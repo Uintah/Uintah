@@ -12,15 +12,10 @@
 #include <Core/Util/DebugStream.h>
 #include <iomanip>
 
-/*`==========TESTING==========*/
-#define test 0 
-/*===========TESTING==========`*/
-
 using namespace Uintah;
 using namespace std;
 static DebugStream cout_doing("ICE_DOING_COUT", false);
 static DebugStream cout_dbg("AMRICE_DBG", false);
-
 
 AMRICE::AMRICE(const ProcessorGroup* myworld)
   : ICE(myworld)
@@ -30,32 +25,29 @@ AMRICE::AMRICE(const ProcessorGroup* myworld)
 AMRICE::~AMRICE()
 {
 }
-//______________________________________________________________________
-//
+//___________________________________________________________________
 void AMRICE::problemSetup(const ProblemSpecP& params, GridP& grid,
                             SimulationStateP& sharedState)
 {
   cout_doing << "Doing problemSetup  \t\t\t AMRICE" << '\n';
   ICE::problemSetup(params, grid, sharedState);
 }
-//______________________________________________________________________
-// 
+//___________________________________________________________________              
 void AMRICE::scheduleInitialize(const LevelP& level,
                                   SchedulerP& sched)
 {
   cout_doing << "AMRICE::scheduleInitialize \t\tL-" << level->getIndex() << '\n';
   ICE::scheduleInitialize(level, sched);
 }
-//______________________________________________________________________
-// 
+//___________________________________________________________________
 void AMRICE::initialize(const ProcessorGroup*,
                            const PatchSubset* patches, const MaterialSubset* matls,
                            DataWarehouse* old_dw, DataWarehouse* new_dw)
 {
 }
-
-//______________________________________________________________________
-// 
+/*___________________________________________________________________
+ Function~  AMRICE::scheduleRefineInterface--  
+_____________________________________________________________________*/
 void AMRICE::scheduleRefineInterface(const LevelP& fineLevel,
                                      SchedulerP& sched,
                                      int step, 
@@ -82,10 +74,10 @@ void AMRICE::scheduleRefineInterface(const LevelP& fineLevel,
     sched->addTask(task, fineLevel->eachPatch(), ice_matls);
   }
 }
-/* ---------------------------------------------------------------------
+/*______________________________________________________________________
  Function~  AMRICE::refineInterface
  Purpose~   
- ---------------------------------------------------------------------  */
+______________________________________________________________________*/
 void AMRICE::refineInterface(const ProcessorGroup*,
                              const PatchSubset* patches,
                              const MaterialSubset*,
@@ -103,16 +95,6 @@ void AMRICE::refineInterface(const ProcessorGroup*,
     for(int p=0;p<patches->size();p++){
       const Patch* patch = patches->get(p);
       
-/*`==========TESTING==========*/
-      // debugging 
-      IntVector l = patch->getCellLowIndex(); 
-      IntVector h = patch->getCellHighIndex();
-      IntVector cLo = level->mapCellToCoarser(l);
-      IntVector cHi = level->mapCellToCoarser(h+level->getRefinementRatio()-IntVector(1,1,1));
-      cout << "level " << level->getIndex() << " patch index" << l << " " << h
-           << " coarse Level index" << cLo << " " << cHi << endl; 
-/*===========TESTING==========`*/
-      
       for (int m = 0; m < numMatls; m++) {
         ICEMaterial* matl = d_sharedState->getICEMaterial(m);
         int indx = matl->getDWIndex();    
@@ -125,8 +107,6 @@ void AMRICE::refineInterface(const ProcessorGroup*,
         old_dw->get(temp_CC,  lb->temp_CCLabel,   indx,patch, gac,1);
         old_dw->get(vel_CC,   lb->vel_CCLabel,    indx,patch, gac,1);
 
-        
-        
         refineBoundaries(patch, press_CC.castOffConst(), new_dw, 
                             lb->press_CCLabel,  indx,subCycleProgress);
 
@@ -146,8 +126,76 @@ void AMRICE::refineInterface(const ProcessorGroup*,
     }
   }             
 }
-//______________________________________________________________________
-// S C A L A R    V E R S I O N   R E F I N E F A C E S
+/*___________________________________________________________________
+ Function~  AMRICE::linearInterpolationWeights--
+_____________________________________________________________________*/
+inline void linearInterpolationWeights(const IntVector& idx, 
+                                    Vector& w,
+                                    IntVector& cidx,
+                                    const IntVector& coarseHigh,
+                                    const Level* level,
+                                    Patch::FaceType face)
+{
+   cidx = level->interpolateCellToCoarser(idx, w);
+   if(cidx.x()+1 >= coarseHigh.x()){
+     cidx.x(cidx.x()-1);
+     w.x(1);
+   }
+   if(cidx.y()+1 >= coarseHigh.y()){
+     cidx.y(cidx.y()-1);
+     w.y(1);
+   }
+   if(cidx.z()+1 >= coarseHigh.z()){
+     cidx.z(cidx.z()-1);
+     w.z(1);
+   }
+   switch(face){
+   case Patch::xminus:
+     w.x(0);
+     break;
+   case Patch::xplus:
+     w.x(1);
+     break;
+   case Patch::yminus:
+     w.y(0);
+     break;
+   case Patch::yplus:
+     w.y(1);
+     break;
+   case Patch::zminus:
+     w.z(0);
+     break;
+   case Patch::zplus:
+     w.z(1);
+     break;
+   default:
+     break;
+   }
+}
+#if 0
+/*___________________________________________________________________
+ Function~  AMRICE::linearInterpolation--
+_____________________________________________________________________*/
+template<class T>
+  void linearInterpolation(ArrayType& q_CC,
+                               const Vector w,
+                               const IntVector cidx,
+                                T& x0)
+{
+  x0 = q_CC[cidx+IntVector(0,0,0)]*(1-w.x())*(1-w.y())*(1-w.z())
+     + q_CC[cidx+IntVector(1,0,0)]*   w.x() *(1-w.y())*(1-w.z())
+     + q_CC[cidx+IntVector(0,1,0)]*(1-w.x())*   w.y() *(1-w.z())
+     + q_CC[cidx+IntVector(1,1,0)]*   w.x() *   w.y() *(1-w.z())
+     + q_CC[cidx+IntVector(0,0,1)]*(1-w.x())*(1-w.y())*   w.z()
+     + q_CC[cidx+IntVector(1,0,1)]*   w.x() *(1-w.y())*   w.z()
+     + q_CC[cidx+IntVector(0,1,1)]*(1-w.x())*   w.y() *   w.z()
+     + q_CC[cidx+IntVector(1,1,1)]*   w.x() *   w.y() *   w.z();
+}
+#endif
+
+/*___________________________________________________________________
+ Function~  AMRICE::refineFaces--   scalar vesion
+_____________________________________________________________________*/
 template<class ArrayType, class constArrayType>
 void refineFaces(const Patch* patch, 
                 const Level* level,
@@ -170,175 +218,46 @@ void refineFaces(const Patch* patch,
 
     {
      //__________________________________
-     //  determine low and high cell iter limits
-#if 0        
-      IntVector l,h;
-      patch->getFace(face, IntVector(0,0,0), IntVector(1,1,1), l, h);
-      cout_dbg << " face " << face << " base " << l << ","<< h << endl;
-      
-      // first adjustement to itertor     --steve help
-      if(face == highFace){
-       l += dir;
-       h += dir;
-      } else if(face != lowFace){
-       h += dir;
-      }
-      switch(face){
-      case Patch::xminus:
-      case Patch::xplus:
-       l-=IntVector(0,1,1);
-       h+=IntVector(0,1,1);
-       break;
-      case Patch::yminus:
-      case Patch::yplus:
-       l-=IntVector(1,0,1);
-       h+=IntVector(1,0,1);
-       break;
-      case Patch::zminus:
-      case Patch::zplus:
-       l-=IntVector(1,1,0);
-       h+=IntVector(1,1,0);
-       break;
-      default:
-       break;
-      }
-      cout_dbg <<"\t firstAdj " << l << ","<< h << endl;
-      
-      // second adjustment to iterator    --steve help
-      if(face != Patch::xminus &&   // Y & Z FACES 
-         face != Patch::xplus && patch->getBCType(Patch::xminus) == Patch::None){
-       l+=IntVector(1,0,0);
-      }
-      if(face != Patch::xminus &&   
-         face != Patch::xplus && patch->getBCType(Patch::xplus) == Patch::None){
-       h-=IntVector(1,0,0);
-      }
-                                   // X & Z FACES
-      if(face != Patch::yminus &&   
-         face != Patch::yplus && patch->getBCType(Patch::yminus) == Patch::None){
-       l+=IntVector(0,1,0);
-      }
-      if(face != Patch::yminus &&   
-         face != Patch::yplus && patch->getBCType(Patch::yplus) == Patch::None){
-       h-=IntVector(0,1,0);
-      }
-      if(face != Patch::zminus &&   // X & Y FACES
-         face != Patch::zplus && patch->getBCType(Patch::zminus) == Patch::None){
-       l+=IntVector(0,0,1);
-      }
-      if(face != Patch::zminus &&   
-         face != Patch::zplus && patch->getBCType(Patch::zplus) == Patch::None){
-       h-=IntVector(0,0,1);
-      }
-      cout_dbg <<"\t secondAdj " << l << ","<< h << endl;
-      
-#endif
-/*`==========TESTING==========*/
+     // fine level hi & lo cell iter limits
+     // coarselevel hi and low index
       CellIterator iter_tmp = patch->getFaceCellIterator(face, "plusEdgeCells");
       IntVector l = iter_tmp.begin();
       IntVector h = iter_tmp.end(); 
-     // cout_dbg << "face " << face << " base iterator " << iter_tmp << endl;
-/*===========TESTING==========`*/
-      //__________________________________
-      //  determine low and high coarse level
-      //  iteration limits.
-/*`==========TESTING==========*/
- //     IntVector coarseLow = level->mapCellToCoarser(l);
-      IntVector coarseLow = level->mapCellToCoarser(l - IntVector(1,1,1)); 
+      IntVector refineRatio = level->getRefinementRatio();
+      IntVector coarseLow  = level->mapCellToCoarser(l);
+      IntVector coarseHigh = level->mapCellToCoarser(h+refineRatio-IntVector(1,1,1));
 
-      IntVector coarseHigh = level->mapCellToCoarser(h+level->getRefinementRatio()-IntVector(1,1,1));
-     // cout_dbg << " base coarseLow " << coarseLow << " coarse high " << coarseHigh << endl;
-/*===========TESTING==========`*/      
-      switch(face){
-      case Patch::xminus:
-       coarseHigh+=IntVector(1,0,0);
-       break;
-      case Patch::xplus: 
-       if(basis == Patch::XFaceBased)    // SFCXVariables
-         coarseHigh += IntVector(1,0,0);
-       else
-         coarseLow -= IntVector(1,0,0);
-       break;
-      case Patch::yminus:
-       coarseHigh+=IntVector(0,1,0);
-       break;
-      case Patch::yplus:
-       if(basis == Patch::YFaceBased)   // SFCYVariables
-         coarseHigh += IntVector(0,1,0);
-       else
-         coarseLow -= IntVector(0,1,0);
-       break;
-      case Patch::zminus:
-       coarseHigh+=IntVector(0,0,1);
-       break;
-      case Patch::zplus:
-       if(basis == Patch::ZFaceBased)   // SFCZVariables
-         coarseHigh += IntVector(0,0,1);
-       else
-         coarseLow -= IntVector(0,0,1);
-       break;
-      default:
-       break;
-      }  // switch face
-    
+      //__________________________________
+      // enlarge the coarselevel foot print by oneCell
+      // x-           x+        y-       y+       z-        z+
+      // (-1,0,0)  (1,0,0)  (0,-1,0)  (0,1,0)  (0,0,-1)  (0,0,1)
+      IntVector oneCell = patch->faceDirection(face);
+      if( face == Patch::xminus || face == Patch::yminus 
+                                || face == Patch::zminus) {
+        coarseHigh -= oneCell;
+      }
+      if( face == Patch::xplus || face == Patch::yplus 
+                               || face == Patch::zplus) {
+        coarseLow -= oneCell;
+      }
+
+      cout_dbg << "face " << face << " FineLevel " << iter_tmp;
+      cout_dbg << "  coarseLow " << coarseLow << " coarse high " << coarseHigh;
+      cout_dbg << "  refine Patch " << *patch << endl;
       
-      l = Max(l, Q.getLowIndex());
-      h = Min(h, Q.getHighIndex());
-/*`==========TESTING==========*/
-#if 0
-      cout_dbg << "\t variable lo " << Q.getLowIndex() << " hi " << Q.getHighIndex()
-               << "\t Celliterator " << l << ","<< h
-               << " coarseLow " << coarseLow << " coarseHigh " << coarseHigh << endl; 
-#endif
-/*===========TESTING==========`*/
       //__________________________________
       //   subCycleProgress_var  = 0
       if(subCycleProgress_var < 1.e-10){
-      
        constArrayType q_OldDW;
        coarse_old_dw->getRegion(q_OldDW, label, matl, coarseLevel,
                              coarseLow, coarseHigh);
                              
        for(CellIterator iter(l,h); !iter.done(); iter++){
          IntVector idx = *iter;
-         //_________________
-         //  deterimine the interpolation weights
+         IntVector cidx;
          Vector w;
-         IntVector cidx = level->mapToCoarser(idx, dir, w);
-         if(cidx.x()+1 >= coarseHigh.x()){
-           cidx.x(cidx.x()-1);
-           w.x(1);
-         }
-         if(cidx.y()+1 >= coarseHigh.y()){
-           cidx.y(cidx.y()-1);
-           w.y(1);
-         }
-         if(cidx.z()+1 >= coarseHigh.z()){
-           cidx.z(cidx.z()-1);
-           w.z(1);
-         }
-         switch(face){
-         case Patch::xminus:
-           w.x(0);
-           break;
-         case Patch::xplus:
-           w.x(1);
-           break;
-         case Patch::yminus:
-           w.y(0);
-           break;
-         case Patch::yplus:
-           w.y(1);
-           break;
-         case Patch::zminus:
-           w.z(0);
-           break;
-         case Patch::zplus:
-           w.z(1);
-           break;
-         default:
-           break;
-         }
+        
+         linearInterpolationWeights( idx,w, cidx, coarseHigh, level, face);
          //_________________
          //  interpolation, using the coarse old_DW
          double x0 = q_OldDW[cidx+IntVector(0,0,0)]*(1-w.x())*(1-w.y())*(1-w.z())
@@ -348,61 +267,22 @@ void refineFaces(const Patch* patch,
            + q_OldDW[cidx+IntVector(0,0,1)]*(1-w.x())*(1-w.y())*   w.z()
            + q_OldDW[cidx+IntVector(1,0,1)]*   w.x() *(1-w.y())*   w.z()
            + q_OldDW[cidx+IntVector(0,1,1)]*(1-w.x())*   w.y() *   w.z()
-           + q_OldDW[cidx+IntVector(1,1,1)]*   w.x() *   w.y() *   w.z();
+           + q_OldDW[cidx+IntVector(1,1,1)]*   w.x() *   w.y() *   w.z();     
+           
          Q[idx] = x0;
          
-/*`==========TESTING==========*/  
-         if (idx == IntVector(-1,-1,-1) ) {
-          cout << label->getName() << " OLDdw level " << level->getIndex() << " x0 " << x0 << endl;
-         } 
-/*===========TESTING==========`*/
-         
        }  // cell iterator
-      } else if(subCycleProgress_var > 1-1.e-10){        /// subCycleProgress_var near 1.0
+      } else if(subCycleProgress_var > 1-1.e-10){  // subCycleProgress_var near 1.0
        constArrayType q_NewDW;
        coarse_new_dw->getRegion(q_NewDW, label, matl, coarseLevel,
                              coarseLow, coarseHigh);
                              
        for(CellIterator iter(l,h); !iter.done(); iter++){
          IntVector idx = *iter;
-         //_________________
-         //  deterimine the interpolation weights
-         Vector w;      
-         IntVector cidx = level->mapToCoarser(idx, dir, w);
-         if(cidx.x()+1 >= coarseHigh.x()){
-           cidx.x(cidx.x()-1);
-           w.x(1);
-         }
-         if(cidx.y()+1 >= coarseHigh.y()){
-           cidx.y(cidx.y()-1);
-           w.y(1);
-         }
-         if(cidx.z()+1 >= coarseHigh.z()){
-           cidx.z(cidx.z()-1);
-           w.z(1);
-         }
-         switch(face){
-         case Patch::xminus:
-           w.x(0);
-           break;
-         case Patch::xplus:
-           w.x(1);
-           break;
-         case Patch::yminus:
-           w.y(0);
-           break;
-         case Patch::yplus:
-           w.y(1);
-           break;
-         case Patch::zminus:
-           w.z(0);
-           break;
-         case Patch::zplus:
-           w.z(1);
-           break;
-         default:
-           break;
-         }
+         IntVector cidx;
+         Vector w;
+        
+         linearInterpolationWeights( idx,w, cidx, coarseHigh, level, face);
          //_________________
          //  interpolation using the coarse_new_dw data
          double x1 = q_NewDW[cidx+IntVector(0,0,0)]*(1-w.x())*(1-w.y())*(1-w.z())
@@ -415,11 +295,6 @@ void refineFaces(const Patch* patch,
            + q_NewDW[cidx+IntVector(1,1,1)]*   w.x() *   w.y() *   w.z();
 
          Q[idx] = x1;
- /*`==========TESTING==========*/
-         if (idx == IntVector(-1,-1,-1) ) {
-          cout << label->getName() << "NEWDW level " << level->getIndex() << " x1 " << x1 << endl;
-         } 
-/*===========TESTING==========`*/
        }  // cell iterator
       } else {                    // subCycleProgress_var neither 0 or 1 
        constArrayType q_OldDW, q_NewDW;
@@ -430,45 +305,10 @@ void refineFaces(const Patch* patch,
                              
       for(CellIterator iter(l,h); !iter.done(); iter++){
          IntVector idx = *iter;
-         //_________________
-         //  deterimine the interpolation weights
+         IntVector cidx;
          Vector w;
-         IntVector cidx = level->mapToCoarser(idx, dir, w);
-         if(cidx.x()+1 >= coarseHigh.x()){
-           cidx.x(cidx.x()-1);
-           w.x(1);
-         }
-         if(cidx.y()+1 >= coarseHigh.y()){
-           cidx.y(cidx.y()-1);
-           w.y(1);
-         }
-         if(cidx.z()+1 >= coarseHigh.z()){
-           cidx.z(cidx.z()-1);
-           w.z(1);
-         }
         
-         switch(face){
-         case Patch::xminus:
-           w.x(0);
-           break;
-         case Patch::xplus:
-           w.x(1);
-           break;
-         case Patch::yminus:
-           w.y(0);
-           break;
-         case Patch::yplus:
-           w.y(1);
-           break;
-         case Patch::zminus:
-           w.z(0);
-           break;
-         case Patch::zplus:
-           w.z(1);
-           break;
-         default:
-           break;
-         }
+         linearInterpolationWeights( idx,w, cidx, coarseHigh, level, face);
          //_________________
          //  interpolation from both coarse new and old dw
          // coarse_old_dw data
@@ -494,19 +334,14 @@ void refineFaces(const Patch* patch,
          // Interpolate temporally  
          double x = (1-subCycleProgress_var)*x0 + subCycleProgress_var*x1;
          Q[idx] = x;
- /*`==========TESTING==========*/
-         if (idx == IntVector(-1,-1,-1) ) {
-          cout << label->getName() << " OLDdw + NewDW level " 
-               << level->getIndex() << " x0 " << x0 << " x1 " << x1 << endl;
-         } 
-/*===========TESTING==========`*/
        }
       }
     }
   }
 }
-//_________________________________________________________________
-//   V E C T O R     V E R S I O N     R E F I N E F A C E S
+/*___________________________________________________________________
+ Function~  AMRICE::refineFaces--   vector version
+_____________________________________________________________________*/
 void refineFaces(const Patch* patch, 
                 const Level* level,
                 const Level* coarseLevel, 
@@ -527,114 +362,31 @@ void refineFaces(const Patch* patch,
       continue;
 
     {
-#if 0
      //__________________________________
      //  determine low and high cell iter limits
-      IntVector l,h;
-      patch->getFace(face, IntVector(0,0,0), IntVector(1,1,1), l, h);
-      if(face == highFace){
-       l += dir;
-       h += dir;
-      } else if(face != lowFace){
-       h += dir;
-      }
-      switch(face){
-      case Patch::xminus:
-      case Patch::xplus:
-       l-=IntVector(0,1,1);
-       h+=IntVector(0,1,1);
-       break;
-      case Patch::yminus:
-      case Patch::yplus:                       
-       l-=IntVector(1,0,1);
-       h+=IntVector(1,0,1);
-       break;
-      case Patch::zminus:
-      case Patch::zplus:
-       l-=IntVector(1,1,0);
-       h+=IntVector(1,1,0);
-       break;
-      default:
-       break;
-      }
-      
-      if(face != Patch::xminus && 
-         face != Patch::xplus && patch->getBCType(Patch::xminus) == Patch::None){
-       l+=IntVector(1,0,0);
-      }
-      if(face != Patch::xminus && 
-         face != Patch::xplus && patch->getBCType(Patch::xplus) == Patch::None){
-       h-=IntVector(1,0,0);
-      }
-      if(face != Patch::yminus && 
-         face != Patch::yplus && patch->getBCType(Patch::yminus) == Patch::None){
-       l+=IntVector(0,1,0);
-      }
-      if(face != Patch::yminus && 
-         face != Patch::yplus && patch->getBCType(Patch::yplus) == Patch::None){
-       h-=IntVector(0,1,0);
-      }
-      if(face != Patch::zminus && 
-         face != Patch::zplus && patch->getBCType(Patch::zminus) == Patch::None){
-       l+=IntVector(0,0,1);
-      }
-      if(face != Patch::zminus && 
-         face != Patch::zplus && patch->getBCType(Patch::zplus) == Patch::None){
-       h-=IntVector(0,0,1);
-      }
-#endif
-
-/*`==========TESTING==========*/
+     // and coarselevel hi and low index
       CellIterator iter_tmp = patch->getFaceCellIterator(face, "plusEdgeCells");
       IntVector l = iter_tmp.begin();
       IntVector h = iter_tmp.end(); 
-     // cout_dbg << "face " << face << " base iterator " << iter_tmp << endl;
-/*===========TESTING==========`*/
+      IntVector refineRatio = level->getRefinementRatio();
+      IntVector coarseLow  = level->mapCellToCoarser(l);
+      IntVector coarseHigh = level->mapCellToCoarser(h + refineRatio - IntVector(1,1,1));
+
       //__________________________________
-      //  determine low and high coarse level
-      //  iteration limits.
-/*`==========TESTING==========*/
- //     IntVector coarseLow = level->mapCellToCoarser(l);
-      IntVector coarseLow = level->mapCellToCoarser(l - IntVector(1,1,1)); 
+      // enlarge the coarse foot print by oneCell
+      // x-           x+        y-       y+       z-        z+
+      // (-1,0,0)  (1,0,0)  (0,-1,0)  (0,1,0)  (0,0,-1)  (0,0,1)
+      IntVector oneCell = patch->faceDirection(face);
+      if( face == Patch::xminus || face == Patch::yminus || face == Patch::zminus) {
+        coarseHigh -= oneCell;
+      }
+      if( face == Patch::xplus || face == Patch::yplus || face == Patch::zplus) {
+        coarseLow -= oneCell;
+      }
 
-      IntVector coarseHigh = level->mapCellToCoarser(h+level->getRefinementRatio()-IntVector(1,1,1));
-      //cout_dbg << " base coarseLow " << coarseLow << " coarse high " << coarseHigh << endl;
-/*===========TESTING==========`*/       
-
-      switch(face){
-      case Patch::xminus:
-       coarseHigh+=IntVector(1,0,0);
-       break;
-      case Patch::xplus:
-       if(basis == Patch::XFaceBased)
-         coarseHigh += IntVector(1,0,0);
-       else
-         coarseLow -= IntVector(1,0,0);
-       break;
-      case Patch::yminus:
-       coarseHigh+=IntVector(0,1,0);
-       break;
-      case Patch::yplus:
-       if(basis == Patch::YFaceBased)
-         coarseHigh += IntVector(0,1,0);
-       else
-         coarseLow -= IntVector(0,1,0);
-       break;
-      case Patch::zminus:
-       coarseHigh+=IntVector(0,0,1);
-       break;
-      case Patch::zplus:
-       if(basis == Patch::ZFaceBased)
-         coarseHigh += IntVector(0,0,1);
-       else
-         coarseLow -= IntVector(0,0,1);
-       break;
-      default:
-       break;
-      }  // switch face
-      
-      l = Max(l, Q.getLowIndex());
-      h = Min(h, Q.getHighIndex());
+      cout_dbg << "face " << face << " FineLevel " << iter_tmp;
+      cout_dbg << "  coarseLow " << coarseLow << " coarse high " << coarseHigh;
+      cout_dbg << "  refine Patch " << *patch << endl;
       //__________________________________
       //   subCycleProgress_var  = 0
       if(subCycleProgress_var < 1.e-10){
@@ -644,44 +396,11 @@ void refineFaces(const Patch* patch,
                              
        for(CellIterator iter(l,h); !iter.done(); iter++){
          IntVector idx = *iter;
-         //_________________
-         //  deterimine the interpolation weights
+         IntVector cidx;
          Vector w;
-         IntVector cidx = level->mapToCoarser(idx, dir, w);
-         if(cidx.x()+1 >= coarseHigh.x()){
-           cidx.x(cidx.x()-1);
-           w.x(1);
-         }
-         if(cidx.y()+1 >= coarseHigh.y()){
-           cidx.y(cidx.y()-1);
-           w.y(1);
-         }
-         if(cidx.z()+1 >= coarseHigh.z()){
-           cidx.z(cidx.z()-1);
-           w.z(1);
-         }
-         switch(face){
-         case Patch::xminus:
-           w.x(0);
-           break;
-         case Patch::xplus:
-           w.x(1);
-           break;
-         case Patch::yminus:
-           w.y(0);
-           break;
-         case Patch::yplus:
-           w.y(1);
-           break;
-         case Patch::zminus:
-           w.z(0);
-           break;
-         case Patch::zplus:
-           w.z(1);
-           break;
-         default:
-           break;
-         }
+        
+         linearInterpolationWeights( idx,w, cidx, coarseHigh, level, face);
+         
          //_________________
          //  interpolation, using the coarse old_DW
          Vector x0 = q_OldDW[cidx+IntVector(0,0,0)]*(1-w.x())*(1-w.y())*(1-w.z())
@@ -701,44 +420,9 @@ void refineFaces(const Patch* patch,
                              
        for(CellIterator iter(l,h); !iter.done(); iter++){
          IntVector idx = *iter;
-         //_________________
-         //  deterimine the interpolation weights
-         Vector w;      
-         IntVector cidx = level->mapToCoarser(idx, dir, w);
-         if(cidx.x()+1 >= coarseHigh.x()){
-           cidx.x(cidx.x()-1);
-           w.x(1);
-         }
-         if(cidx.y()+1 >= coarseHigh.y()){
-           cidx.y(cidx.y()-1);
-           w.y(1);
-         }
-         if(cidx.z()+1 >= coarseHigh.z()){
-           cidx.z(cidx.z()-1);
-           w.z(1);
-         }
-         switch(face){
-         case Patch::xminus:
-           w.x(0);
-           break;
-         case Patch::xplus:
-           w.x(1);
-           break;
-         case Patch::yminus:
-           w.y(0);
-           break;
-         case Patch::yplus:
-           w.y(1);
-           break;
-         case Patch::zminus:
-           w.z(0);
-           break;
-         case Patch::zplus:
-           w.z(1);
-           break;
-         default:
-           break;
-         }
+         IntVector cidx;
+         Vector w;
+         linearInterpolationWeights( idx, w, cidx, coarseHigh, level, face);
          //_________________
          //  interpolation using the coarse_new_dw data
          Vector x1 = q_NewDW[cidx+IntVector(0,0,0)]*(1-w.x())*(1-w.y())*(1-w.z())
@@ -760,45 +444,9 @@ void refineFaces(const Patch* patch,
 
        for(CellIterator iter(l,h); !iter.done(); iter++){
          IntVector idx = *iter;
-         //_________________
-         //  deterimine the interpolation weights
+         IntVector cidx;
          Vector w;
-         IntVector cidx = level->mapToCoarser(idx, dir, w);
-         if(cidx.x()+1 >= coarseHigh.x()){
-           cidx.x(cidx.x()-1);
-           w.x(1);
-         }
-         if(cidx.y()+1 >= coarseHigh.y()){
-           cidx.y(cidx.y()-1);
-           w.y(1);
-         }
-         if(cidx.z()+1 >= coarseHigh.z()){
-           cidx.z(cidx.z()-1);
-           w.z(1);
-         }
-        
-         switch(face){
-         case Patch::xminus:
-           w.x(0);
-           break;
-         case Patch::xplus:
-           w.x(1);
-           break;
-         case Patch::yminus:
-           w.y(0);
-           break;
-         case Patch::yplus:
-           w.y(1);
-           break;
-         case Patch::zminus:
-           w.z(0);
-           break;
-         case Patch::zplus:
-           w.z(1);
-           break;
-         default:
-           break;
-         }
+         linearInterpolationWeights( idx, w, cidx, coarseHigh, level, face); 
          //_________________
          //  interpolation from both coarse new and old dw
          // coarse_old_dw data
@@ -829,8 +477,9 @@ void refineFaces(const Patch* patch,
     }
   }
 }
-//______________________________________________________________________
-//
+/*___________________________________________________________________
+ Function~  AMRICE::addRefineDependencies--
+_____________________________________________________________________*/
 void AMRICE::addRefineDependencies(Task* task, 
                                    const VarLabel* var,
                                    int step, 
@@ -853,9 +502,9 @@ void AMRICE::addRefineDependencies(Task* task,
   }
   cout_dbg <<""<<endl;
 }
-
-//______________________________________________________________________
-//  CCVariable<double> version
+/*___________________________________________________________________
+ Function~  AMRICE::refineBoundaries--   double 
+_____________________________________________________________________*/
 void AMRICE::refineBoundaries(const Patch* patch,
                            CCVariable<double>& val,
                            DataWarehouse* new_dw,
@@ -876,9 +525,9 @@ void AMRICE::refineBoundaries(const Patch* patch,
      Patch::invalidFace, val, label, subCycleProgress_var, matl,
      coarse_old_dw, coarse_new_dw, Patch::CellBased);
 }
-
-//______________________________________________________________________
-//  CCVariable<Vector> version
+/*___________________________________________________________________
+ Function~  AMRICE::refineBoundaries--   Vector 
+_____________________________________________________________________*/
 void AMRICE::refineBoundaries(const Patch* patch,
                            CCVariable<Vector>& val,
                            DataWarehouse* new_dw,
@@ -901,7 +550,7 @@ void AMRICE::refineBoundaries(const Patch* patch,
 
 
 //______________________________________________________________________
-//  SFCXVariable version
+//  SFCXVariable version        N O T   U S E D
 void AMRICE::refineBoundaries(const Patch* patch,
                            SFCXVariable<double>& val,
                            DataWarehouse* new_dw,
@@ -923,7 +572,7 @@ void AMRICE::refineBoundaries(const Patch* patch,
      coarse_old_dw, coarse_new_dw, Patch::XFaceBased);
 }
 //______________________________________________________________________
-//  SFCYVariable version
+//  SFCYVariable version        N O T   U S E D
 void AMRICE::refineBoundaries(const Patch* patch,
                            SFCYVariable<double>& val,
                            DataWarehouse* new_dw,
@@ -945,7 +594,7 @@ void AMRICE::refineBoundaries(const Patch* patch,
      coarse_old_dw, coarse_new_dw, Patch::YFaceBased);
 }
 //______________________________________________________________________
-//  SFCZVariable version
+//  SFCZVariable version        N O T   U S E D
 void AMRICE::refineBoundaries(const Patch* patch,
                             SFCZVariable<double>& val,
                             DataWarehouse* new_dw,
@@ -966,8 +615,9 @@ void AMRICE::refineBoundaries(const Patch* patch,
      Patch::zplus, val, label, subCycleProgress_var, matl,
      coarse_old_dw, coarse_new_dw, Patch::ZFaceBased);
 }
-//______________________________________________________________________
-//
+/*___________________________________________________________________
+ Function~  AMRICE::scheduleCoarsen--  
+_____________________________________________________________________*/
 void AMRICE::scheduleCoarsen(const LevelP& coarseLevel,
                                SchedulerP& sched)
 {
@@ -999,176 +649,52 @@ void AMRICE::scheduleCoarsen(const LevelP& coarseLevel,
   sched->addTask(task, coarseLevel->eachPatch(), d_sharedState->allMaterials()); 
 }
 
-//______________________________________________________________________
-//
+/*___________________________________________________________________
+ Function~  AMRICE::Coarsen--  
+_____________________________________________________________________*/
 void AMRICE::coarsen(const ProcessorGroup*,
                         const PatchSubset* patches,
                         const MaterialSubset* matls,
                         DataWarehouse* old_dw,
                         DataWarehouse* new_dw)
 {
-  cout_doing << "Doing coarsen \t\t\t AMRICE" << '\n';
+  cout_doing << "Doing coarsen \t\t\t\t\t\t AMRICE";
   const Level* coarseLevel = getLevel(patches);
   const Level* fineLevel = coarseLevel->getFinerLevel().get_rep();
+  
   IntVector rr(fineLevel->getRefinementRatio());
-  double ratio = 1./(rr.x()*rr.y()*rr.z());
+  double invRefineRatio = 1./(rr.x()*rr.y()*rr.z());
   
   for(int p=0;p<patches->size();p++){  
     const Patch* coarsePatch = patches->get(p);
-    cout_doing << "\t\t on patch " << coarsePatch->getID();
-    // Find the overlapping regions...
+    cout_doing << " patch " << coarsePatch->getID()<< endl;
+    
     Level::selectType finePatches;
     coarsePatch->getFineLevelPatches(finePatches);
 
     for(int m = 0;m<matls->size();m++){
-      int matl = matls->get(m);
+      int indx = matls->get(m);
 
-      //__________________________________
-      //   D E N S I T Y                     clean out when you've done the test
-      CCVariable<double> rho_CC;
-      new_dw->getModifiable(rho_CC, lb->rho_CCLabel, matl, coarsePatch);
-/*`==========TESTING==========*/
-#ifdef test      
-      fineToCoarseOperator<double>(rho_CC, lb->rho_CCLabel, matl, new_dw, 
-                                   ratio, coarsePatch, coarseLevel, fineLevel);
-#else 
-/*===========TESTING==========`*/
-      //print(density, "before coarsen density");
+      CCVariable<double> rho_CC, press_CC, temp, sp_vol_CC;
+      CCVariable<Vector> vel_CC;
+      new_dw->getModifiable(press_CC, lb->press_CCLabel,  indx, coarsePatch);
+      new_dw->getModifiable(rho_CC,   lb->rho_CCLabel,    indx, coarsePatch);
+      new_dw->getModifiable(sp_vol_CC,lb->sp_vol_CCLabel, indx, coarsePatch);
+      new_dw->getModifiable(temp,     lb->temp_CCLabel,   indx, coarsePatch);
+      new_dw->getModifiable(vel_CC,   lb->vel_CCLabel,    indx, coarsePatch);  
       
-      for(int i=0;i<finePatches.size();i++){
-       const Patch* finePatch = finePatches[i];
-       constCCVariable<double> fine_den;
-       new_dw->get(fine_den, lb->rho_CCLabel, matl, finePatch,
-                  Ghost::None, 0);
-                  
-       IntVector fl(finePatch->getCellLowIndex());
-       IntVector fh(finePatch->getCellHighIndex());
-       IntVector l(fineLevel->mapCellToCoarser(fl));
-       IntVector h(fineLevel->mapCellToCoarser(fh));
-       l = Max(l, coarsePatch->getCellLowIndex());
-       h = Min(h, coarsePatch->getCellHighIndex());
+      // coarsen
+      fineToCoarseOperator<double>(rho_CC,    lb->rho_CCLabel,  indx, new_dw, 
+                         invRefineRatio, coarsePatch, coarseLevel, fineLevel);      
+
+      fineToCoarseOperator<double>(press_CC,  lb->press_CCLabel,indx, new_dw, 
+                         invRefineRatio, coarsePatch, coarseLevel, fineLevel);
+
+      fineToCoarseOperator<double>(temp,      lb->temp_CCLabel, indx, new_dw, 
+                         invRefineRatio, coarsePatch, coarseLevel, fineLevel);
        
-       for(CellIterator iter(l, h); !iter.done(); iter++){
-         double rho_tmp=0;
-         IntVector fineStart(coarseLevel->mapCellToFiner(*iter));
-         
-         for(CellIterator inside(IntVector(0,0,0), fineLevel->getRefinementRatio());
-             !inside.done(); inside++){
-           rho_tmp+=fine_den[fineStart+*inside];
-         }
-         rho_CC[*iter]=rho_tmp*ratio;
-       }
-      } // fine patch loop
-      //print(density, "coarsened density");
-#endif      
-      //__________________________________
-      //  P R E S S U R E 
-      CCVariable<double> press_CC;
-      new_dw->getModifiable(press_CC, lb->press_CCLabel, matl, coarsePatch);
-#ifdef test      
-      fineToCoarseOperator<double>(press_CC, lb->press_CCLabel, matl, new_dw, 
-                                   ratio, coarsePatch, coarseLevel, fineLevel);
-#else 
-      
-      for(int i=0;i<finePatches.size();i++){
-       const Patch* finePatch = finePatches[i];
-       constCCVariable<double> fine_press;
-       new_dw->get(fine_press, lb->press_CCLabel, matl, finePatch,
-                  Ghost::None, 0);
-                  
-       IntVector fl(finePatch->getCellLowIndex());
-       IntVector fh(finePatch->getCellHighIndex());
-       IntVector l(fineLevel->mapCellToCoarser(fl));
-       IntVector h(fineLevel->mapCellToCoarser(fh));
-       l = Max(l, coarsePatch->getCellLowIndex());
-       h = Min(h, coarsePatch->getCellHighIndex());
-       
-       for(CellIterator iter(l, h); !iter.done(); iter++){
-         double press_tmp=0;
-         IntVector fineStart(coarseLevel->mapCellToFiner(*iter));
-         
-         for(CellIterator inside(IntVector(0,0,0), fineLevel->getRefinementRatio());
-             !inside.done(); inside++){
-           press_tmp+=fine_press[fineStart+*inside];
-         }
-         press_CC[*iter]=press_tmp*ratio;
-       }
-      }  // fine patch loop
-#endif
-      //print(pressure, "coarsened pressure");
-      //__________________________________
-      //      T E M P E R A T U R E
-      CCVariable<double> temp;
-      new_dw->getModifiable(temp, lb->temp_CCLabel, matl, coarsePatch);
-/*`==========TESTING==========*/
-#ifdef test      
-      fineToCoarseOperator<double>(temp, lb->temp_CCLabel, matl, new_dw, 
-                                   ratio, coarsePatch, coarseLevel, fineLevel);
-#else 
-/*===========TESTING==========`*/                                   
-       for(int i=0;i<finePatches.size();i++){
-         const Patch* finePatch = finePatches[i];
-         constCCVariable<double> fine_temp;
-         new_dw->get(fine_temp, lb->temp_CCLabel, matl, finePatch,
-                    Ghost::None, 0);
-                    
-         IntVector fl(finePatch->getCellLowIndex());
-         IntVector fh(finePatch->getCellHighIndex());
-         IntVector l(fineLevel->mapCellToCoarser(fl));
-         IntVector h(fineLevel->mapCellToCoarser(fh));
-         l = Max(l, coarsePatch->getCellLowIndex());
-         h = Min(h, coarsePatch->getCellHighIndex());
-         
-         for(CellIterator iter(l, h); !iter.done(); iter++){
-           double temp_tmp=0;
-           IntVector fineStart(coarseLevel->mapCellToFiner(*iter));
-           
-           for(CellIterator inside(IntVector(0,0,0), fineLevel->getRefinementRatio());
-              !inside.done(); inside++){
-             temp_tmp+=fine_temp[fineStart+*inside];
-           }
-           temp[*iter]=temp_tmp*ratio;
-         }
-       }
-#endif
-       //print(temp, "coarsened temperature");
-       
-      //___________________________________________
-      //     C E L L-C E N T E R-V E L O C I T Y   
-       CCVariable<Vector> vel_CC;
-       new_dw->getModifiable(vel_CC, lb->vel_CCLabel, matl, coarsePatch);
-/*`==========TESTING==========*/
-#ifdef test        
-        fineToCoarseOperator<Vector>(vel_CC, lb->vel_CCLabel, matl, new_dw, 
-                                     ratio, coarsePatch, coarseLevel, fineLevel);
-#else  
-/*===========TESTING==========`*/                                        
-       for(int i=0;i<finePatches.size();i++){
-         const Patch* finePatch = finePatches[i];
-         constCCVariable<Vector> fine_vel;
-         new_dw->get(fine_vel, lb->vel_CCLabel, matl, finePatch,
-                    Ghost::None, 0);
-                    
-         IntVector fl(finePatch->getCellLowIndex());
-         IntVector fh(finePatch->getCellHighIndex());
-         IntVector l(fineLevel->mapCellToCoarser(fl));
-         IntVector h(fineLevel->mapCellToCoarser(fh));
-         l = Max(l, coarsePatch->getCellLowIndex());
-         h = Min(h, coarsePatch->getCellHighIndex());
-         
-         for(CellIterator iter(l, h); !iter.done(); iter++){
-           Vector vel_tmp= Vector(0,0,0);
-           IntVector fineStart(coarseLevel->mapCellToFiner(*iter));
-           
-           for(CellIterator inside(IntVector(0,0,0), fineLevel->getRefinementRatio());
-              !inside.done(); inside++){
-             vel_tmp+=fine_vel[fineStart+*inside];
-           }
-           vel_CC[*iter] =vel_tmp*ratio;
-         }
-       }
-       //print(temp, "coarsened temperature"); 
-#endif    
+     fineToCoarseOperator<Vector>( vel_CC,    lb->vel_CCLabel,  indx, new_dw, 
+                         invRefineRatio, coarsePatch, coarseLevel, fineLevel);    
     }
   }  // course patch loop 
 }
@@ -1179,39 +705,50 @@ _____________________________________________________________________*/
 template<class T>
 void AMRICE::fineToCoarseOperator(CCVariable<T>& q_CC,
                                   const VarLabel* varLabel,
-                                  const int matl,
+                                  const int indx,
                                   DataWarehouse* new_dw,
                                   const double ratio,
                                   const Patch* coarsePatch,
                                   const Level* coarseLevel,
                                   const Level* fineLevel)
-{      
-  // Find the overlapping regions...
+{
   Level::selectType finePatches;
-  coarsePatch->getFineLevelPatches(finePatches);  
+  coarsePatch->getFineLevelPatches(finePatches);
+  IntVector extraCells(1,1,1);    // ICE always has 1 layer of extra cells
                             
   for(int i=0;i<finePatches.size();i++){
     const Patch* finePatch = finePatches[i];
+    
     constCCVariable<T> fine_q_CC;
-    new_dw->get(fine_q_CC, varLabel, matl, finePatch,Ghost::None, 0);
+    new_dw->get(fine_q_CC, varLabel, indx, finePatch,Ghost::None, 0);
 
     IntVector fl(finePatch->getCellLowIndex());
     IntVector fh(finePatch->getCellHighIndex());
-    IntVector l(fineLevel->mapCellToCoarser(fl));
-    IntVector h(fineLevel->mapCellToCoarser(fh));
-    l = Max(l, coarsePatch->getCellLowIndex());
-    h = Min(h, coarsePatch->getCellHighIndex());
+    IntVector cl(fineLevel->mapCellToCoarser(fl) + extraCells);
+    IntVector ch(fineLevel->mapCellToCoarser(fh) - extraCells);
+    
+    cl = Max(cl, coarsePatch->getCellLowIndex());
+    ch = Min(ch, coarsePatch->getCellHighIndex());
+    
+    cout_dbg << " fineToCoarseOperator: coarselevel"<< cl << ch 
+             << " fineLevel " << fl << fh 
+             << " patches " << *finePatch << endl;
+    IntVector refinementRatio = fineLevel->getRefinementRatio();
     
     T zero(0.0);
-    for(CellIterator iter(l, h); !iter.done(); iter++){
+    // iterate over coarse level cells
+    for(CellIterator iter(cl, ch); !iter.done(); iter++){
+      IntVector c = *iter;
       T q_CC_tmp(zero);
-      IntVector fineStart(coarseLevel->mapCellToFiner(*iter));
-
-      for(CellIterator inside(IntVector(0,0,0), fineLevel->getRefinementRatio());
-           !inside.done(); inside++){
-         q_CC_tmp+=fine_q_CC[fineStart+*inside];
+      IntVector fineStart = coarseLevel->mapCellToFiner(c);
+    
+      // for each coarse level cell iterate over the fine level cells   
+      for(CellIterator inside(IntVector(0,0,0),refinementRatio );
+                                          !inside.done(); inside++){
+        IntVector fc = fineStart + *inside;
+        q_CC_tmp += fine_q_CC[fc];
       }
-      q_CC[*iter] =q_CC_tmp*ratio;
+      q_CC[c] =q_CC_tmp*ratio;
     }
   }
 }
