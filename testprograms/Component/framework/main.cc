@@ -7,6 +7,7 @@
 
 #include <testprograms/Component/framework/cca.h>
 #include <testprograms/Component/framework/BuilderImpl.h>
+#include <testprograms/Component/framework/ConnectionServicesImpl.h>
 #include <testprograms/Component/framework/ComponentImpl.h>
 #include <Core/CCA/Component/PIDL/PIDL.h>
 
@@ -27,7 +28,7 @@ main( int argc, char *argv[] )
   Component b = new BuilderImpl;
   CCA::init( b );
 
-
+  cerr << "done\n";
   CCA::done();
 
   cerr << "main done\n";

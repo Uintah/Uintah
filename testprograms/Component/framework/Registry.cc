@@ -122,9 +122,11 @@ ProvidePortRecord *
 ComponentRecord::getProvideRecord( const string &name )
 {
   provide_iterator pi = provides_.find(name);
-  if ( pi != provides_.end() ) 
+  if ( pi != provides_.end() ) {
     return pi->second;
+  }
   
+  cerr << "CR:: provide port not found\n";
   return 0;
   
 }
@@ -132,9 +134,11 @@ UsePortRecord *
 ComponentRecord::getUseRecord( const string &name )
 {
   use_iterator ui = uses_.find(name);
-  if ( ui != uses_.end() ) 
+  if ( ui != uses_.end() ) { 
     return ui->second;
+  }
   
+  cerr << "CR::" << id_->toString() << " use port ("<<name<<") not found\n";
   return 0;
   
 }
@@ -159,21 +163,27 @@ Registry::Registry() : connections_("Registry Connection Lock")
 ProvidePortRecord *
 Registry::getProvideRecord( const ComponentID &id, const string &name )
 {
-  component_iterator from = components_.find(id);
-  if ( from == components_.end() ) 
+  component_iterator from = components_.find(id->toString());
+  if ( from == components_.end() ) {
+    cerr << "Registry::component not found\n";
     return 0; 
-  else
+  }
+  else {
     return from->second->getProvideRecord(name);
+  }
 }
 
 UsePortRecord *
 Registry::getUseRecord( const ComponentID &id, const string &name )
 {
-  component_iterator from = components_.find(id);
-  if ( from == components_.end() ) 
+  component_iterator from = components_.find(id->toString());
+  if ( from == components_.end() ) {
+    cerr << "Reg: component not found\n";
     return 0; 
-  else
+  }
+  else {
     return from->second->getUseRecord(name);
+  }
 }
 
 } // namespace sci_cca
