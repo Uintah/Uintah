@@ -1,8 +1,7 @@
 
 #ifndef UINTAH_HOMEBREW_ICE_H
 #define UINTAH_HOMEBREW_ICE_H
-#include <Packages/Uintah/CCA/Components/ICE/ICELabel.h>
-#include <Packages/Uintah/CCA/Components/MPMICE/MPMICELabel.h>
+
 #include <Packages/Uintah/CCA/Components/ICE/Advection/Advector.h>
 #include <Packages/Uintah/CCA/Components/ICE/Turbulence.h>
 #include <Packages/Uintah/CCA/Ports/ModelInterface.h>
@@ -17,6 +16,8 @@
 #include <Packages/Uintah/Core/Grid/SFCYVariable.h>
 #include <Packages/Uintah/Core/Grid/SFCZVariable.h>
 #include <Packages/Uintah/Core/Grid/Stencil7.h>
+#include <Packages/Uintah/Core/Labels/ICELabel.h>
+#include <Packages/Uintah/Core/Labels/MPMICELabel.h>
 #include <Packages/Uintah/Core/Parallel/UintahParallelComponent.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
 #include <Packages/Uintah/Core/Math/FastMatrix.h>
@@ -28,9 +29,9 @@
 
 
 namespace Uintah { 
-using namespace SCIRun;
- class ModelInfo; 
- class ModelInterface; 
+  using namespace SCIRun;
+  class ModelInfo; 
+  class ModelInterface; 
     
     class ICE : public UintahParallelComponent, public SimulationInterface {
     public:

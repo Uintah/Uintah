@@ -2,15 +2,16 @@
 #define _TURBULENCEFACTORY_H_
 
 #include <Packages/Uintah/CCA/Components/ICE/Turbulence.h>
-#include <Packages/Uintah/CCA/Components/ICE/ICELabel.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
 #include <Packages/Uintah/CCA/Ports/SimulationInterface.h>
 #include <Packages/Uintah/Core/Grid/CCVariable.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
 #include <string>
+
 namespace Uintah {
 
+  class ICELabel;
   class Turbulence;
 
   class TurbulenceFactory

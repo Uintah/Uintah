@@ -1,14 +1,11 @@
 #ifndef __EQUATION_OF_STATE_H__
 #define __EQUATION_OF_STATE_H__
 
-#include <Packages/Uintah/CCA/Components/ICE/ICELabel.h>
 #include <Packages/Uintah/Core/Grid/CCVariable.h>
 
 namespace Uintah {
 
-  class Task;
   class Patch;
-  class VarLabel;
   class ICEMaterial;
 
 /**************************************
