@@ -77,9 +77,9 @@ public:
 class TaskQueue {
     Task** q;
     char lock;
+    int size;
     int first;
     int last;
-    int size;
 public:
     int nitems;
     TaskQueue(int size);
@@ -376,7 +376,7 @@ static void handle_abort_signals(int sig, int code, sigcontext_t* context)
 	self->priv->redlen -= pagesize;
 	if(self->priv->redlen <= 0){
 	    fprintf(stderr, "%c%c%cThread \"%s\"(pid %d) ran off end of stack! \n",
-		    7,7,7,tname, getpid(), signam);
+		    7,7,7,tname, getpid());
 	    fprintf(stderr, "Stack size was %d bytes\n", self->priv->stacklen-pagesize);
 	} else {
 	    if(mprotect(self->priv->stackbot+self->priv->redlen, pagesize,
@@ -710,7 +710,7 @@ struct ConditionVariable_private {
 };
 
 ConditionVariable_private::ConditionVariable_private()
-: semaphore(0), nwaiters(0)
+: nwaiters(0), semaphore(0)
 {
 }
 

@@ -13,7 +13,7 @@
 #define TASK_IMPLEMENTATION_CC Task_solaris.cc
 #endif
 
-#ifdef SCI_MACHINE_LINUX
+#ifdef SCI_MACHINE_Linux
 #define TASK_IMPLEMENTATION_O Task_linux.o
 #define TASK_IMPLEMENTATION_CC Task_linux.cc
 #endif
