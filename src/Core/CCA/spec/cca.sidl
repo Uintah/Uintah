@@ -109,6 +109,14 @@ class CCAException  extends CIA.Throwable  {
 
 }  // end interface CCAException
 
+class Matrix
+{
+	double getElement(in int row, in int col);
+	void setElement(in int row, in int col, in double val);
+	int numOfRows();
+	int numOfCols();
+}
+
 
 
 /* $Source$ */
@@ -1360,6 +1368,37 @@ interface ZListPort extends gov.cca.Port
 /* $Source$ */
 
 
+
+//abstract interface 
+interface Field2DPort extends gov.cca.Port
+{
+	//provides a interface to 
+	Matrix getField();
+}
+
+//abstract interface 
+interface PDEDescriptionPort extends gov.cca.Port
+{
+	//provides a interface to 
+	array<double> getNodes();
+	array<int> getBoundaries();
+}
+
+//abstract interface 
+interface MeshPort extends gov.cca.Port
+{
+	//provides a interface to 
+	array<int> getTriangles();
+}
+
+
+//abstract interface 
+interface PDEMatrixPort extends gov.cca.Port
+{
+	//provides a interface to 
+	Matrix getMatrix();
+	array<double> getVector();
+}
 
 
 /* # cca */
