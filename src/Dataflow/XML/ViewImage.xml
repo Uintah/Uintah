@@ -79,7 +79,7 @@
     </inputs>
     <outputs>
       <port>
-	<name>Scene Graph</name>
+	<name>Geometry</name>
 	<description>
 	  <p>
              A scene graph is sent out through this port expecting to be 
