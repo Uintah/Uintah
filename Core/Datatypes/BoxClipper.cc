@@ -39,28 +39,8 @@ Clipper::inside_p(const Point &/* p */)
 
 
 
+PersistentTypeID BoxClipper::type_id("BoxClipper", "Clipper", 0);
 
-#if 0
-BoxClipper::BoxClipper(ScaledBoxWidget *box)
-{
-  Point center, right, down, in;
-  box->GetPosition(center, right, down, in);
-
-  // Rotate * Scale * Translate.
-  Transform r;
-  Point unused;
-  trans_.load_identity();
-  r.load_frame(unused, (right-center).normal(),
-	       (down-center).normal(),
-	       (in-center).normal());
-  trans_.pre_trans(r);
-  trans_.pre_scale(Vector((right-center).length(),
-			  (down-center).length(),
-			  (in-center).length()));
-  trans_.pre_translate(Vector(center.x(), center.y(), center.z()));
-  trans_.invert();
-}
-#endif
 
 BoxClipper::BoxClipper(Transform &t)
   : trans_(t)
@@ -87,6 +67,17 @@ BoxClipper::inside_p(const Point &p)
   return (ptrans.x() >= -1.0 && ptrans.x() < 1.0 &&
 	  ptrans.y() >= -1.0 && ptrans.y() < 1.0 &&
 	  ptrans.z() >= -1.0 && ptrans.z() < 1.0);
+}
+
+
+const int BOXCLIPPER_VERSION = 1;
+
+void
+BoxClipper::io(Piostream &stream)
+{
+  stream.begin_class("BoxClipper", BOXCLIPPER_VERSION);
+  Pio(stream, trans_);
+  stream.end_class();
 }
 
 

@@ -222,7 +222,7 @@ public:
   const Point &point(Node::index_type i) { return points_[i]; }
 
 
-  virtual MeshHandle clip(Clipper &c);
+  virtual MeshHandle clip(ClipperHandle c);
 
 private:
 

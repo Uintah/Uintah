@@ -181,7 +181,7 @@ SelectField::execute()
     bool replace_p = false;
     if (mode_.get() == 2) { replace_p = true; }
 
-    BoxClipper clipper = box_->get_clipper();
+    ClipperHandle clipper = box_->get_clipper();
     algo->execute(output_field_, clipper, value_.get(), replace_p, 0);
 
     output_field_->generation++;

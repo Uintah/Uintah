@@ -220,7 +220,7 @@ PointCloudMesh::size(PointCloudMesh::Cell::size_type &s) const
 
 
 MeshHandle
-PointCloudMesh::clip(Clipper &clipper)
+PointCloudMesh::clip(ClipperHandle clipper)
 {
   PointCloudMesh *clipped = scinew PointCloudMesh();
 
@@ -230,7 +230,7 @@ PointCloudMesh::clip(Clipper &clipper)
   {
     Point p;
     get_center(p, *bi);
-    if (clipper.inside_p(p))
+    if (clipper->inside_p(p))
     {
       clipped->add_point(p);
     }

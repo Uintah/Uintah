@@ -65,7 +65,7 @@ SelectFieldCreateAlgoT<MESH, FIELD>::execute(MeshHandle mesh_h,
 class SelectFieldFillAlgo : public DynamicAlgoBase
 {
 public:
-  virtual void execute(FieldHandle src, Clipper &clipper, int value,
+  virtual void execute(FieldHandle src, ClipperHandle clipper, int value,
 		       bool replace_p, int replace_value) = 0;
 
   //! support the dynamically compiled algorithm concept
@@ -79,7 +79,7 @@ class SelectFieldFillAlgoT : public SelectFieldFillAlgo
 {
 public:
   //! virtual interface. 
-  virtual void execute(FieldHandle src, Clipper &clipper, int value,
+  virtual void execute(FieldHandle src, ClipperHandle clipper, int value,
 		       bool replace_p, int replace_value);
 };
 
@@ -87,7 +87,7 @@ public:
 template <class FIELD, class LOC>
 void
 SelectFieldFillAlgoT<FIELD, LOC>::execute(FieldHandle field_h,
-					  Clipper &clipper,
+					  ClipperHandle clipper,
 					  int value, bool replace_p,
 					  int replace_value)
 {
@@ -102,7 +102,7 @@ SelectFieldFillAlgoT<FIELD, LOC>::execute(FieldHandle field_h,
     Point p;
     field->get_typed_mesh()->get_center(p, *iter);
 
-    if (clipper.inside_p(p))
+    if (clipper->inside_p(p))
     {
       field->set_value(value, *iter);
     }

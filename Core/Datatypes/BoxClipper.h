@@ -38,8 +38,11 @@ public:
   BoxClipper(Transform &t);
   BoxClipper(const BoxClipper &bc);
   virtual ~BoxClipper();
+
   virtual bool inside_p(const Point &p);
 
+  void    io(Piostream &stream);
+  static  PersistentTypeID type_id;
 };
 
 

@@ -34,7 +34,7 @@
 #include <Core/Thread/CrowdMonitor.h>
 #include <Dataflow/Widgets/ScaledBoxWidget.h>
 #include <Core/Datatypes/TetVol.h>
-#include <Core/Datatypes/BoxClipper.h>
+#include <Core/Datatypes/Clipper.h>
 #include <iostream>
 
 namespace SCIRun {
@@ -131,7 +131,7 @@ Clip::execute()
   
   if (mode_.get() == 1 || mode_.get() == 2)
   {
-    BoxClipper clipper = box_->get_clipper();
+    ClipperHandle clipper = box_->get_clipper();
     TetVolMeshHandle omesh = (TetVolMesh *)(ifieldhandle->mesh().get_rep());
     TetVolMeshHandle nmesh = (TetVolMesh *)(omesh->clip(clipper).get_rep());
     TetVol<double> *ofield =

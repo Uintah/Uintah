@@ -22,15 +22,22 @@
 #if !defined(Clipper_h)
 #define Clipper_h
 
+#include <Core/Datatypes/Datatype.h>
+#include <Core/Containers/Handle.h>
+
 namespace SCIRun {
 
-class Clipper
+class Clipper : public Datatype
 {
 public:
   virtual ~Clipper();
 
   virtual bool inside_p(const Point &p);
 };
+
+
+typedef Handle<Clipper> ClipperHandle;
+
 
 } // end namespace SCIRun
 

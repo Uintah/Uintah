@@ -1007,7 +1007,7 @@ TetVolMesh::add_tet_unconnected(const Point &p0,
 
 
 MeshHandle
-TetVolMesh::clip(Clipper &clipper)
+TetVolMesh::clip(ClipperHandle clipper)
 {
   TetVolMesh *clipped = scinew TetVolMesh();
 
@@ -1020,7 +1020,7 @@ TetVolMesh::clip(Clipper &clipper)
   {
     Point p;
     get_center(p, *bi);
-    if (clipper.inside_p(p))
+    if (clipper->inside_p(p))
     {
       // Add this element to the new mesh.
       Node::array_type onodes;

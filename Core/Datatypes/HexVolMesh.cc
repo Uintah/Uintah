@@ -840,7 +840,7 @@ HexVolMesh::add_hex_unconnected(const Point &p0,
 
 
 MeshHandle
-HexVolMesh::clip(Clipper &clipper)
+HexVolMesh::clip(ClipperHandle clipper)
 {
   HexVolMesh *clipped = scinew HexVolMesh();
 
@@ -853,7 +853,7 @@ HexVolMesh::clip(Clipper &clipper)
   {
     Point p;
     get_center(p, *bi);
-    if (clipper.inside_p(p))
+    if (clipper->inside_p(p))
     {
       // Add this element to the new mesh.
       Node::array_type onodes;

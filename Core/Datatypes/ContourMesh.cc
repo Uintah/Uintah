@@ -290,7 +290,7 @@ ContourMesh::size(ContourMesh::Cell::size_type &s) const
 
 
 MeshHandle
-ContourMesh::clip(Clipper &clipper)
+ContourMesh::clip(ClipperHandle clipper)
 {
   ContourMesh *clipped = scinew ContourMesh();
 
@@ -303,7 +303,7 @@ ContourMesh::clip(Clipper &clipper)
   {
     Point p;
     get_center(p, *bi);
-    if (clipper.inside_p(p))
+    if (clipper->inside_p(p))
     {
       // Add this element to the new mesh.
       Node::array_type onodes;
