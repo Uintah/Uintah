@@ -7,7 +7,6 @@
 #include <Core/Geometry/Transform.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Geom/GeomSticky.h>
-#include <values.h>
 #include <stdio.h>
 #include <iostream>
 using std::cerr;

@@ -7,6 +7,7 @@ SRCDIR   := Packages/Uintah/CCA/Components/PatchCombiner
 SRCS     += $(SRCDIR)/PatchCombiner.cc
 
 PSELIBS := \
+	Packages/Uintah/CCA/Ports \
 	Packages/Uintah/CCA/Components/Schedulers        \
 	Packages/Uintah/Core/DataArchive \
 	Packages/Uintah/Core/Parallel    \

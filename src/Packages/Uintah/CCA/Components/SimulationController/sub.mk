@@ -9,12 +9,14 @@ SRCS     += $(SRCDIR)/SimulationController.cc \
             $(SRCDIR)/SimpleSimulationController.cc
 
 PSELIBS := \
+	Packages/Uintah/Core/Disclosure  \
 	Packages/Uintah/Core/Parallel    \
 	Packages/Uintah/Core/ProblemSpec \
 	Packages/Uintah/Core/Exceptions  \
 	Packages/Uintah/Core/DataArchive \
 	Packages/Uintah/CCA/Ports        \
 	Packages/Uintah/Core/Grid        \
+	Packages/Uintah/CCA/Components/PatchCombiner   \
 	Core/OS       \
 	Core/Geometry \
 	Core/Thread   \

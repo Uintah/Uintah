@@ -32,7 +32,6 @@
 #include <TauProfilerForSCIRun.h>
 #include <iostream>
 #include <iomanip>
-#include <values.h>
 
 #include <sys/param.h>
 #include <list>

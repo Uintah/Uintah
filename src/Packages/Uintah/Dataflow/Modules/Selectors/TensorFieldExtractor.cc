@@ -29,7 +29,6 @@ LOG
 ****************************************/
 #include "TensorFieldExtractor.h"
 
-#include <Core/Util/NotFinished.h>
 #include <Packages/Uintah/Core/Disclosure/TypeDescription.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Geometry/IntVector.h>
