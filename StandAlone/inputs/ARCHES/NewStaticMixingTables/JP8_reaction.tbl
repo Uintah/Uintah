@@ -1,12 +1,8 @@
- #
- #
- #
- #
       2
-                 mix_frac                 heatloss
+                 F                 Hl
      49     27
      31
-                     Temp               mix_mol_wt                  density            heat_capacity            sensible_heat              equiv_ratio            soot_vol_frac                         CO          CH4         CH          H           H2          OH          H2O         H2O2        N2          O2          O           NO          NH3         HCN         C(GR)       CO2         ETHANE      PROPANE     HEPTANE     ACETYLENE   MCH         C6H5CH3     C6H6        I-C8H18     
+                     Temp               mix_mol_wt                  density            heat_capac            sensible_h              equiv_ratio            soot_vol_frac                         CO          CH4         CH          H           H2          OH          H2O         H2O2        N2          O2          O           NO          NH3         HCN         C(GR)       CO2         ETHANE      PROPANE     HEPTANE     ACETYLENE   MCH         C6H5CH3     C6H6        I-C8H18     
                         K          kg_mix/kmol_mix                    kg/m3                kj/kmol-K                       kJ                        -                        -                mass_frac
 
 
