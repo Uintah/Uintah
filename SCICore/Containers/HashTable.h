@@ -67,7 +67,7 @@ using std::string;
 inline int Hash(const string& s, int hash_size)
 {
   int val = 0;
-  for( int pos = 0; pos < s.length(); pos++ )
+  for( unsigned int pos = 0; pos < s.length(); pos++ )
     {
       val += s[ pos ];
     }
@@ -545,6 +545,9 @@ void Pio(Piostream& stream, HashTable<Key, Data>& t)
 
 //
 // $Log$
+// Revision 1.12  2000/07/27 20:12:16  yarden
+// replace int with unsigned int to make linux compiler happy
+//
 // Revision 1.11  2000/05/15 19:07:06  dav
 // added simple string hash function so I could make string hash tables.  feel free to modify.  but since we are using the stl map now, this might not make any difference.
 //
