@@ -350,7 +350,8 @@ MaskedLatVolMesh::update_count(MaskedLatVolMesh::Cell::index_type c,
   // ONLY from the presence of this cell, not because of the contribution 
   // of neighboring cells.
   const unsigned faces = (i0?0:1)+(i1?0:1)+(j0?0:1)+(j1?0:1)+(k0?0:1)+(k1?0:1);
-  unsigned nodes, edges;
+  unsigned int   nodes = 0;
+  unsigned int   edges = 0;
 
   if (faces == 6) {  
 	nodes = 8; 

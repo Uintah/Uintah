@@ -32,8 +32,10 @@
 #include <Core/Geometry/BBox.h>
 #include <Core/Geometry/Plane.h>
 #include <Core/Math/MusilRNG.h>
+
 #include <algorithm>
 
+#include <float.h> // For DBL_MAX
 
 namespace SCIRun {
 
@@ -938,7 +940,7 @@ PrismVolMesh::locate(Node::index_type &loc, const Point &p)
     get_nodes(nodes, ci);
 
     Point ptmp;
-    double mindist;
+    double mindist = DBL_MAX;
     for (int i=0; i<PRISM_NNODES; i++) {
       get_center(ptmp, nodes[i]);
       double dist = (p - ptmp).length2();
@@ -952,7 +954,7 @@ PrismVolMesh::locate(Node::index_type &loc, const Point &p)
   else
   {  // do exhaustive search.
     bool found_p = false;
-    double mindist;
+    double mindist = DBL_MAX;
     Node::iterator bi; begin(bi);
     Node::iterator ei; end(ei);
     while (bi != ei) {
@@ -975,7 +977,7 @@ bool
 PrismVolMesh::locate(Edge::index_type &edge, const Point &p)
 {
   bool found_p = false;
-  double mindist;
+  double mindist = DBL_MAX;
   Edge::iterator bi; begin(bi);
   Edge::iterator ei; end(ei);
   while (bi != ei) {
@@ -997,7 +999,7 @@ bool
 PrismVolMesh::locate(Face::index_type &face, const Point &p)
 {
   bool found_p = false;
-  double mindist;
+  double mindist = DBL_MAX;
   Face::iterator bi; begin(bi);
   Face::iterator ei; end(ei);
   while (bi != ei) {
