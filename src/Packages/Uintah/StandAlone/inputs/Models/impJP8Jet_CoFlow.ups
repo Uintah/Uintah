@@ -122,16 +122,50 @@
                               <value> 0.0</value>
         </BCType>
       </Face>
-      <Face side = "z-">
-        <BCType id = "all"   label = "Symmetric" var = "symmetry">
+      <Face side = "x-">
+        <BCType id = "0" label = "Pressure"      var = "Neumann">
+                              <value> 0.0   </value>
         </BCType>
-      </Face>             
+        <BCType id = "all" label = "Velocity"    var = "Neumann">
+                              <value> [0.,0.,0.] </value>
+        </BCType>
+        <BCType id = "all" label = "Temperature" var = "Neumann">
+                              <value> 0.0  </value>
+        </BCType>
+        <BCType id = "all" label = "Density"     var = "Neumann">
+                              <value> 0.0  </value>
+        </BCType>
+        <BCType id = "all" label = "scalar-f"    var = "Neumann">
+                              <value> 0.0</value>
+        </BCType>
+        <BCType id = "all" label = "cumulativeEnergyReleased" var = "Neumann">
+                              <value> 0.0</value>
+        </BCType>
+      </Face>  
       <Face side = "z+">
-        <BCType id = "all"   label = "Symmetric" var = "symmetry">
+        <BCType id = "0" label = "Pressure"       var = "Neumann">
+                              <value> 0.0   </value>
+        </BCType>
+        <BCType id = "all" label = "Velocity"     var = "Neumann">
+                              <value> [0.,0.,0.] </value>
+        </BCType>
+        <BCType id = "all" label = "Temperature"  var = "Neumann">
+                              <value> 0.0  </value>
+        </BCType>
+        <BCType id = "all" label = "Density"      var = "Neumann">
+                              <value> 0.0  </value>
+        </BCType>
+        <BCType id = "all" label = "scalar-f"     var = "Neumann">
+                              <value> 0.0</value>
+        </BCType>
+        <BCType id = "all" label = "cumulativeEnergyReleased" var = "Neumann">
+                              <value> 0.0</value>
         </BCType>
       </Face>
     </BoundaryConditions>
 
+<!--
+        Don't forget to change z- z+ boundary conditions
        <Level>
            <Box label = "2">
               <lower>        [-3,0.0,-0.03]     </lower>
@@ -141,18 +175,17 @@
               <resolution>   [100,100,1]     </resolution>
            </Box>
        </Level>
-<!--
-        Don't forget to change z- z+ boundary conditions
+--> 
+
         <Level>
         <Box label = "3d">
           <lower>         [-3, 0, -3]   </lower>
           <upper>         [ 3, 6,  3]   </upper>
           <extraCells>    [1,1,1]         </extraCells>
-          <patches>       [5,8,5]       </patches>
-          <resolution>    [200,200,200] </resolution>
+          <patches>       [8,4,3]       </patches>
+          <resolution>    [160,160,160] </resolution>
         </Box>
        </Level>
---> 
     </Grid>
    
     <!--____________________________________________________________________-->
