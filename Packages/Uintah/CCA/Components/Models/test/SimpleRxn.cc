@@ -187,6 +187,9 @@ if (!oldStyleAdvect.active()){
   //  Read in probe locations for the scalar field
   ProblemSpecP probe_ps = child->findBlock("probePoints");
   if (probe_ps) {
+    probe_ps->require("probeSamplingFreq", d_probeFreq);
+    d_oldProbeDumpTime = -1.0/d_probeFreq;
+     
     Vector location = Vector(0,0,0);
     map<string,string> attr;                    
     for (ProblemSpecP prob_spec = probe_ps->findBlock("location"); prob_spec != 0; 
@@ -240,7 +243,6 @@ void SimpleRxn::initialize(const ProcessorGroup*,
     CCVariable<double>  f, cv, gamma, thermalCond, viscosity, rho_CC, sp_vol;
     CCVariable<double> press, rho_micro;
     constCCVariable<double> Temp;
-    Ghost::GhostType  gn = Ghost::None;
     new_dw->allocateAndPut(f, d_scalar->scalar_CCLabel, indx, patch);
     new_dw->getModifiable(rho_CC,      lb->rho_CCLabel,       indx,patch);
     new_dw->getModifiable(sp_vol,      lb->sp_vol_CCLabel,    indx,patch);
@@ -313,9 +315,9 @@ void SimpleRxn::initialize(const ProcessorGroup*,
       
         for (unsigned int i =0 ; i < d_probePts.size(); i++) {
           if(patch->findCell(Point(d_probePts[i]),cell) ) {
-            string filename = udaDir + "/" + d_probePtsNames[i].c_str();
+            string filename=udaDir + "/" + d_probePtsNames[i].c_str() + ".dat";
             fp = fopen(filename.c_str(), "a");
-            fprintf(fp, "#Time Scalar Field at [%e, %e, %e], at cell [%i, %i, %i]\n", 
+            fprintf(fp, "%Time Scalar Field at [%e, %e, %e], at cell [%i, %i, %i]\n", 
                     d_probePts[i].x(),d_probePts[i].y(), d_probePts[i].x(),
                     cell.x(), cell.y(), cell.z() );
             fclose(fp);
@@ -562,24 +564,28 @@ void SimpleRxn::momentumAndEnergyExchange(const ProcessorGroup*,
                               placeHolder, placeHolder,  f_old,
                               f_src, diff_coeff, delT);
     }
-
     //__________________________________
     //  dump out the probe points
     if (d_usingProbePts){
-      FILE *fp;
-      string udaDir = d_dataArchiver->getOutputLocation();
       double time = d_dataArchiver->getCurrentTime();
-      IntVector cell_indx;
+      double nextDumpTime = d_oldProbeDumpTime + 1.0/d_probeFreq;
       
-      for (unsigned int i =0 ; i < d_probePts.size(); i++) {
-         if(patch->findCell(Point(d_probePts[i]),cell_indx) ) {
-           string filename = udaDir + "/" + d_probePtsNames[i].c_str();
-           fp = fopen(filename.c_str(), "a");
-           fprintf(fp, "%16.15E  %16.15E\n",time, f_old[cell_indx]);
-           fclose(fp);
-        }
-      }
-    } 
+      if ( time >= nextDumpTime) {
+        d_oldProbeDumpTime = time;
+        FILE *fp;
+        string udaDir = d_dataArchiver->getOutputLocation();
+        IntVector cell_indx;
+
+        for (unsigned int i =0 ; i < d_probePts.size(); i++) {
+           if(patch->findCell(Point(d_probePts[i]),cell_indx) ) {
+             string filename=udaDir + "/" + d_probePtsNames[i].c_str() + ".dat";
+             fp = fopen(filename.c_str(), "a");
+             fprintf(fp, "%16.15E  %16.15E\n",time, f_old[cell_indx]);
+             fclose(fp);
+          }
+        }  // loop over probe pts
+      }  // if(time to dump)
+    } // if(probePts) 
   }
 }
 //__________________________________      
