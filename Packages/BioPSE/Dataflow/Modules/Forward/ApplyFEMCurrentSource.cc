@@ -35,6 +35,7 @@
 #include <Dataflow/Ports/MatrixPort.h>
 #include <Dataflow/Ports/FieldPort.h>
 #include <Core/Malloc/Allocator.h>
+#include <Core/Math/MinMax.h>
 #include <Core/Math/Trig.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <iostream>
@@ -50,6 +51,7 @@ class ApplyFEMCurrentSource : public Module {
   //! Input ports
   FieldIPort*   iportField_;
   FieldIPort*   iportSource_;
+  FieldIPort*   iportInterp_;
   MatrixIPort*  iportRhs_;
 
   //! Output ports
@@ -60,6 +62,10 @@ class ApplyFEMCurrentSource : public Module {
   TetVolMesh::Cell::index_type loc;
 
 public:
+  GuiInt sourceNodeTCL_;
+  GuiInt sinkNodeTCL_;
+  GuiString modeTCL_; //"dipole" or "electrodes" (if electrodes use interp map)
+
   //! Constructor/Destructor
   ApplyFEMCurrentSource(const string& id);
   virtual ~ApplyFEMCurrentSource();
@@ -74,7 +80,10 @@ extern "C" Module* make_ApplyFEMCurrentSource(const string& id)
 }
 
 ApplyFEMCurrentSource::ApplyFEMCurrentSource(const string& id)
-  : Module("ApplyFEMCurrentSource", id, Filter, "Forward", "BioPSE") 
+  : Module("ApplyFEMCurrentSource", id, Filter, "Forward", "BioPSE"),
+    sourceNodeTCL_("sourceNodeTCL", id, this),
+    sinkNodeTCL_("sinkNodeTCL", id, this),
+    modeTCL_("modeTCL", id, this)
 {
 }
 
@@ -87,6 +96,7 @@ void ApplyFEMCurrentSource::execute()
   iportField_ = (FieldIPort *)get_iport("Mesh");
   iportSource_ = (FieldIPort *)get_iport("Dipole Sources");
   iportRhs_ = (MatrixIPort *)get_iport("Input RHS");
+  iportInterp_ = (FieldIPort *)get_iport("Interpolant");
   oportRhs_ = (MatrixOPort *)get_oport("Output RHS");
   oportWeights_ = (MatrixOPort *)get_oport("Output Weights");
   
@@ -111,22 +121,6 @@ void ApplyFEMCurrentSource::execute()
     hMesh = hCondField->get_typed_mesh();
   }
   
-  FieldHandle hSource;
-  if (!iportSource_->get(hSource) || !hSource.get_rep()) {
-    msgStream_ << "Cann't get handle to source field. Returning..." << endl;
-    return;
-  }
-  
-  LockingHandle<PointCloud<Vector> > hDipField;
-  
-  if (hSource->get_type_name(0)!="PointCloud" || hSource->get_type_name(1)!="Vector"){
-    msgStream_ << "Supplied field is not of type PointCloud<Vector>. Returning..." << endl;
-    return;
-  }
-  else {
-    hDipField = dynamic_cast<PointCloud<Vector>*> (hSource.get_rep());
-  }
-  
   MatrixHandle  hRhsIn;
   ColumnMatrix* rhsIn;
   
@@ -140,62 +134,105 @@ void ApplyFEMCurrentSource::execute()
       (*rhs)[i]=(*rhsIn)[i];
   }
   else{
-    msgStream_ << "The supplied RHS doesn't correspond to the mesh in size. Creating own one..." << endl;
+ //   msgStream_ << "The supplied RHS doesn't correspond to the mesh in size. Creating own one..." << endl;
     rhs->zero();
   }
   
-
-  //! Computing contributions of dipoles to RHS
-  PointCloudMesh::Node::iterator ii;
-  Array1<double> weights;
-  for (ii=hDipField->get_typed_mesh()->node_begin(); ii!=hDipField->get_typed_mesh()->node_end(); ++ii) {
+  if (modeTCL_.get() == "dipole") {
+    FieldHandle hSource;
+    if (!iportSource_->get(hSource) || !hSource.get_rep()) {
+      msgStream_ << "Can 't get handle to source field. Returning..." << endl;
+      return;
+    }
+  
+    LockingHandle<PointCloud<Vector> > hDipField;
     
-    Vector dir = hDipField->value(*ii);
-    Point p;
-    hDipField->get_typed_mesh()->get_point(p, *ii);
-    
-    if (hMesh->locate(loc, p)) {
-      if (fabs(dir.x()) > 0.000001) {
-	weights.add(loc*3);
-	weights.add(dir.x());
-      } else if (fabs(dir.y()) > 0.000001) {
-	weights.add(loc*3+1);
-	weights.add(dir.y());
-      } else if (fabs(dir.z()) > 0.000001) {
-	weights.add(loc*3+2);
-	weights.add(dir.z());
-      }
-
-      double s1, s2, s3, s4;
-      Vector g1, g2, g3, g4;
-      hMesh->get_gradient_basis(loc, g1, g2, g3, g4);
-      
-      s1=Dot(g1,dir);
-      s2=Dot(g2,dir);
-      s3=Dot(g3,dir);
-      s4=Dot(g4,dir);
-      
-      TetVolMesh::Node::array_type cell_nodes;
-      hMesh->get_nodes(cell_nodes, loc);
-      (*rhs)[cell_nodes[0]]+=s1;
-      (*rhs)[cell_nodes[1]]+=s2;
-      (*rhs)[cell_nodes[2]]+=s3;
-      (*rhs)[cell_nodes[3]]+=s4;
+    if (hSource->get_type_name(0)!="PointCloud" || hSource->get_type_name(1)!="Vector"){
+      msgStream_ << "Supplied field is not of type PointCloud<Vector>. Returning..." << endl;
+      return;
     }
     else {
-      loc=0;
-      dir=Vector(0,0,0);
-      msgStream_ << "Dipole: "<< p <<" not located within mesh!\n";
+      hDipField = dynamic_cast<PointCloud<Vector>*> (hSource.get_rep());
     }
-    
-    gen_=hSource->generation;
-  }
-  ColumnMatrix* w = scinew ColumnMatrix(weights.size());
-  for (int i=0; i<weights.size(); i++) (*w)[i]=weights[i];
   
+    //! Computing contributions of dipoles to RHS
+    PointCloudMesh::Node::iterator ii;
+    Array1<double> weights;
+    for (ii=hDipField->get_typed_mesh()->node_begin(); 
+	 ii!=hDipField->get_typed_mesh()->node_end(); ++ii) {
+      
+      Vector dir = hDipField->value(*ii);
+      Point p;
+      hDipField->get_typed_mesh()->get_point(p, *ii);
+      
+      if (hMesh->locate(loc, p)) {
+	msgStream_ << "Source p="<<p<<" dir="<<dir<<" found in elem "<<loc<<endl;
+	if (fabs(dir.x()) > 0.000001) {
+	  weights.add(loc*3);
+	  weights.add(dir.x());
+	}
+	if (fabs(dir.y()) > 0.000001) {
+	  weights.add(loc*3+1);
+	  weights.add(dir.y());
+	}
+	if (fabs(dir.z()) > 0.000001) {
+	  weights.add(loc*3+2);
+	  weights.add(dir.z());
+	}
+	
+	double s1, s2, s3, s4;
+	Vector g1, g2, g3, g4;
+	hMesh->get_gradient_basis(loc, g1, g2, g3, g4);
+	
+	s1=Dot(g1,dir);
+	s2=Dot(g2,dir);
+	s3=Dot(g3,dir);
+	s4=Dot(g4,dir);
+	
+	TetVolMesh::Node::array_type cell_nodes;
+	hMesh->get_nodes(cell_nodes, loc);
+	(*rhs)[cell_nodes[0]]+=s1;
+	(*rhs)[cell_nodes[1]]+=s2;
+	(*rhs)[cell_nodes[2]]+=s3;
+	(*rhs)[cell_nodes[3]]+=s4;
+      } else {
+	msgStream_ << "Dipole: "<< p <<" not located within mesh!"<<endl;
+      }
+    }
+    gen_=hSource->generation;
+    ColumnMatrix* w = scinew ColumnMatrix(weights.size());
+    for (int i=0; i<weights.size(); i++) (*w)[i]=weights[i];
+    oportWeights_->send(MatrixHandle(w));
+  } else {  // electrode sources
+    FieldHandle hInterp;
+    iportInterp_->get(hInterp);
+    int sourceNode = Max(sourceNodeTCL_.get(), 0);
+    int sinkNode = Max(sinkNodeTCL_.get(), 0);
+      
+    if (hInterp.get_rep()) {
+      PointCloud<vector<pair<TetVolMesh::Node::index_type, double> > >* interp = dynamic_cast<PointCloud<vector<pair<TetVolMesh::Node::index_type, double> > > *>(hInterp.get_rep());
+      if (!interp) {
+	cerr << "Input interp field wasn't interp'ing PointCloud from a TetVolMesh::Node\n";
+	return;
+      } else if (sourceNode < interp->fdata().size() &&
+		 sinkNode < interp->fdata().size()) {
+	sourceNode = interp->fdata()[sourceNode].begin()->first;
+	sinkNode = interp->fdata()[sinkNode].begin()->first;
+      } else {
+	cerr << "SourceNode or SinkNode was out of interp range.\n";
+	return;
+      }
+    }
+    if (sourceNode >= hMesh->nodes_size() ||
+	sinkNode >= hMesh->nodes_size()) {
+      cerr << "SourceNode or SinkNode was out of mesh range.\n";
+      return;
+    }
+    cerr << "ApplyFEMCurrentSource: sourceNode="<<sourceNode<<" sinkNode="<<sinkNode<<"\n";
+    (*rhs)[sourceNode] += -1;
+    (*rhs)[sinkNode] += 1;
+  }
   //! Sending result
   oportRhs_->send(MatrixHandle(rhs)); 
-  oportWeights_->send(MatrixHandle(w));
 }
-
 } // End namespace BioPSE
