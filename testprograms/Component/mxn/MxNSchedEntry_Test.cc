@@ -16,11 +16,11 @@ int main()
   MxNScheduleEntry* mxnentry1;
   
   //Create an MxNScheduleEntry
-  mxnentry1 = new MxNScheduleEntry("K",caller);
+  mxnentry1 = new MxNScheduleEntry("K",callee);
 
   //isCaller() & isCallee
-  assert(mxnentry1->isCaller() == true);
-  assert(mxnentry1->isCallee() == false);
+  assert(mxnentry1->isCaller() == false);
+  assert(mxnentry1->isCallee() == true);
 
   //Create a couple of ArrayReps and add them
   Index** dr1 = new Index* [1];

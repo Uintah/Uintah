@@ -13,13 +13,13 @@ using namespace std;
 int main()
 {
 
-  MxNScheduler* mxn1;
+  //MxNScheduler* mxn1;
   
   //Create an MxNScheduler
   
 
 
-  delete mxn1;
+  //delete mxn1;
 }
 
 
