@@ -12,10 +12,13 @@
 #include <Packages/Uintah/CCA/Components/Arches/Mixing/Stream.h>
 #include <Packages/Uintah/CCA/Components/Arches/Mixing/InletStream.h>
 #include <Packages/Uintah/CCA/Components/Arches/ArchesMaterial.h>
+#include <Packages/Uintah/CCA/Components/Arches/CellInformationP.h>
+#include <Packages/Uintah/CCA/Components/Arches/CellInformation.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Packages/Uintah/CCA/Ports/Scheduler.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
 #include <Packages/Uintah/Core/Grid/Grid.h>
+#include <Packages/Uintah/Core/Grid/PerPatch.h>
 #include <Packages/Uintah/Core/Grid/Level.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Packages/Uintah/Core/Grid/Task.h>
@@ -43,6 +46,9 @@ Properties::Properties(const ArchesLabel* label, const MPMArchesLabel* MAlb,
 {
   d_flamelet = false;
   d_bc = 0;
+#ifdef PetscFilter
+  d_filter = 0;
+#endif
   d_mixingModel = 0;
 }
 
@@ -1869,32 +1875,58 @@ Properties::computeDenRefArrayInterm(const ProcessorGroup*,
 //****************************************************************************
 void 
 Properties::sched_averageRKProps(SchedulerP& sched, const PatchSet* patches,
-				 const MaterialSet* matls)
+				 const MaterialSet* matls,
+				 const int Runge_Kutta_current_step,
+				 const bool Runge_Kutta_last_step)
 {
   Task* tsk = scinew Task("Properties::averageRKProps",
 			  this,
-			  &Properties::averageRKProps);
+			  &Properties::averageRKProps,
+			  Runge_Kutta_current_step, Runge_Kutta_last_step);
 
   tsk->requires(Task::NewDW, d_lab->d_densityINLabel,
 		Ghost::None, Arches::ZEROGHOSTCELLS);
-  tsk->requires(Task::NewDW, d_lab->d_densityPredLabel,
-		Ghost::None, Arches::ZEROGHOSTCELLS);
-  tsk->requires(Task::NewDW, d_lab->d_densityCPLabel,
-		Ghost::None, Arches::ZEROGHOSTCELLS);
   tsk->requires(Task::NewDW, d_lab->d_scalarOUTBCLabel, 
 		Ghost::None, Arches::ZEROGHOSTCELLS);
-  tsk->modifies(d_lab->d_scalarSPLabel);
-
-  if (d_mixingModel->getNumRxnVars()) {
+  if (d_mixingModel->getNumRxnVars())
     tsk->requires(Task::NewDW, d_lab->d_reactscalarOUTBCLabel,
 		  Ghost::None, Arches::ZEROGHOSTCELLS);
-    tsk->modifies(d_lab->d_reactscalarSPLabel);
-  }
-
-  if (!(d_mixingModel->isAdiabatic())) {
+  if (!(d_mixingModel->isAdiabatic()))
     tsk->requires(Task::NewDW, d_lab->d_enthalpyOUTBCLabel,
 		  Ghost::None, Arches::ZEROGHOSTCELLS);
-    tsk->modifies(d_lab->d_enthalpySPLabel);
+
+  switch (Runge_Kutta_current_step) {
+  case Arches::SECOND:
+    tsk->requires(Task::NewDW, d_lab->d_densityPredLabel,
+		  Ghost::None, Arches::ZEROGHOSTCELLS);
+  break;
+
+  case Arches::THIRD:
+    tsk->requires(Task::NewDW, d_lab->d_densityIntermLabel,
+		  Ghost::None, Arches::ZEROGHOSTCELLS);
+  break;
+
+  default:
+    throw InvalidValue("Invalid Runge-Kutta step in averageRKProps");
+  }
+
+  if (Runge_Kutta_last_step) {
+    tsk->requires(Task::NewDW, d_lab->d_densityCPLabel,
+		  Ghost::None, Arches::ZEROGHOSTCELLS);
+    tsk->modifies(d_lab->d_scalarSPLabel);
+    if (d_mixingModel->getNumRxnVars())
+      tsk->modifies(d_lab->d_reactscalarSPLabel);
+    if (!(d_mixingModel->isAdiabatic()))
+      tsk->modifies(d_lab->d_enthalpySPLabel);
+  }
+  else {
+    tsk->requires(Task::NewDW, d_lab->d_densityIntermLabel,
+		  Ghost::None, Arches::ZEROGHOSTCELLS);
+    tsk->modifies(d_lab->d_scalarIntermLabel);
+    if (d_mixingModel->getNumRxnVars())
+      tsk->modifies(d_lab->d_reactscalarIntermLabel);
+    if (!(d_mixingModel->isAdiabatic()))
+      tsk->modifies(d_lab->d_enthalpyIntermLabel);
   }
 
   sched->addTask(tsk, patches, matls);
@@ -1907,7 +1939,9 @@ Properties::averageRKProps(const ProcessorGroup*,
 			   const PatchSubset* patches,
 			   const MaterialSubset*,
 			   DataWarehouse*,
-			   DataWarehouse* new_dw)
+			   DataWarehouse* new_dw,
+			   const int Runge_Kutta_current_step,
+			   const bool Runge_Kutta_last_step)
 {
   for (int p = 0; p < patches->size(); p++) {
 
@@ -1928,50 +1962,121 @@ Properties::averageRKProps(const ProcessorGroup*,
 
     new_dw->get(old_density, d_lab->d_densityINLabel, 
 		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-    new_dw->get(rho1_density, d_lab->d_densityPredLabel, 
-		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-    new_dw->get(new_density, d_lab->d_densityCPLabel, 
-		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-
     for (int ii = 0; ii < d_numMixingVars; ii++) {
       new_dw->get(old_scalar[ii], d_lab->d_scalarOUTBCLabel, 
 		  matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-      new_dw->getModifiable(new_scalar[ii], d_lab->d_scalarSPLabel, 
-		            matlIndex, patch);
     }
-
     if (d_mixingModel->getNumRxnVars() > 0) {
       for (int ii = 0; ii < d_mixingModel->getNumRxnVars(); ii++) {
 	new_dw->get(old_reactScalar[ii], d_lab->d_reactscalarOUTBCLabel, 
 		    matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-	new_dw->getModifiable(new_reactScalar[ii], d_lab->d_reactscalarSPLabel, 
-		    matlIndex, patch);
       }
     }
-
     if (!(d_mixingModel->isAdiabatic())) {
       new_dw->get(old_enthalpy, d_lab->d_enthalpyOUTBCLabel, 
 		  matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-      new_dw->getModifiable(new_enthalpy, d_lab->d_enthalpySPLabel, 
-		  matlIndex, patch);
     }
 
-    IntVector indexLow = patch->getCellFORTLowIndex();
-    IntVector indexHigh = patch->getCellFORTHighIndex();
+    switch (Runge_Kutta_current_step) {
+    case Arches::SECOND:
+      new_dw->get(rho1_density, d_lab->d_densityPredLabel, 
+		  matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+    break;
 
-    for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
-      for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
-	for (int colX = indexLow.x(); colX <= indexHigh.x(); colX ++) {
+    case Arches::THIRD:
+      new_dw->get(rho1_density, d_lab->d_densityIntermLabel, 
+		  matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+    break;
+
+    default:
+      throw InvalidValue("Invalid Runge-Kutta step in averageRKProps");
+    }
+
+    if (Runge_Kutta_last_step) {
+      new_dw->get(new_density, d_lab->d_densityCPLabel, 
+		  matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+      for (int ii = 0; ii < d_numMixingVars; ii++) {
+        new_dw->getModifiable(new_scalar[ii], d_lab->d_scalarSPLabel, 
+		              matlIndex, patch);
+      }
+      if (d_mixingModel->getNumRxnVars() > 0) {
+        for (int ii = 0; ii < d_mixingModel->getNumRxnVars(); ii++) {
+	  new_dw->getModifiable(new_reactScalar[ii],d_lab->d_reactscalarSPLabel,
+		    		matlIndex, patch);
+        }
+      }
+      if (!(d_mixingModel->isAdiabatic())) {
+        new_dw->getModifiable(new_enthalpy, d_lab->d_enthalpySPLabel, 
+			      matlIndex, patch);
+      }
+    }
+    else {
+      new_dw->get(new_density, d_lab->d_densityIntermLabel, 
+		  matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+      for (int ii = 0; ii < d_numMixingVars; ii++) {
+        new_dw->getModifiable(new_scalar[ii], d_lab->d_scalarIntermLabel, 
+		              matlIndex, patch);
+      }
+      if (d_mixingModel->getNumRxnVars() > 0) {
+        for (int ii = 0; ii < d_mixingModel->getNumRxnVars(); ii++) {
+	  new_dw->getModifiable(new_reactScalar[ii],
+				d_lab->d_reactscalarIntermLabel,
+		    		matlIndex, patch);
+        }
+      }
+      if (!(d_mixingModel->isAdiabatic())) {
+        new_dw->getModifiable(new_enthalpy, d_lab->d_enthalpyIntermLabel, 
+			      matlIndex, patch);
+      }
+    }
+
+    double factor_old, factor_new, factor_divide;
+    switch (Runge_Kutta_current_step) {
+    case Arches::SECOND:
+      if (Runge_Kutta_last_step) {
+	factor_old = 1.0;
+	factor_new = 1.0;
+	factor_divide = 2.0;
+      }
+      else {
+	factor_old = 3.0;
+	factor_new = 1.0;
+	factor_divide = 4.0;
+      }
+    break;
+
+    case Arches::THIRD:
+	factor_old = 1.0;
+	factor_new = 2.0;
+	factor_divide = 3.0;
+    break;
+
+    default:
+      throw InvalidValue("Invalid Runge-Kutta step in averageRKProps");
+    }
+
+    IntVector indexLow = patch->getCellLowIndex();
+    IntVector indexHigh = patch->getCellHighIndex();
+
+    for (int colZ = indexLow.z(); colZ < indexHigh.z(); colZ ++) {
+      for (int colY = indexLow.y(); colY < indexHigh.y(); colY ++) {
+	for (int colX = indexLow.x(); colX < indexHigh.x(); colX ++) {
 	  IntVector currCell(colX, colY, colZ);
           
           double predicted_density;
-          predicted_density = (old_density[currCell] +
-			       new_density[currCell])/2.0;
+//          predicted_density = (old_density[currCell] +
+//			       new_density[currCell])/2.0;
+//          predicted_density = rho1_density[currCell];
+	  if (old_density[currCell] > 0.0)
+            predicted_density = 1.0/((factor_old/old_density[currCell] +
+			       factor_new/new_density[currCell])/factor_divide);
+	  else
+	    predicted_density = new_density[currCell];
 
 	  for (int ii = 0; ii < d_numMixingVars; ii++ ) {
-	    (new_scalar[ii])[currCell] = (old_density[currCell]*
-		(old_scalar[ii])[currCell] + rho1_density[currCell]*
-		(new_scalar[ii])[currCell])/(2.0*predicted_density);
+	    (new_scalar[ii])[currCell] = (factor_old*old_density[currCell]*
+		(old_scalar[ii])[currCell] + factor_new*rho1_density[currCell]*
+		(new_scalar[ii])[currCell])/(factor_divide*predicted_density);
             if ((new_scalar[ii])[currCell] > 1.0) 
 		(new_scalar[ii])[currCell] = 1.0;
             else if ((new_scalar[ii])[currCell] < 0.0)
@@ -1980,9 +2085,11 @@ Properties::averageRKProps(const ProcessorGroup*,
 
 	  if (d_mixingModel->getNumRxnVars() > 0) {
 	    for (int ii = 0; ii < d_mixingModel->getNumRxnVars(); ii++ ) {
-	      (new_reactScalar[ii])[currCell] = (old_density[currCell]*
-		(old_reactScalar[ii])[currCell] + rho1_density[currCell]*
-		(new_reactScalar[ii])[currCell])/(2.0*predicted_density);
+	      (new_reactScalar[ii])[currCell] = (factor_old *
+		old_density[currCell]*(old_reactScalar[ii])[currCell] +
+		factor_new*rho1_density[currCell]*
+		(new_reactScalar[ii])[currCell])/
+		(factor_divide*predicted_density);
             if ((new_reactScalar[ii])[currCell] > 1.0) 
 		(new_reactScalar[ii])[currCell] = 1.0;
             else if ((new_reactScalar[ii])[currCell] < 0.0)
@@ -1991,9 +2098,9 @@ Properties::averageRKProps(const ProcessorGroup*,
 	  }
 
 	  if (!d_mixingModel->isAdiabatic())
-	    new_enthalpy[currCell] = (old_density[currCell]*
-		old_enthalpy[currCell] + rho1_density[currCell]*
-		new_enthalpy[currCell])/(2.0*predicted_density);
+	    new_enthalpy[currCell] = (factor_old*old_density[currCell]*
+		old_enthalpy[currCell] + factor_new*rho1_density[currCell]*
+		new_enthalpy[currCell])/(factor_divide*predicted_density);
 
 	}
       }
@@ -2006,11 +2113,14 @@ Properties::averageRKProps(const ProcessorGroup*,
 //****************************************************************************
 void 
 Properties::sched_reComputeRKProps(SchedulerP& sched, const PatchSet* patches,
-				 const MaterialSet* matls)
+				   const MaterialSet* matls,
+				   const int Runge_Kutta_current_step,
+				   const bool Runge_Kutta_last_step)
 {
   Task* tsk = scinew Task("Properties::ReComputeRKProps",
 			  this,
-			  &Properties::reComputeRKProps);
+			  &Properties::reComputeRKProps,
+			  Runge_Kutta_current_step, Runge_Kutta_last_step);
 
   // requires scalars
   tsk->requires(Task::NewDW, d_lab->d_densityINLabel,
@@ -2022,6 +2132,9 @@ Properties::sched_reComputeRKProps(SchedulerP& sched, const PatchSet* patches,
     //    tsk->requires(Task::NewDW, d_lab->d_densityMicroINLabel, 
     //		  Ghost::None, Arches::ZEROGHOSTCELLS);
   }
+// use densityPredLabel to store rho_2 for now
+  tsk->modifies(d_lab->d_densityPredLabel);
+  if (Runge_Kutta_last_step) {
   tsk->requires(Task::NewDW, d_lab->d_scalarSPLabel, Ghost::None,
 		Arches::ZEROGHOSTCELLS);
 
@@ -2040,8 +2153,6 @@ Properties::sched_reComputeRKProps(SchedulerP& sched, const PatchSet* patches,
 
 //  tsk->modifies(d_lab->d_refDensity_label);
   tsk->modifies(d_lab->d_densityCPLabel);
-// use densityPredLabel to store rho_2 for now
-  tsk->modifies(d_lab->d_densityPredLabel);
   tsk->modifies(d_lab->d_drhodfCPLabel);
   if (d_reactingFlow) {
     tsk->modifies(d_lab->d_tempINLabel);
@@ -2055,6 +2166,41 @@ Properties::sched_reComputeRKProps(SchedulerP& sched, const PatchSet* patches,
     tsk->modifies(d_lab->d_absorpINLabel);
     tsk->modifies(d_lab->d_sootFVINLabel);
   }
+  }
+  else {
+  tsk->requires(Task::NewDW, d_lab->d_scalarIntermLabel, Ghost::None,
+		Arches::ZEROGHOSTCELLS);
+
+  if (d_numMixStatVars > 0) {
+    tsk->requires(Task::NewDW, d_lab->d_scalarVarSPLabel, Ghost::None,
+		Arches::ZEROGHOSTCELLS);
+  }
+
+  if (d_mixingModel->getNumRxnVars())
+    tsk->requires(Task::NewDW, d_lab->d_reactscalarIntermLabel, Ghost::None,
+		  Arches::ZEROGHOSTCELLS);
+
+  if (!(d_mixingModel->isAdiabatic()))
+    tsk->requires(Task::NewDW, d_lab->d_enthalpyIntermLabel, Ghost::None,
+		  Arches::ZEROGHOSTCELLS);
+
+//  tsk->modifies(d_lab->d_refDensity_label);
+  tsk->modifies(d_lab->d_densityIntermLabel);
+  tsk->modifies(d_lab->d_drhodfIntermLabel);
+  if (d_reactingFlow) {
+    tsk->modifies(d_lab->d_tempINIntermLabel);
+    tsk->modifies(d_lab->d_co2INIntermLabel);
+    tsk->modifies(d_lab->d_h2oINIntermLabel);
+    tsk->modifies(d_lab->d_enthalpyRXNIntermLabel);
+    if (d_mixingModel->getNumRxnVars())
+      tsk->modifies(d_lab->d_reactscalarSRCINIntermLabel);
+  }
+  if (d_radiationCalc) {
+    tsk->modifies(d_lab->d_absorpINIntermLabel);
+    tsk->modifies(d_lab->d_sootFVINIntermLabel);
+  }
+  }
+
   if (d_MAlab) 
     tsk->modifies(d_lab->d_densityMicroLabel);
 
@@ -2074,7 +2220,9 @@ Properties::reComputeRKProps(const ProcessorGroup*,
 			   const PatchSubset* patches,
 			   const MaterialSubset*,
 			   DataWarehouse*,
-			   DataWarehouse* new_dw)
+			   DataWarehouse* new_dw,
+			   const int Runge_Kutta_current_step,
+			   const bool Runge_Kutta_last_step)
 {
   for (int p = 0; p < patches->size(); p++) {
 
@@ -2096,40 +2244,117 @@ Properties::reComputeRKProps(const ProcessorGroup*,
     CCVariable<double> enthalpy;
     CCVariable<double> reactscalarSRC;
     CCVariable<double> drhodf;
+    CCVariable<double> absorption;
+    CCVariable<double> sootFV;
+    StaticArray<constCCVariable<double> > scalar(d_numMixingVars);
+    constCCVariable<double> enthalpy_comp;
+    CCVariable<double> denMicro;
+    //    CCVariable<double> denMicro_old;
+    StaticArray<constCCVariable<double> > scalarVar(d_numMixStatVars);
+    StaticArray<constCCVariable<double> > reactScalar(d_mixingModel->getNumRxnVars());
+    if (Runge_Kutta_last_step) {
     if (d_reactingFlow) {
-      new_dw->getModifiable(temperature, d_lab->d_tempINLabel, matlIndex, patch);
+      new_dw->getModifiable(temperature, d_lab->d_tempINLabel,
+			    matlIndex, patch);
       new_dw->getModifiable(co2, d_lab->d_co2INLabel, matlIndex, patch);
       new_dw->getModifiable(h2o, d_lab->d_h2oINLabel, matlIndex, patch);
-      new_dw->getModifiable(enthalpy, d_lab->d_enthalpyRXNLabel, matlIndex, patch);
+      new_dw->getModifiable(enthalpy, d_lab->d_enthalpyRXNLabel,
+			    matlIndex, patch);
       temperature.initialize(0.0);
       co2.initialize(0.0);
       h2o.initialize(0.0);
       enthalpy.initialize(0.0);
       if (d_mixingModel->getNumRxnVars()) {
 	new_dw->getModifiable(reactscalarSRC, d_lab->d_reactscalarSRCINLabel,
-			 matlIndex, patch);
+			      matlIndex, patch);
 	reactscalarSRC.initialize(0.0);
       }
     }
-    CCVariable<double> absorption;
-    CCVariable<double> sootFV;
     if (d_radiationCalc) {
-      new_dw->getModifiable(absorption, d_lab->d_absorpINLabel, matlIndex, patch);
+      new_dw->getModifiable(absorption, d_lab->d_absorpINLabel,
+			    matlIndex, patch);
       new_dw->getModifiable(sootFV, d_lab->d_sootFVINLabel, matlIndex, patch);
       absorption.initialize(0.0);
       sootFV.initialize(0.0);
     }
-    StaticArray<constCCVariable<double> > scalar(d_numMixingVars);
-
-    constCCVariable<double> enthalpy_comp;
-    CCVariable<double> denMicro;
-    //    CCVariable<double> denMicro_old;
 
     new_dw->getModifiable(drhodf, d_lab->d_drhodfCPLabel, matlIndex, patch);
     drhodf.initialize(0.0);
 
-    new_dw->getModifiable(new_density, d_lab->d_densityCPLabel, matlIndex, patch);
-    new_dw->getModifiable(temp_density, d_lab->d_densityPredLabel, matlIndex, patch);
+    new_dw->getModifiable(new_density, d_lab->d_densityCPLabel,
+			  matlIndex, patch);
+
+    for (int ii = 0; ii < d_numMixingVars; ii++)
+      new_dw->get(scalar[ii], d_lab->d_scalarSPLabel, 
+		  matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+    if (d_numMixStatVars > 0) {
+      for (int ii = 0; ii < d_numMixStatVars; ii++)
+	new_dw->get(scalarVar[ii], d_lab->d_scalarVarSPLabel, 
+		    matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+    }
+    if (d_mixingModel->getNumRxnVars() > 0) {
+      for (int ii = 0; ii < d_mixingModel->getNumRxnVars(); ii++)
+	new_dw->get(reactScalar[ii], d_lab->d_reactscalarSPLabel, 
+		    matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+    }
+    if (!(d_mixingModel->isAdiabatic()))
+      new_dw->get(enthalpy_comp, d_lab->d_enthalpySPLabel, 
+		  matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+    }
+    else {
+    if (d_reactingFlow) {
+      new_dw->getModifiable(temperature, d_lab->d_tempINIntermLabel,
+			    matlIndex, patch);
+      new_dw->getModifiable(co2, d_lab->d_co2INIntermLabel, matlIndex, patch);
+      new_dw->getModifiable(h2o, d_lab->d_h2oINIntermLabel, matlIndex, patch);
+      new_dw->getModifiable(enthalpy, d_lab->d_enthalpyRXNIntermLabel,
+			    matlIndex, patch);
+      temperature.initialize(0.0);
+      co2.initialize(0.0);
+      h2o.initialize(0.0);
+      enthalpy.initialize(0.0);
+      if (d_mixingModel->getNumRxnVars()) {
+	new_dw->getModifiable(reactscalarSRC,
+			      d_lab->d_reactscalarSRCINIntermLabel,
+			      matlIndex, patch);
+	reactscalarSRC.initialize(0.0);
+      }
+    }
+    if (d_radiationCalc) {
+      new_dw->getModifiable(absorption, d_lab->d_absorpINIntermLabel,
+			    matlIndex, patch);
+      new_dw->getModifiable(sootFV, d_lab->d_sootFVINIntermLabel,
+			    matlIndex, patch);
+      absorption.initialize(0.0);
+      sootFV.initialize(0.0);
+    }
+
+    new_dw->getModifiable(drhodf, d_lab->d_drhodfIntermLabel, matlIndex, patch);
+    drhodf.initialize(0.0);
+
+    new_dw->getModifiable(new_density, d_lab->d_densityIntermLabel,
+			  matlIndex, patch);
+
+
+    for (int ii = 0; ii < d_numMixingVars; ii++)
+      new_dw->get(scalar[ii], d_lab->d_scalarIntermLabel, 
+		  matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+    if (d_numMixStatVars > 0) {
+      for (int ii = 0; ii < d_numMixStatVars; ii++)
+	new_dw->get(scalarVar[ii], d_lab->d_scalarVarSPLabel, 
+		    matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+    }
+    if (d_mixingModel->getNumRxnVars() > 0) {
+      for (int ii = 0; ii < d_mixingModel->getNumRxnVars(); ii++)
+	new_dw->get(reactScalar[ii], d_lab->d_reactscalarIntermLabel, 
+		    matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+    }
+    if (!(d_mixingModel->isAdiabatic()))
+      new_dw->get(enthalpy_comp, d_lab->d_enthalpyIntermLabel, 
+		  matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+    }
+    new_dw->getModifiable(temp_density, d_lab->d_densityPredLabel,
+			  matlIndex, patch);
     temp_density.copyData(new_density);
     new_dw->get(density, d_lab->d_densityINLabel, 
 		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
@@ -2144,31 +2369,6 @@ Properties::reComputeRKProps(const ProcessorGroup*,
       denMicro.initialize(0.0);
       //denMicro.copyData(denMicro_old);
     }
-
-    for (int ii = 0; ii < d_numMixingVars; ii++)
-      new_dw->get(scalar[ii], d_lab->d_scalarSPLabel, 
-		  matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-
-    StaticArray<constCCVariable<double> > scalarVar(d_numMixStatVars);
-
-    if (d_numMixStatVars > 0) {
-      for (int ii = 0; ii < d_numMixStatVars; ii++)
-	new_dw->get(scalarVar[ii], d_lab->d_scalarVarSPLabel, 
-		    matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-    }
-
-    StaticArray<constCCVariable<double> > reactScalar(d_mixingModel->getNumRxnVars());
-    
-    if (d_mixingModel->getNumRxnVars() > 0) {
-      for (int ii = 0; ii < d_mixingModel->getNumRxnVars(); ii++)
-	new_dw->get(reactScalar[ii], d_lab->d_reactscalarSPLabel, 
-		    matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-    }
-
-
-    if (!(d_mixingModel->isAdiabatic()))
-      new_dw->get(enthalpy_comp, d_lab->d_enthalpySPLabel, 
-		  matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
 
     IntVector indexLow = patch->getCellLowIndex();
     IntVector indexHigh = patch->getCellHighIndex();
@@ -2320,5 +2520,186 @@ Properties::reComputeRKProps(const ProcessorGroup*,
     else
       new_dw->put(sum_vartype(0), d_lab->d_refDensity_label);
     */
+  }
+}
+//****************************************************************************
+// Schedule the computation of drhodt
+//****************************************************************************
+void 
+Properties::sched_computeDrhodt(SchedulerP& sched, const PatchSet* patches,
+				const MaterialSet* matls, 
+				const int Runge_Kutta_current_step,
+				const bool Runge_Kutta_last_step)
+{
+  Task* tsk = scinew Task("Properties::computeDrhodt",
+			  this,
+			  &Properties::computeDrhodt,
+			  Runge_Kutta_current_step, Runge_Kutta_last_step);
+
+  tsk->requires(Task::OldDW, d_lab->d_sharedState->get_delt_label());
+  tsk->requires(Task::OldDW, d_lab->d_oldDeltaTLabel);
+
+  tsk->requires(Task::NewDW, d_lab->d_densityINLabel, Ghost::None,
+		Arches::ZEROGHOSTCELLS);
+  tsk->requires(Task::OldDW, d_lab->d_densityINLabel, Ghost::None,
+		Arches::ZEROGHOSTCELLS);
+
+  if (Runge_Kutta_last_step) {
+    tsk->requires(Task::NewDW, d_lab->d_densityCPLabel, Ghost::None,
+		  Arches::ZEROGHOSTCELLS);
+  }
+  else { 
+ 	switch (Runge_Kutta_current_step) {
+ 	case Arches::FIRST:
+    		tsk->requires(Task::NewDW, d_lab->d_densityPredLabel,
+			      Ghost::None, Arches::ZEROGHOSTCELLS);
+	 break;
+
+	 case Arches::SECOND:
+    		tsk->requires(Task::NewDW, d_lab->d_densityIntermLabel,
+			      Ghost::None, Arches::ZEROGHOSTCELLS);
+	 break;
+
+	 default:
+		throw InvalidValue("Invalid Runge-Kutta step in computeDrhodt");
+	 }
+  }
+  if (Runge_Kutta_current_step == Arches::FIRST) {
+     tsk->computes(d_lab->d_filterdrhodtLabel);
+     tsk->computes(d_lab->d_oldDeltaTLabel);
+  }
+  else
+     tsk->modifies(d_lab->d_filterdrhodtLabel);
+
+  sched->addTask(tsk, patches, matls);
+}
+//****************************************************************************
+// Compute drhodt
+//****************************************************************************
+void 
+Properties::computeDrhodt(const ProcessorGroup* pc,
+			  const PatchSubset* patches,
+			  const MaterialSubset*,
+			  DataWarehouse* old_dw,
+			  DataWarehouse* new_dw,
+			  const int Runge_Kutta_current_step,
+			  const bool Runge_Kutta_last_step)
+{
+  double time = d_lab->d_sharedState->getElapsedTime();
+  delt_vartype delT, old_delT;
+  old_dw->get(delT, d_lab->d_sharedState->get_delt_label() );
+  if (Runge_Kutta_current_step == Arches::FIRST)
+    new_dw->put(delT, d_lab->d_oldDeltaTLabel);
+  double delta_t = delT;
+  old_dw->get(old_delT, d_lab->d_oldDeltaTLabel);
+  double  old_delta_t = old_delT;
+
+
+  for (int p = 0; p < patches->size(); p++) {
+
+    const Patch* patch = patches->get(p);
+    int archIndex = 0; // only one arches material
+    int matlIndex = d_lab->d_sharedState->
+		     getArchesMaterial(archIndex)->getDWIndex(); 
+
+    constCCVariable<double> new_density;
+    constCCVariable<double> old_density;
+    constCCVariable<double> old_old_density;
+    CCVariable<double> drhodt;
+    CCVariable<double> filterdrhodt;
+
+    new_dw->get(old_density, d_lab->d_densityINLabel, matlIndex, patch,
+	        Ghost::None, Arches::ZEROGHOSTCELLS);
+    old_dw->get(old_old_density, d_lab->d_densityINLabel, matlIndex, patch,
+		Ghost::None, Arches::ZEROGHOSTCELLS);
+
+    PerPatch<CellInformationP> cellInfoP;
+    if (new_dw->exists(d_lab->d_cellInfoLabel, matlIndex, patch)) 
+      new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
+    else {
+      cellInfoP.setData(scinew CellInformation(patch));
+      new_dw->put(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
+    }
+    CellInformation* cellinfo = cellInfoP.get().get_rep();
+
+    if (Runge_Kutta_last_step) {
+      new_dw->get(new_density, d_lab->d_densityCPLabel, matlIndex, patch,
+		  Ghost::None, Arches::ZEROGHOSTCELLS);
+    }
+    else { 
+	 switch (Runge_Kutta_current_step) {
+	 case Arches::FIRST:
+		new_dw->get(new_density, d_lab->d_densityPredLabel, matlIndex,
+			patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+	 break;
+
+	 case Arches::SECOND:
+		new_dw->get(new_density, d_lab->d_densityIntermLabel, matlIndex,
+			patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+	 break;
+
+	 default:
+		throw InvalidValue("Invalid Runge-Kutta step in computeDrhodt");
+	 }
+    }
+    if (Runge_Kutta_current_step == Arches::FIRST)
+      new_dw->allocateAndPut(filterdrhodt, d_lab->d_filterdrhodtLabel,
+		             matlIndex, patch);
+    else
+      new_dw->getModifiable(filterdrhodt, d_lab->d_filterdrhodtLabel,
+		            matlIndex, patch);
+      filterdrhodt.initialize(0.0);
+
+    // Get the patch and variable indices
+    IntVector idxLo = patch->getCellFORTLowIndex();
+    IntVector idxHi = patch->getCellFORTHighIndex();
+    // compute drhodt and add its filtered value
+    drhodt.resize(patch->getLowIndex(), patch->getHighIndex());
+
+    if (time == 0.0) {
+// 1st order drhodt
+      for (int kk = idxLo.z(); kk <= idxHi.z(); kk++) {
+        for (int jj = idxLo.y(); jj <= idxHi.y(); jj++) {
+          for (int ii = idxLo.x(); ii <= idxHi.x(); ii++) {
+	    IntVector currcell(ii,jj,kk);
+
+	    double vol = cellinfo->sns[jj]*cellinfo->stb[kk]*cellinfo->sew[ii];
+	    drhodt[currcell] = (new_density[currcell] -
+				old_density[currcell])*vol/delta_t;
+          }
+        }
+      }
+    }
+    else {
+// 2nd order drhodt, assuming constant volume
+      for (int kk = idxLo.z(); kk <= idxHi.z(); kk++) {
+        for (int jj = idxLo.y(); jj <= idxHi.y(); jj++) {
+          for (int ii = idxLo.x(); ii <= idxHi.x(); ii++) {
+	    IntVector currcell(ii,jj,kk);
+
+	    double vol = cellinfo->sns[jj]*cellinfo->stb[kk]*cellinfo->sew[ii];
+	    double factor = 1.0 + old_delta_t/delta_t;
+            double new_factor = factor * factor - 1.0;
+	    double old_factor = factor * factor;
+	    drhodt[currcell] = (new_factor*new_density[currcell] -
+				old_factor*old_density[currcell] +
+				old_old_density[currcell])*vol /
+			       (old_delta_t*factor);
+          }
+        }
+      }
+    }
+
+#ifdef FILTER_DRHODT
+#ifdef PetscFilter
+    d_filter->applyFilter(pc, patch, drhodt, filterdrhodt);
+#else
+    filterdrhodt.copy(drhodt, drhodt.getLowIndex(),
+		      drhodt.getHighIndex());
+#endif
+#else
+    filterdrhodt.copy(drhodt, drhodt.getLowIndex(),
+		      drhodt.getHighIndex());
+#endif
   }
 }

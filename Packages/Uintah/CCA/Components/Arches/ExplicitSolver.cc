@@ -156,16 +156,19 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
   int nofScalars = d_props->getNumMixVars();
   int nofScalarVars = d_props->getNumMixStatVars();
 
+  // go around computing boundary conditions at the beginning
+  d_boundaryCondition->sched_copyINtoOUT(sched, patches, matls);
+
   //correct inlet velocities to account for change in properties
   // require : densityIN, [u,v,w]VelocityIN (new_dw)
   // compute : [u,v,w]VelocitySIVBC
-  d_boundaryCondition->sched_setInletVelocityBC(sched, patches, matls);
-  d_boundaryCondition->sched_recomputePressureBC(sched, patches, matls);
+//  d_boundaryCondition->sched_setInletVelocityBC(sched, patches, matls);
+//  d_boundaryCondition->sched_recomputePressureBC(sched, patches, matls);
   // compute total flowin, flow out and overall mass balance
-  d_boundaryCondition->sched_computeFlowINOUT(sched, patches, matls);
-  d_boundaryCondition->sched_computeOMB(sched, patches, matls);
-  d_boundaryCondition->sched_transOutletBC(sched, patches, matls);
-  d_boundaryCondition->sched_correctOutletBC(sched, patches, matls);
+//  d_boundaryCondition->sched_computeFlowINOUT(sched, patches, matls);
+//  d_boundaryCondition->sched_computeOMB(sched, patches, matls);
+//  d_boundaryCondition->sched_transOutletBC(sched, patches, matls);
+//  d_boundaryCondition->sched_correctOutletBC(sched, patches, matls);
   // compute apo and drhodt, used in transport equations
   // put a logical to call computetranscoeff 
   // using a predictor corrector approach from Najm [1998]
@@ -196,6 +199,7 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
     // if the matrix is not initialized
     if (!d_turbModel->getFilter()->isInitialized()) 
       d_turbModel->sched_initFilterMatrix(level, sched, patches, matls);
+    d_props->setFilter(d_turbModel->getFilter());
   }
 #endif
   for (int index = 0;index < nofScalars; index ++) {
@@ -243,6 +247,10 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
   // first computes, hatted velocities and then computes the pressure poisson equation
   d_momSolver->solveVelHatPred(level, sched,
 			       Runge_Kutta_current_step, Runge_Kutta_last_step);
+
+  d_props->sched_computeDrhodt(sched, patches, matls,
+			Runge_Kutta_current_step, Runge_Kutta_last_step);
+
   d_pressSolver->solvePred(level, sched,
 			Runge_Kutta_current_step, Runge_Kutta_last_step);
   // Momentum solver
@@ -259,13 +267,17 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
   for (int index = 1; index <= Arches::NDIM; ++index) {
     d_momSolver->solvePred(sched, patches, matls, index);
   }
+  d_boundaryCondition->sched_getFlowINOUT(sched, patches, matls,
+			Runge_Kutta_current_step, Runge_Kutta_last_step);
+  d_boundaryCondition->sched_correctVelocityOutletBC(sched, patches, matls,
+			Runge_Kutta_current_step, Runge_Kutta_last_step);
   
   #ifdef correctorstep
-    d_boundaryCondition->sched_predcomputePressureBC(sched, patches, matls);
+//    d_boundaryCondition->sched_predcomputePressureBC(sched, patches, matls);
   // Schedule an interpolation of the face centered velocity data 
     sched_interpolateFromFCToCCPred(sched, patches, matls);
   #else
-    d_boundaryCondition->sched_lastcomputePressureBC(sched, patches, matls);
+//    d_boundaryCondition->sched_lastcomputePressureBC(sched, patches, matls);
   // Schedule an interpolation of the face centered velocity data 
     sched_interpolateFromFCToCC(sched, patches, matls);
   #endif
@@ -307,6 +319,7 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
     // density from the previous substep
     d_props->sched_computePropsInterm(sched, patches, matls);
     d_props->sched_computeDenRefArrayInterm(sched, patches, matls);
+
     // linearizes and solves pressure eqn
     // require : pressureIN, densityIN, viscosityIN,
     //           [u,v,w]VelocitySIVBC (new_dw)
@@ -317,6 +330,31 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
     //           pressurePS (new_dw)
     // first computes, hatted velocities and then computes the pressure 
     // poisson equation
+
+    d_momSolver->solveVelHatInterm(level, sched,
+			   Runge_Kutta_current_step, Runge_Kutta_last_step);
+  #ifdef Runge_Kutta_3d_ssp
+    d_props->sched_averageRKProps(sched, patches, matls,
+			   Runge_Kutta_current_step, Runge_Kutta_last_step);
+    d_props->sched_reComputeRKProps(sched, patches, matls,
+			   Runge_Kutta_current_step, Runge_Kutta_last_step);
+    if (nofScalarVars > 0) {
+      for (int index = 0;index < nofScalarVars; index ++) {
+      // in this case we're only solving for one scalarVar...but
+      // the same subroutine can be used to solve multiple scalarVars
+        d_turbModel->sched_computeScalarVariance(sched, patches, matls,
+			Runge_Kutta_current_step, Runge_Kutta_last_step);
+      }
+      d_turbModel->sched_computeScalarDissipation(sched, patches, matls,
+			Runge_Kutta_current_step, Runge_Kutta_last_step);
+    }
+    d_momSolver->sched_averageRKHatVelocities(sched, patches, matls,
+			Runge_Kutta_current_step, Runge_Kutta_last_step);
+  #endif
+
+    d_props->sched_computeDrhodt(sched, patches, matls,
+			Runge_Kutta_current_step, Runge_Kutta_last_step);
+
     d_pressSolver->solveInterm(level, sched,
 			Runge_Kutta_current_step, Runge_Kutta_last_step);
     // Momentum solver
@@ -333,8 +371,12 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
     for (int index = 1; index <= Arches::NDIM; ++index) {
       d_momSolver->solveInterm(sched, patches, matls, index);
     }
+    d_boundaryCondition->sched_getFlowINOUT(sched, patches, matls,
+			Runge_Kutta_current_step, Runge_Kutta_last_step);
+    d_boundaryCondition->sched_correctVelocityOutletBC(sched, patches, matls,
+			Runge_Kutta_current_step, Runge_Kutta_last_step);
   
-    d_boundaryCondition->sched_intermcomputePressureBC(sched, patches, matls);
+//    d_boundaryCondition->sched_intermcomputePressureBC(sched, patches, matls);
   // Schedule an interpolation of the face centered velocity data 
     sched_interpolateFromFCToCCInterm(sched, patches, matls);
     d_turbModel->sched_reComputeTurbSubmodel(sched, patches, matls,
@@ -381,6 +423,7 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
     // density from the previous substep
     d_props->sched_reComputeProps(sched, patches, matls);
     d_props->sched_computeDenRefArray(sched, patches, matls);
+
     // linearizes and solves pressure eqn
     // require : pressureIN, densityIN, viscosityIN,
     //           [u,v,w]VelocitySIVBC (new_dw)
@@ -394,8 +437,10 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
     d_momSolver->solveVelHatCorr(level, sched,
 			   Runge_Kutta_current_step, Runge_Kutta_last_step);
   #ifdef Runge_Kutta_2nd
-    d_props->sched_averageRKProps(sched, patches, matls);
-    d_props->sched_reComputeRKProps(sched, patches, matls);
+    d_props->sched_averageRKProps(sched, patches, matls,
+			   Runge_Kutta_current_step, Runge_Kutta_last_step);
+    d_props->sched_reComputeRKProps(sched, patches, matls,
+			   Runge_Kutta_current_step, Runge_Kutta_last_step);
     if (nofScalarVars > 0) {
       for (int index = 0;index < nofScalarVars; index ++) {
       // in this case we're only solving for one scalarVar...but
@@ -406,8 +451,13 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
       d_turbModel->sched_computeScalarDissipation(sched, patches, matls,
 			Runge_Kutta_current_step, Runge_Kutta_last_step);
     }
-    d_momSolver->sched_averageRKHatVelocities(sched, patches, matls);
+    d_momSolver->sched_averageRKHatVelocities(sched, patches, matls,
+			Runge_Kutta_current_step, Runge_Kutta_last_step);
   #endif
+
+    d_props->sched_computeDrhodt(sched, patches, matls,
+			Runge_Kutta_current_step, Runge_Kutta_last_step);
+
     d_pressSolver->solveCorr(level, sched,
 			Runge_Kutta_current_step, Runge_Kutta_last_step);
     // Momentum solver
@@ -424,12 +474,16 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
     for (int index = 1; index <= Arches::NDIM; ++index) {
       d_momSolver->solveCorr(sched, patches, matls, index);
     }
+    d_boundaryCondition->sched_getFlowINOUT(sched, patches, matls,
+			Runge_Kutta_current_step, Runge_Kutta_last_step);
+    d_boundaryCondition->sched_correctVelocityOutletBC(sched, patches, matls,
+			Runge_Kutta_current_step, Runge_Kutta_last_step);
     // if external boundary then recompute velocities using new pressure
     // and puts them in nonlinear_dw
     // require : densityCP, pressurePS, [u,v,w]VelocitySIVBC
     // compute : [u,v,w]VelocityCPBC, pressureSPBC
   
-    d_boundaryCondition->sched_lastcomputePressureBC(sched, patches, matls);
+//    d_boundaryCondition->sched_lastcomputePressureBC(sched, patches, matls);
   // Schedule an interpolation of the face centered velocity data 
     sched_interpolateFromFCToCC(sched, patches, matls);
     d_turbModel->sched_reComputeTurbSubmodel(sched, patches, matls,

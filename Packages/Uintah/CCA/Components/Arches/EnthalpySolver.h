@@ -250,6 +250,7 @@ private:
       const PatchSet* d_perproc_patches;
 
       const ProcessorGroup* d_myworld;
+      int d_conv_scheme;
 
 }; // End class EnthalpySolver
 } // End namespace Uintah

@@ -276,6 +276,12 @@ Arches::sched_paramInit(const LevelP& level,
     tsk->computes(d_lab->d_newCCVVelocityLabel);
     tsk->computes(d_lab->d_newCCWVelocityLabel);
     tsk->computes(d_lab->d_pressureINLabel);
+#ifdef correctorstep
+    tsk->computes(d_lab->d_pressurePredLabel);
+#ifdef Runge_Kutta_3d
+    tsk->computes(d_lab->d_pressureIntermLabel);
+#endif
+#endif
     for (int ii = 0; ii < d_nofScalars; ii++) 
       tsk->computes(d_lab->d_scalarINLabel); // only work for 1 scalar
     for (int ii = 0; ii < d_nofScalarStats; ii++) {
@@ -293,6 +299,7 @@ Arches::sched_paramInit(const LevelP& level,
     }
     tsk->computes(d_lab->d_densityINLabel);
     tsk->computes(d_lab->d_viscosityINLabel);
+    tsk->computes(d_lab->d_oldDeltaTLabel);
     // for reacting flows save temperature and co2 
     if (d_MAlab)
       tsk->computes(d_lab->d_pressPlusHydroLabel);
@@ -450,6 +457,8 @@ Arches::paramInit(const ProcessorGroup* ,
 		  DataWarehouse* ,
 		  DataWarehouse* new_dw)
 {
+    double old_delta_t = 0.0;
+    new_dw->put(delt_vartype(old_delta_t), d_lab->d_oldDeltaTLabel);
   // ....but will only compute for computational domain
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
@@ -462,6 +471,8 @@ Arches::paramInit(const ProcessorGroup* ,
     CCVariable<double> vVelocityCC;
     CCVariable<double> wVelocityCC;
     CCVariable<double> pressure;
+    CCVariable<double> pressurePred;
+    CCVariable<double> pressureInterm;
     StaticArray< CCVariable<double> > scalar(d_nofScalars);
     StaticArray< CCVariable<double> > scalarVar(d_nofScalarStats);
     StaticArray< CCVariable<double> > scalarVar_new(d_nofScalarStats);
@@ -482,6 +493,14 @@ Arches::paramInit(const ProcessorGroup* ,
     new_dw->allocateAndPut(vVelocity, d_lab->d_vVelocityINLabel, matlIndex, patch);
     new_dw->allocateAndPut(wVelocity, d_lab->d_wVelocityINLabel, matlIndex, patch);
     new_dw->allocateAndPut(pressure, d_lab->d_pressureINLabel, matlIndex, patch);
+#ifdef correctorstep
+    new_dw->allocateAndPut(pressurePred, d_lab->d_pressurePredLabel, matlIndex, patch);
+    pressurePred.initialize(0.0);
+#ifdef Runge_Kutta_3d
+    new_dw->allocateAndPut(pressureInterm, d_lab->d_pressureIntermLabel, matlIndex, patch);
+    pressureInterm.initialize(0.0);
+#endif
+#endif
     if (d_MAlab) {
       new_dw->allocateAndPut(pPlusHydro, d_lab->d_pressPlusHydroLabel, matlIndex, patch);
       pPlusHydro.initialize(0.0);
