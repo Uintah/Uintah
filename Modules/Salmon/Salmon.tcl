@@ -134,6 +134,7 @@ itcl_class Roe {
 		-variable $this-currentvisual \
 		-font "-adobe-helvetica-bold-r-normal-*-*-80-75-*-*-*-*-*" \
 		-command "$this switchvisual $i"
+            puts "$i: $t"
 	    incr i
 	}
 
@@ -253,7 +254,8 @@ itcl_class Roe {
 	
 	global $this-do_stereo
 	set $this-do_stereo 0
-	checkbutton $m.stereo -text "Stereo" -variable $this-do_stereo
+	checkbutton $m.stereo -text "Stereo" -variable $this-do_stereo \
+		-command "$this-c redraw"
 	pack $m.stereo -side top
 
 	global $this-tracker_state
@@ -335,6 +337,7 @@ itcl_class Roe {
 	    destroy $w.wframe.draw
 	}
 	$this-c switchvisual $w.wframe.draw $idx 640 512
+	puts "done: $this-c switchvisual $w.wframe.draw $idx 640 512"
 	if {[winfo exists $w.wframe.draw]} {
 	    bindEvents $w.wframe.draw
 	    pack $w.wframe.draw -expand yes -fill both

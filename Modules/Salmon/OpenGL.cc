@@ -394,7 +394,6 @@ void OpenGL::redraw_frame()
     timer.clear();
     timer.start();
 
-
     initState();
 
     // Get the window size
@@ -429,6 +428,7 @@ void OpenGL::redraw_frame()
     double fovy=RtoD(2*Atan(aspect*Tan(DtoR(view.fov()/2.))));
 
     drawinfo->reset();
+    int do_stereo=roe->do_stereo.get();
 
     // Compute znear and zfar...
     if(compute_depth(roe, view, znear, zfar)){
@@ -455,43 +455,8 @@ void OpenGL::redraw_frame()
 	double frametime=framerate==0?0:1./framerate;
 	TimeThrottle throttle;
 	throttle.start();
-#ifdef __sgi
-	int do_stereo=roe->do_stereo.get();
-	if(do_stereo && !old_stereo){
-	    int first_event, first_error;
-	    if(!XSGIStereoQueryExtension(dpy, &first_event, &first_error)){
-		do_stereo=0;
-		cerr << "Stereo not supported!\n";
-	    }
-	    glXWaitX();
-	    old_stereo=do_stereo;
-#if 0
-	    int height=492; // Magic numbers from the man pages
-	    int offset=532;
-	    int mode=STEREO_TOP;
-	    XClearWindow(dpy, win);
-	    if(!XSGISetStereoMode(dpy, win, height, offset, mode)){
-		cerr << "Cannot set stereo mode!\n";
-		do_stereo=0;
-	    }
-#endif
-	    //	    system("/usr/gfx/setmon STR_TOP");
-	    XSync(dpy, 0);
-	    glXWaitX();
-	}
-	if(old_stereo && !do_stereo){
-//	    system("/usr/gfx/setmon 72HZ");
-#if 0
-	    if(!XSGISetStereoMode(dpy, win, 0, 0, STEREO_OFF)){
-		cerr << "Cannot set stereo mode!\n";
-		do_stereo=0;
-	    }
-#endif
-	    old_stereo=do_stereo;
-	}
 	Vector eyesep(0,0,0);
 	if(do_stereo){
-	    aspect/=2;	
 	    double eye_sep_dist=0.025/2;
 	    Vector u, v;
 	    view.get_viewplane(aspect, 1.0, u, v);
@@ -499,102 +464,71 @@ void OpenGL::redraw_frame()
 	    double zmid=(znear+zfar)/2.;
 	    eyesep=u*eye_sep_dist*zmid;
 	}
-#endif /* __sgi */
 	for(int t=0;t<nframes;t++){
-#ifdef __sgi
-	    if(do_stereo){
-		XSGISetStereoBuffer(dpy, win, STEREO_BUFFER_LEFT);
-		//		XClearWindow(dpy, win);
-		XSync(dpy, 0);
-		glXWaitX();
-	    }
-#endif
-	    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	    double modeltime=t*dt+tbeg;
-	    roe->set_current_time(modeltime);
+            int n=1;
+	    if(do_stereo)
+	       n=2;
+	    for(int i=0;i<n;i++){
+                 if(do_stereo){
+	             glDrawBuffer(i==0?GL_BACK_LEFT:GL_BACK_RIGHT);
+		 } else {
+		     glDrawBuffer(GL_BACK);
+		 }
 
-	    // Setup view...
-	    glViewport(0, 0, xres, yres);
-	    glMatrixMode(GL_PROJECTION);
-	    glLoadIdentity();
-	    gluPerspective(fovy, aspect, znear, zfar);
+	         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	         double modeltime=t*dt+tbeg;
+	         roe->set_current_time(modeltime);
+
+	         // Setup view...
+	         glViewport(0, 0, xres, yres);
+	         glMatrixMode(GL_PROJECTION);
+	         glLoadIdentity();
+	         gluPerspective(fovy, aspect, znear, zfar);
 	    
-	    glMatrixMode(GL_MODELVIEW);
-	    glLoadIdentity();
-	    Point eyep(view.eyep());
-	    Point lookat(view.lookat());
-#ifdef __sgi
-	    if(do_stereo){
-		eyep-=eyesep;
-		lookat-=eyesep;
+	         glMatrixMode(GL_MODELVIEW);
+	         glLoadIdentity();
+	         Point eyep(view.eyep());
+	         Point lookat(view.lookat());
+	         if(do_stereo){
+                     if(i==0){
+		         eyep-=eyesep;
+		         lookat-=eyesep;
+		     } else {
+		         eyep+=eyesep;
+		         lookat+=eyesep;
+ 		     }
+	         }
+	         Vector up(view.up());
+	         gluLookAt(eyep.x(), eyep.y(), eyep.z(),
+		           lookat.x(), lookat.y(), lookat.z(),
+		           up.x(), up.y(), up.z());
+
+	         // Set up Lighting
+	         glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_TRUE);
+	         Lighting& l=salmon->lighting;
+	         int idx=0;
+	         int i;
+	         for(i=0;i<l.lights.size();i++){
+		     Light* light=l.lights[i];
+		     light->opengl_setup(view, drawinfo, idx);
+	         }
+	         for(i=0;i<idx && i<maxlights;i++)
+		     glEnable(GL_LIGHT0+i);
+	         for(;i<maxlights;i++)
+		     glDisable(GL_LIGHT0+i);
+
+	         // now set up the fog stuff
+
+	         glFogi(GL_FOG_MODE,GL_LINEAR);
+	         glFogf(GL_FOG_START,float(znear));
+	         glFogf(GL_FOG_END,float(zfar));
+	         // now make the Roe setup its clipping planes...
+	         roe->setClip(drawinfo);
+	         
+	         // Draw it all...
+	         current_time=modeltime;
+	         roe->do_for_visible(this, (RoeVisPMF)&OpenGL::redraw_obj);
 	    }
-#endif
-	    Vector up(view.up());
-	    gluLookAt(eyep.x(), eyep.y(), eyep.z(),
-		      lookat.x(), lookat.y(), lookat.z(),
-		      up.x(), up.y(), up.z());
-
-	    // Set up Lighting
-	    glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_TRUE);
-	    Lighting& l=salmon->lighting;
-	    int idx=0;
-	    int i;
-	    for(i=0;i<l.lights.size();i++){
-		Light* light=l.lights[i];
-		light->opengl_setup(view, drawinfo, idx);
-	    }
-	    for(i=0;i<idx && i<maxlights;i++)
-		glEnable(GL_LIGHT0+i);
-	    for(;i<maxlights;i++)
-		glDisable(GL_LIGHT0+i);
-
-	    // now set up the fog stuff
-
-	    glFogi(GL_FOG_MODE,GL_LINEAR);
-	    glFogf(GL_FOG_START,float(znear));
-	    glFogf(GL_FOG_END,float(zfar));
-	    // now make the Roe setup its clipping planes...
-	    roe->setClip(drawinfo);
-	    
-	    // Draw it all...
-	    current_time=modeltime;
-#ifdef REAL_STEREO
-	    if(do_stereo){
-		glDrawBuffer(GL_BACK_LEFT);
-	    } else {
-		glDrawBuffer(GL_BACK);
-	    }
-#endif
-	    roe->do_for_visible(this, (RoeVisPMF)&OpenGL::redraw_obj);
-#ifdef __sgi
-	    if(do_stereo){
-		glXWaitGL();
-		//		XClearWindow(dpy, win);
-		XSGISetStereoBuffer(dpy, win, STEREO_BUFFER_RIGHT);
-		glXWaitX();
-		//		glDrawBuffer(GL_BACK_RIGHT);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-		// Setup view...
-		glViewport(0, 0, xres, yres);
-		glMatrixMode(GL_PROJECTION);
-		glLoadIdentity();
-		gluPerspective(fovy, aspect, znear, zfar);
-		
-		glMatrixMode(GL_MODELVIEW);
-		glLoadIdentity();
-		Point eyep(view.eyep());
-		Point lookat(view.lookat());
-		Vector up(view.up());
-		eyep+=eyesep;
-		lookat+=eyesep;
-		gluLookAt(eyep.x(), eyep.y(), eyep.z(),
-			  lookat.x(), lookat.y(), lookat.z(),
-			  up.x(), up.y(), up.z());
-
-		roe->do_for_visible(this, (RoeVisPMF)&OpenGL::redraw_obj);
-	    }
-#endif
 
 #if 0
 	    if(roe->drawimg.get()){
@@ -660,6 +594,13 @@ void OpenGL::redraw_frame()
     } else {
 	// Just show the cleared screen
 	roe->set_current_time(tend);
+	if(do_stereo){
+	    glDrawBuffer(GL_BACK_LEFT);
+	    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	    glDrawBuffer(GL_BACK_RIGHT);
+        } else {
+	    glDrawBuffer(GL_BACK);
+	}
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	if(roe->drawimg.get()){
 	  if(!imglist)
@@ -668,7 +609,6 @@ void OpenGL::redraw_frame()
 	    glCallList(imglist);
 	}
 	glXSwapBuffers(dpy, win);
-	//	glXWaitGL();
     }
     salmon->geomlock.read_unlock();
 
@@ -1203,6 +1143,7 @@ void OpenGL::listvisuals(TCLArgs& args)
     return;
   }
   dpy=Tk_Display(topwin);
+  int screen=Tk_ScreenNumber(topwin);
   Array1<clString> visualtags;
   Array1<int> scores;
   visuals.remove_all();
@@ -1224,6 +1165,8 @@ void OpenGL::listvisuals(TCLArgs& args)
     GETCONFIG(GLX_LEVEL);
     if(value != 0)
       continue;
+    if(vinfo[i].screen != screen)
+	continue;
     char buf[20];
     sprintf(buf, "id=%02x, ", vinfo[i].visualid);
     clString tag(buf);
@@ -1236,7 +1179,7 @@ void OpenGL::listvisuals(TCLArgs& args)
     }
     GETCONFIG(GLX_STEREO);
     if(value){
-      score-=1;
+	score+=1;
       tag+=clString("stereo, ");
     }
     tag+=clString("rgba=");
@@ -1275,6 +1218,7 @@ void OpenGL::listvisuals(TCLArgs& args)
     tag+=to_string(value);
 
     tag+=clString(", score=")+to_string(score);
+    //cerr << score << ": " << tag << '\n';
 
     visualtags.add(tag);
     visuals.add(&vinfo[i]);
@@ -1304,7 +1248,9 @@ void OpenGL::setvisual(const clString& wname, int which, int width, int height)
 {
   tkwin=0;
   current_drawer=0;
+  cerr << "choosing visual " << which << '\n';
   TCL::execute(clString("opengl ")+wname+" -visual "+to_string((int)visuals[which]->visualid)+" -direct true -geometry "+to_string(width)+"x"+to_string(height));
+  cerr << "done choosing visual\n";
 }
 
 void OpenGL::getData(int datamask, AsyncReply<GeometryData*>* result)
