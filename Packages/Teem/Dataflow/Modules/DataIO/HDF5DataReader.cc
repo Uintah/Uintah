@@ -265,15 +265,21 @@ void HDF5DataReader::execute() {
     int cc = 0;
 
     for( int ic=0; ic<nHandles.size(); ic++ ) {
-      for( int jc=0; jc<nHandles[ic].size(); jc++ )
+      for( int jc=0; jc<nHandles[ic].size(); jc++ ) {
 	nHandles_[cc++] = nHandles[ic][jc];
 
-      if( cc == MAX_PORTS ) {
-	remark( "Maximum number of ports reached" );
-
-	break;
+	if( cc == MAX_PORTS ) {
+	  warning( "Maximum number of ports reached" );
+	  break;
+	}
       }
+
+      if( cc == MAX_PORTS )
+	break;
     }
+
+    for( int ic=cc; ic<MAX_PORTS; ic++ )
+      nHandles_[ic] = NULL;
   }
   else {
     remark( "Already read the file " +  new_filename );
@@ -379,7 +385,9 @@ void HDF5DataReader::parseDatasets( string new_datasets,
   }
 }
 
-vector<int> HDF5DataReader::getDatasetDims( string filename, string group, string dataset ) {
+vector<int> HDF5DataReader::getDatasetDims( string filename,
+					    string group,
+					    string dataset ) {
   vector< int > idims;
 
 #ifdef HAVE_HDF5
@@ -709,19 +717,7 @@ void HDF5DataReader::tcl_command(GuiArgs& args, void* userdata)
     return;
   }
 
-  if (args[1] == "remark") {
-
-    remark( string(args[2]) );
-
-  } else if (args[1] == "error") {
-
-    error( string(args[2]) );
-
-  } else if (args[1] == "execute") {
-
-    error( string(args[2]) );
-
-  } else if (args[1] == "update_file") {
+  if (args[1] == "update_file") {
 #ifdef HAVE_HDF5
     filename_.reset();
     string new_filename(filename_.get());
@@ -842,7 +838,6 @@ void HDF5DataReader::tcl_command(GuiArgs& args, void* userdata)
 
 	  for( int jc=0; jc<ndims && jc<MAX_DIMS; jc++ ) {
 	    if( dims_[jc] != dims[jc] ) {
-	      error( "Data selections do not have the same dimensions" );
 	      ndims = 0;
 	      break;
 	    }
