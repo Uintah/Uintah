@@ -1,9 +1,9 @@
-
 #include <Uintah/Interface/DataArchive.h>
 #include <Uintah/Grid/Grid.h>
 #include <Uintah/Grid/Level.h>
 #include <Uintah/Interface/InputContext.h>
 #include <SCICore/Exceptions/InternalError.h>
+#include <SCICore/Util/Assert.h>
 #include <SCICore/Thread/Time.h>
 #include <PSECore/XMLUtil/SimpleErrorHandler.h>
 #include <PSECore/XMLUtil/XMLUtil.h>
@@ -27,7 +27,8 @@ using SCICore::Util::DebugStream;
 DebugStream DataArchive::dbg("DataArchive", false);
 
 DataArchive::DataArchive(const std::string& filebase)
-   : d_filebase(filebase), d_lock("DataArchive lock")
+   : d_filebase(filebase), d_lock("DataArchive lock"),
+     d_varHashMaps(NULL)
 {
    have_timesteps=false;
    string index(filebase+"/index.xml");
@@ -58,8 +59,10 @@ DataArchive::DataArchive(const std::string& filebase)
    d_indexDoc = parser.getDocument();
 }
 
+
 DataArchive::~DataArchive()
 {
+  delete d_varHashMaps;
 }
 
 void DataArchive::queryTimesteps( std::vector<int>& index,
@@ -134,6 +137,19 @@ DOM_Node DataArchive::getTimestep(double searchtime, XMLURL& found_url)
       return DOM_Node();
    found_url = d_tsurl[i];
    return d_tstop[i];
+}
+
+DOM_Node DataArchive::findVariable(const string& name, const Patch* patch,
+				   int matl, double time, XMLURL& url)
+{
+  if (d_varHashMaps == NULL) {
+    vector<int> indices;
+    vector<double> times;
+    queryTimesteps(indices, times);
+    d_varHashMaps = scinew TimeHashMaps(times, d_tsurl, d_tstop);
+  }
+  
+  return d_varHashMaps->findVariable(name, patch, matl, time, url);
 }
 
 GridP DataArchive::queryGrid( double time )
@@ -250,27 +266,30 @@ void DataArchive::queryVariables( vector<string>& names,
    dbg << "DataArchive::queryVariables completed in " << Time::currentSeconds()-start << " seconds\n";
 }
 
-DOM_Node DataArchive::findVariable(const string& searchname,
-				   const Patch* searchpatch,
-				   int searchindex, double time,
-				   XMLURL& foundurl)
+DataArchive::TimeHashMaps::TimeHashMaps(const vector<double>& tsTimes,
+					const vector<XMLURL>& tsUrls,
+					const vector<DOM_Node>& tsTopNodes)
 {
-   XMLURL timestepurl;
-   DOM_Node ts = getTimestep(time, timestepurl);
-   if(ts == 0)
-      return DOM_Node();
-   DOM_Node datanode = findNode("Data", ts);
-   if(datanode == 0)
-      throw InternalError("Cannot find Data in timestep");
-   for(DOM_Node n = datanode.getFirstChild(); n != 0; n=n.getNextSibling()){
-      if(n.getNodeName().equals(DOMString("Datafile"))){
+   ASSERTL3(tsTimes.size() == tsTopNodes.size());
+   ASSERTL3(tsUrls.size() == tsTopNodes.size());
+
+   for (int i = 0; i < tsTimes.size(); i++) {
+     DOM_Node ts = tsTopNodes[i];
+     ASSERTL3(ts != 0);
+     
+     DOM_Node datanode = findNode("Data", ts);
+     if(datanode == 0)
+       throw InternalError("Cannot find Data in timestep");
+     for(DOM_Node n = datanode.getFirstChild(); n != 0; n=n.getNextSibling()){
+       if(n.getNodeName().equals(DOMString("Datafile"))){
 	 DOM_NamedNodeMap attributes = n.getAttributes();
 	 DOM_Node datafile = attributes.getNamedItem("href");
 	 if(datafile == 0)
 	    throw InternalError("timestep href not found");
 
 	 DOMString href_name = datafile.getNodeValue();
-	 XMLURL url(timestepurl, toString(href_name).c_str());
+	 XMLURL url(tsUrls[i], toString(href_name).c_str());
+	 d_xmlUrls.push_back(url);
 
 	 DOMParser parser;
 	 parser.setDoValidation(false);
@@ -289,30 +308,81 @@ DOM_Node DataArchive::findVariable(const string& searchname,
 	       string varname;
 	       if(!get(r, "variable", varname))
 		  throw InternalError("Cannot get variable name");
-	       if(varname != searchname)
-		  continue;
+	       
 	       int patchid;
 	       if(!get(r, "patch", patchid) && !get(r, "region", patchid))
 		  throw InternalError("Cannot get patch id");
-	       if(patchid != searchpatch->getID())
-		  continue;
+
 	       int index;
 	       if(!get(r, "index", index))
 		  throw InternalError("Cannot get index");
-	       if(index != searchindex)
-		  continue;
-	       // Found it!
-	       foundurl=url;
-	       return r;
+
+	       d_patchHashMaps[tsTimes[i]].add(varname, patchid,
+					       index, r, &d_xmlUrls.back());
 	    } else if(r.getNodeType() != DOM_Node::TEXT_NODE){
 	       cerr << "WARNING: Unknown element in Variables section: " << toString(r.getNodeName()) << '\n';
 	    }
 	 }
-      } else if(n.getNodeType() != DOM_Node::TEXT_NODE){
+       } else if(n.getNodeType() != DOM_Node::TEXT_NODE){
 	 cerr << "WARNING: Unknown element in Data section: " << toString(n.getNodeName()) << '\n';
-      }
+       }
+     }
    }
-   return DOM_Node();
+}
+
+DOM_Node DataArchive::TimeHashMaps::findVariable(const string& name,
+						 const Patch* patch, int matl,
+						 double time,
+						 XMLURL& foundUrl)
+{
+  map<double, PatchHashMaps>::iterator foundIt =
+    d_patchHashMaps.find(time);
+  if (foundIt != d_patchHashMaps.end())
+    return (*foundIt).second.findVariable(name, patch, matl, foundUrl);
+  return DOM_Node();
+}
+
+DOM_Node DataArchive::PatchHashMaps::findVariable(const string& name,
+						  const Patch* patch,
+						  int matl,
+						  XMLURL& foundUrl)
+{
+  map<int, MaterialHashMaps>::iterator foundIt =
+    d_matHashMaps.find(patch->getID());
+  
+  if (foundIt != d_matHashMaps.end())
+    return (*foundIt).second.findVariable(name, matl, foundUrl);
+  return DOM_Node();  
+}
+
+DOM_Node DataArchive::MaterialHashMaps::findVariable(const string& name,
+						     int matl,
+						     XMLURL& foundUrl)
+{
+  if (matl < d_varHashMaps.size()) {
+    VarHashMap& hashMap = d_varHashMaps[matl];
+    VarHashMapIterator foundIt = hashMap.find(name.c_str());
+    
+    if (foundIt !=  hashMap.end()) {
+      foundUrl = *(*foundIt).second.second;
+      return (*foundIt).second.first;
+    }
+  }
+  return DOM_Node();  
+}
+
+void DataArchive::MaterialHashMaps::add(const string& name, int matl,
+					DOM_Node varNode, XMLURL* pUrl)
+{
+  d_varNames.push_back(name);
+  const char* var_name = d_varNames.back().c_str();
+  if (matl >= d_varHashMaps.size())
+    d_varHashMaps.resize(matl + 1);
+  pair<DOM_Node, XMLURL*> value(varNode, pUrl);
+  pair<const char*, pair<DOM_Node, XMLURL*> > valkeypair(var_name, value);
+  if (d_varHashMaps[matl].insert(valkeypair).second == false) {
+    cerr << "Duplicate variable name: " << name << endl;
+  }
 }
 
 int DataArchive::queryNumMaterials( const string& name, const Patch* patch, double time)
@@ -332,6 +402,12 @@ int DataArchive::queryNumMaterials( const string& name, const Patch* patch, doub
 
 //
 // $Log$
+// Revision 1.9  2000/09/14 23:59:06  witzel
+// Changed findVariable method to make it much more efficient and not
+// have to search through xml files over and over again.  The first
+// time it is called it creates a data structure with hash tables to
+// speed up variable searches on subsequent calls.
+//
 // Revision 1.8  2000/07/27 22:39:52  sparker
 // Implemented MPIScheduler
 // Added associated support

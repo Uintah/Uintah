@@ -10,6 +10,8 @@
 #include <SCICore/Util/DebugStream.h>
 #include <string>
 #include <vector>
+#include <list>
+#include <hash_map>
 
 #ifdef __sgi
 #define IRIX
@@ -32,7 +34,20 @@ namespace Uintah {
    using SCICore::Thread::Time;
    using namespace PSECore::XMLUtil;
    using SCICore::Util::DebugStream;
-   
+   using namespace std;
+
+   struct eqstr { // comparison class used in hash_map to compare keys
+     bool operator()(const char* s1, const char* s2) const {
+       return strcmp(s1, s2) == 0;
+     }
+   };
+
+   typedef hash_map<const char*, pair<DOM_Node, XMLURL*>, hash<const char*>, 
+                    eqstr> VarHashMap;
+
+   typedef hash_map<const char*, pair<DOM_Node, XMLURL*>, hash<const char*>,
+                    eqstr>::iterator VarHashMapIterator;
+
    /**************************************
      
      CLASS
@@ -61,8 +76,64 @@ namespace Uintah {
      WARNING
       
      ****************************************/
-    
+   
 class DataArchive {
+private:
+
+  /* Helper classes for storing hash maps of variable data. */
+  class PatchHashMaps;
+  class MaterialHashMaps;
+
+  // Top of data structure for storing hash maps of variable data
+  // - containing data for each time step.
+  class TimeHashMaps {
+  public:
+    TimeHashMaps(const vector<double>& tsTimes,
+		 const vector<XMLURL>& tsUrls,
+		 const vector<DOM_Node>& tsTopNodes);
+    
+    DOM_Node findVariable(const string& name, const Patch* patch, int matl,
+			  double time, XMLURL& foundUrl);
+  private:
+    map<double, PatchHashMaps> d_patchHashMaps;
+    list<XMLURL> d_xmlUrls;
+  };
+
+  // Second layer of data structure for storing hash maps of variable data
+  // - containing data for each patch at a certain time step.
+  class PatchHashMaps {
+    friend class TimeHashMaps;
+  public:
+    PatchHashMaps() {}    
+    DOM_Node findVariable(const string& name, const Patch* patch,
+			  int matl, XMLURL& foundUrl)      ;
+  private:
+    void add(const string& name, int patchid, int matl,
+	     DOM_Node varNode, XMLURL* pUrl)
+    { d_matHashMaps[patchid].add(name, matl, varNode, pUrl); }
+
+    map<int, MaterialHashMaps> d_matHashMaps;
+  };
+
+  // Third layer of data structure for storing hash maps of variable data
+  // - containing data for each material at a certain patch and time step.
+  class MaterialHashMaps {
+    friend class PatchHashMaps;
+  public:
+    MaterialHashMaps() {}
+
+    DOM_Node findVariable(const string& name, int matl,
+			  XMLURL& foundUrl);
+  private:
+    void add(const string& name, int matl, DOM_Node varNode, XMLURL* pUrl);
+
+    vector<VarHashMap> d_varHashMaps;
+
+    // store a copy of the variable names so that char*'s don't become invalid
+    // in the hash table.
+    list<string> d_varNames;
+  };
+  
 public:
    DataArchive(const std::string& filebase);
   // GROUP: Destructors
@@ -170,8 +241,6 @@ public:
    template<class T> void get(T& data, const std::string& name,
 			      const Patch* patch, cellIndex min, cellIndex max);
 #endif
-
-   
    
 protected:
    DataArchive();
@@ -191,7 +260,8 @@ private:
    std::vector<double> d_tstimes;
    std::vector<DOM_Node> d_tstop;
    std::vector<XMLURL> d_tsurl;
-
+   TimeHashMaps* d_varHashMaps;
+  
    Mutex d_lock;
 
    DOM_Node findVariable(const string& name, const Patch* patch,
@@ -467,6 +537,12 @@ void DataArchive::query(std::vector<T>& values, const std::string& name,
 
 //
 // $Log$
+// Revision 1.10  2000/09/14 23:59:06  witzel
+// Changed findVariable method to make it much more efficient and not
+// have to search through xml files over and over again.  The first
+// time it is called it creates a data structure with hash tables to
+// speed up variable searches on subsequent calls.
+//
 // Revision 1.9  2000/08/12 23:29:18  jehall
 // Added a DataArchive query for tracking the value of a variable at a
 // node/cell across multiple timesteps.
