@@ -19,7 +19,7 @@
 
 TAR = SCIRunDocs.tar
 TARBALL = ${TAR}.gz
-PRODUCTS = FAQBook Installation User Developer
+PRODUCTS = FAQBook Installation User Developer Documentum
 
 # Build all docs except code view docs (in Developer/CodeViews).  To
 # additionallly build code views invoke make this way: make WITH_CV=true
@@ -40,6 +40,9 @@ tar: products
 		--file=$${root}/doc/SCIRunDocs.tar \
 		$${root}/doc/index.html \
 		$${root}/doc/.htaccess \
+		$${root}/doc/Documentum/documentum.html \
+		$${root}/doc/Documentum/module-latex \
+		$${root}/doc/Documentum/module-xml \
 		$${root}/doc/Installation/index.html \
                 $${root}/doc/Installation/Guide/*.html \
 		$${root}/doc/User/index.html \
