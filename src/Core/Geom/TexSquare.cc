@@ -61,7 +61,8 @@ TexSquare::TexSquare()
     numcolors(0),
     width_(2),
     height_(2),
-    texname_(0)
+    texname_(0),
+    alpha_cutoff_(0.0)
 {
 }
 
@@ -93,6 +94,12 @@ TexSquare::set_texture( unsigned char *tex, int num, int w, int h) {
 void
 TexSquare::set_texname(unsigned int texname) {
   texname_ = texname;
+}
+
+
+void
+TexSquare::set_alpha_cutoff(double alpha) {
+  alpha_cutoff_ = alpha;
 }
 
 
