@@ -39,7 +39,6 @@ public:
     virtual Module* clone(int deep);
     virtual void execute();
     virtual void ui_button();
-    int abort_flag;
 };
 
 static Module* make_TransformCS(const clString& id)
@@ -58,7 +57,6 @@ TransformCS::TransformCS(const clString& id)
     add_iport(icontour);
     ocontour=new ContourSetOPort(this, "ContourSet", ContourSetIPort::Atomic);
     add_oport(ocontour);
-    abort_flag=0;
     spacing=0;
     dbcontext_st=0;
 }
@@ -153,7 +151,6 @@ void TransformCS::initDB() {
 }   	 
 void TransformCS::execute()
 {
-    abort_flag=0;
     if (!dbcontext_st) {
 	initDB();
     }
