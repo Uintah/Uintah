@@ -42,7 +42,7 @@ void GeomTriangles::add(const Point& p1, const Point& p2, const Point& p3) {
     if(n.length2() > 0){
 	n.normalize();
     } else {
-	cerr << "Degenerate triangle!!!\n" << endl;
+	cerr << "Degenerate triangle in GeomTriangles::add(" << p1 << ", " << p2 << ", " << p3 << ")" << endl;
 	return;
     }
     normals.add(n);
@@ -63,7 +63,7 @@ void GeomTriangles::add(const Point& p1, const Vector& v1,
     if(n.length2() > 0){
 	n.normalize();
     } else {
-	cerr << "Degenerate triangle!!!\n" << endl;
+	cerr << "Degenerate triangle in GeomTriangles::add(" << p1 << ", v1, " << p2 << ", v2, " << p3 << ", v3)" << endl;
 	return;
     }
     normals.add(n);
@@ -79,7 +79,7 @@ void GeomTriangles::add(const Point& p1, const MaterialHandle& m1,
     if(n.length2() > 0){
 	n.normalize();
     } else {
-	cerr << "Degenerate triangle!!!\n" << endl;
+	cerr << "Degenerate triangle in GeomTriangles::add(" << p1 << ", m1, " << p2 << ", m2, " << p3 << ", m3)" << endl;
 	return;
     }
     normals.add(n);
@@ -95,7 +95,7 @@ void GeomTriangles::add(const Point& p1, const Color& c1,
     if(n.length2() > 0){
 	n.normalize();
     } else {
-	cerr << "Degenerate triangle!!!\n" << endl;
+	cerr << "Degenerate triangle in GeomTriangles::add(" << p1 << ", c1, " << p2 << ", c2, " << p3 << ", c3)" << endl;
 	return;
     }
     normals.add(n);
@@ -113,7 +113,7 @@ void GeomTriangles::add(const Point& p1, const Vector& v1,
     if(n.length2() > 0){
 	n.normalize();
     } else {
-	cerr << "Degenerate triangle!!!\n" << endl;
+	cerr << "Degenerate triangle in GeomTriangles::add(" << p1 << ", v1, m1, " << p2 << ", v2, m2, " << p3 << ", v3, m3)" << endl;
 	return;
     }
     normals.add(n);
@@ -127,6 +127,7 @@ void GeomTriangles::add(GeomVertex* v1, GeomVertex* v2, GeomVertex* v3) {
     if(n.length2() > 0){
 	n.normalize();
     } else {
+	cerr << "Degenerate triangle in GeomTriangles::add(v1->" << v1->p << ", v2->" << v2->p << ", v3->" << v3->p << ")" << endl;
 	cerr << "Degenerate triangle!!!\n" << endl;
 	return;
     }

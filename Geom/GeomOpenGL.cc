@@ -88,7 +88,9 @@ static void quad_error(GLenum code)
 DrawInfoOpenGL::DrawInfoOpenGL()
 : current_matl(0),lighting(1),currently_lit(1),pickmode(1),fog(0)
 {
+    cerr << "Drawinfo::drawinfo\n";
     qobj=gluNewQuadric();
+    cerr << "calling gluquadriccallback\n";
     gluQuadricCallback(qobj, GLU_ERROR, (void (*)())quad_error);
 }
 

@@ -99,9 +99,10 @@ Point View::objspace_to_eyespace(const Point& ep, double aspect)
 //    y*=yscale;
 //    x.x(x.x()/xscale);
 //    y.y(y.y()/yscale);
-    Point p(Dot(x,ep-eyep_.vector())/xscale,
-	    Dot(y,ep-eyep_.vector())/yscale,
-	    Dot(z,ep-eyep_.vector()));
+    Vector epv(ep.vector());
+    Point p(Dot(x,epv-eyep_.vector())/xscale,
+	    Dot(y,epv-eyep_.vector())/yscale,
+	    Dot(z,epv-eyep_.vector()));
     return p;
 }
 Point View::eyespace_to_objspace_ns(const Point& ep, double aspect)
@@ -128,9 +129,10 @@ Point View::objspace_to_eyespace_ns(const Point& ep, double aspect)
     x.normalize();
     Vector y(Cross(x, z));
 
-    Point p(Dot(x,ep-eyep_.vector()),
-	    Dot(y,ep-eyep_.vector()),
-	    Dot(z,ep-eyep_.vector()));
+    Vector epv(ep.vector());
+    Point p(Dot(x,epv-eyep_.vector()),
+	    Dot(y,epv-eyep_.vector()),
+	    Dot(z,epv-eyep_.vector()));
     return p;
 }
 
