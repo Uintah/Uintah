@@ -26,44 +26,42 @@
  *
  */
 
-#ifndef SCIRun_Framework_Hello_h
-#define SCIRun_Framework_Hello_h
+#ifndef SCIRun_CCA_Components_Hello_h
+#define SCIRun_CCA_Components_Hello_h
 
 #include <Core/CCA/spec/cca_sidl.h>
 
-//namespace SCIRun {
+namespace SCIRun {
   
-class myUIPort : public virtual sci::cca::ports::UIPort {
-public:
-   virtual ~myUIPort(){}
-   virtual int ui();
-};
-
-class myGoPort : public virtual sci::cca::ports::GoPort {
-public:
-   virtual ~myGoPort(){}
-   virtual int go();
-};
-
-
-class Hello : public sci::cca::Component{
-                
+  class myUIPort : public virtual sci::cca::ports::UIPort {
   public:
-    Hello();
-    virtual ~Hello();
-
-    virtual void setServices(const sci::cca::Services::pointer& svc);
+    int ui();
+  };
+  
+  class myGoPort : public virtual sci::cca::ports::GoPort {
+  public:
+    myGoPort(const sci::cca::Services::pointer& svc);
+    int go();
   private:
-
-    Hello(const Hello&);
-    Hello& operator=(const Hello&);
-    myUIPort uiPort;
-    myGoPort goPort;
     sci::cca::Services::pointer services;
   };
-//}
-
-
+  
+  
+  class Hello : public sci::cca::Component{
+    
+  public:
+    Hello();
+    ~Hello();
+    void setServices(const sci::cca::Services::pointer& svc);
+  private:
+    
+    Hello(const Hello&);
+    Hello& operator=(const Hello&);
+    sci::cca::Services::pointer services;
+  };
+  
+  
+} //namespace SCIRun
 
 
 #endif
