@@ -98,6 +98,7 @@ private:
   //////////
   // Insert Documentation Here:
   friend class MPMICE;
+  friend class MPMArches;
 
   void actuallyInitialize(const ProcessorGroup*,
 			  const Patch* patch,
