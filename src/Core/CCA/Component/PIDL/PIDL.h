@@ -31,11 +31,22 @@
 #ifndef Component_PIDL_PIDL_h
 #define Component_PIDL_PIDL_h
 
-#include <Core/CCA/Component/PIDL/Object.h>
-#include <Core/CCA/Component/PIDL/PIDLException.h>
-#include <Core/CCA/Component/PIDL/URL.h>
-#include <Core/CCA/Component/PIDL/pidl_cast.h>
+#include <Core/CCA/Component/Comm/SpChannel.h>
+#include <Core/CCA/Component/Comm/EpChannel.h>
+#include <Core/CCA/Component/Comm/SocketSpChannel.h>
+#include <Core/CCA/Component/Comm/SocketEpChannel.h>
+#include <Core/CCA/Component/Comm/NexusSpChannel.h>
+#include <Core/CCA/Component/Comm/NexusEpChannel.h>
+
+#include "Object.h"
+#include "PIDLException.h"
+#include "URL.h"
 #include <string>
+
+//Constants used to determine which communications package
+//is used 
+#define COMM_SOCKET 55
+#define COMM_NEXUS 56
 
 namespace PIDL {
 
@@ -54,7 +65,15 @@ DESCRIPTION
   public:
     //////////
     // Initialize PIDL
-    static void initialize(int argc, char* argv[]);
+    static void initialize(int, char*[]);
+
+    //////////
+    // Get the start point channel  
+    static SpChannel* getSpChannel();
+
+    //////////
+    // Get the start point channel
+    static EpChannel* getEpChannel();
 
     //////////
     // Create a base Object class from the given URL
@@ -71,17 +90,16 @@ DESCRIPTION
     static void serveObjects();
 
     //////////
-    // Return the URL for the current process.  Individual
-    // objects may be identified by appending their id number
-    // or name to the end of the string.
-    static std::string getBaseURL();
-
-    //////////
     // Return the object Warehouse.  Most clients will not
     // need to use this.
     static Warehouse* getWarehouse();
   protected:
   private:
+    //////////
+    // Initialize proper communication library to
+    // be used throughout the PIDL
+    static void setCommunication(int c);
+
     //////////
     // The warehouse singleton object
     static Warehouse* warehouse;
@@ -93,4 +111,7 @@ DESCRIPTION
 } // End namespace PIDL
 
 #endif
+
+
+
 

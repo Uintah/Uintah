@@ -28,15 +28,15 @@
  *  Copyright (C) 2000 SCI Group
  */
 
-#include <Core/CCA/Component/PIDL/GlobusError.h>
+#include "PIDLException.h"
 
-using namespace PIDL;
+//using namespace PIDL;
 
-PIDLException::PIDLException()
+::PIDL::PIDLException::PIDLException()
 {
 }
 
-PIDLException::PIDLException(const PIDLException&)
+::PIDL::PIDLException::PIDLException(const PIDLException&)
 {
 }
 

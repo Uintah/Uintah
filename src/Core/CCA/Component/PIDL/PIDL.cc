@@ -29,48 +29,56 @@
  */
 
 #include <Core/CCA/Component/PIDL/PIDL.h>
-#include <Core/CCA/Component/PIDL/GlobusError.h>
 #include <Core/CCA/Component/PIDL/Object_proxy.h>
 #include <Core/CCA/Component/PIDL/Warehouse.h>
-#include <Core/Exceptions/InternalError.h>
-#include <globus_nexus.h>
+#include <Core/Exceptions/InternalError.h> 
 #include <iostream>
 #include <sstream>
 
 
 namespace PIDL {
 
-static unsigned short port;
-static char* host;
+static int comm_type = 0;
 
 Warehouse* ::PIDL::PIDL::warehouse;
-
-static int approval_fn(void*, char* urlstring, globus_nexus_startpoint_t* sp)
-{
-  try {
-    Warehouse* wh=PIDL::getWarehouse();
-    return wh->approval(urlstring, sp);
-  } catch(const SCIRun::Exception& e) {
-    std::cerr << "Caught exception (" << e.message() << "): " << urlstring
-	      << ", rejecting client (code=1005)\n";
-    return 1005;
-  } catch(...) {
-    std::cerr << "Caught unknown exception: " << urlstring
-	      << ", rejecting client (code=1006)\n";
-    return 1006;
-  }
-}
 
 void
 PIDL::initialize(int, char*[])
 {
+  //Default for communication purposes 
+  setCommunication(COMM_NEXUS);
+
   if(!warehouse){
     warehouse=new Warehouse;
-    if(int gerr=globus_module_activate(GLOBUS_NEXUS_MODULE))
-      throw GlobusError("Unable to initialize nexus", gerr);
-    if(int gerr=globus_nexus_allow_attach(&port, &host, approval_fn, 0))
-      throw GlobusError("globus_nexus_allow_attach failed", gerr);
-    globus_nexus_enable_fault_tolerance(NULL, 0);
+  }
+
+}
+
+SpChannel*  
+PIDL::getSpChannel() {
+  switch (comm_type) {
+  case COMM_SOCKET:
+    return (new SocketSpChannel());
+    break;
+  case COMM_NEXUS:
+    return (new NexusSpChannel());
+    break;
+  default:
+    return (new SocketSpChannel());    
+  }
+}
+
+EpChannel*  
+PIDL::getEpChannel() {
+  switch (comm_type) {
+  case COMM_SOCKET:
+    return (new SocketEpChannel());
+    break;
+  case COMM_NEXUS:
+    return (new NexusEpChannel());
+    break;
+  default:
+    return (new SocketEpChannel());
   }
 }
 
@@ -89,20 +97,29 @@ PIDL::objectFrom(const URL& url)
   return Object::pointer(new Object_proxy(url));
 }
 
-void PIDL::serveObjects()
+void 
+PIDL::serveObjects()
 {
   if(!warehouse)
     throw SCIRun::InternalError("Warehouse not initialized!\n");
   warehouse->run();
 }
 
-std::string PIDL::getBaseURL()
+
+//PRIVATE:
+
+void
+PIDL::setCommunication(int c)
 {
-  if(!warehouse)
-    throw SCIRun::InternalError("Warehouse not initialized!\n");
-  std::ostringstream o;
-  o << "x-nexus://" << host << ":" << port << "/";
-  return o.str();
+  if (comm_type != 0)
+    throw SCIRun::InternalError("Cannot modify communication setting after it has been set once\n");
+  else { 
+    comm_type = c;
+  }
 }
 
 }
+
+
+
+

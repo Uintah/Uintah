@@ -16,31 +16,20 @@
 */
 
 
-/*
- *  Object.cc: Base class for all PIDL distributed objects
- *
- *  Written by:
- *   Steven G. Parker
- *   Department of Computer Science
- *   University of Utah
- *   July 1999
- *
- *  Copyright (C) 1999 SCI Group
- */
+#include "Object.h"
 
-#include <Core/CCA/Component/PIDL/Object.h>
-
-#include <Core/CCA/Component/PIDL/GlobusError.h>
+#include <Core/CCA/Component/PIDL/URL.h>
 #include <Core/CCA/Component/PIDL/PIDL.h>
 #include <Core/CCA/Component/PIDL/Reference.h>
 #include <Core/CCA/Component/PIDL/ServerContext.h>
 #include <Core/CCA/Component/PIDL/TypeInfo.h>
-#include <Core/CCA/Component/PIDL/URL.h>
 #include <Core/CCA/Component/PIDL/Warehouse.h>
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Thread/MutexPool.h>
 #include <sstream>
+#include <iostream>
 
+using namespace std;
 using namespace PIDL;
 using namespace SCIRun;
 
@@ -52,7 +41,7 @@ Object::Object()
 }
 
 void
-Object::initializeServer(const TypeInfo* typeinfo, void* ptr)
+Object::initializeServer(const TypeInfo* typeinfo, void* ptr, EpChannel* epc)
 {
   if(!d_serverContext){
     d_serverContext=new ServerContext;
@@ -62,11 +51,13 @@ Object::initializeServer(const TypeInfo* typeinfo, void* ptr)
   } else if(d_serverContext->d_endpoint_active){
     throw InternalError("Server re-initialized while endpoint already active?");
   } else if(d_serverContext->d_objptr != this){
-    throw InternalError("Server re-initialized with a different base class ptr?");
+    throw InternalError("Server re-initialized with a differe`nt base class ptr?");
   }
   // This may happen multiple times, due to multiple inheritance.  It
   // is a "last one wins" approach - the last CTOR to call this function
   // is the most derived type.
+  d_serverContext->chan = epc;
+  d_serverContext->chan->openConnection();
   d_serverContext->d_typeinfo=typeinfo;
   d_serverContext->d_ptr=ptr;
 }
@@ -80,26 +71,26 @@ Object::~Object()
     if(d_serverContext->d_endpoint_active){
       if(warehouse->unregisterObject(d_serverContext->d_objid) != this)
 	throw InternalError("Corruption in object warehouse");
-      if(int gerr=globus_nexus_endpoint_destroy(&d_serverContext->d_endpoint))
-	throw GlobusError("endpoint_destroy", gerr);
+      d_serverContext->chan->closeConnection(); 
     }
+    delete d_serverContext->chan;
     delete d_serverContext;
   }
 }
 
-URL
-Object::getURL() const
+URL Object::getURL() const
 {
   std::ostringstream o;
   if(d_serverContext){
     if(!d_serverContext->d_endpoint_active)
       activateObject();
-    o << PIDL::getBaseURL() << d_serverContext->d_objid;
+    o << d_serverContext->chan->getUrl() 
+      << d_serverContext->d_objid;
   } else {
     // TODO - send a message to get the URL
     o << "getURL() doesn't (yet) work for proxy objects";
   }
-  return o.str();
+  return (o.str());
 }
 
 void
@@ -112,9 +103,8 @@ Object::_getReference(Reference& ref, bool copy) const
   }
   if(!d_serverContext->d_endpoint_active)
     activateObject();
-  if(int gerr=globus_nexus_startpoint_bind(&ref.d_sp, &d_serverContext->d_endpoint))
-    throw GlobusError("startpoint_bind", gerr);
   ref.d_vtable_base=TypeInfo::vtable_methods_start;
+  d_serverContext->bind(ref);
 }
 
 void
@@ -167,4 +157,5 @@ Object::getMutexPool()
   }
   return pool;
 }
+
 

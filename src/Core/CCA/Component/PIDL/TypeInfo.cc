@@ -28,18 +28,17 @@
  *  Copyright (C) 1999 SCI Group
  */
 
-#include <Core/CCA/Component/PIDL/TypeInfo.h>
-#include <Core/CCA/Component/PIDL/GlobusError.h>
+#include "TypeInfo.h"
+#include <Core/CCA/Component/Comm/CommError.h>
 #include <Core/CCA/Component/PIDL/Object.h>
 #include <Core/CCA/Component/PIDL/ProxyBase.h>
-#include <Core/CCA/Component/PIDL/ReplyEP.h>
+#include <Core/CCA/Component/Comm/ReplyEP.h>
 #include <Core/CCA/Component/PIDL/TypeInfo_internal.h>
 #include <Core/Exceptions/InternalError.h>
 #include <iostream>
 
 using std::cerr;
 
-using PIDL::GlobusError;
 using PIDL::Object;
 using PIDL::TypeInfo;
 
@@ -64,6 +63,7 @@ int TypeInfo::computeVtableOffset(const TypeInfo* ti) const
   return iter->second.second-vtable_methods_start;
 }
 
+
 Object* TypeInfo::pidl_cast(Object* obj) const
 {
   // If we aren't a proxy, we don't know what to do...
@@ -71,51 +71,38 @@ Object* TypeInfo::pidl_cast(Object* obj) const
   if(!p)
     return 0;
 
+  PIDL::Reference _ref;
+  p->_proxyGetReference(_ref,false); 
+  Message* message = _ref.chan->getMessage();
+
   // Get a startpoint ready for the reply
-  ReplyEP* reply=ReplyEP::acquire();
-  globus_nexus_startpoint_t sp;
-  reply->get_startpoint_copy(&sp);
+  message->createMessage();
 
   // Size the message
   int classname_size=d_priv->fullclassname.length();
   int uuid_size=d_priv->uuid.length();
-  int size=globus_nexus_sizeof_startpoint(&sp, 1)+
-    globus_nexus_sizeof_int(3)+
-    globus_nexus_sizeof_char(classname_size+uuid_size);
 
   // Pack the message
-  globus_nexus_buffer_t buffer;
-  if(int gerr=globus_nexus_buffer_init(&buffer, size, 0))
-    throw GlobusError("buffer_init", gerr);
-  globus_nexus_put_int(&buffer, &classname_size, 1);
-  globus_nexus_put_char(&buffer, const_cast<char*>(d_priv->fullclassname.c_str()),
-			classname_size);
-  globus_nexus_put_int(&buffer, &uuid_size, 1);
-  globus_nexus_put_char(&buffer, const_cast<char*>(d_priv->uuid.c_str()),
-			uuid_size);
+  message->marshalInt(&classname_size);
+  message->marshalChar(const_cast<char*>(d_priv->fullclassname.c_str()),classname_size);
+  message->marshalInt(&uuid_size); 
+  message->marshalChar(const_cast<char*>(d_priv->uuid.c_str()),uuid_size);
+ 
   int addRef=1; // Tell the isa handler to increment the ref count on the object
-  globus_nexus_put_int(&buffer, &addRef, 1);
-  globus_nexus_put_startpoint_transfer(&buffer, &sp, 1);
+  message->marshalInt(&addRef);
 
-    // Send the message
-  Reference ref;
-  p->_proxyGetReference(ref, false);
+  // Send the message
   int handler=vtable_isa_handler;
-  if(int gerr=globus_nexus_send_rsr(&buffer, &ref.d_sp,
-				    handler, GLOBUS_TRUE, GLOBUS_FALSE))
-    throw GlobusError("send_rsr", gerr);
-
-    // Wait for the reply
-  globus_nexus_buffer_t recvbuff=reply->wait();
+  message->sendMessage(handler);
+  // Wait for the reply
+  message->waitReply();
 
   // Unpack the reply
   int flag;
-  globus_nexus_get_int(&recvbuff, &flag, 1);
+  message->unmarshalInt(&flag);
   int vtbase;
-  globus_nexus_get_int(&recvbuff, &vtbase, 1);
-  ReplyEP::release(reply);
-  if(int gerr=globus_nexus_buffer_destroy(&recvbuff))
-    throw GlobusError("buffer_destroy", gerr);
+  message->unmarshalInt(&vtbase);
+  message->destroyMessage();
 
   if(!flag){
     // isa failed
@@ -123,13 +110,12 @@ Object* TypeInfo::pidl_cast(Object* obj) const
   } else {
     // isa succeeded, return the correct proxy
     Reference new_ref;
-    if(int gerr=globus_nexus_startpoint_copy(&new_ref.d_sp, &ref.d_sp))
-      throw GlobusError("startpoint_copy", gerr);
+    new_ref = _ref;
     new_ref.d_vtable_base=vtbase;
-
     return (*d_priv->create_proxy)(new_ref);
   }
 }
+
 
 int TypeInfo::isa(const std::string& classname, const std::string& uuid) const
 {

@@ -31,7 +31,7 @@
 #ifndef Component_PIDL_InvalidReference_h
 #define Component_PIDL_InvalidReference_h
 
-#include <Core/CCA/Component/PIDL/PIDLException.h>
+#include "PIDLException.h"
 #include <string>
 
 namespace PIDL {

@@ -28,7 +28,7 @@
  *  Copyright (C) 1999 SCI Group
  */
 
-#include <Core/CCA/Component/PIDL/InvalidReference.h>
+#include "InvalidReference.h"
 
 using PIDL::InvalidReference;
 

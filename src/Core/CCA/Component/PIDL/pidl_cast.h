@@ -71,7 +71,6 @@ pidl_cast(const F& ptr)
     dynamic_cast<ptr_type* >(ptr.getPointer());
   if(iface)
     return T(iface);
-
   const PIDL::TypeInfo* typeinfo = ptr_type::_static_getTypeInfo();
   PIDL::Object* result=typeinfo->pidl_cast(ptr.getPointer());
   if(result){

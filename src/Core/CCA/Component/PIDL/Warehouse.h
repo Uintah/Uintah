@@ -35,9 +35,10 @@
 #include <Core/Thread/Mutex.h>
 #include <map>
 #include <string>
-#include <globus_nexus.h>
 
 namespace PIDL {
+
+class Object;
 
 /**************************************
  
@@ -53,12 +54,21 @@ DESCRIPTION
 ****************************************/
   class Warehouse {
   public:
+
     //////////
-    // The nexus approval function.  Returns the startpoint
-    // to an object based on the object number.
-    int approval(char* url, globus_nexus_startpoint_t* sp);
+    // Lookup an object by name.  name should be parsable
+    // as an integer, specifiying the object id.  Returns
+    // null of the object is not found.  May throw
+    // InvalidReference if name is not parsable.
+    Object* lookupObject(const std::string&);
+
+    //////////
+    // Lookup an object by the object ID.  Returns null if
+    // the object is not found.
+    Object* lookupObject(int id);
 
   protected:
+
     //////////
     // PIDL needs access to most of these methods.
     friend class PIDL;
@@ -85,18 +95,6 @@ DESCRIPTION
     // Unregister the object associated with the object ID.
     // Returns a pointer to the object.
     Object* unregisterObject(int id);
-
-    //////////
-    // Lookup an object by name.  name should be parsable
-    // as an integer, specifiying the object id.  Returns
-    // null of the object is not found.  May throw
-    // InvalidReference if name is not parsable.
-    Object* lookupObject(const std::string&);
-
-    //////////
-    // Lookup an object by the object ID.  Returns null if
-    // the object is not found.
-    Object* lookupObject(int id);
 
     //////////
     // "Run" the warehouse.  This simply blocks until objects

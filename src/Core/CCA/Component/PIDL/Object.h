@@ -31,7 +31,11 @@
 #ifndef Component_PIDL_Object_h
 #define Component_PIDL_Object_h
 
+
+#include <Core/CCA/Component/PIDL/URL.h>
+#include <Core/CCA/Component/Comm/EpChannel.h>
 #include <Core/CCA/SmartPointer.h>
+
 
 namespace SCIRun {
   class MutexPool;
@@ -40,7 +44,7 @@ namespace SCIRun {
 namespace PIDL {
 
 class TypeInfo;
-class ServerContext;
+class ServerContext;  
 class Reference;
 class URL;
 
@@ -88,6 +92,11 @@ public:
   // this object.
   void deleteReference();
 
+  //////////
+  // The context of the server object.  If this is null,
+  // then the object is a proxy and there is no server.
+  ServerContext* d_serverContext;
+
 protected:
   //////////
   // Constructor.  Initializes d_serverContext to null,
@@ -103,16 +112,11 @@ protected:
   // in the entire inheritance tree.  The last one to call
   // will be the most derived class, which is the only
   // one that we care about.
-  void initializeServer(const TypeInfo* typeinfo, void* ptr);
+  void initializeServer(const TypeInfo* typeinfo, void* ptr, EpChannel* epc);
 
 private:
 
   friend class Warehouse;
-
-  //////////
-  // The context of the server object.  If this is null,
-  // then the object is a proxy and there is no server.
-  ServerContext* d_serverContext;
 
   //////////
   // The reference count for this object.

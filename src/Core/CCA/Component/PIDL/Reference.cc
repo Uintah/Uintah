@@ -28,36 +28,45 @@
  *  Copyright (C) 1999 SCI Group
  */
 
-#include <Core/CCA/Component/PIDL/Reference.h>
+#include "Reference.h"
 #include <Core/CCA/Component/PIDL/TypeInfo.h>
-#include <globus_nexus.h>
+#include <Core/CCA/Component/PIDL/PIDL.h>
 
-using PIDL::Reference;
-
-Reference::Reference()
+PIDL::Reference::Reference()
 {
-    d_vtable_base=TypeInfo::vtable_invalid;
-    globus_nexus_startpoint_set_null(&d_sp);
+  chan = PIDL::PIDL::getSpChannel();
+  d_vtable_base=TypeInfo::vtable_invalid;    
 }
 
-Reference::Reference(const Reference& copy)
-    : d_sp(copy.d_sp), d_vtable_base(copy.d_vtable_base)
+PIDL::Reference::Reference(const Reference& copy)
+    :d_vtable_base(copy.d_vtable_base)
 {
+  chan = (copy.chan)->SPFactory(false);
 }
 
-Reference::~Reference()
-{
+PIDL::Reference::~Reference(){
+  if (chan != NULL) {
+    delete chan;
+    chan = NULL;
+  }
 }
 
-Reference& Reference::operator=(const Reference& copy)
+PIDL::Reference& PIDL::Reference::operator=(const Reference& copy)
 {
-    d_sp=copy.d_sp;
-    d_vtable_base=copy.d_vtable_base;
-    return *this;
+  d_vtable_base=copy.d_vtable_base;
+  chan = (copy.chan)->SPFactory(false);
+  return *this;
 }
 
-int Reference::getVtableBase() const
+int PIDL::Reference::getVtableBase() const
 {
     return d_vtable_base;
 }
+
+
+
+
+
+
+
 
