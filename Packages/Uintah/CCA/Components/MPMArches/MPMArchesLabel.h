@@ -34,9 +34,9 @@ namespace Uintah {
       // produced by scheduleInterpolateCCToFC
       // if these are duplicates of some of the above, feel free to
       // straighten this out
-      const VarLabel* d_xMomFCLabel;
-      const VarLabel* d_yMomFCLabel;
-      const VarLabel* d_zMomFCLabel;
+      const VarLabel* d_xVelFCLabel;
+      const VarLabel* d_yVelFCLabel;
+      const VarLabel* d_zVelFCLabel;
     };
 
 } // end namespace Uintah

@@ -65,13 +65,13 @@ MPMArchesLabel::MPMArchesLabel()
    // produced by scheduleInterpolateCCToFC
    // if these are duplicates of some of the above, feel free to
    // straighten this out
-   d_xMomFCLabel = scinew VarLabel("xMomFC",
+   d_xVelFCLabel = scinew VarLabel("xVelFC",
 				SFCXVariable<double>::getTypeDescription() );
 
-   d_yMomFCLabel = scinew VarLabel("yMomFC",
+   d_yVelFCLabel = scinew VarLabel("yVelFC",
                                 SFCYVariable<double>::getTypeDescription() );
 
-   d_zMomFCLabel = scinew VarLabel("zMomFC",
+   d_zVelFCLabel = scinew VarLabel("zVelFC",
                                 SFCZVariable<double>::getTypeDescription() );
 
 } 
@@ -95,7 +95,7 @@ MPMArchesLabel::~MPMArchesLabel()
   delete d_wVel_mmLinSrcLabel;
   delete d_wVel_mmNonlinSrcLabel;
 
-  delete d_xMomFCLabel;
-  delete d_yMomFCLabel;
-  delete d_zMomFCLabel;
+  delete d_xVelFCLabel;
+  delete d_yVelFCLabel;
+  delete d_zVelFCLabel;
 }
