@@ -570,7 +570,7 @@ void    ICE::printData_FC(int matl,
  ======================================================================*
  Function:  printStencil--
 _______________________________________________________________________ */
-void    ICE::printStencil( int matl,
+void    ICE::printStencil( int /*matl*/,
                            const Patch* patch, 
                            int include_EC,
                            const string&    message1,        
@@ -783,18 +783,18 @@ void ICE::createDirs( const string& desc, string& path)
   // make the directories
   // code = 0 if successful
   path = udaDir + "/" + dirName;
-  int code = mkdir( path.c_str(), 0777 );
+  mkdir( path.c_str(), 0777 );
   
   path = udaDir + "/" + dirName + "/" + DW.str();
-  code = mkdir( path.c_str(), 0777 );
+  mkdir( path.c_str(), 0777 );
   
   path = udaDir + "/" + dirName + "/" + DW.str() + "/" + patchDir;
-  code = mkdir( path.c_str(), 0777 );
+  mkdir( path.c_str(), 0777 );
   
   if (matDir != "") { 
     path = udaDir + "/" + dirName + "/" + DW.str() + "/" + 
            patchDir + "/" + matDir ;
-    code = mkdir( path.c_str(), 0777 );
+    mkdir( path.c_str(), 0777 );
   }
 }
 /* 

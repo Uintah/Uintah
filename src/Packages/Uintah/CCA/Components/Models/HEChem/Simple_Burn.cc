@@ -55,8 +55,8 @@ Simple_Burn::~Simple_Burn()
     delete mymatls;
 }
 
-void Simple_Burn::problemSetup(GridP& grid, SimulationStateP& sharedState,
-			     ModelSetup& setup)
+void Simple_Burn::problemSetup(GridP&, SimulationStateP& sharedState,
+			     ModelSetup&)
 {
   cout << "I'm in problem setup" << endl;
   d_sharedState = sharedState;
@@ -86,7 +86,7 @@ void Simple_Burn::scheduleInitialize(const LevelP&,
 //______________________________________________________________________
 //      
 void Simple_Burn::scheduleComputeStableTimestep(SchedulerP&,
-					      const LevelP& level,
+					      const LevelP&,
 					      const ModelInfo*)
 {
   // None necessary...
@@ -361,7 +361,7 @@ void Simple_Burn::massExchange(const ProcessorGroup*,
 //______________________________________________________________________
 //
 void Simple_Burn::scheduleMomentumAndEnergyExchange(SchedulerP&,
-				       const LevelP& level,
+				       const LevelP&,
 				       const ModelInfo*)
 {
   // None
