@@ -62,7 +62,6 @@ include $(SCIRUN_SCRIPTS)/program.mk
 
 
 #build the SCIRun CCA Component Loader here
-
 ifeq ($(LARGESOS),yes)
   PSELIBS := Core/CCA/Component
 else
@@ -76,16 +75,14 @@ else
         Core/CCA/Component/PIDL Core/CCA/spec \
 	SCIRun Core/CCA/Component/SSIDL Core/Thread 
 endif
-
 endif
 
+ifeq ($(HAVE_MPI),yes)
 LIBS := $(MPI_LIBRARY) 
-
 PROGRAM := ploader
 SRCS      := $(SRCDIR)/ploader.cc
-
 include $(SCIRUN_SCRIPTS)/program.mk
-
+endif
 
 endif #Build SCIRun2
 
