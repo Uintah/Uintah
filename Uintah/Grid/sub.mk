@@ -19,7 +19,17 @@ SRCS     += $(SRCDIR)/Array3Index.cc $(SRCDIR)/Box.cc \
 	$(SRCDIR)/SimulationTime.cc $(SRCDIR)/SubPatch.cc \
 	$(SRCDIR)/Task.cc $(SRCDIR)/TypeDescription.cc \
 	$(SRCDIR)/TypeUtils.cc $(SRCDIR)/VarLabel.cc \
-	$(SRCDIR)/templates.cc $(SRCDIR)/PerPatchBase.cc
+	$(SRCDIR)/templates.cc $(SRCDIR)/PerPatchBase.cc \
+	$(SRCDIR)/GeometryPiece.cc \
+	$(SRCDIR)/SphereGeometryPiece.cc \
+	$(SRCDIR)/BoxGeometryPiece.cc \
+	$(SRCDIR)/CylinderGeometryPiece.cc \
+	$(SRCDIR)/TriGeometryPiece.cc \
+	$(SRCDIR)/UnionGeometryPiece.cc \
+	$(SRCDIR)/DifferenceGeometryPiece.cc \
+	$(SRCDIR)/IntersectionGeometryPiece.cc \
+	$(SRCDIR)/GeometryPieceFactory.cc 
+
 
 PSELIBS := Uintah/Math Uintah/Exceptions SCICore/Thread SCICore/Exceptions \
 	SCICore/Geometry PSECore/XMLUtil
@@ -29,6 +39,9 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.18  2000/06/09 18:38:23  jas
+# Moved geometry piece stuff to Grid/ from MPM/GeometryPiece/.
+#
 # Revision 1.17  2000/06/05 19:44:49  guilkey
 # Created PerPatchBase, filled in PerPatch class.
 #
