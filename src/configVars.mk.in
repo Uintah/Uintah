@@ -20,6 +20,10 @@
 # copy of the vars. This file has all of the variables and rules common to 
 # all generated makefiles.
 
+ifneq (@TAU_MAKEFILE@,)
+  include @TAU_MAKEFILE@
+endif
+
 # Blow away a bunch of makes internal rules to improve the performance
 # of make
 .SUFFIXES:
@@ -117,17 +121,19 @@ LIBIMAGE_DEF_FLAG := @LIBIMAGE_DEF_FLAG@
 
 LDRUN_PREFIX       := @LDRUN_PREFIX@
 
-TAU_INCLUDE_DIR   := @TAU_INCLUDE_DIR@
-TAU_LIB_DIR       := @TAU_LIB_DIR@
-TAU_LIB_FLAG      := @TAU_LIB_FLAG@
-ifneq ($(TAU_LIB_DIR),)
+TAU_MAKEFILE      := @TAU_MAKEFILE@
+
+ifneq (@TAU_MAKEFILE@,)
+  TAU_LIB_DIR       := $(TAU_PREFIX_INSTALL_DIR)/$(CONFIG_ARCH)/lib
+  TAU_LIB_FLAG      := $(TAU_MPI_LIBS) $(TAU_SHLIBS)
+
+  CFLAGS := $(CFLAGS) $(TAU_DEFS)
   TAU_LIBRARY := $(LDRUN_PREFIX)$(TAU_LIB_DIR) -L$(TAU_LIB_DIR) $(TAU_LIB_FLAG)
 else
-  TAU_LIBRARY := $(TAU_LIB_FLAG)
+  TAU_LIBRARY :=
 endif
-ifneq ($(TAU_INCLUDE_DIR),)
-TAU_INCLUDE := -I@TAU_INCLUDE_DIR@
-endif
+
+# Always put $(TAU_LIBRARY) in front of $(MPI_LIBRARY) for the TAU_MPI wrapper
 
 MPI_LIB_DIR := @MPI_LIB_DIR@
 MPI_LIB_FLAG := @MPI_LIB_FLAG@

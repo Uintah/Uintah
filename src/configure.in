@@ -140,7 +140,7 @@ AC_SUBST(TIME_IMPL)
 
 ##-- Check for TAU --------------------------------------------------------
 AC_ARG_WITH(tau,
-	  [  --with-tau=<path-to-tau-lib>  Specify Tau Lib Directory],
+	  [  --with-tau=<tau-makefile>  Specify Tau Makefile],
 	  [tau="$withval"],
 	  [tau=""])
 
@@ -504,22 +504,42 @@ AC_SUBST(MAKE_PARALLELISM)
 ##-- Find TAU ----------------------------------------------------------------
 
 if test "$tau" ; then
-  if ! test -f "$tau/libTAU.so" ; then
-	AC_MSG_ERROR(Directory '$tau' does not contain libTAU.so.  Bye!)
+  if ! test -f "$tau" ; then
+	AC_MSG_ERROR('$tau' does not exist.  Bye!)
   fi
 
-  AC_MSG_RESULT(Using TAU dir: $tau)
+  AC_MSG_RESULT(Using TAU makefile: $tau)
 
-  TAU_INCLUDE_DIR="${tau}/../../include"
-  TAU_LIB_DIR="${tau}"
-  TAU_LIB_FLAG="-lTauMpi-profile-trace -lTAUsh-profile-trace"
+  TAU_MAKEFILE=${tau}
+  
+  CFLAGS="$CFLAGS -DUSE_TAU_PROFILING"
 
-  CFLAGS="$CFLAGS -DUSE_TAU_PROFILING -DPROFILING_ON -DTRACING_ON"
+  cat > conftest-tau.cc <<EOF
+
+#include <Profile/Profiler.h>
+
+int main(int argc, char **argv)
+{
+  TAU_PROFILE("main", "int (int, char **)", TAU_DEFAULT);
+  TAU_PROFILE_INIT(argc, argv);
+  return 0;
+}
+EOF
+
+  cat > conftest-tau-makefile <<EOF
+include $(TAU_MAKEFILE)
+all:
+	$(TAU_CXX) -o conftest-tau-a.out $(TAU_DEFS) $(TAU_INCLUDE) conftest-tau.cc $(TAU_SHLIBS) $(TAU_MPI_LIBS)
+EOF
+
+  if ! (make TAU_MAKEFILE=${tau} -f conftest-tau-makefile > conftestout1) 2> conftesterr1 ; then
+	rm -f conftest-tau.cc conftest-tau-makefile conftest-tau-a.out conftestout1 conftesterr1
+  	AC_MSG_ERROR(TAU libraries not working. Bye!)
+  fi
+  rm -f conftest-tau.cc conftest-tau-makefile conftest-tau-a.out conftestout1 conftesterr1
 fi
 
-AC_SUBST(TAU_INCLUDE_DIR)
-AC_SUBST(TAU_LIB_DIR)
-AC_SUBST(TAU_LIB_FLAG)
+AC_SUBST(TAU_MAKEFILE)
 
 ##-- Find TCL ----------------------------------------------------------------
 
