@@ -312,7 +312,7 @@ bool LatticeVol<Data>::get_gradient(Vector &g, const Point &p)
     if( data_at() == Field::NODE)
     {
       mesh_handle_type mesh = get_typed_mesh();
-      const Point r = mesh->get_transform()->unproject(p);
+      const Point r = mesh->get_transform().unproject(p);
       double x = r.x();
       double y = r.y();
       double z = r.z();
@@ -331,6 +331,9 @@ bool LatticeVol<Data>::get_gradient(Vector &g, const Point &p)
       double z=pn.z()*(nz-1)/diagz;
 #endif
 
+      int nx=mesh->get_nx();
+      int ny=mesh->get_ny();
+      int nz=mesh->get_nz();
       int ix0 = (int)x;
       int iy0 = (int)y;
       int iz0 = (int)z;
@@ -368,7 +371,7 @@ bool LatticeVol<Data>::get_gradient(Vector &g, const Point &p)
       double z0 = Interpolate(x00, x01, fz);
       double z1 = Interpolate(x10, x11, fz);
       double dy = (z1-z0);
-      g = mesh->get_transform()->unproject(Vector(dx, dy, dz));
+      g = mesh->get_transform().unproject(Vector(dx, dy, dz));
       return true;
     }
   }
