@@ -99,11 +99,21 @@
                 <h4>
                   <b>Overview</b>
                 </h4>
-<p>To maintain a uniform look and functionality, PowerApps should be itcl classes and inherit from the SCIRun PowerAppBase class.  A PowerApp class should be in a file with a .app extension (i.e. BioTensor.app) to indicate that it is an PowerApp and not a SCIRun network.  This file will contain your specific itcl class definition along with a few more components which are discussed below.  All .app files should follow the following layout (examples are from BioTensor.app).</p>
+<p>To maintain a uniform look and functionality, PowerApps should be
+itcl classes and inherit from the SCIRun PowerAppBase class.  A
+PowerApp class should be in a file with a .app extension
+(i.e. BioTensor.app) to indicate that it is an PowerApp and not a
+SCIRun network.  This file contains the specific itcl class definition
+and other components discussed below.  All .app files should follow
+the following layout (examples are from BioTensor.app).</p>
 
 <ul>
-  <li><b><a name="OutputStmt" id="OutputStmt">Output Statement</a></b> such as &quot;Loading BioTensor (this may take a minute)...&quot;<br/><pre>puts "\nLoading BioTensor (this may take a minute)...\n"</pre></li>
-  <li><b><a name="SCIRUN_DATA" id="SCIRUN_DATA">References SCIRUN_DATA and SCIRUN_DATASET</a></b> so that your app can run with example data when possible.<br/>
+  <li><b><a name="OutputStmt" id="OutputStmt">Output Statement</a></b>
+  such as &quot;Loading BioTensor (this may take a
+  minute)...&quot;<br/><pre>puts "\nLoading BioTensor (this may take a
+  minute)...\n"</pre></li> <li><b><a name="SCIRUN_DATA"
+  id="SCIRUN_DATA">References SCIRUN_DATA and SCIRUN_DATASET</a></b>
+  so the app can run with example data when possible.<br/>
 <pre>
 set DATADIR [lindex [array get env SCIRUN_DATA] 1]
 set DATASET brain-dt
@@ -174,7 +184,9 @@ class BioTensorApp {
 </pre>
 </li>
 
-  <li><b><a name="Instantiate" id="Instantiate">Instantiate an App</a></b> and make sure to build it (usually done with the build_app method)<br/>
+  <li><b><a name="Instantiate" id="Instantiate">Instantiate an
+  App</a></b> and make sure to build it (usually done with the
+  build_app method)<br/>
 <pre>
 BioTensorApp app
 
@@ -182,7 +194,8 @@ app build_app
 </pre>
 </li>
 
-  <li><b><a name="Binds" id="Binds">Add Bind Commands</a></b> for shortcuts.  These must be after the creation of the app.<br/>
+  <li><b><a name="Binds" id="Binds">Add Bind Commands</a></b> for
+  shortcuts. Must come after creation of the app.<br/>
 <pre>
 bind all &lt;Control-s&gt; {
     app save_session
@@ -208,7 +221,8 @@ bind all &lt;Control-v&gt; {
                 <h4>
                   <b>Summary</b>
                 </h4>
-<p>Chapter 2 showed what a .app file should contain. Chapter 3 will go into more detail of the PowerAppBase class. </p>
+<p>Chapter 2 illustrated what an .app file should contain. Chapter 3 goes
+into further detail of the PowerAppBase class. </p>
 
                 <div align="right">
                   <p>
