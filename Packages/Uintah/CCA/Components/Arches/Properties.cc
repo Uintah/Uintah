@@ -1748,7 +1748,7 @@ Properties::computeDrhodt(const ProcessorGroup* pc,
     // Get the patch and variable indices
     IntVector idxLo = patch->getCellFORTLowIndex();
     IntVector idxHi = patch->getCellFORTHighIndex();
-    // compute drhodt and add its filtered value
+    // compute drhodt and its filtered value
     drhodt.allocate(patch->getLowIndex(), patch->getHighIndex());
     drhodt.initialize(0.0);
 
@@ -1775,7 +1775,6 @@ Properties::computeDrhodt(const ProcessorGroup* pc,
         for (int jj = idxLo.y(); jj <= idxHi.y(); jj++) {
           for (int ii = idxLo.x(); ii <= idxHi.x(); ii++) {
 	    IntVector currcell(ii,jj,kk);
-	    IntVector xminus(ii-1,jj,kk);
 
 	    double vol =cellinfo->sns[jj]*cellinfo->stb[kk]*cellinfo->sew[ii];
 	    drhodt[currcell] = (new_factor*new_density[currcell] -

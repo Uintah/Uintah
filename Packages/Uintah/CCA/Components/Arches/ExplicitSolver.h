@@ -283,6 +283,7 @@ private:
     int numTimeIntegratorLevels;
     bool nosolve_timelabels_allocated;
     bool d_pressure_correction;
+    bool d_3d_periodic;
 
 }; // End class ExplicitSolver
 } // End namespace Uintah
