@@ -131,7 +131,9 @@ endif
 # Always put $(TAU_LIBRARY) in front of $(MPI_LIBRARY) for the TAU_MPI wrapper
 
 MPI_LIBRARY := @MPI_LIB_DIR_FLAG@ @MPI_LIB_FLAG@
-
+# When using the HAVE_MPI variable, check only for whether it is blank (""), or
+# not blank.  Its "value" is not useful.
+HAVE_MPI := "@DEF_MPI@"
 
 MDSPLUS_LIBRARY := @MDSPLUS_LIB_DIR_FLAG@ @MDSPLUS_LIB_FLAG@
 DEF_MDSPLUS  := @DEF_MDSPLUS@
