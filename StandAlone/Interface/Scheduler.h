@@ -66,7 +66,7 @@ WARNING
        virtual DataWarehouseP createDataWarehouse( int generation ) = 0;
        
     protected:
-    	void emitEdges(const TaskGraph& graph);
+    	void emitEdges(const vector<Task*>& tasks);
     	void emitNode(const Task* name, time_t start, double duration);
     	void finalizeNodes();
     
@@ -83,6 +83,10 @@ WARNING
 
 //
 // $Log$
+// Revision 1.13  2000/07/25 20:59:27  jehall
+// - Simplified taskgraph output implementation
+// - Sort taskgraph edges; makes critical path algorithm eastier
+//
 // Revision 1.12  2000/07/19 21:41:52  jehall
 // - Added functions for emitting task graph information to reduce redundancy
 //

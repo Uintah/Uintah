@@ -2,6 +2,7 @@
 static char *id="@(#) $Id$";
 
 #include <fstream>
+#include <iostream>
 #include <sstream>
 #include <stdlib.h>
 #include <time.h>
@@ -26,7 +27,7 @@ Scheduler::~Scheduler()
 }
 
 void
-Scheduler::emitEdges(const TaskGraph& graph)
+Scheduler::emitEdges(const vector<Task*>& tasks)
 {
     // We'll get called once for each timestep. Each of these executions should
     // have the same task graph, execept for the output task which only happens
@@ -50,10 +51,68 @@ Scheduler::emitEdges(const TaskGraph& graph)
 
     DOM_Element edges = m_graphDoc->createElement("Edges");
     root.appendChild(edges);
-    graph.dumpDependencies(edges);
 
     m_nodes = new DOM_Element(m_graphDoc->createElement("Nodes"));
     root.appendChild(*m_nodes);
+
+    // Now that we've build the XML structure, we can add the actual edges
+    map<TaskProduct, Task*> computes_map;
+    vector<Task*>::const_iterator task_iter;
+    for (task_iter = tasks.begin(); task_iter != tasks.end(); task_iter++) {
+    	const vector<Task::Dependency*>& comps = (*task_iter)->getComputes();
+    	for (vector<Task::Dependency*>::const_iterator dep_iter = comps.begin();
+	     dep_iter != comps.end(); dep_iter++) {
+    	    const Task::Dependency* dep = *dep_iter;
+	    TaskProduct p(dep->d_patch, dep->d_matlIndex, dep->d_var);
+	    computes_map[p] = *task_iter;
+	}
+    }
+
+    ofstream depfile("dependencies");
+    if (!depfile) {
+	cerr << "TaskGraph::dumpDependencies: unable to open output file!\n";
+	return;	// dependency dump failure shouldn't be fatal to anything else
+    }
+
+    for (task_iter = tasks.begin(); task_iter != tasks.end(); task_iter++) {
+    	const Task* task = *task_iter;
+
+	const vector<Task::Dependency*>& deps = task->getRequires();
+	vector<Task::Dependency*>::const_iterator dep_iter;
+	for (dep_iter = deps.begin(); dep_iter != deps.end(); dep_iter++) {
+	    const Task::Dependency* dep = *dep_iter;
+
+	    if (!dep->d_dw->isFinalized()) {
+
+		TaskProduct p(dep->d_patch, dep->d_matlIndex, dep->d_var);
+		map<TaskProduct, Task*>::const_iterator deptask =
+	    	    computes_map.find(p);
+
+		const Task* task1 = task;
+		const Task* task2 = deptask->second;
+
+    	    	ostringstream name1;
+		name1 << task1->getName();
+		if (task1->getPatch())
+		    name1 << "\\nPatch" << task1->getPatch()->getID();
+		
+		ostringstream name2;
+		name2 << task2->getName();
+		if (task2->getPatch())
+		    name2 << "\\nPatch" << task2->getPatch()->getID();
+		    
+    	    	depfile << "\"" << name1.str() << "\" \""
+		    	<< name2.str() << "\"\n";
+
+    	    	DOM_Element edge = edges.getOwnerDocument().createElement("edge");
+    	    	appendElement(edge, "source", name1.str());
+		appendElement(edge, "target", name2.str());
+    	    	edges.appendChild(edge);
+	    }
+	}
+    }
+
+    depfile.close();
 }
 
 void
@@ -91,6 +150,10 @@ Scheduler::finalizeNodes()
 
 //
 // $Log$
+// Revision 1.6  2000/07/25 20:59:27  jehall
+// - Simplified taskgraph output implementation
+// - Sort taskgraph edges; makes critical path algorithm eastier
+//
 // Revision 1.5  2000/07/25 17:55:27  jehall
 // - Added include in case the MIPSPro CC decides to use this file to
 //   instantiate Handle<DataWarehouse>.
