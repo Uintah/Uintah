@@ -4,7 +4,6 @@
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
 #include <Packages/Uintah/CCA/Components/Schedulers/DetailedTasks.h>
 #include <Packages/Uintah/Core/Grid/Level.h>
-#include <Core/Util/NotFinished.h>
 
 using namespace Uintah;
 using namespace std;
