@@ -66,37 +66,39 @@ namespace SCIRun {
 
 
 // ---------------------------------------------------------------------- // 
-bool
-GenStandardColorMaps::genMap(const string& s)
+static bool
+genMap(ColorMapHandle &cmap, const string& s, int res)
 {
-  int m = resolution.get();
   int r,g,b;
   double a;
   istringstream is(s);
   if( is.good() )
   {
-    vector< Color > rgbs(m);
-    vector< float > rgbT(m);
-    vector< float > alphas(m);
-    vector< float > alphaT(m);
+    vector< Color > rgbs(res);
+    vector< float > rgbT(res);
+    vector< float > alphas(res);
+    vector< float > alphaT(res);
 
-    for (int i = 0; i < m; i++)
+    for (int i = 0; i < res; i++)
     {
       is >> r >> g >> b >> a;
       rgbs[i] = Color(r/255.0, g/255.0, b/255.0);
-      rgbT[i] = i/float(m);
+      rgbT[i] = i/float(res);
       alphas[i] = a;
-      alphaT[i] = i/float(m);
+      alphaT[i] = i/float(res);
     }
-    rgbT.push_back(1.0);
-    alphaT.push_back(1.0);
+    if (!res || rgbT[res-1] != 1.0)
+    {
+      rgbT.push_back(1.0);
+    }
+    if (!res || alphaT[res-1] != 1.0)
+    {
+      alphaT.push_back(1.0);
+    }
     cmap = scinew ColorMap(rgbs,rgbT,alphas,alphaT);
     return true;
   }
-  else
-  {
-    return false;
-  }
+  return false;
 }
 
 
@@ -121,29 +123,32 @@ GenStandardColorMaps::GenStandardColorMaps(GuiContext* ctx)
 { 
 } 
 
+
 //---------------------------------------------------------- 
-GenStandardColorMaps::~GenStandardColorMaps(){} 
+GenStandardColorMaps::~GenStandardColorMaps()
+{
+} 
+
 
 //-------------------------------------------------------------- 
 
 void GenStandardColorMaps::execute() 
 {
-   outport = (ColorMapOPort *)get_oport("ColorMap");
-   if (!outport) {
-     error("Unable to initialize oport 'ColorMap'.");
-     return;
-   }
-   static int res = -1;
    tcl_status.set("Calling GenStandardColorMaps!"); 
 
-   if ( res != resolution.get()){
-     res = resolution.get();
-   }
-   
    string tclRes;
    gui->eval(id+" getColorMapString", tclRes);
-   if ( genMap(tclRes) ) 
+
+   ColorMapHandle cmap;
+   if ( genMap(cmap, tclRes, resolution.get()) ) 
+   {
+     ColorMapOPort *outport = (ColorMapOPort *)get_oport("ColorMap");
+     if (!outport) {
+       error("Unable to initialize oport 'ColorMap'.");
+       return;
+     }
      outport->send(cmap);
+   }
 } 
 //--------------------------------------------------------------- 
 } // End namespace SCIRun
