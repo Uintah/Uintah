@@ -32,7 +32,7 @@ DEALINGS IN THE SOFTWARE.
   <!-- Intro to tooth data.  How was it obtained, etc -->
   <para></para>
 
-  <sect1>
+  <section>
     <title>Loading Data</title>
     <para>Loading a dataset is very easy.  Upon opening BioImage, the
     first module visible on the left-hand panel is the Load Data
@@ -74,9 +74,9 @@ DEALINGS IN THE SOFTWARE.
     <para>To reset the views to the default parameters, simply press
     the "Reset" button in the lower right corner of the Load Data
     window.</para>
-  </sect1>
+  </section>
 
-  <sect1>
+  <section>
     <title>Dynamic Filters</title>
     <para>BioImage focuses on data display, interaction, and
     manipulation.  This is all possible through the use of Dynamic
@@ -119,27 +119,27 @@ DEALINGS IN THE SOFTWARE.
     filter rules.  Only after clicking the Update button will any
     changes made to the data be applied to the data being
     visualized.</para>
-  </sect1>
+  </section>
 
-  <sect1>
+  <section>
     <title>Visualization</title>
     <para></para>
 
-    <sect2>
+    <section>
       <title>Planes</title>
       <para></para>
-    </sect2>
+    </section>
 
-    <sect2>
+    <section>
       <title>Volume Rendering</title>
       <para></para>
-    </sect2>
+    </section>
 
-    <sect2>
+    <section>
       <title>Viewer Options</title>
       <para></para>
-    </sect2>
+    </section>
 
-  </sect1>
+  </section>
 
 </chapter>
