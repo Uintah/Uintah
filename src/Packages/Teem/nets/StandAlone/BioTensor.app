@@ -1933,9 +1933,9 @@ class BioTensorApp {
         set plane_type "Principle Eigenvector"
 
         # glyphs
-        set clip_x ">"
-        set clip_y ">"
-        set clip_z ">"
+        set clip_x "<"
+        set clip_y "<"
+        set clip_z "<"
         set glyph_type "Principle Eigenvector"
 
 	# fibers
@@ -2883,7 +2883,7 @@ class BioTensorApp {
 	    
 	    
 	    ### Glyphs
-            set vis_tab [$page.vis_tabs add -label "Glyphs" -command "$this change_vis_tab Glyhps"]
+            set vis_tab [$page.vis_tabs add -label "Glyphs" -command "$this change_vis_tab Glyphs"]
 	    
 	    if {$case == 0} {
 		set glyphs_tab1 $vis_tab
@@ -3583,8 +3583,7 @@ class BioTensorApp {
     }
     
     method show_about {} {
-	puts "FIX ME: Insert BioTensor Intro here..."
-	tk_messageBox -message "BioTensor About Box" -type ok -icon info -parent .standalone
+	tk_messageBox -message "An application for computing and visualizing diffusion tensor\ndata.  Visualizations include planes, isosurfaces, glyphs,\nand fibers. For more information, see the BioTensor Tutorial\n\n  http://software.sci.utah.edu/doc/User/BioTensorTutorial" -type ok -icon info -parent .standalone
     }
     
     method display_module_error {} {
@@ -6195,6 +6194,23 @@ class BioTensorApp {
 	    $rep.f2.type insert end "Principle Eigenvector" "Fractional Anisotropy" "Linear Anisotropy" "Planar Anisotropy" "Constant"
 	    
 	    $rep.f2.type select "Principle Eigenvector"
+
+	    frame $rep.f3 
+	    pack $rep.f3 -side top -anchor nw -padx 3 -pady 1
+	    
+	    radiobutton $rep.f3.quad -text "Super \nQuadrics " \
+		-variable glyph_display_type \
+		-value superquadrics \
+		-state disabled \
+		-command "$this change_glyph_display_type radio $rep"
+	    
+	    iwidgets::optionmenu $rep.f3.type -labeltext "" \
+		-width 150 -state disabled \
+		-command "$this change_glyph_display_type men $rep.f3"
+	    pack $rep.f3.quad $rep.f3.type -side left -anchor nw -padx 2 -pady 0
+	    
+	    $rep.f3.type insert end "Principle Eigenvector" "Fractional Anisotropy" "Linear Anisotropy" "Planar Anisotropy" "Constant"
+	    $rep.f3.type select "Principle Eigenvector"
 	    
 	    global glyph_color
 	    frame $rep.select
@@ -6384,6 +6400,9 @@ class BioTensorApp {
 	    
 	    $glyphs_tab1.rep.childsite.f2.type select "Constant"
 	    $glyphs_tab2.rep.childsite.f2.type select "Constant"
+
+	    $glyphs_tab1.rep.childsite.f3.type select "Constant"
+	    $glyphs_tab2.rep.childsite.f3.type select "Constant"
 	} elseif {$port == 0} {
 	    #FA - set option menu to Fractional Anisotropy disable Color button
 	    $glyphs_tab1.rep.childsite.f1.type select "Fractional Anisotropy"
@@ -6391,6 +6410,9 @@ class BioTensorApp {
 	    
 	    $glyphs_tab1.rep.childsite.f2.type select "Fractional Anisotropy"
 	    $glyphs_tab2.rep.childsite.f2.type select "Fractional Anisotropy"
+
+	    $glyphs_tab1.rep.childsite.f3.type select "Fractional Anisotropy"
+	    $glyphs_tab2.rep.childsite.f3.type select "Fractional Anisotropy"
 	} elseif {$port == 1} {
 	    #LA -set optionmenu to LA and disable Color button
 	    $glyphs_tab1.rep.childsite.f1.type select "Linear Anisotropy"
@@ -6398,7 +6420,9 @@ class BioTensorApp {
 	    
 	    $glyphs_tab1.rep.childsite.f2.type select "Linear Anisotropy"
 	    $glyphs_tab2.rep.childsite.f2.type select "Linear Anisotropy"
-	    
+
+	    $glyphs_tab1.rep.childsite.f3.type select "Linear Anisotropy"
+	    $glyphs_tab2.rep.childsite.f3.type select "Linear Anisotropy"
 	} elseif {$port == 2} {
 	    #PA - set option menu to pa and disable color button
 	    $glyphs_tab1.rep.childsite.f1.type select "Planar Anisotropy"
@@ -6406,6 +6430,9 @@ class BioTensorApp {
 	    
 	    $glyphs_tab1.rep.childsite.f2.type select "Planar Anisotropy"
 	    $glyphs_tab2.rep.childsite.f2.type select "Planar Anisotropy"
+
+	    $glyphs_tab1.rep.childsite.f3.type select "Planar Anisotropy"
+	    $glyphs_tab2.rep.childsite.f3.type select "Planar Anisotropy"
 	} elseif {$port == 3} {
 	    #e1 - set option menu to e1 and disable color button
 	    $glyphs_tab1.rep.childsite.f1.type select "Principle Eigenvector"
@@ -6413,6 +6440,9 @@ class BioTensorApp {
 	    
 	    $glyphs_tab1.rep.childsite.f2.type select "Principle Eigenvector"
 	    $glyphs_tab2.rep.childsite.f2.type select "Principle Eigenvector"
+
+	    $glyphs_tab1.rep.childsite.f3.type select "Principle Eigenvector"
+	    $glyphs_tab2.rep.childsite.f3.type select "Principle Eigenvector"
 	} 
     }
 
@@ -6436,11 +6466,22 @@ class BioTensorApp {
 		$glyphs_tab2.rep.childsite.f1.type configure -state normal
 		$glyphs_tab1.rep.childsite.f2.type configure -state disabled
 		$glyphs_tab2.rep.childsite.f2.type configure -state disabled
+		$glyphs_tab1.rep.childsite.f3.type configure -state disabled
+		$glyphs_tab2.rep.childsite.f3.type configure -state disabled
+	    } elseif {$glyph_display_type == "superquadrics"} {
+		$glyphs_tab1.rep.childsite.f1.type configure -state disabled
+		$glyphs_tab2.rep.childsite.f1.type configure -state disabled
+		$glyphs_tab1.rep.childsite.f2.type configure -state disabled
+		$glyphs_tab2.rep.childsite.f2.type configure -state disabled
+		$glyphs_tab1.rep.childsite.f3.type configure -state normal
+		$glyphs_tab2.rep.childsite.f3.type configure -state normal
 	    } else {
 		$glyphs_tab1.rep.childsite.f1.type configure -state disabled
 		$glyphs_tab2.rep.childsite.f1.type configure -state disabled
 		$glyphs_tab1.rep.childsite.f2.type configure -state normal
 		$glyphs_tab2.rep.childsite.f2.type configure -state normal
+		$glyphs_tab1.rep.childsite.f3.type configure -state disabled
+		$glyphs_tab2.rep.childsite.f3.type configure -state disabled
 	    }       
 
 	    if {$scale_glyph == 0} {
@@ -6479,8 +6520,6 @@ class BioTensorApp {
 	    $glyphs_tab1.show configure -state normal -foreground black
 	    $glyphs_tab2.show configure -state normal -foreground black
 	}
-	
-
     }
 
     method toggle_scale_glyph {} {
@@ -6542,10 +6581,12 @@ class BioTensorApp {
 	    # radio button changed  
 	    if {$glyph_display_type == "boxes"} {
 		set type [$w.f1.type get]
-	    } else {
+	    } elseif {$glyph_display_type == "superquadrics"} {
+		set type [$w.f3.type get]
+	    } elseif {$glyph_display_type == "ellipsoids"} {
 		set type [$w.f2.type get]
 	    }       	
-        } else {
+	} else {
 	    # optionmenu changed
 	    set type [$w.type get]
         }
@@ -6557,7 +6598,9 @@ class BioTensorApp {
         # configure display type
         if {$glyph_display_type == "ellipsoids"} {
 	    set $mods(ShowField-Glyphs)-tensor_display_type Ellipsoids
-        } else {
+        } elseif {$glyph_display_type == "superquadrics"} {
+	    set $mods(ShowField-Glyphs)-tensor_display_type Superquadrics
+	} else {
 	    # determine if normal boxes or colored boxes
 	    if {$type == "RGB"} {
                 set glyph_type "RGB"
@@ -8326,7 +8369,7 @@ bind all <Control-q> {
     app exit_app
 }
 
-bind all <Control-a> {
+bind all <Control-v> {
     global mods
     $mods(Viewer)-ViewWindow_0-c autoview
 }
