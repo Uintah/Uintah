@@ -61,7 +61,7 @@
 #        Use a warning icon
 #     -error
 #        Use a error icon
-#     -parent <window>
+#     -parent <window>  [Not 100% correct yet...]
 #        If this option is specified, the window will center itself on the parent.
 #        If not, the window will be placed near the mouse cursor's current location.
 #     - 
@@ -88,6 +88,14 @@ static unsigned char question_bits[] = {
    0x40, 0x01, 0x00, 0xc0, 0x02, 0x00, 0x00, 0x01, 0x00};
 }
 
+set info_bits {
+#define info_width 8
+#define info_height 21
+static unsigned char info_bits[] = {
+   0x3c, 0x2a, 0x16, 0x2a, 0x14, 0x00, 0x00, 0x3f, 0x15, 0x2e, 0x14, 0x2c,
+   0x14, 0x2c, 0x14, 0x2c, 0x14, 0x2c, 0xd7, 0xab, 0x55};
+}
+
 set warning_bits {
 #define warning_width 6
 #define warning_height 19
@@ -109,7 +117,7 @@ static unsigned char error_bits[] = {
 
 proc createSciDialog { args } {
 
-  global question_bits warning_bits error_bits
+  global question_bits warning_bits error_bits info_bits
 
   set outside_pad 4
 
@@ -198,6 +206,9 @@ proc createSciDialog { args } {
       } elseif { $argName == "-warning" } {
 	  if { $title == "" } { set title "Warning" }
 	  set icon $warning_bits
+      } elseif { $argName == "-info" } {
+	  if { $title == "" } { set title "Info" }
+	  set icon $info_bits
       } elseif { $argName == "-error" } {
 	  if { $title == "" } { set title "Error" }
 	  set icon $error_bits
