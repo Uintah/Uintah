@@ -37,7 +37,7 @@ DEALINGS IN THE SOFTWARE.
 
     <para>
       BioImage is a SCIRun PowerApp for visualizing regular, three
-      dimensional scalar volumes from CT and MRI data.  In addition to
+      dimensional scalar volumes such as CT and MRI data.  In addition to
       2D and 3D visualization tools, BioImage provides a number of
       <firstterm>dynamic filters</firstterm>, such as re-sampling and
       cropping.  Dynamic filters are used to emphasize the features of a
@@ -145,7 +145,7 @@ DEALINGS IN THE SOFTWARE.
 	  <listitem>
 	    <para>
 	      The Processing Pane is used to load, orient, and filter
-	      data.  See item 1 in <xref linkend="fig.viewing-pane"/>.
+	      data.  See item 1 in <xref linkend="fig.gui-launch"/>.
 	    </para>
 	  </listitem>
 	</varlistentry>
@@ -154,8 +154,8 @@ DEALINGS IN THE SOFTWARE.
 	  <listitem>
 	    <para>
 	      The Visualization pane <xref
-	      linkend="fig.viewing-pane"/>, item 2 in <xref
-	      linkend="fig.viewing-pane"/>, contains four sub-panes. The
+	      linkend="fig.gui-launch"/>, item 2 in <xref
+	      linkend="fig.gui-launch"/>, contains four sub-panes. The
 	      top pane displays three dimensional
 	      visualizations. The bottom three panes (left to right)
 	      display sagittal, coronal, and axial slice planes.

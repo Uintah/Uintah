@@ -30,11 +30,12 @@ DEALINGS IN THE SOFTWARE.
   <title>User Interface</title>
   <para>
       BioImage is divided into three main panes: the Processing Pane on the left, 
-      the Rendering Windows in the center, and the Visualization Pane on the right. 
-      The two side panes can be detached from the Rendering Windows by clicking on 
+      the Visualization Pane in the center, and the Visualization Settings Pane 
+      on the right as shown in <xref linkend="fig.gui-launch"/>. The two side 
+      panes can be detached from the Visualization Pane by clicking on 
       the pane detachment/attachment controls.  These are the vertical dashed lines 
       separating the panes.  Detaching these panes allows the user to resize the 
-      Rendering Windows for better viewing.
+      Visualization Pane for better viewing.
   </para>
   <section>
     <title>Processing Pane</title>
@@ -212,16 +213,16 @@ DEALINGS IN THE SOFTWARE.
     </section>
   </section> <!-- End of the Processing Pane Section -->
   <section>
-    <title>Rendering Window</title>
+    <title>Visualization Pane</title>
     <para>
-      The Rendering Window is composed of four main windows, which
+      The Visualization Pane is composed of four sub-panes, which
       can be resized by clicking and dragging the bars which separate
       them. 
     </para>
     <section>
       <title>3D Viewing Window</title>
       <para>
-	The upper window is the 3D viewer window. The 3D viewer can 
+	The upper window is the 3D volume pane. The 3D viewer can 
 	display slice planes of the axial, sagittal and coronal planes oriented 
 	relative to each other in 3-space, maximum intensity projectsions,
 	and a view a full 3D Volume rendering of the data.
@@ -275,10 +276,10 @@ DEALINGS IN THE SOFTWARE.
     </section> <!-- End of the 2D Viewing Windows section -->
   </section> <!-- End of the Rendering Windows Section -->
   <section>
-    <title>Visualization Pane</title>
+    <title>Visualization Settings Pane</title>
     <para>
-      The Visualization Pane is located to the right of the Rendering
-      Window. It controls parameters for all of the visualization in
+      The Visualization Settings Pane is located to the right of the 
+      Visualization Pane. It controls parameters for all of the visualization in
       BioImage and contains three tabs: Planes, Volume Rendering, and
       3D Options.
     </para>
@@ -329,7 +330,12 @@ DEALINGS IN THE SOFTWARE.
 	viewing window guidelines on or off.
       </para>
       <para>
-	The Filter 2D Textures checkbox...
+	The Filter 2D Textures checkbox forces BioImage to linearally
+	interpolate the textures for a smoother appearance when zooming
+	in.  With this option off, when the user zooms in on a slice 
+	either the 3D or 2D views then each pixel is represented as a 
+	little square, with it on, each pixel is linearally interpolated 
+	for a smoother appearance.
       </para>
       <para>
 	The Color Planes By frame allows the user to change the planes
@@ -354,7 +360,7 @@ DEALINGS IN THE SOFTWARE.
 	maximum intensity projection (MIP) rendering styles.
       </para>
       <para>
-	The Sampling frame controla the rendering quality. 
+	The Sampling frame controls the rendering quality. 
 	Increasing the value of the Sampling Rate improve rendering
 	quality. The Interactive Sampling Rate controls the number
 	of samples while translating, rotating, or zomming into the
@@ -375,5 +381,5 @@ DEALINGS IN THE SOFTWARE.
 	is in the 3D window. 
       </para>
     </section> <!-- End of 3D Options section -->
-  </section> <!-- End of Visualization Pane section -->
+  </section> <!-- End of Visualization Settings Pane section -->
 </chapter>
