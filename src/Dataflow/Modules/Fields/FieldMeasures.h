@@ -119,12 +119,12 @@ FieldMeasuresAlgoT<MESH,SIMPLEX>::execute(MeshHandle meshH, bool x, bool y,
   while (si != sie) {
     int col=0;
     if (x || y || z) mesh->get_center(p, *si);
-    if (x)     { m->get(row, col++) = p.x(); }
-    if (y)     { m->get(row, col++) = p.y(); }
-    if (z)     { m->get(row, col++) = p.z(); }
-    if (idx)   { m->get(row, col++) = row; }
-    if (nnbrs) { m->get(row, col++) = mesh->get_valence(*si); }
-    if (size)  { m->get(row, col++) = mesh->get_size(*si); }
+    if (x)     { m->put(row, col++, p.x()); }
+    if (y)     { m->put(row, col++, p.y()); }
+    if (z)     { m->put(row, col++, p.z()); }
+    if (idx)   { m->put(row, col++, row); }
+    if (nnbrs) { m->put(row, col++, mesh->get_valence(*si)); }
+    if (size)  { m->put(row, col++, mesh->get_size(*si)); }
     ++si;
     row++;
   }
@@ -188,18 +188,18 @@ FieldMeasuresAlgoTNN<MESH,SIMPLEX>::execute(MeshHandle meshH, bool x, bool y,
   while (si != sie) {
     int col=0;
     if (x || y || z) mesh->get_center(p, *si);
-    if (x)     { m->get(row, col++) = p.x(); }
-    if (y)     { m->get(row, col++) = p.y(); }
-    if (z)     { m->get(row, col++) = p.z(); }
-    if (idx)   { m->get(row, col++) = row; }
-    if (nnbrs) { m->get(row, col++) = mesh->get_valence(*si); }
-    if (size)  { m->get(row, col++) = mesh->get_size(*si); }
+    if (x)     { m->put(row, col++, p.x()); }
+    if (y)     { m->put(row, col++, p.y()); }
+    if (z)     { m->put(row, col++, p.z()); }
+    if (idx)   { m->put(row, col++, row); }
+    if (nnbrs) { m->put(row, col++, mesh->get_valence(*si)); }
+    if (size)  { m->put(row, col++, mesh->get_size(*si)); }
 
     // Add in the node normals.
     mesh->get_normal(n, *si);
-    m->get(row, col++) = n.x();
-    m->get(row, col++) = n.y();
-    m->get(row, col++) = n.z();
+    m->put(row, col++, n.x());
+    m->put(row, col++, n.y());
+    m->put(row, col++, n.z());
 
     ++si;
     row++;
@@ -265,12 +265,12 @@ FieldMeasuresAlgoTFN<MESH,SIMPLEX>::execute(MeshHandle meshH, bool x, bool y,
   while (si != sie) {
     int col=0;
     if (x || y || z) mesh->get_center(p, *si);
-    if (x)     { m->get(row, col++) = p.x(); }
-    if (y)     { m->get(row, col++) = p.y(); }
-    if (z)     { m->get(row, col++) = p.z(); }
-    if (idx)   { m->get(row, col++) = row; }
-    if (nnbrs) { m->get(row, col++) = mesh->get_valence(*si); }
-    if (size)  { m->get(row, col++) = mesh->get_size(*si); }
+    if (x)     { m->put(row, col++, p.x()); }
+    if (y)     { m->put(row, col++, p.y()); }
+    if (z)     { m->put(row, col++, p.z()); }
+    if (idx)   { m->put(row, col++, row); }
+    if (nnbrs) { m->put(row, col++, mesh->get_valence(*si)); }
+    if (size)  { m->put(row, col++, mesh->get_size(*si)); }
 
     // Add in the face normals.
     mesh->get_nodes(nodes, *si);
@@ -286,9 +286,9 @@ FieldMeasuresAlgoTFN<MESH,SIMPLEX>::execute(MeshHandle meshH, bool x, bool y,
     {
       n = Vector(0.0, 0.0, 0.0);
     }
-    m->get(row, col++) = n.x();
-    m->get(row, col++) = n.y();
-    m->get(row, col++) = n.z();
+    m->put(row, col++, n.x());
+    m->put(row, col++, n.y());
+    m->put(row, col++, n.z());
 
     ++si;
     row++;
