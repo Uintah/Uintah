@@ -29,7 +29,7 @@ void* GetLibrarySymbolAddress(const char* libname, const char* symbolname)
 #ifdef _WIN32
   LibraryHandle = LoadLibrary(libname);
 #else
-  LibraryHandle = dlopen(libname, RTLD_LAZY);
+  LibraryHandle = dlopen(libname, RTLD_LAZY|RTLD_GLOBAL);
 #endif
   
   if (LibraryHandle == 0) 
@@ -56,7 +56,7 @@ LIBRARY_HANDLE GetLibraryHandle(const char* libname)
 #ifdef _WIN32
   return LoadLibrary(libname);
 #else
-  return dlopen(libname, RTLD_LAZY);
+  return dlopen(libname, RTLD_LAZY|RTLD_GLOBAL);
 #endif
 }
 
