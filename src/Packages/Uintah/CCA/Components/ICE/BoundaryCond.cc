@@ -1610,8 +1610,7 @@ void setBCDensityLODI(CCVariable<double>& rho_CC,
     }
  
     if(rho_new_bcs != 0 && rho_new_bcs->getKind() == "LODI"){ 
-      fillFaceDensityLODI(patch, rho_CC, di, nu, rho_tmp, vel,  
-                          face, delT, dx); 
+       FaceDensityLODI(patch, face, rho_CC, di, nu, rho_tmp, vel, delT, dx);
     }
   }  
   
@@ -1694,8 +1693,9 @@ void setBCVelLODI(CCVariable<Vector>& vel_CC,
       continue;
     } 
     if (vel_new_bcs != 0 && kind == "Velocity" && vel_new_bcs->getKind() == "LODI") {
-      fillFaceVelLODI(patch, vel_CC,di, nu, rho_tmp, p, vel,  
-                      face, delT, dx);
+      
+      FaceVelLODI( patch, face, vel_CC, di, nu,
+                  rho_tmp, p, vel, delT, dx);
     }
   } 
   
@@ -1785,10 +1785,10 @@ void setBCVelLODI(CCVariable<Vector>& vel_CC,
     }
 
     if (temp_new_bcs != 0 && temp_new_bcs->getKind() == "LODI") {
-       fillFaceTempLODI(patch, temp_CC, di,
-                        e, rho_CC, nu, rho_tmp, 
-                        p, vel, face, delT, cv, gamma,
-                        dx);
+       FaceTempLODI(patch, face, temp_CC, di,
+                    e, rho_CC,nu,
+                    rho_tmp, p, vel, 
+                    delT, cv, gamma, dx);
     }
   } 
   
