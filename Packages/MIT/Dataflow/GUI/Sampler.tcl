@@ -23,11 +23,14 @@ package require Iwidgets 3.1
 itcl_class MIT_Metropolis_Sampler {
     inherit Module
 
+    variable index
+
     constructor {config} {
 	set name Sampler
     }
 
     method ui {} {
+	set index 0
 	set w .ui[modname]
 	if {[winfo exists $w]} {
 	    raise $w
@@ -40,4 +43,5 @@ itcl_class MIT_Metropolis_Sampler {
 
 	$this-c set-window $w.f
     }
+
 }
