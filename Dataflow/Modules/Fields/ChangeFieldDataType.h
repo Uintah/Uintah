@@ -36,6 +36,8 @@ class ChangeFieldDataTypeAlgoCreate : public DynamicAlgoBase
 public:
 
   virtual FieldHandle execute(FieldHandle fsrc_h) = 0;
+  virtual void set_val_scalar(FieldHandle fout_h, 
+			      unsigned ind, double val) = 0;
 
   //! support the dynamically compiled algorithm concept
   static CompileInfoHandle get_compile_info(const TypeDescription *fsrc,
@@ -49,6 +51,8 @@ class ChangeFieldDataTypeAlgoCreateT : public ChangeFieldDataTypeAlgoCreate
 public:
 
   virtual FieldHandle execute(FieldHandle fsrc_h);
+  virtual void set_val_scalar(FieldHandle fout_h, 
+			      unsigned ind, double val);
 };
 
 
@@ -67,7 +71,16 @@ ChangeFieldDataTypeAlgoCreateT<FSRC, FOUT>::execute(FieldHandle fsrc_h)
   return fout;
 }
 
-
+template <class FSRC, class FOUT>
+void
+ChangeFieldDataTypeAlgoCreateT<FSRC, FOUT>::set_val_scalar(FieldHandle fout_h, 
+							   unsigned ind, 
+							   double val)
+{
+  FOUT *fout = dynamic_cast<FOUT *>(fout_h.get_rep());
+  typedef typename FOUT::mesh_type::Node::index_type ni;
+  fout->set_value(val, (ni)ind);
+}
 
 
 class ChangeFieldDataTypeAlgoCopy : public DynamicAlgoBase

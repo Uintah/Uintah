@@ -38,6 +38,7 @@ SRCS     += $(SRCDIR)/AnisoSphereModel.cc\
 	    $(SRCDIR)/DipoleInSphere.cc\
 	    $(SRCDIR)/DipoleInAnisoSpheres.cc\
 	    $(SRCDIR)/DipoleMatrixSourceRHSQuadratic.cc\
+	    $(SRCDIR)/ForwardMagneticField.cc\
 	    $(SRCDIR)/IndicesToTensors.cc\
 	    $(SRCDIR)/InsertElectrodes.cc\
 	    $(SRCDIR)/InsertVoltageSource.cc\

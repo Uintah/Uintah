@@ -89,11 +89,15 @@ Parallel3<T, Arg1, Arg2, Arg3>::run(int proc)
 
 template<class T, class Arg1, class Arg2, class Arg3>
 Parallel3<T, Arg1, Arg2, Arg3>::Parallel3(T* obj,
-							   void (T::*pmf)(int, Arg1, Arg2, Arg3),
-							   Arg1 a1, Arg2 a2, Arg3 a3)
-    : obj_(obj), pmf_(pmf), a1(a1), a2(a2), a3(a3)
+				         void (T::*pmf)(int, Arg1, Arg2, Arg3),
+					 Arg1 a1, Arg2 a2, Arg3 a3) : 
+  obj_(obj), 
+  pmf_(pmf), 
+  a1(a1), 
+  a2(a2), 
+  a3(a3)
 {
-    wait_=0; // This may be set by Thread::parallel
+  wait_=0; // This may be set by Thread::parallel
 } // End namespace SCIRun
 
 template<class T, class Arg1, class Arg2, class Arg3>
