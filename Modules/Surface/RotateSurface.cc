@@ -27,7 +27,7 @@
 #include <stdio.h>
 #include <Malloc/Allocator.h>
 
-void buildRotateMatrix(double rm[][3], double angle, const Vector& axis) {
+static void buildRotateMatrix(double rm[][3], double angle, const Vector& axis) {
     // From Foley and Van Dam, Pg 227
     // NOTE: Element 0,1 is wrong in the text!
     double sintheta=Sin(angle);
@@ -46,7 +46,7 @@ void buildRotateMatrix(double rm[][3], double angle, const Vector& axis) {
     rm[2][2]=uz*uz+costheta*(1-uz*uz);
 }
 
-Vector rotateVector(const Vector& v_r, double rm[][3]) {
+static Vector rotateVector(const Vector& v_r, double rm[][3]) {
     return Vector(v_r.x()*rm[0][0]+v_r.y()*rm[0][1]+v_r.z()*rm[0][2],
 		  v_r.x()*rm[1][0]+v_r.y()*rm[1][1]+v_r.z()*rm[1][2],
 		  v_r.x()*rm[2][0]+v_r.y()*rm[2][1]+v_r.z()*rm[2][2]);
@@ -54,7 +54,7 @@ Vector rotateVector(const Vector& v_r, double rm[][3]) {
 
 // transform a pt by pushing it though a rotation matrix (M) and adding a
 // displacement Vector (v)
-Point transformPt(double m[3][3], const Point& p, const Vector& v) {
+static Point transformPt(double m[3][3], const Point& p, const Vector& v) {
     return Point(p.x()*m[0][0]+p.y()*m[0][1]+p.z()*m[0][2]+v.x(),
 		 p.x()*m[1][0]+p.y()*m[1][1]+p.z()*m[1][2]+v.y(),
 		 p.x()*m[2][0]+p.y()*m[2][1]+p.z()*m[2][2]+v.z());

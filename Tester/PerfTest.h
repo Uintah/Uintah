@@ -23,7 +23,7 @@ private:
     void print_msg();
     char* symname;
     int count;
-    int max;
+    double max;
     long start_time;
     double baseline;
     double baseline_time;

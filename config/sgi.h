@@ -99,3 +99,4 @@
 #define SCI_OBJROOT /home/sci/data1/development/obj/sgi
 #endif
 
+#define SCI_DYNAMICLINK_LIB 

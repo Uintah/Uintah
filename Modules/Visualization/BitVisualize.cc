@@ -277,18 +277,3 @@ void BitVisualize::vol_render1_grid() {
     sfrg->get_bounds(minP, maxP);
     vol_render1();
 }
-
-#ifdef __GNUG__
-
-#include <Classlib/Array1.cc>
-template class Array1<SurfaceOPort*>;
-template class Array1<SurfaceHandle>;
-template class Array1<TriSurface*>;
-template class Array1<TCLint*>;
-template class Array1<GeomPts*>;
-template class Array1<int>;
-template class Array1<MaterialHandle>;
-template class Array1<GeomGroup*>;
-
-#endif
-

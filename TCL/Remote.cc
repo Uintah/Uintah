@@ -26,6 +26,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <stdlib.h>
+#include <string.h>
 
 //#define DEBUG 1
 
@@ -50,7 +51,7 @@ cerr << "setupConnect() opened listen socket = " << in_socket << endl;
     master.sin_port = port;
 
     // bind to socket
-    if (bind (in_socket, &master, sizeof(master))) {
+    if (bind (in_socket, (struct sockaddr*)&master, sizeof(master))) {
         perror ("binding stream socket");
         exit (-1);
     }
@@ -110,7 +111,7 @@ int requestConnect (int port, char* host)
     master.sin_family = SOCKET_DOMAIN;
     master.sin_port = htons (port);
 
-    if (connect (master_socket, &master, sizeof(master)) < 0) {
+    if (connect (master_socket, (struct sockaddr*)&master, sizeof(master)) < 0) {
         perror ("connecting stream socket");
         return -1;
     }

@@ -11,10 +11,6 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#ifdef __GNUG__
-#pragma implementation
-#endif
-
 #include "Exceptions.h"
 #include <iostream.h>
 #include <stdlib.h>		// for abort()

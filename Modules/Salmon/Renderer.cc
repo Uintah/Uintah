@@ -156,14 +156,3 @@ void Renderer::getData(int, AsyncReply<GeometryData*>* result)
     cerr << "Warning Renderer::getData called - only implemented for OpenGL\n";
     result->reply(0);
 }
-
-
-#ifdef __GNUG__
-
-#include <Classlib/AVLTree.cc>
-
-template class AVLTree<clString, RegisterRenderer*>;
-template class AVLTreeIter<clString, RegisterRenderer*>;
-template class TreeLink<clString, RegisterRenderer*>;
-
-#endif

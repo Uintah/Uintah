@@ -1410,3 +1410,11 @@ GetReq::GetReq(int datamask, AsyncReply<GeometryData*>* result)
 : datamask(datamask), result(result)
 {
 }
+#ifdef __GNUG__
+/*
+ * These template instantiations can't go in templates.cc, because
+ * the classes are defined in this file.
+ */
+#include <Multitask/Mailbox.cc>
+template class Mailbox<GetReq>;
+#endif

@@ -275,11 +275,13 @@ void Gauss::execute()
 
   if (usehardware) {
   
+#ifndef linux
     glConvolutionFilter2DEXT(GL_CONVOLUTION_2D_EXT,  \
 			     GL_LUMINANCE, \
 			     siz,siz, \
 			     GL_LUMINANCE,GL_FLOAT,gauss); 
     glEnable(GL_CONVOLUTION_2D_EXT); 
+#endif
     
     //  glPixelTransferf(GL_POST_CONVOLUTION_RED_BIAS_EXT,0.5);
     
@@ -470,7 +472,11 @@ int Gauss::makeCurrent(void)
       TCLTask::unlock();
       return 0;
     }
-
+#ifdef linux
+    cerr << "This module is broken on linux\n";
+    TCLTask::unlock();
+    return 0;
+#else
     config1 = glXChooseFBConfigSGIX(dpy,Tk_ScreenNumber(tkwin),attributes,&num);
     cerr << "Got configs.." << num << "\n";
     pbuf = glXCreateGLXPbufferSGIX(dpy,*config1,width,height,pattr);
@@ -492,24 +498,9 @@ int Gauss::makeCurrent(void)
       TCLTask::unlock();
       return 0;
     }
+#endif
   } 
 
   return 1;
   
 }
-
-#ifdef __GNUG__
-
-#include <Classlib/Array1.cc>
-
-template class Array1<GeomMaterial*>;
-template class Array1<double>;
-
-#endif
-
-
-
-
-
-
-

@@ -11,10 +11,6 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#ifdef __GNUG__
-#pragma interface
-#endif
-
 #include "Array1.h"
 
 template<class T>

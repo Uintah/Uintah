@@ -2825,11 +2825,3 @@ void IsoSurfaceDW::widget_moved(int last)
 	want_to_execute();
     }
 }
-
-#ifdef __GNUG__
-
-#include <Classlib/Queue.cc>
-
-template class Queue<int>;
-
-#endif

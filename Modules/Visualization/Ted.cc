@@ -692,21 +692,3 @@ int Ted::makeCurrent(void)
   return 1;
   
 }
-
-#ifdef __GNUG__
-
-#include <Classlib/Array1.cc>
-
-template class Array1<GeomMaterial*>;
-template class Array1<double>;
-
-#endif
-
-
-
-
-
-
-
-
-

@@ -187,8 +187,8 @@ fft_free (void)
 }
 
 #if !defined (__FILE__) && !defined (lint)
-Error: your compiler is sick!  define __FILE__ yourself (a string)
-eg, something like -D__FILE__=\"fftn.c\"
+Error: your compiler is sick!  /* define __FILE__ yourself (a string)
+				  eg, something like -D__FILE__=\"fftn.c\" */
 #endif
 
 #ifndef M_PI

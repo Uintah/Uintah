@@ -37,6 +37,7 @@ DESCRIPTION
 #include <TCL/TCLvar.h> 
 #include <Geom/Color.h>
 #include <Datatypes/ColorMap.h>
+#include <Datatypes/ColorMapPort.h>
 
 namespace SCI {
 namespace Visualization {

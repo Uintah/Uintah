@@ -1,7 +1,7 @@
 
 convert: convertall
 
-all:
+all::
 
 #define all convertall
 #include <config/sci.cf>

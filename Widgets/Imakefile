@@ -1,6 +1,11 @@
 
 #include <config/sci.cf>
 
+#ifdef SCI_MACHINE_Linux
+TEMPLATE_OBJS = templates.o
+TEMPLATE_SRCS = templates.cc
+#endif
+
 OBJS = BaseWidget.o \
 	ArrowWidget.o \
 	BoxWidget.o \
@@ -14,7 +19,8 @@ OBJS = BaseWidget.o \
 	RingWidget.o \
 	ScaledBoxWidget.o \
 	ScaledFrameWidget.o \
-	ViewWidget.o
+	ViewWidget.o \
+	$(TEMPLATE_OBJS)
 SRCS = BaseWidget.cc \
 	ArrowWidget.cc \
 	BoxWidget.cc \
@@ -28,14 +34,15 @@ SRCS = BaseWidget.cc \
 	RingWidget.cc \
 	ScaledBoxWidget.cc \
 	ScaledFrameWidget.cc \
-	ViewWidget.cc
+	ViewWidget.cc \
+	$(TEMPLATE_SRCS)
 
 
 LIBNAME = Widgets
 
 SO_LIBS =
 SO_LDFLAGS = -L$(TOP)/lib -lDatatypes -lConstraints -lGeom -lGeometry -lTCL \
-	-lClasslib -lMultitask -lMalloc -lm -lC -lc
+	-lClasslib -lMultitask -lMalloc -lm SCI_CCLibs
 
 SCIDependTarget($(SRCS))
 SCIObjLibraryTarget($(LIBNAME),$(OBJS),$(SO_LIBS),$(SO_LDFLAGS))

@@ -2052,18 +2052,10 @@ void SLSourceInfo::pick_source(const clString& sname,
 }
 
 #ifdef __GNUG__
-
+/*
+ * These template instantiations can't go in templates.cc, because
+ * the classes are defined in this file.
+ */
 #include <Classlib/Array1.cc>
-
-template class Array1<SLSource*>;
-template class Array1<SLTracer*>;
-template class Array1<GeomPolyline*>;
-template class Array1<GeomTube*>;
-template class Array1<GeomTriStrip*>;
-
-#include <Classlib/HashTable.cc>
-template class HashTable<int, SLSourceInfo*>;
-template class HashTableIter<int, SLSourceInfo*>;
-template class HashKey<int, SLSourceInfo*>;
-
+template class Array1<VertBatch>;
 #endif

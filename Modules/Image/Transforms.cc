@@ -149,7 +149,7 @@ static void clip_starter(void* obj,int proc)
   img->do_clip(proc);
 }
 
-double pow(double x,double y) {
+static double mypow(double x,double y) {
   double res = x;
   for (int i=1; i<y; i++)
     res*=x;
@@ -166,10 +166,10 @@ void Transforms::haar()
   double *coef = new double[nx];
   coef[0]=1;
   for (x=2; x<=nx; x++) 
-    coef[x-1]=sqrt(pow(2,x-2));
+    coef[x-1]=sqrt(mypow(2,x-2));
   double iter = log10(nx)/log10(2);
   for (x=1; x<=iter; x++) {
-    int subiter = pow(2,x-1);
+    int subiter = mypow(2,x-1);
     int len = nx/subiter;
     double *subm = new double[len];
     for (y=0; y<len; y++)
@@ -178,7 +178,7 @@ void Transforms::haar()
 	  subm[y]=-coef[x];
     for (y=1; y<=subiter; y++)
       for (z=1; z<=len; z++)
-	trans((pow(2,x-1)+y)-1,(z+(y-1)*len)-1)=subm[z-1];
+	trans((mypow(2,x-1)+y)-1,(z+(y-1)*len)-1)=subm[z-1];
   }
   for (x=0;x<nx;x++)
     for (y=0;y<nx;y++)

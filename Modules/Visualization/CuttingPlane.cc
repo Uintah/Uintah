@@ -431,12 +431,3 @@ void CuttingPlane::tcl_command(TCLArgs& args, void* userdata)
 	Module::tcl_command(args, userdata);
     }
 }
-
-#ifdef __GNUG__
-
-#include <Classlib/Array1.cc>
-
-template class Array1<GeomMaterial*>;
-template class Array1<double>;
-
-#endif

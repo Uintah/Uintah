@@ -70,11 +70,6 @@ Module* HexMeshToGeom::clone(int deep)
     return scinew HexMeshToGeom(*this, deep);
 }
 
-inline int Hash(const unsigned long long& k, int hash_size)
-{
-    return (k^(3*hash_size+1))%hash_size;
-}
-
 void HexMeshToGeom::execute()
 {
     HexMeshHandle mesh;    

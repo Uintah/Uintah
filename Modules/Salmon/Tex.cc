@@ -450,6 +450,7 @@ void GeomTexVolRender::draw(DrawInfoOpenGL* di, Material *m, double time)
   
   if (map1d && !quantnvol) {
 //    cerr << "Using Lookup!\n";
+#ifdef __sgi
     glEnable(GL_TEXTURE_COLOR_TABLE_SGI);
     glColorTableSGI(GL_TEXTURE_COLOR_TABLE_SGI,
 		    GL_RGBA,
@@ -457,6 +458,7 @@ void GeomTexVolRender::draw(DrawInfoOpenGL* di, Material *m, double time)
 		    GL_RGBA,  // need an alpha value...
 		    GL_UNSIGNED_BYTE, // try shorts...
 		    map1d);
+#endif
   }
 
   Vector vx,vy,vz;

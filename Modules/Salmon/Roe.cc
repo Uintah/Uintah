@@ -1185,18 +1185,3 @@ void Roe::getData(int datamask, AsyncReply<GeometryData*>* result)
     } else
 	result->reply(0);
 }
-
-#ifdef __GNUG__
-
-#include <Classlib/HashTable.cc>
-
-template class HashTable<clString, Renderer*>;
-template class HashKey<clString, Renderer*>;
-
-template class HashTable<clString, ObjTag*>;
-template class HashKey<clString, ObjTag*>;
-
-template class HashTable<clString, int>;
-template class HashKey<clString, int>;
-
-#endif

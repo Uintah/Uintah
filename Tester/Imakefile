@@ -11,6 +11,6 @@ SO_LDFLAGS =
 SCIDependTarget($(SRCS))
 SCIObjLibraryTarget($(LIBNAME),$(OBJS),$(SO_LIBS),$(SO_LDFLAGS))
 
-TESTER_LDFLAGS = -L$(TOP)/lib -lTester -lMalloc
+TESTER_LDFLAGS = -L$(TOP)/lib -lTester -lMalloc SCI_DYNAMICLINK_LIB
 SCIProgramTarget(tester, tester.o, , $(TESTER_LDFLAGS))
 

@@ -1,10 +1,17 @@
 
 #include <config/sci.cf>
 
+#ifdef SCI_MACHINE_Linux
+TEMPLATE_OBJS = templates.o
+TEMPLATE_SRCS = templates.cc
+#endif
+
 OBJS = TreatFEM.o  property.o   element.o   sparseMatrix.o   \
-	readData.o   block.o
+	readData.o   block.o \
+	$(TEMPLATE_OBJS)
 SRCS = TreatFEM.cc property.cpp element.cpp sparseMatrix.cpp \
-	readData.cpp block.cpp
+	readData.cpp block.cpp \
+	$(TEMPLATE_SRCS)
 
 LIBNAME = Treat
 
@@ -13,7 +20,7 @@ SO_LIBS =
 
 SO_LDFLAGS = -L$(TOP)/lib -lDatatypes -lDataflow -lGeom -lTCL -lClasslib \
 	-lMultitask -ltk -lMalloc -lGeometry \
-	-lm -lC -lc
+	-lm SCI_CCLibs
 
 SCIDependTarget($(SRCS))
 SCIObjLibraryTarget($(LIBNAME),$(OBJS),$(SO_LIBS),$(SO_LDFLAGS))

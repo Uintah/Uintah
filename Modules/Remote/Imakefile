@@ -13,9 +13,9 @@ TCLS =  rMeshReader.tcl \
 LIBNAME = Remote
 
 SO_LIBS =
-SO_LDFLAGS = -L$(TOP)/lib -lWidgets -lDatatypes -lDataflow -lGeom  \ 
+SO_LDFLAGS = -L$(TOP)/lib -lWidgets -lDatatypes -lDataflow -lGeom  \
 	-lGeometry -lTCL \
-	-lClasslib -lMultitask -lMalloc -lm -lC -lc
+	-lClasslib -lMultitask -lMalloc -lm SCI_CCLibs
 
 depend:: $(SRCS)
 

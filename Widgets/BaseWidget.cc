@@ -651,14 +651,3 @@ BaseWidget& BaseWidget::operator=( const BaseWidget& )
     return *this;
 }
 
-#ifdef __GNUG__
-
-#include <Classlib/Array1.cc>
-template class Array1<long>;
-template class Array1<GeomPick*>;
-template class Array1<GeomSwitch*>;
-template class Array1<GeomMaterial*>;
-template class Array1<GeometryOPort*>;
-
-#endif
-

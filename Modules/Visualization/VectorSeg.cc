@@ -283,18 +283,3 @@ void VectorSeg::vector_seg_rg(const Array1<ScalarFieldHandle> &,
     }
     ofieldRG->grid(0,0,0)=isoChanged;
 }
-
-#ifdef __GNUG__
-
-#include <Classlib/Array1.cc>
-template class Array1<ScalarFieldIPort*>;
-template class Array1<ScalarFieldHandle>;
-
-#include <Classlib/Array2.cc>
-template class Array2<int>;
-template class Array2<TCLint*>;
-
-#include <Classlib/Array3.cc>
-template class Array3<double>;
-
-#endif

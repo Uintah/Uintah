@@ -25,7 +25,7 @@ LIBNAME = Writers
 LOCALINCLUDES = 
 SO_LIBS =
 SO_LDFLAGS = -L$(TOP)/lib -lDatatypes -lDataflow -lGeom -lTCL \
-	-lClasslib -lMultitask -lMalloc -lm -lC -lc
+	-lClasslib -lMultitask -lMalloc -lm SCI_CCLibs
 
 depend:: $(GENSRCS)
 

@@ -1,25 +1,32 @@
 
 #include <config/sci.cf>
 
+#ifdef SCI_MACHINE_Linux
+TEMPLATE_OBJS = templates.o
+TEMPLATE_SRCS = templates.cc
+#endif
+
 OBJS = BuildMultiMesh.o  BuildOctree.o  \
 	Delaunay.o  ExtractMeshSF.o  GenerateMesh.o  \
 	HexMeshToGeom.o \
 	InsertDelaunay.o  MakeScalarField.o  MeshBoundary.o  \
 	MeshToGeom.o  MeshView.o  \
-	OctreeToGeom.o  SelectMesh.o  MeshRender.o
+	OctreeToGeom.o  SelectMesh.o  MeshRender.o \
+	$(TEMPLATE_OBJS)
 SRCS = BuildMultiMesh.cc BuildOctree.cc \
 	Delaunay.cc ExtractMeshSF.cc GenerateMesh.cc \
 	HexMeshToGeom.cc \
 	InsertDelaunay.cc MakeScalarField.cc MeshBoundary.cc \
 	MeshToGeom.cc MeshView.cc \
-	OctreeToGeom.cc SelectMesh.cc MeshRender.cc
+	OctreeToGeom.cc SelectMesh.cc MeshRender.cc \
+	$(TEMPLATE_SRCS)
 
 LIBNAME = Mesh
 
 SO_LIBS =
 SO_LDFLAGS = -L$(TOP)/lib -lWidgets -lDatatypes -lDataflow -lGeom \
 	-lGeometry -lMath -lTCL -lClasslib -lMultitask -lMalloc -lm \
-	-lC -lc
+	SCI_CCLibs
 
 SCIDependTarget($(SRCS))
 SCIObjLibraryTarget($(LIBNAME),$(OBJS),$(SO_LIBS),$(SO_LDFLAGS))

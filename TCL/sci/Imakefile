@@ -22,14 +22,18 @@ XLIBDIR = -L/usr/openwin/lib
 XINCLUDE = -I/usr/openwin/include
 #endif
 
+#if defined(SCI_MACHINE_Linux)
+XLIBDIR = -L/usr/X11R6/lib
+#endif
+
 OBJS = tk3d2.o  tkAppInit.o  tkBevel.o  tkCanvBLine.o  tkRange.o \
 	$(OPENGL_OBJS)
 SRCS = tk3d2.c  tkAppInit.c  tkBevel.c  tkCanvBLine.c  tkRange.c \
 	$(OPENGL_SRCS)
-#if defined(SCI_IRIX_BIN_o32)
+#if defined(SCI_MACHINE_SGO) && defined(SCI_IRIX_BIN_o32)
 LOCALCFLAGS = -woff 835
 #endif
-#if defined(SCI_IRIX_BIN_n32_mips3) || defined(SCI_IRIX_BIN_n32_mips4) \
+#if defined(SCI_MACHINE_SGI) && defined(SCI_IRIX_BIN_n32_mips3) || defined(SCI_IRIX_BIN_n32_mips4) \
 	|| defined(SCI_IRIX_BIN_64_mips3) || defined(SCI_IRIX_BIN_64_mips4)
 LOCALCFLAGS = -woff 1233,1692,1498,1174
 #endif

@@ -2651,12 +2651,3 @@ void IHP::iso_hp(GeomGroup* group, ScalarFieldHP* hp, double iv)
       cerr << "r=" << r << ", tris=" << tris->size() << '\n';
   }
 }
-
-
-#ifdef __GNUG__
-
-#include <Classlib/Queue.cc>
-
-template class Queue<int>;
-
-#endif

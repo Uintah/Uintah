@@ -78,9 +78,3 @@ void DebugSettings::tcl_command(TCLArgs& args, void*)
     args.result(args.make_list(debuglist));
 }
 
-#ifdef __GNUG__
-// Template instantiations
-#include <Classlib/Array1.cc>
-template class Array1<TCLvarintp*>;
-#endif
-

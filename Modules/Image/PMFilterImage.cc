@@ -156,9 +156,9 @@ Image* PMFilterImage::make_filter(int res, double time, double phi, double u10)
 	    float F=*p++;
 	    float f=*p++;
 
-	    float Ftheta = time * fsqrt(f) * PI/180;
-	    float Fre = F * fcos(Ftheta);
-	    float Fim = F * fsin(Ftheta);
+	    float Ftheta = time * sqrtf(f) * PI/180;
+	    float Fre = F * cosf(Ftheta);
+	    float Fim = F * sinf(Ftheta);
 
 	    image->set(x, y, Fre, Fim);
 	    //image->set(res-x-1, y, Fre, Fim);

@@ -658,11 +658,3 @@ void IsoSurfaceMRSG::iso_reg_grid(ScalarFieldRG* field, double isoval,
 	}
     }
 }
-
-#ifdef __GNUG__
-
-#include <Classlib/Queue.cc>
-
-template class Queue<int>;
-
-#endif

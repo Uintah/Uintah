@@ -126,17 +126,3 @@ void ImageViewer::execute()
   
   grid_id = ogeom->addObj(grid, "Image Viewer");
 }
-
-#ifdef __GNUG__
-
-#include <Classlib/Array1.cc>
-
-template class Array1<GeomMaterial*>;
-template class Array1<double>;
-
-#endif
-
-
-
-
-

@@ -1,9 +1,18 @@
 
 #include <config/sci.cf>
 
+#ifdef SCI_MACHINE_Linux
+TEMPLATE_OBJS = templates.o
+TEMPLATE_SRCS = templates.cc
+#endif
+
 #if defined(SCI_MACHINE_Solaris)
 XLIBDIR = -L/usr/openwin/lib
 XINCLUDE = -I/usr/openwin/include
+#endif
+
+#if defined(SCI_MACHINE_Linux)
+XLIBDIR = -L/usr/X11R6/lib
 #endif
 
 #ifdef SCI_OPENGL
@@ -26,13 +35,15 @@ OBJS = ClipField.o  ExtractSurfs.o  FieldFilter.o  FieldMedianFilter.o  \
 	FieldGainCorrect.o  FieldSeed.o \
 	GenSigmaSet.o  Gradient.o  GradientMagnitude.o  MMeshToSFUG.o  \
 	MergeTensor.o  SFRGfile.o  SFUGtoGeom.o  TracePath.o  \
-	TransformField.o  $(OPENGLOBJS)
+	TransformField.o  $(OPENGLOBJS) \
+	$(TEMPLATE_OBJS)
 
 SRCS = ClipField.cc ExtractSurfs.cc FieldFilter.cc FieldMedianFilter.cc \
 	FieldGainCorrect.cc FieldSeed.cc \
 	GenSigmaSet.cc Gradient.cc GradientMagnitude.cc MMeshToSFUG.cc \
 	MergeTensor.cc SFRGfile.cc SFUGtoGeom.cc TracePath.cc \
-	TransformField.cc $(OPENGLSRCS)
+	TransformField.cc $(OPENGLSRCS) \
+	$(TEMPLATE_SRCS)
 
 LIBNAME = Fields
 
@@ -42,7 +53,7 @@ SO_LIBS =
 SO_LDFLAGS = -L$(TOP)/lib -L/usr/openwin/lib -lDatatypes -lDataflow \
 	-lGeom -lTCL -lClasslib -lMultitask -lTester $(OPENGLLIBS) \
 	-lscitk -ltk -lMalloc -lWidgets -lGeometry \
-	-lm -lC -lc
+	-lm SCI_CCLibs
 
 SCIDependTarget($(SRCS))
 SCIObjLibraryTarget($(LIBNAME),$(OBJS),$(SO_LIBS),$(SO_LDFLAGS))

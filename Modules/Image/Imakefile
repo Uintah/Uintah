@@ -1,5 +1,15 @@
 #include <config/sci.cf>
 
+#if defined(SCI_MACHINE_Solaris)
+XLIBDIR = -L/usr/openwin/lib
+XINCLUDE = -I/usr/openwin/include
+#endif
+
+#if defined(SCI_MACHINE_Linux)
+XLIBDIR = -L/usr/X11R6/lib
+#endif
+
+
 OBJS = FFTImage.o IFFTImage.o PMFilterImage.o WhiteNoiseImage.o \
         FilterImage.o ImageConvolve.o \
 	Threshold.o Edge.o ImageGen.o Gauss.o Subsample.o \
@@ -18,8 +28,8 @@ LIBNAME = Image
 
 SO_LIBS =
 SO_LDFLAGS = -L$(TOP)/lib -lDatatypes -lDataflow -lGeom -lMath -lTCL \
-	-lClasslib -lMultitask -lMalloc -lC -lc -lm -lWidgets \
-	-lGLU -lGL -lXext -lX11 TK_LIB TCL_LIB -lscitk
+	-lClasslib -lMultitask -lMalloc SCI_CCLibs -lm -lWidgets \
+	$(XLIBDIR) -lGLU -lGL -lXext -lX11 TK_LIB TCL_LIB -lscitk
 
 SCIDependTarget($(SRCS))
 SCIObjLibraryTarget($(LIBNAME),$(OBJS),$(SO_LIBS),$(SO_LDFLAGS))

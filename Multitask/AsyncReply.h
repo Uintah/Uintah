@@ -14,10 +14,6 @@
 #ifndef SCI_Multitask_AsyncReply_h
 #define SCI_Multitask_AsyncReply_h 1
 
-#ifdef __GNUG__
-#pragma interface
-#endif
-
 #include <Multitask/ITC.h>
 
 template<class Item> class AsyncReply {

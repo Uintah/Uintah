@@ -25,8 +25,10 @@
 #define HOSTNAME	50
 #define BUFSIZE         512
 
+#if 0
 #define bcopy(src, dst, len)    memcpy(dst, src, len)
 #define bzero(src, len)         memset(src, 0, len)
+#endif
 
 
 typedef struct {                // msgBody = 4+80+84 = 168

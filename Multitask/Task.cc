@@ -106,7 +106,9 @@ void Task::multiprocess(int nprocessors, void (*starter)(void*, int),
 	    w->userdata=userdata;
 	    w->processor=i;
 	    w->sema1.up();
+#ifdef __sgi
 	    sysmp(MP_MUSTRUN, i);
+#endif
 	    w->next=0;
 	}
 	return;
@@ -114,7 +116,8 @@ void Task::multiprocess(int nprocessors, void (*starter)(void*, int),
     workerlock.lock();
 
     Multiprocess* workers=0;
-    for(int i=0;i<nprocessors;i++){
+    int i;
+    for(i=0;i<nprocessors;i++){
       Multiprocess* w=mpworkers;
       if(!w){
 	w=new Multiprocess;

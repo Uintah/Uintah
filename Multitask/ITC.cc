@@ -11,10 +11,6 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#ifdef __GNUG__
-#pragma interface
-#endif
-
 #include <Malloc/Allocator.h>
 #include <Multitask/ITC.h>
 #include <Multitask/Task.h>

@@ -263,12 +263,3 @@ cerr << "Done making the tree.\n";
     tree->propagate_up_materials();
 cerr << "Done propagating materials.\n";
 }
-
-
-#ifdef __GNUG__
-
-#include <Classlib/Queue.cc>
-
-template class Queue<int>;
-
-#endif

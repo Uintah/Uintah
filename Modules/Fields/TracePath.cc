@@ -816,3 +816,11 @@ void TracePath::tcl_command(TCLArgs& args, void* userdata) {
     }
 }
 
+#ifdef __GNUG__
+/*
+ * These template instantiations can't go in templates.cc, because
+ * the classes are defined in this file.
+ */
+#include <Classlib/FLPQueue.cc>
+template class FLPQueue<VoxelPath>;
+#endif

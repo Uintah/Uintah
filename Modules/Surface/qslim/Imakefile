@@ -11,7 +11,7 @@ LOCALINCLUDES = -I..
 LIBNAME = qslim
 
 SO_LIBS =
-SO_LDFLAGS = -L$(TOP)/lib -lgfx -lm -lC -lc
+SO_LDFLAGS = -L$(TOP)/lib -lgfx -lm SCI_CCLibs
 
 SCIDependTarget($(SRCS))
 SCIObjLibraryTarget($(LIBNAME),$(OBJS),$(SO_LIBS),$(SO_LDFLAGS))

@@ -612,13 +612,12 @@ GenColorMap::gen_map( const clString& mt )
 }
 
 #ifdef __GNUG__
-
+/*
+ * These template instantiations can't go in templates.cc, because
+ * the classes are defined in this file.
+ */
 #include <Classlib/Array1.cc>
-
-template class Array1<MaterialKey>;
-template class Array1<clString>;
-
 #include <Math/CatmullRomSpline.cc>
+template class Array1<MaterialKey>;
 template class CatmullRomSpline<MaterialKey>;
-
 #endif

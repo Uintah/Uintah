@@ -11,9 +11,7 @@
  *  Copyright (C) 1996 SCI Group
  */
 
-#ifdef __GNUG__
-#pragma interface
-#endif
+#include <Multitask/AsyncReply.h>
 
 template<class Item>
 AsyncReply<Item>::AsyncReply()

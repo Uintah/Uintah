@@ -982,11 +982,3 @@ void MorphMesher3d::lace_surfaces(TriSurface *out, TriSurface *in, Mesh* mesh){
 	mesh->elems[i+in_elem_base]->n[3]=pid+out_node_base;
     }
 }
-
-#ifdef __GNUG__
-
-#include <Classlib/Queue.cc>
-
-template class Queue<int>;
-
-#endif

@@ -1,15 +1,22 @@
 
 #include <config/sci.cf>
 
-SRCS = ReadSonos.cc ScalarFieldHP.cc IHP.cc
-OBJS = ReadSonos.o  ScalarFieldHP.o  IHP.o
+#ifdef SCI_MACHINE_Linux
+TEMPLATE_OBJS = templates.o
+TEMPLATE_SRCS = templates.cc
+#endif
+
+SRCS = ReadSonos.cc ScalarFieldHP.cc IHP.cc \
+	$(TEMPLATE_SRCS)
+OBJS = ReadSonos.o  ScalarFieldHP.o  IHP.o  \
+	$(TEMPLATE_OBJS)
 
 LIBNAME = HP
 
 SO_LIBS =
 SO_LDFLAGS = -L$(TOP)/lib -lWidgets -lDatatypes -lDataflow -lGeom \
 	-lGeometry -lMath -lTCL -lClasslib -lMultitask -lMalloc -lm \
-	-ltiff -lC -lc
+	-ltiff SCI_CCLibs
 
 SCIDependTarget($(SRCS))
 SCIObjLibraryTarget($(LIBNAME),$(OBJS),$(SO_LIBS),$(SO_LDFLAGS))

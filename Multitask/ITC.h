@@ -14,10 +14,6 @@
 #ifndef SCI_Multitask_ITC_h
 #define SCI_Multitask_ITC_h 1
 
-#ifdef __GNUG__
-#pragma interface
-#endif
-
 struct Barrier_private;
 struct ConditionVariable_private;
 struct CrowdMonitor_private;

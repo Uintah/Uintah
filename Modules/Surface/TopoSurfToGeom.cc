@@ -100,11 +100,11 @@ Module* TopoSurfToGeom::clone(int deep)
     return scinew TopoSurfToGeom(*this, deep);
 }
 
-MaterialHandle outmatl(new Material(Color(0,0,0), Color(0,0,0),
+static MaterialHandle outmatl(new Material(Color(0,0,0), Color(0,0,0),
 				    Color(0,0,0), 0));
-MaterialHandle black(new Material(Color(.2,.2,.2), Color(.2,.2,.2), 
+static MaterialHandle black(new Material(Color(.2,.2,.2), Color(.2,.2,.2), 
 				  Color(.5,.5,.5), 30));
-Color blackClr(.2,.2,.2);
+static Color blackClr(.2,.2,.2);
 
 void TopoSurfToGeom::execute()
 {

@@ -11,13 +11,6 @@
  *  Copyright (C) 1996 SCI Group
  */
 
-#ifdef __linux
-#define __KERNEL__
-#include <linux/signal.h>
-typedef __sighandler_t SIG_PF;
-typedef struct sigcontext_struct sigcontext_t;
-#endif
-
 #include <Multitask/Task.h>
 #include <Multitask/ITC.h>
 #include <Malloc/Allocator.h>
@@ -46,12 +39,6 @@ extern "C" {
 extern "C" {
 ssize_t _read(int fildes, void *buf, size_t nbyte);
 };
-
-#ifdef __linux
-extern "C" {
-    size_t getpagesize();
-};
-#endif
 
 #define DEFAULT_STACK_LENGTH 64*1024
 #define INITIAL_STACK_LENGTH 48*1024
@@ -169,8 +156,10 @@ void Task::activate(int task_arg)
     sched_lock->lock();
     pthread_attr_t attr;
     pthread_attr_init(&attr);
+#ifndef linux
     pthread_attr_setstacksize(&attr, priv->stacklen);
     pthread_attr_setstackaddr(&attr, priv->sp);
+#endif
     if(pthread_create(&priv->threadid, NULL, runbody, (void*)args) != 0) {
 	perror("pthread_create");
 	exit(1);

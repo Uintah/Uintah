@@ -1,12 +1,26 @@
 
 #include <config/sci.cf>
 
+#ifdef SCI_MACHINE_Linux
+TEMPLATE_OBJS = templates.o
+TEMPLATE_SRCS = templates.cc
+#endif
+
+#if defined(SCI_MACHINE_Solaris)
+XLIBDIR = -L/usr/openwin/lib
+XINCLUDE = -I/usr/openwin/include
+#endif
+
+#if defined(SCI_MACHINE_Linux)
+XLIBDIR = -L/usr/X11R6/lib
+#endif
+
 #ifdef SCI_MESA
 OPENGLINCS = -I$(TOP)/Mesa/include 
 OPENGLLIBS = -L$(TOP)/Mesa/lib -lMesaGLU -lMesaGL -lXext -lX11
 #else
 OPENGLINCS = 
-OPENGLLIBS = -lGLU -lGL -lXext -lX11
+OPENGLLIBS = $(XLIBDIR) -lGLU -lGL -lXext -lX11
 #endif
 
 #ifndef SCI_OPENGL
@@ -14,27 +28,34 @@ OPENGLOBJS =
 OPENGLSRCS = 
 #endif
 
-OBJS = AddWells.o AddWells2.o BB.o BitVisualize.o BoxClipSField.o \
+#ifdef SCI_VOLPACK
+VOLPACK_OBJS = BB.o  RenderRG.o
+VOLPACK_SRCS = BB.cc RenderRG.cc
+#endif
+
+OBJS = AddWells.o AddWells2.o BitVisualize.o BoxClipSField.o \
 	BoundGrid.o ColorMapKey.o CuttingPlane.o CuttingPlaneTex.o \
 	FastRender.c  FieldCage.o \
 	GenAxes.o GenColorMap.o GenFieldEdges.o GenStandardColorMaps.o \
 	GenTransferFunc.o  Hedgehog.o  \
 	ImageViewer.o IsoMask.o IsoSurface.o \
 	IsoSurfaceDW.o IsoSurfaceMRSG.o IsoSurfaceSP.o \
-	OctIsoSurface.o RenderRG.o RescaleColorMap.o \
+	OctIsoSurface.o RescaleColorMap.o \
 	RescaleParticleColorMap.o SimpVolVis.o Streamline.o Ted.o \
-	VectorSeg.o VolVis.o VolRendTexSlices.o WidgetTest.o
+	VectorSeg.o VolVis.o VolRendTexSlices.o WidgetTest.o \
+	$(TEMPLATE_OBJS)
 
-SRCS = AddWells.cc AddWells2.cc BB.cc BitVisualize.cc BoxClipSField.cc \
+SRCS = AddWells.cc AddWells2.cc BitVisualize.cc BoxClipSField.cc \
 	BoundGrid.cc ColorMapKey.cc CuttingPlane.cc CuttingPlaneTex.cc \
 	FastRender.c  FieldCage.cc \
 	GenAxes.cc GenColorMap.cc GenFieldEdges.cc GenStandardColorMaps.cc \
 	GenTransferFunc.cc  Hedgehog.cc \
 	ImageViewer.cc IsoMask.cc IsoSurface.cc \
 	IsoSurfaceDW.cc IsoSurfaceMRSG.cc IsoSurfaceSP.cc \
-	OctIsoSurface.cc RenderRG.cc RescaleColorMap.cc \
+	OctIsoSurface.cc RescaleColorMap.cc \
 	RescaleParticleColorMap.cc SimpVolVis.cc Streamline.cc Ted.cc \
-	VectorSeg.cc VolVis.cc VolRendTexSlices.cc WidgetTest.cc
+	VectorSeg.cc VolVis.cc VolRendTexSlices.cc WidgetTest.cc \
+	$(TEMPLATE_SRCS)
 
 LIBNAME = Visualization
 
@@ -43,7 +64,7 @@ LOCALINCLUDES = $(OPENGLINCS)
 SO_LIBS =
 SO_LDFLAGS = -L$(TOP)/lib -lSalmon -lWidgets -lDatatypes -lDataflow -lGeom -lGeometry \
 	-lTCL -lscitk TK_LIB TCL_LIB -lClasslib -lMultitask  $(OPENGLLIBS) \
-	-lMalloc -lm -lC -lc
+	-lMalloc -lm SCI_CCLibs
 
 SCIDependTarget($(SRCS))
 SCIObjLibraryTarget($(LIBNAME),$(OBJS),$(SO_LIBS),$(SO_LDFLAGS))

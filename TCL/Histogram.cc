@@ -262,12 +262,3 @@ Histogram::SetNumBuckets( const int nb )
    FillBuckets();
 }
    
-#ifdef __GNUG__
-// Template instantiations
-#include <Classlib/Array1.cc>
-
-template class Array1<double>;
-template class Array1<int>;
-template class Array1<clString>;
-
-#endif

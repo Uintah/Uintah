@@ -1714,9 +1714,10 @@ void IsoSurfaceMSRG::widget_moved(int last)
 }
 
 #ifdef __GNUG__
-
-#include <Classlib/Queue.cc>
-
-template class Queue<int>;
-
+/*
+ * These template instantiations can't go in templates.cc, because
+ * the classes are defined in this file.
+ */
+#include <Classlib/Array1.cc>
+template class Array1<xedges>;
 #endif

@@ -1,18 +1,25 @@
 
 #include <config/sci.cf>
 
+#ifdef SCI_MACHINE_Linux
+TEMPLATE_OBJS = templates.o
+TEMPLATE_SRCS = templates.cc
+#endif
+
 OBJS = AugmentSurf.o  ClipSurface.o  ContoursToSurf.o  GenSurface.o  \
 	LabelSurface.o \
 	RescaleSurface.o  RotateSurface.o  SFUGtoSurf.o  \
 	SurfExtractBCNodes.o  SurfNewVals.o  SurfInterpVals.o  \
 	SurfGen.o  SurfToGeom.o  SurfTreeToTopoSurf.o  \
-	TopoSurfToGeom.o  TransformSurf.o  TranslateSurface.o 
+	TopoSurfToGeom.o  TransformSurf.o  TranslateSurface.o \
+	$(TEMPLATE_OBJS)
 SRCS = AugmentSurf.cc ClipSurface.cc ContoursToSurf.cc GenSurface.cc \
 	LabelSurface.cc \
 	RescaleSurface.cc RotateSurface.cc SFUGtoSurf.cc \
 	SurfExtractBCNodes.cc SurfNewVals.cc SurfInterpVals.cc \
 	SurfGen.cc SurfToGeom.cc SurfTreeToTopoSurf.cc \
-	TopoSurfToGeom.cc TransformSurf.cc TranslateSurface.cc
+	TopoSurfToGeom.cc TransformSurf.cc TranslateSurface.cc \
+	$(TEMPLATES_SRCS)
 
 
 LIBNAME = Surface
@@ -21,7 +28,7 @@ LOCALINCLUDES = -I.
 
 SO_LIBS =
 SO_LDFLAGS = -L$(TOP)/lib -lWidgets -lDatatypes -lDataflow \
-	-lGeom -lGeometry -lTCL -lClasslib -lMultitask -lMalloc -lm -lC -lc
+	-lGeom -lGeometry -lTCL -lClasslib -lMultitask -lMalloc -lm SCI_CCLibs
 
 SCISubdirs( gfx qslim )
 SCIDependTarget($(SRCS))

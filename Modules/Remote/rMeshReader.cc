@@ -112,24 +112,3 @@ printf ("read file into meshHandle - rMeshReader::execute()\n");
 printf ("send meshHandle out oport - rMeshReader::execute()\n");
     outport->send(handle);
 }
-
-#ifdef __GNUG__
-
-#include <Classlib/LockingHandle.cc>
-
-template void Pio(Piostream&, MeshHandle&);
-
-#endif
-
-#ifdef __sgi
-#if _MIPS_SZPTR == 64
-#include <Classlib/LockingHandle.cc>
-
-static void _dummy_(Piostream& p1, MeshHandle& p2)
-{
-    Pio(p1, p2);
-}
-
-#endif
-#endif
-

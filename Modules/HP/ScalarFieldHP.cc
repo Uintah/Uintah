@@ -124,3 +124,18 @@ int ScalarFieldHP::interpolate(const Point& p, double& value,
     int ix=0;
     return interpolate(p, value, ix, eps1, eps2);
 }
+
+void ScalarFieldHP::io(Piostream&)
+{
+    NOT_FINISHED("ScalarFieldHP::io");
+}
+
+Vector ScalarFieldHP::gradient(const Point& p)
+{
+    NOT_FINISHED("ScalarFieldHP::gradient");
+}
+
+void ScalarFieldHP::get_boundary_lines(Array1<Point>& lines)
+{
+    NOT_FINISHED("ScalarFieldHP::get_boundary_lines");
+}

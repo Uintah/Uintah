@@ -11,3 +11,5 @@ SurfaceWriter.cc SurfaceWriter.tcl
 VectorFieldWriter.cc VectorFieldWriter.tcl
 ColorMapWriter.cc ColorMapWriter.tcl
 VoidStarWriter.cc VoidStarWriter.tcl
+SegFldWriter.cc SegFldWriter.tcl
+TensorFieldWriter.cc

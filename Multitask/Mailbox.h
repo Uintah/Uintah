@@ -14,10 +14,6 @@
 #ifndef SCI_Multitask_Mailbox_h
 #define SCI_Multitask_Mailbox_h 1
 
-#ifdef __GNUG__
-#pragma interface
-#endif
-
 template<class Item> struct Mailbox_private;
 
 template<class Item> class Mailbox {

@@ -481,10 +481,3 @@ void Salmon::emit_vars(ostream& out)
   }
 }
 
-#ifdef __GNUG__
-
-#include <Classlib/Array1.cc>
-
-template class Array1<Roe*>;
-
-#endif

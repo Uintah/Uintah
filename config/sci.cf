@@ -46,7 +46,7 @@ OTHERINCLUDES = -I$(CPPINCLUDES)
 
 .SUFFIXES: .cxx
 .cxx.o:
-        $(CCC) $(CCFLAGS) -c $<
+	$(CCC) $(CCFLAGS) -c $<
 
 
 default: all

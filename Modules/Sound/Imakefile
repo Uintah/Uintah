@@ -24,7 +24,7 @@ LIBNAME = Sound
 #if 0
 SO_LIBS =
 SO_LDFLAGS = -L$(TOP)/lib -lDatatypes -lDataflow -lTCL -lClasslib \
-	-lMalloc SCI_LAUDIO SCI_LM -lC -lc
+	-lMalloc SCI_LAUDIO SCI_LM SCI_CCLibs
 #endif
 
 SO_LIBS =

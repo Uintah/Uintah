@@ -876,3 +876,12 @@ int GenTransferFunc::makeCurrent(void)
   return 1;
 
 }
+
+#ifdef __GNUG__
+/*
+ * These template instantiations can't go in templates.cc, because
+ * the classes are defined in this file.
+ */
+#include <Classlib/Array1.cc>
+template class Array1<ColorPoint>;
+#endif
