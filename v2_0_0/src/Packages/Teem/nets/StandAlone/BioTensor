@@ -1,0 +1,5 @@
+
+# This script is just a short cut to run the BioTensor SCIRun Power App
+# It will be copied to the top of the object side of the tree.
+
+echo "Run the BioTensor Power App."
