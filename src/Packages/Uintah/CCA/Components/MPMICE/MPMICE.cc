@@ -367,6 +367,11 @@ MPMICE::scheduleTimeAdvance(const LevelP& level, SchedulerP& sched, int , int )
   d_ice->scheduleAdvectAndAdvanceInTime(          sched, patches, ice_matls_sub,
                                                                   mpm_matls_sub,
                                                                   all_matls);
+                                                                  
+  if(d_ice->switchTestConservation) {
+    d_ice->schedulePrintConservedQuantities(     sched, patches, ice_matls_sub,
+                                                                 all_matls); 
+  }
   sched->scheduleParticleRelocation(level,
                                 Mlb->pXLabel_preReloc, 
                                 Mlb->d_particleState_preReloc,
