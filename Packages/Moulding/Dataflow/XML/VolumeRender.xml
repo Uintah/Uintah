@@ -62,7 +62,7 @@
             The volume to be rendered.
           </p>
         </description>
-        <datatype>SCIRun::ScalarField</datatype>
+        <datatype>SCIRun::Field</datatype>
         <componentname>GenField</componentname>
         <componentname>ReadField</componentname>
         <componentname>Kindlmann</componentname>
