@@ -34,7 +34,7 @@ stylesheet_chunk := ${STYLESHEET_XSL_HTML}/srdocbook-chunk.xsl
 stylesheet_nochunk := ${STYLESHEET_XSL_HTML}/srdocbook.xsl
 stylesheet_print := ${STYLESHEET_DSSSL_PRINT}/docbook.dsl
 params_print := -V %footnote-ulinks% -V %section-autolabel% \
-  -V %generate-article-toc% -V %bop-footnotes%
+  -V %generate-article-toc% -V bop-footnotes
 rxmlsrcs := ${wildcard *.rxml}
 edition := ../../edition.xml
 treetop := ../../..
