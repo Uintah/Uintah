@@ -718,7 +718,7 @@ void OpenGL::redraw_frame()
                           xres, yres,
                           GL_DEPTH_COMPONENT, GL_FLOAT,
                           pixel_depth_data );
-            cerr << "(read from (0,0) to (" << xres << "," << yres << ")" << endl;
+//            cerr << "(read from (0,0) to (" << xres << "," << yres << ")" << endl;
           }
 
 	  // Wait for the right time before swapping buffers
@@ -1815,7 +1815,7 @@ if(glXGetConfig(dpy, &vinfo[i], attrib, &value) != 0){\
     y = (yres - 1) - y;
     int index = x + (y * xres);
     double z = pixel_depth_data[index];
-
+//    cerr << "z="<<z<<"\n";
     if (p) {
       // unproject the window point (x, y, z)
       GLdouble world_x, world_y, world_z;
