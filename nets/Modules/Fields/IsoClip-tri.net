@@ -32,22 +32,32 @@ source $DATADIR/$DATASET/$DATASET.settings
 
 ::netedit dontschedule
 
+global userName
+set userName ""
+
+global runDate
+set runDate ""
+
+global runTime
+set runTime ""
+
+global notes
+set notes ""
+
 set m0 [addModuleAtPosition "SCIRun" "Fields" "SamplePlane" 56 8]
-set m1 [addModuleAtPosition "SCIRun" "Fields" "QuadToTri" 53 261]
-set m2 [addModuleAtPosition "SCIRun" "Fields" "TransformData" 50 345]
-set m3 [addModuleAtPosition "SCIRun" "Fields" "IsoClip" 50 427]
-set m4 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 50 510]
-set m5 [addModuleAtPosition "SCIRun" "Render" "Viewer" 50 591]
-set m6 [addModuleAtPosition "SCIRun" "Fields" "Unstructure" 53 176]
-set m7 [addModuleAtPosition "SCIRun" "Fields" "ChangeFieldBounds" 61 88]
+set m1 [addModuleAtPosition "SCIRun" "Fields" "QuadToTri" 61 167]
+set m2 [addModuleAtPosition "SCIRun" "Fields" "TransformData" 61 245]
+set m3 [addModuleAtPosition "SCIRun" "Fields" "IsoClip" 61 322]
+set m4 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 61 397]
+set m5 [addModuleAtPosition "SCIRun" "Render" "Viewer" 61 478]
+set m6 [addModuleAtPosition "SCIRun" "Fields" "ChangeFieldBounds" 61 88]
 
 addConnection $m1 0 $m2 0
 addConnection $m4 0 $m5 0
-addConnection $m6 0 $m1 0
-addConnection $m0 0 $m7 0
-addConnection $m7 0 $m6 0
+addConnection $m0 0 $m6 0
 addConnection $m2 0 $m3 0
 addConnection $m3 0 $m4 0
+addConnection $m6 0 $m1 0
 
 set $m0-notes {}
 set $m0-sizex {20}
@@ -177,29 +187,28 @@ set $m5-ViewWindow_0-unused {1}
 set $m5-ViewWindow_0-unused {1}
 set $m5-ViewWindow_0-unused {1}
 set $m6-notes {}
-set $m7-notes {}
-set $m7-outputcenterx {0}
-set $m7-outputcentery {0}
-set $m7-outputcenterz {0}
-set $m7-outputsizex {2}
-set $m7-outputsizey {2}
-set $m7-outputsizez {2}
-set $m7-useoutputcenter {1}
-set $m7-useoutputsize {1}
-set $m7-box-scale {-1}
-set $m7-box-center-x {}
-set $m7-box-center-y {}
-set $m7-box-center-z {}
-set $m7-box-right-x {}
-set $m7-box-right-y {}
-set $m7-box-right-z {}
-set $m7-box-down-x {}
-set $m7-box-down-y {}
-set $m7-box-down-z {}
-set $m7-box-in-x {}
-set $m7-box-in-y {}
-set $m7-box-in-z {}
-set $m7-resetting {0}
+set $m6-outputcenterx {0}
+set $m6-outputcentery {0}
+set $m6-outputcenterz {0}
+set $m6-outputsizex {2}
+set $m6-outputsizey {2}
+set $m6-outputsizez {2}
+set $m6-useoutputcenter {1}
+set $m6-useoutputsize {1}
+set $m6-box-scale {-1}
+set $m6-box-center-x {}
+set $m6-box-center-y {}
+set $m6-box-center-z {}
+set $m6-box-right-x {}
+set $m6-box-right-y {}
+set $m6-box-right-z {}
+set $m6-box-down-x {}
+set $m6-box-down-y {}
+set $m6-box-down-z {}
+set $m6-box-in-x {}
+set $m6-box-in-y {}
+set $m6-box-in-z {}
+set $m6-resetting {0}
 $m3 initialize_ui
 
 ::netedit scheduleok
