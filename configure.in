@@ -27,8 +27,10 @@ fi
 
 PACKAGE_DIRS=$package
 PACKAGE_PATH="\$(SRCTOP_ABS)/PSECommon/components.xml"
+#PACKAGE_PATH="\$(SRCTOP_ABS)/PSECommon"
 for i in $package; do
   PACKAGE_PATH=$PACKAGE_PATH,"\$(SRCTOP_ABS)/$i/components.xml"
+# PACKAGE_PATH=$PACKAGE_PATH,"\$(SRCTOP_ABS)/$i"
 done
 
 ##-- check for user supplied tcl paths --------------------------------------
@@ -826,6 +828,10 @@ AC_OUTPUT(Makefile \
 
 #
 # $Log$
+# Revision 1.70  2000/10/21 19:17:42  moulding
+# added some comment lines that will be un-commented when the new module maker
+# comes on line.
+#
 # Revision 1.69  2000/09/14 15:33:47  sparker
 # Added a configure flag --disable-sci-malloc
 #
