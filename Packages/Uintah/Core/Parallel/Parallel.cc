@@ -3,14 +3,17 @@
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Malloc/Allocator.h>
+#include <Core/Thread/Thread.h>
 
 #include <stdio.h>
 
 #include <iostream>
 #include <mpi.h>
 
-using namespace SCIRun;
 using namespace Uintah;
+using SCIRun::Thread;
+using SCIRun::InternalError;
+using SCIRun::AllocatorSetDefaultTagMalloc;
 
 using std::cerr;
 using std::cout;
@@ -106,6 +109,13 @@ Parallel::initializeManager(int& argc, char**& argv, const string & scheduler)
      int status;
      const char* oldtag = AllocatorSetDefaultTagMalloc("MPI initialization");
 
+#ifdef __sgi
+     if(Thread::isInitialized()){
+       cerr << "Thread library initialization occurs before MPI_Init.  This causes problems\nwith MPI exit.  Look for and remove global Thread primitives.\n";
+       throw InternalError("Bad MPI Init");
+     }
+#endif
+
 #ifdef THREADED_MPI_AVAILABLE
      if( ( status = MPI_Init_thread( &argc, &argv, required, &provided ) )
 	                                                     != MPI_SUCCESS) {
@@ -140,8 +150,6 @@ Parallel::initializeManager(int& argc, char**& argv, const string & scheduler)
    }
 
    ProcessorGroup* world = getRootProcessorGroup();
-   //   cerr << "Parallel: processor " << world->myrank() + 1 
-   //<< " of " << world->size();
    if(world->myrank() == 0){
       cerr << "Parallel: " << world->size() << " processors";
       if(::usingMPI)
