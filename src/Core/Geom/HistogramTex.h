@@ -60,8 +60,8 @@ public:
   HistogramTex(const HistogramTex&);
   virtual ~HistogramTex();
 
-  void set_texture( float *tex, int w = 256){
-    // This is unsave. Colormap deletion before draw could result in a
+  void set_texture( const float *tex, int w = 256){
+    // This is unsafe. Colormap deletion before draw could result in a
     // crash.  However the texture is copied to OpenGL and then not used,
     // so problems would be rare.
     texture = tex; width = w; }
