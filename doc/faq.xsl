@@ -86,23 +86,27 @@
 <xsl:for-each select="/faq/entry">
   <xsl:variable name="num"><xsl:number/></xsl:variable>
   <xsl:for-each select="./question">
-    <p><b><xsl:value-of select="$num"/></b>
     <xsl:for-each select="./p">
-      <a><xsl:attribute name="href">
-         <xsl:value-of select="concat('techfaq.xml?dir=1','#',$num)"/></xsl:attribute>
-      <xsl:apply-templates/></a>
+      <xsl:variable name="num2"><xsl:number/></xsl:variable>
+      <xsl:if test="$num2=1">
+        <p><b><xsl:value-of select="$num"/></b>
+        <a><xsl:attribute name="href">
+           <xsl:value-of select="concat('techfaq.xml?dir=1','#',$num)"/></xsl:attribute>
+        <xsl:apply-templates/></a></p>
+      </xsl:if>
     </xsl:for-each>
-    </p>
   </xsl:for-each>
 </xsl:for-each>
+
+<hr width="600"/>
 
 <xsl:for-each select="/faq/entry">
   <xsl:variable name="num"><xsl:number/></xsl:variable>
   <xsl:for-each select="./question">
     <xsl:for-each select="./p">
-      <a><xsl:attribute name="name">
+      <p><a><xsl:attribute name="name">
          <xsl:value-of select="$num"/></xsl:attribute>
-      <b><i><xsl:apply-templates/></i></b></a>
+      <b><i><xsl:apply-templates/></i></b></a></p>
     </xsl:for-each>
     <xsl:for-each select="./pre">
       <pre class="example"><b><i><xsl:apply-templates/></i></b></pre>
@@ -134,4 +138,3 @@
 </xsl:template>
 
 </xsl:stylesheet>
-esheet>
