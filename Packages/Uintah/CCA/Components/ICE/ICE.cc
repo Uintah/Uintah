@@ -2725,20 +2725,24 @@ void ICE::computeLagrangianSpecificVolume(const ProcessorGroup*,
     //__________________________________
     //  Note that spec_vol_L[m] = mass[m] * sp_vol[m]
     for(int m = 0; m < numALLMatls; m++) {
-     Material* matl = d_sharedState->getMaterial( m );
-     int indx = matl->getDWIndex();
-     CCVariable<double> spec_vol_L;
-     Ghost::GhostType  gn = Ghost::None;
-     new_dw->allocateAndPut(spec_vol_L, lb->spec_vol_L_CCLabel, indx, patch);
-     new_dw->get(mass_L_CC,       lb->mass_L_CCLabel,     indx, patch, gn,0);
-     new_dw->get(sp_vol,          lb->sp_vol_CCLabel,     indx, patch, gn,0);
-     new_dw->get(spec_vol_src,    lb->created_vol_CCLabel,indx, patch, gn,0);
-     new_dw->get(rho_CC,          lb->rho_CCLabel,        indx, patch, gn,0); 
-     spec_vol_L.initialize(0.);
-     
-     for(CellIterator iter=patch->getExtraCellIterator();!iter.done();iter++){ 
-       IntVector c = *iter;
-      spec_vol_L[c] = (rho_CC[c] * cell_vol * sp_vol[c]) + spec_vol_src[c];
+      Material* matl = d_sharedState->getMaterial( m );
+      int indx = matl->getDWIndex();
+      CCVariable<double> spec_vol_L;
+      CCVariable<double> spec_vol_source; 
+      Ghost::GhostType  gn = Ghost::None;
+      new_dw->allocateAndPut(spec_vol_L, lb->spec_vol_L_CCLabel, indx, patch);
+      new_dw->get(mass_L_CC,       lb->mass_L_CCLabel,     indx, patch, gn,0);
+      new_dw->get(sp_vol,          lb->sp_vol_CCLabel,     indx, patch, gn,0);
+      new_dw->get(spec_vol_src,    lb->created_vol_CCLabel,indx, patch, gn,0);
+      new_dw->get(rho_CC,          lb->rho_CCLabel,        indx, patch, gn,0); 
+      new_dw->allocateAndPut(spec_vol_source,lb->spec_vol_source_CCLabel,
+                                                             indx,patch); 
+      spec_vol_L.initialize(0.);
+
+      for(CellIterator iter=patch->getExtraCellIterator();!iter.done();iter++){ 
+        IntVector c = *iter;
+        spec_vol_L[c] = (rho_CC[c] * cell_vol * sp_vol[c]) + spec_vol_src[c];
+        spec_vol_source[c] = spec_vol_src[c]/(rho_CC[c] * cell_vol); 
       }
       //  Set Neumann = 0 if symmetric Boundary conditions
       setBC(spec_vol_L, "set_if_sym_BC",patch, d_sharedState, indx); 
