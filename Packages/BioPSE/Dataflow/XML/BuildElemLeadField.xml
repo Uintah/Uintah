@@ -19,7 +19,7 @@
 -->
 
 
-<component name="BuildLeadField" category="LeadField">
+<component name="BuildElemLeadField" category="LeadField">
   <overview>
     <authors>
       <author>David Weinstein</author>

@@ -40,14 +40,14 @@
 
 
 namespace SCIRun {
-vector<pair<TetVolMesh::Cell::index_type, double> > 
-operator*(const vector<pair<TetVolMesh::Cell::index_type, double> >&r, double &) {
+vector<pair<TetVolMesh::Node::index_type, double> > 
+operator*(const vector<pair<TetVolMesh::Node::index_type, double> >&r, double &) {
   ASSERTFAIL("BuildLeadField.cc Bogus operator");
   return r;
 }
-vector<pair<TetVolMesh::Cell::index_type, double> > 
-operator+=(const vector<pair<TetVolMesh::Cell::index_type, double> >&r, 
-	   const vector<pair<TetVolMesh::Cell::index_type, double> >&) {
+vector<pair<TetVolMesh::Node::index_type, double> > 
+operator+=(const vector<pair<TetVolMesh::Node::index_type, double> >&r, 
+	   const vector<pair<TetVolMesh::Node::index_type, double> >&) {
   ASSERTFAIL("BuildLeadField.cc Bogus operator");
   return r;
 }
@@ -122,13 +122,11 @@ void BuildLeadField::execute() {
   }
   PointCloudMesh* interp_mesh = 
     (PointCloudMesh*)dynamic_cast<PointCloudMesh*>(interp_in->mesh().get_rep());
-  cerr << "field type is: "<<interp_in->get_type_name()<<"\n";
-
-  PointCloud<vector<pair<TetVolMesh::Cell::index_type, double> > >* interp = 
-    dynamic_cast<PointCloud<vector<pair<TetVolMesh::Cell::index_type, double> > > *>(interp_in.get_rep());
+  PointCloud<vector<pair<TetVolMesh::Node::index_type, double> > >* interp = 
+    dynamic_cast<PointCloud<vector<pair<TetVolMesh::Node::index_type, double> > > *>(interp_in.get_rep());
 
   if (!interp) {
-    cerr << "Error - Interp Field wasn't a PointCloud<vector<pair<TetVolMesh::Cell::index_type,double>>>\n";
+    cerr << "Error - Interp Field wasn't a PointCloud<vector<pair<TetVolMesh::Node::index_type,double>>>\n";
     return;
   }
 
@@ -153,11 +151,12 @@ void BuildLeadField::execute() {
     int i;
     for (i=0; i<nnodes; i++) (*rhs)[i]=0;
     
-    vector<pair<TetVolMesh::Cell::index_type,double> >::iterator iter = interp->fdata()[0].begin();
+    vector<pair<TetVolMesh::Node::index_type,double> >::iterator iter = interp->fdata()[0].begin();
     while (iter != interp->fdata()[0].end()) {
       int idx = (*iter).first;
       double val = (*iter).second;
       (*rhs)[idx]+=val;
+      ++iter;
     }
 
     iter = interp->fdata()[counter+1].begin();
@@ -165,6 +164,7 @@ void BuildLeadField::execute() {
       int idx = (*iter).first;
       double val = (*iter).second;
       (*rhs)[idx]-=val;
+      ++iter;
     }
 
     if (counter<(nelecs-2)) rhs_oport_->send_intermediate(rhs);
