@@ -62,6 +62,8 @@ public:
   int get_tuple_axis_size() const;
   bool get_tuple_indecies(vector<string> &elems) const;
   bool get_tuple_index_info(int tmin, int tmax, int &min, int &max) const;
+  string concat_tuple_types() const;
+
   virtual void io(Piostream&);
   static PersistentTypeID type_id;
 
