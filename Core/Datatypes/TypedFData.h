@@ -102,7 +102,7 @@ public:
 
   void fget(T &result, int *loc)
   {
-    R::value_type tmp;
+    typename R::value_type tmp;
     fdata->fget(tmp, loc);
     F f; f(result, tmp);
   }
@@ -135,10 +135,10 @@ public:
 
   void fget(T &result, int *loc)
   {
-    R1::value_type tmp1;
+    typename R1::value_type tmp1;
     fdata1->fget(tmp1, loc);
 
-    R2::value_type tmp2;
+    typename R2::value_type tmp2;
     fdata2->fget(tmp2, loc);
 
     F f; f(result, tmp1, tmp2);
