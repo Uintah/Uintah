@@ -6,6 +6,6 @@ ifeq (@BUILD_PARALLEL@,yes)
 PARALLEL_DIRS = Component
 endif
 
-SUBDIRS = $(PARALLEL_DIRS)
+SUBDIRS = Malloc Thread $(PARALLEL_DIRS)
 
 include $(SRCTOP)/scripts/recurse.mk
