@@ -80,7 +80,7 @@ public:
   dynamic_port_range operator[](string);
 };
 
-class PSECORESHARE Module : public TCL, public Pickable {
+class PSECORESHARE Module : public TCL, public ModulePickable {
   /*
    * This exists to trip people up that still have clone and
    * copy constructors in the modules - they should be removed.
@@ -158,6 +158,7 @@ public:
 
     // Callbacks
     virtual void connection(Module::ConnectionMode, int, int);
+#if 0
     virtual void geom_pick(GeomPick*, void*, GeomObj*);
   //virtual void geom_pick(GeomPick*, void*, int);
     virtual void geom_pick(GeomPick*, void*);
@@ -173,10 +174,12 @@ public:
 			    int, const BState&);
     virtual void geom_moved(GeomPick*, int, double, const Vector&, 
 			    const BState&, int);
+#endif
     virtual void widget_moved(int);
     virtual void widget_moved2(int last, void *) {
 	widget_moved(last);
     }
+
     // Port manipulations
     void add_iport(IPort*);
     void add_oport(OPort*);

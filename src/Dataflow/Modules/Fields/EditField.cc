@@ -67,13 +67,13 @@ public:
   GuiInt cdataminmax_;   // change data value extents
   GuiInt cbbox_;         // change bbox
 
-  CrowdMonitor widget_lock_;
+  CrowdMonitor     widget_lock_;
   ScaledBoxWidget *box_;
+  Transform        box_initial_transform__;
+  BBox             box_initial_bounds_;
 
-  bool firsttime_;
   int widgetid_;
   pair<double,double> minmax_;
-  Transform oldtrans_;
 
   EditField(const string& id);
 
@@ -83,6 +83,7 @@ public:
   void update_input_attributes(FieldHandle);
   bool check_types(FieldHandle);
   void build_widget(FieldHandle);
+  bool bbox_similar_to(const BBox &a, const BBox &b);
 
   virtual void execute();
 
@@ -117,8 +118,7 @@ EditField::EditField(const string& id)
     minmax_(1,0)
   
 {
-  box_ = 0;
-  firsttime_ = 1;
+  box_ = scinew ScaledBoxWidget(this, &widget_lock_, 1.0, 1);
   widgetid_ = 0;
 }
 
@@ -241,7 +241,8 @@ bool EditField::check_types(FieldHandle f)
 
 
 
-void EditField::build_widget(FieldHandle f)
+void
+EditField::build_widget(FieldHandle f)
 {
   double l2norm;
   Point center, right, down, in;
@@ -257,6 +258,8 @@ void EditField::build_widget(FieldHandle f)
     min = Point(minx_.get(),miny_.get(),minz_.get());
     max = Point(maxx_.get(),maxy_.get(),maxz_.get());
   }
+
+  box_initial_bounds_ = BBox(min, max);
 
   // Fix degenerate boxes.
   const double size_estimate = Max((max-min).length() * 0.01, 1.0e-5);
@@ -275,7 +278,7 @@ void EditField::build_widget(FieldHandle f)
     min.z(min.z() - size_estimate);
     max.z(max.z() + size_estimate);
   }
-  
+
   center = Point(min.x()+(max.x()-min.x())/2.,
 		 min.y()+(max.y()-min.y())/2.,
 		 min.z()+(max.z()-min.z())/2.);
@@ -288,17 +291,16 @@ void EditField::build_widget(FieldHandle f)
   // Rotate * Scale * Translate.
   Transform r;
   Point unused;
-  oldtrans_.load_identity();
+  box_initial_transform__.load_identity();
   r.load_frame(unused, (right-center).normal(),
 	       (down-center).normal(),
 	       (in-center).normal());
-  oldtrans_.pre_trans(r);
-  oldtrans_.pre_scale(Vector((right-center).length(),
+  box_initial_transform__.pre_trans(r);
+  box_initial_transform__.pre_scale(Vector((right-center).length(),
 			     (down-center).length(),
 			     (in-center).length()));
-  oldtrans_.pre_translate(center.asVector());
+  box_initial_transform__.pre_translate(center.asVector());
 
-  box_ = scinew ScaledBoxWidget(this,&widget_lock_,1);
   box_->SetScale(l2norm * 0.015);
   box_->SetPosition(center, right, down, in);
   box_->AxisAligned(1);
@@ -318,24 +320,54 @@ void EditField::build_widget(FieldHandle f)
 }
 
 
-void EditField::execute()
+static bool
+check_ratio(double x, double y, double lower, double upper)
 {
-  FieldIPort *iport=(FieldIPort*)get_iport("Input Field"); 
-  FieldHandle fh;
-  //Field *f=0;
-  FieldOPort *oport=(FieldOPort*)get_oport("Output Field");
+  if (fabs(x) < 1e-6)
+  {
+    if (!(fabs(y) < 1e-6))
+    {
+      return false;
+    }
+  }
+  else
+  {
+    const double ratio = y / x;
+    if (ratio < lower || ratio > upper)
+    {
+      return false;
+    }
+  }
+  return true;
+}
 
+
+bool
+EditField::bbox_similar_to(const BBox &a, const BBox &b)
+{
+  return 
+    a.valid() &&
+    b.valid() &&
+    check_ratio(a.min().x(), b.min().x(), 0.5, 2.0) &&
+    check_ratio(a.min().y(), b.min().y(), 0.5, 2.0) &&
+    check_ratio(a.min().z(), b.min().z(), 0.5, 2.0) &&
+    check_ratio(a.min().x(), b.min().x(), 0.5, 2.0) &&
+    check_ratio(a.min().y(), b.min().y(), 0.5, 2.0) &&
+    check_ratio(a.min().z(), b.min().z(), 0.5, 2.0);
+}
+
+
+void
+EditField::execute()
+{
+  FieldIPort *iport = (FieldIPort*)get_iport("Input Field"); 
   if (!iport) {
     postMessage("Unable to initialize "+name+"'s iport\n");
     return;
   }
   
-  // the output port is required
-  if (!oport) {
-    postMessage("Unable to initialize "+name+"'s oport\n");
-    return;
-  }
-  // the input port (with data) is required
+  // The input port (with data) is required.
+  FieldHandle fh;
   if (!iport->get(fh) || 
       !(fh.get_rep()))
   {
@@ -343,13 +375,19 @@ void EditField::execute()
     return;
   }
 
+  // The output port is required.
+  FieldOPort *oport = (FieldOPort*)get_oport("Output Field");
+  if (!oport) {
+    postMessage("Unable to initialize "+name+"'s oport\n");
+    return;
+  }
+
   // get and display the attributes of the input field
   update_input_attributes(fh);
 
   // build the transform widget
-  if (firsttime_)
+  if (!bbox_similar_to(box_initial_bounds_, fh->mesh()->get_bounding_box()))
   {
-    firsttime_ = false;
     build_widget(fh);
   } 
 
@@ -480,7 +518,7 @@ void EditField::execute()
 		       (in-center).length()));
     t.pre_translate(center.asVector());
 
-    Transform inv(oldtrans_);
+    Transform inv(box_initial_transform__);
     inv.invert();
     t.post_trans(inv);
 

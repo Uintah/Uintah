@@ -47,12 +47,12 @@ namespace SCIRun {
 
 
 class SCICORESHARE GeomPick : public GeomContainer {
-  Pickable* module;
+  ModulePickable* module;
   void* cbdata;
   //int pick_index;
   GeomObj* picked_obj;
   Array1<Vector> directions;
-  Pickable* widget;
+  WidgetPickable* widget;
   int widget_data;
   int selected;
   int ignore;
@@ -61,15 +61,13 @@ class SCICORESHARE GeomPick : public GeomContainer {
   GeomPick(const GeomPick&);
 public:
   bool drawOnlyOnPick;
-  GeomPick(GeomObj*, Pickable* module);
-  GeomPick(GeomObj*, Pickable* module, Pickable*, int widget_data);
-  GeomPick(GeomObj*, Pickable* module,
-	   const Vector&);
-  GeomPick(GeomObj*, Pickable* module,
-	   const Vector&, const Vector&);
-  GeomPick(GeomObj*, Pickable* module,
+  GeomPick(GeomObj*, ModulePickable* module);
+  GeomPick(GeomObj*, ModulePickable* module, WidgetPickable*, int widget_data);
+  GeomPick(GeomObj*, ModulePickable* module, const Vector&);
+  GeomPick(GeomObj*, ModulePickable* module, const Vector&, const Vector&);
+  GeomPick(GeomObj*, ModulePickable* module,
 	   const Vector&, const Vector&, const Vector&);
-  GeomPick(GeomObj*, Pickable* module, const Array1<Vector>&);
+  GeomPick(GeomObj*, ModulePickable* module, const Array1<Vector>&);
   virtual ~GeomPick();
   virtual GeomObj* clone();
   int nprincipal();
