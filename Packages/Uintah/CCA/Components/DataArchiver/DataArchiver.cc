@@ -169,11 +169,21 @@ void DataArchiver::problemSetup(const ProblemSpecP& params)
      // Create a file, of the name p0_hostname-p0_pid-processor_number
      ostringstream myname;
      myname << basename << "-" << d_myworld->myrank() << ".tmp";
-     {
-       // This will be an empty file, everything is encoded in the name anyway
-       ofstream tmpout(myname.str().c_str());
-     }
+     string fname = myname.str();
+
+     // This will be an empty file, everything is encoded in the name anyway
+     FILE* tmpout = fopen(fname.c_str(), "w");
+     if(!tmpout)
+       throw ErrnoException("fopen", errno);
+     fprintf(tmpout, "\n");
+     if(fflush(tmpout) != 0)
+       throw ErrnoException("fflush", errno);
+     if(fsync(fileno(tmpout)) != 0)
+       throw ErrnoException("fsync", errno);
+     if(fclose(tmpout) != 0)
+       throw ErrnoException("fclose", errno);
      MPI_Barrier(d_myworld->getComm());
+
      // See who else we can see
      d_writeMeta=true;
      int i;
@@ -194,10 +204,18 @@ void DataArchiver::problemSetup(const ProblemSpecP& params)
      MPI_Barrier(d_myworld->getComm());
      if(d_writeMeta){
        d_dir = makeVersionedDir(d_filebase);
-       {
-	 ofstream tmpout(myname.str().c_str());
-	 tmpout << d_dir.getName();
-       }
+       string fname = myname.str();
+       FILE* tmpout = fopen(fname.c_str(), "w");
+       if(!tmpout)
+	 throw ErrnoException("fopen", errno);
+       string dirname = d_dir.getName();
+       fprintf(tmpout, "%s\n", dirname.c_str());
+       if(fflush(tmpout) != 0)
+	 throw ErrnoException("fflush", errno);
+       if(fdatasync(fileno(tmpout)) != 0)
+	 throw ErrnoException("fdatasync", errno);
+       if(fclose(tmpout) != 0)
+	 throw ErrnoException("fclose", errno);
      }
      MPI_Barrier(d_myworld->getComm());
      if(!d_writeMeta){
@@ -211,20 +229,21 @@ void DataArchiver::problemSetup(const ProblemSpecP& params)
        in >> dirname;
        d_dir=Dir(dirname);
      }
-     MPI_Barrier(d_myworld->getComm());
+     int count=d_writeMeta?1:0;
+     int nunique;
+     // This is an AllReduce, not a reduce.  This is necessary to
+     // ensure that all processors wait before they remove the tmp files
+     MPI_Allreduce(&count, &nunique, 1, MPI_INT, MPI_SUM,
+		   d_myworld->getComm());
+     if(d_myworld->myrank() == 0){
+       double dt=Time::currentSeconds()-start;
+       cerr << "Discovered " << nunique << " unique filesystems in " << dt << " seconds\n";
+     }
      // Remove the tmp files...
      int s = unlink(myname.str().c_str());
      if(s != 0){
        cerr << "Cannot unlink file: " << myname.str() << '\n';
        throw ErrnoException("unlink", errno);
-     }
-     int count=d_writeMeta?1:0;
-     int nunique;
-     MPI_Reduce(&count, &nunique, 1, MPI_INT, MPI_SUM, 0,
-		d_myworld->getComm());
-     if(d_myworld->myrank() == 0){
-       double dt=Time::currentSeconds()-start;
-       cerr << "Discovered " << nunique << " unique filesystems in " << dt << " seconds\n";
      }
    } else {
       d_dir = makeVersionedDir(d_filebase);
