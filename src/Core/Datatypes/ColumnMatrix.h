@@ -59,7 +59,6 @@ class DenseMatrix;
 class SparseRowMatrix;
 
 class SCICORESHARE ColumnMatrix : public Matrix {
-  int nrows_;
   double* data;
 
 public:
@@ -84,9 +83,6 @@ public:
   void    put(int r, double val) { ASSERTRANGE(r, 0, nrows_); data[r] = val; };
 
   void resize(int);
-
-  virtual int nrows() const;
-  virtual int ncols() const;
 
   virtual void zero();
   virtual double& get(int, int) const;

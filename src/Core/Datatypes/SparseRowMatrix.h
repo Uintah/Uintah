@@ -53,9 +53,7 @@ class ColumnMatrix;
 class SparseRowMatrix;
 
 class SCICORESHARE SparseRowMatrix : public Matrix {
-  int nrows_;
-  int ncols_;
-
+private:
   SparseRowMatrix(); // This is only used by the maker function.
 
 public:
@@ -91,9 +89,6 @@ public:
   int getIdx(int, int);
   int get_nnz() { return nnz; }
   
-  virtual int nrows() const;
-  virtual int ncols() const;
-
   virtual double* get_val() { return a; }
   virtual int*    get_row() { return rows; }
   virtual int*    get_col() { return columns; }

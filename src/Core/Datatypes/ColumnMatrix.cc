@@ -60,8 +60,8 @@ static Persistent* maker()
 
 PersistentTypeID ColumnMatrix::type_id("ColumnMatrix", "Matrix", maker);
 
-ColumnMatrix::ColumnMatrix(int rows) 
-  : nrows_(rows)
+ColumnMatrix::ColumnMatrix(int rows) :
+  Matrix(rows, 1)
 {
     if(nrows_)
 	data=scinew double[nrows_];
@@ -70,8 +70,8 @@ ColumnMatrix::ColumnMatrix(int rows)
 }
 
 ColumnMatrix::ColumnMatrix(const ColumnMatrix& c) 
-  : nrows_(c.nrows_)
 {
+  nrows_ = c.nrows_;
   if(nrows_){
     data=scinew double[nrows_];
     for(int i=0;i<nrows_;i++)
@@ -155,17 +155,6 @@ void ColumnMatrix::resize(int new_rows)
 	data=0;
     nrows_ = new_rows;
 }
-
-int ColumnMatrix::nrows() const
-{
-    return nrows_;
-}
-
-int ColumnMatrix::ncols() const
-{
-    return 1;
-}
-
 
 void ColumnMatrix::zero()
 {
