@@ -600,6 +600,12 @@ OpenGL::render_and_save_image(int x, int y,
     delete[] tmp_row;
     tmp_row = 0;
   }
+
+  extern bool regression_testing_flag;
+  if (regression_testing_flag)
+  {
+    Thread::exitAll(0);
+  }
 }
 
 

@@ -56,6 +56,7 @@ using namespace SCIRun;
 
 namespace SCIRun {
 extern env_map scirunrc;             // contents of .scirunrc
+extern bool regression_testing_flag;
 }
 
 #ifndef PSECORETCL
@@ -81,10 +82,11 @@ void
 usage()
 {
   cout << "Usage: scirun [args] [net_file]\n";
-  cout << "       [-]-e[xecute] : executes the given network on startup\n";
-  cout << "       [-]-v[ersion] : prints out version information\n";
-  cout << "       [-]-h[elp]    : prints usage information\n";
-  cout << "       net_file      : SCIRun Network Input File\n";
+  cout << "       [-]-r[egression] : regression test a network\n";
+  cout << "       [-]-e[xecute]    : executes the given network on startup\n";
+  cout << "       [-]-v[ersion]    : prints out version information\n";
+  cout << "       [-]-h[elp]       : prints usage information\n";
+  cout << "       net_file         : SCIRun Network Input File\n";
   exit( 0 );
 }
 
@@ -94,6 +96,8 @@ usage()
 int
 parse_args( int argc, char *argv[] )
 {
+  regression_testing_flag = false;
+
   int found = 0;
   for( int cnt = 1; cnt < argc; cnt++ )
   {
@@ -114,6 +118,11 @@ parse_args( int argc, char *argv[] )
     {
       execute_flag = true;
     }
+    else if ( ( arg == "--regression" ) || ( arg == "-regression" ) ||
+	      ( arg == "-r" ) ||  ( arg == "--r" ) )
+    {
+      regression_testing_flag = true;
+    }
     else
     {
       struct stat buf;
@@ -132,6 +141,18 @@ parse_args( int argc, char *argv[] )
   }
   return found;
 }
+
+
+class RegressionKiller : public Runnable
+{
+public:
+  void run()
+  {
+    sleep(300);
+    cout << "Regression test timeout, killing SCIRun.\n";
+    Thread::exitAll(1);
+  }
+};
 
 
 int
@@ -231,10 +252,17 @@ main(int argc, char *argv[] )
     string command = string( "loadnet " ) + argv[startnetno];
     gui->eval(command.c_str(), result);
 
-    if (execute_flag)
+    if (execute_flag || regression_testing_flag)
     {
       gui->eval("ExecuteAll", result);
     }
+  }
+
+  if (regression_testing_flag)
+  {
+    RegressionKiller *kill = scinew RegressionKiller();
+    Thread *tkill = scinew Thread(kill, "Kill a hung SCIRun");
+    tkill->detach();
   }
 
   // Now activate the TCL event loop

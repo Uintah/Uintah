@@ -98,6 +98,7 @@ private:
   vector<ViewWindow*> top_view_window_;
   int                 max_portno_;
   vector<int>         portno_map_;
+  vector<bool>        syncronized_map_;
 };
 
 

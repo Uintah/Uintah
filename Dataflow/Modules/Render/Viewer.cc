@@ -342,6 +342,7 @@ void Viewer::initPort(Mailbox<GeomReply>* reply)
 {
   int portid=max_portno_++;
   portno_map_.push_back(portid);
+  syncronized_map_.push_back(false);
 
   // Create the port
   GeomViewerPort *pi = new GeomViewerPort(portid);
@@ -400,7 +401,12 @@ void Viewer::delete_patch_portnos(int portid)
       found = i;
     }
   }
-  if (found >= 0) { portno_map_.erase(portno_map_.begin() + found); }
+
+  if (found >= 0)
+  {
+    portno_map_.erase(portno_map_.begin() + found);
+    syncronized_map_.erase(syncronized_map_.begin() + found);
+  }
 
 }
 
@@ -657,6 +663,8 @@ void Viewer::append_port_msg(GeometryComm* gmsg)
 //----------------------------------------------------------------------
 void Viewer::flushPort(int portid)
 {
+  extern bool regression_testing_flag;
+
   // Look up the right port number
   GeomViewerPort* pi;
   if(!(pi = ((GeomViewerPort*)ports_.getObj(portid).get_rep())))
@@ -689,6 +697,34 @@ void Viewer::flushPort(int portid)
   {
     flushViews();
     pi->msg_head=pi->msg_tail=0;
+  }
+
+  syncronized_map_[real_portno(portid)-1] = true;
+  bool all = true;
+  unsigned int i;
+  for (i=0; i < numIPorts()-1; i++)
+  {
+    if (syncronized_map_[i] == false)
+    {
+      all = false;
+      break;
+    }
+  }
+  if (all)
+  {
+    if (regression_testing_flag)
+    {
+      for (i = 0; i < view_window_.size(); i++)
+      {
+	const string name = string("snapshot") + to_string(i) + ".ppm";
+	view_window_[i]->current_renderer->saveImage(name, "ppm", 640, 512);
+      }
+    }
+
+    for (i = 0; i < syncronized_map_.size(); i++)
+    {
+      syncronized_map_[i] = false;
+    }
   }
 }
 
