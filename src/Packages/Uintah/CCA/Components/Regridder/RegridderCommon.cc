@@ -395,7 +395,7 @@ void RegridderCommon::Dilate( CCVariable<int>& flaggedCells, CCVariable<int>& di
     low = Max( flagLow, idx - depth );
     high = Min( flagHigh - IntVector(1,1,1), idx + depth );
     int temp = 0;
-    for(CellIterator local_iter(low, high); !local_iter.done(); local_iter++) {
+    for(CellIterator local_iter(low, high + IntVector(1,1,1)); !local_iter.done(); local_iter++) {
       IntVector local_idx(*local_iter);
       temp += flaggedCells[local_idx]*filter[local_idx-idx+depth];
     }
