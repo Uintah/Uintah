@@ -1,4 +1,3 @@
-#include <Packages/Uintah/CCA/Components/MPM/Crack/FractureDefine.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ConstitutiveModelFactory.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/HypoElastic.h>
 #include <Core/Malloc/Allocator.h>
@@ -28,39 +27,38 @@ using std::cerr;
 using namespace Uintah;
 using namespace SCIRun;
 
-HypoElastic::HypoElastic(ProblemSpecP& ps, MPMLabel* Mlb, 
-                                           MPMFlags* Mflag)
+HypoElastic::HypoElastic(ProblemSpecP& ps, MPMLabel* Mlb, MPMFlags* Mflag)
 {
   lb = Mlb;
   flag = Mflag;
 
   ps->require("G",d_initialData.G);
   ps->require("K",d_initialData.K);
-#ifdef FRACTURE
-  // Read in fracture toughness curve versus crack velocity
-  ProblemSpecP curve_ps = ps->findBlock("fracture_toughness_curve");
-  if(curve_ps!=0) {
-    crackPropagationCriterion="max_hoop_stress";	  
-    curve_ps->get("crack_propagation_criterion",crackPropagationCriterion);	  
-    if(crackPropagationCriterion!="max_hoop_stress" && 
-       crackPropagationCriterion!="max_principal_stress" &&
-       crackPropagationCriterion!="max_energy_release_rate" &&
-       crackPropagationCriterion!="strain_energy_density") {
-       cout << "!!! Undefinded crack propagation criterion: "
-	    << crackPropagationCriterion << ". Program terminated."
-            << endl;
-       exit(1);       
-    }	    
-    for(ProblemSpecP child_ps=curve_ps->findBlock("point"); child_ps!=0; 
-  	  	     child_ps=child_ps->findNextBlock("point")) {
-      double Vc,KIc,KIIc;
-      child_ps->get("Vc",Vc);
-      child_ps->get("KIc",KIc);
-      child_ps->get("KIIc",KIIc);
-      d_initialData.Kc.push_back(Vector(Vc,KIc,KIIc));
-    }		  
+  if (flag->d_fracture) {
+    // Read in fracture toughness curve versus crack velocity
+    ProblemSpecP curve_ps = ps->findBlock("fracture_toughness_curve");
+    if(curve_ps!=0) {
+      crackPropagationCriterion="max_hoop_stress";	  
+      curve_ps->get("crack_propagation_criterion",crackPropagationCriterion);	  
+      if(crackPropagationCriterion!="max_hoop_stress" && 
+	 crackPropagationCriterion!="max_principal_stress" &&
+	 crackPropagationCriterion!="max_energy_release_rate" &&
+	 crackPropagationCriterion!="strain_energy_density") {
+	cout << "!!! Undefinded crack propagation criterion: "
+	     << crackPropagationCriterion << ". Program terminated."
+	     << endl;
+	exit(1);       
+      }	    
+      for(ProblemSpecP child_ps=curve_ps->findBlock("point"); child_ps!=0; 
+	  child_ps=child_ps->findNextBlock("point")) {
+	double Vc,KIc,KIIc;
+	child_ps->get("Vc",Vc);
+	child_ps->get("KIc",KIc);
+	child_ps->get("KIIc",KIIc);
+	d_initialData.Kc.push_back(Vector(Vc,KIc,KIIc));
+      }		  
+    }
   }
-#endif
   
   if(flag->d_8or27==8){
     NGN=1;
@@ -77,9 +75,8 @@ HypoElastic::HypoElastic(const HypoElastic* cm)
 
   d_initialData.G = cm->d_initialData.G;
   d_initialData.K = cm->d_initialData.K;
-#ifdef FRACTURE
-  d_initialData.Kc = cm->d_initialData.Kc;
-#endif
+  if (flag->d_fracture)
+    d_initialData.Kc = cm->d_initialData.Kc;
 }
 
 HypoElastic::~HypoElastic()
@@ -104,20 +101,20 @@ void HypoElastic::initializeCMData(const Patch* patch,
   ParticleVariable<Matrix3> pstress;
   new_dw->allocateAndPut(pstress, lb->pStressLabel, pset);
   // for J-Integral
-#ifdef FRACTURE
   ParticleVariable<Matrix3> pdispGrads;
-  new_dw->allocateAndPut(pdispGrads, lb->pDispGradsLabel, pset);
   ParticleVariable<double>  pstrainEnergyDensity;
-  new_dw->allocateAndPut(pstrainEnergyDensity, lb->pStrainEnergyDensityLabel, pset);
-#endif
+  if (flag->d_fracture) {
+    new_dw->allocateAndPut(pdispGrads, lb->pDispGradsLabel, pset);
+    new_dw->allocateAndPut(pstrainEnergyDensity, lb->pStrainEnergyDensityLabel, pset);
+  }
 
   for(ParticleSubset::iterator iter = pset->begin();iter != pset->end();iter++){
      deformationGradient[*iter] = Identity;
      pstress[*iter] = zero;
-#ifdef FRACTURE
-     pdispGrads[*iter] = zero;
-     pstrainEnergyDensity[*iter] = 0.0;
-#endif
+     if (flag->d_fracture) {
+       pdispGrads[*iter] = zero;
+       pstrainEnergyDensity[*iter] = 0.0;
+     }
   }
 
   computeStableTimestep(patch, matl, new_dw);
@@ -134,12 +131,12 @@ void HypoElastic::allocateCMDataAddRequires(Task* task,
                  matlset, Ghost::None);
   task->requires(Task::NewDW,lb->pStressLabel_preReloc, 
                  matlset, Ghost::None);
-#ifdef FRACTURE
-  task->requires(Task::NewDW,lb->pDispGradsLabel_preReloc,
-                 matlset, Ghost::None);
-  task->requires(Task::NewDW,lb->pStrainEnergyDensityLabel_preReloc,
-                 matlset, Ghost::None);
-#endif
+  if (flag->d_fracture) {
+    task->requires(Task::NewDW,lb->pDispGradsLabel_preReloc,
+		   matlset, Ghost::None);
+    task->requires(Task::NewDW,lb->pStrainEnergyDensityLabel_preReloc,
+		   matlset, Ghost::None);
+  }
 }
 
 
@@ -160,36 +157,36 @@ void HypoElastic::allocateCMDataAdd(DataWarehouse* new_dw,
               delset);
   new_dw->get(o_stress,lb->pStressLabel_preReloc,delset);
 
-#ifdef FRACTURE
-  // for J-Integral
   ParticleVariable<Matrix3> pdispGrads;
   constParticleVariable<Matrix3> o_dispGrads;
-  new_dw->allocateTemporary(pdispGrads, addset);
-  new_dw->get(o_dispGrads,lb->pDispGradsLabel_preReloc,delset);
   ParticleVariable<double>  pstrainEnergyDensity;
-  constParticleVariable<double>  o_strainEnergyDensity;
-  new_dw->allocateTemporary(pstrainEnergyDensity,addset);
-  new_dw->get(o_strainEnergyDensity,lb->pStrainEnergyDensityLabel_preReloc,
-              delset);
-#endif
+    constParticleVariable<double>  o_strainEnergyDensity;
+  if (flag->d_fracture) {
+  // for J-Integral
+    new_dw->allocateTemporary(pdispGrads, addset);
+    new_dw->get(o_dispGrads,lb->pDispGradsLabel_preReloc,delset);
+    new_dw->allocateTemporary(pstrainEnergyDensity,addset);
+    new_dw->get(o_strainEnergyDensity,lb->pStrainEnergyDensityLabel_preReloc,
+		delset);
+  }
 
   ParticleSubset::iterator o, n = addset->begin();
   for (o=delset->begin(); o != delset->end(); o++, n++) {
      deformationGradient[*n] = o_deformationGradient[*o];
      pstress[*n] = o_stress[*o];
-#ifdef FRACTURE
-     pdispGrads[*n] = o_dispGrads[*o];
-     pstrainEnergyDensity[*n] = o_strainEnergyDensity[*o];
-#endif
+     if (flag->d_fracture) {
+       pdispGrads[*n] = o_dispGrads[*o];
+       pstrainEnergyDensity[*n] = o_strainEnergyDensity[*o];
+     }
   }
 
   (*newState)[lb->pDeformationMeasureLabel]=deformationGradient.clone();
   (*newState)[lb->pStressLabel]=pstress.clone();
 
-#ifdef FRACTURE
-  (*newState)[lb->pDispGradsLabel]=pdispGrads.clone();
-  (*newState)[lb->pStrainEnergyDensityLabel]=pstrainEnergyDensity.clone();
-#endif
+  if (flag->d_fracture) {
+    (*newState)[lb->pDispGradsLabel]=pdispGrads.clone();
+    (*newState)[lb->pStrainEnergyDensityLabel]=pstrainEnergyDensity.clone();
+  }
 }
 
 void HypoElastic::addParticleState(std::vector<const VarLabel*>& from,
@@ -199,12 +196,13 @@ void HypoElastic::addParticleState(std::vector<const VarLabel*>& from,
    from.push_back(lb->pStressLabel);
    to.push_back(lb->pDeformationMeasureLabel_preReloc);
    to.push_back(lb->pStressLabel_preReloc);
-#ifdef FRACTURE
-   from.push_back(lb->pDispGradsLabel);
-   from.push_back(lb->pStrainEnergyDensityLabel);
-   to.push_back(lb->pDispGradsLabel_preReloc);
-   to.push_back(lb->pStrainEnergyDensityLabel_preReloc);
-#endif
+
+   if (flag->d_fracture) {
+     from.push_back(lb->pDispGradsLabel);
+     from.push_back(lb->pStrainEnergyDensityLabel);
+     to.push_back(lb->pDispGradsLabel_preReloc);
+     to.push_back(lb->pStrainEnergyDensityLabel_preReloc);
+   }
 }
 
 void HypoElastic::computeStableTimestep(const Patch* patch,
@@ -296,26 +294,24 @@ void HypoElastic::computeStressTensor(const PatchSubset* patches,
 
     old_dw->get(delT, lb->delTLabel);
 
-#ifdef FRACTURE
     constNCVariable<Vector> Gvelocity;
-    new_dw->get(Gvelocity,lb->GVelocityLabel, dwi, patch, gac, NGN);
-
     constParticleVariable<Short27> pgCode;
     constParticleVariable<Matrix3> pdispGrads;
     constParticleVariable<double>  pstrainEnergyDensity;
-    new_dw->get(pgCode,              lb->pgCodeLabel,              pset);
-    old_dw->get(pdispGrads,          lb->pDispGradsLabel,          pset);
-    old_dw->get(pstrainEnergyDensity,lb->pStrainEnergyDensityLabel,pset);
-
     ParticleVariable<Matrix3> pvelGrads;
-    new_dw->allocateAndPut(pvelGrads,  lb->pVelGradsLabel,  pset);
-
     ParticleVariable<Matrix3> pdispGrads_new;
     ParticleVariable<double> pstrainEnergyDensity_new;
-    new_dw->allocateAndPut(pdispGrads_new, lb->pDispGradsLabel_preReloc, pset);
-    new_dw->allocateAndPut(pstrainEnergyDensity_new,
-                                 lb->pStrainEnergyDensityLabel_preReloc, pset);
-#endif
+    if (flag->d_fracture) {
+      new_dw->get(Gvelocity,lb->GVelocityLabel, dwi, patch, gac, NGN);
+      new_dw->get(pgCode,              lb->pgCodeLabel,              pset);
+      old_dw->get(pdispGrads,          lb->pDispGradsLabel,          pset);
+      old_dw->get(pstrainEnergyDensity,lb->pStrainEnergyDensityLabel,pset);
+      new_dw->allocateAndPut(pvelGrads,  lb->pVelGradsLabel,  pset);
+          
+      new_dw->allocateAndPut(pdispGrads_new, lb->pDispGradsLabel_preReloc, pset);
+      new_dw->allocateAndPut(pstrainEnergyDensity_new,
+			     lb->pStrainEnergyDensityLabel_preReloc, pset);
+    }
 
     new_dw->allocateAndPut(pstress_new,     lb->pStressLabel_preReloc,   pset);
     new_dw->allocateAndPut(pvolume_deformed, lb->pVolumeDeformedLabel,   pset);
@@ -343,18 +339,16 @@ void HypoElastic::computeStressTensor(const PatchSubset* patches,
        Vector gvel;
        velGrad.set(0.0);
        for(int k = 0; k < flag->d_8or27; k++) {
-#ifdef FRACTURE
-	  if(pgCode[idx][k]==1) gvel = gvelocity[ni[k]];
-	  if(pgCode[idx][k]==2) gvel = Gvelocity[ni[k]];
-#else
-	  gvel = gvelocity[ni[k]];
-#endif
-	  for (int j = 0; j<3; j++){
-	    for (int i = 0; i<3; i++) {
-	      velGrad(i,j)+=gvel[i] * d_S[k][j] * oodx[j];
-#ifdef FRACTURE
-             pvelGrads[idx](i,j)  = velGrad(i,j);
-#endif
+	 if (flag->d_fracture) {
+	   if(pgCode[idx][k]==1) gvel = gvelocity[ni[k]];
+	   if(pgCode[idx][k]==2) gvel = Gvelocity[ni[k]];
+	 } else
+	   gvel = gvelocity[ni[k]];
+	 for (int j = 0; j<3; j++){
+	   for (int i = 0; i<3; i++) {
+	     velGrad(i,j)+=gvel[i] * d_S[k][j] * oodx[j];
+	     if (flag->d_fracture)
+	       pvelGrads[idx](i,j)  = velGrad(i,j);
 	    }
 	  }
       }
@@ -409,13 +403,13 @@ void HypoElastic::computeStressTensor(const PatchSubset* patches,
 
       se += e;
 
-#ifdef FRACTURE
+      if (flag->d_fracture) {
       // Update particle displacement gradients
       pdispGrads_new[idx] = pdispGrads[idx] + velGrad * delT;
       // Update particle strain energy density 
       pstrainEnergyDensity_new[idx] = pstrainEnergyDensity[idx] + 
                                          e/pvolume_deformed[idx];
-#endif
+      }
 
       // Compute wave speed at each particle, store the maximum
       Vector pvelocity_idx = pvelocity[idx];
@@ -710,28 +704,30 @@ void HypoElastic::addComputesAndRequires(Task* task,
   Ghost::GhostType  gac   = Ghost::AroundCells;
   const MaterialSubset* matlset = matl->thisMaterial();
   task->requires(Task::OldDW, lb->delTLabel);
-  task->requires(Task::OldDW, lb->pXLabel,                 matlset,Ghost::None);
-  task->requires(Task::OldDW, lb->pMassLabel,              matlset,Ghost::None);
-  task->requires(Task::OldDW, lb->pStressLabel,            matlset,Ghost::None);
-  task->requires(Task::OldDW, lb->pVolumeLabel,            matlset,Ghost::None);
-  task->requires(Task::OldDW, lb->pVelocityLabel,          matlset,Ghost::None);
-  task->requires(Task::OldDW, lb->pTemperatureLabel,       matlset,Ghost::None);
-  task->requires(Task::OldDW, lb->pDeformationMeasureLabel,matlset,Ghost::None);
+  task->requires(Task::OldDW, lb->pXLabel,                matlset,Ghost::None);
+  task->requires(Task::OldDW, lb->pMassLabel,             matlset,Ghost::None);
+  task->requires(Task::OldDW, lb->pStressLabel,           matlset,Ghost::None);
+  task->requires(Task::OldDW, lb->pVolumeLabel,           matlset,Ghost::None);
+  task->requires(Task::OldDW, lb->pVelocityLabel,         matlset,Ghost::None);
+  task->requires(Task::OldDW, lb->pTemperatureLabel,      matlset,Ghost::None);
+  task->requires(Task::OldDW, lb->pDeformationMeasureLabel,matlset,
+		 Ghost::None);
   if(flag->d_8or27==27){
-    task->requires(Task::OldDW, lb->pSizeLabel,            matlset,Ghost::None);
+    task->requires(Task::OldDW, lb->pSizeLabel,           matlset,Ghost::None);
   }
-  task->requires(Task::NewDW, lb->gVelocityLabel,          matlset, gac, NGN);
+  task->requires(Task::NewDW, lb->gVelocityLabel,         matlset, gac, NGN);
 
-#ifdef FRACTURE
-  task->requires(Task::NewDW, lb->GVelocityLabel,          matlset, gac, NGN);
-  task->requires(Task::NewDW, lb->pgCodeLabel,             matlset,Ghost::None);
-  task->requires(Task::OldDW, lb->pDispGradsLabel,         matlset,Ghost::None);
-  task->requires(Task::OldDW,lb->pStrainEnergyDensityLabel,matlset,Ghost::None);
-
-  task->computes(lb->pDispGradsLabel_preReloc,             matlset);
-  task->computes(lb->pVelGradsLabel,                       matlset);
-  task->computes(lb->pStrainEnergyDensityLabel_preReloc,   matlset);
-#endif
+  if (flag->d_fracture) {
+    task->requires(Task::NewDW, lb->GVelocityLabel,       matlset, gac, NGN);
+    task->requires(Task::NewDW, lb->pgCodeLabel,          matlset,Ghost::None);
+    task->requires(Task::OldDW, lb->pDispGradsLabel,      matlset,Ghost::None);
+    task->requires(Task::OldDW,lb->pStrainEnergyDensityLabel,matlset,
+		   Ghost::None);
+    
+    task->computes(lb->pDispGradsLabel_preReloc,             matlset);
+    task->computes(lb->pVelGradsLabel,                       matlset);
+    task->computes(lb->pStrainEnergyDensityLabel_preReloc,   matlset);
+  }
 
   task->computes(lb->pStressLabel_preReloc,                matlset);
   task->computes(lb->pDeformationMeasureLabel_preReloc,    matlset);
@@ -739,10 +735,8 @@ void HypoElastic::addComputesAndRequires(Task* task,
 }
 
 void 
-HypoElastic::addComputesAndRequires(Task* ,
-				   const MPMMaterial* ,
-				   const PatchSet* ,
-				   const bool ) const
+HypoElastic::addComputesAndRequires(Task*,const MPMMaterial*, const PatchSet*,
+				    const bool ) const
 {
 }
 

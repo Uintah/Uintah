@@ -1,4 +1,3 @@
-#include <Packages/Uintah/CCA/Components/MPM/Crack/FractureDefine.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ConstitutiveModelFactory.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MWViscoElastic.h>
 #include <Core/Malloc/Allocator.h>
@@ -286,12 +285,12 @@ void MWViscoElastic::computeStressTensor(const PatchSubset* patches,
 
     old_dw->get(delT, lb->delTLabel);
 
-#ifdef FRACTURE
     constParticleVariable<Short27> pgCode;
-    new_dw->get(pgCode, lb->pgCodeLabel, pset);
     constNCVariable<Vector> Gvelocity;
-    new_dw->get(Gvelocity,lb->GVelocityLabel, dwi, patch, gac, NGN);
-#endif
+    if (flag->d_fracture) {
+      new_dw->get(pgCode, lb->pgCodeLabel, pset);
+      new_dw->get(Gvelocity,lb->GVelocityLabel, dwi, patch, gac, NGN);
+    }
 
     double e_shear = d_initialData.E_Shear;
     double e_bulk = d_initialData.E_Bulk;
@@ -319,12 +318,11 @@ void MWViscoElastic::computeStressTensor(const PatchSubset* patches,
        Vector gvel;
        velGrad.set(0.0);
        for(int k = 0; k < flag->d_8or27; k++) {
-#ifdef FRACTURE
-	 if(pgCode[idx][k]==1) gvel = gvelocity[ni[k]]; 
-         if(pgCode[idx][k]==2) gvel = Gvelocity[ni[k]];
-#else
- 	 gvel = gvelocity[ni[k]];
-#endif
+	 if (flag->d_fracture) {
+	   if(pgCode[idx][k]==1) gvel = gvelocity[ni[k]]; 
+	   if(pgCode[idx][k]==2) gvel = Gvelocity[ni[k]];
+	 } else
+	   gvel = gvelocity[ni[k]];
 	 for (int j = 0; j<3; j++){
 	    for (int i = 0; i<3; i++) {
 	      velGrad(i,j)+=gvel[i] * d_S[k][j] * oodx[j];
@@ -417,10 +415,11 @@ void MWViscoElastic::addComputesAndRequires(Task* task,
     task->requires(Task::OldDW, lb->pSizeLabel,            matlset,Ghost::None);
   }
   task->requires(Task::NewDW, lb->gVelocityLabel,          matlset,gac, NGN);
-#ifdef FRACTURE
-  task->requires(Task::NewDW, lb->pgCodeLabel,            matlset,Ghost::None);
-  task->requires(Task::NewDW, lb->GVelocityLabel,         matlset, gac, NGN);
-#endif
+
+  if (flag->d_fracture) {
+    task->requires(Task::NewDW, lb->pgCodeLabel,         matlset,Ghost::None);
+    task->requires(Task::NewDW, lb->GVelocityLabel,      matlset, gac, NGN);
+  }
 
   task->computes(lb->pStressLabel_preReloc,             matlset);
   task->computes(lb->pDeformationMeasureLabel_preReloc, matlset);
