@@ -412,25 +412,6 @@ Isosurface::initialize()
 	       new Noise<Module,TetMC<TetVol<double> > >(this) );
 
 
-  // Noise::MaskedTetVol
-  loader.store("Noise::MaskedTetVol<char>", 
-	       new Noise<Module,TetMC<MaskedTetVol<char> > >(this) );
-  loader.store("Noise::MaskedTetVol<unsigned char>", 
-	       new Noise<Module,TetMC<MaskedTetVol<unsigned char> > >(this) );
-  loader.store("Noise::MaskedTetVol<short>", 
-	       new Noise<Module,TetMC<MaskedTetVol<short> > >(this) );
-  loader.store("Noise::MaskedTetVol<unsigned short>", 
-	       new Noise<Module,TetMC<MaskedTetVol<unsigned short> > >(this) );
-  loader.store("Noise::MaskedTetVol<int>", 
-	       new Noise<Module,TetMC<MaskedTetVol<int> > >(this) );
-  loader.store("Noise::MaskedTetVol<unsigned int>", 
-	       new Noise<Module,TetMC<MaskedTetVol<unsigned int> > >(this) );
-  loader.store("Noise::MaskedTetVol<float>", 
-	       new Noise<Module,TetMC<MaskedTetVol<float> > >(this) );
-  loader.store("Noise::MaskedTetVol<double>", 
-	       new Noise<Module,TetMC<MaskedTetVol<double> > >(this) );
-
-
   // MC:LatticeVol
 
   loader.store("MC::LatticeVol<char>", 
@@ -487,24 +468,6 @@ Isosurface::initialize()
   loader.store("Noise::LatticeVol<double>", 
 	       new Noise<Module,HexMC<LatticeVol<double> > >(this) );
 
-  // Noise::MaskedLatticeVol
-  loader.store("Noise::MaskedLatticeVol<char>", 
-	       new Noise<Module,HexMC<MaskedLatticeVol<char> > >(this) );
-  loader.store("Noise::MaskedLatticeVol<unsigned char>", 
-	       new Noise<Module,HexMC<MaskedLatticeVol<unsigned char> > >(this) );
-  loader.store("Noise::MaskedLatticeVol<short>", 
-	       new Noise<Module,HexMC<MaskedLatticeVol<short> > >(this) );
-  loader.store("Noise::MaskedLatticeVol<unsigned short>", 
-	       new Noise<Module,HexMC<MaskedLatticeVol<unsigned short> > >(this) );
-  loader.store("Noise::MaskedLatticeVol<int>", 
-	       new Noise<Module,HexMC<MaskedLatticeVol<int> > >(this) );
-  loader.store("Noise::MaskedLatticeVol<unsigned int>", 
-	       new Noise<Module,HexMC<MaskedLatticeVol<unsigned int> > >(this) );
-  loader.store("Noise::MaskedLatticeVol<float>", 
-	       new Noise<Module,HexMC<MaskedLatticeVol<float> > >(this) );
-  loader.store("Noise::MaskedLatticeVol<double>", 
-	       new Noise<Module,HexMC<MaskedLatticeVol<double> > >(this) );
-
   // Sage::LatticeVol
   loader.store("Sage::LatticeVol<char>", 
 	       new Sage<Module,LatticeVol<char> >(this) );
@@ -523,23 +486,6 @@ Isosurface::initialize()
   loader.store("Sage::LatticeVol<double>", 
 	       new Sage<Module,LatticeVol<double> >(this) );
 
-  // Sage::MaskedLatticeVol
-  loader.store("Sage::MaskedLatticeVol<char>", 
-	       new Sage<Module,MaskedLatticeVol<char> >(this) );
-  loader.store("Sage::MaskedLatticeVol<unsigned char>", 
-	       new Sage<Module,MaskedLatticeVol<unsigned char> >(this) );
-  loader.store("Sage::MaskedLatticeVol<short>", 
-	       new Sage<Module,MaskedLatticeVol<short> >(this) );
-  loader.store("Sage::MaskedLatticeVol<unsigned short>", 
-	       new Sage<Module,MaskedLatticeVol<unsigned short> >(this) );
-  loader.store("Sage::MaskedLatticeVol<int>", 
-	       new Sage<Module,MaskedLatticeVol<int> >(this) );
-  loader.store("Sage::MaskedLatticeVol<unsigned int>", 
-	       new Sage<Module,MaskedLatticeVol<unsigned int> >(this) );
-  loader.store("Sage::MaskedLatticeVol<float>", 
-	       new Sage<Module,MaskedLatticeVol<float> >(this) );
-  loader.store("Sage::MaskedLatticeVol<double>", 
-	       new Sage<Module,MaskedLatticeVol<double> >(this) );
 }
 
 } // End namespace SCIRun
