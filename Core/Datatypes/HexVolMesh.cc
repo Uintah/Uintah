@@ -615,20 +615,64 @@ HexVolMesh::locate(Node::index_type &loc, const Point &p)
 
 
 bool
-HexVolMesh::locate(Edge::index_type &/*edge*/, const Point & /* p */)
+HexVolMesh::locate(Edge::index_type &edge, const Point &p)
 {
-  //FIX_ME
-  ASSERTFAIL("HexVolMesh::locate(Edge::index_type &) not implemented!");
-  //return false;
+  Cell::index_type cell;
+  if (locate(cell, p))
+  {
+    Edge::array_type edges;
+    get_edges(edges, cell);
+
+    if (edges.size() == 0) { return false; }
+
+    edge = edges[0];
+    Point loc;
+    get_center(loc, edges[0]);
+    double mindist = distance2(p, loc);
+    for (unsigned int i = 0; i < edges.size(); i++)
+    {
+      get_center(loc, edges[i]);
+      const double dist = distance2(p, loc);
+      if (dist < mindist)
+      {
+	edge = edges[i];
+	mindist = dist;
+      }
+    }
+    return true;
+  }
+  return false;
 }
 
 
 bool
-HexVolMesh::locate(Face::index_type &/*face*/, const Point & /* p */)
+HexVolMesh::locate(Face::index_type &face, const Point &p)
 {
-  //FIX_ME
-  ASSERTFAIL("HexVolMesh::locate(Face::index_type&) not implemented!");
-  //return false;
+  Cell::index_type cell;
+  if (locate(cell, p))
+  {
+    Face::array_type faces;
+    get_faces(faces, cell);
+
+    if (faces.size() == 0) { return false; }
+
+    face = faces[0];
+    Point loc;
+    get_center(loc, faces[0]);
+    double mindist = distance2(p, loc);
+    for (unsigned int i = 0; i < faces.size(); i++)
+    {
+      get_center(loc, faces[i]);
+      const double dist = distance2(p, loc);
+      if (dist < mindist)
+      {
+	face = faces[i];
+	mindist = dist;
+      }
+    }
+    return true;
+  }
+  return false;
 }
 
 
