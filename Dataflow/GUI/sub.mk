@@ -5,106 +5,36 @@ SRCDIR := Dataflow/GUI
 ALLTARGETS := $(ALLTARGETS) $(SRCDIR)/tclIndex
 
 $(SRCDIR)/tclIndex: \
-	$(SRCDIR)/ArrowWidget.tcl \
-	$(SRCDIR)/BaseWidget.tcl \
-	$(SRCDIR)/Binop.tcl \
 	$(SRCDIR)/BldTransform.tcl \
-	$(SRCDIR)/BoxWidget.tcl \
 	$(SRCDIR)/CastField.tcl \
 	$(SRCDIR)/ChangeCellType.tcl \
 	$(SRCDIR)/ColorMapReader.tcl \
 	$(SRCDIR)/ColorMapWriter.tcl \
-	$(SRCDIR)/ColumnMatrixReader.tcl \
-	$(SRCDIR)/ColumnMatrixWriter.tcl \
 	$(SRCDIR)/ComponentWizard.tcl \
-	$(SRCDIR)/Coregister.tcl \
-	$(SRCDIR)/CriticalPointWidget.tcl \
-	$(SRCDIR)/CrosshairWidget.tcl \
-	$(SRCDIR)/Edge.tcl \
 	$(SRCDIR)/EditPath.tcl \
 	$(SRCDIR)/ErrorMetric.tcl \
-	$(SRCDIR)/FieldCage.tcl \
 	$(SRCDIR)/FieldReader.tcl \
 	$(SRCDIR)/FieldWriter.tcl \
-	$(SRCDIR)/FrameWidget.tcl \
-	$(SRCDIR)/FusionThreshold.tcl \
 	$(SRCDIR)/GLTextureBuilder.tcl \
-	$(SRCDIR)/GainCorrect.tcl \
-	$(SRCDIR)/GaugeWidget.tcl \
-	$(SRCDIR)/Gauss.tcl \
-	$(SRCDIR)/GenField.tcl \
-	$(SRCDIR)/GenScalarField.tcl \
 	$(SRCDIR)/GenStandardColorMaps.tcl \
 	$(SRCDIR)/GenTransferFunc.tcl \
-	$(SRCDIR)/GenVectorField.tcl \
-	$(SRCDIR)/GeomReader.tcl \
-	$(SRCDIR)/GeomWriter.tcl \
-	$(SRCDIR)/Hedgehog.tcl \
-	$(SRCDIR)/HedgehogLitLines.tcl \
-	$(SRCDIR)/ImageConvolve.tcl \
-	$(SRCDIR)/ImageNoise.tcl \
-	$(SRCDIR)/ImageReader.tcl \
-	$(SRCDIR)/ImageSel.tcl \
 	$(SRCDIR)/IsoSurface.tcl \
-	$(SRCDIR)/IsoSurfaceDW.tcl \
-	$(SRCDIR)/LightWidget.tcl \
 	$(SRCDIR)/LocateNbrhd.tcl \
 	$(SRCDIR)/MacroModule.tcl \
 	$(SRCDIR)/ManipFields.tcl \
-	$(SRCDIR)/MatMat.tcl \
-	$(SRCDIR)/MatSelectVec.tcl \
-	$(SRCDIR)/MatVec.tcl \
 	$(SRCDIR)/MatrixReader.tcl \
 	$(SRCDIR)/MatrixWriter.tcl \
-	$(SRCDIR)/MedianFilter.tcl \
-	$(SRCDIR)/MeshReader.tcl \
-	$(SRCDIR)/MeshWriter.tcl \
 	$(SRCDIR)/Module.tcl \
 	$(SRCDIR)/NetworkEditor.tcl \
-	$(SRCDIR)/Noise.tcl \
 	$(SRCDIR)/PathReader.tcl \
-	$(SRCDIR)/PathWidget.tcl \
 	$(SRCDIR)/PathWriter.tcl \
-	$(SRCDIR)/PointWidget.tcl \
-	$(SRCDIR)/Radon.tcl \
-	$(SRCDIR)/RemapVector.tcl \
-	$(SRCDIR)/Resample.tcl \
 	$(SRCDIR)/RescaleColorMap.tcl \
-	$(SRCDIR)/RingWidget.tcl \
-	$(SRCDIR)/ScalarFieldProbe.tcl \
-	$(SRCDIR)/ScalarFieldReader.tcl \
-	$(SRCDIR)/ScalarFieldWriter.tcl \
-	$(SRCDIR)/ScaledBoxWidget.tcl \
-	$(SRCDIR)/ScaledFrameWidget.tcl \
 	$(SRCDIR)/SeedField.tcl \
-	$(SRCDIR)/SegFldOps.tcl \
-	$(SRCDIR)/Segment.tcl \
-	$(SRCDIR)/Sharpen.tcl \
-	$(SRCDIR)/ShowDipoles.tcl \
 	$(SRCDIR)/ShowField.tcl \
-	$(SRCDIR)/ShowFieldSlice.tcl \
-	$(SRCDIR)/ShowMatrix.tcl \
-	$(SRCDIR)/ShowMesh.tcl \
-	$(SRCDIR)/ShowSurface.tcl \
-	$(SRCDIR)/ShowWidgets.tcl \
-	$(SRCDIR)/SimpSurface.tcl \
-	$(SRCDIR)/Smooth.tcl \
-	$(SRCDIR)/Snakes.tcl \
 	$(SRCDIR)/SolveMatrix.tcl \
 	$(SRCDIR)/Streamline.tcl \
-	$(SRCDIR)/Subsample.tcl \
-	$(SRCDIR)/SurfaceReader.tcl \
-	$(SRCDIR)/SurfaceWriter.tcl \
-	$(SRCDIR)/Ted.tcl \
 	$(SRCDIR)/TexCuttingPlanes.tcl \
 	$(SRCDIR)/TextureVolVis.tcl \
-	$(SRCDIR)/Threshold.tcl \
-	$(SRCDIR)/Transforms.tcl \
-	$(SRCDIR)/Unop.tcl \
-	$(SRCDIR)/VecVec.tcl \
-	$(SRCDIR)/VectorFieldReader.tcl \
-	$(SRCDIR)/VectorFieldWriter.tcl \
-	$(SRCDIR)/ViewWidget.tcl \
 	$(SRCDIR)/Viewer.tcl \
 	$(SRCDIR)/TclStream.tcl \
 	$(SRCDIR)/Rescale.tcl \

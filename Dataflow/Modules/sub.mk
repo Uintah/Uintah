@@ -12,11 +12,10 @@ SRCDIR := Dataflow/Modules
 SUBDIRS := \
 	$(SRCDIR)/DataIO\
 	$(SRCDIR)/Fields\
+	$(SRCDIR)/ManipFields\
 	$(SRCDIR)/Math\
 	$(SRCDIR)/Render\
-	$(SRCDIR)/SIP\
         $(SRCDIR)/Visualization\
-	$(SRCDIR)/ManipFields\
 #[INSERT NEW CATEGORY DIR HERE]
 
 include $(SRCTOP)/scripts/recurse.mk
