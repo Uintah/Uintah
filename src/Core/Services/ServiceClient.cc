@@ -97,6 +97,14 @@ bool ServiceClient::open(IComAddress address, std::string servicename, int sessi
     return(false);
   }
   
+  if (!(socket_.settimeout(180,0)))
+  {
+    std::string err = "ServiceClient: Could not set timeout for socket (" + socket_.geterror() + ")";
+    seterror(err);
+    socket_.close();
+    return(false);
+  }
+  
   if (!( socket_.connect(address)))
   {
     std::string err = "ServiceClient: Could not connect to service (" + socket_.geterror() + ")";

@@ -249,7 +249,8 @@ bool ServiceFrame::initiate()
 		std::string passwd = packet->getstring();
 		if (si->passwd == passwd)
 		{
-			packet->settag(TAG_AUSS);
+  			
+            packet->settag(TAG_AUSS);
 			packet->setid(0);
 			packet->setstring(si->version);
 			if(!(socket_.send(packet)))
@@ -261,6 +262,10 @@ bool ServiceFrame::initiate()
 		}
 		else
 		{
+            std::cout << "passwd = '" << passwd << "'\n";
+            std::cout << "service passwd = '" << si->passwd << "'\n";
+
+
 			packet->settag(TAG_AUFL);
 			packet->setid(0);
 			packet->setstring(std::string("Improper password"));

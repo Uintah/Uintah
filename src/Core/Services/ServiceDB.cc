@@ -471,7 +471,7 @@ bool ServiceDB::parse_service_rcfile(ServiceInfo *new_service,std::string filena
               }
               else
               {	// split of the latest line read
-                  newline = linebuffer.substr(linestart,lineend+1);
+                  newline = linebuffer.substr(linestart,lineend);
                   linebuffer = linebuffer.substr(lineend+1);
                   need_new_read = false;
               }
@@ -584,11 +584,23 @@ ServiceDB* ServiceDB::clone()
   {
 	
       ServiceInfo *info = scinew ServiceInfo;
-      info = (*pi).second;
+      *info = *((*pi).second);
       newptr->servicedb_[info->servicename] = info;
   } 
 	
   return(newptr);
+}
+
+void ServiceDB::printservices()
+{
+    std::cout << "list of available services:" << std::endl;
+    std::map<std::string,ServiceInfo*>::iterator it;
+    it = servicedb_.begin();
+    for ( ;it !=servicedb_.end(); it++)
+    {
+        ServiceInfo *info = (*it).second;
+        std::cout << " " << info->servicename << "(" << info->packagename << ")  version=" << info->version << " rcfile=" << info->rcfile << " disabled=" << info->disabled << std::endl; 
+    }
 }
 
 }
