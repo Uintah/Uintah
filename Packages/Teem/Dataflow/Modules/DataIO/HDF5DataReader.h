@@ -40,7 +40,7 @@ namespace SCITeem {
 
 using namespace SCIRun;
 
-#define MAX_PORTS 6
+#define MAX_PORTS 8
 #define MAX_DIMS 6
 
 class TeemSHARE HDF5DataReader : public Module {
@@ -65,7 +65,7 @@ public:
 
 private:
 
-  bool is_mergeable(Nrrd* n1, Nrrd* n2) const;
+  bool is_mergeable(NrrdDataHandle h1, NrrdDataHandle h2) const;
 
   GuiString filename_;
   GuiString datasets_;

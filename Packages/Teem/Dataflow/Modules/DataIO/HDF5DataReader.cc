@@ -91,17 +91,24 @@ HDF5DataReader::~HDF5DataReader() {
 
 
 
-// Allows nrrds to join along tuple i.e. scalar and vector sets can be joined,
+// Allows nrrds to join along tuple, scalar and vector sets can not be joined,
 // or allows for a multiple identical nrrds to assume a time series, 
 // and be joined along a new time axis. 
 bool
-HDF5DataReader::is_mergeable(Nrrd* n1, Nrrd* n2) const
+HDF5DataReader::is_mergeable(NrrdDataHandle h1, NrrdDataHandle h2) const
 {
+  if( (*((PropertyManager *) h1.get_rep()) !=
+       *((PropertyManager *) h2.get_rep())) ) return false;
+
+  if( h1->concat_tuple_types() != h2->concat_tuple_types() ) return false;
+
+  Nrrd* n1 = h1->nrrd;
+  Nrrd* n2 = h2->nrrd;
+
   if (n1->type != n2->type) return false;
-  if (n1->dim != n2->dim)  return false;
-  for (int i = 1; i < n1->dim; i++) {
+  if (n1->dim  != n2->dim)  return false;
+  for (int i=1; i<n1->dim; i++)
     if (n1->axis[i].size != n2->axis[i].size) return false;
-  }
 
   return true;
 }
@@ -204,8 +211,8 @@ void HDF5DataReader::execute() {
     
     for( unsigned int ic=0; ic<paths.size(); ic++ ) {
 
-      NrrdDataHandle handle = readDataset(new_filename, paths[ic], 
-					  datasets[ic]);
+      NrrdDataHandle nHandle = readDataset(new_filename, paths[ic], 
+					   datasets[ic]);
 
       bool inserted = false;
       vector<vector<NrrdDataHandle> >::iterator iter = nHandles.begin();
@@ -215,11 +222,12 @@ void HDF5DataReader::execute() {
 	++iter;
 
 	if (vec.size() == 0) {
-	  vec.push_back(handle);
+	  vec.push_back(nHandle);
 	  inserted = true;
 	  break;
-	} else if(is_mergeable(handle->nrrd, vec[0]->nrrd)) {
-	  vec.push_back(handle);
+	} else if(is_mergeable(nHandle, vec[0])) {
+
+	  vec.push_back(nHandle);
 	  inserted = true;
 	  break;
 	}
@@ -227,7 +235,7 @@ void HDF5DataReader::execute() {
 
       if (! inserted) {
 	vector<NrrdDataHandle> nrrdSet;
-	nrrdSet.push_back( handle );
+	nrrdSet.push_back( nHandle );
 	nHandles.push_back( nrrdSet );
       }
     }
@@ -247,50 +255,46 @@ void HDF5DataReader::execute() {
 	  string new_label("");
 	  string axis_label("");
 
-	  bool time_axis = true;
 	  // check if this is a time axis merge or a tuple axis merge.
 	  vector<Nrrd*> join_me;
 	  vector<NrrdDataHandle>::iterator niter = vec.begin();
-	  NrrdDataHandle first = *niter;
-	  string first_tlab(first->nrrd->axis[0].label);
-	  new_label = first_tlab;
-	  string first_tuple_types = first->concat_tuple_types();
 
+	  NrrdDataHandle n = *niter;
 	  ++niter;
-	  join_me.push_back(first->nrrd);
+	  join_me.push_back(n->nrrd);
+	  new_label = n->nrrd->axis[0].label;
+
 	  while (niter != vec.end()) {
 	    NrrdDataHandle n = *niter;
 	    ++niter;
 	    join_me.push_back(n->nrrd);
-	    string tlab(n->nrrd->axis[0].label);
-	    string types = n->concat_tuple_types();
-	    if (types != first_tuple_types) time_axis = false;
-
-	    new_label += string(",") + tlab;
-
+	    new_label += string(",") + n->nrrd->axis[0].label;
 	  }	  
-	  int axis = 0; // tuple
-	  int incr = 0; // tuple case.
-	  if (time_axis) {
-	    axis = join_me[0]->dim;
-	    incr = 1;
+
+	  int axis,  incr;
+
+	  if (mergedata_ == 1) {
+	    axis = 0; // tuple
+	    incr = 0; // tuple case.
+	  } else if (mergedata_ == 2) {
+	    axis = join_me[0]->dim; // time
+	    incr = 1;               // time
 	  }
 
 	  onrrd->nrrd = nrrdNew();
 	  if (nrrdJoin(onrrd->nrrd, &join_me[0], join_me.size(), axis, incr)) {
-	      char *err = biffGetDone(NRRD);
-	      error(string("Join Error: ") +  err);
-	      free(err);
-	      error_ = true;
-	      return;
-	    }
-	  
+	    char *err = biffGetDone(NRRD);
+	    error(string("Join Error: ") +  err);
+	    free(err);
+	    error_ = true;
+	    return;
+	  }
 
-	  if (time_axis) {
+	  if (mergedata_ == 2) {
 	    onrrd->nrrd->axis[axis].label = "Time";
 	    // remove all numbers from name
 	    string s(join_me[0]->axis[0].label);
-	    string new_label;
+	    new_label.clear();
 
 	    const string nums("0123456789");
 	      
@@ -310,49 +314,52 @@ void HDF5DataReader::execute() {
 	      else        { new_label.push_back(s[i]); }
 
 	    }
-	    onrrd->nrrd->axis[0].label = strdup(new_label.c_str());
-	  } else {
-	    // Take care of tuple axis label.
-	    onrrd->nrrd->axis[0].label = strdup(new_label.c_str());
 	  }
+	   
+	  // Take care of tuple axis label.
+	  onrrd->nrrd->axis[0].label = strdup(new_label.c_str());
+
+	  // Copy the properties.
+	  NrrdDataHandle handle = NrrdDataHandle(onrrd);
+
+	  *((PropertyManager *) handle.get_rep()) =
+	    *((PropertyManager *) n.get_rep());
 
 	  // clear the nrrds;
 	  vec.clear();
-	  vec.push_back(onrrd);
+	  vec.push_back(handle);
 	}
       }
     }
 
-    int cc = 0;
+    unsigned int cc = 0;
 
     for( unsigned int ic=0; ic<nHandles.size(); ic++ ) {
       for( unsigned int jc=0; jc<nHandles[ic].size(); jc++ ) {
-	nHandles_[cc] = nHandles[ic][jc];
+
+	if( cc < MAX_PORTS )
+	  nHandles_[cc] = nHandles[ic][jc];
 
 	++cc;
-	if( cc == MAX_PORTS ) {
-	  warning( "Maximum number of ports reached" );
-	  break;
-	}
       }
-
-      if( cc == MAX_PORTS )
-	break;
     }
 
-    for( int ic=cc; ic<MAX_PORTS; ic++ )
+    if( cc > MAX_PORTS )
+      warning( "More data than availible ports." );
+
+    for( unsigned int ic=cc; ic<MAX_PORTS; ic++ )
       nHandles_[ic] = NULL;
   }
   else {
     remark( "Already read the file " +  new_filename );
   }
 
-  for( int ic=0; ic<MAX_PORTS; ic++ ) {
+  for( unsigned int ic=0; ic<MAX_PORTS; ic++ ) {
     // Get a handle to the output double port.
     if( nHandles_[ic].get_rep() ) {
 
       char portNumber[4];
-      sprintf( portNumber, "%d", ic+1 );
+      sprintf( portNumber, "%d", ic );
 
       string portName = string("Output ") +
 	string(portNumber) +
@@ -530,10 +537,148 @@ vector<int> HDF5DataReader::getDatasetDims( string filename,
   return idims;
 }
 
+#ifdef HAVE_HDF5
+herr_t add_attribute(hid_t group_id, const char * name, void* op_data) {
+  herr_t status;
+
+  hid_t attr_id = H5Aopen_name(group_id, name);
+
+  if (attr_id < 0) {
+    cerr << "Unable to open attribute \"" << name << "\"" << endl;
+    status = -1;
+  } else {
+
+    hid_t type_id = H5Aget_type( attr_id );
+    hid_t file_space_id = H5Aget_space( attr_id );
+
+    if( file_space_id < 0 ) {
+      cerr << "Unable to open data " << endl;
+      return -1;
+    }
+    
+    hid_t mem_type_id;
+
+    switch (H5Tget_class(type_id)) {
+    case H5T_STRING:
+      // String
+      if(H5Tis_variable_str(type_id)) {                    
+	mem_type_id = H5Tcopy(H5T_C_S1);                        
+	H5Tset_size(mem_type_id, H5T_VARIABLE);                 
+      } else {                                      
+	mem_type_id = H5Tcopy(type_id);
+	H5Tset_cset(mem_type_id, H5T_CSET_ASCII);
+      }
+
+      break;
+
+    case H5T_INTEGER:
+      // Integer
+      mem_type_id = H5T_NATIVE_INT;
+      break;
+
+    case H5T_FLOAT:
+      if (H5Tequal(type_id, H5T_IEEE_F32BE) ||
+	  H5Tequal(type_id, H5T_IEEE_F32LE) ||
+	  H5Tequal(type_id, H5T_NATIVE_FLOAT)) {
+	// Float
+	mem_type_id = H5T_NATIVE_FLOAT;
+
+      } else if (H5Tequal(type_id, H5T_IEEE_F64BE) ||
+		 H5Tequal(type_id, H5T_IEEE_F64LE) ||
+		 H5Tequal(type_id, H5T_NATIVE_DOUBLE) ||
+		 H5Tequal(type_id, H5T_NATIVE_LDOUBLE)) {
+	// Double
+	mem_type_id = H5T_NATIVE_DOUBLE;
+
+      } else {
+	cerr << "Undefined HDF5 float" << endl;
+	return -1;
+      }
+      break;
+    default:
+      cerr << "Unknown or unsupported HDF5 data type" << endl;
+      return -1;
+    }
+    
+    /* Get the rank (number of dims) in the space. */
+    int ndims = H5Sget_simple_extent_ndims(file_space_id);
+
+    hsize_t *dims = new hsize_t[ndims];
+
+    /* Get the dims in the space. */
+    int ndim = H5Sget_simple_extent_dims(file_space_id, dims, NULL);
+
+    if( ndim != ndims ) {
+      cerr << "Data dimensions not match." << endl;
+      return -1;
+    }
+
+
+    int cc = 1;
+
+    for( int ic=0; ic<ndims; ic++ )
+      cc *= dims[ic];
+
+    int size;
+
+    if( H5Tget_size(type_id) > H5Tget_size(mem_type_id) )
+      size = cc * H5Tget_size(type_id);
+    else
+      size = cc * H5Tget_size(mem_type_id);
+
+    void *data = new char[size+1];
+
+    if( data == NULL ) {
+      cerr << "Can not allocate enough memory for the data" << endl;
+      return -1;
+    }
+
+    status = H5Aread(attr_id, mem_type_id, data);
+
+    if( status < 0 ) {
+      cerr << "Can not read data" << endl;
+      return -1;
+    }
+
+    ((char*) data)[size] = '\0';
+
+    ostringstream str;
+
+    for( int ic=0; ic<cc; ic++ ) {
+      if (mem_type_id == H5T_NATIVE_INT)
+	str << ((int*) data)[ic];
+      else if (mem_type_id == H5T_NATIVE_FLOAT)
+	str << ((float*) data)[ic];
+      else if (mem_type_id == H5T_NATIVE_DOUBLE)
+	str << ((double*) data)[ic];
+      else if( H5Tget_class(type_id) == H5T_STRING ) {
+	if(H5Tis_variable_str(type_id))
+	  str << ((char*) data)[ic];
+	else
+	  str << "\"" << (char*) data  << "\"";
+      }
+
+      if( cc > 1 && ic<cc-1)
+	str << ", ";
+    }
+
+    NrrdData * nrrd = (NrrdData *) (op_data);
+
+    nrrd->set_property( name, str.str(), false );
+
+    H5Tclose(type_id);
+
+    H5Aclose(attr_id);
+  }    
+
+  return status;
+}
+#endif
+
 
 NrrdDataHandle HDF5DataReader::readDataset( string filename,
-					   string group,
-					   string dataset ) {
+					    string group,
+					    string dataset ) {
 #ifdef HAVE_HDF5
   void *data = NULL;
 
@@ -748,25 +893,10 @@ NrrdDataHandle HDF5DataReader::readDataset( string filename,
     }
   }
 
-  /* Terminate access to the data space. */ 
-  if( (status = H5Sclose(file_space_id)) < 0 )
-    error( "Can not cloase file space." );
-
-  /* Terminate access to the dataset. */
-  if( (status = H5Dclose(ds_id)) < 0 )
-    error( "Can not cloase file space." );
-
-  /* Terminate access to the group. */ 
-  if( (status = H5Gclose(g_id)) < 0 )
-    error( "Can not cloase file space." );
-
-  /* Terminate access to the file. */ 
-  if( (status = H5Fclose(file_id)) < 0 )
-    error( "Can not cloase file space." );
-
   string tuple_type_str(":Scalar");
   int sink_size = 1;
   NrrdData *nout = scinew NrrdData(false);
+
 
   switch(ndims) {
   case 1: 
@@ -998,6 +1128,62 @@ NrrdDataHandle HDF5DataReader::readDataset( string filename,
 
   delete dims;
   delete count;
+
+  std::string parent = group;
+
+  while( parent.length() > 0 ) {
+  
+    hid_t p_id = H5Gopen(file_id, parent.c_str());
+
+    /* Open the group in the file. */
+    if( p_id < 0 ) {
+      error( "Error opening group. " );
+    } else {
+      H5Aiterate(p_id, NULL, add_attribute, nout);
+
+      /* Terminate access to the group. */ 
+      if( (status = H5Gclose(p_id)) < 0 )
+	error( "Can not close file space." );
+    }
+
+    // Remove the last group name from the path.
+    std::string::size_type last = parent.find_last_of("/");
+    parent.erase( last, parent.length()-last);
+  }
+
+  parent = "/";
+
+  hid_t p_id = H5Gopen(file_id, parent.c_str());
+  
+  /* Open the group in the file. */
+  if( p_id < 0 ) {
+    error( "Error opening group. " );
+  } else {
+    H5Aiterate(p_id, NULL, add_attribute, nout);
+    
+    /* Terminate access to the group. */ 
+    if( (status = H5Gclose(p_id)) < 0 )
+      error( "Can not close file space." );
+  }
+
+
+  /* Terminate access to the data space. */ 
+  if( (status = H5Sclose(file_space_id)) < 0 )
+    error( "Can not close file space." );
+
+  /* Terminate access to the dataset. */
+  if( (status = H5Dclose(ds_id)) < 0 )
+    error( "Can not close file space." );
+
+  /* Terminate access to the group. */ 
+  if( (status = H5Gclose(g_id)) < 0 )
+    error( "Can not close file space." );
+
+  /* Terminate access to the file. */ 
+  if( (status = H5Fclose(file_id)) < 0 )
+    error( "Can not close file space." );
+
+
 
   return NrrdDataHandle(nout);
 #else
