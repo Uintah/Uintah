@@ -18,7 +18,6 @@
 #include <Core/Datatypes/SparseRowMatrix.h>
 #include <Dataflow/Ports/MeshPort.h>
 #include <Core/Datatypes/Mesh.h>
-#include <Dataflow/Ports/SurfacePort.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/GuiInterface/GuiVar.h>

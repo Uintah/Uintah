@@ -14,8 +14,10 @@
 #ifndef SCI_project_TriSurf_h
 #define SCI_project_TriSurf_h 1
 
+#include <Core/Containers/Handle.h>
 #include <Core/Datatypes/Datatype.h>
 #include <Core/Geometry/BBox.h>
+#include <Core/Containers/Array1.h>
 
 #include <vector>
 
@@ -94,7 +96,6 @@ public:
   virtual void io(Piostream&);
   static PersistentTypeID type_id;
 
-
   // Extra functionality needed by this specific geometry.
   node_index add_find_point(const Point &p, double err = 1.0e-3);
   void add_triangle(node_index a, node_index b, node_index c,
@@ -102,16 +103,26 @@ public:
   void add_triangle(const Point &p0, const Point &p1, const Point &p2,
 		    bool cw_p = true);
 
+  //bool intersect(const Point &p, const Vector &dir, double &min, double &max,
+  //		 face_index &face, double &u, double &v);
+
+
+  int point_count() { return points_.size(); }
+  const Point &point(node_index i) { return points_[i]; }
+
 private:
 
   bool inside4_p(int, const Point &p);
 
 
-  vector<Point> points_;
-  vector<int>   faces_;
-  vector<int>   neighbors_;
+  Array1<Point> points_;
+  Array1<int>   faces_;
+  Array1<int>   neighbors_;
 
 };
+
+
+typedef Handle<TriSurf> TriSurfHandle;
 
 } // namespace SCIRun
 

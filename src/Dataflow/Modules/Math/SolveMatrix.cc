@@ -45,7 +45,6 @@
 #include <Core/Datatypes/ColumnMatrix.h>
 #include <Core/Datatypes/SparseRowMatrix.h>
 #include <Dataflow/Ports/MatrixPort.h>
-#include <Dataflow/Ports/SurfacePort.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Math/MiscMath.h>

@@ -14,7 +14,7 @@
 #include <Dataflow/Ports/MatrixPort.h>
 #include <Dataflow/Ports/FieldPort.h>
 #include <Core/Datatypes/SparseRowMatrix.h>
-#include <Core/Datatypes/TriSurface.h>
+#include <Core/Datatypes/TriSurf.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <iostream>
@@ -94,7 +94,8 @@ void LocatePoints::execute()
   mesh_gen_ = meshH->generation;
   surf_gen_ = surfH->generation;
 
-  TriSurface *ts = dynamic_cast<TriSurface*>(surfH.get_rep());
+  //TriSurf *ts = surfH.get_rep();  // FIXME
+  TriSurf *ts = 0;
   if (!ts) {
     cerr << "Error - need a TriSurface.\n";
     return;

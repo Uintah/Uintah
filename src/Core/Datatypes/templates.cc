@@ -30,10 +30,6 @@ template class LockingHandle<Matrix>;
 #include <Core/Datatypes/Mesh.h>
 template class LockingHandle<Mesh>;
 
-#include <Core/Datatypes/Surface.h>
-template class LockingHandle<Surface>;
-
-
 #ifdef __sgi
 #pragma reset woff 1468
 #endif

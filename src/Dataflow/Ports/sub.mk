@@ -15,7 +15,6 @@ SRCS     += $(SRCDIR)/ColorMapPort.cc             \
             $(SRCDIR)/MeshPort.cc                 \
             $(SRCDIR)/PathPort.cc                 \
             $(SRCDIR)/ScalarFieldPort.cc          \
-            $(SRCDIR)/SurfacePort.cc              \
             $(SRCDIR)/VectorFieldPort.cc          \
             $(SRCDIR)/VoidStarPort.cc             \
             $(SRCDIR)/templates.cc

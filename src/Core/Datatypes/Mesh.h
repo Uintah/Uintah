@@ -23,7 +23,8 @@
 #include <Core/Containers/LockingHandle.h>
 #include <Core/Containers/Handle.h>
 
-#include <Core/Datatypes/Surface.h>
+#include <Core/Datatypes/TriSurf.h>
+#include <Core/Containers/HashTable.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/Vector.h>
 
@@ -75,9 +76,9 @@ struct Element {
 
 
 struct DirichletBC {
-  SurfaceHandle fromsurf;
+  TriSurfHandle fromsurf;
   double value;
-  DirichletBC(const SurfaceHandle&, double);
+  DirichletBC(const TriSurfHandle&, double);
 };
 
 

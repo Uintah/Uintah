@@ -13,7 +13,6 @@
 #include <Core/Datatypes/ColumnMatrix.h>
 #include <Dataflow/Ports/MatrixPort.h>
 #include <Dataflow/Ports/MeshPort.h>
-#include <Dataflow/Ports/SurfacePort.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Math/Trig.h>
 #include <Core/GuiInterface/GuiVar.h>
