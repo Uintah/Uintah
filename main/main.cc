@@ -41,7 +41,6 @@
 
 #include <main/sci_version.h>
 #include <Dataflow/Network/Network.h>
-#include <Dataflow/Network/NetworkEditor.h>
 #include <Dataflow/Network/PackageDB.h>
 #include <Dataflow/Network/Scheduler.h>
 #include <Core/Containers/StringUtil.h>
@@ -226,57 +225,6 @@ public:
 };
 
 
-
-// show_licence_and_copy_sciunrc is not in Core/Util/Environment.h because it
-// depends on GuiInterface to present the user with the license dialog.
-void
-show_license_and_copy_scirunrc(GuiInterface *gui) {
-  const string tclresult = gui->eval("licenseDialog 1");
-  if (tclresult == "cancel") {
-    Thread::exitAll(1);
-  }
-  // check to make sure home directory is there
-  const char* HOME = sci_getenv("HOME");
-  const char* srcdir = sci_getenv("SCIRUN_SRCDIR");
-  const char* temp_rcfile_version = sci_getenv("SCIRUN_RCFILE_VERSION");
-  string SCIRUN_RCFILE_VERSION;
-
-  // If the .scirunrc file does not have a SCIRUN_RCFILE_VERSION variable...
-  if( temp_rcfile_version == NULL ) {
-    SCIRUN_RCFILE_VERSION = "bak";
-  } else {
-    SCIRUN_RCFILE_VERSION = temp_rcfile_version;
-  }
-
-  ASSERT(HOME);
-  ASSERT(srcdir);
-  if (!HOME) return;
-  // If the user accepted the license then create a .scirunrc for them
-  if (tclresult == "accept") {
-    string homerc = string(HOME)+"/.scirunrc";
-    string cmd;
-    if (gui->eval("validFile "+homerc) == "1") {
-      string backuprc = homerc + "." + SCIRUN_RCFILE_VERSION;
-      cmd = string("cp -f ")+homerc+" "+backuprc;
-      std::cout << "Backing up " << homerc << " to " << backuprc << std::endl;
-      if (sci_system(cmd.c_str())) {
-        std::cerr << "Error executing: " << cmd << std::endl;
-      }
-    }
-
-    cmd = string("cp -f ")+srcdir+string("/scirunrc ")+homerc;
-    std::cout << "Copying " << srcdir << "/scirunrc to " <<
-      homerc << "...\n";
-    if (sci_system(cmd.c_str())) {
-      std::cerr << "Error executing: " << cmd << std::endl;
-    } else { 
-      // if the scirunrc file was copied, then parse it
-      parse_scirunrc(homerc);
-    }
-  }
-}
-
-
 class TCLSocketRunner : public Runnable
 {
 private:
@@ -441,24 +389,6 @@ main(int argc, char *argv[], char **environment) {
 
   // Create initial network
   Scheduler* sched_task=new Scheduler(net);
-  new NetworkEditor(net, gui);
-
-  // If the user doesnt have a .scirunrc file, provide them with a default one
-  if (!find_and_parse_scirunrc()) 
-    show_license_and_copy_scirunrc(gui);
-  else if (!doing_regressions) { 
-    const char *rcversion = sci_getenv("SCIRUN_RCFILE_VERSION");
-    const string ver = string(SCIRUN_VERSION)+"."+
-      string(SCIRUN_RCFILE_SUBVERSION);
-    // If the .scirunrc is an old version
-    if (!rcversion || 
-	gui->eval("compareVersions "+string(rcversion)+" "+ver) == "-1") {
-      // Ask them if they want to copy over a new one
-      if (gui->eval("promptUserToCopySCIRunrc") == "1") {
-        show_license_and_copy_scirunrc(gui);
-      }
-    }
-  }
 
   // Activate the scheduler.  Arguments and return values are meaningless
   Thread* t2=new Thread(sched_task, "Scheduler");
