@@ -38,145 +38,163 @@ set DATASET brain-dt
 ::netedit dontschedule
 
 set m0 [addModuleAtPosition "Teem" "DataIO" "NrrdReader" 14 9]
-set m1 [addModuleAtPosition "Teem" "UnuNtoZ" "UnuSlice" 603 169]
-set m2 [addModuleAtPosition "Teem" "Tend" "TendEpireg" 14 180]
-set m3 [addModuleAtPosition "Teem" "Tend" "TendEstim" 14 718]
-set m4 [addModuleAtPosition "Teem" "Tend" "TendBmat" 231 181]
-set m5 [addModuleAtPosition "Teem" "UnuNtoZ" "UnuSlice" 992 516]
-set m6 [addModuleAtPosition "Teem" "DataIO" "NrrdToField" 603 583]
-set m7 [addModuleAtPosition "Teem" "DataIO" "NrrdToField" 992 649]
-set m8 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 769 812]
-set m9 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 992 812]
-set m10 [addModuleAtPosition "Teem" "DataIO" "NrrdToField" 1121 928]
-set m11 [addModuleAtPosition "Teem" "Tend" "TendAnvol" 14 928]
-set m12 [addModuleAtPosition "Teem" "DataIO" "NrrdToField" 14 994]
-set m13 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 114 1378]
+set m1 [addModuleAtPosition "Teem" "UnuNtoZ" "UnuSlice" 603 769]
+set m2 [addModuleAtPosition "Teem" "Tend" "TendEpireg" 14 780]
+set m3 [addModuleAtPosition "Teem" "Tend" "TendEstim" 14 1318]
+set m4 [addModuleAtPosition "Teem" "Tend" "TendBmat" 231 781]
+set m5 [addModuleAtPosition "Teem" "UnuNtoZ" "UnuSlice" 992 1116]
+set m6 [addModuleAtPosition "Teem" "DataIO" "NrrdToField" 603 1183]
+set m7 [addModuleAtPosition "Teem" "DataIO" "NrrdToField" 992 1249]
+set m8 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 769 1412]
+set m9 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 992 1412]
+set m10 [addModuleAtPosition "Teem" "DataIO" "NrrdToField" 1121 1528]
+set m11 [addModuleAtPosition "Teem" "Tend" "TendAnvol" 14 1528]
+set m12 [addModuleAtPosition "Teem" "DataIO" "NrrdToField" 14 1594]
+set m13 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 114 1978]
 #set m14 [addModuleAtPosition "Teem" "Tend" "TendEval" 1450 23]
 #set m15 [addModuleAtPosition "Teem" "Unu" "UnuSlice" 1449 86]
-set m16 [addModuleAtPosition "Teem" "DataIO" "NrrdToField" 545 995]
-set m17 [addModuleAtPosition "SCIRun" "Visualization" "Isosurface" 14 1143]
-set m18 [addModuleAtPosition "SCIRun" "FieldsData" "DirectInterpolate" 46 1220]
-set m19 [addModuleAtPosition "Teem" "Tend" "TendAnvol" 189 928]
-set m20 [addModuleAtPosition "Teem" "Tend" "TendAnvol" 364 928]
-set m21 [addModuleAtPosition "Teem" "DataIO" "NrrdToField" 189 994]
-set m22 [addModuleAtPosition "Teem" "DataIO" "NrrdToField" 364 994]
-set m23 [addModuleAtPosition "SCIRun" "FieldsOther" "ChooseField" 14 1072]
-set m24 [addModuleAtPosition "SCIRun" "FieldsOther" "ChooseField" 196 1081]
-set m25 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 218 1222]
-set m26 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 218 1156]
-set m27 [addModuleAtPosition "SCIRun" "FieldsOther" "ChooseField" 473 1081]
-set m28 [addModuleAtPosition "SCIRun" "FieldsData" "DirectInterpolate" 506 1405]
-set m29 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 737 1057]
-set m30 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 737 1158]
-set m31 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 470 1650]
+set m16 [addModuleAtPosition "Teem" "DataIO" "NrrdToField" 545 1595]
+set m17 [addModuleAtPosition "SCIRun" "Visualization" "Isosurface" 14 1743]
+set m18 [addModuleAtPosition "SCIRun" "FieldsData" "DirectInterpolate" 46 1820]
+set m19 [addModuleAtPosition "Teem" "Tend" "TendAnvol" 189 1528]
+set m20 [addModuleAtPosition "Teem" "Tend" "TendAnvol" 364 1528]
+set m21 [addModuleAtPosition "Teem" "DataIO" "NrrdToField" 189 1594]
+set m22 [addModuleAtPosition "Teem" "DataIO" "NrrdToField" 364 1594]
+set m23 [addModuleAtPosition "SCIRun" "FieldsOther" "ChooseField" 14 1672]
+set m24 [addModuleAtPosition "SCIRun" "FieldsOther" "ChooseField" 196 1681]
+set m25 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 218 1822]
+set m26 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 218 1756]
+set m27 [addModuleAtPosition "SCIRun" "FieldsOther" "ChooseField" 473 1681]
+set m28 [addModuleAtPosition "SCIRun" "FieldsData" "DirectInterpolate" 506 2005]
+set m29 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 737 1657]
+set m30 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 737 1758]
+set m31 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 470 2250]
 #set m32 [addModuleAtPosition "SCIRun" "FieldsCreate" "ClipField" 1451 533]
-set m33 [addModuleAtPosition "SCIRun" "FieldsOther" "ChooseField" 488 1527]
-set m34 [addModuleAtPosition "SCIRun" "FieldsOther" "ChooseField" 1050 1081]
+set m33 [addModuleAtPosition "SCIRun" "FieldsOther" "ChooseField" 488 2127]
+set m34 [addModuleAtPosition "SCIRun" "FieldsOther" "ChooseField" 1050 1681]
 #set m35 [addModuleAtPosition "SCIRun" "FieldsOther" "FieldMeasures" 1451 213]
 #set m36 [addModuleAtPosition "SCIRun" "FieldsOther" "FieldMeasures" 1450 149]
 #set m37 [addModuleAtPosition "SCIRun" "FieldsOther" "FieldMeasures" 1452 464]
 #set m38 [addModuleAtPosition "SCIRun" "FieldsData" "ManageFieldData" 1451 656]
-set m39 [addModuleAtPosition "SCIRun" "FieldsData" "ManageFieldData" 1492 1414]
-set m40 [addModuleAtPosition "SCIRun" "FieldsData" "ManageFieldData" 1492 1538]
+set m39 [addModuleAtPosition "SCIRun" "FieldsData" "ManageFieldData" 1492 2014]
+set m40 [addModuleAtPosition "SCIRun" "FieldsData" "ManageFieldData" 1492 2138]
 #set m41 [addModuleAtPosition "SCIRun" "Visualization" "Isosurface" 1452 339]
 #set m42 [addModuleAtPosition "SCIRun" "Visualization" "Isosurface" 1269 86]
 #set m43 [addModuleAtPosition "SCIRun" "Visualization" "Isosurface" 1268 26]
-set m44 [addModuleAtPosition "SCIRun" "Render" "Viewer" 88 2390]
-set m45 [addModuleAtPosition "Teem" "NrrdData" "ChooseNrrd" 14 88]
-set m46 [addModuleAtPosition "SCIRun" "FieldsGeometry" "ChangeFieldBounds" 603 645]
-set m47 [addModuleAtPosition "Teem" "UnuAtoM" "UnuJoin" 14 455]
-set m48 [addModuleAtPosition "Teem" "DataIO" "NrrdReader" 32 316]
-set m49 [addModuleAtPosition "Teem" "NrrdData" "ChooseNrrd" 231 558]
-set m50 [addModuleAtPosition "Teem" "DataIO" "NrrdReader" 231 103]
+set m44 [addModuleAtPosition "SCIRun" "Render" "Viewer" 88 2990]
+set m45 [addModuleAtPosition "Teem" "NrrdData" "ChooseNrrd" 37 112]
+set m46 [addModuleAtPosition "SCIRun" "FieldsGeometry" "ChangeFieldBounds" 603 1245]
+set m47 [addModuleAtPosition "Teem" "UnuAtoM" "UnuJoin" 14 1055]
+set m48 [addModuleAtPosition "Teem" "DataIO" "NrrdReader" 32 916]
+set m49 [addModuleAtPosition "Teem" "NrrdData" "ChooseNrrd" 231 1158]
+set m50 [addModuleAtPosition "Teem" "DataIO" "NrrdReader" 231 703]
 #set m51 [addModuleAtPosition "Teem" "Unu" "UnuJoin" 1269 149]
 #set m52 [addModuleAtPosition "Teem" "Tend" "TendEstim" 1269 212]
 #set m53 [addModuleAtPosition "Teem" "Tend" "TendAnvol" 1269 275]
-set m54 [addModuleAtPosition "Teem" "DataIO" "NrrdToField" 1102 1471]
+set m54 [addModuleAtPosition "Teem" "DataIO" "NrrdToField" 1102 2071]
 #set m55 [addModuleAtPosition "SCIRun" "Visualization" "Isosurface" 1269 463]
 #set m56 [addModuleAtPosition "SCIRun" "FieldsGeometry" "ChangeFieldBounds" 1269 400]
-set m57 [addModuleAtPosition "Teem" "UnuNtoZ" "UnuProject" 603 516]
-set m58 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 787 648]
-set m59 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 787 745]
-set m60 [addModuleAtPosition "Teem" "UnuNtoZ" "UnuProject" 992 580]
-set m61 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 1010 748]
-set m62 [addModuleAtPosition "Teem" "NrrdData" "NrrdInfo" 774 169]
-set m63 [addModuleAtPosition "Teem" "DataIO" "NrrdReader" 249 495]
+set m57 [addModuleAtPosition "Teem" "UnuNtoZ" "UnuProject" 603 1110]
+set m58 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 787 1248]
+set m59 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 787 1345]
+set m60 [addModuleAtPosition "Teem" "UnuNtoZ" "UnuProject" 992 1180]
+set m61 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 1010 1348]
+set m62 [addModuleAtPosition "Teem" "NrrdData" "NrrdInfo" 774 769]
+set m63 [addModuleAtPosition "Teem" "DataIO" "NrrdReader" 249 1095]
 #set m64 [addModuleAtPosition "Teem" "Tend" "TendEvec" 1451 718]
 #set m65 [addModuleAtPosition "Teem" "Unu" "UnuCrop" 1448 594]
 #set m66 [addModuleAtPosition "Teem" "NrrdData" "EditTupleAxis" 1269 336]
-set m67 [addModuleAtPosition "SCIRun" "FieldsCreate" "SamplePlane" 488 1264]
-set m68 [addModuleAtPosition "SCIRun" "FieldsCreate" "SamplePlane" 674 1263]
-set m69 [addModuleAtPosition "SCIRun" "FieldsCreate" "SamplePlane" 862 1263]
+set m67 [addModuleAtPosition "SCIRun" "FieldsCreate" "SamplePlane" 488 1864]
+set m68 [addModuleAtPosition "SCIRun" "FieldsCreate" "SamplePlane" 674 1863]
+set m69 [addModuleAtPosition "SCIRun" "FieldsCreate" "SamplePlane" 862 1863]
 #set m70 [addModuleAtPosition "SCIRun" "FieldsGeometry" "Unstructure" 1263 591]
 #set m71 [addModuleAtPosition "SCIRun" "FieldsGeometry" "Unstructure" 1270 529]
 #set m72 [addModuleAtPosition "SCIRun" "FieldsGeometry" "Unstructure" 1267 652]
-set m73 [addModuleAtPosition "SCIRun" "FieldsGeometry" "QuadToTri" 524 1341]
-set m74 [addModuleAtPosition "SCIRun" "FieldsGeometry" "QuadToTri" 710 1341]
-set m75 [addModuleAtPosition "SCIRun" "FieldsGeometry" "QuadToTri" 898 1340]
-set m76 [addModuleAtPosition "SCIRun" "FieldsData" "DirectInterpolate" 470 1586]
-set m77 [addModuleAtPosition "SCIRun" "FieldsCreate" "IsoClip" 506 1465]
-set m78 [addModuleAtPosition "SCIRun" "FieldsData" "DirectInterpolate" 692 1406]
-set m79 [addModuleAtPosition "SCIRun" "FieldsData" "DirectInterpolate" 880 1405]
-set m80 [addModuleAtPosition "SCIRun" "FieldsCreate" "IsoClip" 692 1465]
-set m81 [addModuleAtPosition "SCIRun" "FieldsCreate" "IsoClip" 880 1466]
-set m82 [addModuleAtPosition "SCIRun" "FieldsOther" "ChooseField" 674 1527]
-set m83 [addModuleAtPosition "SCIRun" "FieldsOther" "ChooseField" 862 1527]
-set m84 [addModuleAtPosition "SCIRun" "FieldsData" "DirectInterpolate" 656 1588]
-set m85 [addModuleAtPosition "SCIRun" "FieldsData" "DirectInterpolate" 844 1589]
-set m86 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 656 1651]
-set m87 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 844 1651]
+set m73 [addModuleAtPosition "SCIRun" "FieldsGeometry" "QuadToTri" 524 1941]
+set m74 [addModuleAtPosition "SCIRun" "FieldsGeometry" "QuadToTri" 710 1941]
+set m75 [addModuleAtPosition "SCIRun" "FieldsGeometry" "QuadToTri" 898 1940]
+set m76 [addModuleAtPosition "SCIRun" "FieldsData" "DirectInterpolate" 470 2186]
+set m77 [addModuleAtPosition "SCIRun" "FieldsCreate" "IsoClip" 506 2065]
+set m78 [addModuleAtPosition "SCIRun" "FieldsData" "DirectInterpolate" 692 2006]
+set m79 [addModuleAtPosition "SCIRun" "FieldsData" "DirectInterpolate" 880 2005]
+set m80 [addModuleAtPosition "SCIRun" "FieldsCreate" "IsoClip" 692 2065]
+set m81 [addModuleAtPosition "SCIRun" "FieldsCreate" "IsoClip" 880 2066]
+set m82 [addModuleAtPosition "SCIRun" "FieldsOther" "ChooseField" 674 2127]
+set m83 [addModuleAtPosition "SCIRun" "FieldsOther" "ChooseField" 862 2127]
+set m84 [addModuleAtPosition "SCIRun" "FieldsData" "DirectInterpolate" 656 2188]
+set m85 [addModuleAtPosition "SCIRun" "FieldsData" "DirectInterpolate" 844 2189]
+set m86 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 656 2251]
+set m87 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 844 2251]
 #set m88 [addModuleAtPosition "SCIRun" "FieldsCreate" "GatherPoints" 1451 400]
-set m89 [addModuleAtPosition "SCIRun" "FieldsCreate" "ClipByFunction" 1492 1607]
-set m90 [addModuleAtPosition "SCIRun" "FieldsCreate" "GatherPoints" 1157 1610]
-set m91 [addModuleAtPosition "SCIRun" "FieldsData" "DirectInterpolate" 1050 1849]
-set m92 [addModuleAtPosition "SCIRun" "FieldsCreate" "SampleField" 1138 1534]
-set m93 [addModuleAtPosition "SCIRun" "FieldsOther" "ChooseField" 1120 1726]
-set m94 [addModuleAtPosition "SCIRun" "FieldsCreate" "Probe" 1298 1611]
-set m95 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 1050 2313]
+set m89 [addModuleAtPosition "SCIRun" "FieldsCreate" "ClipByFunction" 1492 2264]
+set m90 [addModuleAtPosition "SCIRun" "FieldsCreate" "GatherPoints" 1157 2210]
+set m91 [addModuleAtPosition "SCIRun" "FieldsData" "DirectInterpolate" 1050 2449]
+set m92 [addModuleAtPosition "SCIRun" "FieldsCreate" "SampleField" 1138 2134]
+set m93 [addModuleAtPosition "SCIRun" "FieldsOther" "ChooseField" 1120 2326]
+set m94 [addModuleAtPosition "SCIRun" "FieldsCreate" "Probe" 1298 2211]
+set m95 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 1050 2913]
 set m96 [addModuleAtPosition "Teem" "DataIO" "AnalyzeNrrdReader" 446 8]
 set m97 [addModuleAtPosition "Teem" "DataIO" "DicomNrrdReader" 232 9]
-set m98 [addModuleAtPosition "Teem" "NrrdData" "ChooseNrrd" 32 392]
-set m99 [addModuleAtPosition "Teem" "DataIO" "DicomNrrdReader" 204 313]
-set m100 [addModuleAtPosition "Teem" "DataIO" "AnalyzeNrrdReader" 377 313]
+set m98 [addModuleAtPosition "Teem" "NrrdData" "ChooseNrrd" 32 992]
+set m99 [addModuleAtPosition "Teem" "DataIO" "DicomNrrdReader" 204 913]
+set m100 [addModuleAtPosition "Teem" "DataIO" "AnalyzeNrrdReader" 377 913]
 #set m101 [addModuleAtPosition "Teem" "Unu" "UnuResample" 1450 275]
-set m102 [addModuleAtPosition "SCIRun" "FieldsData" "DirectInterpolate" 1102 1788]
-set m103 [addModuleAtPosition "Teem" "UnuNtoZ" "UnuResample" 14 517]
-set m104 [addModuleAtPosition "Teem" "NrrdData" "ChooseNrrd" 14 652]
-set m105 [addModuleAtPosition "Teem" "NrrdData" "ChooseNrrd" 14 248]
-set m106 [addModuleAtPosition "Teem" "UnuNtoZ" "UnuResample" 14 588]
+set m102 [addModuleAtPosition "SCIRun" "FieldsData" "DirectInterpolate" 1102 2388]
+set m103 [addModuleAtPosition "Teem" "UnuNtoZ" "UnuResample" 14 1117]
+set m104 [addModuleAtPosition "Teem" "NrrdData" "ChooseNrrd" 14 1252]
+set m105 [addModuleAtPosition "Teem" "NrrdData" "ChooseNrrd" 14 848]
+set m106 [addModuleAtPosition "Teem" "UnuNtoZ" "UnuResample" 14 1188]
 #set m107 [addModuleAtPosition "Teem" "NrrdData" "NrrdInfo" 1267 713]
-set m108 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 1068 1144]
-set m109 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 1068 1206]
-set m110 [addModuleAtPosition "Teem" "DataIO" "FieldToNrrd" 1102 1913]
-set m111 [addModuleAtPosition "Teem" "DataIO" "NrrdToField" 1086 2251]
-set m112 [addModuleAtPosition "Teem" "Tend" "TendEvalClamp" 14 850]
-set m113 [addModuleAtPosition "Teem" "NrrdData" "ChooseNrrd" 410 89]
-set m114 [addModuleAtPosition "Teem" "NrrdData" "ChooseNrrd" 14 786]
-set m115 [addModuleAtPosition "Teem" "Tend" "TendAnscale" 1086 2124]
-set m116 [addModuleAtPosition "Teem" "Tend" "TendNorm" 1102 1979]
-set m117 [addModuleAtPosition "Teem" "NrrdData" "ChooseNrrd" 1102 2046]
-set m118 [addModuleAtPosition "Teem" "NrrdData" "ChooseNrrd" 1086 2190]
-set m119 [addModuleAtPosition "SCIRun" "FieldsCreate" "GatherPoints" 1492 1475]
-set m120 [addModuleAtPosition "SCIRun" "FieldsOther" "ChooseField" 1438 1725]
-set m121 [addModuleAtPosition "SCIRun" "FieldsData" "DirectInterpolate" 1367 1926]
-set m122 [addModuleAtPosition "SCIRun" "FieldsOther" "ChooseField" 1367 1081]
-set m123 [addModuleAtPosition "Teem" "Tend" "TendFiber" 1420 1792]
-set m124 [addModuleAtPosition "SCIRun" "FieldsData" "DirectInterpolate" 1402 1863]
-set m125 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 1367 1993]
-set m126 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 1385 1144]
-set m127 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 1385 1206]
-set m128 [addModuleAtPosition "Teem" "Tend" "TendEvecRGB" 545 928]
+set m108 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 1068 1744]
+set m109 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 1068 1806]
+set m110 [addModuleAtPosition "Teem" "DataIO" "FieldToNrrd" 1102 2513]
+set m111 [addModuleAtPosition "Teem" "DataIO" "NrrdToField" 1086 2851]
+set m112 [addModuleAtPosition "Teem" "Tend" "TendEvalClamp" 14 1450]
+set m113 [addModuleAtPosition "Teem" "NrrdData" "ChooseNrrd" 410 689]
+set m114 [addModuleAtPosition "Teem" "NrrdData" "ChooseNrrd" 14 1386]
+set m115 [addModuleAtPosition "Teem" "Tend" "TendAnscale" 1086 2724]
+set m116 [addModuleAtPosition "Teem" "Tend" "TendNorm" 1102 2579]
+set m117 [addModuleAtPosition "Teem" "NrrdData" "ChooseNrrd" 1102 2646]
+set m118 [addModuleAtPosition "Teem" "NrrdData" "ChooseNrrd" 1086 2790]
+set m119 [addModuleAtPosition "SCIRun" "FieldsCreate" "GatherPoints" 1492 2075]
+set m120 [addModuleAtPosition "SCIRun" "FieldsOther" "ChooseField" 1438 2325]
+set m121 [addModuleAtPosition "SCIRun" "FieldsData" "DirectInterpolate" 1367 2526]
+set m122 [addModuleAtPosition "SCIRun" "FieldsOther" "ChooseField" 1367 1681]
+set m123 [addModuleAtPosition "Teem" "Tend" "TendFiber" 1420 2392]
+set m124 [addModuleAtPosition "SCIRun" "FieldsData" "DirectInterpolate" 1402 2463]
+set m125 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 1367 2593]
+set m126 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 1385 1744]
+set m127 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 1385 1806]
+set m128 [addModuleAtPosition "Teem" "Tend" "TendEvecRGB" 545 1528]
 #set m129 [addModuleAtPosition "SCIRun" "FieldsOther" "FieldInfo" 1451 780]
-set m130 [addModuleAtPosition "SCIRun" "FieldsCreate" "Probe" 1420 1288]
-set m131 [addModuleAtPosition "SCIRun" "FieldsCreate" "SampleField" 1456 1348]
-set m132 [addModuleAtPosition "SCIRun" "Visualization" "ChooseColorMap" 218 1294]
-set m133 [addModuleAtPosition "SCIRun" "Visualization" "ChooseColorMap" 540 1161]
-set m134 [addModuleAtPosition "SCIRun" "Visualization" "ChooseColorMap" 1068 1289]
-set m135 [addModuleAtPosition "SCIRun" "Visualization" "ChooseColorMap" 1274 1358]
-set m136 [addModuleAtPosition "Teem" "NrrdData" "ChooseNrrd" 204 392]
-set m137 [addModuleAtPosition "Teem" "UnuAtoM" "UnuAxinfo"  269 666]
-set m138 [addModuleAtPosition "Teem" "UnuNtoZ" "UnuSave" 198 850]
-set m139 [addModuleAtPosition "Teem" "NrrdData" "ChooseNrrd" 199 771]
+set m130 [addModuleAtPosition "SCIRun" "FieldsCreate" "Probe" 1420 1888]
+set m131 [addModuleAtPosition "SCIRun" "FieldsCreate" "SampleField" 1456 1948]
+set m132 [addModuleAtPosition "SCIRun" "Visualization" "ChooseColorMap" 218 1894]
+set m133 [addModuleAtPosition "SCIRun" "Visualization" "ChooseColorMap" 540 1761]
+set m134 [addModuleAtPosition "SCIRun" "Visualization" "ChooseColorMap" 1068 1889]
+set m135 [addModuleAtPosition "SCIRun" "Visualization" "ChooseColorMap" 1274 1958]
+set m136 [addModuleAtPosition "Teem" "NrrdData" "ChooseNrrd" 204 992]
+set m137 [addModuleAtPosition "Teem" "UnuAtoM" "UnuAxinfo"  269 1266]
+set m138 [addModuleAtPosition "Teem" "UnuNtoZ" "UnuSave" 198 1450]
+set m139 [addModuleAtPosition "Teem" "NrrdData" "ChooseNrrd" 199 1371]
+# set m156 [addModuleAtPosition "SCIRun" "FieldsGeometry" "Unstructure" 1492 2206]
+# set m157 [addModuleAtPosition "Teem" "UnuNtoZ" "UnuSlice" 558 912]
+# set m158 [addModuleAtPosition "Teem" "UnuAtoM" "UnuCrop" 428 773]
+# set m159 [addModuleAtPosition "Teem" "NrrdData" "ChooseNrrd" 428 839]
+# set m160 [addModuleAtPosition "Teem" "NrrdData" "NrrdInfo" 606 701]
+
+set m157 [addModuleAtPosition "Teem" "NrrdData" "ChooseNrrd" 14 704]
+set m158 [addModuleAtPosition "Teem" "UnuAtoM" "UnuAxinsert" 67 193]
+set m159 [addModuleAtPosition "Teem" "UnuNtoZ" "UnuReshape" 67 251]
+set m160 [addModuleAtPosition "Teem" "UnuNtoZ" "UnuPermute" 67 309]
+set m161 [addModuleAtPosition "Teem" "UnuAtoM" "UnuAxinfo" 67 371]
+set m162 [addModuleAtPosition "Teem" "UnuAtoM" "UnuAxinfo" 67 431]
+set m163 [addModuleAtPosition "Teem" "UnuAtoM" "UnuAxinfo" 67 489]
+set m164 [addModuleAtPosition "Teem" "NrrdData" "NrrdInfo" 255 196]
+set m165 [addModuleAtPosition "Teem" "UnuAtoM" "UnuCrop" 95 625]
+set m166 [addModuleAtPosition "Teem" "UnuNtoZ" "UnuSlice" 267 625]
+set m167 [addModuleAtPosition "Teem" "NrrdData" "ChooseNrrd" 49 546]
+
 
 setProgressText "Loading BioTensor Connections, Please Wait..."
 # Create the Connections between Modules
@@ -201,6 +219,7 @@ set c17 [addConnection $m102 0 $m110 0]
 set c18 [addConnection $m121 0 $m125 0]
 set c19 [addConnection $m39 0 $m119 0]
 set c20 [addConnection $m40 0 $m89 0]
+#set c20 [addConnection $m40 0 $m156 0]
 set c21 [addConnection $m46 0 $m8 0]
 set c22 [addConnection $m23 0 $m28 0]
 set c23 [addConnection $m23 0 $m78 0]
@@ -229,7 +248,7 @@ set c45 [addConnection $m109 0 $m134 0]
 set c46 [addConnection $m127 0 $m135 0]
 set c47 [addConnection $m8 0 $m44 0]
 set c48 [addConnection $m110 2 $m116 0]
-set c49 [addConnection $m0 0 $m45 0]
+#set c49 [addConnection $m0 0 $m45 0]
 set c50 [addConnection $m0 0 $m113 0]
 set c51 [addConnection $m48 0 $m98 0]
 set c52 [addConnection $m50 0 $m4 0]
@@ -246,9 +265,13 @@ set c62 [addConnection $m12 0 $m34 0]
 set c63 [addConnection $m12 0 $m122 0]
 set c64 [addConnection $m54 0 $m124 0]
 set c65 [addConnection $m54 0 $m102 0]
-set c66 [addConnection $m45 0 $m62 0]
-set c67 [addConnection $m45 0 $m2 0]
-set c68 [addConnection $m45 0 $m1 0]
+set c66 [addConnection $m45 0 $m164 0]
+set c67 [addConnection $m157 0 $m2 0]
+set c68 [addConnection $m157 0 $m1 0]
+#set c66 [addConnection $m159 0 $m62 0]
+#set c67 [addConnection $m159 0 $m2 0]
+#set c68 [addConnection $m159 0 $m1 0]
+
 set c69 [addConnection $m98 0 $m47 0]
 set c70 [addConnection $m104 0 $m3 0]
 set c71 [addConnection $m105 0 $m5 0]
@@ -308,7 +331,7 @@ set c124 [addConnection $m17 0 $m18 1]
 set c125 [addConnection $m59 0 $m8 1]
 set c126 [addConnection $m61 0 $m9 1]
 set c127 [addConnection $m9 0 $m44 1]
-set c128 [addConnection $m97 0 $m45 1]
+#set c128 [addConnection $m97 0 $m45 1]
 set c129 [addConnection $m97 0 $m113 1]
 set c130 [addConnection $m99 0 $m98 1]
 set c131 [addConnection $m110 2 $m117 1]
@@ -321,10 +344,12 @@ set c137 [addConnection $m21 0 $m24 1]
 set c138 [addConnection $m21 0 $m27 1]
 set c139 [addConnection $m21 0 $m34 1]
 set c140 [addConnection $m21 0 $m122 1]
-set c141 [addConnection $m45 0 $m105 1]
+set c141 [addConnection $m157 0 $m105 1]
+#set c141 [addConnection $m159 0 $m105 1]
+
 set c142 [addConnection $m49 0 $m3 1]
 set c143 [addConnection $m105 0 $m47 1]
-#set c144 [addConnection $m113 0 $m114 1]
+set c144 [addConnection $m113 0 $m114 1]
 set c144 [addConnection $m113 0 $m137 0]
 set c145 [addConnection $m117 0 $m118 1]
 set c146 [addConnection $m123 0 $m124 1]
@@ -335,7 +360,7 @@ set c150 [addConnection $m90 0 $m120 2]
 set c151 [addConnection $m124 0 $m125 2]
 set c152 [addConnection $m83 0 $m90 2]
 set c153 [addConnection $m13 0 $m44 2]
-set c154 [addConnection $m96 0 $m45 2]
+#set c154 [addConnection $m96 0 $m45 2]
 set c155 [addConnection $m96 0 $m113 2]
 set c156 [addConnection $m100 0 $m98 2]
 set c157 [addConnection $m22 0 $m23 2]
@@ -361,11 +386,38 @@ set c176 [addConnection $m125 0 $m44 9]
 set c177 [addConnection $m130 0 $m44 10]
 set c178 [addConnection $m131 1 $m44 11]
 set c179 [addConnection $m136 0 $m103 0]
-set c180 [addConnection $m105 0 $m136 1]
+set c180 [addConnection $m45 0 $m136 1]
 set c181 [addConnection $m102 0 $m111 3]
 set c182 [addConnection $m137 0 $m114 1]
 set c182 [addConnection $m114 0 $m139 0]
 set c183 [addConnection $m139 0 $m138 0]
+# set c184 [addConnection $m156 0 $m89 0]
+# set c185 [addConnection $m45 0 $m157 0]
+# set c186 [addConnection $m45 0 $m158 0]
+# set c187 [addConnection $m157 0 $m98 3]
+# set c188 [addConnection $m45 0 $m159 0]
+# set c189 [addConnection $m158 0 $m159 1]
+# set c190 [addConnection $m45 0 $m160 0]
+set c185 [addConnection $m0 0 $m45 0]
+set c186 [addConnection $m97 0 $m45 1]
+set c187 [addConnection $m96 0 $m45 2]
+set c189 [addConnection $m45 0 $m158 0]
+set c189 [addConnection $m157 0 $m62 0]
+set c189 [addConnection $m158 0 $m159 0]
+set c189 [addConnection $m159 0 $m160 0]
+set c189 [addConnection $m160 0 $m161 0]
+set c189 [addConnection $m161 0 $m162 0]
+set c189 [addConnection $m162 0 $m163 0]
+set c189 [addConnection $m167 0 $m165 0]
+set c189 [addConnection $m167 0 $m166 0]
+set c192 [addConnection $m45 0 $m157 0]
+set c190 [addConnection $m165 0 $m157 1] 
+set c191 [addConnection $m166 0 $m98 3]
+set c192 [addConnection $m45 0 $m167 0]
+set c192 [addConnection $m163 0 $m167 1]
+
+
+
 
 setProgressText "Loading BioTensor Settings, Please Wait..."
 
@@ -1577,6 +1629,19 @@ set mods(AnalyzeToNrrd1) $m96
 set mods(ChooseNrrd1) $m45
 set mods(NrrdInfo1) $m62
 
+set mods(UnuAxinsert) $m158
+set mods(UnuCrop-DWI) $m165
+set mods(UnuSlice-B0) $m166
+set mods(ChooseNrrd-B0) $m157
+set mods(NrrdInfo-full) $m164
+set mods(UnuAxinfo-X) $m161
+set mods(UnuAxinfo-Y) $m162
+set mods(UnuAxinfo-Z) $m163
+set mods(UnuReshape) $m159
+set mods(UnuPermute) $m160
+set mods(ChooseNrrd-preprocess) $m167
+
+
 ### Original Data Stuff
 set mods(UnuSlice1) $m1
 set mods(UnuProject1) $m57
@@ -1705,6 +1770,12 @@ global tips
 
 global data_mode
 set data_mode "DWIknownB0"
+global fast_axis
+set fast_axis "volumes"
+global B0_first
+set B0_first 1
+global channels
+set channels 6
 
 ### planes variables that must be globals (all checkbuttons)
 global show_planes
@@ -1904,6 +1975,8 @@ class BioTensorApp {
 	set c_left_tab "Vis Options"
 	set c_vis_tab "Variance"
 
+	set last_B0_port 0
+
         set proc_tab1 ""
         set proc_tab2 ""
 
@@ -2029,7 +2102,9 @@ class BioTensorApp {
 	set tips(AnalyzeFiles) \
 	    "Load Analyze files\nusing our Analyze\nLoader."
 	set tips(LoadModeDWIknownB0) \
-	    "Load a set of Diffusion\nWeighted Images. These\ncan be registered and\nused to build diffusion\ntensors."
+	    "Load a set of Diffusion\nWeighted Images. These\ncan be registered and\nused to build diffusion\ntensors. B0 is in a\nseparate file."
+	set tips(LoadModeB0DWI) \
+	    "Load a set of Diffusion\nWeighted Images. These\ncan be registered and\nused to build diffusion\ntensors. B0 is first\nimage in 4D volume."
 	set tips(LoadModeDWI) \
 	    "Load a set of Diffusion\nWeighted Images\nwithout any B.  These\ncan be registered and\nused to build diffusion\ntensors."
 	set tips(LoadModeTensor) \
@@ -2196,6 +2271,16 @@ class BioTensorApp {
 	
         disableModule $mods(DicomToNrrd-T2) 1
         disableModule $mods(AnalyzeToNrrd-T2) 1
+
+	disableModule $mods(UnuAxinsert) 1
+	disableModule $mods(UnuReshape) 1
+	disableModule $mods(UnuAxinfo-Z) 1
+	disableModule $mods(UnuCrop-DWI) 1
+	disableModule $mods(UnuSlice-B0) 1
+	disableModule $mods(ChooseNrrd-preprocess) 1
+	disableModule $mods(ChooseNrrd-B0) 1
+	#disableModule $mods(UnuCrop-DWI) 1
+	#disableModule $mods(ChooseNrrd-B0) 1
 
 	# Blocking Registration
         disableModule $mods(TendEpireg) 1
@@ -2391,22 +2476,58 @@ class BioTensorApp {
 
 	    Tooltip $step_tab.mode1 $tips(LoadModeDWI)
 
-            radiobutton $step_tab.mode2 -text "DWI with B0 Reference Data" \
+            radiobutton $step_tab.mode2 -text "DWI with separate B0 Reference Data" \
                 -variable data_mode -value "DWIknownB0" \
                 -command "$this toggle_data_mode"
 
 	    Tooltip $step_tab.mode2 $tips(LoadModeDWIknownB0)
 
-            radiobutton $step_tab.mode3 -text "Tensor Volumes" \
+
+            radiobutton $step_tab.mode3 -text "B0 Reference Data and DWI (single file)" \
+                -variable data_mode -value "B0DWI" \
+                -command "$this toggle_data_mode"
+
+	    Tooltip $step_tab.mode3 $tips(LoadModeB0DWI)
+
+	    frame $step_tab.mode3quest -relief groove -borderwidth 2
+
+	    global channels
+	    iwidgets::entryfield $step_tab.mode3quest.ch -labeltext "Number of channels:" \
+		-labelpos w -textvariable channels -width 5 -foreground grey64
+	    global fast_axis
+	    radiobutton $step_tab.mode3quest.vol -text "Volumes fastest changing axis" \
+		-variable fast_axis -value "volumes" -foreground grey64
+	    Tooltip $step_tab.mode3quest.vol "The volumes are changing the\nfastest in your data.\nThis means that all of the\nB0 slices are either the first z\slices or last z slices,\nbut not interspersed among\nthe DWI slices."
+
+	    radiobutton $step_tab.mode3quest.z -text "Z fastest changing axis" \
+		-variable fast_axis -value "z" -foreground grey64
+	    Tooltip $step_tab.mode3quest.z "The z slices are changing the\nfastest in your data.\nThis means that the B0\nslices are interspersed among the\nDWI slices."
+
+	    global B0_first
+	    checkbutton $step_tab.mode3quest.b0 -text "B0 slices before DWI slices" \
+		-variable B0_first -foreground grey64
+	    Tooltip $step_tab.mode3quest.b0 "Regardless of the fastest changing\naxis, the B0 slices are either before\nor after the DWI slices. Check this\nwhen they are before."
+
+	    pack $step_tab.mode3quest.ch \
+		-side top -anchor nw -padx 2 -pady 3
+
+	    pack $step_tab.mode3quest.vol $step_tab.mode3quest.z \
+		-side top -anchor nw -padx 2 -pady 0
+
+	    pack $step_tab.mode3quest.b0 \
+		-side top -anchor nw -padx 2 -pady 3
+
+            radiobutton $step_tab.mode4 -text "Tensor Volumes" \
                 -variable data_mode -value "tensor" \
                 -command "$this toggle_data_mode"
 
-	    Tooltip $step_tab.mode3 $tips(LoadModeTensor)
-
-            pack $step_tab.mode1 $step_tab.mode2 $step_tab.mode3 -side top -anchor nw -padx 3 -pady 3
+	    Tooltip $step_tab.mode4 $tips(LoadModeTensor)
+	    pack $step_tab.mode1 $step_tab.mode2 $step_tab.mode3 $step_tab.mode4 -side top -anchor nw -padx 3 -pady 3 -expand 0
+            pack $step_tab.mode3quest -after $step_tab.mode3 -side top -anchor n \
+		-padx 12 -pady 3 -expand 0
 
 	    global $mods(TendEstim)-knownB0
-	    if { $data_mode == "DWIknownB0" } {
+	    if { $data_mode == "DWIknownB0" || $data_mode == "B0DWI"} {
 	       set $mods(TendEstim)-knownB0 1
 	    } else {
 		set $mods(TendEstim)-knownB0 0
@@ -2414,7 +2535,7 @@ class BioTensorApp {
 
 	    ### Data Acquisition
             iwidgets::tabnotebook $step_tab.tnb \
-		-width [expr $process_width - 55 ] -height 250 \
+		-width [expr $process_width - 55 ] -height 180 \
 		-tabpos n 
             pack $step_tab.tnb -side top -anchor n \
 		-padx 3 -pady 8
@@ -2445,14 +2566,14 @@ class BioTensorApp {
                 -textvariable $mods(NrrdReader1)-filename \
                 -command "$this execute_Data"
 	    Tooltip $page.file $tips(NrrdFile1)
-            pack $page.file -side top -padx 3 -pady 6 -anchor n \
+            pack $page.file -side top -padx 3 -pady 3 -anchor n \
 	        -fill x 
 	    
             button $page.load -text "Browse" \
                 -command "$this load_nrrd_dwi" \
                 -width 12
 	    Tooltip $page.load $tips(NrrdFile2)
-            pack $page.load -side top -anchor n -padx 3 -pady 6
+            pack $page.load -side top -anchor n -padx 3 -pady 3
 	    
 
             global $mods(NrrdReader-T2)-filename
@@ -2462,14 +2583,14 @@ class BioTensorApp {
             iwidgets::entryfield $page.file2 -labeltext "Nrrd File:" -labelpos w \
                 -textvariable $mods(NrrdReader-T2)-filename 
 	    Tooltip $page.file2 $tips(NrrdFile1)
-            pack $page.file2 -side top -padx 3 -pady 6 -anchor n \
+            pack $page.file2 -side top -padx 3 -pady 3 -anchor n \
 	        -fill x 
 	    
             button $page.load2 -text "Browse" \
                 -command "$this load_nrrd_t2" \
                 -width 12
 	    Tooltip $page.load2 $tips(NrrdFile2)
-            pack $page.load2 -side top -anchor n -padx 3 -pady 6
+            pack $page.load2 -side top -anchor n -padx 3 -pady 3
 	    
 	    
             ### Dicom
@@ -3364,6 +3485,13 @@ class BioTensorApp {
 	# the module variables
 	global data_mode
 	puts $fileid "set data_mode \{$data_mode\}"
+	global fast_axis
+	puts $fileid "set fast_axis \{$fast_axis\}"
+	global B0_first
+	puts $fileid "set B0_first \{$B0_first\}"
+	global channels
+	puts $fileid "set channels \{$channels\}"
+	
 	
 	### planes variables that must be globals (all checkbuttons)
 	global show_planes
@@ -3567,6 +3695,7 @@ class BioTensorApp {
 	    puts $fileid "set \$clip-normal-y-$mod [set $clip-normal-y-$mod]"
 	    puts $fileid "set \$clip-normal-z-$mod [set $clip-normal-z-$mod]"
         }
+
     }
     
 
@@ -3612,6 +3741,7 @@ class BioTensorApp {
 		# needs to be looked into more for 1.20.2
 		global mods
 		global data_mode
+
 		if {$data_mode == "DWIknownB0"} {
 		    # Check AnalyzeToNrrd-T2
 		    global $mods(AnalyzeToNrrd-T2)-num-files
@@ -3628,7 +3758,7 @@ class BioTensorApp {
 			    
 			    # Call the c++ function that adds this data to its data 
 			    # structure.
-			    $mods(AnalyzeToNrrd-T2)-c add_data [set $mods(AnalyzeToNrrd-T2)-file]
+#			    $mods(AnalyzeToNrrd-T2)-c add_data [set $mods(AnalyzeToNrrd-T2)-file]
 			}
 		    }
 		}
@@ -3647,7 +3777,7 @@ class BioTensorApp {
 			
 			# Call the c++ function that adds this data to its data 
 			# structure.
-			$mods(AnalyzeToNrrd1)-c add_data [set $mods(AnalyzeToNrrd1)-file]
+#			$mods(AnalyzeToNrrd1)-c add_data [set $mods(AnalyzeToNrrd1)-file]
 		    }
 		}
 	    } elseif {$c_data_tab == "Dicom"} {
@@ -3685,10 +3815,10 @@ class BioTensorApp {
 			    
 			    # Call the c++ function that adds this data to its data 
 			    # structure.
-			    $mods(DicomToNrrd-T2)-c add_data \
-				[set $mods(DicomToNrrd-T2)-entry-dir$i] \
-				[set $mods(DicomToNrrd-T2)-entry-suid$i] \
-				[set $mods(DicomToNrrd-T2)-entry-files$i] 
+# 			    $mods(DicomToNrrd-T2)-c add_data \
+# 				[set $mods(DicomToNrrd-T2)-entry-dir$i] \
+# 				[set $mods(DicomToNrrd-T2)-entry-suid$i] \
+# 				[set $mods(DicomToNrrd-T2)-entry-files$i] 
 			}
 		    }
 		}
@@ -3717,15 +3847,49 @@ class BioTensorApp {
 			
 			# Call the c++ function that adds this data to its data 
 			# structure.
-			$mods(DicomToNrrd1)-c add_data \
-			    [set $mods(DicomToNrrd1)-entry-dir$i] \
-			    [set $mods(DicomToNrrd1)-entry-suid$i] \
-			    [set $mods(DicomToNrrd1)-entry-files$i]
+# 			$mods(DicomToNrrd1)-c add_data \
+# 			    [set $mods(DicomToNrrd1)-entry-dir$i] \
+# 			    [set $mods(DicomToNrrd1)-entry-suid$i] \
+# 			    [set $mods(DicomToNrrd1)-entry-files$i]
 		    }
 		}
 	    }
 
+	    if {$data_mode == "B0DWI"} {
+		global $mods(UnuPermute)-dim
 
+		if {[info exists $mods(UnuPermute)-axis0]} {
+		    set temp0 [set $mods(UnuPermute)-axis0]
+		    unset $mods(UnuPermute)-axis0
+
+		    global $mods(UnuPermute)-axis0
+		    set $mods(UnuPermute)-axis0 $temp0
+		}
+
+		if {[info exists $mods(UnuPermute)-axis1]} {
+		    set temp1 [set $mods(UnuPermute)-axis1]
+		    unset $mods(UnuPermute)-axis1
+		    global $mods(UnuPermute)-axis1
+		    set $mods(UnuPermute)-axis1 $temp1
+		}
+
+		if {[info exists $mods(UnuPermute)-axis2]} {
+		    set temp2 [set $mods(UnuPermute)-axis2]
+		    unset $mods(UnuPermute)-axis2
+		    global $mods(UnuPermute)-axis2
+		    set $mods(UnuPermute)-axis2 $temp2
+		}
+
+		if {[set $mods(UnuPermute)-dim] == 4} {
+		    set temp3 3
+		    if {[info exists $mods(UnuPermute)-axis3]} {
+			set temp3 [set $mods(UnuPermute)-axis3]
+			unset $mods(UnuPermute)-axis3
+			global $mods(UnuPermute)-axis3
+			set $mods(UnuPermute)-axis3 $temp3
+		    }
+		}
+	    }
 
 	    # set a few variables that need to be reset
 	    set indicate 0
@@ -3758,6 +3922,25 @@ class BioTensorApp {
 	    configure_data_tab
 	    configure_registration_tab
 	    configure_dt_tab
+
+	    # because of the order of disables,
+	    # this module needs to be re-enabled and 
+	    # depending on the data_mode, the UnuCrop
+	    # needs to be disabled
+	    disableModule $mods(ChooseNrrd-B0) 0
+	    global data_mode
+	    if {$data_mode != "B0DWI"} {
+		disableModule $mods(UnuCrop-DWI) 1
+	    } else {
+		disableModule $mods(ChooseNrrd-preprocess) 0
+		disableModule $mods(UnuSlice-B0) 0
+	    }
+
+	    global do_registration
+	    if {!$do_registration || [string equal $data_mode "tensor"] == 1 } {
+		disableModule $mods(TendEpireg) 1
+	    }
+
 
 	    $indicatorL1 configure -text "Press Execute to run to save point..."
 	    $indicatorL2 configure -text "Press Execute to run to save point..."
@@ -3847,7 +4030,11 @@ class BioTensorApp {
 	global $mods(ShowField-Fibers)-edges-on
 	global show_plane_x show_plane_y show_plane_z
 
-	if {$which == $mods(ChooseNrrd1) && $state == "JustStarted"} {
+	if {$which == $mods(ChooseNrrd-B0) && $state == "JustStarted"} {
+	    change_indicate_val 1
+	} elseif {$which == $mods(ChooseNrrd-B0) && $state == "Completed"} {
+	    change_indicate_val 2
+	} elseif {$which == $mods(ChooseNrrd1) && $state == "JustStarted"} {
 	    change_indicator_labels "Loading Data..."
 	    change_indicate_val 1
 	} elseif {$which == $mods(ChooseNrrd1) && $state == "Completed"} {
@@ -3901,6 +4088,174 @@ class BioTensorApp {
 	    if {!$loading} {
 		activate_vis
 	    }
+	} elseif {$which == $mods(NrrdInfo-full) && $state == "Completed"} {
+	    if {!$loading} {
+		global data_mode
+		if {$data_mode == "B0DWI"} {
+		    global $mods(NrrdInfo-full)-dimension
+		    
+		    set v 0
+		    set x 0
+		    set y 0
+		    set z 0
+		    global $mods(NrrdInfo-full)-size0
+		    global $mods(NrrdInfo-full)-size1
+		    global $mods(NrrdInfo-full)-size2
+		    global $mods(ChooseNrrd-preprocess)-port-index
+		    if {[set $mods(NrrdInfo-full)-dimension] == 4} {
+			global $mods(NrrdInfo-full)-size3
+			# just slice and crop - no preprocessing
+			set v [set $mods(NrrdInfo-full)-size0]
+			set x [set $mods(NrrdInfo-full)-size1]
+			set y [set $mods(NrrdInfo-full)-size2]
+			set z [set $mods(NrrdInfo-full)-size3]
+			
+			set $mods(ChooseNrrd-preprocess)-port-index 0
+			
+			disableModule $mods(UnuAxinsert) 1
+			disableModule $mods(UnuReshape) 1
+			disableModule $mods(ChooseNrrd-preprocess) 0
+			disableModule $mods(UnuAxinfo-Z) 1
+		    } elseif {[set $mods(NrrdInfo-full)-dimension] == 3} {
+			# Pre-process before crop and slice
+			global channels
+			set v [expr $channels + 1]
+			set x [set $mods(NrrdInfo-full)-size0]
+			set y [set $mods(NrrdInfo-full)-size1]
+			set z [expr [set $mods(NrrdInfo-full)-size2] / $v]
+			
+			set $mods(ChooseNrrd-preprocess)-port-index 1
+			
+			# set unu axinsert
+			global $mods(UnuAxinsert)-axis
+			set $mods(UnuAxinsert)-axis 2
+			
+			# set unu reshape
+			global fast_axis
+			global $mods(UnuReshape)-sz
+			if {$fast_axis == "volumes"} {
+			    set $mods(UnuReshape)-sz "$x $y $z $v"
+			} else {
+			    set $mods(UnuReshape)-sz "$x $y $v $z"
+			}
+			
+			# set unu permute
+			global $mods(UnuPermute)-dim
+			global $mods(UnuPermute)-axis0
+			global $mods(UnuPermute)-axis1
+			global $mods(UnuPermute)-axis2
+			global $mods(UnuPermute)-axis3
+			set $mods(UnuPermute)-dim 4
+			if {$fast_axis == "volumes"} {
+			    set $mods(UnuPermute)-axis0 3
+			    set $mods(UnuPermute)-axis1 0
+			    set $mods(UnuPermute)-axis2 1
+			    set $mods(UnuPermute)-axis3 2
+			} else {
+			    set $mods(UnuPermute)-axis0 2
+			    set $mods(UnuPermute)-axis1 0
+			    set $mods(UnuPermute)-axis2 1
+			    set $mods(UnuPermute)-axis3 3
+			}
+			
+			# set unu axinfos
+			global $mods(UnuAxinfo-X)-axis $mods(UnuAxinfo-X)-spacing
+			global $mods(UnuAxinfo-X)-min $mods(UnuAxinfo-X)-max
+			global $mods(UnuAxinfo-Y)-axis $mods(UnuAxinfo-Y)-spacing
+			global $mods(UnuAxinfo-Y)-min $mods(UnuAxinfo-Y)-max
+			global $mods(UnuAxinfo-Z)-axis $mods(UnuAxinfo-Z)-spacing
+			global $mods(UnuAxinfo-Z)-min $mods(UnuAxinfo-Z)-max
+			global $mods(NrrdInfo-full)-spacing0
+			global $mods(NrrdInfo-full)-spacing1
+			global $mods(NrrdInfo-full)-spacing2
+			global $mods(NrrdInfo-full)-min0
+			global $mods(NrrdInfo-full)-min1
+			global $mods(NrrdInfo-full)-min2
+			
+			set $mods(UnuAxinfo-X)-axis 1
+			set $mods(UnuAxinfo-X)-spacing [set $mods(NrrdInfo-full)-spacing0]
+			set $mods(UnuAxinfo-X)-min [set $mods(NrrdInfo-full)-min0]
+			set $mods(UnuAxinfo-X)-max [expr [set $mods(NrrdInfo-full)-min0] + [expr [set $mods(NrrdInfo-full)-spacing0] *$x]]
+			
+			set $mods(UnuAxinfo-Y)-axis 2
+			set $mods(UnuAxinfo-Y)-spacing [set $mods(NrrdInfo-full)-spacing1]
+			set $mods(UnuAxinfo-Y)-min [set $mods(NrrdInfo-full)-min1]
+			set $mods(UnuAxinfo-Y)-max [expr [set $mods(NrrdInfo-full)-min1] + [expr [set $mods(NrrdInfo-full)-spacing1] * $y]]
+			
+			set $mods(UnuAxinfo-Z)-axis 3
+			set $mods(UnuAxinfo-Z)-spacing [set $mods(NrrdInfo-full)-spacing2]
+			set $mods(UnuAxinfo-Z)-min [set $mods(NrrdInfo-full)-min2]
+			set $mods(UnuAxinfo-Z)-max [expr [set $mods(NrrdInfo-full)-min2] + [expr [set $mods(NrrdInfo-full)-spacing2] * $z]]
+			
+			disableModule $mods(UnuAxinsert) 0
+			disableModule $mods(UnuReshape) 0
+			disableModule $mods(UnuAxinfo-Z) 0
+			disableModule $mods(ChooseNrrd-preprocess) 0
+		    } else {
+			tk_messageBox -message "Input data must be 3D nrrd (to pre-process) or 4D nrrd." -type ok -icon info -parent .standalone   
+		    }
+		    
+
+		    # Crop out DWI
+		    global $mods(UnuCrop-DWI)-num-axes
+		    global $mods(UnuCrop-DWI)-minAxis0 $mods(UnuCrop-DWI)-minAxis1 $mods(UnuCrop-DWI)-minAxis2
+		    global $mods(UnuCrop-DWI)-minAxis3 $mods(UnuCrop-DWI)-maxAxis0 $mods(UnuCrop-DWI)-maxAxis1
+		    global $mods(UnuCrop-DWI)-maxAxis2 $mods(UnuCrop-DWI)-maxAxis3 $mods(UnuCrop-DWI)-absmaxAxis0
+		    global $mods(UnuCrop-DWI)-absmaxAxis1 $mods(UnuCrop-DWI)-absmaxAxis2 
+		    global $mods(UnuCrop-DWI)-absmaxAxis3
+		    
+		    set $mods(UnuCrop-DWI)-num-axes 4
+		    
+		    global B0_first
+		    if {$B0_first == 1} {
+			set $mods(UnuCrop-DWI)-minAxis0 1
+		    } else {
+			set $mods(UnuCrop-DWI)-minAxis0 0
+		    }
+		    set $mods(UnuCrop-DWI)-minAxis1 0
+		    set $mods(UnuCrop-DWI)-minAxis2 0
+		    set $mods(UnuCrop-DWI)-minAxis3 0
+		    
+		    if {$B0_first == 1} {
+			set $mods(UnuCrop-DWI)-maxAxis0 [expr $v - 1]
+		    } else {
+			set $mods(UnuCrop-DWI)-maxAxis0 [expr $v - 2]
+		    }
+		    set $mods(UnuCrop-DWI)-maxAxis1 [expr $x - 1]
+		    set $mods(UnuCrop-DWI)-maxAxis2 [expr $y - 1]
+		    set $mods(UnuCrop-DWI)-maxAxis3 [expr $z - 1]
+		    
+		    if {$B0_first == 1} {
+			set $mods(UnuCrop-DWI)-absmaxAxis0 [expr $v - 1]
+		    } else {
+			set $mods(UnuCrop-DWI)-absmaxAxis0 [expr $v - 2]
+		    }
+		    set $mods(UnuCrop-DWI)-absmaxAxis1 [expr $x - 1]
+		    set $mods(UnuCrop-DWI)-absmaxAxis2 [expr $y - 1]
+		    set $mods(UnuCrop-DWI)-absmaxAxis3 [expr $z - 1]
+		    
+		    # Slice out B0
+		    global $mods(UnuSlice-B0)-axis $mods(UnuSlice-B0)-position
+		    set $mods(UnuSlice-B0)-axis 0
+		    if {$B0_first} {
+			set $mods(UnuSlice-B0)-position 0
+		    } else {
+			set $mods(UnuSlice-B0)-position [expr $v - 1]
+		    }
+		    
+		    disableModule $mods(UnuCrop-DWI) 0
+		    disableModule $mods(ChooseNrrd-B0) 0
+		    disableModule $mods(TendEpireg) 1
+		    disableModule $mods(ChooseNrrd-ToReg) 1
+		    $mods(ChooseNrrd-preprocess)-c needexecute
+		} else {
+		    disableModule $mods(ChooseNrrd-B0) 0
+		    disableModule $mods(TendEpireg) 1
+		    disableModule $mods(ChooseNrrd-ToReg) 1
+		    disableModule $mods(UnuCrop-DWI) 1
+		    $mods(ChooseNrrd-B0)-c needexecute
+		}
+	    }
 	} elseif {$which == $mods(NrrdInfo1) && $state == "JustStarted"} {
 	    change_indicate_val 1
 	} elseif {$which == $mods(NrrdInfo1) && $state == "Completed"} {
@@ -3927,28 +4282,28 @@ class BioTensorApp {
 		set size_x [expr [set $mods(NrrdInfo1)-size1] - 1]
 		set size_y [expr [set $mods(NrrdInfo1)-size2] - 1]
 		set size_z [expr [set $mods(NrrdInfo1)-size3] - 1]
-
+		
 		set spacing_x [set $mods(NrrdInfo1)-spacing1]
 		set spacing_y [set $mods(NrrdInfo1)-spacing2]
 		set spacing_z [set $mods(NrrdInfo1)-spacing3]
-
+		
 		set average_spacing [expr [expr $spacing_x + $spacing_y + $spacing_z] / 3.0]
 		
 		set min_x [set $mods(NrrdInfo1)-min1]
 		set min_y [set $mods(NrrdInfo1)-min2]
 		set min_z [set $mods(NrrdInfo1)-min3]
-
+		
 		# configure fiber edges to be average spacing * 0.25
 		global $mods(ShowField-Fibers)-edge_scale
 		set $mods(ShowField-Fibers)-edge_scale [expr 0.125 * $average_spacing]
-
+		
 		global $mods(ShowField-Glyphs)-tensors_scale
 		set $mods(ShowField-Glyphs)-tensors_scale [expr 0.5 * $average_spacing]
 		global glyph_scale_val
 		set glyph_scale_val 0.5
-
 		
-		if {$data_mode == "DWI" || $data_mode == "DWIknownB0"} {
+		
+		if {$data_mode == "DWI" || $data_mode == "DWIknownB0" || $data_mode == "B0DWI"} {
 		    # new data has been loaded, configure
 		    # the vis tabs and sync their values
 		    
@@ -4010,25 +4365,25 @@ class BioTensorApp {
 	    change_indicate_val 2
 	} elseif {$which == $mods(SampleField-GlyphSeeds) && $state == "Completed"} {
 	    global $mods(ChooseField-GlyphSeeds)-port-index
-	    if {![set $mods(ShowField-Glyphs)-tensors-on] || [set $mods(ChooseField-GlyphSeeds)-port-index] != 1}  {
+	    if {[set $mods(ShowField-Glyphs)-tensors-on] == 0 || [set $mods(ChooseField-GlyphSeeds)-port-index] != 1}  {
 		after 100 \
 		    "uplevel \#0 set \"\{$mods(Viewer)-ViewWindow_0-SampleField Rake (7)\}\" 0; $mods(Viewer)-ViewWindow_0-c redraw"
 	    }
 	} elseif {$which == $mods(Probe-GlyphSeeds) && $state == "Completed"} {
 	    global $mods(ChooseField-GlyphSeeds)-port-index
-	    if {![set $mods(ShowField-Glyphs)-tensors-on] || [set $mods(ChooseField-GlyphSeeds)-port-index] != 0} {
+	    if {[set $mods(ShowField-Glyphs)-tensors-on] == 0 || [set $mods(ChooseField-GlyphSeeds)-port-index] != 0} {
 		after 100 \
 		    "uplevel \#0 set \"\{$mods(Viewer)-ViewWindow_0-Probe Selection Widget (8)\}\" 0; $mods(Viewer)-ViewWindow_0-c redraw"
 	    }
 	} elseif {$which == $mods(SampleField-FiberSeeds) && $state == "Completed"} {
 	    global $mods(ChooseField-FiberSeeds)-port-index
-	    if {![set $mods(ShowField-Fibers)-edges-on] || [set $mods(ChooseField-FiberSeeds)-port-index] != 1}  {
+	    if {[set $mods(ShowField-Fibers)-edges-on] == 0 || [set $mods(ChooseField-FiberSeeds)-port-index] != 1}  {
 		after 100 \
 		    "uplevel \#0 set \"\{$mods(Viewer)-ViewWindow_0-SampleField Rake (12)\}\" 0; $mods(Viewer)-ViewWindow_0-c redraw"
 	    }
 	} elseif {$which == $mods(Probe-FiberSeeds) && $state == "Completed"} {
 	    global $mods(ChooseField-FiberSeeds)-port-index
-	    if {![set $mods(ShowField-Fibers)-edges-on] || [set $mods(ChooseField-FiberSeeds)-port-index] != 0} {
+	    if {[set $mods(ShowField-Fibers)-edges-on] == 0 || [set $mods(ChooseField-FiberSeeds)-port-index] != 0} {
 		after 100 \
 		    "uplevel \#0 set \"\{$mods(Viewer)-ViewWindow_0-Probe Selection Widget (11)\}\" 0; $mods(Viewer)-ViewWindow_0-c redraw"
 	    }
@@ -4054,7 +4409,9 @@ class BioTensorApp {
 		$which != $mods(RescaleColorMap-ColorPlanes) && \
 		$which != $mods(RescaleColorMap-Isosurface) && \
 		$which != $mods(RescaleColorMap-Fibers) && \
-		$which != $mods(RescaleColorMap-Glyphs)} {
+		$which != $mods(RescaleColorMap-Glyphs) && \
+	        $which != $mods(SampleField-FiberSeeds) && \
+	        $which != $mods(SampleField-GlyphSeeds)} {
 	    if {$msg_state == "Error"} {
 		if {$error_module == ""} {
 		    set error_module $which
@@ -4104,7 +4461,7 @@ class BioTensorApp {
 	}
 
 	# configure t2 reference image stuff if loading tensors directly
-	if {$data_mode == "DWI" || $data_mode == "DWIknownB0"} {
+	if {$data_mode == "DWI" || $data_mode == "DWIknownB0" || $data_mode == "B0DWI"} {
 	    toggle_data_mode
 	} 
 
@@ -4127,7 +4484,7 @@ class BioTensorApp {
 	global data_mode
 	global $mods(ChooseNrrd1)-port-index
 
-	if {$data_mode == "DWI" || $data_mode == "DWIknownB0"} {
+	if {$data_mode == "DWI" || $data_mode == "DWIknownB0" || $data_mode == "B0DWI"} {
 	    # determine if we are loading nrrd, dicom, or analyze
 	    # and check if both DWI and T2 files have been specified
 	    if {[set $mods(ChooseNrrd1)-port-index] == 0} {
@@ -4240,11 +4597,19 @@ class BioTensorApp {
 
 	    set data_completed 1
 
-	    disableModule $mods(TendEpireg) 1
-	    disableModule $mods(ChooseNrrd-DT) 0
-	    disableModule $mods(TendEstim) 1
+	    if {!$loading} {
+		disableModule $mods(TendEpireg) 1
+		disableModule $mods(ChooseNrrd-ToReg) 1
+		disableModule $mods(ChooseNrrd-DT) 0
+		disableModule $mods(TendEstim) 1
+	    }
 
 	    activate_vis
+	}
+
+	global data_mode
+	if {!$loading && $data_mode == "B0DWI"} {
+	    disableModule $mods(UnuSlice-B0) 0
 	}
 	
 	# determine which type of data (nrrd, dicom, analyze)
@@ -4259,7 +4624,7 @@ class BioTensorApp {
 	}
     }
 
-
+    
     ###########################
     ### toggle_data_mode
     ###########################
@@ -4272,10 +4637,20 @@ class BioTensorApp {
         global $mods(ChooseNrrd-DT)-port-index
 	global $mods(NrrdReader1)-type
 	global $mods(ChooseNrrd-KnownB0)-port-index
+	global $mods(ChooseNrrd-B0)-port-index
+	global $mods(ChooseNrrd-T2)-port-index
 	global $mods(TendEstim)-knownB0
 	
-        if {$data_mode == "DWIknownB0"} {
+	if {$data_mode == "DWIknownB0"} {
 	    configure_readers all
+	    
+	    disableModule $mods(UnuAxinsert) 1
+	    disableModule $mods(UnuReshape) 1
+	    disableModule $mods(UnuAxinfo-Z) 1
+	    disableModule $mods(UnuCrop-DWI) 1
+	    disableModule $mods(UnuSlice-B0) 1
+	    disableModule $mods(ChooseNrrd-preprocess) 1
+	    disableModule $mods(ChooseNrrd-B0) 1
 	    
 	    # configure text for DWI Volume
 	    $nrrd_tab1.dwil configure -text "DWI Volume:"
@@ -4305,8 +4680,6 @@ class BioTensorApp {
 	    $analyze_tab1.load2 configure -state normal
 	    $analyze_tab2.load2 configure -state normal
 	    
-	    set $mods(NrrdReader1)-type Scalar
-
 	    # configure ChooseNrrd
 	    set $mods(ChooseNrrd-DT)-port-index 0
 	    
@@ -4314,13 +4687,26 @@ class BioTensorApp {
 	    #activate_registration
 	    
 	    #activate_dt
-
+	    
 	    set $mods(TendEstim)-knownB0 1
 	    set $mods(ChooseNrrd-KnownB0)-port-index 0
-
-        } elseif {$data_mode == "DWI"} {
+	    
+	    set $mods(ChooseNrrd-B0)-port-index 0
+	    set $mods(ChooseNrrd-T2)-port-index $last_B0_port
+	    
+	    set $mods(ChooseNrrd-B0)-port-index 0
+	    
+	} elseif {$data_mode == "DWI"} {
 	    configure_readers all
 	    
+	    disableModule $mods(UnuAxinsert) 1
+	    disableModule $mods(UnuReshape) 1
+	    disableModule $mods(UnuAxinfo-Z) 1
+	    disableModule $mods(UnuCrop-DWI) 1
+	    disableModule $mods(UnuSlice-B0) 1
+	    disableModule $mods(ChooseNrrd-preprocess) 1
+	    disableModule $mods(ChooseNrrd-B0) 1
+		
 	    # configure text for DWI Volume
 	    $nrrd_tab1.dwil configure -text "DWI Volume:"
 	    $nrrd_tab2.dwil configure -text "DWI Volume:"
@@ -4349,8 +4735,62 @@ class BioTensorApp {
 	    $analyze_tab1.load2 configure -state disabled
 	    $analyze_tab2.load2 configure -state disabled
 	    
-	    set $mods(NrrdReader1)-type Scalar
+	    # configure ChooseNrrd
+	    set $mods(ChooseNrrd-DT)-port-index 0
+	    
+	    # enable registration and dt tabs
+	    #activate_registration
+	    
+	    #activate_dt
+	    
+	    set $mods(TendEstim)-knownB0 0
+	    set $mods(ChooseNrrd-KnownB0)-port-index 1
+	    
+	    set $mods(ChooseNrrd-B0)-port-index 0
+	    set $mods(ChooseNrrd-T2)-port-index $last_B0_port
 
+	    set $mods(ChooseNrrd-B0)-port-index 0
+        } elseif {$data_mode == "B0DWI"} {
+	    configure_readers all
+
+	    if {!$loading} {
+		disableModule $mods(UnuAxinsert) 1
+		disableModule $mods(UnuReshape) 1
+		disableModule $mods(UnuAxinfo-Z) 1
+		disableModule $mods(UnuCrop-DWI) 1
+		disableModule $mods(UnuSlice-B0) 1
+		disableModule $mods(ChooseNrrd-preprocess) 1
+		disableModule $mods(ChooseNrrd-B0) 1  
+	    } 
+
+	    # configure text for DWI Volume
+	    $nrrd_tab1.dwil configure -text "B0/DWI Volume:"
+	    $nrrd_tab2.dwil configure -text "B0/DWI Volume:"
+	    
+	    $dicom_tab1.dwil configure -text "B0/DWI Volume:"
+	    $dicom_tab2.dwil configure -text "B0/DWI Volume:"
+	    
+	    $analyze_tab1.dwil configure -text "B0/DWI Volume:"
+	    $analyze_tab2.dwil configure -text "B0/DWI Volume:"
+
+	    # disable T2 stuff
+	    $nrrd_tab1.t2l configure -state disabled
+	    $nrrd_tab2.t2l configure -state disabled
+	    $nrrd_tab1.file2 configure -state disabled -foreground grey64
+	    $nrrd_tab2.file2 configure -state disabled -foreground grey64
+	    $nrrd_tab1.load2 configure -state disabled
+	    $nrrd_tab2.load2 configure -state disabled
+	    
+	    $dicom_tab1.t2l configure -state disabled
+	    $dicom_tab2.t2l configure -state disabled
+	    $dicom_tab1.load2 configure -state disabled
+	    $dicom_tab2.load2 configure -state disabled
+	    
+	    $analyze_tab1.t2l configure -state disabled
+	    $analyze_tab2.t2l configure -state disabled
+	    $analyze_tab1.load2 configure -state disabled
+	    $analyze_tab2.load2 configure -state disabled
+	    
 	    # configure ChooseNrrd
 	    set $mods(ChooseNrrd-DT)-port-index 0
 	    
@@ -4359,12 +4799,23 @@ class BioTensorApp {
 	    
 	    #activate_dt
 
-	    set $mods(TendEstim)-knownB0 0
-	    set $mods(ChooseNrrd-KnownB0)-port-index 1
-	    
-        } else {
+	    set $mods(TendEstim)-knownB0 1
+	    set $mods(ChooseNrrd-KnownB0)-port-index 0
+
+	    set $mods(ChooseNrrd-B0)-port-index 1
+
+	    set $mods(ChooseNrrd-T2)-port-index 3
+	} else {
 	    configure_readers all
-	    
+
+	    disableModule $mods(UnuAxinsert) 1
+	    disableModule $mods(UnuReshape) 1
+	    disableModule $mods(UnuAxinfo-Z) 1
+	    disableModule $mods(UnuCrop-DWI) 1
+	    disableModule $mods(UnuSlice-B0) 1
+	    disableModule $mods(ChooseNrrd-preprocess) 1
+	    disableModule $mods(ChooseNrrd-B0) 1 
+
 	    # configure labels
 	    $nrrd_tab1.dwil configure -text "Tensor Volume:"
 	    $nrrd_tab2.dwil configure -text "Tensor Volume:"
@@ -4392,8 +4843,6 @@ class BioTensorApp {
 	    $analyze_tab2.t2l configure -state disabled
 	    $analyze_tab1.load2 configure -state disabled
 	    $analyze_tab2.load2 configure -state disabled
-	    
-	    set $mods(NrrdReader1)-type Tensor
 	    
 	    # configure ChooseNrrd
 	    set $mods(ChooseNrrd-DT)-port-index 1
@@ -4430,8 +4879,12 @@ class BioTensorApp {
 	    $dt_tab1.last.ex configure -foreground grey64 -background grey75
 	    $dt_tab2.last.ex configure -foreground grey64 -background grey75
 	    
-	    set $mods(ChooseNrrd-KnownB0)-port-index 0	
+	    set $mods(ChooseNrrd-KnownB0)-port-index 0
+	    set $mods(ChooseNrrd-B0)-port-index 0	
+	    set $mods(ChooseNrrd-T2)-port-index $last_B0_port
         }
+
+	$this configure_data_mode
 
     }
 
@@ -4452,6 +4905,7 @@ class BioTensorApp {
 	if {$which == "Nrrd"} {
 	    set $mods(ChooseNrrd1)-port-index 0
 	    set $mods(ChooseNrrd-T2)-port-index 0
+	    set last_B0_port 0	    
 	    set $mods(ChooseNrrd-ToProcess)-port-index 0
 
 	    disableModule $mods(NrrdReader1) 0
@@ -4463,6 +4917,13 @@ class BioTensorApp {
 	    disableModule $mods(AnalyzeToNrrd1) 1
 	    disableModule $mods(AnalyzeToNrrd-T2) 1
 
+	    # disable T2 reader when loading single volume w/B0 and DWIs
+	    global data_mode
+	    if {$data_mode == "B0DWI"} {
+		disableModule $mods(NrrdReader-T2) 1
+		set $mods(ChooseNrrd-T2)-port-index 3
+	    }
+
 	    if {$initialized != 0} {
 		$data_tab1 view "Nrrd"
 		$data_tab2 view "Nrrd"
@@ -4471,6 +4932,7 @@ class BioTensorApp {
         } elseif {$which == "Dicom"} {
 	    set $mods(ChooseNrrd1)-port-index 1
 	    set $mods(ChooseNrrd-T2)-port-index 1
+	    set last_B0_port 1
 	    set $mods(ChooseNrrd-ToProcess)-port-index 1
 
 	    disableModule $mods(NrrdReader1) 1
@@ -4482,6 +4944,13 @@ class BioTensorApp {
 	    disableModule $mods(AnalyzeToNrrd1) 1
 	    disableModule $mods(AnalyzeToNrrd-T2) 1
 
+	    # disable T2 reader when loading single volume w/B0 and DWIs
+	    global data_mode
+	    if {$data_mode == "B0DWI"} {
+		disableModule $mods(DicomToNrrd-T2) 1
+		set $mods(ChooseNrrd-T2)-port-index 3
+	    }
+
             if {$initialized != 0} {
 		$data_tab1 view "Dicom"
 		$data_tab2 view "Dicom"
@@ -4491,6 +4960,7 @@ class BioTensorApp {
 	    # Analyze
 	    set $mods(ChooseNrrd1)-port-index 2
 	    set $mods(ChooseNrrd-T2)-port-index 2
+	    set last_B0_port 2
 	    set $mods(ChooseNrrd-ToProcess)-port-index 2
 
 	    disableModule $mods(NrrdReader1) 1
@@ -4501,6 +4971,12 @@ class BioTensorApp {
 
 	    disableModule $mods(AnalyzeToNrrd1) 0
 	    disableModule $mods(AnalyzeToNrrd-T2) 0
+
+	    # disable T2 reader when loading single volume w/B0 and DWIs
+	    global data_mode
+	    if {$data_mode == "B0DWI"} {
+		disableModule $mods(AnalyzeToNrrd-T2) 1
+	    }
 
 	    if {$initialized != 0} {
 		$data_tab1 view "Analyze"
@@ -4518,6 +4994,13 @@ class BioTensorApp {
 		
 		disableModule $mods(AnalyzeToNrrd1) 1
 		disableModule $mods(AnalyzeToNrrd-T2) 1
+
+		# disable T2 reader when loading single volume w/B0 and DWIs
+		global data_mode
+		if {$data_mode == "B0DWI"} {
+		    disableModule $mods(NrrdReader-T2) 1
+		    set $mods(ChooseNrrd-T2)-port-index 3
+		}
 	    } elseif {[set $mods(ChooseNrrd1)-port-index] == 1} {
 		# dicom
 		disableModule $mods(NrrdReader1) 1
@@ -4528,6 +5011,13 @@ class BioTensorApp {
 		
 		disableModule $mods(AnalyzeToNrrd1) 1
 		disableModule $mods(AnalyzeToNrrd-T2) 1
+
+		# disable T2 reader when loading single volume w/B0 and DWIs
+		global data_mode
+		if {$data_mode == "B0DWI"} {
+		    disableModule $mods(DicomToNrrd-T2) 1
+		    set $mods(ChooseNrrd-T2)-port-index 3
+		}
 	    } else {
 		# analyze
 		disableModule $mods(NrrdReader1) 1
@@ -4538,6 +5028,13 @@ class BioTensorApp {
 		
 		disableModule $mods(AnalyzeToNrrd1) 0
 		disableModule $mods(AnalyzeToNrrd-T2) 0
+
+		# disable T2 reader when loading single volume w/B0 and DWIs
+		global data_mode
+		if {$data_mode == "B0DWI"} {
+		    disableModule $mods(AnalyzeToNrrd-T2) 1
+		    set $mods(ChooseNrrd-T2)-port-index 3
+		}
 	    }
 	}
     }
@@ -4587,13 +5084,13 @@ class BioTensorApp {
 
 
 
-############# REGISTRATION ##############
+    ############# REGISTRATION ##############
     method configure_registration_tab {} {
 	if {$data_completed} {
 	    activate_registration
 	}
     }
-
+    
     method execute_Registration {} {
 	global mods
 	
@@ -4602,14 +5099,17 @@ class BioTensorApp {
 	
 	if {[set $mods(NrrdReader-Gradient)-filename] != ""} {
 	    # unblock modules
-	    disableModule $mods(TendEpireg) 0
-	    disableModule $mods(UnuJoin) 0
-	    disableModule $mods(ChooseNrrd-ToReg) 0
-		
+	    if {!$loading} {
+		disableModule $mods(TendEpireg) 0
+		disableModule $mods(ChooseNrrd-ToReg) 0
+		disableModule $mods(UnuJoin) 0
+		disableModule $mods(ChooseNrrd-ToReg) 0
+	    }
+	    
 	    # activate reg variance checkbutton
 	    $variance_tab1.reg configure -state normal
 	    $variance_tab2.reg configure -state normal
-
+	    
 	    # execute
 	    $mods(TendEpireg)-c needexecute
 
@@ -4805,9 +5305,12 @@ class BioTensorApp {
 	} 
 	
 	# unblock modules
-	disableModule $mods(TendEstim) 0
-	disableModule $mods(ChooseNrrd-DT) 0
-	
+	if {!$loading} {
+	    disableModule $mods(TendEstim) 0
+	    disableModule $mods(ChooseNrrd-DT) 0
+	    disableModule $mods(ChooseNrrd-ToReg) 0
+	}
+
 	# execute
 	$mods(ChooseNrrd-ToSmooth)-c needexecute
 
@@ -4859,9 +5362,10 @@ class BioTensorApp {
 	global bmatrix
 	
 	if {$do_registration == 1} {
-	    disableModule $mods(TendEpireg) 0
+	    disableModule $mods(ChooseNrrd-ToReg) 0
 	    disableModule $mods(UnuJoin) 0
 	    disableModule $mods(NrrdReader-Gradient) 0
+	    disableModule $mods(TendEpireg) 0
 	    
 	    activate_registration
 
@@ -4872,9 +5376,10 @@ class BioTensorApp {
 	    set bmatrix "compute"
 	    $this toggle_b_matrix
         } else {
-	    disableModule $mods(TendEpireg) 1
+	    disableModule $mods(ChooseNrrd-ToReg) 0
 	    disableModule $mods(UnuJoin) 1
 	    disableModule $mods(NrrdReader-Gradient) 1
+	    disableModule $mods(TendEpireg) 1
 	    
 	    # disable registration tab
 	    foreach w [winfo children $reg_tab1] {
@@ -5040,6 +5545,7 @@ class BioTensorApp {
 
 	    set $mods(ChooseNrrd-BMatrix)-port-index 0
 	    disableModule $mods(NrrdReader-BMatrix) 1
+	    disableModule $mods(NrrdReader-Gradient) 0
 	} else {
             $dt_tab1.bm.childsite.load.e configure -state normal \
                 -foreground black
@@ -5051,6 +5557,7 @@ class BioTensorApp {
 
 	    set $mods(ChooseNrrd-BMatrix)-port-index 1
 	    disableModule $mods(NrrdReader-BMatrix) 0
+	    disableModule $mods(NrrdReader-Gradient) 1
 	}
     }
 
@@ -7460,7 +7967,7 @@ class BioTensorApp {
 	    
 	    set $mods(ChooseNrrd-Norm)-port-index 1
 		
-	    if {$vis_activated && [set $mods(ShowField-Glyphs)-tensors-on]} {
+	    if {$vis_activated && [set $mods(ShowField-Glyphs)-tensors-on] == 1} {
 		$mods(ChooseNrrd-Norm)-c needexecute
 	    } else {
 		global exec_glyphs
@@ -7472,7 +7979,7 @@ class BioTensorApp {
 	    
 	    set $mods(ChooseNrrd-Norm)-port-index 0
 		
-	    if {$vis_activated && [set $mods(ShowField-Glyphs)-tensors-on]} {
+	    if {$vis_activated && [set $mods(ShowField-Glyphs)-tensors-on] == 1} {
 		$mods(TendNorm-Glyphs)-c needexecute
 	    } else {
 		global exec_glyphs
@@ -7494,7 +8001,7 @@ class BioTensorApp {
 	    set $mods(ChooseNrrd-Exag)-port-index 1
 	    
 	    global $mods(ShowField-Glyphs)-tensors-on
-	    if {$vis_activated && [set $mods(ShowField-Glyphs)-tensors-on]} {
+	    if {$vis_activated && [set $mods(ShowField-Glyphs)-tensors-on] == 1} {
 		$mods(ChooseNrrd-Exag)-c needexecute
 	    } else {
 		global exec_glyphs
@@ -7508,7 +8015,7 @@ class BioTensorApp {
 
 	    
 	    global $mods(ShowField-Glyphs)-tensors-on
-	    if {$vis_activated && [set $mods(ShowField-Glyphs)-tensors-on]} {
+	    if {$vis_activated && [set $mods(ShowField-Glyphs)-tensors-on] == 1} {
 		$mods(TendAnscale-Glyphs)-c needexecute
 	    } else {
 		global exec_glyphs
@@ -7602,7 +8109,7 @@ class BioTensorApp {
 	configure_glyphs_tabs
 
 	global $mods(ShowField-Glyphs)-tensors-on
-	if {$vis_activated && [set $mods(ShowField-Glyphs)-tensors-on] \
+	if {$vis_activated && [set $mods(ShowField-Glyphs)-tensors-on] == 1 \
 	    && !$loading} {
 	    $mods(ShowField-Glyphs)-c data_display_type
 	    $mods(ChooseField-Glyphs)-c needexecute
@@ -7670,7 +8177,7 @@ class BioTensorApp {
 	}
 	
 	global $mods(ShowField-Glyphs)-tensors-on
-	if {$vis_activated && [set $mods(ShowField-Glyphs)-tensors-on]} {	    
+	if {$vis_activated && [set $mods(ShowField-Glyphs)-tensors-on] == 1} {	    
 	    $mods(ChooseField-GlyphSeeds)-c needexecute       
 	} else {
 	    global exec_glyphs
@@ -7780,7 +8287,7 @@ class BioTensorApp {
 	
 	set $mods(ShowField-Glyphs)-tensors_scale [expr $average_spacing * $glyph_scale_val]
 	
-	if {$vis_activated && $scale_glyph && [set $mods(ShowField-Glyphs)-tensors-on]} {
+	if {$vis_activated && $scale_glyph && [set $mods(ShowField-Glyphs)-tensors-on] == 1} {
 
 	    $mods(ShowField-Glyphs)-c data_scale
 	} else {
@@ -7794,7 +8301,7 @@ class BioTensorApp {
 	global mods
 	global $mods(ShowField-Glyphs)-tensors-on
 
-	if {$vis_activated && [set $mods(ShowField-Glyphs)-tensors-on]} {
+	if {$vis_activated && [set $mods(ShowField-Glyphs)-tensors-on] == 1} {
 	    global mods
 	    $mods(ShowField-Glyphs)-c data_resolution_scale
 	    $mods(ShowField-Glyphs)-c needexecute
@@ -7809,7 +8316,7 @@ class BioTensorApp {
 	global mods
 	global $mods(ShowField-Glyphs)-tensors-on
 
-	if {$vis_activated && [set $mods(ShowField-Glyphs)-tensors-on] && $exag_glyph} {
+	if {$vis_activated && [set $mods(ShowField-Glyphs)-tensors-on] == 1 && $exag_glyph} {
 	    global mods
 	    $mods(TendAnscale-Glyphs)-c needexecute
 	} else {
@@ -8249,7 +8756,7 @@ class BioTensorApp {
 	global mods
 	global $mods(ShowField-Fibers)-edges-on
 
-	if {$vis_activated && [set $mods(ShowField-Fibers)-edges-on]} {
+	if {$vis_activated && [set $mods(ShowField-Fibers)-edges-on] == 1} {
 	    $mods(GenStandardColorMaps-Fibers)-c needexecute
 	} else {
 	    global exec_fibers
@@ -8260,7 +8767,7 @@ class BioTensorApp {
     method execute_TendFiber {} {
 	global mods 
 	global $mods(ShowField-Fibers)-edges-on
-	if {$vis_activated && [set $mods(ShowField-Fibers)-edges-on]} {
+	if {$vis_activated && [set $mods(ShowField-Fibers)-edges-on] == 1} {
 	    $mods(TendFiber)-c needexecute
 	} else {
 	    global exec_fibers
@@ -8805,7 +9312,7 @@ class BioTensorApp {
 		$oldx 0 $x $height -fill $c -outline $c -tags map
 	}
     }
-
+    
     
     method setColor {col color mode} {
 	global $color
@@ -8869,7 +9376,7 @@ class BioTensorApp {
 	    }
 	    
 	    global $mods(ShowField-Isosurface)-faces-on
-	    if {$vis_activated && [set $mods(ShowField-Isosurface)-faces-on]} {
+	    if {$vis_activated && [set $mods(ShowField-Isosurface)-faces-on] == 1} {
 		$mods(Isosurface)-c needexecute
 	    } else {
 		global exec_iso
@@ -8890,7 +9397,7 @@ class BioTensorApp {
 	     }
 	     
 	     global $mods(ShowField-Glyphs)-tensors-on
-	     if {$vis_activated && [set $mods(ShowField-Glyphs)-tensors-on]} {
+	     if {$vis_activated && [set $mods(ShowField-Glyphs)-tensors-on] == 1} {
 		 $mods(DirectInterpolate-Glyphs)-c needexecute
 	     } else {
 		 global exec_glyphs
@@ -8926,7 +9433,7 @@ class BioTensorApp {
 #########################################################
 ####################### TAB STATE #######################
 #########################################################
- 
+	
     method change_vis_tab { which } {
 	# change vis tab for attached/detached
 
@@ -8978,7 +9485,7 @@ class BioTensorApp {
 	    }
 	}
     }
-    
+	
 
     method change_processing_tab { which } {
 	global mods
@@ -9009,12 +9516,13 @@ class BioTensorApp {
 		    # NOT SURE ABOUT THIS RESCALE
 		    #disableModule $mods(RescaleColorMap2) 0
 		    disableModule $mods(TendEpireg) 1
+		    disableModule $mods(ChooseNrrd-ToReg) 1
                     global data_mode
                     # Enable the UnuJoin module if it hasn't already
 		    # been enabled when the B0 volume has been provided.
 		    # This could have been missed being enabled if
 		    # registration was skipped.
-		    if {$data_mode == "DWIknownB0" && $data_completed} {
+		    if {($data_mode == "DWIknownB0" || $data_mode == "B0DWI") && $data_completed} {
 			disableModule $mods(UnuJoin) 0
 		    } else {
 			disableModule $mods(UnuJoin) 1
@@ -9200,7 +9708,49 @@ class BioTensorApp {
     }
 
     
+    method configure_data_mode {} {
+	global data_mode
+	
+	if {$initialized} {
+	    if {$data_mode == "B0DWI"} {
+		$proc_tab1.canvas.notebook.cs.page1.cs.mode3quest.ch configure \
+		    -foreground black
+		$proc_tab1.canvas.notebook.cs.page1.cs.mode3quest.vol configure \
+		    -foreground black
+		$proc_tab1.canvas.notebook.cs.page1.cs.mode3quest.z configure \
+		    -foreground black
+		$proc_tab1.canvas.notebook.cs.page1.cs.mode3quest.b0 configure \
+		    -foreground black
 
+		$proc_tab2.canvas.notebook.cs.page1.cs.mode3quest.ch configure \
+		    -foreground black
+		$proc_tab2.canvas.notebook.cs.page1.cs.mode3quest.vol configure \
+		    -foreground black
+		$proc_tab2.canvas.notebook.cs.page1.cs.mode3quest.z configure \
+		    -foreground black
+		$proc_tab2.canvas.notebook.cs.page1.cs.mode3quest.b0 configure \
+		    -foreground black
+	    } else {
+		$proc_tab1.canvas.notebook.cs.page1.cs.mode3quest.ch configure \
+		    -foreground grey64
+		$proc_tab1.canvas.notebook.cs.page1.cs.mode3quest.vol configure \
+		    -foreground grey64
+		$proc_tab1.canvas.notebook.cs.page1.cs.mode3quest.z configure \
+		    -foreground grey64
+		$proc_tab1.canvas.notebook.cs.page1.cs.mode3quest.b0 configure \
+		    -foreground grey64
+
+		$proc_tab2.canvas.notebook.cs.page1.cs.mode3quest.ch configure \
+		    -foreground grey64
+		$proc_tab2.canvas.notebook.cs.page1.cs.mode3quest.vol configure \
+		    -foreground grey64
+		$proc_tab2.canvas.notebook.cs.page1.cs.mode3quest.z configure \
+		    -foreground grey64
+		$proc_tab2.canvas.notebook.cs.page1.cs.mode3quest.b0 configure \
+		    -foreground grey64		
+	    }
+	}
+    }
 
 
 #############################################################
@@ -9235,6 +9785,8 @@ class BioTensorApp {
     variable c_data_tab
     variable c_left_tab
     variable c_vis_tab
+
+    variable last_B0_port
 
     
     # Procedures frame tabnotebook
@@ -9344,4 +9896,14 @@ bind all <Control-q> {
 bind all <Control-v> {
     global mods
     $mods(Viewer)-ViewWindow_0-c autoview
+}
+
+bind all <Control-n> {
+    if {[winfo exists .]} {
+	if {[winfo ismapped .]} {
+	    wm withdraw .
+	} else {
+	    wm deiconify  .
+	}
+    }
 }
