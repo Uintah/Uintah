@@ -140,7 +140,7 @@
     <!--   switchDebug      = various debugging output                      -->
     <!--____________________________________________________________________-->
    <DataArchiver>
-       <filebase>annulus2.1.uda</filebase>
+       <filebase>annulus3.0.uda</filebase>
        <outputInterval>3.0e-7</outputInterval>
      <!--
        <compression>gzip</compression>
@@ -369,26 +369,26 @@
         <MPM>
                 <crack>
                         <corner1>[-0.006,  -0.006,  0.      ]</corner1>
-                        <corner2>[-0.006,  -0.006,  0.00015 ]</corner2>
-                        <corner3>[-0.007,  -0.007,  0.00015 ]</corner3>
+                        <corner2>[-0.006,  -0.006,  0.0003 ]</corner2>
+                        <corner3>[-0.007,  -0.007,  0.0003 ]</corner3>
                         <corner4>[-0.007,  -0.007,  0.      ]</corner4>
                 </crack>
                 <crack>
                         <corner1>[-0.006,   0.006,  0.      ]</corner1>
-                        <corner2>[-0.006,   0.006,  0.00015 ]</corner2>
-                        <corner3>[-0.007,   0.007,  0.00015 ]</corner3>
+                        <corner2>[-0.006,   0.006,  0.0003 ]</corner2>
+                        <corner3>[-0.007,   0.007,  0.0003 ]</corner3>
                         <corner4>[-0.007,   0.007,  0.      ]</corner4>
                 </crack>
                 <crack>
                         <corner1>[ 0.006,  -0.006,  0.      ]</corner1>
-                        <corner2>[ 0.006,  -0.006,  0.00015 ]</corner2>
-                        <corner3>[ 0.007,  -0.007,  0.00015 ]</corner3>
+                        <corner2>[ 0.006,  -0.006,  0.0003 ]</corner2>
+                        <corner3>[ 0.007,  -0.007,  0.0003 ]</corner3>
                         <corner4>[ 0.007,  -0.007,  0.      ]</corner4>
                 </crack>
                 <crack>
                         <corner1>[ 0.006,   0.006,  0.      ]</corner1>
-                        <corner2>[ 0.006,   0.006,  0.00015 ]</corner2>
-                        <corner3>[ 0.007,   0.007,  0.00015 ]</corner3>
+                        <corner2>[ 0.006,   0.006,  0.0003 ]</corner2>
+                        <corner3>[ 0.007,   0.007,  0.0003 ]</corner3>
                         <corner4>[ 0.007,   0.007,  0.      ]</corner4>
                 </crack>
         </MPM>
