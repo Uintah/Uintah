@@ -108,7 +108,7 @@ public:
     TCLdouble memrefs;
     TCLdouble memrate;
     TCLdouble orig_error;
-    TCLdouble current_error;
+    TCLstring current_error;
     TCLstring method;
     TCLstring precond;
     TCLint iteration;
@@ -255,7 +255,14 @@ void SolveMatrix::execute()
 }
 
 
-
+#if 0
+void SolveMatrix::append_values(int, const Array1<double>&,
+				int&, const Array1<int>&,
+				const Array1<double>&,
+				int&)
+{
+}
+#endif
 
 void SolveMatrix::append_values(int niter, const Array1<double>& errlist,
 				int& last_update,
@@ -283,7 +290,6 @@ void SolveMatrix::append_values(int niter, const Array1<double>& errlist,
     last_errupdate=targetidx.size();
 }
 
-
 #ifdef SCI_SPARSELIB
 
 //********************** IML++  **************************************************
@@ -304,7 +310,7 @@ double x_init = 0.0;
 status.set("Running"); 
   TCL::execute("update idletasks");
 iteration.set(0); 
-current_error.set(0);
+current_error.set(clString("0"));
   TCL::execute("update idletasks");
 
 
@@ -350,7 +356,7 @@ else
   status.set("Failed to Converge");
 
 iteration.set(maxit);
-current_error.set(tol);	      
+current_error.set(to_string(tol));	      
  TCL::execute("update idletasks");
 
 }
@@ -371,7 +377,7 @@ void SolveMatrix::bi_conjugate_gradient(Matrix* matrix,
   status.set("Running");
   TCL::execute("update idletasks");
   iteration.set(0);
-  current_error.set(0);
+  current_error.set(to_string(0));
   TCL::execute("update idletasks");
   
   
@@ -412,7 +418,7 @@ void SolveMatrix::bi_conjugate_gradient(Matrix* matrix,
     status.set("Failed to Converge");
   
   iteration.set(maxit);
-  current_error.set(tol);	   
+  current_error.set(to_string(tol));	   
   TCL::execute("update idletasks");
   
 }
@@ -434,7 +440,7 @@ double x_init = 0.0;
 status.set("Running");
   TCL::execute("update idletasks");
 iteration.set(0);
-current_error.set(0);
+current_error.set(to_string(0));
  TCL::execute("update idletasks");
 
 VECTOR_double b(rhs.get_rhs(),size);
@@ -474,7 +480,7 @@ else
   status.set("Failed to Converge");
 
 iteration.set(maxit);
-current_error.set(tol);	   
+current_error.set(to_string(tol));	   
 
  TCL::execute("update idletasks");
 
@@ -496,7 +502,7 @@ void SolveMatrix::bi_conjugate_gradient_stab(Matrix* matrix,
   status.set("Running");
   TCL::execute("update idletasks");
   iteration.set(0);
-  current_error.set(0);
+  current_error.set(to_string(0));
   TCL::execute("update idletasks");
   
   VECTOR_double b(rhs.get_rhs(),size);
@@ -537,7 +543,7 @@ else
   status.set("Failed to Converge");
 
 iteration.set(maxit);
-current_error.set(tol);	   
+current_error.set(to_string(tol));	   
 
  TCL::execute("update idletasks");
 
@@ -558,7 +564,7 @@ double x_init = 0.0;
 status.set("Running");
 TCL::execute("update idletasks");
 iteration.set(0);
-current_error.set(0);
+current_error.set(to_string(0));
  TCL::execute("update idletasks");
 
 VECTOR_double b(rhs.get_rhs(),size);
@@ -596,7 +602,7 @@ else
   status.set("Failed to Converge");
 
 iteration.set(maxit);
-current_error.set(tol);	   
+current_error.set(to_string(tol));	   
  TCL::execute("update idletasks");
 }
 
@@ -616,7 +622,7 @@ double x_init = 0.0;
 status.set("Running");
 TCL::execute("update idletasks");
 iteration.set(0);
-current_error.set(0);
+current_error.set(to_string(0));
  TCL::execute("update idletasks");
 
 VECTOR_double b(rhs.get_rhs(),size);
@@ -656,7 +662,7 @@ else
   status.set("Failed to Converge");
 
 iteration.set(maxit);
-current_error.set(tol);	   
+current_error.set(to_string(tol));	   
  TCL::execute("update idletasks");
 
 }
@@ -676,7 +682,7 @@ double x_init = 0.0;
 status.set("Running");
 TCL::execute("update idletasks");
 iteration.set(0);
-current_error.set(0);
+current_error.set(to_string(0));
  TCL::execute("update idletasks");
 
 VECTOR_double b(rhs.get_rhs(),size);
@@ -714,7 +720,7 @@ else
   status.set("Failed to Converge");
 
 iteration.set(maxit);
-current_error.set(tol);	   
+current_error.set(to_string(tol));	   
  TCL::execute("update idletasks");
 
 }
@@ -761,7 +767,7 @@ void SolveMatrix::jacobi_sci(Matrix* matrix,
     if (!(err < 10000000)) err=1000000;
 
     orig_error.set(err);
-    current_error.set(err);
+    current_error.set(to_string(err));
 
     int niter=0;
     int toomany=maxiter.get();
@@ -832,7 +838,7 @@ void SolveMatrix::jacobi_sci(Matrix* matrix,
 
 	if(niter == 1 || niter == 5 || niter%10 == 0){
 	    iteration.set(niter);
-	    current_error.set(err);
+	    current_error.set(to_string(err));
 	    double time=timer.time();
 	    flops.set(gflop*1.e9+flop);
 	    floprate.set((gflop*1.e3+flop*1.e-6)/time);
@@ -850,7 +856,7 @@ void SolveMatrix::jacobi_sci(Matrix* matrix,
 	}
     }
     iteration.set(niter);
-    current_error.set(err);
+    current_error.set(to_string(err));
 
     time=timer.time();
     flops.set(gflop*1.e9+flop);
@@ -1006,7 +1012,7 @@ void SolveMatrix::parallel_conjugate_gradient(int processor)
     stats->grefs+=stats->memref/1000000000;
     stats->memref=stats->memref%1000000000;
     orig_error.set(data->err);
-    current_error.set(data->err);
+    current_error.set(to_string(data->err));
     
     double time=data->timer->time();
     flops.set(stats->gflop*1.e9+stats->flop);
@@ -1035,7 +1041,7 @@ void SolveMatrix::parallel_conjugate_gradient(int processor)
     if(processor==0){
 //       data->niter++;
       double new_error;
-      if(get_tcl_doublevar(id, "target_error", new_error)
+     if(get_tcl_doublevar(id, "target_error", new_error)
 	 && new_error != data->max_error){
 	targetidx.add(data->niter+1);
 	targetlist.add(data->max_error);
@@ -1103,7 +1109,7 @@ void SolveMatrix::parallel_conjugate_gradient(int processor)
       if(data->niter == 1 || data->niter == 10 || data->niter%20 == 0){
 	if(data->niter <= 60 || data->niter%60 == 0){
 	  iteration.set(data->niter);
-	  current_error.set(err);
+	  current_error.set(to_string(err));
 	  double time=timer.time();
 	  flops.set(14*stats->gflop*1.e9+stats->flop);
 	  floprate.set(14*(stats->gflop*1.e3+stats->flop*1.e-6)/time);                    memrefs.set(14*stats->grefs*1.e9+stats->memref);
@@ -1129,7 +1135,7 @@ void SolveMatrix::parallel_conjugate_gradient(int processor)
     data->niter++;
     
     iteration.set(data->niter);
-    current_error.set(err);
+    current_error.set(to_string(err));
     data->timer->stop();
     double time=data->timer->time();
     flops.set(14*stats->gflop*1.e9+stats->flop);
@@ -1276,7 +1282,7 @@ void SolveMatrix::parallel_bi_conjugate_gradient(int processor)
     stats->grefs+=stats->memref/1000000000;
     stats->memref=stats->memref%1000000000;
     orig_error.set(data->err);
-    current_error.set(data->err);
+    current_error.set(to_string(data->err));
     
     double time=data->timer->time();
     flops.set(stats->gflop*1.e9+stats->flop);
@@ -1408,7 +1414,7 @@ void SolveMatrix::parallel_bi_conjugate_gradient(int processor)
       if(data->niter == 1 || data->niter == 10 || data->niter%20 == 0){
 	if(data->niter <= 60 || data->niter%60 == 0){
 	  iteration.set(data->niter);
-	  current_error.set(err);
+	  current_error.set(to_string(err));
 	  double time=timer.time();
 	  flops.set(14*stats->gflop*1.e9+stats->flop);
 	  floprate.set(14*(stats->gflop*1.e3+stats->flop*1.e-6)/time);                    memrefs.set(14*stats->grefs*1.e9+stats->memref);
@@ -1435,7 +1441,7 @@ void SolveMatrix::parallel_bi_conjugate_gradient(int processor)
     data->niter++;
     
     iteration.set(data->niter);
-    current_error.set(err);
+    current_error.set(to_string(err));
     data->timer->stop();
     double time=data->timer->time();
     flops.set(14*stats->gflop*1.e9+stats->flop);
@@ -1456,6 +1462,9 @@ void SolveMatrix::parallel_bi_conjugate_gradient(int processor)
 
 //
 // $Log$
+// Revision 1.9  1999/09/16 00:38:11  dmw
+// fixed TCL files for SurfToGeom and SolveMatrix and added SurfToGeom to the Makefile
+//
 // Revision 1.8  1999/09/08 02:26:34  sparker
 // Various #include cleanups
 //
