@@ -161,6 +161,7 @@ Scene* make_scene(int argc, char** argv, int /*nworkers*/)
       cerr<<"  -bg <filename>      environment map image file (envmap.ppm)"<<endl;
       cerr<<"  -i <filename>       input sphere file name (null)"<<endl;
       cerr<<"  -tex <filename>     basename of texture files (./sphere)"<<endl;
+      cerr<<"  -tex_res <int>      resolution of the textures (-1)"<<endl;
       cerr<<"  -radius <float>     sphere radius (1.0)"<<endl;
       cerr<<"  -nsides <int>       number of sides for grid cells (6)"<<endl;
       cerr<<"  -depth <int>        depth of grid cells (2)"<<endl;
@@ -192,22 +193,22 @@ Scene* make_scene(int argc, char** argv, int /*nworkers*/)
     return 0;
   }
 
-  Camera cam(Point(0,0,10), Point(0,0,0), Vector(0,1,0), 45.0);
+  Camera cam(Point(-0.25,-0.1,0.1), Point(0.1,0.075,0.2), Vector(0,0,-1), 15.0);
 
   double ambient_scale=2;
   Color bgcolor(0,0,0);
   Color cdown(1,1,1);
   Color cup(1,1,1);
 
-  rtrt::Plane groundplane(Point(0,0,0), Vector(0,1,0));
+  rtrt::Plane groundplane(Point(0,0,0), Vector(0,0,-1));
   Scene* scene=new Scene(group, cam, bgcolor, cdown, cup, groundplane,
     ambient_scale, Arc_Ambient);
 
-  EnvironmentMapBackground *emap=new EnvironmentMapBackground(bg, Vector(0,1,0));
+  EnvironmentMapBackground *emap=new EnvironmentMapBackground(bg, Vector(0,0,-1));
   if (emap->valid() != true) {
     // try a local copy
     delete emap;
-    emap = new EnvironmentMapBackground("./envmap.ppm", Vector(0,1,0));
+    emap = new EnvironmentMapBackground("./envmap.ppm", Vector(0,0,-1));
     if (emap->valid() != true) {
       return 0;
     }
