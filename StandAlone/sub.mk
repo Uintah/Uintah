@@ -165,6 +165,11 @@ LIBS    := $(XML_LIBRARY) $(M_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/program.mk
 
+SRCS := $(SRCDIR)/gambitFileReader.cc
+PROGRAM := Packages/Uintah/StandAlone/gambitFileReader
+
+include $(SCIRUN_SCRIPTS)/program.mk
+
 # Convenience targets for Specific executables (use make sus)
 sus: prereqs Packages/Uintah/StandAlone/sus
 
@@ -173,3 +178,5 @@ puda: prereqs Packages/Uintah/StandAlone/puda
 compare_uda: prereqs Packages/Uintah/StandAlone/compare_uda
 
 restart_merger: prereqs Packages/Uintah/StandAlone/restart_merger
+
+gambitFileReader: prereqs Packages/Uintah/StandAlone/gambitFileReader
