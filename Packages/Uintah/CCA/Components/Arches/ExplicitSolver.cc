@@ -142,43 +142,56 @@ ExplicitSolver::problemSetup(const ProblemSpecP& params)
 					     d_physicalConsts, d_myworld);
     d_enthalpySolver->problemSetup(db);
   }
-    db->getWithDefault("timeIntegratorType",d_timeIntegratorType,"FE");
-    
-    if (d_timeIntegratorType == "FE") {
-      d_timeIntegratorLabels.push_back(scinew TimeIntegratorLabel(d_lab,
-					TimeIntegratorStepType::FE));
-    }
-    else if (d_timeIntegratorType == "RK2") {
-      d_timeIntegratorLabels.push_back(scinew TimeIntegratorLabel(d_lab,
-					TimeIntegratorStepType::OldPredictor));
-      d_timeIntegratorLabels.push_back(scinew TimeIntegratorLabel(d_lab,
-					TimeIntegratorStepType::OldCorrector));
-    }
-    else if (d_timeIntegratorType == "RK2SSP") {
-      d_timeIntegratorLabels.push_back(scinew TimeIntegratorLabel(d_lab,
-					TimeIntegratorStepType::Predictor));
-      d_timeIntegratorLabels.push_back(scinew TimeIntegratorLabel(d_lab,
-					TimeIntegratorStepType::Corrector));
-    }
-    else if (d_timeIntegratorType == "RK3SSP") {
-      d_timeIntegratorLabels.push_back(scinew TimeIntegratorLabel(d_lab,
-					TimeIntegratorStepType::Predictor));
-      d_timeIntegratorLabels.push_back(scinew TimeIntegratorLabel(d_lab,
-					TimeIntegratorStepType::Intermediate));
-      d_timeIntegratorLabels.push_back(scinew TimeIntegratorLabel(d_lab,
-					TimeIntegratorStepType::CorrectorRK3));
-    }
-    else if (d_timeIntegratorType == "BEEmulation") {
-      d_timeIntegratorLabels.push_back(scinew TimeIntegratorLabel(d_lab,
-					TimeIntegratorStepType::BEEmulation1));
-      d_timeIntegratorLabels.push_back(scinew TimeIntegratorLabel(d_lab,
-					TimeIntegratorStepType::BEEmulation2));
-      d_timeIntegratorLabels.push_back(scinew TimeIntegratorLabel(d_lab,
-					TimeIntegratorStepType::BEEmulation3));
-    }
-    else {
-      throw ProblemSetupException("Integrator type is not defined "+d_timeIntegratorType);
-    }
+
+  db->getWithDefault("timeIntegratorType",d_timeIntegratorType,"FE");
+  
+  if (d_timeIntegratorType == "FE") {
+    d_timeIntegratorLabels.push_back(scinew TimeIntegratorLabel(d_lab,
+      				     TimeIntegratorStepType::FE));
+    numTimeIntegratorLevels = 1;
+  }
+  else if (d_timeIntegratorType == "RK2") {
+    d_timeIntegratorLabels.push_back(scinew TimeIntegratorLabel(d_lab,
+      				     TimeIntegratorStepType::OldPredictor));
+    d_timeIntegratorLabels.push_back(scinew TimeIntegratorLabel(d_lab,
+      				     TimeIntegratorStepType::OldCorrector));
+    numTimeIntegratorLevels = 2;
+  }
+  else if (d_timeIntegratorType == "RK2SSP") {
+    d_timeIntegratorLabels.push_back(scinew TimeIntegratorLabel(d_lab,
+      				     TimeIntegratorStepType::Predictor));
+    d_timeIntegratorLabels.push_back(scinew TimeIntegratorLabel(d_lab,
+      				     TimeIntegratorStepType::Corrector));
+    numTimeIntegratorLevels = 2;
+  }
+  else if (d_timeIntegratorType == "RK3SSP") {
+    d_timeIntegratorLabels.push_back(scinew TimeIntegratorLabel(d_lab,
+      				     TimeIntegratorStepType::Predictor));
+    d_timeIntegratorLabels.push_back(scinew TimeIntegratorLabel(d_lab,
+      				     TimeIntegratorStepType::Intermediate));
+    d_timeIntegratorLabels.push_back(scinew TimeIntegratorLabel(d_lab,
+      				     TimeIntegratorStepType::CorrectorRK3));
+    numTimeIntegratorLevels = 3;
+  }
+  else if (d_timeIntegratorType == "BEEmulation") {
+    d_timeIntegratorLabels.push_back(scinew TimeIntegratorLabel(d_lab,
+      				     TimeIntegratorStepType::BEEmulation1));
+    d_timeIntegratorLabels.push_back(scinew TimeIntegratorLabel(d_lab,
+      				     TimeIntegratorStepType::BEEmulation2));
+    d_timeIntegratorLabels.push_back(scinew TimeIntegratorLabel(d_lab,
+      				     TimeIntegratorStepType::BEEmulation3));
+    numTimeIntegratorLevels = 3;
+  }
+  else {
+    throw ProblemSetupException("Integrator type is not defined "+d_timeIntegratorType);
+  }
+
+#ifdef PetscFilter
+    d_props->setFilter(d_turbModel->getFilter());
+//#ifdef divergenceconstraint
+    d_momSolver->setDiscretizationFilter(d_turbModel->getFilter());
+//#endif
+#endif
 }
 
 // ****************************************************************************
@@ -204,26 +217,14 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
   int nofScalars = d_props->getNumMixVars();
   int nofScalarVars = d_props->getNumMixStatVars();
 
-  // check if filter is defined...only required if using dynamic
-  // or scalesimilarity models
+  // check if filter is defined...
 #ifdef PetscFilter
   if (d_turbModel->getFilter()) {
     // if the matrix is not initialized
     if (!d_turbModel->getFilter()->isInitialized()) 
       d_turbModel->sched_initFilterMatrix(level, sched, patches, matls);
-    d_props->setFilter(d_turbModel->getFilter());
-//#ifdef divergenceconstraint
-    d_momSolver->setDiscretizationFilter(d_turbModel->getFilter());
-//#endif
   }
 #endif
-
-  if (d_timeIntegratorType == "FE")
-    numTimeIntegratorLevels = 1;
-  else if ((d_timeIntegratorType == "RK2")||(d_timeIntegratorType == "RK2SSP"))
-    numTimeIntegratorLevels = 2;
-  else if ((d_timeIntegratorType == "RK3SSP")||(d_timeIntegratorType == "BEEmulation"))
-    numTimeIntegratorLevels = 3;
 
   for (int curr_level = 0; curr_level < numTimeIntegratorLevels; curr_level ++)
   {
