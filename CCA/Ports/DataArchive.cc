@@ -215,7 +215,7 @@ DataArchive::queryGrid( double time )
 		  || r.getNodeName().equals("cellspacing")){
 	  // Nothing - handled above
 	} else if(r.getNodeName().equals("periodic")) {
-	  if(!get(r, periodicBoundaries))
+	  if(!get(r, "periodic", periodicBoundaries))
 	    throw InternalError("Error parsing peridoc");
 	} else if(r.getNodeType() != DOM_Node::TEXT_NODE){
 	  cerr << "WARNING: Unknown level data: " << ::toString(n.getNodeName()) << '\n';
