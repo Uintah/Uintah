@@ -75,6 +75,8 @@ MPIScheduler::problemSetup(const ProblemSpecP& prob_spec)
 
 MPIScheduler::~MPIScheduler()
 {
+  if( ss_ )
+    delete ss_;
 }
 
 SchedulerP
@@ -547,21 +549,22 @@ MPIScheduler::execute(const ProcessorGroup * pg )
    TAU_PROFILE_TIMER(sendrecvtimer, "Initial Send Recv", "[MPIScheduler::execute()] ", 
 	TAU_USER); 
 
-
-  ASSERT(pg_ == 0);
-  pg_ = pg;
-  
   if(dts_ == 0){
     cerr << "MPIScheduler skipping execute, no tasks\n";
     return;
   }
+
+  ASSERT(pg_ == 0);
+  pg_ = pg;
+  
   dbg << "MPIScheduler executing\n";
   dts_->initTimestep();
 
   d_labels.clear();
   d_times.clear();
   emitTime("time since last execute");
-  delete ss_;
+  if( ss_ )
+    delete ss_;
   ss_ = scinew SendState;
   // We do not use many Bsends, so this doesn't need to be
   // big.  We make it moderately large anyway - memory is cheap.
