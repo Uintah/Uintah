@@ -10,8 +10,6 @@
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
 
-#include <Dataflow/share/share.h>
-
 //#include <Dataflow/Widgets/ViewPointWidget.h>
 #include <Dataflow/Ports/ColorMapPort.h>
 #include <Dataflow/Ports/GeometryPort.h>
@@ -27,7 +25,7 @@ using namespace SCIRun;
 
 extern GeometryData* SilhouettesGeometryData;
 
-class PSECORESHARE Silhouettes : public Module {
+class Silhouettes : public Module {
 
 public:
   Silhouettes(GuiContext*);

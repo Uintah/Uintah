@@ -1,10 +1,10 @@
-# SCIRun Network v1.23.0
+# SCIRun Network v1.24.0
 
 
 set name {Main}
 set bbox {10 14 539 653}
-set creationDate {Tue Nov 02 2004}
-set creationTime {13:26:26}
+set creationDate {Mon Nov 15 2004}
+set creationTime {19:57:37}
 set runDate {}
 set runTime {}
 set notes {}
@@ -59,9 +59,9 @@ set c14 [addConnection $m10 0 $m1 2]
 set $m1-datasets {{Points : Unknown} {Connections : (none)} {Data : Unknown} {Original Field : (none)} }
 
 # Set GUI variables for the SCIRun->Visualization->Isosurface Module
+set $m2-isoval-min {221.848}
+set $m2-isoval-max {280374}
 set $m2-isoval {151780}
-set $m2-isoval-min {221.847900391}
-set $m2-isoval-max {280373.875}
 set $m2-build_geom {0}
 
 # Set GUI variables for the SCIRun->Visualization->ShowField Module
@@ -78,18 +78,18 @@ set $m5-min {221.847900391}
 set $m5-max {280373.875}
 
 $m6 addViewer
-set $m6-ViewWindow_0-geometry 654x568+2461+193
+set $m6-ViewWindow_0-geometry 654x567+630+44
 
 # Set GUI variables for the SCIRun->Render->Viewer Module
-set $m6-ViewWindow_0-view-eyep-x {9.22550178925}
-set $m6-ViewWindow_0-view-eyep-y {9.11194619872}
-set $m6-ViewWindow_0-view-eyep-z {9.57706867397}
+set $m6-ViewWindow_0-view-eyep-x {11.6649421729}
+set $m6-ViewWindow_0-view-eyep-y {11.0773244423}
+set $m6-ViewWindow_0-view-eyep-z {0.85609893476}
 set $m6-ViewWindow_0-view-lookat-x {0.0}
 set $m6-ViewWindow_0-view-lookat-y {-0.0714583992958}
 set $m6-ViewWindow_0-view-lookat-z {0.00377868115902}
-set $m6-ViewWindow_0-view-up-x {-0.539125975642}
-set $m6-ViewWindow_0-view-up-y {-0.284701235857}
-set $m6-ViewWindow_0-view-up-z {0.79264644621}
+set $m6-ViewWindow_0-view-up-x {-0.209010665338}
+set $m6-ViewWindow_0-view-up-y {0.144749730431}
+set $m6-ViewWindow_0-view-up-z {0.967141177551}
 set $m6-ViewWindow_0-view-fov {20.0}
 set $m6-ViewWindow_0-sr {1}
 set $m6-ViewWindow_0-do_stereo {0}
@@ -140,10 +140,10 @@ set $m8-has_scalar_data {1}
 set $m8-active_tab {Faces}
 
 # Set GUI variables for the Teem->DataIO->NrrdReader Module
-set $m9-filename "/z/home/sci/allen/SCIRun/linux/MeshPoints.nd.nrrd"
+set $m9-filename "/Volumes/Projects/SCIRun/osx/MeshPoints.nd.nrrd"
 
 # Set GUI variables for the Teem->DataIO->NrrdReader Module
-set $m10-filename "/z/home/sci/allen/SCIRun/linux/FieldData.nd.nrrd"
+set $m10-filename "/Volumes/Projects/SCIRun/osx/FieldData.nd.nrrd"
 
 
 ::netedit scheduleok
