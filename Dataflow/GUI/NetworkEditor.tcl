@@ -1059,11 +1059,17 @@ proc SCIRunNew_source { args } {
     if { [file exists $args] } {    
 	return [uplevel 1 SCIRunBackup_source \{$args\}]
     }
+
     set lastSettings [string last .settings $args]
-    if { $lastSettings != -1 && \
+    if { ($lastSettings != -1) && \
 	     ([expr [string length $args] - $lastSettings] == 9) } {
 	set file "[netedit getenv SCIRUN_SRCDIR]/nets/default.settings"
-	displayErrorWarningOrInfo "*** The settings file '$args'  was not found.  Loading the default file:\n     $file" warning
+	global recentlyWarnedAboutDefaultSettings
+	if { ![info exists recentlyWarnedAboutDefaultSettings] } {
+	    set recentlyWarnedAboutDefaultSettings 1
+	    after 10000 uplevel \#0 unset recentlyWarnedAboutDefaultSettings
+	    displayErrorWarningOrInfo "*** The settings file '$args'  was not found.  Loading the default file:\n     $file" warning
+	}
 	return [uplevel 1 SCIRunBackup_source \{$file\}]
     }
     puts "SCIRun TCL cannot source \'$args\': File does not exist."
@@ -1117,8 +1123,6 @@ proc showChooseDatasetPrompt { initialdir } {
 # Returns "DATADIR DATASET"
 #
 proc sourceSettingsFile {} {
-    renameSourceCommand
-    
     # Attempt to get environment variables:
     set DATADIR [netedit getenv SCIRUN_DATA]
     set DATASET [netedit getenv SCIRUN_DATASET]
@@ -1127,33 +1131,39 @@ proc sourceSettingsFile {} {
 	# if env var SCIRUN_DATASET not set... default to sphere:
 	set DATASET sphere
     } 
+    global recentlyCalledSourceSettingsFile
+    if { ![info exists recentlyCalledSourceSettingsFile] } {
     
-    set initialdir ""
-    while {![string length [glob -nocomplain "$DATADIR/$DATASET/$DATASET*"]]} {
-	case [showInvalidDatasetPrompt] {
-	    1 "set data [showChooseDatasetPrompt $initialdir]"
-	    2 { 
-		displayErrorWarningOrInfo "*** SCIRUN_DATA not set.  Reader modules will need to be manually set to valid filenames." warning
-		break
+	set initialdir ""
+	while {![string length [glob -nocomplain "$DATADIR/$DATASET/$DATASET*"]]} {
+	    case [showInvalidDatasetPrompt] {
+		1 "set data [showChooseDatasetPrompt $initialdir]"
+		2 { 
+		    displayErrorWarningOrInfo "*** SCIRUN_DATA not set.  Reader modules will need to be manually set to valid filenames." warning
+		    break
+		}
+		3 {
+		    ::netedit quit
+		}
 	    }
-	    3 {
-		::netedit quit
-	    }
+	    if { [string length $data] } {
+		set initialdir $data
+		set data [file split $data]
+		set DATASET [lindex $data end]
+		set DATADIR [eval file join [lrange $data 0 end-1]]
+	    }	      
 	}
-	if { [string length $data] } {
-	    set initialdir $data
-	    set data [file split $data]
-	    set DATASET [lindex $data end]
-	    set DATADIR [eval file join [lrange $data 0 end-1]]
-	}	      
+
+	displayErrorWarningOrInfo "*** Using SCIRUN_DATA=$DATADIR" info
+	displayErrorWarningOrInfo "*** Using SCIRUN_DATASET=$DATASET" info
+	set recentlyCalledSourceSettingsFile 1
+	after 10000 uplevel \#0 unset recentlyCalledSourceSettingsFile
+
     }
 
-    displayErrorWarningOrInfo "*** Using SCIRUN_DATA=$DATADIR" info
-    displayErrorWarningOrInfo "*** Using SCIRUN_DATASET=$DATASET" info
-
     set settings "$DATADIR/$DATASET/$DATASET.settings"
+    renameSourceCommand
     uplevel \#0 source $settings
-
     return "$DATADIR $DATASET"
 }
 
