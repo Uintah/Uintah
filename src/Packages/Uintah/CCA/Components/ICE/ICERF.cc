@@ -71,7 +71,6 @@ void ICE::actuallyComputeStableTimestepRF(const ProcessorGroup*,
     IntVector numCells(patch->getHighIndex() - patch->getLowIndex());
     //__________________________________
     // which dimensions are relevant
-
     int mat_id = 0;
     if ( patch->getBCValues(mat_id,"Symmetric",Patch::xminus) || 
          patch->getBCValues(mat_id,"Symmetric",Patch::xplus)  || 
@@ -182,10 +181,14 @@ void ICE::computeRateFormPressure(const ProcessorGroup*,
     StaticArray<constCCVariable<double> > sp_vol_CC(numMatls);
 
     constCCVariable<double> press;
-    CCVariable<double> press_new; 
+    CCVariable<double> press_new, press_copy; 
     Ghost::GhostType  gn = Ghost::None;
-    old_dw->get(press,         lb->press_CCLabel, 0,patch,gn, 0); 
+    //__________________________________
+    //  Implicit pressure calc. needs two copies of press 
+    old_dw->get(press,                lb->press_CCLabel, 0,patch,gn, 0); 
     new_dw->allocateAndPut(press_new, lb->press_equil_CCLabel, 0,patch);
+    new_dw->allocateAndPut(press_copy,lb->press_CCLabel,       0,patch);
+
     
     for (int m = 0; m < numMatls; m++) {
       ICEMaterial* matl = d_sharedState->getICEMaterial(m);
@@ -252,6 +255,7 @@ void ICE::computeRateFormPressure(const ProcessorGroup*,
 
     //__________________________________
     //  Set BCs matl_press, press
+    // implicit pressure calc. needs two copies of the pressure
     for (int m = 0; m < numMatls; m++)   {
       Material* matl = d_sharedState->getMaterial( m );
       int indx = matl->getDWIndex();
@@ -260,6 +264,8 @@ void ICE::computeRateFormPressure(const ProcessorGroup*,
     }  
     setBC(press_new,  rho_micro[SURROUND_MAT],
          "rho_micro", "Pressure", patch, d_sharedState, 0, new_dw);
+         
+    press_copy.copyData(press_new);
     //__________________________________
     // carry rho_cc forward for MPMICE
     // carry sp_vol_CC forward for ICE:computeEquilibrationPressure
