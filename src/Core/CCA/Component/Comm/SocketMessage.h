@@ -19,14 +19,22 @@
 #ifndef SOCKET_MESSAGE_H
 #define SOCKET_MESSAGE_H 
 
+///////////////////////////////
+//message layout
+//   [size(long)] [id (int)] [other marshaled segements]
+//
+//
+
 #include <Core/CCA/Component/Comm/Message.h>
 
 namespace SCIRun {
   class SocketEpChannel;
+  class SocketSpChannel;
   class SocketMessage : public Message {
   public:
-    SocketMessage();
-    SocketMessage(SocketEpChannel* sep);
+    SocketMessage(void *msg);
+    SocketMessage(SocketEpChannel* ep);
+    SocketMessage(SocketSpChannel* sp);
     virtual ~SocketMessage();
     void* getLocalObj();
     void createMessage();
@@ -56,7 +64,9 @@ namespace SCIRun {
     int capacity;
     int msg_size;
     static const int INIT_SIZE=1024;
-    SocketEpChannel *sep;
+    SocketEpChannel *ep;
+    SocketSpChannel *sp;
+    bool isEp;
   };
 }
 

@@ -32,8 +32,8 @@
 #include <Core/CCA/Component/Comm/SocketSpChannel.h>
 #include <Core/CCA/Component/Comm/CommError.h>
 #include <Core/CCA/Component/Comm/SocketMessage.h>
-#include <Core/CCA/Component/Comm/SocketThreads.h>
-
+#include <Core/CCA/Component/Comm/SocketThread.h>
+#include <Core/Thread/Thread.h>
 
 using namespace std;
 using namespace SCIRun;
@@ -98,7 +98,7 @@ string SocketEpChannel::getUrl() {
 
 void SocketEpChannel::activateConnection(void* obj){
   object=obj;
-  Thread* t = new Thread(new SocketAcceptThread(this), "SocketAcceptThread", 0, Thread::Activated);
+  Thread* t = new Thread(new SocketThread(this, -1), "SocketAcceptThread", 0, Thread::Activated);
   t->detach();
 }
 
@@ -139,17 +139,39 @@ SocketEpChannel::runAccept(){
 			 &sin_size)) == -1) {
       throw CommError("accept", errno);
     }
+
     printf("server: got connection from %s\n",
 	   inet_ntoa(their_addr.sin_addr));
-    /*
-      if (!fork()) { // this is the child process
-      close(sockfd); // child doesn't need the listener
-      if (send(new_fd, "Hello, world!\n", 14, 0) == -1)
-	perror("send");
-      close(new_fd);
-      exit(0);
+
+    int headerSize=sizeof(long)+sizeof(int);
+    void *buf=malloc(headerSize);
+    int numbytes;
+    if ((numbytes=recv(new_fd, buf, headerSize, 0)) == -1) {
+      throw CommError("recv", errno);
     }
-    */
+    int msg_size;
+    int id;
+    memcpy(&msg_size, buf, sizeof(long));
+    memcpy(&id, (char*)buf+sizeof(long), sizeof(int));
+
+    buf=realloc(buf, msg_size-headerSize);
+    if ((numbytes=recv(new_fd, buf, msg_size-headerSize, 0)) == -1) {
+      throw CommError("recv", errno);
+    }
+
+    
+    Thread* t = new Thread(new SocketThread(this, id), "SocketHandlerThread", 0, Thread::Activated);
+    t->detach();
+    
+    if(id==0) break;
+
+    cerr<<"server recv: msg_size="<<msg_size;
+    cerr<<"server recv: id="<<id;
+
+    //The SocketThread is responsible to free the buf.
+
+    
+
     close(new_fd);  // parent doesn't need this
   }  
 }

@@ -24,6 +24,7 @@
 namespace SCIRun {
   using namespace std;
   class SocketSpChannel : public SpChannel {
+    friend class SocketMessage;
   public:
 
     SocketSpChannel();

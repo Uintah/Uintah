@@ -30,6 +30,8 @@
 #include <Core/CCA/Component/Comm/SocketSpChannel.h>
 #include <Core/CCA/Component/Comm/SocketMessage.h>
 #include <Core/CCA/Component/PIDL/URL.h>
+#include <Core/Thread/Thread.h>
+
 
 using namespace std;
 using namespace SCIRun;
@@ -105,7 +107,7 @@ Message* SocketSpChannel::getMessage() {
   if (sockfd == 0)
     return NULL;
   if (msg == NULL)
-    msg = new SocketMessage();
+    msg = new SocketMessage(this);
   return msg;
 }
 
