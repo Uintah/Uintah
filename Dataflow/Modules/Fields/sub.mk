@@ -41,6 +41,7 @@ SRCS     += \
 	$(SRCDIR)/EditField.cc\
 	$(SRCDIR)/FieldBoundary.cc\
 	$(SRCDIR)/GatherPoints.cc\
+	$(SRCDIR)/GenDistanceField.cc\
 	$(SRCDIR)/Gradient.cc\
 	$(SRCDIR)/ManageFieldData.cc\
 	$(SRCDIR)/ManageFieldSet.cc\
