@@ -58,6 +58,7 @@ using namespace std;
 // multiple threads at the same time)
 Mutex cerrLock( "cerr lock" );
 DebugStream mixedDebug( "MixedScheduler Debug Output Stream", false );
+DebugStream fullDebug( "MixedScheduler Full Debug", false );
 
 static
 void
@@ -86,12 +87,16 @@ usage( const std::string & message,
 	cerr << "Error parsing argument: " << badarg << '\n';
       cerr << "Usage: " << progname << " [options] <input_file_name>\n\n";
       cerr << "Valid options are:\n";
+      cerr << "-h[elp]              : This usage information.\n";
       cerr << "-mpm                 : \n";
       cerr << "-ice                 : \n";
       cerr << "-arches              : \n";
-      cerr << "-nthreads <#>        : \n";
+      cerr << "-nthreads <#>        : Only good with MixedScheduler\n";
       cerr << "-scheduler <name>    : Don't specify, use system default!\n";
-      cerr << "-loadbalancer <name> : Don't specify, use system default!\n";
+      cerr << "-loadbalancer <name> : Usually use system default.\n";
+      cerr << "          NirvanaLoadBalancer [or NLB for short]\n";
+      cerr << "-layout NxMxO        : Eg: 2x1x1.  MxNxO must equal number\n";
+      cerr << "                           of boxes you are using.\n";
       cerr << "-emit_taskgraphs     : Output taskgraph information\n";
       cerr << "-restart             : Give the checkpointed uda directory as the input file\n";
       cerr << "-t <timestep>        : Restart timestep (last checkpoint is default)\n";
@@ -133,11 +138,22 @@ main(int argc, char** argv)
     IntVector layout(1,1,1);
 
     /*
+     * Initialize MPI
+     */
+    Uintah::Parallel::initializeManager( argc, argv, scheduler );
+    #ifdef USE_VAMPIR
+    VTsetup();
+    #endif
+
+
+    /*
      * Parse arguments
      */
     for(int i=1;i<argc;i++){
 	string s=argv[i];
-	if(s == "-mpm"){
+	if( (s == "-help") || (s == "-h") ) {
+	  usage( "", "", argv[0]);
+	} else if(s == "-mpm"){
 	    do_mpm=true;
 	} else if(s == "-arches"){
 	    do_arches=true;
@@ -225,16 +241,6 @@ main(int argc, char** argv)
     SimulationController::start_addr = (char*)sbrk(0);
     Thread::disallow_sgi_OpenGL_page0_sillyness();
 
-    /*
-     * Initialize MPI
-     */
-    Uintah::Parallel::initializeManager( argc, argv, scheduler );
-    #ifdef USE_VAMPIR
-    VTsetup();
-    #endif
-
-    // Must do this check after Parallel::initializeManager, as it
-    // sets "usingMPI".
     if(scheduler == ""){
        if(Uintah::Parallel::usingMPI()){
 	  scheduler="MPIScheduler"; // Default for parallel runs
@@ -303,8 +309,9 @@ main(int argc, char** argv)
 	   bal = scinew RoundRobinLoadBalancer(world);
 	} else if(loadbalancer == "SimpleLoadBalancer") {
 	   bal = scinew SimpleLoadBalancer(world);
-	} else if(loadbalancer == "NirvanaLoadBalancer") {
-	   bal = scinew NirvanaLoadBalancer(world, layout);
+	} else if( (loadbalancer == "NirvanaLoadBalancer") ||
+		   (loadbalancer == "NLB") ) {
+	  bal = scinew NirvanaLoadBalancer(world, layout);
 	} else {
 	   bal = 0;
 	   quit( "Unknown load balancer: " + loadbalancer );
