@@ -47,12 +47,21 @@ void CutPlane::intersect(Ray& ray, HitInfo& hit, DepthStats* st,
     Vector dir(ray.direction());
     Point orig(ray.origin());
     double dt=Dot(dir, n);
-    if(dt < 1.e-6 && dt > -1.e-6)
-      // perpendicular to the plane, so there are no intersections
-      return;
+    double plane=Dot(n, orig)-d;
+    if(dt < 1.e-6 && dt > -1.e-6) {
+      // perpendicular to the plane, so we need to figure out which
+      // side of the plane we are on.
+      if (plane <= 0) {
+	// on the back side of the plane, so there is not intersection
+	return;
+      } else {
+	// We need to just compute the intersection with the object
+	child->intersect(ray, hit, st, ppc);
+	return;
+      }
+    }
     double t=(d-Dot(n, orig))/dt;
     HitInfo newhit;
-    double plane=Dot(n, orig)-d;
     if(plane > 0){
       child->intersect(ray, newhit, st, ppc);
       // On near side of plane...so try to intersect the object first.
@@ -126,6 +135,19 @@ void CutPlane::light_intersect(Ray& ray, HitInfo& hit, Color& atten,
     Vector dir(ray.direction());
     Point orig(ray.origin());
     double dt=Dot(dir, n);
+    double plane=Dot(n, orig)-d;
+    if(dt < 1.e-6 && dt > -1.e-6) {
+      // perpendicular to the plane, so we need to figure out which
+      // side of the plane we are on.
+      if (plane <= 0) {
+	// on the back side of the plane, so there is not intersection
+	return;
+      } else {
+	// We need to just compute the intersection with the object
+	child->light_intersect(ray, hit, atten, st, ppc);
+	return;
+      }
+    }
     if(dt < 1.e-6 && dt > -1.e-6)
       // perpendicular to the plane, so there are no intersections
       return;
@@ -133,7 +155,6 @@ void CutPlane::light_intersect(Ray& ray, HitInfo& hit, Color& atten,
     HitInfo newhit;
     Color newatten(1,1,1);
     Point p(orig+dir*t);
-    double plane=Dot(n, orig)-d;
     if(plane > 0){
       newhit.min_t = hit.min_t;
       child->light_intersect(ray, newhit, newatten, st, ppc);
@@ -160,10 +181,11 @@ void CutPlane::light_intersect(Ray& ray, HitInfo& hit, Color& atten,
 	  // Need to compute intersection with the child
 	  Point p(orig+dir*t);
 	  Ray newray(p, dir);
-	  child->intersect(newray, newhit, st, ppc);
+	  child->light_intersect(newray, newhit, newatten, st, ppc);
 	  if(newhit.was_hit){
 	    hit=newhit;
 	    hit.min_t+=t;
+	    atten=newatten;
 	  }
 	}
       } else {
@@ -183,7 +205,7 @@ void CutPlane::light_intersect(Ray& ray, HitInfo& hit, Color& atten,
     }
   } else {
     // just call the intersection on the child
-    child->intersect(ray, hit, st, ppc);
+    child->light_intersect(ray, hit, atten, st, ppc);
   }
 }
 
