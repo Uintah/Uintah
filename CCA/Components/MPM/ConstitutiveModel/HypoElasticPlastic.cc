@@ -742,6 +742,25 @@ HypoElasticPlastic::computeStressTensor(const PatchSubset* patches,
       state->shearModulus = mu_cur ;
       state->meltingTemp = Tm_cur ;
 
+      // Check if the particle has localized
+      if (temperature > Tm_cur) {
+        pDeformGrad_new[idx] = pDeformGrad[idx];;
+        pStress_new[idx] = pStress[idx];
+        pVolume_deformed[idx] = pVolume[idx];
+
+        pLeftStretch_new[idx] = pLeftStretch[idx]; 
+        pRotation_new[idx] = pRotation[idx]; 
+        pStrainRate_new[idx] = pStrainRate[idx];
+        pPlasticStrain_new[idx] = pPlasticStrain[idx];
+        pDamage_new[idx] = pDamage[idx];
+        pPorosity_new[idx] = pPorosity[idx];
+	pLocalized_new[idx] = 1;
+        pPlasticTemperature_new[idx] = pPlasticTemperature[idx];
+        pPlasticTempInc_new[idx] = 0.0;
+        d_plastic->updateElastic(idx);
+        continue;
+      }
+
       // Calculate the updated hydrostatic stress
       double p = d_eos->computePressure(matl, state, tensorF_new, tensorD, 
                                         delT);
