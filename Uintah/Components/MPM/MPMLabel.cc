@@ -117,6 +117,9 @@ MPMLabel::MPMLabel()
   cSurfaceNormalLabel = new VarLabel( "c.surfaceNormalLabel",
 			CCVariable<Vector>::getTypeDescription() );
   
+  cBurnedMassLabel = new VarLabel( "c.burnedMass",
+			CCVariable<double>::getTypeDescription() );
+
   // Reduction variables
 
   delTLabel = new VarLabel( "delT", delt_vartype::getTypeDescription() );
@@ -142,6 +145,9 @@ const MPMLabel* MPMLabel::getLabels()
 }
 
 // $Log$
+// Revision 1.9  2000/06/13 23:06:38  guilkey
+// Added a CCVariable for the burned particle mass to go into.
+//
 // Revision 1.8  2000/06/08 16:56:51  guilkey
 // Added tasks and VarLabels for HE burn model stuff.
 //
