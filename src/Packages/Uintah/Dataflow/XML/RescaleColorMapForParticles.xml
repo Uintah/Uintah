@@ -16,7 +16,7 @@
   <io>
     <inputs lastportdynamic="no">
       <port>
-        <name>Scalar Particles</name>
+        <name>ScalarParticles</name>
         <datatype>Uintah::ScalarParticles</datatype>
       </port>
      <port>
