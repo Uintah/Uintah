@@ -364,6 +364,13 @@ public:
 			   ArchesVariables* vars,
 			   ArchesConstVariables* constvars);
       
+      // applies multimaterial bc's for enthalpy
+      void mmEnthalpyWallBC( const ProcessorGroup*,
+			     const Patch* patch,
+			     CellInformation* cellinfo,
+			     ArchesVariables* vars,
+			     ArchesConstVariables* constvars);
+      
       ////////////////////////////////////////////////////////////////////////
       // Calculate uhat for multimaterial case (only for nonintrusion cells)
       void calculateVelRhoHat_mm(const ProcessorGroup* /*pc*/,
