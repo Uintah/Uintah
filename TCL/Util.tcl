@@ -146,17 +146,12 @@ itcl_class expscale {
     }
     method setscales {} {
 	global $variable
-	puts "variable is $variable"
 	set value [set $variable]
 	set mag [expr pow(10, $exp)]
-	puts "mag is $mag"
 	# Round the value down to get from...
-	puts "value is $value"
 	set from [expr int($value/$mag)*$mag]
-	puts "from is $from"
 
 	set to [expr $from+$mag*$sign]
-	puts "to is $to"
 	set ti [expr $mag/5]
 	$this.scale configure -from $from -to $to -tickinterval $mag
 
