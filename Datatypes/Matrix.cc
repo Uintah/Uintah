@@ -12,6 +12,7 @@
  */
 
 #include <Datatypes/Matrix.h>
+#include <Classlib/NotFinished.h>
 
 PersistentTypeID Matrix::type_id("Matrix", "Datatype", 0);
 
@@ -26,6 +27,7 @@ Matrix::~Matrix()
 
 void Matrix::io(Piostream&)
 {
+    NOT_FINISHED("Matrix::io");
 }
 
 Matrix* Matrix::clone()

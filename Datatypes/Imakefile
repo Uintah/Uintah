@@ -1,7 +1,8 @@
 
 #include <config/sci.cf>
 
-OBJS = ColumnMatrix.o  ContourSet.o  ContourSetPort.o  \
+OBJS = Colormap.o  ColormapPort.o  ColumnMatrix.o  \
+	ContourSet.o  ContourSetPort.o  \
 	Datatype.o  DenseMatrix.o  \
 	GeometryPort.o  \
 	Matrix.o  MatrixPort.o  Mesh.o  MeshPort.o  ScalarField.o  \
@@ -9,7 +10,8 @@ OBJS = ColumnMatrix.o  ContourSet.o  ContourSetPort.o  \
 	SoundPort.o  Surface.o  SurfacePort.o  TriSurface.o  \
 	VectorField.o  \
 	VectorFieldPort.o  VectorFieldRG.o  VectorFieldUG.o
-SRCS = ColumnMatrix.cc ContourSet.cc ContourSetPort.cc \
+SRCS = Colormap.cc ColormapPort.cc ColumnMatrix.cc \
+	ContourSet.cc ContourSetPort.cc \
 	Datatype.cc DenseMatrix.cc \
 	GeometryPort.cc \
 	Matrix.cc MatrixPort.cc Mesh.cc MeshPort.cc ScalarField.cc \
