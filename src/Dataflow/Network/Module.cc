@@ -111,15 +111,30 @@ static oport_maker FindOPort(const string &package, const string &datatype)
 Module::Module(const string& name, GuiContext* ctx,
 	       SchedClass sched_class, const string& cat,
 	       const string& pack)
-  : mailbox("Module execution FIFO", 100), gui(ctx->getInterface()),
-    ctx(ctx), name(name), moduleName(name), packageName(pack),
-    categoryName(cat), sched(0), pid_(0), have_own_dispatch(0),
-    helper_done("Module helper finished flag"), id(ctx->getfullname()), 
-    abort_flag(0), msgStream_(ctx->subVar("msgStream")), need_execute(0),
-    sched_class(sched_class), state(NeedData), msg_state(Reset), 
+  : mailbox("Module execution FIFO", 100),
+    gui(ctx->getInterface()),
+    ctx(ctx),
+    name(name),
+    moduleName(name),
+    packageName(pack),
+    categoryName(cat),
+    sched(0),
+    pid_(0),
+    have_own_dispatch(0),
+    helper_done("Module helper finished flag"),
+    id(ctx->getfullname()), 
+    abort_flag(0),
+    msgStream_(ctx->subVar("msgStream")),
+    need_execute(0),
+    sched_class(sched_class),
+    state(NeedData),
+    msg_state(Reset), 
     progress(0),
-    show_stat(false), helper(0), network(0), 
-    notes(ctx->subVar("notes")), show_status(ctx->subVar("show_status"))
+    show_stat(false),
+    helper(0),
+    network(0), 
+    notes(ctx->subVar("notes")),
+    show_status(ctx->subVar("show_status"))
 {
   stacksize=0;
 
@@ -260,6 +275,8 @@ void Module::update_progress(double p)
   if (!show_stat) return;
   if (state == JustStarted)
     update_state(Executing);
+  if (p < 0.0) p = 0.0;
+  if (p > 1.0) p = 1.0;
   int opp=(int)(progress*100);
   int npp=(int)(p*100);
   if(opp != npp){
@@ -274,6 +291,8 @@ void Module::update_progress(double p, Timer &t)
   if (!show_stat) return;
   if (state == JustStarted)
     update_state(Executing);
+  if (p < 0.0) p = 0.0;
+  if (p > 1.0) p = 1.0;
   int opp=(int)(progress*100);
   int npp=(int)(p*100);
   if(opp != npp){
@@ -636,21 +655,24 @@ void Module::setPid(int pid)
 void Module::error(const string& str)
 {
   //gui->postMessage("ERROR: " + moduleName + ": " + str, true);
-  msgStream_ << "ERROR: " << str << endl;
+  msgStream_ << "ERROR: " << str << '\n';
+  msgStream_.flush();
   update_msg_state(Error); 
 }
 
 void Module::warning(const string& str)
 {
   // gui->postMessage("WARNING: " + moduleName + ": " + str, false);
-  msgStream_ << "WARNING: " << str << endl;
+  msgStream_ << "WARNING: " << str << '\n';
+  msgStream_.flush();
   update_msg_state(Warning); 
 }
 
 void Module::remark(const string& str)
 {
   //gui->postMessage("REMARK: " + moduleName + ": " + str, false);
-  msgStream_ << "REMARK: " << str << endl;
+  msgStream_ << "REMARK: " << str << '\n';
+  msgStream_.flush();
   update_msg_state(Remark); 
 }
 

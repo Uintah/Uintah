@@ -1,3 +1,0 @@
-void mmcelltypeinit(IntVector indexLow, IntVector indexHigh,
-	CCVariable<double> voidfrac, CCVariable<int> pcell,
-	int mmwallid, int flowcellid, double cutoff);

@@ -41,8 +41,6 @@ itcl_class BioPSE_Forward_InsertVoltageSource {
     method set_defaults {} {
 	global $this-outside
 	set $this-outside 1
-	global $this-averaging
-	set $this-averaging 1
 	global $this-groundfirst
 	set $this-groundfirst 0
     }
@@ -59,14 +57,11 @@ itcl_class BioPSE_Forward_InsertVoltageSource {
 	global $this-outside
 	checkbutton $w.f.o -text "Interpolate outside mesh" \
 		-variable $this-outside
-	global $this-averaging
-	checkbutton $w.f.a -text "Average interpolated values" \
-		-variable $this-averaging
 	global $this-groundfirst
 	checkbutton $w.f.g -text "Ground first node of second field" \
 		-variable $this-groundfirst
 	
-	pack $w.f.o $w.f.a $w.f.g -side top -fill x -expand yes -padx 5 -pady 5
+	pack $w.f.o $w.f.g -side top -fill x -expand yes -padx 5 -pady 5
         pack $w.f -side top -fill x -expand yes
     }
 }

@@ -180,6 +180,71 @@ void GeomLines::add(const Point& p1, const Point& p2)
   pts.add(p2);
 }
 
+
+Persistent* make_GeomCLines()
+{
+    return new GeomCLines();
+}
+
+PersistentTypeID GeomCLines::type_id("GeomCLines", "GeomObj", make_GeomCLines);
+
+GeomCLines::GeomCLines()
+  : line_width_(1.0)
+{
+}
+
+GeomCLines::GeomCLines(const GeomCLines& copy)
+  : line_width_(copy.line_width_),
+    points_(copy.points_),
+    colors_(copy.colors_)
+{
+}
+
+GeomCLines::~GeomCLines()
+{
+}
+
+GeomObj* GeomCLines::clone()
+{
+  return new GeomCLines(*this);
+}
+
+void GeomCLines::get_bounds(BBox& bb)
+{
+  for(unsigned int i=0;i<points_.size();i++)
+    bb.extend(points_[i]);
+}
+
+#define GEOMLINES_VERSION 1
+
+void GeomCLines::io(Piostream& stream)
+{
+
+    stream.begin_class("GeomCLines", GEOMLINES_VERSION);
+    GeomObj::io(stream);
+    Pio(stream, points_);
+    stream.end_class();
+}
+
+bool GeomCLines::saveobj(ostream&, const string&, GeomSave*)
+{
+#if 0
+    NOT_FINISHED("GeomCLines::saveobj");
+    return false;
+#else
+    return true;
+#endif
+}
+
+void GeomCLines::add(const Point& p1, const Color &c1,
+		     const Point& p2, const Color &c2)
+{
+  points_.push_back(p1);
+  points_.push_back(p2);
+  colors_.push_back(c1);
+  colors_.push_back(c2);
+}
+
 // for lit streamlines
 Persistent* make_TexGeomLines()
 {

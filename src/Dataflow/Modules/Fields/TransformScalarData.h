@@ -55,19 +55,20 @@ TransformScalarDataAlgoT<FIELD, LOC>::execute(FieldHandle field_h,
 {
   FIELD *ifield = dynamic_cast<FIELD *>(field_h.get_rep());
   FIELD *ofield = ifield->clone();
-  typename FIELD::mesh_handle_type mesh = ifield->get_typed_mesh();
 
-  typename LOC::iterator itr, eitr;
-  mesh->begin(itr);
-  mesh->end(eitr);
-  while (itr != eitr)
+  typename FIELD::fdata_type::iterator ibi, iei, obi;
+  ibi = ifield->fdata().begin();
+  iei = ifield->fdata().end();
+  obi = ofield->fdata().begin();
+
+  while (ibi != iei)
   {
-    typename FIELD::value_type val;
-    ifield->value(val, *itr);
+    typename FIELD::value_type val = *ibi;
     double tmp = (double)val;
-    val = (typename FIELD::value_type)(f->eval(&tmp));
-    ofield->set_value(val, *itr);
-    ++itr;
+    *obi = (typename FIELD::value_type)(f->eval(&tmp));
+    ++ibi;
+    ++obi;
+
   }
 
   return ofield;

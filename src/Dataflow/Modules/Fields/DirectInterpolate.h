@@ -35,11 +35,13 @@ namespace SCIRun {
 class DirectInterpScalarAlgoBase : public DynamicAlgoBase
 {
 public:
-  virtual FieldHandle execute(FieldHandle f, ScalarFieldInterface *sfi,
+  virtual FieldHandle execute(MeshHandle m, Field::data_location at,
+			      ScalarFieldInterface *sfi,
 			      bool interp, bool closest, double dist) = 0;
 
   //! support the dynamically compiled algorithm concept
-  static CompileInfo *get_compile_info(const TypeDescription *field,
+  static CompileInfo *get_compile_info(const TypeDescription *fsrc,
+				       const TypeDescription *fdst,
 				       const TypeDescription *element);
 };
 
@@ -49,46 +51,49 @@ class DirectInterpScalarAlgo : public DirectInterpScalarAlgoBase
 {
 public:
   //! virtual interface. 
-  virtual FieldHandle execute(FieldHandle f, ScalarFieldInterface *sfi,
+  virtual FieldHandle execute(MeshHandle m, Field::data_location at,
+			      ScalarFieldInterface *sfi,
 			      bool interp, bool closest, double dist);
 };
 
 
 template <class Fld, class Loc>
 FieldHandle
-DirectInterpScalarAlgo<Fld, Loc>::execute(FieldHandle fldhandle,
+DirectInterpScalarAlgo<Fld, Loc>::execute(MeshHandle meshhandle,
+					  Field::data_location at,
 					  ScalarFieldInterface *sfi,
 					  bool interp, bool closest,
 					  double dist)
 {
-  Fld *fld2 = dynamic_cast<Fld *>(fldhandle.get_rep());
-  if (!fld2->query_scalar_interface()) { return 0; }
-  Fld *fld = fld2->clone();
-  typename Fld::mesh_handle_type mesh = fld->get_typed_mesh();
+  typename Fld::mesh_handle_type mesh =
+    dynamic_cast<typename Fld::mesh_type *>(meshhandle.get_rep());
+  Fld *fld = scinew Fld(mesh, at);
+
+  if (at == Field::NODE) mesh->synchronize(Mesh::NODES_E);
+  else if (at == Field::CELL) mesh->synchronize(Mesh::CELLS_E);
+  else if (at == Field::FACE) mesh->synchronize(Mesh::FACES_E);
+  else if (at == Field::EDGE) mesh->synchronize(Mesh::EDGES_E);
 
   typename Loc::iterator itr, itr_end;
   mesh->begin(itr);
   mesh->end(itr_end);
 
-  double val = 0;
+  double val = 0.0;
   Point p;
-  while (itr != itr_end) {
+  while (itr != itr_end)
+  {
     mesh->get_center(p, *itr);
 
-    if (interp && sfi->interpolate(val, p)) {
+    if (interp && sfi->interpolate(val, p))
+    {
       fld->set_value((typename Fld::value_type)val, *itr);
     } 
-    else if ((closest) && (sfi->find_closest(val, p) < dist))  {
+    else if (closest && sfi->find_closest(val, p) < dist)
+    {
       fld->set_value((typename Fld::value_type)val, *itr);
     }
-    /* The following useless output is a workaround for a bug on linux 
-     * with the gcc-2.96 compiler. For some reason without a print in this loop
-     * values are all being set to one value.  If you have an alternate fix, 
-     * test it with SCIRun/src/Packages/BioPSE/nets/forward-fem.net */
-    cerr << ""; 
     ++itr;
   }
-  cerr << endl;
   
   FieldHandle ofh(fld);
   return ofh;
@@ -99,11 +104,13 @@ DirectInterpScalarAlgo<Fld, Loc>::execute(FieldHandle fldhandle,
 class DirectInterpVectorAlgoBase : public DynamicAlgoBase
 {
 public:
-  virtual FieldHandle execute(FieldHandle f, VectorFieldInterface *vfi,
+  virtual FieldHandle execute(MeshHandle m, Field::data_location at,
+			      VectorFieldInterface *vfi,
 			      bool interp, bool closest, double dist) = 0;
 
   //! support the dynamically compiled algorithm concept
-  static CompileInfo *get_compile_info(const TypeDescription *field,
+  static CompileInfo *get_compile_info(const TypeDescription *fsrc,
+				       const TypeDescription *fdst,
 				       const TypeDescription *element);
 };
 
@@ -113,22 +120,28 @@ class DirectInterpVectorAlgo : public DirectInterpVectorAlgoBase
 {
 public:
   //! virtual interface. 
-  virtual FieldHandle execute(FieldHandle f, VectorFieldInterface *vfi,
+  virtual FieldHandle execute(MeshHandle m, Field::data_location at,
+			      VectorFieldInterface *vfi,
 			      bool interp, bool closest, double dist);
 };
 
 
 template <class Fld, class Loc>
 FieldHandle
-DirectInterpVectorAlgo<Fld, Loc>::execute(FieldHandle fldhandle,
+DirectInterpVectorAlgo<Fld, Loc>::execute(MeshHandle meshhandle,
+					  Field::data_location at,
 					  VectorFieldInterface *vfi,
 					  bool interp, bool closest,
 					  double dist)
 {
-  Fld *fld2 = dynamic_cast<Fld *>(fldhandle.get_rep());
-  if (!fld2->query_vector_interface()) { return 0; }
-  Fld *fld = fld2->clone();
-  typename Fld::mesh_handle_type mesh = fld->get_typed_mesh();
+  typename Fld::mesh_handle_type mesh =
+    dynamic_cast<typename Fld::mesh_type *>(meshhandle.get_rep());
+  Fld *fld = scinew Fld(mesh, at);
+
+  if (at == Field::NODE) mesh->synchronize(Mesh::NODES_E);
+  else if (at == Field::CELL) mesh->synchronize(Mesh::CELLS_E);
+  else if (at == Field::FACE) mesh->synchronize(Mesh::FACES_E);
+  else if (at == Field::EDGE) mesh->synchronize(Mesh::EDGES_E);
 
   typename Loc::iterator itr, itr_end;
   mesh->begin(itr);
@@ -145,12 +158,9 @@ DirectInterpVectorAlgo<Fld, Loc>::execute(FieldHandle fldhandle,
     {
       fld->set_value((typename Fld::value_type)val, *itr);
     }
-    else if (closest)
+    else if (closest && vfi->find_closest(val, p) < dist)
     {
-      if (vfi->find_closest(val, p) < dist)
-      {
-	fld->set_value((typename Fld::value_type)val, *itr);
-      }
+      fld->set_value((typename Fld::value_type)val, *itr);
     }
 
     ++itr;
@@ -164,10 +174,12 @@ DirectInterpVectorAlgo<Fld, Loc>::execute(FieldHandle fldhandle,
 class DirectInterpTensorAlgoBase : public DynamicAlgoBase
 {
 public:
-  virtual FieldHandle execute(FieldHandle f, TensorFieldInterface *tfi,
+  virtual FieldHandle execute(MeshHandle m, Field::data_location at,
+			      TensorFieldInterface *tfi,
 			      bool interp, bool closest, double dist) = 0;
   //! support the dynamically compiled algorithm concept
-  static CompileInfo *get_compile_info(const TypeDescription *field,
+  static CompileInfo *get_compile_info(const TypeDescription *fsrc,
+				       const TypeDescription *fdst,
 				       const TypeDescription *element);
 };
 
@@ -177,22 +189,28 @@ class DirectInterpTensorAlgo : public DirectInterpTensorAlgoBase
 {
 public:
   //! virtual interface. 
-  virtual FieldHandle execute(FieldHandle f, TensorFieldInterface *tfi,
+  virtual FieldHandle execute(MeshHandle m, Field::data_location at,
+			      TensorFieldInterface *tfi,
 			      bool interp, bool closest, double dist);
 };
 
 
 template <class Fld, class Loc>
 FieldHandle
-DirectInterpTensorAlgo<Fld, Loc>::execute(FieldHandle fldhandle,
+DirectInterpTensorAlgo<Fld, Loc>::execute(MeshHandle meshhandle,
+					  Field::data_location at,
 					  TensorFieldInterface *tfi,
 					  bool interp, bool closest,
 					  double dist)
 {
-  Fld *fld2 = dynamic_cast<Fld *>(fldhandle.get_rep());
-  if (!fld2->query_tensor_interface()) { return 0; }
-  Fld *fld = fld2->clone();
-  typename Fld::mesh_handle_type mesh = fld->get_typed_mesh();
+  typename Fld::mesh_handle_type mesh =
+    dynamic_cast<typename Fld::mesh_type *>(meshhandle.get_rep());
+  Fld *fld = scinew Fld(mesh, at);
+
+  if (at == Field::NODE) mesh->synchronize(Mesh::NODES_E);
+  else if (at == Field::CELL) mesh->synchronize(Mesh::CELLS_E);
+  else if (at == Field::FACE) mesh->synchronize(Mesh::FACES_E);
+  else if (at == Field::EDGE) mesh->synchronize(Mesh::EDGES_E);
 
   typename Loc::iterator itr, itr_end;
   mesh->begin(itr);
@@ -209,12 +227,9 @@ DirectInterpTensorAlgo<Fld, Loc>::execute(FieldHandle fldhandle,
     {
       fld->set_value((typename Fld::value_type)val, *itr);
     }
-    else if (closest)
+    else if (closest && tfi->find_closest(val, p) < dist)
     {
-      if (tfi->find_closest(val, p) < dist)
-      {
-	fld->set_value((typename Fld::value_type)val, *itr);
-      }
+      fld->set_value((typename Fld::value_type)val, *itr);
     }
 
     ++itr;

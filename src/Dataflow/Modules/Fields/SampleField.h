@@ -188,6 +188,7 @@ SampleFieldRandomAlgoT<Mesh>::execute(Module *mod,
   }
   if (sfi || vfi || distmode == UNIUNI || distmode == UNISCAT)
   {
+    mesh->synchronize(Mesh::GRID_E);
     if (!build_weight_table(mesh, sfi, vfi, table, distmode))
     {
       mod->error("Bad distribution of weights, unable to choose any.");
