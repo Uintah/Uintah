@@ -62,7 +62,7 @@ static int approval_fn(void*, char* urlstring, globus_nexus_startpoint_t* sp)
 }
 
 void
-PIDL::PIDL::initialize(int, char*[])
+PIDL::initialize(int, char*[])
 {
     if(!warehouse){
 	warehouse=new Warehouse;
