@@ -172,12 +172,12 @@ DirectMapping::execute()
     error_ = false;
 
     CompileInfoHandle ci =
-      DirectInterpAlgo::get_compile_info(sfHandle->get_type_description(),
-					 sfHandle->order_type_description(),
-					 dfHandle->get_type_description(),
-					 dfHandle->order_type_description());
+      DirectMappingAlgo::get_compile_info(sfHandle->get_type_description(),
+                                          sfHandle->order_type_description(),
+                                          dfHandle->get_type_description(),
+                                          dfHandle->order_type_description());
 
-    Handle<DirectInterpAlgo> algo;
+    Handle<DirectMappingAlgo> algo;
     if (!module_dynamic_compile(ci, algo)) return;
 
     sfHandle->mesh()->synchronize(Mesh::LOCATE_E);
@@ -199,15 +199,15 @@ DirectMapping::execute()
 }
 
 CompileInfoHandle
-DirectInterpAlgo::get_compile_info(const TypeDescription *fsrc,
-				   const TypeDescription *lsrc,
-				   const TypeDescription *fdst,
-				   const TypeDescription *ldst)
+DirectMappingAlgo::get_compile_info(const TypeDescription *fsrc,
+                                    const TypeDescription *lsrc,
+                                    const TypeDescription *fdst,
+                                    const TypeDescription *ldst)
 {
   // Use cc_to_h if this is in the .cc file, otherwise just __FILE__
   static const string include_path(TypeDescription::cc_to_h(__FILE__));
-  static const string template_class_name("DirectInterpAlgoT");
-  static const string base_class_name("DirectInterpAlgo");
+  static const string template_class_name("DirectMappingAlgoT");
+  static const string base_class_name("DirectMappingAlgo");
 
   const string::size_type fdst_loc = fdst->get_name().find_first_of('<');
   const string::size_type fsrc_loc = fsrc->get_name().find_first_of('<');

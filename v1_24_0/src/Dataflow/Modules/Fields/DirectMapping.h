@@ -43,7 +43,7 @@
 
 namespace SCIRun {
 
-class DirectInterpAlgo : public DynamicAlgoBase
+class DirectMappingAlgo : public DynamicAlgoBase
 {
 public:
   virtual FieldHandle execute(FieldHandle src, MeshHandle dst,
@@ -60,7 +60,7 @@ public:
 
 
 template <class FSRC, class LSRC, class FOUT, class LDST>
-class DirectInterpAlgoT : public DirectInterpAlgo
+class DirectMappingAlgoT : public DirectMappingAlgo
 {
   typedef pair<typename LDST::index_type, 
     vector<typename LSRC::index_type> > dst_src_pair;
@@ -111,10 +111,10 @@ private:
 
 template <class FSRC, class LSRC, class FOUT, class LDST>
 double
-DirectInterpAlgoT<FSRC, LSRC, FOUT, 
-		  LDST>::find_closest_src_loc(typename LSRC::index_type &index,
-					      typename FSRC::mesh_type *mesh, 
-					      const Point &p) const
+DirectMappingAlgoT<FSRC, LSRC, FOUT, 
+                   LDST>::find_closest_src_loc(typename LSRC::index_type &index,
+                                               typename FSRC::mesh_type *mesh, 
+                                               const Point &p) const
 {
   double mindist = DBL_MAX;
 
@@ -138,7 +138,7 @@ DirectInterpAlgoT<FSRC, LSRC, FOUT,
 
 template <class FSRC, class LSRC, class FOUT, class LDST>
 double
-DirectInterpAlgoT<FSRC, LSRC, FOUT, LDST>::find_closest_dst_loc(typename LDST::index_type &index, typename FOUT::mesh_type *mesh, const Point &p) const
+DirectMappingAlgoT<FSRC, LSRC, FOUT, LDST>::find_closest_dst_loc(typename LDST::index_type &index, typename FOUT::mesh_type *mesh, const Point &p) const
 {
   double mindist = DBL_MAX;
   
@@ -162,15 +162,15 @@ DirectInterpAlgoT<FSRC, LSRC, FOUT, LDST>::find_closest_dst_loc(typename LDST::i
 
 template <class FSRC, class LSRC, class FOUT, class LDST>
 FieldHandle
-DirectInterpAlgoT<FSRC, LSRC, 
-		  FOUT, LDST>::execute(FieldHandle src_fieldH, 
-				       MeshHandle dst_meshH, 
-				       int basis_order, 
-				       const string &basis, 
-				       bool source_to_single_dest, 
-				       bool exhaustive_search, 
-				       double dist, 
-				       int np)
+DirectMappingAlgoT<FSRC, LSRC, 
+                   FOUT, LDST>::execute(FieldHandle src_fieldH, 
+                                        MeshHandle dst_meshH, 
+                                        int basis_order, 
+                                        const string &basis, 
+                                        bool source_to_single_dest, 
+                                        bool exhaustive_search, 
+                                        double dist, 
+                                        int np)
 {
   DIData d;
   d.src_fieldH=src_fieldH;
@@ -190,15 +190,16 @@ DirectInterpAlgoT<FSRC, LSRC,
     parallel_execute(0, &d);
   else
     Thread::parallel(this, 
-	     &DirectInterpAlgoT<FSRC, LSRC, FOUT, LDST>::parallel_execute,
+	     &DirectMappingAlgoT<FSRC, LSRC, FOUT, LDST>::parallel_execute,
 	     np, true, &d);
   return out_field;
 }
 
 template <class FSRC, class LSRC, class FOUT, class LDST>
 void
-DirectInterpAlgoT<FSRC, LSRC, FOUT, LDST>::parallel_execute(int proc,
-							    DIData *d) {
+DirectMappingAlgoT<FSRC, LSRC, FOUT, LDST>::parallel_execute(int proc,
+                                                             DIData *d)
+{
   FieldHandle src_fieldH = d->src_fieldH;
   MeshHandle dst_meshH = d->dst_meshH;
   int basis_order = d->basis_order;
