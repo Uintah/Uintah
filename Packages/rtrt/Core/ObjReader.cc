@@ -99,7 +99,7 @@ void GetFace(char *buf, Array1<Point> &pts, Array1<Vector> &nml,
   int val;
   int what=0; // fi's
 
-  while(wptr = GetNum(wptr,val)) {
+  while( (wptr = GetNum(wptr,val)) != NULL ) {
     switch(what) {
     case 0:
       fis.add(val);
