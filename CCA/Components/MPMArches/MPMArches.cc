@@ -8,6 +8,8 @@
 #include <Packages/Uintah/CCA/Components/Arches/BoundaryCondition.h>
 #include <Packages/Uintah/CCA/Components/Arches/CellInformation.h>
 #include <Packages/Uintah/CCA/Components/Arches/CellInformationP.h>
+#include <Packages/Uintah/CCA/Components/Arches/EnthalpySolver.h>
+#include <Packages/Uintah/CCA/Components/Arches/NonlinearSolver.h>
 #include <Packages/Uintah/CCA/Components/Arches/PicardNonlinearSolver.h>
 #include <Packages/Uintah/CCA/Components/Arches/TurbulenceModel.h>
 #include <Packages/Uintah/CCA/Components/HETransformation/Burn.h>
@@ -92,7 +94,8 @@ void MPMArches::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
    d_Alab = d_arches->getArchesLabel();
    d_arches->problemSetup(prob_spec, grid, d_sharedState);
    d_arches->getBoundaryCondition()->setIfCalcEnergyExchange(d_calcEnergyExchange);
-   
+   d_DORad = d_arches->getNonlinearSolver()->getEnthalpySolver()->checkDORadiation();
+
    cerr << "Done with problemSetup \t\t\t MPMArches" <<endl;
    cerr << "--------------------------------\n"<<endl;
 }
@@ -209,6 +212,8 @@ MPMArches::scheduleTimeAdvance( const LevelP & level,
   scheduleInterpolateNCToCC(sched, patches, mpm_matls);
   scheduleInterpolateCCToFC(sched, patches, mpm_matls);
   scheduleComputeVoidFrac(sched, patches, arches_matls, mpm_matls, all_matls);
+
+  scheduleComputeIntegratedSolidProps(sched, patches, arches_matls, mpm_matls, all_matls);
 
   // compute celltypeinit
 
@@ -359,6 +364,32 @@ void MPMArches::scheduleComputeVoidFrac(SchedulerP& sched,
 
   t->computes(d_MAlb->solid_fraction_CCLabel, mpm_matls->getUnion());
   t->computes(d_MAlb->void_frac_CCLabel, arches_matls->getUnion());
+
+  sched->addTask(t, patches, all_matls);
+}
+
+//______________________________________________________________________
+//
+
+void MPMArches::scheduleComputeIntegratedSolidProps(SchedulerP& sched,
+						    const PatchSet* patches,
+						    const MaterialSet* arches_matls,
+						    const MaterialSet* mpm_matls,
+						    const MaterialSet* all_matls)
+{
+  // primitive variable initialization
+  
+  Task* t=scinew Task("MPMArches::getIntegratedProps",
+		      this, &MPMArches::computeIntegratedSolidProps);
+
+  int zeroGhostCells = 0;
+
+  t->requires(Task::NewDW, d_MAlb->solid_fraction_CCLabel,   
+	      mpm_matls->getUnion(), Ghost::None, zeroGhostCells);
+  t->requires(Task::NewDW, d_MAlb->tempSolid_CCLabel,   
+	      mpm_matls->getUnion(), Ghost::None, zeroGhostCells);
+
+  t->computes(d_MAlb->integTemp_CCLabel, arches_matls->getUnion());
 
   sched->addTask(t, patches, all_matls);
 }
@@ -692,6 +723,22 @@ void MPMArches::scheduleEnergyExchange(SchedulerP& sched,
 	      arches_matls->getUnion(), Ghost::AroundCells, numGhostCells);
   t->requires(Task::NewDW,  d_Alab->d_mmgasVolFracLabel,   
 	      arches_matls->getUnion(), Ghost::AroundCells, numGhostCells);
+
+  if (d_DORad) {
+  // stuff for radiative heat flux to intrusions
+    t->requires(Task::OldDW, d_Alab->d_radiationFluxEINLabel, 
+		arches_matls->getUnion(), Ghost::AroundCells, numGhostCells);
+    t->requires(Task::OldDW, d_Alab->d_radiationFluxWINLabel, 
+		arches_matls->getUnion(), Ghost::AroundCells, numGhostCells);
+    t->requires(Task::OldDW, d_Alab->d_radiationFluxNINLabel, 
+		arches_matls->getUnion(), Ghost::AroundCells, numGhostCells);
+    t->requires(Task::OldDW, d_Alab->d_radiationFluxSINLabel, 
+		arches_matls->getUnion(), Ghost::AroundCells, numGhostCells);
+    t->requires(Task::OldDW, d_Alab->d_radiationFluxTINLabel, 
+		arches_matls->getUnion(), Ghost::AroundCells, numGhostCells);
+    t->requires(Task::OldDW, d_Alab->d_radiationFluxBINLabel, 
+		arches_matls->getUnion(), Ghost::AroundCells, numGhostCells);  
+  }
   
   // computes, for arches, su_enth and sp_enth at the
   // face centers and cell centers
@@ -1408,6 +1455,58 @@ void MPMArches::computeVoidFrac(const ProcessorGroup*,
       if (void_frac[*iter] < 0.0)
 	void_frac[*iter] = 0.0;
 
+    }
+  }
+}
+  
+//______________________________________________________________________
+//
+
+void MPMArches::computeIntegratedSolidProps(const ProcessorGroup*,
+					    const PatchSubset* patches,
+					    const MaterialSubset*,
+					    DataWarehouse* /*old_dw*/,
+					    DataWarehouse* new_dw) 
+
+{
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+    int archIndex = 0;
+    int matlindex = d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+    int numMPMMatls = d_sharedState->getNumMPMMatls();
+    StaticArray<constCCVariable<double> > solid_fraction_cc(numMPMMatls);
+    StaticArray<constCCVariable<double> > tempSolid_CC(numMPMMatls);
+    
+    int zeroGhostCells = 0;
+
+  // get and allocate
+
+    for (int m = 0; m < numMPMMatls; m++) {
+
+      Material* matl = d_sharedState->getMPMMaterial( m );
+      int dwindex = matl->getDWIndex();
+
+      new_dw->get(solid_fraction_cc[m], d_MAlb->solid_fraction_CCLabel,
+		  dwindex, patch, Ghost::None, zeroGhostCells);
+      new_dw->get(tempSolid_CC[m], d_MAlb->tempSolid_CCLabel,
+		  dwindex, patch, Ghost::None, zeroGhostCells);
+    }
+
+    CCVariable<double> integTemp;
+    new_dw->allocateAndPut(integTemp, d_MAlb->integTemp_CCLabel,
+		     matlindex, patch); 
+
+    // actual computation
+
+    integTemp.initialize(0);
+
+    for (CellIterator iter = patch->getExtraCellIterator();!iter.done();iter++) {
+
+      for (int m = 0; m < numMPMMatls; m++) {
+	
+	integTemp[*iter] += solid_fraction_cc[m][*iter]*tempSolid_CC[m][*iter];
+	
+      }
     }
   }
 }
@@ -2514,6 +2613,15 @@ void MPMArches::doEnergyExchange(const ProcessorGroup*,
     constCCVariable<double> tempGas;
     constCCVariable<double> gas_fraction_cc;
     
+  // stuff for radiative heat flux to intrusions
+
+    CCVariable<double> radfluxE;
+    CCVariable<double> radfluxW;
+    CCVariable<double> radfluxN;
+    CCVariable<double> radfluxS;
+    CCVariable<double> radfluxT;
+    CCVariable<double> radfluxB;
+
     // multimaterial contribution to SP and SU terms in Arches 
     // enthalpy eqn., stored where calculated
     
@@ -2599,6 +2707,44 @@ void MPMArches::doEnergyExchange(const ProcessorGroup*,
     new_dw->get(gas_fraction_cc, d_Alab->d_mmgasVolFracLabel, matlIndex, 
 		patch, Ghost::AroundCells, numGhostCellsG);
 
+    if (d_DORad && d_calcEnergyExchange) {
+
+    // for radiative heat transfer to intrusions
+
+      old_dw->getCopy(radfluxE, d_Alab->d_radiationFluxEINLabel,
+		  matlIndex, patch, Ghost::AroundCells, numGhostCellsG);
+      old_dw->getCopy(radfluxW, d_Alab->d_radiationFluxWINLabel,
+		  matlIndex, patch, Ghost::AroundCells, numGhostCellsG);
+      old_dw->getCopy(radfluxN, d_Alab->d_radiationFluxNINLabel,
+		  matlIndex, patch, Ghost::AroundCells, numGhostCellsG);
+      old_dw->getCopy(radfluxS, d_Alab->d_radiationFluxSINLabel,
+		  matlIndex, patch, Ghost::AroundCells, numGhostCellsG);
+      old_dw->getCopy(radfluxT, d_Alab->d_radiationFluxTINLabel,
+		  matlIndex, patch, Ghost::AroundCells, numGhostCellsG);
+      old_dw->getCopy(radfluxB, d_Alab->d_radiationFluxBINLabel,
+		  matlIndex, patch, Ghost::AroundCells, numGhostCellsG);
+    }
+    else {
+      radfluxE.allocate(patch->getGhostCellLowIndex(numGhostCellsG), 
+			patch->getGhostCellHighIndex(numGhostCellsG));
+      radfluxE.initialize(0.);
+      radfluxW.allocate(patch->getGhostCellLowIndex(numGhostCellsG), 
+			patch->getGhostCellHighIndex(numGhostCellsG));
+      radfluxW.initialize(0.);
+      radfluxN.allocate(patch->getGhostCellLowIndex(numGhostCellsG), 
+			patch->getGhostCellHighIndex(numGhostCellsG));
+      radfluxN.initialize(0.);
+      radfluxS.allocate(patch->getGhostCellLowIndex(numGhostCellsG), 
+			patch->getGhostCellHighIndex(numGhostCellsG));
+      radfluxS.initialize(0.);
+      radfluxT.allocate(patch->getGhostCellLowIndex(numGhostCellsG), 
+			patch->getGhostCellHighIndex(numGhostCellsG));
+      radfluxT.initialize(0.);
+      radfluxB.allocate(patch->getGhostCellLowIndex(numGhostCellsG), 
+			patch->getGhostCellHighIndex(numGhostCellsG));
+      radfluxB.initialize(0.);
+    }
+
     // allocates
 
     new_dw->allocateAndPut(sp_enth_cc, d_MAlb->d_enth_mmLinSrc_tmp_CCLabel,
@@ -2664,6 +2810,12 @@ void MPMArches::doEnergyExchange(const ProcessorGroup*,
 			      tempSolid_fcx[m],
 			      tempSolid_fcy[m],
 			      tempSolid_fcz[m],
+			      radfluxE,
+			      radfluxW,
+			      radfluxN,
+			      radfluxS,
+			      radfluxT,
+			      radfluxB,
 			      gas_fraction_cc, 
 			      solid_fraction_cc[m],
 			      cellinfo->sew,  cellinfo->sns, cellinfo->stb,
@@ -3050,6 +3202,5 @@ void MPMArches::putAllForcesOnNC(const ProcessorGroup*,
 // ****************************************************************************
 bool MPMArches::need_recompile(double time, double dt, 
 			    const GridP& grid) {
-  cerr << "printing recompile" << endl;
   return d_recompile;
 }

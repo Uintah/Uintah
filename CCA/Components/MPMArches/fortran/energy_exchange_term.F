@@ -41,6 +41,12 @@
      $     ts_fcx,
      $     ts_fcy,
      $     ts_fcz,
+     $     rfluxE,
+     $     rfluxW,
+     $     rfluxN,
+     $     rfluxS,
+     $     rfluxT,
+     $     rfluxB,
      $     epsg, 
      $     epss,
      $     sew, sns, stb,
@@ -206,6 +212,36 @@ C-----------------------------------------------------------------------
      $     dim_lo_ts_fcz(2):dim_hi_ts_fcz(2),
      $     dim_lo_ts_fcz(3):dim_hi_ts_fcz(3))      
 
+      double precision rfluxE(
+     $     dim_lo_epss(1):dim_hi_epss(1),
+     $     dim_lo_epss(2):dim_hi_epss(2),
+     $     dim_lo_epss(3):dim_hi_epss(3))
+
+      double precision rfluxW(
+     $     dim_lo_epss(1):dim_hi_epss(1),
+     $     dim_lo_epss(2):dim_hi_epss(2),
+     $     dim_lo_epss(3):dim_hi_epss(3))
+
+      double precision rfluxN(
+     $     dim_lo_epss(1):dim_hi_epss(1),
+     $     dim_lo_epss(2):dim_hi_epss(2),
+     $     dim_lo_epss(3):dim_hi_epss(3))
+
+      double precision rfluxS(
+     $     dim_lo_epss(1):dim_hi_epss(1),
+     $     dim_lo_epss(2):dim_hi_epss(2),
+     $     dim_lo_epss(3):dim_hi_epss(3))
+
+      double precision rfluxT(
+     $     dim_lo_epss(1):dim_hi_epss(1),
+     $     dim_lo_epss(2):dim_hi_epss(2),
+     $     dim_lo_epss(3):dim_hi_epss(3))
+
+      double precision rfluxB(
+     $     dim_lo_epss(1):dim_hi_epss(1),
+     $     dim_lo_epss(2):dim_hi_epss(2),
+     $     dim_lo_epss(3):dim_hi_epss(3))
+
       double precision epsg(
      $     dim_lo_eps(1):dim_hi_eps(1),
      $     dim_lo_eps(2):dim_hi_eps(2),
@@ -298,6 +334,22 @@ c     alone,) so we don't need to divide by (1-epsg).
      $                    (tg(i-1,j,k) - 
      $                    ts_fcx(i,j,k))
 
+#if 0
+c     radiative heat transfer to intrusions
+c     note that at this point (November 9, 2002) we
+c     have no model for partial cells. Qn: should there
+c     be a multiplication by epsg, since in a partial
+c     cell not all the intrusion is seen by the gas?
+c     That would require a model for partial cells
+c     as well.
+
+c                     hts_fcx(i,j,k) = 
+c     $                    hts_fcx(i,j,k) + 
+c     $                    rfluxE(i-1,j,k)*areayz*
+c     $                    epss(i,j,k)
+
+#endif
+
 #ifdef debugEnergyExchange
                      print*, i,j,k, hts_fcx(i,j,k), 
      $                    tg(i-1,j,k), ts_fcx(i,j,k),
@@ -335,6 +387,22 @@ c     alone,) so we don't need to divide by (1-epsg).
      $                    qmult*
      $                    (tg(i+1,j,k) - 
      $                    ts_fcx(i,j,k))
+
+#if 0
+c     radiative heat transfer to intrusions
+c     note that at this point (November 9, 2002) we
+c     have no model for partial cells. Qn: should there
+c     be a multiplication by epsg, since in a partial
+c     cell not all the intrusion is seen by the gas?
+c     That would require a model for partial cells
+c     as well.
+
+c                     hts_fcx(i+1,j,k) = 
+c     $                    hts_fcx(i+1,j,k) + 
+c     $                    rfluxW(i+1,j,k)*areayz*
+c     $                    epss(i,j,k)
+
+#endif
 
 #ifdef debugEnergyExchange
                      print*, i+1,j,k, hts_fcx(i+1,j,k),
@@ -374,6 +442,22 @@ c     south face of intrusion
      $                    (tg(i,j-1,k) -
      $                    ts_fcy(i,j,k))
 
+#if 0
+c     radiative heat transfer to intrusions
+c     note that at this point (November 9, 2002) we
+c     have no model for partial cells. Qn: should there
+c     be a multiplication by epsg, since in a partial
+c     cell not all the intrusion is seen by the gas?
+c     That would require a model for partial cells
+c     as well.
+
+c                     hts_fcy(i,j,k) = 
+c     $                    hts_fcy(i,j,k) +
+c     $                    rfluxN(i,j-1,k)*areaxz*
+c     $                    epss(i,j,k)
+
+#endif
+
 #ifdef debugEnergyExchange
                      print*, i,j,k, hts_fcy(i,j,k),
      $                    tg(i,j-1,k), ts_fcy(i,j,k),
@@ -411,6 +495,22 @@ c     south face of intrusion
      $                    qmult*
      $                    (tg(i,j+1,k) - 
      $                    ts_fcx(i,j,k))
+
+#if 0
+c     radiative heat transfer to intrusions
+c     note that at this point (November 9, 2002) we
+c     have no model for partial cells. Qn: should there
+c     be a multiplication by epsg, since in a partial
+c     cell not all the intrusion is seen by the gas?
+c     That would require a model for partial cells
+c     as well.
+
+c                     hts_fcy(i,j+1,k) = 
+c     $                    hts_fcy(i,j+1,k) +
+c     $                    rfluxS(i,j+1,k)*areaxz*
+c     $                    epss(i,j,k)
+
+#endif
 
 #ifdef debugEnergyExchange
                      print*, i,j+1,k, hts_fcy(i,j+1,k),
@@ -450,6 +550,22 @@ c     south face of intrusion
      $                    (tg(i,j,k-1) - 
      $                    ts_fcz(i,j,k))
 
+#if 0
+c     radiative heat transfer to intrusions
+c     note that at this point (November 9, 2002) we
+c     have no model for partial cells. Qn: should there
+c     be a multiplication by epsg, since in a partial
+c     cell not all the intrusion is seen by the gas?
+c     That would require a model for partial cells
+c     as well.
+
+c                      hts_fcz(i,j,k) = 
+c     $                    hts_fcz(i,j,k) +
+c     $                    rfluxT(i,j,k-1)*areaxy*
+c     $                    epss(i,j,k)
+
+#endif
+
 #ifdef debugEnergyExchange
                      print*, i,j,k, hts_fcz(i,j,k),
      $                    tg(i,j,k-1), ts_fcz(i,j,k),
@@ -487,6 +603,22 @@ c     south face of intrusion
      $                    qmult*
      $                    (tg(i,j,k+1) - 
      $                    ts_fcz(i,j,k))
+
+#if 0
+c     radiative heat transfer to intrusions
+c     note that at this point (November 9, 2002) we
+c     have no model for partial cells. Qn: should there
+c     be a multiplication by epsg, since in a partial
+c     cell not all the intrusion is seen by the gas?
+c     That would require a model for partial cells
+c     as well.
+
+c                     hts_fcz(i,j,k+1) =
+c     $                    hts_fcz(i,j,k+1) + 
+c     $                    rfluxB(i,j,k+1)*areaxy*
+c     $                    epss(i,j,k)
+
+#endif
 
 #ifdef debugEnergyExchange
                      print*, i,j,k+1, hts_fcz(i,j,k+1),
