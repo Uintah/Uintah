@@ -35,17 +35,21 @@ SRCS     += $(SRCDIR)/Brick.cc \
 PSELIBS := SCICore/Exceptions SCICore/Geometry \
 	SCICore/Persistent SCICore/Datatypes \
 	SCICore/Containers  SCICore/Geom SCICore/Thread \
+	PSECore/Dataflow PSECore/XMLUtil \
 	Uintah/Grid Uintah/Datatypes Uintah/Exceptions \
 	Uintah/Modules/Visualization
 
 
 
-LIBS :=  $(LINK) $(XML_LIBRARY) $(GL_LIBS) -lm
+LIBS :=  $(LINK) $(XML_LIBRARY) $(GL_LIBS) -lmpi -lm
 
 include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.7  2000/12/06 04:43:02  kuzimmer
+# Added PSECore/Dataflow and PSECore/XMLUtil to PSELIBS.  Added -lmpi to LIBS.  To remove unresolved symbol warnings on compile
+#
 # Revision 1.6  2000/09/27 16:23:18  kuzimmer
 # Moved these files from the now defunct DataArchive Directory
 #
