@@ -39,17 +39,8 @@ Scheduler::~Scheduler()
 }
 
 void
-Scheduler::emitEdges(const vector<Task*>& tasks)
+Scheduler::makeTaskGraphDoc(const vector<Task*>& tasks, bool emit_edges /* = true */)
 {
-    // We'll get called once for each timestep. Each of these executions should
-    // have the same task graph, execept for the output task which only happens
-    // periodically. The first execution will have the output task though, so
-    // we'll just do that. The only complication is that the very first call is
-    // actually just some initialization tasks, so we really want to output the
-    // second call (which is for the first timestep).
-  /*if (m_executeCount++ != 1)
-    	return;*/
-    
     if (!m_outPort->wasOutputTimestep())
       return;
     
@@ -64,11 +55,14 @@ Scheduler::emitEdges(const vector<Task*>& tasks)
     time_t t = time(NULL);
     appendElement(meta, "date", ctime(&t));
 
-    DOM_Element edges = m_graphDoc->createElement("Edges");
-    root.appendChild(edges);
-
     m_nodes = scinew DOM_Element(m_graphDoc->createElement("Nodes"));
     root.appendChild(*m_nodes);
+
+    if (!emit_edges)
+      return;
+    
+    DOM_Element edges = m_graphDoc->createElement("Edges");
+    root.appendChild(edges);
 
     // Now that we've build the XML structure, we can add the actual edges
     map<TaskProduct, Task*> computes_map;
@@ -180,6 +174,11 @@ Scheduler::problemSetup(const ProblemSpecP&)
 
 //
 // $Log$
+// Revision 1.13  2000/09/27 00:14:33  witzel
+// Changed emitEdges to makeTaskGraphDoc with an option to emit
+// the actual edges (only process 0 in the MPI version since all
+// process contain the same taskgraph edge information).
+//
 // Revision 1.12  2000/09/26 21:41:38  dav
 // minor formatting/include rearrangment
 //

@@ -98,7 +98,8 @@ WARNING
 					       int numMatls) = 0;
 
     protected:
-    	void emitEdges(const vector<Task*>& tasks);
+    	void makeTaskGraphDoc(const vector<Task*>& tasks,
+			      bool emit_edges = true);
     	void emitNode(const Task* name, time_t start, double duration);
     	void finalizeNodes(int process=0);
     
@@ -116,6 +117,11 @@ WARNING
 
 //
 // $Log$
+// Revision 1.21  2000/09/27 00:14:33  witzel
+// Changed emitEdges to makeTaskGraphDoc with an option to emit
+// the actual edges (only process 0 in the MPI version since all
+// process contain the same taskgraph edge information).
+//
 // Revision 1.20  2000/09/26 21:41:52  dav
 // minor formatting
 //
