@@ -45,11 +45,14 @@ MPMICELabel::MPMICELabel()
 			CCVariable<double>::getTypeDescription());  
   releasedHeatCCLabel = VarLabel::create("releasedHeat",
 			CCVariable<double>::getTypeDescription());
+  NC_CCweightLabel     = VarLabel::create("NC_CCweight",
+			NCVariable<double>::getTypeDescription());
 
 } 
 
 MPMICELabel::~MPMICELabel()
 {
+  
   VarLabel::destroy(cMassLabel);
   VarLabel::destroy(cVolumeLabel);
   VarLabel::destroy(vel_CCLabel);
@@ -63,4 +66,5 @@ MPMICELabel::~MPMICELabel()
   VarLabel::destroy(velInc_NCLabel);
   VarLabel::destroy(burnedMassCCLabel);
   VarLabel::destroy(releasedHeatCCLabel);
+  VarLabel::destroy(NC_CCweightLabel);
 }
