@@ -5,25 +5,34 @@
 extern "C" {
 #include <sys/uuid.h>
 }
+#else
+#include <uuid/uuid.h>
 #endif
 #include <algorithm>
 #include <iostream>
 #include <map>
 #include <sstream>
 
+#include <stdio.h>
+/*
 using std::cerr;
 using std::for_each;
 using std::map;
 using std::replace;
 using std::string;
 using std::vector;
+*/
+
+using namespace std;
+
+
 extern bool doing_cia;
 
 static string handle_class = "\
 class @ {\n\
     @_interface* ptr;\n\
 public:\n\
-    static const ::Core/CCA/Component::PIDL::TypeInfo* _getTypeInfo();\n\
+    static const ::PIDL::TypeInfo* _getTypeInfo();\n\
     typedef @_interface interfacetype;\n\
     inline @()\n\
     {\n\
@@ -69,7 +78,7 @@ public:\n\
     {\n\
         return ptr != 0;\n\
     }\n\
-    inline operator ::Core/CCA/Component::PIDL::Object() const\n\
+    inline operator ::PIDL::Object() const\n\
     {\n\
         return ptr;\n\
     }\n\
@@ -77,7 +86,7 @@ public:\n\
 
 struct Leader {
 };
-static Leader leader;
+static Leader leader2;
 
 struct SState : public std::ostringstream {
     std::string leader;
@@ -90,10 +99,7 @@ struct SState : public std::ostringstream {
     void begin_namespace(SymbolTable*);
     void close_namespace();
     void recursive_begin_namespace(SymbolTable*);
-    std::ostream& operator<<(const Leader&) {
-	*this << leader;
-	return *this;
-    }
+
     std::string push_leader() {
 	string oldleader=leader;
 	leader+="    ";
@@ -102,7 +108,16 @@ struct SState : public std::ostringstream {
     void pop_leader(const std::string& oldleader) {
 	leader=oldleader;
     }
+
+    friend std::ostream& operator<<( ostream& out, const Leader& );
+
 };
+
+std::ostream& operator<<( SState& out, const Leader& ) {
+  out << out.leader;
+  return out;
+}
+
 
 struct EmitState {
     int instanceNum;
@@ -219,7 +234,7 @@ void Symbol::emit_forward(EmitState& e)
 	    return;
 	}
 	e.fwd.begin_namespace(symtab);
-	e.fwd << leader << "class " << name << ";\n";
+	e.fwd << leader2 << "class " << name << ";\n";
 	break;
     case MethodType:
 	cerr << "Symbol::emit_forward called for a method!\n";
@@ -250,9 +265,13 @@ void SState::close_namespace()
 {
     if(currentPackage){
 	while(currentPackage->getParent()){
-	    for(SymbolTable* p=currentPackage->getParent();p->getParent()!=0;p=p->getParent())
+	    for(SymbolTable* p=currentPackage->getParent();
+		p->getParent()!=0;
+		p=p->getParent())
+	      {
 		*this << "    ";
-	    *this << "} // End namespace " << currentPackage->getName() << '\n';
+	      }
+	    *this << "} // End namespace " << currentPackage->getName() <<'\n';
 	    currentPackage=currentPackage->getParent();
 	}
 	*this << "\n";
@@ -317,30 +336,45 @@ void CI::emit(EmitState& e)
 void CI::emit_typeinfo(EmitState& e)
 {
     std::string fn=cppfullname(0);
-#ifdef __sgi
+
+    char* uuid_str;
     uuid_t uuid;
+#ifdef __sgi
     uint_t status;
     uuid_create(&uuid, &status);
     if(status != uuid_s_ok){
 	cerr << "Error creating uuid!\n";
 	exit(1);
     }
-    char* uuid_str;
+
     uuid_to_string(&uuid, &uuid_str, &status);
     if(status != uuid_s_ok){
 	cerr << "Error creating uuid string!\n";
 	exit(1);
     }
+#else
+  #if 0
+    uuid_str = new char[ 64 ];
+    uuid_generate( uuid );
+    sprintf( uuid_str, "%s", uuid );
+  #else
+    uuid_str = new char[ 64 ];
+    sprintf( uuid_str, "dav_was_here" );
+  #endif
 #endif
-    e.out << "const ::Core/CCA/Component::PIDL::TypeInfo* " << fn << "::_getTypeInfo()\n";
+    e.out << "const ::PIDL::TypeInfo* " << fn << "::_getTypeInfo()\n";
     e.out << "{\n";
-    e.out << "    static ::Core/CCA/Component::PIDL::TypeInfo* ti=0;\n";
+    e.out << "    static ::PIDL::TypeInfo* ti=0;\n";
     e.out << "    if(!ti){\n";
-    e.out << "        ::Core/CCA/Component::PIDL::TypeInfo_internal* tii=\n";
-    e.out << "            new ::Core/CCA/Component::PIDL::TypeInfo_internal(\"" << cppfullname(0) << "\", \"" << uuid_str << "\",\n";
+    e.out << "        ::PIDL::TypeInfo_internal* tii=\n";
+ 
+
+   e.out << "            new ::PIDL::TypeInfo_internal(\"" 
+	 << cppfullname(0) << "\", \"" << uuid_str << "\",\n";
+
     e.out << "                                                     _handler_table" << e.instanceNum << ",\n";
     e.out << "                                                     sizeof(_handler_table" << e.instanceNum << ")/sizeof(globus_nexus_handler_t),\n";
-    e.out << "                                                     &" << fn << "_proxy::create_proxy);\n\n";
+    e.out << "                                                     &::" << fn << "_proxy::create_proxy);\n\n";
     SymbolTable* localScope=symbols->getParent();
     if(parentclass)
 	e.out << "        tii->add_parentclass(" << parentclass->cppfullname(localScope) << "::_getTypeInfo(), " << parentclass->vtable_base << ");\n";
@@ -348,12 +382,15 @@ void CI::emit_typeinfo(EmitState& e)
 	iter != parent_ifaces.end(); iter++){
 	e.out << "        tii->add_parentiface(" << (*iter)->cppfullname(localScope) << "::_getTypeInfo(), " << (*iter)->vtable_base << ");\n";
     }
-    e.out << "        ti=new ::Core/CCA/Component::PIDL::TypeInfo(tii);\n";
+    e.out << "        ti=new ::PIDL::TypeInfo(tii);\n";
     e.out << "    }\n";
     e.out << "    return ti;\n";
     e.out << "}\n\n";
 
+// Dd:
+#ifdef __sgi
     free(uuid_str);
+#endif
 }
 
 void CI::emit_handlers(EmitState& e)
@@ -379,34 +416,34 @@ void CI::emit_handlers(EmitState& e)
     e.out << "    int _addRef;\n";
     e.out << "    globus_nexus_get_int(_recvbuff, &_addRef, 1);\n";
     e.out << "    if(int _gerr=globus_nexus_get_startpoint(_recvbuff, &_sp, 1))\n";
-    e.out << "        throw ::Core/CCA/Component::PIDL::GlobusError(\"get_startpoint\", _gerr);\n";
+    e.out << "        throw ::PIDL::GlobusError(\"get_startpoint\", _gerr);\n";
     e.out << "    if(int _gerr=globus_nexus_buffer_destroy(_recvbuff))\n";
-    e.out << "        throw ::Core/CCA/Component::PIDL::GlobusError(\"buffer_destroy\", _gerr);\n";
-    e.out << "    const ::Core/CCA/Component::PIDL::TypeInfo* ti=" << cppfullname(0) << "::_getTypeInfo();\n";
+    e.out << "        throw ::PIDL::GlobusError(\"buffer_destroy\", _gerr);\n";
+    e.out << "    const ::PIDL::TypeInfo* ti=" << cppfullname(0) << "::_getTypeInfo();\n";
     e.out << "    int result=ti->isa(classname, uuid);\n";
     e.out << "    delete[] classname;\n";
     e.out << "    delete[] uuid;\n";
     e.out << "    int flag;\n";
-    e.out << "    if(result == ::Core/CCA/Component::PIDL::TypeInfo::vtable_invalid) {\n";
+    e.out << "    if(result == ::PIDL::TypeInfo::vtable_invalid) {\n";
     e.out << "        flag=0;\n";
     e.out << "    } else {\n";
     e.out << "        flag=1;\n";
     e.out << "        if(_addRef){\n";
     e.out << "            void* _v=globus_nexus_endpoint_get_user_pointer(_ep);\n";
-    e.out << "            ::Core/CCA/Component::PIDL::ServerContext* _sc=static_cast<::Core/CCA/Component::PIDL::ServerContext*>(_v);\n";
+    e.out << "            ::PIDL::ServerContext* _sc=static_cast< ::PIDL::ServerContext*>(_v);\n";
     e.out << "            _sc->d_objptr->_addReference();\n";
     e.out << "        }\n";
     e.out << "    }\n";
     e.out << "    globus_nexus_buffer_t sendbuff;\n";
     e.out << "    int rsize=globus_nexus_sizeof_int(2);\n";
     e.out << "    if(int gerr=globus_nexus_buffer_init(&sendbuff, rsize, 0))\n";
-    e.out << "        throw ::Core/CCA/Component::PIDL::GlobusError(\"buffer_init\", gerr);\n";
+    e.out << "        throw ::PIDL::GlobusError(\"buffer_init\", gerr);\n";
     e.out << "    globus_nexus_put_int(&sendbuff, &flag, 1);\n";
     e.out << "    globus_nexus_put_int(&sendbuff, &result, 1);\n";
     e.out << "    if(int _gerr=globus_nexus_send_rsr(&sendbuff, &_sp, 0, GLOBUS_TRUE, GLOBUS_FALSE))\n";
-    e.out << "        throw ::Core/CCA/Component::PIDL::GlobusError(\"send_rsr\", _gerr);\n";
+    e.out << "        throw ::PIDL::GlobusError(\"send_rsr\", _gerr);\n";
     e.out << "    if(int _gerr=globus_nexus_startpoint_eventually_destroy(&_sp, GLOBUS_FALSE, 30))\n";
-    e.out << "        throw ::Core/CCA/Component::PIDL::GlobusError(\"startpoint_eventually_destroy\", _gerr);\n";
+    e.out << "        throw ::PIDL::GlobusError(\"startpoint_eventually_destroy\", _gerr);\n";
     e.out << "}\n\n";
 
     // Emit delete reference handler...
@@ -417,9 +454,9 @@ void CI::emit_handlers(EmitState& e)
     e.out << "                      globus_nexus_buffer_t* _recvbuff, globus_bool_t)\n";
     e.out << "{\n";
     e.out << "    if(int _gerr=globus_nexus_buffer_destroy(_recvbuff))\n";
-    e.out << "        throw ::Core/CCA/Component::PIDL::GlobusError(\"buffer_destroy\", _gerr);\n";
+    e.out << "        throw ::PIDL::GlobusError(\"buffer_destroy\", _gerr);\n";
     e.out << "    void* _v=globus_nexus_endpoint_get_user_pointer(_ep);\n";
-    e.out << "    ::Core/CCA/Component::PIDL::ServerContext* _sc=static_cast<::Core/CCA/Component::PIDL::ServerContext*>(_v);\n";
+    e.out << "    ::PIDL::ServerContext* _sc=static_cast< ::PIDL::ServerContext*>(_v);\n";
     e.out << "    _sc->d_objptr->_deleteReference();\n";
     e.out << "}\n\n";
 
@@ -561,8 +598,8 @@ void Method::emit_comment(EmitState& e, const std::string& leader,
 void Method::emit_prototype(SState& out, Context ctx,
 			    SymbolTable* localScope) const
 {
-    out << leader << "// " << fullsignature() << '\n';
-    out << leader << "virtual ";
+    out << leader2 << "// " << fullsignature() << '\n';
+    out << leader2 << "virtual ";
     return_type->emit_prototype(out, Type::ReturnType, localScope);
     out << " " << name << "(";
     std::vector<Argument*>& list=args->getList();
@@ -625,15 +662,15 @@ void Method::emit_handler(EmitState& e, CI* emit_class) const
     if(reply_required()){
 	e.out << "    globus_nexus_startpoint_t _sp;\n";
 	e.out << "    if(int _gerr=globus_nexus_get_startpoint(_recvbuff, &_sp, 1))\n";
-	e.out << "        throw ::Core/CCA/Component::PIDL::GlobusError(\"get_startpoint\", _gerr);\n";
+	e.out << "        throw ::PIDL::GlobusError(\"get_startpoint\", _gerr);\n";
     }
     // Destroy the buffer...
     e.out << "    if(int _gerr=globus_nexus_buffer_destroy(_recvbuff))\n";
-    e.out << "        throw ::Core/CCA/Component::PIDL::GlobusError(\"buffer_destroy\", _gerr);\n";
+    e.out << "        throw ::PIDL::GlobusError(\"buffer_destroy\", _gerr);\n";
     e.out << "    void* _v=globus_nexus_endpoint_get_user_pointer(_ep);\n";
     string myclass=emit_class->cppfullname(0)+"_interface";
-    e.out << "    ::Core/CCA/Component::PIDL::ServerContext* _sc=static_cast<::Core/CCA/Component::PIDL::ServerContext*>(_v);\n";
-    e.out << "    " << myclass << "* _obj=static_cast<" << myclass << "*>(_sc->d_ptr);\n";
+    e.out << "    ::PIDL::ServerContext* _sc=static_cast< ::PIDL::ServerContext*>(_v);\n";
+    e.out << "    " << myclass << "* _obj=static_cast< " << myclass << "*>(_sc->d_ptr);\n";
     e.out << "\n";
 
     // Declare out arguments...
@@ -690,7 +727,7 @@ void Method::emit_handler(EmitState& e, CI* emit_class) const
 	}
 	e.out << "    globus_nexus_buffer_t _sendbuff;\n";
 	e.out << "    if(int _gerr=globus_nexus_buffer_init(&_sendbuff, _rsize, 0))\n";
-	e.out << "        throw ::Core/CCA/Component::PIDL::GlobusError(\"buffer_init\", _gerr);\n";
+	e.out << "        throw ::PIDL::GlobusError(\"buffer_init\", _gerr);\n";
 	e.out << "    int _flag=0;\n";
 	e.out << "    globus_nexus_put_int(&_sendbuff, &_flag, 1);\n";
 	if(return_type){
@@ -716,9 +753,9 @@ void Method::emit_handler(EmitState& e, CI* emit_class) const
 	e.out << "    // Send the reply...\n";
 	int reply_handler_id=0; // Always 0
 	e.out << "    if(int _gerr=globus_nexus_send_rsr(&_sendbuff, &_sp, " << reply_handler_id << ", GLOBUS_TRUE, GLOBUS_FALSE))\n";
-	e.out << "        throw ::Core/CCA/Component::PIDL::GlobusError(\"send_rsr\", _gerr);\n";
+	e.out << "        throw ::PIDL::GlobusError(\"send_rsr\", _gerr);\n";
 	e.out << "    if(int _gerr=globus_nexus_startpoint_eventually_destroy(&_sp, GLOBUS_FALSE, 30))\n";
-	e.out << "        throw ::Core/CCA/Component::PIDL::GlobusError(\"startpoint_eventually_destroy\", _gerr);\n";
+	e.out << "        throw ::PIDL::GlobusError(\"startpoint_eventually_destroy\", _gerr);\n";
     }
     // Clean up inout and out arguments
     
@@ -749,9 +786,9 @@ void CI::emit_proxyclass(EmitState& e)
     std::string pname=name+"_proxy";
     std::string iname=name+"_interface";
 
-    e.proxy << leader << "class " << pname << " : public ::Core/CCA/Component::PIDL::ProxyBase, public " << iname << " {\n";
-    e.proxy << leader << "public:\n";
-    e.proxy << leader << "    " << pname << "(const ::Core/CCA/Component::PIDL::Reference&);\n";
+    e.proxy << leader2 << "class " << pname << " : public ::PIDL::ProxyBase, public " << iname << " {\n";
+    e.proxy << leader2 << "public:\n";
+    e.proxy << leader2 << "    " << pname << "(const ::PIDL::Reference&);\n";
     std::string oldleader=e.proxy.push_leader();
     std::vector<Method*> vtab;
     gatherVtable(vtab, false);
@@ -763,15 +800,15 @@ void CI::emit_proxyclass(EmitState& e)
 	m->emit_prototype(e.proxy, Method::Normal, symbols->getParent());
     }
     e.proxy.pop_leader(oldleader);
-    e.proxy << leader << "protected:\n";
-    e.proxy << leader << "    virtual ~" << pname << "();\n";
-    e.proxy << leader << "private:\n";
-    e.proxy << leader << "    virtual void _getReference(::Core/CCA/Component::PIDL::Reference&, bool copy) const;\n";
-    e.proxy << leader << "    friend const ::Core/CCA/Component::PIDL::TypeInfo* " << name << "::_getTypeInfo();\n";
-    e.proxy << leader << "    static ::Core/CCA/Component::PIDL::Object_interface* create_proxy(const ::Core/CCA/Component::PIDL::Reference&);\n";
-    e.proxy << leader << "    " << pname << "(const " << pname << "&);\n";
-    e.proxy << leader << "    " << pname << "& operator=(const " << pname << "&);\n";
-    e.proxy << leader << "};\n\n";
+    e.proxy << leader2 << "protected:\n";
+    e.proxy << leader2 << "    virtual ~" << pname << "();\n";
+    e.proxy << leader2 << "private:\n";
+    e.proxy << leader2 << "    virtual void _getReference(::PIDL::Reference&, bool copy) const;\n";
+    e.proxy << leader2 << "    friend const ::PIDL::TypeInfo* " << name << "::_getTypeInfo();\n";
+    e.proxy << leader2 << "    static ::PIDL::Object_interface* create_proxy(const ::PIDL::Reference&);\n";
+    e.proxy << leader2 << "    " << pname << "(const " << pname << "&);\n";
+    e.proxy << leader2 << "    " << pname << "& operator=(const " << pname << "&);\n";
+    e.proxy << leader2 << "};\n\n";
     e.proxy.close_namespace();
 }
 
@@ -783,7 +820,7 @@ void CI::emit_header(EmitState& e)
 
     // interface
     std::string iname=name+"_interface";
-    e.decl << leader << "class " << iname << " : ";
+    e.decl << leader2 << "class " << iname << " : ";
 
     // Parents
     bool haveone=false;
@@ -801,12 +838,12 @@ void CI::emit_header(EmitState& e)
 	e.decl << "virtual public " << (*iter)->cppfullname(e.decl.currentPackage) << "_interface";
     }
     if(!haveone)
-	e.decl << "virtual public ::Core/CCA/Component::PIDL::Object_interface";
+	e.decl << "virtual public ::PIDL::Object_interface";
     e.decl << " {\n";
 
     // The interace class body
-    e.decl << leader << "public:\n";
-    e.decl << leader << "    virtual ~" << iname << "();\n";
+    e.decl << leader2 << "public:\n";
+    e.decl << leader2 << "    virtual ~" << iname << "();\n";
     std::string oldleader=e.decl.push_leader();
     for(vector<Method*>::const_iterator iter=mymethods.begin();
 	iter != mymethods.end();iter++){
@@ -816,16 +853,16 @@ void CI::emit_header(EmitState& e)
     }
     e.decl.pop_leader(oldleader);
     // The type signature method...
-    e.decl << leader << "    virtual const ::Core/CCA/Component::PIDL::TypeInfo* _getTypeInfo() const;\n";
-    e.decl << leader << "protected:\n";
-    e.decl << leader << "    " << iname << "(bool initServer=true);\n";
-    e.decl << leader << "private:\n";
-    e.decl << leader << "    " << iname << "(const " << iname << "&);\n";
-    e.decl << leader << "    " << iname << "& operator=(const " << iname << "&);\n";
-    e.decl << leader << "};\n\n";
+    e.decl << leader2 << "    virtual const ::PIDL::TypeInfo* _getTypeInfo() const;\n";
+    e.decl << leader2 << "protected:\n";
+    e.decl << leader2 << "    " << iname << "(bool initServer=true);\n";
+    e.decl << leader2 << "private:\n";
+    e.decl << leader2 << "    " << iname << "(const " << iname << "&);\n";
+    e.decl << leader2 << "    " << iname << "& operator=(const " << iname << "&);\n";
+    e.decl << leader2 << "};\n\n";
 
     // The Handle
-    e.decl << leader;
+    e.decl << leader2;
     for_each(handle_class.begin(), handle_class.end(), output_sub(e.decl, name));
     e.decl << "    // Conversion operations\n";
     // Emit an operator() for each parent class and interface...
@@ -834,14 +871,14 @@ void CI::emit_header(EmitState& e)
     for(std::vector<CI*>::iterator iter=parents.begin();
 	iter != parents.end(); iter++){
 	if(*iter != this){
-	    e.decl << leader << "    inline operator " << (*iter)->cppfullname(e.decl.currentPackage) << "() const\n";
-	    e.decl << leader << "    {\n";
-	    e.decl << leader << "        return ptr;\n";
-	    e.decl << leader << "    }\n";
+	    e.decl << leader2 << "    inline operator " << (*iter)->cppfullname(e.decl.currentPackage) << "() const\n";
+	    e.decl << leader2 << "    {\n";
+	    e.decl << leader2 << "        return ptr;\n";
+	    e.decl << leader2 << "    }\n";
 	    e.decl << "\n";
 	}
     }
-    e.decl << leader << "};\n\n";
+    e.decl << leader2 << "};\n\n";
 }
 
 void CI::emit_interface(EmitState& e)
@@ -875,7 +912,7 @@ void CI::emit_interface(EmitState& e)
     e.out << "{\n";
     e.out << "}\n\n";
 
-    e.out << "const ::Core/CCA/Component::PIDL::TypeInfo* " << fn << "::_getTypeInfo() const\n";
+    e.out << "const ::PIDL::TypeInfo* " << fn << "::_getTypeInfo() const\n";
     e.out << "{\n";
     e.out << "    return " << cppfullname(0) << "::_getTypeInfo();\n";
     e.out << "}\n\n";
@@ -887,28 +924,29 @@ void CI::emit_proxy(EmitState& e)
     if(fn[0] == ':' && fn[1] == ':')
 	fn=fn.substr(2);
     std::string cn=cppclassname()+"_proxy";
-    e.out << fn << "::" << cn << "(const ::Core/CCA/Component::PIDL::Reference& ref)\n";
+    e.out << fn << "::" << cn << "(const ::PIDL::Reference& ref) :\n";
     SymbolTable* localScope=symbols->getParent();
-    e.out << " : " << cppfullname(localScope) << "_interface(false)";
+
+    e.out << "::PIDL::ProxyBase(ref),";
+
+    e.out << cppfullname(localScope) << "_interface(false)";
     vector<Interface*> parents;
     gatherParentInterfaces(parents);
     for(vector<Interface*>::iterator iter=parents.begin();
 	iter != parents.end(); iter++){
 	e.out  << ",\n   "<< (*iter)->cppfullname(localScope) << "_interface(false)";
     }
-    e.out << ",\n   ";
-    e.out << "::Core/CCA/Component::PIDL::ProxyBase(ref)";
     e.out << "\n";
     e.out << "{\n";
     e.out << "}\n\n";
     e.out << fn << "::~" << cn << "()\n";
     e.out << "{\n";
     e.out << "}\n\n";
-    e.out << "void " << fn << "::_getReference(::Core/CCA/Component::PIDL::Reference& ref, bool copy) const\n";
+    e.out << "void " << fn << "::_getReference(::PIDL::Reference& ref, bool copy) const\n";
     e.out << "{\n";
     e.out << "    _proxyGetReference(ref, copy);\n";
     e.out << "}\n\n";
-    e.out << "::Core/CCA/Component::PIDL::Object_interface* " << fn << "::create_proxy(const ::Core/CCA/Component::PIDL::Reference& ref)\n";
+    e.out << "::PIDL::Object_interface* " << fn << "::create_proxy(const ::PIDL::Reference& ref)\n";
     e.out << "{\n";
     e.out << "    return new " << cn << "(ref);\n";
     e.out << "}\n\n";
@@ -929,7 +967,7 @@ void Method::emit_proxy(EmitState& e, const string& fn,
     emit_prototype_defin(e, fn+"::", localScope);
     e.out << "\n{\n";
     if(reply_required())
-	e.out << "    ::Core/CCA/Component::PIDL::ReplyEP* _reply=::Core/CCA/Component::PIDL::ReplyEP::acquire();\n";
+	e.out << "    ::PIDL::ReplyEP* _reply=::PIDL::ReplyEP::acquire();\n";
     e.out << "    globus_nexus_startpoint_t _sp;\n";
     e.out << "    _reply->get_startpoint_copy(&_sp);\n\n";
     std::vector<Argument*>& list=args->getList();
@@ -952,7 +990,7 @@ void Method::emit_proxy(EmitState& e, const string& fn,
     }
     e.out << "    globus_nexus_buffer_t _buffer;\n";
     e.out << "    if(int _gerr=globus_nexus_buffer_init(&_buffer, _size, 0))\n";
-    e.out << "        throw ::Core/CCA/Component::PIDL::GlobusError(\"buffer_init\", _gerr);\n";
+    e.out << "        throw ::PIDL::GlobusError(\"buffer_init\", _gerr);\n";
     if(list.size() != 0)
 	e.out << "    // Marshal the arguments\n";
     argNum=0;
@@ -972,12 +1010,12 @@ void Method::emit_proxy(EmitState& e, const string& fn,
 	e.out << "    globus_nexus_put_startpoint_transfer(&_buffer, &_sp, 1);\n";
     }
     e.out << "    // Send the message\n";
-    e.out << "    ::Core/CCA/Component::PIDL::Reference _ref;\n";
+    e.out << "    ::PIDL::Reference _ref;\n";
     e.out << "    _proxyGetReference(_ref, false);\n";
     e.out << "    int _handler=_ref.getVtableBase()+" << handlerOff << ";\n";
     e.out << "    if(int _gerr=globus_nexus_send_rsr(&_buffer, &_ref.d_sp,\n";
     e.out << "                                       _handler, GLOBUS_TRUE, GLOBUS_FALSE))\n";
-    e.out << "        throw ::Core/CCA/Component::PIDL::GlobusError(\"send_rsr\", _gerr);\n";
+    e.out << "        throw ::PIDL::GlobusError(\"send_rsr\", _gerr);\n";
     if(reply_required()){
 	e.out << "    globus_nexus_buffer_t _recvbuff=_reply->wait();\n";
 	//... emit unmarshal...;
@@ -1005,9 +1043,9 @@ void Method::emit_proxy(EmitState& e, const string& fn,
 	    }
 	}
 	e.out.pop_leader(oldleader);
-	e.out << "    ::Core/CCA/Component::PIDL::ReplyEP::release(_reply);\n";
+	e.out << "    ::PIDL::ReplyEP::release(_reply);\n";
 	e.out << "    if(int _gerr=globus_nexus_buffer_destroy(&_recvbuff))\n";
-	e.out << "        throw ::Core/CCA/Component::PIDL::GlobusError(\"buffer_destroy\", _gerr);\n";
+	e.out << "        throw ::PIDL::GlobusError(\"buffer_destroy\", _gerr);\n";
 	if(return_type){
 	    if(!return_type->isvoid()){
 		e.out << "    return _ret;\n";
@@ -1092,12 +1130,12 @@ void ArrayType::emit_unmarshal(EmitState& e, const string& arg,
 	cerr << "ArrayType::emit_unmarshall, qty != 1: " << qty << '\n';
 	exit(1);
     }
-    e.out << leader << "int " << arg << "_dim[" << dim << "];\n";
-    e.out << leader << "globus_nexus_get_int(" << bufname << ", &" << arg << "_dim[0], " << dim << ");\n";
+    e.out << leader2 << "int " << arg << "_dim[" << dim << "];\n";
+    e.out << leader2 << "globus_nexus_get_int(" << bufname << ", &" << arg << "_dim[0], " << dim << ");\n";
     if(declare){
-	e.out << leader << cppfullname(0) << " " << arg << "(";
+	e.out << leader2 << cppfullname(0) << " " << arg << "(";
     } else {
-	e.out << leader << arg << ".resize(";
+	e.out << leader2 << arg << ".resize(";
     }
     for(int i=0;i<dim;i++){
 	if(i != 0)
@@ -1108,24 +1146,24 @@ void ArrayType::emit_unmarshal(EmitState& e, const string& arg,
     if(subtype->array_use_pointer()){
 	string pname=arg+"_uptr";
 	string sizename=arg+"_totalsize";
-	e.out << leader << "int " << sizename << "=";
+	e.out << leader2 << "int " << sizename << "=";
 	for(int i=0;i<dim;i++){
 	    if(i != 0)
 		e.out << "*";
 	    e.out << arg << "_dim[" << i << "]";
 	}
 	e.out << ";\n";
-	e.out << leader << cppfullname(0) << "::pointer " << pname << "=const_cast<" << cppfullname(0) << "::pointer>(" << arg << ".begin());\n";
+	e.out << leader2 << cppfullname(0) << "::pointer " << pname << "=const_cast< " << cppfullname(0) << "::pointer>(" << arg << ".begin());\n";
 	subtype->emit_unmarshal(e, pname, sizename, bufname, false);
     } else {
 	string pname=arg+"_iter";
-	e.out << leader << "for(" << cppfullname(0) << "::iterator " << pname << "=" << arg << ".begin();";
+	e.out << leader2 << "for(" << cppfullname(0) << "::iterator " << pname << "=" << arg << ".begin();";
 	e.out << pname << " != " << arg << ".end(); " << pname << "++){\n";
 	string oldleader=e.out.push_leader();
-	e.out << leader << cppfullname(0) << "::reference " << arg << "_el = *" << pname << ";\n";
+	e.out << leader2 << cppfullname(0) << "::reference " << arg << "_el = *" << pname << ";\n";
 	subtype->emit_unmarshal(e, arg+"_el", "1", bufname, false);
 	e.out.pop_leader(oldleader);
-	e.out << leader << "}\n";
+	e.out << leader2 << "}\n";
     }
 }
 
@@ -1133,17 +1171,17 @@ void ArrayType::emit_marshalsize(EmitState& e, const string& arg,
 				 const string& sizevar,
 				 const string& /* qty */) const
 {
-    e.out << leader << sizevar << " += globus_nexus_sizeof_int(" << dim << "); // array dims\n";
+    e.out << leader2 << sizevar << " += globus_nexus_sizeof_int(" << dim << "); // array dims\n";
     if(subtype->uniformsize()){
 	string sizename=arg+"_mtotalsize";
 	if(dim == 1){
-	    e.out << leader << "int " << sizename << "=" << arg << ".size();\n";
+	    e.out << leader2 << "int " << sizename << "=" << arg << ".size();\n";
 	} else {
 	    string dimname=arg+"_mdim";
-	    e.out << leader << "int " << dimname << "[" << dim << "];\n";
+	    e.out << leader2 << "int " << dimname << "[" << dim << "];\n";
 	    for(int i=0;i<dim;i++)
-		e.out << leader << dimname << "[" << i << "]=" << arg << ".size" << i+1 << "();\n";
-	    e.out << leader << "int " << sizename << "=" << dimname << "[0]";
+		e.out << leader2 << dimname << "[" << i << "]=" << arg << ".size" << i+1 << "();\n";
+	    e.out << leader2 << "int " << sizename << "=" << dimname << "[0]";
 	    for(int i=1;i<dim;i++)
 		e.out << "*" << dimname << "[" << i << "]";
 	    e.out << ";\n";
@@ -1151,19 +1189,19 @@ void ArrayType::emit_marshalsize(EmitState& e, const string& arg,
 	subtype->emit_marshalsize(e, "", sizevar, arg+"_mtotalsize");
     } else {
 	string pname=arg+"_iter";
-	e.out << leader << "for(" << cppfullname(0) << "::const_iterator " << pname << "=" << arg << ".begin();";
+	e.out << leader2 << "for(" << cppfullname(0) << "::const_iterator " << pname << "=" << arg << ".begin();";
 	e.out << pname << " != " << arg << ".end(); " << pname << "++){\n";
 	string oldleader=e.out.push_leader();
-	e.out << leader << cppfullname(0) << "::const_reference " << arg << "_el = *" << pname << ";\n";
+	e.out << leader2 << cppfullname(0) << "::const_reference " << arg << "_el = *" << pname << ";\n";
 	subtype->emit_marshalsize(e, arg+"_el", sizevar, "1");
 	e.out.pop_leader(oldleader);
-	e.out << leader << "}\n";
+	e.out << leader2 << "}\n";
     }
 }
 
 void ArrayType::emit_declaration(EmitState& e, const string& arg) const
 {
-    e.out << leader << cppfullname(0) << " " << arg << ";\n";
+    e.out << leader2 << cppfullname(0) << " " << arg << ";\n";
 }
 
 bool ArrayType::array_use_pointer() const
@@ -1183,7 +1221,7 @@ void ArrayType::emit_marshal(EmitState& e, const string& arg,
     string pname;
     if(subtype->array_use_pointer()){
 	pname=arg+"_mptr";
-	e.out << leader << cppfullname(0) << "::pointer " << pname << "=const_cast<" << cppfullname(0) << "::pointer>(" << arg << ".begin());\n";
+	e.out << leader2 << cppfullname(0) << "::pointer " << pname << "=const_cast< " << cppfullname(0) << "::pointer>(" << arg << ".begin());\n";
     } else {
 	pname=arg+"_iter";
     }
@@ -1191,33 +1229,33 @@ void ArrayType::emit_marshal(EmitState& e, const string& arg,
     string dimname=arg+"_mdim";
     if(!top || !subtype->uniformsize()){
 	if(dim == 1){
-	    e.out << leader << "int " << sizename << "=" << arg << ".size();\n";
+	    e.out << leader2 << "int " << sizename << "=" << arg << ".size();\n";
 	} else {
-	    e.out << leader << "int " << dimname << "[" << dim << "];\n";
+	    e.out << leader2 << "int " << dimname << "[" << dim << "];\n";
 	    for(int i=0;i<dim;i++)
-		e.out << leader << dimname << "[" << i << "]=" << arg << ".size" << i+1 << "();\n";
-	    e.out << leader << "int " << sizename << "=" << dimname << "[0]";
+		e.out << leader2 << dimname << "[" << i << "]=" << arg << ".size" << i+1 << "();\n";
+	    e.out << leader2 << "int " << sizename << "=" << dimname << "[0]";
 	    for(int i=1;i<dim;i++)
 		e.out << "*" << dimname << "[" << i << "]";
 	    e.out << ";\n";
 	}
     }
     if(dim == 1){
-	e.out << leader << "globus_nexus_put_int(" << bufname << ", &" << sizename << ", 1);\n";
+	e.out << leader2 << "globus_nexus_put_int(" << bufname << ", &" << sizename << ", 1);\n";
     } else {
-	e.out << leader << "globus_nexus_put_int(" << bufname << ", &" << dimname << "[0], " << dim << ");\n";
+	e.out << leader2 << "globus_nexus_put_int(" << bufname << ", &" << dimname << "[0], " << dim << ");\n";
     }
 
     if(subtype->array_use_pointer()){
 	subtype->emit_marshal(e, pname, sizename, bufname, false);
     } else {
-	e.out << leader << "for(" << cppfullname(0) << "::const_iterator " << pname << "=" << arg << ".begin();";
+	e.out << leader2 << "for(" << cppfullname(0) << "::const_iterator " << pname << "=" << arg << ".begin();";
 	e.out << pname << " != " << arg << ".end(); " << pname << "++){\n";
-	e.out << leader << cppfullname(0) << "::const_reference " << arg << "_el = *" << pname << ";\n";
+	e.out << leader2 << cppfullname(0) << "::const_reference " << arg << "_el = *" << pname << ";\n";
 	string oldleader=e.out.push_leader();
 	subtype->emit_marshal(e, arg+"_el", "1", bufname, false);
 	e.out.pop_leader(oldleader);
-	e.out << leader << "}\n";
+	e.out << leader2 << "}\n";
     }
 }
 
@@ -1251,27 +1289,27 @@ void BuiltinType::emit_unmarshal(EmitState& e, const string& arg,
 	    cerr << "emit_unmarshal called for bool with qty != 1:" << qty << "\n";
 	    exit(1);
 	}
-	e.out << leader << "globus_byte_t " << arg << "_tmp;\n";
-	e.out << leader << "globus_nexus_get_byte(" << bufname << ", &" << arg << "_tmp, 1);\n";
+	e.out << leader2 << "globus_byte_t " << arg << "_tmp;\n";
+	e.out << leader2 << "globus_nexus_get_byte(" << bufname << ", &" << arg << "_tmp, 1);\n";
 	if(declare)
-	    e.out << leader << "bool ";
+	    e.out << leader2 << "bool ";
 	e.out << arg << "=(bool)" << arg << "_tmp;\n";
     } else if(cname == "string"){
 	if(qty != "1"){
 	    cerr << "emit_unmarshal call for bool with qty != 1:" << qty << "\n";
 	    exit(1);
 	}
-	e.out << leader << "int " << arg << "_length;\n";
-	e.out << leader << "globus_nexus_get_int(" << bufname << ", &" << arg << "_length, 1);\n";
+	e.out << leader2 << "int " << arg << "_length;\n";
+	e.out << leader2 << "globus_nexus_get_int(" << bufname << ", &" << arg << "_length, 1);\n";
 	if(declare)
-	    e.out << leader << "::CIA::string " << arg << "(" << arg << "_length, ' ');\n";
+	    e.out << leader2 << "::CIA::string " << arg << "(" << arg << "_length, ' ');\n";
 	else
-	    e.out << leader << arg << ".resize(" << arg << "_length);\n";
-	e.out << leader << "globus_nexus_get_char(" << bufname << ", " << arg << ".begin(), " << arg << "_length);\n";
+	    e.out << leader2 << arg << ".resize(" << arg << "_length);\n";
+	e.out << leader2 << "globus_nexus_get_char(" << bufname << ", " << arg << ".begin(), " << arg << "_length);\n";
     } else {
 	if(declare)
-	    e.out << leader << cname << " " << arg << ";\n";
-	e.out << leader << "globus_nexus_get_" << nexusname << "(" << bufname << ", ";
+	    e.out << leader2 << cname << " " << arg << ";\n";
+	e.out << leader2 << "globus_nexus_get_" << nexusname << "(" << bufname << ", ";
 	if(qty == "1")
 	    e.out << "&";
 	e.out << arg << ", " << qty << ");\n";
@@ -1291,9 +1329,9 @@ void BuiltinType::emit_marshalsize(EmitState& e, const string& arg,
 	    cerr << "emit_marshalsize call for string with qty != 1:" << qty << "\n";
 	    exit(1);
 	}
-	e.out << leader << sizevar << "+=globus_nexus_sizeof_int(1)+globus_nexus_sizeof_char(" << arg << ".length());\n";
+	e.out << leader2 << sizevar << "+=globus_nexus_sizeof_int(1)+globus_nexus_sizeof_char(" << arg << ".length());\n";
     } else {
-	e.out << leader << sizevar << "+=globus_nexus_sizeof_" << nexusname << "(" << qty << ");\n";
+	e.out << leader2 << sizevar << "+=globus_nexus_sizeof_" << nexusname << "(" << qty << ");\n";
     }
 }
 
@@ -1304,9 +1342,9 @@ void BuiltinType::emit_declaration(EmitState& e, const string& arg) const
 	cerr << "Trying to declare a void!\n";
 	exit(1);
     } else if(cname == "string"){
-	e.out << leader << "::CIA::string " << arg << ";\n";
+	e.out << leader2 << "::CIA::string " << arg << ";\n";
     } else {
-	e.out << leader << cname << " " << arg << ";\n";
+	e.out << leader2 << cname << " " << arg << ";\n";
     }
 }
 	
@@ -1324,18 +1362,18 @@ void BuiltinType::emit_marshal(EmitState& e, const string& arg,
 	    cerr << "marshal bool called with qty != 1: " << qty << '\n';
 	    exit(1);
 	}
-	e.out << leader << "globus_byte_t " << arg << "_tmp = " << arg << ";\n";
-	e.out << leader << "globus_nexus_put_byte (" << bufname << ", &" << arg << "_tmp, 1);\n";
+	e.out << leader2 << "globus_byte_t " << arg << "_tmp = " << arg << ";\n";
+	e.out << leader2 << "globus_nexus_put_byte (" << bufname << ", &" << arg << "_tmp, 1);\n";
     } else if(cname == "string"){
 	if(qty != "1"){
 	    cerr << "marshal string called with qty != 1: " << qty << '\n';
 	    exit(1);
 	}
-	e.out << leader << "int " << arg << "_len=" << arg << ".length();\n";
-	e.out << leader << "globus_nexus_put_int(" << bufname << ", &" << arg << "_len, 1);\n";
-	e.out << leader << "globus_nexus_put_char(" << bufname << ", const_cast<char*>(" << arg << ".begin()), " << arg << "_len);\n";
+	e.out << leader2 << "int " << arg << "_len=" << arg << ".length();\n";
+	e.out << leader2 << "globus_nexus_put_int(" << bufname << ", &" << arg << "_len, 1);\n";
+	e.out << leader2 << "globus_nexus_put_char(" << bufname << ", const_cast<char*>(" << arg << ".begin()), " << arg << "_len);\n";
     } else {
-	e.out << leader << "globus_nexus_put_" << nexusname << "(" << bufname << ", ";
+	e.out << leader2 << "globus_nexus_put_" << nexusname << "(" << bufname << ", ";
 	if(qty == "1")
 	    e.out << "&";
 	e.out << arg << ", " << qty << ");\n";
@@ -1419,29 +1457,29 @@ void NamedType::emit_unmarshal(EmitState& e, const string& arg,
 	cerr << "NamedType::emit_unmarshal called with qty != 1: " << qty << '\n';
 	exit(1);
     }    
-    e.out << leader << "int " << arg << "_vtable_base;\n";
-    e.out << leader << "globus_nexus_get_int(" << bufname << ", &" << arg << "_vtable_base, 1);\n";
+    e.out << leader2 << "int " << arg << "_vtable_base;\n";
+    e.out << leader2 << "globus_nexus_get_int(" << bufname << ", &" << arg << "_vtable_base, 1);\n";
     if(declare)
-	e.out << leader << name->cppfullname(0) << " " << arg << ";\n";
-    e.out << leader << "if(" << arg << "_vtable_base == -1){\n";
-    e.out << leader << "    " << arg << "=0;\n";
-    e.out << leader << "} else {\n";
-    e.out << leader << "    ::Core/CCA/Component::PIDL::Reference _ref;\n";
-    e.out << leader << "    globus_nexus_get_startpoint(" << bufname << ", &_ref.d_sp, 1);\n";
-    e.out << leader << "    _ref.d_vtable_base=" << arg << "_vtable_base;\n";
-    e.out << leader << "    if(globus_nexus_startpoint_to_current_context(&_ref.d_sp)){\n";
-    e.out << leader << "        globus_nexus_endpoint_t* _ep;\n";
-    e.out << leader << "        if(int _gerr=globus_nexus_startpoint_get_endpoint(&_ref.d_sp, &_ep))\n";
-    e.out << leader << "            throw ::Core/CCA/Component::PIDL::GlobusError(\"get_endpoint\", _gerr);\n";
-    e.out << leader << "        void* _ptr=globus_nexus_endpoint_get_user_pointer(_ep);\n";
-    e.out << leader << "        ::Core/CCA/Component::PIDL::ServerContext* _sc=static_cast<::Core/CCA/Component::PIDL::ServerContext*>(_ptr);\n";
-    e.out << leader << "        " << arg << "=dynamic_cast<" << name->cppfullname(0) << "_interface*>(_sc->d_objptr);\n";
-    e.out << leader << "        if(int _gerr=globus_nexus_startpoint_destroy(&_ref.d_sp))\n";
-    e.out << leader << "            throw ::Core/CCA/Component::PIDL::GlobusError(\"startpoint_destroy\", _gerr);\n";
-    e.out << leader << "    } else {\n";
-    e.out << leader << "        " << arg << "=new " << name->cppfullname(0) << "_proxy(_ref);\n";
-    e.out << leader << "    }\n";
-    e.out << leader << "}\n";
+	e.out << leader2 << name->cppfullname(0) << " " << arg << ";\n";
+    e.out << leader2 << "if(" << arg << "_vtable_base == -1){\n";
+    e.out << leader2 << "    " << arg << "=0;\n";
+    e.out << leader2 << "} else {\n";
+    e.out << leader2 << "    ::PIDL::Reference _ref;\n";
+    e.out << leader2 << "    globus_nexus_get_startpoint(" << bufname << ", &_ref.d_sp, 1);\n";
+    e.out << leader2 << "    _ref.d_vtable_base=" << arg << "_vtable_base;\n";
+    e.out << leader2 << "    if(globus_nexus_startpoint_to_current_context(&_ref.d_sp)){\n";
+    e.out << leader2 << "        globus_nexus_endpoint_t* _ep;\n";
+    e.out << leader2 << "        if(int _gerr=globus_nexus_startpoint_get_endpoint(&_ref.d_sp, &_ep))\n";
+    e.out << leader2 << "            throw ::PIDL::GlobusError(\"get_endpoint\", _gerr);\n";
+    e.out << leader2 << "        void* _ptr=globus_nexus_endpoint_get_user_pointer(_ep);\n";
+    e.out << leader2 << "        ::PIDL::ServerContext* _sc=static_cast< ::PIDL::ServerContext*>(_ptr);\n";
+    e.out << leader2 << "        " << arg << "=dynamic_cast< " << name->cppfullname(0) << "_interface*>(_sc->d_objptr);\n";
+    e.out << leader2 << "        if(int _gerr=globus_nexus_startpoint_destroy(&_ref.d_sp))\n";
+    e.out << leader2 << "            throw ::PIDL::GlobusError(\"startpoint_destroy\", _gerr);\n";
+    e.out << leader2 << "    } else {\n";
+    e.out << leader2 << "        " << arg << "=new " << name->cppfullname(0) << "_proxy(_ref);\n";
+    e.out << leader2 << "    }\n";
+    e.out << leader2 << "}\n";
 }
 
 void NamedType::emit_marshalsize(EmitState& e, const string& arg,
@@ -1452,18 +1490,18 @@ void NamedType::emit_marshalsize(EmitState& e, const string& arg,
 	cerr << "NamedType::emit_marshalsize called with qty != 1: " << qty << '\n';
 	exit(1);
     }
-    e.out << leader << "::Core/CCA/Component::PIDL::Reference " << arg << "_ref;\n";
-    e.out << leader << "if(" << arg << "){\n";
-    e.out << leader << "    " << arg << "->_addReference();\n";
-    e.out << leader << "    " << arg << "->_getReference(" << arg << "_ref, true);\n";
-    e.out << leader << "}\n";
-    e.out << leader << sizevar << "+=globus_nexus_sizeof_int(1)+(";
+    e.out << leader2 << "::PIDL::Reference " << arg << "_ref;\n";
+    e.out << leader2 << "if(" << arg << "){\n";
+    e.out << leader2 << "    " << arg << "->_addReference();\n";
+    e.out << leader2 << "    " << arg << "->_getReference(" << arg << "_ref, true);\n";
+    e.out << leader2 << "}\n";
+    e.out << leader2 << sizevar << "+=globus_nexus_sizeof_int(1)+(";
     e.out << arg << "?globus_nexus_sizeof_startpoint(&" << arg << "_ref.d_sp, 1):0);\n";
 }
 
 void NamedType::emit_declaration(EmitState& e, const string& arg) const
 {
-    e.out << leader << name->cppfullname(0) << " " << arg << ";\n";
+    e.out << leader2 << name->cppfullname(0) << " " << arg << ";\n";
 }
 
 void NamedType::emit_marshal(EmitState& e, const string& arg,
@@ -1474,19 +1512,19 @@ void NamedType::emit_marshal(EmitState& e, const string& arg,
 	cerr << "NamedType::emit_marshal called with qty != 1: " << qty << '\n';
 	exit(1);
     }
-    e.out << leader << "if(" << arg << "){\n";
-    e.out << leader << "    const ::Core/CCA/Component::PIDL::TypeInfo* _dt=" << arg << "->_getTypeInfo();\n";
-    e.out << leader << "    const ::Core/CCA/Component::PIDL::TypeInfo* _bt=" << name->cppfullname(0) << "::_getTypeInfo();\n";
-    e.out << leader << "    int _vtable_offset=_dt->computeVtableOffset(_bt);\n";
-    e.out << leader << "    ::Core/CCA/Component::PIDL::Reference " << arg << "_ref;\n";
-    e.out << leader << "    " << arg << "->_getReference(" << arg << "_ref, true);\n";
-    e.out << leader << "    int _vtable_base=" << arg << "_ref.getVtableBase()+_vtable_offset;\n";
-    e.out << leader << "    globus_nexus_put_int(" << bufname << ", &_vtable_base, 1);\n";
-    e.out << leader << "    globus_nexus_put_startpoint_transfer(" << bufname << ", &" << arg << "_ref.d_sp, 1);\n";
-    e.out << leader << "} else {\n";
-    e.out << leader << "    int _vtable_base=-1; // Null ptr\n";
-    e.out << leader << "    globus_nexus_put_int(" << bufname << ", &_vtable_base, 1);\n";
-    e.out << leader << "}\n";
+    e.out << leader2 << "if(" << arg << "){\n";
+    e.out << leader2 << "    const ::PIDL::TypeInfo* _dt=" << arg << "->_getTypeInfo();\n";
+    e.out << leader2 << "    const ::PIDL::TypeInfo* _bt=" << name->cppfullname(0) << "::_getTypeInfo();\n";
+    e.out << leader2 << "    int _vtable_offset=_dt->computeVtableOffset(_bt);\n";
+    e.out << leader2 << "    ::PIDL::Reference " << arg << "_ref;\n";
+    e.out << leader2 << "    " << arg << "->_getReference(" << arg << "_ref, true);\n";
+    e.out << leader2 << "    int _vtable_base=" << arg << "_ref.getVtableBase()+_vtable_offset;\n";
+    e.out << leader2 << "    globus_nexus_put_int(" << bufname << ", &_vtable_base, 1);\n";
+    e.out << leader2 << "    globus_nexus_put_startpoint_transfer(" << bufname << ", &" << arg << "_ref.d_sp, 1);\n";
+    e.out << leader2 << "} else {\n";
+    e.out << leader2 << "    int _vtable_base=-1; // Null ptr\n";
+    e.out << leader2 << "    globus_nexus_put_int(" << bufname << ", &_vtable_base, 1);\n";
+    e.out << leader2 << "}\n";
 }
 
 void NamedType::emit_rettype(EmitState& e, const string& arg) const

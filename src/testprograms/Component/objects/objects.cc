@@ -16,9 +16,11 @@
 #include "objects_sidl.h"
 #include <Core/Thread/Time.h>
 #include <vector>
+
 using std::cerr;
 using std::cout;
 using std::vector;
+
 using objects_test::Client;
 using objects_test::RingMaster;
 
@@ -100,12 +102,9 @@ void usage(char* progname)
 int main(int argc, char* argv[])
 {
     using std::string;
-    using Component::PIDL::Object;
-    using Component::PIDL::PIDLException;
-    using Component::PIDL::PIDL;
 
     try {
-	PIDL::initialize(argc, argv);
+	PIDL::PIDL::initialize(argc, argv);
 
 	bool client=false;
 	bool server=false;
@@ -138,14 +137,14 @@ int main(int argc, char* argv[])
 	    cerr << "Waiting for objects connections...\n";
 	    cerr << pp->getURL().getString() << '\n';
 	} else {
-	    Object obj=PIDL::objectFrom(client_url);
+	    PIDL::Object obj=PIDL::PIDL::objectFrom(client_url);
 	    RingMaster rm=pidl_cast<RingMaster>(obj);
 
 	    Client_impl* me=new Client_impl;
 	    int myid=rm->registerClient(me);
 	    cerr << "nclients now " << myid << '\n';
 	}
-	PIDL::serveObjects();
+	PIDL::PIDL::serveObjects();
     } catch(const Exception& e) {
 	cerr << "Caught exception:\n";
 	cerr << e.message() << '\n';

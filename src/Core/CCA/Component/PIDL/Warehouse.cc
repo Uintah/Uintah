@@ -1,6 +1,6 @@
 
 /*
- *  Wharehouse.h: A pile of distributed objects
+ *  Warehouse.h: A pile of distributed objects
  *
  *  Written by:
  *   Steven G. Parker
@@ -11,7 +11,7 @@
  *  Copyright (C) 1999 SCI Group
  */
 
-#include <Core/CCA/Component/PIDL/Wharehouse.h>
+#include <Core/CCA/Component/PIDL/Warehouse.h>
 #include <Core/CCA/Component/PIDL/InvalidReference.h>
 #include <Core/CCA/Component/PIDL/Object.h>
 #include <Core/CCA/Component/PIDL/ServerContext.h>
@@ -20,22 +20,22 @@
 #include <iostream>
 #include <sstream>
 
-using Component::PIDL::Object_interface;
-using Component::PIDL::Wharehouse;
+using PIDL::Object_interface;
+using PIDL::Warehouse;
 using std::map;
 
-Wharehouse::Wharehouse()
-    : mutex("PIDL::Wharehouse lock"),
-      condition("PIDL::Wharehouse objects>0 condition")
+Warehouse::Warehouse()
+    : mutex("PIDL::Warehouse lock"),
+      condition("PIDL::Warehouse objects>0 condition")
 {
     nextID=1;
 }
 
-Wharehouse::~Wharehouse()
+Warehouse::~Warehouse()
 {
 }
 
-void Wharehouse::run()
+void Warehouse::run()
 {
     mutex.lock();
     while(objects.size() > 0)
@@ -43,7 +43,7 @@ void Wharehouse::run()
     mutex.unlock();
 }
 
-int Wharehouse::registerObject(Object_interface* object)
+int Warehouse::registerObject(Object_interface* object)
 {
     mutex.lock();
     int id=nextID++;
@@ -52,12 +52,12 @@ int Wharehouse::registerObject(Object_interface* object)
     return id;
 }
 
-Object_interface* Wharehouse::unregisterObject(int id)
+Object_interface* Warehouse::unregisterObject(int id)
 {
     mutex.lock();
     map<int, Object_interface*>::iterator iter=objects.find(id);
     if(iter == objects.end())
-	throw InternalError("Object not in wharehouse");
+	throw SCIRun::InternalError("Object not in wharehouse");
     objects.erase(id);
     if(objects.size() == 0)
 	condition.conditionSignal();
@@ -65,7 +65,7 @@ Object_interface* Wharehouse::unregisterObject(int id)
     return iter->second;
 }
 
-Object_interface* Wharehouse::lookupObject(int id)
+Object_interface* Warehouse::lookupObject(int id)
 {
     mutex.lock();
     map<int, Object_interface*>::iterator iter=objects.find(id);
@@ -78,9 +78,10 @@ Object_interface* Wharehouse::lookupObject(int id)
     }
 }
 
-Object_interface* Wharehouse::lookupObject(const std::string& str)
+Object_interface* Warehouse::lookupObject(const std::string& str)
 {
-    std::istringstream i(str);
+    string temp = str;
+    std::istringstream i(temp);
     int objid;
     i >> objid;
     if(!i)
@@ -92,7 +93,7 @@ Object_interface* Wharehouse::lookupObject(const std::string& str)
     return lookupObject(objid);
 }
 
-int Wharehouse::approval(char* urlstring, globus_nexus_startpoint_t* sp)
+int Warehouse::approval(char* urlstring, globus_nexus_startpoint_t* sp)
 {
     URL url(urlstring);
     Object_interface* obj=lookupObject(url.getSpec());

@@ -18,9 +18,9 @@
 #include <iostream>
 #include <string>
 
-using Component::PIDL::GlobusError;
-using Component::PIDL::Object_proxy;
-using Component::PIDL::TypeInfo;
+using PIDL::GlobusError;
+using PIDL::Object_proxy;
+using PIDL::TypeInfo;
 
 Object_proxy::Object_proxy(const Reference& ref)
     : ProxyBase(ref)
@@ -33,10 +33,12 @@ Object_proxy::Object_proxy(const URL& url)
     std::string s(url.getString());
     d_ref.d_vtable_base=TypeInfo::vtable_methods_start;
     char* str=const_cast<char*>(s.c_str());
+    cout << "Object_proxy: attaching\n";
     if(int gerr=globus_nexus_attach(str, &d_ref.d_sp)){
 	d_ref.d_vtable_base=TypeInfo::vtable_invalid;
 	throw GlobusError("nexus_attach", gerr);
     }
+    cout << "Object_proxy: DONE attaching\n";
 }
 
 Object_proxy::~Object_proxy()

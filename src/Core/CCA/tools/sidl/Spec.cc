@@ -741,14 +741,14 @@ ArrayType::~ArrayType()
 std::string ArrayType::fullname() const
 {
     std::ostringstream o;
-    o << "array" << dim << "<" << subtype->fullname() << ", " << dim << ">";
+    o << "array" << dim << "< " << subtype->fullname() << ", " << dim << ">";
     return o.str();
 }
 
 std::string ArrayType::cppfullname(SymbolTable* localScope) const
 {
     std::ostringstream o;
-    o << "::CIA::array" << dim << "<" << subtype->cppfullname(localScope);
+    o << "::CIA::array" << dim << "< " << subtype->cppfullname(localScope);
     if(dynamic_cast<ArrayType*>(subtype))
 	o << " "; // Keep > > from being >>
     o << ">";

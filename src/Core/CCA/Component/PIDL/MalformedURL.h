@@ -11,13 +11,13 @@
  *  Copyright (C) 1999 SCI Group
  */
 
-#ifndef Core/CCA/Component_PIDL_MalformedURL_h
-#define Core/CCA/Component_PIDL_MalformedURL_h
+#ifndef Component_PIDL_MalformedURL_h
+#define Component_PIDL_MalformedURL_h
 
 #include <Core/Exceptions/Exception.h>
 #include <string>
 
-namespace SCIRun {
+namespace PIDL {
 /**************************************
  
 CLASS
@@ -32,45 +32,48 @@ DESCRIPTION
    formed URL that doesn't map to a valid object.
 
 ****************************************/
-	class MalformedURL : public Exception {
-	public:
-	    //////////
-	    // Contruct the object, giving the offending URL and an
-	    // explanation of the error
-	    MalformedURL(const std::string& url, const std::string& error);
 
-	    //////////
-	    // Copy ctor
-	    MalformedURL(const MalformedURL&);
+class MalformedURL : public SCIRun::Exception {
 
-	    //////////
-	    // Destructor
-	    virtual ~MalformedURL();
+  public:
+    //////////
+    // Contruct the object, giving the offending URL and an
+    // explanation of the error
+    MalformedURL(const std::string& url, const std::string& error);
 
-	    //////////
-	    // Return a human readable explanation
-	    virtual const char* message() const;
+    //////////
+    // Copy ctor
+    MalformedURL(const MalformedURL&);
 
-	    //////////
-	    // Return the name of this class
-	    virtual const char* type() const;
-	protected:
-	private:
-	    //////////
-	    // The offending URL
-	    std::string d_url;
+    //////////
+    // Destructor
+    virtual ~MalformedURL();
 
-	    //////////
-	    // The error explanation
-	    std::string d_error;
+    //////////
+    // Return a human readable explanation
+    virtual const char* message() const;
 
-	    //////////
-	    // The "complete" message
-	    std::string d_msg;
+    //////////
+    // Return the name of this class
+    virtual const char* type() const;
 
-	    MalformedURL& operator=(const MalformedURL&);
-	};
-} // End namespace SCIRun
+  protected:
+  private:
+    //////////
+    // The offending URL
+    std::string d_url;
+
+    //////////
+    // The error explanation
+    std::string d_error;
+
+    //////////
+    // The "complete" message
+    std::string d_msg;
+
+    MalformedURL& operator=(const MalformedURL&);
+  };
+} // End namespace PIDL
 
 #endif
 

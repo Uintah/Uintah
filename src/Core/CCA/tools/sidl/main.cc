@@ -5,6 +5,12 @@
 #include "SymbolTable.h"
 #include <fstream>
 
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
+
+
+
 extern int yyparse();
 extern FILE* yyin;
 extern Specification specs;
@@ -17,8 +23,21 @@ bool foremit;
 
 char* find_cpp()
 {
-    //return "/usr/lib/gcc-lib/i386-redhat-linux/2.7.2.3/cpp";
-    return "/usr/lib/cpp";
+  struct stat s;
+  char * cpp = "/usr/lib/gcc-lib/i586-mandrake-linux/egcs-2.91.66/cpp";
+
+  if( stat( cpp, &s ) == -1 )
+    {
+      cerr << "ERROR in: ./SCIRun/src/Core/CCA/tools/sidl/main.cc:\n";
+      cerr << "Cpp: " << cpp << "doesn't seem to exist... bye.\n";
+      exit( 1 );
+    }
+
+  return cpp;
+  //    return "/usr/lib/gcc-lib/i586-mandrake-linux/egcs-2.91.66/cpp";
+
+  //    return "/usr/lib/gcc-lib/i386-redhat-linux/2.7.2.3/cpp";
+  //    return "/usr/lib/cpp";
 }
 
 char* find_builtin()

@@ -13,7 +13,7 @@
 
 #include <Core/CCA/Component/PIDL/MalformedURL.h>
 
-using Component::PIDL::MalformedURL;
+using PIDL::MalformedURL;
 
 MalformedURL::MalformedURL(const std::string& url,
 			   const std::string& error)

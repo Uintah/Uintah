@@ -20,7 +20,7 @@
 #include <iostream>
 using std::cerr;
 
-using Component::PIDL::ServerContext;
+using PIDL::ServerContext;
 
 static void unknown_handler(globus_nexus_endpoint_t* endpoint,
 			    globus_nexus_buffer_t* buffer,

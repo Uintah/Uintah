@@ -1,17 +1,19 @@
+#
 # Makefile fragment for this subdirectory
+#
 
-SRCDIR   := tools/sidl
+SRCDIR   := Core/CCA/tools/sidl
 SIDL_SRCDIR := $(SRCDIR)
 
 GENSRCS := $(SRCDIR)/parser.cc $(SRCDIR)/parser.h $(SRCDIR)/scanner.cc
 SRCS := $(SRCDIR)/Spec.cc $(SRCDIR)/SymbolTable.cc $(SRCDIR)/emit.cc \
-	$(SRCDIR)/main.cc $(SRCDIR)/parser.y $(SRCDIR)/scanner.l \
-	$(SRCDIR)/static_check.cc
+        $(SRCDIR)/main.cc $(SRCDIR)/parser.y $(SRCDIR)/scanner.l \
+        $(SRCDIR)/static_check.cc
 
 PROGRAM := $(SRCDIR)/sidl
 SIDL_EXE := $(PROGRAM)
 PSELIBS :=
-LIBS :=
+LIBS := -luuid
 
 include $(SRCTOP_ABS)/scripts/program.mk
 
@@ -37,6 +39,6 @@ $(SRCDIR)/parser.cc: $(SRCDIR)/parser.h
 SIDL_BUILTINS := $(SRCTOP_ABS)/Core/CCA/Component/CIA/
 CFLAGS_SIDLMAIN   := $(CFLAGS) -DSIDL_BUILTINS=\"$(SIDL_BUILTINS)\"
 
-$(SRCDIR)/main.o:	$(SRCDIR)/main.cc
+$(SRCDIR)/main.o:       $(SRCDIR)/main.cc
 	$(CXX) $(CFLAGS_SIDLMAIN) $(INCLUDES) $(CC_DEPEND_REGEN) -c $< -o $@
 

@@ -11,8 +11,8 @@
  *  Copyright (C) 1999 SCI Group
  */
 
-#ifndef Core/CCA/Component_PIDL_pidl_cast_h
-#define Core/CCA/Component_PIDL_pidl_cast_h
+#ifndef Component_PIDL_pidl_cast_h
+#define Component_PIDL_pidl_cast_h
 
 // In global namespace for now...
 #include <Core/CCA/Component/PIDL/Object.h>
@@ -43,20 +43,23 @@ DESCRIPTION
    tries to upcast locally, but will send a remote procedure call
    (in TypeInfo::pidl_cast) if required.
 ****************************************/
+
 template<class T>
-T pidl_cast(const Core/CCA/Component::PIDL::Object& obj)
+T
+pidl_cast(const PIDL::Object& obj)
 {
     // Try the direct cast before we go remote
-    T::interfacetype* iface=dynamic_cast<T::interfacetype*>(obj.getPointer());
+    typename T::interfacetype * iface =
+                  dynamic_cast< typename T::interfacetype* >(obj.getPointer());
     if(iface)
         return iface;
 
-    const Core/CCA/Component::PIDL::TypeInfo* typeinfo = T::_getTypeInfo();
-    Core/CCA/Component::PIDL::Object_interface* result=typeinfo->pidl_cast(obj.getPointer());
+    const PIDL::TypeInfo* typeinfo = T::_getTypeInfo();
+    PIDL::Object_interface* result=typeinfo->pidl_cast(obj.getPointer());
     if(result){
-	T p=dynamic_cast<T::interfacetype*>(result);
+	T p=dynamic_cast<typename T::interfacetype*>(result);
 	if(!p)
-	    throw InternalError("TypeInfo::pidl_cast returned wrong object!");
+	    throw SCIRun::InternalError("TypeInfo::pidl_cast returned wrong object!");
 	return p;
     } else {
 	return 0;

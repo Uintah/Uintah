@@ -18,7 +18,8 @@
 #include <globus_nexus.h>
 #include <vector>
 
-using Component::PIDL::ReplyEP;
+using PIDL::ReplyEP;
+using namespace SCIRun;
 
 static Mutex mutex("ReplyEP pool lock");
 static std::vector<ReplyEP*> pool;

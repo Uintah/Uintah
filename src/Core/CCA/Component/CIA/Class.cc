@@ -55,9 +55,9 @@ Class Class_interface::getSuperclass()
     return 0;
 }
 
-Class Class_interface::getCore/CCA/ComponentType()
+Class Class_interface::getComponentType()
 {
-    NOT_FINISHED("final .CIA.Class .CIA.Class.getCore/CCA/ComponentType()");
+    NOT_FINISHED("final .CIA.Class .CIA.Class.getComponentType()");
     return 0;
 }
 

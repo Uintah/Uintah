@@ -13,7 +13,7 @@
 
 #include <Core/CCA/Component/PIDL/GlobusError.h>
 
-using Component::PIDL::PIDLException;
+using namespace PIDL;
 
 PIDLException::PIDLException()
 {

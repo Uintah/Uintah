@@ -11,12 +11,12 @@
  *  Copyright (C) 1999 SCI Group
  */
 
-#ifndef Core/CCA/Component_CIA_array_h
-#define Core/CCA/Component_CIA_array_h
+#ifndef Component_CIA_array_h
+#define Component_CIA_array_h
 
 #include <vector>
 
-namespace SCIRun {
+namespace CIA {
     template<class T> class array1 : public std::vector<T> {
     public:
 	array1() : std::vector<T>(0) {}
@@ -99,7 +99,7 @@ namespace SCIRun {
 	    }
 	}
     };
-} // End namespace SCIRun
+} // End namespace CIA
 
 #endif
 

@@ -19,13 +19,13 @@
 #include <Core/CCA/Component/PIDL/ServerContext.h>
 #include <Core/CCA/Component/PIDL/TypeInfo.h>
 #include <Core/CCA/Component/PIDL/URL.h>
-#include <Core/CCA/Component/PIDL/Wharehouse.h>
+#include <Core/CCA/Component/PIDL/Warehouse.h>
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Thread/MutexPool.h>
 #include <sstream>
 
-using Component::PIDL::Object_interface;
-using Component::PIDL::URL;
+using namespace PIDL;
+using namespace SCIRun;
 
 Object_interface::Object_interface()
     : d_serverContext(0)
@@ -34,7 +34,8 @@ Object_interface::Object_interface()
     mutex_index=getMutexPool()->nextIndex();
 }
 
-void Object_interface::initializeServer(const TypeInfo* typeinfo, void* ptr)
+void
+Object_interface::initializeServer(const TypeInfo* typeinfo, void* ptr)
 {
     if(!d_serverContext){
 	d_serverContext=new ServerContext;
@@ -57,16 +58,17 @@ Object_interface::~Object_interface()
     if(ref_cnt != 0)
 	throw InternalError("Object delete while reference count != 0");
     if(d_serverContext){
-	Wharehouse* wharehouse=PIDL::getWharehouse();
-	if(wharehouse->unregisterObject(d_serverContext->d_objid) != this)
-	    throw InternalError("Corruption in object wharehouse");
+	Warehouse* warehouse=PIDL::getWarehouse();
+	if(warehouse->unregisterObject(d_serverContext->d_objid) != this)
+	    throw InternalError("Corruption in object warehouse");
 	if(int gerr=globus_nexus_endpoint_destroy(&d_serverContext->d_endpoint))
 	    throw GlobusError("endpoint_destroy", 0);
 	delete d_serverContext;
     }
 }
 
-URL Object_interface::getURL() const
+URL
+Object_interface::getURL() const
 {
     std::ostringstream o;
     if(d_serverContext){
@@ -80,7 +82,8 @@ URL Object_interface::getURL() const
     return o.str();
 }
 
-void Object_interface::_getReference(Reference& ref, bool copy) const
+void
+Object_interface::_getReference(Reference& ref, bool copy) const
 {
     if(!d_serverContext)
 	throw InternalError("Object_interface::getReference called for a non-server object");
@@ -94,7 +97,8 @@ void Object_interface::_getReference(Reference& ref, bool copy) const
     ref.d_vtable_base=TypeInfo::vtable_methods_start;
 }
 
-void Object_interface::_addReference()
+void
+Object_interface::_addReference()
 {
     Mutex* m=getMutexPool()->getMutex(mutex_index);
     m->lock();
@@ -102,7 +106,8 @@ void Object_interface::_addReference()
     m->unlock();
 }
 
-void Object_interface::_deleteReference()
+void
+Object_interface::_deleteReference()
 {
     Mutex* m=getMutexPool()->getMutex(mutex_index);
     m->lock();
@@ -122,14 +127,16 @@ void Object_interface::_deleteReference()
 	delete this;
 }
 
-void Object_interface::activateObject() const
+void
+Object_interface::activateObject() const
 {
-    Wharehouse* wharehouse=PIDL::getWharehouse();
-    d_serverContext->d_objid=wharehouse->registerObject(const_cast<Object_interface*>(this));
+    Warehouse* warehouse=PIDL::getWarehouse();
+    d_serverContext->d_objid=warehouse->registerObject(const_cast<Object_interface*>(this));
     d_serverContext->activateEndpoint();
 }
 
-MutexPool* Object_interface::getMutexPool()
+MutexPool*
+Object_interface::getMutexPool()
 {
     static MutexPool* pool=0;
     if(!pool){

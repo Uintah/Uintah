@@ -11,13 +11,13 @@
  *  Copyright (C) 1999 SCI Group
  */
 
-#ifndef Core/CCA/Component_PIDL_GlobusError_h
-#define Core/CCA/Component_PIDL_GlobusError_h
+#ifndef Component_PIDL_GlobusError_h
+#define Component_PIDL_GlobusError_h
 
 #include <Core/CCA/Component/PIDL/PIDLException.h>
 #include <string>
 
-namespace SCIRun {
+namespace PIDL {
 /**************************************
  
 CLASS
@@ -69,7 +69,7 @@ DESCRIPTION
 
 	    GlobusError& operator=(const GlobusError&);
 	};
-} // End namespace SCIRun
+} // End namespace PIDL
 
 #endif
 

@@ -19,10 +19,12 @@
 #include <Core/CCA/Component/PIDL/TypeInfo_internal.h>
 #include <Core/Exceptions/InternalError.h>
 #include <iostream>
+
 using std::cerr;
-using Component::PIDL::GlobusError;
-using Component::PIDL::Object_interface;
-using Component::PIDL::TypeInfo;
+
+using PIDL::GlobusError;
+using PIDL::Object_interface;
+using PIDL::TypeInfo;
 
 TypeInfo::TypeInfo(TypeInfo_internal* priv)
     : d_priv(priv)
@@ -38,17 +40,17 @@ int TypeInfo::computeVtableOffset(const TypeInfo* ti) const
 {
     TypeInfo_internal::MapType::iterator iter=d_priv->classname_map.find(ti->d_priv->fullclassname);
     if(iter == d_priv->classname_map.end()){
-	throw InternalError("computeVtableOffset: "+ti->d_priv->fullclassname+" should be an ancestor of "+d_priv->fullclassname+", but is not!");
+	throw SCIRun::InternalError("computeVtableOffset: "+ti->d_priv->fullclassname+" should be an ancestor of "+d_priv->fullclassname+", but is not!");
     }
     if(iter->second.first->uuid != ti->d_priv->uuid)
-	throw InternalError("UUID mismatch in computeVtableOffset");
+	throw SCIRun::InternalError("UUID mismatch in computeVtableOffset");
     return iter->second.second-vtable_methods_start;
 }
 
 Object_interface* TypeInfo::pidl_cast(Object_interface* obj) const
 {
     // If we aren't a proxy, we don't know what to do...
-    Core/CCA/Component::PIDL::ProxyBase* p=dynamic_cast<Core/CCA/Component::PIDL::ProxyBase*>(obj);
+    PIDL::ProxyBase* p=dynamic_cast<PIDL::ProxyBase*>(obj);
     if(!p)
 	return 0;
 

@@ -6,7 +6,7 @@ extern "C" {
 extern int yylex(void);
 int yyerror(char*);
 }
-#include <tools/sidl/Spec.h>
+#include <Core/CCA/tools/sidl/Spec.h>
 Specification specs;
 extern char* curfile;
 extern int lineno;

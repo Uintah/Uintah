@@ -12,13 +12,13 @@ else
   PSELIBS := Dataflow/Network Core/Containers Core/GuiInterface \
 	Core/Thread Core/Exceptions
   ifeq ($(BUILD_PARALLEL),yes)
-   PSELIBS := $(PSELIBS) Component/PIDL Core/globus_threads
+   PSELIBS := $(PSELIBS) Core/CCA/Component/PIDL Core/globus_threads
   endif
 endif
 
 LIBS := $(GL_LIBS)
 ifeq ($(BUILD_PARALLEL),yes)
-LIBS := $(LIBS) -L$(GLOBUS_LIB_DIR) -lglobus_io
+LIBS := $(LIBS) $(GLOBUS_LIBS) -lglobus_io
 endif
 ifeq ($(NEED_SONAME),yes)
 LIBS := $(LIBS) $(XML_LIBRARY) $(TK_LIBRARY) -ldl -lz

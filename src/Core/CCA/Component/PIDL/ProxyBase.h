@@ -11,12 +11,12 @@
  *  Copyright (C) 1999 SCI Group
  */
 
-#ifndef Core/CCA/Component_PIDL_ProxyBase_h
-#define Core/CCA/Component_PIDL_ProxyBase_h
+#ifndef Component_PIDL_ProxyBase_h
+#define Component_PIDL_ProxyBase_h
 
 #include <Core/CCA/Component/PIDL/Reference.h>
 
-namespace SCIRun {
+namespace PIDL {
 
 /**************************************
  
@@ -57,7 +57,7 @@ DESCRIPTION
 	    // or globus_nexus_put_startpoint_transfer.
 	    void _proxyGetReference(Reference&, bool copy) const;
 	};
-} // End namespace SCIRun
+} // End namespace PIDL
 
 #endif
 

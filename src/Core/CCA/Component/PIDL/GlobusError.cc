@@ -14,7 +14,7 @@
 #include <Core/CCA/Component/PIDL/GlobusError.h>
 #include <sstream>
 
-using Component::PIDL::GlobusError;
+using PIDL::GlobusError;
 
 GlobusError::GlobusError(const std::string& msg, int code)
     : d_msg(msg), d_code(code)

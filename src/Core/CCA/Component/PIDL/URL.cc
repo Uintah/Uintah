@@ -15,7 +15,7 @@
 #include <Core/CCA/Component/PIDL/MalformedURL.h>
 #include <sstream>
 
-using Component::PIDL::URL;
+using PIDL::URL;
 
 URL::URL(const std::string& protocol,
 		       const std::string& hostname,

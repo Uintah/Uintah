@@ -4,12 +4,16 @@ include $(SRCTOP)/scripts/smallso_prologue.mk
 
 SRCDIR   := Core/CCA/Component/CIA
 
-SRCS     += $(SRCDIR)/CIA_sidl.cc $(SRCDIR)/Class.cc \
+SRCS     += \
+	$(SRCDIR)/CIA_sidl.cc \
+	$(SRCDIR)/Class.cc \
 	$(SRCDIR)/ClassNotFoundException.cc \
 	$(SRCDIR)/IllegalArgumentException.cc \
 	$(SRCDIR)/InstantiationException.cc \
-	$(SRCDIR)/Interface.cc $(SRCDIR)/Method.cc \
-	$(SRCDIR)/NoSuchMethodException.cc $(SRCDIR)/Object.cc \
+	$(SRCDIR)/Interface.cc \
+	$(SRCDIR)/Method.cc \
+	$(SRCDIR)/NoSuchMethodException.cc \
+	$(SRCDIR)/Object.cc \
 	$(SRCDIR)/Throwable.cc 
 
 # We cannot use the implicit rule for CIA, since it needs that

@@ -12,13 +12,13 @@
  *  Copyright (C) 1999 SCI Group
  */
 
-#ifndef Core/CCA/Component_PIDL_ServerContext_h
-#define Core/CCA/Component_PIDL_ServerContext_h
+#ifndef Component_PIDL_ServerContext_h
+#define Component_PIDL_ServerContext_h
 
 #include <Core/CCA/Component/PIDL/Object.h>
 #include <globus_nexus.h>
 
-namespace SCIRun {
+namespace PIDL {
 /**************************************
  
 CLASS
@@ -67,7 +67,7 @@ DESCRIPTION
 	    // Create the endpoint for this object.
 	    void activateEndpoint();
 	};
-} // End namespace SCIRun
+} // End namespace PIDL
 
 #endif
 

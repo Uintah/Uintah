@@ -57,6 +57,6 @@ bool Interface_interface::supportsInterface(const Class& type)
 Interface Interface_interface::queryInterface(const Class& type)
 {
     NOT_FINISHED(".CIA.Interface .CIA.Interface.queryInterface(in .CIA.Class type)");
-    return false;
+    return Interface();
 }
 

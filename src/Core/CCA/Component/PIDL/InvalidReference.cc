@@ -13,7 +13,7 @@
 
 #include <Core/CCA/Component/PIDL/InvalidReference.h>
 
-using Component::PIDL::InvalidReference;
+using PIDL::InvalidReference;
 
 InvalidReference::InvalidReference(const std::string& msg)
     : d_msg(msg)
