@@ -22,7 +22,7 @@ PSELIBS := Core/Datatypes Dataflow/Network Dataflow/Ports \
 		Core/Exceptions Core/Thread Core/GuiInterface \
 		Core/Geom Core/Datatypes Core/Geometry \
 		Core/TkExtensions Packages/Morgan/Core/Dbi        
-LIBS := $(TK_LIBRARY) $(GL_LIBS) -lm
+LIBS := $(TK_LIBRARY) $(GL_LIBS) $(M_LIBRARY)
 
 include $(SRCTOP_ABS)/scripts/smallso_epilogue.mk
 

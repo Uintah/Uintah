@@ -15,7 +15,7 @@ PSELIBS := Core/Exceptions Core/Geometry \
 	Packages/Uintah/Core/Exceptions \
 	Packages/Uintah/Dataflow/Modules/Visualization
 
-LIBS :=  $(LINK) $(XML_LIBRARY) $(GL_LIBS) -lmpi -lm
+LIBS :=  $(LINK) $(XML_LIBRARY) $(GL_LIBS) $(M_LIBRARY)pi $(M_LIBRARY)
 
 include $(SRCTOP)/scripts/smallso_epilogue.mk
 

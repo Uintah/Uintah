@@ -70,15 +70,15 @@ ifeq ($(CC),newmpxlc)
 	$(BLT_LIBRARY) \
         $(XML_LIBRARY) \
         $(TAU_LIBRARY) \
-        $(GL_LIBRARY) $(GZ_LIBRARY) \
+        $(GL_LIBRARY) $(Z_LIBRARY) \
         $(THREAD_LIBRARY) \
         $(F_LIBRARY) \
         $(MPI_LIBRARY) \
         $(PETSC_LIBRARY) \
-        -lld -lm
+        -lld $(M_LIBRARY)
 else
   LIBS := $(XML_LIBRARY) $(TAU_LIBRARY) $(F_LIBRARY) \
-        $(HYPRE_LIBRARY) $(PETSC_LIBRARY) $(MPI_LIBRARY) -lm
+        $(HYPRE_LIBRARY) $(PETSC_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY)
 endif
 
 include $(SCIRUN_SCRIPTS)/program.mk
@@ -106,7 +106,7 @@ else
         Core/Containers
 endif
 
-LIBS    := $(XML_LIBRARY) $(MPI_LIBRARY) -lm
+LIBS    := $(XML_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/program.mk
 
@@ -132,7 +132,7 @@ else
         Core/Containers
 endif
 
-LIBS    := $(XML_LIBRARY) $(MPI_LIBRARY) -lm
+LIBS    := $(XML_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/program.mk
 
@@ -158,7 +158,7 @@ PSELIBS := \
         Core/OS          \
         Core/Containers
 endif
-LIBS    := $(XML_LIBRARY) -lm
+LIBS    := $(XML_LIBRARY) $(M_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/program.mk
 

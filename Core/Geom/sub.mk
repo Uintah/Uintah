@@ -77,7 +77,7 @@ PSELIBS := Core/Persistent Core/Geometry Core/Exceptions \
 	Core/Math Core/Containers Core/Thread \
 	Core/GuiInterface
 
-LIBS := $(GL_LIBRARY) -lm
+LIBS := $(GL_LIBRARY) $(M_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 

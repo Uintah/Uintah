@@ -2,18 +2,14 @@
 
 SRCDIR := Packages/Remote/remoteViewer
 
-FLEX := /usr/local/gnu/lib
-GLUT := /usr/local/contrib/moulding/glut
-
 ifeq ($(LARGESOS),yes)
 PSELIBS := Core Remote
 else
 PSELIBS := Core/OS Core/Thread Remote/Tools Remote/Modules/remoteSalmon
 endif
-LIBS := -L$(GLUT)/lib -lglut  $(XML_LIBRARY) $(TK_LIBRARY) $(GL_LIBS) \
-	 -lm
+LIBS := $(XML_LIBRARY) $(TK_LIBRARY) $(GLUT_LIBRARY) $(GL_LIBS) $(M_LIBRARY)
 
-# -lXmu -lX11 -lXext -lm ### -L$(FLEX) -lfl -ltiff -ljpeg 
+# $(XMU_LIBRARY) $(X_LIBRARY) $(M_LIBRARY) ### $(LEX_LIBRARY) $(TIFF_LIBRARY) $(JPEG_LIBRARY)
 
 PROGRAM := $(SRCDIR)/VRMLView
 SRCS := $(SRCDIR)/VRMLView.cc

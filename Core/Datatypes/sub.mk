@@ -58,7 +58,7 @@ SRCS +=	$(SRCDIR)/Clipper.cc		    	\
 PSELIBS := Core/Persistent Core/Exceptions Core/Containers \
 	Core/Thread Core/Geometry Core/GuiInterface \
 	Core/Math Core/Geom Core/Util
-LIBS := $(GL_LIBRARY) -lm
+LIBS := $(GL_LIBRARY) $(M_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 

@@ -20,7 +20,7 @@ PSELIBS := Dataflow/Network Core/Datatypes Dataflow/Comm \
 	Core/TkExtensions Core/Datatypes \
 	Dataflow/Modules/Salmon SCICore/OS Remote/Tools
 
-LIBS := $(TK_LIBRARY) $(GL_LIBS) -lm
+LIBS := $(TK_LIBRARY) $(GL_LIBS) $(M_LIBRARY)
 
 include $(SRCTOP_ABS)/scripts/smallso_epilogue.mk
 

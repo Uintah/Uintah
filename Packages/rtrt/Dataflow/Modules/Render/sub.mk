@@ -19,7 +19,7 @@ PSELIBS := \
 	Packages/rtrt/Core \
 	Packages/rtrt/Dataflow/Ports
 
-LIBS := -lm
+LIBS := $(M_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 

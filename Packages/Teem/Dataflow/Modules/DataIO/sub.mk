@@ -41,6 +41,6 @@ PSELIBS := Packages/Teem/Core/Datatypes Packages/Teem/Dataflow/Ports \
         Core/Geom Core/Datatypes Core/Geometry Core/GeomInterface \
         Core/TkExtensions 
 
-LIBS := $(TEEM_LIBRARY) -lnrrd -lbiff -lair
+LIBS := $(TEEM_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk

@@ -7,7 +7,7 @@ PSELIBS := Packages/DaveW/StandAlone/convert
 else
 PSELIBS := Core/Datatypes Core/Containers Core/Persistent Core/Exceptions Core/Thread Core/Geometry
 endif
-LIBS := -lm
+LIBS := $(M_LIBRARY)
 
 PROGRAM := $(SRCDIR)/GenTestField
 SRCS := $(SRCDIR)/GenTestField.cc

@@ -17,7 +17,7 @@ SRCS     += $(SRCDIR)/StructHexVolMesh.cc	    	\
 
 PSELIBS := Core/Persistent Core/Exceptions Core/Containers \
 	Core/Thread Core/Geometry Core/Math Core/Util
-LIBS := -lm
+LIBS := $(M_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 

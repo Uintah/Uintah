@@ -51,7 +51,7 @@ PSELIBS := \
 LIBS := -L/usr/local/lib \
 	$(LAPACK_LIBRARY) \
 	 -lcvode -lunuran -lranlib -llinpack \
-	$(BLAS_LIBRARY) $(F_LIBRARY) -lm
+	$(BLAS_LIBRARY) $(F_LIBRARY) $(M_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 

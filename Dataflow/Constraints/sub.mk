@@ -31,7 +31,7 @@ SRCS     += $(SRCDIR)/AngleConstraint.cc $(SRCDIR)/BaseConstraint.cc \
 
 PSELIBS := Core/Containers Core/Util Core/Exceptions \
 	Core/Geometry
-LIBS := -lm
+LIBS := $(M_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 

@@ -24,7 +24,7 @@ PSELIBS := Packages/Yarden/Core/Datatypes Packages/Yarden/Dataflow/Ports \
 	Core/Exceptions Core/Thread Core/GuiInterface \
 	Core/Geom Core/Datatypes Core/Geometry \
 	Core/TkExtensions
-LIBS := $(TK_LIBRARY) $(GL_LIBS) -lm
+LIBS := $(TK_LIBRARY) $(GL_LIBS) $(M_LIBRARY)
 
 include $(SRCTOP)/scripts/smallso_epilogue.mk
 

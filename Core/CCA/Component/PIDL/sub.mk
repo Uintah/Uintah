@@ -41,7 +41,7 @@ SRCS     += \
 	$(SRCDIR)/HandlerStorage.cc
 
 PSELIBS := Core/Exceptions Core/Thread Core/globus_threads
-LIBS := $(GLOBUS_LIBRARY) -lglobus_io
+LIBS := $(GLOBUS_LIBRARY) $(GLOBUS_IO_LIBRARYK)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 

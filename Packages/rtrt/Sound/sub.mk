@@ -10,7 +10,6 @@ SRCS += \
 PSELIBS :=  \
 	Core/Thread Core/Exceptions
 
-AUDIOFILE_LIBRARY := -L/home/sci/dav
-LIBS := $(THREAD_LIBRARY) $(PERFEX_LIBRARY) -laudio $(AUDIOFILE_LIBRARY) -laudiofile
+LIBS := $(THREAD_LIBRARY) $(PERFEX_LIBRARY) $(SOUND_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk

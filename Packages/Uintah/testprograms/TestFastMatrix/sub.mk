@@ -8,7 +8,7 @@ PSELIBS := \
 	Packages/Uintah/Core/Math
 PROGRAM := $(SRCDIR)/testfastmatrix
 
-LIBS := -lm
+LIBS := $(M_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/program.mk
 

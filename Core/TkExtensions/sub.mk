@@ -38,7 +38,7 @@ LIBS := $(BLT_LIBRARY) \
 	$(ITCL_LIBRARY) \
 	$(TK_LIBRARY) \
 	$(TCL_LIBRARY) \
-	$(GL_LIBRARY) -lm
+	$(GL_LIBRARY) $(M_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 

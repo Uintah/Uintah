@@ -40,7 +40,7 @@ PSELIBS := Core/Datatypes Dataflow/Network Dataflow/Ports \
         Core/TkExtensions \
         Packages/MatlabInterface/Core/Util
 
-LIBS := $(TK_LIBRARY) $(GL_LIBS) -lm
+LIBS := $(TK_LIBRARY) $(GL_LIBS) $(M_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 

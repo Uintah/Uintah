@@ -24,7 +24,7 @@ SRCDIR   := Core/globus_threads
 SRCS     += $(SRCDIR)/globus_external_threads.cc
 
 PSELIBS := Core/Thread
-LIBS := $(GLOBUS_COMMON)
+LIBS := $(GLOBUS_COMMON_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 

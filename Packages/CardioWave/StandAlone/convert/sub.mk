@@ -23,7 +23,7 @@ PSELIBS := Packages/CardioWave/StandAlone/convert
 else
 PSELIBS := Core/Datatypes Core/Math Core/Containers Core/Persistent Core/Exceptions Core/Thread Core/Geometry
 endif
-LIBS := -lm
+LIBS := $(M_LIBRARY)
 
 PROGRAM := $(SRCDIR)/CardioWaveToColumnMat
 SRCS := $(SRCDIR)/CardioWaveToColumnMat.cc

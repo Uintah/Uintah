@@ -17,7 +17,7 @@ SRCS     += \
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS :=
-LIBS := -lm
+LIBS := $(M_LIBRARY)
 
 include $(SRCTOP)/scripts/smallso_epilogue.mk
 
