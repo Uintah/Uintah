@@ -75,7 +75,7 @@ void GetBinStats(Allocator*, int binno, size_t& minsize, size_t& maxsize,
 		 size_t& nalloc, size_t& nfree, size_t& ninlist);
 
 void AuditAllocator(Allocator*);
-void DumpAllocator(Allocator*);
+void DumpAllocator(Allocator*, const char* filename = "alloc.dump");
 
 } // End namespace SCIRun
 

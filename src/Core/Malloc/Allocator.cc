@@ -1194,9 +1194,9 @@ static void dump_bin(Allocator*, AllocBin* bin, FILE* fp)
     }
 }
 
-void DumpAllocator(Allocator* a)
+void DumpAllocator(Allocator* a, const char* filename)
 {
-    FILE* fp=fopen("alloc.dump", "w");
+    FILE* fp=fopen(filename, "w");
     fprintf(fp, "\n");
     a->lock();
     int i;
