@@ -147,6 +147,12 @@ public:
   void get_point(Point &result, node_index idx) const
     { get_center(result,idx); }
 
+  //! use these to build up a new contour mesh
+  node_index add_node(Point p) 
+    { nodes_.push_back(p); return nodes_.size()-1; }
+  edge_index add_edge(node_index i1, node_index i2) 
+    { edges_.push_back(index_pair(i1,i2)); return nodes_.size()-1; }
+
   virtual void io(Piostream&);
   static PersistentTypeID type_id;
   static  const string type_name(int n = -1);
