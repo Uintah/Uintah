@@ -81,6 +81,7 @@ public:
   void get_viewplane(Vector& u, Vector& v) const;
   virtual void setup();
   void print();
+  bool read(const char* buf);
 
   inline const Point& get_eye() const { return eye; }
   // Returns 2 points on either side of the camera at 2*separation distance.
