@@ -97,10 +97,14 @@ Tensor::Tensor(const vector<double> &t)
   have_eigens_=0;
 }
 
-// compute the tensor from 7 diffusion channels
-Tensor::Tensor(const double * /* channels */) {
-
-  // TODO: compute mat
+Tensor::Tensor(const double *t)
+{
+  mat_[0][0]=t[0];
+  mat_[0][1]=mat_[1][0]=t[1];
+  mat_[0][2]=mat_[2][0]=t[2];
+  mat_[1][1]=t[3];
+  mat_[1][2]=mat_[2][1]=t[4];
+  mat_[2][2]=t[5];
 
   have_eigens_=0;
 }
