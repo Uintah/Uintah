@@ -169,7 +169,7 @@ void SingleVelContact::addComputesAndRequiresInterpolated(Task* t,
   const MaterialSubset* mss = ms->getUnion();
   t->requires( Task::NewDW, lb->gMassLabel,          Ghost::None);
 
-  t->modifies(              lb->gVelocityLabel, mss, Ghost::None);
+  t->modifies(              lb->gVelocityLabel, mss);
 }
 
 void SingleVelContact::addComputesAndRequiresIntegrated( Task* t,
@@ -179,7 +179,7 @@ void SingleVelContact::addComputesAndRequiresIntegrated( Task* t,
   const MaterialSubset* mss = ms->getUnion();
   t->requires(Task::NewDW, lb->gMassLabel,              Ghost::None);
 
-  t->modifies(             lb->gVelocityStarLabel, mss, Ghost::None);
-  t->modifies(             lb->gAccelerationLabel, mss, Ghost::None);
+  t->modifies(             lb->gVelocityStarLabel, mss);
+  t->modifies(             lb->gAccelerationLabel, mss);
 }
 
