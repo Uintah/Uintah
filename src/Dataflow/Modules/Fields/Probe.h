@@ -101,7 +101,7 @@ ProbeLocateAlgoT<MESH>::execute(MeshHandle mesh_h,
   }
 
   {
-    typename MESH::Edge::index_type index = 0;
+    typename MESH::Edge::index_type index;
     bool found_p = true;
     if (!mesh->locate(index, p))
     {
@@ -132,7 +132,7 @@ ProbeLocateAlgoT<MESH>::execute(MeshHandle mesh_h,
   }
 
   {
-    typename MESH::Face::index_type index = 0;
+    typename MESH::Face::index_type index;
     bool found_p = true;
     if (!mesh->locate(index, p))
     {
