@@ -541,7 +541,6 @@ void ImpMPM::scheduleIterate(SchedulerP& sched,const LevelP& level,
 
   task->modifies(lb->dispNewLabel);
   task->modifies(lb->gVelocityLabel);
-  task->modifies(lb->gInternalForceLabel);
 
   task->requires(Task::NewDW,lb->gVelocityOldLabel,    Ghost::None,0);
   task->requires(Task::NewDW,lb->gMassLabel,           Ghost::None,0);
@@ -638,7 +637,6 @@ void ImpMPM::scheduleInterpolateStressToGrid(SchedulerP& sched,
   t->requires(Task::OldDW,lb->pMassLabel,           Ghost::AroundNodes,1);
   t->requires(Task::NewDW,lb->pStressLabel_preReloc,Ghost::AroundNodes,1);
   t->requires(Task::NewDW,lb->gMassLabel,           Ghost::None);
-  t->requires(Task::NewDW,lb->gInternalForceLabel,  Ghost::None);
 
   t->computes(lb->gStressForSavingLabel);
   t->computes(lb->NTractionZMinusLabel);
@@ -793,20 +791,15 @@ void ImpMPM::iterate(const ProcessorGroup*,
       int matl = mpm_matl->getDWIndex();
 
       // Needed in computeAcceleration 
-      constNCVariable<Vector> velocity, dispNew, internalForce;
+      constNCVariable<Vector> velocity, dispNew;
       subsched->get_dw(2)->get(velocity, lb->gVelocityLabel,matl,patch,gnone,0);
       subsched->get_dw(2)->get(dispNew,  lb->dispNewLabel,  matl,patch,gnone,0);
-      subsched->get_dw(2)->get(internalForce,
-                               lb->gInternalForceLabel,     matl,patch,gnone,0);
 
-      NCVariable<Vector> velocity_new, dispNew_new, internalForce_new;
+      NCVariable<Vector> velocity_new, dispNew_new;
       new_dw->getModifiable(velocity_new,lb->gVelocityLabel,      matl,patch);
       new_dw->getModifiable(dispNew_new, lb->dispNewLabel,        matl,patch);
-      new_dw->getModifiable(internalForce_new,
-                            lb->gInternalForceLabel,              matl,patch);
       velocity_new.copyData(velocity);
       dispNew_new.copyData(dispNew);
-      internalForce_new.copyData(internalForce);
     }
   }
   old_dw->setScrubbing(old_dw_scrubmode);
@@ -2070,7 +2063,6 @@ void ImpMPM::interpolateStressToGrid(const ProcessorGroup*,
     GSTRESS.initialize(Matrix3(0.));
     StaticArray<NCVariable<Matrix3> >         gstress(numMatls);
     StaticArray<constNCVariable<double> >     gmass(numMatls);
-    StaticArray<constNCVariable<Vector> >     gintforce(numMatls);
 
     Vector dx = patch->dCell();
     for(int m = 0; m < numMatls; m++){
@@ -2083,11 +2075,9 @@ void ImpMPM::interpolateStressToGrid(const ProcessorGroup*,
 
       ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch,
                                               Ghost::AroundNodes,1,lb->pXLabel);
-      old_dw->get(px,          lb->pXLabel,    pset);
-      old_dw->get(pmass,       lb->pMassLabel, pset);
-      new_dw->get(gmass[m],    lb->gMassLabel, dwi, patch,Ghost::None,0);
-      new_dw->get(gintforce[m],lb->gInternalForceLabel,
-                                               dwi, patch,Ghost::None,0);
+      old_dw->get(px,      lb->pXLabel,    pset);
+      old_dw->get(pmass,   lb->pMassLabel, pset);
+      new_dw->get(gmass[m],lb->gMassLabel, dwi, patch,Ghost::None,0);
       new_dw->allocateAndPut(gstress[m],lb->gStressForSavingLabel,dwi, patch);
 
       new_dw->get(pstress, lb->pStressLabel_preReloc, pset);
@@ -2149,7 +2139,7 @@ void ImpMPM::interpolateStressToGrid(const ProcessorGroup*,
             for (int i = low.x(); i<hi.x(); i++) {
               for (int k = low.z(); k<hi.z(); k++) {
                 integralTraction +=
-                  gintforce[m][IntVector(i,J,k)].y();
+                  gstress[m][IntVector(i,J,k)](1,1)*dx.x()*dx.z();
                 if(fabs(gstress[m][IntVector(i,J,k)](1,1)) > 1.e-12){
                   integralArea+=dx.x()*dx.z();
                 }
@@ -2160,12 +2150,12 @@ void ImpMPM::interpolateStressToGrid(const ProcessorGroup*,
       } // Loop over faces
      } // If !rigid and !did_it 
     } // Loop over matls
-//    if(integralArea > 0.){
-//      integralTraction=integralTraction/integralArea;
-//    }
-//    else{
-//      integralTraction=0.;
-//    }
+    if(integralArea > 0.){
+      integralTraction=integralTraction/integralArea;
+    }
+    else{
+      integralTraction=0.;
+    }
 
     new_dw->put(sum_vartype(integralTraction), lb->NTractionZMinusLabel);
     new_dw->put(sum_vartype(integralArea),     lb->integralAreaLabel);
