@@ -70,6 +70,10 @@ namespace rtrt {
     bool display_probe;
     RectWidget* cp_probe;
     
+    // sets up a boolean grid based on opacity values of transfer function
+    void setupAccGrid( void );
+    // converts a boolean grid to an integer
+    void AccGridToInt( void );      
     // Loads a widget configuration from a file for initialization
     void loadWidgets( char* file );
     // Deletes the cutplane widget probe
@@ -172,8 +176,10 @@ namespace rtrt {
     float vmin, vmax;
     float gmin, gmax;
 
+    // for file information printout
     char *lastSaveState;
     char *lastLoadState;
+
     // for user-defined histogram parameters
     bool hist_adjust;
     float current_vmin, current_vmax, selected_vmin, selected_vmax;
@@ -181,10 +187,18 @@ namespace rtrt {
 
     GLuint bgTextName;                 // histogram texture
     GLuint transFuncTextName;          // transfer function texture
+    GLuint probeTextName;              // probe widget texture
     GLuint widgetManipName;            // manipulated widget texture
     Texture <GLfloat> *bgTextImage;    // clean background texture
     Texture <GLfloat> *transTexture1;  // visible transfer functions
     Texture <GLfloat> *transTexture2;  // swapped to remove rendering "streaks"
+
+/*      Widget* manipWidget; */
+
+    // used for acceleration method to improve rendering frame rates
+    unsigned long UIgrid;
+#define gridsize 32
+    bool UIgridblock[gridsize];
 
     // collection of volumes being rendered
     vector<VolumeVis2D*> volumes;
