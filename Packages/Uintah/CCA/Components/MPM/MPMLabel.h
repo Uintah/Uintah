@@ -69,6 +69,10 @@ using std::vector;
       const VarLabel* pNormLabel;
       const VarLabel* pNormLabel_preReloc;
       
+      const VarLabel* pLeftStretchLabel;  // For Hypoelastic-plasticity
+      const VarLabel* pLeftStretchLabel_preReloc;  // For Hypoelastic-plasticity
+      const VarLabel* pRotationLabel;  // For Hypoelastic-plasticity
+      const VarLabel* pRotationLabel_preReloc;  // For Hypoelastic-plasticity
       const VarLabel* pDeformRatePlasticLabel;  // For Hypoelastic-plasticity
       const VarLabel* pDeformRatePlasticLabel_preReloc;  // For Hypoelastic-plasticity
       const VarLabel* pPlasticStrainLabel;  // For Hypoelastic-plasticity
