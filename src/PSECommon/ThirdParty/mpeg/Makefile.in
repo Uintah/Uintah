@@ -1,0 +1,10 @@
+SRCTOP   = @top_srcdir@
+SRCDIR   = @srcdir@
+OBJTOP   = ../../../..
+
+SRCS     = mpeg.o codec.o huffman.o io.o chendct.o lexer.o marker.o me.o \
+           mem.o stat.o stream.o transform.o
+
+INCLUDES =
+
+include $(SRCTOP)/scripts/objs.mk
