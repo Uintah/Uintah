@@ -42,16 +42,11 @@ static char *id="@(#) $Id$";
 #include <Uintah/Grid/TempThermalBoundCond.h>
 #include <Uintah/Grid/FluxThermalBoundCond.h>
 
-
-
-
 #include <Uintah/Components/MPM/MPMPhysicalModules.h>
 #include <Uintah/Components/MPM/Contact/Contact.h>
 #include <Uintah/Components/MPM/HeatConduction/HeatConduction.h>
 #include <Uintah/Components/MPM/Fracture/Fracture.h>
 #include <Uintah/Components/MPM/ThermalContact/ThermalContact.h>
-
-
 
 using namespace Uintah;
 using namespace Uintah::MPM;
@@ -420,6 +415,11 @@ void SerialMPM::scheduleTimeAdvance(double /*t*/, double /*dt*/,
 	    t->requires( new_dw, lb->gExternalHeatRateLabel, idx, patch,
 			 Ghost::None);
 		*/
+
+	    if(MPMPhysicalModules::thermalContactModel) {
+              t->requires( new_dw, lb->gThermalContactHeatExchangeRateLabel, idx, 
+	                 patch, Ghost::None);
+	    }
 		
 	    t->computes( new_dw, lb->gTemperatureRateLabel, idx, patch);
 	 }
@@ -1268,10 +1268,17 @@ void SerialMPM::solveHeatEquations(const ProcessorGroup*,
      
       // Get required variables for this patch
       NCVariable<double> mass,internalHeatRate,externalHeatRate;
+      NCVariable<double> thermalContactHeatExchangeRate;
 
       new_dw->get(mass, lb->gMassLabel, vfindex, patch, Ghost::None, 0);
       new_dw->get(internalHeatRate, lb->gInternalHeatRateLabel, 
                   vfindex, patch, Ghost::None, 0);
+
+      if(MPMPhysicalModules::thermalContactModel) {
+        new_dw->get(thermalContactHeatExchangeRate,
+                  lb->gThermalContactHeatExchangeRateLabel, 
+                  vfindex, patch, Ghost::None, 0);
+      }
                   
 /*
       new_dw->get(externalHeatRate, lb->gExternalHeatRateLabel, 
@@ -1281,13 +1288,16 @@ void SerialMPM::solveHeatEquations(const ProcessorGroup*,
       // Create variables for the results
       NCVariable<double> temperatureRate;
       new_dw->allocate(temperatureRate, lb->gTemperatureRateLabel,
-							vfindex, patch);
+         vfindex, patch);
 
       for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){
 	if(mass[*iter]>0.0){
-	  temperatureRate[*iter] =
-		 ( internalHeatRate[*iter] /*+ externalHeatRate[*iter]*/ )
-		 /mass[*iter] /specificHeat;
+	  temperatureRate[*iter] = internalHeatRate[*iter]
+		   /*+ externalHeatRate[*iter]*/;
+          if(MPMPhysicalModules::thermalContactModel) {
+            temperatureRate[*iter] += thermalContactHeatExchangeRate[*iter];
+          }
+	  temperatureRate[*iter] /= (mass[*iter] * specificHeat);
 	}
 	else{
 	  temperatureRate[*iter] = 0;
@@ -1591,6 +1601,9 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 }
 
 // $Log$
+// Revision 1.97  2000/06/28 01:08:20  tan
+// Thermal contact model start to work!
+//
 // Revision 1.96  2000/06/27 23:10:53  jas
 // Added in grid bcs.
 //
