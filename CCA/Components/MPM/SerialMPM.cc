@@ -219,6 +219,7 @@ void SerialMPM::scheduleInitialize(const LevelP& level,
   t->computes(lb->pMassLabel);
   t->computes(lb->pVolumeLabel);
   t->computes(lb->pTemperatureLabel);
+  t->computes(lb->pInternalHeatRateLabel);
   t->computes(lb->pVelocityLabel);
   t->computes(lb->pExternalForceLabel);
   t->computes(lb->pParticleIDLabel);
@@ -466,6 +467,11 @@ void SerialMPM::scheduleExMomInterpolated(SchedulerP& sched,
   sched->addTask(t, patches, matls);
 }
 
+/////////////////////////////////////////////////////////////////////////
+/*!  **WARNING** In addition to the stresses and deformations, the internal 
+ *               heat rate in the particles (pInternalHeatRateLabel) 
+ *               is computed here */
+/////////////////////////////////////////////////////////////////////////
 void SerialMPM::scheduleComputeStressTensor(SchedulerP& sched,
                                             const PatchSet* patches,
                                             const MaterialSet* matls)
@@ -616,14 +622,17 @@ void SerialMPM::scheduleComputeInternalHeatRate(SchedulerP& sched,
 
   Ghost::GhostType  gan = Ghost::AroundNodes;
   Ghost::GhostType  gac = Ghost::AroundCells;
-  t->requires(Task::OldDW, lb->pXLabel,              gan, NGP);
+  Ghost::GhostType  gnone = Ghost::None;
+  t->requires(Task::OldDW, lb->pXLabel,                         gan, NGP);
   if(flags->d_8or27==27){
-    t->requires(Task::OldDW, lb->pSizeLabel,          gan, NGP);
+    t->requires(Task::OldDW, lb->pSizeLabel,                    gan, NGP);
   }
-  t->requires(Task::NewDW, lb->pVolumeDeformedLabel, gan, NGP);
-  t->requires(Task::NewDW, lb->gTemperatureLabel,    gac, 2*NGP);
-
-  t->requires(Task::NewDW, lb->pErosionLabel_preReloc, gan, NGP);
+  t->requires(Task::OldDW, lb->pMassLabel,                      gan,NGP);
+  t->requires(Task::NewDW, lb->pVolumeDeformedLabel,            gan, NGP);
+  t->requires(Task::NewDW, lb->pInternalHeatRateLabel_preReloc, gan, NGP);
+  t->requires(Task::NewDW, lb->pErosionLabel_preReloc,          gan, NGP);
+  t->requires(Task::NewDW, lb->gTemperatureLabel,               gac, 2*NGP);
+  t->requires(Task::NewDW, lb->gMassLabel,                      gnone);
 
   t->computes(lb->gInternalHeatRateLabel);
   sched->addTask(t, patches, matls);
@@ -1755,17 +1764,22 @@ void SerialMPM::computeInternalHeatRate(const ProcessorGroup*,
     oodx[2] = 1.0/dx.z();
 
     Ghost::GhostType  gac = Ghost::AroundCells;
+    Ghost::GhostType  gnone = Ghost::None;
     for(int m = 0; m < d_sharedState->getNumMPMMatls(); m++){
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
       int dwi = mpm_matl->getDWIndex();
-      double thermalConductivity = mpm_matl->getThermalConductivity();
+      double kappa = mpm_matl->getThermalConductivity();
+      double Cv = mpm_matl->getSpecificHeat();
       
       constParticleVariable<Point>  px;
       constParticleVariable<double> pvol;
+      constParticleVariable<double> pIntHeatRate;
+      constParticleVariable<double> pMass;
       constParticleVariable<Vector> psize;
       constParticleVariable<double> pErosion;
       ParticleVariable<Vector>      pTemperatureGradient;
       constNCVariable<double>       gTemperature;
+      constNCVariable<double>       gMass;
       NCVariable<double>            internalHeatRate;
 
       ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch,
@@ -1774,19 +1788,30 @@ void SerialMPM::computeInternalHeatRate(const ProcessorGroup*,
 
       old_dw->get(px,           lb->pXLabel,              pset);
       new_dw->get(pvol,         lb->pVolumeDeformedLabel, pset);
+      new_dw->get(pIntHeatRate, lb->pInternalHeatRateLabel_preReloc, pset);
+      old_dw->get(pMass,        lb->pMassLabel,                      pset);
       if(flags->d_8or27==27){
         old_dw->get(psize,      lb->pSizeLabel,           pset);
       }
       new_dw->get(pErosion,     lb->pErosionLabel_preReloc, pset);
 
       new_dw->get(gTemperature, lb->gTemperatureLabel,   dwi, patch, gac,2*NGN);
+      new_dw->get(gMass,        lb->gMassLabel,          dwi, patch, gnone, 0);
       new_dw->allocateAndPut(internalHeatRate, lb->gInternalHeatRateLabel,
                              dwi, patch);
       new_dw->allocateTemporary(pTemperatureGradient, pset);
   
       internalHeatRate.initialize(0.);
 
+      // Create a temporary variable to store the mass weighted grid node
+      // internal heat rate that has been projected from the particles 
+      // to the grid
+      NCVariable<double> gPIntHeatRate;
+      new_dw->allocateTemporary(gPIntHeatRate, patch, gnone, 0);
+      gPIntHeatRate.initialize(0.);
+      
       // First compute the temperature gradient at each particle
+      double S[MAX_BASIS];
       IntVector ni[MAX_BASIS];
       Vector d_S[MAX_BASIS];
 
@@ -1797,23 +1822,39 @@ void SerialMPM::computeInternalHeatRate(const ProcessorGroup*,
 
         // Get the node indices that surround the cell
         if(flags->d_8or27==8){
-          patch->findCellAndShapeDerivatives(px[idx], ni, d_S);
+          patch->findCellAndWeightsAndShapeDerivatives(px[idx], ni, S, d_S);
         }
         else if(flags->d_8or27==27){
-          patch->findCellAndShapeDerivatives27(px[idx], ni, d_S, psize[idx]);
+          patch->findCellAndWeightsAndShapeDerivatives27(px[idx], ni, S, d_S,
+                                                         psize[idx]);
         }
+
+        // Weight the particle internal heat rate with the mass
+        double pIntHeatRate_massWt = pIntHeatRate[idx]*pMass[idx];
 
         pTemperatureGradient[idx] = Vector(0.0,0.0,0.0);
         for (int k = 0; k < flags->d_8or27; k++){
-          d_S[k] *= pErosion[idx];
+          S[k] *= pErosion[idx];
           for (int j = 0; j<3; j++) {
             pTemperatureGradient[idx][j] += 
               gTemperature[ni[k]] * d_S[k][j] * oodx[j];
           }
+          // Project the mass weighted particle internal heat rate to
+          // the grid
+          if(patch->containsNode(ni[k])){
+             gPIntHeatRate[ni[k]] +=  (pIntHeatRate_massWt*S[k]);
+          }
         }
       }
 
+      // Get the internal heat rate due to particle deformation at the
+      // grid nodes by dividing gPIntHeatRate by the grid mass
+      for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++) {
+        IntVector c = *iter;
+        gPIntHeatRate[c] /= gMass[c];
+      }
 
+      // Compute T,ii + qdot
       for(ParticleSubset::iterator iter = pset->begin();
           iter != pset->end(); iter++){
         particleIndex idx = *iter;
@@ -1826,12 +1867,19 @@ void SerialMPM::computeInternalHeatRate(const ProcessorGroup*,
           patch->findCellAndShapeDerivatives27(px[idx], ni, d_S, psize[idx]);
         }
 
+        // Calculate k/(rho*Cv)
+        double alpha = (kappa*pvol[idx])/(pMass[idx]*Cv); 
+        Vector T_i = pTemperatureGradient[idx];
+        double T_ii = 0.0;
+        IntVector node(0,0,0);
         for (int k = 0; k < flags->d_8or27; k++){
-          if(patch->containsNode(ni[k])){
+          node = ni[k];
+          if(patch->containsNode(node)){
             Vector div(d_S[k].x()*oodx[0],d_S[k].y()*oodx[1],
                        d_S[k].z()*oodx[2]);
-            internalHeatRate[ni[k]] -= Dot( div, pTemperatureGradient[idx]) * 
-              pvol[idx] * thermalConductivity;
+            // Question: Why decreasing internal heat rate ?
+            T_ii = -Dot(div, T_i)*alpha*flags->d_adiabaticHeating;
+            internalHeatRate[node] += (T_ii + gPIntHeatRate[node]);
           }
         }
       }
@@ -1930,7 +1978,7 @@ void SerialMPM::solveHeatEquations(const ProcessorGroup*,
     for(int m = 0; m < d_sharedState->getNumMPMMatls(); m++){
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
       int dwi = mpm_matl->getDWIndex();
-      double specificHeat = mpm_matl->getSpecificHeat();
+      double Cv = mpm_matl->getSpecificHeat();
      
       // Get required variables for this patch
       constNCVariable<double> mass,externalHeatRate,gvolume;
@@ -1973,10 +2021,9 @@ void SerialMPM::solveHeatEquations(const ProcessorGroup*,
 
       for(NodeIterator iter=patch->getNodeIterator(n8or27);!iter.done();iter++){
         IntVector c = *iter;
-        tempRate[c] = (internalHeatRate[c]*((mass[c]-1.e-200)/mass[c])
-                    +  externalHeatRate[c]
-                    +  htrate_gasNC[c]) /
-                   (mass[c] * specificHeat) + thermalContactHeatExchangeRate[c];
+        tempRate[c] = internalHeatRate[c]*((mass[c]-1.e-200)/mass[c]) +  
+                      (externalHeatRate[c]+ htrate_gasNC[c])/(mass[c]*Cv) + 
+                      thermalContactHeatExchangeRate[c];
       }
     }
   }
@@ -2682,16 +2729,6 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
         massBurnFrac = massBurnFrac_create;         // reference created data
       }
 
-      // Get the constitutive model (needed for plastic temperature
-      // update) and get the plastic temperature from the plasticity
-      // model
-      ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
-      ParticleVariable<double> pPlasticTempInc;
-      new_dw->allocateTemporary(pPlasticTempInc, pset);
-      ParticleSubset::iterator iter = pset->begin();
-      for(;iter != pset->end();iter++) pPlasticTempInc[*iter] = 0.0;
-      cm->getPlasticTemperatureIncrement(pset, new_dw, pPlasticTempInc);
-
       double Cp=mpm_matl->getSpecificHeat();
       double rho_init=mpm_matl->getInitialDensity();
 
@@ -2740,10 +2777,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
         pvelocitynew[idx]    = pvelocity[idx]    + (acc - alpha*vel)*delT;
         // pxx is only useful if we're not in normal grid resetting mode.
         pxx[idx]             = px[idx]    + pdispnew[idx];
-        // If there is no adiabatic heating, add the plastic temperature
-        // to the particle temperature
-        pTempNew[idx]        = pTemperature[idx] + tempRate  * delT 
-          + flags->d_adiabaticHeating*pPlasticTempInc[idx];
+        pTempNew[idx]        = pTemperature[idx] + tempRate*delT ;
         pSp_volNew[idx]      = pSp_vol[idx];
 
 
