@@ -48,12 +48,10 @@ WARNING
   public:
     SingleProcessorScheduler(const ProcessorGroup* myworld, Output* oport, SingleProcessorScheduler* parent = NULL);
     virtual ~SingleProcessorScheduler();
-    
-    virtual void compile(const ProcessorGroup* pg, bool scrub_new, bool scrub_old = true);
 
     //////////
     // Insert Documentation Here:
-    virtual void execute( const ProcessorGroup * pc );
+    virtual void execute( const ProcessorGroup * pg );
     virtual void executeTimestep( const ProcessorGroup * pc );
     virtual void executeRefine( const ProcessorGroup * pc );
     virtual void executeCoarsen( const ProcessorGroup * pc );
@@ -69,7 +67,9 @@ WARNING
 					    const vector<vector<const VarLabel*> >& new_labels,
 					    const VarLabel* particleIDLabel,
 					    const MaterialSet* matls);
-    
+
+  protected:
+    virtual void actuallyCompile(const ProcessorGroup* pg);
   private:
     SPRelocate reloc;
     SingleProcessorScheduler& operator=(const SingleProcessorScheduler&);

@@ -29,6 +29,13 @@
 
 #include <iostream>
 #include <string>
+#include <sstream>
+
+//#define WAYNE_DEBUG
+
+#ifdef WAYNE_DEBUG
+int totalGridAlloc = 0;
+#endif
 
 using std::cerr;
 using std::string;
@@ -94,6 +101,11 @@ void OnDemandDataWarehouse::finalize()
    d_sfczDB.cleanForeign();
    d_finalized=true;
 
+#ifdef WAYNE_DEBUG   
+   cerr << "Total Grid alloc: " << totalGridAlloc << endl;
+   totalGridAlloc = 0;
+#endif
+   
   d_lock.writeUnlock();
 }
 
@@ -131,12 +143,39 @@ OnDemandDataWarehouse::put(Variable* var, const VarLabel* label,
       throw InternalError("Unknown Variable type");
 }
 
+void OnDemandDataWarehouse::
+allocateAndPutGridVar(Variable* var, const VarLabel* label,
+		      int matlIndex, const Patch* patch)
+{
+   union {
+      NCVariableBase* nc;
+      CCVariableBase* cc;
+      SFCXVariableBase* sfcx;
+      SFCYVariableBase* sfcy;
+      SFCZVariableBase* sfcz;
+   } castVar;
+
+   if ((castVar.nc = dynamic_cast<NCVariableBase*>(var)) != NULL)
+      allocateAndPut(*castVar.nc, label, matlIndex, patch);
+   else if ((castVar.cc = dynamic_cast<CCVariableBase*>(var)) != NULL)
+      allocateAndPut(*castVar.cc, label, matlIndex, patch);
+   else if ((castVar.sfcx=dynamic_cast<SFCXVariableBase*>(var)) != NULL)
+      allocateAndPut(*castVar.sfcx, label, matlIndex, patch);
+   else if ((castVar.sfcy=dynamic_cast<SFCYVariableBase*>(var)) != NULL)
+      allocateAndPut(*castVar.sfcy, label, matlIndex, patch);
+   else if ((castVar.sfcz=dynamic_cast<SFCZVariableBase*>(var)) != NULL)
+      allocateAndPut(*castVar.sfcz, label, matlIndex, patch);
+   else
+      throw InternalError("OnDemandDataWarehouse::allocateAndPutGridVar: Not a grid variable type");
+}
+
 void
 OnDemandDataWarehouse::get(ReductionVariableBase& var,
 			   const VarLabel* label, int matlIndex /*= -1*/)
 {
-  checkGetAccess(label, matlIndex, 0);
   d_lock.readLock();
+  
+  checkGetAccess(label, matlIndex, 0);
 
   if(!d_reductionDB.exists(label, matlIndex, NULL)) {
         throw UnknownVariable(label->getName(), NULL, matlIndex,
@@ -375,110 +414,68 @@ OnDemandDataWarehouse::recvMPI(BufferInfo& buffer,
     }
     break;
   case TypeDescription::NCVariable:
-    {
-      /* Can modify variable now
-      if(d_ncDB.exists(label, matlIndex, patch))
-	throw InternalError("Variable already exists before MPI recv: " +
-			    label->getFullName(matlIndex, patch));
-      */
-      Variable* v = label->typeDescription()->createInstance();
-      NCVariableBase* var = dynamic_cast<NCVariableBase*>(v);
-      ASSERT(var != 0);
-      var->allocate(dep->low, dep->high);
-      var->setForeign();
-      
-	getMPIBuffLock.lock(); // Dd: ??
-      var->getMPIBuffer(buffer, dep->low, dep->high);
-	getMPIBuffLock.unlock(); // Dd: ??
-      d_lock.writeLock();
-      d_ncDB.put(label, matlIndex, patch, var, true);
-      d_lock.writeUnlock();
-    }
+    recvMPIGridVar<NCVariableBase>(d_ncDB, buffer, dep, label, matlIndex,
+				   patch);
     break;
   case TypeDescription::CCVariable:
-    {
-      /* Can modify variable now
-      if(d_ccDB.exists(label, matlIndex, patch))
-	throw InternalError("Variable already exists before MPI recv: "+label->getFullName(matlIndex, patch));
-      */
-      Variable* v = label->typeDescription()->createInstance();
-      CCVariableBase* var = dynamic_cast<CCVariableBase*>(v);
-      ASSERT(var != 0);
-      var->allocate(dep->low, dep->high);
-      var->setForeign();
-      
-	getMPIBuffLock.lock(); // Dd: ??
-      var->getMPIBuffer(buffer, dep->low, dep->high);
-	getMPIBuffLock.unlock(); // Dd: ??
-      d_lock.writeLock();
-      d_ccDB.put(label, matlIndex, patch, var, true);
-      d_lock.writeUnlock();
-    }
+    recvMPIGridVar<CCVariableBase>(d_ccDB, buffer, dep, label, matlIndex,
+				   patch);
     break;
   case TypeDescription::SFCXVariable:
-    {
-      /* Can modify variable now
-      if(d_sfcxDB.exists(label, matlIndex, patch))
-	throw InternalError("Variable already exists before MPI recv: "+label->getFullName(matlIndex, patch));
-      */
-      Variable* v = label->typeDescription()->createInstance();
-      SFCXVariableBase* var = dynamic_cast<SFCXVariableBase*>(v);
-      ASSERT(var != 0);
-      var->allocate(dep->low, dep->high);
-      var->setForeign();
-
-	getMPIBuffLock.lock(); // Dd: ??
-      var->getMPIBuffer(buffer, dep->low, dep->high);
-	getMPIBuffLock.unlock(); // Dd: ??
-      d_lock.writeLock();
-      d_sfcxDB.put(label, matlIndex, patch, var, true);
-      d_lock.writeUnlock();
-    }
+    recvMPIGridVar<SFCXVariableBase>(d_sfcxDB, buffer, dep, label, matlIndex,
+				   patch);
     break;
   case TypeDescription::SFCYVariable:
-    {
-      /* Can modify variable now
-      if(d_sfcyDB.exists(label, matlIndex, patch))
-	throw InternalError("Variable already exists before MPI recv: "+label->getFullName(matlIndex, patch));
-      */
-      Variable* v = label->typeDescription()->createInstance();
-      SFCYVariableBase* var = dynamic_cast<SFCYVariableBase*>(v);
-      ASSERT(var != 0);
-      var->allocate(dep->low, dep->high);
-      var->setForeign();
-      
-	getMPIBuffLock.lock(); // Dd: ??
-      var->getMPIBuffer(buffer, dep->low, dep->high);
-	getMPIBuffLock.unlock(); // Dd: ??
-      d_lock.writeLock();
-      d_sfcyDB.put(label, matlIndex, patch, var, true);
-      d_lock.writeUnlock();
-    }
+    recvMPIGridVar<SFCYVariableBase>(d_sfcyDB, buffer, dep, label, matlIndex,
+				   patch);
     break;
   case TypeDescription::SFCZVariable:
-    {
-      /* Can modify variable now
-      if(d_sfczDB.exists(label, matlIndex, patch))
-	throw InternalError("Variable already exists before MPI recv: "+label->getFullName(matlIndex, patch));
-      */
-      Variable* v = label->typeDescription()->createInstance();
-      SFCZVariableBase* var = dynamic_cast<SFCZVariableBase*>(v);
-      ASSERT(var != 0);
-      var->allocate(dep->low, dep->high);
-      var->setForeign();
-      
-	getMPIBuffLock.lock(); // Dd: ??
-      var->getMPIBuffer(buffer, dep->low, dep->high);
-	getMPIBuffLock.unlock(); // Dd: ??
-      d_lock.writeLock();
-      d_sfczDB.put(label, matlIndex, patch, var, true);
-      d_lock.writeUnlock();
-    }
+    recvMPIGridVar<SFCZVariableBase>(d_sfczDB, buffer, dep, label, matlIndex,
+				   patch);
     break;
   default:
     throw InternalError("recvMPI not implemented for "+label->getFullName(matlIndex, patch));
   } // end switch( label->getType() );
 } // end recvMPI()
+
+#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
+#pragma set woff 1424 // template parameter not used in declaring arguments
+#endif  
+
+template <class VariableBase, class DWDatabase>
+void
+OnDemandDataWarehouse::recvMPIGridVar(DWDatabase& db, BufferInfo& buffer,
+				      const DetailedDep* dep,
+				      const VarLabel* label, int matlIndex,
+				      const Patch* patch)
+{
+  d_lock.readLock();
+  VariableBase* var = 0;
+  if (db.exists(label, matlIndex, patch)) {
+    var = db.get(label, matlIndex, patch);
+  }
+  d_lock.readUnlock();
+  
+  if (var == 0) {
+    // There was no place reserved to recv the data yet,
+    // so it must create the space now.
+    Variable* v = label->typeDescription()->createInstance();
+    var = dynamic_cast<VariableBase*>(v);
+    var->allocate(dep->low, dep->high);
+    var->setForeign();
+    d_lock.writeLock();
+    db.put(label, matlIndex, patch, var, true);
+    d_lock.writeUnlock();
+  }
+  
+  getMPIBuffLock.lock(); // Dd: ??
+  var->getMPIBuffer(buffer, dep->low, dep->high);
+  getMPIBuffLock.unlock(); // Dd: ??
+}
+
+#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
+#pragma reset woff 1424
+#endif  
 
 void
 OnDemandDataWarehouse::reduceMPI(const VarLabel* label,
@@ -549,24 +546,24 @@ OnDemandDataWarehouse::reduceMPI(const VarLabel* label,
 }
 
 void
-OnDemandDataWarehouse::allocate(ReductionVariableBase& var,
-				const VarLabel* label, int)
+OnDemandDataWarehouse::allocate(ReductionVariableBase& /*var*/,
+				const VarLabel* /*label*/, int)
 {
    cerr << "OnDemand DataWarehouse::allocate(ReductionVariable) "
 	<< "not finished\n";
-   var.setAllocationLabel(label);
 }
 
 void
 OnDemandDataWarehouse::put(const ReductionVariableBase& var,
 			   const VarLabel* label, int matlIndex /* = -1 */)
 {
-  ASSERT(!d_finalized);  
-  checkPutAccess(label, matlIndex, 0,
-		 false /* it actually may be replaced, but it doesn't need
-			  to explicitly modify with multiple reduces in the
-			  task graph */);
+  ASSERT(!d_finalized);
   d_lock.writeLock();
+
+   checkPutAccess(label, matlIndex, 0,
+		  false /* it actually may be replaced, but it doesn't need
+			   to explicitly modify with multiple reduces in the
+			   task graph */);
 
    // Error checking
    if (!d_reductionDB.exists(label, matlIndex, NULL))
@@ -585,9 +582,9 @@ void
 OnDemandDataWarehouse::override(const ReductionVariableBase& var,
 				const VarLabel* label, int matlIndex /*=-1*/)
 {
-  checkPutAccess(label, matlIndex, 0, true);
-  
-  d_lock.writeLock();
+  d_lock.writeLock();  
+
+   checkPutAccess(label, matlIndex, 0, true);
 
    // Put it in the database, replace whatever may already be there
    d_reductionDB.put(label, matlIndex, NULL, var.clone(), true);
@@ -748,7 +745,7 @@ OnDemandDataWarehouse::get(constParticleVariableBase& constVar,
 {
   int matlIndex = pset->getMatlIndex();
   const Patch* patch = pset->getPatch();
-  
+
   if(pset->getGhostType() == Ghost::None){
     get(constVar, label, matlIndex, patch);
   }
@@ -841,22 +838,29 @@ OnDemandDataWarehouse::getParticleVariable(const VarLabel* label,
 }
 
 void
-OnDemandDataWarehouse::allocate(ParticleVariableBase& var,
-				const VarLabel* label,
-				ParticleSubset* pset)
+OnDemandDataWarehouse::allocateTemporary(ParticleVariableBase& var,
+					 ParticleSubset* pset)
+{  
+   var.allocate(pset);
+}
+
+void
+OnDemandDataWarehouse::allocateAndPut(ParticleVariableBase& var,
+				      const VarLabel* label,
+				      ParticleSubset* pset)
 {
-  d_lock.writeLock();
    int matlIndex = pset->getMatlIndex();
    const Patch* patch = pset->getPatch();
-
+  
    // Error checking
+  d_lock.readLock();   
    if(d_particleDB.exists(label, matlIndex, patch))
       throw InternalError("Particle variable already exists: " +
 			  label->getName());
-
-   var.allocate(pset);
-   var.setAllocationLabel(label);
-  d_lock.writeUnlock();
+  d_lock.readUnlock();
+  
+  allocateTemporary(var, pset);
+  put(var, label);
 }
 
 void
@@ -864,7 +868,6 @@ OnDemandDataWarehouse::put(ParticleVariableBase& var,
 			   const VarLabel* label, bool replace /*= false*/)
 {
   ASSERT(!d_finalized);  
-  checkAllocation(var, label);
 
    ParticleSubset* pset = var.getParticleSubset();
    if(pset->numGhostCells() != 0 || pset->getGhostType() != 0)
@@ -872,6 +875,7 @@ OnDemandDataWarehouse::put(ParticleVariableBase& var,
    const Patch* patch = pset->getPatch();
    int matlIndex = pset->getMatlIndex();
 
+  d_lock.writeLock();   
    checkPutAccess(label, matlIndex, patch, replace);
    
    // Error checking
@@ -886,8 +890,8 @@ OnDemandDataWarehouse::put(ParticleVariableBase& var,
   cerr << "Putting: " << *label << " MI: " << matlIndex << " patch: " 
        << *patch << " into DW: " << d_generation << "\n";
 #endif
+  
    // Put it in the database
-  d_lock.writeLock();
    d_particleDB.put(label, matlIndex, patch, var.clone(), true);
   d_lock.writeUnlock();
 }
@@ -898,10 +902,14 @@ OnDemandDataWarehouse::get(constNCVariableBase& constVar,
 			   int matlIndex, const Patch* patch,
 			   Ghost::GhostType gtype, int numGhostCells)
 {
-  checkGetAccess(label, matlIndex, patch, gtype, numGhostCells);
   NCVariableBase* var = constVar.cloneType();
+  
+ d_lock.readLock();
+  checkGetAccess(label, matlIndex, patch, gtype, numGhostCells);
   getGridVar<Patch::NodeBased>(*var, d_ncDB, label, matlIndex, patch,
 			       gtype, numGhostCells);
+ d_lock.readUnlock();
+ 
   constVar = *var;
   delete var;
 }
@@ -911,23 +919,28 @@ OnDemandDataWarehouse::getModifiable(NCVariableBase& var,
 				     const VarLabel* label,
 				     int matlIndex, const Patch* patch)
 {
+ d_lock.readLock();  
   checkModifyAccess(label, matlIndex, patch);
   getGridVar<Patch::NodeBased>(var, d_ncDB, label, matlIndex, patch,
 			       Ghost::None, 0);
+ d_lock.readUnlock();  
 }
 
 void
-OnDemandDataWarehouse::allocate(NCVariableBase& var, const VarLabel* label,
-				int matlIndex, const Patch* patch,
-				Ghost::GhostType gtype, int numGhostCells)
+OnDemandDataWarehouse::
+allocateTemporary(NCVariableBase& var, const Patch* patch,
+		  Ghost::GhostType gtype, int numGhostCells)
 {
-#if DAV_DEBUG
-  cerr << "alloc: NC var: " << *label << *patch 
-       << " MI: " << matlIndex << "\n";
-#endif
-  
-  allocateGridVar<Patch::NodeBased>(var, d_ncDB, label, matlIndex, patch,
-				    gtype, numGhostCells);
+  allocateTemporaryGridVar<Patch::NodeBased>(var, patch, gtype, numGhostCells);
+}
+
+void OnDemandDataWarehouse::
+allocateAndPut(NCVariableBase& var, const VarLabel* label,
+	       int matlIndex, const Patch* patch,
+	       Ghost::GhostType gtype, int numGhostCells)
+{
+  allocateAndPutGridVar<Patch::NodeBased>(var, d_ncDB, label, matlIndex, patch,
+					  gtype, numGhostCells);
 }
 
 void
@@ -936,24 +949,7 @@ OnDemandDataWarehouse::put(NCVariableBase& var,
 			   int matlIndex, const Patch* patch,
 			   bool replace /*= false*/)
 {
-  ASSERT(!d_finalized);  
-  checkPutAccess(label, matlIndex, patch, replace);
-  checkAllocation(var, label);
-  
-  d_lock.writeLock();
-
-#if DAV_DEBUG
-  cerr << "Putting: " << *label << " MI: " << matlIndex << " patch: " 
-       << *patch << " into DW: " << d_generation << "\n";
-#endif
-   // Error checking
-   if(!replace && d_ncDB.exists(label, matlIndex, patch))
-      throw InternalError("put: NC variable already exists: " +
-			  label->getName());
-
-   // Put it in the database
-   d_ncDB.put(label, matlIndex, patch, var.clone(), true);
-  d_lock.writeUnlock();
+  putGridVar(*var.clone(), d_ncDB, label, matlIndex, patch, replace);
 }
 
 void
@@ -989,13 +985,20 @@ OnDemandDataWarehouse::put(PerPatchBase& var,
   d_lock.writeUnlock();
 }
 
-void
-OnDemandDataWarehouse::allocate(CCVariableBase& var, const VarLabel* label,
-				int matlIndex, const Patch* patch,
-				Ghost::GhostType gtype, int numGhostCells)
+void OnDemandDataWarehouse::
+allocateTemporary(CCVariableBase& var, const Patch* patch,
+		  Ghost::GhostType gtype, int numGhostCells)
 {
-  allocateGridVar<Patch::CellBased>(var, d_ccDB, label, matlIndex, patch,
-				    gtype, numGhostCells);
+  allocateTemporaryGridVar<Patch::CellBased>(var, patch, gtype, numGhostCells);
+}
+
+void OnDemandDataWarehouse::
+allocateAndPut(CCVariableBase& var, const VarLabel* label,
+	       int matlIndex, const Patch* patch,
+	       Ghost::GhostType gtype, int numGhostCells)
+{
+  allocateAndPutGridVar<Patch::CellBased>(var, d_ccDB, label, matlIndex, 
+					  patch, gtype, numGhostCells);
 }
 
 void
@@ -1004,10 +1007,14 @@ OnDemandDataWarehouse::get(constCCVariableBase& constVar,
 			   int matlIndex, const Patch* patch,
 			   Ghost::GhostType gtype, int numGhostCells)
 {
+  CCVariableBase* var = constVar.cloneType();
+  
+ d_lock.readLock();  
   checkGetAccess(label, matlIndex, patch, gtype, numGhostCells);
-  CCVariableBase* var = constVar.cloneType();  
   getGridVar<Patch::CellBased>(*var, d_ccDB, label, matlIndex, patch,
 			       gtype, numGhostCells);
+ d_lock.readUnlock();
+ 
   constVar = *var;
   delete var;
 }
@@ -1017,9 +1024,11 @@ OnDemandDataWarehouse::getModifiable(CCVariableBase& var,
 				     const VarLabel* label,
 				     int matlIndex, const Patch* patch)
 {
+ d_lock.readLock();  
   checkModifyAccess(label, matlIndex, patch);  
   getGridVar<Patch::CellBased>(var, d_ccDB, label, matlIndex, patch,
 			       Ghost::None, 0);
+ d_lock.readUnlock();  
 }
 
 void
@@ -1027,30 +1036,7 @@ OnDemandDataWarehouse::put(CCVariableBase& var, const VarLabel* label,
 			   int matlIndex, const Patch* patch,
 			   bool replace /*= false*/)
 {
-  ASSERT(!d_finalized);  
-  checkPutAccess(label, matlIndex, patch, replace);
-  checkAllocation(var, label);
-  
-  d_lock.writeLock();
-   // Error checking
-   if(!replace && d_ccDB.exists(label, matlIndex, patch))
-      throw InternalError("CC variable already exists: "+label->getName());
-
-   IntVector low, high, size;
-   var.getSizes(low, high, size);
-
-   if(low != patch->getCellLowIndex() || high != patch->getCellHighIndex()){
-#if 0
-      cerr << "Warning, rewindowing array: " << label->getName() << " on patch " << patch->getID() << '\n';
-#endif
-      CCVariableBase* newvar = var.clone();
-      newvar->rewindow(patch->getCellLowIndex(), patch->getCellHighIndex());
-      d_ccDB.put(label, matlIndex, patch, newvar, true);
-   } else {
-      // Put it in the database
-      d_ccDB.put(label, matlIndex, patch, var.clone(), true);
-   }
-  d_lock.writeUnlock();
+  putGridVar(*var.clone(), d_ccDB, label, matlIndex, patch, replace);  
 }
 
 void
@@ -1059,10 +1045,14 @@ OnDemandDataWarehouse::get(constSFCXVariableBase& constVar,
 			   int matlIndex, const Patch* patch,
 			   Ghost::GhostType gtype, int numGhostCells)
 {
-  checkGetAccess(label, matlIndex, patch, gtype, numGhostCells);
   SFCXVariableBase* var = constVar.cloneType();
+
+ d_lock.readLock();  
+  checkGetAccess(label, matlIndex, patch, gtype, numGhostCells);
   getGridVar<Patch::XFaceBased>(*var, d_sfcxDB, label, matlIndex, patch,
 				gtype, numGhostCells);
+ d_lock.readUnlock();
+ 
   constVar = *var;
   delete var;
 }
@@ -1072,18 +1062,28 @@ OnDemandDataWarehouse::getModifiable(SFCXVariableBase& var,
 				     const VarLabel* label,
 				     int matlIndex, const Patch* patch)
 {
+ d_lock.readLock();  
   checkModifyAccess(label, matlIndex, patch);  
   getGridVar<Patch::XFaceBased>(var, d_sfcxDB, label, matlIndex, patch,
 				Ghost::None, 0);
+ d_lock.readUnlock();  
 }
 
-void
-OnDemandDataWarehouse::allocate(SFCXVariableBase& var, const VarLabel* label,
-				int matlIndex, const Patch* patch,
-				Ghost::GhostType gtype, int numGhostCells)
+void OnDemandDataWarehouse::
+allocateTemporary(SFCXVariableBase& var, const Patch* patch,
+		  Ghost::GhostType gtype, int numGhostCells)
 {
-  allocateGridVar<Patch::XFaceBased>(var, d_sfcxDB, label, matlIndex, patch,
-				     gtype, numGhostCells);
+  allocateTemporaryGridVar<Patch::XFaceBased>(var, patch,
+					      gtype, numGhostCells);
+}
+
+void OnDemandDataWarehouse::
+allocateAndPut(SFCXVariableBase& var, const VarLabel* label,
+	       int matlIndex, const Patch* patch,
+	       Ghost::GhostType gtype, int numGhostCells)
+{
+  allocateAndPutGridVar<Patch::XFaceBased>(var, d_sfcxDB, label, matlIndex, 
+					   patch, gtype, numGhostCells);
 }
 
 void
@@ -1092,31 +1092,7 @@ OnDemandDataWarehouse::put(SFCXVariableBase& var,
 			   int matlIndex, const Patch* patch,
 			   bool replace /*= false*/)
 {
-  ASSERT(!d_finalized);  
-  checkPutAccess(label, matlIndex, patch, replace);
-  checkAllocation(var, label);
-  
-  d_lock.writeLock();
-
-   // Error checking
-   if(!replace && d_sfcxDB.exists(label, matlIndex, patch))
-      throw InternalError("SFCX variable already exists: "+label->getName());
-
-   IntVector low, high, size;
-   var.getSizes(low, high, size);
-   if(low != patch->getSFCXLowIndex() || high != patch->getSFCXHighIndex()) {
-#if 0
-      cerr << "Warning, rewindowing array: " << label->getName() << " on patch " << patch->getID() << '\n';
-#endif
-      SFCXVariableBase* newvar = var.clone();
-      newvar->rewindow(patch->getSFCXLowIndex(), patch->getSFCXHighIndex());
-      d_sfcxDB.put(label, matlIndex, patch, newvar, true);
-   } else {
-
-      // Put it in the database
-      d_sfcxDB.put(label, matlIndex, patch, var.clone(), true);
-   }
-  d_lock.writeUnlock();
+  putGridVar(*var.clone(), d_sfcxDB, label, matlIndex, patch, replace);
 }
 
 void
@@ -1125,10 +1101,14 @@ OnDemandDataWarehouse::get(constSFCYVariableBase& constVar,
 			   int matlIndex, const Patch* patch,
 			   Ghost::GhostType gtype, int numGhostCells)
 {
+  SFCYVariableBase* var = constVar.cloneType();  
+  
+ d_lock.readLock();  
   checkGetAccess(label, matlIndex, patch, gtype, numGhostCells);
-  SFCYVariableBase* var = constVar.cloneType();
   getGridVar<Patch::YFaceBased>(*var, d_sfcyDB, label, matlIndex, patch,
 				gtype, numGhostCells);
+ d_lock.readUnlock();
+ 
   constVar = *var;
   delete var;
 }
@@ -1138,18 +1118,28 @@ OnDemandDataWarehouse::getModifiable(SFCYVariableBase& var,
 				     const VarLabel* label,
 				     int matlIndex, const Patch* patch)
 {
+ d_lock.readLock();  
   checkModifyAccess(label, matlIndex, patch);  
   getGridVar<Patch::YFaceBased>(var, d_sfcyDB, label, matlIndex, patch,
 				Ghost::None, 0);
+ d_lock.readUnlock();  
 }
 
-void
-OnDemandDataWarehouse::allocate(SFCYVariableBase& var, const VarLabel* label,
-				int matlIndex, const Patch* patch,
-				Ghost::GhostType gtype, int numGhostCells)
+void OnDemandDataWarehouse::
+allocateTemporary(SFCYVariableBase& var, const Patch* patch,
+		  Ghost::GhostType gtype, int numGhostCells)
 {
-  allocateGridVar<Patch::YFaceBased>(var, d_sfcyDB, label, matlIndex, patch,
-				     gtype, numGhostCells);
+  allocateTemporaryGridVar<Patch::YFaceBased>(var, patch,
+					      gtype, numGhostCells);
+}
+
+void OnDemandDataWarehouse::
+allocateAndPut(SFCYVariableBase& var, const VarLabel* label,
+	       int matlIndex, const Patch* patch,
+	       Ghost::GhostType gtype, int numGhostCells)
+{
+  allocateAndPutGridVar<Patch::YFaceBased>(var, d_sfcyDB, label, matlIndex, 
+					   patch, gtype, numGhostCells);
 }
 
 void
@@ -1158,31 +1148,7 @@ OnDemandDataWarehouse::put(SFCYVariableBase& var,
 			   int matlIndex, const Patch* patch,
 			   bool replace /*= false*/)
 {
-  ASSERT(!d_finalized);  
-  checkPutAccess(label, matlIndex, patch, replace);
-  checkAllocation(var, label);
-  
-  d_lock.writeLock();
-
-   // Error checking
-   if(!replace && d_sfcyDB.exists(label, matlIndex, patch))
-      throw InternalError("SFCY variable already exists: "+label->getName());
-
-   IntVector low, high, size;
-   var.getSizes(low, high, size);
-   if(low != patch->getSFCYLowIndex() || high != patch->getSFCYHighIndex()) {
-#if 0
-      cerr << "Warning, rewindowing array: " << label->getName() << " on patch " << patch->getID() << '\n';
-#endif
-      SFCYVariableBase* newvar = var.clone();
-      newvar->rewindow(patch->getSFCYLowIndex(), patch->getSFCYHighIndex());
-      d_sfcyDB.put(label, matlIndex, patch, newvar, true);
-   } else {
-
-      // Put it in the database
-      d_sfcyDB.put(label, matlIndex, patch, var.clone(), true);
-   }
-  d_lock.writeUnlock();
+  putGridVar(*var.clone(), d_sfcyDB, label, matlIndex, patch, replace);  
 }
 
 void
@@ -1191,10 +1157,14 @@ OnDemandDataWarehouse::get(constSFCZVariableBase& constVar,
 			   int matlIndex, const Patch* patch,
 			   Ghost::GhostType gtype, int numGhostCells)
 {
-  checkGetAccess(label, matlIndex, patch, gtype, numGhostCells);
   SFCZVariableBase* var = constVar.cloneType();
+
+ d_lock.readLock();  
+  checkGetAccess(label, matlIndex, patch, gtype, numGhostCells);
   getGridVar<Patch::ZFaceBased>(*var, d_sfczDB, label, matlIndex, patch,
 				gtype, numGhostCells);
+ d_lock.readUnlock();
+  
   constVar = *var;
   delete var;
 }
@@ -1204,18 +1174,28 @@ OnDemandDataWarehouse::getModifiable(SFCZVariableBase& var,
 				     const VarLabel* label,
 				     int matlIndex, const Patch* patch)
 {
+ d_lock.readLock();  
   checkModifyAccess(label, matlIndex, patch);  
   getGridVar<Patch::ZFaceBased>(var, d_sfczDB, label, matlIndex, patch,
 				Ghost::None, 0);
+ d_lock.readUnlock();  
 }
 
-void
-OnDemandDataWarehouse::allocate(SFCZVariableBase& var, const VarLabel* label,
-				int matlIndex, const Patch* patch,
-				Ghost::GhostType gtype, int numGhostCells)
+void OnDemandDataWarehouse::
+allocateTemporary(SFCZVariableBase& var, const Patch* patch,
+		  Ghost::GhostType gtype, int numGhostCells)
 {
-  allocateGridVar<Patch::ZFaceBased>(var, d_sfczDB, label, matlIndex, patch,
-				     gtype, numGhostCells);
+  allocateTemporaryGridVar<Patch::ZFaceBased>(var, patch,
+					      gtype, numGhostCells);
+}
+
+void OnDemandDataWarehouse::
+allocateAndPut(SFCZVariableBase& var, const VarLabel* label,
+	       int matlIndex, const Patch* patch,
+	       Ghost::GhostType gtype, int numGhostCells)
+{
+  allocateAndPutGridVar<Patch::ZFaceBased>(var, d_sfczDB, label, matlIndex, 
+					   patch, gtype, numGhostCells);
 }
 
 void
@@ -1224,31 +1204,7 @@ OnDemandDataWarehouse::put(SFCZVariableBase& var,
 			   int matlIndex, const Patch* patch,
 			   bool replace /*= false*/)
 {
-  ASSERT(!d_finalized);  
-  checkPutAccess(label, matlIndex, patch, replace);
-  checkAllocation(var, label);
-  
-  d_lock.writeLock();
-
-   // Error checking
-   if(!replace && d_sfczDB.exists(label, matlIndex, patch))
-      throw InternalError("SFCZ variable already exists: "+label->getName());
-
-   IntVector low, high, size;
-   var.getSizes(low, high, size);
-   if(low != patch->getSFCZLowIndex() || high != patch->getSFCZHighIndex()) {
-#if 0
-      cerr << "Warning, rewindowing array: " << label->getName() << " on patch " << patch->getID() << '\n';
-#endif
-      SFCZVariableBase* newvar = var.clone();
-      newvar->rewindow(patch->getSFCZLowIndex(), patch->getSFCZHighIndex());
-      d_sfczDB.put(label, matlIndex, patch, newvar, true);
-   } else {
-
-      // Put it in the database
-      d_sfczDB.put(label, matlIndex, patch, var.clone(), true);
-   }
-  d_lock.writeUnlock();
+  putGridVar(*var.clone(), d_sfczDB, label, matlIndex, patch, replace);
 }
 
 bool
@@ -1300,14 +1256,14 @@ void OnDemandDataWarehouse::emit(OutputContext& oc, const VarLabel* label,
 
    if (var == NULL)
       throw UnknownVariable(label->getName(), patch, matlIndex, "on emit");
-  
+
    var->emit(oc, label->getCompressionMode());
    
   d_lock.readUnlock();
 }
 
 void OnDemandDataWarehouse::print(ostream& intout, const VarLabel* label,
-				 int matlIndex /* = -1 */)
+				  int matlIndex /* = -1 */)
 {
   d_lock.readLock();
 
@@ -1376,127 +1332,268 @@ getGridVar(VariableBase& var, DWDatabase& db,
 	   const VarLabel* label, int matlIndex, const Patch* patch,
 	   Ghost::GhostType gtype, int numGhostCells)
 {
-  d_lock.readLock();
-  ASSERT(basis == Patch::translateTypeToBasis(var.virtualGetTypeDescription()->getType(), true));
-   if(!db.exists(label, matlIndex, patch))
-     throw UnknownVariable(label->getName(), patch, matlIndex);
-   db.get(label, matlIndex, patch, var);
-   
-   if (gtype == Ghost::None) {
-     if(numGhostCells != 0)
-       throw InternalError("Ghost cells specified with task type none!\n");
-   }
-   else {
-     IntVector low = patch->getLowIndex(basis);
-     IntVector high = patch->getHighIndex(basis);
-     IntVector dn = high - low;
-     long total = dn.x()*dn.y()*dn.z();
+  ASSERT(basis == Patch::translateTypeToBasis(var.virtualGetTypeDescription()->getType(), true));  
 
-     Level::selectType neighbors;
-     IntVector lowIndex, highIndex;
-     patch->computeVariableExtents(basis, gtype, numGhostCells,
-				   neighbors, lowIndex, highIndex);
-     if (!var.rewindow(lowIndex, highIndex)) {
-       // reallocation needed
-       // Ignore this if this is the initialization dw in its old state.
-       // The reason for this is that during initialization it doesn't
-       // know what ghost cells will be required of it for the next timestep.
-       // (This will be an issue whenever the taskgraph changes to require
-       // more ghost cells from the old datawarehouse).
-       bool ignore = d_isInitializationDW && d_finalized;
-       if (!ignore) {
-	 ostringstream errmsg;
-	 errmsg << "Reallocation Error: Reallocation needed for " << label->getName();
-	 if (patch)
-	   errmsg << " on patch " << patch->getID();
-	 errmsg << " for material " << matlIndex;
-	 throw InternalError(errmsg.str().c_str());
-       }
-     }
-     
-     for(int i=0;i<(int)neighbors.size();i++){
-       const Patch* neighbor = neighbors[i];
-       if(neighbor && (neighbor != patch)){
-	 if(!db.exists(label, matlIndex, neighbor))
-	   throw UnknownVariable(label->getName(), neighbor, matlIndex,
-				 neighbor == patch?"on patch":"on neighbor");
-	 VariableBase* srcvar = var.cloneType();
-	 db.get(label, matlIndex, neighbor, *srcvar);
-	 
-	 low = Max(lowIndex, neighbor->getLowIndex(basis));
-	 high= Min(highIndex, neighbor->getHighIndex(basis));
+  if(!db.exists(label, matlIndex, patch))
+    throw UnknownVariable(label->getName(), patch, matlIndex);
+  db.get(label, matlIndex, patch, var);
+  
+  IntVector low = patch->getLowIndex(basis);
+  IntVector high = patch->getHighIndex(basis);
+  
+  if (gtype == Ghost::None) {
+    if(numGhostCells != 0)
+      throw InternalError("Ghost cells specified with task type none!\n");
+    // if this assertion fails, then it is having problems getting the
+    // correct window of the data.
+    ASSERT(var.rewindow(low, high));
+  }
+  else {
+    IntVector dn = high - low;
+    long total = dn.x()*dn.y()*dn.z();
+    
+    Level::selectType neighbors;
+    IntVector lowIndex, highIndex;
+    patch->computeVariableExtents(basis, gtype, numGhostCells,
+				  neighbors, lowIndex, highIndex);
+    if (!var.rewindow(lowIndex, highIndex)) {
+      // reallocation needed
+      // Ignore this if this is the initialization dw in its old state.
+      // The reason for this is that during initialization it doesn't
+      // know what ghost cells will be required of it for the next timestep.
+      // (This will be an issue whenever the taskgraph changes to require
+      // more ghost cells from the old datawarehouse).
+      bool ignore = d_isInitializationDW && d_finalized;
+      if (!ignore) {
+	ostringstream errmsg;
+	errmsg << "Reallocation Error: Reallocation needed for " << label->getName();
+	if (patch)
+	  errmsg << " on patch " << patch->getID();
+	errmsg << " for material " << matlIndex;
+	throw InternalError(errmsg.str().c_str());
+      }
+    }
+    
+    for(int i=0;i<(int)neighbors.size();i++){
+      const Patch* neighbor = neighbors[i];
+      if(neighbor && (neighbor != patch)){
+	if(!db.exists(label, matlIndex, neighbor))
+	  throw UnknownVariable(label->getName(), neighbor, matlIndex,
+				neighbor == patch?"on patch":"on neighbor");
+	VariableBase* srcvar = var.cloneType();
+	db.get(label, matlIndex, neighbor, *srcvar);
+	
+	low = Max(lowIndex, neighbor->getLowIndex(basis));
+	high= Min(highIndex, neighbor->getHighIndex(basis));
+	
+	if( ( high.x() < low.x() ) || ( high.y() < low.y() ) 
+	    || ( high.z() < low.z() ) )
+	  throw InternalError("Patch doesn't overlap?");
+	
+	var.copyPatch(srcvar, low, high);
+	
+	dn = high-low;
+	total+=dn.x()*dn.y()*dn.z();
+	delete srcvar;
+      }
+    }
+    
+    dn = highIndex - lowIndex;
+    long wanted = dn.x()*dn.y()*dn.z();
+    ASSERTEQ(wanted, total);
+    if(wanted!=total){
+      // This ASSERT or this warning are invoked even when trying
+      // to do pefectly legitimate things.
+      cerr << "Warning:  wanted cells/nodes != total cells/nodes " << endl;
+    }
+  }
+}
 
-	 if( ( high.x() < low.x() ) || ( high.y() < low.y() ) 
-	     || ( high.z() < low.z() ) )
-	   throw InternalError("Patch doesn't overlap?");
-	    
-	 var.copyPatch(srcvar, low, high);
+template <Patch::VariableBasis basis, class VariableBase>
+void OnDemandDataWarehouse::
+allocateTemporaryGridVar(VariableBase& var, 
+			 const Patch* patch,
+			 Ghost::GhostType gtype, int numGhostCells)
+{
+  IntVector lowIndex = patch->getLowIndex(basis);
+  IntVector highIndex = patch->getHighIndex(basis);
+  if (numGhostCells > 0) {
+    IntVector lowOffset, highOffset;
+    Patch::getGhostOffsets(var.virtualGetTypeDescription()->getType(), gtype,
+			   numGhostCells, lowOffset, highOffset);
+    patch->computeExtents(basis, lowOffset, highOffset, lowIndex, highIndex);
+  }
 
-	 dn = high-low;
-	 total+=dn.x()*dn.y()*dn.z();
-	 delete srcvar;
-       }
-     }
-
-     dn = highIndex - lowIndex;
-     long wanted = dn.x()*dn.y()*dn.z();
-     ASSERTEQ(wanted, total);
-     if(wanted!=total){
-       // This ASSERT or this warning are invoked even when trying
-       // to do pefectly legitimate things.
-       cerr << "Warning:  wanted cells/nodes != total cells/nodes " << endl;
-     }
-   }
-
-  d_lock.readUnlock();
+#ifdef WAYNE_DEBUG
+  IntVector diff = highIndex - lowIndex;
+  int allocSize = diff.x() * diff.y() * diff.z();
+  totalGridAlloc += allocSize;
+  cerr << "Allocate temporary: " << lowIndex << " - " << highIndex << " = " << allocSize << endl;
+#endif
+  var.allocate(lowIndex, highIndex);
 }
 
 template <Patch::VariableBasis basis, class VariableBase, class DWDatabase>
 void OnDemandDataWarehouse::
-allocateGridVar(VariableBase& var, DWDatabase& db,
-		const VarLabel* label, int matlIndex, const Patch* patch,
-		Ghost::GhostType gtype, int numGhostCells)
+allocateAndPutGridVar(VariableBase& var, DWDatabase& db,
+		      const VarLabel* label, int matlIndex, const Patch* patch,
+		      Ghost::GhostType gtype, int numGhostCells)
 {
-  d_lock.writeLock();
+  ASSERT(!d_finalized);
 
-   // Error checking
-   if(db.exists(label, matlIndex, patch)){
-     /*
-       cerrLock.lock();
-       cerr << string("allocate: variable already exists!\n";
-       cerrLock.unlock();
-     */
-     throw InternalError( "allocate: variable already exists: " +
-			  label->getName() + patch->toString() );
-   }
+  // Note: almost the entire function is write locked in order to prevent dual
+  // allocations in a multi-threaded environment.  Whichever patch in a
+  // super patch group gets here first, does the allocating for the entire
+  // super patch group.
+ d_lock.writeLock();
+ 
+  checkPutAccess(label, matlIndex, patch, false);  
+  bool exists = db.exists(label, matlIndex, patch);
 
-   // Allocate the variable
-   IntVector expLowIndex, expHighIndex;
-   d_scheduler->getExpectedExtents(label, patch, expLowIndex, expHighIndex);
-   IntVector lowOffset, highOffset;
-   IntVector lowIndex = patch->getLowIndex(basis);
-   IntVector highIndex = patch->getHighIndex(basis);
-   if (numGhostCells > 0) {
-     Patch::getGhostOffsets(var.virtualGetTypeDescription()->getType(), gtype,
-			    numGhostCells, lowOffset, highOffset);
-     patch->computeExtents(basis, lowOffset, highOffset, lowIndex, highIndex);
-     lowIndex = Min(expLowIndex, lowIndex);
-     highIndex = Max(expHighIndex, highIndex);
-   }
-#if 1
-   // turn this off while testing
-   var.allocate(Min(expLowIndex, lowIndex), Max(expHighIndex, highIndex));
-#else
-   var.allocate(lowIndex, highIndex);
+  IntVector lowIndex = patch->getLowIndex(basis);
+  IntVector highIndex = patch->getHighIndex(basis);
+  if (numGhostCells > 0) {
+    // expand lowIndex, highIndex to include ghost cells
+    IntVector lowOffset, highOffset;
+    Patch::getGhostOffsets(var.virtualGetTypeDescription()->getType(), gtype,
+			   numGhostCells, lowOffset, highOffset);
+    patch->computeExtents(basis, lowOffset, highOffset, lowIndex, highIndex);
+  }
+  
+ if (exists) {
+   d_lock.writeUnlock();
+    // it was actually allocated and put along with another patch    
+    getGridVar<basis>(var, db, label, matlIndex, patch, Ghost::None, 0);
+    var.rewindow(lowIndex, highIndex);    
+    return;
+  }
+  else {
+    IntVector superLowIndex, superHighIndex;
+    const vector<const Patch*>* superPatchGroup =
+      d_scheduler->getSuperPatchExtents(label, patch, gtype, numGhostCells,
+					superLowIndex, superHighIndex);
+    
+    ASSERT(superPatchGroup != 0);
+
+#ifdef WAYNE_DEBUG
+  IntVector diff = superHighIndex - superLowIndex;
+  int allocSize = diff.x() * diff.y() * diff.z();
+  totalGridAlloc += allocSize;
+  cerr << "Allocate " << label->getName() << ", matl " << matlIndex << ": " << superLowIndex << " - " << superHighIndex << " = " << allocSize << endl;  
 #endif
-   var.rewindow(lowIndex, highIndex);
-   var.setAllocationLabel(label);
+    var.allocate(superLowIndex, superHighIndex);
+    
+    Level::selectType encompassedPatches;
+    if (numGhostCells == 0 && \
+	superLowIndex == lowIndex && superHighIndex == highIndex) {
+      // only encompassing the patch currently being allocated
+      encompassedPatches.push_back(patch);
+    }
+    else {
+      patch->getLevel()->selectPatches(superLowIndex, superHighIndex,
+				       encompassedPatches);
+    }
+
+    // Make a set of the non ghost patches that
+    // has quicker lookup than the vector.
+    set<const Patch*> nonGhostPatches;
+    for (unsigned int i = 0; i < superPatchGroup->size(); i++) {
+      nonGhostPatches.insert((*superPatchGroup)[i]);
+    }
    
+    Level::selectType::iterator iter = encompassedPatches.begin();    
+    for (; iter != encompassedPatches.end(); iter++) {
+      const Patch* patchGroupMember = *iter;
+      VariableBase* clone = var.clone();
+      IntVector groupMemberLowIndex = patchGroupMember->getLowIndex(basis);
+      IntVector groupMemberHighIndex = patchGroupMember->getHighIndex(basis);
+      IntVector enclosedLowIndex = Max(groupMemberLowIndex, superLowIndex);
+      IntVector enclosedHighIndex = Min(groupMemberHighIndex, superHighIndex);
+
+      clone->rewindow(enclosedLowIndex, enclosedHighIndex);
+      if (patchGroupMember == patch) {
+	// this was checked already
+	exists = false;
+      }
+      else {
+	// don't do this again if patchGroupMember == patch-- TODO
+	exists = db.exists(label, matlIndex, patchGroupMember);
+      }
+      if (patchGroupMember->isVirtual()) {
+	  // Virtual patches can only be ghost patches.
+	  ASSERT(nonGhostPatches.find(patchGroupMember)
+		 == nonGhostPatches.end());
+      }
+      else {
+	if (exists) {
+	  // variable section already exists in this patchGroupMember
+	  // (which is assumed to be a ghost patch)
+	  // so check if one is enclosed in the other.
+	  
+	  // Assumption is that it is a ghost patch -- so assert that.
+	  ASSERT(nonGhostPatches.find(patchGroupMember)
+		 == nonGhostPatches.end());
+	  
+	  VariableBase* existingGhostVar =
+	    db.get(label, matlIndex, patchGroupMember);
+	  IntVector existingLow = existingGhostVar->getLow();
+	  IntVector existingHigh = existingGhostVar->getHigh();
+	  IntVector minLow = Min(existingLow, enclosedLowIndex);
+	  IntVector maxHigh = Max(existingHigh, enclosedHighIndex);
+	  if (minLow == existingLow && maxHigh == existingHigh) {
+	    // old ghost variable section encloses this new one, so leave it
+	  }
+	  else if (minLow == enclosedLowIndex && 
+		   maxHigh == enclosedLowIndex) {
+	    // this new ghost variable section encloses the old one,
+	    // so replace the old one
+	    db.put(label, matlIndex, patchGroupMember, clone, true);
+	  }
+	  else {
+	    // Neither encloses the other, so replace with null and let
+	    // it allocate for this patchGroupMember during recvMPI.
+	    db.put(label, matlIndex, patchGroupMember, 0, true);
+	  }
+	}
+	else {
+	  // it didn't exist before -- add it
+	  db.put(label, matlIndex, patchGroupMember, clone, false);
+	}
+      }
+    }
+  }
+ d_lock.writeUnlock();
+   
+  var.rewindow(lowIndex, highIndex);
+}
+
+template <class VariableBase, class DWDatabase>
+void OnDemandDataWarehouse::
+putGridVar(VariableBase& var, DWDatabase& db,
+	   const VarLabel* label, int matlIndex, const Patch* patch,
+	   bool replace /* = false */)
+{
+  ASSERT(!d_finalized);
+ d_lock.writeLock();  
+
+  checkPutAccess(label, matlIndex, patch, replace);
+
+#if DAV_DEBUG
+  cerr << "Putting: " << *label << " MI: " << matlIndex << " patch: " 
+       << *patch << " into DW: " << d_generation << "\n";
+#endif
+   // Error checking
+   if(!replace && db.exists(label, matlIndex, patch))
+      throw InternalError("put: grid variable already exists: " +
+			  label->getName());
+
+   // Put it in the database
+   db.put(label, matlIndex, patch, &var, true);
   d_lock.writeUnlock();
 }
 
 #if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
-#pragma reset woff 1424
+#pragma reset woff 1424 // template parameter not used in declaring arguments
 #endif  
   
 void OnDemandDataWarehouse::logMemoryUse(ostream& out, unsigned long& total,
@@ -1525,25 +1622,8 @@ void OnDemandDataWarehouse::logMemoryUse(ostream& out, unsigned long& total,
 }
 
 inline void
-OnDemandDataWarehouse::checkAllocation(const Variable& var,
-				       const VarLabel* label)
-{
-#if SCI_ASSERTION_LEVEL >= 1
-  if (var.getAllocationLabel() != label) {
-    const Task* currentTask = getCurrentTask();    
-    if (currentTask == 0 ||
-	(string(currentTask->getName()) != "Relocate::relocateParticles")) {
-      // throw IncorrectAllocation(label, var.getAllocationLabel());
-
-      throw IncorrectAllocation(label,  var.getAllocationLabel());
-    }
-  }
-#endif
-}
-
-inline void
-OnDemandDataWarehouse::checkGetAccess(const VarLabel* label, int matlIndex,
-				      const Patch* patch,
+OnDemandDataWarehouse::checkGetAccess(const VarLabel* label,
+				      int matlIndex, const Patch* patch,
 				      Ghost::GhostType gtype,int numGhostCells)
 {
 #if SCI_ASSERTION_LEVEL >= 1
@@ -1615,7 +1695,8 @@ OnDemandDataWarehouse::checkPutAccess(const VarLabel* label, int matlIndex,
   VarAccessMap& currentTaskAccesses = getCurrentTaskAccesses();
   
   if (!hasPutAccess(currentTask, label, matlIndex, patch, replace)) {
-    if (string(currentTask->getName()) != "Relocate::relocateParticles") {
+    if (string(currentTask->getName())
+	!= "Relocate::relocateParticles") {
       string has, needs;
       if (replace) {
 	has = "datawarehouse modify";
@@ -1625,12 +1706,12 @@ OnDemandDataWarehouse::checkPutAccess(const VarLabel* label, int matlIndex,
 	has = "datawarehouse put";
 	needs = "task computes";
       }
-      throw DependencyException(currentTask, label, matlIndex, patch,
-				has, needs);
+      throw DependencyException(currentTask, label, matlIndex,
+				patch, has, needs);
     }
   }
   else {
-    currentTaskAccesses[SpecificVarLabel(label, matlIndex, patch)] =
+    currentTaskAccesses[SpecificVarLabel(label, matlIndex, patch)].accessType =
       replace ? ModifyAccess : PutAccess;
   }
 #endif
@@ -1676,13 +1757,11 @@ void OnDemandDataWarehouse::setCurrentTask(const Task* task)
 
 inline OnDemandDataWarehouse::CurrentTaskInfo* OnDemandDataWarehouse::getCurrentTaskInfo()
 {
- d_lock.readLock();
   CurrentTaskInfo* taskInfo = 0;
   map<Thread*, CurrentTaskInfo>::iterator findIt =
     d_runningTasks.find(Thread::self());
   if (findIt != d_runningTasks.end())
     taskInfo = &(*findIt).second;
- d_lock.readUnlock();
  return taskInfo;
 }
 
@@ -1693,7 +1772,8 @@ inline const Task* OnDemandDataWarehouse::getCurrentTask()
 
 }
 
-inline OnDemandDataWarehouse::VarAccessMap& OnDemandDataWarehouse::getCurrentTaskAccesses()
+inline OnDemandDataWarehouse::VarAccessMap&
+OnDemandDataWarehouse::getCurrentTaskAccesses()
 {
   CurrentTaskInfo* taskInfo = getCurrentTaskInfo();
   ASSERT(taskInfo != 0);
@@ -1704,6 +1784,9 @@ void OnDemandDataWarehouse::checkTasksAccesses(const PatchSubset* patches,
 					       const MaterialSubset* matls)
 {
 #if SCI_ASSERTION_LEVEL >= 1
+
+  d_lock.readLock();
+  
   const Task* currentTask = getCurrentTask();
   ASSERT(currentTask != 0);
   
@@ -1719,6 +1802,9 @@ void OnDemandDataWarehouse::checkTasksAccesses(const PatchSubset* patches,
     checkAccesses(currentTask, currentTask->getModifies(), ModifyAccess,
 		  patches, matls);
   }
+
+  d_lock.readUnlock();
+  
 #endif
 }
 
@@ -1764,7 +1850,8 @@ OnDemandDataWarehouse::checkAccesses(const Task* currentTask,
       matls = default_matls.get_rep();
     }
  
-    if (string(currentTask->getName()) == "Relocate::relocateParticles") {
+    if (string(currentTask->getName())
+	== "Relocate::relocateParticles") {
       continue;
     }
     
@@ -1796,8 +1883,6 @@ OnDemandDataWarehouse::checkAccesses(const Task* currentTask,
 	    has = "task modifies";
 	    needs = "datawarehouse modify";
 	  }
-	  throw DependencyException(currentTask, label, matl, patch,
-				    has, needs);
 	}
 	else if ((*find_iter).second.lowOffset != lowOffset ||
 		 (*find_iter).second.highOffset != highOffset) {

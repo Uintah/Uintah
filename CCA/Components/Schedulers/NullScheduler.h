@@ -47,11 +47,7 @@ WARNING
    public:
       NullScheduler(const ProcessorGroup* myworld, Output* oport);
       virtual ~NullScheduler();
-      
-      //////////
-      // Insert Documentation Here:
-     virtual void compile( const ProcessorGroup * pc, bool scrub_new, bool scrub_old = true );
-      
+     
       //////////
       // Insert Documentation Here:
      virtual void execute( const ProcessorGroup * pc );
@@ -71,6 +67,11 @@ WARNING
 					      const VarLabel* particleIDLabel,
 					      const MaterialSet* matls);
 
+   protected:
+     //////////
+     // Insert Documentation Here:
+     virtual void actuallyCompile( const ProcessorGroup * pg );
+     
    private:
       NullScheduler(const NullScheduler&);
       NullScheduler& operator=(const NullScheduler&);
