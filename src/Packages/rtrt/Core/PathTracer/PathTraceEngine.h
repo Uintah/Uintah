@@ -16,6 +16,7 @@ namespace rtrt {
 
   class PerProcessorContext;
   class DepthStats;
+  class Background;
 
   class PathTraceLight {
   public:
@@ -34,7 +35,8 @@ namespace rtrt {
   class PathTraceContext {
   public:
     PathTraceContext(const Color &color, const PathTraceLight &light,
-		     Object* geometry, int num_samples, int max_depth);
+		     Object* geometry, Background *background,
+		     int num_samples, int max_depth);
 
     // Light source
     PathTraceLight light;
@@ -42,6 +44,8 @@ namespace rtrt {
     Color color;
     // Acceleration geometry
     Object* geometry;
+    // Background
+    Background *background;
     // Number of samples to perform for each texel
     int num_samples;
     int num_samples_root;
@@ -70,8 +74,11 @@ namespace rtrt {
     // Used for rendering
     PerProcessorContext* ppc;
     DepthStats* depth_stats;
+
+    size_t offset;
   public:
-    PathTraceWorker(Group *group, PathTraceContext *ptc, char *texname);
+    PathTraceWorker(Group *group, PathTraceContext *ptc, char *texname,
+		    size_t offset=0);
     ~PathTraceWorker();
     // This does all the work
     void run();
@@ -84,7 +91,8 @@ namespace rtrt {
     friend class PathTraceWorker;
   public:
     TextureSphere(const Point &cen, double radius, int tex_res=16);
-    void writeTexture(char* basename, int index);
+    void writeTexture(char* basename, size_t index);
+    void writeData(FILE *outfile);
   };
 
 } // end namespace rtrt
