@@ -4,4 +4,4 @@ OBJTOP  = ../..
 
 SUBDIRS = Image
 
-include $(SRCTOP)/scripts/recurse.mk
+include $(OBJTOP)/scripts/recurse.mk
