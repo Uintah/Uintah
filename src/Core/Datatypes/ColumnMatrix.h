@@ -69,8 +69,8 @@ public:
 
   virtual double& get(int, int) const;
   double& get(int) const;
-  virtual void put(int, int, const double&);
-  void put(int, const double&);
+  virtual void put(int row, int col, double val);
+  void put(int row, double val);
   virtual string type_name() { return "ColumnMatrix"; }
   virtual int nrows() const;
   virtual int ncols() const;
