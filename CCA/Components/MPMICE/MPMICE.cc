@@ -1407,6 +1407,10 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
       new_dw->allocateAndPut(f_theta[m],    Ilb->f_theta_CCLabel,   indx,patch);
       new_dw->allocateAndPut(speedSound[m], Ilb->speedSound_CCLabel,indx,patch);
       new_dw->allocateAndPut(sp_vol_new[m], Ilb->sp_vol_CCLabel,    indx,patch);
+#define V 1
+#if V == 1
+      speedSound[m].initialize(0);
+#endif
     }
 
     press_new.copyData(press);
@@ -1503,6 +1507,7 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
         double A = 0.;
         double B = 0.;
         double C = 0.;
+#if V == 1
         for (int m = 0; m < numALLMatls; m++)   {
           double Q =  press_new[c] - press_eos[m];
           double inv_y =  (vol_frac[m][c] * vol_frac[m][c])
@@ -1512,6 +1517,29 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
           B   +=  Q * inv_y;
           C   +=  inv_y;
         } 
+#endif
+#if V == 2
+        for (int m = 0; m < numALLMatls; m++)   {
+          double Q =  press_new[c] - press_eos[m];
+          double inv_y =  (vol_frac[m][c] * vol_frac[m][c])
+            / (dp_drho[m] * rho_CC_new[m][c] + d_SMALL_NUM);
+                                 
+          A   +=  vol_frac[m][c];
+          B   +=  Q * inv_y;
+          C   +=  inv_y;
+        } 
+#endif
+#if V == 3
+       for (int m = 0; m < numALLMatls; m++)   {
+         double Q =  press_new[c] - press_eos[m];
+         double y =  dp_drho[m] * ( rho_CC_new[m][c]/
+                 (vol_frac[m][c] * vol_frac[m][c]) ); 
+         A   +=  vol_frac[m][c];
+         B   +=  Q/(y + d_SMALL_NUM);
+         C   +=  1.0/(y  + d_SMALL_NUM);
+       }
+#endif
+
         double vol_frac_not_close_packed = 1.;
         delPress = (A - vol_frac_not_close_packed - B)/C;
 #ifdef OREN_PRESS_EQ
