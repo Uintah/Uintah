@@ -1124,10 +1124,20 @@ OnDemandDataWarehouse::scheduleParticleRelocation(const LevelP& level,
    }
 }
 
+void
+OnDemandDataWarehouse::deleteParticles(ParticleSubset* delset)
+{
+
+}
+
 } // end namespace Uintah
 
 //
 // $Log$
+// Revision 1.39  2000/06/21 20:50:03  guilkey
+// Added deleteParticles, a currently empty function that will remove
+// particles that are no longer relevant to the simulation.
+//
 // Revision 1.38  2000/06/19 22:36:50  sparker
 // Improved message for UnknownVariable
 //

@@ -120,6 +120,10 @@ public:
 					   const VarLabel* new_posLabel,
 					   const vector<const VarLabel*>& new_labels,
 					   int numMatls);
+
+   // Remove particles that are no longer relevant
+   virtual void deleteParticles(ParticleSubset* delset);
+
    //////////
    // When the Scheduler determines that another MPI node will be
    // creating a piece of data (ie: a sibling DataWarehouse will have
@@ -230,6 +234,10 @@ private:
 
 //
 // $Log$
+// Revision 1.31  2000/06/21 20:50:03  guilkey
+// Added deleteParticles, a currently empty function that will remove
+// particles that are no longer relevant to the simulation.
+//
 // Revision 1.30  2000/06/17 07:04:54  sparker
 // Implemented initial load balancer modules
 // Use ProcessorGroup
