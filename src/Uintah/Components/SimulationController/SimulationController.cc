@@ -63,6 +63,7 @@ void SimulationController::run()
    
    // Get the problem specification
    ProblemSpecP ups = psi->readInputFile();
+   ups->writeMessages(d_myworld->myrank() == 0);
    if(!ups)
       throw ProblemSetupException("Cannot read problem specification");
    
@@ -87,7 +88,8 @@ void SimulationController::run()
    // Check the grid
    grid->performConsistencyCheck();
    // Print out meta data
-   grid->printStatistics();
+   if (d_myworld->myrank() == 0)
+     grid->printStatistics();
 
    SimulationStateP sharedState = scinew SimulationState(ups);
    
@@ -478,6 +480,10 @@ void SimulationController::scheduleTimeAdvance(double t, double delt,
 
 //
 // $Log$
+// Revision 1.47  2000/09/26 21:26:36  witzel
+// Make only process zero call printStatistics() and write messages in
+// the ProblemSetup.
+//
 // Revision 1.46  2000/09/25 20:44:08  sparker
 // Quiet g++ warnings
 //
