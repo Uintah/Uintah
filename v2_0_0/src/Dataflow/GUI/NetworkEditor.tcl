@@ -105,7 +105,7 @@ proc makeNetworkEditor {} {
 	    -command ".bot.neteditFrame.canvas postscript -file /tmp/canvas.ps -x 0 -y 0 -width 4500 -height 4500" -state disabled
     }
     .main_menu.file.menu add command -label "Execute All" -underline 0 \
-	-command "netedit schedule" -state disabled
+	-command "netedit scheduleall" -state disabled
 
     .main_menu.file.menu add separator
     .main_menu.file.menu add cascade -label "New" -underline 0\
