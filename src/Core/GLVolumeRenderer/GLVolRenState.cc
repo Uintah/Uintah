@@ -17,12 +17,6 @@
 
 #include <sci_defs.h>
 
-#if defined(HAVE_GLEW)
-#include <GL/glew.h>
-#else
-#include <GL/gl.h>
-#endif
-
 #include <Core/GLVolumeRenderer/GLVolRenState.h>
 #include <Core/GLVolumeRenderer/GLVolumeRenderer.h>
 #include <Core/GLVolumeRenderer/GLTexture3D.h>
@@ -231,14 +225,16 @@ void
 GLVolRenState::loadColorMap(Brick& brick)
 {
   const unsigned char *arr = volren->transfer_functions(brick.level());
-#if defined(GL_ARB_multitexture)
+
+#if defined(GL_ARB_fragment_program)
+
   static GLuint cmap = 0;
   glActiveTextureARB(GL_TEXTURE1_ARB);
   {
     glEnable(GL_TEXTURE_1D);
     glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-
+    
     if( cmap == 0 || newcmap_ ){
       glDeleteTextures(1, &cmap);
       glGenTextures(1, &cmap);
@@ -265,24 +261,25 @@ GLVolRenState::loadColorMap(Brick& brick)
                GL_UNSIGNED_BYTE, // try shorts...
                arr);
 #elif defined( GL_SHARED_TEXTURE_PALETTE_EXT )
-  cerr<<"GL_SHARED_TEXTURE_PALETTE_EXT  defined \n"
+  //  cerr<<"GL_SHARED_TEXTURE_PALETTE_EXT  defined \n";
+
 #ifndef HAVE_CHROMIUM
-  ASSERT(glColorTableEXT != NULL );
+    ASSERT(glColorTableEXT != NULL );
   glColorTableEXT(GL_SHARED_TEXTURE_PALETTE_EXT,
-	       GL_RGBA,
-               256, // try larger sizes?
-               GL_RGBA,  // need an alpha value...
-               GL_UNSIGNED_BYTE, // try shorts...
-               arr);
+		  GL_RGBA,
+		  256, // try larger sizes?
+		  GL_RGBA,  // need an alpha value...
+		  GL_UNSIGNED_BYTE, // try shorts...
+		  arr);
 #endif
-//   glCheckForError("After glColorTableEXT");
+  //   glCheckForError("After glColorTableEXT");
 #endif
 }
 
 void 
 GLVolRenState::loadTexture(Brick& brick)
 {
-#if defined( GL_ARB_multitexture)
+#if defined( GL_ARB_fragment_program)
   glActiveTexture(GL_TEXTURE0_ARB);
   glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
   glEnable(GL_TEXTURE_3D);
@@ -292,7 +289,7 @@ GLVolRenState::loadTexture(Brick& brick)
       glGenTextures(1, brick.texNameP());
       textureNames.push_back( brick.texName() );
     }
-
+    
     glBindTexture(GL_TEXTURE_3D_EXT, brick.texName());
 //      glCheckForError("After glBindTexture");
 
@@ -306,7 +303,7 @@ GLVolRenState::loadTexture(Brick& brick)
 //        glCheckForError("glTexParameteri GL_NEAREST");
     }
 
-#if defined( GL_ARB_multitexture )
+#if defined( GL_ARB_fragment_program )
     glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_CLAMP);
     glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_CLAMP);
     glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_CLAMP);
@@ -328,7 +325,7 @@ GLVolRenState::loadTexture(Brick& brick)
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 //      glCheckForError("After glPixelStorei(GL_UNPACK_ALIGNMENT, 1)");
     
-#if defined( GL_ARB_multitexture )
+#if defined( GL_ARB_fragment_program )
     glTexImage3D(GL_TEXTURE_3D, 0,
 		 GL_INTENSITY,
 		 (brick.texture())->dim1(), 
@@ -447,16 +444,14 @@ GLVolRenState::disableTexCoords()
 void 
 GLVolRenState::enableBlend()
 {
-// #if !defined(GL_ARB_multitexture)
+
   glEnable(GL_BLEND);
-// #endif
+
 }
 void 
 GLVolRenState::disableBlend()
 {
-// #if !defined(GL_ARB_multitexture)
   glDisable(GL_BLEND);
-// #endif
 }
 
 void

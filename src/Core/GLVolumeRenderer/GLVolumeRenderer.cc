@@ -192,14 +192,14 @@ GLVolumeRenderer::draw(DrawInfoOpenGL* di, Material* mat, double)
 void
 GLVolumeRenderer::setup()
 {
-#if defined(GL_ARB_multitexture)
+#if defined(GL_ARB_fragment_program)
   glActiveTextureARB(GL_TEXTURE0_ARB);
 #endif
   glEnable(GL_TEXTURE_3D);
   glTexEnvi(GL_TEXTURE_ENV,GL_TEXTURE_ENV_MODE, GL_MODULATE); 
 
   if( cmap_.get_rep() ) {
-#if defined(GL_ARB_multitexture)
+#if defined(GL_ARB_fragment_program)
     glActiveTextureARB(GL_TEXTURE1_ARB);
     glEnable(GL_TEXTURE_1D);
     glActiveTextureARB(GL_TEXTURE0_ARB);
@@ -224,7 +224,7 @@ GLVolumeRenderer::cleanup()
 
   glDepthMask(GL_TRUE);
   if( cmap_.get_rep() )
-#if defined(GL_ARB_multitexture)
+#if defined(GL_ARB_fragment_program)
   glActiveTextureARB(GL_TEXTURE1_ARB);
   glDisable(GL_TEXTURE_1D);
   glActiveTextureARB(GL_TEXTURE0_ARB);
