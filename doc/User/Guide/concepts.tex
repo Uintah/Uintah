@@ -221,7 +221,7 @@ refers to specific elements of the bioelectric field problem solving
 environment.
 
 
-\section{\SR{} Modules and Networks}
+\section{\SR{} Modules, Networks, and Sub-Networks}
 \label{sec:con-modules} 
 
 %begin{latexonly}
@@ -260,22 +260,24 @@ Their ``input'' is read from a file.  The
 ports only; scene data arrives on its input ports and a screen
 visualization is its ``output''.  
 
-It is important to understand the concepts of modules, connections
-between modules, and data-flow through a network (see
-\secref{Working with Networks}{ch:workwithnets} for more information
-on modules, ports, connections, and networks).
+A \dfn{subnet} is a collection of modules that behave as one.
+Sub-Networks can be created, edited, and saved just like networks.
+Sub-Networks can be reused in other networks, including other
+sub-networks.  Sub-networks simplify the construction of complex
+networks.  \sr{} ships with a  set of subnets.  See \secref{Creating a
+  Sub-Network}{sec:crsubnet} for details.
 
-\section{Subnets}
-\label{sec:con-subnets}
-
-\velide
+It is important to understand the concepts of modules, connections,
+networks and data-flow.  See \secref{Working with
+  Networks}{ch:workwithnets} for more information on modules, subnets,
+ports, connections, and networks.
 
 \section{\sr{}'s Use of Third Party Software}
 \label{sec:con-links} 
 
-\SR{} works with software from third party sources in several
-ways. The use of third party software is largely invisible to the user of \SR{} or
-\BIOPSE{}.
+\SR{} works with software from third party sources in several ways.
+The use of third party software is largely invisible to the user of
+\SR{} or \BIOPSE{}.
 
 For example, \sr{}'s user interface is written in Tcl language
 using the Tk library.  In general, \sr{} modules use Tcl for their
@@ -364,12 +366,13 @@ provided the basis for laboratory courses in neural simulation at
 Caltech and the Marine Biological Laboratory in Woods Hole, MA, and 
 many other institutions.   
 
-\sci{} has created a bridge between \SR{} and GENESIS so it is possible
-to use the output of a GENESIS simulation as the input for a
-visualization, or a subsequent simulation within \BIOPSE{}.  The mechanism for
-this bridge is a database accessible via SQL queries.  \sci{} created
-code for GENESIS that writes the output of the simulation into the database, then the corresponding functions for \SR{} read this
-information from the same database.   Contact Chris Butson
+\sci{} has made it possible to use the output of a GENESIS simulation
+as the input for a visualization, or a subsequent simulation within
+\BIOPSE{}.  The mechanism for this bridge is a database accessible via
+SQL queries.  \sci{} created code for GENESIS that writes the output
+of the simulation into the database, then the corresponding functions
+for \SR{} read this information from the same database.  Contact Chris
+Butson
 \htmladdnormallink{butson@sci.utah.edu}{mailto:butson@sci.utah.edu}
 for details about the implementation of the GENESIS module.
 
@@ -377,23 +380,40 @@ for details about the implementation of the GENESIS module.
 \section{Extensibility}
 \label{sec:con-extend} 
 
-\SR{} is an extensible \index{extensible} problem solving environment.
-There are no limits to the different ways of connecting modules and
-creating new applications.
 
-\sr{} can be extended by creating new packages and modules.  Modules
-can be coded from scratch, or with the assistance of the \sr's
+\sr{} can be extended by creating new packages, modules, and subnets.
+Modules can be coded from scratch, or with the assistance of the \sr's
 \dfn{Module Maker} component.
 
-\sci{} anticipates users creating new modules. \sci{} encourages users
-to contribute modules to a repository on the \BIOPSE{} web site
-\index{BioPSE@\BIOPSE{}!web site}
+\sci{} encourages users to contribute modules to the \BIOPSE{} web
+site \index{BioPSE@\BIOPSE{}!web site}
 (\htmladdnormallink{www.sci.utah.edu/ncrr/software/biopse.html})
 {http://www.sci.utah.edu/ncrr/software/biopse.html} where they will be
 reviewed, and useful modules will be included in subsequent releases
-of \sr{}.  To maximize intellectual investment in legacy code, future
-releases of \sr{} will include more extensive tools for building
-modules and wrapping existing codes within \SR{} module wrappers.
+of \sr{}.
+
+To leverage investment in legacy code, future releases of \sr{} will
+include additional tools for wrapping existing code within \SR{}
+modules.
+
+\section{SCIResorts}
+\label{sec:sec:con-apps}
+
+SCI is developing problem specific applications called
+\dfn{SCIResorts}.  SCIResorts use \sr{}'s data flow engine for
+computation and application specific data flow networks for problem
+solving.  However, SCIResorts hide the complexity of the data flow
+environment behind a simplified application specific graphical user
+interface.
+
+The following SCIResorts are available:
+
+\begin{description}
+  \descitem{BioTensor} See the \htmladdnormallinkfoot{BioTensor
+    tutorial}{\latexhtml{http://software.sci.utah.edu/doc/User/BioTensorTutorial}{../../BioTensorTutorial}}
+  for more information.
+\end{description}
+
 
 \section{\sr{} Objects}
 \label{sec:sr-objects}
