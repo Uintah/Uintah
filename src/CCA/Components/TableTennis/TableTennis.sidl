@@ -16,7 +16,7 @@
 */
 
   package PP {
-    interface PingPong extends gov.cca.Port {
+    interface PingPong extends sci.cca.Port {
 	int pingpong(in int test);
     };
   };
