@@ -6112,7 +6112,7 @@ class BioTensorApp {
 	    set plane_type "Principle Eigenvector"
             $planes_tab1.color.childsite.select.colorFrame.set_color configure -state disabled
             $planes_tab2.color.childsite.select.colorFrame.set_color configure -state disabled
-	    #disableModule $mods(RescaleColorMap-ColorPlanes) 1
+	    disableModule $mods(ChooseColorMap-Planes) 1
 	    set $mods(ChooseColorMap-Planes)-port-index 1
 	    set $mods(ChooseField-ColorPlanes)-port-index 3
 	    disable_planes_colormaps
@@ -6120,7 +6120,7 @@ class BioTensorApp {
 	    set plane_type "Fractional Anisotropy"
             $planes_tab1.color.childsite.select.colorFrame.set_color configure -state disabled
             $planes_tab2.color.childsite.select.colorFrame.set_color configure -state disabled
-	    #disableModule $mods(RescaleColorMap-ColorPlanes) 0
+	    disableModule $mods(RescaleColorMap-ColorPlanes) 0
 	    set $mods(ChooseColorMap-Planes)-port-index 0
 	    set $mods(ChooseField-ColorPlanes)-port-index 0
 	    enable_planes_colormaps
@@ -6128,7 +6128,7 @@ class BioTensorApp {
 	    set plane_type "Linear Anisotropy"
             $planes_tab1.color.childsite.select.colorFrame.set_color configure -state disabled
             $planes_tab2.color.childsite.select.colorFrame.set_color configure -state disabled
-	    #disableModule $mods(RescaleColorMap-ColorPlanes) 0
+	    disableModule $mods(ChooseColorMap-Planes) 0
 	    set $mods(ChooseColorMap-Planes)-port-index 0
 	    set $mods(ChooseField-ColorPlanes)-port-index 1
 	    enable_planes_colormaps
@@ -6136,7 +6136,7 @@ class BioTensorApp {
 	    set plane_type "Planar Anisotropy"
             $planes_tab1.color.childsite.select.colorFrame.set_color configure -state disabled
             $planes_tab2.color.childsite.select.colorFrame.set_color configure -state disabled
-	    #disableModule $mods(RescaleColorMap-ColorPlanes) 0
+	    disableModule $mods(ChooseColorMap-Planes) 0
 	    set $mods(ChooseColorMap-Planes)-port-index 0
 	    set $mods(ChooseField-ColorPlanes)-port-index 2
 	    enable_planes_colormaps
@@ -6145,7 +6145,7 @@ class BioTensorApp {
 	    # specified color
             $planes_tab1.color.childsite.select.colorFrame.set_color configure -state normal
             $planes_tab2.color.childsite.select.colorFrame.set_color configure -state normal
-	    #disableModule $mods(RescaleColorMap-ColorPlanes) 1
+	    disableModule $mods(ChooseColorMap-Planes) 1
 	    set $mods(ChooseColorMap-Planes)-port-index 1
 	    set $mods(ChooseField-ColorPlanes)-port-index 0
 
@@ -7234,7 +7234,7 @@ class BioTensorApp {
 	    set iso_type "Principle Eigenvector"
 	    $isosurface_tab1.isocolor.childsite.select.colorFrame.set_color configure -state disabled
 	    $isosurface_tab2.isocolor.childsite.select.colorFrame.set_color configure -state disabled
-
+	    disableModule $mods(ChooseColorMap-Isosurface) 1
 	    set $mods(ChooseColorMap-Isosurface)-port-index 1
 	    set $mods(ChooseField-Isosurface)-port-index 3
 	    disable_isosurface_colormaps
@@ -7242,7 +7242,7 @@ class BioTensorApp {
 	    set iso_type "Fractional Anisotropy"
 	    $isosurface_tab1.isocolor.childsite.select.colorFrame.set_color configure -state disabled
 	    $isosurface_tab2.isocolor.childsite.select.colorFrame.set_color configure -state disabled	    
-
+	    disableModule $mods(ChooseColorMap-Isosurface) 0
 	    set $mods(ChooseColorMap-Isosurface)-port-index 0
 	    set $mods(ChooseField-Isosurface)-port-index 0
 	    enable_isosurface_colormaps
@@ -7250,7 +7250,7 @@ class BioTensorApp {
 	    set iso_type "Linear Anisotropy"
 	    $isosurface_tab1.isocolor.childsite.select.colorFrame.set_color configure -state disabled
 	    $isosurface_tab2.isocolor.childsite.select.colorFrame.set_color configure -state disabled	   
-
+	    disableModule $mods(ChooseColorMap-Isosurface) 0
 	    set $mods(ChooseColorMap-Isosurface)-port-index 0
 	    set $mods(ChooseField-Isosurface)-port-index 1
 	    enable_isosurface_colormaps
@@ -7258,7 +7258,7 @@ class BioTensorApp {
 	    set iso_type "Planar Anisotropy"
 	    $isosurface_tab1.isocolor.childsite.select.colorFrame.set_color configure -state disabled
 	    $isosurface_tab2.isocolor.childsite.select.colorFrame.set_color configure -state disabled	    
-
+	    disableModule $mods(ChooseColorMap-Isosurface) 0
 	    set $mods(ChooseColorMap-Isosurface)-port-index 0
 	    set $mods(ChooseField-Isosurface)-port-index 2
 	    enable_isosurface_colormaps
@@ -7267,7 +7267,7 @@ class BioTensorApp {
 	    # constant color
 	    $isosurface_tab1.isocolor.childsite.select.colorFrame.set_color configure -state normal
 	    $isosurface_tab2.isocolor.childsite.select.colorFrame.set_color configure -state normal	   
-
+	    disableModule $mods(ChooseColorMap-Isosurface) 1
 	    set $mods(ChooseColorMap-Isosurface)-port-index 1
 	    set $mods(ChooseField-Isosurface)-port-index 0
 	    set $mods(ShowField-Isosurface)-faces-usedefcolor 1
@@ -8031,30 +8031,30 @@ class BioTensorApp {
 	if {$type == "Principle Eigenvector"} {
 	    set glyph_type "Principle Eigenvector"
 	    set $mods(ChooseField-Glyphs)-port-index 3
-
+	    disableModule $mods(ChooseColorMap-Glyphs) 1
 	    set $mods(ChooseColorMap-Glyphs)-port-index 1
 	    disable_glyphs_colormaps
 	} elseif {$type == "Fractional Anisotropy"} {
 	    set glyph_type "Fractional Anisotropy"
 	    set $mods(ChooseField-Glyphs)-port-index 0
-
+	    disableModule $mods(ChooseColorMap-Glyphs) 0
 	    set $mods(ChooseColorMap-Glyphs)-port-index 0
 	    enable_glyphs_colormaps
 	} elseif {$type == "Linear Anisotropy"} {
 	    set glyph_type "Linear Anisotropy"
 	    set $mods(ChooseField-Glyphs)-port-index 1
-
+	    disableModule $mods(ChooseColorMap-Glyphs) 0
 	    set $mods(ChooseColorMap-Glyphs)-port-index 0
 	    enable_glyphs_colormaps
 	} elseif {$type == "Planar Anisotropy"} {
 	    set glyph_type "Planar Anisotropy"
 	    set $mods(ChooseField-Glyphs)-port-index 2
-
+	    disableModule $mods(ChooseColorMap-Glyphs) 0
 	    set $mods(ChooseColorMap-Glyphs)-port-index 0
 	    enable_glyphs_colormaps
 	} elseif {$type == "Constant"} {
 	    set glyph_type "Constant"
-
+	    disableModule $mods(ChooseColorMap-Glyphs) 1
 	    set $mods(ChooseColorMap-Glyphs)-port-index 0
 	    set $mods(ShowField-Glyphs)-tensors-usedefcolor 1
 	    disable_glyphs_colormaps
@@ -8979,7 +8979,7 @@ class BioTensorApp {
             $fibers_tab2.rep.childsite.f1.colorFrame.set_color configure -state disabled
 
 	    set $mods(ChooseField-Fibers)-port-index 3
-
+	    disableModule $mods(ChooseColorMap-Fibers) 1
 	    set $mods(ChooseColorMap-Fibers)-port-index 1
 	    disable_fibers_colormaps
 	} elseif {$type == "Fractional Anisotropy"} {
@@ -8987,7 +8987,7 @@ class BioTensorApp {
             $fibers_tab1.rep.childsite.f1.colorFrame.set_color configure -state disabled
             $fibers_tab2.rep.childsite.f1.colorFrame.set_color configure -state disabled
 	    set $mods(ChooseField-Fibers)-port-index 0
-
+	    disableModule $mods(ChooseColorMap-Fibers) 0
 	    set $mods(ChooseColorMap-Fibers)-port-index 0
 	    enable_fibers_colormaps
 	} elseif {$type == "Linear Anisotropy"} {
@@ -8995,7 +8995,7 @@ class BioTensorApp {
             $fibers_tab1.rep.childsite.f1.colorFrame.set_color configure -state disabled
             $fibers_tab2.rep.childsite.f1.colorFrame.set_color configure -state disabled
 	    set $mods(ChooseField-Fibers)-port-index 1
-
+	    disableModule $mods(ChooseColorMap-Fibers) 0
 	    set $mods(ChooseColorMap-Fibers)-port-index 0
 	    enable_fibers_colormaps
 	} elseif {$type == "Planar Anisotropy"} {
@@ -9003,13 +9003,14 @@ class BioTensorApp {
             $fibers_tab1.rep.childsite.f1.colorFrame.set_color configure -state disabled
             $fibers_tab2.rep.childsite.f1.colorFrame.set_color configure -state disabled
 	    set $mods(ChooseField-Fibers)-port-index 2
-
+	    disableModule $mods(ChooseColorMap-Fibers) 0
 	    set $mods(ChooseColorMap-Fibers)-port-index 0
 	    enable_fibers_colormaps
 	} elseif {$type == "Constant"} {
 	    set fiber_type "Constant"
             $fibers_tab1.rep.childsite.f1.colorFrame.set_color configure -state normal
             $fibers_tab2.rep.childsite.f1.colorFrame.set_color configure -state normal
+	    disableModule $mods(ChooseColorMap-Fibers) 1
 	    set $mods(ChooseColorMap-Fibers)-port-index 1
 	    set $mods(ShowField-Fibers)-edges-usedefcolor 1
 	    set $mods(ChooseField-Fibers)-port-index 0
