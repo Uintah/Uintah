@@ -52,21 +52,80 @@ doc.insertDocType("article", entities)
       <revhistory>
 	<revision>
 	  <revnumber>1.0</revnumber>
-	  <date>7/29/01</date>
+	  <date>12/16/04</date>
 	</revision>
       </revhistory>
       <question>
 	<para>
-	  What systems are compatible with &sr;?
+	  I upgraded my Mac to OSX 10.3.6 and SCIRun broke.  How do I fix this?
 	</para>
       </question>
 
       <answer>
 	<para>
-	  &sr; should be compatible with any SGI machine running Irix 6.5. 
+	  The 10.3.6 Mac OSX upgrade caused the GL state to use more
+          memory.  This caused the &sr; rendering thread to run out of
+          stack memory.  This has been fixed in &sr; version 1.24.  If
+          you wish to continue using 1.22, you can resolve this
+          problem by following these steps:
 	</para>
 	<para>
-	  &sr; has been tested on the following Linux distributions:
+	  <itemizedlist>
+	    <listitem>
+	      <simpara>Edit src/Dataflow/Modules/Render/OpenGL.cc and replace this:</simpara>
+	    </listitem>
+	    <listitem>
+<pre>
+if(!helper)
+{
+  my_openglname= "OpenGL: " + myname_;
+  helper=new OpenGLHelper(this);
+  helper_thread_ = new Thread(helper, my_openglname.c_str());
+}
+</pre>
+	    </listitem>
+	    <listitem><simpara>With this:</simpara>
+	      <pre>
+if(!helper_)
+{
+  helper_=new OpenGLHelper(this);
+  helper_thread_ = new Thread(helper_, 
+		string("OpenGL: "+myname_).c_str(),
+		0, Thread::NotActivated);
+  helper_thread_->setStackSize(1024*1024);
+  helper_thread_->activate(false);
+  helper_thread_->detach();
+}
+</pre>
+	    </listitem>
+	    <listitem>
+	      <simpara>Change directoreis to SCIRun/&lt;bin&gt;/ and
+                       type 'gmake'</simpara>
+	    </listitem>
+	  </itemizedlist> 
+	</para>
+      </answer>
+    </qandaentry>
+
+    <qandaentry>
+      <revhistory>
+	<revision>
+	  <revnumber>1.0</revnumber>
+	  <date>7/29/01</date>
+	</revision>
+      </revhistory>
+      <question>
+	<para>
+	  What systems are compatible with &sr; (Version 1.22)?
+	</para>
+      </question>
+
+      <answer>
+	<para>
+	  &sr; (Version 1.22) should be compatible with any SGI machine running Irix 6.5. 
+	</para>
+	<para>
+	  &sr; (Version 1.22) has been tested on the following Linux distributions:
 	  <itemizedlist>
 	    <listitem>
 	      <simpara>Mandrake 7.2 &amp; 8.0</simpara>
