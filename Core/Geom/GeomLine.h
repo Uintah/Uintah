@@ -95,6 +95,7 @@ public:
   GeomCLines();
   GeomCLines(const GeomCLines&);
 
+  void add(const Point &p0, const Point &p1);
   void add(const Point &p0, MaterialHandle c0,
 	   const Point &p1, MaterialHandle c1);
   void setLineWidth(float val) { line_width_ = val; }

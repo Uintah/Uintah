@@ -224,8 +224,7 @@ COLOR_FTOB(double v)
 
 
 void
-GeomCLines::add(const Point& p1, MaterialHandle c1,
-		const Point& p2, MaterialHandle c2)
+GeomCLines::add(const Point& p1, const Point& p2)
 {
   points_.push_back(p1.x());
   points_.push_back(p1.y());
@@ -233,6 +232,14 @@ GeomCLines::add(const Point& p1, MaterialHandle c1,
   points_.push_back(p2.x());
   points_.push_back(p2.y());
   points_.push_back(p2.z());
+}
+
+
+void
+GeomCLines::add(const Point& p1, MaterialHandle c1,
+		const Point& p2, MaterialHandle c2)
+{
+  add(p1, p2);
 
   const unsigned char r0 = COLOR_FTOB(c1->diffuse.r());
   const unsigned char g0 = COLOR_FTOB(c1->diffuse.g());
