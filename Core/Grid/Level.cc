@@ -487,11 +487,14 @@ void Level::setBCTypes()
 #endif   
 #endif
    patchIterator iter;
-   int ii;
-  for(iter=d_virtualAndRealPatches.begin(), ii = 0;
-      iter != d_virtualAndRealPatches.end(); iter++, ii++){
+   int idx;
+  for(iter=d_virtualAndRealPatches.begin(), idx = 0;
+      iter != d_virtualAndRealPatches.end(); iter++){
     Patch* patch = *iter;
-    patch->setLevelIndex( ii );
+    if(patch->isVirtual())
+      patch->setLevelIndex( -1 );
+    else
+      patch->setLevelIndex(idx++);
     //cout << "Patch bounding box = " << patch->getBox() << endl;
     // See if there are any neighbors on the 6 faces
     for(Patch::FaceType face = Patch::startFace;
