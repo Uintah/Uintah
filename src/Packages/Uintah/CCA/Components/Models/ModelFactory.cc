@@ -8,6 +8,7 @@
 #include <Packages/Uintah/CCA/Components/Models/test/Mixing2.h>
 #include <Packages/Uintah/CCA/Components/Models/test/SimpleRxn.h>
 #include <Packages/Uintah/CCA/Components/Models/test/TestModel.h>
+#include <Packages/Uintah/CCA/Components/Models/test/flameSheet_rxn.h>
 #include <Packages/Uintah/CCA/Components/Models/HEChem/Simple_Burn.h>
 #include <Core/Malloc/Allocator.h>
 #include <iostream>
@@ -47,6 +48,8 @@ void ModelFactory::makeModels(const ProblemSpecP& params, GridP&,
     //      models.push_back(scinew Mixing2(d_myworld, model));
     else if(type == "Simple_Burn")
       models.push_back(scinew Simple_Burn(d_myworld, model));
+    else if(type == "flameSheet_rxn")
+      models.push_back(scinew flameSheet_rxn(d_myworld, model));
     else
       throw ProblemSetupException("Unknown model: "+type);
   }
