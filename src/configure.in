@@ -1068,7 +1068,6 @@ echo
 AC_CANONICAL_HOST
 
 unset NUM_CPUS
-AC_MSG_CHECKING(physical processor count)
 case $host in
   *-irix*)
     SCI_CHECK_OS_VERSION(6.5,,
@@ -1094,6 +1093,7 @@ case $host in
     ;;
 esac
 
+AC_MSG_CHECKING(physical processor count)
 if test -z "$NUM_CPUS"; then
   NUM_CPUS="1"
 fi
@@ -1840,7 +1840,7 @@ case $threads in
       AC_MSG_CHECKING(for semaphore library)
       old_LIBS=$LIBS
       SEMAPHORE_LIB=unknown
-      for i in "" -lrt; do
+      for i in "" "$THREAD_LIBS" -lrt; do
         LIBS="$old_LIBS $i"
         AC_TRY_LINK([
 #include <semaphore.h>
@@ -1859,6 +1859,9 @@ case $threads in
       else
         if test -z "$SEMAPHORE_LIB"; then
           AC_MSG_RESULT(none required)
+        elif test "$SEMAPHORE_LIB" = "$THREAD_LIBS"; then
+          AC_MSG_RESULT(already in thread library: $THREAD_LIBS)
+          SEMAPHORE_LIB=""
         else
           AC_MSG_RESULT($SEMAPHORE_LIB)
         fi
@@ -2237,7 +2240,7 @@ if test "$LIBMDSLIB_CLIENT"; then
 fi
 
 SCI_CHECK_HEADERS($LIBMDSLIB_CLIENT/../include,mdslib.h,,,optional)
-if test "$INC_MDSLIB_CLIENT"; then
+if test "$INCMDSLIB_CLIENT"; then
    INCMDSPLUS_H="$LIBMDSLIB_CLIENT/../include"
 fi
 
@@ -2343,9 +2346,10 @@ SCI_CHECK_LIB($dirs,globus_dc,main,,,optional)
 
 SCI_CHECK_HEADERS($LIBGLOBUS_DC/../include,globus_nexus.h,,,optional)
 
-if test "$HAVE_LIBGLOBUS" && test "$INC_GLOBUS_NEXUS_H"; then
+if test "$HAVE_LIBGLOBUS_DC" -a "$INCGLOBUS_NEXUS_H"; then
+    FOUND_ALL_GLOBUS=yes
     DEF_GLOBUS="#define HAVE_GLOBUS 1"
-    GLOBUS_INCLUDE="$LIBGLOBUS_DC/../include"
+    GLOBUS_INCLUDE="-I$LIBGLOBUS_DC/../include"
     GLOBUS_LIB="$LIBGLOBUS_DC"
     is_linux=`echo $host | sed 's/.*linux.*/linux/'`
     if test "$is_linux" = "linux"; then
@@ -2457,14 +2461,14 @@ dirs="$with_qt/lib $thirdparty/lib $SCI_LAB_TP_LIBS"
 
 SCI_CHECK_LIB($dirs,qt-mt,main,,,optional)
 
-AC_CHECKING(for moc in $LIBGQ_MT/..)
-AC_CHECK_PROG(QT_MOC_BIN,moc,$ac_dir/moc,NOMOC,$LIBGQ_MT/../bin)
+AC_CHECKING(for moc in $LIBQT_MT/../bin)
+AC_CHECK_PROG(QT_MOC_BIN,moc,$ac_dir/moc,NOMOC,$LIBQT_MT/../bin)
 
 if test "$HAVE_LIBQT_MT" && test $QT_MOC_BIN != "NOMOC"; then
    FOUND_ALL_QT=yes
    DEF_QT="#define HAVE_QT 1"
    HAVE_QT="yes"
-   QT_INCLUDE="$LIBQT/../include"
+   QT_INCLUDE="-I$LIBQT/../include"
    QT_LIB="$LIBQT_MT"
 fi
 
