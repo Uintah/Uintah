@@ -44,19 +44,7 @@ template<class T> class ITKFData3d;
 template<class T> void Pio(Piostream& stream, ITKFData3d<T>& array);
 
 template <class Data>
-class ITKIterator : public ImageRegionIterator<Image<Data,3> > {
-public:
-  typedef Image<Data, 3> ImageType;
-  typedef ImageType::RegionType Region;
-
-  ITKIterator() : ImageRegionIterator< ImageType >() { }
-  ITKIterator(ImageType* ptr, Region &region) : ImageRegionIterator< ImageType >(ptr, region) { }
-  virtual ~ITKIterator() {}
-  Data operator*() { return this.Get();}
-};
-
-template <class Data>
-class ITKConstIterator : public ImageRegionConstIterator<Image<Data,3> > {
+class ITKConstIterator : public ImageRegionIterator<Image<Data,3> > {
 public:
   typedef Image<Data, 3> ImageType;
   typedef ImageType::RegionType Region;
@@ -64,7 +52,17 @@ public:
   ITKConstIterator() : ImageRegionConstIterator< ImageType >() {}
   ITKConstIterator(ImageType* ptr, Region &region) : ImageRegionConstIterator< ImageType >(ptr, region) { }
   virtual ~ITKConstIterator() {}
-  Data operator*() { return this.Get();}
+  const Data &operator*() { return ImageRegionConstIteraror::Value();}
+};
+
+
+template <class Data>
+class ITKIterator : public ITKConstIterator {
+public:
+  ITKIterator() : ITKConstIterator { }
+  ITKIterator(ImageType* ptr, Region &region) : ITKConstIterator(ptr, region) { }
+  virtual ~ITKIterator() {}
+  Data &operator*() { return Value();}
 };
 
 
@@ -76,22 +74,15 @@ public:
   typedef typename ITKIterator<Data> iterator;
   typedef typename ITKConstIterator<Data> const_iterator;
   
-  iterator begin() {
-    iterator i(image_, image_->GetRequestedRegion());
-    return i.Begin();
-  }
-  iterator end() {
-    iterator i(image_, image_->GetRequestedRegion());
-    return i.End();
-  }
-  const_iterator begin() const {
-    const_iterator i(image_, image_->GetRequestedRegion());
-    return i.Begin();
-  }
-  const_iterator end() const {
-    const_iterator i(image_, image_->GetRequestedRegion());
-    return i.End();
-  }
+  iterator _begin;
+  iterator _end;
+
+  const iterator &begin() { return _begin; }
+  const iterator &end() { return _end; }
+
+  const const_iterator &begin() const { return _begin; }
+  const const_iterator &end() const { return _end; }
+
 
   ITKFData3d();
   ITKFData3d(int); //default arg sgi bug workaround.
@@ -260,6 +251,11 @@ ITKFData3d<Data>::ITKFData3d(const ITKFData3d& data) {
   std::cerr << "IN COPY CONSTRUCTOR\n";
   image_ = image_type::New();
   image_ = data.image_;
+
+  _begin = iterator(image_, image_->GetRequestedRegion());
+  _begin.GoToBegin();
+  _end = iterator(image_, image_->GetRequestedRegion());
+  _end.GoToEnd();
 }
 
 template <class Data>
