@@ -8,8 +8,11 @@
 #define CONTROLLER_I3STICK 3
 
 #define NUM_CONTROLLER_RECEIVERS 2
+#define CONTROLLER_ONE     0
 #define CONTROLLER_LEFT    0
 #define CONTROLLER_RIGHT   1
+
+#include <PSECommon/Modules/Salmon/glMath.h>
 
 namespace PSECommon {
 namespace Modules {
@@ -21,12 +24,17 @@ public:
   int type;
   char arena[256];
 
-  void *data, *prev;
+  void *data;
   SharedMemory shmem;
   int receiver[NUM_CONTROLLER_RECEIVERS];
-  GLfloat mprev[NUM_CONTROLLER_RECEIVERS][16];
+  GLfloat offset[NUM_CONTROLLER_RECEIVERS][16];
 
-  Controller( void ) { type = CONTROLLER_NONE; }
+  Controller( void )
+    {
+      type = CONTROLLER_NONE;
+
+      for( int i=0; i<NUM_CONTROLLER_RECEIVERS; i++ ) glEye(offset[i]);
+    }
   ~Controller( void ) {}
 
 };

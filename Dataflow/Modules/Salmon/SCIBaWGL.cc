@@ -43,23 +43,196 @@ SCIBaWGLTimer::SCIBaWGLTimer( Roe* r, SCIBaWGL* b )
   scaleFrom = 0;
 
   pinch = BAWGL_PINCH_NONE;
+  pinch0 = BAWGL_PINCH_NONE;
   pinchChange = BAWGL_PINCH_NONE;
   
   stylus = BAWGL_STYLUS_OFF;
+  stylus0 = BAWGL_STYLUS_OFF;
   stylusChange = BAWGL_STYLUS_OFF;
+  
+  glEye(realPinchMatrix);
+  glEye(realStylusMatrix);
+  
+  glEye(virtualStylusMatrix);
+  glEye(virtualStylusChangeMatrix);
 
-  glEye(pinchMatrix);
-  glEye(pinchChangeMatrix);
-  glEye(stylusMatrix);
-  glEye(stylusChangeMatrix);
+  glEye(surfacePinchMatrix);
+  
+  glEye(virtualPinchChangeMatrix);
 
   stylusID = bawgl->getControllerID(BAWGL_STYLUS);
   pinchID = bawgl->getControllerID(BAWGL_PINCH);
 
+  navSpeed = 10;
+
   bawgl->setVirtualViewScaleLimits(0.1, 1000.0);
 }
 
-void SCIBaWGLTimer::run( ) //formerly body
+void SCIBaWGLTimer::navigate( void )
+{
+  // navigation
+
+  // pinch throttle controlls for scale and velocity
+	 
+  // scale
+
+  if( BAWGL_PINCH_LEFT_THUMB_LEFT_PINKY(pinch) )
+    {
+      if( BAWGL_PINCH_LEFT_THUMB_LEFT_PINKY(pinchChange) ) 
+	{
+	  scaleFrom = realPinchMatrix[13];
+	  scaleOriginal = bawgl->getVirtualViewScale();
+	}
+
+      // change the denominator to change the scale rate
+	      
+      bawgl->loadVirtualViewScale(scaleOriginal*exp((scaleFrom - realPinchMatrix[13])/6));
+    }
+
+  // navigation #1
+	  
+  if( BAWGL_PINCH_LEFT_THUMB_LEFT_MIDDLE(pinch) )
+    {
+      if( BAWGL_PINCH_LEFT_THUMB_LEFT_MIDDLE(pinchChange) )
+	scaleFrom = realPinchMatrix[13];
+
+      velocity = (scaleFrom - realPinchMatrix[13]) / (navSpeed * bawgl->virtualViewScale);
+
+      glEye(fly);
+      
+      fly[12] = virtualStylusMatrix[4]*velocity;
+      fly[13] = virtualStylusMatrix[5]*velocity;
+      fly[14] = virtualStylusMatrix[6]*velocity;
+      fly[15] = 1.0;
+      
+      bawgl->multVirtualViewMatrix(fly);
+    }
+	  
+  // stylus based orientation
+  
+  if( stylus == BAWGL_STYLUS_ON )
+    {
+      bawgl->multVirtualViewMatrix(virtualStylusChangeMatrix);
+    }
+  
+  // navigation #2
+
+  if( BAWGL_PINCH_LEFT_THUMB_LEFT_RING(pinch) )
+    {
+      GLfloat fly1[16], fly2[16], svel, dazim, droll;
+      
+      R2zyx(&azim, &elev, &roll, realStylusMatrix);
+      
+      if( BAWGL_PINCH_LEFT_THUMB_LEFT_RING(pinchChange) )
+	{
+	  scaleFrom = realPinchMatrix[13];
+	  azim0 = azim; elev0 = elev; roll0 = roll;
+	}
+      
+      velocity = (realPinchMatrix[13] - scaleFrom) / (navSpeed * bawgl->virtualViewScale);
+      
+      bawgl->getInverseVirtualViewMatrix(realStylusMatrix);
+      
+      glEye(fly);
+      glEye(fly1);
+      glEye(fly2);
+      
+      svel = velocity > 0.0 ? 1.0 : (velocity < 0.0 ? -1.0 : 0.0);
+      
+      /* glAxis2Rot(fly1, &tmp[8], svel*(azim-azim0)/37);
+	 glAxis2Rot(fly2, &tmp[0], svel*(roll-roll0)/37);
+	 glMatrixMult(fly, fly1, fly2); */
+      
+      dazim = svel*(azim0-azim)/37;
+      droll = svel*(roll0-roll)/37;
+      
+      zyx2R(fly, dazim, 0, droll);
+      
+      fly[12] = 0.0;
+      fly[13] = velocity;
+      fly[14] = 0.0;
+      fly[15] = 1.0;
+
+      bawgl->multInverseVirtualViewMatrix(fly);
+    }
+  
+  // go home
+  
+  if( BAWGL_PINCH_LEFT_INDEX_RIGHT_INDEX(pinch) && 
+      BAWGL_PINCH_LEFT_INDEX_RIGHT_INDEX(pinchChange))
+    {
+      bawgl->loadVirtualViewMatrix(bawgl->virtualViewHome);
+    }
+
+  // set home
+
+  if( BAWGL_PINCH_LEFT_MIDDLE_RIGHT_INDEX(pinch) && 
+      BAWGL_PINCH_LEFT_MIDDLE_RIGHT_INDEX(pinchChange))
+    {
+      bawgl->loadVirtualViewHome(bawgl->virtualViewMatrix);
+    }
+	  
+  // autoview
+  
+  if( BAWGL_PINCH_LEFT_MIDDLE_RIGHT_INDEX(pinch) && 
+      BAWGL_PINCH_LEFT_MIDDLE_RIGHT_INDEX(pinchChange))
+    {
+      
+    }
+}
+
+void SCIBaWGLTimer::pick( void )
+{
+  // Picking
+  
+  int screenPos[3]; 
+
+  if( BAWGL_PINCH_LEFT_THUMB_LEFT_INDEX(pinch) )
+    {
+      bawgl->getAllEyePositions();
+
+      if( BAWGL_PINCH_LEFT_THUMB_LEFT_INDEX(pinchChange) )
+	{
+	  // do the pick here
+
+	  bawgl->getScreenCoordinates(&surfacePinchMatrix[12], screenPos, BAWGL_SURFACE_SPACE);
+
+	  cerr << "screen coords are "<< screenPos[0] <<" and " << screenPos[1]<< endl;
+				 
+	  roe->bawgl_pick(BAWGL_PICK_START, screenPos, &surfacePinchMatrix[12]);
+	  
+	  bawgl->pick = 1;
+	} 
+      else 
+	{
+	  // handle pick here
+		
+	  GLfloat v[3];
+
+	  v[0] = virtualPinchChangeMatrix[12];
+	  v[1] = virtualPinchChangeMatrix[13];
+	  v[2] = virtualPinchChangeMatrix[14];
+
+	  // bawgl->transformVector(v, BAWGL_SURFACE_SPACE, vv, BAWGL_VIRTUAL_SPACE);
+
+	  roe->bawgl_pick(BAWGL_PICK_MOVE, screenPos, v);
+	}
+    }
+
+  if( !BAWGL_PINCH_LEFT_THUMB_LEFT_INDEX(pinch) && 
+      BAWGL_PINCH_LEFT_THUMB_LEFT_INDEX(pinchChange) )
+    {
+      GLfloat fv[3];
+      
+      // unset pinch here
+      
+      bawgl->pick = 0;
+      
+      roe->bawgl_pick(BAWGL_PICK_END, screenPos, fv);
+    }
+}
+
+void SCIBaWGLTimer::run( void )
 {
   while( !exit )
     {
@@ -75,84 +248,68 @@ void SCIBaWGLTimer::run( ) //formerly body
 
 	  // force redraw by send message to salmon
 
-	  if(roe->manager->mailbox.numItems() >= 
-	     roe->manager->mailbox.size()-1)
+	  if( bawgl->redraw_enable == true )
 	    {
-	      cerr << "Redraw event dropped, mailbox full!\n";
-	    } 
-	  else 
-	    {
-	      roe->manager->mailbox.send(scinew SalmonMessage(roe->id));
-	    }
-
-	  // navigation
-
-	  // pinch throttle controlls for scale and velocity
-	  
-	  bawgl->getControllerState(pinchID, &pinch, &pinchChange);
-	  bawgl->getControllerMatrix(pinchID, BAWGL_LEFT, 
-				     pinchMatrix, pinchChangeMatrix, BAWGL_REAL_SPACE);
-	  
-	  bawgl->getControllerState(stylusID, &stylus, &stylusChange);
-	  bawgl->getControllerMatrix(stylusID, BAWGL_LEFT, 
-				     stylusMatrix, stylusChangeMatrix, BAWGL_REAL_SPACE);
-	  bawgl->getControllerMatrix(stylusID, BAWGL_LEFT, 
-				     virtualStylusMatrix, virtualStylusChangeMatrix, BAWGL_VIRTUAL_SPACE);
-	 // scale
-
-	  if( BAWGL_PINCH_LEFT_THUMB_LEFT_RING(pinch) )
-	    { 
-	      if( BAWGL_PINCH_LEFT_THUMB_LEFT_RING(pinchChange) ) 
+	      if(roe->manager->mailbox.numItems() >= 
+		 roe->manager->mailbox.size()-1)
 		{
-		  scaleFrom = pinchMatrix[13];
-		  scaleOriginal = bawgl->getVirtualViewScale();
+		  cerr << "Redraw event dropped, mailbox full!\n";
+		} 
+	      else 
+		{
+		  roe->manager->mailbox.send(scinew SalmonMessage(roe->id));
 		}
-
-	      // change the denominator to change the scale rate
-	      
-	      bawgl->loadVirtualViewScale(scaleOriginal*exp((scaleFrom - pinchMatrix[13])/6));
 	    }
 
-	  // velocity
+	  // pinch state and change
 
-	  if( BAWGL_PINCH_LEFT_THUMB_LEFT_MIDDLE(pinch) )
-	    {
-	      // set the fly through velocity
-
-	      GLfloat tmp[16];
-	      GLfloat correctOri[16] = { 0.0, 1.0, 0.0, 0.0,
-                                         1.0, 0.0, 0.0, 0.0,
-                                         0.0, 0.0, -1.0, 0.0,
-                                         0.0, 0.0, 0.0, 1.0 };
-
-	      glMatrixMult(tmp, correctOri, stylusMatrix);
-
-	      R2zyx(&azim, &elev, &roll, tmp);
-
-	      if( BAWGL_PINCH_LEFT_THUMB_LEFT_MIDDLE(pinchChange) )
-		{
-		  scaleFrom = pinchMatrix[13];
-		  azim0 = azim; elev0 = elev;
- 		}
-
-	      velocity = (pinchMatrix[13] - scaleFrom) / 13;
-	      
-	      zyx2R(fly, (azim0-azim)/23, 0, 0);
-
-	      fly[12] = virtualStylusMatrix[0]*velocity;
-	      fly[13] = virtualStylusMatrix[1]*velocity;
-	      fly[14] = virtualStylusMatrix[2]*velocity;
-	      fly[15] = 1.0;
-
-	      bawgl->multVirtualViewMatrix(fly);
-	    }
-
-	  if( !BAWGL_PINCH_LEFT_THUMB_LEFT_MIDDLE(pinch) && 
-	      BAWGL_PINCH_LEFT_THUMB_LEFT_MIDDLE(pinchChange) ) velocity = 0;
+	  pinch0 = pinch;
+	  bawgl->getControllerState(pinchID, &pinch);
+	  bawgl->getControllerStateChange(pinchID, &pinch, &pinch0, &pinchChange);
 	  
-	  usleep(20000); // ~50 Hz
+	  // stylus state and change
+
+	  stylus0 = stylus;
+	  bawgl->getControllerState(stylusID, &stylus);
+	  bawgl->getControllerStateChange(stylusID, &stylus, &stylus0, &stylusChange);
+
+	  // stylus matrices
+
+	  memcpy(realStylus0Matrix, realStylusMatrix, 16*sizeof(GLfloat));
+  
+	  bawgl->getControllerMatrix(stylusID, BAWGL_LEFT, 
+				     realStylusMatrix, BAWGL_REAL_SPACE);
+
+	  bawgl->getControllerMatrix(stylusID, BAWGL_LEFT, 
+				     virtualStylusMatrix, BAWGL_VIRTUAL_SPACE);
+
+	  bawgl->getControllerMatrixChange(stylusID, BAWGL_LEFT, realStylusMatrix,
+					   realStylus0Matrix, virtualStylusChangeMatrix,
+					   BAWGL_REAL_SPACE, BAWGL_VIRTUAL_SPACE);
+	  
+	  // pinch matrices
+	  
+	  memcpy(realPinch0Matrix, realPinchMatrix, 16*sizeof(GLfloat));
+  
+	  bawgl->getControllerMatrix(pinchID, BAWGL_LEFT, 
+				     realPinchMatrix, BAWGL_REAL_SPACE);
+
+	  bawgl->getControllerMatrix(pinchID, BAWGL_LEFT, 
+				     surfacePinchMatrix, BAWGL_SURFACE_SPACE);
+	  
+	  bawgl->getControllerMatrixChange(stylusID, BAWGL_LEFT, realPinchMatrix,
+					   realPinch0Matrix, virtualPinchChangeMatrix,
+					   BAWGL_REAL_SPACE, BAWGL_VIRTUAL_SPACE);
+	  	  
+	  navigate();
+	  
+	  pick();
+	  
+	  usleep(50000);
         }
     }
+
+  cerr << "Bench event manager quit" << endl;
 
   return;
 }
@@ -172,23 +329,26 @@ void SCIBaWGLTimer::quit( void )
   exit = 1;
 }
 
-SCIBaWGL::SCIBaWGL( char* file )
-  : BaWGL(file)
+SCIBaWGL::SCIBaWGL( void )
+  : BaWGL()
 { 
   shutting_down = false;
+  pick = 0;
 }
 
-int SCIBaWGL::start( Roe* r )
+int SCIBaWGL::start( Roe* r, char* config )
 {
   shutting_down = false;
 
-  init();
+  init(config);
 
   timer = new SCIBaWGLTimer(r, this);
   timerthread = new Thread(timer, "timer");
   timerthread->detach();
 
   timer->start();
+
+  redraw_enable = true;
 
   return(0);
 }
@@ -207,6 +367,7 @@ void SCIBaWGL::shutdown_ok()
     {
       quit();
       shutting_down = false;
+      redraw_enable = false;
     }
 }
 
