@@ -16,33 +16,51 @@
 #
 
 
-catch {rename Sampler ""}
-
 package require Iwidgets 3.1
 
-itcl_class MIT_Metropolis_Sampler {
-    inherit Module
+class RtPDSimPartGui {
 
-#    variable index
+    variable w
+    variable n
+    variable len
 
-    constructor {config} {
-	set name Sampler
+    constructor {} {
+	set n 0
+	set len 0
     }
 
-    method ui { args } {
+    method ui { window } {
+	global $this-df
 
-#	set index 0
-	set w .ui[modname]
-	if {[winfo exists $w]} {
-	    raise $w
-	    return;
+	set $this-df 3
+
+	set w $window
+
+        iwidgets::entryfield $w.df -labeltext "df:" \
+	    -textvariable $this-df  \
+	    -width 4 \
+	    -command "$this-c df \[$w.df get\]" 
+
+	frame $w.children
+
+	pack $w.df -anchor w
+	pack $w.children
+
+    }
+
+    method set-df { v } {
+	global $this-df
+	if { [set $this-df] != $v } {
+	    set $this-df $v
 	}
-
-	toplevel $w
-	frame $w.f 
-	pack $w.f -expand true -fill both
-
-	$this-c set-window $w.f
     }
 
+    method new-child-window { name } {
+	set child [iwidgets::Labeledframe $w.children.$n -labeltext $name]
+	pack $child -side top -anchor w
+	incr n
+	return [$child childsite]
+    }
 }
+
+

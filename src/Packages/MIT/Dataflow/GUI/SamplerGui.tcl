@@ -37,31 +37,31 @@ class SamplerGui {
 	global $this-interations
 	global $this-sub
 	global $this-kappa
-
+	
 	set w $window
-
+	
 	# Iterations & Subsampling
 	frame $w.set
         iwidgets::entryfield $w.set.iteration -labeltext "Iterations:" \
 	    -validate numeric -width 6 \
 	    -textvariable $this-iterations \
 	    -command "$this-c iterations \[$w.set.iteration get\]" 
-
+	
         iwidgets::entryfield $w.set.sub -labeltext "Subsample:" \
 	    -validate numeric -width 3 \
 	    -textvariable $this-sub \
 	    -command "$this-c sub \[$w.set.sub get\]" 
-
+	
 	pack $w.set.iteration $w.set.sub -anchor w -side left
 	pack $w.set -anchor w
-
+	
 	# Kappa
         iwidgets::entryfield $w.kappa -labeltext "Kappa:" \
 	    -validate numeric -width 6 \
 	    -textvariable $this-kappa \
 	    -command "$this-c kappa \[$w.kappa get\]" 
 	pack $w.kappa -anchor w
-
+	
 	# Control
 	frame $w.ctrl
 	button $w.ctrl.stop -text "Stop" -command "$this stop" -state disable
@@ -69,10 +69,10 @@ class SamplerGui {
 	label  $w.ctrl.current -text ""
 	pack $w.ctrl.stop $w.ctrl.run $w.ctrl.current -side left -anchor w
 	pack $w.ctrl -anchor w
-
+	
 	# Children
 	frame $w.children
-	pack $w.children 
+	pack $w.children  -expand true -fill both -anchor nw
     }
 
     method run {} {
@@ -91,15 +91,15 @@ class SamplerGui {
 	    $this-c run
 	}
     }
-	
+    
     method stop {} {
 	$w.ctrl.run configure -text "Run"
 	$w.ctrl.stop configure -state disable
 	set mode "stop"
 	$this-c stop
     }
-
-
+    
+    
     method done {} {
 	if { $mode == "run" } {
 	    $w.ctrl.run configure -text "Run"
@@ -107,7 +107,7 @@ class SamplerGui {
 	    set mode "stop"
 	}
     }
-	
+    
     method set-iter { n } {
 	$w.ctrl.current configure -text $n
     }
@@ -116,10 +116,10 @@ class SamplerGui {
 	global $this-kappa
 	set $this-kappa $k
     }
-	
+    
     method new-child-window { name } {
 	set child [iwidgets::Labeledframe $w.children.$n -labeltext $name]
-	pack $child -side top -anchor w
+	pack $child -side top -anchor w -expand true -fill both
 	incr n
 	return [$child childsite]
     }

@@ -13,18 +13,19 @@ SRCDIR := Packages/MIT/Dataflow/GUI
 ALLTARGETS := $(ALLTARGETS) $(SRCDIR)/tclIndex
 
 $(SRCDIR)/tclIndex: \
-	$(SRCDIR)/Metropolis.tcl\
-	$(SRCDIR)/Sampler.tcl\
-	$(SRCDIR)/SamplerGui.tcl\
 	$(SRCDIR)/BayerAnalysis.tcl\
-	$(SRCDIR)/MeasurementsReader.tcl\
 	$(SRCDIR)/DistributionReader.tcl\
-	$(SRCDIR)/MetropolisWriter.tcl\
+	$(SRCDIR)/ItPDSimPartGui.tcl\
+	$(SRCDIR)/RtPDSimPartGui.tcl\
+	$(SRCDIR)/IGaussianPDSimPartGui.tcl\
+	$(SRCDIR)/MeasurementsReader.tcl\
+	$(SRCDIR)/Metropolis.tcl\
 	$(SRCDIR)/MetropolisReader.tcl\
+	$(SRCDIR)/MetropolisWriter.tcl\
 	$(SRCDIR)/PPexample.tcl\
         $(SRCDIR)/PPexampleGui.tcl\
-	$(SRCDIR)/ItPDSimPartGui.tcl\
-	$(SRCDIR)/IGaussianPDSimPartGui.tcl\
+	$(SRCDIR)/Sampler.tcl\
+	$(SRCDIR)/SamplerGui.tcl\
 #[INSERT NEW TCL FILE HERE]
 	$(OBJTOP)/createTclIndex $(SRCTOP)/Packages/MIT/Dataflow/GUI
 
