@@ -56,9 +56,11 @@ public:
 
   //! Is a sci nrrd if we wrap a field up with it, and we have a tuple axis.
   bool is_sci_nrrd() const;
-  
   void copy_sci_data(const NrrdData &);
  
+  int get_tuple_axis_size() const;
+  bool get_tuple_indecies(vector<string> &elems) const;
+  bool get_tuple_index_info(int tmin, int tmax, int &min, int &max) const;
   virtual void io(Piostream&);
   static PersistentTypeID type_id;
 private:
