@@ -27,7 +27,7 @@ PSELIBS := \
 	Core/Exceptions \
 	Core/Util \
 	Dataflow/XMLUtil
-LIBS := $(XML_LIBRARY) -lmpi $(VAMPIR_LIBRARY)
+LIBS := $(XML_LIBRARY) $(MPI_LIBRARY) $(VAMPIR_LIBRARY)
 
 include $(SRCTOP)/scripts/smallso_epilogue.mk
 

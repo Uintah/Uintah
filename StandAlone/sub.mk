@@ -5,10 +5,18 @@ SRCDIR := Packages/Uintah/StandAlone
 include $(SRCTOP)/scripts/largeso_epilogue.mk
 
 SRCS := $(SRCDIR)/sus.cc
+ifneq ($(CC_DEPEND_REGEN),-MD)
+# Arches doesn't work under g++ yet
+ARCHES := Packages/Uintah/CCA/Components/Arches
+else
+SRCS := $(SRCS) $(SRCDIR)/FakeArches.cc
+endif
+
 PROGRAM := Packages/Uintah/StandAlone/sus
 ifeq ($(LARGESOS),yes)
   PSELIBS := Uintah
 else
+
   PSELIBS := \
 	Packages/Uintah/Core/Grid \
 	Packages/Uintah/Core/Parallel \
@@ -20,12 +28,13 @@ else
 	Packages/Uintah/CCA/Components/Schedulers \
 	Packages/Uintah/CCA/Components/ProblemSpecification \
 	Packages/Uintah/CCA/Components/ICE \
-	Packages/Uintah/CCA/Components/Arches \
+	$(ARCHES) \
+	Dataflow/Network \
 	Core/Exceptions \
 	Core/Thread
 
 endif
-LIBS := $(XML_LIBRARY) -lmpi
+LIBS := $(XML_LIBRARY) $(MPI_LIBRARY) $(GL_LIBS)
 
 include $(SRCTOP)/scripts/program.mk
 
@@ -51,3 +60,5 @@ LIBS 	:= $(XML_LIBRARY)
 
 include $(SRCTOP)/scripts/program.mk
 
+# A convenience target (use make sus)
+sus: Packages/Uintah/StandAlone/sus

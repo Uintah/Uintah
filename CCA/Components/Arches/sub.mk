@@ -20,9 +20,13 @@ SRCS +=	$(SRCDIR)/PetscSolver.cc
 endif
 
 
+ifneq ($(CC_DEPEND_REGEN),-MD)
+# The fortran code doesn't work under g++ yet
 SUBDIRS := $(SRCDIR)/fortran
 
 include $(SRCTOP)/scripts/recurse.mk
+FLIB := -lftn
+endif
 
 PSELIBS := \
 	Packages/Uintah/Core/Parallel    \
@@ -33,7 +37,7 @@ PSELIBS := \
 	Core/Geometry                    \
 	Core/Exceptions
 
-LIBS := $(XML_LIBRARY) -lftn -lm -lmpi
+LIBS := $(XML_LIBRARY) $(FLIB) $(MPI_LIBRARY) -lm
 ifneq ($(PETSC_DIR),)
 LIBS := $(LIBS) $(PETSC_LIBS) -lpetscsles -lpetscdm -lpetscmat -lpetscvec -lpetsc -lblas
 endif
