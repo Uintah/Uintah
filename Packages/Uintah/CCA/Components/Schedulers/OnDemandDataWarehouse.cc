@@ -1564,35 +1564,41 @@ OnDemandDataWarehouse::checkGetAccess(const VarLabel* label, int matlIndex,
   map<SpecificVarLabel, AccessInfo>::iterator findIter;
   findIter = currentTaskAccesses.find(SpecificVarLabel(label, matlIndex,
 						       patch));
-  if (findIter == currentTaskAccesses.end()) {
-    // it hasn't been accessed by this task previous, so check that it can.
-    if (!hasGetAccess(currentTask, label, matlIndex, patch, lowOffset,
-		      highOffset)) {
-      if (currentTask == 0 ||
-	  (string(currentTask->getName()) != "Relocate::relocateParticles")) {
-	string has = (isFinalized() ? "old" : "new");
-	has += " datawarehouse get";
-	if (numGhostCells > 0) {
-	  ostringstream ghost_str;
-	  ghost_str << " for " << numGhostCells << " layer";
-	  if (numGhostCells > 1) ghost_str << "s";
-	  ghost_str << " of ghosts around " << Ghost::getGhostTypeName(gtype);
-	  has += ghost_str.str();
-	}	
-	string needs = "task requires";
-	throw DependencyException(currentTask, label, matlIndex, patch,
-				  has, needs);
-      }
+  if (findIter != currentTaskAccesses.end() &&
+      lowOffset == IntVector(0, 0, 0) && highOffset == IntVector(0, 0, 0)) {
+    // allow non ghost cell get if any access (get, put, or modify) is allowed
+    return;
+  }
+
+  if (!hasGetAccess(currentTask, label, matlIndex, patch, lowOffset,
+		    highOffset)) {
+    if (currentTask == 0 ||
+	(string(currentTask->getName()) != "Relocate::relocateParticles")) {
+      string has = (isFinalized() ? "old" : "new");
+      has += " datawarehouse get";
+      if (numGhostCells > 0) {
+	ostringstream ghost_str;
+	ghost_str << " for " << numGhostCells << " layer";
+	if (numGhostCells > 1) ghost_str << "s";
+	ghost_str << " of ghosts around " << Ghost::getGhostTypeName(gtype);
+	has += ghost_str.str();
+      }	
+      string needs = "task requires";
+      throw DependencyException(currentTask, label, matlIndex, patch,
+				has, needs);
     }
-    else {
+  }
+  else {
+    // access granted
+    if (findIter == currentTaskAccesses.end()) {
       AccessInfo& accessInfo =
 	currentTaskAccesses[SpecificVarLabel(label, matlIndex, patch)];
       accessInfo.accessType = GetAccess;
       accessInfo.encompassOffsets(lowOffset, highOffset);
     }
-  }
-  else {
-    findIter->second.encompassOffsets(lowOffset, highOffset);
+    else {
+      findIter->second.encompassOffsets(lowOffset, highOffset);
+    }
   }
 #endif
 }
@@ -1819,7 +1825,7 @@ OnDemandDataWarehouse::checkAccesses(const Task* currentTask,
 	  else
 	    needs = "get from the new datawarehouse";
 	  needs += " that includes these ghosts";
-	
+
 	  throw DependencyException(currentTask, label, matl, patch,
 				    has, needs);
 	}
