@@ -1,6 +1,7 @@
 #include "BurnFactory.h"
 #include "NullBurn.h"
 #include "SimpleBurn.h"
+#include "IgnitionCombustion.h"
 #include <Core/Malloc/Allocator.h>
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <string>
@@ -25,6 +26,9 @@ Burn* BurnFactory::create(ProblemSpecP& ps)
     
     else if (burn_type == "simple")
       return(scinew SimpleBurn(child));
+
+    else if (burn_type == "IgnitionCombustion")
+      return(scinew IgnitionCombustion(child));
     
     else 
       throw ProblemSetupException("Unknown Burn Type R ("+burn_type+")");
