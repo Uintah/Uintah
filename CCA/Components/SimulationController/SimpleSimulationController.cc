@@ -498,7 +498,6 @@ SimpleSimulationController::run()
       } while(!success);
       if(output) {
 	output->executedTimestep();
-	output->finalizeTimestep(t, 0, grid, scheduler);
       }
 
       t += delt;
