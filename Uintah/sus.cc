@@ -51,8 +51,9 @@ void usage( const std::string & message,
 	    const std::string& badarg,
 	    const std::string& progname)
 {
-  if( Parallel::usingMPI() && 
-      Parallel::getRootProcessorGroup()->myrank() == 0 )
+  if( !Parallel::usingMPI() || 
+      ( Parallel::usingMPI() &&
+	Parallel::getRootProcessorGroup()->myrank() == 0 ) )
     {
       cerr << message << "\n";
       if(badarg != "")
@@ -253,6 +254,9 @@ int main(int argc, char** argv)
 
 //
 // $Log$
+// Revision 1.18  2000/08/08 21:36:52  dav
+// fixed 'usage' fix
+//
 // Revision 1.17  2000/08/08 21:23:20  dav
 // Changes so that 'usage' under MPI works correctly.
 //
