@@ -16,14 +16,15 @@ void Pio(Piostream&, rtrt::SeaLambertianMaterial*&);
 
 namespace rtrt {
 
-class SeaLambertianMaterial : public Material {
+class SeaLambertianMaterial : public Material, public Object {
   Color R;
   TimeVaryingCheapCaustics *caustics;
+  double currentTime;
 public:
   SeaLambertianMaterial(const Color& R, TimeVaryingCheapCaustics *caustics);
   virtual ~SeaLambertianMaterial();
 
-  SeaLambertianMaterial() : Material() {} // for Pio.
+  SeaLambertianMaterial() : Material(), Object(this) {} // for Pio.
 
   //! Persistent I/O.
   static  SCIRun::PersistentTypeID type_id;
@@ -34,6 +35,13 @@ public:
 		     const HitInfo& hit, int depth,
 		     double atten, const Color& accumcolor,
 		     Context* cx);
+
+  // Object.  None of these do anything, except for animate...
+  virtual void intersect(Ray& ray, HitInfo& hit, DepthStats* st,
+			 PerProcessorContext*);
+  virtual Vector normal(const Point&, const HitInfo& hit);
+  virtual void animate(double t, bool& changed);
+  virtual void compute_bounds(BBox& bbox, double offset);
 };
 
 } // end namespace rtrt
