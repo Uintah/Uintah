@@ -2788,11 +2788,11 @@ void ICE::addExchangeToMomentumAndEnergy(const ProcessorGroup*,
 
     //__________________________________
     // Convert vars. flux -> primitive 
-    for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
-      IntVector c = *iter;
-      for (int m = 0; m < numMatls; m++) {
-        Temp_CC[m][c] = int_eng_L[m][c]/(mass_L[m][c]*cv[m]);
-        vel_CC[m][c]  =  mom_L[m][c]/mass_L[m][c];
+    for (int m = 0; m < numMatls; m++) {
+      for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
+	IntVector c = *iter;
+	Temp_CC[m][c] = int_eng_L[m][c]/(mass_L[m][c]*cv[m]);
+	vel_CC[m][c]  =  mom_L[m][c]/mass_L[m][c];
       }  
     }
 
@@ -2902,18 +2902,18 @@ void ICE::addExchangeToMomentumAndEnergy(const ProcessorGroup*,
     }
     //__________________________________
     // Convert vars. primitive-> flux 
-    for(CellIterator iter=patch->getExtraCellIterator(); !iter.done(); iter++){
-      IntVector c = *iter;
-      for (int m = 0; m < numMatls; m++) {
+    for (int m = 0; m < numMatls; m++) {
+      for(CellIterator iter=patch->getExtraCellIterator();!iter.done();iter++){
+	IntVector c = *iter;
         int_eng_L_ME[m][c] = Temp_CC[m][c] * cv[m] * mass_L[m][c];
         mom_L_ME[m][c]     = vel_CC[m][c] * mass_L[m][c];
       }  
     }
     
     if (d_RateForm) {
-      for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
-        IntVector c = *iter;
-        for (int m = 0; m < numMatls; m++) {
+      for (int m = 0; m < numMatls; m++) {
+	for(CellIterator iter = patch->getCellIterator();!iter.done(); iter++){
+	  IntVector c = *iter;
           Tdot[m][c]         = (Temp_CC[m][c] - old_temp[m][c])/delT;
         }  
       }
