@@ -32,6 +32,9 @@ itcl_class SCIRun_Math_MatrixSelectVector {
 	global $this-current
 	global $this-execmode
 	global $this-delay
+	global $this-inc-amount
+	global $this-send-amount
+
 
         set_defaults
     }
@@ -48,6 +51,8 @@ itcl_class SCIRun_Math_MatrixSelectVector {
 	set $this-current            0
 	set $this-execmode           "init"
 	set $this-delay              0
+	set $this-inc-amount        1
+	set $this-send-amount       1
     }
 
     method run_update {} {
@@ -120,10 +125,23 @@ itcl_class SCIRun_Math_MatrixSelectVector {
 	pack $w.playmode.delay.label $w.playmode.delay.entry \
 		-side left -anchor n -expand yes -fill x
 
+	frame $w.playmode.inc
+	label $w.playmode.inc.label -text "Increment" -width 16 -justify left
+	entry $w.playmode.inc.entry -width 8 -textvariable $this-inc-amount
+	pack $w.playmode.inc.label $w.playmode.inc.entry \
+		-side left -anchor n -expand yes -fill x
+
+	frame $w.playmode.send
+	label $w.playmode.send.label -text "Amount to Send" \
+	    -width 16 -justify left
+	entry $w.playmode.send.entry -width 8 -textvariable $this-send-amount
+	pack $w.playmode.send.label $w.playmode.send.entry \
+		-side left -anchor n -expand yes -fill x
+
 	pack $w.playmode.label -side top -expand yes -fill both
 	pack $w.playmode.once $w.playmode.loop \
 		$w.playmode.bounce1 $w.playmode.bounce2 $w.playmode.delay \
-		-side top -anchor w
+	        $w.playmode.inc $w.playmode.send -side top -anchor w
 
 
         button $w.execmode.play -text "Play" -command "$this run_play"

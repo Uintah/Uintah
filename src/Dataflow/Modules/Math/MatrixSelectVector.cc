@@ -12,6 +12,7 @@
  */
 
 #include <Core/Datatypes/ColumnMatrix.h>
+#include <Core/Datatypes/DenseMatrix.h>
 #include <Dataflow/Ports/MatrixPort.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <iostream>
@@ -31,10 +32,13 @@ class MatrixSelectVector : public Module {
   GuiInt    current_;
   GuiString execmode_;
   GuiInt    delay_;
+  GuiInt    inc_amount_;
+  GuiInt    send_amount_;
   int       inc_;
   bool      stop_;
 
-  void send_selection(MatrixHandle mh, int which, bool use_row, bool last_p);
+  void send_selection(MatrixHandle mh, int which, int ncopy,
+		      bool use_row, bool last_p);
   int increment(int which, int lower, int upper);
 
 public:
@@ -60,6 +64,8 @@ MatrixSelectVector::MatrixSelectVector(GuiContext* ctx)
     current_(ctx->subVar("current")),
     execmode_(ctx->subVar("execmode")),
     delay_(ctx->subVar("delay")),
+    inc_amount_(ctx->subVar("inc-amount")),
+    send_amount_(ctx->subVar("send-amount")),
     inc_(1),
     stop_(false)
 {
@@ -72,7 +78,7 @@ MatrixSelectVector::~MatrixSelectVector()
 
 
 void
-MatrixSelectVector::send_selection(MatrixHandle mh, int which,
+MatrixSelectVector::send_selection(MatrixHandle mh, int which, int ncopy,
 				   bool use_row, bool last_p)
 {
   MatrixOPort *ovec = (MatrixOPort *)get_oport("Vector");
@@ -89,33 +95,65 @@ MatrixSelectVector::send_selection(MatrixHandle mh, int which,
 
   current_.set(which);
 
-  ColumnMatrix *cm;
+  MatrixHandle matrix(0);
   if (use_row)
   {
-    if (which < 0 || which >= mh->nrows())
+    if (which < 0 || which + ncopy > mh->nrows())
     {
       warning("Row out of range, skipping.");
       return;
     }
-    cm = scinew ColumnMatrix(mh->ncols());
-    double *data = cm->get_data();
-    for (int c = 0; c<mh->ncols(); c++)
+    if (ncopy == 1)
     {
-      data[c] = mh->get(which, c);
+      ColumnMatrix *cm = scinew ColumnMatrix(mh->ncols());
+      double *data = cm->get_data();
+      for (int c = 0; c<mh->ncols(); c++)
+      {
+	data[c] = mh->get(which, c);
+      }
+      matrix = cm;
+    }
+    else
+    {
+      DenseMatrix *dm = scinew DenseMatrix(mh->ncols(), ncopy);
+      for (int i = 0; i <= ncopy; i++)
+      {
+	for (int c = 0; c < mh->ncols(); c++)
+	{
+	  dm->put(c, i, mh->get(which + i, c));
+	}
+      }
+      matrix = dm;
     }
   }
   else
   {
-    if (which < 0 || which >= mh->ncols())
+    if (which < 0 || which + ncopy > mh->ncols())
     {
       warning("Column out of range, skipping.");
       return;
     }
-    cm = scinew ColumnMatrix(mh->nrows());
-    double *data = cm->get_data();
-    for (int r = 0; r<mh->nrows(); r++)
+    if (ncopy == 1)
     {
-      data[r] = mh->get(r, which);
+      ColumnMatrix *cm = scinew ColumnMatrix(mh->nrows());
+      double *data = cm->get_data();
+      for (int r = 0; r<mh->nrows(); r++)
+      {
+	data[r] = mh->get(r, which);
+      }
+      matrix = cm;
+    }
+    else
+    {
+      DenseMatrix *dm = scinew DenseMatrix(mh->ncols(), ncopy);
+      for (int i = 0; i <= ncopy; i++)
+      {
+	for (int c = 0; c < mh->ncols(); c++)
+	{
+	  dm->put(c, i, mh->get(which + i, c));
+	}
+      }
+      matrix = dm;
     }
   }	    
 
@@ -124,13 +162,13 @@ MatrixSelectVector::send_selection(MatrixHandle mh, int which,
 
   if (last_p)
   {
-    ovec->send(MatrixHandle(cm));
+    ovec->send(matrix);
     osel->send(MatrixHandle(selected));
   }
   else
   {
     osel->send(MatrixHandle(selected));
-    ovec->send_intermediate(MatrixHandle(cm));
+    ovec->send_intermediate(matrix);
   }
 }
 
@@ -147,7 +185,8 @@ MatrixSelectVector::increment(int which, int lower, int upper)
     }
     return upper;
   }
-  which += inc_;
+  const int inc_amount = Min(1, Max(upper, inc_amount_.get()));
+  which += inc_ * inc_amount;
 
   if (which > upper)
   {
@@ -366,16 +405,21 @@ MatrixSelectVector::execute()
   }
 #endif
 
+  const int maxsize = (use_row?mh->nrows():mh->ncols())-1;
+  const int send_amount = Min(1, Max(maxsize, send_amount_.get()));
+
   // If there is a current index matrix, use it.
   MatrixIPort *icur = (MatrixIPort *)get_iport("Current Index");
   if (!icur) {
     error("Unable to initialize iport 'Current Index'.");
     return;
   }
+
   MatrixHandle currentH;
   if (icur->get(currentH) && currentH.get_rep())
   {
-    send_selection(mh, (int)(currentH->get(0, 0)), use_row, true);
+    send_selection(mh, (int)(currentH->get(0, 0)), send_amount,
+		   use_row, true);
     return;
   }
 
@@ -409,7 +453,7 @@ MatrixSelectVector::execute()
 
     // TODO: INCREMENT
     which = increment(which, lower, upper);
-    send_selection(mh, which, use_row, true);
+    send_selection(mh, which, send_amount, use_row, true);
   }
   else if (execmode == "play")
   {
@@ -428,7 +472,7 @@ MatrixSelectVector::execute()
 	next = increment(which, lower, upper);
       }
       stop = stop_;
-      send_selection(mh, which, use_row, stop);
+      send_selection(mh, which, send_amount, use_row, stop);
       if (!stop && delay > 0)
       {
 	const unsigned int secs = delay / 1000;
@@ -448,7 +492,7 @@ MatrixSelectVector::execute()
   }
   else
   {
-    send_selection(mh, current_.get(), use_row, true);
+    send_selection(mh, current_.get(), send_amount, use_row, true);
   }
   execmode_.set("init");
 }
