@@ -15,7 +15,7 @@ namespace Uintah {
                        const CCVariable<double>& rho_CC,            
                        const CCVariable<double>& sp_vol_CC,         
                        const CCVariable<double>& Temp_CC,          
-                       double diff_coeff,                
+                       const CCVariable<double>& diff_coeff,                
                        SFCXVariable<double>& q_X_FC,               
                        SFCYVariable<double>& q_Y_FC,               
                        SFCZVariable<double>& q_Z_FC);
@@ -27,13 +27,13 @@ namespace Uintah {
                          const CCVariable<double>& sp_vol_CC,  
                          const CCVariable<double>& q_CC,
                          CCVariable<double>& q_diffusion_src,
-                         const double diff_coeff,
+                         const CCVariable<double>& diff_coeff,
                          const double delT);            
 
   template <class T> 
   void q_flux_FC(CellIterator iter, 
                  IntVector adj_offset,
-                 const double diff_coeff,
+                 const CCVariable<double>& diff_coeff,
                  const double dx,
                  const CCVariable<double>& rho_CC,      
                  const CCVariable<double>& sp_vol_CC,   
