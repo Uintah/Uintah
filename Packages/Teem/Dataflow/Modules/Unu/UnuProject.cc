@@ -86,7 +86,7 @@ UnuProject::execute()
   Nrrd *nin = nrrd_handle->nrrd;
   Nrrd *nout = nrrdNew();
 
-  cerr << "axis_="<<axis_.get()<<"  measure_="<<measure_.get()<<"\n";
+//  cerr << "axis_="<<axis_.get()<<"  measure_="<<measure_.get()<<"\n";
 
   if (nrrdProject(nout, nin, axis_.get(), measure_.get(), nrrdTypeDefault)) {
     char *err = biffGetDone(NRRD);
