@@ -5,11 +5,9 @@
 #include <Packages/Kurt/Core/Geom/BrickGrid.h>
 #include <Core/Geometry/Polygon.h>
 #include <vector>
-using std::vector;
-
 
 namespace Kurt {
-
+using std::vector;
 using SCIRun::Polygon;
 
 

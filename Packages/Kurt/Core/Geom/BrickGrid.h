@@ -17,11 +17,9 @@
 #include <Packages/Kurt/Core/Geom/GridBrick.h>
 #include <vector>
 
+namespace Kurt {
 using std::pair;
 using std::vector;
-
-namespace Kurt {
-
 using SCIRun::Array3;
 using SCIRun::Point;
 using SCIRun::BBox;
