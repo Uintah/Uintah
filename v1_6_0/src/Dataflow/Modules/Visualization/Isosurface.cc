@@ -138,53 +138,48 @@ void Isosurface::execute()
     {
       if (! mc_alg_.get_rep()) {
 	CompileInfo *ci = MarchingCubesAlg::get_compile_info(td);
-	if (! DynamicLoader::scirun_loader().get(*ci, mc_alg_)) {
+	if (!module_dynamic_compile(*ci, mc_alg_))
+	{
 	  error( "Marching Cubes can not work with this field.");
 	  return;
 	}
       }
-      // mc_alg_ should be set now
-      MarchingCubesAlg *mc = dynamic_cast<MarchingCubesAlg*>(mc_alg_.get_rep());
-      mc->set_np( np_.get() ); 
+      mc_alg_->set_np( np_.get() ); 
       if ( np_.get() > 1 )
 	build_trisurf = false;
-      mc->set_field( field.get_rep() );
-      mc->search( iso_value, build_trisurf);
-      surface = mc->get_geom();
-      trisurf_mesh_ = mc->get_trisurf();
+      mc_alg_->set_field( field.get_rep() );
+      mc_alg_->search( iso_value, build_trisurf);
+      surface = mc_alg_->get_geom();
+      trisurf_mesh_ = mc_alg_->get_trisurf();
     }
     break;
   case 1:  // Noise
     {
       if (! noise_alg_.get_rep()) {
 	CompileInfo *ci = NoiseAlg::get_compile_info(td);
-	if (! DynamicLoader::scirun_loader().get(*ci, noise_alg_)) {
+	if (! module_dynamic_compile(*ci, noise_alg_)) {
 	  error( "NOISE can not work with this field.");
 	  return;
 	}
-	NoiseAlg *noise = dynamic_cast<NoiseAlg*>(noise_alg_.get_rep());
-	noise->set_field(field.get_rep());
+	noise_alg_->set_field(field.get_rep());
       }
-      NoiseAlg *noise = dynamic_cast<NoiseAlg*>(noise_alg_.get_rep());
-      surface = noise->search(iso_value, build_trisurf);
-      trisurf_mesh_ = noise->get_trisurf();
+      surface = noise_alg_->search(iso_value, build_trisurf);
+      trisurf_mesh_ = noise_alg_->get_trisurf();
     }
     break;
   case 2:  // View Dependent
     {
       if (! sage_alg_.get_rep()) {
 	CompileInfo *ci = SageAlg::get_compile_info(td);
-	if (! DynamicLoader::scirun_loader().get(*ci, sage_alg_)) {
+	if (! module_dynamic_compile(*ci, sage_alg_)) {
 	  error( "SAGE can not work with this field.");
 	  return;
 	}
-	SageAlg *sage = dynamic_cast<SageAlg*>(sage_alg_.get_rep());
-	sage->set_field(field.get_rep());
+	sage_alg_->set_field(field.get_rep());
       } 
-      SageAlg *sage = dynamic_cast<SageAlg*>(sage_alg_.get_rep());
       GeomGroup *group = new GeomGroup;
       GeomPts *points = new GeomPts(1000);
-      sage->search(iso_value, group, points);
+      sage_alg_->search(iso_value, group, points);
       surface = group;
     }
     break;
