@@ -59,8 +59,10 @@ map<string, FieldIEPlugin *> *FieldIEPlugin::table = 0;
 FieldIEPlugin::FieldIEPlugin(const string& pname,
 			     const string& fextension,
 			     const string& fmagic,
-			     FieldHandle (*freader)(const char *filename),
-			     void (*fwriter)(FieldHandle f,
+			     FieldHandle (*freader)(ProgressReporter *pr,
+						    const char *filename),
+			     void (*fwriter)(ProgressReporter *pr,
+					     FieldHandle f,
 					     const char *filename))
   : pluginname(pname),
     fileextension(fextension),
@@ -68,7 +70,7 @@ FieldIEPlugin::FieldIEPlugin(const string& pname,
     filereader(freader),
     filewriter(fwriter)
 {
-
+#if 0
   fieldIEPluginMutex.lock();
   if (!table)
   {
@@ -99,12 +101,14 @@ FieldIEPlugin::FieldIEPlugin(const string& pname,
   }
 
   fieldIEPluginMutex.unlock();
+#endif
 }
 
 
 
 FieldIEPlugin::~FieldIEPlugin()
 {
+#if 0
   if (table == NULL)
   {
     cerr << "WARNING: FieldIEPlugin.cc: ~FieldIEPlugin(): table is NULL\n";
@@ -132,6 +136,7 @@ FieldIEPlugin::~FieldIEPlugin()
   }
 
   fieldIEPluginMutex.unlock();
+#endif
 }
 
 
