@@ -15,12 +15,12 @@ SRCS     += \
 	$(SRCDIR)/GLTextureBuilder.cc\
 	$(SRCDIR)/GenStandardColorMaps.cc\
 	$(SRCDIR)/GenTransferFunc.cc\
-	$(SRCDIR)/Isosurface.cc\
 	$(SRCDIR)/RescaleColorMap.cc\
 	$(SRCDIR)/ShowField.cc\
 	$(SRCDIR)/Streamline.cc\
 	$(SRCDIR)/TexCuttingPlanes.cc\
 	$(SRCDIR)/TextureVolVis.cc\
+#	$(SRCDIR)/Isosurface.cc\
 [INSERT NEW CODE FILE HERE]
 
 
