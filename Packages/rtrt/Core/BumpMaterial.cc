@@ -137,7 +137,7 @@ int BumpMaterial::readfromppm6(char *filename)
   double max = temp;
   bumpimage = (int *)malloc(dimension_x*dimension_y*sizeof(int));
   printf("Converting from 0->%d (x3) to Vector 0->1 by division\n",temp);
-  printf("Reading in File for a Bump Map%s\n",filename);
+  printf("Reading Bump Map File: %s\n",filename);
   for(int j = dimension_y-1; j >= 0; j--)
     for(int i = 0; i < dimension_x; i++)
     { //ramsey
@@ -181,7 +181,7 @@ int BumpMaterial::read_file(char *filename)
   double max = temp;
   int r,g,b;
   bumpimage = (int *)malloc(dimension_x*dimension_y*sizeof(int));
-  printf("Reading in File for a Bump Map%s\n",filename);
+  printf("Reading Bump Map File: %s\n",filename);
   for(int j = dimension_y-1; j >= 0; j--)
     for(int i = 0; i < dimension_x; i++)
     {
