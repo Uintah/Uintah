@@ -41,11 +41,25 @@ void get_cone_vectors(const Vector& axis, double theta0, int n, Vector* incone)
      }
 }
 
-Light::Light(const Point& pos, const Color& color, double radius)
-    : pos(pos), color(color), radius(radius)
+Light::Light(const Point& pos,
+	     const Color& color,
+	     double radius,
+	     double intensity ) :
+  radius(radius), intensity_(intensity), pos(pos),
+  currentColor_(color*intensity), origColor_(color)
 {
     Vector d(pos-Point(0,0,.5));
     int n=3;
     beamdirs.resize(n*n);
     get_cone_vectors(d, .03, n, &beamdirs[0]);
+}
+
+void
+Light::updateIntensity( double intensity )
+{
+  if( intensity < 0 ) intensity = 0;
+  else if( intensity > 1.0 ) intensity = 1.0;
+
+  currentColor_ = origColor_ * intensity;
+  intensity_ = intensity;
 }
