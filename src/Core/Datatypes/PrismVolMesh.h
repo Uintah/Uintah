@@ -46,6 +46,9 @@
 
 namespace SCIRun {
 
+#define TRI_NNODES 3
+#define QUAD_NNODES 4
+
 #define PRISM_NNODES 6
 #define PRISM_NEDGES 9
 #define PRISM_NFACES 5
@@ -69,7 +72,6 @@ PrismNodeNeighborTable[PRISM_NNODES][3] = { { 1,2,3 },
 					    { 0,4,5 },
 					    { 1,3,5 },
 					    { 2,3,4 } };
- 
 
 class SCICORESHARE PrismVolMesh : public Mesh
 {

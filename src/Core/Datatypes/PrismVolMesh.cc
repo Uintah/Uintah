@@ -19,12 +19,12 @@
  *  PrismVolMesh.cc: Prism mesh with new design.
  *
  *  Written by:
- *   Michael Callahan
+ *   Allen Sanderson
  *   Department of Computer Science
  *   University of Utah
- *   January 2001
+ *   July 2003
  *
- *  Copyright (C) 2001 SCI Group
+ *  Copyright (C) 2003 SCI Insititute
  *
  */
 
@@ -158,28 +158,30 @@ PrismVolMesh::get_random_point(Point &p, const Cell::index_type &ei,
   Node::array_type ra;
   get_nodes(ra,ei);
 
-  p = Point(0,0,0);
+  Vector v = Vector(0,0,0);
 
   double sum = 0;
 
-  for( int i=0; i<PRISM_NNODES; i++ ) {
+  if( seed ) {
+   MusilRNG rng1(seed);
+   for( unsigned int i=0; i<PRISM_NNODES; i++ ) {
+     const Point &p0 = point(ra[i]);
+     const double w = rng1();
+   
+     v += p0.asVector() * w;
+     sum += w;
+   }
+  } else {
+    for( unsigned int i=0; i<PRISM_NNODES; i++ ) {
+      const Point &p0 = point(ra[i]);
+      const double w = rng();
 
-    const Point &p0 = point(ra[i]);
-
-    double w;
-    if (seed) {
-      MusilRNG rng1(seed);
-      w = rng1();
-    } else {
-      w = rng();
+      v += p0.asVector() * w;
+      sum += w;
     }
-
-    sum += w;
-
-    p.asVector() += p0.asVector() * w;
   }
 
-  p.asVector() /= sum;
+  p = (v / sum).asPoint();
 }
 
 BBox
@@ -221,8 +223,8 @@ PrismVolMesh::compute_faces()
   face_lock_.lock();
   faces_.clear();
   all_faces_.clear();
-  unsigned int i, num_cells = (cells_.size()) /  PRISM_NNODES *  PRISM_NFACES;
-  for (i = 0; i < num_cells; i++) {
+  unsigned int num_cells = (cells_.size()) /  PRISM_NNODES *  PRISM_NFACES;
+  for (unsigned int i = 0; i < num_cells; i++) {
     faces_.insert(i);
     all_faces_.insert(i);
   }
@@ -239,8 +241,8 @@ PrismVolMesh::compute_edges()
   edge_lock_.lock();
   edges_.clear();
   all_edges_.clear();
-  unsigned int i, num_cells = (cells_.size()) /  PRISM_NNODES *  PRISM_NEDGES;
-  for (i = 0; i < num_cells; i++) {
+  unsigned int num_cells = (cells_.size()) /  PRISM_NNODES *  PRISM_NEDGES;
+  for (unsigned int i = 0; i < num_cells; i++) {
     edges_.insert(i);
     all_edges_.insert(i);
   }
@@ -256,8 +258,8 @@ PrismVolMesh::compute_node_neighbors()
   node_neighbor_lock_.lock();
   node_neighbors_.clear();
   node_neighbors_.resize(points_.size());
-  unsigned int i, num_cells = cells_.size();
-  for (i = 0; i < num_cells; i++)
+  unsigned int num_cells = cells_.size();
+  for (unsigned int i = 0; i < num_cells; i++)
     node_neighbors_[cells_[i]].push_back(i);
 
   synchronized_ |= NODE_NEIGHBORS_E;
@@ -368,11 +370,12 @@ PrismVolMesh::size(PrismVolMesh::Cell::size_type &s) const
 
 
 void
-PrismVolMesh::create_cell_edges(Cell::index_type c)
+PrismVolMesh::create_cell_edges(Cell::index_type idx)
 {
   //ASSERT(!is_frozen());
   edge_lock_.lock();
-  for (int i = c*PRISM_NEDGES; i < c*PRISM_NEDGES+PRISM_NEDGES; ++i) {
+  const unsigned int base = idx * PRISM_NEDGES;
+  for (unsigned int i=base; i<base+PRISM_NEDGES; ++i) {
     edges_.insert(i);
     all_edges_.insert(i);
   }
@@ -381,11 +384,12 @@ PrismVolMesh::create_cell_edges(Cell::index_type c)
       
 
 void
-PrismVolMesh::delete_cell_edges(Cell::index_type c)
+PrismVolMesh::delete_cell_edges(Cell::index_type idx)
 {
   //ASSERT(!is_frozen());
   edge_lock_.lock();
-  for (int i = c* PRISM_NEDGES; i < c* PRISM_NEDGES+ PRISM_NEDGES; ++i) {
+  const unsigned int base = idx * PRISM_NEDGES;
+  for (unsigned int i=base; i<base+ PRISM_NEDGES; ++i) {
     //! If the Shared Edge Set is represented by the particular
     //! cell/edge index that is being recomputed, then
     //! remove it (and insert a non-recomputed edge if any left)
@@ -421,11 +425,12 @@ PrismVolMesh::delete_cell_edges(Cell::index_type c)
 }
 
 void
-PrismVolMesh::create_cell_faces(Cell::index_type c)
+PrismVolMesh::create_cell_faces(Cell::index_type idx)
 {
   //ASSERT(!is_frozen());
   face_lock_.lock();
-  for (int i = c*PRISM_NFACES; i < c*PRISM_NFACES+PRISM_NFACES; ++i) {
+  const unsigned int base = idx * PRISM_NFACES;
+  for (unsigned int i=base; i<base+PRISM_NFACES; i++) {
     faces_.insert(i);
     all_faces_.insert(i);
   }
@@ -433,11 +438,12 @@ PrismVolMesh::create_cell_faces(Cell::index_type c)
 }
 
 void
-PrismVolMesh::delete_cell_faces(Cell::index_type c)
+PrismVolMesh::delete_cell_faces(Cell::index_type idx)
 {
   //ASSERT(!is_frozen());
   face_lock_.lock();
-  for (int i = c*PRISM_NFACES; i < c*PRISM_NFACES+PRISM_NFACES; ++i) {
+  const unsigned int base = idx * PRISM_NFACES;
+  for (unsigned int i=base; i<base+PRISM_NFACES; ++i) {
     // If the Shared Face Set is represented by the particular
     // cell/face index that is being recomputed, then
     // remove it (and insert a non-recomputed shared face if any exist)
@@ -460,7 +466,8 @@ PrismVolMesh::delete_cell_faces(Cell::index_type c)
 	faces_.insert((*e).index_);
 	shared_face_exists = true;
       }
-      if (half_face_to_delete != all_faces_.end() && shared_face_exists) break;
+      if (half_face_to_delete != all_faces_.end() && shared_face_exists)
+	break;
     }
 
     //! If this ASSERT is reached, it means that the faces
@@ -472,27 +479,38 @@ PrismVolMesh::delete_cell_faces(Cell::index_type c)
 }
 
 void
-PrismVolMesh::create_cell_node_neighbors(Cell::index_type c)
+PrismVolMesh::create_cell_node_neighbors(Cell::index_type idx)
 {
   //ASSERT(!is_frozen());
   node_neighbor_lock_.lock();
-  for (int i = c*PRISM_NNODES; i < c*PRISM_NNODES+PRISM_NNODES; ++i) {
+
+  const unsigned int base = idx * PRISM_NNODES;
+
+  for (unsigned int i=base; i<base+PRISM_NNODES; i++)
     node_neighbors_[cells_[i]].push_back(i);
-  }
+
   node_neighbor_lock_.unlock();
 }
 
 void
-PrismVolMesh::delete_cell_node_neighbors(Cell::index_type c)
+PrismVolMesh::delete_cell_node_neighbors(Cell::index_type idx)
 {
   //ASSERT(!is_frozen());
   node_neighbor_lock_.lock();
-  for (int i = c*PRISM_NNODES; i < c*PRISM_NNODES+PRISM_NNODES; ++i) {
-    const int n = cells_[i];
-    vector<Cell::index_type>::iterator node_cells_end = 
+
+  const unsigned int base = idx * PRISM_NNODES;
+
+  for (unsigned int i=base; i<base+PRISM_NNODES; ++i) {
+
+    const unsigned int n = cells_[i];
+
+    vector<Cell::index_type>::iterator node_cells_end =
       node_neighbors_[n].end();
+
     vector<Cell::index_type>::iterator cell = node_neighbors_[n].begin();
-    while (cell != node_cells_end && (*cell) != i) ++cell;
+
+    while (cell != node_cells_end && (*cell) != i)
+      ++cell;
 
     //! ASSERT that the node_neighbors_ structure contains this cell
     ASSERT(cell != node_cells_end);
@@ -513,7 +531,7 @@ PrismVolMesh::is_edge(Node::index_type n0, Node::index_type n1,
   cells_lock_.lock();
 
   //! Create a phantom cell with edge 0 being the one we're searching for
-  const int fake_edge = cells_.size() /  PRISM_NNODES *  PRISM_NEDGES;
+  const unsigned int fake_edge = cells_.size() /  PRISM_NNODES *  PRISM_NEDGES;
   vector<under_type>::iterator c0 = cells_.insert(cells_.end(),n0);
   vector<under_type>::iterator c1 = cells_.insert(cells_.end(),n1);
 
@@ -521,8 +539,7 @@ PrismVolMesh::is_edge(Node::index_type n0, Node::index_type n1,
   pair<Edge::HalfEdgeSet::iterator, Edge::HalfEdgeSet::iterator> range =
     all_edges_.equal_range(fake_edge);
 
-  if (array)
-  {
+  if (array) {
     array->clear();
     copy(range.first, range.second, array->end());
   }
@@ -551,7 +568,7 @@ PrismVolMesh::is_face(Node::index_type n0,
   cells_lock_.lock();
 
   //! Create a phantom cell with face 3 being the one we're searching for
-  const int fake_face = cells_.size() + 3;
+  const unsigned int fake_face = cells_.size() + 3;
   vector<under_type>::iterator c0 = cells_.insert(cells_.end(),n0);
   vector<under_type>::iterator c1 = cells_.insert(cells_.end(),n1);
   vector<under_type>::iterator c2 = cells_.insert(cells_.end(),n2);
@@ -576,7 +593,7 @@ PrismVolMesh::is_face(Node::index_type n0,
 }
   
 //! Given four nodes (n0, n1, n2, n3), return all face indexes that
-//! span those three nodes
+//! span those four nodes
 bool
 PrismVolMesh::is_face(Node::index_type n0,
 		      Node::index_type n1,
@@ -590,7 +607,7 @@ PrismVolMesh::is_face(Node::index_type n0,
   cells_lock_.lock();
 
   //! Create a phantom cell with face 4 being the one we're searching for
-  const int fake_face = cells_.size() + 4;
+  const unsigned int fake_face = cells_.size() + 4;
   vector<under_type>::iterator c0 = cells_.insert(cells_.end(),n0);
   vector<under_type>::iterator c1 = cells_.insert(cells_.end(),n1);
   vector<under_type>::iterator c2 = cells_.insert(cells_.end(),n2);
@@ -631,20 +648,21 @@ PrismVolMesh::get_nodes(Node::array_type &array, Edge::index_type idx) const
 void
 PrismVolMesh::get_nodes(Node::array_type &array, Face::index_type idx) const
 {
+  // Get the base cell index and the face offset
   const unsigned int offset = idx%PRISM_NFACES;
-  const unsigned int b = idx / PRISM_NFACES * PRISM_NNODES; // base cell index
+  const unsigned int base = idx / PRISM_NFACES * PRISM_NNODES;
 
   if( isTRI( offset ) )
     array.resize(3);
   else if( isQUAD( offset ) )
     array.resize(4);
 
-  array[0] = cells_[b+PrismFaceTable[offset][0]];
-  array[1] = cells_[b+PrismFaceTable[offset][1]];
-  array[2] = cells_[b+PrismFaceTable[offset][2]];
+  array[0] = cells_[base+PrismFaceTable[offset][0]];
+  array[1] = cells_[base+PrismFaceTable[offset][1]];
+  array[2] = cells_[base+PrismFaceTable[offset][2]];
 
   if( isQUAD( offset ) )
-    array[3] = cells_[b+PrismFaceTable[offset][3]];
+    array[3] = cells_[base+PrismFaceTable[offset][3]];
 }
 
 
@@ -652,9 +670,9 @@ void
 PrismVolMesh::get_nodes(Node::array_type &array, Cell::index_type idx) const
 {
   array.resize(PRISM_NNODES);
-  int i=0;
-  for (int n = idx*PRISM_NNODES; n < idx*PRISM_NNODES+PRISM_NNODES; ++n)
-    array[i++] = cells_[n];
+  const unsigned int base = idx*PRISM_NNODES;
+  for (int unsigned i=0; i<PRISM_NNODES; i++ )
+    array[i] = cells_[base+i];
 }
 
 void
@@ -666,8 +684,10 @@ PrismVolMesh::set_nodes(Node::array_type &array, Cell::index_type idx)
   if (synchronized_ & FACES_E) delete_cell_faces(idx);
   if (synchronized_ & NODE_NEIGHBORS_E) delete_cell_node_neighbors(idx);
 
-  for (int n = 0; n < PRISM_NNODES; ++n)
-    cells_[idx * PRISM_NNODES + n] = array[n];
+  const unsigned int base = idx * PRISM_NNODES;
+
+  for (unsigned int i=0; i<PRISM_NNODES; i++)
+    cells_[base + i] = array[i];
   
   synchronized_ &= ~LOCATE_E;
   if (synchronized_ & EDGES_E) create_cell_edges(idx);
@@ -695,10 +715,10 @@ PrismVolMesh::get_edges(Edge::array_type &/*array*/,
 void
 PrismVolMesh::get_edges(Edge::array_type &array, Cell::index_type idx) const
 {
-  array.resize( PRISM_NEDGES);
-  int i=0;
-  for (int e = idx *  PRISM_NEDGES; e < idx *  PRISM_NEDGES +  PRISM_NEDGES; e++)
-    array[i++] = e;
+  array.resize(PRISM_NEDGES);
+  const unsigned int base = idx * PRISM_NEDGES;
+  for (int i=0; i<PRISM_NEDGES; i++)
+    array[base + i] = i;
 }
 
 
@@ -721,9 +741,10 @@ PrismVolMesh::get_faces(Face::array_type &/*array*/,
 void
 PrismVolMesh::get_faces(Face::array_type &array, Cell::index_type idx) const
 {
-  array.clear();
-  for (int f = idx * PRISM_NFACES; f < idx * PRISM_NFACES + PRISM_NFACES; f++)
-    array.push_back(f);
+  array.resize(PRISM_NFACES);
+  const unsigned int base = idx * PRISM_NFACES;
+  for (unsigned int i=0; i<PRISM_NFACES; i++)
+    array[i] = base + i;
 }
 
 void
@@ -767,7 +788,7 @@ PrismVolMesh::get_cells(Cell::array_type &array, Node::index_type idx) const
   ASSERTMSG(synchronized_ & NODE_NEIGHBORS_E, 
 	    "Must call synchronize NODE_NEIGHBORS_E on PrismVolMesh first.");
   array.clear();
-  for (unsigned int i = 0; i < node_neighbors_[idx].size(); ++i)
+  for (unsigned int i=0; i<node_neighbors_[idx].size(); ++i)
     array.push_back(node_neighbors_[idx][i]/PRISM_NNODES);
 }
 
@@ -822,17 +843,18 @@ PrismVolMesh::get_neighbors(Cell::array_type &array,
 {
   ASSERTMSG(synchronized_ & FACE_NEIGHBORS_E,
 	    "Must call synchronize FACE_NEIGHBORS_E on PrismVolMesh first.");
+  array.clear();
   Face::index_type face;
-  for (int i = idx*PRISM_NFACES; i < idx*PRISM_NFACES+PRISM_NFACES;i++)
-  {
-    face.index_ = i;
+  const unsigned int base = idx*PRISM_NFACES;
+  for (unsigned int i=0; i<PRISM_NFACES; i++) {
+    face.index_ = base + i;
     pair<const Face::HalfFaceSet::const_iterator,
          const Face::HalfFaceSet::const_iterator> range =
       all_faces_.equal_range(face);
     for (Face::HalfFaceSet::const_iterator iter = range.first;
 	 iter != range.second; ++iter)
-      if (*iter != i)
-	array.push_back(*iter/PRISM_NFACES);
+      if (*iter != face.index_)
+	array.push_back(*iter/PRISM_NFACES );
   } 
 }
 
@@ -842,10 +864,12 @@ PrismVolMesh::get_neighbors(Node::array_type &array,
 {
   ASSERTMSG(synchronized_ & NODE_NEIGHBORS_E, 
 	    "Must call synchronize NODE_NEIGHBORS_E on PrismVolMesh first.");
+  array.clear();
   set<int> inserted;
-  for (unsigned int i = 0; i < node_neighbors_[idx].size(); i++) {
-    const int base = node_neighbors_[idx][i]/PRISM_NNODES*PRISM_NNODES;
-    for (int c = base; c < base+PRISM_NNODES; c++) {
+  for (unsigned int i=0; i<node_neighbors_[idx].size(); i++) {
+    const unsigned int base =
+      node_neighbors_[idx][i]/PRISM_NNODES*PRISM_NNODES;
+    for (int c=base; c<base+PRISM_NNODES; c++) {
       if (cells_[c] != idx && inserted.find(cells_[c]) == inserted.end()) {
 	inserted.insert(cells_[c]);
 	array.push_back(cells_[c]);
@@ -858,7 +882,7 @@ PrismVolMesh::get_neighbors(Node::array_type &array,
 void
 PrismVolMesh::get_center(Point &p, Node::index_type idx) const
 {
-  get_point(p, idx);
+  p = points_[idx];
 }
 
 void
@@ -895,12 +919,12 @@ PrismVolMesh::get_center(Point &p, Node::array_type& arr) const
 {
   Vector v(0,0,0);
 
-  for( int i=0; i<arr.size(); i++ ) {
+  for( unsigned int i=0; i<arr.size(); i++ ) {
     const Point &p0 = point(arr[i]);
     v += p0.asVector();
   }
 
-  p = Point(v / (double) arr.size());
+  p = (v / (double) arr.size()).asPoint();
 }
 
 
@@ -1018,8 +1042,7 @@ PrismVolMesh::get_weights(const Point &p,
 			  Cell::array_type &l, vector<double> &w)
 {
   Cell::index_type idx;
-  if (locate(idx, p))
-  {
+  if (locate(idx, p)) {
     l.push_back(idx);
     w.push_back(1.0);
   }
@@ -1045,53 +1068,53 @@ PrismVolMesh::get_weights(const Point &p,
 double
 PrismVolMesh::polygon_area(const Node::array_type &ni, const Vector N) const
 {
-    double area = 0;
-    double an, ax, ay, az;  // abs value of normal and its coords
-    int   coord;           // coord to ignore: 1=x, 2=y, 3=z
-    int   i, j, k;         // loop indices
-    const unsigned int n = ni.size();
+  double area = 0;
+  double an, ax, ay, az;  // abs value of normal and its coords
+  int   coord;           // coord to ignore: 1=x, 2=y, 3=z
+  int   i, j, k;         // loop indices
+  const unsigned int n = ni.size();
 
-    // select largest abs coordinate to ignore for projection
-    ax = (N.x()>0 ? N.x() : -N.x());     // abs x-coord
-    ay = (N.y()>0 ? N.y() : -N.y());     // abs y-coord
-    az = (N.z()>0 ? N.z() : -N.z());     // abs z-coord
+  // select largest abs coordinate to ignore for projection
+  ax = (N.x()>0 ? N.x() : -N.x());     // abs x-coord
+  ay = (N.y()>0 ? N.y() : -N.y());     // abs y-coord
+  az = (N.z()>0 ? N.z() : -N.z());     // abs z-coord
 
-    coord = 3;                     // ignore z-coord
-    if (ax > ay) {
-        if (ax > az) coord = 1;    // ignore x-coord
-    }
-    else if (ay > az) coord = 2;   // ignore y-coord
+  coord = 3;                     // ignore z-coord
+  if (ax > ay) {
+    if (ax > az) coord = 1;      // ignore x-coord
+  }
+  else if (ay > az) coord = 2;   // ignore y-coord
 
-    // compute area of the 2D projection
-    for (i=1, j=2, k=0; i<=n; i++, j++, k++)
-        switch (coord) {
-        case 1:
-            area += (points_[ni[i%n]].y() *
-		     (points_[ni[j%n]].z() - points_[ni[k%n]].z()));
-            continue;
-        case 2:
-            area += (points_[ni[i%n]].x() * 
-		     (points_[ni[j%n]].z() - points_[ni[k%n]].z()));
-            continue;
-        case 3:
-            area += (points_[ni[i%n]].x() * 
-		     (points_[ni[j%n]].y() - points_[ni[k%n]].y()));
-            continue;
-        }
-
-    // scale to get area before projection
-    an = sqrt( ax*ax + ay*ay + az*az);  // length of normal vector
+  // compute area of the 2D projection
+  for (i=1, j=2, k=0; i<=n; i++, j++, k++)
     switch (coord) {
     case 1:
-        area *= (an / (2*ax));
-        break;
+      area += (points_[ni[i%n]].y() *
+	       (points_[ni[j%n]].z() - points_[ni[k%n]].z()));
+      continue;
     case 2:
-        area *= (an / (2*ay));
-        break;
+      area += (points_[ni[i%n]].x() * 
+	       (points_[ni[j%n]].z() - points_[ni[k%n]].z()));
+      continue;
     case 3:
-        area *= (an / (2*az));
+      area += (points_[ni[i%n]].x() * 
+	       (points_[ni[j%n]].y() - points_[ni[k%n]].y()));
+      continue;
     }
-    return area;
+
+  // scale to get area before projection
+  an = sqrt( ax*ax + ay*ay + az*az);  // length of normal vector
+  switch (coord) {
+  case 1:
+    area *= (an / (2*ax));
+    break;
+  case 2:
+    area *= (an / (2*ay));
+    break;
+  case 3:
+    area *= (an / (2*az));
+  }
+  return area;
 }
 
 // The volume x 6, used by get_weights to compute barycentric coordinates.
@@ -1107,7 +1130,7 @@ prism_area2(const Point &p1, const Point &p2, const Point &p3)
   return Cross(p1-p2,p3-p1).length();
 }
 
-/* This code is based on the article by
+/* This code is based on the paper by
    Mark Meyer, Haeyoung Lee, Alan Barr, and Mathieu Desbrun.
    Generalized barycentric coordinates on irregular polygons.
    Journal of graphics tools, 7(1):13-22, 2002
@@ -1132,98 +1155,107 @@ PrismVolMesh::get_weights(const Point &pt,
 
     for( i=0; i<PRISM_NNODES; i++ ) {
       w[i] = 0;      
-      get_point(p[i],nodes[i]);
+      p[i] = point(nodes[i]);
     }
 
+    // Make the face check first. This assures that none of the tet
+    // volumes calculated latter will be zero and cause a divide by
+    // zero error. If a volume is zero the barycentric coordinates
+    // are based on the face instead.
     for( f=0; f<PRISM_NFACES; f++ ) {
+      const unsigned int *fTable = PrismFaceTable[f];
 
-      Plane plane(p[PrismFaceTable[f][0]],
-		  p[PrismFaceTable[f][1]],
-		  p[PrismFaceTable[f][2]]);
-      
       // Special case point is on a face.
-      if( fabs(plane.eval_point(pt)) < 1.0e-4 )
+      if( prism_vol6( pt,
+		      p[fTable[0]],
+		      p[fTable[1]],
+		      p[fTable[2]] ) < 1.0e-8 )
 	break;
     }
 
     // Determine volume of the tets.
     if( f == PRISM_NFACES ) {
       for( i=0; i<PRISM_NNODES; i++ ) {
+	const unsigned int *nTable = PrismNodeNeighborTable[i];
+
+	// Get the volume of the tet formed by the node and
+	// its three neighbors. 
 	w[i] = prism_vol6( p[i],
-			   p[PrismNodeNeighborTable[i][0]],
-			   p[PrismNodeNeighborTable[i][1]],
-			   p[PrismNodeNeighborTable[i][2]] );
+			   p[nTable[0]],
+			   p[nTable[1]],
+			   p[nTable[2]] );
 
-	for( j=0,k=1; j<3; j++, k++ ) {
-	  double vol =
-	    prism_vol6( pt,
-			p[i],
-			p[PrismNodeNeighborTable[i][j%3]],
-			p[PrismNodeNeighborTable[i][k%3]] );
-	  	  
-	  w[i] /= vol;
-
-	  if( vol < 1.0e-10 ) {
-	    cerr << "PrismVolMesh - small volume found ";
-	    cerr << "- possible numerical instabilities";
-	  }
-	}
+	// Get the volume of the tet formed by the point, node and
+	// two of the nodes neighbors.
+	// Note: Each node has exactly three neighbors.
+	for( j=0,k=1; j<3; j++, k++ )
+	  w[i] /= prism_vol6( pt,
+			      p[i],
+			      p[nTable[j%3]],
+			      p[nTable[k%3]] );
 
 	total += w[i];
       }
     } else {
+      const unsigned int *fTable = PrismFaceTable[f];
 
       // Special case point is on a face.
-
       if( isTRI( f ) ) {
 	// On a triangular face.
-	// Fast calculation of barycentric coordinates.
-	for( i=0,j=1,k=2; i<3; i++, j++, k++ ) {
-	  w[PrismFaceTable[f][i]] = prism_area2( pt,
-						 p[PrismFaceTable[f][j%3]],
-						 p[PrismFaceTable[f][k%3]] );
+
+	// Fast calculation of barycentric coordinates which does not
+	// have a division so if the point is on an edge there is no
+	// divide by zero error.
+	for( i=0,j=1,k=TRI_NNODES-1; i<TRI_NNODES; i++, j++, k++ ) {
+	  w[fTable[i]] =
+	    prism_area2( pt,
+			 p[fTable[j%TRI_NNODES]],
+			 p[fTable[k%TRI_NNODES]] );
 	  
-	  total += w[PrismFaceTable[f][i]];
+	  total += w[fTable[i]];
 	}
       } else if( isQUAD( f ) ) {
 	// On a quad face.
 	vector< double > area(4);
-	
-	for( i=0,j=1; i<4; i++,j++ ) {
+
+	// Precalculate the areas formed by the point and two neighboring
+	// nodes. If the area is zero the point is on an edge.
+	for( i=0,j=1; i<QUAD_NNODES; i++,j++ ) {
 	  area[i] = prism_area2(pt,
-				p[PrismFaceTable[f][i]],
-				p[PrismFaceTable[f][j%4]]);
+				p[fTable[i]],
+				p[fTable[j%QUAD_NNODES]]);
 	  
 	  // Special case point is on an edge.
 	  if( area[i] < 1.0e-8 )
 	    break;
 	}
 	
-	if( i == 4 ) {
+	if( i == QUAD_NNODES ) {
 	  // Determine area of the triangles.
-	  for( int i=0,j=1,k=3; i<4; i++,j++,k++ ) {
-	    w[PrismFaceTable[f][i]] = prism_area2(pt,
-						  p[PrismFaceTable[f][j%4]],
-						  p[PrismFaceTable[f][k%4]]) /
-	      (area[i] * area[k%4]);
+	  for( i=0,j=1,k=QUAD_NNODES-1; i<QUAD_NNODES; i++,j++,k++ ) {
+	    // Get the area of the triangle formed by the node and
+	    // its two neighbors and divide it by the two triangles
+	    // formed by the point, node and one of the nodes neighbors.
+	    w[fTable[i]] =
+	      prism_area2(p[fTable[i]],
+			  p[fTable[j%QUAD_NNODES]],
+			  p[fTable[k%QUAD_NNODES]]) /
+	      (area[i] * area[k%QUAD_NNODES]);
 
-	    total += w[PrismFaceTable[f][i]];
+	    total += w[fTable[i]];
 	  }
 	} else {
-	  // Special case point is on an edge.
-	  w[PrismFaceTable[f][i]] =
+	  // Special case point is on an edge so bilenar interpolation
+	  w[fTable[i]] =
 	    (pt                      -
-	     p[PrismFaceTable[f][j%4]]).safe_normalize() /
-	    (p[PrismFaceTable[f][i]] -
-	     p[PrismFaceTable[f][j%4]]).safe_normalize();
+	     p[fTable[j%QUAD_NNODES]]).safe_normalize() /
+	    (p[fTable[i]] -
+	     p[fTable[j%QUAD_NNODES]]).safe_normalize();
 
-	  w[PrismFaceTable[f][j%4]] =
-	    (pt                    -
-	     p[PrismFaceTable[f][i]]).safe_normalize() /
-	    (p[PrismFaceTable[f][j%4]] -
-	     p[PrismFaceTable[f][i]]).safe_normalize();
-	  
-	  total += w[PrismFaceTable[f][i]] + w[PrismFaceTable[f][j%4]];
+	  w[fTable[j%QUAD_NNODES]] = 1.0 - w[fTable[i]];
+
+	  // Since it is bilinear no further calculations are needed.
+	  return;
 	}	
       } 
     }
@@ -1301,13 +1333,11 @@ PrismVolMesh::orient(Cell::index_type idx) {
   get_faces(faces, idx);
 
   for (unsigned int i=0; i<PRISM_NFACES; i++) {
-    Node::array_type nodes;
-    get_nodes(nodes, faces[i]);
-
-    Point p0, p1, p2;
-    get_center(p0, nodes[0]);
-    get_center(p1, nodes[1]);
-    get_center(p2, nodes[2]);
+    Node::array_type ra;
+    get_nodes(ra, faces[i]);
+    const Point &p0 = point(ra[0]);
+    const Point &p1 = point(ra[1]);
+    const Point &p2 = point(ra[2]);
 
     const Vector v0(p0 - p1), v1(p2 - p1);
     const Vector normal = Cross(v0, v1);
@@ -1333,13 +1363,11 @@ PrismVolMesh::inside(Cell::index_type idx, const Point &p)
   get_faces(faces, idx);
 
   for (unsigned int i=0; i<PRISM_NFACES; i++) {
-    Node::array_type nodes;
-    get_nodes(nodes, faces[i]);
-
-    Point p0, p1, p2;
-    get_center(p0, nodes[0]);
-    get_center(p1, nodes[1]);
-    get_center(p2, nodes[2]);
+    Node::array_type ra;
+    get_nodes(ra, faces[i]);
+    const Point &p0 = point(ra[0]);
+    const Point &p1 = point(ra[1]);
+    const Point &p2 = point(ra[2]);
 
     const Vector v0(p0 - p1), v1(p2 - p1);
     const Vector normal = Cross(v0, v1);
@@ -1391,7 +1419,7 @@ PrismVolMesh::add_prism(Node::index_type a, Node::index_type b,
 			Node::index_type c, Node::index_type d,
 			Node::index_type e, Node::index_type f)
 {
-  const int prism = cells_.size() / PRISM_NNODES;
+  const unsigned int idx = cells_.size() / PRISM_NNODES;
   cells_.push_back(a);
   cells_.push_back(b);
   cells_.push_back(c);
@@ -1399,12 +1427,12 @@ PrismVolMesh::add_prism(Node::index_type a, Node::index_type b,
   cells_.push_back(e);
   cells_.push_back(f);
 
-  if (synchronized_ & NODE_NEIGHBORS_E) create_cell_node_neighbors(prism);
-  if (synchronized_ & EDGES_E) create_cell_edges(prism);
-  if (synchronized_ & FACES_E) create_cell_faces(prism);
+  if (synchronized_ & NODE_NEIGHBORS_E) create_cell_node_neighbors(idx);
+  if (synchronized_ & EDGES_E) create_cell_edges(idx);
+  if (synchronized_ & FACES_E) create_cell_faces(idx);
   synchronized_ &= ~LOCATE_E;
 
-  return prism; 
+  return idx; 
 }
 
 
@@ -1434,17 +1462,17 @@ PrismVolMesh::add_elem(Node::array_type a)
 {
   ASSERT(a.size() == PRISM_NNODES);
 
-  const int prism = cells_.size() / PRISM_NNODES;
+  const unsigned int idx = cells_.size() / PRISM_NNODES;
  
   for (unsigned int n = 0; n < a.size(); n++)
     cells_.push_back(a[n]);
 
-  if (synchronized_ & NODE_NEIGHBORS_E) create_cell_node_neighbors(prism);
-  if (synchronized_ & EDGES_E) create_cell_edges(prism);
-  if (synchronized_ & FACES_E) create_cell_faces(prism);
+  if (synchronized_ & NODE_NEIGHBORS_E) create_cell_node_neighbors(idx);
+  if (synchronized_ & EDGES_E) create_cell_edges(idx);
+  if (synchronized_ & FACES_E) create_cell_faces(idx);
   synchronized_ &= ~LOCATE_E;
 
-  return prism;
+  return idx;
 }
 
 
@@ -1452,29 +1480,32 @@ void
 PrismVolMesh::delete_cells(set<int> &to_delete)
 {
   vector<under_type> old_cells = cells_;
-  int i = 0, c;
+  unsigned int i = 0;
 
   cells_.clear();
-  cells_.reserve(old_cells.size() - to_delete.size()*4);
+  cells_.reserve(old_cells.size() - to_delete.size()*PRISM_NNODES);
 
-  for (set<int>::iterator deleted = to_delete.begin();
-       deleted != to_delete.end(); ++deleted) {
-    for (;i < *deleted; ++i)
-      for (c = i*PRISM_NNODES; c < i*PRISM_NNODES+PRISM_NNODES; ++c)
+  for (set<int>::iterator deleted=to_delete.begin();
+       deleted!=to_delete.end(); deleted++) {
+    for (;i < *deleted; i++) {
+      const unsigned int base = i * PRISM_NNODES;
+      for (unsigned int c=base; c<base+PRISM_NNODES; c++)
 	cells_.push_back(old_cells[c]);
-    ++i;
+    }
 
+    ++i;
   }
 
-  for (; i < (int)(old_cells.size()/4); ++i)
-    for (c = i*PRISM_NNODES; c < i*PRISM_NNODES+PRISM_NNODES; ++c)
+  for (; i < (unsigned int)(old_cells.size()/PRISM_NNODES); i++) {
+    const unsigned int base = i * PRISM_NNODES;
+    for (unsigned int c=base; c<base+PRISM_NNODES; c++)
       cells_.push_back(old_cells[c]);
-  
+  }  
 }
 
 
 PrismVolMesh::Elem::index_type
-PrismVolMesh::mod_prism(Cell::index_type cell, 
+PrismVolMesh::mod_prism(Cell::index_type idx, 
 			Node::index_type a,
 			Node::index_type b,
 			Node::index_type c,
@@ -1482,20 +1513,21 @@ PrismVolMesh::mod_prism(Cell::index_type cell,
 			Node::index_type e,
 			Node::index_type f)
 {
-  if (synchronized_ & NODE_NEIGHBORS_E) delete_cell_node_neighbors(cell);
-  if (synchronized_ & EDGES_E) delete_cell_edges(cell);
-  if (synchronized_ & FACES_E) delete_cell_faces(cell);
-  cells_[cell*PRISM_NNODES+0] = a;
-  cells_[cell*PRISM_NNODES+1] = b;
-  cells_[cell*PRISM_NNODES+2] = c;
-  cells_[cell*PRISM_NNODES+3] = d;  
-  cells_[cell*PRISM_NNODES+4] = e;  
-  cells_[cell*PRISM_NNODES+5] = f;  
-  if (synchronized_ & NODE_NEIGHBORS_E) create_cell_node_neighbors(cell);
-  if (synchronized_ & EDGES_E) create_cell_edges(cell);
-  if (synchronized_ & FACES_E) create_cell_faces(cell);
+  if (synchronized_ & NODE_NEIGHBORS_E) delete_cell_node_neighbors(idx);
+  if (synchronized_ & EDGES_E) delete_cell_edges(idx);
+  if (synchronized_ & FACES_E) delete_cell_faces(idx);
+  const unsigned int base = idx * PRISM_NNODES;
+  cells_[base+0] = a;
+  cells_[base+1] = b;
+  cells_[base+2] = c;
+  cells_[base+3] = d;  
+  cells_[base+4] = e;  
+  cells_[base+5] = f;  
+  if (synchronized_ & NODE_NEIGHBORS_E) create_cell_node_neighbors(idx);
+  if (synchronized_ & EDGES_E) create_cell_edges(idx);
+  if (synchronized_ & FACES_E) create_cell_faces(idx);
   synchronized_ &= ~LOCATE_E;
-  return cell;
+  return idx;
 }
 
 
@@ -1504,13 +1536,13 @@ PrismVolMesh::mod_prism(Cell::index_type cell,
 void
 PrismVolMesh::io(Piostream &stream)
 {
-  const int version = stream.begin_class(type_name(-1), PRISM_VOL_MESH_VERSION);
+  const int version = stream.begin_class(type_name(-1),
+					 PRISM_VOL_MESH_VERSION);
   Mesh::io(stream);
 
   SCIRun::Pio(stream, points_);
   SCIRun::Pio(stream, cells_);
-  if (version == 1)
-  {
+  if (version == 1) {
     vector<int> neighbors;
     SCIRun::Pio(stream, neighbors);
   }
@@ -1529,11 +1561,10 @@ get_type_description(PrismVolMesh *)
 {
   static TypeDescription *td = 0;
   if (!td)
-  {
     td = scinew TypeDescription("PrismVolMesh",
 				TypeDescription::cc_to_h(__FILE__),
 				"SCIRun");
-  }
+
   return td;
 }
 
@@ -1542,11 +1573,10 @@ get_type_description(PrismVolMesh::Node *)
 {
   static TypeDescription *td = 0;
   if (!td)
-  {
     td = scinew TypeDescription("PrismVolMesh::Node",
 				TypeDescription::cc_to_h(__FILE__),
 				"SCIRun");
-  }
+
   return td;
 }
 
@@ -1555,11 +1585,10 @@ get_type_description(PrismVolMesh::Edge *)
 {
   static TypeDescription *td = 0;
   if (!td)
-  {
     td = scinew TypeDescription("PrismVolMesh::Edge",
 				TypeDescription::cc_to_h(__FILE__),
 				"SCIRun");
-  }
+
   return td;
 }
 
@@ -1568,11 +1597,10 @@ get_type_description(PrismVolMesh::Face *)
 {
   static TypeDescription *td = 0;
   if (!td)
-  {
     td = scinew TypeDescription("PrismVolMesh::Face",
 				TypeDescription::cc_to_h(__FILE__),
 				"SCIRun");
-  }
+
   return td;
 }
 
@@ -1581,11 +1609,10 @@ get_type_description(PrismVolMesh::Cell *)
 {
   static TypeDescription *td = 0;
   if (!td)
-  {
     td = scinew TypeDescription("PrismVolMesh::Cell",
 				TypeDescription::cc_to_h(__FILE__),
 				"SCIRun");
-  }
+
   return td;
 }
 
