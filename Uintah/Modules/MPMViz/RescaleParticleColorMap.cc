@@ -38,18 +38,18 @@ RescaleParticleColorMap::RescaleParticleColorMap(const clString& id)
   scaleMode("scaleMode", id, this)
 {
     // Create the output port
-    omap=scinew ColorMapOPort(this, "ColorMap", ColorMapIPort::Atomic);
+    omap=new ColorMapOPort(this, "ColorMap", ColorMapIPort::Atomic);
 
     add_oport(omap);
 
     // Create the input ports
 
-    iPort=scinew ParticleSetIPort(this, "ParticleSet",
+    iPort=new ParticleSetIPort(this, "ParticleSet",
 						     ParticleSetIPort::Atomic);
     add_iport(iPort);
 
 
-    imap=scinew ColorMapIPort(this, "ColorMap", ColorMapIPort::Atomic);
+    imap=new ColorMapIPort(this, "ColorMap", ColorMapIPort::Atomic);
     add_iport(imap);
 
     //    scaleMode.set("auto");
@@ -118,6 +118,9 @@ Module* make_RescaleParticleColorMap( const clString& id ) {
 
 //
 // $Log$
+// Revision 1.6  1999/09/21 16:12:25  kuzimmer
+// changes made to support binary/ASCII file IO
+//
 // Revision 1.5  1999/08/25 03:49:04  sparker
 // Changed SCICore/CoreDatatypes to SCICore/Datatypes
 // Changed PSECore/CommonDatatypes to PSECore/Datatypes

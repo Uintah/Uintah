@@ -49,7 +49,7 @@ ParticleSetReader::ParticleSetReader(const clString& id)
 : Module("ParticleSetReader", id, Source), filename("filename", id, this)
 {
     // Create the output data handle and port
-    outport=scinew ParticleSetOPort(this, "Output Data", ParticleSetIPort::Atomic);
+    outport=new ParticleSetOPort(this, "Output Data", ParticleSetIPort::Atomic);
     add_oport(outport);
 }
 
@@ -105,6 +105,9 @@ void ParticleSetReader::execute()
 
 //
 // $Log$
+// Revision 1.6  1999/09/21 16:12:27  kuzimmer
+// changes made to support binary/ASCII file IO
+//
 // Revision 1.5  1999/08/25 03:49:05  sparker
 // Changed SCICore/CoreDatatypes to SCICore/Datatypes
 // Changed PSECore/CommonDatatypes to PSECore/Datatypes

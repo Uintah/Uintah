@@ -2,8 +2,9 @@ SRCTOP   = @top_srcdir@
 SRCDIR   = @srcdir@
 OBJTOP   = ../../..
 
-SRCS     = MPReader.cc TriangleReader.cc ParticleSetReader.cc
+SRCS     = MPWriter.cc
 
 INCLUDES = -I$(SRCTOP) -I$(OBJTOP)
 
 include $(SRCTOP)/scripts/objs.mk
+

@@ -12,15 +12,13 @@
  *  Copyright (C) 1999 SCI Group
  */
 
-#include <Util/NotFinished.h>
-#include <Dataflow/Module.h>
-#include <Datatypes/GeometryPort.h>
-#include <Geom/GeomTriangles.h>
-#include <Malloc/Allocator.h>
-#include <TclInterface/TCLTask.h>
-#include <TclInterface/TCLvar.h>
-#include <Modules/Readers/TriangleReader.h>
-#include <Malloc/Allocator.h>
+#include <SCICore/Util/NotFinished.h>
+#include <SCICore/Geom/GeomTriangles.h>
+#include <SCICore/Malloc/Allocator.h>
+#include <SCICore/TclInterface/TCLTask.h>
+#include <SCICore/TclInterface/TCLvar.h>
+#include <SCICore/Malloc/Allocator.h>
+#include "TriangleReader.h"
 
 
 
@@ -51,19 +49,9 @@ TriangleReader::TriangleReader(const clString& id)
     add_oport(outport);
 }
 
-TriangleReader::TriangleReader(const TriangleReader& copy, int deep)
-: Module(copy, deep), filename("filename", id, this)
-{
-    NOT_FINISHED("TriangleReader::TriangleReader");
-}
 
 TriangleReader::~TriangleReader()
 {
-}
-
-Module* TriangleReader::clone(int deep)
-{
-    return scinew TriangleReader(*this, deep);
 }
 
 bool
@@ -85,7 +73,6 @@ TriangleReader::Read(istream& is, ColorMapHandle cmh, GeomGroup *tris)
     return false;
   } else {
     is >> nPoints;
-    cerr<<"We have "<<nPoints<<" points\n";
     Point *p;
     double s;
     int i;
@@ -95,7 +82,6 @@ TriangleReader::Read(istream& is, ColorMapHandle cmh, GeomGroup *tris)
       is>>s; p->y(s);
       is>>s; p->z(s);
       is>>s;
-      cerr<<p<<" "<<*p<<" "<<s<<", ";
       points.add( *p );
       scalars.add( s);
     }
@@ -116,32 +102,20 @@ TriangleReader::Read(istream& is, ColorMapHandle cmh, GeomGroup *tris)
     }   
 
     is >> nTriangles;
-    cerr<<"We have " << nTriangles << " Triangles.\n";
     int p0,p1,p2;
     GeomTriangles *tri = new GeomTriangles();
     for( i = 0; i < nTriangles; i++){
       is >> p0 >> p1 >> p2;
       
-      cerr<<"Here "<< i+1<<" times.\n";
 /*       GeomTri *tri = new GeomTri(points[p0], points[p1],points[p2], */
 /* 				 (cmh->lookup(scalars[p0])), */
 /* 				 (cmh->lookup(scalars[p1])), */
 /* 				 (cmh->lookup(scalars[p2]))); */
-      cerr<<p0<<" "<<p1<<" "<<p2<<endl;
-      cerr<<points[p0]<<" "<<points[p1]<<" "<<points[p2]<<endl;
-      cerr<<&(cmh->lookup(scalars[p0]))<<" "<<&(cmh->lookup(scalars[p1]))<<" "<<&(cmh->lookup(scalars[p2]))<<endl;
-      cerr<<&(cmh->lookup(scalars[p0])->lock)<<" "<<&(cmh->lookup(scalars[p1])->lock)<<" "<<&(cmh->lookup(scalars[p2])->lock)<<endl;
-      cerr<<(cmh->lookup(scalars[p0])->ref_cnt)<<" "<<(cmh->lookup(scalars[p1])->ref_cnt)<<" "<<(cmh->lookup(scalars[p2])->ref_cnt)<<endl;
       //      AuditAllocator(DefaultAllocator());
-      cerr<<"\n Before tri-add\n";
-      cerr<<*(void **)&(cmh->lookup(scalars[p0])->lock)<<" "<<*(void **)&(cmh->lookup(scalars[p1])->lock)<<" "<<*(void **)&(cmh->lookup(scalars[p2])->lock)<<endl;
       tri->add(points[p0],cmh->lookup(scalars[p0]),
 	       points[p1],cmh->lookup(scalars[p1]),
 	       points[p2],cmh->lookup(scalars[p2]));
       
-      cerr<<"But here only "<<i+1<<" times\n";
-      cerr<<"After tri-add\n";
-      cerr<<*(void **)&(cmh->lookup(scalars[p0])->lock)<<" "<<*(void **)&(cmh->lookup(scalars[p1])->lock)<<" "<<*(void **)&(cmh->lookup(scalars[p2])->lock)<<endl<<endl;
     }
     tris->add(tri);
     return true;
@@ -188,11 +162,10 @@ void TriangleReader::execute()
   ifstream is(filename.get()(), ios::in);
   wasRead = Read( is, cmh, tris );
 
-  if( wasRead )
-    cerr<<"So what's going on?\n";
-  outport->delAll();
-  outport->addObj(tris, "Triangles");
-
+  if( wasRead ){
+    outport->delAll();
+    outport->addObj(tris, "Triangles");
+  }
 }
 
 } // End namespace Modules
@@ -200,6 +173,9 @@ void TriangleReader::execute()
 
 //
 // $Log$
+// Revision 1.4  1999/09/21 16:12:27  kuzimmer
+// changes made to support binary/ASCII file IO
+//
 // Revision 1.3  1999/08/25 03:49:05  sparker
 // Changed SCICore/CoreDatatypes to SCICore/Datatypes
 // Changed PSECore/CommonDatatypes to PSECore/Datatypes

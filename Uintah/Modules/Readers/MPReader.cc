@@ -1,26 +1,28 @@
 //static char *id="@(#) $Id$";
 
+#include "MPReader.h"
+#include <Uintah/Datatypes/Particles/MPParticleGridReader.h>
+
 #include <iostream.h> 
 #include <iomanip.h>
 #include <strstream.h>
-#include <stdio.h>
-#include <string.h>
+
 #include <ctype.h>
 #include <unistd.h>
-
-#include <SCICore/Malloc/Allocator.h>
-
-#include "TecplotFileSelector.h"
-#include "TecplotReader.h"
 
 namespace Uintah {
 namespace Modules {
 
 using namespace SCICore::Containers;
 
+PSECore::Dataflow::Module* make_MPReader( const clString& id ) { 
+  return new MPReader( id );
+}
+
+
 //--------------------------------------------------------------- 
-TecplotFileSelector::TecplotFileSelector(const clString& id) 
-  : Module("TecplotFileSelector", id, Filter),
+MPReader::MPReader(const clString& id) 
+  : Module("MPReader", id, Filter),
     filebase("filebase", id, this), animate("animate", id, this),
     startFrame("startFrame", id, this), endFrame("endFrame", id, this),
     increment("increment", id, this),
@@ -43,12 +45,13 @@ TecplotFileSelector::TecplotFileSelector(const clString& id)
 
 } 
 
+
 //------------------------------------------------------------ 
-TecplotFileSelector::~TecplotFileSelector(){} 
+MPReader::~MPReader(){} 
 
-//------------------------------------------------------------- 
+//-------------------------------------------------------------- 
 
-bool TecplotFileSelector::checkFile(const clString& fname)
+bool MPReader::checkFile(const clString& fname)
 {
   ifstream in( fname() );
 
@@ -63,7 +66,7 @@ bool TecplotFileSelector::checkFile(const clString& fname)
   
   in >> head;
 
-  if( head != "TITLE") {
+  if( head != "MPD") {
     //TCL::execute( id + " errorDialog 'File has wrong format.'");
     cerr << "File has wrong format."<<endl;
     in.close();
@@ -75,27 +78,25 @@ bool TecplotFileSelector::checkFile(const clString& fname)
 
 }
 
-void TecplotFileSelector::execute() 
+void MPReader::execute() 
 { 
 
   tcl_status.set("Executing"); 
    // might have multiple filenames later for animations
    clString command( id + " activate");
    TCL::execute(command);
-   emit_vars(cout);
-   cout << "Done!"<<endl; 
    //   command = id + " deselect";
    //TCL::execute(command);
    //cout <<endl;
 
-   cerr<<filebase.get()<<endl;
+   cerr<<"Filename = "<<filebase.get()<<endl;
    if( filebase.get() == "" )
      return;
    
    if( !animate.get() && checkFile( filebase.get() ) ) {
      tcl_status.set("Reading file");    
-     reader = new TecplotReader( filebase.get(), startFrame.get(),
-				   endFrame.get(), increment.get());
+     reader = new MPParticleGridReader( filebase.get(), startFrame.get(),
+					   endFrame.get(), increment.get());
      out->send( ParticleGridReaderHandle( reader ) );
    } else if ( animate.get() && checkFile( filebase.get() ) ) {
      tcl_status.set("Animating");    
@@ -105,7 +106,7 @@ void TecplotFileSelector::execute()
 
 }
 
-void TecplotFileSelector::doAnimation()
+void MPReader::doAnimation()
 {
   clString file = basename( filebase.get() );
   clString path = pathname( filebase.get() );
@@ -117,8 +118,8 @@ void TecplotFileSelector::doAnimation()
   int k = 0;
   for( i= 0; i < file.len(); i++ )
     {
-	if(isdigit(*p)) n[j++] = *p;
-	else root[k++] = *p;
+      if(isdigit(*p)) n[j++] = *p;
+      else root[k++] = *p;
       p++;
     }
   root[k] = '\0';
@@ -129,47 +130,33 @@ void TecplotFileSelector::doAnimation()
     ostr.fill('0');
     ostr << path << "/"<< root<< setw(4)<<i;
     cerr << ostr.str()<< endl;
-    reader = new TecplotReader( ostr.str(), startFrame.get(),
-				   endFrame.get(), increment.get() );
+    reader = new MPParticleGridReader( ostr.str(), startFrame.get(),
+					  endFrame.get(), increment.get() );
     filebase.set( ostr.str() );
-    if( i != endFrame.get())
+    file = basename( filebase.get() );
+    reset_vars();
+    if( i != endFrame.get() && animate.get()){
       out->send_intermediate( ParticleGridReaderHandle( reader));
-    else
+      tcl_status.set( file );
+    }
+    else {
       out->send(ParticleGridReaderHandle( reader));
+      break;
+    }
   }
   TCL::execute( id + " deselect");
 }
   
 //--------------------------------------------------------------- 
   
-PSECore::Dataflow::Module* make_TecplotFileSelector( const clString& id ) { 
-  return new TecplotFileSelector( id );
-}
 
 } // End namespace Modules
 } // End namespace Uintah
 
 //
 // $Log$
-// Revision 1.5  1999/09/21 16:12:25  kuzimmer
+// Revision 1.1  1999/09/21 16:12:26  kuzimmer
 // changes made to support binary/ASCII file IO
-//
-// Revision 1.4  1999/08/18 21:45:26  sparker
-// Array1 const correctness, and subsequent fixes
-// Array1 bug fix courtesy Tom Thompson
-//
-// Revision 1.3  1999/08/18 20:20:23  sparker
-// Eliminated copy constructor and clone in all modules
-// Added a private copy ctor and a private clone method to Module so
-//  that future modules will not compile until they remvoe the copy ctor
-//  and clone method
-// Added an ASSERTFAIL macro to eliminate the "controlling expression is
-//  constant" warnings.
-// Eliminated other miscellaneous warnings
-//
-// Revision 1.2  1999/08/17 06:40:12  sparker
-// Merged in modifications from PSECore to make this the new "blessed"
-// version of SCI-Run/Uintah.
 //
 // Revision 1.1  1999/07/27 17:08:58  mcq
 // Initial commit

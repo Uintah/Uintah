@@ -92,11 +92,11 @@ PartToGeom::PartToGeom(const clString& id)
     MIN_NU(4), MAX_NU(20), MIN_NV(2), MAX_NV(20)
 {
   // Create the input port
-  iPort=scinew ParticleSetIPort(this, "Particles", ParticleSetIPort::Atomic);
+  iPort=new ParticleSetIPort(this, "Particles", ParticleSetIPort::Atomic);
   add_iport(iPort);
-  iCmap=scinew ColorMapIPort(this, "ColorMap", ColorMapIPort::Atomic);
+  iCmap=new ColorMapIPort(this, "ColorMap", ColorMapIPort::Atomic);
   add_iport(iCmap);
-  ogeom=scinew GeometryOPort(this, "Geometry", GeometryIPort::Atomic);
+  ogeom=new GeometryOPort(this, "Geometry", GeometryIPort::Atomic);
   add_oport(ogeom);
   last_idx=-1;
   last_generation=-1;
@@ -109,8 +109,8 @@ PartToGeom::PartToGeom(const clString& id)
   width_scale.set(0.1);
   head_length.set(0.3);
   shaft_rad.set(0.1);
-  outcolor=scinew Material(Color(0.5,0.5,0.5), Color(0.5,0.5,0.5),
-			   Color(0.5,0.5,0.5), 0);
+  outcolor=new Material(Color(0.3,0.3,0.3), Color(0.3,0.3,0.3),
+			   Color(0.3,0.3,0.3), 0);
     
 }
 
@@ -218,21 +218,21 @@ void PartToGeom::execute()
     float t = (polygons.get() - MIN_POLYS)/float(MAX_POLYS - MIN_POLYS);
     int nu = int(MIN_NU + t*(MAX_NU - MIN_NU)); 
     int nv = int(MIN_NV + t*(MAX_NV - MIN_NV));
-    GeomGroup *obj = scinew GeomGroup;
+    GeomGroup *obj = new GeomGroup;
     for (int i=0; i<pos.size();i++) {
-      GeomSphere *sp = scinew GeomSphere(pos[i].asPoint(),radius.get(),
+      GeomSphere *sp = new GeomSphere(pos[i].asPoint(),radius.get(),
 					 nu, nv);
       // Default ColorMap ie. unscaled n autoscale values.
       //      if( cmap->isScaled() ) {
 	
 //  	int index = cmap->rcolors.size() * ( (scalars[i] - min) /
 // 					     (max - min + 1) ) ;
-// 	obj->add( scinew GeomMaterial(sp,scinew Material( Color(1,1,1),
+// 	obj->add( new GeomMaterial(sp,new Material( Color(1,1,1),
 // 							  cmap->rcolors[index],
 // 							  cmap->rcolors[index],
 // 							  20 )));
 //       } else { // ColorMap has been scaled just use it.
-	obj->add( scinew GeomMaterial( sp,(cmap->lookup(scalars[i])).get_rep()));
+	obj->add( new GeomMaterial( sp,(cmap->lookup(scalars[i])).get_rep()));
 //       }
     }
       
@@ -250,12 +250,12 @@ void PartToGeom::execute()
       obj->add( arrows );
     }
     // Let's set it up so that we can pick the particle set -- Kurt Z. 12/18/98
-    GeomPick *pick = scinew GeomPick( obj, this);
+    GeomPick *pick = new GeomPick( obj, this);
     ogeom->delAll();
     ogeom->addObj(pick, "Particles");      
   } else { // Particles
-    GeomGroup *obj = scinew GeomGroup;
-    GeomPts *pts = scinew GeomPts(pos.size());
+    GeomGroup *obj = new GeomGroup;
+    GeomPts *pts = new GeomPts(pos.size());
     pts->pickable = 1;
     for(int i=0;i<pos.size();i++) {
       pts->add(pos[i].asPoint(), (cmap->lookup(scalars[i]))->diffuse);
@@ -277,12 +277,12 @@ void PartToGeom::execute()
       }
       obj->add( arrows );
     }
-    GeomPick *pick = scinew GeomPick( obj, this);
+    GeomPick *pick = new GeomPick( obj, this);
     ogeom->delAll();
     ogeom->addObj(pick, "Particles");      
   }
-//     GeomMaterial* matl=scinew GeomMaterial(obj,
-//    					  scinew Material(Color(0,0,0),
+//     GeomMaterial* matl=new GeomMaterial(obj,
+//    					  new Material(Color(0,0,0),
 //    							  Color(0,.6,0), 
 //    							  Color(.5,.5,.5),20));
     
@@ -313,6 +313,9 @@ Module* make_PartToGeom( const clString& id ) {
 
 //
 // $Log$
+// Revision 1.6  1999/09/21 16:12:24  kuzimmer
+// changes made to support binary/ASCII file IO
+//
 // Revision 1.5  1999/08/25 03:49:03  sparker
 // Changed SCICore/CoreDatatypes to SCICore/Datatypes
 // Changed PSECore/CommonDatatypes to PSECore/Datatypes

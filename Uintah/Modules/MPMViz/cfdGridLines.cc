@@ -74,9 +74,9 @@ cfdGridLines::cfdGridLines(const clString& id)
   // Create the output port
   ogeom=new GeometryOPort(this, "Geometry", GeometryIPort::Atomic);
   add_oport(ogeom);
-  matl = scinew Material(Color(0,0,0), Color(0.2, 0.2, 0.2),
+  matl = new Material(Color(0,0,0), Color(0.2, 0.2, 0.2),
 			 Color(.5,.5,.5), 20);
-  white = scinew Material(Color(0,0,0), Color(1,1,1), Color(1,1,1), 20);
+  white = new Material(Color(0,0,0), Color(1,1,1), Color(1,1,1), 20);
 
   //  rad.set( (max.x() - min.x()) / (10*numx) );
   rad.set(0);
@@ -284,6 +284,9 @@ PSECore::Dataflow::Module*
 
 //
 // $Log$
+// Revision 1.8  1999/09/21 16:12:26  kuzimmer
+// changes made to support binary/ASCII file IO
+//
 // Revision 1.7  1999/09/08 02:27:09  sparker
 // Various #include cleanups
 //
