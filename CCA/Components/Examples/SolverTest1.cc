@@ -2,6 +2,7 @@
 #include <Packages/Uintah/CCA/Components/Examples/SolverTest1.h>
 #include <Packages/Uintah/CCA/Components/Examples/ExamplesLabel.h>
 #include <Packages/Uintah/CCA/Ports/LoadBalancer.h>
+#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Packages/Uintah/Core/Grid/NCVariable.h>
 #include <Packages/Uintah/Core/Grid/CCVariable.h>
@@ -52,6 +53,23 @@ void SolverTest1::problemSetup(const ProblemSpecP& prob_spec, GridP&,
   sharedState_ = sharedState;
   ProblemSpecP ST = prob_spec->findBlock("SolverTest");
   ST->require("delt", delt_);
+
+  // whether or not to do laplacian in x,y,or z direction
+  if (ST->findBlock("X_Laplacian"))
+    x_laplacian = true;
+  else
+    x_laplacian = false;
+  if (ST->findBlock("Y_Laplacian"))
+    y_laplacian = true;
+  else
+    y_laplacian = false;
+  if (ST->findBlock("Z_Laplacian"))
+    z_laplacian = true;
+  else
+    z_laplacian = false;
+
+  if (!x_laplacian && !y_laplacian && !z_laplacian)
+    throw ProblemSetupException("SolverTest: Must specify one of X_Laplacian, Y_Laplacian, or Z_Laplacian");
   mymat_ = new SimpleMaterial();
   sharedState->registerSimpleMaterial(mymat_);
 }
@@ -101,12 +119,41 @@ void SolverTest1::initialize(const ProcessorGroup*,
 {
 }
 
+double rand_double()
+{
+  return ((double)rand())/RAND_MAX*10.0;
+}
+
 void SolverTest1::timeAdvance(const ProcessorGroup* pg,
 			   const PatchSubset* patches,
 			   const MaterialSubset* matls,
 			   DataWarehouse* old_dw, DataWarehouse* new_dw,
 			   LevelP level, Scheduler* sched)
 {
+  static int time = 0;
+  time += (int) delt_*100;
+  srand(time);
+
+  int center = 0;
+  int n=0, s=0, e=0, w=0, t=0, b=0;
+
+  if (x_laplacian) {
+    center+=2;
+    e = -1;
+    w = -1;
+  }
+  if (y_laplacian) {
+    center+=2;
+    n = -1;
+    s = -1;
+  }
+  if (z_laplacian) {
+    center+=2;
+    t = -1;
+    b = -1;
+  }
+
+
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     for(int m = 0;m<matls->size();m++){
@@ -117,15 +164,21 @@ void SolverTest1::timeAdvance(const ProcessorGroup* pg,
       new_dw->allocateAndPut(A, lb_->pressure_matrix, matl, patch);
       new_dw->allocateAndPut(rhs, lb_->pressure_rhs, matl, patch);
 
+      bool first = true;
       for(CellIterator iter(patch->getExtraCellIterator()); !iter.done(); iter++){
         IntVector c = *iter;
         Stencil7&  A_tmp=A[c];
-        A_tmp.p = 10.0; 
-        A_tmp.n = 0.0;   A_tmp.s = 0.0;
-        A_tmp.e = 0.0;   A_tmp.w = 0.0; 
-        A_tmp.t = 0.0;   A_tmp.b = 0.0;
+        A_tmp.p = center; 
+        A_tmp.n = n;   A_tmp.s = s;
+        A_tmp.e = e;   A_tmp.w = w; 
+        A_tmp.t = t;   A_tmp.b = b;
         
-        rhs[c] = 1;
+        if (first) {
+          first = false;
+          rhs[c] = 1.0;
+        }
+        else
+          rhs[c] = 0;
       }
 
     }
