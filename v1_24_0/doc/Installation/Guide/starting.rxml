@@ -35,14 +35,13 @@ DEALINGS IN THE SOFTWARE.
   <title>Starting SCIRun</title>
 
   <para os="linux">
-    If installed from <phrase os="linux">RPM</phrase><phrase
-    os="osx">DMG</phrase>, SCIRun's installation can be tested by
-    changing the working directory (<command>cd</command>ing) to
-    <filename>/usr/local/SCIRun/bin/</filename> and typing:
+    If installed from its <phrase os="linux">RPM</phrase><phrase
+    os="osx">disk image</phrase>, SCIRun's installation can be tested
+    by changing the working directory (<command>cd</command>ing) to
+    <filename os="linux">/usr/local/SCIRun/bin/</filename> <filename
+    os="osx">~/SCIRun/bin/</filename> and typing:
     <command>./scirun</command>.
   </para>
-
-  <para os="osx">If installed from a disk image, blah, blah, blah</para>
 
   <para>
     If built from source code, SCIRun's installation can be

@@ -34,16 +34,16 @@ DEALINGS IN THE SOFTWARE.
 <section id="sec.intro">
   <title>Introduction</title>
 
-  <para>This guide provides instructions for installing &sr;, its
-  sample data sets, and &sr; documentation on the &pf; platform.  &sr;
-  may be installed from either <phrase os="linux">an RPM or</phrase> <phrase
+  <para>This guide provides instructions for installing SCIRun, its
+  sample data sets, and SCIRun documentation on the &pf; platform.  SCIRun
+  may be installed from <phrase os="linux">an RPM or</phrase> <phrase
   os="osx">a disk image (DMG) or</phrase> source code.</para>
 
   <para>&pf; platform guidelines are listed in <xref
   linkend="tbl.pltfm_req"/>.</para>
   
   <para os="linux">Linux has been tested on the specified systems and RPMs are
-  provided for these systems.  &sr; should work on other Linux systems
+  provided for these systems.  SCIRun should work on other Linux systems
   as well.</para>
 
   <para>
@@ -127,12 +127,12 @@ DEALINGS IN THE SOFTWARE.
 		tools, and X11 software development kit.</para>
 	      </listitem>
 	      <listitem>
-		<para>&sr;'s MatlabInterface package requires Matlab
+		<para>SCIRun's MatlabInterface package requires Matlab
 		version Matlab 6.5.1 (MathWorks Relase 13, Service
 		Pack 1).</para>
 	      </listitem>
 	      <listitem>
-		<para>&sr;'s TEEM package supports PNG images if PNG libraries
+		<para>SCIRun's TEEM package supports PNG images if PNG libraries
 		are installed.  PNG libraries can be installed via the <ulink
 		url="http://fink.sourceforge.net/">fink</ulink>
 		software distribution system.</para>
@@ -157,7 +157,7 @@ DEALINGS IN THE SOFTWARE.
 	  <entry><para>650 MB</para></entry>
 	</row>
 	<row>
-	  <entry><para>&sr; sample data (optional)</para></entry>
+	  <entry><para>SCIRun sample data (optional)</para></entry>
 	  <entry><para>1 GB</para></entry>
 	</row>
       </tbody>
@@ -165,12 +165,12 @@ DEALINGS IN THE SOFTWARE.
   </table>
 
   <para os="osx">Apple's X11 server software, Xcode developer tools, and X11
-  SDK are distributed with &osx; but are not part of the &osx; default
+  SDK are distributed with Mac OS X but are not part of the Mac OS X default
   installation.  They are installed by double-clicking, in turn, the
   files <filename>X11User.pkg</filename>,
   <filename>Developer.mpkg</filename>, and
   <filename>X11SDK.pkg</filename>.  These files may be present on the
-  hard drive, the &osx; installation CDs, or DVD.
+  hard drive, the Mac OS X installation CDs, or DVD.
   <filename>Developer.mpkg</filename> and
   <filename>X11SDK.pkg</filename> are part of the Xcode
   distribution.</para>
@@ -195,8 +195,8 @@ DEALINGS IN THE SOFTWARE.
       </listitem>
       <listitem>
 	<para>SCI has experienced a number of strange behaviors when
-	running &sr; on Red Hat Enterprise Linux.  We do not recommend
-	running &sr; on this system at this time.</para>
+	running SCIRun on Red Hat Enterprise Linux.  We do not recommend
+	running SCIRun on this system at this time.</para>
       </listitem>
       <listitem>
 	<para>While NVIDIA graphic cards and drivers seem to work best under linux,
@@ -219,16 +219,16 @@ DEALINGS IN THE SOFTWARE.
     </itemizedlist>
   </para>
 
-  <para os="linux">Proceed to <xref linkend="sec.rpminst" /> to install &sr;
+  <para os="linux">Proceed to <xref linkend="sec.rpminst" /> to install SCIRun
   from an <acronym>RPM</acronym>.</para>
 
-  <para os="osx">Proceed to <xref linkend="sec.dmg_inst"/> to install &sr; from
+  <para os="osx">Proceed to <xref linkend="sec.dmg_inst"/> to install SCIRun from
   a disk image.</para>
 
   <para os="irix">Proceed to <xref linkend="sec.source_inst"/> to install
-  &sr;.</para>
+  SCIRun.</para>
 
   <para os="linux;osx">Proceed to <xref linkend="sec.source_inst"/> to
-  install &sr; from source code.</para>
+  install SCIRun from source code.</para>
 
 </section>
