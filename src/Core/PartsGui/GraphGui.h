@@ -51,14 +51,19 @@ public:
   GraphGui( const string &name, const string &script = "GraphGui"); 
   virtual ~GraphGui();
 
+#ifdef CHRIS
   void reset( const vector<DrawObj*>& );
   void add_values( unsigned, const vector<double> & );
+#else
+  void reset( int );
+  void add_values( const vector<double> & );
+#endif
   void attach( PartInterface * );
 
   virtual void set_window( const string & );
 
 private:
-  vector<DrawObj *> poly_;
+  vector<LockedPolyline *> poly_;
   Diagram *diagram_;
   Graph *graph_;
   CrowdMonitor *monitor_;
