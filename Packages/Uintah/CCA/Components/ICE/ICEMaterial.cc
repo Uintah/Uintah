@@ -18,7 +18,7 @@
 #include <Packages/Uintah/CCA/Components/HETransformation/Burn.h>
 #include <Core/Util/NotFinished.h>
 
-#define d_TINY_RHO 1.0e-100 // also defined ICE.cc and MPMMaterial.cc 
+#define d_TINY_RHO 1.0e-12 // also defined ICE.cc and MPMMaterial.cc 
 
 using namespace std;
 using namespace Uintah;
