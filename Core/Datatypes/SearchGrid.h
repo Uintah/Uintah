@@ -78,6 +78,8 @@ public:
 protected:
   bool locate(unsigned int &i, unsigned int &j, unsigned int &k,
 	      const Point &) const;
+  void unsafe_locate(unsigned int &i, unsigned int &j, unsigned int &k,
+		     const Point &) const;
 
   unsigned int linearize(unsigned int i, unsigned int j, unsigned int k) const
   {
@@ -114,8 +116,7 @@ public:
   SearchGrid(const SearchGridConstructor &c);
   virtual ~SearchGrid();
 
-  bool lookup(const under_type *begin, const under_type *end,
-	      const Point &p) const;
+  bool lookup(under_type **begin, under_type **end, const Point &p) const;
 
   virtual void io(Piostream&);
   static PersistentTypeID type_id;

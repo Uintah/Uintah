@@ -59,7 +59,7 @@
 #include <sgi_stl_warnings_off.h>
 #include <set>
 #include <sgi_stl_warnings_on.h>
-
+#include <Core/Datatypes/SearchGrid.h>
 
 namespace SCIRun {
 
@@ -603,8 +603,8 @@ protected:
   //!  point, we simply find which grid cell contains that point, and
   //!  then search just those tets that overlap that grid cell.
   //!  The grid is only built if synchronize(Mesh::LOCATE_E) is called.
-  typedef LockingHandle<LatVolField<vector<Cell::index_type> > > grid_handle;
-  grid_handle           grid_;
+  //typedef LockingHandle<LatVolField<vector<Cell::index_type> > > grid_handle;
+  LockingHandle<SearchGrid>  grid_;
   Mutex                 grid_lock_; // Bad traffic!
 
   unsigned int		synchronized_;
