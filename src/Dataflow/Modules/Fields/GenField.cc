@@ -24,7 +24,7 @@
 #include <SCICore/Datatypes/Field.h>
 #include <SCICore/Datatypes/GenSField.h>
 #include <SCICore/Datatypes/GenVField.h>
-#include <SCICore/Datatypes/Lattice3Geom.h>
+#include <SCICore/Datatypes/LatticeGeom.h>
 #include <SCICore/Datatypes/MeshGeom.h>
 #include <SCICore/Datatypes/MeshGeom.h>
 #include <SCICore/Datatypes/FlatAttrib.h>
@@ -57,7 +57,7 @@ private:
   DebugStream dbg;
 
   template <class T> void fill(DiscreteAttrib<T> *attrib,
-			       Lattice3Geom *geom,
+			       LatticeGeom *geom,
 			       AnalytAttrib<T> *analyt);
 
   template <class I, class A> void indicize(I *iatt, A *datt,
@@ -124,7 +124,7 @@ GenField::~GenField()
 
 template <class T>
 void
-GenField::fill(DiscreteAttrib<T> *attrib, Lattice3Geom *geom,
+GenField::fill(DiscreteAttrib<T> *attrib, LatticeGeom *geom,
 	       AnalytAttrib<T> *analyt)
 {
   const int x = geom->getSizeX();
@@ -177,6 +177,72 @@ GenField::indicize(I *iatt, A *datt,
 }
 
 
+#if 0
+static void
+collect_points(LatticeGeom *geom)
+{
+  const int x = geom->getSizeX();
+  const int y = geom->getSizeY();
+  const int z = geom->getSizeZ();
+
+  vector<NodeSimp> nodes;
+
+  for (int k=0; k < z; k++)
+    {
+      for (int j=0; j < y; j++)
+	{
+	  for (int i=0; i < x; i++)
+	    {
+	      Point p(i, j, k);
+	      NodeSimp r;
+	      geom->transform(p, r.p);	
+	      nodes.push_back(r);
+	    }
+	}
+    }
+}  
+
+
+static void
+collect_edges(LatticeGeom *geom)
+{
+  vector<EdgeSimp> edges;
+
+  for (int k=0; k < z; k++)
+    {
+      for (int j=0; j < y; j++)
+	{
+	  for (int i=0; i < x; i++)
+	    {
+	      // TODO: Unmap these from 3d->1d
+	      // TODO: compute average values also.
+	      if (i+1 < x) { i, j, k  i+1, j, k; }
+	      if (j+1 < y) { i, j, k, i, j+1, k; }
+	      if (k+1 < z) { i, j, k, i, j, k+1; }
+	    }
+	}
+    }
+}    
+
+
+
+static void
+collect_faces(LatticeGeom *geom)
+{
+  for (int k=0; k < z; k++)
+    {
+      for (int j=0; j < y; j++)
+	{
+	  for (int i=0; i < x; i++)
+	    {
+	      x 0 y+1, x+1, y+
+ 		
+	    }
+	}
+    }
+}
+#endif
+
 
 void
 GenField::send_scalar_field()
@@ -206,7 +272,7 @@ GenField::send_scalar_field()
   const Point start(tcl_sx.get(), tcl_sy.get(), tcl_sz.get());
   const Point end(tcl_ex.get(), tcl_ey.get(), tcl_ez.get());
   
-  Lattice3Geom *geom = new Lattice3Geom(x, y, z, start, end);
+  LatticeGeom *geom = new LatticeGeom(x, y, z, start, end);
 
   // Create attrib.
   const int mattribtype = attribtype.get();
@@ -235,8 +301,8 @@ GenField::send_scalar_field()
   dbg << "Attrib in Genfield:\n" << attrib->getInfo() << endl;
 
   // Create index mapping.
-  GenSField<double, Lattice3Geom> *isf =
-    new GenSField<double, Lattice3Geom>(geom, attrib);
+  GenSField<double, LatticeGeom> *isf =
+    new GenSField<double, LatticeGeom>(geom, attrib);
   double minval, maxval;
   isf->get_minmax(minval, maxval);
 
@@ -251,8 +317,8 @@ GenField::send_scalar_field()
       dbg << "Indexed Attrib in Genfield:\n" << iatt->getInfo() << endl;
 
       // Create Field, send it.
-      GenSField<double, Lattice3Geom> *osf =
-	new GenSField<double, Lattice3Geom>(geom, iatt);
+      GenSField<double, LatticeGeom> *osf =
+	new GenSField<double, LatticeGeom>(geom, iatt);
 
       FieldHandle *hndl = new FieldHandle(osf);
       ofield->send(*hndl);
@@ -260,8 +326,8 @@ GenField::send_scalar_field()
   else
     {
       // Create Field, send it.
-      GenSField<double, Lattice3Geom> *osf =
-	new GenSField<double, Lattice3Geom>(geom, attrib);
+      GenSField<double, LatticeGeom> *osf =
+	new GenSField<double, LatticeGeom>(geom, attrib);
 
       FieldHandle *hndl = new FieldHandle(osf);
       ofield->send(*hndl);
@@ -300,7 +366,7 @@ GenField::send_vector_field()
   const Point start(tcl_sx.get(), tcl_sy.get(), tcl_sz.get());
   const Point end(tcl_ex.get(), tcl_ey.get(), tcl_ez.get());
   
-  Lattice3Geom *geom = new Lattice3Geom(x, y, z, start, end);
+  LatticeGeom *geom = new LatticeGeom(x, y, z, start, end);
 
   // Create attrib.
   const int mattribtype = attribtype.get();
@@ -329,8 +395,8 @@ GenField::send_vector_field()
   dbg << "Attrib in Genfield:\n" << attrib->getInfo() << endl;
 
   // Create Field, send it.
-  GenVField<Vector, Lattice3Geom> *osf =
-    new GenVField<Vector, Lattice3Geom>(geom, attrib);
+  GenVField<Vector, LatticeGeom> *osf =
+    new GenVField<Vector, LatticeGeom>(geom, attrib);
 
   FieldHandle *hndl = new FieldHandle(osf);
   ofield->send(*hndl);
@@ -375,7 +441,7 @@ GenField::send_tensor_field()
   const Point start(tcl_sx.get(), tcl_sy.get(), tcl_sz.get());
   const Point end(tcl_ex.get(), tcl_ey.get(), tcl_ez.get());
   
-  Lattice3Geom *geom = new Lattice3Geom(x, y, z, start, end);
+  LatticeGeom *geom = new LatticeGeom(x, y, z, start, end);
 
   // Create attrib.
   const int mattribtype = attribtype.get();
@@ -404,13 +470,14 @@ GenField::send_tensor_field()
   dbg << "Attrib in Genfield:\n" << attrib->getInfo() << endl;
 
   // Create Field, send it.
-  GenVField<Tensor, Lattice3Geom> *osf =
-    new GenVField<Tensor, Lattice3Geom>(geom, attrib);
+  GenVField<Tensor, LatticeGeom> *osf =
+    new GenVField<Tensor, LatticeGeom>(geom, attrib);
 
   FieldHandle *hndl = new FieldHandle(osf);
   ofield->send(*hndl);
 #endif
 }
+
 
 
 
