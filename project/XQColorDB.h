@@ -312,7 +312,9 @@ XQColor_named_colors.insert("DodgerBlue4", RGBColor(0.0627451,0.305882,0.545098)
 XQColor_named_colors.insert("SteelBlue1", RGBColor(0.388235,0.721569,1));
 XQColor_named_colors.insert("SteelBlue2", RGBColor(0.360784,0.67451,0.933333));
 XQColor_named_colors.insert("SteelBlue3", RGBColor(0.309804,0.580392,0.803922));
+#endif
 XQColor_named_colors.insert("SteelBlue4", RGBColor(0.211765,0.392157,0.545098));
+#if 0
 XQColor_named_colors.insert("DeepSkyBlue1", RGBColor(0,0.74902,1));
 XQColor_named_colors.insert("DeepSkyBlue2", RGBColor(0,0.698039,0.933333));
 XQColor_named_colors.insert("DeepSkyBlue3", RGBColor(0,0.603922,0.803922));

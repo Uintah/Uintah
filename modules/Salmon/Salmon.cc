@@ -78,7 +78,7 @@ void Salmon::do_execute()
 	if(mailbox.nitems() == 0){
 	    // See if anything needs to be redrawn...
 	    for(int i=0;i<topRoe.size();i++)
-		topRoe[i]->redraw_if_needed();
+		topRoe[i]->redraw_if_needed(0);
 	}
 	busy_bit=0;
 	MessageBase* msg=mailbox.receive();
@@ -359,7 +359,7 @@ void Salmon::initPort(Mailbox<GeomReply>* reply)
 void Salmon::flushViews()
 {
     for (int i=0; i<topRoe.size(); i++) {
-	topRoe[i]->redrawAll();
+	topRoe[i]->redraw_if_needed(1);
     }
 }
 

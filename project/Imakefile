@@ -4,7 +4,7 @@
 LOCALINCLUDES = -I. -I../modules -I../../wrapper -I../../wrapper/Mt -I../../wrapper/libMInT
 OBJS = CallbackCloners.o \
 	Color.o ColorManager.o  Connection.o  \
-	Datatype.o  DBContext.o  Dialbox.o  \
+	ContourSet.o  ContourSetPort.o  DBContext.o  Datatype.o  Dialbox.o  \
 	Geom.o  GeometryPort.o  \
 	HelpUI.o  MemStats.o  MessageBase.o  MenuBar.o  ModuleHelper.o  \
 	Module.o  ModuleList.o  MotifCallbackBase.o  \
@@ -12,12 +12,12 @@ OBJS = CallbackCloners.o \
 	MtXEventLoop.o \
 	Network.o  NetworkEditor.o  PopupMenu.o  Port.o  \
 	ScalarField.o  ScalarFieldRG.o  ScalarFieldPort.o  \
-	SoundPort.o \
+	SoundPort.o  Surface.o  SurfacePort.o \
 	UserModule.o  XFont.o  XQColor.o \
 	main.o  tmpl_hack.o
 SRCS = CallbackCloners.cc \
 	Color.cc ColorManager.cc Connection.cc \
-	Datatype.cc DBContext.cc Dialbox.cc \
+	ContourSet.cc ContourSetPort.cc DBContext.cc Datatype.cc Dialbox.cc \
 	Geom.cc GeometryPort.cc \
 	HelpUI.cc MemStats.cc MessageBase.cc MenuBar.cc ModuleHelper.cc \
 	Module.cc ModuleList.cc MotifCallbackBase.cc \
@@ -25,7 +25,7 @@ SRCS = CallbackCloners.cc \
 	MtXEventLoop.cc \
 	Network.cc NetworkEditor.cc PopupMenu.cc Port.cc \
 	ScalarField.cc ScalarFieldRG.cc ScalarFieldPort.cc \
-	SoundPort.cc \
+	SoundPort.cc Surface.cc SurfacePort.cc \
 	UserModule.cc XFont.cc XQColor.cc \
 	main.cc tmpl_hack.cc 
 TARGET = project

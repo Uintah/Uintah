@@ -17,6 +17,7 @@
 #include <SimplePort.h>
 #include <ScalarField.h>
 
+typedef Mailbox<SimplePortComm<ScalarFieldHandle>*> _cfront_bug_ScalarField_;
 typedef SimpleIPort<ScalarFieldHandle> ScalarFieldIPort;
 typedef SimpleOPort<ScalarFieldHandle> ScalarFieldOPort;
 

@@ -1703,14 +1703,14 @@ void Roe::DBrotate(DBContext*, int, double, double delta,
     need_redraw=1;
 }
 
-void Roe::redraw_if_needed()
+void Roe::redraw_if_needed(int always)
 {
-    if(need_redraw){
+    if(need_redraw || always){
 	need_redraw=0;
 	redrawAll();
     }
     for (int i=0; i<kids.size(); i++)
-	kids[i]->redraw_if_needed();
+	kids[i]->redraw_if_needed(always);
 }
 
 void Roe::redraw_perf(CallbackData*, void*)

@@ -69,6 +69,75 @@ void GeomObj::set_matl(MaterialProp* _matl)
     matl=_matl;
 }
 
+ObjTransform::~ObjTransform() {
+    delete(obj);
+}
+
+ObjTransform::ObjTransform(GeomObj *g)
+: obj(g)
+{
+    for (int i=0; i<16; i++)
+	if (i%5 == 0) trans[i]=1; else trans[i]=0;
+    BBox bb;
+    g->get_bounds(bb);
+    center=bb.center();
+}
+
+ObjTransform::ObjTransform(const ObjTransform& ot) 
+: obj(ot.obj), center(ot.center) {
+    for (int i=0; i<16; i++)
+	trans[i] = ot.trans[i];
+}
+
+void ObjTransform::rotate(double angle, Vector axis) {
+    glMatrixMode(GL_MODELVIEW_MATRIX);
+    glPushMatrix();
+    glLoadIdentity();
+    glMultMatrixd(trans);
+    glTranslated(center.x(), center.y(), center.z());
+    glRotated(angle, axis.x(), axis.y(), axis.z());
+    glTranslated(-center.x(), -center.y(), -center.z());
+    glGetDoublev(GL_MODELVIEW_MATRIX, trans);
+    glPopMatrix();
+}
+
+void ObjTransform::scale(double sc) {
+    glMatrixMode(GL_MODELVIEW_MATRIX);
+    glPushMatrix();
+    glLoadIdentity();
+    glMultMatrixd(trans);
+    glTranslated(center.x(), center.y(), center.z());
+    glScaled(sc, sc, sc);
+    glTranslated(-center.x(), -center.y(), -center.z());
+    glGetDoublev(GL_MODELVIEW_MATRIX, trans);
+    glPopMatrix();
+}
+
+void ObjTransform::translate(Vector mtn) {
+    glMatrixMode(GL_MODELVIEW_MATRIX);
+    glPushMatrix();
+    glLoadIdentity();
+    glMultMatrixd(trans);
+    glTranslated(mtn.x(), mtn.y(), mtn.z());
+    glGetDoublev(GL_MODELVIEW_MATRIX, trans);
+    glPopMatrix();
+}
+
+void ObjTransform::draw(DrawInfo *di) {
+    glPushMatrix();
+    glMultMatrixd(trans);
+    obj->draw(di);
+    glPopMatrix();
+}
+
+GeomObj* ObjTransform::clone() {
+    return new ObjTransform(*this);
+}
+
+void ObjTransform::get_bounds(BBox& bb) {
+    obj->get_bounds(bb);
+}
+
 ObjGroup::ObjGroup()
 : objs(0, 100)
 {

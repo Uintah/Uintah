@@ -130,6 +130,22 @@ public:
     virtual void get_bounds(BBox&);
 };
 
+class ObjTransform : public GeomObj {
+    GeomObj* obj;
+    double trans[16];
+    Point center;
+public:
+    ObjTransform(const ObjTransform&);
+    ObjTransform(GeomObj *g);
+    virtual ~ObjTransform();
+    void rotate(double angle, Vector axis);
+    void scale(double scl);
+    void translate(Vector mtn);
+    virtual void draw(DrawInfo*);
+    virtual GeomObj* clone();
+    virtual void get_bounds(BBox&);
+};
+
 class Triangle : public GeomObj {
 public:
     Point p1;

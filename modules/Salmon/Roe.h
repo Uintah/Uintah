@@ -193,7 +193,7 @@ public:
     void SetParent(Roe *r);
     void SetTop();
     void redrawAll();
-    void redraw_if_needed();
+    void redraw_if_needed(int always);
     void printLevel(int level, int&flag);
 
     void mouse_translate(int, int, int, int, int);
