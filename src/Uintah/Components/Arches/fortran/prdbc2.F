@@ -4,10 +4,11 @@ c $Id$
 c
 c*********************************************************************
 
-      SUBROUTINE prdbc2(indexLow, indexHigh, NITER, PCELL,
+      SUBROUTINE prdbc2(domLo, domHi, idxLo, idxHi,
      &     PHI,
      &     AS,AT,AB,
-     &     RR,
+c    &     NITER, 
+     &     PCELL, SYMTRY, FFIELD,
      &     LPRDAV, LPRDJK, LPRDKK)
 C--------------------------------------------------------------------
 C     This subroutine handles periodic boundary conditions for
@@ -19,35 +20,34 @@ C--------------------------------------------------------------------
       implicit none
 
 #include "param4.h"
-#include "pcell.h"
+c #include "pcell.h"
 
 c*********************************************************************
 c     Arguments :
 c*********************************************************************
-      integer indexLow(3)
-      integer indexHigh(3)
-      integer NITER
-      integer PCELL(indexLow(1):indexHigh(1), indexLow(2):indexHigh(2), 
-     &     indexLow(3):indexHigh(3))
-      double precision PHI(indexLow(1):indexHigh(1),
-     &     indexLow(2):indexHigh(2), indexLow(3):indexHigh(3))
-      double precision AS(indexLow(1):indexHigh(1),
-     &     indexLow(2):indexHigh(2), indexLow(3):indexHigh(3))
-      double precision AT(indexLow(1):indexHigh(1),
-     &     indexLow(2):indexHigh(2), indexLow(3):indexHigh(3))
-      double precision AB(indexLow(1):indexHigh(1),
-     &     indexLow(2):indexHigh(2), indexLow(3):indexHigh(3))
-      double precision RR(indexLow(2):indexHigh(2))
+      integer domLo(3), domHi(3), idxLo(3), idxHi(3)
+      double precision PHI(domLo(1):domHi(1),
+     &     domLo(2):domHi(2), domLo(3):domHi(3))
+      double precision AS(domLo(1):domHi(1),
+     &     domLo(2):domHi(2), domLo(3):domHi(3))
+      double precision AT(domLo(1):domHi(1),
+     &     domLo(2):domHi(2), domLo(3):domHi(3))
+      double precision AB(domLo(1):domHi(1),
+     &     domLo(2):domHi(2), domLo(3):domHi(3))
+c     integer NITER
+      integer PCELL(domLo(1):domHi(1), domLo(2):domHi(2), 
+     &     domLo(3):domHi(3))
+      integer SYMTRY, FFIELD
       logical LPRDAV,LPRDKK,LPRDJK
 
 c*********************************************************************
 c     Local Variables :
 c*********************************************************************
-      integer iBegGhost, iEndGhost, iBegActual, iEndActual
-      integer jBegGhost, jEndGhost, jBegActual, jEndActual
-      integer kBegGhost, kEndGhost, kBegActual, kEndActual
+      integer iBegGhost, iEndGhost, IST, IEND
+      integer jBegGhost, jEndGhost, JST, JEND
+      integer kBegGhost, kEndGhost, KST, KEND
 
-      integer IPRDUP
+c     integer IPRDUP
 
       integer i, j, k, JK
       integer NAVG
@@ -57,32 +57,32 @@ c*********************************************************************
 c*********************************************************************
 c     Get the indices of interest
 c*********************************************************************
-      iBegGhost = indexLow(1)
-      jBegGhost = indexLow(2)
-      kBegGhost = indexLow(3)
-      iBegActual = iBegGhost + 1
-      jBegActual = jBegGhost + 1
-      kBegActual = kBegGhost + 1
-      iEndGhost = indexHigh(1)
-      jEndGhost = indexHigh(2)
-      kEndGhost = indexHigh(3)
-      iEndActual = iEndGhost - 1
-      jEndActual = jEndGhost - 1
-      kEndActual = kEndGhost - 1
+      iBegGhost = domLo(1)
+      jBegGhost = domLo(2)
+      kBegGhost = domLo(3)
+      IST = idxLo(1)
+      JST = idxLo(2)
+      KST = idxLo(3)
+      iEndGhost = domHi(1)
+      jEndGhost = domHi(2)
+      kEndGhost = domHi(3)
+      IEND = idxHi(1)
+      JEND = idxHi(2)
+      KEND = idxHi(3)
 
 c*********************************************************************
 c     Start :
 c*********************************************************************
-      IPRDUP = 1
-      IF (LPRDKK .AND. (MOD(NITER,IPRDUP).EQ.0 .OR. NITER.EQ.1))
-     &  THEN
+c     IPRDUP = 1
+c     IF (LPRDKK .AND. (MOD(NITER,IPRDUP).EQ.0 .OR. NITER.EQ.1)) THEN
+      IF (LPRDKK) THEN
          DO 200 J = jBegGhost,jEndGhost
             DO 100 I = iBegGhost,iEndGhost
                IF (PCELL(I,J,kBegGhost) .EQ.SYMTRY .AND.
      &              PCELL(I,J,kEndGhost).EQ.SYMTRY) THEN
                   PHIAVG = ZERO
                   NAVG = 0
-                  DO 50 K=kBegActual+1,kEndActual-1
+                  DO 50 K=KST+1,KEND-1
                      IF (PCELL(I,J,K).EQ.FFIELD) THEN
                         PHIAVG = PHIAVG+PHI(I,J,K)
                         NAVG = NAVG + 1
@@ -113,6 +113,9 @@ C               AB(I,JK,2) = AS(I,2,JK)
 c*********************************************************************
 c
 c $Log$
+c Revision 1.2  2000/07/13 04:51:35  bbanerje
+c Added pressureBC (bcp) .. now called bcpress.F (bcp.F removed)
+c
 c Revision 1.1  2000/04/12 20:31:49  rawat
 c modified PressureSolver and added fortran subroutines
 c

@@ -24,13 +24,16 @@ include $(SRCTOP)/scripts/recurse.mk
 
 PSELIBS := Uintah/Parallel Uintah/Interface Uintah/Grid Uintah/Exceptions \
 	   SCICore/Exceptions
-LIBS := $(XML_LIBRARY) -lftn -lm 
+LIBS := $(XML_LIBRARY) -lftn -lm
 #LIBS += -lblas
 
 include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.17  2000/07/13 04:51:33  bbanerje
+# Added pressureBC (bcp) .. now called bcpress.F (bcp.F removed)
+#
 # Revision 1.16  2000/07/02 05:47:31  bbanerje
 # Uncommented all PerPatch and CellInformation stuff.
 # Updated array sizes in inlbcs.F

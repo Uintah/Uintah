@@ -4,8 +4,9 @@ c $Id$
 c
 c*********************************************************************
 
-      SUBROUTINE prdbc1(indexLow, indexHigh, NITER, PCELL,
-     &     PHI,RR,
+      SUBROUTINE prdbc1(domLo, domHi, 
+     &     PHI,
+     &     PCELL, SYMTRY, FFIELD,
      &     LPRDAV, LPRDJK, LPRDKK)
 
 C--------------------------------------------------------------------
@@ -28,62 +29,57 @@ C--------------------------------------------------------------------
       implicit none
 
 #include "param4.h"
-#include "pcell.h"
+c#include "pcell.h"
 
 c*********************************************************************
 c     Arguments :
 c*********************************************************************
-      integer indexLow(3)
-      integer indexHigh(3)
-      integer NITER
-      integer PCELL(indexLow(1):indexHigh(1), indexLow(2):indexHigh(2), 
-     &     indexLow(3):indexHigh(3))
-      double precision PHI(indexLow(1):indexHigh(1), 
-     &     indexLow(2):indexHigh(2), indexLow(3):indexHigh(3))
-      double precision RR(*)
+      integer domLo(3), domHi(3), idxLo(3), idxHi(3)
+      double precision PHI(domLo(1):domHi(1), 
+     &     domLo(2):domHi(2), domLo(3):domHi(3))
+      integer PCELL(domLo(1):domHi(1), domLo(2):domHi(2), 
+     &     domLo(3):domHi(3))
+      integer SYMTRY, FFIELD
       logical LPRDKK, LPRDAV, LPRDJK
 
 c*********************************************************************
 c     Locals
 c*********************************************************************
-      integer iBegGhost, iEndGhost, iBegActual, iEndActual
-      integer jBegGhost, jEndGhost, jBegActual, jEndActual
-      integer kBegGhost, kEndGhost, kBegActual, kEndActual
+      integer iBegGhost, iEndGhost, IST, IEND
+      integer jBegGhost, jEndGhost, JST, JEND
+      integer kBegGhost, kEndGhost, KST, KEND
 
-      integer IPRDUP
-      
       integer NAVG, i, j, k, JK
       double precision PHIAVG
 
 c*********************************************************************
 c     Get the indices of interest
 c*********************************************************************
-      iBegGhost = indexLow(1)
-      jBegGhost = indexLow(2)
-      kBegGhost = indexLow(3)
-      iBegActual = iBegGhost + 1
-      jBegActual = jBegGhost + 1
-      kBegActual = kBegGhost + 1
-      iEndGhost = indexHigh(1)
-      jEndGhost = indexHigh(2)
-      kEndGhost = indexHigh(3)
-      iEndActual = iEndGhost - 1
-      jEndActual = jEndGhost - 1
-      kEndActual = kEndGhost - 1
+      iBegGhost = domLo(1)
+      jBegGhost = domLo(2)
+      kBegGhost = domLo(3)
+      iEndGhost = domHi(1)
+      jEndGhost = domHi(2)
+      kEndGhost = domHi(3)
+      IST = idxLo(1)
+      JST = idxLo(2)
+      KST = idxLo(3)
+      IEND = idxHi(1)
+      JEND = idxHi(2)
+      KEND = idxHi(3)
 
 c*********************************************************************
 c     Start
 c*********************************************************************
-      IPRDUP = 1
-      IF (LPRDKK .AND. (MOD(NITER,IPRDUP).EQ.0 .OR. NITER.EQ.1))
-     &  THEN
+c     IF (LPRDKK .AND. (NITER.EQ.1))
+      IF (LPRDKK) THEN
         DO 200 J = jBegGhost,jEndGhost
            DO 100 I = iBegGhost,iEndGhost
               IF (PCELL(I,J,kBegGhost) .EQ.SYMTRY .AND.
      &             PCELL(I,J,kEndGhost).EQ.SYMTRY) THEN
                  PHIAVG = ZERO
                  NAVG = 0
-                 DO 50 K=kBegActual+1,kEndActual-1
+                 DO 50 K=KST+1,KEND-1
                     IF (PCELL(I,J,K).EQ.FFIELD) THEN
                        PHIAVG = PHIAVG+PHI(I,J,K)
                        NAVG = NAVG + 1
@@ -98,8 +94,8 @@ C     &          .AND. R(J) .LT. 0.1*R(NJ))
                     PHI(I,J,kBegGhost) = PHIAVG
                     PHI(I,J,kEndGhost) = PHIAVG
                  ELSE
-                    PHI(I,J,kBegGhost) = PHI(I,J,kEndActual)
-                    PHI(I,J,kEndGhost) = PHI(I,J,kBegActual)
+                    PHI(I,J,kBegGhost) = PHI(I,J,KEND)
+                    PHI(I,J,kEndGhost) = PHI(I,J,KST)
                  END IF
               END IF
  100       CONTINUE
@@ -108,9 +104,9 @@ C     &          .AND. R(J) .LT. 0.1*R(NJ))
          DO 400 JK = jBegGhost,jEndGhost
             DO 300 I = iBegGhost,iEndGhost
                IF (PCELL(I,JK,kBegGhost).EQ.SYMTRY) 
-     &              PHI(I,JK,kBegGhost) = PHI(I,jBegActual,JK)
+     &              PHI(I,JK,kBegGhost) = PHI(I,JST,JK)
                IF (PCELL(I,jBegGhost,JK).EQ.SYMTRY) 
-     &              PHI(I,jBegGhost,JK) = PHI(I,JK,kBegActual)
+     &              PHI(I,jBegGhost,JK) = PHI(I,JK,KST)
  300        CONTINUE
  400     CONTINUE
       END IF
@@ -120,8 +116,10 @@ C     &          .AND. R(J) .LT. 0.1*R(NJ))
 c*********************************************************************
 c
 c $Log$
+c Revision 1.2  2000/07/13 04:51:35  bbanerje
+c Added pressureBC (bcp) .. now called bcpress.F (bcp.F removed)
+c
 c Revision 1.1  2000/04/12 20:31:49  rawat
 c modified PressureSolver and added fortran subroutines
-c
 c
 c*********************************************************************
