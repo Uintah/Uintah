@@ -103,8 +103,7 @@ VolumeVis2D::~VolumeVis2D() {
 void
 VolumeVis2D::mouseDown( const Ray& ray, const HitInfo& hit)
 {
-  //  if(dpy->probe_locked)
-  //    return;
+  dpy->delete_voxel_storage();
   Point p = ray.origin() + ray.direction() * hit.min_t - min.vector();
 
   float norm_step_x = inv_diag.x() * (nx - 1 );
@@ -151,11 +150,6 @@ VolumeVis2D::mouseDown( const Ray& ray, const HitInfo& hit)
   
   value = ly1 * x_weight_low + ly2 * (1 - x_weight_low);
 
-//    if(dpy->cp_voxels.size() > 0 )
-//      return;
-
-//    if( !dpy->probe_locked )
-//      dpy->store_voxelGroup( a, b, c, d, e, f, g, h, value );
   dpy->store_voxel( a );
   dpy->store_voxel( b );
   dpy->store_voxel( c );
@@ -165,13 +159,12 @@ VolumeVis2D::mouseDown( const Ray& ray, const HitInfo& hit)
   dpy->store_voxel( g );
   dpy->store_voxel( h );
   dpy->store_voxel( value );
+  dpy->create_widget_probe();
 }
 
 void
 VolumeVis2D::mouseUp( void )
 {
-  dpy->delete_voxel_storage();
-//    dpy->delete_widget_probe( true );
 }
 
 void
@@ -223,10 +216,8 @@ VolumeVis2D::mouseMotion( const Ray& ray, const HitInfo& hit )
   
   value = ly1 * x_weight_low + ly2 * (1 - x_weight_low);
 
-//    dpy->delete_widget_probe( false );
   dpy->delete_voxel_storage();
   
-//    dpy->store_voxelGroup( a, b, c, d, e, f, g, h, value );
   dpy->store_voxel( a );
   dpy->store_voxel( b );
   dpy->store_voxel( c );
@@ -236,6 +227,7 @@ VolumeVis2D::mouseMotion( const Ray& ray, const HitInfo& hit )
   dpy->store_voxel( g );
   dpy->store_voxel( h );
   dpy->store_voxel( value );
+  dpy->create_widget_probe();
 }
 
 
