@@ -24,6 +24,9 @@ namespace Uintah {
                                          int step, 
                                          int nsteps);
                                          
+    virtual void scheduleRefine (const LevelP& fineLevel, 
+                                 SchedulerP& sched); 
+                                                                    
     virtual void scheduleCoarsen(const LevelP& coarseLevel, 
                                  SchedulerP& sched);
 
@@ -34,19 +37,19 @@ namespace Uintah {
     virtual void scheduleErrorEstimate(const LevelP& coarseLevel,
                                        SchedulerP& sched);
   protected:
-    void refineBoundaries(const Patch* patch,
-                          CCVariable<double>& val,
-                          DataWarehouse* new_dw,
-                          const VarLabel* label,
-                          int matl, 
-                          double factor);
+    void refineCoarseFineBoundaries(const Patch* patch,
+                                    CCVariable<double>& val,
+                                    DataWarehouse* new_dw,
+                                    const VarLabel* label,
+                                    int matl, 
+                                    double factor);
                 
-    void refineBoundaries(const Patch* patch,
-                          CCVariable<Vector>& val,
-                          DataWarehouse* new_dw,
-                          const VarLabel* label,
-                          int matl, 
-                          double factor);
+    void refineCoarseFineBoundaries(const Patch* patch,
+                                    CCVariable<Vector>& val,
+                                    DataWarehouse* new_dw,
+                                    const VarLabel* label,
+                                    int matl, 
+                                    double factor);
                                   
     void addRefineDependencies(Task* task, 
                                const VarLabel* var,
@@ -60,12 +63,28 @@ namespace Uintah {
                     DataWarehouse* old_dw, 
                     DataWarehouse* new_dw);
                     
-    void refineInterface(const ProcessorGroup*,
-                         const PatchSubset* patches,
-                         const MaterialSubset* matls,
-                         DataWarehouse*, 
-                         DataWarehouse* new_dw,
-                         double factor);
+    void refineCoarseFineInterface(const ProcessorGroup*,
+                                   const PatchSubset* patches,
+                                   const MaterialSubset* matls,
+                                   DataWarehouse*, 
+                                   DataWarehouse* new_dw,
+                                   double factor);
+
+    template<class T>
+    void CoarseToFineOperator(CCVariable<T>& q_CC,
+                              const VarLabel* varLabel,
+                              const int indx,
+                              DataWarehouse* new_dw,
+                              const double ratio,
+                              const Patch* finePatch,
+                              const Level* fineLevel,
+                              const Level* coarseLevel);
+                              
+    void refine(const ProcessorGroup*,
+                const PatchSubset* patches,
+                const MaterialSubset* matls,
+                DataWarehouse*,
+                DataWarehouse* new_dw);
                          
     template<class T>
     void fineToCoarseOperator(CCVariable<T>& q_CC,
