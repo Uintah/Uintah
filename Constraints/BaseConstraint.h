@@ -49,17 +49,22 @@ public:
    // i.e. don't change constraints!!
    inline void Move( const Point& newValue );
    inline void MoveDelta( const Vector& deltaValue );
+   
    inline const Point& Get() const;
    inline Point* GetRef();
+   inline void SetEpsilon( const Real epsilon );
+   inline Real GetEpsilon() const;
    
-   // Constraints use this instead of Set!
-   void Assign( const Point& newValue );
-
    void print( ostream& os=cout );
+
+   // Constraints use this instead of Set!
+   // ONLY Constraints use this...
+   void Assign( const Point& newValue, const Scheme scheme );
 
 private:
    clString name;
    Point value;
+   Real Epsilon;
 
    Index levellevel, level;
 
@@ -108,6 +113,7 @@ public:
 		    const Index i7 = 0 );
 
    void print( ostream& os=cout );
+   void printc( ostream& os, const Scheme scheme );
 
 protected:
    clString name;
@@ -120,8 +126,8 @@ protected:
    Index whichMethod, callingMethod;
 
    void Register();
-   virtual Index ChooseChange( const Index index );
-   virtual void Satisfy( const Index index );
+   virtual Index ChooseChange( const Index index, const Scheme scheme );
+   virtual void Satisfy( const Index index, const Scheme scheme );
    inline const Point& operator[]( const Index i ) const;
 };
 inline ostream& operator<<( ostream& os, Variable& v );
@@ -154,6 +160,20 @@ inline void
 Variable::MoveDelta( const Vector& deltaValue )
 {
    value += deltaValue;
+}
+
+
+inline void
+Variable::SetEpsilon( const Real epsilon )
+{
+   Epsilon = epsilon;
+}
+
+
+inline Real
+Variable::GetEpsilon() const
+{
+   return Epsilon;
 }
 
 

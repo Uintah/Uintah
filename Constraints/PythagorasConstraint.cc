@@ -32,29 +32,29 @@ PythagorasConstraint::PythagorasConstraint( const clString& name,
 
 
 void
-PythagorasConstraint::Satisfy( const Index index )
+PythagorasConstraint::Satisfy( const Index index, const Scheme scheme )
 {
    Variable& v0 = *vars[0];
    Variable& v1 = *vars[1];
    Variable& v2 = *vars[2];
    Point temp;
    
-   ChooseChange(index);
+   ChooseChange(index, scheme);
    print();
    
    /* A^2 + B^2 = C^2 */
-   switch (ChooseChange(index)) {
+   switch (ChooseChange(index, scheme)) {
    case 0:
       temp.x(sqrt(v2.Get().x() * v2.Get().x() - v1.Get().x() * v1.Get().x()));
-      v0.Assign(temp);
+      v0.Assign(temp, scheme);
       break;
    case 1:
       temp.x(sqrt(v2.Get().x() * v2.Get().x() - v0.Get().x() * v0.Get().x()));
-      v1.Assign(temp);
+      v1.Assign(temp, scheme);
       break;
    case 2:
       temp.x(sqrt(v0.Get().x() * v0.Get().x() + v1.Get().x() * v1.Get().x()));
-      v2.Assign(temp);
+      v2.Assign(temp, scheme);
       break;
    default:
       cerr << "Unknown variable in Pythagoras Constraint!" << endl;

@@ -36,31 +36,37 @@ DistanceConstraint::~DistanceConstraint()
 
 
 void
-DistanceConstraint::Satisfy( const Index index )
+DistanceConstraint::Satisfy( const Index index, const Scheme scheme )
 {
    Variable& v0 = *vars[0];
    Variable& v1 = *vars[1];
    Variable& v2 = *vars[2];
    Point temp;
 
-   ChooseChange(index);
-   print();
+   ChooseChange(index, scheme);
+   printc(cout, scheme);
    
    /* Q <- Sc + Sr * Normalize(P-Sc) */
-   switch (ChooseChange(index)) {
+   switch (ChooseChange(index, scheme)) {
    case 0:
-      v0.Assign(v1.Get()
+      temp = v1.Get()
 		+ ((v0.Get() - v1.Get()).normal()
-		   * v2.Get().x()));
+		   * v2.Get().x());
+      temp.z(0.0);
+      v0.Assign(temp,
+		scheme);
       break;
    case 1:
-      v1.Assign(v0.Get()
+      temp = v0.Get()
 		+ ((v1.Get() - v0.Get()).normal()
-		   * v2.Get().x()));
+		   * v2.Get().x());
+      temp.z(0.0);
+      v1.Assign(temp,
+		scheme);
       break;
    case 2:
       temp.x((v1.Get() - v0.Get()).length());
-      v2.Assign(temp);
+      v2.Assign(temp, scheme);
       break;
    default:
       cerr << "Unknown variable in Distance Constraint!" << endl;

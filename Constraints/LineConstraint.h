@@ -27,7 +27,7 @@ public:
    ~LineConstraint();
 
 protected:
-   virtual void Satisfy( const Index index );
+   virtual void Satisfy( const Index index, const Scheme scheme );
 };
 
 #endif

@@ -57,23 +57,6 @@ NOT ( boolean b )
 }
 
 
-/*const Real Pi = 3.14159;
-
-inline Real
-DegreesToRadians ( Real x )
-{
-   return x * Pi / 180.0;
-}
-
-inline Real
-RadiansToDegrees ( Real x )
-{
-   return x * 180.0 / Pi;
-}
-*/
-const Real Epsilon = 0.000006;
-
-
 #define NOT_FINISHED(what) cerr << what << ": Not Finished " << __FILE__ << " (line " << __LINE__ << ") " << endl
 #define ERROR_HERE(what) cerr << "Error: " << what << " in " << __FILE__ << " (line " << __LINE__ << ") " << endl
 

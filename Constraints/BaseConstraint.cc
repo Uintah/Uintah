@@ -17,9 +17,27 @@
 #include <Constraints/BaseConstraint.h>
 #include <Classlib/Debug.h>
 
-//static DebugSwitch bc_debug("BaseConstraint", "print");
+static DebugSwitch bc_debug1("BaseConstraint", "print");
+static DebugSwitch bc_debug2("BaseConstraint", "vars");
+static DebugSwitch bc_debug3("BaseConstraint", "cons");
 
-static Scheme currentScheme;
+static DebugSwitch bc_debug21("BaseConstraint2", "print");
+static DebugSwitch bc_debug22("BaseConstraint2", "vars");
+static DebugSwitch bc_debug23("BaseConstraint2", "cons");
+
+static DebugSwitch bc_debug31("BaseConstraint3", "print");
+static DebugSwitch bc_debug32("BaseConstraint3", "vars");
+static DebugSwitch bc_debug33("BaseConstraint3", "cons");
+
+static DebugSwitch bc_debug41("BaseConstraint4", "print");
+static DebugSwitch bc_debug42("BaseConstraint4", "cons");
+
+static DebugSwitch bc_debug51("BaseConstraint5", "print");
+static DebugSwitch bc_debug52("BaseConstraint5", "vars");
+
+static DebugSwitch bc_debug6("Antidisestablishmentarianism", "dumb");
+
+static Index recursion=0;
 
 /******* Variables *******/
 
@@ -65,27 +83,26 @@ Variable::Resolve()
    Index index;
 
    for (index = 0; index < numconstraints; index++)
-      constraints[constraint_order[index]]->Satisfy(constraint_indexs[constraint_order[index]]);
+      constraints[constraint_order[index]]->Satisfy(constraint_indexs[constraint_order[index]], Scheme1);
 }
 
 
 void
 Variable::Set( const Point& newValue )
 {
-   currentScheme = scheme;
-   Assign(newValue);
+   Assign(newValue, scheme);
 }
 
 
 void
 Variable::SetDelta( const Vector& deltaValue )
 {
-   currentScheme = scheme;
-   Assign(value + deltaValue);
+   recursion = 0;
+   Assign(value + deltaValue, scheme);
 }
 
 
-int
+inline int
 epsilonequal( const Real Epsilon, const Point& p1, const Point& p2 )
 {
    return ((RealAbs(p1.x()-p2.x()) < Epsilon)
@@ -96,39 +113,47 @@ epsilonequal( const Real Epsilon, const Point& p1, const Point& p2 )
 
 const Index MaxDepth = 25;
 void
-Variable::Assign( const Point& newValue )
+Variable::Assign( const Point& newValue, const Scheme scheme )
 {
    Index index, index2;
-   int reallynew = !(epsilonequal(0.5, value, newValue));
-   
-   value = newValue;
+   int reallynew = !(epsilonequal(Epsilon, value, newValue));
+
+   cout << "Recursion level = " << recursion++ << endl;
 
    cout << name << " S(" << levellevel << ")*";
    for (index=0; index<level; index++)
       cout << " ";
    cout << "*" << endl;
 
-   level++;
-   if (level == MaxDepth) {
+   cout << "Old value (" << (Point)value << ") " << (reallynew?"!=":"==")
+	<< " newValue (" << (Point)newValue << ").  Using Epsilon of ("
+	<< Epsilon << ")." << endl;
+
+   value = newValue;
+
+   cout << "LevelLevel is " << levellevel << " and Level is " << level << "." << endl;
+   if (++level == MaxDepth) {
       level = 0;
       if (++levellevel < numconstraints) {
 	 cerr << "Maximum recursion level reached...\n";
 	 for (index = levellevel; index < numconstraints+levellevel; index++) {
 	    index2 = (index>=numconstraints)?(index-numconstraints):index;
 	    constraints[constraint_order[index2]]
-	       ->Satisfy(constraint_indexs[constraint_order[index2]]);
+	       ->Satisfy(constraint_indexs[constraint_order[index2]], scheme);
 	 }
       }
       else {
-	 levellevel = 0;
-	 Error("Maximum recursion level reached for all constraints!");
+	 levellevel = level = 0;
+	 cerr << "Maximum recursion level reached for all constraints!" << endl;
+	 cout << "Accepting current approximation." << endl;
+	 cout << "Recursion level = " << --recursion << endl;
+	 return;
       }
    }
-   
-   if (reallynew)
+   else if (reallynew)
       for (index = 0; index < numconstraints; index++)
 	 constraints[constraint_order[index]]
-	    ->Satisfy(constraint_indexs[constraint_order[index]]);
+	    ->Satisfy(constraint_indexs[constraint_order[index]], scheme);
    if (level == 0) {
       level = MaxDepth-1;
       levellevel--;
@@ -140,6 +165,8 @@ Variable::Assign( const Point& newValue )
    for (index=0; index<level; index++)
       cout << " ";
    cout << "*" << endl;
+
+   cout << "Recursion level = " << --recursion << endl;
 }
 
 void
@@ -228,17 +255,17 @@ BaseConstraint::VarChoices( const Scheme scheme,
 }
 
 void
-BaseConstraint::Satisfy( const Index index )
+BaseConstraint::Satisfy( const Index index, const Scheme scheme )
 {
    Error("BaseConstraint: Can't satisfy!");
 }
 
 Index
-BaseConstraint::ChooseChange( const Index index )
+BaseConstraint::ChooseChange( const Index index, const Scheme scheme )
 {
    callingMethod = index;
    
-   return whichMethod = var_choices(currentScheme, index);
+   return whichMethod = var_choices(scheme, index);
 }
 
 void
@@ -246,19 +273,41 @@ BaseConstraint::print( ostream& os )
 {
     int i;
 
-    os << name << " (" << SchemeString(currentScheme) << ") (";
+    for (Index j=0; j < nschemes; j++) {
+       os << name << " (" << SchemeString((Scheme)j) << ") (";
+       for (i = 0; i < varCount; i++) {
+	  if (i != whichMethod) {
+	     os << "\t";
+	     vars[i]->printc(os, var_indexs[i]);
+	     os << " (->" << var_choices(j, i) << ")";
+	     os << endl;
+	  }
+       }
+       os << "\t-> ";
+       vars[whichMethod]->printc(os, var_indexs[whichMethod]);
+       os << " (->" << var_choices(j, whichMethod) << ")";
+       os << ")" << endl;
+    }
+}
+
+void
+BaseConstraint::printc( ostream& os, const Scheme scheme )
+{
+    int i;
+
+    os << name << " (" << SchemeString(scheme) << ") (";
     os << "Called by " << callingMethod << ") (" << endl;
     for (i = 0; i < varCount; i++) {
        if (i != whichMethod) {
 	  os << "\t";
 	  vars[i]->printc(os, var_indexs[i]);
-	  os << " (->" << var_choices(currentScheme, i) << ")";
+	  os << " (->" << var_choices(scheme, i) << ")";
 	  os << endl;
        }
     }
     os << "\t-> ";
     vars[whichMethod]->printc(os, var_indexs[whichMethod]);
-    os << " (->" << var_choices(currentScheme, whichMethod) << ")";
+    os << " (->" << var_choices(scheme, whichMethod) << ")";
     os << ")" << endl;
 }
 
