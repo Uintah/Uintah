@@ -194,7 +194,8 @@ public:
 protected:
 
 private:
-
+      string d_pcType;
+      int d_overlap;
       int d_maxSweeps;
       double d_convgTol; // convergence tolerence
       double d_underrelax;
