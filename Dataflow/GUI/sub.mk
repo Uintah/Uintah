@@ -66,6 +66,8 @@ $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/MacroModule.tcl \
 	$(SRCDIR)/ManipFields.tcl \
         $(SRCDIR)/ManipMatrix.tcl \
+	$(SRCDIR)/MapDataToMeshCoord.tcl \
+	$(SRCDIR)/MapScalarData.tcl \
 	$(SRCDIR)/MatrixReader.tcl \
 	$(SRCDIR)/MatrixSelectVector.tcl \
 	$(SRCDIR)/MatrixWriter.tcl \
