@@ -419,7 +419,7 @@ itcl_class SCIRun_Visualization_ShowField {
 	    -side top -fill y -anchor w
 	
 	checkbutton $text.use_def_col \
-		-text "Use default color" \
+		-text "Use text color" \
 		-command "$this-c rerender_text" \
 		-variable $this-text-use-default-color
 
