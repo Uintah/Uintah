@@ -3,6 +3,9 @@ static char *id="@(#) $Id$";
 
 #include <Uintah/Components/Arches/Arches.h>
 #include <Uintah/Components/Arches/PicardNonlinearSolver.h>
+#include <Uintah/Components/Arches/SmagorinskyModel.h>
+#include <Uintah/Components/Arches/BoundaryCondition.h>
+#include <Uintah/Components/Arches/Properties.h>
 #include <SCICore/Util/NotFinished.h>
 #include <Uintah/Interface/ProblemSpec.h>
 #include <Uintah/Interface/DataWarehouse.h>
@@ -22,7 +25,7 @@ Arches::Arches()
 Arches::~Arches()
 {
 }
-
+#if 0
 void Arches::problemSetup(const ProblemSpecP& params, GridP&,
 			  DataWarehouseP& dw)
 {
@@ -31,7 +34,7 @@ void Arches::problemSetup(const ProblemSpecP& params, GridP&,
   db->require("grow_dt", d_deltaT);
   // physical constants
   d_physicalConsts = new PhysicalConstants();
-  d_physicalConsts->problemSetup(db, dw);
+  d_physicalConsts->problemSetup(db);
   // read properties, boundary and turbulence model
   d_props = new Properties();
   d_props->problemSetup(db, dw);
@@ -47,26 +50,31 @@ void Arches::problemSetup(const ProblemSpecP& params, GridP&,
   string nlSolver;
   db->require("nonlinear_solver", nlSolver);
   if(nlSolver == "picard")
-    d_nlSolver = new PicardNonlinearSolver();
+    d_nlSolver = new PicardNonlinearSolver(d_props, d_boundaryCondition,
+					   d_turbModel);
   else
     throw InvalidValue("Nonlinear solver not supported: "+nlSolver, db);
 
   //d_nlSolver->problemSetup(db, dw); /* 2 params ? */
   d_nlSolver->problemSetup(db);
 }
-
+#endif
+#if 0
 void Arches::problemInit(const LevelP& level,
-			  SchedulerP& sched, DataWarehouseP& dw)
+			 SchedulerP& sched, DataWarehouseP& dw,
+			 bool restrt )
 {
   // initializes variables
-  sched_paramInit(level, sched, dw);
-  // initialize velocity, scalars and properties at the boundary
-  d_boundaryCondition->sched_setProfile(level, sched, dw);
+  if (!restrt) {
+    sched_paramInit(level, sched, dw);
+    // initialize velocity, scalars and properties at the boundary
+    d_boundaryCondition->sched_setProfile(level, sched, dw);
+  }
   d_properties->sched_computeProperties(level, sched, dw, dw);
   d_turbModel->sched_computeTurbViscosity(level, sched, dw, dw);
   d_boundaryCondition->sched_pressureBC(level, sched, dw, dw);
 }
-
+#endif
 void Arches::computeStableTimestep(const LevelP& level,
 				   SchedulerP& sched, DataWarehouseP& dw)
 {
@@ -93,6 +101,9 @@ void Arches::timeStep(double time, double dt,
 
 //
 // $Log$
+// Revision 1.12  2000/04/09 00:53:50  rawat
+// added PhysicalConstants and Properties classes
+//
 // Revision 1.11  2000/04/07 18:30:12  rawat
 // Added problem initialization function in Arches.cc
 //
@@ -102,7 +113,7 @@ void Arches::timeStep(double time, double dt,
 // The change is at line 40.
 //
 // Revision 1.9  2000/03/29 21:18:16  rawat
-// modified boundaryconidtion.cc for inlet bcs
+// modified boundarycondition.cc for inlet bcs
 //
 // Revision 1.8  2000/03/23 20:05:13  jas
 // Changed the location of ProblemSpec from Grid to Interface in the include
