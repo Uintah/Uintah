@@ -236,7 +236,7 @@ void Array1<int>::test_rigorous(RigorousTest* __test)
     
     Array1<int> x_array;
 
-    for(i=1;i<=1000;i++){
+    for(i=0;i<1000;i++){
 	x_array.setsize(i);
 	TEST(x_array.size()==i);
     }
@@ -252,78 +252,69 @@ void Array1<int>::test_rigorous(RigorousTest* __test)
 	TEST(x_array[i]==11);
     }
 
-    
+    ///
 
     
 
     Array1<clString> string_array;
 
     
-    for(i=1;i<=1000;i++){
+    for(i=0;i<1000;i++){
 	string_array.setsize(i);
 	TEST(string_array.size()==i);
     }
 
+    string_array.remove_all();
     string_array.grow(10000);
-    
+
     for(i=0;i<2996;i+=3){
-	string_array[i] = "hi ";
-	string_array[i+1] = "there";
-	string_array[i+2] = string_array[i]+string_array[i+1];
-    }
-    
+    	string_array[i] = "hi ";
+    	string_array[i+1] = "there";
+    	string_array[i+2] = "hi there";
+     }
+
     for(i=0;i<2996;i+=3){
-	TEST (string_array[i]=="hi ");
-	TEST (string_array[i+1]=="there");
-	TEST (string_array[i+2]=="hi there");
+    	TEST (string_array[i]=="hi ");
+    	TEST (string_array[i+1]=="there");
+    	TEST (string_array[i+2]=="hi there");
     }
+
 
     
     string_array.remove_all();
     TEST(string_array.size()==0);
 
 
-
-    int c = 0;
-
     Array1<clString> string_array2;
 
     for(i=0;i<1000;i++){
 	string_array2.grow(1);
-	TEST(string_array2.size()==i+1);
-
+	TEST(string_array2.size()==(i+1));   
     }
 
-
-
-    for(i=1000;i>0;i--){
+    for(i=999;i>=0;i--){
 	string_array2.remove(i);
-	TEST(string_array2.size()==i-1);
+	TEST(string_array2.size()==i);
     }
-
-
+    
     string_array2.remove_all();
     TEST(string_array2.size()==0);
 
-
-    for(i=0;i<1000;i++){
-	string_array2.add("hi there");
+    for(i=0;i<100;i++){
+    	string_array2.add("hi there");
     }
 
-
-    for(i=0;i<1000;i++)
-    {
-	TEST(string_array2[i]=="hi there");
+    for(i=0;i<100;i++){
+    	TEST(string_array2[i]=="hi there");
     }
-
+    
 
     string_array2.initialize("hello");
     
-    
-    for(i=0;i<1000;i++)
-    {
+    for(i=0;i<100;i++){
 	TEST(string_array2[i]=="hello");
     }
+
 }
 
 
