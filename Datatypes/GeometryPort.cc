@@ -12,6 +12,7 @@
  */
 
 #include <Datatypes/GeometryPort.h>
+#include <Datatypes/GeometryComm.h>
 
 #include <Classlib/Assert.h>
 #include <Classlib/NotFinished.h>
