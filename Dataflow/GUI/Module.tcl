@@ -1764,7 +1764,6 @@ proc selectAll { { subnet 0 } } {
 
 # Courtesy of the Tcl'ers Wiki (http://mini.net/tcl)
 proc brightness { color } {
-    puts "brightness: $color"
     foreach {r g b} [winfo rgb . $color] break
     set max [lindex [winfo rgb . white] 0]
     return [expr {($r*0.3 + $g*0.59 + $b*0.11)/$max}]
