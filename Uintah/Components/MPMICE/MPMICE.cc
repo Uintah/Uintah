@@ -189,6 +189,7 @@ void MPMICE::scheduleTimeAdvance(double t, double dt,
 				     Mlb->pXLabel, Mlb->d_particleState,
 				     numMPMMatls);
 
+   /* Do 'save's in the DataArchiver section of the problem specification now
    new_dw->pleaseSave(Mlb->pXLabel, numMPMMatls);
    new_dw->pleaseSave(Mlb->pVolumeLabel, numMPMMatls);
    new_dw->pleaseSave(Mlb->pStressLabel, numMPMMatls);
@@ -209,6 +210,7 @@ void MPMICE::scheduleTimeAdvance(double t, double dt,
    new_dw->pleaseSaveIntegrated(Mlb->TotalMassLabel);
    new_dw->pleaseSaveIntegrated(Mlb->CenterOfMassPositionLabel);
    new_dw->pleaseSaveIntegrated(Mlb->CenterOfMassVelocityLabel);
+   */
 }
 
 void MPMICE::interpolateNCToCC(const ProcessorGroup*,
@@ -256,6 +258,9 @@ void MPMICE::interpolateNCToCC(const ProcessorGroup*,
 }
 
 // $Log$
+// Revision 1.3  2000/12/07 01:25:01  witzel
+// Commented out pleaseSave stuff (now done via the problem specification).
+//
 // Revision 1.2  2000/12/01 23:56:54  guilkey
 // Cleaned up the scheduleTimeAdvance.
 //
