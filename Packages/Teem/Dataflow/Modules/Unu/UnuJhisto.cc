@@ -398,27 +398,31 @@ void
       free(err);
       return;
     }
-    
 
+
+    NrrdData *nrrd = scinew NrrdData;
+    nrrd->nrrd = nout;    
+    last_nrrdH_ = nrrd;
+
+    if (nrrds.size()) {
+
+      if (airIsNaN(range[0]->min) || airIsNaN(range[0]->max)) {
+	NrrdRange *minmax = nrrdRangeNewSet(nrrds[0], nrrdBlind8BitRangeFalse);
+	if (airIsNaN(range[0]->min)) range[0]->min = minmax->min;
+	if (airIsNaN(range[0]->max)) range[0]->max = minmax->max;
+	nrrdRangeNix(minmax);
+      }
+      nrrdKeyValueAdd(last_nrrdH_->nrrd, "jhisto_nrrd0_min", 
+		      to_string(range[0]->min).c_str());
+      nrrdKeyValueAdd(last_nrrdH_->nrrd, "jhisto_nrrd0_max", 
+		      to_string(range[0]->max).c_str());
+    }
+    
     for (int d=0; d < (int)nrrds.size(); ++d) {
       nrrdRangeNix(range[d]);
     }
     free(range);
 
-    NrrdData *nrrd = scinew NrrdData;
-    nrrd->nrrd = nout;
-    
-    last_nrrdH_ = nrrd;
-
-    NrrdRange *nrrd0_minmax = nrrdRangeNewSet(nrrds[0], nrrdBlind8BitRangeFalse);
-    nrrdKeyValueAdd(last_nrrdH_->nrrd, "jhisto_nrrd0_min", to_string(nrrd0_minmax->min).c_str());
-    nrrdKeyValueAdd(last_nrrdH_->nrrd, "jhisto_nrrd0_max", to_string(nrrd0_minmax->max).c_str());
-    nrrdRangeNix(nrrd0_minmax);
-
-    NrrdRange *nout_minmax = nrrdRangeNewSet(nout, nrrdBlind8BitRangeFalse);
-    nrrdKeyValueAdd(last_nrrdH_->nrrd, "jhisto_nrrd0_new_min", to_string(nout_minmax->min).c_str());
-    nrrdKeyValueAdd(last_nrrdH_->nrrd, "jhisto_nrrd0_new_max", to_string(nout_minmax->max).c_str());
-    nrrdRangeNix(nout_minmax);
 
     delete bin;
     delete min;

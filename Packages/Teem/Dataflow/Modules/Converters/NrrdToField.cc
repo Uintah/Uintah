@@ -809,12 +809,12 @@ NrrdToField::create_field_from_nrrds(NrrdDataHandle dataH,
       data_off = 1;
 
     for (int i=data_off; i<dataH->nrrd->dim; i++) {
-      if (!(airExists_d(data->axis[i].min) && airExists_d(data->axis[i].max))) {
+      if (!(airExists(data->axis[i].min) && airExists(data->axis[i].max))) {
 	has_min_pt = false;
 	nrrdAxisInfoMinMaxSet(data, i, nrrdCenterNode);
       }
 
-      if (airExists_d(data->axis[i].spacing))
+      if (airExists(data->axis[i].spacing))
 	sp.push_back(data->axis[i].spacing);
       else
 	sp.push_back(1.0);

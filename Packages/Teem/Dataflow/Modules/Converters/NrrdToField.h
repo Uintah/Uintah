@@ -40,6 +40,9 @@
 #include <Core/Util/TypeDescription.h>
 #include <Core/Util/DynamicLoader.h>
 
+#include <Core/Geometry/Vector.h>
+#include <Core/Geometry/Tensor.h>
+
 #include <Core/Datatypes/PointCloudField.h>
 #include <Core/Datatypes/CurveField.h>
 #include <Core/Datatypes/TriSurfField.h>
@@ -58,9 +61,6 @@
 #include <Core/Datatypes/StructCurveField.h>
 
 #include <Core/Containers/StringUtil.h>
-
-#include <Core/Geometry/Vector.h>
-#include <Core/Geometry/Tensor.h>
 
 #include <Core/Datatypes/NrrdData.h>
 
