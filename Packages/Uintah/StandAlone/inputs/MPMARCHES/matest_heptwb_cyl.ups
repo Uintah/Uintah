@@ -198,6 +198,7 @@
 		<denUnderrelax>1.0</denUnderrelax>
 	        <ref_point>[3,3,3]</ref_point>
 	        <radiation>true</radiation>
+	        <opl>3.0</opl>
                 <discrete_ordinates>true</discrete_ordinates>
 	        <mixing_model>pdfMixingModel</mixing_model>
 
@@ -402,8 +403,7 @@
 			<fill>1</fill>		!---for ilu preconditioner
 			<overlap>1</overlap>	!---for asm preconditioner
 			<max_iter>75</max_iter>
-			<res_tol>0.0003</res_tol>
-		        <underrelax>0.97</underrelax>
+		        <underrelax>1.0</underrelax>
 		    </LinearSolver>
 		</PressureSolver>
 
@@ -415,7 +415,7 @@
 		    <LinearSolver>
 			<max_iter>8</max_iter>
 			<res_tol>0.0003</res_tol>
-			<underrelax>0.9</underrelax>
+			<underrelax>1.0</underrelax>
 		    </LinearSolver>
 		</MomentumSolver>
 
@@ -426,7 +426,7 @@
 		    <LinearSolver>
 			<max_iter>6</max_iter>
 			<res_tol>0.0003</res_tol>
-			<underrelax>0.9</underrelax>
+			<underrelax>1.0</underrelax>
 		    </LinearSolver>
 		</MixtureFractionSolver>
 
@@ -434,12 +434,15 @@
 		<EnthalpySolver>
                     <radiation>true</radiation>
                     <discrete_ordinates>true</discrete_ordinates>
+                    <DORadiationModel>
+	            <opl>3.0</opl>
+                    </DORadiationModel>
 		    <finite_difference>second</finite_difference>
 		    <linear_solver>linegs</linear_solver>
 		    <LinearSolver>
 			<max_iter>6</max_iter>
 			<res_tol>0.0003</res_tol>
-			<underrelax>0.9</underrelax>
+			<underrelax>1.0</underrelax>
 		    </LinearSolver>
 		</EnthalpySolver>
 
@@ -457,6 +460,8 @@
 	<fluidHeatCapacity>1007.</fluidHeatCapacity>
 	<IfCutCell>false</IfCutCell>
 	<StationarySolid>false</StationarySolid>
+	<inviscid>false</inviscid>
+	<restart>false</restart>
 
     </Multimaterial>
 
