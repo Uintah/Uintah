@@ -11,6 +11,7 @@
  */
 
 #include <Classlib/NotFinished.h>
+#include <Math/Trig.h>
 #include <Dataflow/Module.h>
 #include <Dataflow/ModuleList.h>
 #include <Datatypes/ColormapPort.h>
@@ -61,6 +62,10 @@ class Streamline : public Module {
     Point p4;
     double slider1_dist;
     double slider2_dist;
+    TCLPoint sp1;
+    TCLPoint sp2;
+    TCLdouble ring_radius;
+    TCLdouble sdist1;
 
     GeomGroup* widget;
     GeomSphere* widget_p1;
@@ -192,6 +197,7 @@ int SRibbon::advance(const VectorFieldHandle& field, int rk4,
 	    return 0;
 	}
 	Vector diag ( tmp.normal() * width ); // only want fixed sized Ribbon
+	diag = stepsize<0?-diag:diag;
 	Point p1 = p +  diag;  
 	Point p2 = p -  diag; 
 	Vector n1 ( Cross(v1, diag) ); // the normals here are not percise,
@@ -240,6 +246,7 @@ int SRibbon::advance(const VectorFieldHandle& field, int rk4,
 	    return 0;
 	}
         diag = tmp.normal() * width; // only want fixed sized Ribbon
+	diag = stepsize<0?-diag:diag;
         Point p1 = p +  diag;  
         Point p2 = p -  diag; 
         n1 = Cross(v1, diag); // the normals here are not percise,
@@ -251,8 +258,10 @@ int SRibbon::advance(const VectorFieldHandle& field, int rk4,
 	    double sval;
 	    if(sfield->interpolate(p1, sval)){
 		MaterialHandle matl(cmap->lookup(sval, smin, smax));
-		vtri->add(p1, n1, matl);
-		vtri->add(p2, n2, matl);
+//		vtri->add(p1, n1, matl);
+//		vtri->add(p2, n2, matl);
+		vtri->add(p1, -n1, matl);
+		vtri->add(p2, -n2, matl);
 	    } else {
 		vtri->add(p1, n1, outmatl);
 		vtri->add(p2, n2, outmatl);
@@ -270,6 +279,9 @@ Streamline::Streamline(const clString& id)
   widgettype("source", id, this),
   markertype("markertype", id, this), lineradius("lineradius", id, this),
   algorithm("algorithm", id, this), stepsize("stepsize", id, this),
+  sp1("sp1", id, this), sp2("sp2", id, this),
+  ring_radius("ring_radius", id, this), 
+  sdist1("sdist1", id, this),
   maxsteps("maxsteps", id, this), range_min("range_min", id, this),
   range_max("range_max", id, this)
 {
@@ -285,8 +297,10 @@ Streamline::Streamline(const clString& id)
     ogeom=new GeometryOPort(this, "Geometry", GeometryIPort::Atomic);
     add_oport(ogeom);
 
-    need_p1=1;
-
+    need_p1=0;
+    p1=Point(-70,0,30);
+    p2=Point(-90,0,30);
+    slider1_dist=.5;
     widget_point_matl=new Material(Color(0,0,0), Color(.54, .60, 1),
 				   Color(.5,.5,.5), 20);
     widget_edge_matl=new Material(Color(0,0,0), Color(.54, .60, .66),
@@ -308,6 +322,9 @@ Streamline::Streamline(const Streamline& copy, int deep)
   widgettype("source", id, this),
   markertype("markertype", id, this), lineradius("lineradius", id, this),
   algorithm("algorithm", id, this), stepsize("stepsize", id, this),
+  sp1("sp1", id, this), sp2("sp2", id, this),
+  ring_radius("ring_radius", id, this), 
+  sdist1("sdist1", id, this),
   maxsteps("maxsteps", id, this), range_min("range_min", id, this),
   range_max("range_max", id, this)
 {
@@ -353,6 +370,10 @@ void Streamline::execute()
     smin=range_min.get();
     smax=range_max.get();
     MaterialHandle outmatl(new Material(Color(0,0,0), Color(1,1,1), Color(1,1,1), 10.0));
+    double linerad=lineradius.get();
+    p1=sp1.get();
+    p2=sp2.get();
+    slider1_dist=sdist1.get();
     if(need_p1){
 	Point min, max;
 	field->get_bounds(min, max);
@@ -365,6 +386,9 @@ void Streamline::execute()
 	Vector sp(p2-p1);
 	slider1_dist=slider2_dist=sp.length()/10;
 	need_p1=0;
+	sp1.set(p1);
+	sp2.set(p2);
+	sdist1.set(slider1_dist);
     }
     widget_scale=0.05*field->longest_dimension();
     if(widgettype.get() != oldwidgettype){
@@ -382,6 +406,8 @@ void Streamline::execute()
 					Vector(0,0,1));
 	    pick->set_highlight(widget_highlight_matl);
 	    widget->add(pick);
+	} else if(widgettype.get() == "Ring"){
+	    // NOTHING TO DO -- too lazy to build a widget...
 	} else if(widgettype.get() == "Line"){
 	    GeomGroup* pts=new GeomGroup;
 	    widget_p1=new GeomSphere(p1, 1*widget_scale);
@@ -433,6 +459,34 @@ void Streamline::execute()
 	widget_id=ogeom->addObj(widget, widget_name);
     }
 
+    // Upedate the widget...
+    if(widgettype.get() == "Point"){
+	widget_p1->move(p1, 1*widget_scale);
+    } else if(widgettype.get() == "Ring"){
+	// NOTHING TO DO YET, cuz I didn't build a widget!
+    } else if(widgettype.get() == "Line"){
+	widget_p1->move(p1, 1*widget_scale);
+	widget_p2->move(p2, 1*widget_scale);
+	widget_edge1->move(p1, p2, 0.5*widget_scale);
+	Vector spvec(p2-p1);
+	spvec.normalize();
+	Point sp(p1+spvec*slider1_dist);
+	Point sp2(sp+spvec*(widget_scale*0.5));
+	Point sp1(sp-spvec*(widget_scale*0.5));
+	widget_slider1body->move(sp1, sp2, 1*widget_scale);
+	widget_slider1cap1->move(sp2, spvec, 1*widget_scale);
+	widget_slider1cap2->move(sp1, -spvec, 1*widget_scale);
+	Vector v1,v2;
+	spvec.find_orthogonal(v1, v2);
+	widget_p1->get_pick()->set_principal(spvec, v1, v2);
+	widget_p2->get_pick()->set_principal(spvec, v1, v2);
+	widget_edge1->get_pick()->set_principal(spvec, v1, v2);
+	widget_slider1->get_pick()->set_principal(spvec);
+	widget->reset_bbox();
+    } else if(widgettype.get() == "Square"){
+	NOT_FINISHED("Square widget");
+    }
+
     GeomGroup* group=new GeomGroup;
     GeomMaterial* matlobj=new GeomMaterial(group, matl);
 
@@ -446,6 +500,19 @@ void Streamline::execute()
 	    double l=line.length();
 	    for(double x=0;x<=l;x+=slider1_dist){
 		slines.add(new SLine(group, p1+line*(x/l)));
+	    }
+	} else if(widgettype.get() == "Ring"){
+	    Vector n(p2-p1);
+	    if (n.length()==0) n.x(1);	// force it to be nonzero!
+	    Vector v1,v2;
+	    n.find_orthogonal(v1,v2);
+	    double rad=ring_radius.get();
+	    // we're using slider1_dist here to be the radian separation btwn
+	    // streamlines.
+	    for(double theta=0; theta<2*Pi; theta+=slider1_dist){
+		slines.add(new SLine(group, 
+				     p1+((v1*(Cos(theta))+
+					  v2*(Sin(theta)))*rad)));
 	    }
 	} else if(widgettype.get() == "Square"){
 	    Vector line1(p2-p1);
@@ -498,7 +565,27 @@ void Streamline::execute()
 	    Vector nline(line/50);
 	    for(double x=0;x<=l;x+=slider1_dist){
 		sribbons.add(new SRibbon(group, p1+line*(x/l),
-					 slider1_dist/4., nline, have_sfield));
+					 slider1_dist*linerad, nline, have_sfield));
+	    }
+	} else if(widgettype.get() == "Ring"){
+	    Vector n(p2-p1);
+	    if (n.length()==0) n.x(1);	// force it to be nonzero!
+	    Vector v1,v2;
+	    n.find_orthogonal(v1,v2);
+	    double rad=ring_radius.get();
+	    // we're using slider1_dist here to be the radian separation btwn
+	    // streamlines.
+	    for(double theta=0; theta<2*Pi; theta+=slider1_dist){
+		sribbons.add(new SRibbon(group, 
+					 p1+((v1*(Cos(theta))+
+					      v2*(Sin(theta)))*rad),
+					 slider1_dist*10,
+					 (v1*(Cos(theta-slider1_dist/2.)-
+					      Cos(theta+slider1_dist/2.))+
+					  v2*(Sin(theta-slider1_dist/2.)-
+					      Sin(theta+slider1_dist/2.)))*rad,
+					 have_sfield));
+;
 	    }
 	} else if(widgettype.get() == "Square"){
 	    NOT_FINISHED("Square with ribbons");

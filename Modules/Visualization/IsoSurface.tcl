@@ -48,7 +48,9 @@ proc uiIsoSurface {modid} {
 }
 
 proc IsoSurface_set_minmax {modid min max} {
-    set w .ui$modid	
+    set w .ui$modid
+    set min -200
+    set max 200
     $w.f.isoval configure -from $min -to $max
     puts "min is $min"
     puts "max is $max"

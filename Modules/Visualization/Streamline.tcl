@@ -16,21 +16,23 @@ proc uiStreamline {modid} {
     label $w.f.widgets.label -text "Source:"
     pack $w.f.widgets.label -padx 2 -side left
     global source,$modid
-    set source,$modid "Line"
+    set source,$modid "Ring"
     radiobutton $w.f.widgets.point -text Point -relief flat \
 	-variable source,$modid -value Point -command $n
     radiobutton $w.f.widgets.line -text Line -relief flat \
 	-variable source,$modid -value Line -command $n
     radiobutton $w.f.widgets.square -text Square -relief flat \
 	-variable source,$modid -value Square -command $n
-    pack $w.f.widgets.point $w.f.widgets.line $w.f.widgets.square -side left
+    radiobutton $w.f.widgets.ring -text Ring -relief flat \
+	-variable source,$modid -value Ring -command $n
+    pack $w.f.widgets.point $w.f.widgets.line $w.f.widgets.square $w.f.widgets.ring -side left
 
     frame $w.f.marker
     pack $w.f.marker -side top -fill x
     label $w.f.marker.label -text "Marker:"
     pack $w.f.marker.label -padx 2 -side left
     global markertype,$modid
-    set markertype,$modid "Line"
+    set markertype,$modid "Ribbon"
     radiobutton $w.f.marker.line -text Line -relief flat \
 	-variable markertype,$modid -value Line -command $n
     radiobutton $w.f.marker.ribbon -text Ribbon -relief flat \
@@ -63,6 +65,7 @@ proc uiStreamline {modid} {
     pack $w.f.alg.euler $w.f.alg.rk4 $w.f.alg.sf -side top -anchor w
 
     global stepsize,$modid
+
     set stepsize,$modid 0.02
     fscale $w.f.stepsize -variable stepsize,$modid -digits 3 \
 	-from -2.0 -to 2.0 -label "Step size:" \
@@ -71,7 +74,7 @@ proc uiStreamline {modid} {
     pack $w.f.stepsize -fill x -pady 2
 
     global maxsteps,$modid
-    set maxsteps,$modid 100
+    set maxsteps,$modid 50
     fscale $w.f.maxsteps -variable maxsteps,$modid \
 	-from 0 -to 1000 -label "Maximum steps:" \
 	-showvalue true -tickinterval 200 \
