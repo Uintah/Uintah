@@ -247,11 +247,12 @@ void GridVisualizer::update_widget() {
   }
 }
 
+// default radius =  radius of a sphere that would fill 
+// the volume of a cell.
 void GridVisualizer::update_default_radius() {
   LevelP level = grid->getLevel(0);
   Vector dCell = level->dCell();
-
-  double new_default_radius = Max(dCell.x(), dCell.y(), dCell.z());
+  double new_default_radius = Min( dCell.x()/2,dCell.y()/2,dCell.z()/2);
   if (new_default_radius != default_radius.get())
     default_radius.set(new_default_radius);
 }
