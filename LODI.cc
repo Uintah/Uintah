@@ -160,14 +160,18 @@ inline IntVector Sutherland_Vector_Components(const Patch::FaceType face)
 
 /*__________________________________________________________________
  Function~ characteristic_source_terms-
+ Note:     Ignore all body force sources except those normal
+           to the boundary face.
 ____________________________________________________________________*/
 inline void characteristic_source_terms(const IntVector dir,
+                                        const int P_dir,
                                         const Vector grav,
                                         const double rho_CC,
                                         const double speedSound,
                                         vector<double>& s)
 {
-  Vector s_mom = grav;
+  Vector s_mom = Vector(0,0,0);
+  s_mom[P_dir] = grav[P_dir];
   double s_press = 0.0;
   //__________________________________
   //  compute sources, Appendix:Table 4
@@ -179,6 +183,117 @@ inline void characteristic_source_terms(const IntVector dir,
   s[3] = s_mom[dir[1]];
   s[4] = s_mom[dir[2]];
   s[5] = 0.5 * (s_press + rho_CC * speedSound * s_mom[dir[0]] );
+}
+
+
+/*__________________________________________________________________
+ Function~ debugging_Di-- this goes through the same logic as
+           Di and dumps out data
+____________________________________________________________________*/
+void debugging_Di(const IntVector c,
+                  StaticArray<CCVariable<Vector> >& d,
+                  const IntVector dir,
+                  const Patch::FaceType face,
+                  const double speedSound,
+                  const Vector vel_CC,
+                  double L1,
+                  double L2, 
+                  double L3,
+                  double L4,
+                  double L5 )
+{
+  int n_dir = dir[0];
+  double normalVel = vel_CC[n_dir];
+  double Mach = fabs(vel_CC.length()/speedSound);
+   cout.setf(ios::scientific,ios::floatfield);
+   cout.precision(10);  
+  //__________________________________
+  //right or left boundary
+  // inflow or outflow
+  double rightFace =1;
+  double leftFace = 0;
+  if (face == Patch::xminus || face == Patch::yminus || face == Patch::zminus){
+    leftFace  = 1;
+    rightFace = 0;
+  }
+  
+  string flowDir = "outFlow";
+  if (leftFace && normalVel >= 0 || rightFace && normalVel <= 0){
+    flowDir = "inFlow";
+  }
+  cout << " \n ----------------- " << c << endl;
+  cout << " default values " << endl;
+  cout << " A = rho * speedSound * dVel_dx[n_dir]; " << endl;
+  cout << " L1 = 0.5 * (normalVel - speedSound) * (dp_dx - A) " << endl;
+  cout << " L2 = normalVel * (drho_dx - dp_dx/speedSoundsqr) " << endl;
+  cout << " L3 = normalVel * dVel_dx[dir[1]];  " << endl;
+  cout << " L4 = normalVel * dVel_dx[dir[2]];  " << endl;
+  cout << " L5 = 0.5 * (normalVel + speedSound) * (dp_dx + A); \n" << endl;
+  
+  cout << "s[1] = 0.5 * (s_press - rho_CC * speedSound * s_mom[dir[0]] ); " << endl;
+  cout << "s[2] = -s_press/(speedSound * speedSound);" << endl;
+  cout << "s[3] = s_mom[dir[1]];" << endl;
+  cout << "s[4] = s_mom[dir[2]];" << endl;
+  cout << "s[5] = 0.5 * (s_press + rho_CC * speedSound * s_mom[dir[0]] ) \n" << endl;
+  
+  //__________________________________
+  //Subsonic non-reflective inflow
+  if (flowDir == "inFlow" && Mach < 1.0){
+    cout << " SUBSONIC INFLOW:  rightFace " <<rightFace << " leftFace " << leftFace<< endl;
+    cout << "L1 = leftFace * L1 + rightFace * s[1]  " << L1 << endl;
+    cout << "L2 = s[2];                             " << L2 << endl;
+    cout << "L3 = s[3];                             " << L3 << endl;
+    cout << "L4 = s[4];                             " << L4 << endl;
+    cout << "L5 = rightFace * L5 + leftFace * s[5]; " << L5 << endl;
+  }
+  //__________________________________
+  // Subsonic non-reflective outflow
+  if (flowDir == "outFlow" && Mach < 1.0){
+    cout << " SUBSONIC IOUTFLOW:  rightFace " <<rightFace << " leftFace " << leftFace << endl;
+    cout << "L1 = rightFace *(0.5 * K * (press - p_infinity)/domainLength[n_dir] + s[1]) "<< endl;
+    cout << "  + leftFace  * L1 " << L1 << endl;
+       
+    cout << "L5 = leftFace  *(0.5 * K * (press - p_infinity)/domainLength[n_dir] + s[5]) "<< endl;
+    cout << "   + rightFace * L5 " << L5 << endl;
+  }
+  
+  //__________________________________
+  //Supersonic non-reflective inflow
+  // see Thompson II pg 453
+  if (flowDir == "inFlow" && Mach > 1.0){
+    cout << " SUPER SONIC inflow " << endl;
+    cout << " L1 = s[1] " << L1 << endl;
+    cout << " L2 = s[2] " << L2 << endl;
+    cout << " L3 = s[3] " << L3 << endl;
+    cout << " L4 = s[4] " << L4 << endl;
+    cout << " L5 = s[5] " << L5 << endl;
+  }
+  //__________________________________
+  // Supersonic non-reflective outflow
+  //if (flowDir == "outFlow" && Mach > 1.0){
+  //}   do nothing see Thompson II pg 453
+  
+  //__________________________________
+  //  compute Di terms in the normal direction based on the 
+  // modified Ls  See Sutherland Table 7
+    cout << "\nd[1][c][n_dir] = L2 + (L1 + L5)/speedSoundsqr  " << d[1][c][n_dir] << endl;
+    cout << "d[2][c][n_dir] = (L5 + L1);                    " << d[2][c][n_dir] << endl;
+ 
+  if (n_dir == 0) {   // X-normal
+    cout << "d[3][c][0] = (L5 - L1)/(rho * speedSound)      " << d[3][c][n_dir] << endl;
+    cout << "d[4][c][0] = L3                                " << d[4][c][n_dir] << endl;
+    cout << "d[5][c][0] = L4                                " << d[5][c][n_dir] << endl;
+  }
+  if (n_dir == 1) {   // Y-normal
+    cout << "d[3][c][1] = L3                                " << d[3][c][n_dir] << endl;
+    cout << "d[4][c][1] = (L5 - L1)/(rho * speedSound)      " << d[4][c][n_dir] << endl;
+    cout << "d[5][c][1] = L4;                               " << d[5][c][n_dir] << endl;
+  }
+  if (n_dir == 2) {   // Z-normal
+    cout << "d[3][c][3] = L3;                               " << d[3][c][n_dir] << endl;
+    cout << "d[4][c][3] = L4;                               " << d[4][c][n_dir] << endl;
+    cout << "d[5][c][3] = (L5 - L1)/(rho * speedSound);     " << d[5][c][n_dir] << endl;
+  }
 }
 
 /*__________________________________________________________________
@@ -216,6 +331,8 @@ inline void Di(StaticArray<CCVariable<Vector> >& d,
   
   double speedSoundsqr = speedSound * speedSound;
   
+  //__________________________________
+  // default Li terms
   double A = rho * speedSound * dVel_dx[n_dir];
   double L1 = 0.5 * (normalVel - speedSound) * (dp_dx - A);
   double L2 = normalVel * (drho_dx - dp_dx/speedSoundsqr);
@@ -289,17 +406,17 @@ inline void Di(StaticArray<CCVariable<Vector> >& d,
   d[1][c][n_dir] = L2 + (L1 + L5)/speedSoundsqr;
   d[2][c][n_dir] = (L5 + L1);
  
-  if (n_dir == 0) {   // X-normal nection
+  if (n_dir == 0) {   // X-normal
     d[3][c][n_dir] = (L5 - L1)/(rho * speedSound);
     d[4][c][n_dir] = L3;
     d[5][c][n_dir] = L4;
   }
-  if (n_dir == 1) {   // Y-normal nection
+  if (n_dir == 1) {   // Y-normal
     d[3][c][n_dir] = L3;
     d[4][c][n_dir] = (L5 - L1)/(rho * speedSound);
     d[5][c][n_dir] = L4;
   }
-  if (n_dir == 2) {   // Z-normal nection
+  if (n_dir == 2) {   // Z-normal
     d[3][c][n_dir] = L3;
     d[4][c][n_dir] = L4;
     d[5][c][n_dir] = (L5 - L1)/(rho * speedSound);
@@ -309,28 +426,14 @@ inline void Di(StaticArray<CCVariable<Vector> >& d,
    //__________________________________
    //  debugging
    vector<IntVector> dbgCells;
-   dbgCells.push_back(IntVector(40,50,0));
-   dbgCells.push_back(IntVector(50,40,0));
-     
+   //dbgCells.push_back(IntVector(-1,-1,-1));
+   //dbgCells.push_back(IntVector(-1,50,-1));
+   //dbgCells.push_back(IntVector(50,-1,-1));
+   dbgCells.push_back(IntVector(50,50,-1));
+           
    for (int i = 0; i<(int) dbgCells.size(); i++) {
      if (c == dbgCells[i]) {
-      cout << "//__________________________________ DI 2" << endl;
-       cout << c << " dir " << dir<< " flowDir " << flowDir << " Mach " << Mach 
-            << " rightFace " << rightFace << " leftFace " << leftFace << endl;
-       cout << " normalVel " << normalVel << " drho_dx " << drho_dx 
-            << " dp_dx " << dp_dx << " dvel_dx " << dVel_dx << endl;
-            
-       cout << " A:  \t" << A  << " rho * C * du"<<n_dir<<"/dx"<< n_dir <<endl;
-       cout << " L1: \t" << L1 << " (u"<< n_dir <<" - c^2)*(dp/dx"<<n_dir<< " - A)"<<endl;
-       cout << " L2: \t" << L2 << "  u"<< n_dir <<"*(c^2*drho/dx"<<n_dir<< " - dp/dx"<<n_dir<<")"<<endl;
-       cout << " L3: \t" << L3 << "  u"<< n_dir <<"*du"<<dir[1]<<"/dx"<<n_dir<<endl;
-       cout << " L4: \t" << L4 << "  u"<< n_dir <<"*du"<<dir[2]<<"/dx"<<n_dir<<endl;
-       cout << " L5: \t" << L5 << " (u"<< n_dir <<" + c^2)*(dp/dx"<<n_dir<< " + A)"<<endl;
-       for (int i = 1; i<= 5; i++ ) {
-         cout << " d[" << i << "]:\t"<< d[i][c]<< endl;
-       }
-       cout << " ----------------------------\n"<<endl;
-       
+      debugging_Di(c, d, dir, face, speedSound, vel_CC, L1, L2, L3, L4, L5 );
      }  // if(dbgCells)
    }  // dbgCells loop
  #endif
@@ -412,7 +515,7 @@ void computeDi(StaticArray<CCVariable<Vector> >& d,
       Vector dVel_dx = (vel[r]   - vel[l])/delta;
 
       vector<double> s(6);
-      characteristic_source_terms(dir, grav, rho[c], speedSound[c], s);
+      characteristic_source_terms(dir, P_dir, grav, rho[c], speedSound[c], s);
       
       Di(d, dir, c, face, domainLength, user_inputs, maxMach, s, press[c],
          speedSound[c], rho[c], vel[c], drho_dx, dp_dx, dVel_dx); 
@@ -872,10 +975,11 @@ void FaceVel_LODI(const Patch* patch,
 // hardCode the cells you want to intergate;
 vector<IntVector> dbgCells;
 #if 0
-  dbgCells.push_back(IntVector(36,50,0));
-  dbgCells.push_back(IntVector(50,23,0));
- // dbgCells.push_back(IntVector(49,50,0));      
- // dbgCells.push_back(IntVector(50,49,0));
+
+//   dbgCells.push_back(IntVector(-1,-1,-1));
+//   dbgCells.push_back(IntVector(-1,50,-1));
+//   dbgCells.push_back(IntVector(50,-1,-1));
+   dbgCells.push_back(IntVector(50,50,-1));
 #endif
 double time = sharedState->getElapsedTime();
 /*===========TESTING==========`*/
@@ -957,9 +1061,11 @@ double time = sharedState->getElapsedTime();
     //  Equations 9.9-9.10
     Vector momOld, momChange;
     momOld    = rho_old[c] * vel_old[c];
+    
+    Vector bodyForce = rho_old[c] * gravity;
                          
-    momChange =  - delT * ( BN_convect + convect1 + convect2 + pressGradient )  
-                 + delT *rho_old[c] * gravity;
+    momChange =  - delT * ( BN_convect + convect1 + convect2 + pressGradient )
+                 + delT *bodyForce;
          
     vel_CC[c] = (momOld + momChange)/rho_new[c];
 
@@ -977,7 +1083,7 @@ double time = sharedState->getElapsedTime();
         cout << " convect2                " << convect2 << endl;
         cout << " BN_convect              " << BN_convect <<endl;
         cout << " pressGradient           " << pressGradient << endl;
-        cout << " rho_old * gravity       " << rho_old[c] * gravity << endl;
+        cout << " rho_old * gravity       " << bodyForce << endl;
         cout << " vel                     " << vel_CC[c] << "\n"<<endl;
         cout << " convect1: rho_old, vel_old["<<dir1<<"], vel_old["<<dir1<<"], dx["<<dir1<<"]" << endl;
         cout << " convect2: rho_old, vel_old["<<dir1<<"], vel_old["<<dir2<<"], dx["<<dir2<<"]" << endl;
@@ -1051,10 +1157,12 @@ double time = sharedState->getElapsedTime();
                   
       BN_convect.z( vel_old[c].z() * (d[1][c][P_dir] + d[1][c][Edir1])
                   + rho_old[c]     * (d[5][c][P_dir] + d[5][c][Edir1]) );
+                  
+      Vector bodyForce = rho_old[c] * gravity;
       
       mom  = rho_old[c] * vel_old[c]                                
-           - delT * ( BN_convect + convect1 + pressGradient )  
-           + delT *rho_old[c] * gravity;                     
+           - delT * ( BN_convect + convect1 + pressGradient )
+           + delT * bodyForce;                     
               
       vel_CC[c] = mom/rho_new[c];
 
@@ -1062,7 +1170,7 @@ double time = sharedState->getElapsedTime();
       //__________________________________
       //  debugging
       for (int i = 0; i<(int) dbgCells.size(); i++) {
-        if (c == dbgCells[i] && time > 0.008) {
+        if (c == dbgCells[i] ) {
           cout.setf(ios::scientific,ios::floatfield);
           cout.precision(10);
 
@@ -1072,7 +1180,7 @@ double time = sharedState->getElapsedTime();
           cout << " BN_convect              " << BN_convect << endl;
           cout << " convect1                " << convect1 << endl;
           cout << " pressGradient           " << pressGradient << endl;
-          cout << " rho_old gravity         " << rho_old[c] * gravity << endl;
+          cout << " rho_old gravity         " << bodyForce << endl;
           cout << " mom                     " << mom << endl;
           cout << " vel                     " << vel_CC[c] << "\n"<<endl;
 
@@ -1101,27 +1209,31 @@ double time = sharedState->getElapsedTime();
     term2.x((d[3][c].x() + d[3][c].y() + d[3][c].z()) * rho_old[c]);
     term2.y((d[4][c].x() + d[4][c].y() + d[4][c].z()) * rho_old[c]);
     term2.z((d[5][c].x() + d[5][c].y() + d[5][c].z()) * rho_old[c]);
+              
+    Vector bodyForce = rho_old[c] * gravity;
                                         
     Vector mom = rho_old[c] * vel_old[c] - delT * (term1 + term2)
-                                         + delT * rho_old[c] * gravity;
+                                         + delT * bodyForce;
 
     vel_CC[c] = mom/ rho_new[c];
 
       //__________________________________
       //  debugging
 #if 0
+  cout << " corner " << c << endl;
       for (int i = 0; i<(int) dbgCells.size(); i++) {
-        if (c == dbgCells[i] && time > 0.001) {
+        if (c == dbgCells[i]) {
          cout << "-------------------------- C O R N E R " << c << endl;
          cout << " rho_old[c] * vel_old[c] " << rho_old[c] * vel_old[c] << endl;
-         cout << " term1 = " << term1 << endl;
-         cout << " term2 = " << term2 << endl;
-         cout << " d1 " << d[1][c] << endl; 
-         cout << " d3 " << d[3][c] << endl; 
-         cout << " d4 " << d[4][c] << endl;
-         cout << " d5 " << d[5][c] << endl; 
-         cout << " mom/delT " <<  mom/delT<< endl;
-         cout << " vel_CC[c] " << vel_CC[c] <<" \n\n"<< endl;
+         cout << " term1 =                 " << term1 << endl;
+         cout << " term2 =                 " << term2 << endl;
+         cout << " rho_old gravity         " << bodyForce << endl;
+ 
+         cout << " mom/delT                " <<  mom/delT<< endl;
+         cout << " vel_CC[c]               " << vel_CC[c] << endl;
+         for (int i = 1; i<= 5; i++ ) {
+           cout << " d[" << i << "]:\t"<< d[i][c]<< endl;
+         }
        }
     }
 #endif 
