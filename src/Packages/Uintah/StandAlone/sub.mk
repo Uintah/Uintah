@@ -21,6 +21,7 @@ else
   PSELIBS := \
 	Packages/Uintah/Core/Grid \
 	Packages/Uintah/Core/Parallel \
+	Packages/Uintah/Core/ProblemSpec \
 	Packages/Uintah/CCA/Ports \
 	Packages/Uintah/CCA/Components/MPM \
 	Packages/Uintah/CCA/Components/MPMICE \
