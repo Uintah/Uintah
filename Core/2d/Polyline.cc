@@ -49,7 +49,7 @@ Persistent* make_Polyline()
 PersistentTypeID Polyline::type_id("polyline", "DrawObj", make_Polyline);
 
 
-Polyline::Polyline( const Array1<double> &data, const string &name )
+Polyline::Polyline( const vector<double> &data, const string &name )
   : DrawObj(name), data_(data) 
 {
   compute_minmax();
@@ -75,7 +75,7 @@ Polyline::compute_minmax()
 {
   if ( data_.size() > 0 ) {
     min_ = max_ = data_[0];
-    for (int i=1; i<data_.size(); i++)
+    for (unsigned i=1; i<data_.size(); i++)
       if ( data_[i] < min_ ) min_ = data_[i];
       else if ( max_ < data_[i] ) max_ = data_[i];
   }
@@ -88,14 +88,13 @@ Polyline::set_color( const Color &c )
   color_ = c;
 }
 
-string
-Polyline::tcl_color()
+void
+Polyline::add( const vector<double>& v)
 {
-  char buffer[10];
-  sprintf( buffer, "#%02x%02x%02x", 
-	   int(color_.r()*255), int(color_.g()*255), int(color_.b()*255));
-  buffer[7] = '\0';
-  return string(buffer);
+  for (unsigned i=0; i<v.size(); ++i)
+    data_.push_back(v[i]);    
+ 
+  compute_minmax();
 }
 
 void
@@ -107,7 +106,7 @@ Polyline::add( double v )
     if ( v < min_ ) min_ = v;
     else if ( max_ < v ) max_ = v;
 
-  data_.add(v);
+  data_.push_back(v);
 }
 
 double

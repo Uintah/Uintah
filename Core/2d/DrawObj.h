@@ -31,18 +31,22 @@
 #ifndef SCI_Drawable_h
 #define SCI_Drawable_h 
 
+#include <Core/Geom/Color.h>
 #include <Core/Containers/Array1.h>
 #include <Core/2d/BBox2d.h>
 #include <Core/Datatypes/Datatype.h>
 #include <Core/Thread/CrowdMonitor.h>
 #include <sci_config.h>
+#include <stdio.h>
 
 #include <iosfwd>
+#include <vector>
 
 namespace SCIRun {
 
 class  BBox2D;
 class  OpenGLWindow;
+using std::vector;
 
 class SCICORESHARE DrawObj : public Datatype {
 private:
@@ -50,8 +54,9 @@ private:
   DrawObj *parent_;
   CrowdMonitor *lock_;
 
- protected:
+protected:
   OpenGLWindow *ogl_;
+  Color color_;
 
 public:
   DrawObj(const string &name="");
@@ -65,6 +70,7 @@ public:
   void write_unlock() { lock_->writeUnlock(); }
 
   string name() { return name_;}
+  string tcl_color();
   void set_name ( const string &name) { name_=name;}
   DrawObj *parent() { return parent_; }
   void set_parent( DrawObj *p ) { parent_ = p; }
@@ -74,6 +80,8 @@ public:
   virtual void reset_bbox();
   virtual void get_bounds(BBox2d&) = 0;
   virtual void child_changed( DrawObj *) {}
+
+  virtual void add(const vector<double>&) {}
 
   // For OpenGL
 #ifdef SCI_OPENGL

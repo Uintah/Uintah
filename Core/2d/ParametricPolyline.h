@@ -60,7 +60,7 @@ public:
   virtual bool at( double, pair<double,double>& );
   
   void compute_minmax();
-  void add( double, double, double );
+  void add( double, double, double);
   void clear() { data_.clear(); }
   string tcl_color();
 
@@ -68,6 +68,8 @@ public:
   Color get_color() { return color_; }
 
   virtual void get_bounds(BBox2d&);
+
+  virtual void add(const vector<double>&);
 
   // For OpenGL
 #ifdef SCI_OPENGL

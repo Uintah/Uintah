@@ -31,35 +31,35 @@
 #ifndef SCI_Polyline_h
 #define SCI_Polyline_h 
 
-#include <Core/Geom/Color.h>
-#include <Core/Containers/Array1.h>
 #include <Core/2d/DrawObj.h>
 
 namespace SCIRun {
+
+    using std::vector;
   
 class SCICORESHARE Polyline : public DrawObj {
 protected:
-  Array1<double> data_;
+  vector<double> data_;
   double min_, max_;
-  Color color_;
 
 public:
   Polyline( const string &name="") : DrawObj(name) {} 
   Polyline( int i );
-  Polyline( const Array1<double> &, const string &name="" );
+  Polyline( const vector<double> &, const string &name="" );
   virtual ~Polyline();
 
   virtual double at( double );
   
   void compute_minmax();
   void add( double );
-  void clear() { data_.remove_all(); }
-  string tcl_color();
+  void clear() { data_.clear(); }
 
   void set_color( const Color &);
   Color get_color() { return color_; }
 
   virtual void get_bounds(BBox2d&);
+
+  virtual void add(const vector<double>&);
 
   // For OpenGL
 #ifdef SCI_OPENGL

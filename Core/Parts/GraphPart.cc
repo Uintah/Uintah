@@ -32,6 +32,7 @@
 #include <typeinfo>
 #include <Core/Parts/GraphPart.h>
 #include <vector>
+#include <Core/2d/LockedPolyline.h>
 
 namespace SCIRun {
   
@@ -56,12 +57,22 @@ GraphPart::set_num_lines( int n )
 {
   cerr << "resizing lines to " << n << endl;
   data_.resize(n);
-  reset(n);
 }
   
 void 
-GraphPart::add_values( vector<double> &v)
+GraphPart::add_values( unsigned item, const vector<double> &v)
 {
+  if (item >= data_.size()) {
+    cerr << "add_values item " << item << " >= data_ size " 
+	 << data_.size() << endl;
+    return;
+  }
+
+  for (unsigned i=0; i<v.size(); ++i) 
+    data_[item].push_back(v[i]);
+  new_values(item,v);
+
+#if 0
   if (v.size() != data_.size()) {
     cerr << "add_values size " << v.size() << " != data_ size " 
 	 << data_.size() << endl;
@@ -71,6 +82,7 @@ GraphPart::add_values( vector<double> &v)
   for (unsigned i=0; i<v.size(); i++)
     data_[i].push_back(v[i]);
   new_values( v );
+#endif
 };
 
 } // namespace SCIRun

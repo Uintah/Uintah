@@ -32,7 +32,7 @@
 #define SCI_Hairline_h 
 
 #include <Core/GuiInterface/TclObj.h>
-#include <Core/2d/Polyline.h>
+#include <Core/2d/DrawObj.h>
 #include <Core/2d/HairObj.h>
 
 namespace SCIRun {
@@ -41,7 +41,7 @@ class Diagram;
 
 class SCICORESHARE Hairline :  public TclObj, public HairObj {
 private:
-  Array1< Polyline *> poly_;
+  Array1< DrawObj *> poly_;
   Diagram *parent_;
 
 public:

@@ -62,7 +62,7 @@ Polyline::draw( bool )
   glColor3f( color_.r(), color_.g(), color_.b() );
   
   glBegin(GL_LINE_STRIP);
-  for (int i=0; i<data_.size(); i++) 
+  for (unsigned i=0; i<data_.size(); i++) 
     glVertex2f( i, data_[i] );
   glEnd();
 }
@@ -75,7 +75,7 @@ LockedPolyline::draw( bool )
   read_lock();
 
   glBegin(GL_LINE_STRIP);
-  for (int i=0; i<data_.size(); i++) 
+  for (unsigned i=0; i<data_.size(); i++) 
     glVertex2f( i, data_[i] );
   glEnd();
 
@@ -93,8 +93,10 @@ ParametricPolyline::draw( bool )
 
   // we want to draw the points in parameter sorted order
   // maps iterate in sorted order of their key
+  // the parameter of a parametric polyline is the map's key!
   while (i != data_.end()) 
-    glVertex2f((*i).second.first,(*i).second.second);
+    glVertex2f((*i).second.first,(*i++).second.second);
+
 
   glEnd();
 }
@@ -106,7 +108,7 @@ HistObj::draw( bool )
   glBegin(GL_QUADS);
   double pos = ref_min_;
   double dp = (ref_max_ - ref_min_)/bins_;
-  for (int i=0; i<data_.size(); i++) {
+  for (unsigned i=0; i<data_.size(); i++) {
     glVertex2f(pos,0);
     glVertex2f(pos+dp,0);
     glVertex2f(pos+dp,data_[i]);

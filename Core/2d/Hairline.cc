@@ -41,6 +41,7 @@ using std::ostringstream;
 #include <Core/2d/Hairline.h>
 #include <Core/2d/Diagram.h>
 #include <Core/Containers/Array1.h>
+#include <Core/2d/LockedPolyline.h>
 
 namespace SCIRun {
 
@@ -100,18 +101,20 @@ Hairline::update()
     
     // get value and insert them in acsending order (using insert sort)
     for (int i=0; i<poly_.size(); i++) {
-      double v = poly_[i]->at(pos);
-      int j;
-      for (j=i; j>0; j--) {
-	if ( value[j-1] < v ) {
-	  value[j] = value[j-1];
-	  index[j] = index[j-1];
-	}
-	else 
-	  break;
+      if (LockedPolyline *p = dynamic_cast<LockedPolyline*>(poly_[i])) {
+        double v = p->at(pos);
+        int j;
+        for (j=i; j>0; j--) {
+	  if ( value[j-1] < v ) {
+	    value[j] = value[j-1];
+	    index[j] = index[j-1];
+	  }
+	  else 
+	    break;
+        }
+        value[j] = v;
+        index[j] = i;
       }
-      value[j] = v;
-      index[j] = i;
     }
   
     // send the sorted list to the tcl side

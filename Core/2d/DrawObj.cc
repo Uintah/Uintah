@@ -44,6 +44,16 @@ DrawObj::DrawObj( const string &name)
 }
 
 
+string
+DrawObj::tcl_color()
+{
+  char buffer[10];
+  sprintf( buffer, "#%02x%02x%02x", 
+	   int(color_.r()*255), int(color_.g()*255), int(color_.b()*255));
+  buffer[7] = '\0';
+  return string(buffer);
+}
+
 DrawObj::~DrawObj()
 {
 }
