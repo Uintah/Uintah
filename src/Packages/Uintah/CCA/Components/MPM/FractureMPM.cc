@@ -128,19 +128,18 @@ void FractureMPM::problemSetup(const ProblemSpecP& prob_spec, GridP& /*grid*/,
      }
      if (flags->d_integrator_type == "fracture") {
        d_integrator = Fracture;
+       flags->d_fracture = true;
      }
    }
    
    MPMPhysicalBCFactory::create(prob_spec);
 
-   contactModel = ContactFactory::create(prob_spec,sharedState, lb, 
-                                         flags->d_8or27);
+   contactModel = ContactFactory::create(prob_spec,sharedState, lb,flags);
    thermalContactModel =
-		 ThermalContactFactory::create(prob_spec, sharedState, lb);
+     ThermalContactFactory::create(prob_spec, sharedState,lb,flags);
 
    // for Fracture 
-   crackMethod = scinew Crack(prob_spec,sharedState,dataArchiver,lb,
-                              flags->d_8or27);
+   crackMethod = scinew Crack(prob_spec,sharedState,dataArchiver,lb,flags);
   
    ProblemSpecP p = prob_spec->findBlock("DataArchiver");
    if(!p->get("outputInterval", d_outputInterval))
