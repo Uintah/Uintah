@@ -1203,8 +1203,8 @@ GeomCones::draw(DrawInfoOpenGL* di, Material* matl, double)
     float nz = 1.0/6.0;
     float nzm = 1.0/sqrt(1.0 + 1.0 + nz*nz);
     nz *= nzm;
-    float tabx[40];
-    float taby[40];
+    float tabx[41];
+    float taby[41];
     float ntabx[40];
     float ntaby[40];
     for (int j=0; j<nu_; j++)
@@ -1214,6 +1214,8 @@ GeomCones::draw(DrawInfoOpenGL* di, Material* matl, double)
       ntabx[j] = sin(2.0 * M_PI * (j+0.5) / nu_) * nzm;
       ntaby[j] = cos(2.0 * M_PI * (j+0.5) / nu_) * nzm;
     }
+    tabx[nu_] = tabx[0];
+    taby[nu_] = taby[0];
 
     for (unsigned int i=0; i < points_.size(); i+=2)
     {
@@ -1261,10 +1263,10 @@ GeomCones::draw(DrawInfoOpenGL* di, Material* matl, double)
 	glNormal3f(ntabx[k], ntaby[k], nz);
 	glVertex3f(0.0, 0.0, 1.0);
 	
-	glNormal3f(tabx[(k+1)%nu_]*nzm, taby[(k+1)%nu_]*nzm, nz);
-	glVertex3f(tabx[(k+1)%nu_], taby[(k+1)%nu_], 0.0);
+	glNormal3f(tabx[k+1]*nzm, taby[k+1]*nzm, nz);
+	glVertex3f(tabx[k+1], taby[k+1], 0.0);
 
-	glNormal3f(tabx[k], taby[k], 1.0/6.0);
+	glNormal3f(tabx[k]*nzm, taby[k]*nzm, nz);
 	glVertex3f(tabx[k], taby[k], 0.0);
       }
       glEnd();
