@@ -110,6 +110,12 @@ PSELIBS := Dataflow/Network Dataflow/Ports Dataflow/XMLUtil Dataflow/Widgets \
 	Core/Math Core/Util Core/Algorithms/Geometry Core/GeomInterface
 LIBS := $(TK_LIBRARY) $(GL_LIBRARY) $(LEX_LIBRARY) $(M_LIBRARY) $(XML_LIBRARY) $(THREAD_LIBRARY)
 
+# Sandia Meshing Library
+ifeq ($(HAVE_CAMAL),yes)
+   SRCS += $(SRCDIR)/TetMesher.cc
+   LIBS := $(LIBS) $(CAMAL_LIBRARY) $(F_LIBRARY)
+endif
+
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
 ifeq ($(LARGESOS),no)
