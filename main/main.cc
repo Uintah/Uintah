@@ -33,13 +33,14 @@
 
 #include <Dataflow/Network/Network.h>
 #include <Dataflow/Network/NetworkEditor.h>
-//#include <Dataflow/Distributed/SlaveController.h>
 #include <Dataflow/Network/PackageDB.h>
 #include <Core/GuiInterface/GuiServer.h>
 #include <Core/GuiInterface/GuiManager.h>
 #include <Core/GuiInterface/TCLTask.h>
 #include <Core/GuiInterface/TCL.h>
 #include <Core/Thread/Thread.h>
+#include <Core/Util/sci_system.h>
+#include <Core/Util/RCParse.h>
 
 #ifdef SCI_PARALLEL
 #include <Core/CCA/Component/PIDL/PIDL.h>
@@ -60,10 +61,12 @@ extern bool global_remote;
 void set_guiManager( GuiManager * );
 }
 
-//extern void set_guiManager( GuiManager* );
-
 int global_argc;
 char** global_argv;
+
+namespace SCIRun {
+env_map scirunrc;  //  contents of .scirunrc are stored here.
+}
 
 #ifndef PSECORETCL
 #error You must set PSECORETCL to the Dataflow/Tcl path
@@ -81,7 +84,6 @@ char** global_argv;
 #error You must set ITCL_WIDGETS to the iwidgets/scripts path
 #endif
 
-// master creates slave by rsh "sr -slave hostname portnumber"
 int main(int argc, char** argv)
 {
   global_argc=argc;
@@ -130,25 +132,20 @@ int main(int argc, char** argv)
   Thread* t2=new Thread(gui_task, "Scheduler");
   t2->setDaemon(true);
   t2->detach();
+  
+  RCParse("/res/sci/data1/moulding/.scirunrc",SCIRun::scirunrc);
 
   // wait for the main window to display before continuing the startup.
   TCL::eval("tkwait visibility .top.globalViewFrame.canvas",result);
 
   // Load in the default packages
-  if(getenv("PACKAGE_PATH")!=NULL)
-    packageDB.loadPackage(getenv("PACKAGE_PATH"));
+  //if(getenv("PACKAGE_PATH")!=NULL)
+  env_iter PACKAGE_PATH = scirunrc.find(string("PACKAGE_PATH"));
+  if (PACKAGE_PATH!=scirunrc.end())
+    packageDB.loadPackage((*PACKAGE_PATH).second.c_str());
   else
     packageDB.loadPackage(DEFAULT_PACKAGE_PATH);
     
-
-#if 0
-  // startup master-side GuiServer, even when no slave..
-  // XXX: Is this a remnant of dist'd stuff?  Michelle?
-  GuiServer* gui_server = new GuiServer;
-  Thread* t3=new Thread(gui_server, "GUI server thread");
-  t3->setDaemon(true);
-  t3->detach();
-#endif
 
   // Now activate the TCL event loop
   tcl_task->release_mainloop();
