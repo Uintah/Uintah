@@ -16,7 +16,7 @@
 */
 
 /*
- *  PolyDataMapper.cc:
+ *  StructuredPointsReader.cc:
  *
  *  Written by:
  *   Keming Zhang
@@ -28,56 +28,28 @@
 
 #include <iostream>
 #include <SCIRun/Vtk/Port.h>
-#include <CCA/Components/VtkTest/PolyDataMapper/PolyDataMapper.h>
+#include <CCA/Components/VtkTest/StructuredPointsReader/StructuredPointsReader.h>
 
-#include "vtkPolyDataMapper.h"
+#include "vtkStructuredPointsReader.h"
+#include "vtkStructuredPoints.h"
 #include "vtkPolyData.h"
-#include "vtkContourFilter.h"
 
 using namespace std;
 using namespace SCIRun;
 using namespace vtk;
 
-extern "C" vtk::Component* make_Vtk_PolyDataMapper()
+extern "C" vtk::Component* make_Vtk_StructuredPointsReader()
 {
-  return new PolyDataMapper;
+  return new StructuredPointsReader;
 }
-
-//Input Port
-IPort::IPort(vtkPolyDataMapper *mapper){
-  this->mapper=mapper;  
-}
-
-IPort::~IPort(){
-
-}
-
-bool
-IPort::isInput(){
-  return true;
-}
-
-std::string
-IPort::getName(){
-  return "PolyDataMapper::input";
-}
-
-bool 
-IPort::accept(Port* port){
-  return dynamic_cast<vtkPolyData*>(port->getObj())!=0;
-}
-
-void
-IPort::connect(Port* port){
-  mapper->SetInput(dynamic_cast<vtkPolyData*>(port->getObj()));
-  mapper->ScalarVisibilityOff();
-}
-
 
 //Output Port
 
-OPort::OPort(vtkPolyDataMapper *mapper){
-  this->mapper=mapper;
+OPort::OPort(vtkStructuredPointsReader *reader){
+  this->reader=reader;
+#  static char * filename="/home/kzhang/vtk/vtkdata/head.60.vtk";
+  static char * filename="/home/kzhang/vtk/vtkdata/matrix.vtk";
+  reader->SetFileName(filename);
 }
 
 OPort::~OPort(){
@@ -91,28 +63,27 @@ OPort::isInput(){
 
 std::string
 OPort::getName(){
-  return "PolyDataMapper::output";
+  return "StructuredPointsReader::output";
 }
 
-vtkObject *
+vtkObject*
 OPort::getObj(){
-  return mapper;
+  return reader->GetOutput();
 }
 
 
-PolyDataMapper::PolyDataMapper(){
+StructuredPointsReader::StructuredPointsReader(){
 
-  mapper=vtkPolyDataMapper::New();
-  iports.push_back(new IPort(mapper));
-  oports.push_back(new OPort(mapper));
+  reader=vtkStructuredPointsReader::New();
+  oports.push_back(new OPort(reader));
 }
 
-PolyDataMapper::~PolyDataMapper(){
+StructuredPointsReader::~StructuredPointsReader(){
   for(unsigned int i=0; i<iports.size(); i++){
     delete iports[i];
   }
   for(unsigned int i=0; i<oports.size(); i++){
     delete oports[i];
   }
-  mapper->Delete();
+  reader->Delete();
 }

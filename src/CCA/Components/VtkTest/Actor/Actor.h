@@ -16,7 +16,7 @@
 */
 
 /*
- *  PolyDataMapper.h
+ *  Actor.h
  *
  *  Written by:
  *   Keming Zhang 
@@ -26,50 +26,51 @@
  *
  */
 
-#ifndef SCIRun_VTK_Components_PolyDataMapper_h
-#define SCIRun_VTK_Components_PolyDataMapper_h
+#ifndef SCIRun_VTK_Components_Actor_h
+#define SCIRun_VTK_Components_Actor_h
 
 #include <SCIRun/Vtk/Port.h>
 #include <SCIRun/Vtk/Component.h>
 #include <vector>
 
-#define IPort PolyDataMapper_IPort
+#define IPort Actor_IPort
+#define OPort Actor_OPort
 
-class vtkPolyDataMapper;
+class vtkActor;
 
 namespace SCIRun {
   namespace vtk{
   class IPort : public vtk::Port {
   public:
-    IPort(vtkPolyDataMapper *mapper);
+    IPort(vtkActor *actor);
     virtual ~IPort();
     bool isInput();
     std::string getName();
-    bool accept(Port* port);
+    bool accept(Port *);
     void connect(Port* p);
-    vtkPolyDataMapper *mapper;
+    vtkActor *actor;
   };
 
   class OPort : public vtk::Port {
   public:
-    OPort(vtkPolyDataMapper *mapper);
+    OPort(vtkActor *actor);
     virtual ~OPort();
     bool isInput();
     std::string getName();
     vtkObject* getObj();
-    vtkPolyDataMapper *mapper;
+    vtkActor *actor;
   };
   
-  class PolyDataMapper: public vtk::Component{
+  class Actor: public vtk::Component{
     
   public:
-    PolyDataMapper();
-    virtual ~PolyDataMapper();
+    Actor();
+    virtual ~Actor();
   private:
-    vtkPolyDataMapper *mapper;
+    vtkActor *actor;
 
-    PolyDataMapper(const PolyDataMapper&);
-    PolyDataMapper& operator=(const PolyDataMapper&);
+    Actor(const Actor&);
+    Actor& operator=(const Actor&);
   };
   
   

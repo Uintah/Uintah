@@ -37,14 +37,21 @@ class vtkRenderer;
 class vtkRenderWindow;
 class vtkRenderWindowInteractor;
 
+#define IPort Renderer_IPort
+#define OPort Renderer_OPort
+
 namespace SCIRun {
   namespace vtk{
   class IPort : public vtk::Port {
   public:
-    IPort();
+    IPort(vtkRenderer *ren);
     virtual ~IPort();
     bool isInput();
     std::string getName();
+    bool accept(Port* p);
+    void connect(Port* p);
+  private:
+    vtkRenderer *ren;
   };
   
   class Renderer: public vtk::Component{
