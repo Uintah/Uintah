@@ -10,7 +10,8 @@ ALLTARGETS := $(ALLTARGETS) $(SRCDIR)/tclIndex
 $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/Anneal.tcl $(SRCDIR)/BldBRDF.tcl \
 	$(SRCDIR)/BldEEGMesh.tcl $(SRCDIR)/BldScene.tcl \
-	$(SRCDIR)/Bundles.tcl $(SRCDIR)/ContourSetReader.tcl \
+	$(SRCDIR)/Bundles.tcl $(SRCDIR)/ConductivitySearch.tcl \
+	$(SRCDIR)/ContourSetReader.tcl \
 	$(SRCDIR)/ContourSetWriter.tcl $(SRCDIR)/Coregister.tcl \
 	$(SRCDIR)/DipoleInSphere.tcl $(SRCDIR)/DipoleMatToGeom.tcl \
 	$(SRCDIR)/DipoleSourceRHS.tcl \
@@ -37,6 +38,9 @@ CLEANPROGS := $(CLEANPROGS) $(SRCDIR)/tclIndex
 
 #
 # $Log$
+# Revision 1.5  2000/12/13 20:54:40  dmw
+# Pressing return causes execution, added ContourSetReader to the sub.mk
+#
 # Revision 1.4  2000/10/29 03:47:58  dmw
 # new GUIs
 #
