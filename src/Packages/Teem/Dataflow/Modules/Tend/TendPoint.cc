@@ -157,34 +157,30 @@ TendPoint::execute()
   sy = nin->axis[2].size;
   sz = nin->axis[3].size;
 
-  if (!( AIR_IN_CL(0, loc[0], sx-1) &&
-	 AIR_IN_CL(0, loc[1], sy-1) &&
-	 AIR_IN_CL(0, loc[2], sz-1) )) {
-    char *err = biffGetDone(TEN);
+  if ((loc[0] > sx-1) ||
+      (loc[0] < 0) ||
+      (loc[1] > sy-1) ||
+      (loc[1] < 0) ||
+      (loc[2] > sz-1) ||
+      (loc[2] < 0) ) {
     error(string("Location : " + to_string(loc[0]) + ", " +
 		 to_string(loc[1]) + ", " + to_string(loc[2]) + 
-		 " not inside volume" + err));
-    free(err);
+		 " not inside volume"));
     return;
   }
   
+  cerr << "Done with check\n";
   float eval[3], evec[9], c[TEN_ANISO_MAX+1];
   float * tdata =  (float*)(nin->data) + 7*(loc[0] + sx*(loc[1] + sy*loc[2]));
-  fprintf(stderr, "location = (%d,%d,%d)\n", loc[0], loc[1], loc[2]);
-  fprintf(stderr, "confidence = %g\n", tdata[0]);
   confidence_.set(tdata[0]);
-  fprintf(stderr, "tensor =\n");
-  fprintf(stderr, "{%.7f,%.7f,%.7f,%.7f,%.7f,%.7f} = \n",
-	  tdata[1], tdata[2], tdata[3], tdata[4], tdata[5], tdata[6]);
+
   tensor1_.set(tdata[1]);
   tensor2_.set(tdata[2]);
   tensor3_.set(tdata[3]);
   tensor4_.set(tdata[4]);
   tensor5_.set(tdata[5]);
   tensor6_.set(tdata[6]);
-  fprintf(stderr, "% 15.7f % 15.7f % 15.7f\n", tdata[1], tdata[2], tdata[3]);
-  fprintf(stderr, "% 15.7f % 15.7f % 15.7f\n", tdata[2], tdata[4], tdata[5]);
-  fprintf(stderr, "% 15.7f % 15.7f % 15.7f\n", tdata[3], tdata[5], tdata[6]);
+
   tenEigensolve_f(eval, evec, tdata);
   eval1_.set(eval[0]);
   eval2_.set(eval[1]);
@@ -198,21 +194,14 @@ TendPoint::execute()
   evec7_.set(evec[6]);
   evec8_.set(evec[7]);
   evec9_.set(evec[8]);
-  fprintf(stderr, "eigensystem = (<eigenvalue> : <eigenvector>):\n");
-  fprintf(stderr, "% 15.7f : % 15.7f % 15.7f % 15.7f\n",
-	  eval[0], evec[0], evec[1], evec[2]);
-  fprintf(stderr, "% 15.7f : % 15.7f % 15.7f % 15.7f\n",
-	  eval[1], evec[3], evec[4], evec[5]);
-  fprintf(stderr, "% 15.7f : % 15.7f % 15.7f % 15.7f\n",
-	  eval[2], evec[6], evec[7], evec[8]);
+
   float axis[3], mat[9];
   float angle = ell_3m_to_aa_f(axis, evec);
   angle_.set(angle);
   axis1_.set(axis[0]);
   axis2_.set(axis[1]);
   axis3_.set(axis[2]);
-  fprintf(stderr, "eigenvector rotation: %g around {%g,%g,%g}\n",
-	  angle, axis[0], axis[1], axis[2]);
+
   ell_aa_to_3m_f(mat, angle, axis);
   mat1_.set(mat[0]);
   mat2_.set(mat[1]);
@@ -223,14 +212,9 @@ TendPoint::execute()
   mat7_.set(mat[6]);
   mat8_.set(mat[7]);
   mat9_.set(mat[8]);
-  fprintf(stderr, "% 15.7f % 15.7f % 15.7f\n",
-	  mat[0], mat[1], mat[2]);
-  fprintf(stderr, "% 15.7f % 15.7f % 15.7f\n",
-	  mat[3], mat[4], mat[5]);
-  fprintf(stderr, "% 15.7f % 15.7f % 15.7f\n",
-	  mat[6], mat[7], mat[8]);
+
   tenAnisoCalc_f(c, eval);
-  fprintf(stderr, "anisotropies = \n");
+
   cl1_.set(c[1]);
   cp1_.set(c[2]);
   ca1_.set(c[3]);
@@ -253,10 +237,6 @@ TendPoint::execute()
   cz_.set(c[20]);
   det_.set(c[21]);
   tr_.set(c[22]);
-  for (int i=1; i<=TEN_ANISO_MAX; i++) {
-    fprintf(stderr, "%s: % 15.7f\n",
-	    airEnumStr(tenAniso, i), c[i]);
-  }
 }
 
 } // End namespace SCITeem
