@@ -497,6 +497,7 @@ proc popupSaveMenu {} {
 
     if { $netedit_savefile != "" } {
 	netedit savenetwork  $netedit_savefile
+	saveMacroModules $netedit_savefile
     }
 }
 
@@ -511,7 +512,8 @@ proc popupLoadMenu {} {
     set netedit_loadfile [tk_getOpenFile -filetypes $types ]
     
     if { [file exists $netedit_loadfile] } {
-	loadfile $netedit_loadfile
+	source $netedit_loadfile
+	saveMacroModules $netedit_loadfile
     }
 }
 
@@ -810,7 +812,7 @@ proc createAlias {fromPackage fromCategory fromModule toPackage toCategory toMod
 proc loadfile {netedit_loadfile} {
     # Check to see of the file exists; exit if it doesn't
     if { ! [file exists $netedit_loadfile] } {
-	puts "loadfile: no such file"
+	puts "$netedit_loadfile: no such file"
 	return
     }
     
@@ -828,7 +830,7 @@ proc loadfile {netedit_loadfile} {
 
     # read in the first line of the file
     set curr_line [gets $fchannel]
-    while { ! [string match $curr_line "# EOF"] } {
+    while { ! [eof $fchannel] } {
 	# Stage 1: Source basic variables
 	if { $stage == 1 } {
 	    if { [string match "set m*" $curr_line] } {
@@ -840,7 +842,7 @@ proc loadfile {netedit_loadfile} {
 		# do nothing
 	    } else {
 		# Execute the line (comments and/or blank lines are ignored)
-		eval $curr_linesave
+		eval $curr_line
 	    }
 	}
 	
@@ -866,7 +868,7 @@ proc loadfile {netedit_loadfile} {
 	    if { [string match "set ::*" $curr_line] } {
 		set curr_string $curr_line
 		set var [string trimleft $curr_string "set :"]
-
+		
 		set c 0
 		set t 0
 		set pram ""
@@ -916,6 +918,8 @@ proc loadfile {netedit_loadfile} {
 		set mvar "m$counter"
 		set m [expr $$mvar]
 		
+
+
 		set command "set ::$m"
 		append command "$pram $value"
 
@@ -939,12 +943,13 @@ proc loadfile {netedit_loadfile} {
 	set curr_line [gets $fchannel]
 	
 	# break out of loop, if at end of file
-	if { [string match $curr_line "# EOF"] } {
+	if { [eof $fchannel] } {
 	    break
 	}
     }
     
     # close the file
     close $fchannel
+    puts "got this far..."
 
 }
