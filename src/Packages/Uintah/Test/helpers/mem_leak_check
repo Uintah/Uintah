@@ -4,7 +4,6 @@ TEST=$1
 MALLOC_STATS=$2
 COMPARISON_MALLOC_STATS=$3
 TMPDIR=$4
-ERRORS_TO=$5
 
 if [ ! -f $MALLOC_STATS ]; then
     echo "No malloc_stats output found.  Can't do memory leak test."
@@ -13,39 +12,33 @@ fi
 
 error=0
 
+echo "Checking $TEST for scinew memory leaks"
 grep '\.' $MALLOC_STATS > $TMPDIR/scinew_malloc_stats
 retval=$?
 if [ $retval == "0" ]; then
-    echo "Here are the object allocated with scinew but not deleted." > $TMPDIR/mem_error.txt
-    echo > $TMPDIR/mem_error.txt
-    cat $TMPDIR/scinew_malloc_stats >> $TMPDIR/mem_error.txt
+    echo "***Memory leaks found***"
+    echo "Here are the object allocated with scinew but not deleted."
+    echo
+    cat $TMPDIR/scinew_malloc_stats
     error=1
 else
+    echo "Memory leak test passed -- no scinew memory leaks found"
     if [ ! -f $COMPARISON_MALLOC_STATS ]; then
+        echo "Storing $MALLOC_STATS"
 	cp $MALLOC_STATS $COMPARISON_MALLOC_STATS
 	exit -1
     fi
-
-    highwater_check.pl $MALLOC_STATS $COMPARISON_MALLOC_STATS > $TMPDIR/mem_error.txt
+    
+    echo "Performing highwater memory usage check"
+    highwater_check.pl $MALLOC_STATS $COMPARISON_MALLOC_STATS
     error=$?
-fi
-
-if [ $error != "0" ]; then
-    echo "Memory leak test failed for $TEST."
-    if [ "$ERRORS_TO" != "" ]; then
-	cat > $TMPDIR/error.msg <<EOF
-Subject: Memory Leak Alert for $TEST on $OS
-To: $ERRORS_TO
-
-Memory leak test failed for $TEST.  
-
-EOF
-        cat $TMPDIR/mem_error.txt >> $TMPDIR/error.msg
-	/usr/lib/sendmail "$ERRORS_TO" < $TMPDIR/error.msg
-        echo "Mail sent"
+    if [ $error != "0" ]; then
+	echo "***Highwater memory usage check failed***"
+        error=2
+    else
+	echo "Highwater memory usage check passed!"
     fi
-    exit 1
 fi
 
-exit $?
+exit $error
 

@@ -1,17 +1,16 @@
 #!/bin/sh
 
 TEST=$1
-TEST_ROOT=$2
+TEST_DIR=$2
 COMPARE_ROOT=$3
 SUS_DIR=$4
-ERRORS_TO=$5
 
-cd $TEST_ROOT/$TEST
+cd $TEST_DIR
 UDADIR=`ls -d *.uda`
 
-TEST_UDADIR=$TEST_ROOT/$TEST/$UDADIR
+TEST_UDADIR=$TEST_DIR/$UDADIR
 COMPARE_UDADIR=$COMPARE_ROOT/$TEST/$UDADIR
-TMPDIR=$TEST_ROOT/$TEST
+TMPDIR=$TEST_DIR
 
 echo "Testing $TEST"
 
@@ -34,6 +33,7 @@ if [ -d "$TEST_UDADIR" ]; then
     echo "Storing uda directory"
     cp -r $TEST_UDADIR $COMPARE_UDADIR
     cd $COMPARE_ROOT/$TEST
+    exit -2
 #    find $UDADIR -type d | xargs cvs add
 #    find $UDADIR -name "*.dat" | xargs cvs add
 #    find $UDADIR -name "*.data" | xargs cvs add
@@ -46,40 +46,47 @@ if [ -d "$TEST_UDADIR" ]; then
     diff -q $TEST_UDADIR/input.xml $COMPARE_UDADIR/input.xml
     if [ $? != "0" ]; then
 	echo
-	echo "Input files differ."
+	echo "  Input files differ."
 	exit 5;
     else
-	echo "Input files are the same."
+	echo "  Input files are the same."
     fi
 
     echo
     echo "Comparing dat files"
+    echo "======================================"
     echo
 
-    compare_dats $TEST $TEST_UDADIR $COMPARE_UDADIR $TMPDIR $ERRORS_TO
+    compare_dats $TEST $TEST_UDADIR $COMPARE_UDADIR $TMPDIR
     compare_dats_retval=$?
     if [ $compare_dats_retval == "1" ]; then
-	echo "  failed"
+	echo 
+	echo "*** dat comparison tests failed ***"
 	exit 1
     fi
 
+
     echo
     echo "Comparing udas"
+    echo "======================================"
     echo
-    compare_udas $SUS_DIR $TEST $TEST_UDADIR $COMPARE_UDADIR $TMPDIR $ERRORS_TO
+    compare_udas $SUS_DIR $TEST $TEST_UDADIR $COMPARE_UDADIR $TMPDIR
     retval=$?
-    if [ $retval == "1" ]; then
-	echo "  failed"
+    if [ $retval != "0" ]; then
+	echo 
+	echo "*** uda comparison tests failed ***"
 	exit 1
     fi
 
     echo
     echo "Comparing checkpoints"
+    echo "======================================"
     echo
-    compare_udas $SUS_DIR $TEST $TEST_UDADIR/checkpoints $COMPARE_UDADIR/checkpoints $TMPDIR $ERRORS_TO
+    compare_udas $SUS_DIR $TEST $TEST_UDADIR/checkpoints $COMPARE_UDADIR/checkpoints $TMPDIR
     retval=$?
-    if [ $retval == "1" ]; then
-	echo "  failed"
+    if [ $retval != "0" ]; then
+	echo 
+	echo "*** checkpoint comparison tests failed ***"
 	exit 1
     fi
 
