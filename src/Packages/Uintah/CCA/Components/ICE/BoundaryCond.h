@@ -1,7 +1,7 @@
 #ifndef Packages_Uintah_CCA_Components_Ice_BoundaryCond_h
 #define Packages_Uintah_CCA_Components_Ice_BoundaryCond_h
 
-#include <Packages/Uintah/CCA/Components/ICE/LODI.h>
+#include <Packages/Uintah/CCA/Components/ICE/LODI2.h>
 #include <Packages/Uintah/Core/Grid/BoundCond.h>
 #include <Packages/Uintah/Core/Grid/SimulationStateP.h>
 #include <Packages/Uintah/Core/Grid/VarTypes.h>
