@@ -31,21 +31,6 @@
 
 namespace SCIRun {
 
-typedef struct _BIData {
-  MeshHandle src_meshH;
-  MeshHandle dst_meshH;
-  Field::data_location loc;
-  string basis;
-  bool source_to_single_dest;
-  bool exhaustive_search;
-  double dist;
-  int np;
-  FieldHandle out_fieldH;
-  Barrier barrier;
-  
-  _BIData() : barrier("BuildInterpolant Barrier") {}
-} BIData;
-
 class BuildInterpAlgo : public DynamicAlgoBase
 {
 public:
@@ -66,6 +51,38 @@ public:
 template <class MSRC, class LSRC, class MDST, class LDST, class FOUT>
 class BuildInterpAlgoT : public BuildInterpAlgo
 {
+
+typedef pair<typename LDST::index_type, 
+  vector<typename LSRC::index_type> > dst_src_pair;
+
+#ifdef HAVE_HASH_MAP
+typedef hash_map<unsigned int,
+  dst_src_pair,
+  hash<unsigned int>, 
+  equal_to<unsigned int> > hash_type;
+#else
+typedef map<unsigned int,
+  dst_src_pair,
+  equal_to<unsigned int> > hash_type;
+#endif
+
+typedef struct _BIData {
+  MeshHandle src_meshH;
+  MeshHandle dst_meshH;
+  Field::data_location loc;
+  string basis;
+  bool source_to_single_dest;
+  bool exhaustive_search;
+  double dist;
+  int np;
+  FieldHandle out_fieldH;
+  hash_type dstmap;
+  Mutex maplock;
+  Barrier barrier;
+  
+  _BIData() : barrier("BuildInterpolant Barrier"), maplock("BuildInterp Map Lock") {}
+} BIData;
+
 public:
   //! virtual interface. 
   virtual FieldHandle execute(MeshHandle src, MeshHandle dst,
@@ -88,7 +105,7 @@ double
 BuildInterpAlgoT<MSRC, LSRC, MDST, LDST, FOUT>::find_closest_src_loc(typename LSRC::index_type &index, MSRC *mesh, const Point &p) const
 {
   double mindist = DBL_MAX;
-  
+
   typename LSRC::iterator itr, eitr;
   mesh->begin(itr);
   mesh->end(eitr);
@@ -147,7 +164,8 @@ BuildInterpAlgoT<MSRC, LSRC, MDST, LDST, FOUT>::execute(MeshHandle src_meshH, Me
   MDST *dst_mesh = dynamic_cast<MDST *>(dst_meshH.get_rep());
   FOUT *out_field = scinew FOUT(dst_mesh, loc);  
   d.out_fieldH = out_field;
-  if (((basis == "constant") && source_to_single_dest) || np==1)
+
+  if (np==1)
     parallel_execute(0, &d);
   else
     Thread::parallel(this, 
@@ -183,7 +201,6 @@ BuildInterpAlgoT<MSRC, LSRC, MDST, LDST, FOUT>::parallel_execute(int proc,
   d->barrier.wait(np);
   int count=0;
 
-  // note: this first option isn't parallelized
   if ((basis == "constant") && source_to_single_dest) {
     // For each source location, we will map it to a single destination
     //   location.  This is different from our other interpolation
@@ -201,21 +218,12 @@ BuildInterpAlgoT<MSRC, LSRC, MDST, LDST, FOUT>::parallel_execute(int proc,
     typename LDST::size_type sz;
     dst_mesh->size(sz);
 
-    typedef pair<typename LDST::index_type, 
-                 vector<typename LSRC::index_type> > dst_src_pair;
-#ifdef HAVE_HASH_MAP
-    typedef hash_map<unsigned int,
-                     dst_src_pair,
-                     hash<unsigned int>, 
-                     equal_to<unsigned int> > hash_type;
-#else
-    typedef map<unsigned int,
-                dst_src_pair,
-                equal_to<unsigned int> > hash_type;
-#endif
-
-    hash_type dstmap;
     while (itr != end_itr) {
+      if (count%np != proc) {
+	++itr;
+	++count;
+	continue;
+      }
       typename LDST::array_type locs;
       vector<double> weights;
       Point p;
@@ -233,34 +241,46 @@ BuildInterpAlgoT<MSRC, LSRC, MDST, LDST, FOUT>::parallel_execute(int proc,
 	  }
 	}
 	unsigned int uint_idx = (unsigned int) locs[max_idx];
-	typename hash_type::iterator dst_iter = dstmap.find(uint_idx);
-	if (dst_iter != dstmap.end()) {
+	d->maplock.lock();
+	typename hash_type::iterator dst_iter = d->dstmap.find(uint_idx);
+	if (dst_iter != d->dstmap.end()) {
 	  dst_iter->second.second.push_back(*itr);
 	} else {
 	  vector<typename LSRC::index_type> v;
 	  v.push_back(*itr);
-	  dstmap[uint_idx] = dst_src_pair(locs[max_idx], v);
+	  d->dstmap[uint_idx] = dst_src_pair(locs[max_idx], v);
 	}
+	d->maplock.unlock();
       }
       if (exhaustive_search && failed) {
 	typename LDST::index_type index;
-	double d=find_closest_dst_loc(index, dst_mesh, p);
-	if (dist<=0 || d<dist) {
+	double dd=find_closest_dst_loc(index, dst_mesh, p);
+	if (dist<=0 || dd<dist) {
 	  unsigned int uint_idx = (unsigned int) index;
-	  typename hash_type::iterator dst_iter = dstmap.find(uint_idx);
-	  if (dst_iter != dstmap.end()) {
+	  d->maplock.lock();
+	  typename hash_type::iterator dst_iter = d->dstmap.find(uint_idx);
+	  if (dst_iter != d->dstmap.end()) {
 	    dst_iter->second.second.push_back(*itr);
 	  } else {
 	    vector<typename LSRC::index_type> v;
 	    v.push_back(*itr);
-	    dstmap[uint_idx] = dst_src_pair(index, v);
+	    d->dstmap[uint_idx] = dst_src_pair(index, v);
 	  }
+	  d->maplock.unlock();
 	}
       }
       ++itr;
+      ++count;
     }
-    typename hash_type::iterator dst_iter = dstmap.begin();
-    while (dst_iter != dstmap.end()) {
+    d->barrier.wait(np);
+    typename hash_type::iterator dst_iter = d->dstmap.begin();
+    count=0;
+    while (dst_iter != d->dstmap.end()) {
+      if (count%np != proc) {
+	++dst_iter;
+	++count;
+	continue;
+      }
       vector<pair<typename LSRC::index_type, double> > v;
       unsigned long n=dst_iter->second.second.size();
       for (unsigned int i=0; i<n; i++) {
@@ -270,6 +290,7 @@ BuildInterpAlgoT<MSRC, LSRC, MDST, LDST, FOUT>::parallel_execute(int proc,
       }
       out_field->set_value(v, dst_iter->second.first);
       ++dst_iter;
+      ++count;
     }
   } else { // linear (or constant, with each src mapping to many dests)
     typename LDST::iterator itr, end_itr;
