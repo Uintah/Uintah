@@ -123,6 +123,8 @@ void PassiveScalar::problemSetup(GridP&, SimulationStateP& in_state,
        
   const_ps->getWithDefault("initialize_diffusion_knob",       
                             d_scalar->initialize_diffusion_knob,   0);
+                            
+   const_ps->getWithDefault("diffusivity",  d_scalar->diff_coeff, 0.0);
 
   //__________________________________
   //  Read in the geometry objects for the scalar
@@ -149,6 +151,7 @@ void PassiveScalar::problemSetup(GridP&, SimulationStateP& in_state,
 
   //__________________________________
   //  Read in probe locations for the scalar field
+  d_usingProbePts = false;
   ProblemSpecP probe_ps = child->findBlock("probePoints");
   if (probe_ps) {
     probe_ps->require("probeSamplingFreq", d_probeFreq);
@@ -228,7 +231,7 @@ void PassiveScalar::initialize(const ProcessorGroup*,
           if(patch->findCell(Point(d_probePts[i]),cell) ) {
             string filename=udaDir + "/" + d_probePtsNames[i].c_str() + ".dat";
             fp = fopen(filename.c_str(), "a");
-            fprintf(fp, "\%Time Scalar Field at [%e, %e, %e], at cell [%i, %i, %i]\n", 
+            fprintf(fp, "%Time Scalar Field at [%e, %e, %e], at cell [%i, %i, %i]\n", 
                     d_probePts[i].x(),d_probePts[i].y(), d_probePts[i].z(),
                     cell.x(), cell.y(), cell.z() );
             fclose(fp);
@@ -271,10 +274,10 @@ void PassiveScalar::modifyThermoTransportProperties(const ProcessorGroup*,
 } 
 
 //______________________________________________________________________
-void PassiveScalar::computeSpecificHeat(CCVariable<double>& cv_new,
-                                    const Patch* patch,
-                                    DataWarehouse* new_dw,
-                                    const int indx)
+void PassiveScalar::computeSpecificHeat(CCVariable<double>& ,
+                                    const Patch* ,
+                                    DataWarehouse* ,
+                                    const int )
 { 
   //none
 } 
@@ -309,7 +312,7 @@ void PassiveScalar::scheduleComputeModelSources(SchedulerP& sched,
 //______________________________________________________________________
 void PassiveScalar::computeModelSources(const ProcessorGroup*, 
                                     const PatchSubset* patches,
-                                    const MaterialSubset* matls,
+                                    const MaterialSubset* /*matls*/,
                                     DataWarehouse* old_dw,
                                     DataWarehouse* new_dw,
                                     const ModelInfo* mi)
