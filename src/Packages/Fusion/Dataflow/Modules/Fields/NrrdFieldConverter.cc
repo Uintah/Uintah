@@ -83,9 +83,8 @@ NrrdFieldConverter::~NrrdFieldConverter(){
 void
 NrrdFieldConverter::execute(){
 
-  vector< NrrdDataHandle > nHandles;
-  NrrdDataHandle nHandle;
   MeshHandle mHandle;
+  vector< NrrdDataHandle > nHandles;
 
   // Assume a range of ports even though only two are needed for the
   // mesh and data.
@@ -105,6 +104,8 @@ NrrdFieldConverter::execute(){
       error( "Unable to initialize "+name+"'s iport " );
       return;
     }
+
+    NrrdDataHandle nHandle;
 
     // Save the field handles.
     if (inrrd_port->get(nHandle) && nHandle.get_rep()) {
@@ -198,6 +199,8 @@ NrrdFieldConverter::execute(){
 
   bool   structured = false;
   bool unstructured = false;
+  int mesh_rank = 0;
+  int mesh_coor_rank = 0;
   string property;
 
   // If data change, update the GUI the field if needed.
@@ -217,11 +220,9 @@ NrrdFieldConverter::execute(){
     // Get each of the dataset names for the GUI.
     for( unsigned int ic=0; ic<nHandles.size(); ic++ ) {
 
-      nHandle = nHandles[ic];
-
       // Get the tuple axis name - there is only one.
       vector< string > dataset;
-      nHandle->get_tuple_indecies(dataset);
+      nHandles[ic]->get_tuple_indecies(dataset);
 
       // Save the name of the dataset.
       if( nHandles.size() == 1 )
@@ -229,24 +230,30 @@ NrrdFieldConverter::execute(){
       else
 	datasetsStr.append( "{" + dataset[0] + "} " );
       
-      if( nHandle->get_property( "Topology", property ) ) {
+      if( nHandles[ic]->get_property( "Topology", property ) ) {
 
 	// Structured mesh.
 	if( property.find( "Structured" ) != string::npos ) {
 
-	  if( nHandle->get_property( "Coordinate System", property ) ) {
+	  if( nHandles[ic]->get_property( "Coordinate System", property ) ) {
 
 	    // Cartesian Coordinates.
 	    if( property.find("Cartesian") != string::npos ) {
 
-	      // Check to make sure three are three coordinates.
-	      // If Scalar the last dim must be three.
+	      // Check to make sure there are two or three coordinates.
+	      // If Scalar the last dim must be two or three.
 	      // If already Vector then nothing ...
-	      if( !(dataset[0].find( ":Scalar" ) != string::npos &&
-		    nHandle->nrrd->axis[ nHandle->nrrd->dim-1].size == 3) &&
-		  !(dataset[0].find( ":Vector" ) != string::npos) ) {
-		error( dataset[0] + "Mesh dataset does not contain 3D points." );
-		error( dataset[0] );
+
+	      if( dataset[0].find( ":Scalar" ) != string::npos ) {
+		mesh_rank = nHandles[ic]->nrrd->dim - 2;
+		mesh_coor_rank = nHandles[ic]->nrrd->axis[ nHandles[ic]->nrrd->dim-1].size;
+	      } else if( dataset[0].find( ":Vector" ) != string::npos ) {
+		mesh_rank = nHandles[ic]->nrrd->dim - 1;
+		mesh_coor_rank = 3;
+	      }
+
+	      if( mesh_coor_rank < 1 || 3 < mesh_coor_rank ) {
+		error( dataset[0] + " Mesh dataset does not contain points." );
 		error_ = true;
 		return;
 	      }
@@ -263,13 +270,13 @@ NrrdFieldConverter::execute(){
 	      structured = true;
 
 	    } else {
-	      error( dataset[0] + property + " is an unsupported coordinate system." );
+	      error( dataset[0] + " - " + property + " is an unsupported coordinate system." );
 	      error_ = true;
 	      return;
 	    }
 
 	  } else {
-	    error( dataset[0] + "No coordinate system found." );
+	    error( dataset[0] + " - No coordinate system found." );
 	    error_ = true;
 	    return;
 	  }
@@ -285,15 +292,15 @@ NrrdFieldConverter::execute(){
 
 	  // The cell list has two attributes: Topology == Unstructured
 	  // and Cell Type == (see check below).
-	  if( nHandle->get_property( "Cell Type", property ) ) {
+	  if( nHandles[ic]->get_property( "Cell Type", property ) ) {
 
-	    if( !(nHandle->nrrd->dim == 2 &&
+	    if( !(nHandles[ic]->nrrd->dim == 2 &&
 		  (dataset[0].find( ":Vector" ) != string::npos ||
 		   dataset[0].find( ":Tensor" ) != string::npos)) &&
 
-		!(nHandle->nrrd->dim == 3 &&
+		!(nHandles[ic]->nrrd->dim == 3 &&
 		  dataset[0].find( ":Scalar" ) != string::npos) ) {
-	      error( dataset[0] + "Malformed connectivity list." );
+	      error( dataset[0] + " - Malformed connectivity list." );
 	      error_ = true;
 	      return;
 	    }
@@ -322,8 +329,8 @@ NrrdFieldConverter::execute(){
 
 	    // If the dim is three then the last axis has the number
 	    // of connections.
-	    if( !(nHandle->nrrd->dim == 3 &&
-		  nHandle->nrrd->axis[2].size == connectivity) &&
+	    if( !(nHandles[ic]->nrrd->dim == 3 &&
+		  nHandles[ic]->nrrd->axis[2].size == connectivity) &&
 
 	    // If stored as Vector or Tensor the last dim will be the point
 	    // list dim so do this check instead.
@@ -332,7 +339,7 @@ NrrdFieldConverter::execute(){
 		!(connectivity == 6 &&
 		  dataset[0].find( ":Tensor" ) != string::npos ) ) {
 
-	      error( dataset[0] + "Connectivity list set does not contain enough points." );
+	      error( dataset[0] + "- Connectivity list set does not contain enough points." );
 	      error_ = true;
 	      return;
 	    }
@@ -342,7 +349,7 @@ NrrdFieldConverter::execute(){
 
 	  // The point list has two attributes: Topology == Unstructured
 	  // and Coordinate System == Cartesian
-	  } else if( nHandle->get_property( "Coordinate System", property ) ) {
+	  } else if( nHandles[ic]->get_property( "Coordinate System", property ) ) {
 
 	    // Cartesian Coordinates.
 	    if( property.find("Cartesian") != string::npos ) {
@@ -350,27 +357,30 @@ NrrdFieldConverter::execute(){
 	      // three (Scalar) and that three are three coordinates.
 	      // If Scalar the last dim must be three.
 	      // If already Vector then nothing ...
-	      if( !(nHandle->nrrd->dim == 3 &&
-		    dataset[0].find( ":Scalar" ) != string::npos &&
-		    nHandle->nrrd->axis[2].size == 3) &&
-		  !(nHandle->nrrd->dim == 2 &&
-		    dataset[0].find( ":Vector" ) != string::npos) )
-		{
-		  error( dataset[0] + "Mesh does not contain 3D points." );
-		  error_ = true;
-		  return;
-		}
+
+	      if( nHandles[ic]->nrrd->dim == 3 &&
+		  dataset[0].find( ":Scalar" ) != string::npos )
+		mesh_coor_rank = nHandles[ic]->nrrd->axis[ nHandles[ic]->nrrd->dim-1].size;
+	      else if( nHandles[ic]->nrrd->dim == 2 &&
+		       dataset[0].find( ":Vector" ) != string::npos )
+		mesh_coor_rank = 3;
+
+	      if( mesh_coor_rank < 1 || 3 < mesh_coor_rank ) {
+		error( dataset[0] + " - Mesh does not contain points." );
+		error_ = true;
+		return;
+	      }
 
 	      mesh_[0] = ic;
 	    
 	      unstructured = true;
 	    } else {
-	      error( dataset[0] + property + " is an unsupported coordinate system." );
+	      error( dataset[0] + " - " + property + " is an unsupported coordinate system." );
 	      error_ = true;
 	      return;
 	    }
 	  } else {
-	    error( dataset[0] + "Unknown unstructured mesh data found." );
+	    error( dataset[0] + " - Unknown unstructured mesh data found." );
 	    error_ = true;
 	    return;
 	  }
@@ -417,7 +427,7 @@ NrrdFieldConverter::execute(){
     error_ = false;
 
     vector<unsigned int> mdims;
-    int idim, jdim, kdim;
+    int idim=1, jdim=1, kdim=1;
 
     if( structured ) {
       
@@ -425,9 +435,9 @@ NrrdFieldConverter::execute(){
 
       if( property.find("Cartesian") != string::npos ) {
 	if( mesh_.size() == 1 ) {
-	  idim = nHandles[mesh_[0]]->nrrd->axis[1].size;
-	  jdim = nHandles[mesh_[0]]->nrrd->axis[2].size;
-	  kdim = nHandles[mesh_[0]]->nrrd->axis[3].size;
+	  if( mesh_rank >= 1 ) idim = nHandles[mesh_[0]]->nrrd->axis[1].size;
+	  if( mesh_rank >= 2 ) jdim = nHandles[mesh_[0]]->nrrd->axis[2].size;
+	  if( mesh_rank >= 3 ) kdim = nHandles[mesh_[0]]->nrrd->axis[3].size;
 	  
 	} else if( mesh_.size() == 3 ) {
 	  idim = nHandles[mesh_[0]]->nrrd->axis[1].size;
@@ -467,9 +477,9 @@ NrrdFieldConverter::execute(){
 
       CompileInfoHandle ci_mesh =
 	NrrdFieldConverterMeshAlgo::get_compile_info( "Structured",
-						 mtd,
-						 nHandle->nrrd->type,
-						 nHandle->nrrd->type);
+				      mtd,
+				      nHandles[mesh_[0]]->nrrd->type,
+				      nHandles[mesh_[0]]->nrrd->type);
 
       Handle<StructuredNrrdFieldConverterMeshAlgo> algo_mesh;
     
@@ -528,24 +538,26 @@ NrrdFieldConverter::execute(){
 
     vector<unsigned int> ddims;
 
-    int rank = 0;
+    int data_rank = 0;
+
+    NrrdDataHandle dHandle;
 
     if( data_.size() == 0 ) {
-      nHandle = NULL;
-      rank = 1;
+      dHandle = NULL;
+      data_rank = 1;
     } else if( data_.size() == 1 || data_.size() == 3 || data_.size() == 6 ) {
 
       for( unsigned int ic=0; ic<data_.size(); ic++ ) {
-	nHandle = nHandles[data_[ic]];
+	dHandle = nHandles[data_[ic]];
 	
 	// Get the tuple axis name - there is only one.
 	vector< string > dataset;
-	nHandle->get_tuple_indecies(dataset);
+	dHandle->get_tuple_indecies(dataset);
 
 	// If more than one dataset then all axii must be Scalar
 	if( data_.size() > 1 ) {
 	  if( dataset[0].find( ":Scalar" ) == string::npos ) {
-	    error( dataset[0] + "Data type must be scalar." );
+	    error( dataset[0] + " - Data type must be scalar." );
 	    error_ = true;
 	    return;
 	  }
@@ -553,36 +565,46 @@ NrrdFieldConverter::execute(){
 	    
 	ddims.clear();
 
-	for( int jc=0; jc<nHandle->nrrd->dim; jc++ )
-	  if( nHandle->nrrd->axis[jc].size > 1 )
-	    ddims.push_back( nHandle->nrrd->axis[jc].size );
+	for( int jc=0; jc<dHandle->nrrd->dim; jc++ )
+	  if( dHandle->nrrd->axis[jc].size > 1 )
+	    ddims.push_back( dHandle->nrrd->axis[jc].size );
 
 	if( ddims.size() == mdims.size() ||
 	    ddims.size() == mdims.size() + 1 ) {
 
 	  for( unsigned int jc=0; jc<mdims.size(); jc++ ) {
 	    if( ddims[jc] != mdims[jc] ) {
-	      error(  dataset[0] + "Data and mesh sizes do not match." );
-	      cerr << "Data and mesh sizes do not match. " << endl;
+	      error(  dataset[0] + "Mesh and Data sizes do not match." );
 
-	      for( unsigned int jc=0; jc<mdims.size(); jc++ )
-		cerr << mdims[jc] << "  ";
-	      cerr << endl;
+	      {
+		ostringstream str;
 
+		str << " Mesh dimensions: ";
+		for( unsigned int jc=0; jc<mdims.size(); jc++ )
+		  str << mdims[jc] << "  ";
+		error( str.str() );
+	      }
 
-	      for( unsigned int jc=0; jc<ddims.size(); jc++ )
-		cerr << ddims[jc] << "  ";
-	      cerr << endl;
+	      {
+		ostringstream str;
 
+		for( unsigned int jc=0; jc<ddims.size(); jc++ )
+		  str << ddims[jc] << "  ";
+		error( str.str() );
+	      }
 
+	      error_ = true;
 	      return;
 	    }
 	  }
 	} else {
-	  error( dataset[0] + "Data and mesh are not of the same rank." );
+	  error( dataset[0] + "Mesh and Data are not of the same rank." );
 
-	  cerr << "Data and mesh are not of the same rank. ";
-	  cerr << ddims.size() << "  " << mdims.size() << endl;
+	  ostringstream str;
+
+	  str << "Mesh rank " << mdims.size() << "  ";
+	  str << "Data rank " << ddims.size();
+	  error( str.str() );
 	  error_ = true;
 	  return;
 	}
@@ -596,21 +618,21 @@ NrrdFieldConverter::execute(){
 
 	if( ddims.size() == mdims.size() ) {
 	  if( dataset[0].find( ":Scalar" ) != string::npos )
-	    rank = 1;
+	    data_rank = 1;
 	  else if( dataset[0].find( ":Vector" ) != string::npos )
-	    rank = 3;
+	    data_rank = 3;
 	  else if( dataset[0].find( ":Tensor" ) != string::npos )
-	    rank = 6;
+	    data_rank = 6;
  	  else {
 	    error( dataset[0] + "Bad tuple axis - no data type must be scalar, vector, or tensor." );
 	    error_ = true;
 	    return;
 	  }
 	} else if(ddims.size() == mdims.size() + 1) {
-	  rank = ddims[mdims.size()];
+	  data_rank = ddims[mdims.size()];
 	}
       } else {
-	rank = data_.size();
+	data_rank = data_.size();
       }
     } else {
       error( "Impropper number of data handles." );
@@ -619,7 +641,7 @@ NrrdFieldConverter::execute(){
 
     }
 
-    if( rank != 1 && rank != 3 && rank != 6 ) {
+    if( data_rank != 1 && data_rank != 3 && data_rank != 6 ) {
       error( "Bad data rank." );
       error_ = true;
       return;
@@ -639,7 +661,7 @@ NrrdFieldConverter::execute(){
 					       fname,
 					       data_.size() ? 
 					       nHandles[data_[0]]->nrrd->type : 0,
-					       rank);
+					       data_rank);
     
     Handle<NrrdFieldConverterFieldAlgo> algo;
     
