@@ -417,6 +417,8 @@ itcl_class SCIRun_Visualization_Isosurface {
 	if [ expr [winfo exists $w] ] {
           $w.f.iso.childsite.tabs.canvas.notebook.cs.page1.cs.isoval.l.s \
 		  configure -from $min -to $max
+          $w.f.iso.childsite.tabs.canvas.notebook.cs.page1.cs.isoval.l.s \
+	          configure -resolution [expr ($max - $min)/10000.]
 	  $w.f.iso.childsite.tabs.canvas.notebook.cs.page1.cs.isoval.l.s \
 		  configure -tickinterval [expr ($max - $min)/3.001]
 	  bind $w.f.iso.childsite.tabs.canvas.notebook.cs.page1.cs.isoval.r.e \
@@ -447,7 +449,7 @@ itcl_class SCIRun_Visualization_Isosurface {
 	    -tickinterval [expr ($stop - $start)/3.001] \
 	    -variable $var1 -orient horizontal -showvalue false \
 	    -command "$this updateSliderEntry $var1 $var2" \
-	    -resolution 0.00000001
+	    -resolution [expr ($stop - $start)/10000.]
 
 	entry $win.r.e -width 7 -text $var2
 
