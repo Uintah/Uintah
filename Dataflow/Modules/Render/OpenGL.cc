@@ -1785,6 +1785,7 @@ OpenGL::listvisuals(GuiArgs& args)
     tag += ", depth=" + to_string(value);
     score+=value*5;
     GETCONFIG(GLX_STENCIL_SIZE);
+    score += value * 2;
     tag += ", stencil="+to_string(value);
     tag += ", accum=";
     GETCONFIG(GLX_ACCUM_RED_SIZE);
