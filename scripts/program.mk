@@ -40,6 +40,7 @@ $(PROGRAM)_LIBS := $(LIBS)
 # we can use the -l syntax to link, but still express the dependicies.
 #
 $(PROGRAM): $(OBJS) $(patsubst %,$(LIBDIR)lib%.so,$(PSELIBS))
+	rm -f $(PROGRAM)
 	$(CXX) $(LDFLAGS) -o $@ $(filter %.o,$^) $(patsubst ../lib/lib%.so,-l%,$(filter %.so,$^)) $($@_LIBS)
 
 #
@@ -55,6 +56,9 @@ SRCS := INVALID_SRCS.cc
 
 #
 # $Log$
+# Revision 1.5  2000/03/17 09:53:22  sparker
+# remove before link (bugzilla #39)
+#
 # Revision 1.4  2000/03/17 09:30:56  sparker
 # New makefile scheme: sub.mk instead of Makefile.in
 # Use XML-based files for module repository
