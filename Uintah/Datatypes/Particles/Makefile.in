@@ -9,7 +9,7 @@ endif
 SRCS     = MPMaterial.cc MPRead.cc MPVizParticleSet.cc ParticleGridReader.cc \
            ParticleGridReaderPort.cc ParticleSet.cc ParticleSetPort.cc \
            cfdlibParticleSet.cc VizGrid.cc MPVizGrid.cc MPWrite.cc \
-	   MPParticleGridReader.cc $(PARALLEL_SRCS)
+	   MPParticleGridReader.cc MFMPParticleGridReader.cc $(PARALLEL_SRCS)
 
 GLOBUS_INCLUDE = @GLOBUS_INCLUDE@
 

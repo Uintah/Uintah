@@ -13,6 +13,9 @@
  */
 
 #include "MPVizGrid.h"
+#include <iostream>
+using std::cerr;
+using std::endl;
 
 namespace Uintah {
 namespace Datatypes {
@@ -81,8 +84,10 @@ VectorFieldHandle MPVizGrid::getVectorField( clString name )
   map<clString, VectorFieldHandle, ltstr>::iterator it = vmap.find( name );
   if (it == vmap.end())
     return 0;
-  else
+  else {
+    cerr<<"Returning vectorfield "<< name <<endl;
     return vmap[ name ];
+  }
 }     
 
 ScalarFieldHandle MPVizGrid::getScalarField( clString name )
@@ -90,8 +95,10 @@ ScalarFieldHandle MPVizGrid::getScalarField( clString name )
   map<clString, ScalarFieldHandle, ltstr>::iterator it = smap.find( name );
   if (it == smap.end())
     return 0;
-  else
+  else{
+    cerr<<"Returning scalarfield "<< name<<endl;
     return smap[ name ];
+  }
 }     
 
 
@@ -109,6 +116,10 @@ void MPVizGrid::io(Piostream& stream)
 
 //
 // $Log$
+// Revision 1.2  1999/12/09 21:01:51  kuzimmer
+// Addtional modules and modifications for reading in multiple files from
+// a SAMRAI output.
+//
 // Revision 1.1  1999/09/21 16:08:29  kuzimmer
 // modifications for binary file format
 //
