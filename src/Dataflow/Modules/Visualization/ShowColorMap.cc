@@ -38,6 +38,7 @@ class ShowColorMap : public Module {
   GuiString gui_side_;
   GuiInt gui_numlabels_;
   GuiDouble gui_scale_;
+  GuiInt gui_num_sig_digits_;
   GuiString gui_units_;
   GuiInt gui_text_color_;
   GuiInt gui_text_fontsize_;
@@ -57,6 +58,7 @@ ShowColorMap::ShowColorMap(GuiContext* ctx)
     gui_side_(ctx->subVar("side")),
     gui_numlabels_(ctx->subVar("numlabels")),
     gui_scale_(ctx->subVar("scale")),
+    gui_num_sig_digits_(ctx->subVar("numsigdigits")),
     gui_units_(ctx->subVar("units")),
     gui_text_color_(ctx->subVar("text_color")),
     gui_text_fontsize_(ctx->subVar("text-fontsize")),
@@ -172,6 +174,13 @@ ShowColorMap::execute()
   double scale = gui_scale_.get();
   string str = gui_units_.get();
   if (str == "") str = cmap->units;
+  // So if the maximum number of digits the number will take up is
+  // at most 25 then the length of str better be less than 80-25-1.
+  // See size of value and num_sig_digits below.
+  if (str.length() > 50) {
+    error("Length of units string is too long.  Make it smaller than 50 characters please.");
+    return;
+  }
 
   sq->set_texture( cmap->rawRGBA_ );
   all->add( sq );
@@ -187,9 +196,21 @@ ShowColorMap::execute()
     GeomLines *lines = scinew GeomLines();
     GeomTexts *texts = scinew GeomTexts();
     texts->set_font_index(gui_text_fontsize_.get());
+    int num_sig_digits = gui_num_sig_digits_.get();
+    if (num_sig_digits < 1) {
+      warning("Number of significant digits needs to be at least 1.  Setting the number of significant digits to 1.");
+      gui_num_sig_digits_.set(1);
+      num_sig_digits = 1;
+    }
+    if (num_sig_digits > 20) {
+      warning("Number of significant digits needs to be less than or equal to 20.  Setting the number of significant digits to 20");
+      gui_num_sig_digits_.set(20);
+      num_sig_digits = 20;
+    }
     for(int i = 0; i < numlabels; i++ )
     {
-      sprintf(value, "%.2g %s", minval + (maxval-minval)*(i/(numlabels-1.0)),
+      sprintf(value, "%.*g %s", num_sig_digits,
+	      minval + (maxval-minval)*(i/(numlabels-1.0)),
 	      str.c_str());
       const Point loc = p0 + along * (i/(numlabels-1.0));
       texts->add(value, loc, text_color);
