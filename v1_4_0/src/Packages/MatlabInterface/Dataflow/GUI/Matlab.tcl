@@ -40,11 +40,13 @@ itcl_class MatlabInterface_DataIO_Matlab {
 	set $this-hpTCL "127.0.0.1:5517"
     }
 
-    method send_text {tw} {
-	set chars [$tw get 1.0 end]
-	#puts stdout $chars
-	#$this-c "mat-command" $chars
-	set $this-cmdTCL $chars
+    method update_text {} {
+	set w .ui[modname]
+	set $this-cmdTCL [$w.f.cmd.st get 1.0 end]
+    }
+
+    method send_text {} {
+	$this update_text
 	$this-c needexecute
     }
 
@@ -76,9 +78,10 @@ itcl_class MatlabInterface_DataIO_Matlab {
 
 	option add *textBackground white	
 	iwidgets::scrolledtext $w.f.cmd.st -vscrollmode dynamic \
-		-labeltext "Matlab Commands" 
-	set cmmd "$this send_text $w.f.cmd.st" 
-	
+		-labeltext "Matlab Commands"
+	set cmmd "$this send_text"
+
+	bind $w.f.cmd.st <Leave> "$this update_text"
 	$w.f.cmd.st insert end [set $this-cmdTCL]
 
 	button $w.f.cmd.execute -text "Execute" -command $cmmd
