@@ -48,7 +48,7 @@ tar: products
 		doc/User/Guide/usersguide2.ps.gz \
 		doc/Developer/index.html \
                 doc/Developer/Guide/*.html \
-		doc/Developer/CodeViews/html \
+		doc/Developer/CodeViews/codeviews \
 		doc/FAQBook/*.html \
                 doc/Utilities/HTML/doc_styles.css \
                 doc/Utilities/HTML/*.js \
