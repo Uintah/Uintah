@@ -69,6 +69,7 @@
           <damage_cutoff>0.7</damage_cutoff>
           <include href="../MaterialData/IsotropicElasticArmcoIron.xml"/>
           <include href="../MaterialData/VonMisesYield.xml"/>
+          <include href="../MaterialData/NoStabilityCheck.xml"/>
           <include href="../MaterialData/JohnsonCookPlasticArmcoIron.xml"/>
           <include href="../MaterialData/JohnsonCookDamageArmcoIron.xml"/>
           <include href="../MaterialData/DefaultHypoEOS.xml"/>
