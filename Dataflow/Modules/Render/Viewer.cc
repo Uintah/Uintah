@@ -155,7 +155,14 @@ void Viewer::do_execute()
 		}
 	    }
 	}
-	process_event(1);
+	if (process_event(1) == 86) {
+	  for(int i=0;i<viewwindow.size();i++){
+	    ViewWindow* r=viewwindow[i];
+	    r->current_renderer->kill_helper();
+	  }
+
+	  return;
+	}
     }
 }
 
@@ -169,6 +176,8 @@ int Viewer::process_event(int block)
     busy_bit=1;
     GeometryComm* gmsg=(GeometryComm*)msg;
     switch(msg->type){
+    case MessageTypes::GoAway:
+      return 86;
     case MessageTypes::ExecuteModule:
 	// We ignore these messages...
 	break;

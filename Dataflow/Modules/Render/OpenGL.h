@@ -140,7 +140,7 @@ protected:
 
     void redraw_obj(Viewer* viewer, ViewWindow* viewwindow, GeomObj* obj);
     void pick_draw_obj(Viewer* viewer, ViewWindow* viewwindow, GeomObj* obj);
-    OpenGLHelper* helper;
+    //OpenGLHelper* helper;
     clString my_openglname;
     Array1<XVisualInfo*> visuals;
 
@@ -194,6 +194,7 @@ GLint    get_depth_view[4];
     // compute world space point under cursor (x,y).  If successful,
     // set 'p' to that value & return true.  Otherwise, return false.
     virtual int    pick_scene(int x, int y, Point *p);
+    virtual void kill_helper() { dead = 1; }
 
     clString myname;
     virtual void redraw_loop();
@@ -230,6 +231,9 @@ GLint    get_depth_view[4];
     
     GeomText* pinchText[2];
     GeomCappedCylinder* pinchCylinder[4];
+
+    Thread *helper_thread;
+    bool dead;
 
     // these functions were added to clean things up a bit...
 
