@@ -22,6 +22,12 @@ namespace SCICore {
 #include <string>
 #include <iosfwd>
 
+/* NOT_SET is used to indicate active 
+   fields inside of data structures that
+   represent XML element trees */
+
+#define NOT_SET ((char*)_NOTSET_)
+
 namespace PSECore {
    namespace XMLUtil {
      using SCICore::Geometry::Point;
@@ -68,11 +74,52 @@ namespace PSECore {
 	       const std::string& name, IntVector &value);
       bool get(const DOM_Node& node,
 	       const std::string& name, bool &value);
+
+      extern const char _NOTSET_[];      
+      
+      //////////////////////////////
+      //
+      // getSerializedAttributes()
+      //
+      // returns a string that has an XML format
+      // which represents the attributes of "node" 
+      // 
+      
+      char* getSerializedAttributes(DOM_Node& node);
+      
+      
+      //////////////////////////////
+      //
+      // getSerializedChildren()
+      //
+      // returns a string in XML format that
+      // represents the children of the node
+      // named "node".
+      //
+      
+      char* getSerializedChildren(DOM_Node& node);
+      
+      
+      //////////////////////////////
+      //
+      // removeWhiteSpace()
+      //
+      // removes all leading and trailing
+      // white space from "string".
+      // Returns "string" (after it has
+      // been modified).
+      //
+      
+      char* removeWhiteSpace(char* string);
+      
    } // end namespace XMLUtil
-} // end namespace Uintah
+} // end namespace PSECore
 
 //
 // $Log$
+// Revision 1.4  2000/10/15 04:34:32  moulding
+// more of Phase 1 for new module maker
+//
 // Revision 1.3  2000/06/27 17:08:24  bigler
 // Steve moved some functions around for me.
 //
