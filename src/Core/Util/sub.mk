@@ -33,9 +33,6 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
 SRCDIR   := Core/Util
 
-#SUBDIRS := \
-#	$(SRCDIR)/Comm
-
 SRCS     += \
 	$(SRCDIR)/DebugStream.cc \
 	$(SRCDIR)/DynamicLoader.cc \
