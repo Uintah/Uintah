@@ -26,7 +26,7 @@
 #  DEALINGS IN THE SOFTWARE.
 #  
 #    File   : ICUMonitor.tcl
-#    Author : Martin Cole
+#    Author : Martin Cole, Alex Ade
 #    Date   : Fri Nov 19 10:42:03 2004
 
 itcl_class VS_Render_ICUMonitor {
@@ -40,9 +40,11 @@ itcl_class VS_Render_ICUMonitor {
 	global  $this-dots_per_inch
 	global  $this-plot_height
 	global  $this-play_mode
+	global  $this-time_markers_mode
 	global  $this-plot_count
 	global  $this-edit
 	global  $this-edit-target
+	global  $this-selected_marker
 
 	set $this-edit          0
 	set $this-edit-target   0
@@ -52,7 +54,9 @@ itcl_class VS_Render_ICUMonitor {
 	set $this-dots_per_inch 96.7
 	set $this-plot_height  75.0
 	set $this-play_mode     1
+	set $this-time_markers_mode  1
 	set $this-plot_count    0
+	set $this-selected_marker -1
     }
 
     method bind_events {w} {
@@ -241,6 +245,9 @@ itcl_class VS_Render_ICUMonitor {
 	    label $w.add.f.maxrl -text "Max Label:" -relief groove
 	    entry $w.add.f.maxr \
 		-textvariable $this-max_ref_label-$v -width 8
+	    checkbutton  $w.add.f.lines -text "Draw Min/Max Lines" -padx 6 \
+		-justify left -relief flat -variable $this-lines-$v \
+		-onvalue 1 -offvalue 0 -anchor n
 	    label $w.add.f.minl -text "Min Value:" -relief groove
 	    entry $w.add.f.min -textvariable $this-min-$v \
 		-width 8
@@ -250,9 +257,18 @@ itcl_class VS_Render_ICUMonitor {
 	    label $w.add.f.idxl -text "Data Index:" -relief groove
 	    entry $w.add.f.idx -textvariable $this-idx-$v \
 		-width 8
-	    label $w.add.f.sndl -text "Draw 2nd Trace:" -relief groove
-	    entry $w.add.f.snd -textvariable $this-snd-$v \
+	    label $w.add.f.adl -text "Derived Data Label:" -relief groove
+	    entry $w.add.f.ad -textvariable $this-aux_data_label-$v \
 		-width 8
+	    label $w.add.f.auxidxl -text "Derived Data Index:" -relief groove
+	    entry $w.add.f.auxidx -textvariable $this-auxidx-$v \
+		-width 8
+	    checkbutton  $w.add.f.trace -text "Compare Traces" -padx 6 \
+		-justify left -relief flat -variable $this-snd-$v \
+		-onvalue 1 -offvalue 0 -anchor n
+	    checkbutton  $w.add.f.draw_aux_data -text "Draw Derived Data" \
+		-padx 6 -justify left -relief flat -variable \
+		$this-draw_aux_data-$v -onvalue 1 -offvalue 0 -anchor n
 
 	    frame $w.add.f.col -borderwidth 2
 	    addColorSelection $w.add.f.col "Plot Color" $this-plot_color-$v  \
@@ -260,9 +276,10 @@ itcl_class VS_Render_ICUMonitor {
  
 	    pack  $w.add.f.pl $w.add.f.p $w.add.f.nwl $w.add.f.nw \
 		$w.add.f.swl $w.add.f.sw $w.add.f.minrl $w.add.f.minr \
-		$w.add.f.maxrl $w.add.f.maxr $w.add.f.minl $w.add.f.min \
-		$w.add.f.maxl $w.add.f.max $w.add.f.idxl $w.add.f.idx \
-		$w.add.f.sndl $w.add.f.snd \
+		$w.add.f.maxrl $w.add.f.maxr $w.add.f.lines $w.add.f.minl \
+		$w.add.f.min $w.add.f.maxl $w.add.f.max $w.add.f.idxl \
+		$w.add.f.idx $w.add.f.trace $w.add.f.adl $w.add.f.ad \
+		$w.add.f.auxidxl $w.add.f.auxidx $w.add.f.draw_aux_data \
 		$w.add.f.col -side top -fill x -padx 2 -pady 2
 
 	    pack $w.add.f -side top -fill x -padx 2 -pady 2
@@ -289,65 +306,133 @@ itcl_class VS_Render_ICUMonitor {
     method create_gl {} {
         set w .ui[modname]
         if {[winfo exists $w.f.gl]} {
-            raise $w
+            SciRaise $w
         } else {
             set n "$this-c needexecute"
-	    
+
+ 	    bind $w <KeyPress-Up> "$this-c increment"
+ 	    bind $w <KeyPress-Down> "$this-c decrement"
+
+            frame $w.f.menu -relief raised -borderwidth 2
+            pack $w.f.menu -fill x -padx 2 -pady 2
+            menubutton $w.f.menu.mkrs -text "Markers" -underline 0 \
+		-menu $w.f.menu.mkrs.menu -state disabled
+            menu $w.f.menu.mkrs.menu -tearoff 0
+            pack $w.f.menu.mkrs -side left
+
             frame $w.f.gl -relief groove -borderwidth 2
-            pack $w.f.gl -padx 2 -pady 2
+            pack $w.f.gl -padx 2 -pady 2 -fill both -expand 1
+
             # create an OpenGL widget
-            opengl $w.f.gl.gl -geometry 640x640 -doublebuffer true \
+            opengl $w.f.gl.gl -doublebuffer true \
 		-direct true -rgba true -redsize 1 -greensize 1 \
 		-bluesize 1 -depthsize 2
 	    bind_events $w.f.gl.gl
             # place the widget on the screen
             pack $w.f.gl.gl -fill both -expand 1
-	    checkbutton  $w.f.gl.play -text "Continuous Updates" -padx 6 \
-		-justify center -relief flat -variable $this-play_mode \
-		-onvalue 1 -offvalue 0 -anchor n
+	    bind $w.f.gl.gl <Configure> "$this-c configure"
 
 	    # time slider
 	    scale $w.f.gl.time -variable $this-time \
-                 -from 0.0 -to 1.0 -label "Time" \
-                 -showvalue true -resolution 0.001 \
+                 -from 0.0 -to 1.0 \
+                 -showvalue false -resolution 0.001 \
                  -orient horizontal -command "$this-c time"
 
+	    frame $w.f.gl.timew -borderwidth 0
+	    label $w.f.gl.timew.timel -text "Time 00:00:00"
+	    pack $w.f.gl.timew.timel -side left -padx 2 
+	    pack $w.f.gl.time $w.f.gl.timew -side top \
+		-fill x -padx 2
 
-	    frame $w.f.gl.plots -relief groove -borderwidth 2
+	    frame $w.f.plots -relief groove -borderwidth 2
+	    pack $w.f.plots -side top -padx 2 -pady 2 -fill x
 
-	    button $w.f.gl.plots.add -text "Add Plot" \
+	    button $w.f.plots.add -text "Add Plot" \
 		-command "$this add_plot cur_size"
-	    button $w.f.gl.plots.edit -text "Edit Plot" \
+	    button $w.f.plots.edit -text "Edit Plot" \
 		-command "$this edit_plot"
-	    button $w.f.gl.plots.del -text "Delete Last" \
+	    button $w.f.plots.del -text "Delete Last" \
 		-command "$this del_plot"
 
-	    pack $w.f.gl.plots.add $w.f.gl.plots.edit $w.f.gl.plots.del \
-		-side left -fill x -padx 6
+	    checkbutton  $w.f.plots.play -text "Play" -padx 6 \
+		-justify center -relief flat -variable $this-play_mode \
+		-onvalue 1 -offvalue 0 -anchor n
+	    checkbutton  $w.f.plots.secs -text "Ticks" -padx 6 \
+		-justify center -relief flat -variable $this-time_markers_mode \
+		-onvalue 1 -offvalue 0 -anchor n
 
-	    pack $w.f.gl.play  $w.f.gl.time $w.f.gl.plots -side top \
-		-fill x -padx 4
+	    pack $w.f.plots.add $w.f.plots.edit $w.f.plots.del \
+	    	$w.f.plots.play $w.f.plots.secs \
+		-side left -padx 2 -pady 2
 
 	    frame $w.f.settings -relief groove -borderwidth 2
-	    label $w.f.settings.srl -text "Sample Rate:" -relief groove
+            pack $w.f.settings -padx 2 -pady 2 -fill x
+
+	    label $w.f.settings.srl -text "Sample Rate:" 
 	    entry $w.f.settings.sr  -textvariable $this-sample_rate -width 8
-	    label $w.f.settings.ssl -text "Sweep Speed:" -relief groove
+	    label $w.f.settings.ssl -text "Sweep Speed:"
 	    entry $w.f.settings.ss  -textvariable $this-sweep_speed -width 8
-	    label $w.f.settings.dpil -text "Monitor dpi:" -relief groove
+	    label $w.f.settings.dpil -text "Monitor dpi:"
 	    entry $w.f.settings.dpi -textvariable $this-dots_per_inch -width 8
-	    label $w.f.settings.ghl -text "Plot Height:" -relief groove
+	    label $w.f.settings.ghl -text "Plot Height:"
 	    entry $w.f.settings.gh  -textvariable $this-plot_height -width 8
 
 	    pack $w.f.settings.srl $w.f.settings.sr $w.f.settings.ssl \
 		$w.f.settings.ss $w.f.settings.dpil $w.f.settings.dpi \
 		$w.f.settings.ghl $w.f.settings.gh \
-		-side left -fill x -padx 2 -pady 2
-
-	    pack $w.f.settings -padx 2 -pady 2 -fill x
- 
+		-side left -padx 4 -pady 2
         }
     }
+
+    method setTimeLabel {value} {
+        set w .ui[modname]
+
+	$w.f.gl.timew.timel configure -text $value
+    }
+
+    method selectMarker {} {
+        set w .ui[modname]
+
+	set $this-selected_marker [$w.f.menu.mkrs.menu index active]
+        $this-c marker
+    }
+
+    method clearMarkers {} {
+        set w .ui[modname]
+
+        $w.f.menu.mkrs.menu delete 0 end
+
+        $w.f.menu.mkrs configure -state disabled
+    }
+
+    method setMarkers {value} {
+        set w .ui[modname]
+
+        $w.f.menu.mkrs.menu add command -label $value \
+		-command "$this selectMarker"
+
+        $w.f.menu.mkrs configure -state normal
+    }
+
+    method setWindowTitle {value} {
+        set w .ui[modname]
+
+	wm title $w $value
+    }
+
+    method initialize_ui { {my_display "local"} } {
+        $this ui
 	
+	if {[winfo exists .ui[modname]]!= 0} {
+	    set w .ui[modname]
+
+	    SciRaise $w
+
+	    wm title $w "ICU Monitor"
+	    wm minsize $w 640 128
+	    wm geometry $w "640x640"
+	}
+    }
 
     method ui {} {
 	set w .ui[modname]
@@ -356,11 +441,10 @@ itcl_class VS_Render_ICUMonitor {
 	    return
 	}
 	toplevel $w
-	frame $w.f
-	pack $w.f -padx 2 -pady 2
-        create_gl
 
-        pack $w.f 
+	frame $w.f
+	pack $w.f -padx 2 -pady 2 -fill both -expand 1
+        create_gl
     }
 }
     
