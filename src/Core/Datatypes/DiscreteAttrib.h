@@ -38,6 +38,8 @@ public:
 template <class T> class DiscreteAttrib : public Attrib
 {
 public:
+  typedef T value_type;
+
   DiscreteAttrib();
   DiscreteAttrib(int x);
   DiscreteAttrib(int x, int y);
