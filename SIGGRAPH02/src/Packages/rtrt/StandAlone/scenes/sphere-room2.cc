@@ -30,7 +30,7 @@ using namespace std;
 #define DOORHEIGHT             2.3
 #define DOOROFFSET             5.25
 #define ROOMFLOOR              .5
-#define ROOMHEIGHT             30+ROOMFLOOR
+#define ROOMHEIGHT             (30+ROOMFLOOR)
 #define ROOMRADIUS             50
 #define ROOMOFFSET             4
 #define PORTALOFFSET           .001
@@ -40,8 +40,8 @@ using namespace std;
 #define SYSTEM_DISTANCE_SCALE  6.76E-9 /*3.382080E-9*/
 #define SYSTEM_TIME_SCALE1     .4
 #define SYSTEM_TIME_SCALE2     .01
-#define FLIP_IMAGES            false
-#define ANIMATE                true
+#define FLIP_IMAGES            true
+#define ANIMATE                false
 #if 0
 #define IMAGEDIR      "/home/moulding/images/"
 #else
@@ -64,6 +64,8 @@ typedef struct {
 
 } satellite_data;
 
+#define DEG2RAD(x) (x*M_PI/180.)
+
 // the data in this table was gathered from 
 // the "views of the solar system" web site
 // www.scienceviews.com
@@ -81,7 +83,7 @@ satellite_data table[] = {
   { 2439.7, 5.791E7, 58.65, 87.97, .2056, 0, 7.004, 
     0, 0, 0, "mercury" },
   
-  { 6052, 1.082E8, -243.01, 224.7, .0068, 177.36, 3.394, 
+  { 6052, 1.082E8, 243.01, 224.7, .0068, 177.36, 3.394, 
     0, 0, 0, "venus" },
   
   { 3397, 2.2794E8, 1.026, 686.98, .0934, 25.19, 1.85,
@@ -93,13 +95,13 @@ satellite_data table[] = {
   { 60268, 1.4294E9, 2.394, 10759.5, .0560, 25.33, 2.488, 
     0, 34, 0, "saturn" },
   
-  { 25559, 2.87099E9, -1.3687, 30685, .0461, 97.86, .774,
+  { 25559, 2.87099E9, 1.3687, 30685, .0461, 97.86, .774,
     0, 21, 0, "uranus" },
   
   { 24746, 4.5043E9, 1.52, 60190, .0097, 28.31, 1.774,
     0, 8, 0, "neptune" },
   
-  { 1137*6, 5.91352E9, -6.3872, 90779, .2482, 122.52, 17.148,
+  { 1137*6, 5.91352E9, 6.3872, 90779, .2482, 122.52, 17.148,
     0, 1, 0, "pluto" },
 
   { 1815, 421600*400, 1.769, 1.769, .004, 0, .04,
@@ -147,8 +149,8 @@ Scene *make_scene(int /*argc*/, char* /*argv*/[], int /*nworkers*/)
 
   MapBlendMaterial *rings_m = 
     new MapBlendMaterial(IMAGEDIR"rings.ppm",
-                         white,
-                         new InvisibleMaterial());
+                         new InvisibleMaterial(),
+                         white);
 
   string solppm(IMAGEDIR); solppm+=table[0].name_; solppm+=".ppm";
   TileImageMaterial *sol_m = 
@@ -181,10 +183,10 @@ Scene *make_scene(int /*argc*/, char* /*argv*/[], int /*nworkers*/)
   matl1->SetScale(3,3*(ROOMHEIGHT/(double)(ROOMRADIUS*2)));
 
   MultiMaterial *holo0 = new MultiMaterial();
-  holo0->insert(matl0,.8);
-  holo0->insert(starfield,.5);
+  holo0->insert(matl0,.0);
+  holo0->insert(starfield,1);
   MultiMaterial *holo1 = new MultiMaterial();
-  holo1->insert(matl1,.8);
+  holo1->insert(matl1,.0);
   holo1->insert(starfield,1);
 
   //
@@ -293,10 +295,11 @@ Scene *make_scene(int /*argc*/, char* /*argv*/[], int /*nworkers*/)
   orb_radius = table[1].orb_radius_*SYSTEM_DISTANCE_SCALE;
   cerr << "earth radius = " << radius << endl;
   cerr << "earth orb radius = " << orb_radius << endl;
+  Vector up(sin(DEG2RAD(table[1].tilt_)), 0, cos(DEG2RAD(table[1].tilt_)));
+  up.normalize();
   Satellite *earth = new Satellite(table[1].name_, earth_m, 
                                    Point(0,0,0), radius, orb_radius,
-                                   Vector(cos(table[1].tilt_),0,
-                                          sin(table[1].tilt_)), sol);
+                                   up, sol);
   earth->set_orb_speed(1./table[1].orb_speed_*SYSTEM_TIME_SCALE2);
   earth->set_rev_speed(1./table[1].rot_speed_*SYSTEM_TIME_SCALE1);
   table[1].self_ = earth;
@@ -314,11 +317,12 @@ Scene *make_scene(int /*argc*/, char* /*argv*/[], int /*nworkers*/)
     radius = table[loop].radius_*SYSTEM_SIZE_SCALE;
     orb_radius = table[loop].orb_radius_*SYSTEM_DISTANCE_SCALE;
 
+    up = Vector(sin(DEG2RAD(table[1].tilt_)), 0, cos(DEG2RAD(table[1].tilt_)));
+    up.normalize();
     Satellite *newsat = new Satellite(table[loop].name_,
                                       newmat, Point(0,0,0), 
                                       radius, orb_radius, 
-                                      Vector(sin(table[loop].tilt_),0,
-                                             cos(table[loop].tilt_)),
+                                      up,
                                       table[table[loop].parent_].self_);
     table[loop].self_ = newsat;
     cerr << newsat->get_name() << " radius = " << radius << endl;
@@ -327,16 +331,18 @@ Scene *make_scene(int /*argc*/, char* /*argv*/[], int /*nworkers*/)
          << newsat->get_parent() << endl;
     newsat->set_rev_speed(1./table[loop].rot_speed_*SYSTEM_TIME_SCALE1);
     newsat->set_orb_speed(1./table[loop].orb_speed_*SYSTEM_TIME_SCALE2);
-    //solar_system->add( newsat );
+    solar_system->add( newsat );
     scene->addObjectOfInterest( newsat, ANIMATE );
 
     if (newsat->get_name() == "saturn") {
       solar_system->add( newsat );
       cerr << "adding rings!!!! " << radius << endl;
+      up = Vector(-sin(DEG2RAD(table[loop].tilt_)), 0, 
+                  cos(DEG2RAD(table[loop].tilt_)));
       RingSatellite *rings = 
         new RingSatellite("rings",rings_m,
                           newsat->get_center(),
-                          newsat->get_up(), 
+                          up,
                           74400*SYSTEM_SIZE_SCALE,
                           65754*SYSTEM_SIZE_SCALE,
                           newsat);
