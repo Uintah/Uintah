@@ -80,58 +80,60 @@ public:
   int size() const;
 
 
-  virtual string get_info();  
+  virtual string getInfo();
 
   //////////
   // Persistent representation...
-  virtual void io(Piostream&);
+  virtual void io(Piostream &);
   static PersistentTypeID type_id;
 
   virtual int iterate(AttribFunctor<T> &func);
 
-  virtual int xsize() const { return nx; }
-  virtual int ysize() const { return ny; }
-  virtual int zsize() const { return nz; }
-  virtual int dimension() const { return dim; }
+  virtual int xsize() const { return d_nx; }
+  virtual int ysize() const { return d_ny; }
+  virtual int zsize() const { return d_nz; }
+  virtual int dimension() const { return d_dim; }
 
 protected:
   /////////
   // an identifying name
-  int nx, ny, nz;
-  int dim;
+  int d_nx, d_ny, d_nz;
+  int d_dim;
 
 private:
-  T defval;
+  T d_defval;
 };
 
 
 template <class T>
 DiscreteAttrib<T>::DiscreteAttrib() :
-  Attrib(), nx(0), ny(0), nz(0), dim(0)
+  Attrib(), d_nx(0), d_ny(0), d_nz(0), d_dim(0)
 {
 }
 
 template <class T>
 DiscreteAttrib<T>::DiscreteAttrib(int ix) :
-  Attrib(), nx(ix), ny(0), nz(0), dim(1)
+  Attrib(), d_nx(ix), d_ny(0), d_nz(0), d_dim(1)
 {
 }
 
 template <class T>
 DiscreteAttrib<T>::DiscreteAttrib(int ix, int iy) :
-  Attrib(), nx(ix), ny(iy), nz(0), dim(2)
+  Attrib(), d_nx(ix), d_ny(iy), d_nz(0), d_dim(2)
 {
 }
 
 template <class T>
 DiscreteAttrib<T>::DiscreteAttrib(int ix, int iy, int iz) :
-  Attrib(), nx(ix), ny(iy), nz(iz), dim(3)
+  Attrib(), d_nx(ix), d_ny(iy), d_nz(iz), d_dim(3)
 {
 }
 
 template <class T>
 DiscreteAttrib<T>::DiscreteAttrib(const DiscreteAttrib& copy) :
-  Attrib(copy), nx(copy.nx), ny(copy.ny), nz(copy.nz), dim(copy.dim)
+  Attrib(copy),
+  d_nx(copy.d_nx), d_ny(copy.d_ny), d_nz(copy.d_nz),
+  d_dim(copy.d_dim)
 {
 }
 
@@ -145,21 +147,21 @@ DiscreteAttrib<T>::~DiscreteAttrib()
 template <class T> T &
 DiscreteAttrib<T>::fget1(int)
 {
-  return defval;
+  return d_defval;
 }
 
 
 template <class T> T &
 DiscreteAttrib<T>::fget2(int, int)
 {
-  return defval;
+  return d_defval;
 }
 
 
 template <class T> T &
 DiscreteAttrib<T>::fget3(int, int, int)
 {
-  return defval;
+  return d_defval;
 }
 
 
@@ -208,21 +210,21 @@ DiscreteAttrib<T>::get3(int ix, int iy, int iz)
 template <class T> void
 DiscreteAttrib<T>::fset1(int, const T &val)
 {
-  defval = val;
+  d_defval = val;
 }
 
 
 template <class T> void
 DiscreteAttrib<T>::fset2(int, int, const T &val)
 {
-  defval = val;
+  d_defval = val;
 }
 
 
 template <class T> void
 DiscreteAttrib<T>::fset3(int, int, int, const T &val)
 {
-  defval = val;
+  d_defval = val;
 }
 
 
@@ -270,37 +272,37 @@ DiscreteAttrib<T>::set3(int x, int y, int z, const T &val)
 template <class T> void
 DiscreteAttrib<T>::resize(int x, int y, int z)
 {
-  nx = x;
-  ny = y;
-  nz = z;
-  dim = 3;
+  d_nx = x;
+  d_ny = y;
+  d_nz = z;
+  d_dim = 3;
 }
 
 
 template <class T> void
 DiscreteAttrib<T>::resize(int x, int y)
 {
-  nx = x;
-  ny = y;
-  nz = 0;
-  dim = 2;
+  d_nx = x;
+  d_ny = y;
+  d_nz = 0;
+  d_dim = 2;
 }
 
 
 template <class T> void
 DiscreteAttrib<T>::resize(int x)
 {
-  nx = x;
-  ny = 0;
-  nz = 0;
-  dim = 1;
+  d_nx = x;
+  d_ny = 0;
+  d_nz = 0;
+  d_dim = 1;
 }
 
 
 template <class T> int
 DiscreteAttrib<T>::iterate(AttribFunctor<T> &func)
 {
-  func(defval);
+  func(d_defval);
   return 1;
 }
 
@@ -308,16 +310,16 @@ DiscreteAttrib<T>::iterate(AttribFunctor<T> &func)
 template <class T> int
 DiscreteAttrib<T>::size() const
 {
-  switch (dim)
+  switch (d_dim)
     {
     case 1:
-      return nx;
+      return d_nx;
 
     case 2:
-      return nx * ny;
+      return d_nx * d_ny;
 
     case 3:
-      return nx * ny * nz;
+      return d_nx * d_ny * d_nz;
 
     default:
       return 0;
@@ -329,13 +331,13 @@ template <class T> PersistentTypeID DiscreteAttrib<T>::type_id("DiscreteAttrib",
 
 
 template <class T> string
-DiscreteAttrib<T>::get_info()
+DiscreteAttrib<T>::getInfo()
 {
   ostringstream retval;
   retval <<
-    "Name = " << name << '\n' <<
+    "Name = " << d_name << '\n' <<
     "Type = DiscreteAttrib" << '\n' <<
-    "Dim = " << dim << ": " << nx << ' ' << ny << ' ' << nz << '\n' <<
+    "Dim = " << d_dim << ": " << d_nx << ' ' << d_ny << ' ' << d_nz << '\n' <<
     "Size = " << size() << '\n';
   return retval.str();
 }

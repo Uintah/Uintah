@@ -193,7 +193,7 @@ template <class T, class G, class A >
 bool GenVField<T,G,A>::set_attrib_name(string iname){
  if (attrib.get_rep())
    {
-     attrib->set_name(iname);
+     attrib->setName(iname);
      return true;
    }
   return false;

@@ -90,7 +90,7 @@ namespace Datatypes{
     
     //////////
     // Base class override
-    string get_info();
+    string getInfo();
 
     //////////
     // Initializes pevalf pointer to whether precompiled
@@ -243,10 +243,11 @@ namespace Datatypes{
     return func;
   }
 
-  template <class T> string AnalytAttrib<T>::get_info(){
+  template <class T> string AnalytAttrib<T>::getInfo()
+  {
     ostringstream ostr;
     ostr << 
-      "Name = " << name << '\n' <<
+      "Name = " << d_name << '\n' <<
       "Type = AnalytAttrib" << '\n' <<
       "Defined in Domain R" << 3 <<'\n' <<
       "Output dimensions = " << func->get_num_comp() <<'\n'; 

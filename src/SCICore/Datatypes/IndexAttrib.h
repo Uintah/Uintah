@@ -73,7 +73,7 @@ public:
   virtual void resize(int, int);
   virtual void resize(int);
 
-  virtual string get_info();  
+  virtual string getInfo();  
 
   //////////
   // Persistent representation...
@@ -316,13 +316,13 @@ template <class T, class I, class A> PersistentTypeID IndexAttrib<T, I, A>::type
 
 
 template <class T, class I, class A> string
-IndexAttrib<T, I, A>::get_info()
+IndexAttrib<T, I, A>::getInfo()
 {
   ostringstream retval;
   retval <<
-    "Name = " << name << endl <<
+    "Name = " << d_name << endl <<
     "Type = IndexAttrib" << endl <<
-    "Dim = " << dim << ": " << nx << ' ' << ny << ' ' << nz << endl <<
+    "Dim = " << d_dim << ": " << d_nx << ' ' << d_ny << ' ' << d_nz << endl <<
     "Size = " << size() << endl <<
     "Datasize = " << index.size() << endl <<
     "Data = ";
@@ -334,7 +334,7 @@ IndexAttrib<T, I, A>::get_info()
   if (itr != index.end()) { retval << "..."; }
   retval << endl;
   retval << 
-    "SubAttrib =" << endl << iattrib.get_info();
+    "SubAttrib =" << endl << iattrib.getInfo();
   return retval.str();
 }
 
