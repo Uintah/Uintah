@@ -1590,6 +1590,7 @@ proc getOnTheFlyLibsDir {} {
 	catch "file mkdir $dir"
 	if { [validDir $dir] && ![llength [glob -nocomplain -directory $dir *]] } {
 	    displayErrorWarningOrInfo "\nCopying the contents of $binOTF\nto $dir..." info
+	    update idletasks
 	    foreach name [glob -nocomplain -directory $binOTF *.cc *.d *.o *.so] {
 		file copy $name $dir
 	    }
@@ -1607,6 +1608,7 @@ proc getOnTheFlyLibsDir {} {
 	catch "file mkdir $dir"
 	if { [validDir $dir] && ![llength [glob -nocomplain -directory $dir *]] } {
 	    displayErrorWarningOrInfo "\nCopying the contents of $binOTF\nto $dir..." info
+	    update idletasks
 	    foreach name [glob -nocomplain -directory $binOTF *.cc *.d *.o *.so] {
 		file copy $name $dir
 	    }
