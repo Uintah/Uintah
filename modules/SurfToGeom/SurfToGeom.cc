@@ -22,15 +22,17 @@
 #include <SurfacePort.h>
 #include <iostream.h>
 #include <fstream.h>
+#include <Color.h>
 
 static Module* make_SurfToGeom()
 {
     return new SurfToGeom;
 }
 
-static RegisterModule db1("Surface", "Surface to Geometry", make_SurfToGeom);
+static RegisterModule db1("Surfaces", "Surface to Geometry", make_SurfToGeom);
 static RegisterModule db2("Visualization", "Surface to Geometry", 
 			  make_SurfToGeom);
+static RegisterModule db3("Dave", "Surface to Geometry", make_SurfToGeom);
 
 SurfToGeom::SurfToGeom()
 : UserModule("SurfToGeom", Filter)
@@ -64,6 +66,11 @@ void SurfToGeom::execute()
     if (!isurface->get(surf))
 	return;
     ObjGroup *group=surf->getGeomFromSurface();
+    if (surf->name == "sagital.scalp") {
+	MaterialProp *matl=new MaterialProp(Color(0,0,0), Color(0,.6,0), 
+					   Color(.5,.5,.5), 20);
+	group->set_matl(matl);
+    }
     ogeom->delAll();
     ogeom->addObj(group, surf->name);
 }
