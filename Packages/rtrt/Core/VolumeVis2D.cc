@@ -272,6 +272,7 @@ void VolumeVis2D::intersect(Ray& ray, HitInfo& hit, DepthStats* ,
   if (ty2 < t2) t2 = ty2;
   if (tz2 < t2) t2 = tz2;
   
+  // CUTPLANE CALCULATIONS
   if (t2 > t1) {
     if (cutplane_active) {
       VolumeVis2D_scratchpad vs;
@@ -292,15 +293,9 @@ void VolumeVis2D::intersect(Ray& ray, HitInfo& hit, DepthStats* ,
 	      vs.coe = OverwroteTMin;
 	      t1 = t_cp;
 	    }
-	  } else if( t_cp < t1 ) {
-	    if( dt < 0 ) {
-	      return;
-	    }
-	  } else if( t_cp > t2 ) {
-	    if( dt > 0 ) {
-	      return;
-	    }
 	  }
+	  else if( t_cp < t1 && dt < 0 ) return;
+	  else if( t_cp > t2 && dt > 0 ) return;
 	}
 	// Check to see which side of the plane the origin of the ray is
       } else if( plane <= 0 ) {
@@ -488,7 +483,7 @@ void VolumeVis2D::shade(Color& result, const Ray& ray,
   if(cutplane_active ) {
     if (vsp->coe == OverwroteTMin) {
       Voxel2D<float> value;
-      lookup_value( p, value, false );
+      lookup_value( p, value );
       float sample_opacity;
       Color sample_color;
       dpy->voxel_lookup(value, sample_color, sample_opacity);
@@ -533,15 +528,19 @@ void VolumeVis2D::shade(Color& result, const Ray& ray,
     d = data(x_low,  y_high, z_high);
     f = data(x_high, y_low,  z_high);
     g = data(x_high, y_high, z_low);
-    // user-selectable acceleration method
-    // (works best when widget areas are larger)
-    if( dpy->render_mode && dpy->skip_opacity( a, d, f, g ) )
-      continue;
+//      // user-selectable acceleration method
+//      // (works best when widget areas are larger)
+//      if( dpy->render_mode && dpy->skip_opacity( a, d, f, g ) )
+//        continue;
     b = data(x_low,  y_low,  z_high);
     c = data(x_low,  y_high, z_low);
     e = data(x_high, y_low,  z_low);
     h = data(x_high, y_high, z_high);
     
+    // acceleration
+    //
+    //
+
     Voxel2D<float> lz1, lz2, lz3, lz4, ly1, ly2, value;
     lz1 = a * z_weight_low + b * (1 - z_weight_low);
     lz2 = c * z_weight_low + d * (1 - z_weight_low);
@@ -625,7 +624,7 @@ void VolumeVis2D::shade(Color& result, const Ray& ray,
   if (opacity < RAY_TERMINATION_THRESHOLD) {
     if (vsp->coe == OverwroteTMax ) {
       Voxel2D<float> value;
-      lookup_value( p, value, false );
+      lookup_value( p, value );
       float sample_opacity;
       Color sample_color;
       dpy->voxel_lookup(value, sample_color, sample_opacity);
@@ -649,20 +648,6 @@ void VolumeVis2D::shade(Color& result, const Ray& ray,
   }
   result = total;
 } // shade()
-
-void VolumeVis2D::compute_grad( Ray ray, Point p, Vector gradient,
-				float &opacity, Color value_color,
-				Color &total, Context* cx )
-{
-  Light* light=cx->scene->light(0);
-  Vector light_dir;
-  light_dir = light->get_pos()-p;
-  
-  Color temp = color(gradient, ray.direction(), light_dir.normal(), 
-		     value_color,light->get_color());
-  total += temp * (1 - opacity);
-  opacity += opacity;//_factor;
-}
 
 // template<class T>
 void VolumeVis2D::animate(double, bool& changed)
@@ -704,23 +689,18 @@ void VolumeVis2D::point2indexspace(Point &p,
 
 // Should return true if the value was completely computed
 bool VolumeVis2D::lookup_value(Voxel2D<float>& return_value,
-			       bool exit_early,
 		  int x_low, int x_high, float x_weight_low,
 		  int y_low, int y_high, float y_weight_low,
 		  int z_low, int z_high, float z_weight_low)
 {
   Voxel2D<float> a, b, c, d, e, f, g, h;
   a = data(x_low,  y_low,  z_low);
-  d = data(x_low,  y_high, z_high);
-  f = data(x_high, y_low,  z_high);
-  g = data(x_high, y_high, z_low);
-  // user-selectable acceleration method
-  // (works best when widget areas are larger)
-  if( exit_early && dpy->skip_opacity( a, d, f, g ) )
-    return false;
   b = data(x_low,  y_low,  z_high);
   c = data(x_low,  y_high, z_low);
+  d = data(x_low,  y_high, z_high);
   e = data(x_high, y_low,  z_low);
+  f = data(x_high, y_low,  z_high);
+  g = data(x_high, y_high, z_low);
   h = data(x_high, y_high, z_high);
   Voxel2D<float> lz1, lz2, lz3, lz4, ly1, ly2, value;
   lz1 = a * z_weight_low + b * (1 - z_weight_low);
@@ -738,8 +718,7 @@ bool VolumeVis2D::lookup_value(Voxel2D<float>& return_value,
 
 // Returns true if the value was completely computed
 bool VolumeVis2D::lookup_value(Point &p,
-			       Voxel2D<float>& return_value,
-			       bool exit_early) {
+			       Voxel2D<float>& return_value ) {
   int x_low, x_high;
   float x_weight_low;
   int y_low, y_high;
@@ -750,7 +729,7 @@ bool VolumeVis2D::lookup_value(Point &p,
 		   x_low, x_high, x_weight_low,
 		   y_low, y_high, y_weight_low,
 		   z_low, z_high, z_weight_low);
-  return lookup_value(return_value, exit_early,
+  return lookup_value(return_value,
 		      x_low, x_high, x_weight_low,
 		      y_low, y_high, y_weight_low,
 		      z_low, z_high, z_weight_low);
@@ -758,11 +737,6 @@ bool VolumeVis2D::lookup_value(Point &p,
 
 //const int VVIS2D_VERSION = 1;
 
-// template<class T>
-void VolumeVis2D::cblookup( Object* /*obj*/ )
-{
-
-}
 
 // template<class T>
 void 

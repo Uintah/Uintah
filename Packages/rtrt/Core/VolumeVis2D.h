@@ -138,16 +138,12 @@ public:
 				 int& yl, int& yh, float& ywl,
 				 int& zl, int& zh, float& zwl );
   virtual bool lookup_value( Point &p,
-			     Voxel2D<float> &return_value,
-			     bool exit_early );
-  virtual bool lookup_value( Voxel2D<float> &return_value, bool exit_early,
+			     Voxel2D<float> &return_value );
+  virtual bool lookup_value( Voxel2D<float> &return_value,
 			     int xl, int xh, float xwl,
 			     int yl, int yh, float ywl,
 			     int zl, int zh, float zwl );
-  virtual void compute_grad( Ray r, Point p, Vector gradient, float &opacity,
-			     Color value_color, Color &total, Context* cx );
   virtual void animate(double t, bool& changed);
-  virtual void cblookup( Object* obj );
   virtual void initialize_cuttingPlane( PlaneDpy *cdpy );
   void initialize_callbacks() {
     MouseCallBack::assignCB_MD( VolumeVis2D::mouseDown_Wrap, this );
