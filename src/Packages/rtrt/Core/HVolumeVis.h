@@ -471,42 +471,47 @@ void HVolumeVis<DataT,MetaCT>::isect(int depth, double t_sample,
 	if (alpha_factor > 0.001) {
 	  // the point is contributing, so compute the color
 	  
-	  // compute the gradient
-	  Vector gradient;
-	  double dx = ly2 - ly1;
-	  
-	  double dy, dy1, dy2;
-	  dy1 = lz2 - lz1;
-	  dy2 = lz4 - lz3;
-	  dy = dy1 * (1 - x_weight_high) + dy2 * x_weight_high;
-	  
-	  double dz, dz1, dz2, dz3, dz4, dzly1, dzly2;
-	  dz1 = rhos[1] - rhos[0];
-	  dz2 = rhos[3] - rhos[2];
-	  dz3 = rhos[5] - rhos[4];
-	  dz4 = rhos[7] - rhos[6];
-	  dzly1 = dz1 * (1 - y_weight_high) + dz2 * y_weight_high;
-	  dzly2 = dz3 * (1 - y_weight_high) + dz4 * y_weight_high;
-	  dz = dzly1 * (1 - x_weight_high) + dzly2 * x_weight_high;
-	  double length2 = dx*dx+dy*dy+dz*dz;
-	  if (length2){
-	    // this lets the compiler use a special 1/sqrt() operation
-	    double ilength2 = 1/sqrt(length2);
-	    gradient = Vector(dx*ilength2, dy*ilength2,dz*ilength2);
-	  } else {
-	    gradient = Vector(0,0,0);
-	  }
-	  
 	  Light* light=isctx.cx->scene->light(0);
-	  Vector light_dir;
-	  Point current_p = isctx.ray.origin() + isctx.ray.direction()*t_sample - min.vector();
-	  light_dir = light->get_pos()-current_p;
-	      
-	  Color temp = color(gradient, isctx.ray.direction(),
-			     light_dir.normal(), 
-			     *(dpy->lookup_color(value)),
-			     light->get_color());
-	  isctx.total += temp * alpha_factor;
+          if (light->isOn()) {
+          
+            // compute the gradient
+            Vector gradient;
+            double dx = ly2 - ly1;
+            
+            double dy, dy1, dy2;
+            dy1 = lz2 - lz1;
+            dy2 = lz4 - lz3;
+            dy = dy1 * (1 - x_weight_high) + dy2 * x_weight_high;
+            
+            double dz, dz1, dz2, dz3, dz4, dzly1, dzly2;
+            dz1 = rhos[1] - rhos[0];
+            dz2 = rhos[3] - rhos[2];
+            dz3 = rhos[5] - rhos[4];
+            dz4 = rhos[7] - rhos[6];
+            dzly1 = dz1 * (1 - y_weight_high) + dz2 * y_weight_high;
+            dzly2 = dz3 * (1 - y_weight_high) + dz4 * y_weight_high;
+            dz = dzly1 * (1 - x_weight_high) + dzly2 * x_weight_high;
+            double length2 = dx*dx+dy*dy+dz*dz;
+            if (length2){
+              // this lets the compiler use a special 1/sqrt() operation
+              double ilength2 = 1/sqrt(length2);
+              gradient = Vector(dx*ilength2, dy*ilength2,dz*ilength2);
+            } else {
+              gradient = Vector(0,0,0);
+            }
+            
+            Vector light_dir;
+            Point current_p = isctx.ray.origin() + isctx.ray.direction()*t_sample - min.vector();
+            light_dir = light->get_pos()-current_p;
+            
+            Color temp = color(gradient, isctx.ray.direction(),
+                               light_dir.normal(), 
+                               *(dpy->lookup_color(value)),
+                               light->get_color());
+            isctx.total += temp * alpha_factor;
+          } else {
+            isctx.total += dpy->lookup_color(value)->operator*(alpha_factor);
+          }
 	  isctx.alpha += alpha_factor;
 	}
 	
@@ -898,41 +903,45 @@ void HVolumeVis<DataT,MetaCT>::shade(Color& result, const Ray& ray,
 	if (alpha_factor > 0.001) {
 	  //      if (true) {
 	  // the point is contributing, so compute the color
-	  
-	  // compute the gradient
-	  Vector gradient;
-	  float dx = ly2 - ly1;
-	  
-	  float dy, dy1, dy2;
-	  dy1 = lz2 - lz1;
-	  dy2 = lz4 - lz3;
-	  dy = dy1 * (1 - x_weight_high) + dy2 * x_weight_high;
-	  
-	  float dz, dz1, dz2, dz3, dz4, dzly1, dzly2;
-	  dz1 = b - a;
-	  dz2 = d - c;
-	  dz3 = f - e;
-	  dz4 = h - g;
-	  dzly1 = dz1 * (1 - y_weight_high) + dz2 * y_weight_high;
-	  dzly2 = dz3 * (1 - y_weight_high) + dz4 * y_weight_high;
-	  dz = dzly1 * (1 - x_weight_high) + dzly2 * x_weight_high;
-	  float length2 = dx*dx+dy*dy+dz*dz;
-	  if (length2){
-	    // this lets the compiler use a special 1/sqrt() operation
-	    float ilength2 = 1.0f/sqrtf(length2);
-	    gradient = Vector(dx*ilength2, dy*ilength2, dz*ilength2);
-	  } else {
-	    gradient = Vector(0,0,0);
-	  }
-	  
 	  Light* light=ctx->scene->light(0);
-	  Vector light_dir;
-	  light_dir = light->get_pos()-current_p;
+          if (light->isOn()) {
 	  
-	  Color temp = color(gradient, ray.direction(), light_dir.normal(), 
-			     *(dpy->lookup_color(value)),
-			     light->get_color());
-	  total += temp * alpha_factor;
+            // compute the gradient
+            Vector gradient;
+            float dx = ly2 - ly1;
+            
+            float dy, dy1, dy2;
+            dy1 = lz2 - lz1;
+            dy2 = lz4 - lz3;
+            dy = dy1 * (1 - x_weight_high) + dy2 * x_weight_high;
+            
+            float dz, dz1, dz2, dz3, dz4, dzly1, dzly2;
+            dz1 = b - a;
+            dz2 = d - c;
+            dz3 = f - e;
+            dz4 = h - g;
+            dzly1 = dz1 * (1 - y_weight_high) + dz2 * y_weight_high;
+            dzly2 = dz3 * (1 - y_weight_high) + dz4 * y_weight_high;
+            dz = dzly1 * (1 - x_weight_high) + dzly2 * x_weight_high;
+            float length2 = dx*dx+dy*dy+dz*dz;
+            if (length2){
+              // this lets the compiler use a special 1/sqrt() operation
+              float ilength2 = 1.0f/sqrtf(length2);
+              gradient = Vector(dx*ilength2, dy*ilength2, dz*ilength2);
+            } else {
+              gradient = Vector(0,0,0);
+            }
+            
+            Vector light_dir;
+            light_dir = light->get_pos()-current_p;
+	  
+            Color temp = color(gradient, ray.direction(), light_dir.normal(), 
+                               *(dpy->lookup_color(value)),
+                               light->get_color());
+            total += temp * alpha_factor;
+          } else {
+            total += dpy->lookup_color(value)->operator*(alpha_factor);
+          }
 	  alpha += alpha_factor;
 	}
       } else {
