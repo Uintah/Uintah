@@ -50,6 +50,7 @@ char* MacroSubstitute(char* var_val, env_map& env)
 	  macro = new char[end-start+1];
 	  sprintf(macro,"%s",&var_val[start]);
 	  env_iter i = env.find(string(macro));
+	  delete[] macro;
 	  if (i!=env.end()) 
 	    newstring += (*i).second;
 	  var_val[cur]=')';
