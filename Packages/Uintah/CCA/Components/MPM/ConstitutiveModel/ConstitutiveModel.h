@@ -114,6 +114,32 @@ WARNING
 			 double& press, double& dp_drho,
 			 double& dp_de);
 
+    /////////
+    // Add initial computes for erosion
+    virtual void addInitialComputesAndRequiresWithErosion(Task* task,
+				     const MPMMaterial* matl,
+				     const PatchSet* patches,
+				     std::string algorithm);
+
+    //////////
+    // Initialize erosion algorithm
+    virtual void initializeCMDataWithErosion(const Patch* patch,
+			     const MPMMaterial* matl,
+			     DataWarehouse* new_dw);
+
+    //////////
+    // Computes and requires to erosion update
+    virtual void addComputesAndRequiresWithErosion(Task* task,
+					const MPMMaterial* matl,
+					const PatchSet* patch) const;
+
+    //////////
+    // Stress computation with erosion
+    virtual void computeStressTensorWithErosion(const PatchSubset* patches,
+				const MPMMaterial* matl,
+				DataWarehouse* old_dw,
+				DataWarehouse* new_dw);
+
   protected:
 
     // Calculate velocity gradient for 27 noded interpolation
@@ -133,6 +159,7 @@ WARNING
     int d_8or27;
     int NGP;
     int NGN;
+    std::string d_erosionAlgorithm;
   };
 } // End namespace Uintah
       

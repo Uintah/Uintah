@@ -144,7 +144,7 @@ void FractureMPM::problemSetup(const ProblemSpecP& prob_spec, GridP& /*grid*/,
    for (ProblemSpecP ps = mpm_mat_ps->findBlock("material"); ps != 0;
        ps = ps->findNextBlock("material") ) {
      MPMMaterial *mat = scinew MPMMaterial(ps, lb, d_8or27,integrator_type,
-					   d_useLoadCurves);
+					   d_useLoadCurves, false);
      //register as an MPM material
      sharedState->registerMPMMaterial(mat);
    }

@@ -73,6 +73,7 @@ WARNING
     CMData d_initialData;
 
     double d_tol;
+    double d_damageCutOff;
     bool d_useModifiedEOS;
     PlasticityModel* d_plasticity;
     DamageModel* d_damage;
@@ -130,15 +131,26 @@ WARNING
 					const PatchSet* patches,
 					const bool recursion) const;
 
+    virtual void computeStressTensorWithErosion(const PatchSubset* patches,
+				const MPMMaterial* matl,
+				DataWarehouse* old_dw,
+				DataWarehouse* new_dw);
+
+    /////////
+    // Sockets for MPM-ICE
     virtual double computeRhoMicroCM(double pressure,
 				     const double p_ref,
 				     const MPMMaterial* matl);
 
+    /////////
+    // Sockets for MPM-ICE
     virtual void computePressEOSCM(double rho_m, double& press_eos,
 				   double p_ref,
 				   double& dp_drho, double& ss_new,
 				   const MPMMaterial* matl);
 
+    /////////
+    // Sockets for MPM-ICE
     virtual double getCompressibility();
 
     // class function to read correct number of parameters
@@ -159,21 +171,6 @@ WARNING
     static ConstitutiveModel* create(double *p_array);
   
   protected:
-
-    /*
-    // Calculate velocity gradient for 27 noded interpolation
-    Matrix3 computeVelocityGradient(const Patch* patch,
-				    const double* oodx, 
-				    const Point& px, 
-				    const Vector& psize, 
-				    constNCVariable<Vector>& gVelocity);
-
-    // Calculate velocity gradient for 8 noded interpolation
-    Matrix3 computeVelocityGradient(const Patch* patch,
-				    const double* oodx, 
-				    const Point& px, 
-				    constNCVariable<Vector>& gVelocity);
-    */
 
     // Compute the updated left stretch and rotation tensors
     void computeUpdatedVR(const double& delT,
