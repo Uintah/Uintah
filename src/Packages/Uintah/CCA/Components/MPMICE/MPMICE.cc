@@ -2346,7 +2346,7 @@ void MPMICE::interpolateMassBurnFractionToNC(const ProcessorGroup*,
         new_dw->allocateAndPut(massBurnFraction, 
                                   Mlb->massBurnFractionLabel,indx,patch);
         massBurnFraction.initialize(0.);
-        if(d_ice->d_models.size() > 0)  {     // MODEL REMOVE this stuff
+        if(d_ice->d_models.size() == 0)  {     // MODEL REMOVE this stuff
           IntVector cIdx[8];  
           for(NodeIterator iter = patch->getNodeIterator(); !iter.done();iter++){
              patch->findCellsFromNode(*iter,cIdx);
