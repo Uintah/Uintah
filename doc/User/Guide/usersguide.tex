@@ -22,24 +22,15 @@
 \input{srugmacros}
 
 \begin{rawhtml}
-<!-- ******************** DOCUMENTATION HEADER ********************* -->
-<div class="top-banner-margins">
-<table border="0" cellspacing="0" cellpadding="0" width="100%" height="91">
-<tr>
-<td align="center" width="%100" background="../../../Utilities/Figures/banner_top_fill.jpg">
-<img src="../../../Utilities/Figures/banner_top.jpg" width="744" height="91" border="0" usemap="#banner" /></td>
-<map name="banner">
-<area href="http://www.sci.utah.edu" alt="Home" coords="92,62,186,83" />
-<area href="http://software.sci.utah.edu" alt="Software" coords="193,61,289,83" />
-<area href="../../index.html" alt="Documentation" coords="296,62,437,83" />
-<area href="./index.html" alt="User Guide" coords="449,62,544,83" />
-<area href="../../Developer/Guide/TOC.html" alt="Developer Guide" coords="550,62,692,83" />
-<area href="../../Installation/Guide/TOC.html" alt="Developer Guide" coords="550,62,692,83" />
-</map>
-</tr>
-</table>
-</div>
-<!-- ****************** END DOCUMENTATION HEADER ******************* -->
+<script language="JavaScript">
+var treetop="";
+var path = location.pathname;
+while (path.substr(path.lastIndexOf("/")+1) != "doc") {
+treetop += "../";
+path = path.substr(0, path.lastIndexOf("/"));
+}
+document.write('<script language="JavaScript" src="',treetop,'doc/Utilities/HTML/banner_top.js"><\/script>');
+</script>
 \end{rawhtml}
 
 % The title page
