@@ -89,9 +89,13 @@ QuadraticTetVolMesh::QuadraticTetVolMesh() :
   TetVolMesh(),
   node_2_edge_(),
 #ifdef HAVE_HASH_MAP
-  edge_2_node_(100,edge_hasher_,edge_eq_),
+#ifdef __ECC
+  edge_2_node_(edge_hasher_),
 #else
-  edge_2_node_(edge_eq_),
+  edge_2_node_(100,edge_hasher_,edge_comp_),
+#endif // ifdef __ECC
+#else
+  edge_2_node_(edge_comp_),
 #endif
   phantom_nodes_computed_p_(false)
 {
@@ -100,18 +104,31 @@ QuadraticTetVolMesh::QuadraticTetVolMesh() :
 QuadraticTetVolMesh::QuadraticTetVolMesh(const QuadraticTetVolMesh& copy) :
   TetVolMesh(copy),
   node_2_edge_(copy.node_2_edge_),
-  edge_2_node_(copy.edge_2_node_),
+#ifdef HAVE_HASH_MAP
+#ifdef __ECC
+  edge_2_node_(edge_hasher_),
+#else
+  edge_2_node_(100,edge_hasher_,edge_comp_),
+#endif // ifdef __ECC
+#else
+  edge_2_node_(edge_comp_),
+#endif
   phantom_nodes_computed_p_(copy.phantom_nodes_computed_p_)
 {
+  compute_nodes();
 }
 
 QuadraticTetVolMesh::QuadraticTetVolMesh(const TetVolMesh &tv) :
   TetVolMesh(tv),
   node_2_edge_(),
 #ifdef HAVE_HASH_MAP
-  edge_2_node_(100,edge_hasher_,edge_eq_),
+#ifdef __ECC
+  edge_2_node_(edge_hasher_),
 #else
-  edge_2_node_(edge_eq_),
+  edge_2_node_(100,edge_hasher_,edge_comp_),
+#endif // ifdef __ECC
+#else
+  edge_2_node_(edge_comp_),
 #endif
   phantom_nodes_computed_p_(false)
 {

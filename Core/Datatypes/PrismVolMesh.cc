@@ -81,29 +81,37 @@ PrismVolMesh::PrismVolMesh() :
   //! Unique Edges
 #ifdef HAVE_HASH_SET
   edge_hasher_(cells_),
-#endif
-  edge_eq_(cells_),
-#ifdef HAVE_HASH_SET
-  all_edges_(100,edge_hasher_,edge_eq_),
-  edges_(100,edge_hasher_,edge_eq_),
+#ifdef __ECC
+  all_edges_(edge_hasher_),
+  edges_(edge_hasher_),
 #else
-  all_edges_(edge_eq_),
-  edges_(edge_eq_),
-#endif
+  edge_comp_(cells_),
+  all_edges_(100,edge_hasher_,edge_comp_),
+  edges_(100,edge_hasher_,edge_comp_),
+#endif // ifdef __ECC
+#else // ifdef HAVE_HASH_SET
+  all_edges_(edge_comp_),
+  edges_(edge_comp_),
+#endif // ifdef HAVE_HASH_SET
+
   edge_lock_("PrismVolMesh edges_ fill lock"),
 
   //! Unique Faces
 #ifdef HAVE_HASH_SET
   face_hasher_(cells_),
-#endif
-  face_eq_(cells_),
-#ifdef HAVE_HASH_SET
-  all_faces_(100,face_hasher_,face_eq_),
-  faces_(100,face_hasher_,face_eq_),
+#ifdef __ECC
+  all_faces_(face_hasher_),
+  faces_(face_hasher_),
 #else
-  all_faces_(face_eq_),
-  faces_(face_eq_),
-#endif
+  face_comp_(cells_),
+  all_faces_(100,face_hasher_,face_comp_),
+  faces_(100,face_hasher_,face_comp_),
+#endif // ifdef __ECC
+#else // ifdef HAVE_HASH_SET
+  all_faces_(face_comp_),
+  faces_(face_comp_),
+#endif // ifdef HAVE_HASH_SET
+
   face_lock_("PrismVolMesh faces_ fill lock"),
 
   node_neighbors_(0),
@@ -120,30 +128,41 @@ PrismVolMesh::PrismVolMesh(const PrismVolMesh &copy):
   points_lock_("PrismVolMesh points_ fill lock"),
   cells_(copy.cells_),
   cells_lock_("PrismVolMesh cells_ fill lock"),
+
 #ifdef HAVE_HASH_SET
   edge_hasher_(cells_),
-#endif
-  edge_eq_(cells_),
-#ifdef HAVE_HASH_SET
-  all_edges_(100,edge_hasher_,edge_eq_),
-  edges_(100,edge_hasher_,edge_eq_),
+#ifdef __ECC
+  all_edges_(edge_hasher_),
+  edges_(edge_hasher_),
 #else
-  all_edges_(edge_eq_),
-  edges_(edge_eq_),
-#endif
+  edge_comp_(cells_),
+  all_edges_(100,edge_hasher_,edge_comp_),
+  edges_(100,edge_hasher_,edge_comp_),
+#endif // ifdef __ECC
+#else // ifdef HAVE_HASH_SET
+  all_edges_(edge_comp_),
+  edges_(edge_comp_),
+#endif // ifdef HAVE_HASH_SET
+
   edge_lock_("PrismVolMesh edges_ fill lock"),
+
 #ifdef HAVE_HASH_SET
   face_hasher_(cells_),
-#endif
-  face_eq_(cells_),
-#ifdef HAVE_HASH_SET
-  all_faces_(100,face_hasher_,face_eq_),
-  faces_(100,face_hasher_,face_eq_),
+#ifdef __ECC
+  all_faces_(face_hasher_),
+  faces_(face_hasher_),
 #else
-  all_faces_(face_eq_),
-  faces_(face_eq_),
-#endif
+  face_comp_(cells_),
+  all_faces_(100,face_hasher_,face_comp_),
+  faces_(100,face_hasher_,face_comp_),
+#endif // ifdef __ECC
+#else // ifdef HAVE_HASH_SET
+  all_faces_(face_comp_),
+  faces_(face_comp_),
+#endif // ifdef HAVE_HASH_SET
+
   face_lock_("PrismVolMesh edges_ fill lock"),
+
   node_neighbors_(0),
   node_neighbor_lock_("PrismVolMesh node_neighbors_ fill lock"),
   grid_(copy.grid_),

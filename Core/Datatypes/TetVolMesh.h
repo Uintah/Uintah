@@ -139,6 +139,11 @@ public:
     public:
       eqEdge(const vector<under_type> &cells) : 
 	cells_(cells) {};
+
+      // Since the indicies of the nodes can be in any order, we need
+      // to order them before we do comparisons.  This can be done
+      // simply for two items using Min and Max.  This works, because
+      // index_type is a single integral value.
       bool operator()(index_type ei1, index_type ei2) const
       {
 	const pair<index_type, index_type> e1 = edgei(ei1), e2 = edgei(ei2);
@@ -146,6 +151,36 @@ public:
 		Max(cells_[e2.first], cells_[e2.second]) &&
 		Min(cells_[e1.first], cells_[e1.second]) == 
 		Min(cells_[e2.first], cells_[e2.second]));
+      };
+    };
+      
+    //! A fucntor that returns a boolean indicating weather two
+    //! edges indices are less than each other.
+    //! Used as a template parameter to STL containers typedef'd below
+    struct lessEdge : public binary_function<index_type, index_type, bool>
+    {
+    private:
+      const vector<under_type> &cells_;
+    public:
+      lessEdge(const vector<under_type> &cells) : 
+	cells_(cells) {};
+
+      static bool lessthen(const vector<under_type> &cells, index_type ei1, index_type ei2) {
+	const pair<index_type, index_type> e1 = edgei(ei1), e2 = edgei(ei2);
+        index_type e1min = Min(cells[e1.first], cells[e1.second]);
+        index_type e2min = Min(cells[e2.first], cells[e2.second]);
+        if (e1min == e2min) {
+          index_type e1max = Max(cells[e1.first], cells[e1.second]);
+          index_type e2max = Max(cells[e2.first], cells[e2.second]);
+          return  e1max < e2max;
+        } else {
+          return e1min < e2min;
+        }
+      }
+
+      bool operator()(index_type ei1, index_type ei2) const
+      {
+        return lessthen(cells_, ei1, ei2);
       };
     };
       
@@ -169,13 +204,32 @@ public:
 	const int n1 = cells_[e.second] & mask;
 	return Min(n0, n1) << size | Max(n0, n1);
       }
+#ifdef __ECC
+
+      // These are particularly needed by ICC's hash stuff
+      static const size_t bucket_size = 4;
+      static const size_t min_buckets = 8;
+      
+      // This is a less than function.
+      bool operator()(index_type ei1, index_type ei2) const {
+        return lessEdge::lessthen(cells_, ei1, ei2);
+      }
+#endif // endif ifdef __ICC
     };   
 
-    typedef hash_multiset<index_type, CellEdgeHasher,eqEdge> HalfEdgeSet;
-    typedef hash_set<index_type, CellEdgeHasher, eqEdge> EdgeSet;
+#ifdef __ECC
+    // The comparator function needs to be a member of CellEdgeHasher
+    typedef hash_multiset<index_type, CellEdgeHasher> HalfEdgeSet;
+    typedef hash_set<index_type, CellEdgeHasher> EdgeSet;
 #else
-    typedef multiset<index_type, eqEdge> HalfEdgeSet;
-    typedef set<index_type, eqEdge> EdgeSet;
+    typedef eqEdge EdgeComparitor;
+    typedef hash_multiset<index_type, CellEdgeHasher, EdgeComparitor> HalfEdgeSet;
+    typedef hash_set<index_type, CellEdgeHasher, EdgeComparitor> EdgeSet;
+#endif // end ifdef __ECC
+#else // ifdef HAVE_HASH_SET
+    typedef lessEdge EdgeComparitor;
+    typedef multiset<index_type, EdgeComparitor> HalfEdgeSet;
+    typedef set<index_type, EdgeComparitor> EdgeSet;
 #endif
     //! This iterator will traverse each shared edge once in no 
     //! particular order.
@@ -216,6 +270,44 @@ public:
       }
     };
     
+    struct lessFace : public binary_function<index_type, index_type, bool>
+    {
+    private:
+      const vector<under_type> &cells_;
+    public:
+      lessFace(const vector<under_type> &cells) : 
+	cells_(cells) {};
+      static bool lessthen(const vector<under_type> &cells, index_type fi1, index_type fi2)
+      {
+	const int f1_offset = fi1 % 4;
+	const int f1_base = fi1 - f1_offset;
+	const under_type f1_n0 = cells[f1_base + (f1_offset < 1 ? 1 : 0)];
+	const under_type f1_n1 = cells[f1_base + (f1_offset < 2 ? 2 : 1)];
+	const under_type f1_n2 = cells[f1_base + (f1_offset < 3 ? 3 : 2)];
+	const int f2_offset = fi2 % 4;
+	const int f2_base = fi2 - f2_offset;
+	const under_type f2_n0 = cells[f2_base + (f2_offset < 1 ? 1 : 0)];
+	const under_type f2_n1 = cells[f2_base + (f2_offset < 2 ? 2 : 1)];
+	const under_type f2_n2 = cells[f2_base + (f2_offset < 3 ? 3 : 2)];
+
+        under_type f1_max = Max(f1_n0, f1_n1, f1_n2);
+        under_type f2_max = Max(f2_n0, f2_n1, f2_n2);
+        if (f1_max == f2_max) {
+          under_type f1_mid = Mid(f1_n0, f1_n1, f1_n2);
+          under_type f2_mid = Mid(f2_n0, f2_n1, f2_n2);
+          if (f1_mid == f2_mid)
+            return Min(f1_n0, f1_n1, f1_n2) < Min(f2_n0, f2_n1, f2_n2);
+          else
+            return f1_mid < f2_mid;
+        } else
+          return f1_max < f2_max;
+      }
+      bool operator()(index_type fi1, index_type fi2) const
+      {
+        return lessthen(cells_, fi1, fi2);
+      }
+    };
+    
 #ifdef HAVE_HASH_SET
     struct CellFaceHasher: public unary_function<size_t, index_type>
     {
@@ -235,12 +327,34 @@ public:
 	const under_type n2 = cells_[base + (offset < 3 ? 3 : 2)] & mask;      
 	return Min(n0,n1,n2)<<size*2 | Mid(n0,n1,n2)<<size | Max(n0,n1,n2);
       }
+
+#ifdef __ECC
+
+      // These are particularly needed by ICC's hash stuff
+      static const size_t bucket_size = 4;
+      static const size_t min_buckets = 8;
+      
+      // This is a less than function.
+      bool operator()(index_type fi1, index_type fi2) const {
+        return lessFace::lessthen(cells_, fi1, fi2);
+      }
+#endif // endif ifdef __ICC
+
     };
-    typedef hash_multiset<index_type, CellFaceHasher,eqFace> HalfFaceSet;
-    typedef hash_set<index_type, CellFaceHasher, eqFace> FaceSet;
+
+#ifdef __ECC
+    // The comparator function needs to be a member of CellFaceHasher
+    typedef hash_multiset<index_type, CellFaceHasher> HalfFaceSet;
+    typedef hash_set<index_type, CellFaceHasher> FaceSet;
 #else
-    typedef multiset<index_type, eqFace> HalfFaceSet;
-    typedef set<index_type, eqFace> FaceSet;
+    typedef eqFace FaceComparitor;
+    typedef hash_multiset<index_type, CellFaceHasher,FaceComparitor> HalfFaceSet;
+    typedef hash_set<index_type, CellFaceHasher, FaceComparitor> FaceSet;
+#endif // end ifdef __ECC
+#else // ifdef HAVE_HASH_SET
+    typedef lessFace FaceComparitor;
+    typedef multiset<index_type, FaceComparitor> HalfFaceSet;
+    typedef set<index_type, FaceComparitor> FaceSet;
 #endif
     typedef FaceSet::iterator		iterator;
     typedef FaceIndex<under_type>       size_type;
@@ -363,7 +477,7 @@ public:
   {
     vector<Node::index_type> arr;
     get_neighbors(arr, idx);
-    return arr.size();
+    return static_cast<unsigned int>(arr.size());
   }
   unsigned int get_valence(Edge::index_type /*idx*/) const { return 0; }
   unsigned int get_valence(Face::index_type idx) const
@@ -375,7 +489,7 @@ public:
   {
     Cell::array_type arr;
     get_neighbors(arr, idx);
-    return arr.size();
+    return static_cast<int>(arr.size());
   }
 
 
@@ -574,9 +688,15 @@ protected:
   typedef LockingHandle<Edge::EdgeSet> EdgeSetHandle;
 #ifdef HAVE_HASH_SET
   Edge::CellEdgeHasher	edge_hasher_;
+#ifndef __ECC
+  Edge::EdgeComparitor	edge_comp_;
 #endif
-  Edge::eqEdge		edge_eq_;
+#else // ifdef HAVE_HASH_SET
+  Edge::EdgeComparitor  edge_comp_;
+#endif
+  
   Edge::HalfEdgeSet	all_edges_;
+
 #if defined(__digital__) || defined(_AIX) || defined(__ECC)
   mutable
 #endif
@@ -587,9 +707,15 @@ protected:
   typedef LockingHandle<Face::FaceSet> FaceSetHandle;
 #ifdef HAVE_HASH_SET
   Face::CellFaceHasher	face_hasher_;
+#ifndef __ECC
+  Face::FaceComparitor  face_comp_;
 #endif
-  Face::eqFace		face_eq_;
+#else // ifdef HAVE_HASH_SET
+  Face::FaceComparitor	face_comp_;
+#endif
+
   Face::HalfFaceSet	all_faces_;
+
 #if defined(__digital__) || defined(_AIX) || defined(__ECC)
   mutable
 #endif
