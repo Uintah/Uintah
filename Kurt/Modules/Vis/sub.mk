@@ -10,22 +10,22 @@ SRCDIR   := Kurt/Modules/Vis
 SRCS     += $(SRCDIR)/GLTextureBuilder.cc  $(SRCDIR)/PadField.cc \
 		$(SRCDIR)/TextureVolVis.cc \
 		$(SRCDIR)/TexCuttingPlanes.cc \
-		$(SRCDIR)/VolVis.cc \
-		$(SRCDIR)/KurtScalarFieldReader.cc \
-		$(SRCDIR)/VisControl.cc \
+#		$(SRCDIR)/VolVis.cc \
+#		$(SRCDIR)/KurtScalarFieldReader.cc \
+#		$(SRCDIR)/VisControl.cc \
 		$(SRCDIR)/RescaleColorMapForParticles.cc \
 		$(SRCDIR)/ParticleColorMapKey.cc \
-		$(SRCDIR)/ParticleVis.cc \
+#		$(SRCDIR)/ParticleVis.cc \
 		$(SRCDIR)/AnimatedStreams.cc 
 
 
 PSELIBS :=  PSECore/Dataflow PSECore/Datatypes \
         SCICore/Thread SCICore/Persistent SCICore/Exceptions \
         SCICore/TclInterface SCICore/Containers SCICore/Datatypes \
-        SCICore/Geom Uintah/Grid Uintah/Interface Uintah/Exceptions \
-	SCICore/Geometry PSECore/Widgets PSECore/XMLUtil \
-	Kurt/Datatypes Kurt/DataArchive Kurt/Geom SCICore/Util \
-	Uintah/Datatypes
+        SCICore/Geom SCICore/Geometry PSECore/Widgets PSECore/XMLUtil \
+	Kurt/Datatypes SCICore/Util \
+	Uintah/Datatypes Uintah/Grid Uintah/Interface Uintah/Exceptions \
+#        Kurt/DataArchive Kurt/Geom
 
 LIBS := $(XML_LIBRARY) -lm
 
@@ -34,6 +34,9 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.10  2000/09/20 22:47:13  kuzimmer
+# changes so that the Kurt subtree can be compiled without Uintah by commenting out a few lines.
+#
 # Revision 1.9  2000/09/17 16:05:07  kuzimmer
 # C++ code for animated streams
 #
