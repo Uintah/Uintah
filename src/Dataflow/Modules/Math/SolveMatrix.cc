@@ -49,12 +49,13 @@
 #include <iostream>
 #include <sstream>
 
-//extern "C" {
-//#include "/local/include/petsc.h"
-//#include "/local/include/petscsles.h"
-//}
-
 #ifdef UNI_PETSC
+
+extern "C" {
+#include <petsc.h>
+#include <petscsles.h>
+}
+
 /*  
   
    This class (and the global instance below it) is used solely to 

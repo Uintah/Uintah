@@ -1167,15 +1167,28 @@ AC_ARG_WITH(unipetsc,
 AC_MSG_CHECKING(for uni-PETSc)
 
 UNI_PETSC_LIB_DIR=""
+UNI_PETSC_INC_DIR=""
+UNI_PETSC_INC=""
+
+if test "$unipetsc" &&
+   test -e "$unipetsc/bin/petscarch"; then
+   PETSC_ARCH=`$unipetsc/bin/petscarch`
+   if test "$is_64bit" != "yes" &&
+      test "$PETSC_ARCH" = "IRIX64"; then
+      PETSC_ARCH="IRIX"
+   fi
+fi
 
 # try the user supplied path first
-if test "$unipetsc" ; then
-  if test -e "$unipetsc/$PETSC_SUB/libpetsc.so"; then
-    UNI_PETSC_LIB_DIR="-L$unipetsc/$PETSC_SUB"
-    UNI_PETSC_DIR="$unipetsc"
+if test "$unipetsc"; then
+  if test -e "$unipetsc/lib/$PETSC_SUB/$PETSC_ARCH/libpetsc.so"; then
+    UNI_PETSC_LIB_DIR="-L$unipetsc/lib/$PETSC_SUB/$PETSC_ARCH"
+    UNI_PETSC_INC_DIR="$unipetsc/include"
+    UNI_PETSC_INC="-I$unipetsc/bmake/linux -I$unipetsc/include"
   elif test -e "$unipetsc/lib/libpetsc.so"; then
     UNI_PETSC_LIB_DIR="-L$unipetsc/lib"
-    UNI_PETSC_DIR="$unipetsc"
+    UNI_PETSC_INC_DIR="$unipetsc/include"
+    UNI_PETSC_INC="-I$unipetsc/include"
   fi
 fi
 
@@ -1183,42 +1196,55 @@ fi
 if test -z "$UNI_PETSC_LIB_DIR" ; then
   if test -e "$thirdparty/$PETSC_SUB/libpetsc.so"; then
     UNI_PETSC_LIB_DIR=-L$thirdparty/$PETSC_SUB
-    UNI_PETSC_DIR="$thirdparty"
+    UNI_PETSC_INC_DIR="$thirdparty/include"
+    UNI_PETSC_INC="-I$thirdparty/include"
   elif test -e "$thirdparty/lib/libpetsc.so"; then
     UNI_PETSC_LIB_DIR=-L$thirdparty/lib
-    UNI_PETSC_DIR="$thirdparty"
+    UNI_PETSC_INC_DIR="$thirdparty/include"
+    UNI_PETSC_INC="-I$thirdparty/include"
   fi
 fi
 
-# if still not found try some standard locations
+# if still not found try a standard location
 if test -z "$UNI_PETSC_LIB_DIR" ; then
-  if test -e /lib/libpetsc.so ; then
-    UNI_PETSC_LIB_DIR=-L/lib
-    UNI_PETSC_DIR=/
-  elif test -e /usr/lib/libpetsc.so; then
+  if test -e /usr/lib/libpetsc.so; then
     UNI_PETSC_LIB_DIR=-L/usr/lib
-    UNI_PETSC_DIR=/usr
+    UNI_PETSC_INC_DIR=/usr/include
+    UNI_PETSC_INC=-I/usr/include
   fi
+fi
+
+if test "$unipetsc" &&
+   test "$UNI_PETSC_LIB_DIR" == ""; then
+  AC_MSG_RESULT(no)
+  AC_MSG_WARN(uni-PETSc libraries not found)
+  AC_MSG_ERROR(Stopping.)
 fi
 
 if test "$UNI_PETSC_LIB_DIR"; then
-  UNI_PETSC_INC_DIR=-I$UNI_PETSC_DIR/include
   UNI_PETSC_DEF="#define UNI_PETSC"
   UNI_PETSC_LIBS="-lpetsc -lpetscsles -lpetscmat -lpetscvec \
                    -lpetscdm -lpetsccontrib -llapack -lblas -lg2c -lmpiuni"
-  AC_MSG_RESULT($UNI_PETSC_LIB_DIR -lpetsc)
 fi
 
 if test "$UNI_PETSC_LIB_DIR"; then
-  if test ! -f "$UNI_PETSC_DIR/include/petsc.h" ||
-     test ! -f "$UNI_PETSC_DIR/include/petscsles.h"; then
-    AC_MSG_ERROR(Couldn't find the necessary uni-PETSc include files.)
+  if test ! -f "$UNI_PETSC_INC_DIR/petsc.h" ||
+     test ! -f "$UNI_PETSC_INC_DIR/petscsles.h"; then
+    AC_MSG_RESULT(no)
+    AC_MSG_WARN(Found: uni-PETSc libs; not found: uni-PETSc include files.)
+    UNI_PETSC_LIB_DIR=""
+    UNI_PETSC_INC_DIR=""
+    UNI_PETSC_DEF=""
+    UNI_PETSC_LIBS=""
+    AC_MSG_ERROR(Stopping.)
+  else
+    AC_MSG_RESULT($UNI_PETSC_LIB_DIR -lpetsc)
   fi
 else
   AC_MSG_RESULT(no)
 fi
 
-AC_SUBST(UNI_PETSC_INC_DIR)
+AC_SUBST(UNI_PETSC_INC)
 AC_SUBST(UNI_PETSC_LIB_DIR)
 AC_SUBST(UNI_PETSC_DEF)
 AC_SUBST(UNI_PETSC_LIBS)
