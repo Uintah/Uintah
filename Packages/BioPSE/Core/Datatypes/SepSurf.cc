@@ -158,7 +158,8 @@ QuadSurfField<int> *SepSurf::extractSingleComponent(int comp,
     }
   }
 
-  for (i=0; i<surfI[comp].faces.size(); i++) {
+  int nfaces = surfI[comp].faces.size();
+  for (i=0; i<nfaces; i++) {
     //	cerr << "surfOrient["<<comp<<"]["<<i<<"]="<<surfOrient[comp][i]<<"\n";
     QuadSurfMesh::Node::array_type nodeArray;
     get_typed_mesh()->get_nodes(nodeArray, faces[surfI[comp].faces[i]]);
@@ -170,14 +171,14 @@ QuadSurfField<int> *SepSurf::extractSingleComponent(int comp,
 		    map[nodeArray[2]], map[nodeArray[3]]);
   }
 
-  QuadSurfField<int> *qsf = new QuadSurfField<int>(qsm, Field::NODE);
+  QuadSurfField<int> *qsf = new QuadSurfField<int>(qsm, Field::FACE);
 
   if (dataVals == "material") {
-    for (i=0; i<currIdx; i++) qsf->fdata()[i]=surfI[comp].matl;
+    for (i=0; i<nfaces; i++) qsf->fdata()[i]=surfI[comp].matl;
   } else if (dataVals == "cindex") {
-    for (i=0; i<currIdx; i++) qsf->fdata()[i]=comp;
+    for (i=0; i<nfaces; i++) qsf->fdata()[i]=comp;
   } else if (dataVals == "size") {
-    for (i=0; i<currIdx; i++) qsf->fdata()[i]=surfI[comp].size;
+    for (i=0; i<nfaces; i++) qsf->fdata()[i]=surfI[comp].size;
   } else {
     cerr << "Unknown dataVal option: "<<dataVals<<"\n";
   }    
