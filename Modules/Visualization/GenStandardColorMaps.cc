@@ -331,7 +331,6 @@ void GenStandardColorMaps::tcl_command( TCLArgs& args, void* userdata)
     const Array1< Color >& colors = mapTypes[mapType.get()]->getColors();
     int n = colors.size();
     int m = resolution.get();
-    cerr << "c-resolution = "<< m <<endl;
     
     if (m < minRes.get()) return;
     
