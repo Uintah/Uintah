@@ -69,6 +69,10 @@ These granular compaction problems all use g, cm, us (10^-6 s) units.
 piston with an initial velocity of .01 cm/us = 100 m/s. Frictional
 contact between grains.  Discretized into 8000 cells, 27000 particles.
 
+10grains_2m.ups  Same geometry as 10grains, but has all grains
+one material (velocity field) and the piston a second material.  Uses
+rigid contact algorithm
+
 1000grains.ups 999 stationary grains compacted by a heavy rectangular 
 piston with an initial velocity of .01 cm/us = 100 m/s. Frictional
 contact between grains.  Discretized into 64000 cells, 400000 particles.
