@@ -556,6 +556,7 @@ DataArchive::initVariable(const Patch* patch,
 
   var->setAllocationLabel(label);
   dw->put(var, label, matl, patch);
+  delete var; // should have been cloned when it was put
 }
 
 DataArchive::TimeHashMaps::TimeHashMaps(const vector<double>& tsTimes,
