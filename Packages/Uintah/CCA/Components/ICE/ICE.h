@@ -555,7 +555,8 @@ namespace Uintah {
                         const  Patch* patch,
                         int include_GC,
                         const string& message1,
-                        const string& message2, int component, 
+                        const string& message2, 
+                        int component, 
                         const CCVariable<Vector>& q_CC);
 
       void printStencil( int matl,
@@ -727,6 +728,30 @@ namespace Uintah {
                               const string& message2,
                               const string& variableType, 
                               const  T& q_CC);
+                              
+      void printVector_driver( int indx,
+                               const  Patch* patch,
+                               int include_GC,
+                               const string& message1,
+                               const string& message2, 
+                               int component, 
+                               const CCVariable<Vector>& q_CC);
+                              
+       template <class T>                       
+       void symmetryTest_driver( int indx,
+                                 const  Patch* patch,
+                                 const IntVector& cellShift,
+                                 const string& message1,
+                                 const string& message2, 
+                                 const  T& q_CC);
+               
+       void symmetryTest_Vector( int indx,
+                                 const  Patch* patch,
+                                 const string& message1,
+                                 const string& message2, 
+                                 const CCVariable<Vector>& q_CC);
+                                 
+
       
       ICELabel* lb; 
       MPMICELabel* MIlb;
@@ -745,10 +770,15 @@ namespace Uintah {
       double d_dbgStopTime;
       double d_dbgOutputInterval;
       double d_dbgNextDumpTime;
+      double d_dbgSym_relative_tol;
+      double d_dbgSym_absolute_tol;
+      
       bool   d_dbgGnuPlot;
       bool   d_dbgTime_to_printData;
+      bool   d_dbgSymmetryTest;
       IntVector d_dbgBeginIndx;
-      IntVector d_dbgEndIndx; 
+      IntVector d_dbgEndIndx;
+      IntVector d_dbgSymPlanes;
       vector<int> d_dbgMatls;
       int d_dbgLevel; 
       int d_dbgSigFigs;
