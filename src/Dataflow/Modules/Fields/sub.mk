@@ -34,13 +34,14 @@ SRCS     += \
 	$(SRCDIR)/CastMLVtoHV.cc\
 	$(SRCDIR)/CastTVtoMLV.cc\
 	$(SRCDIR)/ClipField.cc\
-	$(SRCDIR)/ClippingPlane.cc\
 	$(SRCDIR)/DirectInterpolate.cc\
 	$(SRCDIR)/EditField.cc\
 	$(SRCDIR)/FieldBoundary.cc\
 	$(SRCDIR)/Gradient.cc\
 	$(SRCDIR)/ManageFieldData.cc\
 	$(SRCDIR)/ManageFieldSet.cc\
+	$(SRCDIR)/SamplePlane.cc\
+	$(SRCDIR)/SampleLattice.cc\
 	$(SRCDIR)/ScalarFieldStats.cc\
 	$(SRCDIR)/ScaleFieldData.cc\
 	$(SRCDIR)/SeedField.cc\

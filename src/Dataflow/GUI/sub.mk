@@ -32,7 +32,6 @@ $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/CastMatrix.tcl \
 	$(SRCDIR)/ChangeCellType.tcl \
 	$(SRCDIR)/ClipField.tcl \
-	$(SRCDIR)/ClippingPlane.tcl \
 	$(SRCDIR)/ColorMapReader.tcl \
 	$(SRCDIR)/ColorMapWriter.tcl \
 	$(SRCDIR)/ComboListbox.tcl \
@@ -74,6 +73,8 @@ $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/Rescale.tcl \
 	$(SRCDIR)/RescaleColorMap.tcl \
 	$(SRCDIR)/RingWidget.tcl \
+	$(SRCDIR)/SamplePlane.tcl \
+	$(SRCDIR)/SampleLattice.tcl \
 	$(SRCDIR)/ScalarFieldStats.tcl \
 	$(SRCDIR)/ScaledBoxWidget.tcl \
 	$(SRCDIR)/ScaledFrameWidget.tcl \
