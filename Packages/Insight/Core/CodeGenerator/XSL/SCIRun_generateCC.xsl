@@ -172,6 +172,7 @@ public:
 <xsl:variable name="type"><xsl:value-of select="type"/></xsl:variable>
 <xsl:choose>
 <xsl:when test="$type = 'double'">GuiDouble </xsl:when>
+<xsl:when test="$type = 'float'">GuiDouble </xsl:when>
 <xsl:when test="$type = 'int'">GuiInt </xsl:when>
 <xsl:when test="$type = 'bool'">GuiInt </xsl:when>
 <xsl:otherwise>
@@ -320,8 +321,21 @@ bool </xsl:text><xsl:value-of select="$sci-name"/><xsl:text>::run( </xsl:text>
   // set filter 
   <xsl:for-each select="/filter/filter-itk/parameters/param">
   <xsl:variable name="type"><xsl:value-of select="type"/></xsl:variable>
-  <xsl:variable name="bool">bool</xsl:variable>
+  <xsl:variable name="name"><xsl:value-of select="name"/></xsl:variable>
+  <xsl:choose>
+  <xsl:when test="$type='bool'">
+  <!-- HANDLE CHECKBUTTON -->
+  if( gui_<xsl:value-of select="name"/>_.get() ) {
+    filter-><xsl:value-of select="call[@value='on']"/>( );   
+  } 
+  else { 
+    filter-><xsl:value-of select="call[@value='off']"/>( );
+  }  
+  </xsl:when>
+  <xsl:otherwise>
   filter-><xsl:value-of select="call"/>( gui_<xsl:value-of select="name"/>_.get() ); 
+  </xsl:otherwise>
+  </xsl:choose>
   </xsl:for-each>
 <xsl:text>   
   // set inputs 
