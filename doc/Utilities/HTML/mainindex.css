@@ -39,17 +39,22 @@ table {
 
 table ul li { 
 font-size: medium;
-list-style-type: none}
+list-style-type: none;
+}
 
 th { 
 font-size: large;
 background-color:#003333;
-color:#FFCC33}
+color:#FFCC33;
+width:33%}
 
 tr {}
 
 td { 
-vertical-align: top}
+vertical-align: top;
+}
+
+th {  width: 33%; }
 
 p {
 font-size: small}
