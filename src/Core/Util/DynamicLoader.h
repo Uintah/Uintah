@@ -61,6 +61,7 @@ public:
   void add_include(const string &inc);
   void add_namespace(const string &inc) { namespaces_[inc] = 1; }
   void add_post_include(const string &post);
+  void create_cc(ostream &fstr, bool empty) const;
   
   string             filename_;
   list<string>       includes_;

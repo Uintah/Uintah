@@ -98,6 +98,83 @@ CompileInfo::add_post_include(const string &post)
   post_include_extra_ = post_include_extra_ + post;
 }
 
+//! CompileInfo::create_cc
+//!
+//! Generate the code for a .cc file from the compile info.
+//! If boolean empty == true, It contains an empty maker function.  
+//! Used if the actual compilation fails.
+void 
+CompileInfo::create_cc(ostream &fstr, bool empty) const
+{
+  const string STD_STR("std::");
+
+  fstr << "// This is an automatically generated file, do not edit!" << endl;
+
+  // generate standard includes
+  list<string>::const_iterator iter = includes_.begin();
+  while (iter != includes_.end()) { 
+    const string &s = *iter;
+    if (s.substr(0, 5) == STD_STR)
+    {
+      string std_include = s.substr(5, s.length() -1);
+      fstr << "#include <" << std_include << ">" << endl;
+    }
+    ++iter;
+  }
+
+  ASSERT(sci_getenv("SCIRUN_SRCDIR"));
+  const std::string srcdir(sci_getenv("SCIRUN_SRCDIR"));
+  // generate other includes
+  iter = includes_.begin();
+  while (iter != includes_.end()) { 
+    const string &s = *iter;
+
+    if (!((s.substr(0, 5) == STD_STR) || s == "builtin"))
+    {
+      string::size_type loc = s.find(srcdir);
+      if( loc != string::npos ) {
+	string::size_type endloc = loc+srcdir.size()+1;
+	fstr << "#include <" << s.substr(endloc) << ">\n";
+      } else {
+	fstr << "#include \"" << s << "\"\n";
+      }
+    }
+    ++iter;
+  }
+
+  // output namespaces
+  ci_map_type::const_iterator nsiter = namespaces_.begin();
+  while (nsiter != namespaces_.end()) { 
+    const string &s = (*nsiter).first;
+    if (s != "builtin") {
+      fstr << "using namespace " << s << ";" << endl;
+    }
+    ++nsiter;
+  }
+
+  // Add in any post_include construction, usually specific class instances.
+  if (post_include_extra_ != "")
+  {
+    fstr << "\n" << post_include_extra_ << "\n";
+  }
+
+  // Delcare the maker function
+  fstr << endl << "extern \"C\" {"  << endl
+       << base_class_name_ << "* maker() {" << endl;
+
+  // If making an empty maker, return nothing instead of newing up the class.
+  // Comments out the next line that news up the class.
+  if (empty)
+  {
+    fstr << "  return 0;" << endl << "//";
+  }
+  
+  fstr << "  return scinew " << template_class_name_ << "<" 
+       << template_arg_ << ">;" << endl
+       << "}" << endl << "}" << endl;
+}
+
+
 
 DynamicAlgoBase::DynamicAlgoBase() :
   ref_cnt(0),
@@ -385,8 +462,6 @@ DynamicLoader::cleanup_failed_compile(CompileInfoHandle info)
 bool 
 DynamicLoader::create_cc(const CompileInfo &info, bool empty, ostream &serr)
 {
-  const string STD_STR("std::");
-
   // Try to open the file for writing.
   string full = otf_dir() + "/" + info.filename_ + "cc";
   ofstream fstr(full.c_str());
@@ -396,74 +471,14 @@ DynamicLoader::create_cc(const CompileInfo &info, bool empty, ostream &serr)
 	 << ") - Could not create file " << full << endl;
     return false;
   }
-  fstr << "// This is an automatically generated file, do not edit!" << endl;
 
-  // generate standard includes
-  list<string>::const_iterator iter = info.includes_.begin();
-  while (iter != info.includes_.end()) { 
-    const string &s = *iter;
-    if (s.substr(0, 5) == STD_STR)
-    {
-      string std_include = s.substr(5, s.length() -1);
-      fstr << "#include <" << std_include << ">" << endl;
-    }
-    ++iter;
-  }
-
-  ASSERT(sci_getenv("SCIRUN_SRCDIR"));
-  const std::string srcdir(sci_getenv("SCIRUN_SRCDIR"));
-  // generate other includes
-  iter = info.includes_.begin();
-  while (iter != info.includes_.end()) { 
-    const string &s = *iter;
-
-    if (!((s.substr(0, 5) == STD_STR) || s == "builtin"))
-    {
-      string::size_type loc = s.find(srcdir);
-      if( loc != string::npos ) {
-	string::size_type endloc = loc+srcdir.size()+1;
-	fstr << "#include <" << s.substr(endloc) << ">\n";
-      } else {
-	fstr << "#include \"" << s << "\"\n";
-      }
-    }
-    ++iter;
-  }
-
-  // output namespaces
-  CompileInfo::ci_map_type::const_iterator nsiter = info.namespaces_.begin();
-  while (nsiter != info.namespaces_.end()) { 
-    const string &s = (*nsiter).first;
-    if (s != "builtin") {
-      fstr << "using namespace " << s << ";" << endl;
-    }
-    ++nsiter;
-  }
-
-  // Add in any post_include construction, usually specific class instances.
-  if (info.post_include_extra_ != "")
-  {
-    fstr << "\n" << info.post_include_extra_ << "\n";
-  }
-
-  // Delcare the maker function
-  fstr << endl << "extern \"C\" {"  << endl
-       << info.base_class_name_ << "* maker() {" << endl;
-
-  // If making an empty maker, return nothing instead of newing up the class.
-  // Comments out the next line that news up the class.
-  if (empty)
-  {
-    fstr << "  return 0;" << endl << "//";
-  }
-  
-  fstr << "  return scinew "<< info.template_class_name_ << "<" 
-       << info.template_arg_ << ">;" << endl
-       << "}" << endl << "}" << endl;
+  info.create_cc(fstr, empty);
 
   serr << "DynamicLoader - Successfully created " << full << endl;
   return true;
 }
+
+
 
 
 void 
