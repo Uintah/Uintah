@@ -592,7 +592,7 @@ std::string     MatlabEngine::addcode(std::string &mfile)
   newcode += "fprintf(1,'\\nSCIRUN-MATLABINTERFACE-MATLABENGINE-ERROR\\n');\n";
   newcode += "disp(lasterr)\n";
   newcode += "end\n";
-  newcode += "fprintf(1,'\\nSCIRUN-MATLABINTERFACE-MATLABENGINE-END\\n');\n";
+  newcode += "fprintf(1,'\\n\\nSCIRUN-MATLABINTERFACE-MATLABENGINE-END\\n');\n";
   return(newcode);
 }
 
