@@ -53,6 +53,7 @@ void t1(PingThrow::pointer& pp, OtherThrow::pointer& ot, int rank);
 void t2(PingThrow::pointer& pp, OtherThrow::pointer& ot, int rank);
 void t3(PingThrow::pointer& pp, OtherThrow::pointer& ot, int rank);
 void t4(PingThrow::pointer& pp, OtherThrow::pointer& ot, int rank);
+void t5(PingThrow::pointer& pp, OtherThrow::pointer& ot, int rank);
 
 void usage(char* progname)
 {
@@ -129,7 +130,7 @@ void t4(PingThrow::pointer& pp, OtherThrow::pointer& ot, int rank)
     cout << "SUCCESS\n";
     MPI_Barrier(MPI_COMM_WORLD);
     if (rank==0) cout << "****************************************\n";
-    //t3(pp,ot);
+    t5(pp,ot,rank);
     return;
   } catch(...) {
     cout << "FAILED1\n";
@@ -137,6 +138,14 @@ void t4(PingThrow::pointer& pp, OtherThrow::pointer& ot, int rank)
   }
   cout << "FAILED2\n";
   exit(1);
+}
+
+//getException with multiple exceptions/multiple methods
+void t5(PingThrow::pointer& pp, OtherThrow::pointer& ot, int rank) 
+{
+  cout << "Test 5...  ";
+  pp->pingthrow(rank); //rank one excepts
+  //PIDL::finalize should catch this
 }
 
 int main(int argc, char* argv[])
@@ -216,26 +225,16 @@ int main(int argc, char* argv[])
 	  OtherThrow::pointer ot;
 	  pp->getOX(ot);
 
-	  double stime=Time::currentSeconds();
 	  cout << "Starting test...\n";
 	  t1(pp,ot,myrank);
-	  cout << "ALL TEST SUCCESSFUL\n";
-	  /*
-	  for(int z=0; z<10; z++) { 
-            ::std::cout << "Calling from node " << myrank << " for the " << z+1 << " time\n";
-       	    int j=pp->pingthrow(13);
-            pp->getException();
-	  }
-	  */
-
-          double dt=Time::currentSeconds()-stime;
-	  cerr << "3 reps in " << dt << " seconds\n";
-	  double us=dt/reps*1000*1000;
-	  cerr << us << " us/rep\n";
  	}
+
+    PIDL::serveObjects();
+    PIDL::finalize();
     } catch(PingThrow_ns::PPException* p) {
-        cerr << "pingthrow.cc: Coaught ppexception\n";
-        //exit(0);
+        cerr << "PASSED\n";
+	cout << "ALL TESTS SUCCESSFUL\n";
+        return(0);
     } catch(const MalformedURL& e) {
 	cerr << "pingthrow.cc: Caught MalformedURL exception:\n";
 	cerr << e.message() << '\n';
@@ -247,8 +246,7 @@ int main(int argc, char* argv[])
 	cerr << "Caught unexpected exception!\n";
 	abort();
     }
-    PIDL::serveObjects();
-    PIDL::finalize();
+    cerr << "FAILED\n";
     return 0;
 }
 
