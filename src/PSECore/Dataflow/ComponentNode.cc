@@ -675,8 +675,8 @@ void ProcessComponentNode(const DOM_Node& d, component_node* n)
 {
   if (n->name==NOT_SET) {
     DOM_Node name = d.getAttributes().getNamedItem("name");
-    if (name==0)
-      cout << "WARNING: Component has no name." << endl;
+    if (name==0) 
+      cout << "ERROR: Component has no name." << endl;
     else {
       n->name = name.getNodeValue().transcode();
     }
@@ -685,7 +685,7 @@ void ProcessComponentNode(const DOM_Node& d, component_node* n)
   if (n->category==NOT_SET) {
     DOM_Node name = d.getAttributes().getNamedItem("category");
     if (name==0)
-      cout << "WARNING: Component has no category." << endl;
+      cout << "ERROR: Component has no category." << endl;
     else {
       n->category = name.getNodeValue().transcode();
     }
@@ -1042,7 +1042,7 @@ void WriteComponentNodeToFile(component_node* n, const char* filename)
   o << endl;
 }
 
-void ReadComponentNodeFromFile(component_node* n, const char* filename)
+int ReadComponentNodeFromFile(component_node* n, const char* filename)
 {
   // Initialize the XML4C system
   try {
@@ -1050,7 +1050,7 @@ void ReadComponentNodeFromFile(component_node* n, const char* filename)
   } catch (const XMLException& toCatch) {
     std::cerr << "Error during initialization! :\n"
 	 << StrX(toCatch.getMessage()) << endl;
-    return;
+    return -1;
   }
 
   // Instantiate the DOM parser.
@@ -1067,14 +1067,16 @@ void ReadComponentNodeFromFile(component_node* n, const char* filename)
 		filename+"'\nException message is:  "+
 		xmlto_string(toCatch.getMessage());
     handler.foundError=true;
-    return;
+    return 0;
   }
   
   DOM_Document doc = parser.getDocument();
   DOM_NodeList list = doc.getElementsByTagName("component");
   int nlist = list.getLength();
+  if (nlist==0) return 0;
   for (int i=0;i<nlist;i++)
     ProcessComponentNode(list.item(i),n);
+  return 1;
 }
 
 } // Dataflow

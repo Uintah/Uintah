@@ -18,6 +18,10 @@ namespace SCICore {
 #include <util/PlatformUtils.hpp>
 #include <parsers/DOMParser.hpp>
 #include <dom/DOM_Node.hpp>
+#include <util/XMLUni.hpp>
+#ifdef XERCESDEFS_HPP
+#include <util/XMLUniDefs.hpp>
+#endif
 #ifdef __sgi
 #pragma reset woff 1375
 #endif
@@ -127,6 +131,13 @@ namespace PSECore {
 
 //
 // $Log$
+// Revision 1.6  2000/11/13 19:45:19  moulding
+// - improve error reporting for XML stuff in module maker
+// - edit module maker dialog:
+//   remove browse button
+//   clarify PSE path label
+// - add support for newer versions of xerces
+//
 // Revision 1.5  2000/10/21 18:36:52  moulding
 // removed some utility functions from PackageDB.cc and put them into XMLUtil.
 //
