@@ -45,6 +45,8 @@
 #include <math.h>
 #include "ConstitutiveModel.h"	
 
+#ifdef WONT_COMPILE_YET
+
 class ViscoElasticDamage : public ConstitutiveModel {
  private:
   // data areas
@@ -164,6 +166,8 @@ class ViscoElasticDamage : public ConstitutiveModel {
 
   virtual int getSize() const;
 };
+
+#endif
 
 #endif // __VISCOELASTIC_DAMAGE_CONSTITUTIVE_MODEL_H__ 
 

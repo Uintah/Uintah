@@ -19,7 +19,9 @@
 #define __ELASTIC_CONSTITUTIVE_MODEL_H__
 
 #include "ConstitutiveModel.h"	
-#include "Matrix3.h"
+#include <Uintah/Components/MPM/Util/Matrix3.h>
+
+#ifdef WONT_COMPILE_YET
 
 class ElasticConstitutiveModel : public ConstitutiveModel {
  private:
@@ -147,11 +149,15 @@ class ElasticConstitutiveModel : public ConstitutiveModel {
   virtual int getSize() const;
 };
 
+#endif
 
 
 #endif  // __ELASTIC_CONSTITUTIVE_MODEL_H__ 
 
 // $Log$
+// Revision 1.2  2000/03/20 17:17:08  sparker
+// Made it compile.  There are now several #idef WONT_COMPILE_YET statements.
+//
 // Revision 1.1  2000/03/14 22:11:49  jas
 // Initial creation of the constitutive model directory with the legacy
 // constitutive model classes.

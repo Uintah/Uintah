@@ -7,7 +7,7 @@ include $(OBJTOP_ABS)/scripts/smallso_prologue.mk
 
 SRCDIR   := Uintah/Components/MPM
 
-SRCS     += $(SRCDIR)/SerialMPM.cc $(SRCDIR)/ThreadedMPM.cc \
+SRCS     += $(SRCDIR)/SerialMPM.cc \
 	$(SRCDIR)/BoundCond.cc
 
 SUBDIRS := $(SRCDIR)/ConstitutiveModel $(SRCDIR)/Contact \
@@ -24,6 +24,9 @@ include $(OBJTOP_ABS)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.2  2000/03/20 17:17:05  sparker
+# Made it compile.  There are now several #idef WONT_COMPILE_YET statements.
+#
 # Revision 1.1  2000/03/17 09:29:32  sparker
 # New makefile scheme: sub.mk instead of Makefile.in
 # Use XML-based files for module repository

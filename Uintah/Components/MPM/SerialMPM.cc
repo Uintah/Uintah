@@ -36,6 +36,16 @@ using SCICore::Math::Max;
 using std::cerr;
 using std::string;
 using std::ofstream;
+using Uintah::Grid::Level;
+using Uintah::Grid::ParticleSet;
+using Uintah::Grid::ParticleSubset;
+using Uintah::Grid::ParticleVariable;
+using Uintah::Grid::Task;
+using Uintah::Grid::SoleVariable;
+using Uintah::Grid::ProblemSpec;
+using Uintah::Grid::NCVariable;
+
+#ifdef WONT_COMPILE_YET
 
 SerialMPM::SerialMPM()
 {
@@ -603,10 +613,15 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorContext*,
     new_dw->put(pexternalforce, "p.externalforce", region, 0);
 }
 
-// end namespace Components
-// end namespace Uintah
+#endif
+
+} // end namespace Components
+} // end namespace Uintah
 
 // $Log$
+// Revision 1.8  2000/03/20 17:17:05  sparker
+// Made it compile.  There are now several #idef WONT_COMPILE_YET statements.
+//
 // Revision 1.7  2000/03/17 21:01:50  dav
 // namespace mods
 //

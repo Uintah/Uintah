@@ -18,10 +18,13 @@ public:
 
 };
 
-#endif __GEOMETRY_GRID_H__
+#endif /* __GEOMETRY_GRID_H__ */
 
 
 // $Log$
+// Revision 1.3  2000/03/20 17:17:14  sparker
+// Made it compile.  There are now several #idef WONT_COMPILE_YET statements.
+//
 // Revision 1.2  2000/03/15 21:58:24  jas
 // Added logging and put guards in.
 //

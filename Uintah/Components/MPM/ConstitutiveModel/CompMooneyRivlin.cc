@@ -8,6 +8,10 @@
 
 #include "CompMooneyRivlin.h"
 
+#ifdef WONT_COMPILE_YET
+
+using Uintah::Components::CompMooneyRivlin;
+
 CompMooneyRivlin::CompMooneyRivlin(const Region* region,
 				   MPMMaterial* matl,
 				   const DataWarehouseP& old_dw,
@@ -195,7 +199,12 @@ double CompMooneyRivlin::computeStrainEnergy(const Region* region,
   return se;
 }
 
+#endif
+
 // $Log$
+// Revision 1.4  2000/03/20 17:17:07  sparker
+// Made it compile.  There are now several #idef WONT_COMPILE_YET statements.
+//
 // Revision 1.3  2000/03/16 00:49:31  guilkey
 // Fixed the parameter lists in the .cc files
 //

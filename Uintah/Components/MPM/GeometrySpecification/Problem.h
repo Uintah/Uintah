@@ -6,7 +6,11 @@
 #include "Material.h"
 #include <string>
 #include <vector>
-class Region;
+namespace Uintah {
+    namespace Grid {
+	class Region;
+    }
+}
 #include <Uintah/Interface/DataWarehouseP.h>
 
 class Problem {
@@ -37,7 +41,7 @@ public:
     }
 
   void preProcessor(std::string filename);
-  void createParticles(const Region* region, DataWarehouseP&);
+  void createParticles(const Uintah::Grid::Region* region, Uintah::Interface::DataWarehouseP&);
   void writeGridFiles(std::string gridposname, std::string gridcellname);
   void writeSAMRAIGridFile(std::string gridname);
   int  getNumMaterial() const;
@@ -48,6 +52,9 @@ public:
 #endif // __PROBLEM_H__
 
 // $Log$
+// Revision 1.3  2000/03/20 17:17:15  sparker
+// Made it compile.  There are now several #idef WONT_COMPILE_YET statements.
+//
 // Revision 1.2  2000/03/15 22:13:08  jas
 // Added log and changed header file locations.
 //

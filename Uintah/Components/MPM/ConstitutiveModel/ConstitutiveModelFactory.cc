@@ -5,6 +5,8 @@ using std::cerr;
 using std::ifstream;
 using std::ofstream;
 
+#ifdef WONT_COMPILE_YET
+
 void ConstitutiveModelFactory::readParameters(ifstream& in, int mat_type,
 					      double *p_array)
 {
@@ -142,3 +144,4 @@ ConstitutiveModel* ConstitutiveModelFactory::create(int mat_type,
     }
   return(0);
 }
+#endif
