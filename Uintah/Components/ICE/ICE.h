@@ -225,6 +225,7 @@ namespace Uintah {
       double d_pressure;
       double d_initialDt;
       double d_CFL;
+      int d_max_iter_equilibration;
 
      // exchange coefficients -- off diagonal terms
       vector<double> d_K_mom, d_K_heat; 
@@ -247,7 +248,6 @@ namespace Uintah {
       
     };
 
-#define MAX_ITER_EQUILIBRATION 50     /* max inter in equilibration press calc        */ 
  /*______________________________________________________________________
  *      Needed by Advection Routines
  *______________________________________________________________________*/   
@@ -292,6 +292,10 @@ namespace Uintah {
 #endif
 
 // $Log$
+// Revision 1.47  2001/01/04 03:35:42  jas
+// Remove john_debugs.  Now specifying max_iter_equilibration in the input
+// file instead of using #define MAX_ITER_EQUILIBRATION.
+//
 // Revision 1.46  2001/01/04 00:06:48  jas
 // Formatting changes.
 //
