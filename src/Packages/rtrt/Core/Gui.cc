@@ -853,10 +853,14 @@ Gui::handleKeyPressCB( unsigned char key, int /*mouse_x*/, int /*mouse_y*/ )
     break;
 
   case 'f':
+#if 0
     if( activeGui->dpy_->fullScreenMode_ )
       activeGui->dpy_->toggleRenderWindowSize_ = true;
     else
       cout << "Can't toggle to full res on non-full screen mode.\n";
+#else
+    activeGui->priv->show_frame_rate = !activeGui->priv->show_frame_rate;
+#endif
     break;
 
   case 27: // Escape key... need to find a symbolic name for this...
