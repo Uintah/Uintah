@@ -135,7 +135,7 @@ ManageFieldData::execute()
   }
   if (!imatrix_port->get(imatrixhandle) && (!imatrixhandle.get_rep()))
   {
-    remark("No input matrix connected.");
+    //remark("No input matrix connected.");
     result_field = ifieldhandle;
   }
   else
