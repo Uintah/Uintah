@@ -1,9 +1,7 @@
 
-/* REFERENCED */
-static char *id="$Id$";
-
 /*
  *  Thread_unix.cc: Utilities for all unix implementations of the
+ *  $Id$
  * 		    the thread library
  *
  *  Written by:
@@ -15,24 +13,13 @@ static char *id="$Id$";
  *  Copyright (C) 1997 SCI Group
  */
 
-//
-// This is brutal, but effective.  We want this file to have access
-// to the private members of Thread, without having to explicitly
-// declare friendships in the class.
-#define private public
-#define protected public
-#include <SCICore/Thread/Thread.h>
-#undef private
-#undef protected
 #include <SCICore/Thread/Thread_unix.h>
 #include <stdio.h>
 #include <sys/errno.h>
 #include <sys/signal.h>
 
-using SCICore::Thread::Thread;
-
 char*
-SCICore_Thread_signal_name(int sig, int code, caddr_t addr)
+SCICore_Thread_signal_name(int sig, void* addr)
 {
     static char buf[1000];
     switch(sig){
@@ -46,7 +33,7 @@ SCICore_Thread_signal_name(int sig, int code, caddr_t addr)
 	sprintf(buf, "SIGQUIT (quit)");
 	break;
     case SIGILL:
-	sprintf(buf, "SIGILL (illegal instruction)");
+	sprintf(buf, "SIGILL at address %p (illegal instruction)", addr);
 	break;
     case SIGTRAP:
 	sprintf(buf, "SIGTRAP (trace trap)");
@@ -54,39 +41,35 @@ SCICore_Thread_signal_name(int sig, int code, caddr_t addr)
     case SIGABRT:
 	sprintf(buf, "SIBABRT (Abort)");
 	break;
+#ifdef SIGEMT
     case SIGEMT:
 	sprintf(buf, "SIGEMT (Emulation Trap)");
 	break;
+#endif
+#ifdef SIGIOT
+#if SIGEMT != SIGIOT && SIGIOT != SIGABRT
+    case SIGIOT:
+	sprintf(buf, "SIGIOT (IOT Trap)");
+	break;
+#endif
+#endif
+    case SIGBUS:
+	sprintf(buf, "SIGBUS at address %p (bus error)", addr);
+	break;
     case SIGFPE:
-	sprintf(buf, "SIGFPE (Floating Point Exception)");
+	sprintf(buf, "SIGFPE (floating point exception)");
 	break;
     case SIGKILL:
 	sprintf(buf, "SIGKILL (kill)");
 	break;
-    case SIGBUS:
-	sprintf(buf, "SIGBUS (bus error)");
-	break;
     case SIGSEGV:
-	{
-	    char* why;
-	    switch(code){
-	    case EFAULT:
-		why="Invalid virtual address";
-		break;
-	    case EACCES:
-		why="Invalid permissions for address";
-		break;
-	    default:
-		why="Unknown code!";
-		break;
-	    }
-	    sprintf(buf, "SIGSEGV at address %p (segmentation violation - %s)",
-		    addr, why);
-	}
+	sprintf(buf, "SIGSEGV at address %p (segmentation violation)", addr);
 	break;
+#ifdef SIGSYS
     case SIGSYS:
 	sprintf(buf, "SIGSYS (bad argument to system call)");
 	break;
+#endif
     case SIGPIPE:
 	sprintf(buf, "SIGPIPE (broken pipe)");
 	break;
@@ -102,7 +85,7 @@ SCICore_Thread_signal_name(int sig, int code, caddr_t addr)
     case SIGUSR2:
 	sprintf(buf, "SIGUSR2 (user defined signal 2)");
 	break;
-    case SIGCLD:
+    case SIGCHLD:
 	sprintf(buf, "SIGCLD (death of a child)");
 	break;
     case SIGPWR:
@@ -114,8 +97,8 @@ SCICore_Thread_signal_name(int sig, int code, caddr_t addr)
     case SIGURG:
 	sprintf(buf, "SIGURG (urgent condition on IO channel)");
 	break;
-    case SIGIO:
-	sprintf(buf, "SIGIO (IO possible)");
+    case SIGIO:  // Also SIGPOLL
+	sprintf(buf, "SIGIO/SIGPOLL (i/o possible)");
 	break;
     case SIGSTOP:
 	sprintf(buf, "SIGSTOP (sendable stop signal)");

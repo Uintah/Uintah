@@ -1,9 +1,7 @@
 
-/* REFERENCED */
-static char *id="$Id$";
-
 /*
  *  WorkQueue: Manage assignments of work
+ *  $Id$
  *
  *  Written by:
  *   Author: Steve Parker
@@ -17,9 +15,48 @@ static char *id="$Id$";
 
 #include <SCICore/Thread/WorkQueue.h>
 
-void
-SCICore::Thread::WorkQueue::fill()
+using SCICore::Thread::WorkQueue;
+
+WorkQueue::WorkQueue(const char* name)
+    : d_name(name), d_current_assignment("WorkQueue counter")
 {
+}
+
+WorkQueue::~WorkQueue()
+{
+}
+
+bool
+WorkQueue::nextAssignment(int& start, int& end)
+{
+    int i=d_current_assignment++; // Atomic ++
+    if(i >= (int)d_assignments.size()-1)
+	return false;
+    start=d_assignments[i];
+    end=d_assignments[i+1];
+    return true;
+}
+
+void
+WorkQueue::refill(int new_ta, int new_nthreads,
+				   int new_granularity)
+{
+    if(new_ta == d_total_assignments && new_nthreads == d_num_threads
+       && new_granularity == d_granularity){
+	d_current_assignment.set(0);
+    } else {
+	d_total_assignments=new_ta;
+	d_num_threads=new_nthreads;
+	d_granularity=new_granularity;
+	fill();
+    }
+}
+
+void
+WorkQueue::fill()
+{
+    d_current_assignment.set(0);
+
     if(d_total_assignments==0){
 	d_assignments.resize(0);
 	return;
@@ -55,12 +92,14 @@ SCICore::Thread::WorkQueue::fill()
 	current_assignment+=current_assignmentsize;
     }
     d_assignments.push_back(d_total_assignments);
-    d_num_waiting=0;
     d_done=false;
 }
 
 //
 // $Log$
+// Revision 1.5  1999/08/28 03:46:53  sparker
+// Final updates before integration with PSE
+//
 // Revision 1.4  1999/08/25 19:00:53  sparker
 // More updates to bring it up to spec
 // Factored out common pieces in Thread_irix and Thread_pthreads

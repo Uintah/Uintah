@@ -1,8 +1,7 @@
 
-// $Id$
-
 /*
  *  FutureValue: Delayed return values
+ *  $Id$
  *
  *  Written by:
  *   Author: Steve Parker
@@ -74,6 +73,10 @@ namespace SCICore {
 	    const char* name;
 	    Item value;
 	    Semaphore sema;
+
+	    // Cannot copy them
+	    FutureValue(const FutureValue<Item>&);
+	    FutureValue<Item>& operator=(const FutureValue<Item>&);
 	};
     }
 }
@@ -90,7 +93,7 @@ SCICore::Thread::FutureValue<Item>::~FutureValue()
 
 template<class Item>
 Item
-SCICore::Thread::FutureValue<Item>::wait()
+SCICore::Thread::FutureValue<Item>::receive()
 {
   int s=Thread::couldBlock(name);
   sema.down();
@@ -100,7 +103,7 @@ SCICore::Thread::FutureValue<Item>::wait()
 
 template<class Item>
 void
-SCICore::Thread::FutureValue<Item>::reply(const Item& reply)
+SCICore::Thread::FutureValue<Item>::send(const Item& reply)
 {
   value=reply;
   sema.up();
@@ -110,6 +113,9 @@ SCICore::Thread::FutureValue<Item>::reply(const Item& reply)
 
 //
 // $Log$
+// Revision 1.3  1999/08/28 03:46:47  sparker
+// Final updates before integration with PSE
+//
 // Revision 1.2  1999/08/25 19:00:48  sparker
 // More updates to bring it up to spec
 // Factored out common pieces in Thread_irix and Thread_pthreads

@@ -1,9 +1,7 @@
 
-/* REFERENCED */
-static char *id="$Id$";
-
 /*
  *  Time_unix.cc: Generic unix implementation of the Time class
+ *  $Id$
  *
  *  Written by:
  *   Author: Steve Parker
@@ -43,7 +41,7 @@ static double ticks_to_seconds;
 static double seconds_to_ticks;
 static int hittimer;
 static bool initialized=false;
-static SCICore::Thread::Mutex initlock("Time initialization lock");
+static Mutex initlock("Time initialization lock");
 
 #define TOPBIT ((unsigned int)0x80000000)
 
@@ -65,7 +63,7 @@ handle_alrm(int, int, sigcontext_t*)
 }
 
 void
-SCICore::Thread::Time::initialize()
+Time::initialize()
 {
     initlock.lock();
     if(initialized){
@@ -108,10 +106,9 @@ SCICore::Thread::Time::initialize()
 	sigemptyset(&action.sa_mask);
 
 	action.sa_handler=(SIG_PF)handle_alrm;
-	if(sigaction(SIGALRM, &action, NULL) == -1){
-	    perror("sigaction");
-	    exit(-1);
-	}
+	if(sigaction(SIGALRM, &action, NULL) == -1)
+	    throw ThreadError(std::string("sigaction failed")
+			      +strerror(errno));
 
 	int ticks=overflow/8;
 	struct itimerval dt;
@@ -120,10 +117,9 @@ SCICore::Thread::Time::initialize()
 	dt.it_value.tv_sec=0;
 	dt.it_value.tv_usec=1;
 	struct itimerval old;
-	if(setitimer(ITIMER_REAL, &dt, &old) != 0){
-	    perror("setitimer");
-	    exit(1);
-	}
+	if(setitimer(ITIMER_REAL, &dt, &old) != 0)
+	    throw ThreadError(std::string("setitimer failed")
+			      +strerror(errno));
 	while(!hittimer)
 	    sigsuspend(0);
     }
@@ -132,7 +128,7 @@ SCICore::Thread::Time::initialize()
 }
 
 Time::SysClock
-SCICore::Thread::Time::currentTicks()
+Time::currentTicks()
 {
     if(!initialized)
 	initialize();
@@ -167,13 +163,13 @@ SCICore::Thread::Time::currentTicks()
 }
 
 double
-SCICore::Thread::Time::currentSeconds()
+Time::currentSeconds()
 {
-    return SCICore::Thread::Time::currentTicks()*ticks_to_seconds;
+    return Time::currentTicks()*ticks_to_seconds;
 }
 
 double
-SCICore::Thread::Time::secondsPerTick()
+Time::secondsPerTick()
 {
     if(!initialized)
 	initialize();
@@ -181,7 +177,7 @@ SCICore::Thread::Time::secondsPerTick()
 }
 
 double
-SCICore::Thread::Time::ticksPerSecond()
+Time::ticksPerSecond()
 {
     if(!initialized)
 	initialize();
@@ -189,13 +185,13 @@ SCICore::Thread::Time::ticksPerSecond()
 }
 
 void
-SCICore::Thread::Time::waitUntil(double seconds)
+Time::waitUntil(double seconds)
 {
     waitFor(seconds-currentSeconds());
 }
 
 void
-SCICore::Thread::Time::waitFor(double seconds)
+Time::waitFor(double seconds)
 {
     if(!initialized)
 	initialize();
@@ -205,19 +201,21 @@ SCICore::Thread::Time::waitFor(double seconds)
     if(tps==0)
 	tps=CLK_TCK;
     long ticks=(long)(seconds*(double)tps);
+    int oldstate=Thread::couldBlock("Timed wait");
     while (ticks != 0){
 	ticks=sginap(ticks);
     }
+    Thread::couldBlockDone(oldstate);
 }
 
 void
-SCICore::Thread::Time::waitUntil(SysClock time)
+Time::waitUntil(SysClock time)
 {
     waitFor(time-currentTicks());
 }
 
 void
-SCICore::Thread::Time::waitFor(SysClock time)
+Time::waitFor(SysClock time)
 {
     if(!initialized)
 	initialize();
@@ -227,13 +225,18 @@ SCICore::Thread::Time::waitFor(SysClock time)
     if(tps==0)
 	tps=(double)CLK_TCK*ticks_to_seconds;
     int ticks=time*tps;
+    int oldstate=Thread::couldBlock("Timed wait");
     while (ticks != 0){
 	ticks=(int)sginap(ticks);
     }
+    Thread::couldBlockDone(oldstate);
 }
 
 //
 // $Log$
+// Revision 1.3  1999/08/28 03:46:53  sparker
+// Final updates before integration with PSE
+//
 // Revision 1.2  1999/08/25 22:53:42  sparker
 // Fixed Time initialization race condition
 //

@@ -1,8 +1,7 @@
-/* REFERENCED */
-static char *acid="$Id$";
 
 /*
  *  AtomicCounter: Thread-safe integer variable
+ *  $Id$
  *
  *  Written by:
  *   Author: Steve Parker
@@ -15,71 +14,111 @@ static char *acid="$Id$";
 
 #include <SCICore/Thread/AtomicCounter.h>
 
-SCICore::Thread::AtomicCounter::AtomicCounter(const char* name)
-    : d_name(name), d_lock("AtomicCounter lock")
+namespace SCICore {
+    namespace Thread {
+	struct AtomicCounter_private {
+	    Mutex lock;
+	    int value;
+	    AtomicCounter_private();
+	    ~AtomicCounter_private();
+	};
+    }
+}
+
+using SCICore::Thread::AtomicCounter_private;
+using SCICore::Thread::AtomicCounter;
+
+AtomicCounter_private::AtomicCounter_private()
+    : lock("AtomicCounter lock")
 {
 }
 
-SCICore::Thread::AtomicCounter::AtomicCounter(const char* name, int value)
-    : d_name(name), d_lock("AtomicCounter lock"), d_value(value)
+AtomicCounter_private::~AtomicCounter_private()
 {
 }
 
-SCICore::Thread::AtomicCounter::~AtomicCounter()
+AtomicCounter::AtomicCounter(const char* name)
+    : d_name(name)
 {
+    d_priv=new AtomicCounter_private;
 }
 
-SCICore::Thread::AtomicCounter::operator int() const
+AtomicCounter::AtomicCounter(const char* name, int value)
+    : d_name(name)
 {
-    return d_value;
+    d_priv=new AtomicCounter_private;
+    d_priv->value=value;
 }
 
-SCICore::Thread::AtomicCounter&
-SCICore::Thread::AtomicCounter::operator++()
+AtomicCounter::~AtomicCounter()
 {
-    d_lock.lock();
-    ++d_value;
-    d_lock.unlock();
+    delete d_priv;
+}
+
+AtomicCounter::operator int() const
+{
+    return d_priv->value;
+}
+
+AtomicCounter&
+AtomicCounter::operator++()
+{
+    int oldstate=Thread::couldBlock(d_name);
+    d_priv->lock.lock();
+    ++d_priv->value;
+    d_priv->lock.unlock();
+    Thread::couldBlockDone(oldstate);
     return *this;
 }
 
 int
-SCICore::Thread::AtomicCounter::operator++(int)
+AtomicCounter::operator++(int)
 {
-    d_lock.lock();
-    int ret=d_value++;
-    d_lock.unlock();
+    int oldstate=Thread::couldBlock(d_name);
+    d_priv->lock.lock();
+    int ret=d_priv->value++;
+    d_priv->lock.unlock();
+    Thread::couldBlockDone(oldstate);
     return ret;
 }
 
-SCICore::Thread::AtomicCounter&
-SCICore::Thread::AtomicCounter::operator--()
+AtomicCounter&
+AtomicCounter::operator--()
 {
-    d_lock.lock();
-    --d_value;	
-    d_lock.unlock();
+    int oldstate=Thread::couldBlock(d_name);
+    d_priv->lock.lock();
+    --d_priv->value;	
+    d_priv->lock.unlock();
+    Thread::couldBlockDone(oldstate);
     return *this;
 }
 
 int
-SCICore::Thread::AtomicCounter::operator--(int)
+AtomicCounter::operator--(int)
 {
-    d_lock.lock();
-    int ret=d_value--;
-    d_lock.unlock();
+    int oldstate=Thread::couldBlock(d_name);
+    d_priv->lock.lock();
+    int ret=d_priv->value--;
+    d_priv->lock.unlock();
+    Thread::couldBlockDone(oldstate);
     return ret;
 }
 
 void
-SCICore::Thread::AtomicCounter::set(int v)
+AtomicCounter::set(int v)
 {
-    d_lock.lock();
-    d_value=v;
-    d_lock.unlock();
+    int oldstate=Thread::couldBlock(d_name);
+    d_priv->lock.lock();
+    d_priv->value=v;
+    d_priv->lock.unlock();
+    Thread::couldBlockDone(oldstate);
 }
 
 //
 // $Log$
+// Revision 1.2  1999/08/28 03:46:46  sparker
+// Final updates before integration with PSE
+//
 // Revision 1.1  1999/08/25 19:00:46  sparker
 // More updates to bring it up to spec
 // Factored out common pieces in Thread_irix and Thread_pthreads
