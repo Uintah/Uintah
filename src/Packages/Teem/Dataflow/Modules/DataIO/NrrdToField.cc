@@ -145,9 +145,8 @@ void NrrdToField::execute()
   LatVolMeshHandle lvmH(lvm);
  
   if (n->type == nrrdTypeChar) {
-    cerr << "Converting char to short... sorry.\n";
-    LatticeVol<short> *f = 
-      scinew LatticeVol<short>(lvm, Field::NODE);
+    LatticeVol<char> *f = 
+      scinew LatticeVol<char>(lvm, Field::NODE);
     char *p=(char *)n->data;
     for (k=0; k<nz; k++)
       for (j=0; j<ny; j++)
@@ -173,9 +172,8 @@ void NrrdToField::execute()
 	  f->fdata()(k,j,i) = *p++;
     fieldH = f;
   } else if (n->type == nrrdTypeUShort) {
-    cerr << "Converting unsigned short to int... sorry.\n";
-    LatticeVol<int> *f = 
-      scinew LatticeVol<int>(lvm, Field::NODE);
+    LatticeVol<unsigned short> *f = 
+      scinew LatticeVol<unsigned short>(lvm, Field::NODE);
     unsigned short *p=(unsigned short *)n->data;
     for (k=0; k<nz; k++)
       for (j=0; j<ny; j++)
@@ -192,9 +190,8 @@ void NrrdToField::execute()
 	  f->fdata()(k,j,i) = *p++;
     fieldH = f;
   } else if (n->type == nrrdTypeUInt) {
-    cerr << "Converting unsigned int to int... let's hope there's no wrap-around!\n";
-    LatticeVol<int> *f = 
-      scinew LatticeVol<int>(lvm, Field::NODE);
+    LatticeVol<unsigned int> *f = 
+      scinew LatticeVol<unsigned int>(lvm, Field::NODE);
     unsigned int *p=(unsigned int *)n->data;
     for (k=0; k<nz; k++)
       for (j=0; j<ny; j++)
