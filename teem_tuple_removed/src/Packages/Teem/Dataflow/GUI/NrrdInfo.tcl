@@ -113,7 +113,8 @@ itcl_class Teem_NrrdData_NrrdInfo {
 		    labelpair $t.mn "Min" $this-min0
 		    labelpair $t.mx "Max" $this-max0
 		    
-		    pack $t.l $t.c $t.sz  $t.sp $t.mn $t.mx  -side top
+		    pack $t.l $t.k $t.c $t.sz  $t.sp $t.mn $t.mx  -side top \
+			-fill x 
 		    pack $t -side top -fill both -expand 1	
 		    set $this-initialized 1
 		}
@@ -130,7 +131,8 @@ itcl_class Teem_NrrdData_NrrdInfo {
 		    labelpair $t.mn "Min" $this-min$i
 		    labelpair $t.mx "Max" $this-max$i
 		    
-		    pack $t.l $t.c $t.sz  $t.sp $t.mn $t.mx  -side top
+		    pack $t.l $t.k $t.c $t.sz  $t.sp $t.mn $t.mx  -side top \
+			-fill x
 		    pack $t -side top -fill both -expand 1
 		} 
 	    } else {
@@ -146,7 +148,8 @@ itcl_class Teem_NrrdData_NrrdInfo {
 		labelpair $t.mn "Min" $this-min0
 		labelpair $t.mx "Max" $this-max0
 		
-		pack $t.l $t.c $t.sz  $t.sp $t.mn $t.mx  -side top
+		pack $t.l $t.k $t.c $t.sz  $t.sp $t.mn $t.mx  -side top \
+		    -fill x
 		pack $t -side top -fill both -expand 1	
 		set $this-initialized 1
 	    }
@@ -193,7 +196,7 @@ itcl_class Teem_NrrdData_NrrdInfo {
 	$att.tabs view [set $this-active_tab]	
 	$att.tabs configure -tabpos "n"
 	
-	pack $att.type $att.dim -side top 
+	pack $att.type $att.dim -side top -anchor nw
 	pack $att.tabs -side top -fill x -expand yes
 	
 	makeSciButtonPanel $w $w $this
@@ -210,7 +213,8 @@ itcl_class Teem_NrrdData_NrrdInfo {
 	label $win.colon  -text ":" -width 2 -anchor w -just left 
 	label $win.l2 -textvar $text2 -width 40 -anchor w -just left \
 		-fore darkred
-	pack $win.l1 $win.colon $win.l2 -side left
+	pack $win.l1 $win.colon -side left
+	pack $win.l2 -side left -fill x -expand yes
     } 
 
 }
