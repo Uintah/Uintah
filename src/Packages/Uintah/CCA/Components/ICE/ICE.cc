@@ -332,7 +332,6 @@ void ICE::scheduleInitialize(const LevelP& level,SchedulerP& sched)
   MaterialSubset* press_matl = scinew MaterialSubset();
   press_matl->add(0);
   press_matl->addReference();
-  t->computes(lb->doMechLabel);
   t->computes(lb->vel_CCLabel);
   t->computes(lb->rho_CCLabel); 
   t->computes(lb->temp_CCLabel);
@@ -375,7 +374,6 @@ void ICE::scheduleComputeStableTimestep(const LevelP& level,
   Ghost::GhostType  gn = Ghost::None;  
   Ghost::GhostType  gac = Ghost::AroundCells;
   const MaterialSet* all_matls = d_sharedState->allMaterials(); 
-  t->requires(Task::NewDW, lb->doMechLabel);
   if (d_EqForm){            // EQ
     t->requires(Task::NewDW, lb->vel_CCLabel,         gn);
     t->requires(Task::NewDW, lb->speedSound_CCLabel,  gn);
@@ -535,7 +533,6 @@ void ICE::scheduleComputeFaceCenteredVelocities(SchedulerP& sched,
   t->requires(Task::NewDW,lb->rho_CCLabel,       /*all_matls*/ gac,1);
   t->requires(Task::OldDW,lb->vel_CCLabel,         ice_matls,  gac,1);
   t->requires(Task::NewDW,lb->vel_CCLabel,         mpm_matls,  gac,1);
-  t->requires(Task::OldDW,lb->doMechLabel);
   
   if (d_RateForm) {     //RATE FORM
     t->requires(Task::NewDW,lb->DLabel,                        gac, 1);
@@ -682,14 +679,12 @@ void ICE::scheduleAccumulateMomentumSourceSinks(SchedulerP& sched,
   t->requires(Task::NewDW,lb->sp_vol_CCLabel,   ice_matls_sub, gac, 2);
   t->requires(Task::NewDW,lb->rho_CCLabel,                     gac, 2);
   t->requires(Task::NewDW,lb->vol_frac_CCLabel, Ghost::None);
-  t->requires(Task::OldDW,lb->doMechLabel);
   if (d_RateForm) {   // RATE FORM
     t->requires(Task::NewDW,lb->press_diffX_FCLabel, gac, 1);
     t->requires(Task::NewDW,lb->press_diffY_FCLabel, gac, 1);
     t->requires(Task::NewDW,lb->press_diffZ_FCLabel, gac, 1);
   }
  
-  t->computes(lb->doMechLabel);
   t->computes(lb->mom_source_CCLabel);
   t->computes(lb->press_force_CCLabel);
   sched->addTask(t, patches, matls);
@@ -976,11 +971,6 @@ void ICE::actuallyComputeStableTimestep(const ProcessorGroup*,
     delt_CFL = std::min(delt_CFL, d_initialDt);
     d_initialDt = 10000.0;
 
-    delt_vartype doMech;
-    new_dw->get(doMech, lb->doMechLabel);
-    if(doMech >= 0.){
-      delt_CFL = .0625;
-    }
     //__________________________________
     //  Bullet proofing
     if(delt_CFL < 1e-20) {  
@@ -1128,9 +1118,6 @@ void ICE::actuallyInitialize(const ProcessorGroup*,
     if (switchDebugInitialize){
        printData(0, patch, 1, "Initialization", "press_CC", press_CC);
     }
-
-    double doMech = -999.9;
-    new_dw->put(delt_vartype(doMech), lb->doMechLabel);
 
   }  // patch loop 
 }
@@ -1466,8 +1453,6 @@ void ICE::computeFaceCenteredVelocities(const ProcessorGroup*,
     
     delt_vartype delT;
     old_dw->get(delT, d_sharedState->get_delt_label());
-    delt_vartype doMechOld;
-    old_dw->get(doMechOld, lb->doMechLabel);
     Vector dx      = patch->dCell();
     Vector gravity = d_sharedState->getGravity();
     
@@ -1518,7 +1503,6 @@ void ICE::computeFaceCenteredVelocities(const ProcessorGroup*,
       adj_offset[1] = IntVector(0, -1, 0);    // Y faces
       adj_offset[2] = IntVector(0,  0, -1);   // Z faces     
 
-      if(doMechOld < -1.5) {
       int offset=0;    // 0=Compute all faces in computational domain             
                        // 1=Skip the faces at the border between interior and gc
       //__________________________________
@@ -1550,7 +1534,6 @@ void ICE::computeFaceCenteredVelocities(const ProcessorGroup*,
         printData_FC( indx, patch,1, desc.str(), "vvel_FC", vvel_FC);
         printData_FC( indx, patch,1, desc.str(), "wvel_FC", wvel_FC);
       }
-      }  // if doMech
     } // matls loop
   }  // patch loop
 }
@@ -2199,8 +2182,6 @@ void ICE::accumulateMomentumSourceSinks(const ProcessorGroup*,
 
     delt_vartype delT; 
     old_dw->get(delT, d_sharedState->get_delt_label());
-    delt_vartype doMechOld;
-    old_dw->get(doMechOld, lb->doMechLabel);
  
     dx      = patch->dCell();
     gravity = d_sharedState->getGravity();
@@ -2243,7 +2224,6 @@ void ICE::accumulateMomentumSourceSinks(const ProcessorGroup*,
         new_dw->get(press_diffY_FC,lb->press_diffY_FCLabel,indx,patch,gac, 1);
         new_dw->get(press_diffZ_FC,lb->press_diffZ_FCLabel,indx,patch,gac, 1);
       }
-      if(doMechOld < -1.5){
       //__________________________________
       // Compute Viscous Terms 
       SFCXVariable<Vector> tau_X_FC;
@@ -2359,11 +2339,8 @@ void ICE::accumulateMomentumSourceSinks(const ProcessorGroup*,
                         press_diff_source * areaZ * include_term * delT); 
         }
       }
-      } // if doMechOld
 
       setBC(press_force, "set_if_sym_BC",patch, indx); 
-
-      new_dw->put(doMechOld,    lb->doMechLabel);
 
       //---- P R I N T   D A T A ------ 
       if (switchDebugSource_Sink) {
