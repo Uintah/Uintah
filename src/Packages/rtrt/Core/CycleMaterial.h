@@ -1,5 +1,5 @@
-#ifndef CYCLE_H
-#define CYCLE_H 1
+#ifndef CYCLE_MATERIAL_H
+#define CYCLE_MATERIAL_H 1
 
 #include <Packages/rtrt/Core/Material.h>
 #include <Packages/rtrt/Core/Color.h>
@@ -7,6 +7,13 @@
 
 namespace rtrt {
 
+  /*
+    Note: There is no check to make sure that members contains 1 or more
+          materials.  This is a silly waste of time, because it should
+	  dump core the first time it tries to access members[0].  Besides
+	  it doesn't make sense to have less than 1 material anyway.
+	    -- bigler
+  */
 class CycleMaterial : public Material {
 protected:
   int current;
@@ -15,9 +22,11 @@ public:
 public:
   CycleMaterial();
   virtual ~CycleMaterial();
+
   void next();
-  inline Material *curr() { return members[current]; }
   void prev();
+
+  inline Material *curr() { return members[current]; }
   virtual void shade(Color& result, const Ray& ray,
 		     const HitInfo& hit, int depth, 
 		     double atten, const Color& accumcolor,
