@@ -316,7 +316,9 @@ void SerialMPM::scheduleInterpolateParticlesToGrid(SchedulerP& sched,
 //						Ghost::AroundNodes,1);
 
   t->computes(lb->gMassLabel);
-  t->computes(lb->gMassLabel, d_sharedState->getAllInOneMatl(),
+  t->computes(lb->gMassLabel,        d_sharedState->getAllInOneMatl(),
+	      Task::OutOfDomain);
+  t->computes(lb->gTemperatureLabel, d_sharedState->getAllInOneMatl(),
 	      Task::OutOfDomain);
   t->computes(lb->gVolumeLabel);
   t->computes(lb->gVelocityLabel);
@@ -866,10 +868,13 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
   #endif
     int numMatls = d_sharedState->getNumMPMMatls();
 
-    NCVariable<double> gmassglobal;
+    NCVariable<double> gmassglobal,gtempglobal;
     new_dw->allocate(gmassglobal,lb->gMassLabel,
 		     d_sharedState->getAllInOneMatl()->get(0), patch);
+    new_dw->allocate(gtempglobal,lb->gTemperatureLabel,
+		     d_sharedState->getAllInOneMatl()->get(0), patch);
     gmassglobal.initialize(d_SMALL_NUM_MPM);
+    gtempglobal.initialize(0.0);
 
     for(int m = 0; m < numMatls; m++){
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
@@ -957,6 +962,7 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
 	old_dw->get(pCrackNormal, lb->pCrackNormalLabel, pset);
 	old_dw->get(pCrackSurfacePressure, lb->pCrackSurfacePressureLabel,pset);
 
+
         for(ParticleSubset::iterator iter = pset->begin();
 		iter != pset->end(); iter++){
 	  particleIndex idx = *iter;
@@ -979,6 +985,7 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
 	        gmass[ni[k]]          += pmass[idx]          * S[k];
 	        gvolume[ni[k]]        += pvolume[idx]        * S[k];
 	        gTemperature[ni[k]]   += pTemperature[idx] * pmass[idx] * S[k];
+	        gtempglobal[ni[k]]    += pTemperature[idx] * pmass[idx] * S[k];
                 gexternalheatrate[ni[k]] += pexternalheatrate[idx]      * S[k];
 
 	        totalmass += pmass[idx] * S[k];
@@ -1011,12 +1018,13 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
 	  // Must use the node indices
 	  for(int k = 0; k < 8; k++) {
 	    if(patch->containsNode(ni[k])) {
-	       gmassglobal[ni[k]]     += pmass[idx]          * S[k];
+	       gmassglobal[ni[k]]    += pmass[idx]          * S[k];
 	       gmass[ni[k]]          += pmass[idx]          * S[k];
 	       gvolume[ni[k]]        += pvolume[idx]        * S[k];
 	       gexternalforce[ni[k]] += pexternalforce[idx] * S[k];
 	       gvelocity[ni[k]]      += pvelocity[idx]    * pmass[idx] * S[k];
 	       gTemperature[ni[k]]   += pTemperature[idx] * pmass[idx] * S[k];
+	       gtempglobal[ni[k]]    += pTemperature[idx] * pmass[idx] * S[k];
                gexternalheatrate[ni[k]] += pexternalheatrate[idx]      * S[k];
 
 	       totalmass += pmass[idx] * S[k];
@@ -1076,7 +1084,13 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
 							  matlindex, patch);
 
     }  // End loop over materials
+
+    for(NodeIterator iter = patch->getNodeIterator(); !iter.done();iter++){
+        gtempglobal[*iter] /= gmassglobal[*iter];
+    }
     new_dw->put(gmassglobal, lb->gMassLabel,
+			d_sharedState->getAllInOneMatl()->get(0), patch);
+    new_dw->put(gtempglobal, lb->gTemperatureLabel,
 			d_sharedState->getAllInOneMatl()->get(0), patch);
   }  // End loop over patches
 }
