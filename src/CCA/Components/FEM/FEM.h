@@ -38,7 +38,7 @@
 //namespace SCIRun {
  
 class FEM; 
-class myUIPort : public virtual gov::cca::ports::UIPort {
+class myUIPort : public virtual sci::cca::ports::UIPort {
 public:
   virtual ~myUIPort(){}
   virtual int ui();
@@ -46,7 +46,7 @@ public:
   FEM *com;
 };
 
-class myGoPort : public virtual gov::cca::ports::GoPort {
+class myGoPort : public virtual sci::cca::ports::GoPort {
 public:
   virtual ~myGoPort(){}
   virtual int go();
@@ -55,38 +55,38 @@ public:
 };
 
 
-class myPDEMatrixPort: public virtual gov::cca::ports::PDEMatrixPort{
+class myPDEMatrixPort: public virtual sci::cca::ports::PDEMatrixPort{
  public:
   virtual ~myPDEMatrixPort(){}
-  virtual gov::cca::Matrix::pointer getMatrix();
-  virtual SIDL::array1<double> getVector();
+  virtual sci::cca::Matrix::pointer getMatrix();
+  virtual SSIDL::array1<double> getVector();
   void setParent(FEM *com){this->com=com;}
   FEM *com;  
 };
 
 
-class FEM : public gov::cca::Component{
+class FEM : public sci::cca::Component{
                 
   public:
     FEM();
     virtual ~FEM();
 
-    virtual void setServices(const gov::cca::Services::pointer& svc);
-    virtual gov::cca::Services::pointer getServices(){return services;}
+    virtual void setServices(const sci::cca::Services::pointer& svc);
+    virtual sci::cca::Services::pointer getServices(){return services;}
     void diffTriangle(double b[3], double c[3], double &area,
 			   const double x[3], const double y[3]);
     void localMatrices(double A[3][3], double f[3], 
 		       const double x[3], const double y[3]);
-    void globalMatrices(const SIDL::array1<double> &node1d,
-			const SIDL::array1<int> &tmesh1d);
+    void globalMatrices(const SSIDL::array1<double> &node1d,
+			const SSIDL::array1<int> &tmesh1d);
     double source(int index);
     double boundary(int index);
     bool isConst(int index);
 
     Matrix::pointer Ag;
-    SIDL::array1<double> fg;
-    SIDL::array1<int> dirichletNodes;
-    SIDL::array1<double> dirichletValues;
+    SSIDL::array1<double> fg;
+    SSIDL::array1<int> dirichletNodes;
+    SSIDL::array1<double> dirichletValues;
   private:
 
     FEM(const FEM&);
@@ -96,7 +96,7 @@ class FEM : public gov::cca::Component{
     myPDEMatrixPort matrixPort;
 
 
-    gov::cca::Services::pointer services;
+    sci::cca::Services::pointer services;
   };
 //}
 
