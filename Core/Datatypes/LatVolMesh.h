@@ -51,6 +51,10 @@ using std::endl;
 class SCICORESHARE LatVolMesh : public Mesh
 {
 public:
+
+  struct LatIndex;
+  friend struct LatIndex;
+
   struct LatIndex
   {
   public:
