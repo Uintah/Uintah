@@ -47,8 +47,6 @@ private:
   MatrixOPort              *rhsoport;
   MatrixOPort              *outmatrix;
 
-  typedef QuadraticTetVolMesh::Cell::index_type Element;
-
   int np;
   Barrier barrier;
   int* rows;
@@ -76,7 +74,7 @@ private:
   Mutex mutex;
 
   void parallel(int);
-  void build_local_matrix(Element, double lcl[10][10], TetVolMesh::Cell::index_type);
+  void build_local_matrix(double lcl[10][10], TetVolMesh::Cell::index_type);
   void add_lcl_gbl(Matrix&, double lcl[10][10],
 		   ColumnMatrix&, TetVolMesh::Cell::index_type, int s, int e);
 };
@@ -153,7 +151,7 @@ void BuildFEMatrixQuadratic::execute()
   }
 
   rows=scinew int[nnodes+1];  
-  np=1;//Thread::numProcessors();
+  np=Thread::numProcessors();
   if (np>10) np/=2;
   colidx.resize(np+1);
 
@@ -172,6 +170,7 @@ void BuildFEMatrixQuadratic::execute()
   if (imat_->get(refnodeH)&&refnodeH.get_rep()&&refnodeH->nrows()>0){
     refnode=(int)(*((ColumnMatrix*)refnodeH.get_rep()))[0];
   }
+
 
   if (PinZero) cerr << "BuildFEM: pinning node "<<refnode<<" to zero.\n";
   if (AverageGround) cerr << "BuildFEM: averaging of all nodes to zero.\n";
@@ -244,9 +243,9 @@ void BuildFEMatrixQuadratic::parallel(int proc)
 	}
 	}*/ 
     else {
-      mutex.lock();      
+      //      mutex.lock();      
       qtvm_->add_node_neighbors(mycols, i, bcArray, DirSub);
-      mutex.unlock();
+      // mutex.unlock();
     }
   }
 
@@ -311,7 +310,7 @@ void BuildFEMatrixQuadratic::parallel(int proc)
   qtvm_->begin(ii); qtvm_->end(iie);
   for (; ii != iie; ++ii){
     if (qtvm_->test_nodes_range(*ii, start_node, end_node)){ 
-      build_local_matrix(*ii,lcl_matrix,*ii);   //?? element ??
+      build_local_matrix(lcl_matrix,*ii);   
       add_lcl_gbl(*gbl_matrix,lcl_matrix,*rhs,*ii,start_node, end_node);
     }
   }
@@ -361,8 +360,7 @@ void BuildFEMatrixQuadratic::parallel(int proc)
   }
 }
 
-void BuildFEMatrixQuadratic::build_local_matrix(Element elem, 
-						double lcl_a[10][10], TetVolMesh::Cell::index_type c_ind)
+void BuildFEMatrixQuadratic::build_local_matrix(double lcl_a[10][10], TetVolMesh::Cell::index_type c_ind)
 {
 
   Point pt;
@@ -385,11 +383,11 @@ void BuildFEMatrixQuadratic::build_local_matrix(Element elem,
 
   for (int l=0; l<5; l++) {
 
-    jac_el = qtvm_->get_gradient_basis(elem,l,pt,grad1,grad2,grad3,grad4,
+    jac_el = qtvm_->get_gradient_basis(c_ind,l,pt,grad1,grad2,grad3,grad4,
 				       grad5,grad6,grad7,grad8,grad9,grad10);
 
     Vector l1,l2,l3,l4; 
-    vol = ((TetVolMesh*)qtvm_.get_rep())->get_gradient_basis(elem,l1,l2,l3,l4);  //get volume by using linear
+    vol = ((TetVolMesh*)qtvm_.get_rep())->get_gradient_basis(c_ind,l1,l2,l3,l4);  //get volume by using linear
     if(vol < 1.e-10){
       cerr << "Skipping element..., volume=" << vol << endl;
       for(int i=0;i<10;i++)
@@ -462,6 +460,8 @@ void BuildFEMatrixQuadratic::build_local_matrix(Element elem,
   qtv->get_property("conductivity_table", tens);
   int  ind = qtv->value(c_ind);
 
+  //  cerr << "INDEX " << ind << "c_ind " <<  c_ind <<endl;
+
   if (UseCond) {
     el_cond[0][0] = tens[ind].second.mat_[0][0];
     el_cond[0][1] = tens[ind].second.mat_[0][1];
@@ -473,13 +473,19 @@ void BuildFEMatrixQuadratic::build_local_matrix(Element elem,
     el_cond[2][1] = tens[ind].second.mat_[2][1];
     el_cond[2][2] = tens[ind].second.mat_[2][2];
   }
+
+  /* mutex.lock();
+    cerr << "Local: " << tens[ind].second.mat_[0][0] << " " << tens[ind].second.mat_[0][1] << " " << tens[ind].second.mat_[1][0] << " " << tens[ind].second.mat_[0][2] << " " << tens[ind].second.mat_[2][0] << " " << tens[ind].second.mat_[1][1] << " " << tens[ind].second.mat_[1][2] << " " << tens[ind].second.mat_[2][1] << " " << tens[ind].second.mat_[2][2] << " " << jac_el << "\n";
    
+    mutex.unlock();*/
   // build the local matrix
   for(int i=0; i< 10; i++) {
     for(int j=i; j< 10; j++) {
       double I = 0.0;
       for(int l=0; l< 5; l++){
-	    
+
+       
+    
 	double xx = el_cond[0][0]*jac_el*el_coefs[l][i][0]*el_coefs[l][j][0];
 	double xy = el_cond[0][1]*jac_el*el_coefs[l][i][0]*el_coefs[l][j][1];
 	double xz = el_cond[0][2]*jac_el*el_coefs[l][i][0]*el_coefs[l][j][2];
@@ -496,7 +502,9 @@ void BuildFEMatrixQuadratic::build_local_matrix(Element elem,
       }
       lcl_a[i][j] = I/6.0;
       lcl_a[j][i] = lcl_a[i][j];
-      //	  cerr << "Local: " << i << " " << j << " " << lcl_a[i][j] << "\n";
+ 
+      //     	  cerr << "Local: " << i << " " << j << " " << lcl_a[i][j] << "\n";
+ 
     }
   }
 }
