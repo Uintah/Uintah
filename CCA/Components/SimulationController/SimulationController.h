@@ -65,7 +65,7 @@ class MPMCFDInterface;
 					 CFDInterface*,
 					 MPMInterface*,
 					 MPMCFDInterface*);
-      void scheduleTimeAdvance(double t, double delt, LevelP&, SchedulerP&,
+      void scheduleTimeAdvance(LevelP&, SchedulerP&,
 			       CFDInterface*, MPMInterface*,
 			       MPMCFDInterface*);
 
