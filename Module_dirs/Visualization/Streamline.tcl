@@ -13,17 +13,26 @@ itcl_class Streamline {
 	global $this-markertype
 	set $this-markertype "Ribbon"
 
-	global $this-lineradius
-	set $this-trscale .20
+	global $this-tubesize
+	set $this-tubesize .01
+
+	global $this-ribbonscale
+	set $this-ribbonscale .20
 
 	global $this-algorithm
 	set $this-algorithm "Euler"
 
-	global $this-stepsizes
-	set $this-stepsizes 0.02
+	global $this-animation
+	set $this-animation "None"
 
-	global $this-maxstepss
-	set $this-maxstepss 50
+	global $this-anim_steps
+	set $this-anim_steps 30
+
+	global $this-stepsize
+	set $this-stepsize 0.02
+
+	global $this-maxsteps
+	set $this-maxsteps 50
 
 	global $this-widget_scale
 	set $this-widget_scale 1
@@ -78,14 +87,26 @@ itcl_class Streamline {
 	pack $w.f.alg -side top -fill x
 
 	#
+	# Selector for animation type
+	#
+	make_labeled_radio $w.f.anim "Animation:" $n left $this-animation \
+		{None Time Position}
+	pack $w.f.anim -side top -fill x
+	scale $w.f.anim_steps -variable $this-anim_steps -digits 3 \
+		-from 1 -to 50 -label "N Steps:" \
+		-showvalue true -tickinterval 10 \
+		-orient horizontal
+	pack $w.f.anim_steps -side top -fill x
+
+	#
 	# Parameters
-	scale $w.f.stepsize -variable $this-stepsizes -digits 3 \
+	scale $w.f.stepsize -variable $this-stepsize -digits 3 \
 		-from -2.0 -to 2.0 -label "Step size:" \
 		-resolution .01 -showvalue true -tickinterval 2 \
 		-orient horizontal
 	pack $w.f.stepsize -fill x -pady 2
 	
-	scale $w.f.maxsteps -variable $this-maxstepss \
+	scale $w.f.maxsteps -variable $this-maxsteps \
 		-from 0 -to 1000 -label "Maximum steps:" \
 		-showvalue true -tickinterval 200 \
 		-orient horizontal

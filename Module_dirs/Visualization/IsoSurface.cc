@@ -310,7 +310,7 @@ void IsoSurface::execute()
     GeomObj* topobj=group;
     if(have_colormap && !have_colorfield){
 	// Paint entire surface based on colormap
-	topobj=new GeomMaterial(group, cmap->lookup(iv, old_min, old_max));
+	topobj=new GeomMaterial(group, cmap->lookup(iv));
     } else if(have_colormap && have_colorfield){
 	// Nothing - done per vertex
     } else {

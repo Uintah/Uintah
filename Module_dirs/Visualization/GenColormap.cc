@@ -97,7 +97,10 @@ Module* GenColormap::clone(int deep)
 void GenColormap::execute()
 {
     int nl=nlevels.get();
-    ColormapHandle cmap(new Colormap(nl));
+    double range_min=0;
+    double range_max=1;
+    NOT_FINISHED("Colormap ranges");
+    ColormapHandle cmap(new Colormap(nl, range_min, range_max));
     clString mt(map_type.get());
     if(mt=="rainbow" || mt==""){
 	// Compute a colormap which varies the hue in HSV color space
