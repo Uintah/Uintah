@@ -33,7 +33,7 @@ template <class Data>
 const string
 FData3d<Data>::type_name(int )
 {
-  const static string name =  "FDatat3d<" + find_type_name((Data *)0) + ">";
+  const static string name =  "FData3d<" + find_type_name((Data *)0) + ">";
   return name;
 }
 
@@ -53,7 +53,19 @@ public:
  
   static const string type_name(int );
   static PersistentTypeID type_id;
+  virtual void io(Piostream &stream);
 };
+
+#define LATTICEVOL_VERSION 1
+
+template <class Data>
+void
+LatticeVol<Data>::io(Piostream &stream)
+{
+  stream.begin_class("LatticeVol", LATTICEVOL_VERSION);
+  GenericField<LatVolMesh, FData3d<Data> >::io(stream);
+  stream.end_class();                                                         
+}
 
 template <class Data>
 PersistentTypeID 
