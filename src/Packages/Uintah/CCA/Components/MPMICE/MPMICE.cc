@@ -1678,15 +1678,15 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
           for(CellIterator iter=iterLim; !iter.done();iter++) {
             IntVector c = *iter;
             rho_micro[m][c] = 
-              ice_matl->getEOS()->computeRhoMicro(press_new[c],gamma[m][c],
+              ice_matl[m]->getEOS()->computeRhoMicro(press_new[c],gamma[m][c],
                                            cv[m][c],Temp[m][c],rho_micro[m][c]);
           }
         } else if(mpm_matl[m]){
           for(CellIterator iter=iterLim; !iter.done();iter++) {
             IntVector c = *iter;
             rho_micro[m][c] =  
-              mpm_matl->getConstitutiveModel()->computeRhoMicroCM(
-                                         press_new[c],press_ref,mpm_matl);
+              mpm_matl[m]->getConstitutiveModel()->computeRhoMicroCM(
+                                         press_new[c],press_ref,mpm_matl[m]);
           }
         }  // mpm
       } // face loop
