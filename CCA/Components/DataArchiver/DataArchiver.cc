@@ -1278,6 +1278,7 @@ void DataArchiver::initCheckpoints(SchedulerP& sched)
          
    d_checkpointLabels.reserve(label_matl_map.size());
    map< string, ConsecutiveRangeSet >::iterator mapIter;
+   bool hasDelT = false;
    for (mapIter = label_matl_map.begin();
         mapIter != label_matl_map.end(); mapIter++) {
       VarLabel* var = VarLabel::find((*mapIter).first);
@@ -1288,11 +1289,27 @@ void DataArchiver::initCheckpoints(SchedulerP& sched)
       saveItem.label_ = var;
       saveItem.setMaterials((*mapIter).second, prevMatls_, prevMatlSet_);
 
+      if (string(var->getName()) == "delT") {
+	hasDelT = true;
+      }
+
       if (saveItem.label_->typeDescription()->isReductionVariable())
          d_checkpointReductionLabels.push_back(saveItem);
       else
          d_checkpointLabels.push_back(saveItem);
    }
+
+   if (!hasDelT) {
+     VarLabel* var = VarLabel::find("delT");
+     if (var == NULL)
+       throw ProblemSetupException("delT variable not found to checkpoint.");
+     saveItem.label_ = var;
+     ConsecutiveRangeSet globalMatl("-1");
+     saveItem.setMaterials(globalMatl, prevMatls_, prevMatlSet_);
+     ASSERT(saveItem.label_->typeDescription()->isReductionVariable());
+     d_checkpointReductionLabels.push_back(saveItem);
+   }
+     
 }
 
 void DataArchiver::SaveItem::setMaterials(const ConsecutiveRangeSet& matls,
