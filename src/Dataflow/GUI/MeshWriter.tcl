@@ -12,7 +12,7 @@ itcl_class PSECommon_Writers_MeshWriter {
 	set $this-filetype Binary
     }
     method ui {} {
-	set w .ui$this
+	set w .ui[modname]
 	if {[winfo exists $w]} {
 	    raise $w
 	    return;
