@@ -10,7 +10,7 @@
  *
  *  Copyright (C) 1994 SCI Group
  */
-
+//joe was here
 #include <tcl.h>
 #include <tk.h>
 #include <GL/gl.h>
@@ -465,6 +465,14 @@ void OpenGL::redraw_frame()
 
     drawinfo->reset();
     int do_stereo=roe->do_stereo.get();
+    
+// >>>>>>>>>>>>>>>>>>>> BAWGL >>>>>>>>>>>>>>>>>>>>
+    int do_bawgl = roe->do_bawgl.get();
+    SCIBaWGL* bawgl = roe->get_bawgl();
+
+    if(!do_bawgl)
+      bawgl->shutdown_ok();
+// <<<<<<<<<<<<<<<<<<<< BAWGL <<<<<<<<<<<<<<<<<<<<
 
     // Compute znear and zfar...
     if(compute_depth(roe, view, znear, zfar)){
@@ -500,43 +508,64 @@ void OpenGL::redraw_frame()
 	    double zmid=(znear+zfar)/2.;
 	    eyesep=u*eye_sep_dist*zmid;
 	}
+	
+// >>>>>>>>>>>>>>>>>>>> BAWGL >>>>>>>>>>>>>>>>>>>>
+	if( do_bawgl )
+	  bawgl->getAllEyePositions();
+
 	for(int t=0;t<nframes;t++){
 	  int n=1;
-	  if(do_stereo)
-	    n=2;
+	  if( do_stereo || do_bawgl ) n=2;
 	  for(int i=0;i<n;i++){
-	    if(do_stereo){
+	    if( do_stereo || do_bawgl ){
 	      glDrawBuffer(i==0?GL_BACK_LEFT:GL_BACK_RIGHT);
 	    } else {
 	      glDrawBuffer(GL_BACK);
 	    }
 
 	    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	    glViewport(0, 0, xres, yres);
 	    double modeltime=t*dt+tbeg;
 	    roe->set_current_time(modeltime);
 
-	    // Setup view...
-	    glViewport(0, 0, xres, yres);
-	    glMatrixMode(GL_PROJECTION);
-	    glLoadIdentity();
-	    gluPerspective(fovy, aspect, znear, zfar);
-	    glMatrixMode(GL_MODELVIEW);
-	    glLoadIdentity();
-	    Point eyep(view.eyep());
-	    Point lookat(view.lookat());
-	    if(do_stereo){
-	      if(i==0){
-		eyep-=eyesep;
-		lookat-=eyesep;
-	      } else {
-		eyep+=eyesep;
-		lookat+=eyesep;
+	    if( do_bawgl ) // render head tracked stereo
+	      {
+		if( i )
+		  {
+		    bawgl->setModelViewMatrix(BAWGL_RIGHT_EYE);
+		    bawgl->setProjectionMatrix(BAWGL_RIGHT_EYE);
+		  }
+		else
+		  {
+		    bawgl->setModelViewMatrix(BAWGL_LEFT_EYE);
+		    bawgl->setProjectionMatrix(BAWGL_LEFT_EYE);
+		  }
+		
+		bawgl->setSurfaceView();
+		bawgl->setVirtualView();      
+// <<<<<<<<<<<<<<<<<<<< BAWGL <<<<<<<<<<<<<<<<<<<<
+	      } else { // render normal
+		glMatrixMode(GL_PROJECTION);
+		glLoadIdentity();
+		gluPerspective(fovy, aspect, znear, zfar);
+		glMatrixMode(GL_MODELVIEW);
+		glLoadIdentity();
+		Point eyep(view.eyep());
+		Point lookat(view.lookat());
+		if(do_stereo){
+		  if(i==0){
+		    eyep-=eyesep;
+		    lookat-=eyesep;
+		  } else {
+		    eyep+=eyesep;
+		    lookat+=eyesep;
+		  }
+		}
+		Vector up(view.up());
+		gluLookAt(eyep.x(), eyep.y(), eyep.z(),
+			  lookat.x(), lookat.y(), lookat.z(),
+			  up.x(), up.y(), up.z());
 	      }
-	    }
-	    Vector up(view.up());
-	    gluLookAt(eyep.x(), eyep.y(), eyep.z(),
-		      lookat.x(), lookat.y(), lookat.z(),
-		      up.x(), up.y(), up.z());
 
 	    // Set up Lighting
 	    glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_TRUE);
@@ -629,13 +658,17 @@ void OpenGL::redraw_frame()
     } else {
 	// Just show the cleared screen
 	roe->set_current_time(tend);
-	if(do_stereo){
+
+// >>>>>>>>>>>>>>>>>>>> BAWGL >>>>>>>>>>>>>>>>>>>>
+	if(do_stereo || do_bawgl) {
 	    glDrawBuffer(GL_BACK_LEFT);
 	    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	    glDrawBuffer(GL_BACK_RIGHT);
         } else {
 	    glDrawBuffer(GL_BACK);
 	}
+// <<<<<<<<<<<<<<<<<<<< BAWGL <<<<<<<<<<<<<<<<<<<<
+
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	if(roe->drawimg.get()){
 	  if(!imglist)
@@ -645,6 +678,7 @@ void OpenGL::redraw_frame()
 	}
 	glXSwapBuffers(dpy, win);
     }
+
     salmon->geomlock.readUnlock();
 
     // Look for errors
@@ -768,9 +802,12 @@ void OpenGL::real_get_pick(Salmon*, Roe* roe, int x, int y,
 	glPushName(0);
 	glPushName(0);
 	glPushName(0x12345678);
-#else
-	glPushName(0);
 	glPushName(0x12345678);
+	glPushName(0x12345678);
+#else
+	glPushName(0); //for the pick
+	glPushName(0x12345678); //for the object
+	glPushName(0x12345678); //for the object's face index
 #endif
 
 	glViewport(0, 0, xres, yres);
@@ -850,10 +887,12 @@ void OpenGL::real_get_pick(Salmon*, Roe* roe, int x, int y,
 		    hit_pick=((long)hp1<<32)|hp2;
 		    hit_pick_index = pick_buffer[idx++];
 #else
-		    hit_obj=pick_buffer[idx++];
-		    hit_obj_index=pick_buffer[idx++];
-		    idx+=nnames-4; // Skip to the last one...
+		    // hit_obj=pick_buffer[idx++];
+		    // hit_obj_index=pick_buffer[idx++];
+		    //for(int i=idx; i<idx+nnames; ++i) cerr << pick_buffer[i] << endl;
+		    idx+=nnames-3; // Skip to the last one...
 		    hit_pick=pick_buffer[idx++];
+		    hit_obj=pick_buffer[idx++];
 		    hit_pick_index=pick_buffer[idx++];
 #endif
 		    cerr << "new min... (obj=" << hit_obj
@@ -933,7 +972,7 @@ void OpenGL::pick_draw_obj(Salmon* salmon, Roe*, GeomObj* obj)
     glPushName(0x12345678);
 #else
     glPopName();
-    glLoadName((GLuint)obj);
+    glPushName((GLuint)obj);
     glPushName(0x12345678);
 #endif
     obj->draw(drawinfo, salmon->default_matl.get_rep(), current_time);
@@ -1379,6 +1418,8 @@ void OpenGL::setvisual(const clString& wname, int which, int width, int height)
   TCL::execute(clString("opengl ")+wname+" -visual "+to_string((int)visuals[which]->visualid)+" -direct true -geometry "+to_string(width)+"x"+to_string(height));
   //cerr << clString("opengl ")+wname+" -visual "+to_string((int)visuals[which]->visualid)+" -direct true -geometry "+to_string(width)+"x"+to_string(height) << endl;
   //cerr << "done choosing visual\n";
+
+  myname = wname;
 }
 
 void OpenGL::getData(int datamask, FutureValue<GeometryData*>* result)
@@ -1460,6 +1501,11 @@ GetReq::GetReq(int datamask, FutureValue<GeometryData*>* result)
 
 //
 // $Log$
+// Revision 1.11  1999/10/16 20:50:59  jmk
+// forgive me if I break something -- this fixes picking and sets up sci
+// bench - go to /home/sci/u2/VR/PSE for the latest sci bench technology
+// gota getup to get down.
+//
 // Revision 1.10  1999/10/07 02:06:56  sparker
 // use standard iostreams and complex type
 //

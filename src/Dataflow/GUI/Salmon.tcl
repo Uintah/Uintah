@@ -337,6 +337,12 @@ itcl_class Roe {
 		-command "$this-c tracker"
 	pack $m.tracker -side top
 
+	global $this-do_bawgl 
+        set $this-do_bawgl 0
+	checkbutton $m.bench -text "SCIBench" -variable $this-do_bawgl \
+                -command "$this bench $this-do_bawgl"
+        pack $m.bench -side top
+
 	button $m.tracker_reset -text " Reset\nTracker" \
 		-command "$this-c reset_tracker"
 	pack $m.tracker_reset -side top
@@ -374,7 +380,6 @@ itcl_class Roe {
 	bind $w <Lock-ButtonRelease-1> "$this-c mpick end %x %y %s %b"
 	bind $w <Lock-ButtonRelease-2> "$this-c mpick end %x %y %s %b"
 	bind $w <Lock-ButtonRelease-3> "$this-c mpick end %x %y %s %b"
-	bind $w <Destroy> "$this-c destroy"
     }
     method removeMFrame {w} {
 	pack forget $w.mframe.f
@@ -416,6 +421,39 @@ itcl_class Roe {
 	    pack $w.wframe.draw -expand yes -fill both
 	}
     }	
+
+    method bench {bench} {
+        upvar #0 $bench b
+        set w .ui[modname]
+        puts $w
+        if {$b == 1} {
+            if {[winfo exists $w.wframe.draw]} {
+                destroy $w.wframe.draw
+            }
+            toplevel $w.wframe.bench -borderwidth 1
+            wm overrideredirect $w.wframe.bench 1
+            wm geometry $w.wframe.bench 1024x768+0+0
+            $this-c switchvisual $w.wframe.bench.draw 0 1024 768
+            if {[winfo exists $w.wframe.bench.draw]} {
+                bindEvents $w.wframe.bench.draw
+                bind $w <KeyPress-Escape> "$w.mframe.f.bench invoke"
+                pack $w.wframe.bench.draw -expand yes -fill both
+            }
+            $this-c startbawgl
+        } else {
+            $this-c stopbawgl
+            if {[winfo exists $w.wframe.bench.draw]} {
+                destroy $w.wframe.bench.draw
+            }
+            destroy $w.wframe.bench
+            $this-c switchvisual $w.wframe.draw 0 640 512
+            if {[winfo exists $w.wframe.draw]} {
+                bindEvents $w.wframe.draw
+                bind $w <KeyPress-Escape> ""
+                pack $w.wframe.draw -expand yes -fill both
+            }
+        }
+    }
 
     method makeViewPopup {} {
 	set w .view[modname]

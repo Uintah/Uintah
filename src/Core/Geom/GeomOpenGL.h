@@ -1,4 +1,4 @@
-
+  
 /*
  *  GeomOpenGL.h: Displayable Geometry
  *
@@ -74,6 +74,8 @@ public:
     int lighting;
     int currently_lit;
     int pickmode;
+    int pickchild;
+    int npicks;
     int fog;
     int cull;
 
@@ -115,6 +117,11 @@ public:
 
 //
 // $Log$
+// Revision 1.6  1999/10/16 20:51:01  jmk
+// forgive me if I break something -- this fixes picking and sets up sci
+// bench - go to /home/sci/u2/VR/PSE for the latest sci bench technology
+// gota getup to get down.
+//
 // Revision 1.5  1999/09/23 01:10:48  moulding
 // added #include <stddef.h> and <stdlib.h> for types wchar_t needed by the
 // win32 version of glu.h
