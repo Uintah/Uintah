@@ -124,7 +124,7 @@ public:
 					    const TypeDescription *ttd);
 };
 
-template< template<class> class FIELD, class TYPE >
+template< class FIELD, class TYPE >
 class PPPLHDF5FieldReaderAlgoT : public PPPLHDF5FieldReaderAlgo
 {
 public:
@@ -138,7 +138,7 @@ public:
 };
 
 
-template< template<class> class FIELD, class TYPE >
+template< class FIELD, class TYPE >
 void
 PPPLHDF5FieldReaderAlgoT<FIELD, TYPE>::execute(FieldHandle src,
 					       int idim, int jdim, int kdim,
@@ -146,9 +146,9 @@ PPPLHDF5FieldReaderAlgoT<FIELD, TYPE>::execute(FieldHandle src,
 					       double *grid,
 					       void *data_ptr)
 {
-  FIELD<TYPE> *ifield = (FIELD<TYPE> *) src.get_rep();
-  typename FIELD<TYPE>::mesh_handle_type imesh = ifield->get_typed_mesh();
-  typename FIELD<TYPE>::mesh_type::Node::iterator inodeItr;
+  FIELD *ifield = (FIELD *) src.get_rep();
+  typename FIELD::mesh_handle_type imesh = ifield->get_typed_mesh();
+  typename FIELD::mesh_type::Node::iterator inodeItr;
 
   imesh->begin( inodeItr );
 
