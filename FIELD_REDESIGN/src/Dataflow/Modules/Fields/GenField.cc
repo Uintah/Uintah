@@ -127,9 +127,9 @@ void
 GenField::fill(DiscreteAttrib<T> *attrib, Lattice3Geom *geom,
 	       AnalytAttrib<T> *analyt)
 {
-  const int x = geom->get_nx();
-  const int y = geom->get_ny();
-  const int z = geom->get_nz();
+  const int x = geom->getSizeX();
+  const int y = geom->getSizeY();
+  const int z = geom->getSizeZ();
 
   for (int k=0; k < z; k++)
     {
