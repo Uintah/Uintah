@@ -14,10 +14,14 @@ Sound::Sound( const string        & filename,
 	      const string        & name, 
 	      const vector<Point> & locations,
 	            double          distance,
-	            bool            repeat /* = false */ ) :
+	            bool            repeat /* = false */,
+	            double          constantVol /* = -1 */ ) :
   filename_(filename), name_(name), continuous_(repeat), locations_(locations),
-  distance2_(distance*distance), bufferLocation_(0), numFrames_(0)
+  distance2_(distance*distance), bufferLocation_(0), numFrames_(0),
+  constantVol_(constantVol)
 {
+  if( constantVol_ > 1.0 )
+    constantVol_ = 1.0;
 }
 
 Sound::~Sound()
@@ -71,6 +75,9 @@ Sound::volume( const Point & location )
   double vol = 0;
   if( minDist2 < distance2_ )
     {
+      if( constantVol_ > 0 )
+	return constantVol_;
+
       // vol = (distance2_ - minDist2) / distance2_;
       vol = 1.0 - (sqrt(minDist2) / sqrt(distance2_));
     }

@@ -16,18 +16,26 @@ using SCIRun::Point;
 using std::string;
 using std::vector;
 
+class Gui;
+
 class Sound {
+
+  friend class Gui;
 
 public:
 
   // If locations is an empty list, then the sound will be considered
   // to be everywhere.  "Distance" is the distance at which the sound
-  // will start becoming audible in units of world space.
+  // will start becoming audible in units of world space. 
+  // If constantVol is > 0, then the sound will play at a constant
+  // volume across the entire hearable area.  (constantVol has a vaild
+  // range of 0.0 to 1.0)
   Sound( const string        & filename,
 	 const string        & name,
 	 const vector<Point> & locations,
 	       double          distance = 10,
-	       bool            repeat = false  );
+	       bool            repeat = false,
+	       double          constantVol = -1 );
 
   virtual ~Sound();
 
@@ -42,7 +50,8 @@ public:
   // Continually repeat this sound?
   bool    repeat() { return continuous_; }
 
-  // Volume to play this sound at (percentage from 0 to 100.)
+  // Volume to play this sound at when heard from "location".
+  // (percentage from 0 to 100.)
   double volume( const Point & location );
 
   void currentVolumes( double & right, double & left ) { 
@@ -58,6 +67,7 @@ private:
   int           bufferLocation_;
 
   bool          continuous_;
+  double        constantVol_;
 
   string        filename_;
   string        name_;
