@@ -383,8 +383,8 @@ void Poisson3::coarsen(const ProcessorGroup*,
     const Patch* coarsePatch = coarsePatches->get(p);
     IntVector low = coarsePatch->getNodeLowIndex();
     IntVector high = coarsePatch->getNodeHighIndex();
-    IntVector fine_low = coarseLevel->mapNodeToFiner(low);
-    IntVector fine_high = coarseLevel->mapNodeToFiner(high);
+    // Not Used: IntVector fine_low = coarseLevel->mapNodeToFiner(low);
+    // Not Used: IntVector fine_high = coarseLevel->mapNodeToFiner(high);
 
     // Find the overlapping regions...
     Patch::selectType finePatches;
