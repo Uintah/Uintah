@@ -172,7 +172,7 @@ private:
 		     Semaphore* thread_sema, ThreadGroup* tg);
   
   template <class T>
-  class run_make_brick_data : public Runnable {
+  friend class run_make_brick_data : public Runnable {
   public:
     run_make_brick_data(GLTexture3D* tex3D,
 		      Semaphore *thread,
@@ -190,18 +190,19 @@ private:
     T* tex_;
     Array3<unsigned char>* bd_;
   };
+  // friend class template <class T> run_make_brick_data<T>;
 
   //  template <class T>
-  class run_make_low_res_brick_data : public Runnable {
+  friend class run_make_low_res_brick_data : public Runnable {
   public:
     run_make_low_res_brick_data(GLTexture3D* tex3D,
-			    Semaphore *thread,
-			    int xmax_, int ymax_, int zmax_,
-			    int xsize, int ysize, int zsize,
-			    int xoff, int yoff, int zoff,
-			    int& padx, int& pady_, int& padz_,
-			    int level, Octree<Brick*>* node,
-			    Array3<unsigned char>*& bd);
+				Semaphore *thread,
+				int xmax_, int ymax_, int zmax_,
+				int xsize, int ysize, int zsize,
+				int xoff, int yoff, int zoff,
+				int& padx, int& pady_, int& padz_,
+				int level, Octree<Brick*>* node,
+				Array3<unsigned char>*& bd);
     virtual void run();
   private:
     GLTexture3D* tex3D_;
@@ -215,25 +216,16 @@ private:
     //    T* tex;
     Array3<unsigned char>* bd_;
   };
-
+  //friend class run_make_low_res_brick_data;
 };
 
 template <class Mesh>
 bool 
 GLTexture3D::get_dimensions(Mesh, int&, int&, int&)
-  {
-    return false;
-  }
+{
+  return false;
+}
 
-template<> 
-bool GLTexture3D::get_dimensions(LatVolMeshHandle m,
-				 int& nx, int& ny, int& nz)
-  {
-    nx = m->get_nx();
-    ny = m->get_ny();
-    nz = m->get_nz();
-    return true;
-  }
 
 template <class T>
 Octree<Brick*>*
@@ -304,15 +296,17 @@ GLTexture3D::build_bon_tree(Point min, Point max,
 
     thread_sema->down();
 
-    Thread *t = scinew Thread(new GLTexture3D::run_make_brick_data<T>(this, 
-					 thread_sema, 
-					 newx,newy,newz,
-					 xsize,ysize,zsize,
-					 xoff,yoff,zoff,
-					 tex, brickData),
-			   "make_brick_data worker",tg);
 
-
+    Thread *t = 
+      scinew Thread(new GLTexture3D::run_make_brick_data<T>(this, 
+							    thread_sema, 
+							    newx,newy,newz,
+							    xsize,ysize,zsize,
+							    xoff,yoff,zoff,
+							    tex, brickData),
+		    "make_brick_data worker", tg);
+    
+    
     brick = scinew Brick(min, max, padx_, pady_, padz_, level, brickData);
 
     node = scinew Octree<Brick*>(brick, Octree<Brick *>::LEAF, parent );
@@ -325,26 +319,26 @@ GLTexture3D::build_bon_tree(Point min, Point max,
 
       stepx = pow(2.0, levels_ - level);
       if( xmax_ > xsize ) {
-	padx_=(xmax_ - xsize)*stepx;
+	padx_=(int)((xmax_ - xsize)*stepx);
       } else {
 	if( xmax_ * stepx > xsize){
-	  padx_ = (xmax_*stepx - xsize)/stepx;
+	  padx_ = (int)((xmax_*stepx - xsize)/stepx);
 	}
       }
       stepy = pow(2.0, levels_ - level);
       if( ymax_ > ysize ) {
-	pady_ = (ymax_ - ysize)*stepy;
+	pady_ = (int)((ymax_ - ysize)*stepy);
       } else {
 	if( ymax_ * stepy > ysize){
-	  pady_ = (ymax_*stepy - ysize)/stepy;
+	  pady_ = (int)((ymax_*stepy - ysize)/stepy);
 	}
       }
       stepz = pow(2.0, levels_ - level);
       if( zmax_ > zsize ) {
-	stepz = 1; padz_ = (zmax_ - zsize)*stepz;
+	stepz = 1; padz_ = (int)((zmax_ - zsize)*stepz);
       } else {
 	if( zmax_ * stepz > zsize){
-	  padz_ = (zmax_*stepz - zsize)/stepz;
+	  padz_ = (int)((zmax_*stepz - zsize)/stepz);
 	}
       }
 //     }
@@ -488,15 +482,17 @@ GLTexture3D::build_bon_tree(Point min, Point max,
     //group->stop();
       
     thread_sema->down();
+
+    // commented out thread t because it is an unused variable
     Thread *t =
       scinew Thread(new GLTexture3D::run_make_low_res_brick_data(this, 
-					   thread_sema,
-					   xmax_, ymax_, zmax_,
-					   xsize, ysize, zsize,
-					   xoff, yoff, zoff, 
-					   padx_, pady_, padz_,
-					   level, node, brickData),
-			   "makeLowResBrickData worker", tg);
+						     thread_sema,
+						     xmax_, ymax_, zmax_,
+						     xsize, ysize, zsize,
+						     xoff, yoff, zoff, 
+						     padx_, pady_, padz_,
+						     level, node, brickData),
+		    "makeLowResBrickData worker", tg);
 
     if(group->numActive(false) != 0){
       cerr<<"Active Threads in thread group\n";
@@ -624,11 +620,12 @@ void
 GLTexture3D::run_make_brick_data<T>::run() 
 {
   int i,j,k,ii,jj,kk;
-  T::mesh_type *m = tex_->get_typed_mesh().get_rep();
+  typename T::mesh_type *m = tex_->get_typed_mesh().get_rep();
 
   if( tex_->data_at() == Field::CELL){
-    T::mesh_type mesh(m, xoff_, yoff_, zoff_, xsize_+1, ysize_+1, zsize_+1);
-    T::mesh_type::cell_iterator it = mesh.cell_begin();
+    typename T::mesh_type mesh(m, xoff_, yoff_, zoff_, 
+			       xsize_+1, ysize_+1, zsize_+1);
+    typename T::mesh_type::cell_iterator it = mesh.cell_begin();
     for(kk = 0, k = zoff_; kk < zsize_; kk++, k++)
       for(jj = 0, j = yoff_; jj < ysize_; jj++, j++)
 	for(ii = 0, i = xoff_; ii < xsize_; ii++, i++){
@@ -636,8 +633,8 @@ GLTexture3D::run_make_brick_data<T>::run()
 	  ++it;
 	}
   } else {
-    T::mesh_type mesh(m, xoff_, yoff_, zoff_, xsize_, ysize_, zsize_);
-    T::mesh_type::node_iterator it = mesh.node_begin();
+    typename T::mesh_type mesh(m, xoff_, yoff_, zoff_, xsize_, ysize_, zsize_);
+    typename T::mesh_type::node_iterator it = mesh.node_begin();
     for(kk = 0, k = zoff_; kk < zsize_; kk++, k++)
       for(jj = 0, j = yoff_; jj < ysize_; jj++, j++)
 	for(ii = 0, i = xoff_; ii < xsize_; ii++, i++){
