@@ -3408,8 +3408,11 @@ GeomTranspTriangles::draw(DrawInfoOpenGL* di, Material* matl, double)
     else { di->dir = -1; }
   }
 
-  const vector<unsigned int> &clist =
+  vector<unsigned int> &clist =
     (di->axis==0)?xlist_:((di->axis==1)?ylist_:zlist_);
+
+  bool &reverse = 
+    (di->axis==0)?xreverse_:((di->axis==1)?yreverse_:zreverse_);
 
   glShadeModel(GL_FLAT);
   glDisable(GL_NORMALIZE);
@@ -3449,24 +3452,18 @@ GeomTranspTriangles::draw(DrawInfoOpenGL* di, Material* matl, double)
 
   if (material_.get_rep()) { di->set_matl(material_.get_rep()); }
 
-  if (di->dir == 1)
+  if (di->dir == 1 && reverse ||
+      di->dir == -1 && !reverse)
   {
-    glDrawElements(GL_TRIANGLES, clist.size(), GL_UNSIGNED_INT,
-		   &(clist.front()));
+    std::reverse(clist.begin(), clist.end());
+    reverse = !reverse;
   }
-  else
-  {
-    // Preserve triangle CCW/CW by drawing vertices in same order.
-    const unsigned int ntris = clist.size()/3;
-    glBegin(GL_TRIANGLES);
-    for (unsigned int i = 0; i < ntris; i++)
-    {
-      glArrayElement(clist[(ntris-i-1)*3+0]);
-      glArrayElement(clist[(ntris-i-1)*3+1]);
-      glArrayElement(clist[(ntris-i-1)*3+2]);
-    }
-    glEnd();
-  }
+
+  glFrontFace(reverse?GL_CW:GL_CCW);
+
+  glDrawElements(GL_TRIANGLES, clist.size(), GL_UNSIGNED_INT, &(clist[0]));
+
+  glFrontFace(GL_CCW);
 
   glDisableClientState(GL_NORMAL_ARRAY);
 
@@ -3568,8 +3565,11 @@ GeomTranspQuads::draw(DrawInfoOpenGL* di, Material* matl, double)
     else { di->dir = -1; }
   }
 
-  const vector<unsigned int> &clist =
+  vector<unsigned int> &clist =
     (di->axis==0)?xlist_:((di->axis==1)?ylist_:zlist_);
+
+  bool &reverse = 
+    (di->axis==0)?xreverse_:((di->axis==1)?yreverse_:zreverse_);
 
   if (di->currently_lit)
   {
@@ -3607,25 +3607,18 @@ GeomTranspQuads::draw(DrawInfoOpenGL* di, Material* matl, double)
 
   if (material_.get_rep()) { di->set_matl(material_.get_rep()); }
 
-  if (di->dir == 1)
+  if (di->dir == 1 && reverse ||
+      di->dir == -1 && !reverse)
   {
-    glDrawElements(GL_QUADS, clist.size(), GL_UNSIGNED_INT,
-		   &(clist.front()));
+    std::reverse(clist.begin(), clist.end());
+    reverse = !reverse;
   }
-  else
-  {
-    // Preserve triangle CCW/CW by drawing vertices in same order.
-    const unsigned int ntris = clist.size()/4;
-    glBegin(GL_QUADS);
-    for (unsigned int i = 0; i < ntris; i++)
-    {
-      glArrayElement(clist[(ntris-i-1)*4+0]);
-      glArrayElement(clist[(ntris-i-1)*4+1]);
-      glArrayElement(clist[(ntris-i-1)*4+2]);
-      glArrayElement(clist[(ntris-i-1)*4+3]);
-    }
-    glEnd();
-  }
+
+  glFrontFace(reverse?GL_CW:GL_CCW);
+
+  glDrawElements(GL_QUADS, clist.size(), GL_UNSIGNED_INT, &(clist.front()));
+
+  glFrontFace(GL_CCW);
 
   glDisableClientState(GL_NORMAL_ARRAY);
 

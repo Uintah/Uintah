@@ -118,6 +118,9 @@ protected:
   vector<unsigned int> xlist_;
   vector<unsigned int> ylist_;
   vector<unsigned int> zlist_;
+  bool xreverse_;
+  bool yreverse_;
+  bool zreverse_;
 
 public:
   GeomTranspTriangles();

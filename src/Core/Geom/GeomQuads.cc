@@ -235,11 +235,20 @@ bool GeomFastQuads::saveobj(ostream&, const string&, GeomSave*)
 
 
 GeomTranspQuads::GeomTranspQuads()
+  : xreverse_(false),
+    yreverse_(false),
+    zreverse_(false)
 {
 }
 
 GeomTranspQuads::GeomTranspQuads(const GeomTranspQuads& copy)
-  : GeomFastQuads(copy)
+  : GeomFastQuads(copy),
+    xlist_(copy.xlist_),
+    ylist_(copy.ylist_),
+    zlist_(copy.zlist_),
+    xreverse_(copy.xreverse_),
+    yreverse_(copy.yreverse_),
+    zreverse_(copy.zreverse_)
 {
 }
 
@@ -258,6 +267,10 @@ GeomTranspQuads::SortPolys()
 {
   const unsigned int vsize = points_.size() / 12;
   if (xlist_.size() == vsize*4) return;
+
+  xreverse_ = false;
+  yreverse_ = false;
+  zreverse_ = false;
 
   vector<pair<float, unsigned int> > tmp(vsize);
   unsigned int i;

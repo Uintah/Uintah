@@ -425,11 +425,20 @@ bool GeomFastTriangles::saveobj(ostream&, const string&, GeomSave*)
 
 
 GeomTranspTriangles::GeomTranspTriangles()
+  : xreverse_(false),
+    yreverse_(false),
+    zreverse_(false)
 {
 }
 
 GeomTranspTriangles::GeomTranspTriangles(const GeomTranspTriangles& copy)
-  : GeomFastTriangles(copy)
+  : GeomFastTriangles(copy),
+    xlist_(copy.xlist_),
+    ylist_(copy.ylist_),
+    zlist_(copy.zlist_),
+    xreverse_(copy.xreverse_),
+    yreverse_(copy.yreverse_),
+    zreverse_(copy.zreverse_)
 {
 }
 
@@ -448,6 +457,10 @@ GeomTranspTriangles::SortPolys()
 {
   const unsigned int vsize = points_.size() / 9;
   if (xlist_.size() == vsize*3) return;
+
+  xreverse_ = false;
+  yreverse_ = false;
+  zreverse_ = false;
 
   vector<pair<float, unsigned int> > tmp(vsize);
   unsigned int i;
