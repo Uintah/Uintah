@@ -200,14 +200,14 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
       cout << "num = "<< num<<", datai = "<<datai<<endl;
       // opaque materials
       for (int n = 0; n < num_non_trans; n++) {
-	hvol_matl[n] = (Material*)new HVolumeColor(dpys[n], data, min_rho,
+	hvol_matl[n] = (Material*)new HVolumeMaterial(dpys[n], data, min_rho,
 						   max_rho, transfer[n]);
       }
       // transparent materials
       for (int n = 0; n < num_trans; n++) {
 	hvol_matl_trans[n] =
-	  (Material*)new HVolumeColor(dpys_trans[n], data, min_rho,
-				      max_rho, transfer_trans[n]);
+	  (Material*)new HVolumeMaterial(dpys_trans[n], data, min_rho,
+					 max_rho, transfer_trans[n]);
       }
     } else {
       cerr << "Temperature file( "<< temp_file << " not found\n";
@@ -238,7 +238,7 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
     }
   }
 
-  // compute_min_max  should be called after all the HVolumeColor's
+  // compute_min_max  should be called after all the HVolumeMaterial's
   // have been created and added
   // Start up the thread to handle the slider
   for (int n = 0; n < num_non_trans; n++) {

@@ -19,11 +19,11 @@ Material* HVolumeTransferFunct::index(const float val) {
   return matls[i];
 }
 
-void HVolumeTransferFunct::add(HVolumeColor *hvcolor) {
+void HVolumeTransferFunct::add(HVolumeMaterial *hvcolor) {
   colors.add(hvcolor);
 }
 
-// this must be called after all the HVolumeColor's have been added
+// this must be called after all the HVolumeMaterial's have been added
 // and before rendering starts.
 void HVolumeTransferFunct::compute_min_max() {
   // get the min and max for all the data values
@@ -40,9 +40,9 @@ void HVolumeTransferFunct::compute_min_max() {
   cout << "HVTF::scale = "<< scale << endl;
 }
   
-HVolumeColor::HVolumeColor(VolumeDpy *dpy, Array1<float> indata,
-			   float datamin, float datamax,
-			   HVolumeTransferFunct *trans):
+HVolumeMaterial::HVolumeMaterial(VolumeDpy *dpy, Array1<float> indata,
+				 float datamin, float datamax,
+				 HVolumeTransferFunct *trans):
   vdpy(dpy), data(indata), datamin(datamin), datamax(datamax),
   transfer(trans) 
 {
@@ -57,10 +57,10 @@ HVolumeColor::HVolumeColor(VolumeDpy *dpy, Array1<float> indata,
   cout << "size_minus_1 = "<<size_minus_1<<endl;
 }
 
-void HVolumeColor::shade(Color& result, const Ray& ray,
-			 const HitInfo& hit, int depth,
-			 double atten, const Color& accumcolor,
-			 Context* cx) {
+void HVolumeMaterial::shade(Color& result, const Ray& ray,
+			    const HitInfo& hit, int depth,
+			    double atten, const Color& accumcolor,
+			    Context* cx) {
   
   // get the current value from vdpy
   float isoval = vdpy->isoval;
@@ -80,7 +80,7 @@ void HVolumeColor::shade(Color& result, const Ray& ray,
   matl->shade(result, ray, hit, depth, atten, accumcolor, cx);
 }
 
-void HVolumeColor::get_min_max(float &in_min, float &in_max) {
+void HVolumeMaterial::get_min_max(float &in_min, float &in_max) {
   if (data.size() == 0) return;
   float min, max;
   min = max = data[0];
