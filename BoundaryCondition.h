@@ -482,6 +482,10 @@ public:
 			   	     const PatchSet* patches,
 			   	     const MaterialSet* matls);
 
+      void sched_setInletFlowRates(SchedulerP& sched,
+				   const PatchSet* patches,
+				   const MaterialSet* matls);
+
 private:
 
       // GROUP:  Actual Computations (Private)  :
@@ -625,6 +629,13 @@ private:
 			       ArchesConstVariables* constvars,
 			       constCCVariable<double> balance_var,
 			       double* varIN, double* varOUT); 
+
+      void setInletFlowRates(const ProcessorGroup* pc,
+			     const PatchSubset* patches,
+			     const MaterialSubset* matls,
+			     DataWarehouse* old_dw,
+			     DataWarehouse* new_dw);
+
 private:
 
       // GROUP:  Local DataTypes :
