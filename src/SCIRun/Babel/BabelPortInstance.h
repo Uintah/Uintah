@@ -48,46 +48,53 @@
 #include <string>
 #include <vector>
 
-namespace SCIRun{
-  class BabelPortInstance : public PortInstance {
-  public:
-    enum PortType {
-      Uses, Provides
-    };
-    BabelPortInstance(const std::string& portname, const std::string& classname,
-		    const gov::cca::TypeMap& properties,
-		    PortType porttype);
-    BabelPortInstance(const std::string& portname, const std::string& classname,
-		    const gov::cca::TypeMap& properties,
-		    const gov::cca::Port& port,
-		    PortType porttype);
-    ~BabelPortInstance();
-    virtual bool connect(PortInstance*);
-    virtual PortInstance::PortType portType();
-    virtual std::string getType();
-    virtual std::string getModel();
-    virtual std::string getUniqueName();
-    virtual bool disconnect(PortInstance*);
-    virtual bool canConnectTo(PortInstance*);
-    virtual bool available();
-    virtual PortInstance* getPeer();
-    std::string getName();
-    void incrementUseCount();
-    bool decrementUseCount();
-  public:
-    PortType porttype;
-    std::vector<PortInstance*> connections;
+namespace SCIRun {
+
+/**
+ * \class BabelPortInstance
+ *
+ *
+ */
+class BabelPortInstance : public PortInstance
+{
+public:
+  enum PortType {  Uses, Provides  };
+  
+  BabelPortInstance(const std::string& portname, const std::string& classname,
+                    const gov::cca::TypeMap& properties,
+                    PortType porttype);
+  BabelPortInstance(const std::string& portname, const std::string& classname,
+                    const gov::cca::TypeMap& properties,
+                    const gov::cca::Port& port,
+                    PortType porttype);
+  ~BabelPortInstance();
+  virtual bool connect(PortInstance*);
+  virtual PortInstance::PortType portType();
+  virtual std::string getType();
+  virtual std::string getModel();
+  virtual std::string getUniqueName();
+  virtual bool disconnect(PortInstance*);
+  virtual bool canConnectTo(PortInstance*);
+  virtual bool available();
+  virtual PortInstance* getPeer();
+  std::string getName();
+  void incrementUseCount();
+  bool decrementUseCount();
+public:
+  PortType porttype;
+  std::vector<PortInstance*> connections;
     friend class BabelComponentInstance;
-    std::string name;
-    std::string type;
-    gov::cca::TypeMap properties;
-    gov::cca::Port port;
+  std::string name;
+  std::string type;
+  gov::cca::TypeMap properties;
+  gov::cca::Port port;
+  
+  int useCount;
+  
+  BabelPortInstance(const BabelPortInstance&);
+  BabelPortInstance& operator=(const BabelPortInstance&);
+};
 
-    int useCount;
-
-    BabelPortInstance(const BabelPortInstance&);
-    BabelPortInstance& operator=(const BabelPortInstance&);
-  };
 } //namespace SCIRun
 
 #endif

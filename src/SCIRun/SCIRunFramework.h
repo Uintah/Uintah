@@ -83,27 +83,6 @@ class VtkComponentModel;
  * BuilderService) uses to instantiate components registered in that component
  * model.
  *
- * \par How to use this class
- *
- * NEED SOME TEXT HERE  LIFTED THIS EXAMPLE FROM THE CCA SPEC
- * \code
- * int functionName() {
- *    ::sci::sandia::ccafe::Framework fwkimpl;
- *    ::sci::cca::AbstractFrameworkPtr fwk;
- *
- *    fwk = fwkimpl.getStandardFramework();
- *    ::sci::cca::Services_Interface * svc = 0;
- *    svc = fwk->getServices("instance0","AppDriver",0);
- *    // From here on, access all services, components, etc
- *    // through svc.
- *    ...
- *    // when done
- *    fwk->releaseServices(svc);
- *    svc = 0;
- *    fwk->shutdownFramework();
- *
- * \endcode
- *
  * 
  * \sa BuilderService AbstractFramework 
  * \todo createTypeMap is not fully implemented
@@ -111,9 +90,7 @@ class VtkComponentModel;
  * \todo shutdownFramework is not fully implemented
  * \todo implement shutdownComponent?
  * \todo createEmptyFramework is not fully implemented
- * \todo register a creation event for component (in registerComponent)
- *
- */
+ * \todo register a creation event for component (in registerComponent)  */
 class SCIRunFramework : public sci::cca::AbstractFramework
 {
 public:
@@ -155,7 +132,7 @@ public:
       Services  object. */
   virtual void releaseServices(const sci::cca::Services::pointer& svc);
 
-  /** */
+  /** ? */
   virtual void shutdownFramework();
 
   /** Creates a new SCIRunFramework instance.  The new framework instance is

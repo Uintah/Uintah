@@ -54,7 +54,11 @@ class PortInstanceIterator;
 /**
  * \class ComponentInstance
  *
- */
+ * A handle to an instantiation of a component in the SCIRun framework.  This
+ * class is a container for information necessary to interact with an
+ * instantiation of a framework component such as its unique instance name, its
+ * type, its ports, and the framework to which it belongs.  Specific component
+ * models may subclass ComponentInstance to define their own variations. */
 class ComponentInstance
 {
 public:
@@ -63,11 +67,17 @@ public:
                     const std::string& className);
   virtual ~ComponentInstance();
 
+  /** The framework to which this component instance belongs, i.e. the
+      framework in which it was instantiated. */
   SCIRunFramework* framework;
+  /** The unique name of this component instance. */
   std::string instanceName;
+  /** The type of the component. */
   std::string className;
-  
+
+  /** ? */
   virtual PortInstance* getPortInstance(const std::string& name) = 0;
+  /** ? */
   virtual PortInstanceIterator* getPorts() = 0;
 private:
   ComponentInstance(const ComponentInstance&);

@@ -51,7 +51,20 @@ class SCIRunFramework;
 
 /** \class ComponentDescription
  *
- * 
+ * A container for information necessary to locate and instantiate a specific
+ * component type in the SCIRun framework.  This class holds the type name of
+ * the component and the component model to which it belongs.  Subclasses of
+ * ComponentDescription may contain additional information specific to
+ * a particular component model.  The SCIRun framework maintains a list of
+ * ComponentDescriptions that are used during component instantiation.
+ * ComponentDescriptions are usually created from information contained in XML
+ * files.
+ *
+ * \sa BabelComponentDescription
+ * \sa CCAComponentDescription
+ * \sa VtkComponentDescription
+ * \sa ComponentModel
+ * \sa SCIRunFramework
  */
 class ComponentDescription
 {
@@ -59,13 +72,14 @@ public:
   ComponentDescription();
   virtual ~ComponentDescription();
 
-  /** Returns the name of type of the component described by this class. */
+  /** Returns the type name (a string) the component described by this class. */
   virtual std::string getType() const = 0;
 
-  /** Returns the name of the component model to which this component belongs. */
+  /** Returns a pointer to the component model under which the component type
+      is defined. */
   virtual const ComponentModel* getModel() const = 0;
 
-  /** ? */
+  /** ?  */
   virtual std::string getLoaderName() const;
 private:
   ComponentDescription(const ComponentDescription&);
