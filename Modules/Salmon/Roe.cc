@@ -52,7 +52,8 @@ Roe::Roe(Salmon* s, const clString& id)
   view("view", id, this),
   homeview(Point(.55, .5, 0), Point(.0, .0, .0), Vector(0,1,0), 25),
   bgcolor("bgcolor", id, this), shading("shading", id, this),
-  do_stereo("do_stereo", id, this), tracker_state("tracker_state", id, this),
+  do_stereo("do_stereo", id, this), drawimg("drawimg", id, this),
+  tracker_state("tracker_state", id, this),
   id(id)
 {
     inertia_mode=0;
@@ -411,7 +412,7 @@ void Roe::mouse_rotate(int action, int x, int y, int, int, int time)
 	{
 	    int xres=current_renderer->xres;
 	    int yres=current_renderer->yres;
-	    double aspect=double(xres)/double(yres);
+	    //double aspect=double(xres)/double(yres);
 
 	    if(!rot_point_valid)
 		break;
@@ -936,6 +937,14 @@ void TCLView::set(const View& view)
     up.set(view.up());
     fov.set(view.fov());
     TCLTask::unlock();
+}
+
+void TCLView::emit(ostream& out)
+{
+    eyep.emit(out);
+    lookat.emit(out);
+    up.emit(out);
+    fov.emit(out);
 }
 
 RoeMouseMessage::RoeMouseMessage(const clString& rid, MouseHandler handler,

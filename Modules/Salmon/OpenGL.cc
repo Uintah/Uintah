@@ -34,6 +34,8 @@
 #include <GL/glx.h>
 #include <strstream.h>
 #include <fstream.h>
+#include "image.h"
+#include <string.h>
 
 #ifdef __sgi
 #include <X11/extensions/SGIStereo.h>
@@ -59,6 +61,8 @@ class OpenGL : public Renderer {
     double current_time;
 
     int old_stereo;
+    GLuint imglist;
+    void make_image();
 
     void redraw_obj(Salmon* salmon, Roe* roe, GeomObj* obj);
     void pick_draw_obj(Salmon* salmon, Roe* roe, GeomObj* obj);
@@ -154,7 +158,7 @@ clString OpenGL::create_window(Roe*,
     static int direct=1;
     int d=direct;
     direct=0;
-    return "opengl "+name+" -geometry "+width+"x"+height+" -doublebuffer true -direct "+(d?"true":"false")+" -rgba true -redsize 2 -greensize 2 -bluesize 2 -depthsize 2";
+    return "opengl "+name+" -geometry "+width+"x"+height+" -doublebuffer true -direct "+(d?"true":"false")+" -rgba true -redsize 1 -greensize 1 -bluesize 1 -depthsize 2";
 }
 
 void OpenGL::initState(void)
@@ -234,6 +238,13 @@ void OpenGL::redraw_loop()
     GLint data[1];
     glGetIntegerv(GL_MAX_LIGHTS, data);
     maxlights=data[0];
+    // Look for multisample extension...
+    if(strstr((char*)glGetString(GL_EXTENSIONS), "GL_SGIS_multisample")){
+        cerr << "Enabling multisampling...\n";
+	glEnable(GL_MULTISAMPLE_SGIS);
+	glSamplePatternSGIS(GL_1PASS_SGIS);
+    }
+
     TCLTask::unlock();
 
     // Tell the Roe that we are started...
@@ -327,6 +338,22 @@ void OpenGL::redraw_loop()
     }
 }
 
+void OpenGL::make_image()
+{
+  imglist=glGenLists(1);
+  glNewList(imglist, GL_COMPILE_AND_EXECUTE);
+  glMatrixMode(GL_PROJECTION);
+  glLoadIdentity();
+  glOrtho(0.0, xres-1, 0.0, yres-1, -10.0, 10.0);
+  glMatrixMode(GL_MODELVIEW);
+  glLoadIdentity();
+  glDisable(GL_DEPTH_TEST);
+  glRasterPos2i(xres-168-5, yres-5);
+  glDrawPixels(168, 95, GL_LUMINANCE, GL_UNSIGNED_BYTE, logoimg);
+  glEnable(GL_DEPTH_TEST);
+  glEndList();
+}
+
 void OpenGL::redraw_frame()
 {
     // Start polygon counter...
@@ -404,11 +431,11 @@ void OpenGL::redraw_frame()
 	    }
 	    glXWaitX();
 	    old_stereo=do_stereo;
+#if 0
 	    int height=492; // Magic numbers from the man pages
 	    int offset=532;
 	    int mode=STEREO_TOP;
 	    XClearWindow(dpy, win);
-#if 0
 	    if(!XSGISetStereoMode(dpy, win, height, offset, mode)){
 		cerr << "Cannot set stereo mode!\n";
 		do_stereo=0;
@@ -535,6 +562,15 @@ void OpenGL::redraw_frame()
 	    }
 #endif
 
+#if 0
+	    if(roe->drawimg.get()){
+	      if(!imglist)
+		make_image();
+	      else
+		glCallList(imglist);
+	    }
+#endif
+
 	    // Wait for the right time before swapping buffers
 	    //TCLTask::unlock();
 	    double realtime=t*frametime;
@@ -557,6 +593,12 @@ void OpenGL::redraw_frame()
 	// Just show the cleared screen
 	roe->set_current_time(tend);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	if(roe->drawimg.get()){
+	  if(!imglist)
+	    make_image();
+	  else
+	    glCallList(imglist);
+	}
 	glXSwapBuffers(dpy, win);
 	//	glXWaitGL();
     }
@@ -595,7 +637,7 @@ void OpenGL::hide()
 }
 
 
-void OpenGL::get_pick(Salmon*, Roe* roe, int x, int y,
+void OpenGL::get_pick(Salmon*, Roe*, int x, int y,
 		      GeomObj*& pick_obj, GeomPick*& pick_pick)
 {
     send_pick_x=x;

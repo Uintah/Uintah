@@ -58,6 +58,7 @@ public:
 
     View get();
     void set(const View&);
+    virtual void emit(ostream& out);
 };
 
 class Roe;
@@ -177,6 +178,8 @@ public:
 
     // Stereo
     TCLint do_stereo;
+
+    TCLint drawimg;
 
     // Object processing utility routines
     void do_for_visible(Renderer*, RoeVisPMF);
