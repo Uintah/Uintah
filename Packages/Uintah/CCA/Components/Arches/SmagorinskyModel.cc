@@ -164,6 +164,7 @@ SmagorinskyModel::computeTurbSubmodel(const ProcessorGroup*,
 				      DataWarehouse*,
 				      DataWarehouse* new_dw)
 {
+  double time = d_lab->d_sharedState->getElapsedTime();
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
@@ -213,10 +214,13 @@ SmagorinskyModel::computeTurbSubmodel(const ProcessorGroup*,
     // get physical constants
     double mol_viscos; // molecular viscosity
     mol_viscos = d_physicalConsts->getMolecularViscosity();
+    double CF = d_CF;
+    if (time < 0.5 ) 
+      CF *= (time+ 0.0001);
     fort_smagmodel(uVelocity, vVelocity, wVelocity, density, viscosity,
 		   lowIndex, highIndex,
 		   cellinfo->sew, cellinfo->sns, cellinfo->stb,
-		   mol_viscos, d_CF, d_factorMesh, d_filterl);
+		   mol_viscos, CF, d_factorMesh, d_filterl);
 
 #ifdef multimaterialform
     if (d_mmInterface) {
@@ -266,6 +270,7 @@ SmagorinskyModel::reComputeTurbSubmodel(const ProcessorGroup*,
 					DataWarehouse*,
 					DataWarehouse* new_dw)
 {
+  double time = d_lab->d_sharedState->getElapsedTime();
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
@@ -321,11 +326,14 @@ SmagorinskyModel::reComputeTurbSubmodel(const ProcessorGroup*,
     // compatible with fortran index
     IntVector idxLo = patch->getCellFORTLowIndex();
     IntVector idxHi = patch->getCellFORTHighIndex();
-
+    double CF = d_CF;
+    if (time < 2.0 ) 
+      CF *= (time+ 0.0001)*0.5;
+      
     fort_smagmodel(uVelocity, vVelocity, wVelocity, density, viscosity,
 		   idxLo, idxHi,
 		   cellinfo->sew, cellinfo->sns, cellinfo->stb,
-		   mol_viscos, d_CF, d_factorMesh, d_filterl);
+		   mol_viscos, CF, d_factorMesh, d_filterl);
 
     // boundary conditions
     
@@ -423,6 +431,224 @@ SmagorinskyModel::reComputeTurbSubmodel(const ProcessorGroup*,
   }
 }
 
+
+//****************************************************************************
+// Schedule recomputation of the turbulence sub model 
+//****************************************************************************
+void 
+SmagorinskyModel::sched_computeTurbSubmodelPred(SchedulerP& sched, 
+						const PatchSet* patches,
+						const MaterialSet* matls)
+{
+  Task* tsk = scinew Task("SmagorinskyModel::TurbSubmodelPred",
+			  this,
+			  &SmagorinskyModel::computeTurbSubmodelPred);
+
+  int numGhostCells = 1;
+  int zeroGhostCells = 0;
+  // Requires
+  tsk->requires(Task::NewDW, d_lab->d_densityPredLabel, Ghost::None,
+		zeroGhostCells);
+  tsk->requires(Task::NewDW, d_lab->d_viscosityINLabel, 
+		Ghost::None,
+		zeroGhostCells);
+  tsk->requires(Task::NewDW, d_lab->d_uVelocityPredLabel,
+		Ghost::AroundFaces,
+		numGhostCells);
+  tsk->requires(Task::NewDW, d_lab->d_vVelocityPredLabel, 
+		Ghost::AroundFaces,
+		numGhostCells);
+  tsk->requires(Task::NewDW, d_lab->d_wVelocityPredLabel, 
+		Ghost::AroundFaces,
+		numGhostCells);
+  // for multimaterial
+  if (d_MAlab)
+    tsk->requires(Task::NewDW, d_lab->d_mmgasVolFracLabel, 
+		  Ghost::None, zeroGhostCells);
+
+  tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel, 
+		Ghost::AroundCells, numGhostCells);
+
+      // Computes
+  tsk->computes(d_lab->d_viscosityPredLabel);
+
+  sched->addTask(tsk, patches, matls);
+}
+
+//****************************************************************************
+// Actual compute for predictor step 
+//****************************************************************************
+void 
+SmagorinskyModel::computeTurbSubmodelPred(const ProcessorGroup*,
+					    const PatchSubset* patches,
+					    const MaterialSubset*,
+					    DataWarehouse*,
+					    DataWarehouse* new_dw)
+{
+  double time = d_lab->d_sharedState->getElapsedTime();
+  for (int p = 0; p < patches->size(); p++) {
+    const Patch* patch = patches->get(p);
+    int archIndex = 0; // only one arches material
+    int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+    // Variables
+    constSFCXVariable<double> uVelocity;
+    constSFCYVariable<double> vVelocity;
+    constSFCZVariable<double> wVelocity;
+    constCCVariable<double> density;
+    CCVariable<double> viscosity;
+    constCCVariable<double> voidFraction;
+    constCCVariable<int> cellType;
+    // Get the velocity, density and viscosity from the old data warehouse
+    int numGhostCells = 1;
+    int zeroGhostCells = 0;
+
+    new_dw->allocate(viscosity, d_lab->d_viscosityPredLabel, matlIndex, patch);
+    new_dw->copyOut(viscosity, d_lab->d_viscosityINLabel, matlIndex, patch,
+		    Ghost::None, zeroGhostCells);
+    
+    new_dw->get(uVelocity,d_lab->d_uVelocityPredLabel, matlIndex, patch, 
+		Ghost::AroundFaces, numGhostCells);
+    new_dw->get(vVelocity,d_lab->d_vVelocityPredLabel, matlIndex, patch,
+		Ghost::AroundFaces, numGhostCells);
+    new_dw->get(wVelocity, d_lab->d_wVelocityPredLabel, matlIndex, patch, 
+		Ghost::AroundFaces, numGhostCells);
+    new_dw->get(density, d_lab->d_densityPredLabel, matlIndex, patch, Ghost::None,
+		zeroGhostCells);
+    
+    if (d_MAlab)
+      new_dw->get(voidFraction, d_lab->d_mmgasVolFracLabel, matlIndex, patch,
+		  Ghost::None, zeroGhostCells);
+
+    new_dw->get(cellType, d_lab->d_cellTypeLabel, matlIndex, patch,
+		  Ghost::AroundCells, numGhostCells);
+
+    // Get the PerPatch CellInformation data
+
+    PerPatch<CellInformationP> cellInfoP;
+    if (new_dw->exists(d_lab->d_cellInfoLabel, matlIndex, patch)) 
+      new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
+    else {
+      cellInfoP.setData(scinew CellInformation(patch));
+      new_dw->put(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
+    }
+    CellInformation* cellinfo = cellInfoP.get().get_rep();
+    
+    // get physical constants
+    double mol_viscos; // molecular viscosity
+    mol_viscos = d_physicalConsts->getMolecularViscosity();
+    
+    // Get the patch and variable details
+    // compatible with fortran index
+    IntVector idxLo = patch->getCellFORTLowIndex();
+    IntVector idxHi = patch->getCellFORTHighIndex();
+    double CF = d_CF;
+    if (time < 2.0 ) 
+      CF *= (time+ 0.0001)*0.5;
+
+    fort_smagmodel(uVelocity, vVelocity, wVelocity, density, viscosity,
+		   idxLo, idxHi,
+		   cellinfo->sew, cellinfo->sns, cellinfo->stb,
+		   mol_viscos, CF, d_factorMesh, d_filterl);
+
+    // boundary conditions
+    
+    bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
+    bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
+    bool yminus = patch->getBCType(Patch::yminus) != Patch::Neighbor;
+    bool yplus =  patch->getBCType(Patch::yplus) != Patch::Neighbor;
+    bool zminus = patch->getBCType(Patch::zminus) != Patch::Neighbor;
+    bool zplus =  patch->getBCType(Patch::zplus) != Patch::Neighbor;
+    int wallID = d_boundaryCondition->wallCellType();
+    if (xminus) {
+      for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
+	for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
+	  int colX = idxLo.x();
+	  IntVector currCell(colX-1, colY, colZ);
+	  if (cellType[currCell] != wallID)
+	    viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)];
+	}
+      }
+    }
+    if (xplus) {
+      for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
+	for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
+	  int colX = idxHi.x();
+	  IntVector currCell(colX+1, colY, colZ);
+	  if (cellType[currCell] != wallID)
+	    viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)];
+	}
+      }
+    }
+    if (yminus) {
+      for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
+	for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
+	  int colY = idxLo.y();
+	  IntVector currCell(colX, colY-1, colZ);
+	  if (cellType[currCell] != wallID)
+	    viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)];
+	}
+      }
+    }
+    if (yplus) {
+      for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
+	for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
+	  int colY = idxHi.y();
+	  IntVector currCell(colX, colY+1, colZ);
+	  if (cellType[currCell] != wallID)
+	    viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)];
+	}
+      }
+    }
+    if (zminus) {
+      for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
+	for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
+	  int colZ = idxLo.z();
+	  IntVector currCell(colX, colY, colZ-1);
+	  if (cellType[currCell] != wallID)
+	    viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)];
+	}
+      }
+    }
+    if (zplus) {
+      for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
+	for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
+	  int colZ = idxHi.z();
+	  IntVector currCell(colX, colY, colZ+1);
+	  if (cellType[currCell] != wallID)
+	    viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)];
+	}
+      }
+    }
+
+
+    if (d_MAlab) {
+      IntVector indexLow = patch->getCellLowIndex();
+      IntVector indexHigh = patch->getCellHighIndex();
+      for (int colZ = indexLow.z(); colZ < indexHigh.z(); colZ ++) {
+	for (int colY = indexLow.y(); colY < indexHigh.y(); colY ++) {
+	  for (int colX = indexLow.x(); colX < indexHigh.x(); colX ++) {
+	    // Store current cell
+	    IntVector currCell(colX, colY, colZ);
+	    viscosity[currCell] *=  voidFraction[currCell];
+	  }
+	}
+      }
+    }
+
+#ifdef ARCHES_PRES_DEBUG
+    // Testing if correct values have been put
+    cerr << " AFTER COMPUTE TURBULENCE SUBMODEL " << endl;
+    viscosity.print(cerr);
+#endif
+    
+    // Put the calculated viscosityvalue into the new data warehouse
+    new_dw->put(viscosity, d_lab->d_viscosityPredLabel, matlIndex, patch);
+  }
+}
+
+
+
+
 //****************************************************************************
 // Schedule recomputation of the turbulence sub model 
 //****************************************************************************
@@ -440,9 +666,13 @@ SmagorinskyModel::sched_computeScalarVariance(SchedulerP& sched,
   
   // Requires, only the scalar corresponding to matlindex = 0 is
   //           required. For multiple scalars this will be put in a loop
-  
+#ifdef correctorstep
+  tsk->requires(Task::NewDW, d_lab->d_scalarPredLabel, 
+		Ghost::AroundCells, numGhostCells);
+#else  
   tsk->requires(Task::NewDW, d_lab->d_scalarSPLabel, 
 		Ghost::AroundCells, numGhostCells);
+#endif
   tsk->requires(Task::NewDW, d_lab->d_scalarVarINLabel, 
 		Ghost::None, zeroGhostCells);
 
@@ -450,34 +680,6 @@ SmagorinskyModel::sched_computeScalarVariance(SchedulerP& sched,
   tsk->computes(d_lab->d_scalarVarSPLabel);
 
   sched->addTask(tsk, patches, matls);
-#if 0
-  for(Level::const_patchIterator iter=level->patchesBegin();
-      iter != level->patchesEnd(); iter++){
-    const Patch* patch=*iter;
-    {
-      Task* tsk = scinew Task("SmagorinskyModel::computeScalarVar",
-			      patch, old_dw, new_dw, this,
-			      &SmagorinskyModel::computeScalarVariance);
-
-      int numGhostCells = 1;
-      int zeroGhostCells = 0;
-      int matlIndex = 0;
-
-      // Requires, only the scalar corresponding to matlindex = 0 is
-      //           required. For multiple scalars this will be put in a loop
-      
-      tsk->requires(new_dw, d_lab->d_scalarSPLabel, matlIndex, patch, 
-		    Ghost::AroundCells, numGhostCells);
-      tsk->requires(new_dw, d_lab->d_scalarVarINLabel, matlIndex, patch, 
-		    Ghost::None, zeroGhostCells);
-
-      // Computes
-      tsk->computes(new_dw, d_lab->d_scalarVarSPLabel, matlIndex, patch);
-
-      sched->addTask(tsk);
-    }
-  }
-#endif
 }
 
 
@@ -488,6 +690,7 @@ SmagorinskyModel::computeScalarVariance(const ProcessorGroup*,
 					DataWarehouse*,
 					DataWarehouse* new_dw)
 {
+  double time = d_lab->d_sharedState->getElapsedTime();
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
@@ -498,8 +701,13 @@ SmagorinskyModel::computeScalarVariance(const ProcessorGroup*,
     // Get the velocity, density and viscosity from the old data warehouse
     int numGhostCells = 1;
     int zeroGhostCells = 0;
+#ifdef correctorstep
+    new_dw->get(scalar, d_lab->d_scalarPredLabel, matlIndex, patch, Ghost::AroundCells,
+		numGhostCells);
+#else
     new_dw->get(scalar, d_lab->d_scalarSPLabel, matlIndex, patch, Ghost::AroundCells,
 		numGhostCells);
+#endif
     new_dw->allocate(scalarVar, d_lab->d_scalarVarSPLabel, matlIndex, patch);
     new_dw->copyOut(scalarVar, d_lab->d_scalarVarINLabel, matlIndex, patch,
 		    Ghost::None, zeroGhostCells);
@@ -519,10 +727,13 @@ SmagorinskyModel::computeScalarVariance(const ProcessorGroup*,
     // compatible with fortran index
     IntVector idxLo = patch->getCellFORTLowIndex();
     IntVector idxHi = patch->getCellFORTHighIndex();
-    
+    double CFVar = d_CFVar;
+    if (time < 2.0 ) 
+      CFVar *= (time+ 0.0001)*0.5;
+
     fort_scalarvarmodel(scalar, idxLo, idxHi, scalarVar, cellinfo->dxpw,
 			cellinfo->dyps, cellinfo->dzpb, cellinfo->sew,
-			cellinfo->sns, cellinfo->stb, d_CFVar, d_factorMesh,
+			cellinfo->sns, cellinfo->stb, CFVar, d_factorMesh,
 			d_filterl);
 
     // Put the calculated viscosityvalue into the new data warehouse

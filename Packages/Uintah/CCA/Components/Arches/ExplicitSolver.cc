@@ -227,6 +227,7 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
     d_momSolver->solvePred(sched, patches, matls, index);
   }
 #ifdef correctorstep
+  d_turbModel->sched_computeTurbSubmodelPred(sched, patches, matls);
   // corrected step
   for (int index = 0;index < nofScalars; index ++) {
     // in this case we're only solving for one scalar...but
