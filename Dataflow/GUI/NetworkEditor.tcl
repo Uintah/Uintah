@@ -14,9 +14,8 @@
 #  Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
 #  University of Utah. All Rights Reserved.
 #
-
-source $DataflowTCL/defaults.tcl
-source $DataflowTCL/devices.tcl
+global SCIRUN_SRCDIR
+source $SCIRUN_SRCDIR/Dataflow/GUI/defaults.tcl
 
 set modname_font "-Adobe-Helvetica-Bold-R-Normal-*-12-120-75-*"
 set ui_font "-Adobe-Helvetica-Medium-R-Normal-*-12-120-75-*"
