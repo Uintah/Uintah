@@ -1912,38 +1912,6 @@ AC_SUBST(EXC_LIB_DIR_FLAG)
 AC_SUBST(DEF_EXC)
 sci_defs_files="$sci_defs_files include/sci_defs/exe_testdefs.h"
 
-##  --  search for jpeg and tiff -----------------------------------------
-
-if test "$sci_required_jpeg" = "yes"; then
-
-   if test "$with_jpeg"; then
-     _sci_lib="$with_jpeg/lib"
-   else
-     _sci_lib="$sci_thirdparty_libs"
-   fi 
-
-   SCI_TRY_LINK(JPEG,jpeg library,,,jpeg,$_sci_lib,,,required)
-
-fi #end sci_required_jpeg
-
-AC_SUBST(JPEG_LIB_FLAG)
-AC_SUBST(JPEG_LIB_DIR_FLAG)
-
-
-if test "$sci_required_tiff" = "yes"; then
-   if test "$with_tiff"; then
-     _sci_lib="$with_tiff/lib"
-   else
-     _sci_lib="$sci_thirdparty_libs"
-   fi
-
-   SCI_TRY_LINK(TIFF,tiff library,,,tiff,$_sci_lib,$M_LIB_DIR_FLAG $M_LIB_FLAG,,required)
-
-fi # end sci_required_tiff
-
-AC_SUBST(TIFF_LIB_FLAG)
-AC_SUBST(TIFF_LIB_DIR_FLAG)
-
 ##  --  search for gzopen (and related)  ----------------------------------
 
 ## Since variables create by this section are used to check for PNG
@@ -1976,6 +1944,38 @@ AC_SUBST(Z_LIB_DIR_FLAG)
 AC_SUBST(INC_Z_H)
 AC_SUBST(DEF_Z)
 sci_defs_files="$sci_defs_files include/sci_defs/z_testdefs.h"
+
+##  --  search for jpeg and tiff -----------------------------------------
+
+if test "$sci_required_jpeg" = "yes"; then
+
+   if test "$with_jpeg"; then
+     _sci_lib="$with_jpeg/lib"
+   else
+     _sci_lib="$sci_thirdparty_libs"
+   fi 
+
+   SCI_TRY_LINK(JPEG,jpeg library,,,jpeg,$_sci_lib,,,required)
+
+fi #end sci_required_jpeg
+
+AC_SUBST(JPEG_LIB_FLAG)
+AC_SUBST(JPEG_LIB_DIR_FLAG)
+
+
+if test "$sci_required_tiff" = "yes"; then
+   if test "$with_tiff"; then
+     _sci_lib="$with_tiff/lib"
+   else
+     _sci_lib="$sci_thirdparty_libs"
+   fi
+
+   SCI_TRY_LINK(TIFF,tiff library,,,tiff,$_sci_lib,$M_LIB_DIR_FLAG $M_LIB_FLAG,,required)
+
+fi # end sci_required_tiff
+
+AC_SUBST(TIFF_LIB_FLAG)
+AC_SUBST(TIFF_LIB_DIR_FLAG)
 
 ##  --  search for png --------------------------------------
 
