@@ -56,6 +56,10 @@ private:
 
   GuiInt       axis_;
   GuiInt    measure_;
+  int       old_generation_;
+  int       old_axis_;
+  int       old_measure_;
+  NrrdDataHandle last_nrrdH_;
 };
 
 DECLARE_MAKER(UnuProject)
@@ -63,7 +67,9 @@ DECLARE_MAKER(UnuProject)
 UnuProject::UnuProject(SCIRun::GuiContext *ctx) : 
   Module("UnuProject", ctx, Filter, "UnuNtoZ", "Teem"), 
   axis_(ctx->subVar("axis")),
-  measure_(ctx->subVar("measure"))
+  measure_(ctx->subVar("measure")),
+  old_generation_(-1), old_axis_(-1), old_measure_(-1),
+  last_nrrdH_(0)
 {
 }
 
@@ -95,21 +101,33 @@ UnuProject::execute()
   }
 
   reset_vars();
-
-  Nrrd *nin = nrrd_handle->nrrd;
-  Nrrd *nout = nrrdNew();
-
-  if (nrrdProject(nout, nin, axis_.get(), measure_.get(), nrrdTypeDefault)) {
-    char *err = biffGetDone(NRRD);
-    error(string("Error Projecting nrrd: ") + err);
-    free(err);
+  
+  bool need_execute = false;
+  if (old_axis_ != axis_.get() || 
+      old_measure_ != measure_.get() ||
+      old_generation_ != nrrd_handle->generation) {
+    old_axis_ = axis_.get();
+    old_measure_ = measure_.get();
+    old_generation_ = nrrd_handle->generation;
+    need_execute = true;
   }
 
-  NrrdData *nrrd = scinew NrrdData;
-  nrrd->nrrd = nout;
-  //nrrd->copy_sci_data(*nrrd_handle.get_rep());
-
-  onrrd_->send(NrrdDataHandle(nrrd));
+  if (need_execute) {
+    Nrrd *nin = nrrd_handle->nrrd;
+    Nrrd *nout = nrrdNew();
+    
+    if (nrrdProject(nout, nin, axis_.get(), measure_.get(), nrrdTypeDefault)) {
+      char *err = biffGetDone(NRRD);
+      error(string("Error Projecting nrrd: ") + err);
+      free(err);
+    }
+    
+    NrrdData *nrrd = scinew NrrdData;
+    nrrd->nrrd = nout;
+    //nrrd->copy_sci_data(*nrrd_handle.get_rep());
+    last_nrrdH_ = nrrd;
+  }
+  onrrd_->send(last_nrrdH_);
 }
 
 } // End namespace SCITeem

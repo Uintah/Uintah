@@ -65,6 +65,15 @@ public:
   GuiString       mins_;
   GuiString       maxs_;
   GuiString       type_;
+  string          old_bins_;
+  string          old_mins_;
+  string          old_maxs_;
+  string          old_type_;
+  int             weight_generation_;
+  int             inrrd1_generation_;
+  int             num_inrrd2_;
+  NrrdDataHandle  last_nrrdH_;
+
 
   unsigned int get_type(const string &t);
 };
@@ -74,7 +83,10 @@ DECLARE_MAKER(UnuJhisto)
 UnuJhisto::UnuJhisto(GuiContext* ctx)
   : Module("UnuJhisto", ctx, Source, "UnuAtoM", "Teem"),
     bins_(ctx->subVar("bins")), mins_(ctx->subVar("mins")), 
-    maxs_(ctx->subVar("maxs")), type_(ctx->subVar("type"))    
+    maxs_(ctx->subVar("maxs")), type_(ctx->subVar("type")),
+    old_bins_(""), old_mins_(""), old_maxs_(""), old_type_(""),
+    weight_generation_(-1), inrrd1_generation_(-1),
+    num_inrrd2_(-1)
 {
 }
 
@@ -108,10 +120,19 @@ void
   Nrrd *nin1 = 0;
   Nrrd *nout = nrrdNew();
 
-  if (!weight_->get(weight_handle))
+  bool need_execute = false;
+
+  if (!weight_->get(weight_handle)) {
     weight = 0;
-  else 
+    weight_generation_ = -1;
+  }
+  else {
+    if (weight_handle->generation != weight_generation_) {
+      need_execute = true;
+      weight_generation_ = weight_handle->generation;
+    }
     weight = weight_handle->nrrd;
+  }
 
   if (!inrrd1_->get(nrrd_handle1))
     return;
@@ -121,6 +142,11 @@ void
   if (!nrrd_handle1.get_rep()) {
     error("Empty InputNrrd1.");
     return;
+  }
+
+  if (inrrd1_generation_ != nrrd_handle1->generation) {
+    need_execute = true;
+    inrrd1_generation_ = nrrd_handle1->generation;
   }
 
   port_range_type nrange = get_iports("InputNrrd2");
@@ -149,111 +175,143 @@ void
     ++pi; 
   }
 
+  if ((nrrds.size()-1) != (unsigned)num_inrrd2_) {
+    need_execute = true;
+    num_inrrd2_ = nrrds.size()-1; // minus 1 accounts for inrrd1
+  }
+
   reset_vars();
 
-  // Determine the number of bins given
-  string bins = bins_.get();
-  int binsLen = 0;
-  char ch;
-  int i=0, start=0;
-  bool inword = false;
-  while (i < (int)bins.length()) {
-    ch = bins[i];
-    if(isspace(ch)) {
-      if (inword) {
+  if (old_bins_ != bins_.get() ||
+      old_mins_ != mins_.get() ||
+      old_maxs_ != maxs_.get() ||
+      old_type_ != type_.get()) {
+    old_bins_ = bins_.get();
+    old_mins_ = mins_.get();
+    old_maxs_ = maxs_.get();
+    old_type_ = type_.get();
+    need_execute = true;
+  }
+
+
+  if( need_execute) {
+    cerr << "RE-EXECUTING...\n";
+    // Determine the number of bins given
+    string bins = bins_.get();
+    int binsLen = 0;
+    char ch;
+    int i=0, start=0;
+    bool inword = false;
+    while (i < (int)bins.length()) {
+      ch = bins[i];
+      if(isspace(ch)) {
+	if (inword) {
+	  binsLen++;
+	  inword = false;
+	}
+      } else if (i == (int)bins.length()-1) {
 	binsLen++;
 	inword = false;
+      } else {
+	if(!inword) 
+	  inword = true;
       }
-    } else if (i == (int)bins.length()-1) {
-      binsLen++;
-      inword = false;
-    } else {
-      if(!inword) 
-	inword = true;
+      i++;
     }
-    i++;
-  }
-
-  if ((int)nrrds.size() != binsLen) {
-    error("Number of input nrrds is not equal to number of bin specifications.");
-    return;
-  }
-
-  // get bins
-  int *bin = new int[nrrds.size()];
-  i=0, start=0;
-  int which = 0, end=0, counter=0;
-  inword = false;
-  while (i < (int)bins.length()) {
-    ch = bins[i];
-    if(isspace(ch)) {
-      if (inword) {
-	end = i;
+    
+    if ((int)nrrds.size() != binsLen) {
+      error("Number of input nrrds is not equal to number of bin specifications.");
+      return;
+    }
+    
+    // get bins
+    int *bin = new int[nrrds.size()];
+    i=0, start=0;
+    int which = 0, end=0, counter=0;
+    inword = false;
+    while (i < (int)bins.length()) {
+      ch = bins[i];
+      if(isspace(ch)) {
+	if (inword) {
+	  end = i;
+	  bin[counter] = (atoi(bins.substr(start,end-start).c_str()));
+	  which++;
+	  counter++;
+	  inword = false;
+	}
+      } else if (i == (int)bins.length()-1) {
+	if (!inword) {
+	  start = i;
+	}
+	end = i+1;
 	bin[counter] = (atoi(bins.substr(start,end-start).c_str()));
 	which++;
 	counter++;
 	inword = false;
+      } else {
+	if(!inword) {
+	  start = i;
+	  inword = true;
+	}
       }
-    } else if (i == (int)bins.length()-1) {
-      if (!inword) {
-	start = i;
-      }
-      end = i+1;
-      bin[counter] = (atoi(bins.substr(start,end-start).c_str()));
-      which++;
-      counter++;
-      inword = false;
-    } else {
-      if(!inword) {
-	start = i;
-	inword = true;
-      }
+      i++;
     }
-    i++;
-  }
-
-  NrrdRange **range = (NrrdRange **)calloc(nrrds.size(), sizeof(NrrdRange*));
-  for (int d=0; d<(int)nrrds.size(); d++) {
-    range[d] = nrrdRangeNew(AIR_NAN, AIR_NAN);
-  }
-
-  // Determine the number of mins given
-  string mins = mins_.get();
-  int minsLen = 0;
-  i = 0;
-  inword = false;
-  while (i < (int)mins.length()) {
-    ch = mins[i];
-    if(isspace(ch)) {
-      if (inword) {
+    
+    NrrdRange **range = (NrrdRange **)calloc(nrrds.size(), sizeof(NrrdRange*));
+    for (int d=0; d<(int)nrrds.size(); d++) {
+      range[d] = nrrdRangeNew(AIR_NAN, AIR_NAN);
+    }
+    
+    // Determine the number of mins given
+    string mins = mins_.get();
+    int minsLen = 0;
+    i = 0;
+    inword = false;
+    while (i < (int)mins.length()) {
+      ch = mins[i];
+      if(isspace(ch)) {
+	if (inword) {
+	  minsLen++;
+	  inword = false;
+	}
+      } else if (i == (int)mins.length()-1) {
 	minsLen++;
 	inword = false;
+      } else {
+	if(!inword) 
+	  inword = true;
       }
-    } else if (i == (int)mins.length()-1) {
-      minsLen++;
-      inword = false;
-    } else {
-      if(!inword) 
-	inword = true;
+      i++;
     }
-    i++;
-  }
-
-  if ((int)nrrds.size() != minsLen) {
-    error("Number of input nrrds is not equal to number of mins specifications.");
-    return;
-  }
-
-  // get mins
-  double *min = new double[nrrds.size()];
-  i=0, start=0;
-  which = 0, end=0, counter=0;
-  inword = false;
-  while (i < (int)mins.length()) {
-    ch = mins[i];
-    if(isspace(ch)) {
-      if (inword) {
-	end = i;
+    
+    if ((int)nrrds.size() != minsLen) {
+      error("Number of input nrrds is not equal to number of mins specifications.");
+      return;
+    }
+    
+    // get mins
+    double *min = new double[nrrds.size()];
+    i=0, start=0;
+    which = 0, end=0, counter=0;
+    inword = false;
+    while (i < (int)mins.length()) {
+      ch = mins[i];
+      if(isspace(ch)) {
+	if (inword) {
+	  end = i;
+	  if (mins.substr(start,end-start) == "nan")
+	    min[counter] = AIR_NAN;
+	  else
+	    min[counter] = (atoi(mins.substr(start,end-start).c_str()));
+	  which++;
+	  counter++;
+	  inword = false;
+	}
+      } else if (i == (int)mins.length()-1) {
+	if (!inword) {
+	  start = i;
+	}
+	end = i+1;
 	if (mins.substr(start,end-start) == "nan")
 	  min[counter] = AIR_NAN;
 	else
@@ -261,70 +319,70 @@ void
 	which++;
 	counter++;
 	inword = false;
+      } else {
+	if(!inword) {
+	  start = i;
+	  inword = true;
+	}
       }
-    } else if (i == (int)mins.length()-1) {
-      if (!inword) {
-	start = i;
-      }
-      end = i+1;
-      if (mins.substr(start,end-start) == "nan")
-	min[counter] = AIR_NAN;
-      else
-	min[counter] = (atoi(mins.substr(start,end-start).c_str()));
-      which++;
-      counter++;
-      inword = false;
-    } else {
-      if(!inword) {
-	start = i;
-	inword = true;
-      }
+      i++;
     }
-    i++;
-  }
-
-
-  for (int d=0; d<(int)nrrds.size(); d++) {
-    range[d]->min = min[d];
-  }
-
-  // Determaxe the number of maxs given
-  string maxs = maxs_.get();
-  int maxsLen = 0;
-  inword = false;
-  i = 0;
-  while (i < (int)maxs.length()) {
-    ch = maxs[i];
-    if(isspace(ch)) {
-      if (inword) {
+    
+    
+    for (int d=0; d<(int)nrrds.size(); d++) {
+      range[d]->min = min[d];
+    }
+    
+    // Determaxe the number of maxs given
+    string maxs = maxs_.get();
+    int maxsLen = 0;
+    inword = false;
+    i = 0;
+    while (i < (int)maxs.length()) {
+      ch = maxs[i];
+      if(isspace(ch)) {
+	if (inword) {
+	  maxsLen++;
+	  inword = false;
+	}
+      } else if (i == (int)maxs.length()-1) {
 	maxsLen++;
 	inword = false;
+      } else {
+	if(!inword) 
+	  inword = true;
       }
-    } else if (i == (int)maxs.length()-1) {
-      maxsLen++;
-      inword = false;
-    } else {
-      if(!inword) 
-	inword = true;
+      i++;
     }
-    i++;
-  }
-
-  if ((int)nrrds.size() != maxsLen) {
-    error("Number of input nrrds is not equal to number of maxs specifications.");
-    return;
-  }
-
-  // get maxs
-  double *max = new double[nrrds.size()];
-  i=0, start=0;
-  which = 0, end=0, counter=0;
-  inword = false;
-  while (i < (int)maxs.length()) {
-    ch = maxs[i];
-    if(isspace(ch)) {
-      if (inword) {
-	end = i;
+    
+    if ((int)nrrds.size() != maxsLen) {
+      error("Number of input nrrds is not equal to number of maxs specifications.");
+      return;
+    }
+    
+    // get maxs
+    double *max = new double[nrrds.size()];
+    i=0, start=0;
+    which = 0, end=0, counter=0;
+    inword = false;
+    while (i < (int)maxs.length()) {
+      ch = maxs[i];
+      if(isspace(ch)) {
+	if (inword) {
+	  end = i;
+	  if (maxs.substr(start,end-start) == "nan")
+	    max[counter] = AIR_NAN;
+	  else
+	    max[counter] = (atof(maxs.substr(start,end-start).c_str()));
+	  which++;
+	  counter++;
+	  inword = false;
+	}
+      } else if (i == (int)maxs.length()-1) {
+	if (!inword) {
+	  start = i;
+	}
+	end = i+1;
 	if (maxs.substr(start,end-start) == "nan")
 	  max[counter] = AIR_NAN;
 	else
@@ -332,64 +390,52 @@ void
 	which++;
 	counter++;
 	inword = false;
+      } else {
+	if(!inword) {
+	  start = i;
+	  inword = true;
+	}
       }
-    } else if (i == (int)maxs.length()-1) {
-      if (!inword) {
-	start = i;
-      }
-      end = i+1;
-      if (maxs.substr(start,end-start) == "nan")
-	max[counter] = AIR_NAN;
-      else
-	max[counter] = (atof(maxs.substr(start,end-start).c_str()));
-      which++;
-      counter++;
-      inword = false;
-    } else {
-      if(!inword) {
-	start = i;
-	inword = true;
-      }
+      i++;
     }
-    i++;
-  }
-
-  for (int d=0; d<(int)nrrds.size(); d++) {
-    range[d]->max = max[d];
-  }
-
-  int clamp[NRRD_DIM_MAX];
-  for (int d=0; d<(int)nrrds.size(); d++) {
-    clamp[d] = 0;
-  }
-
-  if (nrrdHistoJoint(nout, (const Nrrd**)&nrrds[0], 
-		     (const NrrdRange**)range,
-		     (int)nrrds.size(), weight, bin, get_type(type_.get()), 
-		     clamp)) {
-    char *err = biffGetDone(NRRD);
-    error(string("Error performing Unu Jhisto: ") +  err);
-    free(err);
-    return;
-  }
     
-  // make call
-  
-  delete bin;
-  delete min;
-  delete max;
-
-
-  NrrdData *nrrd = scinew NrrdData;
-  nrrd->nrrd = nout;
-
-  NrrdDataHandle out(nrrd);
-
-  onrrd_->send(out);
+    for (int d=0; d<(int)nrrds.size(); d++) {
+      range[d]->max = max[d];
+    }
+    
+    int clamp[NRRD_DIM_MAX];
+    for (int d=0; d<(int)nrrds.size(); d++) {
+      clamp[d] = 0;
+    }
+    
+    if (nrrdHistoJoint(nout, (const Nrrd**)&nrrds[0], 
+		       (const NrrdRange**)range,
+		       (int)nrrds.size(), weight, bin, get_type(type_.get()), 
+		       clamp)) {
+      char *err = biffGetDone(NRRD);
+      error(string("Error performing Unu Jhisto: ") +  err);
+      free(err);
+      return;
+    }
+    
+    // make call
+    
+    delete bin;
+    delete min;
+    delete max;
+    
+    
+    NrrdData *nrrd = scinew NrrdData;
+    nrrd->nrrd = nout;
+    
+    last_nrrdH_ = nrrd;
+    
+  }
+  onrrd_->send(last_nrrdH_);
 }
-
+  
 void
- UnuJhisto::tcl_command(GuiArgs& args, void* userdata)
+  UnuJhisto::tcl_command(GuiArgs& args, void* userdata)
 {
   Module::tcl_command(args, userdata);
 }
