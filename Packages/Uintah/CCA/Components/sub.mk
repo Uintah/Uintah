@@ -4,6 +4,7 @@ SRCDIR := Packages/Uintah/CCA/Components
 
 SUBDIRS := \
 	$(SRCDIR)/DataArchiver \
+	$(SRCDIR)/Examples \
 	$(SRCDIR)/Schedulers \
 	$(SRCDIR)/SimulationController \
 	$(SRCDIR)/MPM \
