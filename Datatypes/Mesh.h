@@ -31,6 +31,7 @@ struct Element {
               // tensor of this element
     Mesh* mesh;
     Element(Mesh*, int, int, int, int);
+    Element(const Element&);
     void* operator new(size_t);
     void operator delete(void*, size_t);
     int face(int);
@@ -45,6 +46,7 @@ struct Node {
     Point p;
     Node(const Point&);
     Array1<int> elems;
+    Node(const Node&);
     void* operator new(size_t);
     void operator delete(void*, size_t);
 };
@@ -60,6 +62,7 @@ public:
     Array1<Element*> elems;
     Array1<Array1<double> > cond_tensors;
     Mesh();
+    Mesh(const Mesh&);
     Mesh(int nnodes, int nelems);
     virtual Mesh* clone();
     virtual ~Mesh();

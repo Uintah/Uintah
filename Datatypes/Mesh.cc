@@ -38,6 +38,18 @@ Mesh::Mesh(int nnodes, int nelems)
 {
 }
 
+Mesh::Mesh(const Mesh& copy)
+: nodes(copy.nodes.size()), elems(copy.elems.size()),
+  cond_tensors(copy.cond_tensors)
+{
+    int nnodes=nodes.size();
+    for(int i=0;i<nnodes;i++)
+	nodes[i]=new Node(*copy.nodes[i]);
+    int nelems=elems.size();
+    for(i=0;i<nelems;i++)
+	elems[i]=new Element(*copy.elems[i]);
+}
+
 Mesh::~Mesh()
 {
     for(int i=0;i<nodes.size();i++)
@@ -48,8 +60,7 @@ Mesh::~Mesh()
 
 Mesh* Mesh::clone()
 {
-    NOT_FINISHED("Mesh::clone()");
-    return 0;
+    return new Mesh(*this);
 }
 
 #define MESH_VERSION 1
@@ -98,8 +109,26 @@ Element::Element(Mesh* mesh, int n1, int n2, int n3, int n4)
     n[0]=n1; n[1]=n2; n[2]=n3; n[3]=n4;
 }
 
+Element::Element(const Element& copy)
+: mesh(copy.mesh), cond(copy.cond)
+{
+    faces[0]=copy.faces[0];
+    faces[1]=copy.faces[1];
+    faces[2]=copy.faces[2];
+    faces[3]=copy.faces[3];
+    n[0]=copy.n[0];
+    n[1]=copy.n[1];
+    n[2]=copy.n[2];
+    n[3]=copy.n[3];
+}
+
 Node::Node(const Point& p)
 : p(p), elems(0, 4)
+{
+}
+
+Node::Node(const Node& copy)
+: p(copy.p), elems(copy.elems)
 {
 }
 
@@ -409,8 +438,12 @@ int Element::orient()
 
 double Element::volume()
 {
-    NOT_FINISHED("Element::volume()");
-    return 0;
+    double a1=+x2*(y3*z4-y4*z3)+x3*(y4*z2-y2*z4)+x4*(y2*z3-y3*z2);
+    double a2=-x3*(y4*z1-y1*z4)-x4*(y1*z3-y3*z1)-x1*(y3*z4-y4*z3);
+    double a3=+x4*(y1*z2-y2*z1)+x1*(y2*z4-y4*z2)+x2*(y4*z1-y1*z4);
+    double a4=-x1*(y2*z3-y3*z2)-x2*(y3*z1-y1*z3)-x3*(y1*z2-y2*z1);
+    double iV6=1./(a1+a2+a3+a4);
+    return ???;
 }
 
 void Mesh::get_bounds(Point& min, Point& max)
