@@ -399,7 +399,7 @@ fi
 
 if test $do_impm -eq 1; then
     CASE=IMPM
-    opts=impm
+    opts=-impm
     impm_test
 fi
 
