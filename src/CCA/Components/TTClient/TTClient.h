@@ -36,7 +36,7 @@
 //namespace SCIRun {
 class TTClient;  
 
-class ttUIPort : public virtual gov::cca::ports::UIPort {
+class ttUIPort : public virtual sci::cca::ports::UIPort {
 public:
    virtual ~ttUIPort(){}
    virtual int ui();
@@ -44,7 +44,7 @@ public:
    TTClient *TTCl;
 };
 
-class ttGoPort : public virtual gov::cca::ports::GoPort {
+class ttGoPort : public virtual sci::cca::ports::GoPort {
 public:
    virtual ~ttGoPort(){}
    virtual int go();
@@ -53,21 +53,21 @@ public:
 };
 
 
-class TTClient : public gov::cca::Component{
+class TTClient : public sci::cca::Component{
                 
   public:
     TTClient();
     virtual ~TTClient();
 
-    virtual void setServices(const gov::cca::Services::pointer& svc);
-    gov::cca::Services::pointer getServices(){return services;}
+    virtual void setServices(const sci::cca::Services::pointer& svc);
+    sci::cca::Services::pointer getServices(){return services;}
   private:
 
     TTClient(const TTClient&);
     TTClient& operator=(const TTClient&);
     ttUIPort uiPort;
     ttGoPort goPort;
-    gov::cca::Services::pointer services;
+    sci::cca::Services::pointer services;
   };
 //}
 
