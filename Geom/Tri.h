@@ -42,6 +42,7 @@ public:
 			    Array1<GeomObj*>& dontfree);
     virtual void intersect(const Ray& ray, Material*,
 			   Hit& hit);
+    virtual Vector normal(const Point& p);
 };
 
 #endif /* SCI_Geom_Tri_h */
