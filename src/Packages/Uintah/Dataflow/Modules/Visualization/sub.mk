@@ -35,7 +35,6 @@ PSELIBS := \
         Core/Geom                      \
         Core/GeomInterface             \
 	Core/Geometry                  \
-	Core/GLVolumeRenderer          \
 	Core/Util                      \
 	Packages/Uintah/Core/Grid          \
 	Packages/Uintah/Core/Math          \
@@ -46,6 +45,7 @@ PSELIBS := \
 	Packages/Uintah/Core/Datatypes     \
 	Packages/Uintah/Core/DataArchive     \
 	Packages/Uintah/Dataflow/Modules/Selectors
+
 
 LIBS := $(XML_LIBRARY) $(M_LIBRARY)
 
