@@ -16,7 +16,7 @@
 */
 
 
-class z extends CIA.Throwable {
+class z extends SIDL.Throwable {
 };
 
 interface x {

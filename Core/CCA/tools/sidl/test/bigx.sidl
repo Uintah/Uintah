@@ -27,13 +27,13 @@ package XXX {
      * identification.
      */
     interface Interface {
-	CIA.Object addReference();
+	SIDL.Object addReference();
 	void deleteReference();
-	CIA.Class getClass();
+	SIDL.Class getClass();
 	bool isSame(in Interface object);
 	bool isInstanceOf(in Class type);
 	bool supportsInterface(in Class type);
-	CIA.Interface queryInterface(in Class type);
+	SIDL.Interface queryInterface(in Class type);
     };
 
     /*
@@ -46,13 +46,13 @@ package XXX {
      * IDL type information
      */
     class Object implements Interface {
-	final CIA.Object xxaddReference();
+	final SIDL.Object xxaddReference();
 	final void xxdeleteReference();
-	final CIA.Class xxgetClass();
+	final SIDL.Class xxgetClass();
 	final bool xxisSame(in Interface object);
 	final bool xxisInstanceOf(in Class type);
 	bool supportsInterface(in Class type);
-	CIA.Interface queryInterface(in Class type);
+	SIDL.Interface queryInterface(in Class type);
     };
 
     /*
@@ -103,18 +103,18 @@ package XXX {
      * and dynamic method invocation.
      */
     class Class {
-	static CIA.Class lookupClass(in string class_name)
-	    throws CIA.ClassNotFoundException;
-	final CIA.Object xxnewInstance() throws CIA.InstantiationException;
+	static SIDL.Class lookupClass(in string class_name)
+	    throws SIDL.ClassNotFoundException;
+	final SIDL.Object xxnewInstance() throws SIDL.InstantiationException;
 	final bool xxisInterface();
 	final bool xxisArray();
 	final bool xxisPrimitive();
 	final string xxgetName();
-	final CIA.Class xxgetSuperclass();
-	final array<CIA.Class,1> xxgetInterfaces();
-	final CIA.Class xxgetCore/CCA/ComponentType();
+	final SIDL.Class xxgetSuperclass();
+	final array<SIDL.Class,1> xxgetInterfaces();
+	final SIDL.Class xxgetCore/CCA/ComponentType();
 	final array<Method,1> xxgetMethods();
-	final CIA.Method xxgetMethod() throws CIA.NoSuchMethodException;
+	final SIDL.Method xxgetMethod() throws SIDL.NoSuchMethodException;
 	// and so on - see the Java spec for more information
     };
 
@@ -124,15 +124,15 @@ package XXX {
      * allow for dynamic invocation of methods by GUI builder tools.
      */
     class Method {
-	final CIA.Class xxgetDeclaringClass();
+	final SIDL.Class xxgetDeclaringClass();
 	final string xxgetName();
-	final CIA.Class xxgetReturnType();
-	final array<CIA.Class,1> xxgetParameterTypes();
-	final array<CIA.Class,1> xxgetExceptionTypes();
-	final void xxinvokeStatic(in array<CIA.Object,1> arguments)
-	    throws CIA.IllegalArgumentException;
+	final SIDL.Class xxgetReturnType();
+	final array<SIDL.Class,1> xxgetParameterTypes();
+	final array<SIDL.Class,1> xxgetExceptionTypes();
+	final void xxinvokeStatic(in array<SIDL.Object,1> arguments)
+	    throws SIDL.IllegalArgumentException;
 	final void xxinvokeMember(in Object this, in array<Object,1> arguments)
-	    throws CIA.IllegalArgumentException;
+	    throws SIDL.IllegalArgumentException;
 	// and so on - see the Java spec for more information
     };
 };
