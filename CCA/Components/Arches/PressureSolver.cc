@@ -361,8 +361,8 @@ PressureSolver::sched_pressureLinearSolve(const LevelP& level,
 		Ghost::None, zeroGhostCells);
 
   // computes global residual
-  //      tsk->computes(new_dw, d_lab->d_presResidPSLabel, matlIndex, patch);
-  //      tsk->computes(new_dw, d_lab->d_presTruncPSLabel, matlIndex, patch);
+  tsk->computes(d_lab->d_presResidPSLabel);
+  tsk->computes(d_lab->d_presTruncPSLabel);
 
   tsk->computes(d_lab->d_pressureSPBCLabel);
 
@@ -889,10 +889,10 @@ PressureSolver::pressureLinearSolve (const ProcessorGroup* pc,
 		 d_lab->d_presNonLinSrcPBLMLabel, 
 		 matlIndex, patch, Ghost::None, zeroGhostCells);
 
+#if 0
   // compute eqn residual, L1 norm
   new_dw->allocate(pressureVars.residualPressure, d_lab->d_pressureRes,
 			  matlIndex, patch);
-#if 0
   d_linearSolver->computePressResidual(pc, patch, old_dw, new_dw, 
 				       &pressureVars);
 #else
@@ -1776,8 +1776,8 @@ PressureSolver::sched_pressureLinearSolvePred(const LevelP& level,
 		Ghost::None, zeroGhostCells);
 
   // computes global residual
-  //      tsk->computes(new_dw, d_lab->d_presResidPSLabel, matlIndex, patch);
-  //      tsk->computes(new_dw, d_lab->d_presTruncPSLabel, matlIndex, patch);
+  tsk->computes(d_lab->d_presResidPSLabel);
+  tsk->computes(d_lab->d_presTruncPSLabel);
 #ifdef correctorstep
   tsk->computes(d_lab->d_pressurePredLabel);
 #else
@@ -1888,10 +1888,10 @@ PressureSolver::pressureLinearSolvePred (const ProcessorGroup* pc,
 		 d_lab->d_presNonLinSrcPBLMLabel, 
 		 matlIndex, patch, Ghost::None, zeroGhostCells);
 
+#if 0
   // compute eqn residual, L1 norm
   new_dw->allocate(pressureVars.residualPressure, d_lab->d_pressureRes,
 			  matlIndex, patch);
-#if 0
   d_linearSolver->computePressResidual(pc, patch, old_dw, new_dw, 
 				       &pressureVars);
 #else
@@ -2176,8 +2176,8 @@ PressureSolver::sched_pressureLinearSolveCorr(const LevelP& level,
 		Ghost::None, zeroGhostCells);
 
   // computes global residual
-  //      tsk->computes(new_dw, d_lab->d_presResidPSLabel, matlIndex, patch);
-  //      tsk->computes(new_dw, d_lab->d_presTruncPSLabel, matlIndex, patch);
+  tsk->computes(d_lab->d_presResidPSLabel);
+  tsk->computes(d_lab->d_presTruncPSLabel);
 
   tsk->computes(d_lab->d_pressureSPBCLabel);
 
@@ -2281,10 +2281,10 @@ PressureSolver::pressureLinearSolveCorr (const ProcessorGroup* pc,
 		 d_lab->d_presNonLinSrcCorrLabel, 
 		 matlIndex, patch, Ghost::None, zeroGhostCells);
 
+#if 0
   // compute eqn residual, L1 norm
   new_dw->allocate(pressureVars.residualPressure, d_lab->d_pressureRes,
 			  matlIndex, patch);
-#if 0
   d_linearSolver->computePressResidual(pc, patch, old_dw, new_dw, 
 				       &pressureVars);
 #else
