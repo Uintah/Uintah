@@ -44,6 +44,9 @@ extern "C" { // Linux uuid.h doesn't have this, so we need extern C here
 using namespace std;
 extern bool doing_cia;
 
+//Uncomment line below should debugging files of data transfer be created
+//#define MxNDEBUG
+
 #ifdef OLD_STUFF
 static string handle_class = "\
 class @ {\n\
@@ -2205,9 +2208,11 @@ void NamedType::emit_unmarshal(EmitState& e, const string& arg,
 	e.out << leader2 << "}\n";   
 	e.out << leader2 << "}\n";
 
+#ifdef MxNDEBUG
 	//TEMPORARY TEST:
 	e.out << leader2 << "//Test\n";
 	e.out << leader2 << "if (1) {\n";
+	string testleader = e.out.push_leader();
 	e.out << leader2 << "std::ostringstream fname;\n";
 	e.out << leader2 << "fname << \"" << distarr->getName() << "\" << \"_\" << _refL[0].par_rank << \".caller.out\";\n";
 	e.out << leader2 << "d_sched->dbg.open(fname.str().c_str(), std::ios_base::app);\n";
@@ -2224,8 +2229,10 @@ void NamedType::emit_unmarshal(EmitState& e, const string& arg,
 	}
 	e.out << leader2 << "if (d_sched->dbg)\n";
 	e.out << leader2 << "  d_sched->dbg.close();\n";
+	e.out.pop_leader(testleader);
 	e.out << leader2 << "}\n";
 	//EOF TEMPORARY TEST
+#endif
 
 	// *********** END OF OUT arg -- Special Redis ******************************	
       }
@@ -2239,7 +2246,8 @@ void NamedType::emit_unmarshal(EmitState& e, const string& arg,
 	e.out << leader2 << arr_ptr_name << " = static_cast< " << arr_t->cppfullname(0) 
 	      << "*>(_sc->d_sched->getCompleteArray(\"" << Dname << "\"));\n";
 	e.out << leader2 << "#define " << arg << " (* " << arr_ptr_name << ")\n";
-	
+
+#ifdef MxNDEBUG	
 	//TEMPORARY TEST
 	e.out << leader2 << "//Test\n";
 	e.out << leader2 << "if (1) {\n";
@@ -2263,6 +2271,7 @@ void NamedType::emit_unmarshal(EmitState& e, const string& arg,
 	e.out << leader2 << " _sc->d_sched->dbg.close();\n";
 	e.out << leader2 << "}\n";
 	//EOF TEMPORARY TEST
+#endif
 	// *********** END OF IN arg -- No Special Redis ******************************
       }
       else if (ctx == ArgOut) {
@@ -2392,6 +2401,7 @@ void NamedType::emit_marshal(EmitState& e, const string& arg,
 	e.out << "\n";
 	e.out << leader2 << "//Redistribute the array:\n";
 	e.out << leader2 << "if (1) { //Hack to prevent varable shadowing on rl & this_rep\n";
+	string ifone = e.out.push_leader(); 
 	e.out << leader2 << "SCIRun::descriptorList rl = d_sched->getRedistributionReps(\"" << distarr->getName() << "\");\n";
 	e.out << leader2 << "SCIRun::MxNArrayRep* this_rep = d_sched->callerGetCallerRep(\"" 
 	      << distarr->getName() << "\");\n";
@@ -2443,6 +2453,7 @@ void NamedType::emit_marshal(EmitState& e, const string& arg,
 	e.out << leader2 << "  message->sendMessage(_handler);\n";
 	e.out << leader2 << "  message->destroyMessage();\n";
 	e.out << leader2 << "}\n";
+	e.out.pop_leader(ifone);
 	e.out << leader2 << "}\n"; //if (1) ...
 	// *********** END OF IN arg -- Special Redis ******************************
       }
