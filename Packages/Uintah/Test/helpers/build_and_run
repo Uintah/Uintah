@@ -5,45 +5,54 @@
 mode=$1 # dbg or opt
 CONFIGURE_ARGS=$2 # configure command line arguments
 
-mkdir "$BUILDROOT"/dbg
-mkdir "$BUILDROOT"/dbg/build
-cd "$BUILDROOT"/dbg/build
+if [ ! -d "${BUILDROOT}/${mode}/build" ]; then
+  mkdir "${BUILDROOT}/${mode}/build"
+fi
 
-echo "Configuring dbg build at `date`"
-../../src/configure $CONFIGURE_ARGS > "$BUILDROOT"/dbg/configure.log 2>&1
+cd "${BUILDROOT}/${mode}/build"
+
+echo "Configuring ${mode} build at `date` using these arguments"
+echo "../../src/configure $CONFIGURE_ARGS" > configure_command
+chmod a+x configure_command
+./configure_command > "$BUILDROOT"/${mode}/configure.log 2>&1
 retval=$?
 if [ $retval != "0" ]; then
-    echo "Configure failed with code $retval"
-    echo "Look at ${BUILDROOT}/dbg/configure.log for more information"
+    echo "*** Configure failed with code $retval"
+    echo ""
+    echo "Showing configure log:"
+    cat "${BUILDROOT}/${mode}/configure.log"
 
-    if [ ! -f "${BUILD_DIR}/configure-dbg.lock" ]; then
-      # failed dbg configure, set a lock
-      ln -s "$BUILDROOT" "${BUILD_DIR}/configure-dbg.lock"
+    cd "${BUILD_DIR}"
+    if [ ! -d "configure-${mode}.lock" ]; then
+      # failed ${mode} configure, set a lock
+      echo "ln -s $BUILDROOT configure-${mode}.lock"
+      ln -s "$BUILDROOT" "configure-${mode}.lock"
     fi
     exit 1
 fi
 
-if [ -f "${BUILD_DIR}/configure-dbg.lock" ]; then
+if [ -d "${BUILD_DIR}/configure-${mode}.lock" ]; then
     # configured successfully - remove old configure lock 
-    rm "${BUILD_DIR}/configure-dbg.lock"
+    rm "${BUILD_DIR}/configure-${mode}.lock"
 fi
 
 echo "Starting $mode build at `date`"
 
 cd "${BUILDROOT}/${mode}/build"
 
-rm -f "make.log"
+rm -f "../make.log"
 while [ ! -x "${BUILDROOT}/${mode}/build/Packages/Uintah/StandAlone/sus" ]; do
     nice /usr/local/gnu/bin/make -k -j$MAKE_PARALLELISM >> ../make.log 2>&1
     retval=$?
     if [ $retval != "0" ]; then
-	echo "Make failed with code $retval"
+	echo "*** Make failed with code $retval"
 	echo ""
+	echo "Showing make errors:"
 	# show the compile errors (just the stuff it can't compile)
 	nice /usr/local/gnu/bin/make -k -j$MAKE_PARALLELISM
 
 	# failed make, set a lock for this build
-	if [ ! -f "${BUILD_DIR}/make-${mode}.lock" ]; then
+	if [ ! -d "${BUILD_DIR}/make-${mode}.lock" ]; then
 	    ln -s "$BUILDROOT" "${BUILD_DIR}/make-${mode}.lock"
 	fi
 	exit 1
@@ -58,13 +67,13 @@ if [ $retval != "0" ]; then
     echo ""
 
     # failed make, set a lock for this build
-    if [ ! -f "${BUILD_DIR}/make-${mode}.lock" ]; then
+    if [ ! -d "${BUILD_DIR}/make-${mode}.lock" ]; then
 	ln -s "$BUILDROOT" "${BUILD_DIR}/make-${mode}.lock"
     fi
     exit 1
 fi
 
-if [ -f "${BUILD_DIR}/make-${mode}.lock" ]; then
+if [ -d "${BUILD_DIR}/make-${mode}.lock" ]; then
     # built successfully - remove old make lock 
     rm "${BUILD_DIR}/make-${mode}.lock"
 fi
@@ -97,7 +106,7 @@ for test in TestScripts/*; do
 	    echo "TestScripts/$test StandAlone inputs goldStandard $mode $PARALLELISM "'$1' > "do${test}tests"
 	    /bin/chgrp csafe "do${test}tests"
 	    /bin/chmod g+rx "do${test}tests"
-	    "./do${test}tests" > "${test}.log"
+	    "./do${test}tests" > "${test}.log"  2>&1
 	    retval=$?
 
 	    cat "${test}.log" >> "$summary_log"
@@ -105,14 +114,13 @@ for test in TestScripts/*; do
 	    if [ $retval == "0" ]; then
 		echo "   Test Passed"
 		# It was successful, so it can remove the lock
-		if [ -f "${BUILD_DIR}/${test}-${mode}.lock" ]; then
+		if [ -d "${BUILD_DIR}/${test}-${mode}.lock" ]; then
 		    # test ran successfully - remove the lock
 		    rm "${BUILD_DIR}/${test}-${mode}.lock"
 		fi
 	    else
-		echo "   Test Failed"
-		echo "Test failed with code $retval"
-		if [ ! -f "${BUILD_DIR}/${test}-${mode}.lock" ]; then
+		echo "*** Test failed with code $retval"
+		if [ ! -d "${BUILD_DIR}/${test}-${mode}.lock" ]; then
 		    ln -s "$BUILDROOT" "${BUILD_DIR}/${test}-${mode}.lock"
 		fi
 		failed=1
@@ -124,7 +132,7 @@ done
 if [ $failed == "0" ]; then
     echo "All $mode tests passed!"
 else
-    echo "Some $mode tests failed."
+    echo "*** Some $mode tests failed."
 fi
 
 exit $failed
