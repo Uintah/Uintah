@@ -47,6 +47,7 @@ public:
   virtual const string get_type_name(int n = -1) const;
   static PersistentTypeID type_id;
   virtual void io(Piostream &stream);
+  virtual const TypeDescription* get_type_description() const;
 private:
   static Persistent* maker();
 };
@@ -141,23 +142,29 @@ PointCloud<Data>::get_type_name(int n = -1) const
   return type_name(n);
 }
 
+template <class T>
+const TypeDescription* 
+get_type_description(PointCloud<T>*)
+{
+  static TypeDescription* td = 0;
+  static string name("PointCloud");
+  static string path(__FILE__);
+  if(!td){
+    const TypeDescription *sub = SCIRun::get_type_description((T*)0);
+    TypeDescription::td_vec *subs = scinew TypeDescription::td_vec(1);
+    (*subs)[0] = sub;
+    td = scinew TypeDescription(name, subs, path);
+  }
+  return td;
+}
+
+template <class T>
+const TypeDescription* 
+PointCloud<T>::get_type_description() const 
+{
+  return SCIRun::get_type_description((PointCloud<T>*)0);
+}
 
 } // end namespace SCIRun
 
 #endif // Datatypes_PointCloud_h
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
