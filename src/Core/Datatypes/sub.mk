@@ -32,7 +32,27 @@ SRCS += $(GENSRCS) $(SRCDIR)/TriSurface.cc $(SRCDIR)/BasicSurfaces.cc \
 	$(SRCDIR)/cMatrix.cc $(SRCDIR)/cSMatrix.cc $(SRCDIR)/cVector.cc \
 	$(SRCDIR)/SurfTree.cc $(SRCDIR)/ScalarFieldRGCC.cc \
 	$(SRCDIR)/VectorFieldRGCC.cc  \
-     	$(SRCDIR)/Path.cc $(SRCDIR)/CameraView.cc $(SRCDIR)/templates.cc
+	$(SRCDIR)/Path.cc $(SRCDIR)/CameraView.cc $(SRCDIR)/templates.cc \
+         $(SRCDIR)/Brick.cc \
+         $(SRCDIR)/GLTexture3D.cc \
+         $(SRCDIR)/GLTextureIterator.cc \
+         $(SRCDIR)/GLTexRenState.cc \
+         $(SRCDIR)/GLOverOp.cc \
+         $(SRCDIR)/GLMIP.cc \
+         $(SRCDIR)/GLVolRenState.cc \
+         $(SRCDIR)/GLAttenuate.cc \
+         $(SRCDIR)/GLPlanes.cc \
+         $(SRCDIR)/FullRes.cc \
+         $(SRCDIR)/FullResIterator.cc \
+         $(SRCDIR)/LOS.cc \
+         $(SRCDIR)/LOSIterator.cc \
+         $(SRCDIR)/ROI.cc \
+         $(SRCDIR)/ROIIterator.cc \
+         $(SRCDIR)/TexPlanes.cc \
+         $(SRCDIR)/GLVolumeRenderer.cc \
+         $(SRCDIR)/Polygon.cc \
+         $(SRCDIR)/SliceTable.cc \
+         $(SRCDIR)/VolumeUtils.cc \
 
 
 $(SRCDIR)/ScalarFieldRG.h: $(SRCDIR)/ScalarFieldRGTYPE.h
@@ -89,7 +109,7 @@ $(SRCDIR)/ScalarFieldRGdouble.cc: $(SRCDIR)/ScalarFieldRGTYPE.cc $(SRCDIR)/Scala
 PSELIBS := SCICore/Persistent SCICore/Exceptions SCICore/Containers \
 	SCICore/Thread SCICore/Geometry SCICore/Geom SCICore/TclInterface \
 	SCICore/Math
-LIBS := -lm
+LIBS := $(GL_LIBS) -lm
 
 include $(SRCTOP)/scripts/smallso_epilogue.mk
 
@@ -99,6 +119,9 @@ clean::
 
 #
 # $Log$
+# Revision 1.10  2000/12/09 17:36:55  moulding
+# Port Kurt' volume rendering stuff to linux and move it to PSECommon.
+#
 # Revision 1.9  2000/08/20 04:19:50  samsonov
 # path to CameraView.cc
 #
