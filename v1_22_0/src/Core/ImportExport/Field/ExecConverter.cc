@@ -221,7 +221,7 @@ TextCurveField_reader(ProgressReporter *pr, const char *filename)
 {
   const string command =
     string(SCIRUN_OBJDIR) + "/StandAlone/convert/" +
-    "TextToCurveFieldToText %e.pts %e.edge %t";
+    "TextToCurveField %e.pts %e.edge %t -binOutput";
   return Exec_reader(pr, filename, command);
 }
 
