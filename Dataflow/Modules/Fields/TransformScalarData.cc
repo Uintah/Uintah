@@ -87,8 +87,8 @@ TransformScalarData::execute()
     return;
   }
   
-  ScalarFieldInterface *sfi;
-  if ((sfi = ifieldhandle->query_scalar_interface(this).get_rep()) == 0)
+  ScalarFieldInterfaceHandle sfi;
+  if ((sfi = ifieldhandle->query_scalar_interface(this)).get_rep() == 0)
   {
     error("This module only works on scalar fields.");
     return;
