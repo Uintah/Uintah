@@ -18,7 +18,6 @@ static bool            usingMPI = false;
 static int             maxThreads = 1;
 static MPI_Comm        worldComm = -1;
 static ProcessorGroup* rootContext = 0;
-static int             PSE_MPI_DEBUG_LEVEL = 0;
 
 static
 void
@@ -122,6 +121,9 @@ Parallel::getRootProcessorGroup()
 
 //
 // $Log$
+// Revision 1.12  2000/09/26 21:44:34  dav
+// removed PSE_MPI_DEBUG_LEVEL
+//
 // Revision 1.11  2000/09/26 21:42:34  dav
 // added getMaxThreads
 //
