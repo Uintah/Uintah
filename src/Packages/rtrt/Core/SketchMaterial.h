@@ -18,14 +18,32 @@ int _gageLocationSet (gageContext *ctx, gage_t x, gage_t y, gage_t z);
 
 namespace rtrt {
 
+  class SketchMaterialBase {
+  public:
+    //  The thickness of the silhouette edges.  The gui version is the
+    //  one controlled by the gui, while the other is the one used for
+    //  rendering (and is the inverse).
+    float sil_thickness, inv_sil_thickness, gui_sil_thickness;
+    // This is the color the silhouette edge
+    Color sil_color, gui_sil_color;
+
+    SketchMaterialBase(float sil_thickness):
+      sil_thickness(sil_thickness), inv_sil_thickness(1/sil_thickness),
+      gui_sil_thickness(sil_thickness),
+      sil_color(0,0,0), gui_sil_color(0,0,0)
+    {}
+  };
+  
 template<class ArrayType, class DataType>  
-class SketchMaterial : public Material {
+class SketchMaterial : public SketchMaterialBase, public Material {
 protected:
   ArrayType data;
   int nx, ny, nz;
   BBox bbox;
   Vector inv_diag;
   float ambient, specular, spec_coeff, diffuse;
+  // This is the array used for the silhouette edge lookup
+  Array2<float> sil_trans_funct;
 
   gageContext *main_ctx;
   gagePerVolume *pvl;
@@ -39,7 +57,8 @@ protected:
 	      const Color &object_color, const Color &light_color) const;
   int rtrtGageProbe(gageContext *ctx, gage_t x, gage_t y, gage_t z);
 public:
-  SketchMaterial(ArrayType &indata, BBox &bbox);
+  SketchMaterial(ArrayType &indata, BBox &bbox, Array2<float>& sil_trans,
+		 float sil_thickness);
   virtual ~SketchMaterial();
   
   virtual void shade(Color& result, const Ray& ray,
@@ -51,7 +70,8 @@ public:
 };
 
 template<class ArrayType, class DataType>
-SketchMaterial<ArrayType, DataType>::SketchMaterial(ArrayType &indata, BBox &bbox):
+SketchMaterial<ArrayType, DataType>::SketchMaterial(ArrayType &indata, BBox &bbox, Array2<float>& sil_trans, float sil_thickness):
+  SketchMaterialBase(sil_thickness),
   bbox(bbox), ambient(0.5f), specular(1), spec_coeff(64), diffuse(1)
 {
   char me[] = "SketchMaterial::SketchMaterial";
@@ -78,22 +98,18 @@ SketchMaterial<ArrayType, DataType>::SketchMaterial(ArrayType &indata, BBox &bbo
     inv_diag.z(0);
   else
     inv_diag.z(1.0/diag.z());
+
+  // Set up the silhouette transfer function
+  sil_trans_funct.share(sil_trans);
   
   // Set up the fake nrrd we can use to setup the gage stuff
   Nrrd *nin = nrrdNew();
   nrrdWrap(nin, data.get_dataptr(), nrrdTypeShort, 3, nx, ny, nz);
-  // We need default spacings for the data.
-  // Should this be computed based on the physical size of the volume?
-#if 0
-  nrrdAxisSpacingSet(nin, 0);
-  nrrdAxisSpacingSet(nin, 1);
-  nrrdAxisSpacingSet(nin, 2);
-#else
-  // This assums node centered data, which is what rtrt uses.
+  // Setup the spacing for the data.  This assums node centered data,
+  // which is what rtrt uses.
   nin->axis[0].spacing = diag.x()/(nx-1);
   nin->axis[1].spacing = diag.y()/(ny-1);
   nin->axis[2].spacing = diag.z()/(nz-1);
-#endif
 
   //  fprintf(stderr, "%s: sizeof(gageContext) = %x (%d)\n", me, sizeof(gageContext), sizeof(gageContext));
   //  fprintf(stderr, "%s: sizeof(gagePerVolume) = %x (%d)\n", me, sizeof(gagePerVolume), sizeof(gagePerVolume));
@@ -238,6 +254,7 @@ SketchMaterial<ArrayType, DataType>::shade(Color& result, const Ray& ray,
 	gage_t *k1 = gageAnswerPointer(gctx, gctx->pvl[0], gageSclK1);
 	gage_t *k2 = gageAnswerPointer(gctx, gctx->pvl[0], gageSclK2);
 	gage_t *norm = gageAnswerPointer(gctx, gctx->pvl[0], gageSclGradVec);
+	gage_t *geomt = gageAnswerPointer(gctx, gctx->pvl[0], gageSclGeomTens);
 	
 	//      printf("k1 = %g, k2 = %g, norm = [%g, %g, %g]\n",*k1, *k2,
 	//	     norm[0], norm[1], norm[2]);
@@ -254,9 +271,42 @@ SketchMaterial<ArrayType, DataType>::shade(Color& result, const Ray& ray,
 	Light* light=cx->scene->light(0);
 	Vector light_dir;
 	light_dir = light->get_pos()-hit_pos;
+
+	Color surface;
+	surface = color(normal, ray.direction(), light_dir.normal(), 
+			Color(1,0.3,0.2), light->get_color());
+
+	// Cool, now let's lookup the silhouette contribution.
 	
-	result = color(normal, ray.direction(), light_dir.normal(), 
-		       Color(1,0.3,0.2), light->get_color());
+	// We need a dot product of the normal with the view vector.
+	// This should be between -1 and 1;
+	Vector view = -ray.direction().normal();
+	double eye_dot_norm = Dot(view, normal);
+
+	// Now the multiplication of the geom tensor with the view.
+	double viewx = view.x();
+	double viewy = view.y();
+	double viewz = view.z();
+	double eye_gt_eye =
+	  viewx*(viewx * geomt[0] + viewy * geomt[1] + viewz * geomt[2]) +
+	  viewy*(viewx * geomt[3] + viewy * geomt[4] + viewz * geomt[5]) +
+	  viewz*(viewx * geomt[6] + viewy * geomt[7] + viewz * geomt[8]);
+
+	// Now to compute the indecies for the lookup, with bounds checks
+	int silx = static_cast<int>((eye_dot_norm + 1) * 0.5 *
+				    (sil_trans_funct.dim1()-1));
+	int sily = static_cast<int>(eye_gt_eye * inv_sil_thickness *
+				    (sil_trans_funct.dim2()-1));
+	//	cerr << "eye_dot_norm = "<<eye_dot_norm<<", eye_gt_eye = "<<eye_gt_eye<<", silx,y = ("<<silx<<", "<<sily<<")\n";cerr.flush();
+	if (silx < 0 || silx >= sil_trans_funct.dim1())
+	  silx = 0;
+	if (sily < 0 || sily >= sil_trans_funct.dim2())
+	  sily = 0;
+
+	// Bounds checks on sil_val???
+	float sil_val = sil_trans_funct(silx, sily);
+	// Now to do a lerp
+	result = surface * sil_val + sil_color * (1 - sil_val);
       } else {
 	return;
       }
@@ -398,8 +448,20 @@ SketchMaterial<ArrayType, DataType>::color(const Vector &N, const Vector &V,
 
 template<class ArrayType, class DataType>
 void
-SketchMaterial<ArrayType, DataType>::animate(double t, bool& changed) {
+SketchMaterial<ArrayType, DataType>::animate(double /*t*/, bool& changed) {
   // Here we can update all the gage stuff if we need to.
+  if (gui_sil_thickness != sil_thickness ||
+      gui_sil_color.red() != sil_color.red() ||
+      gui_sil_color.green() != sil_color.green() ||
+      gui_sil_color.blue() != sil_color.blue()) {
+    sil_thickness = gui_sil_thickness;
+    if (gui_sil_thickness != 0)
+      inv_sil_thickness = 1/gui_sil_thickness;
+    else
+      inv_sil_thickness = 0;
+    sil_color = gui_sil_color;
+    changed = true;
+  }
 }
 
 } // end namespace rtrt
