@@ -36,7 +36,7 @@ namespace MIT {
   
 
 SamplerInterface::SamplerInterface( Sampler *part, PartInterface *parent )
-  : PartInterface( part, parent ), sampler_(part)
+  : PartInterface( part, parent, "SamplerInterface" ), sampler_(part)
 {
   burning_ = 0;
   monitor_ = 1000;

@@ -31,7 +31,7 @@
 #ifndef SCI_Gui_h
 #define SCI_Gui_h 
 
-#include <Core/Parts/PartGui.h>
+#include <Core/PartsGui/PartGui.h>
 #include <Core/Util/Signals.h>
 
 namespace MIT {
@@ -49,6 +49,7 @@ public:
   SamplerGui( const string &name, const string &script = "SamplerGui"); 
   virtual ~SamplerGui();
 
+  void attach( PartInterface *) {}
   virtual void tcl_command( TCLArgs &, void *);
 };
 
