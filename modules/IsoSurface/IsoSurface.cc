@@ -58,8 +58,10 @@ IsoSurface::IsoSurface()
     value_slider=new MUI_slider_real("IsoContour value", &isoval,
 			       MUI_widget::Immediate, 1);
     add_ui(value_slider);
-    have_seedpoint=0;
-    seed_point=Point(0,0,0);
+//    have_seedpoint=0;
+//    seed_point=Point(0,0,0);
+    have_seedpoint=1;
+    seed_point=Point(8,8,8);
     add_ui(new MUI_point("Seed Point", &seed_point,
 			 MUI_widget::Immediate, 1));
     scalar_val=0;
@@ -130,6 +132,8 @@ void IsoSurface::execute()
 	}
 	break;
     };
+    cerr << "Finished isosurfacing!  Got " << group->size() << " objects\n";
+
     if(group->size() == 0){
 	delete group;
     } else {
@@ -393,8 +397,8 @@ void IsoSurface::iso_reg_grid(const Field3DHandle& field, const Point& p,
     Point p0(field->get_point(0,0,0));
     Point p1(field->get_point(nx-1, ny-1, nz-1));
     double tx=(p.x()-p0.x())/(p1.x()-p0.x());
-    double ty=(p.x()-p0.x())/(p1.x()-p0.x());
-    double tz=(p.x()-p0.x())/(p1.x()-p0.x());
+    double ty=(p.y()-p0.y())/(p1.y()-p0.y());
+    double tz=(p.z()-p0.z())/(p1.z()-p0.z());
     if (tx<0 || tx>1 || ty<0 || ty>1 || tz<0 || tz>1) {
 	error("Isosurface Seed Point not in field\n");
 	return;
@@ -403,6 +407,7 @@ void IsoSurface::iso_reg_grid(const Field3DHandle& field, const Point& p,
     int py=ny*ty;
     int pz=nz*tz;
     double isoval=field->get(px,py,pz);
+    cerr << "Isoval = " << isoval << "\n";
     HashTable<int, int> visitedPts;
     Queue<int> surfQ;
     int pLoc=(((pz*ny)+py)*nx)+px;
@@ -414,7 +419,7 @@ void IsoSurface::iso_reg_grid(const Field3DHandle& field, const Point& p,
 	pz=pLoc/(nx*ny);
 	dummy=pLoc%(nx*ny);
 	py=dummy/nx;
-	px=dummy%py;
+	px=dummy%nx;
 	int nbrs=iso_cube(px, py, pz, isoval, group, field);
 	if ((nbrs | 1) && (px!=0)) {
 	    pLoc-=1;
