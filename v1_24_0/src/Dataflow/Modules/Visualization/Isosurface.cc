@@ -63,7 +63,7 @@ Isosurface::Isosurface(GuiContext* ctx) :
   Module("Isosurface", ctx, Filter, "Visualization", "SCIRun"), 
   gui_iso_value_min_(ctx->subVar("isoval-min")),
   gui_iso_value_max_(ctx->subVar("isoval-max")),
-  gui_iso_value_(ctx->subVar("isoval-typed")),
+  gui_iso_value_(ctx->subVar("isoval")),
   gui_iso_value_typed_(ctx->subVar("isoval-typed")),
   gui_iso_value_quantity_(ctx->subVar("isoval-quantity")),
   gui_iso_quantity_range_(ctx->subVar("quantity-range")),
