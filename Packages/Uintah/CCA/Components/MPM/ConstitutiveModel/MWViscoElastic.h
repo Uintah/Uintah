@@ -23,8 +23,12 @@ namespace Uintah {
          // Create datatype for storing model parameters
       public:
          struct CMData {
-            double G;
-	    double K;
+            double E_Shear;
+	     double E_Bulk;
+	     double VE_Shear;
+	     double VE_Bulk;
+	     double V_Viscosity;
+	     double D_Viscosity;
          };
 
       private:
