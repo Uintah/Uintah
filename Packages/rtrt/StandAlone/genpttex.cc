@@ -59,6 +59,7 @@ size_t next_sphere = 0;
 #define NUM_DATA 3
 int gridcellsize = 6;
 int griddepth = 2;
+int numvars = 3;
 
 void readSpheres(char *spherefile);
 
@@ -151,10 +152,10 @@ Object *make_geometry_fromfile(char *filename, bool timevary)
   // point data.
 
   // Allocate memory
-  alldata = new float[total_num_spheres*NUM_DATA];
+  alldata = new float[total_num_spheres*numvars];
   float *data = alldata;
   for(int i = 0; i < spheredata.size(); i++) {
-    size_t size = spheredatasize[i] * sizeof(float) * NUM_DATA;
+    size_t size = spheredatasize[i] * sizeof(float) * numvars;
     memcpy(data, spheredata[i], size);
     // Free the old memory
     free(deleteme[i]);
@@ -169,7 +170,7 @@ Object *make_geometry_fromfile(char *filename, bool timevary)
   // Here is our geometry
   cout << "total_num_spheres = "<<total_num_spheres<<endl;
   GridSpheres *gridspheres = new GridSpheres(alldata, 0, 0, total_num_spheres,
-					     NUM_DATA-3,
+					     numvars-3,
 					     gridcellsize, griddepth,
 					     radius*radius_factor,
 					     1, matls, 0);
@@ -190,13 +191,13 @@ Group* get_next_sphere_set(size_t num_spheres) {
     num_spheres = total_num_spheres - next_sphere;
   
   // create spheres
-  float *data = alldata + (next_sphere*3);
+  float *data = alldata + (next_sphere*numvars);
   for (int i=0;i<num_spheres;i++) {
     double x = *data; data++;
     double y = *data; data++;
     double z = *data; data++;
     Point center(x, y, z);
-    data += NUM_DATA-3;
+    data += numvars-3;
     //    group->add( new Sphere(0, center, radius) );
     group->add( new TextureSphere(center, radius, tex_size) );
   }
@@ -216,7 +217,6 @@ readSpheres(char* spherefile)
   sprintf(buf, "%s.meta", spherefile);
   ifstream in(buf);
   int nspheres = 0;
-  int numvars = 3;
   double file_radius=radius;
   float* mins;
   float* maxs;
@@ -247,10 +247,12 @@ readSpheres(char* spherefile)
       }
     }
     numvars = varcount;
+#if 0
     if (numvars != NUM_DATA) {
       cerr << "readSpheres::Can only deal with point data (3 vars)\n";
       return;
     }
+#endif
     mins = (float*)malloc(numvars*sizeof(float));
     maxs = (float*)malloc(numvars*sizeof(float));
     for (int i = 0; i < numvars; i++) {
@@ -339,7 +341,7 @@ readSpheres(char* spherefile)
 
 int main(int argc, char** argv)
 {
-  double lx=-0.25, ly=0.2, lz=-0.1;
+  double lx=-0.25, ly=0.5, lz=-0.1;
   double lr = 0.01;
   double intensity=1000.0;
   int num_samples=100;
@@ -381,6 +383,9 @@ int main(int argc, char** argv)
     else if(strcmp(argv[i],"-file")==0 || strcmp(argv[i],"-i")==0) {
       filename = argv[++i];
       cerr << "Reading from file "<<filename<<endl;
+    } else if(strcmp(argv[i],"-numvars")==0) {
+      numvars = atoi(argv[++i]);
+      cerr << "Assuming "<<numvars<<" number of variables per sphere.\n";
     } else if(strcmp(argv[i],"-timevary")==0) {
       filename = argv[++i];
       timevary=true;
@@ -420,6 +425,7 @@ int main(int argc, char** argv)
       cerr<<"  -tex_res <int>              texture resolution (16)\n";
       cerr<<"  -radius <float>             sphere radius (0.0)\n";
       cerr<<"  -i <filename>               input filename (null)\n";
+      cerr<<"  -numvars <int>                number of variables in file (3)"<<endl;
       cerr<<"  -timevary <filename>        input filename timelist  (null)\n";
       cerr<<"  -bg <filename>              background image name (envmap.ppm)\n";
       cerr<<"  -o <filename>               basename of texture files (null)\n";
