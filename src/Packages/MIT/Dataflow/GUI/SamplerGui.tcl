@@ -114,7 +114,7 @@ class SamplerGui {
 
     method set-kappa { k } {
 	global $this-kappa
-	set $this-kappa k
+	set $this-kappa $k
     }
 	
     method new-child-window { name } {
