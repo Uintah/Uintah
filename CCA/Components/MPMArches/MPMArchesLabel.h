@@ -68,6 +68,9 @@ using std::vector;
       const VarLabel* heaTranSolid_FCXLabel;
       const VarLabel* heaTranSolid_FCYLabel;
       const VarLabel* heaTranSolid_FCZLabel;
+      const VarLabel* heaTranSolid_FCX_RadLabel;
+      const VarLabel* heaTranSolid_FCY_RadLabel;
+      const VarLabel* heaTranSolid_FCZ_RadLabel;
       const VarLabel* heaTranSolid_NCLabel;
 
       const VarLabel* SumAllForcesCCLabel; 
