@@ -81,7 +81,7 @@ ICE::ICE(const ProcessorGroup* myworld)
   d_dbgVar1      = 0;     //inputs for debugging
   d_dbgVar2      = 0;
   d_SMALL_NUM    = 1.0e-100; 
-  d_TINY_RHO     = 1.0e-100;// also defined ICEMaterial.cc and MPMMaterial.cc
+  d_TINY_RHO     = 1.0e-12;// also defined ICEMaterial.cc and MPMMaterial.cc
 }
 
 ICE::~ICE()
