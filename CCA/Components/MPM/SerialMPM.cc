@@ -319,7 +319,8 @@ void SerialMPM::scheduleInterpolateParticlesToGrid(SchedulerP& sched,
 //						Ghost::AroundNodes,1);
 
   t->computes(lb->gMassLabel);
-  t->computes(lb->gMassLabel, d_sharedState->getAllInOneMatl());
+  t->computes(lb->gMassLabel, d_sharedState->getAllInOneMatl(),
+	      Task::OutOfDomain);
   t->computes(lb->gVolumeLabel);
   t->computes(lb->gVelocityLabel);
   t->computes(lb->gExternalForceLabel);
@@ -410,7 +411,7 @@ void SerialMPM::scheduleComputeInternalForce(SchedulerP& sched,
 		    this, &SerialMPM::computeInternalForce);
 
   t->requires(Task::NewDW,lb->gMassLabel, Ghost::None);
-  t->requires(Task::NewDW,lb->gMassLabel, d_sharedState->getAllInOneMatl(), Ghost::None);
+  t->requires(Task::NewDW,lb->gMassLabel, d_sharedState->getAllInOneMatl(), Task::OutOfDomain, Ghost::None);
   t->requires(Task::NewDW,lb->pStressLabel_afterStrainRate,Ghost::AroundNodes,1);
   t->requires(Task::NewDW,lb->pVolumeDeformedLabel,       Ghost::AroundNodes,1);
   t->requires(Task::OldDW,lb->pMassLabel,                 Ghost::AroundNodes,1);
@@ -427,7 +428,8 @@ void SerialMPM::scheduleComputeInternalForce(SchedulerP& sched,
   t->computes(lb->gInternalForceLabel);
   t->computes(lb->NTractionZMinusLabel);
   t->computes(lb->gStressForSavingLabel);
-  t->computes(lb->gStressForSavingLabel, d_sharedState->getAllInOneMatl());
+  t->computes(lb->gStressForSavingLabel, d_sharedState->getAllInOneMatl(),
+	      Task::OutOfDomain);
 
   sched->addTask(t, patches, matls);
 }
@@ -831,8 +833,8 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
     int numMatls = d_sharedState->getNumMPMMatls();
 
     NCVariable<double> gmassglobal;
-    new_dw->allocate(gmassglobal,lb->gMassLabel, d_sharedState->getAllInOneMatl()->get(0), 
-		     patch);
+    new_dw->allocate(gmassglobal,lb->gMassLabel,
+		     d_sharedState->getAllInOneMatl()->get(0), patch);
     gmassglobal.initialize(d_SMALL_NUM_MPM);
 
     for(int m = 0; m < numMatls; m++){
