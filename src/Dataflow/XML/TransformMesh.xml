@@ -33,56 +33,56 @@
 
 
 
-<component name="Gradient" category="FieldsData">
+<component name="TransformMesh" category="FieldsGeometry">
   <overview>
     <authors>
       <author>Michael Callahan</author>
     </authors>
-    <summary>
-      Compute the derivative of a scalar field and output it as a
-  vector field.
-    </summary>
+    <summary>Perform a specified functional transform on all of the
+   points in a field.</summary>
     <description>
-      <p>The Gradient module computes the derivative of a scalar field
-      and converts it to a vector field. The gradient is the
-      derivative of three dimensions; the first component in the X
-      direction, the second component in the Y direction, and the
-      third component in the Z direction grid, computing the general
-      direction of "flow" at a specific point on the geometry.</p>
+    	<p>Compute the specified function on each point in the
+	 input field.</p>
 
-      <p>Not all field types are supported by the Gradient module.  At
-      this time only derivatives of TetVolMesh and LatVolMesh are
-      supported.  The Gradient module has no GUI. If Gradient recieves
-      as input a Field type it does not support, an error message
-      appears in the Error frame of the SCIRun environment.</p>
+        <p>The mesh transform is specified in the GUI as the body of a
+	C++ function.  The input values to the function is 'p'.  No
+	value is returned, rather set the 'result' variable to the
+	return point.  For example, "result = Point(p.x() + 5, p.y(), p.z());"
+        would return a new field translated by 5 in the X
+	direction.</p>
+
+        <p>This module does not work on the mesh types that do not contain any implicit points.  This includes LatVolMesh, ImageMesh, and ScanlineMesh.  The function will not compile but give an error about set_point being undefined.</p>
     </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">
       <port>
-	<name>Input Field</name>
+        <name>Input Field</name>
 	<datatype>SCIRun::Field</datatype>
       </port>
     </inputs>
     <outputs>
       <port>
-	<name>Output Gradient</name>
+        <name>Output Field</name>
 	<datatype>SCIRun::Field</datatype>
       </port>
     </outputs>
   </io>
+  <gui>
+  </gui>
   <testing>
   </testing>
 <nets>
-<net id="Gradient">
-<title>Gradient Regression Test</title>
+<net id="TransformMesh-cylinder">
+<title>TransformMesh-cylinder Regression Test</title>
 
-<p>Compute the gradient of a scalar field, then display the gradient
-using uniformly sized cones colored by the data values from the
-original field.  See also <modref package="SCIRun" name="ChangeFieldBasis"/>, <modref package="SCIRun" name="DirectInterpolate"/>.</p>
+<p>Create and draw a StructHexVolField using the TransformMesh module to do a nonlinear deformation of the mesh.
+The default StructHexVolField created by the module is visually
+indistinguishable from the lattice created by <modref package="SCIRun" name="SampleLattice"/>, so this network
+shows off the capabilities of the StructHexVolField by using the
+<modref package="SCIRun" name="TransformMesh"/> module to transform the points into a low-distortion cylinder.</p>
 
-<p>This network can be found at src/nets/Modules/FieldsData/Gradient.net.</p>
-
+<p>This network can be found at src/nets/Modules/FieldsGeometry/TransformMesh-cylinder.net.</p>
 </net>
 </nets>
 </component>

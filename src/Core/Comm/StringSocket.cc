@@ -39,32 +39,30 @@
  *  Copyright (C) 1999 SCI Group
  */
 
-
-
+#include <stdio.h>
 #include <stdlib.h>
-#include <string>
-#include <sstream>
-#include <sys/types.h>
-#include <sys/socket.h>
 #include <errno.h>
 #include <unistd.h>
-#include <iostream>
 #include <string.h>
+#include <sys/time.h>
+#include <sys/types.h>
+#include <sys/socket.h>
 #include <netinet/in.h>
 #include <netinet/tcp.h>
 #include <arpa/inet.h>
 #include <netdb.h>
-#include <Core/Thread/Time.h>
-#include <sys/time.h>
-
 
 #include <iostream>
+#include <string>
+#include <sstream>
+
 #include <Core/Comm/CommError.h>
-#include <Core/Thread/Thread.h>
-#include <Core/Thread/Mutex.h>
-#include <Core/Thread/ConditionVariable.h>
 #include <Core/Comm/StringSocket.h>
 #include <Core/Comm/StringSocketThread.h>
+#include <Core/Thread/ConditionVariable.h>
+#include <Core/Thread/Mutex.h>
+#include <Core/Thread/Thread.h>
+#include <Core/Thread/Time.h>
 
 using namespace SCIRun;
 using namespace std;

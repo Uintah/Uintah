@@ -179,7 +179,8 @@ template<class T> std::vector<T>  IComPacket::getvector()
 	int datasize = getdatasize();
 			
 	if (elsize != sizeof(T)) throw invalid_data_format();
-	T* ptr = static_cast<T*>(getdatabuffer());
+	//T* ptr = static_cast<T*>(getdatabuffer());
+	T* ptr = static_cast<T*>(0); // FIXME: getdatabuffer is undefined
 	if (buffersize() < elsize*datasize) datasize = (buffersize()/elsize);
 	
 	std::vector<T> vec(datasize);
@@ -239,13 +240,13 @@ template<class T> void IComPacket::getvalue(T& data)
 template<class T> void IComPacket::setvalue(T data)
 {
 	int elsize = sizeof(T);
-	datasize = 1;
+	datasize_ = 1;
 	
-	if (buffersize() < elsize*datasize) newbuffer(elsize*datasize);
+	if (buffersize() < elsize*datasize_) newbuffer(elsize*datasize_);
 	T* ptr = static_cast<T*>(getbuffer());
 	ptr[0] = data;
 	setelsize(elsize);
-	setdatasize(datasize);
+	setdatasize(datasize_);
 }
 
 // INLINE FUNCTIONS

@@ -29,71 +29,68 @@
    DEALINGS IN THE SOFTWARE.
 -->
 
-
-
-<component name="VolumeSlicer" category="Visualization" optional="true">
+<component name="BundleGetBundle" category="Bundle">
   <overview>
     <authors>
-      <author>Kurt Zimmerman</author>
-      <author>Milan Ikits</author>
-      <author>Michael Callahan</author>
+    Jeroen Stinstra
     </authors>
-    <summary>This module is used to view slices of data using hardware
-    3D textures.
+    <summary>
+      This module retrieves a 'bundle' object from a bundle. 
     </summary>
     <description>
-      <p> The VolumeSlicer module is used to view slices of data using hardware
-      3D textures and volume rendering techniques.</p>
-
-      <p> Under Standard tab, select the X, Y, Z and or View plane and use
-      the "+" and "-" buttons to move the cutting planes. The X, Y,
-      and Z planes can also be moved with a selection widget displayed
-      in the view window.
-      </p> 
-      <p>Under Cylindrical tab, select Phi-0, Phi-1, and or Z plane.
-      The "+" and "-" buttons move only the Z plane.  The Phi-0 and
-      Phi-1 planes are controlled by entries in the gui.  The
-      selection widget in the view window, allows user control of the
-      Z plane and locates the rotation points for Phi-0 and Phi-1 planes.
-      </p>
-      <p> The Interplation Mode allows the user to select between
-      linear interpolation "Interpolate" and nearest neighbor
-      interpolation "Nearest".
-      </p>
-     </description>
+      This module retrieves a 'bundle' object from a bundle by specifying the
+      name of that object. The module has three output ports that each can be 
+      programmed to retrieve a specific 'bundle' object. 
+      
+      The module's first bundle output port just generates a copy of the input
+      bundle.
+    </description>
   </overview>
   <implementation>
   </implementation>
   <io>
     <inputs lastportdynamic="no">
       <port>
-        <name>Texture</name>
-	<datatype>SCIRun::Texture</datatype>
+        <name>bundle</name>
+        <datatype>SCIRun::Bundle</datatype>
+      </port>
+<!--
+        <port>
+        <name>name1</name>
+        <datatype>SCIRun::Nrrd</datatype>
       </port>
       <port>
-        <name>ColorMap</name>
-	<datatype>SCIRun::ColorMap</datatype>
+        <name>name2</name>
+        <datatype>SCIRun::Nrrd</datatype>
       </port>
       <port>
-        <name>ColorMap2</name>
-	<datatype>SCIRun::ColorMap2</datatype>
+        <name>name3</name>
+        <datatype>SCIRun::Nrrd</datatype>
       </port>
+-->
     </inputs>
     <outputs>
       <port>
-        <name>Geometry</name>
-        <datatype>SCIRun::Geometry</datatype>
+        <name>bundle</name>
+        <datatype>SCIRun::Bundle</datatype>
       </port>
       <port>
-	<name>ColorMap</name>
-	<datatype>SCIRun::ColorMap</datatype>
+        <name>bundle1</name>
+        <datatype>SCIRun::Bundle</datatype>
+      </port>
+      <port>
+        <name>bundle2</name>
+        <datatype>SCIRun::Bundle</datatype>
+      </port>
+      <port>
+        <name>bundle3</name>
+        <datatype>SCIRun::Bundle</datatype>
       </port>
     </outputs>
- </io>
+  </io>
   <gui>
-<!--    <img>/Packages/Volume/Modules/Visualization/doc/VolumeSlicer.jpg</img>
--->
   </gui>
   <testing>
   </testing>
 </component>
+

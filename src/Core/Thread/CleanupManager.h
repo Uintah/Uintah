@@ -92,6 +92,10 @@ typedef void (*CleanupManagerCallback)(void *);
 class SCICORESHARE CleanupManager {
 public:
   
+  // Initializes the mutex lock for the cleanup manager.  Initialize
+  // is called from the Thread::initialize and is only called once.
+  static void initialize();
+
   static void add_callback(CleanupManagerCallback cb, void *data);
   static void invoke_remove_callback(CleanupManagerCallback cb, void *data);
   static void remove_callback(CleanupManagerCallback cb, void *data);
@@ -100,7 +104,8 @@ public:
 
 protected:
   static std::vector<std::pair<CleanupManagerCallback, void *> > callbacks_;
-  static Mutex lock_;
+  static bool    initialized_;
+  static Mutex * lock_;
 };
 
 } // End namespace SCIRun

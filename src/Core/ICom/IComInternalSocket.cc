@@ -396,8 +396,9 @@ bool	IComInternalSocket::send(IComPacketHandle &packet, IComSocketError &err)
 	
 	rsock->dolock();
 	rsock->packetlist_.push_back(packet);
-	rsock->unlock();
 	rsock->waitpacket_.conditionSignal();
+    rsock->unlock();
+	
 
 	// This one is here to make the code more robust
 	// If some decides to reuse a packet, there is one
