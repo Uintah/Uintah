@@ -39,17 +39,17 @@
   <io>
     <inputs lastportdynamic="no">
       <port>
-        <name>Matrix1</name>
+        <name>host:port string</name>
 	<datatype>SCIRun::Matrix</datatype>
       </port>
       <port>
-        <name>Matrix2</name>
+        <name>Matrix being sent</name>
 	<datatype>SCIRun::Matrix</datatype>
       </port>
     </inputs>
     <outputs>
       <port>
-        <name>Matrix</name>
+        <name>host:port string</name>
 	<datatype>SCIRun::Matrix</datatype>
       </port>
     </outputs>

@@ -7,6 +7,8 @@
  *
  */
 
+#include <sci_defs.h>
+
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
 
@@ -956,6 +958,14 @@ double mlb2double(mlb &a)
    multiply operator
 ****************************************************/
 
+#ifdef BLAS_ENABLED
+extern "C" {
+void dgemm_(char *ta,char *tb,int *m,int *n,int *k,double *alpha,
+            double *A, int *lda,double *B,int *ldb,double *beta,double *c,int *ldc);
+}
+#endif
+
+
 mlb & operator * (mlb &b, mlb &a)
 {
  if(isscalar(a))  return( b*mlb2double(a) ); 
@@ -984,6 +994,16 @@ mlb & operator * (mlb &b, mlb &a)
  tmp.dms[1]=(a.ndms==1)? 1 : a.dms[1];
  tmp.db= new double [ tmp.sizedb() ];
 
+#ifdef BLAS_ENABLED
+
+ double *B=a.db,*A=b.db,*C=tmp.db,alpha=1.,beta=0.;
+ int   m=tmp.dms[0],n=tmp.dms[1],k=a.dms[0];
+ dgemm_("N","N",&m,&n,&k,&alpha,A,&m,B,&k,&beta,C,&m);
+
+#else
+
+//#error BlAS_ENABLED should be set
+
  for(int k1=0; k1<tmp.dms[0]; k1++)
   for(int k2=0; k2<tmp.dms[1]; k2++)
   {
@@ -992,6 +1012,8 @@ mlb & operator * (mlb &b, mlb &a)
       sum+=b.db[k1+k3*b.dms[0]]*a.db[k3+k2*a.dms[0]];
     tmp.db[k1+k2*tmp.dms[0]]=sum;
   }
+
+#endif
 
  if(istmp(b)) chkout(b);
  if(istmp(a)) chkout(a);
