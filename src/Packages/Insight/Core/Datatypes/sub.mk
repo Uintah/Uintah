@@ -18,7 +18,8 @@ SRCS     += $(SRCDIR)/ITKImage.cc \
 
 PSELIBS := Core/Persistent Core/Exceptions Core/Containers \
 	Core/Thread Core/Geometry Core/GuiInterface \
-	Core/Math Core/Geom Core/Util
+	Core/Math Core/Geom Core/Util Core/Datatypes 
+
 LIBS := $(GL_LIBRARY) $(M_LIBRARY) $(INSIGHT_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
