@@ -422,6 +422,7 @@ ShowField::determine_dirty(FieldHandle fld_handle, FieldHandle vfld_handle)
     }
     data_at_dirty_ = true; //we need to rerender colors..
     edges_dirty_ = true; // Edges don't cache color.
+    faces_dirty_ = true; // Faces don't cache color.
     data_dirty_ = true; // Data doesn't cache color.
     text_dirty_ = true; // Text doesn't cache color.
   } //else both are the same as last time, nothing dirty.
@@ -503,6 +504,7 @@ ShowField::execute()
     if (colormap_generation_ != -1) {
       data_at_dirty_ = true;
       edges_dirty_ = true;
+      faces_dirty_ = true;
       text_dirty_ = true;
       data_dirty_ = true;
     }
@@ -511,6 +513,7 @@ ShowField::execute()
     colormap_generation_ = color_handle->generation;  
     data_at_dirty_ = true;
     edges_dirty_ = true;
+    faces_dirty_ = true;
     text_dirty_ = true;
     data_dirty_ = true;
   }
@@ -774,6 +777,7 @@ ShowField::tcl_command(GuiArgs& args, void* userdata) {
     def_mat_handle_ = m;
     data_at_dirty_ = true;
     edges_dirty_ = true;
+    faces_dirty_ = true;
     maybe_execute(DATA_AT);
   } else if (args[1] == "text_color_change") {
     text_color_r_.reset();

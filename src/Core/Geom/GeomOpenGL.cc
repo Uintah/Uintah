@@ -3311,20 +3311,65 @@ void GeomTriangles::draw(DrawInfoOpenGL* di, Material* matl, double)
 
 
 void
+GeomFastTriangles::draw(DrawInfoOpenGL* di, Material* matl, double)
+{
+  if (!pre_draw(di, matl, 1)) return;
+  di->polycount += size();
+
+  if (di->currently_lit)
+  {
+#ifdef SCI_NORM_OGL
+    glEnable(GL_NORMALIZE);
+#else
+    glDisable(GL_NORMALIZE);
+#endif
+    glNormalPointer(GL_FLOAT, 0, &(normals_.front()));
+    glEnableClientState(GL_NORMAL_ARRAY);
+  }
+  else
+  {
+    glDisableClientState(GL_NORMAL_ARRAY);
+    glDisable(GL_NORMALIZE);
+  }
+
+  if (di->get_drawtype() == DrawInfoOpenGL::Flat)
+  {
+    glShadeModel(GL_FLAT);
+  }
+  else
+  {
+    glShadeModel(GL_SMOOTH);
+  }
+
+  glVertexPointer(3, GL_FLOAT, 0, &(points_.front()));
+  glEnableClientState(GL_VERTEX_ARRAY);
+
+  glColorPointer(4, GL_UNSIGNED_BYTE, 0, &(colors_.front()));
+  glEnableClientState(GL_COLOR_ARRAY);
+
+  if (material_.get_rep()) { di->set_matl(material_.get_rep()); }
+
+  glDrawArrays(GL_TRIANGLES, 0, points_.size()/3);
+
+  glDisableClientState(GL_NORMAL_ARRAY);
+
+  glEnable(GL_NORMALIZE);
+  if (di->get_drawtype() == DrawInfoOpenGL::Flat)
+  {
+    glShadeModel(GL_SMOOTH);
+  }
+
+  post_draw(di);
+}
+
+
+void
 GeomTranspTriangles::draw(DrawInfoOpenGL* di, Material* matl, double)
 {
   if (!pre_draw(di, matl, 1)) return;
-  const unsigned int pcount = verts.size() / 3;
-  if (pcount <= 0)
-  {
-    return;
-  }
-  di->polycount += pcount;
+  di->polycount += size();
 
-  if (!sorted_p_)
-  {
-    SortPolys();
-  }
+  SortPolys();
 
   GLdouble matrix[16];
   glGetDoublev(GL_MODELVIEW_MATRIX, matrix);
@@ -3351,84 +3396,73 @@ GeomTranspTriangles::draw(DrawInfoOpenGL* di, Material* matl, double)
     else { di->dir = -1; }
   }
 
-  const vector<pair<float, unsigned int> >&clist =
+  const vector<unsigned int> &clist =
     (di->axis==0)?xlist_:((di->axis==1)?ylist_:zlist_);
 
-  const int sort_dir = (di->dir<0)?-1:1;
-  const unsigned int sort_start = (sort_dir>0)?0:(clist.size()-1);
-  unsigned int i, ndone;
-
+  if (di->currently_lit)
+  {
 #ifdef SCI_NORM_OGL
-  glEnable(GL_NORMALIZE);
+    glEnable(GL_NORMALIZE);
 #else
-  glDisable(GL_NORMALIZE);
+    glDisable(GL_NORMALIZE);
 #endif
+    glNormalPointer(GL_FLOAT, 0, &(normals_.front()));
+    glEnableClientState(GL_NORMAL_ARRAY);
+  }
+  else
+  {
+    glDisableClientState(GL_NORMAL_ARRAY);
+    glDisable(GL_NORMALIZE);
+  }
+
+  if (di->get_drawtype() == DrawInfoOpenGL::Flat)
+  {
+    glShadeModel(GL_FLAT);
+  }
+  else
+  {
+    glShadeModel(GL_SMOOTH);
+  }
+
+  glVertexPointer(3, GL_FLOAT, 0, &(points_.front()));
+  glEnableClientState(GL_VERTEX_ARRAY);
+
+  glColorPointer(4, GL_UNSIGNED_BYTE, 0, &(colors_.front()));
+  glEnableClientState(GL_COLOR_ARRAY);
 
   glEnable(GL_BLEND);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-  //glDepthMask(GL_FALSE); // No zbuffering for now.
 
-  switch(di->get_drawtype())
+  if (material_.get_rep()) { di->set_matl(material_.get_rep()); }
+
+  if (di->dir == 1)
   {
-  case DrawInfoOpenGL::WireFrame:
+    glDrawElements(GL_TRIANGLES, clist.size(), GL_UNSIGNED_INT,
+		   &(clist.front()));
+  }
+  else
+  {
+    // Preserve triangle CCW/CW by drawing vertices in same order.
+    const unsigned int ntris = clist.size()/3;
+    glBegin(GL_TRIANGLES);
+    for (unsigned int i = 0; i < ntris; i++)
     {
-      for (i = sort_start, ndone = 0; ndone < pcount; ndone++, i += sort_dir)
-      {
-	glBegin(GL_LINE_LOOP);
-	if (di->currently_lit)
-	{
-	  glNormal3d(normals[clist[i].second/3].x(),
-		     normals[clist[i].second/3].y(),
-		     normals[clist[i].second/3].z());
-	}
-	verts[clist[i].second+0]->emit_all(di);
-	verts[clist[i].second+1]->emit_all(di);
-	verts[clist[i].second+2]->emit_all(di);
-	glEnd();
-      }
+      glArrayElement(clist[(ntris-i-1)*3+0]);
+      glArrayElement(clist[(ntris-i-1)*3+1]);
+      glArrayElement(clist[(ntris-i-1)*3+2]);
     }
-    break;
-  case DrawInfoOpenGL::Flat:
-    {
-      glBegin(GL_TRIANGLES);
-      for (i = sort_start, ndone = 0; ndone < pcount; ndone++, i += sort_dir)
-      {
-       	if (di->currently_lit)
-	{
-	  glNormal3d(normals[clist[i].second/3].x(),
-		     normals[clist[i].second/3].y(),
-		     normals[clist[i].second/3].z());
-	}
-	verts[clist[i].second+0]->emit_point(di);
-	verts[clist[i].second+1]->emit_point(di);
-	verts[clist[i].second+2]->emit_all(di);
-      }
-      glEnd();
-    }
-    break;
-  case DrawInfoOpenGL::Gouraud:
-    {
-      glBegin(GL_TRIANGLES);
-      for (i = sort_start, ndone = 0; ndone < pcount; ndone++, i += sort_dir)
-      {      
-	if (di->currently_lit)
-	{
-	  glNormal3d(normals[clist[i].second/3].x(),
-		     normals[clist[i].second/3].y(),
-		     normals[clist[i].second/3].z());
-	}
-	verts[clist[i].second+0]->emit_all(di);
-	verts[clist[i].second+1]->emit_all(di);
-	verts[clist[i].second+2]->emit_all(di);
-      }
-      glEnd();
-    }
-    break;
+    glEnd();
   }
 
-  //glDepthMask(GL_TRUE); // Turn zbuff back on.
+  glDisableClientState(GL_NORMAL_ARRAY);
+
   glDisable(GL_BLEND);
   glEnable(GL_NORMALIZE);
+
+  if (di->get_drawtype() == DrawInfoOpenGL::Flat)
+  {
+    glShadeModel(GL_SMOOTH);
+  }
 
   post_draw(di);
 }
