@@ -46,5 +46,5 @@ void SimpleBurn::computeBurn(double gasTemperature,
   if(burnedMass > materialMass){
     burnedMass = materialMass;
   }
-  releasedHeat = burnedMass * Enthalpy * delT;
+  releasedHeat = burnedMass * Enthalpy;
 }
