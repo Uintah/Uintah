@@ -7,9 +7,9 @@
  *   Author: Steve Parker
  *   Department of Computer Science
  *   University of Utah
- *   Date: June 2997
+ *   Date: June 2000
  *
- *  Copyright (C) 2997 SCI Group
+ *  Copyright (C) 2000 SCI Group
  */
 
 #ifndef SCICore_Thread_Parallel2_h
@@ -91,6 +91,9 @@ SCICore::Thread::Parallel2<T, Arg1, Arg2>::~Parallel2()
 
 //
 // $Log$
+// Revision 1.2  2000/03/17 08:28:19  sparker
+// Fixed date in header
+//
 // Revision 1.1  2000/02/15 00:23:49  sparker
 // Added:
 //  - new Thread::parallel method using member template syntax
