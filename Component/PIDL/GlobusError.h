@@ -51,7 +51,13 @@ DESCRIPTION
 	    std::string message() const;
 	protected:
 	private:
+	    //////////
+	    // The explanation string (usually the name of the offending
+	    // call).
 	    std::string d_msg;
+
+	    //////////
+	    // The globus error code.
 	    int d_code;
 	};
     }
@@ -61,6 +67,9 @@ DESCRIPTION
 
 //
 // $Log$
+// Revision 1.4  1999/09/24 20:15:57  sparker
+// Cocoon documentation updates
+//
 // Revision 1.3  1999/09/24 06:26:24  sparker
 // Further implementation of new Component model and IDL parser, including:
 //  - fixed bugs in multiple inheritance

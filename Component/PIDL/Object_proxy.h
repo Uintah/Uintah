@@ -37,7 +37,10 @@ DESCRIPTION
 	class Object_proxy : public ProxyBase, public Object_interface {
 	public:
 	protected:
+	    //////////
+	    // PIDL will create these.
 	    friend class PIDL;
+
 	    //////////
 	    // Private constructor from a reference
 	    Object_proxy(const Reference&);
@@ -58,6 +61,9 @@ DESCRIPTION
 
 //
 // $Log$
+// Revision 1.4  1999/09/24 20:15:58  sparker
+// Cocoon documentation updates
+//
 // Revision 1.3  1999/09/24 20:03:35  sparker
 // Added cocoon documentation
 //
