@@ -7,7 +7,7 @@ include $(SRCTOP)/scripts/smallso_prologue.mk
 
 SRCDIR   := Uintah/Math
 
-SRCS     += $(SRCDIR)/Primes.cc	$(SRCDIR)/CubicPolyRoots.cc
+SRCS     += $(SRCDIR)/Primes.cc	$(SRCDIR)/CubeRoot.cc
 
 PSELIBS := SCICore/Exceptions
 LIBS :=
@@ -16,6 +16,10 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.4  2000/08/19 00:03:22  witzel
+# Replacing my CubicPolyRoots with graphics gems' CubeRoot
+# (theirs may be more reliable).
+#
 # Revision 1.3  2000/08/15 19:09:56  witzel
 # Included CubicPolyRoots stuff.
 #
