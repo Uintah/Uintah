@@ -519,7 +519,7 @@ Material *GeoProbeScene::gen_color_map(ColorMapHandle cmap, Object *obj,
     rtrt::Color rc(sc.r(), sc.g(), sc.b());
     (*colors)[i] = rc;
     (*alphas)[i] = cmap->getAlpha(index);
-#if 1
+#if 0
     cout << "colors["<<i<<"] = "<<(*colors)[i];
     cout << ", alpha = "<<(*alphas)[i]<<endl;
 #endif
