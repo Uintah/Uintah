@@ -1,0 +1,22 @@
+set terminal x11 1
+set multiplot
+set size 1.0,0.50 # for two plots
+set origin 0.0,0.5
+
+set autoscale
+set grid xtics ytics
+set y2tics
+
+plot 'data' using 1:3           t 'Physical Time' with lines,\
+     'data' using 1:2 axes x1y2 t 'meanTime/timestep' with lines
+#---------------------------
+set size 1.0,0.51       
+set origin 0.0,0.0
+set xlabel "ElapsedTime (sec)"
+
+plot 'data' using 1:4 t 'Delt' with lines,\
+     'data' using 1:5 axes x1y2 t 'memory usage' with lines
+set nomultiplot
+pause -1 "Hit return to continue"
+
+
