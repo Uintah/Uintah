@@ -531,6 +531,43 @@ Camera Camera::operator*(double val) const {
   return result;
 }
 
+void Camera::transform(Transform t, TransformCenter center) {
+  Vector cen;
+  switch(center){
+  case Eye:
+    cen = eye.asVector();
+    break;
+  case LookAt:
+    cen = lookat.asVector();
+    break;
+  case Origin:
+    cen = Vector(0,0,0);
+    break;
+  }
+
+  Vector lookdir(eye-lookat);
+  double length = lookdir.length();
+  Transform frame;
+  frame.load_basis(Point(0,0,0), v.normal()*length, u.normal()*length, lookdir);
+  frame.pre_translate(cen);
+  //  double tmp = lookdir.length();
+
+  Transform frame_inv(frame);
+  frame_inv.invert();
+
+  Transform t2;
+  t2.load_identity();
+  t2.pre_trans(frame_inv);
+  t2.pre_trans(t);
+  t2.pre_trans(frame);
+
+  up = t2.project(up);
+  eye = t2.project(eye);
+  lookat = t2.project(lookat);
+  setup();
+}
+
+
 
 const int CAMERA_VERSION = 1;
 
