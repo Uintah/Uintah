@@ -90,6 +90,21 @@ RBGSSolver::computePressResidual(const ProcessorGroup*,
 		    vars->pressNonlinearSrc.getPointer(),
 		    &vars->residPress, &vars->truncPress);
 
+#ifdef ARCHES_PRES_DEBUG
+  cerr << " After Pressure Compute Residual : " << endl;
+  for (int ii = domLo.x(); ii <= domHi.x(); ii++) {
+    cerr << "residual for ii = " << ii << endl;
+    for (int jj = domLo.y(); jj <= domHi.y(); jj++) {
+      for (int kk = domLo.z(); kk <= domHi.z(); kk++) {
+	cerr.width(14);
+	cerr << vars->residualPressure[IntVector(ii,jj,kk)] << " " ; 
+      }
+      cerr << endl;
+    }
+  }
+  cerr << "Resid Press = " << vars->residPress << " Trunc Press = " <<
+    vars->truncPress << endl;
+#endif
 }
 
 
@@ -131,6 +146,41 @@ RBGSSolver::computePressUnderrelax(const ProcessorGroup*,
 		 vars->pressNonlinearSrc.getPointer(), 
 		 &d_underrelax);
 
+#ifdef ARCHES_PRES_DEBUG
+  cerr << " After Pressure Underrelax : " << endl;
+  for (int ii = domLo.x(); ii <= domHi.x(); ii++) {
+    cerr << "pressure for ii = " << ii << endl;
+    for (int jj = domLo.y(); jj <= domHi.y(); jj++) {
+      for (int kk = domLo.z(); kk <= domHi.z(); kk++) {
+	cerr.width(14);
+	cerr << vars->pressure[IntVector(ii,jj,kk)] << " " ; 
+      }
+      cerr << endl;
+    }
+  }
+  cerr << " After Pressure Underrelax : " << endl;
+  for (int ii = domLo.x(); ii <= domHi.x(); ii++) {
+    cerr << "pressure AP for ii = " << ii << endl;
+    for (int jj = domLo.y(); jj <= domHi.y(); jj++) {
+      for (int kk = domLo.z(); kk <= domHi.z(); kk++) {
+	cerr.width(14);
+	cerr << (vars->pressCoeff[Arches::AP])[IntVector(ii,jj,kk)] << " " ; 
+      }
+      cerr << endl;
+    }
+  }
+  cerr << " After Pressure Underrelax : " << endl;
+  for (int ii = domLo.x(); ii <= domHi.x(); ii++) {
+    cerr << "pressure SU for ii = " << ii << endl;
+    for (int jj = domLo.y(); jj <= domHi.y(); jj++) {
+      for (int kk = domLo.z(); kk <= domHi.z(); kk++) {
+	cerr.width(14);
+	cerr << vars->pressNonlinearSrc[IntVector(ii,jj,kk)] << " " ; 
+      }
+      cerr << endl;
+    }
+  }
+#endif
 }
 
 //****************************************************************************
@@ -172,7 +222,8 @@ RBGSSolver::pressLisolve(const ProcessorGroup* pc,
   old_dw->get(truncP, lab->d_presTruncPSLabel);
   double nlResid = residP;
   double trunc_conv = truncP*1.0E-7;
-  double theta = 0.5;
+  //  double theta = 0.5;
+  double theta = 0.0;
   int pressIter = 0;
   double pressResid = 0.0;
   do {
@@ -194,18 +245,23 @@ RBGSSolver::pressLisolve(const ProcessorGroup* pc,
     computePressResidual(pc, patch, old_dw, new_dw, vars);
     pressResid = vars->residPress;
     ++pressIter;
+#ifdef ARCHES_PRES_DEBUG
+    cerr << "Iter # = " << pressIter << " Max Iters = " << d_maxSweeps 
+	 << " Press. Resid = " << pressResid << " d_residual = " << d_residual
+	 << " nlResid = " << nlResid << endl;
+#endif
   } while((pressIter < d_maxSweeps)&&((pressResid > d_residual*nlResid)));
   // while((pressIter < d_maxSweeps)&&((pressResid > d_residual*nlResid)||
   //			      (pressResid > trunc_conv)));
+#ifdef ARCHES_PRES_DEBUG
   cerr << "After pressure solve " << pressIter << " " << pressResid << endl;
   cerr << "After pressure solve " << nlResid << " " << trunc_conv <<  endl;
-#ifdef ARCHES_DEBUG
   cerr << " After Pressure solve : " << endl;
   for (int ii = domLo.x(); ii <= domHi.x(); ii++) {
     cerr << "pressure for ii = " << ii << endl;
     for (int jj = domLo.y(); jj <= domHi.y(); jj++) {
       for (int kk = domLo.z(); kk <= domHi.z(); kk++) {
-	cerr.width(10);
+	cerr.width(14);
 	cerr << vars->pressure[IntVector(ii,jj,kk)] << " " ; 
       }
       cerr << endl;
@@ -256,6 +312,22 @@ RBGSSolver::computeVelResidual(const ProcessorGroup* ,
 		      vars->uVelNonlinearSrc.getPointer(),
 		      &vars->residUVel, &vars->truncUVel);
 
+#ifdef ARCHES_VEL_DEBUG
+    cerr << " After U Velocity Compute Residual : " << endl;
+    for (int ii = domLo.x(); ii <= domHi.x(); ii++) {
+      cerr << "u residual for ii = " << ii << endl;
+      for (int jj = domLo.y(); jj <= domHi.y(); jj++) {
+	for (int kk = domLo.z(); kk <= domHi.z(); kk++) {
+	  cerr.width(14);
+	  cerr << vars->residualUVelocity[IntVector(ii,jj,kk)] << " " ; 
+	}
+	cerr << endl;
+      }
+    }
+    cerr << "Resid U Vel = " << vars->residUVel << " Trunc U Vel = " <<
+      vars->truncUVel << endl;
+#endif
+
     break;
   case Arches::YDIR:
     domLo = vars->vVelocity.getFortLowIndex();
@@ -278,6 +350,22 @@ RBGSSolver::computeVelResidual(const ProcessorGroup* ,
 		      vars->vVelNonlinearSrc.getPointer(),
 		      &vars->residVVel, &vars->truncVVel);
 
+#ifdef ARCHES_VEL_DEBUG
+    cerr << " After V Velocity Compute Residual : " << endl;
+    for (int ii = domLo.x(); ii <= domHi.x(); ii++) {
+      cerr << "v residual for ii = " << ii << endl;
+      for (int jj = domLo.y(); jj <= domHi.y(); jj++) {
+	for (int kk = domLo.z(); kk <= domHi.z(); kk++) {
+	  cerr.width(14);
+	  cerr << vars->residualVVelocity[IntVector(ii,jj,kk)] << " " ; 
+	}
+	cerr << endl;
+      }
+    }
+    cerr << "Resid V Vel = " << vars->residVVel << " Trunc V Vel = " <<
+      vars->truncVVel << endl;
+#endif
+
     break;
   case Arches::ZDIR:
     domLo = vars->wVelocity.getFortLowIndex();
@@ -299,6 +387,22 @@ RBGSSolver::computeVelResidual(const ProcessorGroup* ,
 		      vars->wVelocityCoeff[Arches::AP].getPointer(), 
 		      vars->wVelNonlinearSrc.getPointer(),
 		      &vars->residWVel, &vars->truncWVel);
+
+#ifdef ARCHES_VEL_DEBUG
+    cerr << " After W Velocity Compute Residual : " << endl;
+    for (int ii = domLo.x(); ii <= domHi.x(); ii++) {
+      cerr << "w residual for ii = " << ii << endl;
+      for (int jj = domLo.y(); jj <= domHi.y(); jj++) {
+	for (int kk = domLo.z(); kk <= domHi.z(); kk++) {
+	  cerr.width(14);
+	  cerr << vars->residualWVelocity[IntVector(ii,jj,kk)] << " " ; 
+	}
+	cerr << endl;
+      }
+    }
+    cerr << "Resid W Vel = " << vars->residWVel << " Trunc W Vel = " <<
+      vars->truncWVel << endl;
+#endif
 
     break;
   default:
@@ -353,6 +457,43 @@ RBGSSolver::computeVelUnderrelax(const ProcessorGroup* ,
 		   vars->uVelocityCoeff[Arches::AP].getPointer(), 
 		   vars->uVelNonlinearSrc.getPointer(),
 		   &d_underrelax);
+
+#ifdef ARCHES_VEL_DEBUG
+    cerr << " After U Vel Underrelax : " << endl;
+    for (int ii = domLo.x(); ii <= domHi.x(); ii++) {
+      cerr << "U Vel for ii = " << ii << endl;
+      for (int jj = domLo.y(); jj <= domHi.y(); jj++) {
+	for (int kk = domLo.z(); kk <= domHi.z(); kk++) {
+	  cerr.width(14);
+	  cerr << vars->uVelocity[IntVector(ii,jj,kk)] << " " ; 
+	}
+	cerr << endl;
+      }
+    }
+    cerr << " After U Vel Underrelax : " << endl;
+    for (int ii = domLo.x(); ii <= domHi.x(); ii++) {
+      cerr << "U Vel AP for ii = " << ii << endl;
+      for (int jj = domLo.y(); jj <= domHi.y(); jj++) {
+	for (int kk = domLo.z(); kk <= domHi.z(); kk++) {
+	  cerr.width(14);
+	  cerr << (vars->uVelocityCoeff[Arches::AP])[IntVector(ii,jj,kk)] << " " ; 
+	}
+	cerr << endl;
+      }
+    }
+    cerr << " After U Vel Underrelax : " << endl;
+    for (int ii = domLo.x(); ii <= domHi.x(); ii++) {
+      cerr << "U Vel SU for ii = " << ii << endl;
+      for (int jj = domLo.y(); jj <= domHi.y(); jj++) {
+	for (int kk = domLo.z(); kk <= domHi.z(); kk++) {
+	  cerr.width(14);
+	  cerr << vars->uVelNonlinearSrc[IntVector(ii,jj,kk)] << " " ; 
+	}
+	cerr << endl;
+      }
+    }
+#endif
+
     break;
     case Arches::YDIR:
     domLo = vars->vVelocity.getFortLowIndex();
@@ -365,18 +506,92 @@ RBGSSolver::computeVelUnderrelax(const ProcessorGroup* ,
 		   vars->vVelocityCoeff[Arches::AP].getPointer(), 
 		   vars->vVelNonlinearSrc.getPointer(),
 		   &d_underrelax);
+
+#ifdef ARCHES_VEL_DEBUG
+    cerr << " After V Vel Underrelax : " << endl;
+    for (int ii = domLo.x(); ii <= domHi.x(); ii++) {
+      cerr << "V Vel for ii = " << ii << endl;
+      for (int jj = domLo.y(); jj <= domHi.y(); jj++) {
+	for (int kk = domLo.z(); kk <= domHi.z(); kk++) {
+	  cerr.width(14);
+	  cerr << vars->vVelocity[IntVector(ii,jj,kk)] << " " ; 
+	}
+	cerr << endl;
+      }
+    }
+    cerr << " After V Vel Underrelax : " << endl;
+    for (int ii = domLo.x(); ii <= domHi.x(); ii++) {
+      cerr << "V Vel AP for ii = " << ii << endl;
+      for (int jj = domLo.y(); jj <= domHi.y(); jj++) {
+	for (int kk = domLo.z(); kk <= domHi.z(); kk++) {
+	  cerr.width(14);
+	  cerr << (vars->vVelocityCoeff[Arches::AP])[IntVector(ii,jj,kk)] << " " ; 
+	}
+	cerr << endl;
+      }
+    }
+    cerr << " After V Vel Underrelax : " << endl;
+    for (int ii = domLo.x(); ii <= domHi.x(); ii++) {
+      cerr << "V Vel SU for ii = " << ii << endl;
+      for (int jj = domLo.y(); jj <= domHi.y(); jj++) {
+	for (int kk = domLo.z(); kk <= domHi.z(); kk++) {
+	  cerr.width(14);
+	  cerr << vars->vVelNonlinearSrc[IntVector(ii,jj,kk)] << " " ; 
+	}
+	cerr << endl;
+      }
+    }
+#endif
+
     break;
     case Arches::ZDIR:
     domLo = vars->wVelocity.getFortLowIndex();
     domHi = vars->wVelocity.getFortHighIndex();
-    idxLo = patch->getSFCYFORTLowIndex();
-    idxHi = patch->getSFCYFORTHighIndex();
+    idxLo = patch->getSFCZFORTLowIndex();
+    idxHi = patch->getSFCZFORTHighIndex();
     FORT_UNDERELAX(domLo.get_pointer(), domHi.get_pointer(),
 		   idxLo.get_pointer(), idxHi.get_pointer(),
-		   vars->uVelocity.getPointer(),
-		   vars->uVelocityCoeff[Arches::AP].getPointer(), 
-		   vars->uVelNonlinearSrc.getPointer(),
+		   vars->wVelocity.getPointer(),
+		   vars->wVelocityCoeff[Arches::AP].getPointer(), 
+		   vars->wVelNonlinearSrc.getPointer(),
 		   &d_underrelax);
+
+#ifdef ARCHES_VEL_DEBUG
+    cerr << " After W Vel Underrelax : " << endl;
+    for (int ii = domLo.x(); ii <= domHi.x(); ii++) {
+      cerr << "W Vel for ii = " << ii << endl;
+      for (int jj = domLo.y(); jj <= domHi.y(); jj++) {
+	for (int kk = domLo.z(); kk <= domHi.z(); kk++) {
+	  cerr.width(14);
+	  cerr << vars->wVelocity[IntVector(ii,jj,kk)] << " " ; 
+	}
+	cerr << endl;
+      }
+    }
+    cerr << " After W Vel Underrelax : " << endl;
+    for (int ii = domLo.x(); ii <= domHi.x(); ii++) {
+      cerr << "W Vel AP for ii = " << ii << endl;
+      for (int jj = domLo.y(); jj <= domHi.y(); jj++) {
+	for (int kk = domLo.z(); kk <= domHi.z(); kk++) {
+	  cerr.width(14);
+	  cerr << (vars->wVelocityCoeff[Arches::AP])[IntVector(ii,jj,kk)] << " " ; 
+	}
+	cerr << endl;
+      }
+    }
+    cerr << " After W Vel Underrelax : " << endl;
+    for (int ii = domLo.x(); ii <= domHi.x(); ii++) {
+      cerr << "W Vel SU for ii = " << ii << endl;
+      for (int jj = domLo.y(); jj <= domHi.y(); jj++) {
+	for (int kk = domLo.z(); kk <= domHi.z(); kk++) {
+	  cerr.width(14);
+	  cerr << vars->wVelNonlinearSrc[IntVector(ii,jj,kk)] << " " ; 
+	}
+	cerr << endl;
+      }
+    }
+#endif
+
     break;
   default:
     throw InvalidValue("Invalid index in LinearSolver for velocity");
@@ -470,7 +685,7 @@ RBGSSolver::velocityLisolve(const ProcessorGroup* pc,
 				      (velResid > trunc_conv)));
     cerr << "After u Velocity solve " << velIter << " " << velResid << endl;
     cerr << "After u Velocity solve " << nlResid << " " << trunc_conv <<  endl;
-#endif
+#else
     FORT_EXPLICIT(domLo.get_pointer(), domHi.get_pointer(),
 		  idxLo.get_pointer(), idxHi.get_pointer(),
 		  vars->uVelocity.getPointer(),
@@ -487,8 +702,24 @@ RBGSSolver::velocityLisolve(const ProcessorGroup* pc,
 		  vars->old_density.getPointer(), 
 		  cellinfo->sewu.get_objs(), cellinfo->sns.get_objs(),
 		  cellinfo->stb.get_objs(), &delta_t);
+
+#ifdef ARCHES_VEL_DEBUG
+    cerr << " After U Vel Explicit solve : " << endl;
+    for (int ii = domLo.x(); ii <= domHi.x(); ii++) {
+      cerr << "U Vel for ii = " << ii << endl;
+      for (int jj = domLo.y(); jj <= domHi.y(); jj++) {
+	for (int kk = domLo.z(); kk <= domHi.z(); kk++) {
+	  cerr.width(14);
+	  cerr << vars->uVelocity[IntVector(ii,jj,kk)] << " " ; 
+	}
+	cerr << endl;
+      }
+    }
+#endif
+
     vars->residUVel = 1.0E-7;
     vars->truncUVel = 1.0;
+#endif
     break;
   case Arches::YDIR:
     domLo = vars->vVelocity.getFortLowIndex();
@@ -535,7 +766,7 @@ RBGSSolver::velocityLisolve(const ProcessorGroup* pc,
 				      (velResid > trunc_conv)));
     cerr << "After v Velocity solve " << velIter << " " << velResid << endl;
     cerr << "After v Velocity solve " << nlResid << " " << trunc_conv <<  endl;
-#endif
+#else
     FORT_EXPLICIT(domLo.get_pointer(), domHi.get_pointer(),
 		  idxLo.get_pointer(), idxHi.get_pointer(),
 		  vars->vVelocity.getPointer(),
@@ -552,8 +783,24 @@ RBGSSolver::velocityLisolve(const ProcessorGroup* pc,
 		  vars->old_density.getPointer(), 
 		  cellinfo->sew.get_objs(), cellinfo->snsv.get_objs(),
 		  cellinfo->stb.get_objs(), &delta_t);
+
+#ifdef ARCHES_VEL_DEBUG
+    cerr << " After V Vel Explicit solve : " << endl;
+    for (int ii = domLo.x(); ii <= domHi.x(); ii++) {
+      cerr << "V Vel for ii = " << ii << endl;
+      for (int jj = domLo.y(); jj <= domHi.y(); jj++) {
+	for (int kk = domLo.z(); kk <= domHi.z(); kk++) {
+	  cerr.width(14);
+	  cerr << vars->vVelocity[IntVector(ii,jj,kk)] << " " ; 
+	}
+	cerr << endl;
+      }
+    }
+#endif
+
     vars->residVVel = 1.0E-7;
     vars->truncVVel = 1.0;
+#endif
     break;
   case Arches::ZDIR:
     domLo = vars->wVelocity.getFortLowIndex();
@@ -599,7 +846,7 @@ RBGSSolver::velocityLisolve(const ProcessorGroup* pc,
 				      (velResid > trunc_conv)));
     cerr << "After w Velocity solve " << velIter << " " << velResid << endl;
     cerr << "After w Velocity solve " << nlResid << " " << trunc_conv <<  endl;
-#endif
+#else
     FORT_EXPLICIT(domLo.get_pointer(), domHi.get_pointer(),
 		  idxLo.get_pointer(), idxHi.get_pointer(),
 		  vars->wVelocity.getPointer(),
@@ -616,8 +863,24 @@ RBGSSolver::velocityLisolve(const ProcessorGroup* pc,
 		  vars->old_density.getPointer(), 
 		  cellinfo->sew.get_objs(), cellinfo->sns.get_objs(),
 		  cellinfo->stbw.get_objs(), &delta_t);
+
+#ifdef ARCHES_VEL_DEBUG
+    cerr << " After W Vel Explicit solve : " << endl;
+    for (int ii = domLo.x(); ii <= domHi.x(); ii++) {
+      cerr << "W Vel for ii = " << ii << endl;
+      for (int jj = domLo.y(); jj <= domHi.y(); jj++) {
+	for (int kk = domLo.z(); kk <= domHi.z(); kk++) {
+	  cerr.width(14);
+	  cerr << vars->wVelocity[IntVector(ii,jj,kk)] << " " ; 
+	}
+	cerr << endl;
+      }
+    }
+#endif
+
     vars->residWVel = 1.0E-7;
     vars->truncWVel = 1.0;
+#endif
     break;
   default:
     throw InvalidValue("Invalid index in LinearSolver for velocity");
@@ -794,6 +1057,12 @@ RBGSSolver::scalarLisolve(const ProcessorGroup* pc,
 
 //
 // $Log$
+// Revision 1.21  2000/08/23 06:20:52  bbanerje
+// 1) Results now correct for pressure solve.
+// 2) Modified BCU, BCV, BCW to add stuff for pressure BC.
+// 3) Removed some bugs in BCU, V, W.
+// 4) Coefficients for MOM Solve not computed correctly yet.
+//
 // Revision 1.20  2000/08/17 20:32:00  rawat
 // Fixed some bugs
 //

@@ -524,9 +524,16 @@ extern "C"
 		double* uVelocityCoeff_AT,
 		double* uVelocityCoeff_AB,
 		double* nlsource, double* linsource,
+		const int* domLoV, const int* domHiV, 
+		const int* idxLoV, const int* idxHiV,
+		const double* vVelocity,
+		const int* domLoW, const int* domHiW, 
+		const int* idxLoW, const int* idxHiW,
+		const double* wVelocity,
 		const int* domLo, const int* domHi,
+		const int* idxLo, const int* idxHi,
 		const int* pcell,
-		const int* wall, const int* ffield,
+		const int* wall, const int* ffield, const int* pfield,
 		const double* viscosity,
 		const double* sewu, const double* sns, const double* stb,
 		const double* yy, const double* yv,
@@ -548,9 +555,16 @@ extern "C"
 		double* vVelocityCoeff_AT,
 		double* vVelocityCoeff_AB,
 		double* nlsource, double* linsource,
+		const int* domLoU, const int* domHiU, 
+		const int* idxLoU, const int* idxHiU,
+		const double* uVelocity,
+		const int* domLoW, const int* domHiW, 
+		const int* idxLoW, const int* idxHiW,
+		const double* wVelocity,
 		const int* domLo, const int* domHi,
+		const int* idxLo, const int* idxHi,
 		const int* pcell,
-		const int* wall, const int* ffield,
+		const int* wall, const int* ffield, const int* pfield,
 		const double* viscosity,
 		const double* sew, const double* snsv, const double* stb,
 		const double* xx, const double* xu,
@@ -572,9 +586,16 @@ extern "C"
 		double* wVelocityCoeff_AT,
 		double* wVelocityCoeff_AB,
 		double* nlsource, double* linsource,
+		const int* domLoU, const int* domHiU, 
+		const int* idxLoU, const int* idxHiU,
+		const double* uVelocity,
+		const int* domLoV, const int* domHiV, 
+		const int* idxLoV, const int* idxHiV,
+		const double* vVelocity,
 		const int* domLo, const int* domHi,
+		const int* idxLo, const int* idxHi,
 		const int* pcell,
-		const int* wall, const int* ffield,
+		const int* wall, const int* ffield, const int* pfield,
 		const double* viscosity,
 		const double* sew, const double* sns, const double* stbw,
 		const double* xx, const double* xu,
@@ -885,6 +906,12 @@ extern "C"
 
 //
 // $Log$
+// Revision 1.35  2000/08/23 06:20:51  bbanerje
+// 1) Results now correct for pressure solve.
+// 2) Modified BCU, BCV, BCW to add stuff for pressure BC.
+// 3) Removed some bugs in BCU, V, W.
+// 4) Coefficients for MOM Solve not computed correctly yet.
+//
 // Revision 1.34  2000/08/20 22:52:33  bbanerje
 // Fixed PressureSource bug .. domHi, domLo were not being assigned
 // correctly in the wrapper.

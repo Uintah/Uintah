@@ -517,11 +517,30 @@ PressureSolver::normPressure(const ProcessorGroup* pc,
 		idxLo.get_pointer(), idxHi.get_pointer(),
 		vars->pressure.getPointer(), 
 		&pressref);
-}  
 
+#ifdef ARCHES_PRES_DEBUG
+  cerr << " After Pressure Normalization : " << endl;
+  for (int ii = domLo.x(); ii <= domHi.x(); ii++) {
+    cerr << "pressure for ii = " << ii << endl;
+    for (int jj = domLo.y(); jj <= domHi.y(); jj++) {
+      for (int kk = domLo.z(); kk <= domHi.z(); kk++) {
+	cerr.width(10);
+	cerr << vars->pressure[IntVector(ii,jj,kk)] << " " ; 
+      }
+      cerr << endl;
+    }
+  }
+#endif
+}  
 
 //
 // $Log$
+// Revision 1.45  2000/08/23 06:20:52  bbanerje
+// 1) Results now correct for pressure solve.
+// 2) Modified BCU, BCV, BCW to add stuff for pressure BC.
+// 3) Removed some bugs in BCU, V, W.
+// 4) Coefficients for MOM Solve not computed correctly yet.
+//
 // Revision 1.44  2000/08/11 21:26:36  rawat
 // added linear solver for pressure eqn
 //

@@ -7,7 +7,10 @@ c*********************************************************************
       SUBROUTINE bcuvel(domLoU, domHiU, idxLoU, idxHiU, UU,
      &     AP, AE, AW, AN, AS, AT, AB,
      &     SU, SP, 
-     &     domLo, domHi, PCELL, WALL, FFIELD, VISCOS, 
+     &     domLoV, domHiV, idxLoV, idxHiV, VV,
+     &     domLoW, domHiW, idxLoW, idxHiW, WW,
+     &     domLo, domHi, idxLo, idxHi, PCELL, WALL, FFIELD, PBCFLD,
+     &     VISCOS, 
      &     SEWU, SNS, STB,
      &     Y, YV, Z, ZW, 
      &     ierr)
@@ -44,7 +47,13 @@ c*********************************************************************
      &     domLoU(3):domHiU(3))
       double precision SP(domLoU(1):domHiU(1), domLoU(2):domHiU(2), 
      &     domLoU(3):domHiU(3))
-      integer domLo(3), domHi(3)
+      integer domLoV(3), domHiV(3), idxLoV(3), idxHiV(3)
+      double precision VV(domLoV(1):domHiV(1), domLoV(2):domHiV(2), 
+     &     domLoV(3):domHiV(3))
+      integer domLoW(3), domHiW(3), idxLoW(3), idxHiW(3)
+      double precision WW(domLoW(1):domHiW(1), domLoW(2):domHiW(2), 
+     &     domLoW(3):domHiW(3))
+      integer domLo(3), domHi(3), idxLo(3), idxHi(3)
       integer PCELL(domLo(1):domHi(1), domLo(2):domHi(2), 
      &     domLo(3):domHi(3))
       double precision SEWU(domLo(1):domHi(1))
@@ -58,41 +67,50 @@ c*********************************************************************
       double precision const
       
       integer WALL
-      integer FFIELD
+      integer FFIELD, PBCFLD
       integer ierr
 
 c*********************************************************************
 c     Local Variables :
 c*********************************************************************
-      integer ISTU, JSTU, KSTU, IENDU, JENDU, KENDU
+      integer IST, JST, KST, IEND, JEND, KEND
+      integer IBegGhost, JBegGhost, KBegGhost
+      integer IEndGhost, JEndGhost, KEndGhost
+      integer idxVInlet, idxWInlet
       integer i, j, k
-
 
       double precision YP, ZP, TMULT
 
-c*********************************************************************
+c*******************u*************************************************
 c     Start :
 c*********************************************************************
-      ISTU = idxLoU(1)+1
-      JSTU = idxLoU(2)+1
-      KSTU = idxLoU(3)+1
-      IENDU = idxHiU(1)-1
-      JENDU = idxHiU(2)-1
-      KENDU = idxHiU(3)-1
+      IST = idxLo(1)
+      JST = idxLo(2)
+      KST = idxLo(3)
+      IEND = idxHi(1)
+      JEND = idxHi(2)
+      KEND = idxHi(3)
+      iBegGhost = ist-1
+      jBegGhost = jst-1
+      kBegGhost = kst-1
+      iEndGhost = iend+1
+      jEndGhost = jend+1
+      kEndGhost = kend+1
+      idxVInlet = idxHiV(2)+1
+      idxWInlet = idxHiW(3)+1
       
 c------------------------------------------------------------------ 
 c     interior intrusions
 c------------------------------------------------------------------ 
       const = ONE
-      do 820 k=kstu, kendu
-         do 810 j=jstu, jendu
-            do 800 i=istu, iendu
+      do 820 k=kst, kend
+         do 810 j=jst, jend
+            do 800 i=ist, iend
 
-               if (pcell(i-1,j,k).eq.wall.or.
-     $              pcell(i,j,k).eq.wall)
+               if (pcell(i-1,j,k).eq.wall.or. pcell(i,j,k).eq.wall)
      $              call fixval(zero,ae(i,j,k),aw(i,j,k),an(i,j,k),
      $                          as(i,j,k),at(i,j,k),ab(i,j,k),
-     $              su(i,j,k),sp(i,j,k),const)
+     $                          su(i,j,k),sp(i,j,k),const)
 
  800        continue
  810     continue
@@ -103,31 +121,31 @@ c*********************************************************************
 c     Go thru all the cells
 c*********************************************************************
 C$DIR SCALAR
-      DO 120 K = idxLoU(3), idxHiU(3)
+      DO 120 K = kBegGhost, kEndGhost
 C$DIR SCALAR
-        DO 110 J = idxLoU(2), idxHiU(2)
+        DO 110 J = jBegGhost, jEndGhost
 C$DIR SCALAR
-          DO 100 I = idxLoU(1), idxLoU(1)
+          DO 100 I = iBegGhost, iEndGhost
             IF (PCELL(I,J,K).EQ.WALL) THEN
                UU(I,J,K) = 0.0
 C--------------------------------------------------------------------
 C             WEST FACE OF INTRUSION\WALL
 C--------------------------------------------------------------------
-               IF (I.NE.idxLoU(1)) THEN
+               IF (I.NE.iBegGhost) THEN
                   IF(PCELL(I-1,J,K).EQ.FFIELD) AE(I-1,J,K) = 0.0
                END IF
 C--------------------------------------------------------------------
 C               EAST FACE OF INTRUSION\WALL
 C--------------------------------------------------------------------
-               IF (I.NE.idxHiU(1)) THEN
+               IF (I.NE.iEndGhost) THEN
                   IF (PCELL(I+1, J, K).NE.WALL) THEN
-                     IF (I.NE.(idxHiU(1)-1)) AW(I+2,J,K) = 0.0
+                     IF (I.NE.iEnd) AW(I+2,J,K) = 0.0
                   end if
                end if
 C--------------------------------------------------------------------
 C             SOUTHWEST FACE OF INTRUSION\WALL
 C--------------------------------------------------------------------
-               IF (J.NE.idxLoU(2).AND.I.NE.idxLoU(1)) THEN
+               IF (J.NE.jBegGhost.AND.I.NE.iBegGhost) THEN
                   IF (PCELL(I,J-1,K).NE.WALL.AND.
      &                 PCELL(I-1,J-1,K).NE.WALL) THEN
                      YP = YV(J)-Y(J-1)
@@ -143,7 +161,7 @@ c                  SU(I,J-1,K) = SUL(I,J-1,K)
 C--------------------------------------------------------------------
 C             NORTHWEST FACE OF INTRUSION\WALL
 C--------------------------------------------------------------------
-               IF (J.NE.idxHiU(2).AND.I.NE.idxLoU(1)) THEN
+               IF (J.NE.jEndGhost.AND.I.NE.iBegGhost) THEN
                   IF (PCELL(I,J+1,K).NE.WALL.AND.
      &                 PCELL(I-1,J+1,K).NE.WALL) THEN
                      YP = Y(J+1)-YV(J+1)
@@ -157,7 +175,7 @@ c                SU(I,J+1,K) = SUL(I,J+1,K)
 C--------------------------------------------------------------------
 C             BOTTOM WEST FACE OF INTRUSION\WALL
 C--------------------------------------------------------------------
-              IF (K.NE.idxLoU(3).AND.I.NE.idxLoU(1)) THEN
+              IF (K.NE.kBegGhost.AND.I.NE.iBegGhost) THEN
                  IF (PCELL(I-1,J,K-1).NE.WALL.AND.
      &                PCELL(I,J,K-1).NE.WALL) THEN
                     ZP = ZW(K)-Z(K-1)
@@ -172,7 +190,7 @@ c                 SU(I,J,K-1) = SUL(I,J,K-1)
 C--------------------------------------------------------------------
 C             TOP WEST FACE OF INTRUSION\WALL
 C--------------------------------------------------------------------
-              IF (K.NE.idxHiU(3).AND.I.NE.idxLoU(1)) THEN
+              IF (K.NE.kEndGhost.AND.I.NE.iBegGhost) THEN
                  IF (PCELL(I-1,J,K+1).NE.WALL.AND.
      &                PCELL(I,J,K+1).NE.WALL) THEN
                     ZP = Z(K+1)-ZW(K+1)
@@ -187,12 +205,12 @@ C--------------------------------------------------------------------
 C             IF CELL EAST OF INTRUSION IS AN INTRUSION SKIP
 C             MODIFICATIONS FOR EASTERN FACES OF FIRST INTRUSION.
 C--------------------------------------------------------------------
-              IF (I.NE.idxHiU(1)) THEN
+              IF (I.NE.iEndGhost) THEN
                  IF (PCELL(I+1,J,K).NE.WALL) THEN
 C--------------------------------------------------------------------
 C               SOUTHEAST FACE OF INTRUSION\WALL
 C--------------------------------------------------------------------
-                    IF (J.NE.idxLoU(2).AND.I.NE.idxHiU(1)) THEN
+                    IF (J.NE.jBegGhost.AND.I.NE.iEndGhost) THEN
                        IF (PCELL(I+1,J-1,K).NE.WALL.AND.
      &                      PCELL(I,J-1,K).NE.WALL)  THEN
                           YP = YV(J)-Y(J-1)
@@ -207,7 +225,7 @@ c                       SU(I+1,J-1,K) = SUL(I+1,J-1,K)
 C--------------------------------------------------------------------
 C               NORTHEAST FACE OF INTRUSION\WALL
 C--------------------------------------------------------------------
-                    IF (J.NE.idxHiU(2).AND.I.NE.idxHiU(1)) THEN
+                    IF (J.NE.jEndGhost.AND.I.NE.iEndGhost) THEN
                        IF (PCELL(I+1,J+1,K).NE.WALL.AND.
      &                      PCELL(I,J+1,K).NE.WALL) THEN
                           YP = Y(J+1)-YV(J+1)
@@ -222,7 +240,7 @@ c                  SU(I+1,J+1,K) = SUL(I+1,J+1,K)
 C--------------------------------------------------------------------
 C               BOTTOM EAST FACE OF INTRUSION\WALL
 C--------------------------------------------------------------------
-                    IF (K.NE.idxLoU(3).AND.I.NE.idxHiU(1)) THEN
+                    IF (K.NE.kBegGhost.AND.I.NE.iEndGhost) THEN
                        IF (PCELL(I+1,J,K-1).NE.WALL.AND.
      &                      PCELL(I,J,K-1).NE.WALL) THEN
                           ZP = ZW(K)-Z(K-1)
@@ -237,7 +255,7 @@ c                  SU(I+1,J,K-1) = SUL(I+1,J,K-1)
 C--------------------------------------------------------------------
 C               TOP EAST FACE OF INTRUSION\WALL
 C--------------------------------------------------------------------
-                    IF (K.NE.idxHiU(3).AND.I.NE.idxHiU(1)) THEN
+                    IF (K.NE.kEndGhost.AND.I.NE.iEndGhost) THEN
                        IF (PCELL(I+1,J,K+1).NE.WALL.AND.
      &                      PCELL(I,J,K+1).NE.WALL) THEN
                           ZP = Z(K+1)-ZW(K+1)
@@ -256,12 +274,56 @@ c                  SU(I+1,J,K+1) = SUL(I+1,J,K+1)
  110  CONTINUE
  120  CONTINUE
 
+C--------------------------------------------------------------------
+C     PRESSURE BOUNDARY CONDITIONS 
+C--------------------------------------------------------------------
+C--------------------------------------------------------------------
+C     NORTH AND/OR SOUTH WALLS
+C--------------------------------------------------------------------
+      DO 310 K = kst, kend
+        DO 300 I = ist, iend
+           IF (PCELL(I,jEndGhost,K).EQ.PBCFLD.AND.
+     $          VV(I,idxVInlet,K).GT.0.0) THEN
+              UU(I,jEndGhost,K) = UU(I,jend,K)
+              AN(I,jend,K) = 2.0*TINY
+          END IF
+          IF (PCELL(I,jBegGhost,K).EQ.PBCFLD.AND.
+     $         VV(I,jBegGhost,K).LT.0.0) THEN
+             UU(I,jBegGhost,K) = UU(I,jst,K)
+             AS(I,jst,K) = 2.0*TINY
+          END IF
+  300   CONTINUE
+  310 CONTINUE
+C--------------------------------------------------------------------
+C     TOP AND/OR BOTTOM WALLS
+C--------------------------------------------------------------------
+      DO 410 J = jst, jend
+        DO 400 I = ist, iend
+          IF (PCELL(I,J,kEndGhost).EQ.PBCFLD
+     $          .AND.WW(i,j,idxWInlet).GT.0.0) THEN
+             UU(I,J,kEndGhost) = UU(I,J,kend)
+             AT(I,J,kend) = 2.0*TINY
+          END IF
+          IF (PCELL(I,J,kBegGhost).EQ.PBCFLD.AND.
+     $         WW(I,J,kBegGhost).LT.0.0) THEN
+            UU(I,J,kBegGhost) = UU(I,J,kst)
+            AB(I,J,kst) = 2.0*TINY
+            END IF
+  400   CONTINUE
+  410 CONTINUE
+
       RETURN
       END
 
 c*********************************************************************
 c
 c $Log$
+c Revision 1.5  2000/08/23 06:20:53  bbanerje
+c 1) Results now correct for pressure solve.
+c 2) Modified BCU, BCV, BCW to add stuff for pressure BC.
+c 3) Removed some bugs in BCU, V, W.
+c 4) Coefficients for MOM Solve not computed correctly yet.
+c
 c Revision 1.4  2000/08/17 20:32:02  rawat
 c Fixed some bugs
 c

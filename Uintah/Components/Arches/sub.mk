@@ -26,13 +26,21 @@ include $(SRCTOP)/scripts/recurse.mk
 PSELIBS := Uintah/Parallel Uintah/Interface Uintah/Grid Uintah/Exceptions \
 	   SCICore/Exceptions
 LIBS := $(XML_LIBRARY) -lftn -lm
-CFLAGS += -DARCHES_DEBUG -g
+#CFLAGS += -g -DARCHES_VEL_DEBUG
+CFLAGS += -g -DARCHES_DEBUG -DARCHES_GEOM_DEBUG -DARCHES_BC_DEBUG -DARCHES_COEF_DEBUG 
+CFLAGS += -DARCHES_SRC_DEBUG -DARCHES_PRES_DEBUG -DARCHES_VEL_DEBUG
 #LIBS += -lblas
 
 include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.25  2000/08/23 06:20:52  bbanerje
+# 1) Results now correct for pressure solve.
+# 2) Modified BCU, BCV, BCW to add stuff for pressure BC.
+# 3) Removed some bugs in BCU, V, W.
+# 4) Coefficients for MOM Solve not computed correctly yet.
+#
 # Revision 1.24  2000/08/17 20:32:00  rawat
 # Fixed some bugs
 #
