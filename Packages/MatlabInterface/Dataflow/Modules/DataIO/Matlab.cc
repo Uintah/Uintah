@@ -2,13 +2,15 @@
  *  Matlab.cc:
  *
  *  Written by:
- *   oleg
- *   TODAY'S DATE HERE
+ *   oleg@cs.utah.edu
+ *   02Jan23 
  *
  */
 
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Ports/MatrixPort.h>
+
+#include <sci_defs.h> // for SCIRUN_OBJDIR 
 
 #include <Packages/MatlabInterface/Core/Util/transport.h>
 
@@ -26,6 +28,11 @@ class MatlabInterfaceSHARE Matlab : public Module
   MatrixIPort *ip[5];
   MatrixOPort *op[5];
 
+  int wordy;            // how wordy debug output is
+
+  static char hport[256];      // Host and port information
+  static int engine_running;   // ==1 if engine runs under SCIRun
+  static Mutex engine_lock_;
 
 public:
   Matlab(const string& id);
@@ -43,9 +50,29 @@ Matlab::Matlab(const string& id) :
   hpTCL("hpTCL",id,this),
   cmdTCL("cmdTCL",id,this)
 {
+  wordy=0;
 }
 
-Matlab::~Matlab(){
+#include <unistd.h>
+
+bool Matlab::engine_running = 0;
+Mutex Matlab::engine_lock_("Matlab engine lock");
+char Matlab::hport[256];
+
+Matlab::~Matlab()
+{
+ /* MATLAB ENGINE SHUTDOWN IF NECESSARY */
+ 
+ engine_lock_.lock();
+ if(engine_running)
+ {
+  if(wordy>0) fprintf(stderr,"Closing matlab engine on %s\n",hport); 
+  engine_running--;
+  transport(2,4,hport,NULL);       // OPEN CLIENT 
+  transport(2,2,NULL,"stop");      // SHUT THE ENGINE DOWN 
+  transport(2,5,NULL,NULL);        // CLOSE 
+ }
+ engine_lock_.unlock();
 }
 
 /****************************MAIN ROUTINE*********************************************/
@@ -55,7 +82,6 @@ void   cmdparse(int *ioflags,char *cmd);
 
 void Matlab::execute()
 {
- int wordy=0;
 
 /* CREATE I/O PORTS */
 
@@ -79,28 +105,49 @@ void Matlab::execute()
  cmd=scinew char[strlen(cmd)+1];
  strcpy(cmd,(char *)s1.c_str());
 
- /* OBTAIN GUI STRING - HOST:PORT */
- hpTCL.reset();
- string s2=hpTCL.get();
- char *hport=(char *)s2.c_str();
- //char *hport="127.0.0.1:5517"; // should come from the gui
+ if(wordy>0) fprintf(stderr,"Command is: \n%s\n",cmd); 
+
+/* START THE MATLAB ENGINE */
+
+ engine_lock_.lock();
+
+ if(!engine_running)
+ {
+   /* OBTAIN GUI STRING - HOST:PORT  AND WORDY PARAMETER */
+
+   hpTCL.reset();
+   string s2=hpTCL.get();
+   sscanf((char *)s2.c_str(),"%s %i",hport,&wordy);
+   if(wordy>0) fprintf(stderr,"host and port: %s wordy %i\n",hport, wordy); 
+ 
+   if(strncmp(hport,"127.0.0.1",9)==0)
+   {
+     if(wordy>0) fprintf(stderr,"Starting matlab engine on %s\n",hport); 
+     char cl[1024];
+     
+     strcpy(cl,"echo 'path('\\''"); 
+     strcat(cl,SCIRUN_OBJDIR);
+     strcat(cl,"/../src/Packages/MatlabInterface/matlab/engine");
+     strcat(cl,"'\\'',path); mlabengine(");
+    sprintf(cl,"%s%i",cl,wordy-2);
+     strcat(cl,",'\\''"); 
+     strcat(cl,hport); 
+     strcat(cl,"'\\'');'|matlab -nosplash &");
+
+     if(wordy>1) fprintf(stderr,"line for system call: \n %s\n",cl); 
+     system(cl);
+   } else
+   {
+     if(wordy>0) fprintf(stderr,"Assuming that mlabengine is on %s\n",hport); 
+   }
+   engine_running++;
+ }
 
  char rcv[10],snd[10];
-
-
  MatrixHandle mhi[5],mho[5],err;
  int ioflags[10];
 
- fprintf(stderr,"Command is: \n%s\n",cmd); 
-
  cmdparse(ioflags,cmd);                  /* PARSE THE STRING FOR i o NAMES, delete \n */
-
- // delete [] cmd;
- // return;
-
- // for(int k=0;k<10;k++) ioflags[k]=0;
- // ioflags[0]=1;
- // ioflags[5]=1;
 
  for(int k=0;k<5;k++)
   if(ioflags[k]) ip[k]->get(mhi[k]);     /* GET DATA FROM RELEVANT PORTS */
@@ -124,6 +171,7 @@ void Matlab::execute()
   fprintf(stderr,"Matlab returned error: %g\n",mh2double(err)); 
   transport(wordy-2,2,NULL,"break");      /* RELEASE SERVER */
   transport(wordy-2,5,NULL,NULL);         /* CLOSE */
+  engine_lock_.unlock();
   return;
  }
 
@@ -137,13 +185,19 @@ void Matlab::execute()
    err=transport(wordy-2,1,NULL,err);     
   }
 
- transport(wordy-2,2,NULL,"break");      /* RELEASE SERVER */
+ transport(wordy-2,2,NULL,"break");      // RELEASE SERVER 
+
+ // transport(wordy-2,2,NULL,"stop");       // SHUT SERVER
+ // engine_running=0;
+
  transport(wordy-2,5,NULL,NULL);         /* CLOSE */
 
  for(int k=0;k<5;k++)                    /* SEND DATA TO RELEVANT OUTPUT PORTS */
   if(ioflags[k+5]) op[k]->send(mho[k]);             
 
  delete [] cmd;
+
+ engine_lock_.unlock();
 }
 
 /****************************END OF MAIN ROUTINE**************************************/
