@@ -11,6 +11,9 @@ ParticleSubset::~ParticleSubset()
 {
    if(d_pset && d_pset->removeReference())
       delete d_pset;
+   for(int i=0;i<neighbor_subsets.size();i++)
+      if(neighbor_subsets[i]->removeReference())
+	 delete neighbor_subsets[i];
 }
 
 ParticleSubset::ParticleSubset() :
@@ -39,6 +42,8 @@ ParticleSubset::ParticleSubset(ParticleSet* pset, bool fill,
       neighbors(neighbors), neighbor_subsets(neighbor_subsets)
 {
    d_pset->addReference();
+   for(int i=0;i<neighbor_subsets.size();i++)
+      neighbor_subsets[i]->addReference();
    if(fill)
       fillset();
 }
@@ -54,6 +59,10 @@ ParticleSubset::fillset()
 
 //
 // $Log$
+// Revision 1.10  2000/08/21 23:27:07  sparker
+// Added getReferenceCount() method to RefCounted
+// Correctly maintain ref counts on neighboring particle subsets in ParticleSubset
+//
 // Revision 1.9  2000/07/27 22:39:50  sparker
 // Implemented MPIScheduler
 // Added associated support

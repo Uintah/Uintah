@@ -5,6 +5,7 @@ static char *id="@(#) $Id$";
 #include <SCICore/Thread/AtomicCounter.h>
 #include <SCICore/Thread/Mutex.h>
 #include <SCICore/Util/Assert.h>
+#include <SCICore/Util/FancyAssert.h>
 #include <SCICore/Malloc/Allocator.h>
 using namespace Uintah;
 using namespace SCICore::Thread;
@@ -32,7 +33,7 @@ RefCounted::RefCounted()
 
 RefCounted::~RefCounted()
 {
-    ASSERT(d_refCount == 0);
+    ASSERTEQ(d_refCount, 0);
 }
 
 void RefCounted::addReference()
@@ -53,6 +54,10 @@ bool RefCounted::removeReference()
 
 //
 // $Log$
+// Revision 1.7  2000/08/21 23:27:07  sparker
+// Added getReferenceCount() method to RefCounted
+// Correctly maintain ref counts on neighboring particle subsets in ParticleSubset
+//
 // Revision 1.6  2000/06/22 21:56:30  sparker
 // Changed variable read/write to fortran order
 //
