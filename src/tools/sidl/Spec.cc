@@ -186,7 +186,7 @@ void CI::gatherVtable(vector<Method*>& uniquemethods) const
 	parentclass->gatherVtable(uniquemethods);
     for(vector<Interface*>::const_iterator iter=parent_ifaces.begin();
 	iter != parent_ifaces.end(); iter++){
-	(*iter)->gatherMethods(uniquemethods);
+	(*iter)->gatherVtable(uniquemethods);
     }
     mymethods->gatherVtable(uniquemethods);
 }
@@ -731,6 +731,12 @@ bool ArrayType::isvoid() const
 
 //
 // $Log$
+// Revision 1.5  1999/09/21 06:13:01  sparker
+// Fixed bugs in multiple inheritance
+// Added round-trip optimization
+// To support this, we store Startpoint* in the endpoint instead of the
+//    object final type.
+//
 // Revision 1.4  1999/09/17 05:07:25  sparker
 // Added nexus code generation capability
 //
