@@ -52,7 +52,9 @@ itcl_class Teem_DataIO_HDF5DataReader {
 	set $this-selectionString ""
 	set $this-regexp 0
 
+	global $this-ports
 	global $this-ndims
+	set $this-ports ""
 	set $this-ndims 0
 
 	for {set i 0} {$i < $max_dims} {incr i 1} {
@@ -783,7 +785,8 @@ itcl_class Teem_DataIO_HDF5DataReader {
 		    }		    
 		}
 
-		updateSelection
+		global $this-ports
+		updateSelection [set $this-ports]
 	    }
 
 	    set allow_selection true
@@ -830,7 +833,9 @@ itcl_class Teem_DataIO_HDF5DataReader {
     }
 
 
-    method updateSelection { } {
+    method updateSelection { ports } {
+
+	set $this-ports $ports
 
 	set w .ui[modname]
 
@@ -842,6 +847,12 @@ itcl_class Teem_DataIO_HDF5DataReader {
 	    set names [eval $treeview get -full $ids]
 
 	    global $this-datasets
+
+	    if { {[set $this-datasets]} != {$names} } {
+		set $ports ""
+		set $this-ports ""
+	    }
+		
 	    set $this-datasets $names
 
 	    set sd [$w.sd childsite]
@@ -856,8 +867,22 @@ itcl_class Teem_DataIO_HDF5DataReader {
 		append tmp "\}"
 	    }
 
+	    set cc 0
+
 	    foreach dataset $tmp {
-		$listbox.list insert end $dataset
+
+		set name $dataset
+
+		if { [string length $ports] > 0 } {
+		    set port [string range $ports [expr $cc*4] [expr $cc*4+3]]
+
+		    append name "   Port "
+		    append name $port
+		}
+
+		$listbox.list insert end $name
+
+		incr cc
 	    }
 
 	    $this-c update_selection;
