@@ -1,0 +1,7 @@
+#!/bin/tcsh -f
+
+ITCL_BIN_DIR/itclsh3.0 << END
+source TCL_LIB_DIR/tcl8.0/init.tcl
+source TCL_LIB_DIR/itcl3.0/itcl.tcl 
+auto_mkindex $1
+END

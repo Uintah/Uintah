@@ -1,0 +1,63 @@
+#
+#
+#
+
+#.......................................................................
+#  This script converts giff files to a movie and then plays the individual
+#  movies.  
+#  If you give this script the option "y" then it will remove all of the 
+#  *.giff files in the current directory.
+#  NOTE NO SPACES BETWEEN COMMAS
+#.......................................................................
+
+set p_movie_name   = "particle_movie"
+set e_movie_name   = "eulerian_movie"
+set p_v_movie_name = "particle_vector_movie"
+set s_p_movie_name = "scatter_plot_movie"
+
+#.......................................................................
+#  convert eulerian giff files to a movie
+#.......................................................................
+echo "now converting the eulerian giff files to a movie"
+dmconvert -f qt -n "#E.gif",start=1,end=1000,step=1 -p video,comp="qt_cvid",rate=10 "#E.gif" $e_movie_name
+
+if ($status == 0) then
+mediaplayer $e_movie_name
+endif
+
+#.......................................................................
+#  convert particle giff files to a movie
+#.......................................................................
+echo "now converting the particle giff files to a movie"
+dmconvert -f qt -n "#P.gif",start=1,end=1000,step=1 -p video,comp="qt_cvid",rate=10 "#P.gif" $p_movie_name
+
+if ($status == 0) then
+       mediaplayer $p_movie_name
+endif
+
+
+#.......................................................................
+#  convert particle vector giff files to a movie
+#.......................................................................
+echo "now converting the particle vector giff files to a movie"
+dmconvert -f qt -n "#PV.gif",start=1,end=1000,step=1 -p video,comp="qt_cvid",rate=10 "#PV.gif" $p_v_movie_name
+
+if ($status == 0) then
+       mediaplayer $p_v_movie_name
+endif
+#.......................................................................
+#  convert the scatter plot gif files to a movie
+#.......................................................................
+echo "now converting the scatter plot giff files to a movie"
+dmconvert -f qt -n "#scatter_plot.gif",start=1,end=1000,step=1 -p video,comp="qt_cvid",rate=10 "#scatter_plot.gif" $s_p_movie_name
+
+if ($status == 0) then
+       mediaplayer $s_p_movie_name
+endif
+#.......................................................................
+#  convert particle vector giff files to a movie
+#.......................................................................
+if ($argv == "y") then
+       echo " now removing the gif files"
+       rm *.gif
+endif

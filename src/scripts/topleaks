@@ -1,0 +1,15 @@
+#!/bin/csh
+set n = 10
+echo "--- TOP $n by total size ---"
+grep \( $1 | awk -F: '{print $2}' | sort | uniq -c | \
+ awk '{print $1*$2,$1,$2,$3,$4,$5,$6,$7}' | sort -nr | \
+ head -$n | awk '{printf("%d\t%d\t%s %s %s %s %s %s\n", $2,$3,$4,$5,$6,$7,$8,$9);}'
+
+echo ""
+echo "--- TOP $n by frequency ---"
+awk -F: '{print $2}' stats.out | sort | uniq -c | sort -nr | head -$n |\
+ awk '{printf("%d\t%d\t%s %s %s %s %s %s\n", $1,$2,$3,$4,$5,$6,$7,$8);}'
+
+echo ""
+grep "in use" $1
+
