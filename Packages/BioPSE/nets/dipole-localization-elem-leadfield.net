@@ -56,7 +56,7 @@ set runTime " 21:53:29"
 set bbox {84.0 8.0 1020 793}
 
 set m0 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 283 8]
-set m1 [addModuleAtPosition "SCIRun" "Fields" "SeedField" 283 68]
+set m1 [addModuleAtPosition "SCIRun" "Fields" "SampleField" 283 68]
 set m2 [addModuleAtPosition "SCIRun" "Math" "ErrorMetric" 102 599]
 set m3 [addModuleAtPosition "SCIRun" "Render" "Viewer" 594 749]
 set m4 [addModuleAtPosition "BioPSE" "Visualization" "ShowDipoles" 668 83]

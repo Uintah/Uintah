@@ -17,10 +17,10 @@
 
 package require Iwidgets 3.0
 
-itcl_class SCIRun_Fields_SeedField {
+itcl_class SCIRun_Fields_SampleField {
     inherit Module
     constructor {config} {
-        set name SeedField
+        set name SampleField
 
         set_defaults
     }
@@ -73,7 +73,7 @@ itcl_class SCIRun_Fields_SeedField {
 	pack $type.rake $type.ring $type.frame -side left -padx 5 -pady 5
 	frame $wtab.f1 
 	pack $wtab.f1 -side top 
-	label $wtab.f1.maxseeds_l -text "Maximum number of seeds" -width 23 \
+	label $wtab.f1.maxseeds_l -text "Maximum number of samples" -width 25 \
               -anchor w
 	entry $wtab.f1.maxseeds -text $this-maxseeds -width 10
 	pack $wtab.f1.maxseeds_l $wtab.f1.maxseeds -side left
@@ -98,7 +98,7 @@ itcl_class SCIRun_Fields_SeedField {
 	            -text "Scattered" 
 	pack $dist.imp.label $dist.imp.uni $dist.imp.scat \
 	     $dist.uni.label $dist.uni.uni $dist.uni.scat \
-	     -side top -padx 5 -pady 5
+	     -side top -padx 5 -pady 2
 
 	frame $rtab.f1 
 	pack $rtab.f1 -side top 
@@ -108,10 +108,14 @@ itcl_class SCIRun_Fields_SeedField {
 	pack $rtab.f1.rngseed_l $rtab.f1.rngseed -side left -anchor w
 	frame $rtab.f2
 	pack $rtab.f2 -side top
-	label $rtab.f2.numseeds_l -text "number of seeds" -width 23 \
+	label $rtab.f2.numseeds_l -text "number of samples" -width 23 \
               -anchor w
 	entry $rtab.f2.numseeds -text $this-numseeds -width 10
 	pack $rtab.f2.numseeds_l $rtab.f2.numseeds -side left
+        frame $rtab.f3
+        pack $rtab.f3 -side top
+        checkbutton $rtab.f3.clamp -text "Clamp to nodes" 
+        pack $rtab.f3.clamp
 
 	
 

@@ -15,12 +15,12 @@
   University of Utah. All Rights Reserved.
 */
 
-//    File   : SeedField.h
+//    File   : SampleField.h
 //    Author : Michael Callahan
 //    Date   : June 2001
 
-#if !defined(SeedField_h)
-#define SeedField_h
+#if !defined(SampleField_h)
+#define SampleField_h
 
 #include <Core/Disclosure/TypeDescription.h>
 #include <Core/Disclosure/DynamicLoader.h>
@@ -29,7 +29,7 @@
 
 namespace SCIRun {
 
-class SeedFieldAlgo : public DynamicAlgoBase
+class SampleFieldAlgo : public DynamicAlgoBase
 {
 public:
 
@@ -42,7 +42,7 @@ public:
 
 
 template <class Mesh>
-class SeedFieldAlgoT : public SeedFieldAlgo
+class SampleFieldAlgoT : public SampleFieldAlgo
 {
 private:
   class DistTable
@@ -88,7 +88,7 @@ public:
 
 template <class Mesh>
 bool
-SeedFieldAlgoT<Mesh>::DistTable::search(table_entry_type &e, long double d)
+SampleFieldAlgoT<Mesh>::DistTable::search(table_entry_type &e, long double d)
 {
   int min = 0;
   int max = table_.size() - 1;
@@ -115,7 +115,7 @@ SeedFieldAlgoT<Mesh>::DistTable::search(table_entry_type &e, long double d)
 
 template <class Mesh>
 bool 
-SeedFieldAlgoT<Mesh>::build_weight_table_sfi(MeshHandle mesh_h,
+SampleFieldAlgoT<Mesh>::build_weight_table_sfi(MeshHandle mesh_h,
 					     ScalarFieldInterface *sfi,
 					     DistTable &table,
 					     const string &dist)
@@ -125,7 +125,7 @@ SeedFieldAlgoT<Mesh>::build_weight_table_sfi(MeshHandle mesh_h,
   Mesh *mesh = dynamic_cast<Mesh *>(mesh_h.get_rep());
   if (mesh == 0)
   {
-    cout << "SeedFieldAlgo:: No mesh\n";
+    cout << "SampleFieldAlgo:: No mesh\n";
     return false;
   }
 
@@ -210,7 +210,7 @@ SeedFieldAlgoT<Mesh>::build_weight_table_sfi(MeshHandle mesh_h,
 
 template <class Mesh>
 bool 
-SeedFieldAlgoT<Mesh>::build_weight_table_vfi(MeshHandle mesh_h,
+SampleFieldAlgoT<Mesh>::build_weight_table_vfi(MeshHandle mesh_h,
 					     VectorFieldInterface *vfi,
 					     DistTable &table,
 					     const string &dist)
@@ -220,7 +220,7 @@ SeedFieldAlgoT<Mesh>::build_weight_table_vfi(MeshHandle mesh_h,
   Mesh *mesh = dynamic_cast<Mesh *>(mesh_h.get_rep());
   if (mesh == 0)
   {
-    cout << "SeedFieldAlgo:: No mesh.\n";
+    cout << "SampleFieldAlgo:: No mesh.\n";
     return false;
   }
 
@@ -306,7 +306,7 @@ SeedFieldAlgoT<Mesh>::build_weight_table_vfi(MeshHandle mesh_h,
 
 template <class Mesh>
 FieldHandle
-SeedFieldAlgoT<Mesh>::execute(FieldHandle field,
+SampleFieldAlgoT<Mesh>::execute(FieldHandle field,
 			      unsigned int num_seeds,
 			      int rng_seed,
 			      const string &dist)
@@ -361,4 +361,4 @@ SeedFieldAlgoT<Mesh>::execute(FieldHandle field,
 
 } // end namespace SCIRun
 
-#endif // SeedField_h
+#endif // SampleField_h
