@@ -81,12 +81,14 @@ public:
   virtual void resize(int);
 
   virtual string getInfo();  
+  virtual string getTypeName(int=0);
+
 
   //////////
   // Persistent representation...
   virtual void io(Piostream&);
   static PersistentTypeID type_id;
-  static string typeName();
+  static string typeName(int);
   static Persistent* maker();
 
   virtual int iterate(AttribFunctor<T> &func);
@@ -101,9 +103,23 @@ protected:
 //////////
 // PIO support
 template <class T, class I, class A> string
-IndexAttrib<T, I, A>::typeName(){
-  static string typeName = "IndexAttrib<"+findTypeName((T*)0)+","+findTypeName((I*)0)+","+findTypeName((A*)0)+">";
-  return typeName;
+IndexAttrib<T, I, A>::typeName(int n){
+  static string t1name = findTypeName((T*)0);
+  static string t2name = findTypeName((I*)0);
+  static string t3name = findTypeName((A*)0);
+  
+  static string className = "IndexAttrib<"+ t1name +","+ t2name + "," + t3name +">";
+  
+  switch (n){
+  case 1:
+    return t1name;
+  case 2:
+    return t2name;
+  case 3:
+    return t3name;
+  default:
+    return className;
+  }
 }
 
 template <class T, class I, class A> 
@@ -112,15 +128,15 @@ Persistent* IndexAttrib<T, I, A>::maker(){
 }
 
 template <class T, class I, class A> PersistentTypeID 
-IndexAttrib<T, I, A>::type_id(IndexAttrib<T, I, A>::typeName(), 
-			      DiscreteAttrib<T>::typeName(), 
+IndexAttrib<T, I, A>::type_id(IndexAttrib<T, I, A>::typeName(0), 
+			      DiscreteAttrib<T>::typeName(0), 
 			      maker);
 
 #define INDEXATTRIB_VERSION 1
 template <class T, class I, class A> void
 IndexAttrib<T, I, A>::io(Piostream& stream)
 {
-  stream.begin_class(typeName().c_str(), INDEXATTRIB_VERSION);
+  stream.begin_class(typeName(0).c_str(), INDEXATTRIB_VERSION);
   
   // -- base class PIO
   DiscreteAttrib<T>::io(stream);
@@ -372,6 +388,11 @@ IndexAttrib<T, I, A>::getInfo()
   return retval.str();
 }
 
+template <class T, class I, class A> string
+IndexAttrib<T, I, A>::getTypeName(int n){
+  return typeName(n);
+}
+ 
 } // End namespace SCIRun
 
 #endif

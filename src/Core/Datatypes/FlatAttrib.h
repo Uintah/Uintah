@@ -83,6 +83,7 @@ public:
 
 
   virtual string getInfo();
+  virtual string getTypeName(int=0);
 
   virtual int iterate(AttribFunctor<T> &func);
 
@@ -90,7 +91,7 @@ public:
   // Persistent representation...
   virtual void io(Piostream&);
   static PersistentTypeID type_id;
-  static string typeName();
+  static string typeName(int);
   static Persistent* maker();
 
 protected:
@@ -103,10 +104,6 @@ protected:
 };
 
 //////////
-// Class object maker
-
-
-//////////
 // PIO support
 template <class T> Persistent*
 FlatAttrib<T>::maker(){
@@ -114,14 +111,22 @@ FlatAttrib<T>::maker(){
 }
 
 template <class T>
-string FlatAttrib<T>::typeName(){
-  static string typeName = string("FlatAttrib<") + findTypeName((T*)0)+">";
-  return typeName;
+string FlatAttrib<T>::typeName(int n){
+  ASSERTRANGE(n, 0, 2);
+  static string t1name    = findTypeName((T*)0);
+  static string className = string("FlatAttrib<") + t1name +">";
+  
+  switch (n){
+  case 1:
+    return t1name;
+  default:
+    return className;
+  }
 }
 
 template <class T> 
-PersistentTypeID FlatAttrib<T>::type_id(FlatAttrib<T>::typeName(), 
-					DiscreteAttrib<T>::typeName(), 
+PersistentTypeID FlatAttrib<T>::type_id(FlatAttrib<T>::typeName(0), 
+					DiscreteAttrib<T>::typeName(0), 
 					FlatAttrib<T>::maker);
 
 #define FLATATTRIB_VERSION 1
@@ -129,7 +134,7 @@ PersistentTypeID FlatAttrib<T>::type_id(FlatAttrib<T>::typeName(),
 template <class T> void
 FlatAttrib<T>::io(Piostream& stream)
 {
-  stream.begin_class(typeName().c_str(), FLATATTRIB_VERSION);
+  stream.begin_class(typeName(0).c_str(), FLATATTRIB_VERSION);
   
   // -- base class PIO
   DiscreteAttrib<T>::io(stream);
@@ -374,11 +379,11 @@ FlatAttrib<T>::getInfo()
   return retval.str();
 }
 
+template <class T> string
+FlatAttrib<T>::getTypeName(int n){
+  return typeName(n);
+}
+
 } // End namespace SCIRun
 
-
-
 #endif  // SCI_project_FlatAttrib_h
-
-
-

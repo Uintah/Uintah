@@ -23,7 +23,6 @@
 #include <string>
 //#include <set>
 
-
 namespace SCIRun {
 
 using std::vector;
@@ -46,9 +45,10 @@ public:
   // Persistent representation.
   virtual void io(Piostream&);
   static PersistentTypeID type_id;
+  static string typeName(int);
 
   virtual string getInfo();
-
+  virtual string getTypeName(int=0);
 
 protected:
 

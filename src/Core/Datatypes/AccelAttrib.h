@@ -66,12 +66,12 @@ public:
   virtual void resize(int, int, int);
 
   virtual string getInfo();  
-
+  virtual string getTypeName(int=0);
   //////////
   // Persistent representation...
   virtual void io(Piostream&);
   static PersistentTypeID type_id;
-  static string typeName();
+  static string typeName(int);
   static Persistent* maker();
 
 protected:
@@ -89,14 +89,22 @@ Persistent* AccelAttrib<T>::maker(){
   return new AccelAttrib<T>();
 }
 
-template <class T> string AccelAttrib<T>::typeName(){
-  static string typeName = string("AccelAttrib<") + findTypeName((T*)0)+">";
-  return typeName;
+template <class T> string AccelAttrib<T>::typeName(int n){
+  ASSERTRANGE(n, 0, 2);
+  static string t1name    = findTypeName((T*)0);
+  static string className = string("AccelAttrib<") + t1name +">";
+  
+  switch (n){
+  case 1:
+    return t1name;
+  default:
+    return className;
+  }
 }
 
 template <class T> 
-PersistentTypeID AccelAttrib<T>::type_id(AccelAttrib<T>::typeName(),
-					 FlatAttrib<T>::typeName(),
+PersistentTypeID AccelAttrib<T>::type_id(AccelAttrib<T>::typeName(0),
+					 FlatAttrib<T>::typeName(0),
 					 AccelAttrib<T>::maker);
 
 #define ACCELATTRIB_VERSION 1
@@ -104,7 +112,7 @@ PersistentTypeID AccelAttrib<T>::type_id(AccelAttrib<T>::typeName(),
 template <class T> void
 AccelAttrib<T>::io(Piostream& stream)
 {
-  stream.begin_class(typeName().c_str(), ACCELATTRIB_VERSION);
+  stream.begin_class(typeName(0).c_str(), ACCELATTRIB_VERSION);
   
   // -- base class PIO
   FlatAttrib<T>::io(stream);
@@ -415,8 +423,12 @@ AccelAttrib<unsigned char>::getInfo()
   return retval.str();
 }
 
-} // End namespace SCIRun
+template<class T> string
+AccelAttrib<T>::getTypeName(int n){
+  return typeName(n);
+}
 
+} // End namespace SCIRun
 
 
 #endif  // SCI_project_AccelAttrib_h

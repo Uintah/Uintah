@@ -103,9 +103,11 @@ void SCICORESHARE Pio(Piostream&, TetSimp&);
 class SCICORESHARE UnstructuredGeom : public Geom
 {
 public:
-  
+  virtual string getTypeName(int=0);
+  virtual void io(Piostream&);
   virtual ~UnstructuredGeom() {};
-  static string typeName();
+  static string typeName(int);
+  static PersistentTypeID type_id;
 protected:
 };
 

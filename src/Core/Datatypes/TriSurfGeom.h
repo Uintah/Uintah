@@ -48,12 +48,13 @@ public:
   virtual ~TriSurfGeom() {}
   
   virtual string getInfo();
-  
+  virtual string getTypeName(int=0);
+
   ///////////
   // Persistent representation...
   virtual void io(Piostream&) {}
   static PersistentTypeID type_id;
-  static string typeName();
+  static string typeName(int);
 
   int pointSize() { return d_points.size(); }
   int edgeSize() { return d_mesh.size(); }

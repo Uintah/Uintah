@@ -17,19 +17,20 @@ static Persistent* maker(){
   return new ContourGeom();
 }
 
-string ContourGeom::typeName(){
+string ContourGeom::typeName(int){
   static string typeName = "ContourGeom";
   return typeName;
 }
 
-PersistentTypeID ContourGeom::type_id(ContourGeom::typeName(),
-				      UnstructuredGeom::typeName(),
+PersistentTypeID ContourGeom::type_id(ContourGeom::typeName(0),
+				      UnstructuredGeom::typeName(0),
 				      maker);
 
 #define CONTOURGEOM_VERSION 1
 void ContourGeom::io(Piostream& stream)
 {
-  stream.begin_class(typeName().c_str(), CONTOURGEOM_VERSION);
+  stream.begin_class(typeName(0).c_str(), CONTOURGEOM_VERSION);
+  UnstructuredGeom::io(stream);
   Pio(stream, d_edge);
   stream.end_class();
 }
@@ -60,6 +61,12 @@ ContourGeom::getInfo()
   retval << "name = " << d_name << endl;
   return retval.str();
 }
+
+string
+ContourGeom::getTypeName(int n){
+  return typeName(n);
+}
+
 
 void
 ContourGeom::setEdges(const vector<EdgeSimp>& iedges)
