@@ -96,6 +96,7 @@ void SerialMPM::problemSetup(const ProblemSpecP& prob_spec, GridP&,
 
   if(mpm_soln_ps) {
     mpm_soln_ps->get("nodes8or27", flags->d_8or27);
+    mpm_soln_ps->get("withColor",  flags->d_with_color);
     mpm_soln_ps->get("do_grid_reset", d_doGridReset);
     mpm_soln_ps->get("minimum_particle_mass",    d_min_part_mass);
     mpm_soln_ps->get("maximum_particle_velocity",d_max_vel);
@@ -206,6 +207,11 @@ void SerialMPM::scheduleInitialize(const LevelP& level,
   t->computes(lb->pErosionLabel);
   t->computes(d_sharedState->get_delt_label());
   t->computes(lb->pCellNAPIDLabel,zeroth_matl);
+  
+  // Debugging Scalar
+  if (flags->d_with_color) {
+    t->computes(lb->pColorLabel);
+  }
 
   if (flags->d_useLoadCurves) {
     // Computes the load curve ID associated with each particle
@@ -874,6 +880,13 @@ void SerialMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   t->computes(lb->ThermalEnergyLabel);
   t->computes(lb->CenterOfMassPositionLabel);
   t->computes(lb->CenterOfMassVelocityLabel);
+  
+  // debugging scalar
+  if(flags->d_with_color) {
+    t->requires(Task::OldDW, lb->pColorLabel,  Ghost::None);
+    t->computes(lb->pColorLabel_preReloc);
+  }
+  
   sched->addTask(t, patches, matls);
 }
 
@@ -1047,6 +1060,19 @@ void SerialMPM::actuallyInitialize(const ProcessorGroup*,
       mpm_matl->getConstitutiveModel()->initializeCMData(patch,
                                                          mpm_matl,
                                                          new_dw);
+      // scalar used for debugging
+      if(flags->d_with_color) {
+        ParticleVariable<double> pcolor;
+        int index = mpm_matl->getDWIndex();
+        ParticleSubset* pset = new_dw->getParticleSubset(index, patch);
+        setParticleDefault(pcolor, lb->pColorLabel, pset, new_dw, 0.0);
+        //__________________________________
+        //  hardwiring for Northrup Grumman nozzle   
+        #define SerialMPM_1
+        #include "../MPMICE/NGC_nozzle.i"
+        #undef SerialMPM_1
+      }
+
     }
   }
 
@@ -2656,6 +2682,15 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
        }
       }
       new_dw->deleteParticles(delset);      
+      //__________________________________
+      //  particle debugging label-- carry forward
+      if (flags->d_with_color) {
+        constParticleVariable<double> pColor;
+        ParticleVariable<double>pColor_new;
+        old_dw->get(pColor, lb->pColorLabel, pset);
+        new_dw->allocateAndPut(pColor_new, lb->pColorLabel_preReloc, pset);
+        pColor_new.copyData(pColor);
+      }    
     }
 
     if(combustion_problem){  // Adjust the min. part. mass if dt gets small
