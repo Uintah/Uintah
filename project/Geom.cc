@@ -25,6 +25,11 @@ GeomObj::GeomObj()
 {
 }
 
+GeomObj::GeomObj(const GeomObj& copy)
+: matl(copy.matl)
+{
+}
+
 GeomObj::~GeomObj()
 {
     if(matl)
@@ -36,8 +41,18 @@ ObjGroup::ObjGroup()
 {
 }
 
+ObjGroup::ObjGroup(const ObjGroup& copy)
+: GeomObj(copy), bb(copy.bb)
+{
+    objs.grow(copy.objs.size());
+    for(int i=0;i<objs.size();i++)
+	objs[i]=copy.objs[i]->clone();
+}
+
 ObjGroup::~ObjGroup()
 {
+    for(int i=0;i<objs.size();i++)
+	delete objs[i];
 }
 
 void ObjGroup::add(GeomObj* obj)
@@ -61,6 +76,11 @@ void ObjGroup::draw(DrawInfo* di)
 	di->pop_matl();
 }
 
+GeomObj* ObjGroup::clone()
+{
+    return new ObjGroup(*this);
+}
+
 BBox ObjGroup::bbox()
 {
     return bb;
@@ -72,6 +92,11 @@ Triangle::Triangle(const Point& p1, const Point& p2, const Point& p3)
     bb.extend(p1);
     bb.extend(p2);
     bb.extend(p3);
+}
+
+Triangle::Triangle(const Triangle &copy)
+: bb(copy.bb), p1(copy.p1), p2(copy.p2), p3(copy.p3)
+{
 }
 
 Triangle::~Triangle()
@@ -110,6 +135,11 @@ void Triangle::draw(DrawInfo* di) {
 	di->pop_matl();
 }
 
+GeomObj* Triangle::clone()
+{
+    return new Triangle(*this);
+}
+
 BBox Triangle::bbox() {
     return bb;
 }
@@ -121,6 +151,11 @@ Tetra::Tetra(const Point& p1, const Point& p2, const Point& p3, const Point& p4)
     bb.extend(p2);
     bb.extend(p3);
     bb.extend(p4);
+}
+
+Tetra::Tetra(const Tetra& copy)
+: bb(copy.bb), p1(copy.p1), p2(copy.p2), p3(copy.p3), p4(copy.p4)
+{
 }
 
 Tetra::~Tetra()
@@ -144,6 +179,11 @@ void Tetra::draw(DrawInfo* di) {
 	di->pop_matl();
 }
 
+GeomObj* Tetra::clone()
+{
+    return new Tetra(*this);
+}
+
 BBox Tetra::bbox() {
     return bb;
 }
@@ -152,6 +192,11 @@ GeomSphere::GeomSphere(const Point& cen, double rad, int nu, int nv)
 : cen(cen), rad(rad), nu(nu), nv(nv)
 {
     bb.extend(cen, rad);
+}
+
+GeomSphere::GeomSphere(const GeomSphere& copy)
+: bb(copy.bb), cen(copy.cen), rad(copy.rad), nu(copy.nu), nv(copy.nv)
+{
 }
 
 GeomSphere::~GeomSphere()
@@ -264,6 +309,11 @@ void GeomSphere::draw(DrawInfo* di)
 	di->pop_matl();
 }
 
+GeomObj* GeomSphere::clone()
+{
+    return new GeomSphere(*this);
+}
+
 BBox GeomSphere::bbox() {
     return bb;
 }
@@ -272,6 +322,11 @@ GeomPt::GeomPt(const Point& p)
 : p1(p)
 {
     bb.extend(p);
+}
+
+GeomPt::GeomPt(const GeomPt& copy)
+: bb(copy.bb), p1(copy.p1)
+{
 }
 
 GeomPt::~GeomPt() {
@@ -285,6 +340,11 @@ void GeomPt::draw(DrawInfo* di) {
     glEnd();
     if(matl)
 	di->pop_matl();
+}
+
+GeomObj* GeomPt::clone()
+{
+    return new GeomPt(*this);
 }
 
 BBox GeomPt::bbox() {

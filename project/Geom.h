@@ -55,9 +55,11 @@ protected:
     MaterialProp* matl;
 public:
     GeomObj();
+    GeomObj(const GeomObj&);
     virtual ~GeomObj();
     virtual void draw(DrawInfo*) = 0;
     virtual BBox bbox() = 0;
+    virtual GeomObj* clone() = 0;
     void set_matl(MaterialProp*);
 };
 
@@ -71,12 +73,14 @@ class ObjGroup : public GeomObj {
     BBox bb;
 public:
     ObjGroup();
+    ObjGroup(const ObjGroup&);
     virtual ~ObjGroup();
 
     void add(GeomObj*);
     int size();
     virtual void draw(DrawInfo*);
-    BBox bbox();
+    virtual GeomObj* clone();
+    virtual BBox bbox();
 };
 
 class Triangle : public GeomObj {
@@ -88,9 +92,11 @@ public:
     Vector n;
 
     Triangle(const Point&, const Point&, const Point&);
+    Triangle(const Triangle&);
     virtual ~Triangle();
     virtual void draw(DrawInfo*);
-    BBox bbox();
+    virtual GeomObj* clone();
+    virtual BBox bbox();
 };
 
 class Tetra : public GeomObj {
@@ -102,9 +108,11 @@ public:
     Point p4;
 
     Tetra(const Point&, const Point&, const Point&, const Point&);
+    Tetra(const Tetra&);
     virtual ~Tetra();
     virtual void draw(DrawInfo*);
-    BBox bbox();
+    virtual GeomObj* clone();
+    virtual BBox bbox();
 };
 
 class GeomSphere : public GeomObj {
@@ -118,7 +126,8 @@ public:
     GeomSphere(const Point&, double, int nu=20, int nv=10);
     virtual ~GeomSphere();
     virtual void draw(DrawInfo*);
-    BBox bbox();
+    virtual GeomObj* clone();
+    virtual BBox bbox();
 };
 
 class GeomPt : public GeomObj {
@@ -127,9 +136,11 @@ public:
     Point p1;
 
     GeomPt(const Point&);
+    GeomPt(const GeomPt&);
     virtual ~GeomPt();
     virtual void draw(DrawInfo*);
-    BBox bbox();
+    virtual GeomObj* clone();
+    virtual BBox bbox();
 };
 
 #endif
