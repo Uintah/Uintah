@@ -39,7 +39,7 @@ using namespace std;
 #define DOORHEIGHT             2.3
 #define DOOROFFSET             5.25
 #define ROOMSCALE              .5
-#define ROOMFLOOR              .55
+#define ROOMFLOOR              0
 #define ROOMHEIGHT             ((30*ROOMSCALE)+ROOMFLOOR)
 #define ROOMRADIUS             (50*ROOMSCALE)
 #define ROOMOFFSETX            4
@@ -232,7 +232,6 @@ Scene *make_scene(int /*argc*/, char* /*argv*/[], int /*nworkers*/)
 
   double radius;
   double orb_radius;
-  BBox bbox;
 
   // galaxy room
 
@@ -403,8 +402,6 @@ Scene *make_scene(int /*argc*/, char* /*argv*/[], int /*nworkers*/)
   earth->set_rev_speed(1./table[1].rot_speed_*SYSTEM_TIME_SCALE1);
   table[1].self_ = earth;
   cerr << earth->get_name() << " = " << earth << endl;
-  bbox.reset();
-  earth->compute_bounds(bbox,1E-6);
   solar_system->add( earth );
   
   // these two lines needed for animation
@@ -443,8 +440,6 @@ Scene *make_scene(int /*argc*/, char* /*argv*/[], int /*nworkers*/)
          << newsat->get_parent() << endl;
     newsat->set_rev_speed(1./table[loop].rot_speed_*SYSTEM_TIME_SCALE1);
     newsat->set_orb_speed(1./table[loop].orb_speed_*SYSTEM_TIME_SCALE2);
-    bbox.reset();
-    newsat->compute_bounds( bbox, 1E-6 );
     solar_system->add( newsat );
 #if _USING_GRID_
 #if _USING_GRID2_
@@ -457,8 +452,6 @@ Scene *make_scene(int /*argc*/, char* /*argv*/[], int /*nworkers*/)
 #endif
 
     if (newsat->get_name() == "saturn") {
-      bbox.reset();
-      newsat->compute_bounds( bbox, 1E-6 );
       cerr << "adding rings!!!! " << radius << endl;
       up = Vector(-sin(DEG2RAD(table[loop].tilt_))+.25, 0, 
                   cos(DEG2RAD(table[loop].tilt_)));
@@ -470,8 +463,6 @@ Scene *make_scene(int /*argc*/, char* /*argv*/[], int /*nworkers*/)
                           65754*SYSTEM_SIZE_SCALE,
                           newsat);
 
-      bbox.reset();
-      rings->compute_bounds( bbox, 1E-6 );
       solar_system->add( rings );
 #if _USING_GRID_
 #if _USING_GRID2_
