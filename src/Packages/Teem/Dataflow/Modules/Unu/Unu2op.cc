@@ -194,6 +194,7 @@ Unu2op::execute()
   NrrdData *nrrd = scinew NrrdData;
   nrrd->nrrd = nout;
 
+  nrrdKeyValueCopy(nout, nin2);
   NrrdDataHandle out(nrrd);
 
   onrrd_->send(out);

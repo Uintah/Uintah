@@ -128,7 +128,7 @@ Unu1op::execute()
 
   NrrdData *nrrd = scinew NrrdData;
   nrrd->nrrd = nout;
-
+  nrrdKeyValueCopy(nout, nin);
   NrrdDataHandle out(nrrd);
 
   onrrd_->send(out);
