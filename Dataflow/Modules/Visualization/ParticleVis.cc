@@ -327,7 +327,7 @@ void ParticleVis::execute()
 	count++;
 	if (count == show_nth.get() ){ 
 	  double value = (*s_it)[*iter];
-	  pts->add((*p_it)[*iter], cmap->lookup(value)->diffuse);
+	  pts->add((*p_it)[*iter], cmap->lookup(value));
 	  count = 0;
 	}
  	if( drawVectors.get() == 1 && hasVectors){
