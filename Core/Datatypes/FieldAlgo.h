@@ -14,27 +14,27 @@
 
 namespace SCIRun {
 
-  template <class Functor>
-  void interpolate(const Point &p, Functor &f);
   
-template <class Data> template <class Functor>
+template <class Field, class Functor>
 void 
-GenericField<Data>::interpolate(const Point &p, Functor &f) {
-
-  if (f.wieghts_ == 0)
+interpolate_vol(const Field &fld, const Point &p, Functor &f) {
+  typedef typename Field::mesh_type Mesh;
+  
+  if (f.wieghts_ == 0) //FIX_ME get weights....
     f.wieghts_ = new double[4]; // four nodes in tets
-  MeshTet::cell_index ci;
-  mesh_->locate_cell(ci, p, f.weights_);
 
-  switch (data_at()) {
+  typename Mesh::cell_index ci;
+  fld.locate(ci, p, f.weights_);
+
+  switch (fld.data_at()) {
   case Field::NODE :
     {
       int i = 0;
-      MeshTet::node_array nodes;
+      typename Mesh::node_array nodes;
       get_nodes(nodes, ci);
-      MeshTet::node_array::iterator iter = nodes.begin();
+      typename Mesh::node_array::iterator iter = nodes.begin();
       while (iter != nodes.end()) {
-	f(*data_, *iter);
+	f(fld, *iter, i);
 	++iter; ++i;
       }
     }
