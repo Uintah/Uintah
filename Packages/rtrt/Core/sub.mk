@@ -90,7 +90,7 @@ SRCS += $(SRCDIR)/Worker.cc \
 PSELIBS :=  \
 	Core/Thread Core/Exceptions Core/Geometry Packages/rtrt/visinfo 
 
-LIBS := $(GL_LIBS) $(FASTM_LIBS) -lm $(THREAD_LIBS) $(PERFEX_LIBRARY)
+LIBS := $(GL_LIBS) $(FASTM_LIBS) -lm -lelf $(THREAD_LIBS) $(PERFEX_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
