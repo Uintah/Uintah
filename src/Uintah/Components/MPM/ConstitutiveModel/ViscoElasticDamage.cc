@@ -50,11 +50,6 @@ ViscoElasticDamage::ViscoElasticDamage(ProblemSpecP& ps)
 {
   // Constructor
   // Initialize deformationGradient
-  const DOM_Node root_node = ps->getNode().getOwnerDocument();
-  ProblemSpecP root_ps = scinew ProblemSpec(root_node);
-  ProblemSpecP time_ps= root_ps->findBlock("Uintah_specification")->findBlock("Time");
-  time_ps->require("timestep_multiplier",d_fudge);
-
   ps->require("bulk_modulus",d_Bulk);
   ps->require("shear_modulus",d_Shear);
   ps->require("alpha",d_Alpha);

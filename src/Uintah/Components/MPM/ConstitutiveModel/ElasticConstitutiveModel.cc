@@ -30,11 +30,6 @@ using namespace Uintah::MPM;
 
 ElasticConstitutiveModel::ElasticConstitutiveModel(ProblemSpecP &ps)
 {
-  const DOM_Node root_node = ps->getNode().getOwnerDocument();
-  ProblemSpecP root_ps = scinew ProblemSpec(root_node);
-  ProblemSpecP time_ps= root_ps->findBlock("Uintah_specification")->findBlock("Time");
-  time_ps->require("timestep_multiplier",d_fudge);
-
   ps->require("youngs_modulus",d_initialData.YngMod);
   ps->require("poissons_ratio",d_initialData.PoiRat); 
   p_cmdata_label = scinew VarLabel("p.cmdata",
@@ -515,6 +510,12 @@ int ElasticConstitutiveModel::getSize() const
 
 
 // $Log$
+// Revision 1.17  2000/06/16 05:03:05  sparker
+// Moved timestep multiplier to simulation controller
+// Fixed timestep min/max clamping so that it really works now
+// Implemented "override" for reduction variables that will
+//   allow the value of a reduction variable to be overridden
+//
 // Revision 1.16  2000/06/15 21:57:05  sparker
 // Added multi-patch support (bugzilla #107)
 // Changed interface to datawarehouse for particle data

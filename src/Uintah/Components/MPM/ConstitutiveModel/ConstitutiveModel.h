@@ -88,13 +88,18 @@ WARNING
 	 */
 
         protected:
-	  double d_fudge;
       };
       
    } // end namespace MPM
 } // end namespace Uintah
 
 // $Log$
+// Revision 1.19  2000/06/16 05:03:05  sparker
+// Moved timestep multiplier to simulation controller
+// Fixed timestep min/max clamping so that it really works now
+// Implemented "override" for reduction variables that will
+//   allow the value of a reduction variable to be overridden
+//
 // Revision 1.18  2000/06/15 21:57:05  sparker
 // Added multi-patch support (bugzilla #107)
 // Changed interface to datawarehouse for particle data

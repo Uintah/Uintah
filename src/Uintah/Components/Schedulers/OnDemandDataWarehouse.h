@@ -64,6 +64,7 @@ public:
    virtual void allocate(ReductionVariableBase&, const VarLabel*);
    virtual void get(ReductionVariableBase&, const VarLabel*);
    virtual void put(const ReductionVariableBase&, const VarLabel*);
+   virtual void override(const ReductionVariableBase&, const VarLabel*);
 
    // Particle Variables
    virtual ParticleSubset* createParticleSubset(particleIndex numParticles,
@@ -237,6 +238,12 @@ private:
 
 //
 // $Log$
+// Revision 1.28  2000/06/16 05:03:08  sparker
+// Moved timestep multiplier to simulation controller
+// Fixed timestep min/max clamping so that it really works now
+// Implemented "override" for reduction variables that will
+//   allow the value of a reduction variable to be overridden
+//
 // Revision 1.27  2000/06/15 21:57:12  sparker
 // Added multi-patch support (bugzilla #107)
 // Changed interface to datawarehouse for particle data
