@@ -47,6 +47,7 @@ using std::endl;
 using std::hex;
 using std::dec;
 using std::ostringstream;
+using std::istringstream;
 using std::vector;
 using std::string;
 
@@ -75,7 +76,9 @@ SCIRex::SCIRex(GuiContext* ctx)
     num_slices_(ctx->subVar("num_slices")),
     render_style_(ctx->subVar("render_style")),
     alpha_scale_(ctx->subVar("alpha_scale")),
-    interp_mode_(ctx->subVar("interp_mode"))
+    interp_mode_(ctx->subVar("interp_mode")),
+    displays_(ctx->subVar("displays")),
+    compositers_(ctx->subVar("compositers"))
 {
 }
 
@@ -131,10 +134,17 @@ void SCIRex::execute(void)
     return;
   }
 
-  vector<char*> dpys; // hard code for now
-  dpys.push_back(":0.0");
-  dpys.push_back(":0.0");
-  int ncomp = 3;
+  istringstream iss(displays_.get());
+  string dpy;
+  vector<const char*> dpys; // hard code for now
+  while(iss >> dpy){
+    dpys.push_back( dpy.c_str() );
+  }
+  if( dpys.size() < 2 ) return;
+
+//   dpys.push_back(":0.0");
+//   dpys.push_back(":0.0");
+//   int ncomp = 3;
   //AuditAllocator(default_allocator);
   if(geom_id != -1)
     ogeom_->delObj(geom_id, 0);
@@ -144,7 +154,7 @@ void SCIRex::execute(void)
 
   cerr<<"min = "<<min_.get()<<" max = "<<max_.get()<<endl;
   volren_ =
-    scinew SCIRexRenderer(0x123456, dpys, ncomp, tex_, cmap,
+    scinew SCIRexRenderer(0x123456, dpys, compositers_.get(), tex_, cmap,
 			  (is_fixed_.get() == 1),
 			  min_.get(), max_.get());
   if( tex_->data_at() == Field::CELL ){

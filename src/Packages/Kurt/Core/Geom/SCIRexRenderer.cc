@@ -73,7 +73,7 @@ SCIRexRenderer::SCIRexRenderer(int id)
 }
 
 
-SCIRexRenderer::SCIRexRenderer(int id, vector<char *>& displays,
+SCIRexRenderer::SCIRexRenderer(int id, vector<const char *>& displays,
 			       int ncompositers, FieldHandle tex,
 			       ColorMapHandle map, bool isfixed,
 			       double min, double max,
@@ -497,7 +497,7 @@ void
 SCIRexRenderer::make_render_windows(FieldHandle tex_, 
 			      double& min_, double& max,
 			      bool is_fixed_, int brick_size_,
-			      vector<char *>& displays)
+			      vector<const char *>& displays)
 {
   GLTexture3D *texture;
   LatVolMesh *mesh = dynamic_cast<LatVolMesh *> (tex_->mesh().get_rep());
@@ -572,8 +572,10 @@ SCIRexRenderer::make_render_windows(FieldHandle tex_,
 	ostringstream win;
 	win << "Win"<<i;
 	char *w = new char[win.str().length()];
+	char *d = new char[strlen(displays[i])];
 	win.str().copy(w, win.str().length());
-	windows.push_back( new SCIRexWindow(w,displays[i], render_data_));
+	strcpy(d, displays[i]);
+	windows.push_back( new SCIRexWindow(w,d, render_data_));
 	GLVolumeRenderer *vr;
 	vr = new GLVolumeRenderer( 0x12345676, texture, cmap_);
 	vr->DrawFullRes();

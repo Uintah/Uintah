@@ -47,6 +47,11 @@ itcl_class Kurt_Visualization_SCIRex {
 	set $this-min_ 0
 	set $this-max_ 1
 	set $this-is_fixed_ 0
+
+	global $this-displays
+	set $this-displays ""
+	global $this-compositers
+	set $this-compositers 2
     }
 
 
@@ -60,6 +65,25 @@ itcl_class Kurt_Visualization_SCIRex {
 	toplevel $w
 	wm minsize $w 250 300
 	set n "$this-c needexecute "
+
+
+	frame $w.dpyframe -relief groove -border 2
+	label $w.dpyframe.l -text "List displays:"
+	entry $w.dpyframe.entry -textvariable $this-displays \
+	    -bg white
+	pack  $w.dpyframe -side top -padx 2 -pady 2 -fill both
+	pack $w.dpyframe.l $w.dpyframe.entry -side top \
+	    -padx 2 -pady 2 -fill both -fill x
+	
+	frame $w.cmpframe -relief flat -border 2
+	label $w.cmpframe.l -text "Select the number of compositers:"
+	scale $w.cmpframe.s -variable $this-compositers -orient horizontal \
+	    -from 1 -to 32
+	
+	pack  $w.cmpframe -side top -padx 2 -pady 2 -fill both
+	pack $w.cmpframe.l $w.cmpframe.s -side top \
+	    -padx 2 -pady 2 -fill both -fill x
+
 
 	frame $w.dimframe -relief groove -border 2
 	label $w.dimframe.l -text "Brick Size Cubed"
