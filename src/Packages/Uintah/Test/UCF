@@ -5,7 +5,7 @@ from sys import argv,exit,platform
 from helpers.runSusTests import runSusTests, inputs_root
 
 
-TESTS = [ ("dlb_mpm", "dlbTest.ups", "-loadbalancer PLB", 8, "ALL","","mpm"),  \
+TESTS = [ ("dlb_mpm", "dlbTest.ups", "-loadbalancer PLB", 8, "Linux","","mpm"),  \
           ("dlb_mpmice", "dlbTest.ups", "-loadbalancer PLB", 8, "ALL","","mpmice"),  \
           ("periodic_disks", "periodic_disks.ups", "", 6, "ALL","","mpm") \
           ]
