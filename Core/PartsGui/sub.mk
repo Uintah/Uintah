@@ -24,7 +24,6 @@ SRCDIR := Core/PartsGui
 SRCS     += $(SRCDIR)/PartGui.cc \
 	$(SRCDIR)/NullGui.cc \
 	$(SRCDIR)/GraphGui.cc \
-	$(SRCDIR)/ItPDSimPartGui.cc \
 	$(SRCDIR)/PartManagerGui.cc \
 
 

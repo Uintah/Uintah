@@ -32,23 +32,50 @@
 #define SCI_PartGui_h 
 
 #include <string>
+#include <map>
+
+#include <Core/Malloc/Allocator.h>
 #include <Core/GuiInterface/TclObj.h>
 
 namespace SCIRun {
   
 class PartInterface;
+class PartGui;
+class GuiCreatorBase;
+
+
+class GuiCreatorBase {
+public:
+  GuiCreatorBase(const string &name);
+  virtual ~GuiCreatorBase() {}
+
+  virtual PartGui *create( const string & ) = 0;
+};
+
+template<class T>
+class GuiCreator : public GuiCreatorBase {
+public:
+  GuiCreator( const string &name ) : GuiCreatorBase( name ) {}
+
+  virtual PartGui *create( const string &name) { return scinew T(name); }
+};
+
 
 class PartGui : public TclObj {
+public:
+  static map<string,GuiCreatorBase*> table;
+
 protected:
   string name_;
+  int n_;
 
 public:
   PartGui( const string &name, const string &script ) 
-    : TclObj(script), name_(name) {}
+    : TclObj(script), name_(name), n_(0) {}
   virtual ~PartGui() {}
 
   string name() { return name_; }
-  
+
   virtual void add_child( PartInterface *child );
   virtual void attach( PartInterface *interface ) = 0;
 };
