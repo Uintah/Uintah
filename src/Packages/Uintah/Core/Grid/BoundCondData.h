@@ -50,6 +50,7 @@ WARNING
     void setBCValues(int mat_id,BoundCondBase* bc);
     const BoundCondBase* getBCValues(int mat_id,const string& type) const;
     int getMatID() const;
+    void print();
     
    private:
     // The first map is for the material id (-1 for "all"), 
@@ -58,6 +59,7 @@ WARNING
     // "Velocity", VelocityBoundCond
     typedef map<int,map<string,BoundCondBase* > > boundcondDataType;
     boundcondDataType d_data;
+    friend class BCReader;
     
   };
 } // End namespace Uintah

@@ -3,7 +3,7 @@
 #include <Packages/Uintah/Core/Grid/Box.h>
 #include <Packages/Uintah/Core/Grid/BoundCondFactory.h>
 #include <Core/Malloc/Allocator.h>
-
+#include <iostream>
 using namespace SCIRun;
 using namespace Uintah;
 using namespace std;
@@ -19,8 +19,26 @@ RectangleBCData::RectangleBCData(BCData& bc)
 }
 
 RectangleBCData::RectangleBCData(Point& low, Point& up)
-  : d_min(low), d_max(up)
 {
+  cout << "low = " << low << " up = " << up << endl;
+  Point n_low,n_up;
+
+  if(low.x() == up.x()) {
+    n_low = Point(low.x()-1.e-2,low.y(),low.z());
+    n_up = Point(up.x()+1.e-2,up.y(),up.z());
+  }    
+  if(low.y() == up.y()) {
+    n_low = Point(low.x(),low.y()-1.e-2,low.z());
+    n_up = Point(up.x(),up.y()+1.e-2,up.z());
+  }    
+  if(low.z() == up.z()) {
+    n_low = Point(low.x(),low.y(),low.z()-1.e-2);
+    n_up = Point(up.x(),up.y(),up.z()+1.e-2);
+  }    
+  d_min = n_low;
+  d_max = n_up;
+
+  cout << "d_min = " << d_min << " d_max = " << d_max << endl;
 }
 
 RectangleBCData::~RectangleBCData()
@@ -56,3 +74,7 @@ bool RectangleBCData::inside(const Point &p) const
     return false;
 }
 
+void RectangleBCData::print() 
+{
+  d_bc.print();
+}

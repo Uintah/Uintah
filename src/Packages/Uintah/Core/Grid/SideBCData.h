@@ -56,6 +56,7 @@ WARNING
      void addBCData(BCData& bc);
      void addBC(BoundCondBase* bc);
      bool inside(const Point& p) const;
+     virtual void print();
      
    private:
      BCData d_bc;
