@@ -34,8 +34,7 @@ itcl_class SCIRun_Math_CastMatrix {
     method ui {} {
         set w .ui[modname]
         if {[winfo exists $w]} {
-            raise $w
-            return;
+            return
         }
 
         toplevel $w
@@ -73,5 +72,8 @@ itcl_class SCIRun_Math_CastMatrix {
 		{DenseMatrix DenseMatrix} \
 		{SparseRowMatrix SparseRowMatrix}}
 	pack $w.otype.r -side top -expand 1 -fill x
+
+	makeSciButtonPanel $w $w $this
+	moveToCursor $w
     }
 }
