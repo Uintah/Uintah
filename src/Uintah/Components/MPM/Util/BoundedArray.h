@@ -27,7 +27,6 @@
 #define __BOUNDED_ARRAY_H__
 
 #include "Array.h"
-#include "Array.cc"
 
 template<class T> class BoundedArray : public Array<T> {
 protected:
@@ -84,11 +83,15 @@ template <class T> T BoundedArray<T>::operator [] (int index) const
 
 }
 
+#include "BoundedArray.cc"
 
 #endif // __BOUNDED_ARRAY_H__
 
 
 // $Log$
+// Revision 1.2  2000/05/26 22:11:59  tan
+// include the template implementations into the head file.
+//
 // Revision 1.1  2000/03/14 22:12:42  jas
 // Initial creation of the utility directory that has old matrix routines
 // that will eventually be replaced by the PSE library.

@@ -155,10 +155,14 @@ template<class T> Array<T>::~Array()
 
 }
 
+#include "Array.cc"
 
 #endif  // __ARRAY_H__ 
 
 // $Log$
+// Revision 1.2  2000/05/26 22:10:59  tan
+// include the template implementations into the head file.
+//
 // Revision 1.1  2000/03/14 22:12:42  jas
 // Initial creation of the utility directory that has old matrix routines
 // that will eventually be replaced by the PSE library.
