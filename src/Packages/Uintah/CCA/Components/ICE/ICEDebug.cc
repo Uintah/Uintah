@@ -65,7 +65,7 @@ void    ICE::printData(const Patch* patch, int include_GC,
       cerr << "\n";
     }
     cerr <<" ______________________________________________\n";
-    cerr.setf(0,ios::floatfield);
+    cerr.setf(ios_base::scientific ,ios_base::floatfield);
   }
 }
 
@@ -167,7 +167,7 @@ void    ICE::printVector(const Patch* patch, int include_GC,
       cerr << "\n";
     }
     cerr << " ______________________________________________\n";
-    cerr.setf(0,ios::floatfield);
+    cerr.setf(ios_base::scientific, ios_base::floatfield);
   }
 }
 
@@ -221,7 +221,7 @@ void    ICE::printData_FC(const Patch* patch, int include_GC,
       cerr <<"\n";
     }
     cerr << " ______________________________________________\n";
-    cerr.setf(0,ios::floatfield);
+    cerr.setf(ios_base::scientific, ios_base::floatfield);
   }
 }
 /* 
@@ -273,7 +273,7 @@ void    ICE::printData_FC(const Patch* patch, int include_GC,
       cerr << "\n";
     }
     cerr << " ______________________________________________\n";
-    cerr.setf(0,ios::floatfield);
+    cerr.setf(ios_base::scientific, ios_base::floatfield);
   }
 }
 
@@ -327,7 +327,7 @@ void    ICE::printData_FC(const Patch* patch, int include_GC,
       cerr << "\n";
     }
     cerr << " ______________________________________________\n";
-    cerr.setf(0,ios::floatfield);
+    cerr.setf(ios_base::scientific, ios_base::floatfield);
   }
 }
 
@@ -608,7 +608,7 @@ void ICE::printConservedQuantities(const ProcessorGroup*,
   cerr.setf(ios::fixed,ios::floatfield);
   cerr << "Percent change in total fluid mom.: " << change_total_mom <<
     " \t fluid total eng: " << change_total_eng << "\n";
-  cerr.setf(0,ios::floatfield);
+  cerr.setf(ios_base::scientific, ios_base::floatfield);
 
   if (flag == 1)  {
     cout<< " D E L P R E S S   >   0   O N   B O U N D A R Y"<<endl;
