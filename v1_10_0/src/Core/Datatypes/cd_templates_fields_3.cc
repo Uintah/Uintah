@@ -73,6 +73,17 @@ const TypeDescription* get_type_description(MaskedTetVolField<unsigned int> *);
 const TypeDescription* get_type_description(MaskedTetVolField<unsigned short> *);
 const TypeDescription* get_type_description(MaskedTetVolField<unsigned char> *);
 
+template class GenericField<QuadraticTetVolMesh, vector<Tensor> >;
+template class GenericField<QuadraticTetVolMesh, vector<Vector> >;
+template class GenericField<QuadraticTetVolMesh, vector<double> >;
+template class GenericField<QuadraticTetVolMesh, vector<float> >;
+template class GenericField<QuadraticTetVolMesh, vector<int> >;
+template class GenericField<QuadraticTetVolMesh, vector<short> >;
+template class GenericField<QuadraticTetVolMesh, vector<char> >;
+template class GenericField<QuadraticTetVolMesh, vector<unsigned int> >;
+template class GenericField<QuadraticTetVolMesh, vector<unsigned short> >;
+template class GenericField<QuadraticTetVolMesh, vector<unsigned char> >;
+
 template class QuadraticTetVolField<Tensor>;
 template class QuadraticTetVolField<Vector>;
 template class QuadraticTetVolField<double>;
