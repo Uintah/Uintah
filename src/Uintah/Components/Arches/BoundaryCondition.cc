@@ -667,11 +667,11 @@ BoundaryCondition::sched_recomputePressureBC(const LevelP& level,
       tsk->requires(new_dw, d_lab->d_pressurePSLabel, matlIndex, patch, Ghost::None,
 		    numGhostCells);
       tsk->requires(new_dw, d_lab->d_uVelocitySIVBCLabel, matlIndex, patch, 
-		    Ghost::None, numGhostCells);
+		    Ghost::None, numGhostCells+1);
       tsk->requires(new_dw, d_lab->d_vVelocitySIVBCLabel, matlIndex, patch, 
-		    Ghost::None, numGhostCells);
+		    Ghost::None, numGhostCells+1);
       tsk->requires(new_dw, d_lab->d_wVelocitySIVBCLabel, matlIndex, patch, 
-		    Ghost::None, numGhostCells);
+		    Ghost::None, numGhostCells+1);
       for (int ii = 0; ii < d_nofScalars; ii++)
 	tsk->requires(new_dw, d_lab->d_scalarINLabel, ii, patch,
 		      Ghost::None, numGhostCells);
@@ -2417,6 +2417,11 @@ BoundaryCondition::FlowOutlet::problemSetup(ProblemSpecP& params)
 
 //
 // $Log$
+// Revision 1.59.4.2  2000/10/20 04:41:57  sparker
+// Temporarily require 2 ghost cells for all *VelocitySIVBCLabel's, due
+//  to limitation in risky scheduler.  Put this back when the scheduler
+//  gets fixed ASV.
+//
 // Revision 1.59.4.1  2000/10/19 05:17:27  sparker
 // Merge changes from main branch into csafe_risky1
 //
