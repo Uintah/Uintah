@@ -905,10 +905,12 @@ void OpenGL::redraw_frame()
 #endif
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	if(roe->drawimg.get()){
+#if 0
 	  if(!imglist)
 	    make_image();
 	  else
 	    glCallList(imglist);
+#endif
 	}
 	glXSwapBuffers(dpy, win);
     }
@@ -1751,6 +1753,9 @@ GetReq::GetReq(int datamask, FutureValue<GeometryData*>* result)
 
 //
 // $Log$
+// Revision 1.22  2000/03/17 08:23:13  sparker
+// Commented out SCI logo - it wasn't drawing on the screen anyway
+//
 // Revision 1.21  2000/03/11 00:39:52  dahart
 // Replaced all instances of HashTable<class X, class Y> with the
 // Standard Template Library's std::map<class X, class Y, less<class X>>
