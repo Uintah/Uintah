@@ -126,6 +126,26 @@ SparseRowMatrix::~SparseRowMatrix()
 }
 
   
+int SparseRowMatrix::getIdx(int i, int j) {
+    int row_idx=rows[i];
+    int next_idx=rows[i+1];
+    int l=row_idx;
+    int h=next_idx-1;
+    for(;;){
+	if(h<l){
+	  return -1;
+	}
+	int m=(l+h)/2;
+	if(j<columns[m]){
+	    h=m-1;
+	} else if(j>columns[m]){
+	    l=m+1;
+	} else {
+	    return m;
+	}
+    }
+}
+  
 double& SparseRowMatrix::get(int i, int j)
 {
     int row_idx=rows[i];
@@ -329,6 +349,9 @@ void SparseRowMatrix::io(Piostream& stream)
 
 //
 // $Log$
+// Revision 1.10  2000/10/29 04:46:17  dmw
+// changed private/public status, added a flag for whether datavalues were associate with elements or nodes
+//
 // Revision 1.9  2000/07/12 15:45:10  dmw
 // Added Yarden's raw output thing to matrices, added neighborhood accessors to meshes, added ScalarFieldRGushort
 //

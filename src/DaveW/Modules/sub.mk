@@ -23,7 +23,6 @@ SUBDIRS := \
 	$(SRCDIR)/FEM\
 	$(SRCDIR)/ISL\
 	$(SRCDIR)/MEG\
-	$(SRCDIR)/Path\
 	$(SRCDIR)/Readers\
 	$(SRCDIR)/Tensor\
 	$(SRCDIR)/Writers\
@@ -33,6 +32,9 @@ include $(SRCTOP)/scripts/recurse.mk
 
 #
 # $Log$
+# Revision 1.6  2000/10/29 04:02:45  dmw
+# cleaning up DaveW tree
+#
 # Revision 1.5  2000/10/24 05:57:08  moulding
 # new module maker Phase 2: new module maker goes online
 #

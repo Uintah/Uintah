@@ -18,7 +18,8 @@ include $(SRCTOP)/scripts/smallso_prologue.mk
 SRCDIR   := DaveW/Modules/ISL
 
 SRCS     += \
-	$(SRCDIR)/Downhill_Simplex.cc\
+	$(SRCDIR)/ConductivitySearch.cc\
+	$(SRCDIR)/Downhill_Simplex3.cc\
 	$(SRCDIR)/LeastSquaresSolve.cc\
 	$(SRCDIR)/OptDip.cc\
 	$(SRCDIR)/SGI_LU.cc\
@@ -27,14 +28,17 @@ SRCS     += \
 
 PSELIBS := DaveW/ThirdParty/NumRec DaveW/ThirdParty/OldLinAlg \
 	PSECore/Datatypes PSECore/Dataflow SCICore/Datatypes \
-	SCICore/Persistent SCICore/Exceptions SCICore/Thread \
+	SCICore/Persistent SCICore/Exceptions SCICore/Math SCICore/Thread \
 	SCICore/Containers SCICore/TclInterface
-LIBS := 
+LIBS := -lm
 
 include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.6  2000/10/29 04:02:48  dmw
+# cleaning up DaveW tree
+#
 # Revision 1.5  2000/10/24 05:57:14  moulding
 # new module maker Phase 2: new module maker goes online
 #
