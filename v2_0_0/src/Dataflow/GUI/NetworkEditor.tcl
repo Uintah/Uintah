@@ -981,5 +981,5 @@ proc listFindAndRemove { name elem } {
 
 proc initVar { var } {
     if { [string first msgStream $var] != -1 } return
-    uplevel \#0 trace variable "$var" w networkHasChanged
+    uplevel \#0 trace variable \"$var\" w networkHasChanged
 }
