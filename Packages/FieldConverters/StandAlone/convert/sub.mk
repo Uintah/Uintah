@@ -13,6 +13,10 @@ PROGRAM := $(SRCDIR)/OldSFRGtoNewLatticeVol
 SRCS := $(SRCDIR)/OldSFRGtoNewLatticeVol.cc
 include $(SRCTOP)/scripts/program.mk
 
+PROGRAM := $(SRCDIR)/OldVFRGtoNewLatticeVol
+SRCS := $(SRCDIR)/OldVFRGtoNewLatticeVol.cc
+include $(SRCTOP)/scripts/program.mk
+
 PROGRAM := $(SRCDIR)/NewLatticeVolToOldSFRG
 SRCS := $(SRCDIR)/NewLatticeVolToOldSFRG.cc
 include $(SRCTOP)/scripts/program.mk
