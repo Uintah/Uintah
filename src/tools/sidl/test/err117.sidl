@@ -1,8 +1,0 @@
-
-class x {
-      final void z();
-};
-
-class y extends x {
-      void z();
-};
