@@ -52,6 +52,7 @@ public:
 		   Vector& up, double& fov);
 
     void updatePosition( const Stealth & stealth );
+    void followPath( Stealth & stealth );
 };
 
 } // end namespace rtrt
