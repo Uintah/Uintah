@@ -72,8 +72,9 @@ WARNING
 #ifdef Scalar_WENO
   #define Scalar_ENO
 #endif
-
-#define PetscFilter
+#ifdef HAVE_PETSC
+  #define PetscFilter
+#endif
 namespace Uintah {
 
   class VarLabel;

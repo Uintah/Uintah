@@ -35,7 +35,7 @@ TurbulenceModel::~TurbulenceModel()
     delete d_filter;
 #endif
 }
-
+#ifdef PetscFilter
 void 
 TurbulenceModel::sched_initFilterMatrix(const LevelP& level,
 					SchedulerP& sched, 
@@ -73,5 +73,7 @@ TurbulenceModel::initFilterMatrix(const ProcessorGroup* pg,
     d_filter->setFilterMatrix(pg, patch, cellinfo);
   }
 }
+#endif
+
 
 
