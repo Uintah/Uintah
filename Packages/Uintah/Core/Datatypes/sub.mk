@@ -16,6 +16,7 @@ SRCS     += \
 	$(SRCDIR)/PSet.cc \
 	$(SRCDIR)/LevelMesh.cc \
 	$(SRCDIR)/GLTexture3D.cc \
+	$(SRCDIR)/GLAnimatedStreams.cc \
 	$(SRCDIR)/cd_templates.cc \
 
 #	$(SRCDIR)/NCTensorField.cc \
