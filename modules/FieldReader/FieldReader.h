@@ -15,11 +15,13 @@
 #define SCI_project_module_FieldReader_h
 
 #include <UserModule.h>
+#include <Field3D.h>
 class Field3DOPort;
 
 class FieldReader : public UserModule {
     Field3DOPort* outfield;
     clString filename;
+    Field3DHandle field_handle;
 public:
     FieldReader();
     FieldReader(const FieldReader&, int deep);

@@ -56,19 +56,22 @@ Module* FieldReader::clone(int deep)
 
 void FieldReader::execute()
 {
-    Piostream* stream=auto_istream(filename);
-    if(!stream){
-	error(clString("Error reading file: ")+filename);
-	return; // Can't open file...
+    if(!field_handle.get_rep()){
+	Piostream* stream=auto_istream(filename);
+	if(!stream){
+	    error(clString("Error reading file: ")+filename);
+	    return; // Can't open file...
+	}
+	field_handle=new Field3D;
+	// Read the file...
+	field_handle->io(*stream);
+	delete stream;
     }
-    Field3DHandle field(new Field3D);
-    // Read the file...
-    field->io(*stream);
-    delete stream;
-    outfield->send_field(field);
+    outfield->send_field(field_handle);
 }
 
 void FieldReader::mui_callback(void*, int)
 {
+    field_handle=0;
     want_to_execute();
 }
