@@ -25,7 +25,7 @@ namespace Uintah {
 //  setenv SCI_DEBUG "LODI_DOING_COUT:+, LODI_DBG_COUT:+"
 static DebugStream cout_doing("LODI_DOING_COUT", false);
 static DebugStream cout_dbg("LODI_DBG_COUT", false);
-	
+       
 /*________________________________________________________
  Function~ computeConvection--
  Purpose~  Compute the convection term in conservation law
@@ -44,7 +44,7 @@ double computeConvection(const double& nuFrt,     const double& nuMid,
    eplus  = 0.5 * k_const * deltaX * (nuFrt   + nuMid)/deltaT;
    eminus = 0.5 * k_const * deltaX * (nuLast  + nuMid)/deltaT;
    dissipation = (eplus * qFrt - (eplus + eminus) * qMid 
-	       +  eminus * qLast)/deltaX; 
+              +  eminus * qLast)/deltaX; 
    return  0.5 * (qConFrt - qConLast)/deltaX - dissipation;
 }
 
@@ -66,7 +66,7 @@ void xFaceDensityLODI(const Patch::FaceType face,
                 const Vector& dx)
 {
   cout_doing << "I am in xFaceDensityLODI on face " << face<<endl;
-  IntVector low,hi,l,t,b,f,bk,c;
+  IntVector low,hi;
   int xFaceCell;
   double y_conv, z_conv;
   double qConFrt,qConLast;
@@ -83,11 +83,11 @@ void xFaceDensityLODI(const Patch::FaceType face,
   }
   for(int j = low.y()+1; j < hi_y; j++) {
     for(int k = low.z()+1; k < hi_z; k++) {
-      c  =  IntVector(xFaceCell,  j,   k);
-      t  =  IntVector(xFaceCell,  j+1, k);
-      b  =  IntVector(xFaceCell,  j-1, k);
-      f  =  IntVector(xFaceCell,  j,   k+1);
-      bk =  IntVector(xFaceCell,  j,   k-1);       
+      IntVector c (xFaceCell,  j,   k);
+      IntVector t (xFaceCell,  j+1, k);
+      IntVector b (xFaceCell,  j-1, k);
+      IntVector f (xFaceCell,  j,   k+1);
+      IntVector bk(xFaceCell,  j,   k-1);       
 
       qConFrt  = rho_tmp[t] * vel[t].y();
       qConLast = rho_tmp[b] * vel[b].y();
@@ -116,9 +116,10 @@ void xFaceDensityLODI(const Patch::FaceType face,
   //__________________________________
   //  E D G E    right/left-bottom
   for(int k = low.z()+1; k < hi_z; k++) {
-    c  =  IntVector(xFaceCell,   low.y(),   k);
-    f  =  IntVector(xFaceCell,   low.y(),   k+1);
-    bk =  IntVector(xFaceCell,   low.y(),   k-1);
+    IntVector c (xFaceCell,  low.y(), k);     
+    IntVector f (xFaceCell,  low.y(), k+1);   
+    IntVector bk(xFaceCell, low.y(), k-1);    
+    
     qConFrt  = rho_tmp[f]  * vel[f].z();
     qConLast = rho_tmp[bk] * vel[bk].z();
     z_conv = computeConvection(nuz[f], nuz[c], nuz[bk],
@@ -131,9 +132,9 @@ void xFaceDensityLODI(const Patch::FaceType face,
   //__________________________________
   //    E D G E   right/left-top
   for(int k = low.z()+1; k < hi_z; k++) {
-    c  =  IntVector(xFaceCell,   hi_y,   k);
-    f  =  IntVector(xFaceCell,   hi_y,   k+1);
-    bk =  IntVector(xFaceCell,   hi_y,   k-1);
+    IntVector c (xFaceCell,  hi_y, k);     
+    IntVector f (xFaceCell,  hi_y, k+1);   
+    IntVector bk(xFaceCell, hi_y, k-1);    
 
     qConFrt  = rho_tmp[f]  * vel[f].z();
     qConLast = rho_tmp[bk] * vel[bk].z();
@@ -146,9 +147,9 @@ void xFaceDensityLODI(const Patch::FaceType face,
   //_____________________________________________________
   //    E D G E   right/left--back
   for(int j = low.y()+1; j < hi_y; j++) {
-    c  =  IntVector(xFaceCell,   j,   low.z());
-    t  =  IntVector(xFaceCell,   j+1, low.z());
-    b  =  IntVector(xFaceCell,   j-1, low.z());
+    IntVector c (xFaceCell,   j,   low.z());  
+    IntVector t (xFaceCell,   j+1, low.z());  
+    IntVector b (xFaceCell,   j-1, low.z());  
     qConFrt  = rho_tmp[t] * vel[t].y();
     qConLast = rho_tmp[b] * vel[b].y();
     y_conv = computeConvection(nuy[t], nuy[c], nuy[b],
@@ -160,9 +161,9 @@ void xFaceDensityLODI(const Patch::FaceType face,
   //_________________________________________________
   // E D G E    right/left--front
   for(int j = low.y()+1; j < hi_y; j++) {
-    c  =  IntVector(xFaceCell,   j,   hi_z);
-    t  =  IntVector(xFaceCell,   j+1, hi_z);
-    b  =  IntVector(xFaceCell,   j-1, hi_z);
+    IntVector c (xFaceCell,   j,   hi_z);
+    IntVector t (xFaceCell,   j+1, hi_z);
+    IntVector b (xFaceCell,   j-1, hi_z);
 
     qConFrt  = rho_tmp[t] * vel[t].y();
     qConLast = rho_tmp[b] * vel[b].y();
@@ -181,7 +182,7 @@ void xFaceDensityLODI(const Patch::FaceType face,
   crn[3] = IntVector(xFaceCell, low.y(), low.z());// right/left-bottom-back            
 
   for(int corner = 0; corner <4; corner ++ ) {
-    c = crn[corner];
+    IntVector c = crn[corner];
     rho_CC[c] = rho_tmp[c] - delT * (d1_x[c] + d1_y[c] + d1_z[c]);
   }                     
 } 
@@ -205,7 +206,7 @@ void yFaceDensityLODI(const Patch::FaceType face,
 
 {
   cout_doing << "I am in yFaceDensityLODI on face " <<face << endl;    
-  IntVector low,hi,r,l,c,b,f,bk;
+  IntVector low,hi;
   int yFaceCell;
   low = vel.getLowIndex();
   hi  = vel.getHighIndex();
@@ -223,11 +224,11 @@ void yFaceDensityLODI(const Patch::FaceType face,
 
   for(int i = low.x()+1; i < hi_x; i++) {
     for(int k = low.z()+1; k < hi_z; k++) {
-      r  =  IntVector(i+1,  yFaceCell,   k);
-      l  =  IntVector(i-1,  yFaceCell,   k);
-      c  =  IntVector(i,    yFaceCell,   k);
-      f  =  IntVector(i,    yFaceCell,   k+1);
-      bk =  IntVector(i,    yFaceCell,   k-1);       
+      IntVector r (i+1,  yFaceCell,   k);
+      IntVector l (i-1,  yFaceCell,   k);
+      IntVector c (i,    yFaceCell,   k);
+      IntVector f (i,    yFaceCell,   k+1);
+      IntVector bk(i,    yFaceCell,   k-1);       
 
       qConFrt  = rho_tmp[r] * vel[r].x();
       qConLast = rho_tmp[l] * vel[l].x();
@@ -255,9 +256,9 @@ void yFaceDensityLODI(const Patch::FaceType face,
   //__________________________________________________________
   //  E D G E    right-top/bottom
   for(int k = low.z()+1; k < hi_z; k++) {
-    c  =  IntVector(hi_x,   yFaceCell,   k);
-    f  =  IntVector(hi_x,   yFaceCell,   k+1);
-    bk =  IntVector(hi_x,   yFaceCell,   k-1);
+    IntVector c (hi_x,   yFaceCell,   k);
+    IntVector f (hi_x,   yFaceCell,   k+1);
+    IntVector bk(hi_x,   yFaceCell,   k-1);
     qConFrt  = rho_tmp[f]  * vel[f].z();
     qConLast = rho_tmp[bk] * vel[bk].z();
     z_conv = computeConvection(nuz[f], nuz[c], nuz[bk],
@@ -269,9 +270,9 @@ void yFaceDensityLODI(const Patch::FaceType face,
   //_______________________________________________________
   //    E D G E    top/bottom-front
   for(int i = low.x()+1; i < hi_x; i++) {
-    r  =  IntVector(i+1, yFaceCell,  hi_z);
-    l  =  IntVector(i-1, yFaceCell,  hi_z);
-    c  =  IntVector(i,   yFaceCell,  hi_z);
+    IntVector r (i+1, yFaceCell,  hi_z);
+    IntVector l (i-1, yFaceCell,  hi_z);
+    IntVector c (i,   yFaceCell,  hi_z);
     qConFrt  = rho_tmp[r] * vel[r].x();
     qConLast = rho_tmp[l] * vel[l].x();
     x_conv   = computeConvection(nux[r], nux[c], nux[l],
@@ -283,9 +284,9 @@ void yFaceDensityLODI(const Patch::FaceType face,
   //_____________________________________________________
   //    E D G E    left-top/bottom
   for(int k = low.z()+1; k < hi_z; k++) {
-     c  = IntVector(low.x(),   yFaceCell,   k);
-     f  = IntVector(low.x(),   yFaceCell,   k+1);
-     bk = IntVector(low.x(),   yFaceCell,   k-1);
+     IntVector c  (low.x(),   yFaceCell,   k);
+     IntVector f  (low.x(),   yFaceCell,   k+1);
+     IntVector bk (low.x(),   yFaceCell,   k-1);
      qConFrt  = rho_tmp[f] * vel[f].z();
      qConLast = rho_tmp[bk] * vel[bk].z();
      z_conv   = computeConvection(nuz[f], nuz[c], nuz[bk],
@@ -297,9 +298,9 @@ void yFaceDensityLODI(const Patch::FaceType face,
   //_________________________________________________
   // E D G E    top/bottom-back
   for(int i = low.x()+1; i < hi_x; i++) {
-    r  =  IntVector(i+1, yFaceCell,   low.z());
-    l  =  IntVector(i-1, yFaceCell,   low.z());
-    c  =  IntVector(i,   yFaceCell,   low.z());
+    IntVector r (i+1, yFaceCell,   low.z());
+    IntVector l (i-1, yFaceCell,   low.z());
+    IntVector c (i,   yFaceCell,   low.z());
 
     qConFrt  = rho_tmp[r] * vel[r].x();
     qConLast = rho_tmp[l] * vel[l].x();
@@ -317,7 +318,7 @@ void yFaceDensityLODI(const Patch::FaceType face,
   crn[3] = IntVector(hi_x,    yFaceCell, low.z());  // right-top/bottom-back     
 
   for( int corner = 0; corner <4; corner ++ ) {
-    c = crn[corner];
+    IntVector c = crn[corner];
     rho_CC[c] = rho_tmp[c] - delT * (d1_x[c] + d1_y[c] + d1_z[c]);
   }
 }
@@ -340,7 +341,7 @@ void zFaceDensityLODI( const Patch::FaceType face,
 
 {
   cout << "I am in zFaceDensityLODI on face " <<face<< endl;    
-  IntVector low,hi,r,l,t,b,c,bk;
+  IntVector low,hi;
   int zFaceCell;
   low = vel.getLowIndex();
   hi  = vel.getHighIndex();
@@ -359,11 +360,11 @@ void zFaceDensityLODI( const Patch::FaceType face,
 
   for(int i = low.x()+1; i < hi_x; i++) {
     for(int j = low.y()+1; j < hi_y; j++) {
-      r  =  IntVector(i+1, j,   zFaceCell);
-      l  =  IntVector(i-1, j,   zFaceCell);
-      t  =  IntVector(i,   j+1, zFaceCell);
-      b  =  IntVector(i,   j-1, zFaceCell);
-      c  =  IntVector(i,   j,   zFaceCell);
+      IntVector r (i+1, j,   zFaceCell);
+      IntVector l (i-1, j,   zFaceCell);
+      IntVector t (i,   j+1, zFaceCell);
+      IntVector b (i,   j-1, zFaceCell);
+      IntVector c (i,   j,   zFaceCell);
 
       qConFrt  = rho_tmp[r] * vel[r].x();
       qConLast = rho_tmp[l] * vel[l].x();
@@ -391,9 +392,9 @@ void zFaceDensityLODI( const Patch::FaceType face,
   //__________________________________________________________
   //  E D G E      right-front
   for(int j = low.y()+1; j < hi_y; j++) {
-    c  =  IntVector(hi_x,   j,   zFaceCell);
-    t  =  IntVector(hi_x,   j+1, zFaceCell);
-    b  =  IntVector(hi_x,   j-1, zFaceCell);
+    IntVector c (hi_x,   j,   zFaceCell);
+    IntVector t (hi_x,   j+1, zFaceCell);
+    IntVector b (hi_x,   j-1, zFaceCell);
     qConFrt  = rho_tmp[t] * vel[t].y();
     qConLast = rho_tmp[b] * vel[b].y();
     y_conv = computeConvection(nuy[t], nuy[c], nuy[b],
@@ -405,9 +406,9 @@ void zFaceDensityLODI( const Patch::FaceType face,
   //__________________________________________________________
   //  E D G E      left-front
   for(int j = low.y()+1; j < hi_y; j++) {
-    c  =  IntVector(low.x(),   j,   zFaceCell);
-    t  =  IntVector(low.x(),   j+1, zFaceCell);
-    b  =  IntVector(low.x(),   j-1, zFaceCell);
+    IntVector c (low.x(),   j,   zFaceCell);
+    IntVector t (low.x(),   j+1, zFaceCell);
+    IntVector b (low.x(),   j-1, zFaceCell);
     qConFrt  = rho_tmp[t] * vel[t].y();
     qConLast = rho_tmp[b] * vel[b].y();
     y_conv = computeConvection(nuy[t], nuy[c], nuy[b],
@@ -421,9 +422,9 @@ void zFaceDensityLODI( const Patch::FaceType face,
   //_______________________________________________________
   //    E D G E   top-front
   for(int i = low.x()+1; i < hi_x; i++) {
-    r  =  IntVector(i+1, hi_y,   zFaceCell);
-    l  =  IntVector(i-1, hi_y,   zFaceCell);
-    c  =  IntVector(i,   hi_y,   zFaceCell);
+    IntVector r (i+1, hi_y,   zFaceCell);
+    IntVector l (i-1, hi_y,   zFaceCell);
+    IntVector c (i,   hi_y,   zFaceCell);
     qConFrt  = rho_tmp[r] * vel[r].x();
     qConLast = rho_tmp[l] * vel[l].x();
     x_conv = computeConvection(nux[r], nux[c], nux[l],
@@ -434,9 +435,9 @@ void zFaceDensityLODI( const Patch::FaceType face,
   //_______________________________________________________
   //    E D G E    bottom-front
   for(int i = low.x()+1; i < hi_x; i++) {
-    r  =  IntVector(i+1, low.y(), zFaceCell);
-    l  =  IntVector(i-1, low.y(), zFaceCell);
-    b  =  IntVector(i,   low.y(), zFaceCell);
+    IntVector r (i+1, low.y(), zFaceCell);
+    IntVector l (i-1, low.y(), zFaceCell);
+    IntVector b (i,   low.y(), zFaceCell);
 
     qConFrt  = rho_tmp[r] * vel[r].x();
     qConLast = rho_tmp[l] * vel[l].x();
@@ -491,10 +492,11 @@ void fillFaceDensityLODI(CCVariable<double>& rho_CC,
 }
 
 /*_________________________________________________________________
- Function~ xPlusVelLODI--
+ Function~ xFaceVelLODI--
  Purpose~  Compute velocity in boundary cells on x_plus face
 ___________________________________________________________________*/
-void xPlusVelLODI(CCVariable<Vector>& vel_CC,
+void xFaceVelLODI(Patch::FaceType face,
+            CCVariable<Vector>& vel_CC,
             const CCVariable<double>& d1_x,  
             const CCVariable<double>& d3_x, 
             const CCVariable<double>& d4_x, 
@@ -517,35 +519,40 @@ void xPlusVelLODI(CCVariable<Vector>& vel_CC,
             const Vector& dx)
 
 {
-   cout_doing << " I am in xPlusVelLODI" << endl;
-   IntVector low,hi,r,l,t,b,f,bk;
+  cout_doing << " I am in xFaceVelLODI on face " << face << endl;
+  IntVector low,hi;
+  int xFaceCell;
+  low = vel.getLowIndex();
+  hi  = vel.getHighIndex();
+  int hi_x = hi.x() - 1;
+  int hi_y = hi.y() - 1;
+  int hi_z = hi.z() - 1;
 
-   low = vel.getLowIndex();
-   hi  = vel.getHighIndex();
-   int hi_x = hi.x() - 1;
-   int hi_y = hi.y() - 1;
-   int hi_z = hi.z() - 1;
-
-   double y_conv, z_conv;
-   double uVel, vVel, wVel;
-   double qConFrt,qConLast,qFrt,qMid,qLast;
-
+  double y_conv, z_conv;
+  double uVel, vVel, wVel;
+  double qConFrt,qConLast,qFrt,qMid,qLast;
+   
+  if(face == Patch::xplus ){
+    xFaceCell = hi_x;  
+  } else {
+    xFaceCell = low.x();
+  }  
    for(int j = low.y()+1; j < hi_y; j++) {
      for(int k = low.z()+1; k < hi_z; k++) {
-       r  =  IntVector(hi_x,  j,   k);
-       t  =  IntVector(hi_x,  j+1, k);
-       b  =  IntVector(hi_x,  j-1, k);
-       f  =  IntVector(hi_x,  j,   k+1);
-       bk =  IntVector(hi_x,  j,   k-1);       
+       IntVector c  (xFaceCell,  j,   k);
+       IntVector t  (xFaceCell,  j+1, k);
+       IntVector b  (xFaceCell,  j-1, k);
+       IntVector f  (xFaceCell,  j,   k+1);
+       IntVector bk (xFaceCell,  j,   k-1);
 
        //__________________________________
-       //         X   V E L O C I T Y              
+       //         X   V E L O C I T Y 
        qConFrt  = rho_tmp[t] * vel[t].y() * vel[t].x();
        qConLast = rho_tmp[b] * vel[b].y() * vel[b].x();
        qFrt     = rho_tmp[t] * vel[t].x();
-       qMid     = rho_tmp[r] * vel[r].x();
+       qMid     = rho_tmp[c] * vel[c].x();
        qLast    = rho_tmp[b] * vel[b].x();
-       y_conv   = computeConvection(nuy[t], nuy[r], nuy[b], 
+       y_conv   = computeConvection(nuy[t], nuy[c], nuy[b], 
                                   qFrt, qMid, qLast, qConFrt, 
                                   qConLast, delT, dx.y());
 
@@ -554,19 +561,19 @@ void xPlusVelLODI(CCVariable<Vector>& vel_CC,
        qFrt     = rho_tmp[f]  * vel[f].x();
        qLast    = rho_tmp[bk] * vel[bk].x();
 
-       z_conv   = computeConvection(nuz[f], nuz[r], nuz[bk],
+       z_conv   = computeConvection(nuz[f], nuz[c], nuz[bk],
                                     qFrt, qMid, qLast, qConFrt, 
-				    qConLast, delT, dx.z());       
-       uVel     = (qMid - delT * (d1_x[r] * vel[r].x() 
-                +  rho_tmp[r] * d3_x[r] + y_conv + z_conv ))/rho_tmp[r];   
+                                    qConLast, delT, dx.z());       
+       uVel     = (qMid - delT * (d1_x[c] * vel[c].x() 
+                +  rho_tmp[c] * d3_x[c] + y_conv + z_conv ))/rho_tmp[c];
       //__________________________________
       //         Y   V E L O C I T Y     
       qConFrt  = rho_tmp[t] * vel[t].y() * vel[t].y() + p[t];
       qConLast = rho_tmp[b] * vel[b].y() * vel[b].y() + p[b];
       qFrt     = rho_tmp[t] * vel[t].y();
-      qMid     = rho_tmp[r] * vel[r].y();
+      qMid     = rho_tmp[c] * vel[c].y();
       qLast    = rho_tmp[b] * vel[b].y();
-      y_conv   = computeConvection(nuy[t], nuy[r], nuy[b], 
+      y_conv   = computeConvection(nuy[t], nuy[c], nuy[b], 
                                    qFrt, qMid, qLast, qConFrt, 
                                    qConLast, delT, dx.y());
 
@@ -575,20 +582,20 @@ void xPlusVelLODI(CCVariable<Vector>& vel_CC,
       qFrt     = rho_tmp[f]  * vel[f].y();
       qLast    = rho_tmp[bk] * vel[bk].y();
 
-      z_conv   = computeConvection(nuz[f], nuz[r], nuz[bk],
+      z_conv   = computeConvection(nuz[f], nuz[c], nuz[bk],
                                  qFrt, qMid, qLast, qConFrt, 
-				 qConLast, delT, dx.z());        
+                             qConLast, delT, dx.z());        
 
-      vVel = (qMid- delT * (d1_x[r] * vel[r].y()
-           +  rho_tmp[r] * d4_x[r] + y_conv + z_conv))/rho_tmp[r];
+      vVel = (qMid- delT * (d1_x[c] * vel[c].y()
+           +  rho_tmp[c] * d4_x[c] + y_conv + z_conv))/rho_tmp[c];
       //__________________________________
       //         Z   V E L O C I T Y               
       qConFrt  = rho_tmp[t] * vel[t].y() * vel[t].z();
       qConLast = rho_tmp[b] * vel[b].y() * vel[b].z();
       qFrt     = rho_tmp[t] * vel[t].z();
-      qMid     = rho_tmp[r] * vel[r].z();
+      qMid     = rho_tmp[c] * vel[c].z();
       qLast    = rho_tmp[b] * vel[b].z();
-      y_conv   = computeConvection(nuy[t], nuy[r], nuy[b], 
+      y_conv   = computeConvection(nuy[t], nuy[c], nuy[b], 
                                  qFrt, qMid, qLast, qConFrt, 
                                  qConLast, delT, dx.y());
 
@@ -597,614 +604,248 @@ void xPlusVelLODI(CCVariable<Vector>& vel_CC,
       qFrt     = rho_tmp[f]  * vel[f].z();
       qLast    = rho_tmp[bk] * vel[bk].z();
 
-      z_conv = computeConvection(nuz[f], nuz[r], nuz[bk],
+      z_conv = computeConvection(nuz[f], nuz[c], nuz[bk],
                                  qFrt, qMid, qLast, qConFrt, 
-				 qConLast, delT, dx.z());        
+                             qConLast, delT, dx.z());        
 
 
-      wVel = (qMid - delT * (d1_x[r] * vel[r].z() + rho_tmp[r] * d5_x[r]
-                   + y_conv + z_conv))/rho_tmp[r];
+      wVel = (qMid - delT * (d1_x[c] * vel[c].z() + rho_tmp[c] * d5_x[c]
+                   + y_conv + z_conv))/rho_tmp[c];
 
-      vel_CC[r] = Vector(uVel, vVel, wVel);
+      vel_CC[c] = Vector(uVel, vVel, wVel);
+       
     } // end of j loop
   } //end of k loop
+
   //__________________________________________________________
   //  E D G E        right-bottom
   for(int k = low.z()+1; k < hi_z; k++) {
-    r  =  IntVector(hi_x, low.y(), k);
-    f  =  IntVector(hi_x, low.y(), k+1);
-    bk =  IntVector(hi_x, low.y(), k-1);
+    IntVector c  (xFaceCell, low.y(), k);
+    IntVector f  (xFaceCell, low.y(), k+1);
+    IntVector bk (xFaceCell, low.y(), k-1);
 
     //__________________________________
     //         X   V E L O C I T Y                          
     qConFrt  = rho_tmp[f]  * vel[f].z()  * vel[f].x();
     qConLast = rho_tmp[bk] * vel[bk].z() * vel[bk].x();
     qFrt     = rho_tmp[f]  * vel[f].x();
-    qMid     = rho_tmp[r]  * vel[r].x();
+    qMid     = rho_tmp[c]  * vel[c].x();
     qLast    = rho_tmp[bk] * vel[bk].x();
 
-    z_conv = computeConvection(nuz[f], nuz[r], nuz[bk],
+    z_conv = computeConvection(nuz[f], nuz[c], nuz[bk],
                                qFrt, qMid, qLast, 
                                qConFrt,qConLast, delT, dx.z());       
 
-    uVel = (qMid - delT * ((d1_x[r] + d1_y[r]) * vel[r].x() + 
-                        +  (d3_x[r] + d4_y[r]) * rho_tmp[r] 
-                        +   z_conv))/rho_tmp[r];
-
+    uVel = (qMid - delT * ((d1_x[c] + d1_y[c]) * vel[c].x() + 
+                        +  (d3_x[c] + d4_y[c]) * rho_tmp[c] 
+                        +   z_conv))/rho_tmp[c];
     //__________________________________
     //         Y   V E L O C I T Y
     qConFrt  = rho_tmp[f]  * vel[f].z()  * vel[f].y();
     qConLast = rho_tmp[bk] * vel[bk].z() * vel[bk].y();
     qFrt     = rho_tmp[f]  * vel[f].y();
-    qMid     = rho_tmp[r]  * vel[r].y();
+    qMid     = rho_tmp[c]  * vel[c].y();
     qLast    = rho_tmp[bk] * vel[bk].y();
 
-    z_conv = computeConvection(nuz[f], nuz[r], nuz[bk],
+    z_conv = computeConvection(nuz[f], nuz[c], nuz[bk],
                  qFrt, qMid, qLast, qConFrt,qConLast, delT, dx.z()); 
 
-    vVel = (qMid - delT * ((d1_x[r] + d1_y[r]) * vel[r].y() 
-                        +  (d4_x[r] + d3_y[r]) * rho_tmp[r] + z_conv))
-                            /rho_tmp[r];
+    vVel = (qMid - delT * ((d1_x[c] + d1_y[c]) * vel[c].y() 
+                        +  (d4_x[c] + d3_y[c]) * rho_tmp[c] + z_conv))
+                            /rho_tmp[c];
 
     //__________________________________
     //         Z   V E L O C I T Y
     qConFrt  = rho_tmp[f]  * vel[f].z()  * vel[f].z()  + p[f];
     qConLast = rho_tmp[bk] * vel[bk].z() * vel[bk].z() + p[bk];
     qFrt     = rho_tmp[f]  * vel[f].z();
-    qMid     = rho_tmp[r]  * vel[r].z();
+    qMid     = rho_tmp[c]  * vel[c].z();
     qLast    = rho_tmp[bk] * vel[bk].z();
 
-    z_conv = computeConvection(nuz[f], nuz[r], nuz[bk],
+    z_conv = computeConvection(nuz[f], nuz[c], nuz[bk],
                     qFrt, qMid, qLast, qConFrt, qConLast, delT, dx.z());
 
-    wVel = (qMid - delT * ((d1_x[r] + d1_y[r]) * vel[r].z() 
-                        +  (d5_x[r] + d5_y[r]) * rho_tmp[r]  
-                        + z_conv))/rho_tmp[r];
-    vel_CC[r] = Vector(uVel, vVel, wVel);
+    wVel = (qMid - delT * ((d1_x[c] + d1_y[c]) * vel[c].z() 
+                        +  (d5_x[c] + d5_y[c]) * rho_tmp[c]  
+                        + z_conv))/rho_tmp[c];
+    vel_CC[c] = Vector(uVel, vVel, wVel);
 
   } //end of k loop
+
   //_______________________________________________________
   //    E D G E     right-top
   for(int k = low.z()+1; k < hi_z; k++) {
-
-    r  =  IntVector(hi_x,   hi_y,   k);
-    f  =  IntVector(hi_x,   hi_y,   k+1);
-    bk =  IntVector(hi_x,   hi_y,   k-1);
+    IntVector c  (xFaceCell,   hi_y,   k);
+    IntVector f  (xFaceCell,   hi_y,   k+1);
+    IntVector bk (xFaceCell,   hi_y,   k-1);
 
     //__________________________________
     //         X   V E L O C I T Y                         
     qConFrt  = rho_tmp[f]  * vel[f].z()  * vel[f].x();
     qConLast = rho_tmp[bk] * vel[bk].z() * vel[bk].x();
     qFrt     = rho_tmp[f]  * vel[f].x();
-    qMid     = rho_tmp[r]  * vel[r].x();
+    qMid     = rho_tmp[c]  * vel[c].x();
     qLast    = rho_tmp[bk] * vel[bk].x();
 
-    z_conv = computeConvection(nuz[f], nuz[r], nuz[bk],
+    z_conv = computeConvection(nuz[f], nuz[c], nuz[bk],
                                qFrt, qMid, qLast, 
                            qConFrt, qConLast, delT, dx.z());       
 
-    uVel = (qMid - delT * ((d1_x[r] + d1_y[r]) * vel[r].x() + 
-                        +  (d3_x[r] + d4_y[r]) * rho_tmp[r] 
-                         +   z_conv))/rho_tmp[r];
+    uVel = (qMid - delT * ((d1_x[c] + d1_y[c]) * vel[c].x() + 
+                        +  (d3_x[c] + d4_y[c]) * rho_tmp[c] 
+                        +   z_conv))/rho_tmp[c];
+      if (c == IntVector(-1,9,9)){
+        cout << " 3 " << uVel << endl;
+      }
     //__________________________________
     //         Y   V E L O C I T Y            
     qConFrt  = rho_tmp[f]  * vel[f].z()  * vel[f].y();
     qConLast = rho_tmp[bk] * vel[bk].z() * vel[bk].y();
     qFrt     = rho_tmp[f]  * vel[f].y();
-    qMid     = rho_tmp[r]  * vel[r].y();
+    qMid     = rho_tmp[c]  * vel[c].y();
     qLast    = rho_tmp[bk] * vel[bk].y();
 
-    z_conv = computeConvection(nuz[f], nuz[r], nuz[bk],
+    z_conv = computeConvection(nuz[f], nuz[c], nuz[bk],
                    qFrt, qMid, qLast, qConFrt, qConLast, delT, dx.z()); 
 
-    vVel = (qMid - delT * ((d1_x[r] + d1_y[r]) * vel[r].y() 
-                        +  (d4_x[r] + d3_y[r]) * rho_tmp[r] + z_conv))
-                             /rho_tmp[r];
+    vVel = (qMid - delT * ((d1_x[c] + d1_y[c]) * vel[c].y() 
+                        +  (d4_x[c] + d3_y[c]) * rho_tmp[c] + z_conv))
+                             /rho_tmp[c];
 
     //__________________________________
     //         Z   V E L O C I T Y
     qConFrt  = rho_tmp[f]  * vel[f].z()  * vel[f].z()  + p[f];
     qConLast = rho_tmp[bk] * vel[bk].z() * vel[bk].z() + p[bk];
     qFrt     = rho_tmp[f]  * vel[f].z();
-    qMid     = rho_tmp[r]  * vel[r].z();
+    qMid     = rho_tmp[c]  * vel[c].z();
     qLast    = rho_tmp[bk] * vel[bk].z();
 
-    z_conv = computeConvection(nuz[f], nuz[r], nuz[bk],
+    z_conv = computeConvection(nuz[f], nuz[c], nuz[bk],
                     qFrt, qMid, qLast, qConFrt, qConLast, delT, dx.z());
 
-    wVel = (qMid - delT * ((d1_x[r] + d1_y[r]) * vel[r].z() 
-                        +  (d5_x[r] + d5_y[r]) * rho_tmp[r]  
-                          + z_conv))/rho_tmp[r];
-    vel_CC[r] = Vector(uVel, vVel, wVel);
+    wVel = (qMid - delT * ((d1_x[c] + d1_y[c]) * vel[c].z() 
+                        +  (d5_x[c] + d5_y[c]) * rho_tmp[c]  
+                          + z_conv))/rho_tmp[c];
+    vel_CC[c] = Vector(uVel, vVel, wVel);
   } //end of k loop
-         
+       
   //_____________________________________________________
   //    E D G E     right-back
   for(int j = low.y()+1; j < hi_y; j++) {
-    r  =  IntVector(hi_x,   j,   low.z());
-    t  =  IntVector(hi_x,   j+1, low.z());
-    b  =  IntVector(hi_x,   j-1, low.z());
+    IntVector c (xFaceCell,   j,   low.z());
+    IntVector t (xFaceCell,   j+1, low.z());
+    IntVector b (xFaceCell,   j-1, low.z());
 
     //__________________________________
     //         X   V E L O C I T Y                         
     qConFrt  = rho_tmp[t] * vel[t].y() * vel[t].x();
     qConLast = rho_tmp[b] * vel[b].y() * vel[b].x();
     qFrt     = rho_tmp[t] * vel[t].x();
-    qMid     = rho_tmp[r] * vel[r].x();
+    qMid     = rho_tmp[c] * vel[c].x();
     qLast    = rho_tmp[b] * vel[b].x();
 
-    y_conv = computeConvection(nuy[t], nuy[r], nuy[b],
+    y_conv = computeConvection(nuy[t], nuy[c], nuy[b],
                                qFrt, qMid, qLast, 
                            qConFrt, qConLast, delT, dx.y());       
 
-    uVel = (qMid - delT * ((d1_x[r] + d1_z[r]) * vel[r].x() + 
-                        +  (d3_x[r] + d4_z[r]) * rho_tmp[r] 
-                        +   y_conv))/rho_tmp[r];
-
+    uVel = (qMid - delT * ((d1_x[c] + d1_z[c]) * vel[c].x() + 
+                        +  (d3_x[c] + d4_z[c]) * rho_tmp[c] 
+                        +   y_conv))/rho_tmp[c];
     //__________________________________
     //         Y   V E L O C I T Y ()
     qConFrt  = rho_tmp[t] * vel[t].y() * vel[t].y() + p[t];
     qConLast = rho_tmp[b] * vel[b].y() * vel[b].y() + p[b];
     qFrt     = rho_tmp[t] * vel[t].y();
-    qMid     = rho_tmp[r] * vel[r].y();
+    qMid     = rho_tmp[c] * vel[c].y();
     qLast    = rho_tmp[b] * vel[b].y();
 
-    y_conv = computeConvection(nuy[t], nuy[r], nuy[b],
+    y_conv = computeConvection(nuy[t], nuy[c], nuy[b],
                  qFrt, qMid, qLast, qConFrt, qConLast, delT, dx.y()); 
 
-    vVel = (qMid - delT * ((d1_x[r] + d1_z[r]) * vel[r].y() 
-                        +  (d4_x[r] + d5_z[r]) * rho_tmp[r] + y_conv))
-                             /rho_tmp[r];
+    vVel = (qMid - delT * ((d1_x[c] + d1_z[c]) * vel[c].y() 
+                        +  (d4_x[c] + d5_z[c]) * rho_tmp[c] + y_conv))
+                             /rho_tmp[c];
     //__________________________________
     //         Z   V E L O C I T Y ()
     qConFrt  = rho_tmp[t] * vel[t].y() * vel[t].z();
     qConLast = rho_tmp[b] * vel[b].y() * vel[b].z();
     qFrt     = rho_tmp[t] * vel[t].z();
-    qMid     = rho_tmp[r] * vel[r].z();
+    qMid     = rho_tmp[c] * vel[c].z();
     qLast    = rho_tmp[b] * vel[b].z();
 
-    y_conv = computeConvection(nuy[t], nuy[r], nuy[b],
+    y_conv = computeConvection(nuy[t], nuy[c], nuy[b],
                     qFrt, qMid, qLast, qConFrt, qConLast, delT, dx.y());
 
-    wVel = (qMid - delT * ((d1_x[r] + d1_z[r]) * vel[r].z() 
-                        +  (d5_x[r] + d3_z[r]) * rho_tmp[r]  
-                        + y_conv))/rho_tmp[r];
-    vel_CC[r] = Vector(uVel, vVel, wVel);
+    wVel = (qMid - delT * ((d1_x[c] + d1_z[c]) * vel[c].z() 
+                        +  (d5_x[c] + d3_z[c]) * rho_tmp[c]  
+                        + y_conv))/rho_tmp[c];
+    vel_CC[c] = Vector(uVel, vVel, wVel);
   }
 
   //_________________________________________________
   // E D G E    right-front
   for(int j = low.y()+1; j < hi_y; j++) {
-    r  =  IntVector(hi_x,   j,   hi_z);
-    t  =  IntVector(hi_x,   j+1, hi_z);
-    b  =  IntVector(hi_x,   j-1, hi_z);
+    IntVector c (xFaceCell,   j,   hi_z);
+    IntVector t (xFaceCell,   j+1, hi_z);
+    IntVector b (xFaceCell,   j-1, hi_z);
 
     //__________________________________
     //         X   V E L O C I T Y ()                          
     qConFrt  = rho_tmp[t] * vel[t].y() * vel[t].x();
     qConLast = rho_tmp[b] * vel[b].y() * vel[b].x();
     qFrt     = rho_tmp[t] * vel[t].x();
-    qMid     = rho_tmp[r] * vel[r].x();
+    qMid     = rho_tmp[c] * vel[c].x();
     qLast    = rho_tmp[b] * vel[b].x();
 
-    y_conv = computeConvection(nuy[t], nuy[r], nuy[b],
+    y_conv = computeConvection(nuy[t], nuy[c], nuy[b],
                                qFrt, qMid, qLast, 
                                qConFrt, qConLast, delT, dx.y());       
 
-    uVel = (qMid - delT * ((d1_x[r] + d1_z[r]) * vel[r].x() + 
-                        +  (d3_x[r] + d4_z[r]) * rho_tmp[r] 
-                        +   y_conv))/rho_tmp[r];
-
+    uVel = (qMid - delT * ((d1_x[c] + d1_z[c]) * vel[c].x() + 
+                        +  (d3_x[c] + d4_z[c]) * rho_tmp[c] 
+                        +   y_conv))/rho_tmp[c];
     //__________________________________
     //         Y   V E L O C I T Y ()
     qConFrt  = rho_tmp[t] * vel[t].y() * vel[t].y() + p[t];
     qConLast = rho_tmp[b] * vel[b].y() * vel[b].y() + p[b];
     qFrt     = rho_tmp[t] * vel[t].y();
-    qMid     = rho_tmp[r] * vel[r].y();
+    qMid     = rho_tmp[c] * vel[c].y();
     qLast    = rho_tmp[b] * vel[b].y();
 
-    y_conv = computeConvection(nuy[t], nuy[r], nuy[b],
+    y_conv = computeConvection(nuy[t], nuy[c], nuy[b],
                    qFrt, qMid, qLast, qConFrt, qConLast, delT, dx.y()); 
 
-    vVel = (qMid - delT * ((d1_x[r] + d1_z[r]) * vel[r].y() 
-                        +  (d4_x[r] + d5_z[r]) * rho_tmp[r] + y_conv))
-                             /rho_tmp[r];
-#ifdef ON
-    cout << "vVel, y_conv" << r << "= " << vVel
-          << "," << y_conv  << endl;
-    cout << "p" << t << "= " << p[t] << "," << "p" << b << "= " << p[b] << endl; 
-#endif
-
+    vVel = (qMid - delT * ((d1_x[c] + d1_z[c]) * vel[c].y() 
+                        +  (d4_x[c] + d5_z[c]) * rho_tmp[c] + y_conv))
+                             /rho_tmp[c];
     //__________________________________
     //         Z   V E L O C I T Y ()
     qConFrt  = rho_tmp[t] * vel[t].y() * vel[t].z();
     qConLast = rho_tmp[b] * vel[b].y() * vel[b].z();
     qFrt     = rho_tmp[t] * vel[t].z();
-    qMid     = rho_tmp[r] * vel[r].z();
+    qMid     = rho_tmp[c] * vel[c].z();
     qLast    = rho_tmp[b] * vel[b].z();
 
-    y_conv = computeConvection(nuy[t], nuy[r], nuy[b],
+    y_conv = computeConvection(nuy[t], nuy[c], nuy[b],
                     qFrt, qMid, qLast, qConFrt, qConLast, delT, dx.y());
 
-    wVel = (qMid - delT * ((d1_x[r] + d1_z[r]) * vel[r].z() 
-                        +  (d5_x[r] + d3_z[r]) * rho_tmp[r]  
-                        + y_conv))/rho_tmp[r];
-    vel_CC[r] = Vector(uVel, vVel, wVel);        
+    wVel = (qMid - delT * ((d1_x[c] + d1_z[c]) * vel[c].z() 
+                        +  (d5_x[c] + d3_z[c]) * rho_tmp[c]  
+                        + y_conv))/rho_tmp[c];
+    vel_CC[c] = Vector(uVel, vVel, wVel);        
   } 
         
    //________________________________________________________
    // C O R N E R S    
    vector<IntVector> crn(4);
-   crn[0] = IntVector(hi_x, low.y(), hi_z);     // right-bottom-front
-   crn[1] = IntVector(hi_x, hi_y,    hi_z);     // right-top-front   
-   crn[2] = IntVector(hi_x, hi_y,    low.z());  // right-top-back  
-   crn[3] = IntVector(hi_x, low.y(), low.z());  // right-bottom-back 
+   crn[0] = IntVector(xFaceCell, low.y(), hi_z);     // right-bottom-front
+   crn[1] = IntVector(xFaceCell, hi_y,    hi_z);     // right-top-front   
+   crn[2] = IntVector(xFaceCell, hi_y,    low.z());  // right-top-back  
+   crn[3] = IntVector(xFaceCell, low.y(), low.z());  // right-bottom-back 
 
    for( int corner = 0; corner < 4; corner ++ ) {
      IntVector c = crn[corner];
-     uVel = vel[r].x() - delT * ((d1_x[c] + d1_y[c] + d1_z[c]) * vel[c].x()  
-                              +  (d3_x[c] + d4_y[c] + d4_z[c]) * rho_tmp[c]) 
-                         / rho_tmp[c];
-
-     vVel = vel[c].y() - delT * ((d1_x[c] + d1_y[c] + d1_z[c]) * vel[c].y() 
-                              +  (d4_x[c] + d3_y[c] + d5_z[c]) * rho_tmp[c])
-                         / rho_tmp[c];
-
-     wVel = vel[c].z() - delT * ((d1_x[c] + d1_y[c] + d1_z[c]) * vel[c].z() 
-                              +  (d5_x[c] + d5_y[c] + d3_z[c]) * rho_tmp[c])
-                         / rho_tmp[c];
-     vel_CC[r] = Vector(uVel, vVel, wVel);
-   }
-} //end of the function xPlusVelLODI()
-
-/*_________________________________________________________________
- Function~ xMinusVelLODI--
- Purpose~  Compute velocity in boundary cells on x_minus face
-___________________________________________________________________*/
-void xMinusVelLODI(CCVariable<Vector>& vel_CC,
-             const CCVariable<double>& d1_x,  
-             const CCVariable<double>& d3_x, 
-             const CCVariable<double>& d4_x, 
-             const CCVariable<double>& d5_x, 
-             const CCVariable<double>& d1_y,  
-             const CCVariable<double>& d3_y, 
-             const CCVariable<double>& d4_y, 
-             const CCVariable<double>& d5_y, 
-             const CCVariable<double>& d1_z,  
-             const CCVariable<double>& d3_z, 
-             const CCVariable<double>& d4_z,
-             const CCVariable<double>& d5_z,
-             const CCVariable<double>& nux,
-             const CCVariable<double>& nuy,
-             const CCVariable<double>& nuz,
-             const CCVariable<double>& rho_tmp,
-             const CCVariable<double>& p,
-             const CCVariable<Vector>& vel,
-             const double delT,
-             const Vector& dx)
-{
-  cout_doing << " I am in xMinusVelLODI" << endl; 
-  IntVector low,hi,r,l,t,b,f,bk;
-
-  low = vel.getLowIndex();
-  hi  = vel.getHighIndex();
-  int hi_y = hi.y() - 1;
-  int hi_z = hi.z() - 1;
-
-  double uVel, vVel, wVel;
-  double y_conv, z_conv;
-  double qConFrt,qConLast,qFrt,qMid,qLast;
-  
-  for(int j = low.y()+1; j < hi_y; j++) {
-    for(int k = low.z()+1; k < hi_z; k++) {
-      r  =  IntVector(low.x(),  j,   k);
-      t  =  IntVector(low.x(),  j+1, k);
-      b  =  IntVector(low.x(),  j-1, k);
-      f  =  IntVector(low.x(),  j,   k+1);
-      bk =  IntVector(low.x(),  j,   k-1);  
-
-      //__________________________________
-      //         X   V E L O C I T Y ()
-      qConFrt  = rho_tmp[t] * vel[t].y() * vel[t].x();
-      qConLast = rho_tmp[b] * vel[b].y() * vel[b].x();
-      qFrt     = rho_tmp[t] * vel[t].x();
-      qMid     = rho_tmp[r] * vel[r].x();
-      qLast    = rho_tmp[b] * vel[b].x();
-      y_conv   = computeConvection(nuy[t], nuy[r], nuy[b], 
-                                 qFrt, qMid, qLast, qConFrt, 
-                                 qConLast, delT, dx.y());
-
-      qConFrt  = rho_tmp[f]  * vel[f].z()  * vel[f].x();
-      qConLast = rho_tmp[bk] * vel[bk].z() * vel[bk].x();
-      qFrt     = rho_tmp[f]  * vel[f].x();
-      qLast    = rho_tmp[bk] * vel[bk].x();
-
-      z_conv = computeConvection(nuz[f], nuz[r], nuz[bk],
-                               qFrt, qMid, qLast, qConFrt, 
-			      qConLast, delT, dx.z());       
-      uVel = (qMid - delT * (d1_x[r] * vel[r].x() 
-           +  rho_tmp[r] * d3_x[r] + y_conv + z_conv ))/rho_tmp[r];	
-                
-      //__________________________________
-      //         Y   V E L O C I T Y ()       
-      qConFrt  = rho_tmp[t] * vel[t].y() * vel[t].y() + p[t];
-      qConLast = rho_tmp[b] * vel[b].y() * vel[b].y() + p[b];
-      qFrt     = rho_tmp[t] * vel[t].y();
-      qMid     = rho_tmp[r] * vel[r].y();
-      qLast    = rho_tmp[b] * vel[b].y();
-      y_conv   = computeConvection(nuy[t], nuy[r], nuy[b], 
-                                 qFrt, qMid, qLast, qConFrt, 
-                                 qConLast, delT, dx.y());
-
-      qConFrt  = rho_tmp[f]  * vel[f].z()  * vel[f].y();
-      qConLast = rho_tmp[bk] * vel[bk].z() * vel[bk].y();
-      qFrt     = rho_tmp[f]  * vel[f].y();
-      qLast    = rho_tmp[bk] * vel[bk].y();
-
-      z_conv = computeConvection(nuz[f], nuz[r], nuz[bk],
-                                 qFrt, qMid, qLast, qConFrt, 
-				 qConLast, delT, dx.z());        
-
-      vVel = (qMid- delT * (d1_x[r] * vel[r].y()
-                +  rho_tmp[r] * d4_x[r] + y_conv + z_conv))/rho_tmp[r];
-
-      //__________________________________
-      //         Z  V E L O C I T Y () 
-      qConFrt  = rho_tmp[t] * vel[t].y() * vel[t].z();
-      qConLast = rho_tmp[b] * vel[b].y() * vel[b].z();
-      qFrt     = rho_tmp[t] * vel[t].z();
-      qMid     = rho_tmp[r] * vel[r].z();
-      qLast    = rho_tmp[b] * vel[b].z();
-      y_conv   = computeConvection(nuy[t], nuy[r], nuy[b], 
-                                 qFrt, qMid, qLast, qConFrt, 
-                                 qConLast, delT, dx.y());
-
-      qConFrt  = rho_tmp[f]  * vel[f].z()  * vel[f].z()  + p[f];
-      qConLast = rho_tmp[bk] * vel[bk].z() * vel[bk].z() + p[bk];
-      qFrt     = rho_tmp[f]  * vel[f].z();
-      qLast    = rho_tmp[bk] * vel[bk].z();
-
-      z_conv = computeConvection(nuz[f], nuz[r], nuz[bk],
-                               qFrt, qMid, qLast, qConFrt, 
-			      qConLast, delT, dx.z());        
-
-
-      wVel = (qMid - delT * (d1_x[r] * vel[r].z() + rho_tmp[r] * d5_x[r]
-                  + y_conv + z_conv))/rho_tmp[r];
-      vel_CC[r] = Vector(uVel, vVel, wVel); 
-    } // end of j loop
-  } //end of k loop
-  //__________________________________________________________
-  //  E D G E    left-bottom
-  for(int k = low.z()+1; k < hi_z; k++) {
-
-    l  =  IntVector(low.x(),   low.y(),   k);
-    f  =  IntVector(low.x(),   low.y(),   k+1);
-    bk =  IntVector(low.x(),   low.y(),   k-1);
-    //__________________________________
-    //         X   V E L O C I T Y                         
-    qConFrt  = rho_tmp[f]  * vel[f].z()  * vel[f].x();
-    qConLast = rho_tmp[bk] * vel[bk].z() * vel[bk].x();
-    qFrt     = rho_tmp[f]  * vel[f].x();
-    qMid     = rho_tmp[r]  * vel[r].x();
-    qLast    = rho_tmp[bk] * vel[bk].x();
-
-    z_conv = computeConvection(nuz[f], nuz[r], nuz[bk],
-                               qFrt, qMid, qLast, 
-                           qConFrt,qConLast, delT, dx.z());       
-
-    uVel = (qMid - delT * ((d1_x[r] + d1_y[r]) * vel[r].x() + 
-                        +  (d3_x[r] + d4_y[r]) * rho_tmp[r] 
-                        +   z_conv))/rho_tmp[r];
-
-    //__________________________________
-    //         Y   V E L O C I T Y
-    qConFrt  = rho_tmp[f]  * vel[f].z()  * vel[f].y();
-    qConLast = rho_tmp[bk] * vel[bk].z() * vel[bk].y();
-    qFrt     = rho_tmp[f]  * vel[f].y();
-    qMid     = rho_tmp[r]  * vel[r].y();
-    qLast    = rho_tmp[bk] * vel[bk].y();
-
-    z_conv = computeConvection(nuz[f], nuz[r], nuz[bk],
-                   qFrt, qMid, qLast, qConFrt,qConLast, delT, dx.z()); 
-
-    vVel = (qMid - delT * ((d1_x[r] + d1_y[r]) * vel[r].y() 
-                        +  (d4_x[r] + d3_y[r]) * rho_tmp[r] + z_conv))
-                            /rho_tmp[r];
-                            
-    //__________________________________
-    //         Z   V E L O C I T Y
-    qConFrt  = rho_tmp[f]  * vel[f].z()  * vel[f].z()  + p[f];
-    qConLast = rho_tmp[bk] * vel[bk].z() * vel[bk].z() + p[bk];
-    qFrt     = rho_tmp[f]  * vel[f].z();
-    qMid     = rho_tmp[r]  * vel[r].z();
-    qLast    = rho_tmp[bk] * vel[bk].z();
-
-    z_conv = computeConvection(nuz[f], nuz[r], nuz[bk],
-                    qFrt, qMid, qLast, qConFrt, qConLast, delT, dx.z());
-
-    wVel = (qMid - delT * ((d1_x[r] + d1_y[r]) * vel[r].z() 
-                        +  (d5_x[r] + d5_y[r]) * rho_tmp[r]  
-                        + z_conv))/rho_tmp[r];
-    vel_CC[r] = Vector(uVel, vVel, wVel);
-  } //end of k loop
-
-  //_______________________________________________________
-  //    E D G E   left- top
-  for(int k = low.z()+1; k < hi_z; k++) {
-    r  =  IntVector(low.x(),   hi_y,   k);
-    f  =  IntVector(low.x(),   hi_y,   k+1);
-    bk =  IntVector(low.x(),   hi_y,   k-1);
-
-    //__________________________________
-    //         X   V E L O C I T Y                          
-    qConFrt  = rho_tmp[f]  * vel[f].z()  * vel[f].x();
-    qConLast = rho_tmp[bk] * vel[bk].z() * vel[bk].x();
-    qFrt     = rho_tmp[f]  * vel[f].x();
-    qMid     = rho_tmp[r]  * vel[r].x();
-    qLast    = rho_tmp[bk] * vel[bk].x();
-
-    z_conv = computeConvection(nuz[f], nuz[r], nuz[bk],
-                               qFrt, qMid, qLast, 
-                           qConFrt,qConLast, delT, dx.z());       
-
-    uVel = (qMid - delT * ((d1_x[r] + d1_y[r]) * vel[r].x() + 
-                        +  (d3_x[r] + d4_y[r]) * rho_tmp[r] 
-                        +   z_conv))/rho_tmp[r];
-
-    //__________________________________
-    //         Y   V E L O C I T Y 
-    qConFrt  = rho_tmp[f]  * vel[f].z()  * vel[f].y();
-    qConLast = rho_tmp[bk] * vel[bk].z() * vel[bk].y();
-    qFrt     = rho_tmp[f]  * vel[f].y();
-    qMid     = rho_tmp[r]  * vel[r].y();
-    qLast    = rho_tmp[bk] * vel[bk].y();
-
-    z_conv = computeConvection(nuz[f], nuz[r], nuz[bk],
-                   qFrt, qMid, qLast, qConFrt,qConLast, delT, dx.z()); 
-
-    vVel = (qMid - delT * ((d1_x[r] + d1_y[r]) * vel[r].y() 
-                        +  (d4_x[r] + d3_y[r]) * rho_tmp[r] + z_conv))
-                           /rho_tmp[r];
-
-    //__________________________________
-    //         Z   V E L O C I T Y
-    qConFrt  = rho_tmp[f]  * vel[f].z()  * vel[f].z()  + p[f];
-    qConLast = rho_tmp[bk] * vel[bk].z() * vel[bk].z() + p[bk];
-    qFrt     = rho_tmp[f]  * vel[f].z();
-    qMid     = rho_tmp[r]  * vel[r].z();
-    qLast    = rho_tmp[bk] * vel[bk].z();
-
-    z_conv = computeConvection(nuz[f], nuz[r], nuz[bk],
-                    qFrt, qMid, qLast, qConFrt, qConLast, delT, dx.z());
-
-    wVel = (qMid - delT * ((d1_x[r] + d1_y[r]) * vel[r].z() 
-                        +  (d5_x[r] + d5_y[r]) * rho_tmp[r]  
-                        + z_conv))/rho_tmp[r];
-    vel_CC[r] = Vector(uVel, vVel, wVel);
-  } //end of k loop
-  
-         
-  //_____________________________________________________
-  //    E D G E   left-bottom
-  for(int j = low.y()+1; j < hi_y; j++) {
-    r  =  IntVector(low.x(),   j,   low.z());
-    t  =  IntVector(low.x(),   j+1, low.z());
-    b  =  IntVector(low.x(),   j-1, low.z());
-
-    //__________________________________
-    //         X   V E L O C I T Y                          
-    qConFrt  = rho_tmp[t] * vel[t].y() * vel[t].x();
-    qConLast = rho_tmp[b] * vel[b].y() * vel[b].x();
-    qFrt     = rho_tmp[t] * vel[t].x();
-    qMid     = rho_tmp[r] * vel[r].x();
-    qLast    = rho_tmp[b] * vel[b].x();
-
-    y_conv = computeConvection(nuy[t], nuy[r], nuy[b],
-                               qFrt, qMid, qLast, 
-                           qConFrt, qConLast, delT, dx.y());       
-
-    uVel = (qMid - delT * ((d1_x[r] + d1_z[r]) * vel[r].x() + 
-                        +  (d3_x[r] + d4_z[r]) * rho_tmp[r] 
-                        +   y_conv))/rho_tmp[r];
-        
-    //__________________________________
-    //         Y   V E L O C I T Y
-    qConFrt  = rho_tmp[t] * vel[t].y() * vel[t].y() + p[t];
-    qConLast = rho_tmp[b] * vel[b].y() * vel[b].y() + p[b];
-    qFrt     = rho_tmp[t] * vel[t].y();
-    qMid     = rho_tmp[r] * vel[r].y();
-    qLast    = rho_tmp[b] * vel[b].y();
-
-    y_conv = computeConvection(nuy[t], nuy[r], nuy[b],
-                 qFrt, qMid, qLast, qConFrt, qConLast, delT, dx.y()); 
-
-    vVel = (qMid - delT * ((d1_x[r] + d1_z[r]) * vel[r].y() 
-                        +  (d4_x[r] + d5_z[r]) * rho_tmp[r] + y_conv))
-                             /rho_tmp[r];
-
-    //__________________________________
-    //         Z   V E L O C I T Y
-    qConFrt  = rho_tmp[t] * vel[t].y() * vel[t].z();
-    qConLast = rho_tmp[b] * vel[b].y() * vel[b].z();
-    qFrt     = rho_tmp[t] * vel[t].z();
-    qMid     = rho_tmp[r] * vel[r].z();
-    qLast    = rho_tmp[b] * vel[b].z();
-
-    y_conv = computeConvection(nuy[t], nuy[r], nuy[b],
-                    qFrt, qMid, qLast, qConFrt, qConLast, delT, dx.y());
-
-    wVel = (qMid - delT * ((d1_x[r] + d1_z[r]) * vel[r].z() 
-                        +  (d5_x[r] + d3_z[r]) * rho_tmp[r]  
-                          + y_conv))/rho_tmp[r];
-    vel_CC[r] = Vector(uVel, vVel, wVel);
-  }
-
-  //_________________________________________________
-  // E D G E    left-front
-  for(int j = low.y()+1; j < hi_y; j++) {
-    r  =  IntVector(low.x(),   j,   hi_z);
-    t  =  IntVector(low.x(),   j+1, hi_z);
-    b  =  IntVector(low.x(),   j-1, hi_z);
-
-    //__________________________________
-    //         X   V E L O C I T Y                          
-    qConFrt  = rho_tmp[t] * vel[t].y() * vel[t].x();
-    qConLast = rho_tmp[b] * vel[b].y() * vel[b].x();
-    qFrt     = rho_tmp[t] * vel[t].x();
-    qMid     = rho_tmp[r] * vel[r].x();
-    qLast    = rho_tmp[b] * vel[b].x();
-
-    y_conv = computeConvection(nuy[t], nuy[r], nuy[b],
-                               qFrt, qMid, qLast, 
-                           qConFrt, qConLast, delT, dx.y());       
-
-    uVel = (qMid - delT * ((d1_x[r] + d1_z[r]) * vel[r].x() + 
-                        +  (d3_x[r] + d4_z[r]) * rho_tmp[r] 
-                        +   y_conv))/rho_tmp[r];
-        
-    //__________________________________
-    //         Y   V E L O C I T Y 
-    qConFrt  = rho_tmp[t] * vel[t].y() * vel[t].y() + p[t];
-    qConLast = rho_tmp[b] * vel[b].y() * vel[b].y() + p[b];
-    qFrt     = rho_tmp[t] * vel[t].y();
-    qMid     = rho_tmp[r] * vel[r].y();
-    qLast    = rho_tmp[b] * vel[b].y();
-
-    y_conv = computeConvection(nuy[t], nuy[r], nuy[b],
-                 qFrt, qMid, qLast, qConFrt, qConLast, delT, dx.y()); 
-
-    vVel = (qMid - delT * ((d1_x[r] + d1_z[r]) * vel[r].y() 
-                        +  (d4_x[r] + d5_z[r]) * rho_tmp[r] + y_conv))
-                             /rho_tmp[r];
-
-    //__________________________________
-    //         Z   V E L O C I T Y 
-    qConFrt  = rho_tmp[t] * vel[t].y() * vel[t].z();
-    qConLast = rho_tmp[b] * vel[b].y() * vel[b].z();
-    qFrt     = rho_tmp[t] * vel[t].z();
-    qMid     = rho_tmp[r] * vel[r].z();
-    qLast    = rho_tmp[b] * vel[b].z();
-
-    y_conv = computeConvection(nuy[t], nuy[r], nuy[b],
-                    qFrt, qMid, qLast, qConFrt, qConLast, delT, dx.y());
-
-    wVel = (qMid - delT * ((d1_x[r] + d1_z[r]) * vel[r].z() 
-                        +  (d5_x[r] + d3_z[r]) * rho_tmp[r]  
-                        + y_conv))/rho_tmp[r];
-    vel_CC[r] = Vector(uVel, vVel, wVel);
-  } 
-  //________________________________________________________
-  // C O R N E R S    
-  vector<IntVector> crn(4);
-  crn[0] = IntVector(low.x(), low.y(), hi_z);     // left-bottom-front
-  crn[1] = IntVector(low.x(), hi_y,    hi_z);     // left-top-front   
-  crn[2] = IntVector(low.x(), hi_y,    low.z());  // left-top-back  
-  crn[3] = IntVector(low.x(), low.y(), low.z());  // left-bottom-back 
-
-  for( int corner = 0; corner < 4; corner ++ ) {
-    IntVector c = crn[corner];
-     uVel = vel[r].x() - delT * ((d1_x[c] + d1_y[c] + d1_z[c]) * vel[c].x()  
+     uVel = vel[c].x() - delT * ((d1_x[c] + d1_y[c] + d1_z[c]) * vel[c].x()  
                               +  (d3_x[c] + d4_y[c] + d4_z[c]) * rho_tmp[c]) 
                          / rho_tmp[c];
 
@@ -1216,14 +857,15 @@ void xMinusVelLODI(CCVariable<Vector>& vel_CC,
                               +  (d5_x[c] + d5_y[c] + d3_z[c]) * rho_tmp[c])
                          / rho_tmp[c];
      vel_CC[c] = Vector(uVel, vVel, wVel);
-  }                       
-} //end of the function xMinusVelLODI()
+   }
+} //end of the function xFaceVelLODI() 
 
 /*_________________________________________________________________
- Function~ yPlusVelLODI--
+ Function~ yFaceVelLODI--
  Purpose~  Compute velocity in boundary cells on y_plus face 
 ___________________________________________________________________*/
-void yPlusVelLODI(CCVariable<Vector>& vel_CC,
+void yFaceVelLODI(Patch::FaceType face,
+             CCVariable<Vector>& vel_CC,
              const CCVariable<double>& d1_x,  
              const CCVariable<double>& d3_x, 
              const CCVariable<double>& d4_x, 
@@ -1245,9 +887,9 @@ void yPlusVelLODI(CCVariable<Vector>& vel_CC,
              const double delT,
              const Vector& dx)
 {
-  cout << " I am in yPlusVelLODI" << endl;    
-  IntVector low,hi,r,l,t,b,f,bk;
-
+  cout_doing << " I am in yFaceVelLODI on face " <<face << endl;    
+  IntVector low,hi;
+  int yFaceCell;
   low = vel.getLowIndex();
   hi  = vel.getHighIndex();
   int hi_x = hi.x() - 1;
@@ -1258,22 +900,29 @@ void yPlusVelLODI(CCVariable<Vector>& vel_CC,
   double x_conv, z_conv;
   double qConFrt,qConLast,qFrt,qMid,qLast;
   
+  if(face == Patch::yplus ){
+    yFaceCell = hi_y;  
+  } else {
+    yFaceCell = low.y();
+  }  
+  
   for(int i = low.x()+1; i < hi_x; i++) {
     for(int k = low.z()+1; k < hi_z; k++) {
-      r  =  IntVector(i+1,  hi_y,   k);
-      l  =  IntVector(i-1,  hi_y,   k);
-      t  =  IntVector(i,    hi_y,   k);
-      f  =  IntVector(i,    hi_y,   k+1);
-      bk =  IntVector(i,    hi_y,   k-1);       
+      IntVector r  (i+1,  yFaceCell,   k);
+      IntVector l  (i-1,  yFaceCell,   k);
+      IntVector c  (i,    yFaceCell,   k);
+      IntVector f  (i,    yFaceCell,   k+1);
+      IntVector bk (i,    yFaceCell,   k-1);       
 
       //__________________________________
       //         X   V E L O C I T Y 
       qConFrt  = rho_tmp[r] * vel[r].x() * vel[r].x() + p[r];
       qConLast = rho_tmp[l] * vel[l].x() * vel[l].x() + p[l];
       qFrt   = rho_tmp[r] * vel[r].x();
-      qMid   = rho_tmp[t] * vel[t].x();
+      qMid   = rho_tmp[c] * vel[c].x();
       qLast  = rho_tmp[l] * vel[l].x();
-      x_conv = computeConvection(nux[r], nux[t], nux[l], 
+      
+      x_conv = computeConvection(nux[r], nux[c], nux[l], 
                                  qFrt, qMid, qLast, qConFrt, 
                                  qConLast, delT, dx.x());
 
@@ -1282,19 +931,19 @@ void yPlusVelLODI(CCVariable<Vector>& vel_CC,
       qFrt     = rho_tmp[f]  * vel[f].x();
       qLast    = rho_tmp[bk] * vel[bk].x();
 
-      z_conv = computeConvection(nuz[f], nuz[t], nuz[bk],
-                              qFrt, qMid, qLast, qConFrt, 
-			     qConLast, delT, dx.z());       
-      uVel = (qMid - delT * (d1_y[t] * vel[t].x() 
-           +  rho_tmp[t] * d4_y[t] + x_conv + z_conv ))/rho_tmp[t];
+      z_conv = computeConvection(nuz[f], nuz[c], nuz[bk],
+                                 qFrt, qMid, qLast, qConFrt, 
+                                 qConLast, delT, dx.z());       
+      uVel = (qMid - delT * (d1_y[c] * vel[c].x() 
+           +  rho_tmp[c] * d4_y[c] + x_conv + z_conv ))/rho_tmp[c];
       //__________________________________
       //         Y   V E L O C I T Y        
       qConFrt  = rho_tmp[r] * vel[r].x() * vel[r].y();
       qConLast = rho_tmp[l] * vel[l].x() * vel[l].y();
       qFrt   = rho_tmp[r] * vel[r].y();
-      qMid   = rho_tmp[t] * vel[t].y();
+      qMid   = rho_tmp[c] * vel[c].y();
       qLast  = rho_tmp[l] * vel[l].y();
-      x_conv = computeConvection(nux[r], nux[t], nux[l], 
+      x_conv = computeConvection(nux[r], nux[c], nux[l], 
                                  qFrt, qMid, qLast, qConFrt, 
                                  qConLast, delT, dx.x());
 
@@ -1303,20 +952,20 @@ void yPlusVelLODI(CCVariable<Vector>& vel_CC,
       qFrt     = rho_tmp[f]  * vel[f].y();
       qLast    = rho_tmp[bk] * vel[bk].y();
 
-      z_conv = computeConvection(nuz[f], nuz[t], nuz[bk],
+      z_conv = computeConvection(nuz[f], nuz[c], nuz[bk],
                                  qFrt, qMid, qLast, qConFrt, 
-				 qConLast, delT, dx.z());        
+                                 qConLast, delT, dx.z());        
 
-      vVel = (qMid- delT * (d1_y[t] * vel[t].y()
-               +  rho_tmp[t] * d3_y[t] + x_conv + z_conv))/rho_tmp[t];
+      vVel = (qMid- delT * (d1_y[c] * vel[c].y()
+           +  rho_tmp[c] * d3_y[c] + x_conv + z_conv))/rho_tmp[c];
       //__________________________________
       //         Z   V E L O C I T Y
       qConFrt  = rho_tmp[r] * vel[r].x() * vel[r].z();
       qConLast = rho_tmp[l] * vel[l].x() * vel[l].z();
       qFrt     = rho_tmp[r] * vel[r].z();
-      qMid     = rho_tmp[t] * vel[t].z();
+      qMid     = rho_tmp[c] * vel[c].z();
       qLast    = rho_tmp[l] * vel[l].z();
-      x_conv   = computeConvection(nux[r], nux[t], nux[l], 
+      x_conv = computeConvection(nux[r], nux[c], nux[l], 
                                  qFrt, qMid, qLast, qConFrt, 
                                  qConLast, delT, dx.x());
 
@@ -1325,617 +974,269 @@ void yPlusVelLODI(CCVariable<Vector>& vel_CC,
       qFrt     = rho_tmp[f]  * vel[f].z();
       qLast    = rho_tmp[bk] * vel[bk].z();
 
-      z_conv = computeConvection(nuz[f], nuz[t], nuz[bk],
-                             qFrt, qMid, qLast, qConFrt, 
-			    qConLast, delT, dx.z());        
+      z_conv  = computeConvection(nuz[f], nuz[c], nuz[bk],
+                                  qFrt, qMid, qLast, qConFrt, 
+                                  qConLast, delT, dx.z());        
 
-      wVel = (qMid - delT * (d1_y[t] * vel[t].z() + rho_tmp[t] * d5_y[t]
-                + x_conv + z_conv))/rho_tmp[t];
+      wVel = (qMid - delT * (d1_y[c] * vel[c].z() 
+           + rho_tmp[c] * d5_y[c] + x_conv + z_conv))/rho_tmp[c];
 
-      vel_CC[t] = Vector(uVel, vVel, wVel);
+      vel_CC[c] = Vector(uVel, vVel, wVel);
     } // end of i loop
   } //end of k loop
 
   //__________________________________________________________
   //  E D G E    right-top
   for(int k = low.z()+1; k < hi_z; k++) {
-    t  =  IntVector(hi_x,   hi_y,   k);
-    f  =  IntVector(hi_x,   hi_y,   k+1);
-    bk =  IntVector(hi_x,   hi_y,   k-1);
+    IntVector c  (hi_x,   yFaceCell,   k);
+    IntVector f  (hi_x,   yFaceCell,   k+1);
+    IntVector bk (hi_x,   yFaceCell,   k-1);
 
     //__________________________________
     //         X   V E L O C I T Y                         
     qConFrt  = rho_tmp[f]  * vel[f].z()  * vel[f].x();
     qConLast = rho_tmp[bk] * vel[bk].z() * vel[bk].x();
     qFrt     = rho_tmp[f]  * vel[f].x();
-    qMid     = rho_tmp[t]  * vel[t].x();
+    qMid     = rho_tmp[c]  * vel[c].x();
     qLast    = rho_tmp[bk] * vel[bk].x();
 
-    z_conv = computeConvection(nuz[f], nuz[t], nuz[bk],
+    z_conv = computeConvection(nuz[f], nuz[c], nuz[bk],
                                qFrt, qMid, qLast, 
                                qConFrt,qConLast, delT, dx.z());       
 
-    uVel = (qMid - delT * ((d1_x[t] + d1_y[t]) * vel[t].x() + 
-                        +  (d3_x[t] + d4_y[t]) * rho_tmp[t] 
-                        +   z_conv))/rho_tmp[t];
+    uVel = (qMid - delT * ((d1_x[c] + d1_y[c]) * vel[c].x() + 
+                        +  (d3_x[c] + d4_y[c]) * rho_tmp[c] 
+                        +   z_conv))/rho_tmp[c];
 
     //__________________________________
     //         Y   V E L O C I T Y 
     qConFrt  = rho_tmp[f]  * vel[f].z()  * vel[f].y();
     qConLast = rho_tmp[bk] * vel[bk].z() * vel[bk].y();
     qFrt     = rho_tmp[f]  * vel[f].y();
-    qMid     = rho_tmp[t]  * vel[t].y();
+    qMid     = rho_tmp[c]  * vel[c].y();
     qLast    = rho_tmp[bk] * vel[bk].y();
 
-    z_conv = computeConvection(nuz[f], nuz[t], nuz[bk],
-                 qFrt, qMid, qLast, qConFrt,qConLast, delT, dx.z()); 
+    z_conv = computeConvection(nuz[f], nuz[c], nuz[bk],
+                               qFrt, qMid, qLast, 
+                               qConFrt,qConLast, delT, dx.z()); 
 
-    vVel = (qMid - delT * ((d1_x[t] + d1_y[t]) * vel[t].y() 
-                        +  (d4_x[t] + d3_y[t]) * rho_tmp[t] + z_conv))
-                            /rho_tmp[t];
+    vVel = (qMid - delT * ((d1_x[c] + d1_y[c]) * vel[c].y() 
+                        +  (d4_x[c] + d3_y[c]) * rho_tmp[c] + z_conv))
+                            /rho_tmp[c];
     //__________________________________
     //         Z   V E L O C I T Y 
     qConFrt  = rho_tmp[f]  * vel[f].z()  * vel[f].z()  + p[f];
     qConLast = rho_tmp[bk] * vel[bk].z() * vel[bk].z() + p[bk];
     qFrt     = rho_tmp[f]  * vel[f].z();
-    qMid     = rho_tmp[t]  * vel[t].z();
+    qMid     = rho_tmp[c]  * vel[c].z();
     qLast    = rho_tmp[bk] * vel[bk].z();
 
-    z_conv = computeConvection(nuz[f], nuz[t], nuz[bk],
-                    qFrt, qMid, qLast, qConFrt, qConLast, delT, dx.z());
+    z_conv = computeConvection(nuz[f], nuz[c], nuz[bk],
+                               qFrt, qMid, qLast, 
+                               qConFrt, qConLast, delT, dx.z());
 
-    wVel = (qMid - delT * ((d1_x[t] + d1_y[t]) * vel[t].z() 
-                        +  (d5_x[t] + d5_y[t]) * rho_tmp[t]  
-                        + z_conv))/rho_tmp[t];
-    vel_CC[t] = Vector(uVel, vVel, wVel);
+    wVel = (qMid - delT * ((d1_x[c] + d1_y[c]) * vel[c].z() 
+                        +  (d5_x[c] + d5_y[c]) * rho_tmp[c]  
+                        + z_conv))/rho_tmp[c];
+    vel_CC[c] = Vector(uVel, vVel, wVel);
   } //end of k loop
      
          
   //_____________________________________________________
   //    E D G E   left-top
   for(int k = low.z()+1; k < hi_z; k++) {
-    t  = IntVector(low.x(),   hi_y,   k);
-    f  = IntVector(low.x(),   hi_y,   k+1);
-    bk = IntVector(low.x(),   hi_y,   k-1);
+    IntVector c  (low.x(),   yFaceCell,   k);
+    IntVector f  (low.x(),   yFaceCell,   k+1);
+    IntVector bk (low.x(),   yFaceCell,   k-1);
 
     //__________________________________
     //         X   V E L O C I T Y                          
     qConFrt  = rho_tmp[f]  * vel[f].z()  * vel[f].x();
     qConLast = rho_tmp[bk] * vel[bk].z() * vel[bk].x();
     qFrt     = rho_tmp[f]  * vel[f].x();
-    qMid     = rho_tmp[t]  * vel[t].x();
+    qMid     = rho_tmp[c]  * vel[c].x();
     qLast    = rho_tmp[bk] * vel[bk].x();
 
-    z_conv = computeConvection(nuz[f], nuz[t], nuz[bk],
-                                qFrt, qMid, qLast, 
-                            qConFrt, qConLast, delT, dx.z());       
+    z_conv = computeConvection(nuz[f], nuz[c], nuz[bk],
+                               qFrt, qMid, qLast, 
+                               qConFrt, qConLast, delT, dx.z());       
 
-    uVel = (qMid - delT * ((d1_x[t] + d1_y[t]) * vel[t].x() + 
-                         +  (d3_x[t] + d4_y[t]) * rho_tmp[t] 
-                         +   z_conv))/rho_tmp[t];
+    uVel = (qMid - delT * ((d1_x[c] + d1_y[c]) * vel[c].x() + 
+                         + (d3_x[c] + d4_y[c]) * rho_tmp[c] 
+                         +  z_conv))/rho_tmp[c];
     //__________________________________
     //         Y   V E L O C I T Y 
     qConFrt  = rho_tmp[f]  * vel[f].z()  * vel[f].y();
     qConLast = rho_tmp[bk] * vel[bk].z() * vel[bk].y();
     qFrt     = rho_tmp[f]  * vel[f].y();
-    qMid     = rho_tmp[t]  * vel[t].y();
+    qMid     = rho_tmp[c]  * vel[c].y();
     qLast    = rho_tmp[bk] * vel[bk].y();
 
-    z_conv = computeConvection(nuz[f], nuz[t], nuz[bk],
-                qFrt, qMid, qLast, qConFrt, qConLast, delT, dx.z()); 
+    z_conv = computeConvection(nuz[f], nuz[c], nuz[bk],
+                                  qFrt, qMid, qLast, 
+                                  qConFrt, qConLast, delT, dx.z()); 
 
-    vVel = (qMid - delT * ((d1_x[t] + d1_y[t]) * vel[t].y() 
-                       +  (d4_x[t] + d3_y[t]) * rho_tmp[t] + z_conv))
-                            /rho_tmp[t];
+    vVel = (qMid - delT * ((d1_x[c] + d1_y[c]) * vel[c].y() 
+                        +  (d4_x[c] + d3_y[c]) * rho_tmp[c] + z_conv))
+                           /rho_tmp[c];
     //__________________________________
     //         Z   V E L O C I T Y
     qConFrt  = rho_tmp[f]  * vel[f].z()  * vel[f].z()  + p[f];
     qConLast = rho_tmp[bk] * vel[bk].z() * vel[bk].z() + p[bk];
     qFrt     = rho_tmp[f]  * vel[f].z();
-    qMid     = rho_tmp[t]  * vel[t].z();
+    qMid     = rho_tmp[c]  * vel[c].z();
     qLast    = rho_tmp[bk] * vel[bk].z();
 
-    z_conv = computeConvection(nuz[f], nuz[t], nuz[bk],
-                    qFrt, qMid, qLast, qConFrt, qConLast, delT, dx.z());
+    z_conv = computeConvection(nuz[f], nuz[c], nuz[bk],
+                               qFrt, qMid, qLast, 
+                               qConFrt, qConLast, delT, dx.z());
 
-    wVel = (qMid - delT * ((d1_x[t] + d1_y[t]) * vel[t].z() 
-                        +  (d5_x[t] + d5_y[t]) * rho_tmp[t]  
-                        + z_conv))/rho_tmp[t];
-    vel_CC[t] = Vector(uVel, vVel, wVel);
+    wVel = (qMid - delT * ((d1_x[c] + d1_y[c]) * vel[c].z() 
+                        +  (d5_x[c] + d5_y[c]) * rho_tmp[c]  
+                        + z_conv))/rho_tmp[c];
+    vel_CC[c] = Vector(uVel, vVel, wVel);
 
   } 
   //_______________________________________________________
   //    E D G E     top-front
   for(int i = low.x()+1; i < hi_x; i++) {
-    r  =  IntVector(i+1, hi_y,    hi_z);
-    l  =  IntVector(i-1, hi_y,    hi_z);
-    t  =  IntVector(i,   hi_y,    hi_z);
+    IntVector r (i+1, yFaceCell,    hi_z);
+    IntVector l (i-1, yFaceCell,    hi_z);
+    IntVector c (i,   yFaceCell,    hi_z);
 
     //__________________________________
     //         X   V E L O C I T Y                          
     qConFrt  = rho_tmp[r] * vel[r].x() * vel[r].x() + p[r];
     qConLast = rho_tmp[l] * vel[l].x() * vel[l].x() + p[l];
     qFrt     = rho_tmp[r] * vel[r].x();
-    qMid     = rho_tmp[t] * vel[t].x();
+    qMid     = rho_tmp[c] * vel[c].x();
     qLast    = rho_tmp[l] * vel[l].x();
 
-    x_conv = computeConvection(nux[r], nux[t], nux[l],
+    x_conv = computeConvection(nux[r], nux[c], nux[l],
                                qFrt, qMid, qLast, 
-                           qConFrt, qConLast, delT, dx.x());       
+                               qConFrt, qConLast, delT, dx.x());       
 
-    uVel = (qMid - delT * ((d1_y[t] + d1_z[t]) * vel[t].x() + 
-                        +  (d4_y[t] + d4_z[t]) * rho_tmp[t] 
-                        +   x_conv))/rho_tmp[t];
+    uVel = (qMid - delT * ((d1_y[c] + d1_z[c]) * vel[c].x() + 
+                        +  (d4_y[c] + d4_z[c]) * rho_tmp[c] 
+                        +   x_conv))/rho_tmp[c];
     //__________________________________
     //         Y   V E L O C I T Y 
     qConFrt  = rho_tmp[r] * vel[r].x() * vel[r].y();
     qConLast = rho_tmp[l] * vel[l].x() * vel[l].y();
     qFrt     = rho_tmp[r] * vel[r].y();
-    qMid     = rho_tmp[t] * vel[t].y();
+    qMid     = rho_tmp[c] * vel[c].y();
     qLast    = rho_tmp[l] * vel[l].y();
 
-    x_conv = computeConvection(nux[r], nux[t], nux[l],
-                 qFrt, qMid, qLast, qConFrt, qConLast, delT, dx.x()); 
+    x_conv = computeConvection(nux[r], nux[c], nux[l],
+                              qFrt, qMid, qLast, 
+                              qConFrt, qConLast, delT, dx.x()); 
 
-    vVel = (qMid - delT * ((d1_y[t] + d1_z[t]) * vel[t].y() 
-                        +  (d3_y[t] + d5_z[t]) * rho_tmp[t] + x_conv))
-                           /rho_tmp[t];
+    vVel = (qMid - delT * ((d1_y[c] + d1_z[c]) * vel[c].y() 
+                        +  (d3_y[c] + d5_z[c]) * rho_tmp[c] + x_conv))
+                           /rho_tmp[c];
     //__________________________________
     //         Z   V E L O C I T Y
     qConFrt  = rho_tmp[r] * vel[r].x() * vel[r].z();
     qConLast = rho_tmp[l] * vel[l].x() * vel[l].z();
     qFrt     = rho_tmp[r] * vel[r].z();
-    qMid     = rho_tmp[t] * vel[t].z();
+    qMid     = rho_tmp[c] * vel[c].z();
     qLast    = rho_tmp[l] * vel[l].z();
 
-    x_conv = computeConvection(nux[r], nux[t], nux[l],
-                    qFrt, qMid, qLast, qConFrt, qConLast, delT, dx.x());
+    x_conv = computeConvection(nux[r], nux[c], nux[l],
+                               qFrt, qMid, qLast, 
+                               qConFrt, qConLast, delT, dx.x());
 
-    wVel = (qMid - delT * ((d1_y[t] + d1_z[t]) * vel[t].z() 
-                        +  (d5_y[t] + d3_z[t]) * rho_tmp[t]  
-                        + x_conv))/rho_tmp[t];
-    vel_CC[t] = Vector(uVel, vVel, wVel);
+    wVel = (qMid - delT * ((d1_y[c] + d1_z[c]) * vel[c].z() 
+                        +  (d5_y[c] + d3_z[c]) * rho_tmp[c]  
+                        + x_conv))/rho_tmp[c];
+    vel_CC[c] = Vector(uVel, vVel, wVel);
   } //end of i loop
        
   //_________________________________________________
   // E D G E    top-back
   for(int i = low.x()+1; i < hi_x; i++) {
-    r  =  IntVector(i+1, hi_y,   low.z());
-    l  =  IntVector(i-1, hi_y,   low.z());
-    t  =  IntVector(i,   hi_y,   low.z());
+    IntVector r (i+1, yFaceCell,   low.z());
+    IntVector l (i-1, yFaceCell,   low.z());
+    IntVector c (i,   yFaceCell,   low.z());
 
     //__________________________________
     //         X   V E L O C I T Y                          
     qConFrt  = rho_tmp[r] * vel[r].x() * vel[r].x() + p[r];
     qConLast = rho_tmp[l] * vel[l].x() * vel[l].x() + p[l];
     qFrt   = rho_tmp[r] * vel[r].x();
-    qMid   = rho_tmp[t] * vel[t].x();
+    qMid   = rho_tmp[c] * vel[c].x();
     qLast  = rho_tmp[l] * vel[l].x();
 
-    x_conv = computeConvection(nux[r], nux[t], nux[l],
-                              qFrt, qMid, qLast, 
-                          qConFrt, qConLast, delT, dx.x());       
+    x_conv = computeConvection(nux[r], nux[c], nux[l],
+                               qFrt, qMid, qLast, 
+                               qConFrt, qConLast, delT, dx.x());       
 
-    uVel = (qMid - delT * ((d1_y[t] + d1_z[t]) * vel[t].x() + 
-                        +  (d4_y[t] + d4_z[t]) * rho_tmp[t] 
-                         +   x_conv))/rho_tmp[t];
+    uVel = (qMid - delT * ((d1_y[c] + d1_z[c]) * vel[c].x() + 
+                        +  (d4_y[c] + d4_z[c]) * rho_tmp[c] 
+                        +   x_conv))/rho_tmp[c];
 
     //__________________________________
     //         Y   V E L O C I T Y
     qConFrt  = rho_tmp[r] * vel[r].x() * vel[r].y();
     qConLast = rho_tmp[l] * vel[l].x() * vel[l].y();
     qFrt     = rho_tmp[r] * vel[r].y();
-    qMid     = rho_tmp[t] * vel[t].y();
+    qMid     = rho_tmp[c] * vel[c].y();
     qLast    = rho_tmp[l] * vel[l].y();
 
-    x_conv = computeConvection(nux[r], nux[t], nux[l],
+    x_conv = computeConvection(nux[r], nux[c], nux[l],
                  qFrt, qMid, qLast, qConFrt, qConLast, delT, dx.x()); 
 
-    vVel = (qMid - delT * ((d1_y[t] + d1_z[t]) * vel[t].y() 
-                       +  (d3_y[t] + d5_z[t]) * rho_tmp[t] + x_conv))
-                            /rho_tmp[t];
+    vVel = (qMid - delT * ((d1_y[c] + d1_z[c]) * vel[c].y() 
+                        +  (d3_y[c] + d5_z[c]) * rho_tmp[c] + x_conv))
+                          /rho_tmp[c];
 
     //__________________________________
     //         Z   V E L O C I T Y
     qConFrt  = rho_tmp[r] * vel[r].x() * vel[r].z();
     qConLast = rho_tmp[l] * vel[l].x() * vel[l].z();
     qFrt     = rho_tmp[r] * vel[r].z();
-    qMid     = rho_tmp[t] * vel[t].z();
+    qMid     = rho_tmp[c] * vel[c].z();
     qLast    = rho_tmp[l] * vel[l].z();
 
-    x_conv = computeConvection(nux[r], nux[t], nux[l],
+    x_conv = computeConvection(nux[r], nux[c], nux[l],
                     qFrt, qMid, qLast, qConFrt, qConLast, delT, dx.x());
 
-    wVel = (qMid - delT * ((d1_y[t] + d1_z[t]) * vel[t].z() 
-                        +  (d5_y[t] + d3_z[t]) * rho_tmp[t]  
-                        + x_conv))/rho_tmp[t];
-    vel_CC[t] = Vector(uVel, vVel, wVel);
+    wVel = (qMid - delT * ((d1_y[c] + d1_z[c]) * vel[c].z() 
+                        +  (d5_y[c] + d3_z[c]) * rho_tmp[c]  
+                        + x_conv))/rho_tmp[c];
+    vel_CC[c] = Vector(uVel, vVel, wVel);
   } 
   //________________________________________________________
   // C O R N E R S    
   vector<IntVector> crn(4);
-  crn[0] = IntVector(hi_x,    hi_y, hi_z);     // right-top-front
-  crn[1] = IntVector(low.x(), hi_y, hi_z);     // left-top-front   
-  crn[2] = IntVector(low.x(), hi_y, low.z());  // left-top-back  
-  crn[3] = IntVector(hi_x,    hi_y, low.z());  // right-top-back 
+  crn[0] = IntVector(hi_x,    yFaceCell, hi_z);     // right-top-front
+  crn[1] = IntVector(low.x(), yFaceCell, hi_z);     // left-top-front   
+  crn[2] = IntVector(low.x(), yFaceCell, low.z());  // left-top-back  
+  crn[3] = IntVector(hi_x,    yFaceCell, low.z());  // right-top-back 
 
   for( int corner = 0; corner < 4; corner ++ ) {
     IntVector c = crn[corner];
-    uVel = vel[r].x() - delT * ((d1_x[c] + d1_y[c] + d1_z[c]) * vel[c].x()  
+    uVel = vel[c].x() - delT * ((d1_x[c] + d1_y[c] + d1_z[c]) * vel[c].x()  
                              +  (d3_x[c] + d4_y[c] + d4_z[c]) * rho_tmp[c]) 
-                        / rho_tmp[c];
+                             / rho_tmp[c];
 
     vVel = vel[c].y() - delT * ((d1_x[c] + d1_y[c] + d1_z[c]) * vel[c].y() 
                              +  (d4_x[c] + d3_y[c] + d5_z[c]) * rho_tmp[c])
-                        / rho_tmp[c];
+                             / rho_tmp[c];
 
     wVel = vel[c].z() - delT * ((d1_x[c] + d1_y[c] + d1_z[c]) * vel[c].z() 
                              +  (d5_x[c] + d5_y[c] + d3_z[c]) * rho_tmp[c])
-                        / rho_tmp[c];
+                             / rho_tmp[c];
     vel_CC[c] = Vector(uVel, vVel, wVel);
   }                     
-} //end of the function yPlusVelLODI()
+} //end of the function yFaceVelLODI() 
 
 /*_________________________________________________________________
- Function~ yMinusVelLODI--
- Purpose~  Compute velocity in boundary cells on yMinus 
-___________________________________________________________________*/
-void yMinusVelLODI(CCVariable<Vector>& vel_CC,
-             const CCVariable<double>& d1_x,  
-             const CCVariable<double>& d3_x, 
-             const CCVariable<double>& d4_x, 
-             const CCVariable<double>& d5_x, 
-             const CCVariable<double>& d1_y,  
-             const CCVariable<double>& d3_y, 
-             const CCVariable<double>& d4_y, 
-             const CCVariable<double>& d5_y, 
-             const CCVariable<double>& d1_z,  
-             const CCVariable<double>& d3_z, 
-             const CCVariable<double>& d4_z,
-             const CCVariable<double>& d5_z,
-             const CCVariable<double>& nux,
-             const CCVariable<double>& nuy,
-             const CCVariable<double>& nuz,
-             const CCVariable<double>& rho_tmp,
-             const CCVariable<double>& p,
-             const CCVariable<Vector>& vel,
-             const double delT,
-             const Vector& dx)
-
-{
-  cout_doing << " I am in yMinusVelLODI" << endl;    
-  IntVector low,hi,r,l,t,b,f,bk;
-
-  low = vel.getLowIndex();
-  hi  = vel.getHighIndex();
-  int hi_x = hi.x() - 1;
-  int hi_z = hi.z() - 1;
-
-  double uVel, vVel, wVel;
-  double x_conv, z_conv;
-  double qConFrt,qConLast,qFrt,qMid,qLast;
-
-   
-  for(int i = low.x()+1; i < hi_x; i++) {
-    for(int k = low.z()+1; k < hi_z; k++) {
-      r  =  IntVector(i+1,  low.y(),   k);
-      l  =  IntVector(i-1,  low.y(),   k);
-      b  =  IntVector(i,    low.y(),   k);
-      f  =  IntVector(i,    low.y(),   k+1);
-      bk =  IntVector(i,    low.y(),   k-1);       
-
-      //__________________________________
-      //         X   V E L O C I T Y
-      qConFrt  = rho_tmp[r] * vel[r].x() * vel[r].x() + p[r];
-      qConLast = rho_tmp[l] * vel[l].x() * vel[l].x() + p[l];
-      qFrt   = rho_tmp[r] * vel[r].x();
-      qMid   = rho_tmp[b] * vel[b].x();
-      qLast  = rho_tmp[l] * vel[l].x();
-      x_conv = computeConvection(nux[r], nux[b], nux[l], 
-                                 qFrt, qMid, qLast, qConFrt, 
-                                 qConLast, delT, dx.x());
-
-      qConFrt  = rho_tmp[f]  * vel[f].z()  * vel[f].x();
-      qConLast = rho_tmp[bk] * vel[bk].z() * vel[bk].x();
-      qFrt     = rho_tmp[f]  * vel[f].x();
-      qLast    = rho_tmp[bk] * vel[bk].x();
-
-      z_conv = computeConvection(nuz[f], nuz[b], nuz[bk],
-                                 qFrt, qMid, qLast, qConFrt, 
-				 qConLast, delT, dx.z());       
-      uVel = (qMid - delT * (d1_y[b] * vel[b].x() 
-           +  rho_tmp[b] * d4_y[b] + x_conv + z_conv ))/rho_tmp[b];     
-      //__________________________________
-      //         Y   V E L O C I T Y        
-      qConFrt  = rho_tmp[r] * vel[r].x() * vel[r].y();
-      qConLast = rho_tmp[l] * vel[l].x() * vel[l].y();
-      qFrt     = rho_tmp[r] * vel[r].y();
-      qMid     = rho_tmp[b] * vel[b].y();
-      qLast    = rho_tmp[l] * vel[l].y();
-      x_conv   = computeConvection(nux[r], nux[b], nux[l], 
-                                 qFrt, qMid, qLast, qConFrt, 
-                                 qConLast, delT, dx.x());
-
-      qConFrt  = rho_tmp[f]  * vel[f].z()  * vel[f].y();
-      qConLast = rho_tmp[bk] * vel[bk].z() * vel[bk].y();
-      qFrt     = rho_tmp[f]  * vel[f].y();
-      qLast    = rho_tmp[bk] * vel[bk].y();
-
-      z_conv = computeConvection(nuz[f], nuz[b], nuz[bk],
-                              qFrt, qMid, qLast, qConFrt, 
-			     qConLast, delT, dx.z());        
-
-      vVel = (qMid- delT * (d1_y[b] * vel[b].y()
-                 +  rho_tmp[b] * d3_y[b] + x_conv + z_conv))/rho_tmp[b];
-      //__________________________________
-      //         Z   V E L O C I T Y
-      qConFrt  = rho_tmp[r] * vel[r].x() * vel[r].z();
-      qConLast = rho_tmp[l] * vel[l].x() * vel[l].z();
-      qFrt     = rho_tmp[r] * vel[r].z();
-      qMid     = rho_tmp[b] * vel[b].z();
-      qLast    = rho_tmp[l] * vel[l].z();
-      x_conv   = computeConvection(nux[r], nux[b], nux[l], 
-                                 qFrt, qMid, qLast, qConFrt, 
-                                 qConLast, delT, dx.x());
-
-      qConFrt  = rho_tmp[f]  * vel[f].z()  * vel[f].z()  + p[f];
-      qConLast = rho_tmp[bk] * vel[bk].z() * vel[bk].z() + p[bk];
-      qFrt     = rho_tmp[f]  * vel[f].z();
-      qLast    = rho_tmp[bk] * vel[bk].z();
-
-      z_conv = computeConvection(nuz[f], nuz[b], nuz[bk],
-                                 qFrt, qMid, qLast, qConFrt, 
-				 qConLast, delT, dx.z());        
-
-
-      wVel = (qMid - delT * (d1_y[b] * vel[b].z() + rho_tmp[b] * d5_y[b]
-                  + x_conv + z_conv))/rho_tmp[b];
-      vel_CC[b] = Vector(uVel, vVel, wVel); 
-    } // end of i loop
-  } //end of k loop
-  //__________________________________________________________
-  //  E D G E      right-bottom
-  for(int k = low.z()+1; k < hi_z; k++) {
-    b  =  IntVector(hi_x,   low.y(),   k);
-    f  =  IntVector(hi_x,   low.y(),   k+1);
-    bk =  IntVector(hi_x,   low.y(),   k-1);
-
-    //__________________________________
-    //         X   V E L O C I T Y                          
-    qConFrt  = rho_tmp[f]  * vel[f].z()  * vel[f].x();
-    qConLast = rho_tmp[bk] * vel[bk].z() * vel[bk].x();
-    qFrt     = rho_tmp[f]  * vel[f].x();
-    qMid     = rho_tmp[b]  * vel[b].x();
-    qLast    = rho_tmp[bk] * vel[bk].x();
-
-    z_conv = computeConvection(nuz[f], nuz[b], nuz[bk],
-                               qFrt, qMid, qLast, 
-                               qConFrt,qConLast, delT, dx.z());       
-
-    uVel = (qMid - delT * ((d1_x[b] + d1_y[b]) * vel[b].x() + 
-                        +  (d3_x[b] + d4_y[b]) * rho_tmp[b] 
-                        +   z_conv))/rho_tmp[b];
-        
-    //__________________________________
-    //         Y   V E L O C I T Y 
-    qConFrt  = rho_tmp[f]  * vel[f].z()  * vel[f].y();
-    qConLast = rho_tmp[bk] * vel[bk].z() * vel[bk].y();
-    qFrt     = rho_tmp[f]  * vel[f].y();
-    qMid     = rho_tmp[b]  * vel[b].y();
-    qLast    = rho_tmp[bk] * vel[bk].y();
-
-    z_conv = computeConvection(nuz[f], nuz[b], nuz[bk],
-                 qFrt, qMid, qLast, qConFrt,qConLast, delT, dx.z()); 
-
-    vVel = (qMid - delT * ((d1_x[b] + d1_y[b]) * vel[b].y() 
-                        +  (d4_x[b] + d3_y[b]) * rho_tmp[b] + z_conv))
-                            /rho_tmp[b];
-    //__________________________________
-    //         Z   V E L O C I T Y 
-    qConFrt  = rho_tmp[f]  * vel[f].z()  * vel[f].z()  + p[f];
-    qConLast = rho_tmp[bk] * vel[bk].z() * vel[bk].z() + p[bk];
-    qFrt     = rho_tmp[f]  * vel[f].z();
-    qMid     = rho_tmp[b]  * vel[b].z();
-    qLast    = rho_tmp[bk] * vel[bk].z();
-
-    z_conv = computeConvection(nuz[f], nuz[b], nuz[bk],
-                    qFrt, qMid, qLast, qConFrt, qConLast, delT, dx.z());
-
-    wVel = (qMid - delT * ((d1_x[b] + d1_y[b]) * vel[b].z() 
-                        +  (d5_x[b] + d5_y[b]) * rho_tmp[b]  
-                        + z_conv))/rho_tmp[b];
-    vel_CC[b] = Vector(uVel, vVel, wVel);
-  } 
-  //_____________________________________________________
-  //    E D G E   left-bottom
-  for(int k = low.z()+1; k < hi_z; k++) {
-    b  = IntVector(low.x(),   low.y(),   k);
-    f  = IntVector(low.x(),   low.y(),   k+1);
-    bk = IntVector(low.x(),   low.y(),   k-1);
-
-    //__________________________________
-    //         X   V E L O C I T Y                           
-    qConFrt  = rho_tmp[f]  * vel[f].z()  * vel[f].x();
-    qConLast = rho_tmp[bk] * vel[bk].z() * vel[bk].x();
-    qFrt     = rho_tmp[f]  * vel[f].x();
-    qMid     = rho_tmp[b]  * vel[b].x();
-    qLast    = rho_tmp[bk] * vel[bk].x();
-
-    z_conv = computeConvection(nuz[f], nuz[b], nuz[bk],
-                               qFrt, qMid, qLast, 
-                           qConFrt, qConLast, delT, dx.z());       
-
-    uVel = (qMid - delT * ((d1_x[b] + d1_y[b]) * vel[b].x() + 
-                        +  (d3_x[b] + d4_y[b]) * rho_tmp[b] 
-                        +   z_conv))/rho_tmp[b];
-    //__________________________________
-    //         Y   V E L O C I T Y
-    qConFrt  = rho_tmp[f]  * vel[f].z()  * vel[f].y();
-    qConLast = rho_tmp[bk] * vel[bk].z() * vel[bk].y();
-    qFrt     = rho_tmp[f]  * vel[f].y();
-    qMid     = rho_tmp[b]  * vel[b].y();
-    qLast    = rho_tmp[bk] * vel[bk].y();
-
-    z_conv = computeConvection(nuz[f], nuz[b], nuz[bk],
-                 qFrt, qMid, qLast, qConFrt, qConLast, delT, dx.z()); 
-
-    vVel = (qMid - delT * ((d1_x[b] + d1_y[b]) * vel[b].y() 
-                        +  (d4_x[b] + d3_y[b]) * rho_tmp[b] + z_conv))
-                             /rho_tmp[b];
-
-    //__________________________________
-    //         Z   V E L O C I T Y
-    qConFrt  = rho_tmp[f]  * vel[f].z()  * vel[f].z()  + p[f];
-    qConLast = rho_tmp[bk] * vel[bk].z() * vel[bk].z() + p[bk];
-    qFrt     = rho_tmp[f]  * vel[f].z();
-    qMid     = rho_tmp[b]  * vel[b].z();
-    qLast    = rho_tmp[bk] * vel[bk].z();
-
-    z_conv = computeConvection(nuz[f], nuz[b], nuz[bk],
-                    qFrt, qMid, qLast, qConFrt, qConLast, delT, dx.z());
-
-    wVel = (qMid - delT * ((d1_x[b] + d1_y[b]) * vel[b].z() 
-                        +  (d5_x[b] + d5_y[b]) * rho_tmp[b]  
-                        + z_conv))/rho_tmp[b];
-    vel_CC[b] = Vector(uVel, vVel, wVel);
-  } 
-  //_______________________________________________________
-  //    E D G E   bottom-front
-  for(int i = low.x()+1; i < hi_x; i++) {
-    r  =  IntVector(i+1, low.y(), hi_z);
-    l  =  IntVector(i-1, low.y(), hi_z);
-    b  =  IntVector(i,   low.y(), hi_z);
-
-    //__________________________________
-    //         X   V E L O C I T Y                         
-    qConFrt  = rho_tmp[r] * vel[r].x() * vel[r].x() + p[r];
-    qConLast = rho_tmp[l] * vel[l].x() * vel[l].x() + p[l];
-    qFrt   = rho_tmp[r] * vel[r].x();
-    qMid   = rho_tmp[b] * vel[b].x();
-    qLast  = rho_tmp[l] * vel[l].x();
-
-    x_conv = computeConvection(nux[r], nux[b], nux[l],
-                               qFrt, qMid, qLast, 
-                           qConFrt, qConLast, delT, dx.x());       
-
-    uVel = (qMid - delT * ((d1_y[b] + d1_z[b]) * vel[b].x() + 
-                        +  (d4_y[b] + d4_z[b]) * rho_tmp[b] 
-                         +   x_conv))/rho_tmp[b];
-    //__________________________________
-    //         Y   V E L O C I T Y
-    qConFrt  = rho_tmp[r] * vel[r].x() * vel[r].y();
-    qConLast = rho_tmp[l] * vel[l].x() * vel[l].y();
-    qFrt     = rho_tmp[r] * vel[r].y();
-    qMid     = rho_tmp[b] * vel[b].y();
-    qLast    = rho_tmp[l] * vel[l].y();
-
-    x_conv = computeConvection(nux[r], nux[b], nux[l],
-                   qFrt, qMid, qLast, qConFrt, qConLast, delT, dx.x()); 
-
-    vVel = (qMid - delT * ((d1_y[b] + d1_z[b]) * vel[b].y() 
-                        +  (d3_y[b] + d5_z[b]) * rho_tmp[b] + x_conv))
-                             /rho_tmp[b];
-    //__________________________________
-    //         Z   V E L O C I T Y
-    qConFrt  = rho_tmp[r] * vel[r].x() * vel[r].z();
-    qConLast = rho_tmp[l] * vel[l].x() * vel[l].z();
-    qFrt     = rho_tmp[r] * vel[r].z();
-    qMid     = rho_tmp[b] * vel[b].z();
-    qLast    = rho_tmp[l] * vel[l].z();
-
-    x_conv = computeConvection(nux[r], nux[b], nux[l],
-                    qFrt, qMid, qLast, qConFrt, qConLast, delT, dx.x());
-
-    wVel = (qMid - delT * ((d1_y[b] + d1_z[b]) * vel[b].z() 
-                        +  (d5_y[b] + d3_z[b]) * rho_tmp[b]  
-                          + x_conv))/rho_tmp[b];
-    vel_CC[b] = Vector(uVel, vVel, wVel);
-  } 
-  
-  //_________________________________________________
-  // E D G E    bottom-back
-  for(int i = low.x()+1; i < hi_x; i++) {
-    r  =  IntVector(i+1, low.y(),   low.z());
-    l  =  IntVector(i-1, low.y(),   low.z());
-    b  =  IntVector(i,   low.y(),   low.z());
-
-    //__________________________________
-    //         X   V E L O C I T Y                          
-    qConFrt  = rho_tmp[r] * vel[r].x() * vel[r].x() + p[r];
-    qConLast = rho_tmp[l] * vel[l].x() * vel[l].x() + p[l];
-    qFrt     = rho_tmp[r] * vel[r].x();
-    qMid     = rho_tmp[b] * vel[b].x();
-    qLast    = rho_tmp[l] * vel[l].x();
-
-    x_conv = computeConvection(nux[r], nux[b], nux[l],
-                               qFrt, qMid, qLast, 
-                           qConFrt, qConLast, delT, dx.x());       
-
-    uVel = (qMid - delT * ((d1_y[b] + d1_z[b]) * vel[b].x() + 
-                        +  (d4_y[b] + d4_z[b]) * rho_tmp[b] 
-                        +   x_conv))/rho_tmp[b];
-    //__________________________________
-    //         Y   V E L O C I T Y
-    qConFrt  = rho_tmp[r] * vel[r].x() * vel[r].y();
-    qConLast = rho_tmp[l] * vel[l].x() * vel[l].y();
-    qFrt     = rho_tmp[r] * vel[r].y();
-    qMid     = rho_tmp[b] * vel[b].y();
-    qLast    = rho_tmp[l] * vel[l].y();
-
-    x_conv = computeConvection(nux[r], nux[b], nux[l],
-                qFrt, qMid, qLast, qConFrt, qConLast, delT, dx.x()); 
-
-    vVel = (qMid - delT * ((d1_y[b] + d1_z[b]) * vel[b].y() 
-                        +  (d3_y[b] + d5_z[b]) * rho_tmp[b] + x_conv))
-                            /rho_tmp[b];
-    //__________________________________
-    //         Z   V E L O C I T Y
-    qConFrt  = rho_tmp[r] * vel[r].x() * vel[r].z();
-    qConLast = rho_tmp[l] * vel[l].x() * vel[l].z();
-    qFrt     = rho_tmp[r] * vel[r].z();
-    qMid     = rho_tmp[b] * vel[b].z();
-    qLast    = rho_tmp[l] * vel[l].z();
-
-    x_conv = computeConvection(nux[r], nux[b], nux[l],
-                   qFrt, qMid, qLast, qConFrt, qConLast, delT, dx.x());
-
-    wVel = (qMid - delT * ((d1_y[b] + d1_z[b]) * vel[b].z() 
-                        +  (d5_y[b] + d3_z[b]) * rho_tmp[b]  
-                        + x_conv))/rho_tmp[b];
-    vel_CC[b] = Vector(uVel, vVel, wVel);
-  }
-
-  //________________________________________________________
-  // C O R N E R S    
-  vector<IntVector> crn(4);
-  crn[0] = IntVector(hi_x,    low.y(), hi_z);     // right-bottom-front
-  crn[1] = IntVector(low.x(), low.y(), hi_z);     // left-bottom-front   
-  crn[2] = IntVector(low.x(), low.y(), low.z());  // left-bottom-back  
-  crn[3] = IntVector(hi_x,    low.y(), low.z());  // right-bottom-back 
-
-  for( int corner = 0; corner < 4; corner ++ ) {
-    IntVector c = crn[corner];
-     uVel = vel[r].x() - delT * ((d1_x[c] + d1_y[c] + d1_z[c]) * vel[c].x()  
-                              +  (d3_x[c] + d4_y[c] + d4_z[c]) * rho_tmp[c]) 
-                         / rho_tmp[c];
-
-     vVel = vel[c].y() - delT * ((d1_x[c] + d1_y[c] + d1_z[c]) * vel[c].y() 
-                              +  (d4_x[c] + d3_y[c] + d5_z[c]) * rho_tmp[c])
-                         / rho_tmp[c];
-
-     wVel = vel[c].z() - delT * ((d1_x[c] + d1_y[c] + d1_z[c]) * vel[c].z() 
-                              +  (d5_x[c] + d5_y[c] + d3_z[c]) * rho_tmp[c])
-                         / rho_tmp[c];
-     vel_CC[c] = Vector(uVel, vVel, wVel);
-  }                             
-} //end of the function yMinusVelLODI()
-
-
-/*_________________________________________________________________
- Function~ zPlusVelLODI--
+ Function~ zFaceVelLODI--
  Purpose~  Compute velocity in boundary cells on the z_plus face
 ___________________________________________________________________*/
-void zPlusVelLODI(CCVariable<Vector>& vel_CC,
+void zFaceVelLODI(const Patch::FaceType face,
+             CCVariable<Vector>& vel_CC,
              const CCVariable<double>& d1_x,  
              const CCVariable<double>& d3_x, 
              const CCVariable<double>& d4_x, 
@@ -1958,36 +1259,42 @@ void zPlusVelLODI(CCVariable<Vector>& vel_CC,
              const Vector& dx)
 
 {
-  cout_doing << " I am in zPlusvelocityLODI" << endl;    
-  IntVector low,hi,r,l,t,b,f,bk;
-
+  cout_doing << " I am in zFaceVelLODI on face " <<face << endl;    
+  IntVector low,hi;
+  int zFaceCell;
   low = vel.getLowIndex();
   hi  = vel.getHighIndex();
   int hi_x = hi.x() - 1;
   int hi_y = hi.y() - 1;
   int hi_z = hi.z() - 1;
-
+  
   double x_conv, y_conv;
   double uVel, vVel, wVel;
   double qConFrt,qConLast,qFrt,qMid,qLast;
-         
+ 
+  if(face == Patch::zplus ){
+    zFaceCell = hi_z;  
+  } else {
+    zFaceCell = low.z();
+  }     
+    
   for(int i = low.x()+1; i < hi_x; i++) {
     for(int j = low.y()+1; j < hi_y; j++) {
 
-      r  =  IntVector(i+1, j,   hi_z);
-      l  =  IntVector(i-1, j,   hi_z);
-      t  =  IntVector(i,   j+1, hi_z);
-      b  =  IntVector(i,   j-1, hi_z);
-      f  =  IntVector(i,   j,   hi_z);
+      IntVector r (i+1, j,   zFaceCell);
+      IntVector l (i-1, j,   zFaceCell);
+      IntVector t (i,   j+1, zFaceCell);
+      IntVector b (i,   j-1, zFaceCell);
+      IntVector c (i,   j,   zFaceCell);
 
       //__________________________________
       //         X   V E L O C I T Y
       qConFrt  = rho_tmp[r] * vel[r].x() * vel[r].x() + p[r];
       qConLast = rho_tmp[l] * vel[l].x() * vel[l].x() + p[l];
       qFrt     = rho_tmp[r] * vel[r].x();
-      qMid     = rho_tmp[f] * vel[f].x();
+      qMid     = rho_tmp[c] * vel[c].x();
       qLast    = rho_tmp[l] * vel[l].x();
-      x_conv   = computeConvection(nux[r], nux[f], nux[l], 
+      x_conv   = computeConvection(nux[r], nux[c], nux[l], 
                                  qFrt, qMid, qLast, qConFrt, 
                                  qConLast, delT, dx.x());
 
@@ -1996,286 +1303,297 @@ void zPlusVelLODI(CCVariable<Vector>& vel_CC,
       qFrt     = rho_tmp[t] * vel[t].x();
       qLast    = rho_tmp[b] * vel[b].x();
 
-      y_conv = computeConvection(nuy[t], nuy[f], nuy[b],
+      y_conv = computeConvection(nuy[t], nuy[c], nuy[b],
                                  qFrt, qMid, qLast, qConFrt, 
-				     qConLast, delT, dx.y());       
-      uVel = (qMid - delT * (d1_z[f] * vel[f].x() 
-           +  rho_tmp[f] * d4_z[f] + x_conv + y_conv))/rho_tmp[f];
+                                 qConLast, delT, dx.y());       
+      uVel = (qMid - delT * (d1_z[c] * vel[c].x() 
+           +  rho_tmp[c] * d4_z[c] + x_conv + y_conv))/rho_tmp[c];
       //__________________________________
       //         Y   V E L O C I T Y        
       qConFrt  = rho_tmp[r] * vel[r].x() * vel[r].y();
       qConLast = rho_tmp[l] * vel[l].x() * vel[l].y();
       qFrt     = rho_tmp[r] * vel[r].y();
-      qMid     = rho_tmp[f] * vel[f].y();
+      qMid     = rho_tmp[c] * vel[c].y();
       qLast    = rho_tmp[l] * vel[l].y();
 
-      x_conv = computeConvection(nux[r], nux[f], nux[l],
+      x_conv = computeConvection(nux[r], nux[c], nux[l],
                                  qFrt, qMid, qLast, qConFrt, 
-				 qConLast, delT, dx.x()); 
+                                 qConLast, delT, dx.x()); 
 
       qConFrt  = rho_tmp[t] * vel[t].y() * vel[t].y() + p[t];
       qConLast = rho_tmp[b] * vel[b].y() * vel[b].y() + p[b];
       qFrt     = rho_tmp[t] * vel[t].y();
       qLast    = rho_tmp[b] * vel[b].y();
-      y_conv   = computeConvection(nuy[t], nuy[f], nuy[b], 
-                                 qFrt, qMid, qLast, qConFrt, 
-                                 qConLast, delT, dx.y());
+      y_conv   = computeConvection(nuy[t], nuy[c], nuy[b], 
+                                   qFrt, qMid, qLast, qConFrt, 
+                                   qConLast, delT, dx.y());
 
-      vVel = (qMid- delT * (d1_z[f] * vel[f].y()
-                  +  rho_tmp[f] * d5_z[f] + x_conv + y_conv))/rho_tmp[f];
+      vVel = (qMid- delT * (d1_z[c] * vel[c].y()
+           +  rho_tmp[c] * d5_z[c] + x_conv + y_conv))/rho_tmp[c];
                         
       //__________________________________
       //         Z   V E L O C I T Y
       qConFrt  = rho_tmp[r] * vel[r].x() * vel[r].z();
       qConLast = rho_tmp[l] * vel[l].x() * vel[l].z() ;
       qFrt     = rho_tmp[r] * vel[r].z();
-      qMid     = rho_tmp[f] * vel[f].z();
+      qMid     = rho_tmp[c] * vel[c].z();
       qLast    = rho_tmp[l] * vel[l].z();
-      x_conv   = computeConvection(nux[r], nux[f], nux[l],
-                                 qFrt, qMid, qLast, qConFrt, 
-				 qConLast, delT, dx.x());  
+      x_conv   = computeConvection(nux[r], nux[c], nux[l],
+                                   qFrt, qMid, qLast, qConFrt, 
+                                   qConLast, delT, dx.x());  
 
       qConFrt  = rho_tmp[t] * vel[t].y() * vel[t].z();
       qConLast = rho_tmp[b] * vel[b].y() * vel[b].z();
       qFrt     = rho_tmp[t] * vel[t].z();
       qLast    = rho_tmp[b] * vel[b].z();
-      y_conv   = computeConvection(nuy[t], nuy[f], nuy[b], 
+      y_conv   = computeConvection(nuy[t], nuy[c], nuy[b], 
                                    qFrt, qMid, qLast, qConFrt, 
                                    qConLast, delT, dx.y());
 
-      wVel = (qMid - delT * (d1_z[f] * vel[f].z() + rho_tmp[f] * d3_z[f]
-                  + x_conv + y_conv))/rho_tmp[f];
-      vel_CC[f] = Vector(uVel, vVel, wVel);
+      wVel = (qMid - delT * (d1_z[c] * vel[c].z() 
+           + rho_tmp[c] * d3_z[c] + x_conv + y_conv))/rho_tmp[c];
+           
+      vel_CC[c] = Vector(uVel, vVel, wVel);
     } // end of j loop
   } //end of i loop
     
-	
+       
   //__________________________________________________________
   //  E D G E    right-front
   for(int j = low.y()+1; j < hi_y; j++) {
-    r  =  IntVector(hi_x,   j,   hi_z);
-    t  =  IntVector(hi_x,   j+1, hi_z);
-    b  =  IntVector(hi_x,   j-1, hi_z);
+    IntVector c (hi_x,   j,   zFaceCell);
+    IntVector t (hi_x,   j+1, zFaceCell);
+    IntVector b (hi_x,   j-1, zFaceCell);
 
     //__________________________________
     //         X   V E L O C I T Y                         
     qConFrt  = rho_tmp[t] * vel[t].y() * vel[t].x();
     qConLast = rho_tmp[b] * vel[b].y() * vel[b].x();
     qFrt     = rho_tmp[t] * vel[t].x();
-    qMid     = rho_tmp[r] * vel[r].x();
+    qMid     = rho_tmp[c] * vel[c].x();
     qLast    = rho_tmp[b] * vel[b].x();
 
-    y_conv = computeConvection(nuy[t], nuy[r], nuy[b],
+    y_conv = computeConvection(nuy[t], nuy[c], nuy[b],
                                qFrt, qMid, qLast, 
-                           qConFrt,qConLast, delT, dx.y());       
+                               qConFrt,qConLast, delT, dx.y());       
 
-    uVel = (qMid - delT * ((d1_x[r] + d1_z[r]) * vel[r].x() + 
-                        +  (d3_x[r] + d4_z[r]) * rho_tmp[r] 
-                        +   y_conv))/rho_tmp[r];
+    uVel = (qMid - delT * ((d1_x[c] + d1_z[c]) * vel[c].x() + 
+                        +  (d3_x[c] + d4_z[c]) * rho_tmp[c] 
+                        +   y_conv))/rho_tmp[c];
     //__________________________________
     //         Y   V E L O C I T Y 
     qConFrt  = rho_tmp[t] * vel[t].y() * vel[t].y() + p[t];
     qConLast = rho_tmp[b] * vel[b].y() * vel[b].y() + p[b];
     qFrt     = rho_tmp[t] * vel[t].y();
-    qMid     = rho_tmp[r] * vel[r].y();
+    qMid     = rho_tmp[c] * vel[c].y();
     qLast    = rho_tmp[b] * vel[b].y();
 
-    y_conv = computeConvection(nuy[t], nuy[r], nuy[b],
-                   qFrt, qMid, qLast, qConFrt,qConLast, delT, dx.y()); 
+    y_conv = computeConvection(nuy[t], nuy[c], nuy[b],
+                               qFrt, qMid, qLast, 
+                               qConFrt,qConLast, delT, dx.y()); 
 
-    vVel = (qMid - delT * ((d1_x[r] + d1_z[r]) * vel[r].y() 
-                        +  (d4_x[r] + d5_z[r]) * rho_tmp[r] + y_conv))
-                              /rho_tmp[r];
+    vVel = (qMid - delT * ((d1_x[c] + d1_z[c]) * vel[c].y() 
+                        +  (d4_x[c] + d5_z[c]) * rho_tmp[c] + y_conv))
+                        /rho_tmp[c];
     //__________________________________
     //         Z   V E L O C I T Y
     qConFrt  = rho_tmp[t] * vel[t].y() * vel[t].z();
     qConLast = rho_tmp[b] * vel[b].y() * vel[b].z();
     qFrt     = rho_tmp[t] * vel[t].z();
-    qMid     = rho_tmp[r] * vel[r].z();
+    qMid     = rho_tmp[c] * vel[c].z();
     qLast    = rho_tmp[b] * vel[b].z();
 
-    y_conv = computeConvection(nuy[t], nuy[r], nuy[b],
-                    qFrt, qMid, qLast, qConFrt, qConLast, delT, dx.y());
+    y_conv = computeConvection(nuy[t], nuy[c], nuy[b],
+                               qFrt, qMid, qLast, 
+                               qConFrt, qConLast, delT, dx.y());
 
-    wVel = (qMid - delT * ((d1_x[r] + d1_z[r]) * vel[r].z() 
-                        +  (d5_x[r] + d3_z[r]) * rho_tmp[r]  
-                        + y_conv))/rho_tmp[r];
+    wVel = (qMid - delT * ((d1_x[c] + d1_z[c]) * vel[c].z() 
+                        +  (d5_x[c] + d3_z[c]) * rho_tmp[c]  
+                        + y_conv))/rho_tmp[c];
 
-    vel_CC[r] = Vector(uVel, vVel, wVel);
+    vel_CC[c] = Vector(uVel, vVel, wVel);
 
   } //end of j loop
 
   //__________________________________________________________
   //  E D G E    left-front
   for(int j = low.y()+1; j < hi_y; j++) {
-    l  =  IntVector(low.x(), j,   hi_z);
-    t  =  IntVector(low.x(), j+1, hi_z);
-    b  =  IntVector(low.x(), j-1, hi_z);
+    IntVector c (low.x(), j,   zFaceCell);
+    IntVector t (low.x(), j+1, zFaceCell);
+    IntVector b (low.x(), j-1, zFaceCell);
 
     //__________________________________
     //         X   V E L O C I T Y                         
     qConFrt  = rho_tmp[t] * vel[t].y() * vel[t].x();
     qConLast = rho_tmp[b] * vel[b].y() * vel[b].x();
     qFrt     = rho_tmp[t] * vel[t].x();
-    qMid     = rho_tmp[l] * vel[l].x();
+    qMid     = rho_tmp[c] * vel[c].x();
     qLast    = rho_tmp[b] * vel[b].x();
 
-    y_conv = computeConvection(nuy[t], nuy[l], nuy[b],
+    y_conv = computeConvection(nuy[t], nuy[c], nuy[b],
                                qFrt, qMid, qLast, 
-                           qConFrt,qConLast, delT, dx.y());       
+                               qConFrt,qConLast, delT, dx.y());       
 
-    uVel = (qMid - delT * ((d1_x[l] + d1_z[l]) * vel[l].x() + 
-                        +  (d3_x[l] + d4_z[l]) * rho_tmp[l] 
-                        +   y_conv))/rho_tmp[l];
+    uVel = (qMid - delT * ((d1_x[c] + d1_z[c]) * vel[c].x() + 
+                        +  (d3_x[c] + d4_z[c]) * rho_tmp[c] 
+                        +   y_conv))/rho_tmp[c];
     //__________________________________
     //         Y   V E L O C I T Y 
     qConFrt  = rho_tmp[t] * vel[t].y() * vel[t].y() + p[t];
     qConLast = rho_tmp[b] * vel[b].y() * vel[b].y() + p[b];
     qFrt     = rho_tmp[t] * vel[t].y();
-    qMid     = rho_tmp[l] * vel[l].y();
+    qMid     = rho_tmp[c] * vel[c].y();
     qLast    = rho_tmp[b] * vel[b].y();
 
-    y_conv = computeConvection(nuy[t], nuy[l], nuy[b],
-                   qFrt, qMid, qLast, qConFrt,qConLast, delT, dx.y()); 
+    y_conv = computeConvection(nuy[t], nuy[c], nuy[b],
+                               qFrt, qMid, qLast, 
+                               qConFrt,qConLast, delT, dx.y()); 
 
-    vVel = (qMid - delT * ((d1_x[l] + d1_z[l]) * vel[l].y() 
-                        +  (d4_x[l] + d5_z[l]) * rho_tmp[l] + y_conv))
-                              /rho_tmp[l];
+    vVel = (qMid - delT * ((d1_x[c] + d1_z[c]) * vel[c].y() 
+                        +  (d4_x[c] + d5_z[c]) * rho_tmp[c] + y_conv))
+                              /rho_tmp[c];
     //__________________________________
     //         Z   V E L O C I T Y
     qConFrt  = rho_tmp[t] * vel[t].y() * vel[t].z();
     qConLast = rho_tmp[b] * vel[b].y() * vel[b].z();
     qFrt     = rho_tmp[t] * vel[t].z();
-    qMid     = rho_tmp[l] * vel[l].z();
+    qMid     = rho_tmp[c] * vel[c].z();
     qLast    = rho_tmp[b] * vel[b].z();
 
-    y_conv = computeConvection(nuy[t], nuy[l], nuy[b],
-                      qFrt, qMid, qLast, qConFrt, qConLast, delT, dx.y());
+    y_conv = computeConvection(nuy[t], nuy[c], nuy[b],
+                               qFrt, qMid, qLast, 
+                               qConFrt, qConLast, delT, dx.y());
 
-    wVel = (qMid - delT * ((d1_x[l] + d1_z[l]) * vel[l].z() 
-                        +  (d5_x[l] + d3_z[l]) * rho_tmp[l]  
-                        + y_conv))/rho_tmp[l];
+    wVel = (qMid - delT * ((d1_x[c] + d1_z[c]) * vel[c].z() 
+                        +  (d5_x[c] + d3_z[c]) * rho_tmp[c]  
+                        + y_conv))/rho_tmp[c];
 
-    vel_CC[l] = Vector(uVel, vVel, wVel);
+    vel_CC[c] = Vector(uVel, vVel, wVel);
   } 
   //_______________________________________________________
   //    E D G E   top-front
   for(int i = low.x()+1; i < hi_x; i++) {
-    r  =  IntVector(i+1, hi_y,   hi_z);
-    l  =  IntVector(i-1, hi_y,   hi_z);
-    t  =  IntVector(i,   hi_y,   hi_z);
+    IntVector r (i+1, hi_y,   zFaceCell);
+    IntVector l (i-1, hi_y,   zFaceCell);
+    IntVector c (i,   hi_y,   zFaceCell);
 
     //__________________________________
     //         X   V E L O C I T Y                          
     qConFrt  = rho_tmp[r] * vel[r].x() * vel[r].x() + p[r];
     qConLast = rho_tmp[l] * vel[l].x() * vel[l].x() + p[l];
     qFrt     = rho_tmp[r] * vel[r].x();
-    qMid     = rho_tmp[t] * vel[t].x();
+    qMid     = rho_tmp[c] * vel[c].x();
     qLast    = rho_tmp[l] * vel[l].x();
 
-    x_conv = computeConvection(nux[r], nux[t], nux[l],
+    x_conv = computeConvection(nux[r], nux[c], nux[l],
                                  qFrt, qMid, qLast, 
                                  qConFrt, qConLast, delT, dx.x());       
 
-    uVel = (qMid - delT * ((d1_y[t] + d1_z[t]) * vel[t].x() + 
-                        +  (d4_y[t] + d4_z[t]) * rho_tmp[t] 
-                        +   x_conv))/rho_tmp[t];
+    uVel = (qMid - delT * ((d1_y[c] + d1_z[c]) * vel[c].x() + 
+                        +  (d4_y[c] + d4_z[c]) * rho_tmp[c] 
+                        +   x_conv))/rho_tmp[c];
     //__________________________________
     //         Y   V E L O C I T Y
     qConFrt  = rho_tmp[r] * vel[r].x() * vel[r].y();
     qConLast = rho_tmp[l] * vel[l].x() * vel[l].y();
     qFrt     = rho_tmp[r] * vel[r].y();
-    qMid     = rho_tmp[t] * vel[t].y();
+    qMid     = rho_tmp[c] * vel[c].y();
     qLast    = rho_tmp[l] * vel[l].y();
 
-    x_conv = computeConvection(nux[r], nux[t], nux[l],
-                   qFrt, qMid, qLast, qConFrt, qConLast, delT, dx.x()); 
+    x_conv = computeConvection(nux[r], nux[c], nux[l],
+                               qFrt, qMid, qLast, 
+                               qConFrt, qConLast, delT, dx.x()); 
 
-    vVel = (qMid - delT * ((d1_y[t] + d1_z[t]) * vel[t].y() 
-                        +  (d3_y[t] + d5_z[t]) * rho_tmp[t] + x_conv))
-                               /rho_tmp[t];
+    vVel = (qMid - delT * ((d1_y[c] + d1_z[c]) * vel[c].y() 
+                        +  (d3_y[c] + d5_z[c]) * rho_tmp[c] + x_conv))
+                               /rho_tmp[c];
     //__________________________________
     //         Z   V E L O C I T Y
     qConFrt  = rho_tmp[r] * vel[r].x() * vel[r].z();
     qConLast = rho_tmp[l] * vel[l].x() * vel[l].z();
     qFrt     = rho_tmp[r] * vel[r].z();
-    qMid     = rho_tmp[t] * vel[t].z();
+    qMid     = rho_tmp[c] * vel[c].z();
     qLast    = rho_tmp[l] * vel[l].z();
 
-    x_conv = computeConvection(nux[r], nux[t], nux[l],
-                    qFrt, qMid, qLast, qConFrt, qConLast, delT, dx.x());
+    x_conv = computeConvection(nux[r], nux[c], nux[l],
+                               qFrt, qMid, qLast, 
+                               qConFrt, qConLast, delT, dx.x());
 
-    wVel = (qMid - delT * ((d1_y[t] + d1_z[t]) * vel[t].z() 
-                        +  (d5_y[t] + d3_z[t]) * rho_tmp[t]  
-                        + x_conv))/rho_tmp[t];
-    vel_CC[t] = Vector(uVel, vVel, wVel);
+    wVel = (qMid - delT * ((d1_y[c] + d1_z[c]) * vel[c].z() 
+                        +  (d5_y[c] + d3_z[c]) * rho_tmp[c]  
+                        + x_conv))/rho_tmp[c];
+                        
+    vel_CC[c] = Vector(uVel, vVel, wVel);
   } 
          
   //_______________________________________________________
   //    E D G E   bottom-front
   for(int i = low.x()+1; i < hi_x; i++) {
-    r  =  IntVector(i+1, low.y(), hi_z);
-    l  =  IntVector(i-1, low.y(), hi_z);
-    b  =  IntVector(i,   low.y(), hi_z);
+    IntVector r (i+1, low.y(), zFaceCell);
+    IntVector l (i-1, low.y(), zFaceCell);
+    IntVector c (i,   low.y(), zFaceCell);
 
     //__________________________________
     //         X   V E L O C I T Y                          
     qConFrt  = rho_tmp[r] * vel[r].x() * vel[r].x() + p[r];
     qConLast = rho_tmp[l] * vel[l].x() * vel[l].x() + p[l];
     qFrt     = rho_tmp[r] * vel[r].x();
-    qMid     = rho_tmp[b] * vel[b].x();
+    qMid     = rho_tmp[c] * vel[c].x();
     qLast    = rho_tmp[l] * vel[l].x();
 
-    x_conv = computeConvection(nux[r], nux[b], nux[l],
+    x_conv = computeConvection(nux[r], nux[c], nux[l],
                                  qFrt, qMid, qLast, 
                                  qConFrt, qConLast, delT, dx.x());       
 
-    uVel = (qMid - delT * ((d1_y[b] + d1_z[b]) * vel[b].x() + 
-                        +  (d4_y[b] + d4_z[b]) * rho_tmp[b] 
-                        +   x_conv))/rho_tmp[b];
+    uVel = (qMid - delT * ((d1_y[c] + d1_z[c]) * vel[c].x() + 
+                        +  (d4_y[c] + d4_z[c]) * rho_tmp[c] 
+                        +   x_conv))/rho_tmp[c];
         
     //__________________________________
     //         Y   V E L O C I T Y
     qConFrt  = rho_tmp[r] * vel[r].x() * vel[r].y();
     qConLast = rho_tmp[l] * vel[l].x() * vel[l].y();
     qFrt     = rho_tmp[r] * vel[r].y();
-    qMid     = rho_tmp[b] * vel[b].y();
+    qMid     = rho_tmp[c] * vel[c].y();
     qLast    = rho_tmp[l] * vel[l].y();
 
-    x_conv = computeConvection(nux[r], nux[b], nux[l],
-                   qFrt, qMid, qLast, qConFrt, qConLast, delT, dx.x()); 
+    x_conv = computeConvection(nux[r], nux[c], nux[l],
+                               qFrt, qMid, qLast, 
+                               qConFrt, qConLast, delT, dx.x()); 
 
-    vVel = (qMid - delT * ((d1_y[b] + d1_z[b]) * vel[b].y() 
-                        +  (d3_y[b] + d5_z[b]) * rho_tmp[b] + x_conv))
-                               /rho_tmp[b];
+    vVel = (qMid - delT * ((d1_y[c] + d1_z[c]) * vel[c].y() 
+                        +  (d3_y[c] + d5_z[c]) * rho_tmp[c] + x_conv))
+                               /rho_tmp[c];
 
     //__________________________________
     //         Z   V E L O C I T Y
     qConFrt  = rho_tmp[r] * vel[r].x() * vel[r].z();
     qConLast = rho_tmp[l] * vel[l].x() * vel[l].z();
     qFrt     = rho_tmp[r] * vel[r].z();
-    qMid     = rho_tmp[b] * vel[b].z();
+    qMid     = rho_tmp[c] * vel[c].z();
     qLast    = rho_tmp[l] * vel[l].z();
 
-    x_conv = computeConvection(nux[r], nux[b], nux[l],
-                    qFrt, qMid, qLast, qConFrt, qConLast, delT, dx.x());
+    x_conv = computeConvection(nux[r], nux[c], nux[l],
+                               qFrt, qMid, qLast,
+                               qConFrt, qConLast, delT, dx.x());
 
-    wVel = (qMid - delT * ((d1_y[b] + d1_z[b]) * vel[b].z() 
-                        +  (d5_y[b] + d3_z[b]) * rho_tmp[b]  
-                        + x_conv))/rho_tmp[b];
-    vel_CC[b] = Vector(uVel, vVel, wVel);
+    wVel = (qMid - delT * ((d1_y[c] + d1_z[c]) * vel[c].z() 
+                        +  (d5_y[c] + d3_z[c]) * rho_tmp[c]  
+                        + x_conv))/rho_tmp[c];
+                        
+    vel_CC[c] = Vector(uVel, vVel, wVel);
   }  
   //________________________________________________________
   // C O R N E R S    
   vector<IntVector> crn(4);
-  crn[0] = IntVector(hi_x,    low.y(), hi_z);   // right-bottom-front
-  crn[1] = IntVector(hi_x,    hi_y,    hi_z);   // right-top-front   
-  crn[2] = IntVector(low.x(), hi_y,    hi_z);   // left-top-front 
-  crn[3] = IntVector(low.x(), low.y(), hi_z);;  // left-bottom-back 
+  crn[0] = IntVector(hi_x,    low.y(), zFaceCell);   // right-bottom-front
+  crn[1] = IntVector(hi_x,    hi_y,    zFaceCell);   // right-top-front   
+  crn[2] = IntVector(low.x(), hi_y,    zFaceCell);   // left-top-front 
+  crn[3] = IntVector(low.x(), low.y(), zFaceCell);;  // left-bottom-back 
 
   for( int corner = 0; corner < 4; corner ++ ) {
     IntVector c = crn[corner];
-    uVel = vel[r].x() - delT * ((d1_x[c] + d1_y[c] + d1_z[c]) * vel[c].x()  
+    uVel = vel[c].x() - delT * ((d1_x[c] + d1_y[c] + d1_z[c]) * vel[c].x()  
                              +  (d3_x[c] + d4_y[c] + d4_z[c]) * rho_tmp[c]) 
                         / rho_tmp[c];
 
@@ -2288,366 +1606,7 @@ void zPlusVelLODI(CCVariable<Vector>& vel_CC,
                         / rho_tmp[c];
     vel_CC[c] = Vector(uVel, vVel, wVel);
   }                      
-} //end of the function zPlusVelLODI()
-
-/*_________________________________________________________________
- Function~ zMinusVelLODI--
- Purpose~  Compute velocity in boundary cells on the z_minus face
-___________________________________________________________________*/
-void zMinusVelLODI(CCVariable<Vector>& vel_CC,
-             const CCVariable<double>& d1_x,  
-             const CCVariable<double>& d3_x, 
-             const CCVariable<double>& d4_x, 
-             const CCVariable<double>& d5_x, 
-             const CCVariable<double>& d1_y,  
-             const CCVariable<double>& d3_y, 
-             const CCVariable<double>& d4_y, 
-             const CCVariable<double>& d5_y, 
-             const CCVariable<double>& d1_z,  
-             const CCVariable<double>& d3_z, 
-             const CCVariable<double>& d4_z,
-             const CCVariable<double>& d5_z,
-             const CCVariable<double>& nux,
-             const CCVariable<double>& nuy,
-             const CCVariable<double>& nuz,
-             const CCVariable<double>& rho_tmp,
-             const CCVariable<double>& p,
-             const CCVariable<Vector>& vel,
-             const double delT,
-             const Vector& dx)
-
-{
-
-  cout << " I am in zMinusVelLODI" << endl;    
-  IntVector low,hi,r,l,t,b,f,bk;
-
-  low = vel.getLowIndex();
-  hi  = vel.getHighIndex();
-  int hi_x = hi.x() - 1;
-  int hi_y = hi.y() - 1;
-  double uVel, vVel, wVel;
-  double x_conv, y_conv;
-  double qConFrt,qConLast,qFrt,qMid,qLast;
-
-
-  for(int i = low.x()+1; i < hi_x; i++) {
-    for(int j = low.y()+1; j < hi_y; j++) {
-      r  =  IntVector(i+1, j,   low.z());
-      l  =  IntVector(i-1, j,   low.z());
-      t  =  IntVector(i,   j+1, low.z());
-      b  =  IntVector(i,   j-1, low.z());
-      f  =  IntVector(i,   j,   low.z());
-
-      //__________________________________
-      //         X   V E L O C I T Y
-      qConFrt  = rho_tmp[r] * vel[r].x() * vel[r].x() + p[r];
-      qConLast = rho_tmp[l] * vel[l].x() * vel[l].x() + p[l];
-      qFrt     = rho_tmp[r] * vel[r].x();
-      qMid     = rho_tmp[f] * vel[f].x();
-      qLast    = rho_tmp[l] * vel[l].x();
-      x_conv   = computeConvection(nux[r], nux[f], nux[l], 
-                                 qFrt, qMid, qLast, qConFrt, 
-                                 qConLast, delT, dx.x());
-
-      qConFrt  = rho_tmp[t] * vel[t].y() * vel[t].x();
-      qConLast = rho_tmp[b] * vel[b].y() * vel[b].x();
-      qFrt     = rho_tmp[t] * vel[t].x();
-      qLast    = rho_tmp[b] * vel[b].x();
-
-      y_conv = computeConvection(nuy[t], nuy[f], nuy[b],
-                                qFrt, qMid, qLast, qConFrt, 
-			      qConLast, delT, dx.y());       
-      uVel = (qMid - delT * (d1_z[f] * vel[f].x() 
-           +  rho_tmp[f] * d4_z[f] + x_conv + y_conv))/rho_tmp[f];
-     
-      //__________________________________
-      //         Y   V E L O C I T Y        
-      qConFrt  = rho_tmp[r] * vel[r].x() * vel[r].y();
-      qConLast = rho_tmp[l] * vel[l].x() * vel[l].y();
-      qFrt     = rho_tmp[r] * vel[r].y();
-      qMid     = rho_tmp[f] * vel[f].y();
-      qLast    = rho_tmp[l] * vel[l].y();
-
-      x_conv = computeConvection(nux[r], nux[f], nux[l],
-                               qFrt, qMid, qLast, qConFrt, 
-			      qConLast, delT, dx.x()); 
-
-      qConFrt  = rho_tmp[t] * vel[t].y() * vel[t].y() + p[t];
-      qConLast = rho_tmp[b] * vel[b].y() * vel[b].y() + p[b];
-      qFrt     = rho_tmp[t] * vel[t].y();
-      qLast    = rho_tmp[b] * vel[b].y();
-      y_conv   = computeConvection(nuy[t], nuy[f], nuy[b], 
-                                 qFrt, qMid, qLast, qConFrt, 
-                                 qConLast, delT, dx.y());
-
-      vVel = (qMid- delT * (d1_z[f] * vel[f].y()
-                  +  rho_tmp[f] * d5_z[f] + x_conv + y_conv))/rho_tmp[f];
-      //__________________________________
-      //         Z   V E L O C I T Y
-      qConFrt  = rho_tmp[r] * vel[r].x() * vel[r].z();
-      qConLast = rho_tmp[l] * vel[l].x() * vel[l].z() ;
-      qFrt     = rho_tmp[r] * vel[r].z();
-      qMid     = rho_tmp[f] * vel[f].z();
-      qLast    = rho_tmp[l] * vel[l].z();
-      x_conv   = computeConvection(nux[r], nux[f], nux[l],
-                                 qFrt, qMid, qLast, qConFrt, 
-				 qConLast, delT, dx.x());  
-
-      qConFrt  = rho_tmp[t] * vel[t].y() * vel[t].z();
-      qConLast = rho_tmp[b] * vel[b].y() * vel[b].z();
-      qFrt     = rho_tmp[t] * vel[t].z();
-      qLast    = rho_tmp[b] * vel[b].z();
-      y_conv   = computeConvection(nuy[t], nuy[f], nuy[b], 
-                                   qFrt, qMid, qLast, qConFrt, 
-                                   qConLast, delT, dx.y());
-
-
-      wVel = (qMid - delT * (d1_z[f] * vel[f].z() + rho_tmp[f] * d3_z[f]
-                   + x_conv + y_conv))/rho_tmp[f];
-      vel_CC[f] = Vector(uVel, vVel, wVel);
- 
-    } // end of j loop
-  } //end of i loop
-	
-  //__________________________________________________________
-  //  E D G E    right-back
-  for(int j = low.y()+1; j < hi_y; j++) {
-    r  =  IntVector(hi_x,   j,   low.z());
-    t  =  IntVector(hi_x,   j+1, low.z());
-    b  =  IntVector(hi_x,   j-1, low.z());
-
-    //__________________________________
-    //         X   V E L O C I T Y                        
-    qConFrt  = rho_tmp[t] * vel[t].y() * vel[t].x();
-    qConLast = rho_tmp[b] * vel[b].y() * vel[b].x();
-    qFrt     = rho_tmp[t] * vel[t].x();
-    qMid     = rho_tmp[r] * vel[r].x();
-    qLast    = rho_tmp[b] * vel[b].x();
-
-    y_conv = computeConvection(nuy[t], nuy[r], nuy[b],
-                               qFrt, qMid, qLast, 
-                           qConFrt,qConLast, delT, dx.y());       
-
-    uVel = (qMid - delT * ((d1_x[r] + d1_z[r]) * vel[r].x() + 
-                        +  (d3_x[r] + d4_z[r]) * rho_tmp[r] 
-                        +   y_conv))/rho_tmp[r]; 
-    //__________________________________
-    //         Y   V E L O C I T Y
-    qConFrt  = rho_tmp[t] * vel[t].y() * vel[t].y() + p[t];
-    qConLast = rho_tmp[b] * vel[b].y() * vel[b].y() + p[b];
-    qFrt     = rho_tmp[t] * vel[t].y();
-    qMid     = rho_tmp[r] * vel[r].y();
-    qLast    = rho_tmp[b] * vel[b].y();
-
-    y_conv = computeConvection(nuy[t], nuy[r], nuy[b],
-                   qFrt, qMid, qLast, qConFrt,qConLast, delT, dx.y()); 
-
-    vVel = (qMid - delT * ((d1_x[r] + d1_z[r]) * vel[r].y() 
-                        +  (d4_x[r] + d5_z[r]) * rho_tmp[r] + y_conv))
-                              /rho_tmp[r];
-
-    //__________________________________
-    //         Z   V E L O C I T Y
-    qConFrt  = rho_tmp[t] * vel[t].y() * vel[t].z();
-    qConLast = rho_tmp[b] * vel[b].y() * vel[b].z();
-    qFrt     = rho_tmp[t] * vel[t].z();
-    qMid     = rho_tmp[r] * vel[r].z();
-    qLast    = rho_tmp[b] * vel[b].z();
-
-    y_conv = computeConvection(nuy[t], nuy[r], nuy[b],
-                    qFrt, qMid, qLast, qConFrt, qConLast, delT, dx.y());
-
-    wVel = (qMid - delT * ((d1_x[r] + d1_z[r]) * vel[r].z() 
-                        +  (d5_x[r] + d3_z[r]) * rho_tmp[r]  
-                        + y_conv))/rho_tmp[r];
-
-    vel_CC[r] = Vector(uVel, vVel, wVel);
-  } //end of j loop
-
-  //__________________________________________________________
-  //  E D G E    left-back
-  for(int j = low.y()+1; j < hi_y; j++) {
-    l  =  IntVector(low.x(), j,   low.z());
-    t  =  IntVector(low.x(), j+1, low.z());
-    b  =  IntVector(low.x(), j-1, low.z());
-
-    //__________________________________
-    //         X   V E L O C I T Y                         
-    qConFrt  = rho_tmp[t] * vel[t].y() * vel[t].x();
-    qConLast = rho_tmp[b] * vel[b].y() * vel[b].x();
-    qFrt     = rho_tmp[t] * vel[t].x();
-    qMid     = rho_tmp[l] * vel[l].x();
-    qLast    = rho_tmp[b] * vel[b].x();
-
-    y_conv = computeConvection(nuy[t], nuy[l], nuy[b],
-                               qFrt, qMid, qLast, 
-                           qConFrt,qConLast, delT, dx.y());       
-
-    uVel = (qMid - delT * ((d1_x[l] + d1_z[l]) * vel[l].x() + 
-                        +  (d3_x[l] + d4_z[l]) * rho_tmp[l] 
-                        +   y_conv))/rho_tmp[l];
-    //__________________________________
-    //         Y   V E L O C I T Y
-    qConFrt  = rho_tmp[t] * vel[t].y() * vel[t].y() + p[t];
-    qConLast = rho_tmp[b] * vel[b].y() * vel[b].y() + p[b];
-    qFrt     = rho_tmp[t] * vel[t].y();
-    qMid     = rho_tmp[l] * vel[l].y();
-    qLast    = rho_tmp[b] * vel[b].y();
-
-    y_conv = computeConvection(nuy[t], nuy[l], nuy[b],
-                   qFrt, qMid, qLast, qConFrt,qConLast, delT, dx.y()); 
-
-    vVel = (qMid - delT * ((d1_x[l] + d1_z[l]) * vel[l].y() 
-                        +  (d4_x[l] + d5_z[l]) * rho_tmp[l] + y_conv))
-                              /rho_tmp[l];
-    //__________________________________
-    //         Z   V E L O C I T Y
-    qConFrt  = rho_tmp[t] * vel[t].y() * vel[t].z();
-    qConLast = rho_tmp[b] * vel[b].y() * vel[b].z();
-    qFrt     = rho_tmp[t] * vel[t].z();
-    qMid     = rho_tmp[l] * vel[l].z();
-    qLast    = rho_tmp[b] * vel[b].z();
-
-    y_conv = computeConvection(nuy[t], nuy[l], nuy[b],
-                      qFrt, qMid, qLast, qConFrt, qConLast, delT, dx.y());
-
-    wVel = (qMid - delT * ((d1_x[l] + d1_z[l]) * vel[l].z() 
-                        +  (d5_x[l] + d3_z[l]) * rho_tmp[l]  
-                        + y_conv))/rho_tmp[l];
-
-    vel_CC[l] = Vector(uVel, vVel, wVel);
-  } 
-
-  //_______________________________________________________
-  //    E D G E     top-back
-  for(int i = low.x()+1; i < hi_x; i++) {
-    r  =  IntVector(i+1, hi_y,   low.z());
-    l  =  IntVector(i-1, hi_y,   low.z());
-    t  =  IntVector(i,   hi_y,   low.z());
-    //__________________________________
-    //         X   V E L O C I T Y                          
-    qConFrt  = rho_tmp[r] * vel[r].x() * vel[r].x() + p[r];
-    qConLast = rho_tmp[l] * vel[l].x() * vel[l].x() + p[l];
-    qFrt     = rho_tmp[r] * vel[r].x();
-    qMid     = rho_tmp[t] * vel[t].x();
-    qLast    = rho_tmp[l] * vel[l].x();
-
-    x_conv = computeConvection(nux[r], nux[t], nux[l],
-                                 qFrt, qMid, qLast, 
-                                 qConFrt, qConLast, delT, dx.x());       
-
-    uVel = (qMid - delT * ((d1_y[t] + d1_z[t]) * vel[t].x() + 
-                        +  (d4_y[t] + d4_z[t]) * rho_tmp[t] 
-                        +   x_conv))/rho_tmp[t];          
-    //__________________________________
-    //         Y   V E L O C I T Y 
-    qConFrt  = rho_tmp[r] * vel[r].x() * vel[r].y();
-    qConLast = rho_tmp[l] * vel[l].x() * vel[l].y();
-    qFrt     = rho_tmp[r] * vel[r].y();
-    qMid     = rho_tmp[t] * vel[t].y();
-    qLast    = rho_tmp[l] * vel[l].y();
-
-    x_conv = computeConvection(nux[r], nux[t], nux[l],
-                   qFrt, qMid, qLast, qConFrt, qConLast, delT, dx.x()); 
-
-    vVel = (qMid - delT * ((d1_y[t] + d1_z[t]) * vel[t].y() 
-                        +  (d3_y[t] + d5_z[t]) * rho_tmp[t] + x_conv))
-                               /rho_tmp[t];
-
-    //__________________________________
-    //         Z   V E L O C I T Y
-    qConFrt  = rho_tmp[r] * vel[r].x() * vel[r].z();
-    qConLast = rho_tmp[l] * vel[l].x() * vel[l].z();
-    qFrt     = rho_tmp[r] * vel[r].z();
-    qMid     = rho_tmp[t] * vel[t].z();
-    qLast    = rho_tmp[l] * vel[l].z();
-
-    x_conv = computeConvection(nux[r], nux[t], nux[l],
-                    qFrt, qMid, qLast, qConFrt, qConLast, delT, dx.x());
-
-    wVel = (qMid - delT * ((d1_y[t] + d1_z[t]) * vel[t].z() 
-                        +  (d5_y[t] + d3_z[t]) * rho_tmp[t]  
-                        + x_conv))/rho_tmp[t];
-    vel_CC[t] = Vector(uVel, vVel, wVel);
-  }
-         
-  //_______________________________________________________
-  //    E D G E   bottom-back
-  for(int i = low.x()+1; i < hi_x; i++) {
-    r  =  IntVector(i+1, low.y(), low.z());
-    l  =  IntVector(i-1, low.y(), low.z());
-    b  =  IntVector(i,   low.y(), low.z());
-
-    //__________________________________
-    //         X   V E L O C I T Y                         
-    qConFrt  = rho_tmp[r] * vel[r].x() * vel[r].x() + p[r];
-    qConLast = rho_tmp[l] * vel[l].x() * vel[l].x() + p[l];
-    qFrt     = rho_tmp[r] * vel[r].x();
-    qMid     = rho_tmp[b] * vel[b].x();
-    qLast    = rho_tmp[l] * vel[l].x();
-
-    x_conv = computeConvection(nux[r], nux[b], nux[l],
-                                 qFrt, qMid, qLast, 
-                               qConFrt, qConLast, delT, dx.x());       
-
-    uVel = (qMid - delT * ((d1_y[b] + d1_z[b]) * vel[b].x() + 
-                      +  (d4_y[b] + d4_z[b]) * rho_tmp[b] 
-                      +   x_conv))/rho_tmp[b];
-    //__________________________________
-    //         Y   V E L O C I T Y
-    qConFrt  = rho_tmp[r] * vel[r].x() * vel[r].y();
-    qConLast = rho_tmp[l] * vel[l].x() * vel[l].y();
-    qFrt     = rho_tmp[r] * vel[r].y();
-    qMid     = rho_tmp[b] * vel[b].y();
-    qLast    = rho_tmp[l] * vel[l].y();
-
-    x_conv = computeConvection(nux[r], nux[b], nux[l],
-                   qFrt, qMid, qLast, qConFrt, qConLast, delT, dx.x()); 
-
-    vVel = (qMid - delT * ((d1_y[b] + d1_z[b]) * vel[b].y() 
-                        +  (d3_y[b] + d5_z[b]) * rho_tmp[b] + x_conv))
-                               /rho_tmp[b];
-    //__________________________________
-    //         Z  V E L O C I T Y
-    qConFrt  = rho_tmp[r] * vel[r].x() * vel[r].z();
-    qConLast = rho_tmp[l] * vel[l].x() * vel[l].z();
-    qFrt     = rho_tmp[r] * vel[r].z();
-    qMid     = rho_tmp[b] * vel[b].z();
-    qLast    = rho_tmp[l] * vel[l].z();
-
-    x_conv = computeConvection(nux[r], nux[b], nux[l],
-                    qFrt, qMid, qLast, qConFrt, qConLast, delT, dx.x());
-
-    wVel = (qMid - delT * ((d1_y[b] + d1_z[b]) * vel[b].z() 
-                        +  (d5_y[b] + d3_z[b]) * rho_tmp[b]  
-                        + x_conv))/rho_tmp[b];
-    vel_CC[b] = Vector(uVel, vVel, wVel);       
-  }   
-  //________________________________________________________
-  // C O R N E R S    
-  vector<IntVector> crn(4);
-  crn[0] = IntVector(hi_x,    low.y(), low.z());   // right-bottom-front
-  crn[1] = IntVector(hi_x,    hi_y,    low.z());   // right-top-front   
-  crn[2] = IntVector(low.x(), hi_y,    low.z());   // left-top-front 
-  crn[3] = IntVector(low.x(), low.y(), low.z());;  // left-bottom-back 
-
-  for( int corner = 0; corner < 4; corner ++ ) {
-     IntVector c = crn[corner];
-     uVel = vel[r].x() - delT * ((d1_x[c] + d1_y[c] + d1_z[c]) * vel[c].x()  
-                              +  (d3_x[c] + d4_y[c] + d4_z[c]) * rho_tmp[c]) 
-                         / rho_tmp[c];
-
-     vVel = vel[c].y() - delT * ((d1_x[c] + d1_y[c] + d1_z[c]) * vel[c].y() 
-                              +  (d4_x[c] + d3_y[c] + d5_z[c]) * rho_tmp[c])
-                         / rho_tmp[c];
-
-     wVel = vel[c].z() - delT * ((d1_x[c] + d1_y[c] + d1_z[c]) * vel[c].z() 
-                              +  (d5_x[c] + d5_y[c] + d3_z[c]) * rho_tmp[c])
-                         / rho_tmp[c];
-     vel_CC[c] = Vector(uVel, vVel, wVel);
-  }                    
-} //end of the function zMinusVelLODI()
-
+} //end of the function zFaceVelLODI()
 
 /*_________________________________________________________________
  Function~ fillFaceVelLODI--
@@ -2677,60 +1636,31 @@ void   fillFaceVelLODI(CCVariable<Vector>& vel_CC,
                  const double delT,
                  const Vector& dx)
 
-{    	
-   cout_doing << "I am in fillFaceVelLODI()" << endl;
-   switch(face) {
-     case Patch::xplus:{ 
-     xPlusVelLODI(vel_CC, d1_x, d3_x, d4_x, d5_x,
-		            d1_y, d3_y, d4_y, d5_y, 
-		            d1_z, d3_z, d4_z, d5_z, 
-			     nux,nuy,nuz,
-			     rho_tmp, p, vel, delT, dx);
-     }
-     break;
-     case Patch::xminus:{ 
-       xMinusVelLODI(vel_CC,d1_x, d3_x, d4_x, d5_x,
-		              d1_y, d3_y, d4_y, d5_y,
-			       d1_z, d3_z, d4_z, d5_z, 
-		              nux,nuy,nuz,
-		              rho_tmp, p, vel, delT, dx);
-     }
-     break;
-     case Patch::yplus:{ 
-       yPlusVelLODI(vel_CC, d1_x, d3_x, d4_x, d5_x,
-		              d1_y, d3_y, d4_y, d5_y,
-			       d1_z, d3_z, d4_z, d5_z,
-		               nux,nuy,nuz,
-		               rho_tmp, p, vel, delT, dx);
-     } 
-     break;
-     case Patch::yminus:{ 
-       yMinusVelLODI(vel_CC, d1_x, d3_x, d4_x, d5_x,
-		               d1_y, d3_y, d4_y, d5_y,
-			        d1_z, d3_z, d4_z, d5_z,
-		               nux,nuy,nuz,
-		               rho_tmp, p, vel, delT, dx);
-     }
-     break;
-     case Patch::zplus:{ 
-       zPlusVelLODI(vel_CC, d1_x, d3_x, d4_x, d5_x,
-	                     d1_y, d3_y, d4_y, d5_y,
-		              d1_z, d3_z, d4_z, d5_z,
-		              nux,nuy,nuz,
-		              rho_tmp, p, vel, delT, dx);
-     }
-     break;
-     case Patch::zminus:{
-     zMinusVelLODI(vel_CC, d1_x, d3_x, d4_x, d5_x,
-	                    d1_y, d3_y, d4_y, d5_y,
-	 	             d1_z, d3_z, d4_z, d5_z,
-		             nux,nuy,nuz,
-		             rho_tmp, p, vel, delT, dx);
-     }
-     break;
-     default:
-     break;
-    }
+{ 
+  if(face ==  Patch::xplus || face ==  Patch::xminus) {
+    xFaceVelLODI( face, vel_CC, 
+                  d1_x, d3_x, d4_x, d5_x,
+                  d1_y, d3_y, d4_y, d5_y, 
+                  d1_z, d3_z, d4_z, d5_z, 
+                  nux,nuy,nuz,
+                  rho_tmp, p, vel, delT, dx);
+  }
+  if(face ==  Patch::yplus || face ==  Patch::yminus) {
+       yFaceVelLODI(face, vel_CC, 
+                    d1_x, d3_x, d4_x, d5_x,
+                    d1_y, d3_y, d4_y, d5_y,             
+                    d1_z, d3_z, d4_z, d5_z,             
+                    nux,nuy,nuz,                        
+                    rho_tmp, p, vel, delT, dx);         
+  } 
+  if(face ==  Patch::zplus || face ==  Patch::zminus) {  
+    zFaceVelLODI(face, vel_CC, 
+                 d1_x, d3_x, d4_x, d5_x,
+                 d1_y, d3_y, d4_y, d5_y,
+                 d1_z, d3_z, d4_z, d5_z,
+                 nux,nuy,nuz,
+                 rho_tmp, p, vel, delT, dx);
+  }
 }
   
 /*_________________________________________________________________
@@ -3251,7 +2181,7 @@ void yPlusTempLODI(CCVariable<double>& temp_CC,
       // not per unit mass, must be given or compute. The ICE code compute 
       // just internal energy, not the total energy. Here the code is written 
       // just for ICE materials
-	   
+          
       qConFrt  = vel[r].x() * (e[r] + p[r]);
       qConLast = vel[l].x() * (e[l] + p[l]);
       qFrt     = e[r];
@@ -3976,7 +2906,7 @@ void zMinusTempLODI(CCVariable<double>& temp_CC,
       temp_CC[bk] = e_tmp/rho_CC[bk]/cv - 0.5 * vel_sqr/cv;   
     } // end of j loop
   } //end of i loop
-	
+       
   //__________________________________________________________
   //  E D G E      right-back
   for(int j = low.y()+1; j < hi_y; j++) {
@@ -4156,8 +3086,8 @@ void fillFaceTempLODI(CCVariable<double>& temp_CC,
                    d1_y, d2_y, d3_y, d4_y, d5_y,
                    d1_z, d2_z, d3_z, d4_z, d5_z,
                    e, rho_CC,
-	            nux,nuy,nuz,
-	            rho_tmp, p, vel, 
+                   nux,nuy,nuz,
+                   rho_tmp, p, vel, 
                    delT, cv, gamma, dx);
    } 
    break;
@@ -4167,8 +3097,8 @@ void fillFaceTempLODI(CCVariable<double>& temp_CC,
                     d1_y, d2_y, d3_y, d4_y, d5_y,
                     d1_z, d2_z, d3_z, d4_z, d5_z,
                     e, rho_CC,
-		      nux,nuy,nuz,
-		      rho_tmp, p, vel, 
+                    nux,nuy,nuz,
+                    rho_tmp, p, vel, 
                     delT, cv, gamma, dx);
    } 
    break;
@@ -4178,8 +3108,8 @@ void fillFaceTempLODI(CCVariable<double>& temp_CC,
                    d1_y, d2_y, d3_y, d4_y, d5_y,
                    d1_z, d2_z, d3_z, d4_z, d5_z,
                    e, rho_CC,
-	            nux,nuy,nuz,
-	            rho_tmp, p, vel, 
+                   nux,nuy,nuz,
+                   rho_tmp, p, vel, 
                    delT, cv, gamma, dx);
    }
    break;
@@ -4190,8 +3120,8 @@ void fillFaceTempLODI(CCVariable<double>& temp_CC,
                     d1_y, d2_y, d3_y, d4_y, d5_y,
                     d1_z, d2_z, d3_z, d4_z, d5_z,
                     e, rho_CC,
-		      nux,nuy,nuz,
-		      rho_tmp, p, vel, 
+                    nux,nuy,nuz,
+                    rho_tmp, p, vel, 
                     delT, cv, gamma, dx);
    } 
    break;
@@ -4201,8 +3131,8 @@ void fillFaceTempLODI(CCVariable<double>& temp_CC,
                    d1_y, d2_y, d3_y, d4_y, d5_y,
                    d1_z, d2_z, d3_z, d4_z, d5_z,
                    e, rho_CC,
-	            nux,nuy,nuz,
-	            rho_tmp, p, vel, 
+                   nux,nuy,nuz,
+                   rho_tmp, p, vel, 
                    delT, cv, gamma, dx);
    }
    break;
@@ -4212,8 +3142,8 @@ void fillFaceTempLODI(CCVariable<double>& temp_CC,
                     d1_y, d2_y, d3_y, d4_y, d5_y,
                     d1_z, d2_z, d3_z, d4_z, d5_z,
                     e, rho_CC,
-		      nux,nuy,nuz,
-		      rho_tmp, p, vel, 
+                    nux,nuy,nuz,
+                    rho_tmp, p, vel, 
                     delT, cv, gamma, dx);
    }
    break;
