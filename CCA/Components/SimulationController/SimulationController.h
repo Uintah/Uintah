@@ -67,7 +67,7 @@ class Regridder;
 
       // notifies (before calling run) the simulationController
       //! that this run is a combinePatches run.
-      void doCombinePatches(std::string fromDir);
+      void doCombinePatches(std::string fromDir, bool reduceUda);
      
       // for calculating memory usage when sci-malloc is disabled.
       static char* start_addr;
@@ -109,7 +109,7 @@ class Regridder;
       int d_restartTimestep;
 
       bool d_combinePatches;
-
+      bool d_reduceUda;
       // If d_restartFromScratch is true then don't copy or move any of
       // the old timesteps or dat files from the old directory.  Run as
       // as if it were running from scratch but with initial conditions
