@@ -1,6 +1,5 @@
 #include <Packages/Uintah/Core/Grid/VelocityBoundCond.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
-#include <map>
 #include <iostream>
 #include <stdlib.h>
 using namespace Uintah;
