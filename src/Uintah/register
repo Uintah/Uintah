@@ -265,13 +265,13 @@ sub usage() {
 	  "      Register -q <.uda directory name>\n" .
 	  "        Example: Register -q  PSE/src/uda/tmp.uda.001\n" .
 	  "      Register -qd <username> \n" .
-	  "        Example: Register -qd  xichen" .
+	  "        Example: Register -qd  xichen \n" .
 	  "      Register -qd <username>  <date>\n" .
 	  "        Example: Register -qd xichen April \n" .
 	  "      Register -a Job_ID \n" .
-	  "        Example: Register -a 6" .
+	  "        Example: Register -a 6 \n" .
 	  "      Register -a Job_ID <FileName>\n" .
-	  "        Example: Register -a 6 input.xml" .
+	  "        Example: Register -a 6 input.xml\n" .
 	  "      Register -help\n" );    
 }
 
