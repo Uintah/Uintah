@@ -116,6 +116,15 @@ public:
     void io(int, string& str);
 };
 
+//! The Fast stream is binary, its results can only safely be used
+//! on the architecture where the file is generated.
+class SCICORESHARE FastPiostream : public TextPiostream {
+public:
+  FastPiostream(const string& filename, Direction dir) :
+    TextPiostream(filename, dir)
+  {}
+};
+
 class SCICORESHARE GzipPiostream : public Piostream {
     gzFile gzfile;
     int have_peekname;

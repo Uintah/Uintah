@@ -359,12 +359,12 @@ const string find_type_name(ImageMesh::IFaceIndex *)
 }
 
 
-#define LATVOLMESH_VERSION 1
+#define IMAGEMESH_VERSION 1
 
 void
 ImageMesh::io(Piostream& stream)
 {
-  stream.begin_class(type_name(-1), LATVOLMESH_VERSION);
+  stream.begin_class(type_name(-1), IMAGEMESH_VERSION);
 
   Mesh::io(stream);
 

@@ -162,13 +162,17 @@ BoxClipper::inside_p(const Point &p)
 }
 
 
-const int BOXCLIPPER_VERSION = 1;
+const int BOXCLIPPER_VERSION = 2;
 
 void
 BoxClipper::io(Piostream &stream)
 {
-  stream.begin_class("BoxClipper", BOXCLIPPER_VERSION);
-  Pio(stream, trans_);
+  int version = stream.begin_class("BoxClipper", BOXCLIPPER_VERSION);
+  if (version < 2 && stream.reading() ) {
+    Pio_old(stream, trans_);
+  } else {
+    Pio(stream, trans_);
+  }
   stream.end_class();
 }
 

@@ -1532,6 +1532,7 @@ case $host in
     ;;
 
   *)
+    BASE_LIB_DIR=lib
     CFLAGS=" -Wall"
     SCI_CHECK_VERSION($CC,--version,2.95.3,,
       echo configure: error: wrong $CC version.; exit)
@@ -2740,11 +2741,11 @@ AC_SUBST(DEF_Z)
 if test "$need_rtrt" = "yes"; then
 
    dirs="$with_glut/$BASE_LIB_DIR $thirdparty/lib $SCI_LAB_TP_LIBS"
-   SCI_CHECK_LIB($dirs,glut,main,-lGLU -lGL,,not-optional)
+   SCI_CHECK_LIB($dirs,glut,main,$GLU_LIBRARY -lGLU $GL_LIBRARY -lGL,,not-optional)
    SCI_CHECK_HEADERS($with_glut/include $LIBGLUT/../include $thirdparty/include,GL/glut.h,,,not-optional)
 
    dirs="$with_glui/$BASE_LIB_DIR $thirdparty/lib $SCI_LAB_TP_LIBS"
-   SCI_CHECK_LIB($dirs,glui,main,$GLUT_LIBRARY -lglut -lGLU -lGL,,not-optional)
+   SCI_CHECK_LIB($dirs,glui,main,$GLUT_LIBRARY -lglut $GLU_LIBRARY -lGLU $GL_LIBRARY -lGL,,not-optional)
    SCI_CHECK_HEADERS($with_glui/include $LIBGLUI/../include $thirdparty/include,glui.h,$INCGL_GLUT_H,,not-optional)
 
    AC_SUBST(INCGL_GLUT_H)

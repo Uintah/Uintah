@@ -184,19 +184,22 @@ Vector ScanlineMesh::diagonal() const
   return get_bounding_box().diagonal();
 }
 
-#define LATVOLMESH_VERSION 1
+#define SCANLINEMESH_VERSION 2
 
 void
 ScanlineMesh::io(Piostream& stream)
 {
-  stream.begin_class(type_name(-1), LATVOLMESH_VERSION);
+  int version = stream.begin_class(type_name(-1), SCANLINEMESH_VERSION);
 
   Mesh::io(stream);
 
   // IO data members, in order
   Pio(stream, length_);
-  Pio(stream, transform_);
-
+  if (version < 2 && stream.reading() ) {
+    Pio_old(stream, transform_);
+  } else {
+    Pio(stream, transform_);
+  }
   stream.end_class();
 }
 
