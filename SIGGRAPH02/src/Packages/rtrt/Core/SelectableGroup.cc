@@ -68,9 +68,9 @@ SelectableGroup::animate(double t, bool& changed)
   }
 
   // Animate all of them even if they aren't showing
-  for(int i=0;i<objs.size();i++){
-    objs[i]->animate(t, changed);
-  }
+  //for(int i=0;i<objs.size();i++){
+    objs[child]->animate(t, changed);
+    //}
 }
 
 void

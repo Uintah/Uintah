@@ -46,6 +46,7 @@
 #include <Packages/rtrt/Core/MIPHVB16.h>
 #include <Packages/rtrt/Core/CutVolumeDpy.h>
 #include <Packages/rtrt/Core/CutPlaneDpy.h>
+#include <Packages/rtrt/Core/CutPlane.h>
 #include <Packages/rtrt/Core/ColorMap.h>
 #include <Packages/rtrt/Core/ColorMapDpy.h>
 #include <Packages/rtrt/Core/PhongColorMapMaterial.h>
@@ -64,9 +65,11 @@ using SCIRun::Thread;
 #define ADD_VIS_FEM
 #define ADD_HEAD
 #define ADD_CSAFE_FIRE
-#define ADD_GEO_DATA
+//#define ADD_GEO_DATA
+#define ADD_GEO_DATA2
 #define ADD_SHEEP
 #define ADD_DTIGLYPH
+
 //#define ADD_BOX
 //#define ADD_SPHERE
 
@@ -1083,12 +1086,12 @@ Scene* make_scene(int /*argc*/, char* /*argv*/[], int nworkers)
 		    center+Vector(0,0,2)+Vector(1,1,1)));
 #endif
 
-//#ifdef ADD_SPHERE
+#ifdef ADD_SPHERE
   Group *sphereg = new Group;
 
   Material *gray2 = new LambertianMaterial(Color(0.3,0.3,0.3));
   sphereg->add(new Sphere(gray2, center+Vector(0,0,2), 0.8));
-//#endif
+#endif
 
 #ifdef ADD_BRICKBRACK
   add_objects(g, s, center, room_lights);
@@ -1097,6 +1100,20 @@ Scene* make_scene(int /*argc*/, char* /*argv*/[], int nworkers)
 #ifdef ADD_BRICKBRACK
   SpinningInstance *smw = make_dna(g, s, room_lights);
 #endif
+
+  //DEFINE THE HOLOGRAM SPACE
+  //5cm floating above pedasta;
+#define HMIN 0.55
+  //allow to scale from pedestal top to 3m up
+#define EXTZ (3-HMIN)
+  //max x,y that will rotate within a 1.5rad circle 2*sqrt(1.5^2/2)=2.22
+#define EXTX 2.22
+#define EXTY 2.22
+
+  //now where is center of holospace?
+#define CENX -8
+#define CENY 8
+#define CENZ ((EXTZ*.5) + HMIN)
 
 
 
@@ -1144,19 +1161,6 @@ Scene* make_scene(int /*argc*/, char* /*argv*/[], int nworkers)
 					  3, nworkers);
 					  
 
-  //5cm floating above pedasta;
-#define HFLT 0.05
-  //allow to scale from pedestal top to 3m up
-#define EXTZ (3-(0.5+HFLT))
-  //max x,y that will rotate within a 1.5rad circle 2*sqrt(1.5^2/2)=2.22
-#define EXTX 2.22
-#define EXTY 2.22
-
-  //now where is center of holospace?
-#define CENX -8
-#define CENY 8
-#define CENZ (EXTZ/2.0 + (0.5+HFLT))
-
   Group *vig = new Group();
   vig->add(slc0);
   vig->add(slc1);
@@ -1174,14 +1178,14 @@ Scene* make_scene(int /*argc*/, char* /*argv*/[], int nworkers)
 #define ORIGEY .48
 #define ORIGEZ 1.7330
   //choose maximum from model, in this case z
-#define SCALE EXTZ/ORIGEZ
+#define SCALE (EXTZ/ORIGEZ)
   vtrans->pre_scale(Vector(SCALE,SCALE,SCALE));
   vtrans->pre_translate(Vector(CENX, CENY, CENZ));
-  //#define ZMIN CENZ-((ORIGEZ*SCALE)/2.0)
-  //#define LOWERZ 0.5+HFLT - ZMIN
+  //#define ZMIN (CENZ-((ORIGEZ*SCALE)*.5))
+  //#define LOWERZ (HMIN - ZMIN)
   //no need, we've scaled in this case to fit z
 #define LOWERZ 0
-  vtrans->pre_translate(Vector(0,0,LOWERZ)); //place at HFLT above surface
+  vtrans->pre_translate(Vector(0,0,LOWERZ)); //place at HMIN
 #undef ORIGEX
 #undef ORIGEY
 #undef ORIGEZ
@@ -1204,7 +1208,9 @@ Scene* make_scene(int /*argc*/, char* /*argv*/[], int nworkers)
   CutPlaneDpy* hcpdpy=new CutPlaneDpy(Vector(.707,-.707,0), Point(-8,8,1.56));
 
   ColorMap *hcmap = new ColorMap("/usr/sci/data/Geometry/volumes2/head",256);
-  Material *hmat=new LambertianMaterial(Color(0.7,0.7,0.7));
+  //Material *hmat=new LambertianMaterial(Color(1,0.7,0.7));
+  Phong *hmat = new Phong(Color(0.6,0.5,0.5), Color(1,1,1), 50);
+
   for (l=0; l<holo_lights.size(); l++)
     hmat->my_lights.add(holo_lights[l]);
 
@@ -1227,12 +1233,12 @@ Scene* make_scene(int /*argc*/, char* /*argv*/[], int nworkers)
 #define ORIGEY 1.9
 #define ORIGEZ 1.6
   //max in this case is y
-#define SCALE EXTY/ORIGEY
+#define SCALE (EXTY/ORIGEY)
   htrans->pre_scale(Vector(SCALE,SCALE,SCALE));
   htrans->pre_translate(Vector(CENX, CENY, CENZ));
-#define ZMIN CENZ-((ORIGEZ*SCALE)/2.0)
-#define LOWERZ 0.5+HFLT - ZMIN
-  htrans->pre_translate(Vector(0,0,LOWERZ)); //place at HFLT above surface
+#define ZMIN (CENZ-((ORIGEZ*SCALE)*.5))
+#define LOWERZ (HMIN - ZMIN)
+  htrans->pre_translate(Vector(0,0,LOWERZ)); //place at HMIN
 #undef ORIGEX
 #undef ORIGEY
 #undef ORIGEZ
@@ -1261,11 +1267,11 @@ Scene* make_scene(int /*argc*/, char* /*argv*/[], int nworkers)
     colors[i].x = (float)i/(color_size-1);
     colors[i].val = 1;
   }
-  colors[0].c = Color(1,0,0);
-  colors[1].c = Color(1,1,0);
+  colors[0].c = Color(0,0,1);
+  colors[1].c = Color(0,1,1);
   colors[2].c = Color(0,1,0);
-  colors[3].c = Color(0,1,1);
-  colors[4].c = Color(0,0,1);
+  colors[3].c = Color(1,1,0);
+  colors[4].c = Color(1,0,0);
 
   ColorMapDpy *fcdpy = new ColorMapDpy(colors);
   //  dpys.add(fcdpy);
@@ -1298,18 +1304,19 @@ Scene* make_scene(int /*argc*/, char* /*argv*/[], int nworkers)
   InstanceWrapperObject *temp_iw = new InstanceWrapperObject(temp_field, f_bb);
   InstanceWrapperObject *fire_iw = new InstanceWrapperObject(fire_geom, f_bb);
   Transform *fire_trans = new Transform();
+
   //after rotation...
   fire_trans->rotate(Vector(1,0,0), Vector(0,0,1));
 #define ORIGEX 2
 #define ORIGEY 2
 #define ORIGEZ 2
   //max in this case is y
-#define SCALE EXTY/ORIGEY
-  htrans->pre_scale(Vector(SCALE,SCALE,SCALE));
-  htrans->pre_translate(Vector(CENX, CENY, CENZ));
-#define ZMIN CENZ-((ORIGEZ*SCALE)/2.0)
-#define LOWERZ 0.5+HFLT - ZMIN
-  htrans->pre_translate(Vector(0,0,LOWERZ)); //place at HFLT above surface
+#define SCALE (EXTY/ORIGEY)
+  fire_trans->pre_scale(Vector(SCALE,SCALE,SCALE));
+  fire_trans->pre_translate(Vector(CENX, CENY, CENZ));
+#define ZMIN (CENZ-((ORIGEZ*SCALE)*.5))
+#define LOWERZ (HMIN - ZMIN)
+  fire_trans->pre_translate(Vector(0,0,LOWERZ)); //place at HMIN
 #undef ORIGEX
 #undef ORIGEY
 #undef ORIGEZ
@@ -1384,7 +1391,7 @@ Scene* make_scene(int /*argc*/, char* /*argv*/[], int nworkers)
   CutPlaneDpy* gcpdpy=new CutPlaneDpy(Vector(.707,-.707,0), Point(-8,8,1.56));
 
   ColorMap *gcmap = new ColorMap("/usr/sci/data/Geometry/volumes2/Seismic/geo",256);
-  Material* gmat=new LambertianMaterial(Color(0.7,0.7,0.7));
+  Material* gmat=new LambertianMaterial(Color(0.25,0.125,0));
   for (l=0; l<holo_lights.size(); l++)
     gmat->my_lights.add(holo_lights[l]);
 
@@ -1408,19 +1415,18 @@ Scene* make_scene(int /*argc*/, char* /*argv*/[], int nworkers)
 #define ORIGEX .46
 #define ORIGEY .4
 #define ORIGEZ 2
-  //choose maximum from model, in this case z
-#define SCALE EXTZ/ORIGEZ
-  gtrans->pre_scale(Vector(SCALE,SCALE,SCALE));
+#define SCALE (EXTZ/ORIGEZ)
+#define SCALEZ (EXTZ/ORIGEZ)*0.75
+  gtrans->pre_scale(Vector(SCALE*2,SCALE*2,SCALEZ));
   gtrans->pre_translate(Vector(CENX, CENY, CENZ));
-  //#define ZMIN CENZ-((ORIGEZ*SCALE)/2.0)
-  //#define LOWERZ 0.5+HFLT - ZMIN
-  //no need, we've scaled in this case to fit z
-#define LOWERZ 0
-  gtrans->pre_translate(Vector(0,0,LOWERZ)); //place at HFLT above surface
+#define ZMIN (CENZ-((ORIGEZ*SCALEZ)*.5))
+#define LOWERZ (HMIN - ZMIN)
+  gtrans->pre_translate(Vector(0,0,LOWERZ)); //place at HMIN
 #undef ORIGEX
 #undef ORIGEY
 #undef ORIGEZ
 #undef SCALE
+#undef SCALEZ
 #undef ZMIN
 #undef LOWERZ
 
@@ -1442,12 +1448,83 @@ Scene* make_scene(int /*argc*/, char* /*argv*/[], int nworkers)
   ginst->addCPDpy(gcpdpy);
 #endif
 
+#ifdef ADD_GEO_DATA2
+  //ADD THE GEOLOGY DATA SET
+  Array1<ColorPos> gcolors(6);
+  gcolors[0] = ColorPos(0, 0, Color(1,1,1));
+  gcolors[1] = ColorPos(0.3, 1, Color(0,0.5,0.5));
+  gcolors[2] = ColorPos(0.45, 1, Color(0,0.5,0.5));
+  gcolors[3] = ColorPos(0.55, 1, Color(1,0.5,0.5));
+  gcolors[4] = ColorPos(0.66, 1, Color(1,0.5,0.5));
+  gcolors[5] = ColorPos(1, 0, Color(1,1,1));
+
+  ColorMapDpy *gcmap = new ColorMapDpy(gcolors);
+
+  VolumeDpy* gcvdpy = new VolumeDpy(16137.7);
+
+  Material* gmat_brown=new LambertianMaterial(Color(0.25,0.125,0));
+  for (l=0; l<holo_lights.size(); l++)
+    gmat_brown->my_lights.add(holo_lights[l]);
+  HVolumeBrick16* geology=new HVolumeBrick16(gmat_brown, gcvdpy,
+					     //unfiltered, full data set
+					     //"/usr/sci/data/Geometry/volumes2/Seismic/stack-16full.raw",
+					     //filtered, cropped data set
+					     "/usr/sci/data/Geometry/volumes2/Seismic/stack-chunks01-m2-16.raw",
+					      3, nworkers);
+
+  InstanceWrapperObject *giw = new InstanceWrapperObject(geology);
+
+  Transform *gtrans = new Transform();
+  gtrans->rotate(Vector(1,0,0), Vector(0,0,-1));
+  //after rotation...
+#define ORIGEX .46
+#define ORIGEY .4
+#define ORIGEZ 2
+#define SCALE (EXTZ/ORIGEZ)
+#define SCALEZ (EXTZ/ORIGEZ)*0.75
+  gtrans->pre_scale(Vector(SCALE*2,SCALE*2,SCALEZ));
+  gtrans->pre_translate(Vector(CENX, CENY, CENZ));
+#define ZMIN (CENZ-((ORIGEZ*SCALEZ)*.5))
+#define LOWERZ (HMIN - ZMIN)
+  gtrans->pre_translate(Vector(0,0,LOWERZ)); //place at HMIN
+#undef ORIGEX
+#undef ORIGEY
+#undef ORIGEZ
+#undef SCALE
+#undef SCALEZ
+#undef ZMIN
+#undef LOWERZ
+
+  /*
+//  gtrans->pre_scale(Vector(1.245,1.245,1.245)); //fit between z=0.51 and 3
+  gtrans->pre_scale(Vector(3.735,3.735,0.6225)); //fit between z=0.51 and 1.75
+  gtrans->pre_translate(Vector(-8, 8, 1.25));
+//  gtrans->pre_translate(Vector(-8, 8, 1.75));
+  gtrans->pre_translate(Vector(0,0,0.1)); //place 4 cm above table
+  */
+
+  SpinningInstance *ginst = new SpinningInstance(giw, gtrans, Point(-8,8,1.56), Vector(0,0,1), 0.1);
+  ginst->set_name("Spinning Geology");
+
+  Material* gmat=new PhongColorMapMaterial
+    (ginst,
+     gcmap->get_color_transfer_pointer(),
+     gcmap->get_alpha_transfer_pointer());
+  for (l=0; l<holo_lights.size(); l++)
+    gmat->my_lights.add(holo_lights[l]);
+  
+  PlaneDpy* gcpdpy=new PlaneDpy(Vector(.707,-.707,0), Point(-8,8,1.56));
+  Object *gcut = new CutPlane(ginst, gcpdpy);
+  gcut->set_matl(gmat);
+#endif
+
 #ifdef ADD_SHEEP
   //ADD THE SHEEP HEART DATA SET
   CutPlaneDpy* scpdpy=new CutPlaneDpy(Vector(.707,-.707,0), Point(-8,8,1.56));
 
   ColorMap *scmap = new ColorMap("/usr/sci/data/Geometry/volumes2/sheep",256);
-  Material *smat=new LambertianMaterial(Color(0.7,0.7,0.7));
+  //  Material *smat=new LambertianMaterial(Color(0.7,0.7,0.7));
+  Material *smat=new Phong(Color(0.5,0,0), Color(1,0,0), 50);
   for (l=0; l<holo_lights.size(); l++)
     smat->my_lights.add(holo_lights[l]);
 
@@ -1469,12 +1546,12 @@ Scene* make_scene(int /*argc*/, char* /*argv*/[], int nworkers)
 #define ORIGEY .352
 #define ORIGEZ .352
   //choose maximum from model, in this case y
-#define SCALE EXTY/ORIGEY
+#define SCALE (EXTY/ORIGEY)
   strans->pre_scale(Vector(SCALE,SCALE,SCALE));
   strans->pre_translate(Vector(CENX, CENY, CENZ));
-#define ZMIN CENZ-((ORIGEZ*SCALE)/2.0)
-#define LOWERZ 0.5+HFLT - ZMIN
-  strans->pre_translate(Vector(0,0,LOWERZ)); //place at HFLT above surface
+#define ZMIN (CENZ-((ORIGEZ*SCALE)/2.0))
+#define LOWERZ (HMIN - ZMIN)
+  strans->pre_translate(Vector(0,0,LOWERZ)); //place at HMIN
 #undef ORIGEX
 #undef ORIGEY
 #undef ORIGEZ
@@ -1497,7 +1574,7 @@ Scene* make_scene(int /*argc*/, char* /*argv*/[], int nworkers)
   sinst->addCPDpy(scpdpy);
 #endif
 
-#undef HFLT
+#undef HMIN
 #undef EXTZ
 #undef EXTX
 #undef EXTY
@@ -1527,6 +1604,12 @@ Scene* make_scene(int /*argc*/, char* /*argv*/[], int nworkers)
   sg->add(fire_inst);
 #endif
 #ifdef ADD_GEO_DATA
+  BBox ginst_bbox;
+  gcut->compute_bounds(ginst_bbox, 0);
+  cerr << "Geoscience bbox="<<ginst_bbox.min()<<"-"<<ginst_bbox.max()<<"(diag="<<ginst_bbox.diagonal()<<"\n";
+  sg->add(gcut);
+#endif
+#ifdef ADD_GEO_DATA2
   BBox ginst_bbox;
   gcut->compute_bounds(ginst_bbox, 0);
   cerr << "Geoscience bbox="<<ginst_bbox.min()<<"-"<<ginst_bbox.max()<<"(diag="<<ginst_bbox.diagonal()<<"\n";
@@ -1563,7 +1646,7 @@ Scene* make_scene(int /*argc*/, char* /*argv*/[], int nworkers)
 
   sg->set_name("VolVis Selection");
   BBox sg_bbox;
-  sphereg->compute_bounds(sg_bbox, 0);
+  sg->compute_bounds(sg_bbox, 0);
   cerr << "Selectable Group bbox="<<sg_bbox.min()<<"-"<<sg_bbox.max()<<"(diag="<<sg_bbox.diagonal()<<"\n";
   g->add(sg);
 
@@ -1573,13 +1656,12 @@ Scene* make_scene(int /*argc*/, char* /*argv*/[], int nworkers)
   rtrt::Plane groundplane(Point(0,0,-5), Vector(0,0,1));
   Color bgcolor(0.3, 0.3, 0.3);
 
-  Scene *scene = new Scene(new Grid(g, 64),
+  //  Scene *scene = new Scene(g,
+  //			   cam, bgcolor, cdown, cup, groundplane, 0.3);
+  Scene *scene = new Scene(new Grid(g, 8),
 			   cam, bgcolor, cdown, cup, groundplane, 0.3);
-
-//  Scene *scene = new Scene(new Grid(g, 64),
-//			   cam, bgcolor, cdown, cup, groundplane, 0.3);
-//  Scene *scene = new Scene(new BV1(g),
-//			   cam, bgcolor, cdown, cup, groundplane, 0.3);
+  //  Scene *scene = new Scene(new BV1(g),
+  //			   cam, bgcolor, cdown, cup, groundplane, 0.3);
 //  Scene *scene = new Scene(new BV1(g),
 //			   cam, bgcolor, cdown, cup, groundplane, 0.3);
 
@@ -1652,6 +1734,20 @@ Scene* make_scene(int /*argc*/, char* /*argv*/[], int nworkers)
   gcpdpy->setName("Geological Cutting Plane");
   scene->attach_display(gcpdpy);
   (new Thread(gcpdpy, "GEO CutPlane Dpy"))->detach();
+
+#endif
+#ifdef ADD_GEO_DATA2
+  scene->addObjectOfInterest( ginst, false );
+  scene->attach_auxiliary_display(gcvdpy);
+  gcvdpy->setName("Geological Volume");
+  scene->attach_display(gcvdpy);
+  (new Thread(gcvdpy, "GEO Volume Dpy"))->detach();
+
+  scene->addObjectOfInterest( gcut, false );
+  scene->attach_auxiliary_display(gcmap);
+  gcmap->setName("Geological Cutting Plane");
+  scene->attach_display(gcmap);
+  (new Thread(gcmap, "GEO CutPlane Dpy"))->detach();
 
 #endif
 #ifdef ADD_SHEEP

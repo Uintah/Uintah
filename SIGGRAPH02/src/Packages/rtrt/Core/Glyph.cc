@@ -83,7 +83,7 @@ void Glyph::print(ostream& out) {
 }
 
 void Glyph::animate(double t, bool& changed) {
-  child->animate(t, changed);
+  //child->animate(t, changed);
 }
 
 void Glyph::preprocess(double maxradius, int& pp_offset, int& scratchsize) {
