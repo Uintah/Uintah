@@ -317,6 +317,12 @@ SCI_ARG_WITH(oogl,
   [with_oogl="$withval"
    sci_check_oogl=yes],
   [with_oogl=""])
+SCI_ARG_WITH(glew,
+  AC_HELP_STRING(--with-glew=DIR,
+                 Use the GLEW installation in DIR),
+  [with_glew="$withval"
+   sci_check_glew=yes],
+  [with_glew=""])
 SCI_ARG_WITH(audio,
   AC_HELP_STRING(--with-audio=DIR,
                  Use the audio installation in DIR),
@@ -2791,6 +2797,60 @@ AC_SUBST(INC_OOGL_H)
 AC_SUBST(DEF_OOGL)
 AC_SUBST(OOGL_LIB_FLAG)
 AC_SUBST(OOGL_LIB_DIR_FLAG)
+
+##  --  search for glew  -----------------------------------------------
+
+if test "$sci_check_glew" = "yes"; then
+  if test "$with_glew"; then
+    #first find the opengl headers and libraries
+    if test "$with_opengl"; then
+      _sci_lib="$with_glew/lib $with_opengl/lib"
+      _sci_inc="$with_glew/include $with_opengl/include"
+    else
+      _sci_lib="$with_glew/lib /usr/X11R6/lib"
+      _sci_inc="$with_glew/include /usr/X11R6/include"
+    fi
+  else
+    if test "$with_opengl"; then
+      _sci_lib="/usr/X11R6/lib $with_opengl/lib"
+      _sci_inc="/usr/X11R6/include $with_opengl/include"
+    else
+      _sci_lib="/usr/X11R6/lib"
+      _sci_inc="/usr/X11R6/include"
+    fi        
+  fi
+
+  SCI_TRY_LINK(GLEW,glew libraries and headers,[
+    #include<GL/glew.h>
+
+    #ifndef GLAPIENTRY
+      #define GLAPIENTRY
+    #endif
+
+    #ifndef GLEWAPI
+      #define GLEWAPI
+    #endif
+    #include<GL/glxew.h>
+
+    ],$_sci_inc, GLEW,$_sci_lib,,,optional)
+  if test "$HAVE_GLEW" = "yes"; then
+    DEF_GLEW="#define HAVE_GLEW 1"
+  fi  
+fi # end sci_check_glew
+
+
+if test "$GLEW_LIB_DIR_FLAG" && test "$enable_rpath" = "no"; then
+  AC_MSG_WARN("$GLEW_LIB_DIR_FLAG")
+  AC_MSG_WARN("flag for GLEW has been removed.")
+  GLEW_LIB_DIR_FLAG=""
+fi
+
+AC_SUBST(GLEW_LIB_FLAG)
+AC_SUBST(GLEW_LIB_DIR_FLAG)
+AC_SUBST(INC_GLEW_H)
+AC_SUBST(DEF_GLEW)
+
+##  --  search for audio  -----------------------------------------------
 
 if test "$sci_check_audio" = "yes"; then
   _sci_lib="$with_audio"
