@@ -351,9 +351,11 @@ void AMRSimulationController::run()
 #endif
      }
 
-     // put the current time into the shared state so other components
-     // can access it
+     // Put the current time into the shared state so other components
+     // can access it.  Also increment (by one) the current time step
+     // number so components can tell what timestep they are on.
      sharedState->setElapsedTime(t);
+     sharedState->incrementCurrentTopLevelTimeStep();
 
      if(need_recompile(t, delt, grid, sim, output, levelids)){
        if(d_myworld->myrank() == 0)

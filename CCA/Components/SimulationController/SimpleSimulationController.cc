@@ -190,11 +190,15 @@ SimpleSimulationController::run()
       archive.restartInitialize(d_restartTimestep, grid,
 				scheduler->get_dw(1), &t, &delt);
       
+      sharedState->setCurrentTopLevelTimeStep( output->getCurrentTimestep() );
+
       output->restartSetup(restartFromDir, 0, d_restartTimestep, t,
 			   d_restartFromScratch, d_restartRemoveOldDir);
+      scheduler->get_dw(1)->setID( output->getCurrentTimestep() );
       scheduler->get_dw(1)->finalize();
       sim->restartInitialize();
    } else {
+      sharedState->setCurrentTopLevelTimeStep( 0 );
       // Initialize the CFD and/or MPM data
       for(int i=0;i<grid->numLevels();i++){
 	 LevelP level = grid->getLevel(i);
@@ -374,9 +378,13 @@ SimpleSimulationController::run()
 #endif
       }
       scheduler->advanceDataWarehouse(grid);
-      // put the current time into the shared state so other components
-      // can access it
+
+      // Put the current time into the shared state so other components
+      // can access it.  Also increment (by one) the current time step
+      // number so components can tell what timestep they are on.
       sharedState->setElapsedTime(t);
+      sharedState->incrementCurrentTopLevelTimeStep();
+
       if(need_recompile(t, delt, grid, sim, output) || first){
 	first=false;
 	if(d_myworld->myrank() == 0)
