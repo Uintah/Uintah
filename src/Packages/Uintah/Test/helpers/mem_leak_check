@@ -5,6 +5,11 @@ MALLOC_STATS=$2
 TMPDIR=$3
 ERRORS_TO=$4
 
+if [ ! -f $MALLOC_STATS ]; then
+    echo "No malloc_stats output found.  Can't do memory leak test."
+    exit 5
+fi
+
 grep 'src' $MALLOC_STATS > $TMPDIR/scinew_malloc_stats
 retval=$?
 
