@@ -45,29 +45,19 @@ WARNING
     JWLpp(const ProcessorGroup* myworld, ProblemSpecP& params);
     virtual ~JWLpp();
 
-    //////////
-    // Insert Documentation Here:
     virtual void problemSetup(GridP& grid, SimulationStateP& sharedState,
 			      ModelSetup* setup);
       
-    //////////
-    // Insert Documentation Here:
     virtual void scheduleInitialize(SchedulerP&,
 				    const LevelP& level,
 				    const ModelInfo*);
 
-    //////////
-    // Insert Documentation Here:
     virtual void restartInitialize() {}
       
-    //////////
-    // Insert Documentation Here:
     virtual void scheduleComputeStableTimestep(SchedulerP&,
 					       const LevelP& level,
 					       const ModelInfo*);
       
-    //////////
-    // Insert Documentation Here:
     virtual void scheduleMassExchange(SchedulerP&,
 				      const LevelP& level,
 				      const ModelInfo*);
@@ -78,6 +68,11 @@ WARNING
     virtual void scheduleModifyThermoTransportProperties(SchedulerP&,
                                                const LevelP&,
                                                const MaterialSet*);
+                                               
+   virtual void computeSpecificHeat(CCVariable<double>&,
+                                    const Patch*,
+                                    DataWarehouse*,
+                                    const int);
   private:    
     void massExchange(const ProcessorGroup*, const PatchSubset* patches,
 		      const MaterialSubset* matls, DataWarehouse*, 

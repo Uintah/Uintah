@@ -262,3 +262,10 @@ void JWLpp::scheduleModifyThermoTransportProperties(SchedulerP&,
 {
   // do nothing      
 }
+void JWLpp::computeSpecificHeat(CCVariable<double>&,
+                                const Patch*,   
+                                DataWarehouse*, 
+                                const int)      
+{
+  //do nothing
+}

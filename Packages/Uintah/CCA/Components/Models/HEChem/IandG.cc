@@ -301,3 +301,10 @@ void IandG::scheduleModifyThermoTransportProperties(SchedulerP&,
 {
   // do nothing      
 }
+void IandG::computeSpecificHeat(CCVariable<double>&,
+                                const Patch*,   
+                                DataWarehouse*, 
+                                const int)      
+{
+  //do nothing
+}
