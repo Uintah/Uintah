@@ -91,8 +91,10 @@ itcl_class expscale {
 	pack $this.e.e -side left
 
 	button $this.e.upexp -text "+" -pady 0 -command "$this upexp"
+	button $this.e.signchange -text "S" -pady 0 -command "$this chngsign"
 	button $this.e.downexp -text "-" -pady 0 -command "$this downexp"
 	pack $this.e.upexp -side top -fill x
+	pack $this.e.signchange -side bottom -fill x
 	pack $this.e.downexp -side bottom -fill x
 
 	entry $this.e.exp -width 3 -selectborderwidth 0 -highlightthickness 0 \
@@ -117,6 +119,7 @@ itcl_class expscale {
 	}
     }
     protected exp 0
+    protected sign 1
     public command ""
 
     method upexp {} {
@@ -130,6 +133,17 @@ itcl_class expscale {
 	incr exp -1
 	setscales
     }
+    method chngsign {} {
+	incr sign [expr $sign * -2]
+
+	global $variable
+
+	set value [expr -1 * [set $variable]]
+
+	setscales
+	set $variable $value
+	setscales
+    }
     method setscales {} {
 	global $variable
 	puts "variable is $variable"
@@ -141,7 +155,7 @@ itcl_class expscale {
 	set from [expr int($value/$mag)*$mag]
 	puts "from is $from"
 
-	set to [expr $from+$mag]
+	set to [expr $from+$mag*$sign]
 	puts "to is $to"
 	set ti [expr $mag/5]
 	$this.scale configure -from $from -to $to -tickinterval $mag

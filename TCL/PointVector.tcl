@@ -22,6 +22,34 @@ proc makePoint {w title name command} {
 	    -command $command
     pack $w.z -side top -expand yes -fill x
 }
+ 
+proc makePlane {w title name command} {
+    frame $w -relief groove -borderwidth 2
+    label $w.label -text $title
+    pack $w.label -side top
+    scale $w.x -orient horizontal -variable $name-x \
+	    -from -1 -to 1 -label "X:" \
+	    -showvalue true -tickinterval 5 \
+	    -resolution 0 -digits 3 \
+	    -command $command
+    pack $w.x -side top -expand yes -fill x
+    scale $w.y -orient horizontal -variable $name-y \
+	    -from -1 -to 1 -label "Y:" \
+	    -showvalue true -tickinterval 5 \
+	    -resolution 0 -digits 3 \
+	    -command $command
+    pack $w.y -side top -expand yes -fill x
+    scale $w.z -orient horizontal -variable $name-z \
+	    -from -1 -to 1 -label "Z:" \
+	    -showvalue true -tickinterval 5 \
+	    -resolution 0 -digits 3 \
+	    -command $command
+    pack $w.z -side top -expand yes -fill x
+    expscale $w.d -orient horizontal -variable $name-d \
+	    -label "D:" \
+	    -command $command
+    pack $w.d -side top -expand yes -fill x
+}
 
 proc updateNormalVector {xname yname zname name1 name2 op} {
     global $xname $yname $zname
