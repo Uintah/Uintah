@@ -162,7 +162,7 @@ DESCRIPTION
 	    //////////
 	    // Mark a section as one that could block for debugging purposes.
 	    // The <b>int</b> that is returned should be passed into
-	    // <i>couldBlock(int)</i> when the section has completed.  This
+	    // <i>couldBlockDone(int)</i> when the section has completed.  This
 	    // will typically not be used outside of the thread implementation
 	    static int couldBlock(const char* why);
 	    
@@ -233,6 +233,9 @@ DESCRIPTION
 
 //
 // $Log$
+// Revision 1.15  1999/11/01 22:50:01  moulding
+// fixed a typo in the (comment) description for Thread::couldBlock
+//
 // Revision 1.14  1999/10/15 20:56:51  ikits
 // Fixed conflict w/ get_tid in /usr/include/task.h. Replaced by get_thread_id.
 //
