@@ -44,12 +44,11 @@ public:
 
   //! support the dynamically compiled algorithm concept
   static CompileInfoHandle get_compile_info(const TypeDescription *fsrc,
-					    const TypeDescription *lsrc,
 					    string clipfunction);
 };
 
 
-template <class FIELD, class LOC>
+template <class FIELD>
 class ClipByFunctionAlgoT : public ClipByFunctionAlgo
 {
 public:
@@ -66,11 +65,11 @@ public:
 };
 
 
-template <class FIELD, class LOC>
+template <class FIELD>
 FieldHandle
-ClipByFunctionAlgoT<FIELD, LOC>::execute(ModuleReporter *mod,
-					 FieldHandle fieldh,
-					 int clipmode)
+ClipByFunctionAlgoT<FIELD>::execute(ModuleReporter *mod,
+				    FieldHandle fieldh,
+				    int clipmode)
 {
   FIELD *field = dynamic_cast<FIELD*>(fieldh.get_rep());
   typename FIELD::mesh_type *mesh =

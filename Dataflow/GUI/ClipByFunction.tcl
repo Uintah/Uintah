@@ -25,16 +25,8 @@ itcl_class SCIRun_Fields_ClipByFunction {
         global $this-clipfunction
 	global $this-clipmode
 	set $this-clipfunction "x < 0"
-	set $this-clipmode "allnode"
+	set $this-clipmode 1
     }
-
-    method functioneval2 {x y z v function} {
-	if {![catch {expr $function} result]} {
-	    return $result
-	}
-	return 0
-    }
-
 
     method ui {} {
         set w .ui[modname]
