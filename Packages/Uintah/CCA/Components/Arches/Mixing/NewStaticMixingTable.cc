@@ -156,6 +156,7 @@ NewStaticMixingTable::computeProps(const InletStream& inStream,
   	cout<<"Mixture fraction variance for properties outbound is :  "<<mixFracVars<<endl;
   	cout<<"Heat loss for properties outbound is :  "<<current_heat_loss<<endl;
   }*/
+  //cout<<"Temperature is:  "<<outStream.d_temperature<<endl;
 }
 
 
@@ -166,7 +167,7 @@ double NewStaticMixingTable::tableLookUp(double mixfrac, double mixfracVars, dou
   // compute index
   // nx - mixfrac, ny - mixfracVars, var_index - index of the variable
   // Enthalpy loss lookup
-  double fmg, fpmg,s1,s2,var_value;
+  double fmg=0.0, fpmg=0.0,s1=0.0,s2=0.0,var_value=0.0;
   int nhl_lo=0, nhl_hi=0;
   double dhl_lo=0.0, dhl_hi=0.0;
   if(current_heat_loss==0.0  && d_heatlosscount ==1){
@@ -198,10 +199,10 @@ double NewStaticMixingTable::tableLookUp(double mixfrac, double mixfracVars, dou
 
   // Main loop
   for(int m_index = nhl_lo; m_index <= nhl_hi; m_index++){ 
-  int nx_lo, nx_hi;
+  int nx_lo=0, nx_hi=0;
 
   //Non-unifrom mixture fraction 
-  double df1,df2; 
+  double df1=0.0,df2=0.0; 
   for(int index=0; index < d_mixfraccount-1; index++){
 	df1 = meanMix[var_index][index]-mixfrac;
 	df2 = meanMix[var_index][index+1]-mixfrac;
@@ -221,78 +222,47 @@ double NewStaticMixingTable::tableLookUp(double mixfrac, double mixfracVars, dou
   //cout<<"nx_hi index is  : "<<nx_hi<<endl;
 
   
-  // variance is uniform table
+  // Supports non-uniform normalized variance lookup  
   double max_curr_Zvar = mixfrac*(1.0-mixfrac);
   double max_Zvar = min(mixfracVars,max_curr_Zvar);
-  double g, gi1, gp, gi2;
+  // Normalized variance
+  double g=0.0;
   //Index for variances
-  int k1,k2,k1p,k2p;
+  int k1=0,k2=0;
   //Weighing factors for variance
-  double dk1,dk2,dk1p,dk2p;
-  if(meanMix[var_index][nx_lo]<=small || fabs(meanMix[var_index][nx_lo]-1.0)<=small){
+  double dk1=0.0,dk2=0.0;
+  if(max_Zvar <= small){
 	// Set the values to get the first entry
 	g=0.0;
         k1=0;
-	k1p=1;
+	k2=0;
 	dk1=0.0;
-	dk1p=1.0;
+	dk2=1.0;
   }
   else{
-	gi1=max_Zvar*meanMix[var_index][nx_lo]*(1.0-meanMix[var_index][nx_lo])/(max_curr_Zvar+small);
-	// Normalizing
-        g=gi1/(meanMix[var_index][nx_lo]*(1.0-meanMix[var_index][nx_lo]));
+	g=max_Zvar/(max_curr_Zvar+small);
 	// Finding the table entry
   	for(int index=0; index < d_mixvarcount-1; index++){
 		dk1 = variance[index]-g;
-		dk1p = variance[index+1]-g;
-		if((dk1*dk1p) == 0.0 && index != 0){
+		dk2 = variance[index+1]-g;
+		if((dk1*dk2) == 0.0 && index != 0){
 			k1=index+1;
-			k1p=k1;
+			k2=k1;
                 	break;
 		}
-		else if((dk1*dk1p) <= 0.0){
+		else if((dk1*dk2) <= 0.0){
 			k1=index;
-			k1p=k1+1;
+			k2=k1+1;
                 	break;
 		}
   	}
   }
 
-  if(meanMix[var_index][nx_hi]<=small || fabs(meanMix[var_index][nx_hi]-1.0)<=small){
-	// Set the values to get the first entry
-	gp=0.0;
-        k2=0;
-	k2p=1;
-	dk2=0.0;
-	dk2p=1.0;
-  }
-  else{
-	gi2=max_Zvar*meanMix[var_index][nx_hi]*(1.0-meanMix[var_index][nx_hi])/(max_curr_Zvar+small);
-	// Normalizing
-        gp=gi2/(meanMix[var_index][nx_hi]*(1.0-meanMix[var_index][nx_hi]));
-	// Finding the table entry
-  	for(int index=0; index < d_mixvarcount-1; index++){
-		dk2 = variance[index]-gp;
-		dk2p = variance[index+1]-gp;
-		if((dk2*dk2p) == 0.0 && index != 0){
-			k2=index+1;
-			k2p=k2;
-                	break;
-		}
-		else if((dk2*dk2p) <= 0.0){
-			k2=index;
-			k2p=k2+1;
-                	break;
-		}
-  	}
-
-  }
   //cout<<" G value is :"<<g<<endl;
-  //cout<<"GP value is :"<<gp<<endl;
   //Interpolating the values
-  fmg=(g-double(k1))*table[var_index][m_index*d_mixfraccount*d_mixvarcount+k1p*d_mixfraccount+nx_lo]-(g-double(k1p))*table[var_index][m_index*d_mixfraccount*d_mixvarcount+k1*d_mixfraccount+nx_lo];
+  fmg = (dk1*table[var_index][m_index*d_mixfraccount*d_mixvarcount+k2*d_mixfraccount+nx_lo]-dk2*table[var_index][m_index*d_mixfraccount*d_mixvarcount+k1*d_mixfraccount+nx_lo])/(dk1-dk2);
   //cout<< "FMG is :"<<fmg<<endl;
-  fpmg=(gp-double(k2))*table[var_index][m_index*d_mixfraccount*d_mixvarcount+k2p*d_mixfraccount+nx_hi]-(gp-double(k2p))*table[var_index][m_index*d_mixfraccount*d_mixvarcount+k2*d_mixfraccount+nx_hi];
+  fpmg = (dk1*table[var_index][m_index*d_mixfraccount*d_mixvarcount+k2*d_mixfraccount+nx_hi]-dk2*table[var_index][m_index*d_mixfraccount*d_mixvarcount+k1*d_mixfraccount+nx_hi])/(dk1-dk2);
   //cout<< "FPMG is : "<<fpmg<<endl;
   if(nhl_lo==nhl_hi){
 	s1=(df1*fpmg-df2*fmg)/(df1-df2);
