@@ -2216,7 +2216,7 @@ OpenGL::setFrustumToWindowPortion()
 void
 OpenGL::saveImage(const string& fname,
 		  const string& type,
-		  int x, int y) //= "ppm")
+		  int x, int y)
 {
   send_mb.send(DO_IMAGE);
   img_mb.send(ImgReq(fname,type,x,y));
