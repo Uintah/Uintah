@@ -266,3 +266,10 @@ void JWLpp::computeSpecificHeat(CCVariable<double>&,
 {
   //do nothing
 }
+//______________________________________________________________________
+//
+void JWLpp::scheduleErrorEstimate(const LevelP&,
+                                  SchedulerP&)
+{
+  // Not implemented yet
+}

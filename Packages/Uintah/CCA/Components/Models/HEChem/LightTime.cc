@@ -310,3 +310,10 @@ void LightTime::computeSpecificHeat(CCVariable<double>&,
 {
   //do nothing
 }
+//______________________________________________________________________
+//
+void LightTime::scheduleErrorEstimate(const LevelP&,
+                                      SchedulerP&)
+{
+  // Not implemented yet
+}
