@@ -33,6 +33,7 @@ namespace SCICore {
   }
   namespace GeomSpace {
     class GeomPick;
+    class GeomObj;
   }
 }
 
@@ -61,6 +62,7 @@ using SCICore::TclInterface::TCLArgs;
 using SCICore::TclInterface::TCLint;
 using SCICore::TclInterface::TCLstring;
 using SCICore::GeomSpace::GeomPick;
+using SCICore::GeomSpace::GeomObj;
 using SCICore::GeomSpace::BState;
 using SCICore::GeomSpace::Pickable;
 using SCICore::Geometry::Vector;
@@ -144,13 +146,16 @@ public:
 
     // Callbacks
     virtual void connection(Module::ConnectionMode, int, int);
-    virtual void geom_pick(GeomPick*, void*, int);
+    virtual void geom_pick(GeomPick*, void*, GeomObj*);
+  //virtual void geom_pick(GeomPick*, void*, int);
     virtual void geom_pick(GeomPick*, void*);
     virtual void geom_pick(GeomPick*, Roe*, int, const BState& bs);
     virtual void geom_release(GeomPick*, int, const BState& bs);
-    virtual void geom_release(GeomPick*, void*, int);
+    virtual void geom_release(GeomPick*, void*, GeomObj*);
+  //virtual void geom_release(GeomPick*, void*, int);
     virtual void geom_release(GeomPick*, void*);
-    virtual void geom_moved(GeomPick*, int, double, const Vector&, void*, int);
+    virtual void geom_moved(GeomPick*, int, double, const Vector&, void*, GeomObj*);
+  //virtual void geom_moved(GeomPick*, int, double, const Vector&, void*, int);
     virtual void geom_moved(GeomPick*, int, double, const Vector&, void*);
     virtual void geom_moved(GeomPick*, int, double, const Vector&, 
 			    int, const BState&);
@@ -216,6 +221,9 @@ typedef Module* (*ModuleMaker)(const clString& id);
 
 //
 // $Log$
+// Revision 1.14  2000/08/11 15:44:43  bigler
+// Changed geom_* functions that took an int index to take a GeomObj* picked_obj.
+//
 // Revision 1.13  2000/07/27 05:22:34  sparker
 // Added a setStackSize method to the module
 //

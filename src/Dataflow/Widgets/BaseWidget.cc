@@ -538,7 +538,8 @@ BaseWidget::execute(int always_callback)
 }
 
 void
-BaseWidget::geom_pick(GeomPick*, void*, int)
+//BaseWidget::geom_pick(GeomPick*, void*, int)
+BaseWidget::geom_pick(GeomPick*, void*, GeomObj*)
 {
   NOT_FINISHED("Module::geom_pick: This version of geom_pick is only here to stop the compiler from complaining, it should never be used.");
 }
@@ -570,7 +571,8 @@ BaseWidget::geom_pick( GeomPick* pick, Roe* /*roe*/, int /* cbdata */, const BSt
 
 
 void
-BaseWidget::geom_release(GeomPick*, void*, int)
+//BaseWidget::geom_release(GeomPick*, void*, int)
+BaseWidget::geom_release(GeomPick*, void*, GeomObj*)
 {
   NOT_FINISHED("Module::geom_release: This version of geom_release is only here to stop the compiler from complaining, it should never be used.");
 }
@@ -603,7 +605,8 @@ BaseWidget::geom_moved(GeomPick*, int, double, const Vector&,
 
 void
 BaseWidget::geom_moved(GeomPick*, int, double, const Vector&,
-		       void*, int)
+		       //void*, int)
+		       void*, GeomObj*)
 {
   NOT_FINISHED("Module::geom_release: This version of geom_release is only here to stop the compiler from complaining, it should never be used.");
 }
@@ -727,6 +730,9 @@ BaseWidget& BaseWidget::operator=( const BaseWidget& )
 
 //
 // $Log$
+// Revision 1.10  2000/08/11 15:44:44  bigler
+// Changed geom_* functions that took an int index to take a GeomObj* picked_obj.
+//
 // Revision 1.9  1999/11/12 01:38:32  ikits
 // Added ANL AVTC site visit modifications to make the demos work.
 // Fixed bugs in PSECore/Datatypes/SoundPort.[h,cc] and PSECore/Dataflow/NetworkEditor.cc
