@@ -130,6 +130,22 @@ PROGRAM := Packages/Uintah/StandAlone/timeextract
 include $(SCIRUN_SCRIPTS)/program.mk
 
 ##############################################
+# extractV
+
+SRCS := $(SRCDIR)/extractV.cc
+PROGRAM := Packages/Uintah/StandAlone/extractV
+
+include $(SCIRUN_SCRIPTS)/program.mk
+
+##############################################
+# extractF
+
+SRCS := $(SRCDIR)/extractF.cc
+PROGRAM := Packages/Uintah/StandAlone/extractF
+
+include $(SCIRUN_SCRIPTS)/program.mk
+
+##############################################
 # partextract
 
 SRCS := $(SRCDIR)/partextract.cc
@@ -308,6 +324,8 @@ uintah: sus \
         compare_uda \
         restart_merger \
         partextract \
+        extractV \
+        extractF \
         gambitFileReader \
         lineextract \
         timeextract \
@@ -356,6 +374,10 @@ compare_uda: prereqs Packages/Uintah/StandAlone/compare_uda
 restart_merger: prereqs Packages/Uintah/StandAlone/restart_merger
 
 partextract: prereqs Packages/Uintah/StandAlone/partextract
+
+extractV: prereqs Packages/Uintah/StandAlone/extractV
+
+extractF: prereqs Packages/Uintah/StandAlone/extractF
 
 gambitFileReader: prereqs Packages/Uintah/StandAlone/gambitFileReader
 
