@@ -184,6 +184,7 @@ ImageExporter::execute()
   C_Magick::Image *image = C_Magick::AllocateImage(image_info);
   const unsigned int w = image->columns = nrrd->axis[1].size;
   const unsigned int h = image->rows = nrrd->axis[2].size;
+  image->matte = alpha;
 
   C_Magick::PixelPacket *pixels =
     C_Magick::SetImagePixels(image, 0, 0, w, h);
@@ -212,11 +213,11 @@ ImageExporter::execute()
 
 	if (alpha)
 	{
-	  pixels[j * w + i].opacity = *data++;
+	  pixels[j * w + i].opacity = 0xffff - *data++;
 	}
 	else
 	{
-	  pixels[j * w + i].opacity = 0xffff;
+	  pixels[j * w + i].opacity = 0;
 	}
       }
     }
@@ -245,11 +246,11 @@ ImageExporter::execute()
 
 	if (alpha)
 	{
-	  pixels[j * w + i].opacity = *data++ << 8;
+	  pixels[j * w + i].opacity = 0xffff - (*data++ << 8);
 	}
 	else
 	{
-	  pixels[j * w + i].opacity = 0xffff;
+	  pixels[j * w + i].opacity = 0;
 	}
       }
     }
@@ -278,11 +279,11 @@ ImageExporter::execute()
 
 	if (alpha)
 	{
-	  pixels[j * w + i].opacity = TO_QUANTUM(*data++);
+	  pixels[j * w + i].opacity = 0xffff - TO_QUANTUM(*data++);
 	}
 	else
 	{
-	  pixels[j * w + i].opacity = 0xffff;
+	  pixels[j * w + i].opacity = 0;
 	}
       }
     }
@@ -311,11 +312,11 @@ ImageExporter::execute()
 
 	if (alpha)
 	{
-	  pixels[j * w + i].opacity = TO_QUANTUM(*data++);
+	  pixels[j * w + i].opacity = 0xffff - TO_QUANTUM(*data++);
 	}
 	else
 	{
-	  pixels[j * w + i].opacity = 0xffff;
+	  pixels[j * w + i].opacity = 0;
 	}
       }
     }
