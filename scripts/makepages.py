@@ -13,14 +13,14 @@ def mkdir_and_copy(src, dsttop, trim) :
     
 def copy_doc1(arg, dirname, names) :
     if dirname[-3:] == 'CVS' : return #don't work in CVS dirs!!
-    print "recurse working in: " + dirname
+    #print "recurse working in: " + dirname
     webtop = arg[0]
     trim = arg[1]
     mkdir_and_copy(dirname, webtop, trim)
     
 def copy_doc(arg, dirname, names) :
     if dirname[-3:] != 'doc' : return #only work in doc dirs!!
-    print "working in: " + dirname
+    #print "working in: " + dirname
     webtop = arg[0]
     trim = arg[1]
     os.path.walk(dirname, copy_doc1, (webtop, trim))
