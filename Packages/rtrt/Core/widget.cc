@@ -323,9 +323,9 @@ TriWidget::manipulate( float x, float dx, float y, float dy ) {
   if( drawFlag == 1)
     adjustOpacity( dx );
   else if( drawFlag == 2 )
-    adjustWidth( dx );
-  else if( drawFlag == 3 )
     adjustLowerBound( dx, dy );
+  else if( drawFlag == 3 )
+    adjustWidth( dx );
   else if( drawFlag == 4 )
     adjustShear( dx, dy );
   else if( drawFlag == 5 )
@@ -341,17 +341,17 @@ TriWidget::manipulate( float x, float dx, float y, float dy ) {
       drawFlag = 1;
       adjustOpacity( dx );
     } // if()
-    // if mouse cursor near widthStar
-    else if( x >= topRightVertex[0] - 5 && x <= topRightVertex[0] + 5 &&
-	     y >= topRightVertex[1] - 5 && y <= topRightVertex[1] + 5 ) {
-      drawFlag = 2;
-      adjustWidth( dx );
-    } // if()
     // if mouse cursor near lowerBoundStar
     else if( x >= midRightVertex[0] - 5 && x <= midRightVertex[0] + 5 && 
 	     y >= midRightVertex[1] - 5 && y <= midRightVertex[1] + 5 ) {
-      drawFlag = 3;
+      drawFlag = 2;
       adjustLowerBound( dx, dy );
+    } // if()
+    // if mouse cursor near widthStar
+    else if( x >= topRightVertex[0] - 5 && x <= topRightVertex[0] + 5 &&
+	     y >= topRightVertex[1] - 5 && y <= topRightVertex[1] + 5 ) {
+      drawFlag = 3;
+      adjustWidth( dx );
     } // if()
     // if mouse cursor on shearBar
     else if( x >= topLeftVertex[0] - 5 && x <= topRightVertex[0] + 5 && 
