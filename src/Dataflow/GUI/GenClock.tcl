@@ -164,7 +164,7 @@ itcl_class SCIRun_Visualization_GenClock {
 
 
 # Range
-	iwidgets::labeledframe $w.range -labeltext "Clock Range"
+	iwidgets::labeledframe $w.range -labeltext "Analog Clock Range"
 	set range [$w.range childsite]
 
 # Range - minimum
@@ -183,7 +183,7 @@ itcl_class SCIRun_Visualization_GenClock {
 	pack $range.max.label $range.max.entry -side left
 	pack $range.max -side left -padx 5
 
-# Range - maximum
+# Range - current
 	frame $range.current
 	label $range.current.label -text "Current"  -width 7 -anchor w -just left
 	entry $range.current.entry -width 6 -text $this-current
