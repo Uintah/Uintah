@@ -26,11 +26,17 @@ void BoundCondFactory::create(ProblemSpecP& child,
   map<string,string> bc_attr;
   child->getAttributes(bc_attr);
   
-  bool massFractionBC = false;   // check for massFraction BC
+  //__________________________________
+  // add Models transport variables labels here
+  // hard coding ...yuck
+  bool ModelsBC = false;   //
   string::size_type pos1 = bc_attr["label"].find ("massFraction");
   string::size_type pos2 = bc_attr["label"].find ("scalar");
-  if ( pos1 != std::string::npos || pos2 != std::string::npos ){
-    massFractionBC = true;
+  string::size_type pos3 = bc_attr["label"].find ("cumulativeEnergyReleased");
+  
+  if ( pos1 != std::string::npos || pos2 != std::string::npos 
+    || pos3 != std::string::npos){
+    ModelsBC = true;
   }
   
   // Check to see if "id" is defined
@@ -82,14 +88,14 @@ void BoundCondFactory::create(ProblemSpecP& child,
 	    bc_attr["var"]   == "Dirichlet") ) {
     bc = scinew DensityBoundCond(child,bc_attr["var"]);
   } 
-  else if (massFractionBC &&
+  else if (ModelsBC &&
 	   (bc_attr["var"]   == "Neumann"  ||
 	    bc_attr["var"]   == "Dirichlet") ) {  
     bc = scinew MassFractionBoundCond(child,bc_attr["var"],bc_attr["label"]);
   }
   else {
-    cerr << "Unknown Boundary Condition Type " << "(" << bc_attr["var"] 
-	 << ")  " << bc_attr["label"]<<endl;
+    cerr << "BoundCondFactory: Unknown Boundary Condition Type " << "(" << bc_attr["var"] 
+         << ")  " << bc_attr["label"]<<endl;
     exit(1);
   }
 }
