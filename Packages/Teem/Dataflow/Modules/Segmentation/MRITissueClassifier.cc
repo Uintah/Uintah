@@ -302,7 +302,7 @@ MRITissueClassifier::execute()
     error("Unable to initialize Out Port 'Tissue'.");
     return;
   }
-
+  update_state(Module::NeedData);
   if (!T1port->get(m_T1_Data) || !m_T1_Data.get_rep() ||
       !T2port->get(m_T2_Data) || !m_T2_Data.get_rep() ||
       !PDport->get(m_PD_Data) || !m_PD_Data.get_rep())
@@ -311,8 +311,6 @@ MRITissueClassifier::execute()
   }
 
   m_FatSat = (FSport->get(m_FATSAT_Data) && m_FATSAT_Data.get_rep())?1:0;
-
-  
 
   if (generation_[0] != m_T1_Data.get_rep()->generation ||
       generation_[1] != m_T2_Data.get_rep()->generation ||
@@ -423,6 +421,19 @@ MRITissueClassifier::execute()
     ScalpClassification();
     update_state(Module::Executing);
     BrainClassification();
+
+    if (!m_Top) {
+      temp = create_nrrd_of_ints(m_width, m_height, m_depth);
+      nrrdFlip(temp->nrrd, m_Label->nrrd, 3);
+      m_Label = temp;
+    }
+    update_state(Module::Executing);
+
+    if (!m_Anterior) {
+      temp = create_nrrd_of_ints(m_width, m_height, m_depth);
+      nrrdFlip(temp->nrrd, m_Label->nrrd, 2);
+      m_Label = temp;
+    }
   }
   OutPort->send(m_Label);
 
@@ -1251,8 +1262,6 @@ MRITissueClassifier::EM_Muscle_Fat (ColumnMatrix &Muscle_mean, DenseMatrix &Musc
 				    ColumnMatrix &Fat_mean, DenseMatrix &Fat_cov, float *Fat_prior,
 				    int label, int dim)
 {
-  int counter = 0;
-  
   int x, y, z, n, flag, it, j, k, flops, memrefs;    
   ColumnMatrix Muscle_meanp(dim), Fat_meanp(dim);
   float sum, sum2, dist, Muscle_const, Fat_const;
