@@ -79,7 +79,7 @@ public:
 
   void SetEpsilon( const double Epsilon );
 
-  GeomSwitch* GetWidget();
+  GeomHandle GetWidget();
   void Connect(GeometryOPort*);
 
   virtual void MoveDelta( const Vector& delta ) = 0;
@@ -180,7 +180,7 @@ protected:
     Switch8 = 0x0100
   };
 
-  GeomSwitch* widget_;
+  GeomHandle widget_;
   double widget_scale_;
   double epsilon_;
 

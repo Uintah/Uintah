@@ -152,7 +152,7 @@ AddLight::execute()
   }
 
   if( control_id_ == -1 ){
-    GeomObj *w=light_widget_->GetWidget();
+    GeomHandle w = light_widget_->GetWidget();
     control_id_ = ogeom_->addObj( w, control_name, &control_lock_);
   }
   

@@ -240,7 +240,7 @@ void TexCuttingPlanes::execute(void)
   //AuditAllocator(default_allocator);
   if(drawX_.get() || drawY_.get() || drawZ_.get()){
     if( control_id_ == -1 ){
-      GeomObj *w=control_widget_->GetWidget();
+      GeomHandle w = control_widget_->GetWidget();
       control_id_ = ogeom_->addObj( w, control_name, &control_lock_);
     }
   } else {
