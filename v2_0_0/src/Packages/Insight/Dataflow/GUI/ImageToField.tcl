@@ -43,19 +43,20 @@ itcl_class Insight_Converters_ImageToField {
 	radiobutton $w.a -text "Reference ITK Image Data" \
 	    -variable $this-copy \
 	    -value 0
-	pack $w.a 
+	pack $w.a -anchor nw
+	Tooltip $w.a "Select to reference the\nimage data directly."
 
 	radiobutton $w.b -text "Copy Data" \
 	    -variable $this-copy \
 	    -value 1
-	pack $w.b 
+	pack $w.b -anchor nw
+	Tooltip $w.b "Select to copy the\nimage data to a Field"
 
 
 	frame $w.buttons
-        button $w.buttons.execute -text "Execute" -command "$this-c needexecute"
-        button $w.buttons.close -text "Close" -command "destroy $w"
-        pack $w.buttons.execute $w.buttons.close -side left
-	pack $w.buttons -side top -padx 5 -pady 5
+	makeSciButtonPanel $w.buttons $w $this
+	moveToCursor $w
+	pack $w.buttons -side top -anchor n -padx 5 -pady 5
     }
 }
 
