@@ -31,7 +31,7 @@ public:
     inline int dim2() const { return e->dim2(); }
     inline int dim3() const { return e->dim3(); }
     inline double get_spacing() const { return spacing; }
-    inline Point get_min() { return min; }
+    inline Point get_min() const { return min; }
     Grid(int x, int y, int z, const Point &m, double sp);
     ~Grid();
     inline Array1<int> *get_members(int x, int y, int z) const {
@@ -43,7 +43,8 @@ public:
     void add_member(int id, int x, int y, int z);
     void size(int *i, int *j, int *k);
     int remove_member(int id, int x, int y, int z);
-    Array1<int>* get_cubes_at_distance(int dist, int i, int j, int k);
+    void get_cubes_at_distance(int dist, int i, int j, int k, Array1<int>&);
+    void get_cubes_within_distance(int dist, int i, int j, int k, Array1<int>&);
     void get_element(const Point &p, int *i, int *j, int *k);
     void get_element(const Point &p, int *i, int *j, int *k, double *dist);
     void get_intersected_elements(Array1<int> *inter, const Point &p1,
