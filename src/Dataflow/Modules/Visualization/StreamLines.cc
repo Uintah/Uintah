@@ -394,7 +394,7 @@ StreamLinesAccAlgo::RayPlaneIntersection(const Point &p, const Vector &dir,
   const double Vd = Dot(dir, pn);
 
   // Return no intersection if parallel to plane or no cross product.
-  if (fabs(Vd) < 1.0e-12) { return 1.0e24; }
+  if (Vd < 1.0e-12) { return 1.0e24; }
 
   const double D = - Dot(pn, p0);
 

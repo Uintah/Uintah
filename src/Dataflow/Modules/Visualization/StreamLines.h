@@ -333,21 +333,33 @@ StreamLinesAccAlgoT<SMESH, SLOC, VFLD>::FindNodes(vector<Point> &v,
     dir.safe_normalize();
     if (back) { dir *= -1.0; }
     
-    if (i && Dot(dir, lastnormal) < 1.0e-3) { break; }
+    double ddl;
+    if (i && (ddl = Dot(dir, lastnormal)) < 1.0e-3)
+    {
+      dir = dir - lastnormal * (ddl / Dot (lastnormal, lastnormal));
+      if (dir.safe_normalize() < 1.0e-3) { break; }
+    }
 
     vmesh->get_faces(faces, elem);
     double mindist = 1.0e24;
     bool found = false;
+    Point ecenter;
+    vmesh->get_center(ecenter, elem);
     for (unsigned int j=0; j < faces.size(); j++)
     {
+      Point eface;
+      vmesh->get_center(eface, faces[j]);
+
       Point p0, p1, p2;
       vmesh->get_nodes(nodes, faces[j]);
       vmesh->get_center(p0, nodes[0]);
       vmesh->get_center(p1, nodes[1]);
       vmesh->get_center(p2, nodes[2]);
-      const Vector normal = Cross(p1-p0, p2-p0);
+      Vector normal = Cross(p1-p0, p2-p0);
+      if (normal.safe_normalize() < 1.0e-3) { continue; }
+      if (Dot(normal, ecenter-eface) > 0.0) { normal *= -1.0; }
       const double dist = RayPlaneIntersection(seed, dir, p0, normal);
-      if (dist > 1.0e-6 && dist < mindist)
+      if (dist > -1.0e-6 && dist < mindist)
       {
 	mindist = dist;
 	minface = faces[j];
