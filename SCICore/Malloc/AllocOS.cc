@@ -18,7 +18,7 @@
 #include <string.h>
 #include <errno.h>
 #include <fcntl.h>
-#ifdef __sgi
+#if defined(__sgi) || defined(__linux)
 #include <unistd.h>
 #endif
 #include <sci_config.h>
@@ -104,6 +104,9 @@ void OSHunk::free(OSHunk* hunk)
 
 //
 // $Log$
+// Revision 1.7  2000/07/27 17:56:53  yarden
+// include unistd.h for linux
+//
 // Revision 1.6  2000/07/27 07:41:48  sparker
 // Distinguish between "returnable" chunks and non-returnable chucks of memory
 // Make malloc get along with SGI's MPI
