@@ -39,7 +39,8 @@ void ICE::printData_problemSetup( const ProblemSpecP& prob_spec)
   d_dbgSymPlanes= IntVector(0,0,0);
   d_dbgSymmetryTest = false;
   d_dbgSym_relative_tol = 1e-6;
-  d_dbgSym_absolute_tol = 1e-9;  
+  d_dbgSym_absolute_tol = 1e-9;
+  d_dbgSym_cutoff_value = 1e-12;
   //__________________________________
   // Find the switches
   ProblemSpecP debug_ps = prob_spec->findBlock("Debug");
@@ -59,6 +60,7 @@ void ICE::printData_problemSetup( const ProblemSpecP& prob_spec)
     debug_ps->get("dbg_SymmetryPlanes",           d_dbgSymPlanes);
     debug_ps->get("dbg_Sym_absolute_tol",         d_dbgSym_absolute_tol); 
     debug_ps->get("dbg_Sym_relative_tol",         d_dbgSym_relative_tol);
+    debug_ps->get("dbg_Sym_cutoff_value",         d_dbgSym_cutoff_value);
     
     if(d_dbgSymPlanes.x()>0 || d_dbgSymPlanes.y()>0 || d_dbgSymPlanes.z() > 0){
       d_dbgSymmetryTest = true;
@@ -549,8 +551,14 @@ void    ICE::symmetryTest_driver( int matl,
               mirrorCell[dir] += FC_shift;
 
               // calc. absolute and relative differences
-              double abs_diff = fabs(q_CC[c] - q_CC[mirrorCell]);
-              double rel_diff = abs_diff/(fabs(q_CC[c]) + 1e-100);
+              double abs_diff = 0;
+              double rel_diff = 0;
+
+              if( fabs(q_CC[c]) > d_dbgSym_cutoff_value || 
+                  fabs (q_CC[mirrorCell]) > d_dbgSym_cutoff_value){
+                abs_diff = fabs(q_CC[c] - q_CC[mirrorCell]);
+                rel_diff = abs_diff/(fabs(q_CC[c]) + 1e-100);
+              }
               
               // catch any asymmetries
               if (abs_diff > d_dbgSym_absolute_tol || 
@@ -650,21 +658,26 @@ void    ICE::symmetryTest_Vector( int matl,
               // pencil and paper
               IntVector mirrorCell = c;
               mirrorCell[dir] = (high[dir]-1) - (c[dir]+extraCell);
+                            
+              Vector rel_diff = Vector(0);
+              Vector abs_diff = Vector(0);
+              
+              if( q_CC[c].length() > d_dbgSym_cutoff_value || 
+                  q_CC[mirrorCell].length() > d_dbgSym_cutoff_value){
+                
+                // absolute difference
+                for(int d = 0; d < 3; d ++ ){
+                  abs_diff[d] = fabs(q_CC[c][d] - q_CC[mirrorCell][d]);
+                }
+                // normal component is equal and opposite
+                abs_diff[dir] = fabs(q_CC[c][dir] + q_CC[mirrorCell][dir]);
 
-              // absolute difference
-              Vector abs_diff;
-              for(int d = 0; d < 3; d ++ ){
-                abs_diff[d] = fabs(q_CC[c][d] - q_CC[mirrorCell][d]);
+                // relative difference
+                rel_diff.x(abs_diff.x()/(fabs(q_CC[c].x()) + 1e-100) );
+                rel_diff.y(abs_diff.y()/(fabs(q_CC[c].y()) + 1e-100) );
+                rel_diff.z(abs_diff.z()/(fabs(q_CC[c].z()) + 1e-100) );
               }
-              // normal component is equal and opposite
-              abs_diff[dir] = fabs(q_CC[c][dir] + q_CC[mirrorCell][dir]);
-
-              // relative difference
-              Vector rel_diff;
-              rel_diff.x(abs_diff.x()/(fabs(q_CC[c].x()) + 1e-100) );
-              rel_diff.y(abs_diff.y()/(fabs(q_CC[c].y()) + 1e-100) );
-              rel_diff.z(abs_diff.z()/(fabs(q_CC[c].z()) + 1e-100) );
-
+              
               // catch any asymmetries  
               if (abs_diff.length() > d_dbgSym_absolute_tol || 
                   rel_diff.length() > d_dbgSym_relative_tol){
