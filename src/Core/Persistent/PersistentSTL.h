@@ -111,7 +111,7 @@ Pio(Piostream& stream, map<Key, Data>& data) {
 
 //////////
 // PIO for vectors
-#define STLVECTOR_VERSION 1
+#define STLVECTOR_VERSION 2
 
 template <> 
 SCICORESHARE void Pio(Piostream& stream, vector<bool>& data);
@@ -119,8 +119,14 @@ SCICORESHARE void Pio(Piostream& stream, vector<bool>& data);
 template <class T> 
 SCICORESHARE void Pio(Piostream& stream, vector<T>& data)
 { 
-  
-  stream.begin_class("STLVector", STLVECTOR_VERSION);
+  if (stream.reading() && stream.peek_class() == "Array1")
+  {
+    stream.begin_class("Array1", STLVECTOR_VERSION);
+  }
+  else
+  {
+    stream.begin_class("STLVector", STLVECTOR_VERSION);
+  }
   
   int size=(int)data.size();
   stream.io(size);
