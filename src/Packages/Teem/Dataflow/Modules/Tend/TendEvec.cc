@@ -105,7 +105,7 @@ TendEvec::execute()
     tenEigensolve(eval, evec, tdata);
     float scl = tdata[0] >= thresh;
     for (int cc=0; cc<3; cc++) {
-      ELL_3V_SCALE(edata+9, scl, evec+3*cc);
+      ELL_3V_SCALE(edata+3*cc, scl, evec+3*cc);
     }
     edata += 9;
     tdata += 7;
