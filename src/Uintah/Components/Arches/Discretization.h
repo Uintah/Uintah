@@ -33,7 +33,11 @@ none
 #ifndef included_Discretization
 #define included_Discretization
 
+#include <SCICore/Containers/Array1.h>
+
 class StencilMatrix;
+
+using namespace SCICore::Containers;
 
 class Discretization : 
 {
@@ -66,11 +70,13 @@ public:
 					     SchedulerP& sched,
 					     const DataWarehouseP& old_dw,
 					     DataWarehouseP& new_dw);
-   virtual void sched_calculateVelocityCoeff(const LevelP& level,
+   virtual void sched_calculateVelocityCoeff(const int index,
+					     const LevelP& level,
 					     SchedulerP& sched,
 					     const DataWarehouseP& old_dw,
 					     DataWarehouseP& new_dw);
-   virtual void sched_calculateScalarCoeff(const LevelP& level,
+   virtual void sched_calculateScalarCoeff(const int index,
+					   const LevelP& level,
 					   SchedulerP& sched,
 					   const DataWarehouseP& old_dw,
 					   DataWarehouseP& new_dw);

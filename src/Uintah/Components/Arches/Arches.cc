@@ -1,6 +1,14 @@
 
 #include <Uintah/Components/Arches/Arches.h>
+#include <Uintah/Components/Arches/PicardNonlinearSolver.h>
 #include <SCICore/Util/NotFinished.h>
+#include <Uintah/Grid/ProblemSpec.h>
+#include <Uintah/Interface/DataWarehouse.h>
+#include <Uintah/Exceptions/InvalidValue.h>
+#include <Uintah/Grid/SoleVariable.h>
+
+using Uintah::Components::Arches;
+using namespace Uintah::Grid;
 
 Arches::Arches()
 {
@@ -10,40 +18,26 @@ Arches::~Arches()
 {
 }
 
-void Arches::problemSetup(const ProblemSpecP& params, GridP& grid,
-		  DataWarehouseP& dw, DatabaseP& db)
+void Arches::problemSetup(const ProblemSpecP& params, GridP&,
+			  DataWarehouseP&)
 {
-  int nlSolver;
-  if (db->keyExists("grow_dt")) {
-    d_deltaT = db->getDouble("grow_dt");
-  } else {
-    cerr << "grow_dt not in input database" << endl;
-  }
-  if (db->keyExists("nonlinear_solver")) {
-    nlSolver = db->getInteger("nonlinear_solver");
-  } else {
-    cerr << "nonlinear_solver not in input database" << endl;
-  }
-  if (nlSolver == 0) {
+  ProblemSpecP db = params->findBlock("Arches");
+
+  db->require("grow_dt", d_deltaT);
+
+  string nlSolver;
+  db->require("nonlinear_solver", nlSolver);
+  if(nlSolver == "picard")
     d_nlSolver = new PicardNonlinearSolver();
-  }
-  else {
-    cerr << "incorrect nonlinear_solver option" << endl;
-  }
-  if (db->keyExists("Picard Solver")) {
-    DatabaseP nlSolverDB = db->getDatabase("Picard Solver");
-  } else {
-    cerr << "Picard Solver not in input database" << endl;
-  }
-  d_nlSolver->problemSetup(nlSolverDB);
+  else
+    throw InvalidValue("Nonlinear solver not supported: "+nlSolver, db);
 
-
+  d_nlSolver->problemSetup(db);
 }
 
 void Arches::computeStableTimestep(const LevelP& level,
-			   SchedulerP& sched, DataWarehouseP& dw)
+				   SchedulerP& sched, DataWarehouseP& dw)
 {
-  
   dw->put(SoleVariable<double>(d_deltaT), "delt"); 
 }
 
@@ -51,7 +45,7 @@ void Arches::timeStep(double time, double dt,
 	      const LevelP& level, SchedulerP& sched,
 	      const DataWarehouseP& old_dw, DataWarehouseP& new_dw)
 {
-  int error_code = d_solver->nonlinearSolve(level, sched, old_dw, new_dw);
+  int error_code = d_nlSolver->nonlinearSolve(level, sched, old_dw, new_dw);
 
    /*
     * if the solver works then put thecomputed values in
@@ -97,7 +91,7 @@ void Arches::timeStep(double time, double dt,
 
 */
 
-/*
+#if 0
 void Arches::advanceTimeStep(const ProcessorContext* pc,
 			     const Region* region,
 			     const DataWarehouseP& old_dw,
@@ -121,4 +115,5 @@ void Arches::advanceTimeStep(const ProcessorContext* pc,
 
 
 
-*/
+#endif
+

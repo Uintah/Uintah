@@ -8,10 +8,26 @@
 
 #include <Uintah/Parallel/UintahParallelComponent.h>
 #include <Uintah/Interface/CFDInterface.h>
+#include <Uintah/Grid/Region.h>
+#include <Uintah/Parallel/ProcessorContext.h>
+
+namespace Uintah {
+    namespace Components {
+	using Uintah::Interface::CFDInterface;
+	using Uintah::Parallel::UintahParallelComponent;
+	using Uintah::Grid::ProblemSpecP;
+	using Uintah::Grid::GridP;
+	using Uintah::Grid::LevelP;
+	using Uintah::Grid::Region;
+	using Uintah::Interface::DataWarehouseP;
+	using Uintah::Interface::SchedulerP;
+	using Uintah::Parallel::ProcessorContext;
 class NonlinearSolver;
-const int NDIM = 3;
+
 class Arches : public UintahParallelComponent, public CFDInterface {
 public:
+    static const int NDIM = 3;
+
     Arches();
     virtual ~Arches();
 
@@ -22,18 +38,21 @@ public:
     virtual void timeStep(double t, double dt,
 			  const LevelP& level, SchedulerP&,
 			  const DataWarehouseP&, DataWarehouseP&);
-    void Arches::actuallyComputeStableTimestep(const LevelP& level,
-			   DataWarehouseP& dw);
-    void Arches::advanceTimeStep(const ProcessorContext*,
-			     const Region* region,
-			     const DataWarehouseP& old_dw,
-			     DataWarehouseP& new_dw);
+    void actuallyComputeStableTimestep(const LevelP& level,
+				       DataWarehouseP& dw);
+    void advanceTimeStep(const ProcessorContext*,
+			 const Region* region,
+			 const DataWarehouseP& old_dw,
+			 DataWarehouseP& new_dw);
 private:
     Arches(const Arches&);
     Arches& operator=(const Arches&);
     double d_deltaT;
     NonlinearSolver* d_nlSolver;
 };
+
+    }
+}
 
 #endif
 
