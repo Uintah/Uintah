@@ -1073,7 +1073,6 @@ int Mesh::insert_delaunay(int node)
 	    facetab.insert(f4, n);
 	}
     }
-    compute_face_neighbors();
     return 1;
 }
 
