@@ -7,6 +7,7 @@
 #include <Packages/rtrt/Core/BrickArray3.h>
 #include <Packages/rtrt/Core/ScalarTransform1D.h>
 #include <Packages/rtrt/Core/Array1.h>
+#include <Packages/rtrt/Core/PlaneDpy.h>
 #include <stdlib.h>
 #include <iostream>
 
@@ -85,6 +86,18 @@ protected:
   Point min, max;
   double spec_coeff, ambient, diffuse, specular;
   float delta_x2, delta_y2, delta_z2;
+
+  // stuff for cutting plane
+  enum CPlane_overwrite { OverwroteTMax, OverwroteTMin, Neither };
+  struct VolumeVis2D_scratchpad {
+    CPlane_overwrite coe;
+    float tmax;
+  };
+  Vector cutplane_normal;
+  double cutplane_displacement;
+  PlaneDpy* cdpy;
+  bool cutplane_active;
+  bool use_cutplane_material;
   
   inline int bound(const int val, const int min, const int max) {
     return (val>min?(val<max?val:max):min);
@@ -103,8 +116,8 @@ public:
   virtual void io(SCIRun::Piostream &stream);
   //friend void SCIRun::Pio(SCIRun::Piostream&, VolumeVis2D*&);
 
-  virtual void intersect(Ray& ray, HitInfo& hit, DepthStats* st,
-			 PerProcessorContext*);
+  virtual void intersect( Ray& ray, HitInfo& hit, DepthStats* st,
+			 PerProcessorContext* ppc );
   virtual Vector normal(const Point&, const HitInfo& hit);
   virtual void compute_bounds(BBox&, double offset);
   virtual void print(ostream& out);
@@ -114,6 +127,7 @@ public:
 		     Context* cx);
   virtual void animate(double t, bool& changed);
   virtual void cblookup( Object* obj );
+  virtual void initialize_cuttingPlane( PlaneDpy *cdpy );
 };
   
 } // end namespace rtrt
