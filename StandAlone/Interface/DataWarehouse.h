@@ -10,6 +10,7 @@
 #include <Uintah/Grid/ParticleVariableBase.h>
 #include <Uintah/Grid/NCVariableBase.h>
 #include <Uintah/Grid/ReductionVariableBase.h>
+#include <Uintah/Grid/PerPatchBase.h>
 #include <Uintah/Interface/DataWarehouseP.h>
 
 #include <iosfwd>
@@ -64,6 +65,8 @@ WARNING
       DataWarehouseP getTop() const;
       
       virtual void setGrid(const GridP&)=0;
+
+      virtual bool exists(const VarLabel*, int matlIndex, const Patch*) = 0;
       
       // Reduction Variables
       virtual void allocate(ReductionVariableBase&, const VarLabel*) = 0;
@@ -95,6 +98,12 @@ WARNING
 		       const Patch*, Ghost::GhostType, int numGhostCells) = 0;
       virtual void put(const CCVariableBase&, const VarLabel*,
 		       int matlIndex, const Patch*) = 0;
+
+      // PerPatch Variables
+      virtual void get(PerPatchBase&, const VarLabel*,
+				int matlIndex, const Patch*) = 0;
+      virtual void put(const PerPatchBase&, const VarLabel*,
+				int matlIndex, const Patch*) = 0;
      
       //////////
       // Insert Documentation Here:
@@ -151,6 +160,9 @@ WARNING
 
 //
 // $Log$
+// Revision 1.27  2000/06/05 19:45:43  guilkey
+// Added some functionality to the DW for PerPatch variables.
+//
 // Revision 1.26  2000/06/03 05:32:10  sparker
 // Removed include of fstream
 // Changed include of iostream to iosfwd
