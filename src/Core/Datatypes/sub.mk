@@ -37,7 +37,6 @@ SRCS += $(SRCDIR)/Clipper.cc		    	\
         $(SRCDIR)/Field.cc		    	\
         $(SRCDIR)/FieldSet.cc		    	\
         $(SRCDIR)/GenFunction.cc	    	\
-        $(SRCDIR)/Geom.c          	    	\
 	$(SRCDIR)/HexVolMesh.cc			\
         $(SRCDIR)/Image.cc		    	\
         $(SRCDIR)/ImageMesh.cc		    	\
