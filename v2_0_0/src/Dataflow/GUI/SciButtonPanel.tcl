@@ -33,8 +33,6 @@ proc makeSciButtonPanel { parent close_window this args } {
   frame $parent.btnBox
   pack  $parent.btnBox -anchor e
 
-  puts "num args: [llength $args]"
-
   set btnId 0
   # Parse args
   for {set arg 0} {$arg < [llength $args] } { incr arg } {
