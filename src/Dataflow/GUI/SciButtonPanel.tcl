@@ -43,6 +43,7 @@
 #                                         the standard buttons).  Each button needs to be
 #                                         self contained as a single arg.  Eg:
 #                                         "Doit \"$this doit\" \"This is a tool tip\""
+#   -force_bottom   <- Forces the buttonPanel to be packed against the bottom
 #
 #   NOTE: This function also overrides the "close_window"s destruction
 #   window decoration and makes the window 'close' instead of being
@@ -50,22 +51,12 @@
 #
 
 proc makeSciButtonPanel { parent close_window this args } {
-  set outside_pad 4
-  frame $parent.buttonPanel -bd 0
-  pack $parent.buttonPanel -fill x
-  set parent $parent.buttonPanel
-
-  frame $parent.separator -height 2 -relief sunken -borderwidth 2
-  pack  $parent.separator -fill x -pady 5
-
-  frame $parent.btnBox
-  pack  $parent.btnBox -anchor e
-
   # Parse options
   set make_help_btn 1
   set make_exec_btn 1
   set make_close_btn 1
   set make_find_btn 1
+  set force_bottom 0
 
   foreach argName $args {
       if { $argName == "-no_help" } {
@@ -83,8 +74,26 @@ proc makeSciButtonPanel { parent close_window this args } {
       } elseif { $argName == "-no_find" } {
 	  listFindAndRemove args $argName
 	  set make_find_btn 0
-      } 
+      } elseif { $argName == "-force_bottom" } {
+          listFindAndRemove args $argName
+          set force_bottom 1
+      }
   }
+
+  set outside_pad 4
+  frame $parent.buttonPanel -bd 0
+  if { $force_bottom == 1 } {
+      pack $parent.buttonPanel -fill x -side bottom
+  } else {
+      pack $parent.buttonPanel -fill x
+  }
+  set parent $parent.buttonPanel
+
+  frame $parent.separator -height 2 -relief sunken -borderwidth 2
+  pack  $parent.separator -fill x -pady 5
+
+  frame $parent.btnBox
+  pack  $parent.btnBox -anchor e
 
   if { $make_help_btn } {
       button $parent.btnBox.help -text " ? " \
