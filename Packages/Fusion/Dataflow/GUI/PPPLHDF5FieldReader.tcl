@@ -357,8 +357,8 @@ itcl_class Fusion_DataIO_PPPLHDF5FieldReader {
 
 	set w .ui[modname]
 
-	set d [$w.d childsite]
-	$d.dataset.s configure -from 0 -to [expr [set $this-ndatasets] - 1]
+#	set d [$w.d childsite]
+#	$d.dataset.s configure -from 0 -to [expr [set $this-ndatasets] - 1]
 
 	# Update the count values to be at the initials values.
 	set $this-readall 0
