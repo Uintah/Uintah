@@ -2,8 +2,8 @@
  *  AddLight.cc:
  *
  *  Written by:
- *   kuzimmer
- *   TODAY'S DATE HERE
+ *   Kurt Zimmerman
+ *   June 2003
  *
  */
 
@@ -49,6 +49,7 @@ private:
   LightHandle      l;
   GeomID           control_id_;
   LightID          light_id_;
+  bool             widget_init;
   GuiInt           control_pos_saved_;
   GuiDouble        control_x_;
   GuiDouble        control_y_;
@@ -56,7 +57,11 @@ private:
   GuiDouble        at_x_;
   GuiDouble        at_y_;
   GuiDouble        at_z_;
+  GuiDouble        cone_x_;
+  GuiDouble        cone_y_;
+  GuiDouble        cone_z_;
   GuiDouble        rad_;
+  GuiDouble        rat_;
   GuiInt           light_type_;
   GuiInt           light_on_;
 };
@@ -74,6 +79,7 @@ AddLight::AddLight(GuiContext* ctx)
     l(0),
     control_id_(-1),
     light_id_(-1),
+    widget_init(false),
     control_pos_saved_(ctx->subVar("control_pos_saved")),
     control_x_(ctx->subVar("control_x")),
     control_y_(ctx->subVar("control_y")),
@@ -81,7 +87,11 @@ AddLight::AddLight(GuiContext* ctx)
     at_x_(ctx->subVar("at_x")),
     at_y_(ctx->subVar("at_y")),
     at_z_(ctx->subVar("at_z")),
+    cone_x_(ctx->subVar("cone_x")),
+    cone_y_(ctx->subVar("cone_y")),
+    cone_z_(ctx->subVar("cone_z")),
     rad_(ctx->subVar("rad")),
+    rat_(ctx->subVar("rat")),
     light_type_(ctx->subVar("type")),
     light_on_(ctx->subVar("on"))
 {
@@ -105,21 +115,40 @@ AddLight::execute()
   }
   
   if(!light_widget_){
-    light_widget_=scinew LightWidget(this, &control_lock_, 0.2);
     
-    if( control_pos_saved_.get()== 1 ) {
-      light_widget_->Move(Point(control_x_.get(),
-				control_y_.get(),
-				control_z_.get()));
-      light_widget_->SetPointAt( Point(at_x_.get(),
-				       at_y_.get(),
-				       at_z_.get())); 
-      light_widget_->SetRadius( rad_.get() );
+    if( control_pos_saved_.get() == 1 ) {
+      light_widget_=scinew LightWidget(this, &control_lock_, 0.2,
+				       Point(control_x_.get(),
+					     control_y_.get(),
+					     control_z_.get()),
+				       Point(at_x_.get(),
+					     at_y_.get(),
+					     at_z_.get()),
+				       Point(cone_x_.get(),
+					     cone_y_.get(),
+					     cone_z_.get()),
+				       rad_.get(),
+				       rat_.get());
+				       
+//        light_widget_->Move(Point(control_x_.get(),
+//  				control_y_.get(),
+//  				control_z_.get()));
+//        cerr<<"PointAt = ("<<at_x_.get()<<", "<<at_y_.get()<<", "<<at_z_.get()<<")\n";
+//        light_widget_->SetPointAt( Point(at_x_.get(),
+//  				       at_y_.get(),
+//  				       at_z_.get()));
+//        light_widget_->SetCone(Point(cone_x_.get(),
+//  				   cone_y_.get(),
+//  				   cone_z_.get()));) 
+//        light_widget_->SetRadius( rad_.get() );
       lt = (LightType)light_type_.get();
       light_widget_->SetLightType( lt );
+    } else {
+      light_widget_=scinew LightWidget(this, &control_lock_, 0.2);
     }
     
     light_widget_->Connect(ogeom_);
+    widget_init=true;
   }
 
   if( control_id_ == -1 ){
@@ -215,6 +244,7 @@ AddLight::tcl_command(GuiArgs& args, void* userdata)
 void 
 AddLight::widget_moved(bool)
 {
+  if( widget_init ){
   Point w(light_widget_->ReferencePoint());
   control_x_.set( w.x() );
   control_y_.set( w.y() );
@@ -223,10 +253,16 @@ AddLight::widget_moved(bool)
   at_x_.set( dp.x() );
   at_y_.set( dp.y() );
   at_z_.set( dp.z() );
+  Point c( light_widget_->GetCone() );
+  cone_x_.set( c.x() );
+  cone_y_.set( c.y() );
+  cone_z_.set( c.z() );
   rad_.set( light_widget_->GetRadius());
+  rat_.set( light_widget_->GetRatio());
   light_type_.set( (int)light_widget_->GetLightType() );
   control_pos_saved_.set( 1 );
   want_to_execute();
+  }
 }
 
 
