@@ -161,6 +161,12 @@ WARNING
       if(d_window)
 	d_window->addReference();
     }
+    Array3(Array3Window<T>* window)
+      : d_window(window)
+    {
+      if(d_window)
+	d_window->addReference();
+    }
     virtual ~Array3()
     {
       if(d_window && d_window->removeReference()){
