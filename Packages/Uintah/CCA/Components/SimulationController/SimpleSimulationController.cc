@@ -203,9 +203,9 @@ SimpleSimulationController::run()
                             scheduler->get_dw(1), lb, &t, &delt);
       
       sharedState->setCurrentTopLevelTimeStep( d_restartTimestep );
-      //ProblemSpecP pspec = archive.getRestartTimestepDoc();
-      //XMLURL url = archive.getRestartTimestepURL();
-      //lb->restartInitialize(pspec, url);
+      ProblemSpecP pspec = archive.getRestartTimestepDoc();
+      XMLURL url = archive.getRestartTimestepURL();
+      lb->restartInitialize(pspec, url);
       output->restartSetup(restartFromDir, 0, d_restartTimestep, t,
                         d_restartFromScratch, d_restartRemoveOldDir);
 
@@ -369,6 +369,7 @@ SimpleSimulationController::run()
 
       if(sharedState->needAddMaterial()){
         sim->addMaterial(ups, grid, sharedState);
+        sharedState->finalizeMaterials();
         scheduler->initialize();
         sim->scheduleInitializeAddedMaterial(level, scheduler);
         scheduler->compile();
