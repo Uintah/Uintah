@@ -222,18 +222,19 @@ itcl_class SCIRun_Visualization_VolumeVisualizer {
             -side top -fill x -padx 4
 
 
- 	frame $w.f3 -relief groove -borderwidth 2
- 	pack $w.f3 -padx 2 -pady 2 -fill x
- 	label $w.f3.l -text "Interpolation Mode"
-	frame $w.f3.f
- 	radiobutton $w.f3.f.interp -text "Trilinear" -relief flat \
+ 	frame $w.main.interp -relief groove -borderwidth 2
+ 	label $w.main.interp.l -text "Interpolation Mode"
+	frame $w.main.interp.f
+ 	radiobutton $w.main.interp.f.interp -text "Trilinear" -relief flat \
  		-variable $this-interp_mode -value 1 \
  		-anchor w -command $n
- 	radiobutton $w.f3.f.near -text "Nearest" -relief flat \
+ 	radiobutton $w.main.interp.f.near -text "Nearest" -relief flat \
  		-variable $this-interp_mode -value 0 \
  		-anchor w -command $n
-	pack $w.f3.f.interp $w.f3.f.near -side left -fill x -padx 10 -expand y
- 	pack $w.f3.l $w.f3.f -side top -fill x -padx 4
+ 	pack $w.main.interp -padx 2 -pady 2 -fill x -side top
+ 	pack $w.main.interp.l $w.main.interp.f -side top -fill x -padx 4
+	pack $w.main.interp.f.interp $w.main.interp.f.near -side left -fill x \
+	    -padx 10 -expand y
 
         #-----------------------------------------------------------
         # Sampling
