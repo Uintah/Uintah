@@ -57,10 +57,12 @@ printTask( ostream& out, DetailedTask* task )
   }
 }
 
-MPIScheduler::MPIScheduler(const ProcessorGroup* myworld, Output* oport, MPIScheduler* parentScheduler)
-  : SchedulerCommon(myworld, oport), log(myworld, oport), parentScheduler(parentScheduler)
+MPIScheduler::MPIScheduler( const ProcessorGroup * myworld,
+			          Output         * oport,
+			          MPIScheduler   * parentScheduler) :
+  SchedulerCommon( myworld, oport ),
+  log( myworld, oport ), parentScheduler( parentScheduler )
 {
-  d_generation = 0;
   d_lasttime=Time::currentSeconds();
   ss_ = 0;
   pg_ = 0;
