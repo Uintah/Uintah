@@ -525,10 +525,11 @@ void Crack::FindTimeStepForFractureAnalysis(double time)
   static double timeforcalculateJK=0.0;
   static double timeforpropagation=0.0;
 
+  double calJKInterval=0.0;
   if(d_calFractParameters=="true") {
     if(time>=timeforcalculateJK) {
       calFractParameters=1;
-      timeforcalculateJK+=d_outputInterval;
+      timeforcalculateJK+=calJKInterval;
     }
     else {
      calFractParameters=0;
@@ -744,8 +745,8 @@ short Crack::CalculateCrackFrontNormals(const int& mm)
     // Step d: Store tangential vectors and modify cx
     for(i=min_idx;i<=max_idx;i++) { // Loop over
       int ki=idx[i];
-      int nd=cfSegNodes[mm][i];
-      cx[mm][nd]=pts[ki];
+      //int nd=cfSegNodes[mm][i];
+      //cx[mm][nd]=pts[ki];
       cfSegV3[mm][i]=-V3[ki]/V3[ki].length();
     }
     pts.clear();
