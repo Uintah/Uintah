@@ -1967,7 +1967,7 @@ AC_SUBST(DEF_PERFEX)
 
 ##  --  search for fastm  --------------------------------------------------
 
-SCI_CHECK_LIB($thirdparty/lib,fastm,main,,optional)
+SCI_CHECK_LIB($thirdparty/lib,fastm,main,,,optional)
 
 if test "$HAVE_FASTM"; then
   DEF_FASTM="#define HAVE_FASTM 1"
