@@ -35,14 +35,15 @@
 The \htmladdnormallinkfoot{National Library of Medicine Insight
   Segmentation and Registration Toolkit}{http://www.itk.org} (ITK)
 is open source software that complements \sr{} by providing
-image-processing capabilities, ranging from fundamental algorithms to
+image-processing capabilities ranging from fundamental algorithms to
 advanced segmentation and registration tools.  The Insight Tool Kit
 provides these capabilities as \dfn{filters}.  \sci{} has developed a
 method of wrapping ITK filters in \sr{} modules.
 
 If ITK is present, and \sr{} is appropriately configured, \sr{} 
 builds a default set of ITK filter-based modules.  Users can generate 
-additional modules by writing XML descriptions. This chapter describes
+additional modules by writing filter descriptions using \sr{}'s
+XML-based filter description language. This chapter describes
 the process of wrapping ITK filters in \sr{} modules.
 
 Before reading this chapter, users should be familiar with \sr{}, the
@@ -76,8 +77,7 @@ Up to three XML files are required for each filter:
 
 \begin{description}
 \descitem{ITK Filter Description File} Description of a filter.  Contains
-no \sr{} specific information.  Filter descriptions may exist in the
-ITK distribution.
+no \sr{} specific information.  
 \descitem{\sr{} Filter Description File} Contains \sr{} specific
 information and include a reference to an ITK filter description file
 and an optional reference to a GUI description file.
@@ -611,8 +611,8 @@ Each element is discussed below.
 
 \subsection{Element \xmlstarttag{filter}}
 
-Element \xmlstarttag{<filter>} is the top-level element.  All other
-elements are enclosed in element \xmlstarttag{<filter>}:
+Element \xmlstarttag{filter} is the top-level element.  All other
+elements are enclosed in element \xmlstarttag{filter}:
 
 \begin{alltt}
   <filter>
@@ -699,8 +699,8 @@ For example:
 
 \subsubsection{Element \xmlstarttag{instantiations}}
 
-Element \xmlstarttag{instantiations} can declare filter instantiations
-that replace those declared in an ITK filter description file (see
+Element \xmlstarttag{instantiations} declares filter instantiations
+that can replace those declared in an ITK filter description file (see
 \secref{Element \xmlstarttag{templated}}{sec:itk_mods:templated}):
 
 \begin{alltt}
@@ -714,9 +714,15 @@ that replace those declared in an ITK filter description file (see
   </instantiations>
 \end{alltt}
 
-Attribute \xmlattrname{use-defaults} is set to "off" to replace ITK
-filter instantiations with the instantiations specified.  It is set to
-"on" to use ITK filter instantiations.
+When attribute \xmlattrname{use-defaults} has the value "off" then
+instantiations declared in the \xmlstarttag{instantiations} element
+replace instantiations declared in the \xmlstarttag{templated} element
+of the ITK filter description file.  When attribute
+\xmlattrname{use-defaults} has the value "on" then instantiations
+declared in the \xmlstarttag{templated} element of the ITK filter
+description file replace those declared in the
+\xmlstarttag{instantiations} element of the SCIRun filter description
+file.
 
 Each \xmlstarttag{instance} element declares one filter instantiation.
 Each \xmlstarttag{type} element corresponds to a
@@ -737,7 +743,7 @@ For example:
       <value>itk::Image&lt;float, 2&gt;</value>
     </type>
    </instance>
-   <instance">
+   <instance>
     <type name="InputImageType">
       <value>itk::Image&lt;float, 3&gt;</value>
     </type>
@@ -755,7 +761,7 @@ lists outputs that are allowed to send \dfn{intermediate} data.
 
 Usually data are sent on a port only after a module has finished its
 execution.  When sending intermediate data is allowed, however, a
-module can send data every $n_th$ iteration of a calculation.
+module can send data every $n_{th}$ iteration of a calculation.
 
 Intermediate data are useful when using, for example, any of the
 level-set segmentation filters---the user can visualize the
@@ -797,11 +803,11 @@ that determines if the output will generate intermediate data; and a
 text entry widget specifying the number of iterations between
 sends of intermediate data.
 
-For an example see sci\_ThresholdSegmentationLevelSetImageFilter.xml in
-the directory:
+For an example see file:
 
 \begin{alltt}
-  src/Packages/Insight/Dataflow/Modules/Filters/XML
+  src/Packages/Insight/Dataflow/Modules/Filters/XML/
+    sci\_ThresholdSegmentationLevelSetImageFilter.xml
 \end{alltt}
 
 \subsubsection{Element \xmlstarttag{includes}}
@@ -958,12 +964,18 @@ To build \sr{} modules from ITK filters:
 \begin{enumerate}
 \item Ensure that \sr{} is Configured with support for the Insight
   package.  See the \sr{} Installation Guide for details.
-\item Place ITK filter description files in
-  \directory{SCIRun/src/Packages/Insight/ITK}
-\item Place \sr{} filter description files in
-  \directory{SCIRun/src/Packages/Insight/Dataflow/Modules/Filters/XML}
-\item Place \sr{} GUI description files in
-  \directory{SCIRun/src/Packages/Insight/Dataflow/Modules/Filters/XML}
+\item Place ITK filter description files in:
+  \begin{alltt}
+    SCIRun/src/Packages/Insight/ITK
+  \end{alltt}
+\item Place \sr{} filter description files in:
+  \begin{alltt}
+    SCIRun/src/Packages/Insight/Dataflow/Modules/Filters/XML
+  \end{alltt}
+\item Place \sr{} GUI description files in:
+  \begin{alltt}
+    SCIRun/src/Packages/Insight/Dataflow/Modules/Filters/XML
+  \end{alltt}
 \item Invoke \command{gnumake} to build \sr{} (see the \sr{}
   Installation Guide for details)
 \end{enumerate}
