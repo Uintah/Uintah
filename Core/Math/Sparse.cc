@@ -28,7 +28,7 @@ valarray<double> cgSolve(SparseMatrix<double, int>& A,
   // Make an initial guess for the solution, x, -- guess all ones.
   // valarrays initialize things to zero.
  
-  valarray<double> x(1.,A.Rows()),residual(A.Rows());
+  valarray<double> x(0.,A.Rows()),residual(A.Rows());
 
   // compute the norm of b
 
@@ -41,7 +41,7 @@ valarray<double> cgSolve(SparseMatrix<double, int>& A,
 
   // Now start the procedure
 
-  int max_iterations = 500;
+  int max_iterations = 5000;
   double rho_i_1 = 0.;
   double rho_i_2 = 0.;
 
