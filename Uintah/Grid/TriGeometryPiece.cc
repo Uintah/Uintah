@@ -2,9 +2,11 @@
 #include "GeometryPieceFactory.h"
 #include <Uintah/Interface/ProblemSpec.h>
 #include <Uintah/Grid/Box.h>
+#include <iostream>
 
 using namespace Uintah::MPM;
 using namespace Uintah;
+using namespace std;
 
 TriGeometryPiece::TriGeometryPiece(ProblemSpecP &ps)
 {
@@ -34,6 +36,9 @@ Box TriGeometryPiece::getBoundingBox() const
 
 //
 // $Log$
+// Revision 1.3  2000/09/26 00:44:54  witzel
+// needed "#include <iostream>" and "using namespace std;"
+//
 // Revision 1.2  2000/09/25 20:37:43  sparker
 // Quiet g++ compiler warnings
 // Work around g++ compiler bug instantiating vector<NCVariable<Vector> >
