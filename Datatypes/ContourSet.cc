@@ -15,7 +15,6 @@
 #include <Classlib/String.h>
 #include <Datatypes/Surface.h>
 #include <Geometry/Transform.h>
-#include <Geom/Geom.h>
 
 #include <iostream.h>
 
