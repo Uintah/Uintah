@@ -371,7 +371,8 @@ int main(int argc, char* argv[])
     //  ThreadGroup *group = new ThreadGroup("rtrt group");
 
     // Start up display thread...
-    Dpy* dpy=new Dpy(scene, criteria1, criteria2, rtrt_engine->nworkers, bench,
+    Dpy* dpy=new Dpy(scene, rtrt_engine, criteria1, criteria2,
+                     rtrt_engine->nworkers, bench,
 		     ncounters, c0, c1, 1.0, 1.0, display_frames,
 		     pp_size, scratchsize, false, do_frameless==true, false);
     /* <<<< bigler >>>> */
