@@ -153,7 +153,7 @@ def runSusTests(argv, TESTS, algo, callback = nullCallback):
 
 
 
-  environ['MPI_TYPE_MAX'] = '200000'
+  environ['MPI_TYPE_MAX'] = '10000'
 
   print ""
   if solotest == "":
