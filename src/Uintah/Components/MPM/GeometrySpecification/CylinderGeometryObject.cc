@@ -65,6 +65,9 @@ Box CylinderGeometryObject::getBoundingBox() const
 }
 
 // $Log$
+// Revision 1.10.2.1  2000/10/19 05:17:51  sparker
+// Merge changes from main branch into csafe_risky1
+//
 // Revision 1.10  2000/04/25 18:43:30  jas
 // Changed variable name of d_num_par_per_cell to d_resolution.
 //

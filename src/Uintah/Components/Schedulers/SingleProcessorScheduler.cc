@@ -320,6 +320,7 @@ SingleProcessorScheduler::gatherParticles(const ProcessorGroup*,
 	 new_dw->put(*newvar, reloc_new_labels[m][v]);
 	 delete newvar;
       }
+      // Delete keepset and all relocsets
       for(int i=0;i<(int)subsets.size();i++)
 	 delete subsets[i];
    }
@@ -347,6 +348,9 @@ SingleProcessorScheduler::releaseLoadBalancer()
 
 //
 // $Log$
+// Revision 1.19.4.2  2000/10/19 05:17:56  sparker
+// Merge changes from main branch into csafe_risky1
+//
 // Revision 1.19.4.1  2000/10/10 05:28:03  sparker
 // Added support for NullScheduler (used for profiling taskgraph overhead)
 //

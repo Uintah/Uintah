@@ -94,6 +94,9 @@ WARNING
 #endif // __ICE_MATERIAL_H__
 
 // $Log$
+// Revision 1.4.2.1  2000/10/19 05:17:39  sparker
+// Merge changes from main branch into csafe_risky1
+//
 // Revision 1.4  2000/10/06 04:05:18  jas
 // Move files into EOS directory.
 //

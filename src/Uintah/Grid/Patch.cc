@@ -684,11 +684,22 @@ IntVector Patch::getGhostSFCZHighIndex(const int numGC) const
 
 //
 // $Log$
+// Revision 1.22.4.3  2000/10/19 05:18:03  sparker
+// Merge changes from main branch into csafe_risky1
+//
 // Revision 1.22.4.2  2000/10/10 05:28:08  sparker
 // Added support for NullScheduler (used for profiling taskgraph overhead)
 //
 // Revision 1.22.4.1  2000/09/29 06:12:29  sparker
 // Added support for sending data along patch edges
+//
+// Revision 1.24  2000/10/11 21:39:59  sparker
+// Added rewindow to CCVariable - just copies the array to a different window
+//
+// Revision 1.23  2000/10/11 17:39:38  sparker
+// Added copy with range
+// Fixed bug in Array3Data::copy
+// Fixed compiler warnings
 //
 // Revision 1.22  2000/09/25 20:58:14  sparker
 // Removed a few "if 0" statements.

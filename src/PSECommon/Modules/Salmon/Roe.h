@@ -220,6 +220,7 @@ public:
   void mouse_translate(int, int, int, int, int, int);
   void mouse_scale(int, int, int, int, int, int);
   void mouse_rotate(int, int, int, int, int, int);
+  void mouse_rotate_eyep(int, int, int, int, int, int);
   void mouse_pick(int, int, int, int, int, int);
 
   void tcl_command(TCLArgs&, void*);
@@ -252,11 +253,13 @@ public:
 
 				// Stereo
   TCLint do_stereo;
-
+  TCLvardouble sbase;           // multiplier to stereo base
+  TCLvarint    sr;              // if 0 - parallel shift, 1 - rotational shift
+  
   // >>>>>>>>>>>>>>>>>>>> BAWGL >>>>>>>>>>>>>>>>>>>>
   TCLint do_bawgl;
   // <<<<<<<<<<<<<<<<<<<< BAWGL <<<<<<<<<<<<<<<<<<<<
-  
+
   TCLint drawimg;
 
   TCLstring saveprefix;
@@ -294,6 +297,15 @@ public:
 
 //
 // $Log$
+// Revision 1.15.2.1  2000/10/19 05:17:12  sparker
+// Merge changes from main branch into csafe_risky1
+//
+// Revision 1.17  2000/10/08 05:42:38  samsonov
+// Added rotation around eye point and corresponding inertia mode; to use the mode , use ALT key and middle mouse button
+//
+// Revision 1.16  2000/09/29 08:06:59  samsonov
+// Changes in stereo implementation
+//
 // Revision 1.15  2000/06/09 17:50:18  kuzimmer
 // Hopefully everything is fixed so that you can use -lifl on SGI's and you can use -lcl on SGI's in32bit mode.
 //

@@ -38,9 +38,9 @@ WARNING
 
    class NeighBoundCond : public BoundCond {
    public:
-      NeighBoundCond() {}; 
-      NeighBoundCond(ProblemSpecP& ps) {};
-      virtual ~NeighBoundCond() {};
+      NeighBoundCond() {}
+      NeighBoundCond(ProblemSpecP&) {}
+      virtual ~NeighBoundCond() {}
       virtual std::string getType() const {
 	return "Neighbor";
       }
@@ -56,6 +56,9 @@ WARNING
 
 //
 // $Log$
+// Revision 1.1.4.1  2000/10/19 05:18:03  sparker
+// Merge changes from main branch into csafe_risky1
+//
 // Revision 1.1  2000/06/27 22:31:50  jas
 // Grid boundary conditions that are stored at the patch level.
 //

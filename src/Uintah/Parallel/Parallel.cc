@@ -9,9 +9,11 @@
 #include <iostream>
 #include <mpi.h>
 
-using namespace Uintah;
-using std::cerr;
 using namespace SCICore::Exceptions;
+using namespace Uintah;
+
+using std::cerr;
+using std::cout;
 using std::string;
 
 static bool            allowThreads;
@@ -142,8 +144,22 @@ Parallel::getRootProcessorGroup()
 
 //
 // $Log$
+// Revision 1.13.2.2  2000/10/19 05:18:13  sparker
+// Merge changes from main branch into csafe_risky1
+//
 // Revision 1.13.2.1  2000/10/17 19:54:26  dav
 // added a few things that got lost in the risky move
+//
+// Revision 1.16  2000/10/13 19:51:08  sparker
+// Changed printout of processor n of m to a single # of processors
+//
+// Revision 1.15  2000/09/29 20:43:42  dav
+// Added setMaxThreads()
+//
+// Revision 1.14  2000/09/29 19:52:56  dav
+// Added cerr and cout flushes and a sleep before the abort... In the past
+// print statements have been lost because of the abort.  Hopefully this
+// will allow all output to be displayed before the program actually dies.
 //
 // Revision 1.13  2000/09/28 22:21:34  dav
 // Added code that allows the MPIScheduler to run correctly even if

@@ -110,6 +110,9 @@ WARNING
 #endif  // __IDEAL_GAS_H__
 
 // $Log$
+// Revision 1.4.2.1  2000/10/19 05:17:41  sparker
+// Merge changes from main branch into csafe_risky1
+//
 // Revision 1.4  2000/10/14 02:49:50  jas
 // Added implementation of compute equilibration pressure.  Still need to do
 // the update of BCS and hydrostatic pressure.  Still some issues with
