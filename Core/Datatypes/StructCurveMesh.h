@@ -65,6 +65,11 @@ public:
   virtual BBox get_bounding_box() const;
   virtual void transform(Transform &t);
 
+  void set_dim(Array1<unsigned int> dims) {
+    ScanlineMesh::set_dim(dims);
+    points_.newsize(dims[0]);
+  }
+
   //! get the child elements of the given index
   void get_nodes(Node::array_type &, Edge::index_type) const;
   void get_nodes(Node::array_type &, Face::index_type) const {}
