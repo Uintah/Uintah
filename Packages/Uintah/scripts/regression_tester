@@ -26,6 +26,13 @@ DIR=dbg
 #Set the default inputs directory
 INPUTS=../../../../src/Packages/Uintah/StandAlone/inputs
 
+#Set the test results directory
+results=TestResults
+if test ! -d $results
+	then
+	mkdir TestResults;
+fi
+
 do_mpm=0
 do_ice=0
 do_mpmice=0
@@ -149,7 +156,6 @@ if test ! -e inputs; then
 fi
 
 REMOVE () {
-    rm -f *.out;
     if test -a chem.bin
     	then
     	rm -f chem.bin;
@@ -158,36 +164,39 @@ REMOVE () {
        then
        rm -f input.dtd;
     fi
-    rm -f *.compare; 
-    rm -rf *.uda*
+    rm -rf $results;
 }
 
 run_test () {
+    cd $results
     echo; echo "Running sus $opts $INPUTS/$CASE/$n.ups"
-    sus $opts $INPUTS/$CASE/$n.ups &> $n.out
+    ../sus $opts ../$INPUTS/$CASE/$n.ups &> $n.out
     success=`grep "successfully" $n.out`
     if test -n "$success";
 	then 
 	echo $success
+	cd ..
     else
 	echo; echo "FAILURE running sus . . ."
+	cd ..
 	continue;
     fi
 }
 
 compare_results () {
-
+    cd $results
     echo "Comparing results"
     echo "compare_uda $test_dir/$DIR/$CASE/$udadir/$uda $uda &> $n.compare"
-    compare_uda $test_dir/$DIR/$CASE/$udadir/$uda $uda &> $n.compare
+    ../compare_uda $test_dir/$DIR/$CASE/$udadir/$uda $uda &> $n.compare
     compare=`grep "passed" $n.compare`
     if test -n "$compare";
 	then
 	echo $compare
+	cd ..
     else
 	echo; echo "FAILURE running compare_uda . . ."
+	cd ..
     fi
-
 }
 
 mpm_test () {
