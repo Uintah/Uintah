@@ -87,7 +87,7 @@ itcl_class PCS_Visualization_Silhouettes {
 	
 	addColorSelection $opt.right $this-color
 
-	pack $opt.left $opt.right -side left -pady 5
+	pack $opt.left $opt.right -side left -pady 5  -padx 10
 
 	pack $w.opt -side top
 
