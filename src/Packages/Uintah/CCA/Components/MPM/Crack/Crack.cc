@@ -1590,50 +1590,22 @@ void Crack::CalculateFractureParameters(const ProcessorGroup*,
                   Matrix3 T =Matrix3(l1,m1,n1,l2,m2,n2,l3,m3,n3);
                   Matrix3 TT=Matrix3(l1,l2,l3,m1,m2,m3,n1,n2,n3);
  
-                  /* Step 2 Define the center of J-integral contour
-                  */
-                  Point JCircleCenter=origin;
-                  // See if the center is too close to the boundary                 
-                  Point ptsNearOrigin[3]={origin+TT*(rJ*v1),
-                                          origin+TT*(rJ*v2),origin+TT*(-rJ*v2)};
-                  short ptsInMat[3]={YES,YES,YES};
-                  // Get the node indices that surround the cell
-                  IntVector ni[MAX_BASIS];
-                  double S[MAX_BASIS];
-                  for(int j=0; j<3; j++) {
-                    if(d_8or27==8)
-                      patch->findCellAndWeights(ptsNearOrigin[j], ni, S);
-                    else if(d_8or27==27)
-                      patch->findCellAndWeights27(ptsNearOrigin[j], ni, S, psize[j]);
-
-                    for(int k = 0; k < d_8or27; k++) {
-                      double totalMass=gmass[ni[k]]+Gmass[ni[k]];
-                      if(totalMass<5*d_SMALL_NUM_MPM) {
-                        ptsInMat[j]=NO;
-                        break;
-                      }
-                    }
-                  } // End of loop over j
-                  // Move the center if it is too close to the boundary
-                  if(!ptsInMat[0]) JCircleCenter=origin+TT*(-0.9*rJ*v1);
-                  if(!ptsInMat[1]) JCircleCenter=origin+TT*(-0.9*rJ*v2);
-                  if(!ptsInMat[2]) JCircleCenter=origin+TT*(0.9*rJ*v2);
-
-                  /* Step 3: Find parameters A[14] of J-path circle with equation
+                  /* Step 2: Find parameters A[14] of J-path circle with equation
                      A0x^2+A1y^2+A2z^2+A3xy+A4xz+A5yz+A6x+A7y+A8z+A9-r^2=0 and
                      A10x+A11y+A12z+A13=0 */
                   double A[14];    
-                  FindJPathCircle(JCircleCenter,v1,v2,v3,A); 
-         
-                  /* Step 4: Find intersection(crossPt) between J-ptah and crack plane
+                  FindJPathCircle(origin,v1,v2,v3,A); 
+
+                  /* Step 3: Find intersection(crossPt) between J-ptah and crack plane
                   */
+                  double d_rJ=rJ; // Radius of J-contour
                   Point crossPt;
-                  double d_rJ=rJ;
                   while(!FindIntersectionOfJPathAndCrackPlane(m,d_rJ,A,crossPt)) 
-                    d_rJ/=2.;
+                    d_rJ*=0.7;
                   if(fabs(d_rJ-rJ)/rJ>1.e-6) {
-                    cout << "!!! Radius of J-contour decreased from " << rJ << " to " 
-                         << d_rJ << " for seg "<< i << " of mat " << m << endl; 
+                    cout << "   ! Radius of J-contour decreased from " << rJ 
+                         << " to " << d_rJ << " for seg "<< i << " of mat " 
+                         << m << "." << endl; 
                   }
 
                   // Get coordinates of intersection in local system (xcprime,ycprime)
@@ -1643,11 +1615,11 @@ void Crack::CalculateFractureParameters(const ProcessorGroup*,
                   ycprime=l2*(xc-x0)+m2*(yc-y0)+n2*(zc-z0);
                   scprime=sqrt(xcprime*xcprime+ycprime*ycprime);
     
-                  /* Step 5: Put integral points in J-path circle and do initialization
+                  /* Step 4: Put integral points in J-path circle and do initialization
                   */
+                  int nSegs=16;
                   double xprime,yprime,x,y,z;
                   double PI=3.141592654;
-                  int nSegs=16;                       // Number of segments on J-path circle
                   Point*   X  = new Point[nSegs+1];   // Integral points
                   double*  W  = new double[nSegs+1];  // Strain energy density
                   double*  K  = new double[nSegs+1];  // Kinetic energy density
@@ -1655,7 +1627,9 @@ void Crack::CalculateFractureParameters(const ProcessorGroup*,
                   Matrix3* DG = new Matrix3[nSegs+1]; // Disp grads in global coordinates
                   Matrix3* st = new Matrix3[nSegs+1]; // Stresses in local coordinates
                   Matrix3* dg = new Matrix3[nSegs+1]; // Disp grads in local coordinates
-    
+
+                  IntVector ni[MAX_BASIS];
+                  double S[MAX_BASIS]; 
                   for(int j=0; j<=nSegs; j++) {       // Loop over points on the circle
                     double angle,cosTheta,sinTheta;
                     angle=2*PI*(float)j/(float)nSegs;
@@ -1677,7 +1651,7 @@ void Crack::CalculateFractureParameters(const ProcessorGroup*,
                     dg[j] = Matrix3(0.);
                   }
  
-                  /* Step 6: Evaluate solutions at integral points in global coordinates
+                  /* Step 5: Evaluate solutions at integral points in global coordinates
                   */
                   for(int j=0; j<=nSegs; j++) {
                     if(d_8or27==8) 
@@ -1701,7 +1675,7 @@ void Crack::CalculateFractureParameters(const ProcessorGroup*,
                     } // End of loop over k
                   } // End of loop over j
  
-                  /* Step 7: Transform the solutions to crack-front coordinates
+                  /* Step 6: Transform the solutions to crack-front coordinates
                   */
                   for(int j=0; j<=nSegs; j++) {
                     for(int i1=0; i1<3; i1++) {
@@ -1716,7 +1690,7 @@ void Crack::CalculateFractureParameters(const ProcessorGroup*,
                     } // End of loop over i1
                   } // End of loop over j
  
-                  /* Step 8: Get function values at integral points
+                  /* Step 7: Get function values at integral points
                   */
                   double* f1ForJx = new double[nSegs+1];
                   double* f1ForJy = new double[nSegs+1];
@@ -1739,7 +1713,7 @@ void Crack::CalculateFractureParameters(const ProcessorGroup*,
                     f1ForJy[j]=(W[j]+K[j])*sinTheta-Dot(t123,dgy);
                   }
  
-                  /* Step 9: Get J integral
+                  /* Step 8: Calculate contour integral (primary part of J integral) 
                   */
                   double Jx1=0.,Jy1=0.; 
                   for(int j=0; j<nSegs; j++) {   // Loop over segments
@@ -1749,7 +1723,7 @@ void Crack::CalculateFractureParameters(const ProcessorGroup*,
                   Jx1 *= d_rJ*PI/nSegs;
                   Jy1 *= d_rJ*PI/nSegs; 
  
-                  /* Step 10: Release dynamic arries for this crack front segment
+                  /* Step 9: Release dynamic arries for this crack front segment
                   */
                   delete [] X;
                   delete [] W;        delete [] K;
@@ -1757,7 +1731,7 @@ void Crack::CalculateFractureParameters(const ProcessorGroup*,
                   delete [] st;       delete [] dg;
                   delete [] f1ForJx;  delete [] f1ForJy;
  
-                  /* Step 11: Effect of the area integral in J-integral formula
+                  /* Step 10: Effect of the area integral in J-integral formula
                   */ 
                   double Jx2=0.,Jy2=0.;
                   if(d_useVolumeIntegral) {
@@ -1860,7 +1834,7 @@ void Crack::CalculateFractureParameters(const ProcessorGroup*,
  
                   cfJ[l]=Vector(Jx1+Jx2,Jy1+Jy2,0.);
 
-                  /* Step 12: Convert J to K 
+                  /* Step 11: Convert J to K 
                   */
                   // Task 11a: Find COD near crack tip (point(-d,0,0) in local coordinates)
                   double d;
@@ -1893,7 +1867,7 @@ void Crack::CalculateFractureParameters(const ProcessorGroup*,
                   // Crack opening displacements
                   Vector D = disp_a_prime - disp_b_prime;
   
-                  // Task 11: Get crack propagating velocity, currently just set it to zero
+                  // Task 12: Get crack propagating velocity, currently just set it to zero
                   Vector C=Vector(0.,0.,0.);   
  
                   // Convert J-integral into stress intensity factors 
@@ -2165,7 +2139,7 @@ void Crack::PropagateCrackFrontNodes(const ProcessorGroup*,
           }
           else { // The segment is dead
             if(pid==0) {
-              cout << "!!! Crack-front seg " << i << "(" << nd1  
+              cout << "   ! Crack-front seg " << i << "(" << nd1  
                    << cx[m][nd1] << "-->" << nd2 << cx[m][nd2]
                    << ") of Mat " << m << " is dead." << endl; 
             }
@@ -2178,7 +2152,7 @@ void Crack::PropagateCrackFrontNodes(const ProcessorGroup*,
 
         // If all crack-front segs dead, the material is broken.
         if(cfSegNodes[m].size()/2<=0 && pid==0) {
-         cout << "!!! Material " << m
+         cout << "   !!! Material " << m
               << " is broken. Program terminated." << endl;
          exit(1);
         }
@@ -2414,13 +2388,13 @@ void Crack::ConstructNewCrackFrontElems(const ProcessorGroup*,
     Vector dx = patch->dCell();
     double dx_max=Max(dx.x(),dx.y(),dx.z());
 
-    double PI=3.141592654;
     enum {NO=0,YES};
     int numMPMMatls=d_sharedState->getNumMPMMatls();
     for(int m=0; m<numMPMMatls; m++) {
       if(doCrackPropagation) {
-
-        // Combine crack front nodes if they propagates a little
+/*
+        // Step 1: Combine crack front nodes if they propagates 
+        // a little (<10%) or in self-similar way (angle<10 degree)
         for(int i=0; i<(int)cfSegNodes[m].size(); i++) {
            int node=cfSegNodes[m][i];
            // crack plane normal at this node
@@ -2436,11 +2410,11 @@ void Crack::ConstructNewCrackFrontElems(const ProcessorGroup*,
            double dis=(cfSegPtsT[m][i]-cx[m][node]).length();
            Vector vp=TwoPtsDirCos(cx[m][node],cfSegPtsT[m][i]);
            // Crack propa angle(in degree) measured from crack plane
-           double angle=90-acos(Dot(vp,v2))*180/PI;
-           if(dis<0.2*(rdadx*dx_max) || fabs(angle)<10)
+           double angle=90-acos(Dot(vp,v2))*180/3.141592654;
+           if(dis<0.1*(rdadx*dx_max) || fabs(angle)<5)
              cx[m][node]=cfSegPtsT[m][i];
         }
-
+*/
         // Clear up the temporary crack front segment nodes
         cfSegNodesT[m].clear();
 
@@ -2461,28 +2435,38 @@ void Crack::ConstructNewCrackFrontElems(const ProcessorGroup*,
           // length of crack front segment after propagation 
           double l12=(p2p-p1p).length();
 
-          // seven cases
+          // Step 2: Determine ten cases of propagation
           short sp=YES, ep=YES; 
           if((p1p-p1).length()/dx_max<0.01) sp=NO; // p1 no propagating
           if((p2p-p2).length()/dx_max<0.01) ep=NO; // p2 no propagating
 
-          short CASE=0;             // no propagation
-          if(l12/cs0[m]<2.) {    // no break the seg
-            if( sp && !ep) CASE=1;  // p1 propagates, p2 doesn't
-            if(!sp &&  ep) CASE=2;  // p2 propagates, p1 doesn't
+          short CASE=0;        // no propagation
+          if(l12/cs0[m]<0.5) { // Adjust or combine the seg
+            if( !sp && ep) CASE=1;  // p2 propagates, p1 doesn't
+            if( sp && !ep) CASE=2;  // p1 propagates, p2 doesn't
             if( sp &&  ep) CASE=3;  // Both of p1 and p2 propagate
-          }
-          else {                    // break the seg
+          } 
+          else if(l12/cs0[m]<2.) {// Keep the seg
             if( sp && !ep) CASE=4;  // p1 propagates, p2 doesn't
             if(!sp &&  ep) CASE=5;  // p2 propagates, p1 doesn't
             if( sp &&  ep) CASE=6;  // Both of p1 and p2 propagate
           }
+          else { // Break the seg into two
+            if( sp && !ep) CASE=7;  // p1 propagates, p2 doesn't
+            if(!sp &&  ep) CASE=8;  // p2 propagates, p1 doesn't
+            if( sp &&  ep) CASE=9;  // Both of p1 and p2 propagate
+          }
 
-          if(CASE>3 && patch->getID()==0)
-            cout << "!!! mat " << m << ", cfSeg " << i
-                << " will be split into two segments (CASE " 
+          if(CASE>=1 && CASE<=3 && patch->getID()==0)
+            cout << "   ! Crack-front seg " << i << "(mat " << m
+                << ") is combined into the next segs (CASE "
+                << CASE << ")" << endl;
+          if(CASE>=7 && patch->getID()==0)
+            cout << "   ! Crack-front seg " << i << "(mat " << m
+                << ") is split into two segs (CASE " 
                 << CASE << ")" << endl;
 
+          // Step 3: Construct new crack elems and crack-front segs
           // Detect if the seg is the first seg of a crack
           short firstSeg=YES;
           if(i>0 && n1==cfSegNodes[m][2*(i-1)+1]) firstSeg=NO;
@@ -2492,7 +2476,30 @@ void Crack::ConstructNewCrackFrontElems(const ProcessorGroup*,
               cfSegNodesT[m].push_back(n1);
               cfSegNodesT[m].push_back(n2);
               break;
-            case 1: 
+            case 1:
+              n2p=(int)cx[m].size();
+              // Modify p2p to the center of p1p and p2p of next seg
+              if(i<ncfSegs-1)  p2p=cfSegPtsT[m][2*i]+
+                  (cfSegPtsT[m][2*(i+1)+1]-cfSegPtsT[m][2*i])/2.;
+              cx[m].push_back(p2p);
+              cfSegPtsT[m][2*(i+1)]=p2p;
+              // the new crack element
+              ce[m].push_back(IntVector(n1,n2p,n2));
+              // the new crack front-seg nodes
+              cfSegNodesT[m].push_back(n1);
+              cfSegNodesT[m].push_back(n2p);
+              break;
+            case 2:
+            case 3:
+              // the new crack point
+              if(!firstSeg) n1p=(int)cx[m].size()-1;
+              else {n1p=(int)cx[m].size(); cx[m].push_back(p1p);}
+              // the new crack elements
+              ce[m].push_back(IntVector(n1,n1p,n2));
+              // Move cfSegPtsT[m][2*(i+1)]
+              if(i<ncfSegs-1) cfSegPtsT[m][2*(i+1)]=cfSegPtsT[m][2*i];
+              break;
+            case 4: 
               // the new crack point 
               if(!firstSeg) n1p=(int)cx[m].size()-1;
               else {n1p=(int)cx[m].size(); cx[m].push_back(p1p);} 
@@ -2502,7 +2509,7 @@ void Crack::ConstructNewCrackFrontElems(const ProcessorGroup*,
               cfSegNodesT[m].push_back(n1p);
               cfSegNodesT[m].push_back(n2);
               break;
-            case 2: 
+            case 5: 
               n2p=(int)cx[m].size();
               // the new crack point
               cx[m].push_back(p2p);
@@ -2512,7 +2519,7 @@ void Crack::ConstructNewCrackFrontElems(const ProcessorGroup*,
               cfSegNodesT[m].push_back(n1);
               cfSegNodesT[m].push_back(n2p);
               break;
-            case 3: 
+            case 6: 
               // the new crack point
               if(!firstSeg) n1p=(int)cx[m].size()-1;
               else {n1p=(int)cx[m].size(); cx[m].push_back(p1p);}
@@ -2525,7 +2532,7 @@ void Crack::ConstructNewCrackFrontElems(const ProcessorGroup*,
               cfSegNodesT[m].push_back(n1p);
               cfSegNodesT[m].push_back(n2p);
               break;
-            case 4:   
+            case 7:   
               // the new crack point
               if(!firstSeg) n1p=(int)cx[m].size()-1;
               else {n1p=(int)cx[m].size(); cx[m].push_back(p1p);}
@@ -2540,7 +2547,7 @@ void Crack::ConstructNewCrackFrontElems(const ProcessorGroup*,
               cfSegNodesT[m].push_back(nc);
               cfSegNodesT[m].push_back(n2);
               break;
-            case 5:
+            case 8:
               nc=(int)cx[m].size();
               n2p=nc+1;
               // the new crack points
@@ -2555,7 +2562,7 @@ void Crack::ConstructNewCrackFrontElems(const ProcessorGroup*,
               cfSegNodesT[m].push_back(nc);
               cfSegNodesT[m].push_back(n2p);
               break;
-            case 6:  
+            case 9:  
               // the new crack point
               if(!firstSeg) n1p=(int)cx[m].size()-1;
               else {n1p=(int)cx[m].size(); cx[m].push_back(p1p);}
@@ -2575,6 +2582,8 @@ void Crack::ConstructNewCrackFrontElems(const ProcessorGroup*,
               break;
           }
         } // End of loop over crack front segments
+
+        MPI_Barrier(mpi_crack_comm);
 
         // Reset crack front segment nodes after crack propagation
         cfSegNodes[m].clear();
@@ -2622,7 +2631,7 @@ void Crack::CrackPointSubset(const ProcessorGroup*,
         int num; // number of crack nodes in patch i
         if(i==pid) num=cnset[m][i].size();
         MPI_Bcast(&num,1,MPI_INT,i,mpi_crack_comm);
-        cnset[m][i].resize(num);
+        if(pid!=i) cnset[m][i].resize(num);
         MPI_Bcast(&cnset[m][i][0],num,MPI_INT,i,mpi_crack_comm);
       }
     
@@ -2857,7 +2866,7 @@ void Crack::UpdateCrackExtentAndNormals(const ProcessorGroup*,
         int n2=cfSegNodes[m][2*i+1];
         // Find the crack element ID of the front segment
         Vector ceNorm;
-        for(int j=0; j<(int)ce[m].size(); j++) {
+        for(int j=(int)ce[m].size()-1; j>=0; j--) { // from the last elem
           int numDupNodes=0;
           int n3=ce[m][j].x();
           int n4=ce[m][j].y();
