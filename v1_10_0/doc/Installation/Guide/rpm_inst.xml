@@ -62,9 +62,9 @@ archive</ulink> page download the following files:
 
 <itemizedlist>
 <listitem>
-<para>Either
+<para>
 <filename>&sr;-<replaceable>x.x.x</replaceable>-mdk9.0.i586.rpm</filename>
-for Mandrake 9 systems or
+for Mandrake 9 systems, or
 <filename>&sr;-<replaceable>x.x.x</replaceable>-rh8.0.i386.rpm</filename>
 for Redhat 8 systems.
 </para>
@@ -90,8 +90,7 @@ for Redhat 8 systems.
 <para>
 Open a shell terminal (e.g. xterm) and enter the command
 <command>su</command> to become the root user (superuser).  The
-<command>su</command> command will prompt for root's password.  If
-you do not have root access then ask the system administrator to
+<command>su</command> command will prompt for root's password.  To acquire root access, ask the system administrator to
 install the RPM.
 </para>
 
@@ -119,7 +118,7 @@ Type <command>exit</command> to leave the root account.
 rpm -e &sr;
 </literallayout>
 <para>
-Be sure to read  <citetitle pubwork="section"><xref
+Read  <citetitle pubwork="section"><xref
 endterm="title.prepare" linkend="sec.prepare"/></citetitle> before
 <link linkend="sec.starting">starting</link> &sr;.
 </para>

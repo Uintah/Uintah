@@ -41,7 +41,7 @@ requirements for building &sr;.
 <para>&requirements;</para>
 
 <para>
-On Linux systems (Mandrake 9 and Red Hat 8), &sr; binaries may be
+On Linux systems (Mandrake 9 and Red Hat 8), &sr; binaries can be
 <link linkend="sec.rpminst">installed via
 an <acronym>RPM</acronym> package</link> or <link
 linkend="sec.source_inst">from &sr;'s source code distribution</link>.
@@ -59,13 +59,13 @@ from the source code distribution</link>.
 <para>
 Read  <citetitle pubwork="section"><xref
 endterm="title.prepare" linkend="sec.prepare"/></citetitle> after
-installing but before starting &sr;.
+installing, but before starting &sr;.
 </para>
 
 <para>
 Start with <citetitle pubwork="section"><xref linkend="sec.petsc"
 endterm="title.petsc"/></citetitle> if installing
-<acronym>PETSc</acronym>.  Otherwise start with <citetitle
+<acronym>PETSc</acronym>.  Otherwise, start with <citetitle
 pubwork="section"><xref linkend="sec.source_inst"
 endterm="title.source_inst" /></citetitle> or <citetitle
 pubwork="section"><xref linkend="sec.rpminst"

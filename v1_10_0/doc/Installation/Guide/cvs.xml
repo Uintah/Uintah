@@ -16,7 +16,7 @@
 -->
 
 <appendix id="ap.lsrcvs">
-<title>Local &sr; Source Code Control using CVS</title>
+<title>Local &sr; Source Code Control Using CVS</title>
 
 
 <section>
@@ -66,7 +66,7 @@ extracting files, and importing files into the CVS repository</para>
 
 <para>This procedure should be followed once for each release in order
 to import the released source code into the CVS repository. No
-compilation is done, and therefore the result is not a working
+compilation is done, therefore the result is not a working
 tree. See <citetitle pubwork="section"><xref endterm="title.create-work-dir"
 linkend="sec.create-work-dir"/></citetitle> to create a working directory.</para>
 
@@ -80,8 +80,8 @@ setenv CVSROOT /proj/cdsp/biomed2/cvs&sr;
 </listitem>
 
 <listitem>
-<para>Create directory to store tar files. I suggest we move away from
-   roland and start storing these files on the ECE file system, eg.,
+<para>Create directory to store tar files. It is suggested to move away from
+   roland and begin storing these files on the ECE file system, eg.,
    <filename>/proj/cdsp/biomed2/&sr;Downloads/v1.6.0_tars</filename>.
    </para>
 </listitem>
@@ -89,7 +89,7 @@ setenv CVSROOT /proj/cdsp/biomed2/cvs&sr;
 <listitem>
 <para>Download zipped tar files from <ulink
    url="http:://software.sci.utah.edu/archive_entry.html">http:://software.sci.utah.edu/archive_entry.html.</ulink>
-   A username, which is your email address, and a password may be
+   A username, which is an email address, and a password may be
    needed to access this page.
  </para>
 </listitem>
@@ -153,17 +153,18 @@ Redirect output to a file in order to reliably identify any conflicts.
 </para>
 
 <note>
-<para>Files that have been <quote>retired</quote> in the new release need to be removed
-and committed individually (or en masse). Use the following commands: 
+<para>Files that have been <quote>retired</quote> in the new release, need to be removed
+and committed individually (or en masse). Use the following commands
+to remove retired files: 
 <literallayout class="monospaced">
 cvs rm -f `cat remove.txt`
 cvs commit -m"sync removed files" `cat remove.txt`
 </literallayout>
-where remove.txt is a space-delimited list of retired files. The cvs
-<command>rm</command> command marks files for removal; the
-<command>commit</command> command modifies the database, implementing
-the removal. The files remain in the archive and can still be
-retrieved at a later time, but they will not be automatically
+<filename>remove.txt</filename> is a space-delimited list of retired
+files. The cvs <command>rm</command> command marks files for removal;
+the <command>commit</command> command modifies the database,
+implementing the removal. The files remain in the archive and can
+still be retrieved at a later time, but they will not be automatically
 retrieved as part of a global checkout.
 </para>
 </note>
@@ -171,18 +172,18 @@ retrieved as part of a global checkout.
 <tip>
 <para>The <command>add</command> and <command>rm</command> commands
 are similar in that they schedule an action to take place in the
-repository, but don't actually modify the repository themselves. The
+repository, but do not actually modify the repository themselves. The
 <command>commit</command> command implements the action scheduled by
 <command>add</command> or <command>rm</command>. This is in contrast
-to other cvs commands like <command>checkout</command> and
-<command>checkin</command> that take their own action right away.
+to other cvs commands, such as <command>checkout</command> and
+<command>checkin</command>, that take their own action.
 </para>
 </tip>
 </listitem>
 
 <listitem>
 <para>Resolve any conflicts that occur between the imported files and locally
-modified files. Use 
+modified files:
 <literallayout class="monospaced">
 cvs checkout -jSCI_DIST:yesterday -jSCI_DIST filename 
 </literallayout>
@@ -194,16 +195,16 @@ cvs checkout -jSCI_DIST:yesterday -jSCI_DIST filename
 </section>
 
 <section id="sec.create-work-dir">
-<title id="title.create-work-dir">Creating A Working Scirun Directory Tree</title>
+<title id="title.create-work-dir">Creating a Working Scirun Directory Tree</title>
 
 <para>This procedure assumes the latest &sr;/BioPSE tar files have
-already been downloaded and the source code has been imported, and
-merged if necessary, into our repository. The following steps build a
+already been downloaded, and the source code has been imported, and
+merged if necessary, into the repository. The following steps build a
 working directory by extracting the Thirdparty software, DataSets, and
 documentation from tar files and obtaining the &sr;/BioPSE source
 code from the CVS repository. This procedure also assumes, for the
-present, that the BioPSE and MatlabInterface packages are always
-desired in the working directory and that no other packages have been
+present, that the BioPSE and MatlabInterface packages are
+desired in the working directory, and no other packages have been
 imported into the repository. Under this model, it is expected that
 each developer will be writing and compiling code in his/her own
 working directory, independently of other developers. Periodically,
@@ -226,8 +227,8 @@ setenv CVS_RSH ssh
 </listitem>
 
 <listitem>
-<para>Create your top-level &sr; directory. This can be anything
-since it is your personal working directory, eg.,
+<para>Create a top-level &sr; directory. This can be anything
+because it is a personal working directory, eg.,
 <filename>/usr/people/scirun/&sr;.1.6.0.lk</filename> or
 <filename>/export/scratch/&sr;.1.6.0.test</filename>.
 </para>
@@ -271,7 +272,7 @@ cd /export/scratch/&sr;.1.6.0.test/Thirdparty_install.1.4.3.
 </literallayout>
 <note>
 <para>The Thirdparty software distributed with v1.6.0 is unchanged from
-v1.4.2, and this is why the numbers 1.4.3 and 1.4.2 appear.</para>
+v1.4.2. This is why the numbers 1.4.3 and 1.4.2 appear.</para>
 </note>
 
 <para>Run the install script:</para>
@@ -280,13 +281,13 @@ v1.4.2, and this is why the numbers 1.4.3 and 1.4.2 appear.</para>
 python install <replaceable>INSTALLDIR</replaceable> [irix, Linux] [sgi, gcc] [32, 64]
 </literallayout>
 
-<para>where <replaceable>INSTALLDIR</replaceable> is your top-level
+<para>where <replaceable>INSTALLDIR</replaceable> is the top-level
 working directory, eg.,
 <filename>/export/scratch/&sr;.1.6.0.test</filename>, and brackets
 indicate lists of options for each argument.
 </para>
 
-<para>This will create a 1.4.2 directory (because the thirdparty
+<para>This creates a 1.4.2 directory (because the thirdparty
 software has not changed with v1.6.0) under
 <replaceable>INSTALLDIR</replaceable> containing all the necessary
 thirdparty software libraries.
@@ -294,8 +295,8 @@ thirdparty software libraries.
 
 <para>The previous 5 steps take care of the &sr; installation that
 is independent of CVS. The remaining steps retrieve the &sr;/BioPSE
-source code that has been imported to the repository and build the
-&sr; program itself.
+source code that has been imported to the repository, and build the
+&sr; program.
 </para>
 </listitem>
 
@@ -322,7 +323,7 @@ line below is an essential part of the command.</para>
 cvs checkout . 
 </literallayout>
 
-<para>This command will create and populate the src and doc directories below
+<para>This command creates and populates the src and doc directories below
 <filename>./&sr;</filename>. 
 </para>
 </listitem>
@@ -364,8 +365,8 @@ gmake -j <replaceable>JOBNUMBER</replaceable>
 
 <para>&sr; may appear to compile successfully, but run-time errors
 may occur if environment variables starting with
-<envar>LD_LIBRARY</envar> were set prior to compilation. Therefore, we
-recommend unsetting these environment variables when compiling and
+<envar>LD_LIBRARY</envar> were set prior to compilation. Therefore, it is
+recommended to unset these environment variables when compiling and
 running &sr;, e.g.,</para>
 
 <literallayout class="monospaced">
@@ -403,8 +404,8 @@ repository. Can be abbreviated as <command>co</command>.</para>
 <varlistentry>
 <term><command>cvs co .</command></term>
 <listitem>
-<para>Checkout the entire tree; invoke where you wish the
-<filename>src</filename> and <filename>doc</filename> directories to
+<para>Checkout the entire tree; invoke where the
+<filename>src</filename> and <filename>doc</filename> directories are to
 be created</para>
 </listitem>
 </varlistentry>
@@ -413,8 +414,8 @@ be created</para>
 <term><command>cvs co src/Core/Datatypes/TriSurfMesh.cc</command></term>
 <listitem>
 <para>Checkout the HEAD (the tip of the tree) revision of a specific
-file; invoke at the top of your working tree, where src and doc
-subdirectories reside or where you wish them to be
+file; invoke at the top of the working tree, where src and doc
+subdirectories reside or where they are to be
 created. Invoking this command in the subdirectory where the file
 resides, or without giving the path specification as indicated,
 will not work.</para>
@@ -425,8 +426,8 @@ will not work.</para>
 <term><command>cvs co -rV1_4_2 src/Core/Datatypes/TriSurfMesh.cc</command></term>
 <listitem>
 <para>Checkout a tagged revision of a specific file; invoke at the top of
-your working tree, where src and doc subdirectories reside or where
-you wish them to be created.</para>
+the working tree, where src and doc subdirectories reside, or where
+they are to be created.</para>
 </listitem>
 </varlistentry>
 </variablelist>
@@ -436,20 +437,21 @@ you wish them to be created.</para>
 <varlistentry>
 <term><command>update</command></term> 
 <listitem>
-<para>Bring your working directory up to date with the
-repository. This command replaces files in your working directory if a
-more recent version of the file exists in the repository and the local
-copy is unchanged. If the repository contains a revision more recent
-than the ancestor of the local copy and the local copy has been
-modified, this command attempts to merge the latest revision in the
-repository with the local copy. It is also a good idea to run this
-command with the -n global option first, and it is best to issue this
-command by piping its output to a file so that all files for which a
-conflict occurred can be reliably identified. If conflicts arise, cvs
-indicates this with a 'C' in the output. Running update with the -n
-option tells you would cvs would do, but doesn't modify any
-files. Running update prior to checking in files is strongly
-recommended to ensure that you don't overwrite someone else's changes.</para>
+<para>Bring the working directory up to date with the repository. This
+command replaces files in the working directory if a more recent
+version of the file exists in the repository and the local copy is
+unchanged. If the repository contains a revision more recent than the
+ancestor of the local copy, and the local copy has been modified, this
+command attempts to merge the latest revision in the repository with
+the local copy. It is a good idea to first run this command with the
+<option>-n</option> global option. Running update with the
+<option>-n</option> option causes cvs to tell you would it would do
+without modifying any files.  It is best to issue this command by
+piping its output to a file so that all files in which a conflict
+occurred can be reliably identified. If conflicts arise, cvs indicates
+this with a 'C' in the output.  Running update prior to checking in
+files is strongly recommended to ensure that someone else's changes
+are not over-written.</para>
 
 <variablelist>
 <varlistentry>
@@ -460,7 +462,7 @@ invoke in the top level directory (where src and doc reside), and
 redirect output to a file.  Option <option>-A</option> resets any
 sticky tags, <option>-P</option> prunes empty directories, and
 <option>-d</option> creates any directories that exist in the
-repository if they're missing from the working directory.</para>
+repository if they are missing from the working directory.</para>
 </listitem>
 </varlistentry>
 
@@ -486,8 +488,8 @@ U Core/Datatypes/TypeName.h
 <para>The character at the beginning of certain lines indicates the
 result of the update. The "C" indicates that cvs tried to merge two
 revisions and encountered conflicts, which are highlighted by the
-standard diff demarcations. Manual resolution is required. An "M"
-means the files were merged successfully. "U" means the file is
+standard diff demarcations. Manual resolution is required. "M"
+means the files were merged successfully, "U" means the file is
 unchanged, and "?" means there is no record of the file in the
 repository.</para>
 </listitem>
@@ -500,12 +502,12 @@ repository.</para>
 <term><command>add</command></term>
 
 <listitem>
-<para>Schedule newly created file(s) to be added to the repository. You
-must have a working copy of the new file. The add command is used to
+<para>To schedule newly created file(s) to be added to the repository, there
+must be a working copy of the new file. The add command is used to
 tell CVS about the new file (see the manual for instructions on adding
 new directories). The add command must be invoked from the directory in
-which the new file exists. The commit command must then be run to
-actually check the file into the repository.  For example:</para>
+which the new file exists. Then run the commit command to
+check the file into the repository.  For example:</para>
 <literallayout class="monospaced">
 cvs add <replaceable>filename</replaceable>
 </literallayout>
@@ -515,14 +517,13 @@ cvs add <replaceable>filename</replaceable>
 <varlistentry>
 <term> <command>commit</command></term>
 <listitem>
-<para>Incorporate changes from your working directory into the
+<para>Incorporate changes from the working directory into the
    repository. Can be abbreviated as <command>ci</command>.</para>
 
 <tip>
-<para>When checking in files, cvs will prompt you for comments using
-the vi editor unless you specify otherwise. To avoid vi, be sure to
-set the <envar>EDITOR</envar> environment variable to point to your
-favorite editor. For example:</para>
+<para>When checking in files, cvs will prompt for comments using
+the vi editor, unless otherwise specified. To avoid vi, 
+set the <envar>EDITOR</envar> environment variable to point to an editor. For example:</para>
 <literallayout class="monospaced">
 setenv EDITOR emacs
 </literallayout>
@@ -540,7 +541,7 @@ file resides without any path specification (not sure if it can be
 run any other way). CVS will automatically assign the next internal
 revision number to the file upon checkin.</para>
 
-<para>You can also use the "-m" option to avoid being plopped into an editor:</para>
+<para>The "-m" option can be used to avoid being put into an editor:</para>
 
 <literallayout class="monospaced">
 cvs ci -m"this is my checkin comment" TriSurfMesh.cc
