@@ -4,7 +4,8 @@ c $Id$
 c
 c*********************************************************************
 
-      SUBROUTINE wvelsrc(domLoW, domHiW, idxLoW, idxHiW, WW, old_WW,
+      SUBROUTINE wvelsrc(domLoW, domHiW, domLoWng, domHiWng, 
+     $     idxLoW, idxHiW, WW, old_WW,
      &     SU, SP,
      &     domLoU, domHiU, UU,
      &     domLoV, domHiV, VV,
@@ -31,14 +32,18 @@ c*********************************************************************
 c     Arguments :
 c*********************************************************************
       integer domLoW(3), domHiW(3), idxLoW(3), idxHiW(3)
+      integer domLoWng(3), domHiWng(3)
       double precision WW(domLoW(1):domHiW(1), domLoW(2):domHiW(2), 
      &     domLoW(3):domHiW(3))
-      double precision old_WW(domLoW(1):domHiW(1), domLoW(2):domHiW(2), 
-     &     domLoW(3):domHiW(3))
-      double precision SU(domLoW(1):domHiW(1), domLoW(2):domHiW(2), 
-     &     domLoW(3):domHiW(3))
-      double precision SP(domLoW(1):domHiW(1), domLoW(2):domHiW(2), 
-     &     domLoW(3):domHiW(3))
+      double precision old_WW(domLoWng(1):domHiWng(1), 
+     $     domLoWng(2):domHiWng(2), 
+     &     domLoWng(3):domHiWng(3))
+      double precision SU(domLoWng(1):domHiWng(1), 
+     $     domLoWng(2):domHiWng(2), 
+     &     domLoWng(3):domHiWng(3))
+      double precision SP(domLoWng(1):domHiWng(1),
+     $     domLoWng(2):domHiWng(2), 
+     &     domLoWng(3):domHiWng(3))
       integer domLoU(3), domHiU(3)
       double precision UU(domLoU(1):domHiU(1), domLoU(2):domHiU(2), 
      &     domLoU(3):domHiU(3))
@@ -150,6 +155,9 @@ c     viscous sources
 c*********************************************************************
 c
 c $Log$
+c Revision 1.4  2000/09/26 04:35:34  rawat
+c added some more multi-patch support
+c
 c Revision 1.3  2000/08/10 21:29:15  rawat
 c fixed a bug in cellinformation
 c

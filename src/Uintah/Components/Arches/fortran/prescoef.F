@@ -3,7 +3,8 @@ c
 c $Id$
 c
 c*********************************************************************
-      SUBROUTINE prescoef(domLo, domHi, idxLo, idxHi, DEN,
+      SUBROUTINE prescoef(domLo, domHi, domLong, domHing, 
+     $     idxLo, idxHi, DEN,
      &     AE, AW, AN, AS, AT, AB,
      &     domLoU, domHiU, AUP,
      &     domLoV, domHiV, AVP,
@@ -30,21 +31,22 @@ c*********************************************************************
 c     Arguments :
 c*********************************************************************
       integer domLo(3), domHi(3)
+      integer domLong(3), domHing(3)
       integer idxLo(3), idxHi(3)
       double precision DEN(domLo(1):domHi(1),
      &     domLo(2):domHi(2),domLo(3):domHi(3))
-      double precision AE(domLo(1):domHi(1),
-     &     domLo(2):domHi(2),domLo(3):domHi(3))
-      double precision AW(domLo(1):domHi(1),
-     &     domLo(2):domHi(2),domLo(3):domHi(3))
-      double precision AN(domLo(1):domHi(1),
-     &     domLo(2):domHi(2),domLo(3):domHi(3))
-      double precision AS(domLo(1):domHi(1),
-     &     domLo(2):domHi(2),domLo(3):domHi(3))
-      double precision AT(domLo(1):domHi(1),
-     &     domLo(2):domHi(2),domLo(3):domHi(3))
-      double precision AB(domLo(1):domHi(1),
-     &     domLo(2):domHi(2),domLo(3):domHi(3))
+      double precision AE(domLong(1):domHing(1),
+     &     domLong(2):domHing(2),domLong(3):domHing(3))
+      double precision AW(domLong(1):domHing(1),
+     &     domLong(2):domHing(2),domLong(3):domHing(3))
+      double precision AN(domLong(1):domHing(1),
+     &     domLong(2):domHing(2),domLong(3):domHing(3))
+      double precision AS(domLong(1):domHing(1),
+     &     domLong(2):domHing(2),domLong(3):domHing(3))
+      double precision AT(domLong(1):domHing(1),
+     &     domLong(2):domHing(2),domLong(3):domHing(3))
+      double precision AB(domLong(1):domHing(1),
+     &     domLong(2):domHing(2),domLong(3):domHing(3))
       integer domLoU(3), domHiU(3)
       double precision AUP(domLoU(1):domHiU(1),
      &     domLoU(2):domHiU(2),domLoU(3):domHiU(3))
@@ -140,6 +142,9 @@ C-----------------------------------------------------------------------
 c*********************************************************************
 c
 c $Log$
+c Revision 1.4  2000/09/26 04:35:34  rawat
+c added some more multi-patch support
+c
 c Revision 1.3  2000/07/28 02:31:04  rawat
 c moved all the labels in ArchesLabel. fixed some bugs and added matrix_dw to store matrix
 c coeffecients

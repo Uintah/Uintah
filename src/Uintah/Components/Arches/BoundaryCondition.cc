@@ -821,12 +821,17 @@ BoundaryCondition::uVelocityBC(DataWarehouseP& new_dw,
   IntVector domHi = vars->cellType.getFortHighIndex();
   IntVector idxLo = patch->getCellFORTLowIndex();
   IntVector idxHi = patch->getCellFORTHighIndex();
+  // for no ghost cells
+  IntVector domLoUng = vars->uVelLinearSrc.getFortLowIndex();
+  IntVector domHiUng = vars->uVelLinearSrc.getFortHighIndex();
+
   // ** Reverted back to old ways
   // for a single patch should be equal to 1 and nx
   //IntVector idxLoU = vars->cellType.getFortLowIndex();
   //IntVector idxHiU = vars->cellType.getFortHighIndex();
   // computes momentum source term due to wall
   FORT_BCUVEL(domLoU.get_pointer(), domHiU.get_pointer(), 
+	      domLoUng.get_pointer(), domHiUng.get_pointer(), 
 	      idxLoU.get_pointer(), idxHiU.get_pointer(),
 	      vars->uVelocity.getPointer(),
 	      vars->uVelocityCoeff[Arches::AP].getPointer(), 
@@ -999,6 +1004,9 @@ BoundaryCondition::vVelocityBC(DataWarehouseP& new_dw,
   IntVector domHi = vars->cellType.getFortHighIndex();
   IntVector idxLo = patch->getCellFORTLowIndex();
   IntVector idxHi = patch->getCellFORTHighIndex();
+  // for no ghost cells
+  IntVector domLoVng = vars->vVelLinearSrc.getFortLowIndex();
+  IntVector domHiVng = vars->vVelLinearSrc.getFortHighIndex();
   // for a single patch should be equal to 1 and nx
   //IntVector idxLoV = vars->cellType.getFortLowIndex();
   //IntVector idxHiV = vars->cellType.getFortHighIndex();
@@ -1006,6 +1014,7 @@ BoundaryCondition::vVelocityBC(DataWarehouseP& new_dw,
 
   // computes remianing diffusion term and also computes source due to gravity
   FORT_BCVVEL(domLoV.get_pointer(), domHiV.get_pointer(), 
+	      domLoVng.get_pointer(), domHiVng.get_pointer(), 
 	      idxLoV.get_pointer(), idxHiV.get_pointer(),
 	      vars->vVelocity.getPointer(),   
 	      vars->vVelocityCoeff[Arches::AP].getPointer(), 
@@ -1178,11 +1187,15 @@ BoundaryCondition::wVelocityBC(DataWarehouseP& new_dw,
   IntVector domHi = vars->cellType.getFortHighIndex();
   IntVector idxLo = patch->getCellFORTLowIndex();
   IntVector idxHi = patch->getCellFORTHighIndex();
+  // for no ghost cells
+  IntVector domLoWng = vars->wVelLinearSrc.getFortLowIndex();
+  IntVector domHiWng = vars->wVelLinearSrc.getFortHighIndex();
   // for a single patch should be equal to 1 and nx
   //IntVector idxLoW = vars->cellType.getFortLowIndex();
   //IntVector idxHiW = vars->cellType.getFortHighIndex();
   // computes momentum source term due to wall
   FORT_BCWVEL(domLoW.get_pointer(), domHiW.get_pointer(), 
+	      domLoWng.get_pointer(), domHiWng.get_pointer(), 
 	      idxLoW.get_pointer(), idxHiW.get_pointer(),
 	      vars->wVelocity.getPointer(),   
 	      vars->wVelocityCoeff[Arches::AP].getPointer(), 
@@ -1337,10 +1350,12 @@ BoundaryCondition::pressureBC(const ProcessorGroup*,
 			      ArchesVariables* vars)
 {
   // Get the low and high index for the patch
-  IntVector domLo = vars->pressLinearSrc.getFortLowIndex();
-  IntVector domHi = vars->pressLinearSrc.getFortHighIndex();
+  IntVector domLo = vars->cellType.getFortLowIndex();
+  IntVector domHi = vars->cellType.getFortHighIndex();
   IntVector idxLo = patch->getCellFORTLowIndex();
   IntVector idxHi = patch->getCellFORTHighIndex();
+  IntVector domLong = vars->pressLinearSrc.getFortLowIndex();
+  IntVector domHing = vars->pressLinearSrc.getFortHighIndex();
 
   // Get the wall boundary and flow field codes
   int wall_celltypeval = d_wallBdry->d_cellTypeID;
@@ -1350,6 +1365,7 @@ BoundaryCondition::pressureBC(const ProcessorGroup*,
 
   //fortran call
   FORT_PRESSBC(domLo.get_pointer(), domHi.get_pointer(),
+	       domLong.get_pointer(), domHing.get_pointer(),
 	       idxLo.get_pointer(), idxHi.get_pointer(),
 	       vars->pressure.getPointer(), 
 	       vars->pressCoeff[Arches::AE].getPointer(),
@@ -2193,6 +2209,9 @@ BoundaryCondition::FlowOutlet::problemSetup(ProblemSpecP& params)
 
 //
 // $Log$
+// Revision 1.58  2000/09/26 04:35:27  rawat
+// added some more multi-patch support
+//
 // Revision 1.57  2000/09/21 22:45:41  sparker
 // Towards compiling petsc stuff
 //

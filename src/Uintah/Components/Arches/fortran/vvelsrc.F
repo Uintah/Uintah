@@ -4,7 +4,8 @@ c $Id$
 c
 c*********************************************************************
 
-      SUBROUTINE vvelsrc(domLoV, domHiV, idxLoV, idxHiV, VV, old_VV,
+      SUBROUTINE vvelsrc(domLoV, domHiV, domLoVng, domHiVng,
+     $     idxLoV, idxHiV, VV, old_VV,
      &     SU, SP,
      &     domLoU, domHiU, UU,
      &     domLoW, domHiW, WW,
@@ -31,14 +32,18 @@ c*********************************************************************
 c     Arguments :
 c*********************************************************************
       integer domLoV(3), domHiV(3), idxLoV(3), idxHiV(3)
+      integer domLoVng(3), domHiVng(3)
       double precision VV(domLoV(1):domHiV(1), domLoV(2):domHiV(2), 
      &     domLoV(3):domHiV(3))
-      double precision old_VV(domLoV(1):domHiV(1), domLoV(2):domHiV(2), 
-     &     domLoV(3):domHiV(3))
-      double precision SU(domLoV(1):domHiV(1), domLoV(2):domHiV(2), 
-     &     domLoV(3):domHiV(3))
-      double precision SP(domLoV(1):domHiV(1), domLoV(2):domHiV(2), 
-     &     domLoV(3):domHiV(3))
+      double precision old_VV(domLoVng(1):domHiVng(1), 
+     $     domLoVng(2):domHiVng(2), 
+     &     domLoVng(3):domHiVng(3))
+      double precision SU(domLoVng(1):domHiVng(1), 
+     $     domLoVng(2):domHiVng(2), 
+     &     domLoVng(3):domHiVng(3))
+      double precision SP(domLoVng(1):domHiVng(1),
+     $     domLoVng(2):domHiVng(2), 
+     &     domLoVng(3):domHiVng(3))
       integer domLoU(3), domHiU(3)
       double precision UU(domLoU(1):domHiU(1), domLoU(2):domHiU(2), 
      &     domLoU(3):domHiU(3))
@@ -150,6 +155,9 @@ c     viscous sources
 c*********************************************************************
 c
 c $Log$
+c Revision 1.4  2000/09/26 04:35:34  rawat
+c added some more multi-patch support
+c
 c Revision 1.3  2000/08/10 00:56:38  rawat
 c added pressure bc for scalar and changed discretization option for velocity
 c

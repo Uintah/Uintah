@@ -253,6 +253,7 @@ extern "C"
     //
     void
     FORT_UVELCOEF(const int* domLoU, const int* domHiU,
+		  const int* domLoUng, const int* domHiUng,
 		  const int* idxLoU, const int* idxHiU,
 		  const double* uVelocity,
 		  double* uVelocityConvectCoeff_AE, 
@@ -298,6 +299,7 @@ extern "C"
     //
     void
     FORT_VVELCOEF(const int* domLoV, const int* domHiV,
+		  const int* domLoVng, const int* domHiVng,
 		  const int* idxLoV, const int* idxHiV,
 		  const double* vVelocity,
 		  double* vVelocityConvectCoeff_AE, 
@@ -343,6 +345,7 @@ extern "C"
     //
     void
     FORT_WVELCOEF(const int* domLoW, const int* domHiW,
+		  const int* domLoWng, const int* domHiWng,
 		  const int* idxLoW, const int* idxHiW,
 		  const double* wVelocity,
 		  double* wVelocityConvectCoeff_AE, 
@@ -387,6 +390,7 @@ extern "C"
     //
     void
     FORT_UVELSOURCE(const int* domLoU, const int* domHiU,
+		    const int* domLoUng, const int* domHiUng,
 		    const int* idxLoU, const int* idxHiU,
 		    const double* uVelocity,  const double* old_uVelocity,
 		    double* uvelnlinSrc, double* uvellinSrc,
@@ -415,6 +419,7 @@ extern "C"
     //
     void
     FORT_VVELSOURCE(const int* domLoV, const int* domHiV,
+		    const int* domLoVng, const int* domHiVng,
 		    const int* idxLoV, const int* idxHiV,
 		    const double* vVelocity,  const double* old_vVelocity,
 		    double* vvelnlinSrc, double* vvellinSrc,
@@ -443,6 +448,7 @@ extern "C"
     //
     void
     FORT_WVELSOURCE(const int* domLoW, const int* domHiW,
+		    const int* domLoWng, const int* domHiWng,
 		    const int* idxLoW, const int* idxHiW,
 		    const double* wVelocity,  const double* old_wVelocity,
 		    double* wvelnlinSrc, double* wvellinSrc,
@@ -471,6 +477,7 @@ extern "C"
     //
     void
     FORT_MASCAL(const int* domLo, const int* domHi,
+		const int* domLong, const int* domHing,
 		const int* idxLo, const int* idxHi,
 		const double* velocity,  
 		const double* velCoefAE,
@@ -514,6 +521,7 @@ extern "C"
     //
     void
     FORT_BCUVEL(const int* domLoU, const int* domHiU,
+		const int* domLoUng, const int* domHiUng,
 		const int* idxLoU, const int* idxHiU,
 		const double* uVelocity,
 		double* uVelocityCoeff_AP,
@@ -545,6 +553,7 @@ extern "C"
     //
     void
     FORT_BCVVEL(const int* domLoV, const int* domHiV,
+		const int* domLoVng, const int* domHiVng,
 		const int* idxLoV, const int* idxHiV,
 		const double* vVelocity,
 		double* vVelocityCoeff_AP,
@@ -576,6 +585,7 @@ extern "C"
     //
     void
     FORT_BCWVEL(const int* domLoW, const int* domHiW,
+		const int* domLoWng, const int* domHiWng,
 		const int* idxLoW, const int* idxHiW,
 		const double* wVelocity,
 		double* wVelocityCoeff_AP,
@@ -640,6 +650,7 @@ extern "C"
     //
     void
     FORT_PRESSCOEFF(const int* domLo, const int* domHi,
+		    const int* domLong, const int* domHing,
 		    const int* idxLo, const int* idxHi,
 		    const double* density,
 		    double* pressCoefAE,
@@ -665,11 +676,13 @@ extern "C"
     //
     void
     FORT_PRESSOURCE(const int* domLo, const int* domHi,
+		    const int* domLong, const int* domHing,
 		    const int* idxLo, const int* idxHi,
 		    double* pressureNonLinSrc,
 		    double* pressureLinSrc,
 		    const double* density, const double* old_density,
 		    const int* domLoU, const int* domHiU,
+		    const int* domLoUng, const int* domHiUng,
 		    const double* uVelocity,
 		    const double* uVelCoefAP,
 		    const double* uVelCoefAE,
@@ -680,6 +693,7 @@ extern "C"
 		    const double* uVelCoefAB,
 		    const double* uVelNonLinSrc,
 		    const int* domLoV, const int* domHiV,
+		    const int* domLoVng, const int* domHiVng,
 		    const double* vVelocity,
 		    const double* vVelCoefAP,
 		    const double* vVelCoefAE,
@@ -690,6 +704,7 @@ extern "C"
 		    const double* vVelCoefAB,
 		    const double* vVelNonLinSrc,
 		    const int* domLoW, const int* domHiW,
+		    const int* domLoWng, const int* domHiWng,
 		    const double* wVelocity,
 		    const double* wVelCoefAP,
 		    const double* wVelCoefAE,
@@ -709,6 +724,7 @@ extern "C"
     //
     void
     FORT_PRESSBC(const int* domLo, const int* domHi,
+		 const int* domLong, const int* domHing,
 		 const int* idxLo, const int* idxHi,
 		 double* pressure,
 		 double* pressCoeffAE,
@@ -906,6 +922,9 @@ extern "C"
 
 //
 // $Log$
+// Revision 1.36  2000/09/26 04:35:27  rawat
+// added some more multi-patch support
+//
 // Revision 1.35  2000/08/23 06:20:51  bbanerje
 // 1) Results now correct for pressure solve.
 // 2) Modified BCU, BCV, BCW to add stuff for pressure BC.

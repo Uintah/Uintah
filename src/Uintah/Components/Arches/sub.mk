@@ -35,7 +35,8 @@ LIBS := $(LIBS) $(PETSC_LIBS) -lpetscsles -lpetscdm -lpetscmat -lpetscvec -lpets
 endif
 #CFLAGS += -g -DARCHES_VEL_DEBUG
 #CFLAGS += -g -DARCHES_DEBUG -DARCHES_GEOM_DEBUG -DARCHES_BC_DEBUG -DARCHES_COEF_DEBUG 
-CFLAGS += -DARCHES_SRC_DEBUG -DARCHES_PRES_DEBUG -DARCHES_VEL_DEBUG
+CFLAGS += -DARCHES_PRES_DEBUG -DARCHES_VEL_DEBUG
+#CFLAGS += -DARCHES_SRC_DEBUG -DARCHES_PRES_DEBUG -DARCHES_VEL_DEBUG
 ifneq ($(PETSC_DIR),)
 CFLAGS +=	-DHAVE_PETSC
 endif
@@ -45,6 +46,9 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.36  2000/09/26 04:35:28  rawat
+# added some more multi-patch support
+#
 # Revision 1.35  2000/09/25 17:32:12  sparker
 # Automatically determine if we should use -DHAVE_PETSC
 #

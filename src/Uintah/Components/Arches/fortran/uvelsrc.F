@@ -4,7 +4,8 @@ c $Id$
 c
 c*********************************************************************
 
-      SUBROUTINE uvelsrc(domLoU, domHiU, idxLoU, idxHiU, UU, old_UU,
+      SUBROUTINE uvelsrc(domLoU, domHiU, domLoUng, domHiUng,
+     $     idxLoU, idxHiU, UU, old_UU,
      &     SU, SP,
      &     domLoV, domHiV, VV,
      &     domLoW, domHiW, WW,
@@ -31,14 +32,18 @@ c*********************************************************************
 c     Arguments :
 c*********************************************************************
       integer domLoU(3), domHiU(3), idxLoU(3), idxHiU(3)
+      integer domLoUng(3), domHiUng(3)
       double precision UU(domLoU(1):domHiU(1), domLoU(2):domHiU(2), 
      &     domLoU(3):domHiU(3))
-      double precision old_UU(domLoU(1):domHiU(1), domLoU(2):domHiU(2), 
-     &     domLoU(3):domHiU(3))
-      double precision SU(domLoU(1):domHiU(1), domLoU(2):domHiU(2), 
-     &     domLoU(3):domHiU(3))
-      double precision SP(domLoU(1):domHiU(1), domLoU(2):domHiU(2), 
-     &     domLoU(3):domHiU(3))
+      double precision old_UU(domLoUng(1):domHiUng(1),
+     $     domLoUng(2):domHiUng(2), 
+     &     domLoUng(3):domHiUng(3))
+      double precision SU(domLoUng(1):domHiUng(1), 
+     $     domLoUng(2):domHiUng(2), 
+     &     domLoUng(3):domHiUng(3))
+      double precision SP(domLoUng(1):domHiUng(1), 
+     $     domLoUng(2):domHiUng(2), 
+     &     domLoUng(3):domHiUng(3))
       integer domLoV(3), domHiV(3)
       double precision VV(domLoV(1):domHiV(1), domLoV(2):domHiV(2), 
      &     domLoV(3):domHiV(3))
@@ -154,6 +159,9 @@ c
 c*********************************************************************
 c
 c $Log$
+c Revision 1.7  2000/09/26 04:35:34  rawat
+c added some more multi-patch support
+c
 c Revision 1.6  2000/08/23 06:20:53  bbanerje
 c 1) Results now correct for pressure solve.
 c 2) Modified BCU, BCV, BCW to add stuff for pressure BC.
