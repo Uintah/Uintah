@@ -1581,6 +1581,7 @@ class BioImageApp {
 	global mods
 
 	frame $history.$which
+	puts "add load ui $history.$which"
 	grid config $history.$which -column 0 -row $row -sticky "nw" -pady 0
 
 	### Load Data UI
@@ -2815,9 +2816,9 @@ class BioImageApp {
 	global insertimg
   	button $f.insert -image $insertimg -anchor n -relief sunken -borderwidth 0 
 	grid config $f.insert -row 1 -column 1 -pady 0	
-	bind $f.insertbar <ButtonPress-1> "app popup_insert_menu %X %Y $which"
-  	bind $f.insertbar <ButtonPress-2> "app popup_insert_menu %X %Y $which"
-  	bind $f.insertbar <ButtonPress-3> "app popup_insert_menu %X %Y $which"
+	bind $f.insert <ButtonPress-1> "app popup_insert_menu %X %Y $which"
+  	bind $f.insert <ButtonPress-2> "app popup_insert_menu %X %Y $which"
+  	bind $f.insert <ButtonPress-3> "app popup_insert_menu %X %Y $which"
 
         TooltipMultiline $f.insert "Click on this bar to insert any of the\n" \
 	    "pre-processing filters at this location"
@@ -2921,9 +2922,6 @@ class BioImageApp {
             set execute_choose 1
 
 	    $mod-c needexecute
-	    # Add insert bar
-	    $this add_insert_bar $history0.0 0
-	    $this add_insert_bar $history1.0 0
 
 	    set has_executed 1
 	} else {
@@ -4154,12 +4152,13 @@ class BioImageApp {
     }
 
     method update_changes {} {
-	set mod ""
-
-
 	if { !$has_executed } {
 	    $this execute_Data
 	    $this disable_update
+	    # Add insert bar
+	    $this add_insert_bar $history0.0 0
+	    $this add_insert_bar $history1.0 0
+
 	    return
 	}
 
