@@ -71,6 +71,9 @@ void Light::init() {
   if ( !white_halo )
     white_halo = new HaloMaterial(flat_white,4);
 
+  if( intensity_ == 0.0 )
+    turnOff();
+
   // Create a yellow sphere that can be rendered in the location
   // of the light.
   sphere_ = new Sphere( white_halo /*flat_yellow*/, pos, 0.1 );
