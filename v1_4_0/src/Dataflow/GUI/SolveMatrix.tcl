@@ -47,6 +47,7 @@ itcl_class SCIRun_Math_SolveMatrix {
 	set $this-emit_partial 1
 	set $this-emit_iter 50
 	set $this-np 4
+	set $this-petsc_installed 0
     }
     
     
