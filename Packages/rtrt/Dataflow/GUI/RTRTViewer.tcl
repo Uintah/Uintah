@@ -22,7 +22,7 @@ itcl_class rtrt_Render_RTRTViewer {
 	global $this-nworkers
 	set $this-nworkers 1
 	global $this-xres_gui
-	set $this-xres_gui 400
+	set $this-xres_gui 600
 	global $this-yres_gui
 	set $this-yres_gui 400
 	global $this-render_mode
@@ -73,17 +73,17 @@ itcl_class rtrt_Render_RTRTViewer {
 
 	# add the number of processors box
 	make_entry $w.options.nworkers "Number of processors" $this-nworkers \
-		"$this do_nothing"
+		"$this-c needexecute"
 	pack $w.options.nworkers -side top -fill x -padx 2 -pady 2
 
 	# add the xres box
 	make_entry $w.options.xres "xres" $this-xres_gui \
-		"$this do_nothing"
+		"$this-c needexecute"
 	pack $w.options.xres -side top -fill x -padx 2 -pady 2
 
 	# add the yres box
 	make_entry $w.options.yres "yres" $this-yres_gui \
-		"$this do_nothing"
+		"$this-c needexecute"
 	pack $w.options.yres -side top -fill x -padx 2 -pady 2
 
 	menubutton $w.options.renmode -text "Render Mode" \
