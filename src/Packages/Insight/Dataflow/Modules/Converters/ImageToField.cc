@@ -1,4 +1,21 @@
 /*
+  The contents of this file are subject to the University of Utah Public
+  License (the "License"); you may not use this file except in compliance
+  with the License.
+  
+  Software distributed under the License is distributed on an "AS IS"
+  basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+  License for the specific language governing rights and limitations under
+  the License.
+  
+  The Original Source Code is SCIRun, released March 12, 2001.
+  
+  The Original Source Code was developed by the University of Utah.
+  Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+  University of Utah. All Rights Reserved.
+*/
+
+/*
  *  ImageToField.cc:
  *
  *  Written by:
@@ -25,7 +42,10 @@ using namespace SCIRun;
 class InsightSHARE ImageToField : public Module {  
 public:
   ITKDatatypeIPort* inrrd;
+  ITKDatatypeHandle ninH;
+
   FieldOPort* ofield;
+  FieldHandle ofield_handle;
 
 public:
   ImageToField(GuiContext*);
@@ -36,15 +56,17 @@ public:
 
   virtual void tcl_command(GuiArgs&, void*);
 
+  // Run function will dynamically cast data to determine which
+  // instantiation we are working with. The last template type
+  // refers to the last template type of the filter intstantiation.
+  template< class InputImageType > 
+  bool run( itk::Object* );
+
 private:
+  template<class InputImageType>
   FieldHandle create_image_field(ITKDatatypeHandle &im);
   FieldHandle create_latvol_field(ITKDatatypeHandle &im);
   
-  template<class Fld, class Iter>
-  void fill_data(Fld* fld, itk::Image<unsigned char, 2>* inrrd, Iter &iter, Iter &end);
-
-  template<class Val>
-  void get_val_and_inc_imgptr(Val &val, void* &ptr, unsigned);
 };
 
 
@@ -57,8 +79,38 @@ ImageToField::ImageToField(GuiContext* ctx)
 ImageToField::~ImageToField(){
 }
 
+template<class InputImageType >
+bool ImageToField::run( itk::Object* obj1) 
+{
+  InputImageType* n = dynamic_cast< InputImageType * >(obj1);
+  if( !n ) {
+    return false;
+  }
+
+  bool dim_based_convert = true;
+  
+  // do a standard dimension based convert
+  if(dim_based_convert) {
+    int dim = n->GetImageDimension();
+    
+    switch(dim) {
+      
+    case 2:
+      ofield_handle = create_image_field<InputImageType>(ninH);
+      break;
+      
+    case 3:
+      //ofield_handle = create_latvol_field(ninH);
+      break;
+    default:
+      error("Cannot convert data that is not 2D or 3D to a SCIRun Field.");
+      return false;
+    }
+  }
+  return true;
+}
+
 void ImageToField::execute(){
-  ITKDatatypeHandle ninH;
   inrrd = (ITKDatatypeIPort *)get_iport("InputImage");
   ofield = (FieldOPort *)get_oport("OutputImage");
 
@@ -74,28 +126,18 @@ void ImageToField::execute(){
   if(!inrrd->get(ninH))
     return;
 
-  itk::Image<unsigned char, 2> *n = dynamic_cast< itk::Image<unsigned char, 2> * >( ninH.get_rep()->data_.GetPointer() );
-  bool dim_based_convert = true;
-  FieldHandle ofield_handle;
-  
-  // do a standard dimension based convert
-  if(dim_based_convert) {
-    int dim = n->GetImageDimension();
-    
-    switch(dim) {
-      
-    case 2:
-      ofield_handle = create_image_field(ninH);
-      break;
+  // get input
+  itk::Object *n = ninH.get_rep()->data_.GetPointer();
 
-    case 3:
-      ofield_handle = create_latvol_field(ninH);
-      break;
-    default:
-      error("Cannot convert data that is not 2D or 3D to a SCIRun Field.");
-      return;
-    }
-
+  // can we operate on it?
+  if(0) { }
+  else if(run< itk::Image<float, 2> >(n)) { }
+  else if(run< itk::Image<unsigned char, 2> >(n)) { }
+  else if(run< itk::Image<unsigned short, 2> >(n)) { }
+  else {
+    // error
+    error("Incorrect input type");
+    return;
   }
   ofield->send(ofield_handle);
 }
@@ -105,57 +147,42 @@ void ImageToField::tcl_command(GuiArgs& args, void* userdata)
   Module::tcl_command(args, userdata);
 }
 
-template<class Val>
-void ImageToField::get_val_and_inc_imgptr(Val &v, void* &ptr, unsigned) {
-  Val *&p = (Val*&)ptr;
-  v = *p;
-  ++p;
-}
 
-
-template <class Fld, class Iter>
-void ImageToField::fill_data(Fld* fld, itk::Image<unsigned char, 2>* inrrd, Iter &iter, Iter &end) {
-  typedef typename Fld::value_type val_t;
-  void* p = inrrd; // need pointer to image data
-
-  //for(int col=0; col<
-
-  //  while(iter != end) {
-  //val_t tmp;
-  //get_val_and_inc_imgptr(tmp, p, 1); // don't understand 1 param
-  //fld->set_value(tmp, *iter);
-  //++iter;
-  //}
-}
-
+template<class InputImageType>
 FieldHandle ImageToField::create_image_field(ITKDatatypeHandle &nrd) {
-  itk::Image<unsigned char, 2> *n = dynamic_cast< itk::Image<unsigned char, 2> * >( nrd.get_rep()->data_.GetPointer() );
+  InputImageType::PixelType;
+  typedef ImageField<typename InputImageType::PixelType> ImageFieldType;
+  InputImageType *n = dynamic_cast< InputImageType * >( nrd.get_rep()->data_.GetPointer() );
 
   double spc[2];
   double data_center = n->GetOrigin()[0];
-  unsigned int size_x = 100;
-  unsigned int size_y = 100; 
+  
+  unsigned int size_x = (n->GetLargestPossibleRegion()).GetSize()[0];
+  unsigned int size_y = (n->GetLargestPossibleRegion()).GetSize()[1];
+  //unsigned int size_x = 256;
+  //unsigned int size_y = 256;
 
   Point min(0., 0., 0.);
   Point max(size_x, size_y, 0.);
 
-  ImageMesh* m = new ImageMesh(size_x, size_y, min, max);
+  ImageMesh* m = new ImageMesh(size_x+1, size_y+1, min, max);
+  //ImageMesh* m = new ImageMesh(size_x, size_y, min, max);
   ImageMeshHandle mh(m);
 
   FieldHandle fh;
   int mn_idx, mx_idx;
   
   // assume data type is unsigned char
-  fh = new ImageField<unsigned char>(mh, Field::NODE); 
-  ImageMesh::Node::iterator iter, end;
+  fh = new ImageFieldType(mh, Field::FACE); 
+  ImageMesh::Face::iterator iter, end;
   mh->begin(iter);
   mh->end(end);
 
   // fill data
-  itk::Image<unsigned char, 2>::IndexType pixelIndex;
-  typedef ImageField<unsigned char>::value_type val_t;
+  typename InputImageType::IndexType pixelIndex;
+  typedef ImageFieldType::value_type val_t;
   val_t tmp;
-  ImageField<unsigned char>* fld = (ImageField<unsigned char>*)fh.get_rep();
+  ImageFieldType* fld = (ImageFieldType* )fh.get_rep();
 
   
   for(int row=0; row < size_y; row++) {
