@@ -11,7 +11,6 @@
  */
 
 
-
 #include<iostream.h>
 #include"Complex.h"
 
@@ -82,7 +81,7 @@ Complex Complex::operator/(const Complex &C2) const{
 }
 
 //------------------------------------------------------------------
-Complex  operator*(double t, Complex C1){
+Complex  operator*(double t, Complex &C1){
   Complex C;
 
   C.a = t*C1.a;
@@ -92,7 +91,7 @@ Complex  operator*(double t, Complex C1){
 }
 
 //------------------------------------------------------------------
-Complex  operator/(double t,Complex C1){
+Complex  operator/(double t,Complex &C1){
   Complex C;  
   double d = C1.a*C1.a + C1.b*C1.b;
  
@@ -102,17 +101,30 @@ Complex  operator/(double t,Complex C1){
 } 
   
 //------------------------------------------------------------------
-ostream &operator<< (ostream &output, Complex C){
+ostream &operator<< (ostream &output, Complex &C){
+
   if(C.b>=0)
     output<<"("<<C.a<<" + "<<C.b<<"*i)";
   else
     output<<"("<<C.a<<" - "<<-C.b<<"*i)";
-  return(output);
+
+    
+//  output<<C.a<<" "<<C.b<<" ";
+
+    return(output);
 }
 
 //------------------------------------------------------------------
   
-  
+istream &operator>> (istream &input, Complex &C){
+ 
+    input>>C.a;
+    input>>C.b;
+    
+  return(input);
+}
+
+//------------------------------------------------------------------  
 
 
 

@@ -2,9 +2,9 @@
 #include <config/sci.cf>
 
 OBJS = LinAlg.o  Mat.o  MusilRNG.o  TrigTable.o  CatmullRomSpline.o  \
-	ssmult.o fft.o hf.o
+	ssmult.o fft.o hf.o Complex.o
 SRCS = LinAlg.c  Mat.c MusilRNG.cc TrigTable.cc CatmullRomSpline.cc \
-	ssmult.c fft.c hf.c
+	ssmult.c fft.c hf.c Complex.cc
 
 LIBNAME = Math
 

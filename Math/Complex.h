@@ -11,6 +11,9 @@
  */
 
 
+#ifndef COMPLEX_H
+#define COMPLEX_H 1
+
 
 #include<math.h>
 
@@ -24,11 +27,15 @@ public:
   Complex(double a, double b): a(a), b(b) {}
   Complex (const Complex &C): a(C.a), b(C.b) {}
   Complex &operator= (const Complex &C){a = C.a; b=C.b; return(*this);}
+  Complex &operator= (double x){a = x; b = x; return(*this);}
   
   double abs() {return sqrt(a*a + b*b);}
   double arg();
   double &Re(){return a;}
   double &Im(){return b;}  
+  void set(double aa,double bb){a = aa; b = bb;} 
+  Complex conj(){Complex C; C.a=a; C.b=-b;return(C);}
+
   
   Complex operator+ (const Complex&) const;
   Complex operator- (const Complex&) const;
@@ -36,15 +43,16 @@ public:
   Complex operator/ (const Complex&) const;
   Complex operator* (double) const;
   Complex operator/ (double) const;
-  friend  Complex operator* (double , const Complex); 
-  friend  Complex operator/ (double , const Complex);
+  friend  Complex operator* (double , Complex&); 
+  friend  Complex operator/ (double , Complex&);
   
-  friend ostream &operator<<(ostream &output, const Complex);
-  
+  friend ostream &operator<<(ostream &output, Complex&);
+  friend istream &operator>>(istream &input, Complex&);
 };
 
 
 
+#endif
 
 
 
