@@ -56,6 +56,7 @@ class Variable;
 	 Matrix3,
 	 ReductionVariable,
 	 double_type,
+         float_type,
 	 bool_type,
 	 int_type,
 	 short_int_type,

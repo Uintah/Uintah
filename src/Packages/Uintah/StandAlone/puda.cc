@@ -67,6 +67,7 @@ Mutex cerrLock( "cerrLock" );
 
 typedef struct{
   vector<ShareAssignParticleVariable<double> > pv_double_list;
+  vector<ShareAssignParticleVariable<float> > pv_float_list;
   vector<ShareAssignParticleVariable<Point> > pv_point_list;
   vector<ShareAssignParticleVariable<Vector> > pv_vector_list;
   vector<ShareAssignParticleVariable<Matrix3> > pv_matrix3_list;
@@ -153,8 +154,8 @@ void usage(const std::string& badarg, const std::string& progname)
   cerr << "  -ptonly (prints out only the point location\n";
   cerr << "  -patch (outputs patch id with data)\n";
   cerr << "  -material (outputs material number with data)\n";
-  cerr << "  -NCvar [double or point or vector]\n";
-  cerr << "  -CCvar [double or point or vector]\n";
+  cerr << "  -NCvar [double or float or point or vector]\n";
+  cerr << "  -CCvar [double or float or point or vector]\n";
   cerr << "  -verbose (prints status of output)\n";
   cerr << "  -timesteplow [int] (only outputs timestep from int)\n";
   cerr << "  -timestephigh [int] (only outputs timesteps upto int)\n";
@@ -260,18 +261,43 @@ getParticleStrains(DataArchive* da, string flag) {
 	      // Find the name of the variable
 	      if (doAverage) {
 		if (var == "p.volume") {
-		  ParticleVariable<double> value;
-		  da->query(value, var, matl, patch, time);
-		  ParticleSubset* pset = value.getParticleSubset();
-		  if(pset->numParticles() > 0){
-		    ParticleSubset::iterator iter = pset->begin();
-		    for(;iter != pset->end(); iter++){
-		      volumeVector.push_back(value[*iter]);
-		      totVol += value[*iter];
+		  switch(td->getSubType()->getType())
+		  {
+		  case Uintah::TypeDescription::double_type:
+		    {
+		      ParticleVariable<double> value;
+		      da->query(value, var, matl, patch, time);
+		      ParticleSubset* pset = value.getParticleSubset();
+		      if(pset->numParticles() > 0){
+			ParticleSubset::iterator iter = pset->begin();
+			for(;iter != pset->end(); iter++){
+			  volumeVector.push_back(value[*iter]);
+			  totVol += value[*iter];
+			}
+		      }
 		    }
+		  break;
+		  case Uintah::TypeDescription::float_type:
+		    {
+		      ParticleVariable<float> value;
+		      da->query(value, var, matl, patch, time);
+		      ParticleSubset* pset = value.getParticleSubset();
+		      if(pset->numParticles() > 0){
+			ParticleSubset::iterator iter = pset->begin();
+			for(;iter != pset->end(); iter++){
+			  volumeVector.push_back((double)(value[*iter]));
+			  totVol += value[*iter];
+			}
+		      }
+		    }
+		  break;
+		  default:
+		    cerr << "Particle Variable of unknown type: " 
+			 << td->getSubType()->getType() << endl;
+		    break;
 		  }
 		}
-	      } 
+	      }
 	      if (var == "p.deformationMeasure") {
 	        //cout << "Material: " << matl << endl;
 		ParticleVariable<Matrix3> value;
@@ -479,15 +505,40 @@ getParticleStresses(DataArchive* da, string flag) {
 	      // Find the name of the variable
 	      if (doAverage) {
 		if (var == "p.volume") {
-		  ParticleVariable<double> value;
-		  da->query(value, var, matl, patch, time);
-		  ParticleSubset* pset = value.getParticleSubset();
-		  if(pset->numParticles() > 0){
-		    ParticleSubset::iterator iter = pset->begin();
-		    for(;iter != pset->end(); iter++){
-		      volumeVector.push_back(value[*iter]);
-		      totVol += value[*iter];
+		  switch(td->getSubType()->getType())
+		  {
+		  case Uintah::TypeDescription::double_type:
+		    {
+		      ParticleVariable<double> value;
+		      da->query(value, var, matl, patch, time);
+		      ParticleSubset* pset = value.getParticleSubset();
+		      if(pset->numParticles() > 0){
+			ParticleSubset::iterator iter = pset->begin();
+			for(;iter != pset->end(); iter++){
+			  volumeVector.push_back(value[*iter]);
+			  totVol += value[*iter];
+			}
+		      }
 		    }
+		  break;
+		  case Uintah::TypeDescription::float_type:
+		    {
+		      ParticleVariable<float> value;
+		      da->query(value, var, matl, patch, time);
+		      ParticleSubset* pset = value.getParticleSubset();
+		      if(pset->numParticles() > 0){
+			ParticleSubset::iterator iter = pset->begin();
+			for(;iter != pset->end(); iter++){
+			  volumeVector.push_back((double)(value[*iter]));
+			  totVol += value[*iter];
+			}
+		      }
+		    }
+		  break;
+		  default:
+		    cerr << "Particle Variable of unknown type: " 
+			 << td->getSubType()->getType() << endl;
+		    break;
 		  }
 		}
 	      } 
@@ -635,6 +686,20 @@ void printParticleVariable(DataArchive* da,
 		    }
 		  }
 		break;
+		case Uintah::TypeDescription::float_type:
+		  {
+		    ParticleVariable<float> value;
+		    da->query(value, var, matl, patch, time);
+		    ParticleSubset* pset = value.getParticleSubset();
+		    if(pset->numParticles() > 0){
+		      ParticleSubset::iterator iter = pset->begin();
+		      for(;iter != pset->end(); iter++){
+                        cout << time << " " << patchIndex << " " << matl ;
+			cout << " " << value[*iter] << endl;
+		      }
+		    }
+		  }
+		break;
 		case Uintah::TypeDescription::int_type:
 		  {
 		    ParticleVariable<int> value;
@@ -751,10 +816,12 @@ int main(int argc, char** argv)
   bool do_euler_part_strain = false;
   bool do_rtdata = false;
   bool do_NCvar_double = false;
+  bool do_NCvar_float = false;
   bool do_NCvar_point = false;
   bool do_NCvar_vector = false;
   bool do_NCvar_matrix3 = false;
   bool do_CCvar_double = false;
+  bool do_CCvar_float = false;
   bool do_CCvar_point = false;
   bool do_CCvar_vector = false;
   bool do_CCvar_matrix3 = false;
@@ -857,6 +924,8 @@ int main(int argc, char** argv)
 	s = argv[i];
 	if (s == "double")
 	  do_NCvar_double = true;
+	else if (s == "float")
+	  do_NCvar_float = true;
 	else if (s == "point")
 	  do_NCvar_point = true;
 	else if (s == "vector")
@@ -873,6 +942,8 @@ int main(int argc, char** argv)
 	s = argv[i];
 	if (s == "double")
 	  do_CCvar_double = true;
+	else if (s == "float")
+	  do_CCvar_float = true;
 	else if (s == "point")
 	  do_CCvar_point = true;
 	else if (s == "vector")
@@ -1071,6 +1142,10 @@ int main(int argc, char** argv)
 		  outfile << "VARIABLES = " << "\"X" << "\", " << "\"Y" << "\", " << "\"Z" << "\", "
 			  << "\"" << ccVariable << "\""; 
 	        }
+	        if(subtype->getType() == Uintah::TypeDescription::float_type) {
+		  outfile << "VARIABLES = " << "\"X" << "\", " << "\"Y" << "\", " << "\"Z" << "\", "
+			  << "\"" << ccVariable << "\""; 
+	        }
 	        if(subtype->getType() == Uintah::TypeDescription::Vector || subtype->getType() == Uintah::TypeDescription::Point) {
 		  outfile << "VARIABLES =" << "\"X" << "\", " << "\"Y" << "\", " << "\"Z" << "\", "
 			  << "\"" << ccVariable << ".X" << "\", " << "\"" << ccVariable << ".Y" << "\", " 
@@ -1088,6 +1163,10 @@ int main(int argc, char** argv)
 		  outfile << "VARIABLES = " << "\"X" << "\", " << "\"Y" << "\", " 
 			  << "\"" << ccVariable << "\""; 
 	        }
+	        if(subtype->getType() == Uintah::TypeDescription::float_type) {
+		  outfile << "VARIABLES = " << "\"X" << "\", " << "\"Y" << "\", " 
+			  << "\"" << ccVariable << "\""; 
+	        }
 	        if(subtype->getType() == Uintah::TypeDescription::Vector || subtype->getType() == Uintah::TypeDescription::Point) {
 		  outfile << "VARIABLES =" << "\"X" << "\", " << "\"Y" << "\", "
 			  << "\"" << ccVariable << ".X" << "\", " << "\"" << ccVariable << ".Y" << "\"";
@@ -1100,6 +1179,9 @@ int main(int argc, char** argv)
 	        outfile << endl;
 	      } else if(i_xd == "i_1d") {
 	        if(subtype->getType() == Uintah::TypeDescription::double_type) {
+		  outfile << "VARIABLES = " << "\"X" << "\", " << "\"" << ccVariable << "\""; 
+	        }
+	        if(subtype->getType() == Uintah::TypeDescription::float_type) {
 		  outfile << "VARIABLES = " << "\"X" << "\", " << "\"" << ccVariable << "\""; 
 	        }
 	        if(subtype->getType() == Uintah::TypeDescription::Vector || subtype->getType() == Uintah::TypeDescription::Point) {
@@ -1206,6 +1288,50 @@ int main(int argc, char** argv)
 			    case Uintah::TypeDescription::double_type:
 			      {
 				CCVariable<double> value;
+				da->query(value, ccVariable, matl, patch, time);
+				if(i_xd == "i_3d") {
+				  for(indexK = lo.z(); indexK < hi.z(); ++indexK){
+				    for(indexJ = lo.y(); indexJ < hi.y(); ++indexJ){
+				      for(indexI = lo.x(); indexI < hi.x(); ++indexI){
+					++totalNode;
+					nodeIndex(indexI-Imin,indexJ-Jmin,indexK-Kmin) = totalNode;
+					IntVector cellIndex(indexI, indexJ, indexK);
+					outfile << start.x() + dx.x()*(indexI + 1) << " " //assume the begining index as [-1,-1,-1] 
+						<< start.y() + dx.y()*(indexJ + 1) << " "   
+						<< start.z() + dx.z()*(indexK + 1) << " "  
+						<< value[cellIndex] << endl;
+				      }
+				    }
+				  } 
+				} //(i_xd == "i_3d") 
+
+				else if(i_xd == "i_2d") {
+				  for(indexJ = lo.y(); indexJ < hi.y(); ++indexJ){
+				    for(indexI = lo.x(); indexI < hi.x(); ++indexI){
+				      ++totalNode;
+				      nodeIndex(indexI-Imin,indexJ-Jmin,0) = totalNode;
+				      IntVector cellIndex(indexI, indexJ, 0);
+				      outfile << start.x() + dx.x()*(indexI + 1) << " " //assume the begining index as [-1,-1,-1] 
+					      << start.y() + dx.y()*(indexJ + 1) << " "   
+					      << value[cellIndex] << endl;
+				    }
+				  }
+				} //end of if(i_xd == "i_2d")
+
+				else if(i_xd == "i_1d") {
+				  for(indexI = lo.x(); indexI < hi.x(); ++indexI){
+				    ++totalNode;
+				    nodeIndex(indexI-Imin,0,0) = totalNode;
+				    IntVector cellIndex(indexI, 0, 0);
+				    outfile << start.x() + dx.x()*(indexI + 1) << " " //assume the begining index as [-1,-1,-1] 
+					    << value[cellIndex] << endl;
+				  }
+				}//end of if(i_xd == "i_1d") 
+			      }
+			    break;
+			    case Uintah::TypeDescription::float_type:
+			      {
+				CCVariable<float> value;
 				da->query(value, ccVariable, matl, patch, time);
 				if(i_xd == "i_3d") {
 				  for(indexK = lo.z(); indexK < hi.z(); ++indexK){
@@ -1519,6 +1645,25 @@ int main(int argc, char** argv)
 		      }
 		    }
 		  break;
+		  case Uintah::TypeDescription::float_type:
+		    {
+		      ParticleVariable<float> value;
+		      da->query(value, var, matl, patch, time);
+		      ParticleSubset* pset = value.getParticleSubset();
+		      cout << "\t\t\t\t" << td->getName() << " over " << pset->numParticles() << " particles\n";
+		      if(pset->numParticles() > 0){
+			float min, max;
+			ParticleSubset::iterator iter = pset->begin();
+			min=max=value[*iter++];
+			for(;iter != pset->end(); iter++){
+			  min=Min(min, value[*iter]);
+			  max=Max(max, value[*iter]);
+			}
+			cout << "\t\t\t\tmin value: " << min << endl;
+			cout << "\t\t\t\tmax value: " << max << endl;
+		      }
+		    }
+		  break;
 		  case Uintah::TypeDescription::int_type:
 		    {
 		      ParticleVariable<int> value;
@@ -1644,6 +1789,27 @@ int main(int argc, char** argv)
 		      }
 		    }
 		  break;
+		  case Uintah::TypeDescription::float_type:
+		    {
+		      NCVariable<float> value;
+		      da->query(value, var, matl, patch, time);
+		      IntVector lo = value.getLowIndex();
+		      IntVector hi = value.getHighIndex() - IntVector(1,1,1);
+		      cout << "\t\t\t\t" << td->getName() << " over " << lo << " to " << hi << endl;
+		      IntVector dx(value.getHighIndex()-value.getLowIndex());
+		      if(dx.x() && dx.y() && dx.z()){
+			float min, max;
+			NodeIterator iter = patch->getNodeIterator();
+			min=max=value[*iter];
+			for(;!iter.done(); iter++){
+			  min=Min(min, value[*iter]);
+			  max=Max(max, value[*iter]);
+			}
+			cout << "\t\t\t\tmin value: " << min << endl;
+			cout << "\t\t\t\tmax value: " << max << endl;
+		      }
+		    }
+		  break;
 		  case Uintah::TypeDescription::Point:
 		    {
 		      NCVariable<Point> value;
@@ -1731,6 +1897,38 @@ int main(int argc, char** argv)
 			iter++;
 			for(;!iter.done(); iter++){
 			  double val = value[*iter];
+			  if (val < min) {
+			    min = val;
+			    c_min = *iter;
+			  }
+			  if (val > max ) {
+			    max = val;
+			    c_max = *iter;
+			  }
+			}
+			cout << "\t\t\t\tmin value: " << min << "\t\t"<< c_min <<endl;
+			cout << "\t\t\t\tmax value: " << max << "\t\t"<< c_max <<endl;
+		      }
+		    }
+		  break;
+		  case Uintah::TypeDescription::float_type:
+		    {
+		      CCVariable<float> value;
+		      da->query(value, var, matl, patch, time);
+		      IntVector lo = value.getLowIndex();
+		      IntVector hi= value.getHighIndex() - IntVector(1,1,1);
+		      cout << "\t\t\t\t" << td->getName() << " over " << lo << " to " << hi << endl;
+		      IntVector dx(value.getHighIndex()-value.getLowIndex());
+		      if(dx.x() && dx.y() && dx.z()){
+			float min, max;
+			IntVector c_min, c_max;
+			CellIterator iter = patch->getCellIterator();
+			min=max=value[*iter];
+			c_min = c_max = *iter;
+			// No need to do a comparison on the initial cell
+			iter++;
+			for(;!iter.done(); iter++){
+			  float val = value[*iter];
 			  if (val < min) {
 			    min = val;
 			    c_min = *iter;
@@ -1858,6 +2056,40 @@ int main(int argc, char** argv)
 		      }
 		    }
 		  break;
+		  case Uintah::TypeDescription::float_type:
+		    {
+		      SFCXVariable<float> value;
+		      da->query(value, var, matl, patch, time);
+		      IntVector lo = value.getLowIndex();
+		      IntVector hi= value.getHighIndex() - IntVector(1,1,1);
+		      cout << "\t\t\t\t" << td->getName() << " over " << lo << " to " << hi << endl;
+		      IntVector dx(value.getHighIndex()-value.getLowIndex());
+                    
+		      if(dx.x() && dx.y() && dx.z()){
+			float min, max;
+			IntVector c_min, c_max;
+			
+			CellIterator iter=patch->getSFCXIterator();
+			min=max=value[*iter];
+			c_min = c_max = *iter;
+			// No need to do a comparison on the initial cell
+			iter++;
+			for(;!iter.done(); iter++){
+			  float val = value[*iter];
+			  if (val < min) {
+			    min = val;
+			    c_min = *iter;
+			  }
+			  if (val > max ) {
+			    max = val;
+			    c_max = *iter;
+			  }
+			}
+			cout << "\t\t\t\tmin value: " << min << "\t\t"<< c_min <<endl;
+			cout << "\t\t\t\tmax value: " << max << "\t\t"<< c_max <<endl;
+		      }
+		    }
+		  break;
 		  default:
 		    cerr << "SCFXVariable  of unknown type: " << subtype->getType() << endl;
 		    break;
@@ -1901,6 +2133,40 @@ int main(int argc, char** argv)
 		      }
 		    }
 		  break;
+		  case Uintah::TypeDescription::float_type:
+		    {
+		      SFCYVariable<float> value;
+		      da->query(value, var, matl, patch, time);
+		      IntVector lo = value.getLowIndex();
+		      IntVector hi= value.getHighIndex() - IntVector(1,1,1);
+		      cout << "\t\t\t\t" << td->getName() << " over " << lo << " to " << hi << endl;
+		      IntVector dx(value.getHighIndex()-value.getLowIndex());
+                    
+		      if(dx.x() && dx.y() && dx.z()){
+			float min, max;
+			IntVector c_min, c_max;
+			
+			CellIterator iter=patch->getSFCYIterator();
+			min=max=value[*iter];
+			c_min = c_max = *iter;
+			// No need to do a comparison on the initial cell
+			iter++;
+			for(;!iter.done(); iter++){
+			  float val = value[*iter];
+			  if (val < min) {
+			    min = val;
+			    c_min = *iter;
+			  }
+			  if (val > max ) {
+			    max = val;
+			    c_max = *iter;
+			  }
+			}
+			cout << "\t\t\t\tmin value: " << min << "\t\t"<< c_min <<endl;
+			cout << "\t\t\t\tmax value: " << max << "\t\t"<< c_max <<endl;
+		      }
+		    }
+		  break;
 		  default:
 		    cerr << "SCFYVariable  of unknown type: " << subtype->getType() << endl;
 		    break;
@@ -1930,6 +2196,40 @@ int main(int argc, char** argv)
 			iter++;
 			for(;!iter.done(); iter++){
 			  double val = value[*iter];
+			  if (val < min) {
+			    min = val;
+			    c_min = *iter;
+			  }
+			  if (val > max ) {
+			    max = val;
+			    c_max = *iter;
+			  }
+			}
+			cout << "\t\t\t\tmin value: " << min << "\t\t"<< c_min <<endl;
+			cout << "\t\t\t\tmax value: " << max << "\t\t"<< c_max <<endl;
+		      }
+		    }
+		  break;
+		  case Uintah::TypeDescription::float_type:
+		    {
+		      SFCZVariable<float> value;
+		      da->query(value, var, matl, patch, time);
+		      IntVector lo = value.getLowIndex();
+		      IntVector hi= value.getHighIndex() - IntVector(1,1,1);
+		      cout << "\t\t\t\t" << td->getName() << " over " << lo << " to " << hi << endl;
+		      IntVector dx(value.getHighIndex()-value.getLowIndex());
+                    
+		      if(dx.x() && dx.y() && dx.z()){
+			float min, max;
+			IntVector c_min, c_max;
+			
+			CellIterator iter=patch->getSFCZIterator();
+			min=max=value[*iter];
+			c_min = c_max = *iter;
+			// No need to do a comparison on the initial cell
+			iter++;
+			for(;!iter.done(); iter++){
+			  float val = value[*iter];
 			  if (val < min) {
 			    min = val;
 			    c_min = *iter;
@@ -2136,6 +2436,24 @@ int main(int argc, char** argv)
 		    partnum=num_of_particles;
 		  }
 		break;
+		case Uintah::TypeDescription::float_type:
+		  {
+		    ParticleVariable<float> value;
+		    da->query(value, var, matl, patch, time);
+		    ParticleSubset* pset = value.getParticleSubset();
+		      
+		    if(pset->numParticles() > 0){
+		      ParticleSubset::iterator iter = pset->begin();
+			
+		      if(matl == 0){
+			partfile << ", \"" << var << "\"";}
+		      for(;iter != pset->end(); iter++){
+			num_of_particles++;
+		      }
+		    }
+		    partnum=num_of_particles;
+		  }
+		break;
 		case Uintah::TypeDescription::Point:
 		  {
 		    ParticleVariable<Point> value;
@@ -2221,6 +2539,20 @@ int main(int argc, char** argv)
 		case Uintah::TypeDescription::double_type:
 		  {
 		    ParticleVariable<double> value;
+		    da->query(value, var, matl, patch, time);
+		    ParticleSubset* pset = value.getParticleSubset();
+		    if(pset->numParticles() > 0){
+		      ParticleSubset::iterator iter = pset->begin();
+		      for(;iter != pset->end(); iter++){
+			partfile << value[*iter] << " " << endl;
+		      }
+		      partfile << endl;
+		    }
+		  }
+		break;
+		case Uintah::TypeDescription::float_type:
+		  {
+		    ParticleVariable<float> value;
 		    da->query(value, var, matl, patch, time);
 		    ParticleSubset* pset = value.getParticleSubset();
 		    if(pset->numParticles() > 0){
@@ -2610,6 +2942,13 @@ int main(int argc, char** argv)
 			material_data.pv_double_list.push_back(value);
 		      }
 		    break;
+		    case Uintah::TypeDescription::float_type:
+		      {
+			ParticleVariable<float> value;
+			da->query(value, var, matl, patch, time);
+			material_data.pv_float_list.push_back(value);
+		      }
+		    break;
 		    case Uintah::TypeDescription::Point:
 		      {
 			ParticleVariable<Point> value;
@@ -2668,6 +3007,48 @@ int main(int argc, char** argv)
 			    min=Min(min, value[*iter]);
 			    max=Max(max, value[*iter]);
 			    float temp_value = (float)value[*iter];
+			    fwrite(&temp_value, sizeof(float), 1, datafile);
+			  }	  
+			}
+			
+			Point b_min = patch->getBox().lower();
+			Point b_max = patch->getBox().upper();
+			
+			// write the header file
+			fprintf(headerfile, "%d %d %d\n",dim.x(), dim.y(), dim.z());
+			fprintf(headerfile, "%f %f %f\n",(float)b_min.x(),(float)b_min.y(),(float)b_min.z());
+			fprintf(headerfile, "%f %f %f\n",(float)b_max.x(),(float)b_max.y(),(float)b_max.z());
+			fprintf(headerfile, "%f %f\n",(float)min,(float)max);
+
+			fclose(datafile);
+			fclose(headerfile);
+		      }
+		    }
+		  break;
+		  case Uintah::TypeDescription::float_type:
+		    {
+		      if (do_NCvar_float) {
+			// setup output files
+			string raydatafile = makeFileName(raydatadir,variable_file,time_file,patchID_file,materialType_file);			
+			FILE* datafile;
+			FILE* headerfile;
+			if (!setupOutFiles(&datafile,&headerfile,raydatafile,string("hdr")))
+			  abort();
+
+			// addfile to filelist
+			fprintf(filelist,"%s\n",raydatafile.c_str());
+			// get the data and write it out
+			float min = 0.0, max = 0.0;
+			NCVariable<float> value;
+			da->query(value, var, matl, patch, time);
+			IntVector dim(value.getHighIndex()-value.getLowIndex());
+			if(dim.x() && dim.y() && dim.z()){
+			  NodeIterator iter = patch->getNodeIterator();
+			  min=max=value[*iter];
+			  for(;!iter.done(); iter++){
+			    min=Min(min, value[*iter]);
+			    max=Max(max, value[*iter]);
+			    float temp_value = value[*iter];
 			    fwrite(&temp_value, sizeof(float), 1, datafile);
 			  }	  
 			}
@@ -2756,6 +3137,48 @@ int main(int argc, char** argv)
 		      }
 		    }
 		  break;
+		  case Uintah::TypeDescription::float_type:
+		    {
+		      if (do_CCvar_float) {
+			// setup output files
+			string raydatafile = makeFileName(raydatadir,variable_file,time_file,patchID_file,materialType_file);			
+			FILE* datafile;
+			FILE* headerfile;
+			if (!setupOutFiles(&datafile,&headerfile,raydatafile,string("hdr")))
+			  abort();
+
+			// addfile to filelist
+			fprintf(filelist,"%s\n",raydatafile.c_str());
+			// get the data and write it out
+			float min = 0.0, max = 0.0;
+			CCVariable<float> value;
+			da->query(value, var, matl, patch, time);
+			IntVector dim(value.getHighIndex()-value.getLowIndex());
+			if(dim.x() && dim.y() && dim.z()){
+			  NodeIterator iter = patch->getNodeIterator();
+			  min=max=value[*iter];
+			  for(;!iter.done(); iter++){
+			    min=Min(min, value[*iter]);
+			    max=Max(max, value[*iter]);
+			    float temp_value = value[*iter];
+			    fwrite(&temp_value, sizeof(float), 1, datafile);
+			  }	  
+			}
+			
+			Point b_min = patch->getBox().lower();
+			Point b_max = patch->getBox().upper();
+			
+			// write the header file
+			fprintf(headerfile, "%d %d %d\n",dim.x(), dim.y(), dim.z());
+			fprintf(headerfile, "%f %f %f\n",(float)b_min.x(),(float)b_min.y(),(float)b_min.z());
+			fprintf(headerfile, "%f %f %f\n",(float)b_max.x(),(float)b_max.y(),(float)b_max.z());
+			fprintf(headerfile, "%f %f\n",(float)min,(float)max);
+
+			fclose(datafile);
+			fclose(headerfile);
+		      }
+		    }
+		  break;
 		  case Uintah::TypeDescription::Point:
 		    {
 		      if (do_CCvar_point) {
@@ -2800,7 +3223,7 @@ int main(int argc, char** argv)
 	      //--------------------------------------------------
 	      // set up the first min/max
 	      Point min, max;
-	      vector<double> d_min,d_max,v_min,v_max,m_min,m_max;
+	      vector<double> d_min,d_max,f_min,f_max,v_min,v_max,m_min,m_max;
 	      bool data_found = false;
 	      int total_particles = 0;
 	      
@@ -2826,6 +3249,10 @@ int main(int argc, char** argv)
 		    for(int i = 0; i <(int) md.pv_double_list.size(); i++) {
 		      d_min.push_back(md.pv_double_list[i][*iter]);
 		      d_max.push_back(md.pv_double_list[i][*iter]);
+		    }
+		    for(int i = 0; i <(int) md.pv_float_list.size(); i++) {
+		      f_min.push_back(md.pv_float_list[i][*iter]);
+		      f_max.push_back(md.pv_float_list[i][*iter]);
 		    }
 		    for(int i = 0; i < (int)md.pv_vector_list.size(); i++) {
 		      v_min.push_back(md.pv_vector_list[i][*iter].length());
@@ -2888,6 +3315,14 @@ int main(int argc, char** argv)
 			temp_value = (float)value;
 			fwrite(&temp_value, sizeof(float), 1, datafile);
 		      }
+		      // float data
+		      for(int i = 0; i <(int) md.pv_float_list.size(); i++) {
+			float value = md.pv_float_list[i][*iter];
+			f_min[i]=Min(f_min[i],(double)value);
+			f_max[i]=Max(f_max[i],(double)value);
+			temp_value = value;
+			fwrite(&temp_value, sizeof(float), 1, datafile);
+		      }
 		      // vector data
 		      for(int i = 0; i < (int)md.pv_vector_list.size(); i++) {
 			double value = md.pv_vector_list[i][*iter].length();
@@ -2931,6 +3366,9 @@ int main(int argc, char** argv)
 		if (do_PTvar_all) {
 		  for(int i = 0; i < (int)d_min.size(); i++) {
 		    fprintf(headerfile,"%.17g %.17g\n",d_min[i],d_max[i]);
+		  }
+		  for(int i = 0; i < (int)f_min.size(); i++) {
+		    fprintf(headerfile,"%.17g %.17g\n",f_min[i],f_max[i]);
 		  }
 		  for(int i = 0; i < (int)v_min.size(); i++) {
 		    fprintf(headerfile,"%.17g %.17g\n",v_min[i],v_max[i]);

@@ -78,6 +78,12 @@ void VariableCache::cache_value(const string &key, vector< double > &values,
   data_cache[key] = data;
 }  
 
+void VariableCache::cache_value(const string &key, vector< float > &values,
+				string &data) {
+  data = vector_to_string(values);
+  data_cache[key] = data;
+}  
+
 // Scalar values based on Vector are cached.
 // 
 // These types are               cached under
@@ -139,6 +145,15 @@ string VariableCache::vector_to_string(vector< string > &data) {
 }
 
 string VariableCache::vector_to_string(vector< double > &data) {
+  ostringstream ostr;
+  ostr.precision(15);
+  for(int i = 0; i < (int)data.size(); i++) {
+      ostr << data[i]  << " ";
+    }
+  return ostr.str();
+}
+
+string VariableCache::vector_to_string(vector< float > &data) {
   ostringstream ostr;
   ostr.precision(15);
   for(int i = 0; i < (int)data.size(); i++) {

@@ -94,6 +94,7 @@ void ParticleFieldExtractor::add_type(string &type_list,
 {
   switch ( subtype->getType() ) {
   case TypeDescription::double_type:
+  case TypeDescription::float_type:
   case TypeDescription::int_type:
     type_list += " scaler";
     break;
@@ -151,6 +152,7 @@ bool ParticleFieldExtractor::setVars(DataArchive& archive)
 							 times[0]);
       switch ( subtype->getType() ) {
       case TypeDescription::double_type:
+      case TypeDescription::float_type:
       case TypeDescription::int_type:
         scalarVars.push_back(VarInfo(names[i], matls));
 	found = true;
@@ -358,7 +360,7 @@ void ParticleFieldExtractor::graph(string idx, string var)
 void ParticleFieldExtractor::execute() 
 { 
   tcl_status.set("Calling ParticleFieldExtractor!"); 
-  bool newarchive;
+  //  bool newarchive; RNJ - Not used???
   in = (ArchiveIPort *) get_iport("Data Archive");
   psout = (ScalarParticlesOPort *) get_oport("Scalar Particles");
   pvout = (VectorParticlesOPort *) get_oport("Vector Particles");
@@ -448,8 +450,8 @@ ParticleFieldExtractor::buildData(DataArchive& archive, double time,
   Mutex imutex("ParticleIds Mutex");
 //   WallClockTimer my_timer;
 //   my_timer.start();
-  double size = level->numPatches();
-  int count = 0;
+//  double size = level->numPatches();  RNJ - Commented to get rid of unused warning.
+//  int count = 0; RNJ - Commented to get rid of unused warning.
   // iterate over patches
   for(Level::const_patchIterator patch = level->patchesBegin();
       patch != level->patchesEnd(); patch++ ){
@@ -489,6 +491,7 @@ void PFEThread::run(){
   ParticleVariable< Vector > pvv;
   ParticleVariable< Matrix3 > pvt;
   ParticleVariable< double > pvs;
+  ParticleVariable< float > pvfloat;
   ParticleVariable< Point  > pvp;
   ParticleVariable< int > pvint;
   ParticleVariable< long64 > pvi;
@@ -521,6 +524,14 @@ void PFEThread::run(){
 	  have_subset = true;
 	}
 	break;
+      case TypeDescription::float_type:
+	//cerr << "Getting data for ParticleVariable<float>\n";
+	archive.query(pvfloat, pfe->psVar.get(), matl, patch, pfe->time);
+	if( !have_subset){
+	  source_subset = pvfloat.getParticleSubset();
+	  have_subset = true;
+	}
+	//cerr << "Got data\n";
       case TypeDescription::int_type:
 	//cerr << "Getting data for ParticleVariable<int>\n";
 	archive.query(pvint, pfe->psVar.get(), matl, patch, pfe->time);
@@ -589,6 +600,9 @@ void PFEThread::run(){
 	switch (scalar_type) {
 	case TypeDescription::double_type:
 	  scalars[dest]=pvs[*iter];
+	  break;
+	case TypeDescription::float_type:
+	  scalars[dest]=pvfloat[*iter];
 	  break;
 	case TypeDescription::int_type:
 	  scalars[dest]=pvint[*iter];
@@ -736,8 +750,34 @@ void ParticleFieldExtractor::graph(string varname, vector<string> mat_list,
       name_list = name_list + mat_list[i] + " " + type_list[i] + " ";
     }
     break;
+  case TypeDescription::float_type:
+    cerr << "Graphing a variable of type float\n";
+    // loop over all the materials in the mat_list
+    for(int i = 0; i < (int)mat_list.size(); i++) {
+      string data;
+      // query the value
+      if (!is_cached(particleID+" "+varname+" "+mat_list[i],data)) {
+	// query the value and then cache it
+	vector< float > values;
+	int matl = atoi(mat_list[i].c_str());
+	cerr << "querying data archive for "<<varname<<" with matl="<<matl<<", particleID="<<partID<<", from time "<<times[0]<<" to time "<<times[times.size()-1]<<endl;
+	try {
+	  archive.query(values, varname, matl, partID, times[0], times[times.size()-1]);
+	} catch (const VariableNotFoundInGrid& exception) {
+	  error("Particle Variable "+particleID+" not found.\n");
+	  return;
+	}
+	cerr << "Received data.  Size of data = " << values.size() << endl;
+	cache_value(particleID+" "+varname+" "+mat_list[i],values,data);
+      } else {
+	cerr << "Cache hit\n";
+      }
+      gui->execute(id+" set_var_val "+data.c_str());
+      name_list = name_list + mat_list[i] + " " + type_list[i] + " ";
+    }
+    break;
   case TypeDescription::int_type:
-    cerr << "Graphing a variable of type double\n";
+    cerr << "Graphing a variable of type int\n";
     // loop over all the materials in the mat_list
     for(int i = 0; i < (int)mat_list.size(); i++) {
       string data;
@@ -846,6 +886,14 @@ string ParticleFieldExtractor::vector_to_string(vector< double > data) {
   return ostr.str();
 }
 
+string ParticleFieldExtractor::vector_to_string(vector< float > data) {
+  ostringstream ostr;
+  for(int i = 0; i < (int)data.size(); i++) {
+      ostr << data[i]  << " ";
+    }
+  return ostr.str();
+}
+
 string ParticleFieldExtractor::vector_to_string(vector< Vector > data, string type) {
   ostringstream ostr;
   if (type == "length") {
@@ -905,6 +953,12 @@ bool ParticleFieldExtractor::is_cached(string name, string& data) {
 }
 
 void ParticleFieldExtractor::cache_value(string where, vector<double>& values,
+				 string &data) {
+  data = vector_to_string(values);
+  material_data_list[where] = data;
+}
+
+void ParticleFieldExtractor::cache_value(string where, vector<float>& values,
 				 string &data) {
   data = vector_to_string(values);
   material_data_list[where] = data;

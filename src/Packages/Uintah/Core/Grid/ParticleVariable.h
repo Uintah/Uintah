@@ -461,6 +461,12 @@ template<class T>
     }
   }
 
+  // Specialized in ParticleVariable_special.cc
+  template<>
+  void
+  ParticleVariable<double>::emitNormal(ostream& out, const IntVector&,
+				  const IntVector&, ProblemSpecP varnode, bool outputDoubleAsFloat );
+
   template<class T>
   void
   ParticleVariable<T>::emitNormal(ostream& out, const IntVector&,

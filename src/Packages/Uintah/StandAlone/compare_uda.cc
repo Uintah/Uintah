@@ -141,6 +141,11 @@ bool compare(double a, double b, double abs_tolerance, double rel_tolerance)
     return true;
 }
 
+bool compare(float a, float b, double abs_tolerance, double rel_tolerance)
+{
+  return compare((double)a, (double)b, abs_tolerance, rel_tolerance);
+}
+
 bool compare(long64 a, long64 b, double /* abs_tolerance */,
 	     double /* rel_tolerance */)
 {
@@ -453,6 +458,10 @@ compare(MaterialParticleVarData& data2, int matl, double time1, double time2,
     return compare(data2, dynamic_cast<ParticleVariable<double>*>(pvb1),
 		   dynamic_cast<ParticleVariable<double>*>(pvb2), matl,
 		   time1, time2, abs_tolerance, rel_tolerance);
+  case Uintah::TypeDescription::float_type:
+    return compare(data2, dynamic_cast<ParticleVariable<float>*>(pvb1),
+		   dynamic_cast<ParticleVariable<float>*>(pvb2), matl,
+		   time1, time2, abs_tolerance, rel_tolerance);
   case Uintah::TypeDescription::long64_type:
     return compare(data2, dynamic_cast<ParticleVariable<long64>*>(pvb1),
 		   dynamic_cast<ParticleVariable<long64>*>(pvb2), matl,
@@ -546,6 +555,7 @@ const Patch* MaterialParticleVarData::getPatch(particleIndex index)
 /*
 typedef struct{
   vector<ParticleVariable<double> > pv_double_list;
+  vector<ParticleVariable<float> > pv_float_list;
   vector<ParticleVariable<Point> > pv_point_list;
   vector<ParticleVariable<Vector> > pv_vector_list;
   vector<ParticleVariable<Matrix3> > pv_matrix3_list;
@@ -591,6 +601,9 @@ void addParticleData(MaterialParticleDataMap& matlParticleDataMap,
 	  switch(subtype->getType()){
 	  case Uintah::TypeDescription::double_type:
 	    pvb = scinew ParticleVariable<double>();
+	    break;
+	  case Uintah::TypeDescription::float_type:
+	    pvb = scinew ParticleVariable<float>();
 	    break;
 	  case Uintah::TypeDescription::long64_type:
 	    pvb = scinew ParticleVariable<long64>();
@@ -758,6 +771,9 @@ makeFieldComparator(const Uintah::TypeDescription* td,
     case Uintah::TypeDescription::double_type:
       return scinew
 	SpecificFieldComparator<NCVariable<double>, NodeIterator>(iter);
+    case Uintah::TypeDescription::float_type:
+      return scinew
+	SpecificFieldComparator<NCVariable<float>, NodeIterator>(iter);
     case Uintah::TypeDescription::int_type:
       return scinew
 	SpecificFieldComparator<NCVariable<int>, NodeIterator>(iter);
@@ -781,6 +797,9 @@ makeFieldComparator(const Uintah::TypeDescription* td,
     case Uintah::TypeDescription::double_type:
       return scinew
 	SpecificFieldComparator<CCVariable<double>, CellIterator>(iter);
+    case Uintah::TypeDescription::float_type:
+      return scinew
+	SpecificFieldComparator<CCVariable<float>, CellIterator>(iter);
     case Uintah::TypeDescription::int_type:
       return scinew
 	SpecificFieldComparator<CCVariable<int>, CellIterator>(iter);
@@ -804,6 +823,9 @@ makeFieldComparator(const Uintah::TypeDescription* td,
     case Uintah::TypeDescription::double_type:
       return scinew
 	SpecificFieldComparator<SFCXVariable<double>, CellIterator>(iter);
+    case Uintah::TypeDescription::float_type:
+      return scinew
+	SpecificFieldComparator<SFCXVariable<float>, CellIterator>(iter);
     case Uintah::TypeDescription::int_type:
       return scinew
 	SpecificFieldComparator<SFCXVariable<int>, CellIterator>(iter);
@@ -827,6 +849,9 @@ makeFieldComparator(const Uintah::TypeDescription* td,
     case Uintah::TypeDescription::double_type:
       return scinew
 	SpecificFieldComparator<SFCYVariable<double>, CellIterator>(iter);
+    case Uintah::TypeDescription::float_type:
+      return scinew
+	SpecificFieldComparator<SFCYVariable<float>, CellIterator>(iter);
     case Uintah::TypeDescription::int_type:
       return scinew
 	SpecificFieldComparator<SFCYVariable<int>, CellIterator>(iter);
@@ -850,6 +875,9 @@ makeFieldComparator(const Uintah::TypeDescription* td,
     case Uintah::TypeDescription::double_type:
       return scinew
 	SpecificFieldComparator<SFCZVariable<double>, CellIterator>(iter);
+    case Uintah::TypeDescription::float_type:
+      return scinew
+	SpecificFieldComparator<SFCZVariable<float>, CellIterator>(iter);
     case Uintah::TypeDescription::int_type:
       return scinew
 	SpecificFieldComparator<SFCZVariable<int>, CellIterator>(iter);
@@ -1264,6 +1292,10 @@ main(int argc, char** argv)
 		  switch(subtype->getType()){
 		  case Uintah::TypeDescription::double_type:
 		    compareParticles<double>(da1, da2, var, matl, patch, patch2,
+					     time1, time2, abs_tolerance, rel_tolerance);
+		    break;
+		  case Uintah::TypeDescription::float_type:
+		    compareParticles<float>(da1, da2, var, matl, patch, patch2,
 					     time1, time2, abs_tolerance, rel_tolerance);
 		    break;
 		  case Uintah::TypeDescription::int_type:
