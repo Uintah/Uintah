@@ -303,7 +303,7 @@ public:
     get_point(p1,ra[1]);
     get_point(p2,ra[2]);
     get_point(p3,ra[3]);
-    return (Cross(Cross(p1-p0,p2-p0),p3-p0)).length()*0.1666666666666666;
+    return Dot(Cross(p1-p0,p2-p0),p3-p0)*0.1666666666666666;
   } 
   double get_length(Edge::index_type idx) const { return get_size(idx); };
   double get_area(Face::index_type idx) const   { return get_size(idx); };
