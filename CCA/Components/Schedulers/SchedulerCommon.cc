@@ -44,6 +44,8 @@ SchedulerCommon::SchedulerCommon(const ProcessorGroup* myworld, Output* oport)
   : UintahParallelComponent(myworld), graph(this), m_outPort(oport),
     m_graphDoc(NULL), m_nodes(NULL)
 {
+  d_generation = 0;
+
   dts_ = 0;
   emit_taskgraph = false;
   memlogfile = 0;

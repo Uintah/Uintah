@@ -201,10 +201,15 @@ SimpleSimulationController::run()
       archive.restartInitialize(d_restartTimestep, grid,
 				scheduler->get_dw(1), &t, &delt);
       
-      sharedState->setCurrentTopLevelTimeStep( output->getCurrentTimestep() );
-
       output->restartSetup(restartFromDir, 0, d_restartTimestep, t,
 			   d_restartFromScratch, d_restartRemoveOldDir);
+
+      sharedState->setCurrentTopLevelTimeStep( output->getCurrentTimestep() );
+      // Tell the scheduler the generation of the re-started simulation.
+      // (Add +1 because the scheduler will be starting on the next
+      // timestep.)
+      scheduler->setGeneration( output->getCurrentTimestep()+1 );
+
       scheduler->get_dw(1)->setID( output->getCurrentTimestep() );
       scheduler->get_dw(1)->finalize();
       sim->restartInitialize();
