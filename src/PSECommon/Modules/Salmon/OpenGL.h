@@ -176,6 +176,17 @@ public:
   void real_saveImage(const clString& fname,
 		      const clString& type = "raw");
 
+// HACK -- support data for get_pixel_depth
+float  pixel_depth_data[1310720];  // assume no screen is > 1280x1024
+GLdouble get_depth_model[16];
+GLdouble get_depth_proj[16];
+GLint    get_depth_view[4];
+
+
+    // compute world space point under cursor (x,y).  If successful,
+    // set 'p' to that value & return true.  Otherwise, return false.
+    virtual int    pick_scene(int x, int y, Point *p);
+
     clString myname;
     virtual void redraw_loop();
     SCICore::Thread::Mailbox<int> send_mb;
