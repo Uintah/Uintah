@@ -99,6 +99,12 @@ private:
 			  DataWarehouse* old_dw,
 			  DataWarehouse* new_dw);
 
+  void printParticleCount(const ProcessorGroup*,
+			  const PatchSubset* patches,
+			  const MaterialSubset* matls,
+			  DataWarehouse* old_dw,
+			  DataWarehouse* new_dw);
+
   void interpolateParticlesForSaving(const ProcessorGroup*,
 				     const PatchSubset* patches,
 				     const MaterialSubset* matls,
