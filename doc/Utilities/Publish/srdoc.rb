@@ -182,11 +182,11 @@ class Doc
   # Return platform type and string.
   def Doc.getPlatform()
     platform = ENV["PLATFORM"]
-    raise "Invalid platform" if !(platform == "Linux" || platform == "Irix" || platform == "OSX" || platform == nil)
+    raise "Invalid platform" if !(platform == "linux" || platform == "irix" || platform == "osx" || platform == nil)
     case platform
-    when "Linux" then [Linux, "Linux"]
-    when "Irix" then [Irix, "SGI Irix"]
-    when "OSX" then [OSX, "Mac OS X"]
+    when "linux" then [Linux, "Linux"]
+    when "irix" then [Irix, "SGI Irix"]
+    when "osx" then [OSX, "Mac OS X"]
     when nil then [0, ""]
     end
   end
