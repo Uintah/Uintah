@@ -29,7 +29,8 @@ public:
   PBNMaterial(const string& s) : pbnmap_(s) {}
   virtual ~PBNMaterial() {}
 
-  virtual void io(SCIRun::Piostream &stream) { ASSERTFAIL("not implemented"); }
+  virtual void io(SCIRun::Piostream &/*stream*/)
+  { ASSERTFAIL("not implemented"); }
   void insert(Material *m, unsigned n)
   {
     mat_iter i = material_map_.find(n);

@@ -18,7 +18,8 @@ public:
 	  const Color&  c1,
 	  const Color&  c2);
   virtual ~Speckle();
-  virtual void io(SCIRun::Piostream &stream) { ASSERTFAIL("not implemented"); }
+  virtual void io(SCIRun::Piostream &/*stream*/)
+  { ASSERTFAIL("not implemented"); }
   virtual void shade(Color& result, const Ray& ray,
 		     const HitInfo& hit, int depth, 
 		     double atten, const Color& accumcolor,

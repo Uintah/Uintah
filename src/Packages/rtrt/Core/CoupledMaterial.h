@@ -14,7 +14,8 @@ public:
   CoupledMaterial(const Color& Rd, double R0 = 0.05, 
 		  double phong_exponent = 100);
   virtual ~CoupledMaterial();
-  virtual void io(SCIRun::Piostream &stream) { ASSERTFAIL("not implemented"); }
+  virtual void io(SCIRun::Piostream &/*stream*/)
+  { ASSERTFAIL("not implemented"); }
   virtual void shade(Color& result, const Ray& ray,
 		     const HitInfo& hit, int depth, 
 		     double atten, const Color& accumcolor,

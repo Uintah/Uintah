@@ -31,7 +31,8 @@ public:
   SHLambertianMaterial( const Color& R, char* envmap, float scale = 10.0, 
 			int type = 1 );
   virtual ~SHLambertianMaterial( void );
-  virtual void io(SCIRun::Piostream &stream) { ASSERTFAIL("not implemented"); }
+  virtual void io(SCIRun::Piostream &/*stream*/)
+  { ASSERTFAIL("not implemented"); }
   virtual void shade( Color& result, const Ray& ray,
 		      const HitInfo& hit, int depth,
 		      double atten, const Color& accumcolor,

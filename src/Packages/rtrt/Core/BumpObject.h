@@ -14,7 +14,7 @@ protected:
 public:
   BumpObject(Vector &v, UVMapping *uv);
   ~BumpObject(); 
-  virtual void io(SCIRun::Piostream &stream) 
+  virtual void io(SCIRun::Piostream &/*stream*/) 
   { ASSERTFAIL("Pio not supported"); }
   virtual void intersect(Ray& ray, HitInfo& hit, DepthStats* st,
 			 PerProcessorContext*);

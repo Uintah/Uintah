@@ -17,7 +17,7 @@ class BV2 : public Object {
 public:
   BV2(Object* obj);
   virtual ~BV2();
-  virtual void io(SCIRun::Piostream &stream) 
+  virtual void io(SCIRun::Piostream &/*stream*/) 
   { ASSERTFAIL("Pio not supported"); }
   virtual void intersect(Ray& ray,
 			 HitInfo& hit, DepthStats* st,

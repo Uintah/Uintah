@@ -55,7 +55,8 @@ public:
   virtual void shade (Color& result, const Ray& ray, const HitInfo& hit, 
 		      int depth, double atten, const Color& accumcolor,
 		      Context* cx); 	    
-  virtual void io(SCIRun::Piostream &stream) { ASSERTFAIL("not implemented"); }
+  virtual void io(SCIRun::Piostream &/*stream*/)
+  { ASSERTFAIL("not implemented"); }
 };   
 
 } // namespace rtrt
