@@ -1,4 +1,3 @@
-
 /*
  *  Debug.cc: Implementation of debug switches
  *
