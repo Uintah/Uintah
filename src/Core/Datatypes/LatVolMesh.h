@@ -299,6 +299,24 @@ public:
       return *this;
     }
 
+    void end(NodeIter &end_iter) {
+      // This tests is designed for a slice in the xy plane.  If z (or k)
+      // is equal then you have this condition.  When this happens you
+      // need to increment k so that you will iterate over the xy values.
+      if (min_k_ != max_k_)
+	end_iter = NodeIter(mesh_, min_i_, min_j_, max_k_);
+      else {
+	// We need to check to see if the min and max extents are the same.
+	// If they are then set the end iterator such that it will be equal
+	// to the beginning.  When they are the same any for() loop using
+	// these iterators [for(;iter != end_iter; iter++)] will never enter.
+	if (min_i_ != max_i_ || min_j_ != max_j_)
+	  end_iter = NodeIter(mesh_, min_i_, min_j_, max_k_ + 1);
+	else
+	  end_iter = NodeIter(mesh_, min_i_, min_j_, max_k_);
+      }
+    }
+    
   private:
     // The minimum extents
     unsigned min_i_, min_j_, min_k_;
@@ -347,6 +365,24 @@ public:
 	}
       }
       return *this;
+    }
+
+    void end(CellIter &end_iter) {
+      // This tests is designed for a slice in the xy plane.  If z (or k)
+      // is equal then you have this condition.  When this happens you
+      // need to increment k so that you will iterate over the xy values.
+      if (min_k_ != max_k_)
+	end_iter = CellIter(mesh_, min_i_, min_j_, max_k_);
+      else {
+	// We need to check to see if the min and max extents are the same.
+	// If they are then set the end iterator such that it will be equal
+	// to the beginning.  When they are the same any for() loop using
+	// these iterators [for(;iter != end_iter; iter++)] will never enter.
+	if (min_i_ != max_i_ || min_j_ != max_j_)
+	  end_iter = CellIter(mesh_, min_i_, min_j_, max_k_ + 1);
+	else
+	  end_iter = CellIter(mesh_, min_i_, min_j_, max_k_);
+      }
     }
 
   private:
@@ -476,10 +512,17 @@ public:
   void get_cells(Cell::array_type &arr, const BBox &box);
   //! return iterators over that fall within or on the BBox
   void get_cell_range(Cell::range_iter &begin, Cell::iterator &end,
-		      const BBox &box);
+		      const BBox &box) ;
   void get_node_range(Node::range_iter &begin, Node::iterator &end,
 		      const BBox &box);
-
+  //! return interators over the range created by begin_index and end_index
+  void get_cell_range(Cell::range_iter &begin, Cell::iterator &end,
+		      const Cell::index_type &begin_index,
+		      const Cell::index_type &end_index);
+  void get_node_range(Node::range_iter &begin, Node::iterator &end,
+		      const Node::index_type &begin_index,
+		      const Node::index_type &end_index);
+  
   //! similar to get_cells() with Face::index_type argument, but
   //  returns the "other" cell if it exists, not all that exist
   bool get_neighbor(Cell::index_type & /*neighbor*/, Cell::index_type /*from*/,
