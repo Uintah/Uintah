@@ -93,6 +93,7 @@ void PackageDB::loadPackage(const clString& packPath)
   // The format of a package path element is either URL,URL,...
   // Where URL is a filename or a url to an XML file that
   // describes the components in the package.
+  
   while(packagePath!="") {
     // Strip off the first element, leave the rest in the path for the next
     // iteration.
@@ -104,7 +105,7 @@ void PackageDB::loadPackage(const clString& packPath)
       packageElt=packagePath;
       packagePath="";
     }
-    
+
     TCL::execute(clString("lappend auto_path ")+packageElt+"/Dataflow/GUI");
     
     clString bname = basename(packageElt);
@@ -206,12 +207,15 @@ void PackageDB::loadPackage(const clString& packPath)
   clString makename;
   clString command;
   int index = 0;
+  int numreg;
   
   mod_count = 0;
 
   for (pi = packages.begin();
        pi!=packages.end();
        pi++) {
+
+    numreg = 0;
     
     pname = (*pi).second->name;
 
@@ -273,16 +277,23 @@ void PackageDB::loadPackage(const clString& packPath)
 	  TCL::execute("update idletasks");
 	  //destroy new_module here
 	  continue;
-	} else
+	} else {
+	  numreg++;
 	  registerModule((*mi).second);
+	}
+
 	TCL::execute(clString("if [winfo exists .loading.fb] "
 			      "{.loading.fb step; update idletasks}"));
       }
     }
     
-    command = clString("createPackageMenu "+to_string(index++));
-    TCL::execute(command());
-    TCL::execute("update idletasks");
+    if (numreg) {
+      command = clString("createPackageMenu "+to_string(index++));
+      TCL::execute(command());
+      TCL::execute("update idletasks");
+    } else 
+      postMessage(clString("Unable to load package ")+pname+":\n"
+                  " - could not find any valid modules.\n");
   }
 
   postMessage("\nFinished loading packages.\n",false);
