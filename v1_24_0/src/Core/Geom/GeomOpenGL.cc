@@ -6311,8 +6311,6 @@ void TexSquare::draw(DrawInfoOpenGL* di, Material* matl, double)
 "END"
 #    ifndef GL_ARB_fragment_program
 #      define GL_FRAGMENT_PROGRAM_ARB 0x8804
-#    else
-#      error fragment program is already defined? 
 #    endif /* GL_ARB_fragment_program */
 #endif
 
