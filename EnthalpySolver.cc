@@ -32,7 +32,7 @@ using namespace Uintah;
 using namespace std;
 
 //****************************************************************************
-// Default constructor for PressureSolver
+// Default constructor for EnthalpySolver
 //****************************************************************************
 EnthalpySolver::EnthalpySolver(const ArchesLabel* label,
 			   const MPMArchesLabel* MAlb,
@@ -740,9 +740,11 @@ EnthalpySolver::sched_enthalpyLinearSolvePred(SchedulerP& sched,
   tsk->requires(Task::NewDW, d_lab->d_enthNonLinSrcPredLabel, 
 		Ghost::None, Arches::ZEROGHOSTCELLS);
 
+  tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel,
+		Ghost::AroundCells, Arches::ONEGHOSTCELL);
   if (d_MAlab) {
-    tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel,
-		  Ghost::None, Arches::ZEROGHOSTCELLS);
+//    tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel,
+//		  Ghost::None, Arches::ZEROGHOSTCELLS);
     tsk->requires(Task::NewDW, d_lab->d_mmgasVolFracLabel,
 		  Ghost::None, Arches::ZEROGHOSTCELLS);
   } 
@@ -836,9 +838,12 @@ EnthalpySolver::enthalpyLinearSolvePred(const ProcessorGroup* pc,
 		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
     new_dw->allocateTemporary(enthalpyVars.residualEnthalpy,  patch);
 
+    new_dw->getCopy(enthalpyVars.cellType, d_lab->d_cellTypeLabel,
+		    matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
+
     if (d_MAlab) {
-      new_dw->getCopy(enthalpyVars.cellType, d_lab->d_cellTypeLabel,
-		      matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+ //     new_dw->getCopy(enthalpyVars.cellType, d_lab->d_cellTypeLabel,
+//		      matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
       new_dw->getCopy(enthalpyVars.voidFraction, d_lab->d_mmgasVolFracLabel,
 		      matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
     }
@@ -891,6 +896,8 @@ EnthalpySolver::enthalpyLinearSolvePred(const ProcessorGroup* pc,
 #endif
 #endif
 
+    d_boundaryCondition->enthalpyPressureBC(pc, patch,  cellinfo, 
+				  &enthalpyVars);
 #ifdef correctorstep
     // allocateAndPut instead:
     /* new_dw->put(enthalpyVars.enthalpy, d_lab->d_enthalpyPredLabel, 
@@ -1304,6 +1311,8 @@ EnthalpySolver::sched_enthalpyLinearSolveCorr(SchedulerP& sched,
   tsk->requires(Task::NewDW, d_lab->d_densityINLabel, 
 		Ghost::None, Arches::ZEROGHOSTCELLS);
   #endif
+  tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel,
+		Ghost::AroundCells, Arches::ONEGHOSTCELL);
   tsk->computes(d_lab->d_enthalpySPLabel);
   
   sched->addTask(tsk, patches, matls);
@@ -1380,6 +1389,9 @@ EnthalpySolver::enthalpyLinearSolveCorr(const ProcessorGroup* pc,
     new_dw->getCopy(enthalpyVars.scalarNonlinearSrc, d_lab->d_enthNonLinSrcCorrLabel,
 		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
     new_dw->allocateTemporary(enthalpyVars.residualEnthalpy,  patch);
+
+    new_dw->getCopy(enthalpyVars.cellType, d_lab->d_cellTypeLabel,
+		    matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
 
   // apply underelax to eqn
     d_linearSolver->computeEnthalpyUnderrelax(pc, patch,
@@ -1471,6 +1483,8 @@ EnthalpySolver::enthalpyLinearSolveCorr(const ProcessorGroup* pc,
     }
   #endif
 
+    d_boundaryCondition->enthalpyPressureBC(pc, patch,  cellinfo, 
+				  &enthalpyVars);
   // put back the results
     // allocateAndPut instead:
     /* new_dw->put(enthalpyVars.enthalpy, d_lab->d_enthalpySPLabel, 
@@ -1774,6 +1788,8 @@ EnthalpySolver::sched_enthalpyLinearSolveInterm(SchedulerP& sched,
   tsk->requires(Task::NewDW, d_lab->d_densityINLabel, 
 		Ghost::None, Arches::ZEROGHOSTCELLS);
   #endif
+  tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel,
+		Ghost::AroundCells, Arches::ONEGHOSTCELL);
   tsk->computes(d_lab->d_enthalpyIntermLabel);
   
   sched->addTask(tsk, patches, matls);
@@ -1838,6 +1854,9 @@ EnthalpySolver::enthalpyLinearSolveInterm(const ProcessorGroup* pc,
     new_dw->getCopy(enthalpyVars.scalarNonlinearSrc, d_lab->d_enthNonLinSrcIntermLabel,
 		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
     new_dw->allocateTemporary(enthalpyVars.residualEnthalpy,  patch);
+
+    new_dw->getCopy(enthalpyVars.cellType, d_lab->d_cellTypeLabel,
+		    matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
 
   // apply underelax to eqn
     d_linearSolver->computeEnthalpyUnderrelax(pc, patch,
@@ -1904,6 +1923,8 @@ EnthalpySolver::enthalpyLinearSolveInterm(const ProcessorGroup* pc,
     }
   #endif
   
+    d_boundaryCondition->enthalpyPressureBC(pc, patch, cellinfo, 
+				  &enthalpyVars);
   // put back the results
     // allocateAndPut instead:
     /* new_dw->put(enthalpyVars.enthalpy, d_lab->d_enthalpyIntermLabel, 

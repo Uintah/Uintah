@@ -137,6 +137,12 @@ public:
 			     SchedulerP& sched,
 			     DataWarehouseP& old_dw,
 			     DataWarehouseP& new_dw);
+
+      void sched_printTotalKE(SchedulerP& sched,
+			      const PatchSet* patches,
+			      const MaterialSet* matls,
+			      const int Runge_Kutta_current_step,
+			      const bool Runge_Kutta_last_step);
   
 protected :
 
@@ -194,6 +200,14 @@ private:
 		     const MaterialSubset* matls,
 		     DataWarehouse* old_dw,
 		     DataWarehouse* new_dw);
+
+      void printTotalKE(const ProcessorGroup* ,
+			const PatchSubset* patches,
+			const MaterialSubset*,
+			DataWarehouse*,
+			DataWarehouse* new_dw,
+			const int Runge_Kutta_current_step,
+			const bool Runge_Kutta_last_step);
 
 private:
       // const VarLabel*
