@@ -4,13 +4,24 @@
 #
 #   Author: J. Davison de St. Germain
 #
-#   Moves the given "window" to near the cursor location.
+#
+#   Moves the given "window" to near the cursor location.  It also
+#   withdraws the window.  This is because it needs to determine the
+#   size of the window for proper positioning of the window near the
+#   edges of the screen.  If you want the window to be remapped, 
+#   set the _optional_ parameter to "leave_up":
+#
+#   moveToCursor $w "leave_up"
+#
+#   or use the default version
+#
+#   moveToCursor $w
 #
 
 set screenWidth [winfo screenwidth .]
 set screenHeight [winfo screenheight .]
 
-proc moveToCursor { window } {
+proc moveToCursor { window { leave_up "no" } } {
 
   # If we are currently running a script... ie, we are loading the net
   # from a file, then do not move GUI to the mouse.
@@ -29,7 +40,9 @@ proc moveToCursor { window } {
   # "update idletasks" to make it figure out its geometry ... so now
   # this will work!
   if { [winfo ismapped $window] == 0 } {
-      wm withdraw $window
+      if { $leave_up != "leave_up" } {
+	  wm withdraw $window
+      }
       ::update idletasks
   }
 
@@ -50,6 +63,10 @@ proc moveToCursor { window } {
       set windowYLoc [expr $screenHeight - $guiHeight - 50]
   } else {
       set windowYLoc [expr $cursorYLoc - 80]
+  }
+
+  if { $leave_up == "leave_up" } {
+      wm deiconify $window
   }
 
   wm geometry $window +$windowXLoc+$windowYLoc
