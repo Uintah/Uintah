@@ -145,6 +145,36 @@ LatVolMesh::locate(node_index &node, const Point &p) const
   return true;
 }
 
+
+bool
+LatVolMesh::unlocate(Point &result, node_index idx) const
+{
+  const double sx = (max_.x() - min_.x()) / nx_; 
+  const double sy = (max_.y() - min_.y()) / ny_; 
+  const double sz = (max_.z() - min_.z()) / nz_;
+
+  result.x(idx.i_ * sx + min_.x());
+  result.y(idx.j_ * sy + min_.y());
+  result.z(idx.k_ * sz + min_.z());
+
+  return true;
+}
+
+bool
+LatVolMesh::unlocate(Point &result, cell_index idx) const
+{
+  const double sx = (max_.x() - min_.x()) / nx_; 
+  const double sy = (max_.y() - min_.y()) / ny_; 
+  const double sz = (max_.z() - min_.z()) / nz_;
+
+  result.x((idx.i_ + 0.5) * sx + min_.x());
+  result.y((idx.j_ + 0.5) * sy + min_.y());
+  result.z((idx.k_ + 0.5) * sz + min_.z());
+
+  return true;
+}
+
+
 #define LATVOLMESH_VERSION 1
 
 void

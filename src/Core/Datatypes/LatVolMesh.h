@@ -319,7 +319,10 @@ public:
   bool locate(face_index &, const Point &) const { return false; }
   bool locate(cell_index &, const Point &) const;
 
-  void unlocate(Point &result, const Point &p) const { result =  p; };
+  bool unlocate(Point &result, node_index idx) const;
+  bool unlocate(Point &result, edge_index idx) const { return false; }
+  bool unlocate(Point &result, face_index idx) const { return false; }
+  bool unlocate(Point &result, cell_index idx) const;
 
   void get_point(Point &, node_index) const;
 
