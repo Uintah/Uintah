@@ -42,7 +42,7 @@ extern "C" {
 #define TOPBIT ((unsigned int)0x80000000)
 
 extern "C" int __ateachexit(void(*)());
-#define THREAD_STACKSIZE 256*1024
+#define THREAD_STACKSIZE 256*1024*2
 
 #define MAXBSTACK 10
 #define MAXTHREADS 4000
