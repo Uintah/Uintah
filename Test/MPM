@@ -11,6 +11,7 @@ TESTS = [   ("disks.ups",		    ["dbg", "opt"]),    \
     	    ("disks2mat_fc.ups",	    ["dbg", "opt"]),    \
     	    ("disks_complex.ups",	    ["dbg", "opt"]),    \
 	    ("disks_fracture.ups",	    ["dbg", "opt"]),	\
+	    ("periodic_disks.ups",	    ["dbg", "opt"]),	\
 	    ("heatcond.ups",		    ["dbg", "opt"]),	\
 	    ("heatcond2mat.ups",	    ["dbg", "opt"]),	\
     	    ("inclined_plane_sphere.ups",   ["dbg", "opt"]),	\
