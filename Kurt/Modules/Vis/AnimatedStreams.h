@@ -16,6 +16,8 @@
 #include <PSECore/Datatypes/VectorFieldPort.h>
 #include <SCICore/Malloc/Allocator.h>
 #include <SCICore/TclInterface/TCLvar.h>
+#include <SCICore/Thread/CrowdMonitor.h>
+#include <PSECore/Widgets/PointWidget.h>
 
 #include <Kurt/Datatypes/GLAnimatedStreams.h>
 
@@ -24,12 +26,13 @@ namespace Modules {
 
 using namespace PSECore::Dataflow;
 using namespace PSECore::Datatypes;
+using namespace PSECore::Widgets;
 using namespace SCICore::TclInterface;
-using namespace SCICore::GeomSpace;
+using namespace Kurt::GeomSpace;
 using namespace SCICore::Geometry;
 using SCICore::Thread::Mutex;
 
-class SCICore::GeomSpace::GeomObj;
+
 
 class AnimatedStreams : public Module {
 
@@ -37,6 +40,7 @@ public:
   AnimatedStreams( const clString& id);
 
   virtual ~AnimatedStreams();
+  virtual void widget_moved(int last);    
   virtual void execute();
   //  void tcl_command( TCLArgs&, void* );
 
@@ -60,6 +64,9 @@ private:
 
   Mutex mutex;
 
+  CrowdMonitor control_lock; 
+  PointWidget *control_widget;
+  GeomID control_id;
 
 
 };

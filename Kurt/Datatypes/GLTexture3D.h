@@ -14,12 +14,6 @@
 using std::deque;
 
 namespace SCICore{
-namespace GeomSpace{
-    class GLVolRenState;
-    class FullRes;
-    class ROI;
-    class LOS;
-  }
 namespace Thread{
   class Semaphore;
   class ThreadGroup;
@@ -27,6 +21,13 @@ namespace Thread{
 }
 
 namespace Kurt {
+namespace GeomSpace{
+    class GLVolRenState;
+    class FullRes;
+    class ROI;
+    class LOS;
+  }
+
 namespace Datatypes {
 
 using SCICore::Datatypes::ScalarFieldRGBase;
@@ -80,13 +81,13 @@ typedef LockingHandle<GLTexture3D> GLTexture3DHandle;
 
 class GLTexture3D : public Datatype {
   friend class GLTextureIterator;
-  friend class SCICore::GeomSpace::GLVolRenState;
+  friend class Kurt::GeomSpace::GLVolRenState;
   friend class FullResIterator;
-  friend class SCICore::GeomSpace::FullRes;
+  friend class Kurt::GeomSpace::FullRes;
   friend class LOSIterator;
-  friend class SCICore::GeomSpace::LOS;
+  friend class Kurt::GeomSpace::LOS;
   friend class ROIIterator;
-  friend class SCICore::GeomSpace::ROI;
+  friend class Kurt::GeomSpace::ROI;
 
 public:
   // GROUP: Constructors:
@@ -166,17 +167,14 @@ private:
 				 int xsize, int ysize, int zsize,
 				 int level, T *tex,
 				 Octree<Brick*>* parent,
-				 Semaphore* thread_sema, 
-				 Semaphore* total_threads, 
-				 int& numTotal);
+				 Semaphore* thread_sema);
   template <class T>
     void BuildChild(int i, Point min, Point mid, Point max,
 		    int xoff, int yoff, int zoff,
 		    int xsize, int ysize, int zsize,
 		    int X2, int Y2, int Z2,
 		    int level,  T* tex, Octree<Brick*>* node,
-		    Semaphore* thread_sema, Semaphore* total_threads,
-		    int& numTotal);
+		    Semaphore* thread_sema);
   
 //   template <class T>
 //     void makeBrickData(int newx, int newy, int newz,
@@ -196,7 +194,7 @@ private:
   class run_makeBrickData : public Runnable {
   public:
     run_makeBrickData(GLTexture3D* tex3D,
-		      Semaphore *thread, Semaphore *total,
+		      Semaphore *thread,
 		      int newx, int newy, int newz,
 		      int xsize, int ysize, int zsize,
 		      int xoff, int yoff, int zoff, T *tex,
@@ -204,7 +202,7 @@ private:
     virtual void run();
   private:
     GLTexture3D *tex3D;
-    Semaphore *thread_sema, *total_threads;
+    Semaphore *thread_sema;
     int newx, newy, newz;
     int xsize, ysize, zsize;
     int xoff, yoff, zoff;
@@ -216,7 +214,7 @@ private:
   class run_makeLowResBrickData : public Runnable {
   public:
     run_makeLowResBrickData(GLTexture3D* tex3D,
-			    Semaphore *thread, Semaphore *total,
+			    Semaphore *thread,
 			    int xmax, int ymax, int zmax,
 			    int xsize, int ysize, int zsize,
 			    int xoff, int yoff, int zoff,
@@ -225,7 +223,7 @@ private:
     virtual void run();
   private:
     GLTexture3D *tex3D;
-    Semaphore *thread_sema, *total_threads;
+    Semaphore *thread_sema;
     int xmax, ymax, zmax;
     int xsize, ysize, zsize;
     int xoff, yoff, zoff;

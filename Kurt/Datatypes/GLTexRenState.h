@@ -1,7 +1,7 @@
 #ifndef GLTEXRENSTATE_H
 #define GLTEXRENSTATE_H
 
-namespace SCICore {
+namespace Kurt {
 namespace GeomSpace  {
 
 
@@ -65,6 +65,6 @@ protected:
   const GLVolumeRenderer* volren;
 };
 
-} // end namespace Datatypes
+} // end namespace GeomSpace
 } // end namespace Kurt
 #endif

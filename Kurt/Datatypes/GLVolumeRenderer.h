@@ -27,7 +27,11 @@
 #include "GLOverOp.h"
 #include "GLTexture3D.h"
 
-namespace SCICore {
+#include <iostream>
+using std::cerr;
+using std::endl;
+
+namespace Kurt {
 namespace GeomSpace  {
 
 
@@ -35,6 +39,9 @@ using namespace SCICore::Geometry;
 using namespace SCICore::Datatypes;
 using namespace Kurt::Datatypes;
 using SCICore::Thread::Mutex;
+using SCICore::GeomSpace::DrawInfoOpenGL;
+using SCICore::GeomSpace::Material;
+using SCICore::GeomSpace::GeomSave;
 
 class GLVolumeRenderer : public GeomObj
 {
@@ -121,7 +128,8 @@ public:
 #endif
   
   virtual GeomObj* clone();
-  virtual void get_bounds(BBox& bb){ tex->get_bounds( bb ); }
+  virtual void get_bounds(BBox& bb){ tex->get_bounds( bb );
+  cerr<<"Volume Bounds are "<<bb.min()<<", "<<bb.max()<<endl;}
   virtual void io(Piostream&);
   static PersistentTypeID type_id;
   virtual bool saveobj(std::ostream&, const clString& format, GeomSave*);
@@ -166,7 +174,7 @@ private:
 
  
 }  // namespace GeomSpace
-} // namespace SCICore
+} // namespace Kurt
 
 
 #endif

@@ -7,6 +7,8 @@ namespace SCICore {
   namespace Geometry {
     class Polygon;
   }
+}
+namespace Kurt {
 namespace GeomSpace  {
   using SCICore::Geometry::Polygon;
 
@@ -66,5 +68,5 @@ protected:
 };
 
 }  // namespace GeomSpace
-} // namespace SCICore
+} // namespace Kurt
 #endif

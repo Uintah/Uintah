@@ -64,7 +64,7 @@ WARNING
 
 class Brick 
  {
-friend class SCICore::GeomSpace::GLVolRenState;
+friend class Kurt::GeomSpace::GLVolRenState;
 public:
 
   // GROUP: Constructors:

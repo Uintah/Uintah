@@ -2,7 +2,7 @@
 #define LOS_H
 
 #include "GLVolRenState.h"
-namespace SCICore {
+namespace Kurt {
 namespace GeomSpace  {
 
 
@@ -63,6 +63,6 @@ protected:
 };
 
 }  // namespace GeomSpace
-} // namespace SCICore
+} // namespace Kurt
 
 #endif

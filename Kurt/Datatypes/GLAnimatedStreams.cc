@@ -7,7 +7,7 @@
 #include <float.h>
 #include <iostream>
 
-namespace SCICore {
+namespace Kurt {
 namespace GeomSpace  {
 
 using std::cerr;
@@ -15,6 +15,7 @@ using std::endl;
 
 using namespace SCICore::Geometry;
 using namespace SCICore::Datatypes;
+
 
 const double GLAnimatedStreams::FADE = 9.0;
 const int GLAnimatedStreams::MAXN = 10;
@@ -35,7 +36,7 @@ GLAnimatedStreams::GLAnimatedStreams(int id)
   : GeomObj( id ), mutex("GLAnimatedStreams Mutex"),
     _vfH(0), _cmapH(0), _pause(false), _normalsOn(false),
     _stepsize(0.1), fx(0), tail(0), head(0), _numStreams(0),
-    _linewidth(2)
+    _linewidth(2), _usesWidget(false), widgetLocation(0,0,0)
 {
 
   NOT_FINISHED("GLAnimatedStreams::GLAnimatedStreams(int id, const Texture3D* tex, ColorMap* cmap)");
@@ -48,7 +49,7 @@ GLAnimatedStreams::GLAnimatedStreams(int id,
   : GeomObj( id ),  mutex("GLAnimatedStreams Mutex"),
     _vfH(vfh), _cmapH(map), _pause(false), _normalsOn(false),
     _stepsize(0.1), fx(0), tail(0), head(0), _numStreams(0),
-    _linewidth(2)
+    _linewidth(2), _usesWidget(false), widgetLocation(0,0,0)
 {
   init();
 }
@@ -58,7 +59,8 @@ GLAnimatedStreams::GLAnimatedStreams(const GLAnimatedStreams& copy)
     _vfH(copy._vfH), _cmapH(copy._cmapH), fx(copy.fx),
     head(copy.head), tail(copy.tail), _numStreams(copy._numStreams),
     _pause(copy._pause), _normalsOn(copy._normalsOn),
-    _linewidth(copy._linewidth)
+    _linewidth(copy._linewidth), _usesWidget(copy._usesWidget),
+    widgetLocation(copy.widgetLocation)
 {
   
 } 
@@ -212,16 +214,43 @@ void
 GLAnimatedStreams::newStreamer(int whichStreamer)
 {
   streamerNode* tempNode;
-  int i;
+  double costheta;
+  double sintheta;
+  double phi;
   Point min, max;
   _vfH->get_bounds(min, max);
+  BBox bb;
+  bb.extend(min); bb.extend(max);
+  Vector toPoint(0,0,0);
+  Point loc;
+  // if we are using a widget then we want to choose a point near
+  // the widget to start the stream.  This uses a simple rejection
+  // test to determine the usability of the sample.
+  //  if( _usesWidget && 
+  if( bb.inside(widgetLocation)){
+    double r = std::min(max.x() - min.x(),
+			std::min(max.y() - min.y(), max.z() - min.z()));
+    r /= 2.0;
+    double scale;
+    do{
+      costheta = 1.0 - 2.0 * dRANDOM();
+      sintheta = sqrt(1 - costheta * costheta);
+      phi = 2 * M_PI * dRANDOM();
+      toPoint = Vector(r * cos(phi) * sintheta,
+		       r * sin(phi) * sintheta,
+		       r * costheta);
+      scale = dRANDOM();
+      loc = widgetLocation + toPoint*(scale*scale);
+    } while (!bb.inside( loc ));
+  } else {
+    // we just pick a random Point in the domain.
+    toPoint = Vector( (max.x() - min.x()) * dRANDOM(),
+		      (max.y() - min.y()) * dRANDOM(),
+		      (max.z() - min.z()) * dRANDOM());
+    loc = min + toPoint;
+  }
+  fx[whichStreamer] = loc;
   
-  Vector toPoint = Vector( (max.x() - min.x()) * dRANDOM(),
-			   (max.y() - min.y()) * dRANDOM(),
-			   (max.z() - min.z()) * dRANDOM());
-
-  fx[whichStreamer] = min + toPoint;
-
   tempNode = new streamerNode;
   tempNode->position = fx[whichStreamer];
 
@@ -354,4 +383,4 @@ GLAnimatedStreams::draw()
 
   
 } // namespace SCICore
-} // namespace GeomSpace
+} // namespace Kurt

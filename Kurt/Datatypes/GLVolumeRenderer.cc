@@ -6,13 +6,16 @@
 #include <GL/gl.h>
 #include <iostream>
 
-namespace SCICore {
+namespace Kurt {
 namespace GeomSpace  {
 
 using std::cerr;
 
 using namespace SCICore::Geometry;
 using namespace SCICore::Datatypes;
+using SCICore::GeomSpace::DrawInfoOpenGL;
+using SCICore::GeomSpace::Material;
+using SCICore::GeomSpace::GeomSave;
 using Kurt::Datatypes::Octree;
 using Kurt::Datatypes::Brick;
   //using SCICore::Thread::Mutex;
@@ -130,7 +133,7 @@ GLVolumeRenderer::setup()
 
 
 
-  glEnable(GL_TEXTURE_3D_EXT);
+  glEnable(GL_TEXTURE_3D);
   glTexEnvi(GL_TEXTURE_ENV,GL_TEXTURE_ENV_MODE, GL_MODULATE); 
 
 
@@ -299,11 +302,11 @@ GLVolumeRenderer::BuildTransferFunctions( )
 
 	  alpha1 = pow(alpha, bp);
 
-	  if( j == 128 ) cerr <<" alpha = "<< alpha<<std::endl;
-	  if( j == 128 ) cerr <<" alpha1 = "<< alpha1<<std::endl;
+	  //	  if( j == 128 ) cerr <<" alpha = "<< alpha<<std::endl;
+	  //if( j == 128 ) cerr <<" alpha1 = "<< alpha1<<std::endl;
 
 	  alpha2 = 1.0 - pow((1.0 - alpha1), sliceRatio);
-	  if( j == 128 ) cerr <<" alpha2 = "<< alpha2<<std::endl;
+	  // if( j == 128 ) cerr <<" alpha2 = "<< alpha2<<std::endl;
 	  TransferFunctions[i][4*j + 0] = (c.r()*255);
 	  TransferFunctions[i][4*j + 1] = (c.g()*255);
 	  TransferFunctions[i][4*j + 2] = (c.b()*255);
@@ -311,5 +314,5 @@ GLVolumeRenderer::BuildTransferFunctions( )
 	}
   }
 }
-} // namespace SCICore
 } // namespace GeomSpace
+} // namespace Kurt

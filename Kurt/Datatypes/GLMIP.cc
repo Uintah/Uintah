@@ -1,7 +1,7 @@
 #include "GLMIP.h"
 #include <GL/gl.h>
 
-namespace SCICore {
+namespace Kurt{
 namespace GeomSpace  {
 
 
@@ -24,5 +24,5 @@ void GLMIP::postDraw()
 }
 
 
-} // end namespace Datatypes
+} // end namespace GeomSpace
 } // end namespace Kurt

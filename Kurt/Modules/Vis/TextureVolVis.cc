@@ -41,7 +41,7 @@ using namespace PSECore::Dataflow;
 using namespace PSECore::Datatypes;
 using namespace PSECore::Widgets;
 using namespace SCICore::TclInterface;
-using namespace SCICore::GeomSpace;
+using namespace Kurt::GeomSpace;
 using namespace SCICore::Geometry;
 using namespace SCICore::Math;
 
@@ -154,6 +154,8 @@ void TextureVolVis::execute(void)
     }
     //    ogeom->delAll();
     ogeom->addObj( volren, "VolumeRenderer TransParent");
+    if(control_widget)
+      volren->SetControlPoint(control_widget->ReferencePoint());
   } else {
     volren->SetVol( tex );
     volren->SetColorMap( cmap );

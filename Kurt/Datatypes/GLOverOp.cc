@@ -1,7 +1,7 @@
 #include "GLOverOp.h"
 #include <GL/gl.h>
 
-namespace SCICore {
+namespace Kurt {
 namespace GeomSpace  {
 
 
@@ -22,6 +22,6 @@ void GLOverOp::postDraw()
   glDisable(GL_BLEND);
 }
 
+} //namespace GeomSpace  
+} //namespace Kurt 
 
-} // end namespace Datatypes
-} // end namespace Kurt

@@ -13,13 +13,17 @@
 #include <GL/gl.h>
 #include <GL/glu.h>
 
-namespace SCICore {
+namespace Kurt {
 namespace GeomSpace  {
 
 
 using namespace SCICore::Geometry;
 using namespace SCICore::Datatypes;
 //using namespace Kurt::Datatypes;
+using SCICore::GeomSpace::Material;
+using SCICore::GeomSpace::GeomObj;
+using SCICore::GeomSpace::DrawInfoOpenGL;
+using SCICore::GeomSpace::GeomSave;
 using SCICore::Thread::Mutex;
 
 struct streamerNode {
@@ -53,7 +57,8 @@ public:
   void Normals( bool n) {_normalsOn = n; }
   void SetLineWidth( int w){ _linewidth = w; }
   void SetStepSize( double step){ _stepsize = step; }
-
+  void SetWidgetLocation(Point p){ widgetLocation = p; }
+  //void UseWidget(bool b){ _usesWidget = b; }
   GLAnimatedStreams(const GLAnimatedStreams&);
   ~GLAnimatedStreams();
 
@@ -93,6 +98,8 @@ private:
   double slice_alpha;
 
   bool cmapHasChanged;
+  bool _usesWidget;
+  Point widgetLocation;
 
   bool _pause;
   bool _normalsOn;
@@ -121,7 +128,7 @@ private:
 
  
 }  // namespace GeomSpace
-} // namespace SCICore
+} // namespace Kurt
 
 
 #endif

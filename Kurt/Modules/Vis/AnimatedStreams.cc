@@ -14,7 +14,9 @@
 #include <PSECore/Datatypes/GeometryPort.h>
 #include <PSECore/Datatypes/VectorFieldPort.h>
 #include <SCICore/Datatypes/VectorField.h>
+#include <SCICore/Thread/CrowdMonitor.h>
 
+#include <PSECore/Widgets/PointWidget.h>
 #include <SCICore/Geom/GeomTriangles.h>
 
 #include <SCICore/Malloc/Allocator.h>
@@ -37,6 +39,7 @@ using namespace PSECore::Dataflow;
 using namespace PSECore::Datatypes;
 using namespace SCICore::TclInterface;
 
+static clString control_name("Stream Control Widget");
 			 
 extern "C" Module* make_AnimatedStreams( const clString& id) {
   return new AnimatedStreams(id);
@@ -49,6 +52,8 @@ AnimatedStreams::AnimatedStreams(const clString& id)
     normals("normals", id, this),
     stepsize("stepsize", id, this),
     linewidth("linewidth", id, this),
+    control_lock("AnimatedStreams position lock"),
+    control_widget(0), control_id(-1),
     anistreams(0), vf(0),
     mutex("Animated Streams")
 {
@@ -72,6 +77,12 @@ AnimatedStreams::~AnimatedStreams()
 {
 
 }
+void AnimatedStreams::widget_moved(int)
+{
+  if( anistreams ){
+      anistreams->SetWidgetLocation(control_widget->ReferencePoint());
+    }
+}
 
 void AnimatedStreams::execute(void)
 {
@@ -89,8 +100,22 @@ void AnimatedStreams::execute(void)
     return;
   }
 
-  mutex.lock();
 
+  if(!control_widget){
+    control_widget=scinew PointWidget(this, &control_lock, 0.2);
+    
+    Point Smin, Smax;
+    field->get_bounds(Smin, Smax);
+
+    double max =  std::max(Smax.x() - Smin.x(), Smax.y() - Smin.y());
+    max = std::max( max, Smax.z() - Smin.z());
+    control_widget->SetPosition(Interpolate(Smin,Smax,0.5));
+    control_widget->SetScale(max/80.0);
+    GeomObj *w=control_widget->GetWidget();
+    control_id = ogeom->addObj( w, control_name, &control_lock);
+  }
+
+  mutex.lock();
 
   if( !anistreams ){
     anistreams = new GLAnimatedStreams(0x12345676,
@@ -115,7 +140,7 @@ void AnimatedStreams::execute(void)
   anistreams->Normals( (bool)(normals.get()) );
   anistreams->SetStepSize( stepsize.get() );
   anistreams->SetLineWidth( linewidth.get());
-
+  //anistreams->UseWidget(true);
   if( !pause.get() ) {
     want_to_execute();
     ogeom->flushViews();
@@ -124,7 +149,7 @@ void AnimatedStreams::execute(void)
   }
       
     
-    ogeom->flushViews();
+  ogeom->flushViews();
   
   mutex.unlock();
 }

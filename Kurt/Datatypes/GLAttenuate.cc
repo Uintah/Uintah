@@ -2,7 +2,7 @@
 #include "GLVolumeRenderer.h"
 #include <GL/gl.h>
 
-namespace SCICore {
+namespace Kurt {
 namespace GeomSpace  {
 
 using namespace Kurt::Datatypes;
@@ -26,5 +26,5 @@ void GLAttenuate::postDraw()
   glDisable(GL_BLEND);
 }
 
-} // end namespace Datatypes
+} // end namespace GeomSpace
 } // end namespace Kurt

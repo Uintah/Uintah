@@ -3,7 +3,7 @@
 
 #include "GLTexRenState.h"
 
-namespace SCICore {
+namespace Kurt{
 namespace GeomSpace  {
 
 /**************************************
@@ -60,6 +60,6 @@ private:
 
 };
 
-} // end namespace Datatypes
+} // end namespace GeomSpace
 } // end namespace Kurt
 #endif
