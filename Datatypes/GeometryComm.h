@@ -29,7 +29,7 @@ struct GeomReply {
 class GeometryComm : public MessageBase {
 public:
     GeometryComm(Mailbox<GeomReply>*);
-    GeometryComm(int, GeomID, GeomObj*, const clString&);
+    GeometryComm(int, GeomID, GeomObj*, const clString&, CrowdMonitor* lock);
     GeometryComm(int, GeomID);
     GeometryComm(MessageTypes::MessageType, int);
     virtual ~GeometryComm();
@@ -39,6 +39,7 @@ public:
     GeomID serial;
     GeomObj* obj;
     clString name;
+    CrowdMonitor* lock;
 
     GeometryComm* next;
 };

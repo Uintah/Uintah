@@ -83,11 +83,12 @@ void GeometryOPort::finish()
     }
 }
 
-GeomID GeometryOPort::addObj(GeomObj* obj, const clString& name)
+GeomID GeometryOPort::addObj(GeomObj* obj, const clString& name,
+			     CrowdMonitor* lock)
 {
     turn_on();
     GeomID id=serial++;
-    outbox->send(new GeometryComm(portid, id, obj, name));
+    outbox->send(new GeometryComm(portid, id, obj, name, lock));
     dirty=1;
     turn_off();
     return id;
@@ -112,7 +113,7 @@ void GeometryOPort::delAll()
 void GeometryOPort::flushViews()
 {
     turn_on();
-    outbox->send(new GeometryComm(MessageTypes::GeometryFlush, portid));
+    outbox->send(new GeometryComm(MessageTypes::GeometryFlushViews, portid));
     dirty=0;
     turn_off();
 }
@@ -128,9 +129,9 @@ GeometryComm::GeometryComm(Mailbox<GeomReply>* reply)
 }
 
 GeometryComm::GeometryComm(int portno, GeomID serial, GeomObj* obj,
-			   const clString& name)
+			   const clString& name, CrowdMonitor* lock)
 : MessageBase(MessageTypes::GeometryAddObj),
-  portno(portno), serial(serial), obj(obj), name(name)
+  portno(portno), serial(serial), obj(obj), name(name), lock(lock)
 {
 }
 

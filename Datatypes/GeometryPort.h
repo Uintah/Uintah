@@ -21,6 +21,7 @@ typedef int GeomID;
 class clString;
 class GeomObj;
 class MessageBase;
+class Mutex;
 
 class GeometryIPort : public IPort {
 public:
@@ -44,6 +45,7 @@ class GeometryOPort : public OPort {
     GeomID serial;
     int dirty;
     int* busy_bit;
+    Mutex* lock;
 
     virtual void reset();
     virtual void finish();
@@ -53,7 +55,7 @@ public:
     GeometryOPort(Module*, const clString& name, int protocol);
     virtual ~GeometryOPort();
 
-    GeomID addObj(GeomObj*, const clString& name);
+    GeomID addObj(GeomObj*, const clString& name, CrowdMonitor* lock=0);
     void delObj(GeomID);
     void delAll();
     void flushViews();
