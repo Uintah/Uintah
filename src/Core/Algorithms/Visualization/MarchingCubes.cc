@@ -20,6 +20,7 @@
 #include <Core/Algorithms/Visualization/MarchingCubes.h>
 #include <Core/Algorithms/Visualization/HexMC.h>
 #include <Core/Algorithms/Visualization/UHexMC.h>
+#include <Core/Algorithms/Visualization/PrismMC.h>
 #include <Core/Algorithms/Visualization/TetMC.h>
 #include <Core/Algorithms/Visualization/TriMC.h>
 #include <Core/Algorithms/Visualization/QuadMC.h>
@@ -57,6 +58,9 @@ MarchingCubesAlg::get_compile_info(const TypeDescription *td) {
   } else if (sname.find("TetVolField") != string::npos) {
     subname.append("TetMC<" + td->get_name() + "> ");
     subinc.append(TetMCBase::get_h_file_path());
+  } else if (sname.find("PrismVolField") != string::npos) {
+    subname.append("PrismMC<" + td->get_name() + "> ");
+    subinc.append(PrismMCBase::get_h_file_path());
   } else if (sname.find("HexVolField") != string::npos) {
     subname.append("UHexMC<" + td->get_name() + "> ");
     subinc.append(UHexMCBase::get_h_file_path());
