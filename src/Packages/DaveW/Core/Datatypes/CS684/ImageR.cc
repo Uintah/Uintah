@@ -29,7 +29,7 @@ namespace Datatypes {
 using SCICore::Math::Min;
 using SCICore::Math::Max;
 
-using namespace SCICore::CoreDatatypes;
+using namespace SCICore::Datatypes;
 
 static Persistent* make_ImageXYZ()
 {
@@ -365,6 +365,9 @@ void ImageRM::io(Piostream& stream) {
 
 //
 // $Log$
+// Revision 1.4  1999/08/25 03:35:47  sparker
+// *** empty log message ***
+//
 // Revision 1.3  1999/08/24 06:22:54  dmw
 // Added in everything for the DaveW branch
 //
