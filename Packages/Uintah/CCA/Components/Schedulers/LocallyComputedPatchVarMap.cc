@@ -99,7 +99,7 @@ ConnectedPatchGrouper(const set<const Patch*>& patchSet)
   const Level* level = (*patchSet.begin())->getLevel();
 
   if (patchSet.size() > 1)
-    cerr << "patchSet size: " << patchSet.size() << endl;
+    cerr << "patchSet size: " << patchSet.size() << "\n";
   
   PatchRangeQuerier patchRangeQuerier(level);
   connectedPatchGroups_ =
@@ -107,8 +107,8 @@ ConnectedPatchGrouper(const set<const Patch*>& patchSet)
 					      patchSet.end(),
 					      patchRangeQuerier);
 
-  //cerr << "ConnectedPatchGroups: " << endl;
-  //cerr << *connectedPatchGroups_ << endl;
+  //cerr << "ConnectedPatchGroups: " << "\n";
+  //cerr << *connectedPatchGroups_ << "\n";
   // map each patch to its SuperBox
   const SuperPatchContainer& superBoxes =
     connectedPatchGroups_->getSuperBoxes();
