@@ -175,6 +175,7 @@ Grid* HierarchicalRegridder::regrid(Grid* oldGrid, SchedulerP& scheduler, const 
   
 }
 
+#if 0
 void HierarchicalRegridder::MarkPatches( const GridP& oldGrid, int levelIdx  )
 {
   rdbg << "HierarchicalRegridder::MarkPatches() BGN" << endl;
@@ -306,6 +307,7 @@ void HierarchicalRegridder::ExtendPatches( const GridP&, int levelIdx  )
 
   rdbg << "HierarchicalRegridder::ExtendPatches() END" << endl;
 }
+#endif
 
 IntVector HierarchicalRegridder::StartCellToLattice ( IntVector startCell, int levelIdx )
 {
@@ -335,13 +337,10 @@ void HierarchicalRegridder::MarkPatches2(const ProcessorGroup*,
     SubPatchFlag* subpatches = scinew SubPatchFlag(startidx, startidx+numSubPatches);
     PerPatch<SubPatchFlagP> activePatches(subpatches);
     
-    // use pointers here to avoid a lot of const nonsense with the original version of Regridder
-    constCCVariable<int> dcc;
-    CCVariable<int>* dilatedCellsCreated;
+    constCCVariable<int> dilatedCellsCreated;
     // FIX Deletion - CCVariable<int>* dilatedCellsDeleted;
     new_dw->put(activePatches, d_activePatchesLabel, 0, patch);
-    new_dw->get(dcc, d_dilatedCellsCreationLabel, 0, patch, Ghost::None, 0);
-    dilatedCellsCreated = dynamic_cast<CCVariable<int>*>(const_cast<CCVariableBase*>(dcc.clone()));
+    new_dw->get(dilatedCellsCreated, d_dilatedCellsCreationLabel, 0, patch, Ghost::None, 0);
     
     if (d_cellCreationDilation != d_cellDeletionDilation) {
       //FIX Deletion
@@ -369,7 +368,7 @@ void HierarchicalRegridder::MarkPatches2(const ProcessorGroup*,
 //       rdbg << "MarkPatches() startCellSubPatch = " << startCellSubPatch << endl;
 //       rdbg << "MarkPatches() endCellSubPatch   = " << endCellSubPatch   << endl;
 
-      if (flaggedCellsExist(*dilatedCellsCreated, startCellSubPatch, endCellSubPatch)) {
+      if (flaggedCellsExist(dilatedCellsCreated, startCellSubPatch, endCellSubPatch)) {
         rdbg << "Marking Active [ " << levelIdx+1 << " ]: " << latticeStartIdx << endl;
         subpatches->set(latticeStartIdx);
 //       } else if (!flaggedCellsExist(*dilatedCellsDeleted, startCellSubPatch, endCellSubPatch)) {
@@ -392,7 +391,7 @@ void HierarchicalRegridder::MarkPatches2(const ProcessorGroup*,
   }
   rdbg << "MarkPatches2 END\n";
 }
-
+#if 0
 Grid* HierarchicalRegridder::CreateGrid(Grid* oldGrid, const ProblemSpecP& ups) 
 {
   Grid* newGrid = scinew Grid();
@@ -491,7 +490,7 @@ Grid* HierarchicalRegridder::CreateGrid(Grid* oldGrid, const ProblemSpecP& ups)
 
   return newGrid;
 }
-
+#endif
 void HierarchicalRegridder::GatherSubPatches(const GridP& oldGrid, SchedulerP& sched)
 {
   rdbg << "GatherSubPatches BGN\n";

@@ -263,7 +263,7 @@ void RegridderCommon::problemSetup(const ProblemSpecP& params,
   rdbg << "RegridderCommon::problemSetup() END" << endl;
 }
 
-bool RegridderCommon::flaggedCellsExist(CCVariable<int>& flaggedCells, IntVector low, IntVector high)
+bool RegridderCommon::flaggedCellsExist(constCCVariable<int>& flaggedCells, IntVector low, IntVector high)
 {
   //  rdbg << "RegridderCommon::flaggedCellsExist() BGN" << endl;
 
