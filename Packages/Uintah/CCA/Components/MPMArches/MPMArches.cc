@@ -710,6 +710,9 @@ void MPMArches::scheduleEnergyExchange(SchedulerP& sched,
   t->computes(d_MAlb->heaTranSolid_FCXLabel, mpm_matls->getUnion());
   t->computes(d_MAlb->heaTranSolid_FCYLabel, mpm_matls->getUnion());
   t->computes(d_MAlb->heaTranSolid_FCZLabel, mpm_matls->getUnion());
+  t->computes(d_MAlb->heaTranSolid_FCX_RadLabel, mpm_matls->getUnion());
+  t->computes(d_MAlb->heaTranSolid_FCY_RadLabel, mpm_matls->getUnion());
+  t->computes(d_MAlb->heaTranSolid_FCZ_RadLabel, mpm_matls->getUnion());
 
   // requires from Arches: celltype, gas temperature
   // also, from mpmarches, void fraction
@@ -2606,6 +2609,9 @@ void MPMArches::doEnergyExchange(const ProcessorGroup*,
     StaticArray<SFCXVariable<double> > heaTranSolid_fcx(numMPMMatls);
     StaticArray<SFCYVariable<double> > heaTranSolid_fcy(numMPMMatls);
     StaticArray<SFCZVariable<double> > heaTranSolid_fcz(numMPMMatls);
+    StaticArray<SFCXVariable<double> > heaTranSolid_fcx_rad(numMPMMatls);
+    StaticArray<SFCYVariable<double> > heaTranSolid_fcy_rad(numMPMMatls);
+    StaticArray<SFCZVariable<double> > heaTranSolid_fcz_rad(numMPMMatls);
     
     // Arches stuff
     
@@ -2691,6 +2697,18 @@ void MPMArches::doEnergyExchange(const ProcessorGroup*,
       new_dw->allocateAndPut(heaTranSolid_fcz[m], d_MAlb->heaTranSolid_FCZLabel,
 		       idx, patch);
       heaTranSolid_fcz[m].initialize(0.);
+
+      new_dw->allocateAndPut(heaTranSolid_fcx_rad[m], d_MAlb->heaTranSolid_FCX_RadLabel,
+		       idx, patch);
+      heaTranSolid_fcx_rad[m].initialize(0.);
+
+      new_dw->allocateAndPut(heaTranSolid_fcy_rad[m], d_MAlb->heaTranSolid_FCY_RadLabel,
+		       idx, patch);
+      heaTranSolid_fcy_rad[m].initialize(0.);
+
+      new_dw->allocateAndPut(heaTranSolid_fcz_rad[m], d_MAlb->heaTranSolid_FCZ_RadLabel,
+		       idx, patch);
+      heaTranSolid_fcz_rad[m].initialize(0.);
 
     }
 
@@ -2796,6 +2814,9 @@ void MPMArches::doEnergyExchange(const ProcessorGroup*,
 			      heaTranSolid_fcx[m],
 			      heaTranSolid_fcy[m],
 			      heaTranSolid_fcz[m],
+			      heaTranSolid_fcx_rad[m],
+			      heaTranSolid_fcy_rad[m],
+			      heaTranSolid_fcz_rad[m],
 			      heaTranSolid_cc[m],
 			      su_enth_cc, 
 			      sp_enth_cc,
@@ -2825,36 +2846,6 @@ void MPMArches::doEnergyExchange(const ProcessorGroup*,
 
     }
 
-    // Calculation done: now put computed/modified variables in 
-    // data warehouse
-    
-    // Solid variables
-    
-    for (int m = 0; m < numMPMMatls; m++) {
-      
-      Material* matl = d_sharedState->getMPMMaterial( m );
-      int idx = matl->getDWIndex();
-
-      // allocateAndPut instead:
-      /* new_dw->put(heaTranSolid_cc[m], d_MAlb->heaTranSolid_tmp_CCLabel,
-		  idx, patch); */;
-
-      // allocateAndPut instead:
-      /* new_dw->put(heaTranSolid_fcx[m], d_MAlb->heaTranSolid_FCXLabel,
-		  idx, patch); */;
-
-      // allocateAndPut instead:
-      /* new_dw->put(heaTranSolid_fcy[m], d_MAlb->heaTranSolid_FCYLabel,
-		  idx, patch); */;
-
-      // allocateAndPut instead:
-      /* new_dw->put(heaTranSolid_fcz[m], d_MAlb->heaTranSolid_FCZLabel,
-		  idx, patch); */;
-
-    }
-
-    // Gas variables
-
     // debug, sk, April 16, 2002
     //    sp_enth_cc.initialize(0.);
     //    sp_enth_fcx.initialize(0.);
@@ -2865,40 +2856,6 @@ void MPMArches::doEnergyExchange(const ProcessorGroup*,
     //    su_enth_fcy.initialize(0.);
     //    su_enth_fcz.initialize(0.);
     // end debug, sk, April 16, 2002
-    
-    // Gas variables
-
-    // allocateAndPut instead:
-    /* new_dw->put(su_enth_cc, d_MAlb->d_enth_mmNonLinSrc_tmp_CCLabel,
-		matlIndex, patch); */;
-
-    // allocateAndPut instead:
-    /* new_dw->put(su_enth_fcx, d_MAlb->d_enth_mmNonLinSrc_FCXLabel,
-		matlIndex, patch); */;
-
-    // allocateAndPut instead:
-    /* new_dw->put(su_enth_fcy, d_MAlb->d_enth_mmNonLinSrc_FCYLabel,
-		matlIndex, patch); */;
-
-    // allocateAndPut instead:
-    /* new_dw->put(su_enth_fcz, d_MAlb->d_enth_mmNonLinSrc_FCZLabel,
-		matlIndex, patch); */;
-
-    // allocateAndPut instead:
-    /* new_dw->put(sp_enth_cc, d_MAlb->d_enth_mmLinSrc_tmp_CCLabel,
-		matlIndex, patch); */;
-
-    // allocateAndPut instead:
-    /* new_dw->put(sp_enth_fcx, d_MAlb->d_enth_mmLinSrc_FCXLabel,
-		matlIndex, patch); */;
-
-    // allocateAndPut instead:
-    /* new_dw->put(sp_enth_fcy, d_MAlb->d_enth_mmLinSrc_FCYLabel,
-		matlIndex, patch); */;
-
-    // allocateAndPut instead:
-    /* new_dw->put(sp_enth_fcz, d_MAlb->d_enth_mmLinSrc_FCZLabel,
-		matlIndex, patch); */;
     
   }
 }

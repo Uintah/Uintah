@@ -122,6 +122,12 @@ MPMArchesLabel::MPMArchesLabel()
 					   SFCYVariable<double>::getTypeDescription() );
   heaTranSolid_FCZLabel = VarLabel::create("heaTranSolid_FCZ",
 					   SFCZVariable<double>::getTypeDescription() );
+  heaTranSolid_FCX_RadLabel = VarLabel::create("heaTranSolid_FCX_Rad",
+					   SFCXVariable<double>::getTypeDescription() );
+  heaTranSolid_FCY_RadLabel = VarLabel::create("heaTranSolid_FCY_Rad",
+					   SFCYVariable<double>::getTypeDescription() );
+  heaTranSolid_FCZ_RadLabel = VarLabel::create("heaTranSolid_FCZ_Rad",
+					   SFCZVariable<double>::getTypeDescription() );
   heaTranSolid_NCLabel = VarLabel::create("heaTranSolid_NC",
 					  NCVariable<double>::getTypeDescription() );
 
@@ -358,6 +364,9 @@ MPMArchesLabel::~MPMArchesLabel()
   VarLabel::destroy(heaTranSolid_FCXLabel);
   VarLabel::destroy(heaTranSolid_FCYLabel);
   VarLabel::destroy(heaTranSolid_FCZLabel);
+  VarLabel::destroy(heaTranSolid_FCX_RadLabel);
+  VarLabel::destroy(heaTranSolid_FCY_RadLabel);
+  VarLabel::destroy(heaTranSolid_FCZ_RadLabel);
   VarLabel::destroy(heaTranSolid_NCLabel);
 
   VarLabel::destroy(SumAllForcesCCLabel);
