@@ -535,8 +535,6 @@ if test "$tau" ; then
 
   TAU_MAKEFILE=${tau}
   
-  CFLAGS="$CFLAGS -DUSE_TAU_PROFILING"
-
   cat > conftest-tau.cc <<EOF
 
 #include <Profile/Profiler.h>
