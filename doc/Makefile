@@ -36,7 +36,8 @@ tar: products
 	@echo "Making a tar archive"
 	-rm -f SCIRunDocs.tar
 	cd ..; root=`pwd`; root=`basename $${root}`;\
-	cd ..; tar cvf $${root}/doc/SCIRunDocs.tar \
+	cd ..; gnutar --exclude='*CVS*' --create --verbose \
+		--file=$${root}/doc/SCIRunDocs.tar \
 		$${root}/doc/index.html \
 		$${root}/doc/.htaccess \
 		$${root}/doc/Installation/index.html \
@@ -58,8 +59,9 @@ tar: products
 		$${root}/doc/Utilities/Figures \
 		$${root}/src/Dataflow/XML/*.html \
 		$${root}/src/Dataflow/Modules/*/doc \
-		$${root}/src/Packages/*/Dataflow/XML/*.html
-#		$${root}/src/Packages/*/Dataflow/Modules/*/doc
+		$${root}/src/Packages/*/Dataflow/XML/*.html \
+		$${root}/src/Packages/*/Dataflow/TeX/*/*/* \
+		$${root}/src/Packages/*/Dataflow/TeX/*/figs
 
 # Build all docs.
 products:
