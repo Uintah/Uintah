@@ -108,47 +108,6 @@ CompDynamicProcedure::problemSetup(const ProblemSpecP& params)
 #endif
 
 }
-void
-CompDynamicProcedure::initializeSmagCoeff( const ProcessorGroup*,
-                                                const PatchSubset* patches,
-                                                const MaterialSubset* ,
-                                                DataWarehouse*,
-                                                DataWarehouse* new_dw,
-                                                const TimeIntegratorLabel* ) {
-  int archIndex = 0; // only one arches material
-  int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
-
-  for(int p=0;p<patches->size();p++){
-    const Patch* patch = patches->get(p);
-
-    CCVariable<double> Cs; //smag coeff 
-//    cout << "before Cs allocate\n"; 
-    new_dw->allocateAndPut(Cs, d_lab->d_CsLabel, matlIndex, patch);  
-//    cout << "after Cs allocate\n";
-    Cs.initialize(0.0);
-  }
-}
-
-//****************************************************************************
-// Schedule initialization of the smag coeff sub model 
-//****************************************************************************
-void 
-CompDynamicProcedure::sched_initializeSmagCoeff( SchedulerP& sched, 
-                                                      const PatchSet* patches,
-                                                      const MaterialSet* matls,
-                                                      const TimeIntegratorLabel* timelabels )
-{
-  string taskname =  "CompDynamicProcedure::initializeSmagCoeff" + timelabels->integrator_step_name;
-  Task* tsk = scinew Task(taskname, this,
-                          &CompDynamicProcedure::initializeSmagCoeff,
-                          timelabels);
-
-  tsk->computes(d_lab->d_CsLabel);
-  sched->addTask(tsk, patches, matls);
-}
-
-
-
 
 //****************************************************************************
 // Schedule recomputation of the turbulence sub model 
@@ -1852,8 +1811,8 @@ CompDynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
 	  double isi_cur = sqrt(2.0*(sij0*sij0 + sij1*sij1 + sij2*sij2 +
 				     2.0*(sij3*sij3 + sij4*sij4 + sij5*sij5)));
 // trace has been neglected
-	  double trace = (sij0 + sij1 + sij2)/3.0;
-//	  double trace = 0.0;
+//	  double trace = (sij0 + sij1 + sij2)/3.0;
+	  double trace = 0.0;
 	  double uvel_cur = ccUVel[currCell];
 	  double vvel_cur = ccVVel[currCell];
 	  double wvel_cur = ccWVel[currCell];
@@ -2086,8 +2045,8 @@ CompDynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
 				       shatij4*shatij4 + shatij5*shatij5)));
 	  double filterDencur = filterRho[currCell];
 //        ignoring the trace
-	  double trace = (shatij0 + shatij1 + shatij2)/3.0;
-//	  double trace = 0.0;
+//	  double trace = (shatij0 + shatij1 + shatij2)/3.0;
+	  double trace = 0.0;
 
 	  IsImag[currCell] = IsI[currCell]; 
 

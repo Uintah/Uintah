@@ -157,7 +157,7 @@ Arches::problemSetup(const ProblemSpecP& params,
 						 d_calcEnthalpy);
   // send params, boundary type defined at the level of Grid
   d_boundaryCondition->problemSetup(db);
-  string turbModel;
+//  string turbModel;
   db->require("turbulence_model", turbModel);
   if (turbModel == "smagorinsky") 
     d_turbModel = scinew SmagorinskyModel(d_lab, d_MAlab, d_physicalConsts,
@@ -308,9 +308,11 @@ Arches::scheduleInitialize(const LevelP& level,
         d_scaleSimilarityModel->sched_reComputeTurbSubmodel(sched, patches, matls,
                                                             init_timelabel);
     }
-    
-//    d_turbModel->sched_reComputeTurbSubmodel(sched, patches, matls, init_timelabel);
-    d_turbModel->sched_initializeSmagCoeff(sched, patches, matls, init_timelabel);
+    cout << "turbModel= " << turbModel<<"\n";
+    if (turbModel == "complocaldynamicprocedure")
+	    sched_initializeSmagCoeff(level, sched);
+    else
+	    d_turbModel->sched_reComputeTurbSubmodel(sched, patches, matls, init_timelabel);
   }
 
   // Computes velocities at apecified pressure b.c's
@@ -340,7 +342,6 @@ Arches::sched_paramInit(const LevelP& level,
     tsk->computes(d_lab->d_newCCVVelocityLabel);
     tsk->computes(d_lab->d_newCCWVelocityLabel);
     tsk->computes(d_lab->d_pressurePSLabel);
-//    tsk->computes(d_lab->d_CsLabel);
     if (!((d_timeIntegratorType == "FE")||(d_timeIntegratorType == "BE")))
       tsk->computes(d_lab->d_pressurePredLabel);
     if (d_timeIntegratorType == "RK3SSP")
@@ -431,7 +432,6 @@ Arches::paramInit(const ProcessorGroup* ,
     CCVariable<double> reactScalarDiffusivity;
     CCVariable<double> pPlusHydro;
     CCVariable<double> mmgasVolFrac;
-//    CCVariable<double> Cs;
     std::cerr << "Material Index: " << matlIndex << endl;
     new_dw->allocateAndPut(uVelocityCC, d_lab->d_newCCUVelocityLabel, matlIndex, patch);
     new_dw->allocateAndPut(vVelocityCC, d_lab->d_newCCVVelocityLabel, matlIndex, patch);
@@ -445,11 +445,9 @@ Arches::paramInit(const ProcessorGroup* ,
     new_dw->allocateAndPut(uVelRhoHat, d_lab->d_uVelRhoHatLabel, matlIndex, patch);
     new_dw->allocateAndPut(vVelRhoHat, d_lab->d_vVelRhoHatLabel, matlIndex, patch);
     new_dw->allocateAndPut(wVelRhoHat, d_lab->d_wVelRhoHatLabel, matlIndex, patch);
-//    new_dw->allocateAndPut(Cs, d_lab->d_CsLabel, matlIndex, patch);
     uVelRhoHat.initialize(0.0);
     vVelRhoHat.initialize(0.0);
     wVelRhoHat.initialize(0.0);
-//    Cs.initialize(0.0);
     new_dw->allocateAndPut(pressure, d_lab->d_pressurePSLabel, matlIndex, patch);
     if (!((d_timeIntegratorType == "FE")||(d_timeIntegratorType == "BE"))) {
       new_dw->allocateAndPut(pressurePred, d_lab->d_pressurePredLabel,
@@ -917,6 +915,42 @@ Arches::readCCInitialCondition(const ProcessorGroup* ,
       }
     }
     fd.close();  
+  }
+}
+
+// ****************************************************************************
+// schedule of initializing SmagCoeff 
+// ****************************************************************************
+void 
+Arches::sched_initializeSmagCoeff(const LevelP& level,
+				     SchedulerP& sched)
+{
+    // primitive variable initialization
+    Task* tsk = scinew Task( "Arches::initializeSmagCoeff",
+			    this, &Arches::initializeSmagCoeff);
+
+    tsk->computes(d_lab->d_CsLabel);
+    sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials());
+
+}
+
+// ****************************************************************************
+// Actual read
+// ****************************************************************************
+void
+Arches::initializeSmagCoeff(const ProcessorGroup* ,
+		  	       const PatchSubset* patches,
+			       const MaterialSubset*,
+	 		       DataWarehouse* ,
+			       DataWarehouse* new_dw)
+{
+  for (int p = 0; p < patches->size(); p++) {
+    const Patch* patch = patches->get(p);
+    int archIndex = 0; // only one arches material
+    int matlIndex = d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+    CCVariable<double> Cs; //smag coeff 
+    new_dw->allocateAndPut(Cs, d_lab->d_CsLabel, matlIndex, patch);  
+    Cs.initialize(0.0);
   }
 }
 

@@ -105,11 +105,12 @@ public:
 
       // GROUP: Schedule Action :
       ///////////////////////////////////////////////////////////////////////
-      virtual void sched_initializeSmagCoeff( SchedulerP&,
-                                  const PatchSet* patches,
-                                  const MaterialSet* matls,
-                                  const TimeIntegratorLabel* timelabels) = 0;
-                                                
+/*      virtual void sched_initializeSmagCoeff(SchedulerP&,
+                                             const PatchSet* patches,
+                                             const MaterialSet* matls,
+                                             const TimeIntegratorLabel* timelabels);
+      
+*/                                                
       ///////////////////////////////////////////////////////////////////////
       // Interface for Schedule the recomputation of Turbulence Model data
       //    [in] 
