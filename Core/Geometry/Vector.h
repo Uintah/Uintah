@@ -103,6 +103,7 @@ public:
   inline Vector operator*(const double) const;
   inline Vector operator*(const Vector&) const;
   inline Vector& operator*=(const double);
+  inline Vector& operator*=(const Vector&);
   inline Vector operator/(const double) const;
   inline Vector operator/(const Vector&) const;
   inline Vector& operator/=(const double);
@@ -227,6 +228,14 @@ inline Vector& Vector::operator=(const Vector& v)
 inline Vector Vector::operator*(const double s) const
 {
     return Vector(_x*s, _y*s, _z*s);
+}
+
+inline Vector& Vector::operator*=(const Vector& v)
+{
+  _x *= v._x;
+  _y *= v._y;
+  _z *= v._z;
+  return *this;
 }
 
 // Allows for double * Vector so that everything doesn't have to be
