@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE component SYSTEM "../../../../../doc/ReferenceGuide/component.dtd">
+
+<component name="BuildFDMatrix" category="Forward">
+  <overview>
+
+    <authors>
+      <author>Alexei Samsonov</author>
+    </authors>
+
+    <summary>
+      The module takes field containing conductivity tensors, current
+      source values, Newmann and Dirichlet boundary conditions  and
+      outputs finite-differences matrix and right-hand side vector for
+      forward problem solution.
+    </summary>
+
+    <description>
+      <p>Version Date: November 2000</p><p>Version: 1.0</p>
+    </description>
+
+  </overview>
+
+  <implementation>
+
+  </implementation>
+
+  <io>
+  </io>
+  
+  <gui>
+  </gui>
+
+  <testing>
+    <plan>
+      <description>
+	<p>The components need to be tested on synthetic and real data
+	for different forward problems. The main attention needs to be
+	applied for testing for boundary conditions of different
+	configurations</p>
+      </description>
+      <step>
+	<p></p>
+      </step>
+    </plan>
+  </testing>
+
+</component>
+
