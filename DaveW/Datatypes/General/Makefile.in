@@ -2,8 +2,11 @@ SRCTOP   = @top_srcdir@
 SRCDIR   = @srcdir@
 OBJTOP   = ../../..
 
-SRCS	 = ManhattanDist.cc ScalarTriSurface.cc SegFld.cc SegFldPort.cc \
-	   SigmaSet.cc SigmaSetPort.cc
+SRCS	 = ContourSet.cc ContourSetPort.cc ManhattanDist.cc \
+	   ScalarTriSurface.cc SegFld.cc SegFldPort.cc \
+	   SigmaSet.cc SigmaSetPort.cc \
+	   TensorField.cc TensorFieldBase.cc TensorFieldPort.cc \
+	   TopoSurfTree.cc
 
 INCLUDES = -I$(SRCTOP) -I$(OBJTOP) 
 

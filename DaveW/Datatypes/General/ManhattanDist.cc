@@ -27,12 +27,12 @@ using SCICore::Containers::Queue;
 using SCICore::Geometry::Vector;
 using SCICore::Datatypes::Persistent;
 
-static Persistent* maker()
+static Persistent* make_ManhattanDist()
 {
     return scinew ManhattanDist;
 }
 
-PersistentTypeID ManhattanDist::type_id("ManhattanDist", "ScalarFieldRGint", maker);
+PersistentTypeID ManhattanDist::type_id("ManhattanDist", "ScalarFieldRGint", make_ManhattanDist);
 
 ManhattanDist::ManhattanDist(const Array1<Point>&Pts, int n, int init,
 			     double minX, double minY, double minZ,
@@ -344,6 +344,9 @@ ScalarField* ManhattanDist::clone()
 
 //
 // $Log$
+// Revision 1.3  1999/09/01 05:27:36  dmw
+// more DaveW datatypes...
+//
 // Revision 1.2  1999/08/25 03:47:34  sparker
 // Changed SCICore/CoreDatatypes to SCICore/Datatypes
 // Changed PSECore/CommonDatatypes to PSECore/Datatypes
