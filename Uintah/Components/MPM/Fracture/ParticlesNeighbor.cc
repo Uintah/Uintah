@@ -3,11 +3,19 @@
 #include "CellsNeighbor.h"
 #include "Lattice.h"
 #include "Cell.h"
+#include "LeastSquare.h"
+
+#include <Uintah/Components/MPM/Util/Matrix3.h>
 
 #include <Uintah/Grid/Patch.h>
 
 namespace Uintah {
 namespace MPM {
+
+ParticlesNeighbor::ParticlesNeighbor(const ParticleVariable<Point>& pX)
+: std::vector<particleIndex>(), d_pX(pX)
+{
+}
 
 void  ParticlesNeighbor::buildIncluding(const particleIndex& pIndex,
                                         const Lattice& lattice)
@@ -52,26 +60,67 @@ void  ParticlesNeighbor::buildExcluding(const particleIndex& pIndex,
   }
 }
 
-void
-ParticlesNeighbor::
-interpolateVector( const ParticleVariable<Vector>& pVector,
-                   Vector* vector, 
-                   Matrix3* gradient) const
+void  ParticlesNeighbor::interpolateVector(LeastSquare& ls,
+                          const particleIndex& pIdx,
+                          const ParticleVariable<Vector>& pVector,
+                          Vector& data,
+                          Matrix3& gradient) const
 {
+  Vector v;
+  for(int i=0;i<3;++i) {
+    ls.clean();
+    for(const_iterator pIter = begin(); pIter != end(); pIter++) {
+      ls.input( d_pX[*pIter]-d_pX[pIdx], pVector[*pIter](i) );
+    }
+    ls.output( data(i),v );
+    for(int j=0;j<3;++j) {
+      gradient(i,j) = v(j);
+    }
+  }
 }
 
-void
-ParticlesNeighbor::
-interpolatedouble(const ParticleVariable<double>& pdouble,
-                  double* data,
-                  Vector* gradient) const
+void  ParticlesNeighbor::interpolatedouble(LeastSquare& ls,
+                          const particleIndex& pIdx,
+                          const ParticleVariable<double>& pdouble,
+                          double& data,
+                          Vector& gradient) const
 {
+  ls.clean();
+  for(const_iterator pIter = begin(); pIter != end(); pIter++) {
+    ls.input( d_pX[*pIter]-d_pX[pIdx], pdouble[*pIter] );
+  }
+  ls.output( data,gradient );
+}
+
+void  ParticlesNeighbor::interpolateInternalForce(LeastSquare& ls,
+                          const particleIndex& pIdx,
+                          const ParticleVariable<Matrix3>& pStress,
+                          Vector& pInternalForce) const
+{
+  Vector v;
+  double data;
+  for(int i=0;i<3;++i) {
+    pInternalForce(i) = 0;
+    for(int j=0;j<3;++j) {
+      ls.clean();
+      for(const_iterator pIter = begin(); pIter != end(); pIter++) {
+        ls.input( d_pX[*pIter]-d_pX[pIdx], pStress[*pIter](i,j) );
+      }
+    }
+    ls.output( data,v );
+    pInternalForce(i) -= v(i);
+  }
 }
 
 } //namespace MPM
 } //namespace Uintah
 
 // $Log$
+// Revision 1.7  2000/07/06 06:23:23  tan
+// Added Least Square interpolation of double (such as temperatures),
+// vector (such as velocities) and stresses for particles in the
+// self-contact cells.
+//
 // Revision 1.6  2000/06/27 23:11:05  jas
 // Added in grid bcs.
 //

@@ -7,16 +7,20 @@
 
 #include <vector>
 
+class Matrix3;
+
 namespace Uintah {
 namespace MPM {
 
 using SCICore::Geometry::Vector;
 using SCICore::Geometry::Point;
-class Matrix3;
 class Lattice;
+class LeastSquare;
 
 class ParticlesNeighbor : public std::vector<particleIndex> {
 public:
+
+        ParticlesNeighbor(const ParticleVariable<Point>& pX);
 
   void  buildIncluding(const particleIndex& pIndex,
                        const Lattice& lattice);
@@ -24,15 +28,25 @@ public:
   void  buildExcluding(const particleIndex& pIndex,
                        const Lattice& lattice);
 
-  void  interpolateVector(const ParticleVariable<Vector>& pVector,
-                          Vector* data, 
-                          Matrix3* gradient) const;
+  void  interpolateVector(LeastSquare& ls,
+                          const particleIndex& pIdx,
+                          const ParticleVariable<Vector>& pVector,
+                          Vector& data, 
+                          Matrix3& gradient) const;
 
-  void  interpolatedouble(const ParticleVariable<double>& pdouble,
-                          double* data,
-                          Vector* gradient) const;
+  void  interpolatedouble(LeastSquare& ls,
+                          const particleIndex& pIdx,
+                          const ParticleVariable<double>& pdouble,
+                          double& data,
+                          Vector& gradient) const;
+
+  void  interpolateInternalForce(LeastSquare& ls,
+                          const particleIndex& pIdx,
+                          const ParticleVariable<Matrix3>& pStress,
+                          Vector& pInternalForce) const;
 
 private:
+  const ParticleVariable<Point>&  d_pX;
 };
 
 } //namespace MPM
@@ -41,6 +55,11 @@ private:
 #endif //__PARTICLESNEIGHBOR_H__
 
 // $Log$
+// Revision 1.5  2000/07/06 06:23:08  tan
+// Added Least Square interpolation of double (such as temperatures),
+// vector (such as velocities) and stresses for particles in the
+// self-contact cells.
+//
 // Revision 1.4  2000/06/23 21:56:30  tan
 // Use vector instead of list for cells-neighbor and particles-neighbor.
 //
