@@ -51,7 +51,7 @@ QApplication* QtUtils::getApplication()
   if(!theApp){
     startup=new Semaphore("Qt Thread startup wait", 0);
     Thread* t = new Thread(new QtThread(), "SCIRun Builder", 0, Thread::NotActivated);
-    t->setStackSize(2*256*1024);
+    t->setStackSize(4*256*1024);
     t->activate(false);
     t->detach();
     startup->down();

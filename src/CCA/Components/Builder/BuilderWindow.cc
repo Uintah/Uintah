@@ -228,7 +228,6 @@ help->insertTearOffHandle();
 
 BuilderWindow::~BuilderWindow()
 {
-  cerr << "~BuilderWindow called!\n";
 }
 
 void BuilderWindow::closeEvent( QCloseEvent* ce )
@@ -364,7 +363,7 @@ void BuilderWindow::buildRemotePackageMenus(const  sci::cca::ports::ComponentRep
 void BuilderWindow::buildPackageMenus()
 {
   //remove outdated package menu first
-  for(int i=0; i<packageMenuIDs.size(); i++){
+  for(unsigned int i=0; i<packageMenuIDs.size(); i++){
     menuBar()->removeItem(packageMenuIDs[i]);
   }
 
@@ -592,13 +591,11 @@ void BuilderWindow::about()
 
 void BuilderWindow::instantiateComponent(const sci::cca::ComponentClassDescription::pointer& cd)
 {
-  cerr << "Should wait for component to be committed...\n";
   sci::cca::ports::BuilderService::pointer builder = pidl_cast<sci::cca::ports::BuilderService::pointer>(services->getPort("cca.BuilderService"));
   if(builder.isNull()){
     cerr << "Fatal Error: Cannot find builder service\n";
     return;
   }
-  cerr << "Should put properties on component before creating\n";
 
   TypeMap *tm=new TypeMap;
   tm->putString("LOADER NAME", cd->getLoaderName());
@@ -608,20 +605,15 @@ void BuilderWindow::instantiateComponent(const sci::cca::ComponentClassDescripti
     return;
   }
   SSIDL::array1<std::string> usesPorts=builder->getUsedPortNames(cid);
-  cerr << "getUsesPorts done ..."<<endl;
   SSIDL::array1<std::string> providesPorts=builder->getProvidedPortNames(cid);
-  cerr << "getProvidedPorts done ..."<<endl;
 
   services->releasePort("cca.BuilderService");
   if(cd->getComponentClassName()!="SCIRun.Builder"){
-
-    cerr << "getComponentClassName done ..."<<endl;
 
     int x = 20;
     int y = 20;
     
     big_canvas_view->addModule(cd->getComponentClassName(), x, y, usesPorts, providesPorts, cid, true); //reposition module
-      cerr << "addModule done ..."<<endl;
   }
 }
 

@@ -282,16 +282,12 @@ void Module::ui()
   string instanceName = cid->getInstanceName();
   string uiPortName = instanceName+" uiPort";
 
-  cerr<<"run  services->getPort()....\n";
   sci::cca::Port::pointer p = services->getPort(uiPortName);
-  cerr<<"Done\n";
-  cerr<<"run  services->pidl_cast()\n";
   sci::cca::ports::UIPort::pointer uiPort = pidl_cast<sci::cca::ports::UIPort::pointer>(p);
   if(uiPort.isNull()){
     cerr << "uiPort is not connected, cannot bring up UI!\n";
   } 
   else {
-    cerr<<"run uiPort->ui()\n";
     int status=uiPort->ui();
 
     if(!hasGoPort){

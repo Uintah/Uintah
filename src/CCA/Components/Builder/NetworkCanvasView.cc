@@ -64,11 +64,11 @@ void NetworkCanvasView::contentsMousePressEvent(QMouseEvent* e)
 	
         if(e->button()==Qt::RightButton){
           QCanvasItemList lst=canvas()->collisions(e->pos());
-          cerr<<"lst.size="<<lst.size()<<endl;
+          //cerr<<"lst.size="<<lst.size()<<endl;
           if(lst.size()>0) removeConnection(lst[0]);
         }
 	else if(e->button()==Qt::MidButton){
-	  cerr<<"pos="<<e->pos().x()<<" "<<e->pos().y()<<endl;
+	 // cerr<<"pos="<<e->pos().x()<<" "<<e->pos().y()<<endl;
 	}
 #ifdef USE_MID_BUTTON
 	else if(e->button()==Qt::MidButton){
@@ -266,7 +266,7 @@ void NetworkCanvasView::addChild( Module* mod2add, int x , int y, bool repositio
       }
     }
   }
-  cerr<<"not candidate rect found!"<<endl;
+  //cerr<<"not candidate rect found!"<<endl;
   QPoint p=viewportToContents(QPoint(0,0));
   QScrollView::addChild( mod2add, p.x(), p.y());
 }
@@ -333,8 +333,8 @@ void NetworkCanvasView::removeConnection(QCanvasItem *c)
 		iter!=connections.end(); iter++){
 	   if((QCanvasItem*) (*iter)==c){
                 
-		cerr<<"connection.size()="<<connections.size()<<endl;
-		cerr<<"all item.size before del="<<canvas()->allItems().size()<<endl;
+		//cerr<<"connection.size()="<<connections.size()<<endl;
+		//cerr<<"all item.size before del="<<canvas()->allItems().size()<<endl;
 		sci::cca::ports::BuilderService::pointer bs = pidl_cast<sci::cca::ports::BuilderService::pointer>(services->getPort("cca.BuilderService"));
 		if(bs.isNull()){
 		  cerr << "Fatal Error: Cannot find builder service\n";
@@ -344,7 +344,7 @@ void NetworkCanvasView::removeConnection(QCanvasItem *c)
 		connections.erase(iter);
 
 		delete c;
-                cerr<<"allitem.size after del="<<canvas()->allItems().size()<<endl;
+                //cerr<<"allitem.size after del="<<canvas()->allItems().size()<<endl;
 	        canvas()->update();
 		break;
 
@@ -385,7 +385,7 @@ void NetworkCanvasView::showPossibleConnections(Module *m, const std::string &po
     cerr << "Fatal Error: Cannot find builder service\n";
   }
 
-  cerr<<"Possible Ports:"<<endl;
+  //cerr<<"Possible Ports:"<<endl;
   for(unsigned int i=0; i<modules.size(); i++){
       SSIDL::array1<std::string> portList=bs->getCompatiblePortList(m->cid,portname,modules[i]->cid );
       for(unsigned int j=0; j<portList.size(); j++){
@@ -399,7 +399,7 @@ void NetworkCanvasView::showPossibleConnections(Module *m, const std::string &po
 	con->show();
 	possibleConns.push_back(con);
 	canvas()->update();
-	cerr<<portList[j]<<endl;
+	//cerr<<portList[j]<<endl;
       }
   }    
   services->releasePort("cca.BuilderService");		
