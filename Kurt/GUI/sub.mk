@@ -13,13 +13,16 @@ $(SRCDIR)/tclIndex: $(SRCDIR)/VolVis.tcl $(SRCDIR)/PadField.tcl \
 	$(SRCDIR)/VisControl.tcl \
 	$(SRCDIR)/RescaleColorMapForParticles.tcl \
 	$(SRCDIR)/ParticleVis.tcl \
-	$(SRCDIR)/KurtScalarFieldReader.tcl
+	$(SRCDIR)/AnimatedStreams.tcl 
 	$(SRCTOP)/scripts/createTclIndex $(SRCTOP)/Kurt/GUI
 
 CLEANPROGS := $(CLEANPROGS) $(SRCDIR)/tclIndex
 
 #
 # $Log$
+# Revision 1.10  2000/09/17 16:03:16  kuzimmer
+# updated to include GLAnimatedStreams.tcl
+#
 # Revision 1.9  2000/06/26 17:06:06  bigler
 # Fixed typo that was keeping tclIndex from building.
 #
