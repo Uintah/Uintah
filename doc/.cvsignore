@@ -1,3 +1,0 @@
-*.aux *.dvi *.toc *.log 
-design.ps develop.ps user.ps module_widgets.ps modulelist.ps
-widgets.ps datatypes.ps

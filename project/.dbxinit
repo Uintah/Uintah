@@ -1,4 +1,0 @@
-set $mp_program=1
-set $promptonfork=2
-sh stty intr ^C
-sh stty erase "^?"
