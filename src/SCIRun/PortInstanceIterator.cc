@@ -40,8 +40,10 @@
 
 #include <SCIRun/PortInstanceIterator.h>
 
-using namespace SCIRun;
+namespace SCIRun {
 
 PortInstanceIterator::~PortInstanceIterator()
 {
 }
+
+} // end namespace SCIRun
