@@ -55,6 +55,7 @@ class Variable;
 	 Vector,
 	 Matrix3,
 	 ReductionVariable,
+	 SoleVariable,
 	 double_type,
          float_type,
 	 bool_type,
