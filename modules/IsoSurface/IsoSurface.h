@@ -71,6 +71,8 @@ class IsoSurface : public UserModule {
     void find_seed_from_value(const Field3DHandle&);
 
     virtual void geom_moved(int, double, const Vector&, void*);
+    Point ov[9];
+    Point v[9];
 public:
     IsoSurface();
     IsoSurface(const IsoSurface&, int deep);

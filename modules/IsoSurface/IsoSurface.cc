@@ -61,7 +61,7 @@ IsoSurface::IsoSurface()
     have_seedpoint=0;
 //    seed_point=Point(0,0,0);
     have_seedpoint=1;
-    seed_point=Point(.5,.5,.5);
+    seed_point=Point(.5,.5,.8);
     add_ui(new MUI_point("Seed Point", &seed_point,
 			 MUI_widget::Immediate, 1));
     scalar_val=0;
@@ -127,8 +127,8 @@ void IsoSurface::execute()
 	need_seed=0;
     }
     if(do_3dwidget){
+	widget_scale=0.05*field->longest_dimension();
 	if(!widget){
-	    widget_scale=0.05;
 	    widget_sphere=new GeomSphere(seed_point, 1*widget_scale);
 	    Vector grad(field->gradient(seed_point));
 	    grad.normalize();
@@ -155,7 +155,18 @@ void IsoSurface::execute()
 	widget_sphere->rad=1*widget_scale;
 	widget_sphere->adjust();
 	Vector grad(field->gradient(seed_point));
-	grad.normalize();
+	if(grad.length2() < 1.e-6){
+	    // Just the point...
+	    widget_scale=0.00001;
+	    widget->pick->set_principal(Vector(1,0,0),
+					Vector(0,1,0),
+					Vector(0,0,1));
+	} else {
+	    grad.normalize();
+	    Vector v1, v2;
+	    grad.find_orthogonal(v1, v2);
+	    widget->pick->set_principal(grad, v1, v2);
+	}
 	Point cyl_top(seed_point+grad*(2*widget_scale));
 	widget_cylinder->bottom=seed_point;
 	widget_cylinder->top=cyl_top;
@@ -211,7 +222,6 @@ int IsoSurface::iso_cube(int i, int j, int k, double isoval,
     oval[6]=field->get(i+1, j, k+1)-isoval;
     oval[7]=field->get(i+1, j+1, k+1)-isoval;
     oval[8]=field->get(i, j+1, k+1)-isoval;
-    Point ov[9];
     ov[1]=field->get_point(i,j,k);
     ov[2]=field->get_point(i+1, j, k);
     ov[3]=field->get_point(i+1, j+1, k);
@@ -227,7 +237,6 @@ int IsoSurface::iso_cube(int i, int j, int k, double isoval,
     }
     MCubeTable* tab=&mcube_table[mask];
     double val[9];
-    Point v[9];
     for(idx=1;idx<=8;idx++){
 	val[idx]=oval[tab->permute[idx-1]];
 	v[idx]=ov[tab->permute[idx-1]];
