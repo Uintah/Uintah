@@ -13,6 +13,7 @@
 #include <Uintah/Grid/GridP.h>
 #include <Uintah/Grid/LevelP.h>
 #include <Uintah/Grid/Region.h>
+#include <Uintah/Grid/VarTypes.h>
 #include <Uintah/Parallel/ProcessorContext.h>
 #include <SCICore/Geometry/Vector.h>
 
@@ -69,10 +70,10 @@ private:
     TurbulenceModel* d_turbModel;
   // Boundary conditions
     BoundaryCondition* d_boundaryCondition;
-    
+    SimulationStateP d_sharedState;
     // Variable labels that are used by the simulation controller
-    // SimulationStateP d_sharedState;
-    const VarLabel* d_deltLabel;
+    // 
+    //    const VarLabel* d_deltLabel;
     const VarLabel* d_densityLabel;
     const VarLabel* d_pressureLabel;
     const VarLabel* d_scalarLabel;
@@ -86,6 +87,9 @@ private:
 
 //
 // $Log$
+// Revision 1.20  2000/05/30 15:44:58  rawat
+// modified computeStableTimestep
+//
 // Revision 1.19  2000/05/20 22:54:14  bbanerje
 // Again, adding the first set of changes to get the scheduler to add tasks.
 //
