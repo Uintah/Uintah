@@ -398,3 +398,11 @@ void Transform::sub_rows(double m[4][4], int r1, int r2, double mul) const
         m[r1][i] -= m[r2][i]*mul;
 }
 
+Transform& Transform::operator=(const Transform& copy)
+{
+    for(int i=0;i<4;i++)
+        for(int j=0;j<4;j++)
+            mat[i][j]=copy.mat[i][j];
+    inverse_valid=0;
+}
+
