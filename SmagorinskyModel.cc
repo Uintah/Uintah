@@ -69,7 +69,6 @@ void
 SmagorinskyModel::problemSetup(const ProblemSpecP& params)
 {
   ProblemSpecP db = params->findBlock("Turbulence");
-//  db->getWithDefault("mixedmodel",d_mixedModel,false);
   db->require("cf", d_CF);
   db->require("fac_mesh", d_factorMesh);
   db->require("filterl", d_filterl);
