@@ -110,6 +110,9 @@ WARNING
 #endif  // __IDEAL_GAS_H__
 
 // $Log$
+// Revision 1.4.4.1  2000/10/26 23:52:44  moulding
+// merge HEAD into FIELD_REDESIGN
+//
 // Revision 1.4  2000/10/14 02:49:50  jas
 // Added implementation of compute equilibration pressure.  Still need to do
 // the update of BCS and hydrostatic pressure.  Still some issues with
