@@ -1650,14 +1650,15 @@ void SerialMPM::setGridBoundaryConditions(const ProcessorGroup*,
   #endif
     int numMPMMatls=d_sharedState->getNumMPMMatls();
     
+    delt_vartype delT;            
+    old_dw->get(delT, d_sharedState->get_delt_label() );
+                      
     for(int m = 0; m < numMPMMatls; m++){
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
       int dwindex = mpm_matl->getDWIndex();
       NCVariable<Vector> gvelocity_star, gacceleration;
       NCVariable<double> gTemperatureRate, gTemperatureNoBC;
       
-      delt_vartype delT;            
-                      
       new_dw->get(gacceleration,    lb->gAccelerationLabel,
 		       dwindex, patch, Ghost::None, 0);
       new_dw->get(gvelocity_star,   lb->gVelocityStarLabel,
