@@ -114,6 +114,10 @@ void SerialMPM::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
        d_fracture = true;
        lb->registerPermanentParticleState(m,lb->pCrackNormalLabel,
 					 lb->pCrackNormalLabel_preReloc); 
+       lb->registerPermanentParticleState(m,lb->pTipNormalLabel,
+					 lb->pTipNormalLabel_preReloc);
+       lb->registerPermanentParticleState(m,lb->pExtensionDirectionLabel,
+					 lb->pExtensionDirectionLabel_preReloc);
        lb->registerPermanentParticleState(m,lb->pToughnessLabel,
 					  lb->pToughnessLabel_preReloc); 
        lb->registerPermanentParticleState(m,lb->pIsBrokenLabel,
@@ -157,6 +161,8 @@ void SerialMPM::scheduleInitialize(const LevelP& level,
   if(d_fracture){
     t->computes(lb->pIsBrokenLabel);
     t->computes(lb->pCrackNormalLabel);
+    t->computes(lb->pTipNormalLabel);
+    t->computes(lb->pExtensionDirectionLabel);
     t->computes(lb->pToughnessLabel);
   }
   t->computes(d_sharedState->get_delt_label());
@@ -206,6 +212,7 @@ void SerialMPM::scheduleTimeAdvance(double , double ,
 
   if(d_fracture) {
     scheduleComputeFracture(              sched, patches, matls);
+    scheduleComputeCrackExtension(        sched, patches, matls);
   }
   scheduleCarryForwardVariables(          sched, patches, matls);
     
@@ -623,23 +630,51 @@ void SerialMPM::scheduleComputeFracture(SchedulerP& sched,
   t->requires(Task::OldDW, d_sharedState->get_delt_label() );
 
   t->requires(Task::OldDW, lb->pXLabel,            Ghost::AroundCells, 1);
-  t->requires(Task::OldDW, lb->pIsBrokenLabel,     Ghost::AroundCells, 1);
-  t->requires(Task::OldDW, lb->pCrackNormalLabel,  Ghost::AroundCells, 1);
   t->requires(Task::OldDW, lb->pVolumeLabel,       Ghost::AroundCells, 1);
 
   t->requires(Task::NewDW, lb->pXXLabel,                    Ghost::None);
-  //t->requires(Task::NewDW, lb->pStrainEnergyLabel,          Ghost::None);
-  t->requires(Task::OldDW, lb->pToughnessLabel,             Ghost::None);
   t->requires(Task::NewDW, lb->pRotationRateLabel,          Ghost::None);
-  t->requires(Task::NewDW, lb->pConnectivityLabel,          Ghost::None);
   t->requires(Task::NewDW, lb->pStressAfterStrainRateLabel, Ghost::None);
+  t->requires(Task::OldDW, lb->pIsBrokenLabel,              Ghost::None);
+  t->requires(Task::OldDW, lb->pCrackNormalLabel,           Ghost::None);
+  t->requires(Task::OldDW, lb->pTipNormalLabel,             Ghost::None);
+  t->requires(Task::OldDW, lb->pExtensionDirectionLabel,    Ghost::None);
+  t->requires(Task::OldDW, lb->pToughnessLabel,             Ghost::None);
 
-  t->requires(Task::NewDW, lb->gStressForSavingLabel, Ghost::AroundCells, 1);
-
-  t->computes(lb->pStressAfterFractureReleaseLabel);
+  t->computes(lb->pToughnessLabel_preReloc);
   t->computes(lb->pIsBrokenLabel_preReloc);
   t->computes(lb->pCrackNormalLabel_preReloc);
-  t->computes(lb->pToughnessLabel_preReloc);
+  t->computes(lb->pStressAfterFractureReleaseLabel);
+
+  sched->addTask(t, patches, matls);
+}
+
+void SerialMPM::scheduleComputeCrackExtension(SchedulerP& sched,
+					const PatchSet* patches,
+					const MaterialSet* matls)
+{
+ /*
+  * scheduleComputeCrackExtension
+  *   in(P.X, P.VOLUME, P.ISBROKEN, P.CRACKSURFACENORMAL)
+  *   operation(compute the visibility information of particles to the
+  *   related nodes)
+  * out(P.VISIBILITY) */
+
+  Task* t = scinew Task( "SerialMPM::computeCrackExtension",
+			  this,&SerialMPM::computeCrackExtension);
+
+  t->requires(Task::OldDW, lb->pXLabel,                   Ghost::AroundCells, 1);
+  t->requires(Task::NewDW, lb->pIsBrokenLabel_preReloc,   Ghost::AroundCells, 1);
+  t->requires(Task::NewDW, lb->pCrackNormalLabel_preReloc,Ghost::AroundCells, 1);
+  t->requires(Task::OldDW, lb->pExtensionDirectionLabel,  Ghost::AroundCells, 1);
+  t->requires(Task::OldDW, lb->pVolumeLabel,              Ghost::AroundCells, 1);
+
+  t->requires(Task::NewDW, lb->pXXLabel,                  Ghost::None);
+  t->requires(Task::OldDW, lb->pTipNormalLabel,           Ghost::None);
+
+  t->computes(lb->pTipNormalLabel_preReloc);
+  t->computes(lb->pExtensionDirectionLabel_preReloc);
+  
   sched->addTask(t, patches, matls);
 }
 
@@ -1862,6 +1897,22 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 //  cout << "Solid momentum after advection = " << CMV << endl;
 
 //  cout << "THERMAL ENERGY " << thermal_energy << endl;
+  }
+}
+
+void SerialMPM::computeCrackExtension(
+                   const ProcessorGroup*,
+		   const PatchSubset* patches,
+		   const MaterialSubset* ,
+		   DataWarehouse* old_dw,
+		   DataWarehouse* new_dw)
+{
+  int numMatls = d_sharedState->getNumMPMMatls();
+
+  for(int m = 0; m < numMatls; m++) {
+    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
+    mpm_matl->getFractureModel()->computeCrackExtension(
+	  patches, mpm_matl, old_dw, new_dw);
   }
 }
 

@@ -275,6 +275,34 @@ void getFirstAndSecondEigenvalue(const Matrix3& mat,
   eigenValue2 = d[index2];
 }
 
+void getEigenInfo(const Matrix3& mat, 
+                  Vector& eigenVector1,double& eigenValue1,
+		  Vector& eigenVector2,double& eigenValue2,
+		  Vector& eigenVector3,double& eigenValue3)
+{
+  Matrix3 a = mat;
+  Vector d;
+
+  QLAlgorithm(a, d);
+
+  eigenVector1[1] = a(1,1);
+  eigenVector1[2] = a(2,1);
+  eigenVector1[3] = a(3,1);
+  eigenVector1.normalize();
+  eigenValue1 = d[1];
+
+  eigenVector2[1] = a(1,2);
+  eigenVector2[2] = a(2,2);
+  eigenVector2[3] = a(3,2);
+  eigenVector2.normalize();
+  eigenValue2 = d[2];
+
+  eigenVector3[1] = a(1,3);
+  eigenVector3[2] = a(2,3);
+  eigenVector3[3] = a(3,3);
+  eigenVector3.normalize();
+  eigenValue3 = d[3];
+}
+
+
 } // End namespace Uintah
-
-
