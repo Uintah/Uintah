@@ -9,9 +9,11 @@
 #include <Packages/Uintah/Core/Grid/VarLabelMatlPatch.h>
 #include <Packages/Uintah/Core/Grid/VarLabelMatlPatchDW.h>
 
+#include <sgi_stl_warnings_off.h>
 #include <map>
 #include <iosfwd>
 #include <vector>
+#include <sgi_stl_warnings_on.h>
 #include <sci_config.h> // For MPIPP_H on SGI
 #include <mpi.h>
 

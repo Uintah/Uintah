@@ -1865,8 +1865,6 @@ void ImpMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 
       old_dw->get(delT, d_sharedState->get_delt_label() );
 
-      double rho_init=mpm_matl->getInitialDensity();
-
       IntVector ni[8];
 
       for(ParticleSubset::iterator iter = pset->begin();

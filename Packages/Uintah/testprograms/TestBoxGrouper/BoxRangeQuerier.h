@@ -3,8 +3,10 @@
 
 #include <Core/Containers/RangeTree.h>
 #include <Packages/Uintah/testprograms/TestBoxGrouper/Box.h>
+#include <sgi_stl_warnings_off.h>
 #include <list>
 #include <vector>
+#include <sgi_stl_warnings_on.h>
 
 namespace Uintah {
 using namespace SCIRun;

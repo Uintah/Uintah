@@ -7,7 +7,9 @@
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 
 #include <math.h>
+#include <sgi_stl_warnings_off.h>
 #include <vector>
+#include <sgi_stl_warnings_on.h>
 
 #ifndef M_PI
 # define M_PI           3.14159265358979323846  /* pi */

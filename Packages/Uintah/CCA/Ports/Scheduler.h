@@ -7,11 +7,13 @@
 #include <Packages/Uintah/Core/Grid/ComputeSet.h>
 #include <Packages/Uintah/Core/Grid/LevelP.h>
 #include <Packages/Uintah/Core/Grid/Task.h>
+#include <sgi_stl_warnings_off.h>
 #include <map>
 #include <list>
 #include <string>
 #include <set>
 #include <vector>
+#include <sgi_stl_warnings_on.h>
 
 namespace Uintah {
   using namespace std;

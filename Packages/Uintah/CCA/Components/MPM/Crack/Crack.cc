@@ -21,13 +21,11 @@
 #include <Core/Util/NotFinished.h>
 #include <vector>
 #include <iostream>
+#include <iomanip>
 #include <fstream>
 
 using namespace Uintah;
 using namespace SCIRun;
-using std::vector;
-using std::string;
-
 using namespace std;
 
 #define MAX_BASIS 27

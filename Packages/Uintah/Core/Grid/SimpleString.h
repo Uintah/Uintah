@@ -1,8 +1,9 @@
 #ifndef UINTAH_HOMEBREW_SimpleString_H
 #define UINTAH_HOMEBREW_SimpleString_H
 
+#include <sgi_stl_warnings_off.h>
 #include <string>
-#include <iostream>
+#include <sgi_stl_warnings_on.h>
 
 namespace Uintah {
    /**************************************

@@ -5,8 +5,10 @@
 #include <Packages/Uintah/Core/Grid/ComputeSet.h>
 #include <Packages/Uintah/Core/Grid/Array3.h>
 #include <Packages/Uintah/Core/Math/Sparse.h>
+#include <sgi_stl_warnings_off.h>
 #include <map>
 #include <vector>
+#include <sgi_stl_warnings_on.h>
 
 using std::map;
 using std::vector;

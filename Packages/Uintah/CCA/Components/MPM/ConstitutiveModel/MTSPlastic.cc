@@ -2,7 +2,6 @@
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MTSPlastic.h>
 #include <math.h>
 
-using std::cerr;
 using namespace Uintah;
 using namespace SCIRun;
 

@@ -15,7 +15,10 @@
 #include <Packages/Uintah/CCA/Components/MPM/PhysicalBC/CrackBC.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
+#include <sgi_stl_warnings_off.h>
 #include <fstream>
+#include <iostream>
+#include <sgi_stl_warnings_on.h>
 
 using namespace Uintah;
 using std::vector;
@@ -305,7 +308,7 @@ ParticleCreator::countParticles(GeometryObject* obj, const Patch* patch) const
    Box b2 = patch->getBox();
    Box b = b1.intersect(b2);
    if(b.degenerate()){
-      cout << "B.DEGENERATE" << endl;
+     //cout << "B.DEGENERATE" << endl;
       return 0;
    }
 

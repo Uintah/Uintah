@@ -1070,8 +1070,8 @@ void SimpleCFD::applyForces(const ProcessorGroup*,
   }
 }
 
-void SimpleCFD::applybc(const IntVector& idx, const IntVector& l,
-			const IntVector& h, const IntVector& h2,
+void SimpleCFD::applybc(const IntVector& idx, const IntVector&,
+			const IntVector&, const IntVector& h2,
 			const Array3<double>& field, double delt,
 			const Vector& inv_dx2, double diff,
 			constNCVariable<int>& bctype,
@@ -1529,7 +1529,7 @@ void SimpleCFD::projectVelocity(const ProcessorGroup*,
 				const PatchSubset* patches,
 				const MaterialSubset* matls,
 				DataWarehouse* old_dw, DataWarehouse* new_dw,
-				const VarLabel* pressure,
+				const VarLabel*,
 				const VarLabel* pressure_matrix,
 				const VarLabel* pressure_rhs)
 {

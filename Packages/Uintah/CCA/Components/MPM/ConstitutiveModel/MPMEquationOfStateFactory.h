@@ -2,7 +2,10 @@
 #define _EQUATIONOFSTATEFACTORY_H_
 
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
+#include <sgi_stl_warnings_off.h>
 #include <string>
+#include <sgi_stl_warnings_on.h>
+
 namespace Uintah {
 
   class MPMEquationOfState;

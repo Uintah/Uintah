@@ -1,6 +1,5 @@
 #include <Packages/Uintah/Core/Math/Sparse.h>
 #include <iostream>
-using namespace std;
 
 using namespace Uintah;
 using namespace std;

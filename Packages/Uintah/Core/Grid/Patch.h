@@ -11,9 +11,11 @@
 #include <Core/Geometry/IntVector.h>
 #undef None
 
+#include <sgi_stl_warnings_off.h>
 #include <string>
 #include <map>
 #include <iosfwd>
+#include <sgi_stl_warnings_on.h>
 
 namespace Uintah {
 

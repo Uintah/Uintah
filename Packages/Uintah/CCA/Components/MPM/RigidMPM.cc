@@ -200,9 +200,6 @@ void RigidMPM::scheduleInitialize(const LevelP& level,
      t->computes(lb->pDampingCoeffLabel); 
   }
 
-  int numMPM = d_sharedState->getNumMPMMatls();
-  const PatchSet* patches = level->eachPatch();
-
   sched->addTask(t, level->eachPatch(), d_sharedState->allMPMMaterials());
 
   t = scinew Task("MPM::printParticleCount",
@@ -359,15 +356,15 @@ void RigidMPM::scheduleComputeStressTensor(SchedulerP& sched,
   sched->addTask(t, patches, matls);
 }
 
-void RigidMPM::scheduleComputeArtificialViscosity(SchedulerP& sched,
-                                                   const PatchSet* patches,
-                                                   const MaterialSet* matls)
+void RigidMPM::scheduleComputeArtificialViscosity(SchedulerP&,
+						  const PatchSet*,
+						  const MaterialSet*)
 {
 }
 
-void RigidMPM::scheduleComputeInternalForce(SchedulerP& sched,
-					     const PatchSet* patches,
-					     const MaterialSet* matls)
+void RigidMPM::scheduleComputeInternalForce(SchedulerP&,
+					    const PatchSet*,
+					    const MaterialSet*)
 {
 }
 
@@ -540,9 +537,9 @@ void RigidMPM::scheduleApplyExternalLoads(SchedulerP& sched,
 
 }
 
-void RigidMPM::scheduleCalculateDampingRate(SchedulerP& sched,
-					     const PatchSet* patches,
-					     const MaterialSet* matls)
+void RigidMPM::scheduleCalculateDampingRate(SchedulerP&,
+					    const PatchSet*,
+					    const MaterialSet*)
 {
 
 }
@@ -951,8 +948,8 @@ void RigidMPM::computeStressTensor(const ProcessorGroup*,
 void RigidMPM::computeArtificialViscosity(const ProcessorGroup*,
                                            const PatchSubset* patches,
                                            const MaterialSubset* ,
-                                           DataWarehouse* old_dw,
-                                           DataWarehouse* new_dw)
+                                           DataWarehouse*,
+                                           DataWarehouse*)
 {
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
@@ -965,10 +962,10 @@ void RigidMPM::computeArtificialViscosity(const ProcessorGroup*,
 }
 
 void RigidMPM::computeInternalForce(const ProcessorGroup*,
-				     const PatchSubset* patches,
-				     const MaterialSubset* ,
-				     DataWarehouse* old_dw,
-				     DataWarehouse* new_dw)
+				    const PatchSubset* patches,
+				    const MaterialSubset* ,
+				    DataWarehouse*,
+				    DataWarehouse*)
 {
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
@@ -1101,11 +1098,9 @@ void RigidMPM::solveEquationsMotion(const ProcessorGroup*,
     cout_doing <<"Doing solveEquationsMotion on patch " << patch->getID()
 	       <<"\t\t\t MPM"<< endl;
 
-    Vector gravity = d_sharedState->getGravity();
     delt_vartype delT;
     old_dw->get(delT, d_sharedState->get_delt_label() );
 
-    Ghost::GhostType  gnone = Ghost::None;
     for(int m = 0; m < d_sharedState->getNumMPMMatls(); m++){
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
       int dwi = mpm_matl->getDWIndex();
@@ -1395,7 +1390,7 @@ void RigidMPM::setGridBoundaryConditions(const ProcessorGroup*,
 
 void RigidMPM::applyExternalLoads(const ProcessorGroup* ,
                                    const PatchSubset* patches,
-                                   const MaterialSubset* ms,
+                                   const MaterialSubset*,
                                    DataWarehouse* old_dw,
                                    DataWarehouse* new_dw)
 {
@@ -1433,8 +1428,8 @@ void RigidMPM::applyExternalLoads(const ProcessorGroup* ,
 void RigidMPM::calculateDampingRate(const ProcessorGroup*,
 				     const PatchSubset* patches,
 				     const MaterialSubset* ,
-				     DataWarehouse* old_dw,
-				     DataWarehouse* new_dw)
+				     DataWarehouse*,
+				     DataWarehouse*)
 {
   if (d_artificialDampCoeff > 0.0) {
     for(int p=0;p<patches->size();p++){
@@ -1572,7 +1567,6 @@ void RigidMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       }
 
       double Cp=mpm_matl->getSpecificHeat();
-      double rho_init=mpm_matl->getInitialDensity();
 
       IntVector ni[MAX_BASIS];
       double S[MAX_BASIS];

@@ -9,9 +9,11 @@
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
 #include <Packages/Uintah/Core/Parallel/Parallel.h>
 
+#include <sgi_stl_warnings_off.h>
 #include <set>
 #include <map>
 #include <algorithm>
+#include <sgi_stl_warnings_on.h>
 
 
 using namespace Uintah;

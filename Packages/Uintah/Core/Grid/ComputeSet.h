@@ -7,9 +7,11 @@
 #include <Core/Exceptions/InternalError.h>
 #include <Packages/Uintah/Core/ProblemSpec/RefCounted.h>
 #include <Packages/Uintah/Core/ProblemSpec/constHandle.h>
+#include <sgi_stl_warnings_off.h>
 #include <vector>
 #include <algorithm>
 #include <sstream>
+#include <sgi_stl_warnings_on.h>
 
 namespace Uintah {
 

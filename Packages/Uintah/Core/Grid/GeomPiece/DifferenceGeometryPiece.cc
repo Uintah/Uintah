@@ -5,13 +5,9 @@
 #include <Packages/Uintah/Core/Grid/Box.h>
 
 #include <vector>
-#include <iostream>
 
 using namespace SCIRun;
 using namespace Uintah;
-
-using std::cerr;
-using std::endl;
 
 DifferenceGeometryPiece::DifferenceGeometryPiece(ProblemSpecP &ps) 
 {

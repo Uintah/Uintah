@@ -12,7 +12,8 @@ PSELIBS := \
 	Packages/Uintah/Core/Grid        \
 	Packages/Uintah/Core/Parallel    \
 	Packages/Uintah/Core/ProblemSpec \
-	Dataflow/XMLUtil
+	Dataflow/XMLUtil \
+	Core/Exceptions
 
 LIBS 	:= $(XML_LIBRARY)
 

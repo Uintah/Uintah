@@ -143,7 +143,7 @@ PressureBC::forcePerParticle(double time) const
   double press = pressure(time);
 
   // Calculate the forec per particle
-  return (press*area)/d_numMaterialPoints;
+  return (press*area)/static_cast<double>(d_numMaterialPoints);
 }
 
 // Calculate the force vector to be applied to a particular

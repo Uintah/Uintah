@@ -16,7 +16,9 @@
 
 #include <Core/Exceptions/Exception.h>
 #include <Core/Geometry/IntVector.h>
+#include <sgi_stl_warnings_off.h>
 #include <string>
+#include <sgi_stl_warnings_on.h>
 
 namespace Uintah {
   

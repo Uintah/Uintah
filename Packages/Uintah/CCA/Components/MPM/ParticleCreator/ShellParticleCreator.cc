@@ -10,7 +10,9 @@
 #include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Packages/Uintah/Core/Grid/GeomPiece/GeometryPiece.h>
 #include <Packages/Uintah/Core/Grid/GeomPiece/ShellGeometryPiece.h>
-
+#include <sgi_stl_warnings_off.h>
+#include <iostream>
+#include <sgi_stl_warnings_on.h>
 using namespace Uintah;
 
 
@@ -267,7 +269,7 @@ ShellParticleCreator::countParticles(GeometryObject* obj,
 // Register variables for crossing patches
 //
 void 
-ShellParticleCreator::registerPermanentParticleState(MPMMaterial* matl,
+ShellParticleCreator::registerPermanentParticleState(MPMMaterial*,
 						     MPMLabel* lb)
 
 {

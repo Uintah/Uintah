@@ -4,8 +4,10 @@
 
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Packages/Uintah/Core/Grid/GridP.h>
+#include <sgi_stl_warnings_off.h>
 #include <map>
 #include <string>
+#include <sgi_stl_warnings_on.h>
 
 namespace Uintah {
   class GeometryPiece;

@@ -47,7 +47,9 @@
   **************************************************************************/
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
 
+#include <sgi_stl_warnings_off.h>
 #include <vector>
+#include <sgi_stl_warnings_on.h>
 
 namespace  Uintah {
   class ChemkinInterface;
@@ -130,6 +132,9 @@ namespace  Uintah {
 
 //
 // $Log$
+// Revision 1.11  2003/08/07 00:48:14  sparker
+// SGI 64 bit warnings rampage
+//
 // Revision 1.10  2003/01/22 00:43:04  spinti
 // Added improved BetaPDF mixing model and capability to create a betaPDF table a priori. Cleaned up favre averaging and streamlined sections of code.
 //

@@ -3,8 +3,10 @@
 
 #include <map>
 #include <assert.h>
+#include <sgi_stl_warnings_off.h>
 #include <valarray>
 #include <numeric>
+#include <sgi_stl_warnings_on.h>
 
 namespace Uintah {
 using namespace std;

@@ -13,14 +13,13 @@
 #include <Packages/Uintah/Core/DataArchive/DataArchive.h>
 #include <Core/Util/Timer.h>
 
+#include <sgi_stl_warnings_off.h>
 #include <string>
 #include <iostream>
-using std::string;
-using std::cerr;
-using std::endl;
+#include <sgi_stl_warnings_on.h>
 
 namespace Uintah {
-
+using std::string;
 using SCIRun::Thread;
 using SCIRun::ThreadGroup;
 using SCIRun::Semaphore;

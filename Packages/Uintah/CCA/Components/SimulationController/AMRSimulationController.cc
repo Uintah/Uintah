@@ -653,7 +653,7 @@ void
 AMRSimulationController::initializeErrorEstimate(const ProcessorGroup*,
 						 const PatchSubset* patches,
 						 const MaterialSubset* matls,
-						 DataWarehouse* old_dw,
+						 DataWarehouse*,
 						 DataWarehouse* new_dw,
 						 SimulationStateP sharedState)
 {

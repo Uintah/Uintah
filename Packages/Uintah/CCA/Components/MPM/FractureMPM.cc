@@ -2387,7 +2387,7 @@ void FractureMPM::setGridBoundaryConditions(const ProcessorGroup*,
 
 void FractureMPM::applyExternalLoads(const ProcessorGroup* ,
                                    const PatchSubset* patches,
-                                   const MaterialSubset* ms,
+                                   const MaterialSubset*,
                                    DataWarehouse* old_dw,
                                    DataWarehouse* new_dw)
 {

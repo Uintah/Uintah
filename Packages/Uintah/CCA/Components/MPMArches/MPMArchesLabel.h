@@ -1,10 +1,8 @@
 #ifndef Uintah_Component_MPMArchesLabel_h
 #define Uintah_Component_MPMArchesLabel_h
 #include <Packages/Uintah/Core/Grid/VarLabel.h>
-#include <vector>
 
 namespace Uintah {
-using std::vector;
 
     class MPMArchesLabel {
     public:

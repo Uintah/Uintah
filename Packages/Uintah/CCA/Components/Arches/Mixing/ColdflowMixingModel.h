@@ -37,8 +37,10 @@ POSSIBLE REVISIONS
 #include <Packages/Uintah/CCA/Components/Arches/Mixing/ReactionModel.h>
 #include <Packages/Uintah/CCA/Components/Arches/Mixing/Integrator.h>
 
+#include <sgi_stl_warnings_off.h>
 #include <vector>
 #include <string>
+#include <sgi_stl_warnings_on.h>
 
 namespace Uintah {
 
@@ -148,6 +150,9 @@ private:
 
 //
 // $Log$
+// Revision 1.14  2003/08/07 00:48:14  sparker
+// SGI 64 bit warnings rampage
+//
 // Revision 1.13  2002/05/31 22:04:44  spinti
 // *** empty log message ***
 //

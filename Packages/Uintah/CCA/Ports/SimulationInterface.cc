@@ -13,34 +13,34 @@ SimulationInterface::~SimulationInterface()
 {
 }
 
-void SimulationInterface::scheduleRefine(const LevelP& fineLevel, 
-					 SchedulerP& scheduler)
+void SimulationInterface::scheduleRefine(const LevelP&, 
+					 SchedulerP&)
 {
   throw InternalError("scheduleRefine not implemented for this component\n");
 }
 
-void SimulationInterface::scheduleRefineInterface(const LevelP& fineLevel, 
-						  SchedulerP& scheduler,
-						  int step, int nsteps)
+void SimulationInterface::scheduleRefineInterface(const LevelP&, 
+						  SchedulerP&,
+						  int, int)
 {
   throw InternalError("scheduleRefineInterface not implemented for this component\n");
 }
 
-void SimulationInterface::scheduleCoarsen(const LevelP& coarseLevel, 
-					  SchedulerP& scheduler)
+void SimulationInterface::scheduleCoarsen(const LevelP&, 
+					  SchedulerP&)
 {
   throw InternalError("scheduleCoarsen not implemented for this component\n");
 }
 
-void SimulationInterface::scheduleTimeAdvance(const LevelP& level,
-					      SchedulerP& sched,
-					      int step, int nsteps)
+void SimulationInterface::scheduleTimeAdvance(const LevelP&,
+					      SchedulerP&,
+					      int, int)
 {
   throw InternalError("no simulation implemented?");
 }
 
-void SimulationInterface::scheduleErrorEstimate(const LevelP& level,
-						SchedulerP& sched)
+void SimulationInterface::scheduleErrorEstimate(const LevelP&,
+						SchedulerP&)
 {
   throw InternalError("scheduleErrorEstimate not implemented for this component\n");
 }

@@ -17,7 +17,6 @@
 #include <Core/Malloc/Allocator.h>
 
 #include <unistd.h>
-#include <iostream>
 
 namespace Uintah {
 
@@ -270,7 +269,6 @@ template<class T>
   template<class T>
   CCVariable<T>::CCVariable()
   {
-    //	 std::cerr << "CCVariable ctor not done!\n";
   }
 
   template<class T>
@@ -318,7 +316,6 @@ template<class T>
     if (getWindow()->getData() == src.getWindow()->getData() &&
 	getWindow()->getOffset() == src.getWindow()->getOffset()) {
       // No copy needed
-      //cerr << "No copy needed for CCVariable!!!\n";
       return;
     }
 

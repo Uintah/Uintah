@@ -40,7 +40,9 @@ POSSIBLE REVISIONS
 
 #include <Packages/Uintah/CCA/Components/Arches/Mixing/MixRxnTable.h>
 
+#include <sgi_stl_warnings_off.h>
 #include <vector>
+#include <sgi_stl_warnings_on.h>
 
 namespace Uintah {
   class Stream;

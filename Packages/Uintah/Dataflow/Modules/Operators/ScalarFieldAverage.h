@@ -6,13 +6,12 @@
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Ports/FieldPort.h>
 #include <Core/Datatypes/LatVolField.h>
+#include <sgi_stl_warnings_off.h>
 #include <string>
-#include <iostream>
+#include <sgi_stl_warnings_on.h>
 
 namespace Uintah {
 using std::string;
-using std::cerr;
-using std::endl;
 using namespace SCIRun;
 
   

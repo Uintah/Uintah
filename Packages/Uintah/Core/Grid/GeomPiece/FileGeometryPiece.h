@@ -4,7 +4,9 @@
 #include <Packages/Uintah/Core/Grid/GeomPiece/GeometryPiece.h>
 #include <Packages/Uintah/Core/Grid/Box.h>
 #include <Core/Geometry/Point.h>
+#include <sgi_stl_warnings_off.h>
 #include <vector>
+#include <sgi_stl_warnings_on.h>
 
 namespace Uintah {
 using std::vector;

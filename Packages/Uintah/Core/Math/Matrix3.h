@@ -14,9 +14,11 @@
 
 #include <math.h>
 
+#include <sgi_stl_warnings_off.h>
 #include <iosfwd>
 #include <vector>
 #include <string>
+#include <sgi_stl_warnings_on.h>
 
 namespace Uintah {
 
@@ -659,7 +661,9 @@ inline Vector operator*(const Vector& v, const Matrix3& m3) {
 std::ostream & operator << (std::ostream &out_file, const Uintah::Matrix3 &m3);
 // Added for compatibility with core types
 #include <Core/Datatypes/TypeName.h>
+#include <sgi_stl_warnings_off.h>
 #include <string>
+#include <sgi_stl_warnings_on.h>
 namespace SCIRun {
   class TypeDescription;
   class Piostream;

@@ -14,9 +14,10 @@
 #define SUITE_TREE_H
 
 #include "Suite.h"
+#include <sgi_stl_warnings_off.h>
 #include <list>
-#include <iostream>
 #include <string>
+#include <sgi_stl_warnings_on.h>
 
 using namespace std;
 

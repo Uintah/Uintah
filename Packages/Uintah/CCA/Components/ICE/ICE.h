@@ -18,8 +18,10 @@
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
 #include <Packages/Uintah/Core/Math/FastMatrix.h>
 #include <Core/Containers/StaticArray.h>
+#include <sgi_stl_warnings_off.h>
 #include <vector>
 #include <string>
+#include <sgi_stl_warnings_on.h>
 
 
 namespace Uintah { 

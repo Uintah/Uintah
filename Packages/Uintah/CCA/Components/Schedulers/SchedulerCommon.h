@@ -9,7 +9,9 @@
 #include <Packages/Uintah/CCA/Components/Schedulers/GhostOffsetVarMap.h>
 #include <Packages/Uintah/CCA/Components/Schedulers/LocallyComputedPatchVarMap.h>
 #include <Packages/Uintah/CCA/Components/Schedulers/OnDemandDataWarehouseP.h>
+#include <sgi_stl_warnings_off.h>
 #include <iosfwd>
+#include <sgi_stl_warnings_on.h>
 
 namespace Uintah {
   using namespace std;

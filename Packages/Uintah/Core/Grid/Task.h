@@ -13,10 +13,12 @@
 #include <Core/Geometry/IntVector.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Exceptions/InternalError.h>
+#include <sgi_stl_warnings_off.h>
 #include <map>
 #include <string>
 #include <vector>
-#include <iostream>
+#include <iosfwd>
+#include <sgi_stl_warnings_on.h>
 
 namespace Uintah {
 

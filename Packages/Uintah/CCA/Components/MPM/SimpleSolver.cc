@@ -1,11 +1,12 @@
 #include <Packages/Uintah/CCA/Components/MPM/SimpleSolver.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
+#include <iostream>
 #include <vector>
 
 using namespace Uintah;
 using namespace SCIRun;
-using std::vector;
+using namespace std;
 
 SimpleSolver::SimpleSolver()
 {

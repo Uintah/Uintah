@@ -7,7 +7,9 @@
 #include <Core/Geometry/IntVector.h>
 #include <Core/Malloc/Allocator.h>
 
-#include <iostream>
+#include <sgi_stl_warnings_off.h>
+#include <iosfwd>
+#include <sgi_stl_warnings_on.h>
 
 namespace Uintah {
 

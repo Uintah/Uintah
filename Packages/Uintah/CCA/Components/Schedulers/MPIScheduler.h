@@ -11,8 +11,10 @@
 #include <Packages/Uintah/Core/Grid/TaskProduct.h>
 #include <Packages/Uintah/Core/Grid/Task.h>
 #include <Packages/Uintah/Core/Grid/BufferInfo.h>
+#include <sgi_stl_warnings_off.h>
 #include <vector>
 #include <map>
+#include <sgi_stl_warnings_on.h>
 
 namespace Uintah {
 using std::vector;

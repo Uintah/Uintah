@@ -24,7 +24,9 @@ namespace SCIRun {
 #endif
 } //end namespace SCIRun
 
-#include <iostream>
+#include <sgi_stl_warnings_off.h>
+#include <iosfwd>
+#include <sgi_stl_warnings_on.h>
 
 
 namespace Uintah {
