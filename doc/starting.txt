@@ -30,13 +30,14 @@ if [ -r /home/sci/data1/development/scripts/develop.ksh ]
     . /home/sci/data1/development/scripts/develop.ksh
 fi
 
-3B) Set the following environment variables:
+3B) Set the following environment variables, probably in your .cshrc
 setenv SCI_WORK ~/SCIRun (or wherever you put SCIRun)
 setenv LD_LIBRARY_PATH $SCI_WORK/lib
 setenv TCL_LIBRARY $SCI_WORK/tcl/tcl/library
 setenv TK_LIBRARY $SCI_WORK/tcl/tk/library
 setenv SCI_DATA /wherever/you/put/datafiles
 setenv SCI_CATCH_SIGNALS
+setenv CVSROOT csf.cs.utah.edu:/csafe_noexport/cvs/cvsroot
 
 4) Choose a suitable space for your work directory to be located.
    It is best to have the work directory on a disk which is local
