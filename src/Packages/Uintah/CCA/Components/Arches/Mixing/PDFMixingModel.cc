@@ -6,6 +6,7 @@
 #include <Packages/Uintah/CCA/Components/Arches/Mixing/KDTree.h>
 #include <Packages/Uintah/CCA/Components/Arches/Mixing/ReactionModel.h>
 #include <Packages/Uintah/CCA/Components/Arches/Mixing/StanjanEquilibriumReactionModel.h>
+#include <Packages/Uintah/CCA/Components/Arches/Mixing/ILDMReactionModel.h>
 #include <Packages/Uintah/CCA/Components/Arches/Mixing/ChemkinInterface.h>
 #include <Packages/Uintah/CCA/Components/Arches/Mixing/MixRxnTableInfo.h>
 #include <Packages/Uintah/CCA/Components/Arches/Mixing/DynamicTable.h>
@@ -16,6 +17,7 @@
 #include <iostream>
 #include <math.h>
 #include <Core/Math/MiscMath.h>
+
 using namespace std;
 using namespace Uintah;
 using namespace SCIRun;
@@ -52,15 +54,16 @@ PDFMixingModel::problemSetup(const ProblemSpecP& params)
   if (rxnModel == "EquilibriumReactionModel")
     d_rxnModel = new StanjanEquilibriumReactionModel(d_adiabatic);
   else if (rxnModel == "ILDMReactionModel")
-    cout<<"yeah"<<endl<<endl;
-    //d_rxnModel = new ILDMReactionModel(d_adiabatic);
+    d_rxnModel = new ILDMReactionModel(d_adiabatic);
   else
     throw InvalidValue("Reaction Model not supported" + rxnModel);
-  d_rxnModel->problemSetup(db);
-  //d_rxnModel->problemSetup(db, this);
+  cout<<"adiabatic = "<<d_adiabatic<<endl; 
+  //d_rxnModel->problemSetup(db);//Move this to the end of problemSetup
+  cerr << "Made it up to pdfmix model" << std::endl;
   // number of species
   ChemkinInterface* chemInterf = d_rxnModel->getChemkinInterface();
   int nofSpecies = chemInterf->getNumSpecies();
+  int nofElements = chemInterf->getNumElements();
   // Read the mixing variable streams, total is noofStreams 0 
   int nofstrm = 0;
   string speciesName;
@@ -68,7 +71,7 @@ PDFMixingModel::problemSetup(const ProblemSpecP& params)
   for (ProblemSpecP stream_db = db->findBlock("Stream");
        stream_db != 0; stream_db = stream_db->findNextBlock("Stream")) {
     // Create the stream and add it to the vector
-    d_streams.push_back(Stream(nofSpecies));
+    d_streams.push_back(Stream(nofSpecies, nofElements));
     stream_db->require("pressure", d_streams[nofstrm].d_pressure);
     stream_db->require("temperature", d_streams[nofstrm].d_temperature);
     // mole fraction or mass fraction
@@ -83,7 +86,6 @@ PDFMixingModel::problemSetup(const ProblemSpecP& params)
     }
     d_streams[nofstrm].normalizeStream(); // normalize sum to be 1
     vector<double> ymassVec;
-    double* ymassFrac = new double[nofSpecies];
     if (d_streams[nofstrm].d_mole) {
       ymassVec = chemInterf->convertMolestoMass(
 					  d_streams[nofstrm].d_speciesConcn);
@@ -92,50 +94,57 @@ PDFMixingModel::problemSetup(const ProblemSpecP& params)
     }
     else
       ymassVec = d_streams[nofstrm].d_speciesConcn;
-    // convert vec to array
-    for (int ii = 0; ii < nofSpecies; ii++)
-      ymassFrac[ii] = ymassVec[ii];
     double strmTemp = d_streams[nofstrm].d_temperature;
     double strmPress = d_streams[nofstrm].d_pressure;
     d_streams[nofstrm].d_density=chemInterf->getMassDensity(strmPress,
-						     strmTemp, ymassFrac);
+						     strmTemp, ymassVec);
     d_streams[nofstrm].d_enthalpy=chemInterf->getMixEnthalpy(strmTemp, ymassVec);
-    d_streams[nofstrm].d_moleWeight=chemInterf->getMixMoleWeight(ymassFrac);
-    d_streams[nofstrm].d_cp=chemInterf->getMixSpecificHeat(strmTemp, ymassFrac);
+    d_streams[nofstrm].d_moleWeight=chemInterf->getMixMoleWeight(ymassVec);
+    d_streams[nofstrm].d_cp=chemInterf->getMixSpecificHeat(strmTemp, ymassVec);
     // store as mass fraction
     d_streams[nofstrm].print(cerr );
-    delete[] ymassFrac;
     ++nofstrm;
   }
   // num_mix_scalars = num_streams -1
   d_numMixingVars = nofstrm - 1;
+  cout << "PDFMixingModel::numMixStatVars = " << d_numMixStatVars << endl;
+  cout << "PDFMixingModel::numMixVars = " << d_numMixingVars << endl;
+  cout <<"PDF::numRxnVars = "<<d_numRxnVars<<endl;
+  cout <<"PDF::adiabatic = "<<d_adiabatic<<endl;
   d_tableDimension = d_numMixingVars + d_numMixStatVars + d_numRxnVars + !(d_adiabatic);
   d_tableInfo = new MixRxnTableInfo(d_tableDimension);
   bool mixTableFlag = true; //This is a mixing table, not a rxn table
   d_tableInfo->problemSetup(db, mixTableFlag, this);
   //d_tableInfo->problemSetup(db, this);
-  d_depStateSpaceVars = d_streams[0].getDepStateSpaceVars();
+  // Call reaction model constructor; now have total number of dependent  vars
+  d_rxnModel->problemSetup(db, this); 
+  //d_depStateSpaceVars = d_streams[0].getDepStateSpaceVars();
+  d_depStateSpaceVars = d_rxnModel->getTotalDepVars();
+  cout<<"PDF::tabledim = "<<d_tableDimension<<" "<<d_depStateSpaceVars<<endl;
   d_mixTable = new KD_Tree(d_tableDimension, d_depStateSpaceVars);
   // tableSetup is a function in DynamicTable; it allocates memory for table
   tableSetup(d_tableDimension, d_tableInfo);
   d_integrator = new Integrator(d_tableDimension, this, d_rxnModel, d_tableInfo);
-  d_integrator->problemSetup(db);  
+  d_integrator->problemSetup(db);
 
+ 
 }
 
 Stream
 PDFMixingModel::speciesStateSpace(const vector<double>& mixVar) 
 {
   ChemkinInterface* chemInterf = d_rxnModel->getChemkinInterface();
+  int nofElements = chemInterf->getNumElements();
   int nofSpecies = chemInterf->getNumSpecies();
-  Stream mixedStream(nofSpecies,d_numMixingVars, d_numRxnVars);
+  bool lsoot = d_rxnModel->getSootBool();
+  Stream mixedStream(nofSpecies,nofElements, d_numMixingVars, d_numRxnVars,
+		     lsoot);
   // if adiabatic
   int count = 0;
   // store species as massfraction
   mixedStream.d_mole = false;
   double* sumMixVarFrac = new double[d_numMixingVars+1];
   double sum = 0.0;
-  int ii;
   for (int ii = 0; ii < d_numMixingVars; ii ++) {
     sum += mixVar[ii];
     sumMixVarFrac[ii] = mixVar[ii];
@@ -163,16 +172,15 @@ void
 PDFMixingModel::computeProps(const InletStream& inStream,
 			     Stream& outStream)
 {
-  //  cout<<"in computeProps" << endl;
   // convert inStream to array
-  std::vector<double> mixRxnVar(d_tableDimension);  
+  std::vector<double> mixRxnVar(d_tableDimension); 
   std::vector<double> normVar(d_tableDimension);
   int count = 0;
   double absEnthalpy = 0.0;
   if (!(d_adiabatic)) {
-    absEnthalpy = inStream.d_enthalpy; 
-    mixRxnVar[0] = absEnthalpy;
-    normVar[0] = 0.0;
+    absEnthalpy = inStream.d_enthalpy;
+    mixRxnVar[count] = 0.0;
+    normVar[count] = 0.0;
     count ++;
   }
   for (int i = 0; i < d_numMixingVars; i++) {
@@ -181,13 +189,14 @@ PDFMixingModel::computeProps(const InletStream& inStream,
     count++;
   }
   for (int i = 0; i < d_numMixStatVars; i++) {
-    mixRxnVar[count] = inStream.d_mixVarVariance[i];
+    mixRxnVar[count] = inStream.d_mixVarVariance[i];   
     normVar[count] = inStream.d_mixVarVariance[i];
     count++;
   }
+  int rxncount = count;
   for (int i = 0; i < d_numRxnVars;i++) {
     mixRxnVar[count] = inStream.d_rxnVars[i];
-    normVar[count] = inStream.d_rxnVars[i];
+    normVar[count] = 0.0; //??Or min value of rxn variable??
     count++;
   }
   // count and d_tableDimension should be equal
@@ -196,33 +205,44 @@ PDFMixingModel::computeProps(const InletStream& inStream,
   if (!(d_adiabatic)) {
     Stream normStream = getProps(normVar);
     double adiabaticEnthalpy = normStream.d_enthalpy; //Use Get functions???
-    double sensEnthalpy = normStream.d_sensibleEnthalpy;
+    double sensEnthalpy = normStream.d_sensibleEnthalpy; 
     double normEnthalpy;
     if (Abs(absEnthalpy) < 1e-20)
       normEnthalpy = 0.0;
     else 
       normEnthalpy = (absEnthalpy - adiabaticEnthalpy)/sensEnthalpy;
-    
-    //cout << "Absolute enthalpy: " << normEnthalpy*sensEnthalpy+adiabaticEnthalpy 
-    //<< endl;
     mixRxnVar[0] = normEnthalpy;
+    normVar[0] = normEnthalpy; //Need to normalize rxn variable next, so 
+                               //normalized enthalpy must be known
   }
-    outStream = getProps(mixRxnVar);
-    //    cout << "PDF::returned from getProps" << endl;
-    //    outStream.print(cout, d_rxnModel->getChemkinInterface());
-#if 0
   //Normalize reaction variables
-  if (d_numRxnVars > 0) {
-    for (int i = 0; i < d_numRxnVars;i++) {
-      vector<double> paramValues = d_rxnModel->normalizeParameter(mixRxnVar);//Better to use array??
-      double minParamValue = paramValues[0];
-      double maxParamValue = paramValues[1];
-      double normParam = (mixRxnVar[rxncount+i] - minParamValue)/(maxParamValue - 
-								  minParamValue);
-      mixRxnVar[rxncount+i] = normParam;
+  if (d_numRxnVars > 0) { 
+    //Since min/max rxn parameter values for a given (h/f) combo are the 
+    //same for every rxn parameter entry, look up the first entry; 
+    for (int ii = 0; ii < d_numRxnVars; ii++) {
+      // ???If statement if reaction variable = 0???
+      Stream paramValues =  getProps(normVar);
+      double minParamValue = paramValues.d_rxnVarNorm[0];
+      double maxParamValue = paramValues.d_rxnVarNorm[1];
+      if (mixRxnVar[rxncount+ii] < minParamValue)
+	mixRxnVar[rxncount+ii] = minParamValue;
+      if (mixRxnVar[rxncount+ii] > maxParamValue)
+	mixRxnVar[rxncount+ii] = maxParamValue;
+      double normParam;
+     if ((maxParamValue-minParamValue) < 1e-10)
+	normParam = 0.0;
+     else 
+       normParam = (mixRxnVar[rxncount+ii] - minParamValue)/
+	(maxParamValue - minParamValue);
+      mixRxnVar[rxncount+ii] = normParam;
+      normVar[rxncount+ii] = normParam;
     }
   }
-#endif
+
+    outStream = getProps(mixRxnVar); //function in DynamicTable
+    //    cerr << "PDF::getProps f= " << mixRxnVar[0]<<endl;
+    //    cerr << "PDF::getProps pi= " << mixRxnVar[1]<<endl;
+     
 }
 
 
@@ -230,7 +250,8 @@ Stream
 PDFMixingModel::tableLookUp(int* tableKeyIndex) {
   Stream stateSpaceVars;
   vector<double> vec_stateSpaceVars;
-  //  cout << tableKeyIndex[0] << " " << tableKeyIndex[1] << " " << tableKeyIndex[2] << endl;
+  bool lsoot = d_rxnModel->getSootBool();
+  bool flag = false;
   if (!(d_mixTable->Lookup(tableKeyIndex, vec_stateSpaceVars))) 
     {
       // call to integrator
@@ -241,8 +262,8 @@ PDFMixingModel::tableLookUp(int* tableKeyIndex) {
 	{
 	  stateSpaceVars = d_integrator->computeMeanValues(tableKeyIndex);
 	}
-      bool flag = false;
-      vec_stateSpaceVars = stateSpaceVars.convertStreamToVec(flag);
+
+      vec_stateSpaceVars = stateSpaceVars.convertStreamToVec();
       // defined in K-D tree implementation
       d_mixTable->Insert(tableKeyIndex, vec_stateSpaceVars);
       //cerr << "state space vars in PDFMixModel: " << tableKeyIndex[0] << endl;
@@ -251,7 +272,8 @@ PDFMixingModel::tableLookUp(int* tableKeyIndex) {
   else {
     bool flag = false;
     stateSpaceVars.convertVecToStream(vec_stateSpaceVars, flag, d_numMixingVars,
-                                      d_numRxnVars);
+				      d_numRxnVars, lsoot);
+
   }
   return stateSpaceVars;
   

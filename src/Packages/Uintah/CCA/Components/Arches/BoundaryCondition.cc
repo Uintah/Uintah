@@ -75,10 +75,12 @@ BoundaryCondition::BoundaryCondition(const ArchesLabel* label,
 				     const MPMArchesLabel* MAlb,
 				     TurbulenceModel* turb_model,
 				     Properties* props,
+				     bool calcReactScalar,
 				     bool calcEnthalpy):
                                      d_lab(label), d_MAlab(MAlb),
 				     d_turbModel(turb_model), 
 				     d_props(props),
+				     d_reactingScalarSolve(calcReactScalar),
 				     d_enthalpySolve(calcEnthalpy)
 {
   d_nofScalars = d_props->getNumMixVars();
@@ -983,6 +985,12 @@ BoundaryCondition::sched_transOutletBC(SchedulerP& sched,
     tsk->requires(Task::NewDW, d_lab->d_scalarCPBCLabel, 
 		  Ghost::None, zeroGhostCells);
   tsk->requires(Task::NewDW, d_lab->d_uvwoutLabel);
+  if (d_reactingScalarSolve) {
+    tsk->requires(Task::NewDW, d_lab->d_reactscalarINLabel, 
+		  Ghost::None, zeroGhostCells);
+    tsk->computes(d_lab->d_reactscalarOUTBCLabel);
+  }
+
   if (d_enthalpySolve) {
     tsk->requires(Task::NewDW, d_lab->d_enthalpyCPBCLabel, 
 		  Ghost::None, zeroGhostCells);
@@ -1093,6 +1101,26 @@ BoundaryCondition::transOutletBC(const ProcessorGroup* ,
 
     }
 
+    if (d_reactingScalarSolve) {
+      CCVariable<double> reactscalar;
+      CCVariable<double> old_reactscalar;
+      new_dw->get(reactscalar, d_lab->d_reactscalarINLabel, matlIndex, patch, 
+		  Ghost::None,
+		  nofGhostCells);
+      new_dw->get(old_reactscalar, d_lab->d_reactscalarINLabel, matlIndex, patch, 
+		  Ghost::None,
+		  nofGhostCells);
+    // assuming outlet to be pos x
+
+      fort_outletbcenth(reactscalar, old_reactscalar, idxLo, idxHi, cellType,
+			d_outletBC->d_cellTypeID, uvwout,
+			xminus, xplus, yminus, yplus, zminus, zplus,
+			delta_t, cellinfo->dxpw);
+      new_dw->put(reactscalar, d_lab->d_reactscalarOUTBCLabel, matlIndex, patch);
+
+    }
+
+
     if (d_enthalpySolve) {
       CCVariable<double> enthalpy;
       CCVariable<double> old_enthalpy;
@@ -1157,6 +1185,8 @@ BoundaryCondition::sched_recomputePressureBC(SchedulerP& sched,
   for (int ii = 0; ii < d_nofScalars; ii++)
     tsk->requires(Task::NewDW, d_lab->d_scalarINLabel, 
 		  Ghost::None, numGhostCells);
+
+
   if (d_enthalpySolve) {
     tsk->requires(Task::NewDW, d_lab->d_enthalpyINLabel, 
 		  Ghost::None, numGhostCells);
@@ -1255,6 +1285,12 @@ BoundaryCondition::sched_setProfile(SchedulerP& sched, const PatchSet* patches,
 		  Ghost::None, numGhostCells);
     tsk->computes(d_lab->d_enthalpySPLabel);
   }
+  if (d_reactingScalarSolve) {
+    tsk->requires(Task::NewDW, d_lab->d_reactscalarINLabel,
+		  Ghost::None, numGhostCells);
+    tsk->computes(d_lab->d_reactscalarSPLabel);
+  }
+    
   // This task computes new density, uVelocity, vVelocity and wVelocity, scalars
   tsk->computes(d_lab->d_densitySPLabel);
   tsk->computes(d_lab->d_uVelocitySPLabel);
@@ -2010,6 +2046,7 @@ BoundaryCondition::setFlatProfile(const ProcessorGroup* /*pc*/,
     SFCYVariable<double> vVelocity;
     SFCZVariable<double> wVelocity;
     StaticArray<CCVariable<double> > scalar(d_nofScalars);
+    CCVariable<double> reactscalar;
     CCVariable<double> enthalpy;
     int nofGhostCells = 0;
     
@@ -2027,6 +2064,13 @@ BoundaryCondition::setFlatProfile(const ProcessorGroup* /*pc*/,
     for (int ii = 0; ii < d_nofScalars; ii++) {
       new_dw->get(scalar[ii], d_lab->d_scalarINLabel, matlIndex, patch, Ghost::None,
 		  nofGhostCells);
+    }
+    if (d_reactingScalarSolve) {
+      new_dw->get(reactscalar, d_lab->d_reactscalarINLabel, matlIndex,
+		  patch, Ghost::None,
+		  nofGhostCells);
+      // reactscalar will be zero at the boundaries, so no further calculation
+      // is required.
     }
     IntVector domLoEnth;
     IntVector domHiEnth;
@@ -2108,6 +2152,8 @@ BoundaryCondition::setFlatProfile(const ProcessorGroup* /*pc*/,
     for (int ii =0; ii < d_nofScalars; ii++) {
       new_dw->put(scalar[ii], d_lab->d_scalarSPLabel, matlIndex, patch);
     }
+    if (d_reactingScalarSolve)
+      new_dw->put(reactscalar, d_lab->d_reactscalarSPLabel, matlIndex, patch);
     if (d_enthalpySolve)
       new_dw->put(enthalpy, d_lab->d_enthalpySPBCLabel, matlIndex, patch);
     

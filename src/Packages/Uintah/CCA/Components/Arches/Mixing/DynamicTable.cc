@@ -49,15 +49,25 @@ DynamicTable::getProps(const vector<double> mixRxnVar)
   for (int i = 0; i < d_tableDim; i++)
     {
 	// calculates index in the table
-      double tableIndex = (mixRxnVar[i] - d_tableInfo->getMinValue(i))/  
-	d_tableInfo->getIncrValue(i);
-      //cout << "DynamicTable: tableIndex = " << tableIndex << endl;
+      double midPt = d_tableInfo->getStoicValue(i);
+      double tableIndex;
+      if (mixRxnVar[i] <= midPt) {
+	tableIndex = (mixRxnVar[i] - d_tableInfo->getMinValue(i))/  
+	  d_tableInfo->getIncrValueBelow(i);
+      }
+      else {
+	tableIndex = ((mixRxnVar[i] - midPt)/  
+	  d_tableInfo->getIncrValueAbove(i))+d_tableInfo->getNumDivsBelow(i);
+      }
       // can use floor(tableIndex)
+      //tableIndex = tableIndex + 0.5;
       int tableLowIndex = (int) tableIndex; // cast to int
       int tableUpIndex = tableLowIndex + 1;
-      if (tableLowIndex >= d_tableInfo->getNumDivisions(i))
+      if (tableLowIndex >= (d_tableInfo->getNumDivsBelow(i)+
+	  d_tableInfo->getNumDivsAbove(i)))
 	{
-	  tableLowIndex = d_tableInfo->getNumDivisions(i);
+	  tableLowIndex = d_tableInfo->getNumDivsBelow(i)+
+	    d_tableInfo->getNumDivsAbove(i);
 	  tableIndex = tableLowIndex;
 	  tableUpIndex = tableLowIndex;
 	}
@@ -88,13 +98,8 @@ DynamicTable::interpolate(int currentDim, int* lowIndex, int* upIndex,
       upFactor[currentDim] = d_tableBoundsVec[1][currentDim];
       lowIndex[currentDim] = d_tableIndexVec[0][currentDim];
       Stream lowValue = tableLookUp(lowIndex);
-      //cout << "DynamicTable: lowValue complete for lowIndex = " << lowIndex[currentDim] << endl;
-      //cout<< "LowFactor = "<<lowFactor[currentDim]<<" UpFactor = "<<
-      //	upFactor[currentDim]<<endl;
       lowIndex[currentDim] = d_tableIndexVec[1][currentDim];
-      //cout<< "lowIndex = " << lowIndex[currentDim] << endl;
       Stream upValue = tableLookUp(lowIndex);
-      //cout << "Dynamic Table: upValue complete for upIndex = " << lowIndex[currentDim] <<endl;
       return lowValue.linInterpolate(upFactor[currentDim],
 				     lowFactor[currentDim], upValue);
     }
@@ -121,9 +126,13 @@ DynamicTable::interpolate(int currentDim, int* lowIndex, int* upIndex,
 }
 
 
-
+ 
 //
 // $Log$
+// Revision 1.3  2001/09/04 23:44:26  rawat
+// Added ReactingScalar transport equation to run ILDM.
+// Also, merged Jennifer's changes to run ILDM in the mixing directory.
+//
 // Revision 1.2  2001/08/03 18:08:09  witzel
 // Removed an extraneous semi-colon at the end of a #include.
 //

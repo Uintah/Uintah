@@ -46,7 +46,7 @@
 #include <vector>
 using namespace std;
 namespace Uintah {
-    const int NAMELENGTH = 20;
+  const int NAMELENGTH = 20;
   // This constant is used to dimension char arrays which will be compared to
   // the data type "CharArray" returned by some Chemkin subroutines.
   const int CHARLENGTH = 16;
@@ -57,8 +57,8 @@ namespace Uintah {
     /////////////////////////////////////////////////////////////////////////
     //
     // Constructs an instance of ChemkinInterface. No variables are specified,
-    // but two files are required inputs: therm.dat (thermodynamic data) and 
-    // chem.inp (element, species, and chemical kinetics data)
+    // but one files is required input: chem.bin. This file is the output of
+    // ckinterp, which must be run a priori
     // PRECONDITIONS
     //  None
     // POSTCONDITIONS
@@ -139,32 +139,33 @@ namespace Uintah {
     // getMixMoleWeight returns the mean molecular weight of a gas mixture
     // given the species mass fractions
     //
-    double getMixMoleWeight(double *Y);
+    double getMixMoleWeight(vector<double> Yvec);
     //////////////////////////////////////////////////////////////////////
     // getMixEnthalpy returns the mean enthalpy of a mixture in mass units 
     // (J/kg) given temperature(K) and species mass fractions
     //
-    double getMixEnthalpy(double temp, const vector<double>& Yvec);
+    double getMixEnthalpy(double temp, vector<double> Yvec);
     //////////////////////////////////////////////////////////////////////
     // getMixSpecificHeat returns the mean specific heat at constant pressure
     // (J/kg*K) given temperature(K) and species mass fractions
     //
-    double getMixSpecificHeat(double temp, double *Y);
+    double getMixSpecificHeat(double temp, vector<double> Yvec);
     //////////////////////////////////////////////////////////////////////
     // getMassDensity returns the mass density (kg/m^3)of a gas mixture
     // given the pressure(Pa), temperature(K), and species mass fractions
     //
-    double getMassDensity(double press, double temp, double *Y);
+    double getMassDensity(double press, double temp, 
+			  const vector<double> Yvec);
     //////////////////////////////////////////////////////////////////////
     // convertMolestoMass returns the array of species mass fractions
     // given the mole fractions
     //
-    vector<double> convertMolestoMass(const vector<double>& Xvec); 
+    vector<double> convertMolestoMass(vector<double> Xvec); 
     //////////////////////////////////////////////////////////////////////
     // convertMasstoMoles returns the array of species mole fractions
     // given the mass fractions
     //
-    vector<double> convertMasstoMoles(const vector<double>& Yvec);
+    vector<double> convertMasstoMoles(vector<double> Yvec);
     //////////////////////////////////////////////////////////////////////
     // getSpeciesEnthalpy returns the array of enthalpies for the species
     // in mass units (J/kg)
@@ -174,7 +175,8 @@ namespace Uintah {
     // getMolarRates returns the molar production rates (kmoles/(m^3*s)of 
     // the species given the temperature(K), pressure(Pa), and mass fractions
     //
-    void getMolarRates(double press, double temp, double *Y, double *wdot);
+    void getMolarRates(double press, double temp, vector<double> Yvec, 
+		       double *wdot);
 
 
     //Variables needed by Stanjan equilibrium model
@@ -221,6 +223,7 @@ namespace Uintah {
 
   }; // End Class ChemkinInterface
 } // end namespace uintah
+
 #endif
 
 
