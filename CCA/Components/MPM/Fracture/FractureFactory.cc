@@ -1,23 +1,26 @@
 #include "FractureFactory.h"
-
 #include "NormalFracture.h"
+#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
 
 namespace Uintah {
 Fracture* FractureFactory::create(const ProblemSpecP& ps)
 {
-   if(ProblemSpecP fractureProb = ps->findBlock("fracture")) {
+   ProblemSpecP fractureProb = ps->findBlock("fracture");
+   if (fractureProb) {
      std::string fracture_type;
-     fractureProb->require("type",fracture_type);
-     cerr << "fracture_type = " << fracture_type << std::endl;
- 
+     if (!fractureProb->getAttribute("type",fracture_type))
+       throw ProblemSetupException("No type for fracture");
+
      if (fracture_type == "normal") 
         return(scinew NormalFracture(fractureProb));
-     else {
-	cerr << "Unknown Fracture Type (" << fracture_type << ")" << std::endl;
-     }
+
+     else 
+	throw ProblemSetupException("Unknown Fracture Type ("+fracture_type+")");
+     
    }
-   return NULL;
+   return 0;
 }
+
 } // End namespace Uintah
 
 

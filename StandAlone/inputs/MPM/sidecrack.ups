@@ -48,9 +48,7 @@
 	<MPM>
 	    <material>
                 <burn type = "null" />
-                <fracture>
-                   <type>normal</type>
-                </fracture>
+                <fracture type = "normal" />
                 <density>1000.0</density>
                 <thermal_conductivity>237.0</thermal_conductivity>
                 <specific_heat>903</specific_heat>
