@@ -15,8 +15,8 @@
 #include <Dataflow/ModuleList.h>
 #include <Datatypes/ContourSet.h>
 #include <Datatypes/ContourSetPort.h>
-#include <Devices/Dialbox.h>
-#include <Devices/DBContext.h>
+// #include <Devices/Dialbox.h>
+// #include <Devices/DBContext.h>
 #include <Geometry/Vector.h>
 #include <Math/Expon.h>
 #include <Math/Trig.h>
@@ -25,11 +25,11 @@
 class TransformCS : public Module {
     ContourSetIPort* icontour;
     ContourSetOPort* ocontour;
-    DBContext *dbcontext_st;
+//    DBContext *dbcontext_st;
     void lace_contours(ContourSetHandle);
     void transform_cs();
-    void initDB();
-    void DBCallBack(DBContext*, int, double, double, void*);
+//    void initDB();
+//    void DBCallBack(DBContext*, int, double, double, void*);
     double spacing;
     ContourSetHandle contours;
 public:
@@ -58,14 +58,14 @@ TransformCS::TransformCS(const clString& id)
     ocontour=new ContourSetOPort(this, "ContourSet", ContourSetIPort::Atomic);
     add_oport(ocontour);
     spacing=0;
-    dbcontext_st=0;
+//    dbcontext_st=0;
 }
 
 void TransformCS::ui_button() {
-    if (!dbcontext_st) {
+/*    if (!dbcontext_st) {
 	initDB();
     }
-    Dialbox::attach_dials(dbcontext_st);
+    Dialbox::attach_dials(dbcontext_st);*/
 }
 
 TransformCS::TransformCS(const TransformCS&copy, int deep)
@@ -84,7 +84,7 @@ Module* TransformCS::clone(int deep)
 }
 
 void TransformCS::transform_cs() {
-    contours->translate(Vector(dbcontext_st->get_value(6),
+/*    contours->translate(Vector(dbcontext_st->get_value(6),
 			       dbcontext_st->get_value(4),
 			       dbcontext_st->get_value(2)));
     cerr << "Bases after translate:\n";
@@ -99,9 +99,9 @@ void TransformCS::transform_cs() {
     cerr << contours->basis[1].string() << "\n";
     cerr << contours->basis[2].string() << "\n";
     contours->scale(Exp10(dbcontext_st->get_value(0)));
-    contours->space=dbcontext_st->get_value(1);
+    contours->space=dbcontext_st->get_value(1);*/
 }
-
+/*
 void TransformCS::initDB() {
 #ifdef OLDUI
     dbcontext_st=new DBContext(clString("TransformCS"));
@@ -148,17 +148,17 @@ void TransformCS::initDB() {
 				  &TransformCS::DBCallBack, 0));
     dbcontext_st->set_wraprange(3, 0, 10);
 #endif
-}   	 
+}*/
 void TransformCS::execute()
 {
-    if (!dbcontext_st) {
+/*    if (!dbcontext_st) {
 	initDB();
     }
-    if (!icontour->get(contours))
+    */    if (!icontour->get(contours))
 	return;
     if (contours->space!=spacing) {
 	spacing=contours->space;
-	dbcontext_st->set_value(1, spacing);
+//	dbcontext_st->set_value(1, spacing);
     }
     contours.detach();
     cerr << "Bases before:\n";
@@ -172,10 +172,11 @@ void TransformCS::execute()
     cerr << contours->basis[2].string() << "\n";
     ocontour->send(contours);
 }
-
+/*
 void TransformCS::DBCallBack(DBContext*, int, double, double, void*) {
     if(!abort_flag){
 	abort_flag=1;
 	want_to_execute();
     }
 }
+*/
