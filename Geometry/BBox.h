@@ -6,28 +6,9 @@
 class Vector;
 class Piostream;
 
-class BBoxSide;
 class BBox;
 
 #define EEpsilon  1e-13
-
-class BBoxSide
-{
-  Plane pl;
-  Point pts[2][3];
-
-public:  
-  Vector perimeter[2][3];
-  BBoxSide *next;
-  
-  BBoxSide( );
-  BBoxSide( Point a, Point b, Point c, Point d );
-  void ChangeBBoxSide( Point a, Point b, Point c, Point d );
-
-  int BBoxSide::Intersect( Point s, Vector v, Point& hit );
-};
-
-
 
 class BBox {
 protected:
@@ -35,9 +16,8 @@ friend void Pio(Piostream &, BBox& );
     int have_some;
     Point cmin;
     Point cmax;
-    BBoxSide sides[6];
     Point bcmin, bcmax;
-    Point extracmin, extracmax;
+    Point extracmin;
     int inbx, inby, inbz;
 public:
     BBox();
@@ -56,21 +36,19 @@ public:
     Point min() const;
     Point max() const;
     Vector diagonal() const;
-    Point corner(int) const;
 
-    // sets up the bbox sides for intersection calculations
-
-    void SetupSides( );
+    // prepares for intersection by assigning the closest bbox corner
+    // to extracmin and initializing an epsilon bigger bbox
     
-    // finds up to 2 points of intersection of a ray and a bbox
+    void PrepareIntersect( const Point& e );
+    
+    // returns true if the ray hit the bbox and returns the hit point
+    // in hitNear
 
     int Intersect( const Point& e, const Vector& v, Point& hitNear );
-    int Intersect2( Point s, Vector v, Point& hitNear, Point& hitFar );
 
-    int OnCube( const Point& p );
-
-    //
-    void remap( const Point& e );
+    // given a t distance, assigns the hit point.  returns true
+    // if the hit point lies on a bbox face
 
     int TestTx( const Point& e, const Vector& v, double tx, Point& hitNear );
     int TestTy( const Point& e, const Vector& v, double ty, Point& hitNear );
