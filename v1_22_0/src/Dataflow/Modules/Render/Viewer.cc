@@ -121,6 +121,12 @@ Viewer::Viewer(GuiContext* ctx)
 //----------------------------------------------------------------------
 Viewer::~Viewer()
 {
+  for(unsigned int i=0;i<view_window_.size();i++)
+  {
+    view_window_lock_.lock();
+    delete view_window_[i];
+    view_window_lock_.unlock();
+  }
 
 }
 //----------------------------------------------------------------------
@@ -677,11 +683,25 @@ void Viewer::tcl_command(GuiArgs& args, void* userdata)
       return;
     }
     view_window_.push_back(scinew ViewWindow(this, gui, gui->createContext(args[2])));
-  }
-  else
-  {
+  } else if (args[1] == "deleteviewwindow") {
+    if(args.count() != 3)
+    {
+      args.error(args[1]+" must have a RID");
+      return;
+    }
+    unsigned int win = 0;
+    while (win<view_window_.size() && view_window_[win]->id!=args[2]) ++win;
+    if (win < view_window_.size()) {
+      gui->unlock();
+      delete_viewwindow(view_window_[win]);
+      gui->lock();
+    } else {
+      args.error(args[1]+": invalid ViewWindow: "+args[1]);
+    }
+  } else {
     Module::tcl_command(args, userdata);
   }
+
 }
 //----------------------------------------------------------------------
 void Viewer::execute()
@@ -844,18 +864,5 @@ void Viewer::flushPort(int portid)
 }
 
 
-//----------------------------------------------------------------------
-void Viewer::emit_vars(ostream& out, const string& midx, const string &prefix)
-{
-  ctx->emit(out, midx);
-  string viewwindowstr;
-  for(unsigned int i=0;i<view_window_.size();i++)
-  {
-    out << prefix << midx << " ui\n";
-    view_window_[i]->emit_vars(out,
-			       midx+string("-ViewWindow_")+to_string(i),
-			       prefix);
-  }
-}
 
 } // End namespace SCIRun
