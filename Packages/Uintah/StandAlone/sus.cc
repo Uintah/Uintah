@@ -20,7 +20,7 @@
 #include <Uintah/Components/MPM/SerialMPM.h>
 #include <Uintah/Components/Arches/Arches.h>
 #include <Uintah/Components/ICE/ICE.h>
-#include <Uintah/Components/Schedulers/BrainDamagedScheduler.h>
+#include <Uintah/Components/Schedulers/SingleProcessorScheduler.h>
 #include <Uintah/Components/DataArchiver/DataArchiver.h>
 #include <SCICore/Exceptions/Exception.h>
 #include <ieeefp.h>
@@ -161,9 +161,8 @@ int main(int argc, char** argv)
 	sim->attachPort("output", output);
 
 	// Scheduler
-	BrainDamagedScheduler* sched = 
-	   scinew BrainDamagedScheduler( MpiRank, MpiProcesses );
-	sched->setNumThreads(numThreads);
+	SingleProcessorScheduler* sched = 
+	   scinew SingleProcessorScheduler( MpiRank, MpiProcesses );
 	sim->attachPort("scheduler", sched);
 
 	/*
@@ -186,6 +185,11 @@ int main(int argc, char** argv)
 
 //
 // $Log$
+// Revision 1.13  2000/06/15 23:14:04  sparker
+// Cleaned up scheduler code
+// Renamed BrainDamagedScheduler to SingleProcessorScheduler
+// Created MPIScheduler to (eventually) do the MPI work
+//
 // Revision 1.12  2000/06/15 21:56:56  sparker
 // Added multi-patch support (bugzilla #107)
 // Changed interface to datawarehouse for particle data
