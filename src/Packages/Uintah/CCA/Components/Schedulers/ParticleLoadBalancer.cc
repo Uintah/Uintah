@@ -161,7 +161,9 @@ bool ParticleLoadBalancer::assignPatchesParticle(const GridP& grid)
   MPI_Allgatherv(&particleList[0],particleList.size(),particletype,
 	      &allParticles[0], &recvcounts[0], &displs[0], particletype,
 	      d_myworld->getComm());
-  
+
+  MPI_Type_free(&particletype);
+
   // proc 0 - associate patches to particles, load balance, 
   //   MPI_Bcast it to all procs
   
