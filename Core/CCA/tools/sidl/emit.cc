@@ -788,7 +788,7 @@ void Method::emit_handler(EmitState& e, CI* emit_class) const
     e.out << leader2 << "  int _numCalls;\n";
     e.out << leader2 << "  message->unmarshalInt(&_numCalls);\n";
     e.out << leader2 << "  //Check if it's the right session for this request to be satisfied\n";
-    e.out << leader2 << "  _sc->gatekeeper->getTickets(_sessionID,_numCalls);\n";
+    e.out << leader2 << "  _sc->gatekeeper->getTickets(" << e.handlerNum << ",_sessionID,_numCalls);\n";
     e.out << leader2 << "}\n";
   }
 
@@ -1012,7 +1012,7 @@ void Method::emit_handler(EmitState& e, CI* emit_class) const
   if(isCollective) {
     e.out << leader2 << "if(_flag != ::SCIRun::REDIS) {\n";
     e.out << leader2 << "  //Release a ticket from the gatekeeper object\n";
-    e.out << leader2 << "  _sc->gatekeeper->releaseOneTicket();\n";
+    e.out << leader2 << "  _sc->gatekeeper->releaseOneTicket(" << e.handlerNum << ");\n";
     e.out << leader2 << "}\n";
   }
 
@@ -1402,7 +1402,7 @@ void Method::emit_proxy(EmitState& e, const string& fn,
 e.out << leader2 << "::std::cout << \" NOCALLRET sending _sessionID = '\" << _sessionID << \"'\\n\";\n";
     e.out << leader2 << "message->marshalChar(const_cast<char*>(_sessionID.c_str()), 36);\n";
     e.out << leader2 << "int _numCalls = (_rm->localSize / remoteSize);\n";
-    e.out << leader2 << "((_rm->localSize % remoteSize) > (_rm->localRank % remoteSize)) ?_numCalls++ :0;\n";
+    e.out << leader2 << "((_rm->localSize % remoteSize) > _rm->localRank) ?_numCalls++ :0;\n";
     e.out << leader2 << "message->marshalInt(&_numCalls);\n";
     e.out << leader2 << "// Send the message\n";
     e.out << leader2 << "int _handler=(_ref[0])->getVtableBase()+" << handlerOff << ";\n";
