@@ -4,7 +4,7 @@
  *  visualization of 3-D unstructured meshes
  *
  *  Written by:
- *   Carole Gitlin and Steven G. Parker
+ *   Carole Gitlin
  *   Department of Computer Science
  *   University of Utah
  *   March 1994
@@ -19,6 +19,8 @@
 #include <Dataflow/ModuleList.h>
 #include <Datatypes/GeometryPort.h>
 #include <Datatypes/MeshPort.h>
+#include <Datatypes/Colormap.h>
+#include <Datatypes/ColormapPort.h>
 #include <Geometry/Point.h>
 #include <Geom/Geom.h>
 #include <Geom/Group.h>
@@ -26,8 +28,12 @@
 #include <Geom/Tetra.h>
 #include <Geom/Line.h>
 #include <Geom/Switch.h>
-#include <Malloc/Allocator.h>
+#include <Geom/Tri.h>
+#include <Geom/Sphere.h>
+#include <Geom/Cylinder.h>
+#include <Geom/Pick.h>
 #include <TCL/TCLvar.h>
+#include <TCL/Histogram.h>
 #include <Widgets/CrosshairWidget.h>
 #include <iostream.h>
 #include <strstream.h>
@@ -38,171 +44,393 @@
 #define ALL 0
 #define OUTER 1
 
-struct MVEdge {
-    int n[2];
-    MVEdge(int, int);
-    int hash(int hash_size) const;
-    int operator==(const MVEdge&) const;
-};
+#define SURFACE 0
+#define VOLUME 1
+
+#define ADD 1
+#define DELETE 2
 
 class MeshView : public Module {
     MeshIPort* inport;
+    ColormapIPort* colorPort;
     GeometryOPort* ogeom;
+    MeshOPort* oport;
+
     CrowdMonitor widget_lock;
-    int haveVol, haveAsp, haveSize;
+
+    int haveVol, haveAsp, haveSize,
+         showing, oldTech, toEdit;
     
     TCLint numLevels,               //  The number of levels being shown
-           seedTet;                 //  The seed element to build out from
-    int oldLev, oldSeed;            //  Previous values of the above two
+           editMode,
+           display,
+           select,
+           render;
+    int oldLev, oldSeed, Seed;	    //  Previous values of the above two
     TCLdouble clipX, clipY, clipZ;  //  Positive clipping planes
     TCLdouble clipNX, clipNY, clipNZ;  // Negative clipping planes
+    TCLdouble radius;
     double oldClipX, oldClipY, oldClipZ;    // Previous values of the
     double oldClipNX, oldClipNY, oldClipNZ; // clipping planes
-	Point oldMin, oldMax;           //  Previous bounding box values
+    Point oldMin, oldMax;           //  Previous bounding box values
     int deep,                       //  How many levels out there are from a
                                     //  given seed
-        oldNumTet;                  //  The previous number of elements
-    TCLint allLevels, elmMeas;	    //  Flag of whether to show all levels
+        oldNumTet,                  //  The previous number of elements
+        oldInside, oldRadius,
+        lastTech,
+        oldEdit,
+        oldDisplay;
+    TCLint allLevels, 		    //  Flag of whether to show all levels
                                     //    or only the current one
-    TCLint elmSwitch, tech;
-    TCLdouble mMin, mMax;
-    CrosshairWidget *startingTet;
+           elmMeas,    		    //  Which measure we are looking at
+           elmSwitch,	      	    //  Whether only showing elements in
+                                    //    range, or showing them hilited in
+                                    //    mesh
+           inside,		    //  elements are either inside the
+                                    //    specified range or outside
+           tech;		    //  Switch between quantitative and
+                                    //    manipulative techniques	   
+    CrosshairWidget *startingTet;   //  Selecting Starting tetrahedron
+    Histogram histo;                //  Histogram for showing measures
 
-    int oldmMin, oldmMax;
-    int oldMeas, switchSet, oldElm;
-    Array1<BBox> tb;
+    Point oldPoint, editPoint;
+    double oldmMin, oldmMax;
+    int oldMeas, switchSet, oldElm, 
+        changed, oldNL, oldALL, oldSurf, oldRender;
 
-    Array1<int> levels;
+    Array1<int> levels, toDrawTet, toDrawMeas;
     Array1< Array1<int> > levStor;
-    Array1<GeomSwitch*> levSwitch;
-    Array1<GeomSwitch*> auxSwitch;
+    Array1<GeomGroup*> tetra, measTetra;
+    Array1<GeomMaterial*> matl, measMatl;
+    Array1<MaterialHandle> Materials;
+    GeomGroup* measAuxTetra;
+    GeomGroup* measGroup;
+    GeomGroup* regGroup;
+    GeomMaterial* measAuxMatl;
+    GeomSwitch* regSwitch;
     GeomSwitch* measSwitch;
     GeomSwitch* measAuxSwitch;
-    Array1<GeomGroup*> levTetra;
-    Array1<GeomGroup*> auxTetra;
-    GeomGroup* measTetra;
-    GeomGroup* measAuxTetra;
-    Array1<GeomGroup*> levEdges;
-    Array1<GeomMaterial*> levMatl;
-    Array1<GeomMaterial*> auxMatl;
-    GeomMaterial* measMatl;
-    GeomMaterial* measAuxMatl;
+    Point bmin, bmax;
 
     Array1<double> volMeas, aspMeas, sizeMeas;
     CrowdMonitor geom_lock;
-    GeomGroup* eGroup;
 
-    MaterialHandle mat1;
-    MaterialHandle mat2, mat3;
+    Array1<MaterialHandle> genMat;
 public:
     MeshView(const clString& id);
     MeshView(const MeshView&, int deep);
+    void initGroups();
     virtual ~MeshView();
     virtual Module* clone(int deep);
     virtual void execute();
+    void doChecks(const MeshHandle& Mesh,
+			   const ColormapHandle& genColors);
+    void updateInfo(const MeshHandle& Mesh);
+    void getElements(const MeshHandle& mesh, 
+			   const ColormapHandle& genColors);
     void initList();
     void addTet(int row, int ind);
     void makeLevels(const MeshHandle&);
-    void doClip(int ind, double cX, double cNX, double cY,
-		double cNY, double cZ, double cNZ, const MeshHandle& mesh); 
+    void getTetra(const MeshHandle&);
+    int setToDraw(const MeshHandle&);
+    int doClip(int n, const MeshHandle& mesh);
+
     void makeEdges(const MeshHandle& mesh);
     void calcMeasures(const MeshHandle& mesh, double *min, double *max);
-    void getMeas(const MeshHandle& mesh);
+    int getMeas(const MeshHandle& mesh, const ColormapHandle& col);
     double volume(Point p1, Point p2, Point p3, Point p4);
     double aspect_ratio(Point p1, Point p2, Point p3, Point p4);
     double calcSize(const MeshHandle& mesh, int ind);
     void get_sphere(Point p1, Point p2, Point p3, Point p4, double& rad);
     double getDistance(Point p0, Point p1, Point p2, Point p3);
+    int findElement(Point p, const MeshHandle& mesh, const ColormapHandle&);
+    void geom_release(GeomPick*, void*);
+    void geom_moved(GeomPick*, int, double, const Vector&, void*);
+    int doEdit(const MeshHandle& mesh);
+    int newTesselation(const MeshHandle& mesh);
+    int findNode(const MeshHandle& mesh);
 };
 
 static Module* make_MeshView(const clString& id)
 {
-    return scinew MeshView(id);
+    return new MeshView(id);
 }
 
 static RegisterModule db1("Fields", "MeshView", make_MeshView);
-static RegisterModule db2("Visualization", "MeshView", make_MeshView);
+static RegisterModule db2("Mesh", "MeshView", make_MeshView);
 static clString mesh_name("Mesh");
+static clString widget_name("Crosshair Widget");
 
+/***************************************************************************
+ * Constructor for the MeshView module.
+ */
 MeshView::MeshView(const clString& id)
 : Module("MeshView", id, Filter), numLevels("numLevels", id, this),
-  seedTet("seedTet", id, this), clipX("clipX", id, this),
-  clipY("clipY", id, this), clipZ("clipZ", id, this),
-  clipNX("clipNX", id, this), clipNY("clipNY", id, this), 
-  clipNZ("clipNZ", id, this), allLevels("allLevels", id, this),
+  clipX("clipX", id, this), clipY("clipY", id, this), 
+  clipZ("clipZ", id, this), clipNX("clipNX", id, this), 
+  clipNY("clipNY", id, this), clipNZ("clipNZ", id, this), 
+  allLevels("allLevels", id, this), editMode("editMode", id, this),
   elmMeas("elmMeas", id, this), elmSwitch("elmSwitch", id, this),
-  mMin("mMin", id, this), mMax("mMax", id, this), tech("tech", id, this)
+  tech("tech", id, this), inside("inside", id, this), 
+  render("render", id, this), display("display", id, this),
+  radius("radius", id, this), select("select", id, this)
 {
 
     // Create an input port, of type Mesh
-    inport=scinew MeshIPort(this, "Mesh", MeshIPort::Atomic);
+    inport=new MeshIPort(this, "Mesh", MeshIPort::Atomic);
     add_iport(inport);
 
-    // Create the output port
-    ogeom=scinew GeometryOPort(this, "Geometry", GeometryIPort::Atomic);
+    // Create a colormap input port
+    colorPort = new ColormapIPort(this, "Colormap", ColormapIPort::Atomic);
+    add_iport(colorPort);
+
+
+    // Create the output port for geometry
+    ogeom=new GeometryOPort(this, "Geometry", GeometryIPort::Atomic);
     add_oport(ogeom);
 
+    // Create output port for writing the mesh
+    oport = new MeshOPort(this, "Outmesh", MeshIPort::Atomic);
+    add_oport(oport);
+
     // Initialize the 'old' values
-    oldSeed = -1; 
+    oldSeed = -1; toEdit = 0;
     oldClipY = 10000; oldClipX = 10000; oldClipZ = 10000;
     oldClipNY = 10000; oldClipNX = 10000; oldClipNZ = 10000;
-    oldMeas = 10;
-
-    // Set up Material Properties
-    mat1=scinew Material(Color(.5, .5, .5), Color(.5, .5, .5),
-		      Color(.1, .1, .1), 10);
-    mat2=scinew Material(Color(1, 0, 0), Color(1, 0, 0),
-		      Color(.1, .1, .1), 10);
-    mat3=scinew Material(Color(0, 1, 1), Color(0, 1, 1),
-		      Color(.1, .1, .1), 10);
+    oldMeas = 10; oldEdit = 0;
     oldMin = Point(0.0, 0.0, 0.0);
     oldMax = Point(0.0, 0.0, 0.0);
     oldNumTet = 0; oldElm = -1;
-    haveVol = haveAsp = haveSize = 0;
-    switchSet = 0;
-
     oldmMin = 10000; oldmMax = 10000;
-    startingTet = scinew CrosshairWidget(this, &widget_lock, 0.01);
-    measTetra = scinew GeomGroup;
-    measAuxTetra = scinew GeomGroup;
+    showing = 0; oldTech = 2; oldNL = -1; 
+
+
+    Seed = 0;
+    // Set up Material Properties
+    genMat.grow(4);
+    genMat[0]=new Material(Color(.5, .5, .5), Color(.5, .5, .5),
+		      Color(.5, .5, .5), 20);
+//    genMat[0] = new Material(Color(0,0,0), Color(0,.6,0),Color(.5,.5,.5),20);
+    genMat[1]=new Material(Color(1, 0, 0), Color(1, 0, 0),
+		      Color(.5, .5, .5), 20);
+    genMat[2]=new Material(Color(0, 1, 1), Color(0, 1, 1),
+		      Color(.5, .5, .5), 20);
+    genMat[3] = new Material(Color(1, 1, 0), Color(1, 1, 0),
+			     Color(.5, .5, .5), 20);
+    haveVol = haveAsp = haveSize = 0;
+    switchSet = 0; oldInside = 0;
+    oldALL = ALL; oldRender = VOLUME;
+    oldDisplay = 0; oldRadius = 0.025;
+    lastTech = -1;
+
+    startingTet = new CrosshairWidget(this, &widget_lock, 0.1);
+
+    initGroups();
+}
+
+
+/***************************************************************************
+ * Initializes the geometry groups.  There are three main groups, one for 
+ * the regular tetrahedron, and two for the quantitative techniques with one
+ * for the elements inside the range and one for the wireframe mesh of those
+ * elements outside the range.  Each group has a switch that the program 
+ * turns on and off, depending on which group should be displayed.
+ */
+void MeshView::initGroups()
+{
+    // measTetra is used for the elements inside the range, for the
+    // quantitative measures
+    measTetra.grow(1);
+    measTetra[0] = new GeomGroup;
+
+    GeomTetra *dumT = new GeomTetra(Point(0,0,0), Point(0,0,0.1), 
+				    Point(0,0.01,0), Point(0.1,0,0));
+
+    measTetra[0] -> add(dumT);
+    measMatl.grow(1);
+    measMatl[0] = new GeomMaterial(measTetra[0], genMat[0]);
+    measGroup = new GeomGroup;
+    measGroup -> add(measMatl[0]);
+    measSwitch = new GeomSwitch(measGroup, 0);
+
+    GeomTetra *dumX = new GeomTetra(Point(0,0,0), Point(0,0,0.1), 
+				    Point(0,0.01,0), Point(0.1,0,0));
+
+    // measAuxTetra is used for the wireframe mesh of elements outside
+    // the range.
+    measAuxTetra = new GeomGroup;
+    measAuxTetra -> add(dumX);
+    measAuxMatl = new GeomMaterial(measAuxTetra, genMat[2]);
+    measAuxSwitch = new GeomSwitch(measAuxMatl, 0);
+
+    // tetra is used for the regular tetrahedron in the manipulative mode
+    tetra.grow(1);
+    tetra[0] = new GeomGroup;
+    GeomTetra *dumY = new GeomTetra(Point(0,0,0), Point(0,0,0.1), 
+				    Point(0,0.01,0), Point(0.1,0,0));
+    
+    tetra[0] -> add(dumY);
+    matl.grow(1);
+    matl[0] = new GeomMaterial(tetra[0], genMat[1]);
+    regGroup = new GeomGroup;
+    regGroup -> add(matl[0]);
+    regSwitch = new GeomSwitch(regGroup, 0);
+
+    GeomGroup *group = new GeomGroup;
+    group -> add(regSwitch);
+    group -> add(measSwitch);
+    group -> add(measAuxSwitch);
+    
+    ogeom -> delAll();
+    ogeom -> addObj(group, mesh_name, &geom_lock);
+    ogeom -> addObj(startingTet -> GetWidget(), widget_name, &widget_lock);
 }	
 
+/***************************************************************************
+ */
 MeshView::MeshView(const MeshView& copy, int deep)
 : Module(copy, deep), numLevels("numLevels", id, this),
-  seedTet("seedTet", id, this), clipX("clipX", id, this),
-  clipY("clipY", id, this), clipZ("clipZ", id, this),
-  clipNX("clipNX", id, this), clipNY("clipNY", id, this), 
-  clipNZ("clipNZ", id, this), allLevels("allLevels", id, this),
+  clipX("clipX", id, this), clipY("clipY", id, this), 
+  clipZ("clipZ", id, this), clipNX("clipNX", id, this), 
+  clipNY("clipNY", id, this), clipNZ("clipNZ", id, this), 
+  allLevels("allLevels", id, this), editMode("editMode", id, this),
   elmMeas("elmMeas", id, this), elmSwitch("elmSwitch", id, this),
-  mMin("mMin", id, this), mMax("mMax", id, this), tech("tech", id, this)
+  tech("tech", id, this), inside("inside", id, this),
+  render("render", id, this), display("display", id, this),
+  radius("radius", id, this), select("select", id, this)
 {
     NOT_FINISHED("MeshView::MeshView");
 }
 
+/***************************************************************************
+ */
 MeshView::~MeshView()
 {
 }
 
+/***************************************************************************
+ */
 Module* MeshView::clone(int deep)
 {
-    return scinew MeshView(*this, deep);
+    return new MeshView(*this, deep);
 }
 
+/***************************************************************************
+ * Main function of the MeshView module
+ */
 void MeshView::execute()
 {
     MeshHandle mesh;
-	char buf[1000];
+    ColormapHandle genColors;
+
+    // Wait until we have a mesh
     if(!inport->get(mesh))
 	return;
-    Point bmin, bmax;
+
+    // If we don't have a colormap, then create a generic one.
+    if (!colorPort -> get(genColors)){
+	genColors = new Colormap;
+	genColors -> build_default();
+    }
+
+    // Check to see if anything has changed
+    doChecks(mesh, genColors);
+
+    // Get the elements to display
+    getElements(mesh, genColors);
+
+    geom_lock.write_unlock();
+//    startingTet -> execute();
+
+    oport->send(mesh);
+    ogeom->flushViews();
+
+    lastTech = tech.get();
+}
+
+/***************************************************************************
+ * Function to determine whether anything in the interface has been changed
+ * and then act appropriately.
+ */
+void MeshView::doChecks(const MeshHandle& mesh, const ColormapHandle& cmap)
+{
+    int numTetra=mesh->elems.size();
+    char buf[1000];
+    changed = 0; // This is used to indicate whether something has been
+                 // changed.
+
+    // Get the position of the crosshair widget
+    Point newP = startingTet -> GetPosition();
+
+    // if it is a new point, find which element it is in
+    if (newP != oldPoint)
+    {
+	int findit=findElement(newP, mesh, cmap);
+	if (findit == -1)
+	    cerr << "Didn't find the tetrahedron\n";
+	else
+	{
+	    // See if we were selecting the edit element or seed
+	    if (select.get() == 1)
+	    {
+		toEdit = findit;
+		if (toEdit != oldEdit)
+		{
+		    updateInfo(mesh);
+		    oldEdit = toEdit;
+		}
+		editPoint = newP;
+	    }
+	    else
+		Seed = findit;
+	    cerr << "Element = " << findit << endl;
+	}
+	oldPoint = newP;
+    }
+
+    // Check if we're editing the mesh
+    if (tech.get() == 2)
+    {
+	oldElm = -1;
+	doEdit(mesh);
+    }
+
+    // if we've read in a new file or changed the number of
+    // elements, reset the slider
+    if (oldNumTet != numTetra)
+    {
+	toDrawTet.remove_all();
+	toDrawTet.grow(numTetra);
+	toDrawMeas.remove_all();
+	toDrawMeas.grow(numTetra);
+        oldNumTet = numTetra;
+	changed = 1;
+	haveVol = haveAsp = haveSize = 0;
+	Element* elem = mesh->elems[Seed];
+
+	// Put the crosshair widget in the center of the seed
+	Point p1(mesh->nodes[elem->n[0]]->p);
+	Point p2(mesh->nodes[elem->n[1]]->p);
+	Point p3(mesh->nodes[elem->n[2]]->p);
+	Point p4(mesh->nodes[elem->n[3]]->p);
+
+	Point center((p1.x() + p2.x() + p3.x() + p4.x()) / 4.,
+		     (p1.y() + p2.y() + p3.y() + p4.y()) / 4.,
+		     (p1.z() + p2.z() + p3.z() + p4.z()) / 4.);
+	
+	startingTet -> SetPosition(center);
+	oldPoint = center;
+    }
+
     mesh->get_bounds(bmin, bmax);
 
     // If the new bounding box values aren't equal to the old ones, reset
-    //  the values on the slider
+    //  the values on the sliders
+
     if ((bmin != oldMin) || (bmax != oldMax))
     {
         ostrstream str(buf, 1000);
-        str << id << " set_bounds " << bmin.x() << " " << bmax.x() << " " << bmin.y() << " " << bmax.y() << " " << bmin.z() << " " << bmax.z() << '\0';
+	str << id << " set_bounds " << bmin.x() << " " << bmax.x() << " " << bmin.y() << " " << bmax.y() << " " << bmin.z() << " " << bmax.z() << '\0';
 
         TCL::execute(str.str());
         oldMin = bmin;
@@ -210,191 +438,192 @@ void MeshView::execute()
         clipX.set(bmin.x()); clipNX.set(bmax.x());
         clipY.set(bmin.y()); clipNY.set(bmax.y());
         clipZ.set(bmin.z()); clipNZ.set(bmax.z());
+	changed = 1;
+	Vector v = bmin - bmax;
+	double widget_scale = sqrt(v.x() * v.x() + v.y() * v.y() + 
+				   v.z() * v.z());
+	startingTet -> SetScale(widget_scale * .001);
     }
 
-    int numTetra=mesh->elems.size();
-    if (oldSeed != seedTet.get()) 
+    // Check to see if the clipping surfaces have changed, and if so,
+    // mark 'changed'.
+    if (oldClipX != clipX.get() || oldClipNX != clipNX.get() || oldClipY !=
+	clipY.get() || oldClipNY != clipNY.get() || oldClipZ != clipZ.get() ||
+	oldClipNZ != clipNZ.get())
     {
-        makeLevels(mesh);
+	oldClipX = clipX.get(); oldClipY = clipY.get(); oldClipZ = clipZ.get();
+	oldClipNX=clipNX.get(); oldClipNY=clipNY.get(); oldClipNZ=clipNZ.get();
+	changed = 1;
+    }
+
+    // If we have a new seed tetrahedron, need to remake the level sets and
+    // update the slider.
+    if (oldSeed != Seed)
+    {
+	makeLevels(mesh);
+	// Reset the slider with the new number of levels
         ostrstream str3(buf, 1000);
         str3 << id << " set_minmax_nl " << " " << 0 << " " << deep-1 << '\0';
         TCL::execute(str3.str());
-        oldSeed = seedTet.get();
-	if (tb.size())
-	    tb.remove_all();
-	tb.grow(deep);
-	for (int k = 0; k < deep; k++)
-	{
-	    levMatl[k] -> get_bounds(tb[k]);
-	}
+
+	updateInfo(mesh);
     }
 
-    oldLev = numLevels.get();
-    oldClipX = clipX.get();
-    oldClipY = clipY.get();
-    oldClipZ = clipZ.get();
+    int NL = numLevels.get();
+    int AL = allLevels.get();
 
-    if (oldNumTet != numTetra)
-    {
-        ostrstream str2(buf, 1000);
-        str2 << id << " set_minmax_numTet " << " " << 0 << " " << numTetra - 1 << '\0';
-        TCL::execute(str2.str());
-        oldNumTet = numTetra;
-    }
-    double cX, cY, cZ, cNX, cNY, cNZ;
-
-    int nL = numLevels.get();
-    int aL = allLevels.get();
-
-    cX = clipX.get(); cNX = clipNX.get();
-    cY = clipY.get(); cNY = clipNY.get();
-    cZ = clipZ.get(); cNZ = clipNZ.get();
-
+    // Check various variables to see if their values have changed, and if
+    // so, mrk 'changed'.
+    if (oldNL != NL)
+	oldNL = NL; changed = 1;
+    if (oldALL != AL)
+	oldALL = AL; changed = 1;
+    if (oldRender != render.get())
+	oldRender = render.get(); changed = 1;
+    if (oldDisplay != display.get())
+	oldDisplay = display.get(); changed = 1;
+    if (oldRadius != radius.get())
+	oldRadius = radius.get(); changed = 1;
 
 
     geom_lock.write_lock();
-    GeomGroup *group = scinew GeomGroup;
-    int needAux = 0;
-    int start, finish;
-
-    if ((allLevels.get()) == 0)
-    {
-	start = 0;
-	finish = nL;
-    }
-    else
-    {
-	start = nL;
-	finish = nL;
-    }
 
     double measMin, measMax;
-    calcMeasures(mesh, &measMin, &measMax);
-    if (oldMeas != elmMeas.get())
+
+    // if we're looking at quantitative measures...
+    if (tech.get() == 1)
     {
-	ostrstream str4(buf, 1000);
-	str4 << id << " do_measure " << " " << measMin << " " << measMax << '\0';
-	TCL::execute(str4.str());
-	oldMeas = elmMeas.get();
+	// Calculate the measure
+	calcMeasures(mesh, &measMin, &measMax);
+    
+	// if we're looking at a new measure, reset the histogram values
+	if (oldMeas != elmMeas.get())
+	{
+	    oldMeas = elmMeas.get();
+	    histo.SetTitle(id+" Histogram");
+	    if (oldMeas == 1)
+	    {
+		histo.SetData(volMeas);
+		histo.SetValueTitle("Volume");
+	    }
+	    else if (oldMeas == 2)
+	    {
+		histo.SetData(aspMeas);
+		histo.SetValueTitle("Aspect Ratio");
+	    }
+	    else if (oldMeas == 3)
+	    {
+		histo.SetData(sizeMeas);
+		histo.SetValueTitle("Size v Neighbor");
+	    }
+	    histo.ShowGrid();
+	    histo.ShowRange();
+	    // pop up the histogram
+	    histo.ui();
+	}
     }
 
-    if (tech.get())
+}
+
+/***************************************************************************
+ * Procedure to determine which elements should be displayed.  Handles both
+ * quantitative measures and manipulative techniques.
+ */
+void MeshView::getElements(const MeshHandle& mesh, 
+			   const ColormapHandle& genColors)
+{
+    int numTetra = mesh -> elems.size();
+    int numGroups, nL = numLevels.get(), aL = allLevels.get();
+    HashTable<Edge, int> edge_table;
+
+    if (tech.get() == 1 || (tech.get() == 2 && lastTech == 1))
     {
-	for (int j = 0; j < deep; j++)
-	{
-	    levSwitch[j] -> set_state(0);
-	    auxSwitch[j] -> set_state(0);
-	}
+	// If we're looking at quantitative measures, get the apppropriate
+	// elements
+	numGroups = getMeas(mesh, genColors);
 
-	getMeas(mesh);
+	// Turn the regular group off and the measures on
+	regSwitch -> set_state(0);
 	measSwitch -> set_state(1);
-
 	if (elmSwitch.get() == 2)
 	    measAuxSwitch -> set_state(1);
 	else
 	    measAuxSwitch -> set_state(0);
     }
-    else	
+
+    else
     {
-	if (switchSet)
-	{
-	    measSwitch -> set_state(0);
-	    measAuxSwitch -> set_state(0);
-	}
-	for( int i = 0; i < deep; i++)
-	{
-	    if (((aL == OUTER) && (i != nL)) || (i > nL))
-	    {	
-		levSwitch[i] -> set_state(0);
-		auxSwitch[i] -> set_state(0);	
-	    }	
-	    else
-	    {
+	// Otherwise, we're looking at the manipulative techniques, so if
+	// something has changed, then get the appropriate elements
+	if (changed)
+	    getTetra(mesh);
 
-		needAux = 0;
-		if ((tb[i].min().x() < cX) || (tb[i].max().x() > cNX) ||
-		    (tb[i].min().y() < cY) || (tb[i].max().y() > cNY) ||
-		    (tb[i].min().z() < cZ) || (tb[i].max().z() > cNZ))
-		{
-		    doClip(i, cX, cNX, cY, cNY, cZ, cNZ, mesh);
-		    needAux = 1;
-		}
+	// Turn the regular tetra group on and the other two off.
+	regSwitch -> set_state(1);
+	measSwitch -> set_state(0);
+	measAuxSwitch -> set_state(0);
 
-		if (needAux)
-		{
-		    levSwitch[i] -> set_state(0);
-		    auxSwitch[i] -> set_state(1);
-		}
-		else
-		{
-		    levSwitch[i] -> set_state(1);
-		    auxSwitch[i] -> set_state(0);
-		}
-	    }
-	    if (i < nL)
-	    {
-		levMatl[i]->setMaterial(mat2);
-	    }
-	    else
-	    {
-		levMatl[i]->setMaterial(mat1);
-	    }
-	}
     }
 
-    geom_lock.write_unlock();
-
-
-    ogeom->flushViews();
 }
 
+/***************************************************************************
+ *
+ * Procedure for calculating the levels of the mesh.  A level is defined as
+ * all elements that share a face with an element on the previous level, 
+ * starting with a specified tetrehedron.
+ */
 
 void MeshView::makeLevels(const MeshHandle& mesh)
 {
     int counter = 0;
+    int numTetra = mesh -> elems.size();
 
-    GeomGroup *group = scinew GeomGroup;
-    int numTetra=mesh->elems.size();
+    // the array 'levels' is used to keep track of which level each 
+    // element is at.
     levels.remove_all();
     levels.grow(numTetra);
+
     for (int i = 0; i < numTetra; i++)
         levels[i] = -1;
 
+    // We will use a queue to keep track of elements that need to be put
+    // into a level
     Queue<int> q;
-    q.append(seedTet.get());
+//    q.append(seedTet.get());
+    q.append(Seed);
+
+    // Use the value -2 to specify we're at a new level
     q.append(-2);
 	
     levStor.remove_all();
     levStor.grow(1);
-    levTetra.remove_all();
-    levTetra.grow(1);
-    levTetra[0] = scinew GeomGroup;
-    levSwitch.remove_all();
+    levStor[0].remove_all();
     deep = 0;
     while(counter < numTetra)
     {
         int x = q.pop();
+
+	// if the value is -2, we're at a new level, so increase the counter
+	// and grow the array
         if (x == -2) 
         {
             deep++;
             q.append(-2);
 	    levStor.grow(1);
-	    levTetra.grow(1);
-	    levTetra[deep] = scinew GeomGroup;
+	    levStor[deep].remove_all();
         } 
+	// Otherwise, x will be an element number.  If x's level has not
+	// yet been set, then we add that element to the list of elements
+	// at level 'deep', and set x's level.
         else if (levels[x] == -1)
         {
             levStor[deep].add(x);
 	    levels[x] = deep;
             counter++;
             Element* e=mesh->elems[x];
-	    Point p1(mesh->nodes[e->n[0]]->p);
-	    Point p2(mesh->nodes[e->n[1]]->p);
-	    Point p3(mesh->nodes[e->n[2]]->p);
-	    Point p4(mesh->nodes[e->n[3]]->p);
-	    
-	    GeomTetra *nTet = scinew GeomTetra(p1, p2, p3, p4);                
-	    levTetra[deep] -> add(nTet);
+
+	    // Get all 4 of x's neighbors, and add them to the queue
 	    for(int i = 0; i < 4; i++)
             {
         	int neighbor=e->face(i);
@@ -404,84 +633,282 @@ void MeshView::makeLevels(const MeshHandle& mesh)
         }
     }
     deep++;
-    levMatl.remove_all();
-    levMatl.grow(deep);
-    auxMatl.remove_all();
-    auxMatl.grow(deep);
-    auxSwitch.remove_all();
-    levSwitch.grow(deep);
-    auxSwitch.grow(deep);
-
-    auxTetra.remove_all();
-    auxTetra.grow(deep);
-
-    int EdgeOnly = 0;
-    if (EdgeOnly)
-	makeEdges(mesh);
- 
-    for(i = 0;i < deep;i++)
-    {
-	if (!EdgeOnly)
-	{
-	    GeomTetra *dumT = scinew GeomTetra(Point(0,0,0), Point(0, 0, 0.01),
-					    Point(0,0.01,0), Point(0.1,0,0));
-	    auxTetra[i] = scinew GeomGroup;
-	    auxTetra[i] -> add(dumT);
-	    levMatl[i]=scinew GeomMaterial(levTetra[i], mat1);
-	    auxMatl[i]= scinew GeomMaterial(auxTetra[i], mat1);
-	    levSwitch[i] = scinew GeomSwitch(levMatl[i], 0);
-	    auxSwitch[i] = scinew GeomSwitch(auxMatl[i], 0);
-	    group -> add(levSwitch[i]);
-	    group -> add(auxSwitch[i]);
-	}
-	else
-	{
-	    levMatl[i]=scinew GeomMaterial(levEdges[i], mat1);
-	}
-    }
-
-    ogeom -> delAll();
-    ogeom -> addObj(group, mesh_name, &geom_lock);    
 }
 
+/***************************************************************************
+ * Procedure to decide which elements should be displayed when in the
+ * manipulative mode.
+ */
+void MeshView::getTetra(const MeshHandle& mesh)
+{
+    int numTetra = mesh -> elems.size();
+    int numGroups, nL = numLevels.get(), aL = allLevels.get();
+    int i, j;
 
-void MeshView::doClip(int ind, double cX, double cNX, double cY,
-double cNY, double cZ, double cNZ, const MeshHandle& mesh) 
+    // First have to remove all elements that were previously shown.
+    regGroup -> remove_all();
+    tetra.remove_all();
+
+    numGroups = setToDraw(mesh);
+
+    // Switch to see if we're displaying elements in production mode or
+    // normal mode.
+    int RENDER = display.get();;
+    if (RENDER)
+	numGroups = 1;
+    tetra.grow(numGroups + 1);
+    for (i = 0; i < numGroups + 1; i++)
+	tetra[i] = new GeomGroup;
+    
+    int toDo = render.get(); // Either looking at entire volume or surface
+                             // faces only.
+
+    HashTable<Edge, int> edge_table;
+    int dummy = 0;
+    for (i = 0; i < numTetra; i++)
+    {
+	if (toDrawTet[i] != -1)
+	{
+	    Element *e = mesh -> elems[i];
+	    // If we're in production mode
+	    if (RENDER)
+	    {
+		// and looking at entire volume
+		if (toDo == VOLUME)
+		{
+		    // add each edge of the tetrahedron to the hashtable, if
+		    // it's not already there
+		    Edge e1(e->n[0], e->n[1]);
+		    Edge e2(e->n[0], e->n[2]);
+		    Edge e3(e->n[0], e->n[3]);
+		    Edge e4(e->n[1], e->n[2]);
+		    Edge e5(e->n[1], e->n[3]);
+		    Edge e6(e->n[2], e->n[3]);
+		    if (!(edge_table.lookup(e1, dummy)))
+			edge_table.insert(e1, 0);
+		    if (!(edge_table.lookup(e2, dummy)))
+			edge_table.insert(e2, 0);
+		    if (!(edge_table.lookup(e3, dummy)))
+			edge_table.insert(e3, 0);
+		    if (!(edge_table.lookup(e4, dummy)))
+			edge_table.insert(e4, 0);
+		    if (!(edge_table.lookup(e5, dummy)))
+			edge_table.insert(e5, 0);
+		    if (!(edge_table.lookup(e6, dummy)))
+			edge_table.insert(e6, 0);
+		}
+		else 
+		{
+		    // if we're only looking at the surface, for each of
+		    // the four neighbors, see if it is to be displayed,
+		    // and if it is not, then add the 3 edges of that face
+		    // to the hashtable
+		    for (int k = 0; k < 4; k++)
+		    {
+			int nbr = e->face(k);
+			if (nbr == -1 || toDrawTet[nbr] == -1)
+			{  
+			    int p1 = (k+1)%4;
+			    int p2 = (k+2)%4;
+			    int p3 = (k+3)%4;
+			    Edge e1(e->n[p1], e->n[p2]);
+			    Edge e2(e->n[p2], e->n[p3]);
+			    Edge e3(e->n[p3], e->n[p1]);
+			    if (!(edge_table.lookup(e1, dummy)))
+				edge_table.insert(e1, dummy);
+			    if (!(edge_table.lookup(e2, dummy)))
+				edge_table.insert(e2, dummy);
+			    if (!(edge_table.lookup(e3, dummy)))
+				edge_table.insert(e3, dummy);
+			}
+		    }
+		}
+	    }
+	    else
+	    {
+		// If we're in normal display mode, then check the four 
+		// faces, and if we're in volume mode, or the neighbor is
+		// not to be displayed, add the face triangle to the group.
+		for (j = 0; j < 4; j++)
+		{
+		    
+		    int neighbor = e->face(j);
+		    if (toDo == VOLUME || neighbor == -1 || 
+			toDrawTet[neighbor] == -1)
+		    {
+			int i1=e->n[(j+1)%4];
+			int i2=e->n[(j+2)%4];
+			int i3=e->n[(j+3)%4];
+			Point p1(mesh->nodes[i1]->p);
+			Point p2(mesh->nodes[i2]->p);
+			Point p3(mesh->nodes[i3]->p);
+			GeomTri *tri = new GeomTri(p1, p2, p3);
+			tetra[toDrawTet[i]] -> add(tri);
+		    }
+		}
+	    }
+    
+	}
+    }
+    HashTableIter<Edge, int> eiter(&edge_table);
+    double rad = radius.get();
+
+    // For each edge in the hashtable, make it into a cylinder and add it to
+    // the group.
+    for(eiter.first(); eiter.ok(); ++eiter)
+    {
+	Edge e(eiter.get_key());
+	Point p1(mesh->nodes[e.n[0]]->p);
+	Point p2(mesh->nodes[e.n[1]]->p);
+	GeomCylinder* cyl = new GeomCylinder(p1, p2, rad, 8, 1);
+	tetra[0] -> add(cyl);
+    }
+
+
+    matl.remove_all();
+    matl.grow(numGroups+1);
+    
+    for (i = 0; i < numGroups+1; i++)
+    {
+	matl[i] = new GeomMaterial(tetra[i], Materials[i]);
+	regGroup -> add(matl[i]);
+    }
+}
+
+/***************************************************************************
+ * Procedure to determine which elements are eligible to be displayed.  It
+ * First checks to see if each element is in a desired level, and if so, 
+ * sends it to another function to test the element against the clipping
+ * surfaces.
+ */
+int MeshView::setToDraw(const MeshHandle& mesh)
+{
+    int numTetra = mesh -> elems.size();
+    int numGroups, nL = numLevels.get(), aL = allLevels.get();
+    double cX, cY, cZ, cNX, cNY, cNZ;
+
+    cX = clipX.get(); cNX = clipNX.get();
+    cY = clipY.get(); cNY = clipNY.get();
+    cZ = clipZ.get(); cNZ = clipNZ.get();
+    
+    int needC, i, j;
+    Point min(cX, cY, cZ), max(cNX, cNY, cNZ);
+    
+    // If the clipping points are the same as the bounding box, then we 
+    // don't need to check for clipping, otherwise we do
+    if ((min != bmin) || (max != bmax))
+	needC = 1;
+    else needC = 0;
+
+    toDrawTet.remove_all();
+    toDrawMeas.remove_all();
+    toDrawTet.grow(numTetra);
+    toDrawMeas.grow(numTetra);
+    Materials.remove_all();
+    for (i=0; i < numTetra; i++)
+    {
+	toDrawTet[i] = -1;
+	toDrawMeas[i] = -1;
+    }
+
+    // If we're looking at the outer level
+    if (aL == OUTER)
+    {
+	// For all the elements at that level, if they're inside the clipping
+	// box, set them as needing to be displayed.
+	for (i = 0; i < levStor[nL].size(); i++)
+	    if ((needC == 0) || ((needC == 1) && 
+				 doClip(levStor[nL][i], mesh)))
+		if (levStor[nL][i] == Seed)
+		    toDrawTet[levStor[nL][i]] = 1;
+		else	
+		    toDrawTet[levStor[nL][i]] = 0;
+	Materials.grow(2);
+	Materials[0] = genMat[0];
+	Materials[1] = genMat[3];
+	numGroups = 1;
+    }
+    else
+    {
+	// Otherwise we're looking at all of the levels, so run through all
+	// the elements at each level, determining whether they need to be
+	// displayed or not
+	for (i = 0; i < nL; i++)
+	    for (j = 0; j < levStor[i].size(); j++)
+		if ((needC == 0) || ((needC == 1) && 
+				     (doClip(levStor[i][j], mesh))))
+		{
+		    if (levStor[i][j] == Seed)
+			toDrawTet[levStor[i][j]] = 2;
+		    else
+			toDrawTet[levStor[i][j]] = 0;
+		} 
+	
+	for (i = 0; i < levStor[nL].size(); i++)
+	    if ((needC == 0) || ((needC == 1) && 
+				 doClip(levStor[nL][i], mesh)))
+		if (levStor[nL][i] == Seed)
+		    toDrawTet[levStor[nL][i]] = 2;
+		else	
+		    toDrawTet[levStor[nL][i]] = 1;
+	
+	Materials.grow(3);
+	Materials[0] = genMat[1];
+	Materials[1] = genMat[0];
+	Materials[2] = genMat[3];
+	numGroups = 2;
+    }
+    return numGroups;
+}
+
+/***************************************************************************
+ * Procedure for calculating which elements are discarded due to clipping.
+ * We look at each level individually, comparing the bounding box of that 
+ * level with the clipping cube.  Only those levels that around outside the
+ * box are sent here for clipping.
+ */
+
+int MeshView::doClip(int n, const MeshHandle& mesh)
 {
 
-    auxTetra[ind] -> remove_all();
+    Element* e=mesh->elems[n];
+    Point p1(mesh->nodes[e->n[0]]->p);
+    Point p2(mesh->nodes[e->n[1]]->p);
+    Point p3(mesh->nodes[e->n[2]]->p);
+    Point p4(mesh->nodes[e->n[3]]->p);
 
-    for (int j = 0; j < levStor[ind].size(); j++)
-    {
-	int l = levStor[ind][j];
-	Element* e=mesh->elems[l];
-	Point p1(mesh->nodes[e->n[0]]->p);
-	Point p2(mesh->nodes[e->n[1]]->p);
-	Point p3(mesh->nodes[e->n[2]]->p);
-	Point p4(mesh->nodes[e->n[3]]->p);
-	
-	if (((p1.x() >= cX) && (p2.x() >= cX) && (p3.x() >= cX) && 
-          (p4.x() >= cX)) &&
- 	    ((p1.x() <= cNX) && (p2.x() <= cNX) && (p3.x() <= cNX) && 
-          (p4.x() <= cNX)) &&
- 	    ((p1.y() >= cY) && (p2.y() >= cY) && (p3.y() >= cY) && 
-          (p4.y() >= cY)) &&
- 	    ((p1.y() <= cNY) && (p2.y() <= cNY) && (p3.y() <= cNY) && 
-          (p4.y() <= cNY)) &&
-  	    ((p1.z() >= cZ) && (p2.z() >= cZ) && (p3.z() >= cZ) && 
-          (p4.z() >= cZ)) &&
- 	    ((p1.z() <= cNZ) && (p2.z() <= cNZ) && (p3.z() <= cNZ) && 
+
+    double cX, cY, cZ, cNX, cNY, cNZ;
+    cX = clipX.get(); cNX = clipNX.get();
+    cY = clipY.get(); cNY = clipNY.get();
+    cZ = clipZ.get(); cNZ = clipNZ.get();
+
+
+    // If all nodes are inside the box, then we add the element to
+    // the group of elements to be rendered.
+    
+    if (((p1.x() >= cX) && (p2.x() >= cX) && (p3.x() >= cX) && 
+	 (p4.x() >= cX)) &&
+	((p1.x() <= cNX) && (p2.x() <= cNX) && (p3.x() <= cNX) && 
+	 (p4.x() <= cNX)) &&
+	((p1.y() >= cY) && (p2.y() >= cY) && (p3.y() >= cY) && 
+	 (p4.y() >= cY)) &&
+	((p1.y() <= cNY) && (p2.y() <= cNY) && (p3.y() <= cNY) && 
+	 (p4.y() <= cNY)) &&
+	((p1.z() >= cZ) && (p2.z() >= cZ) && (p3.z() >= cZ) && 
+	 (p4.z() >= cZ)) &&
+	((p1.z() <= cNZ) && (p2.z() <= cNZ) && (p3.z() <= cNZ) && 
          (p4.z() <= cNZ)))
-	{		
-	    GeomTetra *t = scinew GeomTetra(p1, p2, p3, p4);
-	    auxTetra[ind] ->add(t);
-	
-	}
+    {		
+	return 1;
     }
-    auxMatl[ind] = scinew GeomMaterial(auxTetra[ind], mat1);
-
+    return 0;
 }
 
+/***************************************************************************
+ * Procedure for calculating the measure, either the volume, aspect ratio,
+ * or size versus neighbor.
+ */
 void MeshView::calcMeasures(const MeshHandle& mesh, double *min, double *max)
 {
     int i, e = elmMeas.get();
@@ -506,6 +933,8 @@ void MeshView::calcMeasures(const MeshHandle& mesh, double *min, double *max)
 		*max = volMeas[i];
 	}
 	haveVol = 1; 
+	for (i = 0; i < numTetra; i++)
+	    volMeas[i] = (volMeas[i] - *min) / (*max - *min);
     }
     else if ((e == 2) && !haveAsp)
     {
@@ -526,7 +955,8 @@ void MeshView::calcMeasures(const MeshHandle& mesh, double *min, double *max)
     }
     else if ((e == 3) && !haveSize)
     {
-
+	// We need to know the volumes before we can calculate the size
+	// versus neighbor
 	sizeMeas.grow(numTetra);
 	if (!haveVol)
 	{
@@ -543,118 +973,190 @@ void MeshView::calcMeasures(const MeshHandle& mesh, double *min, double *max)
 	for (i = 0; i < numTetra; i++)
 	{
 	    sizeMeas[i] = calcSize(mesh, i);
-	    if (*min > sizeMeas[i])
-		*min = sizeMeas[i];
-	    if (*max < sizeMeas[i])
-		*max = sizeMeas[i];
+	    if (sizeMeas[i] != 0)
+	    {
+		if (*min > sizeMeas[i])
+		    *min = sizeMeas[i];
+		if (*max < sizeMeas[i])
+		    *max = sizeMeas[i];
+	    }
 	}
 	haveSize = 1;
-cerr << "Size (min, max) = " << *min << ", " << *max << endl;
     }
 
 }
 
-void MeshView::getMeas(const MeshHandle& mesh)
+/**************************************************************************
+ * Procedure for determining which elements fall inside (or out) of the given
+ * range for the particular measure
+ */
+int MeshView::getMeas(const MeshHandle& mesh, const ColormapHandle& genColors)
 {
-    GeomGroup *gr = scinew GeomGroup;
+    GeomGroup *gr = new GeomGroup;
     int e = elmMeas.get();
-    HashTable<MVEdge, int> edge_table;
-    double min = mMin.get(); 
-    double max = mMax.get();
+    HashTable<Edge, int> edge_table;
+    double min, max;
+    histo.GetRange(min, max);
+    int cSize = genColors -> colors.size();
+
     double meas;
     int numTetra=mesh->elems.size();
+    int i, in = inside.get();
 
+    // We only need to do calculations if something has changed, ie, we are
+    // looking at a different measure, the range has changed, or we have
+    // changed whether we want to be looking at the elements inside or outside
+    // of the range.
 
-    if ((e != oldElm) || ((oldmMin != min) || (oldmMax != max)))
+    double mm1, mm2;
+    if (in == 0)
+	histo.GetMaxMin(mm1, mm2);
+
+    if ((e != oldElm) || ((oldmMin != min) || (oldmMax != max)) ||
+	(oldInside != in))
     {
-//	if (measTetra -> size())
-	    measTetra -> remove_all();
-//	if (measAuxTetra -> size())
-	    measAuxTetra -> remove_all();
-	for (int i = 0; i < numTetra; i++)
+	Materials.remove_all();
+	Materials.grow(cSize + 1);
+        measTetra.remove_all();
+        measTetra.grow(cSize);
+	measAuxTetra -> remove_all();
+
+	for (i = 0; i < numTetra; i++)
 	{
 	    if (e == 1)
 		meas = volMeas[i];
 	    else if (e == 2)
+	    {
 		meas = aspMeas[i];
+	    }	
 	    else if (e == 3)
 		meas = sizeMeas[i];
-		
-	    if ((meas > min) && (meas < max))
-	    {
-		Element* elm=mesh->elems[i];
-		Point p1(mesh->nodes[elm->n[0]]->p);
-		Point p2(mesh->nodes[elm->n[1]]->p);
-		Point p3(mesh->nodes[elm->n[2]]->p);
-		Point p4(mesh->nodes[elm->n[3]]->p);
 	    
-		GeomTetra *nTet = scinew GeomTetra(p1, p2, p3, p4);
-		measTetra -> add(nTet);
+	    // If the element is within the specified range then simply
+	    // add the tetrahedron to the group
+	    if ((in && (meas >= min) && (meas <= max)) ||
+		(!in && ((meas < min) || (meas > max))))
+	    {
+		double rat;
+		if (in == 0)
+		    rat = (fabs) (meas - mm1) / (mm2 - mm1);
+		else
+		    rat = (fabs) (meas - min) / (max - min);
+		int bucket = rat * cSize;
+		Materials[bucket] = genColors -> lookup(rat);
+		toDrawMeas[i] = bucket;
 	    }
+
+	    // Otherwise add the edges of the element into an edge table
 	    else
 	    {
-		Element* elm=mesh->elems[i];
-		MVEdge e1(elm->n[0], elm->n[1]);
-		MVEdge e2(elm->n[0], elm->n[2]);
-		MVEdge e3(elm->n[0], elm->n[3]);
-		MVEdge e4(elm->n[1], elm->n[2]);
-		MVEdge e5(elm->n[1], elm->n[3]);
-		MVEdge e6(elm->n[2], elm->n[3]);
+		toDrawMeas[i] = cSize;
+		Materials[cSize] = genMat[0];
+	    }   
+	}
+	for (i = 0; i < cSize; i++)
+	    measTetra[i] = new GeomGroup;
 
-//		Point p1(mesh->nodes[elm->n[0]]->p);
-//		Point p2(mesh->nodes[elm->n[1]]->p);
-//		Point p3(mesh->nodes[elm->n[2]]->p);
-//		Point p4(mesh->nodes[elm->n[3]]->p);
-	    
+	for (i = 0; i < numTetra; i++)
+	{
+	    // If the element is not in the range to be drawn, then add
+	    // its edges to the hashtable to be rendered for the wireframe
+	    // mesh
+	    if (toDrawMeas[i] == cSize)
+	    {
+		Element* elm=mesh->elems[i];
+		Edge e1(elm->n[0], elm->n[1]);
+		Edge e2(elm->n[0], elm->n[2]);
+		Edge e3(elm->n[0], elm->n[3]);
+		Edge e4(elm->n[1], elm->n[2]);
+		Edge e5(elm->n[1], elm->n[3]);
+		Edge e6(elm->n[2], elm->n[3]);
+		
 		int dummy=0;
 		if (!(edge_table.lookup(e1, dummy)))
 		    edge_table.insert(e1, 0);
-		if (!(edge_table.lookup(e2, dummy)))
-		    edge_table.insert(e2, 0);
-		if (!(edge_table.lookup(e3, dummy)))
-		    edge_table.insert(e3, 0);
-		if (!(edge_table.lookup(e4, dummy)))
-		    edge_table.insert(e4, 0);
-		if (!(edge_table.lookup(e5, dummy)))
-		    edge_table.insert(e5, 0);
-		if (!(edge_table.lookup(e6, dummy)))
-		    edge_table.insert(e6, 0);
-
-//		GeomTetra *nTet = scinew GeomTetra(p1, p2, p3, p4);
-//		measAuxTetra -> add(nTet);
+		int dummy2=0;
+		if (!(edge_table.lookup(e2, dummy2)))
+		    edge_table.insert(e2, dummy2);
+		int dummy3=0;
+		if (!(edge_table.lookup(e3, dummy3)))
+		    edge_table.insert(e3, dummy3);
+		int dummy4=0;
+		if (!(edge_table.lookup(e4, dummy4)))
+		    edge_table.insert(e4, dummy4);
+		int dummy5=0;
+		if (!(edge_table.lookup(e5, dummy5)))
+		    edge_table.insert(e5, dummy5);
+		int dummy6=0;
+		if (!(edge_table.lookup(e6, dummy6)))
+		    edge_table.insert(e6, dummy6);
 	    }
-
+	    // Otherwise, if it is in the range, check each face to see if
+	    // that neighbor is to be drawn, and if it is not, then add that
+	    // face triangle
+	    else if (toDrawMeas[i] != -1)
+	    {
+		Element *e = mesh -> elems[i];
+		for (int j = 0; j < 4; j++)
+		{
+		    int neighbor = e->face(j);
+		    if (neighbor == -1 || (toDrawMeas[neighbor] == -1 || 
+					   toDrawMeas[neighbor] == cSize))
+		    {
+			int i1=e->n[(j+1)%4];
+			int i2=e->n[(j+2)%4];
+			int i3=e->n[(j+3)%4];
+			Point p1(mesh->nodes[i1]->p);
+			Point p2(mesh->nodes[i2]->p);
+			Point p3(mesh->nodes[i3]->p);
+			GeomTri *tri = new GeomTri(p1, p2, p3);
+			measTetra[toDrawMeas[i]] -> add(tri);
+		    }
+		}
+	    }
 	}
+	measMatl.remove_all();
+	measMatl.grow(cSize);
+	measGroup -> remove_all();
 	
-	HashTableIter<MVEdge, int> eiter(&edge_table);
+	for (i = 0; i < cSize; i++)
+	{
+	    measMatl[i] = new GeomMaterial(measTetra[i], Materials[i]);
+	    measGroup -> add(measMatl[i]);
+	}
+
+	// For each edge in the hashtable, add a line for the wireframe.
+	HashTableIter<Edge, int> eiter(&edge_table);
 	for(eiter.first(); eiter.ok(); ++eiter)
 	{
-	    MVEdge e(eiter.get_key());
+	    Edge e(eiter.get_key());
 	    Point p1(mesh->nodes[e.n[0]]->p);
 	    Point p2(mesh->nodes[e.n[1]]->p);
 	    GeomLine* gline = new GeomLine(p1, p2);
 	    measAuxTetra -> add(gline);
+	    measAuxMatl -> setMaterial(Materials[cSize]);
 	}
 
-	if (!switchSet)
-	{
-	    measMatl = scinew GeomMaterial(measTetra, mat3);
-	    measSwitch = scinew GeomSwitch(measMatl, 0);
-	    measAuxMatl = scinew GeomMaterial(measAuxTetra, mat1);
-	    measAuxSwitch = scinew GeomSwitch(measAuxMatl, 0);
-	    gr -> add(measAuxSwitch);
-	    gr -> add(measSwitch);
-	}
+	measAuxMatl = new GeomMaterial(measAuxTetra, Materials[cSize]);
 
-	switchSet = 1;
-//    ogeom -> delAll();
-	ogeom -> addObj(gr, mesh_name, &geom_lock);
 	oldElm = e;
 	oldmMin = min;
 	oldmMax = max;
-    }
+	oldInside = in;
 
+    }	
+    return cSize;
 }
+
+/*************************************************************************
+ * function to calculate the volume of a tetrahedron, given the four
+ * vertices
+ *
+ * Volume = | Ax  Ay  Az  1 |
+ *          | Bx  By  Bz  1 |
+ *          | Cx  Cy  Cz  1 |
+ *          | Dx  Dy  Dz  1 |
+ */
 double MeshView::volume(Point p1, Point p2, Point p3, Point p4)
 {
     double x1=p1.x();
@@ -678,18 +1180,36 @@ double MeshView::volume(Point p1, Point p2, Point p3, Point p4)
     return fabs((a1 + a2 + a3 + a4) / 6.);
 }
 
-double MeshView::aspect_ratio(Point p0, Point p1, Point p2, Point p3)
+/**************************************************************************
+ * function to calculate the aspect ratio of a tetrahedron
+ *
+ * Aspect ratio = 4 * sqrt(3/2 * (rho_k / h_k))  where rho_k is the
+ * diameter of the sphere circumscribed about the tetrahedron and h_k is
+ * the maximum distance between two vertices
+ */
+double MeshView::aspect_ratio(Point p1, Point p2, Point p3, Point p4)
 {
     double rad, len;
-    get_sphere(p0, p1, p2, p3, rad);
+
+    // First calculate the sphere circumscribing the tetrahedron
+    get_sphere(p1, p2, p3, p4, rad);
     rad = sqrt(rad);
-    len = getDistance(p0, p1, p2, p3);
+    double dia = rad * 2;
+
+    // Calculate the maximum distance
+    len = getDistance(p1, p2, p3, p4);
     
-    double ar = 4 * sqrt(1.5 * (rad / len));
+    double ar = sqrt(1.5) * (len / dia);
 
     return ar;
 }
 
+/**************************************************************************
+ * function to calculate the size of an element compared to its 4 
+ * neighbors.  We compare the test element with its four neighbors and find
+ * the maximum and minimum differences.  The ratio of the maximum and 
+ * minimum to the test element are compared, with the largest being returned.
+ */
 double MeshView::calcSize(const MeshHandle& mesh, int ind)
 {
     double m1 = 10000, m2 = -10000, a, b, c, d;
@@ -724,11 +1244,16 @@ double MeshView::calcSize(const MeshHandle& mesh, int ind)
 	    m1 = Min(m1, d); m2 = Max(m2, d);
     }
 
-    double m3 = Max(volMeas[ind] / m1, m2 / volMeas[ind]);
-
-    return m3;
+    if (volMeas[ind] != 0)
+	return Max(volMeas[ind] / m1, m2 / volMeas[ind]);
+    else
+	return 0;
 }
     
+/***************************************************************************
+ * function to compare the four edges of a tetrahedron and find the longest
+ * one.
+ */
 double MeshView::getDistance(Point p0, Point p1, Point p2, Point p3)
 {
     double d1, d2, d3, d4, d5, d6;
@@ -745,10 +1270,13 @@ double MeshView::getDistance(Point p0, Point p1, Point p2, Point p3)
     double m3 = Max(d5, d6);
 
     double dis = Max(Max(m1, m2), m3);
-    return sqrt(dis);
+    return (dis / 2.0);
 
 }
 
+/***************************************************************************
+ * Procedure to calculate the sphere circumscribing an element.
+ */
 void MeshView::get_sphere(Point p0, Point p1, Point p2, Point p3, double& rad)
 {
     Vector v1(p1 - p0);
@@ -781,104 +1309,343 @@ void MeshView::get_sphere(Point p0, Point p1, Point p2, Point p3, double& rad)
     rad=(p0-cen).length2();
 }
 
-MVEdge::MVEdge(int n0, int n1)
+/***************************************************************************
+ * function to determine which element the crosshair point is in.
+ */
+int MeshView::findElement(Point p, const MeshHandle& mesh,
+			  const ColormapHandle& genColors)
 {
-    if (n0 < n1)
-    {
-	n[0] = n0;
-	n[1] = n1;
-    }
+    int j, which = (tech.get() == 2) ? lastTech : tech.get();
+
+    int num;
+    if (which == 1)
+	num = toDrawMeas.size();
     else
+	num = toDrawTet.size();
+    for (int i = 0; i < num; i++)
     {
-	n[0] = n1;
-	n[1] = n0;
-    }
-}
+	int num2;
+	if (which == 0)
+	    num2 = toDrawTet[i];
+	else if (toDrawMeas[i] == genColors -> colors.size())
+	    num2 = -1;
+	else
+	    num2 = toDrawMeas[i];
 
-int MVEdge::hash(int hash_size) const
-{
-    return (((n[0]*7+5)^(n[1]*5+3))^(3*hash_size+1))%hash_size;
-}
-
-int MVEdge::operator==(const MVEdge& e) const
-{
-    return n[0]==e.n[0] && n[1]==e.n[1];
-}
-
-void MeshView::makeEdges(const MeshHandle& mesh)
-{
-    Array1< HashTable<MVEdge, int> > edge_table;
-
-    edge_table.grow(deep);
-    levEdges.remove_all();
-
-    levEdges.grow(deep);
-
-    for (int i = 0; i < mesh->elems.size(); i++)
-    {
-	Element* e=mesh->elems[i];
-	
-	MVEdge e1(e->n[0], e->n[1]);
-	MVEdge e2(e->n[0], e->n[2]);
-	MVEdge e3(e->n[0], e->n[3]);
-	MVEdge e4(e->n[1], e->n[2]);
-	MVEdge e5(e->n[1], e->n[3]);
-	MVEdge e6(e->n[2], e->n[3]);
-
-	int l=levels[i];
-
-	int dummy=0;
-	int aL = allLevels.get();
-	
-	int lu = edge_table[l].lookup(e1, dummy);
-	if (((aL == OUTER) && !lu) ||
-	    ((aL == ALL) && (!lu || ((l > 0) &&
-	     !(edge_table[l-1].lookup(e1, dummy))))))
-	    edge_table[l].insert(e1, 0);
-
-	lu = edge_table[l].lookup(e2, dummy);
-	if (((aL == OUTER) && !lu) ||
-	    ((aL == ALL) && (!lu || ((l > 0) &&
-	     !(edge_table[l-1].lookup(e2, dummy))))))
-	    edge_table[l].insert(e2, 0);
-
-	lu = edge_table[l].lookup(e3, dummy);
-	if (((aL == OUTER) && !lu) ||
-	    ((aL == ALL) && (!lu || ((l > 0) &&
-	     !(edge_table[l-1].lookup(e3, dummy))))))
-	    edge_table[l].insert(e3, 0);
-
-	lu = edge_table[l].lookup(e4, dummy);
-	if (((aL == OUTER) && !lu) ||
-	    ((aL == ALL) && (!lu || ((l > 0) &&
-	     !(edge_table[l-1].lookup(e4, dummy))))))
-	    edge_table[l].insert(e4, 0);
-
-	lu = edge_table[l].lookup(e5, dummy);
-	if (((aL == OUTER) && !lu) ||
-	    ((aL == ALL) && (!lu || ((l > 0) &&
-	     !(edge_table[l-1].lookup(e5, dummy))))))
-	    edge_table[l].insert(e5, 0);
-
-	lu = edge_table[l].lookup(e6, dummy);
-	if (((aL == OUTER) && !lu) ||
-	    ((aL == ALL) && (!lu || ((l > 0) &&
-	     !(edge_table[l-1].lookup(e6, dummy))))))
-	    edge_table[l].insert(e6, 0);
-
-    }
-
-    for (i = 0; i < deep; i++)
-    {
-	HashTableIter<MVEdge, int> eiter(&edge_table[i]);
-	levEdges[i] = scinew GeomGroup;
-	for(eiter.first(); eiter.ok(); ++eiter)
-	{	
-	    MVEdge e(eiter.get_key());
-	    Point p1(mesh->nodes[e.n[0]]->p);
-	    Point p2(mesh->nodes[e.n[1]]->p);
-	    GeomLine* gline = new GeomLine(p1, p2);
-	    levEdges[i] -> add(gline);
+	if (num2 != -1)
+	{
+	    Element* elem=mesh->elems[i];
+	    
+	    Point p1(mesh->nodes[elem->n[0]]->p);
+	    Point p2(mesh->nodes[elem->n[1]]->p);
+	    Point p3(mesh->nodes[elem->n[2]]->p);
+	    Point p4(mesh->nodes[elem->n[3]]->p);
+	    double x1=p1.x();
+	    double y1=p1.y();
+	    double z1=p1.z();
+	    double x2=p2.x();
+	    double y2=p2.y();
+	    double z2=p2.z();
+	    double x3=p3.x();
+	    double y3=p3.y();
+	    double z3=p3.z();
+	    double x4=p4.x();
+	    double y4=p4.y();
+	    double z4=p4.z();
+	    double a1=+x2*(y3*z4-y4*z3)+x3*(y4*z2-y2*z4)+x4*(y2*z3-y3*z2);
+	    double a2=-x3*(y4*z1-y1*z4)-x4*(y1*z3-y3*z1)-x1*(y3*z4-y4*z3);
+	    double a3=+x4*(y1*z2-y2*z1)+x1*(y2*z4-y4*z2)+x2*(y4*z1-y1*z4);
+	    double a4=-x1*(y2*z3-y3*z2)-x2*(y3*z1-y1*z3)-x3*(y1*z2-y2*z1);
+	    double iV6=1./(a1+a2+a3+a4);
+	    
+	    double b1=-(y3*z4-y4*z3)-(y4*z2-y2*z4)-(y2*z3-y3*z2);
+	    double c1=+(x3*z4-x4*z3)+(x4*z2-x2*z4)+(x2*z3-x3*z2);
+	    double d1=-(x3*y4-x4*y3)-(x4*y2-x2*y4)-(x2*y3-x3*y2);
+	    double s1=iV6*(a1+b1*p.x()+c1*p.y()+d1*p.z());
+	    if(s1<-1.e-6){
+		j=elem->face(0);
+		if(j==-1)
+		    return -1;
+		continue;
+	    }
+	    
+	    double b2=+(y4*z1-y1*z4)+(y1*z3-y3*z1)+(y3*z4-y4*z3);
+	    double c2=-(x4*z1-x1*z4)-(x1*z3-x3*z1)-(x3*z4-x4*z3);
+	    double d2=+(x4*y1-x1*y4)+(x1*y3-x3*y1)+(x3*y4-x4*y3);
+	    double s2=iV6*(a2+b2*p.x()+c2*p.y()+d2*p.z());
+	    if(s2<-1.e-6){
+		j=elem->face(1);
+		if(j==-1)
+		    return -1;
+		continue;
+	    }
+	    
+	    double b3=-(y1*z2-y2*z1)-(y2*z4-y4*z2)-(y4*z1-y1*z4);
+	    double c3=+(x1*z2-x2*z1)+(x2*z4-x4*z2)+(x4*z1-x1*z4);
+	    double d3=-(x1*y2-x2*y1)-(x2*y4-x4*y2)-(x4*y1-x1*y4);
+	    double s3=iV6*(a3+b3*p.x()+c3*p.y()+d3*p.z());
+	    if(s3<-1.e-6){
+		j=elem->face(2);
+		if(j==-1)
+		    return -1;
+		continue;
+	    }
+	    
+	    double b4=+(y2*z3-y3*z2)+(y3*z1-y1*z3)+(y1*z2-y2*z1);
+	    double c4=-(x2*z3-x3*z2)-(x3*z1-x1*z3)-(x1*z2-x2*z1);
+	    double d4=+(x2*y3-x3*y2)+(x3*y1-x1*y3)+(x1*y2-x2*y1);
+	    double s4=iV6*(a4+b4*p.x()+c4*p.y()+d4*p.z());
+	    if(s4<-1.e-6){
+		j=elem->face(3);
+		if(j==-1)
+		    return -1;
+		continue;
+		
+	    }
+	    return i;
 	}
     }
+    return -1;
 }
+
+/***************************************************************************
+ * Procedure to handle the editing options.  Will add a node in the center
+ * of the given tetrahedra, or delete either 1 or 4 nodes.
+ */
+int MeshView::doEdit(const MeshHandle& mesh)
+{
+    Element* elem = mesh->elems[toEdit];
+cerr << "Deleting: " << toEdit << endl; 
+
+    // Add a point
+    if (editMode.get() == 1)
+    {
+	// Find the center of the tetrahedron and add a node there
+	Point p1(mesh->nodes[elem->n[0]]->p);
+	Point p2(mesh->nodes[elem->n[1]]->p);
+	Point p3(mesh->nodes[elem->n[2]]->p);
+	Point p4(mesh->nodes[elem->n[3]]->p);
+
+	Point center((p1.x() + p2.x() + p3.x() + p4.x()) / 4.,
+		     (p1.y() + p2.y() + p3.y() + p4.y()) / 4.,
+		     (p1.z() + p2.z() + p3.z() + p4.z()) / 4.);
+	
+	// Tesselate the mesh with this new point.
+	mesh -> insert_delaunay(center);
+	mesh -> compute_neighbors();
+	mesh -> pack_all();
+    }
+    // Delete the four nodes of the given tetrahedron
+    else if (editMode.get() == 2)
+    {
+	mesh->nodes.remove(elem->n[0]);
+	mesh->nodes.remove(elem->n[1]);
+	mesh->nodes.remove(elem->n[2]);
+	mesh->nodes.remove(elem->n[3]);
+
+	// Retesselate entire mesh
+	newTesselation(mesh);
+    }
+    // Delete the node nearest the crosshair point
+    else if (editMode.get() == 3)
+    {
+	mesh->nodes.remove(findNode(mesh));
+	// Retesselate the entire mesh
+	newTesselation(mesh);
+    }
+
+    // Since the mesh has changed, we need to redetermine what the seed
+    // element is.
+    oldSeed = -1; oldEdit = -1;
+//    toEdit = Seed = findElement(startingTet -> GetPosition(), mesh);
+    Seed = -1;
+    if (Seed == -1)
+    {
+	Seed = 0; toEdit = 0;
+	Element* elem = mesh->elems[Seed];
+
+	Point p1(mesh->nodes[elem->n[0]]->p);
+	Point p2(mesh->nodes[elem->n[1]]->p);
+	Point p3(mesh->nodes[elem->n[2]]->p);
+	Point p4(mesh->nodes[elem->n[3]]->p);
+
+	Point center((p1.x() + p2.x() + p3.x() + p4.x()) / 4.,
+		     (p1.y() + p2.y() + p3.y() + p4.y()) / 4.,
+		     (p1.z() + p2.z() + p3.z() + p4.z()) / 4.);
+	
+	startingTet -> SetPosition(center);
+    }
+
+    return 1;
+}
+
+/***************************************************************************
+ * Procedure to retessellate the mesh.  This is only done when a node is
+ * deleted, and is necessary as we can not determine how far-reaching the 
+ * effect of removing a node will be.
+ */
+int MeshView::newTesselation(const MeshHandle& mesh)
+{
+    mesh -> elems.remove_all();
+    mesh -> compute_neighbors();
+    
+
+    // We first need to determine the bounding box of the mesh.
+    int nn = mesh -> nodes.size();
+    BBox bbox;
+    for (int i = 0; i < nn; i++)
+	bbox.extend(mesh->nodes[i] -> p);
+    
+    double eps = 1.e-4;
+    
+    bbox.extend(bbox.max() - Vector(eps, eps, eps));
+    bbox.extend(bbox.min() + Vector(eps, eps, eps));
+    
+    Point center(bbox.center());
+    double le=1.0001*bbox.longest_edge();
+    
+    Vector diag(le, le, le);
+    Point bmin(center - diag/2.0);
+    
+    // Next, we create the first tetrahedron of the mesh that bounds all
+    // of the nodes
+    mesh -> nodes.add(new Node(bmin-Vector(le, le, le)));
+    mesh -> nodes.add(new Node(bmin+Vector(le*5, 0, 0)));
+    mesh -> nodes.add(new Node(bmin+Vector(0, le*5, 0)));
+    mesh -> nodes.add(new Node(bmin+Vector(0, 0, le*5)));
+    
+    Mesh* m2 = mesh.get_rep();
+    Element* e = new Element(m2, nn+0, nn+1, nn+2, nn+3);
+    int onn=nn;
+    
+    // Orient the element so that it has a positive volume
+    e -> orient();
+
+    // Initialize the element to indicate it has no neighbors
+    e -> faces[0] = e -> faces[1] = e -> faces[2] = e -> faces[3] = -1;
+    mesh -> elems.add(e);
+    
+    // One by one add in all of the nodes
+    for (int node=0; node < nn; node++)
+    {
+	if (!mesh->insert_delaunay(node))
+	{
+	    error("Mesher upset");
+	    return 0;
+	}
+	
+	if (node%200 == 0)
+	{
+	    mesh -> pack_elems();
+	}
+    }
+    
+    // Compute the neighbors of each element
+    mesh -> compute_neighbors();
+
+    // And remove the four extra points added for the bounding tetrahedron
+    mesh -> remove_delaunay(onn, 0);
+    mesh -> remove_delaunay(onn + 1, 0);
+    mesh -> remove_delaunay(onn + 2, 0);
+    mesh -> remove_delaunay(onn + 3, 0);
+    mesh -> pack_all();
+
+    return 1;
+}
+
+/***************************************************************************
+ * function to determine which of the four nodes of the edit element is 
+ * nearest to the crosshair picker. 
+ */
+int MeshView::findNode(const MeshHandle& mesh)
+{
+    Element* e = mesh -> elems[toEdit];
+    
+    Point p1(mesh->nodes[e->n[0]]->p);
+    Point p2(mesh->nodes[e->n[1]]->p);
+    Point p3(mesh->nodes[e->n[2]]->p);
+    Point p4(mesh->nodes[e->n[3]]->p);
+
+    Point newp = editPoint;
+
+    Vector v1(newp - p1);
+    Vector v2(newp - p2);
+    Vector v3(newp - p3);
+    Vector v4(newp - p4);
+
+    // Calculate the distance from each point to the editPoint.
+    double d1 = sqrt(v1.x() * v1.x() + v1.y() * v1.y() + v1.z() * v1.z());
+    double d2 = sqrt(v2.x() * v2.x() + v2.y() * v2.y() + v2.z() * v2.z());
+    double d3 = sqrt(v3.x() * v3.x() + v3.y() * v3.y() + v3.z() * v3.z());
+    double d4 = sqrt(v4.x() * v4.x() + v4.y() * v4.y() + v4.z() * v4.z());
+
+    // Find the smallest distance
+    double m1 = Min(Min(Min(d1, d2), d3), d4);
+    
+    int node;
+
+    // Determine which node it was
+    if (m1 == d1) node = 0;
+    else if (m1 == d2) node = 1;
+    else if (m1 == d3) node = 2;
+    else node = 3;
+
+    return e->n[node];
+}
+
+/***************************************************************************
+ * Procedure to update the information in the interface
+ */
+void MeshView::updateInfo(const MeshHandle& mesh)
+{	
+    char buf[1000];
+    double m1, m2;
+    if (!haveVol)
+	calcMeasures(mesh, &m1, &m2);
+    double t1, t2, t3, t4;
+    t1 = volMeas[Seed]; t3 = volMeas[toEdit];
+    if (!haveAsp)
+    {
+	Element* e=mesh->elems[Seed];
+	t2 = aspect_ratio(mesh->nodes[e->n[0]]->p,
+			  mesh->nodes[e->n[1]]->p,
+			  mesh->nodes[e->n[2]]->p,
+			  mesh->nodes[e->n[3]]->p);
+	e=mesh->elems[toEdit];
+	t4 = aspect_ratio(mesh->nodes[e->n[0]]->p,
+			  mesh->nodes[e->n[1]]->p,
+			  mesh->nodes[e->n[2]]->p,
+			  mesh->nodes[e->n[3]]->p);
+	
+    }
+    else
+	t2 = aspMeas[Seed];
+    
+    ostrstream str4(buf, 1000);
+    str4 << id << " set_info " << " " << mesh->nodes.size() << " " <<
+	mesh->elems.size() << " " << Seed << " " << t1 << " " << t2 << 
+	    " " << toEdit << " " << t3 << " " << t4 << '\0';
+    TCL::execute(str4.str());
+    oldSeed = Seed;
+    changed = 1;
+}
+
+/***************************************************************************
+ * Procedure for when the mouse button is released when using a widget
+ */
+void MeshView::geom_release(GeomPick*, void*)
+{
+    if(!abort_flag)
+    {
+	abort_flag=1;
+	want_to_execute();
+    }
+}
+
+/***************************************************************************
+ * Dummy procedure for when the mouse button is moved during a widget action
+ */
+void MeshView::geom_moved(GeomPick*, int, double, const Vector&, void*)
+{
+}
+

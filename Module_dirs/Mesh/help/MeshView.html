@@ -2,7 +2,7 @@
 <!--  MeshView.html                   -->
 <!--                                  -->
 <!--  Written by:                     -->
-<!--   James Purciful                 -->
+<!--   Carole Gitlin                  -->
 <!--   Department of Computer Science -->
 <!--   University of Utah             -->
 <!--   Apr. 1995                      -->
@@ -19,10 +19,171 @@
 <h3> <a href = "Mesh.html">Mesh Category Help</a> </h3>
 <h4> MeshView Module Help </h4>
 
+<h2> Contents </h2> <br>
+<a href="#intro"> Introduction </a> <br>
+<a href="#map">   Creating a map </a> <br>
+<a href="#inter"> Interface </a> <br>
+<a href="#pick">  Picking an element </a> <br>
+<a href="#histo"> Histogram </a> <br>
+
+<a name="intro"> <h2> Introduction </h2> </a>
+
+MeshView is a graphical analysis tool for displaying, analyzing and
+editing 3D unstructured tetrahedral meshes.  It is designed to allow
+users to visually verify the integrity of a mesh.  There are two
+separate approaches we take to the problem.  The first provides for
+manipulations of the mesh, allowing the user to verify the overall
+structure of the mesh.  There are three techniques that we provide: a
+growth algorithm, clipping isosurfaces, and multiple views.  For the
+growth algorithm, the user picks a starting tetrahedron, and then can
+grow the mesh out, level by level, where a level is defined by all
+those elements that share a face with an element on the previous
+level.  With the clipping isosurfaces, unlike traditional clipping
+planes, if the plane goes through an element, than the entire element
+is discarded, instead of drawing partial elements.  Lastly, the user
+can have several different views of the mesh, with an orientation
+window to show how the views are with respect to each other. <p>
+
+The second approach is to look at quantitative measures of the mesh, like
+volume, aspect ratio, and error.  To study these, we provide an interactive
+histogram that displays number of elements per value.  The user can then move
+two bars to specify a range of values, and all the elements within that range
+are displayed. <p>
+
+To accommodate the user's need for fixing problem areas once they are
+found, we also provide several editing options.  The user can add a
+node in the center of an existing element, thereby subdividing that
+element, or she can delete either the four vertices of an element or
+a single vertex. <p>
+
+<a name="map"> <h2> Creating a map </h2> </a>
+
+Like all modules in the SCIRun environment, the MeshView needs to
+hooked up with various other modules to create a working map. The
+following is a general use map for using the MeshView program. <p>
+
+<img src="map.gif"> <p>
+
+The MeshView module has four ports, two input and two output.  The two
+input ports are for <b> <i>(a) </i> </b> a mesh and <b> <i>(b) </i>
+</b> a colormap, and the two output ports are for <b> <i>(c) </i> </b>
+a geometry viewer and <b> <i>(d) </i> </b> a mesh writer.  Ports <b>
+<i> a </i> </b> and <b> <i> c </i> </b> are required.  The mesh input
+can be from a variety of modules, however. The simplest is just a <a
+href="../../Readers/help/MeshReader.html"> MeshReader </a> which reads
+in a pre-existing mesh.  Other modules could be a <a
+href="Delaunay.html"> Delaunay </a> module which creates a mesh given
+a point set.  The geometry viewer, <a
+href="../../Salmon/help/Salmon.html"> Salmon</a>, is also necessary
+for viewing the mesh while interacting with it.  The colormap module,
+<a href="../../Visualization/help/GenColormap.html"> GenColormap</a>,
+is for defining the colormap used when viewing the quantitative
+measures.  Finally, port <b> <i> d </i> </b> is for writing the mesh
+to disk after it has been edited.  There are two different modules
+that can be used, <a href="../../Writers/help/MeshWriter.html">
+MeshWriter </a> which writes a mesh in the SCIRun format, or <a
+href="../../Writers/help/TetraWriter.html"> TetraWriter </a> which
+writes a conventional point file and tetra file.  NOTE: the output
+mesh module should not be used until all editing is complete, to save
+time by not having the mesh written every time there is a change.<p>
+
+ 
+<a name="inter"> <h2> Interface </h2> </a>
+
+MeshView is controlled through its user-interface, as shown below.  
+<p>
+<img src="mesh.gif"> <p>
+
+The MeshView interface is divided into 7 different sections. 
+
+<h4> Section A </h4> 
+The first section lets the user specify which technique she wants to
+do, either manipulative, quantifying, or editing.  Only one technique
+can be used at a time.
+
+<h4> Section B </h4>
+The second section allows the user to specify
+whether the geometry should be rendered in ``production'' or
+``normal'' mode.  In production mode, the mesh
+is rendered with cylinders that are suitable for using as final
+images.  Normal mode renders the mesh as either a wireframe or Gouraud
+shaded.  For the production mode, there is a slider that lets the user
+set the width of the cylinders.
+
+<img src="display.gif"> <br>
+A mesh rendered in: a) normal mode and b) production mode. <p>
+
+
+<h4> Section C </h4>
+The third section contains the buttons and sliders for the
+manipulative techniques.  The first slider is for setting how many
+levels the user wants to look at.  Following that is the switch to
+indicate whether the user wants to look at all of the levels up to the
+specified level or only the outermost level.  Due to the way the
+program only sends surface faces to the renderer, there needs to be a
+way for the user to see the entire mesh when she changes to wireframe
+mode.  Therefore, the third button provides the user with the
+capability to flip between rendering the entire volume, and rendering
+the surface only.  This switch is only useful when rendering in
+wireframe mode.  The next three sliders are for manipulating the
+clipping isosurfaces. These sliders permit the user to make a ``cube''
+of clipping isosurfaces and thus able to clip from any orthogonal
+surface. <p>
+
+<h4> Section D </h4>
+The next section is for the quantitative measures.  There are two
+different ways of displaying the elements that fall into the desired
+range: either only the elements in the range will be displayed, or
+those elements will be displayed with the rest of the mesh drawn in
+wireframe.  The first switch allows the user to toggle between these
+two options.  The second switch is for indicating whether the user
+wants to see the elements that are inside of the range or outside of
+the range.  Choosing the elements outside of the range displays both
+the largest and smallest valued elements at the same time.  The last
+four buttons are for selecting a measure, either volume, aspect ratio,
+size versus neighbor, or error. <p>
+
+<h4> Section E </h4>
+The editing capabilities comprise the fifth section.  There are three
+editing options: adding a node, deleting an element and its four node,
+or deleting the node nearest to the cross-hair picker.  The element to
+be edited is selected by moving the cross-hair picker into the desired
+element.  <p>
+
+<h4> Section F </h4>
+The sixth section is a switch for indicating whether the
+user is using the cross-hair picker to select a new seed element or an
+element to be editted. <p>
+
+<h4> Section G </h4>
+The last section shows information about the mesh, including the
+number of nodes, number of elements, and quantitative information
+about both the seed element and the element selected for editing. <p>
+
+<a name="pick"> <h2> Picking an element </h2>
+There are two techniques in the MeshView program that require picking an
+element in space.  To accomplish this, a 3D <a
+href="../../../Widgets/help/CrosshairWidget.html"> Crosshair Widget </a> is
+used.  Briefly, to select an element, you hold down the SHIFT key and then
+use the left mouse button to select and move the widget.  The selected
+element is the one which contains the center sphere of the widget. <p>
+
+<img src="pick.gif"> Example of the crosshair widget inside of an element.<p>
+
+<a name="histo"> <h2> Histogram </h2>
+The interactive histogram allows the user to specify a range of values
+to indicate which elements should be displayed. <p>
+
+<img src="histo.gif"> <p>
+
+The two red bars on the histogram are movable and define the range.
+The lower lefthand corner displays what the range is numerically,
+making it easy to get an accurate range.
 
 <hr>
 <img align = middle src = "../../../help/sci.gif"><p>
 <a href = "http://www.cs.utah.edu/~sci">SCI Research Group</a><p>
-<a href = "http://www.cs.utah.edu/projects/"> Computer Science Department Research </a>
+<a href = "http://www.cs.utah.edu/projects/"> Computer Science
+Department Research </a>
 
 </html>

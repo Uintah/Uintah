@@ -117,8 +117,8 @@ void Delaunay::execute()
     el->faces[0]=el->faces[1]=el->faces[2]=el->faces[3]=-1;
     mesh->elems.add(el);
 
-    nn=nnodes.get();
-    if(nn==0 || nn > onn)nn=onn;
+//    nn=nnodes.get();
+//    if(nn==0 || nn > onn)nn=onn;
     for(int node=0;node<nn;node++){
 	// Add this node...
 	update_progress(node, nn);
@@ -129,6 +129,7 @@ void Delaunay::execute()
 	}
 	// Every 200 nodes, cleanup the elems array...
 	if(node%200 == 0){
+cerr << "Adding node " << node << endl;
 	    mesh->pack_elems();
 	}
     }
