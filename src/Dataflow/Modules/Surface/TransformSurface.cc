@@ -91,6 +91,9 @@ void TransformSurface::execute()
     MatToTransform(mIH, t);
 
     Array1<NodeHandle> nodes;
+
+    SurfaceHandle sss=sIH;
+
     sIH.detach();
     sIH->get_surfnodes(nodes);
     for (int i=0; i<nodes.size(); i++) {
@@ -106,6 +109,9 @@ void TransformSurface::execute()
 
 //
 // $Log$
+// Revision 1.3  2000/08/04 19:19:45  dmw
+// adding TransformSurface.cc to makefile
+//
 // Revision 1.2  2000/03/17 09:27:23  sparker
 // New makefile scheme: sub.mk instead of Makefile.in
 // Use XML-based files for module repository

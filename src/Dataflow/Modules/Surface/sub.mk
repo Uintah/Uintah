@@ -25,6 +25,7 @@ SRCS     += \
 	$(SRCDIR)/SurfInterpVals.cc\
 	$(SRCDIR)/SurfNewVals.cc\
 	$(SRCDIR)/SurfToGeom.cc\
+	$(SRCDIR)/TransformSurface.cc\
 #[INSERT NEW MODULE HERE]
 
 PSELIBS := PSECore/Dataflow PSECore/Datatypes PSECore/Widgets \
@@ -37,6 +38,9 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.5  2000/08/04 19:19:45  dmw
+# adding TransformSurface.cc to makefile
+#
 # Revision 1.4  2000/06/08 22:46:30  moulding
 # Added a comment note about not messing with the module maker comment lines,
 # and how to edit this file by hand.
