@@ -47,7 +47,7 @@
       be at the nodes.  A new field is created such that the data
       remains at the same positions in space but occupy the
       cell/face centers of the new mesh rather than being located at
-      the node locations.  This is the opposite of MoveElemToNode.</p>
+      the node locations.  This is the opposite of <modref package="SCIRun" name="MoveElemToNode"/>.</p>
 
     </description>
   </overview>

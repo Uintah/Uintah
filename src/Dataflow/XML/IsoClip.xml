@@ -49,12 +49,12 @@
     <p> In order to compute where the cuts
     are to be made, the input field must contain scalar values at the
     nodes.  If the input field contains element centered data then either
-    just use ClipByFunction to determine which elements to keep or
+    just use <modref package="SCIRun" name="ClipByFunction"/> to determine which elements to keep or
     interpolate the elements onto a node-centered field. </p>
 
     <p> Only TetVol and TriSurf fields are supported by this general
     clipping.  Other fields should be converted into these types if
-    they are to be clipped.  See HexToTet, QuadToTri, and Unstructure
+    they are to be clipped.  See <modref package="SCIRun" name="HexToTet"/>, <modref package="SCIRun" name="QuadToTri"/>, and <modref package="SCIRun" name="Unstructure"/>
     for an idea of how to do this conversion. </p>
 
     </description>

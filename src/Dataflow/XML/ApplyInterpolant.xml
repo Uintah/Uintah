@@ -47,20 +47,20 @@
       <p>
         This module interpolates the "Source" field onto the geometry of
         the Interpolant field.  The Interpolant field would be
-        preconstructed using the BuildInterpolant module.
+        preconstructed using the <modref package="SCIRun" name="BuildInterpolant"/> module.
       </p>
       <p>
-        The source field for BuildInterpolant and ApplyInterpolant
+        The source field for <modref package="SCIRun" name="BuildInterpolant"/> and ApplyInterpolant
         must contain the same geometry and data locations.  However
         they do not have to contain the same data values or value
         types.  For instance, a TetVolField of doubles with data at the
-        nodes can be passed into the Source port of BuildInterpolant,
+        nodes can be passed into the Source port of <modref package="SCIRun" name="BuildInterpolant"/>,
         and a TetVolField of Vectors with data also at the nodes and with
         the same mesh can be passed into the source port of
         ApplyInterpolant.
       </p>
       <p>
-        DirectInterpolate should be used instead of BuildInterpolant
+        <modref package="SCIRun" name="DirectInterpolate"/> should be used instead of <modref package="SCIRun" name="BuildInterpolant"/>
         and ApplyInterpolant if the Interpolant is not to be reused,
         as it does the same interpolation without building the
         intermediate interpolant field.  This should be used if the

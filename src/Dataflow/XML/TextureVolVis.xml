@@ -59,7 +59,7 @@
      </p>
       <p> The slice transparency slider allows the user to control the
       slice transparency in concert with the transparency specified in the
-      transfer function that was  provided to the GLTextureBuilder.  The range
+      transfer function that was  provided to the <modref package="SCIRun" name="GLTextureBuilder"/>.  The range
       is from -1 (full transparency for each slice) to 0 (accept
       the values in the transfer function) to 1 (full opacity for each
       slice--except for regions that are zero in the transfer function)
