@@ -1,0 +1,488 @@
+
+
+#include <Packages/rtrt/Core/GridSpheresDpy.h>
+#include <Packages/rtrt/Core/GridSpheres.h>
+#include <Core/Thread/Thread.h>
+#include <Core/Thread/Mutex.h>
+#include <Core/Thread/Time.h>
+#include <iostream>
+#include <stdlib.h>
+#include <Packages/rtrt/visinfo/visinfo.h>
+#include <stdio.h>
+
+using namespace rtrt;
+using SCIRun::Mutex;
+using SCIRun::Thread;
+
+namespace rtrt {
+  extern Mutex xlock;
+} // end namespace rtrt
+
+
+GridSpheresDpy::GridSpheresDpy(int colordata)
+    : ndata(-1),hist(0),xres(500),yres(500),
+      colordata(colordata),newcolordata(colordata)
+{
+}
+
+GridSpheresDpy::~GridSpheresDpy()
+{
+  if (hist)
+    delete(hist);
+}
+
+void GridSpheresDpy::setup_vars() {
+  cerr << "GridSpheresDpy:setup_vars:start\n";
+  if (grids.size() > 0) {
+    histmax=new int[ndata];
+
+    // determine min/max
+    min = new float[ndata];
+    max = new float[ndata];
+    // inialize values
+    for(int i = 0; i < ndata; i ++) {
+      min[i] = MAXFLOAT;
+      max[i] = -MAXFLOAT;
+    }
+    // go through all the grids and compute min/max
+    for(int g = 0; g < grids.size(); g++) {
+      for (int i = 0; i < ndata; i++) {
+	min[i]=Min(min[i], grids[g]->min[i]);
+	max[i]=Max(max[i], grids[g]->max[i]);
+      }
+    }
+
+    // setup scales/ranges
+    scales=new float[ndata];
+    range_begin=new float[ndata];
+    range_end=new float[ndata];
+    new_range_begin=new float[ndata];
+    new_range_end=new float[ndata];
+    for(int i=0;i<ndata;i++){
+      cerr << "\t\t\t\tmin["<<i<<"] = "<<min[i]<<",\tmax["<<i<< "] = "<<max[i] << endl;
+      // this takes into account of
+      // min/max equaling each other
+      if (min[i] == max[i]) {
+	if (max[i] > 0) {
+	  max[i] *= 1.1;
+	} else {
+	  if (max[i] < 0)
+	    max[i] *= 0.9;
+	  else
+	    max[i] = 1;
+	}
+      }
+      scales[i]=1./(max[i]-min[i]);
+      new_range_begin[i]=range_begin[i]=min[i];
+      new_range_end[i]=range_end[i]=max[i];
+    }
+  }
+  cerr << "GridSpheresDpy:setup_vars:end\n";
+}
+
+void GridSpheresDpy::run()
+{
+  //cerr << "GridSpheresDpy:run\n";
+  xlock.lock();
+  // Open an OpenGL window
+  Display* dpy=XOpenDisplay(NULL);
+  if(!dpy){
+    cerr << "Cannot open display\n";
+    Thread::exitAll(1);
+  }
+  int error, event;
+  if ( !glXQueryExtension( dpy, &error, &event) ) {
+    cerr << "GL extension NOT available!\n";
+    XCloseDisplay(dpy);
+    dpy=0;
+    Thread::exitAll(1);
+  }
+  int screen=DefaultScreen(dpy);
+  
+  char* criteria="sb, max rgb";
+  if(!visPixelFormat(criteria)){
+    cerr << "Error setting pixel format for visinfo\n";
+    cerr << "Syntax error in criteria: " << criteria << '\n';
+    Thread::exitAll(1);
+  }
+  int nvinfo;
+  XVisualInfo* vi=visGetGLXVisualInfo(dpy, screen, &nvinfo);
+  if(!vi || nvinfo == 0){
+    cerr << "Error matching OpenGL Visual: " << criteria << '\n';
+    Thread::exitAll(1);
+  }
+  Colormap cmap = XCreateColormap(dpy, RootWindow(dpy, screen),
+				  vi->visual, AllocNone);
+  XSetWindowAttributes atts;
+  int flags=CWColormap|CWEventMask|CWBackPixmap|CWBorderPixel;
+  atts.background_pixmap = None;
+  atts.border_pixmap = None;
+  atts.border_pixel = 0;
+  atts.colormap=cmap;
+  atts.event_mask=StructureNotifyMask|ExposureMask|ButtonPressMask|ButtonReleaseMask|ButtonMotionMask|KeyPressMask;
+  Window win=XCreateWindow(dpy, RootWindow(dpy, screen),
+			   0, 0, xres, yres, 0, vi->depth,
+			   InputOutput, vi->visual, flags, &atts);
+  char* p="GridSpheres histogram";
+  XTextProperty tp;
+  XStringListToTextProperty(&p, 1, &tp);
+  XSizeHints sh;
+  sh.flags = USSize;
+  XSetWMProperties(dpy, win, &tp, &tp, 0, 0, &sh, 0, 0);
+  
+  XMapWindow(dpy, win);
+  
+  GLXContext cx=glXCreateContext(dpy, vi, NULL, True);
+  if(!glXMakeCurrent(dpy, win, cx)){
+    cerr << "glXMakeCurrent failed!\n";
+  }
+  glShadeModel(GL_FLAT);
+  for(;;){
+    XEvent e;
+    XNextEvent(dpy, &e);
+    if(e.type == MapNotify)
+      break;
+  }
+  XFontStruct* fontInfo = XLoadQueryFont(dpy, 
+	 "-adobe-helvetica-bold-r-normal--17-120-100-100-p-88-iso8859-1");
+  if (fontInfo == NULL) {
+    cerr << "no font found\n";
+    Thread::exitAll(1);
+  }
+  Font id = fontInfo->fid;
+  unsigned int first = fontInfo->min_char_or_byte2;
+  unsigned int last = fontInfo->max_char_or_byte2;
+  GLuint fontbase = glGenLists((GLuint) last+1);
+  if (fontbase == 0) {
+    printf ("out of display lists\n");
+    exit (0);
+  }
+  glXUseXFont(id, first, last-first+1, fontbase+first);
+  
+
+  setup_vars();
+  bool need_hist=true;
+  bool redraw=true;
+  int redraw_range=-1;
+  xlock.unlock();
+  for(;;){
+    //cerr << "GridSpheresDpy:run:eventloop\n";
+    if(need_hist){
+      need_hist=false;
+      compute_hist(fontbase);
+      redraw=true;
+    }
+    if(redraw){
+      draw_hist(fontbase, fontInfo, redraw_range);
+      redraw=false;
+    }
+    XEvent e;
+    XNextEvent(dpy, &e);	
+    switch(e.type){
+    case Expose:
+      // Ignore expose events, since we will be refreshing
+      // constantly anyway
+      redraw=true;
+      break;
+    case ConfigureNotify:
+      yres=e.xconfigure.height;
+      if(e.xconfigure.width != xres){
+	xres=e.xconfigure.width;
+	need_hist=true;
+      } else {
+	redraw=true;
+      }
+      break;
+    case ButtonPress:
+    case ButtonRelease:
+      switch(e.xbutton.button){
+      case Button1:
+	move(new_range_begin, e.xbutton.x, e.xbutton.y, redraw_range);
+	redraw=true;
+	break;
+      case Button2:
+	changecolor(e.xbutton.y);
+	break;
+      case Button3:
+	move(new_range_end, e.xbutton.x, e.xbutton.y, redraw_range);
+	redraw=true;
+	break;
+      }
+      break;
+    case MotionNotify:
+      switch(e.xmotion.state&(Button1Mask|Button2Mask|Button3Mask)){
+      case Button1Mask:
+	move(new_range_begin, e.xbutton.x, e.xbutton.y, redraw_range);
+	redraw=true;
+	break;
+      case Button2Mask:
+	break;
+      case Button3Mask:
+	move(new_range_end, e.xbutton.x, e.xbutton.y, redraw_range);
+	redraw=true;
+	break;
+      }
+      break;
+    default:
+      cerr << "Unknown event, type=" << e.type << '\n';
+    }
+  }
+}
+
+static void printString(GLuint fontbase, double x, double y,
+			char *s, const Color& c)
+{
+  glColor3f(c.red(), c.green(), c.blue());
+  
+  glRasterPos2d(x,y);
+  /*glBitmap(0, 0, x, y, 1, 1, 0);*/
+  glPushAttrib (GL_LIST_BIT);
+  glListBase(fontbase);
+  glCallLists((int)strlen(s), GL_UNSIGNED_BYTE, (GLubyte *)s);
+  glPopAttrib ();
+}
+
+void GridSpheresDpy::compute_hist(GLuint fid)
+{
+  //cerr << "GridSpheresDpy:compute_hist:start\n";
+  glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+  glViewport(0, 0, xres, yres);
+  glClearColor(0, 0, .2, 1);
+  glClear(GL_COLOR_BUFFER_BIT);
+  glMatrixMode(GL_PROJECTION);
+  glLoadIdentity();
+  gluOrtho2D(0, 1, 0, 1);
+  glMatrixMode(GL_MODELVIEW);
+  glLoadIdentity();
+  
+  printString(fid, .1, .5, "Recomputing histogram...\n", Color(1,1,1));
+  glFlush();
+  int n=ndata;
+  if (n == -1) {
+    cerr <<"GridSpheresDpy::compute_hist: GridSpheresDpy::attach not called\n";
+    cerr << "GridSpheresDpy::ndata = -1\n";
+    Thread::exitAll(-1);
+  }
+  int nhist=xres;
+  int total=n*nhist;
+  //cerr << "GridSpheresDpy:compute_hist:ndata = " << ndata << "\n";  
+  //cerr << "GridSpheresDpy:compute_hist:xres = " << xres << "\n";  
+  //cerr << "GridSpheresDpy:compute_hist:total = " << total << "\n";  
+  if (hist)
+    delete(hist);
+  hist=new int[total];
+  for(int i=0;i<total;i++){
+    hist[i]=0;
+  }
+  // loop over all the data and compute histograms
+  for (int g = 0; g < grids.size() ; g++) {
+    GridSpheres* grid = grids[g];
+    float* p=grid->spheres;
+    int nspheres=grid->nspheres;
+    for(int i=0;i<nspheres;i++){
+      int offset=0;
+      for(int j=0;j<n;j++){
+	float normalized=(p[j]-min[j])*scales[j];
+	int idx=(int)(normalized*(nhist-1));
+	if(idx<0 || idx>=nhist){
+	  cerr << "p[" << j << "]=" << p[j] << ", min[" << j << "]=" << min[j] << ", scales[" << j << "]=" << scales[j] << '\n';
+	  cerr << "idx=" << idx << '\n';
+	  cerr << "idx out of bounds!\n";
+	  Thread::exitAll(-1);
+	}
+	hist[offset+idx]++;
+	offset+=nhist;
+      }
+      p+=n;
+    }
+  }
+  //cerr << "GridSpheresDpy:compute_hist:past compute histograms\n";
+  // determine the maximum height for each histogram
+  int* hp=hist;
+  for(int j=0;j<n;j++){
+    int max=0;
+    for(int i=0;i<nhist;i++){
+      if(*hp>max)
+	max=*hp;
+      hp++;
+    }
+    histmax[j]=max;
+  }
+  //cerr << "GridSpheresDpy:compute_hist:end\n";
+}
+
+static int calc_width(XFontStruct* font_struct, char* str)
+{
+  XCharStruct overall;
+  int ascent, descent;
+  int dir;
+  XTextExtents(font_struct, str, (int)strlen(str), &dir, &ascent, &descent, &overall);
+  return overall.width;
+}
+
+void GridSpheresDpy::draw_hist(GLuint fid, XFontStruct* font_struct,
+			       int& redraw_range)
+{
+  //cerr << "GridSpheresDpy:draw_hist:start\n";
+  int n=ndata;
+  int descent=font_struct->descent;
+  int textheight=font_struct->descent+font_struct->ascent;
+  if(redraw_range == -1){
+    glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+    glViewport(0, 0, xres, yres);
+    glClearColor(0, 0, 0, 1);
+    glClear(GL_COLOR_BUFFER_BIT);
+    int offset=0;
+    int nhist=xres;
+    for(int j=0;j<n;j++){
+      int s=j*yres/n+2;
+      int e=(j+1)*yres/n-2;
+      int h=e-s;
+      glViewport(0, s, xres, e-s);
+      glMatrixMode(GL_PROJECTION);
+      glLoadIdentity();
+      gluOrtho2D(0, xres, -float(textheight)*histmax[j]/(h-textheight), histmax[j]);
+      glMatrixMode(GL_MODELVIEW);
+      glLoadIdentity();
+      
+      glColor3f(0,0,1);
+      glBegin(GL_LINES);
+      for(int i=0;i<nhist;i++){
+	glVertex2i(i, 0);
+	glVertex2i(i, hist[offset+i]);
+      }
+      glEnd();
+      
+      glMatrixMode(GL_PROJECTION);
+      glLoadIdentity();
+      gluOrtho2D(0, xres, 0, h);
+      offset+=nhist;
+      char buf[100];
+      sprintf(buf, "%g", min[j]);
+      printString(fid, 2, descent+1, buf, Color(0,1,1));
+      sprintf(buf, "%g", max[j]);
+      int w=calc_width(font_struct, buf);
+      printString(fid, xres-2-w, descent+1, buf, Color(0,1,1));
+    }
+  }
+  
+  glColorMask(GL_TRUE, GL_FALSE, GL_FALSE, GL_FALSE);
+  for(int j=0;j<n;j++){
+    if(redraw_range==-1 || redraw_range==j){
+      int s=j*yres/n+2;
+      int e=(j+1)*yres/n-2;
+      int h=e-s;
+      glViewport(0, s, xres, e-s);
+      glMatrixMode(GL_PROJECTION);
+      glLoadIdentity();
+      gluOrtho2D(min[j], max[j], 0, h);
+      glMatrixMode(GL_MODELVIEW);
+      glLoadIdentity();
+      glColor3f(0,0,0);
+      glRectf(min[j], 0, max[j], h);
+      
+      if(new_range_end[j] > new_range_begin[j]){
+	glColor3f(.5,0,0);
+	glRectf(new_range_begin[j], textheight, new_range_end[j], h);
+      }
+      
+      char buf[100];
+      sprintf(buf, "%g", new_range_begin[j]);
+      
+      int w=calc_width(font_struct, buf);
+      float wid=(max[j]-min[j])*w/xres;
+      float x=new_range_begin[j]-wid/2.;
+      float left=min[j]+(max[j]-min[j])*2/xres;
+      if(x<left)
+	x=left;
+      printString(fid, x, descent+1, buf, Color(1,0,0));
+      
+      sprintf(buf, "%g", new_range_end[j]);
+      w=calc_width(font_struct, buf);
+      wid=(max[j]-min[j])*w/xres;
+      x=new_range_end[j]-wid/2.;
+      float right=max[j]-(max[j]-min[j])*2/xres;
+      if(x>right-wid)
+	x=right-wid;
+      printString(fid, x, descent+1, buf, Color(1,0,0));
+    }
+  }
+  glFinish();
+  int errcode;
+  while((errcode=glGetError()) != GL_NO_ERROR){
+    cerr << "We got an error from GL: " << (char*)gluErrorString(errcode) << endl;
+  }
+  redraw_range=-1;
+  //cerr << "GridSpheresDpy:draw_hist:end\n";
+}
+
+void GridSpheresDpy::move(float* range, int x, int y, int& redraw_range)
+{
+  y=yres-y;
+  for(int j = 0; j < ndata; j++){
+    int s=j*yres/ndata +2;
+    int e=(j+1)*yres/ndata-2;
+    if(y>=s && y<e){
+      float xn=float(x)/xres;
+      float val=min[j]+xn*(max[j]-min[j]);
+      if(val < min[j])
+	val = min[j];
+      if(val > max[j])
+	val = max[j];
+      range[j]=val;
+      redraw_range=j;
+      break;
+    }
+  }
+}
+
+void GridSpheresDpy::animate(bool& changed) {
+
+  for(int j=0;j<ndata;j++){
+    if(new_range_begin[j] != range_begin[j]){
+      changed=true;
+      range_begin[j]=new_range_begin[j];
+    }
+    if(new_range_end[j] != range_end[j]){
+      changed=true;
+      range_end[j]=new_range_end[j];
+    }
+  }
+  if (newcolordata != colordata) {
+    changed=true;
+    colordata = newcolordata;
+  }
+}
+
+void GridSpheresDpy::attach(GridSpheres* g) {
+  // ndata only equals -1 if ndata has not been set 
+  if (ndata != -1) {
+    if (ndata == g->ndata+3) {
+      grids.add(g);
+      g->dpy = this;
+    }
+    else {
+      cerr << "Number of data fields does not match. Not adding to display.\n";
+    }
+  }
+  else {
+    ndata = g->ndata + 3;
+    grids.add(g);
+    g->dpy = this;
+  }
+}
+
+void GridSpheresDpy::changecolor(int y) {
+  y=yres-y;
+  for(int j = 0; j < ndata; j++){
+    int s=j*yres/ndata +2;
+    int e=(j+1)*yres/ndata-2;
+    if(y>=s && y<e){
+      newcolordata = j;
+      break;
+    }
+  }
+}
+
+
+
