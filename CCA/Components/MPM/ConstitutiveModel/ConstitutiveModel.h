@@ -64,7 +64,8 @@ WARNING
 						  const MPMMaterial* matl,
 						  DataWarehouse* old_dw,
 						  DataWarehouse* new_dw,
-						  SparseMatrix<double,int>& K);
+						  SparseMatrix<double,int>& K,
+						  const bool recursion);
 	 
 	 virtual void computeStressTensorImplicitOnly(const PatchSubset* patches,
 						  const MPMMaterial* matl,
@@ -81,6 +82,11 @@ WARNING
 	 virtual void addComputesAndRequires(Task* task,
 					   const MPMMaterial* matl,
 					   const PatchSet* patches) const = 0;
+
+	 virtual void addComputesAndRequiresImplicit(Task* task,
+					    const MPMMaterial* matl,
+					    const PatchSet* patches,
+					    const bool recursion);
 
 	 virtual void addParticleState(std::vector<const VarLabel*>& from,
 				       std::vector<const VarLabel*>& to) = 0;

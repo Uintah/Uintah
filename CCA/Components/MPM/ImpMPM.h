@@ -150,7 +150,8 @@ private:
 			   const PatchSubset* patches,
 			   const MaterialSubset* matls,
 			   DataWarehouse* old_dw,
-			   DataWarehouse* new_dw);
+			   DataWarehouse* new_dw,
+			   const bool recursion);
 
   void computeStressTensorOnly(const ProcessorGroup*,
 			       const PatchSubset* patches,
@@ -173,7 +174,8 @@ private:
 			    const PatchSubset* patches,
 			    const MaterialSubset* matls,
 			    DataWarehouse* old_dw,
-			    DataWarehouse* new_dw);
+			    DataWarehouse* new_dw,
+			    const bool recursion);
 
   void iterate(const ProcessorGroup* pg,
 	       const PatchSubset* patches,
@@ -241,16 +243,20 @@ private:
 					       const MaterialSet*);
 
   void scheduleComputeStressTensor(SchedulerP&, const PatchSet*,
-				   const MaterialSet*);
+				   const MaterialSet*,
+				   const bool recursion = false);
 
   void scheduleComputeStressTensorOnly(SchedulerP&, const PatchSet*,
-				       const MaterialSet*);
+				       const MaterialSet*,
+				       const bool recursion = false);
 
   void scheduleFormStiffnessMatrix(SchedulerP&, const PatchSet*,
 				   const MaterialSet*);
 
+
   void scheduleComputeInternalForce(SchedulerP&, const PatchSet*,
-				    const MaterialSet*);
+				    const MaterialSet*,
+				   const bool recursion);
 
   void scheduleIterate(SchedulerP&, const LevelP&,const PatchSet*, 
 		       const MaterialSet*);
@@ -262,7 +268,7 @@ private:
   void scheduleUpdateGridKinematics(SchedulerP&, const PatchSet*, 
 				    const MaterialSet*);
 
-  void scheduleCheckConvergence(SchedulerP&, LevelP&, const PatchSet*,
+  void scheduleCheckConvergence(SchedulerP&, const LevelP&, const PatchSet*,
 				const MaterialSet*);
 
   void scheduleComputeAcceleration(SchedulerP&, const PatchSet*,

@@ -157,27 +157,39 @@ void ImpMPM::scheduleTimeAdvance(const LevelP& level, SchedulerP& sched)
   const PatchSet* patches = level->eachPatch();
   const MaterialSet* matls = d_sharedState->allMPMMaterials();
 
-#if 0
-  scheduleInitializeForFirstIterationAfterConverged(sched,patches,matls);
-#endif
-
   scheduleInterpolateParticlesToGrid(sched, patches, matls);
+
 #if 0
   scheduleApplySymmetryBoundaryConditions(sched,patches,matls);
 #endif
 
-  scheduleComputeStressTensor(sched, patches, matls);
+#if 0
+  scheduleComputeStressTensor(sched, patches, matls,false);
 
   scheduleFormStiffnessMatrix(sched,patches,matls);
 
-  scheduleComputeInternalForce(sched, patches, matls);
+  scheduleComputeInternalForce(sched, patches, matls,false);
+
+  scheduleFormQ(sched, patches, matls);
+
+  scheduleSolveForDuCG(sched, patches, matls);
+
+  scheduleUpdateGridKinematics(sched, patches, matls);
+
+  scheduleCheckConvergence(sched,level, patches, matls);
 
   scheduleIterate(sched,level,patches,matls);
 
-  scheduleComputeAcceleration(sched,patches,matls);
+  scheduleComputeStressTensorOnly(sched,patches,matls,true);
 
+  scheduleComputeInternalForce(sched,patches,matls,false);
+
+  scheduleComputeAcceleration(sched,patches,matls);
+#endif
   scheduleInterpolateToParticlesAndUpdate(sched, patches, matls);
   scheduleInterpolateStressToGrid(sched,patches,matls);
+
+
 
   sched->scheduleParticleRelocation(level, lb->pXLabel_preReloc, 
 				    lb->d_particleState_preReloc,
@@ -261,8 +273,7 @@ void ImpMPM::scheduleApplySymmetryBoundaryConditions(SchedulerP& sched,
 {
 
   Task* t = scinew Task("ImpMPM::applySymmetryBoundaryConditions",
-		        this,
-		        &ImpMPM::applySymmetryBoundaryConditions);
+		        this, &ImpMPM::applySymmetryBoundaryConditions);
 
   sched->addTask(t, patches, matls);
 }
@@ -271,23 +282,25 @@ void ImpMPM::scheduleApplySymmetryBoundaryConditions(SchedulerP& sched,
 
 void ImpMPM::scheduleComputeStressTensor(SchedulerP& sched,
 					 const PatchSet* patches,
-					 const MaterialSet* matls)
+					 const MaterialSet* matls,
+					 const bool recursion)
 {
   int numMatls = d_sharedState->getNumMPMMatls();
   Task* t = scinew Task("ImpMPM::computeStressTensor",
-		    this, &ImpMPM::computeStressTensor);
+		    this, &ImpMPM::computeStressTensor,recursion);
   for(int m = 0; m < numMatls; m++){
     MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
     ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
-    cm->addComputesAndRequires(t, mpm_matl, patches);
+    cm->addComputesAndRequiresImplicit(t, mpm_matl, patches,recursion);
   }
-	 
+
   sched->addTask(t, patches, matls);
 }
 
 void ImpMPM::scheduleComputeStressTensorOnly(SchedulerP& sched,
 					 const PatchSet* patches,
-					 const MaterialSet* matls)
+					 const MaterialSet* matls,
+					 const bool recursion)
 {
   int numMatls = d_sharedState->getNumMPMMatls();
   Task* t = scinew Task("ImpMPM::computeStressTensorOnly",
@@ -295,9 +308,9 @@ void ImpMPM::scheduleComputeStressTensorOnly(SchedulerP& sched,
   for(int m = 0; m < numMatls; m++){
     MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
     ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
-    cm->addComputesAndRequires(t, mpm_matl, patches);
+    cm->addComputesAndRequiresImplicit(t, mpm_matl, patches,recursion);
   }
-	 
+
   sched->addTask(t, patches, matls);
 }
 
@@ -311,33 +324,25 @@ void ImpMPM::scheduleFormStiffnessMatrix(SchedulerP& sched,
 		    this, &ImpMPM::formStiffnessMatrix);
 
   t->requires(Task::NewDW,lb->gMassLabel, Ghost::None);
-  t->requires(Task::NewDW,lb->gMassLabel, d_sharedState->getAllInOneMatl(),
-	      Task::OutOfDomain, Ghost::None);
-  t->requires(Task::NewDW,lb->pStressLabel_preReloc,Ghost::AroundNodes,
-	      1);
-  t->requires(Task::NewDW,lb->pVolumeDeformedLabel,Ghost::AroundNodes,1);
-  t->requires(Task::OldDW,lb->pXLabel,Ghost::AroundNodes,1);
-  t->requires(Task::OldDW,lb->pMassLabel,Ghost::AroundNodes,1);
-
-  
-  t->computes(lb->gInternalForceLabel);
-  t->computes(lb->NTractionZMinusLabel);
-  t->computes(lb->gStressForSavingLabel);
-  t->computes(lb->gStressForSavingLabel, d_sharedState->getAllInOneMatl(),
-	      Task::OutOfDomain);
+  t->requires(Task::OldDW,d_sharedState->get_delt_label());
 
   sched->addTask(t, patches, matls);
 }
 
 void ImpMPM::scheduleComputeInternalForce(SchedulerP& sched,
 					  const PatchSet* patches,
-					  const MaterialSet* matls)
+					  const MaterialSet* matls,
+					  const bool recursion)
 {
   Task* t = scinew Task("ImpMPM::computeInternalForce",
-			this, &ImpMPM::computeInternalForce);
+			this, &ImpMPM::computeInternalForce,recursion);
   
-  t->requires(Task::NewDW,lb->pStressLabel_preReloc,Ghost::AroundNodes,
-	      1);
+  if (recursion)
+    t->requires(Task::NewDW,lb->pStressLabel_preReloc,Ghost::AroundNodes,
+		1);
+  else
+    t->requires(Task::NewDW,lb->pStressLabel,Ghost::AroundNodes,
+		1);
   t->requires(Task::NewDW,lb->pVolumeDeformedLabel,Ghost::AroundNodes,1);
   t->requires(Task::OldDW,lb->pXLabel,Ghost::AroundNodes,1);
   t->computes(lb->gInternalForceLabel);  
@@ -357,6 +362,7 @@ void ImpMPM::scheduleIterate(SchedulerP& sched,const LevelP& level,
 			   sched);
   task->hasSubScheduler();
 
+  task->computes(lb->dispNewLabel);
 
   LoadBalancer* lb = sched->getLoadBalancer();
   const PatchSet* perproc_patches = lb->createPerProcessorPatchSet(level, 
@@ -379,7 +385,18 @@ void ImpMPM::iterate(const ProcessorGroup* pg,
   subsched->advanceDataWarehouse(grid);
 
 
+  scheduleComputeStressTensor(subsched,level->eachPatch(),
+			      d_sharedState->allMPMMaterials(),
+			      true);
 
+  
+  scheduleFormStiffnessMatrix(subsched,level->eachPatch(),
+			      d_sharedState->allMPMMaterials());
+
+  scheduleComputeInternalForce(subsched,level->eachPatch(),
+			      d_sharedState->allMPMMaterials(), true);
+
+  
   scheduleFormQ(subsched,level->eachPatch(),d_sharedState->allMPMMaterials());
 
   scheduleSolveForDuCG(subsched,level->eachPatch(),
@@ -389,19 +406,20 @@ void ImpMPM::iterate(const ProcessorGroup* pg,
 
   scheduleCheckConvergence(subsched,level,level->eachPatch(),
 			       d_sharedState->allMPMMaterials());
-  scheduleComputeInternalForce(subsched,level->eachPatch(),
-			       d_sharedState->allMPMMaterials());
 
   subsched->compile(d_myworld,false);
 
-  bool converged = false;
-  do {
+
+  bool_and_vartype converged_var;
+  new_dw->get(converged_var, lb->converged);
+  
+  while(bool(converged_var) == false) {
     subsched->execute(d_myworld);
-    bool_and_vartype converged_var;
-    subsched->get_new_dw()->get(converged_var, lb->converged);
-    converged = !converged_var;
     subsched->advanceDataWarehouse(grid);
-  } while(!converged);
+    subsched->get_new_dw()->get(converged_var, lb->converged);
+
+  }
+
 
 }
 
@@ -454,7 +472,7 @@ void ImpMPM::scheduleUpdateGridKinematics(SchedulerP& sched,
 
 
 
-void ImpMPM::scheduleCheckConvergence(SchedulerP& sched, LevelP& level,
+void ImpMPM::scheduleCheckConvergence(SchedulerP& sched, const LevelP& level,
 				      const PatchSet* patches,
 				      const MaterialSet* matls)
 {
@@ -533,6 +551,7 @@ void ImpMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
 
 
   t->computes(lb->pVelocityLabel_preReloc);
+  t->computes(lb->pAccelerationLabel_preReloc);
   t->computes(lb->pXLabel_preReloc);
   t->computes(lb->pExternalForceLabel_preReloc);
   t->computes(lb->pParticleIDLabel_preReloc);
@@ -818,7 +837,8 @@ void ImpMPM::computeStressTensor(const ProcessorGroup*,
 				 const PatchSubset* patches,
 				 const MaterialSubset* ,
 				 DataWarehouse* old_dw,
-				 DataWarehouse* new_dw)
+				 DataWarehouse* new_dw,
+				 const bool recursion)
 {
   // DONE
 #ifdef DOING
@@ -830,7 +850,8 @@ void ImpMPM::computeStressTensor(const ProcessorGroup*,
   for(int m = 0; m < d_sharedState->getNumMPMMatls(); m++) {
     MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
     ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
-    cm->computeStressTensorImplicit(patches, mpm_matl, old_dw, new_dw,KK);
+    cm->computeStressTensorImplicit(patches, mpm_matl, old_dw, new_dw,KK,
+				    recursion);
   }
   
 }
@@ -900,7 +921,8 @@ void ImpMPM::computeInternalForce(const ProcessorGroup*,
 				  const PatchSubset* patches,
 				  const MaterialSubset* ,
 				  DataWarehouse* old_dw,
-				  DataWarehouse* new_dw)
+				  DataWarehouse* new_dw,
+				  const bool recursion)
 {
   // DONE
   for(int p=0;p<patches->size();p++){
@@ -931,7 +953,10 @@ void ImpMPM::computeInternalForce(const ProcessorGroup*,
 
       old_dw->get(px,      lb->pXLabel, pset);
       new_dw->get(pvol,    lb->pVolumeDeformedLabel, pset);
-      new_dw->get(pstress, lb->pStressLabel, pset);
+      if (recursion)
+	new_dw->get(pstress, lb->pStressLabel_preReloc, pset);
+      else
+	new_dw->get(pstress, lb->pStressLabel, pset);
 
       new_dw->allocate(internalforce,lb->gInternalForceLabel,matlindex,patch);
 
@@ -1128,10 +1153,13 @@ void ImpMPM::checkConvergence(const ProcessorGroup*,
 			      LevelP level, SchedulerP sched)
 {
 
+#if 0
   SchedulerP subsched = sched->createSubScheduler();
   subsched->initialize();
   GridP grid = level->getGrid();
   subsched->advanceDataWarehouse(grid);
+
+#endif
 
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
@@ -1195,6 +1223,7 @@ void ImpMPM::checkConvergence(const ProcessorGroup*,
 
   // Check what the convergence flag is and fire off the appropriate tasks
 
+#if 0
   bool_and_vartype convergence;
   new_dw->get(convergence, lb->converged);
 
@@ -1207,7 +1236,7 @@ void ImpMPM::checkConvergence(const ProcessorGroup*,
     scheduleComputeStressTensorOnly(subsched,level->eachPatch(),
 				    d_sharedState->allMPMMaterials());
   }
-
+#endif
   
 }
 
@@ -1467,6 +1496,7 @@ void ImpMPM::interpolateStressToGrid(const ProcessorGroup*,
       }
 
       for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){
+
       }
 
       new_dw->put(gstress, lb->gStressLabel, matlindex,patch);
