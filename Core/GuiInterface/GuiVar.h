@@ -41,7 +41,7 @@ public:
     clString format_varname();
 
     clString str();
-    virtual void emit(std::ostream& out)=0;
+    virtual void emit(std::ostream& out, clString& midx)=0;
 };
 
 class SCICORESHARE GuiString : public GuiVar {
@@ -52,7 +52,7 @@ public:
 
     clString get();
     void set(const clString&);
-    virtual void emit(std::ostream& out);
+    virtual void emit(std::ostream& out, clString& midx);
 };
 
 class SCICORESHARE GuiDouble : public GuiVar {
@@ -63,7 +63,7 @@ public:
 
     double get();
     void set(double);
-    virtual void emit(std::ostream& out);
+    virtual void emit(std::ostream& out, clString& midx);
 };
 
 class SCICORESHARE GuiInt : public GuiVar {
@@ -74,7 +74,7 @@ public:
 
     int get();
     void set(int);
-    virtual void emit(std::ostream& out);
+    virtual void emit(std::ostream& out, clString& midx);
 };
 
 class SCICORESHARE GuiVardouble : public GuiVar {
@@ -85,7 +85,7 @@ public:
 
     double get();
     void set(double);
-    virtual void emit(std::ostream& out);
+    virtual void emit(std::ostream& out, clString& midx);
 };
 
 class SCICORESHARE GuiVarint : public GuiVar {
@@ -96,7 +96,7 @@ public:
 
     int get();
     void set(int);
-    virtual void emit(std::ostream& out);
+    virtual void emit(std::ostream& out, clString& midx);
 };
 
 class SCICORESHARE GuiVarintp : public GuiVar {
@@ -107,7 +107,7 @@ public:
 
     int get();
     void set(int);
-    virtual void emit(std::ostream& out);
+    virtual void emit(std::ostream& out, clString& midx);
 };
 
 class SCICORESHARE GuiPoint : public GuiVar {
@@ -120,7 +120,7 @@ public:
 
     Point get();
     void set(const Point&);
-    virtual void emit(std::ostream& out);
+    virtual void emit(std::ostream& out, clString& midx);
 };
 
 class SCICORESHARE GuiVector : public GuiVar {
@@ -133,7 +133,7 @@ public:
 
     Vector get();
     void set(const Vector&);
-    virtual void emit(std::ostream& out);
+    virtual void emit(std::ostream& out, clString& midx);
 };
 
 } // End namespace SCIRun

@@ -40,7 +40,7 @@ public:
     virtual void reset();
     View get();
     void set(const View&);
-    virtual void emit(std::ostream& out);
+    virtual void emit(std::ostream& out, clString& midx);
 };
 
 class SCICORESHARE GuiExtendedView : public GuiVar {
@@ -62,7 +62,7 @@ public:
     virtual void reset();
     ExtendedView get();
     void set(const ExtendedView&);
-    virtual void emit(std::ostream& out);
+    virtual void emit(std::ostream& out, clString& midx);
   };
 
 } // End namespace SCIRun

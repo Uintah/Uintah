@@ -66,12 +66,12 @@ GuiView::set(const View& view)
 
 
 void
-GuiView::emit(ostream& out)
+GuiView::emit(ostream& out, clString& midx)
 {
-    eyep.emit(out);
-    lookat.emit(out);
-    up.emit(out);
-    fov.emit(out);
+    eyep.emit(out, midx);
+    lookat.emit(out, midx);
+    up.emit(out, midx);
+    fov.emit(out, midx);
 }
 
 
@@ -127,15 +127,15 @@ GuiExtendedView::set(const ExtendedView& view)
 
 
 void
-GuiExtendedView::emit(ostream& out)
+GuiExtendedView::emit(ostream& out, clString& midx)
 {
-    eyep.emit(out);
-    lookat.emit(out);
-    up.emit(out);
-    fov.emit(out);
-    xres.emit(out);
-    yres.emit(out);
-    bg.emit(out);
+    eyep.emit(out, midx);
+    lookat.emit(out, midx);
+    up.emit(out, midx);
+    fov.emit(out, midx);
+    xres.emit(out, midx);
+    yres.emit(out, midx);
+    bg.emit(out, midx);
 }
 
 } // End namespace SCIRun

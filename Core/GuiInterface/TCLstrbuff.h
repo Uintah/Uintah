@@ -50,7 +50,7 @@ public:
     return *this;
   }
 
-  virtual void emit(std::ostream&);
+  virtual void emit(std::ostream&, clString& midx);
 };
 
 TCLstrbuff& operator<<(TCLstrbuff& stream, TCLstrbuff& (*mp)(TCLstrbuff&));

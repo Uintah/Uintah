@@ -240,12 +240,12 @@ TCL::~TCL()
 {
 }
 
-void TCL::emit_vars(ostream& out)
+void TCL::emit_vars(ostream& out, clString& midx)
 {
     for(int i=0;i<vars.size();i++)
       {
-	cerr << "emit: " << vars[i]->str() << endl;
-        vars[i]->emit(out);
+//	cerr << "emit: " << vars[i]->str() << endl;
+        vars[i]->emit(out, midx);
       }
 }
 

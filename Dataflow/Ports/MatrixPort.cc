@@ -29,7 +29,7 @@ PSECORESHARE OPort* make_MatrixOPort(Module* module, const clString& name) {
 
 
 template<> clString SimpleIPort<MatrixHandle>::port_type("Matrix");
-template<> clString SimpleIPort<MatrixHandle>::port_color("dodger blue");
+template<> clString SimpleIPort<MatrixHandle>::port_color("dodgerblue");
 
 } // End namespace SCIRun
 

@@ -87,6 +87,7 @@ clString GuiVar::str()
     return varname;
 }
 
+#if 0
 clString GuiVar::format_varname()
 {
   bool fixit=false;
@@ -110,6 +111,31 @@ clString GuiVar::format_varname()
     return clString("::")+varname;
   else
     return varname;
+}
+#endif
+
+
+// if GuiVar has a varname like:
+//    ::PSECommon_Visualization_GenStandardColorMaps_0-width
+// then we want to return:
+//    width
+// i.e. take off everything upto and including the last occurence of _#-
+//    
+clString GuiVar::format_varname() {
+  int state=0;
+  int end_of_modulename = -1;
+  for (int i=0; i<varname.len(); i++) {
+    if (state == 0 && varname(i) == '_') state=1;
+    else if (state == 1 && varname.is_digit(i)) state = 2;
+    else if (state == 2 && varname.is_digit(i)) state = 2;
+    else if (state == 2 && varname(i) == '-') {
+      end_of_modulename = i;
+      state = 0;
+    } else state = 0;
+  }
+  if (end_of_modulename == -1)
+    cerr << "Error -- couldn't format name "<< varname << endl;
+  return varname.substr(end_of_modulename+1);
 }
 
 GuiDouble::GuiDouble(const clString& name, const clString& id, TCL* tcl)
@@ -183,9 +209,9 @@ void GuiDouble::set(double val)
     }
 }
 
-void GuiDouble::emit(ostream& out)
+void GuiDouble::emit(ostream& out, clString& midx)
 {
-    out << "set " << format_varname() << " " << get() << endl;
+  out << "set " << midx << "-" << format_varname() << " " << get() << endl;
 }
 
 GuiInt::GuiInt(const clString& name, const clString& id, TCL* tcl)
@@ -257,9 +283,9 @@ void GuiInt::set(int val)
     }
 }
 
-void GuiInt::emit(ostream& out)
+void GuiInt::emit(ostream& out, clString& midx)
 {
-    out << "set " << format_varname() << " " << get() << endl;
+  out << "set " << midx << "-" << format_varname() << " " << get() << endl;
 }
 
 GuiString::GuiString(const clString& name, const clString& id, TCL* tcl)
@@ -329,9 +355,9 @@ void GuiString::set(const clString& val)
     }
 }
 
-void GuiString::emit(ostream& out)
+void GuiString::emit(ostream& out, clString& midx)
 {
-    out << "set " << format_varname() << " {" << get() << "}" << endl;
+  out << "set " << midx << "-" << format_varname() << " {" << get() << "}" << endl;
 }
 
 GuiVardouble::GuiVardouble(const clString& name, const clString& id, TCL* tcl)
@@ -369,9 +395,9 @@ double GuiVardouble::get()
     //}
 }
 
-void GuiVardouble::emit(ostream& out)
+void GuiVardouble::emit(ostream& out, clString& midx)
 {
-    out << "set " << format_varname() << " " << get() << endl;
+  out << "set " << midx << "-" << format_varname() << " " << get() << endl;
 }
 
 GuiVarint::GuiVarint(const clString& name, const clString& id, TCL* tcl)
@@ -419,9 +445,9 @@ void GuiVardouble::set(double dv)
     value=dv;
 }
 
-void GuiVarint::emit(ostream& out)
+void GuiVarint::emit(ostream& out, clString& midx)
 {
-    out << "set " << format_varname() << " " << get() << endl;
+  out << "set " << midx << "-" << format_varname() << " " << get() << endl;
 }
 
 GuiVarintp::GuiVarintp(int* value,
@@ -454,9 +480,9 @@ void GuiVarintp::set(int nv)
     *value=nv;
 }
 
-void GuiVarintp::emit(ostream& out)
+void GuiVarintp::emit(ostream& out, clString& midx)
 {
-    out << "set " << format_varname() << " " << get() << endl;
+  out << "set " << midx << "-" << format_varname() << " " << get() << endl;
 }
 
 GuiPoint::GuiPoint(const clString& name, const clString& id, TCL* tcl)
@@ -481,11 +507,11 @@ void GuiPoint::set(const Point& p)
     z.set(p.z());
 }
 
-void GuiPoint::emit(ostream& out)
+void GuiPoint::emit(ostream& out, clString& midx)
 {
-    x.emit(out);
-    y.emit(out);
-    z.emit(out);
+    x.emit(out, midx);
+    y.emit(out, midx);
+    z.emit(out, midx);
 }
 
 GuiVector::GuiVector(const clString& name, const clString& id, TCL* tcl)
@@ -510,11 +536,11 @@ void GuiVector::set(const Vector& p)
     z.set(p.z());
 }
 
-void GuiVector::emit(ostream& out)
+void GuiVector::emit(ostream& out, clString& midx)
 {
-    x.emit(out);
-    y.emit(out);
-    z.emit(out);
+    x.emit(out, midx);
+    y.emit(out, midx);
+    z.emit(out, midx);
 }
 
 } // End namespace SCIRun

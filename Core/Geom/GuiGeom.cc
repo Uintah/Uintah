@@ -49,11 +49,11 @@ void GuiColor::set(const Color& p)
     b.set(p.b());
 }
 
-void GuiColor::emit(ostream& out)
+void GuiColor::emit(ostream& out, clString& midx)
 {
-    r.emit(out);
-    g.emit(out);
-    b.emit(out);
+    r.emit(out, midx);
+    g.emit(out, midx);
+    b.emit(out, midx);
 }
 
 GuiMaterial::GuiMaterial(const clString& name, const clString& id, TCL* tcl)
@@ -103,16 +103,16 @@ void GuiMaterial::set(const Material& m)
     refraction_index.set(m.refraction_index);
 }
 
-void GuiMaterial::emit(ostream& out)
+void GuiMaterial::emit(ostream& out, clString& midx)
 {
-    ambient.emit(out);
-    diffuse.emit(out);
-    specular.emit(out);
-    shininess.emit(out);
-    emission.emit(out);
-    reflectivity.emit(out);
-    transparency.emit(out);
-    refraction_index.emit(out);
+    ambient.emit(out, midx);
+    diffuse.emit(out, midx);
+    specular.emit(out, midx);
+    shininess.emit(out, midx);
+    emission.emit(out, midx);
+    reflectivity.emit(out, midx);
+    transparency.emit(out, midx);
+    refraction_index.emit(out, midx);
 }
 
 } // End namespace SCIRun

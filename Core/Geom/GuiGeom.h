@@ -33,7 +33,7 @@ public:
     virtual void reset();
     Color get();
     void set(const Color&);
-    virtual void emit(std::ostream& out);
+    virtual void emit(std::ostream& out, clString& midx);
 };
 
 class Material;
@@ -53,7 +53,7 @@ class SCICORESHARE GuiMaterial : public GuiVar {
     virtual void reset();
     Material get();
     void set(const Material&);
-    virtual void emit(std::ostream& out);
+    virtual void emit(std::ostream& out, clString& midx);
 };
 
 } // End namespace SCIRun
