@@ -13,8 +13,7 @@ PSELIBS := \
 	Core/Thread     \
 	Core/Exceptions \
 	Core/Util       \
-	Core/Geometry   \
-	Core/Disclosure
+	Core/Geometry
 
 LIBS := $(MPI_LIBRARY)
 
