@@ -133,7 +133,7 @@ Diagram::set_window( const string & window )
   TclObj::set_window( window, name() );
 
   for (int i=0; i<graph_.size(); i++) {
-    tcl_ << id() << " add " << i << " ";
+    tcl_ << " add " << i << " ";
     if ( graph_[i]->name() != "" )
       tcl_ << graph_[i]->name();
     else
