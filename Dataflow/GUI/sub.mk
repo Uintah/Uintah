@@ -22,6 +22,7 @@ SRCDIR := Dataflow/GUI
 ALLTARGETS := $(ALLTARGETS) $(SRCDIR)/tclIndex
 
 $(SRCDIR)/tclIndex: \
+	$(SRCDIR)/AppendMatrix.tcl \
 	$(SRCDIR)/ArrowWidget.tcl \
 	$(SRCDIR)/BaseWidget.tcl \
 	$(SRCDIR)/BuildInterpolant.tcl \
