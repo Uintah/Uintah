@@ -1,4 +1,21 @@
 /*
+  The contents of this file are subject to the University of Utah Public
+  License (the "License"); you may not use this file except in compliance
+  with the License.
+  
+  Software distributed under the License is distributed on an "AS IS"
+  basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+  License for the specific language governing rights and limitations under
+  the License.
+  
+  The Original Source Code is SCIRun, released March 12, 2001.
+  
+  The Original Source Code was developed by the University of Utah.
+  Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+  University of Utah. All Rights Reserved.
+*/
+
+/*
  *  EditField.cc:
  *
  *  Written by:
@@ -71,9 +88,9 @@ public:
   template <class field_type_in, class field_type_out>
   field_type_out *create_edited_field(field_type_in *, field_type_out *);
   void clear_vals();
-  void update_input_attributes(Field *);
-  bool check_types(Field *);
-  void build_widget(Field *);
+  void update_input_attributes(FieldHandle);
+  bool check_types(FieldHandle);
+  void build_widget(FieldHandle);
 
   virtual void execute();
 
@@ -167,11 +184,10 @@ void EditField::clear_vals()
   TCL::execute(id+" update_multifields");
 }
 
-void EditField::update_input_attributes(Field *f) 
+void EditField::update_input_attributes(FieldHandle f) 
 {
-  string tname(f->get_type_name(-1));
-
-  TCL::execute(string("set ")+id+"-typename "+tname);
+  const string &tname = f->get_type_description()->get_name();
+  TCL::execute(string("set ")+id+"-typename " + tname);
 
   switch(f->data_at()) {
   case Field::CELL: 
@@ -231,7 +247,7 @@ void EditField::update_input_attributes(Field *f)
   TCL::execute(id+" update_multifields");
 }
 
-bool EditField::check_types(Field *f)
+bool EditField::check_types(FieldHandle f)
 {
   string fldtype = typename_.get();
   fldtype = fldtype.substr(0,fldtype.find('<'));
@@ -354,7 +370,7 @@ EditField::create_edited_field(field_type_in *f, field_type_out * )
   return field;
 }
 
-void EditField::build_widget(Field* f)
+void EditField::build_widget(FieldHandle f)
 {
   double l2norm;
   Point center, right, down, in;
@@ -395,6 +411,7 @@ void EditField::build_widget(Field* f)
   ogport->flushViews();
 }
 
+
 void EditField::execute(){
   FieldIPort *iport=0; 
   FieldHandle fh;
@@ -414,7 +431,7 @@ void EditField::execute(){
   }
 
   // get and display the attributes of the input field
-  update_input_attributes(f);
+  update_input_attributes(fh);
 
   // build the transform widget
   if (firsttime_) {
@@ -433,7 +450,7 @@ void EditField::execute(){
   }
 
   // verify that the requested edits are possible (type check)
-  if (ctypename_.get() && !check_types(f))
+  if (ctypename_.get() && !check_types(fh))
     return;
 
   // create a field identical to the input, except for the edits
