@@ -1580,13 +1580,21 @@ ViewImage::handle_gui_motion(GuiArgs &args) {
   string_to_int(args[7], X);
   string_to_int(args[8], Y);
 
+
   if (window_level_) {
-    SliceWindow &window = *window_level_;
-    window.clut_ww_ = window_level_ww_ + (X - window_level_x_)*2;
-    if (window.clut_ww_ < 1) window.clut_ww_ = 1;
-    window.clut_wl_ = window_level_wl_ + (window_level_y_ - Y)*2;
-    window.clut_dirty_ = true;
+    WindowLayouts::iterator liter = layouts_.begin();
+    while (liter != layouts_.end()) {
+      for (int v = 0; v < (*liter).second->windows_.size(); ++v) {
+	SliceWindow &window = *(*liter).second->windows_[v];
+	window.clut_ww_ = window_level_ww_ + (X - window_level_x_)*2;
+	if (window.clut_ww_ < 1) window.clut_ww_ = 1;
+	window.clut_wl_ = window_level_wl_ + (window_level_y_ - Y)*2;
+	window.clut_dirty_ = true;
+      }
+      ++liter;
+    }
   }
+
 
   redraw_all();
 }
