@@ -349,7 +349,7 @@ PackageDB::moduleNames(const clString& packageName,
 
 //
 // $Log$
-// Revision 1.15.2.1  2000/10/26 10:03:58  moulding
+// Revision 1.15.2.2  2000/10/26 14:16:50  moulding
 // merge HEAD into FIELD_REDESIGN
 //
 // Revision 1.23  2000/10/24 05:57:41  moulding
