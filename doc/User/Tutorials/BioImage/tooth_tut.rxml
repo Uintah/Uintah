@@ -71,11 +71,11 @@ DEALINGS IN THE SOFTWARE.
     </figure>
 
     <para>
-      After loading data, BioImage will display visualizations of the
-      data as shown in <xref linkend="fig.viewing-pane"/>.  The top
-      pane displays a three dimensional representation of the data
-      as orthogonal slices. The bottom three panes present the
-      slices individually.
+      After loading data, BioImage will display the visualizations
+      shown in <xref linkend="fig.viewing-pane"/>.  The top pane
+      displays a three dimensional representation of the data as
+      orthogonal slices. The bottom three panes present the slices
+      individually.
     </para>
 
     <figure id="fig.viewing-pane">
@@ -94,20 +94,19 @@ DEALINGS IN THE SOFTWARE.
     </figure>
     
     <para>
-      The  slice windows show  sagittal, coronal, and axial
-      views respectively. Depending on the order of the
-      axes in the volume, the data may need to be flipped or
-      permuted so that axis labels are correct.  The Viewing Cube,
-      located in the Processing Pane (item 3 in <xref
-      linkend="fig.load"/>),  allows the user to change the orientation
-      of  slices presented in the visualization windows.  The orientation of
-      each view can be changed by altering the abbreviation next to
-      the proper arrow.  By default, the axial, sagittal, and coronal
-      slices are viewed from the superior, anterior, and left views
-      respectively.  To change this, simply select the appropriate
-      arrow entry box, change the value, and then click the cube
-      button in the middle.  This will change all four views in the
-      drawing space.  The valid options are:
+      The slice windows show sagittal, coronal, and axial views
+      respectively. Depending on the order of the axes in the volume,
+      the data may need to be flipped or permuted so that axis labels
+      are correct.  The Viewing Cube, located in the Processing Pane
+      (item 3 in <xref linkend="fig.load"/>), allows the user to
+      change the orientation of slices presented in the visualization
+      panes.  The orientation of each view can be changed by altering
+      the abbreviation next to the proper arrow.  By default, the
+      axial, sagittal, and coronal slices are viewed from the
+      superior, anterior, and left views respectively.  To change
+      this, click the appropriate arrow entry box, type a value, then
+      click the Viewing Cube icon (button).  This will update all
+      visualization panes.  Valid orientation options are:
     </para>
 
     <simplelist type="vert" columns="1">
@@ -148,10 +147,9 @@ DEALINGS IN THE SOFTWARE.
 
     <para>
       Add a resample filter by clicking the Processing Pane's
-      <guibutton>Resample</guibutton> button, item 1 in <xref
-      linkend="fig.load"/>.  A new frame will appear immediately below
-      the <guilabel>Load Data</guilabel> frame as shown in item 2 of
-      <xref linkend="fig.filter"/>.
+      <guibutton>Resample</guibutton> button.  A new frame will appear
+      immediately below the <guilabel>Load Data</guilabel> frame as
+      shown in item 2 of <xref linkend="fig.filter"/>.
     </para>
 
     <para>
@@ -170,9 +168,9 @@ DEALINGS IN THE SOFTWARE.
     </para>
 
     <para>
-      To add a cropping filter, click the Processing Pane's
+      Add a cropping filter, by clicking the Processing Pane's
       <guibutton>Crop</guibutton> button.  A new frame will appear
-      below the resample filter frame and cropping controls (box)
+      below the resample filter frame and cropping controls (boxes)
       will appear within the 2D Viewers.
     </para>
     
@@ -192,13 +190,12 @@ DEALINGS IN THE SOFTWARE.
     </figure>
 
     <para>
-      The extents of the cropping controls present a visual indication
-      of data remaining after the application of the cropping filter.
-      A cropping control can be resized by clicking and dragging a
-      control's corner or side.  A box can be moved by clicking and
-      dragging the control's interior.  <xref
-      linkend="fig.crop_module_added"/> demonstrates use of cropping
-      controls.
+      The extents of the cropping boxes present a visual indication of
+      data remaining after the application of the cropping filter.  A
+      cropping box can be resized by clicking and dragging a box's
+      corner or side.  A box can be moved by clicking and dragging its
+      interior.  <xref linkend="fig.crop_module_added"/> demonstrates
+      use of cropping controls.
     </para>
     
     <para>
@@ -222,8 +219,10 @@ DEALINGS IN THE SOFTWARE.
     </figure>
 
     <para>
-      Notice that each of these filters are applied sequentially,
-      first to last (top to bottom) in the Processing Pane window.
+      Filters are applied sequentially, first to last (top to bottom
+      in the Processing Pane window).  If a filter parameter is
+      modified, the <guibutton>Update</guibutton> button must be
+      pressed to apply the filter.
     </para>
 
     <para>
@@ -270,16 +269,18 @@ DEALINGS IN THE SOFTWARE.
 	Initially, the slice plane is placed at the center of the
 	volume, which, for the tooth dataset, corresponds to the
 	51<superscript>st</superscript> slice along the saggital axis.
-	Move the saggital slice plane slider  to the right until it
+	Move the saggital slice plane slider to the right until it
 	reads 68. The 68th saggital slice is now displayed in both the
-	slice and volume panes, as shown in <xref linkend="fig.68saggitalBoth"/>.
+	slice and volume panes, as shown in <xref
+	linkend="fig.68saggitalBoth"/>.
       </para>
 
       <para>
-	Cross-hairs correspond to planes orthogonal to a slice
-	displayed in a slice pane.  Press
+	Cross-hairs correspond to planes orthogonal to the slice
+	beneath the cross-hairs.  Press
 	<mousebutton>Button2</mousebutton> (middle mouse button) and
-	drag the cross hairs, selecting slices in orthogonal planes.
+	drag the cross hairs to select new slices in orthogonal
+	planes.
       </para>
 
       <para>
@@ -357,7 +358,7 @@ DEALINGS IN THE SOFTWARE.
     <section>
       <title>Coloring Slices</title>
       <para>
-	The colors displayed in the slice panes are greyscale and
+	Colors displayed in the slice panes are greyscale and
 	represent the underlying density data values: highest
 	density corresponds to white, lowest density are colored
 	black, and in between areas are colored shades of grey.
@@ -366,10 +367,10 @@ DEALINGS IN THE SOFTWARE.
 	It is possible to change the color range used.  A color range
 	that goes from blue to red, or one that uses rainbow colors
 	can be used.  To change the color range, click the
-	Visualization pane's <guilabel>Planes</guilabel> tab.  Then
-	select a color range by clicking one of the <guilabel>Color
-	Planes By</guilabel> radio buttons&#x2014;see <xref
-	linkend="fig.planesTab"/>
+	Visualization Settings pane's <guilabel>Planes</guilabel> tab.
+	Then select a color range by clicking one of the
+	<guilabel>Color Planes By</guilabel> radio buttons&#x2014;see
+	<xref linkend="fig.planesTab"/>
 	
 	<figure id="fig.planesTab">
 	  <title>Options for controlling planes</title>
@@ -428,13 +429,12 @@ DEALINGS IN THE SOFTWARE.
       <title>Emphasizing Tooth Features</title>
       <para>
 	<firstterm>Window width</firstterm> and
-	<firstterm>level</firstterm> 
-	controls are used to emphasize data values displayed in the
-	Visualization pane.  Window width is the number of displayed
-	data values.  Window level is the center value of displayed
-	values.  The default window width is the entire dataset.  The
-	default level is the center value of the entire dataset. With the
-	default window and level, all values in the dataset are
+	<firstterm>level</firstterm> controls are used to emphasize
+	data values displayed in the Visualization pane.  Window width
+	is the range of values relative to the ranges center value, or
+	level.  The default window width is the entire dataset.  The
+	default level is the center value of the entire dataset. With
+	the default window and level, all values in the dataset are
 	visible in the viewer. Certain features of the dataset, bone
 	for example, may be emphasized by changing window width and
 	level values.
@@ -442,9 +442,9 @@ DEALINGS IN THE SOFTWARE.
       <para>
 	One way to change the window width and level is by using
 	<guilabel>Window/Level</guilabel> slider controls located in
-	the Visualization pane's <guilabel>Planes</guilabel> tab.
-	<xref linkend="fig.planesTab"/> shows these controls.  Two
-	sliders are used to set the window width and level.  It is
+	the Visualization Settings pane's <guilabel>Planes</guilabel>
+	tab.  <xref linkend="fig.planesTab"/> shows these controls.
+	Two sliders are used to set the window width and level.  It is
 	also possible to type values by clicking on the text entry
 	boxes displayed next to the slider controls.
       </para>
@@ -522,7 +522,7 @@ DEALINGS IN THE SOFTWARE.
     </figure>
 
     <para>
-      Turn on volume rendering by clicking the Visualization pane's
+      Turn on volume rendering by clicking the Visualization Settings pane's
       <guilabel>Volume Rendering</guilabel> tab and then click the
       check-box labeled <guilabel>Show Volume Rendering</guilabel>.
     </para>
@@ -552,7 +552,7 @@ DEALINGS IN THE SOFTWARE.
     </para>
 
     <table id="tbl.vol_mouse_actions">
-      <title>Manipulating the Volume</title>
+      <title>Volume Mouse Controls</title>
       <tgroup cols="2">
 	<thead>
 	  <row>
@@ -579,7 +579,7 @@ DEALINGS IN THE SOFTWARE.
 
     <para>
       If the object is no longer in view, click
-      <guibutton>Autoview</guibutton>, found in the Visualization
+      <guibutton>Autoview</guibutton>, found in the Visualization Settings
       pane's <guilabel>3D Options</guilabel> tab.
       <guibutton>Autoview</guibutton> restores a resonable view.
       Pressing <keycombo
@@ -598,15 +598,16 @@ DEALINGS IN THE SOFTWARE.
     <section>
       <title>Transfer Functions</title>
       <para>
-	BioImage supports editable <firstterm>transfer
-	functions</firstterm>.  A transfer function assigns color to
-	three dimensional data to help the user comprehend the data
-	visually.  <xref linkend="fig.editTFWindow"/> shows BioImage's
-	interface for editing transfer functions.
+	BioImage allows editing of a <firstterm>transfer
+	function</firstterm>.  A transfer function assigns color (and
+	other properties) to three dimensional data to help the user
+	comprehend the data visually.  <xref
+	linkend="fig.editTFWindow"/> shows BioImage's interface for
+	editing transfer functions.
       </para>
       <para>
-	To edit transfer functions, press <guibutton>Edit
-	Transfer Function</guibutton>, located in the Visualization
+	To edit the transfer function, press <guibutton>Edit
+	Transfer Function</guibutton>, located in the Visualization Settings
 	pane's <guilabel>Volume Rendering
 	Tab</guilabel>, see <xref linkend="fig.volrender_tab"/>.  This
 	displays the transfer function editor shown in <xref
@@ -647,16 +648,6 @@ DEALINGS IN THE SOFTWARE.
 	correspond to different materials in the dataset.
       </para>
       
-      <para>
-	A transfer function is represented by a shape in the editor
-	window.  The shape encloses a histogram region of
-	value/gradient magnitude space and is used to specify a
-	material or material border.  Shapes are moved and resized by
-	pressing mouse <mousebutton>Button1</mousebutton> on a vertex,
-	side, or shape interior and then dragging.  Triangle shapes
-	have one vertex anchored to the bottom of the histogram.
-      </para>
-
       <figure id="fig.histo">
 	<title>Histogram of values in dataset</title>
 	<mediaobject>
@@ -690,9 +681,9 @@ DEALINGS IN THE SOFTWARE.
       </para>
       
       <para>
-	The tooth's root is visualized by adding a rectangle shaped
-	transfer function over the first material area, as shown in
-	<xref linkend="fig.root_ren_tf"/>.
+	The tooth's root is visualized by adding a rectangle over the
+	first material area, as shown in <xref
+	linkend="fig.root_ren_tf"/>.
       </para>
       
       <figure id="fig.root_ren_tf">
@@ -711,7 +702,7 @@ DEALINGS IN THE SOFTWARE.
       </figure>
 
       <para>
-	Now move the transfer function, in turn, to the other material
+	Now move the rectangle, in turn, to the other material
 	regions to discover the air surrounding the tooth <xref
 	linkend="fig.air_ren_tf"/>, the tooth dentin <xref
 	linkend="fig.dentin_ren_tf"/>, and tooth enamel <xref
@@ -774,17 +765,16 @@ DEALINGS IN THE SOFTWARE.
       </para>
 
       <para>
-	To visualize the dentin-enamel border, add a triangle to the
-	transfer function and position it on the arc connecting the
-	dentin and enamel, &#x2014;see <xref
-	linkend="fig.border_dentin_enamel_ren_tf"/>.
+	To visualize the dentin-enamel border, add a triangle and
+	position it on the arc connecting the dentin and enamel,
+	&#x2014;see <xref linkend="fig.border_dentin_enamel_ren_tf"/>.
       </para>
 
       <figure id="fig.border_dentin_enamel_ren_tf">
 	<title>Dentin, enamel border</title>
 	<mediaobject>
 	  <textobject>
-	    <phrase>Adding color tp the transfer function</phrase>
+	    <phrase>Adding color to the transfer function</phrase>
 	  </textobject>
 	  <imageobject>
 	    <imagedata fileref="Figures/border_dentin_enamel_ren_tf.eps" align="center" format="EPS"/>
