@@ -84,7 +84,10 @@ VisControl::VisControl(const clString& id)
     gvVar("gvVar", id, this), psVar("psVar", id, this),
     pvVar("pvVar", id, this), ptVar("ptVar", id, this),
     gtVar("gtVar", id, this), time("time", id, this),
-    archive(0), positionName("")
+    gsMatNum("gsMatNum", id, this),
+    gvMatNum("gvMatNum", id, this),
+    pNMaterials("pNMaterials", id, this),
+    animate("animate",id, this),archive(0), positionName("")
 { 
   //////////// Initialization code goes here
   // Create Ports
@@ -177,6 +180,7 @@ void VisControl::tcl_command( TCLArgs& args, void* userdata)
   string gvNames("");
   //  string gtNames;
 
+  // get all of the NC and Particle Variables
   const TypeDescription *td;
   for( int i = 0; i < names.size(); i++ ){
     td = types[i];
@@ -208,24 +212,36 @@ void VisControl::tcl_command( TCLArgs& args, void* userdata)
       }// else { Tensor,Other}
     }
   }
+
+  // get the number of materials for the NC & particle Variables
+  GridP grid = archive.queryGrid(times[0]);
+  LevelP level = grid->getLevel( 0 );
+  Region* r = *(level->regionsBegin());
+  int numpsMatls = archive.queryNumMaterials(psVar.get()(), r, times[0]);
+  int numgsMatls = archive.queryNumMaterials(gsVar.get()(), r, times[0]);
+  int numgvMatls = archive.queryNumMaterials(gvVar.get()(), r, times[0]);
+
   clString visible;
   TCL::eval(id + " isVisible", visible);
-  cerr<<"isVisible = "<<visible<<endl;
   if( visible == "1"){
     TCL::execute(id + " destroyFrames");
     TCL::execute(id + " build");
     
+    TCL::execute(id + " buildPMaterials " + to_string(numpsMatls));
+    pNMaterials.set(numpsMatls);
+    TCL::execute(id + " buildGsGvMaterials " 
+		 + to_string(numgsMatls) + " " + to_string(numgvMatls));
+
     TCL::execute(id + " SetTimeRange " + to_string( times[0] )
 		 + " " + to_string(times[times.size()-1])
 		 + " " + to_string((int)times.size()));
-    cerr << "scalars: " << psNames << '\n';
     TCL::execute(id + " setParticleScalars " + psNames.c_str());
-    cerr << "vectors: " << pvNames << '\n';
     TCL::execute(id + " setParticleVectors " + pvNames.c_str());
     TCL::execute(id + " buildVarList particleSet");
     TCL::execute(id + " setGridScalars " + gsNames.c_str());
     TCL::execute(id + " setGridVectors " + gvNames.c_str());
     TCL::execute(id + " buildVarList grid");
+
     TCL::execute("update idletasks");
     reset_vars();
   }
@@ -305,7 +321,7 @@ void VisControl::execute()
        clString visible;
        TCL::eval(id + " isVisible", visible);
        if( visible == "0" ){
-	 TCL::execute(id + " ui");
+	 TCL::execute(id + " buildTopLevel");
        }
      }
      setVars( handle );
@@ -313,117 +329,158 @@ void VisControl::execute()
    }       
      
    cerr << "done with setVars\n";
+
+
+
    DataArchive& archive = *((*(handle.get_rep()))());
+   VectorFieldRG* vf;
+   ScalarFieldRGdouble* sf;
+   VisParticleSet* vps;
+
+   // what time is it?
    double t = time.get();
+
+   // set the index for the correct timestep.
    int idx = 0;
    vector< double > times;
    vector< int > indices;
    archive.queryTimesteps( indices, times );
    while(t>times[idx] && idx < times.size())
-      idx++;
+     idx++;
    if(idx >= times.size())
-      idx=times.size()-1;
-   cerr << "Closest time is: " << times[idx] << "\n";
-   GridP grid = archive.queryGrid(times[idx]);
-   LevelP level = grid->getLevel( 0 );
+     idx=times.size()-1;
 
-   // get index and spatial ranges 
-   BBox indexbox;
-   BBox spatialbox;
-   level->getIndexRange(indexbox);
-   level->getSpatialRange(spatialbox);
-
-   VectorFieldRG* vf = new VectorFieldRG();
-   ScalarFieldRGdouble* sf = new ScalarFieldRGdouble();
-   // resize and set bounds
-   vf->resize(indexbox.max().x() - indexbox.min().x(),
-	     indexbox.max().y() - indexbox.min().y(),
-	     indexbox.max().z() - indexbox.min().z());
-   sf->resize(indexbox.max().x() - indexbox.min().x(),
-	     indexbox.max().y() - indexbox.min().y(),
-	     indexbox.max().z() - indexbox.min().z());
-   vf->set_bounds(spatialbox.min(), spatialbox.max());
-   sf->set_bounds(spatialbox.min(), spatialbox.max());
-
-   
-   ParticleSubset* dest_subset = new ParticleSubset();
-   ParticleVariable< Vector > vectors(dest_subset);
-   ParticleVariable< Point > positions(dest_subset);
-   ParticleVariable< double > scalars(dest_subset);
-   // iterator over regions
-   for(Level::const_regionIterator r = level->regionsBegin();
-       r != level->regionsEnd(); r++ ){
-     NCVariable< Vector >  vv;
-     NCVariable< double >  sv;
-     ParticleVariable< Vector > pv;
-     ParticleVariable< double > ps;
-     ParticleVariable< Point  > pp;
-     
-     int matlIndex=0; // HARDCODED - Steve.  This should be fixed!
-     bool have_gv;
-     if(gvVar.get() != ""){
-	have_gv=true;
-	archive.query(vv, string(gvVar.get()()), matlIndex, *r, times[idx]);
-     } else {
-	have_gv=false;
+   if( animate.get() ){
+     while( animate.get() && idx < times.size() - 1){
+       tcl_status.set( to_string( times[idx] ));
+       time.set( times[idx] );
+       buildData( archive, times, idx , sf, vf, vps );
+       sfout->send_intermediate( sf );
+       vfout->send_intermediate( vf );
+       psout->send_intermediate( vps );
+       reset_vars();
+       idx++;
      }
-     bool have_gs;
-     if(gsVar.get() != ""){
-	have_gs=true;
-	archive.query(sv, string(gsVar.get()()), matlIndex, *r, times[idx]);
-     } else {
-	have_gs=false;
-     }
-     // fill up the scalar and vector fields
-     for(NodeIterator n = (*r)->getNodeIterator(); !n.done(); n++){
-	if(have_gs)
-	   sf->grid((*n).x(), (*n).y(), (*n).z() ) = sv[*n];
-	else
-	   sf->grid((*n).x(), (*n).y(), (*n).z()) = 0;
-	if(have_gv)
-	   vf->grid((*n).x(), (*n).y(), (*n).z() ) = vv[*n]; 
-	else
-	   vf->grid((*n).x(), (*n).y(), (*n).z() ) = Vector(0,0,0);
-     }
-
-     int numMatls = archive.queryNumMaterials(positionName, *r, times[idx]);
-     bool have_pv;
-     if(pvVar.get() != ""){
-	have_pv=true;
-     } else {
-	have_pv=false;
-     }
-     for(int matl=0;matl<numMatls;matl++){
-	if(have_pv)
-	   archive.query(pv, string(pvVar.get()()), matl, *r, times[idx]);
-	if(psVar.get() != "")
-	   archive.query(ps, string(psVar.get()()), matl, *r, times[idx]);
-	if(positionName != "")
-	   archive.query(pp, positionName, matl, *r, times[idx]);
-	
-	ParticleSubset* source_subset = ps.getParticleSubset();
-	particleIndex dest = dest_subset->addParticles(source_subset->numParticles());
-	vectors.resync();
-	positions.resync();
-	scalars.resync();
-	for(ParticleSubset::iterator iter = source_subset->begin();
-	    iter != source_subset->end(); iter++, dest++){
-	   if(have_pv)
-	      vectors[dest]=pv[*iter];
-	   else
-	      vectors[dest]=Vector(0,0,0);
-	   positions[dest]=pp[*iter];
-	   scalars[dest]=ps[*iter];
-	}
-     }
+     animate.set(0);
+     reset_vars();
    }
-   VisParticleSet*vps = new VisParticleSet(positions, scalars, vectors, this);
-   
+   buildData( archive, times, idx , sf, vf, vps );
    sfout->send( sf );
    vfout->send( vf );
-   psout->send( vps );
-   cerr << "all done\n";
+   psout->send( vps );	  
+   tcl_status.set("Done");
+}
+
+void 
+VisControl::buildData(DataArchive& archive, vector< double >& times,
+		      int idx, ScalarFieldRGdouble*& sf,
+		      VectorFieldRG*& vf, VisParticleSet*& vps)
+{
+  
+  cerr << "Closest time is: " << times[idx] << "\n";
+  GridP grid = archive.queryGrid(times[idx]);
+  LevelP level = grid->getLevel( 0 );
+
+  // get index and spatial ranges 
+  BBox indexbox;
+  BBox spatialbox;
+  level->getIndexRange(indexbox);
+  level->getSpatialRange(spatialbox);
+
+  vf = new VectorFieldRG();
+  sf = new ScalarFieldRGdouble();
+
+  // resize and set bounds
+  vf->resize(indexbox.max().x() - indexbox.min().x(),
+	     indexbox.max().y() - indexbox.min().y(),
+	     indexbox.max().z() - indexbox.min().z());
+  sf->resize(indexbox.max().x() - indexbox.min().x(),
+	     indexbox.max().y() - indexbox.min().y(),
+	     indexbox.max().z() - indexbox.min().z());
+  vf->set_bounds(spatialbox.min(), spatialbox.max());
+  sf->set_bounds(spatialbox.min(), spatialbox.max());
+
+   
+  ParticleSubset* dest_subset = new ParticleSubset();
+  ParticleVariable< Vector > vectors(dest_subset);
+  ParticleVariable< Point > positions(dest_subset);
+  ParticleVariable< double > scalars(dest_subset);
+
+  // iterate over regions
+  for(Level::const_regionIterator r = level->regionsBegin();
+      r != level->regionsEnd(); r++ ){
+    NCVariable< Vector >  vv;
+    NCVariable< double >  sv;
+    ParticleVariable< Vector > pv;
+    ParticleVariable< double > ps;
+    ParticleVariable< Point  > pp;
+     
+    int matlIndex=gsMatNum.get();
+    bool have_gv;
+    if(gvVar.get() != ""){
+      have_gv=true;
+      archive.query(vv, string(gvVar.get()()), matlIndex, *r, times[idx]);
+    } else {
+      have_gv=false;
+    }
+    matlIndex = gvMatNum.get();
+    bool have_gs;
+    if(gsVar.get() != ""){
+      have_gs=true;
+      archive.query(sv, string(gsVar.get()()), matlIndex, *r, times[idx]);
+    } else {
+      have_gs=false;
+    }
+    // fill up the scalar and vector fields
+    for(NodeIterator n = (*r)->getNodeIterator(); !n.done(); n++){
+      if(have_gs)
+	sf->grid((*n).x(), (*n).y(), (*n).z() ) = sv[*n];
+      else
+	sf->grid((*n).x(), (*n).y(), (*n).z()) = 0;
+      if(have_gv)
+	vf->grid((*n).x(), (*n).y(), (*n).z() ) = vv[*n]; 
+      else
+	vf->grid((*n).x(), (*n).y(), (*n).z() ) = Vector(0,0,0);
+    }
+
+    int numMatls = archive.queryNumMaterials(positionName, *r, times[idx]);
+    bool have_pv;
+    if(pvVar.get() != ""){
+      have_pv=true;
+    } else {
+      have_pv=false;
+    }
+    for(int matl=0;matl<numMatls;matl++){
+      clString result;
+      eval(id + " isOn p" + to_string(matl), result);
+      if ( result == "0")
+	continue;
+      if (have_pv)
+	archive.query(pv, string(pvVar.get()()), matl, *r, times[idx]);
+      if( psVar.get() != "")
+	archive.query(ps, string(psVar.get()()), matl, *r, times[idx]);
+      if(positionName != "")
+	archive.query(pp, positionName, matl, *r, times[idx]);
+      
+      ParticleSubset* source_subset = ps.getParticleSubset();
+      particleIndex dest = dest_subset->addParticles(source_subset->numParticles());
+      vectors.resync();
+      positions.resync();
+      scalars.resync();
+      for(ParticleSubset::iterator iter = source_subset->begin();
+	  iter != source_subset->end(); iter++, dest++){
+	if(have_pv)
+	  vectors[dest]=pv[*iter];
+	else
+	  vectors[dest]=Vector(0,0,0);
+	positions[dest]=pp[*iter];
+	scalars[dest]=ps[*iter];
+      }
+    }
+  }
+  vps = new VisParticleSet(positions, scalars, vectors, this);
 } 
+
 //--------------------------------------------------------------- 
 } // end namespace Modules
 } // end namespace Kurt

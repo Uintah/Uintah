@@ -52,6 +52,10 @@ itcl_class Kurt_Vis_VisControl {
 	global $this-gvVar;
 	global $this-psVar;
 	global $this-pvVar;
+	global $this-gsMatNum;
+	global $this-pNMaterials;
+	global $this-gvMatNum;
+	global $this-animate
 	global $this-time;
 
 	set $this-gsVar ""
@@ -60,7 +64,11 @@ itcl_class Kurt_Vis_VisControl {
 	set $this-pvVar ""
 	set $this-pName ""
 	set $this-gName ""
+	set $this-gsMatNum 0
+	set $this-pNMaterials 0
+	set $this-gvMatNum 0
 	set $this-time 0
+	set $this-animate 0
     } 
     
     method ui {} { 
@@ -69,23 +77,45 @@ itcl_class Kurt_Vis_VisControl {
         if {[winfo exists $w]} { 
 	    wm deiconify $w
             raise $w 
+        } else { 
+	    $this buildTopLevel
+	    wm deiconify $w
+            raise $w 
+	}
+    }
+
+    method buildTopLevel {} {
+        set w .ui[modname] 
+
+        if {[winfo exists $w]} { 
             return;
         } 
 	
         toplevel $w 
-        wm minsize $w 100 50 
+	wm withdraw $w
 	
-	#       set n "$this-c needexecute" 
- 	frame $w.f -relief flat
+	set n "$this-c needexecute"
+	frame $w.f -relief flat
  	pack $w.f -side top -expand yes -fill both
 
 	scale $w.time -orient horizontal -from 0 -to 1.0 \
 	    -resolution 0.01 -bd 2 -label "Time" -variable $this-time\
-	    -tickinterval 0.5 -command "$this-c needexecute"
+	    -tickinterval 0.5 
+	pack $w.time -side top -fill x -padx 2 -pady 2
+
+	frame $w.aframe -relief groove -borderwidth 2
+	pack $w.aframe -side top -fill x -padx 2 -pady 2
+	checkbutton $w.aframe.abutton -text Animate \
+	    -variable $this-animate -command $n
+	entry $w.aframe.status  -width 15  -relief sunken -bd 2 \
+	    -textvariable $this-tcl_status 
+	pack $w.aframe.abutton -side left
+	pack $w.aframe.status -side right  -padx 2 -pady 2
 	button $w.b -text "Close" -command "wm withdraw $w"
-	pack $w.time $w.b -side top -fill x -padx 2 -pady 2
+	pack $w.b -side top -fill x -padx 2 -pady 2
+
+	bind $w.time <ButtonRelease> $n
 	makeFrames $w.f
-	
     }
 
 
@@ -122,8 +152,8 @@ itcl_class Kurt_Vis_VisControl {
 	    pack $parent.f$i -side left -expand yes -fill both -padx 2
 	    pack $parent.f$i.label -side top
 	    
-	    frame $parent.f$i.names -relief groove -borderwidth 2
-	    pack $parent.f$i.names -side top -expand yes -fill both 
+	   # frame $parent.f$i.names -relief groove -borderwidth 2
+	   # pack $parent.f$i.names -side top -expand yes -fill both 
 
 	    frame $parent.f$i.1 -relief flat -borderwidth 2
 	    pack $parent.f$i.1 -side top -expand yes -fill both -padx 2
@@ -173,13 +203,13 @@ itcl_class Kurt_Vis_VisControl {
     method SetTimeRange { min max timesteps } {
 	set w .ui[modname] 
 	if { [winfo exists $w.time] } {
-	    
 	    set r [expr ($max - $min)/double($timesteps)]
 	    set res "$r"
-
+	    set interval [expr ($max - $min)/2.0]
 	    $w.time configure -from $min
 	    $w.time configure -to $max
 	    $w.time configure -resolution $res 
+	    $w.time configure -tickinterval $interval
 	}
     }
 
@@ -197,7 +227,59 @@ itcl_class Kurt_Vis_VisControl {
 	set pvVarList $args;
 	puts "pvVarList is now $pvVarList";
     }    
-    
+ 
+    method buildPMaterials { ns } {
+	set parent $pf
+	set buttontype checkbutton
+	set c "$this-c needexecute"
+	frame $parent.m -relief groove -borderwidth 2
+	pack $parent.m -side top
+	label $parent.m.l -text Material
+	pack $parent.m.l -side top
+	for {set i 0} { $i < $ns} {incr i} {
+	    $buttontype $parent.m.p$i -text $i \
+		-offvalue 0 -onvalue 1 -command $c \
+		-variable $this-p$i
+	    pack $parent.m.p$i -side top
+	   $parent.m.p$i select
+	    puts [$parent.m.p$i configure -variable]
+	}
+    }
+    method buildGsGvMaterials { ns nv } {
+	set parent $gf
+	set buttontype radiobutton
+	set c "$this-c needexecute"
+	frame $parent.m -relief groove -borderwidth 2
+	pack $parent.m -side top
+	label $parent.m.l -text Material
+	pack $parent.m.l -side top
+	frame $parent.m.m -relief flat 
+	pack $parent.m.m  -side top
+	frame $parent.m.m.fl -relief flat 
+	pack $parent.m.m.fl -side left -padx 2 
+	label $parent.m.m.fl.s -text Scalars -anchor n
+	pack $parent.m.m.fl.s -expand yes -fill both
+	frame $parent.m.m.fr -relief flat 
+	pack $parent.m.m.fr -side left -padx 2
+	label $parent.m.m.fr.v -text Vectors -anchor n
+	pack $parent.m.m.fr.v -expand yes -fill both
+	for {set i 0} { $i < $ns} {incr i} {
+	    $buttontype $parent.m.m.fl.gs$i -text $i \
+		-variable $this-gvMatNum -command $c -value $i
+	    pack $parent.m.m.fl.gs$i -side top
+	}
+	for {set i 0} { $i < $nv} {incr i} {
+	    $buttontype $parent.m.m.fr.gv$i -text $i \
+		-variable $this-gvMatNum -command $c -value $i
+	    pack $parent.m.m.fr.gv$i -side top
+	}
+
+    }
+
+    method isOn { bval } {
+	return  [set $this-$bval]
+    }
+
     method buildVarList { type } {
 	puts "buildVarList $type $name"
 	global $this-pName
@@ -207,7 +289,6 @@ itcl_class Kurt_Vis_VisControl {
 	set c "$this-c needexecute"
 	if { $type == "particleSet"} {
 	    puts "... buildControlFrame $pf.1"
-	    buildControlFrame $pf.1
 	    #set varlist [split $psVarList]
 	    for {set i 0} { $i < [llength $psVarList] } { incr i } {
 		set newvar [lindex $psVarList $i]
@@ -242,7 +323,6 @@ itcl_class Kurt_Vis_VisControl {
 	    }
 	} else {
 
-	    puts "... buildControlFrame $gf.1"
 	    buildControlFrame $gf.1
 	    #set varlist [split $gsVarList]
 	    for {set i 0} { $i < [llength $gsVarList] } { incr i } {
