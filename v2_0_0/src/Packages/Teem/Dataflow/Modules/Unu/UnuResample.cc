@@ -227,7 +227,7 @@ UnuResample::execute()
       info->kernel[0]=0;
     } else {
       info->samples[a]=nin->axis[a].size;
-      const char *str = resampAxes_[a]->get().c_str();
+      char *str = strdup(resampAxes_[a]->get().c_str());
       int none=0;
       if (getint(str, &(info->samples[a]), &none)) {
 	error("NrrdResample -- bad size."); 
