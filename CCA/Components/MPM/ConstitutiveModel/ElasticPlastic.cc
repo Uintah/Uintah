@@ -61,6 +61,9 @@ ElasticPlastic::ElasticPlastic(ProblemSpecP& ps,
   d_checkTeplaFailureCriterion = true;
   ps->get("check_TEPLA_failure_criterion",d_checkTeplaFailureCriterion);
 
+  d_doMelting = true;
+  ps->get("do_melting",d_doMelting);
+
   d_yield = YieldConditionFactory::create(ps);
   if(!d_yield){
     ostringstream desc;
@@ -620,6 +623,7 @@ ElasticPlastic::computeStressTensor(const PatchSubset* patches,
     // Get grid size
     Vector dx = patch->dCell();
     double oodx[3] = {1./dx.x(), 1./dx.y(), 1./dx.z()};
+    //double dx_ave = (dx.x() + dx.y() + dx.z())/3.0;
 
     // Get the set of particles
     int dwi = matl->getDWIndex();
@@ -853,6 +857,9 @@ ElasticPlastic::computeStressTensor(const PatchSubset* patches,
       state->shearModulus = mu_cur ;
       state->meltingTemp = Tm_cur ;
 
+      // compute the local sound wave speed
+      double c_dil = sqrt((bulk + 4.0*mu_cur/3.0)/rho_cur);
+
       //-----------------------------------------------------------------------
       // Stage 2:
       //-----------------------------------------------------------------------
@@ -875,7 +882,7 @@ ElasticPlastic::computeStressTensor(const PatchSubset* patches,
         melted = true;
 
         // Set the deviatoric stress to zero
-        tensorS = 0.0;
+	if (d_doMelting) tensorS = 0.0;
 
         d_plastic->updateElastic(idx);
 
@@ -1033,6 +1040,16 @@ ElasticPlastic::computeStressTensor(const PatchSubset* patches,
       // Calculate the updated hydrostatic stress
       double p = d_eos->computePressure(matl, state, tensorF_new, tensorD, 
                                         delT);
+
+      /*
+      if (flag->d_artificial_viscosity) {
+        double Dkk = tensorD.Trace();
+        double c_bulk = sqrt(bulk/rho_cur);
+        double q = artificialBulkViscosity(Dkk, c_bulk, rho_cur, dx_ave);
+        p -= q;
+      }
+      */
+
       Matrix3 tensorHy = one*p;
    
       // Calculate the total stress
@@ -1189,8 +1206,6 @@ ElasticPlastic::computeStressTensor(const PatchSubset* patches,
 
       // Compute wave speed at each particle, store the maximum
       Vector pVel = pVelocity[idx];
-      double c_dil = sqrt((bulk + 4.0*mu_cur/3.0)*
-                          pVolume_deformed[idx]/pMass[idx]);
       WaveSpeed=Vector(Max(c_dil+fabs(pVel.x()),WaveSpeed.x()),
                        Max(c_dil+fabs(pVel.y()),WaveSpeed.y()),
                        Max(c_dil+fabs(pVel.z()),WaveSpeed.z()));
