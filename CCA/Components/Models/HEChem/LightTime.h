@@ -101,6 +101,7 @@ WARNING
     double d_rho0;
     Point  d_start_place;
     Vector d_direction;
+    bool   d_react_mixed_cells;
 
     #define d_SMALL_NUM 1e-100
     #define d_TINY_RHO 1e-12
