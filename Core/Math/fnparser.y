@@ -101,6 +101,7 @@ extern char *yytext;
 %token TSQRT
 %token TLOG
 %token TPOW
+%token TRANDOM
 
 %left TPLUS TMINUS
 %left TTIMES TSLASH
@@ -174,6 +175,10 @@ function : TCONST {
 }
 | TBAR function TBAR {
   $$ = new Function(absolutevalue, $2);
+}
+
+| TRANDOM TLPAREN TRPAREN {
+  $$ = new Function(randomfunction, 0);
 }
 ;
 
