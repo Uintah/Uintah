@@ -22,11 +22,9 @@ using namespace std;
 using namespace Uintah;
 using namespace SCIRun;
 
+ // Constructor
 ICEMaterial::ICEMaterial(ProblemSpecP& ps): Material(ps)
 {
-
-  // Constructor
-
   // Follow the layout of the input file
   // Steps:
   // 1.  Determine the type of EOS and create it.
@@ -36,8 +34,9 @@ ICEMaterial::ICEMaterial(ProblemSpecP& ps): Material(ps)
 
   // Step 1 -- create the constitutive gmodel.
    d_eos = EquationOfStateFactory::create(ps);
-   if(!d_eos)
-      throw ParameterNotFound("No EOS");
+   if(!d_eos) {
+     throw ParameterNotFound("ICE: No EOS specified");
+   }
    
    // Step 2 -- get the general material properties
    ps->require("thermal_conductivity",d_thermalConductivity);
@@ -45,6 +44,9 @@ ICEMaterial::ICEMaterial(ProblemSpecP& ps): Material(ps)
    ps->require("viscosity",d_viscosity);
    ps->require("speed_of_sound",d_speed_of_sound);
    ps->require("gamma",d_gamma);
+   
+   d_isSurroundingMatl = false;
+   ps->get("isSurroundMatl",d_isSurroundingMatl);
 
    // Step 3 -- Loop through all of the pieces in this geometry object
    int piece_num = 0;
@@ -67,26 +69,21 @@ ICEMaterial::ICEMaterial(ProblemSpecP& ps): Material(ps)
       piece_num++;
       d_geom_objs.push_back(scinew GeometryObject2(this,mainpiece,geom_obj_ps));
    }
-
    lb = scinew ICELabel();
 }
-
+ // Destructor
 ICEMaterial::~ICEMaterial()
 {
-  // Destructor
-
   delete d_eos;
   delete lb;
   for (int i = 0; i< (int)d_geom_objs.size(); i++) {
-       delete d_geom_objs[i];
+    delete d_geom_objs[i];
   }
 }
 
 EquationOfState * ICEMaterial::getEOS() const
 {
-  // Return the pointer to the constitutive model associated
-  // with this material
-
+  // Return the pointer to the constitutive model 
   return d_eos;
 }
 
@@ -103,6 +100,10 @@ double ICEMaterial::getViscosity() const
 double ICEMaterial::getSpeedOfSound() const
 {
   return d_speed_of_sound;
+}
+bool ICEMaterial::isSurroundingMatl() const
+{
+  return d_isSurroundingMatl;
 }
 
 /* --------------------------------------------------------------------- 
@@ -129,7 +130,8 @@ void ICEMaterial::initializeCells(CCVariable<double>& rho_micro,
                                   CCVariable<Vector>& vel_CC,
                                   CCVariable<double>& press_CC,
                                   int numMatls,
-                              const Patch* patch,DataWarehouse* new_dw)
+                                  const Patch* patch,
+                                  DataWarehouse* new_dw)
 {
   CCVariable<int> IveBeenHere;
   new_dw->allocateTemporary(IveBeenHere, patch);
@@ -146,8 +148,7 @@ void ICEMaterial::initializeCells(CCVariable<double>& rho_micro,
    GeometryPiece* piece = d_geom_objs[obj]->getPiece();
    Box b1 = piece->getBoundingBox();
    Box b2 = patch->getBox();
-   Box b = b1.intersect(b2);
-   
+    
    IntVector ppc = d_geom_objs[obj]->getNumParticlesPerCell();
    Vector dxpp = patch->dCell()/ppc;
    Vector dcorner = dxpp*0.5;
