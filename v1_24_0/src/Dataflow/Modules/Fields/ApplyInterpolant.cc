@@ -85,6 +85,8 @@ ApplyInterpolant::~ApplyInterpolant()
 void
 ApplyInterpolant::execute()
 {
+  warning("This module is deprecated, use ApplyMappingMatrix instead.");
+
   src_port = (FieldIPort *)getIPort("Source");
   FieldHandle fsrc_h;
   if (!(src_port->get(fsrc_h) && fsrc_h.get_rep()))

@@ -93,6 +93,8 @@ BuildInterpolant::~BuildInterpolant()
 void
 BuildInterpolant::execute()
 {
+  warning("This module is deprecated, use BuildMappingMatrix instead.");
+
   dst_port = (FieldIPort *)get_iport("Destination");
   FieldHandle fdst_h;
 

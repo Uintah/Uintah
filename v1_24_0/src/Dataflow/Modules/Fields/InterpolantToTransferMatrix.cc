@@ -82,6 +82,8 @@ InterpolantToTransferMatrix::~InterpolantToTransferMatrix()
 void
 InterpolantToTransferMatrix::execute()
 {
+  warning("This module is deprecated, build a Mapping Matrix instead.");
+
   FieldIPort *itp_port = (FieldIPort *)get_iport("Interpolant");
   FieldHandle fitp_h;
 
