@@ -78,6 +78,16 @@ void Group::add(Object* obj)
     objs.add(obj);
 }
 
+int Group::add2(Object* obj)
+{
+    return objs.add2(obj);
+}
+
+void Group::remove2(int idx)
+{
+    objs.remove(idx);
+}
+
 void Group::animate(double t, bool& changed)
 {
     for(int i=0;i<objs.size();i++){
