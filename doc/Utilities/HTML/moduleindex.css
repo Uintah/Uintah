@@ -49,3 +49,13 @@ vertical-align: center}
 
 td {
 height: 1.75em}
+
+td.cattitle {
+text-align:center;
+color:#FFCC33;            
+background-color:#003333;
+}
+
+a.alt { 
+color:#FFCC33;            
+}
