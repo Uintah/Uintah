@@ -59,7 +59,7 @@ PSELIBS := \
 	Core/OS \
 	Core/Containers
 endif
-LIBS 	:= $(XML_LIBRARY)
+LIBS 	:= $(XML_LIBRARY) $(MPI_LIBRARY)
 
 include $(SRCTOP)/scripts/program.mk
 
