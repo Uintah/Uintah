@@ -308,6 +308,7 @@ void ICE::scheduleComputeStableTimestep(const LevelP& level,
   Task* task = scinew Task("ICE::actuallyComputeStableTimestep",
 			this, &ICE::actuallyComputeStableTimestep);
 
+  task->requires(Task::NewDW, lb->doMechLabel);
   task->requires(Task::NewDW,lb->vel_CCLabel,        Ghost::None);
   task->requires(Task::NewDW,lb->speedSound_CCLabel, Ghost::None);
   task->computes(d_sharedState->get_delt_label());
@@ -575,9 +576,10 @@ void ICE::scheduleAccumulateEnergySourceSinks(SchedulerP& sched,
   Task* task = scinew Task("ICE::accumulateEnergySourceSinks",
                      this, &ICE::accumulateEnergySourceSinks);
   
+  task->requires(Task::OldDW, lb->delTLabel);
   task->requires(Task::NewDW, lb->press_CCLabel,     press_matl,Ghost::None);
   task->requires(Task::NewDW, lb->delP_DilatateLabel,press_matl,Ghost::None);
-  task->requires(Task::NewDW, lb->delP_MassXLabel,   press_matl,Ghost::None);
+  //task->requires(Task::NewDW, lb->delP_MassXLabel,   press_matl,Ghost::None);
   task->requires(Task::NewDW, lb->rho_micro_CCLabel,            Ghost::None);
   task->requires(Task::NewDW, lb->speedSound_CCLabel,           Ghost::None);
   task->requires(Task::NewDW, lb->vol_frac_CCLabel,             Ghost::None);
