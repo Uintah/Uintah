@@ -1235,7 +1235,7 @@ PressureSolver::sched_buildLinearMatrixPred(SchedulerP& sched,
     // from new_dw
 
     tsk->requires(Task::NewDW, d_lab->d_pressurePSLabel,
-		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
+		  Ghost::None, Arches::ZEROGHOSTCELLS);	
 #ifdef correctorstep
     tsk->requires(Task::NewDW, d_lab->d_densityPredLabel, 
 		  Ghost::AroundCells, Arches::ONEGHOSTCELL);

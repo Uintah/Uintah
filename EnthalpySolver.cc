@@ -439,8 +439,14 @@ EnthalpySolver::sched_buildLinearMatrixPred(SchedulerP& sched,
   //DataWarehouseP old_dw = new_dw->getTop();
   tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel,
 		Ghost::AroundCells, Arches::ONEGHOSTCELL);
+#ifdef Scalar_ENO
   tsk->requires(Task::NewDW, d_lab->d_enthalpyOUTBCLabel,
 		Ghost::AroundCells, Arches::TWOGHOSTCELLS);
+#else
+  tsk->requires(Task::NewDW, d_lab->d_enthalpyOUTBCLabel,
+		Ghost::None, Arches::ZEROGHOSTCELLS);
+#endif
+  
   tsk->requires(Task::NewDW, d_lab->d_densityINLabel, 
 		Ghost::AroundCells, Arches::TWOGHOSTCELLS);
   tsk->requires(Task::NewDW, d_lab->d_viscosityINLabel,
