@@ -355,7 +355,7 @@ DirectInterpAlgoT<FSRC, LSRC, FOUT, LDST>::parallel_execute(int proc,
 	  val = (typename FOUT::value_type)(src_field->value(index));
 	}
       }
-      if (failed) val = FOUT::value_type(0);
+      if (failed) val = typename FOUT::value_type(0);
       out_field->set_value(val, *itr);
       ++itr;
       ++count;
