@@ -24,7 +24,13 @@ namespace GeomSpace {
 
 PersistentTypeID GeomObj::type_id("GeomObj", "Persistent", 0);
 
-GeomObj::GeomObj(int id) : id(id)
+GeomObj::GeomObj(int id) : id(id),
+  _id(0x1234567,0x1234567,0x1234567)
+{
+}
+
+GeomObj::GeomObj(IntVector i)
+  :id( 0x1234567 ), _id(i)
 {
 }
 
@@ -64,6 +70,9 @@ void Pio( Piostream & stream, GeomObj *& obj )
 
 //
 // $Log$
+// Revision 1.7  2000/08/09 18:21:14  kuzimmer
+// Added IntVector indexing to GeomObj & GeomSphere
+//
 // Revision 1.6  2000/06/06 16:01:45  dahart
 // - Added get_triangles() to several classes for serializing triangles to
 // send them over a network connection.  This is a short term (hack)
