@@ -338,7 +338,7 @@ bool ParticleLoadBalancer::assignPatchesParticle(const GridP& grid)
       }
 
       if (currentProc > 0) {
-        int optimal_procs = (totalCost /
+        int optimal_procs = (int)(totalCost /
           ((origTotalCost - totalCost) / currentProc) +  currentProc);
         dbg << "This simulation would probably perform better on " 
             << optimal_procs << "-" << optimal_procs+1 << " processors\n";
