@@ -1,10 +1,3 @@
-//  CompMooneyRivlin.cc 
-//  
-//  class ConstitutiveModel ConstitutiveModel data type -- 3D - 
-//  holds ConstitutiveModel
-//  information for the FLIP technique:
-//    This is for Compressible Mooney Rivlin materials
-//     
 
 #include "CompMooneyRivlin.h"
 #include <Uintah/Grid/Region.h>
@@ -323,6 +316,10 @@ ConstitutiveModel* CompMooneyRivlin::readRestartParametersAndCreate(
 #endif
 
 // $Log$
+// Revision 1.23  2000/05/04 16:37:30  guilkey
+// Got the CompNeoHookPlas constitutive model up to speed.  It seems
+// to work but hasn't had a rigorous test yet.
+//
 // Revision 1.22  2000/05/03 20:35:20  guilkey
 // Added fudge factor to the other place where delt is calculated.
 //
