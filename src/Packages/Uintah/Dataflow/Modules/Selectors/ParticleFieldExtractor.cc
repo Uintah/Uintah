@@ -446,14 +446,14 @@ ParticleFieldExtractor::buildData(DataArchive& archive, double time,
   Mutex vmutex("VectorParticles Mutex");
   Mutex tmutex("TensorrParticles Mutex");
   Mutex imutex("ParticleIds Mutex");
-  WallClockTimer my_timer;
-  my_timer.start();
+//   WallClockTimer my_timer;
+//   my_timer.start();
   double size = level->numPatches();
   int count = 0;
   // iterate over patches
   for(Level::const_patchIterator patch = level->patchesBegin();
       patch != level->patchesEnd(); patch++ ){
-    update_progress(count++/size, my_timer);
+//     update_progress(count++/size, my_timer);
     sema->down();
     Thread *thrd =
       new Thread( scinew PFEThread( this, archive,
@@ -473,8 +473,8 @@ ParticleFieldExtractor::buildData(DataArchive& archive, double time,
   }
   sema->down( max_workers );
   if( sema )  delete sema;
-  timer.add( my_timer.time() );
-  my_timer.stop();
+//   timer.add( my_timer.time() );
+//   my_timer.stop();
 } 
 void PFEThread::run(){     
 
