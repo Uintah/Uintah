@@ -141,9 +141,11 @@ void ImpMPM::scheduleInitialize(const LevelP& level,
   t->computes(lb->pVelocityLabel);
   t->computes(lb->pAccelerationLabel);
   t->computes(lb->pExternalForceLabel);
+  t->computes(lb->pTemperatureLabel);
   t->computes(lb->pParticleIDLabel);
   t->computes(lb->pDeformationMeasureLabel);
   t->computes(lb->pStressLabel);
+  t->computes(lb->pSizeLabel);
   t->computes(d_sharedState->get_delt_label());
   t->computes(lb->pCellNAPIDLabel);
   t->computes(lb->bElBarLabel);
@@ -231,13 +233,13 @@ void ImpMPM::scheduleInterpolateParticlesToGrid(SchedulerP& sched,
 
   Task* t = scinew Task("ImpMPM::interpolateParticlesToGrid",
 			this,&ImpMPM::interpolateParticlesToGrid);
-  t->requires(Task::OldDW, lb->pMassLabel,           Ghost::AroundNodes,1);
-  t->requires(Task::OldDW, lb->pVolumeLabel,       Ghost::AroundNodes,1);
+  t->requires(Task::OldDW, lb->pMassLabel,           Ghost::None,0);
+  t->requires(Task::OldDW, lb->pVolumeLabel,       Ghost::None,0);
   
-  t->requires(Task::OldDW, lb->pAccelerationLabel,     Ghost::AroundNodes,1);
-  t->requires(Task::OldDW, lb->pVelocityLabel,     Ghost::AroundNodes,1);
-  t->requires(Task::OldDW, lb->pXLabel,            Ghost::AroundNodes,1);
-  t->requires(Task::OldDW, lb->pExternalForceLabel,Ghost::AroundNodes,1);
+  t->requires(Task::OldDW, lb->pAccelerationLabel,     Ghost::None,0);
+  t->requires(Task::OldDW, lb->pVelocityLabel,     Ghost::None,0);
+  t->requires(Task::OldDW, lb->pXLabel,            Ghost::None,0);
+  t->requires(Task::OldDW, lb->pExternalForceLabel,Ghost::None,0);
 
 
 
@@ -362,9 +364,9 @@ void ImpMPM::scheduleComputeInternalForceI(SchedulerP& sched,
   Task* t = scinew Task("ImpMPM::computeInternalForceI",
 			this, &ImpMPM::computeInternalForce,recursion);
   
-  t->requires(Task::NewDW,lb->pStressLabel_preReloc,Ghost::AroundNodes,1);
-  t->requires(Task::NewDW,lb->pVolumeDeformedLabel,Ghost::AroundNodes,1);
-  t->requires(Task::OldDW,lb->pXLabel,Ghost::AroundNodes,1);
+  t->requires(Task::NewDW,lb->pStressLabel_preReloc,Ghost::None,0);
+  t->requires(Task::NewDW,lb->pVolumeDeformedLabel,Ghost::None,0);
+  t->requires(Task::OldDW,lb->pXLabel,Ghost::None,0);
 
   t->computes(lb->gInternalForceLabel);  
   
@@ -380,9 +382,9 @@ void ImpMPM::scheduleComputeInternalForceII(SchedulerP& sched,
   Task* t = scinew Task("ImpMPM::computeInternalForceII",
 			this, &ImpMPM::computeInternalForce,recursion);
   
-  t->requires(Task::NewDW,lb->pStressLabel_preReloc,Ghost::AroundNodes,1);
-  t->requires(Task::NewDW,lb->pVolumeDeformedLabel,Ghost::AroundNodes,1);
-  t->requires(Task::OldDW,lb->pXLabel,Ghost::AroundNodes,1);
+  t->requires(Task::NewDW,lb->pStressLabel_preReloc,Ghost::None,0);
+  t->requires(Task::NewDW,lb->pVolumeDeformedLabel,Ghost::None,0);
+  t->requires(Task::OldDW,lb->pXLabel,Ghost::None,0);
   t->modifies(lb->gInternalForceLabel);  
   
   sched->addTask(t, patches, matls);
@@ -398,13 +400,13 @@ void ImpMPM::scheduleComputeInternalForceR(SchedulerP& sched,
 			this, &ImpMPM::computeInternalForce,recursion);
   
   if (recursion)
-    t->requires(Task::NewDW,lb->pStressLabel_preReloc,Ghost::AroundNodes,
-		1);
+    t->requires(Task::NewDW,lb->pStressLabel_preReloc,Ghost::None,
+		0);
   else
-    t->requires(Task::NewDW,lb->pStressLabel,Ghost::AroundNodes,
-		1);
-  t->requires(Task::NewDW,lb->pVolumeDeformedLabel,Ghost::AroundNodes,1);
-  t->requires(Task::OldDW,lb->pXLabel,Ghost::AroundNodes,1);
+    t->requires(Task::NewDW,lb->pStressLabel,Ghost::None,
+		0);
+  t->requires(Task::NewDW,lb->pVolumeDeformedLabel,Ghost::None,0);
+  t->requires(Task::OldDW,lb->pXLabel,Ghost::None,0);
   t->computes(lb->gInternalForceLabel);  
   
   sched->addTask(t, patches, matls);
@@ -417,7 +419,7 @@ void ImpMPM::scheduleMoveData(SchedulerP& sched,const LevelP& level,
 
   Task* task = scinew Task("moveData",this,&ImpMPM::moveData);
  
-  //  task->requires(Task::OldDW,lb->dispNewLabel,Ghost::AroundNodes,1);
+  //  task->requires(Task::OldDW,lb->dispNewLabel,Ghost::None,0);
   task->requires(Task::OldDW,lb->pXLabel,Ghost::None,0);
   task->requires(Task::OldDW,lb->pVolumeLabel,Ghost::None,0);
   task->requires(Task::OldDW,lb->pDeformationMeasureLabel,Ghost::None,0);
@@ -454,8 +456,8 @@ void ImpMPM::scheduleIterate(SchedulerP& sched,const LevelP& level,
 			   sched);
   task->hasSubScheduler();
 
-  task->requires(Task::NewDW,lb->dispNewLabel,Ghost::AroundNodes,1);
-  task->requires(Task::NewDW,lb->pStressLabel_preReloc,Ghost::AroundNodes,1);
+  task->requires(Task::NewDW,lb->dispNewLabel,Ghost::None,0);
+  task->requires(Task::NewDW,lb->pStressLabel_preReloc,Ghost::None,0);
   task->requires(Task::OldDW,lb->pXLabel,Ghost::None,0);
   task->requires(Task::OldDW,lb->pVolumeLabel,Ghost::None,0);
   task->requires(Task::OldDW,lb->pDeformationMeasureLabel,Ghost::None,0);
@@ -1137,7 +1139,7 @@ void ImpMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
 
   t->requires(Task::OldDW, d_sharedState->get_delt_label() );
 
-  t->requires(Task::NewDW, lb->gAccelerationLabel,  Ghost::AroundCells,1);
+  t->requires(Task::NewDW, lb->gAccelerationLabel,  Ghost::None,0);
   t->requires(Task::NewDW, lb->dispNewLabel,Ghost::None);
   t->requires(Task::OldDW, lb->pXLabel,                Ghost::None);
   t->requires(Task::OldDW, lb->pExternalForceLabel,    Ghost::None);
@@ -1175,9 +1177,9 @@ void ImpMPM::scheduleInterpolateStressToGrid(SchedulerP& sched,
   Task* t = scinew Task("ImpMPM::interpolateStressToGrid",
 			    this, &ImpMPM::interpolateStressToGrid);
 
-  t->requires(Task::NewDW, lb->pXLabel_preReloc,Ghost::AroundNodes,1);
-  t->requires(Task::NewDW, lb->pMassLabel_preReloc,Ghost::AroundNodes,1);
-  t->requires(Task::NewDW, lb->pStressLabel_preReloc,Ghost::AroundNodes,1);
+  t->requires(Task::NewDW, lb->pXLabel_preReloc,Ghost::None,0);
+  t->requires(Task::NewDW, lb->pMassLabel_preReloc,Ghost::None,0);
+  t->requires(Task::NewDW, lb->pStressLabel_preReloc,Ghost::None,0);
 
   t->computes(lb->gStressLabel);
 
@@ -1282,7 +1284,7 @@ void ImpMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       constParticleVariable<Vector> pvelocity, pacceleration,pexternalforce;
 
       ParticleSubset* pset = old_dw->getParticleSubset(matlindex, patch,
-					       Ghost::AroundNodes, 1,
+					       Ghost::None, 0,
 					       lb->pXLabel);
 
       old_dw->get(px,             lb->pXLabel,             pset);
@@ -1563,7 +1565,7 @@ void ImpMPM::computeInternalForce(const ProcessorGroup*,
       NCVariable<Vector>        internalforce;
 
       ParticleSubset* pset = old_dw->getParticleSubset(matlindex, patch,
-					       Ghost::AroundNodes, 1,
+					       Ghost::None, 0,
 					       lb->pXLabel);
 
       old_dw->get(px,      lb->pXLabel, pset);
@@ -2219,11 +2221,11 @@ void ImpMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       new_dw->get(dispNew,lb->dispNewLabel,dwindex,patch,Ghost::None,0);
 
       new_dw->get(gacceleration,      lb->gAccelerationLabel,
-			dwindex, patch, Ghost::AroundCells, 1);
+			dwindex, patch, Ghost::None, 0);
 
      
       NCVariable<double> dTdt_create, massBurnFraction_create;	
-      new_dw->allocateTemporary(dTdt_create, patch,Ghost::AroundCells,1);
+      new_dw->allocateTemporary(dTdt_create, patch,Ghost::None,0);
       dTdt_create.initialize(0.);
       dTdt = dTdt_create; // reference created data
             
@@ -2341,7 +2343,7 @@ void ImpMPM::interpolateStressToGrid(const ProcessorGroup*,
       constParticleVariable<Matrix3> pstress;
 
       ParticleSubset* pset = new_dw->getParticleSubset(matlindex, patch,
-					       Ghost::AroundNodes, 1,
+					       Ghost::None, 0,
 					       lb->pXLabel_preReloc);
 
       new_dw->get(px,lb->pXLabel_preReloc,pset);
