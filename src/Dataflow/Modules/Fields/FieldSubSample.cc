@@ -55,9 +55,9 @@ private:
   GuiInt jStart_;
   GuiInt kStart_;
 
-  GuiInt iDelta_;
-  GuiInt jDelta_;
-  GuiInt kDelta_;
+  GuiInt iStop_;
+  GuiInt jStop_;
+  GuiInt kStop_;
 
   GuiInt iSkip_;
   GuiInt jSkip_;
@@ -75,9 +75,9 @@ private:
   int jstart_;
   int kstart_;
 
-  int iend_;
-  int jend_;
-  int kend_;
+  int istop_;
+  int jstop_;
+  int kstop_;
 
   int iskip_;
   int jskip_;
@@ -111,9 +111,9 @@ FieldSubSample::FieldSubSample(GuiContext *context)
     jStart_(context->subVar("j-start")),
     kStart_(context->subVar("k-start")),
 
-    iDelta_(context->subVar("i-delta")),
-    jDelta_(context->subVar("j-delta")),
-    kDelta_(context->subVar("k-delta")),
+    iStop_(context->subVar("i-stop")),
+    jStop_(context->subVar("j-stop")),
+    kStop_(context->subVar("k-stop")),
 
     iSkip_(context->subVar("i-skip")),
     jSkip_(context->subVar("j-skip")),
@@ -131,9 +131,9 @@ FieldSubSample::FieldSubSample(GuiContext *context)
     jstart_(-1),
     kstart_(-1),
 
-    iend_(-1),
-    jend_(-1),
-    kend_(-1),
+    istop_(-1),
+    jstop_(-1),
+    kstop_(-1),
 
     iskip_(10),
     jskip_(5),
@@ -250,9 +250,9 @@ void FieldSubSample::execute(){
       jstart_ != jStart_.get() ||
       kstart_ != kStart_.get() ||
 
-      iend_ != (iStart_.get() + iDelta_.get()) ||
-      jend_ != (jStart_.get() + jDelta_.get()) ||
-      kend_ != (kStart_.get() + kDelta_.get()) ||
+      istop_ != iStop_.get() ||
+      jstop_ != jStop_.get() ||
+      kstop_ != kStop_.get() ||
 
       iskip_ != iSkip_.get() ||
       jskip_ != jSkip_.get() ||
@@ -266,9 +266,9 @@ void FieldSubSample::execute(){
     jstart_ = jStart_.get();
     kstart_ = kStart_.get();
 
-    iend_ = iStart_.get() + iDelta_.get();
-    jend_ = jStart_.get() + jDelta_.get();
-    kend_ = kStart_.get() + kDelta_.get();
+    istop_ = iStop_.get();
+    jstop_ = jStop_.get();
+    kstop_ = kStop_.get();
 
     iskip_ = iSkip_.get();
     jskip_ = jSkip_.get();
@@ -277,13 +277,6 @@ void FieldSubSample::execute(){
     iwrap_ = iWrap_.get();
     jwrap_ = jWrap_.get();
     kwrap_ = kWrap_.get();
-    
-    if( !iwrap_ && iend_ >= idim_ )
-      iend_ = idim_ - 1;
-    if( !jwrap_ && jend_ >= jdim_ )
-      jend_ = jdim_ - 1;
-    if( !kwrap_ && kend_ >= kdim_ )
-      kend_ = kdim_ - 1;
     
     updateAll = true;
   }
@@ -298,7 +291,7 @@ void FieldSubSample::execute(){
 
     fHandle_ = algo->execute(fHandle,
 			     istart_, jstart_, kstart_,
-			     iend_, jend_, kend_,
+			     istop_, jstop_, kstop_,
 			     iskip_, jskip_, kskip_,
 			     iwrap_, jwrap_, kwrap_);
   }

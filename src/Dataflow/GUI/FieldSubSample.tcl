@@ -48,8 +48,8 @@ itcl_class SCIRun_Fields_FieldSubSample {
 	    global $this-$index-dim
 	    global $this-$index-start
 	    global $this-$index-start2
-	    global $this-$index-delta
-	    global $this-$index-delta2
+	    global $this-$index-stop
+	    global $this-$index-stop2
 	    global $this-$index-skip
 	    global $this-$index-skip2
 	    global $this-$index-wrap
@@ -57,8 +57,8 @@ itcl_class SCIRun_Fields_FieldSubSample {
 	    set $this-$index-dim     2
 	    set $this-$index-start   0
 	    set $this-$index-start2 "0"
-	    set $this-$index-delta   1
-	    set $this-$index-delta2 "1"
+	    set $this-$index-stop    1
+	    set $this-$index-stop2  "1"
 	    set $this-$index-skip    1
 	    set $this-$index-skip2  "1"
 	    set $this-$index-wrap    0
@@ -87,19 +87,19 @@ itcl_class SCIRun_Fields_FieldSubSample {
         toplevel $w
 
 	frame $w.l
-	label $w.l.direction -text "Index"            -width  5 -anchor w -just left
-	label $w.l.start     -text "Start Node"       -width 10 -anchor w -just left
-	label $w.l.delta     -text "Number of Nodes"  -width 15 -anchor w -just left
-	label $w.l.skip      -text "Increment"        -width  9 -anchor w -just left
-	label $w.l.wrap      -text "Wrap"             -width  4 -anchor w -just left
+	label $w.l.direction -text "Index"      -width  5 -anchor w -just left
+	label $w.l.start     -text "Start Node" -width 10 -anchor w -just left
+	label $w.l.stop      -text "Stop Node"  -width  9 -anchor w -just left
+	label $w.l.skip      -text "Increment"  -width  9 -anchor w -just left
+	label $w.l.wrap      -text "Wrap"       -width  4 -anchor w -just left
 
 	pack $w.l.direction -side left
-	pack $w.l.start     -side left -padx 70
-	pack $w.l.delta     -side left -padx 90
-	pack $w.l.skip      -side left -padx 40
+	pack $w.l.start     -side left -padx  70
+	pack $w.l.stop      -side left -padx 110
+	pack $w.l.skip      -side left -padx  40
 	pack $w.l.wrap      -side left
 
-#	grid $w.l.direction $w.l.start $w.l.delta $w.l.skip $w.l.wrap
+#	grid $w.l.direction $w.l.start $w.l.stop $w.l.skip $w.l.wrap
 
 	for {set i 0} {$i < 3} {incr i 1} {
 	    if { $i == 0 } {
@@ -113,8 +113,8 @@ itcl_class SCIRun_Fields_FieldSubSample {
 	    global $this-$index-dim
 	    global $this-$index-start
 	    global $this-$index-start2
-	    global $this-$index-delta
-	    global $this-$index-delta2
+	    global $this-$index-stop
+	    global $this-$index-stop2
 	    global $this-$index-skip
 	    global $this-$index-skip2
 	    global $this-$index-wrap
@@ -125,9 +125,11 @@ itcl_class SCIRun_Fields_FieldSubSample {
 	    }
 
 	    if [set $this-$index-wrap] {
-		set cc 0
+		set start_val 0
+		set stop_val [expr [set $this-$index-dim] - 1]
 	    } else {
-		set cc 1
+		set start_val 1
+		set stop_val [expr [set $this-$index-dim] - 2]
 	    }
 
 	    frame $w.$index
@@ -137,25 +139,23 @@ itcl_class SCIRun_Fields_FieldSubSample {
 	    pack $w.$index.l -side left
 
 	    scaleEntry4 $w.$index.start \
-		0 [expr [set $this-$index-dim] - [expr $cc + 1] ] 200 \
+		0 $stop_val 200 \
 		$this-$index-start $this-$index-start2 $index
 
-	    scaleEntry2 $w.$index.delta \
-		1 [expr [set $this-$index-dim] - $cc] 200 $this-$index-delta $this-$index-delta2
+	    scaleEntry2 $w.$index.stop \
+		$start_val [expr [set $this-$index-dim] - 1] 200 \
+		$this-$index-stop $this-$index-stop2
 
 	    scaleEntry2 $w.$index.skip \
 		1 50 100 $this-$index-skip $this-$index-skip2
 
 	    checkbutton $w.$index.wrap -variable $this-$index-wrap \
 		    -state $wrap -disabledforeground "" \
-		    -command "$this wrap $w.$index.start $w.$index.delta \
-                          $this-$index-wrap $this-$index-dim \
-			  $this-$index-start $this-$index-start2 \
-                          $this-$index-delta $this-$index-delta2"
+		    -command "$this wrap $index"
 
-	    pack $w.$index.l $w.$index.start $w.$index.delta \
+	    pack $w.$index.l $w.$index.start $w.$index.stop \
 		    $w.$index.skip $w.$index.wrap -side left
-#	    grid $w.$index.l $w.$index.start $w.$index.delta 
+#	    grid $w.$index.l $w.$index.start $w.$index.stop 
 #		    $w.$index.skip $w.$index.wrap
 	}
 
@@ -173,8 +173,6 @@ itcl_class SCIRun_Fields_FieldSubSample {
 	    pack $w.l $w.i $w.misc -side top -padx 10 -pady 5	    
 	}
     }
-
-
 
     method scaleEntry2 { win start stop length var1 var2 } {
 	frame $win 
@@ -209,31 +207,34 @@ itcl_class SCIRun_Fields_FieldSubSample {
     }
 
 
-    method wrap { win1 win2 wrap stop var1 var2 var3 var4 } {
+    method wrap { index } {
 
-	# Update the sliders to have the new end values.
-	if [ set $wrap ] {
-	    set stop_node   [expr [set $stop] - 1]
-	    set stop_number [expr [set $stop] - 0]
-	} else {
-	    set stop_node   [expr [set $stop] - 2]
-	    set stop_number [expr [set $stop] - 1]
-	}
+	global $this-$index-start
+	global $this-$index-start2
+	global $this-$index-stop
+	global $this-$index-stop2
+	global $this-$index-dim
+	global $this-$index-wrap
 
- 	if [ expr [winfo exists $win1] ] {
+	set w .ui[modname]
 
-	    $win1.s configure -from 0 -to $stop_node
+	if [ expr [winfo exists $w] ] {
 
-	    bind $win1.e \
-		<Return> "$this manualSliderEntry 0 $stop_node $var1 $var2"
-	}
+	    # Update the sliders to have the new end values.
 
- 	if [ expr [winfo exists $win1] ] {
+	    if [ set $this-$index-wrap ] {
+		set start_val 0
+		set stop_val  [expr [set $this-$index-dim] - 1]
+	    } else {
+		set start_val [expr [set $this-$index-start] + 1]
+		set stop_val  [expr [set $this-$index-dim] - 2]
+	    }
 
-	    $win2.s configure -from 1 -to $stop_number
+	    $w.$index.start.s configure -from 0 -to $stop_val
+	    $w.$index.stop.s configure -from $start_val -to [expr [set $this-$index-dim] - 1]
 
-	    bind $win2.e \
-		<Return> "$this manualSliderEntry 1 $stop_number $var3 $var4"
+	    bind $w.$index.start.e <Return> "$this manualSliderEntry4 0 $stop_val $this-$index-start $this-$index-start2 $index"
+	    bind $w.$index.stop.e  <Return> "$this manualSliderEntry $start_val  [expr [set $this-$index-dim] - 1] $this-$index-stop $this-$index-stop2"
 	}
     }
 
@@ -258,30 +259,13 @@ itcl_class SCIRun_Fields_FieldSubSample {
 
 	global $this-$index-start
 	global $this-$index-start2
-	global $this-$index-delta
-	global $this-$index-delta2
-	global $this-$index-dim
-	global $this-$index-wrap
+	global $this-$index-stop
+	global $this-$index-stop2
 
-	if { [set $this-$index-wrap] == 0 } {
-
-	    set max [expr [set $this-$index-dim] - 1]
-	    set start [set $this-$index-start]
-	    set delta [set $this-$index-delta]
-
-	    if { [expr $delta + $start] > $max } {
-		set $this-$index-delta [expr $max - $start]
-	    }
-	    set w .ui[modname]
-
-	    if [ expr [winfo exists $w] ] {
-		$w.$index.delta.s configure -from 1 -to [expr $max - $start]
-		bind $w.$index.delta.e <Return> "$this manualSliderEntry 1 [expr $max - $start] $this-$index-delta $this-$index-delta2"
-	    }
-	}
+	wrap $index
 
 	set $this-$index-start2 [set $this-$index-start]
-	set $this-$index-delta2 [set $this-$index-delta]
+	set $this-$index-stop2  [set $this-$index-stop]
     }
 
     method manualSliderEntry4 { start stop var1 var2 index } {
@@ -339,55 +323,40 @@ itcl_class SCIRun_Fields_FieldSubSample {
 
 	    global $this-$index-start
 	    global $this-$index-start2
-	    global $this-$index-delta
-	    global $this-$index-delta2
+	    global $this-$index-stop
+	    global $this-$index-stop2
 	    global $this-$index-skip
 	    global $this-$index-skip2
 
+	    set $this-$index-wrap 0
+
+	    set start_val 1
+	    set stop_val [expr [set $this-$index-dim] - 2]
+
 	    if [ expr [winfo exists $w] ] {
-
-		# Update the sliders to have the new end values.
-		if [ set $this-$index-wrap ] {
-		    $w.$index.start.s configure \
-			-from 0 -to [expr [set $this-$index-dim] - 1]
-		    $w.$index.delta.s configure \
-			-from 1 -to [expr [set $this-$index-dim] - 0]
-
-		    bind $w.$index.start.e <Return> "$this manualSliderEntry4 0 [expr [set $this-$index-dim] - 1] $this-$index-start $this-$index-start2 i"
-		    bind $w.$index.delta.e <Return> "$this manualSliderEntry  1 [expr [set $this-$index-dim] - 0] $this-$index-delta $this-$index-delta2"
-
-		} else {
-		    $w.$index.start.s configure \
-			-from 0 -to [expr [set $this-$index-dim] - 2]
-		    $w.$index.delta.s configure \
-			-from 1 -to [expr [set $this-$index-dim] - 1]
-
-		    bind $w.$index.start.e <Return> "$this manualSliderEntry4 0 [expr [set $this-$index-dim] - 2] $this-$index-start $this-$index-start2 i"
-		    bind $w.$index.delta.e <Return> "$this manualSliderEntry  1 [expr [set $this-$index-dim] - 1] $this-$index-delta $this-$index-delta2"
-		}
 
 		if { [set $this-wrap ] } {
 		    $w.$index.wrap configure -state normal
 		} else {
 		    $w.$index.wrap configure -state disabled 
-		    set $this-$index-wrap 0
 		}
+
+		# Update the sliders to have the new bounds.
+		$w.$index.start.s configure -from          0 -to $stop_val
+		$w.$index.stop.s  configure -from $start_val -to [expr [set $this-$index-dim] - 1]
+
+		bind $w.$index.start.e <Return> "$this manualSliderEntry4          0 $stop_val $this-$index-start $this-$index-start2 i"
+		bind $w.$index.stop.e  <Return> "$this manualSliderEntry  $start_val [expr [set $this-$index-dim] - 1] $this-$index-stop $this-$index-stop2"
 	    }
 
-	    # Update the delta values to be at the initials values.
-	    set $this-$index-start 0
-
-	    if [ set $this-$index-wrap ] {
-		set $this-$index-delta [set $this-$index-dim]
-	    } else {
-		set $this-$index-delta [expr [set $this-$index-dim] - 1]
-	    }
-
-	    set $this-$index-skip  5
+	    # Update the stop values to be at the initials values.
+	    set $this-$index-start 0	    
+	    set $this-$index-stop  $stop_val
+	    set $this-$index-skip  1
 
 	    # Update the text values.
 	    set $this-$index-start2 [set $this-$index-start]
-	    set $this-$index-delta2 [set $this-$index-delta]
+	    set $this-$index-stop2  [set $this-$index-stop]
 	    set $this-$index-skip2  [set $this-$index-skip]
 	}
     }
