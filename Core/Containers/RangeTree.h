@@ -210,6 +210,28 @@ public:
   void topLevelDump(); // for debugging
 
   void bottomLevelDump(); // for debugging
+
+  int getDimensions() const
+  { return DIMENSIONS_; }
+  
+public:
+  /* really only for internal use, although it's public */
+ 
+  int** const getDiagonalDirections() const
+  { return diagonalDirections_; }
+
+  int getNumDiagDirections() const
+  { return numDiagDirections_; }
+
+  static inline TPointElem getL1MetricLength(const TPoint* p, int* direction,
+					     int dimensions);
+
+  static inline
+  TPointElem getDistanceSquared(const TPoint& p1, const TPoint& p2,
+				int dimensions);
+  
+  static inline TPointElem squared(TPointElem p)
+  { return p * p; }  
 private:
   class BaseLevelSet;
 
@@ -242,11 +264,6 @@ private:
     // up to dimension d (asserting that it has already been checked for the
     // other dimensions).
     bool isPointInDirection(const TPoint& p, int* direction, int d);
-
-    template <int SIDE>
-    inline RangeTreeNode* getChild()
-    { return (SIDE == RANGE_LEFT) ? leftChild_ : rightChild_; }
-
     void singleDimensionDump(int d);
     
     RangeTreeNode* leftChild_;
@@ -294,52 +311,29 @@ private:
       return (((firstGrEq < size_) && (*points_[firstGrEq])[0] == e) ?
 	      firstGrEq : firstGrEq - 1);
     }
-
-    // use cascading to get the index in the sub-BaseLevelSet (right or
-    // left depending on SUB_SIDE) which corresponds to the first element >=
-    // to element i in this set, or is the last element <= to element i in
-    // this set (depending on BOUND_FROM_SIDE).
-    template <int SUB_SIDE, int BOUND_FROM_SIDE>
-    inline int getCascadedSubIndex(int i, BaseLevelSet* sub)
-    {
-      ASSERT(sub == ((SUB_SIDE == RANGE_LEFT) ? leftSubset_ : rightSubset_));
-	     
-      int subIndex = getSubGreaterEq<SUB_SIDE>(i);
-      if ((BOUND_FROM_SIDE == RANGE_RIGHT) &&
-	  ((subIndex == sub->getSize()) ||
-	   (*sub->points_[subIndex])[0] > (*points_[i])[0]))
-	return subIndex - 1; // go lesser instead of greater
-      else
-	return subIndex; // equal or greater
-    }
     
     // Use a lookup table to find the element in A(lc(v)) or A(rc(v))
-    // (depending on whether 'left' is true or not) that is the first
-    // one greater than or equal to the ith one in A(v).
-    template <int SIDE>
-    inline int getSubGreaterEq(int i /* , BaseLevelSet* sub */
-			             /* pass in for verification */)
-    { return ((SIDE == RANGE_LEFT) ?
-	      getLeftSubGreaterEq(i /* , sub */) :
-	      getRightSubGreaterEq(i /* , sub */));
+    // (left or right versions) that is the first one greater than or
+    // equal to the ith one in A(v).
+    inline int getLeftSubGreaterEq(int i, BaseLevelSet* sub)
+    {
+      ASSERT(leftSubset_ == sub);
+      CHECKARRAYBOUNDS(i, 0, size_+1);
+      return leftSubLinks_[i];
     }
-
-    inline int getLeftSubGreaterEq(int i /*, BaseLevelSet* sub */)
-    { /* ASSERT(leftSubset_ == sub); */
+    inline int getRightSubGreaterEq(int i, BaseLevelSet* sub)
+    {
+      ASSERT(rightSubset_ == sub);
       CHECKARRAYBOUNDS(i, 0, size_+1);
-      return leftSubLinks_[i]; }
-
-    inline int getRightSubGreaterEq(int i /*, BaseLevelSet* sub */)
-    { /* ASSERT(rightSubset_ == sub); */
-      CHECKARRAYBOUNDS(i, 0, size_+1);
-      return rightSubLinks_[i]; }
+      return rightSubLinks_[i];
+    }
 
     // Append points to found list in the range from points_[start]
     // until points_[j] <= high.
     void getRange(list<TPoint*>& found, int start, TPointElem high);
 
-    void setExtremePoints(int** diagonalDirections, int numDiagDirections,
-			  int dimensions);
+    void setExtremePoints(int** const diagonalDirections,
+			  int numDiagDirections, int dimensions);
 
     template <int BOUND_FROM_SIDE>
     inline TPoint* getExtremePoint(int i, int directionIndex,
@@ -391,10 +385,39 @@ private:
     BaseLevelSet* rightSubset_;
 #endif
   };
+  
+public:
+  // The only reason this is not a member of RAngeTreeNode is due to a
+  // g++ compiler bug relating to templates functions.
+  template <int SIDE>
+  static inline RangeTreeNode* getChild(RangeTreeNode* node)
+  { return (SIDE == RANGE_LEFT) ? node->leftChild_ : node->rightChild_; }
 
+  /* Likewise, these aren't in BaseLevelSet because of the same g++ compiler
+     bug */
+  
+  // use cascading to get the index in the sub-BaseLevelSet (right or
+  // left depending on SUB_SIDE) which corresponds to the first element >=
+  // to element i in this set, or is the last element <= to element i in
+  // this set (depending on BOUND_FROM_SIDE).
+  template <int SUB_SIDE, int BOUND_FROM_SIDE>
+  static inline int getCascadedSubIndex(BaseLevelSet* parent, int i,
+					BaseLevelSet* sub);    
+
+  template <int SIDE>
+  static inline int getSubGreaterEq(BaseLevelSet* parent, int i,
+				    BaseLevelSet* sub /* for verification */)
+  {
+    return (SIDE == RANGE_LEFT) ?
+      parent->getLeftSubGreaterEq(i, sub) :
+      parent->getRightSubGreaterEq(i, sub);
+  }
+
+private:
   // Traverse down one side of a tree in some dimension visiting each
-  // node that is the highest node fully contained within a given minmax
-  // boundary (min if SIDE = RANGE_LEFT, max if SICE = RANGE_RIGHT).
+  // node that is the highest node whose sorting point is contained within
+  // some boundary in that dimension according to some BoundTester class.
+  // (see BasicBoundTester and RadialBoundTester).
   template <int SIDE>
   class Traverser
   {
@@ -404,16 +427,15 @@ private:
     Traverser(Traverser& traverser)
       : node_(traverser.node_), D_(traverse.D_) {}
 
-    template<class BoundTester>
+    template <class BoundTester>
     inline bool goNext(const BoundTester& boundTester);
 
     RangeTreeNode* getNode()
     { return node_; }
 
   protected:
-    const int D_;
     RangeTreeNode* node_;
-
+    const int D_;
   private:
     Traverser& operator=(const Traverser&);    
   };
@@ -432,22 +454,25 @@ private:
   {
   public:
     CascadeTraverser(RangeTreeNode* vsplit, int subIndex)
-      : RangeTree<TPoint, TPointElem, ALLOW_NEAREST_NEIGHBOR_QUERY>::Traverser<SIDE>(vsplit, 1), subIndex_(subIndex)
+      : RangeTree<TPoint, TPointElem, ALLOW_NEAREST_NEIGHBOR_QUERY>::
+    Traverser<SIDE>(vsplit, 1), subIndex_(subIndex)
     { ASSERT(subIndex != -1); }
 
     CascadeTraverser(CascadeTraverser& traverser)
-      : RangeTree<TPoint, TPointElem, ALLOW_NEAREST_NEIGHBOR_QUERY>::Traverser<SIDE>(traverser), subIndex_(traverser.subIndex_) {}
+      : RangeTree<TPoint, TPointElem, ALLOW_NEAREST_NEIGHBOR_QUERY>::
+    Traverser<SIDE>(traverser), subIndex_(traverser.subIndex_) {}
 
     // quitOnBadIndex is only relevant if BOUND_FROM_SIDE == RANGE_LEFT,
     // otherwise it will quit regardless (because it can't handle negative
     // indices).
-    template<class BoundTester>
+    template <class BoundTester>
     inline bool goNext(const BoundTester& boundTester,
 		       bool quitOnBadIndex = true);
 
-    int getCascadedSubIndex()
+    int getCurrentCascadedIndex()
     { return subIndex_; }
-  private:
+
+  private:        
     inline bool isValidIndex(int subIndex, const BaseLevelSet* sub)
     {
       if (BOUND_FROM_SIDE == RANGE_LEFT)
@@ -461,26 +486,26 @@ private:
   };
 
   /* BoundTester classes to be used in the goNext methods of the traversers */
+  template <int SIDE>
   class BasicBoundTester
   {
   public:
     BasicBoundTester(const TPointElem& minmax)
       : minmax_(minmax) { }
     
-    template <int SIDE>
     inline bool isInBound(TPointElem x) const
     { return (SIDE == RANGE_LEFT) ? x >= minmax_ : x <= minmax_; }
   private:
     TPointElem minmax_;
   };
 
+  template <int SIDE>
   class RadialBoundTester
   {
   public:
     RadialBoundTester(const TPointElem& p, const TPointElem& radiusSquared)
       : p_(p), radiusSquared_(radiusSquared) { }
 
-    template <int SIDE>
     inline bool isInBound(TPointElem x) const
     {
       TPointElem diff = x - p_;
@@ -573,16 +598,6 @@ private:
     else
       return (x2 > 0) ? 0 : ((x1 > x2) ? x1 : x2) /* both < 0 */;
   }
-
-  static inline TPointElem getL1MetricLength(const TPoint* p, int* direction,
-					     int dimensions);
-
-  static inline
-  TPointElem getDistanceSquared(const TPoint& p1, const TPoint& p2,
-				int dimensions);
-  
-  static inline TPointElem squared(TPointElem p)
-  { return p * p; }
 
   void setDiagonalDirections();
   
@@ -794,9 +809,9 @@ RangeTreeNode(int d, TPoint** dSorted, TPoint*** subDSorted, int low, int high,
   else if (d == 1) {
     lowerLevel_.bls = scinew BaseLevelSet(&subDSorted[0][low], high-low);
     if (ALLOW_NEAREST_NEIGHBOR_QUERY)
-      lowerLevel_.bls->setExtremePoints(entireTree->diagonalDirections_,
-					entireTree->numDiagDirections_,
-					entireTree->DIMENSIONS_);
+      lowerLevel_.bls->setExtremePoints(entireTree->getDiagonalDirections(),
+					entireTree->getNumDiagDirections(),
+					entireTree->getDimensions());
   }
 
   // split points by the mid value of the (d-1)th dimension
@@ -924,9 +939,9 @@ singleDimensionDump(int d)
 template<class TPoint, class TPointElem, bool ALLOW_NEAREST_NEIGHBOR_QUERY>
 RangeTree<TPoint, TPointElem, ALLOW_NEAREST_NEIGHBOR_QUERY>::BaseLevelSet::
 BaseLevelSet(TPoint** points, int n)
-  : points_(scinew TPoint*[n]),
+  : points_(scinew TPoint*[n]), size_(n),
     leftSubLinks_(scinew int[n+1]), rightSubLinks_(scinew int[n+1]),
-    extremePoints_(0), size_(n)
+    extremePoints_(0)
 {
   ASSERT(size_ >= 1);
   for (int i = 0; i < size_; i++)
@@ -950,7 +965,7 @@ RangeTree<TPoint, TPointElem, ALLOW_NEAREST_NEIGHBOR_QUERY>::BaseLevelSet::
 template<class TPoint, class TPointElem, bool ALLOW_NEAREST_NEIGHBOR_QUERY>
 void
 RangeTree<TPoint, TPointElem, ALLOW_NEAREST_NEIGHBOR_QUERY>::BaseLevelSet::
-setExtremePoints(int** diagonalDirections, int numDiagDirections,
+setExtremePoints(int** const diagonalDirections, int numDiagDirections,
 		 int dimensions)
 {
   extremePoints_ = scinew TPoint**[size_];
@@ -1006,6 +1021,21 @@ setExtremePoints(int** diagonalDirections, int numDiagDirections,
       }
     }
   }  
+}
+
+template<class TPoint, class TPointElem, bool ALLOW_NEAREST_NEIGHBOR_QUERY>
+template<int SUB_SIDE, int BOUND_FROM_SIDE>
+inline int
+RangeTree<TPoint, TPointElem, ALLOW_NEAREST_NEIGHBOR_QUERY>::
+getCascadedSubIndex(BaseLevelSet* parent, int i, BaseLevelSet* sub)
+{
+  int subIndex = getSubGreaterEq<SUB_SIDE>(parent, i, sub);
+  if ((BOUND_FROM_SIDE == RANGE_RIGHT) &&
+      ((subIndex == sub->getSize()) ||
+       ((*sub->getPoint(subIndex))[0] > (*parent->getPoint(i))[0])))
+    return subIndex - 1; // go lesser instead of greater
+  else
+    return subIndex; // equal or greater
 }
 
 template<class TPoint, class TPointElem, bool ALLOW_NEAREST_NEIGHBOR_QUERY>
@@ -1103,16 +1133,16 @@ template<class TPoint, class TPointElem, bool ALLOW_NEAREST_NEIGHBOR_QUERY>
 template<int SIDE>
 template<class BoundTester>
 inline bool
-RangeTree<TPoint, TPointElem, ALLOW_NEAREST_NEIGHBOR_QUERY>::Traverser<SIDE>::
+RangeTree<TPoint, TPointElem, ALLOW_NEAREST_NEIGHBOR_QUERY>::Traverser::
 goNext(const BoundTester& boundTester)
 {
   const int OTHER_SIDE = (SIDE + 1) % 2;
   ASSERT(!node_->isLeaf());
 
-  node_ = node_->getChild<SIDE>();
+  node_ = getChild<SIDE>(node_);
   while (!node_->isLeaf() &&
-	 !boundTester.isInBound<SIDE>((*node_->point_)[D_]))
-      node_ = node_->getChild<OTHER_SIDE>();
+	 !boundTester.isInBound((*node_->point_)[D_]))
+      node_ = getChild<OTHER_SIDE>(node_);
   return !node_->isLeaf();
 }
 
@@ -1121,30 +1151,30 @@ template<int SIDE, int BOUND_FROM_SIDE>
 template<class BoundTester>
 inline bool
 RangeTree<TPoint, TPointElem, ALLOW_NEAREST_NEIGHBOR_QUERY>::
-CascadeTraverser<SIDE, BOUND_FROM_SIDE>::goNext(const BoundTester& boundTester,
-						bool quitOnBadIndex /*=true*/)
+CascadeTraverser::goNext(const BoundTester& boundTester,
+			 bool quitOnBadIndex /*=true*/)
 {
   const int OTHER_SIDE = (SIDE + 1) % 2;
   ASSERT(!node_->isLeaf());
   BaseLevelSet* parentSub = node_->lowerLevel_.bls;
   BaseLevelSet* sub;
   
-  node_ = node_->getChild<SIDE>();
+  node_ = getChild<SIDE>(node_);
   sub = node_->lowerLevel_.bls;
-  subIndex_ = parentSub->
-    getCascadedSubIndex<SIDE, BOUND_FROM_SIDE>(subIndex_, sub);
+  subIndex_ =
+    getCascadedSubIndex<SIDE, BOUND_FROM_SIDE>(parentSub, subIndex_, sub);
   if (((BOUND_FROM_SIDE == RANGE_RIGHT) || quitOnBadIndex) &&
       !isValidIndex(subIndex_, sub)) {
     return false; // no more points in range at the base level
   }
   
   while (!node_->isLeaf() &&
-	 !boundTester.isInBound<SIDE>((*node_->point_)[D_])){
+	 !boundTester.isInBound((*node_->point_)[D_])){
     parentSub = sub;    
-    node_ = node_->getChild<OTHER_SIDE>();
+    node_ = getChild<OTHER_SIDE>(node_);
     sub = node_->lowerLevel_.bls;
-    subIndex_ = parentSub->
-      getCascadedSubIndex<OTHER_SIDE, BOUND_FROM_SIDE>(subIndex_, sub);
+    subIndex_ = getCascadedSubIndex<OTHER_SIDE, BOUND_FROM_SIDE>
+      (parentSub, subIndex_, sub);
     if (((BOUND_FROM_SIDE == RANGE_RIGHT) || quitOnBadIndex) &&
 	!isValidIndex(subIndex_, sub)) {
       return false;// no more points in range at the base level
@@ -1251,13 +1281,13 @@ queryFromSplit(RangeTreeNode* vsplit, list<TPoint*>& found,
 {
   const int OTHER_SIDE = (SIDE + 1) % 2;
   TPointElem minmax = ((SIDE == RANGE_LEFT) ? low[d] : high[d]);
-  BasicBoundTester boundTester(minmax);
+  BasicBoundTester<SIDE> boundTester(minmax);
 
   // traverse the tree and do queries on the inner sub-trees that are
   // fully contained in the range at this level
   Traverser<SIDE> traverser(vsplit, d);
   while (traverser.goNext(boundTester)) {
-    query(traverser.getNode()->getChild<OTHER_SIDE>()->lowerLevel_.rtn,
+    query(getChild<OTHER_SIDE>(traverser.getNode())->lowerLevel_.rtn,
 	  found, low, high, d-1);
   }
 
@@ -1280,21 +1310,20 @@ queryFromSplitD1(RangeTreeNode* vsplit, list<TPoint*>& found,
   
   TPointElem minmax = ((SIDE == RANGE_LEFT) ?
 		      low[d] : high[d]);
-  BasicBoundTester boundTester(minmax);
+  BasicBoundTester<SIDE> boundTester(minmax);
 
   // traverse the tree and do queries on the inner sub-trees that are
   // fully contained in the range at this level
-  CascadeTraverser<SIDE, RANGE_LEFT> traverser(vsplit,
-					       splitSubFirstGreaterEq);
+  CascadeTraverser<SIDE, RANGE_LEFT> traverser(vsplit, splitSubFirstGreaterEq);
   while (traverser.goNext(boundTester)) {
     // base case, d == 1 querying d = 0
     RangeTreeNode* node = traverser.getNode();
-    BaseLevelSet* sub = node->getChild<OTHER_SIDE>()->lowerLevel_.bls;
+    BaseLevelSet* sub = getChild<OTHER_SIDE>(node)->lowerLevel_.bls;
     // fractional cascading - constant time lookup
-    int cascadedSubIndex = traverser.getCascadedSubIndex();
+    int cascadedSubIndex = traverser.getCurrentCascadedIndex();
 
-    int firstGreaterEqLow = node->lowerLevel_.bls->
-      getCascadedSubIndex<OTHER_SIDE, RANGE_LEFT>(cascadedSubIndex, sub);
+    int firstGreaterEqLow = getCascadedSubIndex<OTHER_SIDE, RANGE_LEFT>
+      (node->lowerLevel_.bls, cascadedSubIndex, sub);
       
     sub->getRange(found, firstGreaterEqLow, high[0]);
   }
@@ -1362,7 +1391,7 @@ querySphereFromSplit(RangeTreeNode* vsplit, list<TPoint*>& found,
 		     TPointElem availableRadiusSquared, int d)
 {
   const int OTHER_SIDE = (SIDE + 1) % 2;
-  RadialBoundTester boundTester(p[d], availableRadiusSquared);
+  RadialBoundTester<SIDE> boundTester(p[d], availableRadiusSquared);
 
   // traverse the tree and do queries on the inner sub-trees that are
   // fully contained in the range at this level
@@ -1378,7 +1407,7 @@ querySphereFromSplit(RangeTreeNode* vsplit, list<TPoint*>& found,
     // availableRadius in the next level.
     minDiff = getMinInRange(diff, prevDiff);
     querySphere<STRICTLY_INSIDE>
-      (traverser.getNode()->getChild<OTHER_SIDE>()->lowerLevel_.rtn, found, p,
+      (getChild<OTHER_SIDE>(traverser.getNode())->lowerLevel_.rtn, found, p,
        radiusSquared, availableRadiusSquared - minDiff*minDiff, d-1);
     prevDiff = diff;
   }
@@ -1403,7 +1432,7 @@ querySphereFromSplitD1(RangeTreeNode* vsplit, list<TPoint*>& found,
   const int d = 1;
   const int OTHER_SIDE = (SIDE + 1) % 2;
   int i;
-  RadialBoundTester boundTester(p[d], availableRadiusSquared);
+  RadialBoundTester<SIDE> boundTester(p[d], availableRadiusSquared);
 
   // traverse the tree and do queries on the inner sub-trees that are
   // fully contained in the range at this level
@@ -1412,16 +1441,16 @@ querySphereFromSplitD1(RangeTreeNode* vsplit, list<TPoint*>& found,
   TPointElem diff;
   TPointElem minDiff;
   while (traverser.goNext(boundTester, false /* don't quit on a bad index
-						because it needs to check
-						elements before it */)) {
+					        because it needs to check
+					        elements before it */)) {
     // base case, d == 1 querying d = 0
     RangeTreeNode* node = traverser.getNode();
-    BaseLevelSet* sub = node->getChild<OTHER_SIDE>()->lowerLevel_.bls;
+    BaseLevelSet* sub = getChild<OTHER_SIDE>(node)->lowerLevel_.bls;
     // fractional cascading - constant time lookup
-    int cascadedSubIndex = traverser.getCascadedSubIndex();
+    int cascadedSubIndex = traverser.getCurrentCascadedIndex();
 
-    int indexP = node->lowerLevel_.bls->
-      getCascadedSubIndex<OTHER_SIDE, RANGE_LEFT>(cascadedSubIndex, sub);
+    int indexP = getCascadedSubIndex<OTHER_SIDE, RANGE_LEFT>
+      (node->lowerLevel_.bls, cascadedSubIndex, sub);
 
     // All query points below will be between p[d] + prevDiff and p[d] + diff,
     // get the closest possible value in that range in order to reduce the
@@ -1544,7 +1573,7 @@ queryNearestL1FromSplit(RangeTreeNode* vsplit, const TPoint& p,
   // Traverse along the near side of the split, putting the nodes (and
   // indices if D1 is true) in lists to be iterated in reverse order.
   edgeNodes.push_back(vsplit);
-  BasicBoundTester nearBoundTester(p[d]);
+  BasicBoundTester<NEAR_SIDE> nearBoundTester(p[d]);
   if (D1) {
     splitSubIndex = vsplit->lowerLevel_.bls->
       findFirstFromSide<BASE_BOUND_SIDE>(p[0]);
@@ -1553,12 +1582,12 @@ queryNearestL1FromSplit(RangeTreeNode* vsplit, const TPoint& p,
 	(splitSubIndex >= vsplit->lowerLevel_.bls->getSize()))
       return; // no points in this sub tree are on the searching side of p[0]
     
-    CascadeTraverser<NEAR_SIDE, BASE_BOUND_SIDE>
-      traverser(vsplit, splitSubIndex);
+    CascadeTraverser<NEAR_SIDE, BASE_BOUND_SIDE> traverser(vsplit,
+							   splitSubIndex);
     do {
       // push in front to automatically iterate in reverse order 
       edgeNodes.push_front(traverser.getNode());
-      subCascadedIndices.push_front(traverser.getCascadedSubIndex());
+      subCascadedIndices.push_front(traverser.getCurrentCascadedIndex());
     } while (traverser.goNext(nearBoundTester));
     if (traverser.getNode()->isLeaf())
       leafNode = traverser.getNode();
@@ -1618,16 +1647,15 @@ queryNearestL1FromSplit(RangeTreeNode* vsplit, const TPoint& p,
       break;
     }
     if (!D1)
-      queryNearestL1(prev->getChild<FAR_SIDE>()->lowerLevel_.rtn, p, pL1Length,
+      queryNearestL1(getChild<FAR_SIDE>(prev)->lowerLevel_.rtn, p, pL1Length,
 		     d-1, directionIndex, prevMinL1Distance,
 		     nearestKnownL1Distance, nearest);
     else if (D1) {
       // base case - find best candidate and test it
-      BaseLevelSet* sub = prev->getChild<FAR_SIDE>()->lowerLevel_.bls;
+      BaseLevelSet* sub = getChild<FAR_SIDE>(prev)->lowerLevel_.bls;
 
-      int cascadedIndex = prev->lowerLevel_.bls->
-	getCascadedSubIndex<FAR_SIDE, BASE_BOUND_SIDE>(*cascadedIndexIter,
-						       sub);
+      int cascadedIndex = getCascadedSubIndex<FAR_SIDE, BASE_BOUND_SIDE>
+	(prev->lowerLevel_.bls, *cascadedIndexIter, sub);
       // constant time lookup
       TPoint* candidate =
 	sub->getExtremePoint<BASE_BOUND_SIDE>(cascadedIndex, directionIndex,
@@ -1646,13 +1674,13 @@ queryNearestL1FromSplit(RangeTreeNode* vsplit, const TPoint& p,
     Traverser<FAR_SIDE> traverser(vsplit, d);
     
     while (traverser.goNext
-	   (BasicBoundTester
+	   (BasicBoundTester<FAR_SIDE>
 	    (addInDirection<FAR_SIDE>(offsetP, nearestKnownL1Distance)))) {
       // add to the minL1Distance for the next level
       RangeTreeNode* node = traverser.getNode();
       currentMinL1Distance =
 	distance<NEAR_SIDE>(offsetP, (*node->point_)[d]);
-      queryNearestL1(node->getChild<NEAR_SIDE>()->lowerLevel_.rtn,
+      queryNearestL1(getChild<NEAR_SIDE>(node)->lowerLevel_.rtn,
 		     p, pL1Length,d-1, directionIndex, currentMinL1Distance,
 		     nearestKnownL1Distance, nearest);
     }
@@ -1660,18 +1688,18 @@ queryNearestL1FromSplit(RangeTreeNode* vsplit, const TPoint& p,
   }
   else {
     // base case, d == 1 querying down to d == 0
-    CascadeTraverser<FAR_SIDE, BASE_BOUND_SIDE>
-      traverser(vsplit, splitSubIndex);
+    CascadeTraverser<FAR_SIDE, BASE_BOUND_SIDE> traverser(vsplit,
+							  splitSubIndex);
     
     while (traverser.goNext
-	   (BasicBoundTester
+	   (BasicBoundTester<FAR_SIDE>
 	    (addInDirection<FAR_SIDE>(offsetP, nearestKnownL1Distance)))) {
       RangeTreeNode* node = traverser.getNode();
-      BaseLevelSet* sub = node->getChild<NEAR_SIDE>()->lowerLevel_.bls;
+      BaseLevelSet* sub = getChild<NEAR_SIDE>(node)->lowerLevel_.bls;
       // fractional cascading - constant time lookup
-      int index = traverser.getCascadedSubIndex();
-      index = node->lowerLevel_.bls->
-	getCascadedSubIndex<NEAR_SIDE, BASE_BOUND_SIDE>(index, sub);
+      int index = traverser.getCurrentCascadedIndex();
+      index = getCascadedSubIndex<NEAR_SIDE, BASE_BOUND_SIDE>
+	(node->lowerLevel_.bls, index, sub);
       TPoint* candidate =
 	sub->getExtremePoint<BASE_BOUND_SIDE>(index, directionIndex,
 					      numDiagDirections_);
