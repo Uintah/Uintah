@@ -1,663 +1,955 @@
-
-<HTML>
-  <TITLE>BioTensor Tutorial</TITLE>
-
-<BODY bgcolor="#a9a9a9">
-
-
-<CENTER>
-<TABLE border="0" cellpadding="20" cellspacing="5" width="640" bgcolor="#cccccc">
-<TR><TD>
-
-<CENTER>
-<IMG SRC="images/biot-banner-main.gif">
-<FONT face="Arial,Helvetica,Geneva,Swiss,SunSans-Regular" color="Maroon">
-<H1> BioTensor Tutorial </H1>
-</FONT>
-</CENTER>
-
-<H2>Contents</H2>
-<H3>Sections</H3>
-
-<OL>
-  <LI value="1"> <A HREF="#section_1">Introduction</A>
-  <LI value="2"> <A HREF="#section_2">Getting Started</A>
-    <OL>
-      <LI value="1"> <A HREF="#section_2_1">SCIRun Environment Variables</A>
-      <LI value="2"> <A HREF="#section_2_2">Launching BioTensor</A>
-      <LI value="3"> <A HREF="#section_2_3">User Interface Organization</A>
-    </OL>
-  <LI value="3"> <A HREF="#section_3">Loading Data</A>
-  <LI value="4"> <A HREF="#section_4">Registration of Echo-Planar DWIs</A>
-  <LI value="5"> <A HREF="#section_5">Building Tensors (Tensor Estimation)</A>
-  <LI value="6"> <A HREF="#section_6">Visualization</A>
-  <OL>
-    <LI value="1"> <A HREF="#section_6_1">Rendering Window</A>
-    <LI value="2"> <A HREF="#section_6_2">Planes</A>
-    <LI value="3"> <A HREF="#section_6_3">Isosurface</A>
-    <LI value="4"> <A HREF="#section_6_4">Glyphs</A>
-    <LI value="5"> <A HREF="#section_6_5">Fibers</A>
-  </OL
-</OL>
-
-<H3>Figures</H3>
-<UL>
-  <LI><A HREF="#figure_1">Figure 1: BioTensor Interface Window</A>
-  <LI><A HREF="#figure_2">Figure 2: BioTensor Interface Window (Detached Panes)</A>
-  <LI><A HREF="#figure_3">Figure 3: File Menu</A>
-  <LI><A HREF="#figure_4">Figure 4: Help Menu</A>
-  <LI><A HREF="#figure_5">Figure 5: File Load Dialog</A>
-  <LI><A HREF="#figure_6">Figure 6: Registration Tab</A>
-  <LI><A HREF="#figure_7">Figure 7: Registration Improvement</A>
-  <LI><A HREF="#figure_8">Figure 8: Final Processing Stage</A>
-  <LI><A HREF="#figure_9">Figure 9: Cutting Plane Visualization</A>
-  <LI><A HREF="#figure_10">Figure 10: Isosurface Visualization</A>
-  <LI><A HREF="#figure_11">Figure 11: Clipped Plane Visualization</A>
-  <LI><A HREF="#figure_12">Figure 12: Glyph Box Visualization</A>
-  <LI><A HREF="#figure_13">Figure 13: Superquadric Glyph Visualization</A>
-  <LI><A HREF="#figure_14">Figure 14: Fiber Visualization</A>
-  <LI><A HREF="#figure_15">Figure 15: Single Fiber</A>
-  <LI><A HREF="#figure_16">Figure 16: Planes and Fibers</A>
-</UL>
-
-<H2><A NAME="section_1"> Section 1 -- Introduction </H2>
-
-BioTensor is a program for processing and visualizing diffusion tensor
-images.  It can read in diffusion weighted images (DWIs), perform
-correction for a common class of distortions in echo-planar imaging,
-estimate tensors from the DWIs, and generate a variety of
-visualizations of the diffusion tensor field.  The application
-framework which created BioTensor makes it easy to extend its
-functionality with new modules.  Future version will have expanded
-capabilities, based on contributions from external collaborators as
-well as internal development.
-<P>
-Diffusion weighting imaging uses the diffusion of water molecules to
-probe the directional micro-structure of living tissue.  A single
-diffusion weighted image generally measures diffusivity of water
-molecules along a particular direction.  The amount of diffusion along
-this direction is detected by destructive interference of the
-different phase signatures created by the magnetic gradient.  A
-sufficiently large set of DWIs along carefully chosen gradient
-directions permits estimation of a diffusion tensor which models the
-relationship between direction and diffusivity.  This software
-provides the means of going from DWIs to "diffusion tensor images"
-(DTIs), which are actually three-dimensional fields of tensor values.
-Many of the seminal papers on diffusion tensor imaging, written by
-Peter Basser and others, can be found at
-<http://dir2.nichd.nih.gov/nichd/stbb/publications.html>.
-<P>
-One of the most important applications of diffusion tensor imaging is
-determining the connective structure of central nervous tissue, made
-possible by the directionally constrained diffusion of water within or
-between the myelinated axon sheaths of white matter. The extent to
-which diffusion is faster along some directions than others is termed
-anisotropy; white matter within the brain is more anisotropic than the
-gray matter on its cortical surface.  The visualization capabilities
-in BioTensor allow you to:
-<P>
-<UL>
-   <LI> Inspect individual tensor sample with various glyphs, or icons;
-   <LI> determine the over-all shape of anisotropic regions through
-        isosurfaces of different aniosotropy metrics; and
-   <LI> trace the connectivity along white matter tracts by forming
-        paths which follow the tensor principal eigenvector, or which
-        use the tensorline algorithm.
-</UL>
-
-<H2><A NAME="section_2"> Section 2 -- Getting Started </H2>
-
-In this section we describe how to get started using BioTensor.
-Subsequent sections will cover the various features and functions of
-the software, along with snapshots of the software in action.
-
-<BR><H3><A NAME="section_2_1"> 2.1 SCIRun Environment Variables </H3>
-
-If you have downloaded the SCIRun datasets (available from
-http://software.sci.utah.edu/scirun-datasets.html) then you have an
-example dataset you can begin investigating with BioTensor.  You are,
-of course, also encourage to use BioTensor to investigate your own
-datasets.  Details of how to import data into BioTensor will be
-provided in Section 3.  If you do choose to use the example SCIRun
-datasets, you are encouraged to set your SCIRUN_DATA environment
-variable to point to the location of the data.  This is not mandatory,
-but it is recommended.
-
-<BR><H3><A NAME="section_2_2"> 2.2 Launching BioTensor </H3>
-
-To launch the BioTensor application, 'cd' into the directory in which
-the BioTensor executable is located (if you have done an RPM
-installation, that directory is /usr/local/SCIRun/bin/), and then type
-'./BioTensor'.  The BioTensor application will take a few moments to
-start up, and will launch a user interface window like the one shown
-in <A HREF="#figure_1">Figure 1</A>.
-
-<A NAME="figure_1">
-<BR><BR>
-<CENTER>
-<P><A HREF="figures/biotensor-load.gif"><IMG BORDER=1 SRC="figures/biotensor-load-small.gif"></A><br>
-<B>Figure 1: BioTensor Interface Window (Initial State).</b>
-</CENTER>
-
-<BR><H3><A NAME="section_2_3"> 2.3 User Interface Organization </H3>
-
-The user interface for the BioTensor application is a typical layout
-for the SCIRun/BioPSE PowerApps.  Specifically, there is a Processing
-Pane on the left, which guides you through the stages of the
-application.  In the middle, there is a Rendering window, which is
-where all of the data interaction and visualization is performed.
-Finally, on the right, there is a Visualization Pane, from which you
-can control many of the parameters for the Rendering window.  Because
-it is often desirable to view the Rendering window at full-screen
-resolution, we have added support for detaching and reattaching these
-three panes by clicking on the vertical dashed lines between them.
-When separated, the panes appear as shown in <A HREF="#figure_2">Figure 2.</A>
-
-<A NAME="figure_2">
-<BR><BR>
-<CENTER>
-<P><A HREF="figures/biotensor-panes.gif"><IMG BORDER=1 SRC="figures/biotensor-panes-small.gif"></A><br>
-<B>Figure 2: BioTensor Interface Window (Panels Detached From View Window).</b>
-</CENTER>
-
-<P>
-At the top of the Processing Pane, there are two top-level menu
-options: File and Help, as shown in <A HREF="#figure_3">Figures 3</A>
-and <A HREF ="#figure_4">4</A>.  These menus contain options for loading and
-saving BioTensor settings, as well as options for controlling the
-appearance of 'tooltips' within BioTensor.
-
-<A NAME="figure_3">
-<BR><BR>
-<CENTER>
-<P><IMG BORDER=1 SRC="figures/biotensor-file.gif"><br>
-<B>Figure 3: File Menu.</b>
-</CENTER>
-<A NAME="figure_4">
-<BR><BR>
-<CENTER>
-<P><IMG BORDER=1 SRC="figures/biotensor-help.gif"><br>
-<B>Figure 4: Help Menu.</b>
-</CENTER>
-
-<P>
-At the bottom of the Processing Pane, there is a Progress Indicator
-and a text description which indicate the current state of the
-application, as well as suggesting the next processing step.  Just
-above the Progress Indicator are two buttons: a blue Execute button
-and a yellow Next button.  The Execute button can be pressed to invoke
-the current processing step.  Once a stage has been completed, the
-Next button will become enabled, allowing you to progress to the next
-stage.
-
-<BR><H2><A NAME="section_3"> Section 3: Loading Data </H2>
-
-BioTensor can be used to process raw DWI images, producing DTI data
-for visualization.  Alternatively, if you already have Tensor data
-available, that data can be loaded into BioTensor for immediate
-investigation (bypassing the processing stages).  Both alternatives
-will be described in this section.
-<P>
-To process and visualize DWI data, use the Browse buttons (an example
-File Browser window can be seen in <A HREF="#figure_5">Figure 5</A>.
-The Browse buttons are located on the Load Data tab of the Processing
-Pane, and can be used to specify the DWI volumes and the B0 reference
-volume.  These datasets can be loaded either as Nrrd formatted data
-(as described at http://teem.sourceforge,net), as Analyze volumes, or
-as a set of DICOM image volumes.
-
-<A NAME="figure_5">
-<BR><BR>
-<CENTER>
-<P><IMG BORDER=1 SRC="figures/biotensor-load-browse.jpg"><br>
-<B>Figure 5: File Load Dialog.</b>
-</CENTER>
-
-<P>
-If you load Nrrd files for the input datasets, the DWI volume
-should be constructed as a 4-dimensional array (several 3-D channel
-volumes stacked contiguously in memory).  The reference data (B0) volume
-should consist of a 3-dimensional array with the same dimensions as one of
-the DWI channels.  For example, for an axial scan with 128x256 in-plane
-resolution, 90 slices, and 12 diffusion-weightings, the DWI volume
-would be stored as one contiguous 12x90x128x256 dataset (in terms of
-data-ordering, the 256 axis is changing "fastest", i.e. the data is
-stored as 12 volumes (each 90x128x256) concatenated together into one
-big array), and the B0 volume would have dimensions 90x128x256.  A
-similar format is expected for Analyze data.  For DICOM data the
-you must identify a collection of sequences (directories) which make
-up the DWI and reference volumes.
-<P>
-<em>Note: The 1.20.0 version of BioTensor does <b>not</b> have support
-for loading diffusion weighted data without also specifying a B0
-reference dataset.  This will be fixed in version 1.20.1.</em>
-<P>
-Note: if your already have diffusion tensor (DT) data (rather than
-DWI data and reference volumes), you can bypss the registration and
-tensor  estimation stages by loading the data in this stage (as a Nrrd
-file), and then proceeding directly to Section 6 (data visualization).
-The radio button at the top of the Load Data tab can be used to
-indicate whether your input data is DWI/B0 or DTI.
-<P>
-Once the File entries are pointing to the correct data locations,
-press the Execute button at the bottom of the pane to load the data
-into the system.  Once the data is loaded, an image will appear in the
-Rendering window.  This image shows the variance between the different
-DWI component volumes for a specific slice location.  The variance
-values are color-coded, such that areas of low variance appear black,
-areas with medium variance are orange, and areas of high variance are
-white.  With the slider in the Visualization panel, you can select
+<!-- Note: This is supposed to be a valid xhtml file! -->
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+"DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta content="HTML Tidy for Mac OS X (vers 1st December 2002), see www.w3.org"
+name="generator" />
+<title>
+BioTensor Tutorial
+</title>
+</head>
+<body bgcolor="#A9A9A9">
+<center>
+<table border="0" cellpadding="20" cellspacing="5" width="640"
+bgcolor="#CCCCCC">
+<tr>
+<td>
+<center>
+<img src="images/biot-banner-main.gif" height="204" width="600"
+usemap="#biot-banner-main" border="0" alt="Top Banner"/>
+<map id="biot-banner-main" name="biot-banner-main">
+<area shape="rect" coords="405,170,497,194" href="http://www.sci.utah.edu" alt="SCI Web Site" />
+<area shape="rect" coords="510,172,590,193" href="http://software.sci.utah.edu"  alt="SCI Software Site" />
+</map>
+<h1>
+<font face="Arial,Helvetica,Geneva,Swiss,SunSans-Regular"
+color="Maroon">BioTensor Tutorial</font>
+</h1>
+</center>
+<h2>
+Contents
+</h2>
+<h3>
+Sections
+</h3>
+<ol>
+<li value="1">
+<a href="#section_1">Introduction</a>
+</li>
+<li value="2">
+<a href="#section_2">Getting Started</a> 
+<ol>
+<li value="1">
+<a href="#section_2_1">SCIRun Environment
+Variables</a>
+</li>
+<li value="2">
+<a href="#section_2_2">Launching BioTensor</a>
+</li>
+<li value="3">
+<a href="#section_2_3">User Interface
+Organization</a>
+</li>
+</ol>
+</li>
+<li value="3">
+<a href="#section_3">Loading Data</a>
+</li>
+<li value="4">
+<a href="#section_4">Registration of Echo-Planar
+DWIs</a>
+</li>
+<li value="5">
+<a href="#section_5">Building Tensors (Tensor
+Estimation)</a>
+</li>
+<li value="6">
+<a href="#section_6">Visualization</a> 
+<ol>
+<li value="1">
+<a href="#section_6_1">Rendering Window</a>
+</li>
+<li value="2">
+<a href="#section_6_2">Planes</a>
+</li>
+<li value="3">
+<a href="#section_6_3">Isosurface</a>
+</li>
+<li value="4">
+<a href="#section_6_4">Glyphs</a>
+</li>
+<li value="5">
+<a href="#section_6_5">Fibers</a>
+</li>
+</ol>
+<h3>
+Figures
+</h3>
+<ul>
+<li>
+<a href="#figure_1">Figure 1: BioTensor Interface
+Window</a>
+</li>
+<li>
+<a href="#figure_2">Figure 2: BioTensor Interface
+Window (Detached Panes)</a>
+</li>
+<li>
+<a href="#figure_3">Figure 3: File Menu</a>
+</li>
+<li>
+<a href="#figure_4">Figure 4: Help Menu</a>
+</li>
+<li>
+<a href="#figure_5">Figure 5: File Load Dialog</a>
+</li>
+<li>
+<a href="#figure_6">Figure 6: Registration Tab</a>
+</li>
+<li>
+<a href="#figure_7">Figure 7: Registration
+Improvement</a>
+</li>
+<li>
+<a href="#figure_8">Figure 8: Final Processing
+Stage</a>
+</li>
+<li>
+<a href="#figure_9">Figure 9: Cutting Plane
+Visualization</a>
+</li>
+<li>
+<a href="#figure_10">Figure 10: Isosurface
+Visualization</a>
+</li>
+<li>
+<a href="#figure_11">Figure 11: Clipped Plane
+Visualization</a>
+</li>
+<li>
+<a href="#figure_12">Figure 12: Glyph Box
+Visualization</a>
+</li>
+<li>
+<a href="#figure_13">Figure 13: Super quadric Glyph
+Visualization</a>
+</li>
+<li>
+<a href="#figure_14">Figure 14: Fiber
+Visualization</a>
+</li>
+<li>
+<a href="#figure_15">Figure 15: Single Fiber</a>
+</li>
+<li>
+<a href="#figure_16">Figure 16: Planes and
+Fibers</a>
+</li>
+</ul>
+<h2>
+<a name="section_1" id="section_1">Section 1 --
+Introduction</a>
+</h2> BioTensor is a program used to process and
+visualize diffusion tensor images. It can read
+diffusion weighted images (DWIs), perform correction
+for a common class of distortions in echo-planar
+imaging, estimate tensors from DWIs, and visualize the
+diffusion tensor field. The application framework,
+which created BioTensor, makes it easy to extend its
+functionality with new modules. Future versions will
+have expanded capabilities, based on contributions from
+external collaborators and internal development. 
+<p>
+Diffusion weighted imaging uses the diffusion of
+water molecules to probe the directional
+micro-structure of living tissue. A single diffusion
+weighted image generally measures diffusivity of
+water molecules along a particular direction. The
+amount of diffusion along a direction is detected by
+destructive interference of different phase
+signatures created by the magnetic gradient. A large
+set of DWIs along carefully chosen gradient
+directions permits estimation of a diffusion tensor
+that models the relationship between direction and
+diffusivity. The BioTensor application provides the
+means of going from DWIs to "diffusion tensor images"
+(DTIs), which are actually three-dimensional fields
+of tensor values. Seminal papers on diffusion tensor
+imaging, written by Peter Basser and others, can be
+found
+<a href="http://dir2.nichd.nih.gov/nichd/stbb/publications.html">
+here</a>.
+</p>
+<p>
+An important application of diffusion tensor imaging
+is determining the connective structure of central
+nervous tissue, made possible by the directionally
+constrained diffusion of water within or between the
+myelinated axon sheaths of white matter. The extent
+to which diffusion is faster along some directions
+than others is termed anisotropy; white matter within
+the brain is more anisotropic than gray matter on its
+cortical surface. The visualization capabilities in
+BioTensor allow the user to:
+</p>
+<ul>
+<li>
+Inspect individual tensor sample with various
+glyphs or icons.
+</li>
+<li>
+Determine the over-all shape of anisotropic regions
+through isosurfaces of different anisotropy
+metrics.
+</li>
+<li>
+Trace the connectivity along white matter tracts by
+forming paths that follow the tensor principal
+eigenvector, or use the tensor-line algorithm.
+</li>
+</ul>
+<h2>
+<a name="section_2" id="section_2">Section 2 --
+Getting Started</a>
+</h2> This section describes how to start using
+BioTensor. Subsequent sections cover various features
+and functions of the software, along with snapshots of
+the software in action.<br />
+<h3>
+<a name="section_2_1" id="section_2_1">2.1 SCIRun
+Environment Variables</a>
+</h3> If SCIRun datasets have been downloaded
+(available from
+http://software.sci.utah.edu/scirun-datasets.html) the
+user has an example dataset to begin investigating
+BioTensor. It is encouraged to use BioTensor to
+investigate datasets. Details of importing data into
+BioTensor is provided in Section 3. If example SCIRun
+datasets are used, it is encouraged to set the
+SCIRUN_DATA environment variable to point to the
+location of the data.<br />
+<h3>
+<a name="section_2_2" id="section_2_2">2.2 Launching
+BioTensor</a>
+</h3> To launch the BioTensor application, 'cd' into
+the directory where the BioTensor executable is located
+(the deriectorry for an RPM installation is
+/usr/local/SCIRun/bin/), then type './BioTensor'. The
+BioTensor application takes a few moments to start up
+It launches a user interface window like the one shown
+in <a href="#figure_1">Figure 1</a>. <a name="figure_1"
+id="figure_1"><br />
+<br /></a>
+<center>
+<p>
+<a href="figures/biotensor-load.gif">
+<img border="1"
+src="figures/biotensor-load-small.gif" alt="Figure 1: BioTensor
+Interface Window (Initial State)."/> 
+</a><br />
+<b>Figure 1: BioTensor Interface Window (Initial
+State).</b>
+</p>
+</center><br />
+<h3>
+<a name="section_2_3" id="section_2_3">2.3 User
+Interface Organization</a>
+</h3> The user interface for the BioTensor application
+is typical for a SCIRun/BioPSE PowerApp. Specifically,
+there is a Processing Pane on the left, which guides
+the user through the application. In the middle, there
+is a Rendering window where all data interaction and
+visualization is performed. On the right, there is a
+Visualization Pane, from which many of the parameters
+for the Rendering window can be controlled. To view the
+Rendering window at full-screen resolution, detach and
+re-attach the three panes by clicking on the vertical
+dashed lines between them. When separated, the panes
+appear as shown in <a href="#figure_2">Figure 2.</a>
+<a name="figure_2" id="figure_2"><br />
+<br /></a>
+<center>
+<p>
+<a href="figures/biotensor-panes.gif"><img border="1"
+src="figures/biotensor-panes-small.gif" alt="Figure 2: BioTensor
+Interface Window (Panels Detached From View Window)."/> 
+</a><br />
+<b>Figure 2: BioTensor Interface Window (Panels
+Detached From View Window).</b>
+</p>
+</center>
+<p>
+The top of the Processing Pane has two top-level menu
+options: File and Help, as shown in
+<a href="#figure_3">Figures 3</a> and
+<a href="#figure_4">4</a>. These menus contain
+options for loading and saving BioTensor settings,
+and options for controlling the appearance of
+'tool-tips' within BioTensor. <a name="figure_3"
+id="figure_3"><br />
+<br /></a>
+</p>
+<center>
+<p>
+<img border="1"
+src="figures/biotensor-file.gif" alt="Figure 3: File Menu."/><br />
+<b>Figure 3: File Menu.</b>
+</p>
+</center><a name="figure_4" id="figure_4"><br />
+<br /></a>
+<center>
+<p>
+<img border="1"
+src="figures/biotensor-help.gif" alt="Figure: Help Menu."/><br />
+<b>Figure 4: Help Menu.</b>
+</p>
+</center>
+<p>
+The bottom of the Processing Pane has a Progress
+Indicator and a text description that indicate the
+current state of the application, and suggests the
+next processing step. Just above the Progress
+Indicator are two buttons: a blue Execute button and
+a yellow Next button. The Execute button can be
+pressed to invoke the current processing step. Once a
+stage has been completed, the Next button becomes
+enabled, allowing progress to the next stage.<br />
+</p>
+<h2>
+<a name="section_3" id="section_3">Section 3: Loading
+Data</a>
+</h2> BioTensor can be used to process raw DWI images,
+producing DTI data for visualization. Alternatively, if
+Tensor data is already available, that data can be
+loaded into BioTensor for immediate investigation
+(bypassing the processing stages). Both alternatives
+are described in this section. 
+<p>
+To process and visualize DWI data, use the Browse
+buttons (an example File Browser window can be seen
+in <a href="#figure_5">Figure 5</a>. The Browse
+buttons are located on the Load Data tab of the
+Processing Pane, and can be used to specify the DWI
+volumes and the B0 reference volume. These datasets
+can be loaded as NRRD formatted data (as described at
+http://teem.sourceforge,net), Analyze volumes, or a
+set of DICOM image volumes. <a name="figure_5"
+id="figure_5"><br />
+<br /></a>
+</p>
+<center>
+<p>
+<img border="1"
+src="figures/biotensor-load-browse.jpg" 
+alt="Figure: File Load Dialog."/><br />
+<b>Figure 5: File Load Dialog.</b>
+</p>
+</center>
+<p>
+If NRRD files are loaded for input datasets, the DWI
+volume should be constructed as a 4-dimensional array
+(several 3-D channel volumes stacked contiguously in
+memory). The reference data (B0) volume should
+consist of a 3-dimensional array with the same
+dimensions as one of the DWI channels. For example,
+for an axial scan with 128x256 in-plane resolution,
+90 slices, and 12 diffusion-weightings, the DWI
+volume would be stored as one contiguous
+12x90x128x256 dataset (in terms of data-ordering, the
+256 axis is changing "fastest", i.e. the data is
+stored as 12 volumes (each 90x128x256) concatenated
+together into one big array), and the B0 volume would
+have dimensions 90x128x256. A similar format is
+expected for Analyze data. For DICOM data, a
+collection of sequences (directories) that make up
+the DWI and reference volumes must be identified.
+</p>
+<p>
+<em>Note: The 1.20.0 version of BioTensor does
+<b>not</b> have support for loading diffusion
+weighted data without also specifying a B0 reference
+dataset. This will be fixed in version 1.20.1.</em>
+</p>
+<p>
+Note: if your already have diffusion tensor (DT) data
+(rather than DWI data and reference volumes), bypass
+the registration and tensor estimation stages by
+loading the data in this stage (as a NRRD file), then
+proceed directly to Section 6 (data visualization).
+The radio button at the top of the Load Data tab can
+be used to indicate whether input data is DWI/B0 or
+DTI.
+</p>
+<p>
+Once the File entries are pointing to the correct
+data locations, press the Execute button at the
+bottom of the pane to load data into the system. Once
+data is loaded, an image appears in the Rendering
+window. This image shows the variance between the
+different DWI component volumes for a specific slice
+location. Variance values are color-coded: areas of
+low variance are black, areas with medium variance
+are orange, and areas of high variance are white.
+With the slider in the Visualization panel, select
 different slices from the volume to inspect.
-<P>
-The next step in the BioTensor application is to perform distortion
-correction on the DWI channels.  Press the yellow "Next" button at the
-bottom of the Processing pane to continue.
-
-<BR><H2><A NAME="section_4"> Section 4: Registration of Echo-Planar DWIs </H2>
-
-Many diffusion weighted images are acquired with a fast method known
-as echo-planar imaging (EPI).  This type of imaging can suffer from
-two kinds of distortion: global distortions due to eddy currents, and
-local distortions due to susceptibility artifacts.  BioTensor can
-currently correct for the first type of distortion; future versions
-may include field-map based correction of the second type of
-distortion.  Following convention, BioTensor assumes that the X
-direction is the read-out direction, and that the Y direction is the
-phase-encoding direction, along which EPI distortions occur.  <A
-HREF="#figure_6">Figure 6</A> shows the UI for the Registration tab of
-the Processing pane.  Whether or not any EPI registration is performed
-is controlled by the "Perform Global EPI Registration" checkbox.
-
-<A NAME="figure_6">
-<BR><BR>
-<CENTER>
-<P><IMG BORDER=1 SRC="figures/biotensor-processing.jpg"><br>
-<B>Figure 6: Registration Tab.</b>
-</CENTER>
-
-<P>
-The problems due to poor DWI registration can be visualized by looking
-at the variance, at each voxel, across the DWIs, as is shown in
-<A HREF="#figure_6">Figure 6</A>, by selecting the "View Variance of
-Original Data" checkbox in the visualization pane.  DWI variance is a
-simple indicator of anisotropy, since isotropic regions should
-generate constant DWI values for all gradient directions.  Note,
-however, the regions of high spurious ("ghost") anisotropy at the top (anterior)
+</p>
+<p>
+The next step in the BioTensor application is
+performing distortion correction on the DWI channels.
+Press the yellow "Next" button at the bottom of the
+Processing pane to continue.<br />
+</p>
+<h2>
+<a name="section_4" id="section_4">Section 4:
+Registration of Echo-Planar DWIs</a>
+</h2> Many diffusion weighted images are acquired with
+a fast method known as echo-planar imaging (EPI). This
+type of imaging can suffer from two kinds of
+distortion: global distortions due to eddy currents,
+and local distortions due to susceptibility artifacts.
+BioTensor can correct the first type of distortion.
+Future versions may include field-map based correction
+of the second type of distortion. Following convention,
+BioTensor assumes the X direction is the read-out
+direction, and the Y direction is the phase-encoding
+direction, along which EPI distortions occur.
+<a href="#figure_6">Figure 6</a> shows the UI for the
+Registration tab of the Processing pane. The "Perform
+Global EPI Registration" check-box controls whether any
+EPI registration is performed. <a name="figure_6"
+id="figure_6"><br />
+<br /></a>
+<center>
+<p>
+<img border="1"
+src="figures/biotensor-processing.jpg"
+alt="Figure: Registration Tab."/><br />
+<b>Figure 6: Registration Tab.</b>
+</p>
+</center>
+<p>
+Problems due to poor DWI registration can be
+visualized by looking at the variance, at each voxel,
+across the DWIs, as shown in
+<a href="#figure_6">Figure 6</a>, by selecting the
+"View Variance of Original Data" check-box in the
+visualization pane. DWI variance is a simple
+indicator of anisotropy, since isotropic regions
+should generate constant DWI values for all gradient
+directions. Note, however, the regions of high
+spurious ("ghost") anisotropy at the top (anterior)
 and bottom (posterior) edges of the brain, due to DWI
 mis-registration.
-
-<P>
-This method for EPI registration looks at how the over-all shape of
-the brain cross-section changes across the DWIs to estimate (and
-correct for) the distortion caused by eddy currents.  The first piece
-of information required at this stage is the list of gradient
-directions associated with each DWI (the direction along which the
-image is sensitized to diffusion).  This is given as the "Gradients
-File:".  This is a plain text file, with three numbers per line,
-giving the X, Y, and Z components of the gradient.  There must be
-one line per DWI.
-<P>
-The registration method can either perform implicit registration with
-the reference (B=0) image ("Implicit Reference: estimate distortion
-parameters from all images"), or you can indicate one of the diffusion
-weighted images which you judge to be the least affected by EPI
-distortion ("Choose Reference Image").  If choosing a reference image,
-keep in mind that all the DWIs are sequentially numbered, starting
-with 1 (as opposed to 0).  When implicit registration is chosen,
-method attempts to model the relationship between gradient directions
-and the resulting distortion, allowing it to map the DWIs back to the
-coordinate space of the B=0 image without explicitly registering with it.
-<P>
-The registration method's estimate of the over-all shape of the brain
-cross-section is based on a simple segmentation of the DWIs.  This
-segmentation is performed as some amount of Gaussian smoothing along
-the X and Y directions, followed by a thresholding of the DWI value,
-followed by (optional) connected component analysis.  Each of these
-steps is represented in the UI.
-<P>
-In "Gaussian Smoothing", the sliders control the radius (standard
-deviation) of the gaussian smoothing along that direction.  Some
-amount of smoothing helps the thresholding find better estimates of
-the brain cortical outline; too much smoothing will distort the
-estimate of cortical shape due to anisotropy in the underlying white
-matter.  The preset defaults generally work well.
-<P>
-The "Background/DWI Threshold" area of the UI allows you to use
-automatic determination of the threshold DWI value between background
-and brain tissue ("Automatically Determine Threshold"), or enter one
+</p>
+<p>
+The method for registering EPI acquired images looks at
+over-all brain cross-section changes across the DWIs
+to estimate (and correct for) the distortion caused
+by eddy currents. The first piece of information
+required at this stage is the list of gradient
+directions associated with each DWI (the direction
+along which the image is sensitized to diffusion).
+This is given as the "Gradients File:". This is a
+plain text file, with three numbers per line, giving
+the X, Y, and Z components of the gradient. There
+must be one line per DWI.
+</p>
+<p>
+The registration method can perform implicit
+registration with the reference (B=0) image
+("Implicit Reference: estimate distortion parameters
+from all images"), or it can use a diffusion weighted
+image chosen by the user. The user should choose the
+diffusion weighted image least affected by EPI
+distortion ("Choose Reference Image"). Note that DWIs
+are sequentially numbered, starting with 1 (as
+opposed to 0). Implicit registration attempts to
+model the relationship between gradient directions
+and the resulting distortion, which allows this
+method to map the DWIs back to the coordinate space
+of the B=0 image without explicitly registering with
+it.
+</p>
+<p>
+The registration method's estimate of the over-all
+shape of the brain cross-section is based on a simple
+segmentation of the DWIs. Segmentation is performed
+as some amount of Gaussian smoothing along the X and
+Y directions, followed by a thresholding of the DWI
+value, followed by (optional) connected component
+analysis. Each step is represented in the UI.
+</p>
+<p>
+In "Gaussian Smoothing", sliders control the radius
+(standard deviation) of the Gaussian smoothing along
+that direction. Some amount of smoothing helps the
+thresholding find more accurate estimates of the
+brain cortical outline; too much smoothing distorts
+the estimate of cortical shape due to anisotropy in
+the underlying white matter. The preset defaults work
+well.
+</p>
+<p>
+The "Background/DWI Threshold" area of the UI allows
+use of automatic determination of the threshold DWI
+value between background and brain tissue
+("Automatically Determine Threshold"), or enter one
 directly ("Specify Threshold").
-<P>
-The "Use Connected Components" check box determines whether connected
-component analysis is done to refine the thresholding output.  Using
-connected components is generally helpful because it leads to
-estimates of the brain cross-section shape that are more similar
-across the diffusion weighted images.
-<P>
-Based on the segmentation of the brain interior, the registration
-method will estimate the distortion on each slice of the DWI volumes.
-To improve the robustness, a linear fitting of the distortion
-parameters across the slices is performed.  This allows better
-distortion correction on slices where the brain cross-section shape
-was poorly segmented, leading to poor distortion estimation on that
-single slice.  The algorithm internally generates a measure of
-segmentation quality, and uses some fraction of the slices (those with
-the best segmentation) as reference when performing the linear fit of
-distortion parameters across slices.  You specify with the "Fitting"
-percentage slider how many of the slices should contribute to the
-fitting, versus how many slices (with the poorest segmentation
-results) should be ignored.  The default setting generally
-works well.
-<P>
-The final parameter in the registration method is the kernel to use when
-applying the warp to the individual images.  In order of ascending quality
+</p>
+<p>
+The "Use Connected Components" check box determines
+whether connected component analysis is done to
+refine the thresholding output. Using connected
+components is helpful because it leads to estimates
+of the brain cross-section shape that are more
+similar across the diffusion weighted images.
+</p>
+<p>
+Based on the segmentation of the brain interior, the
+registration method estimates the distortion on each
+slice of the DWI volumes. To improve the robustness,
+a linear fitting of the distortion parameters across
+the slices is performed. This allows better
+distortion correction on slices where the brain
+cross-section shape was poorly segmented, leading to
+poor distortion estimation on that single slice. The
+algorithm internally generates a measure of
+segmentation quality, and uses some fraction of the
+slices (those with the best segmentation) as
+reference when performing the linear fit of
+distortion parameters across slices. With the
+"Fitting" percentage slider, specify how many of
+slices should contribute to the fitting, versus how
+many slices (with the poorest segmentation results)
+should be ignored. The default setting works well.
+</p>
+<p>
+The kernel used when applying the warp to the
+individual images is the final parameter in the
+registration method. In order of ascending quality
 (and decreasing speed), the choices are:
-<UL>
-   <LI> Tent (linear interpolation)
-   <LI> Catmull-Rom (cubic interpolation)
-   <LI> Windowed Sinc (Hann window with 8-sample radius)
-</UL>
-<P>
-Once these parameters have been estimated, press "Execute".  Due to the
-complexity of this process, the registration step can take some time.
-<P>
-Once the registration is finished, you can visualize the improvement,
-as shown in <A HREF="#figure_7">Figure 7</A>, by selecting the
-"View Variance of Registered Data" checkbox in the visualization pane.
-This shows, side by side, slices of DWI variance before and after
-registration.  Note the reduction of spurious anisotropy at the edges
-of the brain.
+</p>
+<ul>
+<li>
+Tent (linear interpolation)
+</li>
+<li>
+Catmull-Rom (cubic interpolation)
+</li>
+<li>
+Windowed Sinc (Hann window with 8-sample radius)
+</li>
+</ul>
+<p>
+Once parameters have been estimated, press "Execute".
+Due to the complexity of the process, the
+registration step can take some time.
+</p>
+<p>
+Once registration is finished, visualize the
+improvement, as shown in <a href="#figure_7">Figure
+7</a>, by selecting the "View Variance of Registered
+Data" check-box in the visualization pane. This shows,
+side by side, slices of DWI variance before and after
+registration. Note the reduction of spurious
+anisotropy at the edges of the brain.
+<a name="figure_7" id="figure_7"><br />
+<br /></a>
+</p>
+<center>
+<p>
+<img border="1"
+src="figures/biotensor-registration-done.jpg" 
+alt="Figure: Registration Improvement."/><br />
+<b>Figure 7: Registration Improvement.</b>
+</p>
+</center><br />
+<h2>
+<a name="section_5" id="section_5">Section 5:
+Building Tensors (Tensor Estimation)</a>
+</h2> <a href="#figure_8">Figure 8</a> shows the UI at
+the final stage of processing, in which the diffusion
+weighted images are combined to estimate the diffusion
+tensors at each sample point. This step takes as input,
+the output of the DWI registration step, and a small
+number of additional parameters. <a name="figure_8"
+id="figure_8"><br />
+<br /></a>
+<center>
+<p>
+<img border="1"
+src="figures/biotensor-build.jpg" 
+alt="Figure: Final Processing Stage."/><br />
+<b>Figure 8: Final Processing Stage.</b>
+</p>
+</center>
+<p>
+DWI Smoothing: Prior to the estimation of tensors,
+later visualization and analysis stages sometimes
+benefit from some smoothing of the individual DWIs
+prior to estimation of tensors. This option allows
+the user to Gaussian blur the DWIs by controlling the
+radius (the standard deviation) of the Gaussian
+kernel within the slice plane ("Radius in X and Y")
+and across slices ("Radius in Z").
+</p>
+<p>
+Masking Threshold: Diffusion tensors can not be
+meaningfully calculated in the background (air) of
+the DWIs; neither the non-diffusion-weighted image
+nor any DWIs has significant signal in the
+background. Diffusion tensors can be calculated
+inside the CSF (cerebrospinal fluid), but they do not
+record interesting anatomical structure. In both
+regions, the value of DWIs is small compared to
+values inside the brain. BioTensor masks the tensor
+field based on the mean DWI value, so the regions do
+not appear in later visualizations. For this option,
+specify the mean DWI value used for thresholding
+("Specify Threshold"), or allow BioTensor to attempt
+to automatically find the threshold by histogram
+analysis. NOTE: tensors are computed for all voxels;
+the DWI masking produces a separate scalar field that
+BioTensor uses for controlling visualization, but
+does not scale tensors themselves.
+</p>
+<p>
+<em>Note: The 1.20.0 version of BioTensor has a bug,
+which causes the automatic threshold button for the
+Masking Threshold to be ignored. Instead, the
+specified threshold is <b>always</b> used. Un-select
+the Automatic check-box and take care in specifying
+this value. This bug will be fixed in the 1.20.1
+release.</em>
+</p>
+<p>
+B-Matrix: In order to estimate tensors from DWIs, the
+relationship between each DWI and the diffusion
+tensor must be known. The B-matrix is a matrix that
+captures the weighting that each diffusion tensor
+coefficient received in a given DWI. BioTensor
+currently refers to the list of B-matrices for all
+DWIs as the "B-Matrix". There are two ways B-Matrix
+information can be communicated to BioTensor.
+</p>
+<p>
+"Compute B-Matrix Using Gradients Provided": Assuming
+diffusion weighting caused by imaging gradients is
+negligible, the B-Matrix can be computed directly
+from the list of gradient directions used previously
+for EPI registration. NOTE: in this case, the first
+image among the DWIs is assumed to be the reference
+T2 image, which exhibits no diffusion weighting, and
+the B-matrix is assumed to be all zeros ("B=0").
+</p>
+<p>
+Alternatively, if a B-matrix has been computed for
+each DWI, from both imaging gradients and
+diffusion-encoding gradients, a it can be loaded as a
+separate text ("Load B-Matrix").
+</p>
+<p>
+Some important notes on the formatting of the
+B-Matrix file:
+</p>
+<ul>
+<li>
+This is a plain text file with six numbers per
+line, however, lines beginning with the pound
+character ("#") are treated as comments.
+</li>
+<li>
+The six floating-point values per line convey the
+B-matrix for a single DWI.
+</li>
+<li>
+The ordering of the B-matrix elements per line is:
+Bxx Bxy Bxz Byy Byz Bzz
+</li>
+<li>
+The off-diagonal elements of the B-matrix have NOT
+been pre-multiplied by two. This multiplication is
+done internally, to account for how the
+off-diagonal elements of the diffusion tensor are
+actually weighted in each DWI.
+</li>
+</ul>
+<p>
+Currently, BioTensor performs linear least-squares
+fitting to estimate the diffusion tensors at each
+sample point. Non-linear tensor estimation will be
+included in an upcoming version.
+</p>
+<p>
+Press the Execute button to compute the DT volume and
+begin visualization.<br />
+</p>
+<h2>
+<a name="section_6" id="section_6">Section 6:
+Visualization</a>
+</h2> As the visualization stage begins, the system
+begins computing a number of derived quantities. This
+may take several minutes, during which time, the
+Progress indicator indicates that the system is busy.
+One of the first quantities the system renders, is a
+set of three orthogonal cutting planes through the DT
+volume. Once the Progress indicator changes to
+"Completed" (green), begin interacting with the
+visualization.<br />
+<h3>
+<a name="section_6_1" id="section_6_1">6.1 Rendering
+Window</a>
+</h3> To begin visualizing the data, press the AutoView
+button to move the rendered geometry into the middle of
+the window. The AutoView button is located on the
+Viewer Options tab, or press Ctrl-V while the mouse is
+in the Rendering window. Controls for navigating within
+the Rendering window are similar to the SCIRun
+<a href="http://software.sci.utah.edu/doc/User/Guide/usersguide/srug6_1.html">Viewer</a>.
+However, the full control pane normally found at the
+bottom of the SCIRun ViewWindow, has been replaced with
+the most frequently used subset of those controls, and
+is now located on the Viewer Options tab. 
+<p>
+Within the Vis Options tab of the Visualization pane,
+there are five sub-tabs for controlling visualization
+settings. The first tab, "Variance", was used in
+Section 3 to visualize DTI variance data. The
+following sections investigate options on the four
+other tabs: Planes, Isosurface, Glyphs, and
+Fibers.<br />
+</p>
+<h3>
+<a name="section_6_2" id="section_6_2">6.2 Planes
+Visualization</a>
+</h3> By default, the cutting planes render when the
+visualization pre-processing stage completes, as shown
+in <a href="#figure_8">Figure 9</a>. These planes are
+initially color-mapped to reflect the principal
+eigenvector direction, using a standard (X,Y,Z) -&gt;
+(R,G,B) mapping. Saturation of colors has been
+modulated by fractional anisotropy, and areas outside
+of the gray and white matter are rendered black. The
+individual cutting planes can be turned on and off and
+their positions can be controlled using the X, Y, Z
+check-buttons and slides. Color-mapping of tensor values
+on planes can be controlled using the drop-down menu
+under "Principle Eigenvector" in the "Color Planes
+Based On" frame. When coloring based on a scalar
+quantity (e.g. Fractional Anisotropy), radio buttons
+next to the color-map swatches become active. For
+constant coloring, change the specified color by
+clicking on the Color button. The "Clip to Isosurface"
+button is discussed in the next section.
+<a name="figure_9" id="figure_9"><br />
+<br /></a>
+<center>
+<p>
+<img border="1"
+src="figures/biotensor-vis-planes.jpg" 
+alt="Figure: Cutting Plane Visualization
+(Default)"/><br />
+<b>Figure 9: Cutting Plane Visualization
+(Default).</b>
+</p>
+</center><br />
+<h3>
+<a name="section_6_3" id="section_6_3">6.3 Isosurface
+Visualization  Selecting the Isosurface tab reveals
+options for generating an isosurface from the DT
+volume. As shown in</a> <a href="#figure_10">Figure
+10</a>:
+</h3>
+<ul>
+<li>
+Choose whether or not to show the isosurface.
+</li>
+<li>
+Select which derived metric the isosurface is
+computing (e.g. Fractional Anisotropy).
+</li>
+<li>
+Select an isovalue.
+</li>
+<li>
+Color the isosurface based on: the principle
+eigenvector direction (and desaturated or colored
+black as described for the planes, above), another
+scalar metric (in which case the radio buttons for
+the color-map swatches are activated), or a constant
+color (chosen using the "Color" button).
+</li>
+<li>
+Use the planes as clipping planes to clip the
+isosurface. Orientation of each clipping plane can
+be toggled using the Flip buttons.
+</li>
+</ul><a name="figure_10" id="figure_10"><br />
+<br /></a>
+<center>
+<p>
+<img border="1"
+src="figures/biotensor-vis-isosurf.jpg" 
+alt="Figure: Isosurface Visualization."/><br />
+<b>Figure 10: Isosurface Visualization.</b>
+</p>
+</center><em>Note: The 1.20.0 version of BioTensor
+renders the isosurface faces using a constant per-face
+normal. In the 1.20.1 release, the rendering option
+will be enabled to display faces with interpolated
+normals, which will produce smoother surface
+renderings, as demonstrated in
+<a href="#figure_10">Figure 10</a></em>. 
+<p>
+Just as planes can be used to clip the isosurface,
+the isosurface can be used to clip the planes. An
+example of this is shown in
+<a href="#figure_11">Figure 11</a>. The isosurface
+value is set low (0.01), the "Show Isosurface" button
+is turned off, and the Planes tab has selected the
+Clip to Isosurface button. <a name="figure_11"
+id="figure_11"><br />
+<br /></a>
+</p>
+<center>
+<p>
+<img border="1"
+src="figures/biotensor-vis-clipped-planes.jpg" 
+alt="Figure: Clipped Planes Visualization."/><br />
+<b>Figure 11: Clipped Planes Visualization.</b>
+</p>
+</center><br />
+<h3>
+<a name="section_6_4" id="section_6_4">6.4 Glyph
+Visualization</a>
+</h3> The Glyphs panel allows selection of the type,
+placement, and coloring of tensor glyphs within the
+volume. The default setting renders box glyphs, seeded
+on the planes of the planes and colored based on the
+principle eigenvector direction as shown in
+<a href="#figure_12">Figure 12</a>. A zoomed-in figure
+of the super-quadric glyphs rendered on the cutting
+planes is shown in <a href="#figure_13">Figure 13</a>.
+In addition to colored-box glyphs, the tensors can be
+rendered as RGB boxes, ellipsoids, or super-quadric
+glyphs. With the controls at the top of the panel,
+users can select the discretization level used for the
+round glyph shapes (which are approximated using
+triangular meshes), select whether to normalize the
+volume (to 1.0) of each tensor before rendering, and
+whether to scale the volume of each tensor, and whether
+to exaggerate the anisotropy of the tensor (and by how
+much). Finally, using the options in the "Seed At"
+frame, users can choose where to place the glyphs: at a
+single point (controlled by the position of a sphere
+widget in the Rendering window: use Shift-Left Mouse to
+select and move widgets), seeded along a line specified
+by a rake widget, seeded on the visible cutting planes,
+or seeded at the grid point located within the
+prescribed isovolume. <a name="figure_12"
+id="figure_12"><br />
+<br /></a>
+<center>
+<p>
+<img border="1"
+src="figures/biotensor-vis-boxes.jpg" 
+alt="Figure: Glyph Box Visualization."/><br />
+<b>Figure 12: Glyph Box Visualization.</b>
+</p>
+</center><a name="figure_13" id="figure_13"><br />
+<br /></a>
+<center>
+<p>
+<img border="1"
+src="figures/biotensor-vis-sqg.jpg" 
+alt="Figure: Super-quadric Glyph Visualization."/><br />
+<b>Figure 13: Super-quadric Glyph Visualization.</b>
+</p>
+</center><br />
+<h3>
+<a name="section_6_5" id="section_6_5">6.5 Fiber
+Visualization</a>
+</h3> 6.5 Fibers As with tensor glyphs, seed locations
+and colorization options for rendering fibers within
+the brain can be selected. A variety of options are
+shown in <a href="#figure_14">Figure 14</a>,
+<a href="#Figure_15">Figure 15, and</a>
+<a href="#figure_16">Figure 16</a>. Additionally, a
+number of parameters can be set that control the fiber
+tracing algorithm. These parameters include: 
+<ul>
+<li>
+Algorithm: trace along the major eigenvector or
+using the tensor-lines algorithm; choose a step
+size, and whether to use Euler or RK4 (fourth-order
+Runge-Kutta) integration.
+</li>
+<li>
+Sampling Kernel: choose the interpolation kernel to
+be used when querying tensor values between
+discrete sample locations (Tent, Catmull-Rom, or
+B-Spline).
+</li>
+<li>
+Stopping Criteria: choose a set of criteria that
+can be evaluated to determine whether to terminate
+a fiber. If any of the criteria are true, the fiber
+will terminate. These criteria include: exceeding a
+specified maximum fiber length, exceeding a maximum
+number of steps, and entering a region of the
+volume that falls below a specified anisotropy
+threshold (either Linear Anisotropy or Fractional
+Anisotropy).
+</li>
+</ul><a name="figure_14" id="figure_14"><br />
+<br /></a>
+<center>
+<p>
+<img border="1"
+src="figures/biotensor-vis-fibers.jpg" 
+alt="Figure: Fiber Visualization."/><br />
+<b>Figure 14: Fiber Visualization.</b>
+</p>
+</center><a name="figure_15" id="figure_15"><br />
+<br /></a>
+<center>
+<p>
+<img border="1"
+src="figures/biotensor-vis-single-fiber.jpg" 
+alt="Figure: Single Fiber."/><br />
 
-<A NAME="figure_7">
-<BR><BR>
-<CENTER>
-<P><IMG BORDER=1 SRC="figures/biotensor-registration-done.jpg"><br>
-<B>Figure 7: Registration Improvement.</b>
-</CENTER>
+<b>Figure 15: Single Fiber.</b>
+</p>
+</center><a name="figure_16" id="figure_16"><br />
+<br /></a>
+<center>
+<p>
+<img border="1"
+src="figures/biotensor-vis-planes-fibers.jpg" 
+alt="Figure: Planes and Fibers."/><br />
 
-<BR><H2><A NAME="section_5"> Section 5: Building Tensors (Tensor Estimation) </H2>
-
-<A HREF="#figure_8">Figure 8</A> shows the UI at the final stage of processing,
-in which the diffusion weighted images are combined together to estimate
-the diffusion tensors at each sample point.  This step takes as input
-the the output of the DWI registration step, as well as a small number
-of additional parameters.  
-
-<A NAME="figure_8">
-<BR><BR>
-<CENTER>
-<P><IMG BORDER=1 SRC="figures/biotensor-build.jpg"><br>
-<B>Figure 8: Final Processing Stage.</b>
-</CENTER>
-
-<P>
-DWI Smoothing: Later visualization and analysis stages sometimes
-benefit from some smoothing of the individual DWIs prior to the
-estimation of tensors.  This option allows you to Gaussian blur the
-DWIs, by controlling the radius (the standard deviation) of the
-Gaussian kernel within the slice plane ("Radius in X and Y") as well
-as across slices ("Radius in Z").
-<P>
-Masking Threshold: Diffusion tensors can not be meaningfully
-calculated in the background (air) of the DWIs, because neither the
-non-diffusion-weighted image nor any of the DWIs has any significant
-signal there.  Diffusion tensors can be calculated inside the CSF
-(cerebrospinal fluid), but they do not record any interesting
-anatomical structure.  In both regions, the value of the DWIs will be
-very small, compared to the values inside the brain.  BioTensor
-performs making of the tensor field based on the mean DWI value so
-that these regions do not appear in later visualizations.  For this
-option, you may specify the mean DWI value used for thresholding
-("Specify Threshold"), or you may allow BioTensor to attempt to
-automatically find this threshold by histogram analysis.  NOTE:
-tensors will be computed for all voxels; the DWI masking produces a
-separate scalar field which BioTensor uses for controlling
-visualization, but which does not scale the tensors themselves.
-<P>
-<em>Note: The 1.20.0 version of BioTensor has a bug, which causes the
-automatic threshold button for the Masking Threshold to be ignored.
-Instead, the specified threshold is <b>always</b> used, so please
-unselect the Automatic checkbox and take care in specifying this value.
-This bug will be fixed in the 1.20.1 release.</em>
-<P>
-B-Matrix: In order to estimate tensors from DWIs, the relationship
-between each DWI and the diffusion tensor must be known.  The B-matrix
-is a matrix that captures the weighting that each diffusion tensor
-coefficient received in a given DWI.  BioTensor currently refers to
-the list of B-matrices for all the DWIs as the "B-Matrix".  There are
-two ways that the B-Matrix information can be communicated to BioTensor.
-<P>
-"Compute B-Matrix Using Gradients Provided": Assuming that the
-diffusion weighting caused by the imaging gradients is negligible, the
-B-Matrix can be computed directly from the list of gradient
-directions, which was used previously for EPI registration.  NOTE: in
-this case, the first image among the DWIs is assumed to be the
-reference T2 image, which exhibits no diffusion weighting, and for
-which the B-matrix is assumed to be all zeros ("B=0").
-<P>
-Alternatively, if for each DWI you have computed a B-matrices which
-more completely accounts for diffusion weighting, from both imaging
-gradients as well as diffusion-encoding gradients, this may be
-provided as separate a text file ("Load B-Matrix").
-<P>
-Some important notes on the formatting of the B-Matrix file:
-<UL>
-  <LI> This is a plain text file, with six numbers per line, although
-       lines beginning with the pound character ("#") are treated as comments.
-  <LI> The six floating-point values per line convey the B-matrix for a single DWI.
-  <LI> The ordering of the B-matrix elements per line is:
-       Bxx  Bxy  Bxz  Byy  Byz  Bzz
-  <LI> The off-diagonal elements of the B-matrix have NOT been pre-multiplied by two.
-       This multiplication is done internally, to account for how the off-diagonal
-       elements of the diffusion tensor are actually weighted in each
-       DWI.
-</UL>
-<P>
-Currently, BioTensor performs linear least-squares fitting to estimate
-the diffusion tensors at each sample point.  Non-linear tensor estimation
-will be included in an upcoming version.
-<P>
-Press the Execute button to compute the DT volume and begin
-visualization.
-
-<BR><H2><A NAME="section_6"> Section 6: Visualization </H2>
-
-As the visualization stage begins, the system will begin computing a
-number of derived quantities; this may take several moments, during
-which time the Progress indicator will indicate that the system is
-busy.  One of the first quantities the system will render are a set of
-three orthogonal cutting planes through the DT volume.  Once the
-Progress indicator changes to "Completed" (green), you can begin
-interacting with the visualization.
-
-<BR><H3><A NAME="section_6_1"> 6.1 Rendering Window </H3>
-
-To begin visualizing the data, press the AutoView button to move the
-rendered geometry into the middle of the window.  The Autoview button
-is located on the Viewer Options tab, but can also be invoked by
-pressing Ctrl-V while the mouse is in the Rendering window.  The
-controls for navigating within the Rendering window are the same as
-for the SCIRun ViewWindow
-(http://software.sci.utah.edu/doc/User/Guide/usersguide/srug5.html#sec:viewer)
-though the full control pane normally found at the bottom of the
-ViewWindow has been replaced with the most frequently used subset of
-those controls and is now located on the Viewer Options tab.
-<P>
-Within the Vis Options tab of the Visualization pane, there are five
-sub-tabs for controlling the visualization settings.  The first tab,
-"Variance" was used when visualizing the DTI variance data in Section
-3.  We will now investigate the options on the four other tabs:
-Planes, Isosurface, Glyphs, and Fibers.
-
-<BR><H3><A NAME="section_6_2"> 6.2 Planes Visualization </H3>
-
-By default, the cutting planes are rendered when the visualization
-pre-processing stage completes, as shown in <A HREF="#figure_8">Figure
-9</A>.  These planes are initially color-mapped to reflect the
-principal eigenvector direction, using a standard (X,Y,Z) -> (R,G,B)
-mapping.  The saturation of the colors has been modulated by
-fractional anisotropy, and areas outside of the gray and white matter
-are rendered black.  The individual cutting planes can be turned on
-and off and their positions can be controlled using the X, Y, Z
-checkbuttons and slides.  The color-mapping of the tensor values on
-the planes can be controlled using the drop-down menu under "Principle
-Eigenvector" in the "Color Planes Based On" frame.  When coloring
-based on a scalar quantity (e.g. Fractional Anisotropy), the radio
-buttons next to the colormap swatches become active.  For constant
-coloring, you can change the specified color by clicking on the Color
-button.  We will return to the "Clip to Isosurface" button in the next
-section.
-
-<A NAME="figure_9">
-<BR><BR>
-<CENTER>
-<P><IMG BORDER=1 SRC="figures/biotensor-vis-planes.jpg"><br>
-<B>Figure 9: Cutting Plane Visualization (Default).</b>
-</CENTER>
-
-<BR><H3><A NAME="section_6_3"> 6.3 Isosurface Visualization </H2>
-
-Selecting the Isosurface tab reveals the options for generating an
-isosurface from the DT volume.  As shown in <A
-HREF="#figure_10">Figure 10</A> you can:
-
-<UL> 
-   <LI> Choose whether or not to show the isosurface.
-   <LI> Select which derived metric the isosurface is being computed for
- (e.g. Fractional Anisotropy).
-   <LI> Selcted an isovalue.
-   <LI> Color the isosurface based on a) the principle eigenvector
- direction (and again desaturated or colored black as described for
- the planes, above); b) another scalar metric (in which case the
- radio buttons for the colormap swatches are activated); or c) using a
- constant color (chosen using the "Color" button).
-   <LI> Use the planes as clipping planes to clip the isosurface; the
- orientation of each clipping plane can be toggled using the Flip
- buttons.
-</UL>
-
-<A NAME="figure_10">
-<BR><BR>
-<CENTER>
-<P><IMG BORDER=1 SRC="figures/biotensor-vis-isosurf.jpg"><br>
-<B>Figure 10: Isosurface Visualization.</b>
-</CENTER>
-
-<em>Note: The 1.20.0 version of BioTensor renders the isosurface faces
-using a constant per-face normal.  In our 1.20.1 release, we will
-enable the rendering option to display faces with interpolated normals,
-which will produce smoother surface renderings, as demonstrated in <A
-HREF="#figure_10">Figure 10</A></em>.
-<P>
-
-Just as the planes can be used to clip the isosurface, the isosurface
-can also be used to clip the planes.  An example of this is shown in
-<A
-HREF="#figure_11">Figure 11</A>.  We have set the
-isosurface value very low (0.01), have turned off the "Show
-Isosurface" button, and on the Planes tab have selected the Clip to
-Isosurface button.
-
-<A NAME="figure_11">
-<BR><BR>
-<CENTER>
-<P><IMG BORDER=1 SRC="figures/biotensor-vis-clipped-planes.jpg"><br>
-<B>Figure 11: Clipped Planes Visualization.</b>
-</CENTER>
-
-<BR><H3><A NAME="section_6_4"> 6.4 Glyph Visualization </H3>
-
-Under the Glyphs tab, you can select the type, placement, and coloring
-of tensor glyphs within the volume.  The default setting is to render
-box glyphs, seeded on the planes of the planes, colored based on the
-principle eigenvector direction (as above) as shown in <A
-HREF="#figure_12">Figure 12</A>.  A zoomed-in figure of the
-superquadric glyphs rendered on the cutting planes is shown in <A
-HREF="#figure_13">Figure 13</A>.  In addition to colored-box glyphs,
-the tensors can be rendered as RGB boxes, ellipsoids, or superquadric
-glyphs.  With the controls at the top of the panel, you can select the
-discretization level used for the round glyph shapes (which are
-approximated using triangular meshes), you can select whether or not
-to normalize the volume (to 1.0) of each tensor before rendering, as
-well as whether to scale the volume of each tensor, and whether to
-exaggerate the anisotropy of the tensor (and by how much).  Finally,
-using the options in the "Seed At" frame, you can choose where to
-place the glyphs: either at a single point (controlled by the position
-of a sphere widget in the Rendering window: use Shift-LeftMouse to
-select and move widgets), seeded along a line specified by a rake
-widget, seeded on the visible cutting planes, or seeded at the grid
-point located within the prescribed isovolume.
-
-<A NAME="figure_12">
-<BR><BR>
-<CENTER>
-<P><IMG BORDER=1 SRC="figures/biotensor-vis-boxes.jpg"><br>
-<B>Figure 12: Glyph Box Visualization.</b>
-</CENTER>
-
-<A NAME="figure_13">
-<BR><BR>
-<CENTER>
-<P><IMG BORDER=1 SRC="figures/biotensor-vis-sqg.jpg"><br>
-<B>Figure 13: Superquadric Glyph Visualization.</b>
-</CENTER>
-
-<BR><H3><A NAME="section_6_5"> 6.5 Fiber Visualization </H3>
+<b>Figure 16: Planes and Fibers.</b>
+</p>
+</center>
+<p>
+<img src="images/footer.gif" alt="Bottom Banner"/><br />
+</p>
+</li>
+</ol>
+</td>
+</tr>
+</table>
+</center>
+</body>
+</html>
 
 
-6.5 Fibers
-
-As with the tensor glyphs, you can select seed locations and
-colorization options for rendering fibers within the brain.  A variety
-of these options are shown in <A HREF="#figure_14">Figure 14</A>, <A
-HREF="#Figure_15"> Figure 15, and <A HREF="#figure_16">Figure 16</A>.
-Additionally, you can set a number of parameters that control the
-fiber tracing algorithm.  These parameters include:
-
-<UL>
-  <LI> Algorithm: trace along the major eigenvector or using the
-       tensorlines algorithm; choose a step size, as well as whether
-       to use Euler or RK4 (fourth-order Runge-Kutta) integration.
-
-  <LI> Sampling Kernel: when querying tensor values between discrete
-       sample locations, the interpolation kernel to be used (Tent,
-       Catmull-Rom, or B-Spline).
-
-  <LI> Stopping Criteria: choose a set of criteria which can be
-       evaluated to determine whether to terminate a fiber.  If any of
-       the criteria are true, the fiber will terminate.  These
-       criteria include: exceeding a specified maximum fiber length,
-       exceeding a maximum number of steps, and entering a region of
-       the volume which falls below a specified anisotropy threshold
-       (either Linear Anisotropy or Fractional Anisotropy).
-</UL>
-
-<A NAME="figure_14">
-<BR><BR>
-<CENTER>
-<P><IMG BORDER=1 SRC="figures/biotensor-vis-fibers.jpg"><br>
-<B>Figure 14: Fiber Visualization.</b>
-</CENTER>
-
-<A NAME="figure_15">
-<BR><BR>
-<CENTER>
-<P><IMG BORDER=1 SRC="figures/biotensor-vis-single-fiber.jpg"><br>
-<B>Figure 15: Single Fiber.</b>
-</CENTER>
-
-<A NAME="figure_16">
-<BR><BR>
-<CENTER>
-<P><IMG BORDER=1 SRC="figures/biotensor-vis-planes-fibers.jpg"><br>
-<B>Figure 16: Planes and Fibers.</b>
-</CENTER>
-
-
-<P><IMG SRC="images/footer.gif"><br>
-
-</TD></TR>
-</TABLE>
-</CENTER>
-
-</BODY>
-</HTML>
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: xml
+sgml-default-dtd-file:"../../../Utilities/XML/xhtml1-transitional.ced"
+sgml-omittag:nil
+sgml-shorttag:nil
+End:
+-->
