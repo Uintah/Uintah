@@ -419,6 +419,10 @@ GridSpheres* read_spheres(char* spherefile, int datanum,
     cerr << "Num Variables found in " << buf << " is " << numvars << endl;
     mins = (float*)malloc(numvars*sizeof(float));
     maxs = (float*)malloc(numvars*sizeof(float));
+    if (numvars != mins_vec.size() || numvars != maxs_vec.size()) {
+      cerr << "There was a problem in read_spheres\n";
+      return 0;
+    }
     for (int i = 0; i < numvars; i++) {
       mins[i] = mins_vec[i];
       maxs[i] = maxs_vec[i];
@@ -913,7 +917,8 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
   (new Thread(display, "GridSpheres display thread\n"))->detach();
 
   // Do the preprocessing here
-  Semaphore* prepro_sema = new Semaphore("rtrt::tstdemo preprocess semaphore", nworkers);
+  int num_threads =  Min(nworkers, 16);
+  Semaphore* prepro_sema = new Semaphore("rtrt::tstdemo preprocess semaphore", num_threads);
   for(int i = 0; i < spheres.size(); i++) {
     prepro_sema->down();
     cerr << "=====================================\n";
@@ -923,7 +928,7 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
     thrd->detach();
   }
   // Wait for everyone to finish
-  prepro_sema->down(nworkers);
+  prepro_sema->down(num_threads);
   if (prepro_sema) delete prepro_sema;
   
   Group* all = new Group();
