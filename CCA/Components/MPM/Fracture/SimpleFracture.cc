@@ -57,7 +57,7 @@ void SimpleFracture::computeNodeVisibility(
 
   ParticleSubset* pset_patchOnly = old_dw->getParticleSubset(matlindex, patch);
   ParticleVariable<int>    pVisibility;
-  new_dw->allocate(pVisibility, lb->pVisibilityLabel, pset_patchOnly);
+  new_dw->allocateAndPut(pVisibility, lb->pVisibilityLabel, pset_patchOnly);
   ParticleVariable<Point>  pX_patchOnly;
   new_dw->get(pX_patchOnly, lb->pXXLabel, pset_patchOnly);
 
@@ -109,7 +109,8 @@ void SimpleFracture::computeNodeVisibility(
     pVisibility[pIdx] = vis.flag();
   }
   
-  new_dw->put(pVisibility, lb->pVisibilityLabel);
+  // allocateAndPut instead:
+  /* new_dw->put(pVisibility, lb->pVisibilityLabel); */;
 
 #if 0
   for(ParticleSubset::iterator iter = pset_patchAndGhost->begin();
@@ -142,7 +143,7 @@ crackGrow(const Patch* patch,
        matlindex, patch, Ghost::None, 0);
 
     NCVariable<Vector> gCrackNormal;
-    new_dw->allocate(gCrackNormal, lb->gCrackNormalLabel,
+    new_dw->allocateAndPut(gCrackNormal, lb->gCrackNormalLabel,
        matlindex, patch);
     
     for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++)
@@ -191,8 +192,9 @@ crackGrow(const Patch* patch,
 	//cout<<"crack open in direction "<<gCrackNormal[*iter]<<endl;
       }
     }
-    new_dw->put(gCrackNormal, lb->gCrackNormalLabel, 
-       matlindex, patch);
+    // allocateAndPut instead:
+    /* new_dw->put(gCrackNormal, lb->gCrackNormalLabel, 
+       matlindex, patch); */;
 }
 
 void
@@ -236,8 +238,8 @@ stressRelease(const Patch* patch,
 
   old_dw->get(pIsBroken, lb->pIsBrokenLabel, pset);
   old_dw->get(pCrackNormal, lb->pCrackNormalLabel, pset);
-  new_dw->allocate(pIsBroken_new, lb->pIsBrokenLabel, pset);
-  new_dw->allocate(pCrackNormal_new, lb->pCrackNormalLabel, pset);
+  new_dw->allocateAndPut(pIsBroken_new, lb->pIsBrokenLabel, pset);
+  new_dw->allocateAndPut(pCrackNormal_new, lb->pCrackNormalLabel, pset);
 
   IntVector ni[8];
   Vector zero(0.,0.,0.);
@@ -284,8 +286,10 @@ stressRelease(const Patch* patch,
   new_dw->put(delt_vartype(delT_new), lb->delTLabel);
   */
 
-  new_dw->put(pCrackNormal_new, lb->pCrackNormalLabel_preReloc);
-  new_dw->put(pIsBroken_new, lb->pIsBrokenLabel_preReloc);
+  // allocateAndPut instead:
+  /* new_dw->put(pCrackNormal_new, lb->pCrackNormalLabel_preReloc); */;
+  // allocateAndPut instead:
+  /* new_dw->put(pIsBroken_new, lb->pIsBrokenLabel_preReloc); */;
 
   new_dw->put(pStress, lb->pStressAfterFractureReleaseLabel);
   new_dw->put(pVelocity, lb->pVelocityAfterFractureLabel);

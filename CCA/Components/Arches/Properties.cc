@@ -266,7 +266,7 @@ Properties::computeProps(const ProcessorGroup*,
       //constCCVariable<double> enthalpy_old;
       //new_dw->get(enthalpy_old, d_lab->d_enthalpySPBCLabel, 
       //	  matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-      new_dw->allocate(enthalpy, d_lab->d_enthalpySPLabel, matlIndex, patch);
+      new_dw->allocateAndPut(enthalpy, d_lab->d_enthalpySPLabel, matlIndex, patch);
       //enthalpy.copyData(enthalpy_old);
     }
     
@@ -285,11 +285,11 @@ Properties::computeProps(const ProcessorGroup*,
     CCVariable<double> enthalpyRXN;
     CCVariable<double> reactscalarSRC;
     if (d_reactingFlow) {
-      new_dw->allocate(temperature, d_lab->d_tempINLabel, matlIndex, patch);
-      new_dw->allocate(co2, d_lab->d_co2INLabel, matlIndex, patch);
-      new_dw->allocate(enthalpyRXN, d_lab->d_enthalpyRXNLabel, matlIndex, patch);
+      new_dw->allocateAndPut(temperature, d_lab->d_tempINLabel, matlIndex, patch);
+      new_dw->allocateAndPut(co2, d_lab->d_co2INLabel, matlIndex, patch);
+      new_dw->allocateAndPut(enthalpyRXN, d_lab->d_enthalpyRXNLabel, matlIndex, patch);
       if (d_mixingModel->getNumRxnVars()) {
-	new_dw->allocate(reactscalarSRC, d_lab->d_reactscalarSRCINLabel,
+	new_dw->allocateAndPut(reactscalarSRC, d_lab->d_reactscalarSRCINLabel,
 			 matlIndex, patch);
 	reactscalarSRC.initialize(0.0);
       }
@@ -297,8 +297,8 @@ Properties::computeProps(const ProcessorGroup*,
     CCVariable<double> absorption;
     CCVariable<double> sootFV;
     if (d_radiationCalc) {
-      new_dw->allocate(absorption, d_lab->d_absorpINLabel, matlIndex, patch);
-      new_dw->allocate(sootFV, d_lab->d_sootFVINLabel, matlIndex, patch);
+      new_dw->allocateAndPut(absorption, d_lab->d_absorpINLabel, matlIndex, patch);
+      new_dw->allocateAndPut(sootFV, d_lab->d_sootFVINLabel, matlIndex, patch);
       absorption.initialize(0.0);
       sootFV.initialize(0.0);
     }
@@ -333,7 +333,7 @@ Properties::computeProps(const ProcessorGroup*,
       // temporary comment for debug, sk, 01/22/02
       //      new_dw->get(voidFraction, d_lab->d_mmgasVolFracLabel, 
       //      		  matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-      new_dw->allocate(denMicro, d_lab->d_densityMicroLabel,
+      new_dw->allocateAndPut(denMicro, d_lab->d_densityMicroLabel,
 		       matlIndex, patch);
     }
     
@@ -442,25 +442,34 @@ Properties::computeProps(const ProcessorGroup*,
     
     // Write the computed density to the new data warehouse
     CCVariable<double> density_cp;
-    new_dw->allocate(density_cp,d_lab->d_densityCPLabel, matlIndex, patch);
+    new_dw->allocateAndPut(density_cp, d_lab->d_densityCPLabel, matlIndex, patch);
     density_cp.copyData(density);
-    new_dw->put(density_cp,d_lab->d_densityCPLabel, matlIndex, patch);
+    // allocateAndPut instead:
+    /* new_dw->put(density_cp,d_lab->d_densityCPLabel, matlIndex, patch); */;
     if (d_enthalpySolve)
-      new_dw->put(enthalpy, d_lab->d_enthalpySPLabel, matlIndex, patch);
+      // allocateAndPut instead:
+      /* new_dw->put(enthalpy, d_lab->d_enthalpySPLabel, matlIndex, patch); */;
     if (d_reactingFlow) {
-      new_dw->put(temperature, d_lab->d_tempINLabel, matlIndex, patch);
-      new_dw->put(co2, d_lab->d_co2INLabel, matlIndex, patch);
-      new_dw->put(enthalpyRXN, d_lab->d_enthalpyRXNLabel, matlIndex, patch);
+      // allocateAndPut instead:
+      /* new_dw->put(temperature, d_lab->d_tempINLabel, matlIndex, patch); */;
+      // allocateAndPut instead:
+      /* new_dw->put(co2, d_lab->d_co2INLabel, matlIndex, patch); */;
+      // allocateAndPut instead:
+      /* new_dw->put(enthalpyRXN, d_lab->d_enthalpyRXNLabel, matlIndex, patch); */;
       if (d_mixingModel->getNumRxnVars())
-	new_dw->put(reactscalarSRC, d_lab->d_reactscalarSRCINLabel,
-		    matlIndex, patch);
+	// allocateAndPut instead:
+	/* new_dw->put(reactscalarSRC, d_lab->d_reactscalarSRCINLabel,
+		    matlIndex, patch); */;
     }
     if (d_radiationCalc){
-      new_dw->put(absorption, d_lab->d_absorpINLabel, matlIndex, patch);
-      new_dw->put(sootFV, d_lab->d_sootFVINLabel, matlIndex, patch);
+      // allocateAndPut instead:
+      /* new_dw->put(absorption, d_lab->d_absorpINLabel, matlIndex, patch); */;
+      // allocateAndPut instead:
+      /* new_dw->put(sootFV, d_lab->d_sootFVINLabel, matlIndex, patch); */;
     }
     if (d_MAlab)
-      new_dw->put(denMicro,d_lab->d_densityMicroLabel, matlIndex, patch);
+      // allocateAndPut instead:
+      /* new_dw->put(denMicro,d_lab->d_densityMicroLabel, matlIndex, patch); */;
 
   }
 }
@@ -494,11 +503,11 @@ Properties::reComputeProps(const ProcessorGroup*,
     CCVariable<double> reactscalarSRC;
     CCVariable<double> drhodf;
     if (d_reactingFlow) {
-      new_dw->allocate(temperature, d_lab->d_tempINLabel, matlIndex, patch);
-      new_dw->allocate(co2, d_lab->d_co2INLabel, matlIndex, patch);
-      new_dw->allocate(enthalpy, d_lab->d_enthalpyRXNLabel, matlIndex, patch);
+      new_dw->allocateAndPut(temperature, d_lab->d_tempINLabel, matlIndex, patch);
+      new_dw->allocateAndPut(co2, d_lab->d_co2INLabel, matlIndex, patch);
+      new_dw->allocateAndPut(enthalpy, d_lab->d_enthalpyRXNLabel, matlIndex, patch);
       if (d_mixingModel->getNumRxnVars()) {
-	new_dw->allocate(reactscalarSRC, d_lab->d_reactscalarSRCINLabel,
+	new_dw->allocateAndPut(reactscalarSRC, d_lab->d_reactscalarSRCINLabel,
 			 matlIndex, patch);
 	reactscalarSRC.initialize(0.0);
       }
@@ -506,8 +515,8 @@ Properties::reComputeProps(const ProcessorGroup*,
     CCVariable<double> absorption;
     CCVariable<double> sootFV;
     if (d_radiationCalc) {
-      new_dw->allocate(absorption, d_lab->d_absorpINLabel, matlIndex, patch);
-      new_dw->allocate(sootFV, d_lab->d_sootFVINLabel, matlIndex, patch);
+      new_dw->allocateAndPut(absorption, d_lab->d_absorpINLabel, matlIndex, patch);
+      new_dw->allocateAndPut(sootFV, d_lab->d_sootFVINLabel, matlIndex, patch);
       absorption.initialize(0.0);
       sootFV.initialize(0.0);
     }
@@ -517,10 +526,10 @@ Properties::reComputeProps(const ProcessorGroup*,
     CCVariable<double> denMicro;
     //    CCVariable<double> denMicro_old;
 
-    new_dw->allocate(drhodf, d_lab->d_drhodfCPLabel, matlIndex, patch);
+    new_dw->allocateAndPut(drhodf, d_lab->d_drhodfCPLabel, matlIndex, patch);
     drhodf.initialize(0.0);
 
-    new_dw->allocate(new_density, d_lab->d_densityCPLabel, matlIndex, patch);
+    new_dw->allocateAndPut(new_density, d_lab->d_densityCPLabel, matlIndex, patch);
     new_dw->get(density, d_lab->d_densityINLabel, 
 		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
     new_density.copyData(density);
@@ -530,7 +539,7 @@ Properties::reComputeProps(const ProcessorGroup*,
 		  matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
       //new_dw->get(denMicro_old, d_lab->d_densityMicroINLabel, 
       //	  matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-      new_dw->allocate(denMicro, d_lab->d_densityMicroLabel, matlIndex, patch);
+      new_dw->allocateAndPut(denMicro, d_lab->d_densityMicroLabel, matlIndex, patch);
       //denMicro.copyData(denMicro_old);
     }
 
@@ -670,22 +679,31 @@ Properties::reComputeProps(const ProcessorGroup*,
     else
       new_dw->put(sum_vartype(0), d_lab->d_refDensity_label);
     
-    new_dw->put(new_density, d_lab->d_densityCPLabel, matlIndex, patch);
-    new_dw->put(drhodf, d_lab->d_drhodfCPLabel, matlIndex, patch);
+    // allocateAndPut instead:
+    /* new_dw->put(new_density, d_lab->d_densityCPLabel, matlIndex, patch); */;
+    // allocateAndPut instead:
+    /* new_dw->put(drhodf, d_lab->d_drhodfCPLabel, matlIndex, patch); */;
     if (d_reactingFlow) {
-      new_dw->put(temperature, d_lab->d_tempINLabel, matlIndex, patch);
-      new_dw->put(co2, d_lab->d_co2INLabel, matlIndex, patch);
-      new_dw->put(enthalpy, d_lab->d_enthalpyRXNLabel, matlIndex, patch);
+      // allocateAndPut instead:
+      /* new_dw->put(temperature, d_lab->d_tempINLabel, matlIndex, patch); */;
+      // allocateAndPut instead:
+      /* new_dw->put(co2, d_lab->d_co2INLabel, matlIndex, patch); */;
+      // allocateAndPut instead:
+      /* new_dw->put(enthalpy, d_lab->d_enthalpyRXNLabel, matlIndex, patch); */;
       if (d_mixingModel->getNumRxnVars())
-	new_dw->put(reactscalarSRC, d_lab->d_reactscalarSRCINLabel,
-		    matlIndex, patch);
+	// allocateAndPut instead:
+	/* new_dw->put(reactscalarSRC, d_lab->d_reactscalarSRCINLabel,
+		    matlIndex, patch); */;
     }
     if (d_radiationCalc) {
-      new_dw->put(absorption, d_lab->d_absorpINLabel, matlIndex, patch);
-      new_dw->put(sootFV, d_lab->d_sootFVINLabel, matlIndex, patch);
+      // allocateAndPut instead:
+      /* new_dw->put(absorption, d_lab->d_absorpINLabel, matlIndex, patch); */;
+      // allocateAndPut instead:
+      /* new_dw->put(sootFV, d_lab->d_sootFVINLabel, matlIndex, patch); */;
     }
     if (d_MAlab)
-      new_dw->put(denMicro, d_lab->d_densityMicroLabel, matlIndex, patch);
+      // allocateAndPut instead:
+      /* new_dw->put(denMicro, d_lab->d_densityMicroLabel, matlIndex, patch); */;
   }
 }
 
@@ -726,7 +744,7 @@ Properties::computeDenRefArray(const ProcessorGroup*,
 
     }
 
-    new_dw->allocate(denRefArray, d_lab->d_denRefArrayLabel, 
+    new_dw->allocateAndPut(denRefArray, d_lab->d_denRefArrayLabel, 
 		     matlIndex, patch);
 		
     denRefArray.initialize(den_Ref);
@@ -741,8 +759,9 @@ Properties::computeDenRefArray(const ProcessorGroup*,
       }
     }
 
-    new_dw->put(denRefArray, d_lab->d_denRefArrayLabel,
-		matlIndex, patch);
+    // allocateAndPut instead:
+    /* new_dw->put(denRefArray, d_lab->d_denRefArrayLabel,
+		matlIndex, patch); */;
 
   }
 }
@@ -834,11 +853,11 @@ Properties::computePropsPred(const ProcessorGroup*,
     CCVariable<double> drhodf;
 
     if (d_reactingFlow) {
-      new_dw->allocate(temperature, d_lab->d_tempINPredLabel, matlIndex, patch);
-      new_dw->allocate(co2, d_lab->d_co2INPredLabel, matlIndex, patch);
-      new_dw->allocate(enthalpy, d_lab->d_enthalpyRXNPredLabel, matlIndex, patch);
+      new_dw->allocateAndPut(temperature, d_lab->d_tempINPredLabel, matlIndex, patch);
+      new_dw->allocateAndPut(co2, d_lab->d_co2INPredLabel, matlIndex, patch);
+      new_dw->allocateAndPut(enthalpy, d_lab->d_enthalpyRXNPredLabel, matlIndex, patch);
       if (d_mixingModel->getNumRxnVars()) {
-	new_dw->allocate(reactscalarSRC, d_lab->d_reactscalarSRCINPredLabel,
+	new_dw->allocateAndPut(reactscalarSRC, d_lab->d_reactscalarSRCINPredLabel,
 			 matlIndex, patch);
 	reactscalarSRC.initialize(0.0);
       }
@@ -846,8 +865,8 @@ Properties::computePropsPred(const ProcessorGroup*,
     CCVariable<double> absorption;
     CCVariable<double> sootFV;
     if (d_radiationCalc) {
-      new_dw->allocate(absorption, d_lab->d_absorpINPredLabel, matlIndex, patch);
-      new_dw->allocate(sootFV, d_lab->d_sootFVINPredLabel, matlIndex, patch);
+      new_dw->allocateAndPut(absorption, d_lab->d_absorpINPredLabel, matlIndex, patch);
+      new_dw->allocateAndPut(sootFV, d_lab->d_sootFVINPredLabel, matlIndex, patch);
       absorption.initialize(0.0);
       sootFV.initialize(0.0);
     }
@@ -856,10 +875,10 @@ Properties::computePropsPred(const ProcessorGroup*,
     //constCCVariable<double> denMicro;
     constCCVariable<double> enthalpy_comp;
 
-    new_dw->allocate(drhodf, d_lab->d_drhodfPredLabel, matlIndex, patch);
+    new_dw->allocateAndPut(drhodf, d_lab->d_drhodfPredLabel, matlIndex, patch);
     drhodf.initialize(0.0);
 
-    new_dw->allocate(new_density, d_lab->d_densityPredLabel, matlIndex, patch);
+    new_dw->allocateAndPut(new_density, d_lab->d_densityPredLabel, matlIndex, patch);
     new_dw->get(density, d_lab->d_densityINLabel, 
 		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
     new_density.copyData(density);
@@ -1010,21 +1029,29 @@ Properties::computePropsPred(const ProcessorGroup*,
     else
       new_dw->put(sum_vartype(0), d_lab->d_refDensityPred_label);
 
-    new_dw->put(new_density, d_lab->d_densityPredLabel, matlIndex, patch);
-    new_dw->put(drhodf, d_lab->d_drhodfPredLabel, matlIndex, patch);
+    // allocateAndPut instead:
+    /* new_dw->put(new_density, d_lab->d_densityPredLabel, matlIndex, patch); */;
+    // allocateAndPut instead:
+    /* new_dw->put(drhodf, d_lab->d_drhodfPredLabel, matlIndex, patch); */;
     //    if (d_MAlab)
     //      new_dw->put(denMicro, d_lab->densityMicroLabel, matlIndex, patch);
     if (d_reactingFlow) {
-      new_dw->put(temperature, d_lab->d_tempINPredLabel, matlIndex, patch);
-      new_dw->put(co2, d_lab->d_co2INPredLabel, matlIndex, patch);
-      new_dw->put(enthalpy, d_lab->d_enthalpyRXNPredLabel, matlIndex, patch);
+      // allocateAndPut instead:
+      /* new_dw->put(temperature, d_lab->d_tempINPredLabel, matlIndex, patch); */;
+      // allocateAndPut instead:
+      /* new_dw->put(co2, d_lab->d_co2INPredLabel, matlIndex, patch); */;
+      // allocateAndPut instead:
+      /* new_dw->put(enthalpy, d_lab->d_enthalpyRXNPredLabel, matlIndex, patch); */;
       if (d_mixingModel->getNumRxnVars())
-	new_dw->put(reactscalarSRC, d_lab->d_reactscalarSRCINPredLabel,
-		    matlIndex, patch);
+	// allocateAndPut instead:
+	/* new_dw->put(reactscalarSRC, d_lab->d_reactscalarSRCINPredLabel,
+		    matlIndex, patch); */;
     }
     if (d_radiationCalc) {
-      new_dw->put(absorption, d_lab->d_absorpINPredLabel, matlIndex, patch);
-      new_dw->put(sootFV, d_lab->d_sootFVINPredLabel, matlIndex, patch);
+      // allocateAndPut instead:
+      /* new_dw->put(absorption, d_lab->d_absorpINPredLabel, matlIndex, patch); */;
+      // allocateAndPut instead:
+      /* new_dw->put(sootFV, d_lab->d_sootFVINPredLabel, matlIndex, patch); */;
     }
   }
 }
@@ -1115,11 +1142,11 @@ Properties::computePropsInterm(const ProcessorGroup*,
     CCVariable<double> drhodf;
 
     if (d_reactingFlow) {
-      new_dw->allocate(temperature, d_lab->d_tempINIntermLabel, matlIndex, patch);
-      new_dw->allocate(co2, d_lab->d_co2INIntermLabel, matlIndex, patch);
-      new_dw->allocate(enthalpy, d_lab->d_enthalpyRXNIntermLabel, matlIndex, patch);
+      new_dw->allocateAndPut(temperature, d_lab->d_tempINIntermLabel, matlIndex, patch);
+      new_dw->allocateAndPut(co2, d_lab->d_co2INIntermLabel, matlIndex, patch);
+      new_dw->allocateAndPut(enthalpy, d_lab->d_enthalpyRXNIntermLabel, matlIndex, patch);
       if (d_mixingModel->getNumRxnVars()) {
-	new_dw->allocate(reactscalarSRC, d_lab->d_reactscalarSRCINIntermLabel,
+	new_dw->allocateAndPut(reactscalarSRC, d_lab->d_reactscalarSRCINIntermLabel,
 			 matlIndex, patch);
 	reactscalarSRC.initialize(0.0);
       }
@@ -1127,8 +1154,8 @@ Properties::computePropsInterm(const ProcessorGroup*,
     CCVariable<double> absorption;
     CCVariable<double> sootFV;
     if (d_radiationCalc) {
-      new_dw->allocate(absorption, d_lab->d_absorpINIntermLabel, matlIndex, patch);
-      new_dw->allocate(sootFV, d_lab->d_sootFVINIntermLabel, matlIndex, patch);
+      new_dw->allocateAndPut(absorption, d_lab->d_absorpINIntermLabel, matlIndex, patch);
+      new_dw->allocateAndPut(sootFV, d_lab->d_sootFVINIntermLabel, matlIndex, patch);
       absorption.initialize(0.0);
       sootFV.initialize(0.0);
     }
@@ -1137,10 +1164,10 @@ Properties::computePropsInterm(const ProcessorGroup*,
     //constCCVariable<double> denMicro;
     constCCVariable<double> enthalpy_comp;
 
-    new_dw->allocate(drhodf, d_lab->d_drhodfIntermLabel, matlIndex, patch);
+    new_dw->allocateAndPut(drhodf, d_lab->d_drhodfIntermLabel, matlIndex, patch);
     drhodf.initialize(0.0);
 
-    new_dw->allocate(new_density, d_lab->d_densityIntermLabel, matlIndex, patch);
+    new_dw->allocateAndPut(new_density, d_lab->d_densityIntermLabel, matlIndex, patch);
     new_dw->get(density, d_lab->d_densityINLabel, 
 		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
     new_density.copyData(density);
@@ -1291,19 +1318,27 @@ Properties::computePropsInterm(const ProcessorGroup*,
     else
       new_dw->put(sum_vartype(0), d_lab->d_refDensityInterm_label);
     
-    new_dw->put(new_density, d_lab->d_densityIntermLabel, matlIndex, patch);
-    new_dw->put(drhodf, d_lab->d_drhodfIntermLabel, matlIndex, patch);
+    // allocateAndPut instead:
+    /* new_dw->put(new_density, d_lab->d_densityIntermLabel, matlIndex, patch); */;
+    // allocateAndPut instead:
+    /* new_dw->put(drhodf, d_lab->d_drhodfIntermLabel, matlIndex, patch); */;
     if (d_reactingFlow) {
-      new_dw->put(temperature, d_lab->d_tempINIntermLabel, matlIndex, patch);
-      new_dw->put(co2, d_lab->d_co2INIntermLabel, matlIndex, patch);
-      new_dw->put(enthalpy, d_lab->d_enthalpyRXNIntermLabel, matlIndex, patch);
+      // allocateAndPut instead:
+      /* new_dw->put(temperature, d_lab->d_tempINIntermLabel, matlIndex, patch); */;
+      // allocateAndPut instead:
+      /* new_dw->put(co2, d_lab->d_co2INIntermLabel, matlIndex, patch); */;
+      // allocateAndPut instead:
+      /* new_dw->put(enthalpy, d_lab->d_enthalpyRXNIntermLabel, matlIndex, patch); */;
       if (d_mixingModel->getNumRxnVars())
-	new_dw->put(reactscalarSRC, d_lab->d_reactscalarSRCINIntermLabel,
-		    matlIndex, patch);
+	// allocateAndPut instead:
+	/* new_dw->put(reactscalarSRC, d_lab->d_reactscalarSRCINIntermLabel,
+		    matlIndex, patch); */;
     }
     if (d_radiationCalc) {
-      new_dw->put(absorption, d_lab->d_absorpINIntermLabel, matlIndex, patch);
-      new_dw->put(sootFV, d_lab->d_sootFVINIntermLabel, matlIndex, patch);
+      // allocateAndPut instead:
+      /* new_dw->put(absorption, d_lab->d_absorpINIntermLabel, matlIndex, patch); */;
+      // allocateAndPut instead:
+      /* new_dw->put(sootFV, d_lab->d_sootFVINIntermLabel, matlIndex, patch); */;
     }
   }
 }
@@ -1373,7 +1408,7 @@ Properties::computeDenRefArrayPred(const ProcessorGroup*,
 
     }
 
-    new_dw->allocate(denRefArray, d_lab->d_denRefArrayPredLabel, 
+    new_dw->allocateAndPut(denRefArray, d_lab->d_denRefArrayPredLabel, 
 		     matlIndex, patch);
 		
     denRefArray.initialize(den_Ref);
@@ -1388,8 +1423,9 @@ Properties::computeDenRefArrayPred(const ProcessorGroup*,
       }
     }
 
-    new_dw->put(denRefArray, d_lab->d_denRefArrayPredLabel,
-		matlIndex, patch);
+    // allocateAndPut instead:
+    /* new_dw->put(denRefArray, d_lab->d_denRefArrayPredLabel,
+		matlIndex, patch); */;
 
   }
 }
@@ -1459,7 +1495,7 @@ Properties::computeDenRefArrayInterm(const ProcessorGroup*,
 
     }
 
-    new_dw->allocate(denRefArray, d_lab->d_denRefArrayIntermLabel, 
+    new_dw->allocateAndPut(denRefArray, d_lab->d_denRefArrayIntermLabel, 
 		     matlIndex, patch);
 		
     denRefArray.initialize(den_Ref);
@@ -1474,8 +1510,9 @@ Properties::computeDenRefArrayInterm(const ProcessorGroup*,
       }
     }
 
-    new_dw->put(denRefArray, d_lab->d_denRefArrayIntermLabel,
-		matlIndex, patch);
+    // allocateAndPut instead:
+    /* new_dw->put(denRefArray, d_lab->d_denRefArrayIntermLabel,
+		matlIndex, patch); */;
 
   }
 }

@@ -596,7 +596,7 @@ void MPMICE::actuallyInitialize(const ProcessorGroup*,
      << "\t\t\t MPMICE" << endl;
 
     NCVariable<double> NC_CCweight;
-    new_dw->allocate(NC_CCweight,  MIlb->NC_CCweightLabel,    0, patch);
+    new_dw->allocateAndPut(NC_CCweight, MIlb->NC_CCweightLabel,    0, patch);
    //__________________________________
    // - Initialize NC_CCweight = 0.125
    // - Find the walls with symmetry BC and
@@ -625,11 +625,11 @@ void MPMICE::actuallyInitialize(const ProcessorGroup*,
       CCVariable<Vector> vel_CC;
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
       int indx= mpm_matl->getDWIndex();
-      new_dw->allocate(rho_micro,   Ilb->rho_micro_CCLabel,   indx,patch);
-      new_dw->allocate(sp_vol_CC,   Ilb->sp_vol_CCLabel,      indx,patch);
-      new_dw->allocate(rho_CC,      Ilb->rho_CCLabel,         indx,patch); 
-      new_dw->allocate(Temp_CC,   MIlb->temp_CCLabel,         indx,patch);
-      new_dw->allocate(vel_CC,    MIlb->vel_CCLabel,          indx,patch);
+      new_dw->allocateTemporary(rho_micro, patch);
+      new_dw->allocateAndPut(sp_vol_CC, Ilb->sp_vol_CCLabel,      indx,patch);
+      new_dw->allocateAndPut(rho_CC, Ilb->rho_CCLabel,         indx,patch); 
+      new_dw->allocateAndPut(Temp_CC, MIlb->temp_CCLabel,         indx,patch);
+      new_dw->allocateAndPut(vel_CC, MIlb->vel_CCLabel,          indx,patch);
       
       mpm_matl->initializeCCVariables(rho_micro,   rho_CC,
                                       Temp_CC,     vel_CC,  
@@ -667,10 +667,14 @@ void MPMICE::actuallyInitialize(const ProcessorGroup*,
       //__________________________________
       //You may need to adjust Temp_CC if g!=0
       // for thermo consistency, for now ignore it 2/11/02
-      new_dw->put(sp_vol_CC,    Ilb->sp_vol_CCLabel, indx,patch);        
-      new_dw->put(rho_CC,       Ilb->rho_CCLabel,    indx,patch);        
-      new_dw->put(Temp_CC,     MIlb->temp_CCLabel,   indx,patch);        
-      new_dw->put(vel_CC,      MIlb->vel_CCLabel,    indx,patch); 
+      // allocateAndPut instead:
+      /* new_dw->put(sp_vol_CC,    Ilb->sp_vol_CCLabel, indx,patch);         */;
+      // allocateAndPut instead:
+      /* new_dw->put(rho_CC,       Ilb->rho_CCLabel,    indx,patch);         */;
+      // allocateAndPut instead:
+      /* new_dw->put(Temp_CC,     MIlb->temp_CCLabel,   indx,patch);         */;
+      // allocateAndPut instead:
+      /* new_dw->put(vel_CC,      MIlb->vel_CCLabel,    indx,patch);  */;
       
       //---- P R I N T   D A T A ------        
       if (d_ice->switchDebugInitialize){      
@@ -687,7 +691,8 @@ void MPMICE::actuallyInitialize(const ProcessorGroup*,
 
     double doMech = 999.9;
     new_dw->put(delt_vartype(doMech), Mlb->doMechLabel);
-    new_dw->put(NC_CCweight,  MIlb->NC_CCweightLabel,    0, patch);
+    // allocateAndPut instead:
+    /* new_dw->put(NC_CCweight,  MIlb->NC_CCweightLabel,    0, patch); */;
   } // Patch loop
 }
 
@@ -713,7 +718,7 @@ void MPMICE::interpolatePressCCToPressNC(const ProcessorGroup*,
     new_dw->get(pressCC, Ilb->press_CCLabel,       0, patch, gac, 1);
 //  new_dw->get(pressCC, Ilb->press_equil_CCLabel, 0, patch, gac, 1);
 /*`==========TESTING==========*/
-    new_dw->allocate(pressNC, MIlb->press_NCLabel, 0, patch);
+    new_dw->allocateAndPut(pressNC, MIlb->press_NCLabel, 0, patch);
     pressNC.initialize(0.0);
     
     IntVector cIdx[8];
@@ -724,7 +729,8 @@ void MPMICE::interpolatePressCCToPressNC(const ProcessorGroup*,
         pressNC[*iter]  += .125*pressCC[cIdx[in]];
       }
     }
-    new_dw->put(pressNC,MIlb->press_NCLabel,0,patch);
+    // allocateAndPut instead:
+    /* new_dw->put(pressNC,MIlb->press_NCLabel,0,patch); */;
   }
 }
 
@@ -760,7 +766,7 @@ void MPMICE::interpolatePAndGradP(const ProcessorGroup*,
       NCVariable<Vector> gradPAccNC; 
       new_dw->get(press_force,      Ilb->press_force_CCLabel,indx,patch,gac,1);
       new_dw->get(mass,             MIlb->cMassLabel,        indx,patch,gac,1); 
-      new_dw->allocate(gradPAccNC,  Mlb->gradPAccNCLabel,    indx,patch);
+      new_dw->allocateAndPut(gradPAccNC, Mlb->gradPAccNCLabel,    indx,patch);
       gradPAccNC.initialize(Vector(0.,0.,0.));    
 
       ParticleSubset* pset = old_dw->getParticleSubset(indx, patch);
@@ -770,7 +776,7 @@ void MPMICE::interpolatePAndGradP(const ProcessorGroup*,
       if(d_8or27==27){
         old_dw->get(psize,        Mlb->pSizeLabel,          pset);
       }
-      new_dw->allocate(pPressure, Mlb->pPressureLabel,      pset);
+      new_dw->allocateAndPut(pPressure, Mlb->pPressureLabel,      pset);
       old_dw->get(px,             Mlb->pXLabel,             pset);
 
      //__________________________________
@@ -814,8 +820,10 @@ void MPMICE::interpolatePAndGradP(const ProcessorGroup*,
             <<patch->getID();                   
         printNCVector( patch, 1,desc.str(),"gradPAccNC",0,gradPAccNC);
       }
-      new_dw->put(pPressure,   Mlb->pPressureLabel);
-      new_dw->put(gradPAccNC,  Mlb->gradPAccNCLabel, indx, patch);
+      // allocateAndPut instead:
+      /* new_dw->put(pPressure,   Mlb->pPressureLabel); */;
+      // allocateAndPut instead:
+      /* new_dw->put(gradPAccNC,  Mlb->gradPAccNCLabel, indx, patch); */;
     }  // numMPMMatls
   } //patches
 }
@@ -868,10 +876,10 @@ void MPMICE::interpolateNCToCC_0(const ProcessorGroup*,
       constCCVariable<double> Temp_CC_ice;
       constCCVariable<Vector> vel_CC_ice; 
 
-      new_dw->allocate(cmass,     MIlb->cMassLabel,   indx, patch);    
-      new_dw->allocate(cvolume,   MIlb->cVolumeLabel, indx, patch);
-      new_dw->allocate(vel_CC,    MIlb->vel_CCLabel,  indx, patch);    
-      new_dw->allocate(Temp_CC,   MIlb->temp_CCLabel, indx, patch);   
+      new_dw->allocateAndPut(cmass, MIlb->cMassLabel,   indx, patch);    
+      new_dw->allocateAndPut(cvolume, MIlb->cVolumeLabel, indx, patch);
+      new_dw->allocateAndPut(vel_CC, MIlb->vel_CCLabel,  indx, patch);    
+      new_dw->allocateAndPut(Temp_CC, MIlb->temp_CCLabel, indx, patch);   
 
       double rho_orig = mpm_matl->getInitialDensity();
       double very_small_mass = d_TINY_RHO * cell_vol;
@@ -971,10 +979,14 @@ void MPMICE::interpolateNCToCC_0(const ProcessorGroup*,
         d_ice->printVector( patch, 1,desc.str(), "vel_CC", 0,vel_CC);
       } 
      
-      new_dw->put(cmass,    MIlb->cMassLabel,   indx, patch);    
-      new_dw->put(cvolume,  MIlb->cVolumeLabel, indx, patch);    
-      new_dw->put(vel_CC,   MIlb->vel_CCLabel,  indx, patch);    
-      new_dw->put(Temp_CC,  MIlb->temp_CCLabel, indx, patch);   
+      // allocateAndPut instead:
+      /* new_dw->put(cmass,    MIlb->cMassLabel,   indx, patch);     */;
+      // allocateAndPut instead:
+      /* new_dw->put(cvolume,  MIlb->cVolumeLabel, indx, patch);     */;
+      // allocateAndPut instead:
+      /* new_dw->put(vel_CC,   MIlb->vel_CCLabel,  indx, patch);     */;
+      // allocateAndPut instead:
+      /* new_dw->put(Temp_CC,  MIlb->temp_CCLabel, indx, patch);    */;
     }
     if(doMechNew < 0.){
        first_small_dt++;
@@ -1004,7 +1016,7 @@ void MPMICE::computeLagrangianValuesMPM(const ProcessorGroup*,
     
     constNCVariable<double> NC_CCweight;
     NCVariable<double>NC_CCweight_copy;
-    new_dw->allocate(NC_CCweight_copy,MIlb->NC_CCweightLabel, 0,patch);
+    new_dw->allocateAndPut(NC_CCweight_copy, MIlb->NC_CCweightLabel, 0,patch);
     old_dw->get(NC_CCweight,          MIlb->NC_CCweightLabel, 0,patch,
               Ghost::AroundCells, 1);
               
@@ -1041,9 +1053,9 @@ void MPMICE::computeLagrangianValuesMPM(const ProcessorGroup*,
                   MIlb->vel_CCLabel,         indx,patch,Ghost::None,0);
                                                            
       new_dw->getModifiable(rho_CC,Ilb->rho_CCLabel,      indx,patch);   
-      new_dw->allocate(mass_L,     Ilb->mass_L_CCLabel,   indx,patch);      
-      new_dw->allocate(cmomentum,  Ilb->mom_L_CCLabel,    indx,patch);   
-      new_dw->allocate(int_eng_L,  Ilb->int_eng_L_CCLabel,indx,patch);   
+      new_dw->allocateAndPut(mass_L, Ilb->mass_L_CCLabel,   indx,patch);      
+      new_dw->allocateAndPut(cmomentum, Ilb->mom_L_CCLabel,    indx,patch);   
+      new_dw->allocateAndPut(int_eng_L, Ilb->int_eng_L_CCLabel,indx,patch);   
 
       cmomentum.initialize(Vector(0.0, 0.0, 0.0));
       int_eng_L.initialize(0.);
@@ -1156,16 +1168,20 @@ void MPMICE::computeLagrangianValuesMPM(const ProcessorGroup*,
         d_ice->printData(   patch, 1,desc.str(), "int_eng_L", int_eng_L);
         d_ice->printVector( patch, 1,desc.str(), "mom_L_CC", 0,  cmomentum);
       }
-       new_dw->put(cmomentum,   Ilb->mom_L_CCLabel,    indx, patch);     
-       new_dw->put(int_eng_L,   Ilb->int_eng_L_CCLabel,indx, patch);     
-       new_dw->put(mass_L,      Ilb->mass_L_CCLabel,   indx, patch);     
+       // allocateAndPut instead:
+       /* new_dw->put(cmomentum,   Ilb->mom_L_CCLabel,    indx, patch);      */;
+       // allocateAndPut instead:
+       /* new_dw->put(int_eng_L,   Ilb->int_eng_L_CCLabel,indx, patch);      */;
+       // allocateAndPut instead:
+       /* new_dw->put(mass_L,      Ilb->mass_L_CCLabel,   indx, patch);      */;
     }
     //__________________________________
     // carry forward interpolation weight 
     IntVector low = patch->getNodeLowIndex();
     IntVector hi  = patch->getNodeHighIndex();
     NC_CCweight_copy.copyPatch(NC_CCweight, low,hi);
-    new_dw->put(NC_CCweight_copy, MIlb->NC_CCweightLabel, 0,patch);
+    // allocateAndPut instead:
+    /* new_dw->put(NC_CCweight_copy, MIlb->NC_CCweightLabel, 0,patch); */;
   }  //patches
 }
 
@@ -1211,7 +1227,7 @@ void MPMICE::interpolateCCToNC(const ProcessorGroup*,
       new_dw->get(int_eng_L_ME_CC, Ilb->int_eng_L_ME_CCLabel,indx,patch,gac,1);
       double cv = mpm_matl->getSpecificHeat();     
 
-      new_dw->allocate(dTdt_NC, Mlb->dTdt_NCLabel,        indx, patch);
+      new_dw->allocateAndPut(dTdt_NC, Mlb->dTdt_NCLabel,        indx, patch);
       dTdt_NC.initialize(0.0);
       IntVector cIdx[8];
       Vector dvdt_tmp;
@@ -1239,7 +1255,8 @@ void MPMICE::interpolateCCToNC(const ProcessorGroup*,
         printNCVector( patch, 1,desc.str(),"gvelocity",    0,gvelocity);
         printNCVector( patch, 1,desc.str(),"gacceleration",0,gacceleration);
       }
-      new_dw->put(dTdt_NC,           Mlb->dTdt_NCLabel,       indx,patch);
+      // allocateAndPut instead:
+      /* new_dw->put(dTdt_NC,           Mlb->dTdt_NCLabel,       indx,patch); */;
     }  
   }  //patches
 }
@@ -1314,8 +1331,8 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
     constCCVariable<double> press;    
     CCVariable<double> press_new, delPress_tmp;
     //  P R E S S 
-    new_dw->allocate(press_new,    Ilb->press_equil_CCLabel, 0,patch);
-    new_dw->allocate(delPress_tmp, Ilb->press_CCLabel,       0,patch); 
+    new_dw->allocateAndPut(press_new, Ilb->press_equil_CCLabel, 0,patch);
+    new_dw->allocateTemporary(delPress_tmp, patch); 
     old_dw->get(press, Ilb->press_CCLabel, 0,patch,Ghost::None, 0); 
 
     for (int m = 0; m < numALLMatls; m++) {
@@ -1337,11 +1354,11 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
         new_dw->get(vel_CC[m],   MIlb->vel_CCLabel,  indx,patch,Ghost::None,0);
         cv[m] = mpm_matl->getSpecificHeat();
       }
-      new_dw->allocate(rho_CC_new[m],Ilb->rho_CCLabel,       indx, patch);
-      new_dw->allocate(vol_frac[m],  Ilb->vol_frac_CCLabel,  indx, patch);
-      new_dw->allocate(rho_micro[m], Ilb->rho_micro_CCLabel, indx, patch);
-      new_dw->allocate(speedSound_new[m],Ilb->speedSound_CCLabel,indx,patch);
-      new_dw->allocate(sp_vol_new[m],Ilb->sp_vol_CCLabel,    indx, patch);
+      new_dw->allocateAndPut(rho_CC_new[m], Ilb->rho_CCLabel,       indx, patch);
+      new_dw->allocateAndPut(vol_frac[m], Ilb->vol_frac_CCLabel,  indx, patch);
+      new_dw->allocateTemporary(rho_micro[m],  patch);
+      new_dw->allocateAndPut(speedSound_new[m], Ilb->speedSound_CCLabel,indx,patch);
+      new_dw->allocateAndPut(sp_vol_new[m], Ilb->sp_vol_CCLabel,    indx, patch);
       speedSound_new[m].initialize(0.0);
     }
     
@@ -1671,12 +1688,17 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
     for (int m = 0; m < numALLMatls; m++)   {
       Material* matl = d_sharedState->getMaterial( m );
       int indx = matl->getDWIndex();
-      new_dw->put( vol_frac[m],      Ilb->vol_frac_CCLabel,   indx, patch);
-      new_dw->put( speedSound_new[m],Ilb->speedSound_CCLabel, indx, patch);
-      new_dw->put( sp_vol_new[m],    Ilb->sp_vol_CCLabel,     indx, patch); 
-      new_dw->put( rho_CC_new[m],    Ilb->rho_CCLabel,        indx, patch);
+      // allocateAndPut instead:
+      /* new_dw->put( vol_frac[m],      Ilb->vol_frac_CCLabel,   indx, patch); */;
+      // allocateAndPut instead:
+      /* new_dw->put( speedSound_new[m],Ilb->speedSound_CCLabel, indx, patch); */;
+      // allocateAndPut instead:
+      /* new_dw->put( sp_vol_new[m],    Ilb->sp_vol_CCLabel,     indx, patch);  */;
+      // allocateAndPut instead:
+      /* new_dw->put( rho_CC_new[m],    Ilb->rho_CCLabel,        indx, patch); */;
     }
-    new_dw->put(press_new,Ilb->press_equil_CCLabel,0,patch);
+    // allocateAndPut instead:
+    /* new_dw->put(press_new,Ilb->press_equil_CCLabel,0,patch); */;
 
 
   //---- P R I N T   D A T A ------
@@ -1762,10 +1784,10 @@ void MPMICE::HEChemistry(const ProcessorGroup*,
       //  burnedMass, createdVol, int_eng_comb
       //  must still be allocated and initialized = 0,
       //  other tasks depend on them.
-      new_dw->allocate(burnedMass[m],   MIlb->burnedMassCCLabel,   indx,patch);
-      new_dw->allocate(createdVol[m],    Ilb->created_vol_CCLabel, indx,patch);
-      new_dw->allocate(int_eng_react[m], Ilb->int_eng_comb_CCLabel,indx,patch);
-      new_dw->allocate(mom_comb[m],      Ilb->mom_comb_CCLabel,    indx,patch);
+      new_dw->allocateAndPut(burnedMass[m], MIlb->burnedMassCCLabel,   indx,patch);
+      new_dw->allocateAndPut(createdVol[m], Ilb->created_vol_CCLabel, indx,patch);
+      new_dw->allocateAndPut(int_eng_react[m], Ilb->int_eng_comb_CCLabel,indx,patch);
+      new_dw->allocateAndPut(mom_comb[m], Ilb->mom_comb_CCLabel,    indx,patch);
             
       burnedMass[m].initialize(0.0);
       createdVol[m].initialize(0.0);
@@ -1782,13 +1804,13 @@ void MPMICE::HEChemistry(const ProcessorGroup*,
                                       prod_indx, patch, Ghost::None,0);
         new_dw->get(gasVolumeFraction,    Ilb->vol_frac_CCLabel,
                                       prod_indx, patch, Ghost::None,0);
-        new_dw->allocate(sumBurnedMass,  MIlb->burnedMassCCLabel,   
+        new_dw->allocateAndPut(sumBurnedMass, MIlb->burnedMassCCLabel,   
                                       prod_indx, patch);
-        new_dw->allocate(sumCreatedVol,   Ilb->created_vol_CCLabel,  
+        new_dw->allocateAndPut(sumCreatedVol, Ilb->created_vol_CCLabel,  
                                       prod_indx, patch);
-        new_dw->allocate(sumReleasedHeat, Ilb->int_eng_comb_CCLabel, 
+        new_dw->allocateAndPut(sumReleasedHeat, Ilb->int_eng_comb_CCLabel, 
                                       prod_indx, patch);
-        new_dw->allocate(sumMom_comb,     Ilb->mom_comb_CCLabel, 
+        new_dw->allocateAndPut(sumMom_comb, Ilb->mom_comb_CCLabel, 
                                       prod_indx, patch);
         sumBurnedMass.initialize(0.0);
         sumCreatedVol.initialize(0.0);
@@ -1963,16 +1985,24 @@ void MPMICE::HEChemistry(const ProcessorGroup*,
       setBC(burnedMass[m], "set_if_sym_BC",patch, d_sharedState, indx);
       if (ice_matl && (ice_matl->getRxProduct() == Material::product)) {
         setBC(sumBurnedMass, "set_if_sym_BC",patch, d_sharedState, indx);
-        new_dw->put(sumBurnedMass,  MIlb->burnedMassCCLabel,   indx, patch);
-        new_dw->put(sumReleasedHeat, Ilb->int_eng_comb_CCLabel,indx, patch); 
-        new_dw->put(sumCreatedVol,   Ilb->created_vol_CCLabel, indx, patch);
-        new_dw->put(sumMom_comb,     Ilb->mom_comb_CCLabel,    indx, patch);
+        // allocateAndPut instead:
+        /* new_dw->put(sumBurnedMass,  MIlb->burnedMassCCLabel,   indx, patch); */;
+        // allocateAndPut instead:
+        /* new_dw->put(sumReleasedHeat, Ilb->int_eng_comb_CCLabel,indx, patch);  */;
+        // allocateAndPut instead:
+        /* new_dw->put(sumCreatedVol,   Ilb->created_vol_CCLabel, indx, patch); */;
+        // allocateAndPut instead:
+        /* new_dw->put(sumMom_comb,     Ilb->mom_comb_CCLabel,    indx, patch); */;
       }
       else{
-        new_dw->put(burnedMass[m],   MIlb->burnedMassCCLabel,  indx, patch);
-        new_dw->put(int_eng_react[m],Ilb->int_eng_comb_CCLabel,indx, patch); 
-        new_dw->put(createdVol[m],    Ilb->created_vol_CCLabel,indx, patch);
-        new_dw->put(mom_comb[m],      Ilb->mom_comb_CCLabel,   indx, patch);
+        // allocateAndPut instead:
+        /* new_dw->put(burnedMass[m],   MIlb->burnedMassCCLabel,  indx, patch); */;
+        // allocateAndPut instead:
+        /* new_dw->put(int_eng_react[m],Ilb->int_eng_comb_CCLabel,indx, patch);  */;
+        // allocateAndPut instead:
+        /* new_dw->put(createdVol[m],    Ilb->created_vol_CCLabel,indx, patch); */;
+        // allocateAndPut instead:
+        /* new_dw->put(mom_comb[m],      Ilb->mom_comb_CCLabel,   indx, patch); */;
       }
     }
     //---- P R I N T   D A T A ------ 
@@ -2038,8 +2068,7 @@ void MPMICE::interpolateMassBurnFractionToNC(const ProcessorGroup*,
                                                   Ghost::AroundCells,1);
         new_dw->get(massCC,           MIlb->cMassLabel,       dwindex,patch,
                                                   Ghost::AroundCells,1);
-        new_dw->allocate(massBurnFraction,
-                                  Mlb->massBurnFractionLabel,dwindex,patch);
+        new_dw->allocateAndPut(massBurnFraction, Mlb->massBurnFractionLabel,dwindex,patch);
         massBurnFraction.initialize(0.);
 
         IntVector cIdx[8];
@@ -2051,7 +2080,8 @@ void MPMICE::interpolateMassBurnFractionToNC(const ProcessorGroup*,
 
           }
         }
-        new_dw->put(massBurnFraction,Mlb->massBurnFractionLabel, dwindex,patch);
+        // allocateAndPut instead:
+        /* new_dw->put(massBurnFraction,Mlb->massBurnFractionLabel, dwindex,patch); */;
       }  //if(mpm_matl)
     }  //ALLmatls  
   }  //patches

@@ -54,10 +54,10 @@ void CompNeoHook::initializeCMData(const Patch* patch,
    ParticleVariable<Matrix3> bElBar;
 #endif
 
-   new_dw->allocate(deformationGradient, lb->pDeformationMeasureLabel, pset);
-   new_dw->allocate(pstress,             lb->pStressLabel,             pset);
+   new_dw->allocateAndPut(deformationGradient, lb->pDeformationMeasureLabel, pset);
+   new_dw->allocateAndPut(pstress, lb->pStressLabel,             pset);
 #ifdef IMPLICIT
-   new_dw->allocate(bElBar,             lb->bElBarLabel,             pset);
+   new_dw->allocateAndPut(bElBar, lb->bElBarLabel,             pset);
 #endif
 
    for(ParticleSubset::iterator iter = pset->begin();
@@ -68,10 +68,13 @@ void CompNeoHook::initializeCMData(const Patch* patch,
 	  bElBar[*iter] = Identity;
 #endif
    }
-   new_dw->put(deformationGradient, lb->pDeformationMeasureLabel);
-   new_dw->put(pstress, lb->pStressLabel);
+   // allocateAndPut instead:
+   /* new_dw->put(deformationGradient, lb->pDeformationMeasureLabel); */;
+   // allocateAndPut instead:
+   /* new_dw->put(pstress, lb->pStressLabel); */;
 #ifdef IMPLICIT
-   new_dw->put(bElBar, lb->bElBarLabel);
+   // allocateAndPut instead:
+   /* new_dw->put(bElBar, lb->bElBarLabel); */;
 #endif
 
    computeStableTimestep(patch, matl, new_dw);
@@ -164,10 +167,9 @@ void CompNeoHook::computeStressTensor(const PatchSubset* patches,
     old_dw->get(pmass,               lb->pMassLabel,               pset);
     old_dw->get(pvelocity,           lb->pVelocityLabel,           pset);
     old_dw->get(deformationGradient, lb->pDeformationMeasureLabel, pset);
-    new_dw->allocate(pstress,        lb->pStressLabel_preReloc,    pset);
-    new_dw->allocate(pvolume_deformed, lb->pVolumeDeformedLabel,   pset);
-    new_dw->allocate(deformationGradient_new,
-		     lb->pDeformationMeasureLabel_preReloc, pset);
+    new_dw->allocateAndPut(pstress, lb->pStressLabel_preReloc,    pset);
+    new_dw->allocateAndPut(pvolume_deformed, lb->pVolumeDeformedLabel,   pset);
+    new_dw->allocateAndPut(deformationGradient_new, lb->pDeformationMeasureLabel_preReloc, pset);
 
     new_dw->get(gvelocity,           lb->gVelocityLabel, matlindex,patch,
             Ghost::AroundCells, 1);
@@ -263,9 +265,12 @@ void CompNeoHook::computeStressTensor(const PatchSubset* patches,
     WaveSpeed = dx/WaveSpeed;
     double delT_new = WaveSpeed.minComponent();
     new_dw->put(delt_vartype(delT_new), lb->delTLabel);
-    new_dw->put(pstress,                lb->pStressLabel_preReloc);
-    new_dw->put(deformationGradient_new,lb->pDeformationMeasureLabel_preReloc);
-    new_dw->put(pvolume_deformed,       lb->pVolumeDeformedLabel);
+    // allocateAndPut instead:
+    /* new_dw->put(pstress,                lb->pStressLabel_preReloc); */;
+    // allocateAndPut instead:
+    /* new_dw->put(deformationGradient_new,lb->pDeformationMeasureLabel_preReloc); */;
+    // allocateAndPut instead:
+    /* new_dw->put(pvolume_deformed,       lb->pVolumeDeformedLabel); */;
     new_dw->put(sum_vartype(se),        lb->StrainEnergyLabel);
 
   }
@@ -315,12 +320,11 @@ void CompNeoHook::computeStressTensorImplicit(const PatchSubset* patches,
       new_dw->get(dispNew,lb->dispNewLabel,matlindex,patch,
 		  Ghost::AroundCells,1);
     
-    new_dw->allocate(pstress,        lb->pStressLabel_preReloc, pset);
+    new_dw->allocateAndPut(pstress, lb->pStressLabel_preReloc, pset);
     
-    new_dw->allocate(pvolume_deformed, lb->pVolumeDeformedLabel, pset);
-    new_dw->allocate(deformationGradient_new,
-		     lb->pDeformationMeasureLabel_preReloc, pset);
-    new_dw->allocate(bElBar_new,lb->bElBarLabel_preReloc, pset);
+    new_dw->allocateAndPut(pvolume_deformed, lb->pVolumeDeformedLabel, pset);
+    new_dw->allocateAndPut(deformationGradient_new, lb->pDeformationMeasureLabel_preReloc, pset);
+    new_dw->allocateAndPut(bElBar_new, lb->bElBarLabel_preReloc, pset);
     
     
     
@@ -600,10 +604,14 @@ void CompNeoHook::computeStressTensorImplicit(const PatchSubset* patches,
       
       
     }
-    new_dw->put(pstress,                lb->pStressLabel_preReloc);
-    new_dw->put(deformationGradient_new,lb->pDeformationMeasureLabel_preReloc);
-    new_dw->put(pvolume_deformed,       lb->pVolumeDeformedLabel);
-    new_dw->put(bElBar_new,             lb->bElBarLabel_preReloc);
+    // allocateAndPut instead:
+    /* new_dw->put(pstress,                lb->pStressLabel_preReloc); */;
+    // allocateAndPut instead:
+    /* new_dw->put(deformationGradient_new,lb->pDeformationMeasureLabel_preReloc); */;
+    // allocateAndPut instead:
+    /* new_dw->put(pvolume_deformed,       lb->pVolumeDeformedLabel); */;
+    // allocateAndPut instead:
+    /* new_dw->put(bElBar_new,             lb->bElBarLabel_preReloc); */;
     
   }
 }

@@ -219,7 +219,7 @@ BoundaryCondition::cellTypeInit(const ProcessorGroup*,
     int archIndex = 0; // only one arches material
     int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
     CCVariable<int> cellType;
-    new_dw->allocate(cellType, d_lab->d_cellTypeLabel, matlIndex, patch);
+    new_dw->allocateAndPut(cellType, d_lab->d_cellTypeLabel, matlIndex, patch);
 
     IntVector domLo = cellType.getFortLowIndex();
     IntVector domHi = cellType.getFortHighIndex();
@@ -382,7 +382,8 @@ BoundaryCondition::cellTypeInit(const ProcessorGroup*,
     cellType.print(cerr);
 #endif
     
-    new_dw->put(cellType, d_lab->d_cellTypeLabel, matlIndex, patch);
+    // allocateAndPut instead:
+    /* new_dw->put(cellType, d_lab->d_cellTypeLabel, matlIndex, patch); */;
   }
 }  
 
@@ -432,10 +433,10 @@ BoundaryCondition::mmWallCellTypeInit(const ProcessorGroup*,
     new_dw->get(voidFrac, d_MAlab->void_frac_CCLabel, matlIndex, patch,
 		Ghost::None, numGhostcells);
     CCVariable<int> mmcellType;
-    new_dw->allocate(mmcellType, d_lab->d_mmcellTypeLabel, matlIndex, patch);
+    new_dw->allocateAndPut(mmcellType, d_lab->d_mmcellTypeLabel, matlIndex, patch);
     mmcellType.copyData(cellType);
     CCVariable<double> mmvoidFrac;
-    new_dw->allocate(mmvoidFrac, d_lab->d_mmgasVolFracLabel, matlIndex, patch);
+    new_dw->allocateAndPut(mmvoidFrac, d_lab->d_mmgasVolFracLabel, matlIndex, patch);
     mmvoidFrac.copyData(voidFrac);
 	
     IntVector domLo = mmcellType.getFortLowIndex();
@@ -447,9 +448,11 @@ BoundaryCondition::mmWallCellTypeInit(const ProcessorGroup*,
     fort_mmcelltypeinit(idxLo, idxHi, mmvoidFrac, mmcellType, d_mmWallID,
 			d_flowfieldCellTypeVal, MM_CUTOFF_VOID_FRAC);
     
-    new_dw->put(mmcellType, d_lab->d_mmcellTypeLabel, matlIndex, patch);
+    // allocateAndPut instead:
+    /* new_dw->put(mmcellType, d_lab->d_mmcellTypeLabel, matlIndex, patch); */;
     // save in arches label
-    new_dw->put(mmvoidFrac, d_lab->d_mmgasVolFracLabel, matlIndex, patch);
+    // allocateAndPut instead:
+    /* new_dw->put(mmvoidFrac, d_lab->d_mmgasVolFracLabel, matlIndex, patch); */;
   }  
 }
 
@@ -505,10 +508,10 @@ BoundaryCondition::mmWallCellTypeInit_first(const ProcessorGroup*,
     new_dw->get(voidFrac, d_MAlab->void_frac_CCLabel, matlIndex, patch,
 		Ghost::None, numGhostcells);
     CCVariable<int> mmcellType;
-    new_dw->allocate(mmcellType, d_lab->d_mmcellTypeLabel, matlIndex, patch);
+    new_dw->allocateAndPut(mmcellType, d_lab->d_mmcellTypeLabel, matlIndex, patch);
     mmcellType.copyData(cellType);
     CCVariable<double> mmvoidFrac;
-    new_dw->allocate(mmvoidFrac, d_lab->d_mmgasVolFracLabel, matlIndex, patch);
+    new_dw->allocateAndPut(mmvoidFrac, d_lab->d_mmgasVolFracLabel, matlIndex, patch);
     mmvoidFrac.copyData(voidFrac);
 	
     IntVector domLo = mmcellType.getFortLowIndex();
@@ -521,9 +524,11 @@ BoundaryCondition::mmWallCellTypeInit_first(const ProcessorGroup*,
     fort_mmcelltypeinit(idxLo, idxHi, mmvoidFrac, mmcellType, d_mmWallID,
 			d_flowfieldCellTypeVal, MM_CUTOFF_VOID_FRAC);
 
-    new_dw->put(mmcellType, d_lab->d_mmcellTypeLabel, matlIndex, patch);
+    // allocateAndPut instead:
+    /* new_dw->put(mmcellType, d_lab->d_mmcellTypeLabel, matlIndex, patch); */;
     // save in arches label
-    new_dw->put(mmvoidFrac, d_lab->d_mmgasVolFracLabel, matlIndex, patch);
+    // allocateAndPut instead:
+    /* new_dw->put(mmvoidFrac, d_lab->d_mmgasVolFracLabel, matlIndex, patch); */;
   }  
 }
 
@@ -694,13 +699,13 @@ BoundaryCondition::calcPressureBC(const ProcessorGroup* ,
     new_dw->get(viscosity, d_lab->d_viscosityCTSLabel, matlIndex, patch, 
 		Ghost::None,
 		Arches::ZEROGHOSTCELLS);
-    new_dw->allocate(uVelocity, d_lab->d_uVelocitySPBCLabel, matlIndex, patch,
+    new_dw->allocateAndPut(uVelocity, d_lab->d_uVelocitySPBCLabel, matlIndex, patch,
 		     Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-    new_dw->allocate(vVelocity, d_lab->d_vVelocitySPBCLabel, matlIndex, patch,
+    new_dw->allocateAndPut(vVelocity, d_lab->d_vVelocitySPBCLabel, matlIndex, patch,
 		     Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-    new_dw->allocate(wVelocity, d_lab->d_wVelocitySPBCLabel, matlIndex, patch,
+    new_dw->allocateAndPut(wVelocity, d_lab->d_wVelocitySPBCLabel, matlIndex, patch,
 		     Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-    new_dw->allocate(pressure, d_lab->d_pressureSPBCLabel, matlIndex, patch);
+    new_dw->allocateAndPut(pressure, d_lab->d_pressureSPBCLabel, matlIndex, patch);
     new_dw->copyOut(pressure, d_lab->d_pressureINLabel, matlIndex, patch);
     new_dw->copyOut(uVelocity, d_lab->d_uVelocitySPLabel, matlIndex, patch,
 		     Ghost::AroundFaces, Arches::ONEGHOSTCELL);
@@ -744,10 +749,14 @@ BoundaryCondition::calcPressureBC(const ProcessorGroup* ,
 		xminus, xplus, yminus, yplus, zminus, zplus);
     
     // Put the calculated data into the new DW
-    new_dw->put(uVelocity, d_lab->d_uVelocitySPBCLabel, matlIndex, patch);
-    new_dw->put(vVelocity, d_lab->d_vVelocitySPBCLabel, matlIndex, patch);
-    new_dw->put(wVelocity, d_lab->d_wVelocitySPBCLabel, matlIndex, patch);
-    new_dw->put(pressure, d_lab->d_pressureSPBCLabel, matlIndex, patch);
+    // allocateAndPut instead:
+    /* new_dw->put(uVelocity, d_lab->d_uVelocitySPBCLabel, matlIndex, patch); */;
+    // allocateAndPut instead:
+    /* new_dw->put(vVelocity, d_lab->d_vVelocitySPBCLabel, matlIndex, patch); */;
+    // allocateAndPut instead:
+    /* new_dw->put(wVelocity, d_lab->d_wVelocitySPBCLabel, matlIndex, patch); */;
+    // allocateAndPut instead:
+    /* new_dw->put(pressure, d_lab->d_pressureSPBCLabel, matlIndex, patch); */;
 
 #ifdef ARCHES_BC_DEBUG
     // Testing if correct values have been put
@@ -1150,14 +1159,14 @@ BoundaryCondition::transOutletBC(const ProcessorGroup* ,
     }
     CellInformation* cellinfo = cellInfoP.get().get_rep();
 
-    new_dw->allocate(uVelocity, d_lab->d_uVelocityOUTBCLabel, matlIndex,
+    new_dw->allocateAndPut(uVelocity, d_lab->d_uVelocityOUTBCLabel, matlIndex,
 		     patch);
-    new_dw->allocate(vVelocity, d_lab->d_vVelocityOUTBCLabel, matlIndex,
+    new_dw->allocateAndPut(vVelocity, d_lab->d_vVelocityOUTBCLabel, matlIndex,
 		     patch);
-    new_dw->allocate(wVelocity, d_lab->d_wVelocityOUTBCLabel, matlIndex,
+    new_dw->allocateAndPut(wVelocity, d_lab->d_wVelocityOUTBCLabel, matlIndex,
 		     patch);
     for (int ii = 0; ii < d_nofScalars; ii++) 
-      new_dw->allocate(scalar[ii], d_lab->d_scalarOUTBCLabel, matlIndex,
+      new_dw->allocateAndPut(scalar[ii], d_lab->d_scalarOUTBCLabel, matlIndex,
 		       patch);
 
     // get cellType, pressure and velocity
@@ -1217,7 +1226,7 @@ BoundaryCondition::transOutletBC(const ProcessorGroup* ,
       constCCVariable<double> old_reactscalar;
       new_dw->get(old_reactscalar, d_lab->d_reactscalarCPBCLabel, matlIndex,
                   patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-      new_dw->allocate(reactscalar, d_lab->d_reactscalarOUTBCLabel, matlIndex, patch);
+      new_dw->allocateAndPut(reactscalar, d_lab->d_reactscalarOUTBCLabel, matlIndex, patch);
       new_dw->copyOut(reactscalar, d_lab->d_reactscalarCPBCLabel, matlIndex, patch);
     // assuming outlet to be pos x
 
@@ -1229,7 +1238,8 @@ BoundaryCondition::transOutletBC(const ProcessorGroup* ,
 			  delta_t, cellinfo->dxpw);
 
       }
-      new_dw->put(reactscalar, d_lab->d_reactscalarOUTBCLabel, matlIndex, patch);
+      // allocateAndPut instead:
+      /* new_dw->put(reactscalar, d_lab->d_reactscalarOUTBCLabel, matlIndex, patch); */;
     }
 
 
@@ -1238,7 +1248,7 @@ BoundaryCondition::transOutletBC(const ProcessorGroup* ,
       constCCVariable<double> old_enthalpy;
       new_dw->get(old_enthalpy, d_lab->d_enthalpyCPBCLabel, matlIndex, patch,
 		  Ghost::None, Arches::ZEROGHOSTCELLS);
-      new_dw->allocate(enthalpy, d_lab->d_enthalpyOUTBCLabel, matlIndex,
+      new_dw->allocateAndPut(enthalpy, d_lab->d_enthalpyOUTBCLabel, matlIndex,
 		       patch);
       new_dw->copyOut(enthalpy, d_lab->d_enthalpyCPBCLabel, matlIndex, patch);
             
@@ -1252,16 +1262,21 @@ BoundaryCondition::transOutletBC(const ProcessorGroup* ,
 			  delta_t, cellinfo->dxpw);
 
       }
-	new_dw->put(enthalpy, d_lab->d_enthalpyOUTBCLabel, matlIndex, patch);
+	// allocateAndPut instead:
+	/* new_dw->put(enthalpy, d_lab->d_enthalpyOUTBCLabel, matlIndex, patch); */;
     }
 
   // Put the calculated data into the new DW
     new_dw->put(sum_vartype(flowout), d_lab->d_netflowOUTBCLabel);
-    new_dw->put(uVelocity, d_lab->d_uVelocityOUTBCLabel, matlIndex, patch);
-    new_dw->put(vVelocity, d_lab->d_vVelocityOUTBCLabel, matlIndex, patch);
-    new_dw->put(wVelocity, d_lab->d_wVelocityOUTBCLabel, matlIndex, patch);
+    // allocateAndPut instead:
+    /* new_dw->put(uVelocity, d_lab->d_uVelocityOUTBCLabel, matlIndex, patch); */;
+    // allocateAndPut instead:
+    /* new_dw->put(vVelocity, d_lab->d_vVelocityOUTBCLabel, matlIndex, patch); */;
+    // allocateAndPut instead:
+    /* new_dw->put(wVelocity, d_lab->d_wVelocityOUTBCLabel, matlIndex, patch); */;
     for (int ii = 0; ii < d_nofScalars; ii++) 
-      new_dw->put(scalar[ii], d_lab->d_scalarOUTBCLabel, matlIndex, patch);
+      // allocateAndPut instead:
+      /* new_dw->put(scalar[ii], d_lab->d_scalarOUTBCLabel, matlIndex, patch); */;
   }
 } 
 
@@ -2034,9 +2049,9 @@ BoundaryCondition::setInletVelocityBC(const ProcessorGroup* ,
     new_dw->get(density, d_lab->d_densityINLabel, matlIndex, patch, Ghost::None,
 		Arches::ZEROGHOSTCELLS);
 
-    new_dw->allocate(uVelocity, d_lab->d_uVelocitySIVBCLabel, matlIndex, patch);
-    new_dw->allocate(vVelocity, d_lab->d_vVelocitySIVBCLabel, matlIndex, patch);
-    new_dw->allocate(wVelocity, d_lab->d_wVelocitySIVBCLabel, matlIndex, patch);
+    new_dw->allocateAndPut(uVelocity, d_lab->d_uVelocitySIVBCLabel, matlIndex, patch);
+    new_dw->allocateAndPut(vVelocity, d_lab->d_vVelocitySIVBCLabel, matlIndex, patch);
+    new_dw->allocateAndPut(wVelocity, d_lab->d_wVelocitySIVBCLabel, matlIndex, patch);
     new_dw->copyOut(uVelocity, d_lab->d_uVelocityINLabel, matlIndex, patch);
     new_dw->copyOut(vVelocity, d_lab->d_vVelocityINLabel, matlIndex, patch);
     new_dw->copyOut(wVelocity, d_lab->d_wVelocityINLabel, matlIndex, patch);
@@ -2063,9 +2078,12 @@ BoundaryCondition::setInletVelocityBC(const ProcessorGroup* ,
       
     }
     // Put the calculated data into the new DW
-    new_dw->put(uVelocity, d_lab->d_uVelocitySIVBCLabel, matlIndex, patch);
-    new_dw->put(vVelocity, d_lab->d_vVelocitySIVBCLabel, matlIndex, patch);
-    new_dw->put(wVelocity, d_lab->d_wVelocitySIVBCLabel, matlIndex, patch);
+    // allocateAndPut instead:
+    /* new_dw->put(uVelocity, d_lab->d_uVelocitySIVBCLabel, matlIndex, patch); */;
+    // allocateAndPut instead:
+    /* new_dw->put(vVelocity, d_lab->d_vVelocitySIVBCLabel, matlIndex, patch); */;
+    // allocateAndPut instead:
+    /* new_dw->put(wVelocity, d_lab->d_wVelocitySIVBCLabel, matlIndex, patch); */;
 
 #ifdef ARCHES_BC_DEBUG
     cerr << "After presssoln" << endl;
@@ -2142,15 +2160,15 @@ BoundaryCondition::recomputePressureBC(const ProcessorGroup* ,
     SFCXVariable<double> uVelocity;
     SFCYVariable<double> vVelocity;
     SFCZVariable<double> wVelocity;
-    new_dw->allocate(uVelocity, d_lab->d_uVelocityCPBCLabel, matlIndex, patch,
+    new_dw->allocateAndPut(uVelocity, d_lab->d_uVelocityCPBCLabel, matlIndex, patch,
 		     Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-    new_dw->allocate(vVelocity, d_lab->d_vVelocityCPBCLabel, matlIndex, patch,
+    new_dw->allocateAndPut(vVelocity, d_lab->d_vVelocityCPBCLabel, matlIndex, patch,
 		     Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-    new_dw->allocate(wVelocity, d_lab->d_wVelocityCPBCLabel, matlIndex, patch,
+    new_dw->allocateAndPut(wVelocity, d_lab->d_wVelocityCPBCLabel, matlIndex, patch,
 		     Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-    new_dw->allocate(pressure, d_lab->d_pressurePSLabel, matlIndex, patch);
+    new_dw->allocateAndPut(pressure, d_lab->d_pressurePSLabel, matlIndex, patch);
     for (int ii = 0; ii < d_nofScalars; ii++) 
-      new_dw->allocate(scalar[ii], d_lab->d_scalarCPBCLabel, matlIndex, patch);
+      new_dw->allocateAndPut(scalar[ii], d_lab->d_scalarCPBCLabel, matlIndex, patch);
 
     
     // get cellType, pressure and velocity
@@ -2226,7 +2244,7 @@ BoundaryCondition::recomputePressureBC(const ProcessorGroup* ,
 #endif
     if (d_reactingScalarSolve) {
       CCVariable<double> reactscalar;
-      new_dw->allocate(reactscalar, d_lab->d_reactscalarCPBCLabel, matlIndex, patch);
+      new_dw->allocateAndPut(reactscalar, d_lab->d_reactscalarCPBCLabel, matlIndex, patch);
       new_dw->copyOut(reactscalar, d_lab->d_reactscalarINLabel, matlIndex, patch, 
 		      Ghost::None, Arches::ZEROGHOSTCELLS);
       // Get the low and high index for the patch and the variables
@@ -2236,12 +2254,13 @@ BoundaryCondition::recomputePressureBC(const ProcessorGroup* ,
 		      d_pressureBdry->d_cellTypeID,
 		      xminus, xplus, yminus, yplus, zminus, zplus);
 #endif
-      new_dw->put(reactscalar, d_lab->d_reactscalarCPBCLabel, matlIndex, patch);
+      // allocateAndPut instead:
+      /* new_dw->put(reactscalar, d_lab->d_reactscalarCPBCLabel, matlIndex, patch); */;
     }
 
     if (d_enthalpySolve) {
       CCVariable<double> enthalpy;
-      new_dw->allocate(enthalpy, d_lab->d_enthalpyCPBCLabel, matlIndex, patch);
+      new_dw->allocateAndPut(enthalpy, d_lab->d_enthalpyCPBCLabel, matlIndex, patch);
       new_dw->copyOut(enthalpy, d_lab->d_enthalpyINLabel, matlIndex, patch, 
 		      Ghost::None, Arches::ZEROGHOSTCELLS);
       // Get the low and high index for the patch and the variables
@@ -2251,7 +2270,8 @@ BoundaryCondition::recomputePressureBC(const ProcessorGroup* ,
 		      d_pressureBdry->d_cellTypeID,
 		      xminus, xplus, yminus, yplus, zminus, zplus);
 #endif
-      new_dw->put(enthalpy, d_lab->d_enthalpyCPBCLabel, matlIndex, patch);
+      // allocateAndPut instead:
+      /* new_dw->put(enthalpy, d_lab->d_enthalpyCPBCLabel, matlIndex, patch); */;
     }
 
 #ifdef ARCHES_BC_DEBUG
@@ -2281,12 +2301,17 @@ BoundaryCondition::recomputePressureBC(const ProcessorGroup* ,
 #endif
 
   // Put the calculated data into the new DW
-    new_dw->put(uVelocity, d_lab->d_uVelocityCPBCLabel, matlIndex, patch);
-    new_dw->put(vVelocity, d_lab->d_vVelocityCPBCLabel, matlIndex, patch);
-    new_dw->put(wVelocity, d_lab->d_wVelocityCPBCLabel, matlIndex, patch);
-    new_dw->put(pressure, d_lab->d_pressurePSLabel, matlIndex, patch);
+    // allocateAndPut instead:
+    /* new_dw->put(uVelocity, d_lab->d_uVelocityCPBCLabel, matlIndex, patch); */;
+    // allocateAndPut instead:
+    /* new_dw->put(vVelocity, d_lab->d_vVelocityCPBCLabel, matlIndex, patch); */;
+    // allocateAndPut instead:
+    /* new_dw->put(wVelocity, d_lab->d_wVelocityCPBCLabel, matlIndex, patch); */;
+    // allocateAndPut instead:
+    /* new_dw->put(pressure, d_lab->d_pressurePSLabel, matlIndex, patch); */;
     for (int ii = 0; ii < d_nofScalars; ii++) 
-      new_dw->put(scalar[ii], d_lab->d_scalarCPBCLabel, matlIndex, patch);
+      // allocateAndPut instead:
+      /* new_dw->put(scalar[ii], d_lab->d_scalarCPBCLabel, matlIndex, patch); */;
   }
 } 
 
@@ -2345,16 +2370,16 @@ BoundaryCondition::setFlatProfile(const ProcessorGroup* /*pc*/,
     CCVariable<double> reactscalar;
     CCVariable<double> enthalpy;
 
-    new_dw->allocate(uVelocity, d_lab->d_uVelocitySPLabel, matlIndex, patch);
-    new_dw->allocate(vVelocity, d_lab->d_vVelocitySPLabel, matlIndex, patch);
-    new_dw->allocate(wVelocity, d_lab->d_wVelocitySPLabel, matlIndex, patch);
+    new_dw->allocateAndPut(uVelocity, d_lab->d_uVelocitySPLabel, matlIndex, patch);
+    new_dw->allocateAndPut(vVelocity, d_lab->d_vVelocitySPLabel, matlIndex, patch);
+    new_dw->allocateAndPut(wVelocity, d_lab->d_wVelocitySPLabel, matlIndex, patch);
     if (d_reactingScalarSolve)
-      new_dw->allocate(reactscalar, d_lab->d_reactscalarSPLabel, matlIndex, patch);
+      new_dw->allocateAndPut(reactscalar, d_lab->d_reactscalarSPLabel, matlIndex, patch);
     for (int ii =0; ii < d_nofScalars; ii++) {
-      new_dw->allocate(scalar[ii], d_lab->d_scalarSPLabel, matlIndex, patch);
+      new_dw->allocateAndPut(scalar[ii], d_lab->d_scalarSPLabel, matlIndex, patch);
     }
     if (d_enthalpySolve)
-      new_dw->allocate(enthalpy, d_lab->d_enthalpySPBCLabel, matlIndex, patch);
+      new_dw->allocateAndPut(enthalpy, d_lab->d_enthalpySPBCLabel, matlIndex, patch);
     
     // get cellType, density and velocity
     new_dw->get(cellType, d_lab->d_cellTypeLabel, matlIndex, patch, Ghost::None,
@@ -2509,16 +2534,22 @@ BoundaryCondition::setFlatProfile(const ProcessorGroup* /*pc*/,
 
     // Put the calculated data into the new DW
     //new_dw->put(density, d_lab->d_densitySPLabel, matlIndex, patch);
-    new_dw->put(uVelocity, d_lab->d_uVelocitySPLabel, matlIndex, patch);
-    new_dw->put(vVelocity, d_lab->d_vVelocitySPLabel, matlIndex, patch);
-    new_dw->put(wVelocity, d_lab->d_wVelocitySPLabel, matlIndex, patch);
+    // allocateAndPut instead:
+    /* new_dw->put(uVelocity, d_lab->d_uVelocitySPLabel, matlIndex, patch); */;
+    // allocateAndPut instead:
+    /* new_dw->put(vVelocity, d_lab->d_vVelocitySPLabel, matlIndex, patch); */;
+    // allocateAndPut instead:
+    /* new_dw->put(wVelocity, d_lab->d_wVelocitySPLabel, matlIndex, patch); */;
     for (int ii =0; ii < d_nofScalars; ii++) {
-      new_dw->put(scalar[ii], d_lab->d_scalarSPLabel, matlIndex, patch);
+      // allocateAndPut instead:
+      /* new_dw->put(scalar[ii], d_lab->d_scalarSPLabel, matlIndex, patch); */;
     }
     if (d_reactingScalarSolve)
-      new_dw->put(reactscalar, d_lab->d_reactscalarSPLabel, matlIndex, patch);
+      // allocateAndPut instead:
+      /* new_dw->put(reactscalar, d_lab->d_reactscalarSPLabel, matlIndex, patch); */;
     if (d_enthalpySolve)
-      new_dw->put(enthalpy, d_lab->d_enthalpySPBCLabel, matlIndex, patch);
+      // allocateAndPut instead:
+      /* new_dw->put(enthalpy, d_lab->d_enthalpySPBCLabel, matlIndex, patch); */;
     
 #ifdef ARCHES_BC_DEBUG
     // Testing if correct values have been put

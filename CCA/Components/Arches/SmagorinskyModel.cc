@@ -174,7 +174,7 @@ SmagorinskyModel::computeTurbSubmodel(const ProcessorGroup*,
 
     // Get the velocity, density and viscosity from the old data warehouse
     
-    new_dw->allocate(viscosity, d_lab->d_viscosityCTSLabel, matlIndex, patch);
+    new_dw->allocateAndPut(viscosity, d_lab->d_viscosityCTSLabel, matlIndex, patch);
     new_dw->copyOut(viscosity, d_lab->d_viscosityINLabel, matlIndex, patch,
 		    Ghost::None, Arches::ZEROGHOSTCELLS);
     new_dw->get(uVelocity, d_lab->d_uVelocitySPLabel, matlIndex, patch,
@@ -250,7 +250,8 @@ SmagorinskyModel::computeTurbSubmodel(const ProcessorGroup*,
       // Create the new viscosity variable to write the result to 
       // and allocate space in the new data warehouse for this variable
       // Put the calculated viscosityvalue into the new data warehouse
-      new_dw->put(viscosity, d_lab->d_viscosityCTSLabel, matlIndex, patch);
+      // allocateAndPut instead:
+      /* new_dw->put(viscosity, d_lab->d_viscosityCTSLabel, matlIndex, patch); */;
   }
 }
 
@@ -279,7 +280,7 @@ SmagorinskyModel::reComputeTurbSubmodel(const ProcessorGroup*,
     constCCVariable<int> cellType;
     // Get the velocity, density and viscosity from the old data warehouse
 
-    new_dw->allocate(viscosity, d_lab->d_viscosityCTSLabel, matlIndex, patch);
+    new_dw->allocateAndPut(viscosity, d_lab->d_viscosityCTSLabel, matlIndex, patch);
     new_dw->copyOut(viscosity, d_lab->d_viscosityINLabel, matlIndex, patch,
 		    Ghost::None, Arches::ZEROGHOSTCELLS);
     
@@ -418,7 +419,8 @@ SmagorinskyModel::reComputeTurbSubmodel(const ProcessorGroup*,
 #endif
     
     // Put the calculated viscosityvalue into the new data warehouse
-    new_dw->put(viscosity, d_lab->d_viscosityCTSLabel, matlIndex, patch);
+    // allocateAndPut instead:
+    /* new_dw->put(viscosity, d_lab->d_viscosityCTSLabel, matlIndex, patch); */;
   }
 }
 
@@ -489,7 +491,7 @@ SmagorinskyModel::computeTurbSubmodelPred(const ProcessorGroup*,
     constCCVariable<int> cellType;
     // Get the velocity, density and viscosity from the old data warehouse
 
-    new_dw->allocate(viscosity, d_lab->d_viscosityPredLabel, matlIndex, patch);
+    new_dw->allocateAndPut(viscosity, d_lab->d_viscosityPredLabel, matlIndex, patch);
     new_dw->copyOut(viscosity, d_lab->d_viscosityINLabel, matlIndex, patch,
 		    Ghost::None, Arches::ZEROGHOSTCELLS);
     
@@ -628,7 +630,8 @@ SmagorinskyModel::computeTurbSubmodelPred(const ProcessorGroup*,
 #endif
     
     // Put the calculated viscosityvalue into the new data warehouse
-    new_dw->put(viscosity, d_lab->d_viscosityPredLabel, matlIndex, patch);
+    // allocateAndPut instead:
+    /* new_dw->put(viscosity, d_lab->d_viscosityPredLabel, matlIndex, patch); */;
   }
 }
 
@@ -701,7 +704,7 @@ SmagorinskyModel::computeTurbSubmodelInterm(const ProcessorGroup*,
     constCCVariable<int> cellType;
     // Get the velocity, density and viscosity from the old data warehouse
 
-    new_dw->allocate(viscosity, d_lab->d_viscosityIntermLabel, matlIndex, patch);
+    new_dw->allocateAndPut(viscosity, d_lab->d_viscosityIntermLabel, matlIndex, patch);
     new_dw->copyOut(viscosity, d_lab->d_viscosityINLabel, matlIndex, patch,
 		    Ghost::None, Arches::ZEROGHOSTCELLS);
     
@@ -842,7 +845,8 @@ SmagorinskyModel::computeTurbSubmodelInterm(const ProcessorGroup*,
 #endif
     
     // Put the calculated viscosityvalue into the new data warehouse
-    new_dw->put(viscosity, d_lab->d_viscosityIntermLabel, matlIndex, patch);
+    // allocateAndPut instead:
+    /* new_dw->put(viscosity, d_lab->d_viscosityIntermLabel, matlIndex, patch); */;
   }
 }
 
@@ -904,7 +908,7 @@ SmagorinskyModel::computeScalarVariance(const ProcessorGroup*,
     new_dw->get(scalar, d_lab->d_scalarSPLabel, matlIndex, patch, Ghost::AroundCells,
 		Arches::ONEGHOSTCELL);
 #endif
-    new_dw->allocate(scalarVar, d_lab->d_scalarVarSPLabel, matlIndex, patch);
+    new_dw->allocateAndPut(scalarVar, d_lab->d_scalarVarSPLabel, matlIndex, patch);
     new_dw->copyOut(scalarVar, d_lab->d_scalarVarINLabel, matlIndex, patch,
 		    Ghost::None, Arches::ZEROGHOSTCELLS);
     
@@ -933,7 +937,8 @@ SmagorinskyModel::computeScalarVariance(const ProcessorGroup*,
 			d_filterl);
 
     // Put the calculated viscosityvalue into the new data warehouse
-    new_dw->put(scalarVar, d_lab->d_scalarVarSPLabel, matlIndex, patch);
+    // allocateAndPut instead:
+    /* new_dw->put(scalarVar, d_lab->d_scalarVarSPLabel, matlIndex, patch); */;
   }
 }
 

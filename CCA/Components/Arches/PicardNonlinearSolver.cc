@@ -398,7 +398,7 @@ PicardNonlinearSolver::setInitialGuess(const ProcessorGroup* ,
     if (d_MAlab) {
       old_dw->get(denMicro, d_lab->d_densityMicroLabel, 
 		  matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-      new_dw->allocate(denMicro_new, d_lab->d_densityMicroINLabel, 
+      new_dw->allocateAndPut(denMicro_new, d_lab->d_densityMicroINLabel, 
 		       matlIndex, patch);
       denMicro_new.copyData(denMicro);
     }
@@ -445,7 +445,7 @@ PicardNonlinearSolver::setInitialGuess(const ProcessorGroup* ,
 
   // Create vars for new_dw ***warning changed new_dw to old_dw...check
     CCVariable<int> cellType_new;
-    new_dw->allocate(cellType_new, d_lab->d_cellTypeLabel, matlIndex, patch);
+    new_dw->allocateAndPut(cellType_new, d_lab->d_cellTypeLabel, matlIndex, patch);
     cellType_new.copyData(cellType);
     // Get the PerPatch CellInformation data
     PerPatch<CellInformationP> cellInfoP;
@@ -462,53 +462,63 @@ PicardNonlinearSolver::setInitialGuess(const ProcessorGroup* ,
     new_dw->put(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
 #endif
     CCVariable<double> pressure_new;
-    new_dw->allocate(pressure_new, d_lab->d_pressureINLabel, matlIndex, patch);
+    new_dw->allocateAndPut(pressure_new, d_lab->d_pressureINLabel, matlIndex, patch);
     pressure_new.copyData(pressure); // copy old into new
 
     SFCXVariable<double> uVelocity_new;
-    new_dw->allocate(uVelocity_new, d_lab->d_uVelocityINLabel, matlIndex, patch);
+    new_dw->allocateAndPut(uVelocity_new, d_lab->d_uVelocityINLabel, matlIndex, patch);
     uVelocity_new.copyData(uVelocity); // copy old into new
     SFCYVariable<double> vVelocity_new;
-    new_dw->allocate(vVelocity_new, d_lab->d_vVelocityINLabel, matlIndex, patch);
+    new_dw->allocateAndPut(vVelocity_new, d_lab->d_vVelocityINLabel, matlIndex, patch);
     vVelocity_new.copyData(vVelocity); // copy old into new
     SFCZVariable<double> wVelocity_new;
-    new_dw->allocate(wVelocity_new, d_lab->d_wVelocityINLabel, matlIndex, patch);
+    new_dw->allocateAndPut(wVelocity_new, d_lab->d_wVelocityINLabel, matlIndex, patch);
     wVelocity_new.copyData(wVelocity); // copy old into new
     
     StaticArray< CCVariable<double> > scalar_new(nofScalars);
     for (int ii = 0; ii < nofScalars; ii++) {
-      new_dw->allocate(scalar_new[ii], d_lab->d_scalarINLabel, ii, patch);
+      new_dw->allocateAndPut(scalar_new[ii], d_lab->d_scalarINLabel, ii, patch);
       scalar_new[ii].copyData(scalar[ii]); // copy old into new
     }
     CCVariable<double> new_enthalpy;
     if (d_enthalpySolve) {
-      new_dw->allocate(new_enthalpy, d_lab->d_enthalpyINLabel, matlIndex, patch);
+      new_dw->allocateAndPut(new_enthalpy, d_lab->d_enthalpyINLabel, matlIndex, patch);
       new_enthalpy.copyData(enthalpy);
     }
 
     CCVariable<double> density_new;
-    new_dw->allocate(density_new, d_lab->d_densityINLabel, matlIndex, patch);
+    new_dw->allocateAndPut(density_new, d_lab->d_densityINLabel, matlIndex, patch);
     density_new.copyData(density); // copy old into new
 
     CCVariable<double> viscosity_new;
-    new_dw->allocate(viscosity_new, d_lab->d_viscosityINLabel, matlIndex, patch);
+    new_dw->allocateAndPut(viscosity_new, d_lab->d_viscosityINLabel, matlIndex, patch);
     viscosity_new.copyData(viscosity); // copy old into new
 
     // Copy the variables into the new datawarehouse
-    new_dw->put(cellType_new, d_lab->d_cellTypeLabel, matlIndex, patch);
-    new_dw->put(pressure_new, d_lab->d_pressureINLabel, matlIndex, patch);
-    new_dw->put(uVelocity_new, d_lab->d_uVelocityINLabel, matlIndex, patch);
-    new_dw->put(vVelocity_new, d_lab->d_vVelocityINLabel, matlIndex, patch);
-    new_dw->put(wVelocity_new, d_lab->d_wVelocityINLabel, matlIndex, patch);
+    // allocateAndPut instead:
+    /* new_dw->put(cellType_new, d_lab->d_cellTypeLabel, matlIndex, patch); */;
+    // allocateAndPut instead:
+    /* new_dw->put(pressure_new, d_lab->d_pressureINLabel, matlIndex, patch); */;
+    // allocateAndPut instead:
+    /* new_dw->put(uVelocity_new, d_lab->d_uVelocityINLabel, matlIndex, patch); */;
+    // allocateAndPut instead:
+    /* new_dw->put(vVelocity_new, d_lab->d_vVelocityINLabel, matlIndex, patch); */;
+    // allocateAndPut instead:
+    /* new_dw->put(wVelocity_new, d_lab->d_wVelocityINLabel, matlIndex, patch); */;
     for (int ii = 0; ii < nofScalars; ii++) {
-      new_dw->put(scalar_new[ii], d_lab->d_scalarINLabel, matlIndex, patch);
+      // allocateAndPut instead:
+      /* new_dw->put(scalar_new[ii], d_lab->d_scalarINLabel, matlIndex, patch); */;
     }
     if (d_enthalpySolve)
-      new_dw->put(new_enthalpy, d_lab->d_enthalpyINLabel, matlIndex, patch);
-    new_dw->put(density_new, d_lab->d_densityINLabel, matlIndex, patch);
-    new_dw->put(viscosity_new, d_lab->d_viscosityINLabel, matlIndex, patch);
+      // allocateAndPut instead:
+      /* new_dw->put(new_enthalpy, d_lab->d_enthalpyINLabel, matlIndex, patch); */;
+    // allocateAndPut instead:
+    /* new_dw->put(density_new, d_lab->d_densityINLabel, matlIndex, patch); */;
+    // allocateAndPut instead:
+    /* new_dw->put(viscosity_new, d_lab->d_viscosityINLabel, matlIndex, patch); */;
     if (d_MAlab)
-      new_dw->put(denMicro_new, d_lab->d_densityMicroINLabel, matlIndex, patch);
+      // allocateAndPut instead:
+      /* new_dw->put(denMicro_new, d_lab->d_densityMicroINLabel, matlIndex, patch); */;
   }
 }
 
@@ -561,11 +571,11 @@ PicardNonlinearSolver::interpolateFromFCToCC(const ProcessorGroup* ,
     CCVariable<double> newCCUVel;
     CCVariable<double> newCCVVel;
     CCVariable<double> newCCWVel;
-    new_dw->allocate(oldCCVel, d_lab->d_oldCCVelocityLabel, matlIndex, patch);
-    new_dw->allocate(newCCVel, d_lab->d_newCCVelocityLabel, matlIndex, patch);
-    new_dw->allocate(newCCUVel, d_lab->d_newCCUVelocityLabel, matlIndex, patch);
-    new_dw->allocate(newCCVVel, d_lab->d_newCCVVelocityLabel, matlIndex, patch);
-    new_dw->allocate(newCCWVel, d_lab->d_newCCWVelocityLabel, matlIndex, patch);
+    new_dw->allocateAndPut(oldCCVel, d_lab->d_oldCCVelocityLabel, matlIndex, patch);
+    new_dw->allocateAndPut(newCCVel, d_lab->d_newCCVelocityLabel, matlIndex, patch);
+    new_dw->allocateAndPut(newCCUVel, d_lab->d_newCCUVelocityLabel, matlIndex, patch);
+    new_dw->allocateAndPut(newCCVVel, d_lab->d_newCCVVelocityLabel, matlIndex, patch);
+    new_dw->allocateAndPut(newCCWVel, d_lab->d_newCCWVelocityLabel, matlIndex, patch);
 
     // Interpolate the FC velocity to the CC
     for (int kk = idxLo.z(); kk < idxHi.z(); ++kk) {
@@ -609,11 +619,16 @@ PicardNonlinearSolver::interpolateFromFCToCC(const ProcessorGroup* ,
     }
 
   // Put the calculated stuff into the new_dw
-    new_dw->put(oldCCVel, d_lab->d_oldCCVelocityLabel, matlIndex, patch);
-    new_dw->put(newCCVel, d_lab->d_newCCVelocityLabel, matlIndex, patch);
-    new_dw->put(newCCUVel, d_lab->d_newCCUVelocityLabel, matlIndex, patch);
-    new_dw->put(newCCVVel, d_lab->d_newCCVVelocityLabel, matlIndex, patch);
-    new_dw->put(newCCWVel, d_lab->d_newCCWVelocityLabel, matlIndex, patch);
+    // allocateAndPut instead:
+    /* new_dw->put(oldCCVel, d_lab->d_oldCCVelocityLabel, matlIndex, patch); */;
+    // allocateAndPut instead:
+    /* new_dw->put(newCCVel, d_lab->d_newCCVelocityLabel, matlIndex, patch); */;
+    // allocateAndPut instead:
+    /* new_dw->put(newCCUVel, d_lab->d_newCCUVelocityLabel, matlIndex, patch); */;
+    // allocateAndPut instead:
+    /* new_dw->put(newCCVVel, d_lab->d_newCCVVelocityLabel, matlIndex, patch); */;
+    // allocateAndPut instead:
+    /* new_dw->put(newCCWVel, d_lab->d_newCCWVelocityLabel, matlIndex, patch); */;
   }
 }
 
