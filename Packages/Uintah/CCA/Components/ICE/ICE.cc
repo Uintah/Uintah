@@ -1900,7 +1900,7 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
   // Done with preliminary calcs, now loop over every cell
     int count, test_max_iter = 0;
     int num_bad_cells = 0;
-    double root_search_derivative;
+    double root_search_derivative = 0.;
     for (CellIterator iter=patch->getExtraCellIterator();!iter.done();iter++) {
       IntVector c = *iter;   
       double delPress = 0.;
@@ -1986,7 +1986,7 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
 
       //-------- Oren, better convergence criterion   10-AUG-2004 BEGIN --------
       if ((fabs(root_search_derivative) < sensitivity_criterion*fabs(press_new[c])) // If |f'|/|p| < threshold
-	  && (num_bad_cells < 10)) {
+	  && (num_bad_cells < 10) && (count > 0)) {
 	cout << "Warning: computeEquilibrationPressure() might give inaccurate " \
 	  "pressure result for cell = " << c << " ; |derivative|/|p| = " << fabs(root_search_derivative)/fabs(press_new[c]) << endl;
 	num_bad_cells++;
