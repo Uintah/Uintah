@@ -1078,8 +1078,17 @@ case $host in
   *)
     # linux
     ac_objext=o
-    CFLAGS=" -Wall"
-    CXXFLAGS=" -Wall"
+
+    case $host in
+    *ia64*)  
+      CFLAGS=" -w1"
+      CXXFLAGS=" -w1"
+      ;;
+    *)
+      CFLAGS=" -Wall"
+      CXXFLAGS=" -Wall"
+      ;;
+    esac
 
     if test "$enable_64bit" = "yes"; then
        CFLAGS="-fPIC $CFLAGS"
