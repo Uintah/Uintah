@@ -443,12 +443,18 @@ ICE::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched, int, int )
                                                           all_matls);           
   }  
                                                             
+/*`==========TESTING==========*/
+if(!d_impICE) {
   scheduleComputeFC_vel_Temp(             sched, patches, ice_matls_sub,
                                                           mpm_matls_sub,
                                                           press_matl, 
-                                                          all_matls);
+                                                          all_matls,
+                                                          false);
 
-  scheduleAddExchangeContributionToFCVel( sched, patches, all_matls);    
+  scheduleAddExchangeContributionToFCVel( sched, patches, all_matls,
+                                                          false); 
+}   
+/*===========TESTING==========`*/ 
 
   scheduleMassExchange(                   sched, patches, all_matls);
 /*`==========TESTING==========*/
@@ -463,6 +469,8 @@ ICE::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched, int, int )
    scheduleImplicitPressureSolve(         sched, level,   patches, 
                                                           one_matl,
                                                           press_matl,
+                                                          ice_matls_sub, 
+                                                          mpm_matls_sub,
                                                           all_matls);
   }
 
@@ -558,18 +566,19 @@ void ICE::scheduleComputeFC_vel_Temp(SchedulerP& sched,
                                           const MaterialSubset* ice_matls,
                                           const MaterialSubset* mpm_matls,
                                           const MaterialSubset* press_matl,
-                                          const MaterialSet* all_matls)
+                                          const MaterialSet* all_matls,
+                                          bool recursion)
 { 
   Task* t;
   if (d_RateForm) {     //RATE FORM
     cout_doing << "ICE::scheduleComputeFaceCenteredVelocitiesRF" << endl;
     t = scinew Task("ICE::computeFaceCenteredVelocitiesRF",
-                       this, &ICE::computeFaceCenteredVelocitiesRF);
+              this, &ICE::computeFaceCenteredVelocitiesRF);
   }
   else if (d_EqForm) {       // EQ 
     cout_doing << "ICE::scheduleComputeFC_vel_Temp" << endl;
     t = scinew Task("ICE::computeFC_vel_Temp",
-                       this, &ICE::computeFC_vel_Temp);
+              this, &ICE::computeFC_vel_Temp, recursion);
   }
                       // EQ  & RATE FORM 
   Ghost::GhostType  gac = Ghost::AroundCells;                      
@@ -608,11 +617,12 @@ void ICE::scheduleComputeFC_vel_Temp(SchedulerP& sched,
 _____________________________________________________________________*/
 void ICE::scheduleAddExchangeContributionToFCVel(SchedulerP& sched,
                                            const PatchSet* patches,
-                                           const MaterialSet* matls)
+                                           const MaterialSet* matls,
+                                           const bool recursion)
 {
   cout_doing << "ICE::scheduleAddExchangeContributionToFCVel" << endl;
   Task* task = scinew Task("ICE::addExchangeContributionToFCVel",
-                     this, &ICE::addExchangeContributionToFCVel);
+                     this, &ICE::addExchangeContributionToFCVel, recursion);
 
   task->requires(Task::OldDW, lb->delTLabel);  
   task->requires(Task::NewDW,lb->sp_vol_CCLabel,    Ghost::AroundCells,1);
@@ -1531,23 +1541,40 @@ void ICE::computeFC_vel_Temp(const ProcessorGroup*,
                              const PatchSubset* patches,                
                              const MaterialSubset* /*matls*/,           
                              DataWarehouse* old_dw,                     
-                             DataWarehouse* new_dw)                     
+                             DataWarehouse* new_dw,
+                             bool recursion)                     
 {
   for(int p = 0; p<patches->size(); p++){
     const Patch* patch = patches->get(p);
     
     cout_doing << "Doing compute_FC_vel_Temp on patch " 
-              << patch->getID() << "\t ICE" << endl;
+              << patch->getID() << "\t\t\t ICE" << endl;
+              
+/*`==========TESTING==========*/
+    // change the definition of parent(old/new)DW
+    // when implicit
+    DataWarehouse* pNewDW;
+    DataWarehouse* pOldDW;
+    if(recursion) {
+      pNewDW = 
+	  new_dw->getOtherDataWarehouse(Task::ParentNewDW);
+      pOldDW = 
+	  new_dw->getOtherDataWarehouse(Task::ParentOldDW);    
+    } else {
+      pNewDW =new_dw;
+      pOldDW =old_dw;
+    } 
+/*===========TESTING==========`*/
     int numMatls = d_sharedState->getNumMatls();
     
     delt_vartype delT;
-    old_dw->get(delT, d_sharedState->get_delt_label());
+    pOldDW->get(delT, d_sharedState->get_delt_label());
     Vector dx      = patch->dCell();
     Vector gravity = d_sharedState->getGravity();
     
     constCCVariable<double> press_CC;
     Ghost::GhostType  gac = Ghost::AroundCells; 
-    new_dw->get(press_CC,lb->press_equil_CCLabel, 0, patch,gac, 1);
+    pNewDW->get(press_CC,lb->press_equil_CCLabel, 0, patch,gac, 1);
     
     // Compute the face centered velocities
     for(int m = 0; m < numMatls; m++) {
@@ -1557,15 +1584,15 @@ void ICE::computeFC_vel_Temp(const ProcessorGroup*,
       constCCVariable<double> rho_CC, sp_vol_CC, Temp_CC;
       constCCVariable<Vector> vel_CC;
       if(ice_matl){
-        new_dw->get(rho_CC, lb->rho_CCLabel, indx, patch, gac, 1);
-        old_dw->get(vel_CC, lb->vel_CCLabel, indx, patch, gac, 1);
-        old_dw->get(Temp_CC,lb->temp_CCLabel,indx, patch, gac, 1); 
+        pNewDW->get(rho_CC, lb->rho_CCLabel, indx, patch, gac, 1);
+        pOldDW->get(vel_CC, lb->vel_CCLabel, indx, patch, gac, 1);
+        pOldDW->get(Temp_CC,lb->temp_CCLabel,indx, patch, gac, 1); 
       } else {
-        new_dw->get(rho_CC, lb->rho_CCLabel, indx, patch, gac, 1);
-        new_dw->get(vel_CC, lb->vel_CCLabel, indx, patch, gac, 1);
-        new_dw->get(Temp_CC,lb->temp_CCLabel,indx, patch, gac, 1);
+        pNewDW->get(rho_CC, lb->rho_CCLabel, indx, patch, gac, 1);
+        pNewDW->get(vel_CC, lb->vel_CCLabel, indx, patch, gac, 1);
+        pNewDW->get(Temp_CC,lb->temp_CCLabel,indx, patch, gac, 1);
       }              
-      new_dw->get(sp_vol_CC, lb->sp_vol_CCLabel,indx,patch, gac, 1);
+      pNewDW->get(sp_vol_CC, lb->sp_vol_CCLabel,indx,patch, gac, 1);
               
       //---- P R I N T   D A T A ------
   #if 1
@@ -1697,16 +1724,32 @@ void ICE::addExchangeContributionToFCVel(const ProcessorGroup*,
                                          const PatchSubset* patches,
                                          const MaterialSubset* /*matls*/,
                                          DataWarehouse* old_dw, 
-                                         DataWarehouse* new_dw)
+                                         DataWarehouse* new_dw,
+                                         const bool recursion)
 {
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     cout_doing << "Doing Add_exchange_contribution_to_FC_vel on patch " <<
       patch->getID() << "\t ICE" << endl;
 
+/*`==========TESTING==========*/
+    // change the definition of parent(old/new)DW
+    // when implicit
+    DataWarehouse* pNewDW;
+    DataWarehouse* pOldDW;
+    if(recursion) {
+      pNewDW = 
+	  new_dw->getOtherDataWarehouse(Task::ParentNewDW);
+      pOldDW = 
+	  new_dw->getOtherDataWarehouse(Task::ParentOldDW);    
+    } else {
+      pNewDW =new_dw;
+      pOldDW =old_dw;
+    } 
+/*===========TESTING==========`*/
     int numMatls = d_sharedState->getNumMatls();
     delt_vartype delT;
-    old_dw->get(delT, d_sharedState->get_delt_label());
+    pOldDW->get(delT, d_sharedState->get_delt_label());
 
     double tmp, sp_vol_brack;
     StaticArray<constCCVariable<double> > sp_vol_CC(numMatls);
@@ -1738,8 +1781,8 @@ void ICE::addExchangeContributionToFCVel(const ProcessorGroup*,
     for(int m = 0; m < numMatls; m++) {
       Material* matl = d_sharedState->getMaterial( m );
       int indx = matl->getDWIndex();
-      new_dw->get(sp_vol_CC[m],    lb->sp_vol_CCLabel,  indx, patch,gac, 1);
-      new_dw->get(vol_frac_CC[m],  lb->vol_frac_CCLabel,indx, patch,gac, 1);  
+      pNewDW->get(sp_vol_CC[m],    lb->sp_vol_CCLabel,  indx, patch,gac, 1);
+      pNewDW->get(vol_frac_CC[m],  lb->vol_frac_CCLabel,indx, patch,gac, 1);  
       new_dw->get(uvel_FC[m],      lb->uvel_FCLabel,    indx, patch,gac, 2);  
       new_dw->get(vvel_FC[m],      lb->vvel_FCLabel,    indx, patch,gac, 2);  
       new_dw->get(wvel_FC[m],      lb->wvel_FCLabel,    indx, patch,gac, 2);  
