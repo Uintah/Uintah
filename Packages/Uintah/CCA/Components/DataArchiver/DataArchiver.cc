@@ -524,17 +524,12 @@ void DataArchiver::copyTimesteps(Dir& fromDir, Dir& toDir, int startTimestep,
 	 if (hrefNode == "")
 	    throw InternalError("timestep href attribute not found");
 
-	 //char* href = const_cast<char*>(hrefNode.c_str());
 	 unsigned int href_pos = hrefNode.find_first_of("/");
 
 	 string href = hrefNode;
 	 if (href_pos != string::npos)
 	   href = hrefNode.substr(0, href_pos);
 	 
-
-	 //strtok(href, "/"); // just grab the directory part
-	 cerr << href << endl;
-	 cout << hrefNode << " " << attributes["href"] << " " << (*(attributes.begin())).second << endl;
 	 Dir timestepDir = fromDir.getSubdir(href);
 	 if (removeOld)
 	    timestepDir.move(toDir);
@@ -544,7 +539,6 @@ void DataArchiver::copyTimesteps(Dir& fromDir, Dir& toDir, int startTimestep,
 	 if (areCheckpoints)
 	    d_checkpointTimestepDirs.push_back(toDir.getSubdir(href).getName());
 	 
-	 cout << hrefNode << " " << attributes["href"] << " " << (*(attributes.begin())).second << endl;
 	 // add the timestep to the index.xml
 	 ProblemSpecP newTS = timesteps->appendChild("timestep", 1);
 
@@ -554,7 +548,6 @@ void DataArchiver::copyTimesteps(Dir& fromDir, Dir& toDir, int startTimestep,
 	 newTS->appendText(timestep_str.str().c_str());
 	 for (map<string,string>::iterator iter = attributes.begin();
 	      iter != attributes.end(); iter++) {
-	   cout << hrefNode << " " << attributes["href"] << " " << (*(attributes.begin())).second << endl << endl;
 	   newTS->setAttribute((*iter).first, (*iter).second);
 	 }
 	 
