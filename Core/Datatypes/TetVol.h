@@ -41,7 +41,7 @@ private:
 };
 
 // Pio defs.
-const double TET_VOL_VERSION = 1.0;
+const int TET_VOL_VERSION = 1;
 
 template <class T>
 Persistent*
