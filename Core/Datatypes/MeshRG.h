@@ -101,6 +101,7 @@ class SCICORESHARE MeshRG : public Datatype
       return *this;
     }
 
+  private:
     CellIter operator++(int)
     {
       CellIter result(*this);
