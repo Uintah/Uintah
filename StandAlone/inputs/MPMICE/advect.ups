@@ -199,11 +199,8 @@
     <MaterialProperties>
        <MPM>
          <material>
-                <burn type = "null" />
-               <EOS type = "ideal_gas" >
-                  <gas_constant>      287             </gas_constant>
-               </EOS>
-              <density>             8900.0         </density>
+              <burn type = "null" />
+              <density>             8900.0           </density>
               <constitutive_model type = "comp_neo_hook_plastic">
                   <useModifiedEOS>     true          </useModifiedEOS>
                   <bulk_modulus>      117.0e7        </bulk_modulus>
@@ -237,9 +234,7 @@
        <ICE>
          <material>
             <burn type = "null" />       
-           <EOS type = "ideal_gas">
-              <gas_constant>            287             </gas_constant>
-           </EOS>
+           <EOS type = "ideal_gas">                     </EOS>
            <viscosity>                  0.0             </viscosity>
            <thermal_conductivity>       0.0             </thermal_conductivity>
            <specific_heat>              716.0           </specific_heat>

@@ -57,9 +57,6 @@
        <MPM>
          <material name = "Piston">
                 <burn type = "null"/>
-                <EOS type = "ideal_gas">
-                    <gas_constant>       0.0         </gas_constant>
-                </EOS>
                 <density>1.9e8</density>
                 <constitutive_model type = "comp_neo_hook_plastic">
                     <bulk_modulus>10.2e8</bulk_modulus>
@@ -83,9 +80,6 @@
          </material>
          <material name = "HMX">
                 <burn type = "null"/>
-                <EOS type = "ideal_gas">
-                    <gas_constant>       0.0         </gas_constant>
-                </EOS>
                 <density>1.901e6</density>
                 <constitutive_model type = "comp_neo_hook_plastic">
                     <bulk_modulus>10.2e6</bulk_modulus>
@@ -110,9 +104,6 @@
          </material>
          <material name = "HMX">
                 <burn type = "null"/>
-                <EOS type = "ideal_gas">
-                    <gas_constant>       0.0         </gas_constant>
-                </EOS>
                <density>1.902e6</density>
                 <constitutive_model type = "comp_neo_hook_plastic">
                     <bulk_modulus>10.2e6</bulk_modulus>
@@ -150,10 +141,8 @@
       </MPM>
        <ICE>
          <material name = "air">
-            <burn type = "null"/>
-            <EOS type = "ideal_gas">
-                 <gas_constant>         0.0              </gas_constant>
-            </EOS>
+           <burn type = "null"/>
+           <EOS type = "ideal_gas">                     </EOS>
            <viscosity>                  0.0             </viscosity>
            <thermal_conductivity>       0.0             </thermal_conductivity>
            <specific_heat>              716.0e-8        </specific_heat>

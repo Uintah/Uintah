@@ -201,9 +201,6 @@
                 <activationEnergy>    17900           </activationEnergy>
                 <preExponent>              0.2e11          </preExponent>
                 </burn>
-                <EOS type = "ideal_gas">
-                    <gas_constant>       188.92         </gas_constant>
-                </EOS>
                 
                 <density>       1828.0  </density>
                 <constitutive_model type="visco_scram">
@@ -282,10 +279,8 @@
       </MPM>
        <ICE>
          <material Rx = "product" name = "gas">
-            <burn type = "null"/>
-            <EOS type = "ideal_gas">
-                 <gas_constant>         287             </gas_constant>
-            </EOS>
+           <burn type = "null"/>
+           <EOS type = "ideal_gas">                     </EOS>
            <viscosity>                  0.0             </viscosity>
            <thermal_conductivity>       0.0             </thermal_conductivity>
            <specific_heat>              716.0           </specific_heat>

@@ -222,11 +222,7 @@
        <MPM>
          <material name = "Container" >
                 <burn type = "null" />
-               <EOS type = "ideal_gas">
-                  <gas_constant>      287               </gas_constant>
-               </EOS>
-              
-                <density>   1000.0   </density>
+                <density>   1000.0                      </density>
                 <constitutive_model type="comp_neo_hook">
                   <shear_modulus>      0.5e8              </shear_modulus>
                   <bulk_modulus>       1.0e8       </bulk_modulus>
@@ -255,10 +251,6 @@
          </material>
          <material name = "Contents" >
                 <burn type = "null" />
-               <EOS type = "ideal_gas">
-                  <gas_constant>      287               </gas_constant>
-               </EOS>
-              
                 <density>   900.0   </density>
                 <constitutive_model type="comp_neo_hook">
                   <shear_modulus>      0.4e8              </shear_modulus>
@@ -295,9 +287,7 @@
        <ICE>
          <material name = "Inner air" >
            <burn type = "null" />
-           <EOS type = "ideal_gas">
-              <gas_constant>            287           </gas_constant>
-           </EOS>
+           <EOS type = "ideal_gas">                     </EOS>
            <viscosity>                  0.0            </viscosity>
            <thermal_conductivity>       0.0            </thermal_conductivity>
            <specific_heat>              716.0          </specific_heat>
@@ -318,9 +308,7 @@
          </material>
          <material name = "Surrounding air" >
            <burn type = "null" />
-           <EOS type = "ideal_gas">
-              <gas_constant>            287           </gas_constant>
-           </EOS>
+           <EOS type = "ideal_gas">                     </EOS>
            <viscosity>                  0.0            </viscosity>
            <thermal_conductivity>       0.0            </thermal_conductivity>
            <specific_heat>              716.0          </specific_heat>
