@@ -102,6 +102,8 @@ class Roe {
     makeIndepRoe();
     GLXContext cx;
     int doneInit;
+    int last_x;
+    int last_y;
 public:
     Roe(Salmon *s);
     Roe(const Roe&);

@@ -38,6 +38,7 @@
 #include <Geom.h>
 #include <iostream.h>
 #include <GL/glu.h>
+#include <CallbackCloners.h>
 extern MtXEventLoop* evl;
 
 Roe::Roe(Salmon* s) 
@@ -85,6 +86,8 @@ Roe::Roe(Salmon* s)
 				&manager->mailbox, this,
 				&Roe::initCB,
 				0, 0);
+    graphics->Create(*left, "opengl_viewer");
+
     new MotifCallback<Roe>FIXCB(graphics, "<Btn1Up>", 
 				&manager->mailbox, this,
 				&Roe::btn1upCB, 0, 
@@ -109,8 +112,6 @@ Roe::Roe(Salmon* s)
 				&manager->mailbox, this,
 				&Roe::btn2motionCB, 0, 
 				&CallbackCloners::event_clone);
-
-    graphics->Create(*left, "opengl_viewer");
 
     controls=new RowColumnC;
     controls->SetOrientation(XmHORIZONTAL);
@@ -275,6 +276,17 @@ void Roe::initCB(CallbackData*, void*) {
     // Create a GLX context
     evl->lock();
     cx = glXCreateContext(XtDisplay(*graphics), vi, 0, GL_TRUE);
+
+    make_current();
+
+    // set the view
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    gluPerspective(90, 1.33, 1, 10);
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+    gluLookAt(2,2,5,2,2,2,0,1,0);
+
     evl->unlock();
     doneInit=1;
 }
@@ -289,15 +301,7 @@ void Roe::redrawAll()
     if (doneInit) {
 	// clear screen
 evl->lock();
-	make_current();
-
-	// set the view
-	glMatrixMode(GL_PROJECTION);
-	glLoadIdentity();
-	gluPerspective(90, 1.33, 1, 10);
-	glMatrixMode(GL_MODELVIEW);
-	glLoadIdentity();
-	gluLookAt(2,2,5,2,2,2,0,1,0);
+        make_current();  
 	glClearColor(0,0,0,1);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -310,10 +314,10 @@ evl->lock();
 		geom->draw();
 	    }
 	}
+	GLwDrawingAreaSwapBuffers(*graphics);
 	for (int i=0; i<kids.size(); i++) {
 	    kids[i]->redrawAll();
 	}
-	GLwDrawingAreaSwapBuffers(*graphics);
 evl->unlock();       
     }
 }
@@ -480,40 +484,69 @@ Roe::Roe(const Roe& copy)
 
 void Roe::rotate(double angle, Vector v)
 {
-    NOT_FINISHED("Roe::rotate");
+    make_current();
+    glScaled(v.x(), v.y(), v.z());
 }
 
 void Roe::translate(Vector v)
 {
-    NOT_FINISHED("Roe:translate");
+    make_current();
+    glTranslated(v.x(), v.y(), v.z());
 }
 
 void Roe::scale(Vector v)
 {
-    NOT_FINISHED("Roe::scale");
+    make_current();
+    glScaled(v.x(), v.y(), v.z());
 }
 
-void btn1upCB(CallbackData*, void*) {
-    NOT_FINSIHED("Roe::btn1up");
+void Roe::btn1upCB(CallbackData* cbdata, void*) {
+    XEvent* event=cbdata->get_event();
 }
 
-void btn1downCB(CallbackData*, void*) {
-    NOT_FINSIHED("Roe::btn1down");
+void Roe::btn1downCB(CallbackData* cbdata, void*) {
+    XEvent* event=cbdata->get_event();
+    last_x=event->xbutton.x;
+    last_y=event->xbutton.y;
 }
 
-void btn1motionCB(CallbackData*, void*) {
-    NOT_FINSIHED("Roe::btn1motion");
+void Roe::btn1motionCB(CallbackData* cbdata, void*) {
+    XEvent* event=cbdata->get_event();
+    double xmtn=last_x-event->xmotion.x;
+    double ymtn=last_y-event->xmotion.y;
+    xmtn/=10;
+    ymtn/=10;
+    last_x = event->xmotion.x;
+    last_y = event->xmotion.y;
+    make_current();
+    glTranslated(-xmtn, ymtn, 0);
+    for (int i=0; i<kids.size(); i++)
+	kids[i]->translate(Vector(-xmtn, ymtn, 0));
+    redrawAll();
 }
 
-void btn2upCB(CallbackData*, void*) {
-    NOT_FINSIHED("Roe::btn2up");
+void Roe::btn2upCB(CallbackData* cbdata, void*) {
+    NOT_FINISHED("Roe::btn2upCB");
+    XEvent* event=cbdata->get_event();
 }
 
-void btn2downCB(CallbackData*, void*) {
-    NOT_FINSIHED("Roe::btn2down");
+void Roe::btn2downCB(CallbackData* cbdata, void*) {
+    NOT_FINISHED("Roe::btn2downCB");
+    XEvent* event=cbdata->get_event();
+    last_x=event->xbutton.x;
 }
 
-void btn2motionCB(CallbackData*, void*) {
-    NOT_FINSIHED("Roe::btn2motion");
+void Roe::btn2motionCB(CallbackData* cbdata, void*) {
+    NOT_FINISHED("Roe::btn2motionCB");
+    XEvent* event=cbdata->get_event();
+    double xmtn=last_x-event->xmotion.x;
+    xmtn/=30;
+    last_x = event->xmotion.x;
+    make_current();
+    glScaled(1+xmtn, 1+xmtn, 1+xmtn);
+//    cerr << xmtn << "\n";
+    for (int i=0; i<kids.size(); i++)
+	kids[i]->scale(Vector(1+xmtn, 1+xmtn, 1+xmtn));
+    redrawAll();
 }
 
