@@ -48,7 +48,7 @@ Module::Module(const clString& name, const clString& id,
     mailbox("Module execution FIFO", 100),
   name(name), abort_flag(0), need_execute(0), sched_class(sched_class),
   id(id), progress(0), handle(0), remote(0), skeleton(0),
-  notes("notes", id, this)
+  notes("notes", id, this), show_status(1)
 {
   packageName="error: unset package name";
   categoryName="error: unset category name";
@@ -68,6 +68,7 @@ int Module::clone(int)
 
 void Module::update_state(State st)
 {
+    if (!show_status) return;
     state=st;
     char* s="unknown";
     switch(st){
@@ -90,6 +91,7 @@ void Module::update_state(State st)
 
 void Module::update_progress(double p)
 {
+    if (!show_status) return;
     if (state == JustStarted)
 	update_state(Executing);
     int opp=(int)(progress*100);
@@ -103,6 +105,7 @@ void Module::update_progress(double p)
 
 void Module::update_progress(double p, Timer &t)
 {
+    if (!show_status) return;
     if (state == JustStarted)
 	update_state(Executing);
     int opp=(int)(progress*100);
@@ -389,6 +392,14 @@ void Module::do_execute()
     // Reset all of the ports...
     int i;
 
+    clString result;
+    if (!TCL::eval(id+" get_show_status", result)) {
+	error("Error getting show_status");
+    } else if (!result.get_int(show_status)) {
+	error("Error parsing show_status");
+    }
+//    cerr << "show_status = "<<show_status<<"\n";
+
     for(i=0;i<oports.size();i++){
 	OPort* port=oports[i];
 	port->reset();
@@ -454,6 +465,9 @@ void Module::multisend(OPort* p1, OPort* p2)
 
 //
 // $Log$
+// Revision 1.8  1999/11/10 23:24:30  dmw
+// added show_status flag to module interface -- if you turn it off, the timer and port lights won't update
+//
 // Revision 1.7  1999/10/07 02:07:19  sparker
 // use standard iostreams and complex type
 //

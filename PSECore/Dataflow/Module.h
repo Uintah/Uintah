@@ -82,6 +82,8 @@ public:
 	Completed
     };
 public:
+    int show_status;
+
     friend class ModuleHelper;
     virtual void do_execute();
     virtual void execute()=0;
@@ -197,6 +199,9 @@ typedef Module* (*ModuleMaker)(const clString& id);
 
 //
 // $Log$
+// Revision 1.8  1999/11/10 23:24:31  dmw
+// added show_status flag to module interface -- if you turn it off, the timer and port lights won't update
+//
 // Revision 1.7  1999/08/30 18:47:52  kuzimmer
 // Modified so that dataflow scripts can be read and written properly
 //

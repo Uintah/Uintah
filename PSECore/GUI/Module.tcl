@@ -32,9 +32,10 @@ itcl_class Module {
     public state "NeedData" {$this update_state}
     public progress 0 {$this update_progress}
     public time "00.00" {$this update_time}
-
+    
     public group    -1
     public selected  0
+    public show_status 1
 
     method set_state {st t} {
 	set state $st
@@ -189,6 +190,9 @@ itcl_class Module {
 	$p.menu add command -label "Destroy" \
 		-command "moduleDestroy $canvas $minicanvas [modname]"
 
+	global $this-show_status
+	$p.menu add checkbutton -variable $this-show_status -label "Show Status"
+	set $this-show_status 1
 
 	bind $p <2> "$this toggleSelected"
 
@@ -420,6 +424,11 @@ itcl_class Module {
 	set canvas [lindex $canvases 0]
 	set coords [$canvas coords [modname]]
 	return [lindex $coords 1]
+    }
+    method get_show_status {} {
+	global $this-show_status
+#	puts "show_status (tcl) = [set $this-show_status]"
+	return [set $this-show_status]
     }
 }
 
