@@ -27,6 +27,10 @@ OBJS := $(patsubst %.c,%.o,$(filter %.c,$(SRCS))) \
 # We always link against the internal Dataflow malloc
 PSELIBS := $(PSELIBS) $(MALLOCLIB)
 
+ifneq ($(REPOSITORY_FLAGS),)
+REPOSITORIES_$(PROGRAM) := $(REPOSITORY_FLAGS) $(SRCDIR)/ptrepository_$(notdir $(PROGRAM)) $(patsubst %,$(REPOSITORY_FLAGS) %/ptrepository, $(PSELIBS))
+endif
+
 # The libraries are specified like Core/Thread but get
 # name-mangled to Core_Thread
 PSELIBS := $(subst /,_,$(PSELIBS))
@@ -47,11 +51,14 @@ $(PROGRAM)_LIBS := $(LIBS)
 # we can use the -l syntax to link, but still express the dependicies.
 $(PROGRAM): $(OBJS) $(patsubst %,$(LIBDIR)lib%.$(SO_OR_A_FILE),$(PSELIBS))
 	rm -f $@
-	$(CXX) $(LDFLAGS) $(LDRUN_PREFIX)$(LIBDIR_ABS) -o $@ $(filter %.o,$^) $(patsubst $(LIBDIR)lib%.$(SO_OR_A_FILE),-l%,$(filter %.$(SO_OR_A_FILE),$^)) $($@_LIBS)
+	$(CXX) $(LDFLAGS) $(LDRUN_PREFIX)$(LIBDIR_ABS) -o $@ $(filter %.o,$^) $(patsubst $(LIBDIR)lib%.$(SO_OR_A_FILE),-l%,$(filter %.$(SO_OR_A_FILE),$^)) $(REPOSITORIES_$@) $($@_LIBS)
 
 #  These will get removed on make clean
 CLEANOBJS := $(CLEANOBJS) $(OBJS)
 CLEANPROGS := $(CLEANPROGS) $(PROGRAM)
+ifneq ($(REPOSITORY_FLAGS),)
+  ALL_LIB_ASSOCIATIONS := $(ALL_LIB_ASSOCIATIONS) $(patsubst %,$(SRCDIR)/ptrepository_$(notdir $(PROGRAM)):%,$(OBJS))
+endif
 
 # Try to prevent user error
 SRCS := INVALID_SRCS.cc
