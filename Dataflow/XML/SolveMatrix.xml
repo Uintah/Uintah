@@ -49,6 +49,9 @@
       </port>
     </outputs>
   </io>
+  <gui>
+    <img>../Modules/Math/doc/SolveMatrixUI.jpg</img>
+  </gui>
   <testing>
   </testing>
 </component>

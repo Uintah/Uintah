@@ -49,6 +49,9 @@
       </port>
     </outputs>
   </io>
+  <gui>
+    <img>../Modules/Visualization/doc/TextureVolVisUI.jpg</img>
+  </gui>
   <testing>
   </testing>
 </component>

@@ -49,6 +49,9 @@
       </port>
     </outputs>
   </io>
+  <gui>
+    <img>../Modules/Math/BuildTransformUI.jpg</img>
+  </gui>
   <testing>
   </testing>
 </component>

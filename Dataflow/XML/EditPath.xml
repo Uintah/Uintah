@@ -53,6 +53,9 @@
       </port>
     </outputs>
   </io>
+  <gui>
+    <img>../Modules/Render/doc/EditPathUI.jpg</img>
+  </gui>
   <testing>
   </testing>
 </component>

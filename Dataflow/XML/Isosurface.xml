@@ -53,6 +53,9 @@
       </port>
     </outputs>
   </io>
+  <gui>
+    <img>../Modules/Visualization/doc/IsoSurfaceUI.jpg</img>
+  </gui>
   <testing>
   </testing>
 </component>

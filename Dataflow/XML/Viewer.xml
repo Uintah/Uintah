@@ -39,6 +39,9 @@
       </port>
     </inputs>
   </io>
+  <gui>
+    <img>../Modules/Render/doc/ViewerUI.jpg</img>
+  </gui>
   <testing>
   </testing>
 </component>

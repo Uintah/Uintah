@@ -57,6 +57,9 @@
       </port>
     </outputs>
   </io>
+  <gui>
+    <img>../Modules/Fields/doc/ManageFieldSetUI.jpg</img>
+  </gui>
   <testing>
   </testing>
 </component>

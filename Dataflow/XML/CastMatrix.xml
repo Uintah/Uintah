@@ -45,6 +45,9 @@
       </port>
     </outputs>
   </io>
+  <gui>
+    <img>../Modules/Math/doc/CastMatrixUI.jpg</img>
+  </gui>
   <testing>
   </testing>
 </component>
