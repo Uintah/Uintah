@@ -79,20 +79,20 @@ ScaledBoxWidget::ScaledBoxWidget( Module* module, CrowdMonitor* lock, double wid
    constraints[SBoxW_ConstOULIDR]->VarChoices(Scheme4, 2, 2, 1);
    constraints[SBoxW_ConstOULIDR]->Priorities(P_Highest, P_Highest, P_Default);
    constraints[SBoxW_ConstIDLOUR] = new DistanceConstraint("ConstIDLOUR",
-							  NumSchemes,
-							  variables[SBoxW_PointIDL],
-							  variables[SBoxW_PointOUR],
-							  variables[SBoxW_Diag]);
+							   NumSchemes,
+							   variables[SBoxW_PointIDL],
+							   variables[SBoxW_PointOUR],
+							   variables[SBoxW_Diag]);
    constraints[SBoxW_ConstIDLOUR]->VarChoices(Scheme1, 2, 2, 1);
    constraints[SBoxW_ConstIDLOUR]->VarChoices(Scheme2, 1, 0, 1);
    constraints[SBoxW_ConstIDLOUR]->VarChoices(Scheme3, 2, 2, 1);
    constraints[SBoxW_ConstIDLOUR]->VarChoices(Scheme4, 1, 0, 1);
    constraints[SBoxW_ConstIDLOUR]->Priorities(P_Highest, P_Highest, P_Default);
    constraints[SBoxW_ConstODLIUR] = new DistanceConstraint("ConstODLIUR",
-							  NumSchemes,
-							  variables[SBoxW_PointODL],
-							  variables[SBoxW_PointIUR],
-							  variables[SBoxW_Diag]);
+							   NumSchemes,
+							   variables[SBoxW_PointODL],
+							   variables[SBoxW_PointIUR],
+							   variables[SBoxW_Diag]);
    constraints[SBoxW_ConstODLIUR]->VarChoices(Scheme1, 1, 0, 1);
    constraints[SBoxW_ConstODLIUR]->VarChoices(Scheme2, 2, 2, 1);
    constraints[SBoxW_ConstODLIUR]->VarChoices(Scheme3, 1, 0, 1);
@@ -373,7 +373,7 @@ ScaledBoxWidget::widget_execute()
 
 void
 ScaledBoxWidget::geom_moved( int /* axis*/, double /*dist*/, const Vector& delta,
-			void* cbdata )
+			     void* cbdata )
 {
    for (Index v=0; v<NumVars; v++)
       variables[v]->Reset();

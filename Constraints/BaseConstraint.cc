@@ -278,48 +278,48 @@ BaseConstraint::Satisfy( const Index, const Scheme )
 void
 BaseConstraint::print( ostream& os )
 {
-    int i;
+   int i;
 
-    for (Index j=0; j < nschemes; j++) {
-       os << name << " (" << SchemeString((Scheme)j) << ") (";
-       for (i = 0; i < varCount; i++) {
-	  if (i != whichMethod) {
-	     os << "\t";
-	     vars[i]->printc(os, var_indexs[i]);
-	     os << " (->" << var_choices(j, i) << ")";
-	     os << endl;
-	  }
-       }
-       os << "\t-> ";
-       if (whichMethod < varCount) {
-	  vars[whichMethod]->printc(os, var_indexs[whichMethod]);
-	  os << " (->" << var_choices(j, whichMethod) << ")";
-       } else {
-	  os << "(Special option.";
-       }
-       os << ")" << endl;
-    }
+   for (Index j=0; j < nschemes; j++) {
+      os << name << " (" << SchemeString((Scheme)j) << ") (";
+      for (i = 0; i < varCount; i++) {
+	 if (i != whichMethod) {
+	    os << "\t";
+	    vars[i]->printc(os, var_indexs[i]);
+	    os << " (->" << var_choices(j, i) << ")";
+	    os << endl;
+	 }
+      }
+      os << "\t-> ";
+      if (whichMethod < varCount) {
+	 vars[whichMethod]->printc(os, var_indexs[whichMethod]);
+	 os << " (->" << var_choices(j, whichMethod) << ")";
+      } else {
+	 os << "(Special option.";
+      }
+      os << ")" << endl;
+   }
 }
 
 void
 BaseConstraint::printc( ostream& os, const Scheme scheme )
 {
-    int i;
+   int i;
 
-    os << name << " (" << SchemeString(scheme) << ") (";
-    os << "Called by " << callingMethod << ") (" << endl;
-    for (i = 0; i < varCount; i++) {
-       if (i != whichMethod) {
-	  os << "\t";
-	  vars[i]->printc(os, var_indexs[i]);
-	  os << " (->" << var_choices(scheme, i) << ")";
-	  os << endl;
-       }
-    }
-    os << "\t-> ";
-    vars[whichMethod]->printc(os, var_indexs[whichMethod]);
-    os << " (->" << var_choices(scheme, whichMethod) << ")";
-    os << ")" << endl;
+   os << name << " (" << SchemeString(scheme) << ") (";
+   os << "Called by " << callingMethod << ") (" << endl;
+   for (i = 0; i < varCount; i++) {
+      if (i != whichMethod) {
+	 os << "\t";
+	 vars[i]->printc(os, var_indexs[i]);
+	 os << " (->" << var_choices(scheme, i) << ")";
+	 os << endl;
+      }
+   }
+   os << "\t-> ";
+   vars[whichMethod]->printc(os, var_indexs[whichMethod]);
+   os << " (->" << var_choices(scheme, whichMethod) << ")";
+   os << ")" << endl;
 }
 
 void

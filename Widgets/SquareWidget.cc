@@ -33,7 +33,7 @@ enum { SquareW_SphereUL, SquareW_SphereUR, SquareW_SphereDR, SquareW_SphereDL,
 enum { SquareW_PickSphUL, SquareW_PickSphUR, SquareW_PickSphDR, SquareW_PickSphDL, SquareW_PickCyls };
 
 SquareWidget::SquareWidget( Module* module, CrowdMonitor* lock,
-			   Real widget_scale )
+			    Real widget_scale )
 : BaseWidget(module, lock, NumVars, NumCons, NumGeoms, NumMatls, NumPcks, widget_scale*0.1)
 {
    Real INIT = 1.0*widget_scale;
@@ -53,20 +53,20 @@ SquareWidget::SquareWidget( Module* module, CrowdMonitor* lock,
    constraints[SquareW_ConstPlane]->VarChoices(Scheme1, 2, 3, 0, 1);
    constraints[SquareW_ConstPlane]->VarChoices(Scheme2, 2, 3, 0, 1);
    constraints[SquareW_ConstPlane]->Priorities(P_Highest, P_Highest,
-					      P_Highest, P_Highest);
+					       P_Highest, P_Highest);
    constraints[SquareW_ConstULDR] = new DistanceConstraint("Const13",
-							  NumSchemes,
-							  variables[SquareW_PointUL],
-							  variables[SquareW_PointDR],
-							  variables[SquareW_Hypo]);
+							   NumSchemes,
+							   variables[SquareW_PointUL],
+							   variables[SquareW_PointDR],
+							   variables[SquareW_Hypo]);
    constraints[SquareW_ConstULDR]->VarChoices(Scheme1, 2, 2, 1);
    constraints[SquareW_ConstULDR]->VarChoices(Scheme2, 1, 0, 1);
    constraints[SquareW_ConstULDR]->Priorities(P_HighMedium, P_HighMedium, P_Default);
    constraints[SquareW_ConstURDL] = new DistanceConstraint("Const24",
-							  NumSchemes,
-							  variables[SquareW_PointUR],
-							  variables[SquareW_PointDL],
-							  variables[SquareW_Hypo]);
+							   NumSchemes,
+							   variables[SquareW_PointUR],
+							   variables[SquareW_PointDL],
+							   variables[SquareW_Hypo]);
    constraints[SquareW_ConstURDL]->VarChoices(Scheme1, 1, 0, 1);
    constraints[SquareW_ConstURDL]->VarChoices(Scheme2, 2, 2, 1);
    constraints[SquareW_ConstURDL]->Priorities(P_HighMedium, P_HighMedium, P_Default);
@@ -78,34 +78,34 @@ SquareWidget::SquareWidget( Module* module, CrowdMonitor* lock,
    constraints[SquareW_ConstHypo]->VarChoices(Scheme2, 1, 0);
    constraints[SquareW_ConstHypo]->Priorities(P_Default, P_HighMedium);
    constraints[SquareW_ConstULUR] = new DistanceConstraint("Const12",
-							  NumSchemes,
-							  variables[SquareW_PointUL],
-							  variables[SquareW_PointUR],
-							  variables[SquareW_Dist]);
+							   NumSchemes,
+							   variables[SquareW_PointUL],
+							   variables[SquareW_PointUR],
+							   variables[SquareW_Dist]);
    constraints[SquareW_ConstULUR]->VarChoices(Scheme1, 1, 1, 1);
    constraints[SquareW_ConstULUR]->VarChoices(Scheme2, 0, 0, 0);
    constraints[SquareW_ConstULUR]->Priorities(P_Default, P_Default, P_LowMedium);
    constraints[SquareW_ConstULDL] = new DistanceConstraint("Const14",
-							  NumSchemes,
-							  variables[SquareW_PointUL],
-							  variables[SquareW_PointDL],
-							  variables[SquareW_Dist]);
+							   NumSchemes,
+							   variables[SquareW_PointUL],
+							   variables[SquareW_PointDL],
+							   variables[SquareW_Dist]);
    constraints[SquareW_ConstULDL]->VarChoices(Scheme1, 1, 1, 1);
    constraints[SquareW_ConstULDL]->VarChoices(Scheme2, 0, 0, 0);
    constraints[SquareW_ConstULDL]->Priorities(P_Default, P_Default, P_LowMedium);
    constraints[SquareW_ConstDRUR] = new DistanceConstraint("Const32",
-							  NumSchemes,
-							  variables[SquareW_PointDR],
-							  variables[SquareW_PointUR],
-							  variables[SquareW_Dist]);
+							   NumSchemes,
+							   variables[SquareW_PointDR],
+							   variables[SquareW_PointUR],
+							   variables[SquareW_Dist]);
    constraints[SquareW_ConstDRUR]->VarChoices(Scheme1, 1, 1, 1);
    constraints[SquareW_ConstDRUR]->VarChoices(Scheme2, 0, 0, 0);
    constraints[SquareW_ConstDRUR]->Priorities(P_Default, P_Default, P_LowMedium);
    constraints[SquareW_ConstDRDL] = new DistanceConstraint("Const34",
-							  NumSchemes,
-							  variables[SquareW_PointDR],
-							  variables[SquareW_PointDL],
-							  variables[SquareW_Dist]);
+							   NumSchemes,
+							   variables[SquareW_PointDR],
+							   variables[SquareW_PointDL],
+							   variables[SquareW_Dist]);
    constraints[SquareW_ConstDRDL]->VarChoices(Scheme1, 1, 1, 1);
    constraints[SquareW_ConstDRDL]->VarChoices(Scheme2, 0, 0, 0);
    constraints[SquareW_ConstDRDL]->Priorities(P_Default, P_Default, P_LowMedium);
@@ -155,25 +155,25 @@ void
 SquareWidget::widget_execute()
 {
    ((GeomSphere*)geometries[SquareW_SphereUL])->move(variables[SquareW_PointUL]->Get(),
-						    1*widget_scale);
+						     1*widget_scale);
    ((GeomSphere*)geometries[SquareW_SphereUR])->move(variables[SquareW_PointUR]->Get(),
-						    1*widget_scale);
+						     1*widget_scale);
    ((GeomSphere*)geometries[SquareW_SphereDR])->move(variables[SquareW_PointDR]->Get(),
-						    1*widget_scale);
+						     1*widget_scale);
    ((GeomSphere*)geometries[SquareW_SphereDL])->move(variables[SquareW_PointDL]->Get(),
-						    1*widget_scale);
+						     1*widget_scale);
    ((GeomCylinder*)geometries[SquareW_CylU])->move(variables[SquareW_PointUL]->Get(),
-						  variables[SquareW_PointUR]->Get(),
-						  0.5*widget_scale);
+						   variables[SquareW_PointUR]->Get(),
+						   0.5*widget_scale);
    ((GeomCylinder*)geometries[SquareW_CylR])->move(variables[SquareW_PointUR]->Get(),
-						  variables[SquareW_PointDR]->Get(),
-						  0.5*widget_scale);
+						   variables[SquareW_PointDR]->Get(),
+						   0.5*widget_scale);
    ((GeomCylinder*)geometries[SquareW_CylD])->move(variables[SquareW_PointDR]->Get(),
-						  variables[SquareW_PointDL]->Get(),
-						  0.5*widget_scale);
+						   variables[SquareW_PointDL]->Get(),
+						   0.5*widget_scale);
    ((GeomCylinder*)geometries[SquareW_CylL])->move(variables[SquareW_PointDL]->Get(),
-						  variables[SquareW_PointUL]->Get(),
-						  0.5*widget_scale);
+						   variables[SquareW_PointUL]->Get(),
+						   0.5*widget_scale);
 
    SetEpsilon(widget_scale*1e-4);
 
@@ -191,7 +191,7 @@ SquareWidget::widget_execute()
 
 void
 SquareWidget::geom_moved( int /* axis */, double /* dist */, const Vector& delta,
-			 void* cbdata )
+			  void* cbdata )
 {
    for (Index v=0; v<NumVars; v++)
       variables[v]->Reset();

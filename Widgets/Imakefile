@@ -6,6 +6,7 @@
 OBJS = BaseWidget.o \
 	ArrowWidget.o \
 	BoxWidget.o \
+	CrosshairWidget.o \
 	CubeWidget.o \
 	FixedFrameWidget.o \
 	FrameWidget.o \
@@ -20,6 +21,7 @@ OBJS = BaseWidget.o \
 SRCS = BaseWidget.cc \
 	ArrowWidget.cc \
 	BoxWidget.cc \
+	CrosshairWidget.cc \
 	CubeWidget.cc \
 	FixedFrameWidget.cc \
 	FrameWidget.cc \

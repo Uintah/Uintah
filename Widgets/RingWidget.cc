@@ -117,10 +117,10 @@ RingWidget::RingWidget( Module* module, CrowdMonitor* lock, Real widget_scale )
    constraints[RingW_ConstSPlane]->Priorities(P_Highest, P_Highest,
 					      P_Highest, P_Highest);
    constraints[RingW_ConstULDR] = new DistanceConstraint("Const13",
-							    NumSchemes,
-							    variables[RingW_PointUL],
-							    variables[RingW_PointDR],
-							    variables[RingW_Hypo]);
+							 NumSchemes,
+							 variables[RingW_PointUL],
+							 variables[RingW_PointDR],
+							 variables[RingW_Hypo]);
    constraints[RingW_ConstULDR]->VarChoices(Scheme1, 2, 2, 1);
    constraints[RingW_ConstULDR]->VarChoices(Scheme2, 1, 0, 1);
    constraints[RingW_ConstULDR]->VarChoices(Scheme3, 2, 2, 1);
@@ -235,26 +235,30 @@ void
 RingWidget::widget_execute()
 {
    ((GeomSphere*)geometries[RingW_GeomPointUL])->move(variables[RingW_PointUL]->Get(),
-						    1*widget_scale);
+						      1*widget_scale);
    ((GeomSphere*)geometries[RingW_GeomPointUR])->move(variables[RingW_PointUR]->Get(),
-						    1*widget_scale);
+						      1*widget_scale);
    ((GeomSphere*)geometries[RingW_GeomPointDR])->move(variables[RingW_PointDR]->Get(),
-						    1*widget_scale);
+						      1*widget_scale);
    ((GeomSphere*)geometries[RingW_GeomPointDL])->move(variables[RingW_PointDL]->Get(),
-						    1*widget_scale);
+						      1*widget_scale);
    Vector normal(Plane(variables[RingW_PointUL]->Get(),
 		       variables[RingW_PointUR]->Get(),
 		       variables[RingW_PointDL]->Get()).normal());
    Real rad = (variables[RingW_PointUL]->Get()-variables[RingW_PointDR]->Get()).length()/2.;
-   
    ((GeomTorus*)geometries[RingW_GeomRing])->move(variables[RingW_Center]->Get(), normal,
-					      rad, 0.5*widget_scale);
-   Vector slide(Cross(normal,(variables[RingW_Slider]->Get()-variables[RingW_Center]->Get()).normal()));
+						  rad, 0.5*widget_scale);
+   Vector s = variables[RingW_Slider]->Get()-variables[RingW_Center]->Get();
+   Vector slide;
+   if (s.length2() > 1e-6)
+      slide = Cross(normal, s.normal());
+   else
+      slide = Vector(0,0,0);
    ((GeomCappedCylinder*)geometries[RingW_GeomSlider])->move(variables[RingW_Slider]->Get()
-							    - (slide * 0.3 * widget_scale),
-							    variables[RingW_Slider]->Get()
-							    + (slide * 0.3 * widget_scale),
-							    1.1*widget_scale);
+							     - (slide * 0.3 * widget_scale),
+							     variables[RingW_Slider]->Get()
+							     + (slide * 0.3 * widget_scale),
+							     1.1*widget_scale);
    
    SetEpsilon(widget_scale*1e-4);
 
@@ -275,7 +279,7 @@ RingWidget::widget_execute()
 
 void
 RingWidget::geom_moved( int /* axis */, double /* dist */, const Vector& delta,
-			 void* cbdata )
+			void* cbdata )
 {
    ((DistanceConstraint*)constraints[RingW_ConstSDist])->SetDefault(GetAxis());
 

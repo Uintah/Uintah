@@ -62,8 +62,8 @@ RealMax ( Real x1, Real x2 )
 
 static void Error(char *errorString)
 {
-    cerr << "Error: " <<  errorString << "." << endl;
-    exit(-1);
+   cerr << "Error: " <<  errorString << "." << endl;
+   exit(-1);
 }
 
 

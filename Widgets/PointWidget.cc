@@ -52,7 +52,7 @@ void
 PointWidget::widget_execute()
 {
    ((GeomSphere*)geometries[PointW_GeomPoint])->move(variables[PointW_Point]->Get(),
-						  1*widget_scale);
+						     1*widget_scale);
 }
 
 void

@@ -22,7 +22,8 @@ DistanceConstraint::DistanceConstraint( const clString& name,
 					const Index numSchemes,
 					Variable* p1, Variable* p2,
 					Variable* distInX )
-:BaseConstraint(name, numSchemes, 3), guess(1, 0, 0)
+:BaseConstraint(name, numSchemes, 3),
+ guess(1, 0, 0), minimum(0.0)
 {
    vars[0] = p1;
    vars[1] = p2;
@@ -45,13 +46,13 @@ DistanceConstraint::Satisfy( const Index index, const Scheme scheme )
    Variable& v1 = *vars[1];
    Variable& v2 = *vars[2];
    Vector v;
+   Real t;
 
    if (dc_debug) {
       ChooseChange(index, scheme);
       printc(cout, scheme);
    }
    
-   /* Q <- Sc + Sr * Normalize(P-Sc) */
    switch (ChooseChange(index, scheme)) {
    case 0:
       v = (v0.Get() - v1.Get());
@@ -59,8 +60,11 @@ DistanceConstraint::Satisfy( const Index index, const Scheme scheme )
 	 v = guess;
       else
 	 v.normalize();
-      v0.Assign(v1.Get() + (v * v2.Get().x()),
-		scheme);
+      if (v2.Get().x() < minimum)
+	 t = minimum;
+      else
+	 t = v2.Get().x();
+      v0.Assign(v1.Get() + (v * t), scheme);
       break;
    case 1:
       v = (v1.Get() - v0.Get());
@@ -68,12 +72,17 @@ DistanceConstraint::Satisfy( const Index index, const Scheme scheme )
 	 v = guess;
       else
 	 v.normalize();
-      v1.Assign(v0.Get() + (v * v2.Get().x()),
-		scheme);
+      if (v2.Get().x() < minimum)
+	 t = minimum;
+      else
+	 t = v2.Get().x();
+      v1.Assign(v0.Get() + (v * t), scheme);
       break;
    case 2:
-      v2.Assign(Point((v1.Get() - v0.Get()).length(), 0, 0),
-		scheme);
+      t = (v1.Get() - v0.Get()).length();
+      if (t < minimum)
+	 t = minimum;
+      v2.Assign(Point(t, 0, 0), scheme);
       break;
    default:
       cerr << "Unknown variable in Distance Constraint!" << endl;

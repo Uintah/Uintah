@@ -54,7 +54,7 @@ PythagorasConstraint::Satisfy( const Index index, const Scheme scheme )
    switch (ChooseChange(index, scheme)) {
    case 0:
       if ((t = v2.Get().x() * v2.Get().x() - v1.Get().x() * v1.Get().x()) >= 0.0)
-	  v0.Assign(Point(sqrt(t), 0, 0), scheme);
+	 v0.Assign(Point(sqrt(t), 0, 0), scheme);
       break;
    case 1:
       if ((t = v2.Get().x() * v2.Get().x() - v0.Get().x() * v0.Get().x()) >= 0.0)

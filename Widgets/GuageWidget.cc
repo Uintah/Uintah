@@ -59,10 +59,10 @@ GuageWidget::GuageWidget( Module* module, CrowdMonitor* lock, double widget_scal
    constraints[GuageW_ConstDist]->VarChoices(Scheme2, 2, 2, 2);
    constraints[GuageW_ConstDist]->Priorities(P_Highest, P_Highest, P_Default);
    constraints[GuageW_ConstSDist] = new DistanceConstraint("ConstSDist",
-							  NumSchemes,
-							  variables[GuageW_PointL],
-							  variables[GuageW_Slider],
-							  variables[GuageW_SDist]);
+							   NumSchemes,
+							   variables[GuageW_PointL],
+							   variables[GuageW_Slider],
+							   variables[GuageW_SDist]);
    constraints[GuageW_ConstSDist]->VarChoices(Scheme1, 1, 1, 1);
    constraints[GuageW_ConstSDist]->VarChoices(Scheme2, 2, 2, 2);
    constraints[GuageW_ConstSDist]->Priorities(P_Lowest, P_Default, P_Default);
@@ -122,17 +122,17 @@ void
 GuageWidget::widget_execute()
 {
    ((GeomSphere*)geometries[GuageW_GeomPointL])->move(variables[GuageW_PointL]->Get(),
-						   1*widget_scale);
+						      1*widget_scale);
    ((GeomSphere*)geometries[GuageW_GeomPointR])->move(variables[GuageW_PointR]->Get(),
-						   1*widget_scale);
+						      1*widget_scale);
    ((GeomCylinder*)geometries[GuageW_GeomShaft])->move(variables[GuageW_PointL]->Get(),
-						      variables[GuageW_PointR]->Get(),
-						      0.5*widget_scale);
+						       variables[GuageW_PointR]->Get(),
+						       0.5*widget_scale);
    ((GeomCappedCylinder*)geometries[GuageW_GeomSlider])->move(variables[GuageW_Slider]->Get()
-							     - (GetAxis() * 0.3 * widget_scale),
-							     variables[GuageW_Slider]->Get()
-							     + (GetAxis() * 0.3 * widget_scale),
-							     1.1*widget_scale);
+							      - (GetAxis() * 0.3 * widget_scale),
+							      variables[GuageW_Slider]->Get()
+							      + (GetAxis() * 0.3 * widget_scale),
+							      1.1*widget_scale);
 
    Vector v(GetAxis()), v1, v2;
    v.find_orthogonal(v1,v2);

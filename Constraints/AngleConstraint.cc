@@ -73,7 +73,7 @@ AngleConstraint::Satisfy( const Index index, const Scheme scheme )
 	   + (v2.Get() - v0.Get()) * sin(v4.Get().x()));
 
       if (v.length2() < v3.GetEpsilon()) {
-	 v3.Assign(v0.Get(), scheme);
+	 v3.Assign(v1.Get(), scheme);
       } else {
 	 v.normalize();
 	 Real t = Dot(v3.Get() - v0.Get(), v);

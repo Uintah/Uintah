@@ -59,20 +59,20 @@ BoxWidget::BoxWidget( Module* module, CrowdMonitor* lock, double widget_scale )
    NOT_FINISHED("Constraints not right!");
    
    constraints[BoxW_ConstIULODR] = new DistanceConstraint("ConstIULODR",
-							   NumSchemes,
-							   variables[BoxW_PointIUL],
-							   variables[BoxW_PointODR],
-							   variables[BoxW_Diag]);
+							  NumSchemes,
+							  variables[BoxW_PointIUL],
+							  variables[BoxW_PointODR],
+							  variables[BoxW_Diag]);
    constraints[BoxW_ConstIULODR]->VarChoices(Scheme1, 2, 2, 1);
    constraints[BoxW_ConstIULODR]->VarChoices(Scheme2, 1, 0, 1);
    constraints[BoxW_ConstIULODR]->VarChoices(Scheme3, 2, 2, 1);
    constraints[BoxW_ConstIULODR]->VarChoices(Scheme4, 1, 0, 1);
    constraints[BoxW_ConstIULODR]->Priorities(P_Highest, P_Highest, P_Default);
    constraints[BoxW_ConstOULIDR] = new DistanceConstraint("ConstOULIDR",
-							   NumSchemes,
-							   variables[BoxW_PointOUL],
-							   variables[BoxW_PointIDR],
-							   variables[BoxW_Diag]);
+							  NumSchemes,
+							  variables[BoxW_PointOUL],
+							  variables[BoxW_PointIDR],
+							  variables[BoxW_Diag]);
    constraints[BoxW_ConstOULIDR]->VarChoices(Scheme1, 1, 0, 1);
    constraints[BoxW_ConstOULIDR]->VarChoices(Scheme2, 2, 2, 1);
    constraints[BoxW_ConstOULIDR]->VarChoices(Scheme3, 1, 0, 1);
@@ -99,139 +99,139 @@ BoxWidget::BoxWidget( Module* module, CrowdMonitor* lock, double widget_scale )
    constraints[BoxW_ConstODLIUR]->VarChoices(Scheme4, 2, 2, 1);
    constraints[BoxW_ConstODLIUR]->Priorities(P_Highest, P_Highest, P_Default);
    constraints[BoxW_ConstHypo] = new HypotenuseConstraint("ConstHypo",
-							   NumSchemes,
-							   variables[BoxW_Dist],
-							   variables[BoxW_Hypo]);
+							  NumSchemes,
+							  variables[BoxW_Dist],
+							  variables[BoxW_Hypo]);
    constraints[BoxW_ConstHypo]->VarChoices(Scheme1, 1, 0);
    constraints[BoxW_ConstHypo]->VarChoices(Scheme2, 1, 0);
    constraints[BoxW_ConstHypo]->VarChoices(Scheme3, 1, 0);
    constraints[BoxW_ConstHypo]->VarChoices(Scheme4, 1, 0);
    constraints[BoxW_ConstHypo]->Priorities(P_Highest, P_Default);
    constraints[BoxW_ConstDiag] = new PythagorasConstraint("ConstDiag",
-							   NumSchemes,
-							   variables[BoxW_Dist],
-							   variables[BoxW_Hypo],
-							   variables[BoxW_Diag]);
+							  NumSchemes,
+							  variables[BoxW_Dist],
+							  variables[BoxW_Hypo],
+							  variables[BoxW_Diag]);
    constraints[BoxW_ConstDiag]->VarChoices(Scheme1, 2, 2, 1);
    constraints[BoxW_ConstDiag]->VarChoices(Scheme2, 2, 2, 1);
    constraints[BoxW_ConstDiag]->VarChoices(Scheme3, 2, 2, 1);
    constraints[BoxW_ConstDiag]->VarChoices(Scheme4, 2, 2, 1);
    constraints[BoxW_ConstDiag]->Priorities(P_Highest, P_Highest, P_Default);
    constraints[BoxW_ConstIULUR] = new DistanceConstraint("ConstIULUR",
-							  NumSchemes,
-							  variables[BoxW_PointIUL],
-							  variables[BoxW_PointIUR],
-							  variables[BoxW_Dist]);
+							 NumSchemes,
+							 variables[BoxW_PointIUL],
+							 variables[BoxW_PointIUR],
+							 variables[BoxW_Dist]);
    constraints[BoxW_ConstIULUR]->VarChoices(Scheme1, 1, 1, 1);
    constraints[BoxW_ConstIULUR]->VarChoices(Scheme2, 0, 0, 0);
    constraints[BoxW_ConstIULUR]->VarChoices(Scheme3, 1, 1, 1);
    constraints[BoxW_ConstIULUR]->VarChoices(Scheme4, 0, 0, 0);
    constraints[BoxW_ConstIULUR]->Priorities(P_Default, P_Default, P_LowMedium);
    constraints[BoxW_ConstIULDL] = new DistanceConstraint("ConstIULDL",
-							  NumSchemes,
-							  variables[BoxW_PointIUL],
-							  variables[BoxW_PointIDL],
-							  variables[BoxW_Dist]);
+							 NumSchemes,
+							 variables[BoxW_PointIUL],
+							 variables[BoxW_PointIDL],
+							 variables[BoxW_Dist]);
    constraints[BoxW_ConstIULDL]->VarChoices(Scheme1, 1, 1, 1);
    constraints[BoxW_ConstIULDL]->VarChoices(Scheme2, 0, 0, 0);
    constraints[BoxW_ConstIULDL]->VarChoices(Scheme3, 1, 1, 1);
    constraints[BoxW_ConstIULDL]->VarChoices(Scheme4, 0, 0, 0);
    constraints[BoxW_ConstIULDL]->Priorities(P_Default, P_Default, P_LowMedium);
    constraints[BoxW_ConstIDRUR] = new DistanceConstraint("ConstIDRUR",
-							  NumSchemes,
-							  variables[BoxW_PointIDR],
-							  variables[BoxW_PointIUR],
-							  variables[BoxW_Dist]);
+							 NumSchemes,
+							 variables[BoxW_PointIDR],
+							 variables[BoxW_PointIUR],
+							 variables[BoxW_Dist]);
    constraints[BoxW_ConstIDRUR]->VarChoices(Scheme1, 1, 1, 1);
    constraints[BoxW_ConstIDRUR]->VarChoices(Scheme2, 0, 0, 0);
    constraints[BoxW_ConstIDRUR]->VarChoices(Scheme3, 1, 1, 1);
    constraints[BoxW_ConstIDRUR]->VarChoices(Scheme4, 0, 0, 0);
    constraints[BoxW_ConstIDRUR]->Priorities(P_Default, P_Default, P_LowMedium);
    constraints[BoxW_ConstIDRDL] = new DistanceConstraint("ConstIDRUR",
-							  NumSchemes,
-							  variables[BoxW_PointIDR],
-							  variables[BoxW_PointIDL],
-							  variables[BoxW_Dist]);
+							 NumSchemes,
+							 variables[BoxW_PointIDR],
+							 variables[BoxW_PointIDL],
+							 variables[BoxW_Dist]);
    constraints[BoxW_ConstIDRDL]->VarChoices(Scheme1, 1, 1, 1);
    constraints[BoxW_ConstIDRDL]->VarChoices(Scheme2, 0, 0, 0);
    constraints[BoxW_ConstIDRDL]->VarChoices(Scheme3, 1, 1, 1);
    constraints[BoxW_ConstIDRDL]->VarChoices(Scheme4, 0, 0, 0);
    constraints[BoxW_ConstIDRDL]->Priorities(P_Default, P_Default, P_LowMedium);
    constraints[BoxW_ConstMULUL] = new DistanceConstraint("ConstMULUL",
-							  NumSchemes,
-							  variables[BoxW_PointIUL],
-							  variables[BoxW_PointOUL],
-							  variables[BoxW_Dist]);
+							 NumSchemes,
+							 variables[BoxW_PointIUL],
+							 variables[BoxW_PointOUL],
+							 variables[BoxW_Dist]);
    constraints[BoxW_ConstMULUL]->VarChoices(Scheme1, 1, 1, 1);
    constraints[BoxW_ConstMULUL]->VarChoices(Scheme2, 0, 0, 0);
    constraints[BoxW_ConstMULUL]->VarChoices(Scheme3, 1, 1, 1);
    constraints[BoxW_ConstMULUL]->VarChoices(Scheme4, 0, 0, 0);
    constraints[BoxW_ConstMULUL]->Priorities(P_Default, P_Default, P_LowMedium);
    constraints[BoxW_ConstMURUR] = new DistanceConstraint("ConstMURUR",
-							  NumSchemes,
-							  variables[BoxW_PointIUR],
-							  variables[BoxW_PointOUR],
-							  variables[BoxW_Dist]);
+							 NumSchemes,
+							 variables[BoxW_PointIUR],
+							 variables[BoxW_PointOUR],
+							 variables[BoxW_Dist]);
    constraints[BoxW_ConstMURUR]->VarChoices(Scheme1, 1, 1, 1);
    constraints[BoxW_ConstMURUR]->VarChoices(Scheme2, 0, 0, 0);
    constraints[BoxW_ConstMURUR]->VarChoices(Scheme3, 1, 1, 1);
    constraints[BoxW_ConstMURUR]->VarChoices(Scheme4, 0, 0, 0);
    constraints[BoxW_ConstMURUR]->Priorities(P_Default, P_Default, P_LowMedium);
    constraints[BoxW_ConstMDRDR] = new DistanceConstraint("ConstMDRDR",
-							  NumSchemes,
-							  variables[BoxW_PointIDR],
-							  variables[BoxW_PointODR],
-							  variables[BoxW_Dist]);
+							 NumSchemes,
+							 variables[BoxW_PointIDR],
+							 variables[BoxW_PointODR],
+							 variables[BoxW_Dist]);
    constraints[BoxW_ConstMDRDR]->VarChoices(Scheme1, 1, 1, 1);
    constraints[BoxW_ConstMDRDR]->VarChoices(Scheme2, 0, 0, 0);
    constraints[BoxW_ConstMDRDR]->VarChoices(Scheme3, 1, 1, 1);
    constraints[BoxW_ConstMDRDR]->VarChoices(Scheme4, 0, 0, 0);
    constraints[BoxW_ConstMDRDR]->Priorities(P_Default, P_Default, P_LowMedium);
    constraints[BoxW_ConstMDLDL] = new DistanceConstraint("ConstMDLDL",
-							  NumSchemes,
-							  variables[BoxW_PointIDL],
-							  variables[BoxW_PointODL],
-							  variables[BoxW_Dist]);
+							 NumSchemes,
+							 variables[BoxW_PointIDL],
+							 variables[BoxW_PointODL],
+							 variables[BoxW_Dist]);
    constraints[BoxW_ConstMDLDL]->VarChoices(Scheme1, 1, 1, 1);
    constraints[BoxW_ConstMDLDL]->VarChoices(Scheme2, 0, 0, 0);
    constraints[BoxW_ConstMDLDL]->VarChoices(Scheme3, 1, 1, 1);
    constraints[BoxW_ConstMDLDL]->VarChoices(Scheme4, 0, 0, 0);
    constraints[BoxW_ConstMDLDL]->Priorities(P_Default, P_Default, P_LowMedium);
    constraints[BoxW_ConstOULUR] = new DistanceConstraint("ConstOULUR",
-							  NumSchemes,
-							  variables[BoxW_PointOUL],
-							  variables[BoxW_PointOUR],
-							  variables[BoxW_Dist]);
+							 NumSchemes,
+							 variables[BoxW_PointOUL],
+							 variables[BoxW_PointOUR],
+							 variables[BoxW_Dist]);
    constraints[BoxW_ConstOULUR]->VarChoices(Scheme1, 1, 1, 1);
    constraints[BoxW_ConstOULUR]->VarChoices(Scheme2, 0, 0, 0);
    constraints[BoxW_ConstOULUR]->VarChoices(Scheme3, 1, 1, 1);
    constraints[BoxW_ConstOULUR]->VarChoices(Scheme4, 0, 0, 0);
    constraints[BoxW_ConstOULUR]->Priorities(P_Default, P_Default, P_LowMedium);
    constraints[BoxW_ConstOULDL] = new DistanceConstraint("ConstOULDL",
-							  NumSchemes,
-							  variables[BoxW_PointOUL],
-							  variables[BoxW_PointODL],
-							  variables[BoxW_Dist]);
+							 NumSchemes,
+							 variables[BoxW_PointOUL],
+							 variables[BoxW_PointODL],
+							 variables[BoxW_Dist]);
    constraints[BoxW_ConstOULDL]->VarChoices(Scheme1, 1, 1, 1);
    constraints[BoxW_ConstOULDL]->VarChoices(Scheme2, 0, 0, 0);
    constraints[BoxW_ConstOULDL]->VarChoices(Scheme3, 1, 1, 1);
    constraints[BoxW_ConstOULDL]->VarChoices(Scheme4, 0, 0, 0);
    constraints[BoxW_ConstOULDL]->Priorities(P_Default, P_Default, P_LowMedium);
    constraints[BoxW_ConstODRUR] = new DistanceConstraint("ConstODRUR",
-							  NumSchemes,
-							  variables[BoxW_PointODR],
-							  variables[BoxW_PointOUR],
-							  variables[BoxW_Dist]);
+							 NumSchemes,
+							 variables[BoxW_PointODR],
+							 variables[BoxW_PointOUR],
+							 variables[BoxW_Dist]);
    constraints[BoxW_ConstODRUR]->VarChoices(Scheme1, 1, 1, 1);
    constraints[BoxW_ConstODRUR]->VarChoices(Scheme2, 0, 0, 0);
    constraints[BoxW_ConstODRUR]->VarChoices(Scheme3, 1, 1, 1);
    constraints[BoxW_ConstODRUR]->VarChoices(Scheme4, 0, 0, 0);
    constraints[BoxW_ConstODRUR]->Priorities(P_Default, P_Default, P_LowMedium);
    constraints[BoxW_ConstODRDL] = new DistanceConstraint("ConstODRDL",
-							  NumSchemes,
-							  variables[BoxW_PointODR],
-							  variables[BoxW_PointODL],
-							  variables[BoxW_Dist]);
+							 NumSchemes,
+							 variables[BoxW_PointODR],
+							 variables[BoxW_PointODL],
+							 variables[BoxW_Dist]);
    constraints[BoxW_ConstODRDL]->VarChoices(Scheme1, 1, 1, 1);
    constraints[BoxW_ConstODRDL]->VarChoices(Scheme2, 0, 0, 0);
    constraints[BoxW_ConstODRDL]->VarChoices(Scheme3, 1, 1, 1);
@@ -283,57 +283,57 @@ void
 BoxWidget::widget_execute()
 {
    ((GeomSphere*)geometries[BoxW_SphereIUL])->move(variables[BoxW_PointIUL]->Get(),
-						    1*widget_scale);
+						   1*widget_scale);
    ((GeomSphere*)geometries[BoxW_SphereIUR])->move(variables[BoxW_PointIUR]->Get(),
-						    1*widget_scale);
+						   1*widget_scale);
    ((GeomSphere*)geometries[BoxW_SphereIDR])->move(variables[BoxW_PointIDR]->Get(),
-						    1*widget_scale);
+						   1*widget_scale);
    ((GeomSphere*)geometries[BoxW_SphereIDL])->move(variables[BoxW_PointIDL]->Get(),
-						    1*widget_scale);
+						   1*widget_scale);
    ((GeomSphere*)geometries[BoxW_SphereOUL])->move(variables[BoxW_PointOUL]->Get(),
-						    1*widget_scale);
+						   1*widget_scale);
    ((GeomSphere*)geometries[BoxW_SphereOUR])->move(variables[BoxW_PointOUR]->Get(),
-						    1*widget_scale);
+						   1*widget_scale);
    ((GeomSphere*)geometries[BoxW_SphereODR])->move(variables[BoxW_PointODR]->Get(),
-						    1*widget_scale);
+						   1*widget_scale);
    ((GeomSphere*)geometries[BoxW_SphereODL])->move(variables[BoxW_PointODL]->Get(),
-						    1*widget_scale);
+						   1*widget_scale);
    ((GeomCylinder*)geometries[BoxW_CylIU])->move(variables[BoxW_PointIUL]->Get(),
-						  variables[BoxW_PointIUR]->Get(),
-						  0.5*widget_scale);
+						 variables[BoxW_PointIUR]->Get(),
+						 0.5*widget_scale);
    ((GeomCylinder*)geometries[BoxW_CylIR])->move(variables[BoxW_PointIUR]->Get(),
-						  variables[BoxW_PointIDR]->Get(),
-						  0.5*widget_scale);
+						 variables[BoxW_PointIDR]->Get(),
+						 0.5*widget_scale);
    ((GeomCylinder*)geometries[BoxW_CylID])->move(variables[BoxW_PointIDR]->Get(),
-						  variables[BoxW_PointIDL]->Get(),
-						  0.5*widget_scale);
+						 variables[BoxW_PointIDL]->Get(),
+						 0.5*widget_scale);
    ((GeomCylinder*)geometries[BoxW_CylIL])->move(variables[BoxW_PointIDL]->Get(),
-						  variables[BoxW_PointIUL]->Get(),
-						  0.5*widget_scale);
+						 variables[BoxW_PointIUL]->Get(),
+						 0.5*widget_scale);
    ((GeomCylinder*)geometries[BoxW_CylMU])->move(variables[BoxW_PointIUL]->Get(),
-						  variables[BoxW_PointOUL]->Get(),
-						  0.5*widget_scale);
+						 variables[BoxW_PointOUL]->Get(),
+						 0.5*widget_scale);
    ((GeomCylinder*)geometries[BoxW_CylMR])->move(variables[BoxW_PointIUR]->Get(),
-						  variables[BoxW_PointOUR]->Get(),
-						  0.5*widget_scale);
+						 variables[BoxW_PointOUR]->Get(),
+						 0.5*widget_scale);
    ((GeomCylinder*)geometries[BoxW_CylMD])->move(variables[BoxW_PointIDR]->Get(),
-						  variables[BoxW_PointODR]->Get(),
-						  0.5*widget_scale);
+						 variables[BoxW_PointODR]->Get(),
+						 0.5*widget_scale);
    ((GeomCylinder*)geometries[BoxW_CylML])->move(variables[BoxW_PointIDL]->Get(),
-						  variables[BoxW_PointODL]->Get(),
-						  0.5*widget_scale);
+						 variables[BoxW_PointODL]->Get(),
+						 0.5*widget_scale);
    ((GeomCylinder*)geometries[BoxW_CylOU])->move(variables[BoxW_PointOUL]->Get(),
-						  variables[BoxW_PointOUR]->Get(),
-						  0.5*widget_scale);
+						 variables[BoxW_PointOUR]->Get(),
+						 0.5*widget_scale);
    ((GeomCylinder*)geometries[BoxW_CylOR])->move(variables[BoxW_PointOUR]->Get(),
-						  variables[BoxW_PointODR]->Get(),
-						  0.5*widget_scale);
+						 variables[BoxW_PointODR]->Get(),
+						 0.5*widget_scale);
    ((GeomCylinder*)geometries[BoxW_CylOD])->move(variables[BoxW_PointODR]->Get(),
-						  variables[BoxW_PointODL]->Get(),
-						  0.5*widget_scale);
+						 variables[BoxW_PointODL]->Get(),
+						 0.5*widget_scale);
    ((GeomCylinder*)geometries[BoxW_CylOL])->move(variables[BoxW_PointODL]->Get(),
-						  variables[BoxW_PointOUL]->Get(),
-						  0.5*widget_scale);
+						 variables[BoxW_PointOUL]->Get(),
+						 0.5*widget_scale);
 
    Vector spvec1(variables[BoxW_PointIUR]->Get() - variables[BoxW_PointIUL]->Get());
    Vector spvec2(variables[BoxW_PointIDL]->Get() - variables[BoxW_PointIUL]->Get());
@@ -371,7 +371,7 @@ BoxWidget::widget_execute()
 
 void
 BoxWidget::geom_moved( int /* axis*/, double /*dist*/, const Vector& delta,
-			void* cbdata )
+		       void* cbdata )
 {
    for (Index v=0; v<NumVars; v++)
       variables[v]->Reset();

@@ -228,6 +228,13 @@ FrameWidget::widget_execute()
 						      variables[FrameW_PointUL]->Get(),
 						      0.5*widget_scale);
 
+   ((DistanceConstraint*)constraints[FrameW_ConstULUR])->SetMinimum(2*widget_scale);
+   ((DistanceConstraint*)constraints[FrameW_ConstDRDL])->SetMinimum(2*widget_scale);
+   ((DistanceConstraint*)constraints[FrameW_ConstULDL])->SetMinimum(2*widget_scale);
+   ((DistanceConstraint*)constraints[FrameW_ConstDRUR])->SetMinimum(2*widget_scale);
+   ((DistanceConstraint*)constraints[FrameW_ConstULDR])->SetMinimum(sqrt(8)*widget_scale);
+   ((DistanceConstraint*)constraints[FrameW_ConstURDL])->SetMinimum(sqrt(8)*widget_scale);
+
    SetEpsilon(widget_scale*1e-4);
 
    Vector spvec1(variables[FrameW_PointUR]->Get() - variables[FrameW_PointUL]->Get());
@@ -301,15 +308,19 @@ FrameWidget::geom_moved( int /* axis */, double /* dist */, const Vector& delta,
       variables[FrameW_PointDL]->SetDelta(delta);
       break;
    case FrameW_PickResizeU:
+      variables[FrameW_PointUL]->MoveDelta(delta);
       variables[FrameW_PointUR]->SetDelta(delta, Scheme4);
       break;
    case FrameW_PickResizeR:
+      variables[FrameW_PointUR]->MoveDelta(delta);
       variables[FrameW_PointDR]->SetDelta(delta, Scheme3);
       break;
    case FrameW_PickResizeD:
+      variables[FrameW_PointDR]->MoveDelta(delta);
       variables[FrameW_PointDL]->SetDelta(delta, Scheme4);
       break;
    case FrameW_PickResizeL:
+      variables[FrameW_PointDL]->MoveDelta(delta);
       variables[FrameW_PointUL]->SetDelta(delta, Scheme3);
       break;
    case FrameW_PickCyls:

@@ -29,7 +29,7 @@ enum { ArrowW_Pick };
 
 ArrowWidget::ArrowWidget( Module* module, CrowdMonitor* lock,
 
-			 double widget_scale )
+			  double widget_scale )
 : BaseWidget(module, lock, NumVars, NumCons, NumGeoms, NumMatls, NumPcks, widget_scale),
   direction(0, 0, 1.0)
 {
@@ -66,17 +66,17 @@ void
 ArrowWidget::widget_execute()
 {
    ((GeomSphere*)geometries[ArrowW_GeomPoint])->move(variables[ArrowW_Point]->Get(),
-						  1*widget_scale);
+						     1*widget_scale);
    ((GeomCylinder*)geometries[ArrowW_GeomShaft])->move(variables[ArrowW_Point]->Get(),
-						      variables[ArrowW_Point]->Get()
-						      + direction * widget_scale * 3.0,
-						      0.5*widget_scale);
+						       variables[ArrowW_Point]->Get()
+						       + direction * widget_scale * 3.0,
+						       0.5*widget_scale);
    ((GeomCappedCone*)geometries[ArrowW_GeomHead])->move(variables[ArrowW_Point]->Get()
-						    + direction * widget_scale * 3.0,
-						    variables[ArrowW_Point]->Get()
-						    + direction * widget_scale * 5.0,
-						    widget_scale,
-						    0);
+							+ direction * widget_scale * 3.0,
+							variables[ArrowW_Point]->Get()
+							+ direction * widget_scale * 5.0,
+							widget_scale,
+							0);
 
    Vector v1, v2;
    direction.find_orthogonal(v1, v2);

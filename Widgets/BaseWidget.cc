@@ -55,9 +55,9 @@ BaseWidget::~BaseWidget()
 void
 BaseWidget::execute()
 {
-    lock->write_lock();
-    widget_execute();
-    lock->write_unlock();
+   lock->write_lock();
+   widget_execute();
+   lock->write_unlock();
 }
 
 

@@ -18,9 +18,9 @@
 static DebugSwitch rc_debug("BaseConstraint", "Ratio");
 
 RatioConstraint::RatioConstraint( const clString& name,
-					const Index numSchemes,
-					Variable* numerInX, Variable* denomInX,
-					Variable* ratioInX )
+				  const Index numSchemes,
+				  Variable* numerInX, Variable* denomInX,
+				  Variable* ratioInX )
 :BaseConstraint(name, numSchemes, 3)
 {
    vars[0] = numerInX;

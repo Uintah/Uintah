@@ -139,14 +139,14 @@ BaseWidget::GetState()
    return widget->get_state();
 }
 
-   
+
 inline void
 BaseWidget::SetState( const int state )
 {
    widget->set_state(state);
 }
 
-   
+
 inline void
 BaseWidget::SetMaterial( const Index mindex, const MaterialHandle m )
 {

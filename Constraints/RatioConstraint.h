@@ -21,10 +21,10 @@
 class RatioConstraint : public BaseConstraint {
 public:
    RatioConstraint( const clString& name,
-		       const Index numSchemes,
-		       Variable* numerInX, Variable* denomInX,
-		       Variable* ratioInX );
-    virtual ~RatioConstraint();
+		    const Index numSchemes,
+		    Variable* numerInX, Variable* denomInX,
+		    Variable* ratioInX );
+   virtual ~RatioConstraint();
 
 protected:
    virtual void Satisfy( const Index index, const Scheme scheme );

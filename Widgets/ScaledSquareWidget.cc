@@ -39,7 +39,7 @@ enum { SSquareW_PickSphUL, SSquareW_PickSphUR, SSquareW_PickSphDR, SSquareW_Pick
        SSquareW_PickSlider1, SSquareW_PickSlider2 };
 
 ScaledSquareWidget::ScaledSquareWidget( Module* module, CrowdMonitor* lock,
-				       Real widget_scale )
+					Real widget_scale )
 : BaseWidget(module, lock, NumVars, NumCons, NumGeoms, NumMatls, NumPcks, widget_scale*0.1),
   oldaxis1(1, 0, 0), oldaxis2(1, 0, 0)
 {
@@ -58,60 +58,60 @@ ScaledSquareWidget::ScaledSquareWidget( Module* module, CrowdMonitor* lock,
    variables[SSquareW_Ratio2] = new Variable("Ratio2", Scheme1, Point(0.5, 0, 0));
 
    constraints[SSquareW_ConstLine1] = new SegmentConstraint("ConstLine1",
-							 NumSchemes,
-							 variables[SSquareW_PointUL],
-							 variables[SSquareW_PointUR],
-							 variables[SSquareW_Slider1]);
+							    NumSchemes,
+							    variables[SSquareW_PointUL],
+							    variables[SSquareW_PointUR],
+							    variables[SSquareW_Slider1]);
    constraints[SSquareW_ConstLine1]->VarChoices(Scheme1, 2, 2, 2);
    constraints[SSquareW_ConstLine1]->VarChoices(Scheme2, 2, 2, 2);
    constraints[SSquareW_ConstLine1]->VarChoices(Scheme3, 2, 2, 2);
    constraints[SSquareW_ConstLine1]->VarChoices(Scheme4, 2, 2, 2);
    constraints[SSquareW_ConstLine1]->Priorities(P_Default, P_Default, P_Highest);
    constraints[SSquareW_ConstLine2] = new SegmentConstraint("ConstLine2",
-							 NumSchemes,
-							 variables[SSquareW_PointUL],
-							 variables[SSquareW_PointDL],
-							 variables[SSquareW_Slider2]);
+							    NumSchemes,
+							    variables[SSquareW_PointUL],
+							    variables[SSquareW_PointDL],
+							    variables[SSquareW_Slider2]);
    constraints[SSquareW_ConstLine2]->VarChoices(Scheme1, 2, 2, 2);
    constraints[SSquareW_ConstLine2]->VarChoices(Scheme2, 2, 2, 2);
    constraints[SSquareW_ConstLine2]->VarChoices(Scheme3, 2, 2, 2);
    constraints[SSquareW_ConstLine2]->VarChoices(Scheme4, 2, 2, 2);
    constraints[SSquareW_ConstLine2]->Priorities(P_Default, P_Default, P_Highest);
    constraints[SSquareW_ConstSDist1] = new DistanceConstraint("ConstSDist1",
-							  NumSchemes,
-							  variables[SSquareW_PointUL],
-							  variables[SSquareW_Slider1],
-							  variables[SSquareW_SDist1]);
+							      NumSchemes,
+							      variables[SSquareW_PointUL],
+							      variables[SSquareW_Slider1],
+							      variables[SSquareW_SDist1]);
    constraints[SSquareW_ConstSDist1]->VarChoices(Scheme1, 1, 1, 1);
    constraints[SSquareW_ConstSDist1]->VarChoices(Scheme2, 1, 1, 1);
    constraints[SSquareW_ConstSDist1]->VarChoices(Scheme3, 2, 2, 2);
    constraints[SSquareW_ConstSDist1]->VarChoices(Scheme4, 2, 2, 2);
    constraints[SSquareW_ConstSDist1]->Priorities(P_Lowest, P_Default, P_Default);
    constraints[SSquareW_ConstRatio1] = new RatioConstraint("ConstRatio1",
-							NumSchemes,
-							variables[SSquareW_SDist1],
-							variables[SSquareW_Dist],
-							variables[SSquareW_Ratio1]);
+							   NumSchemes,
+							   variables[SSquareW_SDist1],
+							   variables[SSquareW_Dist],
+							   variables[SSquareW_Ratio1]);
    constraints[SSquareW_ConstRatio1]->VarChoices(Scheme1, 0, 0, 0);
    constraints[SSquareW_ConstRatio1]->VarChoices(Scheme2, 0, 0, 0);
    constraints[SSquareW_ConstRatio1]->VarChoices(Scheme3, 2, 2, 2);
    constraints[SSquareW_ConstRatio1]->VarChoices(Scheme4, 2, 2, 2);
    constraints[SSquareW_ConstRatio1]->Priorities(P_Highest, P_Highest, P_Highest);
    constraints[SSquareW_ConstSDist2] = new DistanceConstraint("ConstSDist2",
-							  NumSchemes,
-							  variables[SSquareW_PointUL],
-							  variables[SSquareW_Slider2],
-							  variables[SSquareW_SDist2]);
+							      NumSchemes,
+							      variables[SSquareW_PointUL],
+							      variables[SSquareW_Slider2],
+							      variables[SSquareW_SDist2]);
    constraints[SSquareW_ConstSDist2]->VarChoices(Scheme1, 1, 1, 1);
    constraints[SSquareW_ConstSDist2]->VarChoices(Scheme2, 1, 1, 1);
    constraints[SSquareW_ConstSDist2]->VarChoices(Scheme3, 2, 2, 2);
    constraints[SSquareW_ConstSDist2]->VarChoices(Scheme4, 2, 2, 2);
    constraints[SSquareW_ConstSDist2]->Priorities(P_Lowest, P_Default, P_Default);
    constraints[SSquareW_ConstRatio2] = new RatioConstraint("ConstRatio2",
-							NumSchemes,
-							variables[SSquareW_SDist2],
-							variables[SSquareW_Dist],
-							variables[SSquareW_Ratio2]);
+							   NumSchemes,
+							   variables[SSquareW_SDist2],
+							   variables[SSquareW_Dist],
+							   variables[SSquareW_Ratio2]);
    constraints[SSquareW_ConstRatio2]->VarChoices(Scheme1, 0, 0, 0);
    constraints[SSquareW_ConstRatio2]->VarChoices(Scheme2, 0, 0, 0);
    constraints[SSquareW_ConstRatio2]->VarChoices(Scheme3, 2, 2, 2);
@@ -128,7 +128,7 @@ ScaledSquareWidget::ScaledSquareWidget( Module* module, CrowdMonitor* lock,
    constraints[SSquareW_ConstPlane]->VarChoices(Scheme3, 2, 3, 0, 1);
    constraints[SSquareW_ConstPlane]->VarChoices(Scheme4, 2, 3, 0, 1);
    constraints[SSquareW_ConstPlane]->Priorities(P_Highest, P_Highest,
-					      P_Highest, P_Highest);
+						P_Highest, P_Highest);
    constraints[SSquareW_ConstULDR] = new DistanceConstraint("Const13",
 							    NumSchemes,
 							    variables[SSquareW_PointUL],
@@ -189,10 +189,10 @@ ScaledSquareWidget::ScaledSquareWidget( Module* module, CrowdMonitor* lock,
    constraints[SSquareW_ConstDRUR]->VarChoices(Scheme4, 0, 0, 0);
    constraints[SSquareW_ConstDRUR]->Priorities(P_Default, P_Default, P_LowMedium);
    constraints[SSquareW_ConstDRDL] = new DistanceConstraint("Const34",
-							  NumSchemes,
-							  variables[SSquareW_PointDR],
-							  variables[SSquareW_PointDL],
-							  variables[SSquareW_Dist]);
+							    NumSchemes,
+							    variables[SSquareW_PointDR],
+							    variables[SSquareW_PointDL],
+							    variables[SSquareW_Dist]);
    constraints[SSquareW_ConstDRDL]->VarChoices(Scheme1, 1, 1, 1);
    constraints[SSquareW_ConstDRDL]->VarChoices(Scheme2, 0, 0, 0);
    constraints[SSquareW_ConstDRDL]->VarChoices(Scheme3, 1, 1, 1);
@@ -259,25 +259,25 @@ void
 ScaledSquareWidget::widget_execute()
 {
    ((GeomSphere*)geometries[SSquareW_SphereUL])->move(variables[SSquareW_PointUL]->Get(),
-						    1*widget_scale);
+						      1*widget_scale);
    ((GeomSphere*)geometries[SSquareW_SphereUR])->move(variables[SSquareW_PointUR]->Get(),
-						    1*widget_scale);
+						      1*widget_scale);
    ((GeomSphere*)geometries[SSquareW_SphereDR])->move(variables[SSquareW_PointDR]->Get(),
-						    1*widget_scale);
+						      1*widget_scale);
    ((GeomSphere*)geometries[SSquareW_SphereDL])->move(variables[SSquareW_PointDL]->Get(),
-						    1*widget_scale);
+						      1*widget_scale);
    ((GeomCylinder*)geometries[SSquareW_CylU])->move(variables[SSquareW_PointUL]->Get(),
-						  variables[SSquareW_PointUR]->Get(),
-						  0.5*widget_scale);
+						    variables[SSquareW_PointUR]->Get(),
+						    0.5*widget_scale);
    ((GeomCylinder*)geometries[SSquareW_CylR])->move(variables[SSquareW_PointUR]->Get(),
-						  variables[SSquareW_PointDR]->Get(),
-						  0.5*widget_scale);
+						    variables[SSquareW_PointDR]->Get(),
+						    0.5*widget_scale);
    ((GeomCylinder*)geometries[SSquareW_CylD])->move(variables[SSquareW_PointDR]->Get(),
-						  variables[SSquareW_PointDL]->Get(),
-						  0.5*widget_scale);
+						    variables[SSquareW_PointDL]->Get(),
+						    0.5*widget_scale);
    ((GeomCylinder*)geometries[SSquareW_CylL])->move(variables[SSquareW_PointDL]->Get(),
-						  variables[SSquareW_PointUL]->Get(),
-						  0.5*widget_scale);
+						    variables[SSquareW_PointUL]->Get(),
+						    0.5*widget_scale);
    ((GeomCappedCylinder*)geometries[SSquareW_SliderCyl1])->move(variables[SSquareW_Slider1]->Get()
 								- (GetAxis1() * 0.3 * widget_scale),
 								variables[SSquareW_Slider1]->Get()
@@ -310,7 +310,7 @@ ScaledSquareWidget::widget_execute()
 
 void
 ScaledSquareWidget::geom_moved( int /* axis */, double /* dist */, const Vector& delta,
-			 void* cbdata )
+				void* cbdata )
 {
    ((DistanceConstraint*)constraints[SSquareW_ConstSDist1])->SetDefault(GetAxis1());
    ((DistanceConstraint*)constraints[SSquareW_ConstSDist2])->SetDefault(GetAxis2());
