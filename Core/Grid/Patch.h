@@ -424,11 +424,12 @@ WARNING
      Patch(const Patch* realPatch, const IntVector& virtualOffset);
      Patch& operator=(const Patch&);
 
-     // NULL, unless this patch is a virtual patch (wrap-around
-     // from periodic boundary conditions).
+     // d_realPatch is NULL, unless this patch is a virtual patch
+     // (wrap-around from periodic boundary conditions).
+     const Patch* d_realPatch;
+     
      const Level* d_level; // I live in this grid level;
      int d_level_index;  // I'm at this index in the Level vector;
-     const Patch* d_realPatch;     
      
      // used only by friend class Level
      inline void setLevelIndex( int idx ){ d_level_index = idx;}
