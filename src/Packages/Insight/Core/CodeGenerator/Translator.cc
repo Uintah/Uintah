@@ -10,6 +10,8 @@
 
 #include "Translator.h"
 
+XALAN_CPP_NAMESPACE_USE;
+
 ///////////////////////////////
 // Constructors and Destructors
 ///////////////////////////////
