@@ -26,7 +26,7 @@ $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/GaugeWidget.tcl \
 	$(SRCDIR)/GenStandardColorMaps.tcl \
 	$(SRCDIR)/GenTransferFunc.tcl \
-	$(SRCDIR)/IsoSurface.tcl \
+	$(SRCDIR)/Isosurface.tcl \
 	$(SRCDIR)/LightWidget.tcl \
 	$(SRCDIR)/LocateNbrhd.tcl \
 	$(SRCDIR)/MacroModule.tcl \
