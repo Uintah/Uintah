@@ -102,11 +102,11 @@ public:
   int			size() const { return rawRampColor_.size();}
  
   // Lookup which color value would be associated with in the colormap.
-  MaterialHandle&	lookup(double value);
+  const MaterialHandle&	lookup(double value) const;
 
   // Lookup a color in the colormap by a value that has already been fitted
   // to the min/max of the colormap (value should be between 1 and ncolors).
-  MaterialHandle&	lookup2(double value);
+  const MaterialHandle&	lookup2(double value) const;
 
   virtual double	getMin() const;
   virtual double	getMax() const;
