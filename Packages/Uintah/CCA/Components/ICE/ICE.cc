@@ -28,6 +28,9 @@
 #include <Core/Util/DebugStream.h>
 
 
+#define JOHN_BCS
+//#undef JOHN_BCS
+
 using std::vector;
 using std::max;
 using std::min;
@@ -419,7 +422,7 @@ void ICE::scheduleComputeStableTimestep(const LevelP& level,
                                       SchedulerP& sched)
 {
   Task* t;
-  t = t;   // quite the compiler
+
   if (d_EqForm) {             // EQ 
     cout_doing << "ICE::scheduleComputeStableTimestep " << endl;
     t = scinew Task("ICE::actuallyComputeStableTimestep",
@@ -1257,14 +1260,50 @@ void ICE::actuallyInitialize(const ProcessorGroup*,
                                 press_CC,  numALLMatls,    patch, new_dw);
 
       cv[m] = ice_matl->getSpecificHeat();
+      cout << "Works before setBCJohn pressure" << endl;
+#ifdef JOHN_BCS
+      setBCJohn(press_CC,   rho_micro[SURROUND_MAT], "rho_micro","Pressure", 
+                                              patch, d_sharedState, 0, new_dw);
+#else
       setBC(press_CC,   rho_micro[SURROUND_MAT], "rho_micro","Pressure", 
                                               patch, d_sharedState, 0, new_dw);
+#endif
+      cout << "Works after setBCJohn pressure" << endl;
+#ifdef JOHN_BCS
+      setBCJohn(rho_CC[m],        "Density",      patch, d_sharedState, indx);
+#else
       setBC(rho_CC[m],        "Density",      patch, d_sharedState, indx);
-      setBC(rho_micro[m],     "Density",      patch, d_sharedState, indx);
-      setBC(Temp_CC[m],       "Temperature",  patch, d_sharedState, indx);
-      setBC(speedSound[m],    "zeroNeumann",  patch, d_sharedState, indx); 
-      setBC(vel_CC[m],        "Velocity",     patch, indx); 
+#endif
+      cout << "Works after setBCJohn Density" << endl;
 
+#ifdef JOHN_BCS
+      setBCJohn(rho_micro[m],     "Density",      patch, d_sharedState, indx);
+#else
+      setBC(rho_micro[m],     "Density",      patch, d_sharedState, indx);
+#endif
+
+      cout << "Works after setBCJohn rho_micro" << endl;
+#ifdef JOHN_BCS
+      setBCJohn(Temp_CC[m],       "Temperature",  patch, d_sharedState, indx);
+#else
+      setBC(Temp_CC[m],       "Temperature",  patch, d_sharedState, indx);
+#endif
+      cout << "Works after setBCJohn Temperature" << endl;
+
+#ifdef JOHN_BCS
+      setBCJohn(speedSound[m],    "zeroNeumann",  patch, d_sharedState, indx); 
+#else
+      setBC(speedSound[m],    "zeroNeumann",  patch, d_sharedState, indx); 
+#endif
+
+      cout << "Works after setBCJohn zeroNeumann" << endl;
+#ifdef JOHN_BCS
+      setBCJohn(vel_CC[m],        "Velocity",     patch, indx); 
+#else
+      setBC(vel_CC[m],        "Velocity",     patch, indx); 
+#endif
+      cout << "Works after setBCJohn Velocity" << endl;
+      
       for (CellIterator iter = patch->getExtraCellIterator();
                                                         !iter.done();iter++){
         IntVector c = *iter;
@@ -1276,9 +1315,13 @@ void ICE::actuallyInitialize(const ProcessorGroup*,
       if ((grav.x() !=0 || grav.y() != 0.0 || grav.z() != 0.0))  {
         hydrostaticPressureAdjustment(patch,
                                       rho_micro[SURROUND_MAT], press_CC);
-
+#ifdef JOHN_BCS
+        setBCJohn(press_CC,  rho_micro[SURROUND_MAT],
+		  "rho_micro", "Pressure", patch, d_sharedState, 0, new_dw);
+#else
         setBC(press_CC,  rho_micro[SURROUND_MAT],
-            "rho_micro", "Pressure", patch, d_sharedState, 0, new_dw);
+	      "rho_micro", "Pressure", patch, d_sharedState, 0, new_dw);
+#endif
 
         ICEMaterial* ice_matl = d_sharedState->getICEMaterial(m);
         double gamma = ice_matl->getGamma();
@@ -1579,8 +1622,13 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
     //__________________________________
     // update Boundary conditions
     // make copy of press for implicit calc.
+#ifdef JOHN_BCS
+    setBCJohn(press_new,   rho_micro[SURROUND_MAT],
+	      "rho_micro", "Pressure", patch , d_sharedState, 0, new_dw);    
+#else
     setBC(press_new,   rho_micro[SURROUND_MAT],
           "rho_micro", "Pressure", patch , d_sharedState, 0, new_dw);    
+#endif
 
     press_copy.copyData(press_new);
     //__________________________________
@@ -2152,9 +2200,21 @@ void ICE::addExchangeContributionToFCVel(const ProcessorGroup*,
     for (int m = 0; m < numMatls; m++)  {
       Material* matl = d_sharedState->getMaterial( m );
       int indx = matl->getDWIndex();
+#ifdef JOHN_BCS
+      setBCJohn(uvel_FCME[m],"Velocity","x",patch,indx);
+#else
       setBC(uvel_FCME[m],"Velocity","x",patch,indx);
+#endif
+#ifdef JOHN_BCS
+      setBCJohn(vvel_FCME[m],"Velocity","y",patch,indx);
+#else
       setBC(vvel_FCME[m],"Velocity","y",patch,indx);
+#endif
+#ifdef JOHN_BCS
+      setBCJohn(wvel_FCME[m],"Velocity","z",patch,indx);
+#else
       setBC(wvel_FCME[m],"Velocity","z",patch,indx);
+#endif
     }
 
    //---- P R I N T   D A T A ------ 
@@ -2338,8 +2398,14 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
         press_CC[c] = max(1.0e-12, press_CC[c]);  
       }
     }
+
+#ifdef JOHN_BCS
+    setBCJohn(press_CC, sp_vol_CC[SURROUND_MAT],
+	      "sp_vol", "Pressure", patch ,d_sharedState, 0, new_dw);
+#else
     setBC(press_CC, sp_vol_CC[SURROUND_MAT],
           "sp_vol", "Pressure", patch ,d_sharedState, 0, new_dw);
+#endif
           
    //---- P R I N T   D A T A ------  
     if (switchDebug_explicit_press) {
@@ -2728,8 +2794,11 @@ void ICE::accumulateMomentumSourceSinks(const ProcessorGroup*,
                         press_diff_source * areaZ * include_term * delT); 
         }
       }
-
+#ifdef JOHN_BCS
+      setBCJohn(press_force, "set_if_sym_BC",patch, indx); 
+#else
       setBC(press_force, "set_if_sym_BC",patch, indx); 
+#endif
 
       //---- P R I N T   D A T A ------ 
       if (switchDebugSource_Sink) {
@@ -3064,7 +3133,11 @@ void ICE::computeLagrangianSpecificVolume(const ProcessorGroup*,
         spec_vol_source[c] = spec_vol_src[c]/(rho_CC[c] * cell_vol); 
       }
       //  Set Neumann = 0 if symmetric Boundary conditions
+#ifdef JOHN_BCS
+      setBCJohn(spec_vol_L, "set_if_sym_BC",patch, d_sharedState, indx); 
+#else
       setBC(spec_vol_L, "set_if_sym_BC",patch, d_sharedState, indx); 
+#endif
 
       //---- P R I N T   D A T A ------ 
       if (switchDebugLagrangianSpecificVol ) {
@@ -3433,8 +3506,16 @@ void ICE::addExchangeToMomentumAndEnergy(const ProcessorGroup*,
     for (int m = 0; m < numALLMatls; m++)  {
       Material* matl = d_sharedState->getMaterial( m );
       int dwindex = matl->getDWIndex();
+#ifdef JOHN_BCS
+      setBCJohn(vel_CC[m], "Velocity",   patch,dwindex);
+#else
       setBC(vel_CC[m], "Velocity",   patch,dwindex);
+#endif
+#ifdef JOHN_BCS
+      setBCJohn(Temp_CC[m],"Temperature",patch, d_sharedState, dwindex);
+#else
       setBC(Temp_CC[m],"Temperature",patch, d_sharedState, dwindex);
+#endif
     }
     //__________________________________
     // Convert vars. primitive-> flux 
@@ -3576,8 +3657,11 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup*,
         mass_new[c]  = (mass_L[c] + mass_advected[c]);
         rho_CC[c]    = mass_new[c] * invvol;
       }   
-  
+#ifdef JOHN_BCS
+      setBCJohn(rho_CC, "Density", patch, d_sharedState, indx);
+#else
       setBC(rho_CC, "Density", patch, d_sharedState, indx);
+#endif
       
       //__________________________________
       // Advect  momentum and backout vel_CC
@@ -3599,8 +3683,11 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup*,
         vel_CC[c]    = (vel_L_ME + vel_advected);
 //      vel_CC[c] = (mom_L_ME[c] + qV_advected[c])/mass_new[c] ; 
       }
-      
+#ifdef JOHN_BCS
+      setBCJohn(vel_CC, "Velocity", patch,indx);
+#else
       setBC(vel_CC, "Velocity", patch,indx);
+#endif
 
       //__________________________________
       // Advect internal energy and backout Temp_CC
@@ -3642,9 +3729,12 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup*,
 //        double KE = 0.5 * mass_new[c] * vel_CC[c].length() * vel_CC[c].length();
 //        temp[c] = (int_eng_L_ME[c] + q_advected[c] - KE)/(mass_new[c] * cv);
         }
-      } 
+      }
+#ifdef JOHN_BCS 
+      setBCJohn(temp, "Temperature", patch, d_sharedState, indx);
+#else
       setBC(temp, "Temperature", patch, d_sharedState, indx);
-     
+#endif
       //__________________________________
       // Advection of specific volume
       // Note sp_vol_L[m] is actually sp_vol[m] * mass
@@ -3666,7 +3756,11 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup*,
       }
 
       //  Set Neumann = 0 if symmetric Boundary conditions
+#ifdef JOHN_BCS
+      setBCJohn(sp_vol_CC, "set_if_sym_BC",patch, d_sharedState, indx); 
+#else
       setBC(sp_vol_CC, "set_if_sym_BC",patch, d_sharedState, indx); 
+#endif
       
       //---- P R I N T   D A T A ------   
       if (switchDebug_advance_advect ) {
