@@ -424,8 +424,6 @@ EnthalpySolver::sched_buildLinearMatrixPred(SchedulerP& sched,
   //DataWarehouseP old_dw = new_dw->getTop();
   tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel,
 		Ghost::AroundCells, numGhostCells);
-  tsk->requires(Task::NewDW, d_lab->d_enthalpyINLabel,
-		Ghost::None, zeroGhostCells);
   tsk->requires(Task::NewDW, d_lab->d_enthalpyOUTBCLabel,
 		Ghost::AroundCells, numGhostCells);
   tsk->requires(Task::NewDW, d_lab->d_densityINLabel, 

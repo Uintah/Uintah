@@ -428,8 +428,6 @@ ScalarSolver::sched_buildLinearMatrixPred(SchedulerP& sched,
   //DataWarehouseP old_dw = new_dw->getTop();  
   tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel,
 		Ghost::AroundCells, numGhostCells);
-  tsk->requires(Task::NewDW, d_lab->d_scalarINLabel,
-		Ghost::None, zeroGhostCells);
   tsk->requires(Task::NewDW, d_lab->d_scalarOUTBCLabel,
 		Ghost::AroundCells, numGhostCells);
   tsk->requires(Task::NewDW, d_lab->d_densityINLabel, 
@@ -654,8 +652,13 @@ ScalarSolver::scalarLinearSolvePred(const ProcessorGroup* pc,
 		matlIndex, patch, Ghost::None, zeroGhostCells);
     // for explicit calculation
     {
+#ifdef correctorstep
     new_dw->allocate(scalarVars.scalar, d_lab->d_scalarPredLabel, 
                 matlIndex, patch, Ghost::AroundCells, numGhostCells);
+#else
+    new_dw->allocate(scalarVars.scalar, d_lab->d_scalarSPLabel, 
+                matlIndex, patch, Ghost::AroundCells, numGhostCells);
+#endif
     new_dw->copyOut(scalarVars.scalar, d_lab->d_scalarOUTBCLabel, 
 		matlIndex, patch, Ghost::AroundCells, numGhostCells);
     }
