@@ -56,6 +56,10 @@ static inline void calc_se(const BBox& obj_bbox, const BBox& bbox,
     if(sz < 0 || ez >= nz){
 	cerr << "NZ out of bounds!\n";
 	cerr << "sz=" << sz << ", ez=" << ez << '\n';
+	cerr << "e=" << e << '\n';
+	cerr << "obj_bbox=" << obj_bbox.min() << ", " << obj_bbox.max() << '\n';
+	cerr << "bbox=" << bbox.min() << ", " << bbox.max() << '\n';
+	cerr << "diag=" << diag << '\n';
 	exit(1);
     }
 }
@@ -105,6 +109,7 @@ void Grid::preprocess(double maxradius, int& pp_offset, int& scratchsize)
     if(grid)
 	delete[] grid;
     counts=new int[2*ngrid];
+    cerr << "counts=" << counts << ":" << counts+2*ngrid << '\n';
     for(int i=0;i<ngrid*2;i++)
 	counts[i]=0;
 
@@ -141,8 +146,10 @@ void Grid::preprocess(double maxradius, int& pp_offset, int& scratchsize)
     }
     cerr << "Allocating " << total << " grid cells (" << double(total)/prims.size() << " per object, " << double(total)/ngrid << " per cell)\n";
     grid=new Object*[total];
+    cerr << "grid=" << grid << ":" << grid+total << '\n';
     for(int i=0;i<total;i++)
 	grid[i]=0;
+    cerr << "total=" << total << '\n';
     cerr << "5/7 Calculating offsets took " << Time::currentSeconds()-time << " seconds\n";
     time=Time::currentSeconds();
     itime=time;
@@ -227,7 +234,7 @@ void Grid::intersect(const Ray& ray, HitInfo& hit,
 	didx_dy=nz;
 	diy_dy=1;
 	ddy=1;
-    } else if(dir.y() <-1.e-6){
+    } else {
 	double inv_dir=1./dir.y();
 	y0=inv_dir*(max.y()-orig.y());
 	y1=inv_dir*(min.y()-orig.y());
@@ -308,11 +315,11 @@ void Grid::intersect(const Ray& ray, HitInfo& hit,
     next_z=(z-orig.z())/dir.z();
     dtdz=diz_dz*diag.z()/nz/dir.z();
     for(;;){
-	int n=counts[idx*2+1];
-	int s=counts[idx*2];
-	for(int i=0;i<n;i++){
-	    grid[s+i]->intersect(ray, hit, st, ppc);
-	}
+      int n=counts[idx*2+1];
+      int s=counts[idx*2];
+      for(int i=0;i<n;i++){
+	grid[s+i]->intersect(ray, hit, st, ppc);
+      }
 	if(next_x < next_y && next_x < next_z){
 	    // Step in x...
 	    t=next_x;
@@ -320,21 +327,21 @@ void Grid::intersect(const Ray& ray, HitInfo& hit,
 	    ix+=dix_dx;
 	    idx+=didx_dx;
 	    if(ix<0 || ix>=nx)
-		return;
+		break;
 	} else if(next_y < next_z){
 	    t=next_y;
 	    next_y+=dtdy;
 	    iy+=diy_dy;
 	    idx+=didx_dy;
 	    if(iy<0 || iy>=ny)
-		return;
+		break;
 	} else {
 	    t=next_z;
 	    next_z+=dtdz;
 	    iz+=diz_dz;
 	    idx+=didx_dz;
 	    if(iz<0 || iz >=nz)
-		return;
+		break;
 	}
 	if(hit.min_t < t)
 	    break;
