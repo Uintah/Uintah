@@ -76,6 +76,9 @@ ApplyInterpAlgoT<FSRC, FITP, LITP, FOUT>::execute(FieldHandle fsrc_h,
 	  (fsrc->value(v[j].first) * v[j].second);
       }
       fout->set_value(val, *iter);
+    } else {
+      typename FSRC::value_type val = 0;
+      fout->set_value(val, *iter);
     }
     ++iter;
   }
