@@ -45,12 +45,23 @@ int Network::read_file(const clString& filename)
     return 1;
 }
 
-void Network::lock()
+// For now, we just use a simple mutex for both reading and writing
+void Network::read_lock()
 {
     the_lock.lock();
 }
 
-void Network::unlock()
+void Network::read_unlock()
+{
+    the_lock.unlock();
+}
+
+void Network::write_lock()
+{
+    the_lock.lock();
+}
+
+void Network::write_unlock()
 {
     the_lock.unlock();
 }

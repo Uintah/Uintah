@@ -27,8 +27,10 @@ public:
     Network(int first);
     ~Network();
 
-    void lock();
-    void unlock();
+    void read_lock();
+    void read_unlock();
+    void write_lock();
+    void write_unlock();
 
     int nmodules();
     Module* module(int);

@@ -327,11 +327,16 @@ void NetworkEditor::build_ui()
     XtRealizeWidget(toplevel);
 
     // Initialize modules...
+    // We do some writing to the network, but it is all
+    // either our own private data, or the update flags, where
+    // locking is not necessary
+    net->read_lock();
     int nmodules=net->nmodules();
     for(int i=0;i<nmodules;i++){
 	Module* mod=net->module(i);
 	initialize(mod);
     }
+    net->read_unlock();
 
     // Finally... Make the timer...
     timer_id=XtAppAddTimeOut(app, interval_time, do_timer, this);
@@ -421,6 +426,10 @@ void NetworkEditor::initialize(Module* mod)
 void NetworkEditor::update_display()
 {
     if(!redrawn_once)return;
+    // We do some writing to the network, but it is all
+    // either our own private data, or the update flags, where
+    // locking is not necessary
+    net->read_lock();
     int nmodules=net->nmodules();
     for(int i=0;i<nmodules;i++){
 	Module* mod=net->module(i);
@@ -432,6 +441,7 @@ void NetworkEditor::update_display()
 	    mod->updated();
 	}
     }
+    net->read_unlock();
 }
 
 
