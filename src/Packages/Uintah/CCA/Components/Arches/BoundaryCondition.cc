@@ -3353,6 +3353,7 @@ BoundaryCondition::enthalpyOutletBC(const ProcessorGroup*,
         IntVector xplusCell(colX+1, colY, colZ);
         if (constvars->cellType[xplusCell] == outlet_celltypeval) {
 	   double out_vel = constvars->uVelocity[currCell];
+	   out_vel = maxAbsU;
            vars->enthalpy[xplusCell]= (- delta_t * out_vel *
                (constvars->old_density[xplusCell]*constvars->old_enthalpy[xplusCell] -
                 constvars->old_density[currCell]*constvars->old_enthalpy[currCell]) /
