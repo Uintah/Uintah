@@ -56,7 +56,11 @@ public:
       // Get the molecular viscisity
       virtual double getMolecularViscosity() const = 0;
 
-      // GROUP: Problem Setup :
+      ////////////////////////////////////////////////////////////////////////
+      // Get the Smagorinsky model constant
+      virtual double getSmagorinskyConst() const = 0;
+
+       // GROUP: Problem Setup :
       ///////////////////////////////////////////////////////////////////////
       // Interface for Set up the problem specification database
       virtual void problemSetup(const ProblemSpecP& db) = 0;
