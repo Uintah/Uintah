@@ -27,24 +27,52 @@ if test $# != 1 || test $1 = "-h" || test $1 = "-help" || test $1 = "--help"; th
   echo "You could run this script like this:"
   echo ""
   echo "cd .../SCIRun/<bin>"
-  echo "../src/scripts/repair Thirdparty/1.20"
+  echo "../src/scripts/repair.sh Thirdparty/1.20"
   echo ""
   echo "And then run your 'gmake' again."
+  echo ""
+  echo "Example 2:"
+  echo ""
+  echo "If the error is something like:"
+  echo ""
+  echo "    No rule to make target `../src/Dataflow/Modules/Render/SCIBaWGL.h',"
+  echo "       needed by `Dataflow/Modules/Render/OpenGL.o'.  Stop."
+  echo ""
+  echo "Then you would use:"
+  echo ""
+  echo "../src/scripts/repair.sh SCIBaWGL.h"
   echo ""
   exit
 fi
 
 bad_inc=$1
 
-files=`find . -name "*.d" | xargs grep -l $bad_inc`
+files=`find . -name "*.d" -o -name "depend.mk" | xargs grep -l $bad_inc`
 
 file_found=no
 
 for file in $files; do
    file_found=yes
-   base=`echo $file | sed "s%\.d%%"`
-   echo "rm -rf $base.o $base.d"
-   rm -rf $base.o $base.d
+
+   filename=`echo $file | sed "s%.*/%%"`
+
+   if test "$filename" = "depend.mk"; then
+     c_files=`grep $bad_inc $file | cut -f1 -d":"`
+     echo "rm $file"
+           rm $file
+   else
+     c_files=$file
+   fi
+
+   for cfile in $c_files; do
+     base=`echo $cfile | sed "s%\.d%%" | sed "s%\.o%%"`
+     echo "rm -rf $base.o"
+           rm -rf $base.o
+     if test "$filename" != "depend.mk"; then
+        echo "rm -rf $base.d"
+              rm -rf $base.d
+     fi 
+   done
 done
 
 if test $file_found = "no"; then
