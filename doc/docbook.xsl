@@ -437,11 +437,27 @@
     <xsl:value-of select="./sect1/para" />
   </p>
 
+<!--
+  <xsl:for-each select="./sect1">
+    <xsl:variable name="sectnum">
+      <xsl:number/>
+    </xsl:variable>
+    <xsl:for-each select="./title">
+    <p class="psubhead">
+      <xsl:value-of select="$chapnum"/>.
+      <xsl:value-of select="$sectnum + -1"/>
+      <xsl:value-of select="concat(' ',' ')"/><xsl:value-of select="."/>
+    </p>
+    </xsl:for-each>
+  </xsl:for-each>
+-->
+
   <ul>
     <xsl:for-each select="./sect1/title">
       <li><xsl:value-of select="."/></li>
     </xsl:for-each>
   </ul>
+
 
 </xsl:for-each>
 
