@@ -336,12 +336,12 @@ BumpMaterial::io(SCIRun::Piostream &str)
   SCIRun::Pio(str, ntiles);
   SCIRun::Pio(str, bump_scale);
 
-  int size = dimension_x*dimension_y*sizeof(int);
+  size_t size = dimension_x*dimension_y*sizeof(int);
   if (str.reading()) {
     // why malloc?
     bumpimage = (int *)malloc(size);
   }
-  for (int i = 0; i < size; i++) {
+  for (size_t i = 0; i < size; i++) {
     SCIRun::Pio(str, bumpimage[i]);    
   }
   str.end_class();

@@ -312,7 +312,7 @@ rtrt::readObjFile(const string geom_fname, const string matl_fname,
 	 matl_complete=1;
        } else if (strncmp(&buf[0], "map_Kd", strlen("map_Kd")) == 0) {
 	 char *b = &(buf[7]);
-	 int last = strlen(b) - 1;
+	 unsigned long last = strlen(b) - 1;
 	 while ((b[last] == '\r' || b[last] == '\n') && last>0) last--;
 	 b[last+1]='\0';
 	 string fname(b);
