@@ -15,6 +15,9 @@
 #  University of Utah. All Rights Reserved.
 #
 
+# NrrdWriter.tcl
+# by Samsonov Alexei
+# October 2000 
 
 catch {rename Teem_DataIO_NrrdWriter ""}
 
@@ -25,23 +28,64 @@ itcl_class Teem_DataIO_NrrdWriter {
 	set_defaults
     }
     method set_defaults {} {
-	global $this-filetype
-	set $this-filetype Binary
+	global $this-d_filetype
+	set $this-d_filetype Binary
+	# set $this-split 0
     }
+    
     method ui {} {
+	global env
 	set w .ui[modname]
 	if {[winfo exists $w]} {
-	    raise $w
+	    set child [lindex [winfo children $w] 0]
+	    # $w withdrawn by $child's procedures
+	    raise $child
 	    return;
 	}
+	
 	toplevel $w
+	set initdir ""
 
-	make_labeled_radio $w.filetype "Format:" "" left $this-filetype \
-		{Binary ASCII}
-	pack $w.filetype
-	entry $w.f -textvariable $this-filename -width 40 \
-		-borderwidth 2 -relief sunken
-	pack $w.f -side bottom
-	bind $w.f <Return> "$this-c needexecute "
+	# place to put preferred data directory
+	# it's used if $this-filename is empty
+	
+	if {[info exists env(SCIRUN_DATA)]} {
+	    set initdir $env(SCIRUN_DATA)
+	} elseif {[info exists env(SCI_DATA)]} {
+	    set initdir $env(SCI_DATA)
+	} elseif {[info exists env(PSE_DATA)]} {
+	    set initdir $env(PSE_DATA)
+	}
+
+	#######################################################
+	# to be modified for particular reader
+
+	# extansion to append if no extension supplied by user
+	set defext ".fld"
+	
+	# name to appear initially
+	set defname "MyNrrd"
+	set title "Save nrrd file"
+
+	# file types to appers in filter box
+	set types {
+	    {{Nrrd File}     {.nrrd}      }
+	    {{All Files}       {.*}   }
+	}
+	
+	######################################################
+	
+	makeSaveFilebox \
+		-parent $w \
+		-filevar $this-filename \
+		-command "$this-c needexecute; destroy $w" \
+		-cancel "destroy $w" \
+		-title $title \
+		-filetypes $types \
+	        -initialfile $defname \
+		-initialdir $initdir \
+		-defaultextension $defext \
+		-formatvar $this-d_filetype 
+		#-splitvar $this-split
     }
 }

@@ -38,9 +38,9 @@ namespace SCITeem {
 using namespace SCIRun;
 
 class NrrdWriter : public Module {
-    NrrdIPort* inport;
-    GuiString filename;
-    GuiString filetype;
+    NrrdIPort* inport_;
+    GuiString filename_;
+    GuiString filetype_;
 public:
     NrrdWriter(const clString& id);
     virtual ~NrrdWriter();
@@ -52,12 +52,13 @@ extern "C" Module* make_NrrdWriter(const clString& id) {
 }
 
 NrrdWriter::NrrdWriter(const clString& id)
-: Module("NrrdWriter", id, Source), filename("filename", id, this),
-  filetype("filetype", id, this)
+: Module("NrrdWriter", id, Source, "DataIO", "Teem"), 
+  filename_("filename", id, this),
+  filetype_("filetype", id, this)
 {
-    // Create the output data handle and port
-    inport=scinew NrrdIPort(this, "Input Data", NrrdIPort::Atomic);
-    add_iport(inport);
+    // Create the output port
+    inport_=scinew NrrdIPort(this, "Input Data", NrrdIPort::Atomic);
+    add_iport(inport_);
 }
 
 NrrdWriter::~NrrdWriter()
@@ -66,23 +67,33 @@ NrrdWriter::~NrrdWriter()
 
 void NrrdWriter::execute()
 {
+  // Read data from the input port
+  NrrdDataHandle handle;
+  if(!inport_->get(handle))
+    return;
 
-    NrrdDataHandle handle;
-    if(!inport->get(handle))
-	return;
-    clString fn(filename.get());
-    if(fn == "")
-	return;
-    Piostream* stream;
-    clString ft(filetype.get());
-    if(ft=="Binary"){
-	stream=scinew BinaryPiostream(fn, Piostream::Write);
-    } else {
-	stream=scinew TextPiostream(fn, Piostream::Write);
-    }
-    // Write the file
-    Pio(*stream, handle);
-    delete stream;
+  // If no name is provided, return
+  clString fn(filename_.get());
+  if(fn == "") {
+    error("Warning: no filename in NrrdWriter");
+    return;
+  }
+
+  FILE *f;
+  if (!(f = fopen(fn(), "wt"))) {
+    cerr << "Error opening file "<<fn<<"\n";
+    return;
+  }
+
+  if (nrrdWrite(f, handle->nrrd)) {
+    char *err = biffGet(NRRD);      
+    cerr << "Error writing nrrd "<<fn<<": "<<err<<"\n";
+    free(err);
+    biffDone(NRRD);
+    fclose(f);
+    return;
+  }
+  fclose(f);
 }
 
 } // End namespace SCITeem

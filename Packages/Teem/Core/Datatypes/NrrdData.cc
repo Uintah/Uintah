@@ -77,7 +77,7 @@ void NrrdData::io(Piostream& stream) {
     fclose(f);
     fname="";
   } else { // writing
-    if (fname == "") {   // if fname wasn't set up stream, just appdend .nrrd
+    if (fname == "") {   // if fname wasn't set up stream, just append .nrrd
       if (stream.file_name()) {
 	fname = stream.file_name() + clString(".nrrd");
       }
