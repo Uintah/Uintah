@@ -55,7 +55,7 @@ void ParticleColorMapKey::execute() {
 				 Point( xsize, -1 + ysize, 0 ),
 				 Point( 0, -1 + ysize, 0 ) );
 
-  sq->set_texture( map->raw1d );
+  sq->set_texture( map->rawRGBA_ );
   all->add( sq );
   
   ScalarParticlesHandle part;
