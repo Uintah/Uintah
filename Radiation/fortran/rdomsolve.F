@@ -76,7 +76,7 @@ c  call fixval assume abskg to be one but change it in props calculation
             else
                aw(ii,jj,kk) = 0.0d0
                su(ii,jj,kk) = su(ii,jj,kk) + (abs(omu(l))*areaew) *
-     &         PI1 * (SIG * abs(fraction(bands))* 
+     &         PI1 * (SIG * abs(fraction(bands))*
      &              tg(ii-1,jj,kk)**4)
             end if
          else
@@ -85,7 +85,9 @@ c  call fixval assume abskg to be one but change it in props calculation
             else
                aw(ii,jj,kk) = 0.0d0
                su(ii,jj,kk) = su(ii,jj,kk) + (abs(omu(l)) * areaew) * 
-     &         PI1 * (SIG * abs(fraction(bands))* 
+     &         PI1 * (SIG * abs(fraction(bands))*
+c     Empirical model for emissivity at boundaries
+     &              abskg(ii+1,jj,kk)*
      &              tg(ii+1,jj,kk)**4)
             end if
          endif
@@ -98,6 +100,8 @@ c  call fixval assume abskg to be one but change it in props calculation
                su(ii,jj,kk) = su(ii,jj,kk) + 
      &              (abs(oeta(l))*arean(ii)) *
      &         PI1 * (SIG * abs(fraction(bands)) *
+c     Empirical model for emissivity at boundaries
+     &              abskg(ii,jj-1,kk)*
      &              tg(ii,jj-1,kk)**4)
             end if
          else
@@ -108,6 +112,8 @@ c  call fixval assume abskg to be one but change it in props calculation
                su(ii,jj,kk) = su(ii,jj,kk) + 
      &              (abs(oeta(l))*arean(ii)) *
      &         PI1 * (SIG * abs(fraction(bands)) *
+c     Empirical model for emissivity at boundaries
+     &              abskg(ii,jj+1,kk)*
      &              tg(ii,jj+1,kk)**4)
             end if
          endif
@@ -120,6 +126,8 @@ c  call fixval assume abskg to be one but change it in props calculation
                su(ii,jj,kk) = su(ii,jj,kk) + 
      &              (abs(oxi(l))*areatb(ii)) *
      &         PI1 * (SIG * abs(fraction(bands)) *
+c     Empirical model for emissivity at boundaries
+     &              abskg(ii,jj,kk-1)*
      &              tg(ii,jj,kk-1)**4)
             end if
          else
@@ -129,6 +137,8 @@ c  call fixval assume abskg to be one but change it in props calculation
                ab(ii,jj,kk) = 0.0d0
                su(ii,jj,kk) = su(ii,jj,kk) + 
      &              (abs(oxi(l))*areatb(ii)) * 
+c     Empirical model for emissivity at boundaries
+     &              abskg(ii,jj,kk+1)*
      &         PI1 * (SIG * abs(fraction(bands)) *
      &              tg(ii,jj,kk+1)**4)
             end if
