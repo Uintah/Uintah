@@ -26,23 +26,10 @@
 
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
-#include <Core/Datatypes/GenericField.h>
 #include <Dataflow/Ports/FieldPort.h>
-#include <Core/Geometry/Point.h>
-#include <Core/Geometry/Vector.h>
-#include <Core/Datatypes/LatticeVol.h>
-#include <Core/Datatypes/LatVolMesh.h>
 #include <Core/Datatypes/ContourField.h>
-#include <Core/Datatypes/PointCloud.h>
 #include <Dataflow/Network/NetworkEditor.h>
-#include <Core/Datatypes/MeshBase.h>
-#include <Core/Datatypes/TetVol.h>
-#include <Core/Datatypes/TetVolMesh.h>
-#include <Core/Datatypes/ContourMesh.h>
-#include <Core/Datatypes/TriSurfMesh.h>
-#include <Core/Datatypes/TriSurf.h>
-#include <Core/GuiInterface/GuiVar.h>
-#include <Core/GuiInterface/TCL.h>
+#include <Dataflow/Modules/Visualization/StreamLines.h>
 
 #include <iostream>
 #include <vector>
@@ -91,31 +78,6 @@ private:
   GuiDouble                     tolerance_;
   GuiInt                        maxsteps_;
 
-  //! interpolate using the generic linear interpolator
-  bool interpolate(VectorFieldInterface *vfi, const Point &p, Vector &v)
-  {
-    const bool b = vfi->interpolate(v,p);
-    if (b && v.length2() > 0)
-    {
-      v.normalize(); // try not to skip cells - needs help from stepsize
-    }
-    return b;
-  }
-
-  //! loop through the nodes in the seed field
-  template <class VMESH, class SMESH>
-  void TemplatedExecute(VMESH *, SMESH *, VectorFieldInterface *,
-			double tolerance, double stepsize, int maxsteps,
-			ContourMeshHandle);
-
-  //! find the nodes that make up a single stream line.
-  //! This particular implementation uses Runge-Kutta-Fehlberg
-  void FindStreamLineNodes(vector<Point>&, Point, float, float, int, 
-			   VectorFieldInterface *);
-
-  //! compute the inner terms of the RKF formula
-  bool ComputeRKFTerms(vector<Vector> &, const Point&, float,
-		       VectorFieldInterface *);
 };
 
 extern "C" PSECORESHARE Module* make_StreamLines(const string& id) {
@@ -137,11 +99,25 @@ StreamLines::~StreamLines()
 }
 
 
+//! interpolate using the generic linear interpolator
 bool
-StreamLines::ComputeRKFTerms(vector<Vector> &v, /* storage for terms */
-			     const Point &p,    /* previous point */
-			     float s,           /* current step size */
-			     VectorFieldInterface *vfi)
+StreamLinesAlgo::interpolate(VectorFieldInterface *vfi,
+			     const Point &p, Vector &v)
+{
+  const bool b = vfi->interpolate(v,p);
+  if (b && v.length2() > 0)
+  {
+    v.normalize(); // try not to skip cells - needs help from stepsize
+  }
+  return b;
+}
+
+
+bool
+StreamLinesAlgo::ComputeRKFTerms(vector<Vector> &v, // storage for terms
+				 const Point &p,    // previous point
+				 double s,          // current step size
+				 VectorFieldInterface *vfi)
 {
   if (!interpolate(vfi, p, v[0]))
   {
@@ -186,12 +162,12 @@ StreamLines::ComputeRKFTerms(vector<Vector> &v, /* storage for terms */
 
   
 void
-StreamLines::FindStreamLineNodes(vector<Point> &v /* storage for points */,
-				 Point x          /* initial point */,
-				 float t          /* error tolerance */,
-				 float s          /* initial step size */,
-				 int n            /* max number of steps */,
-				 VectorFieldInterface *vfi  /* the field */)
+StreamLinesAlgo::FindStreamLineNodes(vector<Point> &v, // storage for points
+				     Point x,          // initial point
+				     double t,          // error tolerance
+				     double s,          // initial step size
+				     int n,            // max number of steps
+				     VectorFieldInterface *vfi) // the field
 {
   int loop;
   vector <Vector> terms;
@@ -243,82 +219,6 @@ StreamLines::FindStreamLineNodes(vector<Point> &v /* storage for points */,
     {
       break;
     }
-  }
-}
-
-
-
-template <class VMESH, class SMESH>
-void 
-StreamLines::TemplatedExecute(VMESH *vmesh, SMESH *smesh,
-			      VectorFieldInterface *vfi,
-			      double tolerance,
-			      double stepsize,
-			      int maxsteps,
-			      ContourMeshHandle cmesh)
-{
-  typedef typename VMESH::Node::iterator          vf_node_iterator;
-  typedef typename SMESH::Node::iterator          sf_node_iterator;
-
-  Point seed;
-  Vector test;
-  vector<Point> nodes;
-  vector<Point>::iterator node_iter;
-  ContourMesh::Node::index_type n1, n2;
-
-  vmesh->finish_mesh();
-
-  // Try to find the streamline for each seed point.
-  sf_node_iterator seed_iter = smesh->node_begin();
-  sf_node_iterator seed_iter_end = smesh->node_end();
-  while (seed_iter != seed_iter_end)
-  {
-    smesh->get_point(seed, *seed_iter);
-
-    // Is the seed point inside the field?
-    if (!interpolate(vfi, seed, test))
-    {
-      warning("StreamLines: WARNING: seed point was not inside the field.");
-      ++seed_iter;
-      continue;
-    }
-
-    // Find the positive streamlines.
-    nodes.clear();
-    FindStreamLineNodes(nodes, seed, tolerance, stepsize, maxsteps, vfi);
-
-    node_iter = nodes.begin();
-    if (node_iter != nodes.end())
-    {
-      n1 = cmesh->add_node(*node_iter);
-      ++node_iter;
-      while (node_iter != nodes.end())
-      {
-	n2 = cmesh->add_node(*node_iter);
-	cmesh->add_edge(n1, n2);
-	n1 = n2;
-	++node_iter;
-      }
-    }
-
-    // Find the negative streamlines.
-    nodes.clear();
-    FindStreamLineNodes(nodes, seed, tolerance, -stepsize, maxsteps, vfi);
-
-    if (node_iter != nodes.end())
-    {
-      n1 = cmesh->add_node(*node_iter);
-      ++node_iter;
-      while (node_iter != nodes.end())
-      {
-	n2 = cmesh->add_node(*node_iter);
-	cmesh->add_edge(n1, n2);
-	n1 = n2;
-	++node_iter;
-      }
-    }
-
-    ++seed_iter;
   }
 }
 
@@ -376,37 +276,25 @@ void StreamLines::execute()
   get_gui_doublevar(id, "stepsize", stepsize);
   get_gui_intvar(id, "maxsteps", maxsteps);
 
-  // this is a pain...
-  // use Marty's dispatch here instead...
-  if (vf_->get_type_name(0) == "LatticeVol") {
-    LatVolMesh *vmesh = (LatVolMesh *)(vf_->mesh().get_rep());
-    if (vf_->get_type_name(1) == "Vector") {
-      if (sf_->get_type_name(-1) == "ContourField<double>") {
-	TemplatedExecute(vmesh, (ContourMesh *)(sf_->mesh().get_rep()),
-			 vfi, tolerance, stepsize, maxsteps, cmesh);
-      } else if (sf_->get_type_name(-1) == "TriSurf<double>") {
-	TemplatedExecute(vmesh, (TriSurfMesh *)(sf_->mesh().get_rep()),
-			 vfi, tolerance, stepsize, maxsteps, cmesh);
-      } else if (sf_->get_type_name(-1) == "PointCloud<double>") {
-	TemplatedExecute(vmesh, (PointCloudMesh *)(sf_->mesh().get_rep()),
-			 vfi, tolerance, stepsize, maxsteps, cmesh);
-      }
-    }
-  } else if (vf_->get_type_name(0) =="TetVol") {
-    TetVolMesh *vmesh = (TetVolMesh *)(vf_->mesh().get_rep());
-    if (vf_->get_type_name(1) == "Vector") {
-      if (sf_->get_type_name(-1) == "ContourField<double>") {
-	TemplatedExecute(vmesh, (ContourMesh *)(sf_->mesh().get_rep()),
-			 vfi, tolerance, stepsize, maxsteps, cmesh);
-      } else if (sf_->get_type_name(-1) == "TriSurf<double>") {
-	TemplatedExecute(vmesh, (TriSurfMesh *)(sf_->mesh().get_rep()),
-			 vfi, tolerance, stepsize, maxsteps, cmesh);
-      } else if (sf_->get_type_name(-1) == "PointCloud<double>") {
-	TemplatedExecute(vmesh, (PointCloudMesh *)(sf_->mesh().get_rep()),
-			 vfi, tolerance, stepsize, maxsteps, cmesh);
-      }
-    }
+  const TypeDescription *vmtd = vf_->mesh()->get_type_description();
+  const TypeDescription *smtd = sf_->mesh()->get_type_description();
+  const TypeDescription *sltd = sf_->data_at_type_description();
+  CompileInfo *ci = StreamLinesAlgo::get_compile_info(vmtd, smtd, sltd); 
+  DynamicAlgoHandle algo_handle;
+  if (! DynamicLoader::scirun_loader().get(*ci, algo_handle))
+  {
+    cout << "Could not compile algorithm." << std::endl;
+    return;
   }
+  StreamLinesAlgo *algo =
+    dynamic_cast<StreamLinesAlgo *>(algo_handle.get_rep());
+  if (algo == 0)
+  {
+    cout << "Could not get algorithm." << std::endl;
+    return;
+  }
+  algo->execute(vf_->mesh(), sf_->mesh(), vfi,
+		tolerance, stepsize, maxsteps, cmesh);
 
   cf->resize_fdata();
   oport_->send(cf);
@@ -426,6 +314,36 @@ void StreamLines::tcl_command(TCLArgs& args, void* userdata)
     Module::tcl_command(args, userdata);
   }
 }
+
+
+CompileInfo *
+StreamLinesAlgo::get_compile_info(const TypeDescription *vmesh,
+				  const TypeDescription *smesh,
+				  const TypeDescription *sloc)
+{
+  // use cc_to_h if this is in the .cc file, otherwise just __FILE__
+  static const string include_path(TypeDescription::cc_to_h(__FILE__));
+  static const string template_class_name("StreamLinesAlgoT");
+  static const string base_class_name("StreamLinesAlgo");
+
+  CompileInfo *rval = 
+    scinew CompileInfo(template_class_name + "." +
+		       to_filename(vmesh->get_name()) + "." +
+		       to_filename(smesh->get_name()) + "." +
+		       to_filename(sloc->get_name()) + ".",
+                       base_class_name, 
+                       template_class_name, 
+                       vmesh->get_name() + ", " +
+		       smesh->get_name() + ", " +
+		       sloc->get_name());
+
+  // Add in the include path to compile this obj
+  rval->add_include(include_path);
+  vmesh->fill_compile_info(rval);
+  smesh->fill_compile_info(rval);
+  return rval;
+}
+
 
 } // End namespace SCIRun
 
