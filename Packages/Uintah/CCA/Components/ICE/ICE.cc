@@ -443,7 +443,7 @@ void ICE::scheduleInitialize(const LevelP& level,SchedulerP& sched)
   }
  
   //__________________________________
-  // Make adjustments to the hydrostatic prssure
+  // Make adjustments to the hydrostatic pressure
   // and temperature fields.  You need to do this
   // after the models have initialized the flowfield
   Vector grav = d_sharedState->getGravity();
@@ -492,9 +492,8 @@ void ICE::restartInitialize()
   int numMatls    = d_sharedState->getNumICEMatls();
   for (int m = 0; m < numMatls; m++ ) {
     ICEMaterial* ice_matl = d_sharedState->getICEMaterial(m);
-    int indx= ice_matl->getDWIndex();
     if(ice_matl->isSurroundingMatl()) {
-      d_surroundingMatl_indx = indx;
+      d_surroundingMatl_indx = m;
     } 
   }
   // --------bulletproofing
@@ -1524,7 +1523,7 @@ void ICE::actuallyInitialize(const ProcessorGroup*,
       thermalCond.initialize( ice_matl->getThermalConductivity());
       
       if(ice_matl->isSurroundingMatl()) {
-        d_surroundingMatl_indx = indx;  //which matl. is the surrounding matl
+        d_surroundingMatl_indx = m;  //which matl. is the surrounding matl
       } 
     }
     // --------bulletproofing
@@ -1643,23 +1642,25 @@ void ICE::initializeSubTask_hydrostaticAdj(const ProcessorGroup*,
       int indx = ice_matl->getDWIndex();
       new_dw->getModifiable(rho_micro[m],lb->rho_micro_CCLabel,  indx, patch);
     }
+    
+    CCVariable<double> press_CC;
+    new_dw->getModifiable(press_CC, lb->press_CCLabel,0, patch);
+    
     //_________________________________
     for (int m = 0; m < numMatls; m++) {
       ICEMaterial* ice_matl = d_sharedState->getICEMaterial(m);
       int indx = ice_matl->getDWIndex();
       constCCVariable<double> gamma, cv;
-      CCVariable<double> Temp, press_CC;
-     
-      new_dw->getModifiable(press_CC, lb->press_CCLabel,  0,   patch); 
-      new_dw->getModifiable(Temp,     lb->temp_CCLabel,  indx, patch);
-      new_dw->get(gamma,    lb->gammaLabel,         indx, patch,gn,0);
-      new_dw->get(cv,       lb->specific_heatLabel, indx, patch,gn,0);
+      CCVariable<double> Temp;   
+      
+      new_dw->get(gamma, lb->gammaLabel,         indx, patch,gn,0);   
+      new_dw->get(cv,    lb->specific_heatLabel, indx, patch,gn,0);
+      new_dw->getModifiable(Temp, lb->temp_CCLabel,  indx, patch);  
        
       //__________________________________
       //  Adjust pressure and Temp field if g != 0
       //  so fields are thermodynamically consistent.
       StaticArray<constCCVariable<double> > placeHolder(0);
-      
       hydrostaticPressureAdjustment(patch, rho_micro[d_surroundingMatl_indx],
                                     press_CC);
 
@@ -1667,6 +1668,7 @@ void ICE::initializeSubTask_hydrostaticAdj(const ProcessorGroup*,
       ice_matl->getEOS()->computeTempCC(patch, "WholeDomain",
                                    press_CC, gamma, cv,
                                    rho_micro[m], Temp, facePlaceHolder);
+
       //__________________________________
       //  Print Data
       if (switchDebugInitialize){     
