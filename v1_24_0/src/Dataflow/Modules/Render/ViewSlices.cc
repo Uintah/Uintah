@@ -1684,7 +1684,6 @@ ViewSlices::draw_label(SliceWindow &window, string text, int x, int y,
   glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
   glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
   glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-  glPixelTransferi(GL_MAP_COLOR, 0);
   
   glTexImage2D(GL_TEXTURE_2D, 0, GL_ALPHA, wid, hei, 0, 
 	       GL_ALPHA, GL_UNSIGNED_BYTE, buf);
@@ -1978,12 +1977,16 @@ ViewSlices::draw_slice(NrrdSlice &slice)
   glDisable(GL_LIGHTING);
   glEnable(GL_TEXTURE_2D);
   glEnable(GL_BLEND);
+  glEnable(GL_COLOR_MATERIAL);
   glBlendFunc(GL_ONE, GL_ONE); 
  
   glColorMaterial(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE);
   glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
   glShadeModel(GL_FLAT);
-  glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+  glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+  GLfloat ones[4] = {1.0, 1.0, 1.0, 1.0};
+  glTexEnvfv(GL_TEXTURE_ENV, GL_TEXTURE_ENV_COLOR, ones);
+
 
   if (slice.tex_dirty_) {
     int min = window.clut_wl_ - window.clut_ww_/2;
@@ -2266,6 +2269,8 @@ ViewSlices::send_mip_textures(SliceWindow &window)
     set_slice_coords(slice, false);
     mintex->set_coords(slice.tex_coords_, slice.pos_coords_);
     mintex->set_texname(slice.tex_name_);
+    Vector normal(axis==0?1.0:0.0, axis==1?-1.0:0.0, axis==2?1.0:0.0);
+    mintex->set_normal(normal);
 
     Vector *minvec = scinew 
       Vector(axis==0?1.0:0.0, axis==1?1.0:0.0, axis==2?1.0:0.0);
@@ -2277,6 +2282,7 @@ ViewSlices::send_mip_textures(SliceWindow &window)
     set_slice_coords(slice, false);
     maxtex->set_coords(slice.tex_coords_, slice.pos_coords_);
     maxtex->set_texname(slice.tex_name_);
+    maxtex->set_normal(normal);
 
     Vector *maxvec = scinew 
       Vector(axis==0?-1.0:0.0, axis==1?-1.0:0.0, axis==2?-1.0:0.0);
@@ -2996,6 +3002,9 @@ ViewSlices::send_slice_textures(NrrdSlice &slice) {
   tobjs_[name]->set_texname(slice.tex_name_);
   set_slice_coords(slice, false);
   tobjs_[name]->set_coords(slice.tex_coords_, slice.pos_coords_);
+  int axis = slice.axis_;
+  Vector normal(axis==0?1.0:0.0, axis==1?-1.0:0.0, axis==2?1.0:0.0);
+  tobjs_[name]->set_normal(normal);
   set_slice_coords(slice, true);
   GeomHandle gobj = tobjs_[name];
   slice.geom_dirty_ = false;
