@@ -26,8 +26,8 @@ double IdealGas::getGasConstant() const
 
 //__________________________________
 //
-double IdealGas::computeRhoMicro(double& press, double& gamma,
-				 double& cv, double& Temp)
+double IdealGas::computeRhoMicro(double press, double gamma,
+				 double cv, double Temp)
 {
   // Pointwise computation of microscopic density
   return  press/((gamma - 1.0)*cv*Temp);
@@ -61,8 +61,8 @@ void IdealGas::computeTempCC(const Patch* patch,
 
 //__________________________________
 //
-void IdealGas::computePressEOS(double& rhoM, double& gamma,
-			       double& cv, double& Temp,
+void IdealGas::computePressEOS(double rhoM, double gamma,
+			       double cv, double Temp,
 			       double& press, double& dp_drho, double& dp_de)
 {
   // Pointwise computation of thermodynamic quantities
