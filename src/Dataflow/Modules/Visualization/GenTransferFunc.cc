@@ -39,6 +39,8 @@
 #include <Core/Containers/StringUtil.h>
 #include <Core/Datatypes/Color.h>
 #include <Core/Math/MinMax.h>
+#include <Core/2d/Point2d.h>
+#include <Core/2d/Vector2d.h>
 
 #define Colormap XColormap
 #include <Core/Geom/GeomOpenGL.h>
@@ -46,8 +48,10 @@
 #include <tk.h>
 #undef Colormap
 
+#include <sgi_stl_warnings_off.h>
 #include <iostream>
 #include <algorithm>
+#include <sgi_stl_warnings_on.h>
 #include <stdio.h>
 
 using std::sort;
@@ -111,6 +115,8 @@ public:
   void DoMotion(int x, int y);
   void DoRelease(int x, int y, int button);
 
+  // Returns the normalized [0,1] location of a pixel on the screen
+  // based on the 'X' coordinate.
   float GetTime(int x, int)
     {
       float v = x/(1.0*winX[0]);
@@ -118,6 +124,8 @@ public:
       if (v < 0.0) v = 0.0;
       return v;
     }
+  // Returns the normalized [0,1] location of a pixel on the screen
+  // based on the 'Y' coordinate.
   float GetVal(int, int y)
     {
       float v= (winY[0]-y)/(1.0*winY[0]);
@@ -126,7 +134,8 @@ public:
       return v;
     }
 
-  void GetClosest(float time, float val, int& cline, int& cpoint);
+  void GetClosestPoint(float time, float val, int& cline, int& cpoint);
+  void GetClosestLineSegment(float time, float val, int& cline, int& cpoint);
 
   void Resize(int win);
 
@@ -560,17 +569,20 @@ GenTransferFunc::tcl_command( GuiArgs& args, void* userdata)
 }
 
 
-// You just have to find the time interval first
-// then look at the values.
+// You just have to find the time interval first then look at the
+// values.  This returns the closest point doing a distance comparison
+// with each point in the time interval.
 
 void
-GenTransferFunc::GetClosest(float time, float val, int& cline, int& cpoint)
+GenTransferFunc::GetClosestPoint(float time, float val,
+                                 int& cline, int& cpoint)
 {
   unsigned int i;
 
   float minP=10000;
 
-  float d1,d2;
+  // This find the time interval that time fits in.
+  // rgbT_[i-1] <= time < rgbT_[i]
   for (i=0; i < rgbT_.size() && (rgbT_[i] <= time); i++) ; // do nothing
 
   // Now i is the value 1 greater.
@@ -579,6 +591,7 @@ GenTransferFunc::GetClosest(float time, float val, int& cline, int& cpoint)
     i = rgbs_.size() -1;
   }
 
+  float d1,d2;
   // Now find the closest point.
   d1 = time - rgbT_[i-1];  d1 = d1*d1;
   d2 = rgbT_[i] - time;  d2 = d2*d2;
@@ -627,6 +640,146 @@ GenTransferFunc::GetClosest(float time, float val, int& cline, int& cpoint)
     if (d2 < minP) {
       cline = 7;
       cpoint = i;
+    }
+  }
+}	
+
+// This first finds the closest line segment within the time interval.
+// Once the closest line segment if found the endpoint of the line
+// segment closest to the point (time, val) is used.
+//
+// James Bigler
+//
+void
+GenTransferFunc::GetClosestLineSegment(float time, float val,
+                                       int& cline, int& cpoint)
+{
+  unsigned int i;
+
+  float minP=10000;
+
+  // This find the time interval that time fits in.
+  // rgbT_[i-1] <= time < rgbT_[i]
+  for (i=0; i < rgbT_.size() && (rgbT_[i] <= time); i++) ; // do nothing
+
+  // Now i is the value 1 greater.
+  if (i == rgbs_.size())
+  {
+    i = rgbs_.size() -1;
+  }
+
+  // Because we rely on the projection of the input point on the line
+  // segment, we need to make sure the aspect ratio of the
+  // computational domain (1/1) matches that of the window
+  // (winDX/winDY).  We then scale all the y coordinates by this
+  // ratio.
+  double aspect_ratio = winDX/winDY;
+  
+  // Now find the closest line segment.  It doesn't matter which
+  // endpoint of the line segment we return, as the calling function
+  // uses this point as an identifier for the line segment.
+
+  // I got this derivation off the web.
+  // By David Eberly, Magic Software, Inc.
+  // http://www.magic-software.com/Documentation/DistancePointLine.pdf
+  //
+  // This code was based on the following formula that determines the
+  // distance from point P to line L(t) = B + t(M) where B is the
+  // start of the line segment, M is the direction of the line segment
+  // and t is distance along M.  L(0) = B and L(1) = the end of the
+  // line segment or B + M.
+  //
+  // The closest point on L from is the projection of P onto the line:
+  //
+  // t0 = Dot(M, ( P - B)) / Dot( M, M)
+  //
+  // The distance is a case statement based on the value of t0.
+  //
+  // D = { | P - B |             t0 <= 0 }
+  //     { | P - (B + t0(M)) |   0 < t0 < 1 }
+  //     { | P - (B + M) |       t0 >= 1 }
+
+  Point2d P(time, val*aspect_ratio);
+  for(int j = 0; j < 3; j++) {
+    Point2d P1(rgbT_[i-1], rgbs_[i-1][j] * aspect_ratio);
+    Point2d P2(rgbT_[i],   rgbs_[i][j] * aspect_ratio);
+    
+    Vector2d M = P2 - P1;
+    // M.length2 is the same as Dot(M,M).
+    //
+    // We could delay the division with M.length2(), but more often
+    // than not, we will do it, and why make the code harder to use it
+    // when this isn't a performance crytical section.
+    double t0 = Dot(M, P-P1)/M.length2();
+    double min1;
+    int point;
+    if (t0 <= 0) {
+      // P1 is the closest point on the line segment
+      min1 = (P-P1).length2();
+      point = i-1;
+    } else if ( t0 < 0.5) {
+      // Project point on the line is the closest point
+      min1 = (P - (P1 + M * t0)).length2();
+      point = i-1;
+    } else if ( t0 < 1) {
+      // Project point on the line is the closest point
+      min1 = (P - (P1 + M * t0)).length2();
+      point = i;
+    } else {
+      // P2 is the closest point on the line segment
+      min1 = (P - P2).length2();
+      point = i;
+    }
+
+    if (min1 < minP) {
+      minP = min1;
+      cpoint = point;
+      cline = j*2;
+    }
+  }
+
+  // Now check alpha...
+  for (i=0;i<alphaT_.size() && (alphaT_[i] <= time); i++) ; // do nothing
+
+
+  // Now i is the value 1 greater.
+  if (i == alphas_.size())
+  {
+    i = alphas_.size() -1;
+  }
+
+  // See comment above for derivation.
+
+  {
+    Point2d P1(alphaT_[i-1], alphas_[i-1] * aspect_ratio);
+    Point2d P2(alphaT_[i],   alphas_[i] * aspect_ratio);
+
+    Vector2d M = P2 - P1;
+    double t0 = Dot(M, P-P1)/M.length2();
+    double min1;
+    int point;
+    if (t0 <= 0) {
+      // P1 is the closest point on the line segment
+      min1 = (P-P1).length2();
+      point = i-1;
+    } else if ( t0 < 0.5) {
+      // Project point on the line is the closest point
+      min1 = (P - (P1 + M * t0)).length2();
+      point = i-1;
+    } else if ( t0 < 1) {
+      // Project point on the line is the closest point
+      min1 = (P - (P1 + M * t0)).length2();
+      point = i;
+    } else {
+      // P2 is the closest point on the line segment
+      min1 = (P - P2).length2();
+      point = i;
+    }
+
+    if (min1 < minP) {
+      minP = min1;
+      cpoint = point;
+      cline = 7;
     }
   }
 }	
@@ -706,16 +859,16 @@ GenTransferFunc::DoDown(int x, int y, int button)
   time = GetTime(x,y);
   val  = GetVal(x,y);
 
-  GetClosest(time,val,cline,cpoint);
-
-  ColorPoint p;
-
   if (button == 2)
   {
+    GetClosestLineSegment(time,val,cline,cpoint);
+
     // You have to find what side of the closest point
     // you are on.
 
     activeLine = cline;
+
+    ColorPoint p;
 
     p._t = time;
 
@@ -777,7 +930,10 @@ GenTransferFunc::DoDown(int x, int y, int button)
       alphaT_.insert(alphaT_.begin() + cpoint, time);
       alphas_.insert(alphas_.begin() + cpoint, val);
     }
+  } else {
+    GetClosestPoint(time,val,cline,cpoint);
   }
+    
 
   selNode = cpoint;
   activeLine = cline;
