@@ -82,6 +82,7 @@ void BBox::extend(const BBox& b)
 
 void BBox::extend_cyl(const Point& cen, const Vector& normal, double r)
 {
+    if (normal.length2() < 0.000001) { extend(cen); return; }
     Vector n(normal.normal());
     double x=Sqrt(1-n.x())*r;
     double y=Sqrt(1-n.y())*r;
@@ -550,6 +551,9 @@ void Pio(Piostream & stream, BBox & box) {
 
 //
 // $Log$
+// Revision 1.7  2000/12/04 23:57:30  dmw
+// don't crash if extending a bounding cylinder by a zero-length vector
+//
 // Revision 1.6  2000/05/08 19:15:47  kuzimmer
 // Added a new constructor to BBox
 //
