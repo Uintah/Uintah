@@ -360,11 +360,11 @@ NrrdFieldConverter::execute(){
 
 	      if( nHandles[ic]->nrrd->dim == 3 &&
 		  dataset[0].find( ":Scalar" ) != string::npos )
-		mesh_coor_rank = nHandles[ic]->nrrd->axis[ nHandles[ic]->nrrd->dim-1].size;
+		mesh_coor_rank = nHandles[ic]->nrrd->axis[2].size;
 	      else if( nHandles[ic]->nrrd->dim == 2 &&
 		       dataset[0].find( ":Vector" ) != string::npos )
 		mesh_coor_rank = 3;
-
+	      
 	      if( mesh_coor_rank < 1 || 3 < mesh_coor_rank ) {
 		error( dataset[0] + " - Mesh does not contain points." );
 		error_ = true;

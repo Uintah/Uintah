@@ -10,7 +10,7 @@
 
 include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
-INCLUDES += $(TEEM_INCLUDE) $(HDF5_INCLUDE) $(MDSPLUS_INCLUDE)
+INCLUDES += $(HDF5_INCLUDE) $(MDSPLUS_INCLUDE)
 
 SRCDIR   := Packages/DataIO/Dataflow/Modules/Readers
 
@@ -29,8 +29,6 @@ PSELIBS := Core/Datatypes Dataflow/Network Dataflow/Ports \
 	Packages/DataIO/Core/ThirdParty \
 	Packages/Teem/Core/Datatypes
 
-LIBS := $(TK_LIBRARY) $(GL_LIBRARY) $(M_LIBRARY) $(TEEM_LIBRARY) $(MDSPLUS_LIBRARY) $(HDF5_LIBRARY)
+LIBS := $(TK_LIBRARY) $(GL_LIBRARY) $(M_LIBRARY) $(HDF5_LIBRARY) $(MDSPLUS_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
-
-
