@@ -49,7 +49,7 @@ WARNING
       
       virtual ~SFCXVariableBase();
       
-      virtual void copyPointer(const SFCXVariableBase&) = 0;
+      virtual void copyPointer(SFCXVariableBase&) = 0;
       
       virtual void rewindow(const IntVector& low, const IntVector& high) = 0;
 

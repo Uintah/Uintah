@@ -49,7 +49,7 @@ WARNING
       
       virtual ~CCVariableBase();
       
-      virtual void copyPointer(const CCVariableBase&) = 0;
+      virtual void copyPointer(CCVariableBase&) = 0;
       
       virtual void rewindow(const IntVector& low, const IntVector& high) = 0;
 
