@@ -12,6 +12,9 @@
 #include <X11/Xutil.h>
 #include <iostream>
 #include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+#include "FontString.h"
 
 using namespace std;
 using namespace rtrt;
@@ -101,16 +104,12 @@ void run_gl_test() {
     cerr << "glXMakeCurrent failed!\n";
   }
 
-  XFontStruct* fontInfo = XLoadQueryFont(dpy, 
-        "-adobe-helvetica-bold-r-normal--17-120-100-100-p-88-iso8859-1");
-
+  XFontStruct* fontInfo = XLoadQueryFont(dpy, __FONTSTRING__);
+  
   if (fontInfo == NULL) {
-    fontInfo = XLoadQueryFont(dpy, 
-		       "-gnu-unifont-bold-*-*-*-16-*-*-*-*-*-*-*");
-    if (fontInfo == NULL) {
-      cerr << "no font found " << __FILE__ << "," << __LINE__ << std::endl;
-    }
+    cerr << "no font found " << __FILE__ << "," << __LINE__ << std::endl;
   }
+
   Font id = fontInfo->fid;
   unsigned int first = fontInfo->min_char_or_byte2;
   unsigned int last = fontInfo->max_char_or_byte2;
@@ -123,10 +122,7 @@ void run_gl_test() {
   glXUseXFont(id, first, last-first+1, fontbase+first);
 
 
-  XFontStruct* fontInfo2 = 
-      XLoadQueryFont(dpy,
-		     "-gnu-unifont-bold-*-*-*-16-*-*-*-*-*-*-*");
-
+  XFontStruct* fontInfo2 = XLoadQueryFont(dpy, __FONTSTRING__);
 
   if (fontInfo2 == NULL) {
     cerr << "no font found(2)\n";

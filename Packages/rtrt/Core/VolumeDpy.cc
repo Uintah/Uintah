@@ -13,6 +13,7 @@
 #include <values.h>
 #include <stdio.h>
 #include <unistd.h>
+#include "FontString.h"
 
 using namespace rtrt;
 using SCIRun::Mutex;
@@ -117,17 +118,13 @@ void VolumeDpy::run()
 	if(e.type == MapNotify)
 	    break;
     }
-    XFontStruct* fontInfo = XLoadQueryFont(dpy, 
-        "-adobe-helvetica-bold-r-normal--17-120-100-100-p-88-iso8859-1");
+    XFontStruct* fontInfo = XLoadQueryFont(dpy, __FONTSTRING__);
 
     if (fontInfo == NULL) {
-      fontInfo = XLoadQueryFont(dpy, 
-		       "-gnu-unifont-bold-*-*-*-16-*-*-*-*-*-*-*");
-      if (fontInfo == NULL) {
-	cerr << "no font found\n";
-	Thread::exitAll(1);
-      }
+      cerr << "no font found\n";
+      Thread::exitAll(1);
     }
+
     Font id = fontInfo->fid;
     unsigned int first = fontInfo->min_char_or_byte2;
     unsigned int last = fontInfo->max_char_or_byte2;
