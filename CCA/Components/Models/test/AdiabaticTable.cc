@@ -298,9 +298,17 @@ void AdiabaticTable::initialize(const ProcessorGroup*,
     // initialize other properties
     vector<constCCVariable<double> > ind_vars;
     ind_vars.push_back(f);
+
+    // Save the volume fraction so that we can back out rho later
+    CCVariable<double> volfrac;
+    new_dw->allocateTemporary(volfrac, patch);
+    for(CellIterator iter = patch->getExtraCellIterator();!iter.done(); iter++){
+      const IntVector& c = *iter;
+      volfrac[c] = rho_CC[c]/rho_micro[c];
+    }
     
     CellIterator iter = patch->getExtraCellIterator();
-    table->interpolate(d_density_index,   rho_CC,   iter, ind_vars);
+    table->interpolate(d_density_index,   rho_micro,   iter, ind_vars);
     table->interpolate(d_gamma_index,     gamma,    iter, ind_vars);
     table->interpolate(d_cv_index,        cv,       iter, ind_vars);
     table->interpolate(d_viscosity_index, viscosity,iter, ind_vars);
@@ -318,9 +326,11 @@ void AdiabaticTable::initialize(const ProcessorGroup*,
     double volume = dx.x()*dx.y()*dx.z();
     for(CellIterator iter = patch->getExtraCellIterator();!iter.done();iter++){
       const IntVector& c = *iter;
-      rho_micro[c] = rho_CC[c];
-      sp_vol[c] = 1./rho_CC[c];
-      double mass  = rho_CC[c]*volume;    
+      // Restore the density and specific volume using the same volume
+      // fractions that came from the ICE initialization process
+      rho_CC[c] = rho_micro[c]*volfrac[c];
+      sp_vol[c] = 1./rho_micro[c];
+
       double cp    = gamma[c] * cv[c];    
       double icp   = ref_gamma[c] * ref_cv[c];
       // This is stupid, but since some machines can't do math when
