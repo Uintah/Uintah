@@ -5,12 +5,16 @@
 
 SRCDIR := PSECommon/ThirdParty
 
-SUBDIRS := $(SRCDIR)/mpeg
+SUBDIRS := $(SRCDIR)/mpeg \
+	   $(SRCDIR)/mpeg_encode 
 
 include $(SRCTOP)/scripts/recurse.mk
 
 #
 # $Log$
+# Revision 1.3  2001/01/17 20:09:25  kuzimmer
+# added Berkely mpeg_encode library
+#
 # Revision 1.2  2000/03/20 19:37:09  sparker
 # Added VPATH support
 #
