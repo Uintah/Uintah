@@ -143,7 +143,8 @@ void ICEMaterial::initializeCells(CCVariable<double>& rho_micro,
   temp.initialize(0.);
   vol_frac_CC.initialize(0.);
   speedSound.initialize(0.);
-  
+  IveBeenHere.initialize(-9);
+
   for(int obj=0; obj<(int)d_geom_objs.size(); obj++){
    GeometryPiece* piece = d_geom_objs[obj]->getPiece();
    Box b1 = piece->getBoundingBox();
@@ -168,11 +169,10 @@ void ICEMaterial::initializeCells(CCVariable<double>& rho_micro,
         }
        }
      }
-     IveBeenHere[*iter]=-9; 
   //__________________________________
   // For single materials with more than one object 
       if(numMatls == 1)  {
-        if ( count > 0  && obj == 0) {
+        if ( count > 0 ) {
           vol_frac_CC[*iter]= 1.0;
           press_CC[*iter]   = d_geom_objs[obj]->getInitialPressure();
           vel_CC[*iter]     = d_geom_objs[obj]->getInitialVelocity();
@@ -182,28 +182,39 @@ void ICEMaterial::initializeCells(CCVariable<double>& rho_micro,
           speedSound[*iter] = d_speed_of_sound;
           IveBeenHere[*iter]= 1;
         }
-
-        if (count > 0 && obj > 0) {
-          vol_frac_CC[*iter]= 1.0;
+      }   
+      if (numMatls > 1 ) {
+        vol_frac_CC[*iter]+= count/totalppc;       
+        if(IveBeenHere[*iter] == -9){
+          // This cell hasn't been hit for this matl yet so set values
+          // to ensure that everything is set to something everywhere
           press_CC[*iter]   = d_geom_objs[obj]->getInitialPressure();
           vel_CC[*iter]     = d_geom_objs[obj]->getInitialVelocity();
           rho_micro[*iter]  = d_geom_objs[obj]->getInitialDensity();
-          rho_CC[*iter]     = rho_micro[*iter] + d_TINY_RHO*rho_micro[*iter];
+          rho_CC[*iter]     = rho_micro[*iter] * vol_frac_CC[*iter] +
+                            d_TINY_RHO*rho_micro[*iter];
           temp[*iter]       = d_geom_objs[obj]->getInitialTemperature();
           speedSound[*iter] = d_speed_of_sound;
-          IveBeenHere[*iter]= 2;
-        } 
-      }   
-      if (numMatls > 1 ) {
-        vol_frac_CC[*iter]= count/totalppc;       
-        press_CC[*iter]   = d_geom_objs[obj]->getInitialPressure();
-        vel_CC[*iter]     = d_geom_objs[obj]->getInitialVelocity();
-        rho_micro[*iter]  = d_geom_objs[obj]->getInitialDensity();
-        rho_CC[*iter]     = rho_micro[*iter] * vol_frac_CC[*iter] +
+          IveBeenHere[*iter]= obj; 
+        }
+        if(IveBeenHere[*iter] != -9 && count > 0){
+          // This cell HAS been hit but another object has values to
+          // override it, possibly in a cell that was just set by default
+          // in the above section.
+          press_CC[*iter]   = d_geom_objs[obj]->getInitialPressure();
+          vel_CC[*iter]     = d_geom_objs[obj]->getInitialVelocity();
+          rho_micro[*iter]  = d_geom_objs[obj]->getInitialDensity();
+          rho_CC[*iter]     = rho_micro[*iter] * vol_frac_CC[*iter] +
                             d_TINY_RHO*rho_micro[*iter];
-        temp[*iter]       = d_geom_objs[obj]->getInitialTemperature();
-        speedSound[*iter] = d_speed_of_sound;
-        IveBeenHere[*iter]= obj; 
+          temp[*iter]       = d_geom_objs[obj]->getInitialTemperature();
+          speedSound[*iter] = d_speed_of_sound;
+          IveBeenHere[*iter]= obj; 
+        }
+        if(IveBeenHere[*iter] != -9 && count == 0){
+          // This cell has been initialized, the current object doesn't
+          // occupy this cell, so don't screw with it.  All bases are
+          // covered.
+        }
       }    
     }  // Loop over domain
   }  // Loop over geom_objects
