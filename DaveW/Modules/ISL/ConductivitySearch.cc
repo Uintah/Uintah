@@ -96,7 +96,7 @@ public:
   void buildCondMatrices(int);
   virtual void execute();
   double gaussian(double w);
-  static double *error_eval(double *);
+  static double *error_eval(int);
   void helper(int proc);
   void tcl_command( TCLArgs&, void * );
 }; //class
@@ -529,7 +529,7 @@ void ConductivitySearch::helper(int /*proc*/){
 //   matrix containing all of the conductivity configurations; and  
 //   "y" contains the error for each configuration in p
 //---------------------------------------------------------------
-double* ConductivitySearch::error_eval(double *) {
+double* ConductivitySearch::error_eval(int) {
   _CS_send_pos = 1;
   _CS_in_bounds = 1;
   _CS_need_error = 1;
@@ -603,6 +603,9 @@ void ConductivitySearch::tcl_command(TCLArgs& args, void* userdata) {
 
 //
 // $Log$
+// Revision 1.2  2000/10/29 05:03:20  dmw
+// fixed argument mismatch
+//
 // Revision 1.1  2000/10/29 04:02:47  dmw
 // cleaning up DaveW tree
 //
