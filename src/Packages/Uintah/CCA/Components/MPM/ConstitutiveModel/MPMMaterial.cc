@@ -31,6 +31,11 @@
 #include <Packages/Uintah/CCA/Components/MPM/PhysicalBC/CrackBC.h>
 #include <Packages/Uintah/CCA/Components/ICE/EOS/EquationOfState.h>
 #include <Packages/Uintah/CCA/Components/ICE/EOS/EquationOfStateFactory.h>
+#if 0
+#include "ImplicitParticleCreator.h"
+#include "DefaultParticleCreator.h"
+#include "MembraneParticleCreator.h"
+#endif
 #include <Core/Util/NotFinished.h>
 #include <iostream>
 
@@ -42,7 +47,10 @@ using namespace SCIRun;
 
 MPMMaterial::MPMMaterial(ProblemSpecP& ps, MPMLabel* lb, int n8or27,
 			 string integrator)
-  : Material(ps), lb(lb), d_cm(0), d_burn(0), d_eos(0), d_membrane(false) 
+  : Material(ps), lb(lb), d_cm(0), d_burn(0), d_eos(0), d_membrane(false)
+#if 0
+    d_particle_creator(0)
+#endif
 {
    // Constructor
 
@@ -69,6 +77,15 @@ MPMMaterial::MPMMaterial(ProblemSpecP& ps, MPMLabel* lb, int n8or27,
    }
 
    d_burn = BurnFactory::create(ps);
+#if 0
+   // Check to see which ParticleCreator object we need
+   if (integrator == "implicit") 
+     d_particle_creator = scinew ImplicitParticleCreator();
+   else if (dynamic_cast<Membrane*>(d_cm) != 0)
+     d_particle_creator = scinew MembraneParticleCreator();
+   else
+     d_particle_creator = scinew DefaultParticleCreator();
+#endif
 	
 //   d_eos = EquationOfStateFactory::create(ps);
 
@@ -459,44 +476,6 @@ particleIndex MPMMaterial::createParticles(GeometryObject* obj,
    } // else
    return count;
 }
-#if 0
-int MPMMaterial::checkForSurface(const GeometryPiece* piece, const Point p,
-				 const Vector dxpp)
-{
-
-//  Check the candidate points which surround the point just passed
-//  in.  If any of those points are not also inside the object
-//  the current point is on the surface
-
-  int ss = 0;
-
-  // Check to the left (-x)
-  if(!piece->inside(p-Vector(dxpp.x(),0.,0.)))
-    ss++;
-  // Check to the right (+x)
-  if(!piece->inside(p+Vector(dxpp.x(),0.,0.)))
-    ss++;
-  // Check behind (-y)
-  if(!piece->inside(p-Vector(0.,dxpp.y(),0.)))
-    ss++;
-  // Check in front (+y)
-  if(!piece->inside(p+Vector(0.,dxpp.y(),0.)))
-    ss++;
-  // Check below (-z)
-  if(!piece->inside(p-Vector(0.,0.,dxpp.z())))
-    ss++;
-  // Check above (+z)
-  if(!piece->inside(p+Vector(0.,0.,dxpp.z())))
-    ss++;
-
-  if(ss>0){
-    return 1;
-  }
-  else {
-    return 0;
-  }
-}
-#endif
 
 double MPMMaterial::getThermalConductivity() const
 {
