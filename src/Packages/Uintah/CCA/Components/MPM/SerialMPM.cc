@@ -2339,6 +2339,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       }
 
       if(d_with_ice){  // Delete particles based on various criteria
+       if(mpm_matl->getRxProduct() == Material::reactant){
         for(ParticleSubset::iterator iter  = pset->begin();
                                      iter != pset->end(); iter++){
           particleIndex idx = *iter;
@@ -2348,6 +2349,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
             delset->addParticle(idx);
           }
         }
+       }
       }
 
       new_dw->deleteParticles(delset);      
