@@ -24,9 +24,11 @@
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
 #include <Packages/Uintah/Core/Grid/VarTypes.h>
 #include <Core/Containers/StaticArray.h>
+#include <sgi_stl_warnings_off.h>
 #include <vector>
 #include <iostream>
 #include <fstream>
+#include <sgi_stl_warnings_on.h>
 
 using namespace Uintah;
 using namespace SCIRun;
@@ -326,7 +328,7 @@ void Crack::CalculateFractureParameters(const ProcessorGroup*,
       cfSegK[m].resize(cfNodeSize);
       if(calFractParameters || doCrackPropagation) {
         for(int i=0; i<patch_size; i++) {// Loop over all patches
-          int num=cfnset[m][i].size(); // number of crack-front nodes in patch i
+          int num= (int) cfnset[m][i].size(); // number of crack-front nodes in patch i
 
           if(num>0) { // If there is crack-front node(s) in patch i
             Vector* cfJ=new Vector[num];
@@ -500,14 +502,13 @@ void Crack::CalculateFractureParameters(const ProcessorGroup*,
                   double* f1ForJy = new double[nSegs+1];
                   for(int j=0; j<=nSegs; j++) {
                     double angle,cosTheta,sinTheta;
-                    double t1,t2,t3;
 
                     angle=2*PI*(float)j/(float)nSegs;
                     cosTheta=(xcprime*cos(angle)-ycprime*sin(angle))/scprime;
                     sinTheta=(ycprime*cos(angle)+xcprime*sin(angle))/scprime;
-                    t1=st[j](0,0)*cosTheta+st[j](0,1)*sinTheta;
-                    t2=st[j](1,0)*cosTheta+st[j](1,1)*sinTheta;
-                    t3=st[j](2,0)*cosTheta+st[j](2,1)*sinTheta;
+                    double t1=st[j](0,0)*cosTheta+st[j](0,1)*sinTheta;
+                    double t2=st[j](1,0)*cosTheta+st[j](1,1)*sinTheta;
+                    //double t3=st[j](2,0)*cosTheta+st[j](2,1)*sinTheta;
 
                     Vector t123=Vector(t1,t2,0./*t3*/); // plane state
                     Vector dgx=Vector(dg[j](0,0),dg[j](1,0),dg[j](2,0));
