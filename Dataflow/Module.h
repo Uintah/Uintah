@@ -53,6 +53,7 @@ public:
 
     double progress;
     CPUTimer timer;
+    //WallClockTimer timer;
 
 public:
     enum ConnectionMode {
@@ -124,6 +125,10 @@ public:
     // virtual int should_execute();
 
     clString id;
+    int handle; 	// mm-skeleton and remote share the same handle
+    bool remote;        // mm-is this a remote module?  not used.
+    bool skeleton;	// mm-is this a skeleton module?
+    bool isSkeleton()	{ return skeleton; }
     void tcl_command(TCLArgs&, void*);
 
 };

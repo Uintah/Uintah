@@ -18,7 +18,7 @@
 #include <Classlib/String.h>
 
 class Module;
-typedef Module* (*makeModule)(const clString&);
+typedef Module* (*makeModule)(const clString&, int remote=0);
 
 typedef AVLTree<clString, makeModule> ModuleCategory;
 typedef AVLTreeIter<clString, makeModule> ModuleCategoryIter;

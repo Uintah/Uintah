@@ -25,11 +25,13 @@
 
 #include <stdlib.h>
 
+bool global_remote = false;
+
 Module::Module(const clString& name, const clString& id,
 	       SchedClass sched_class)
 : state(NeedData), helper(0), have_own_dispatch(0), mailbox(100),
-  name(name), abort_flag(0), need_execute(0),
-  sched_class(sched_class), id(id), progress(0) ,
+  name(name), abort_flag(0), need_execute(0), sched_class(sched_class),
+  id(id), progress(0), handle(0), remote(0), skeleton(0),
   notes("notes", id, this)
 {
 }
@@ -37,7 +39,8 @@ Module::Module(const clString& name, const clString& id,
 Module::Module(const Module& copy, int)
 : state(NeedData), helper(0), have_own_dispatch(0), mailbox(100),
   name(copy.name), abort_flag(0), need_execute(0),
-  sched_class(copy.sched_class), id(copy.id),
+  sched_class(copy.sched_class), id(copy.id), handle(0), remote(0),
+  skeleton(0),
   notes("notes", id, this)
 {
     NOT_FINISHED("Module copy CTOR");
@@ -253,6 +256,7 @@ void Module::tcl_command(TCLArgs& args, void*)
 }
 
 // Error conditions
+// ZZZ- what should I do with this on remote side?
 void Module::error(const clString& string)
 {
     netedit->add_text(name+": "+string);
@@ -330,8 +334,9 @@ void Module::do_execute()
 	IPort* port=iports[i];
 	port->reset();
     }
-    // Reset the TCL variables...
-    reset_vars();
+    // Reset the TCL variables, if not slave
+    if (!global_remote)
+    	reset_vars();
 
     // Call the User's execute function...
     update_state(JustStarted);
@@ -354,6 +359,8 @@ void Module::do_execute()
 
 void Module::reconfigure_iports()
 {
+    if (global_remote)
+	return;
     if(id.len()==0)
 	return;
     TCL::execute("configureIPorts "+id);
@@ -361,7 +368,9 @@ void Module::reconfigure_iports()
 
 void Module::reconfigure_oports()
 {
-    if(id.len()==0)
+    if (global_remote)
+	return;
+    else if (id.len()==0)
 	return;
     TCL::execute("configureOPorts "+id);
 }

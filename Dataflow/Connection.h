@@ -25,13 +25,17 @@ class Connection {
 public:
     Connection(Module*, int, Module*, int);
     ~Connection();
-    void attach(OPort*);
-    void attach(IPort*);
+    bool isRemote()   	{return remote;}   // mm-test of remote flag
+    void setRemote()    {remote = true;}   // mm-set remote to true
 
     OPort* oport;
     IPort* iport;
     int local;
     clString id;
+    bool remote;	// mm-flag for remote connection
+    int handle;		// mm-connection handle for distrib. connections
+    int socketPort;	// mm-port number for remote connections
+    int remSocket;  	// mm-comm channel that has both sides connected
 
 #if 0
     int demand;
@@ -39,6 +43,7 @@ public:
 
     void wait_ready();
 
+    void remoteConnect();    // mm-special method to connect remote endpoints
     void connect();
 };
 

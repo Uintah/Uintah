@@ -8,6 +8,10 @@
  *   University of Utah
  *   March 1994
  *
+ *  Distributed SCIRun changes:
+ *   Michelle Miller
+ *   Nov. 1997
+ *
  *  Copyright (C) 1994 SCI Group
  */
 
@@ -23,6 +27,7 @@
 #include <Dataflow/Port.h>
 #include <Malloc/Allocator.h>
 #include <Math/MiscMath.h>
+#include <TCL/Remote.h>
 #include <TCL/TCL.h>
 #include <TCL/TCLTask.h>
 #include <time.h>
@@ -32,6 +37,8 @@
 #include <unistd.h>
 
 #include <fstream.h>
+
+//#define DEBUG 1
 #include <tcl/tcl/tcl.h>
 
 extern Tcl_Interp* the_interp;
@@ -70,7 +77,6 @@ void init_notes ()
     
 
 }
-
 
 NetworkEditor::NetworkEditor(Network* net)
 : Task("Network Editor", 1), net(net),
@@ -117,7 +123,10 @@ void NetworkEditor::main_loop()
 		if(mmsg->p2)
 		    multisend(mmsg->p2);
 		// Do not re-execute sender
-		do_scheduling(mmsg->p1->get_module());
+
+		// do_scheduling on the module instance bound to
+		// the output port p1 (the first arg in Multisend() call)
+		do_scheduling(mmsg->p1->get_module()); 
 	    }
 	    break;
 	case MessageTypes::ReSchedule:
@@ -146,11 +155,15 @@ void NetworkEditor::multisend(OPort* oport)
 
 void NetworkEditor::do_scheduling(Module* exclude)
 {
+    Message msg;
+
     if(!schedule)
 	return;
     int nmodules=net->nmodules();
-    Queue<Module*> needexecute;
-    int i;
+    Queue<Module*> needexecute;		
+
+    // build queue of module ptrs to execute
+    int i;			    
     for(i=0;i<nmodules;i++){
 	Module* module=net->module(i);
 	if(module->need_execute)
@@ -162,6 +175,9 @@ void NetworkEditor::do_scheduling(Module* exclude)
 
     // For all of the modules that need executing, execute the
     // downstream modules and arrange for the data to be sent to them
+    // mm - this doesn't really execute them. It just adds modules to
+    // the queue of those to execute based on dataflow dependencies.
+
     Array1<Connection*> to_trigger;
     while(!needexecute.is_empty()){
 	Module* module=needexecute.pop();
@@ -217,7 +233,21 @@ void NetworkEditor::do_scheduling(Module* exclude)
 	//cerr << "Triggering " << module->name << endl;
 	if(module->need_execute){
 	    // Executing this module, don't actually trigger....
-	} else {
+	}
+    	else if (module->isSkeleton()) {
+
+	    // format TriggerPortMsg
+            msg.type        = TRIGGER_PORT;
+            msg.u.tp.modHandle = module->handle;
+	    msg.u.tp.connHandle = conn->handle;
+
+	    // send msg to slave
+	    char buf[BUFSIZE];
+       	    bzero (buf, sizeof (buf));
+            bcopy ((char *) &msg, buf, sizeof (msg));
+            write (net->slave_socket, buf, sizeof(buf));
+	}
+	else {
 	    module->mailbox.send(scinew Scheduler_Module_Message(conn));
 	}
     }
@@ -226,8 +256,27 @@ void NetworkEditor::do_scheduling(Module* exclude)
     for(i=0;i<nmodules;i++){
 	Module* module=net->module(i);
 	if(module->need_execute){
-	    module->mailbox.send(scinew Scheduler_Module_Message);
+
+	    // emulate local fire and forget mailbox semantics? YES!
+	    if (module->isSkeleton()) {
+		
+		// format ExecuteMsg
+	        msg.type        = EXECUTE_MOD;
+        	msg.u.e.modHandle = module->handle;
+
+		// send msg to slave
+        	char buf[BUFSIZE];
+        	bzero (buf, sizeof (buf));
+        	bcopy ((char *) &msg, buf, sizeof (msg));
+        	write (net->slave_socket, buf, sizeof(buf));
+	    }
+	    else {
+	    	module->mailbox.send(scinew Scheduler_Module_Message);
+	    }
 	    module->need_execute=0;
+#ifdef DEBUG
+	    cerr << "Firing " << module->name << endl;
+#endif
 	}
     }
 
