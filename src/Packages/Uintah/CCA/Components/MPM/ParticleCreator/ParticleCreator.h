@@ -69,18 +69,40 @@ namespace Uintah {
     void createPoints(const Patch* patch, GeometryObject* obj);
 
     virtual void initializeParticle(const Patch* patch,
-				    vector<GeometryObject*>::const_iterator obj, 
+				    vector<GeometryObject*>::const_iterator obj,
 				    MPMMaterial* matl,
 				    Point p, IntVector cell_idx,
 				    particleIndex i,
 				    CCVariable<short int>& cellNAPI);
     
-    // Get the LoadCurveID applicable for this material point
+    //////////////////////////////////////////////////////////////////////////
+    /*! \brief Initialize non-geometric particle variables */
+    //////////////////////////////////////////////////////////////////////////
+    virtual void initNonGeomPartVar(particleIndex pidx,
+                                    const Patch* patch,
+                                    vector<GeometryObject*>::const_iterator obj,
+			            MPMMaterial* matl,
+			            CCVariable<short int>& cellNAPI);
+
+    //////////////////////////////////////////////////////////////////////////
+    /*! \brief Compute the particle ID */
+    //////////////////////////////////////////////////////////////////////////
+    long64 createParticleID(IntVector cell_idx, 
+                            CCVariable<short int>& cellNAPID);
+
+    //////////////////////////////////////////////////////////////////////////
+    /*! Get the LoadCurveID applicable for this material point */
+    //////////////////////////////////////////////////////////////////////////
     int getLoadCurveID(const Point& pp, const Vector& dxpp);
 
-    // Print MPM physical boundary condition information
+    //////////////////////////////////////////////////////////////////////////
+    /*! Print MPM physical boundary condition information */
+    //////////////////////////////////////////////////////////////////////////
     void printPhysicalBCs();
 
+    //////////////////////////////////////////////////////////////////////////
+    /*! Calculate the external force to be applied to a particle */
+    //////////////////////////////////////////////////////////////////////////
     void applyForceBC(const Vector& dxpp, 
                       const Point& pp,
                       const double& pMass, 

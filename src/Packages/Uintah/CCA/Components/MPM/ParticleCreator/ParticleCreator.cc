@@ -9,7 +9,7 @@
 #include <Packages/Uintah/Core/Grid/VarLabel.h>
 #include <Packages/Uintah/Core/Grid/GeomPiece/GeometryPiece.h>
 #include <Packages/Uintah/Core/Grid/GeomPiece/FileGeometryPiece.h>
-#include <Packages/Uintah/Core/Grid/GeomPiece/SmoothCylGeomPiece.h>
+#include <Packages/Uintah/Core/Grid/GeomPiece/SmoothGeomPiece.h>
 #include <Packages/Uintah/CCA/Components/MPM/PhysicalBC/MPMPhysicalBCFactory.h>
 #include <Packages/Uintah/CCA/Components/MPM/PhysicalBC/ForceBC.h>
 #include <Packages/Uintah/CCA/Components/MPM/PhysicalBC/PressureBC.h>
@@ -72,13 +72,19 @@ ParticleCreator::createParticles(MPMMaterial* matl,
 
     Vector dxpp = patch->dCell()/(*obj)->getNumParticlesPerCell();    
 
-    // If the object is a SmoothCylGeomPiece then use the particle
-    // creators in that class to do the creations, otherwise do the
-    // standard thing
-    SmoothCylGeomPiece *scgp = dynamic_cast<SmoothCylGeomPiece*>(piece);
-    if (scgp) {
-      int numP = scgp->createParticles(patch, position, pvolume,
-                                       psize, start);
+    // If the object is a SmoothGeomPiece then use the particle
+    // creators in that class to do the creation, otherwise do the
+    // standard thing.  Another creation+count is done for SmoothGeomPiece
+    // unlike other geom pieces.
+    SmoothGeomPiece *sgp = dynamic_cast<SmoothGeomPiece*>(piece);
+    if (sgp) {
+      particleIndex oldStart = start;
+      int numP = sgp->createParticles(patch, position, pvolume,
+                                      psize, start);
+      for (int ii = 0; ii < numP ; ++ii) {
+        particleIndex pidx = oldStart + ii;
+	initNonGeomPartVar(pidx, patch, obj, matl, cellNAPID);
+      }
     } else {
       // Special case exception for FileGeometryPieces
       FileGeometryPiece* fgp = dynamic_cast<FileGeometryPiece*>(piece);
@@ -218,7 +224,7 @@ void ParticleCreator::allocateVariablesAddRequires(Task* task,
 						   const PatchSet* patch,
 						   MPMLabel* lb) const
 {
-  const MaterialSubset* matlset = matl->thisMaterial();
+  //const MaterialSubset* matlset = matl->thisMaterial();
   task->requires(Task::OldDW,lb->pDispLabel, Ghost::None);
   task->requires(Task::OldDW,lb->pXLabel, Ghost::None);
   task->requires(Task::OldDW,lb->pVelocityLabel, Ghost::None);
@@ -373,25 +379,53 @@ ParticleCreator::initializeParticle(const Patch* patch,
 	      1./((double) ppc.z()));
   position[i] = p;
   pvolume[i] = dxpp.x()*dxpp.y()*dxpp.z();
-  pvelocity[i] = (*obj)->getInitialVelocity();
-  ptemperature[i] = (*obj)->getInitialTemperature();
-  psp_vol[i] = 1./matl->getInitialDensity();
-  pmass[i] = matl->getInitialDensity()*pvolume[i];
   psize[i] = size;
-  pdisp[i] = Vector(0.,0.,0.);
+
+  initNonGeomPartVar(i, patch, obj, matl, cellNAPID);
+}
+
+//////////////////////////////////////////////////////////////////////////////
+// Initialize extra non-geometric particle variables 
+//////////////////////////////////////////////////////////////////////////////
+void 
+ParticleCreator::initNonGeomPartVar(particleIndex pidx, 
+                                    const Patch* patch,
+                                    vector<GeometryObject*>::const_iterator obj,
+				    MPMMaterial* matl,
+				    CCVariable<short int>& cellNAPID)
+{
+  pvelocity[pidx] = (*obj)->getInitialVelocity();
+  ptemperature[pidx] = (*obj)->getInitialTemperature();
+  psp_vol[pidx] = 1./matl->getInitialDensity();
+  pmass[pidx] = matl->getInitialDensity()*pvolume[pidx];
+  pdisp[pidx] = Vector(0.,0.,0.);
+
+  IntVector cell_idx;
+  patch->findCell(position[pidx], cell_idx);
+  pparticleID[pidx] = createParticleID(cell_idx, cellNAPID);
+
   Vector pExtForce(0,0,0);
-  ParticleCreator::applyForceBC(dxpp, p, pmass[i], pExtForce);
-  pexternalforce[i] = pExtForce;
+  Vector dxpp = patch->dCell()/(*obj)->getNumParticlesPerCell();
+  ParticleCreator::applyForceBC(dxpp, position[pidx], pmass[pidx], pExtForce);
+  pexternalforce[pidx] = pExtForce;
+}
+
+//////////////////////////////////////////////////////////////////////////
+/*! \brief Compute the particle ID */
+//////////////////////////////////////////////////////////////////////////
+long64 
+ParticleCreator::createParticleID(IntVector cell_idx, 
+                                  CCVariable<short int>& cellNAPID)
+{
   ASSERT(cell_idx.x() <= 0xffff && cell_idx.y() <= 0xffff
 	 && cell_idx.z() <= 0xffff);
   long64 cellID = ((long64)cell_idx.x() << 16) | 
     ((long64)cell_idx.y() << 32) | ((long64)cell_idx.z() << 48);
   short int& myCellNAPID = cellNAPID[cell_idx];
-  pparticleID[i] = cellID | (long64) myCellNAPID;
-  ASSERT(myCellNAPID < 0x7fff);
-  myCellNAPID++;
+  return (cellID | (long64) myCellNAPID);
+  //ASSERT(myCellNAPID < 0x7fff);
+  //myCellNAPID++;
 }
-
 
 particleIndex 
 ParticleCreator::countParticles(const Patch* patch,
@@ -416,10 +450,14 @@ ParticleCreator::countAndCreateParticles(const Patch* patch,
   Box b1 = piece->getBoundingBox();
   Box b2 = patch->getBox();
   Box b = b1.intersect(b2);
-  if(b.degenerate()){
-    return 0;
-  }
+  if(b.degenerate()) return 0;
   
+  // If the object is a SmoothGeomPiece then use the particle creators in that 
+  // class to do the counting, otherwise do the standard thing
+  // (Note that d_object_points is not used at all for SmoothGeomPieces)
+  SmoothGeomPiece *sgp = dynamic_cast<SmoothGeomPiece*>(piece);
+  if (sgp) return(sgp->returnParticleCount(patch));
+
   // Special case exception for FileGeometryPiece
   FileGeometryPiece* fgp = dynamic_cast<FileGeometryPiece*>(piece);
   if (fgp)
