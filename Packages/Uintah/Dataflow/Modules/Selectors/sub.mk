@@ -27,7 +27,8 @@ PSELIBS := \
 	Core/GuiInterface \
 	Core/Thread \
 	Core/Datatypes \
-	Core/Geom
+	Core/Geom \
+	Core/Geometry
 LIBS := $(XML_LIBRARY)
 
 include $(SRCTOP)/scripts/smallso_epilogue.mk
