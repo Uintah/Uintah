@@ -67,7 +67,7 @@ public:
 
   void set_dim(Array1<unsigned int> dims) {
     ScanlineMesh::set_dim(dims);
-    points_.newsize(dims[0]);
+    points_.resize(dims[0]);
   }
 
   //! get the child elements of the given index

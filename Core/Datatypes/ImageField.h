@@ -70,13 +70,13 @@ public:
   { return operator()(idx.j_, idx.i_); }
 
   void resize(const ImageMesh::Node::size_type &size)
-  { newsize(size.j_, size.i_); }
+  { Array2<Data>::resize(size.j_, size.i_); }
   void resize(const ImageMesh::Edge::size_type &size)
-  { newsize(1, size); }
+  { Array2<Data>::resize(1, size); }
   void resize(const ImageMesh::Face::size_type &size)
-  { newsize(size.j_, size.i_); }
+  { Array2<Data>::resize(size.j_, size.i_); }
   void resize(const ImageMesh::Cell::size_type &size)
-  { newsize(1, size); }
+  { Array2<Data>::resize(1, size); }
 
   static const string type_name(int n = -1);
 };

@@ -338,7 +338,7 @@ CoregPtsSimplexSearch::CoregPtsSimplexSearch(int maxIters, double misfitTol,
 {
   NDIM_ = 7;
   NSEEDS_ = 8;
-  params_.newsize(NSEEDS_+1, NDIM_);
+  params_.resize(NSEEDS_+1, NDIM_);
   misfit_.resize(NSEEDS_+1);
 }
 

@@ -82,7 +82,7 @@ public:
 
   void set_dim(Array1<unsigned int> dims) {
     LatVolMesh::set_dim(dims);
-    points_.newsize(dims[0], dims[1], dims[2]);
+    points_.resize(dims[0], dims[1], dims[2]);
   }
 
   //! get the center point (in object space) of an element
