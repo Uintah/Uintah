@@ -298,10 +298,7 @@ proc makeNetworkEditor {} {
 
     .topbot fraction 25 75
     $topFrame.panes fraction 25 75
-    wm withdraw .
-
-    loadSubnetScriptsFromDisk
-    
+    wm withdraw .    
 }
 
 proc canvasScroll { canvas { dx 0.0 } { dy 0.0 } } {
@@ -311,6 +308,10 @@ proc canvasScroll { canvas { dx 0.0 } { dy 0.0 } } {
 
 # Activate the "File" menu items - called from C after all packages are loaded
 proc activate_file_submenus { } {
+    global maincanvas minicanvas    
+    loadSubnetScriptsFromDisk
+    createModulesMenu $maincanvas.modulesMenu 0
+    
     .main_menu.file.menu entryconfig  0 -state active
     .main_menu.file.menu entryconfig  1 -state active
     .main_menu.file.menu entryconfig  2 -state active
@@ -326,7 +327,6 @@ proc activate_file_submenus { } {
 
     ###################################################################
     # Bind all the actions after SCIRun has loaded everything...
-    global maincanvas minicanvas
     updateViewAreaBox
     bind $minicanvas <B1-Motion> "updateCanvases %x %y"
     bind $minicanvas <1> "updateCanvases %x %y"
