@@ -466,7 +466,8 @@ void TableTest::massExchange(const ProcessorGroup*,
                              const ModelInfo* mi)
 {
   delt_vartype delT;
-  old_dw->get(delT, mi->delT_Label);
+  const Level* level = getLevel(patches);
+  old_dw->get(delT, mi->delT_Label,level);
   
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
@@ -493,7 +494,7 @@ void TableTest::scheduleMomentumAndEnergyExchange(SchedulerP& sched,
   t->requires(Task::OldDW, d_scalar->scalar_CCLabel,     gac,1); 
   t->requires(Task::OldDW, mi->density_CCLabel,          gn);
   t->requires(Task::OldDW, mi->temperature_CCLabel,      gn);
-  t->requires(Task::OldDW, mi->delT_Label);
+  //t->requires(Task::OldDW, mi->delT_Label); turn off for AMR
   
   t->modifies(mi->momentum_source_CCLabel);
   t->modifies(mi->energy_source_CCLabel);
@@ -522,7 +523,8 @@ void TableTest::momentumAndEnergyExchange(const ProcessorGroup*,
                                             const ModelInfo* mi)
 {
   delt_vartype delT;
-  old_dw->get(delT, mi->delT_Label);
+  const Level* level = getLevel(patches);
+  old_dw->get(delT, mi->delT_Label, level);
   Ghost::GhostType gn = Ghost::None;         
   Ghost::GhostType gac = Ghost::AroundCells; 
   

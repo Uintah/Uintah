@@ -441,8 +441,9 @@ void SimpleRxn::massExchange(const ProcessorGroup*,
                              DataWarehouse* new_dw,
                              const ModelInfo* mi)
 {
+  const Level* level = getLevel(patches);
   delt_vartype delT;
-  old_dw->get(delT, mi->delT_Label);
+  old_dw->get(delT, mi->delT_Label, level);
   
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
@@ -469,7 +470,7 @@ void SimpleRxn::scheduleMomentumAndEnergyExchange(SchedulerP& sched,
   t->requires(Task::OldDW, d_scalar->scalar_CCLabel,     gac,1); 
   t->requires(Task::OldDW, mi->density_CCLabel,          gn);
   t->requires(Task::OldDW, mi->temperature_CCLabel,      gn);
-  t->requires(Task::OldDW, mi->delT_Label);
+  //t->requires(Task::OldDW, mi->delT_Label);  turn off for AMR
   
   t->modifies(mi->momentum_source_CCLabel);
   t->modifies(mi->energy_source_CCLabel);
@@ -491,8 +492,9 @@ void SimpleRxn::momentumAndEnergyExchange(const ProcessorGroup*,
                                             DataWarehouse* new_dw,
                                             const ModelInfo* mi)
 {
+  const Level* level = getLevel(patches);
   delt_vartype delT;
-  old_dw->get(delT, mi->delT_Label);
+  old_dw->get(delT, mi->delT_Label, level);
   Ghost::GhostType gn = Ghost::None;         
   Ghost::GhostType gac = Ghost::AroundCells; 
   
