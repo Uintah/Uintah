@@ -98,7 +98,7 @@ WARNING
 
   protected:
      SimulationStateP d_sharedState; ///< to keep track of timesteps
-     bool d_isAdaptive; //!< if true, do not regrid (stick with what you got)
+     bool d_isAdaptive; //!< if false, do not regrid (stick with what you got)
 
     // input parameters from ups file
     SizeList  d_cellRefinementRatio;
@@ -131,6 +131,7 @@ WARNING
 
     bool d_newGrid;
     int d_lastRegridTimestep;
+    int d_maxTimestepsBetweenRegrids;
 
     bool flaggedCellsExist(CCVariable<int>& flaggedCells, IntVector low, IntVector high);
     SCIRun::IntVector calculateNumberOfPatches(SCIRun::IntVector& cell_num, SCIRun::IntVector& patch_size);
