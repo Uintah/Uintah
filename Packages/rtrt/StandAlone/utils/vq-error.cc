@@ -194,7 +194,7 @@ int main(int argc, char *argv[]) {
   tex=nrrdNuke(tex);
   delete [] error;
   // XXX - don't know why, but this causes a seg fault
-  //  nout=nrrdNuke(nout);
+  // nout=nrrdNuke(nout);
   
   return 0;
 }
@@ -210,6 +210,7 @@ void usage(char* me, const char* unknown) {
   cerr<<"  -cb <filename>    filename of codebook textures (null)"<<endl;
   cerr<<"  -idx <filename>   filename of texture indices (null)"<<endl;
   cerr<<"  -tex <filename>   filename of original textures (null)"<<endl;
+  cerr<<"  -inf_norm         use infinity norm to calculate error (false)"<<endl;
   cerr<<"  -nrrd             use .nrrd extension (false)"<<endl;
   cerr<<"  -v <int>          set verbosity level (0)"<<endl;
   cerr<<"  --help            print this message and exit"<<endl;
@@ -219,8 +220,8 @@ void usage(char* me, const char* unknown) {
 }
 
 Nrrd* convertNrrdToFloat(Nrrd* nin) {
-  char *me="convertNrrdToFloat";
-  char *err;
+  char* me="convertNrrdToFloat";
+  char* err;
   
   if (nin->type!=nrrdTypeFloat) {
     if (verbose) {
