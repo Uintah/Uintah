@@ -4,16 +4,14 @@ C	SUBROUTINE RADCAL - calculates spectral gas and soot absorption
 C	coefficients for cartesian or cylindrical geometries.
 C	(particle radiation properties are calculated in GLACIER)
 C***********************************************************************
-      IMPLICIT NONE 
 	
       double precision PI,SIG,CTWO,PI1,PTOT,SDWEAK,UK, 
      &x,y,z,xxx,yyy,zzz,TEMP,ABSKP,FV,RGAS,MWCOTWO,MWWATER,MWCO,
      &RHO,MUONE,MUTWO,SUMONE,SUMTWO,FRACNONE,FRACNTWO,small
 
-      Integer I,II,J,K,L,bands
+      Integer I,II,J,K,L
 
-      double precision RGAMMA(4,7),GC(5),PkPa(6),
-     &SD15(6,80),SD(6,376),SD7(3,16),SD3(3,32)
+      double precision GC(5),PkPa(6)
 
       DATA PI/3.141593D0/,SIG/5.67E-08/,CTWO/1.4388d0/,small/1.0d-10/,
      &RGAS/82.05d0/,MWCOTWO/44.0d0/,MWWATER/18.0d0/,MWCO/28.0d0/
@@ -67,12 +65,13 @@ C          5     PARTICULATES(SOOT)
 
                  GC(L)=0.0d0
                  PTOT=0.0d0
+c BROKEN!!!!
                 DO 110 II=1,6
                  PTOT=PkPa(II)+PTOT
-                 GC(L)=GC(L)+RGAMMA(L,II)*PkPa(II)*
+                 GC(L)=GC(L)+RGAMMA(L)*PkPa(II)*
      &           (273.0d0/TG(I,J,K))**0.5
 110             CONTINUE
-                 GC(L)=GC(L)+RGAMMA(L,7)*PkPa(L)*273.0d0/TG(I,J,K)
+                 GC(L)=GC(L)+RGAMMA(L)*PkPa(L)*273.0d0/TG(I,J,K)
 
 111              IF(PkPa(L).EQ.0.0d0) GO TO 117
                  TEMP = TG(I,J,K)
