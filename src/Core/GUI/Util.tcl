@@ -86,6 +86,17 @@ itcl_class expscale {
 	}
 
 	frame $w -class $class -borderwidth 2 -relief groove
+
+	# This tells the expscale to delete itself when its
+	# window is destroyed.  That way, when the expscale
+	# is "re-created" there isn't a name conflict.
+	# (A better solution is to not let the GUI windows
+	# be destroyed in the first place... just close 
+	# (unmap) them and remap them when they need to
+	# be seen again.
+	#
+	bind $w <Destroy> "::delete object $this"
+
 	pack $w -side top -fill both -expand 1
 	if {[catch {set variable}]} {
 	    set variable $w-variable
@@ -120,6 +131,8 @@ itcl_class expscale {
 	pack $w.e.exp
 
 	newvalue [set $variable]
+
+	puts "Here: this is -- $this --"
     }
 
     destructor {
