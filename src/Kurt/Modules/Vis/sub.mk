@@ -15,7 +15,8 @@ SRCS     += $(SRCDIR)/GLTextureBuilder.cc  $(SRCDIR)/PadField.cc \
 		$(SRCDIR)/VisControl.cc \
 		$(SRCDIR)/RescaleColorMapForParticles.cc \
 		$(SRCDIR)/ParticleColorMapKey.cc \
-		$(SRCDIR)/ParticleVis.cc 
+		$(SRCDIR)/ParticleVis.cc \
+		$(SRCDIR)/AnimatedStreams.cc 
 
 
 PSELIBS :=  PSECore/Dataflow PSECore/Datatypes \
@@ -33,6 +34,9 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.9  2000/09/17 16:05:07  kuzimmer
+# C++ code for animated streams
+#
 # Revision 1.8  2000/06/21 04:14:16  kuzimmer
 # removed unneeded dependencies on Kurt
 #
