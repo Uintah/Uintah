@@ -11,6 +11,7 @@
 #include <Packages/rtrt/Core/Scene.h>
 #include <Packages/rtrt/Core/Sphere.h>
 #include <Packages/rtrt/Core/TimeObj.h>
+#include <Packages/rtrt/Core/RegularColorMap.h>
 #include <Core/Thread/Time.h>
 #include <fcntl.h>
 #include <fstream>
@@ -229,32 +230,9 @@ void append_spheres(char* spherefile, Array1<SphereData> &data_group,
   data_group.add(sphere_data);
 }
 
-void get_material(Array1<Material*> &matls) {
-  CatmullRomSpline<Color> spline(0);
-  spline.add(Color(.4,.4,.4));
-  spline.add(Color(.4,.4,1));
-  //    for(int i=0;i<2;i++)
-  spline.add(Color(.4,1,.4));
-  //    for(int i=0;i<3;i++)
-  spline.add(Color(1,1,.4));
-  //    for(int i=0;i<300;i++)
-  spline.add(Color(1,.4,.4));
-  int ncolors=5000;
-  matls.resize(ncolors);
-  float Kd=.8;
-  float Ks=.8;
-  float refl=0;
-  int specpow=40;
-  for(int i=0;i<ncolors;i++){
-    float frac=float(i)/(ncolors-1);
-    Color c(spline(frac));
-    matls[i]=new Phong(c*Kd, c*Ks, specpow, refl);
-    //matls[i]=new LambertianMaterial(c*Kd);
-  }
-}
-
 GridSpheres* create_GridSpheres(Array1<SphereData> data_group, int colordata,
-				int gridcellsize, int griddepth) {
+				int gridcellsize, int griddepth,
+                                RegularColorMap* cmap) {
   // need from the group
   // 1. total number of spheres
   // 2. make sure the numvars is the same
@@ -324,16 +302,14 @@ GridSpheres* create_GridSpheres(Array1<SphereData> data_group, int colordata,
   if (index != total_spheres * numvars) {
     cerr << "Wrong number of vars copied: index = " << index << ", total_spheres * numvars = " << total_spheres * numvars << endl;
   }
-  Array1<Material*> matls;
-  get_material(matls);
   cout << "Using radius "<<radius<<"\n";
-  return new GridSpheres(data, mins, maxs, total_spheres, numvars, gridcellsize, griddepth, radius, matls.size(), &matls[0]);  
+  return new GridSpheres(data, mins, maxs, total_spheres, numvars, gridcellsize, griddepth, radius, cmap);  
 }
 
 GridSpheres* read_spheres(char* spherefile, int datanum,
 			  int gridcellsize, int griddepth,
 			  float radius_in, float radius_factor,
-			  int numvars)
+			  int numvars, RegularColorMap* cmap)
 {
   double time=SCIRun::Time::currentSeconds();
 
@@ -406,51 +382,6 @@ GridSpheres* read_spheres(char* spherefile, int datanum,
     abort();
   }
   datanum--;
-  
-  CatmullRomSpline<Color> spline(0);
-#if 0
-  spline.add(Color(.4,.4,.4));
-  spline.add(Color(.4,.4,1));
-  //    for(int i=0;i<2;i++)
-  spline.add(Color(.4,1,.4));
-  //    for(int i=0;i<3;i++)
-  spline.add(Color(1,1,.4));
-  //    for(int i=0;i<300;i++)
-  spline.add(Color(1,.4,.4));
-#else
-  spline.add(Color(0,0,1));
-  spline.add(Color(0,0.4,1));
-  spline.add(Color(0,0.8,1));
-  spline.add(Color(0,1,0.8));
-  spline.add(Color(0,1,0.4));
-  spline.add(Color(0,1,0));
-  spline.add(Color(0.4,1,0));
-  spline.add(Color(0.8,1,0));
-  spline.add(Color(1,0.9176,0));
-  spline.add(Color(1,0.8,0));
-  spline.add(Color(1,0.4,0));
-  spline.add(Color(1,0,0));
-  //{ 0 0 255}   { 0 102 255}
-  //{ 0 204 255}  { 0 255 204}
-  //{ 0 255 102}  { 0 255 0}
-  //{ 102 255 0}  { 204 255 0}
-  //{ 255 234 0}  { 255 204 0}
-  //{ 255 102 0}  { 255 0 0} }}
-#endif  
-  int ncolors=5000;
-  Array1<Material*> matls(ncolors);
-  //float Ka=.8;
-  float Kd=.8;
-  //float Ks=.8;
-  //float refl=0;
-  //float specpow=40;
-  for(int i=0;i<ncolors;i++){
-    float frac=float(i)/(ncolors-1);
-    Color c(spline(frac));
-    //matls[i]=new Phong(c*Kd, c*Ks, specpow, refl);
-    matls[i]=new LambertianMaterial(c*Kd);
-  }
-  
   
   //------------------------------------
   // open the data file
@@ -580,7 +511,7 @@ GridSpheres* read_spheres(char* spherefile, int datanum,
   double dt=SCIRun::Time::currentSeconds()-time;
   cerr << "Read " << nspheres << " spheres in " << dt << " seconds (" << nspheres/dt << " spheres/sec)\n";
   close(in_fd);
-  return new GridSpheres(data, mins, maxs, nspheres, numvars, gridcellsize, griddepth, radius, matls.size(), &matls[0]);
+  return new GridSpheres(data, mins, maxs, nspheres, numvars, gridcellsize, griddepth, radius, cmap);
 }
 
 extern "C" 
@@ -662,6 +593,9 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   
   //  Color bgcolor(bgscale*108/255., bgscale*166/255., bgscale*205/255.);
   Color bgcolor(0,0,0);
+
+  RegularColorMap *cmap = 0;
+  cmap = new RegularColorMap(RegularColorMap::RegCMap_InvRainbow);
   
   Group* all = new Group();
   // the value will be checked later and the program will abort
@@ -687,7 +621,7 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
 	else if (strcmp(file,"</TIMESTEP>") == 0) {
 	  cerr << "=============Ending timestep============\n";
 	  GridSpheres* obj = create_GridSpheres(sphere_data, colordata,
-						gridcellsize, griddepth);
+						gridcellsize, griddepth, cmap);
 	  display->attach(obj);
 	  alltime->add((Object*)obj);
 	  //alltime->add(timeblock);
@@ -712,7 +646,7 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
     all->add(alltime);
   }
   else {
-    GridSpheres* obj=read_spheres(file, colordata, gridcellsize, griddepth, radius, radius_factor, numvars);
+    GridSpheres* obj=read_spheres(file, colordata, gridcellsize, griddepth, radius, radius_factor, numvars, cmap);
     display->attach(obj);
     all->add((Object*)obj);
   }
@@ -739,8 +673,10 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   Scene* scene=new Scene(all, cam,
 			 bgcolor, cdown, cup, groundplane, 
 			 ambient_scale);
-  
-  scene->add_light(new Light(Point(500,-300,300), Color(.8,.8,.8), 0));
+
+  Light *light=new Light(Point(500,-300,300), Color(.8,.8,.8), 0);
+  light->name_ = "Main Light";
+  scene->add_light(light);
   scene->select_shadow_mode( No_Shadows );
   scene->addObjectOfInterest(all, true);
 

@@ -11,6 +11,7 @@
 #include <Packages/rtrt/Core/PPMImage.h>
 #include <Packages/rtrt/Core/TextureGridSpheres.h>
 #include <Packages/rtrt/Core/PCAGridSpheres.h>
+#include <Packages/rtrt/Core/RegularColorMap.h>
 
 #include <sgi_stl_warnings_off.h>
 #include <iostream>
@@ -32,7 +33,7 @@ using namespace rtrt;
 
 TextureGridSpheres* texGridFromFile(char *fname, int tex_res, float radius,
 				    int numvars, int nsides, int gdepth,
-				    const Color& color);
+				    RegularColorMap *cmap, const Color& color);
 
 float radius = 1.0;
 
@@ -76,7 +77,8 @@ Group *make_geometry(char* tex_names[NUM_TEXTURES])
 }
 
 Group *make_geometry_tg(char* tex_names[NUM_TEXTURES], int tex_res,
-			int nsides, int gdepth, const Color& color)
+			int nsides, int gdepth,
+                        RegularColorMap* cmap, const Color& color)
 {
   Group* group = new Group();
   
@@ -125,7 +127,7 @@ Group *make_geometry_tg(char* tex_names[NUM_TEXTURES], int tex_res,
   group->add(new 
 	     TextureGridSpheres(spheres, nspheres, 3, radius, tex_indices,
 				tex_data, nspheres, tex_res,
-				nsides, gdepth, color));
+				nsides, gdepth, cmap, color));
   return group;
 }
 
@@ -141,6 +143,7 @@ Scene* make_scene(int argc, char** argv, int /*nworkers*/)
   int numvars = 3;
   Color color(1.0, 1.0, 1.0);
   bool display=false;
+  char *cmap_file = 0; // Non zero when a file has been specified
 
   for (int i=1;i<argc;i++)
   {
@@ -164,6 +167,8 @@ Scene* make_scene(int argc, char** argv, int /*nworkers*/)
       color=Color(atof(argv[++i]),
 		  atof(argv[++i]),
 		  atof(argv[++i]));
+    } else if (strcmp(argv[i], "-cmap") == 0) {
+      cmap_file = argv[++i];
     } else if(strcmp(argv[i],"-display")==0)
       display=true;
     else {
@@ -178,16 +183,23 @@ Scene* make_scene(int argc, char** argv, int /*nworkers*/)
       cerr<<"  -nsides <int>        number of sides for grid cells (6)"<<endl;
       cerr<<"  -gdepth <int>        gdepth of grid cells (2)"<<endl;
       cerr<<"  -color <r> <g> <b>   surface color (1.0, 1.0, 1.0)"<<endl;
+      cerr<<"  -cmap <filename>     defaults to inverse rainbow"<<endl;
       cerr<<"  -display             use GridSpheresDpy display (false)"<<endl;
       exit(1);
     }
   }
 
+  RegularColorMap *cmap = 0;
+  if (cmap_file)
+    cmap = new RegularColorMap(cmap_file);
+  else 
+    cmap = new RegularColorMap(RegularColorMap::RegCMap_InvRainbow);
+
   Object *group=0;
   if (infilename) {
     GridSpheresDpy *dpy = new GridSpheresDpy(0);
     GridSpheres *grid = texGridFromFile(infilename, tex_res, radius, numvars,
-					nsides, gdepth, color);
+					nsides, gdepth, cmap, color);
     
     dpy->attach(grid);
     if (display) {
@@ -208,7 +220,7 @@ Scene* make_scene(int argc, char** argv, int /*nworkers*/)
     }
   
     if (tex_res > 0)
-      group = make_geometry_tg(tex_names, tex_res, nsides, gdepth, color);
+      group = make_geometry_tg(tex_names, tex_res, nsides, gdepth, cmap,color);
     else
       group = make_geometry(tex_names);
   }
@@ -259,7 +271,7 @@ Scene* make_scene(int argc, char** argv, int /*nworkers*/)
 //   on success, NULL on any failure
 TextureGridSpheres* texGridFromFile(char *fname, int tex_res, float radius,
 				    int numvars, int nsides, int gdepth,
-				    const Color& color)
+				    RegularColorMap* cmap, const Color& color)
 {
   // Declare a few variables
   float* sphere_data=0;
@@ -938,12 +950,12 @@ TextureGridSpheres* texGridFromFile(char *fname, int tex_res, float radius,
 				  tex_data, total_ntextures, tex_res,
 				  xform_data, mean_data, total_nmeans,
 				  tex_min, tex_max,
-				  nsides, gdepth, color);
+				  nsides, gdepth, cmap, color);
   } else {
     tex_grid = new TextureGridSpheres(sphere_data, total_nspheres, numvars,
 				      radius, index_data, tex_data,
 				      total_ntextures, tex_res,
-				      nsides, gdepth, color);
+				      nsides, gdepth, cmap, color);
   }
   
   return tex_grid;

@@ -25,6 +25,7 @@
 #include <Packages/rtrt/Core/SelectableGroup.h>
 #include <Packages/rtrt/Core/Array1.h>
 #include <Packages/rtrt/Core/BBox.h>
+#include <Packages/rtrt/Core/RegularColorMap.h>
 #if 0
 #undef Exception
 #undef SCI_ASSERTION_LEVEL
@@ -181,105 +182,6 @@ void usage(const std::string& badarg, const std::string& progname)
     return;
 }
 
-void get_material_cmap(rtrt::Array1<Material*> &matls, char *file) {
-  rtrt::Array1<Color> colors;
-  ifstream infile(file);
-  if (!infile) {
-    cerr << "Color map file, "<<file<<" cannot be opened for reading\n";
-    exit(0);
-  }
-
-  float r = 0;
-  infile >> r;
-  float max = r;
-  do {
-    // slurp up the colors
-    float g = 0;
-    float b = 0;
-    infile >> g >> b;
-    if (r > max)
-      max = r;
-    if (g > max)
-      max = g;
-    if (b > max)
-      max = b;
-    colors.add(Color(r,g,b));
-    //    cout << "Added: "<<colors[colors.size()-1]<<endl;
-    infile >> r;
-  } while(infile);
-
-  if (max > 1) {
-    cerr << "Renormalizing colors for range of 0 to 255\n";
-    float inv255 = 1.0f/255.0f;
-    for(int i = 0; i < colors.size(); i++) {
-      colors[i] = colors[i] * inv255;
-      //      cout << "colors["<<i<<"] = "<<colors[i]<<endl;
-    }
-  }
-
-  // Now to create the color map
-  ScalarTransform1D<int, Color> cmap(colors);
-  int ncolors = 5000;
-  cmap.scale(0, ncolors);
-  matls.resize(ncolors);
-  float Kd=.8;
-  float Ks=.8;
-  float refl=0;
-  int specpow=40;
-  for(int i = 0; i < ncolors; i++) {
-    Color c(cmap.interpolate(i));
-    matls[i]=new Phong( c*Kd, c*Ks, specpow, refl);
-    //matls[i]=new LambertianMaterial(c*Kd);
-  }
-}
-
-void get_material(rtrt::Array1<Material*> &matls) {
-  CatmullRomSpline<Color> spline(0);
-#if 0
-  spline.add(Color(.4,.4,.4));
-  spline.add(Color(.4,.4,1));
-  //    for(int i=0;i<2;i++)
-  spline.add(Color(.4,1,.4));
-  //    for(int i=0;i<3;i++)
-  spline.add(Color(1,1,.4));
-  //    for(int i=0;i<300;i++)
-  spline.add(Color(1,.4,.4));
-#else
-  spline.add(Color(0,0,1));
-  spline.add(Color(0,0,1));
-  spline.add(Color(0,0.4,1));
-  spline.add(Color(0,0.8,1));
-  spline.add(Color(0,1,0.8));
-  spline.add(Color(0,1,0.4));
-  spline.add(Color(0,1,0));
-  spline.add(Color(0.4,1,0));
-  spline.add(Color(0.8,1,0));
-  spline.add(Color(1,0.9176,0));
-  spline.add(Color(1,0.8,0));
-  spline.add(Color(1,0.4,0));
-  spline.add(Color(1,0,0));
-  spline.add(Color(1,0,0));
-  //{ 0 0 255}   { 0 102 255}
-  //{ 0 204 255}  { 0 255 204}
-  //{ 0 255 102}  { 0 255 0}
-  //{ 102 255 0}  { 204 255 0}
-  //{ 255 234 0}  { 255 204 0}
-  //{ 255 102 0}  { 255 0 0} }}
-#endif  
-  int ncolors=5000;
-  matls.resize(ncolors);
-  float Kd=.8;
-  float Ks=.8;
-  float refl=0;
-  int specpow=40;
-  for(int i=0;i<ncolors;i++){
-    float frac=float(i)/(ncolors-1);
-    Color c(spline(frac));
-    matls[i]=new Phong( c*Kd, c*Ks, specpow, refl);
-    //matls[i]=new LambertianMaterial(c*Kd);
-  }
-}
-
 void writeData(float *spheres, int nspheres, int ndata, int tindex) {
   char buf[200];
   sprintf(buf, "uintahout/spheredata%03d.raw", tindex);
@@ -424,7 +326,7 @@ void append_spheres(rtrt::Array1<SphereData> &data_group,
 
 GridSpheres* create_GridSpheres(rtrt::Array1<SphereData> data_group,
 				int colordata, int gridcellsize,
-				int griddepth, char *cmap_file,
+				int griddepth, RegularColorMap *cmap,
 				int timestep) {
   // need from the group
   // 1. total number of spheres
@@ -482,11 +384,6 @@ GridSpheres* create_GridSpheres(rtrt::Array1<SphereData> data_group,
   if (index != total_spheres * numvars) {
     cerr << "Wrong number of vars copied: index = " << index << ", total_spheres * numvars = " << total_spheres * numvars << endl;
   }
-  rtrt::Array1<Material*> matls;
-  if (cmap_file)
-    get_material_cmap(matls, cmap_file);
-  else 
-    get_material(matls);
   
   float *mins, *maxs;
   mins = (float*)malloc(numvars * sizeof(float));
@@ -501,7 +398,7 @@ GridSpheres* create_GridSpheres(rtrt::Array1<SphereData> data_group,
   if (write_data) {
     writeData(data, total_spheres, numvars, timestep);
   }
-  return new GridSpheres(data, mins, maxs, total_spheres, numvars, gridcellsize, griddepth, radius, matls.size(), &matls[0], data_group[0].var_names);  
+  return new GridSpheres(data, mins, maxs, total_spheres, numvars, gridcellsize, griddepth, radius, cmap, data_group[0].var_names);  
 }
 
 #ifdef USE_UINTAHPARTICLE_THREADS
@@ -939,6 +836,12 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
   GridSpheresDpy* display = new GridSpheresDpy(colordata-1, dpy_config);
   SelectableGroup* alltime = new SelectableGroup(1/rate);
  
+  RegularColorMap *cmap = 0;
+  if (cmap_file)
+    cmap = new RegularColorMap(cmap_file);
+  else 
+    cmap = new RegularColorMap(RegularColorMap::RegCMap_InvRainbow);
+
   try {
     DataArchive* da = new DataArchive(filebase);
 
@@ -1296,7 +1199,7 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
       thread_sema->down(rtrt::Min(nworkers,5));
       cout << "Adding timestep.\n";
       GridSpheres* obj = create_GridSpheres(sphere_data,colordata,
-					    gridcellsize,griddepth, cmap_file,
+					    gridcellsize,griddepth, cmap,
 					    t);
       thread_sema->up(rtrt::Min(nworkers,5));
       display->attach(obj);
