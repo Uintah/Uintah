@@ -181,7 +181,7 @@ void CompNeoHook::computeStressTensor(const Patch* patch,
   NCVariable<Vector> gvelocity;
 
   new_dw->get(gvelocity, lb->gMomExedVelocityLabel, matlindex,patch,
-            Ghost::None, 0);
+            Ghost::AroundCells, 1);
   delt_vartype delT;
   old_dw->get(delT, lb->delTLabel);
 
@@ -365,6 +365,10 @@ const TypeDescription* fun_getTypeDescription(CompNeoHook::CMData*)
 }
 
 // $Log$
+// Revision 1.26  2000/06/23 23:15:48  guilkey
+// Corrected a ghost cell dependency problem to allow these models to work with
+// multiple patches.
+//
 // Revision 1.25  2000/06/23 22:11:07  guilkey
 // Added hack to the wavespeed to avoid floating point exception in case of no particles
 // on a patch.
