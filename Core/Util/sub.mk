@@ -30,6 +30,7 @@ SRCS     += \
 	$(SRCDIR)/RCParse.cc \
 	$(SRCDIR)/RWS.cc \
 	$(SRCDIR)/MacroSubstitute.cc \
+        $(SRCDIR)/Signals.cc \
 
 PSELIBS := Core/Containers Core/Exceptions
 LIBS := $(DL_LIBRARY) $(THREAD_LIBS)
