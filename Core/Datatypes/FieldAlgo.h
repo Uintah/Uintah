@@ -92,7 +92,7 @@ field_minmax( Field &field, pair<T,T>& minmax )
     }
 
     // cache in the field properties
-    field.store( "minmax", tmp );
+    field.store("minmax", tmp, true);
   }
   
   minmax.first = T(tmp->first);

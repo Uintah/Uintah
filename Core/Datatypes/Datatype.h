@@ -41,13 +41,16 @@ namespace SCIRun {
 
 class SCICORESHARE Datatype : public Persistent {
 public:
-    int ref_cnt;
-    Mutex lock;
-    int generation;
-    Datatype();
-    Datatype(const Datatype&);
-    Datatype& operator=(const Datatype&);
-    virtual ~Datatype();
+  //! needed for our smart pointers -- LockingHandle<T>
+  int ref_cnt;
+  Mutex lock;
+
+  //! unique id for each instance
+  int generation;
+  Datatype();
+  Datatype(const Datatype&);
+  Datatype& operator=(const Datatype&);
+  virtual ~Datatype();
 };
 
 } // End namespace SCIRun

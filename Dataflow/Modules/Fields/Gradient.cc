@@ -88,6 +88,7 @@ Gradient::dispatch_tetvol(F *f)
     ++ci;
   }
 
+  result->freeze();
   FieldHandle fh(result);
   ofp->send(fh);
 }
@@ -115,6 +116,7 @@ Gradient::dispatch_latticevol(F *f)
     postMessage("Unable to initialize "+name+"'s oport\n");
     return;
   }
+  result->freeze();
   FieldHandle fh(result);
   ofp->send(fh);
 }

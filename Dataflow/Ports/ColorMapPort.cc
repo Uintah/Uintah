@@ -43,8 +43,8 @@ PSECORESHARE OPort* make_ColorMapOPort(Module* module, const string& name) {
 }
 }
 
-template<> string ColorMapIPort::port_type("ColorMap");
-template<> string ColorMapIPort::port_color("blueviolet");
+template<> string ColorMapIPort::port_type_("ColorMap");
+template<> string ColorMapIPort::port_color_("blueviolet");
 
 } // End namespace SCIRun
 

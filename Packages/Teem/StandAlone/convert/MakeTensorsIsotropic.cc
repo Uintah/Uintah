@@ -86,7 +86,7 @@ main(int argc, char **argv) {
     if (cbrt_vol<0.1) {small_vals++; cbrt_vol=0.1; }
     for (j=0; j<3; j++) (*conds)[i].mat_[j][j]=cbrt_vol;
   }
-  handle->store("conductivity_table", *conds);
+  handle->store("conductivity_table", *conds, true);
   cerr << "  # of negative volumes = "<<neg_vals<<"\n";
   cerr << "  # of small volumes = "<<small_vals<<"\n";
   TextPiostream stream2(argv[2], Piostream::Write);

@@ -44,12 +44,21 @@ namespace SCIRun {
 class PropertyBase : public Datatype {
 public:
   void *obj_;
-
+  PropertyBase(bool trans = true) :
+    obj_(0),
+    transient_(trans)
+  {} 
   virtual ~PropertyBase() {}
   virtual void io(Piostream &) {}
   static  PersistentTypeID type_id;
   virtual PropertyBase* copy() const {return 0;}
+
+  bool transient() { return transient_; }
+  void set_transient(bool t) { transient_ = t; }
 private:
+  //! Transient properties are deleted when the PropertyManager that this
+  //! Property belongs to is thawed. 
+  bool transient_;
   static Persistent *maker();
 };
 
@@ -57,10 +66,13 @@ template<class T>
 class Property : public T, public PropertyBase {
 public:
   Property() {}   // only Pio should use this constructor
-  Property( T &o ) { obj_= &o; } 
+  Property(T &o, bool trans = true) :
+    PropertyBase(trans)
+  { obj_ = &o; } 
   
-  virtual PropertyBase * copy() const {return scinew Property(*static_cast<T *>(obj_));}
-  static const string type_name( int n = -1 );
+  virtual PropertyBase * copy() const 
+  { return scinew Property(*static_cast<T *>(obj_)); }
+  static const string type_name(int n = -1);
   virtual void io(Piostream &stream);
   static  PersistentTypeID type_id;
 private:
@@ -142,27 +154,45 @@ public:
   virtual ~PropertyManager();
 
   
-  template<class T> void store( const string &, const T &);
-  template<class T> void store( const string &, T &); 
+  template<class T> void store(const string &, const T &, bool is_transient);
+  template<class T> void store(const string &, T &, bool is_transient); 
 
-  void store( const string &name, const char *s )
-  { store(name, *scinew string(s)); }
-  void store( const string &name, const char s )
-  { store(name, *scinew Char(s)); }
-  void store( const string &name, const short s )
-  { store(name, *scinew Short(s)); }
-  void store( const string &name, const int s )
-  { store(name, *scinew Int(s)); }
-  void store( const string &name, const float s )
-  { store(name, *scinew Float(s)); }
-  void store( const string &name, const double s )
-  { store(name, *scinew Double(s)); }
+  void store(const string &name, const char *s, bool is_transient)
+  { store(name, *scinew string(s), is_transient); }
+  void store(const string &name, const char s, bool is_transient)
+  { store(name, *scinew Char(s), is_transient); }
+  void store(const string &name, const short s, bool is_transient)
+  { store(name, *scinew Short(s), is_transient); }
+  void store(const string &name, const int s, bool is_transient)
+  { store(name, *scinew Int(s), is_transient); }
+  void store(const string &name, const float s, bool is_transient)
+  { store(name, *scinew Float(s), is_transient); }
+  void store(const string &name, const double s, bool is_transient)
+  { store(name, *scinew Double(s), is_transient); }
 
   template<class T> bool get( const string &, T &);
   template<class T> bool get( const string &, T *&);
 
+
+  //! -- mutability --
+
+  //! when a field is frozen, it will freeze its mesh.
+  //! A frozen field may compute transient meta data that depends on a 
+  //! stable field, min and max are examples of this. 
+  virtual void freeze();
+  
+  //! To thaw a field, you *MUST* call detach on the field handle.
+  //! Thaw will *remove all transient properties* from the field.
+  //! The Mesh handle will be detached and thawed as well.
+  virtual void thaw();
+  
+  //! query frozen state of a field.
+  bool is_frozen() const { return frozen_; }
+
   void remove( const string & );
   int size() { return size_; }
+
+  void clear_transient();
 
   void    io(Piostream &stream);
   static  PersistentTypeID type_id;
@@ -174,40 +204,49 @@ private:
 
   int size_;
   map_type properties_;
+
+  //! A frozen PropertyManager may store transient data.
+  bool frozen_;
 };
 
 
 template<class T>
 void 
-PropertyManager::store( const string &name,  T& obj)
+PropertyManager::store(const string &name,  T& obj, bool is_transient)
 {
-  lock.lock();
+  if (is_transient && (! is_frozen())) {
+    cerr << "WARNING::PropertyManager must be frozen to store transient data" 
+	 <<" freezing now!" << endl;
+    freeze();
+  }
 
+  lock.lock();
   map_type::iterator loc = properties_.find(name);
   if (loc != properties_.end()) 
     delete loc->second;
   else
     size_++;
-  properties_[name] = new Property<T>( obj );
-
+  properties_[name] = new Property<T>(obj, is_transient);
   lock.unlock();
 }
 
 template<class T>
 void 
-PropertyManager::store( const string &name,  const T& obj )
+PropertyManager::store(const string &name,  const T& obj, bool is_transient)
 {
+  if (is_transient && (! is_frozen())) {
+    cerr << "WARNING::PropertyManager must be frozen to store transient data" 
+	 <<" freezing now!" << endl;
+    freeze();
+  }
   lock.lock();
-
   map_type::iterator loc = properties_.find(name);
   if (loc != properties_.end()) 
     delete loc->second;
   else
     size_++;
-  properties_[name] = new Property<T*>( scinew T(obj), true );
-
+  properties_[name] = new Property<T*>(scinew T(obj), is_transient);
   lock.unlock();
-
 }
 
 template<class T>

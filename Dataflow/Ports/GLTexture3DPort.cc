@@ -35,8 +35,8 @@ PSECORESHARE OPort* make_GLTexture3DOPort(Module* module,
 }
 }
 
-template<> string SimpleIPort<GLTexture3DHandle>::port_type("GLTexture3D");
-template<> string SimpleIPort<GLTexture3DHandle>::port_color("gray40");
+template<> string SimpleIPort<GLTexture3DHandle>::port_type_("GLTexture3D");
+template<> string SimpleIPort<GLTexture3DHandle>::port_color_("gray40");
 
 
 } // End namespace SCIRun

@@ -46,7 +46,7 @@ extern "C" {
 } // End namespace SCITeem
 
 namespace SCIRun {
-template<> string SimpleIPort<SCITeem::NrrdDataHandle>::port_type("Nrrd");
-template<> string SimpleIPort<SCITeem::NrrdDataHandle>::port_color("Purple4");
+template<> string SimpleIPort<SCITeem::NrrdDataHandle>::port_type_("Nrrd");
+template<> string SimpleIPort<SCITeem::NrrdDataHandle>::port_color_("Purple4");
 } // End namespace SCIRun
 

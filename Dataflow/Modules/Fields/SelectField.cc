@@ -162,6 +162,7 @@ SelectField::execute()
 
   if (mode_.get() == 1 || mode_.get() == 2)
   {
+    output_field_.detach();
     const TypeDescription *oftd = output_field_->get_type_description();
     const TypeDescription *oltd = output_field_->data_at_type_description();
     CompileInfo *ci = SelectFieldFillAlgo::get_compile_info(oftd, oltd);
@@ -184,7 +185,6 @@ SelectField::execute()
     ClipperHandle clipper = box_->get_clipper();
     algo->execute(output_field_, clipper, value_.get(), replace_p, 0);
 
-    output_field_->generation++;
     forward_p = true;
   }
 

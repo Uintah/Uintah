@@ -42,7 +42,7 @@ PSECORESHARE OPort* make_PathOPort(Module* module, const string& name) {
 }
 }
 
-template<> string SimpleIPort<PathHandle>::port_type("Path");
-template<> string SimpleIPort<PathHandle>::port_color("chocolate4");
+template<> string SimpleIPort<PathHandle>::port_type_("Path");
+template<> string SimpleIPort<PathHandle>::port_color_("chocolate4");
 
 } // End namespace SCIRun

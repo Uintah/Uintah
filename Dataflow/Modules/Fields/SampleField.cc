@@ -187,6 +187,7 @@ SampleField::generate_widget_seeds(Field *field)
     mesh->add_node(min+dir*loop);
   }
 
+  mesh->freeze();
   PointCloud<double> *seeds = scinew PointCloud<double>(mesh, Field::NODE);
   PointCloud<double>::fdata_type &fdata = seeds->fdata();
   
@@ -194,7 +195,7 @@ SampleField::generate_widget_seeds(Field *field)
   {
     fdata[loop]=1;
   }
-  
+  seeds->freeze();
   ofport_->send(seeds);
   widgetid_ = ogport_->addObj(widget_group,"StreamLines rake",&widget_lock_);
   ogport_->flushViews();

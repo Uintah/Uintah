@@ -105,7 +105,7 @@ RescaleColorMap::execute()
 	  if ( !field->get("minmax", minmax)) {
 	    vfi->compute_min_max(minmax.first, minmax.second);
 	    // cache this potentially expensive to compute value.
-	    field->store("minmax", minmax);
+	    field->store("minmax", minmax, true);
 	  }
 	  minmax_.first = 0.0;
 	  minmax_.second = minmax.second.length();

@@ -498,7 +498,7 @@ EditField::execute()
   // Set some field attributes.
   if (cfldname_.get())
   {
-    ef->store(string("name"), fldname_.get());
+    ef->store(string("name"), fldname_.get(), false);
   }
 
   ScalarFieldInterface* sfi = ef->query_scalar_interface();
@@ -506,7 +506,7 @@ EditField::execute()
   {
     std::pair<double, double> minmax(1, 0);
     sfi->compute_min_max(minmax.first, minmax.second);
-    ef->store(string("minmax"), minmax);
+    ef->store(string("minmax"), minmax, true);
   }
     
   oport->send(ef);
