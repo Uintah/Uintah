@@ -7,9 +7,7 @@
 
 using namespace Uintah;
 using namespace SCIRun;
-
-using std::string;
-using std::ostringstream;
+using namespace std;
 
 map<string, VarLabel*> VarLabel::allLabels;
 string VarLabel::defaultCompressionMode = "none";

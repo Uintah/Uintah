@@ -29,6 +29,8 @@
  */
 
 #include <Dataflow/Network/Module.h>
+#include <Core/Datatypes/FieldInterface.h>
+#include <Core/Geometry/Tensor.h>
 #include <Dataflow/Ports/FieldPort.h>
 #include <Dataflow/Ports/GeometryPort.h>
 #include <Core/Thread/CrowdMonitor.h>

@@ -20,6 +20,7 @@
 //    Date   : August 2001
 
 #include <Dataflow/Network/Module.h>
+#include <Core/Datatypes/FieldInterface.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Datatypes/TetVolField.h>

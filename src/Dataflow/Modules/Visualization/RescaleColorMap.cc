@@ -30,6 +30,7 @@
 #include <Dataflow/Modules/Visualization/RescaleColorMap.h>
 #include <Dataflow/Ports/ColorMapPort.h>
 #include <Core/Datatypes/ColorMap.h>
+#include <Core/Datatypes/FieldInterface.h>
 #include <Dataflow/Ports/FieldPort.h>
 #include <Core/Datatypes/TetVolField.h>
 #include <Core/Datatypes/LatVolField.h>

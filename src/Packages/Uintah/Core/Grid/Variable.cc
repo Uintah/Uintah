@@ -244,3 +244,7 @@ void Variable::readRLE(istream& /*in*/)
   throw InvalidCompressionMode("rle",
 			       virtualGetTypeDescription()->getName());
 }
+
+void Variable::offsetGrid(const IntVector& /*offset*/)
+{
+}

@@ -3,12 +3,11 @@
 #define UINTAH_HOMEBREW_VarLabel_H
 
 #include <string>
-#include <iostream>
+#include <iosfwd>
 #include <map>
 #include <Packages/Uintah/Core/ProblemSpec/RefCounted.h>
 
 namespace Uintah {
-using std::ostream;
 using std::string;
 using std::map;
 

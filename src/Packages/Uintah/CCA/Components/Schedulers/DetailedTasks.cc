@@ -1,4 +1,3 @@
-
 #include <Packages/Uintah/CCA/Components/Schedulers/DetailedTasks.h>
 #include <Packages/Uintah/CCA/Components/Schedulers/TaskGraph.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
@@ -7,6 +6,11 @@
 #include <Core/Util/NotFinished.h>
 #include <Core/Util/DebugStream.h>
 #include <Core/Util/FancyAssert.h>
+#if HAVE_EXT_ALGORITHM
+#include <ext/algorithm>
+using namespace __gnu_cxx;
+#endif
+using namespace std;
 
 #include <Core/Thread/Mutex.h>
 

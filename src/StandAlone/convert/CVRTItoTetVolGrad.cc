@@ -29,6 +29,7 @@
 
 #include <Core/Datatypes/TetVolField.h>
 #include <Core/Persistent/Pstreams.h>
+#include <Core/Containers/Array1.h>
 #include <iostream>
 #include <fstream>
 #include <stdlib.h>

@@ -24,7 +24,6 @@ SRCDIR := Dataflow
 SUBDIRS := \
 	$(SRCDIR)/Comm \
 	$(SRCDIR)/Constraints \
-	$(SRCDIR)/Distributed \
 	$(SRCDIR)/GUI \
 	$(SRCDIR)/Modules \
 	$(SRCDIR)/Network \

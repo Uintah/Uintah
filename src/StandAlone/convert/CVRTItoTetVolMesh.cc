@@ -28,6 +28,7 @@
  */
 
 #include <Core/Datatypes/TetVolField.h>
+#include <Core/Containers/Array1.h>
 #include <Core/Geometry/Tensor.h>
 #include <Core/Persistent/Pstreams.h>
 #include <iostream>

@@ -28,6 +28,7 @@
  */
 
 #include <Core/Datatypes/TriSurfField.h>
+#include <Core/Containers/Array1.h>
 #include <Core/Persistent/Pstreams.h>
 #include <iostream>
 #include <fstream>

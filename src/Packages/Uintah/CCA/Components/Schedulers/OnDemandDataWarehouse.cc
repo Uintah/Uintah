@@ -2,6 +2,7 @@
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Thread/Runnable.h>
 #include <Core/Thread/Mutex.h>
+#include <Core/Thread/Thread.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/IntVector.h>
 #include <Core/Util/NotFinished.h>
