@@ -236,7 +236,6 @@ class ViewSlices : public Module
 
   struct WindowLayout {
     WindowLayout	(GuiContext *ctx);
-    //    void		reset();
     TkOpenGLContext *	opengl_;
     int			mouse_x_;
     int			mouse_y_;
@@ -244,19 +243,8 @@ class ViewSlices : public Module
     string		name_;
   };
 
-  struct TextLabel {
-    string		name_;
-    SliceWindows	windows_;
-    FreeTypeText	text_;
-    std::map<SliceWindow *, GLuint> tex_name_;
-  };
-
-  typedef vector<TextLabel *>		Labels;
-  typedef vector<FreeTypeFace *>	FreeTypeFaces;
-
   typedef vector<NrrdVolume *>		NrrdVolumes;
   typedef map<string, WindowLayout *>	WindowLayouts;
-
   typedef vector<BBox>			PickBoxes;
 
   WindowLayouts		layouts_;
@@ -348,8 +336,9 @@ class ViewSlices : public Module
   map<string,GeomID>    gobjs_;
 
   FreeTypeLibrary *	freetype_lib_;
-  map<string, FreeTypeFace *>		fonts_;
-  Labels		labels_;
+  typedef		map<string, FreeTypeFace *> FontMap;
+  FontMap		fonts_;
+  UIdouble		font_size_;
   
   RealDrawer *		runner_;
   Thread *		runner_thread_;
@@ -359,8 +348,11 @@ class ViewSlices : public Module
   void			redraw_window(SliceWindow &);
   void			draw_slice(SliceWindow &, NrrdSlice &);
 
+  void			initialize_fonts();
+  void			delete_all_fonts();
+  void			set_font_sizes(double size);
   void			draw_all_labels(SliceWindow &);
-  void			draw_anatomical_labels(SliceWindow &);
+  void			draw_orientation_labels(SliceWindow &);
   void			draw_position_label(SliceWindow &);
   void			draw_label(SliceWindow &, string, int, int, 
 				   FreeTypeText::anchor_e, 
@@ -686,52 +678,22 @@ ViewSlices::ViewSlices(GuiContext* ctx) :
   cmap2_oport_((ColorMap2OPort*)get_oport("ColorMap2")),
   freetype_lib_(0),
   fonts_(),
-  labels_(0),
+  font_size_(ctx->subVar("font_size"),15.0),
   runner_(0),
   runner_thread_(0),
   fps_(0.0)
 {
-  //  volumes_.resize(2);
-  //  volumes_[0] = 0;
-  //  volumes_[1] = 0;
   nrrd_generations_.resize(2);
   nrrd_generations_[0] = -1;
   nrrd_generations_[1] = -1;
 
   for (int a = 0; a < 3; ++a)
     mip_slices_[a] = 0;
-  try {
-    freetype_lib_ = scinew FreeTypeLibrary();
-  } catch (...) {
-    error("Cannot Initialize FreeType Library.  Did you configure with --with-freetype= ?");
-    error("Module will not render text.");
-  }
 
-  if (freetype_lib_) {
-    try {
-      freetype_lib_ = scinew FreeTypeLibrary();
-      string sdir;
-      const char *dir = sci_getenv("SCIRUN_FONT_PATH");
-      if (dir) 
-	sdir = dir;
-      else
-	sdir = string(sci_getenv("SCIRUN_SRCDIR"))+"/Fonts";
-      
-      fonts_["default"] = freetype_lib_->load_face(sdir+"/scirun.ttf");
-      fonts_["anatomical"] = fonts_["default"];
-      fonts_["patientname"] = fonts_["default"];
-      fonts_["fps"] = fonts_["default"];
-      fonts_["view"] = fonts_["default"];
-      fonts_["position"] = fonts_["default"];
-      
-    } catch (...) {
-      fonts_.clear();
-      error("Error loading fonts.\n"
-	    "Please set SCIRUN_FONT_PATH to a directory with scirun.ttf\n");
-    }
-  }
   runner_ = scinew RealDrawer(this);
   runner_thread_ = scinew Thread(runner_, string(id+" OpenGL drawer").c_str());
+
+  initialize_fonts();
 }
 
 void
@@ -1583,14 +1545,10 @@ ViewSlices::setup_gl_view(SliceWindow &window)
 }
 
 
-
-
-
-// A,P   R, L   S, I
 void
 ViewSlices::draw_position_label(SliceWindow &window)
 {
-  FreeTypeFace *font = fonts_["position"];
+  FreeTypeFace *font = fonts_["default"];
   if (!font) return;
 
   glMatrixMode(GL_PROJECTION);
@@ -1602,7 +1560,6 @@ ViewSlices::draw_position_label(SliceWindow &window)
 
   BBox label_bbox;
   //  BBox line_bbox;
-  font->set_points(15.0);
   FreeTypeText zoom("Zoom: "+to_string(window.zoom_())+string("%"), font);
   zoom.get_bounds(label_bbox);
   Point pos(0, label_bbox.max().y()+2, 0);
@@ -1671,11 +1628,10 @@ ViewSlices::draw_position_label(SliceWindow &window)
 // Inferior	= -Z
 // Superior	= +Z
 void
-ViewSlices::draw_anatomical_labels(SliceWindow &window)
+ViewSlices::draw_orientation_labels(SliceWindow &window)
 {
-  FreeTypeFace *font = fonts_["anatomical"];
+  FreeTypeFace *font = fonts_["orientation"];
   if (!font) return;
-
 
   int prim = x_axis(window);
   int sec = y_axis(window);
@@ -1697,7 +1653,6 @@ ViewSlices::draw_anatomical_labels(SliceWindow &window)
   }
   if (sec >= 3) SWAP (ttext, btext);
 
-  font->set_points(25.0);
   draw_label(window, ltext, 2, window.viewport_->height()/2, 
 	     FreeTypeText::w, font);
   draw_label(window, rtext, window.viewport_->width()-2, 
@@ -1706,7 +1661,6 @@ ViewSlices::draw_anatomical_labels(SliceWindow &window)
 	     FreeTypeText::s, font);
   draw_label(window, ttext, window.viewport_->width()/2, 
 	     window.viewport_->height()-2, FreeTypeText::n, font);
-
 }
 
 
@@ -2147,39 +2101,24 @@ ViewSlices::draw_all_labels(SliceWindow &window) {
   glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 
   draw_position_label(window);
-  draw_anatomical_labels(window);
-  FreeTypeFace *font = fonts_["patientname"];
-  if (0 && font) {
-    font->set_points(20.0);
-    draw_label(window, "Patient Name: Anonymous", 
-	       window.viewport_->width() - 2,
-	       window.viewport_->height() - 2,
-	       FreeTypeText::ne, font);
-  }
+  draw_orientation_labels(window);
 
-  font = fonts_["view"];
-  if (font) {
-    font->set_points(20.0);
-    string text;
-    switch (window.axis_) {
-    case 0: text = "Sagittal"; break;
-    case 1: text = "Coronal"; break;
-    default:
-    case 2: text = "Axial"; break;
-    }
-    if (window.mode_ == slab_e) text = "SLAB - "+text;
-    if (window.mode_ == mip_e) text = "MIP - "+text;
-    draw_label(window, text, window.viewport_->width() - 2, 0, 
-	       FreeTypeText::se, font);
+  string text;
+  switch (window.axis_) {
+  case 0: text = "Sagittal"; break;
+  case 1: text = "Coronal"; break;
+  default:
+  case 2: text = "Axial"; break;
   }
-  
-  font = fonts_["fps"];
-  if (font && string(sci_getenv("USER")) == string("mdavis")) {
-    font->set_points(20.0);
-        draw_label(window, "fps: "+to_string(fps_), 
-		   0, window.viewport_->height() - 2,
-		   FreeTypeText::nw, font);
-  }
+  if (window.mode_ == slab_e) text = "SLAB - "+text;
+  if (window.mode_ == mip_e) text = "MIP - "+text;
+  draw_label(window, text, window.viewport_->width() - 2, 0, 
+	     FreeTypeText::se, fonts_["view"]);
+
+  if (string(sci_getenv("USER")) == string("mdavis"))
+    draw_label(window, "fps: "+to_string(fps_), 
+	       0, window.viewport_->height() - 2,
+	       FreeTypeText::nw, fonts_["default"]);
 }
   
 void
@@ -3248,111 +3187,112 @@ ViewSlices::tcl_command(GuiArgs& args, void* userdata) {
   else if (args[1] == "background_thresh") update_background_threshold();
   else if (args[1] == "add_paint_widget") add_paint_widget();
   else if (args[1] == "undo") undo_paint_stroke();
-  else if(args[1] == "setgl") {
-    int visualid = 0;
-    if (args.count() == 5 && !string_to_int(args[4], visualid))
-      error("setgl bad visual id: "+args[4]);
+  else if (args[1] == "set_font_sizes") set_font_sizes(font_size_());
+   else if(args[1] == "setgl") {
+     int visualid = 0;
+     if (args.count() == 5 && !string_to_int(args[4], visualid))
+       error("setgl bad visual id: "+args[4]);
 
-    TkOpenGLContext *context = scinew TkOpenGLContext(args[2], visualid, 512, 512);
-    XSync(context->display_, 0);
-    ASSERT(layouts_.find(args[2]) == layouts_.end());
-    layouts_[args[2]] = scinew WindowLayout(ctx->subVar(args[3],0));
-    layouts_[args[2]]->opengl_ = context;
-  } else if(args[1] == "destroygl") {
-    WindowLayouts::iterator pos = layouts_.find(args[2]);
-    ASSERT(pos != layouts_.end());
-    delete (pos->second);
-    layouts_.erase(pos);
-  } else if(args[1] == "add_viewport") {
-    ASSERT(layouts_.find(args[2]) != layouts_.end());
-    WindowLayout *layout = layouts_[args[2]];
-    SliceWindow *window = scinew SliceWindow(ctx->subVar(args[3],0));
-    window->name_ = args[2];
-    window->viewport_ = scinew OpenGLViewport(layout->opengl_);
-    window->axis_ = (layouts_.size())%3;
-    layout->windows_.push_back(window);
-  } else if(args[1] == "redraw") {
-    ASSERT(layouts_.find(args[2]) != layouts_.end());
-    redraw_window_layout(*layouts_[args[2]]);
-  } else if(args[1] == "resize") {
-    ASSERT(layouts_.find(args[2]) != layouts_.end());
-    WindowLayout &layout = *layouts_[args[2]];
-    //    for (unsigned int w = 0; w < layout.windows_.size(); ++w) {
-    //SliceWindow &win = *layout.windows_[w];
-    redraw_window_layout(layout);
-    
-  } else if(args[1] == "redrawall") {
-    redraw_all();
-  } else if(args[1] == "rebind") {
-    ASSERT(layouts_.find(args[2]) != layouts_.end());
-    WindowLayout &layout = *layouts_[args[2]];
-    for (unsigned int w = 0; w < layout.windows_.size(); ++w) {
-      SliceWindow &window = *layout.windows_[w];
-      extract_window_slices(window);
-    }
-    redraw_window_layout(layout);
-  } else if(args[1] == "texture_rebind") {
-    WindowLayouts::iterator liter = layouts_.begin();
-    WindowLayouts::iterator lend = layouts_.end();
-    while (liter != lend) {
-      if (args.count() == 2 ||
-	  ((args.count() > 2) && liter->first == args[2]))
-      {
-	WindowLayout &layout = *(liter->second);
-	for (unsigned int w = 0; w < layout.windows_.size(); ++w) {
-	  SliceWindow &window = *layout.windows_[w];
-	  unsigned int v, s;
-	  int a;      
-	  s = 0;
-	  for (v = 0; v < volumes_.size(); ++v) {
-	    for (a = 0; a < 3; a++) {
-	      window.slices_[s]->do_lock();
-	      window.slices_[s]->tex_dirty_ = true;
-	      window.slices_[s]->do_unlock();	
-	      s++;
-	    }
-	  }
-	}
-	redraw_window_layout(layout);
-      }
-      ++liter;
-    }
+     TkOpenGLContext *context = scinew TkOpenGLContext(args[2], visualid, 512, 512);
+     XSync(context->display_, 0);
+     ASSERT(layouts_.find(args[2]) == layouts_.end());
+     layouts_[args[2]] = scinew WindowLayout(ctx->subVar(args[3],0));
+     layouts_[args[2]]->opengl_ = context;
+   } else if(args[1] == "destroygl") {
+     WindowLayouts::iterator pos = layouts_.find(args[2]);
+     ASSERT(pos != layouts_.end());
+     delete (pos->second);
+     layouts_.erase(pos);
+   } else if(args[1] == "add_viewport") {
+     ASSERT(layouts_.find(args[2]) != layouts_.end());
+     WindowLayout *layout = layouts_[args[2]];
+     SliceWindow *window = scinew SliceWindow(ctx->subVar(args[3],0));
+     window->name_ = args[2];
+     window->viewport_ = scinew OpenGLViewport(layout->opengl_);
+     window->axis_ = (layouts_.size())%3;
+     layout->windows_.push_back(window);
+   } else if(args[1] == "redraw") {
+     ASSERT(layouts_.find(args[2]) != layouts_.end());
+     redraw_window_layout(*layouts_[args[2]]);
+   } else if(args[1] == "resize") {
+     ASSERT(layouts_.find(args[2]) != layouts_.end());
+     WindowLayout &layout = *layouts_[args[2]];
+     //    for (unsigned int w = 0; w < layout.windows_.size(); ++w) {
+     //SliceWindow &win = *layout.windows_[w];
+     redraw_window_layout(layout);
 
-  } else if(args[1] == "startcrop") {
-    crop_ = 1;
-    if (args.count() == 2) {
-      crop_bbox_ = BBox
-	(Point(0,0,0), 
-	 Point(max_slice_[0]+1, max_slice_[1]+1, max_slice_[2]+1));
-      crop_draw_bbox_ = crop_bbox_;
-      update_crop_bbox_to_gui();
-    }
-    redraw_all();
-  } else if(args[1] == "stopcrop") {
-    crop_ = 0;
-    redraw_all();
-  } else if(args[1] == "updatecrop") {
-    update_crop_bbox_from_gui();
-    redraw_all();
-  } else if (args[1] == "setclut") {
-    WindowLayouts::iterator liter = layouts_.begin();
-    while (liter != layouts_.end()) {
-      for (unsigned int v = 0; v < (*liter).second->windows_.size(); ++v) {
-	SliceWindow &window = *(*liter).second->windows_[v];
-	window.clut_ww_ = window.clut_ww_();
-	window.clut_wl_ = window.clut_wl_();
-	window.clut_dirty_ = true;
-	for (unsigned int s = 0; s < window.slices_.size(); ++s)
-	  window.slices_[s]->tex_dirty_ = true;
-	window.redraw_ = true;
-      }
-      ++liter;
-    }
-    for (int n = 0; n < 3; ++n)
-      if (mip_slices_[n])
-	mip_slices_[n]->tex_dirty_ = true;
+   } else if(args[1] == "redrawall") {
+     redraw_all();
+   } else if(args[1] == "rebind") {
+     ASSERT(layouts_.find(args[2]) != layouts_.end());
+     WindowLayout &layout = *layouts_[args[2]];
+     for (unsigned int w = 0; w < layout.windows_.size(); ++w) {
+       SliceWindow &window = *layout.windows_[w];
+       extract_window_slices(window);
+     }
+     redraw_window_layout(layout);
+   } else if(args[1] == "texture_rebind") {
+     WindowLayouts::iterator liter = layouts_.begin();
+     WindowLayouts::iterator lend = layouts_.end();
+     while (liter != lend) {
+       if (args.count() == 2 ||
+	   ((args.count() > 2) && liter->first == args[2]))
+       {
+	 WindowLayout &layout = *(liter->second);
+	 for (unsigned int w = 0; w < layout.windows_.size(); ++w) {
+	   SliceWindow &window = *layout.windows_[w];
+	   unsigned int v, s;
+	   int a;      
+	   s = 0;
+	   for (v = 0; v < volumes_.size(); ++v) {
+	     for (a = 0; a < 3; a++) {
+	       window.slices_[s]->do_lock();
+	       window.slices_[s]->tex_dirty_ = true;
+	       window.slices_[s]->do_unlock();	
+	       s++;
+	     }
+	   }
+	 }
+	 redraw_window_layout(layout);
+       }
+       ++liter;
+     }
 
-  } else Module::tcl_command(args, userdata);
+   } else if(args[1] == "startcrop") {
+     crop_ = 1;
+     if (args.count() == 2) {
+       crop_bbox_ = BBox
+	 (Point(0,0,0), 
+	  Point(max_slice_[0]+1, max_slice_[1]+1, max_slice_[2]+1));
+       crop_draw_bbox_ = crop_bbox_;
+       update_crop_bbox_to_gui();
+     }
+     redraw_all();
+   } else if(args[1] == "stopcrop") {
+     crop_ = 0;
+     redraw_all();
+   } else if(args[1] == "updatecrop") {
+     update_crop_bbox_from_gui();
+     redraw_all();
+   } else if (args[1] == "setclut") {
+     WindowLayouts::iterator liter = layouts_.begin();
+     while (liter != layouts_.end()) {
+       for (unsigned int v = 0; v < (*liter).second->windows_.size(); ++v) {
+	 SliceWindow &window = *(*liter).second->windows_[v];
+	 window.clut_ww_ = window.clut_ww_();
+	 window.clut_wl_ = window.clut_wl_();
+	 window.clut_dirty_ = true;
+	 for (unsigned int s = 0; s < window.slices_.size(); ++s)
+	   window.slices_[s]->tex_dirty_ = true;
+	 window.redraw_ = true;
+       }
+       ++liter;
+     }
+     for (int n = 0; n < 3; ++n)
+       if (mip_slices_[n])
+	 mip_slices_[n]->tex_dirty_ = true;
+
+   } else Module::tcl_command(args, userdata);
 }
 
 
@@ -3638,5 +3578,69 @@ ViewSlices::undo_paint_stroke() {
   }
 }
   
+void
+ViewSlices::delete_all_fonts() {
+  FontMap::iterator fiter = fonts_.begin();
+  const FontMap::iterator fend = fonts_.end();
+  while (fiter != fend)
+    if (fiter->second)
+      delete fiter++->second;
+  fonts_.clear();
+}
+
+void
+ViewSlices::initialize_fonts() {
+  if (!freetype_lib_) {
+    try {
+      freetype_lib_ = scinew FreeTypeLibrary();
+    } catch (...) {
+      freetype_lib_ = 0;
+      error("Cannot Initialize FreeType Library.");
+      error("Did you configure with --with-freetype= ?");
+      error("Will not render text in windows.");
+    }
+  }
+
+  if (!freetype_lib_) return;
+
+  delete_all_fonts();
+
+  string font_dir;
+  const char *dir = sci_getenv("SCIRUN_FONT_PATH");
+  if (dir) 
+    font_dir = dir;
+  if (gui->eval("validDir "+font_dir) == "0")
+    font_dir = string(sci_getenv("SCIRUN_SRCDIR"))+"/pixmaps";
+  string fontfile = font_dir+"/scirun.ttf";
+  
+  try {
+    fonts_["default"] = freetype_lib_->load_face(fontfile);
+    fonts_["orientation"] = freetype_lib_->load_face(fontfile);
+    fonts_["view"] = freetype_lib_->load_face(fontfile);
+    set_font_sizes(font_size_());
+  } catch (...) {
+    delete_all_fonts();
+    error("Error loading font file: "+fontfile);
+    error("Please set SCIRUN_FONT_PATH to a directory with scirun.ttf\n");
+  }
+}
+
+void
+ViewSlices::set_font_sizes(double size) {
+  try {
+    if (fonts_["default"]) 
+      fonts_["default"]->set_points(size);
+    if (fonts_["orientation"]) 
+      fonts_["orientation"]->set_points(size+10.0);
+    if (fonts_["view"]) 
+      fonts_["view"]->set_points(size+5.0);
+    redraw_all();
+  } catch (...) {
+    delete_all_fonts();
+    error("Error calling set_points on FreeTypeFont.");
+    error("No fonts will be rendered.");
+  }
+}
+
 
 } // End namespace SCIRun
