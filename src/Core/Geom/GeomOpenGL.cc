@@ -1209,8 +1209,6 @@ GeomCones::draw(DrawInfoOpenGL* di, Material* matl, double)
       ntaby[j] = cos(2.0 * M_PI * (j+0.5) / nu_) * nzm;
     }
 
-    glEnable(GL_NORMALIZE);
-
     for (unsigned int i=0; i < points_.size(); i+=2)
     {
       Vector v0(points_[i+1] - points_[i+0]);
@@ -1268,10 +1266,7 @@ GeomCones::draw(DrawInfoOpenGL* di, Material* matl, double)
       glPopMatrix();
     }
 
-    glLineWidth(1.0);
-
     glDisable(GL_TEXTURE_1D);
-    glDisable(GL_NORMALIZE);
 
     post_draw(di);
 }
@@ -1373,8 +1368,6 @@ GeomCylinders::draw(DrawInfoOpenGL* di, Material* matl, double)
 
       glPopMatrix();
     }
-
-    glLineWidth(1.0);
 
     glDisable(GL_TEXTURE_1D);
 
@@ -1491,8 +1484,6 @@ GeomCappedCylinders::draw(DrawInfoOpenGL* di, Material* matl, double)
 
       glPopMatrix();
     }
-
-    glLineWidth(1.0);
 
     glDisable(GL_TEXTURE_1D);
 
