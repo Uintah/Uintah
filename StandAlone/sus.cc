@@ -31,6 +31,7 @@
 #include <Packages/Uintah/CCA/Components/Examples/Poisson1.h>
 #include <Packages/Uintah/CCA/Components/Examples/Poisson2.h>
 #include <Packages/Uintah/CCA/Components/Examples/Burger.h>
+#include <Packages/Uintah/CCA/Components/Examples/Wave.h>
 #include <Packages/Uintah/CCA/Components/Examples/ParticleTest1.h>
 #include <Packages/Uintah/CCA/Components/Examples/RegridderTest.h>
 #include <Packages/Uintah/CCA/Components/Examples/Poisson3.h>
@@ -210,6 +211,7 @@ main( int argc, char** argv )
     bool   do_particletest1=false;
     bool   do_regriddertest=false;
     bool   do_burger=false;
+    bool   do_wave=false;
     bool   do_poisson1=false;
     bool   do_poisson2=false;
     bool   do_poisson3=false;
@@ -288,6 +290,8 @@ main( int argc, char** argv )
 	    do_regriddertest=true;
 	} else if(s == "-burger"){
 	    do_burger=true;
+	} else if(s == "-wave"){
+            do_wave=true;
 	} else if(s == "-poisson1"){
 	    do_poisson1=true;
 	} else if(s == "-poisson2"){
@@ -395,7 +399,8 @@ main( int argc, char** argv )
     }
 
     if(!(do_ice || do_arches || do_mpm || do_mpmf  || do_rmpm || do_smpm ||
-	 do_smpmice || do_rmpmice || do_fmpmice || do_impmpm || do_burger || do_particletest1 ||
+	 do_smpmice || do_rmpmice || do_fmpmice || do_impmpm || do_burger || do_wave ||
+         do_particletest1 ||
 	 do_regriddertest || do_poisson1 || do_poisson2 || do_poisson3 ||
 	 do_simplecfd || combine_patches)){
 	usage( "You need to specify -arches, -ice, -mpmf, -rmpm, -smpm or -mpm", "", argv[0]);
@@ -535,6 +540,10 @@ main( int argc, char** argv )
 	  Burger* burger = scinew Burger(world);
 	  sim = burger;
 	  comp = burger;
+	} else if(do_wave){
+	  Wave* wave = scinew Wave(world);
+	  sim = wave;
+	  comp = wave;
 	} else if(do_poisson1){
 	  Poisson1* poisson1 = scinew Poisson1(world);
 	  sim = poisson1;
@@ -570,7 +579,7 @@ main( int argc, char** argv )
 	  ctl->doCombinePatches(udaDir);
 	} else {
 	  usage("You need to specify a simulation: -arches, -ice, -mpm, "
-		"-impm, -fmpmice, -mpmice, -mpmarches, -burger, -poisson1, -poisson2, or -poisson3",
+		"-impm, -fmpmice, -mpmice, -mpmarches, -burger, -wave, -poisson1, -poisson2, or -poisson3",
 		"", argv[0]);
 	}
 
