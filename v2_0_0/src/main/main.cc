@@ -324,7 +324,7 @@ main(int argc, char *argv[] )
 
   if (startnetno)
   {
-    string command = string( "loadnet " ) + argv[startnetno];
+    string command = string( "loadnet """ ) + argv[startnetno] + string("""");
     gui->eval(command.c_str(), result);
 
     if (execute_flag || getenv("SCI_REGRESSION_TESTING"))
