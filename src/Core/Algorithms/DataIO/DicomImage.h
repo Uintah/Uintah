@@ -19,18 +19,18 @@
 /*
  * HEADER (H) FILE : DicomImage.h
  *
- * DESCRIPTION     : 
+ * DESCRIPTION     : A DicomImage object contains all of the data and 
+ *                   information relevant to a single DICOM series.  This 
+ *                   includes the pixel buffer, dimension, size along each 
+ *                   axis, origin, pixel spacing, and index. This object is
+ *                   typically initialized using the DicomSeriesReader.
  *                     
  * AUTHOR(S)       : Jenny Simpson
  *                   SCI Institute
  *                   University of Utah
  *                 
- *                   Darby J. Van Uitert
- *                   SCI Institute
- *                   University of Utah
- *
  * CREATED         : 9/19/2003
- * MODIFIED        : 9/19/2003
+ * MODIFIED        : 10/3/2003
  * DOCUMENTATION   :
  * NOTES           : 
  *
@@ -76,17 +76,16 @@ public:
   // !Destructor
   ~DicomImage();
 
-  // TODO: Implement copy constructor
-
   //! Utility functions
   int get_num_pixels();
   PixelType * get_pixel_buffer();
-  void get_data_type();
+  //void get_data_type();
   int get_dimension();
   int get_size( int i );
   double get_origin( int i );
   double get_spacing( int i );
   int get_index( int i );
+  void print_image_info();
 
 private:
   unsigned long num_pixels;

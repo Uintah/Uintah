@@ -19,18 +19,18 @@
 /*
  * C++ (CC) FILE : DicomImage.cc
  *
- * DESCRIPTION   : 
- *                     
+ * DESCRIPTION   : A DicomImage object contains all of the data and 
+ *                 information relevant to a single DICOM series.  This 
+ *                 includes the pixel buffer, dimension, size along each 
+ *                 axis, origin, pixel spacing, and index. This object is
+ *                 typically initialized using the DicomSeriesReader.
+ *                      
  * AUTHOR(S)     : Jenny Simpson
  *                 SCI Institute
  *                 University of Utah
  *                 
- *                 Darby J. Van Uitert
- *                 SCI Institute
- *                 University of Utah
- *
  * CREATED       : 9/19/2003
- * MODIFIED      : 9/19/2003
+ * MODIFIED      : 10/3/2003
  * DOCUMENTATION :
  * NOTES         : 
  *
@@ -87,6 +87,15 @@ DicomImage::DicomImage( itk::DicomImageIO::Pointer io,
   // ??? data_type;
 
   dim = region.GetImageDimension();
+
+  // Make sure single files have dimension 2, not 3
+  if( dim == 3 ) 
+  {
+    if( region.GetSize(2) == 1)
+    {
+      dim = 2;
+    }
+  }
 
   size = scinew int[dim];
   origin = scinew double[dim];
@@ -191,13 +200,13 @@ PixelType * DicomImage::get_pixel_buffer()
 //
 // Arguments   : none
 //
-void DicomImage::get_data_type()
-{
+//void DicomImage::get_data_type()
+//{
   // TODO: Fix this
   //std::type_info type = io_->GetPixelType();
   //io_->GetPixelType();
   //cerr << "Pixel Type: " << io_->GetPixelType();
-}
+//}
 
 /*===========================================================================*/
 // 
@@ -293,6 +302,74 @@ int DicomImage::get_index( int i )
 {
   assert( i >= 0 && i < dim );
   return index[i];
+}
+
+/*===========================================================================*/
+// 
+// print_image_info
+//
+// Description : Prints image info for this Dicom image.  This is
+//               useful for debugging.
+//
+// Arguments   : none
+//
+void DicomImage::print_image_info()
+{
+
+  // Get data from DICOM files
+
+  // Get number of pixels
+  int num_pixels = get_num_pixels();
+  cout << "(DicomImage::print_image_info) Num Pixels: " << num_pixels << "\n";
+
+  // Get pixel buffer data (array)
+  //PixelType * pixel_data = get_pixel_buffer();
+  //for( int i = 0; i < num_pixels; i++ )
+  // {
+  //  cout << "(DicomImage) Pixel value " << i << ": " << pixel_data[i] 
+  //      << "\n"; 
+  //}
+
+  // Get pixel type
+  //get_data_type();
+
+  // Get image dimension
+  int image_dim = get_dimension();
+  cout << "(DicomImage::print_image_info) Dimension: " << image_dim << "\n";
+
+  // Get the size of each axis
+  cout << "(DicomImage::print_image_info) Size: [ ";
+  for( int j = 0; j < image_dim; j++ )
+  {
+    cout << get_size(j) << " "; 
+  }
+  cout << "]\n";
+
+  // Get the origin  
+  cout << "(DicomImage::print_image_info) Origin: [ ";
+  for( int k = 0; k < image_dim; k++ )
+  {
+    cout << get_origin(k) << " "; 
+  }
+  cout << "]\n";
+
+  // Get the pixel spacing
+  cout << "(DicomImage::print_image_info) Spacing: [ ";
+  for( int m = 0; m < image_dim; m++ )
+  {
+    cout << get_spacing(m) << " "; 
+  }
+  cout << "]\n";
+
+  // Get the indices
+  cout << "(DicomImage::print_image_info) Index: [ ";
+  for( int n = 0; n < image_dim; n++ )
+  {
+    cout << get_index(n) << " "; 
+  }
+  cout << "]\n";
+
+
 }
 
 } // End namespace SCIRun
