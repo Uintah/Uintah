@@ -23,12 +23,13 @@ NullBurn::~NullBurn()
 }
 
 void NullBurn::computeBurn(double gasTemperature,
-			     double gasPressure,
-			     double materialMass,
-			     double materialTemperature,
-			     double &burnedMass,
-			     double &releasedHeat,
-			     double &delT)
+			   double gasPressure,
+			   double materialMass,
+			   double materialTemperature,
+			   double &burnedMass,
+			   double &releasedHeat,
+			   double &delT,
+			   double &surfaceArea)
 {
   burnedMass = 0;
   releasedHeat = 0;
