@@ -6,7 +6,8 @@
 #include <Packages/rtrt/Core/Array1.h>
 #include <Packages/rtrt/Core/Color.h>
 #include <Core/Geometry/Transform.h>
-#include <iostream>
+
+#include <string>
 
 namespace SCIRun {
   class Point;
@@ -19,6 +20,7 @@ namespace rtrt {
 using SCIRun::Vector;
 using SCIRun::Point;
 using SCIRun::Transform;
+using std::string;
 
 struct DepthStats;
 
@@ -37,19 +39,15 @@ class Object {
     UVMapping* uv;
 public:
     Object(Material* matl, UVMapping* uv=0);
-    inline Material* get_matl() const {
-	return matl;
-    }
-    inline void set_matl(Material* new_matl) {
-	matl=new_matl;
-    }
-    inline UVMapping* get_uvmapping() {
-	return uv;
-    }
-    inline void set_uvmapping(UVMapping* uv) {
-	this->uv=uv;
-    }
     virtual ~Object();
+
+    string name_;
+
+    inline Material  * get_matl() const { return matl; }
+    inline void        set_matl(Material* new_matl) { matl=new_matl; }
+    inline UVMapping * get_uvmapping() { return uv; }
+    inline void        set_uvmapping(UVMapping* uv) { this->uv=uv; }
+
     virtual void intersect(const Ray& ray, HitInfo& hit, DepthStats* st,
 			   PerProcessorContext*)=0;
     virtual void light_intersect(const Ray& ray, HitInfo& hit, Color& atten,
