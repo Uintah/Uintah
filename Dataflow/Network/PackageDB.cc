@@ -704,7 +704,8 @@ PackageDB::getCategoryName(const string &packName,
     if (iter.get_data()->lookup(modName, modinfo))
     {
       string newcatname = iter.get_key();
-      if (newcatname != catName)
+      if (newcatname != catName &&
+	  !(packName == "SCIRun" && catName == "Fields"))
       {
 	cerr << "WARNING: Remapping " <<
 	  packName << "_" << catName << "_" << modName << " to " <<
