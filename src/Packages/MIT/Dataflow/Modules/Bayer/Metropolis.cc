@@ -258,17 +258,15 @@ void Metropolis::metropolis()
 {
   // init Cholesky of proposal distribution covariance matrix
 
-  //double A[nparms][nparms];
-
-  Array2 <double> A(nparms,nparms);
+  double *A = new double[nparms*nparms];
   for (int i=0; i<nparms; i++) 
     for (int j=0; j<nparms; j++) 
-      A(i,j) = pd->sigma(i,j);
+      A[i*nparms+j] = pd->sigma(i,j);
   
   int info;
 
   char cmd = 'L';  // 'L' if fortran means 'U' in C
-  dpotrf_( cmd, nparms, (double *)A.get_dataptr(), nparms, info ); 
+  dpotrf_( cmd, nparms, A, nparms, info ); 
   if ( info != 0 ) {
     cerr << "Cholesky factorization error = " << info << endl;
     return;
@@ -278,9 +276,9 @@ void Metropolis::metropolis()
 
   double k2 = sqrt(kappa);
   for (int i=0; i<nparms; i++) {
-    lkappa(i,i) = A(i,i)*k2;
+    lkappa(i,i) = A[i*nparms+i]*k2;
     for (int j=i+1; j<nparms; j++) {
-      lkappa(j,i) = A(i,j)*k2;
+      lkappa(j,i) = A[i*nparms+j]*k2;
       lkappa(i,j) = 0;
     }
   }
