@@ -112,6 +112,8 @@ Allocator* default_allocator;
 // Objects bigger than this can't be allocated
 #define MAX_ALLOCSIZE (1024*1024*1024)
 
+static bool do_shutdown=false;
+
 inline size_t Allocator::obj_maxsize(Tag* t)
 {
     return (t->bin == &big_bin)?(t->hunk->len-OVERHEAD):t->bin->maxsize;
@@ -144,6 +146,11 @@ static void shutdown()
 {
     Allocator* a=DefaultAllocator();
     if(a->stats_out){
+       if(do_shutdown){
+	  // We have already done this once, but we got called again,
+	  // so we rewind the file if we can
+	  rewind(a->stats_out);
+       }
 	// Just in case...
 	a->lock();
 
@@ -206,8 +213,7 @@ static void shutdown()
 		a->sizealloc-a->sizefree, a->nalloc-a->nfree);
 
 	a->unlock();
-	if(a->stats_out != stderr)
-	    fclose(a->stats_out);
+	do_shutdown=true;
     }
 }
 
@@ -490,7 +496,7 @@ Allocator* MakeAllocator()
 
 void* Allocator::alloc(size_t size, const char* tag)
 {
-    if(size > MEDIUM_THRESHOLD)
+   if(size > MEDIUM_THRESHOLD)
 	return alloc_big(size, tag);
     if(size == 0)
 	return 0;
@@ -563,6 +569,8 @@ void* Allocator::alloc(size_t size, const char* tag)
     if(trace_out)
 	fprintf(trace_out, "A %p "UCONV" (%s)\n", d, size, tag);
 
+    if(do_shutdown)
+       shutdown();
     return (void*)d;
 }
 
@@ -702,6 +710,8 @@ void* Allocator::alloc_big(size_t size, const char* tag)
     if(trace_out)
 	fprintf(trace_out, "A %p "UCONV" (%s)\n",d, size, tag);
 
+    if(do_shutdown)
+       shutdown();
     return (void*)d;
 }
 
@@ -805,6 +815,8 @@ void Allocator::free(void* dobj)
 	if(obj->next != obj->prev)
 	    AllocError("Memalign tag inconsistency, or memory corrupt!\n");
 	free((void*)obj->prev);
+	if(do_shutdown)
+	   shutdown();
 	return;
     }
 
@@ -870,6 +882,8 @@ void Allocator::free(void* dobj)
       }
     }
     unlock();
+    if(do_shutdown)
+       shutdown();
 }
 
 void Allocator::fill_bin(AllocBin* bin)
