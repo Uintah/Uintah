@@ -81,8 +81,11 @@ private:
 
 //
 // $Log$
-// Revision 1.3.2.3  2000/10/31 02:30:42  dmw
-// Merging PSECommon changes in HEAD into FIELD_REDESIGN branch
+// Revision 1.3.2.4  2000/11/01 23:02:59  mcole
+// Fix for previous merge from trunk
+//
+// Revision 1.3.2.2  2000/10/26 14:16:56  moulding
+// merge HEAD into FIELD_REDESIGN
 //
 // Revision 1.5  2000/06/27 07:57:48  samsonov
 // Added Get/SetLength member function

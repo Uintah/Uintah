@@ -119,8 +119,11 @@ void Mult(ColumnMatrix&, const Matrix&, const ColumnMatrix&);
 
 //
 // $Log$
-// Revision 1.4.2.3  2000/10/31 02:36:22  dmw
-// Merging SCICore changes in HEAD into FIELD_REDESIGN branch
+// Revision 1.4.2.4  2000/11/01 23:03:01  mcole
+// Fix for previous merge from trunk
+//
+// Revision 1.4.2.2  2000/10/26 17:30:45  moulding
+// merge HEAD into FIELD_REDESIGN
 //
 // Revision 1.5  2000/07/12 15:45:08  dmw
 // Added Yarden's raw output thing to matrices, added neighborhood accessors to meshes, added ScalarFieldRGushort

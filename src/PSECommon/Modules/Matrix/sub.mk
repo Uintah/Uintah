@@ -40,8 +40,14 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
-# Revision 1.2.2.3  2000/10/31 02:27:57  dmw
-# Merging PSECommon changes in HEAD into FIELD_REDESIGN branch
+# Revision 1.2.2.4  2000/11/01 23:02:56  mcole
+# Fix for previous merge from trunk
+#
+# Revision 1.2.2.2  2000/10/26 10:03:35  moulding
+# merge HEAD into FIELD_REDESIGN
+#
+# Revision 1.2.2.1  2000/09/28 03:16:03  mcole
+# merge trunk into FIELD_REDESIGN branch
 #
 # Revision 1.5  2000/10/24 05:57:35  moulding
 # new module maker Phase 2: new module maker goes online

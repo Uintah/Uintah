@@ -201,8 +201,11 @@ void SliceMaker::execute()
 
 //
 // $Log$
-// Revision 1.1.2.2  2000/10/31 02:14:42  dmw
-// merging DaveW HEAD changes into FIELD_BRANCH
+// Revision 1.1.2.3  2000/11/01 23:02:22  mcole
+// Fix for previous merge from trunk
+//
+// Revision 1.1.2.1  2000/09/28 03:20:14  mcole
+// merge trunk into FIELD_REDESIGN branch
 //
 // Revision 1.2  2000/10/29 04:02:46  dmw
 // cleaning up DaveW tree

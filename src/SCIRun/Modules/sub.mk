@@ -24,8 +24,11 @@ include $(SRCTOP)/scripts/recurse.mk
 
 #
 # $Log$
-# Revision 1.2.2.4  2000/10/31 02:33:14  dmw
-# Merging SCIRun changes in HEAD into FIELD_REDESIGN branch
+# Revision 1.2.2.5  2000/11/01 23:03:21  mcole
+# Fix for previous merge from trunk
+#
+# Revision 1.2.2.3  2000/10/26 13:49:29  moulding
+# merge HEAD into FIELD_REDESIGN
 #
 # Revision 1.5  2000/10/24 05:57:51  moulding
 # new module maker Phase 2: new module maker goes online
