@@ -111,11 +111,13 @@ MeanMixingModel::problemSetup(const ProblemSpecP& params)
   d_tableInfo->problemSetup(db, mixTableFlag, this);
   // Define table type (static or dynamic). Set up table storage, either as 
   // vectors or as kdtree 
-  db->require("TableType", d_tableType);
-  if (d_tableType == "static") {
-    cerr << "Ignore static table type; mean value table is dynamic" << endl;
-    cerr << "Dynamic table will be computed" << endl;
-    d_tableType = "dynamic";
+  if (db->findBlock("TableType")) {
+    db->require("TableType", d_tableType);
+    if (d_tableType == "static") {
+      cerr << "Ignore static table type; mean value table is dynamic" << endl;
+      cerr << "Dynamic table will be computed" << endl;
+      d_tableType = "dynamic";
+    }
   }
   else {
     d_tableType = "dynamic";
@@ -127,16 +129,21 @@ MeanMixingModel::problemSetup(const ProblemSpecP& params)
   d_depStateSpaceVars = d_rxnModel->getTotalDepVars();
   //cout << "MeanProblemSetup: depVars = " << d_depStateSpaceVars << endl;
   string tableStorage;
-  db->require("TableStorage", tableStorage);
-  if (tableStorage == "KDTree")
-    d_mixTable = new KD_Tree(d_tableDimension, d_depStateSpaceVars);
-  else if (tableStorage == "2DVector")
-    d_mixTable = new VectorTable(d_tableDimension, d_tableInfo);
+  if (db->findBlock("TableStorage")) {
+    db->require("TableStorage", tableStorage);
+    if (tableStorage == "KDTree")
+      d_mixTable = new KD_Tree(d_tableDimension, d_depStateSpaceVars);
+    else if (tableStorage == "2DVector")
+      d_mixTable = new VectorTable(d_tableDimension, d_tableInfo);
+    else {
+      throw InvalidValue("Table storage not supported" + tableStorage);
+    }
+  }
   else {
     d_mixTable = new VectorTable(d_tableDimension, d_tableInfo);
     cout << "TABLE STORAGE is vectorTable" << endl;
-    //throw InvalidValue("Table storage not supported" + tableStorage);
   }
+
   // tableSetup is a function in DynamicTable; it allocates memory for 
   // table functions
   tableSetup(d_tableDimension, d_tableInfo);

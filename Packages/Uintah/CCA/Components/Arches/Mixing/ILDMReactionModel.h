@@ -60,9 +60,8 @@ POSSIBLE REVISIONS:
 
 using namespace std;
 namespace Uintah {
-  class MixRxnTable;
-  class MixRxnTableInfo;
-  class MixingModel;
+  class KD_Tree;
+  class MixingModel; //Change to PDFMixingModel???
   class Stream;
  
   // Reference temperature defined to be the lower limit of integration in the
@@ -115,41 +114,35 @@ namespace Uintah {
     // Computes the state space (dependent) variables given the unreacted
     // stream information and values for the reaction variables
     //
-    virtual void getRxnStateSpace(Stream unreactedMixture, 
-				  std::vector<double> varsHFPi,
-				  Stream& reactedStream);
-    virtual void computeRxnStateSpace(Stream unreactedMixture, vector<double> mixRxnVar, 
-				      Stream& equilStateSpace);
+    virtual void getRxnStateSpace(Stream& unreactedMixture, 
+				  std::vector<double>& varsHFPi,
+				  Stream& reactedStream);  
 
 
   private:
     // Looks for needed entry in KDTree and returns that entry. If entry 
     // does not exist, calls integrator to compute entry before returning it.
-    void tableLookUp(int* tableKeyIndex, Stream& stateSpaceVars);
-    // Reads static data files created by Diem's ILDM
-    void readStaticTable();
+    Stream tableLookUp(int* tableKeyIndex);
 
     // Class object that stores all the information about the reaction
     // mechanism read in through Chemkin including species, elements, reaction
     // rates, and thermodynamic information.
     ChemkinInterface* d_reactionData;
+    MixingModel* d_mixModel;
     bool d_adiabatic;
-    bool d_lsoot; // No longer read in; set in problemSetup
-    int d_numSpecInTbl; // No longer read in; set in problemSetup
+    bool d_lsoot;
     int d_numMixVars;
     int d_numRxnVars;
-    int d_rxnTableDimension;
     int d_depStateSpaceVars;
-    MixingModel* d_mixModel;
     MixRxnTableInfo* d_rxnTableInfo;
     // Data structure class that stores the table entries for state-space
     // variables as a function of independent variables.
     // This could be implemented either as a k-d or a binary tree data structure.
-    MixRxnTable* d_rxnTable;
+    KD_Tree* d_rxnTable;
 
     // includes all the vars except vectors...
     // increase the value if want to increase number of variables
-    static const int NUM_DEP_VARS = 9;
+    static const int NUM_DEP_VARS = 7;
 
   }; // End Class ILDMReactionModel
 

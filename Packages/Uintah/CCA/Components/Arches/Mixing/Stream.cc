@@ -39,8 +39,8 @@ Stream::Stream(int numSpecies,  int numElements)
 }
 
 
-Stream::Stream(int numSpecies, int numElements, int numMixVars, 
-	       int numRxnVars, bool lsoot): 
+Stream::Stream(int numSpecies, int numElements, 
+	       int numMixVars, int numRxnVars, bool lsoot): 
   d_numMixVars(numMixVars), d_numRxnVars(numRxnVars), d_lsoot(lsoot)
 {
   d_speciesConcn = vector<double>(numSpecies, 0.0); // initialize with 0
@@ -71,9 +71,8 @@ Stream::Stream(int numSpecies, int numElements, int numMixVars,
   // includes mass fraction of each species, soot volume fraction and 
   // diameter, source terms (rxn rates) for each rxn variable, and min/max 
   // values of each rxn variable for normalization
-  d_depStateSpaceVars = NUM_DEP_VARS + numSpecies + 2*sootTrue
-    + 3*d_numRxnVars;
-  //cout << "Stream: numDepVars = " << d_depStateSpaceVars << endl;
+  d_depStateSpaceVars = NUM_DEP_VARS + numSpecies + 2*sootTrue + 
+    3*d_numRxnVars;
 }
 
 
@@ -279,7 +278,8 @@ Stream::normalizeStream() {
 	
 void
 Stream::convertVecToStream(const vector<double>& vec_stateSpace, bool lfavre,
-                           int numMixVars, int numRxnVars, bool lsoot) {
+                           int numMixVars, int numRxnVars,
+			   bool lsoot) {
   d_depStateSpaceVars = vec_stateSpace.size();
   d_pressure = vec_stateSpace[0];
   d_density = vec_stateSpace[1];
@@ -329,10 +329,9 @@ Stream::convertVecToStream(const vector<double>& vec_stateSpace, bool lfavre,
     if (!(ii % 10)) cout << endl; 
     cout << endl;
   }
-  //   cout << d_numMixVars << " " << d_numRxnVars << " " << d_lsoot << " " << d_mole << " " << d_depStateSpaceVars << endl; 
+   cout << d_numMixVars << " " << d_numRxnVars << " " << d_lsoot << " " << d_mole << " " << d_depStateSpaceVars << endl; 
 #endif
-}
-     
+}     
 
 vector<double>
 //Stream::convertStreamToVec(bool lsoot)
@@ -470,12 +469,10 @@ Stream::print(std::ostream& out, ChemkinInterface* chemInterf) {
 
 //
 // $Log$
-// Revision 1.14  2002/03/28 23:14:51  spinti
-// 1. Added in capability to save mixing and reaction tables as KDTree or 2DVector
-// 2. Tables can be declared either static or dynamic
-// 3. Added capability to run using static clipped Gaussian MixingModel table
-// 4. Removed mean values mixing model option from PDFMixingModel and made it
-//    a separate mixing model, MeanMixingModel.
+// Revision 1.15  2002/04/08 18:09:43  rawat
+// i) modified sub.mk's to make separate lib's for Mixing and fortran dirs
+// ii) Modified computeStableTImeStep to include diffusion time scale
+// iii) changed mixing model back to the old one
 //
 // Revision 1.13  2002/02/28 03:05:46  rawat
 // Added divergence constraint and modified pressure/outlet boundary condition.

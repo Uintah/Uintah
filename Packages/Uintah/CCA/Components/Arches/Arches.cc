@@ -275,6 +275,10 @@ Arches::scheduleComputeStableTimestep(const LevelP& level,
 		Ghost::None, Arches::ZEROGHOSTCELLS);
   tsk->requires(Task::NewDW, d_lab->d_wVelocitySPBCLabel,
 		Ghost::None, Arches::ZEROGHOSTCELLS);
+  tsk->requires(Task::NewDW, d_lab->d_densityCPLabel,
+		Ghost::None, Arches::ZEROGHOSTCELLS);
+  tsk->requires(Task::NewDW, d_lab->d_viscosityCTSLabel,
+		Ghost::None, Arches::ZEROGHOSTCELLS);
   tsk->computes(d_sharedState->get_delt_label());
   sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials());
 
@@ -296,6 +300,8 @@ Arches::computeStableTimeStep(const ProcessorGroup* ,
     constSFCXVariable<double> uVelocity;
     constSFCYVariable<double> vVelocity;
     constSFCZVariable<double> wVelocity;
+    constCCVariable<double> den;
+    constCCVariable<double> visc;
     PerPatch<CellInformationP> cellInfoP;
 
     if (new_dw->exists(d_lab->d_cellInfoLabel, matlIndex, patch)) 
@@ -317,12 +323,14 @@ Arches::computeStableTimeStep(const ProcessorGroup* ,
 		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
     new_dw->get(wVelocity, d_lab->d_wVelocitySPBCLabel, 
 		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+    new_dw->get(den, d_lab->d_densityCPLabel, 
+		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+    new_dw->get(visc, d_lab->d_viscosityCTSLabel, 
+		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
     IntVector indexLow = patch->getCellFORTLowIndex();
     IntVector indexHigh = patch->getCellFORTHighIndex() + IntVector(1,1,1);
-    //    voidFraction.print(cerr);
   // set density for the whole domain
     double delta_t = d_deltaT; // max value allowed
-    //    double temp_t = 0;
     double small_num = 1e-30;
     double delta_t2 = delta_t;
     for (int colZ = indexLow.z(); colZ < indexHigh.z(); colZ ++) {
@@ -332,7 +340,11 @@ Arches::computeStableTimeStep(const ProcessorGroup* ,
 	  double tmp_time=Abs(uVelocity[currCell])/(cellinfo->sew[colX])+
 	                  Abs(vVelocity[currCell])/(cellinfo->sns[colY])+
 	                  Abs(wVelocity[currCell])/(cellinfo->stb[colZ])+
-	                  small_num;
+	                  (visc[currCell]/den[currCell])* 
+	                    (1.0/(cellinfo->sew[colX]*cellinfo->sew[colX]) +
+			     1.0/(cellinfo->sns[colY]*cellinfo->sns[colY]) +
+	                     1.0/(cellinfo->stb[colZ]*cellinfo->stb[colZ])) +
+	                   small_num;
 #ifdef Runge_Kutta_3d
 #ifndef Runge_Kutta_3d_ssp
           tmp_time *= Pi;
