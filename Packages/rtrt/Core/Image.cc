@@ -121,14 +121,41 @@ void Image::set(const Pixel& value)
 
 void Image::save(char* filename)
 {
-    ofstream out(filename);
-    if(!out){
-	cerr << "error opening file: " << filename << '\n';
+  ofstream out(filename);
+  if(!out){
+    cerr << "error opening file: " << filename << '\n';
+    return;
+  }
+  printf("Image res(%d,%d)\n",xres, yres);
+  out.write((char*)&image[0][0], (int)(sizeof(Pixel)*xres*yres));
+  out.close();
+  printf("Finished writing image\n");
+}
+
+void Image::save_ppm(char *filename)
+{
+  ofstream outdata(filename);
+  if (!outdata.is_open()) {
+    cerr << "Image::save_ppm: ERROR: I/O fault: couldn't write image file: "
+	 << filename << "\n";
+    return;
+  }
+  outdata << "P6\n# PPM binary image created with rtrt\n";
+  
+  outdata << xres << " " << yres << "\n";
+  outdata << "255\n";
+  
+  unsigned char c[3];
+  for(int v=yres-1;v>=0;--v){
+    for(int u=0;u<xres;++u){
+      c[0]=image[v][u].r;
+      c[1]=image[v][u].g;
+      c[2]=image[v][u].b;
+      outdata.write((char *)c, 3);
     }
-    printf("Image res(%d,%d)\n",xres, yres);
-    out.write((char*)&image[0][0], (int)(sizeof(Pixel)*xres*yres));
-    out.close();
-    printf("Finished writing image\n");
+  }
+  outdata.close();
+  printf("Finished writing image\n");
 }
 
 // this code is added for tiled images...
