@@ -133,23 +133,24 @@
     </BoundaryConditions>
        <Level>
            <Box label="1">
-              <lower>        [-0.4,-0.4,-0.4]    </lower>
-              <upper>        [0.4,  0.4, 0.4]    </upper>
+              <lower>        [0,0,0]    </lower>
+              <upper>        [1,1,1]    </upper>
               <extraCells>   [1,1,1]    </extraCells>
               <patches>      [1,1,1]    </patches>
            </Box>
-           <spacing>         [0.025,0.025,0.025]    </spacing>
+           <spacing>         [.1,.1,.1]    </spacing>
        </Level>  
-  <!--
+<!--
        <Level>
            <Box label="2">
-              <lower>        [-0.4,-0.4,-0.4]    </lower>
-              <upper>        [0.4,  0.4, 0.4]    </upper>
+              <lower>        [.2,.2,.2]    </lower>
+              <upper>        [.7,.7,.7]    </upper>
               <extraCells>   [1,1,1]    </extraCells>
               <patches>      [1,1,1]    </patches>
            </Box>
            <spacing>         [0.05,0.05,0.05]    </spacing>
-       </Level>  -->
+       </Level>
+-->
     </Grid> 
     <!--____________________________________________________________________-->
     <!--    A M R   G R I D                                                 -->
@@ -158,7 +159,7 @@
     <Regridder>
       <max_levels>2</max_levels>
       <cell_refinement_ratio>    [[2,2,1]]  </cell_refinement_ratio>
-      <lattice_refinement_ratio> [[2,2,1]]   </lattice_refinement_ratio>
+      <lattice_refinement_ratio> [[2,2,1]]  </lattice_refinement_ratio>
       <cell_creation_dilation>   [2,1,1]   </cell_creation_dilation>   
       <cell_deletion_dilation>   [1,1,1]   </cell_deletion_dilation>   
       <min_boundary_cells>       [1,1,1]   </min_boundary_cells>
@@ -186,11 +187,12 @@
       <dbg_timeStart>       0.00        </dbg_timeStart>
       <dbg_timeStop>        0.01        </dbg_timeStop>
       <dbg_outputInterval>  1e-9        </dbg_outputInterval>
-      <dbg_BeginIndex>      [-1,-1,9]  </dbg_BeginIndex>
-      <dbg_EndIndex>        [3,3,10]     </dbg_EndIndex>
+      <dbg_BeginIndex>      [-1,30,-1]  </dbg_BeginIndex>
+      <dbg_EndIndex>        [3,32,3]    </dbg_EndIndex>
       <dbg_Matls>           [0]         </dbg_Matls>
-      <dbg_Level>           1         </dbg_Level>
+      <dbg_Level>           1        </dbg_Level>
   <!--
+      <debug label = "switchDebug_EQ_RF_press"/>
       <debug label = "switchDebug_EQ_RF_press"/>
       <debug label = "switchDebug_press"/>
       <debug label = "switchDebug_vel_FC"/>            
@@ -272,7 +274,7 @@
         <constants>
           <diffusivity>              0.0    </diffusivity>                      
           <initialize_diffusion_knob>  0    </initialize_diffusion_knob>         
-          <AMR_Refinement_Criteria>    1   </AMR_Refinement_Criteria>          
+          <AMR_Refinement_Criteria>    1    </AMR_Refinement_Criteria>          
               
         </constants>
          <geom_object>
@@ -282,16 +284,16 @@
                 <max>       [  1.,  1.,  1. ]        </max>
             </box>
             <box label="scalarPlug">
-              <min>         [-0.0,-0.0,-0.0]         </min>
-              <max>         [ 0.1, 0.1, 0.1]         </max>
+              <min>         [0.4,0.4,0.4]            </min>
+              <max>         [ 0.6, 0.6, 0.6]         </max>
             </box>
             </difference>
             <scalar>    0.00   </scalar>
          </geom_object>
           <geom_object>
             <box label="scalarPlug">
-              <min>          [-0.0,-0.0,-0.0]    </min>
-              <max>          [ 0.1, 0.1, 0.1]    </max>
+              <min>          [0.4,0.4,0.4]       </min>
+              <max>          [ 0.6, 0.6, 0.6]    </max>
             </box>
             <scalar>    1.00   </scalar>
          </geom_object>
