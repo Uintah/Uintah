@@ -27,6 +27,7 @@
 #include <Uintah/Components/ICE/ICEMaterial.h>
 #include <Uintah/Interface/ProblemSpecP.h>
 #include <Uintah/Grid/VarTypes.h>
+#include <SCICore/Datatypes/DenseMatrix.h>
 #include <vector>
 
 using std::vector;
@@ -35,6 +36,8 @@ using SCICore::Geometry::Vector;
 
 using namespace Uintah;
 using namespace Uintah::ICESpace;
+//using namespace SCICore::Datatypes;
+using SCICore::Datatypes::DenseMatrix;
 
 
 ICE::ICE(const ProcessorGroup* myworld) 
@@ -215,9 +218,9 @@ void ICE::scheduleTimeAdvance(double t, double dt,
 	  Material* matl = d_sharedState->getMaterial(m);
 	  ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
 	  if(ice_matl){
-	    t->requires(old_dw,lb->rho_micro_CCLabel,
+	    t->requires(new_dw,lb->rho_micro_CCLabel,
 			matl->getDWIndex(),patch,Ghost::None);
-	    t->requires(old_dw,lb->vol_frac_CCLabel,
+	    t->requires(new_dw,lb->vol_frac_CCLabel,
 			matl->getDWIndex(),patch,Ghost::None);
 	    t->requires(old_dw,lb->uvel_FCLabel,
 			matl->getDWIndex(),patch,Ghost::None);
@@ -359,7 +362,7 @@ void ICE::actuallyStep1a(const ProcessorGroup*,
     Material* matl = d_sharedState->getMaterial(m);
     ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
     if (ice_matl) {
-       EquationOfState* eos = ice_matl->getEOS();
+      EquationOfState* eos = ice_matl->getEOS();
       eos->computeSpeedSound(patch,ice_matl,old_dw,new_dw);
     }
   }
@@ -593,11 +596,6 @@ void ICE::actuallyStep1c(const ProcessorGroup*,
 
       for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
 	IntVector curcell = *iter;
-	IntVector below(curcell.x(),curcell.y()-1,curcell.z()); 
-	IntVector right(curcell.x()+1,curcell.y(),curcell.z()); 
-	IntVector left (curcell.x()-1,curcell.y(),curcell.z()); 
-	IntVector front(curcell.x(),curcell.y(),curcell.z()-1); 
-	IntVector behind(curcell.x(),curcell.y(),curcell.z()-1); 
 
        // Top face
 	IntVector adjcell(curcell.x(),curcell.y()+1,curcell.z()); 
@@ -680,11 +678,115 @@ void ICE::actuallyStep1d(const ProcessorGroup*,
 		   DataWarehouseP& old_dw,
 		   DataWarehouseP& new_dw)
 {
-
   cout << "Doing actually step1d" << endl;
 
   int numMatls = d_sharedState->getNumMatls();
+  int NVFs = d_sharedState->getNumVelFields();
 
+  delt_vartype delT;
+  old_dw->get(delT, d_sharedState->get_delt_label());
+  Vector dx = patch->dCell();
+  Vector gravity = d_sharedState->getGravity();
+
+  double temp,betamn;
+
+  // Create variables for the required values
+  vector<CCVariable<double> > rho_micro_CC(NVFs);
+  vector<CCVariable<double> > vol_frac_CC(NVFs);
+  vector<FCVariable<double> > uvel_FC(NVFs);
+  vector<FCVariable<double> > vvel_FC(NVFs);
+  vector<FCVariable<double> > wvel_FC(NVFs);
+
+  // Create variables for the results
+  vector<FCVariable<double> > uvel_FCME(NVFs);
+  vector<FCVariable<double> > vvel_FCME(NVFs);
+  vector<FCVariable<double> > wvel_FCME(NVFs);
+
+  vector<double> b(NVFs);
+  DenseMatrix beta(NVFs,NVFs),a(NVFs,NVFs),K(NVFs,NVFs);
+
+  for(int m = 0; m < numMatls; m++){
+    Material* matl = d_sharedState->getMaterial( m );
+    ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
+    if(ice_matl){
+      int vfindex = matl->getVFIndex();
+      new_dw->get(rho_micro_CC[vfindex], lb->rho_micro_CCLabel,
+				vfindex, patch, Ghost::None, 0);
+      new_dw->get(vol_frac_CC[vfindex],  lb->vol_frac_CCLabel,
+				vfindex, patch, Ghost::None, 0);
+      new_dw->get(uvel_FC[vfindex], lb->uvel_FCLabel,
+				vfindex, patch, Ghost::None, 0);
+      new_dw->get(vvel_FC[vfindex], lb->vvel_FCLabel,
+				vfindex, patch, Ghost::None, 0);
+      new_dw->get(wvel_FC[vfindex], lb->wvel_FCLabel,
+				vfindex, patch, Ghost::None, 0);
+
+      new_dw->allocate(uvel_FC[vfindex], lb->uvel_FCMELabel, vfindex, patch);
+      new_dw->allocate(vvel_FC[vfindex], lb->vvel_FCMELabel, vfindex, patch);
+      new_dw->allocate(wvel_FC[vfindex], lb->wvel_FCMELabel, vfindex, patch);
+    }
+  }
+
+  for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
+    IntVector curcell = *iter;
+
+   // Top face
+   IntVector adjcell(curcell.x(),curcell.y()+1,curcell.z()); 
+
+   for(int m = 0; m < NVFs; m++){
+     for(int n = 0; n < NVFs; n++){
+	temp = (vol_frac_CC[n][adjcell] + vol_frac_CC[n][curcell]) * K.get(n,m);
+	betamn = delT * temp/
+		       (rho_micro_CC[m][curcell] + rho_micro_CC[m][adjcell]);
+	beta.put(m,n,betamn);
+	a.put(m,n,-beta.get(m,n));
+     }
+   }
+
+   for(int m = 0; m < NVFs; m++){
+     a.put(m,m,1.);
+     for(int n = 0; n < NVFs; n++){
+	a.put(m,m, a.get(m,m) +  beta.get(m,n));
+     }
+   }
+
+   for(int m = 0; m < NVFs; m++){
+     b[m] = 0.0;
+     for(int n = 0; n < NVFs; n++){
+	b[m] += beta.get(m,n) * (vvel_FC[n][*iter] - vvel_FC[m][*iter]);
+     }
+   }
+
+//  gauss_jordan_elimination(a,  b,  nMaterials);
+//   int itworked = a.solve(b);
+
+   for(int m = 0; m < NVFs; m++){
+     vvel_FCME[m][*iter] = vvel_FCME[m][*iter] + b[m];
+   }
+
+    // I don't know what this is going to look like yet
+    // but the equations are right I think.
+//	uvel_FC[curcell][top] = 0.0;
+//	vvel_FC[curcell][top] = term1- term2 + term3;
+//	wvel_FC[curcell][top] = 0.0;
+
+       // Right face
+	adjcell = IntVector(curcell.x()+1,curcell.y(),curcell.z()); 
+
+       // Front face
+	adjcell = IntVector(curcell.x(),curcell.y(),curcell.z()+1); 
+  }
+
+  // Put Boundary condition stuff in here
+  //
+  //
+
+  // Put the result in the datawarehouse
+  for(int m = 0; m < NVFs; m++){
+      new_dw->put(uvel_FCME[m], lb->uvel_FCMELabel, m, patch);
+      new_dw->put(vvel_FCME[m], lb->vvel_FCMELabel, m, patch);
+      new_dw->put(wvel_FCME[m], lb->wvel_FCMELabel, m, patch);
+  }
 }
 
 void ICE::actuallyStep2(const ProcessorGroup*,
@@ -765,13 +867,12 @@ void ICE::actuallyStep6and7(const ProcessorGroup*,
   }
 }
 
-
-
-
-					
-
 //
 // $Log$
+// Revision 1.32  2000/10/16 17:19:44  guilkey
+// Code for ICE::step1d.  Only code for one of the faces is committed
+// until things become more concrete.
+//
 // Revision 1.31  2000/10/14 02:49:46  jas
 // Added implementation of compute equilibration pressure.  Still need to do
 // the update of BCS and hydrostatic pressure.  Still some issues with

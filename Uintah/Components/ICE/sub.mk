@@ -17,13 +17,18 @@ include $(SRCTOP)/scripts/recurse.mk
 
 PSELIBS := Uintah/Interface Uintah/Grid Uintah/Parallel \
 	Uintah/Exceptions SCICore/Exceptions SCICore/Thread \
-	SCICore/Geometry PSECore/XMLUtil Uintah/Math
+	SCICore/Geometry PSECore/XMLUtil Uintah/Math \
+	SCICore/Datatypes
 LIBS	:= $(XML_LIBRARY)        
 
 include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.18  2000/10/16 17:19:44  guilkey
+# Code for ICE::step1d.  Only code for one of the faces is committed
+# until things become more concrete.
+#
 # Revision 1.17  2000/10/06 04:05:18  jas
 # Move files into EOS directory.
 #
