@@ -55,6 +55,10 @@ namespace Uintah {
 
       //////////
       // Insert Documentation Here:
+      virtual const std::string getOutputLocation() const;
+
+      //////////
+      // Insert Documentation Here:
       void output(const ProcessorGroup*,
 		  const Patch* patch,
 		  DataWarehouseP& old_dw,
@@ -84,6 +88,12 @@ namespace Uintah {
 
 //
 // $Log$
+// Revision 1.9  2000/07/26 20:14:09  jehall
+// Moved taskgraph/dependency output files to UDA directory
+// - Added output port parameter to schedulers
+// - Added getOutputLocation() to Uintah::Output interface
+// - Renamed output files to taskgraph[.xml]
+//
 // Revision 1.8  2000/06/17 07:06:30  sparker
 // Changed ProcessorContext to ProcessorGroup
 //

@@ -14,8 +14,8 @@ using SCICore::Thread::Time;
 
 static SCICore::Util::DebugStream dbg("MPIScheduler", false);
 
-MPIScheduler::MPIScheduler(const ProcessorGroup* myworld)
-   : UintahParallelComponent(myworld)
+MPIScheduler::MPIScheduler(const ProcessorGroup* myworld, Output* oport)
+   : UintahParallelComponent(myworld), Scheduler(oport)
 {
 }
 
@@ -80,6 +80,12 @@ MPIScheduler::createDataWarehouse( int generation )
 
 //
 // $Log$
+// Revision 1.5  2000/07/26 20:14:11  jehall
+// Moved taskgraph/dependency output files to UDA directory
+// - Added output port parameter to schedulers
+// - Added getOutputLocation() to Uintah::Output interface
+// - Renamed output files to taskgraph[.xml]
+//
 // Revision 1.4  2000/07/25 20:59:28  jehall
 // - Simplified taskgraph output implementation
 // - Sort taskgraph edges; makes critical path algorithm eastier

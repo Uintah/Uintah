@@ -240,6 +240,12 @@ void DataArchiver::finalizeTimestep(double time, double delt,
    dbg << "Created " << n << " output tasks\n";
 }
 
+const string
+DataArchiver::getOutputLocation() const
+{
+    return d_dir.getName();
+}
+
 void DataArchiver::outputReduction(const ProcessorGroup*,
 				   DataWarehouseP& /*old_dw*/,
 				   DataWarehouseP& new_dw,
@@ -542,6 +548,12 @@ static Dir makeVersionedDir(const std::string nameBase)
 
 //
 // $Log$
+// Revision 1.15  2000/07/26 20:14:09  jehall
+// Moved taskgraph/dependency output files to UDA directory
+// - Added output port parameter to schedulers
+// - Added getOutputLocation() to Uintah::Output interface
+// - Renamed output files to taskgraph[.xml]
+//
 // Revision 1.14  2000/06/27 17:08:32  bigler
 // Steve moved some functions around for me.
 //

@@ -43,7 +43,7 @@ WARNING
 
    class SingleProcessorScheduler : public UintahParallelComponent, public Scheduler {
    public:
-      SingleProcessorScheduler(const ProcessorGroup* myworld);
+      SingleProcessorScheduler(const ProcessorGroup* myworld, Output* oport);
       virtual ~SingleProcessorScheduler();
       
       //////////
@@ -74,6 +74,12 @@ WARNING
 
 //
 // $Log$
+// Revision 1.3  2000/07/26 20:14:11  jehall
+// Moved taskgraph/dependency output files to UDA directory
+// - Added output port parameter to schedulers
+// - Added getOutputLocation() to Uintah::Output interface
+// - Renamed output files to taskgraph[.xml]
+//
 // Revision 1.2  2000/06/17 07:04:55  sparker
 // Implemented initial load balancer modules
 // Use ProcessorGroup
