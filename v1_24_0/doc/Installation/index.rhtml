@@ -1,34 +1,35 @@
-<!--% require("../Utilities/Publish/srdoc.rb") %-->
-<!--% doc = Doc.create(Doc::HTML) %-->
+<!-- -*- nxml -*- -->
 
 <!--
-   For more information, please see: http://software.sci.utah.edu
+For more information, please see: http://software.sci.utah.edu
 
-   The MIT License
+The MIT License
 
-   Copyright (c) 2004 Scientific Computing and Imaging Institute,
-   University of Utah.
+Copyright (c) 2004 Scientific Computing and Imaging Institute,
+University of Utah.
 
-   License for the specific language governing rights and limitations under
-   Permission is hereby granted, free of charge, to any person obtaining a
-   copy of this software and associated documentation files (the "Software"),
-   to deal in the Software without restriction, including without limitation
-   the rights to use, copy, modify, merge, publish, distribute, sublicense,
-   and/or sell copies of the Software, and to permit persons to whom the
-   Software is furnished to do so, subject to the following conditions:
+License for the specific language governing rights and limitations under
+Permission is hereby granted, free of charge, to any person obtaining a
+copy of this software and associated documentation files (the "Software"),
+to deal in the Software without restriction, including without limitation
+the rights to use, copy, modify, merge, publish, distribute, sublicense,
+and/or sell copies of the Software, and to permit persons to whom the
+Software is furnished to do so, subject to the following conditions:
 
-   The above copyright notice and this permission notice shall be included
-   in all copies or substantial portions of the Software.
+The above copyright notice and this permission notice shall be included
+in all copies or substantial portions of the Software.
 
-   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-   OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
-   THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-   FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
-   DEALINGS IN THE SOFTWARE.
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+DEALINGS IN THE SOFTWARE.
 -->
 
+<!--% require("../Utilities/Publish/srdoc.rb") %-->
+<!--% doc = Doc.create(Doc::HTML) %-->
 
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
   <head>
@@ -43,11 +44,38 @@
     <h1 class="page-title">Installation Documentation Index<br/>(v. <!--%= doc.edition %-->)</h1>
     <div class="doc-group">
       <h1>General</h1>
-      <h2><a href="Guide/index.html">Guide</a> <sup><a href="Guide/srig.pdf">pdf</a></sup></h2>
-      <p>Installation instructions for SCIRun, third party
-      libraries, the optional PETSc library, sample data sets, and
-      documentation.</p>
-      <h2><a href="FAQ/faq.html">FAQ</a> <sup><a href="FAQ/faq.pdf">pdf</a></sup></h2>
+	<h2>Installation for Linux</h2>
+	<div class="doc-links">
+	  <a href="Installation/Guide/Linux/srig.html">HTML one page</a> | 
+	  <a href="Installation/Guide/Linux/index.html">HTML multiple pages</a> |
+	  <a href="Installation/Guide/Linux/srig.pdf">PDF</a>
+	</div>
+	<p>Installation instructions for SCIRun, third party
+	libraries, sample data
+	sets, and documentation for the Linux platform.</p>
+
+	<h2>Installation for Mac OS X</h2>
+	<div class="doc-links">
+	  <a href="Installation/Guide/OSX/srig.html">HTML one page</a> | 
+	  <a href="Installation/Guide/OSX/index.html">HTML multiple pages</a> |
+	  <a href="Installation/Guide/OSX/srig.pdf">PDF</a>
+	</div>
+	<p>Installation instructions for Mac OS X platform.</p>
+	
+	<h2>Installation for SGI Irix</h2>
+	<div class="doc-links">
+	  <a href="Installation/Guide/Irix/srig.html">HTML one page</a> | 
+	  <a href="Installation/Guide/Irix/index.html">HTML multiple pages</a> |
+	  <a href="Installation/Guide/Irix/srig.pdf">PDF</a>
+	</div>
+	<p>Installation instructions for SGI's Irix platform.</p>
+	
+
+      <h2>FAQ</h2>
+      <div class="doc-links">
+	<a href="FAQ/faq.html">HTML one page</a> | 
+	<a href="FAQ/faq.pdf">PDF</a>
+      </div>
       <p>Common installation questions and answers.</p>
     </div>
     <div class="clear-right"></div>
