@@ -944,7 +944,7 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
     StaticArray<double> cv(numMatls);
 
     old_dw->get(press,         lb->press_CCLabel, 0,patch,Ghost::None, 0); 
-    new_dw->allocate(press_new,lb->press_CCLabel, 0,patch);
+    new_dw->allocate(press_new,lb->press_equil_CCLabel, 0,patch);
 
     for (int m = 0; m < numMatls; m++) {
       ICEMaterial* matl = d_sharedState->getICEMaterial(m);
