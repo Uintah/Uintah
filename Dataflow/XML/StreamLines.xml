@@ -67,7 +67,7 @@
             The field to be visualized.
           </p>
         </description>
-        <datatype>PSECore::Field</datatype>
+        <datatype>SCIRun::Field</datatype>
         <componentname>GenField</componentname>
         <componentname>ReadField</componentname>
       </port>
@@ -79,18 +79,9 @@
 	    opacity.
           </p>
         </description>
-        <datatype>PSECore::Field</datatype>
+        <datatype>SCIRun::Field</datatype>
         <componentname>GenField</componentname>
         <componentname>ReadField</componentname>
-      </port>
-      <port>
-        <name>Colormap range</name>
-        <description>
-          The function that maps a data value to a color and opacity.
-        </description>
-        <datatype>PSECore::ColorMap</datatype>
-        <componentname>GenStandardColormaps</componentname>
-        <componentname>GenTransferFunc</componentname>
       </port>
     </inputs>
     <outputs>
@@ -101,7 +92,7 @@
             The geometry that represents the flow present in the vector field.
           </p>
         </description>
-        <datatype>PSECore::Geometry</datatype>
+        <datatype>SCIRun::Field</datatype>
         <componentname>Render3D</componentname>
         <componentname>WriteGeometry</componentname>
       </port>

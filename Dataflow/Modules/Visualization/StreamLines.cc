@@ -41,6 +41,8 @@
 #include <Core/Datatypes/ContourMesh.h>
 #include <Core/Datatypes/TriSurfMesh.h>
 #include <Core/Datatypes/TriSurf.h>
+#include <Core/GuiInterface/GuiVar.h>
+#include <Core/GuiInterface/TCL.h>
 
 #include <iostream>
 #include <vector>
@@ -93,6 +95,10 @@ private:
 
   GenericInterpolate<Vector>    *interp_;
 
+  GuiDouble                     stepsize_;
+  GuiDouble                     tolerance_;
+  GuiInt                        maxsteps_;
+
   //! loop through the nodes in the seed field
   template <class VectorField, class SeedField>
   void TemplatedExecute(VectorField *, SeedField *);
@@ -110,17 +116,21 @@ extern "C" PSECORESHARE Module* make_StreamLines(const clString& id) {
 }
 
 StreamLines::StreamLines(const clString& id)
-  : Module("StreamLines", id, Source, "Visualization", "SCIRun")
-  //, "Visualization", "SCIRun")
+  : Module("StreamLines", id, Source, "Visualization", "SCIRun"),
+    stepsize_("stepsize",id,this),tolerance_("tolerance",id,this),
+    maxsteps_("maxsteps",id,this)
+
 {
-  vfport_ = scinew FieldIPort(this, "FlowField", FieldIPort::Atomic);
-  add_iport(vfport_);
+  // these ports are now done automatically by the port manager
 
-  sfport_ = scinew FieldIPort(this, "SeedField", FieldIPort::Atomic);
-  add_iport(sfport_);
+  //vfport_ = scinew FieldIPort(this, "FlowField", FieldIPort::Atomic);
+  //add_iport(vfport_);
 
-  oport_ = scinew FieldOPort(this, "StreamLines", FieldIPort::Atomic);
-  add_oport(oport_);
+  //sfport_ = scinew FieldIPort(this, "SeedField", FieldIPort::Atomic);
+  //add_iport(sfport_);
+
+  //oport_ = scinew FieldOPort(this, "StreamLines", FieldIPort::Atomic);
+  //add_oport(oport_);
 
   vf_ = 0;
   sf_ = 0;
@@ -223,6 +233,9 @@ void StreamLines::TemplatedExecute(VectorField *vf, SeedField *sf)
   vector<Point> nodes;
   vector<Point>::iterator node_iter;
   node_index n1,n2;
+  double tolerance;
+  double stepsize;
+  int maxsteps;
 
   sf_mesh_type *smesh =
     dynamic_cast<sf_mesh_type*>(sf->get_typed_mesh().get_rep());
@@ -240,7 +253,11 @@ void StreamLines::TemplatedExecute(VectorField *vf, SeedField *sf)
 
     cerr << "new streamline." << endl;
 
-    FindStreamLineNodes(nodes,seed,.01,.01,200);
+    get_gui_doublevar(id,"tolerance",tolerance);
+    get_gui_doublevar(id,"stepsize",stepsize);
+    get_gui_intvar(id,"maxsteps",maxsteps);
+
+    FindStreamLineNodes(nodes,seed,tolerance,stepsize,maxsteps);
 
     cerr << "done finding streamline." << endl;
 
@@ -266,6 +283,18 @@ void StreamLines::TemplatedExecute(VectorField *vf, SeedField *sf)
 
 void StreamLines::execute()
 {
+  // must find vector field input port
+  if (!(vfport_=(FieldIPort*)get_iport(0)))
+    return;
+
+  // must find seed field input port
+  if (!(sfport_=(FieldIPort*)get_iport(1)))
+    return;
+
+  // must find output port
+  if (!(oport_=(FieldOPort*)get_oport(0)))
+    return;
+
   // the vector field input is required
   if (!vfport_->get(vfhandle_) || !(vf_ = vfhandle_.get_rep()))
     return;
@@ -293,7 +322,10 @@ void StreamLines::execute()
     return;
   }
 
+  cerr << "got here" << endl;
+
   // this is a pain...
+  // use Marty's dispatch here instead...
   if (vf_->get_type_name(0) == "LatticeVol") {
     if (vf_->get_type_name(1) == "double") {
       if (sf_->get_type_name(-1) == "ContourField<double>") {
@@ -330,7 +362,16 @@ void StreamLines::execute()
 
 void StreamLines::tcl_command(TCLArgs& args, void* userdata)
 {
-  Module::tcl_command(args, userdata);
+  if(args.count() < 2){
+    args.error("StreamLines needs a minor command");
+    return;
+  }
+ 
+  if (args[1] == "execute") {
+    want_to_execute();
+  } else {
+    Module::tcl_command(args, userdata);
+  }
 }
 
 } // End namespace SCIRun
