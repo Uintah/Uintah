@@ -15,6 +15,7 @@
 #include <Dataflow/Ports/GeometryPort.h>
 #include <Core/Datatypes/Field.h>
 #include <Core/Datatypes/TetVol.h>
+#include <Core/Datatypes/LatticeVol.h>
 #include <Core/Datatypes/FieldAlgo.h>
 #include <Dataflow/Ports/FieldPort.h>
 #include <Core/Geom/GeomGroup.h>
@@ -188,15 +189,31 @@ ShowField::execute()
     return;
   }
 
-  TetVol<double> *tv = 0;
-  tv = dynamic_cast<TetVol<double>*>(field_handle_.get_rep());
-  if (!tv) {
-    cerr << "Not a Tet Vol input field" << endl;
+  bool error = false;
+  string msg;
+  string name = field_handle_->get_type_name(0);
+  if (name == "TetVol") {
+    if (field_handle_->get_type_name(1) == "double") {
+      TetVol<double> *tv = 0;
+      tv = dynamic_cast<TetVol<double>*>(field_handle_.get_rep());
+      if (tv) { render(tv); }
+      else { error = true; msg = "Not a valid TetVol."; }
+    } else {
+      error = true; msg ="TetVol of unknown type.";
+    }
+  } /*else if (name == "LatticeVol") {
+    if (field_handle_->get_type_name(1) == "double") {
+      LatticeVol<double> *lv = 0;
+      lv = dynamic_cast<LatticeVol<double>*>(field_handle_.get_rep());
+      if (lv) { render(lv); }
+      else { error = true; msg = "Not a valid LatticeVol."; }
+    } else {
+      error = true; msg ="LatticeVol of unknown type.";
+    }
+    }*/ else if (error) {
+    cerr << "ShowField Error: " << msg << endl;
     return;
-  } 
-
-
-  render(tv);
+  }
 
   nodeId_ = ogeom_->addObj(nodeSwitch_, "Nodes");
   conId_ = ogeom_->addObj(conSwitch_, "Connections");
