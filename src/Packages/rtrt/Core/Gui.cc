@@ -13,6 +13,7 @@
 #include <Packages/rtrt/Core/Image.h>
 #include <Packages/rtrt/Core/CycleMaterial.h>
 #include <Packages/rtrt/Core/FontString.h>
+#include <Packages/rtrt/Core/Instance.h>
 
 #include <Core/Math/Trig.h>
 #include <Core/Thread/Time.h>
@@ -62,6 +63,7 @@ static Transform prev_trans;
 
 #define OBJECT_LIST_ID           140
 #define OBJECTS_BUTTON_ID        141
+#define ATTACH_KEYPAD_BTN_ID     142
 
 #define TOGGLE_HOTSPOTS_ID       190
 
@@ -80,7 +82,7 @@ static Transform prev_trans;
 static int routeNumber = 0;
 
 Gui::Gui() :
-  selectedLightId(0), selectedRouteId(0), selectedObjectId(0),
+  selectedLightId_(0), selectedRouteId_(0), selectedObjectId_(0),
   routeWindowVisible(false), lightsWindowVisible(false),
   objectsWindowVisible(false), mainWindowVisible(true),
   lightList(NULL), routeList(NULL), objectList(NULL),
@@ -88,7 +90,8 @@ Gui::Gui() :
   lightIntensity_(NULL),
   lightBrightness_(1.0), ambientBrightness_(1.0),
   mouseDown_(0), shiftDown_(false), beQuiet_(true),
-  lightsOn_(true), lightsBeingRendered_(false)
+  lightsOn_(true), lightsBeingRendered_(false),
+  keypadAttached_(false)
 {
 }
 
@@ -163,13 +166,13 @@ Gui::idleFunc()
 
     // Display textual information on the screen:
     char buf[100];
-    sprintf( buf, "%3.1 fps", activeGui->priv->FrameRate );
+    sprintf( buf, "%3.1lf fps", activeGui->priv->FrameRate );
     activeGui->displayText(GLUT_BITMAP_HELVETICA_10, 10, 3, buf, Color(1,1,1));
 
     glutSwapBuffers(); 
 
     // Let the Dpy thread start drawing the next image.
-    activeGui->priv->waitDisplay->unlock();
+    //activeGui->priv->waitDisplay->unlock();
     if( activeGui->mainWindowVisible ) {
       activeGui->update(); // update the gui each time a frame is finished.
     }
@@ -310,7 +313,8 @@ Gui::handleKeyPressCB( unsigned char key, int /*mouse_x*/, int /*mouse_y*/ )
     traverseRouteCB(-1);
     break;
   case 'a':
-   activeGui->priv->animate =! activeGui->priv->animate;
+    activeGui->priv->animate =! activeGui->priv->animate;
+    cout << "animate is now " << activeGui->priv->animate << "\n";
     break;
 
   case 'c':
@@ -474,8 +478,6 @@ Gui::handleMousePress(int button, int mouse_x, int mouse_y)
     last_time=SCIRun::Time::currentSeconds();
     break;
   }
-
-  printf("mouse was pressed\n");
 } // end handleMousePress()
 
 void
@@ -509,7 +511,7 @@ Gui::handleMouseRelease(int button, int /*mouse_x*/, int /*mouse_y*/)
 	z_a.normalize();
 	    
 	activeGui->camera_->up  = y_a;
-	activeGui->camera_->eye = activeGui->camera_->lookat+z_a;
+	activeGui->camera_->eye = activeGui->camera_->lookat+z_a*eye_dist;
 	activeGui->camera_->setup();
 	prev_trans = prv;
 
@@ -585,8 +587,6 @@ Gui::handleMouseMotionCB( int mouse_x, int mouse_y )
   double     & last_time = priv->last_time;
   BallData  *& ball      = priv->ball;
 
-  cout << "mouse is at: " << mouse_x << ", " << mouse_y << "\n";
-
   switch( activeGui->mouseDown_ ) {
   case GLUT_LEFT_BUTTON:
     {
@@ -637,8 +637,8 @@ Gui::handleMouseMotionCB( int mouse_x, int mouse_y )
       Vector y_a(vmat[0][1],vmat[1][1],vmat[2][1]);
       Vector z_a(vmat[0][2],vmat[1][2],vmat[2][2]);
       z_a.normalize();
-      activeGui->camera_->up=y_a;
 
+      activeGui->camera_->up  = y_a;
       activeGui->camera_->eye = activeGui->camera_->lookat+z_a*eye_dist;
       activeGui->camera_->setup();
 			
@@ -689,7 +689,7 @@ Gui::updateLightPanelCB( int /*id*/ )
 {
   if( activeGui->lights_.size() == 0 ) return;
 
-  Light * light = activeGui->lights_[ activeGui->selectedLightId ];
+  Light * light = activeGui->lights_[ activeGui->selectedLightId_ ];
   const Color & color = light->getOrigColor();
 
   activeGui->r_color_spin->set_float_val( color.red() );
@@ -708,7 +708,7 @@ Gui::updateLightPanelCB( int /*id*/ )
 void
 Gui::updateRouteCB( int /*id*/ )
 {
-  activeGui->stealth_->selectPath( activeGui->selectedRouteId );
+  activeGui->stealth_->selectPath( activeGui->selectedRouteId_ );
   goToRouteBeginningCB( -1 );
 }
 
@@ -759,7 +759,7 @@ Gui::createRouteWindow( GLUI * window )
   GLUI_Panel * panel = window->add_panel( "Routes" );
 
   routeList = window->add_listbox_to_panel( panel, "Selected Route",
-					    &selectedRouteId, 
+					    &selectedRouteId_, 
 					    ROUTE_LIST_ID, updateRouteCB );
   routePositionPanel = window->add_panel_to_panel(panel, "Current Position");
   routePositionET =
@@ -828,15 +828,46 @@ Gui::createObjectWindow( GLUI * window )
   GLUI_Panel * panel = window->add_panel( "Objects" );
 
   objectList = window->add_listbox_to_panel( panel, "Selected Object",
-					    &selectedObjectId, 
+					    &selectedObjectId_,
 					    OBJECT_LIST_ID, updateObjectCB );
-  objectList->add_item( 1, "Not Implemented Yet" );
-  objectList->add_item( 2, "Object 2" );
+
+  Array1<Object*> & objects = dpy_->scene->objectsOfInterest_;
+  for( int num = 0; num < objects.size(); num++ )
+    {
+      char name[ 1024 ];
+      sprintf( name, "%s", objects[ num ]->name_.c_str() );
+      objectList->add_item( num, name );
+    }
 
   window->add_statictext_to_panel( panel, "Position:" );
   window->add_statictext_to_panel( panel, "Type:" );
   window->add_statictext_to_panel( panel, "Material:" );
 
+  attachKeypadBtn_ = window->add_button_to_panel( panel, "Attach Keypad",
+						  ATTACH_KEYPAD_BTN_ID,
+						  attachKeypadCB );
+}
+
+void
+Gui::attachKeypadCB( int /*id*/ )
+{
+  Object * obj = 
+    activeGui->dpy_->scene->objectsOfInterest_[ activeGui->selectedObjectId_ ];
+  Instance * instance = dynamic_cast<Instance*>( obj );
+
+  if( instance ) 
+    {
+      if( !activeGui->keypadAttached_ )
+	{
+	  activeGui->keypadAttached_ = true;
+	  activeGui->attachKeypadBtn_->set_name( "Detach Keypad" );
+	}
+      else
+	{
+	  activeGui->keypadAttached_ = false;
+	  activeGui->attachKeypadBtn_->set_name( "Attach Keypad" );
+	}
+  }
 }
 
 void
@@ -863,7 +894,7 @@ Gui::createLightWindow( GLUI * window )
 {
   GLUI_Panel * panel = window->add_panel( "Lights" );
   lightList = window->add_listbox_to_panel( panel, "Selected Light:",
-					    &selectedLightId, 
+					    &selectedLightId_, 
 					    LIGHT_LIST_ID, updateLightPanelCB);
   lightsColorPanel_ = window->add_panel_to_panel( panel, "Color" );
 
@@ -922,7 +953,7 @@ Gui::createMenus( int winId )
 
   activeGui->glutDisplayWindowId = winId;
 
-  int modemenu = glutCreateMenu( Gui::handleMenuCB );
+  /*int modemenu = */glutCreateMenu( Gui::handleMenuCB );
 
   glutAddMenuEntry( "Toggle Gui", TOGGLE_GUI );
   glutAddMenuEntry( "Toggle Hot Spots", TOGGLE_HOT_SPOTS );
@@ -1050,7 +1081,7 @@ Gui::createMenus( int winId )
   activeGui->ambientModeLB_->add_item( Constant_Ambient, "Constant" );
   activeGui->ambientModeLB_->add_item( Arc_Ambient, "Arc" );
   activeGui->ambientModeLB_->add_item( Sphere_Ambient, "Sphere" );
-  activeGui->ambientModeLB_->set_int_val( activeGui->dpy_->scene->ambient_mode );
+  activeGui->ambientModeLB_->set_int_val( activeGui->dpy_->ambientMode_ );
 
   // Jitter
   GLUI_Panel * jitter = 
@@ -1244,7 +1275,7 @@ Gui::updateIntensityCB( int /*id*/ )
 
   if( activeGui->lights_.size() == 0 ) return;
 
-  Light * light = activeGui->lights_[ activeGui->selectedLightId ];
+  Light * light = activeGui->lights_[ activeGui->selectedLightId_ ];
 
   light->updateIntensity( activeGui->lightBrightness_ );
 
