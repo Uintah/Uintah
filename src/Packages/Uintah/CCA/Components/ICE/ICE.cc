@@ -1049,10 +1049,13 @@ void ICE::actuallyInitialize(const ProcessorGroup*,
                                 press_CC,  numALLMatls,    patch, new_dw);
 
       cv[m] = ice_matl->getSpecificHeat();
+      setBC(press_CC,   rho_micro[SURROUND_MAT], "rho_micro","Pressure", 
+                                              patch, d_sharedState, 0, new_dw);
       setBC(rho_CC[m],        "Density",      patch, d_sharedState, indx);
       setBC(rho_micro[m],     "Density",      patch, d_sharedState, indx);
       setBC(Temp_CC[m],       "Temperature",  patch, d_sharedState, indx);
       setBC(vel_CC[m],        "Velocity",     patch, indx); 
+
       for (CellIterator iter = patch->getExtraCellIterator();
                                                         !iter.done();iter++){
         IntVector c = *iter;
@@ -1099,12 +1102,13 @@ void ICE::actuallyInitialize(const ProcessorGroup*,
       }
     }   // numMatls loop 
 
-    if (switchDebugInitialize){          
+    if (switchDebugInitialize){     
+      ostringstream desc;
+      desc << "Initialization_patch_"<< patch->getID();
+      printData(0, patch, 1, "Initialization", "press_CC", press_CC);         
       for (int m = 0; m < numMatls; m++ ) { 
         ICEMaterial* ice_matl = d_sharedState->getICEMaterial(m);
-        int indx = ice_matl->getDWIndex();
-        cout_norm << " Initial Conditions" << endl;       
-        ostringstream desc;
+        int indx = ice_matl->getDWIndex();      
         desc << "Initialization_Mat_" << indx << "_patch_"<< patch->getID();
         printData(indx, patch,   1, desc.str(), "rho_CC",      rho_CC[m]);
         printData(indx, patch,   1, desc.str(), "rho_micro_CC",rho_micro[m]);
@@ -1114,12 +1118,6 @@ void ICE::actuallyInitialize(const ProcessorGroup*,
         printVector(indx, patch, 1, desc.str(), "vel_CC", 0,   vel_CC[m]);;
       }   
     }
-    setBC(press_CC,   rho_micro[SURROUND_MAT], 
-          "rho_micro","Pressure", patch, d_sharedState, 0, new_dw);
-    if (switchDebugInitialize){
-       printData(0, patch, 1, "Initialization", "press_CC", press_CC);
-    }
-
   }  // patch loop 
 }
 
