@@ -14,7 +14,16 @@ namespace Uintah {
   class VarLabel;
   class SolverParameters {
   public:
+    SolverParameters() : solveOnExtraCells(false) {}
+    void setSolveOnExtraCells(bool s) {
+      solveOnExtraCells = s;
+    }
+    bool getSolveOnExtraCells() const {
+      return solveOnExtraCells;
+    }
     virtual ~SolverParameters();
+  private:
+    bool solveOnExtraCells;
   };
   class SolverInterface : public UintahParallelPort {
   public:
