@@ -50,6 +50,12 @@ class Worker : public Runnable {
   int  oldNumWorkers_;
   
   int rendering_scene;
+
+  // This reallocates the work distribution for the workers when doing
+  // frameless rendering.
+  void fill_frameless_work(Array1<int>& xpos, Array1<int>& ypos,
+                           int xres, int yres, int& nwork);
+  void renderFrameless();
 public:
   Worker(Dpy* dpy, Scene* scene, int num, int pp_size, int scratchsize,
 	 int ncounters, int c0, int c1);
@@ -81,7 +87,7 @@ public:
   // This is probably a bad idea to use this as I can't enforce num to
   // be between 0 and the number of workers or be unique, but for now
   // it is.  --James Bigler
-  int rank() { return num; }
+  inline int rank() const { return num; }
 
 };
 
