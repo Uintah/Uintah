@@ -136,64 +136,19 @@ ShowColorMap::execute()
   sq->set_texture( cmap->raw1d );
   all->add( sq );
   
-  double min, max;
-  if (cmap->IsScaled())
-  {
-    min = cmap->min;
-    max = cmap->max;
-  }
-  else
-  {
-    // If the scalar field is present, we can add numbers and place the
-    // billboard more intelligently.
-    bool computed_min_max_p = false;
-    port_range_type range = get_iports("ScalarField");
-    port_map_type::iterator pi = range.first;
-    while (pi != range.second)
-    {
-      FieldIPort *isf = (FieldIPort *)get_iport(pi->second);
-      ++pi;
-      FieldHandle sf;
-      ScalarFieldInterface *sfi;
-      if (isf->get(sf) && (sfi = sf->query_scalar_interface()))
-      {
-	double minval, maxval;
-	sfi->compute_min_max(minval, maxval);
-	
-	if (computed_min_max_p)
-	{
-	  min = Min(min, minval);
-	  max = Max(max, maxval);
-	}
-	else
-	{ 
-	  min = minval;
-	  max = maxval;
-	  computed_min_max_p = true;
-	}
-      }
-    }
-    if (computed_min_max_p)
-    {
-      cmap->Scale(min, max);
-    }
-    else
-    {
-      min = cmap->min;
-      max = cmap->max;
-    }
-  }
-
   const int numlabels = gui_numlabels_.get();
   if (numlabels > 1 && numlabels < 50)
   {
     // Fill in the text.
+    const double minval = cmap->min;
+    const double maxval = cmap->max;
+
     Point p0  = ref0 - out * 0.02; 
     char value[80];
     GeomGroup *labels = scinew GeomGroup();
     for(int i = 0; i < numlabels; i++ )
     {
-      sprintf(value, "%.2g", min + (max-min)*(i/(numlabels-1.0)));
+      sprintf(value, "%.2g", minval + (maxval-minval)*(i/(numlabels-1.0)));
       labels->add(scinew GeomText(value, p0 + along * (i/(numlabels-1.0))));
       labels->add(new GeomLine(p0 + along * (i/(numlabels-1.0)),
 			       p0 + along * (i/(numlabels-1.0)) + out * 0.5));
