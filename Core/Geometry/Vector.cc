@@ -64,6 +64,26 @@ Vector::find_orthogonal(Vector& v1, Vector& v2) const
     v2.normalize();
 }
 
+bool
+Vector::check_find_orthogonal(Vector& v1, Vector& v2) const
+{
+    Vector v0(Cross(*this, Vector(1,0,0)));
+    if(v0.length2() == 0){
+	v0=Cross(*this, Vector(0,1,0));
+    }
+    v1=Cross(*this, v0);
+    double length1 = v1.length();
+    if(length1 == 0)
+       return false;
+    v1 *= 1./length1;
+    v2=Cross(*this, v1);
+    double length2 = v2.length();
+    if(length2 == 0)
+       return false;
+    v2 *= 1./length2;
+    return true;
+}
+
 Vector
 Vector::normal() const
 {
