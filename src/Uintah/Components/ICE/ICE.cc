@@ -548,9 +548,12 @@ void ICE::scheduleStep5b(const Patch* patch,SchedulerP& sched,
     task->requires( new_dw, lb->rho_micro_equil_CCLabel,
 		    dwindex,patch,Ghost::None);
     
+    task->computes( new_dw, lb->mom_L_ME_CCLabel,  dwindex,patch);
+#if 0
     task->computes( new_dw, lb->xmom_L_ME_CCLabel,  dwindex,patch);
     task->computes( new_dw, lb->ymom_L_ME_CCLabel,  dwindex,patch);
     task->computes( new_dw, lb->zmom_L_ME_CCLabel,  dwindex,patch);
+#endif
     task->computes( new_dw, lb->int_eng_L_ME_CCLabel,dwindex,patch);
   }
   sched->addTask(task);
@@ -575,9 +578,12 @@ void ICE::scheduleStep6and7(const Patch* patch, SchedulerP& sched,
     task->requires(old_dw, lb->rho_CCLabel,       dwindex,patch,Ghost::None);
     task->requires(old_dw, lb->vel_CCLabel,      dwindex,patch,Ghost::None);
     task->requires(old_dw, lb->temp_CCLabel,      dwindex,patch,Ghost::None);
+    task->requires(new_dw, lb->mom_L_ME_CCLabel, dwindex,patch,Ghost::None,0);
+#if 0
     task->requires(new_dw, lb->xmom_L_ME_CCLabel, dwindex,patch,Ghost::None,0);
     task->requires(new_dw, lb->ymom_L_ME_CCLabel, dwindex,patch,Ghost::None,0);
     task->requires(new_dw, lb->zmom_L_ME_CCLabel, dwindex,patch,Ghost::None,0);
+#endif
     task->requires(new_dw, lb->int_eng_L_ME_CCLabel,dwindex,patch,
 		   Ghost::None,0);    
     task->requires(new_dw, lb->speedSound_CCLabel,dwindex,patch,Ghost::None);
@@ -2003,17 +2009,22 @@ void ICE::actuallyStep5b(const ProcessorGroup*,const Patch* patch,
 
   vector<CCVariable<double> > rho_CC(numMatls);
   vector<CCVariable<Vector> > mom_L(numMatls);
+#if 0
   vector<CCVariable<double> > xmom_L(numMatls);
   vector<CCVariable<double> > ymom_L(numMatls);
   vector<CCVariable<double> > zmom_L(numMatls);
+#endif
   vector<CCVariable<double> > int_eng_L(numMatls);
   vector<CCVariable<double> > vol_frac_CC(numMatls);
   vector<CCVariable<double> > rho_micro_CC(numMatls);
   vector<CCVariable<double> > cv_CC(numMatls);
 
+  vector<CCVariable<Vector> > mom_L_ME(numMatls);
+#if 0
   vector<CCVariable<double> > xmom_L_ME(numMatls);
   vector<CCVariable<double> > ymom_L_ME(numMatls);
   vector<CCVariable<double> > zmom_L_ME(numMatls);
+#endif
   vector<CCVariable<double> > int_eng_L_ME(numMatls);
     
   vector<double> b(numMatls);
@@ -2039,9 +2050,12 @@ void ICE::actuallyStep5b(const ProcessorGroup*,const Patch* patch,
 		Ghost::None, 0);
     old_dw->get(cv_CC[m],lb->cv_CCLabel,dwindex,patch, Ghost::None, 0);
 
+    new_dw->allocate( mom_L_ME[m],  lb->mom_L_ME_CCLabel,    dwindex, patch);
+#if 0
     new_dw->allocate( xmom_L_ME[m],  lb->xmom_L_ME_CCLabel,    dwindex, patch);
     new_dw->allocate( ymom_L_ME[m],  lb->ymom_L_ME_CCLabel,    dwindex, patch);
     new_dw->allocate( zmom_L_ME[m],  lb->zmom_L_ME_CCLabel,    dwindex, patch);
+#endif
     new_dw->allocate(int_eng_L_ME[m],lb->int_eng_L_ME_CCLabel, dwindex, patch);
   }
   for (int i = 0; i < numMatls; i++ )  {
@@ -2052,12 +2066,7 @@ void ICE::actuallyStep5b(const ProcessorGroup*,const Patch* patch,
   // Set (*)mom_L_ME = (*)mom_L
   // if you have only 1 mat then there is no exchange
   for (int m = 0; m < numMatls; m++) {
-    for(CellIterator iter = patch->getExtraCellIterator(); !iter.done(); 
-	iter++){
-      xmom_L_ME[m][*iter] = mom_L[m][*iter].x();
-      ymom_L_ME[m][*iter] = mom_L[m][*iter].y();
-      zmom_L_ME[m][*iter] = mom_L[m][*iter].z();
-    }
+    mom_L_ME[m] = mom_L[m];
     int_eng_L_ME[m] = int_eng_L[m];
   }
 
@@ -2096,7 +2105,7 @@ void ICE::actuallyStep5b(const ProcessorGroup*,const Patch* patch,
     acopy = a;
     itworked = acopy.solve(b);
     for(int m = 0; m < numMatls; m++) {
-        xmom_L_ME[m][*iter] = mom_L[m][*iter].x() + b[m]*mass[m];
+        mom_L_ME[m][*iter].x( mom_L[m][*iter].x() + b[m]*mass[m] );
     }
 
     //     Y - M O M E N T U M
@@ -2116,7 +2125,7 @@ void ICE::actuallyStep5b(const ProcessorGroup*,const Patch* patch,
     acopy    = a;
     itworked = acopy.solve(b);
     for(int m = 0; m < numMatls; m++)   {
-        ymom_L_ME[m][*iter] = mom_L[m][*iter].y() + b[m]*mass[m];
+        mom_L_ME[m][*iter].y( mom_L[m][*iter].y() + b[m]*mass[m] );
     }
 
     //     Z - M O M E N T U M
@@ -2136,7 +2145,7 @@ void ICE::actuallyStep5b(const ProcessorGroup*,const Patch* patch,
     acopy    = a;
     itworked = acopy.solve(b);
     for(int m = 0; m < numMatls; m++)  {
-      zmom_L_ME[m][*iter] = mom_L[m][*iter].z() + b[m]*mass[m];
+      mom_L_ME[m][*iter].z( mom_L[m][*iter].z() + b[m]*mass[m] );
     }
     //    E N E R G Y   E X C H A N G E
     //   Form BETA matrix (a) off diagonal terms
@@ -2175,17 +2184,23 @@ void ICE::actuallyStep5b(const ProcessorGroup*,const Patch* patch,
   }
   
   for (int m = 0; m < numMatls; m++)  {
+    setBC(mom_L_ME[m],"Velocity",patch);
+#if 0
     setBC(xmom_L_ME[m],"Velocity","x",patch);
     setBC(ymom_L_ME[m],"Velocity","y",patch);
     setBC(zmom_L_ME[m],"Velocity","z",patch);
+#endif
   }
   
   for(int m = 0; m < numMatls; m++) {
     ICEMaterial* matl = d_sharedState->getICEMaterial( m );
     int dwindex = matl->getDWIndex();
+    new_dw->put(mom_L_ME[m],   lb->mom_L_ME_CCLabel,   dwindex, patch);
+#if 0
     new_dw->put(xmom_L_ME[m],   lb->xmom_L_ME_CCLabel,   dwindex, patch);
     new_dw->put(ymom_L_ME[m],   lb->ymom_L_ME_CCLabel,   dwindex, patch);
     new_dw->put(zmom_L_ME[m],   lb->zmom_L_ME_CCLabel,   dwindex, patch);
+#endif
     new_dw->put(int_eng_L_ME[m],lb->int_eng_L_ME_CCLabel,dwindex, patch);
   }
 
@@ -2222,6 +2237,7 @@ void ICE::actuallyStep6and7(const ProcessorGroup*, const Patch* patch,
     }
   
   CCVariable<double> xmom_L_ME, ymom_L_ME, zmom_L_ME, int_eng_L_ME, mass_L;
+  CCVariable<Vector> mom_L_ME;
   CCVariable<double> speedSound,cv_old;
   
   SFCXVariable<double> uvel_FC;
@@ -2257,9 +2273,12 @@ void ICE::actuallyStep6and7(const ProcessorGroup*, const Patch* patch,
     new_dw->get(uvel_FC,   lb->uvel_FCMELabel,   dwindex,patch,Ghost::None,0);
     new_dw->get(vvel_FC,   lb->vvel_FCMELabel,   dwindex,patch,Ghost::None,0);
     new_dw->get(wvel_FC,   lb->wvel_FCMELabel,   dwindex,patch,Ghost::None,0);
+    new_dw->get(mom_L_ME, lb->mom_L_ME_CCLabel,dwindex,patch,Ghost::None,0);
+#if 0
     new_dw->get(xmom_L_ME, lb->xmom_L_ME_CCLabel,dwindex,patch,Ghost::None,0);
     new_dw->get(ymom_L_ME, lb->ymom_L_ME_CCLabel,dwindex,patch,Ghost::None,0);
     new_dw->get(zmom_L_ME, lb->zmom_L_ME_CCLabel,dwindex,patch,Ghost::None,0);
+#endif
     new_dw->get(mass_L,    lb->mass_L_CCLabel,   dwindex,patch,Ghost::None,0);
     new_dw->get(int_eng_L_ME,lb->int_eng_L_ME_CCLabel,dwindex,patch,
 		Ghost::None,0);
@@ -2279,9 +2298,7 @@ void ICE::actuallyStep6and7(const ProcessorGroup*, const Patch* patch,
 /*`==========DEBUG============*/ 
 #if switchDebug_advance_advect
     printData( patch,1, "TOP Advection",   "mass_L",      mass_L);
-    printData( patch,1, "",   "xmom_L_ME",                xmom_L_ME);
-    printData( patch,1, "",   "ymom_L_ME",                ymom_L_ME);
-    printData( patch,1, "",   "zmom_L_ME",                zmom_L_ME);
+    printData( patch,1, "",   "mom_L_ME",                mom_L_ME);
     printData( patch,1, "",   "int_eng_L_ME",             int_eng_L_ME);
 #endif
  /*==========DEBUG============`*/
@@ -2309,7 +2326,7 @@ void ICE::actuallyStep6and7(const ProcessorGroup*, const Patch* patch,
     
     // Advect X momentum and backout vel_CC.x()
     for(CellIterator iter=patch->getExtraCellIterator(); !iter.done(); iter++){
-      q_CC[*iter] = xmom_L_ME[*iter] * invvol;
+      q_CC[*iter] = mom_L_ME[*iter].x() * invvol;
     }
     
     advectQFirst(q_CC,patch,OFS,OFE,OFC,IFS,IFE,IFC,q_out,q_out_EF,q_out_CF,
@@ -2317,11 +2334,11 @@ void ICE::actuallyStep6and7(const ProcessorGroup*, const Patch* patch,
 
     for(CellIterator iter = patch->getCellIterator(); !iter.done();  iter++){
       mass = rho_CC[*iter] * vol;
-      vel_CC[*iter].x( (xmom_L_ME[*iter] + q_advected[*iter])/mass );
+      vel_CC[*iter].x( (mom_L_ME[*iter].x() + q_advected[*iter])/mass );
     }
     // Advect Y momentum and backout vvel_CC
     for(CellIterator iter=patch->getExtraCellIterator(); !iter.done(); iter++){
-      q_CC[*iter] = ymom_L_ME[*iter] * invvol;
+      q_CC[*iter] = mom_L_ME[*iter].y() * invvol;
     }
     
     advectQFirst(q_CC,patch,OFS,OFE,OFC,IFS,IFE,IFC,q_out,q_out_EF,q_out_CF,
@@ -2329,12 +2346,12 @@ void ICE::actuallyStep6and7(const ProcessorGroup*, const Patch* patch,
     
     for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
       mass = rho_CC[*iter] * vol;
-      vel_CC[*iter].y( (ymom_L_ME[*iter] + q_advected[*iter])/mass );
+      vel_CC[*iter].y( (mom_L_ME[*iter].y() + q_advected[*iter])/mass );
     }
     
     // Advect Z momentum and backout wvel_CC
     for(CellIterator iter=patch->getExtraCellIterator(); !iter.done(); iter++){
-      q_CC[*iter] = zmom_L_ME[*iter] * invvol;
+      q_CC[*iter] = mom_L_ME[*iter].z() * invvol;
     }
     
     advectQFirst(q_CC, patch,OFS,OFE,OFC,IFS,IFE,IFC,q_out,q_out_EF,q_out_CF,
@@ -2342,7 +2359,7 @@ void ICE::actuallyStep6and7(const ProcessorGroup*, const Patch* patch,
                                         
     for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++) {
       mass = rho_CC[*iter] * vol;
-      vel_CC[*iter].z( (zmom_L_ME[*iter] + q_advected[*iter])/mass );
+      vel_CC[*iter].z( (mom_L_ME[*iter].z() + q_advected[*iter])/mass );
     }
 
     // Advect internal energy and backout Temp_CC
@@ -3608,6 +3625,9 @@ ______________________________________________________________________*/
 
 //
 // $Log$
+// Revision 1.80  2001/01/08 20:40:51  jas
+// Replace {x,y,z}mom_L_ME with a single CCVariable<Vector> mom_L_ME.
+//
 // Revision 1.79  2001/01/08 18:30:36  jas
 // Replace {x,y,z}mom_L with a single CCVariable<Vector> mom_L.
 //
