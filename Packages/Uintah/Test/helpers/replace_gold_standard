@@ -41,6 +41,8 @@ if [ $yesno == "y" -o $yesno == "yes" ]; then
   echo "Enter 'yes' or 'y' to continue"
   read yesno
   if [ $yesno == "y" -o $yesno == "yes" ]; then
+    echo "rm $gold_standard_dir/$testname/*malloc*"
+    rm $gold_standard_dir/$testname/*malloc*
     echo "cp $replacement_dir/$testname/malloc_stats $gold_standard_dir/$testname/."
     cp $replacement_dir/$testname/malloc_stats $gold_standard_dir/$testname/.
     if [ $? != "0" ]; then
@@ -55,14 +57,14 @@ if [ $yesno == "y" -o $yesno == "yes" ]; then
     echo "No memory usage results replaced"
   fi
 
-  echo "chgrp -R csafe $gold_standard_dir/$testname"
-  chgrp -R csafe "$gold_standard_dir/$testname"
+  echo "chgrp -R csafe $gold_standard_dir/$testname/*"
+  chgrp -R csafe "$gold_standard_dir/$testname"/* 
   if [ $? != "0" ]; then
     echo "failed"
     exit 1
   fi
-  echo "chmod -R g+rwX $gold_standard_dir/$testname"
-  chmod -R g+rwX "$gold_standard_dir/$testname"
+  echo "chmod -R g+rwX $gold_standard_dir/$testname/*"
+  chmod -R g+rwX "$gold_standard_dir/$testname"/*
   if [ $? != "0" ]; then
     echo "failed"
     exit 1
