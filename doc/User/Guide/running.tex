@@ -64,14 +64,14 @@ It is convenient to place the above  in a shell initialization
 file (\filename{.cshrc} or \filename{.bashrc}).
 
 %begin{latexonly}
-\newcommand{\srwindow}%
-{\centerline{\epsfig{file=Figures/srwindow-1.eps.gz, width=6in,
-      bbllx=0, bblly=0, bburx=400, bbury=410}}}
+\newcommand{\srwindow}{%
+  \centerline{\includegraphics[bb=0 0 400 410,width=6in]{Figures/srwindow-1.eps.gz}}
+}
 %end{latexonly}
 \begin{htmlonly}
   \newcommand{\srwindow}{%
-    \htmladdimg[align=top,alt="SCIRun Window"]
-    {../Figures/srwindow-1.gif}}
+    \htmladdimg[alt="SCIRun Window"]{../Figures/srwindow-1.gif}
+  }
 \end{htmlonly}
 
 Change your current working directory to \sr{}'s
@@ -246,9 +246,9 @@ prompt \screen{scirun\ra}.  This program is  a modified \dfna{Tool
 \label{sec:scirunrc}
 \index{Environment Variables}
 
-The file \filename{.scirunrc} contains assignments to environment
-variables that affect \sr{}'s behavior.  \sr{} processes this file
-upon startup.
+\sr{} processes \filename{.scirunrc} file on startup.  File
+\filename{.scirunrc} contains assignments to environment variables
+that affect \sr{}'s behavior.  Lines beginning with '\#' are ignored.
 
 When started by a user the first time, \sr{} creates a default version of
 \filename{.scirunrc} in the user's home directory.  Users may modify
@@ -258,7 +258,7 @@ Users may also set \sr{} related environment variables in their
 shell.  Values of variables set in the shell override values set in
 \filename{.scirunrc}.
 
-See the content of \filename{.scirunrc} for a complete list \sr{}
+See the content of \filename{.scirunrc} for a complete list of \sr{}
 related environment variables.  The following
 is a partial list of variables understood by \sr{}:
 
@@ -295,6 +295,17 @@ is a partial list of variables understood by \sr{}:
   \filename{/usr/local/SCIRunData} (assuming this is where \sr{}'s
   sample data were installed).  \envvar{SCIRUN\_DATASET} can then be
   set to \filename{utahtorso} to specify the Utah Torso data set.
+  
+  \envitem{SCIRUN\_NET\_SUBSTITUTE\_DATADIR} When saving a network
+  containing a reader or writer module, \sr{} normally records (in the
+  network file) the absolute
+  pathname of a reader/writer module's chosen file.  If
+  \envvar{SCIRUN\_NET\_SUBSTITUTE\_DATADIR} is set to 1 and if a
+  reader/writer module is set to read/write from/to a file in
+  \icode{\$SCIRUN\_DATA/\$SCIRUN\_DATASET} then \sr{} will record a
+  filename whose path will be determined by future values of
+  \envvar{SCIRUN\_DATA} and \envvar{SCIRUN\_DATASET}.  The default
+  value of \envvar{SCIRUN\_NET\_SUBSTITUTE\_DATADIR} is 0.
 
   \envitem{SCIRUN\_TMP\_DIR}
   \envvar{SCIRUN\_TMP\_DIR} specifies the directory where \sr{} will
@@ -327,11 +338,11 @@ is a partial list of variables understood by \sr{}:
 \section{Remote Display}
 \label{sec:remote-display}
 
-Normally, \sr{}'s main window is displayed on a console 
-connected directly to the computer on which \sr{} runs.  It is
-possible, however, to display \sr{} on a remote console.  The term
-\dfn{local} refers to the machine running \sr{}.  The term
-\dfn{remote} refers to the machine displaying \sr{}.
+Normally, \sr{}'s main window is displayed on a console that is part
+of the computer on which \sr{} runs.  It is possible, however, to
+display \sr{} on a \dfn{remote} console.  In the discussion that
+follows, the term \dfn{local} refers to the machine running \sr{} and
+the term \dfn{remote} refers to the machine displaying \sr{}.
 
 To display \sr{} remotely, the value of the \envvar{DISPLAY}
 environment variable must be set correctly on the local machine.
@@ -339,8 +350,8 @@ Also, the local machine must be allowed to send display commands to
 the remote machine.
   
 Normally, the remote machine makes a connection to the local machine
-via \command{ssh}.  In this case, \command{ssh} sets the value of
-\envvar{DISPLAY}, which also gives the the local machine permission to
+via the \command{ssh} command.  In this case, \command{ssh} sets the value of
+\envvar{DISPLAY} in such a way that the local machine has permission to
 send display commands to the remote machine.  However, \command{ssh}
 connections result in poor display performance because of encryption
 activity on the connection.
@@ -363,9 +374,10 @@ for a csh-style shell
 Note that this technique defeats the encryption protection on the
 connection.
 
-When overriding the value of \envvar{DISPLAY}, the local machine will
-need permission to send display commands to the remote machine.  Use
-the \command{xhost} command on the remote machine to give permission:
+After overriding the value of \envvar{DISPLAY} set by \command{ssh},
+the local machine will lack permission to send display commands to the
+remote machine.  Use the \command{xhost} command on the remote machine
+to give permission to the local machine:
 
 \begin{verbatim}
   xhost +local-machine-name

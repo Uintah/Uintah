@@ -65,14 +65,14 @@ type key \replaceable{key}
 \label{sec:modanatomy}
 
 %begin{latexonly}
-  \newcommand{\modgraphic}%
-  {\centerline{\epsfig{file=Figures/modgraphic-1.eps.gz,width=4in,
-        bbllx=0, bblly=0, bburx=325, bbury=157}}}
+\newcommand{\modgraphic}{%
+  \centerline{\includegraphics[bb=0 0 325 157,width=4in]{Figures/modgraphic-1.eps.gz}}
+}
 %end{latexonly}
 \begin{htmlonly}
   \newcommand{\modgraphic}{%
-  \htmladdimg[align=top,width="256",alt="SCIRun Module Graphic"]
-  {../Figures/modgraphic-1.gif}}
+  \htmladdimg[alt="SCIRun Module Graphic"]{../Figures/modgraphic-1.gif}
+}
 \end{htmlonly}
 
 All modules are similarly represented by a graphic within the NetEdit frame
@@ -138,7 +138,7 @@ for all modules and consists of the following elements:
     \descitem{Find} Highlights the module in the NetEdit frame
     that owns the control dialog being edited.
 
-    \descitem{Help} Displays a module's help information.
+    \descitem{? or Help} Displays a module's help information.
 
   \end{description}
 
@@ -208,6 +208,14 @@ for all modules and consists of the following elements:
     
     \menuitemdesc{Destroy} Destroys the module See \secref{Destroying
       Module(s)}{sec:destroymod}.
+
+    \menuitemdesc{Duplicate} Duplicates the module, its connections,
+    and its state.
+    
+    \menuitemdesc{Replace With} Replaces the module with the chosen
+    one.  \menu{Replace With} is a pop-up menu listing modules that
+    accept the same connections as the current module.  The chosen
+    module replaces the current module.
     
     \menuitemdesc{Show Log} Displays the module's message log.  Most
     modules write messages to their log during the course of
@@ -248,13 +256,17 @@ available in the pop-up menu:
 \begin{description}
   \menuitemdesc{Delete} Deletes a connection.
   
-  \menuitemdesc{Disable} Disables a connection.
+  \menuitemdesc{Insert Module} Creates and inserts a module ``into'' a
+  connection.  \menu{Insert Module} is a pop-up menu listing modules
+  that contain at least one input and at least one output port
+  matching the connection.  The chosen module is created and then the
+  connection is routed into the left-most matching input port and out
+  of the left-most matching output port.
   
-  \menuitemdesc{Enable} Enables a disabled connection.
-
+  \menuitemdesc{Disable (or Enable)} Disables (or enables) a connection.
+  
   \menuitemdesc{Notes} Displays a connection's note pad.
 \end{description}
-
 
 
 \section{Creating a Module}
@@ -277,14 +289,14 @@ placed in the NetEdit frame.
 \label{sec:setmodprops}
 
 %begin{latexonly}
-  \newcommand{\moddialog}%
-  {\centerline{\epsfig{file=Figures/moddialog.eps.gz,
-        bbllx=0, bblly=0, bburx=272, bbury=406}}}
+\newcommand{\moddialog} {%
+  \centerline{\includegraphics[bb=0 0 275 483]{Figures/moddialog.eps.gz}}
+}
 %end{latexonly}
 \begin{htmlonly}
   \newcommand{\moddialog}{%
-  \htmladdimg[align=top,alt="SCIRun Module Dialog"]
-  {../Figures/moddialog.gif}}
+    \htmladdimg[alt="SCIRun Module Dialog"]{../Figures/moddialog.gif}
+  }
 \end{htmlonly}
 
 To change a module's properties, click its \guibutton{UI} button.
@@ -293,9 +305,9 @@ the module's properties.  Each \htmladdnormallinkfoot{module's
   reference
   documentation}{\latexhtml{http://software.sci.utah.edu/doc/}{../../../}Developer/Modules/index.html}
 explains the use of its control dialog.  A module's reference
-documentation can be displayed by clicking a module's \guibutton{Help}
-button.  Figure~\ref{fig:moddialog} shows the control dialog for the
-\module{Show Field} module.
+documentation can be displayed by clicking a module's \guibutton{?}
+(or \guibutton{Help}) button.  Figure~\ref{fig:moddialog} shows the
+control dialog for the \module{Show Field} module.
 
 \begin{figure}[htb]
   \begin{makeimage}
@@ -356,7 +368,7 @@ modules, then perform Button1-Drag while the pointer is over any one
 of the modules in the selected group.
 
 Two modules may be moved by dragging one of the connections between
-them.  To move two modules perform Button1-Drag when the pointer is
+them.  To move two modules, perform Button1-Drag when the pointer is
 over a connection between two modules.
 
 \section{Disabling and Enabling Modules}
@@ -383,7 +395,7 @@ See also \secref{Disabling/Enabling Connections}{sec:disableconnect}.
 
 %begin{latexonly}
 \newcommand{\subnetgraphicfig}{%
-  \includegraphics[0,0][174,65]{Figures/subnetgraphic.eps.gz}
+  \centerline{\includegraphics[bb=0 0 219 132]{Figures/subnetgraphic.eps.gz}}
 }
 %end{latexonly}
 \begin{htmlonly}
@@ -405,7 +417,7 @@ sub-networks.  The next section (\secref{Editing a
   Sub-Network}{sec:editsubnet}) explains the use of the sub-network
 editor.
 
-A \guibutton{Sub-Network} button replaces the CPU time and Progress
+A sub-network editor button replaces the CPU time and Progress
 Bar in the sub-network graphic.  See Figure~\ref{fig:subnetgraphic}
 
 \begin{figure}[htb]
@@ -416,7 +428,7 @@ Bar in the sub-network graphic.  See Figure~\ref{fig:subnetgraphic}
 \end{figure}
 
 A sub-network's editor is activated by pressing the
-\guibutton{Sub-Network} button.
+sub-network editor button.
 
 Pressing button \guibutton{UI} activates control dialogs of all
 modules in a sub-network.  Control dialogs can be activated
@@ -427,8 +439,9 @@ has input and/or output ports (orginating from modules within the
 sub-network) that can be connected to modules outside of the
 sub-network.  Each sub-network has a pop-up menu and a set of editable
 notes (see \secref{Editing and Displaying Module
-  Notes}{sec:modnotes}).  A sub-network does not support a log (see
-\secref{Viewing a Module's Log}{sec:viewmodslog}).
+  Notes}{sec:modnotes}).  A sub-network does not have a log. Logs of
+individual modules in the sub-network can be viewed in the sub-network
+editor window (see \secref{Viewing a Module's Log}{sec:viewmodslog}).
 
 \section{Expanding a Sub-Network}
 \label{sec:expsubnet}
@@ -446,7 +459,7 @@ from the sub-network's pop-up menu.
 
 %begin{latexonly}
 \newcommand{\subneteditorfig}{%
-  \includegraphics[0,0][405,357]{Figures/subneteditor.eps.gz}
+  \centerline{\includegraphics[bb=0 0 304 307]{Figures/subneteditor.eps.gz}}
 }
 %end{latexonly}
 \begin{htmlonly}
@@ -455,12 +468,11 @@ from the sub-network's pop-up menu.
   }
 \end{htmlonly}
 
-The sub-network editor is activated by pressing a sub-network's
-\guibutton{Sub-Network} button.  The sub-network editor works similarly
-to the NetEdit window.  All network editing features of the NetEdit
-window are available in the sub-network editor---modules can be
-created, connections can be made, \etc{}  See
-Figure~\ref{fig:subneteditor}.
+The sub-network editor is activated by pressing a sub-network's editor
+button.  The sub-network editor works similarly to the NetEdit window.
+All network editing features of the NetEdit window are available in
+the sub-network editor---modules can be created, connections can be
+made, \etc{} See Figure~\ref{fig:subneteditor}.
 
 \begin{figure}[htb]
   \centering
@@ -491,7 +503,7 @@ build directory, if it exists and is writable (which applies only when
 are saved in the \directory{SCIRun/Subnets} directory of a user's home
 directory.
 
-To save a sub-network, press the sub-network's \guibutton{Sub-Network}
+To save a sub-network, press the sub-network's editor
 button, which activates the sub-network's editor, then press the
 editor's \guibutton{Save} button.
 
