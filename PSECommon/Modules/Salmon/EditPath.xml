@@ -18,6 +18,7 @@
 	<para>  - Path step(smoothness) and sampling rate specification for current path</para>
 	<para>  - Automatic generation of circle path based on current camera position and position of reference widget</para>
 	<para>  - Looped and reversed path modes</para>
+	<para>  - Switching output directions</para>
 	<para> </para>
 
 	<para> EditPath module could be used in any module network where automatic predefined/interpolated
