@@ -58,6 +58,8 @@ public:
   bool get_gradient(Vector &, Point &);
   Vector cell_gradient(TetVolMesh::cell_index);
 
+  virtual SFIHandle query_scalar_interface() const;
+
   //! Persistent IO
   void    io(Piostream &stream);
   static  PersistentTypeID type_id;
@@ -97,6 +99,29 @@ TetVol<T>::clone() const
 template <class T>
 TetVol<T>::~TetVol()
 {
+}
+
+template <>
+SFIHandle 
+TetVol<double>::query_scalar_interface() const;
+
+template <>
+SFIHandle 
+TetVol<int>::query_scalar_interface() const;
+
+template <>
+SFIHandle 
+TetVol<short>::query_scalar_interface() const;
+
+template <>
+SFIHandle 
+TetVol<unsigned char>::query_scalar_interface() const;
+
+template <class T>
+SFIHandle 
+TetVol<T>::query_scalar_interface() const
+{
+  return 0;
 }
 
 template <class T>

@@ -49,6 +49,9 @@ public:
   virtual void mesh_detach() = 0;
 
   //! Required interfaces
+  virtual SFIHandle query_scalar_interface() const = 0;
+  virtual VectorFieldInterface* query_vector_interface() const = 0;
+  virtual TensorFieldInterface* query_tensor_interface() const = 0;
   virtual InterpBase* query_interpolate() const = 0;
   virtual void finish_mesh() {};
 
