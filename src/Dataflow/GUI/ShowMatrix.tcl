@@ -66,7 +66,6 @@ itcl_class SCIRun_Visualization_ShowMatrix {
     method ui {} {
         set w .ui[modname]
         if {[winfo exists $w]} {
-            raise $w
             return
         }
         toplevel $w
@@ -130,9 +129,6 @@ itcl_class SCIRun_Visualization_ShowMatrix {
 #	-showvalue true -variable $this-ypos -resolution 0.01 -tickinterval 0.25
 
 
-
-
-
 	frame $w.col -relief groove -borderwidth 2
 	frame $w.col.label
 	
@@ -188,9 +184,10 @@ itcl_class SCIRun_Visualization_ShowMatrix {
 #	bind $w.row.rfrom <Return> "$this-c needexecute"
 #	bind $w.row.rto <Return> "$this-c needexecute"
 
-	button $w.execbutton -text "Execute" -command "$this-c needexecute"
+	pack $w.row $w.col $w.graph $w.cmap $w.text $w.mode $w.poslabel $w.pos -side top -e y -f both -padx 5 -pady 5
 
-	pack $w.row $w.col $w.graph $w.cmap $w.text $w.mode $w.poslabel $w.pos $w.execbutton -side top -e y -f both -padx 5 -pady 5
+	makeSciButtonPanel $w $w $this
+	moveToCursor $w
     }
 }
 
