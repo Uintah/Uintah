@@ -8,9 +8,9 @@ OBJS = VarCore.o \
 	BaseVariable.o \
 	BaseConstraint.o \
 	AngleConstraint.o \
+	CenterConstraint.o \
 	DistanceConstraint.o \
 	LineConstraint.o \
-	MidpointConstraint.o \
 	PlaneConstraint.o \
 	PythagorasConstraint.o \
 	RatioConstraint.o \
@@ -20,9 +20,9 @@ SRCS = VarCore.cc \
 	BaseVariable.cc \
 	BaseConstraint.cc \
 	AngleConstraint.cc \
+	CenterConstraint.cc \
 	DistanceConstraint.cc \
 	LineConstraint.cc \
-	MidpointConstraint.cc \
 	PlaneConstraint.cc \
 	PythagorasConstraint.cc \
 	RatioConstraint.cc \

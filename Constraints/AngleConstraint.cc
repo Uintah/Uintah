@@ -52,7 +52,7 @@ AngleConstraint::Satisfy( const Index index, const Scheme scheme, const Real Eps
    PointVariable& end2 = *vars[2];
    PointVariable& p = *vars[3];
    RealVariable& angle = *vars[4];
-   Vector v;
+   Vector v, v1, v2;
 
    if (ac_debug) {
       ChooseChange(index, scheme);
@@ -70,26 +70,43 @@ AngleConstraint::Satisfy( const Index index, const Scheme scheme, const Real Eps
       NOT_FINISHED("Line Constraint:  end2");
       break;
    case 3:
-      v = (((Point)end1 - center) * cos(angle) + ((Point)end2 - center) * sin(angle));
-
-      if (v.length2() < Epsilon) {
-	 c = (Point)end1;
-      } else {
-	 v.normalize();
-	 Real t = Dot((Point)p - center, v);
-	 c = (Point)center + (v * t);
+      v1 = (Point)end1 - center;
+      v2 = (Point)end2 - center;
+      if ((v1.length2() >= Epsilon) && (v2.length2() >= Epsilon)) {
+	 v2 = Cross(v2.normal(), v1.normal());
+	 if (v2.length2() >= Epsilon) {
+	    v2 = Cross(v1, v2.normal()); // Find orthogonal v2.
+	    v = (v1 * cos(angle) + v2 * sin(angle));
+	    
+	    if (v.length2() < Epsilon) {
+	       c = (Point)end1;
+	    } else {
+	       v.normalize();
+	       Real t(Dot((Point)p - center, v));
+	       c = (Point)center + (v * t);
+	    }
+	    var = vars[3];
+	    return 1;
+	 }
       }
-      var = vars[3];
-      return 1;
    case 4:
       v = (Point)p - center;
-      Real x(Dot((Point)end1 - center,v));
-      Real y(Dot((Point)end2 - center,v));
-      
-      if ((fabs(x) > Epsilon) || (fabs(y) > Epsilon)) {
-	 var = vars[4];
-	 c = atan2(y,x);
-	 return 1;
+      v1 = (Point)end1 - center;
+      v2 = (Point)end2 - center;
+      if ((v.length2() >= Epsilon)
+	  && (v1.length2() >= Epsilon) && (v2.length2() >= Epsilon)) {
+	 v2 = Cross(v2.normal(), v1.normal());
+	 if (v2.length2() >= Epsilon) {
+	    v2 = Cross(v1, v2.normal()); // Find orthogonal v2.
+	    
+	    Real x(Dot(v1, v)), y(Dot(v2, v));
+	    
+	    if ((fabs(x) > Epsilon) || (fabs(y) > Epsilon)) {
+	       var = vars[4];
+	       c = atan2(y,x);
+	       return 1;
+	    }
+	 }
       }
       break;
    default:
