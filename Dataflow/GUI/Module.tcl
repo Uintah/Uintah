@@ -771,6 +771,45 @@ itcl_class Module {
 	update_progress
     }
 
+    method light_module { } {
+	# light up module
+	set ir 240
+	set ig 230 
+	set ib 140 
+	foreach t $canvases {
+	    set modframe $t.module[modname]
+	    $modframe configure -background [format #%1x%1x%1x $ir $ig $ib]
+	    $modframe.ff configure -background [format #%1x%1x%1x $ir $ig $ib]
+	    if {[winfo exists $modframe.ff.ui] == 1} {
+		$modframe.ff.ui configure -background [format #%1x%1x%1x $ir $ig $ib]
+	    }
+	    $modframe.ff.title configure -background [format #%1x%1x%1x $ir $ig $ib]
+	    $modframe.ff.time configure -background [format #%1x%1x%1x $ir $ig $ib]
+
+	    
+	    # add "Dynamically Compiling" text
+	    $modframe.ff.title configure -text "$name\nCompiling" -justify left
+	}
+
+    }
+
+    method reset_module_color { } {
+	# light up module
+	foreach t $canvases {
+	    set modframe $t.module[modname]
+	    $modframe configure -background grey75
+	    $modframe.ff configure -background grey75
+	    if {[winfo exists $modframe.ff.ui] == 1} {
+		$modframe.ff.ui configure -background grey75
+	    }
+	    $modframe.ff.title configure -background grey75
+	    $modframe.ff.time configure -background grey75
+	    
+	    # add "Dynamically Compiling" text
+	    $modframe.ff.title configure -text $name
+	}
+    }
+    
     method update_msg_state {} { 
 	
 	if {$msg_state == "Error"} {

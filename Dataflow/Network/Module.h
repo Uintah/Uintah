@@ -244,6 +244,8 @@ namespace SCIRun {
       Nothing
     };
     void update_state(State);
+    void light_module();
+    void reset_module_color();
     void update_msg_state(MsgState);  
     CPUTimer timer;
   public:

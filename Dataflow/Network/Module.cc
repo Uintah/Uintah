@@ -288,6 +288,16 @@ void Module::update_progress(int n, int max, Timer &t)
   update_progress(double(n)/double(max), t);
 }
 
+void Module::light_module()
+{
+  gui->execute(id+" light_module ");
+}
+
+void Module::reset_module_color()
+{
+  gui->execute(id+" reset_module_color ");
+}
+
 // Port stuff
 void Module::add_iport(IPort* port)
 {
@@ -666,10 +676,7 @@ void Module::do_execute()
   timer.start();
   execute();
   timer.stop();
-  //if (msg_state != Error) 
-  //{
   update_state(Completed);
-  //}
 
   // Call finish on all ports...
   for(int i=0;i<iports.size();i++){
