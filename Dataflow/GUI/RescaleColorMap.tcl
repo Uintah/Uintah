@@ -36,11 +36,14 @@ itcl_class SCIRun_Visualization_RescaleColorMap {
     } 
   
     method set_defaults {} { 
+	global main_frame
+	set main_frame ""
+
 	global $this-isFixed
 	global $this-min
 	global $this-max
 	global $this-makeSymmetric
-	set bVar 0
+
 	set $this-isFixed 0
 	set $this-min 0
 	set $this-max 1
@@ -48,11 +51,6 @@ itcl_class SCIRun_Visualization_RescaleColorMap {
     }   
 
     method ui {} { 
-	global $this-isFixed
-	global $this-min
-	global $this-max
-	global $this-makeSymmetric
-
 	set w .ui[modname]
 	
 	if {[winfo exists $w]} { 
@@ -60,7 +58,38 @@ itcl_class SCIRun_Visualization_RescaleColorMap {
 	} 
 	
 	toplevel $w 
- 
+
+	build_ui $w
+
+	makeSciButtonPanel $w $w $this
+	moveToCursor $w
+
+	# Don't let the GUI be smaller than it originally starts as.
+	# (This works because moveToCursor forces the GUI to size
+	#  itself.  Without the "update idletasks" in moveToCursor
+        #  winfo would return 0.)
+	set guiWidth [winfo reqwidth $w]
+	set guiHeight [winfo reqheight $w]
+	wm minsize $w $guiWidth $guiHeight
+
+	if { [set $this-isFixed] } {
+	    $w.bf.f3.fs select
+	    $this fixedScale
+	} else {
+	    $w.bf.f1.as select
+	    $this autoScale
+	}
+    }
+
+    method build_ui { w } {
+	global main_frame
+	set main_frame $w
+	
+	global $this-isFixed
+	global $this-min
+	global $this-max
+	global $this-makeSymmetric
+
 	# Base Frame
 	frame $w.bf
 	pack $w.bf -padx 4 -pady 4 -fill both -expand y
@@ -116,48 +145,29 @@ itcl_class SCIRun_Visualization_RescaleColorMap {
 
 	bind $w.bf.f3.min.e1 <Return> "$this-c needexecute"
 	bind $w.bf.f3.max.e2 <Return> "$this-c needexecute"
-
-	if { [set $this-isFixed] } {
-	    $w.bf.f3.fs select
-	    $this fixedScale
-	} else {
-	    $w.bf.f1.as select
-	    $this autoScale
-	}
-
-	makeSciButtonPanel $w $w $this
-	moveToCursor $w
-
-	# Don't let the GUI be smaller than it originally starts as.
-	# (This works because moveToCursor forces the GUI to size
-	#  itself.  Without the "update idletasks" in moveToCursor
-        #  winfo would return 0.)
-	set guiWidth [winfo reqwidth $w]
-	set guiHeight [winfo reqheight $w]
-	wm minsize $w $guiWidth $guiHeight
     }
 
     method autoScale { } {
 	global $this-isFixed
-	set w .ui[modname]
+	global main_frame
 	
 	set lightgray "#444444"
 
-	$w.bf.f1.sas    configure -state normal
-	$w.bf.f3.min.l1 configure -foreground $lightgray
-	$w.bf.f3.min.e1 configure -state disabled -foreground $lightgray
-	$w.bf.f3.max.l2 configure -foreground $lightgray
-	$w.bf.f3.max.e2 configure -state disabled -foreground $lightgray
+	$main_frame.bf.f1.sas    configure -state normal
+	$main_frame.bf.f3.min.l1 configure -foreground $lightgray
+	$main_frame.bf.f3.min.e1 configure -state disabled -foreground $lightgray
+	$main_frame.bf.f3.max.l2 configure -foreground $lightgray
+	$main_frame.bf.f3.max.e2 configure -state disabled -foreground $lightgray
     }
 
     method fixedScale { } {
 	global $this-isFixed
-	set w .ui[modname]
+	global main_frame
 
-	$w.bf.f1.sas     configure -state disabled
-	$w.bf.f3.min.l1  configure -foreground black
-	$w.bf.f3.min.e1  configure -state normal -foreground black
-	$w.bf.f3.max.l2  configure -foreground black
-	$w.bf.f3.max.e2  configure -state normal -foreground black
+	$main_frame.bf.f1.sas     configure -state disabled
+	$main_frame.bf.f3.min.l1  configure -foreground black
+	$main_frame.bf.f3.min.e1  configure -state normal -foreground black
+	$main_frame.bf.f3.max.l2  configure -foreground black
+	$main_frame.bf.f3.max.e2  configure -state normal -foreground black
     }
 }
