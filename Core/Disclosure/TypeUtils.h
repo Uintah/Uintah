@@ -2,6 +2,7 @@
 #define UINTAH_HOMEBREW_TypeUtils_H
 
 #include <inttypes.h>
+#include <float.h>
 
 namespace SCIRun {
   class Point;
@@ -41,7 +42,27 @@ const TypeDescription* fun_getTypeDescription(Matrix3*);
 const TypeDescription* fun_getTypeDescription(Stencil7*);
 const TypeDescription* fun_getTypeDescription(Short27*);
 
-} // End namespace UintahStencil7
+// these functions are for getting safe values of types
+// return back the value in the argument (so we don't have to include
+// Vector.h here)
+void fun_getLargeValue(double*);
+void fun_getSmallValue(double*);
+void fun_getZeroValue(double*);
+void fun_getZeroValue(bool*);
+void fun_getZeroValue(long64*);
+void fun_getZeroValue(Vector*);
+
+// these functions should never get called - they just exist for
+// template completeness
+void fun_getLargeValue(bool*);
+void fun_getSmallValue(bool*);
+void fun_getLargeValue(long64*);
+void fun_getSmallValue(long64*);
+void fun_getLargeValue(Vector*);
+void fun_getSmallValue(Vector*);
+
+
+} // End namespace Uintah
    
 #include <Core/Datatypes/TypeName.h>
 #include <sgi_stl_warnings_off.h>
