@@ -551,12 +551,8 @@ proc isaDefaultValue { var } {
     set module [string range $var 0 [expr $pos-1]]
     # Get the variables name
     set varname [string range $var [expr $pos+1] end]
-    # Get where in the package hierarchy the module resides
-    set modulePath [list [netedit packageName $module] \
-			 [netedit categoryName $module] \
-			 [netedit moduleName $module]]
     # Get the name of the TCL instance of the modules GUI
-    set classname [join $modulePath _]
+    set classname [join [modulePath $module] _]
     if { ![llength [info commands $classname]] } { 
 	error "TCL Class not found while writing guiVar $var"	
 	return 0 
@@ -608,18 +604,17 @@ proc writeSubnet { filename subnet } {
 
     set i 0
     foreach module $Subnet(Subnet${subnet}_Modules) {
+	incr i
 	set modVar($module) "\$m$i"
 	if { [isaSubnetIcon $module] } {
 	    puts $out "\n${tab}\# Instiantiate a SCIRun Sub-Network"
 	    set number $Subnet(${module}_num)
 	    puts -nonewline $out "${tab}set m$i \[addSubnetInstanceAtPosition $Subnet(Subnet${number}_instance) "
 	} else {
-	    set modulePath [list [netedit packageName $module] \
-				 [netedit categoryName $module] \
-				 [netedit moduleName $module]]
-	    puts $out "\n${tab}\# Create a [join $modulePath ->] Module"
+	    set modpath [modulePath $module]
+	    puts $out "\n${tab}\# Create a [join $modpath ->] Module"
 	    puts -nonewline $out  "${tab}set m$i \[addModuleAtPosition "
-	    foreach elem $modulePath { puts -nonewline $out "\"${elem}\" " }
+	    foreach elem $modpath { puts -nonewline $out "\"${elem}\" " }
 	}
 	# Write the x,y position of the modules icon on the network graph
 	puts $out "[expr int([$module get_x])] [expr int([$module get_y])]\]"
@@ -627,12 +622,11 @@ proc writeSubnet { filename subnet } {
 	eval lappend connections $Subnet(${module}_connections)
 	# Write user notes 
 	if [info exists Notes($module-Position)] {
-	    puts $out "${tab}set Notes(\$m$i-Position) \{$Notes($module-Position)\}"
+	    puts $out "${tab}setGlobal Notes(\$m$i-Position) \{$Notes($module-Position)\}"
 	}
 	if [info exists Notes($module-Color)] {
-	    puts $out "${tab}set Notes(\$m$i--Color) \{$Notes($module-Color)\}"
+	    puts $out "${tab}setGlobal Notes(\$m$i--Color) \{$Notes($module-Color)\}"
 	}
-	incr i
     }
 
     # Uniquely sort connections list by output port # to handle dynamic ports
@@ -643,45 +637,44 @@ proc writeSubnet { filename subnet } {
     }
     set i 0
     foreach conn $connections {
+	incr i
 	puts -nonewline $out "${tab}set c$i \[addConnection "
 	puts $out "$modVar([oMod conn]) [oNum conn] $modVar([iMod conn]) [iNum conn]\]"
 	set id [makeConnID $conn]
 	if [info exists Notes($id-Color)] {
-	    puts $out "${tab}set Notes(\$c$i-Color) \{$Notes($id-Color)\}"
+	    puts $out "${tab}setGlobal Notes(\$c$i-Color) \{$Notes($id-Color)\}"
 	}	
 	if { [info exists Disabled($id)] && $Disabled($id) } {
-	    puts $out "${tab}set Disabled(\$c$i) \{1\}"
+	    puts $out "${tab}setGlobal Disabled(\$c$i) \{1\}"
 	}
 	if { [info exists Notes($id)] && [string length $Notes($id)] } {
-	    puts $out "${tab}set Notes(\$c$i) \{$Notes($id)\}"
+	    puts $out "${tab}setGlobal Notes(\$c$i) \{$Notes($id)\}"
 	}
 	if [info exists Notes($id-Position)] {
-	    puts $out "${tab}set Notes(\$c$i-Position) \{$Notes($id-Position)\}"
+	    puts $out "${tab}setGlobal Notes(\$c$i-Position) \{$Notes($id-Position)\}"
 	}
-	incr i
     }
     close $out
 
     set i 0
     foreach module $Subnet(Subnet${subnet}_Modules) {
-	if { [isaSubnetIcon $module] } { incr i; continue } 
+	incr i
+	if [isaSubnetIcon $module] continue
+	# Write the comment line for this modules GUIV values
+	set modstr [join [modulePath $module] ->]
 	set out [open $filename {WRONLY APPEND}] ;# Re-Open for appending
-	set modulePath [list [netedit packageName $module] \
-			    [netedit categoryName $module] \
-			    [netedit moduleName $module]]
-	puts $out "\n${tab}\# Set GUI Values for the [join $modulePath ->] Module"
-
-	# Write file to open GUI on load if it was open on save
-	if [windowIsMapped .ui$module] {
-	    puts $out "${tab}\$m$i initialize_ui"
-	}	
+	puts $out "\n${tab}\# Setup GUI for the $modstr Module"
 	close $out
-
 	# C-side knows which GUI vars to write out
 	if { ![isaSubnetIcon $module] } { 
 	    $module-c emit_vars $filename "\$m$i" "${tab}"
 	}
-	incr i
+	# Write command to open GUI on load if it was open on save
+	if [windowIsMapped .ui$module] {
+	    set out [open $filename {WRONLY APPEND}] ;# Re-Open for appending
+	    puts $out "${tab}\$m$i initialize_ui"
+	    close $out
+	}	
     }   
 
     if $subnet {
@@ -689,7 +682,15 @@ proc writeSubnet { filename subnet } {
 	puts $out "\}\n"
 	close $out
     }
-}		          
+}
+
+
+# Get where in the package hierarchy the module resides
+proc modulePath { module } {
+    return [list [netedit packageName $module] \
+		[netedit categoryName $module] \
+		[netedit moduleName $module]]
+}
 
 
 proc getAdjWidth { bbox } {
