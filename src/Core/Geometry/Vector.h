@@ -216,6 +216,12 @@ inline Vector Vector::operator*(const double s) const
     return Vector(_x*s, _y*s, _z*s);
 }
 
+// Allows for double * Vector so that everything doesn't have to be
+// Vector * double
+inline Vector operator*(double s, const Vector& v) {
+    return v*s;
+}
+
 inline Vector Vector::operator/(const double d) const
 {
     return Vector(_x/d, _y/d, _z/d);
