@@ -35,8 +35,8 @@ using std::string;
 
 using namespace SCIRun;
 
-void ProcessManager::start_process(const string& command,
-				   const string& resourceSpec)
+void ProcessManager::start_process(const string&,
+				   const string&)
 {
     NOT_FINISHED("ProcessManager::start_process");
 }
