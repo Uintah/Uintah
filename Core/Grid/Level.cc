@@ -33,8 +33,8 @@ using namespace std;
 static AtomicCounter* ids = 0;
 static Mutex ids_init("ID init");
 
-Level::Level(Grid* grid, const Point& anchor, const Vector& dcell, int index,
-	     int id)
+Level::Level(Grid* grid, const Point& anchor, const Vector& dcell, 
+             int index, int id /*=-1*/)
    : grid(grid), d_anchor(anchor), d_dcell(dcell), d_index(index),
      d_patchDistribution(-1,-1,-1),
      d_periodicBoundaries(0, 0, 0), d_id(id)
