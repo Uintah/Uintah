@@ -233,6 +233,7 @@ FieldMeasures::measure_tetvol()
   int x = xFlag_.get();
   int y = yFlag_.get();
   int z = zFlag_.get();
+  int length = lengthFlag_.get();
   int valence = valenceFlag_.get();
   int aspectRatio = aspectRatioFlag_.get();
   if (aspectRatio) {
@@ -273,7 +274,31 @@ FieldMeasures::measure_tetvol()
     MatrixHandle matH(dm);
     omp->send(matH);
   } else if (type == "edge") {
-    warning("TetVolMesh edge not yet implemented.");
+    if (length) ncols++;
+    TetVolMesh::Edge::size_type nedges;
+    mesh->size(nedges);
+    DenseMatrix *dm = scinew DenseMatrix(nedges, ncols);
+    TetVolMesh::Edge::iterator ni, nie;
+    mesh->begin(ni); mesh->end(nie);
+    int row=0;
+    int col=0;
+    while (ni != nie) {
+      col=0;
+      Point p,p0,p1;
+      mesh->get_center(p, *ni);
+      TetVolMesh::Node::array_type nodes;
+      mesh->get_nodes(nodes, *ni);
+      mesh->get_center(p0,nodes[0]);
+      mesh->get_center(p1,nodes[1]);
+      if (x) { (*dm)[row][col]=p.x(); col++; }
+      if (y) { (*dm)[row][col]=p.y(); col++; }
+      if (z) { (*dm)[row][col]=p.z(); col++; }
+      if (length) { (*dm)[row][col]=(p1-p0).length(); col++; }
+      ++ni;
+      row++;
+    }
+    MatrixHandle matH(dm);
+    omp->send(matH);
   } else if (type == "element") {
     if (aspectRatio) ncols++;
     if (elemSize) ncols++;
@@ -311,6 +336,7 @@ FieldMeasures::measure_latvol()
   int x = xFlag_.get();
   int y = yFlag_.get();
   int z = zFlag_.get();
+  int length = lengthFlag_.get();
   int valence = valenceFlag_.get();
   if (valence) {
     warning("TriSurfMesh node valence not yet implemented.");
@@ -354,7 +380,31 @@ FieldMeasures::measure_latvol()
     MatrixHandle matH(dm);
     omp->send(matH);
   } else if (type == "edge") {
-    warning("TetVolMesh edge not yet implemented.");
+    if (length) ncols++;
+    LatVolMesh::Edge::size_type nedges;
+    mesh->size(nedges);
+    DenseMatrix *dm = scinew DenseMatrix(nedges, ncols);
+    LatVolMesh::Edge::iterator ni, nie;
+    mesh->begin(ni); mesh->end(nie);
+    int row=0;
+    int col=0;
+    while (ni != nie) {
+      col=0;
+      Point p,p0,p1;
+      mesh->get_center(p, *ni);
+      LatVolMesh::Node::array_type nodes;
+      mesh->get_nodes(nodes, *ni);
+      mesh->get_center(p0,nodes[0]);
+      mesh->get_center(p1,nodes[1]);
+      if (x) { (*dm)[row][col]=p.x(); col++; }
+      if (y) { (*dm)[row][col]=p.y(); col++; }
+      if (z) { (*dm)[row][col]=p.z(); col++; }
+      if (length) { (*dm)[row][col]=(p1-p0).length(); col++; }
+      ++ni;
+      row++;
+    }
+    MatrixHandle matH(dm);
+    omp->send(matH);
   } else if (type == "element") {
     if (aspectRatio) ncols++;
     if (elemSize) ncols++;
