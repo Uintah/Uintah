@@ -116,9 +116,9 @@ Module::Module(const string& name, GuiContext* ctx,
     categoryName(cat), sched(0), pid_(0), have_own_dispatch(0),
     helper_done("Module helper finished flag"), id(ctx->getfullname()), 
     abort_flag(0), msgStream_(ctx->subVar("msgStream")), need_execute(0),
-    sched_class(sched_class), state(NeedData), progress(0),
-    show_stat(false), helper(0), network(0), notes(ctx->subVar("notes")),
-    show_status(ctx->subVar("show_status"))
+    sched_class(sched_class), state(NeedData), progress(0), msg_state(Nothing), 
+    show_stat(false), helper(0), network(0), 
+    notes(ctx->subVar("notes")), show_status(ctx->subVar("show_status"))
 {
   stacksize=0;
 
@@ -217,15 +217,35 @@ void Module::update_state(State st)
   case Completed:
     s="Completed";
     break;
-  case Error:
-    s="Error";
-    break;
   }
   double time = timer.time();
   if(time<0)
     time=0;
   time = Min(time, 1.0e10); // Clamp NaN
   gui->execute(id+" set_state " + s + " " + to_string(time));
+}
+
+
+void Module::update_msg_state(MsgState st)
+{
+  if (!show_stat) return;
+  msg_state=st;
+  char* s="unknown";
+  switch(st){
+  case Remark:
+    s="Remark";
+    break;
+  case Warning:
+    s="Warning";
+    break;
+  case Error:
+    s="Error";
+    break;
+  case Nothing:
+    s="Nothing";
+    break;
+  }
+  gui->execute(id+" set_msg_state " + s);
 }
 
 void Module::update_progress(double p)
@@ -598,21 +618,23 @@ void Module::setPid(int pid)
 // Error conditions
 void Module::error(const string& str)
 {
-  gui->postMessage("ERROR: " + moduleName + ": " + str, true);
+  //gui->postMessage("ERROR: " + moduleName + ": " + str, true);
   msgStream_ << "ERROR: " << str << endl;
-  update_state(Error);
+  update_msg_state(Error); 
 }
 
 void Module::warning(const string& str)
 {
-  gui->postMessage("WARNING: " + moduleName + ": " + str, false);
+  // gui->postMessage("WARNING: " + moduleName + ": " + str, false);
   msgStream_ << "WARNING: " << str << endl;
+  update_msg_state(Warning); 
 }
 
 void Module::remark(const string& str)
 {
   //gui->postMessage("REMARK: " + moduleName + ": " + str, false);
   msgStream_ << "REMARK: " << str << endl;
+  update_msg_state(Remark); 
 }
 
 void Module::postMessage(const string& str)
@@ -643,10 +665,10 @@ void Module::do_execute()
   timer.start();
   execute();
   timer.stop();
-  if (state != Error)
-  {
-    update_state(Completed);
-  }
+  //if (msg_state != Error) 
+  //{
+  update_state(Completed);
+  //}
 
   // Call finish on all ports...
   for(int i=0;i<iports.size();i++){

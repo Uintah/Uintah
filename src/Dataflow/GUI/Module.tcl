@@ -96,6 +96,9 @@ itcl_class Module {
     protected make_time 1
     protected graph_width 50
     protected old_width 0
+    protected make_msg_indicator 1  
+    protected indicator_width 15
+
     protected mdragged
     protected mconnected {}
     protected last_pos
@@ -105,6 +108,7 @@ itcl_class Module {
     protected MenuList
     protected made_icon 0
     public state "NeedData" {$this update_state}
+    public msg_state "Nothing" {$this update_msg_state}
     public progress 0 {$this update_progress}
     public time "00.00" {$this update_time}
     public group -1
@@ -155,6 +159,13 @@ itcl_class Module {
 	update_time
 	update idletasks
     }
+
+    method set_msg_state {st} {
+	set msg_state $st
+	update_msg_state
+	update idletasks
+    }
+
     method set_progress {p t} {
 	set progress $p
 	set time $t
@@ -311,6 +322,29 @@ itcl_class Module {
 	    # Don't pack it in yet - the width is zero... 
 	    #pack $p.inset.graph -fill y -expand yes -anchor nw
 	}
+
+	# Make the message indicator
+	if {$make_msg_indicator} {
+	    if {!$make_progress_graph} {
+		# No progress graph so pack next to title
+		frame $p.msg -relief sunken -height 15 -borderwidth 2 \
+			-width [expr $indicator_width+2]
+		pack $p.msg -side left  -fill both -padx 2 -pady 2
+		frame $p.msg.indicator -relief raised -width 0 -height 0 -borderwidth 2 \
+			-background blue
+	    } else {
+		frame $p.msg -relief sunken -height 15 -borderwidth 1 \
+			-width [expr $indicator_width+2]
+		pack $p.msg -side left  -fill both -padx 2 -pady 2
+		frame $p.msg.indicator -relief raised -width 0 -height 0 -borderwidth 2 \
+			-background blue
+	    }
+	    # Don't pack it in yet - the width is zero... 
+	    # pack $p.inset.graph -fill y -expand yes -anchor nw
+	}
+
+	# Update the message state
+	update_msg_state
 
 	# Update the progress and time graphs
 	update_progress
@@ -723,12 +757,9 @@ itcl_class Module {
 	} elseif {$state == "Completed"} {
 	    set p 1
 	    set color green
-	} elseif {$state == "Error"} {
-	    set p 1
-	    set color red
 	} else {
 	    set width 0
-		set color grey75
+	    set color grey75
 	    set p 0
 	}
 	foreach t $canvases {
@@ -738,6 +769,40 @@ itcl_class Module {
 	# call update_progress
 	set progress $p
 	update_progress
+    }
+
+    method update_msg_state {} { 
+	
+	if {$msg_state == "Error"} {
+	    set p 1
+	    set color red
+	} elseif {$msg_state == "Warning"} {
+	    set p 1
+	    set color yellow
+	} elseif {$msg_state == "Remark"} {
+	    set p 1
+	    set color blue
+	}  elseif {$msg_state == "Nothing"} {
+	    set p 1
+	    set color grey75
+	} else {
+	    set color grey75
+	    set p 0
+	}
+
+	foreach t $canvases {
+	    set modframe $t.module[modname]
+
+	    place forget $modframe.ff.msg.indicator
+	    $modframe.ff.msg.indicator configure -width $indicator_width \
+		    -background $color
+	    place $modframe.ff.msg.indicator -relheight 1 \
+		    -anchor nw 
+	    if {$msg_state == "Error"} {
+		flash $modframe.ff.msg.indicator red
+	    }
+	}
+
     }
     method get_x {} {
 	set canvas [lindex $canvases 0]
@@ -913,6 +978,19 @@ itcl_class Module {
 	}
     }
 }   
+
+# procedure to make a widget flash a color
+proc flash {w color} {
+    if [winfo exists $w] {
+	set c [$w cget -background]
+	if { $c == "red" } {
+	    $w configure -background grey75
+	} else {     
+	    $w configure -background $color
+	} 
+	after 500 flash $w $color
+    }
+}
 
 proc popup_menu {x y canvas minicanvas modid} {
     global CurrentlySelectedModules
