@@ -387,12 +387,11 @@ void PackageDB::loadPackage(bool resolve)
   }
   if(gui){
     gui->execute("toplevel .loading; "
-		 //"wm geometry .loading 250x75+275+200; "
-		 "wm geometry .loading 504x382+135+200; "
+		 "wm geometry .loading 504x482+135+170; "
 		 "wm title .loading {SCIRun Splash Screen}; "
 		 "update idletasks");
     gui->execute("image create photo ::img::splash -file \"" +
-		 string(SCIRUN_SRCTOP) + "/main/scisplash.gif\"; "
+		 string(SCIRUN_SRCTOP) + "/main/scisplash.ppm\"; "
 		 "label .loading.splash -image ::img::splash; "
 		 "pack .loading.splash");
     gui->execute("iwidgets::feedback .loading.fb -labeltext "
