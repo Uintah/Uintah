@@ -925,6 +925,7 @@ Optional Packages:
 --with-hypre=DIR        Use the hypre installation in DIR
 --with-netsolve=DIR     Use the netsolve installation in DIR
 --with-petsc=DIR        Use the petsc installation in DIR
+--with-png=DIR          Use the png installation in DIR
 --with-unipetsc=DIR     Use the unipetsc installation in DIR
 --with-tau=<tau-makefile>
                           Specify a Tau Makefile
@@ -935,7 +936,13 @@ Optional Packages:
                           globus)
 --with-insight=DIR      Use the Insight installation in DIR
 --with-qt=DIR           Use the Qt installation in DIR
---with-ruby=DIR         Use the ruby installation in DIR
+--with-ruby=DIR
+where DIR points to the --prefix option specified when installing ruby.  A standard ruby install defaults to --prefix=/usr/localUse
+where DIR points to the --prefix option specified when installing ruby.  A standard ruby install defaults to --prefix=/usr/localthe
+where DIR points to the --prefix option specified when installing ruby.  A standard ruby install defaults to --prefix=/usr/localruby
+where DIR points to the --prefix option specified when installing ruby.  A standard ruby install defaults to --prefix=/usr/localinstallation
+where DIR points to the --prefix option specified when installing ruby.  A standard ruby install defaults to --prefix=/usr/localin
+where DIR points to the --prefix option specified when installing ruby.  A standard ruby install defaults to --prefix=/usr/localDIR
 --with-vtk=DIR          Build the VTK components. Use VTK build in DIR
 --with-vtklibraries=DIR Build the VTK components. Use the vtk libraries in
                           DIR
@@ -1738,6 +1745,24 @@ fi;
   if test -n "$petsc" -a ! -e "$petsc"; then
     { { echo "$as_me:$LINENO: error: The file or directory parameter ($petsc) specified for --with-petsc does not exist!  Please verify that the path and file are correct." >&5
 echo "$as_me: error: The file or directory parameter ($petsc) specified for --with-petsc does not exist!  Please verify that the path and file are correct." >&2;}
+   { (exit 1); exit 1; }; }
+  fi
+
+
+
+
+# Check whether --with-png or --without-png was given.
+if test "${with_png+set}" = set; then
+  withval="$with_png"
+  with_png="$withval"
+   sci_required_png=yes
+else
+  with_png=""
+fi;
+  sci_arg_with_list="$sci_arg_with_list --with-png --without-png"
+  if test -n "$png" -a ! -e "$png"; then
+    { { echo "$as_me:$LINENO: error: The file or directory parameter ($png) specified for --with-png does not exist!  Please verify that the path and file are correct." >&5
+echo "$as_me: error: The file or directory parameter ($png) specified for --with-png does not exist!  Please verify that the path and file are correct." >&2;}
    { (exit 1); exit 1; }; }
   fi
 
@@ -4205,7 +4230,7 @@ fi
 
 
 # Provide some information about the compiler.
-echo "$as_me:4208:" \
+echo "$as_me:4233:" \
      "checking for Fortran 77 compiler version" >&5
 ac_compiler=`set X $ac_compile; echo $2`
 { (eval echo "$as_me:$LINENO: \"$ac_compiler --version </dev/null >&5\"") >&5
@@ -30702,16 +30727,26 @@ fi # end sci_required_qt
 
 
 ##  --  search for ruby  ----------------------------------------------------
-##  -- Point to the BUILD directory of ruby unless you installed ruby in the standard
-##  -- locations on your system (i.e. /usr/include, /usr/lib).
 if test "$sci_required_ruby" = "yes"; then
-  if test "$with_ruby"; then
-    _sci_lib="$with_ruby"
-  else
-    _sci_lib="$sci_thirdparty_libs"
-  fi
+  _sci_optional=required;
 
-  _ruby_inc="$with_ruby"
+  if test "$with_ruby" = "yes"; then
+    # --with-ruby has been specified without a parameter.
+    _sci_lib="$sci_thirdparty_libs"
+    _ruby_inc="$sci_thirdparty_includes"
+  else
+   if test "$with_ruby"; then
+     #if --with-ruby has been specified with a parameter, then use that parameter
+    _sci_lib="$with_ruby/lib"
+    # A standard ruby install only places include files in platform-specific directories and does
+    # not bother to create symlinks.  We have to search for the .h files here.  This may fail where
+    # multiple builds of ruby are placed under the same root install tree.  If "find" fails, then the
+    # configure will also fail unless ruby.h is in a standard path.
+    echo "Searching for ruby.h under $with_ruby"
+    _ruby_inc=`find $with_ruby -name "ruby.h" -print | sed s/ruby.h//`
+    _sci_optional=specific;
+   fi
+  fi
 
   # Only looking for one .h file... assuming all the rest are in the same place.
 
@@ -30747,8 +30782,8 @@ fi
 
 
 
-echo "$as_me:$LINENO: checking for ruby library (optional)" >&5
-echo $ECHO_N "checking for ruby library (optional)... $ECHO_C" >&6
+echo "$as_me:$LINENO: checking for ruby library ($_sci_optional)" >&5
+echo $ECHO_N "checking for ruby library ($_sci_optional)... $ECHO_C" >&6
 _sci_savelibs=$LIBS
 _sci_saveldflags=$LDFLAGS
 _sci_savecflags=$CFLAGS
@@ -30756,9 +30791,9 @@ _sci_savecxxflags=$CXXFLAGS
 
 _sci_includes=
 
-if test "optional" != "optional" -a "optional" != "required" -a "optional" != "specific"; then
-     { { echo "$as_me:$LINENO: error: Last parameter of SCI-TRY-LINK for ruby library must be: optional or required or specific.  (You had optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&5
-echo "$as_me: error: Last parameter of SCI-TRY-LINK for ruby library must be: optional or required or specific.  (You had optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&2;}
+if test "$_sci_optional" != "optional" -a "$_sci_optional" != "required" -a "$_sci_optional" != "specific"; then
+     { { echo "$as_me:$LINENO: error: Last parameter of SCI-TRY-LINK for ruby library must be: optional or required or specific.  (You had $_sci_optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&5
+echo "$as_me: error: Last parameter of SCI-TRY-LINK for ruby library must be: optional or required or specific.  (You had $_sci_optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&2;}
    { (exit 1); exit 1; }; }
 fi
 
@@ -30781,7 +30816,7 @@ echo "$as_me: error: Please do not specify /usr/include as the location for ruby
   fi
 done
 
-if test "optional" = "specific"; then
+if test "$_sci_optional" = "specific"; then
   # If 'specific' then only one lib is allowed:
   ### Determine if there is only one item in $_sci_lib (I don't know of a better way to do this.)
   __sci_pass=false
@@ -30933,7 +30968,7 @@ eval INC_RUBY_H=''
 eval HAVE_RUBY_H="no"
 echo "$as_me:$LINENO: result: not found" >&5
 echo "${ECHO_T}not found" >&6
-if test "optional" != "optional"; then
+if test "$_sci_optional" != "optional"; then
 
 ## SCI_MSG_ERROR
 if test -z "$debugging"; then
@@ -30976,7 +31011,7 @@ fi
 fi
 rm -f conftest.$ac_objext conftest$ac_exeext conftest.$ac_ext
 
-if test "optional" = "specific"; then
+if test "$_sci_optional" = "specific"; then
 #echo specific
   # Make sure the exact includes were found
   for i in ""ruby.h; do
