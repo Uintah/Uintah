@@ -1,3 +1,58 @@
+#include <string.h>
+# include "stdio.h"
+# define U(x) ((unsigned char)(x))
+# define NLSTATE yyprevious=YYNEWLINE
+# define BEGIN yybgin = yysvec + 1 +
+# define INITIAL 0
+# define YYLERR yysvec
+# define YYSTATE (yyestate-yysvec-1)
+# define YYOPTIM 1
+# define YYLMAX 2048
+# define output(c) (void)putc(c,yyout)
+#if defined(__cplusplus) || defined(__STDC__)
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+	int yylex(void);
+	int yyback(int *, int);
+	int yyinput(void);
+	int yylook(void);
+	void yyoutput(int);
+	int yyracc(int);
+	int yyreject(void);
+	void yyunput(int);
+#ifndef yyless
+	void yyless(long int);
+#endif
+#ifndef yywrap
+	int yywrap(void);
+#endif
+#ifdef __cplusplus
+}
+#endif
+
+#endif
+
+# define input() (((yytchar=yysptr>yysbuf?U(*--yysptr):getc(yyin))==10?(yylineno++,yytchar):yytchar)==EOF?0:yytchar)
+# define unput(c) {yytchar= (c);if(yytchar=='\n')yylineno--;*yysptr++=yytchar;}
+# define yymore() (yymorfg=1)
+# define ECHO (void)fprintf(yyout, "%s",yytext)
+# define REJECT { nstr = yyreject(); goto yyfussy;}
+int yyleng; extern char yytext[];
+int yymorfg;
+extern char *yysptr, yysbuf[];
+int yytchar;
+FILE *yyin = {stdin}, *yyout = {stdout};
+extern int yylineno;
+struct yysvf { 
+	struct yywork *yystoff;
+	struct yysvf *yyother;
+	int *yystops;};
+struct yysvf *yyestate;
+extern struct yysvf yysvec[], *yybgin;
+
+# line 2 "lexer.l"
 /*************************************************************
 Copyright (C) 1990, 1991, 1993 Andy C. Hung, all rights reserved.
 PUBLIC DOMAIN LICENSE: Stanford University Portable Video Research
@@ -15,45 +70,15 @@ advertisement of this source code should refer to it as the Portable
 Video Research Group (PVRG) code, and not by any author(s) (or
 Stanford University) name.
 *************************************************************/
-# include "stdio.h"
-#include "string.h"
-# define U(x) ((x)&0377)
-# define NLSTATE yyprevious=YYNEWLINE
-# define BEGIN yybgin = yysvec + 1 +
-# define INITIAL 0
-# define YYLERR yysvec
-# define YYSTATE (yyestate-yysvec-1)
-# define YYOPTIM 1
-# define YYLMAX 200
-# define output(c) putc(c,yyout)
-# define input() (((yytchar=yysptr>yysbuf?U(*--yysptr):getc(yyin))==10?(yylineno++,yytchar):yytchar)==EOF?0:yytchar)
-# define unput(c) {yytchar= (c);if(yytchar=='\n')yylineno--;*yysptr++=yytchar;}
-# define yymore() (yymorfg=1)
-# define ECHO fprintf(yyout, "%s",yytext)
-# define REJECT { nstr = yyreject(); goto yyfussy;}
-int yyleng; extern char yytext[];
-int yymorfg;
-extern char *yysptr, yysbuf[];
-int yytchar;
 
-#ifdef LINUX
-FILE *yyin = 0, *yyout = 0;
-#else
-FILE *yyin ={stdin}, *yyout ={stdout};
-#endif
+# line 19 "lexer.l"
 
-extern int yylineno;
-struct yysvf { 
-	struct yywork *yystoff;
-	struct yysvf *yyother;
-	int *yystops;};
-struct yysvf *yyestate;
-extern struct yysvf yysvec[], *yybgin;
 
-void equname(int, char*);
-
+# line 21 "lexer.l"
 /*LABEL lexer.c */
 
+
+# line 23 "lexer.l"
 /* Redefine the yywrap so that we don't have
    to worry about lex library */
 
@@ -244,6 +269,8 @@ LINK *next;
 
 ID *Cid=NULL;
 
+
+# line 213 "lexer.l"
 /*PUBLIC*/
 
 extern void initparser();
@@ -259,30 +286,31 @@ static void MakeProgram();
 static void CompileProgram();
 static int mylex();
 
+
+# line 228 "lexer.l"
 /*PRIVATE*/
 
+
+# line 230 "lexer.l"
 /*NOPROTO*/
 
 # define NORMAL 2
 # define COMMENT 4
 # define YYNEWLINE 10
-yylex(){
-
+yylex(void){
 int nstr; extern int yyprevious;
-
-#ifdef LINUX
-yyout = stdout;
-yyin = stdin;
-#endif
-
 while((nstr = yylook()) >= 0)
 yyfussy: switch(nstr){
 case 0:
 if(yywrap()) return(0); break;
 case 1:
+
+# line 256 "lexer.l"
 {}
 break;
 case 2:
+
+# line 258 "lexer.l"
 {Cid = enter(0,yytext,yyleng); 
 		 if (LexDebug)
 		   {
@@ -301,49 +329,70 @@ case 2:
 		     return(R_ID);
 		   }
 	       }
+break;
 case 3:
+
+# line 276 "lexer.l"
         {if (LexDebug)
 			   {
 			     printf("%s : %s\n", yytext, "REAL");
 			   }
 			 return(R_REAL);
 		       }
+break;
 case 4:
+
+# line 282 "lexer.l"
 {if (LexDebug)
 			   {             
 			     printf("%s : %s\n", yytext, "INTEGER");
 			   }
 			 yyint = atoi(yytext);
 			 return(R_INTEGER);}
+break;
 case 5:
+
+# line 288 "lexer.l"
 {if (LexDebug)
 			   {
 			     printf("%s : %s\n", yytext, "(HEX)INTEGER");
 			   }
 			 yyint = strtol(yytext+2,NULL,16);
 			 return(R_INTEGER);}
+break;
 case 6:
+
+# line 294 "lexer.l"
 {if (LexDebug)
 			   {
 			     printf("%s : %s\n", yytext, "(HEX)INTEGER");
 			   }
 			 yyint = strtol(yytext,NULL,16);
 			 return(R_INTEGER);}
+break;
 case 7:
+
+# line 300 "lexer.l"
 {if (LexDebug)
 			   {
 			     printf("%s : %s\n", yytext, "(OCT)INTEGER");
 			   }
 			 yyint = strtol(yytext+2,NULL,8);
 			 return(R_INTEGER);}
+break;
 case 8:
+
+# line 306 "lexer.l"
 {if (LexDebug)
 			   {
 			     printf("%s : %s\n", yytext, "(OCT)INTEGER");
 			   }
 			 yyint = strtol(yytext,NULL,8);
 			 return(R_INTEGER);}
+break;
 case 9:
+
+# line 312 "lexer.l"
 {if (LexDebug)
 			   {
 			     printf("%s : %s\n", yytext, "(CHAR)INTEGER");
@@ -390,31 +439,47 @@ case 9:
 			       }
 			   }
 			 return(R_INTEGER);}
+break;
 case 10:
+
+# line 358 "lexer.l"
         {if (LexDebug)
 			   {
 			     printf("%s : %s\n", yytext, "LBRACKET");
 			   }
 			 return(R_LBRACKET);}
+break;
 case 11:
+
+# line 363 "lexer.l"
         {if (LexDebug)
 			   {
 			     printf("%s : %s\n", yytext, "RBRACKET");
 			   }
 			 return(R_RBRACKET);}
+break;
 case 12:
+
+# line 368 "lexer.l"
 {if (LexDebug)
 			   {
 			     printf("%s : %s\n", yytext, "STRING");
 			   }
 			 return(R_STRING);}
+break;
 case 13:
+
+# line 374 "lexer.l"
 {CommentDepth++; BEGIN COMMENT;}
 break;
 case 14:
+
+# line 376 "lexer.l"
 	{CommentDepth--;if(!CommentDepth) BEGIN NORMAL;}
 break;
 case 15:
+
+# line 378 "lexer.l"
   	  	{
 		  	    /* None of the above rules applicable, so
 			       it's a bad symbol. */
@@ -424,14 +489,18 @@ case 15:
   	  	  	}
 break;
 case 16:
+
+# line 386 "lexer.l"
 	{}
 break;
 case -1:
 break;
 default:
-fprintf(yyout,"bad switch yylook %d",nstr);
+(void)fprintf(yyout,"bad switch yylook %d",nstr);
 } return(0); }
 /* end of yylex */
+
+# line 389 "lexer.l"
 
 /*PROTO*/
 #define NUMBER_PROGRAMS 10
@@ -486,15 +555,15 @@ void initparser()
 {
   char i,**sptr;
   BEGIN NORMAL;
-  
+
   for(i=1,sptr=ReservedWords;**sptr!='\0';i++,sptr++) 
-  {     /* Add Reserved Words */
-    enter(i,*sptr,strlen(*sptr));
-  }
+    {     /* Add Reserved Words */
+      enter(i,*sptr,strlen(*sptr));
+    }
   for(i=1,sptr=EquLabels;**sptr!='\0';i++,sptr++) 
-  {     /* Add defined labels */
-    equname(i,*sptr);
-  }
+    {     /* Add defined labels */
+      equname(i,*sptr);
+    }
   for(i=0;i<NUMBER_PROGRAMS;i++)
     {
       ProgramLevel[i]=0;
@@ -632,7 +701,7 @@ static ID *enter(tokentype,str,len)
     }
 }
 
-void equname(number,name)
+equname(number,name)
      int number;
      char *name;
 {
@@ -1547,11 +1616,14 @@ static int mylex()
 	case R_PRINTPROGRAM:
 	  NextVal = 1;  /* Notify to take the next integer straight */
 	  return(token);
+	  break;
 	case R_ROLL:
 	  NextVal = 2;
 	  return(token);
+	  break;
 	default:
 	  return(token);
+	  break;
 	}
     }
 }
@@ -1578,7 +1650,7 @@ void Execute(pnum)
 /*NOPROTO*/
 /*END*/
 
-int yyvstop[] ={
+int yyvstop[] = {
 0,
 
 15,
@@ -1729,7 +1801,7 @@ int yyvstop[] ={
 0,
 0};
 # define YYTYPE unsigned char
-struct yywork { YYTYPE verify, advance; } yycrank[] ={
+struct yywork { YYTYPE verify, advance; } yycrank[] = {
 0,0,	0,0,	3,7,	0,0,	
 0,0,	0,0,	0,0,	0,0,	
 0,0,	0,0,	3,8,	3,9,	
@@ -1965,7 +2037,7 @@ struct yywork { YYTYPE verify, advance; } yycrank[] ={
 68,69,	68,69,	68,69,	68,69,	
 68,69,	68,69,	68,69,	0,0,	
 0,0};
-struct yysvf yysvec[] ={
+struct yysvf yysvec[] = {
 0,	0,	0,
 yycrank+0,	0,		0,	
 yycrank+0,	0,		0,	
@@ -2039,7 +2111,7 @@ yycrank+0,	yysvec+68,	yyvstop+100,
 0,	0,	0};
 struct yywork *yytop = yycrank+934;
 struct yysvf *yybgin = yysvec+1;
-char yymatch[] ={
+unsigned char yymatch[] = {
 00  ,01  ,01  ,01  ,01  ,01  ,01  ,01  ,
 01  ,011 ,012 ,01  ,01  ,01  ,01  ,01  ,
 01  ,01  ,01  ,01  ,01  ,01  ,01  ,01  ,
@@ -2073,12 +2145,12 @@ char yymatch[] ={
 01  ,01  ,01  ,01  ,01  ,01  ,01  ,01  ,
 01  ,01  ,01  ,01  ,01  ,01  ,01  ,01  ,
 0};
-char yyextra[] ={
+char yyextra[] = {
 0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,
 0};
-/*	ncform	4.1	83/08/11	*/
+#ident	"$Revision$"
 
 int yylineno =1;
 # define YYU(x) x
@@ -2090,11 +2162,16 @@ char *yysptr = yysbuf;
 int *yyfnd;
 extern struct yysvf *yyestate;
 int yyprevious = YYNEWLINE;
-yylook(){
+#if defined(__cplusplus) || defined(__STDC__)
+int yylook(void)
+#else
+yylook()
+#endif
+{
 	register struct yysvf *yystate, **lsp;
 	register struct yywork *yyt;
 	struct yysvf *yyz;
-	int yych;
+	int yych, yyfirst;
 	struct yywork *yyr;
 # ifdef LEXDEBUG
 	int debug;
@@ -2104,6 +2181,7 @@ yylook(){
 # ifdef LEXDEBUG
 	debug = 0;
 # endif
+	yyfirst=1;
 	if (!yymorfg)
 		yylastch = yytext;
 	else {
@@ -2119,32 +2197,45 @@ yylook(){
 			if(debug)fprintf(yyout,"state %d\n",yystate-yysvec-1);
 # endif
 			yyt = yystate->yystoff;
-			if(yyt == yycrank){		/* may not be any transitions */
+			if(yyt == yycrank && !yyfirst){  /* may not be any transitions */
 				yyz = yystate->yyother;
 				if(yyz == 0)break;
 				if(yyz->yystoff == yycrank)break;
 				}
 			*yylastch++ = yych = input();
+#ifndef LONGLINES
+			if(yylastch > &yytext[YYLMAX]) {
+				fprintf(yyout,"Input string too long, limit %d\n",YYLMAX);
+				exit(1);
+			}
+#endif
+			yyfirst=0;
 		tryagain:
 # ifdef LEXDEBUG
 			if(debug){
-				fprintf(yyout,"unsigned char ");
+				fprintf(yyout,"char ");
 				allprint(yych);
 				putchar('\n');
 				}
 # endif
 			yyr = yyt;
-			if ( (int)yyt > (int)yycrank){
+			if ( (void *)yyt > (void *)yycrank){
 				yyt = yyr + yych;
 				if (yyt <= yytop && yyt->verify+yysvec == yystate){
 					if(yyt->advance+yysvec == YYLERR)	/* error transitions */
 						{unput(*--yylastch);break;}
 					*lsp++ = yystate = yyt->advance+yysvec;
+#ifndef LONGLINES
+					if(lsp > &yylstate[YYLMAX]) {
+						fprintf(yyout,"Input string too long, limit %d\n",YYLMAX);
+						exit(1);
+					}
+#endif
 					goto contin;
 					}
 				}
 # ifdef YYOPTIM
-			else if((int)yyt < (int)yycrank) {		/* r < yycrank */
+			else if((void *)yyt < (void *)yycrank) {	/* r < yycrank */
 				yyt = yyr = yycrank+(yycrank-yyt);
 # ifdef LEXDEBUG
 				if(debug)fprintf(yyout,"compressed state\n");
@@ -2154,6 +2245,12 @@ yylook(){
 					if(yyt->advance+yysvec == YYLERR)	/* error transitions */
 						{unput(*--yylastch);break;}
 					*lsp++ = yystate = yyt->advance+yysvec;
+#ifndef LONGLINES
+					if(lsp > &yylstate[YYLMAX]) {
+						fprintf(yyout,"Input string too long, limit %d\n",YYLMAX);
+						exit(1);
+					}
+#endif
 					goto contin;
 					}
 				yyt = yyr + YYU(yymatch[yych]);
@@ -2168,6 +2265,12 @@ yylook(){
 					if(yyt->advance+yysvec == YYLERR)	/* error transition */
 						{unput(*--yylastch);break;}
 					*lsp++ = yystate = yyt->advance+yysvec;
+#ifndef LONGLINES
+					if(lsp > &yylstate[YYLMAX]) {
+						fprintf(yyout,"Input string too long, limit %d\n",YYLMAX);
+						exit(1);
+					}
+#endif
 					goto contin;
 					}
 				}
@@ -2209,7 +2312,7 @@ yylook(){
 					}
 				yyprevious = YYU(*yylastch);
 				yylsp = lsp;
-				yyleng = yylastch-yytext+1;
+				yyleng = (int)(yylastch-yytext+1);
 				yytext[yyleng] = 0;
 # ifdef LEXDEBUG
 				if(debug){
@@ -2236,26 +2339,44 @@ yylook(){
 # endif
 		}
 	}
+#if defined(__cplusplus) || defined(__STDC__)
+int yyback(int *p, int m)
+#else
 yyback(p, m)
 	int *p;
+#endif
 {
-if (p==0) return(0);
-while (*p)
-	{
-	if (*p++ == m)
-		return(1);
+	if (p==0) return(0);
+	while (*p) {
+		if (*p++ == m)
+			return(1);
 	}
-return(0);
+	return(0);
 }
 	/* the following are only used in the lex library */
-yyinput(){
+#if defined(__cplusplus) || defined(__STDC__)
+int yyinput(void)
+#else
+yyinput()
+#endif
+{
 	return(input());
 	}
-void yyoutput(c)
-     int c; {
-       output(c);
-}
-void yyunput(c)
-     int c; {
-       unput(c);
-}
+#if defined(__cplusplus) || defined(__STDC__)
+void yyoutput(int c)
+#else
+yyoutput(c)
+  int c; 
+#endif
+{
+	output(c);
+	}
+#if defined(__cplusplus) || defined(__STDC__)
+void yyunput(int c)
+#else
+yyunput(c)
+   int c; 
+#endif
+{
+	unput(c);
+	}
