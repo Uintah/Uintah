@@ -427,8 +427,8 @@ Arches::computeStableTimeStep(const ProcessorGroup* ,
 // Schedule time advance
 // ****************************************************************************
 void 
-Arches::scheduleTimeAdvance(const LevelP& level, 
-			    SchedulerP& sched)
+Arches::scheduleTimeAdvance( const LevelP& level, 
+			     SchedulerP& sched )
 {
 #ifndef ExactMPMArchesInitialize
   if (d_MAlab) {
@@ -445,6 +445,14 @@ Arches::scheduleTimeAdvance(const LevelP& level,
 #else
   d_nlSolver->nonlinearSolve(level, sched);
 #endif
+}
+
+// scheduleTimeAdvance version called by the AMR simulation controller.
+void
+Arches::scheduleTimeAdvance( const LevelP&, SchedulerP&, int , int )
+{
+  cout << "Arches component does not support ARM yet.\n";
+  throw InternalError("Arches component does not support AMR yet.");
 }
 
 // ****************************************************************************
