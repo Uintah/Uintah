@@ -21,11 +21,19 @@
 #include <Math/MinMax.h>
 #include <Math/MiscMath.h>
 #include <Math/Trig.h>
+#include <ModuleList.h>
 #include <MUI.h>
 #include <NotFinished.h>
 #include <SoundPort.h>
 #include <iostream.h>
 #include <fstream.h>
+
+static Module* make_SoundFilter()
+{
+    return new SoundFilter;
+}
+
+static RegisterModule db1("Sound", "SoundFilter", make_SoundFilter);
 
 SoundFilter::SoundFilter()
 : UserModule("SoundFilter", Filter)
@@ -51,11 +59,6 @@ SoundFilter::SoundFilter(const SoundFilter& copy, int deep)
 
 SoundFilter::~SoundFilter()
 {
-}
-
-Module* make_SoundFilter()
-{
-    return new SoundFilter;
 }
 
 Module* SoundFilter::clone(int deep)

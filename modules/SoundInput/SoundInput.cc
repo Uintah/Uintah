@@ -13,6 +13,7 @@
 
 #include <SoundInput/SoundInput.h>
 #include <Math/MinMax.h>
+#include <ModuleList.h>
 #include <MUI.h>
 #include <NotFinished.h>
 #include <Port.h>
@@ -22,6 +23,13 @@
 #include <audio.h>
 #include <stdlib.h>
 #include <stdio.h>
+
+static Module* make_SoundInput()
+{
+    return new SoundInput;
+}
+
+static RegisterModule db1("Sound", "SoundInput", make_SoundInput);
 
 SoundInput::SoundInput()
 : UserModule("SoundInput", Source)
@@ -44,11 +52,6 @@ SoundInput::SoundInput(const SoundInput& copy, int deep)
 
 SoundInput::~SoundInput()
 {
-}
-
-Module* make_SoundInput()
-{
-    return new SoundInput;
 }
 
 Module* SoundInput::clone(int deep)

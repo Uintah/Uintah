@@ -17,13 +17,22 @@
  */
 
 #include <SoundFFT/SoundFFT.h>
+#include <ModuleList.h>
+#include <MUI.h>
+#include <Port.h>
+#include <ModuleList.h>
+#include <NotFinished.h>
 #include <Math/MinMax.h>
 #include <Math/Trig.h>
-#include <MUI.h>
-#include <NotFinished.h>
-#include <Port.h>
 #include <iostream.h>
 #include <fstream.h>
+
+static Module* make_SoundFFT()
+{
+    return new SoundFFT;
+}
+
+static RegisterModule db1("Sound", "SoundFFT", make_SoundFFT);
 
 SoundFFT::SoundFFT()
 : UserModule("SoundFFT")
@@ -46,11 +55,6 @@ SoundFFT::SoundFFT(const SoundFFT& copy, int deep)
 
 SoundFFT::~SoundFFT()
 {
-}
-
-Module* make_SoundFFT()
-{
-    return new SoundFFT;
 }
 
 Module* SoundFFT::clone(int deep)

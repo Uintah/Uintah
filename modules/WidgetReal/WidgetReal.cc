@@ -16,6 +16,13 @@
 #include <iostream.h>
 extern "C" int abs(int);
 
+static Module* make_WidgetReal()
+{
+    return new WidgetReal;
+}
+
+static RegisterModule db1("Widgets", "WidgetReal", make_WidgetReal);
+
 WidgetReal::WidgetReal()
 : UserModule("WidgetReal")
 {
@@ -30,11 +37,6 @@ WidgetReal::WidgetReal(const WidgetReal& copy, int deep)
 
 WidgetReal::~WidgetReal()
 {
-}
-
-Module* make_WidgetReal()
-{
-    return new WidgetReal;
 }
 
 Module* WidgetReal::clone(int deep)
