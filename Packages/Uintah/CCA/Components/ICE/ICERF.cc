@@ -572,7 +572,7 @@ void ICE::accumulateEnergySourceSinks_RF(const ProcessorGroup*,
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     cout_doing << "Doing accumulate_energy_source_sinks_RF on patch " 
-         << patch->getID() << "\t\t ICE" << endl;
+         << patch->getID() << "\t ICE" << endl;
 
     int numMatls = d_sharedState->getNumMatls();
 
@@ -1097,8 +1097,15 @@ void ICE::computeLagrangianSpecificVolumeRF(const ProcessorGroup*,
     int numALLMatls = d_sharedState->getNumMatls();
     Vector  dx = patch->dCell();
     double vol = dx.x()*dx.y()*dx.z();   
+    double areaX = dx.y() * dx.z();
+    double areaY = dx.x() * dx.z();
+    double areaZ = dx.x() * dx.y(); 
     Ghost::GhostType  gn  = Ghost::None;
-    StaticArray<constCCVariable<double> > volFrac_advected(numALLMatls); 
+    Ghost::GhostType  gac = Ghost::AroundCells;
+    StaticArray<constSFCXVariable<double> > uvel_FC(numALLMatls);
+    StaticArray<constSFCYVariable<double> > vvel_FC(numALLMatls);
+    StaticArray<constSFCZVariable<double> > wvel_FC(numALLMatls); 
+    
     StaticArray<constCCVariable<double> > Tdot(numALLMatls);
     StaticArray<constCCVariable<double> > vol_frac(numALLMatls);
     StaticArray<constCCVariable<double> > Temp_CC(numALLMatls);
@@ -1108,6 +1115,25 @@ void ICE::computeLagrangianSpecificVolumeRF(const ProcessorGroup*,
 
     new_dw->allocateTemporary(sum_therm_exp,patch);
     sum_therm_exp.initialize(0.);
+ 
+    for(int m = 0; m < numALLMatls; m++) {
+      Material* matl = d_sharedState->getMaterial( m );
+      MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
+      ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
+      int indx = matl->getDWIndex();
+      new_dw->get(Tdot[m],    lb->Tdot_CCLabel,    indx,patch, gn,0);  
+      new_dw->get(vol_frac[m],lb->vol_frac_CCLabel,indx,patch, gn,0);
+      new_dw->get(uvel_FC[m], lb->uvel_FCMELabel,  indx, patch,gac, 1);   
+      new_dw->get(vvel_FC[m], lb->vvel_FCMELabel,  indx, patch,gac, 1);   
+      new_dw->get(wvel_FC[m], lb->wvel_FCMELabel,  indx, patch,gac, 1);
+      if (ice_matl) {  
+        old_dw->get(Temp_CC[m], lb->temp_CCLabel,    indx,patch, gn,0); 
+      }
+      if (mpm_matl) {
+        new_dw->get(Temp_CC[m],lb->temp_CCLabel,   indx,patch, gn,0);
+      }
+    }
+    
     //__________________________________
     // Sum of thermal expansion
     // alpha is hardwired for ideal gases
@@ -1115,12 +1141,7 @@ void ICE::computeLagrangianSpecificVolumeRF(const ProcessorGroup*,
     for(int m = 0; m < numALLMatls; m++) {
       Material* matl = d_sharedState->getMaterial( m );
       MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
-      int indx = matl->getDWIndex();
-      new_dw->get(Tdot[m],    lb->Tdot_CCLabel,    indx,patch, gn,0);  
-      new_dw->get(vol_frac[m],lb->vol_frac_CCLabel,indx,patch, gn,0);  
-      old_dw->get(Temp_CC[m], lb->temp_CCLabel,    indx,patch, gn,0);    
-      new_dw->get(volFrac_advected[m],lb->volFrac_advectedLabel,
-                                                   indx,patch, gn,0);
+ 
       if_mpm_matl_ignore[m] = 1.0; 
       if ( mpm_matl) {       
         if_mpm_matl_ignore[m] = 0.0; 
@@ -1138,8 +1159,10 @@ void ICE::computeLagrangianSpecificVolumeRF(const ProcessorGroup*,
       Material* matl = d_sharedState->getMaterial( m );
       int indx = matl->getDWIndex();
       CCVariable<double> spec_vol_L, spec_vol_source;
-      new_dw->allocateAndPut(spec_vol_L,     lb->spec_vol_L_CCLabel,     indx,patch);
-      new_dw->allocateAndPut(spec_vol_source,lb->spec_vol_source_CCLabel,indx,patch);
+      new_dw->allocateAndPut(spec_vol_L,     lb->spec_vol_L_CCLabel,     
+                                                            indx,patch);
+      new_dw->allocateAndPut(spec_vol_source,lb->spec_vol_source_CCLabel,
+                                                            indx,patch);
       spec_vol_source.initialize(0.);
       
       new_dw->get(sp_vol_CC, lb->sp_vol_CCLabel,    indx,patch,gn, 0);
@@ -1160,11 +1183,40 @@ void ICE::computeLagrangianSpecificVolumeRF(const ProcessorGroup*,
       for(CellIterator iter=patch->getCellIterator();!iter.done();iter++){
         IntVector c = *iter;
         
-        double sumVolFrac_advected = 0.0;
-        for(int k = 0; k < numALLMatls; k++) {        
-          sumVolFrac_advected -= volFrac_advected[k][c];
-        }
-        double term1 = vol * f_theta[c] * sumVolFrac_advected;
+        IntVector right, left, top, bottom, front, back;
+        right    = c + IntVector(1,0,0);    left     = c;
+        top      = c + IntVector(0,1,0);    bottom   = c;
+        front    = c + IntVector(0,0,1);    back     = c;
+        //__________________________________
+        //  term1
+        double term1, term1_X, term1_Y, term1_Z;
+        double tmp_R = 0.0, tmp_L   = 0.0;
+        double tmp_T = 0.0, tmp_BOT = 0.0;
+        double tmp_F = 0.0, tmp_BK  = 0.0;
+        //   O H   T H I S   I S   G O I N G   T O   B E   S L O W  
+        for(int m = 0; m < numALLMatls; m++) {
+          //  use the upwinded vol_frac
+          IntVector upwc;     
+          upwc     = upwindCell_X(c,     uvel_FC[m][right],  1.0);
+          tmp_R   += vol_frac[m][upwc] * uvel_FC[m][right];
+          upwc     = upwindCell_X(c,     uvel_FC[m][left],   0.0);
+          tmp_L   += vol_frac[m][upwc] * uvel_FC[m][left];
+          
+          upwc     = upwindCell_Y(c,     vvel_FC[m][top],    1.0);
+          tmp_T   += vol_frac[m][upwc] * vvel_FC[m][top];
+          upwc     = upwindCell_Y(c,     vvel_FC[m][bottom], 0.0);
+          tmp_BOT += vol_frac[m][upwc] * vvel_FC[m][bottom];
+          
+          upwc     = upwindCell_Z(c,     wvel_FC[m][front],  1.0);
+          tmp_F   += vol_frac[m][upwc] * wvel_FC[m][front];
+          upwc     = upwindCell_Z(c,     wvel_FC[m][back],   0.0);
+          tmp_BK  += vol_frac[m][upwc] * wvel_FC[m][back];
+        } 
+        term1_X = (tmp_R - tmp_L)   * areaX;
+        term1_Y = (tmp_T - tmp_BOT) * areaY;
+        term1_Z = (tmp_F - tmp_BK)  * areaZ;
+
+        term1 = f_theta[c] * delT * (term1_X + term1_Y + term1_Z);
        
 
         double alpha = 1.0/Temp_CC[m][c];  // HARDWRIED FOR IDEAL GAS
