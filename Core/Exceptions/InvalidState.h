@@ -16,8 +16,9 @@
 */
 
 
+
 /*
- *  ErrnoException.h: Generic exception for internal errors
+ *  InvalidState.h: Generic exception for internal errors
  *
  *  Written by:
  *   Steven G. Parker
@@ -28,48 +29,29 @@
  *  Copyright (C) 1999 SCI Group
  */
 
-#include <Core/Exceptions/ErrnoException.h>
+#ifndef Core_Exceptions_InvalidState_h
+#define Core_Exceptions_InvalidState_h
+
+#include <Core/Exceptions/Exception.h>
 #include <sgi_stl_warnings_off.h>
-#include <sstream>
+#include <string>
 #include <sgi_stl_warnings_on.h>
 
 namespace SCIRun {
-
-using namespace std;
-
-ErrnoException::ErrnoException(const std::string& message, int err)
-   : errno_(err)
-{
-   ostringstream str;
-   const char* s = strerror(err);
-   if(!s)
-      s="(none)";
-   str << message << " (errno=" << err << ": " << s << ")";
-   message_ = str.str();
-}
-
-ErrnoException::ErrnoException(const ErrnoException& copy)
-   : message_(copy.message_), errno_(copy.errno_)
-{
-}
-
-ErrnoException::~ErrnoException()
-{
-}
-
-const char* ErrnoException::message() const
-{
-   return message_.c_str();
-}
-
-const char* ErrnoException::type() const
-{
-   return "ErrnoException";
-}
-
-int ErrnoException::getErrno() const
-{
-   return errno_;
-}
-
+  class InvalidState : public Exception {
+  public:
+    InvalidState(const std::string&);
+    InvalidState(const InvalidState&);
+    virtual ~InvalidState();
+    virtual const char* message() const;
+    virtual const char* type() const;
+  protected:
+  private:
+    std::string message_;
+    InvalidState& operator=(const InvalidState&);
+  };
 } // End namespace SCIRun
+
+#endif
+
+

@@ -27,6 +27,7 @@ SRCS     += $(SRCDIR)/ArrayIndexOutOfBounds.cc \
 	    $(SRCDIR)/ErrnoException.cc \
 	    $(SRCDIR)/Exception.cc \
 	    $(SRCDIR)/FileNotFound.cc \
+	    $(SRCDIR)/InvalidState.cc \
 	    $(SRCDIR)/InternalError.cc
 
 PSELIBS := 

@@ -15,9 +15,8 @@
   University of Utah. All Rights Reserved.
 */
 
-
 /*
- *  ErrnoException.h: Generic exception for internal errors
+ *  InvalidState.h: Generic exception for internal errors
  *
  *  Written by:
  *   Steven G. Parker
@@ -28,48 +27,32 @@
  *  Copyright (C) 1999 SCI Group
  */
 
-#include <Core/Exceptions/ErrnoException.h>
-#include <sgi_stl_warnings_off.h>
-#include <sstream>
-#include <sgi_stl_warnings_on.h>
-
+#include <Core/Exceptions/InvalidState.h>
 namespace SCIRun {
 
-using namespace std;
 
-ErrnoException::ErrnoException(const std::string& message, int err)
-   : errno_(err)
-{
-   ostringstream str;
-   const char* s = strerror(err);
-   if(!s)
-      s="(none)";
-   str << message << " (errno=" << err << ": " << s << ")";
-   message_ = str.str();
-}
-
-ErrnoException::ErrnoException(const ErrnoException& copy)
-   : message_(copy.message_), errno_(copy.errno_)
+InvalidState::InvalidState(const std::string& message)
+    : message_(message)
 {
 }
 
-ErrnoException::~ErrnoException()
+InvalidState::InvalidState(const InvalidState& copy)
+    : message_(copy.message_)
 {
 }
 
-const char* ErrnoException::message() const
+InvalidState::~InvalidState()
 {
-   return message_.c_str();
 }
 
-const char* ErrnoException::type() const
+const char* InvalidState::message() const
 {
-   return "ErrnoException";
+    return message_.c_str();
 }
 
-int ErrnoException::getErrno() const
+const char* InvalidState::type() const
 {
-   return errno_;
+    return "InvalidState";
 }
 
 } // End namespace SCIRun
