@@ -253,7 +253,8 @@ void GeoProbeScene::execute()
     vdpy->set_minmax(datamin, datamax);
     hvol = new HVolume<unsigned char, BrickArray3<unsigned char>, 
       BrickArray3<VMCell<unsigned char> > >
-      (surfmat, vdpy, 3 /*depth*/, 2 /*np*/, nx, ny, nz, 
+      (surfmat, vdpy, 3 /*depth*/, Max(Thread::numProcessors()/2,2) /*np*/,
+       nx, ny, nz, 
        min, max, datamin, datamax, data);
     // Add the cutting planes
     Object *obj = hvol;
