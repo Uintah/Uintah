@@ -2,7 +2,7 @@ SRCTOP   = @top_srcdir@
 SRCDIR   = @srcdir@
 OBJTOP   = ../..
 
-include $(SRCTOP)/scripts/targets.mk
+include $(OBJTOP)/scripts/targets.mk
 
 all:: tclIndex
 
