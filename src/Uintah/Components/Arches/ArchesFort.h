@@ -39,6 +39,7 @@ WARNING
 #define FORT_INIT_SCALAR initscal_
 #define FORT_CELLTYPEINIT celltypeinit_
 #define FORT_CELLG cellg_
+#define FORT_AREAIN areain_
 #define FORT_PROFV profv_
 #define FORT_INLBCS inlbcs_
 #define FORT_CALPBC calpbc_
@@ -128,10 +129,23 @@ extern "C"
 }
 
 
+    ////////////////////////////////////////////////////////////////////////
+    //
+    // Initialize celltype variables :
+    //
+    void
+    FORT_AREAIN(const int* domainLow, const int* domainHigh, 
+		const int* indexLow, const int* indexHigh,
+		int* celltype, int* celltypeID, double* sew, double* sns,
+		double* stb, double* area);
+
 #endif
 
 //
 // $Log$
+// Revision 1.3  2000/06/15 22:13:21  rawat
+// modified boundary stuff
+//
 // Revision 1.2  2000/06/14 20:40:48  rawat
 // modified boundarycondition for physical boundaries and
 // added CellInformation class

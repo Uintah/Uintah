@@ -117,7 +117,6 @@ Arches::problemSetup(const ProblemSpecP& params,
   else
     throw InvalidValue("Nonlinear solver not supported: "+nlSolver);
 
-  //d_nlSolver->problemSetup(db, dw); /* 2 params ? */
   d_nlSolver->problemSetup(db);
 }
 
@@ -189,6 +188,28 @@ Arches::scheduleInitialize(const LevelP& level,
       sched->addTask(tsk);
       cerr << "New task added successfully to scheduler\n";
     }
+    // computing flow inlet areas
+    {
+      Task* tsk = new Task("BoundaryCondition::calculateArea",
+			   patch, dw, dw, d_boundaryCondition,
+			   &BoundaryCondition::computeInletFlowArea);
+      cerr << "New task created successfully\n";
+      int matlIndex = 0;
+      int numGhostCells = 0;
+      tsk->requires(dw, d_cellTypeLabel, matlIndex, patch, Ghost::None,
+		    numGhostCells);
+      std::vector <VarLabel*> areaLabel;
+      for (int ii = 0; ii << d_boundaryCondition->getNumInlets(); ii++) {
+	// make it simple by adding matlindex for reduction vars
+	VarLabel* areaLabel = scinew VarLabel("flowarea"+
+				       d_boundaryCondition->getFlowCellID(ii),
+             ReductionVariable<double, Reductions::Sum<double> >::getTypeDescription()); 
+	tsk->computes(dw, areaLabel, matlIndex, patch);
+      }
+      sched->addTask(tsk);
+      cerr << "New task added successfully to scheduler\n";
+    }
+
   }
 }
 
@@ -226,31 +247,6 @@ Arches::scheduleTimeAdvance(double time, double dt,
   cerr << "Done: Arches::scheduleTimeAdvance\n";
 }
 
-/*
-void 
-Arches::sched_paramInit(const LevelP& level,
-			SchedulerP& sched, 
-			DataWarehouseP& dw)
-{
-  for(Level::const_patchIterator iter=level->patchesBegin();
-      iter != level->patchesEnd(); iter++){
-    const Patch* patch=*iter;
-    {
-      Task* tsk = new Task("Arches::paramInit",
-			   patch, dw, dw, this,
-			   &Arches::paramInit);
-      cerr << "New task created successfully\n";
-      tsk->computes(dw, d_velocityLabel, 0, patch);
-      tsk->computes(dw, d_pressureLabel, 0, patch);
-      tsk->computes(dw, d_scalarLabel, 0, patch);
-      tsk->computes(dw, d_densityLabel, 0, patch);
-      tsk->computes(dw, d_viscosityLabel, 0, patch);
-      sched->addTask(tsk);
-      cerr << "New task added successfully to scheduler\n";
-    }
-  }
-}
-*/
 
 //****************************************************************************
 // Actual initialization
@@ -304,7 +300,7 @@ Arches::paramInit(const ProcessorContext* ,
     indexLow[ii] = domainLow[ii]+1;
     indexHigh[ii] = domainHigh[ii]-1;
   }
- 
+  //can read these values from input file 
   double uVal = 0.0, vVal = 0.0, wVal = 0.0;
   double pVal = 0.0, denVal = 0.0;
   double visVal = d_physicalConsts->getMolecularViscosity();
@@ -358,6 +354,9 @@ Arches::paramInit(const ProcessorContext* ,
 
 //
 // $Log$
+// Revision 1.38  2000/06/15 22:13:21  rawat
+// modified boundary stuff
+//
 // Revision 1.37  2000/06/14 20:40:47  rawat
 // modified boundarycondition for physical boundaries and
 // added CellInformation class

@@ -104,12 +104,39 @@ public:
       //
       void problemSetup(const ProblemSpecP& params);
 
+      // GROUP: Access function
+      ////////////////////////////////////////////////////////////////////////
+      //
+      // Details here
+      //
+      int getNumInlets() {
+	return d_numInlets;
+      }
+
+      // GROUP: Access function
+      ////////////////////////////////////////////////////////////////////////
+      //
+      // Details here
+      //
+      int getFlowCellID(int index) {
+	return d_flowInlets[index].d_cellTypeID;
+      }
+
       ////////////////////////////////////////////////////////////////////////
       //
       // Initialize celltyping
       // Details here
       //
       void cellTypeInit(const ProcessorContext*,
+			const Patch* patch,
+			DataWarehouseP& old_dw,  
+			DataWarehouseP&);
+      ////////////////////////////////////////////////////////////////////////
+      //
+      // computing inlet areas
+      // Details here
+      //
+      void computeInletFlowArea(const ProcessorContext*,
 			const Patch* patch,
 			DataWarehouseP& old_dw,  
 			DataWarehouseP&);
@@ -299,11 +326,12 @@ private:
 	double turb_lengthScale;
 	// calculated values
 	double density;
-	double area;              // inlet area
 	// stores the geometry information, read from problem specs
 	GeometryPiece* d_geomPiece;
 	FlowInlet(int numMix, int cellID);
 	void problemSetup(ProblemSpecP& params);
+	// reduction variable label to get area
+	const VarLabel* d_area_label;
       };
 
       ////////////////////////////////////////////////////////////////////////
@@ -408,6 +436,9 @@ private:
   
 //
 // $Log$
+// Revision 1.21  2000/06/15 22:13:22  rawat
+// modified boundary stuff
+//
 // Revision 1.20  2000/06/15 08:48:12  bbanerje
 // Removed most commented stuff , added StencilMatrix, tasks etc.  May need some
 // more work
