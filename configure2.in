@@ -1094,6 +1094,7 @@ echo
 
 ##  --  search for X  ----------------------------------------------------
 AC_PATH_X
+AC_PATH_XTRA
 if test "$x_libraries" &&
    test "$x_libraries" != "/usr/lib"; then
   LIBX=$x_libraries
