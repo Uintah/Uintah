@@ -75,5 +75,8 @@ MPMICELabel::~MPMICELabel()
   VarLabel::destroy(burnedMassCCLabel);
   VarLabel::destroy(releasedHeatCCLabel);
   VarLabel::destroy(scratchLabel);
+  VarLabel::destroy(scratch1Label);
+  VarLabel::destroy(scratch2Label);
+  VarLabel::destroy(scratch3Label);
   VarLabel::destroy(NC_CCweightLabel);
 }
