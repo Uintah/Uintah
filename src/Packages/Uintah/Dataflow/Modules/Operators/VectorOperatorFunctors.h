@@ -31,4 +31,14 @@ struct LengthOp
   { return v.length(); }
 };
 
+struct VorticityOp
+{
+  VorticityOp() {}
+  inline double operator()(const Vector&  v)
+  {
+    // This is something I made up.  Put the actuall thing in.
+    return v.x() * v.y() + v.y() * v.z() + v.x() * v.z();
+  }
+};
+
 }
