@@ -137,7 +137,7 @@ NIMRODConverter::execute(){
 	  max[j] = nHandle->nrrd->axis[j].size-1;
 	}
 
-	// Separtate via the tupple axis.
+	// Separate via the tupple axis.
 	for( unsigned int i=0; i<tuples; i++ ) {
 
 	  Nrrd *nout = nrrdNew();
