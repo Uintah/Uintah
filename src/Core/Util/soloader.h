@@ -5,7 +5,7 @@
 //
 
 #ifdef _WIN32
-#include <windows.h> // for LoadLibrary(), GetProcAddress() and HINSTANCE
+#include <afxwin.h> // for LoadLibrary(), GetProcAddress() and HINSTANCE
 typedef HINSTANCE LIBRARY_HANDLE;
 #else
 #include <dlfcn.h>   // for dlopen() and dlsym()
@@ -42,7 +42,7 @@ LIBRARY_HANDLE GetLibraryHandle(const char* libname);
 // from within the shared library with handle "handle"
 //
 
-void* GetHandleSymbolAddress(LIBRARY_HANDLE handle, char* symbolname);
+void* GetHandleSymbolAddress(LIBRARY_HANDLE handle, const char* symbolname);
 
 
 /////////////////////////////////////////////////////////////////
