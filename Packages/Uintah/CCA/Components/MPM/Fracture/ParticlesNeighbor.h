@@ -43,6 +43,15 @@ public:
                const Point& B,
 	       const Point& O,const Vector& N,double size2) const;
 
+  bool computeEnergyReleaseRate(
+        particleIndex tipIndex,
+        const Vector& nx,
+	const Vector& ny,
+	const ParticleVariable<Point>& pX,
+	const ParticleVariable<Matrix3>& pStress,
+	const ParticleVariable<double>& pVolume,
+	double& G) const;
+
 private:
 
 };
