@@ -25,7 +25,7 @@ set $m0-cmdTCL {o1=load('rand2.dat');
 }
 set $m1-notes {}
 set $m1-show_status {1}
-set $m1-filename {/mnt/win_c2/oleg/prj/scirun/1/SCIRun/bin/rand3.mat}
+set $m1-filename {rand3.mat}
 set $m1-filetype {ASCII}
 set $m1-split {0}
 $m0 initialize_ui

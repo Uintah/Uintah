@@ -20,7 +20,7 @@ addConnection $m0 0 $m1 0
 
 set $m0-notes {}
 set $m0-show_status {1}
-set $m0-filename {/mnt/win_c2/oleg/prj/scirun/1/SCIRun/bin/rand1.mat}
+set $m0-filename {rand1.mat}
 set $m1-notes {}
 set $m1-show_status {1}
 set $m1-hpTCL {127.0.0.1:5517 3}
