@@ -247,7 +247,7 @@ void ExtractSurfs::execute()
 	if(pts[i].size()) {
 	    gp[i]=scinew GeomPts(pts[i].size());
 	    for (xx=0; xx<pts[i].size(); xx++)
-		gp[i]->pts.add(pts[i][xx]);
+		gp[i]->add(pts[i][xx]);
 	    ExtractSurfs_id[i]=ogeom->addObj(gp[i], "material"+to_string(i));
 	} else {
 	    ExtractSurfs_id[i]=0;
