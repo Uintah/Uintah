@@ -27,7 +27,6 @@
 #include <Geom/Material.h>
 #include <Geom/Group.h>
 #include <Geom/Tri.h>
-#include <Geom/VCTri.h>
 #include <TCL/TCLvar.h>
 
 
@@ -39,7 +38,6 @@ class SurfToGeom : public Module {
 
     TCLdouble range_min;
     TCLdouble range_max;
-    double old_smin, old_smax;
     int have_sf, have_cm;
 
     void surf_to_geom(const SurfaceHandle&, GeomGroup*);
@@ -74,7 +72,6 @@ SurfToGeom::SurfToGeom(const clString& id)
     add_iport(icmap);
     ogeom=new GeometryOPort(this, "Geometry", GeometryIPort::Atomic);
     add_oport(ogeom);
-    old_smin=old_smax=0;
 }
 
 SurfToGeom::SurfToGeom(const SurfToGeom&copy, int deep)
@@ -104,17 +101,6 @@ void SurfToGeom::execute()
     ScalarFieldHandle sfield;
 
     int have_sf=ifield->get(sfield);
-    double smin, smax;
-    sfield->get_minmax(smin, smax);
-    if(old_smin != smin || old_smax != smax){
-	range_min.set(smin);
-	range_max.set(smax);
-	old_smin=smin;
-	old_smax=smax;
-    }
-    smin=range_min.get();
-    smax=range_max.get();
-
     GeomGroup* group = new GeomGroup;
     TriSurface* ts=surf->getTriSurface();
 
@@ -126,24 +112,24 @@ void SurfToGeom::execute()
 		int ok=1;
 		if (sfield->interpolate(ts->points[ts->elements[i]->i1], 
 				       interp))
-		    mat1=cmap->lookup(interp, smin, smax);
+		    mat1=cmap->lookup(interp);
 		else ok=0;
 		if (sfield->interpolate(ts->points[ts->elements[i]->i2], 
 				       interp))
-		    mat2=cmap->lookup(interp, smin, smax);
+		    mat2=cmap->lookup(interp);
 		else ok=0;
 		if (sfield->interpolate(ts->points[ts->elements[i]->i3], 
 				       interp))
-		    mat3=cmap->lookup(interp, smin, smax);
+		    mat3=cmap->lookup(interp);
 		else ok=0;
 		if (ok) {
-		    group->add(new GeomVCTri(ts->points[ts->elements[i]->i1], 
-					     ts->points[ts->elements[i]->i2],
-					     ts->points[ts->elements[i]->i3],
-					     mat1, mat2, mat3));
+		    group->add(new GeomTri(ts->points[ts->elements[i]->i1], 
+					   ts->points[ts->elements[i]->i2],
+					   ts->points[ts->elements[i]->i3],
+					   mat1, mat2, mat3));
 		} else {
-			cerr << "One of the points was out of the field.\n";
-		    }
+		    cerr << "One of the points was out of the field.\n";
+		}
 	    } else {
 		group->add(new GeomTri(ts->points[ts->elements[i]->i1], 
 				       ts->points[ts->elements[i]->i2],
