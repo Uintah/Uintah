@@ -39,16 +39,12 @@ using namespace SCIRun;
 //! Constructor
 // -- it's private, no occasional object creation
 BuildFEMatrix::BuildFEMatrix(TetVolIntHandle hField,
-			     DirichletBC&  dirBC,
 			     vector<pair<string, Tensor> >& tens,
 			     MatrixHandle& hA, 
-			     MatrixHandle& hRhs,
 			     int np):
   // ---------------------------------------------
   hField_(hField),
-  dirBC_(dirBC),
   hA_(hA),
-  hRhs_(hRhs),
   np_(np),
   barrier_("BuildFEMatrix barrier"),
   colIdx_(np+1),
@@ -62,10 +58,8 @@ BuildFEMatrix::BuildFEMatrix(TetVolIntHandle hField,
 BuildFEMatrix::~BuildFEMatrix(){}
 
 bool BuildFEMatrix::build_FEMatrix(TetVolIntHandle hField,
-				   DirichletBC& dirBC,
 				   vector<pair<string, Tensor> >& tens,
-				   MatrixHandle& hA, 
-				   MatrixHandle& hRhs)
+				   MatrixHandle& hA)
   //------------------------------------------------
 {
   int np=Thread::numProcessors();
@@ -78,10 +72,9 @@ bool BuildFEMatrix::build_FEMatrix(TetVolIntHandle hField,
   }
 
   hA = 0;
-  hRhs = 0;
 
   BuildFEMatrixHandle hMaker =
-    new BuildFEMatrix(hField, dirBC, tens, hA, hRhs, np);
+    new BuildFEMatrix(hField, tens, hA, np);
   cerr << "SetupFEMatrix: number of threads being used = " << np << endl;
 
   Thread::parallel(Parallel<BuildFEMatrix>(hMaker.get_rep(), 
@@ -91,7 +84,7 @@ bool BuildFEMatrix::build_FEMatrix(TetVolIntHandle hField,
   // -- refer to the object one more time not to make it die before
   hMaker = 0;
   
-  if (hA.get_rep() && hRhs.get_rep())
+  if (hA.get_rep())
     return true;
   else
     return false;
@@ -172,13 +165,11 @@ void BuildFEMatrix::parallel(int proc)
   //! check point
   barrier_.wait(np_);
   
-  //! the main thread makes the matrix and rhs...
+  //! the main thread makes the matrix
   if(proc == 0){
     rows_[nNodes]=st;
     pA_ = scinew SparseRowMatrix(nNodes, nNodes, rows_, allCols_, st);
-    pRhs_ = scinew ColumnMatrix(nNodes);
     hA_ = pA_;
-    hRhs_ = pRhs_;
   }
   
   //! check point
@@ -186,9 +177,6 @@ void BuildFEMatrix::parallel(int proc)
   
   //! zeroing in parallel
   double* a = pA_->a;
-  for(i=start_node; i<end_node; i++){
-    (*pRhs_)[i]=0;
-  }
   
   int ns=colIdx_[proc];
   int ne=colIdx_[proc+1];
@@ -212,51 +200,7 @@ void BuildFEMatrix::parallel(int proc)
       add_lcl_gbl(lcl_matrix, *ii, start_node, end_node, cell_nodes);
     }
   }
-  
   barrier_.wait(np_);
- 
-  //! adjusting matrix for Dirichlet BC on first processor
-  // --  no parralelization here, no many Dirichlet nodes
-  Array1<int> idcNz;
-  Array1<double> valNz;
-
-  TetVolMesh::Node::array_type nind;
-  vector<double> dbc;
-
-  if (proc==0){
-    
-    for(unsigned int idx = 0; idx<dirBC_.size(); ++idx){
-      int ni = dirBC_[idx].first;
-      double val = dirBC_[idx].second;
-      
-      // -- getting column indices of non-zero elements for the current row
-      pA_->getRowNonzeros(ni, idcNz, valNz);
-      
-      // -- updating rhs
-      for (int i=0; i<idcNz.size(); ++i){
-	int j = idcNz[i];
-	(*pRhs_)[j] +=-val*valNz[i]; 
-      }
-    }
-    
-    //! zeroing matrix row and column corresponding to the dirichlet nodes
-    for(unsigned int idx = 0; idx<dirBC_.size(); ++idx){
-      int ni = dirBC_[idx].first;
-      double val = dirBC_[idx].second;
-      
-      pA_->getRowNonzeros(ni, idcNz, valNz);
-      
-      for (int i=0; i<idcNz.size(); ++i){
-	int j = idcNz[i];
-	pA_->put(ni, j, 0);
-	pA_->put(j, ni, 0); 
-      }
-      
-      //! updating dirichlet node and corresponding entry in rhs
-      pA_->put(ni, ni, 1);
-      (*pRhs_)[ni] = val;
-    }
-  }
 }
 
 void BuildFEMatrix::build_local_matrix(double lcl_a[4][4], TetVolMesh::Cell::index_type c_ind)

@@ -46,24 +46,19 @@ using namespace SCIRun;
 class BuildFEMatrix;
 typedef LockingHandle<TetVol<int> >   TetVolIntHandle;
 typedef LockingHandle<BuildFEMatrix>   BuildFEMatrixHandle;
-typedef vector<pair<int, double> >     DirichletBC;       
 
 class BuildFEMatrix: public Datatype {
   
   //! Private data members
-  TetVolIntHandle         hField_;
-  TetVolMeshHandle         hMesh_;
-  DirichletBC&             dirBC_;
-  MatrixHandle&            hA_;
-  MatrixHandle&            hRhs_;
-  SparseRowMatrix*         pA_;
-  ColumnMatrix*            pRhs_;
-  int                      np_;
-
-  int*             rows_;
-  int*             allCols_;
-  Barrier          barrier_;
-  Array1<int>      colIdx_;
+  TetVolIntHandle                 hField_;
+  TetVolMeshHandle                hMesh_;
+  MatrixHandle&                   hA_;
+  SparseRowMatrix*                pA_;
+  int                             np_;
+  int*                            rows_;
+  int*                            allCols_;
+  Barrier                         barrier_;
+  Array1<int>                     colIdx_;
   vector<pair<string, Tensor> >&  tens_;
   
   //! Private methods
@@ -77,15 +72,11 @@ class BuildFEMatrix: public Datatype {
 public:
    //! Constructor
   BuildFEMatrix(TetVolIntHandle,
-		DirichletBC&,
 		vector<pair<string, Tensor> >&,
-		MatrixHandle&, 
 		MatrixHandle&, 
 		int);
   static bool build_FEMatrix(TetVolIntHandle,
-			     DirichletBC&,
 			     vector<pair<string, Tensor> > &,
-			     MatrixHandle&, 
 			     MatrixHandle&);
   //! Destuctor
   virtual ~BuildFEMatrix();
