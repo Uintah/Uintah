@@ -716,7 +716,7 @@ proc regenModuleMenu { modid menu_id } {
     }
 
     # 'Fetch/Return UI' Menu Option
-    if { [envBool SCIRUN_GUI_UseGuiFetch] } {
+    if { ![$modid is_subnet] && [envBool SCIRUN_GUI_UseGuiFetch] } {
         $menu_id add separator
 	$menu_id add command -label "Fetch UI"  -command "$modid fetch_ui"
 	$menu_id add command -label "Return UI" -command "$modid return_ui"
