@@ -21,8 +21,8 @@ void
  TensorToTensorConvertor::execute(void)
 {
   // Set up ports
-  inPort = (TensorParticlesIPort*) get_iport("Tensor Particles");
-  outPort = (TensorParticlesOPort*) get_oport("Tensor Particles");
+  inPort = (TensorParticlesIPort*) get_iport("Input Tensor");
+  outPort = (TensorParticlesOPort*) get_oport("Output Tensor");
 
   // Set up handle
   TensorParticlesHandle handle;
