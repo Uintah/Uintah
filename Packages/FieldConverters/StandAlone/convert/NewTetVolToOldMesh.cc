@@ -25,6 +25,7 @@ using std::endl;
 //using namespace SCIRun;
 //using namespace FieldConverters;
 
+int
 main(int argc, char **argv) {
 #if 0
   ScalarFieldHandle handle;
