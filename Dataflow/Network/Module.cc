@@ -351,6 +351,11 @@ void Module::update_state(State st)
     time=0;
   time = Min(time, 1.0e10); // Clamp NaN
   gui->execute(id+" set_state " + s + " " + to_string(time));
+
+  if (sci_getenv_p("SCI_REGRESSION_TESTING") && st == Completed)
+  {
+    cout << id << ":RUNTIME: " << time << "\n";
+  }
 }
 
 
