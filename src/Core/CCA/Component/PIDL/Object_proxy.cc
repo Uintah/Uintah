@@ -35,6 +35,8 @@
 #include <iostream>
 #include <string>
 
+using namespace std;
+
 using PIDL::GlobusError;
 using PIDL::Object_proxy;
 using PIDL::TypeInfo;
@@ -53,9 +55,13 @@ Object_proxy::Object_proxy(const URL& url)
     cout << "Object_proxy: attaching\n";
     if(int gerr=globus_nexus_attach(str, &d_ref.d_sp)){
 	d_ref.d_vtable_base=TypeInfo::vtable_invalid;
+	cout << "nexus_attach error\n";
+
 	throw GlobusError("nexus_attach", gerr);
     }
     cout << "Object_proxy: DONE attaching\n";
+
+    attach_done();
 }
 
 Object_proxy::~Object_proxy()
