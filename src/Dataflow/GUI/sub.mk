@@ -90,7 +90,6 @@ $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/ScalarFieldStats.tcl \
 	$(SRCDIR)/SetProperty.tcl \
 	$(SRCDIR)/SelectElements.tcl \
-	$(SRCDIR)/ShowColorMap.tcl \
 	$(SRCDIR)/ShowField.tcl \
 	$(SRCDIR)/SolveMatrix.tcl \
 	$(SRCDIR)/StreamLines.tcl \
