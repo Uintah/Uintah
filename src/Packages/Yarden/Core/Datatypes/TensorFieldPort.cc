@@ -11,6 +11,7 @@
  */
 
 #include <Yarden/Datatypes/TensorFieldPort.h>
+#include <Yarden/share/share.h>
 
 namespace SCICore {
   namespace Datatypes {
@@ -18,6 +19,17 @@ namespace SCICore {
     using namespace SCICore::Containers;
     using namespace DaveW::Datatypes;
     
+    extern "C" {
+      YardenSHARE IPort* make_MatrixIPort(Module* module,
+					   const clString& name) {
+	return new SimpleIPort<MatrixHandle>(module,name);
+      }
+      YardenSHARE OPort* make_MatrixOPort(Module* module,
+					   const clString& name) {
+	return new SimpleOPort<MatrixHandle>(module,name);
+      }
+    }
+
     template<> clString SimpleIPort<TensorFieldHandle>::port_type("TensorField");
     template<> clString SimpleIPort<TensorFieldHandle>::port_color("green3");
   }
@@ -25,6 +37,10 @@ namespace SCICore {
 
 //
 // $Log$
+// Revision 1.2  2000/11/22 18:53:46  moulding
+// added extern "C" make functions for input and output ports (to be used
+// by the autoport facility).
+//
 // Revision 1.1  2000/10/23 23:39:39  yarden
 // Tensor and Tensor Field definitions
 //
