@@ -64,7 +64,7 @@ public:
     void set_up(const Vector&);
     Vector get_up() const;
     void getParams(Point& origin, Vector& lookdir,
-		   Vector& up, double& fov);
+		   Vector& up, Vector& side, double& fov);
 
     void updatePosition( Stealth & stealth, 
 			 Scene * scene, PerProcessorContext * ppc );
