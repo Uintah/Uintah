@@ -25,8 +25,6 @@
 #  DEALINGS IN THE SOFTWARE.
 #
 
-source [file join $SCIRUN_SRCDIR Core GUI Range.tcl]
-
 itk::usual Linkedpane {
     keep -background -cursor -sashcursor
 }
@@ -211,6 +209,7 @@ class BioImageApp {
         set has_executed 0
         set data_dir ""
         set 2D_fixed 0
+	set ViewImage_executed_on_error 0
 
 	### Define Tooltips
 	##########################
@@ -251,7 +250,23 @@ class BioImageApp {
     # and change_indicator_labels methods. We catch errors from
     method indicate_error { which msg_state } {
 	if {$msg_state == "Error"} {
-	    if {$error_module == ""} {
+	    if {[string first "ViewImage" $which] != -1} {
+		# hopefully, getting here means that we have new data, and that NrrdInfo
+		# has caught it but didn't change slice stuff in time before the ViewImage
+		# module executed
+		global mods
+		if {$mods(ViewImage) != ""} {
+		    if {$ViewImage_executed_on_error == 0} {
+			set ViewImage_executed_on_error 1
+			after 100 "$mods(ViewImage)-c needexecute"
+		    } elseif {$error_module == ""} {
+			set error_module $which
+			# turn progress graph red
+			change_indicator_labels "E R R O R !"
+			change_indicate_val 3
+		    }
+		}
+	    } elseif {$error_module == ""} {
 		set error_module $which
 		# turn progress graph red
 		change_indicator_labels "E R R O R !"
@@ -263,10 +278,12 @@ class BioImageApp {
 		#puts "FIX ME implement indicate_error"
 		change_indicator_labels "Visualizing..."
 		change_indicate_val 0
+		if {[string first "ViewImage" $which] != -1} {
+		    set ViewImage_executed_on_error 0
+		}
 	    }
 	}
-    }
-
+    } 
     ##########################
     ### update_progress
     ##########################
@@ -4299,6 +4316,7 @@ class BioImageApp {
 
     variable data_dir
     variable 2D_fixed
+    variable ViewImage_executed_on_error
 }
 
 
