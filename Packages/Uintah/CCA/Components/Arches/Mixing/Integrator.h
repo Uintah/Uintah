@@ -40,7 +40,7 @@ POSSIBLE REVISIONS
 #include <vector>
 double fnc(double *x);
  // Fortran subroutine for numerical integration
-extern "C" {void dqagpe_(double fun(double* f),double *a, double *b, 
+extern "C" {void dqagpe(double fun(double* f),double *a, double *b, 
 			int *i, double *points, double *epsabs, 
 			double *epsrel, int *limit, double *result, 
 			double *abserr, int *neval,
