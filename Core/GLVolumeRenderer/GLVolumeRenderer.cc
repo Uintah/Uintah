@@ -64,7 +64,8 @@ GLVolumeRenderer::GLVolumeRenderer() :
   drawZ_(false),
   drawView_(false),
   interp_(true),
-  lighting_(0)
+  lighting_(0),
+  alphamult_(true)
 {
   r_count_++;
   NOT_FINISHED("GLVolumeRenderer::GLVolumeRenderer(int id, const Texture3D* tex, ColorMap* cmap)");
@@ -97,7 +98,8 @@ GLVolumeRenderer::GLVolumeRenderer(GLTexture3DHandle tex,
   drawView_(false),
   di_(0),
   interp_(true),
-  lighting_(0)
+  lighting_(0),
+  alphamult_(true)
 {
   r_count_++;
 }
@@ -127,7 +129,8 @@ GLVolumeRenderer::GLVolumeRenderer(const GLVolumeRenderer& copy) :
   drawView_(copy.drawView_),
   di_(copy.di_),
   interp_(copy.interp_),
-  lighting_(copy.lighting_)
+  lighting_(copy.lighting_),
+  alphamult_(copy.alphamult_)
 {
   r_count_++;
 } 
@@ -154,6 +157,7 @@ GLVolumeRenderer::clone()
 {
   return scinew GLVolumeRenderer( *this );
 }
+
 
 #ifdef SCI_OPENGL
 void 
@@ -198,7 +202,6 @@ GLVolumeRenderer::setup()
   glEnable(GL_TEXTURE_3D);
   glTexEnvi(GL_TEXTURE_ENV,GL_TEXTURE_ENV_MODE, GL_MODULATE); 
 
-  if( cmap_.get_rep() ) {
 #if defined(GL_ARB_fragment_program) && defined(GL_ARB_multitexture) && defined(__APPLE__)
     glActiveTextureARB(GL_TEXTURE1_ARB);
     glEnable(GL_TEXTURE_1D);
@@ -209,6 +212,7 @@ GLVolumeRenderer::setup()
 #elif defined(GL_SHARED_TEXTURE_PALETTE_EXT)
     glEnable(GL_SHARED_TEXTURE_PALETTE_EXT);
 #endif
+  if( cmap_.get_rep() ) {
     if( cmap_has_changed_ || r_count_ != 1) {
       BuildTransferFunctions();
       cmap_has_changed_ = false;
@@ -268,7 +272,13 @@ GLVolumeRenderer::BuildTransferFunctions( )
     return;
   }
 
-  double bp = tan( 1.570796327*(0.5 - slice_alpha_*0.49999));
+  double bp;
+
+  if(alphamult_){
+    bp = tan( 1.570796327*(0.5 - slice_alpha_*0.49999));
+  } else {
+    bp = tan( 1.570796327 * 0.5 );
+  }
   for (int i = 0; i < tex_->depth() + 1; i++)
   {
     double sliceRatio =
@@ -280,6 +290,7 @@ GLVolumeRenderer::BuildTransferFunctions( )
 
       const double alpha1 = pow(alpha, bp);
       const double alpha2 = 1.0 - pow((1.0 - alpha1), sliceRatio);
+  
 
       //	  if( j == 128 ) cerr <<" alpha = "<< alpha<<std::endl;
       //	  if( j == 128 ) cerr <<" alpha1 = "<< alpha1<<std::endl;

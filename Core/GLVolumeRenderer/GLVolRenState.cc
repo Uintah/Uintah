@@ -66,16 +66,16 @@ using std::vector;
 using std::cerr;
 using std::endl;
 
+#if defined(GL_ARB_fragment_program) && defined(__APPLE__)
+FragmentProgramARB *GLVolRenState::VolShader = new FragmentProgramARB( ShaderString, false );
+#endif
 
 GLVolRenState::GLVolRenState(const GLVolumeRenderer* glvr)
   : volren( glvr ), texName(0), reload_(true), 
-  newbricks_(false), newcmap_(true)
+    newbricks_(false), newcmap_(true)
 {
   // Base Class, holds pointer to VolumeRenderer and 
   // common computation
-#if defined(GL_ARB_fragment_program) && defined(__APPLE__)
-  VolShader = new FragmentProgramARB( ShaderString, false );
-#endif
 
 }
 
@@ -156,11 +156,11 @@ GLVolRenState::drawPolys( vector<Polygon *> polys )
   for (i = 0; i < polys.size(); i++) {
     switch (polys[i]->size() ) {
     case 1:
-      t0 = polys[i]->getTexCoord(0);
+//       t0 = polys[i]->getTexCoord(0);
       p0 = polys[i]->getVertex(0);
       glBegin(GL_POINTS);
-//       glMultiTexCoord3f(GL_TEXTURE0_ARB, t0.x(), t0.y(), t0.z());
-      glTexCoord3f(t0.x(), t0.y(), t0.z());
+  //       glMultiTexCoord3f(GL_TEXTURE0_ARB, t0.x(), t0.y(), t0.z());
+//       glTexCoord3f(t0.x(), t0.y(), t0.z());
       glVertex3f(p0.x(), p0.y(), p0.z());
       glEnd();
       break;
@@ -168,10 +168,10 @@ GLVolRenState::drawPolys( vector<Polygon *> polys )
             glBegin(GL_LINES);
       for(k =0; k < polys[i]->size(); k++)
       {
-        t0 = polys[i]->getTexCoord(k);
+//         t0 = polys[i]->getTexCoord(k);
         p0 = polys[i]->getVertex(k);
-//         glMultiTexCoord3f(GL_TEXTURE0_ARB, t0.x(), t0.y(), t0.z());
-        glTexCoord3f(t0.x(), t0.y(), t0.z());
+  //         glMultiTexCoord3f(GL_TEXTURE0_ARB, t0.x(), t0.y(), t0.z());
+//         glTexCoord3f(t0.x(), t0.y(), t0.z());
         glVertex3f(p0.x(), p0.y(), p0.z());
       }
       glEnd();
@@ -185,10 +185,10 @@ GLVolRenState::drawPolys( vector<Polygon *> polys )
         glNormal3f(n.x(), n.y(), n.z());
         for(k =0; k < polys[i]->size(); k++)
         {
-          t0 = polys[i]->getTexCoord(k);
+//           t0 = polys[i]->getTexCoord(k);
           p0 = polys[i]->getVertex(k);
-//           glMultiTexCoord3f(GL_TEXTURE0_ARB, t0.x(), t0.y(), t0.z());
-          glTexCoord3f(t0.x(), t0.y(), t0.z());
+  //           glMultiTexCoord3f(GL_TEXTURE0_ARB, t0.x(), t0.y(), t0.z());
+//           glTexCoord3f(t0.x(), t0.y(), t0.z());
           glVertex3f(p0.x(), p0.y(), p0.z());
         }
 	glEnd();
@@ -232,17 +232,15 @@ GLVolRenState::loadColorMap(Brick& brick)
 
 #if defined(GL_ARB_fragment_program) && defined(GL_ARB_multitexture)  && defined(__APPLE__)
 
-  static GLuint cmap = 0;
   glActiveTextureARB(GL_TEXTURE1_ARB);
   {
     glEnable(GL_TEXTURE_1D);
     glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-    
-    if( cmap == 0 || newcmap_ ){
-      glDeleteTextures(1, &cmap);
-      glGenTextures(1, &cmap);
-      glBindTexture(GL_TEXTURE_1D, cmap);
+    if( cmap_texture_ == 0 || newcmap_ ){
+      glDeleteTextures(1, &cmap_texture_);
+      glGenTextures(1, &cmap_texture_);
+      glBindTexture(GL_TEXTURE_1D, cmap_texture_);
       glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
       glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
       glTexImage1D(GL_TEXTURE_1D, 0,
@@ -252,7 +250,7 @@ GLVolRenState::loadColorMap(Brick& brick)
 		   arr);
       newcmap_ = false;
     } else {
-      glBindTexture(GL_TEXTURE_1D, cmap);
+      glBindTexture(GL_TEXTURE_1D, cmap_texture_);
     }
     glActiveTexture(GL_TEXTURE0_ARB);
   }
@@ -285,14 +283,14 @@ GLVolRenState::loadTexture(Brick& brick)
 {
 #if defined( GL_ARB_fragment_program) && defined(GL_ARB_multitexture) && defined(__APPLE__)
   glActiveTexture(GL_TEXTURE0_ARB);
-  glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+//   glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
   glEnable(GL_TEXTURE_3D);
 #endif
   if( !brick.texName() || reload_ ) {
     if( !brick.texName() ){
       glGenTextures(1, brick.texNameP());
       textureNames.push_back( brick.texName() );
-    }
+     }
     
     glBindTexture(GL_TEXTURE_3D_EXT, brick.texName());
 //      glCheckForError("After glBindTexture");
@@ -361,7 +359,6 @@ GLVolRenState::loadTexture(Brick& brick)
 		    &(*(brick.texture()))(0,0,0));
 //      glCheckForError("After glTexImage3D Linux");
 #endif
-    reload_ = false;
   } else {
     glBindTexture(GL_TEXTURE_3D_EXT, brick.texName());
   }
