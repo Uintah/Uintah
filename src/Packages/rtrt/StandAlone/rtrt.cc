@@ -373,7 +373,7 @@ int main(int argc, char* argv[])
 		   ncounters, c0, c1, 1.0, 1.0, display_frames,
 		   do_frameless==true);
   /* <<<< bigler >>>> */
-  new Thread(dpy, "Display thread");
+  (new Thread(dpy, "Display thread"))->detach();
   //new Thread(dpy, "Display thread", group);
 #if 0
   Dpy* dpy2=new Dpy(scene, criteria1, criteria2, rtrt_engine->nworkers, bench,
