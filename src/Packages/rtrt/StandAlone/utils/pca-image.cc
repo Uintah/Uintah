@@ -185,12 +185,12 @@ int main(int argc, char *argv[]) {
     for (int x = 0; x < width; x++ ) {
       // compute cov(x,y) for current pixel
       double *cov_data = (double*)(cov->data);
-      for(int c = 0; c < num_channels; c++)
-	for(int r = 0; r < num_channels; r++)
-	  {
-	    *cov_data = *cov_data + data[c] * data[r];
-	    cov_data++;
-	  }
+      for(int c = 0; c < num_channels; c++) {
+	for(int r = c; r < num_channels; r++) {
+	  cov_data[r] += data[c] * data[r];
+	}
+	cov_data += num_channels;
+      }
       data += num_channels;
     }
   }
@@ -214,12 +214,12 @@ int main(int argc, char *argv[]) {
     double *cov_data = (double*)(cov->data);
     float *mean_data = (float*)(mean->data);
     float inv_num_pixels = 1.0f/(width*height);
-    for(int c = 0; c < num_channels; c++)
-      for(int r = 0; r < num_channels; r++)
-	{
-	  *cov_data = *cov_data * inv_num_pixels - mean_data[c] * mean_data[r];
-	  cov_data++;
-	}
+    for(int c = 0; c < num_channels; c++) {
+      for(int r = c; r < num_channels; r++) {
+	cov_data[r] = cov_data[r]*inv_num_pixels - mean_data[c] * mean_data[r];
+      }
+      cov_data += num_channels;
+    }
   }
 
   if (verbose) cout << "After minus mean\n";
@@ -231,9 +231,7 @@ int main(int argc, char *argv[]) {
       {
 	cout << "[";
 	for(int c = 0; c < cov->axis[1].size; c++)
-	  {
-	    cout << cov_data[c*cov->axis[0].size + r] << ", ";
-	  }
+	  cout << cov_data[c*cov->axis[0].size + r] << ", ";
 	cout << "]\n";
       }
   }
@@ -241,7 +239,6 @@ int main(int argc, char *argv[]) {
   // Covariance matrix computed
 
   // Compute eigen values/vectors
-
   double *eval = new double[num_channels];
   double *cov_data = (double*)(cov->data);
   double *evec_data = 0;
@@ -287,6 +284,18 @@ int main(int argc, char *argv[]) {
       cout << eval[i]<<", ";
     cout << "]\n";
   }
+
+  double total_var = 0;
+  double recovered_var = 0;
+  for (int i=0; i<num_channels; i++) {
+    total_var += eval[i];
+    if(i>=(num_channels-num_bases))
+      recovered_var+=eval[i];
+  }
+  
+  cout << "Variance recovered by "<<num_bases<<" is "
+       <<(recovered_var/total_var)*100.0<<"%"<<endl;
+  
   delete[] eval;
   
   // Cull our eigen vectors
