@@ -212,5 +212,6 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
     BV1* obj=new BV1(group);
 
     scene->set_object(obj);
+    scene->addAnimateObject(obj);
     return scene;
 }
