@@ -553,7 +553,8 @@ itcl_class ViewWindow {
 	switchvisual 0
 	$this-c startup
 
-	puts [pack slaves $w]
+#	puts [pack slaves $w]
+	pack slaves $w
     }
     method bindEvents {w} {
 	bind $w <Expose> "$this-c redraw"
