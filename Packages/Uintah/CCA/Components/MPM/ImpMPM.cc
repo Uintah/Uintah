@@ -686,11 +686,11 @@ void ImpMPM::iterate(const ProcessorGroup*,
   }
 
   subsched->get_new_dw()->finalize();
-
+  subsched->advanceDataWarehouse(grid);
   cout << "dispInc = " << dispInc << " dispIncQ = " << dispIncQ << "\n";
   while(!dispInc && !dispIncQ) {
     cout << "Iteration = " << count++ << "\n";
-    subsched->advanceDataWarehouse(grid);
+    //    subsched->advanceDataWarehouse(grid);
     subsched->execute(d_myworld);
     subsched->get_new_dw()->get(dispIncNorm,lb->dispIncNorm);
     subsched->get_new_dw()->get(dispIncQNorm,lb->dispIncQNorm); 
@@ -704,7 +704,7 @@ void ImpMPM::iterate(const ProcessorGroup*,
       dispInc = true;
     if (dispIncQNorm/dispIncQNorm0 <= 4.*error)
       dispIncQ = true;
-    
+    subsched->advanceDataWarehouse(grid);
   }
 
   // Move the particle data from subscheduler to scheduler.
