@@ -417,6 +417,7 @@ namespace Uintah {
       // for reacting flows
       const VarLabel* d_tempINLabel;
       const VarLabel* d_co2INLabel;
+      const VarLabel* d_h2oINLabel;
       const VarLabel* d_denRefArrayLabel;
       const VarLabel* d_denRefArrayPredLabel;
       const VarLabel* d_densityMicroLabel;
@@ -425,6 +426,7 @@ namespace Uintah {
       // predicted
       const VarLabel* d_tempINPredLabel;
       const VarLabel* d_co2INPredLabel;
+      const VarLabel* d_h2oINPredLabel;
 
       // for outlet bc
       const VarLabel* d_uvwoutLabel;
@@ -665,6 +667,7 @@ namespace Uintah {
       const VarLabel* d_drhodfIntermLabel;
       const VarLabel* d_tempINIntermLabel;
       const VarLabel* d_co2INIntermLabel; 
+      const VarLabel* d_h2oINIntermLabel; 
       const VarLabel* d_enthalpyRXNIntermLabel; 
       const VarLabel* d_reactscalarSRCINIntermLabel; 
       const VarLabel* d_absorpINIntermLabel; 
@@ -711,6 +714,17 @@ namespace Uintah {
       const VarLabel* d_maxAbsUInterm_label;
       const VarLabel* d_maxAbsVInterm_label;
       const VarLabel* d_maxAbsWInterm_label;
+// labels for interpolated velocity used in Runge-Kutta method
+      const VarLabel* d_newCCUVelocityPredLabel;
+      const VarLabel* d_newCCVVelocityPredLabel;
+      const VarLabel* d_newCCWVelocityPredLabel;
+      const VarLabel* d_newCCUVelocityIntermLabel;
+      const VarLabel* d_newCCVVelocityIntermLabel;
+      const VarLabel* d_newCCWVelocityIntermLabel;
+// filtered convection terms in momentum eqn
+      const VarLabel* d_filteredRhoUjULabel;
+      const VarLabel* d_filteredRhoUjVLabel;
+      const VarLabel* d_filteredRhoUjWLabel;
  
     }; // End class ArchesLabel
 } // End namespace Uintah

@@ -383,10 +383,14 @@ ArchesLabel::ArchesLabel()
 				  CCVariable<double>::getTypeDescription() );
   d_co2INLabel = VarLabel::create("co2IN",
 				  CCVariable<double>::getTypeDescription() );
+  d_h2oINLabel = VarLabel::create("h2oIN",
+				  CCVariable<double>::getTypeDescription() );
 
   d_tempINPredLabel = VarLabel::create("tempINPred",
 				  CCVariable<double>::getTypeDescription() );
   d_co2INPredLabel = VarLabel::create("co2INPred",
+				  CCVariable<double>::getTypeDescription() );
+  d_h2oINPredLabel = VarLabel::create("h2oINPred",
 				  CCVariable<double>::getTypeDescription() );
 
 
@@ -766,6 +770,8 @@ ArchesLabel::ArchesLabel()
 				  CCVariable<double>::getTypeDescription() );
   d_co2INIntermLabel = VarLabel::create("co2INInterm",
 				  CCVariable<double>::getTypeDescription() );
+  d_h2oINIntermLabel = VarLabel::create("h2oINInterm",
+				  CCVariable<double>::getTypeDescription() );
   d_enthalpyRXNIntermLabel = VarLabel::create("enthalpyRXNInterm",
 				   CCVariable<double>::getTypeDescription() );
   d_reactscalarSRCINIntermLabel = VarLabel::create("reactscalarSRCINInterm",
@@ -855,6 +861,26 @@ ArchesLabel::ArchesLabel()
 				       max_vartype::getTypeDescription() );
   d_maxAbsWInterm_label = VarLabel::create("maxAbsWInterm",
 				       max_vartype::getTypeDescription() );
+// labels for interpolated velocity used in Runge-Kutta method
+  d_newCCUVelocityPredLabel = VarLabel::create("newCCUVelocityPred",
+				CCVariable<double>::getTypeDescription() );
+  d_newCCVVelocityPredLabel = VarLabel::create("newCCVVelocityPred",
+				CCVariable<double>::getTypeDescription() );
+  d_newCCWVelocityPredLabel = VarLabel::create("newCCWVelocityPred",
+				CCVariable<double>::getTypeDescription() );
+  d_newCCUVelocityIntermLabel = VarLabel::create("newCCUVelocityInterm",
+				CCVariable<double>::getTypeDescription() );
+  d_newCCVVelocityIntermLabel = VarLabel::create("newCCVVelocityInterm",
+				CCVariable<double>::getTypeDescription() );
+  d_newCCWVelocityIntermLabel = VarLabel::create("newCCWVelocityInterm",
+				CCVariable<double>::getTypeDescription() );
+// filtered convection terms in momentum eqn
+  d_filteredRhoUjULabel = VarLabel::create("filteredRhoUjU",
+				   SFCXVariable<double>::getTypeDescription() );
+  d_filteredRhoUjVLabel = VarLabel::create("filteredRhoUjV",
+				   SFCYVariable<double>::getTypeDescription() );
+  d_filteredRhoUjWLabel = VarLabel::create("filteredRhoUjW",
+				   SFCZVariable<double>::getTypeDescription() );
 }
 
 //****************************************************************************
@@ -1001,6 +1027,7 @@ ArchesLabel::~ArchesLabel()
   VarLabel::destroy(d_mmgasVolFracLabel);
   VarLabel::destroy(d_tempINLabel);
   VarLabel::destroy(d_co2INLabel);
+  VarLabel::destroy(d_h2oINLabel);
   VarLabel::destroy(d_denRefArrayLabel);
   VarLabel::destroy(d_denRefArrayPredLabel);
   VarLabel::destroy(d_densityMicroLabel);
@@ -1073,6 +1100,7 @@ ArchesLabel::~ArchesLabel()
   VarLabel::destroy(d_reactscalarSRCINLabel);
   VarLabel::destroy(d_absorpINPredLabel);
   VarLabel::destroy(d_co2INPredLabel);
+  VarLabel::destroy(d_h2oINPredLabel);
   VarLabel::destroy(d_enthalpyRXNPredLabel);
   VarLabel::destroy(d_pressureCorrSPBCLabel);
   VarLabel::destroy(d_reactscalarSRCINPredLabel);
@@ -1123,6 +1151,7 @@ ArchesLabel::~ArchesLabel()
   VarLabel::destroy(d_drhodfIntermLabel);
   VarLabel::destroy(d_tempINIntermLabel);
   VarLabel::destroy(d_co2INIntermLabel); 
+  VarLabel::destroy(d_h2oINIntermLabel); 
   VarLabel::destroy(d_enthalpyRXNIntermLabel); 
   VarLabel::destroy(d_reactscalarSRCINIntermLabel); 
   VarLabel::destroy(d_absorpINIntermLabel); 
@@ -1155,6 +1184,7 @@ ArchesLabel::~ArchesLabel()
   VarLabel::destroy(d_uVelocityIntermLabel);
   VarLabel::destroy(d_vVelocityIntermLabel);
   VarLabel::destroy(d_wVelocityIntermLabel);
+// labels for scale similarity model
   VarLabel::destroy(d_stressTensorCompLabel);
   VarLabel::destroy(d_strainTensorCompLabel);
   VarLabel::destroy(d_scalarFluxCompLabel);
@@ -1171,6 +1201,17 @@ ArchesLabel::~ArchesLabel()
   VarLabel::destroy(d_maxAbsUInterm_label);
   VarLabel::destroy(d_maxAbsVInterm_label);
   VarLabel::destroy(d_maxAbsWInterm_label);
+// labels for interpolated velocity used in Runge-Kutta method
+  VarLabel::destroy(d_newCCUVelocityPredLabel);
+  VarLabel::destroy(d_newCCVVelocityPredLabel);
+  VarLabel::destroy(d_newCCWVelocityPredLabel);
+  VarLabel::destroy(d_newCCUVelocityIntermLabel);
+  VarLabel::destroy(d_newCCVVelocityIntermLabel);
+  VarLabel::destroy(d_newCCWVelocityIntermLabel);
+// filtered convection terms in momentum eqn
+  VarLabel::destroy(d_filteredRhoUjULabel);
+  VarLabel::destroy(d_filteredRhoUjVLabel);
+  VarLabel::destroy(d_filteredRhoUjWLabel);
 			
 }
 
