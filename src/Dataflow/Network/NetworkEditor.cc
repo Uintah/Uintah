@@ -304,9 +304,10 @@ void NetworkEditor::tcl_command(GuiArgs& args, void*)
       sci_system(command.c_str());
       return;
     } else if (args[1] == "getenv" && args.count() == 3){
-      char *result = getenv(args[2].c_str());
+      char *result = sci_getenv( args[2] );
       if (result) {
 	args.result(string(result));
+	// WARNING: PROBABLY NEED TO FREE result HERE.
       }
       return;
     } else if (args[1] == "setenv" && args.count() == 4){
