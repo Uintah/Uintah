@@ -71,6 +71,11 @@ WARNING
       Patch* addPatch(const SCICore::Geometry::IntVector& lowIndex,
 		      const SCICore::Geometry::IntVector& highIndex,
 		      int ID);
+
+     //////////
+     // Find a patch containing the point, return 0 if non exists
+      Patch* getPatchFromPoint( const Point& );
+
       void finalizeLevel();
       void assignBCS(const ProblemSpecP& ps);
       
@@ -116,6 +121,9 @@ WARNING
 
 //
 // $Log$
+// Revision 1.19  2000/07/11 19:32:16  kuzimmer
+// Added getPatchFromPoint(const Point& p)
+//
 // Revision 1.18  2000/07/11 15:53:45  tan
 // Changed the following to be const member function.
 //       void getIndexRange(SCICore::Geometry::BBox& b) const;
