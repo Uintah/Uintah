@@ -234,7 +234,8 @@ endl;
 /* ---------------------------------------------------------------------
  Function~  ICE::scheduleInitialize--
 _____________________________________________________________________*/
-void ICE::scheduleInitialize(const LevelP& level, SchedulerP& sched)
+void ICE::scheduleInitialize(const LevelP& level, 
+                             SchedulerP& sched)
 {
 #ifdef DOING
   cout << "Doing ICE::scheduleInitialize " << endl;
@@ -258,7 +259,8 @@ void ICE::scheduleInitialize(const LevelP& level, SchedulerP& sched)
 /* ---------------------------------------------------------------------
  Function~  ICE::scheduleComputeStableTimestep--
 _____________________________________________________________________*/
-void ICE::scheduleComputeStableTimestep(const LevelP& level,SchedulerP& sched)
+void ICE::scheduleComputeStableTimestep(const LevelP& level,
+                                      SchedulerP& sched)
 {
 #ifdef DOING
   cout << "ICE::scheduleComputeStableTimestep " << endl;
@@ -295,27 +297,35 @@ void ICE::scheduleTimeAdvance(double t, double dt,const LevelP& level,
   const MaterialSet* ice_matls = d_sharedState->allICEMaterials();
   const MaterialSet* mpm_matls = d_sharedState->allMPMMaterials();
   const MaterialSet* all_matls = d_sharedState->allMaterials();  
+  const MaterialSubset* press_matl    = scinew MaterialSubset();
+  press_matl ->addReference();
   const MaterialSubset* ice_matls_sub = ice_matls->getUnion();
   const MaterialSubset* mpm_matls_sub = mpm_matls->getUnion();
 
   
-  scheduleComputeEquilibrationPressure(sched, patches, ice_matls);
+  scheduleComputeEquilibrationPressure(sched, patches, press_matl,
+                                                       ice_matls);
 
   scheduleComputeFaceCenteredVelocities(sched, patches, ice_matls_sub,
-                                                        mpm_matls_sub, 
+                                                        mpm_matls_sub,
+                                                        press_matl, 
                                                         all_matls);
 
   scheduleAddExchangeContributionToFCVel(sched, patches, ice_matls);    
 
-  scheduleComputeDelPressAndUpdatePressCC(sched, patches, ice_matls);
+  scheduleComputeDelPressAndUpdatePressCC(sched, patches, press_matl,
+                                                          ice_matls);
 
-  scheduleComputePressFC(sched, patches, ice_matls);
+  scheduleComputePressFC(sched, patches, press_matl,
+                                        ice_matls);
 
   scheduleMassExchange(sched, patches, ice_matls);
 
-  scheduleAccumulateMomentumSourceSinks(sched, patches, ice_matls);
+  scheduleAccumulateMomentumSourceSinks(sched, patches, press_matl,
+                                                        ice_matls);
 
-  scheduleAccumulateEnergySourceSinks(sched, patches, ice_matls);
+  scheduleAccumulateEnergySourceSinks(sched, patches, press_matl,
+                                                      ice_matls);
 
   scheduleComputeLagrangianValues(sched, patches, ice_matls_sub, 
                                                   all_matls);
@@ -334,7 +344,8 @@ void ICE::scheduleTimeAdvance(double t, double dt,const LevelP& level,
 _____________________________________________________________________*/
 void ICE::scheduleComputeEquilibrationPressure(SchedulerP& sched,
 					       const PatchSet* patches,
-					       const MaterialSet* matls)
+                                          const MaterialSubset* press_matl,
+					       const MaterialSet* ice_matls)
 {
 #ifdef DOING
   cout << "ICE::scheduleComputeEquilibrationPressure" << endl;
@@ -342,16 +353,16 @@ void ICE::scheduleComputeEquilibrationPressure(SchedulerP& sched,
   Task* task = scinew Task("ICE::computeEquilibrationPressure",
                      this, &ICE::computeEquilibrationPressure);
   
-  task->requires(Task::OldDW,lb->press_CCLabel,         Ghost::None);
-  task->requires(Task::OldDW,lb->rho_CC_top_cycleLabel, Ghost::None);
-  task->requires(Task::OldDW,lb->temp_CCLabel,          Ghost::None);
+  task->requires(Task::OldDW,lb->press_CCLabel, press_matl, Ghost::None);
+  task->requires(Task::OldDW,lb->rho_CC_top_cycleLabel,     Ghost::None);
+  task->requires(Task::OldDW,lb->temp_CCLabel,              Ghost::None);
   
   task->computes(lb->speedSound_CCLabel);
   task->computes(lb->vol_frac_CCLabel);
   task->computes(lb->rho_micro_CCLabel);
   task->computes(lb->rho_CCLabel);
-  task->computes(lb->press_equil_CCLabel);
-  sched->addTask(task, patches, matls);
+  task->computes(lb->press_equil_CCLabel, press_matl);
+  sched->addTask(task, patches, ice_matls);
 }
 
 /* ---------------------------------------------------------------------
@@ -361,6 +372,7 @@ void ICE::scheduleComputeFaceCenteredVelocities(SchedulerP& sched,
 						const PatchSet* patches,
 						const MaterialSubset* ice_matls,
                                           const MaterialSubset* mpm_matls,
+                                          const MaterialSubset* press_matl,
                                           const MaterialSet* all_matls)
 {
 #ifdef DOING
@@ -369,12 +381,17 @@ void ICE::scheduleComputeFaceCenteredVelocities(SchedulerP& sched,
   Task* task = scinew Task("ICE::computeFaceCenteredVelocities",
                      this, &ICE::computeFaceCenteredVelocities);
 
-  task->requires(Task::NewDW,lb->press_equil_CCLabel,   Ghost::AroundCells,1);
-  task->requires(Task::NewDW,lb->rho_micro_CCLabel,     Ghost::AroundCells,1);
-  task->requires(Task::NewDW,lb->rho_CCLabel,           Ghost::AroundCells,1);
-  task->requires(Task::OldDW,lb->vel_CCLabel, ice_matls,Ghost::AroundCells,1);
-// task->requires(Task::NewDW,lb->rho_CCLabel, mpm_matls,Ghost::AroundCells,1);
-// task->requires(Task::NewDW,lb->vel_CCLabel, mpm_matls,Ghost::AroundCells,1);
+  task->requires(Task::NewDW,lb->press_equil_CCLabel, press_matl,Ghost::AroundCells,1);
+  task->requires(Task::NewDW,lb->rho_micro_CCLabel, /*all_matls*/Ghost::AroundCells,1);
+  task->requires(Task::NewDW,lb->rho_CCLabel,       /*all_matls*/Ghost::AroundCells,1);
+  task->requires(Task::OldDW,lb->vel_CCLabel,         ice_matls, Ghost::AroundCells,1);
+/*`==========TESTING==========*/ 
+// This is a workaround for a bug that is currently
+// in the scheduler
+  if(mpm_matls->size() != 0 ) {     
+  // task->requires(Task::NewDW,lb->vel_CCLabel, mpm_matls,Ghost::AroundCells,1);
+  }
+ /*==========TESTING==========`*/
 
   task->computes(lb->uvel_FCLabel);
   task->computes(lb->vvel_FCLabel);
@@ -413,6 +430,7 @@ void ICE::scheduleAddExchangeContributionToFCVel(SchedulerP& sched,
 _____________________________________________________________________*/
 void ICE::scheduleComputeDelPressAndUpdatePressCC(SchedulerP& sched,
 						  const PatchSet* patches,
+                                            const MaterialSubset* press_matl,
 						  const MaterialSet* matls)
 {
 #ifdef DOING
@@ -421,7 +439,8 @@ void ICE::scheduleComputeDelPressAndUpdatePressCC(SchedulerP& sched,
   Task* task = scinew Task("ICE::computeDelPressAndUpdatePressCC",
                      this, &ICE::computeDelPressAndUpdatePressCC);
   
-  task->requires( Task::NewDW,lb->press_equil_CCLabel,Ghost::None);
+  task->requires( Task::NewDW,lb->press_equil_CCLabel,
+                                          press_matl, Ghost::None);
   task->requires( Task::NewDW, lb->vol_frac_CCLabel,  Ghost::AroundCells,1);
   task->requires( Task::NewDW, lb->uvel_FCMELabel,    Ghost::AroundCells,2);
   task->requires( Task::NewDW, lb->vvel_FCMELabel,    Ghost::AroundCells,2);
@@ -430,8 +449,8 @@ void ICE::scheduleComputeDelPressAndUpdatePressCC(SchedulerP& sched,
   task->requires( Task::NewDW, lb->speedSound_CCLabel,Ghost::None);
   task->requires( Task::NewDW, lb->rho_micro_CCLabel, Ghost::None);
   
-  task->computes(lb->press_CCLabel);
-  task->computes(lb->delPress_CCLabel);
+  task->computes(lb->press_CCLabel,    press_matl);
+  task->computes(lb->delPress_CCLabel, press_matl);
   
   sched->addTask(task, patches, matls);
 }
@@ -441,6 +460,7 @@ void ICE::scheduleComputeDelPressAndUpdatePressCC(SchedulerP& sched,
 _____________________________________________________________________*/
 void ICE::scheduleComputePressFC(SchedulerP& sched,
 				 const PatchSet* patches,
+                             const MaterialSubset* press_matl,
 				 const MaterialSet* matls)
 { 
 #ifdef DOING
@@ -449,11 +469,13 @@ void ICE::scheduleComputePressFC(SchedulerP& sched,
   Task* task = scinew Task("ICE::computePressFC",
                      this, &ICE::computePressFC);
 
-  task->requires(Task::NewDW,lb->press_CCLabel,Ghost::AroundCells,1);
-  task->requires(Task::NewDW,lb->rho_CCLabel,  Ghost::AroundCells,1);
-  task->computes(lb->pressX_FCLabel);
-  task->computes(lb->pressY_FCLabel);
-  task->computes(lb->pressZ_FCLabel);
+  task->requires(Task::NewDW,lb->press_CCLabel,
+                                     press_matl,Ghost::AroundCells,1);
+  task->requires(Task::NewDW,lb->rho_CCLabel,   Ghost::AroundCells,1);
+  
+  task->computes(lb->pressX_FCLabel, press_matl);
+  task->computes(lb->pressY_FCLabel, press_matl);
+  task->computes(lb->pressZ_FCLabel, press_matl);
 
   sched->addTask(task, patches, matls);
 }
@@ -480,6 +502,7 @@ void  ICE::scheduleMassExchange(SchedulerP& sched,
 _____________________________________________________________________*/
 void ICE::scheduleAccumulateMomentumSourceSinks(SchedulerP& sched,
 						const PatchSet* patches,
+                                          const MaterialSubset* press_matl,
 						const MaterialSet* matls)
 {
 #ifdef DOING
@@ -488,9 +511,12 @@ void ICE::scheduleAccumulateMomentumSourceSinks(SchedulerP& sched,
   Task* task = scinew Task("ICE::accumulateMomentumSourceSinks", 
                      this, &ICE::accumulateMomentumSourceSinks);
                      
-  task->requires(Task::NewDW,lb->pressX_FCLabel,   Ghost::AroundCells,1);
-  task->requires(Task::NewDW,lb->pressY_FCLabel,   Ghost::AroundCells,1);
-  task->requires(Task::NewDW,lb->pressZ_FCLabel,   Ghost::AroundCells,1);
+  task->requires(Task::NewDW,lb->pressX_FCLabel,   press_matl,    
+                                                   Ghost::AroundCells,1);
+  task->requires(Task::NewDW,lb->pressY_FCLabel,   press_matl,
+                                                   Ghost::AroundCells,1);
+  task->requires(Task::NewDW,lb->pressZ_FCLabel,   press_matl,
+                                                   Ghost::AroundCells,1);
   task->requires(Task::NewDW,lb->rho_CCLabel,      Ghost::None);
   task->requires(Task::NewDW,lb->vol_frac_CCLabel, Ghost::None);
 // TURN ON WHEN WE HAVE VISCOUS TERMS
@@ -512,6 +538,7 @@ void ICE::scheduleAccumulateMomentumSourceSinks(SchedulerP& sched,
 _____________________________________________________________________*/
 void ICE::scheduleAccumulateEnergySourceSinks(SchedulerP& sched,
 					      const PatchSet* patches,
+                                         const MaterialSubset* press_matl,
 					      const MaterialSet* matls)
 
 {
@@ -521,11 +548,12 @@ void ICE::scheduleAccumulateEnergySourceSinks(SchedulerP& sched,
   Task* task = scinew Task("ICE::accumulateEnergySourceSinks",
                      this, &ICE::accumulateEnergySourceSinks);
   
-  task->requires(Task::NewDW, lb->press_CCLabel,      Ghost::None);
-  task->requires(Task::NewDW, lb->delPress_CCLabel,   Ghost::None);
-  task->requires(Task::NewDW, lb->rho_micro_CCLabel,  Ghost::None);
-  task->requires(Task::NewDW, lb->speedSound_CCLabel, Ghost::None);
-  task->requires(Task::NewDW, lb->vol_frac_CCLabel,   Ghost::None);
+  task->requires(Task::NewDW, lb->press_CCLabel,      press_matl,Ghost::None);
+  task->requires(Task::NewDW, lb->delPress_CCLabel,   press_matl,Ghost::None);
+  task->requires(Task::NewDW, lb->rho_micro_CCLabel,             Ghost::None);
+  task->requires(Task::NewDW, lb->speedSound_CCLabel,            Ghost::None);
+  task->requires(Task::NewDW, lb->vol_frac_CCLabel,              Ghost::None);
+  
   task->computes(lb->int_eng_source_CCLabel);
   
   sched->addTask(task, patches, matls);
