@@ -54,6 +54,7 @@ Module::Module(const clString& name, const clString& id,
   packageName="error: unset package name";
   categoryName="error: unset category name";
   moduleName="error: unset module name";
+  stacksize=0;
 }
 
 Module::~Module()
@@ -170,8 +171,16 @@ void Module::set_context(NetworkEditor* _netedit, Network* _network)
 
     // Start up the event loop
     helper=scinew ModuleHelper(this);
-    Thread* t=new Thread(helper, name());
+    Thread* t=new Thread(helper, name(), 0, Thread::NotActivated);
+    if(stacksize)
+       t->setStackSize(stacksize);
+    t->activate(false);
     t->detach();
+}
+
+void Module::setStackSize(unsigned long s)
+{
+   stacksize=s;
 }
 
 OPort* Module::oport(int i)
@@ -466,6 +475,9 @@ void Module::multisend(OPort* p1, OPort* p2)
 
 //
 // $Log$
+// Revision 1.11  2000/07/27 05:22:34  sparker
+// Added a setStackSize method to the module
+//
 // Revision 1.10  1999/12/07 02:53:33  dmw
 // made show_status variable persistent with network maps
 //
