@@ -2412,7 +2412,8 @@ case $host in
          fi
       fi
 
-      SCI_CHECK_HEADERS("$LIB_DIR_MPI"/../include,mpi.h,,,optional)
+      # /usr/include/mpi is the standard location of mpi on some linux dists.
+      SCI_CHECK_HEADERS("$LIB_DIR_MPI"/../include /usr/include/mpi,mpi.h,,,optional)
 
       if test "$HAVE_LIB_MPI" && test "$HAVE_MPI_H"; then
          if test "$HAVE_LIB_MPICH"; then
@@ -2989,8 +2990,8 @@ if test "$HAVE_LIB_F" && test "$HAVE_LIB_BLAS"; then
   SCI_CHECK_LIB($dirs,lapack,main,$F_LIB_DIR_FLAG $F_LIB_FLAG,,optional)
 
   if test ! "$HAVE_LIB_LAPACK"; then
-    SCI_CHECK_LIB($LIB_DIR_LAPACK,complib.sgimath,main,,,optional)
-    SCI_CHECK_LIB($LIB_DIR_LAPACK,complib.sgimath_mp,main,,,optional)
+    SCI_CHECK_LIB($dirs,complib.sgimath,main,,,optional)
+    SCI_CHECK_LIB($dirs,complib.sgimath_mp,main,,,optional)
     if test "$HAVE_LIB_COMPLIB_SGIMATH_MP"; then
        AC_MSG_WARN(Using complib for lapack)
        HAVE_LIB_LAPACK="yes"
@@ -3117,8 +3118,10 @@ if test "$HAVE_LIB_MPI" &&
   fi
 
   SCI_CHECK_LIB($dirs,petsc,main,,,optional)
-  SCI_CHECK_HEADERS($LIB_DIR_PETSC/../../../include,petsc.h, \
-                    $INC_MPI_H -I$LIB_DIR_PETSC/../../../bmake/$PETSC_ARCH,,optional)
+
+  SCI_CHECK_HEADERS($LIB_DIR_PETSC/../../../include /usr/include/petsc, \
+    petsc.h, $INC_MPI_H -I$LIB_DIR_PETSC/../../../bmake/$PETSC_ARCH,, \
+    optional)
 
   SCI_CHECK_LIB($LIB_DIR_PETSC,petscvec,main,$PETSC_LIB_FLAG,,optional)
   SCI_CHECK_LIB($LIB_DIR_PETSC,petscmat,main,
