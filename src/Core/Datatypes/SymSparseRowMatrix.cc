@@ -199,7 +199,8 @@ void SymSparseRowMatrix::solve(ColumnMatrix&)
 }
 
 void SymSparseRowMatrix::mult(const ColumnMatrix& x, ColumnMatrix& b,
-			      int& flops, int& memrefs, int beg, int end) const
+			      int& flops, int& memrefs, int beg, int end,
+			      int) const
 {
     // Compute A*x=b
     ASSERT(x.nrows() == nnrows);
@@ -222,7 +223,7 @@ void SymSparseRowMatrix::mult(const ColumnMatrix& x, ColumnMatrix& b,
 
 void SymSparseRowMatrix::mult_transpose(const ColumnMatrix& x, ColumnMatrix& b,
 					int& flops, int& memrefs,
-					int beg, int end)
+					int beg, int end, int)
 {
     // Compute At*x=b
     // This is the same as Ax=b since the matrix is symmetric
@@ -321,6 +322,9 @@ void SymSparseRowMatrix::compute_upper()
 
 //
 // $Log$
+// Revision 1.6  2000/07/12 15:45:10  dmw
+// Added Yarden's raw output thing to matrices, added neighborhood accessors to meshes, added ScalarFieldRGushort
+//
 // Revision 1.5  2000/03/23 10:29:20  sparker
 // Use new exceptions/ASSERT macros
 // Fixed compiler warnings

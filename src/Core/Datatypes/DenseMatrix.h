@@ -50,10 +50,11 @@ public:
     virtual void zero();
 
     virtual void mult(const ColumnMatrix& x, ColumnMatrix& b,
-		      int& flops, int& memrefs, int beg=-1, int end=-1) const;
+		      int& flops, int& memrefs, int beg=-1, int end=-1, 
+		      int spVec=0) const;
     virtual void mult_transpose(const ColumnMatrix& x, ColumnMatrix& b,
 				int& flops, int& memrefs,
-				int beg=-1, int end=-1);
+				int beg=-1, int end=-1, int spVec=0);
     virtual void print();
 
     MatrixRow operator[](int r);
@@ -76,6 +77,9 @@ public:
 
 //
 // $Log$
+// Revision 1.5  2000/07/12 15:45:08  dmw
+// Added Yarden's raw output thing to matrices, added neighborhood accessors to meshes, added ScalarFieldRGushort
+//
 // Revision 1.4  1999/12/10 06:58:57  dmw
 // DenseMatrix::solve() now returns an int (instead of void) indicating whether it succeeded or not.
 //

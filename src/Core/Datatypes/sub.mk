@@ -9,6 +9,7 @@ SRCDIR   := SCICore/Datatypes
 
 GENSRCS := $(SRCDIR)/ScalarFieldRG.cc $(SRCDIR)/ScalarFieldRGchar.cc \
 	$(SRCDIR)/ScalarFieldRGuchar.cc $(SRCDIR)/ScalarFieldRGshort.cc \
+	$(SRCDIR)/ScalarFieldRGushort.cc \
 	$(SRCDIR)/ScalarFieldRGint.cc $(SRCDIR)/ScalarFieldRGfloat.cc \
 	$(SRCDIR)/ScalarFieldRGdouble.cc
 
@@ -90,6 +91,9 @@ clean::
 
 #
 # $Log$
+# Revision 1.4  2000/07/12 15:45:11  dmw
+# Added Yarden's raw output thing to matrices, added neighborhood accessors to meshes, added ScalarFieldRGushort
+#
 # Revision 1.3  2000/03/21 03:01:28  sparker
 # Partially fixed special_get method in SimplePort
 # Pre-instantiated a few key template types, in an attempt to reduce

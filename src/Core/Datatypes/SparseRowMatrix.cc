@@ -238,7 +238,8 @@ void SparseRowMatrix::solve(ColumnMatrix&)
 }
 
 void SparseRowMatrix::mult(const ColumnMatrix& x, ColumnMatrix& b,
-			      int& flops, int& memrefs, int beg, int end) const
+			   int& flops, int& memrefs, int beg, int end, 
+			   int) const
 {
     // Compute A*x=b
     ASSERT(x.nrows() == nncols);
@@ -257,7 +258,7 @@ void SparseRowMatrix::mult(const ColumnMatrix& x, ColumnMatrix& b,
 
 void SparseRowMatrix::mult_transpose(const ColumnMatrix& x, ColumnMatrix& b,
 					int& flops, int& memrefs,
-					int beg, int end)
+					int beg, int end, int)
 {
     // Compute At*x=b
     ASSERT(x.nrows() == nnrows);
@@ -268,9 +269,10 @@ void SparseRowMatrix::mult_transpose(const ColumnMatrix& x, ColumnMatrix& b,
     for (int i=beg; i<end; i++)
       bp[i] = 0;
     for (int j=0; j<nnrows; j++) {
+      if (!x[j]) continue;
+      double xj = x[j];
       int row_idx = rows[j];
       int next_idx = rows[j+1];
-      double xj = x[j];
       int i=row_idx;
       for (; i<next_idx && columns[i] < beg; i++);
       for (; i<next_idx && columns[i] < end; i++)
@@ -327,6 +329,9 @@ void SparseRowMatrix::io(Piostream& stream)
 
 //
 // $Log$
+// Revision 1.9  2000/07/12 15:45:10  dmw
+// Added Yarden's raw output thing to matrices, added neighborhood accessors to meshes, added ScalarFieldRGushort
+//
 // Revision 1.8  2000/03/23 10:29:19  sparker
 // Use new exceptions/ASSERT macros
 // Fixed compiler warnings
