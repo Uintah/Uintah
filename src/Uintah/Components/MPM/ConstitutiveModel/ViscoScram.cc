@@ -525,14 +525,14 @@ void ViscoScram::computeStressTensor(const Patch* patch,
   new_dw->put(pvolume,lb->pVolumeDeformedLabel);
 }
 
-double ViscoScram::computeStrainEnergy(const Patch* patch,
-                                        const MPMMaterial* matl,
-                                        DataWarehouseP& new_dw)
-{
-  double se=0;
-
-  return se;
-}
+//double ViscoScram::computeStrainEnergy(const Patch* patch,
+//                                        const MPMMaterial* matl,
+//                                        DataWarehouseP& new_dw)
+//{
+//  double se=0;
+//
+//  return se;
+//}
 
 void ViscoScram::addComputesAndRequires(Task* task,
 					 const MPMMaterial* matl,
@@ -609,6 +609,9 @@ const TypeDescription* fun_getTypeDescription(ViscoScram::StateData*)
 }
 
 // $Log$
+// Revision 1.15  2000/11/15 18:37:24  guilkey
+// Reduced warnings in constitutive models.
+//
 // Revision 1.14  2000/10/31 22:43:12  guilkey
 // Added temperature retrieval and uncommented some of the code which
 // this allowed.

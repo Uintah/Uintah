@@ -80,11 +80,6 @@ WARNING
 					  DataWarehouseP& old_dw,
 					  DataWarehouseP& new_dw);
 
-	 // compute total strain energy for all particles in the patch
-	 virtual double computeStrainEnergy(const Patch* patch,
-					    const MPMMaterial* matl,
-					    DataWarehouseP& new_dw);
-
          // initialize  each particle's constitutive model data
          virtual void initializeCMData(const Patch* patch,
 				       const MPMMaterial* matl,
@@ -125,6 +120,9 @@ WARNING
 #endif  // __NEOHOOK_CONSTITUTIVE_MODEL_H__ 
 
 // $Log$
+// Revision 1.20  2000/11/15 18:37:24  guilkey
+// Reduced warnings in constitutive models.
+//
 // Revision 1.19  2000/10/11 01:30:28  guilkey
 // Made CMData no longer a per particle variable for these models.
 // None of them currently have anything worthy of being called StateData,

@@ -293,23 +293,23 @@ void CompMooneyRivlin::addComputesAndRequires(Task* task,
 {
    int idx = matl->getDWIndex();
    
-  //  const MPMLabel* lb = MPMLabel::getLabels();
    task->requires(old_dw, lb->pXLabel, idx, patch, Ghost::None);
    task->requires(old_dw, lb->pDeformationMeasureLabel, idx, patch, Ghost::None);
-   task->requires(old_dw, lb->pMassLabel, idx,  patch, Ghost::None);
+   task->requires(old_dw, lb->pMassLabel,   idx,  patch, Ghost::None);
    task->requires(old_dw, lb->pVolumeLabel, idx,  patch, Ghost::None);
    task->requires(old_dw, lb->pStressLabel, idx,  patch, Ghost::None);
-   task->requires(new_dw, lb->gMomExedVelocityLabel, idx, patch, Ghost::AroundCells, 1);
+   task->requires(new_dw, lb->gMomExedVelocityLabel, idx, patch,
+						Ghost::AroundCells, 1);
    task->requires(old_dw, lb->delTLabel);
 
-   task->computes(new_dw, lb->pStressAfterStrainRateLabel, idx,  patch);
+   task->computes(new_dw, lb->pStressAfterStrainRateLabel,       idx, patch);
    task->computes(new_dw, lb->pDeformationMeasureLabel_preReloc, idx, patch);
-   task->computes(new_dw, lb->pVolumeDeformedLabel, idx, patch);
+   task->computes(new_dw, lb->pVolumeDeformedLabel,              idx, patch);
    
    if(matl->getFractureModel()) {
-      task->requires(new_dw, lb->pVisibilityLabel, idx, patch, Ghost::None);
-      task->requires(new_dw, lb->gMassLabel, idx, patch, Ghost::None);
-      task->computes(new_dw, lb->pRotationRateLabel, idx,  patch);
+      task->requires(new_dw, lb->pVisibilityLabel,   idx, patch, Ghost::None);
+      task->requires(new_dw, lb->gMassLabel,         idx, patch, Ghost::None);
+      task->computes(new_dw, lb->pRotationRateLabel, idx, patch);
    }
 }
 
@@ -474,14 +474,6 @@ void CompMooneyRivlin::addComputesAndRequiresForCrackSurfaceContact(
   task->computes(new_dw, lb->pCrackSurfaceContactForceLabel_preReloc, idx, patch );
 }
 
-double CompMooneyRivlin::computeStrainEnergy(const Patch* /*patch*/,
-                                             const MPMMaterial* /*matl*/,
-                                             DataWarehouseP& /*new_dw*/)
-{
-  double se=0.0;
-  return se;
-}
-
 #ifdef __sgi
 #define IRIX
 #pragma set woff 1209
@@ -512,6 +504,9 @@ const TypeDescription* fun_getTypeDescription(CompMooneyRivlin::CMData*)
 }
 
 // $Log$
+// Revision 1.72  2000/11/15 18:37:23  guilkey
+// Reduced warnings in constitutive models.
+//
 // Revision 1.71  2000/10/13 19:49:19  sparker
 // Fixed a few warnings
 //

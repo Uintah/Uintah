@@ -60,12 +60,6 @@ WARNING
 					  DataWarehouseP& new_dw) = 0;
 	 
 	 //////////
-	 // Computation of strain energy.  Useful for tracking energy balance.
-	 virtual double computeStrainEnergy(const Patch* patch,
-					    const MPMMaterial* matl,
-					    DataWarehouseP& new_dw) = 0;
-	 
-	 //////////
 	 // Create space in data warehouse for CM data
 	 virtual void initializeCMData(const Patch* patch,
 				       const MPMMaterial* matl,
@@ -102,6 +96,9 @@ WARNING
 } // end namespace Uintah
 
 // $Log$
+// Revision 1.23  2000/11/15 18:37:24  guilkey
+// Reduced warnings in constitutive models.
+//
 // Revision 1.22  2000/09/12 16:52:10  tan
 // Reorganized crack surface contact force algorithm.
 //
