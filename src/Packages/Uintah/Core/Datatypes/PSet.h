@@ -1,7 +1,7 @@
 #ifndef  UINTAH_DATATYPES_PSet_H
 #define  UINTAH_DATATYPES_PSet_H
 
-#include <Packages/Uintah/Core/Grid/ParticleVariable.h>
+#include <Packages/Uintah/Core/Grid/ShareAssignParticleVariable.h>
 #include <Packages/Uintah/Core/Grid/Grid.h>
 #include <Packages/Uintah/Core/Grid/LevelP.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
@@ -61,8 +61,8 @@ class PSet : public Datatype {
   PSet();
   //////////
   // Constructor
-  PSet( const vector <ParticleVariable<Point> >& positions,
-	const vector <ParticleVariable<long> >& ids,
+  PSet( const vector <ShareAssignParticleVariable<Point> >& positions,
+	const vector <ShareAssignParticleVariable<long> >& ids,
 	const vector <const Patch *> patches,
 	void* callbackClass);
   // GROUP: Destructors
@@ -72,10 +72,12 @@ class PSet : public Datatype {
   // GROUP: Access
   //////////
   // return the locations
-  vector<ParticleVariable<Point> >&  getPositions(){ return positions;}
+  vector<ShareAssignParticleVariable<Point> >&  getPositions()
+  { return positions;}
   //////////
   // return the ids
-  vector<ParticleVariable<long> >&  getIDs(){ return particle_ids;}
+  vector<ShareAssignParticleVariable<long> >&  getIDs()
+  { return particle_ids;}
   //////////
   // return the patches
   vector<const Patch*>&  getPatches(){ return patches; }
@@ -123,8 +125,8 @@ class PSet : public Datatype {
   GridP _grid;
   LevelP _level;
 
-  vector< ParticleVariable<Point> >  positions;
-  vector< ParticleVariable<long> >  particle_ids;
+  vector< ShareAssignParticleVariable<Point> >  positions;
+  vector< ShareAssignParticleVariable<long> >  particle_ids;
   vector< const Patch* >  patches;
 };
 

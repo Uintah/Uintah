@@ -31,7 +31,7 @@ ScalarParticles::ScalarParticles()
 }
 
 ScalarParticles::ScalarParticles(
-		 const vector <ParticleVariable<double> >& scalars,
+		 const vector<ShareAssignParticleVariable<double> >& scalars,
 		 PSet* pset) :
   have_minmax(false), psetH(pset), scalars(scalars)
 {
@@ -53,7 +53,7 @@ void ScalarParticles::compute_minmax()
     return;
 
   double min = 1e30, max = -1e30;
-  vector<ParticleVariable<double> >::iterator it;
+  vector<ShareAssignParticleVariable<double> >::iterator it;
   for( it = scalars.begin(); it != scalars.end(); it++){
     
     ParticleSubset *ps = (*it).getParticleSubset();

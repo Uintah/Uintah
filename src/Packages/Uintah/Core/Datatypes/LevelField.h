@@ -28,7 +28,7 @@
 #include <Core/Malloc/Allocator.h>
 #include <Core/Util/NotFinished.h>
 #include <Core/Util/Assert.h>
-#include <Packages/Uintah/Core/Grid/Array3.h>
+#include <Packages/Uintah/Core/Grid/ShareAssignArray3.h>
 #include <Packages/Uintah/CCA/Components/MPM/Util/Matrix3.h>
 #include <Core/Thread/Thread.h>
 #include <Core/Thread/Mutex.h>
@@ -78,19 +78,19 @@ private:
 // this will not compile
 
 template <class Data>
-class LevelData : public vector<Array3<Data> > 
+class LevelData : public vector<ShareAssignArray3<Data> > 
 {
 public:
   typedef Data value_type;
   //  typedef  iterator;
-  typedef vector<Array3<Data> > parent;
+  typedef vector<ShareAssignArray3<Data> > parent;
 
 
   LevelData():
-    vector<Array3<Data> >(), begin_(0), begin_initialized(false),
+    vector<ShareAssignArray3<Data> >(), begin_(0), begin_initialized(false),
     end_(0), end_initialized(false) {}
   LevelData(const LevelData& data) :
-    vector<Array3<Data> >(data), begin_(0), begin_initialized(false),
+    vector<ShareAssignArray3<Data> >(data), begin_(0), begin_initialized(false),
     end_(0), end_initialized(false) {}
   virtual ~LevelData(){ }
   
@@ -127,12 +127,12 @@ void resize(const LevelMesh::Node::size_type &) {}
 void resize(LevelMesh::Edge::size_type) {}
 void resize(LevelMesh::Face::size_type) {}
 void resize(const LevelMesh::Cell::size_type &) {}
-void resize(int i){ vector<Array3<Data> >::resize(i); }
+void resize(int i){ vector<ShareAssignArray3<Data> >::resize(i); }
 
   class iterator
   {
   public:
-    iterator(const vector<Array3<Data> >* data, IntVector index) 
+    iterator(const vector<ShareAssignArray3<Data> >* data, IntVector index) 
       : it_( (*data)[0].begin() ), vit_(data->begin()), vitend_(data->end())
       {
 	for(; vit_ != vitend_; vit_++){
@@ -147,7 +147,7 @@ void resize(int i){ vector<Array3<Data> >::resize(i); }
 	  }
 	}
       }
-    iterator(const vector<Array3<Data> >* data) 
+    iterator(const vector<ShareAssignArray3<Data> >* data) 
       : it_( (*data)[0].begin() ), vit_(data->begin()), vitend_(data->end()){}
     iterator(const iterator& iter) 
       : it_(iter.it_), vit_(iter.vit_), vitend_(iter.vitend_){}
@@ -173,8 +173,8 @@ void resize(int i){ vector<Array3<Data> >::resize(i); }
     }
   private:
     typename Array3<Data>::iterator it_;
-    typename vector<Array3<Data> >::const_iterator vit_;
-    typename vector<Array3<Data> >::const_iterator vitend_;
+    typename vector<ShareAssignArray3<Data> >::const_iterator vit_;
+    typename vector<ShareAssignArray3<Data> >::const_iterator vitend_;
   };
   
 inline iterator begin() { 
@@ -513,9 +513,9 @@ bool LevelField<Data>::minmax( pair<double, double> & mm) const
      type_name(1) == "long"){
     double mn, mx;
     fdata_type dt = fdata();
-    vector<Array3<Data> > vdt = fdata();
-    vector<Array3<Data> >::iterator vit = vdt.begin();
-    vector<Array3<Data> >::iterator vit_end = vdt.end();
+    vector<ShareAssignArray3<Data> > vdt = fdata();
+    vector<ShareAssignArray3<Data> >::iterator vit = vdt.begin();
+    vector<ShareAssignArray3<Data> >::iterator vit_end = vdt.end();
     int max_workers = Max(Thread::numProcessors()/3, 4);
 
     Semaphore* thread_sema = scinew Semaphore( "scalar extractor semaphore",

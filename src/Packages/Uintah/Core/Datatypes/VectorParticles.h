@@ -4,7 +4,7 @@
 #include <Packages/Uintah/Core/Datatypes/PSet.h>
 #include <Packages/Uintah/CCA/Ports/DataArchive.h>
 //#include <Packages/Uintah/CCA/Components/MPM/Util/Matrix3.h>
-#include <Packages/Uintah/Core/Grid/ParticleVariable.h>
+#include <Packages/Uintah/Core/Grid/ShareAssignParticleVariable.h>
 #include <Packages/Uintah/Core/Grid/Grid.h>
 #include <Packages/Uintah/Core/Grid/LevelP.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
@@ -64,7 +64,7 @@ public:
   VectorParticles();
   //////////
   // Constructor
-  VectorParticles(const vector <ParticleVariable<Vector> >& vectors,
+  VectorParticles(const vector<ShareAssignParticleVariable<Vector> >& vectors,
 		  PSet* pset );
 
   // GROUP: Destructors
@@ -75,7 +75,7 @@ public:
   // GROUP: Access
   //////////
   // return the Vectors
-  vector<ParticleVariable<Vector> >& get(){ return vectors; }
+  vector<ShareAssignParticleVariable<Vector> >& get(){ return vectors; }
   PSet* getParticleSet(){ return psetH.get_rep(); }
 
 
@@ -85,7 +85,7 @@ public:
   void Set(PSetHandle psh){ psetH = psh;}
   //////////  
   // Set the Vectors
-  void Set(vector <ParticleVariable<Vector> >& s){ vectors = s; }
+  void Set(vector<ShareAssignParticleVariable<Vector> >& s){ vectors = s; }
 
   void AddVar( const ParticleVariable<Vector> parts );
 
@@ -112,7 +112,7 @@ private:
 
   string _varname;
   int _matIndex;
-  vector<ParticleVariable<Vector> >  vectors;
+  vector<ShareAssignParticleVariable<Vector> >  vectors;
 };
 
 } // End namespace Uintah

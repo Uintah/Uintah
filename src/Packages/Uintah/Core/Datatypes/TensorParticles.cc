@@ -31,7 +31,7 @@ TensorParticles::TensorParticles()
 }
 
 TensorParticles::TensorParticles(
-		 const vector <ParticleVariable<Matrix3> >& tensors,
+		 const vector<ShareAssignParticleVariable<Matrix3> >& tensors,
 		 PSet* pset) :
   have_minmax(false),  psetH(pset), tensors(tensors)
 {
@@ -53,7 +53,7 @@ void TensorParticles::compute_minmax()
     return;
 
   double min = 1e30, max = -1e30;
-  vector<ParticleVariable<Matrix3> >::iterator it;
+  vector<ShareAssignParticleVariable<Matrix3> >::iterator it;
   for( it = tensors.begin(); it != tensors.end(); it++){
     ParticleSubset *ps = (*it).getParticleSubset();
     for(ParticleSubset::iterator iter = ps->begin();

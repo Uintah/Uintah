@@ -4,7 +4,7 @@
 #include <Packages/Uintah/Core/Datatypes/PSet.h>
 #include <Packages/Uintah/CCA/Ports/DataArchive.h>
 //#include <Packages/Uintah/CCA/Components/MPM/Util/Matrix3.h>
-#include <Packages/Uintah/Core/Grid/ParticleVariable.h>
+#include <Packages/Uintah/Core/Grid/ShareAssignParticleVariable.h>
 #include <Packages/Uintah/Core/Grid/Grid.h>
 #include <Packages/Uintah/Core/Grid/LevelP.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
@@ -64,7 +64,7 @@ public:
   ScalarParticles();
   //////////
   // Constructor
-  ScalarParticles(const vector <ParticleVariable<double> >& scalars,
+  ScalarParticles(const vector<ShareAssignParticleVariable<double> >& scalars,
 		  PSet* pset );
 
   // GROUP: Destructors
@@ -75,7 +75,7 @@ public:
   // GROUP: Access
   //////////
   // return the Scalars
-  vector<ParticleVariable<double> >& get(){ return scalars; }
+  vector<ShareAssignParticleVariable<double> >& get(){ return scalars; }
   PSet* getParticleSet(){ return psetH.get_rep(); }
 
 
@@ -85,7 +85,7 @@ public:
   void Set(PSetHandle psh){ psetH = psh;}
   //////////  
   // Set the Scalars
-  void Set(vector <ParticleVariable<double> >& s){ scalars = s; }
+  void Set(vector<ShareAssignParticleVariable<double> >& s){ scalars = s; }
 
   void AddVar( const ParticleVariable<double> parts );
 
@@ -112,7 +112,7 @@ private:
 
   string _varname;
   int _matIndex;
-  vector<ParticleVariable<double> >  scalars;
+  vector<ShareAssignParticleVariable<double> >  scalars;
 
 };
 
