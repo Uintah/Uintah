@@ -559,24 +559,10 @@ EditColorMap2D::add_rectangle_widget()
 void
 EditColorMap2D::add_paint_widget()
 {
-  CM2WidgetHandle paint_widget = scinew PaintCM2Widget();
-  const unsigned int size = widgets_.size();
-  vector<CM2WidgetHandle> widgets;
-  widgets.reserve(size+1);
-  int added = -1;
-  for (unsigned int w = 0; w < size; ++w) {
-    PaintCM2Widget *paint_layer = 
-      dynamic_cast<PaintCM2Widget*>(widgets_[w].get_rep());
-    if (!paint_layer && (added == -1)) {
-      added = w;
-      widgets.push_back(paint_widget);
-    }
-    widgets.push_back(widgets_[w]);
-  }
-  widgets_ = widgets;
+  widgets_.push_back(scinew PaintCM2Widget());
   undo_stack_.push(UndoItem(UndoItem::UNDO_ADD, widgets_.size()-1, NULL));
   update_to_gui();
-  select_widget(added, 1);
+  select_widget(widgets_.size()-1, 1);
   // PaintCM2Widgets start blank, so no need set cmap_dirty and redraw here
   want_to_execute();
 }
