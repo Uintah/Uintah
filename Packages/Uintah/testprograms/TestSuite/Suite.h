@@ -15,9 +15,9 @@
 #include <map>
 #include <list>
 
-typedef map<const string, Test*> testMap;
-typedef map<const string, Test*>::iterator testMapIterator;
-typedef map<const string, Test*>::value_type testMapPair;
+typedef map<string, Test*> testMap;
+typedef map<string, Test*>::iterator testMapIterator;
+typedef map<string, Test*>::value_type testMapPair;
 
 class Suite
 {
