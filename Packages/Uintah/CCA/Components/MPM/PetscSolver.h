@@ -52,6 +52,8 @@ namespace Uintah {
 
     virtual int getSolution(vector<double>& xPetsc);
 
+    virtual int getRHS(vector<double>& QPetsc);
+
     virtual void assembleVector();
   private:
 
