@@ -17,18 +17,26 @@
 #include <UserModule.h>
 #include <Geometry/Point.h>
 #include <Field3D.h>
+class ColormapPort;
 class Field3DIPort;
 class GeometryOPort;
 class ObjGroup;
 
 class IsoSurface : public UserModule {
     Field3DIPort* infield;
+    ColormapPort* incolormap;
+    Field3DIPort* incolorfield;
     GeometryOPort* ogeom;
     int abort_flag;
 
     int have_seedpoint;
     Point seed_point;
     double isoval;
+    int make_normals;
+    int do_3dwidget;
+    double scalar_val;
+
+    int widget_id;
 
     void iso_cube(int, int, int, double, ObjGroup*, const Field3DHandle&);
     void iso_tetra(int, double, ObjGroup*, const Field3DHandle&);
@@ -37,6 +45,8 @@ class IsoSurface : public UserModule {
     void iso_reg_grid(const Field3DHandle&, double, ObjGroup*);
     void iso_tetrahedra(const Field3DHandle&, const Point&, ObjGroup*);
     void iso_tetrahedra(const Field3DHandle&, double, ObjGroup*);
+
+    void find_seed_from_value();
 public:
     IsoSurface();
     IsoSurface(const IsoSurface&, int deep);

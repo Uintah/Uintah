@@ -40,20 +40,35 @@ static RegisterModule db2("Visualization", "IsoSurface", make_IsoSurface);
 IsoSurface::IsoSurface()
 : UserModule("IsoSurface", Filter)
 {
-    // Create the output data handle and port
+    // Create the input ports
     infield=new Field3DIPort(this, "Field", Field3DIPort::Atomic);
     add_iport(infield);
+    //incolormap=new ColormapIPort(this, "Colormap");
+    //add_iport(incolormap);
+    incolorfield=new Field3DIPort(this, "Color Field", Field3DIPort::Atomic);
+    add_iport(incolorfield);
 
-    // Create the input port
+    // Create the output port
     ogeom=new GeometryOPort(this, "Geometry", GeometryIPort::Atomic);
     add_oport(ogeom);
 
     isoval=1;
-    MUI_slider_real* slider=new MUI_slider_real("IsoContour value", &isoval,
-						MUI_widget::Immediate, 1);
-    add_ui(slider);
-
+    add_ui(new MUI_slider_real("IsoContour value", &isoval,
+			       MUI_widget::Immediate, 1));
     have_seedpoint=0;
+    seed_point=Point(0,0,0);
+    add_ui(new MUI_point("Seed Point", &seed_point,
+			 MUI_widget::Immediate, 1));
+    scalar_val=0;
+    add_ui(new MUI_slider_real("Scalar value", &scalar_val,
+			       MUI_widget::Immediate, 0,
+			       MUI_slider_real::Guage));
+    make_normals=0;
+    add_ui(new MUI_onoff_switch("Smooth", &make_normals,
+				MUI_widget::Immediate));
+    do_3dwidget=1;
+    add_ui(new MUI_onoff_switch("3D widget", &do_3dwidget,
+				MUI_widget::Immediate));
 }
 
 IsoSurface::IsoSurface(const IsoSurface& copy, int deep)
@@ -80,6 +95,11 @@ void IsoSurface::execute()
     if(field->get_type() != Field3D::ScalarField){
 	error("Field is not a scalar field!\n");
 	return;
+    }
+    if(do_3dwidget){
+	GeomSphere* ptobj=new GeomSphere(seed_point, 0.5);
+	//ptobj->make it movable()
+	widget_id=ogeom->addObj(ptobj);
     }
     ObjGroup* group=new ObjGroup;
     switch(field->get_rep()){
@@ -370,8 +390,23 @@ void IsoSurface::iso_tetrahedra(const Field3DHandle&, double,
     NOT_FINISHED("IsoSurface::iso_tetrahedra");
 }
 
-void IsoSurface::mui_callback(void*, int)
+void IsoSurface::find_seed_from_value()
+{
+    NOT_FINISHED("find_seed_from_value()");
+    seed_point=Point(0,0,1);
+}
+
+void IsoSurface::mui_callback(void*, int which)
 {
     abort_flag=1;
     want_to_execute();
+    if(which==0){
+	have_seedpoint=0;
+    }
+    if(do_3dwidget){
+	if(!have_seedpoint){
+	    have_seedpoint=1;
+	    find_seed_from_value();
+	}
+    }
 }
