@@ -46,6 +46,8 @@ public:
   void SetAlpha( double alpha){ this->alpha = alpha;}
   int getMaxLevel(){ return treeDepth; }
   int getMaxSize(){ return ((X < Y && X < Z)? X:((Y < Z)? Y:Z)); }
+  
+  void SetResPosition(const Point& p){ resPoint = p; }
 
   MultiBrick(const MultiBrick&);
   ~MultiBrick();
@@ -74,6 +76,7 @@ private:
   int xmax, ymax, zmax;  // max brick sizes.
   Point min, max;
   Point widgetPoint;
+  Point resPoint;
   double alpha;
   double dx, dy, dz;
   bool drawWireFrame;
