@@ -92,34 +92,32 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \newcommand{\graphics}{\emph{Graphics}}
 
-\section{Visualization with the \viewer{}}
+\section{Visualization}
 \label{sec:viewer}
 \index{Viewer@\viewer{}}
 
 This section describes the most frequently used \sr{} module,
-the \viewer{}, which has the task of displaying interactive graphical
-output to the computer screen.  You will use the \viewer{} any time you
-wish to see a geometry, or spatial data.  More important for
-computational steering (described in \secref{Computational
-Steering}{sec:con-steering}) is that the \viewer{} provides access to
-many simulation parameters and controls and thus indirectly initiates new
-iterations of the simulation steps.
+the \viewer{}, which displays interactive graphical
+output to the computer screen.  The \viewer{} will be used any time the user
+wants to see a geometry or spatial data. The \viewer{} also provides access to
+many simulation parameters and controls, and indirectly initiates new
+iterations of  simulation steps, which is important for computational steering (see \secref{Computational Steering}{sec:con-steering}).
 
-We begin with an overview of the \viewer{} window and its controls, then
-describe in detail all the options and variations.
+This section begins with an overview of the \viewer{} window and its
+controls, then describes the options and variations.
 
 \subsection{Anatomy of the \viewer{} Window}
 \label{sec:viewer-anatomy} 
 \index{Viewer@\viewer{}!anatomy}
 
-The \viewer{} window contains two main areas, the upper portion,
-called the \graphics{} window, which displays the graphics, and the
-lower portion, where most of the control buttons are.
+The \viewer{} window contains two main areas.  The upper portion,
+which displays graphics and is called the \graphics{} window, and the
+lower portion where the majority of control buttons are found.
 Figure~\ref{fig:viewwindow} contains an example of a \viewer{} window.
-In the \graphics{} window, viewing is controlled mostly by means of the
-mouse, mouse buttons, and various modifier keys (shift/control/alt).
-In the lower window are a lot of buttons and sliders, the function of
-which will become clear as you read this section of the manual.
+In the \graphics{} window, viewing is controlled by the mouse, mouse
+buttons, and various modifier keys (shift/control/alt).  In the lower
+window there are several buttons and sliders, the function of which
+will become clear in this section of the manual.
 
 \begin{figure}[htb]
   \begin{makeimage}
@@ -132,44 +130,42 @@ which will become clear as you read this section of the manual.
 \end{figure}
 
 
-First, try out the controls for the \graphics{} window by moving the mouse
-to the center of the viewer window and clicking and holding the left button
-and then dragging the mouse.  The objects should translate along with the
+First, experiment with the \graphics{} window controls by moving the mouse
+to the center of the viewer window and clicking and holding the left button,
+then drag the mouse.  The objects should translate along with the
 mouse.  Do the same operation with the middle mouse button and the objects
 will rotate around a point in the center of the display.  The right mouse
 button controls the scale of the display, zooming in when the mouse moves
-downward or to the right.  See \secref{Mouse Control in the
-Viewer}{sec:view-mouse} for details on using the mouse.
+downward or to the right (see \secref{Mouse Control in the
+Viewer}{sec:view-mouse} for details on using the mouse).
 
-The controls visible along the bottom of the \viewer{} window set some basic
+The visible controls along the bottom of the \viewer{} window set some basic
 configurations as follows:
 %
 \begin{description}
   \buttondesc{Autoview} Restores the display to a default
-  condition. Very useful when some combination of settings results in
+  condition. \buttondesc{Autoview} is useful when some combination of settings result in
   the objects disappearing from the view window.
   
   \buttondesc{Set Home View} Captures the setting of the
-  current view so you can return to it later by clicking the Go home''
+  current view so the user can return to it later by clicking the Go home''
   button.
 
-  \buttondesc{Go home} Restore the current home view.
+  \buttondesc{Go home} Restores the current home view.
   
   \buttondesc{Views} Lists a number of standard viewing angles
   and orientations.  The view directions align with the Cartesian axes
-  of the objects and the ``Up vector'' choice sets the orientation of
+  of the objects and the ``Up vector'' option sets the orientation of
   the objects when viewed along the selected axis.
 \end{description}
 
-In the left corner of the control panel of the \viewer{} window are
+In the left corner of the the \viewer{} window control panel. there are
 performance indicators that document the current rendering speed for the
-display.  The better the graphics performance of the workstation you
-have, the higher the display rate.
+display.  The better the graphics performance of the workstation, the higher the display rate.
 
-You may reveal more controls by clicking the
+More controls can be revealed by clicking the
 \latexhtml{\fbox{+}}{\button{[+]}} button in the lower right corner of
-the \viewer{} window.  The extended controls are described in
-\secref{Extended control window} {sec:view-control}.
+the \viewer{} window (see \secref{Extended Control Window} {sec:view-control} for a description of extended controls).
 
 
 \subsubsection{Menus}
@@ -178,18 +174,18 @@ the \viewer{} window.  The extended controls are described in
 At the top of the \viewer{} window are three pull-down menus.
 
 \begin{description}
-  \menuitemdesc{File} Current contains only the \menuitem{Save
-    image file...} item which allows you to save the contents of the
+  \menuitemdesc{File} \menuitem{Save
+    image file...} item allows the user to save the contents of the
   \viewer{} window as an image to a file.
   
-  \menuitemdesc{Edit} Provides access to controls for the
-  background color for the window, as well as the clipping planes
+  \menuitemdesc{Edit} Provides access to controls for the windows 
+  background color, as well as the clipping planes
   (requires the ``Use Clip'' control to be selected in the extended
   controls described in \secref{Extended control
     window}{sec:view-control}).
   
-  \menuitemdesc{Visual} Allows you to select between different
-  graphics hardware settings that are available on your workstation.
+  \menuitemdesc{Visual} Allows users to select between different
+  graphics hardware settings that are available on the workstation.
   The list is ordered heuristically from most to least useful.
 \end{description}
 
@@ -198,12 +194,11 @@ At the top of the \viewer{} window are three pull-down menus.
 \index{Viewer@\viewer{}!mouse controls}
 
 The mouse controls within \SR{} are extensive and flexible.  The
-resulting action depends on the choice of mouse button, any
-simultaneously pressed control keys, and the way the mouse moves.  The
+resulting action depends on the choice of mouse button, how the mouse is moved
+and simultaneously pressed control keys.  The
 description in Tables~\ref{tab:view-mouse} and~\ref{tab:view-unicam}
-below may seem overly complicated at first, but with a little playing,
-it becomes intuitive (another way of saying you will learn it if you
-use it enough).
+may seem complicated, but with practice, use of the mouse becomes intuitive.
+
 
 \begin{table}[htb]
 \begin{center}
@@ -266,12 +261,13 @@ Control & Left & Translate in the Z-direction, \ie{} zoom in and out of the
 \label{sec:view-control} 
 \index{Viewer@\viewer{}!extended controls}
 
-Click on the \button{[+]} button in the lower right corner of the
-default \viewer{} window, and the window expands to reveal an extended
-panel of control buttons, as shown in Figure~\ref{fig:extviewwindow}.
-Click on the \button{[-]} sign that now replaces the \button{[+]} and
-this extended panel disappears again.  Here we describe the control
-options available in the extended control window.
+Clicking on the \button{[+]} button in the lower right corner of the
+default \viewer{} window expands to reveal an extended panel of
+control buttons as shown in Figure~\ref{fig:extviewwindow}.  Note that
+\button{[+]} changes to \button{[-]}.  Clicking on the \button{[-]}
+button hides the extended control panel.  The following sections
+describe the the control options available in the extended control
+window.
 
 \begin{figure}[htb]
   \begin{makeimage}
@@ -288,24 +284,24 @@ options available in the extended control window.
 \subsubsection{Object Selector}
 
 The lower portion of the extended \viewer{} window is divided into three
-columns. The middle column contains a list of all the objects in the
-display.  If the list becomes long enough, a scroll bar on the left
-hand side controls which are visible.  For each entry in the list, we have
+columns. The middle column contains a list of all objects in the
+display.  If the list becomes long, use the scroll bar on the left
+side to access other objects.  For each entry in the list, we have
 the following controls, reading from left to right:
 
 \begin{itemize}
-  \item At the left end of each of the
-        objects in the list is a selection indicator that displays red
+  \item At the left end of each object
+        in the list is a selection indicator that displays red
         when that object is 
         selected.  The \viewer{} window only displays those objects that
         are selected.
-  \item Next comes the name of the object.
-  \item The \button{Shading} control box that comes next determines the
-        shading options that will be used for rendering the object.
+  \item Now comes the name of the object.
+  \item Next the \button{Shading} control box determines the
+        shading options used for rendering the object.
         Options include: Lighting, BBox, Fog, Use Clip, Back Cull, and
         Display List (for descriptions, see
         \secref{Rendering controls}{sec:view-rendering}).
-  \item At the right end of each entry is the lighting control, initially
+  \item Lighting control is found at the right end of each entry, initially
         marked \menu{Default}.  In the Default setting, the common
         rendering controls described in \secref{Rendering
         controls}{sec:view-rendering} below apply.  Clicking this box
@@ -319,10 +315,11 @@ the following controls, reading from left to right:
 \index{Viewer@\viewer{}!rendering}
 
 The left column of the extended \viewer{} window contains controls that
-apply to all of the selected objects with ``Default'' lighting selected.
-Those without the Default setting will use their own, object specific
-settings, as described in the previous section.  The lighting and shading
-options available are:
+apply to all selected objects with ``Default'' lighting selected.
+Objects without the Default setting use their own object specific
+settings, as described in the previous section.  
+
+The lighting and shading options available are:
 %
 \begin{description}
   \descitem{Lighting} Toggles whether or not the \viewer{} applies
@@ -344,8 +341,8 @@ options available are:
   \descitem{Back Cull} Displays only the forward facing facets of any
   surface objects in the display.
   
-  \descitem{Display List} Cache the list of objects to be displayed;
-  this option accelerates rendering when the content of the display
+  \descitem{Display List} Cache the list of objects to be displayed.
+  This option accelerates rendering when the content of the display
   does not change.
 
   \descitem{Shading} Selects the type of shading for objects from the
@@ -357,11 +354,11 @@ options available are:
         \end{description}
 \end{description}
 
-The right hand column of the extended \viewer{} window contains controls
+The right column of the extended \viewer{} window contains controls
 for displaying the axes and creating stereoscopic rendering.  
 
 \paragraph{Stereo viewing: } requires hardware LCD glasses synchronized
-with the display so that visibility for each eye coincides with the
+with the display so visibility in each eye coincides with the
 display of the appropriate view.  The ``Fusion Scale'' control provides a
 means of setting the eye separation and thus setting the view that is most
 suited to facial anatomy and distance from the screen.
@@ -371,18 +368,16 @@ suited to facial anatomy and distance from the screen.
 \index{movies}
 
 The \viewer{} window in \SR{} has simple controls for capturing sequences
-of images into animations or movies.  Here we describe how this works.
+of images into animations or movies.  Here is described how this works.
 
-In the left column of the extended \viewer{} window are controls for
-selecting movie type and then initiating and stopping the acquisition of
+In the left column of the extended \viewer{} window, there are controls for
+selecting movie type and initiating and stopping the acquisition of
 individual frames in the movie.
 
-\SR{} sends a frame to the movie after each ``redraw'' operation, \ie{}
-each time anything moves in the display or any visualization parameter
-changes.  If the MPEG package is available (See the
-\htmladdnormallink{Installation Manual}{\installguideurl} for
-details) then an option will be available for saving the animations as MPEG
-movies.
+\SR{} sends a frame to the movie after each ``redraw'' operation ( \ie{}
+each time something moves in the display or a visualization parameters
+change).  If the MPEG package is available, then an option will be available for saving the animations as MPEG movies (See the
+\htmladdnormallink{Installation Manual}{\installguideurl} for details).
 
 There is also a button that forces the size of the graphical window to be
 352x240 pixels in size, which is a standard format well suited to MPEG.
@@ -390,27 +385,25 @@ There is also a button that forces the size of the graphical window to be
 \subsection{Control Widgets}
 \label{sec:view-widgets} 
 
-While the \hyperref{mouse controls}{mouse controls in
-Section}{}{sec:view-mouse} describe many ways to interact with the contents
-of the \viewer{}, SR{} also supports some powerful display widgets.
-Examples of widgets capabilities include managing cutting surfaces colored
+\hyperref{Mouse controls}{mouse controls in
+Section}{}{sec:view-mouse} describes ways to interact with the contents
+of the \viewer{}, \SR{} also supports  powerful display widgets.
+Examples of widget capabilities include managing cutting surfaces colored
 according to the local data values, displaying streamlines in vector
 fields, or selecting sub-volumes within the display area for further
 manipulation. 
  
-We have tried to make interacting with these widgets as consistent as
-possible so that, for example, controlling parameters is usually by clicking
-and dragging on either a cylindrical ``collar'' or a sphere element of the
-widget.  
-%%The original design of these modules was by James Purcifal
-%%\cite{??}. 
-Note that a single widget may have more than one purpose
-depending on the context in which it exists.
+We has tried to making interaction with widgets as consistent as
+possible. For example, controlling parameters is usually done by
+clicking and dragging on a cylindrical ``collar'' or a sphere element
+of the widget. Note that a single widget may have more than one
+purpose depending on the context in which it exists. The Gauge widget,
+for example, selects a clipping or display plane through a
+three-dimensional object and sets the seed points for a streamline
+module.
 
-In this section, we describe the widgets available within \SR{} and \BIOPSE{}.
-The same widget may, for example, select a clipping or a display plane
-through a three-dimensional object but may also set the seed points for a
-streamline module.  
+This section describes the widgets available within \SR{} and \BIOPSE{}.
+ 
 
 \subsubsection{Gauge Widget}
 \label{sec:view-gaugewidget} 
@@ -427,18 +420,16 @@ streamline module.
 \end{figure}
 
 \paragraph{Appearance} The Gauge
-Widget (see Figure~\ref{fig:gaugewidget}) consists of two spheres (A) connected by a cylinder (B) with a
+Widget has an orientation, length, and value (see Figure~\ref{fig:gaugewidget}). It consists of two spheres (A) connected by a cylinder (B) with a
 small slider collar (C) on the cylinder.  There are also small resize
-cylinders extending from the spheres (D).
+cylinders (D) extending from the spheres.
 
 \paragraph{Purpose} The primary use of the Gauge Widget is to set the
 location and density of streamlines emerging from the long cylinder.  It
-may also be used as a more general purpose three-dimensional slider or as a
+may also be used as a more general purpose three-dimensional slider or a
 source for a stream surface. 
 
-\paragraph{Controls} Clicking and dragging either sphere causes the
-entire widget to move in space, rotating about the other sphere and
-following along behind the selected sphere.  Dragging either of the resize
+\paragraph{Controls} Clicking and dragging either sphere changes the widget's orientation.  Dragging either of the resize
 cylinders cases the size of the widget to change and dragging any point on
 the main cylinder moves the whole widget without any change in orientation.
 Dragging the slider collar changes the associated value, typically the
@@ -454,8 +445,7 @@ density of seed points for a streamline source.
 %    \framebox{\parbox[3in]{\columnwidth}{The\dotfill Figure\\
 %    \vspace{2in}\\
 %    With some \dotfill dummy text}}
-  \caption{\label{fig:framewidget} The frame widget for selecting
-    cutting/projection planes}
+  \caption{\label{fig:framewidget} The Frame Widget}
 \end{figure}
 
 
@@ -464,14 +454,12 @@ Frame Widget(See Figure~\ref{fig:framewidget}) consists of four cylinders connec
 the middle of each of the cylinders there is a sphere (B), from which
 a resize cylinder extends (C).
 
-\paragraph{Purpose} The primary uses of the Frame Widget is for image
-plane definition, for defining stream volumes, and as a ``tie dye'' as with
+\paragraph{Purpose} The Frame Widget is primarily used for image
+plane definition, defining stream volumes, and as a, "tie dye'' similar to
 the Ring Widget described in \secref{Ring Widget}{sec:view-ringwidget}.
 
-\paragraph{Controls} Clicking and dragging a sphere on the widget will
-cause the widget to rotate about its center; dragging on a resize cylinder
-will move the associated edge and thus extend or contract the rectangle.
-Dragging any of the cylinders will drag the entire widget through space.
+\paragraph{Controls} Dragging a sphere rotates the widget about its center. Dragging on a resize cylinder will extend or contract the rectangle.
+Dragging any cylinder will drag the entire widget through space.
 
 
 \subsubsection{Box Widget}
@@ -489,17 +477,15 @@ Dragging any of the cylinders will drag the entire widget through space.
 
 \paragraph{Appearance} The Box
 Widget (see Figure~\ref{sec:view-boxwidget}) consists of twelve 
-connected cylinders (A) which form a hexahedral box (three-dimensional
-rectangle) with cylinders indicating the edges of the box.  In the
-middle of each face is a sphere (B) with an attached short cylinder
-(C) providing resize control.
+connected cylinders (A) to form a hexahedral box (B) (three-dimensional
+rectangle).  In the middle of each face of the box is a sphere with a protruding cylinder (C) providing resize control.
 
-\paragraph{Purpose} The primary use of the Box Widget is to select a
+\paragraph{Purpose} The Box Widget is primarily used to select a
 subvolume of the workspace for further manipulation (\eg{} volume
 rendering, isosurfaces, streamlines, mesh adaption) where the faces of the
 widget act as orthogonal clipping planes.
 
-\paragraph{Controls} Clicking and dragging on one of the spheres rotates
+\paragraph{Controls} Clicking on and dragging a sphere rotates
 the widget about its center without changing the position of the center.
 Clicking on and dragging any resize handle
 % What do these look like??
@@ -524,20 +510,20 @@ orientation.
 
 \paragraph{Appearance} The Ring
 Widget (see Figure~\ref{sec:view-ringwidget}) consists of a ring (A)
-with four embedded spheres (B), each with a resize cylindrical
+with four embedded spheres (B), each with a resize cylinder
 attached (D).  Between two of the spheres is a sliding collar (C).
 One of the resize cylinders has a special material property (typically
 a different color from the other cylinders) to indicate that it is the
 ``halfway point'' for the slider (E).
 
-\paragraph{Purpose} The primary use of the Ring Widget is to set the
-density of streamlines emerging from the ring---the ring serves as a set of
-seed points from which will emerge streamlines.  The Ring Widget can also
+\paragraph{Purpose} The Ring Widget is primarily used to set the
+density of streamlines emerging from the ring. The ring serves as a set of
+seed points from which streamlines will emerge. The Ring Widget can 
 serve as a three-dimensional angle gauge, as a source for multiple
 streamlines throughout its surface, as a source for a stream surface from
-the outer ring, and as a source for a stream volume.  Another use is as a
-color sheet, or ``tie dye'', in which the surface is colored as a function of
-the scalar value of the field at each point.
+the outer ring, and as a source for a stream volume.  The Ring Widget can 
+also be used as a color sheet, or ``tie dye'', in which the surface is colored as 
+a function of the scalar value of the field at each point.
 
 \paragraph{Controls} Clicking and dragging the slider collar along the
 ring changes the density of the seed points or some other related
