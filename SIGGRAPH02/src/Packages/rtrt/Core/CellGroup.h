@@ -18,6 +18,7 @@ class CellGroup : public Object {
   Array1<Object *> non_bbox_objs;
 public:
   void add_bbox_obj(Object *o, BBox b) { bboxes.add(b); bbox_objs.add(o); }
+  void add_bbox_obj(Object *o) { BBox b; o->compute_bounds(b, 0); bboxes.add(b); bbox_objs.add(o); }
   void add_non_bbox_obj(Object *o) { non_bbox_objs.add(o); }
   CellGroup();
   virtual ~CellGroup();
