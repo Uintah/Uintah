@@ -2,7 +2,7 @@ SRCTOP  = @top_srcdir@
 SRCDIR  = @srcdir@
 OBJTOP  = ..
 
-SUBDIRS = PIDL
+SUBDIRS = PIDL CIA
 SOLIB   = libComponent.so
 
 TCL_LIB_DIR  = @TCL_LIB_DIR@

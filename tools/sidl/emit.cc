@@ -12,8 +12,10 @@ extern "C" {
 using std::cerr;
 using std::for_each;
 using std::map;
+using std::replace;
 using std::string;
 using std::vector;
+extern bool doing_cia;
 
 static string handle_class = "\
 class @ {\n\
@@ -102,7 +104,8 @@ EmitState::EmitState()
     handlerNum=0;
 }
 
-void Specification::emit(std::ostream& out, std::ostream& hdr) const
+void Specification::emit(std::ostream& out, std::ostream& hdr,
+			 const std::string& hname) const
 {
     EmitState e;
     // Emit code for each definition
@@ -117,11 +120,15 @@ void Specification::emit(std::ostream& out, std::ostream& hdr) const
     hdr << " * do not edit directly!\n";
     hdr << " */\n";
     hdr << "\n";
-    hdr << "#ifndef xxx_replace_this_later\n";
-    hdr << "#define xxx_replace_this_later\n";
+    string ifname(hname);
+    replace(ifname.begin(), ifname.end(), '/', '_');
+    replace(ifname.begin(), ifname.end(), '.', '_');
+    hdr << "#ifndef _sidl_generated_" << ifname << '\n';
+    hdr << "#define _sidl_generated_" << ifname << '\n';
     hdr << "\n";
     hdr << "#include <Component/PIDL/Object.h>\n";
     hdr << "#include <Component/PIDL/pidl_cast.h>\n";
+    hdr << "#include <Component/CIA/CIA_sidl.h>\n";
     hdr << "#include <Component/CIA/array1.h>\n";
     hdr << "#include <Component/CIA/string.h>\n";
     hdr << "\n";
@@ -135,7 +142,7 @@ void Specification::emit(std::ostream& out, std::ostream& hdr) const
     out << " * do not edit directly!\n";
     out << " */\n";
     out << "\n";
-    out << "#include \"PingPong_sidl.h\"\n";
+    out << "#include \"" << hname << "\"\n";
     out << "#include <SCICore/Exceptions/InternalError.h>\n";
     out << "#include <Component/PIDL/GlobusError.h>\n";
     out << "#include <Component/PIDL/Object_proxy.h>\n";
@@ -265,8 +272,13 @@ void CI::emit(EmitState& e)
 	(*iter)->emit(e);
     }
 
-    emit_header(e);
     emit_proxyclass(e);
+    if(!do_emit){
+	emitted_declaration=true;
+	return;
+    }
+
+    emit_header(e);
 
     e.instanceNum++;
 
@@ -363,10 +375,10 @@ void CI::emit_handlers(EmitState& e)
     e.out << "        throw ::Component::PIDL::GlobusError(\"buffer_init\", gerr);\n";
     e.out << "    globus_nexus_put_int(&sendbuff, &flag, 1);\n";
     e.out << "    globus_nexus_put_int(&sendbuff, &result, 1);\n";
-    e.out << "    if(int gerr=globus_nexus_send_rsr(&sendbuff, &_sp, 0, GLOBUS_TRUE, GLOBUS_FALSE))\n";
-    e.out << "        throw ::Component::PIDL::GlobusError(\"send_rsr\", gerr);\n";
-    e.out << "    if(int gerr=globus_nexus_startpoint_destroy(&_sp))\n";
-    e.out << "        throw ::Component::PIDL::GlobusError(\"startpoint_destroy\", gerr);\n";
+    e.out << "    if(int _gerr=globus_nexus_send_rsr(&sendbuff, &_sp, 0, GLOBUS_TRUE, GLOBUS_FALSE))\n";
+    e.out << "        throw ::Component::PIDL::GlobusError(\"send_rsr\", _gerr);\n";
+    e.out << "    if(int _gerr=globus_nexus_startpoint_eventually_destroy(&_sp, GLOBUS_FALSE, 30))\n";
+    e.out << "        throw ::Component::PIDL::GlobusError(\"startpoint_eventually_destroy\", _gerr);\n";
     e.out << "}\n\n";
 
     // Emit method handlers...
@@ -519,7 +531,7 @@ void Method::emit_prototype(SState& out, Context ctx,
 	arg->emit_prototype(out, localScope);
     }
     out << ")";
-    if(ctx == PureVirtual)
+    if(ctx == PureVirtual && !doing_cia)
 	out << "=0";
     out << ";\n";
 }
@@ -660,8 +672,8 @@ void Method::emit_handler(EmitState& e, CI* emit_class) const
 	int reply_handler_id=0; // Always 0
 	e.out << "    if(int _gerr=globus_nexus_send_rsr(&_sendbuff, &_sp, " << reply_handler_id << ", GLOBUS_TRUE, GLOBUS_FALSE))\n";
 	e.out << "        throw ::Component::PIDL::GlobusError(\"send_rsr\", _gerr);\n";
-	e.out << "    if(int _gerr=globus_nexus_startpoint_destroy(&_sp))\n";
-	e.out << "        throw ::Component::PIDL::GlobusError(\"startpoint_destroy\", _gerr);\n";
+	e.out << "    if(int _gerr=globus_nexus_startpoint_eventually_destroy(&_sp, GLOBUS_FALSE, 30))\n";
+	e.out << "        throw ::Component::PIDL::GlobusError(\"startpoint_eventually_destroy\", _gerr);\n";
     }
     // Clean up inout and out arguments
     
@@ -1246,6 +1258,19 @@ void NamedType::emit_prototype(SState& out, ArgContext ctx,
 
 //
 // $Log$
+// Revision 1.3  1999/09/24 06:26:30  sparker
+// Further implementation of new Component model and IDL parser, including:
+//  - fixed bugs in multiple inheritance
+//  - added test for multiple inheritance
+//  - fixed bugs in object reference send/receive
+//  - added test for sending objects
+//  - beginnings of support for separate compilation of sidl files
+//  - beginnings of CIA spec implementation
+//  - beginnings of cocoon docs in PIDL
+//  - cleaned up initalization sequence of server objects
+//  - use globus_nexus_startpoint_eventually_destroy (contained in
+// 	the globus-1.1-utah.patch)
+//
 // Revision 1.2  1999/09/21 06:13:01  sparker
 // Fixed bugs in multiple inheritance
 // Added round-trip optimization

@@ -15,12 +15,10 @@
 #include <Component/PIDL/Object.h>
 
 #include <Component/PIDL/GlobusError.h>
-#include <Component/PIDL/InvalidReference.h>
 #include <Component/PIDL/PIDL.h>
 #include <Component/PIDL/Reference.h>
 #include <Component/PIDL/ServerContext.h>
 #include <Component/PIDL/TypeInfo.h>
-#include <Component/PIDL/TypeInfo_internal.h>
 #include <Component/PIDL/URL.h>
 #include <Component/PIDL/Wharehouse.h>
 #include <SCICore/Exceptions/InternalError.h>
@@ -31,14 +29,6 @@ using Component::PIDL::Object_interface;
 using Component::PIDL::URL;
 using SCICore::Exceptions::InternalError;
 
-static void unknown_handler(globus_nexus_endpoint_t* endpoint,
-			    globus_nexus_buffer_t* buffer,
-			    int handler_id)
-{
-    cerr << "handler_id=" << handler_id << '\n';
-    NOT_FINISHED("unknown handler");
-}
-
 Object_interface::Object_interface()
     : d_serverContext(0)
 {
@@ -46,39 +36,21 @@ Object_interface::Object_interface()
 
 void Object_interface::initializeServer(const TypeInfo* typeinfo, void* ptr)
 {
-    if(d_serverContext){
-	// This happens because initializeServer gets called by
-	// all of the parent interfaces.  We have no way of knowing
-	// which one is the last, so we overwrite the old
-	// endpoint
-	if(int gerr=globus_nexus_endpoint_destroy(&d_serverContext->d_endpoint))
-	    throw GlobusError("endpoint_destroy", gerr);
-    } else {
+    if(!d_serverContext){
 	d_serverContext=new ServerContext;
-	Wharehouse* wharehouse=PIDL::getWharehouse();
-	d_serverContext->d_objid=wharehouse->registerObject(this);
+	d_serverContext->d_endpoint_active=false;
+	d_serverContext->d_objptr=this;
+    } else if(d_serverContext->d_endpoint_active){
+	throw InternalError("Server re-initialized while endpoint already active?");
+    } else if(d_serverContext->d_objptr != this){
+	throw InternalError("Server re-initialized with a different base class ptr?");
     }
+    //
+    // This may happen multiple times, due to multiple inheritance.  It
+    // is a "last one wins" approach - the last CTOR to call this function
+    // is the most derived type.
     d_serverContext->d_typeinfo=typeinfo;
     d_serverContext->d_ptr=ptr;
-    d_serverContext->d_objptr=this;
-    globus_nexus_endpointattr_t attr;
-    if(int gerr=globus_nexus_endpointattr_init(&attr))
-	throw GlobusError("endpointattr_init", gerr);
-    if(int gerr=globus_nexus_endpointattr_set_handler_table(&attr,
-							    typeinfo->d_priv->table,
-							    typeinfo->d_priv->tableSize))
-	throw GlobusError("endpointattr_set_handler_table", gerr);
-    if(int gerr=globus_nexus_endpointattr_set_unknown_handler(&attr,
-							      unknown_handler,
-							      GLOBUS_NEXUS_HANDLER_TYPE_THREADED))
-	throw GlobusError("endpointattr_set_unknown_handler", gerr);
-    if(int gerr=globus_nexus_endpoint_init(&d_serverContext->d_endpoint,
-					   &attr))
-	throw GlobusError("endpoint_init", gerr);    
-    globus_nexus_endpoint_set_user_pointer(&d_serverContext->d_endpoint,
-					   (void*)d_serverContext);
-    if(int gerr=globus_nexus_endpointattr_destroy(&attr))
-	throw GlobusError("endpointattr_destroy", gerr);
 }
 
 Object_interface::~Object_interface()
@@ -97,13 +69,16 @@ Object_interface::~Object_interface()
 
 URL Object_interface::getURL() const
 {
+    std::ostringstream o;
     if(d_serverContext){
-	std::ostringstream o;
+	if(!d_serverContext->d_endpoint_active)
+	    activateObject();
 	o << PIDL::getBaseURL() << d_serverContext->d_objid;
-	return o.str();
     } else {
-	NOT_FINISHED("Object::getURL");
+	// TODO - send a message to get the URL
+	o << "getURL() doesn't (yet) work for proxy objects";
     }
+    return o.str();
 }
 
 void Object_interface::_getReference(Reference& ref, bool copy) const
@@ -113,13 +88,35 @@ void Object_interface::_getReference(Reference& ref, bool copy) const
     if(!copy){
 	throw SCICore::Exceptions::InternalError("Object_interface::getReference called with copy=false");
     }
+    if(!d_serverContext->d_endpoint_active)
+	activateObject();
     if(int gerr=globus_nexus_startpoint_bind(&ref.d_sp, &d_serverContext->d_endpoint))
 	throw GlobusError("startpoint_bind", gerr);
     ref.d_vtable_base=TypeInfo::vtable_methods_start;
 }
 
+void Object_interface::activateObject() const
+{
+    Wharehouse* wharehouse=PIDL::getWharehouse();
+    d_serverContext->d_objid=wharehouse->registerObject(const_cast<Object_interface*>(this));
+    d_serverContext->activateEndpoint();
+}
+
 //
 // $Log$
+// Revision 1.5  1999/09/24 06:26:25  sparker
+// Further implementation of new Component model and IDL parser, including:
+//  - fixed bugs in multiple inheritance
+//  - added test for multiple inheritance
+//  - fixed bugs in object reference send/receive
+//  - added test for sending objects
+//  - beginnings of support for separate compilation of sidl files
+//  - beginnings of CIA spec implementation
+//  - beginnings of cocoon docs in PIDL
+//  - cleaned up initalization sequence of server objects
+//  - use globus_nexus_startpoint_eventually_destroy (contained in
+// 	the globus-1.1-utah.patch)
+//
 // Revision 1.4  1999/09/21 06:12:59  sparker
 // Fixed bugs in multiple inheritance
 // Added round-trip optimization

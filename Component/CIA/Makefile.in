@@ -1,0 +1,24 @@
+SRCTOP   = @top_srcdir@
+SRCDIR   = @srcdir@
+OBJTOP   = ../..
+
+GLOBUS_INCLUDE = @GLOBUS_INCLUDE@
+
+SRCS     = CIA_sidl.cc Class.cc ClassNotFoundException.cc \
+	   IllegalArgumentException.cc InstantiationException.cc \
+	   Interface.cc Method.cc NoSuchMethodException.cc Object.cc \
+	   Throwable.cc 
+
+INCLUDES = -I$(SRCTOP) -I$(OBJTOP) $(GLOBUS_INCLUDE)
+
+include $(SRCTOP)/scripts/objs.mk
+
+SIDL_EXE = $(OBJTOP)/tools/sidl/sidl
+
+CIA_sidl.o: CIA_sidl.cc CIA_sidl.h
+
+CIA_sidl.cc: cia.sidl $(SIDL_EXE)
+	$(SIDL_EXE) -cia -o $@ $<
+
+CIA_sidl.h: cia.sidl $(SIDL_EXE)
+	$(SIDL_EXE) -cia -h -o $@ $<

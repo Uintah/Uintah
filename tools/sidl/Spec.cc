@@ -13,12 +13,14 @@ using std::find;
 using std::map;
 using std::string;
 using std::vector;
+extern bool foremit;
 
 Definition::Definition(const string& curfile, int lineno, const string& name)
     : curfile(curfile), lineno(lineno), name(name)
 {
     symbols=0;
     emitted_declaration=false;
+    do_emit=::foremit;
 }
 
 Definition::~Definition()
@@ -731,6 +733,19 @@ bool ArrayType::isvoid() const
 
 //
 // $Log$
+// Revision 1.6  1999/09/24 06:26:29  sparker
+// Further implementation of new Component model and IDL parser, including:
+//  - fixed bugs in multiple inheritance
+//  - added test for multiple inheritance
+//  - fixed bugs in object reference send/receive
+//  - added test for sending objects
+//  - beginnings of support for separate compilation of sidl files
+//  - beginnings of CIA spec implementation
+//  - beginnings of cocoon docs in PIDL
+//  - cleaned up initalization sequence of server objects
+//  - use globus_nexus_startpoint_eventually_destroy (contained in
+// 	the globus-1.1-utah.patch)
+//
 // Revision 1.5  1999/09/21 06:13:01  sparker
 // Fixed bugs in multiple inheritance
 // Added round-trip optimization

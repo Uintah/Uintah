@@ -19,10 +19,33 @@
 
 namespace Component {
     namespace PIDL {
+/**************************************
+ 
+CLASS
+   MalformedURL
+   
+KEYWORDS
+   Exception, Error, PIDL, URL
+   
+DESCRIPTION
+   Exception class for an unintelligible URL.  This results from
+   a syntax error in the URL.  See InvalidReference for a properly
+   formed URL that doesn't map to a valid object.
+
+****************************************/
 	class MalformedURL : public SCICore::Exceptions::Exception {
 	public:
+	    //////////
+	    // Contruct the object, giving the offending URL and an
+	    // explanation of the error
 	    MalformedURL(const std::string& url, const std::string& error);
+
+	    //////////
+	    // Destructor
 	    virtual ~MalformedURL();
+
+	    //////////
+	    // Return a human readable explanation
 	    virtual std::string message() const;
 	protected:
 	private:
@@ -36,6 +59,19 @@ namespace Component {
 
 //
 // $Log$
+// Revision 1.4  1999/09/24 06:26:25  sparker
+// Further implementation of new Component model and IDL parser, including:
+//  - fixed bugs in multiple inheritance
+//  - added test for multiple inheritance
+//  - fixed bugs in object reference send/receive
+//  - added test for sending objects
+//  - beginnings of support for separate compilation of sidl files
+//  - beginnings of CIA spec implementation
+//  - beginnings of cocoon docs in PIDL
+//  - cleaned up initalization sequence of server objects
+//  - use globus_nexus_startpoint_eventually_destroy (contained in
+// 	the globus-1.1-utah.patch)
+//
 // Revision 1.3  1999/09/17 05:08:07  sparker
 // Implemented component model to work with sidl code generator
 //
