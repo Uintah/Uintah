@@ -241,7 +241,8 @@ show_license_and_copy_scirunrc(GuiInterface *gui) {
     string homerc = string(HOME)+"/.scirunrc";
     string cmd;
     if (gui->eval("validFile "+homerc) == "1") {
-      string backuprc = homerc+"."+string(SCIRUN_VERSION);
+      string backuprc = homerc+"."+string(SCIRUN_VERSION)+
+	string(SCIRUN_RCFILE_SUBVERSION);
       cmd = string("cp -f ")+homerc+" "+backuprc;
       std::cout << "Backing up " << homerc << " to " << backuprc << std::endl;
       if (sci_system(cmd.c_str())) {
@@ -294,6 +295,7 @@ main(int argc, char *argv[], char **environment) {
   // Setup the SCIRun key/value environment
   create_sci_environment(environment, 0);
   sci_putenv("SCIRUN_VERSION", SCIRUN_VERSION);
+  sci_putenv("SCIRUN_RCFILE_SUBVERSION", SCIRUN_RCFILE_SUBVERSION);
 
   // Parse the command line arguments to find a network to execute
   const int startnetno = parse_args( argc, argv );
@@ -428,8 +430,9 @@ main(int argc, char *argv[], char **environment) {
     show_license_and_copy_scirunrc(gui);
   else { 
     const char *rcversion = sci_getenv("SCIRUN_RCFILE_VERSION");
+    const string ver =string(SCIRUN_VERSION)+"."+string(SCIRUN_RCFILE_SUBVERSION);
     // If the .scirunrc is an old version
-    if (!rcversion || string(rcversion) != string(SCIRUN_VERSION))
+    if (!rcversion || string(rcversion) != ver)
       // Ask them if they want to copy over a new one
       if (gui->eval("promptUserToCopySCIRunrc") == "1")
 	show_license_and_copy_scirunrc(gui);
