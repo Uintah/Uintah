@@ -27,7 +27,10 @@
 #include <Uintah/Components/ICE/ICEMaterial.h>
 #include <Uintah/Interface/ProblemSpecP.h>
 #include <Uintah/Grid/VarTypes.h>
+#include <vector>
 
+using std::vector;
+using std::max;
 using SCICore::Geometry::Vector;
 
 using namespace Uintah;
@@ -148,24 +151,28 @@ void ICE::scheduleTimeAdvance(double t, double dt,
 	  Material* matl = d_sharedState->getMaterial(m);
 	  ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
 	  if(ice_matl){
-	    t->requires(old_dw,lb->vol_frac_CCLabel,
-			matl->getDWIndex(),patch,Ghost::None);
-	    t->requires(old_dw,lb->rho_CCLabel,
-			matl->getDWIndex(),patch,Ghost::None);
-	    t->requires(old_dw,lb->rho_micro_CCLabel,
-			matl->getDWIndex(),patch,Ghost::None);
-	    t->requires(old_dw,lb->temp_CCLabel,
-			matl->getDWIndex(),patch,Ghost::None);
-	    t->requires(old_dw,lb->cv_CCLabel,
-			matl->getDWIndex(),patch,Ghost::None);
-	    t->requires(new_dw,lb->speedSound_CCLabel,
-			matl->getDWIndex(),patch,Ghost::None);
-	    t->requires(old_dw,lb->press_CCLabel,
-			matl->getDWIndex(),patch,Ghost::None);
-	    
-	    t->computes(new_dw,lb->press_CCLabel,matl->getDWIndex(), patch);
-	    t->computes(new_dw,lb->rho_micro_CCLabel,matl->getDWIndex(),patch);
-
+	     EquationOfState* eos = ice_matl->getEOS();
+	       // Compute the rho micro
+               eos->addComputesAndRequiresRM(t,ice_matl,patch,old_dw,new_dw);
+	       t->requires(old_dw,lb->vol_frac_CCLabel,
+			   matl->getDWIndex(),patch,Ghost::None);
+	       t->requires(old_dw,lb->rho_CCLabel,
+			   matl->getDWIndex(),patch,Ghost::None);
+	       t->requires(old_dw,lb->rho_micro_CCLabel,
+			   matl->getDWIndex(),patch,Ghost::None);
+	       t->requires(old_dw,lb->temp_CCLabel,
+			   matl->getDWIndex(),patch,Ghost::None);
+	       t->requires(old_dw,lb->cv_CCLabel,
+			   matl->getDWIndex(),patch,Ghost::None);
+	       t->requires(new_dw,lb->speedSound_CCLabel,
+			   matl->getDWIndex(),patch,Ghost::None);
+	       t->requires(old_dw,lb->press_CCLabel,
+			   matl->getDWIndex(),patch,Ghost::None);
+	       t->computes(new_dw,lb->press_CCLabel,matl->getDWIndex(), patch);
+	       t->computes(new_dw,lb->vol_frac_CCLabel,matl->getDWIndex(),
+			   patch);
+	       t->computes(new_dw,lb->speedSound_CCLabel,matl->getDWIndex(), 
+			   patch);
 	  }
 	}
 	sched->addTask(t);
@@ -352,7 +359,7 @@ void ICE::actuallyStep1a(const ProcessorGroup*,
     Material* matl = d_sharedState->getMaterial(m);
     ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
     if (ice_matl) {
-      EquationOfState* eos = ice_matl->getEOS();
+       EquationOfState* eos = ice_matl->getEOS();
       eos->computeSpeedSound(patch,ice_matl,old_dw,new_dw);
     }
   }
@@ -370,68 +377,171 @@ void ICE::actuallyStep1b(const ProcessorGroup*,
   int numMatls = d_sharedState->getNumMatls();
 
   // Compute the equilibration pressure for all materials
-#if 0
-  int vfindex = matl->getVFIndex();
-
-  CCVariable<double> vol_frac;
-  CCVariable<double> rho;
+#if 1
  
-  CCVariable<double> temp;
-  CCVariable<double> cv;
-  CCVariable<double> speedSound;
-  CCVariable<double> press;
 
-  double gamma = matl->getGamma();
-
-  old_dw->get(vol_frac,lb->vol_frac_CCLabel, vfindex,patch,Ghost::None, 0);
-  old_dw->get(rho,lb->rho_CCLabel, vfindex,patch,Ghost::None, 0); 
-  old_dw->get(rho_micro_old,lb->rho_micro_CCLabel, vfindex,patch,Ghost::None, 0); 
-  old_dw->get(temp,lb->temp_CCLabel, vfindex,patch,Ghost::None, 0); 
-  old_dw->get(cv, lb->cv_CCLabel, vfindex,patch,Ghost::None, 0); 
-  new_dw->get(speedSound,lb->speedSound_CCLabel,vfindex,patch,Ghost::None, 0); 
-  old_dw->get(press,lb->press_CCLabel,vfindex,patch,Ghost::None, 0); 
-
-  vector<CCVariable<double> > rho_micro;
+  // Compute initial Rho Micro
   for(int m = 0; m < numMatls; m++){
     Material* matl = d_sharedState->getMaterial( m );
     ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
     if(ice_matl){
-      int vfindex = matl->getVFIndex();
-      new_dw->allocate(rho_micro[vfindex], lb->rho_micro_CCLabel,vfindex , patch);
+      ice_matl->getEOS()->computeRhoMicro(patch,ice_matl,old_dw,new_dw);   
     }
   }
 
-
-  new_dw->allocate(press,lb->press_CCLabel,vfindex,patch);
-  new_dw->allocate(rho_micro_new[,lb->rho_micro_CCLabel,vfindex,patch);
-
-  matl->getEOS()->computeRhoMicro(patch,old_dw,new_dw);
   
-  // Need to pull out all of the material's data just like in contact::exMomInterpolated
-  // store in a vector<CCVariable<double>>
-
- for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
-   // vol fraction
- }
-
- for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
-   while( !converged) {
-
-     // loop over materials
-     EOS->computePressEOS(double);
-     
-     // compute delPress over materials
-
-      rho_micro[*iter] = EOS->computeRhoMicro();
-
-      // compute speed of sound mm
-
+   // Need to pull out all of the material's data just like in 
+  // contact::exMomInterpolated
+   // store in a vector<CCVariable<double>>
+  
+  // Compute the initial volume fraction
+  vector<CCVariable<double> > vol_frac(numMatls);
+  for (int m = 0; m < numMatls; m++) {
+    Material* matl = d_sharedState->getMaterial(m);
+    ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
+    if (ice_matl) {
+      int vfindex = matl->getVFIndex();
+      CCVariable<double> rho_micro,rho;    
+      new_dw->allocate(vol_frac[m],lb->vol_frac_CCLabel,vfindex,patch);
+      old_dw->get(rho,lb->rho_CCLabel, vfindex,patch,Ghost::None, 0); 
+      new_dw->get(rho_micro,lb->rho_micro_CCLabel, vfindex,patch,
+		  Ghost::None, 0); 
+      for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
+	vol_frac[m][*iter] = rho[*iter]/rho_micro[*iter];
+      }
+      
+    }
    }
+  
+  vector<double> delVol_frac(numMatls),press_eos(numMatls);
+  vector<double> dp_drho(numMatls),dp_de(numMatls);
+  
+  vector<CCVariable<double> > rho_micro(numMatls),rho(numMatls);
+  vector<CCVariable<double> > cv(numMatls);
+  vector<CCVariable<double> > Temp(numMatls);
+  vector<CCVariable<double> > press(numMatls),press_new(numMatls);
+  vector<CCVariable<double> > speedSound(numMatls);
 
-    
-  new_dw->put(press,lb->press_CCLabel,vfindex,patch);
- }
+  
+  for (int m = 0; m < numMatls; m++) {
+    Material* matl = d_sharedState->getMaterial(m);
+    ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
+    if (ice_matl) {
+      int vfindex = matl->getVFIndex();
+      old_dw->get(cv[m], lb->cv_CCLabel, vfindex,patch,Ghost::None, 0); 
+      old_dw->get(rho[m], lb->rho_CCLabel, vfindex,patch,Ghost::None, 0); 
+      old_dw->get(Temp[m], lb->temp_CCLabel, vfindex,patch,Ghost::None, 0); 
+      old_dw->get(press[m], lb->press_CCLabel, vfindex,patch,Ghost::None, 0); 
+      new_dw->allocate(press_new[m],lb->press_CCLabel,vfindex,patch);
+      new_dw->allocate(speedSound[m],lb->speedSound_CCLabel,vfindex,patch);
+      new_dw->get(rho_micro[m],lb->rho_micro_CCLabel,vfindex,patch,
+		  Ghost::None,0);
+    }
+  }
+
+  bool converged = false;
+  for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
+    double delPress = 0.;
+    while( converged == false) {
+     double A = 0.;
+     double B = 0.;
+     double C = 0.;
      
+     for (int m = 0; m < numMatls; m++) 
+       delVol_frac[m] = 0.;
+
+     for (int m = 0; m < numMatls; m++) {
+       Material* matl = d_sharedState->getMaterial(m);
+       ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
+       if (ice_matl) {
+	 double gamma = ice_matl->getGamma();
+	 ice_matl->getEOS()->computePressEOS(rho_micro[m][*iter],gamma,
+					     cv[m][*iter],
+					     Temp[m][*iter],press_eos[m],
+					     dp_drho[m],dp_de[m]);
+       }
+     }
+     vector<double> Q(2),y(2);     
+     for (int m = 0; m < numMatls; m++) {
+       Material* matl = d_sharedState->getMaterial(m);
+       ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
+       if (ice_matl) {
+	 Q[m] = press[m][*iter] - press_eos[m];
+	 y[m] = rho[m][*iter]/(vol_frac[m][*iter]*vol_frac[m][*iter]) 
+	   * dp_drho[m];
+	 A += vol_frac[m][*iter];
+	 B += Q[m]/y[m];
+	 C += 1./y[m];
+       }
+     }
+     double vol_frac_not_close_packed = 1.;
+     delPress = (A - vol_frac_not_close_packed - B)/C;
+     for (int m = 0; m < numMatls; m++)
+       press[m][*iter] += delPress;
+
+     for (int m = 0; m < numMatls; m++) {
+       Material* matl = d_sharedState->getMaterial(m);
+       ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
+       if (ice_matl) {
+	 double gamma = ice_matl->getGamma();
+	 rho_micro[m][*iter] = ice_matl->getEOS()->
+	   computeRhoMicro(press[m][*iter], gamma,cv[m][*iter],Temp[m][*iter]);
+       }
+     }
+
+     // Compute delVol_frac
+     for (int m = 0; m < numMatls; m++) {
+       delVol_frac[m] = -(Q[m] + delPress)/y[m];
+       vol_frac[m][*iter] += delVol_frac[m];
+     }
+     
+      // compute speed of sound mm
+     //  1. compute press eos
+     //  2. compute sound speed using dp_drho, dp_de, press_eos;
+     for (int m = 0; m < numMatls; m++) {
+       Material* matl = d_sharedState->getMaterial(m);
+       ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
+       if (ice_matl) {
+	 double gamma = ice_matl->getGamma();
+	 ice_matl->getEOS()->computePressEOS(rho_micro[m][*iter],gamma,
+					     cv[m][*iter],
+					     Temp[m][*iter],press_eos[m],
+					     dp_drho[m],dp_de[m]);
+	 
+	 double temp = dp_drho[m] + dp_de[m] * 
+	   (press_eos[m]/(rho_micro[m][*iter]*rho_micro[m][*iter]));
+	 speedSound[m][*iter] = sqrt(temp);
+       }
+     }
+     
+     
+     // Check if converged
+     
+     double test = 0.;
+     test = std::max(test,fabs(delPress));
+     for (int m = 0; m < numMatls; m++) {
+       test = std::max(test,fabs(delVol_frac[m]));
+     }
+     if (test < 1.e-5)
+       converged = true;
+     
+    }  // end of converged
+    
+    // Store new pressure, speedSound,vol_frac
+    for (int m = 0; m < numMatls; m++) {
+      Material* matl = d_sharedState->getMaterial(m);
+      ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
+      if (ice_matl) {
+	int vfindex = matl->getVFIndex();
+	new_dw->put(press[m],lb->press_CCLabel,vfindex,patch);
+	new_dw->put(vol_frac[m],lb->vol_frac_CCLabel,vfindex,patch);
+	new_dw->put(speedSound[m],lb->speedSound_CCLabel,vfindex,patch);
+      }
+    }
+    
+  }
+    
+    
 #endif
 
 }
@@ -662,6 +772,11 @@ void ICE::actuallyStep6and7(const ProcessorGroup*,
 
 //
 // $Log$
+// Revision 1.31  2000/10/14 02:49:46  jas
+// Added implementation of compute equilibration pressure.  Still need to do
+// the update of BCS and hydrostatic pressure.  Still some issues with
+// computes and requires - will compile but won't run.
+//
 // Revision 1.30  2000/10/13 00:01:11  guilkey
 // More work on ICE
 //

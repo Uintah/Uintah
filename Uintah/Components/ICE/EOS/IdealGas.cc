@@ -43,18 +43,49 @@ void IdealGas::addComputesAndRequiresSS(Task* task,
 
 }
 
+void IdealGas::addComputesAndRequiresRM(Task* task,
+				 const ICEMaterial* matl, const Patch* patch,
+				 DataWarehouseP& old_dw,
+				 DataWarehouseP& new_dw) const
+{
+  task->requires(old_dw,lb->temp_CCLabel,
+		matl->getDWIndex(),patch,Ghost::None);
+  task->requires(old_dw,lb->press_CCLabel,
+		matl->getDWIndex(),patch,Ghost::None);
+  task->requires(old_dw,lb->cv_CCLabel,
+		matl->getDWIndex(),patch,Ghost::None);
+  task->computes(new_dw,lb->rho_micro_CCLabel,matl->getDWIndex(), patch);
+
+}
+
+void IdealGas::addComputesAndRequiresPEOS(Task* task,
+				 const ICEMaterial* matl, const Patch* patch,
+				 DataWarehouseP& old_dw,
+				 DataWarehouseP& new_dw) const
+{
+  task->requires(old_dw,lb->rho_micro_CCLabel,
+		matl->getDWIndex(),patch,Ghost::None);
+  task->requires(old_dw,lb->temp_CCLabel,
+		matl->getDWIndex(),patch,Ghost::None);
+  task->requires(old_dw,lb->cv_CCLabel,
+		matl->getDWIndex(),patch,Ghost::None);
+  task->computes(new_dw,lb->press_CCLabel,matl->getDWIndex(), patch);
+
+}
+
+
 
 void IdealGas::computeSpeedSound(const Patch* patch,
                                  const ICEMaterial* matl,
                                  DataWarehouseP& old_dw,
                                  DataWarehouseP& new_dw)
 {
-  int vfindex = matl->getVFIndex();
   CCVariable<double> rho_micro;
   CCVariable<double> temp;
   CCVariable<double> cv;
   CCVariable<double> speedSound;
 
+  int vfindex = matl->getVFIndex();
   double gamma = matl->getGamma();
 
   old_dw->get(temp, lb->temp_CCLabel, vfindex,patch,Ghost::None, 0); 
@@ -94,10 +125,30 @@ void IdealGas::computePressEOS(double& rhoM, double& gamma,
 
 
 void IdealGas::computeRhoMicro(const Patch* patch,
-                               const ICEMaterial* matl,
+			       const ICEMaterial* matl,
                                DataWarehouseP& old_dw,
                                DataWarehouseP& new_dw)
 {
+
+  CCVariable<double> rho_micro;
+  CCVariable<double> temp;
+  CCVariable<double> cv;
+  CCVariable<double> press;
+  
+  int vfindex = matl->getVFIndex();
+
+  old_dw->get(temp, lb->temp_CCLabel, vfindex,patch,Ghost::None, 0); 
+  old_dw->get(cv, lb->cv_CCLabel, vfindex,patch,Ghost::None, 0); 
+  old_dw->get(press, lb->press_CCLabel, vfindex,patch,Ghost::None, 0); 
+  new_dw->allocate(rho_micro,lb->rho_micro_CCLabel,vfindex,patch);
+
+  double gamma = matl->getGamma();
+
+  for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
+    rho_micro[*iter] = press[*iter]/((gamma -1.)*cv[*iter]*temp[*iter]);
+  }
+
+  new_dw->put(rho_micro,lb->rho_micro_CCLabel,vfindex,patch);
 
 
 }
@@ -107,10 +158,36 @@ void IdealGas::computePressEOS(const Patch* patch,
                                DataWarehouseP& old_dw,
                                DataWarehouseP& new_dw)
 {
+
+  int vfindex = matl->getVFIndex();
+  CCVariable<double> rho_micro;
+  CCVariable<double> temp;
+  CCVariable<double> cv;
+  CCVariable<double> press;
+
+  double gamma = matl->getGamma();
+
+  old_dw->get(temp, lb->temp_CCLabel, vfindex,patch,Ghost::None, 0); 
+  old_dw->get(cv, lb->cv_CCLabel, vfindex,patch,Ghost::None, 0); 
+  old_dw->get(rho_micro, lb->cv_CCLabel, vfindex,patch,Ghost::None, 0); 
+  new_dw->allocate(press,lb->rho_micro_CCLabel,vfindex,patch);
+
+
+  for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
+    press[*iter] = (gamma - 1.)* rho_micro[*iter] * cv[*iter] * temp[*iter];
+  }
+
+  new_dw->put(press,lb->press_CCLabel,vfindex,patch);
+
 }
 
 
 //$Log$
+//Revision 1.5  2000/10/14 02:49:50  jas
+//Added implementation of compute equilibration pressure.  Still need to do
+//the update of BCS and hydrostatic pressure.  Still some issues with
+//computes and requires - will compile but won't run.
+//
 //Revision 1.4  2000/10/10 22:18:27  guilkey
 //Added some simple functions
 //
