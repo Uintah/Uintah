@@ -4,7 +4,7 @@
 <Uintah_specification>
 
    <Meta>
-	<title>J & K calculation for a thick single edge notched specimen under tension</title>
+	<title>SIF calculation for a thick single edge notched specimen under tension</title>
    </Meta>
 
    <Time>
@@ -137,14 +137,14 @@
     <PhysicalBC>
 	<MPM>
            <force>
-             <lower>[-10e-3, 29.0e-3, -15e-3]</lower>
+             <lower>[-10e-3, 29.5e-3, -15e-3]</lower>
              <upper>[ 10e-3, 30.0e-3, 0.0]</upper>
-             <force_density>[0.0, 0.50633e8, 0.0]</force_density>
+             <force_density>[0.0, 1.013e8, 0.0]</force_density>
            </force>
            <force>
              <lower>[-10e-3, -30.0e-3, -15e-3]</lower>
-             <upper>[ 10e-3, -29.0e-3, 0.0]</upper>
-             <force_density>[0.0, -0.50633e8, 0.0]</force_density>
+             <upper>[ 10e-3, -29.5e-3, 0.0]</upper>
+             <force_density>[0.0, -1.013e8, 0.0]</force_density>
            </force>
 	</MPM>
     </PhysicalBC>
