@@ -36,9 +36,8 @@ void ICE::scheduleComputeFCPressDiffRF(SchedulerP& sched,
   t->requires(Task::NewDW,lb->matl_press_CCLabel,     Ghost::AroundCells,1);
   t->requires(Task::NewDW,lb->vel_CCLabel,mpm_matls,  Ghost::AroundCells,1);
   t->requires(Task::OldDW,lb->vel_CCLabel,ice_matls,  Ghost::AroundCells,1);
-
   t->requires(Task::NewDW,lb->press_equil_CCLabel,press_matl,
-                                                          Ghost::AroundCells,1);
+                                                      Ghost::AroundCells,1);
 
   t->computes(lb->press_diffX_FCLabel);
   t->computes(lb->press_diffY_FCLabel);
@@ -123,17 +122,17 @@ void ICE::computeRateFormPressure(const ProcessorGroup*,
         Material* matl = d_sharedState->getMaterial( m );
         ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
 
-         rho_micro[m][c] = 1.0/sp_vol_CC[m][c];
-         ice_matl->getEOS()->computePressEOS(rho_micro[m][c],gamma[m],
+        rho_micro[m][c] = 1.0/sp_vol_CC[m][c];
+        ice_matl->getEOS()->computePressEOS(rho_micro[m][c],gamma[m],
                                              cv[m],Temp[m][c],
                                              matl_press[m][c],dp_drho[m],dp_de[m]);
 
-         compressibility[m]=
+        compressibility[m]=
                       ice_matl->getEOS()->getCompressibility(matl_press[m][c]);
 
-         mat_volume[m] = (rho_CC[m][c] * cell_vol) * sp_vol_CC[m][c];
+        mat_volume[m] = (rho_CC[m][c] * cell_vol) * sp_vol_CC[m][c];
 
-         tmp = dp_drho[m] + dp_de[m] * 
+        tmp = dp_drho[m] + dp_de[m] * 
            (matl_press[m][c] * (sp_vol_CC[m][c] * sp_vol_CC[m][c]));            
 
         total_mat_vol += mat_volume[m];
@@ -193,13 +192,14 @@ void ICE::computeRateFormPressure(const ProcessorGroup*,
        ostringstream desc;
        desc << "BOT_computeRFPress_Mat_" << indx << "_patch_"<< patch->getID();
        printData( patch, 1, desc.str(), "rho_CC",       rho_CC[m]);
+       printData( patch, 1, desc.str(), "sp_vol_CC",    sp_vol_new[m]);
        printData( patch, 1, desc.str(), "rho_micro_CC", rho_micro[m]);
        printData( patch, 1, desc.str(), "vol_frac_CC",  vol_frac[m]);
      }
     }
   } // patches
-
 }
+
 /* --------------------------------------------------------------------- 
  Function~  ICE::computeFCPressDiffRF-- 
  Reference: A Multifield Model and Method for Fluid Structure
@@ -352,15 +352,61 @@ void ICE::computeFCPressDiffRF(const ProcessorGroup*,
     }
   } // patches
 }
+
 /* ---------------------------------------------------------------------
  Function~  ICE::computeFaceCenteredVelocitiesRF--
  Purpose~   compute the face centered velocities minus the exchange
             contribution.  See Kashiwa Feb. 2001, 4.10a for description
             of term1-term4.
 _____________________________________________________________________*/
+template<class T> void ICE::computeVelFaceRF(int dir, CellIterator it,
+                                       IntVector adj_offset,double dx,
+                                       double delT, double gravity,
+                                       constCCVariable<double>& sp_vol_CC,
+                                       constCCVariable<Vector>& vel_CC,
+                                       constCCVariable<double>& vol_frac,
+                                       constCCVariable<double>& matl_press_CC,
+                                       constCCVariable<double>& press_CC,
+                                       const T& sig_bar_FC,
+                                       T& vel_FC)
+{
+  double term1, term2, term3, term4, sp_vol_brack, sig_L, sig_R;
+  for(;!it.done(); it++){
+    IntVector cur = *it;
+    IntVector adj = cur + adj_offset; 
+    sp_vol_brack = 2.*(sp_vol_CC[adj] * sp_vol_CC[cur])/
+                      (sp_vol_CC[adj] + sp_vol_CC[cur]);
+    //__________________________________
+    // interpolation to the face           
+    term1 = (vel_CC[adj](dir) * sp_vol_CC[cur] +
+             vel_CC[cur](dir) * sp_vol_CC[adj])/
+             (sp_vol_CC[cur] + sp_vol_CC[adj]);
+
+    //__________________________________
+    // pressure term
+    term2 = sp_vol_brack * (delT/dx) * 
+                           (press_CC[cur] - press_CC[adj]);
+    //__________________________________
+    // gravity term
+    term3 =  delT * gravity;
+
+    // stress difference term
+    sig_L = vol_frac[adj] * (matl_press_CC[adj] - press_CC[adj]);
+    sig_R = vol_frac[cur] * (matl_press_CC[cur] - press_CC[cur]);
+    term4 = (sp_vol_brack * delT/dx) * (
+            (sig_bar_FC[cur] - sig_L)/vol_frac[adj] +
+            (sig_R - sig_bar_FC[cur])/vol_frac[cur]);
+
+    // Todd, I think that term4 should be a negative, since Bucky
+    // has a positive, but since sigma = -p*I.  What do you think?
+    vel_FC[cur] = term1 - term2 + term3 - term4;
+  } 
+}
+//______________________________________________________________________
+//
 void ICE::computeFaceCenteredVelocitiesRF(const ProcessorGroup*,  
                                          const PatchSubset* patches,
-                                    const MaterialSubset* /*matls*/,
+                                         const MaterialSubset* /*matls*/,
                                          DataWarehouse* old_dw, 
                                          DataWarehouse* new_dw)
 {
@@ -436,117 +482,37 @@ void ICE::computeFaceCenteredVelocitiesRF(const ProcessorGroup*,
       vvel_FC.initialize(0.0, lowIndex,patch->getSFCYHighIndex());
       wvel_FC.initialize(0.0, lowIndex,patch->getSFCZHighIndex());
 
-      double term1, term2, term3, term4, sp_vol_brack, sig_L, sig_R;
-      
+      vector<IntVector> adj_offset(3);
+      adj_offset[0] = IntVector(-1, 0, 0);    // X faces
+      adj_offset[1] = IntVector(0, -1, 0);    // Y faces
+      adj_offset[2] = IntVector(0,  0, -1);   // Z faces  
+      int offset=0; // 0=Compute all faces in computational domain
+                    // 1=Skip the faces at the border between interior and gc      
       if(doMechOld < -1.5){
       //__________________________________
-      //   B O T T O M   F A C E S 
-      int offset=1; // 0=Compute all faces in computational domain
-                    // 1=Skip the faces at the border between interior and gc
-      for(CellIterator iter=patch->getSFCYIterator(offset);!iter.done();iter++){
-         IntVector cur = *iter;
-         IntVector adj(cur.x(),cur.y()-1,cur.z());                          
-         sp_vol_brack = 2.*(sp_vol_CC[adj] * sp_vol_CC[cur])/
-                            (sp_vol_CC[adj] + sp_vol_CC[cur]);
-         //__________________________________
-         // interpolation to the face           
-         term1 = (vel_CC[adj].y() * sp_vol_CC[cur] +
-                  vel_CC[cur].y() * sp_vol_CC[adj])/
-                  (sp_vol_CC[cur] + sp_vol_CC[adj]);
+      //  Compute vel_FC for each face
+      computeVelFaceRF<SFCXVariable<double> >(0, patch->getSFCXIterator(offset),
+                                       adj_offset[0], dx(0), delT, gravity(0),
+                                       sp_vol_CC, vel_CC, vol_frac,
+                                       matl_press_CC, press_CC,
+                                       p_dXFC,    uvel_FC);
 
-         //__________________________________
-         // pressure term
-         term2 = sp_vol_brack * (delT/dx.y()) * 
-                                (press_CC[cur] - press_CC[adj]);
-         //__________________________________
-         // gravity term
-         term3 =  delT * gravity.y();
+      computeVelFaceRF<SFCYVariable<double> >(1, patch->getSFCYIterator(offset),
+                                       adj_offset[1], dx(1), delT, gravity(1),
+                                       sp_vol_CC, vel_CC, vol_frac, 
+                                       matl_press_CC, press_CC,
+                                       p_dYFC,    vvel_FC);
 
-         // stress difference term
-         sig_L = vol_frac[adj] * (matl_press_CC[adj] - press_CC[adj]);
-         sig_R = vol_frac[cur] * (matl_press_CC[cur] - press_CC[cur]);
-         term4 = (sp_vol_brack * delT/dx.y()) * (
-                 (p_dYFC[cur] - sig_L)/vol_frac[adj] +
-                 (sig_R - p_dYFC[cur])/vol_frac[cur]);
-
-         // Todd, I think that term4 should be a negative, since Bucky
-         // has a positive, but since sigma = -p*I.  What do you think?
-         vvel_FC[cur] = term1 - term2 + term3 - term4;
-      }
-
-      //__________________________________
-      //  L E F T   F A C E 
-      for(CellIterator iter=patch->getSFCXIterator(offset);!iter.done();iter++){
-         IntVector cur = *iter;
-         IntVector adj(cur.x()-1,cur.y(),cur.z()); 
-            
-          sp_vol_brack = 2.*(sp_vol_CC[adj] * sp_vol_CC[cur])/
-                            (sp_vol_CC[adj] + sp_vol_CC[cur]);
-
-         //__________________________________
-         // interpolation to the face                
-         term1 = (vel_CC[adj].x() * sp_vol_CC[cur] +
-                  vel_CC[cur].x() * sp_vol_CC[adj])/
-                  (sp_vol_CC[cur] + sp_vol_CC[adj]);
-
-         //__________________________________
-         // pressure term
-         term2 = sp_vol_brack * (delT/dx.x()) * 
-                                (press_CC[cur] - press_CC[adj]);
-         //__________________________________
-         // gravity term
-         term3 =  delT * gravity.x();
-
-         // stress difference term
-         sig_L = vol_frac[adj] * (matl_press_CC[adj] - press_CC[adj]);
-         sig_R = vol_frac[cur] * (matl_press_CC[cur] - press_CC[cur]);
-         term4 = (sp_vol_brack * delT/dx.x()) * (
-                 (p_dXFC[cur] - sig_L)/vol_frac[adj] +
-                 (sig_R - p_dXFC[cur])/vol_frac[cur]);
-
-         // Todd, I think that term4 should be a negative, since Bucky
-         // has a positive, but since sigma = -p*I.  What do you think?
-         uvel_FC[cur] = term1 - term2 + term3 - term4;
-      }
-      
-      //__________________________________
-      //  B A C K    F A C E
-      for(CellIterator iter=patch->getSFCZIterator(offset);!iter.done();iter++){
-         IntVector cur = *iter;
-         IntVector adj(cur.x(),cur.y(),cur.z()-1); 
-                        
-         sp_vol_brack = 2.*(sp_vol_CC[adj] * sp_vol_CC[cur])/
-                            (sp_vol_CC[adj] + sp_vol_CC[cur]);
-         //__________________________________
-         // interpolation to the face               
-         term1 = (vel_CC[adj].z() * sp_vol_CC[cur] +
-                  vel_CC[cur].z() * sp_vol_CC[adj])/
-                  (sp_vol_CC[cur] + sp_vol_CC[adj]);
-         //__________________________________
-         // pressure term
-         term2 = sp_vol_brack*(delT/dx.z()) * 
-                                (press_CC[cur] - press_CC[adj]);
-         //__________________________________
-         // gravity term
-         term3 =  delT * gravity.z();
-
-         // stress difference term
-         sig_L = vol_frac[adj] * (matl_press_CC[adj] - press_CC[adj]);
-         sig_R = vol_frac[cur] * (matl_press_CC[cur] - press_CC[cur]);
-         term4 = (sp_vol_brack * delT/dx.z()) * (
-                 (p_dZFC[cur] - sig_L)/vol_frac[adj] +
-                 (sig_R - p_dZFC[cur])/vol_frac[cur]);
-
-         // Todd, I think that term4 should be a negative, since Bucky
-         // has a positive, but since sigma = -p*I.  What do you think?
-         wvel_FC[cur] = term1 - term2 + term3 - term4;
-      }
+      computeVelFaceRF<SFCZVariable<double> >(2, patch->getSFCZIterator(offset),
+                                       adj_offset[2], dx(2), delT, gravity(2),
+                                       sp_vol_CC, vel_CC, vol_frac,
+                                       matl_press_CC, press_CC,
+                                       p_dZFC,    wvel_FC); 
       }  // if doMech
 
       //__________________________________
       // (*)vel_FC BC are updated in 
       // ICE::addExchangeContributionToFCVel()
-
       new_dw->put(uvel_FC, lb->uvel_FCLabel, indx, patch);
       new_dw->put(vvel_FC, lb->vvel_FCLabel, indx, patch);
       new_dw->put(wvel_FC, lb->wvel_FCLabel, indx, patch);
