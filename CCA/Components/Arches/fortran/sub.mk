@@ -86,9 +86,9 @@ SRCS += \
 	$(SRCDIR)/wallbc.F \
 	$(SRCDIR)/wvelcoef.F \
 	$(SRCDIR)/wvelsrc.F \
-	$(SRCDIR)/dynamic_1loop.F \
-	$(SRCDIR)/dynamic_2loop.F \
-	$(SRCDIR)/dynamic_3loop.F
+	$(SRCDIR)/inc_dynamic_1loop.F \
+	$(SRCDIR)/inc_dynamic_2loop.F \
+	$(SRCDIR)/inc_dynamic_3loop.F
 
 PSELIBS := \
 	Packages/Uintah/Core/ProblemSpec \
@@ -182,9 +182,9 @@ $(SRCDIR)/wvelcoef.o: $(SRCDIR)/wvelcoef_fort.h
 $(SRCDIR)/wvelsrc.o: $(SRCDIR)/wvelsrc_fort.h
 $(SRCDIR)/hatvelcalpbc.o: $(SRCDIR)/hatvelcalpbc_fort.h
 $(SRCDIR)/uvelcoeffupdate.o: $(SRCDIR)/uvelcoeffupdate_fort.h
-$(SRCDIR)/dynamic_1loop.o: $(SRCDIR)/dynamic_1loop_fort.h
-$(SRCDIR)/dynamic_2loop.o: $(SRCDIR)/dynamic_2loop_fort.h
-$(SRCDIR)/dynamic_3loop.o: $(SRCDIR)/dynamic_3loop_fort.h
+$(SRCDIR)/inc_dynamic_1loop.o: $(SRCDIR)/inc_dynamic_1loop_fort.h
+$(SRCDIR)/inc_dynamic_2loop.o: $(SRCDIR)/inc_dynamic_2loop_fort.h
+$(SRCDIR)/inc_dynamic_3loop.o: $(SRCDIR)/inc_dynamic_3loop_fort.h
 $(SRCDIR)/intrusion_computevel.o: $(SRCDIR)/intrusion_computevel_fort.h
 $(SRCDIR)/mmbcvelocity_momex.o: $(SRCDIR)/mmbcvelocity_momex_fort.h
 $(SRCDIR)/mmbcenthalpy_energyex.o: $(SRCDIR)/mmbcenthalpy_energyex_fort.h
