@@ -74,8 +74,12 @@ WARNING
         : op(op), child1(child1), child2(child2)
       {
       }
-      Expr(int dep)
-        : op('i'), child1(0), child2(0), dep(dep)
+      Expr(int var)
+        : op('d'), child1(0), child2(0), var(var)
+      {
+      }
+      Expr(const string& id)
+        : op('i'), child1(0), child2(0), id(id)
       {
       }
       Expr(double constant)
@@ -84,8 +88,9 @@ WARNING
       }
       Expr* child1;
       Expr* child2;
-      int dep;
+      int var;
       double constant;
+      string id;
       ~Expr() {
         if(child1)
           delete child1;
@@ -96,7 +101,6 @@ WARNING
 
     struct Dep {
       string name;
-      string units;
       enum Type {
         ConstantValue,
         DerivedValue,
@@ -134,6 +138,7 @@ WARNING
     int getInt(istream&);
     double getDouble(istream&);
     string getString(istream&);
+    string getLine(istream&);
 
     bool startline;
     void error(istream& in);
