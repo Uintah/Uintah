@@ -30,6 +30,7 @@ public:
   virtual void run();
 
 private:
+
   Mutex                * d_ready;
   int                    d_id;
   ThreadPool           * d_parent;
@@ -47,7 +48,7 @@ public:
 
   // Worker calls this to let the ThreadPool know that it is done
   // running its task...
-  void done( int id, Task * task );
+  void done( int id, Task * task, double timeUsed );
 
   // Returns a list of the tasks that have been completed.
   // The list is subsequently cleared and only updated with new tasks
@@ -56,10 +57,19 @@ public:
 
   void assignThread( Task * task, const ProcessorGroup * pg );
 
+  // Returns the percent of time that has been used by threads
+  // for executing tasks.
+  double getUtilization();
+
 private:
 
+  double            d_beginTime;
   int               d_numWorkers;
   int               d_numBusy;
+
+
+  // List of the amount of time used by each thread for processing tasks.
+  double          * d_timeUsed;
 
   // List of tasks that workers have finished
   vector<Task *>    d_finishedTasks;
