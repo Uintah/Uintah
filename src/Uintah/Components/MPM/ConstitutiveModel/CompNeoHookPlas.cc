@@ -205,8 +205,8 @@ void CompNeoHookPlas::computeStressTensor(const Patch* patch,
         old_dw->get(pCrackSurfaceNormal, lb->pCrackSurfaceNormalLabel, pset);
 	old_dw->get(pIsBroken, lb->pIsBrokenLabel, pset);
 	
-        lattice = new Lattice(px);
-	brokenCellShapeFunction = new BrokenCellShapeFunction(*lattice,
+        lattice = scinew Lattice(px);
+	brokenCellShapeFunction = scinew BrokenCellShapeFunction(*lattice,
 	   pIsBroken,pCrackSurfaceNormal);
   }
 
@@ -425,6 +425,9 @@ const TypeDescription* fun_getTypeDescription(CompNeoHookPlas::CMData*)
 }
 
 // $Log$
+// Revision 1.40  2000/09/06 19:45:09  jas
+// Changed new to scinew in constitutive models related to crack stuff.
+//
 // Revision 1.39  2000/09/05 07:46:17  tan
 // Applied BrokenCellShapeFunction to constitutive models where fracture
 // is involved.

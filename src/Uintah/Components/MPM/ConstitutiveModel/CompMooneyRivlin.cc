@@ -176,8 +176,8 @@ void CompMooneyRivlin::computeStressTensor(const Patch* patch,
         old_dw->get(pCrackSurfaceNormal, lb->pCrackSurfaceNormalLabel, pset);
 	old_dw->get(pIsBroken, lb->pIsBrokenLabel, pset);
 	
-        lattice = new Lattice(px);
-	brokenCellShapeFunction = new BrokenCellShapeFunction(*lattice,
+        lattice = scinew Lattice(px);
+	brokenCellShapeFunction = scinew BrokenCellShapeFunction(*lattice,
 	   pIsBroken,pCrackSurfaceNormal);
   }
 
@@ -368,6 +368,9 @@ const TypeDescription* fun_getTypeDescription(CompMooneyRivlin::CMData*)
 }
 
 // $Log$
+// Revision 1.55  2000/09/06 19:45:09  jas
+// Changed new to scinew in constitutive models related to crack stuff.
+//
 // Revision 1.54  2000/09/05 07:45:49  tan
 // Applied BrokenCellShapeFunction to constitutive models where fracture
 // is involved.
