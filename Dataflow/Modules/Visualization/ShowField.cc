@@ -132,8 +132,10 @@ class ShowField : public Module
   //! Refinement resolution for cylinders and spheres
   GuiInt                   gui_node_resolution_;
   GuiInt                   gui_edge_resolution_;
+  GuiInt                   gui_data_resolution_;
   int                      node_resolution_;
   int                      edge_resolution_;
+  int                      data_resolution_;
   LockingHandle<RenderFieldBase>  renderer_;
   LockingHandle<RenderFieldDataBase>  data_renderer_;
 
@@ -218,8 +220,10 @@ ShowField::ShowField(GuiContext* ctx) :
   interactive_mode_(ctx->subVar("interactive_mode")),
   gui_node_resolution_(ctx->subVar("node-resolution")),
   gui_edge_resolution_(ctx->subVar("edge-resolution")),
+  gui_data_resolution_(ctx->subVar("data-resolution")),
   node_resolution_(0),
   edge_resolution_(0),
+  data_resolution_(0),
   renderer_(0),
   data_renderer_(0),
   render_state_(5),
@@ -491,6 +495,11 @@ ShowField::execute()
   }
   edge_resolution_ = gui_edge_resolution_.get();
 
+  if (gui_data_resolution_.get() != data_resolution_) {
+    data_dirty_ = true;
+  }
+  data_resolution_ = gui_data_resolution_.get();
+
   // check to see if we have something to do.
   if ((!nodes_dirty_) && (!edges_dirty_) && 
       (!faces_dirty_) && (!data_dirty_) && (!data_at_dirty_))  { 
@@ -601,7 +610,7 @@ ShowField::execute()
 						    normalize_vectors_.get(),
 						    bidirectional_.get(),
 						    arrow_heads_on_.get(),
-						    node_resolution_);
+						    data_resolution_);
       data_id_ = ogeom_->addObj(data, "Vectors");
     }
   }
@@ -696,6 +705,12 @@ ShowField::tcl_command(GuiArgs& args, void* userdata) {
     if (edges_on_.get())
     {
       maybe_execute(EDGE);
+    }
+  } else if (args[1] == "data_resolution_scale") {
+    data_dirty_ = true;
+    if (vectors_on_.get())
+    {
+      maybe_execute(DATA);
     }
   } else if (args[1] == "default_color_change") {
     def_color_r_.reset();
