@@ -104,11 +104,11 @@ PartToGeom::PartToGeom(const clString& id)
     MIN_NU(4), MAX_NU(20), MIN_NV(2), MAX_NV(20)
 {
   // Create the input port
-  iPort=new ParticleSetIPort(this, "Particles", ParticleSetIPort::Atomic);
+  iPort=scinew ParticleSetIPort(this, "Particles", ParticleSetIPort::Atomic);
   add_iport(iPort);
-  iCmap=new ColorMapIPort(this, "ColorMap", ColorMapIPort::Atomic);
+  iCmap=scinew ColorMapIPort(this, "ColorMap", ColorMapIPort::Atomic);
   add_iport(iCmap);
-  ogeom=new GeometryOPort(this, "Geometry", GeometryIPort::Atomic);
+  ogeom=scinew GeometryOPort(this, "Geometry", GeometryIPort::Atomic);
   add_oport(ogeom);
   last_idx=-1;
   last_generation=-1;
@@ -122,7 +122,7 @@ PartToGeom::PartToGeom(const clString& id)
   head_length.set(0.3);
   shaft_rad.set(0.1);
   show_nth.set(1);
-  outcolor=new Material(Color(0.3,0.3,0.3), Color(0.3,0.3,0.3),
+  outcolor=scinew Material(Color(0.3,0.3,0.3), Color(0.3,0.3,0.3),
 			   Color(0.3,0.3,0.3), 0);
     
 }
@@ -209,7 +209,7 @@ void PartToGeom::execute()
     alphaT.add(1.0);
     alphaT.add(1.0);
       
-    cmap = new ColorMap(rgb,rgbT,alphas,alphaT,16);
+    cmap = scinew ColorMap(rgb,rgbT,alphas,alphaT,16);
   }
   double max = -1e30;
   double min = 1e30;
@@ -234,31 +234,31 @@ void PartToGeom::execute()
     float t = (polygons.get() - MIN_POLYS)/float(MAX_POLYS - MIN_POLYS);
     int nu = int(MIN_NU + t*(MAX_NU - MIN_NU)); 
     int nv = int(MIN_NV + t*(MAX_NV - MIN_NV));
-    GeomGroup *obj = new GeomGroup;
+    GeomGroup *obj = scinew GeomGroup;
     int count = 0;
     for (int i=0; i<pos.size();i++) {
       count++;
       if (count == show_nth.get() ){ 
-	GeomSphere *sp = new GeomSphere(pos[i].asPoint(),radius.get(),
+	GeomSphere *sp = scinew GeomSphere(pos[i].asPoint(),radius.get(),
 					 nu, nv, i);
       // Default ColorMap ie. unscaled n autoscale values.
       //      if( cmap->isScaled() ) {
 	
 //  	int index = cmap->rcolors.size() * ( (scalars[i] - min) /
 // 					     (max - min + 1) ) ;
-// 	obj->add( new GeomMaterial(sp,new Material( Color(1,1,1),
+// 	obj->add( scinew GeomMaterial(sp,scinew Material( Color(1,1,1),
 // 							  cmap->rcolors[index],
 // 							  cmap->rcolors[index],
 // 							  20 )));
 //       } else { // ColorMap has been scaled just use it.
-	obj->add( new GeomMaterial( sp,(cmap->lookup(scalars[i])).get_rep()));
+	obj->add( scinew GeomMaterial( sp,(cmap->lookup(scalars[i])).get_rep()));
 //       }
 	count = 0;
       }
     }
       
     if( drawVectors.get() == 1 && vectors.size() == pos.size()) {
-      GeomArrows* arrows = new GeomArrows(width_scale.get(),
+      GeomArrows* arrows = scinew GeomArrows(width_scale.get(),
 					  1.0 - head_length.get(),
 					  drawcylinders.get(),
 					  shaft_rad.get());
@@ -271,12 +271,12 @@ void PartToGeom::execute()
       obj->add( arrows );
     }
     // Let's set it up so that we can pick the particle set -- Kurt Z. 12/18/98
-    GeomPick *pick = new GeomPick( obj, this);
+    GeomPick *pick = scinew GeomPick( obj, this);
     ogeom->delAll();
     ogeom->addObj(pick, "Particles");      
   } else if( scalars.size() ) { // Particles
-    GeomGroup *obj = new GeomGroup;
-    GeomPts *pts = new GeomPts(pos.size());
+    GeomGroup *obj = scinew GeomGroup;
+    GeomPts *pts = scinew GeomPts(pos.size());
     pts->pickable = 1;
     int count = 0;
     for(int i=0;i<pos.size();i++) {
@@ -291,7 +291,7 @@ void PartToGeom::execute()
     }
     obj->add( pts );
     if( drawVectors.get() == 1 && vectors.size() == pos.size()) {
-      GeomArrows* arrows = new GeomArrows(width_scale.get(),
+      GeomArrows* arrows = scinew GeomArrows(width_scale.get(),
 					  1.0 - head_length.get(),
 					  drawcylinders.get(),
 					  shaft_rad.get());
@@ -303,12 +303,12 @@ void PartToGeom::execute()
       }
       obj->add( arrows );
     }
-    GeomPick *pick = new GeomPick( obj, this);
+    GeomPick *pick = scinew GeomPick( obj, this);
     ogeom->delAll();
     ogeom->addObj(pick, "Particles");      
   }
-//     GeomMaterial* matl=new GeomMaterial(obj,
-//    					  new Material(Color(0,0,0),
+//     GeomMaterial* matl=scinew GeomMaterial(obj,
+//    					  scinew Material(Color(0,0,0),
 //    							  Color(0,.6,0), 
 //    							  Color(.5,.5,.5),20));
     
@@ -334,7 +334,7 @@ void PartToGeom::geom_pick(GeomPick* pick, void* userdata, int index)
 }
   
 extern "C" Module* make_PartToGeom( const clString& id ) {
-  return new PartToGeom( id );
+  return scinew PartToGeom( id );
 }
 
 } // End namespace Modules
@@ -343,6 +343,9 @@ extern "C" Module* make_PartToGeom( const clString& id ) {
 
 //
 // $Log$
+// Revision 1.13  2000/08/09 03:18:06  jas
+// Changed new to scinew and added deletes to some of the destructors.
+//
 // Revision 1.12  2000/03/17 09:30:11  sparker
 // New makefile scheme: sub.mk instead of Makefile.in
 // Use XML-based files for module repository

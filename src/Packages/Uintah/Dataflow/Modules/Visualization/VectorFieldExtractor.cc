@@ -76,9 +76,9 @@ VectorFieldExtractor::VectorFieldExtractor(const clString& id)
 { 
   //////////// Initialization code goes here
   // Create Ports
-  in=new ArchiveIPort(this, "Data Archive",
+  in=scinew ArchiveIPort(this, "Data Archive",
 		      ArchiveIPort::Atomic);
-  sfout=new VectorFieldOPort(this, "VectorField", VectorFieldIPort::Atomic);
+  sfout=scinew VectorFieldOPort(this, "VectorField", VectorFieldIPort::Atomic);
 
   // Add them to the Module
   add_iport(in);
@@ -211,7 +211,7 @@ void VectorFieldExtractor::execute()
     switch ( subtype->getType() ) {
     case TypeDescription::Vector:
       {
-	NCVectorField *vfd  = new NCVectorField();
+	NCVectorField *vfd  = scinew NCVectorField();
 	NCVariable< Vector > vv;
 	
 	if(var != ""){
@@ -239,7 +239,7 @@ void VectorFieldExtractor::execute()
     switch ( subtype->getType() ) {
     case TypeDescription::Vector:
       {
-	CCVectorField *vfd  = new CCVectorField();
+	CCVectorField *vfd  = scinew CCVectorField();
 	CCVariable< Vector > vv;
 	
 	if(var != ""){

@@ -49,7 +49,7 @@ class RunSimulation : public Module {
 RunSimulation::RunSimulation(const clString& id)
   : Module("RunSimulation", id, Filter)
 {
-    iface=new PIDLObjectIPort(this, "SimulationInterface",
+    iface=scinew PIDLObjectIPort(this, "SimulationInterface",
 			      PIDLObjectIPort::Atomic);
     add_iport(iface);
 }
@@ -79,7 +79,7 @@ void RunSimulation::execute()
 
 extern "C" Module* make_RunSimulation( const clString& id )
 {
-  return new RunSimulation( id );
+  return scinew RunSimulation( id );
 }
 
 } // End namespace Modules
@@ -88,6 +88,9 @@ extern "C" Module* make_RunSimulation( const clString& id )
 
 //
 // $Log$
+// Revision 1.4  2000/08/09 03:18:07  jas
+// Changed new to scinew and added deletes to some of the destructors.
+//
 // Revision 1.3  2000/03/17 09:30:12  sparker
 // New makefile scheme: sub.mk instead of Makefile.in
 // Use XML-based files for module repository

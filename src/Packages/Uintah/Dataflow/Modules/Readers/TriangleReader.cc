@@ -96,7 +96,7 @@ TriangleReader::Read(istream& is, ColorMapHandle cmh, GeomGroup *tris)
     double s;
     int i;
     for(i = 0; i < nPoints; i++){
-      p = new Point();
+      p = scinew Point();
       is>>s; p->x(s);
       is>>s; p->y(s);
       is>>s; p->z(s);
@@ -124,11 +124,11 @@ TriangleReader::Read(istream& is, ColorMapHandle cmh, GeomGroup *tris)
 
     is >> nTriangles;
     int p0,p1,p2;
-    GeomTriangles *tri = new GeomTriangles();
+    GeomTriangles *tri = scinew GeomTriangles();
     for( i = 0; i < nTriangles; i++){
       is >> p0 >> p1 >> p2;
       
-/*       GeomTri *tri = new GeomTri(points[p0], points[p1],points[p2], */
+/*       GeomTri *tri = scinew GeomTri(points[p0], points[p1],points[p2], */
 /* 				 (cmh->lookup(scalars[p0])), */
 /* 				 (cmh->lookup(scalars[p1])), */
 /* 				 (cmh->lookup(scalars[p2]))); */
@@ -178,7 +178,7 @@ void TriangleReader::execute()
     alphaT.add(1.0);
     alphaT.add(1.0);
       
-    cmh  = new ColorMap(rgb,rgbT,alphas,alphaT,16);
+    cmh  = scinew ColorMap(rgb,rgbT,alphas,alphaT,16);
   }
 
   if( !animate.get() && checkFile( filename.get() )){
@@ -245,6 +245,9 @@ void TriangleReader::doAnimation( ColorMapHandle cmh )
 
 //
 // $Log$
+// Revision 1.10  2000/08/09 03:18:08  jas
+// Changed new to scinew and added deletes to some of the destructors.
+//
 // Revision 1.9  2000/03/17 09:30:16  sparker
 // New makefile scheme: sub.mk instead of Makefile.in
 // Use XML-based files for module repository

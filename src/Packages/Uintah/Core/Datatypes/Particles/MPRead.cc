@@ -308,8 +308,8 @@ MPRead::GetScalarField( ScalarFieldHandle& sf )
     return 0;
   } else if( currentType == NC || currentType == CC){
     ScalarFieldRG *sfrg;
-    if (currentType == NC) sfrg = new ScalarFieldRG();
-    else  sfrg = new ScalarFieldRGCC();
+    if (currentType == NC) sfrg = scinew ScalarFieldRG();
+    else  sfrg = scinew ScalarFieldRGCC();
     svCount++;
     cerr<<"Getting scalarfield of size "<< x_size <<" " << y_size <<
       " " << z_size <<endl;
@@ -356,7 +356,7 @@ MPRead::GetScalarField( double *sf, int& length )
   } else if( currentType == NC || currentType == CC ){
     svCount++;
     length = x_size*y_size*z_size;
-    sf = new double[length];
+    sf = scinew double[length];
     if(fileType == BIN){
       is.read((char *) sf, sizeof(double)*length);
     } else {
@@ -390,8 +390,8 @@ MPRead::GetVectorField( VectorFieldHandle& vf )
   } else if( currentType == NC || currentType == CC){
     vvCount++;
     VectorFieldRG *vfrg;
-    if (currentType == NC ) vfrg  = new VectorFieldRG();
-    else vfrg = new VectorFieldRGCC();
+    if (currentType == NC ) vfrg  = scinew VectorFieldRG();
+    else vfrg = scinew VectorFieldRGCC();
     vfrg->resize(x_size, y_size, z_size);
     vfrg->set_bounds(minPt, maxPt);    if(fileType == BIN ){
       double size = vfrg->grid.dim1()*vfrg->grid.dim2()*vfrg->grid.dim3();
@@ -437,7 +437,7 @@ MPRead::GetVectorField( Vector *vf, int& length)
     vvCount++;
     int i;
     length = x_size*y_size*z_size;
-    vf = new Vector[length];
+    vf = scinew Vector[length];
     for( i = 0; i < length; i++){
       is.read((char *) &(vf[i]), sizeof(double)*3);
     }

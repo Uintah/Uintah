@@ -36,7 +36,7 @@ using SCICore::Containers::to_string;
 
 static Persistent* maker()
 {
-    return new MFMPParticleGridReader();
+    return scinew MFMPParticleGridReader();
 }
 
 PersistentTypeID MFMPParticleGridReader::type_id("MFMPParticleGridReader",
@@ -170,7 +170,7 @@ int MFMPParticleGridReader::readfile()
   
   vector<MPRead *> readers;
   for( int i = 0; i < fnames.size(); i++){
-    readers.insert(readers.end(), new MPRead( fnames[i].c_str() ));
+    readers.insert(readers.end(), scinew MPRead( fnames[i].c_str() ));
   }
   
   clString title;
@@ -239,7 +239,7 @@ void MFMPParticleGridReader::readGrid( vector<MPRead*>& readers)
     vvars = vvars+vectors[i]+" ";
 
   // create the single scalar field
-  MPVizGrid *grid = new MPVizGrid(name);
+  MPVizGrid *grid = scinew MPVizGrid(name);
 
   Point minPt(xmin,ymin,zmin);
   Point maxPt(xmax, ymax, zmax);
@@ -248,7 +248,7 @@ void MFMPParticleGridReader::readGrid( vector<MPRead*>& readers)
   int si, sj, sk;
   int i,j,k;
   for(int ss = 0; ss< scalars.size(); ss++){
-    ScalarFieldRG *sfrg = new ScalarFieldRG();
+    ScalarFieldRG *sfrg = scinew ScalarFieldRG();
     sfrg->set_bounds( minPt, maxPt );
     sfrg->resize( sizex, sizey, sizez );
     for(int rs = 0; rs < readers.size(); rs++){
@@ -275,7 +275,7 @@ void MFMPParticleGridReader::readGrid( vector<MPRead*>& readers)
 
   VectorFieldHandle vfh;
   for(int vs = 0; vs< vectors.size(); vs++){
-    VectorFieldRG *vfrg = new VectorFieldRG();
+    VectorFieldRG *vfrg = scinew VectorFieldRG();
     vfrg->resize( sizex, sizey, sizez );
     vfrg->set_bounds( minPt, maxPt );
 
@@ -313,13 +313,13 @@ void MFMPParticleGridReader::readParticles(vector<MPRead*>& readers)
   Array1<clString> vVars;
   Array1<int> nps;
   int total = 0, nParticles;
-  cfdlibTimeStep* ts = new cfdlibTimeStep();
+  cfdlibTimeStep* ts = scinew cfdlibTimeStep();
   for(i = 0; i < readers.size(); i++) {
     readers[i]->GetParticleInfo(name, nParticles, sVars, vVars);
     nps.add( nParticles );
     total += nParticles;
   }
-  MPVizParticleSet *ps = new MPVizParticleSet(name);
+  MPVizParticleSet *ps = scinew MPVizParticleSet(name);
   
   for( i = 0; i < sVars.size(); i++){
     ps->addScalarVar( sVars[i] );
