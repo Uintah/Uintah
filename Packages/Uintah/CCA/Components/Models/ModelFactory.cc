@@ -3,6 +3,7 @@
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <Packages/Uintah/CCA/Ports/ModelInterface.h>
+#include <Packages/Uintah/CCA/Components/Models/test/SimpleRxn.h>
 #include <Packages/Uintah/CCA/Components/Models/test/TestModel.h>
 #include <Core/Malloc/Allocator.h>
 #include <iostream>
@@ -19,8 +20,8 @@ ModelFactory::~ModelFactory()
 {
 }
 
-void ModelFactory::makeModels(const ProblemSpecP& params, GridP& grid,
-			      SimulationStateP& sharedState,
+void ModelFactory::makeModels(const ProblemSpecP& params, GridP&,
+			      SimulationStateP&,
 			      vector<ModelInterface*>& models)
 {
   ProblemSpecP m = params->findBlock("Models");
@@ -31,7 +32,10 @@ void ModelFactory::makeModels(const ProblemSpecP& params, GridP& grid,
     string type;
     if(!model->getAttribute("type", type))
       throw ProblemSetupException("Model does not specify type=\"name\"");
-    if(type == "Test")
+
+    if(type == "SimpleRxn")
+      models.push_back(scinew SimpleRxn(d_myworld, model));
+    else if(type == "Test")
       models.push_back(scinew TestModel(d_myworld, model));
     else
       throw ProblemSetupException("Unknown model: "+type);
