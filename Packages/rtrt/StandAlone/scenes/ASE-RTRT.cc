@@ -16,6 +16,8 @@
 #include <Packages/rtrt/Core/ImageMaterial.h>
 #include <Packages/rtrt/Core/DielectricMaterial.h>
 #include <Packages/rtrt/Core/PhongMaterial.h>
+#include <Packages/rtrt/Core/CycleMaterial.h>
+#include <Packages/rtrt/Core/InvisibleMaterial.h>
 #include <Packages/rtrt/Core/Rect.h>
 #include <fstream>
 #include <iostream>
@@ -242,7 +244,15 @@ extern "C" Scene *make_scene(int argc, char** argv, int)
 
   Group *all = new Group();
   ConvertASEFileToRTRTObject(infile,all);
-  
+
+  // switch the roof texture with a cycle texture
+  CycleMaterial *cm = new CycleMaterial();
+  cm->members.add(ase_matls[5]);            
+  cm->members.add(new InvisibleMaterial);
+  cm->members.add(new PhongMaterial(Color(.5,.5,.5),.3,
+                                    .3,400));
+  ase_matls[5] = cm;
+                  
   Camera cam(Point(1,0,0), Point(0,0,0),
              Vector(0,0,1), 40);
   
@@ -255,7 +265,7 @@ extern "C" Scene *make_scene(int argc, char** argv, int)
   Scene* scene=new Scene(all, cam,
                          bgcolor, groundcolor*bgcolor, bgcolor, groundplane,
                          ambient_scale);
-  scene->add_light(new Light(Point(-2250,-11800,15000), Color(.8,.8,.8), 0));
+  scene->add_light(new Light(Point(-2250,-11800,15000), Color(.4,.4,.4), 0));
   if (env_map!="")
     scene->set_background_ptr(new EnvironmentMapBackground((char*)env_map.c_str()));
   scene->shadow_mode=0;
