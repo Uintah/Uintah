@@ -63,13 +63,13 @@ public:
 QApplication* QtUtils::getApplication()
 {
     if ( !theApp ) {
-	startup = new Semaphore("Qt Thread startup wait", 0);
-	Thread* t = new Thread(new QtThread(), "SCIRun Builder",
-				0, Thread::NotActivated);
-	t->setStackSize(8*256*1024);
-	t->activate(false);
-	t->detach();
-	startup->down();
+        startup = new Semaphore("Qt Thread startup wait", 0);
+        Thread* t = new Thread(new QtThread(), "SCIRun Builder",
+                               0, Thread::NotActivated);
+        t->setStackSize(8*256*1024);
+        t->activate(false);
+        t->detach();
+        startup->down();
     }
     return theApp;
 }

@@ -57,8 +57,8 @@ extern "C" sci::cca::Component::pointer make_SCIRun_Builder()
 
 void myBuilderPort::setServices(const sci::cca::Services::pointer& svc)
 {
-  services=svc;
-  std::cerr<<"BuilderPort::setServices"<<std::endl;
+  services = svc;
+  std::cerr << "BuilderPort::setServices" << std::endl;
   
   QApplication* app = QtUtils::getApplication();
 #ifdef QT_THREAD_SUPPORT
@@ -67,60 +67,63 @@ void myBuilderPort::setServices(const sci::cca::Services::pointer& svc)
 
   QString path(sci_getenv("SCIRUN_SRCDIR"));
   path.append("/CCA/Components/Builder/scirun2-splash.png");
-  QSplashScreen* splash = new QSplashScreen(QPixmap(path), Qt::WStyle_StaysOnTop);
+  QSplashScreen* splash =
+      new QSplashScreen(QPixmap(path), Qt::WStyle_StaysOnTop);
   splash->show();
 
-  std::cerr<<"creating builderwindow"<<std::endl;
-  builder = new BuilderWindow(services);
+  std::cerr << "creating builderwindow" << std::endl;
+  builder = new BuilderWindow(services, app);
   splash->finish(builder); // wait for a QMainWindow to show
-  std::cerr<<"builderwindow created"<<std::endl;
+  std::cerr << "builderwindow created" << std::endl;
 
   builder->addReference();
   builder->show();
-  std::cerr<<"builderwindow is shown"<<std::endl;
+  std::cerr << "builderwindow is shown" << std::endl;
   delete splash;
 #ifdef QT_THREAD_SUPPORT
   app->unlock();
 #endif
 }
 
-void myBuilderPort::buildRemotePackageMenus(const sci::cca::ports
-                                            ::ComponentRepository::pointer &reg,
-                                            const std::string &frameworkURL)
+void myBuilderPort::buildRemotePackageMenus(
+    const sci::cca::ports::ComponentRepository::pointer &reg,
+    const std::string &frameworkURL)
 {
   builder->buildRemotePackageMenus(reg, frameworkURL);
 }
 
 Builder::Builder()
 {
-  std::cerr<<"Builder()"<<std::endl;
+  std::cerr << "Builder()" << std::endl;
 }
 
 Builder::~Builder()
 {
-  std::cerr<<"~Builder()"<<std::endl;
+  std::cerr << "~Builder()" << std::endl;
 }
 
 void Builder::setServices(const sci::cca::Services::pointer& services)
 {
-  std::cerr<<"Builder::setServices"<<std::endl;
-  builderPort.setServices(services);
-  sci::cca::TypeMap::pointer props = services->createTypeMap();
-  myBuilderPort::pointer bp(&builderPort);
-  services->addProvidesPort(bp,"builderPort","sci.cca.ports.BuilderPort", props);
-  services->registerUsesPort("builder", "sci.cca.ports.BuilderPort", props);
-  
-  sci::cca::ports::BuilderService::pointer builder 
-    = pidl_cast<sci::cca::ports::BuilderService::pointer>
-    (services->getPort("cca.BuilderService"));
-  if(builder.isNull()){
-  std::cerr << "Fatal Error: Cannot find builder service\n";
-  return;
-  } 
-  //do not delete the following line	
-  //builder->registerServices(services);
-  
-  services->releasePort("cca.BuilderService"); 
+    std::cerr << "Builder::setServices" << std::endl;
+    builderPort.setServices(services);
+    sci::cca::TypeMap::pointer props = services->createTypeMap();
+    myBuilderPort::pointer bp(&builderPort);
+    services->addProvidesPort(bp, "builderPort",
+                              "sci.cca.ports.BuilderPort", props);
+    services->registerUsesPort("builder",
+                               "sci.cca.ports.BuilderPort", props);
+
+    sci::cca::ports::BuilderService::pointer builder =
+        pidl_cast<sci::cca::ports::BuilderService::pointer>(
+            services->getPort("cca.BuilderService")
+        );
+    if (builder.isNull()) {
+        std::cerr << "Fatal Error: Cannot find builder service\n";
+        return;
+    } 
+    //do not delete the following line	
+    //builder->registerServices(services);
+    services->releasePort("cca.BuilderService"); 
 }
 
 } // end namespace SCIRun

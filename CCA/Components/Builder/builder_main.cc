@@ -43,7 +43,8 @@
 #include <Core/CCA/spec/cca_sidl.h>
 #include <CCA/Components/Builder/Builder.h>
 #include <iostream>
-using namespace std;
+
+//using namespace std;
 using namespace SCIRun;
 
 int main(int argc, char* argv[])
@@ -52,38 +53,43 @@ int main(int argc, char* argv[])
     // TODO: Move this out of here???
     PIDL::initialize();
   } catch(const Exception& e) {
-    cerr << "Caught exception:\n";
-    cerr << e.message() << '\n';
+    std::cerr << "Caught exception:" << std::endl;
+    std::cerr << e.message() << std::endl;
     abort();
   } catch(...) {
-    cerr << "Caught unexpected exception!\n";
+    std::cerr << "Caught unexpected exception!" << std::endl;
     abort();
   }
 
   // Get the framework
   try {
-    string client_url = argv[1];
-    cerr << "got url: " << client_url << '\n';
+    std::string client_url = argv[1];
+    std::cerr << "got url: " << client_url << std::endl;
     Object::pointer obj=PIDL::objectFrom(client_url);
-    cerr << "got obj\n";
-    sci::cca::AbstractFramework::pointer sr=pidl_cast<sci::cca::AbstractFramework::pointer>(obj);
-    cerr << "got sr\n";
-    sci::cca::Services::pointer bs = sr->getServices("external builder", "builder main", sci::cca::TypeMap::pointer(0));
-    cerr << "got bs\n";
+    std::cerr << "got obj" << std::endl;
+    sci::cca::AbstractFramework::pointer sr =
+	pidl_cast<sci::cca::AbstractFramework::pointer>(obj);
+    std::cerr << "got sr" << std::endl;
+    // test framwork URL availability
+    std::cerr << "got sr url: " << sr->getURL().getString() << std::endl;
+    // test framwork URL availability
+    sci::cca::Services::pointer bs =
+	sr->getServices("external builder", "builder main", sci::cca::TypeMap::pointer(0));
+    std::cerr << "got bs" << std::endl;
     Builder* builder = new Builder();
-    cerr << "created builder\n";
+    std::cerr << "created builder" << std::endl;
     builder->setServices(bs);
-    cerr << "called setservices\n";
+    std::cerr << "called setservices" << std::endl;
     PIDL::serveObjects();
   } catch(const MalformedURL& e) {
-    cerr << "builder.cc: Caught MalformedURL exception:\n";
-    cerr << e.message() << '\n';
+    std::cerr << "builder.cc: Caught MalformedURL exception:" << std::endl;
+    std::cerr << e.message() << std::endl;
   } catch(const Exception& e) {
-    cerr << "builder.cc: Caught exception:\n";
-    cerr << e.message() << '\n';
+    std::cerr << "builder.cc: Caught exception:\n";
+    std::cerr << e.message() << std::endl;
     abort();
   } catch(...) {
-    cerr << "Caught unexpected exception!\n";
+    std::cerr << "Caught unexpected exception!" << std::endl;
     abort();
   }
 }

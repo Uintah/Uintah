@@ -39,17 +39,15 @@ using namespace SCIRun;
 class BridgeConnection : public Connection 
 {
 public:
-  BridgeConnection(Module* m1, const std::string& s1, Module* m2, const std::string& s2, const sci::cca::ConnectionID::pointer &connID, QCanvasView *cv)
-  : Connection(m1,s1,m2,s2,connID,cv) { }
+  BridgeConnection(PortIcon* p1, PortIcon* p2, const sci::cca::ConnectionID::pointer &connID, QCanvasView *cv)
+  : Connection(p1, p2, connID, cv) { }
   using Connection::resetPoints;
   using Connection::isConnectedTo;
   using Connection::getConnectionID;
   using Connection::highlight;
   using Connection::setDefault;
-  using Connection::getUsesModule;
-  using Connection::getProvidesModule;
-  using Connection::getUsesPortName;
-  using Connection::getProvidesPortName;
+  using Connection::usesPort;
+  using Connection::providesPort;
   virtual std::string getConnectionType();
 
 protected:

@@ -31,9 +31,11 @@
  *
  * Written by:
  *  Ayla Khan
- *  SCI
+ *  Scientific Computing and Imaging Institute
  *  University of Utah
  *  September 2004
+ *
+ *  Copyright (C) 2004 SCI Institute
  *
  */
 

@@ -45,6 +45,7 @@
 
 
 #include <CCA/Components/Builder/BuilderWindow.h>
+#include <CCA/Components/Builder/PortIcon.h>
 #include <CCA/Components/Builder/Module.h>
 #include <CCA/Components/Builder/Connection.h>
 #include <CCA/Components/Builder/BridgeConnection.h>
@@ -84,7 +85,7 @@ public:
   void highlightConnection(QCanvasItem *c);
   void showPossibleConnections(Module *m, 
                                const std::string &protname,
-                               Module::PortType);
+                               PortIcon::PortType);
   void clearPossibleConnections();
   void removeAllConnections(Module *module);
 
@@ -108,17 +109,21 @@ protected:
   void NetworkCanvasView::viewportResizeEvent(QResizeEvent*);
 
 private:
-  Module* moving;
-  Module* connecting;
-  Module::PortType porttype;
-  std::string portname; 
+  NetworkCanvasView(const NetworkCanvasView&);
+  NetworkCanvasView& operator=(const NetworkCanvasView&);
+
+  QFont *displayFont;
   QPoint moving_start;
+  Module *moving;
+  Module *connecting;
+  Connection *highlightedConnection;
+
+  PortIcon::PortType porttype;
+  std::string portname;
+
   std::vector<Module*> modules;
   std::vector<Connection*> connections;
   std::vector<Connection*> possibleConns;
-  Connection *highlightedConnection;
-  NetworkCanvasView(const NetworkCanvasView&);
-  NetworkCanvasView& operator=(const NetworkCanvasView&);
   sci::cca::Services::pointer services;
 };
 

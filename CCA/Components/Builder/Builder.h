@@ -57,15 +57,16 @@ class BuilderWindow;
 class myBuilderPort : public virtual sci::cca::ports::BuilderPort
 {
 public:
-  virtual ~myBuilderPort(){}
+  virtual ~myBuilderPort() {}
   /** Obtain Services handle, through which the component communicates with the
       framework. */
   virtual void setServices(const sci::cca::Services::pointer& svc);
   
-  /** ? */
-  virtual void buildRemotePackageMenus(const sci::cca::ports
-                                       ::ComponentRepository::pointer &reg,
-                                       const std::string &frameworkURL);
+    /** ? */
+    virtual void buildRemotePackageMenus(
+    const sci::cca::ports::ComponentRepository::pointer &reg,
+    const std::string &frameworkURL);
+
 protected:
   sci::cca::Services::pointer services;
   BuilderWindow* builder;
@@ -92,7 +93,7 @@ public:
 private:
   Builder(const Builder&);
   Builder& operator=(const Builder&);
-  myBuilderPort builderPort;  
+  myBuilderPort builderPort;
 };
 
 } //namespace SCIRun
