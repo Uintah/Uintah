@@ -82,6 +82,7 @@ $(SRCDIR)/BoundaryCondition.o: $(SRCDIR)/fortran/mmwallbc_fort.h
 $(SRCDIR)/BoundaryCondition.o: $(SRCDIR)/fortran/outarea_fort.h
 $(SRCDIR)/BoundaryCondition.o: $(SRCDIR)/fortran/outletbc_fort.h
 $(SRCDIR)/BoundaryCondition.o: $(SRCDIR)/fortran/outletbcenth_fort.h
+$(SRCDIR)/BoundaryCondition.o: $(SRCDIR)/fortran/outletbcrscal_fort.h
 $(SRCDIR)/BoundaryCondition.o: $(SRCDIR)/fortran/profscalar_fort.h
 $(SRCDIR)/BoundaryCondition.o: $(SRCDIR)/fortran/profv_fort.h
 $(SRCDIR)/CellInformation.o: $(SRCDIR)/fortran/cellg_fort.h
