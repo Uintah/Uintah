@@ -123,6 +123,10 @@ main(int argc, char *argv[] )
     {
     // TODO: Move this out of here???
     PIDL::initialize();
+    PIDL::isfrwk=true;
+    //all threads in the framework share the same
+    //invocation id
+    PRMI::setInvID(ProxyID(1,0));
     }
   catch(const Exception& e)
     {
