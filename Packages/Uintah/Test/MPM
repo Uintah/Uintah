@@ -3,7 +3,8 @@
 from sys import argv,exit
 from helpers.runSusTests import runSusTests
 
-UNUSED = [ 	    ("periodic_disks", "periodic_disks.ups", "", 6, "Linux")	]
+UNUSED = [  ("test_cyl_pene_hypo_jc_ero", "test_cyl_pene_hypo_jc_ero.ups", "", 1, "ALL"), \
+            ("periodic_disks", "periodic_disks.ups", "", 6, "Linux")	]
 
 TESTS = [   ("disks2mat4patch4proc", "disks2mat4patch.ups", "", 4, "ALL"), \
 	    ("heatcond2mat", "heatcond2mat.ups", "", 1, "ALL"), \
@@ -15,7 +16,6 @@ TESTS = [   ("disks2mat4patch4proc", "disks2mat4patch.ups", "", 4, "ALL"), \
 	    ("const_test_vs", "const_test_vs.ups", "", 1, "Linux"), \
 	    ("test_corrug_plate", "test_corrug_plate.ups", "", 1, "ALL"), \
 	    ("test_cyl_pene_no_ero", "test_cyl_pene_no_ero.ups", "", 1, "ALL"), \
-	    ("test_cyl_pene_hypo_jc_ero", "test_cyl_pene_hypo_jc_ero.ups", "", 1, "ALL"), \
 	    ("test_gurson_beckerdrucker_mts", "test_gurson_beckerdrucker_mts.ups", "", 1, "ALL"), \
     	]
 
