@@ -75,7 +75,7 @@ GeomViewerItem::GeomViewerItem(GeomHandle obj,const string& nm,
 {
   if (!crowd_lock_)
   {
-    //child_ = scinew GeomBBoxCache(obj);
+    child_ = scinew GeomBBoxCache(obj);
   }
 }
 
