@@ -5273,8 +5273,8 @@ class BioTensorApp {
 	global $mods(UnuSlice2)-position
 
 	# configure slice slider
-	$variance_tab1.slice configure -from 0 -to [expr $size_z - 1]
-	$variance_tab2.slice configure -from 0 -to [expr $size_z - 1]
+	$variance_tab1.slice configure -from 0 -to [expr $size_z]
+	$variance_tab2.slice configure -from 0 -to [expr $size_z]
 
 	set $mods(UnuSlice1)-position [expr $size_z / 2]
 	set $mods(UnuSlice2)-position [expr $size_z / 2]
