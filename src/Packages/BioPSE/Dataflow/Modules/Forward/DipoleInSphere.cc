@@ -130,7 +130,7 @@ void DipoleInSphere::execute() {
     
     if (iportDip_->get(matrix_handle) 
 	&& matrix_handle.get_rep()){
-      
+
       if (matrix_handle->ncols()!=6){
 	msgStream_ << "Error: dipoles must have 6 parameters" << endl;
 	return;

@@ -180,7 +180,7 @@ void BuildFEMatrix::parallel(int proc)
   double lcl_matrix[4][4];
  
   for (ii=hMesh_->cell_begin(); ii!=hMesh_->cell_end(); ++ii){
-    TetVolMesh::node_array  cell_nodes(4);
+    TetVolMesh::node_array  cell_nodes;
     hMesh_->get_nodes(cell_nodes, *ii); 
     
     //! calculate local matrix if at least one node in the cell belongs to the process nodes range
@@ -292,7 +292,7 @@ void BuildFEMatrix::build_local_matrix(double lcl_a[4][4], TetVolMesh::cell_inde
 
 void BuildFEMatrix::add_lcl_gbl(double lcl_a[4][4], TetVolMesh::cell_index c_ind, int s, int e)
 {
-  TetVolMesh::node_array cell_nodes(4);
+  TetVolMesh::node_array cell_nodes;
 
   hMesh_->get_nodes(cell_nodes, c_ind); 
   for (int i=0; i<4; i++) {
