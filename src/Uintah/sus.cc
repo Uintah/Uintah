@@ -90,10 +90,10 @@ int main(int argc, char** argv)
     /*
      * Default values
      */
-    bool do_mpm=false;
-    bool do_arches=false;
-    bool do_ice=false;
-    bool numThreads = 0;
+    bool   do_mpm=false;
+    bool   do_arches=false;
+    bool   do_ice=false;
+    int    numThreads = 0;
     string filename;
     string scheduler;
     string loadbalancer;
@@ -297,6 +297,9 @@ int main(int argc, char** argv)
 
 //
 // $Log$
+// Revision 1.27  2000/09/29 19:57:51  dav
+// Changed numThreads from bool to int
+//
 // Revision 1.26  2000/09/29 19:54:22  dav
 // Uncommented the commented out sections that called
 // Parallel::finlaizeManager().  They were commented out because the abort
