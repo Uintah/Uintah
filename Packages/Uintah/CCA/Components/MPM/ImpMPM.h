@@ -156,8 +156,7 @@ private:
                                        const PatchSubset* patches,
                                        const MaterialSubset* matls,
                                        DataWarehouse* old_dw,
-                                       DataWarehouse* new_dw,
-                                       const bool recursion);
+                                       DataWarehouse* new_dw);
 
   void applyBoundaryConditions(        const ProcessorGroup*,
                                        const PatchSubset* patches,
@@ -196,10 +195,7 @@ private:
                                        const PatchSubset* patches,
                                        const MaterialSubset* matls,
                                        DataWarehouse* old_dw,
-                                       DataWarehouse* new_dw,
-                                       const bool recursion);
-
-
+                                       DataWarehouse* new_dw);
 
   //////////
   // Insert Documentation Here:
@@ -207,8 +203,7 @@ private:
                                        const PatchSubset* patches,
                                        const MaterialSubset* matls,
                                        DataWarehouse* old_dw,
-                                       DataWarehouse* new_dw,
-                                       bool recursion);
+                                       DataWarehouse* new_dw);
 
   void iterate(                        const ProcessorGroup* pg,
                                        const PatchSubset* patches,
@@ -221,8 +216,7 @@ private:
                                        const PatchSubset* patches,
                                        const MaterialSubset* matls,
                                        DataWarehouse* old_dw,
-                                       DataWarehouse* new_dw,
-                                       const bool recursion);
+                                       DataWarehouse* new_dw);
 
   void solveForDuCG(                   const ProcessorGroup*,
                                        const PatchSubset* patches,
@@ -241,8 +235,7 @@ private:
                                        const PatchSubset* patches,
                                        const MaterialSubset* matls,
                                        DataWarehouse* old_dw,
-                                       DataWarehouse* new_dw,
-                                       const bool recursion);
+                                       DataWarehouse* new_dw);
 
   //////////
   // Insert Documentation Here:
@@ -250,8 +243,7 @@ private:
                                        const PatchSubset* patches,
                                        const MaterialSubset* matls,
                                        DataWarehouse* old_dw,
-                                       DataWarehouse* new_dw,
-                                       const bool recursion);
+                                       DataWarehouse* new_dw);
 			
   //////////
   // Insert Documentation Here:
@@ -273,16 +265,16 @@ private:
                                     const MaterialSet*, const bool recursion);
 
   void scheduleFormStiffnessMatrix( SchedulerP&, const PatchSet*,
-                                    const MaterialSet*,const bool recursion);
+                                    const MaterialSet*);
 
   void scheduleComputeInternalForce(SchedulerP&, const PatchSet*,
-				    const MaterialSet*, const bool recursion);
+				    const MaterialSet*);
 
   void scheduleFormQ(               SchedulerP&, const PatchSet*,
-                                    const MaterialSet*, const bool recursion);
+                                    const MaterialSet*);
 
   void scheduleUpdateGridKinematics(SchedulerP&, const PatchSet*, 
-				    const MaterialSet*, const bool recursion);
+				    const MaterialSet*);
 
   void scheduleInterpolateParticlesToGrid(     SchedulerP&, const PatchSet*,
                                                const MaterialSet*);
@@ -294,7 +286,7 @@ private:
                                    const MaterialSet*, const bool recursion);
 
   void scheduleCreateMatrix(       SchedulerP&, const PatchSet*,
-                                   const MaterialSet*, const bool recursion);
+                                   const MaterialSet*);
 
   void scheduleApplyBoundaryConditions(        SchedulerP&, const PatchSet*,
                                                const MaterialSet*);
@@ -330,7 +322,7 @@ private:
                                     const MaterialSet*);
   
   void scheduleCheckConvergence(    SchedulerP&, const LevelP&, const PatchSet*,
-                                    const MaterialSet*, const bool recursion);
+                                    const MaterialSet*);
 
 
   ImpMPM(const ImpMPM&);
