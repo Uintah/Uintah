@@ -2,8 +2,6 @@
 
 SRCDIR := Packages/Uintah/StandAlone
 
-include $(SRCTOP)/scripts/largeso_epilogue.mk
-
 SRCS := $(SRCDIR)/sus.cc
 ifneq ($(CC_DEPEND_REGEN),-MD)
 # Arches doesn't work under g++ yet
