@@ -1757,14 +1757,13 @@ fi
 # Note: TK_DEFS (used below to help resolve tk issues) comes from tkConfig.sh
 #
 SCI_TRY_LINK(TK,tk library and headers, tk.h tk3d.h tkPort.h,
-      $_x_inc_dir $_sci_tk_inc,tk,$_sci_lib,$TK_DEFS $TCL_LIB_DIR_FLAG $TCL_LIB_FLAG,,required)
+      $_x_inc_dir $_sci_tk_inc,tk $TCL_LIB_FLAG,$_sci_lib,$TK_DEFS $TCL_LIB_DIR_FLAG,,required)
 
 
 AC_SUBST(TK_LIB_FLAG)
 AC_SUBST(TK_LIB_DIR_FLAG)
 AC_SUBST(INC_TK_H)
 
-# -- itcl --
 SCI_TRY_LINK(ITCL,itcl library and headers, itcl.h,
              $_sci_inc,itcl,$_sci_lib,$TCL_LIB_DIR_FLAG $TCL_LIB_FLAG,,required)
 
@@ -1938,17 +1937,10 @@ for dif in "" "$_sci_lib"; do
 
        MAGICK_LIB_DIR_FLAG=`$_sci_lib/../bin/Magick-config --ldflags`
        MAGICK_LIB_FLAG=`$_sci_lib/../bin/Magick-config --libs`
-       tmp_includes=`$_sci_lib/../bin/Magick-config --cppflags`
-
-       includes=
-       # Remove the '-L's from the list that Magick-config returns
-       for inc in "" $tmp_includes; do
-          the_inc=`echo $inc | sed 's/-I//'`
-          includes="$includes $the_inc"
-       done
+       includes=`$_sci_lib/../bin/Magick-config --cppflags`
 
        SCI_TRY_LINK(MAGICK,ImageMagick library and headers,magick/magick.h,
-                    $includes,Magick,$MAGICK_LIB_FLAG,$MAGICK_LIB_DIR_FLAG,,required)
+                    $includes,$MAGICK_LIB_FLAG,$MAGICK_LIB_DIR_FLAG,,,required)
 
        DEF_MAGICK="#define HAVE_MAGICK 1"
     fi
@@ -2432,7 +2424,6 @@ AC_SUBST(INC_MPI_H)
 AC_SUBST(MPI_LIB_FLAG)
 AC_SUBST(MPI_LIB_DIR_FLAG)
 
-
 ##  --  search for petsc stuff  ------------------------------------------
 # a required check for an optional library for base scirun, due to that 
 # fact that if MatrixSolver will utilize uni-petsc if it exists, and uni-petsc
@@ -2549,11 +2540,11 @@ if (test "$HAVE_MPI" = "yes" || test "$HAVE_MPIUNI" = "yes") &&
    (test "$PETSC_ARCH" = "rs6000_sp" || test "$PETSC_ARCH" = "dec" ||
     test "$HAVE_LAPACK" = "yes"); then
 
-  _sci_lib=""
+  _sci_lib_dir=""
   _sci_inc=""
 
   if test "$with_petsc"; then
-    _sci_lib="$with_petsc/lib/$PETSC_SUB/$PETSC_ARCH"
+    _sci_lib_dir="$with_petsc/lib/$PETSC_SUB/$PETSC_ARCH"
     _sci_inc="$with_petsc/bmake/$PETSC_ARCH $with_petsc/include"
   else
     # Modify _sci_dirs to have correct path information:
@@ -2567,12 +2558,19 @@ if (test "$HAVE_MPI" = "yes" || test "$HAVE_MPIUNI" = "yes") &&
         continue
       fi
   
-      _sci_lib="$_sci_lib $i/$PETSC_VERSION_DIR/lib/$PETSC_SUB/$PETSC_ARCH"
+      _sci_lib_dir="$_sci_lib_dir $i/$PETSC_VERSION_DIR/lib/$PETSC_SUB/$PETSC_ARCH"
       _sci_inc="$_sci_inc $i/$PETSC_VERSION_DIR/include $i/$PETSC_VERSION_DIR/bmake/$PETSC_ARCH"
     done  
   fi
 
-  SCI_TRY_LINK(PETSC,petsc libraries and headers,petsc.h,$_sci_inc /usr/include/petsc,petsc petscvec petscmat petscdm petsccontrib petscsnes petscts petscsles petscfortran,$_sci_lib,$LAPACK_LIB_DIR_FLAG $LAPACK_LIB_FLAG $BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $M_LIB_FLAG $INC_MPI_H $MPI_LIB_DIR_FLAG $MPI_LIB_FLAG $F_LIB_FLAG $DL_LIB_FLAG,,optional)
+  SCI_TRY_LINK(PETSC,
+               petsc libraries and headers,
+               petsc.h,
+               $_sci_inc /usr/include/petsc,
+               petsc petscvec petscmat petscdm petsccontrib petscsnes petscts petscsles petscfortran $LAPACK_LIB_FLAG $BLAS_LIB_FLAG $M_LIB_FLAG $MPI_LIB_FLAG $F_LIB_FLAG $DL_LIB_FLAG,
+               $_sci_lib_dir $LAPACK_LIB_DIR_FLAG $BLAS_LIB_DIR_FLAG $MPI_LIB_DIR_FLAG,
+               $INC_MPI_H,
+               ,optional)
 
   if test "$HAVE_PETSC" = "yes" ; then
     DEF_PETSC="#define HAVE_PETSC 1"
@@ -3094,7 +3092,7 @@ if test "$sci_required_teem" = "yes"; then
      AC_MSG_ERROR(Please fix this problem and then configure again.)
   fi
 
-  SCI_TRY_LINK(TEEM,teem library and headers,teem/nrrd.h,$_sci_inc,teem,$_sci_lib,$PNG_LIB_DIR_FLAG $PNG_LIB_FLAG $Z_LIB_DIR_FLAG $Z_LIB_FLAG -lm,,$_sci_optional)
+  SCI_TRY_LINK(TEEM,teem library and headers,teem/nrrd.h,$_sci_inc,teem $PNG_LIB_FLAG $Z_LIB_FLAG -lm,$_sci_lib $PNG_LIB_DIR_FLAG $Z_LIB_DIR_FLAG,,,$_sci_optional)
 
   if test "$HAVE_TEEM" = "yes"; then
      DEF_TEEM="#define HAVE_TEEM 1"
