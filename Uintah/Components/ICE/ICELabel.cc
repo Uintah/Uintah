@@ -25,8 +25,12 @@ ICELabel::ICELabel()
     temp_CCLabel      = 
      scinew VarLabel("temp_CC",   CCVariable<double>::getTypeDescription() );
 
-    vel_CCLabel       = 
-     scinew VarLabel("vel_CC",    CCVariable<Vector>::getTypeDescription() );
+    uvel_CCLabel       = 
+     scinew VarLabel("uvel_CC",    CCVariable<double>::getTypeDescription() );
+    vvel_CCLabel       = 
+     scinew VarLabel("vvel_CC",    CCVariable<double>::getTypeDescription() );
+    wvel_CCLabel       = 
+     scinew VarLabel("wvel_CC",    CCVariable<double>::getTypeDescription() );
 
     cv_CCLabel        = 
      scinew VarLabel("cv_CC",     CCVariable<double>::getTypeDescription() );
@@ -40,8 +44,18 @@ ICELabel::ICELabel()
      scinew VarLabel("vol_frac_CC", CCVariable<double>::getTypeDescription() );
 
   // Face centered variables
-    vel_FCLabel       = 
-     scinew VarLabel("vel_FC",    FCVariable<Vector>::getTypeDescription() );
+    uvel_FCLabel       = 
+     scinew VarLabel("uvel_FC",   FCVariable<double>::getTypeDescription() );
+    vvel_FCLabel       = 
+     scinew VarLabel("vvel_FC",   FCVariable<double>::getTypeDescription() );
+    wvel_FCLabel       = 
+     scinew VarLabel("wvel_FC",   FCVariable<double>::getTypeDescription() );
+    uvel_FCMELabel       = 
+     scinew VarLabel("uvel_FCME", FCVariable<double>::getTypeDescription() );
+    vvel_FCMELabel       = 
+     scinew VarLabel("vvel_FCME", FCVariable<double>::getTypeDescription() );
+    wvel_FCMELabel       = 
+     scinew VarLabel("wvel_FCME", FCVariable<double>::getTypeDescription() );
     press_FCLabel     = 
      scinew VarLabel("press_FC",  FCVariable<double>::getTypeDescription() );
     tau_FCLabel       = 
@@ -54,7 +68,9 @@ ICELabel::~ICELabel()
     delete  press_CCLabel;
     delete  rho_CCLabel;
     delete temp_CCLabel;
-    delete vel_CCLabel;
+    delete uvel_CCLabel;
+    delete vvel_CCLabel;
+    delete wvel_CCLabel;
     delete cv_CCLabel;
     delete rho_micro_CCLabel;
     delete div_velfc_CCLabel;
@@ -62,13 +78,18 @@ ICELabel::~ICELabel()
     delete speedSound_CCLabel;
 
     // Face centered variables
-    delete vel_FCLabel;
+    delete uvel_FCLabel;
+    delete vvel_FCLabel;
+    delete wvel_FCLabel;
     delete press_FCLabel;
     delete tau_FCLabel;
 
     delete delTLabel;
 }
 // $Log$
+// Revision 1.5  2000/10/13 00:01:11  guilkey
+// More work on ICE
+//
 // Revision 1.4  2000/10/09 22:37:01  jas
 // Cleaned up labels and added more computes and requires for EOS.
 //
