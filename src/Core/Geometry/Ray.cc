@@ -29,17 +29,17 @@
  */
 
 #include <Core/Geometry/Ray.h>
-
+#include <Core/Persistent/Persistent.h>
 namespace SCIRun {
 
   
 Ray::Ray(const Point& o, const Vector& d)
-: o(o), d(d)
+: o_(o), d_(d)
 {
 }
 
 Ray::Ray(const Ray& copy)
-: o(copy.o), d(copy.d)
+: o_(copy.o_), d_(copy.d_)
 {
 }
 
@@ -49,37 +49,69 @@ Ray::~Ray()
 
 Ray& Ray::operator=(const Ray& copy)
 {
-    o=copy.o;
-    d=copy.d;
+    o_=copy.o_;
+    d_=copy.d_;
     return *this;
 }
 
 Point Ray::origin() const
 {
-    return o;
+    return o_;
 }
 
 
 Vector Ray::direction() const
 {
-    return d;
+    return d_;
 }
 
 Point Ray::parameter(double t) const
 {
-  return o + d*t;
+  return o_ + d_*t;
+}
+
+
+bool
+Ray::planeIntersectParameter(const Vector& N, const Point& P, double& t) const
+{
+  //! Computes the ray parameter t at which the ray R will
+
+  //! point P
+
+  /*  Dot(N, ((O + t0*V) - P)) = 0   solve for t0 */
+
+  Point O(o_);
+  Vector V(d_);
+  double D = -(N.x()*P.x() + N.y()*P.y() + N.z()*P.z());
+  double NO = (N.x()*O.x() + N.y()*O.y() + N.z()*O.z());
+
+  double NV = Dot(N,V);
+
+  if (NV == 0) // ray is parallel to plane
+    return false;
+  else {
+    t =  -(D + NO)/NV;  
+    return true;
+  }
 }
 
 void Ray::normalize()
 {
-  d.normalize();
+  d_.normalize();
 }
 
 void Ray::direction(const Vector& newdir)
 {
-    d=newdir;
+    d_=newdir;
 }
 
+void Pio(Piostream& stream, Ray& ray)
+{
+    stream.begin_cheap_delim();
+    Pio(stream, ray.o_);
+    Pio(stream, ray.d_);
+    stream.end_cheap_delim();
+}
 
 } // End namespace SCIRun
 

@@ -36,25 +36,47 @@
 
 namespace SCIRun {
 
+class Piostream;
 
-class Ray {
-    Point o;
-    Vector d;
+
+class SCICORESHARE Ray {
+    Point o_;
+    Vector d_;
 public:
-    Ray(){}
-    Ray(const Point&, const Vector&);
-    
-    Ray(const Ray&);
-    ~Ray();
-    Ray& operator=(const Ray&);
+  //! Constructors
+  Ray(){}
+  Ray(const Point&, const Vector&);
+  Ray(const Ray&);
 
-    Point origin() const;
-    Vector direction() const;
-  Point parameter(double t) const; // returns the Point at parameter t
-			     //  does not pre-normalized direction
+  //! Destructor
+  ~Ray();
+
+  //! Copy Constructor
+  Ray& operator=(const Ray&);
   
-  void normalize(); // normalizes the direction vector
-    void direction(const Vector& newdir);
+  //! Return data
+  Point origin() const;
+  Vector direction() const;
+
+  /*!
+    Returns the Point at parameter t, but does not pre-normalize d
+  */
+  Point parameter(double t) const;
+
+  /*! 
+    Computes the ray parameter t at which the ray will
+    intersect the plane specified by the normal N and the 
+    point P, such that the plane intersect point Ip: 
+    Ip = o + d*t.  Returns true if there is an intersection,
+    false if the vector is parallel to the plane.
+  */
+  bool planeIntersectParameter(const Vector& N, const Point& P, double& t) const;
+  
+  //! Modifiers
+  void normalize(); //! normalizes the direction vector d
+  void direction(const Vector& newdir); //! changes d
+
+  friend SCICORESHARE void Pio( Piostream&, Ray&);
 };
 
 
