@@ -3577,7 +3577,7 @@ void MPMArches::putAllForcesOnCC(const ProcessorGroup*,
 
 	totalforce[*iter] = Vector(DFX_CC[*iter], DFY_CC[*iter], DFZ_CC[*iter]);
 	IntVector curcell = *iter;
-	double XCPF, YCPF, ZCPF;
+	double XCPF = 0.0, YCPF = 0.0, ZCPF = 0.0;
 
 	if (curcell.x() >= (patch->getInteriorCellLowIndex()).x()) {
 
