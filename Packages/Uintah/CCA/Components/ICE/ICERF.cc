@@ -1,5 +1,4 @@
 #include "ICE.h"
-#include <Packages/Uintah/CCA/Components/ICE/MathToolbox.h>
 #include <Packages/Uintah/CCA/Components/ICE/ICEMaterial.h>
 #include <Packages/Uintah/CCA/Components/ICE/BoundaryCond.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
@@ -596,10 +595,10 @@ void ICE::addExchangeToMomentumAndEnergyRF(const ProcessorGroup*,
 // If this isn't 0.0 then you need to include extra terms -Todd
     double Joule_coeff   = 0.0;         // measure of "thermal imperfection" 
 /*==========TESTING==========`*/
-    DenseMatrix beta(numALLMatls,numALLMatls),acopy(numALLMatls,numALLMatls);
-    DenseMatrix K(numALLMatls,numALLMatls),H(numALLMatls,numALLMatls);
-    DenseMatrix a(numALLMatls,numALLMatls), a_inverse(numALLMatls,numALLMatls);
-    DenseMatrix phi(numALLMatls,numALLMatls);
+    FastMatrix beta(numALLMatls, numALLMatls),acopy(numALLMatls, numALLMatls);
+    FastMatrix K(numALLMatls, numALLMatls),H(numALLMatls, numALLMatls);
+    FastMatrix a(numALLMatls, numALLMatls), a_inverse(numALLMatls, numALLMatls);
+    FastMatrix phi(numALLMatls, numALLMatls);
     beta.zero();
     acopy.zero();
     K.zero();
@@ -679,28 +678,28 @@ void ICE::addExchangeToMomentumAndEnergyRF(const ProcessorGroup*,
       for(int m = 0; m < numALLMatls; m++)  {
         tmp = sp_vol_CC[m][c];
         for(int n = 0; n < numALLMatls; n++) {
-          beta[m][n] = delT * vol_frac_CC[n][c]  * K[n][m] * tmp;
-          a[m][n]    = -beta[m][n];
+          beta(m,n) = delT * vol_frac_CC[n][c]  * K(n,m) * tmp;
+          a(m,n)    = -beta(m,n);
         }
       }
       //   Form matrix (a) diagonal terms
       for(int m = 0; m < numALLMatls; m++) {
-        a[m][m] = 1.0;
+        a(m,m) = 1.0;
         for(int n = 0; n < numALLMatls; n++) {
-          a[m][m] +=  beta[m][n];
+          a(m,m) +=  beta(m,n);
         }
       }
-      matrixInverse(numALLMatls, a, a_inverse);
+      a_inverse.destructiveInvert(a);
       
       for (int dir = 0; dir <3; dir++) {  //loop over all three directons
         for(int m = 0; m < numALLMatls; m++) {
           b[m] = 0.0;
           for(int n = 0; n < numALLMatls; n++) {
-           b[m] += beta[m][n] * (vel_CC[n][c](dir) - vel_CC[m][c](dir));
+           b[m] += beta(m,n) * (vel_CC[n][c](dir) - vel_CC[m][c](dir));
           }
         }
         
-        multiplyMatrixAndVector(numALLMatls,a_inverse,b,X);
+        a_inverse.multiply(b,X);
         
         for(int m = 0; m < numALLMatls; m++) {
           vel_CC[m][c](dir) =  vel_CC[m][c](dir) + X[m];
@@ -714,25 +713,25 @@ void ICE::addExchangeToMomentumAndEnergyRF(const ProcessorGroup*,
       sumBeta = 0.0;
       for(int m = 0; m < numALLMatls; m++) {
         for(int n = 0; n < numALLMatls; n++)  {
-          beta[m][n]  = delT * sp_vol_CC[m][c] * vol_frac_CC[n][c] * H[n][m];
-          sumBeta    += beta[m][n];
+          beta(m,n)  = delT * sp_vol_CC[m][c] * vol_frac_CC[n][c] * H(n,m);
+          sumBeta    += beta(m,n);
           alpha       = if_mpm_matl_ignore[n] * 1.0/Temp_CC[n][c];
-          phi[m][n]   = (f_theta[m][c] * vol_frac_CC[n][c]* alpha)/rho_CC[m][c]; 
+          phi(m,n)   = (f_theta[m][c] * vol_frac_CC[n][c]* alpha)/rho_CC[m][c]; 
         }
       } 
       //  off diagonal terms, matrix A    
       for(int m = 0; m < numALLMatls; m++) {
         for(int n = 0; n < numALLMatls; n++)  {
-          a[m][n] = -press_CC[c] * phi[m][n] - beta[m][n];
+          a(m,n) = -press_CC[c] * phi(m,n) - beta(m,n);
         }
       }
       //  diagonal terms, matrix A wipe out the above
       for(int m = 0; m < numALLMatls; m++) {
-        a[m][m] = cv[m] + (press_CC[c] * phi[m][m])/f_theta[m][c] 
-                 - press_CC[c] * phi[m][m] - beta[m][m];
+        a(m,m) = cv[m] + (press_CC[c] * phi(m,m))/f_theta[m][c] 
+                 - press_CC[c] * phi(m,m) - beta(m,m);
                  
         for(int n = 0; n < numALLMatls; n++) {  // sum beta 
-          a[m][m] += beta[m][n]; 
+          a(m,m) += beta(m,n);
         }                
       } 
 
@@ -748,11 +747,11 @@ void ICE::addExchangeToMomentumAndEnergyRF(const ProcessorGroup*,
                       - delta_KE;
 
         for(int n = 0; n < numALLMatls; n++) {
-          b[m] += beta[m][n] * (Temp_CC[n][c] - Temp_CC[m][c]);
+          b[m] += beta(m,n) * (Temp_CC[n][c] - Temp_CC[m][c]);
         }
       }
       //     S O L V E  and backout Tdot and Temp_CC
-      matrixSolver(numALLMatls,a,b,X);
+      a.destructiveSolve(b,X);
       
       for(int m = 0; m < numALLMatls; m++) {
         Temp_CC[m][c] = Temp_CC[m][c] + X[m];

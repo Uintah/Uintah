@@ -10,8 +10,7 @@ SRCS	+= \
 	$(SRCDIR)/ICELabel.cc    \
 	$(SRCDIR)/ICEMaterial.cc \
 	$(SRCDIR)/BoundaryCond.cc \
-	$(SRCDIR)/GeometryObject2.cc \
-	$(SRCDIR)/MathToolbox.cc
+	$(SRCDIR)/GeometryObject2.cc
 
 SUBDIRS := $(SRCDIR)/EOS $(SRCDIR)/Advection
 
@@ -29,7 +28,7 @@ PSELIBS := \
 	Packages/Uintah/Core/Math                       \
 	Core/Exceptions Core/Thread                     \
 	Core/Geometry Dataflow/XMLUtil                  \
-	Core/Datatypes Core/Util
+	Core/Util
 
 LIBS	:= $(XML_LIBRARY) $(MPI_LIBRARY) -lm
 

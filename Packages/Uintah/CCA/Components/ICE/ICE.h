@@ -13,7 +13,7 @@
 #include <Packages/Uintah/Core/Parallel/UintahParallelComponent.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
 #include <Packages/Uintah/CCA/Ports/Output.h>
-#include <Core/Datatypes/DenseMatrix.h>
+#include <Packages/Uintah/Core/Math/FastMatrix.h>
 #include <Core/Containers/StaticArray.h>
 #include <vector>
 #include <Packages/Uintah/CCA/Components/ICE/Advection/Advector.h>
@@ -304,8 +304,8 @@ using namespace SCIRun;
                         DataWarehouse* old_dw,
                         DataWarehouse* new_dw);  
                                                       
-      void getExchangeCoefficients( DenseMatrix& K,
-                                    DenseMatrix& H ); 
+      void getExchangeCoefficients( FastMatrix& K,
+                                    FastMatrix& H ); 
 
 
       bool areAllValuesPositive( CCVariable<double> & src, 
