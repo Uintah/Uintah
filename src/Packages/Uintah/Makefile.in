@@ -10,7 +10,7 @@ TK_LIB_FLAG   = @TK_LIB_FLAG@
 ITCL_LIB_DIR  = @ITCL_LIB_DIR@
 ITCL_LIB_FLAG = @ITCL_LIB_FLAG@
 
-SUBDIRS = Datatypes Modules
+SUBDIRS = GUI Datatypes Modules
 SOLIB   = libUintah.so
 
 SOLIBRARIES = -L$(OBJTOP)/PSECore -lPSECore \
