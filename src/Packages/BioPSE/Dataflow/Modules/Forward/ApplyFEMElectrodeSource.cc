@@ -189,7 +189,7 @@ void
 ApplyFEMElectrodeSource::ProcessTriElectrodeSet( ColumnMatrix* rhs,
                                                TriSurfMeshHandle hTriMesh )
 {
-  FieldIPort *iportInterp = (FieldIPort *)get_iport("Interpolant");
+  MatrixIPort *iportMapping = (MatrixIPort *)get_iport("Mapping");
   MatrixIPort *iportCurrentPattern =
     (MatrixIPort *)get_iport("Current Pattern");
   MatrixIPort *iportCurrentPatternIndex =
@@ -291,8 +291,7 @@ ApplyFEMElectrodeSource::ProcessTriElectrodeSet( ColumnMatrix* rhs,
   }
 
   // If a boundary field was supplied, check for the matrix that maps
-  // boundary nodes to mesh nodes. This matrix is the output of the
-  // module: InterpolantToTransferMatrix
+  // boundary nodes to mesh nodes.
   MatrixHandle      hBoundaryToMesh;
 
   if (boundary)
@@ -305,37 +304,28 @@ ApplyFEMElectrodeSource::ProcessTriElectrodeSet( ColumnMatrix* rhs,
     }
   }
 
-  // Get the interp field
+  // Get the mapping matrix
   // --------------------
-  // This is the location of the electrodes interpolated onto the body
+  // This is the location of the electrodes mapped onto the body
   // mesh. The presence of this input means the user is electing to
   // specify electrode locations manually rather than use an automatic
   // placement scheme selected through the electrode manager.
-  FieldHandle hInterp;
-
-  if ( iportInterp->get(hInterp) && hInterp.get_rep())
+  MatrixHandle hMapping;
+  if ( iportMapping->get(hMapping) && hMapping.get_rep())
   {
-    // Determine the dimension (number of electrodes) in the interp'd
-    // field of electrodes.
-    PointCloudMesh::Node::size_type nsize;
-    LockingHandle<PointCloudField<vector<pair<NodeIndex<int>,double> > > >hInterpField;
-    PointCloudMeshHandle hPtCldMesh;
-    PointCloudField<vector<pair<NodeIndex<int>,double> > >* interp =
-      dynamic_cast<PointCloudField<vector<pair<NodeIndex<int>,double> > > *> (hInterp.get_rep());
-    hPtCldMesh = interp->get_typed_mesh();
-    hPtCldMesh->size(nsize);
+    // Unimplemented
   }
-
-  // If electrode interp field is not supplied, determine electrode
+  // If electrode mapping field is not supplied, determine electrode
   // centers using number of electrodes, spacing from the electrode
   // manager and extracted field boundary
   else
   {
+    // Unimplemented
   }
 
   // Make a local copy of the input current pattern Hold off on
   // copying the current pattern until after we check if there's an
-  // interpolated electrode field as this could influence the value of
+  // mappingolated electrode field as this could influence the value of
   // numElectrodes Also, this input is not needed for the continuum
   // case and may not be present in this case.
   ColumnMatrix* currentPattern = scinew ColumnMatrix(numElectrodes);
@@ -397,12 +387,12 @@ ApplyFEMElectrodeSource::ProcessTriElectrodeSet( ColumnMatrix* rhs,
   // -------------------------------
   else if (electrodeModel == GAP_MODEL )
   {
-    // Originally, we didn't execute if an electrode interp field was
+    // Originally, we didn't execute if an electrode mapping matrix was
     // not supplied because this is the only way we know where the
     // electrodes are on the input mesh.  Supplying a point cloud
     // field of electrode positions could still be an option, but it
     // is not supported now.  The equivalent effect can be obtained
-    // using the ElectrodeManager module.  The hInterp input is
+    // using the ElectrodeManager module.  The hMapping input is
     // ignored by this part of ApplyFEMElectrodeSource.
 
     // The code below places electrodes on the boundary of the input field.
