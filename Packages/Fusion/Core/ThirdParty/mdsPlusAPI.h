@@ -36,6 +36,8 @@
 
 #define MDS_PLUS_API
 
+#include <sci_defs.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
