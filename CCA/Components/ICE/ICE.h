@@ -13,6 +13,7 @@
 #include <Packages/Uintah/Core/Parallel/UintahParallelComponent.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
 #include <Core/Datatypes/DenseMatrix.h>
+#include <Core/Containers/StaticArray.h>
 #include <vector>
 
 namespace Uintah {
@@ -193,10 +194,10 @@ using namespace SCIRun;
                const std::string& type, const Patch* p, const int mat_id);
                
       void setBC(CCVariable<double>& press_CC, 
-                vector<CCVariable<double> >& rho_micro_CC,
-                vector<CCVariable<double> >& rho_CC,
-                vector<CCVariable<double> >& vol_frac_CC,
-                vector<CCVariable<Vector> >& vel_CC,
+                StaticArray<CCVariable<double> >& rho_micro_CC,
+                StaticArray<CCVariable<double> >& rho_CC,
+                StaticArray<CCVariable<double> >& vol_frac_CC,
+                StaticArray<CCVariable<Vector> >& vel_CC,
                 DataWarehouse* old_dw,
                 const string& kind, 
                 const Patch* patch, 
@@ -243,10 +244,10 @@ using namespace SCIRun;
                                 Patch::FaceType face,
                                 DataWarehouse* old_dw,
                                 CCVariable<double>& press_CC, 
-                          const vector<CCVariable<double> >& rho_micro_CC,
-                          const vector<CCVariable<double> >& rho_CC,
-                          const vector<CCVariable<double> >& vol_frac_CC,
-                          const vector<CCVariable<Vector> >& vel_CC);
+                          const StaticArray<CCVariable<double> >& rho_micro_CC,
+                          const StaticArray<CCVariable<double> >& rho_CC,
+                          const StaticArray<CCVariable<double> >& vol_frac_CC,
+                          const StaticArray<CCVariable<Vector> >& vel_CC);
                              
       void getExchangeCoefficients( DenseMatrix& K,
                                     DenseMatrix& H );  
