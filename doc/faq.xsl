@@ -151,25 +151,6 @@
 </xsl:for-each>
 </ol>
 
-<!--
-
-<xsl:for-each select="/faq/entry">
-  <xsl:variable name="num"><xsl:number/></xsl:variable>
-  <xsl:for-each select="./question">
-    <xsl:for-each select="./p">
-      <xsl:variable name="num2"><xsl:number/></xsl:variable>
-      <xsl:if test="$num2=1">
-        <p class="firstpara"><b><xsl:value-of select="$num"/></b>
-        <a><xsl:attribute name="href">
-           <xsl:value-of select="concat('#',$num)"/></xsl:attribute>
-        <xsl:apply-templates/></a></p>
-      </xsl:if>
-    </xsl:for-each>
-  </xsl:for-each>
-</xsl:for-each>
-
--->
-
 <hr size="1" />
 
 <xsl:for-each select="/faq/entry">
