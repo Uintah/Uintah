@@ -366,9 +366,9 @@ execute(MeshHandle& mHandle,
     }
     if (data_center == nrrdCenterCell) {
       ifield = (FIELD *) scinew FIELD((MESH *) imesh, 0);
-      typename FIELD::mesh_type::Cell::iterator icellItr;
+      typename FIELD::mesh_type::Elem::iterator ielemItr;
       
-      imesh->begin( icellItr );
+      imesh->begin( ielemItr );
       
       NTYPE *ptr = (NTYPE *)(dataH->nrrd->data);
       
@@ -384,9 +384,9 @@ execute(MeshHandle& mHandle,
 	      index = (i * jdim + j) * kdim + k;
 	    
 	    // Value
-	    ifield->set_value( ptr[index], *icellItr);
+	    ifield->set_value( ptr[index], *ielemItr);
 	    
-	    ++icellItr;
+	    ++ielemItr;
 	  }
 	}
       }
@@ -450,17 +450,17 @@ execute(MeshHandle& mHandle,
     if (data_center == nrrdCenterCell) {
       ifield = (FIELD *) scinew FIELD((MESH *) imesh, 0);
 
-      typename FIELD::mesh_type::Cell::iterator icellItr, end;
+      typename FIELD::mesh_type::Elem::iterator ielemItr, end;
       
-      imesh->begin( icellItr );
+      imesh->begin( ielemItr );
       imesh->end( end );
       
       int i = 0;
       NTYPE *ptr = (NTYPE *)(dataH->nrrd->data);
       
-      while (icellItr != end) {
-	ifield->set_value( ptr[i], *icellItr);
-	++icellItr;
+      while (ielemItr != end) {
+	ifield->set_value( ptr[i], *ielemItr);
+	++ielemItr;
 	i++;
       }
     }
@@ -528,9 +528,9 @@ execute(MeshHandle& mHandle,
     if (data_center == nrrdCenterCell) {
       ifield = (FIELD *) scinew FIELD((MESH *) imesh, 0);
 
-      typename FIELD::mesh_type::Cell::iterator icellItr;
+      typename FIELD::mesh_type::Elem::iterator ielemItr;
       
-      imesh->begin( icellItr );
+      imesh->begin( ielemItr );
       
       register int i, j, k, index;
       
@@ -547,9 +547,9 @@ execute(MeshHandle& mHandle,
 	    
 	    ifield->set_value( Vector( ptr[index*3  ],
 				       ptr[index*3+1],
-				       ptr[index*3+2] ), *icellItr);
+				       ptr[index*3+2] ), *ielemItr);
 	    
-	    ++icellItr;
+	    ++ielemItr;
 	  }
 	}
       }
@@ -613,14 +613,14 @@ execute(MeshHandle& mHandle,
     if (data_center == nrrdCenterCell) {
       ifield = (FIELD *) scinew FIELD((MESH *) imesh, 0);
 
-      typename FIELD::mesh_type::Cell::iterator icellItr, end;
+      typename FIELD::mesh_type::Elem::iterator ielemItr, end;
       
-      imesh->begin( icellItr );
+      imesh->begin( ielemItr );
       imesh->end( end );
       
       NTYPE *ptr = (NTYPE *)(dataH->nrrd->data);
       int i = 0;
-      while (icellItr != end) {
+      while (ielemItr != end) {
 	NTYPE x = *ptr;
 	++ptr;
 	NTYPE y = *ptr;
@@ -628,8 +628,8 @@ execute(MeshHandle& mHandle,
 	NTYPE z = *ptr;
 	++ptr;
 	ifield->set_value( Vector( x, y, z ),
-			   *icellItr);
-	++icellItr;
+			   *ielemItr);
+	++ielemItr;
 	i++;
       }
 
@@ -704,7 +704,7 @@ execute(MeshHandle& mHandle,
     if (data_center == nrrdCenterCell) {
       ifield = (FIELD *) scinew FIELD((MESH *) imesh, 0);
 
-      typename FIELD::mesh_type::Cell::iterator iter, end;
+      typename FIELD::mesh_type::Elem::iterator iter, end;
       
       imesh->begin( iter );
       imesh->end( end );
@@ -1127,7 +1127,7 @@ execute(MeshHandle& mHandle,
     if (data_center == nrrdCenterCell) {
       ifield = (FIELD *) scinew FIELD((MESH *) imesh, 0);
 
-      typename FIELD::mesh_type::Cell::iterator iter, end;
+      typename FIELD::mesh_type::Elem::iterator iter, end;
       
       imesh->begin( iter );
       imesh->end( end );
@@ -1557,7 +1557,7 @@ NrrdToFieldTestMesh<Fld>::execute(SCIRun::FieldHandle fld,
 	  mesh->size(sz);
 	  dims.push_back(sz);
 	} else if (mesh->dimensionality() == 3) {
-	  typename Fld::mesh_type::Cell::size_type sz;
+	  typename Fld::mesh_type::Elem::size_type sz;
 	  mesh->size(sz);
 	  dims.push_back(sz);
 	}
