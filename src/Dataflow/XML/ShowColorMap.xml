@@ -31,14 +31,10 @@
     </description>
   </overview>
   <io>
-    <inputs lastportdynamic="yes">
+    <inputs lastportdynamic="no">
       <port>
 	<name>ColorMap</name>
 	<datatype>SCIRun::ColorMap</datatype>
-      </port>
-      <port>
-	<name>ScalarField</name>
-	<datatype>SCIRun::Field</datatype>
       </port>
     </inputs>
     <outputs>
