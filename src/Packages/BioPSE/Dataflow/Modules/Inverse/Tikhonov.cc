@@ -42,7 +42,7 @@ namespace BioPSE
 
   using namespace SCIRun;
 
-  #define nLambda 80
+  #define nLambda 70
 
   class BioPSESHARE Tikhonov : public Module 
   {
@@ -78,9 +78,9 @@ namespace BioPSE
   // CONSTRUCTOR
   Tikhonov::Tikhonov(const string& id)
     : Module("Tikhonov", id, Source, "Inverse", "BioPSE"),
-      haveUI_("haveUI", id, this),
       lambda_fix_("lambda_fix", id, this),
       lambda_sld_("lambda_sld", id, this),
+      haveUI_("haveUI", id, this),
       reg_method_("reg_method", id, this)
   {
   }
@@ -369,7 +369,7 @@ namespace BioPSE
 	rho.setsize(nLambda);
 	eta.setsize(nLambda);   
 
-	lambdaArray[0]=1e-6;
+	lambdaArray[0]=5e-5;
 
 	for(j=0; j<nLambda; j++)
 	  {
@@ -417,7 +417,7 @@ namespace BioPSE
 
 	lambda = FindCorner(rho, eta, lambdaArray, kapa, &lambda_index);
 
-	int lower_y = eta[0]/10;
+	double lower_y = eta[0]/10.;
 	if (eta[nLambda-1] < lower_y)  lower_y = eta[nLambda-1];
 
 	if (haveUI_.get()) {
