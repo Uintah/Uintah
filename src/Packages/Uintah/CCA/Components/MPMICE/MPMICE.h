@@ -245,17 +245,6 @@ protected:
   int              d_8or27;
   int              NGN;
 
-  double d_dbgTime; 
-  double d_dbgStartTime;
-  double d_dbgStopTime;
-  double d_dbgOutputInterval;
-  double d_dbgNextDumpTime;
-  double d_dbgOldTime;
-  IntVector d_dbgBeginIndx;
-  IntVector d_dbgEndIndx; 
-  vector<int> d_dbgMatls; 
-  int d_dbgSigFigs;
-
   vector<MPMPhysicalBC*> d_physicalBCs;
   double d_SMALL_NUM;
   double d_TINY_RHO;
