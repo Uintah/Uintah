@@ -225,46 +225,108 @@ void Worker::run()
 	    ex=xres;
 	  st->npixels+=(ex-sx)*(ey-sy);
 	  if(stereo){
-#if 1
+	    ///////////////////////////////////////////////////////
+	    // Stereo
+	    ///////////////////////////////////////////////////////
 	    double stime = 0;
 	    if( hotSpotMode )
 	      stime = SCIRun::Time::currentSeconds();
-	    for(int y=sy;y<ey;y++){
-	      for(int x=sx;x<ex;x++){
-		//camera->makeRay(ray, x+xoffset+1, y+yoffset, ixres, iyres);
-		camera->makeRayL(ray, x+xoffset, y+yoffset, ixres, iyres);
-		traceRay(result, ray, 0, 1.0, Color(0,0,0), &cx);
-		if( !hotSpotMode ) {
+
+	    if (!scene->get_rtrt_engine()->do_jitter) {
+	      //////////////////////////
+	      // Non jitter
+	      for(int y=sy;y<ey;y++){
+		for(int x=sx;x<ex;x++){
+		  camera->makeRayL(ray, x+xoffset, y+yoffset, ixres, iyres);
+		  traceRay(result, ray, 0, 1.0, Color(0,0,0), &cx);
+		  if( !hotSpotMode ) {
 		    (*image)(x,y).set(result);
-		} else {
+		  } else {
 		    double etime=SCIRun::Time::currentSeconds();
 		    double dt=etime-stime;	
 		    stime=etime;
 		    (*image)(x,y).set(CMAP(dt));
+		  }
 		}
-	      }
-	      for(int x=sx;x<ex;x++){
-		//camera->makeRay(ray, x+xoffset, y+yoffset, ixres, iyres);
-		camera->makeRayR(ray, x+xoffset, y+yoffset, ixres, iyres);
-		traceRay(result, ray, 0, 1.0, Color(0,0,0), &cx);
-		if( !hotSpotMode ) {
+		for(int x=sx;x<ex;x++){
+		  camera->makeRayR(ray, x+xoffset, y+yoffset, ixres, iyres);
+		  traceRay(result, ray, 0, 1.0, Color(0,0,0), &cx);
+		  if( !hotSpotMode ) {
 		    (*image)(x,y+yres).set(result);
-		} else {
+		  } else {
 		    double etime=SCIRun::Time::currentSeconds();
 		    double dt=etime-stime;	
 		    stime=etime;
 		    (*image)(x,y+yres).set(CMAP(dt));
+		  }
+		}
+	      }
+	    } else {
+	      ///////////////////////////
+	      // Jitter
+	      Color sum;
+	      Color resulta,resultb; // 4 samples
+	      for(int y=sy;y<ey;y++){
+		for(int x=sx;x<ex;x++){
+		  camera->makeRayL(ray, x+xoffset -0.25 + jitter_vals[x], 
+				  y+yoffset -0.25 + jitter_valsb[y], ixres, iyres);
+		  traceRay(sum, ray, 0, 1.0, Color(0,0,0), &cx);
+		  
+		  camera->makeRayL(ray, x+xoffset +0.25 + jitter_vals[x], 
+				  y+yoffset -0.25 + jitter_valsb[y], ixres, iyres);
+		  traceRay(result, ray, 0, 1.0, Color(0,0,0), &cx);
+		  
+		  camera->makeRayL(ray, x+xoffset +0.25 + jitter_vals[x], 
+				  y+yoffset +0.25 + jitter_valsb[y], ixres, iyres);
+		  traceRay(resulta, ray, 0, 1.0, Color(0,0,0), &cx);
+		  
+		  camera->makeRayL(ray, x+xoffset -0.25 + jitter_vals[x], 
+				  y+yoffset +0.25 + jitter_valsb[y], ixres, iyres);
+		  traceRay(resultb, ray, 0, 1.0, Color(0,0,0), &cx);
+
+		  if( !hotSpotMode ) {
+		    sum = (sum+result+resulta+resultb)*0.25f;
+		    (*image)(x,y).set(sum);
+		  } else {
+		    double etime=SCIRun::Time::currentSeconds();
+		    double dt=etime-stime;	
+		    stime=etime;
+		    (*image)(x,y).set(CMAP(dt));
+		  }
+		}
+		for(int x=sx;x<ex;x++){
+		  camera->makeRayR(ray, x+xoffset -0.25 + jitter_vals[x], 
+				  y+yoffset -0.25 + jitter_valsb[y], ixres, iyres);
+		  traceRay(sum, ray, 0, 1.0, Color(0,0,0), &cx);
+		  
+		  camera->makeRayR(ray, x+xoffset +0.25 + jitter_vals[x], 
+				  y+yoffset -0.25 + jitter_valsb[y], ixres, iyres);
+		  traceRay(result, ray, 0, 1.0, Color(0,0,0), &cx);
+		  
+		  camera->makeRayR(ray, x+xoffset +0.25 + jitter_vals[x], 
+				  y+yoffset +0.25 + jitter_valsb[y], ixres, iyres);
+		  traceRay(resulta, ray, 0, 1.0, Color(0,0,0), &cx);
+		  
+		  camera->makeRayR(ray, x+xoffset -0.25 + jitter_vals[x], 
+				  y+yoffset +0.25 + jitter_valsb[y], ixres, iyres);
+		  traceRay(resultb, ray, 0, 1.0, Color(0,0,0), &cx);
+
+		  if( !hotSpotMode ) {
+		    sum = (sum+result+resulta+resultb)*0.25f;
+		    (*image)(x,y+yres).set(sum);
+		  } else {
+		    double etime=SCIRun::Time::currentSeconds();
+		    double dt=etime-stime;	
+		    stime=etime;
+		    (*image)(x,y+yres).set(CMAP(dt));
+		  }
 		}
 	      }
 	    }
-#else
-	    static bool warned = false;
-	    if( !warned ) {
-	      warned = true;
-	      cout << "WARNING: Stereo not implemented now!\n";
-	    }
-#endif
 	  } else {
+	    ///////////////////////////////////////////////////////
+	    // Mono
+	    ///////////////////////////////////////////////////////
 	    if (scene->get_rtrt_engine()->do_jitter) {
 	      Color sum;
 	      Color resulta,resultb; // 4 samples
@@ -297,7 +359,7 @@ void Worker::run()
 		    stime=etime;
 		    (*image)(x,y).set(CMAP(t));
 		  } else {
-		    sum = (sum+result+resulta+resultb)*0.25;
+		    sum = (sum+result+resulta+resultb)*0.25f;
 		    (*image)(x,y).set(sum);
 		  }
 		}
