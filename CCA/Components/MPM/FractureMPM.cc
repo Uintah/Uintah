@@ -303,7 +303,7 @@ FractureMPM::scheduleTimeAdvance(const LevelP & level,
   scheduleParticleVelocityField(          sched, patches, matls); 
   scheduleInterpolateParticlesToGrid(     sched, patches, matls);
   scheduleComputeHeatExchange(            sched, patches, matls);
-  scheduleCrackAdjustInterpolated(        sched, patches, matls);
+  scheduleAdjustCrackContactInterpolated( sched, patches, matls);
   scheduleExMomInterpolated(              sched, patches, matls);
   scheduleComputeStressTensor(            sched, patches, matls);
   scheduleComputeInternalForce(           sched, patches, matls);
@@ -312,15 +312,13 @@ FractureMPM::scheduleTimeAdvance(const LevelP & level,
   scheduleSolveHeatEquations(             sched, patches, matls);
   scheduleIntegrateAcceleration(          sched, patches, matls);
   scheduleIntegrateTemperatureRate(       sched, patches, matls);
-  scheduleCrackAdjustIntegrated(          sched, patches, matls);
+  scheduleAdjustCrackContactIntegrated(   sched, patches, matls);
   scheduleExMomIntegrated(                sched, patches, matls);
   scheduleSetGridBoundaryConditions(      sched, patches, matls);
   scheduleApplyExternalLoads(             sched, patches, matls);
   scheduleCalculateDampingRate(           sched, patches, matls);
   scheduleInterpolateToParticlesAndUpdate(sched, patches, matls);
-  schedulePrepareMovingCrack(             sched, patches, matls);
-  scheduleMoveCrack(                      sched, patches, matls);
-  scheduleUpdateCrackExtentAndNormals(    sched, patches, matls);
+  scheduleMoveCracks(                      sched, patches, matls);
 
   sched->scheduleParticleRelocation(level, lb->pXLabel_preReloc,
 				    lb->d_particleState_preReloc,
@@ -429,14 +427,14 @@ void FractureMPM::scheduleComputeHeatExchange(SchedulerP& sched,
 }
 
 // ckeck crack contact and make adjustments on velocity field
-void FractureMPM::scheduleCrackAdjustInterpolated(SchedulerP& sched,
+void FractureMPM::scheduleAdjustCrackContactInterpolated(SchedulerP& sched,
                                             const PatchSet* patches,
                                             const MaterialSet* matls)
 {
-  Task* t = scinew Task("Crack::CrackContactAdjustInterpolated",
-                    crackMethod,&Crack::CrackContactAdjustInterpolated);
+  Task* t = scinew Task("Crack::AdjustCrackContactInterpolated",
+                    crackMethod,&Crack::AdjustCrackContactInterpolated);
 
-  crackMethod->addComputesAndRequiresCrackAdjustInterpolated(t,
+  crackMethod->addComputesAndRequiresAdjustCrackContactInterpolated(t,
                                                      patches, matls);
 
   sched->addTask(t, patches, matls);
@@ -740,14 +738,14 @@ void FractureMPM::scheduleIntegrateTemperatureRate(SchedulerP& sched,
 }
 
 // check crack contact and adjust nodal velocities and accelerations
-void FractureMPM::scheduleCrackAdjustIntegrated(SchedulerP& sched,
+void FractureMPM::scheduleAdjustCrackContactIntegrated(SchedulerP& sched,
                                             const PatchSet* patches,
                                             const MaterialSet* matls)
 { 
-  Task* t = scinew Task("Crack::CrackContactAdjustIntegrated",
-                    crackMethod,&Crack::CrackContactAdjustIntegrated);
+  Task* t = scinew Task("Crack::AdjustCrackContactIntegrated",
+                    crackMethod,&Crack::AdjustCrackContactIntegrated);
   
-  crackMethod->addComputesAndRequiresCrackAdjustIntegrated(t,
+  crackMethod->addComputesAndRequiresAdjustCrackContactIntegrated(t,
                                                       patches, matls);
   
   sched->addTask(t, patches, matls);
@@ -932,42 +930,30 @@ void FractureMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   sched->addTask(t, patches, matls);
 }
 
-// set if crack points moved to No
-void FractureMPM::schedulePrepareMovingCrack(SchedulerP& sched,
+// Move crack with center-of-mass velocity
+void FractureMPM::scheduleMoveCracks(SchedulerP& sched,
                                     const PatchSet* patches,
                                     const MaterialSet* matls)
 {
-  Task* t = scinew Task("Crack::PrepareMovingCrack", crackMethod,
-                        &Crack::PrepareMovingCrack);
-
-  crackMethod->addComputesAndRequiresPrepareMovingCrack(t, patches, matls);
+  // Set if crack points moved to NO
+  Task* t = scinew Task("Crack::InitializeMovingCracks", crackMethod,
+                        &Crack::InitializeMovingCracks);
+  crackMethod->addComputesAndRequiresInitializeMovingCracks(t, patches, matls);
   sched->addTask(t, patches, matls);
-}
 
-// move crack with center-of-mass velocity
-void FractureMPM::scheduleMoveCrack(SchedulerP& sched,
-                                    const PatchSet* patches,
-                                    const MaterialSet* matls)
-{
-
-  Task* t = scinew Task("Crack::MoveCrack", crackMethod,
-                        &Crack::MoveCrack);
-
-  crackMethod->addComputesAndRequiresMoveCrack(t, patches, matls);
+  // Move crack points
+  t = scinew Task("Crack::MoveCracks", crackMethod,
+                        &Crack::MoveCracks);
+  crackMethod->addComputesAndRequiresMoveCracks(t, patches, matls);
   sched->addTask(t, patches, matls);
-}
 
-// Check if crack points moved and moved only once
-void FractureMPM::scheduleUpdateCrackExtentAndNormals(SchedulerP& sched,
-                                    const PatchSet* patches,
-                                    const MaterialSet* matls)
-{
-  Task* t = scinew Task("Crack::UpdateCrackExtentAndNormals", crackMethod,
+  // Update crack extent and normals
+  t = scinew Task("Crack::UpdateCrackExtentAndNormals", crackMethod,
                         &Crack::UpdateCrackExtentAndNormals);
-
-  crackMethod->addComputesAndRequiresUpdateCrackExtentAndNormals(t, 
+  crackMethod->addComputesAndRequiresUpdateCrackExtentAndNormals(t,
                                                        patches, matls);
   sched->addTask(t, patches, matls);
+
 }
 
 void FractureMPM::printParticleCount(const ProcessorGroup* pg,
