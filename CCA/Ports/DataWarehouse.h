@@ -295,7 +295,7 @@ public:
   // Move stuff to a different data Warehouse
   virtual void transferFrom(DataWarehouse*, const VarLabel*,
 			    const PatchSubset*, const MaterialSubset*,
-                            const PatchSubset* = 0) = 0;
+                            bool replace = false, const PatchSubset* = 0) = 0;
 
   virtual void emit(OutputContext&, const VarLabel* label,
 		    int matlIndex, const Patch* patch) = 0;
