@@ -221,7 +221,7 @@ itcl_class SCIRun_Visualization_VolumeVisualizer {
 
 
 	scale $tab.srate_hi -variable $this-sampling_rate_hi \
-            -from 0.5 -to 10.0 -label "Sampling Rate" \
+            -from 0.5 -to 20.0 -label "Sampling Rate" \
             -showvalue true -resolution 0.1 \
             -orient horizontal \
 
@@ -230,7 +230,7 @@ itcl_class SCIRun_Visualization_VolumeVisualizer {
             -anchor w -command "$s; $n"
 
 	scale $tab.srate_lo -variable $this-sampling_rate_lo \
-            -from 0.1 -to 5.0 -label "Adaptive Sampling Rate" \
+            -from 0.1 -to 10.0 -label "Adaptive Sampling Rate" \
             -showvalue true -resolution 0.1 \
             -orient horizontal \
 
