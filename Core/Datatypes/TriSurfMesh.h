@@ -103,6 +103,7 @@ public:
   virtual const string get_type_name(int n) const { return type_name(n); }
 
   // Extra functionality needed by this specific geometry.
+  void add_point(const Point &p) { points_.push_back(p); }
   node_index add_find_point(const Point &p, double err = 1.0e-3);
   void add_triangle(node_index a, node_index b, node_index c,
 		    bool cw_p = true);
@@ -115,14 +116,21 @@ public:
 
   const Point &point(node_index i) { return points_[i]; }
 
+  void connect(double err = 1.0e-3);
+
 private:
+
+  int next(int i) { return ((i%3)==2) ? (i-2) : (i+1); }
+  int prev(int i) { return ((i%3)==0) ? (i+2) : (i-1); }
+
+
 
   bool inside4_p(int, const Point &p);
 
 
-  Array1<Point> points_;
-  Array1<int>   faces_;
-  Array1<int>   neighbors_;
+  vector<Point> points_;
+  vector<int>   faces_;
+  vector<int>   neighbors_;
 
 };
 

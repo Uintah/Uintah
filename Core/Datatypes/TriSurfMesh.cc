@@ -12,6 +12,7 @@
  */
 
 #include <Core/Datatypes/TriSurfMesh.h>
+#include <Core/Persistent/PersistentSTL.h>
 
 
 namespace SCIRun {
@@ -48,7 +49,7 @@ TriSurfMesh::get_bounding_box() const
 {
   BBox result;
 
-  for (int i = 0; i < points_.size(); i++)
+  for (vector<Point>::size_type i = 0; i < points_.size(); i++)
   {
     result.extend(points_[i]);
   }
@@ -294,7 +295,7 @@ TriSurfMesh::add_find_point(const Point &p, double err)
   }
   else
   {
-    points_.add(p);
+    points_.push_back(p);
     return points_.size() - 1;
   }
 }
@@ -306,15 +307,92 @@ TriSurfMesh::add_triangle(node_index a, node_index b, node_index c,
 {
   if (cw_p)
   {
-    faces_.add(a);
-    faces_.add(b);
-    faces_.add(c);
+    faces_.push_back(a);
+    faces_.push_back(b);
+    faces_.push_back(c);
   }
   else
   {
-    faces_.add(c);
-    faces_.add(b);
-    faces_.add(a);
+    faces_.push_back(c);
+    faces_.push_back(b);
+    faces_.push_back(a);
+  }
+}
+
+
+void
+TriSurfMesh::connect(double err)
+{
+  // Collapse point set by err.
+  // TODO: average in stead of first found for new point?
+  vector<Point> points(points_);
+  vector<int> mapping(points_.size());
+  vector<Point>::size_type i; 
+  points_.clear();
+  for (i = 0; i < points.size(); i++)
+  {
+    mapping[i] = add_find_point(points[i], err);
+  }
+
+  // Repair faces.
+  for (i=0; i < faces_.size(); i++)
+  {
+    faces_[i] = mapping[i];
+  }
+  
+  // TODO: Remove all degenerate faces here.
+
+  // TODO: fix forward/backward facing problems.
+
+  // Find neighbors
+  vector<list<int> > edgemap(points_.size());
+  for (i=0; i< faces_.size(); i++)
+  {
+    edgemap[faces_[i]].push_back(i);
+  }
+
+  for (i=0; i<edgemap.size(); i++)
+  {
+    list<int>::iterator li1 = edgemap[i].begin();
+
+    while (li1 != edgemap[i].end())
+    {
+      int e1 = *li1;
+      li1++;
+
+      list<int>::iterator li2 = li1;
+      while (li2 != edgemap[i].end())
+      {
+	int e2 = *li2;
+	li2++;
+	
+	if ( faces_[next(e1)] == faces_[prev(e2)])
+	{
+	  neighbors_[e1] = e2;
+	  neighbors_[e2] = e1;
+	}
+      }
+    }
+  }
+
+  // Remove unused points.
+  // Reuse mapping array, edgemap array.
+  vector<Point> dups(points_);
+  points_.clear();
+  
+  for (i=0; i<dups.size(); i++)
+  {
+    if(edgemap[i].begin() != edgemap[i].end())
+    {
+      points_.push_back(dups[i]);
+      mapping[i] = points_.size() - 1;
+    }
+  }
+
+  // Repair faces.
+  for (i=0; i < faces_.size(); i++)
+  {
+    faces_[i] = mapping[i];
   }
 }
 
