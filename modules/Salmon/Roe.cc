@@ -277,9 +277,35 @@ void Roe::RoeInit(Salmon* s) {
 				0, 0);
     point1->SetSet(True);
     point1->Create(*lightRC, "Point1");
+
+    opt_proj=new RowColumnC;
+    opt_proj->SetOrientation(XmVERTICAL);
+    opt_proj->Create(*left, "opt_proj");
+
+    projRC=new RowColumnC;
+    projRC->SetOrientation(XmHORIZONTAL);
+    projRC->SetRadioAlwaysOne(True);
+    projRC->SetRadioBehavior(True);
+    projRC->Create(*opt_proj, "proj");
+
+    perspB=new ToggleButtonC;
+    new MotifCallback<Roe>FIXCB(perspB, XmNvalueChangedCallback,
+				&manager->mailbox, this,
+				&Roe::perspCB,
+				0, 0);
+    perspB->SetSet(True);
+    perspB->Create(*projRC, "Perspective");
+	
+    orthoB=new ToggleButtonC;
+    new MotifCallback<Roe>FIXCB(orthoB, XmNvalueChangedCallback,
+				&manager->mailbox, this,
+				&Roe::orthoCB,
+				0, 0);
+    orthoB->Create(*projRC, "Orthographic");
+    
     options=new RowColumnC;
     options->SetOrientation(XmHORIZONTAL);
-    options->Create(*left, "options");
+    options->Create(*opt_proj, "options");
 
     viewRC=new RowColumnC;
     viewRC->SetOrientation(XmVERTICAL);
@@ -344,6 +370,25 @@ void Roe::RoeInit(Salmon* s) {
     evl->unlock();
 }
 
+void Roe::orthoCB(CallbackData*, void*) {
+    make_current();
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    glOrtho(-4, 4, -3, 3, 100, -100);
+//    glOrtho(-4, 4, -3, 3, -100, 100); /* might flip it? */
+    glMatrixMode(GL_MODELVIEW);
+    redrawAll();
+}
+
+void Roe::perspCB(CallbackData*, void*) {
+    make_current();
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    gluPerspective(90, 1.33, 1, 100);
+    glMatrixMode(GL_MODELVIEW);
+    redrawAll();
+}
+
 void Roe::redrawCB(CallbackData*, void*){
     if(!doneInit)
 	initCB(0, 0);
@@ -363,15 +408,10 @@ void Roe::initCB(CallbackData*, void*) {
     // set the view
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    gluPerspective(90, 1.33, 1, 10);
+    gluPerspective(90, 1.33, 1, 100);
     glMatrixMode(GL_MODELVIEW);
-    if (haveInheritMat) {
-	glLoadMatrixd(inheritMat);
-    } else {
-	glLoadIdentity();
-	gluLookAt(2,2,5,2,2,2,0,1,0);
-	glGetDoublev(GL_MODELVIEW_MATRIX, inheritMat);
-    }
+    glLoadIdentity();
+    gluLookAt(2,2,5,2,2,2,0,1,0);
 
     GLfloat light_position[] = { 3,3,-100,1};
     glLightfv(GL_LIGHT0, GL_POSITION, light_position);
@@ -381,6 +421,13 @@ void Roe::initCB(CallbackData*, void*) {
     glEnable(GL_LIGHT0);
     glDepthFunc(GL_LEQUAL);
     glEnable(GL_DEPTH_TEST);
+
+    if (haveInheritMat) {
+	glLoadMatrixd(inheritMat);
+    } else {
+	glGetDoublev(GL_MODELVIEW_MATRIX, inheritMat);
+    }
+
     evl->unlock();
     doneInit=1;
 }
@@ -537,6 +584,10 @@ Roe::~Roe()
     delete lightRC;
     delete ambient;
     delete point1;
+    delete opt_proj;
+    delete projRC;
+    delete orthoB;
+    delete perspB;
     delete options;
     delete viewRC;
     delete autoView;
@@ -660,7 +711,6 @@ void Roe::goHomeCB(CallbackData*, void*)
 void Roe::autoViewCB(CallbackData*, void*)
 {
     BBox bbox;
-    int ok=0;
     HashTableIter<int,HashTable<int, GeomObj*>*> iter(&manager->portHash);
     for (iter.first(); iter.ok(); ++iter) {
 	HashTable<int, GeomObj*>* serHash=iter.get_data();
@@ -671,11 +721,10 @@ void Roe::autoViewCB(CallbackData*, void*)
 		if (geomItemA[i]->geom == geom)
 		    if (geomItemA[i]->vis) {
 			bbox.extend(geom->bbox());
-			ok=1;
 		    }
 	}		
     }	
-    if (!ok) return;
+    if (!bbox.valid()) return;
     Point lookat(bbox.center());
     lookat.z(bbox.max().z());
     double xwidth=lookat.x()-bbox.min().x();
@@ -683,9 +732,6 @@ void Roe::autoViewCB(CallbackData*, void*)
     double dist=Max(xwidth, ywidth);
     make_current();
     evl->lock();
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    gluPerspective(90, 1.33, 1, 1000);
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
     gluLookAt(lookat.x(), lookat.y(), lookat.z()+dist, lookat.x(), lookat.y(), lookat.z(), 0, 1, 0);
@@ -708,18 +754,24 @@ void Roe::rotate(double angle, Vector v)
 {
     make_current();
     glRotated(angle,v.x(), v.y(), v.z());
+    for (int i=0; i<kids.size(); i++)
+	kids[i]->rotate(angle, v);
 }
 
 void Roe::translate(Vector v)
 {
     make_current();
     glTranslated(v.x(), v.y(), v.z());
+    for (int i=0; i<kids.size(); i++)
+	kids[i]->translate(v);
 }
 
 void Roe::scale(Vector v)
 {
     make_current();
     glScaled(v.x(), v.y(), v.z());
+    for (int i=0; i<kids.size(); i++)
+	kids[i]->scale(v);
 }
 
 void Roe::eventCB(CallbackData* cbdata, void*)
@@ -919,11 +971,27 @@ void Roe::mouse_scale(int action, int x, int y, int, int)
 {
     switch(action){
     case BUTTON_DOWN:
-	last_x=x;
-	last_y=y;
+	{
+	    last_x=x;
+	    last_y=y;
+	    bb.reset();
+	    HashTableIter<int,HashTable<int, GeomObj*>*> iter(&manager->portHash);
+	    for (iter.first(); iter.ok(); ++iter) {
+		HashTable<int, GeomObj*>* serHash=iter.get_data();
+		HashTableIter<int, GeomObj*> serIter(serHash);
+		for (serIter.first(); serIter.ok(); ++serIter) {
+		    GeomObj *geom=serIter.get_data();
+		    for (int i=0; i<geomItemA.size(); i++)
+			if (geomItemA[i]->geom == geom)
+			    if (geomItemA[i]->vis)
+				bb.extend(geom->bbox());
+		}		
+	    }
+	}
 	break;
     case BUTTON_MOTION:
 	{
+	    if (!bb.valid()) break;
 	    double scl;
 	    double xmtn=last_x-x;
 	    double ymtn=last_y-y;
@@ -933,9 +1001,15 @@ void Roe::mouse_scale(int action, int x, int y, int, int)
 	    last_y = y;
 	    make_current();
 	    if (Abs(xmtn)>Abs(ymtn)) scl=xmtn; else scl=ymtn;
+	    Point cntr(bb.center());
+	    glTranslated(cntr.x(), cntr.y(), cntr.z());
 	    glScaled(1+scl, 1+scl, 1+scl);
-	    for (int i=0; i<kids.size(); i++)
+	    glTranslated(-cntr.x(), -cntr.y(), -cntr.z());
+	    for (int i=0; i<kids.size(); i++) {
+		kids[i]->translate(Vector(cntr.x(), cntr.y(), cntr.z()));
 		kids[i]->scale(Vector(1+scl, 1+scl, 1+scl));
+		kids[i]->translate(Vector(-cntr.x(), -cntr.y(), -cntr.z()));
+	    }
 	    redrawAll();
 	}
 	break;
@@ -966,6 +1040,7 @@ void Roe::mouse_rotate(int action, int x, int y, int, int)
 	break;
     case BUTTON_MOTION:
 	{
+	    if (!bb.valid()) break;
 	    double xmtn=last_x-x;
 	    double ymtn=last_y-y;
 	    last_x = x;

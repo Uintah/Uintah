@@ -72,8 +72,12 @@ class Roe {
     RowColumnC* lightRC;
     ToggleButtonC* ambient;
     ToggleButtonC* point1;
+    RowColumnC* opt_proj;
+    RowColumnC* projRC;
     RowColumnC* options;
     RowColumnC* viewRC;
+    ToggleButtonC* orthoB;
+    ToggleButtonC* perspB;
     PushButtonC* autoView;
     PushButtonC* setHome;
     PushButtonC* goHome;
@@ -94,6 +98,8 @@ class Roe {
     void phongCB(CallbackData*, void*);
     void ambientCB(CallbackData*, void*);
     void point1CB(CallbackData*, void*);
+    void orthoCB(CallbackData*, void*);
+    void perspCB(CallbackData*, void*);
     void goHomeCB(CallbackData*, void*);
     void autoViewCB(CallbackData*, void*);
     void setHomeCB(CallbackData*, void*);
