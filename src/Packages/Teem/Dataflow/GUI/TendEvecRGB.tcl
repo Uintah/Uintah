@@ -60,9 +60,9 @@ itcl_class Teem_Tend_TendEvecRGB {
 	frame $w.f.options.f1 -borderwidth 2 -relief groove
 	make_labeled_radio $w.f.options.f1.evec \
 	    "Eigenvector to use" "" top $this-evec \
-	    {{"Major" 2}
+	    {{"Major" 0}
 		{"Medium" 1}
-		{"Minor" 0}}
+		{"Minor" 2}}
 	pack $w.f.options.f1.evec -side top -expand yes -fill x
 	pack $w.f.options.f1 -side top -expand yes -fill x
 
