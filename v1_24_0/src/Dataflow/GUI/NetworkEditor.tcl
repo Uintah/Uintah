@@ -33,6 +33,7 @@ source [netedit getenv SCIRUN_SRCDIR]/Dataflow/GUI/Connection.tcl
 source [netedit getenv SCIRUN_SRCDIR]/Dataflow/GUI/Port.tcl
 source [netedit getenv SCIRUN_SRCDIR]/Dataflow/GUI/Subnet.tcl
 source [netedit getenv SCIRUN_SRCDIR]/Dataflow/GUI/UIvar.tcl
+source [netedit getenv SCIRUN_SRCDIR]/Core/GUI/Range.tcl
 
 set SCIRUN_SRCDIR [netedit getenv SCIRUN_SRCDIR]
 set smallIcon [image create photo -file "$SCIRUN_SRCDIR/pixmaps/scirun-icon-small.ppm"]
