@@ -110,7 +110,7 @@ void ScalarFieldUG::compute_minmax()
 int ScalarFieldUG::interpolate(const Point& p, double& value, double epsilon1, double epsilon2)
 {
     int ix=0;
-    if(!mesh->locate(p, ix, epsilon1, epsilon2))
+    if(!mesh->locate(&ix, p, epsilon1, epsilon2))
 	return 0;
     if(typ == NodalValues){
       double s1,s2,s3,s4;
@@ -129,18 +129,18 @@ int ScalarFieldUG::interpolate(const Point& p, double& value, double epsilon1, d
 
 int ScalarFieldUG::interpolate(const Point& p, double& value, int& ix, double epsilon1, double epsilon2, int exhaustive)
 {
-    if (!mesh->locate(p,ix,epsilon1,epsilon2)) {
+    if (!mesh->locate(&ix, p, epsilon1, epsilon2)) {
 	if (exhaustive > 0) {
 	    MusilRNG mr;
 	    ix=(int)(mr()*mesh->nodesize());
 	    int cntr=0;
-	    while(!mesh->locate(p,ix,epsilon1, epsilon2) && cntr<5) {
+	    while(!mesh->locate(&ix, p, epsilon1, epsilon2) && cntr<5) {
 		ix=(int)(mr()*mesh->nodesize());
 		cntr++;
 	    }
 	    if (cntr==5) {
 		if (exhaustive == 2) {
-		    if(!mesh->locate2(p, ix, 0))
+		    if(!mesh->locate2(&ix, p, 0))
 			return 0;
 		} else {
 		    return 0;
@@ -164,7 +164,7 @@ int ScalarFieldUG::interpolate(const Point& p, double& value, int& ix, double ep
 Vector ScalarFieldUG::gradient(const Point& p)
 {
     int ix;
-    if(!mesh->locate(p, ix))
+    if(!mesh->locate(&ix, p))
 	return Vector(0,0,0);
     Vector g1, g2, g3, g4;
     Element* e=mesh->element(ix);

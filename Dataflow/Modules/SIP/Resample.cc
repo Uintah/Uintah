@@ -26,8 +26,6 @@
 #include <iostream>
 using std::cerr;
 
-#define RESIZE_MACRO   fX->resize(lastZ, isf->nx, isf->ny);fX->grid.initialize(0);fY->resize(lastY, lastZ, isf->nx);fY->grid.initialize(0);of->resize(lastX, lastY, lastZ);of->grid.initialize(0);fldX=fX;fldY=fY;osf=of;
-
 namespace SCIRun {
 
 
@@ -255,41 +253,29 @@ void Resample::execute() {
 
     ScalarFieldRGBase *fldX, *fldY;
     if (ifd) {
-	ScalarFieldRGdouble *fX, *fY, *of;
-	fX=new ScalarFieldRGdouble();
-	fY=new ScalarFieldRGdouble();
-	oFldHandle=of=new ScalarFieldRGdouble();
-	RESIZE_MACRO
+	fldX = new ScalarFieldRGdouble(lastZ, isf->nx, isf->ny);
+	fldY = new ScalarFieldRGdouble(lastY, lastZ, isf->nx);
+	oFldHandle = osf = new ScalarFieldRGdouble(lastX, lastY, lastZ);
     } else if (iff) {
-	ScalarFieldRGfloat *fX, *fY, *of;
-	fX=new ScalarFieldRGfloat();
-	fY=new ScalarFieldRGfloat();
-	oFldHandle=of=new ScalarFieldRGfloat();
-	RESIZE_MACRO
+	fldX = new ScalarFieldRGfloat(lastZ, isf->nx, isf->ny);
+	fldY = new ScalarFieldRGfloat(lastY, lastZ, isf->nx);
+	oFldHandle = osf = new ScalarFieldRGfloat(lastX, lastY, lastZ);
     } else if (ifi) {
-	ScalarFieldRGint *fX, *fY, *of;
-	fX=new ScalarFieldRGint();
-	fY=new ScalarFieldRGint();
-	oFldHandle=of=new ScalarFieldRGint();
-	RESIZE_MACRO
+	fldX = new ScalarFieldRGint(lastZ, isf->nx, isf->ny);
+	fldY = new ScalarFieldRGint(lastY, lastZ, isf->nx);
+	oFldHandle = osf = new ScalarFieldRGint(lastX, lastY, lastZ);
     } else if (ifs) {
-	ScalarFieldRGshort *fX, *fY, *of;
-	fX=new ScalarFieldRGshort();
-	fY=new ScalarFieldRGshort();
-	oFldHandle=of=new ScalarFieldRGshort();
-	RESIZE_MACRO
+	fldX = new ScalarFieldRGshort(lastZ, isf->nx, isf->ny);
+	fldY = new ScalarFieldRGshort(lastY, lastZ, isf->nx);
+	oFldHandle = osf = new ScalarFieldRGshort(lastX, lastY, lastZ);
     } else if (ifc) {
-	ScalarFieldRGchar *fX, *fY, *of;
-	fX=new ScalarFieldRGchar();
-	fY=new ScalarFieldRGchar();
-	oFldHandle=of=new ScalarFieldRGchar();
-	RESIZE_MACRO
+	fldX = new ScalarFieldRGchar(lastZ, isf->nx, isf->ny);
+	fldY = new ScalarFieldRGchar(lastY, lastZ, isf->nx);
+	oFldHandle = osf = new ScalarFieldRGchar(lastX, lastY, lastZ);
     } else if (ifu) {
-	ScalarFieldRGuchar *fX, *fY, *of;
-	fX=new ScalarFieldRGuchar();
-	fY=new ScalarFieldRGuchar();
-	oFldHandle=of=new ScalarFieldRGuchar();
-	RESIZE_MACRO
+	fldX = new ScalarFieldRGuchar(lastZ, isf->nx, isf->ny);
+	fldY = new ScalarFieldRGuchar(lastY, lastZ, isf->nx);
+	oFldHandle = osf = new ScalarFieldRGuchar(lastX, lastY, lastZ);
     } else {
 	cerr << "Unknown SFRG type in Resample: "<<isf->getType()<<"\n";
 	return;

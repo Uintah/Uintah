@@ -102,8 +102,7 @@ void GradientMagnitude::execute()
     VectorFieldRG* vfrg=vf->getRG();
     VectorFieldUG* vfug=vf->getUG();
     if (vfrg) {
-	ScalarFieldRG* sfrg=new ScalarFieldRG();
-	sfrg->resize(vfrg->nx, vfrg->ny, vfrg->nz);
+	ScalarFieldRG* sfrg = new ScalarFieldRG(vfrg->nx, vfrg->ny, vfrg->nz);
 	Point min, max;
 	vfrg->get_bounds(min, max);
 	sfrg->set_bounds(min, max);

@@ -76,7 +76,6 @@ Segment::Segment(const clString& id)
     outscalarfield = scinew ScalarFieldOPort( this, "Scalar Field",
 					ScalarFieldIPort::Atomic);
     add_oport( outscalarfield);
-    newgrid=new ScalarFieldRG;
 }
 
 Segment::~Segment()
@@ -277,7 +276,9 @@ void Segment::execute()
     int width = rg->grid.dim2();
     int height = rg->grid.dim1();
 
-    newgrid->resize(rg->grid.dim1(),rg->grid.dim2(),rg->grid.dim3());
+    newgrid = new ScalarFieldRG(rg->grid.dim1(),
+				rg->grid.dim2(),
+				rg->grid.dim3());
 
     int *in = new int[width*height];
     int *out = new int[width*height];

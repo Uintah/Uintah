@@ -73,7 +73,6 @@ ImageConvolve::ImageConvolve(const clString& id)
     outscalarfield = scinew ScalarFieldOPort( this, "Scalar Field",
 					ScalarFieldIPort::Atomic);
     add_oport( outscalarfield);
-    newgrid=new ScalarFieldRG;
     for (int x=0;x<9;x++)
       matrix[x]=1;
     normal=1;
@@ -122,7 +121,6 @@ void ImageConvolve::execute()
     gen=rg->generation;
     
     if (gen!=newgrid->generation){
-      newgrid=new ScalarFieldRG(*rg);
       // New input
     }
 
@@ -138,7 +136,7 @@ void ImageConvolve::execute()
     int nx=rg->grid.dim1();
     int ny=rg->grid.dim2();
     int nz=rg->grid.dim3();
-    newgrid->resize(nx,ny,nz);
+    newgrid = new ScalarFieldRG(nx, ny, nz);
 
     np = Thread::numProcessors();
     Thread::parallel(Parallel<ImageConvolve>(this, &ImageConvolve::do_parallel),

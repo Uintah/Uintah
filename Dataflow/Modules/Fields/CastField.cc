@@ -224,26 +224,19 @@ void CastField::revoxelize() {
     ScalarFieldRGdouble *ifdo=ifd;
 
     if (outVoxel == UCHAR) {
-	ifuc = new ScalarFieldRGuchar;
-	ifuc->resize(nx,ny,nz);
+	ifuc = new ScalarFieldRGuchar(nx, ny, nz);
     } else if (outVoxel == CHAR) {
-	ifc = new ScalarFieldRGchar;
-	ifc->resize(nx,ny,nz);
+	ifc = new ScalarFieldRGchar(nx, ny, nz);
     } else if (outVoxel == SHORT) {
-	ifs = new ScalarFieldRGshort;
-	ifs->resize(nx,ny,nz);
+	ifs = new ScalarFieldRGshort(nx, ny, nz);
     } else if (outVoxel == USHORT) {
-	ifus = new ScalarFieldRGushort;
-	ifus->resize(nx,ny,nz);
+	ifus = new ScalarFieldRGushort(nx, ny, nz);
     } else if (outVoxel == INT) {
-	ifi = new ScalarFieldRGint;
-	ifi->resize(nx,ny,nz);
+	ifi = new ScalarFieldRGint(nx, ny, nz);
     } else if (outVoxel == FLOAT) {
-	iff = new ScalarFieldRGfloat;
-	iff->resize(nx,ny,nz);
+	iff = new ScalarFieldRGfloat(nx, ny, nz);
     } else if (outVoxel == DOUBLE) {
-	ifd = new ScalarFieldRGdouble;
-	ifd->resize(nx,ny,nz);
+	ifd = new ScalarFieldRGdouble(nx, ny, nz);
     }
 
     if (inVoxel == UCHAR) {

@@ -220,7 +220,7 @@ void Mesh::io(Piostream& stream)
     compute_neighbors();
     if (bld_grid) {
       int idx=0;
-      locate2(Point(0,0,0), idx, 0);
+      locate2(&idx, Point(0,0,0), 0);
     }
     cerr << "Mesh has "<<nodes.size()<<" nodes and "<<elems.size()<<" elements.\n";
   }
@@ -769,10 +769,10 @@ static void dump_mesh(Mesh* mesh)
 }
 #endif
 
-bool Mesh::locate(const Point& p, int& ix, double epsilon1, double epsilon2)
+bool Mesh::locate(int *ix, const Point& p, double epsilon1, double epsilon2)
 {
   // Start with the initial element
-  int i=ix;
+  int i=*ix;
   if(i<0)
     i=0;
   // Find the next valid element in the list
@@ -780,7 +780,7 @@ bool Mesh::locate(const Point& p, int& ix, double epsilon1, double epsilon2)
   if(i>=elemsize()) {
     // If we get to the end, start over...
     i=0;
-    while(i<ix && i<elems.size() && !elems[i])i++;
+    while(i<*ix && i<elems.size() && !elems[i])i++;
   }
   int count=0;
   int nelems=elems.size();
@@ -852,20 +852,20 @@ bool Mesh::locate(const Point& p, int& ix, double epsilon1, double epsilon2)
       int ni=elem->face(f);
 
       if(ni==-1) {
-	ix=i;
+	*ix=i;
 
   	if (min<-epsilon2)
-  	  return locate2(p, ix, epsilon2);
+  	  return locate2(ix, p, epsilon2);
   	else
   	  return true;
       }
       i=ni;
       continue;
     }
-    ix=i;
+    *ix=i;
     return true;
   }
-  return locate2(p, ix, epsilon1);
+  return locate2(ix, p, epsilon1);
 }
 
 bool Mesh::tetra_edge_in_box(const Point&  min, const Point&  max,
@@ -1113,7 +1113,7 @@ int MeshGrid::locate(Mesh* mesh, const Point& p, double)
   return -1;
 }
 
-bool Mesh::locate2(const Point& p, int& ix, double epsilon1)
+bool Mesh::locate2(int *ix, const Point& p, double epsilon1)
 {
   if (grid.nx==0)
   {
@@ -1129,7 +1129,7 @@ bool Mesh::locate2(const Point& p, int& ix, double epsilon1)
   }
   else
   {
-    ix=idx;
+    *ix = idx;
     return true;
   }
 }
@@ -1353,8 +1353,8 @@ Mesh::insert_delaunay( int nn )
   int in_element=elems.size()-1;
   while(!elems[in_element] && in_element>0)
     in_element--;
-  if(!locate(p, in_element)) {
-    if(!locate2(p, in_element)) {
+  if(!locate(&in_element, p)) {
+    if(!locate2(&in_element, p)) {
       cerr << "Error locating point: " << p << endl;
       return false;
     }

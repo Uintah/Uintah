@@ -79,7 +79,6 @@ Threshold::Threshold(const clString& id)
 					ScalarFieldIPort::Atomic);
     add_oport( outscalarfield);
 
-    newgrid=new ScalarFieldRG;
     gen=99;
 }
 
@@ -136,7 +135,6 @@ void Threshold::execute()
     gen=rg->generation;    
     
     if (gen!=newgrid->generation){
-      newgrid=new ScalarFieldRG(*rg);
 	// cerr << "New input..";
     }
     
@@ -165,7 +163,7 @@ void Threshold::execute()
     int ny=rg->grid.dim2();
     int nz=rg->grid.dim3();
     
-    newgrid->resize(nx,ny,nz);
+    newgrid = new ScalarFieldRG(nx, ny, nz);
     
     np = Thread::numProcessors();
     Thread::parallel(Parallel<Threshold>(this, &Threshold::do_parallel),

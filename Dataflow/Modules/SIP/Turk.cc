@@ -131,7 +131,6 @@ Turk::Turk(const clString& id)
     outscalarfield = scinew ScalarFieldOPort( this, "Scalar Field",
 					ScalarFieldIPort::Atomic);
     add_oport( outscalarfield);
-    newgrid=new ScalarFieldRG;
     for (int x=0;x<9;x++)
       matrix[x]=1;
     normal=1;
@@ -483,7 +482,7 @@ void Turk::execute()
     else
       do_spots();
   
-    newgrid->resize(xsize,ysize,1);
+    newgrid = new ScalarFieldRG(xsize, ysize, 1);
     np = Thread::numProcessors();
 
     cerr << "n: " << np << "\n";

@@ -79,7 +79,6 @@ FFT::FFT(const clString& id)
     outscalarfield = scinew ScalarFieldOPort( this, "Scalar Field",
 					ScalarFieldIPort::Atomic);
     add_oport( outscalarfield);
-    newgrid=new ScalarFieldRG;
 }
 
 FFT::~FFT()
@@ -114,21 +113,22 @@ void FFT::execute()
       return;
     }
     gen=rg->generation;
-    
+
+#if 0    
     if (gen!=newgrid->generation){
     //  newgrid=new ScalarFieldRGint;
       // New input
     }
-    newgrid=new ScalarFieldRG;
+#endif
 
     rg->compute_minmax();
     rg->get_minmax(min,max);
 
-    int nx = rg->grid.dim2();
-    int ny = rg->grid.dim1();
-    int nz = rg->grid.dim3();
+    const int nx = rg->grid.dim2();
+    const int ny = rg->grid.dim1();
+    const int nz = rg->grid.dim3();
     
-    newgrid->resize(ny,nx,2);
+    newgrid = scinew ScalarFieldRG(nx, ny, nz);
 
     np = Thread::numProcessors();    
 

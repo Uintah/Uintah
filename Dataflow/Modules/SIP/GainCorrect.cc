@@ -202,9 +202,8 @@ void GainCorrect::execute() {
     lastOffset=nOffset;
     Point min, max;
     igain->get_bounds(min, max);
-    osf = new ScalarFieldRGuchar();
+    osf = new ScalarFieldRGuchar(igain->nx, igain->ny, igain->nz);
     osf->set_bounds(min, max);
-    osf->resize(igain->nx, igain->ny, igain->nz);
     osf->grid.initialize(0);
     oFldHandle = osf;
     if (lastFT == "Subtract") {

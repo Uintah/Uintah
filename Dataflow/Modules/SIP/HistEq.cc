@@ -83,7 +83,6 @@ HistEq::HistEq(const clString& id)
     outscalarfield = scinew ScalarFieldOPort( this, "Scalar Field",
 					ScalarFieldIPort::Atomic);
     add_oport( outscalarfield);
-    newgrid=new ScalarFieldRG;
 }
 
 HistEq::~HistEq()
@@ -383,16 +382,15 @@ void HistEq::execute()
     //  newgrid=new ScalarFieldRGint;
       // New input
     }
-    newgrid=new ScalarFieldRG;
+    newgrid = new ScalarFieldRG(rg->grid.dim1(),
+				rg->grid.dim2(),
+				rg->grid.dim3());
 
     rg->compute_minmax();
     rg->get_minmax(min,max);
 
     int ydim = rg->grid.dim1();
     int xdim = rg->grid.dim2();
-    
-    newgrid->resize(rg->grid.dim1(),rg->grid.dim2(),rg->grid.dim3());
-
     
     
     np = Thread::numProcessors();    
@@ -413,7 +411,7 @@ void HistEq::execute()
       cerr << "Input image must be a multiple of NX and NY.\n";
     for (x=0; x<xdim; x++)
       for (int y=0; y<ydim; y++)
-	newgrid->grid(y,x,0)=theimage[y*xdim+x];
+	newgrid->grid(y,x,0) = theimage[y*xdim+x];
     
     outscalarfield->send( newgrid );
 }

@@ -86,7 +86,7 @@ void MeshReader::execute()
     }
     delete stream;
     int i;
-    handle->locate2(Point(0,0,0), i, 0.00001);
+    handle->locate2(&i, Point(0,0,0), 0.00001);
     handle->compute_neighbors();
   }
   outport->send(handle);

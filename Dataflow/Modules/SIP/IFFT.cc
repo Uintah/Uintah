@@ -79,7 +79,6 @@ IFFT::IFFT(const clString& id)
     outscalarfield = scinew ScalarFieldOPort( this, "Scalar Field",
 					ScalarFieldIPort::Atomic);
     add_oport( outscalarfield);
-    newgrid=new ScalarFieldRG;
 }
 
 IFFT::~IFFT()
@@ -119,8 +118,6 @@ void IFFT::execute()
     //  newgrid=new ScalarFieldRGint;
       // New input
     }
-    newgrid=new ScalarFieldRG;
-
     rg->compute_minmax();
     rg->get_minmax(min,max);
 
@@ -128,7 +125,7 @@ void IFFT::execute()
     int ny = rg->grid.dim1();
     //int nz = rg->grid.dim3();
     
-    newgrid->resize(ny,nx,1);
+    newgrid = new ScalarFieldRG(ny, nx, 1);
 
     np = Thread::numProcessors();    
 

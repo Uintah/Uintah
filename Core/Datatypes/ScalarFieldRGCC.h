@@ -27,7 +27,7 @@ namespace SCIRun {
 
 class SCICORESHARE ScalarFieldRGCC : public ScalarFieldRG {
 public:
-    ScalarFieldRGCC();
+    ScalarFieldRGCC(int x, int y, int z);
     ScalarFieldRGCC(const ScalarFieldRGCC&);
     virtual ~ScalarFieldRGCC();
     virtual ScalarField* clone();

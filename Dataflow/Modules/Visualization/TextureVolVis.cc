@@ -95,8 +95,7 @@ void TextureVolVis::SwapXZ( ScalarFieldHandle sfh )
   Point max;
   sfh->get_bounds(min, max);
 
-  ofu = scinew ScalarFieldRGuchar();
-  ofu->resize(nz,ny,nx);
+  ofu = scinew ScalarFieldRGuchar(nz, ny, nx);
   ofu->set_bounds(min, max);
   for (int i=0, ii=0; i<nx; i++, ii++)
     for (int j=0, jj=0; j<ny; j++, jj++)

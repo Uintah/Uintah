@@ -28,8 +28,7 @@ class SCICORESHARE ScalarFieldRGT : public ScalarFieldRGBase {
 public:
   Array3<T> grid;
 
-  void resize(int, int, int);
-  ScalarFieldRGT();
+  ScalarFieldRGT(int x, int y, int z);
   ScalarFieldRGT(const ScalarFieldRGT &);
   virtual ~ScalarFieldRGT();
   virtual ScalarField* clone();
@@ -59,13 +58,13 @@ private:
 };
 
 
-template <> ScalarFieldRGT<double>::ScalarFieldRGT();
-template <> ScalarFieldRGT<float>::ScalarFieldRGT();
-template <> ScalarFieldRGT<int>::ScalarFieldRGT();
-template <> ScalarFieldRGT<short>::ScalarFieldRGT();
-template <> ScalarFieldRGT<unsigned short>::ScalarFieldRGT();
-template <> ScalarFieldRGT<char>::ScalarFieldRGT();
-template <> ScalarFieldRGT<unsigned char>::ScalarFieldRGT();
+template <> ScalarFieldRGT<double>::ScalarFieldRGT(int x, int y, int z);
+template <> ScalarFieldRGT<float>::ScalarFieldRGT(int x, int y, int z);
+template <> ScalarFieldRGT<int>::ScalarFieldRGT(int x, int y, int z);
+template <> ScalarFieldRGT<short>::ScalarFieldRGT(int x, int y, int z);
+template <> ScalarFieldRGT<unsigned short>::ScalarFieldRGT(int x, int y, int z);
+template <> ScalarFieldRGT<char>::ScalarFieldRGT(int x, int y, int z);
+template <> ScalarFieldRGT<unsigned char>::ScalarFieldRGT(int x, int y, int z);
 
 
 template <> PersistentTypeID ScalarFieldRGT<double>::type_id;
@@ -82,7 +81,7 @@ template <class T>
 Persistent *
 ScalarFieldRGT<T>::maker()
 {
-  return scinew ScalarFieldRGT<T>();
+  return scinew ScalarFieldRGT<T>(0, 0, 0);
 }
 
 template <class T>
@@ -110,19 +109,13 @@ ScalarFieldRGT<T>::get_value( int x, int y, int z )
   return (double) grid( x, y, z );
 }
 
-template <class T>
-void ScalarFieldRGT<T>::resize(int x, int y, int z) {
-  nx=x; ny=y; nz=z;
-  grid.newsize(x,y,z);
-}
-
 #define ScalarFieldRGT_VERSION 3
 
 template <class T>
 void ScalarFieldRGT<T>::io(Piostream& stream)
 {
   int version=stream.begin_class(type_id.type.c_str(), ScalarFieldRGT_VERSION);
-  if(version == 1){
+  if(version == 1) {
     // From before, when the ScalarFieldRGBase didn't exist...
     ScalarField::io(stream);
 
