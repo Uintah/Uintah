@@ -849,7 +849,7 @@ void setBC(CCVariable<double>& press_CC,
               const int mat_id,
               DataWarehouse* new_dw)
 {
-  BC_doing << "Johns setBC (press_CC) "<< kind <<" " << which_var<<endl;
+  BC_doing << "Johns setBC (press_CC) "<< kind <<" " << which_Var<<endl;
   Vector dx = patch->dCell();
   for (Patch::FaceType face = Patch::startFace; face <= Patch::endFace;
        face=Patch::nextFace(face)) {
