@@ -10,6 +10,7 @@ static char *id="@(#) $Id$";
 #include <SCICore/Geometry/Point.h>
 #include <Uintah/Exceptions/ParameterNotFound.h>
 #include <PSECore/XMLUtil/XMLUtil.h>
+#include <SCICore/Malloc/Allocator.h>
 //#include <cstdlib>
 using namespace Uintah;
 using namespace std;
@@ -27,7 +28,7 @@ ProblemSpec::~ProblemSpec()
 
 ProblemSpecP ProblemSpec::findBlock() const
 {
-  ProblemSpecP prob_spec = new ProblemSpec(d_node);
+  ProblemSpecP prob_spec = scinew ProblemSpec(d_node);
 
   DOM_Node child = d_node.getFirstChild();
   if (child != 0) {
@@ -38,7 +39,7 @@ ProblemSpecP ProblemSpec::findBlock() const
   if (child.isNull() )
      return 0;
   else
-     return new ProblemSpec(child);
+     return scinew ProblemSpec(child);
 
 }
 
@@ -52,7 +53,7 @@ ProblemSpecP ProblemSpec::findBlock(const std::string& name) const
     return 0;
   }
   else {
-     return new ProblemSpec(found_node);
+     return scinew ProblemSpec(found_node);
   }
 }
 
@@ -70,7 +71,7 @@ ProblemSpecP ProblemSpec::findNextBlock() const
      return 0;
   }
   else {
-     return new ProblemSpec(found_node);
+     return scinew ProblemSpec(found_node);
   }
 }
 
@@ -98,7 +99,7 @@ ProblemSpecP ProblemSpec::findNextBlock(const std::string& name) const
      return 0;
   }
   else {
-     return new ProblemSpec(found_node);
+     return scinew ProblemSpec(found_node);
   }
 }
 
@@ -432,6 +433,10 @@ const TypeDescription* ProblemSpec::getTypeDescription()
 
 //
 // $Log$
+// Revision 1.19  2000/05/30 20:19:41  sparker
+// Changed new to scinew to help track down memory leaks
+// Changed region to patch
+//
 // Revision 1.18  2000/05/20 08:09:38  sparker
 // Improved TypeDescription
 // Finished I/O

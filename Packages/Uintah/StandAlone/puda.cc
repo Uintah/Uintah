@@ -151,11 +151,11 @@ int main(int argc, char** argv)
 	       cerr << "\tVariable: " << var << ", type " << td->getName() << "\n";
 	       for(int l=0;l<grid->numLevels();l++){
 		  LevelP level = grid->getLevel(l);
-		  for(Level::const_regionIterator iter = level->regionsBegin();
-		      iter != level->regionsEnd(); iter++){
-		     const Region* region = *iter;
-		     cerr << "\t\tRegion: " << region->getID() << "\n";
-		     int numMatls = da->queryNumMaterials(var, region, time);
+		  for(Level::const_patchIterator iter = level->patchesBegin();
+		      iter != level->patchesEnd(); iter++){
+		     const Patch* patch = *iter;
+		     cerr << "\t\tPatch: " << patch->getID() << "\n";
+		     int numMatls = da->queryNumMaterials(var, patch, time);
 		     for(int matl=0;matl<numMatls;matl++){
 			cerr << "\t\t\tMaterial: " << matl << "\n";
 			switch(td->getType()){
@@ -164,7 +164,7 @@ int main(int argc, char** argv)
 			   case TypeDescription::double_type:
 			      {
 				 ParticleVariable<double> value;
-				 da->query(value, var, matl, region, time);
+				 da->query(value, var, matl, patch, time);
 				 ParticleSubset* pset = value.getParticleSubset();
 				 cerr << "\t\t\t\t" << td->getName() << " over " << pset->numParticles() << " particles\n";
 				 if(pset->numParticles() > 0){
@@ -183,7 +183,7 @@ int main(int argc, char** argv)
 			   case TypeDescription::Point:
 			      {
 				 ParticleVariable<Point> value;
-				 da->query(value, var, matl, region, time);
+				 da->query(value, var, matl, patch, time);
 				 ParticleSubset* pset = value.getParticleSubset();
 				 cerr << "\t\t\t\t" << td->getName() << " over " << pset->numParticles() << " particles\n";
 				 if(pset->numParticles() > 0){
@@ -202,7 +202,7 @@ int main(int argc, char** argv)
 			   case TypeDescription::Vector:
 			      {
 				 ParticleVariable<Vector> value;
-				 da->query(value, var, matl, region, time);
+				 da->query(value, var, matl, patch, time);
 				 ParticleSubset* pset = value.getParticleSubset();
 				 cerr << "\t\t\t\t" << td->getName() << " over " << pset->numParticles() << " particles\n";
 				 if(pset->numParticles() > 0){
@@ -228,12 +228,12 @@ int main(int argc, char** argv)
 			   case TypeDescription::double_type:
 			      {
 				 NCVariable<double> value;
-				 da->query(value, var, matl, region, time);
+				 da->query(value, var, matl, patch, time);
 				 cerr << "\t\t\t\t" << td->getName() << " over " << value.getLowIndex() << " to " << value.getHighIndex() << "\n";
 				 IntVector dx(value.getHighIndex()-value.getLowIndex());
 				 if(dx.x() && dx.y() && dx.z()){
 				    double min, max;
-				    NodeIterator iter = region->getNodeIterator();
+				    NodeIterator iter = patch->getNodeIterator();
 				    min=max=value[*iter];
 				    for(;!iter.done(); iter++){
 				       min=Min(min, value[*iter]);
@@ -247,12 +247,12 @@ int main(int argc, char** argv)
 			   case TypeDescription::Point:
 			      {
 				 NCVariable<Point> value;
-				 da->query(value, var, matl, region, time);
+				 da->query(value, var, matl, patch, time);
 				 cerr << "\t\t\t\t" << td->getName() << " over " << value.getLowIndex() << " to " << value.getHighIndex() << "\n";
 				 IntVector dx(value.getHighIndex()-value.getLowIndex());
 				 if(dx.x() && dx.y() && dx.z()){
 				    Point min, max;
-				    NodeIterator iter = region->getNodeIterator();
+				    NodeIterator iter = patch->getNodeIterator();
 				    min=max=value[*iter];
 				    for(;!iter.done(); iter++){
 				       min=Min(min, value[*iter]);
@@ -266,12 +266,12 @@ int main(int argc, char** argv)
 			   case TypeDescription::Vector:
 			      {
 				 NCVariable<Vector> value;
-				 da->query(value, var, matl, region, time);
+				 da->query(value, var, matl, patch, time);
 				 cerr << "\t\t\t\t" << td->getName() << " over " << value.getLowIndex() << " to " << value.getHighIndex() << "\n";
 				 IntVector dx(value.getHighIndex()-value.getLowIndex());
 				 if(dx.x() && dx.y() && dx.z()){
 				    double min, max;
-				    NodeIterator iter = region->getNodeIterator();
+				    NodeIterator iter = patch->getNodeIterator();
 				    min=max=value[*iter].length2();
 				    for(;!iter.done(); iter++){
 				       min=Min(min, value[*iter].length2());
@@ -308,6 +308,10 @@ int main(int argc, char** argv)
 
 //
 // $Log$
+// Revision 1.4  2000/05/30 20:18:39  sparker
+// Changed new to scinew to help track down memory leaks
+// Changed region to patch
+//
 // Revision 1.3  2000/05/21 08:19:04  sparker
 // Implement NCVariable read
 // Do not fail if variable type is not known
