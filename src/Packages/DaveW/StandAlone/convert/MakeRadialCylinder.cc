@@ -178,10 +178,13 @@ int main(int argc, char *argv[]) {
 //  Array1<int> data = genPtsAndTets(14, 22, mesh);  // generate everything
   Array1<int> data = genPtsAndTets(nr, nz, mesh);  // generate everything
 
-  Array1<Tensor> conds(3);
-  conds[0] = Tensor(0.3012);
-  conds[1] = Tensor(0.1506);
-  conds[2] = Tensor(0.4518);
+  vector<pair<string, Tensor> > conds(3);
+  conds[0].first = "0 conductivity";
+  conds[0].second = Tensor(0.3012);
+  conds[1].first = "1 conductivity";
+  conds[1].second = Tensor(0.1506);
+  conds[2].first = "2 conductivity";
+  conds[2].second = Tensor(0.4518);
 
   TetVolMeshHandle tvmH(mesh);
   TetVol<int> *tv = scinew TetVol<int>(tvmH, Field::CELL);

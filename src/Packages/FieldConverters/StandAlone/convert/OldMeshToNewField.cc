@@ -87,9 +87,12 @@ int main(int argc, char **argv) {
   field = new TetVol<int>(tvm, Field::CELL);
 
   // Set the conductivities as indexed data
-  Array1<Tensor> conds;
+  vector<pair<string, Tensor> > conds;
   for (int i=0; i<mesh->cond_tensors.size(); i++)
-    conds.add(Tensor(mesh->cond_tensors[i]));
+  {
+    conds.push_back(pair<string, Tensor>(to_string(i),
+					 Tensor(mesh->cond_tensors[i])));
+  }
   field->store("data_storage", string("table"));
   field->store("name", string("conductivity"));
   field->store("conductivity_table", conds);

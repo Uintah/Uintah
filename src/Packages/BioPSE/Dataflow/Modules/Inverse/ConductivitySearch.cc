@@ -138,21 +138,21 @@ void ConductivitySearch::build_basis_matrices() {
 
   MatrixHandle aH;
   MatrixHandle bH;
-  Array1<Tensor> tens(NDIM_);
-  tens.initialize(zero);
+  vector<pair<string, Tensor> > tens(NDIM_, pair<string, Tensor>("", zero));
   BuildFEMatrix::build_FEMatrix(tvH, dirBC, tens, aH, bH);
   AmatH_ = aH;
   AmatH_.detach(); // this will be our global "shape" information
   
   data_basis_.resize(NDIM_);
   for (int i=0; i<NDIM_; i++) {
-    tens[i]=identity;
+    tens[i].first=to_string(i);
+    tens[i].second=identity;
     BuildFEMatrix::build_FEMatrix(tvH, dirBC, tens, aH, bH);
     SparseRowMatrix *m = dynamic_cast<SparseRowMatrix*>(aH.get_rep());
     data_basis_[i].resize(m->nnz);
     for (int j=0; j<m->nnz; j++)
       data_basis_[i][j] = m->a[j];
-    tens[i]=zero;
+    tens[i].second=zero;
   }    
 }
 
@@ -176,9 +176,9 @@ void ConductivitySearch::initialize_search() {
   cond_vector_ = cm = new ColumnMatrix(NDIM_*2);
   int c;
   for (int c=0; c<NDIM_*2; c++) (*cm)[c]=0;
-  Array1<Tensor> conds;
+  vector<pair<string, Tensor> > conds;
   if (mesh_in_->get("conductivity_table", conds))
-    for (c=NDIM_; c<NDIM_*2; c++) (*cm)[c]=conds[c-NDIM_].mat_[0][0];
+    for (c=NDIM_; c<NDIM_*2; c++) (*cm)[c]=conds[c-NDIM_].second.mat_[0][0];
 
   int seed = seed_gui_.get();
   seed_gui_.set(seed+1);
@@ -237,12 +237,12 @@ void ConductivitySearch::send_and_get_data(int which_conductivity) {
   cond_vector_.detach();
   mesh_out_ = mesh_in_;
   mesh_out_.detach();
-  Array1<Tensor> conds;
+  vector<pair<string, Tensor> > conds;
   ColumnMatrix *cm = dynamic_cast<ColumnMatrix*>(cond_vector_.get_rep());
   int i;
   for (i=0; i<NDIM_; i++) {
     double c=conductivities_(which_conductivity, i);
-    conds.add(Tensor(c));
+    conds.push_back(pair<string, Tensor>(to_string(i), Tensor(c)));
     (*cm)[i]=c;
   }
   mesh_out_->store("conductivity_table", conds, true);

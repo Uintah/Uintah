@@ -62,7 +62,7 @@ main(int argc, char **argv) {
     exit(0);
   }
 
-  Array1<Tensor> *conds = scinew Array1<Tensor>;
+  vector<pair<string, Tensor> > *conds = scinew vector<pair<string, Tensor> >;
   if (!handle->get("conductivity_table", *conds)) {
     cerr << "Error - didn't have a conductivity_table in the PropertyManager.\n";
     return 0;
@@ -77,14 +77,14 @@ main(int argc, char **argv) {
   for (int i=0; i<conds->size(); i++) {
     int j, k;
     for (j=0; j<3; j++) for (k=0; k<3; k++) {
-      m[j*3+k]=(*conds)[i].mat_[j][k];
-      (*conds)[i].mat_[j][k]=0;
+      m[j*3+k]=(*conds)[i].second.mat_[j][k];
+      (*conds)[i].second.mat_[j][k]=0;
     }
     ell3mEigensolve(eval, evec, m, 0);
     double cbrt_vol = cbrt(eval[0]*eval[1]*eval[2]);
     if (cbrt_vol<0) { neg_vals++; cbrt_vol=0.1; }
     if (cbrt_vol<0.1) {small_vals++; cbrt_vol=0.1; }
-    for (j=0; j<3; j++) (*conds)[i].mat_[j][j]=cbrt_vol;
+    for (j=0; j<3; j++) (*conds)[i].second.mat_[j][j]=cbrt_vol;
   }
   handle->store("conductivity_table", *conds, true);
   cerr << "  # of negative volumes = "<<neg_vals<<"\n";

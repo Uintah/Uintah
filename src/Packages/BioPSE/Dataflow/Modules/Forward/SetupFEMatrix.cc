@@ -192,7 +192,7 @@ void SetupFEMatrix::execute(){
   }
 
   //! finding conductivity tensor lookup table
-  Array1<Tensor> tens;
+  vector<pair<string, Tensor> > tens;
 
   if (uiUseCond_.get()==1 && hCondMesh->get("conductivity_table", tens)){
     msgStream_ << "Using supplied conductivity tensors "  << endl;
@@ -203,10 +203,14 @@ void SetupFEMatrix::execute(){
     minmax.second=1;
     field_minmax(*(hCondMesh.get_rep()), minmax);
     tens.resize(minmax.second+1);
-    Array1<double> t(6);
+    vector<double> t(6);
     t[0] = t[3] = t[5] = 1;
     t[1] = t[2] = t[4] = 0;
-    tens.initialize(Tensor(t));
+    Tensor ten(t);
+    for (unsigned int i = 0; i < tens.size(); i++)
+    {
+      tens[i] = pair<string, Tensor>(to_string((int)i), ten);
+    }
   }
   
   lastUseCond_ = uiUseCond_.get();

@@ -64,7 +64,7 @@ class BuildFEMatrix: public Datatype {
   int*             allCols_;
   Barrier          barrier_;
   Array1<int>      colIdx_;
-  Array1<Tensor>&  tens_;
+  vector<pair<string, Tensor> >&  tens_;
   
   //! Private methods
   void parallel(int);
@@ -78,13 +78,13 @@ public:
    //! Constructor
   BuildFEMatrix(TetVolIntHandle,
 		DirichletBC&,
-		Array1<Tensor>&,
+		vector<pair<string, Tensor> >&,
 		MatrixHandle&, 
 		MatrixHandle&, 
 		int);
   static bool build_FEMatrix(TetVolIntHandle,
 			     DirichletBC&,
-			     Array1<Tensor>&,
+			     vector<pair<string, Tensor> > &,
 			     MatrixHandle&, 
 			     MatrixHandle&);
   //! Destuctor
