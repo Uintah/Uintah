@@ -168,7 +168,7 @@ void SimpleHEBurn::computeMassRate(const Patch* patch,
   ParticleVariable<double> pmass;
   old_dw->get(pmass, lb->pMassLabel, matlindex, patch,Ghost::None,0);
   ParticleVariable<double> pvolume;
-  new_dw->get(pmass, lb->pVolumeDeformedLabel, matlindex, patch,Ghost::None,0);
+  new_dw->get(pvolume,lb->pVolumeDeformedLabel, matlindex, patch,Ghost::None,0);
 
   ParticleVariable<int> pIsIgnited;
   new_dw->get(pIsIgnited, lb->pIsIgnitedLabel,
@@ -194,6 +194,9 @@ void SimpleHEBurn::computeMassRate(const Patch* patch,
 }
  
 // $Log$
+// Revision 1.5  2000/06/08 17:37:07  guilkey
+// Fixed small error.
+//
 // Revision 1.4  2000/06/08 17:09:11  guilkey
 // Changed an old_dw to a new_dw.
 //
