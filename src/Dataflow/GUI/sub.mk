@@ -138,6 +138,7 @@ SRCS := \
 	$(SRCDIR)/Subnet.tcl \
 	$(SRCDIR)/SynchronizeGeometry.tcl \
 	$(SRCDIR)/SciTclStream.tcl \
+	$(SRCDIR)/TetMesher.tcl \
 	$(SRCDIR)/TexCuttingPlanes.tcl \
 	$(SRCDIR)/TextureBuilder.tcl \
 	$(SRCDIR)/TextureVolVis.tcl \
