@@ -213,7 +213,6 @@ void TensorFieldExtractor::execute()
     case TypeDescription::Matrix3:
       {
 	NCTensorField *vfd  = scinew NCTensorField();
-	NCVariable< Matrix3 > vv;
 	
 	if(var != ""){
 	  vfd->SetGrid( grid );
@@ -223,6 +222,7 @@ void TensorFieldExtractor::execute()
 	  // iterate over patches
 	  for(Level::const_patchIterator r = level->patchesBegin();
 	      r != level->patchesEnd(); r++ ){
+	    NCVariable< Matrix3 > vv;
 	    archive.query(vv, var, mat, *r, time);
 	    vfd->AddVar( vv );
 	  }
@@ -252,6 +252,7 @@ void TensorFieldExtractor::execute()
 	  // iterate over patches
 	  for(Level::const_patchIterator r = level->patchesBegin();
 	      r != level->patchesEnd(); r++ ){
+	    CCVariable< Matrix3 > vv;
 	    archive.query(vv, var, mat, (*r), time);
 	    vfd->AddVar( vv );
 	  }
