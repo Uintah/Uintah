@@ -96,7 +96,7 @@ int main()
   for(;;){
     cerr << "remote server waiting for connections on port " << PORT << '\n';
     struct sockaddr_in in_sa;
-    int in_sa_len = sizeof(in_sa);
+    socklen_t in_sa_len = sizeof(in_sa);
     int in = accept(listen_sock, (struct sockaddr*)&in_sa, &in_sa_len);
     if(in == -1){
       perror("accept");

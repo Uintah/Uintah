@@ -38,13 +38,13 @@ include $(SCIRUN_SCRIPTS)/program.mk
 # rserver
 SRCS := $(SRCDIR)/rserver.cc
 PROGRAM := Packages/rtrt/StandAlone/rserver
-LIBS := $(OOGL_LIBRARY) $(GLUI_LIBRARY) $(GLUT_LIBRARY) $(GL_LIBRARY) $(X_LIBRARY) $(XI_LIBRARY)
+LIBS := $(OOGL_LIBRARY) $(GLUI_LIBRARY) $(GLUT_LIBRARY) $(GL_LIBRARY) $(X_LIBRARY) $(XI_LIBRARY) $(XMU_LIBRARY)
 PSELIBS := Packages/rtrt/visinfo Core/Thread Packages/rtrt/Core
 include $(SCIRUN_SCRIPTS)/program.mk
 
 #nrrd2brick
 SRCS := $(SRCDIR)/nrrd2brick.cc
-LIBS := $(FASTM_LIBRARY) $(TEEM_LIBRARY) $(THREAD_LIBRARY) $(X11_LIBRARY) $(M_LIBRARY)
+LIBS := $(FASTM_LIBRARY) $(TEEM_LIBRARY) $(THREAD_LIBRARY) $(X11_LIBRARY) $(M_LIBRARY) $(XI_LIBRARY) $(XMU_LIBRARY)
 PROGRAM := Packages/rtrt/StandAlone/nrrd2brick
 include $(SCIRUN_SCRIPTS)/program.mk
 
@@ -82,7 +82,7 @@ else
 	Core/Exceptions
 
 endif
-LIBS := $(GL_LIBRARY) $(FASTM_LIBRARY) $(M_LIBRARY) $(THREAD_LIBRARY) $(PERFEX_LIBRARY)
+LIBS := $(GL_LIBRARY) $(FASTM_LIBRARY) $(M_LIBRARY) $(THREAD_LIBRARY) $(PERFEX_LIBRARY) $(XI_LIBRARY) $(XMU_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/program.mk
 
@@ -103,7 +103,7 @@ else
 	Core/Exceptions
 
 endif
-LIBS := $(GL_LIBRARY) $(FASTM_LIBRARY) $(M_LIBRARY) $(THREAD_LIBRARY) $(PERFEX_LIBRARY)
+LIBS := $(GL_LIBRARY) $(FASTM_LIBRARY) $(M_LIBRARY) $(THREAD_LIBRARY) $(PERFEX_LIBRARY) $(XI_LIBRARY) $(XMU_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/program.mk
 
