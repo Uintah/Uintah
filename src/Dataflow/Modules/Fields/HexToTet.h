@@ -32,6 +32,7 @@
 #include <Core/Util/TypeDescription.h>
 #include <Core/Util/DynamicLoader.h>
 #include <Core/Datatypes/TetVolField.h>
+#include <Core/Util/Assert.h>
 
 namespace SCIRun {
 
@@ -112,7 +113,7 @@ HexToTetAlgoT<FSRC>::execute(FieldHandle srcH, FieldHandle& dstH)
 
 	  mesh_type::Node::array_type hvnodes;
 	  hvmesh->get_nodes(hvnodes, buffers[flipflop][i]);
-
+	  ASSERT(hvnodes.size() == 8);
 	  if (flipflop)
 	  {
 	    tvmesh->add_tet((TetVolMesh::Node::index_type)(hvnodes[0]),

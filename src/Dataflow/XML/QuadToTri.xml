@@ -21,17 +21,17 @@
 -->
 
 
-<component name="HexToTet" category="Fields">
+<component name="QuadToTri" category="Fields">
   <overview>
     <authors>
-      <author>Michael Callahan</author>
+      <author>David Weinstein</author>
     </authors>
-    <summary>Convert a HexVolField into a TetVolField.</summary>
+    <summary>Convert a QuadSurfField into a TriSurfField.</summary>
     <description>
       <p>
-        Given a Hex field (or anything that supports the same interface)
-	as input, produce a TetVol as output -- each Hex element gets
-        split into 5 Tets.  In order to produce consistent splits across
+        Given a QuadSurfField (or anything that supports the same interface)
+        as input, produce a TriSurfField as output -- each Quad element gets
+        split into 2 Tris.  In order to produce consistent splits across
         faces, we alternate between two different templates for how to do
         the split.
       </p>
@@ -40,13 +40,13 @@
   <io>
     <inputs lastportdynamic="no">
       <port>
-        <name>HexVol</name>
+        <name>QuadSurf</name>
 	<datatype>SCIRun::Field</datatype>
       </port>
     </inputs>
     <outputs>
       <port>
-        <name>TetVol</name>
+        <name>TriSurf</name>
 	<datatype>SCIRun::Field</datatype>
       </port>
     </outputs>

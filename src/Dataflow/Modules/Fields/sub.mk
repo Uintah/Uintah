@@ -52,6 +52,7 @@ SRCS     += \
 	$(SRCDIR)/HexToTet.cc\
 	$(SRCDIR)/ManageFieldData.cc\
 	$(SRCDIR)/MapDataToMeshCoord.cc\
+	$(SRCDIR)/QuadToTri.cc\
 	$(SRCDIR)/Probe.cc\
 	$(SRCDIR)/ReplaceScalarDataValue.cc\
 	$(SRCDIR)/SampleField.cc\
