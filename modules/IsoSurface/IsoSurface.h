@@ -20,7 +20,9 @@
 class ColormapPort;
 class Field3DIPort;
 class GeometryOPort;
+class MUI_slider_real;
 class ObjGroup;
+
 
 class IsoSurface : public UserModule {
     Field3DIPort* infield;
@@ -35,6 +37,10 @@ class IsoSurface : public UserModule {
     int make_normals;
     int do_3dwidget;
     double scalar_val;
+
+    double old_min;
+    double old_max;
+    MUI_slider_real* value_slider;
 
     int widget_id;
 

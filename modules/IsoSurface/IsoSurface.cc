@@ -55,8 +55,9 @@ IsoSurface::IsoSurface()
     add_oport(ogeom);
 
     isoval=1;
-    add_ui(new MUI_slider_real("IsoContour value", &isoval,
-			       MUI_widget::Immediate, 1));
+    value_slider=new MUI_slider_real("IsoContour value", &isoval,
+			       MUI_widget::Immediate, 1);
+    add_ui(value_slider);
     have_seedpoint=0;
     seed_point=Point(0,0,0);
     add_ui(new MUI_point("Seed Point", &seed_point,
@@ -71,6 +72,8 @@ IsoSurface::IsoSurface()
     do_3dwidget=1;
     add_ui(new MUI_onoff_switch("3D widget", &do_3dwidget,
 				MUI_widget::Immediate));
+    old_min=-1.e30;
+    old_max=1.e30;
 }
 
 IsoSurface::IsoSurface(const IsoSurface& copy, int deep)
@@ -97,6 +100,13 @@ void IsoSurface::execute()
     if(field->get_type() != Field3D::ScalarField){
 	error("Field is not a scalar field!\n");
 	return;
+    }
+    double min, max;
+    field->get_minmax(min, max);
+    if(min != old_min || max != old_max){
+	value_slider->set_minmax(min, max);
+	old_min=min;
+	old_max=max;
     }
     if(do_3dwidget){
 	GeomSphere* ptobj=new GeomSphere(seed_point, 0.5);
@@ -166,188 +176,188 @@ int IsoSurface::iso_cube(int i, int j, int k, double isoval,
 	break;
     case 1:
 	{
-	    Point p1(Interpolate(v[1], v[2], val[1]/(val[2]-val[1])));
-	    Point p2(Interpolate(v[1], v[5], val[1]/(val[5]-val[1])));
-	    Point p3(Interpolate(v[1], v[4], val[1]/(val[4]-val[1])));
+	    Point p1(Interpolate(v[1], v[2], val[1]/(val[1]-val[2])));
+	    Point p2(Interpolate(v[1], v[5], val[1]/(val[1]-val[5])));
+	    Point p3(Interpolate(v[1], v[4], val[1]/(val[1]-val[4])));
 	    group->add(new Triangle(p1, p2, p3));
 	}
 	break;
     case 2:
 	{
-	    Point p1(Interpolate(v[1], v[5], val[1]/(val[5]-val[1])));
-	    Point p2(Interpolate(v[2], v[6], val[2]/(val[6]-val[2])));
-	    Point p3(Interpolate(v[2], v[3], val[2]/(val[3]-val[2])));
+	    Point p1(Interpolate(v[1], v[5], val[1]/(val[1]-val[5])));
+	    Point p2(Interpolate(v[2], v[6], val[2]/(val[2]-val[6])));
+	    Point p3(Interpolate(v[2], v[3], val[2]/(val[2]-val[3])));
 	    group->add(new Triangle(p1, p2, p3));
-	    Point p4(Interpolate(v[1], v[4], val[1]/(val[4]-val[1])));
+	    Point p4(Interpolate(v[1], v[4], val[1]/(val[1]-val[4])));
 	    group->add(new Triangle(p3, p4, p1));
 	}
 	break;
     case 3:
 	{
-	    Point p1(Interpolate(v[1], v[2], val[1]/(val[2]-val[1])));
-	    Point p2(Interpolate(v[1], v[5], val[1]/(val[5]-val[1])));
-	    Point p3(Interpolate(v[1], v[4], val[1]/(val[4]-val[1])));
+	    Point p1(Interpolate(v[1], v[2], val[1]/(val[1]-val[2])));
+	    Point p2(Interpolate(v[1], v[5], val[1]/(val[1]-val[5])));
+	    Point p3(Interpolate(v[1], v[4], val[1]/(val[1]-val[4])));
 	    group->add(new Triangle(p1, p2, p3));
-	    Point p4(Interpolate(v[3], v[2], val[3]/(val[2]-val[3])));
-	    Point p5(Interpolate(v[3], v[7], val[3]/(val[7]-val[3])));
-	    Point p6(Interpolate(v[3], v[4], val[3]/(val[4]-val[3])));
+	    Point p4(Interpolate(v[3], v[2], val[3]/(val[3]-val[2])));
+	    Point p5(Interpolate(v[3], v[7], val[3]/(val[3]-val[7])));
+	    Point p6(Interpolate(v[3], v[4], val[3]/(val[3]-val[4])));
 	    group->add(new Triangle(p4, p5, p6));
 	}
 	break;
     case 4:
 	{
-	    Point p1(Interpolate(v[1], v[2], val[1]/(val[2]-val[1])));
-	    Point p2(Interpolate(v[1], v[5], val[1]/(val[5]-val[1])));
-	    Point p3(Interpolate(v[1], v[4], val[1]/(val[4]-val[1])));
+	    Point p1(Interpolate(v[1], v[2], val[1]/(val[1]-val[2])));
+	    Point p2(Interpolate(v[1], v[5], val[1]/(val[1]-val[5])));
+	    Point p3(Interpolate(v[1], v[4], val[1]/(val[1]-val[4])));
 	    group->add(new Triangle(p1, p2, p3));
-	    Point p4(Interpolate(v[7], v[3], val[7]/(val[3]-val[7])));
-	    Point p5(Interpolate(v[7], v[8], val[7]/(val[8]-val[7])));
-	    Point p6(Interpolate(v[7], v[6], val[7]/(val[6]-val[7])));
+	    Point p4(Interpolate(v[7], v[3], val[7]/(val[7]-val[3])));
+	    Point p5(Interpolate(v[7], v[8], val[7]/(val[7]-val[8])));
+	    Point p6(Interpolate(v[7], v[6], val[7]/(val[7]-val[6])));
 	    group->add(new Triangle(p4, p5, p6));
 	}
 	break;
     case 5:
 	{
-	    Point p1(Interpolate(v[2], v[1], val[2]/(val[1]-val[2])));
-	    Point p2(Interpolate(v[2], v[3], val[2]/(val[3]-val[2])));
-	    Point p3(Interpolate(v[5], v[1], val[5]/(val[1]-val[5])));
+	    Point p1(Interpolate(v[2], v[1], val[2]/(val[2]-val[1])));
+	    Point p2(Interpolate(v[2], v[3], val[2]/(val[2]-val[3])));
+	    Point p3(Interpolate(v[5], v[1], val[5]/(val[5]-val[1])));
 	    group->add(new Triangle(p1, p2, p3));
-	    Point p4(Interpolate(v[5], v[8], val[5]/(val[8]-val[5])));
+	    Point p4(Interpolate(v[5], v[8], val[5]/(val[5]-val[8])));
 	    group->add(new Triangle(p4, p3, p2));
-	    Point p5(Interpolate(v[6], v[7], val[6]/(val[7]-val[6])));
+	    Point p5(Interpolate(v[6], v[7], val[6]/(val[6]-val[7])));
 	    group->add(new Triangle(p5, p4, p2));
 	}
 	break;
     case 6:
 	{
-	    Point p1(Interpolate(v[1], v[5], val[1]/(val[5]-val[1])));
-	    Point p2(Interpolate(v[2], v[6], val[2]/(val[6]-val[2])));
-	    Point p3(Interpolate(v[2], v[3], val[2]/(val[3]-val[2])));
+	    Point p1(Interpolate(v[1], v[5], val[1]/(val[1]-val[5])));
+	    Point p2(Interpolate(v[2], v[6], val[2]/(val[2]-val[6])));
+	    Point p3(Interpolate(v[2], v[3], val[2]/(val[2]-val[3])));
 	    group->add(new Triangle(p1, p2, p3));
-	    Point p4(Interpolate(v[1], v[4], val[1]/(val[4]-val[1])));
+	    Point p4(Interpolate(v[1], v[4], val[1]/(val[1]-val[4])));
 	    group->add(new Triangle(p3, p4, p1));
-	    Point p5(Interpolate(v[7], v[3], val[7]/(val[3]-val[7])));
-	    Point p6(Interpolate(v[7], v[8], val[7]/(val[8]-val[7])));
-	    Point p7(Interpolate(v[7], v[6], val[7]/(val[6]-val[7])));
+	    Point p5(Interpolate(v[7], v[3], val[7]/(val[7]-val[3])));
+	    Point p6(Interpolate(v[7], v[8], val[7]/(val[7]-val[8])));
+	    Point p7(Interpolate(v[7], v[6], val[7]/(val[7]-val[6])));
 	    group->add(new Triangle(p5, p6, p7));
 	}
 	break;
     case 7:
 	{
-	    Point p1(Interpolate(v[2], v[1], val[2]/(val[1]-val[2])));
-	    Point p2(Interpolate(v[2], v[3], val[2]/(val[3]-val[2])));
-	    Point p3(Interpolate(v[2], v[6], val[2]/(val[6]-val[2])));
+	    Point p1(Interpolate(v[2], v[1], val[2]/(val[2]-val[1])));
+	    Point p2(Interpolate(v[2], v[3], val[2]/(val[2]-val[3])));
+	    Point p3(Interpolate(v[2], v[6], val[2]/(val[2]-val[6])));
 	    group->add(new Triangle(p1, p2, p3));
-	    Point p4(Interpolate(v[4], v[1], val[4]/(val[1]-val[4])));
-	    Point p5(Interpolate(v[4], v[3], val[4]/(val[3]-val[4])));
-	    Point p6(Interpolate(v[4], v[8], val[4]/(val[8]-val[4])));
+	    Point p4(Interpolate(v[4], v[1], val[4]/(val[4]-val[1])));
+	    Point p5(Interpolate(v[4], v[3], val[4]/(val[4]-val[3])));
+	    Point p6(Interpolate(v[4], v[8], val[4]/(val[4]-val[8])));
 	    group->add(new Triangle(p4, p5, p6));
-	    Point p7(Interpolate(v[7], v[8], val[7]/(val[8]-val[7])));
-	    Point p8(Interpolate(v[7], v[6], val[7]/(val[6]-val[7])));
-	    Point p9(Interpolate(v[7], v[3], val[7]/(val[3]-val[7])));
+	    Point p7(Interpolate(v[7], v[8], val[7]/(val[7]-val[8])));
+	    Point p8(Interpolate(v[7], v[6], val[7]/(val[7]-val[6])));
+	    Point p9(Interpolate(v[7], v[3], val[7]/(val[7]-val[3])));
 	    group->add(new Triangle(p7, p8, p9));
 	}
 	break;
     case 8:
 	{
-	    Point p1(Interpolate(v[1], v[4], val[1]/(val[4]-val[1])));
-	    Point p2(Interpolate(v[2], v[3], val[2]/(val[3]-val[2])));
-	    Point p3(Interpolate(v[6], v[7], val[6]/(val[7]-val[6])));
+	    Point p1(Interpolate(v[1], v[4], val[1]/(val[1]-val[4])));
+	    Point p2(Interpolate(v[2], v[3], val[2]/(val[2]-val[3])));
+	    Point p3(Interpolate(v[6], v[7], val[6]/(val[6]-val[7])));
 	    group->add(new Triangle(p1, p2, p3));
-	    Point p4(Interpolate(v[5], v[8], val[5]/(val[8]-val[5])));
+	    Point p4(Interpolate(v[5], v[8], val[5]/(val[5]-val[8])));
 	    group->add(new Triangle(p4, p1, p3));
 	}
 	break;
     case 9:
 	{
-	    Point p1(Interpolate(v[1], v[2], val[1]/(val[2]-val[1])));
-	    Point p2(Interpolate(v[6], v[2], val[6]/(val[2]-val[6])));
-	    Point p3(Interpolate(v[6], v[7], val[6]/(val[7]-val[6])));
+	    Point p1(Interpolate(v[1], v[2], val[1]/(val[1]-val[2])));
+	    Point p2(Interpolate(v[6], v[2], val[6]/(val[6]-val[2])));
+	    Point p3(Interpolate(v[6], v[7], val[6]/(val[6]-val[7])));
 	    group->add(new Triangle(p1, p2, p3));
-	    Point p4(Interpolate(v[8], v[7], val[8]/(val[7]-val[8])));
+	    Point p4(Interpolate(v[8], v[7], val[8]/(val[8]-val[7])));
 	    group->add(new Triangle(p1, p3, p4));
-	    Point p5(Interpolate(v[1], v[4], val[1]/(val[4]-val[1])));
+	    Point p5(Interpolate(v[1], v[4], val[1]/(val[1]-val[4])));
 	    group->add(new Triangle(p1, p4, p5));
-	    Point p6(Interpolate(v[8], v[4], val[8]/(val[4]-val[8])));
+	    Point p6(Interpolate(v[8], v[4], val[8]/(val[8]-val[4])));
 	    group->add(new Triangle(p5, p4, p6));
 	}
 	break;
     case 10:
 	{
-	    Point p1(Interpolate(v[1], v[2], val[1]/(val[2]-val[1])));
-	    Point p2(Interpolate(v[4], v[3], val[4]/(val[3]-val[4])));
-	    Point p3(Interpolate(v[1], v[5], val[1]/(val[5]-val[1])));
+	    Point p1(Interpolate(v[1], v[2], val[1]/(val[1]-val[2])));
+	    Point p2(Interpolate(v[4], v[3], val[4]/(val[4]-val[3])));
+	    Point p3(Interpolate(v[1], v[5], val[1]/(val[1]-val[5])));
 	    group->add(new Triangle(p1, p2, p3));
-	    Point p4(Interpolate(v[4], v[8], val[4]/(val[8]-val[4])));
+	    Point p4(Interpolate(v[4], v[8], val[4]/(val[4]-val[8])));
 	    group->add(new Triangle(p2, p4, p3));
-	    Point p5(Interpolate(v[6], v[2], val[6]/(val[2]-val[6])));
-	    Point p6(Interpolate(v[6], v[5], val[6]/(val[5]-val[6])));
-	    Point p7(Interpolate(v[7], v[3], val[7]/(val[3]-val[7])));
+	    Point p5(Interpolate(v[6], v[2], val[6]/(val[6]-val[2])));
+	    Point p6(Interpolate(v[6], v[5], val[6]/(val[6]-val[5])));
+	    Point p7(Interpolate(v[7], v[3], val[7]/(val[7]-val[3])));
 	    group->add(new Triangle(p5, p6, p7));
-	    Point p8(Interpolate(v[7], v[8], val[7]/(val[8]-val[7])));
+	    Point p8(Interpolate(v[7], v[8], val[7]/(val[7]-val[8])));
 	    group->add(new Triangle(p2, p8, p3));
 	}
 	break;
     case 11:
 	{
-	    Point p1(Interpolate(v[1], v[2], val[1]/(val[2]-val[1])));
-	    Point p2(Interpolate(v[6], v[2], val[6]/(val[2]-val[6])));
-	    Point p3(Interpolate(v[7], v[3], val[7]/(val[3]-val[7])));
+	    Point p1(Interpolate(v[1], v[2], val[1]/(val[1]-val[2])));
+	    Point p2(Interpolate(v[6], v[2], val[6]/(val[6]-val[2])));
+	    Point p3(Interpolate(v[7], v[3], val[7]/(val[7]-val[3])));
 	    group->add(new Triangle(p1, p2, p3));
-	    Point p4(Interpolate(v[5], v[8], val[5]/(val[8]-val[5])));
+	    Point p4(Interpolate(v[5], v[8], val[5]/(val[5]-val[8])));
 	    group->add(new Triangle(p1, p3, p4));
-	    Point p5(Interpolate(v[1], v[4], val[1]/(val[4]-val[1])));
+	    Point p5(Interpolate(v[1], v[4], val[1]/(val[1]-val[4])));
 	    group->add(new Triangle(p1, p4, p5));
-	    Point p6(Interpolate(v[7], v[8], val[7]/(val[8]-val[7])));
+	    Point p6(Interpolate(v[7], v[8], val[7]/(val[7]-val[8])));
 	    group->add(new Triangle(p4, p3, p6));
 	}
 	break;
     case 12:
 	{
-	    Point p1(Interpolate(v[2], v[1], val[2]/(val[1]-val[2])));
-	    Point p2(Interpolate(v[2], v[3], val[2]/(val[3]-val[2])));
-	    Point p3(Interpolate(v[5], v[1], val[5]/(val[1]-val[5])));
+	    Point p1(Interpolate(v[2], v[1], val[2]/(val[2]-val[1])));
+	    Point p2(Interpolate(v[2], v[3], val[2]/(val[2]-val[3])));
+	    Point p3(Interpolate(v[5], v[1], val[5]/(val[5]-val[1])));
 	    group->add(new Triangle(p1, p2, p3));
-	    Point p4(Interpolate(v[5], v[8], val[5]/(val[8]-val[5])));
+	    Point p4(Interpolate(v[5], v[8], val[5]/(val[5]-val[8])));
 	    group->add(new Triangle(p3, p2, p4));
-	    Point p5(Interpolate(v[6], v[7], val[6]/(val[7]-val[6])));
+	    Point p5(Interpolate(v[6], v[7], val[6]/(val[6]-val[7])));
 	    group->add(new Triangle(p5, p2, p5));
-	    Point p6(Interpolate(v[4], v[1], val[4]/(val[1]-val[4])));
-	    Point p7(Interpolate(v[4], v[3], val[4]/(val[3]-val[4])));
-	    Point p8(Interpolate(v[4], v[8], val[4]/(val[8]-val[4])));
+	    Point p6(Interpolate(v[4], v[1], val[4]/(val[4]-val[1])));
+	    Point p7(Interpolate(v[4], v[3], val[4]/(val[4]-val[3])));
+	    Point p8(Interpolate(v[4], v[8], val[4]/(val[4]-val[8])));
 	    group->add(new Triangle(p6, p7, p8));
 	}
 	break;
     case 13:
 	{
-	    Point p1(Interpolate(v[1], v[2], val[1]/(val[2]-val[1])));
-	    Point p2(Interpolate(v[1], v[5], val[1]/(val[5]-val[1])));
-	    Point p3(Interpolate(v[1], v[4], val[1]/(val[4]-val[1])));
+	    Point p1(Interpolate(v[1], v[2], val[1]/(val[1]-val[2])));
+	    Point p2(Interpolate(v[1], v[5], val[1]/(val[1]-val[5])));
+	    Point p3(Interpolate(v[1], v[4], val[1]/(val[1]-val[4])));
 	    group->add(new Triangle(p1, p2, p3));
-	    Point p4(Interpolate(v[3], v[2], val[3]/(val[2]-val[3])));
-	    Point p5(Interpolate(v[3], v[7], val[3]/(val[7]-val[3])));
-	    Point p6(Interpolate(v[3], v[4], val[3]/(val[4]-val[3])));
+	    Point p4(Interpolate(v[3], v[2], val[3]/(val[3]-val[2])));
+	    Point p5(Interpolate(v[3], v[7], val[3]/(val[3]-val[7])));
+	    Point p6(Interpolate(v[3], v[4], val[3]/(val[3]-val[4])));
 	    group->add(new Triangle(p4, p5, p6));
-	    Point p7(Interpolate(v[6], v[2], val[6]/(val[2]-val[6])));
-	    Point p8(Interpolate(v[6], v[7], val[6]/(val[7]-val[6])));
-	    Point p9(Interpolate(v[6], v[5], val[6]/(val[5]-val[6])));
+	    Point p7(Interpolate(v[6], v[2], val[6]/(val[6]-val[2])));
+	    Point p8(Interpolate(v[6], v[7], val[6]/(val[6]-val[7])));
+	    Point p9(Interpolate(v[6], v[5], val[6]/(val[6]-val[5])));
 	    group->add(new Triangle(p7, p8, p9));
-	    Point p10(Interpolate(v[8], v[5], val[8]/(val[5]-val[8])));
-	    Point p11(Interpolate(v[8], v[7], val[8]/(val[7]-val[8])));
-	    Point p12(Interpolate(v[8], v[4], val[8]/(val[4]-val[8])));
+	    Point p10(Interpolate(v[8], v[5], val[8]/(val[8]-val[5])));
+	    Point p11(Interpolate(v[8], v[7], val[8]/(val[8]-val[7])));
+	    Point p12(Interpolate(v[8], v[4], val[8]/(val[8]-val[4])));
 	}
 	break;
     case 14:
 	{
-	    Point p1(Interpolate(v[2], v[1], val[2]/(val[1]-val[2])));
-	    Point p2(Interpolate(v[2], v[3], val[2]/(val[3]-val[2])));
-	    Point p3(Interpolate(v[6], v[7], val[6]/(val[7]-val[6])));
+	    Point p1(Interpolate(v[2], v[1], val[2]/(val[2]-val[1])));
+	    Point p2(Interpolate(v[2], v[3], val[2]/(val[2]-val[3])));
+	    Point p3(Interpolate(v[6], v[7], val[6]/(val[6]-val[7])));
 	    group->add(new Triangle(p1, p2, p3));
-	    Point p4(Interpolate(v[8], v[4], val[8]/(val[4]-val[8])));
+	    Point p4(Interpolate(v[8], v[4], val[8]/(val[8]-val[4])));
 	    group->add(new Triangle(p1, p3, p4));
-	    Point p5(Interpolate(v[5], v[1], val[5]/(val[1]-val[5])));
+	    Point p5(Interpolate(v[5], v[1], val[5]/(val[5]-val[1])));
 	    group->add(new Triangle(p1, p4, p5));
-	    Point p6(Interpolate(v[8], v[7], val[8]/(val[7]-val[8])));
+	    Point p6(Interpolate(v[8], v[7], val[8]/(val[8]-val[7])));
 	    group->add(new Triangle(p3, p6, p4));
 	}
 	break;
