@@ -900,7 +900,9 @@ HypoElasticPlastic::computeStressTensor(const PatchSubset* patches,
         //cout << "Equivalent stress = " << equivStress 
         //     << " Flow stress = " << flowStress << endl;
      
-        if (Phi <= 0.0) {
+	// If the particle is just sitting there, do nothing
+        double defRateSq = tensorEta.NormSquared();
+        if (Phi <= 0.0 || !(defRateSq > 0.0)) {
 
           // Get the elastic stress
           tensorSig = trialS + tensorHy;
@@ -972,6 +974,11 @@ HypoElasticPlastic::computeStressTensor(const PatchSubset* patches,
               cout << "L = " << endl << tensorL << endl;
               cout << "D = " << endl << tensorD << endl;
               cout << "Eta = " << endl << tensorEta << endl;
+              cout << "tensorSig = " << endl << tensorSig << endl;
+              cout << "tensorS = " << endl << tensorS << endl;
+              cout << "Phi = " << Phi << endl;
+              cout << "Equivalent stress = " << equivStress 
+                   << " Flow stress = " << flowStress << endl;
             }
             ASSERT(etaeta != 0);
             Matrix3 u_eta = tensorEta/etaeta;
