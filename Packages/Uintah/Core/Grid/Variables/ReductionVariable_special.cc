@@ -27,7 +27,7 @@ void
 ReductionVariable<double, Reductions::Min<double> >
    ::getMPIData(vector<char>& data, int& index)
 {
-  ASSERTRANGE(index+sizeof(double), 0, data.size()+1);
+  ASSERTRANGE(index, 0, static_cast<int>(data.size()+1-sizeof(double)));
   double* ptr = reinterpret_cast<double*>(&data[index]);
   *ptr = value;
   index += sizeof(double);
@@ -40,7 +40,7 @@ void
 ReductionVariable<double, Reductions::Min<double> >
    ::putMPIData(vector<char>& data, int& index)
 {
-  ASSERTRANGE(index+sizeof(double), 0, data.size()+1);
+  ASSERTRANGE(index, 0, static_cast<int>(data.size()+1-sizeof(double)));
   double* ptr = reinterpret_cast<double*>(&data[index]);
   value = *ptr;
   index += sizeof(double);
@@ -65,7 +65,7 @@ void
 ReductionVariable<double, Reductions::Max<double> >
    ::getMPIData(vector<char>& data, int& index)
 {
-  ASSERTRANGE(index+sizeof(double), 0, data.size()+1);
+  ASSERTRANGE(index, 0, static_cast<int>(data.size()+1-sizeof(double)));
   double* ptr = reinterpret_cast<double*>(&data[index]);
   *ptr = value;
   index += sizeof(double);
@@ -78,7 +78,7 @@ void
 ReductionVariable<double, Reductions::Max<double> >
    ::putMPIData(vector<char>& data, int& index)
 {
-  ASSERTRANGE(index+sizeof(double), 0, data.size()+1);
+  ASSERTRANGE(index, 0, static_cast<int>(data.size()+1-sizeof(double)));
   double* ptr = reinterpret_cast<double*>(&data[index]);
   value = *ptr;
   index += sizeof(double);
@@ -103,7 +103,7 @@ void
 ReductionVariable<double, Reductions::Sum<double> >
    ::getMPIData(vector<char>& data, int& index)
 {
-  ASSERTRANGE(index+sizeof(double), 0, data.size()+1);
+  ASSERTRANGE(index, 0, static_cast<int>(data.size()+1-sizeof(double)));
   double* ptr = reinterpret_cast<double*>(&data[index]);
   *ptr = value;
   index += sizeof(double);
@@ -116,7 +116,7 @@ void
 ReductionVariable<double, Reductions::Sum<double> >
    ::putMPIData(vector<char>& data, int& index)
 {
-  ASSERTRANGE(index+sizeof(double), 0, data.size()+1);
+  ASSERTRANGE(index, 0, static_cast<int>(data.size()+1-sizeof(double)));
   double* ptr = reinterpret_cast<double*>(&data[index]);
   value = *ptr;
   index += sizeof(double);
@@ -141,7 +141,7 @@ void
 ReductionVariable<bool, Reductions::And<bool> >
    ::getMPIData(vector<char>& data, int& index)
 {
-  ASSERTRANGE(index+sizeof(char), 0, data.size()+1);
+  ASSERTRANGE(index, 0, static_cast<int>(data.size()+1-sizeof(char)));
   char* ptr = reinterpret_cast<char*>(&data[index]);
   *ptr = value;
   index += sizeof(char);
@@ -154,7 +154,7 @@ void
 ReductionVariable<bool, Reductions::And<bool> >
    ::putMPIData(vector<char>& data, int& index)
 {
-  ASSERTRANGE(index+sizeof(char), 0, data.size()+1);
+  ASSERTRANGE(index, 0, static_cast<int>(data.size()+1-sizeof(char)));
   char* ptr = reinterpret_cast<char*>(&data[index]);
   value = *ptr;
   index += sizeof(char);
@@ -181,7 +181,7 @@ void
 ReductionVariable<long64, Reductions::Sum<long64> >
    ::getMPIData(vector<char>& data, int& index)
 {
-  ASSERTRANGE(index+sizeof(long), 0, data.size()+1);
+  ASSERTRANGE(index, 0, static_cast<int>(data.size()+1-sizeof(long)));
   long* ptr = reinterpret_cast<long*>(&data[index]);
   *ptr = value;
   index += sizeof(long);
@@ -194,7 +194,7 @@ void
 ReductionVariable<long64, Reductions::Sum<long64> >
    ::putMPIData(vector<char>& data, int& index)
 {
-  ASSERTRANGE(index+sizeof(long), 0, data.size()+1);
+  ASSERTRANGE(index, 0, static_cast<int>(data.size()+1-sizeof(long)));
   long* ptr = reinterpret_cast<long*>(&data[index]);
   value = *ptr;
   index += sizeof(long);
@@ -220,7 +220,7 @@ void
 ReductionVariable<Vector, Reductions::Sum<Vector> >
    ::getMPIData(vector<char>& data, int& index)
 {	
-  ASSERTRANGE(index+3*sizeof(double), 0, data.size()+1);
+  ASSERTRANGE(index, 0, static_cast<int>(data.size()+1-3*sizeof(double)));
   double* ptr = reinterpret_cast<double*>(&data[index]);
   *ptr++ = value.x();
   *ptr++ = value.y();
@@ -234,7 +234,7 @@ void
 ReductionVariable<Vector, Reductions::Sum<Vector> >
    ::putMPIData(vector<char>& data, int& index)
 {
-  ASSERTRANGE(index+3*sizeof(double), 0, data.size()+1);
+  ASSERTRANGE(index, 0, static_cast<int>(data.size()+1-3*sizeof(double)));
   double* ptr = reinterpret_cast<double*>(&data[index]);
   value.x(*ptr++);
   value.y(*ptr++);
