@@ -118,7 +118,6 @@ void
 Gradient::execute()
 {
   ifp = (FieldIPort *)get_iport("Input Field");
-  ofp = (FieldOPort *)get_oport("Output Gradient");
   FieldHandle fieldhandle;
   Field *field;
   if (!(ifp->get(fieldhandle) && (field = fieldhandle.get_rep())))
@@ -126,62 +125,45 @@ Gradient::execute()
     return;
   }
 
-  // Create a new Vector field with the same geometry handle as field.
-  const string geom_name = field->get_type_name(0);
-  const string data_name = field->get_type_name(1);
-  if (geom_name == "TetVol")
+  ofp = (FieldOPort *)get_oport("Output Gradient");
+
+  const TypeDescription *ftd = fieldhandle->get_type_description();
+
+  if (ftd->get_name() == get_type_description((TetVol<double> *)0)->get_name())
   {
-    if (data_name == "double")
-    {
-      dispatch_tetvol((TetVol<double> *)field);
-    }
-    else if (data_name == "int")
-    {
-      dispatch_tetvol((TetVol<int> *)field);
-    }
-    else if (data_name == "short")
-    {
-      dispatch_tetvol((TetVol<short> *)field);
-    }
-    else if (data_name == "unsigned char")
-    {
-      dispatch_tetvol((TetVol<unsigned char> *)field);
-    }
-    else
-    {
-      // Don't know what to do with this field type.
-      error("Unsupported data type '" + data_name + "' in field.");
-    }
+    dispatch_tetvol((TetVol<double> *)field);
   }
-  else if (geom_name == "LatticeVol")
+  else if (ftd->get_name() == get_type_description((TetVol<int> *)0)->get_name())
   {
-    if (data_name == "double")
-    {
-      dispatch_latticevol((LatticeVol<double> *)field);
-    }
-    else if (data_name == "int")
-    {
-      dispatch_latticevol((LatticeVol<int> *)field);
-    }
-    else if (data_name == "short")
-    {
-      dispatch_latticevol((LatticeVol<short> *)field);
-    }
-    else if (data_name == "unsigned char")
-    {
-      dispatch_latticevol((LatticeVol<unsigned char> *)field);
-    }
-    else
-    {
-      // Don't know what to do with this field type.
-      error("Unsupported data type '" + data_name + "' in field.");
-    }
+    dispatch_tetvol((TetVol<int> *)field);
+  }
+  else if (ftd->get_name() == get_type_description((TetVol<short> *)0)->get_name())
+  {
+    dispatch_tetvol((TetVol<short> *)field);
+  }
+  else if (ftd->get_name() == get_type_description((TetVol<unsigned char> *)0)->get_name())
+  {
+    dispatch_tetvol((TetVol<unsigned char> *)field);
+  }
+  else if (ftd->get_name() == get_type_description((LatticeVol<double> *)0)->get_name())
+  {
+    dispatch_latticevol((LatticeVol<double> *)field);
+  }
+  else if (ftd->get_name() == get_type_description((LatticeVol<int> *)0)->get_name())
+  {
+    dispatch_latticevol((LatticeVol<int> *)field);
+  }
+  else if (ftd->get_name() == get_type_description((LatticeVol<short> *)0)->get_name())
+  {
+    dispatch_latticevol((LatticeVol<short> *)field);
+  }
+  else if (ftd->get_name() == get_type_description((LatticeVol<unsigned char> *)0)->get_name())
+  {
+    dispatch_latticevol((LatticeVol<unsigned char> *)field);
   }
   else
   {
-    // Don't know what to do with this field type.
-    error("Unsupported geometry type '" + geom_name + "' in field.");
-    return;
+    error("Unable to handle a field of type '" + ftd->get_name() + "'.");
   }
 }
 
