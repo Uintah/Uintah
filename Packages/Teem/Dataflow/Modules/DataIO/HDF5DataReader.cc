@@ -460,21 +460,25 @@ vector<int> HDF5DataReader::getDatasetDims( string filename,
   if( (file_id = H5Fopen(filename.c_str(),
 			 H5F_ACC_RDONLY, H5P_DEFAULT)) < 0 ) {
     error( "Error opening file. " );
+    return idims;
   }
 
   /* Open the group in the file. */
   if( (g_id = H5Gopen(file_id, group.c_str())) < 0 ) {
     error( "Error opening group. " );
+    return idims;
   }
 
   /* Open the dataset in the file. */
   if( (ds_id = H5Dopen(g_id, dataset.c_str())) < 0 ) {
     error( "Error opening dataset. " );
+    return idims;
   }
 
   /* Open the coordinate space in the file. */
   if( (file_space_id = H5Dget_space( ds_id )) < 0 ) {
     error( "Error getting file space. " );
+    return idims;
   }
     
   /* Get the rank (number of dims) in the space. */
@@ -494,7 +498,6 @@ vector<int> HDF5DataReader::getDatasetDims( string filename,
 
       if( ndim != ndims ) {
 	error( "Data dimensions not match. " );
-	error_ = true;
 	return idims;
       }
 
@@ -509,7 +512,6 @@ vector<int> HDF5DataReader::getDatasetDims( string filename,
   if( (status = H5Sclose(file_space_id)) < 0 ) {
     error( "Error closing file space. " );
   }
-
   /* Terminate access to the dataset. */
   if( (status = H5Dclose(ds_id)) < 0 ) {
     error( "Error closing data set. " );
@@ -646,10 +648,13 @@ NrrdDataHandle HDF5DataReader::readDataset( string filename,
 	return NULL;
       }
 
-      status = H5Dread(ds_id, mem_type_id,
-		       H5S_ALL, H5S_ALL, H5P_DEFAULT, 
-		       data);
-
+      if( (status = H5Dread(ds_id, mem_type_id,
+			    H5S_ALL, H5S_ALL, H5P_DEFAULT, 
+			    data)) < 0 ) {
+	error( "Error reading dataset." );
+	error_ = true;
+	return NULL;
+      }
     } else {
       /* simple dataspace */
       dims = new hsize_t[ndims];
@@ -691,8 +696,12 @@ NrrdDataHandle HDF5DataReader::readDataset( string filename,
 	block[ic]  = 1;
       }
 
-      status = H5Sselect_hyperslab(file_space_id, H5S_SELECT_SET,
-				   start, stride, count, block);
+      if( (status = H5Sselect_hyperslab(file_space_id, H5S_SELECT_SET,
+					start, stride, count, block)) < 0 ) {
+	error( "Can not select data slab requested." );
+	error_ = true;
+	return NULL;
+      }
 
       hid_t mem_space_id = H5Screate_simple (ndims, count, NULL );
 
@@ -701,8 +710,12 @@ NrrdDataHandle HDF5DataReader::readDataset( string filename,
 	stride[d] = 1;
       }
 
-      status = H5Sselect_hyperslab(mem_space_id, H5S_SELECT_SET,
-				   start, stride, count, block);
+      if( (status = H5Sselect_hyperslab(mem_space_id, H5S_SELECT_SET,
+					start, stride, count, block)) < 0 ) {
+	error( "Can not select memory for the data slab requested." );
+	error_ = true;
+	return NULL;
+      }
 
       for( int ic=0; ic<ndims; ic++ )
 	size *= count[ic];
@@ -713,12 +726,20 @@ NrrdDataHandle HDF5DataReader::readDataset( string filename,
 	return NULL;
       }
 
-      status = H5Dread(ds_id, mem_type_id,
-		       mem_space_id, file_space_id, H5P_DEFAULT, 
-		       data);
+      if( (status = H5Dread(ds_id, mem_type_id,
+			    mem_space_id, file_space_id, H5P_DEFAULT, 
+			    data)) < 0 ) {
+	error( "Can not read the data slab requested." );
+	error_ = true;
+	return NULL;
+      }
 
       /* Terminate access to the data space. */
-      status = H5Sclose(mem_space_id);
+      if( (status = H5Sclose(mem_space_id)) < 0 ) {
+	error( "Can not cloase the memory data slab requested." );
+	error_ = true;
+	return NULL;
+      }
 
       delete start;
       delete stride;
@@ -727,8 +748,20 @@ NrrdDataHandle HDF5DataReader::readDataset( string filename,
   }
 
   /* Terminate access to the data space. */ 
-  status = H5Sclose(file_space_id);
+  if( (status = H5Sclose(file_space_id)) < 0 )
+    error( "Can not cloase file space." );
 
+  /* Terminate access to the dataset. */
+  if( (status = H5Dclose(ds_id)) < 0 )
+    error( "Can not cloase file space." );
+
+  /* Terminate access to the group. */ 
+  if( (status = H5Gclose(g_id)) < 0 )
+    error( "Can not cloase file space." );
+
+  /* Terminate access to the file. */ 
+  if( (status = H5Fclose(file_id)) < 0 )
+    error( "Can not cloase file space." );
 
   string tuple_type_str(":Scalar");
   int sink_size = 1;
@@ -964,13 +997,6 @@ NrrdDataHandle HDF5DataReader::readDataset( string filename,
 
   delete dims;
   delete count;
-
-  /* Terminate access to the dataset. */
-  status = H5Dclose(ds_id);
-  /* Terminate access to the group. */ 
-  status = H5Gclose(g_id);
-  /* Terminate access to the file. */ 
-  status = H5Fclose(file_id);
 
   return NrrdDataHandle(nout);
 #else
