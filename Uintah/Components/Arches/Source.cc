@@ -14,7 +14,9 @@ static char *id="@(#) $Id$";
 #include <Uintah/Grid/Level.h>
 #include <Uintah/Grid/Patch.h>
 #include <Uintah/Grid/Task.h>
-#include <Uintah/Grid/FCVariable.h>
+#include <Uintah/Grid/SFCXVariable.h>
+#include <Uintah/Grid/SFCYVariable.h>
+#include <Uintah/Grid/SFCZVariable.h>
 #include <Uintah/Grid/CCVariable.h>
 #include <Uintah/Grid/PerPatch.h>
 #include <Uintah/Grid/SoleVariable.h>
@@ -30,55 +32,55 @@ Source::Source()
 {
   // inputs (calcVelocitySource)
   d_uVelocitySIVBCLabel = scinew VarLabel("uVelocitySIVBC",
-				    FCVariable<double>::getTypeDescription() );
+				    SFCXVariable<double>::getTypeDescription() );
   d_vVelocitySIVBCLabel = scinew VarLabel("vVelocitySIVBC",
-				    FCVariable<double>::getTypeDescription() );
+				    SFCYVariable<double>::getTypeDescription() );
   d_wVelocitySIVBCLabel = scinew VarLabel("wVelocitySIVBC",
-				    FCVariable<double>::getTypeDescription() );
+				    SFCZVariable<double>::getTypeDescription() );
   d_densitySIVBCLabel = scinew VarLabel("densitySIVBC",
 				    CCVariable<double>::getTypeDescription() );
   d_viscosityCTSLabel = scinew VarLabel("viscosityCTS",
 				    CCVariable<double>::getTypeDescription() );
   d_uVelocityCPBCLabel = scinew VarLabel("uVelocityCPBC",
-				    FCVariable<double>::getTypeDescription() );
+				    SFCXVariable<double>::getTypeDescription() );
   d_vVelocityCPBCLabel = scinew VarLabel("vVelocityCPBC",
-				    FCVariable<double>::getTypeDescription() );
+				    SFCYVariable<double>::getTypeDescription() );
   d_wVelocityCPBCLabel = scinew VarLabel("wVelocityCPBC",
-				    FCVariable<double>::getTypeDescription() );
+				    SFCZVariable<double>::getTypeDescription() );
 
   // outputs (calcVelocitySource)
   d_uVelLinSrcPBLMLabel = scinew VarLabel("uVelLinSrcPBLM",
-				    FCVariable<double>::getTypeDescription() );
+				    SFCXVariable<double>::getTypeDescription() );
   d_uVelNonLinSrcPBLMLabel = scinew VarLabel("uVelNonLinSrcPBLM",
-				    FCVariable<double>::getTypeDescription() );
+				    SFCXVariable<double>::getTypeDescription() );
   d_vVelLinSrcPBLMLabel = scinew VarLabel("vVelLinSrcPBLM",
-				    FCVariable<double>::getTypeDescription() );
+				    SFCYVariable<double>::getTypeDescription() );
   d_vVelNonLinSrcPBLMLabel = scinew VarLabel("vVelNonLinSrcPBLM",
-				    FCVariable<double>::getTypeDescription() );
+				    SFCYVariable<double>::getTypeDescription() );
   d_wVelLinSrcPBLMLabel = scinew VarLabel("wVelLinSrcPBLM",
-				    FCVariable<double>::getTypeDescription() );
+				    SFCZVariable<double>::getTypeDescription() );
   d_wVelNonLinSrcPBLMLabel = scinew VarLabel("wVelNonLinSrcPBLM",
-				    FCVariable<double>::getTypeDescription() );
+				    SFCZVariable<double>::getTypeDescription() );
   d_uVelLinSrcMBLMLabel = scinew VarLabel("uVelLinSrcMBLM",
-				    FCVariable<double>::getTypeDescription() );
+				    SFCXVariable<double>::getTypeDescription() );
   d_uVelNonLinSrcMBLMLabel = scinew VarLabel("uVelNonLinSrcMBLM",
-				    FCVariable<double>::getTypeDescription() );
+				    SFCXVariable<double>::getTypeDescription() );
   d_vVelLinSrcMBLMLabel = scinew VarLabel("vVelLinSrcMBLM",
-				    FCVariable<double>::getTypeDescription() );
+				    SFCYVariable<double>::getTypeDescription() );
   d_vVelNonLinSrcMBLMLabel = scinew VarLabel("vVelNonLinSrcMBLM",
-				    FCVariable<double>::getTypeDescription() );
+				    SFCYVariable<double>::getTypeDescription() );
   d_wVelLinSrcMBLMLabel = scinew VarLabel("wVelLinSrcMBLM",
-				    FCVariable<double>::getTypeDescription() );
+				    SFCZVariable<double>::getTypeDescription() );
   d_wVelNonLinSrcMBLMLabel = scinew VarLabel("wVelNonLinSrcMBLM",
-				    FCVariable<double>::getTypeDescription() );
+				    SFCZVariable<double>::getTypeDescription() );
 
   // inputs/outputs for calculatePressureSource()
   d_uVelCoefPBLMLabel = scinew VarLabel("uVelCoefPBLM",
-				  FCVariable<double>::getTypeDescription() );
+				  SFCXVariable<double>::getTypeDescription() );
   d_vVelCoefPBLMLabel = scinew VarLabel("vVelCoefPBLM",
-				  FCVariable<double>::getTypeDescription() );
+				  SFCYVariable<double>::getTypeDescription() );
   d_wVelCoefPBLMLabel = scinew VarLabel("wVelCoefPBLM",
-				  FCVariable<double>::getTypeDescription() );
+				  SFCZVariable<double>::getTypeDescription() );
   d_pressureINLabel = scinew VarLabel("pressureIN",
 				  CCVariable<double>::getTypeDescription() );
   d_presLinSrcPBLMLabel = scinew VarLabel("presLinSrcPBLM",
@@ -88,11 +90,11 @@ Source::Source()
 
   // inputs/outputs for calculateScalarSource()
   d_uVelocityMSLabel = scinew VarLabel("uVelocityMS",
-				  FCVariable<double>::getTypeDescription() );
+				  SFCXVariable<double>::getTypeDescription() );
   d_vVelocityMSLabel = scinew VarLabel("vVelocityMS",
-				  FCVariable<double>::getTypeDescription() );
+				  SFCYVariable<double>::getTypeDescription() );
   d_wVelocityMSLabel = scinew VarLabel("wVelocityMS",
-				  FCVariable<double>::getTypeDescription() );
+				  SFCZVariable<double>::getTypeDescription() );
   d_scalarSPLabel = scinew VarLabel("scalarSP",
 				  CCVariable<double>::getTypeDescription() );
   d_scalLinSrcSBLMLabel = scinew VarLabel("scalLinSrcSBLM",
@@ -132,18 +134,18 @@ Source::calculateVelocitySource(const ProcessorGroup* pc,
   int numGhostCells = 0;
   int matlIndex = 0;
 
-  FCVariable<double> uVelocity;
-  FCVariable<double> vVelocity;
-  FCVariable<double> wVelocity;
+  SFCXVariable<double> uVelocity;
+  SFCYVariable<double> vVelocity;
+  SFCZVariable<double> wVelocity;
   CCVariable<double> density;
   CCVariable<double> viscosity;
 
-  FCVariable<double> uVelLinearSrc; //SP term in Arches 
-  FCVariable<double> uVelNonlinearSrc; // SU in Arches 
-  FCVariable<double> vVelLinearSrc; //SP term in Arches 
-  FCVariable<double> vVelNonlinearSrc; // SU in Arches 
-  FCVariable<double> wVelLinearSrc; //SP term in Arches 
-  FCVariable<double> wVelNonlinearSrc; // SU in Arches 
+  SFCXVariable<double> uVelLinearSrc; //SP term in Arches 
+  SFCXVariable<double> uVelNonlinearSrc; // SU in Arches 
+  SFCYVariable<double> vVelLinearSrc; //SP term in Arches 
+  SFCYVariable<double> vVelNonlinearSrc; // SU in Arches 
+  SFCZVariable<double> wVelLinearSrc; //SP term in Arches 
+  SFCZVariable<double> wVelNonlinearSrc; // SU in Arches 
 
   // get data
   switch(eqnType) {
@@ -184,9 +186,6 @@ Source::calculateVelocitySource(const ProcessorGroup* pc,
   CellInformation* cellinfo = cellinfop;
 #endif
 
-  IntVector lowIndex = patch->getCellLowIndex();
-  IntVector highIndex = patch->getCellHighIndex();
-
   //get index component of gravity
   double gravity = d_physicalConsts->getGravity(index);
 
@@ -218,6 +217,24 @@ Source::calculateVelocitySource(const ProcessorGroup* pc,
     break;
   }
 
+  // Get the patch and variable indices
+  IntVector domLoU = uVelocity.getFortLowIndex();
+  IntVector domHiU = uVelocity.getFortHighIndex();
+  IntVector idxLoU = patch->getSFCXFORTLowIndex();
+  IntVector idxHiU = patch->getSFCXFORTHighIndex();
+  IntVector domLoV = uVelocity.getFortLowIndex();
+  IntVector domHiV = uVelocity.getFortHighIndex();
+  IntVector idxLoV = patch->getSFCYFORTLowIndex();
+  IntVector idxHiV = patch->getSFCYFORTHighIndex();
+  IntVector domLoW = uVelocity.getFortLowIndex();
+  IntVector domHiW = uVelocity.getFortHighIndex();
+  IntVector idxLoW = patch->getSFCZFORTLowIndex();
+  IntVector idxHiW = patch->getSFCZFORTHighIndex();
+  IntVector domLo = density.getFortLowIndex();
+  IntVector domHi = density.getFortHighIndex();
+  IntVector idxLo = patch->getCellFORTLowIndex();
+  IntVector idxHi = patch->getCellFORTHighIndex();
+
 #ifdef WONT_COMPILE_YET
   int ioff = 1;
   int joff = 0;
@@ -226,9 +243,27 @@ Source::calculateVelocitySource(const ProcessorGroup* pc,
   Array3<double> volume(patch->getLowIndex(), patch->getHighIndex());
   // computes remaining diffusion term and also computes 
   // source due to gravity...need to pass ipref, jpref and kpref
-  FORT_VELSOURCE(velLinearSrc, velNonlinearSrc, velocity, viscosity, 
-		 density, gravity, 
-		 ioff, joff, koff, lowIndex, highIndex,
+  FORT_VELSOURCE(domLoU.get_pointer(), domHiU.get_pointer(),
+		 idxLoU.get_pointer(), idxHiU.get_pointer(),
+		 uVelLinearSrc.getPointer(), 
+		 uVelNonlinearSrc.getPointer(), 
+		 uVelocity.getPointer(), 
+		 domLoV.get_pointer(), domHiV.get_pointer(),
+		 idxLoV.get_pointer(), idxHiV.get_pointer(),
+		 vVelLinearSrc.getPointer(), 
+		 vVelNonlinearSrc.getPointer(), 
+		 vVelocity.getPointer(), 
+		 domLoW.get_pointer(), domHiW.get_pointer(),
+		 idxLoW.get_pointer(), idxHiW.get_pointer(),
+		 wVelLinearSrc.getPointer(), 
+		 wVelNonlinearSrc.getPointer(), 
+		 wVelocity.getPointer(), 
+		 domLo.get_pointer(), domHi.get_pointer(),
+		 idxLo.get_pointer(), idxHi.get_pointer(),
+		 density.getPointer(),
+		 viscosity.getPointer(), 
+		 &gravity, 
+		 ioff, joff, koff, 
 		 cellinfo->ceeu, cellinfo->cweu, cellinfo->cwwu,
 		 cellinfo->cnn, cellinfo->csn, cellinfo->css,
 		 cellinfo->ctt, cellinfo->cbt, cellinfo->cbb,
@@ -260,8 +295,6 @@ Source::calculateVelocitySource(const ProcessorGroup* pc,
   default:
     break;
   }
-  //new_dw->put(uLinearSrc, "velLinearSource", patch, index, 0);
-  //new_dw->put(uNonlinearSrc, "velNonlinearSource", patch, index, 0);
 
   // pass the pointer to turbulence model object and make 
   // it a data memeber of Source class
@@ -287,71 +320,45 @@ Source::calculatePressureSource(const ProcessorGroup*,
   int nofStencils = 7;
 
   CCVariable<double> pressure;
+  CCVariable<double> density;
+  SFCXVariable<double> uVelocity;
+  SFCYVariable<double> vVelocity;
+  SFCZVariable<double> wVelocity;
+  StencilMatrix<SFCXVariable<double> > uVelCoeff;
+  SFCXVariable<double> uNonlinearSrc;
+  StencilMatrix<SFCYVariable<double> > vVelCoeff;
+  SFCYVariable<double> vNonlinearSrc;
+  StencilMatrix<SFCZVariable<double> > wVelCoeff;
+  SFCZVariable<double> wNonlinearSrc;
+
   old_dw->get(pressure, d_pressureINLabel, matlIndex, patch, Ghost::None,
 	      numGhostCells);
-  //old_dw->get(pressure, "pressure", patch, 1);
-
-  FCVariable<double> uVelocity;
-  old_dw->get(uVelocity, d_uVelocitySIVBCLabel, matlIndex, patch, Ghost::None,
-	      numGhostCells);
-  FCVariable<double> vVelocity;
-  old_dw->get(uVelocity, d_vVelocitySIVBCLabel, matlIndex, patch, Ghost::None,
-	      numGhostCells);
-  FCVariable<double> wVelocity;
-  old_dw->get(uVelocity, d_wVelocitySIVBCLabel, matlIndex, patch, Ghost::None,
-	      numGhostCells);
-  //FCVariable<Vector> velocity;
-  //old_dw->get(velocity, "velocity", patch, 1);
-
-  CCVariable<double> density;
   old_dw->get(density, d_densitySIVBCLabel, matlIndex, patch, Ghost::None,
 	      numGhostCells);
-  //old_dw->get(density, "density", patch, 1);
-
-  StencilMatrix<FCVariable<double> > uVelCoeff;
+  old_dw->get(uVelocity, d_uVelocitySIVBCLabel, matlIndex, patch, Ghost::None,
+	      numGhostCells);
+  old_dw->get(uVelocity, d_vVelocitySIVBCLabel, matlIndex, patch, Ghost::None,
+	      numGhostCells);
+  old_dw->get(uVelocity, d_wVelocitySIVBCLabel, matlIndex, patch, Ghost::None,
+	      numGhostCells);
   for (int ii = 0; ii < nofStencils; ii++) {
     new_dw->get(uVelCoeff[ii], d_uVelCoefPBLMLabel, matlIndex, patch, 
 		Ghost::None, numGhostCells);
   }
-  //int index = 1;
-  //FCVariable<Vector> uVelCoeff;
-  //new_dw->get(uVelCoeff,"uVelocityCoeff",patch, index, 0);
-
-  FCVariable<double> uNonlinearSrc;
   new_dw->get(uNonlinearSrc, d_uVelNonLinSrcPBLMLabel, matlIndex, patch, 
 	      Ghost::None, numGhostCells);
-  //FCVariable<double> uNonlinearSrc;
-  //new_dw->get(uNonlinearSrc,"uNonlinearSource",patch, index, 0);
-  //++index;
-
-  StencilMatrix<FCVariable<double> > vVelCoeff;
   for (int ii = 0; ii < nofStencils; ii++) {
     new_dw->get(vVelCoeff[ii], d_vVelCoefPBLMLabel, matlIndex, patch, 
 		Ghost::None, numGhostCells);
   }
-  //FCVariable<Vector> vVelCoeff;
-  //new_dw->get(vVelCoeff,"vVelocityCoeff",patch,index,  0);
-
-  FCVariable<double> vNonlinearSrc;
   new_dw->get(vNonlinearSrc, d_vVelNonLinSrcPBLMLabel, matlIndex, patch, 
 	      Ghost::None, numGhostCells);
-  //FCVariable<double> vNonlinearSrc;
-  //new_dw->get(vNonlinearSrc,"vNonlinearSource",patch, index, 0);
-  //++index;
-
-  StencilMatrix<FCVariable<double> > wVelCoeff;
   for (int ii = 0; ii < nofStencils; ii++) {
     new_dw->get(wVelCoeff[ii], d_wVelCoefPBLMLabel, matlIndex, patch, 
 		Ghost::None, numGhostCells);
   }
-  //FCVariable<Vector> wVelCoeff;
-  //new_dw->get(wVelCoeff,"wVelocityCoeff",patch, index, 0);
-
-  FCVariable<double> wNonlinearSrc;
   new_dw->get(wNonlinearSrc, d_wVelNonLinSrcPBLMLabel, matlIndex, patch, 
 	      Ghost::None, numGhostCells);
-  //FCVariable<Vector> wNonlinearSrc;
-  //new_dw->get(wNonlinearSrc,"wNonlinearSource",patch, index, 0);
   
 #ifdef WONT_COMPILE_YET
   // using chain of responsibility pattern for getting cell information
@@ -367,34 +374,81 @@ Source::calculatePressureSource(const ProcessorGroup*,
   CellInformation* cellinfo = cellinfop;
 #endif
 
-  IntVector lowIndex = patch->getCellLowIndex();
-  IntVector highIndex = patch->getCellHighIndex();
-
   // Create vars for new_dw
   CCVariable<double> pressLinearSrc;
-  new_dw->allocate(pressLinearSrc, d_presLinSrcPBLMLabel, matlIndex, patch);
-  //new_dw->allocate(pressLinearSrc,"pressureLinearSource",patch, 0);
-
   CCVariable<double> pressNonlinearSrc;
+
+  // Allocate space
+  new_dw->allocate(pressLinearSrc, d_presLinSrcPBLMLabel, matlIndex, patch);
   new_dw->allocate(pressNonlinearSrc, d_presNonLinSrcPBLMLabel, matlIndex, 
 		   patch);
-  //new_dw->allocate(pressNonlinearSrc,"pressureNonlinearSource",patch, 0);
+
+  // Get the patch and variable indices
+  IntVector domLoU = uVelocity.getFortLowIndex();
+  IntVector domHiU = uVelocity.getFortHighIndex();
+  IntVector idxLoU = patch->getSFCXFORTLowIndex();
+  IntVector idxHiU = patch->getSFCXFORTHighIndex();
+  IntVector domLoV = uVelocity.getFortLowIndex();
+  IntVector domHiV = uVelocity.getFortHighIndex();
+  IntVector idxLoV = patch->getSFCYFORTLowIndex();
+  IntVector idxHiV = patch->getSFCYFORTHighIndex();
+  IntVector domLoW = uVelocity.getFortLowIndex();
+  IntVector domHiW = uVelocity.getFortHighIndex();
+  IntVector idxLoW = patch->getSFCZFORTLowIndex();
+  IntVector idxHiW = patch->getSFCZFORTHighIndex();
+  IntVector domLo = pressure.getFortLowIndex();
+  IntVector domHi = pressure.getFortHighIndex();
+  IntVector idxLo = patch->getCellFORTLowIndex();
+  IntVector idxHi = patch->getCellFORTHighIndex();
 
 #ifdef WONT_COMPILE_YET
   //fortran call
-  FORT_PRESSSOURCE(pressLinearSrc, pressNonlinearSrc, pressure, velocity,
-		   density, uVelocityCoeff, vVelocityCoeff, wVelocityCoeff,
-		   uNonlinearSource, vNonlinearSource, wNonlinearSource,
-		   lowIndex, highIndex,
+  FORT_PRESSSOURCE(domLo.get_pointer(), domHi.get_pointer(),
+		   idxLo.get_pointer(), idxHi.get_pointer(),
+		   pressLinearSrc.getPointer(),
+		   pressNonlinearSrc.getPointer(),
+		   pressure.getPointer(),
+		   density.getPointer(),
+		   domLoU.get_pointer(), domHiU.get_pointer(),
+		   idxLoU.get_pointer(), idxHiU.get_pointer(),
+		   uVelocity.getPointer(), 
+		   uVelCoeff[StencilMatrix::AP].getPointer(),
+		   uVelCoeff[StencilMatrix::AE].getPointer(),
+		   uVelCoeff[StencilMatrix::AW].getPointer(),
+		   uVelCoeff[StencilMatrix::AN].getPointer(),
+		   uVelCoeff[StencilMatrix::AS].getPointer(),
+		   uVelCoeff[StencilMatrix::AT].getPointer(),
+		   uVelCoeff[StencilMatrix::AB].getPointer(),
+		   uNonlinearSrc.getPointer(),
+		   domLoV.get_pointer(), domHiV.get_pointer(),
+		   idxLoV.get_pointer(), idxHiV.get_pointer(),
+		   vVelocity.getPointer(), 
+		   vVelCoeff[StencilMatrix::AP].getPointer(),
+		   vVelCoeff[StencilMatrix::AE].getPointer(),
+		   vVelCoeff[StencilMatrix::AW].getPointer(),
+		   vVelCoeff[StencilMatrix::AN].getPointer(),
+		   vVelCoeff[StencilMatrix::AS].getPointer(),
+		   vVelCoeff[StencilMatrix::AT].getPointer(),
+		   vVelCoeff[StencilMatrix::AB].getPointer(),
+		   vNonlinearSrc.getPointer(),
+		   domLoW.get_pointer(), domHiW.get_pointer(),
+		   idxLoW.get_pointer(), idxHiW.get_pointer(),
+		   wVelocity.getPointer(), 
+		   wVelCoeff[StencilMatrix::AP].getPointer(),
+		   wVelCoeff[StencilMatrix::AE].getPointer(),
+		   wVelCoeff[StencilMatrix::AW].getPointer(),
+		   wVelCoeff[StencilMatrix::AN].getPointer(),
+		   wVelCoeff[StencilMatrix::AS].getPointer(),
+		   wVelCoeff[StencilMatrix::AT].getPointer(),
+		   wVelCoeff[StencilMatrix::AB].getPointer(),
+		   wNonlinearSrc.getPointer(),
 		   cellinfo->sew, cellinfo->sns, cellinfo->stb,
 		   cellinfo->dxep, cellinfo->dxpw, cellinfo->dynp,
 		   cellinfo->dyps, cellinfo->dztp, cellinfo->dzpb);
 #endif
 		   
   new_dw->put(pressLinearSrc, d_presLinSrcPBLMLabel, matlIndex, patch);
-  //new_dw->put(pressLinearSrc, "pressureLinearSource", patch, 0);
   new_dw->put(pressNonlinearSrc, d_presNonLinSrcPBLMLabel, matlIndex, patch);
-  //new_dw->put(pressNonlinearSrc, "pressureNonlinearSource", patch, 0);
 }
 
 //****************************************************************************
@@ -411,9 +465,9 @@ Source::calculateScalarSource(const ProcessorGroup*,
   int numGhostCells = 0;
   int matlIndex = 0;
 
-  FCVariable<double> uVelocity;
-  FCVariable<double> vVelocity;
-  FCVariable<double> wVelocity;
+  SFCXVariable<double> uVelocity;
+  SFCYVariable<double> vVelocity;
+  SFCZVariable<double> wVelocity;
   CCVariable<double> scalar;
   CCVariable<double> density;
   CCVariable<double> viscosity;
@@ -446,9 +500,6 @@ Source::calculateScalarSource(const ProcessorGroup*,
   CellInformation* cellinfo = cellinfop;
 #endif
 
-  IntVector lowIndex = patch->getCellLowIndex();
-  IntVector highIndex = patch->getCellHighIndex();
-
   CCVariable<double> scalarLinearSrc; //SP term in Arches
   CCVariable<double> scalarNonlinearSrc; // SU in Arches
 
@@ -456,14 +507,51 @@ Source::calculateScalarSource(const ProcessorGroup*,
   new_dw->allocate(scalarNonlinearSrc, d_scalNonLinSrcSBLMLabel, 
 		   index, patch);
 
+  // Get the patch and variable indices
+  IntVector domLoU = uVelocity.getFortLowIndex();
+  IntVector domHiU = uVelocity.getFortHighIndex();
+  IntVector idxLoU = patch->getSFCXFORTLowIndex();
+  IntVector idxHiU = patch->getSFCXFORTHighIndex();
+  IntVector domLoV = uVelocity.getFortLowIndex();
+  IntVector domHiV = uVelocity.getFortHighIndex();
+  IntVector idxLoV = patch->getSFCYFORTLowIndex();
+  IntVector idxHiV = patch->getSFCYFORTHighIndex();
+  IntVector domLoW = uVelocity.getFortLowIndex();
+  IntVector domHiW = uVelocity.getFortHighIndex();
+  IntVector idxLoW = patch->getSFCZFORTLowIndex();
+  IntVector idxHiW = patch->getSFCZFORTHighIndex();
+  IntVector domLo = scalar.getFortLowIndex();
+  IntVector domHi = scalar.getFortHighIndex();
+  IntVector idxLo = patch->getCellFORTLowIndex();
+  IntVector idxHi = patch->getCellFORTHighIndex();
+
 #ifdef WONT_COMPILE_YET
   // 3-d array for volume - fortran uses it for temporary storage
   Array3<double> volume(patch->getLowIndex(), patch->getHighIndex());
   // computes remaining diffusion term and also computes 
   // source due to gravity...need to pass ipref, jpref and kpref
-  FORT_SCALARSOURCE(scalarLinearSrc, scalarNonlinearSrc, scalar, velocity,
-		    viscosity, density, 
-		    lowIndex, highIndex,
+  FORT_SCALARSOURCE(domLo.get_pointer(), domHi.get_pointer(),
+		    idxLo.get_pointer(), idxHi.get_pointer(),
+		    scalarLinearSrc.getPointer(),
+		    scalarNonlinearSrc.getPointer(),
+		    scalar.getPointer(),
+		    density.getPointer(),
+		    viscosity.getPointer(),
+		    domLoU.get_pointer(), domHiU.get_pointer(),
+		    idxLoU.get_pointer(), idxHiU.get_pointer(),
+		    uVelLinearSrc.getPointer(), 
+		    uVelNonlinearSrc.getPointer(), 
+		    uVelocity.getPointer(), 
+		    domLoV.get_pointer(), domHiV.get_pointer(),
+		    idxLoV.get_pointer(), idxHiV.get_pointer(),
+		    vVelLinearSrc.getPointer(), 
+		    vVelNonlinearSrc.getPointer(), 
+		    vVelocity.getPointer(), 
+		    domLoW.get_pointer(), domHiW.get_pointer(),
+		    idxLoW.get_pointer(), idxHiW.get_pointer(),
+		    wVelLinearSrc.getPointer(), 
+		    wVelNonlinearSrc.getPointer(), 
+		    wVelocity.getPointer(), 
 		    cellinfo->ceeu, cellinfo->cweu, cellinfo->cwwu,
 		    cellinfo->cnn, cellinfo->csn, cellinfo->css,
 		    cellinfo->ctt, cellinfo->cbt, cellinfo->cbb,
@@ -523,5 +611,8 @@ Source::addPressureSource(const ProcessorGroup* ,
 }
 
 //
-//$ Log: $
+//$Log$
+//Revision 1.16  2000/06/30 04:36:47  bbanerje
+//Changed FCVarsto SFC[X,Y,Z]Vars and added relevant getIndex() calls.
+//
 //
