@@ -10,10 +10,10 @@
    </Meta>
 
    <Time>
-	<maxTime>10.0</maxTime>
+	<maxTime>10</maxTime>
 	<initTime>0.0</initTime>
 	<delt_min>0.001</delt_min>
-	<delt_max>0.5</delt_max>
+	<delt_max>0.01</delt_max>
 	<timestep_multiplier>0.8</timestep_multiplier>
    </Time>
 
@@ -51,7 +51,7 @@
 		<geom_object>
 		    <box label="gp1">
 			<min>[0,0,0]</min>
-			<max>[20,8,8]</max>
+			<max>[0.02,0.008,0.008]</max>
 		    </box>
 		    <res>[2,2,2]</res>
 		    <velocity>[0.,0.,0.]</velocity>
@@ -59,13 +59,13 @@
 			<NormalForce>5</NormalForce>
 			<FaceForce face="x+">[1,0,0]</FaceForce>
 		    </BoundaryConditions>
-		    <temperature>873.</temperature>
+		    <temperature>300.</temperature>
  		</geom_object>
 
 		<geom_object>
 		    <box label="gp2">
-			<min>[20,0,0]</min>
-			<max>[40,8,8]</max>
+			<min>[0.02,0,0]</min>
+			<max>[0.04,0.008,0.008]</max>
 		    </box>
 		    <res>[2,2,2]</res>
 		    <velocity>[0.,0.,0.]</velocity>
@@ -73,7 +73,7 @@
 			<NormalForce>5</NormalForce>
 			<FaceForce face="x+">[1,0,0]</FaceForce>
 		    </BoundaryConditions>
-		    <temperature>573.</temperature>
+		    <temperature>0.</temperature>
  		</geom_object>
 		<velocity_field>0</velocity_field>
 
@@ -86,8 +86,6 @@
 
             <heat_conduction></heat_conduction>
 
-            <thermal_contact></thermal_contact>
-            
 	</MPM>
 
     </MaterialProperties>
@@ -96,7 +94,7 @@
 	<Level>
 	    <Box label="1">
 		<lower>[0,0,0]</lower>
-		<upper>[40,8,8]</upper>
+		<upper>[0.04,0.008,0.008]</upper>
 	        <resolution>[40,8,8]</resolution>
 		<patches>[1,1,1]</patches>
 	    </Box>
