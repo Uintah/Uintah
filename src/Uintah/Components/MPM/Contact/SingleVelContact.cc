@@ -1,5 +1,6 @@
-/* REFERENCED */
-static char *id="@(#) $Id$";
+//
+// $Id$
+//
 
 // SingleVel.cc
 //
@@ -214,6 +215,9 @@ void SingleVelContact::addComputesAndRequiresIntegrated( Task* t,
 }
 
 // $Log$
+// Revision 1.24  2000/09/25 20:23:20  sparker
+// Quiet g++ warnings
+//
 // Revision 1.23  2000/07/05 23:43:36  jas
 // Changed the way MPMLabel is used.  No longer a Singleton class.  Added
 // MPMLabel* lb to various classes to retain the original calling

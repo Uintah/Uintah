@@ -105,7 +105,7 @@ MPMMaterial::~MPMMaterial()
   delete lb;
   delete d_burn;
 
-  for (int i = 0; i<d_geom_objs.size(); i++) {
+  for (int i = 0; i<(int)d_geom_objs.size(); i++) {
     GeometryObject* obj = d_geom_objs[i];
     delete obj;
     delete d_geom_objs[i];
@@ -139,7 +139,7 @@ Fracture * MPMMaterial::getFractureModel() const
 particleIndex MPMMaterial::countParticles(const Patch* patch) const
 {
    particleIndex sum = 0;
-   for(int i=0; i<d_geom_objs.size(); i++)
+   for(int i=0; i<(int)d_geom_objs.size(); i++)
       sum+= countParticles(d_geom_objs[i], patch);
    return sum;
 }
@@ -183,7 +183,7 @@ void MPMMaterial::createParticles(particleIndex numParticles,
    }
    
    particleIndex start = 0;
-   for(int i=0; i<d_geom_objs.size(); i++){
+   for(int i=0; i<(int)d_geom_objs.size(); i++){
       start += createParticles( d_geom_objs[i], start, position,
 				pvelocity,pexternalforce,pmass,pvolume,
 				pissurf,ptemperature,pTensileStrength,pparticleID,NAPID,patch);
@@ -210,7 +210,7 @@ void MPMMaterial::createParticles(particleIndex numParticles,
      pexternalforce[pIdx] = Vector(0.0,0.0,0.0);
 
      //applyPhysicalBCToParticles
-     for (int i = 0; i<MPMPhysicalBCFactory::mpmPhysicalBCs.size(); i++ )
+     for (int i = 0; i<(int)MPMPhysicalBCFactory::mpmPhysicalBCs.size(); i++ )
      {
        string bcs_type = MPMPhysicalBCFactory::mpmPhysicalBCs[i]->getType();
         
@@ -422,6 +422,9 @@ double MPMMaterial::getHeatTransferCoefficient() const
 
 
 // $Log$
+// Revision 1.51  2000/09/25 20:23:19  sparker
+// Quiet g++ warnings
+//
 // Revision 1.50  2000/09/22 07:10:57  tan
 // MPM code works with fracture in three point bending.
 //

@@ -107,7 +107,7 @@ bool ParticlesNeighbor::visible(particleIndex idx,
     if( Dot( B - A, pCrackSurfaceNormal[idx] ) > 0 ) return false;
   }
   
-  for(int i=0; i<size(); i++) {
+  for(int i=0; i<(int)size(); i++) {
       int index = (*this)[i];
       //cout<<"neighbor distance"<<(pX[index] - A).length()<<endl;
       
@@ -139,6 +139,9 @@ bool ParticlesNeighbor::visible(particleIndex idx,
 } //namespace Uintah
 
 // $Log$
+// Revision 1.14  2000/09/25 20:23:21  sparker
+// Quiet g++ warnings
+//
 // Revision 1.13  2000/09/22 07:18:57  tan
 // MPM code works with fracture in three point bending.
 //

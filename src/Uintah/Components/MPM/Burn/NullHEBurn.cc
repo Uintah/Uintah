@@ -1,7 +1,5 @@
-/* REFERENCED */
-static char *id="@(#) $Id$";
-
-// NullHEBurn.cc
+//
+// $Id$
 //
 // One of the derived HEBurn classes.  This particular
 // class is used when no burn is desired.  
@@ -71,7 +69,7 @@ void NullHEBurn::computeMassRate(const Patch* patch,
 				 DataWarehouseP& old_dw,
 				 DataWarehouseP& new_dw)
 {
-  int matlindex = matl->getDWIndex();
+    //int matlindex = matl->getDWIndex();
   //  const MPMLabel* lb = MPMLabel::getLabels();
 
   // Carry the mass and volume forward
@@ -87,6 +85,9 @@ void NullHEBurn::computeMassRate(const Patch* patch,
 }
 
 // $Log$
+// Revision 1.10  2000/09/25 20:23:18  sparker
+// Quiet g++ warnings
+//
 // Revision 1.9  2000/07/25 19:10:25  guilkey
 // Changed code relating to particle combustion as well as the
 // heat conduction.

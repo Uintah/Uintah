@@ -224,7 +224,7 @@ template <class T> void Matrix<T>::resize( int num_rows,  int num_columns)
 
   // Old dimensions
   int o_rows = numberRows();
-  int o_cols = numberColumns();
+  //int o_cols = numberColumns();
 
   // Resize the matrix to size rows by columns
 
@@ -910,6 +910,9 @@ template<class T> Matrix<T>  operator * (const Matrix<T> &left,
 #endif // __Matrix_cc__
 
 // $Log$
+// Revision 1.5  2000/09/25 20:23:23  sparker
+// Quiet g++ warnings
+//
 // Revision 1.4  2000/08/08 01:32:44  jas
 // Changed new to scinew and eliminated some(minor) memory leaks in the scheduler
 // stuff.

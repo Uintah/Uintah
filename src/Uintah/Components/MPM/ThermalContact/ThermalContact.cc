@@ -37,13 +37,13 @@ void ThermalContact::computeHeatExchange(const ProcessorGroup*,
 
   //  const MPMLabel *lb = MPMLabel::getLabels();
   
-  int m, n, vfindex;
+  //  int m, n, vfindex;
   Material* matl;
   MPMMaterial* mpm_matl;
   delt_vartype delT;
   old_dw->get(delT, lb->delTLabel);
   
-  for(m = 0; m < numMatls; m++){
+  for(int m = 0; m < numMatls; m++){
     matl = d_sharedState->getMaterial( m );
     mpm_matl = dynamic_cast<MPMMaterial*>(matl);
     if(mpm_matl){
@@ -61,13 +61,13 @@ void ThermalContact::computeHeatExchange(const ProcessorGroup*,
   for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++) {
     double numerator=0.0;
     double denominator=0.0;
-    for(m = 0; m < numMatls; m++) {
+    for(int m = 0; m < numMatls; m++) {
       Material* matl = d_sharedState->getMaterial( m );
       MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
       if(mpm_matl){
         int n = matl->getVFIndex();
         double Cp=mpm_matl->getSpecificHeat();
-        double K=mpm_matl->getThermalConductivity();
+        //double K=mpm_matl->getThermalConductivity();
         numerator   += gTemperature[n][*iter] * gmass[n][*iter] * Cp;
         denominator += gmass[n][*iter] * Cp;
       }
@@ -75,13 +75,13 @@ void ThermalContact::computeHeatExchange(const ProcessorGroup*,
       
     if( !compare(denominator,0.0) ) {
       double contactTemperature = numerator/denominator;
-      for(m = 0; m < numMatls; m++) {
+      for(int m = 0; m < numMatls; m++) {
         matl = d_sharedState->getMaterial( m );
         mpm_matl = dynamic_cast<MPMMaterial*>(matl);
         
         if(mpm_matl){
-          double Cp=mpm_matl->getSpecificHeat();
-          double K=mpm_matl->getThermalConductivity();
+	    //double Cp=mpm_matl->getSpecificHeat();
+          //double K=mpm_matl->getThermalConductivity();
           int n = matl->getVFIndex();
 	  if( !compare(gmass[n][*iter],0.0)){
             thermalContactHeatExchangeRate[n][*iter] =
@@ -125,6 +125,9 @@ void ThermalContact::addComputesAndRequires(Task* t,
 
 //
 // $Log$
+// Revision 1.14  2000/09/25 20:23:22  sparker
+// Quiet g++ warnings
+//
 // Revision 1.13  2000/08/09 03:18:03  jas
 // Changed new to scinew and added deletes to some of the destructors.
 //

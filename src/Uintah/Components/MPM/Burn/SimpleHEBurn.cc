@@ -1,7 +1,5 @@
-/* REFERENCED */
-static char *id="@(#) $Id$";
-
-// SimpleHEBurn.cc
+//
+// $Id$
 //
 // One of the derived HEBurn classes.  This particular
 // class is used when no burn is desired.  
@@ -198,6 +196,9 @@ void SimpleHEBurn::computeMassRate(const Patch* patch,
 }
  
 // $Log$
+// Revision 1.15  2000/09/25 20:23:18  sparker
+// Quiet g++ warnings
+//
 // Revision 1.14  2000/07/25 19:10:25  guilkey
 // Changed code relating to particle combustion as well as the
 // heat conduction.
