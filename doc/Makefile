@@ -39,7 +39,7 @@ tarball : tar
 tarlist := ${shell ruby tarlist}
 
 # Build all docs and put them in a tar archive.
-tar: products
+tar: index.html products
 	@echo "Making a tar archive"
 	-rm -f ${TARFILE}
 	cd ../..; ${TARCMD} ${tarlist}
