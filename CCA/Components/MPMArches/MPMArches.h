@@ -121,6 +121,12 @@ public:
 			        const PatchSet* patches,
 			        const MaterialSet* mpm_matls);
 
+  ///////////////////////////////////////////////////////////////////////
+    // Function to return boolean for recompiling taskgraph
+
+    virtual bool need_recompile(double time, double dt,
+				const GridP& grid);
+
  protected:
 
   void interpolateParticlesToGrid(const ProcessorGroup*,
@@ -219,6 +225,8 @@ public:
 
   double d_htcoeff;
   bool d_calcEnergyExchange;
+  int nofTimeSteps;
+  bool d_recompile;
 
 };
       
