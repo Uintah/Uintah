@@ -29,6 +29,19 @@ MembraneParticleCreator::MembraneParticleCreator(MPMMaterial* matl,
   lb->d_particleState_preReloc.push_back(particle_state_preReloc);
 }
 
+MembraneParticleCreator::MembraneParticleCreator(MPMMaterial* matl,
+						 MPMLabel* lb,
+                                                 int n8or27,
+                                                 bool haveLoadCurve,
+						 bool doErosion, 
+                                                 bool haveShell) 
+  :  ParticleCreator(matl,lb,n8or27,haveLoadCurve, doErosion, haveShell)
+{
+  registerPermanentParticleState(matl,lb);
+  lb->d_particleState.push_back(particle_state);
+  lb->d_particleState_preReloc.push_back(particle_state_preReloc);
+}
+
 MembraneParticleCreator::~MembraneParticleCreator()
 {
 }
@@ -193,5 +206,4 @@ MembraneParticleCreator::registerPermanentParticleState(MPMMaterial* matl,
 
   particle_state.push_back(lb->pNormLabel);
   particle_state_preReloc.push_back(lb->pNormLabel_preReloc);
-
 }
