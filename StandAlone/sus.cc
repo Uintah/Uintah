@@ -32,7 +32,10 @@
 #include <Packages/Uintah/CCA/Components/DataArchiver/DataArchiver.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
+
 #include <Core/Exceptions/Exception.h>
+#include <Core/Thread/Mutex.h>
+#include <Core/Util/DebugStream.h>
 
 #ifdef USE_VAMPIR
 #include <Packages/Uintah/Core/Parallel/Vampir.h>
@@ -46,10 +49,14 @@
 #include <string>
 #include <vector>
 
-
 using namespace SCIRun;
 using namespace Uintah;
 using namespace std;
+
+// Debug: Used to sync cerr so it is readable (when output by
+// multiple threads at the same time)
+Mutex cerrLock( "cerr lock" );
+DebugStream mixedDebug( "MixedScheduler Debug Output Stream", false );
 
 static
 void
@@ -98,19 +105,9 @@ usage( const std::string & message,
 int
 main(int argc, char** argv)
 {
-    TAU_PROFILE("main()", "void (int, char **)", TAU_DEFAULT);
-    TAU_PROFILE_INIT(argc,argv);
-
-    SimulationController::start_addr = (char*)sbrk(0);
-    Thread::disallow_sgi_OpenGL_page0_sillyness();
-  
-    /*
-     * Initialize MPI
-     */
-    Uintah::Parallel::initializeManager(argc, argv);
-    #ifdef USE_VAMPIR
-    VTsetup();
-    #endif
+  TAU_PROFILE_INIT(argc,argv);
+  // Causes buserr for some reason:
+  //TAU_PROFILE("main()", "void (int, char **)", TAU_DEFAULT);
 
 #if HAVE_FPSETMASK
     fpsetmask(FP_X_OFL|FP_X_DZ|FP_X_INV);
@@ -227,6 +224,17 @@ main(int argc, char** argv)
 	usage( "You need to specify -arches, -ice, or -mpm", "", argv[0]);
     }
 
+    SimulationController::start_addr = (char*)sbrk(0);
+    Thread::disallow_sgi_OpenGL_page0_sillyness();
+
+    /*
+     * Initialize MPI
+     */
+    Uintah::Parallel::initializeManager( argc, argv, scheduler );
+    #ifdef USE_VAMPIR
+    VTsetup();
+    #endif
+
     bool thrownException = false;
     
     /*
@@ -341,6 +349,7 @@ main(int argc, char** argv)
 	  int sleepTime = atoi( st );
 	  cerr << "SLEEPING FOR " << sleepTime 
 	       << " SECONDS TO ALLOW DEBUGGER ATTACHMENT\n";
+	  cerr << "PID is " << getpid() << "\n";
 	  sleep( sleepTime );
 	}
 
@@ -348,6 +357,7 @@ main(int argc, char** argv)
 	  sim->doRestart(restartFromDir, restartTimestep,
 			 restartFromScratch, restartRemoveOldDir);
 	}
+	cout << "About to run simulation\n";
 	sim->run();
 
     delete mpm;
@@ -360,24 +370,35 @@ main(int argc, char** argv)
     sch->removeReference();
     delete sch;
     } catch (Exception& e) {
-	cerr << "Caught exception: " << e.message() << '\n';
-	if(e.stackTrace())
-	   cerr << "Stack trace: " << e.stackTrace() << '\n';
-	// Dd: I believe that these cause error messages
-	// to be lost when the program dies...
-	//Uintah::Parallel::finalizeManager(Uintah::Parallel::Abort);
-	//abort();
-	thrownException = true;
+
+      cerrLock.lock();
+      mixedDebug << "Caught exception: " << e.message() << '\n';
+      if(e.stackTrace())
+	cerr << "Stack trace: " << e.stackTrace() << '\n';
+      cerrLock.unlock();
+
+      // Dd: I believe that these cause error messages
+      // to be lost when the program dies...
+      //Uintah::Parallel::finalizeManager(Uintah::Parallel::Abort);
+      //abort();
+      thrownException = true;
     } catch (std::exception e){
-        cerr << "Caught std exception: " << e.what() << '\n';
-	//Uintah::Parallel::finalizeManager(Uintah::Parallel::Abort);
-	//abort();
-	thrownException = true;
+
+      cerrLock.lock();
+      cerr << "Caught std exception: " << e.what() << '\n';
+      cerrLock.unlock();
+      //Uintah::Parallel::finalizeManager(Uintah::Parallel::Abort);
+      //abort();
+      thrownException = true;
+
     } catch(...){
-	cerr << "Caught unknown exception\n";
-	//Uintah::Parallel::finalizeManager(Uintah::Parallel::Abort);
-	//abort();
-	thrownException = true;
+
+      cerrLock.lock();
+      cerr << "Caught unknown exception\n";
+      cerrLock.unlock();
+      //Uintah::Parallel::finalizeManager(Uintah::Parallel::Abort);
+      //abort();
+      thrownException = true;
     }
 
     // Shutdown XML crap
