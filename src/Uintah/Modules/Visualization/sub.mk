@@ -19,11 +19,8 @@ SRCS     += \
 	$(SRCDIR)/ParticleVis.cc \
 	$(SRCDIR)/EigenEvaluator.cc \
 	$(SRCDIR)/ParticleEigenEvaluator.cc \
-	$(SRCDIR)/InPlaneEigenEvaluator.cc \
-	$(SRCDIR)/ParticleInPlaneEigenEvaluator.cc \
-	$(SRCDIR)/TensorElementExtractor.cc \
-	$(SRCDIR)/ParticleTensorElementExtractor.cc\
-#[INSERT NEW CODE FILE HERE]
+	$(SRCDIR)/TensorFieldOperator.cc \
+	$(SRCDIR)/TensorParticlesOperator.cc
 
 PSELIBS :=  PSECore/Dataflow PSECore/Datatypes \
         SCICore/Thread SCICore/Persistent SCICore/Exceptions \
@@ -39,7 +36,16 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.12  2000/11/21 21:52:39  witzel
+# Added TensorFieldOperator which replaces InPlaneEigenEvaluator
+# and TensorElementExtractor as well as adding other tensor operations.
+# Added TensorParticlesOperator which replaces ParticleInPlaneEigenEvaluator
+# and ParticleTensorElementExtractor as well as adding other tensor
+# operations (particle version of TensorFieldOperator).
+#
 # Revision 1.11  2000/10/24 05:57:58  moulding
+#
+#
 # new module maker Phase 2: new module maker goes online
 #
 # These changes clean out the last remnants of the old module maker and
