@@ -31,6 +31,9 @@ itcl_class Insight_DataIO_ImageFileWriter {
     inherit Module
     constructor {config} {
         set name ImageFileWriter
+
+	global $this-filename
+
         set_defaults
     }
 
@@ -38,6 +41,7 @@ itcl_class Insight_DataIO_ImageFileWriter {
 	global $this-filetype
 	set $this-filetype Binary
 	set $this-split 0
+	set $this-filename "MyImage.mhd"
     }
 
     method ui {} {
@@ -63,7 +67,7 @@ itcl_class Insight_DataIO_ImageFileWriter {
         toplevel $w -class TkFDialog
 	makeSaveFilebox \
 	    -parent $w \
-	    -filevar $this-FileName \
+	    -filevar $this-filename \
             -setcmd "wm withdraw $w" \
 	    -command "$this-c needexecute; wm withdraw $w" \
 	    -cancel "wm withdraw $w " \

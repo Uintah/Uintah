@@ -31,10 +31,14 @@ itcl_class Insight_DataIO_ImageReaderUChar3D {
     inherit Module
     constructor {config} {
         set name ImageReaderUChar3D
+
+	global $this-filename
+
         set_defaults
     }
 
     method set_defaults {} {
+	set $this-filename "MyImage.mhd"
     }
 
     method ui {} {
@@ -59,7 +63,7 @@ itcl_class Insight_DataIO_ImageReaderUChar3D {
 
 	makeOpenFilebox \
 		-parent $w \
-		-filevar $this-FileName \
+		-filevar $this-filename \
 	        -setcmd "wm withdraw $w" \
 		-command "$this-c needexecute; wm withdraw $w" \
 		-cancel "wm withdraw $w" \
