@@ -27,12 +27,12 @@
  */
 
 #include <iostream>
-#include <SCIRun/Vtk/Port.h>
-#include <CCA/Components/VtkTest/StructuredPointsReader/StructuredPointsReader.h>
+#include <vtkStructuredPointsReader.h>
+#include <vtkStructuredPoints.h>
+#include <vtkPolyData.h>
 
-#include "vtkStructuredPointsReader.h"
-#include "vtkStructuredPoints.h"
-#include "vtkPolyData.h"
+#include <CCA/Components/VtkTest/StructuredPointsReader/StructuredPointsReader.h>
+#include <qfiledialog.h>
 
 using namespace std;
 using namespace SCIRun;
@@ -43,46 +43,27 @@ extern "C" vtk::Component* make_Vtk_StructuredPointsReader()
   return new StructuredPointsReader;
 }
 
-//Output Port
-
-OPort::OPort(vtkStructuredPointsReader *reader){
-  this->reader=reader;
-  static char * filename="/home/sci/kzhang/vtk/vtkdata/head.60.vtk";
-  reader->SetFileName(filename);
-}
-
-OPort::~OPort(){
-
-}
-
-bool
-OPort::isInput(){
-  return false;
-}
-
-std::string
-OPort::getName(){
-  return "StructuredPointsReader::output";
-}
-
-vtkObject*
-OPort::getObj(){
-  return reader->GetOutput();
-}
-
-
 StructuredPointsReader::StructuredPointsReader(){
-
+  //set output port name
+  OutPort::setName("StructuredPointsReader::output");
   reader=vtkStructuredPointsReader::New();
-  oports.push_back(new OPort(reader));
+  setOutput(reader->GetOutput());
+  addPort(this);
+  enableUI();
 }
 
 StructuredPointsReader::~StructuredPointsReader(){
-  for(unsigned int i=0; i<iports.size(); i++){
-    delete iports[i];
-  }
-  for(unsigned int i=0; i<oports.size(); i++){
-    delete oports[i];
-  }
   reader->Delete();
+}
+
+
+int
+StructuredPointsReader::popupUI(){
+  QString fn = QFileDialog::getOpenFileName(
+	    "./","Vtk StructuredPoints Files(*.vtk)");
+  if(fn.isNull())   return 1;
+  reader->SetFileName(fn);
+  reader->Update();
+
+  return 0;
 }

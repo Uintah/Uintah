@@ -29,41 +29,33 @@
 #ifndef SCIRun_VTK_Components_StructuredPointsReader_h
 #define SCIRun_VTK_Components_StructuredPointsReader_h
 
-#include <SCIRun/Vtk/Port.h>
+#include <SCIRun/Vtk/OutPort.h>
 #include <SCIRun/Vtk/Component.h>
 #include <vector>
-
-#define OPort StructuredPointsReader_OPort
 
 class vtkStructuredPointsReader;
 
 namespace SCIRun {
   namespace vtk{
 
-  class OPort : public vtk::Port {
-  public:
-    OPort(vtkStructuredPointsReader *reader);
-    virtual ~OPort();
-    bool isInput();
-    std::string getName();
-    vtkObject* getObj();
-    vtkStructuredPointsReader *reader;
-  };
-  
-  class StructuredPointsReader: public vtk::Component{
-    
-  public:
-    StructuredPointsReader();
-    virtual ~StructuredPointsReader();
-  private:
-    vtkStructuredPointsReader *reader;
+    class StructuredPointsReader: public Component, public OutPort{
+      
+    public:
+      //constructor
+      StructuredPointsReader();
 
-    StructuredPointsReader(const StructuredPointsReader&);
-    StructuredPointsReader& operator=(const StructuredPointsReader&);
-  };
-  
-  
-} //namespace vtk
+      //destructor
+      ~StructuredPointsReader();
+
+      //Component interface
+      int popupUI();
+
+    private:
+      vtkStructuredPointsReader *reader;
+      StructuredPointsReader(const StructuredPointsReader&);
+      StructuredPointsReader& operator=(const StructuredPointsReader&);
+    };
+  } //namespace vtk
 } //namespace SCIRun
 
 
