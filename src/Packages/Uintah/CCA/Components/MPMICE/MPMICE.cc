@@ -728,7 +728,7 @@ void MPMICE::scheduleInterpolateMassBurnFractionToNC(SchedulerP& sched,
   }
   //__________________________________
   if(d_ice->d_models.size() > 0){
-    t->requires(Task::NewDW,Ilb->modelVol_srcLabel, Ghost::None,0);
+    t->requires(Task::NewDW,Ilb->modelVol_srcLabel, Ghost::AroundCells,1);
   }
   t->computes(Mlb->massBurnFractionLabel);
 
@@ -2370,7 +2370,7 @@ void MPMICE::interpolateMassBurnFractionToNC(const ProcessorGroup*,
         //__________________________________
         if(d_ice->d_models.size() > 0)  { 
           constCCVariable<double> modelMass_src;
-	   new_dw->get(modelMass_src,Ilb->modelMass_srcLabel,indx, patch, gn, 0);
+	   new_dw->get(modelMass_src,Ilb->modelMass_srcLabel,indx, patch, gac,1);
           
           IntVector cIdx[8];  
           for(NodeIterator iter = patch->getNodeIterator(); !iter.done();iter++){
