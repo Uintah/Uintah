@@ -1119,6 +1119,26 @@ IntVector Patch::faceDirection(FaceType face) const
   }
 }
 
+string Patch::getFaceName(FaceType face) const
+{
+  switch(face) {
+  case xminus:
+    return "xminus";
+  case xplus:
+    return "xplus";
+  case yminus:
+    return "yminus";
+  case yplus:
+    return "yplus";
+  case zminus:
+    return "zminus";
+  case zplus:
+    return "zplus";
+  default:
+    SCI_THROW(InternalError("Illegal FaceType in Patch::faceName"));
+  }
+}
+
 void
 Patch::getFaceNodes(FaceType face, int offset,IntVector& l, IntVector& h) const
 {
