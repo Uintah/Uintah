@@ -31,7 +31,8 @@ int main(int argc, char *argv[]) {
   char *bases_filename=0;
   char *trans_filename=0;
   char *mean_filename=0;
-
+  char *nrrd_ext = ".nhdr";
+  
   for(int i = 1; i < argc; i++) {
     string arg(argv[i]);
     if (arg == "-input" || arg == "-i") {
@@ -44,6 +45,8 @@ int main(int argc, char *argv[]) {
       trans_filename = argv[++i];
     } else if (arg == "-mean" || arg == "-m") {
       mean_filename = argv[++i];            
+    } else if (arg == "-nrrd") {
+      nrrd_ext = ".nrrd";
     } else {
       usage(me, arg.c_str());
     }
@@ -72,15 +75,15 @@ int main(int argc, char *argv[]) {
     size_t len=strlen(infilename_base);
     if (!bases_filename) {
       bases_filename=new char[len+15];
-      sprintf(bases_filename, "%s-bases.nrrd", infilename_base);
+      sprintf(bases_filename, "%s-bases%s", infilename_base, nrrd_ext);
     }
     if (!trans_filename) {
       trans_filename=new char[len+20];
-      sprintf(trans_filename, "%s-transform.nrrd", infilename_base);
+      sprintf(trans_filename, "%s-transform%s", infilename_base, nrrd_ext);
     }
     if (!mean_filename) {
       mean_filename=new char[len+15];
-      sprintf(mean_filename, "%s-mean.nrrd", infilename_base);
+      sprintf(mean_filename, "%s-mean%s", infilename_base, nrrd_ext);
     }
   }
 
