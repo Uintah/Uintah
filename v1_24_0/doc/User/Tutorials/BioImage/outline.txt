@@ -57,31 +57,31 @@ BioImage Tutorial
 Reference Guide
 -------------------
 User Interface Organization
-     Processing Tab
-     Dynamic Filters    
-	     dynamic filters and history
-             hide/show filter ui
-             change labels of filters
-             insert/delete
-             notion of the "eye"
-             currently selected
-             Update button
-      Rendering Windows
+     Processing Tab	DARBY
+          Dynamic Filters    
+	       dynamic filters and history
+	       hide/show filter ui
+               change labels of filters
+               insert/delete
+               notion of the "eye"
+               Update button
+	  Rendering Windows
              ability to separate windows
              2D window interactions
 	     3D window interactions
-      Visualization Pane
+          Visualization Pane
              Planes options
 	     Volume Rendering options
-	     TransferFunction editing
+	        TransferFunction editing
+             3D Options
 
-Types of Data Input
+Types of Data Input ERIK
       Nrrd
-      Dicom
-      Analyze
+      Dicom (need to build SCIRun with Insight)
+      Analyze (need to build SCIRun with Insight)
       Field
 
-Pre-processing Filters
+Pre-processing Filters MARK
       Resample
       Crop	
       Histogram
