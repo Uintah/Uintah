@@ -8,8 +8,8 @@ testname="$3"
 force="$4" # if set to -f then it won't ask you yes/no questions
 
 # prompt for and replace udas
-if [ $# -ne 3 ]; then
-  echo "usage: $0 <gold_standard_dir> <replacement_dir> <testname>"
+if [ $# -ne 3 -a $# -ne 4 ]; then
+  echo "usage: $0 <gold_standard_dir> <replacement_dir> <testname> [-f]"
   exit 1
 fi
 if [ ! -d $gold_standard_dir/$testname ]; then
@@ -20,18 +20,18 @@ fi
 if [ ! -d $replacement_dir/$testname/*.uda ]; then
   echo "No udas to replace"
 else
-  echo "Replace the udas at $gold_standard_dir/$testname with $replacement_dir/$testname? (Enter 'yes' or 'y' to continue.) "
 
-  if [ $force = "-f" ]; then
+  if [ "$force" = "-f" ]; then
     yesno="yes"
   else
+    echo "Replace the udas at $gold_standard_dir/$testname with $replacement_dir/$testname? (Enter 'yes' or 'y' to continue.) "
     read yesno
   fi
 
   # remove the udas, and copy the new ones
   if [ $yesno = "y" -o $yesno = "yes" ]; then
   # echo "rm -rf $gold_standard_dir/$testname/*.uda"
-    echo "Replacing $testname udas"
+    echo -n "Replacing $testname udas ... "
     rm -r $gold_standard_dir/$testname/*.uda
     if [ $? != "0" ]; then
       echo "$testname replacement failed - could not remove old udas"
@@ -62,7 +62,7 @@ else
   
   # replace the memory usage (both normal and restart)
 
-  if [ "$force" != "-f" ];
+  if [ "$force" != "-f" ]; then
     echo "Replace $testname mem usage results? (Enter 'yes' or 'y' to continue.)"
     read yesno
   fi
