@@ -224,18 +224,24 @@ void NexusSpMessage::destroyMessage() {
 
 int NexusSpMessage::getRecvBufferCopy(void* buf) 
 {
+  //  globus_nexus_get_user(_recvbuff, (globus_byte_t *)buf, 50);
+  return 50;
 }
 
 int NexusSpMessage::getSendBufferCopy(void* buf)
 {
+  //  globus_nexus_get_user(_buffer, (globus_byte_t *)buf, msgsize);
+  return msgsize;
 }
 
 void NexusSpMessage::setRecvBuffer(void* buf, int len)
 {
+  //  globus_nexus_put_user(_recvbuff, (globus_byte_t *)buf, len);  
 }
 
 void NexusSpMessage::setSendBuffer(void* buf, int len)
 {
+  //  globus_nexus_put_user(_buffer, (globus_byte_t *)buf, len);
 }
 
   

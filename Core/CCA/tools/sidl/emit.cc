@@ -861,8 +861,10 @@ void Method::emit_handler(EmitState& e, CI* emit_class) const
       e.out << leader2 << "} catch(" << name << "* _e_ptr) {\n";
       e.out << leader2 << "  ::std::cerr << \"Throwing " << name << "\\n\";\n";
       e.out << leader2 << "  _marshal_exception< " << name << ">(message,_e_ptr," << cnt << ");\n";
-      e.out << leader2 << "  return;\n";
- 
+      if(isCollective)
+	e.out << leader2 << "  goto releaseTicket;\n";
+      else
+	e.out << leader2 << "  return;\n";
     }
     e.out << leader2 << "}\n";
   }
@@ -919,10 +921,10 @@ void Method::emit_handler(EmitState& e, CI* emit_class) const
 	int reply_handler_id=0; // Always 0
 	e.out << leader2 << "  message->sendMessage(" << reply_handler_id << ");\n";
 	e.out << leader2 << "  message->destroyMessage();\n";
-	//e.out << leader2 << "  return;\n";	
+	e.out << leader2 << "  goto releaseTicket;\n";	
       } else { 
 	e.out << leader2 << "  message->destroyMessage();\n";
-	//e.out << leader2 << "  return;\n";
+	e.out << leader2 << "  goto releaseTicket;\n";
       }
       e.out << leader2 << "}\n";
       e.out << leader2 << "else { /*CALLONLY*/ \n";
@@ -1039,6 +1041,7 @@ void Method::emit_handler(EmitState& e, CI* emit_class) const
 
 #ifdef HAVE_MPI
   if(isCollective) {
+    e.out << "releaseTicket:\n";
     e.out << leader2 << "if(_flag != ::SCIRun::REDIS) {\n";
     e.out << leader2 << "  //Release a ticket from the gatekeeper object\n";
     e.out << leader2 << "  _sc->gatekeeper->releaseOneTicket(" << e.handlerNum << ");\n";
@@ -1406,8 +1409,13 @@ void Method::emit_proxy(EmitState& e, const string& fn,
     e.out << leader2 << "::std::vector< ::SCIRun::Reference*> _ref;\n";
     e.out << leader2 << "::SCIRun::callType _flag;\n";
     e.out << leader2 << "::SCIRun::Message* save_callonly_msg = NULL;\n";
-    if(throws_clause)
+    if(throws_clause) {
       e.out << leader2 << "::std::vector < ::SCIRun::Message*> save_callnoret_msg;\n";
+#ifdef HAVE_MPI 
+      e.out << leader2 << "//Imprecise exception check if someone caught an exception\n";
+      e.out << leader2 << "xr->checkException();\n";
+#endif
+    }
   }
 
   if(reply_required()){
@@ -1473,9 +1481,7 @@ e.out << leader2 << "//::std::cout << \" NOCALLRET sending _sessionID = '\" << _
       //... emit unmarshal...;
       e.out << leader2 << "int _x_flag;\n";
       e.out << leader2 << "message->unmarshalInt(&_x_flag);\n";
-      e.out << leader2 << "if(_x_flag != 0)\n";
-      e.out << leader2 << "  NOT_FINISHED(\"Exceptions not implemented\");\n";
-      
+      e.out << leader2 << "//Exceptions are ineffective for NOCALLRET\n";
       
       if(return_type){
 	if(!return_type->isvoid()){
@@ -1661,7 +1667,12 @@ e.out << leader2 << "//::std::cout << \"CALLONLY sending _sessionID = '\" << _se
       for(vector<ScopedName*>::const_iterator iter=thlist.begin();iter != thlist.end();iter++, cnt++){
 	::std::string name = (*iter)->cppfullname();
 	e.out << leader2 << "  case " << cnt << ":\n";
-	e.out << leader2 << "    _unmarshal_exception<" << name << ", " << name << "_proxy>(message);\n";
+	e.out << leader2 << "    " << name << "* _e_ptr = _unmarshal_exception<" << name << ", " << name << "_proxy>(message);\n";
+#ifdef HAVE_MPI
+	if(isCollective) 
+	  e.out << leader2 << "    xr->relayException(" << cnt << ", message);\n";
+#endif
+	e.out << leader2 << "    throw _e_ptr;\n";
 	e.out << leader2 << "    break;\n";
       }
       e.out << leader2 << "  }\n";
@@ -1701,7 +1712,8 @@ e.out << leader2 << "//::std::cout << \"CALLONLY sending _sessionID = '\" << _se
 
     //CALLNORET ADDENDUM FOR EXCEPTIONS
     if((isCollective)&&(throws_clause)) {
-      e.out << leader2 << "\n//CALLNORET ADDENDUM FOR EXCEPTIONS\n";
+      e.out << "\n";
+      e.out << leader2 << "//CALLNORET ADDENDUM FOR EXCEPTIONS\n";
       e.out << leader2 << "if(save_callnoret_msg.size() > 0) {\n";      
       e.out << leader2 << "  ::std::vector< ::SCIRun::Message*>::iterator iter = save_callnoret_msg.begin();\n";
       e.out << leader2 << "  for(unsigned int i=0; i < save_callnoret_msg.size(); i++, iter++) {\n";
@@ -1716,7 +1728,11 @@ e.out << leader2 << "//::std::cout << \"CALLONLY sending _sessionID = '\" << _se
       for(vector<ScopedName*>::const_iterator iter=thlist.begin();iter != thlist.end();iter++, cnt++){
 	::std::string name = (*iter)->cppfullname();
 	e.out << leader2 << "      case " << cnt << ":\n";
-	e.out << leader2 << "        _unmarshal_exception<" << name << ", " << name << "_proxy>(*iter);\n";
+	e.out << leader2 << "        " << name << "* _e_ptr = _unmarshal_exception<" << name << ", " << name << "_proxy>(*iter);\n";
+#ifdef HAVE_MPI
+	e.out << leader2 << "        xr->relayException(" << cnt << ", (*iter));\n";
+#endif
+	e.out << leader2 << "        throw _e_ptr;\n";
 	e.out << leader2 << "        break;\n";
       }
       e.out << leader2 << "      }\n";
