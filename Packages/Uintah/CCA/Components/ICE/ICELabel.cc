@@ -141,19 +141,20 @@ ICELabel::ICELabel()
  //Reduction labels (The names must be identical to those in MPMLabel.cc)
   KineticEnergyLabel = 
     VarLabel::create( "KineticEnergy", sum_vartype::getTypeDescription() );
-  CenterOfMassVelocityLabel = 
-    VarLabel::create( "CenterOfMassVelocity",
-                                      sumvec_vartype::getTypeDescription() );
   TotalMassLabel = 
     VarLabel::create( "TotalMass",     sum_vartype::getTypeDescription() );  
   TotalIntEngLabel = 
     VarLabel::create( "TotalIntEng",   sum_vartype::getTypeDescription() );
-  mom_exch_errorLabel = 
-    VarLabel::create( "mom_exch_error",sum_vartype::getTypeDescription() );
   eng_exch_errorLabel = 
     VarLabel::create( "eng_exch_error",sum_vartype::getTypeDescription() );
   max_RHSLabel = 
     VarLabel::create( "max_RHS",       max_vartype::getTypeDescription() ); 
+  CenterOfMassVelocityLabel = 
+    VarLabel::create( "CenterOfMassVelocity",
+                                      sumvec_vartype::getTypeDescription() );
+  mom_exch_errorLabel = 
+    VarLabel::create( "mom_exch_error",
+                                      sumvec_vartype::getTypeDescription() );
 } 
 
 ICELabel::~ICELabel()
