@@ -123,9 +123,10 @@ void VolumeVis::intersect(Ray& ray, HitInfo& hit, DepthStats*,
    // t1 is t_min and t2 is t_max
    if (t2 > t1) {
      if (t1 > FLT_EPSILON) {
-       hit.hit(this, t1);
-       float* tmax=(float*)hit.scratchpad;
-       *tmax = t2;
+       if (hit.hit(this, t1)) {
+	 float* tmax=(float*)hit.scratchpad;
+	 *tmax = t2;
+       }
      }
      //else if (t2 > FLT_EPSILON)
      //hit.hit(this, t2);
@@ -271,19 +272,19 @@ void VolumeVis::shade(Color& result, const Ray& ray,
       // get the indices and weights for the indicies
       float norm = p.x() * inv_diag.x();
       float step = norm * (nx - 1);
-      int x_low = bound((int)step, 0, data.dim1()-2);
+      int x_low = clamp(0, (int)step, data.dim1()-2);
       int x_high = x_low+1;
       float x_weight_low = x_high - step;
 
       norm = p.y() * inv_diag.y();
       step = norm * (ny - 1);
-      int y_low = bound((int)step, 0, data.dim2()-2);
+      int y_low = clamp(0, (int)step, data.dim2()-2);
       int y_high = y_low+1;
       float y_weight_low = y_high - step;
 
       norm = p.z() * inv_diag.z();
       step = norm * (nz - 1);
-      int z_low = bound((int)step, 0, data.dim3()-2);
+      int z_low = clamp(0, (int)step, data.dim3()-2);
       int z_high = z_low+1;
       float z_weight_low = z_high - step;
 
