@@ -246,7 +246,7 @@ HVolume<T,A,B>::HVolume(Material* matl, VolumeDpy* dpy,
     bout_fd = open (buf, O_WRONLY | O_CREAT | O_TRUNC,
 		    S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP|S_IROTH|S_IWOTH);
 #else
-    ASSERTFAIL("Can only write bricked data on SGI.");
+    //    ASSERTFAIL("Can only write bricked data on SGI.");
 #endif    
 
     if (bout_fd == -1 ) {
@@ -261,7 +261,7 @@ HVolume<T,A,B>::HVolume(Material* matl, VolumeDpy* dpy,
     indata.resize(0,0,0);
   } else {
 #if !defined(__sgi) && !defined(__APPLE__)
-    ASSERTFAIL("Can't do direct io on non-sgi machines.");
+    //    ASSERTFAIL("Can't do direct io on non-sgi machines.");
 #else
 #if 0
     struct dioattr s;
