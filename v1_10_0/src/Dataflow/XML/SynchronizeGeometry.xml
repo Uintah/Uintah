@@ -20,14 +20,9 @@
 	    out explicitly by calling functions like GeometryOPort::
 	    flushViews(), or implicitly by SCIRun after you did some 
 	    geometry operations (delete or add) in Module::execute() but 
-            did not call any flush messages. Sometimes Module::tcl_command()
-            updates the geometry objects created in the last sample and 
-            just sends flush message without any other GeometryDelObj or 
-	    GeometryAddObj messages between the current and last flush 
-            message. In this case, the flush message is taken as an
-	    asynchronous message and sent out without synchronzation with
-	    other geometry streams. With a checkbox in the control panel,
-	    users can dynamically choose whether or not enforce the barrier.
+            did not call any flush messages. With a checkbox in the control 
+	    panel, users can dynamically choose whether or not enforce
+	    the barrier.
 	</p>
     </description>
   </overview>
