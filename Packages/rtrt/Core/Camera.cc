@@ -253,7 +253,7 @@ void
 Camera::followPath( Stealth & stealth )
 {
   
-  stealth.getNextLocation( eye, lookat);
+  stealth.getNextLocation( this );
   setup();
 }
 
@@ -459,6 +459,58 @@ Camera::changeFacing( double amount )
   setup();
 }
 
+Camera Camera::operator+(const Camera& right) const {
+  Camera result;
+
+  result.eye = (eye + right.eye).asPoint();
+  result.lookat = (lookat + right.lookat).asPoint();
+  result.up = up + right.up;
+
+  result.fov = fov + right.fov;
+  result.verticalFov_ = verticalFov_ + right.verticalFov_;
+  result.windowAspectRatio_ = windowAspectRatio_ + right.windowAspectRatio_;
+
+  result.eyesep = eyesep + right.eyesep;
+  result.ray_offset = ray_offset + right.ray_offset;
+
+  return result;
+}
+
+Camera Camera::operator-(const Camera& right) const {
+  Camera result;
+
+  result.eye = (eye - right.eye).asPoint();
+  result.lookat = (lookat - right.lookat).asPoint();
+  result.up = up - right.up;
+
+  result.fov = fov - right.fov;
+  result.verticalFov_ = verticalFov_ - right.verticalFov_;
+  result.windowAspectRatio_ = windowAspectRatio_ - right.windowAspectRatio_;
+
+  result.eyesep = eyesep - right.eyesep;
+  result.ray_offset = ray_offset - right.ray_offset;
+
+  return result;
+}
+
+Camera Camera::operator*(double val) const {
+  Camera result;
+
+  result.eye = eye * val;
+  result.lookat = lookat * val;
+  result.up = up * val;
+
+  result.fov = fov * val;
+  result.verticalFov_ = verticalFov_ * val;
+  result.windowAspectRatio_ = windowAspectRatio_ * val;
+
+  result.eyesep = eyesep * val;
+  result.ray_offset = ray_offset * val;
+
+  return result;
+}
+
+
 const int CAMERA_VERSION = 1;
 
 void 
@@ -469,13 +521,13 @@ Camera::io(SCIRun::Piostream &str)
   SCIRun::Pio(str, lookat);
   SCIRun::Pio(str, up);
   SCIRun::Pio(str, fov);
-  SCIRun::Pio(str, u);
-  SCIRun::Pio(str, v);
-  SCIRun::Pio(str, uhat);
-  SCIRun::Pio(str, vhat);
-  SCIRun::Pio(str, what);
-  SCIRun::Pio(str, direction);
+  SCIRun::Pio(str, verticalFov_);
+  SCIRun::Pio(str, windowAspectRatio_);
+//   SCIRun::Pio(str, u);
+//   SCIRun::Pio(str, v);
+//   SCIRun::Pio(str, direction);
   SCIRun::Pio(str, eyesep);
+  SCIRun::Pio(str, ray_offset);
   str.end_class();
 }
 
@@ -486,6 +538,7 @@ void Pio(SCIRun::Piostream& stream, rtrt::Camera*& obj)
   stream.io(pobj, rtrt::Camera::type_id);
   if(stream.reading()) {
     obj=dynamic_cast<rtrt::Camera*>(pobj);
+    obj->setup();
     //ASSERT(obj != 0)
   }
 }
