@@ -256,6 +256,14 @@ MPMLabel::MPMLabel()
 
   pAccelerationLabel_preReloc = VarLabel::create("p.acceleration+",
 				   ParticleVariable<Vector>::getTypeDescription()); 
+
+  bElBarLabel = VarLabel::create("bElBar",
+		       ParticleVariable<Matrix3>::getTypeDescription());
+
+  bElBarLabel_preReloc = VarLabel::create("bElBar_preReloc",
+			 ParticleVariable<Matrix3>::getTypeDescription());
+
+
 } 
 
 MPMLabel::~MPMLabel()
@@ -346,6 +354,8 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(dispIncQNorm0);
   VarLabel::destroy(dispIncNormMax);
   VarLabel::destroy(pAccelerationLabel_preReloc);
+  VarLabel::destroy(bElBarLabel);
+  VarLabel::destroy(bElBarLabel_preReloc);
 
 }
 
