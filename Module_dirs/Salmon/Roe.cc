@@ -854,7 +854,7 @@ void Roe::animate_to_view(const View& v, double /*time*/)
 {
     NOT_FINISHED("Roe::animate_to_view");
     view.set(v);
-    manager->mailbox.send(new RedrawMessage(id));
+    manager->mailbox.send(new SalmonMessage(id));
 }
 
 Renderer* Roe::get_renderer(const clString& name)

@@ -478,10 +478,13 @@ void Streamline::execute()
 	widget_slider1cap2->move(sp1, -spvec, 1*widget_scale);
 	Vector v1,v2;
 	spvec.find_orthogonal(v1, v2);
+#if 0
 	widget_p1->get_pick()->set_principal(spvec, v1, v2);
 	widget_p2->get_pick()->set_principal(spvec, v1, v2);
 	widget_edge1->get_pick()->set_principal(spvec, v1, v2);
 	widget_slider1->get_pick()->set_principal(spvec);
+#endif
+	NOT_FINISHED("Rake");
 	widget->reset_bbox();
     } else if(widgettype.get() == "Square"){
 	NOT_FINISHED("Square widget");
