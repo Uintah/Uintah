@@ -78,7 +78,7 @@ GatherPoints::execute()
       return;
     }
     FieldHandle field;
-    if (ifield->get(field)) {
+    if (ifield->get(field) && field.get_rep()) {
       const TypeDescription *meshtd = field->mesh()->get_type_description();
       CompileInfoHandle ci = GatherPointsAlgo::get_compile_info(meshtd);
       Handle<GatherPointsAlgo> algo;
