@@ -62,7 +62,7 @@ ManageFieldSet::execute()
 
   clString op_gui = op_gui_.get();
 
-  dynamic_port_range range = get_iport("Input FieldSets");
+  dynamic_port_range range = get_iport("Input FieldSet");
   port_iter pi = range.first;
   while (pi != range.second)
   {
@@ -75,7 +75,7 @@ ManageFieldSet::execute()
     ++pi;
   }
 
-  range = get_iport("Input Fields");
+  range = get_iport("Input Field");
   pi = range.first;
   while (pi != range.second)
   {
@@ -89,6 +89,9 @@ ManageFieldSet::execute()
   }
 
 
+
+  FieldSetOPort *ofsp = (FieldSetOPort *)get_oport(0);
+  FieldOPort *ofp = (FieldOPort *)get_oport(1);
 }
 
 } // End namespace SCIRun
