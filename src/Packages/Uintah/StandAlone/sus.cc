@@ -26,6 +26,7 @@
 #include <Packages/Uintah/CCA/Components/MPMArches/MPMArches.h>
 #include <Packages/Uintah/CCA/Components/Examples/Poisson1.h>
 #include <Packages/Uintah/CCA/Components/Examples/Poisson2.h>
+#include <Packages/Uintah/CCA/Components/Examples/Burger.h>
 #include <Packages/Uintah/CCA/Components/Examples/Poisson3.h>
 #include <Packages/Uintah/CCA/Components/Schedulers/SimpleScheduler.h>
 #include <Packages/Uintah/CCA/Components/Schedulers/SingleProcessorScheduler.h>
@@ -165,6 +166,7 @@ main( int argc, char** argv )
     bool   do_impmpm=false;
     bool   do_arches=false;
     bool   do_ice=false;
+    bool   do_burger=false;
     bool   do_poisson1=false;
     bool   do_poisson2=false;
     bool   do_poisson3=false;
@@ -221,6 +223,8 @@ main( int argc, char** argv )
 	} else if(s == "-mpmice"){
 	    do_ice=true;
 	    do_mpm=true;
+	} else if(s == "-burger"){
+	    do_burger=true;
 	} else if(s == "-poisson1"){
 	    do_poisson1=true;
 	} else if(s == "-poisson2"){
@@ -312,8 +316,7 @@ main( int argc, char** argv )
 	usage( "ICE and Arches do not work together", "", argv[0]);
     }
 
-    if( !(do_ice || do_arches || do_mpm || do_impmpm || 
-	  do_poisson1 || do_poisson2 || do_poisson3) ) {
+    if(!(do_ice || do_arches || do_mpm || do_impmpm || do_burger || do_poisson1 || do_poisson2 || do_poisson3)){
 	usage( "You need to specify -arches, -ice, or -mpm", "", argv[0]);
     }
 
@@ -377,6 +380,8 @@ main( int argc, char** argv )
 	  ICE* ice = scinew ICE(world);
 	  ice->attachPort("output", output);
 	  sim = ice;
+	} else if(do_burger){
+	  sim = scinew Burger(world);
 	} else if(do_poisson1){
 	  sim = scinew Poisson1(world);
 	} else if(do_poisson2){
@@ -385,7 +390,7 @@ main( int argc, char** argv )
 	  sim = scinew Poisson3(world);
 	} else {
 	  usage("You need to specify a simulation: -arches, -ice, -mpm, "
-		"-impm -mpmice, -mpmarches, -poisson1, -poisson2 or -poisson3",
+		"-impm -mpmice, -mpmarches, -burger, -poisson1, -poisson2, or -poisson3",
 		"", argv[0]);
 	}
 
