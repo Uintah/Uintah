@@ -21,11 +21,13 @@ PSELIBS := \
         Core/Geom Core/GeomInterface \
 	Core/Geometry Dataflow/Widgets Dataflow/XMLUtil \
 	Core/Util \
+	Core/TkExtensions \
 	Packages/Volume/Core/Algorithms \
 	Packages/Volume/Core/Datatypes \
 	Packages/Volume/Core/Geom \
+	Packages/Volume/Core/Util \
 
-LIBS := $(XML_LIBRARY)  $(GL_LIBRARY) $(M_LIBRARY)
+LIBS := $(XML_LIBRARY) $(TK_LIBRARY) $(GL_LIBRARY) $(TEEM_LIBRARY) $(M_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 

@@ -29,11 +29,10 @@
 //    Author : Milan Ikits
 //    Date   : Mon Jul  5 18:33:29 2004
 
-#include <Packages/Volume/Core/Datatypes/CM2Widget.h>
 #include <sci_gl.h>
 #include <Packages/Volume/Core/Util/ShaderProgramARB.h>
-#include <Core/Geom/GeomOpenGL.h>
-
+#include <Packages/Volume/Core/Datatypes/CM2Widget.h>
+#include <Core/Math/MinMax.h>
 
 using namespace SCIRun;
 
