@@ -48,6 +48,7 @@ public:
   HairObj( const BBox2d &, const string &name="hairline" );
   virtual ~HairObj();
 
+  double at() { return pos_; }
   virtual void select( double x, double y, int b );
   virtual void move( double x, double y, int b );
   virtual void release( double x, double y, int b );

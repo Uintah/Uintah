@@ -36,9 +36,10 @@ using std::ostream;
 #include <sstream>
 using std::ostringstream;
 
+#include <Core/Containers/StringUtil.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/2d/Diagram.h>
-#include <Core/2d/HairObj.h>
+#include <Core/2d/Hairline.h>
 #include <Core/2d/BBox2d.h>
 #include <Core/2d/OpenGLWindow.h>
 
@@ -81,10 +82,11 @@ Diagram::add( DrawObj *d )
 }
 
 
-void
+int
 Diagram::add_widget( Widget *w )
 {
   widget_.add(w);
+  return widget_.size()-1;
 }
 
 void
@@ -147,12 +149,7 @@ Diagram::tcl_command(TCLArgs& args, void* userdata)
   else if ( args[1] == "widget" ) {
     // start a widget
     if ( args[2] == "hairline" ) {
-      BBox2d b1, b2;
-      get_bounds( b1 );
-      b2.extend( Point2d( b1.min().x(), 0 ) );
-      b2.extend( Point2d( b1.max().x(), 1 ) );
-      add_widget( scinew HairObj( b2, "HairObj") );
-      redraw();
+      add_hairline();
     }
     else {
       cerr << "Diagram[tcl_command]: unknown widget requested" << endl;
@@ -161,6 +158,32 @@ Diagram::tcl_command(TCLArgs& args, void* userdata)
   else
     cerr << "Diagram[tcl_command]: unknown tcl command requested" << endl;
 }
+
+
+void
+Diagram::add_hairline() 
+{
+  BBox2d b1, b2;
+  get_bounds( b1 );
+  b2.extend( Point2d( b1.min().x(), 0 ) );
+  b2.extend( Point2d( b1.max().x(), 1 ) );
+
+  Hairline *hair = scinew Hairline( b2, "Hairline");
+  int w = add_widget( hair );
+
+  string window_name;
+  tcl_eval( "new-opt " , window_name );
+  hair->set_id( id()+"-hairline-" + to_string(w) );
+  hair->set_window( window_name, string("hair")+ to_string(w));
+
+  for (int i=0; i<graph_.size(); i++) {
+    Polyline *p = dynamic_cast<Polyline *>(graph_[i]);
+    if ( p ) 
+      hair->add( p );
+  }
+  redraw();
+}
+
 
 void
 Diagram::set_id( const string & id )

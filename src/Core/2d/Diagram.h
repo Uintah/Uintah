@@ -64,7 +64,7 @@ public:
   virtual ~Diagram();
 
   void add( DrawObj * );
-  void add_widget( Widget *);
+  int add_widget( Widget *);
   void redraw() { if ( parent() ) parent()->need_redraw(); }
   virtual void reset_bbox();
   virtual void get_bounds(BBox2d&);
@@ -78,6 +78,7 @@ public:
   void button_motion( int x, int y, int button );
   void button_release( int x, int y, int button );
 
+  void add_hairline();
  public:
   // For OpenGL
 #ifdef SCI_OPENGL

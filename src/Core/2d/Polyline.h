@@ -41,7 +41,7 @@ class SCICORESHARE Polyline : public DrawObj {
 private:
   Array1<double> data_;
   double min_, max_;
-  Color color;
+  Color color_;
 
 public:
   Polyline( const string &name="") : DrawObj(name) {} 
@@ -49,9 +49,12 @@ public:
   Polyline( const Array1<double> &, const string &name="" );
   virtual ~Polyline();
 
+  double at( double );
+
   void add( double );
   void clear() { data_.remove_all(); }
   void set_color( const Color &);
+  Color get_color() { return color_; }
   //virtual void reset_bbox();
   virtual void get_bounds(BBox2d&);
 
