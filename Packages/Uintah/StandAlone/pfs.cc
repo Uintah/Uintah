@@ -26,9 +26,6 @@
 #include <string.h>
 #include <sgi_stl_warnings_on.h>
 
-// TODO:
-// Either clean this up a bit, or merge the functionality into slb
-
 using namespace Uintah;
 using namespace std;
 
@@ -110,60 +107,53 @@ main(int argc, char *argv[])
       ProblemSpecP mp = ups->findBlock("MaterialProperties");
       ProblemSpecP mpm = mp->findBlock("MPM");
       for (ProblemSpecP child = mpm->findBlock("material"); child != 0;
-           child = child->findNextBlock("material")) {
+                        child = child->findNextBlock("material")) {
         for (ProblemSpecP geom_obj_ps = child->findBlock("geom_object");
-             geom_obj_ps != 0;
-             geom_obj_ps = geom_obj_ps->findNextBlock("geom_object") ) {
+          geom_obj_ps != 0;
+          geom_obj_ps = geom_obj_ps->findNextBlock("geom_object") ) {
 
-             for(ProblemSpecP child = geom_obj_ps->findBlock(); child != 0;
-                              child = child->findNextBlock()){
-               std::string go_type = child->getNodeName();
-               if (go_type == "file"){
-                 string f_name,of_name;
-                 child->require("name",f_name);
-                 ifstream source(f_name.c_str());
-                 vector<vector<Point> > points(level->numPatches());
-                 double x,y,z;
-                 Point min(1e30,1e30,1e30),max(-1e30,-1e30,-1e30);
-                 while (source >> x >> y >> z) {
-                   Patch* currentpatch = level->getPatchFromPoint(Point(x,y,z));
-                   int pid = currentpatch->getID();
-                   Point pp(x,y,z);
-                   min = Min(pp,min);
-                   max = Max(pp,max);
-                   points[pid].push_back(pp);
-                 }
-                 source.close();
-                 for(Level::const_patchIterator iter = level->patchesBegin();
-                                     iter != level->patchesEnd(); iter++){
-                    const Patch* patch = *iter;
-                    int pid = patch->getID();
+          for(ProblemSpecP child = geom_obj_ps->findBlock(); child != 0;
+                           child = child->findNextBlock()){
+            std::string go_type = child->getNodeName();
+            if (go_type == "file"){
+              string f_name,of_name;
+              child->require("name",f_name);
+              ifstream source(f_name.c_str());
+              vector<vector<Point> > points(level->numPatches());
+              double x,y,z;
+              Point min(1e30,1e30,1e30),max(-1e30,-1e30,-1e30);
+              while (source >> x >> y >> z) {
+                Point pp(x,y,z);
+                const Patch* currentpatch =
+                     level->selectPatchForCellIndex(level->getCellIndex(pp));
+                int pid = currentpatch->getID();
+                min = Min(pp,min);
+                max = Max(pp,max);
+                points[pid].push_back(pp);
+              }
+              source.close();
+              for(Level::const_patchIterator iter = level->patchesBegin();
+                                  iter != level->patchesEnd(); iter++){
+                 const Patch* patch = *iter;
+                 int pid = patch->getID();
 
-                    char fnum[5];
-                    sprintf(fnum,".%d",pid);
-                    of_name = f_name+fnum;
-                    ofstream dest(of_name.c_str());
-                    dest << min.x() << " " << min.y() << " " << min.z() << " " 
-                         << max.x() << " " << max.y() << " " << max.z() << endl;
-                    for (int I = 0; I < (int) points[pid].size(); I++) {
-                      dest << points[pid][I].x() << " " <<
-                              points[pid][I].y() << " " <<
-                              points[pid][I].z() << endl;
-                    }
-                    dest.close();
+                 char fnum[5];
+                 sprintf(fnum,".%d",pid);
+                 of_name = f_name+fnum;
+                 ofstream dest(of_name.c_str());
+                 dest << min.x() << " " << min.y() << " " << min.z() << " " 
+                      << max.x() << " " << max.y() << " " << max.z() << endl;
+                 for (int I = 0; I < (int) points[pid].size(); I++) {
+                   dest << points[pid][I].x() << " " <<
+                           points[pid][I].y() << " " <<
+                           points[pid][I].z() << endl;
                  }
-               }
-             }
+                 dest.close();
+              }
+            }
+          }
         }
       }
-
-      
-      // remove the 'Box' entry from the ups - note this should try to
-      // remove *all* boxes from the level node
-      ProblemSpecP lev = g->findBlock("Level");
-      ProblemSpecP box = lev->findBlock("Box");
-      
-      lev->removeChild(box);
     }
     
   } catch (Exception& e) {
