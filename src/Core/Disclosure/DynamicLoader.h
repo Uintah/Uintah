@@ -22,6 +22,9 @@
 
 #include <Core/Datatypes/Datatype.h>
 #include <Core/Containers/LockingHandle.h>
+#include <Core/Thread/CrowdMonitor.h>
+#include <Core/Thread/Mutex.h>
+#include <Core/Thread/ConditionVariable.h>
 
 #include <map>
 #include <string>
@@ -65,9 +68,11 @@ public:
   DynamicLoader();
   ~DynamicLoader();
 
-  // Compile and load .so for the selected manipulation
+  //! Compile and load .so for the selected manipulation
   bool get(const CompileInfo &info, DynamicAlgoHandle&);
 
+  //! All modules should use this function to get the loader.
+  static DynamicLoader& scirun_loader();
 
 private:
   bool create_cc(const CompileInfo &info);
@@ -75,9 +80,22 @@ private:
   void store( const string &, maker_fun);
   bool fetch(const CompileInfo &info, DynamicAlgoHandle&);
   bool compile_and_store(const CompileInfo &info);
+  bool entry_exists(const string &entry);
+  bool entry_is_null(const string &entry);
+  bool wait_for_current_compile(const string &entry);
 
   typedef map<string, maker_fun> map_type;
-  map_type algo_map_;
+  map_type              algo_map_;
+  
+  //! Thread Safety. 
+  CrowdMonitor          map_crowd_;
+  ConditionVariable     compilation_cond_;
+  Mutex                 map_lock_;
+  Mutex                 condit_mutex_;
+
+  //! static vars.
+  static DynamicLoader        *scirun_loader_;
+  static Mutex                 scirun_loader_lock_;
 };
 
 } // End namespace SCIRun
