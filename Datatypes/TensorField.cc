@@ -47,6 +47,81 @@ TensorField<DATA>::TensorField(int in_slices, int in_width, int in_height)
   m_tensorsGood = m_vectorsGood = m_valuesGood = 0;
 }
 
+template<class DATA>
+int TensorField<DATA>::interpolate(const Point& p, double t[][3], int &, int) 
+{
+    return interpolate(p, t);
+}
+
+template<class DATA>
+void TensorField<DATA>::get_bounds(Point &min, Point &max) {
+    bmin=min;
+    bmax=max;
+}
+
+template<class DATA>
+void TensorField<DATA>::set_bounds(const Point& min, const Point& max) {
+    bmin=min;
+    bmax=max;
+    diagonal=bmax-bmin;
+    if (m_vectorsGood)
+	for (int i=0; i<EVECTOR_ELEMENTS; i++) 
+	    m_e_vectors[i]->set_bounds(min, max);
+    if (m_valuesGood)
+	for (int i=0; i<EVECTOR_ELEMENTS; i++) 
+	    m_e_values[i]->set_bounds(min, max);
+}
+
+// just do linear interpolation of the matrix entries
+template<class DATA>
+int TensorField<DATA>::interpolate(const Point& p, double t[][3])
+{
+    int nx=m_slices;
+    int ny=m_width;
+    int nz=m_height;
+    Vector pn=p-bmin;
+    double dx=diagonal.x();
+    double dy=diagonal.y();
+    double dz=diagonal.z();
+    double x=pn.x()*(nx-1)/dx;
+    double y=pn.y()*(ny-1)/dy;
+    double z=pn.z()*(nz-1)/dz;
+    int ix=(int)x;
+    int iy=(int)y;
+    int iz=(int)z;
+    int ix1=ix+1;
+    int iy1=iy+1;
+    int iz1=iz+1;
+    if(ix<0 || ix1>=nx)return 0;
+    if(iy<0 || iy1>=ny)return 0;
+    if(iz<0 || iz1>=nz)return 0;
+    double fx=x-ix;
+    double fy=y-iy;
+    double fz=z-iz;
+    double v000, v001, v010, v011, v100, v101, v110, v111,
+	   x00, x01, x10, x11, y0, y1, zz[TENSOR_ELEMENTS];
+    for (int i=0; i<TENSOR_ELEMENTS; i++) {
+	v000=m_tensor_field[i](ix, iy, iz);
+	v001=m_tensor_field[i](ix, iy, iz1);
+	v010=m_tensor_field[i](ix, iy1, iz);
+	v011=m_tensor_field[i](ix, iy1, iz1);
+	v100=m_tensor_field[i](ix1, iy, iz);
+	v101=m_tensor_field[i](ix1, iy, iz1);
+	v110=m_tensor_field[i](ix1, iy1, iz);
+	v111=m_tensor_field[i](ix1, iy1, iz1);
+	x00=Interpolate(v000, v100, fx);
+	x01=Interpolate(v001, v101, fx);
+	x10=Interpolate(v010, v110, fx);
+	x11=Interpolate(v011, v111, fx);
+	y0=Interpolate(x00, x10, fy);
+	y1=Interpolate(x01, x11, fy);
+	zz[i]=Interpolate(y0, y1, fz);
+    }
+    t[0][0]=zz[0]; t[1][0]=t[0][1]=zz[1]; t[2][0]=t[0][2]=zz[2];
+    t[1][1]=zz[3]; t[2][1]=t[1][2]=zz[4]; t[2][2]=zz[5];
+    return 1;
+}
+
 /*note all index values should be from 0 - (value)*/
 template<class DATA>
 int TensorField<DATA>::AddSlice(int in_slice, int in_tensor_component, FILE* in_file)

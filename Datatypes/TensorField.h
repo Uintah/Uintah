@@ -50,6 +50,12 @@ public:
     virtual TensorFieldBase* clone() const; /*makes a real copy of this*/
 #endif
 
+    void get_bounds(Point &min, Point &max);
+    void set_bounds(const Point& min, const Point& max);
+
+    virtual int interpolate(const Point&, double[][3], int&, int=0);
+    virtual int interpolate(const Point&, double[][3]);
+
     // Persistent representation...
     virtual void io(Piostream&);
     static PersistentTypeID type_id;

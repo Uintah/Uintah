@@ -15,6 +15,8 @@
 #define SCI_Datatypes_TensorFieldBase_h 1
 
 #include <stdio.h>
+#include <Geometry/Point.h>
+#include <Geometry/Vector.h>
 #include <Datatypes/Datatype.h>
 #include <Classlib/LockingHandle.h>
 #include <Classlib/Array3.h>
@@ -30,7 +32,8 @@ class TensorFieldBase : public Datatype
 {
 protected:  
   int m_type;
-
+  Point bmin, bmax;
+  Vector diagonal;
 public:
   TensorFieldBase();
   TensorFieldBase(const TensorFieldBase&); /*Deep Copy Constructor*/
@@ -42,6 +45,8 @@ public:
   /* Type handling */
   void set_type(int in_type);
   int get_type(void);
+  virtual int interpolate(const Point&, double[][3], int&, int=0)=0;
+  virtual int interpolate(const Point&, double[][3])=0;
 
   /* Persistent representation...*/
   virtual void io(Piostream&);
