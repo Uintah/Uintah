@@ -14,12 +14,11 @@
     <!--  thermx.ups (1patch).                                              -->
     <!--____________________________________________________________________-->
    <Time>
-       <maxTime>            0.3         </maxTime>
+       <maxTime>            0.003       </maxTime>
        <initTime>           0.0         </initTime>
        <delt_min>           0.0         </delt_min>
        <delt_max>           1.0         </delt_max>
        <delt_init>          1.0e-4      </delt_init>
-       <max_iterations>     15          </max_iterations>
        <timestep_multiplier>0.8         </timestep_multiplier>
    </Time>
    
