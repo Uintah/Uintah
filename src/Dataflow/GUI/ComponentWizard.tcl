@@ -704,43 +704,47 @@ proc CreateNewModule { packname catname psepath compname } {
 		      by a non-directory file"
 	return
     }
-
-    if {![file exists $psepath/src/Packages/$packname]} {
-	yesnodialog "PACKAGE NAME WARNING" \
-                    "Package \"$psepath/src/Packages/$packname\" \
+    
+    set basepath $psepath/src/Packages/$packname
+    if {$packname=="SCIRun"} {
+	set basepath $psepath/src
+    } else {
+	if {![file exists $basepath]} {
+	    yesnodialog "PACKAGE NAME WARNING" \
+		"Package \"$basepath\" \
 		    does not exist. \
                      Create it now? \n \
                      (If yes, the category \"$psepath/src/Packages/ \
 		     $packname/$catname\"\
                      will also be created.)" \
-		    "netedit create_pac_cat_mod $psepath $packname\
+		"netedit create_pac_cat_mod $psepath $packname\
 		    $catname $compname $xmlname; destroy .componentWizard; \
                     newpackagemessage $packname"
-	return
-    }
+	    return
+	}
 
-    if {![file isdirectory $psepath/src/Packages/$packname]} {
-	messagedialog "PACKAGE NAME ERROR" 
-                      "The name \"$psepath/src/Packages/$packname\" \
+	if {![file isdirectory $basepath]} {
+	    messagedialog "PACKAGE NAME ERROR" \
+		"The name \"$basepath\" \
 		      is already in use\
                        by a non-package file"
-	return
+	    return
+	}
     }
+#	   [file exists $basepath/sub.mk] &&
+#          ![file isdirectory $basepath/sub.mk] &&
 
     if {![expr \
-           [file exists $psepath/src/Packages/$packname/Dataflow] &&\
-	   [file isdirectory $psepath/src/Packages/$packname/Dataflow] &&\
-	   [file exists $psepath/src/Packages/$packname/Core] &&\
-	   [file isdirectory $psepath/src/Packages/$packname/Core] &&\
-	   [file exists $psepath/src/Packages/$packname/sub.mk] &&\
-           [file exists $psepath/src/Packages/$packname/Dataflow/Modules] && \
-           [file isdirectory \
-	     $psepath/src/Packages/$packname/Dataflow/Modules] && \
-           [file exists $psepath/src/Packages/$packname/Dataflow/XML] && \
-           [file isdirectory $psepath/src/Packages/$packname/Dataflow/XML] && \
-           ![file isdirectory $psepath/src/Packages/$packname/sub.mk]]} {
+           [file exists $basepath/Dataflow] &&\
+	   [file isdirectory $basepath/Dataflow] &&\
+	   [file exists $basepath/Core] &&\
+	   [file isdirectory $basepath/Core] &&\
+           [file exists $basepath/Dataflow/Modules] && \
+           [file isdirectory $basepath/Dataflow/Modules] && \
+           [file exists $basepath/Dataflow/XML] && \
+           [file isdirectory $basepath/Dataflow/XML]]} {
 	messagedialog "PACKAGE ERROR" \
-                      "The file \"$psepath/src/Packages/$packname\" \
+                      "The file \"$basepath\" \
 		      does not appear\
                        to be a valid package or is somehow corrupt.\
                        The module \"$compname\" will not be added.\n\n\
@@ -749,11 +753,10 @@ proc CreateNewModule { packname catname psepath compname } {
 	return
     }
              
-    if {![file exists \
-	    $psepath/src/Packages/$packname/Dataflow/Modules/$catname]} {
+    if {![file exists $basepath/Dataflow/Modules/$catname]} {
 	yesnodialog "CATEGORY NAME WARNING" \
                     "Category \
-		    \"$psepath/src/Packages/$packname/Dataflow/Modules/$catname\"\
+		    \"$basepath/Dataflow/Modules/$catname\"\
 		    does not exist.  Create it now?" \
 		    "netedit create_cat_mod $psepath $packname\
 		    $catname $compname $xmlname; destroy .componentWizard; \
@@ -762,18 +765,18 @@ proc CreateNewModule { packname catname psepath compname } {
     }
 
     if {![file isdirectory \
-	    $psepath/src/Packages/$packname/Dataflow/Modules/$catname]} {
+	    $basepath/Dataflow/Modules/$catname]} {
 	messagedialog "CATEGORY NAME ERROR" \
                       "The name \
-		      \"$psepath/src/Packages/$packname/Dataflow/Modules/$catname\"\
+		      \"$basepath/Dataflow/Modules/$catname\"\
                        is already in use by a non-category file"
 	return	
     }
 
     if {![file exists \
-	    $psepath/src/Packages/$packname/Dataflow/Modules/$catname/sub.mk]} {
+	    $basepath/Dataflow/Modules/$catname/sub.mk]} {
 	messagedialog "CATEGORY ERROR" \
-                      "The file \"$psepath/src/Packages/$packname/Dataflow/Modules/$catname\"\
+                      "The file \"$basepath/Dataflow/Modules/$catname\"\
                        does not appear to be a valid category or is\
                        somehow corrupt.  The Module \"$compname\" will\
                        not be added.\n\n\
@@ -783,10 +786,10 @@ proc CreateNewModule { packname catname psepath compname } {
     }
 
     if {[file exists \
-	    $psepath/src/Packages/$packname/Dataflow/Modules/$catname/$compname.cc]} {
+	    $basepath/Dataflow/Modules/$catname/$compname.cc]} {
 	messagedialog "MODULE NAME ERROR" \
 		      "The name \
-		      \"$psepath/src/Packages/$packname/Dataflow/Modules/$catname/$compname\"\
+		      \"$basepath/Dataflow/Modules/$catname/$compname\"\
                       is already in use by another file"
 	return
     }
