@@ -1082,6 +1082,17 @@ void PressureSolver::solvePred(const LevelP& level,
 
   sched_pressureLinearSolvePred(level, sched);
 
+  if (d_MAlab) {
+
+    // currently coded only for predictor-only case...
+
+#ifdef correctorstep
+#else
+    sched_addHydrostaticTermtoPressure(sched, patches, matls);
+#endif
+
+  }
+
 }
 
 // ****************************************************************************
