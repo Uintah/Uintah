@@ -74,9 +74,6 @@
 #ifdef WIN32
 #include <windows.h>
 #include <winbase.h>
-
-
-
 inline double the_time() {
     return double(GetTickCount())/1000.0;
 }
@@ -90,13 +87,11 @@ inline double the_time() {
 }
 #endif
 
-template <class Type>
-inline Type clamp(const Type a,const Type b,const Type c) { return a > b ? (a < 
-c ? a : c) : b ; }
-inline int  Sign (double a)             { return a > 0 ? 1 : a < 0 ? -1 : 0; }
 
 namespace SCIRun {
-  using namespace std;
+
+using namespace std;
+
 class GeomObj;
 class GeomSphere;
 struct DrawInfoOpenGL;
@@ -108,7 +103,6 @@ class OpenGL;
 class DBContext;
 class Viewer;
 class SCIBaWGL;
-
 class GeomViewerItem;
 class BallData;
 class OpenGL;
@@ -116,11 +110,6 @@ class TexStruct1D;
 class TexStruct2D;
 class TexStruct3D;
 class SegBin;			// bins for sorted line segments...
-
-struct ObjTag {
-  GuiInt* visible;
-  int tagid;
-};
 
 class ViewWindow;
 typedef void (ViewWindow::*MouseHandler)(int, int x, int y, 
@@ -137,11 +126,9 @@ public:
   // --  BAWGL -- 
   
 public:
-  typedef map<string, ObjTag*>	        MapStringObjTag;
   GuiString pos;  
   GuiInt caxes;
   GuiInt raxes;
-  GuiInt iaxes;
 
   // CollabVis code begin
   GuiInt HaveCollabVis_;
@@ -179,11 +166,6 @@ protected:
 #endif
   // CollabVis code end
   
-  Point orig_eye;
-  Vector frame_up;
-  Vector frame_right;
-  Vector frame_front;
-
   vector<GeomHandle> viewwindow_objs;
   vector<bool> viewwindow_objs_draw;   
 
@@ -228,8 +210,7 @@ public:
   double dolly_throttle_scale;
 
   // CollabVis code begin
-#ifdef HAVE_COLLAB_VIS
-  
+#ifdef HAVE_COLLAB_VIS  
   RenderGroupInfo *groupInfo;
   Mutex groupInfoLock;
   bool handlingOneTimeRequest;
@@ -249,8 +230,6 @@ public:
   CrowdMonitor viewStateLock;
 
   inline GuiInterface * getGui() { return gui; }
-  
-  
 #endif
   // CollabVis code end
   
@@ -337,6 +316,7 @@ public:
                            double angle);
   Vector CameraToWorld(Vector v);
   void   NormalizeMouseXY( int X, int Y, float *NX, float *NY);
+  void   UnNormalizeMouseXY( float NX, float NY, int *NX, int *NY);
   float  WindowAspect();
 
   // for 'film_dir' and 'film_pt', x & y should be in the range [-1, 1].
@@ -351,22 +331,25 @@ public:
 
   void autoview(const BBox&);
 
-				// sets up the state (OGL) for a tool/viewwindow
+  // sets up the state (OGL) for a tool/viewwindow
   void setState(DrawInfoOpenGL*, const string&);
-				// sets up DI for this drawinfo
+  // sets up DI for this drawinfo
   void setDI(DrawInfoOpenGL*,string);
-				// sets up OGL clipping planes...
+  // sets up OGL clipping planes...
   void setClip(DrawInfoOpenGL*); 
-
-				// Which of the objects do we draw?
-  MapStringObjTag visible;
-
-				// Which of the lights are on?
+  
+  // Which of the objects do we draw?
+  map<string,GuiInt*> visible;
+  map<string,int>     obj_tag;
+  
+  // Which of the lights are on?
   //map<string, int> light_on;
     
-				// The Camera
+  // The Camera
   GuiView view;
   View homeview;
+  GuiInt track_view_window_0_;
+
 
   GuiInt light0;               // just cache out whether these are on or off
   GuiInt light1;
@@ -450,10 +433,9 @@ public:
   int btn;
   int time;
   
-  
   ViewWindowMouseMessage(const string& rid, MouseHandler handler,
-		  int action, int x, int y, int state, int btn,
-		  int time);
+			 int action, int x, int y, int state, int btn,
+			 int time);
   virtual ~ViewWindowMouseMessage();
 };
 
