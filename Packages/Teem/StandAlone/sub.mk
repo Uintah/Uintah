@@ -15,13 +15,10 @@
 #  University of Utah. All Rights Reserved.
 #
 
-#Makefile fragment for the Packages/Teem directory
+#Makefile fragment for the Packages/FieldConverters directory
 
-SRCDIR := Packages/Teem
+SRCDIR := Packages/Teem/StandAlone
 SUBDIRS := \
-	$(SRCDIR)/Core \
-	$(SRCDIR)/Dataflow \
-	$(SRCDIR)/StandAlone \
+	$(SRCDIR)/convert \
 
 include $(SCIRUN_SCRIPTS)/recurse.mk
-
