@@ -4,6 +4,7 @@
 #include <Uintah/Grid/Array3.h>
 #include <Uintah/Grid/CCVariableBase.h>
 #include <Uintah/Grid/TypeDescription.h>
+#include <Uintah/Grid/TypeUtils.h>
 #include <Uintah/Interface/InputContext.h>
 #include <Uintah/Interface/OutputContext.h>
 #include <SCICore/Exceptions/ErrnoException.h>
@@ -352,6 +353,10 @@ class CCVariable : public Array3<T>, public CCVariableBase {
 
 //
 // $Log$
+// Revision 1.16  2000/06/13 21:28:30  jas
+// Added missing TypeUtils.h for fun_forgottherestofname and copy constructor
+// was wrong for CellIterator.
+//
 // Revision 1.15  2000/06/03 05:29:44  sparker
 // Changed reduction variable emit to require ostream instead of ofstream
 // emit now only prints number without formatting
