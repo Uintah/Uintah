@@ -132,12 +132,12 @@ HVolumeBrickColor::HVolumeBrickColor(char* filebase, int np,
 	    cerr << "Error allocating data array\n";
 	    exit(1);
 	}
-	double start=Time::currentSeconds();
+	double start=SCIRun::Time::currentSeconds();
 	cerr << "Reading " << filebase << "...";
 	cerr.flush();
 	//read(din.rdbuf()->fd(), indata, sizeof(unsigned char)*nx*ny*nz*3);
 	read(din_fd, indata, sizeof(unsigned char)*nx*ny*nz*3);
-	double dt=Time::currentSeconds()-start;
+	double dt=SCIRun::Time::currentSeconds()-start;
 	cerr << "done in " << dt << " seconds (" << nx*ny*nz*3/dt/1024/1024 << " MB/sec)\n";
 	int s = close(din_fd);
 	if(s == -1) {
@@ -161,19 +161,19 @@ HVolumeBrickColor::HVolumeBrickColor(char* filebase, int np,
 	  exit(1);
 	}
 	cerr << "Writing " << buf << "...";
-	start=Time::currentSeconds();
+	start=SCIRun::Time::currentSeconds();
 	//write(bout.rdbuf()->fd(),blockdata, sizeof(unsigned char)*totalsize);
 	write(bout_fd, blockdata, sizeof(unsigned char)*totalsize);
-	dt=Time::currentSeconds()-start;
+	dt=SCIRun::Time::currentSeconds()-start;
 	cerr << "done in " << dt << " seconds (" << (double)totalsize/dt/1024/1024 << " MB/sec)\n";
 	delete[] indata;
     } else {
 	cerr << "Reading " << buf << "(" << totalsize << " bytes)...";
 	cerr.flush();
-	double start=Time::currentSeconds();
+	double start=SCIRun::Time::currentSeconds();
 	//read(bin.rdbuf()->fd(), blockdata, sizeof(unsigned char)*totalsize);
 	read(bin_fd, blockdata, sizeof(unsigned char)*totalsize);
-	double dt=Time::currentSeconds()-start;
+	double dt=SCIRun::Time::currentSeconds()-start;
 	cerr << "done in " << dt << " seconds (" << (double)totalsize/dt/1024/1024 << " MB/sec)\n";
 	int s = close(bin_fd);
 	if(s == -1) {

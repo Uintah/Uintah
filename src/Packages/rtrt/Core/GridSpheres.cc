@@ -162,7 +162,7 @@ void GridSpheres::preprocess(double, int&, int&)
   if (preprocessed) return;
   preprocessed = true;
   cerr << "Building GridSpheres\n";
-  float time=Time::currentSeconds();
+  float time=SCIRun::Time::currentSeconds();
   
   cerr << "min: " << min[0] << ", " << min[1] << ", " << min[2] << '\n';
   cerr << "max: " << max[0] << ", " << max[1] << ", " << max[2] << '\n';
@@ -189,8 +189,8 @@ void GridSpheres::preprocess(double, int&, int&)
   counts=new int[2*totalsize];
   for(int i=0;i<totalsize*2;i++)
     counts[i]=0;
-  cerr << "0/6 Allocation took " << Time::currentSeconds()-time << " seconds\n";
-  time=Time::currentSeconds();
+  cerr << "0/6 Allocation took " << SCIRun::Time::currentSeconds()-time << " seconds\n";
+  time=SCIRun::Time::currentSeconds();
   
   int* map=new int[totalsize];
 #if 0
@@ -206,14 +206,14 @@ void GridSpheres::preprocess(double, int&, int&)
     }
   }
 #endif
-  cerr << "1/6 Generating map took " << Time::currentSeconds()-time << " seconds\n";
-  time=Time::currentSeconds();
+  cerr << "1/6 Generating map took " << SCIRun::Time::currentSeconds()-time << " seconds\n";
+  time=SCIRun::Time::currentSeconds();
   
   double itime=time;
   float* p=spheres;
   int tc2=totalcells*totalcells;
   for(int i=0;i<nspheres;i++){
-    double tnow=Time::currentSeconds();
+    double tnow=SCIRun::Time::currentSeconds();
     if(tnow-itime > 5.0){
       cerr << i << "/" << nspheres << '\n';
       itime=tnow;
@@ -237,8 +237,8 @@ void GridSpheres::preprocess(double, int&, int&)
     p+=3+ndata;
   }
   
-  cerr << "2/6 Counting cells took " << Time::currentSeconds()-time << " seconds\n";
-  time=Time::currentSeconds();
+  cerr << "2/6 Counting cells took " << SCIRun::Time::currentSeconds()-time << " seconds\n";
+  time=SCIRun::Time::currentSeconds();
   int total=0;
   for(int i=0;i<totalsize;i++){
     int count=counts[i*2+1];
@@ -249,14 +249,14 @@ void GridSpheres::preprocess(double, int&, int&)
   cells=new int[total];
   for(int i=0;i<total;i++)
     cells[i]=-1234;
-  cerr << "3/6 Calculating offsets took " << Time::currentSeconds()-time << " seconds\n";
-  time=Time::currentSeconds();
+  cerr << "3/6 Calculating offsets took " << SCIRun::Time::currentSeconds()-time << " seconds\n";
+  time=SCIRun::Time::currentSeconds();
   itime=time;
   Array1<int> current(totalsize);
   current.initialize(0);
   p=spheres;
   for(int i=0;i<nspheres;i++){
-    double tnow=Time::currentSeconds();
+    double tnow=SCIRun::Time::currentSeconds();
     if(tnow-itime > 5.0){
       cerr << i << "/" << nspheres << '\n';
       itime=tnow;
@@ -276,9 +276,9 @@ void GridSpheres::preprocess(double, int&, int&)
     }
     p+=3+ndata;
   }
-  cerr << "4/6 Filling grid took " << Time::currentSeconds()-time << " seconds\n";
+  cerr << "4/6 Filling grid took " << SCIRun::Time::currentSeconds()-time << " seconds\n";
   delete[] map;
-  time=Time::currentSeconds();
+  time=SCIRun::Time::currentSeconds();
   for(int i=0;i<totalsize;i++){
     if(current[i] != counts[i*2+1]){
       cerr << "OOPS!\n";
@@ -301,8 +301,8 @@ void GridSpheres::preprocess(double, int&, int&)
       exit(1);
     }
   }
-  cerr << "5/6 Verifying grid took " << Time::currentSeconds()-time << " seconds\n";
-  time=Time::currentSeconds();
+  cerr << "5/6 Verifying grid took " << SCIRun::Time::currentSeconds()-time << " seconds\n";
+  time=SCIRun::Time::currentSeconds();
   if(depth==0){
     macrocells=0;
   } else {
@@ -329,7 +329,7 @@ void GridSpheres::preprocess(double, int&, int&)
       cerr << "mcell: " << top.nspheres << '\n';
       cerr << "total: " << total << '\n';
     }
-    cerr << "6/6 Calculating macrocells took " << Time::currentSeconds()-time << " seconds\n";
+    cerr << "6/6 Calculating macrocells took " << SCIRun::Time::currentSeconds()-time << " seconds\n";
   }
   cerr << "Done building GridSpheres\n";
   icellsize=1./cellsize;

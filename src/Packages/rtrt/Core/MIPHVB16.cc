@@ -140,13 +140,13 @@ MIPHVB16::MIPHVB16(char* filebase, int depth, int np)
 	    cerr << "Error allocating data array\n";
 	    exit(1);
 	}
-	double start=Time::currentSeconds();
+	double start=SCIRun::Time::currentSeconds();
 	//din.read((char*)data, sizeof(short)*nx*ny*nz);
 	cerr << "Reading " << filebase << "...";
 	cerr.flush();
 	//read(din.rdbuf()->fd(), indata, sizeof(short)*nx*ny*nz);
 	read(din_fd, indata, sizeof(short)*nx*ny*nz);
-	double dt=Time::currentSeconds()-start;
+	double dt=SCIRun::Time::currentSeconds()-start;
 	cerr << "done in " << dt << " seconds (" << (double)(sizeof(short)*nx*ny*nz)/dt/1024/1024 << " MB/sec)\n";
 	int s = close(din_fd);
 	if(s == -1) {
@@ -170,20 +170,20 @@ MIPHVB16::MIPHVB16(char* filebase, int depth, int np)
 	  exit(1);
 	}
 	cerr << "Writing " << buf << "...";
-	start=Time::currentSeconds();	
+	start=SCIRun::Time::currentSeconds();	
 	//write(bout.rdbuf()->fd(), blockdata, sizeof(short)*totalsize);
 	write(bout_fd, blockdata, sizeof(short)*totalsize);
-	dt=Time::currentSeconds()-start;
+	dt=SCIRun::Time::currentSeconds()-start;
 	cerr << "done (" << (double)(sizeof(short)*totalsize)/dt/1024/1024 << " MB/sec)\n";
 	delete[] indata;
     } else {
 	//din.read((char*)data, sizeof(short)*nx*ny*nz);
 	cerr << "Reading " << buf << "...";
 	cerr.flush();
-	double start=Time::currentSeconds();
+	double start=SCIRun::Time::currentSeconds();
 	//read(bin.rdbuf()->fd(), blockdata, sizeof(short)*totalsize);
 	read(bin_fd, blockdata, sizeof(short)*totalsize);
-	double dt=Time::currentSeconds()-start;
+	double dt=SCIRun::Time::currentSeconds()-start;
 	cerr << "done (" << (double)(sizeof(short)*totalsize)/dt/1024/1024 << " MB/sec)\n";
 	int s = close(bin_fd);
 	if(s == -1) {
