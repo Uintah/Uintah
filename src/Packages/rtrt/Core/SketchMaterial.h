@@ -9,6 +9,7 @@
 #include <Packages/rtrt/Core/HitInfo.h>
 #include <Packages/rtrt/Core/Context.h>
 #include <Packages/rtrt/Core/Worker.h>
+#include <Packages/rtrt/Core/SketchMaterialBase.h>
 #include <teem/nrrd.h>
 #include <teem/gage.h>
 #include <stdlib.h>
@@ -18,30 +19,6 @@ int _gageLocationSet (gageContext *ctx, gage_t x, gage_t y, gage_t z);
 
 namespace rtrt {
 
-  class SketchMaterialBase {
-  public:
-    //  The thickness of the silhouette edges.  The gui version is the
-    //  one controlled by the gui, while the other is the one used for
-    //  rendering (and is the inverse).
-    float sil_thickness, inv_sil_thickness, gui_sil_thickness;
-    // This is the color the silhouette edge
-    Color sil_color;
-    float gui_sil_color_r, gui_sil_color_g, gui_sil_color_b;
-
-    int normal_method, gui_normal_method;
-    int show_silhouettes, gui_show_silhouettes;
-
-    SketchMaterialBase(float sil_thickness):
-      sil_thickness(sil_thickness), inv_sil_thickness(1/sil_thickness),
-      gui_sil_thickness(sil_thickness),
-      sil_color(0,0,0),
-      gui_sil_color_r(0), gui_sil_color_g(0), gui_sil_color_b(0),
-      normal_method(1), gui_normal_method(1),
-      show_silhouettes(1), gui_show_silhouettes(1)
-    {}
-    virtual ~SketchMaterialBase() {}
-  };
-  
 template<class ArrayType, class DataType>  
 class SketchMaterial : public SketchMaterialBase, public Material {
 protected:
@@ -241,16 +218,25 @@ SketchMaterial<ArrayType, DataType>::shade(Color& result, const Ray& ray,
 					Context* cx) {
   Point hit_pos(ray.origin()+ray.direction()*(hit.min_t));
   if (normal_method == 0) {
-    // Get the normal from the object
-    Vector normal(hit.hit_obj->normal(hit_pos, hit));
-
+    Color surface(1, 0.3, 0.2);
+    // Compute whether we are in shadow
+    Color shadowfactor(1,1,1);
     Light* light=cx->scene->light(0);
     Vector light_dir;
     light_dir = light->get_pos()-hit_pos;
-    
-    Color surface;
-    result = color(normal, ray.direction(), light_dir.normal(), 
-		   Color(1,0.3,0.2), light->get_color());
+    double dist=light_dir.normalize();
+    if(cx->scene->lit(hit_pos, light, light_dir, dist, shadowfactor, depth, cx) ){
+      // Not in shadow
+
+      // Get the normal from the object
+      Vector normal(hit.hit_obj->normal(hit_pos, hit));
+      
+      result = color(normal, ray.direction(), light_dir, 
+		     surface, light->get_color());
+    } else {
+      // we are in shadow
+      result = light->get_color() * surface * ambient;
+    }
     return;
   }
   if (bbox.contains_point(hit_pos)) {
@@ -291,12 +277,22 @@ SketchMaterial<ArrayType, DataType>::shade(Color& result, const Ray& ray,
 	}
 	
 	Light* light=cx->scene->light(0);
+
+	Color surface(1, 0.3, 0.2);
+	// Compute whether we are in shadow
+	Color shadowfactor(1,1,1);
 	Vector light_dir;
 	light_dir = light->get_pos()-hit_pos;
-
-	Color surface;
-	surface = color(normal, ray.direction(), light_dir.normal(), 
-			Color(1,0.3,0.2), light->get_color());
+	double dist=light_dir.normalize();
+	if(cx->scene->lit(hit_pos, light, light_dir, dist, shadowfactor, depth, cx) ){
+	  // Not in shadow
+	  
+	  surface = color(normal, ray.direction(), light_dir, 
+			  surface, light->get_color());
+	} else {
+	  // we are in shadow
+	  surface = light->get_color() * surface * ambient;
+	}
 
 	if (show_silhouettes == 0) {
 	  result = surface;
