@@ -165,6 +165,8 @@ set m132 [addModuleAtPosition "SCIRun" "Visualization" "ChooseColorMap" 218 1294
 set m133 [addModuleAtPosition "SCIRun" "Visualization" "ChooseColorMap" 540 1161]
 set m134 [addModuleAtPosition "SCIRun" "Visualization" "ChooseColorMap" 1068 1289]
 set m135 [addModuleAtPosition "SCIRun" "Visualization" "ChooseColorMap" 1274 1358]
+set m136 [addModuleAtPosition "Teem" "NrrdData" "ChooseNrrd" 204 392]
+
 
 
 # Create the Connections between Modules
@@ -259,7 +261,7 @@ set c87 [addConnection $m112 0 $m128 0]
 set c88 [addConnection $m112 0 $m123 0]
 set c89 [addConnection $m128 0 $m16 0]
 set c90 [addConnection $m116 0 $m117 0]
-set c91 [addConnection $m47 0 $m103 0]
+set c91 [addConnection $m47 0 $m136 0]
 set c92 [addConnection $m57 0 $m6 0]
 set c93 [addConnection $m60 0 $m7 0]
 set c94 [addConnection $m103 0 $m106 0]
@@ -316,7 +318,7 @@ set c144 [addConnection $m113 0 $m114 1]
 set c145 [addConnection $m117 0 $m118 1]
 set c146 [addConnection $m123 0 $m124 1]
 set c147 [addConnection $m123 0 $m121 1]
-set c148 [addConnection $m47 0 $m104 1]
+set c148 [addConnection $m136 0 $m104 1]
 set c149 [addConnection $m90 0 $m93 2]
 set c150 [addConnection $m90 0 $m120 2]
 set c151 [addConnection $m124 0 $m125 2]
@@ -347,6 +349,8 @@ set c175 [addConnection $m95 0 $m44 8]
 set c176 [addConnection $m125 0 $m44 9]
 set c177 [addConnection $m130 0 $m44 10]
 set c178 [addConnection $m131 1 $m44 11]
+set c179 [addConnection $m136 0 $m103 0]
+set c180 [addConnection $m105 0 $m136 1]
 
 
 set $m0-notes {}
@@ -375,6 +379,7 @@ set $m2-kernel {cubicCR}
 set $m2-sigma {1}
 set $m2-extent {1}
 set $m3-notes {}
+set $m3-knownB0 {0}
 set $m3-use-default-threshold {1}
 set $m3-threshold {100}
 set $m3-soft {0}
@@ -527,7 +532,7 @@ set $m13-nodes-as-disks {0}
 set $m13-edges-on {0}
 set $m13-edges-transparency {0}
 set $m13-faces-on {0}
-set $m13-use-normals {0}
+set $m13-use-normals {1}
 set $m13-use-transparency {0}
 set $m13-vectors-on {0}
 set $m13-normalize-vectors {}
@@ -1008,7 +1013,7 @@ set $m63-notes {}
 set $m63-label {unknown}
 set $m63-type {Scalar}
 set $m63-axis {axis0}
-set $m63-add {0}
+set $m63-add {1}
 set $m63-filename {}
 # set $m64-notes {}
 # set $m64-threshold {0.5}
@@ -1532,6 +1537,7 @@ set $m134-notes {}
 set $m134-port-index {1}
 set $m135-notes {}
 set $m135-port-index {1}
+set $m136-port-index {0}
 
 ::netedit scheduleok
 
@@ -1558,6 +1564,7 @@ set mods(UnuJoin) $m47
 set mods(TendEpireg) $m2
 set mods(ChooseNrrd-BMatrix) $m49
 set mods(ChooseNrrd-ToReg) $m105
+set mods(ChooseNrrd-KnownB0) $m136
 set mods(ChooseNrrd-ToSmooth) $m104
 
 set mods(NrrdReader-Gradient) $m50
@@ -1658,7 +1665,7 @@ set mods(Viewer) $m44
 global tips
 
 global data_mode
-set data_mode "DWI"
+set data_mode "DWIknownB0"
 
 ### planes variables that must be globals (all checkbuttons)
 global show_planes
@@ -1940,8 +1947,10 @@ class BioTensorApp {
 	    "Load Data in\nAnalyze format."
 	set tips(AnalyzeFiles) \
 	    "Load Analyze files\nusing our Analyze\nLoader."
-	set tips(LoadModeDWI) \
+	set tips(LoadModeDWIknownB0) \
 	    "Load a set of Diffusion\nWeighted Images. These\ncan be registered and\nused to build diffusion\ntensors."
+	set tips(LoadModeDWI) \
+	    "Load a set of Diffusion\nWeighted Images\nwithout any B.  These\ncan be registered and\nused to build diffusion\ntensors."
 	set tips(LoadModeTensor) \
 	    "Load Tensors directly.\nThe Registration and\nBuild Tensors steps\nwill be skipped. "
 
@@ -2268,21 +2277,33 @@ class BioTensorApp {
 	    # the tensors directly
             global data_mode
 
-            radiobutton $step_tab.mode1 -text "Load Diffusion Weighted Images (DWI)" \
+            radiobutton $step_tab.mode1 -text "Just Diffusion Weighted Images (DWI)" \
                 -variable data_mode -value "DWI" \
                 -command "$this toggle_data_mode"
 
 	    Tooltip $step_tab.mode1 $tips(LoadModeDWI)
 
-            radiobutton $step_tab.mode2 -text "Load Tensor Volumes" \
+            radiobutton $step_tab.mode2 -text "DWI with B0 Reference Data" \
+                -variable data_mode -value "DWIknownB0" \
+                -command "$this toggle_data_mode"
+
+	    Tooltip $step_tab.mode2 $tips(LoadModeDWIknownB0)
+
+            radiobutton $step_tab.mode3 -text "Tensor Volumes" \
                 -variable data_mode -value "tensor" \
                 -command "$this toggle_data_mode"
 
-	    Tooltip $step_tab.mode2 $tips(LoadModeTensor)
+	    Tooltip $step_tab.mode3 $tips(LoadModeTensor)
 
-            pack $step_tab.mode1 $step_tab.mode2 -side top -anchor nw -padx 3 -pady 3
+            pack $step_tab.mode1 $step_tab.mode2 $step_tab.mode3 -side top -anchor nw -padx 3 -pady 3
 
-
+	    global $mods(TendEstim)-knownB0
+	    if { $data_mode == "DWIknownB0" } {
+	       set $mods(TendEstim)-knownB0 1
+	    } else {
+		set $mods(TendEstim)-knownB0 0
+	    }
+  
 	    ### Data Acquisition
             iwidgets::tabnotebook $step_tab.tnb \
 		-width [expr $process_width - 55 ] -height 250 \
@@ -3562,7 +3583,7 @@ class BioTensorApp {
 		global $mods(NrrdInfo1)-min1
 		global $mods(NrrdInfo1)-min2
 		global $mods(NrrdInfo1)-min3
-		
+
 		set volumes [set $mods(NrrdInfo1)-size0]
 		set size_x [expr [set $mods(NrrdInfo1)-size1] - 1]
 		set size_y [expr [set $mods(NrrdInfo1)-size2] - 1]
@@ -3587,8 +3608,7 @@ class BioTensorApp {
 		global glyph_scale_val
 		set glyph_scale_val 0.5
 
-		
-		if {$data_mode == "DWI"} {
+		if {$data_mode == "DWI" || $data_mode == "DWIknownB0"} {
 		    # new data has been loaded, configure
 		    # the vis tabs and sync their values
 		    
@@ -3721,7 +3741,7 @@ class BioTensorApp {
 	}
 
 	# configure t2 reference image stuff if loading tensors directly
-	if {$data_mode == "DWI"} {
+	if {$data_mode == "DWI" || $data_mode == "DWIknownB0"} {
 	    toggle_data_mode
 	} 
 
@@ -3745,7 +3765,7 @@ class BioTensorApp {
 
 	set data_completed 1
 
-	if {$data_mode == "DWI"} {
+	if {$data_mode == "DWI" || $data_mode == "DWIknownB0"} {
 	    if {!$dt_completed} {
 		disableModule $mods(ChooseNrrd-DT) 1
 	    }
@@ -3789,8 +3809,10 @@ class BioTensorApp {
         global mods
         global $mods(ChooseNrrd-DT)-port-index
 	global $mods(NrrdReader1)-type
+	global $mods(ChooseNrrd-KnownB0)-port-index
+	global $mods(TendEstim)-knownB0
 	
-        if {$data_mode == "DWI"} {
+        if {$data_mode == "DWIknownB0"} {
 	    configure_readers all
 	    
 	    # configure text for DWI Volume
@@ -3830,7 +3852,54 @@ class BioTensorApp {
 	    #activate_registration
 	    
 	    #activate_dt
+
+	    set $mods(TendEstim)-knownB0 1
+	    set $mods(ChooseNrrd-KnownB0)-port-index 0
+
+        } elseif {$data_mode == "DWI"} {
+	    configure_readers all
 	    
+	    # configure text for DWI Volume
+	    $nrrd_tab1.dwil configure -text "DWI Volume:"
+	    $nrrd_tab2.dwil configure -text "DWI Volume:"
+	    
+	    $dicom_tab1.dwil configure -text "DWI Volume:"
+	    $dicom_tab2.dwil configure -text "DWI Volume:"
+	    
+	    $analyze_tab1.dwil configure -text "DWI Volume:"
+	    $analyze_tab2.dwil configure -text "DWI Volume:"
+	    
+	    # disable T2 stuff
+	    $nrrd_tab1.t2l configure -state disabled
+	    $nrrd_tab2.t2l configure -state disabled
+	    $nrrd_tab1.file2 configure -state disabled -foreground grey64
+	    $nrrd_tab2.file2 configure -state disabled -foreground grey64
+	    $nrrd_tab1.load2 configure -state disabled
+	    $nrrd_tab2.load2 configure -state disabled
+	    
+	    $dicom_tab1.t2l configure -state disabled
+	    $dicom_tab2.t2l configure -state disabled
+	    $dicom_tab1.load2 configure -state disabled
+	    $dicom_tab2.load2 configure -state disabled
+	    
+	    $analyze_tab1.t2l configure -state disabled
+	    $analyze_tab2.t2l configure -state disabled
+	    $analyze_tab1.load2 configure -state disabled
+	    $analyze_tab2.load2 configure -state disabled
+	    
+	    set $mods(NrrdReader1)-type Scalar
+
+	    # configure ChooseNrrd
+	    set $mods(ChooseNrrd-DT)-port-index 0
+	    
+	    # enable registration and dt tabs
+	    #activate_registration
+	    
+	    #activate_dt
+	    
+	    set $mods(TendEstim)-knownB0 0
+	    set $mods(ChooseNrrd-KnownB0)-port-index 1
+
         } else {
 	    configure_readers all
 	    
@@ -3899,7 +3968,8 @@ class BioTensorApp {
 	    # fix execute in dt
 	    $dt_tab1.last.ex configure -foreground grey64 -background grey75
 	    $dt_tab2.last.ex configure -foreground grey64 -background grey75
-	    
+
+	    set $mods(ChooseNrrd-KnownB0)-port-index 0	    
         }
 
     }
@@ -4257,10 +4327,6 @@ class BioTensorApp {
 	disableModule $mods(TendEstim) 0
 	disableModule $mods(ChooseNrrd-DT) 0
 	
-	# unblock modules
-	disableModule $mods(TendEstim) 0
-	disableModule $mods(ChooseNrrd-DT) 0
-	
 	# execute
 	$mods(ChooseNrrd-ToSmooth)-c needexecute
 
@@ -4297,9 +4363,6 @@ class BioTensorApp {
 	tkwait window $theWindow
 	
 	update idletasks
-	
-        global $mods(NrrdReader-BMatrix)-axis
-        set $mods(NrrdReader-BMatrix)-axis 0
     } 
     
     method toggle_do_registration {} {

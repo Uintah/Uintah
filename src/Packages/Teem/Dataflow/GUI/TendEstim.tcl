@@ -26,6 +26,9 @@ itcl_class Teem_Tend_TendEstim {
         set_defaults
     }
     method set_defaults {} {
+	global $this-knownB0
+	set $this-knownB0 1
+
 	global $this-use-default-threshold
 	set $this-use-default-threshold 1
 
@@ -59,6 +62,9 @@ itcl_class Teem_Tend_TendEstim {
 	frame $w.f.options
 	pack $w.f.options -side top -expand yes
 
+	checkbutton $w.f.options.knownB0 -text \
+	    "B0 is stored as first DWI value" -variable $this-knownB0
+	pack $w.f.options.knownB0 -side top -expand yes -fill x
 	checkbutton $w.f.options.usedefaultthreshold -text \
 	    "Use Default Threshold" -variable $this-use-default-threshold
 	pack $w.f.options.usedefaultthreshold -side top -expand yes -fill x
