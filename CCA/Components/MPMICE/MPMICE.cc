@@ -26,12 +26,10 @@ using namespace std;
 
 //#define DOING
 #undef DOING
-#define EOSCM
-//#undef EOSCM
-//#define IDEAL_GAS
-#undef IDEAL_GAS
-//#define BURN_DEBUG
-#undef BURN_DEBUG
+//#define EOSCM
+#undef EOSCM
+#define IDEAL_GAS
+//#undef IDEAL_GAS
 /*`==========TESTING==========*/ 
 // KEEP THIS AROUND UNTIL
 // I'M SURE OF THE NEW STYLE OF SETBC -Todd
@@ -297,9 +295,10 @@ void MPMICE::scheduleInterpolateNCToCC_0(SchedulerP& sched,
    Task* t=scinew Task("MPMICE::interpolateNCToCC_0",
 		   this, &MPMICE::interpolateNCToCC_0);
 
-   t->requires(Task::NewDW, Mlb->gMassLabel,      Ghost::AroundCells, 1);
-   t->requires(Task::NewDW, Mlb->gVolumeLabel,    Ghost::AroundCells, 1);
-   t->requires(Task::NewDW, Mlb->gVelocityLabel,  Ghost::AroundCells, 1);
+   t->requires(Task::NewDW, Mlb->gMassLabel,       Ghost::AroundCells, 1);
+   t->requires(Task::NewDW, Mlb->gVolumeLabel,     Ghost::AroundCells, 1);
+   t->requires(Task::NewDW, Mlb->gVelocityLabel,   Ghost::AroundCells, 1); 
+   t->requires(Task::NewDW, Mlb->gTemperatureLabel,Ghost::AroundCells, 1);
 
    t->computes(MIlb->cMassLabel);
    t->computes(MIlb->cVolumeLabel);
@@ -447,9 +446,9 @@ void MPMICE::scheduleHEChemistry(SchedulerP& sched,
   t->requires(Task::OldDW, Ilb->temp_CCLabel,     ice_matls,  Ghost::None);
   t->requires(Task::OldDW, Ilb->vol_frac_CCLabel, ice_matls, Ghost::None);
 
-  t->requires(Task::NewDW, MIlb->temp_CCLabel,mpm_matls, Ghost::None);
-  t->requires(Task::NewDW, MIlb->cMassLabel,  mpm_matls, Ghost::None);
-  t->requires(Task::NewDW, Mlb->gMassLabel,  mpm_matls, Ghost::AroundCells,1);
+  t->requires(Task::NewDW, MIlb->temp_CCLabel,     mpm_matls, Ghost::None);
+  t->requires(Task::NewDW, MIlb->cMassLabel,       mpm_matls, Ghost::None);
+  t->requires(Task::NewDW, Mlb->gMassLabel,        mpm_matls, Ghost::AroundCells,1);
   
   t->computes(MIlb->burnedMassCCLabel);
   t->computes(MIlb->releasedHeatCCLabel);
@@ -698,7 +697,7 @@ void MPMICE::interpolateNCToCC_0(const ProcessorGroup*,
       int matlindex = mpm_matl->getDWIndex();
 
       // Create arrays for the grid data
-      NCVariable<double> gmass, gvolume;
+      NCVariable<double> gmass, gvolume, gtemperature;
       NCVariable<Vector> gvelocity;
       CCVariable<double> cmass, cvolume,Temp_CC;
       CCVariable<Vector> vel_CC;
@@ -713,17 +712,30 @@ void MPMICE::interpolateNCToCC_0(const ProcessorGroup*,
       vel_CC.initialize(zero); 
 
       new_dw->get(gmass,Mlb->gMassLabel,matlindex, patch,Ghost::AroundCells, 1);
-      new_dw->get(gvolume,Mlb->gVolumeLabel,matlindex, patch,
+      new_dw->get(gvolume,      Mlb->gVolumeLabel,      matlindex, patch,
 		  Ghost::AroundCells, 1);
-      new_dw->get(gvelocity,Mlb->gVelocityLabel,matlindex, patch,
+      new_dw->get(gvelocity,    Mlb->gVelocityLabel,    matlindex, patch,
 		  Ghost::AroundCells, 1);
-
+      new_dw->get(gtemperature, Mlb->gTemperatureLabel, matlindex, patch,
+                Ghost::AroundCells, 1);
       IntVector nodeIdx[8];
-
-      // This temp is only used in computeEquilibrationPressure
-      // so for now it's hardwired
+      //__________________________________
+      //  Compute Temp_CC
+#ifdef IDEAL_GAS
+      // This temp is only used in computeEquilibrationPressure ideal gas EOS 
+      // so for now it's hardwired.  We should really put this in MPMICE 
+      // initialization. -Todd
       Temp_CC.initialize(300.0);
-
+#endif
+#ifdef EOSCM    //
+     Temp_CC.initialize(0.0);
+     for(CellIterator iter =patch->getExtraCellIterator();!iter.done();iter++){
+        patch->findNodesFromCell(*iter,nodeIdx);
+        for (int in=0;in<8;in++){
+         Temp_CC[*iter] += .125*gtemperature[nodeIdx[in]];
+        }
+      }
+#endif
 
   #if 0
       Vector nodal_mom(0.,0.,0.);
