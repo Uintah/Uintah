@@ -66,6 +66,9 @@ WARNING
 	 // Destructor
 	 virtual ~SphereGeometryPiece();
 	 
+	 /// Make a clone
+	 SphereGeometryPiece* clone();
+
 	 //////////
 	 // Determines whether a point is inside the sphere. 
 	 virtual bool inside(const Point &p) const;

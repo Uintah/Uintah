@@ -73,6 +73,10 @@ WARNING
 			   double topRad,
 			   double botRad);
 
+
+	 /// Make a clone
+
+	 ConeGeometryPiece* clone();
 	 //////////
 	 // Destructor
 	 virtual ~ConeGeometryPiece();

@@ -66,7 +66,17 @@ WARNING
 	 // Constructor that takes an array of children. It copies the array,
 	 // and assume ownership of the children.
 	 UnionGeometryPiece(const std::vector<GeometryPiece*>& children);
-	 
+
+	 /// Copy constructor
+	 UnionGeometryPiece(const UnionGeometryPiece&);
+
+	 /// Assignment operator
+	 UnionGeometryPiece& operator=(const UnionGeometryPiece& );
+
+	 //// Make a clone
+	 UnionGeometryPiece* clone();
+
+
 	 //////////
 	 // Destructor
 	 virtual ~UnionGeometryPiece();

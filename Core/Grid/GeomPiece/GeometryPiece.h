@@ -56,6 +56,9 @@ WARNING
 	 // Insert Documentation Here:
 	 virtual ~GeometryPiece();
 	 
+	 /// Clone a geometry piece
+	 virtual GeometryPiece* clone() = 0;
+
 	 //////////
 	 // Insert Documentation Here:
 	 virtual Box getBoundingBox() const = 0;

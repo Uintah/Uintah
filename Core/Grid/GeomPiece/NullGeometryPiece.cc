@@ -1,6 +1,7 @@
 #include <Packages/Uintah/Core/Grid/GeomPiece/NullGeometryPiece.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
+#include <Core/Malloc/Allocator.h>
 #include <sgi_stl_warnings_off.h>
 #include <fstream>
 #include <sgi_stl_warnings_on.h>
@@ -21,6 +22,11 @@ NullGeometryPiece::NullGeometryPiece(const string& file_name)
 
 NullGeometryPiece::~NullGeometryPiece()
 {
+}
+
+NullGeometryPiece* NullGeometryPiece::clone()
+{
+  return scinew NullGeometryPiece(*this);
 }
 
 bool NullGeometryPiece::inside(const Point& p) const

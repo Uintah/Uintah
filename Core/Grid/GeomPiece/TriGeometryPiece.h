@@ -64,6 +64,9 @@ WARNING
 	 // Destructor
 	 virtual ~TriGeometryPiece();
 	 
+	 /// Make a clone
+	 TriGeometryPiece* clone();
+
 	 //////////
 	 // Determins whether a point is inside the triangulated surface.
 	 virtual bool inside(const Point &p) const;

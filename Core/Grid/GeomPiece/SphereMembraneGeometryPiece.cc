@@ -5,6 +5,7 @@
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
+#include <Core/Malloc/Allocator.h>
 
 using namespace Uintah;
 using namespace SCIRun;
@@ -27,6 +28,11 @@ SphereMembraneGeometryPiece::SphereMembraneGeometryPiece(ProblemSpecP& ps)
 
 SphereMembraneGeometryPiece::~SphereMembraneGeometryPiece()
 {
+}
+
+SphereMembraneGeometryPiece* SphereMembraneGeometryPiece::clone()
+{
+  return scinew SphereMembraneGeometryPiece(*this);
 }
 
 bool SphereMembraneGeometryPiece::inside(const Point& p) const

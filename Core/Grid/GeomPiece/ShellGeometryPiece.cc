@@ -12,3 +12,4 @@ ShellGeometryPiece::ShellGeometryPiece()
 ShellGeometryPiece::~ShellGeometryPiece()
 {
 }
+

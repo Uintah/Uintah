@@ -70,6 +70,10 @@ WARNING
          //
 	 virtual ~CylinderGeometryPiece();
 	 
+	 /// Make a clone
+	 CylinderGeometryPiece* clone();
+
+
 	 //////////
 	 // Determines whether a point is inside the cylinder.
          //

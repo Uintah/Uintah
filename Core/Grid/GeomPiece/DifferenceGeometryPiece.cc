@@ -1,6 +1,6 @@
 #include <Packages/Uintah/Core/Grid/GeomPiece/DifferenceGeometryPiece.h>
 #include <Packages/Uintah/Core/Grid/GeomPiece/GeometryPieceFactory.h>
-
+#include <Core/Malloc/Allocator.h>
 #include <Core/Geometry/Point.h>
 #include <Packages/Uintah/Core/Grid/Box.h>
 
@@ -33,6 +33,32 @@ DifferenceGeometryPiece::~DifferenceGeometryPiece()
   delete left;
   delete right;
  
+}
+
+DifferenceGeometryPiece::DifferenceGeometryPiece(const DifferenceGeometryPiece& rhs)
+{
+  left=rhs.left->clone();
+  right=rhs.right->clone();
+}
+
+DifferenceGeometryPiece& DifferenceGeometryPiece::operator=(const DifferenceGeometryPiece& rhs)
+{
+  if (this == &rhs)
+    return *this;
+
+  // Delete left hand side
+  delete left;
+  delete right;
+
+  left = rhs.left->clone();
+  right = rhs.right->clone();
+
+  return *this;
+}
+
+DifferenceGeometryPiece* DifferenceGeometryPiece::clone()
+{
+  return scinew DifferenceGeometryPiece(*this);
 }
 
 bool DifferenceGeometryPiece::inside(const Point &p) const 

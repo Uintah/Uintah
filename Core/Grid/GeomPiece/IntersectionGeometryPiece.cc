@@ -1,7 +1,7 @@
 #include <Packages/Uintah/Core/Grid/GeomPiece/IntersectionGeometryPiece.h>
 #include <Packages/Uintah/Core/Grid/GeomPiece/GeometryPieceFactory.h>
 #include <Packages/Uintah/Core/Grid/Box.h>
-
+#include <Core/Malloc/Allocator.h>
 #include <Core/Geometry/Point.h>
 
 using namespace SCIRun;
@@ -19,6 +19,40 @@ IntersectionGeometryPiece::~IntersectionGeometryPiece()
   for (int i = 0; i < (int)child.size(); i++) {
     delete child[i];
   }
+}
+
+IntersectionGeometryPiece& IntersectionGeometryPiece::operator=(const IntersectionGeometryPiece& rhs)
+{
+  if (this == &rhs)
+    return *this;
+
+  // Delete the lhs
+  for (std::vector<GeometryPiece*>::const_iterator it = child.begin();
+       it != child.end(); ++it)
+    delete *it;
+  child.clear();
+
+  for (std::vector<GeometryPiece*>::const_iterator it = rhs.child.begin();
+       it != rhs.child.end(); ++it)
+    child.push_back((*it)->clone());
+
+  return *this;
+
+}
+
+
+IntersectionGeometryPiece::IntersectionGeometryPiece(const IntersectionGeometryPiece& rhs)
+{
+  for (std::vector<GeometryPiece*>::const_iterator it = rhs.child.begin();
+       it != rhs.child.end(); ++it)
+    child.push_back((*it)->clone());
+
+  
+}
+
+IntersectionGeometryPiece* IntersectionGeometryPiece::clone()
+{
+  return scinew IntersectionGeometryPiece(*this);
 }
 
 bool IntersectionGeometryPiece::inside(const Point &p) const 

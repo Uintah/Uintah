@@ -2,7 +2,7 @@
 #include <Packages/Uintah/Core/Grid/GeomPiece/GeometryPieceFactory.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
-
+#include <Core/Malloc/Allocator.h>
 #include <Core/Geometry/Point.h>
 
 #include <string>
@@ -44,6 +44,11 @@ BoxGeometryPiece::BoxGeometryPiece(const Point& p1, const Point& p2)
 
 BoxGeometryPiece::~BoxGeometryPiece()
 {
+}
+
+BoxGeometryPiece* BoxGeometryPiece::clone()
+{
+  return scinew BoxGeometryPiece(*this);
 }
 
 bool BoxGeometryPiece::inside(const Point& p) const
