@@ -43,8 +43,8 @@ itcl_class SCIRun_Visualization_GenStandardColorMaps {
 	global $this-height
 	set $this-gamma 0
 	set $this-mapType 3
-	set $this-resolution 255
-	set $this-realres 255
+	set $this-resolution 256
+	set $this-realres 256
 	set $this-minRes 12
 	set exposed 0
 	set colorMap {}
@@ -225,7 +225,7 @@ itcl_class SCIRun_Visualization_GenStandardColorMaps {
 	pack $w.f2.f3 -side left -padx 2 -pady 2 -expand yes -fill both
 	label $w.f2.f3.label -text "Resolution"
 	pack $w.f2.f3.label -side top -pady 2
-	scale $w.f2.f3.s -from [set $this-minRes] -to 255 -state normal \
+	scale $w.f2.f3.s -from [set $this-minRes] -to 256 -state normal \
 		-orient horizontal  -variable $this-resolution 
 	pack $w.f2.f3.s -side top -padx 2 -pady 2 -expand yes -fill x
 	
