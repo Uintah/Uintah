@@ -226,9 +226,9 @@ void VolumeSlicer::execute()
     int nz = tex_->nz();
     Transform t(tex_->transform());
     dmin_=t.project(Point(0,0,0));
-    ddx_= (t.project(Point(1,0,0))-dmin_) * (dv.x()/nx);
-    ddy_= (t.project(Point(0,1,0))-dmin_) * (dv.y()/ny);
-    ddz_= (t.project(Point(0,0,1))-dmin_) * (dv.z()/nz);
+    ddx_ = t.project(Vector(1.0/nx, 0, 0));
+    ddy_ = t.project(Vector(0, 1.0/ny, 0));
+    ddz_ = t.project(Vector(0, 0, 1.0/nz));
     ddview_ = (dv.length()/(std::max(nx, std::max(ny,nz)) -1));
   }
 
@@ -285,9 +285,9 @@ void VolumeSlicer::execute()
       int nz = tex_->nz();
       Transform t(tex_->transform());
       dmin_=t.project(Point(0,0,0));
-      ddx_= (t.project(Point(1,0,0))-dmin_) * (dv.x()/nx);
-      ddy_= (t.project(Point(0,1,0))-dmin_) * (dv.y()/ny);
-      ddz_= (t.project(Point(0,0,1))-dmin_) * (dv.z()/nz);
+      ddx_ = t.project(Vector(1.0/nx, 0, 0));
+      ddy_ = t.project(Vector(0, 1.0/ny, 0));
+      ddz_ = t.project(Vector(0, 0, 1.0/nz));
       ddview_ = (dv.length()/(std::max(nx, std::max(ny,nz)) -1));
       if(!b.inside(control_widget_->GetPosition())) {
 	control_widget_->SetPosition(Interpolate(b.min(), b.max(), 0.5));
