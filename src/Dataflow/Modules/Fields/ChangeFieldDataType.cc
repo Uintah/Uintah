@@ -167,22 +167,13 @@ ChangeFieldDataType::execute()
     gui->execute(id + " set_state Executing 0");
     algo->execute(fh, ef);
   }
-  
 
-  ScalarFieldInterface* sfi = ef->query_scalar_interface(this);
-  if (sfi)
-  {
-    ef->freeze();
-    std::pair<double, double> minmax(1, 0);
-    sfi->compute_min_max(minmax.first, minmax.second);
-    ef->set_property(string("minmax"), minmax, true);
-  }
-    
   oport->send(ef);
 }
 
     
-void ChangeFieldDataType::tcl_command(GuiArgs& args, void* userdata)
+void
+ChangeFieldDataType::tcl_command(GuiArgs& args, void* userdata)
 {
   if(args.count() < 2){
     args.error("ChangeFieldDataType needs a minor command");

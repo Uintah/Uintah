@@ -318,15 +318,7 @@ Isosurface::new_field( FieldHandle field )
     return;
   }
 
-  pair<double, double> minmax;
-  if ( !field->get_property("minmax", minmax))
-  {
-    sfi->compute_min_max(minmax.first, minmax.second);
-    // Cache this potentially expensive to compute value.
-    field->set_property("minmax", minmax, true);
-  }
-  
-  // reset the GUI
+  // Reset the GUI.
 
   // 1: field info
   ostringstream info;
@@ -334,6 +326,8 @@ Isosurface::new_field( FieldHandle field )
   gui->execute(info.str().c_str());
 
   // 2: min/max
+  pair<double, double> minmax;
+  sfi->compute_min_max(minmax.first, minmax.second);
   if (minmax.first != prev_min_ || minmax.second != prev_max_)
   {
     ostringstream str;
