@@ -74,7 +74,7 @@ private:
   MaterialHandle	white_;
   MaterialHandle	black_;
   ColorMapHandle	cmap_;
-  int			cgen_;
+  int			colormap_generation_;
   bool			swap_row_col_;
   GeomHandle		plot_;
 
@@ -82,7 +82,6 @@ private:
   int			cached_gui_showtext_;
   int			cached_gui_cmode_;
   
-  GuiInt		gui_color_by_val_;
   GuiInt		gui_grid_x_;
   GuiInt		gui_grid_y_;
   GuiInt		gui_grid_z_;
@@ -91,13 +90,15 @@ private:
   GuiDouble		gui_scale_;
   GuiDouble		gui_scale_x_;
   GuiDouble		gui_scale_y_;
-  GuiString		gui_mode_;
+  GuiInt		gui_3d_mode_;
   GuiInt		gui_gmode_;
   GuiInt		gui_showtext_;
   GuiInt		gui_row_begin_;
   GuiInt		gui_row_end_;
+  GuiInt		gui_rows_;
   GuiInt		gui_col_begin_;
   GuiInt		gui_col_end_;
+  GuiInt		gui_cols_;
   GuiDouble		gui_x_gap_;
   GuiDouble		gui_z_gap_;
   GuiInt		gui_data_face_centered_;
@@ -153,7 +154,6 @@ ShowMatrix::ShowMatrix(GuiContext* ctx)
     white_(scinew Material(Color(0,0,0), Color(1,1,1), Color(1,1,1), 20)),
     black_(scinew Material(Color(0,0,0), Color(0,0,0), Color(0,0,0), 20)),
     swap_row_col_(false),
-    gui_color_by_val_(ctx->subVar("color_by_val")),
     gui_grid_x_(ctx->subVar("grid_x")),
     gui_grid_y_(ctx->subVar("grid_y")),
     gui_grid_z_(ctx->subVar("grid_z")),
@@ -162,13 +162,15 @@ ShowMatrix::ShowMatrix(GuiContext* ctx)
     gui_scale_(ctx->subVar("xscale")),
     gui_scale_x_(ctx->subVar("xscale")),
     gui_scale_y_(ctx->subVar("yscale")),
-    gui_mode_(ctx->subVar("displaymode")),
+    gui_3d_mode_(ctx->subVar("3d_mode")),
     gui_gmode_(ctx->subVar("gmode")),
     gui_showtext_(ctx->subVar("showtext")),
     gui_row_begin_(ctx->subVar("row_begin")),
     gui_row_end_(ctx->subVar("row_end")),
+    gui_rows_(ctx->subVar("rows")),
     gui_col_begin_(ctx->subVar("col_begin")),
     gui_col_end_(ctx->subVar("col_end")),
+    gui_cols_(ctx->subVar("cols")),
     gui_x_gap_(ctx->subVar("xgap")),
     gui_z_gap_(ctx->subVar("ygap")),
     gui_data_face_centered_(ctx->subVar("data_face_centered")),
@@ -595,29 +597,19 @@ ShowMatrix::execute()
 
   port_map_type::iterator pi = range.first;
   while (pi != range.second) {
-    MatrixIPort *iport = (MatrixIPort *)get_iport(pi->second);
-    pi++;
+    MatrixIPort *iport = (MatrixIPort *)get_iport(pi++->second);
     MatrixHandle matrix;
-    if (iport->get(matrix) && matrix.get_rep()) {
+    if (iport->get(matrix) && matrix.get_rep())
       matrices.push_back(matrix);
-    }
-    else {
-      //error("Cannot get matrix from input port.");
-      //      return;
-    }
   }
   
   ColorMapIPort *imap = (ColorMapIPort *)get_iport("ColorMap");
   if (!imap->get(cmap_)) { 
+    // TODO: Do greyscale if no cmap
     error("No input color map. Aborting execution.");
     return;
   }
   
-  bool do_3d = false;
-  if (gui_mode_.get() == string("3D")) do_3d = true;
-
-  gui_color_by_val_.set(1);
-
   switch (gui_cmode_.get()){
   case 0: color_mode_ = COLOR_BY_VAL; break;
   case 1: color_mode_ = COLOR_BY_ROW; break;
@@ -625,15 +617,9 @@ ShowMatrix::execute()
   case 2: color_mode_ = COLOR_BY_COL; break;
   }
     
-
-
   
-  bool recompute_geom = false;
-
-  if (cmap_->generation != cgen_) {
-    recompute_geom = true;
-    cgen_ = cmap_->generation;
-  }    
+  bool recompute_geom = cmap_->generation != colormap_generation_;
+  colormap_generation_ = cmap_->generation;
   
   for (unsigned int m = 0; m < matrices.size(); m++) {
     if (recompute_geom) break;
@@ -641,42 +627,28 @@ ShowMatrix::execute()
     if (data.changed) recompute_geom = true;
   }
 
-  if (cached_gui_cmode_ != gui_cmode_.get()) {
-    recompute_geom = true;
-    cached_gui_cmode_ = gui_cmode_.get();
-  }
-
-  if (cached_gui_gmode_ != gui_gmode_.get()) {
-    recompute_geom = true;
-    cached_gui_gmode_ = gui_gmode_.get();
-  }
-
-  if (cached_gui_showtext_ != gui_showtext_.get()) {
-    recompute_geom = true;
-    cached_gui_showtext_ = gui_showtext_.get();
-  }
-
+  recompute_geom = (recompute_geom || gui_cmode_.changed() || 
+		    gui_gmode_.changed() || gui_showtext_.changed());
 
   if (recompute_geom) {
     GeomGroup *plot = scinew GeomGroup();
-    GeomSwitch *grid = scinew GeomSwitch(scinew GeomMaterial(generate_grid(do_3d), white_));
+    GeomSwitch *grid = 
+      scinew GeomSwitch(scinew GeomMaterial(generate_grid(gui_3d_mode_.get()),
+					    white_));
     plot->add(grid);
-    //plot->add(generate_contour(matrices[m]));
+    //    plot->add(generate_contour(matrices[0]));
 
     for (unsigned int m = 0; m < matrices.size(); m++) {
       switch (gui_gmode_.get()){
       case 1:
 	plot->add(generate_line_graph(matrices[m]));
 	break;
-
       case 2:
 	plot->add(generate_3d_bar_graph(matrices[m]));
 	break;
-
       case 3:
 	plot->add(generate_3d_sheet_graph(matrices[m]));
 	break;
-
       case 4:
 	plot->add(generate_3d_ribbon_graph(matrices[m],false));
 	break;
@@ -690,20 +662,19 @@ ShowMatrix::execute()
     plot_ = plot;
   }
 
-  //  if (!plot_.get_rep()) return;
   GeomTransform *trans = scinew GeomTransform(plot_);
-  double scale = gui_scale_.get();
-  trans->scale (Vector(scale, scale, scale));//gui_scale_.get()2.0, 2.0, 2.0));
+  const double scale = gui_scale_.get();
+  trans->scale(Vector(scale, scale, scale));
   trans->translate(Vector(gui_trans_x_.get(), gui_trans_y_.get(), -1.0));
-    
+
   GeomHandle obj = trans;
-  if (!do_3d) obj = scinew GeomSticky(trans);
+  if (!gui_3d_mode_.get()) 
+    obj = scinew GeomSticky(trans);
     
   GeometryOPort *ogeom = (GeometryOPort *)get_oport("Geometry");
   ogeom->delAll();
-  ogeom->addObj(obj, "ShowMatrix Plot" );
+  ogeom->addObj(obj, id+" Plot");
   ogeom->flushViews();
-
 }
 
 const ShowMatrix::MatrixData &
@@ -742,7 +713,7 @@ ShowMatrix::get_matrix_data(MatrixHandle mh)
 
     gui_row_begin_.set(data.row_begin);
     gui_row_end_.set(data.row_end);
-
+    gui_rows_.set(m->nrows()-1);
 
     data.col_begin  = gui_col_begin_.get();
     data.col_end    = gui_col_end_.get();
@@ -763,6 +734,8 @@ ShowMatrix::get_matrix_data(MatrixHandle mh)
 
     gui_col_begin_.set(data.col_begin);
     gui_col_end_.set(data.col_end);
+    gui_cols_.set(m->ncols()-1);
+    
 
 
     data.min = get_value(mh, data.row_begin, data.col_begin);
