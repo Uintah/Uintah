@@ -63,6 +63,8 @@ namespace Volume {
 
 struct UndoItem
 {
+  enum Action { UNDO_SELECT, UNDO_MOVE, UNDO_ADD, UNDO_DELETE };
+
   int action_;
   int selected_;
   CM2Widget *widget_;
@@ -100,6 +102,7 @@ class EditTransferFunc2 : public Module {
   
   int pick_widget_; // Which widget is selected.
   int pick_object_; // The part of the widget that is selected.
+  bool first_motion_; // Push on undo when motion occurs, not on select.
 
   bool updating_; // updating the tf or not
 
@@ -133,7 +136,7 @@ EditTransferFunc2::EditTransferFunc2(GuiContext* ctx)
     pbuffer_(0), use_pbuffer_(true), use_back_buffer_(true),
     histo_(0), histo_dirty_(false), histo_tex_(0),
     cmap_dirty_(true), cmap_tex_(0),
-    pick_widget_(-1), pick_object_(0), updating_(false),
+    pick_widget_(-1), pick_object_(0), first_motion_(true), updating_(false),
     gui_faux_(ctx->subVar("faux")),
     gui_histo_(ctx->subVar("histo"))
 {
@@ -202,19 +205,20 @@ EditTransferFunc2::tcl_command(GuiArgs& args, void* userdata)
     ctx_ = 0;
   } else if (args[1] == "addtriangle") {
     widgets_.push_back(scinew TriangleCM2Widget());
-    undo_stack_.push(UndoItem(3, widgets_.size()-1, NULL));
+    undo_stack_.push(UndoItem(UndoItem::UNDO_ADD, widgets_.size()-1, NULL));
     cmap_dirty_ = true;
     redraw();
   } else if (args[1] == "addrectangle") {
     widgets_.push_back(scinew RectangleCM2Widget());
-    undo_stack_.push(UndoItem(3, widgets_.size()-1, NULL));
+    undo_stack_.push(UndoItem(UndoItem::UNDO_ADD, widgets_.size()-1, NULL));
     cmap_dirty_ = true;
     redraw();
   } else if (args[1] == "deletewidget") {
     if (pick_widget_ != -1 && pick_widget_ < (int)widgets_.size())
     {
       // Delete widget.
-      undo_stack_.push(UndoItem(2, pick_widget_, widgets_[pick_widget_]));
+      undo_stack_.push(UndoItem(UndoItem::UNDO_DELETE,
+				pick_widget_, widgets_[pick_widget_]));
       widgets_.erase(widgets_.begin() + pick_widget_);
       pick_widget_ = -1;
       cmap_dirty_ = true;
@@ -238,24 +242,24 @@ EditTransferFunc2::undo()
     
     switch (item.action_)
     {
-    case 0: // select
+    case UndoItem::UNDO_SELECT:
       pick_widget_ = item.selected_;
       break;
       
-    case 1: // move
+    case UndoItem::UNDO_MOVE:
       delete widgets_[item.selected_];
       widgets_[item.selected_] = item.widget_;
       break;
 
-    case 2: // delete
+    case UndoItem::UNDO_ADD:
+      delete widgets_[item.selected_];
+      widgets_.erase(widgets_.begin() + item.selected_);
+      break;
+   
+    case UndoItem::UNDO_DELETE:
       widgets_.insert(widgets_.begin() + item.selected_, item.widget_);
       break;
       
-    case 3: // add
-      delete widgets_[pick_widget_];
-      widgets_.erase(widgets_.begin() + pick_widget_);
-      break;
-   
     }
     undo_stack_.pop();
     cmap_dirty_ = true;
@@ -273,6 +277,7 @@ EditTransferFunc2::push(int x, int y, int button)
   unsigned int i;
 
   button_ = button;
+  first_motion_ = true;
 
   for (i = 0; i < widgets_.size(); i++)
   {
@@ -308,8 +313,6 @@ EditTransferFunc2::push(int x, int y, int button)
   }
   if (pick_widget_ != -1)
   {
-    undo_stack_.push(UndoItem(1, pick_widget_,
-			      widgets_[pick_widget_]->clone()));
     redraw();
   }
 }
@@ -323,6 +326,13 @@ EditTransferFunc2::motion(int x, int y)
 
   if (pick_widget_ != -1)
   {
+    if (first_motion_)
+    {
+      undo_stack_.push(UndoItem(UndoItem::UNDO_MOVE, pick_widget_,
+				widgets_[pick_widget_]->clone()));
+      first_motion_ = false;
+    }
+
     widgets_[pick_widget_]->move(pick_object_, x, height_-1-y, width_, height_);
     cmap_dirty_ = true;
     updating_ = true;
