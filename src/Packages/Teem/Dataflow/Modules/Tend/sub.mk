@@ -39,6 +39,7 @@ SRCS     += \
 	$(SRCDIR)/TendEvec.cc\
 	$(SRCDIR)/TendEvecRGB.cc\
 	$(SRCDIR)/TendExpand.cc\
+	$(SRCDIR)/TendFiber.cc\
 	$(SRCDIR)/TendMake.cc\
 	$(SRCDIR)/TendNorm.cc\
 	$(SRCDIR)/TendPoint.cc\
