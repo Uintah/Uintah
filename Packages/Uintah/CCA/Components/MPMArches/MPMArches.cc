@@ -231,7 +231,6 @@ void MPMArches::scheduleTimeAdvance(const LevelP&   level,
 
   sched->scheduleParticleRelocation(level, 
                                     Mlb->pXLabel_preReloc,
-                                    Mlb->pKeepDeleteLabel,
                                     Mlb->d_particleState_preReloc,
                                     Mlb->pXLabel, Mlb->d_particleState,
 				    Mlb->pParticleIDLabel,
