@@ -70,7 +70,7 @@ template <class Data>
 void
 PointCloud<Data>::io(Piostream &stream)
 {
-  stream.begin_class(type_name().c_str(), PointCloud_VERSION);
+  stream.begin_class(type_name(-1).c_str(), PointCloud_VERSION);
   GenericField<PointCloudMesh, vector<Data> >::io(stream);
   stream.end_class();                                                         
 }
