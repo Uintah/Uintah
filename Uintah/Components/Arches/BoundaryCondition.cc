@@ -5,6 +5,7 @@ static char *id="@(#) $Id$";
 
 #include <Uintah/Components/Arches/BoundaryCondition.h>
 #include <Uintah/Components/Arches/CellInformation.h>
+#include <Uintah/Components/Arches/CellInformationP.h>
 #include <Uintah/Components/Arches/StencilMatrix.h>
 #include <Uintah/Components/Arches/ArchesFort.h>
 #include <Uintah/Components/Arches/Discretization.h>
@@ -341,14 +342,14 @@ BoundaryCondition::computeInletFlowArea(const ProcessorGroup*,
 	      Ghost::None, numGhostCells);
 
   // Get the PerPatch CellInformation data
-  PerPatch<CellInformation*> cellInfoP;
+  PerPatch<CellInformationP> cellInfoP;
   if (old_dw->exists(d_lab->d_cellInfoLabel, patch)) 
     old_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
   else {
     cellInfoP.setData(scinew CellInformation(patch));
     old_dw->put(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
   }
-  CellInformation* cellInfo = cellInfoP;
+  CellInformation* cellInfo = cellInfoP.get().get_rep();
   
   // Get the low and high index for the variable and the patch
   IntVector domLo = cellType.getFortLowIndex();
@@ -2416,6 +2417,10 @@ BoundaryCondition::FlowOutlet::problemSetup(ProblemSpecP& params)
 
 //
 // $Log$
+// Revision 1.70  2000/10/14 17:11:05  sparker
+// Changed PerPatch<CellInformation*> to PerPatch<CellInformationP>
+// to get rid of memory leak
+//
 // Revision 1.69  2000/10/13 19:48:02  sparker
 // Commenting out chatter
 //

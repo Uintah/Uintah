@@ -4,6 +4,7 @@
 static char *id="@(#) $Id$";
 
 #include <Uintah/Components/Arches/PressureSolver.h>
+#include <Uintah/Components/Arches/CellInformationP.h>
 #include <Uintah/Components/Arches/Discretization.h>
 #include <Uintah/Components/Arches/Source.h>
 #include <Uintah/Components/Arches/BoundaryCondition.h>
@@ -386,7 +387,7 @@ PressureSolver::buildLinearMatrix(const ProcessorGroup* pc,
   pressureVars.den_Ref = den_ref_var;
   //cerr << "getdensity_ref " << pressureVars.den_Ref << endl;
   // Get the PerPatch CellInformation data
-  PerPatch<CellInformation*> cellInfoP;
+  PerPatch<CellInformationP> cellInfoP;
   old_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
   //  old_dw->get(cellInfoP, d_cellInfoLabel, matlIndex, patch);
   //  if (old_dw->exists(d_cellInfoLabel, patch)) 
@@ -395,7 +396,7 @@ PressureSolver::buildLinearMatrix(const ProcessorGroup* pc,
   //  cellInfoP.setData(scinew CellInformation(patch));
   //  old_dw->put(cellInfoP, d_cellInfoLabel, matlIndex, patch);
   //}
-  CellInformation* cellinfo = cellInfoP;
+  CellInformation* cellinfo = cellInfoP.get().get_rep();
   new_dw->get(pressureVars.uVelocity, d_lab->d_uVelocitySIVBCLabel, 
 	      matlIndex, patch, Ghost::AroundCells, numGhostCells);
   new_dw->get(pressureVars.vVelocity, d_lab->d_vVelocitySIVBCLabel, 
@@ -578,7 +579,7 @@ PressureSolver::buildLinearMatrixPress(const ProcessorGroup* pc,
   new_dw->get(pressureVars.pressure, d_lab->d_pressureINLabel, 
 	      matlIndex, patch, Ghost::None, zeroGhostCells);
   // Get the PerPatch CellInformation data
-  PerPatch<CellInformation*> cellInfoP;
+  PerPatch<CellInformationP> cellInfoP;
   old_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
   //  old_dw->get(cellInfoP, d_cellInfoLabel, matlIndex, patch);
   //  if (old_dw->exists(d_cellInfoLabel, patch)) 
@@ -587,7 +588,7 @@ PressureSolver::buildLinearMatrixPress(const ProcessorGroup* pc,
   //  cellInfoP.setData(scinew CellInformation(patch));
   //  old_dw->put(cellInfoP, d_cellInfoLabel, matlIndex, patch);
   //}
-  CellInformation* cellinfo = cellInfoP;
+  CellInformation* cellinfo = cellInfoP.get().get_rep();
   new_dw->get(pressureVars.uVelocity, d_lab->d_uVelocitySIVBCLabel, 
 	      matlIndex, patch, Ghost::AroundCells, numGhostCells+1);
   new_dw->get(pressureVars.vVelocity, d_lab->d_vVelocitySIVBCLabel, 
@@ -874,6 +875,10 @@ PressureSolver::normPressure(const ProcessorGroup*,
 
 //
 // $Log$
+// Revision 1.63  2000/10/14 17:11:05  sparker
+// Changed PerPatch<CellInformation*> to PerPatch<CellInformationP>
+// to get rid of memory leak
+//
 // Revision 1.62  2000/10/12 20:08:33  sparker
 // Made multipatch work for several timesteps
 // Cleaned up print statements

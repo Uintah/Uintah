@@ -4,6 +4,7 @@
 static char *id="@(#) $Id$";
 
 #include <Uintah/Components/Arches/ScalarSolver.h>
+#include <Uintah/Components/Arches/CellInformationP.h>
 #include <Uintah/Components/Arches/PetscSolver.h>
 #include <Uintah/Components/Arches/RBGSSolver.h>
 #include <Uintah/Components/Arches/Discretization.h>
@@ -234,9 +235,9 @@ void ScalarSolver::buildLinearMatrix(const ProcessorGroup* pc,
   //DataWarehouseP old_dw = new_dw->getTop();
 
   // Get the PerPatch CellInformation data
-  PerPatch<CellInformation*> cellInfoP;
+  PerPatch<CellInformationP> cellInfoP;
   old_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
-  CellInformation* cellinfo = cellInfoP;
+  CellInformation* cellinfo = cellInfoP.get().get_rep();
 
   // from old_dw get PCELL, DENO, FO(index)
   old_dw->get(scalarVars.cellType, d_lab->d_cellTypeLabel, 
@@ -331,7 +332,7 @@ ScalarSolver::scalarLinearSolve(const ProcessorGroup* pc,
   int nofStencils = 7;
   //DataWarehouseP old_dw = new_dw->getTop();
   // Get the PerPatch CellInformation data
-  PerPatch<CellInformation*> cellInfoP;
+  PerPatch<CellInformationP> cellInfoP;
   // get old_dw from getTop function
   old_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
   //  old_dw->get(cellInfoP, d_cellInfoLabel, matlIndex, patch);
@@ -341,7 +342,7 @@ ScalarSolver::scalarLinearSolve(const ProcessorGroup* pc,
   //  cellInfoP.setData(scinew CellInformation(patch));
   //  old_dw->put(cellInfoP, d_cellInfoLabel, matlIndex, patch);
   //}
-  CellInformation* cellinfo = cellInfoP;
+  CellInformation* cellinfo = cellInfoP.get().get_rep();
   old_dw->get(scalarVars.old_density, d_lab->d_densityCPLabel, 
 	      matlIndex, patch, Ghost::None, zeroGhostCells);
   // for explicit calculation
@@ -388,6 +389,10 @@ ScalarSolver::scalarLinearSolve(const ProcessorGroup* pc,
 
 //
 // $Log$
+// Revision 1.30  2000/10/14 17:11:05  sparker
+// Changed PerPatch<CellInformation*> to PerPatch<CellInformationP>
+// to get rid of memory leak
+//
 // Revision 1.29  2000/10/10 19:30:57  rawat
 // added scalarsolver
 //

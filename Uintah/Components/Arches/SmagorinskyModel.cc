@@ -188,14 +188,14 @@ SmagorinskyModel::computeTurbSubmodel(const ProcessorGroup* pc,
   old_dw->get(viscosity, d_lab->d_viscosityINLabel, matlIndex, patch, Ghost::None,
 	      zeroGhostCells);
 
-  PerPatch<CellInformation*> cellinfop;
+  PerPatch<CellInformationP> cellinfop;
   //if (old_dw->exists(d_cellInfoLabel, patch)) {
   old_dw->get(cellinfop, d_lab->d_cellInfoLabel, matlIndex, patch);
   //} else {
   //  cellinfop.setData(scinew CellInformation(patch));
   //  old_dw->put(cellinfop, d_cellInfoLabel, matlIndex, patch);
   //}
-  CellInformation* cellinfo = cellinfop;
+  CellInformation* cellinfo = cellinfop.get().get_rep();
 
   //  DataWarehouseP top_dw = new_dw->getTop();
   // Get the patch details
@@ -290,7 +290,7 @@ SmagorinskyModel::reComputeTurbSubmodel(const ProcessorGroup* pc,
 	      zeroGhostCells);
 
   // Get the PerPatch CellInformation data
-  PerPatch<CellInformation*> cellInfoP;
+  PerPatch<CellInformationP> cellInfoP;
   old_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
   //  if (old_dw->exists(d_cellInfoLabel, patch)) 
   //  old_dw->get(cellInfoP, d_cellInfoLabel, matlIndex, patch);
@@ -298,7 +298,7 @@ SmagorinskyModel::reComputeTurbSubmodel(const ProcessorGroup* pc,
   //  cellInfoP.setData(scinew CellInformation(patch));
   //  old_dw->put(cellInfoP, d_cellInfoLabel, matlIndex, patch);
   //}
-  CellInformation* cellinfo = cellInfoP;
+  CellInformation* cellinfo = cellInfoP.get().get_rep();
   
   // get physical constants
   double mol_viscos; // molecular viscosity
@@ -436,7 +436,7 @@ void SmagorinskyModel::calcVelocityWallBC(const ProcessorGroup* pc,
 	      numGhostCells);
 
   // Get the PerPatch CellInformation data
-  PerPatch<CellInformation*> cellInfoP;
+  PerPatch<CellInformationP> cellInfoP;
   old_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
   //  if (old_dw->exists(d_cellInfoLabel, patch)) 
   //  old_dw->get(cellInfoP, d_cellInfoLabel, matlIndex, patch);
@@ -662,6 +662,10 @@ void SmagorinskyModel::calcVelocitySource(const ProcessorGroup* pc,
 
 //
 // $Log$
+// Revision 1.33  2000/10/14 17:11:05  sparker
+// Changed PerPatch<CellInformation*> to PerPatch<CellInformationP>
+// to get rid of memory leak
+//
 // Revision 1.32  2000/10/12 00:03:18  rawat
 // running for more than one timestep.
 //

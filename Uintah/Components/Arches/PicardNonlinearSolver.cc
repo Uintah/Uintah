@@ -5,6 +5,7 @@ static char *id="@(#) $Id$";
 
 #include <Uintah/Components/Arches/PicardNonlinearSolver.h>
 #include <Uintah/Components/Arches/Arches.h>
+#include <Uintah/Components/Arches/CellInformationP.h>
 #include <Uintah/Components/Arches/Properties.h>
 #include <Uintah/Components/Arches/BoundaryCondition.h>
 #include <Uintah/Components/Arches/TurbulenceModel.h>
@@ -353,7 +354,7 @@ PicardNonlinearSolver::setInitialGuess(const ProcessorGroup* ,
   new_dw->allocate(cellType_new, d_lab->d_cellTypeLabel, matlIndex, patch);
   cellType_new = cellType;
     // Get the PerPatch CellInformation data
-  PerPatch<CellInformation*> cellInfoP;
+  PerPatch<CellInformationP> cellInfoP;
   cellInfoP.setData(scinew CellInformation(patch));
   new_dw->put(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
 
@@ -523,6 +524,10 @@ PicardNonlinearSolver::computeResidual(const LevelP& /*level*/,
 
 //
 // $Log$
+// Revision 1.51  2000/10/14 17:11:05  sparker
+// Changed PerPatch<CellInformation*> to PerPatch<CellInformationP>
+// to get rid of memory leak
+//
 // Revision 1.50  2000/10/12 00:03:18  rawat
 // running for more than one timestep.
 //

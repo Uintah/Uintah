@@ -4,6 +4,7 @@
 static char *id="@(#) $Id$";
 
 #include <Uintah/Components/Arches/ArchesLabel.h>
+#include <Uintah/Components/Arches/CellInformationP.h>
 #include <Uintah/Components/Arches/CellInformation.h>
 #include <Uintah/Grid/PerPatch.h>
 #include <Uintah/Grid/CCVariable.h>
@@ -24,7 +25,7 @@ ArchesLabel::ArchesLabel()
 
   // Cell Information
   d_cellInfoLabel = scinew VarLabel("cellInformation",
-			    PerPatch<CellInformation*>::getTypeDescription());
+			    PerPatch<CellInformationP>::getTypeDescription());
   // Cell type
   d_cellTypeLabel = scinew VarLabel("cellType", 
 				  CCVariable<int>::getTypeDescription() );
@@ -264,6 +265,10 @@ ArchesLabel::~ArchesLabel()
 
 //
 // $Log$
+// Revision 1.10  2000/10/14 17:11:05  sparker
+// Changed PerPatch<CellInformation*> to PerPatch<CellInformationP>
+// to get rid of memory leak
+//
 // Revision 1.9  2000/09/29 20:32:35  rawat
 // added underrelax to pressure solver
 //
