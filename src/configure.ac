@@ -472,6 +472,11 @@ SCI_ARG_ENABLE(assertion-level,
                  Use assertion level N (0-3)),
   [enable_assertion_level="$enableval"],
   [enable_assertion_level=${enable_assertion_level=3}])
+SCI_ARG_ENABLE(throw-level,
+  AC_HELP_STRING(--enable-throw-level=N,
+                 Use throw level N (0-3)),
+  [enable_throw_level="$enableval"],
+  [enable_throw_level=${enable_throw_level=0}])
 SCI_ARG_ENABLE(scirun2,
   AC_HELP_STRING(--enable-scirun2,
                  Build experimental SCIRun 2),
@@ -491,7 +496,7 @@ SCI_ARG_ENABLE(chromium,
   [enable_chromium=${enable_chromium='no'}])
 SCI_ARG_ENABLE(ati-card-fix,
   AC_HELP_STRING(--enable-ati-card-fix,
-                 Enable the ati car fix to repair bad polygons),
+                 Enable the ati car fix to repair bad polygons - Deprecated - use SCIRUN_DRAWARRAYS_DISABLE environment variable - see scirunrc file),
   [enable_ati_card_fix="$enableval"],
   [enable_ati_card_fix=${enable_ati_card_fix='no'}])
 SCI_ARG_ENABLE(no-dynamic-cast,
@@ -513,9 +518,11 @@ fi
 AC_SUBST(DEF_CHROMIUM)
 
 if test "$enable_ati_card_fix" = "yes"; then
-   DEF_NEED_ATI_CARD_FIX="#define NEED_ATI_CARD_FIX 1"
+   AC_MSG_WARN("The ATI card hack is no longer controlled by configure.")
+   AC_MSG_WARN("You can turn it on/off by setting the environment variable")
+   AC_MSG_WARN("SCIRUN_DRAWARRAYS_DISABLE to true.  This can be done either")
+   AC_MSG_ERROR("in your environment or in your .scirunrc file.)
 fi
-AC_SUBST(DEF_NEED_ATI_CARD_FIX)
 
 if test "$enable_no_dynamic_cast" = "yes"; then
    DEF_NO_DYNAMIC_CAST="#define NO_DYNAMIC_CAST 1"
@@ -758,6 +765,7 @@ case $host in
 esac
 
 ASSERTION_LEVEL="$enable_assertion_level"
+THROW_LEVEL="$enable_throw_level"
 
 extra_cflags="";
 
@@ -780,14 +788,17 @@ else
 fi
 
 AC_SUBST(SO_OR_ARCHIVE_EXTENSION)
-AC_SUBST(ASSERTION_LEVEL)
 AC_SUBST(NOPRINTDIR)
-AC_SUBST(DEF_MALLOC)
 AC_SUBST(PACKAGE_DIRS)
 AC_SUBST(LOAD_PACKAGE)
 AC_SUBST(EXENAME)
 AC_SUBST(LARGESOS)
 AC_SUBST(TIME_IMPL)
+
+AC_SUBST(DEF_MALLOC)
+
+AC_SUBST(ASSERTION_LEVEL)
+AC_SUBST(THROW_LEVEL)
 
 #########################################################################
 
@@ -1265,6 +1276,7 @@ case $ac_cv_sizeof_voidp in
   Exiting due to size of void* problem! Read above warnings!])
   ;;
 esac
+
 AC_SUBST(NBITS)
 
 AC_LANG([C++])
@@ -1689,13 +1701,13 @@ case $host in
     # test for required sqi headers as well
     SCI_TRY_LINK(STD_HDRS,SGI standard headers,ieeefp.h ulocks.h values.h malloc.h,,,,,,required)
     DEF_IEEEFP="#define HAVE_IEEEFP_H 1"
-    AC_SUBST(DEF_IEEEFP)
     ;;
   *)
     SCI_TRY_LINK(STD_HDRS,standard headers-2,values.h malloc.h,,,,,,required)
     ;;
 esac
 
+AC_SUBST(DEF_IEEEFP)
 
 ##  --  required STL headers 
 ##  --      (only look for STL after going into cplusplus mode)
@@ -1887,6 +1899,162 @@ AC_SUBST(EXC_LIB_FLAG)
 AC_SUBST(EXC_LIB_DIR_FLAG)
 AC_SUBST(DEF_EXC)
 
+##  --  search for gzopen (and related)  ----------------------------------
+
+## Since variables create by this section are used to check for PNG
+## and TEEM stuff this section needs to preceed them.
+
+_sci_optional=required
+if test "$with_zlib"; then
+  _sci_lib="$with_zlib/lib"
+  _sci_inc="$with_zlib/include"
+  _sci_optional=specific
+else
+  _sci_lib="$sci_thirdparty_libs"
+  _sci_inc="$sci_thirdparty_includes"
+fi
+
+SCI_TRY_LINK(Z,zlib library and header,zlib.h,$_sci_inc,z,$_sci_lib,,,$_sci_optional)
+
+if test "$HAVE_Z" = "yes"; then
+   DEF_Z="#define HAVE_ZLIB 1"
+fi
+
+if test "$with_zlib" && test ! "$DEF_Z"; then
+  echo
+  AC_MSG_ERROR(One or more of the GZOPEN components is missing.)
+  echo
+fi
+
+AC_SUBST(Z_LIB_FLAG)
+AC_SUBST(Z_LIB_DIR_FLAG)
+AC_SUBST(INC_Z_H)
+AC_SUBST(DEF_Z)
+
+##  --  search for jpeg and tiff -----------------------------------------
+
+if test "$sci_required_jpeg" = "yes"; then
+
+   if test "$with_jpeg"; then
+     _sci_lib="$with_jpeg/lib"
+   else
+     _sci_lib="$sci_thirdparty_libs"
+   fi 
+
+   SCI_TRY_LINK(JPEG,jpeg library,,,jpeg,$_sci_lib,,,required)
+
+fi #end sci_required_jpeg
+
+AC_SUBST(JPEG_LIB_FLAG)
+AC_SUBST(JPEG_LIB_DIR_FLAG)
+
+
+if test "$sci_required_tiff" = "yes"; then
+   if test "$with_tiff"; then
+     _sci_lib="$with_tiff/lib"
+   else
+     _sci_lib="$sci_thirdparty_libs"
+   fi
+
+   SCI_TRY_LINK(TIFF,tiff library,,,tiff,$_sci_lib,$M_LIB_DIR_FLAG $M_LIB_FLAG,,required)
+
+fi # end sci_required_tiff
+
+AC_SUBST(TIFF_LIB_FLAG)
+AC_SUBST(TIFF_LIB_DIR_FLAG)
+
+##  --  search for png --------------------------------------
+
+# Default values:
+_sci_optional=optional
+_sci_lib=
+_sci_inc=
+
+if test "$with_png" = "yes"; then
+  # If --with-png is specified without a parameter, then it makes it required
+  _sci_optional=required
+else 
+  if test "$with_png"; then
+    # If --with-png has a parameter, then use it
+    _sci_lib="$with_png"
+    _sci_inc="$with_png/include"
+    BASE_LIB_PATH(_sci_lib,$_sci_lib)
+    _sci_optional=specific
+  fi 
+fi
+
+SCI_TRY_LINK(PNG,png library and headers,png.h,$_sci_inc,png,$_sci_lib,$Z_LIB_DIR_FLAG $Z_LIB_FLAG,,optional)
+
+# Now check for the correct version.
+if test "$HAVE_PNG" = "yes"; then
+
+    AC_MSG_CHECKING(for PNG version 1.0.2 or better.)
+    cat > conftest-png.c <<EOF
+
+         #include <png.h>
+         #include <stdio.h>
+
+         int main() {
+
+           if (PNG_LIBPNG_VER < 10002) {
+	       printf("1\n");
+	   } else {
+	       printf("0\n");
+           }	   
+          return 0;
+         }
+EOF
+    #echo "$CC $INC_PNG_H conftest-png.c -o conftest-png"
+    $CC $INC_PNG_H conftest-png.c -o conftest-png
+    #ls -l conftest-png
+    png_error=`./conftest-png`
+    rm -f conftest-png conftest-png.c
+
+    if test "$png_error" != "0"; then
+       AC_MSG_RESULT(PNG library too old.  Need at least 1.0.2.  Turning off PNG.)
+       DEF_PNG=""
+       HAVE_PNG="no"
+       PNG_LIB_FLAG=""
+       PNG_LIB_DIR_FLAG=""
+       INC_PNG_H=""
+       DEF_PNG=""
+    else
+       AC_MSG_RESULT(yes.)
+       DEF_PNG="#define HAVE_PNG 1"
+    fi
+
+    break
+fi
+ 
+if test "$HAVE_PNG" = "no"; then
+  # Try looking in a sci specific location
+  BASE_LIB_PATH(png_lib_dir,/usr/sci/local)
+
+  SCI_TRY_LINK(PNG,png library and headers (SCI),png.h,/usr/sci/local/include,png,
+               $png_lib_dir,$Z_LIB_DIR_FLAG $Z_LIB_FLAG,,optional)
+else
+  if test "$_sci_optional" = "specific"; then
+       # verify that it was found in the location requested.
+       if test ! -e $with_png/lib/libpng.so &&
+          test ! -e $with_png/lib/libpng.a &&
+          test ! -e $with_png/lib/libpng.dylib; then
+            echo
+            AC_MSG_ERROR(Found libpng but not in requested directory: $with_png/lib)
+       fi
+    fi
+fi
+
+if test "$with_png" && test ! "$DEF_PNG"; then
+  echo
+  AC_MSG_ERROR(One or more of the png components is missing.)
+  echo
+fi
+
+AC_SUBST(PNG_LIB_FLAG)
+AC_SUBST(PNG_LIB_DIR_FLAG)
+AC_SUBST(INC_PNG_H)
+AC_SUBST(DEF_PNG)
+
 ##  --  search for mpeg  -------------------------------------------------
 
 _sci_optional=optional
@@ -1936,26 +2104,28 @@ fi
 AC_MSG_CHECKING(for $_sci_optional ImageMagick)
 
 found_magic_config="no"
-for dif in "" "$_sci_lib"; do
+for dir in "" $_sci_lib; do
 
-   if test -e $_sci_lib/../bin/Magick-config; then
+   if test -e $dir/../bin/Magick-config; then
        found_magic_config="yes"
-       AC_MSG_RESULT(Using $_sci_lib/../bin/Magick-config to set ImageMagick variables.)
+       echo
+       AC_MSG_RESULT(Using $dir/../bin/Magick-config to set ImageMagick variables.)
 
-       MAG_LIBS=`$_sci_lib/../bin/Magick-config --libs`
-       MAG_DIRS=`$_sci_lib/../bin/Magick-config --ldflags`
+       MAG_LIBS=`$dir/../bin/Magick-config --libs`
+       MAG_DIRS=`$dir/../bin/Magick-config --ldflags`
 
        #MAGICK_LIB_DIR_FLAG=
        #SCI_REMOVE_MINUS_L(MAGICK_LIB_FLAG,$MAG_DIRS,$MAG_LIBS)
 
-       MAGICK_LIB_DIR_FLAG=`$_sci_lib/../bin/Magick-config --ldflags`
-       MAGICK_LIB_FLAG=`$_sci_lib/../bin/Magick-config --libs`
-       includes=`$_sci_lib/../bin/Magick-config --cppflags`
+       MAGICK_LIB_DIR_FLAG=`$dir/../bin/Magick-config --ldflags`
+       MAGICK_LIB_FLAG=`$dir/../bin/Magick-config --libs`
+       includes=`$dir/../bin/Magick-config --cppflags`
 
        SCI_TRY_LINK(MAGICK,ImageMagick library and headers,magick/magick.h,
                     $includes,$MAGICK_LIB_FLAG,$MAGICK_LIB_DIR_FLAG,,,required)
 
        DEF_MAGICK="#define HAVE_MAGICK 1"
+       break
     fi
 done
 
@@ -1979,35 +2149,6 @@ AC_SUBST(MAGICK_LIB_DIR_FLAG)
 AC_SUBST(INC_MAGICK_H)
 AC_SUBST(DEF_MAGICK)
 
-##  --  search for gzopen (and related)  ----------------------------------
-
-_sci_optional=required
-if test "$with_zlib"; then
-  _sci_lib="$with_zlib/lib"
-  _sci_inc="$with_zlib/include"
-  _sci_optional=specific
-else
-  _sci_lib="$sci_thirdparty_libs"
-  _sci_inc="$sci_thirdparty_includes"
-fi
-
-SCI_TRY_LINK(Z,zlib library and header,zlib.h,$_sci_inc,z,$_sci_lib,,,$_sci_optional)
-
-if test "$HAVE_Z" = "yes"; then
-   DEF_Z="#define HAVE_ZLIB 1"
-fi
-
-if test "$with_zlib" && test ! "$DEF_Z"; then
-  echo
-  AC_MSG_ERROR(One or more of the GZOPEN components is missing.)
-  echo
-fi
-
-AC_SUBST(Z_LIB_FLAG)
-AC_SUBST(Z_LIB_DIR_FLAG)
-AC_SUBST(INC_Z_H)
-AC_SUBST(DEF_Z)
-
 ##  --  search for unp --------------------------------------
 
 if test "$with_unp" = "yes"; then
@@ -2030,81 +2171,6 @@ SCI_TRY_LINK(UNP,unp socket library and headers,extern_C unpv12e/unp.h unpv12e/u
 AC_SUBST(UNP_LIB_FLAG)
 AC_SUBST(UNP_LIB_DIR_FLAG)
 AC_SUBST(INC_UNP_H)
-
-##  --  search for png --------------------------------------
-
-# Default values:
-_sci_optional=optional
-_sci_lib=
-_sci_inc=
-
-if test "$with_png" = "yes"; then
-  # If --with-png is specified without a parameter, then it makes it required
-  _sci_optional=required
-else 
-  if test "$with_png"; then
-    # If --with-png has a parameter, then use it
-    _sci_lib="$with_png"
-    _sci_inc="$with_png/include"
-    BASE_LIB_PATH(_sci_lib,$_sci_lib)
-    _sci_optional=specific
-  fi 
-fi
-
-SCI_TRY_LINK(PNG,png library and headers,png.h,$_sci_inc,png,$_sci_lib,$Z_LIB_DIR_FLAG $Z_LIB_FLAG,,$_sci_optional)
-
-# Now check for the correct version.
-if test "$HAVE_PNG" = "yes"; then
-
-    AC_MSG_CHECKING(for PNG version 1.0.2 or better.)
-    cat > conftest-png.c <<EOF
-
-         #include <png.h>
-         #include <stdio.h>
-
-         int main() {
-
-           if (PNG_LIBPNG_VER < 10002) {
-	       printf("1\n");
-	   } else {
-	       printf("0\n");
-           }	   
-          return 0;
-         }
-EOF
-    #echo "$CC $INC_PNG_H conftest-png.c -o conftest-png"
-    $CC $INC_PNG_H conftest-png.c -o conftest-png
-    #ls -l conftest-png
-    png_error=`./conftest-png`
-    rm -f conftest-png conftest-png.c
-
-    if test "$png_error" != "0"; then
-       AC_MSG_RESULT(PNG library too old.  Need at least 1.0.2.  Turning off PNG.)
-       DEF_PNG=""
-       HAVE_PNG="no"
-       PNG_LIB_FLAG=""
-       PNG_LIB_DIR_FLAG=""
-       INC_PNG_H=""
-       DEF_PNG=""
-    else
-       AC_MSG_RESULT(yes.)
-       DEF_PNG="#define HAVE_PNG 1"
-    fi
-
-    break
-fi
- 
-if test "$with_png" && test ! "$DEF_PNG"; then
-  echo
-  AC_MSG_ERROR(One or more of the png components is missing.)
-  echo
-fi
-
-AC_SUBST(PNG_LIB_FLAG)
-AC_SUBST(PNG_LIB_DIR_FLAG)
-AC_SUBST(INC_PNG_H)
-AC_SUBST(DEF_PNG)
-
 
 ##  --  search for the fortran library  ----------------------------------
 # Always check for fortran, since we now always try to enable blas
@@ -2152,12 +2218,16 @@ if test "$with_blas" && test "$with_atlas"; then
   AC_MSG_ERROR(You cannot use both --with-blas and --with-atlas.)
 fi
 
-if test "$with_atlas"; then
+_sci_lib=
+_sci_inc=
+_sci_optional=optional
+
+if test "$with_atlas" = "yes"; then
+  _sci_optional=required
+elif test "$with_atlas"; then
   _sci_lib="$with_atlas/lib"
   _sci_inc="$with_atlas/include"
-else
-  _sci_lib="$sci_thirdparty_libs"
-  _sci_inc="$sci_thirdparty_includes"
+  _sci_optional=specific
 fi
 
 case $host in
@@ -2165,12 +2235,12 @@ case $host in
      if test "$with_atlas" && test "$with_atlas" != yes ; then
        AC_MSG_ERROR(Don't specify a path for atlas when on a Mac (we use vecLib by default.))
      fi
-     SCI_TRY_LINK(BLAS,atlas version oflibraries and headers (OSX),vecLib/cblas.h,
-                  -faltivec,,,-framework vecLib,,optional)
+     SCI_TRY_LINK(BLAS,atlas version of libraries and headers (OSX),vecLib/cblas.h,
+                  -faltivec,,,-framework vecLib,,$_sci_optional)
      ;;
    *)
      SCI_TRY_LINK(BLAS,atlas version of libraries and headers,cblas.h,
-             $_sci_inc,cblas f77blas atlas f2c,$_sci_lib,$F_LIB_FLAG,,optional)
+             $_sci_inc,cblas f77blas atlas,$_sci_lib,$F_LIB_FLAG,,$_sci_optional)
      ;;
 esac
 
@@ -2181,33 +2251,22 @@ if test "$HAVE_BLAS" = "yes"; then
   DEF_BLAS="#define HAVE_BLAS 1"
   DEF_CBLAS="#define HAVE_CBLAS 1"
   sci_required_blas=no
-  AC_SUBST(HAVE_BLAS)
-  AC_SUBST(HAVE_CBLAS)
-  AC_SUBST(INC_BLAS_H)
-  AC_SUBST(BLAS_LIB_FLAG)
-  AC_SUBST(BLAS_LIB_DIR_FLAG)
-  AC_SUBST(DEF_BLAS)
-  AC_SUBST(DEF_CBLAS)
 fi
 
 
 ##  --  search for blas stuff  -------------------------------------------
 
-# if HAVE_BLAS is yes, then atlas has been found
-
-# DAV, FIX ME
-# _sci_optional=optional
-#if test "$sci_required_blas" = "yes" ; then
-#   _sci_optional=required
-#fi
+_sci_lib=
+_sci_inc=
 
 if test "$HAVE_BLAS" != "yes"; then
-  if test "$with_blas"; then
+  # if HAVE_BLAS is yes at this point, then atlas has been found and we
+  # don't want to check for blas.
+
+  if test "$with_blas" && test "$with_blas" != "yes"; then
     _sci_lib="$with_blas/lib"
     _sci_inc="$with_blas/include"
-  else
-    _sci_lib="$sci_thirdparty_libs"
-    _sci_inc="$sci_thirdparty_includes"
+    _sci_specific=yes
   fi
   
   case $host in
@@ -2220,6 +2279,8 @@ if test "$HAVE_BLAS" != "yes"; then
                       cxml,$_sci_lib,$F_LIB_FLAG,,required)
        ;;
     *)
+       # Can't use the "specific" key word as we are testing for a number
+       # of different configurations.
        SCI_TRY_LINK(BLAS,blas and cblas libraries-1,cblas.h,
                     $_sci_inc,cblas blas,$_sci_lib,$F_LIB_FLAG,,optional)
        if test "$HAVE_BLAS" = "yes"; then
@@ -2240,6 +2301,11 @@ if test "$HAVE_BLAS" != "yes"; then
              if test "$HAVE_BLAS" = "no"; then
 	        SCI_TRY_LINK(BLAS,optional fblas library,,,
 			     fblas,$_sci_lib,$F_LIB_FLAG,,optional)
+             else
+                # Verify it was in the right spot
+                if test "$_sci_specific" = "yes"; then
+                  SCI_TRY_LINK(BLAS,blas library,,,blas,$_sci_lib,$F_LIB_FLAG,,specific)
+                fi
              fi
 	  fi
        fi
@@ -2256,44 +2322,16 @@ if test "$HAVE_BLAS" != "yes"; then
     echo
   fi
 
-  # these are set above by atlas check if atlas check succeeded
-  AC_SUBST(HAVE_BLAS)
-  AC_SUBST(INC_BLAS_H)
-  AC_SUBST(BLAS_LIB_FLAG)
-  AC_SUBST(BLAS_LIB_DIR_FLAG)
-  AC_SUBST(DEF_BLAS)
-
 fi # end sci_required_blas
 
-
-##  --  search for ftgl stuff  -------------------------------------------
-if test "$sci_required_ftgl" = "yes"; then
-  if test "$with_ftgl"; then
-    _sci_lib="$with_ftgl/unix/src/.libs"
-    _sci_inc="$with_ftgl/include /usr/include/freetype2"
-  else
-    _sci_lib="$sci_thirdparty_libs"
-  fi
-  
-  SCI_TRY_LINK(FTGL,FTGL library,FTGLTextureFont.h,$_sci_inc,freetype ftgl,$_sci_lib,,,required)
-
-  if test "$HAVE_FTGL" = "yes"; then
-    DEF_FTGL="#define HAVE_FTGL 1"
-  fi
-
-  if test "$with_ftgl" && test ! "$DEF_FTGL"; then
-    echo
-    AC_MSG_ERROR(One or more of the FTGL components is missing.)
-    echo
-  fi
-
-fi # end sci_required_ftgl
-
-AC_SUBST(FTGL_LIB_FLAG)
-AC_SUBST(FTGL_LIB_DIR_FLAG)
-AC_SUBST(DEF_FTGL)
-AC_SUBST(INC_FTGL_H)
-
+# these are set above by atlas check if atlas check succeeded
+AC_SUBST(HAVE_BLAS)
+AC_SUBST(HAVE_CBLAS)
+AC_SUBST(INC_BLAS_H)
+AC_SUBST(BLAS_LIB_FLAG)
+AC_SUBST(BLAS_LIB_DIR_FLAG)
+AC_SUBST(DEF_BLAS)
+AC_SUBST(DEF_CBLAS)
 
 ##  --  search for lapack stuff  -----------------------------------------
 
@@ -2510,71 +2548,79 @@ esac
 # Again required for the following uni-petsc checks, that attempt to support
 # the MatrixSolver module.
 
-if test "$with_mpiuni"; then
-  _sci_lib="$with_mpiuni/lib"
-  _sci_inc="$with_mpiuni/include" 
+_sci_lib=
+_sci_inc=
+
+if test "$with_mpiuni" = "yes"; then
+  echo
+  AC_MSG_ERROR(You must specify a directory with the --with-mpiuni=dir.)
+  echo
 elif test "$with_unipetsc"; then
   _sci_lib="$with_unipetsc/lib/$PETSC_SUB/$PETSC_ARCH"
-  _sci_inc="$with_unipetsc/src/sys/src/mpiuni $with_unipetsc/bmake/$PETSC_ARCH" 
-else
-  _sci_lib="$sci_thirdparty_libs"
-  _sci_inc="$sci_thirdparty_includes"
+  if test ! -d "$_sci_lib" || test ! -d "$with_unipetsc/include/mpiuni" ||
+     test ! -d "$with_unipetsc/bmake/$PETSC_ARCH" ; then
+    echo
+    AC_MSG_WARN(Specified unipetsc directory is invalid.  One of the following dirs does not exist:)
+    AC_MSG_WARN($_sci_lib)
+    AC_MSG_WARN($with_unipetsc/include/mpiuni)
+    AC_MSG_WARN($with_unipetsc/bmake/$PETSC_ARCH)
+    AC_MSG_ERROR(Please fix this problem and reconfigure.)
+  fi
+  _sci_inc="$with_unipetsc/include/mpiuni $with_unipetsc/bmake/$PETSC_ARCH" 
 fi
 
-SCI_TRY_LINK(MPIUNI,mpi-uni libraries and headers,mpi.h,$_sci_inc,mpiuni,$_sci_lib,,,optional)
+SCI_TRY_LINK(MPI_UNI,mpi-uni libraries and headers,mpi.h,$_sci_inc,mpiuni,$_sci_lib,,,optional)
 
-if test "$HAVE_MPIUNI" != "yes"; then
-   SCI_TRY_LINK(MPIUNICH,mpiunich and pmpiunich libraries,,
+if test "$HAVE_MPI_UNI" != "yes"; then
+   SCI_TRY_LINK(MPI_UNICH,mpiunich and pmpiunich libraries,,
                   $_sci_inc,mpiunich pmpiunich,$_sci_lib,,,optional)
 
-   if test "$HAVE_MPIUNICH" = "yes"; then
-     LIB_DIR_MPIUNI="$LIB_DIR_MPIUNICH"
-     MPIUNI_LIB_FLAG="$MPIUNICH_LIB_FLAG"
-     MPIUNI_LIB_DIR_FLAG="$MPIUNICH_LIB_DIR_FLAG"
+   if test "$HAVE_MPI_UNICH" = "yes"; then
+     LIB_DIR_MPI_UNI="$LIB_DIR_MPI_UNICH"
+     MPI_UNI_LIB_FLAG="$MPI_UNICH_LIB_FLAG"
+     MPI_UNI_LIB_DIR_FLAG="$MPI_UNICH_LIB_DIR_FLAG"
    fi
 fi
 
-if test "$HAVE_MPIUNI" = "yes"; then
-   if test "$HAVE_MPIUNICH" = "yes"; then
-     DEF_MPIUNI="#define HAVE_MPIUNICH 1"
+if test "$HAVE_MPI_UNI" = "yes"; then
+   if test "$HAVE_MPI_UNICH" = "yes"; then
+     DEF_MPI_UNI="#define HAVE_MPI_UNICH 1"
    else
-     DEF_MPIUNI="#define HAVE_MPIUNI 1"
+     DEF_MPI_UNI="#define HAVE_MPI_UNI 1"
    fi
 fi
 
-if test "$with_mpiuni" && test ! "$DEF_MPIUNI"; then
+if test "$with_mpiuni" && test ! "$DEF_MPI_UNI"; then
   echo
-  AC_MSG_ERROR(One or more of the MPIUNI components is missing.)
-  echo
-fi
-
-if test "$with_unipetsc" && test ! "$DEF_MPIUNI"; then
-  echo
-  AC_MSG_ERROR(One or more of the MPIUNI components is missing.)
+  AC_MSG_ERROR(One or more of the MPI_UNI components is missing.)
   echo
 fi
 
-AC_SUBST(DEF_MPIUNI)
-AC_SUBST(INC_MPIUNI_H)
-AC_SUBST(MPIUNI_LIB_FLAG)
-AC_SUBST(MPIUNI_LIB_DIR_FLAG)
+if test "$with_unipetsc" && test ! "$DEF_MPI_UNI"; then
+  echo
+  AC_MSG_ERROR(One or more of the MPI_UNI components is missing.)
+  echo
+fi
+
+AC_SUBST(DEF_MPI_UNI)
+AC_SUBST(INC_MPI_UNI_H)
+AC_SUBST(MPI_UNI_LIB_FLAG)
+AC_SUBST(MPI_UNI_LIB_DIR_FLAG)
 
 
+#  --  search for PETSc  --------------------------------------------
 if test -z "$PETSC_ARCH"; then
    AC_MSG_ERROR(PETSC_ARCH environment var is not set.  Please set.)
 fi
 
-
-#  --  search for mpi-uni  --------------------------------------------
 # Make sure we have either mpi or mpi-uni, blas, and lapack
 # It seems that under AIX and OSF, the libs that cover blas also cover lapack
-if (test "$HAVE_MPI" = "yes" || test "$HAVE_MPIUNI" = "yes") && 
-    test "$HAVE_BLAS" = "yes" && 
+if (test "$HAVE_MPI" = "yes" || test "$HAVE_MPI_UNI" = "yes") && test "$HAVE_BLAS" = "yes" && 
    (test "$PETSC_ARCH" = "rs6000_sp" || test "$PETSC_ARCH" = "dec" ||
     test "$HAVE_LAPACK" = "yes"); then
 
-  _sci_lib_dir=""
-  _sci_inc=""
+  _sci_lib_dir=
+  _sci_inc=
 
   if test "$with_petsc"; then
     _sci_lib_dir="$with_petsc/lib/$PETSC_SUB/$PETSC_ARCH"
@@ -2617,30 +2663,43 @@ if (test "$HAVE_MPI" = "yes" || test "$HAVE_MPIUNI" = "yes") &&
   fi
 
   #  --  search for uni-petsc  --------------------------------------------
-  _sci_lib=""
-  _sci_inc=""
 
-  if test "$with_unipetsc"; then
-    _sci_lib="$with_unipetsc/lib/$PETSC_SUB/$PETSC_ARCH"
-    _sci_inc="$with_unipetsc/bmake/$PETSC_ARCH $with_unipetsc/include"
-  fi
+  if test "$HAVE_PETSC" != "yes" ; then
 
-  SCI_TRY_LINK(PETSC_UNI,petsc-uni libraries and headers,petsc.h,$_sci_inc /usr/include/petsc,petsc petscvec petscmat petscdm petsccontrib petscsnes petscts petscsles petscfortran,$_sci_lib,$LAPACK_LIB_DIR_FLAG $LAPACK_LIB_FLAG $BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $M_LIB_FLAG $INC_MPIUNI_H $MPIUNI_LIB_DIR_FLAG $MPIUNI_LIB_FLAG $F_LIB_FLAG,,optional)
+    # Only check for uni petsc if petsc not found.
+    _sci_lib=""
+    _sci_inc=""
 
-  if test "$HAVE_PETSC_UNI" = "yes" ; then
-    DEF_PETSC_UNI="#define PETSC_UNI 1"
-  fi
+    if test "$with_unipetsc"; then
+      _sci_lib="$with_unipetsc/lib/$PETSC_SUB/$PETSC_ARCH"
+      _sci_inc="$with_unipetsc/bmake/$PETSC_ARCH $with_unipetsc/include"
+    fi
+
+    SCI_TRY_LINK(PETSC_UNI,
+                 petsc-uni libraries and headers,
+                 petsc.h,
+                 $_sci_inc /usr/include/petsc,
+                 petsc petscvec petscmat petscdm petscsnes petscts petscfortran,
+                 $_sci_lib,
+                 $LAPACK_LIB_DIR_FLAG $LAPACK_LIB_FLAG $BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $M_LIB_FLAG $INC_MPI_UNI_H $MPI_UNI_LIB_DIR_FLAG $MPI_UNI_LIB_FLAG $F_LIB_FLAG,
+                 ,
+                 optional)
+
+    if test "$HAVE_PETSC_UNI" = "yes" ; then
+      DEF_PETSC_UNI="#define PETSC_UNI 1"
+    fi
    
-  if test "$with_unipetsc" && test ! "$DEF_PETSC_UNI"; then
-    echo
-    AC_MSG_ERROR(One or more of the UNI-PETSC components is missing.)
-    echo
+    if test "$with_unipetsc" && test ! "$DEF_PETSC_UNI"; then
+      echo
+      AC_MSG_ERROR(One or more of the UNI-PETSC components is missing.)
+      echo
+    fi
   fi
 
 else
   AC_MSG_WARN(One or more of MPI or BLAS or LAPACK is missing.)
   AC_MSG_WARN(HAVE_MPI: $HAVE_MPI)
-  AC_MSG_WARN(HAVE_MPIUNI: $HAVE_MPIUNI)
+  AC_MSG_WARN(HAVE_MPI_UNI: $HAVE_MPI_UNI)
   AC_MSG_WARN(HAVE_BLAS: $HAVE_BLAS)
   AC_MSG_WARN(HAVE_LAPACK: $HAVE_LAPACK)
   AC_MSG_WARN(Not configuring PETSc.)
@@ -2651,6 +2710,7 @@ AC_SUBST(PETSC_LIB_FLAG)
 AC_SUBST(PETSC_LIB_DIR_FLAG)
 AC_SUBST(DEF_PETSC)
 AC_SUBST(INC_PETSC_H)
+
 AC_SUBST(PETSC_UNI_LIB_FLAG)
 AC_SUBST(PETSC_UNI_LIB_DIR_FLAG)
 AC_SUBST(DEF_PETSC_UNI)
@@ -2821,38 +2881,6 @@ AC_SUBST(INC_SIDL_H)
 AC_SUBST(SIDL_LIB_FLAG)
 AC_SUBST(SIDL_LIB_DIR_FLAG)
 
-##  --  search for jpeg and tiff -----------------------------------------
-
-if test "$sci_required_jpeg" = "yes"; then
-
-   if test "$with_jpeg"; then
-     _sci_lib="$with_jpeg/lib"
-   else
-     _sci_lib="$sci_thirdparty_libs"
-   fi 
-
-   SCI_TRY_LINK(JPEG,jpeg library,,,jpeg,$_sci_lib,,,required)
-
-fi #end sci_required_jpeg
-
-AC_SUBST(JPEG_LIB_FLAG)
-AC_SUBST(JPEG_LIB_DIR_FLAG)
-
-
-if test "$sci_required_tiff" = "yes"; then
-   if test "$with_tiff"; then
-     _sci_lib="$with_tiff/lib"
-   else
-     _sci_lib="$sci_thirdparty_libs"
-   fi
-
-   SCI_TRY_LINK(TIFF,tiff library,,,tiff,$_sci_lib,$M_LIB_DIR_FLAG $M_LIB_FLAG,,required)
-
-fi # end sci_required_tiff
-
-AC_SUBST(TIFF_LIB_FLAG)
-AC_SUBST(TIFF_LIB_DIR_FLAG)
-
 ##  --  search for netsolve ----------------------------------------------
 
 if test "$sci_required_netsolve" = "yes"; then
@@ -3013,7 +3041,6 @@ AC_SUBST(INC_OOGL_H)
 AC_SUBST(OOGL_LIB_FLAG)
 AC_SUBST(OOGL_LIB_DIR_FLAG)
 
-
 ##  --  search for glew  -----------------------------------------------
 if test "$sci_required_glew" = "yes"; then
   if test "$with_glew"; then
@@ -3073,6 +3100,33 @@ AC_SUBST(INC_GLEW_H)
 AC_SUBST(GLEW_LIB_FLAG)
 AC_SUBST(GLEW_LIB_DIR_FLAG)
 
+##  --  search for ftgl stuff  -------------------------------------------
+if test "$sci_required_ftgl" = "yes"; then
+  if test "$with_ftgl"; then
+    _sci_lib="$with_ftgl/unix/src/.libs"
+    _sci_inc="$with_ftgl/include /usr/include/freetype2"
+  else
+    _sci_lib="$sci_thirdparty_libs"
+  fi
+  
+  SCI_TRY_LINK(FTGL,FTGL library,FTGLTextureFont.h,$_sci_inc,freetype ftgl,$_sci_lib,,,required)
+
+  if test "$HAVE_FTGL" = "yes"; then
+    DEF_FTGL="#define HAVE_FTGL 1"
+  fi
+
+  if test "$with_ftgl" && test ! "$DEF_FTGL"; then
+    echo
+    AC_MSG_ERROR(One or more of the FTGL components is missing.)
+    echo
+  fi
+
+fi # end sci_required_ftgl
+
+AC_SUBST(FTGL_LIB_FLAG)
+AC_SUBST(FTGL_LIB_DIR_FLAG)
+AC_SUBST(DEF_FTGL)
+AC_SUBST(INC_FTGL_H)
 
 ##  --  search for audio  -----------------------------------------------
 
@@ -3146,7 +3200,6 @@ AC_SUBST(DEF_TEEM)
 AC_SUBST(INC_TEEM_H)
 AC_SUBST(TEEM_LIB_FLAG)
 AC_SUBST(TEEM_LIB_DIR_FLAG)
-
 
 ##  --  search for mdsplus  -------------------------------------------------
 
@@ -3266,9 +3319,9 @@ if test "$sci_required_crypto" = "yes"; then
   fi
 fi # end sci_required_crypto
 
+AC_SUBST(DEF_CRYPTO)
 AC_SUBST(CRYPTO_LIB_FLAG)
 AC_SUBST(CRYPTO_LIB_DIR_FLAG)
-AC_SUBST(DEF_CRYPTO)
 
 ##  --  search for ssl ---------------------------------
 
@@ -3292,9 +3345,9 @@ if test "$sci_required_ssl" = "yes"; then
   fi
 fi # end sci_required_ssl
 
+AC_SUBST(DEF_SSL)
 AC_SUBST(SSL_LIB_FLAG)
 AC_SUBST(SSL_LIB_DIR_FLAG)
-AC_SUBST(DEF_SSL)
 
 ##  --  globus nexus  ----------------------------------------------------
 if test "$sci_required_globus" = "yes"; then
@@ -3404,7 +3457,7 @@ if test "$sci_required_ruby" = "yes"; then
     # multiple builds of ruby are placed under the same root install tree.  If "find" fails, then the
     # configure will also fail unless ruby.h is in a standard path.
     echo "Searching for ruby.h under $with_ruby"
-    _ruby_inc=`find $with_ruby -name "ruby.h" -print | sed s/ruby.h//`
+    _ruby_inc=`find $with_ruby -name "ruby.h" -print | sed 's/ruby.h//'`
     _sci_optional=specific;
    fi
   fi
@@ -3517,7 +3570,6 @@ AC_SUBST(INC_VDT_H)
 AC_SUBST(VDT_LIB_FLAG)
 AC_SUBST(VDT_LIB_DIR_FLAG)
 
-
 ##  --  search for hypre stuff  ------------------------------------------
 
 _sci_optional=optional
@@ -3551,7 +3603,6 @@ AC_SUBST(DEF_HYPRE)
 AC_SUBST(INC_HYPRE_H)
 AC_SUBST(HYPRE_LIB_FLAG)
 AC_SUBST(HYPRE_LIB_DIR_FLAG)
-
 
 ##  --  finis flags  ------------------------------------------------
 case $host in
@@ -3680,13 +3731,10 @@ if test "$enable_scirun2" = "yes"; then
     esac
     exit 1
   fi
-  DEF_SCIRUN2="#define SCIRUN2"
   BUILD_SCIRUN2="yes"
 else
-  DEF_SCIRUN2=""
   BUILD_SCIRUN2="no"
 fi
-AC_SUBST(DEF_SCIRUN2)
 AC_SUBST(BUILD_SCIRUN2)
 
 
@@ -3714,10 +3762,12 @@ AC_SUBST(BUILD_SCIRUN2)
 ##  --------------------  generate output files  ------------------------
 ##  ---------------------------------------------------------------------
 SCI_ARG_VAR(CXXFLAGS,C++ compiler flags)
-abs_conftop_dir=`pwd`;
-AC_SUBST(abs_conftop_dir)
-abs_srcdir=`(cd ${srcdir};pwd)`
-AC_SUBST(abs_srcdir)
+
+scirun_obj_dir=`pwd`;
+scirun_src_dir=`(cd ${srcdir};pwd)`
+
+AC_SUBST(scirun_obj_dir)
+AC_SUBST(scirun_src_dir)
 
 AC_CONFIG_FILES(configVars.mk Makefile on-the-fly-libs/Makefile 
                 disjointPackageMakefile sci_testdefs.h)
