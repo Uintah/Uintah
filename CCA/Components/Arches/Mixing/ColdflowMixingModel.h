@@ -72,6 +72,8 @@ public:
       //
       virtual void computeProps(const InletStream& inStream,
 				Stream& outStream);
+      inline Stream speciesStateSpace(const std::vector<double>& mixVar) {
+      }
 
       // GROUP: Get Methods :
       ///////////////////////////////////////////////////////////////////////
@@ -127,6 +129,13 @@ private:
 
 //
 // $Log$
+// Revision 1.2  2001/08/25 07:32:45  skumar
+// Incorporated Jennifer's beta-PDF mixing model code with some
+// corrections to the equilibrium code.
+// Added computation of scalar variance for use in PDF model.
+// Properties::computeInletProperties now uses speciesStateSpace
+// instead of computeProps from d_mixingModel.
+//
 // Revision 1.1  2001/01/31 16:35:30  rawat
 // Implemented mixing and reaction models for fire.
 //

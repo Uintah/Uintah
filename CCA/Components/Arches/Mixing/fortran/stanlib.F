@@ -198,6 +198,7 @@ c    iteration limit
 c    first call indicator
        SAVE
        DATA KCALL/1/
+       common /kcallblock/ kcall
 c-----------------------------------------------------------------------
 c    set comparison constants in computation precision
        IF (KCALL.NE.0)  THEN
@@ -6364,6 +6365,7 @@ c-----------------------------------------------------------------------
      ;   (IoNB,IEPTR(6)),(IoNP,IEPTR(7)),(IoNS,IEPTR(8)),
      ;   (IoNSP,IEPTR(30)),(IoELAM,IEPTR(39)),(IoHUGE,IEPTR(32)),
      ;   (IoPMOL,IEPTR(62)),(IoSMOL,IEPTR(74)),(IoX,IEPTR(77))
+       common /kcallblock/ kcall
 c-----------------------------------------------------------------------
        IF (KCALL.EQ.0)  THEN
            TOLD = 0

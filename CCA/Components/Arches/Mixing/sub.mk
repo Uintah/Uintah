@@ -6,6 +6,7 @@
 SRCDIR   := Packages/Uintah/CCA/Components/Arches/Mixing
 
 SRCS     += $(SRCDIR)/MixingModel.cc $(SRCDIR)/ColdflowMixingModel.cc  \
+                $(SRCDIR)/DynamicTable.cc \
 		$(SRCDIR)/PDFMixingModel.cc $(SRCDIR)/MixRxnTableInfo.cc \
 		$(SRCDIR)/Integrator.cc $(SRCDIR)/PDFShape.cc \
 		$(SRCDIR)/BetaPDFShape.cc $(SRCDIR)/KDTree.cc \
@@ -13,7 +14,7 @@ SRCS     += $(SRCDIR)/MixingModel.cc $(SRCDIR)/ColdflowMixingModel.cc  \
 		$(SRCDIR)/StanjanEquilibriumReactionModel.cc \
 		$(SRCDIR)/Common.cc \
 		$(SRCDIR)/Stream.cc $(SRCDIR)/InletStream.cc \
-		$(SRCDIR)/ChemkinInterface.cc $(SRCDIR)/DynamicTable.cc 
+		$(SRCDIR)/ChemkinInterface.cc 
 
 SUBDIRS := $(SRCDIR)/fortran
 include $(SCIRUN_SCRIPTS)/recurse.mk

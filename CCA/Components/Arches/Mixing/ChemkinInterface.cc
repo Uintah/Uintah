@@ -68,6 +68,7 @@ ChemkinInterface::ChemkinInterface() {
   mrhsyms(d_cckwrk[0], &d_lout, d_speciesNames[0], &ichar); 
   for(int i = 0; i < d_numSpecies; i++) {
     strtok(d_speciesNames[i]," "); //Add terminator 
+    cout<<"species = " << d_speciesNames[i] << endl;
   }
 
   // Get array of atomic weights
