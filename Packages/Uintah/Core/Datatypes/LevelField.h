@@ -31,6 +31,7 @@
 #include <Packages/Uintah/Core/Grid/Array3.h>
 #include <Packages/Uintah/CCA/Components/MPM/Util/Matrix3.h>
 #include <Core/Thread/Thread.h>
+#include <Core/Thread/Mutex.h>
 #include <Core/Thread/Semaphore.h>
 #include <Core/Thread/Runnable.h>
 
@@ -55,6 +56,7 @@ using SCIRun::LockingHandle;
 using SCIRun::Interpolate;
 
 using SCIRun::Thread;
+using SCIRun::Mutex;
 using SCIRun::Semaphore;
 using SCIRun::Runnable;
 
@@ -258,17 +260,23 @@ private:
     public:
       make_minmax_thread( typename Array3<Data>::iterator it,
 			  typename Array3<Data>::iterator it_end,
-			  double& min, double& max, Semaphore* sema):
-	it_(it), it_end_(it_end), min_(min), max_(max), sema_(sema) {}
+			  double& min, double& max, Semaphore* sema,
+			  Mutex& m):
+	it_(it), it_end_(it_end), min_(min), max_(max), sema_(sema), m_(m){}
 
       void run()
 	{
-	  min_ = max_ = *it_;
+	  double min, max;
+	  min = max = *it_;
 	  ++it_;
 	  for(; it_ != it_end_; ++it_){
-	    min_ = Min(min_, double(*it_));
-	    max_ = Max(max_, double(*it_));
+	    min = Min(min, double(*it_));
+	    max = Max(max, double(*it_));
 	  }
+	  m_.lock();
+	  min_ = Min(min_, min);
+	  max_ = Max(max_, max);
+	  m_.unlock();
 	  sema_->up();
 	}
     private:
@@ -276,6 +284,7 @@ private:
       typename Array3<Data>::iterator it_end_;
       double &min_, &max_;
       Semaphore *sema_;
+      Mutex& m_;
     };
 };
 
@@ -511,9 +520,10 @@ bool LevelField<Data>::minmax( pair<double, double> & mm) const
 
     Semaphore* thread_sema = scinew Semaphore( "scalar extractor semaphore",
 					       max_workers); 
-
+    Mutex lock("make_minmax_thread mutex");
     //    typename fdata_type::iterator it = dt.begin();
     //    typename fdata_type::iterator it_end = dt.end();
+    mn = mx = *((*vit).begin());
     for(;vit != vit_end; ++vit) {
       Array3<Data>::iterator it((*vit).begin());
       Array3<Data>::iterator it_end((*vit).end());
@@ -521,7 +531,7 @@ bool LevelField<Data>::minmax( pair<double, double> & mm) const
       thread_sema->down();
       Thread *thrd = 
 	scinew Thread(scinew LevelField<Data>::make_minmax_thread( it, it_end,
-						       mn, mx, thread_sema),
+						   mn, mx, thread_sema, lock),
 		      "minmax worker" );
       thrd->detach();
     }
