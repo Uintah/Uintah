@@ -40,6 +40,28 @@ itcl_class rtrt_Scenes_GeoProbeScene {
 	set $this-xa-active 1
 	global $this-xa-usemat
 	set $this-xa-usemat 1
+	global $this-xb-active
+	set $this-xb-active 1
+	global $this-xb-usemat
+	set $this-xb-usemat 1
+
+	global $this-ya-active
+	set $this-ya-active 1
+	global $this-ya-usemat
+	set $this-ya-usemat 1
+	global $this-yb-active
+	set $this-yb-active 1
+	global $this-yb-usemat
+	set $this-yb-usemat 1
+
+	global $this-za-active
+	set $this-za-active 1
+	global $this-za-usemat
+	set $this-za-usemat 1
+	global $this-zb-active
+	set $this-zb-active 1
+	global $this-zb-usemat
+	set $this-zb-usemat 1
 
 	global $this-color-r
 	global $this-color-g
@@ -49,7 +71,7 @@ itcl_class rtrt_Scenes_GeoProbeScene {
 	set $this-color-b 0.5
 
 	global $this-iso_min
-	global $this-iso_max
+	global $this-iso_ma
 	global $this-iso_val
 	set $this-iso_min 0
 	set $this-iso_max 255
@@ -108,6 +130,24 @@ itcl_class rtrt_Scenes_GeoProbeScene {
 
     }
 
+    method addCutPlane {w cp label} {
+	set var "$this-$cp"
+	scale $w.scale -variable $var \
+	    -label $label -showvalue true -orient horizontal \
+	    -relief groove -length 200 -from 0 -to 1 \
+	    -tickinterval 0.25 -resolution 0.01 \
+	    -command "$this-c update_cut $cp"
+	set cpactive "$var-active"
+	checkbutton $w.act -text "Active" \
+	    -variable $cpactive -command "$this-c update_active $cp"
+	set cpusemat "$var-usemat"
+	checkbutton $w.mat -text "Use Material" \
+	    -variable $cpusemat -command "$this-c update_usemat $cp"
+	
+	pack $w.scale -side left -expand 1
+	pack $w.act $w.mat -side top -anchor w -fill x -expand 1
+    }
+	 
     # this is the main function which creates the initial window
     method ui {} {
 	set w .ui[modname]
@@ -123,44 +163,23 @@ itcl_class rtrt_Scenes_GeoProbeScene {
 	frame $w.cut
 	
 	frame $w.cut.xa
-	scale $w.cut.xa.scale -variable $this-xa \
-	    -label "X Low" -showvalue true -orient horizontal \
-	    -relief groove -length 200 -from 0 -to 1 \
-	    -tickinterval 0.25 -resolution 0.01 \
-	    -command "$this-c update_cut xa"
-	checkbutton $w.cut.xa.act -text "Active" \
-	    -variable $this-xa-active -command "$this-c update_active xa"
-	checkbutton $w.cut.xa.mat -text "Use Material" \
-	    -variable $this-xa-usemat -command "$this-c update_usemat xa"
+	addCutPlane $w.cut.xa "xa" "X Low"
 	
-	pack $w.cut.xa.scale -side left -expand 1
-	pack $w.cut.xa.act $w.cut.xa.mat -side top -anchor w -fill x -expand 1
+	frame $w.cut.xb
+	addCutPlane $w.cut.xb "xb" "X High"
 	
-	scale $w.cut.xb -variable $this-xb \
-	    -label "X High" -showvalue true -orient horizontal \
-	    -relief groove -length 200 -from 0 -to 1 \
-	    -tickinterval 0.25 -resolution 0.01 \
-	    -command "$this-c update_cut xb"
-	scale $w.cut.ya -variable $this-ya \
-	    -label "Y Low" -showvalue true -orient horizontal \
-	    -relief groove -length 200 -from 0 -to 1 \
-	    -tickinterval 0.25 -resolution 0.01 \
-	    -command "$this-c update_cut ya"
-	scale $w.cut.yb -variable $this-yb \
-	    -label "Y High" -showvalue true -orient horizontal \
-	    -relief groove -length 200 -from 0 -to 1 \
-	    -tickinterval 0.25 -resolution 0.01 \
-	    -command "$this-c update_cut yb"
-	scale $w.cut.za -variable $this-za \
-	    -label "Z Low" -showvalue true -orient horizontal \
-	    -relief groove -length 200 -from 0 -to 1 \
-	    -tickinterval 0.25 -resolution 0.01 \
-	    -command "$this-c update_cut za"
-	scale $w.cut.zb -variable $this-zb \
-	    -label "Z High" -showvalue true -orient horizontal \
-	    -relief groove -length 200 -from 0 -to 1 \
-	    -tickinterval 0.25 -resolution 0.01 \
-	    -command "$this-c update_cut zb"
+	frame $w.cut.ya
+	addCutPlane $w.cut.ya "ya" "Y Low"
+	
+	frame $w.cut.yb
+	addCutPlane $w.cut.yb "yb" "Y High"
+	
+	frame $w.cut.za
+	addCutPlane $w.cut.za "za" "Z Low"
+	
+	frame $w.cut.zb
+	addCutPlane $w.cut.zb "zb" "Z High"
+	
 	pack $w.cut.xa $w.cut.xb $w.cut.ya $w.cut.yb $w.cut.za $w.cut.zb \
 	    -side top -expand 1 -fill x
 	
