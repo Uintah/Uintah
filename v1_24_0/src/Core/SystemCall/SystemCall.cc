@@ -140,7 +140,7 @@ namespace SCIRun {
                 if (errno == EINTR) continue;
                 if (errno == EAGAIN) continue;
                 
-                std::cerr << "SystemCall: Detected an error during select" << std::endl;
+                // std::cerr << "SystemCall: Detected an error during select" << std::endl;
                 
                 syscall_->signal_exit();
                 syscall_->signal_eof();
@@ -180,8 +180,18 @@ namespace SCIRun {
 
         if (FD_ISSET(fd_exit,&selectset))
           {
-            syscall_->signal_exit();
-            doexit = false;
+             bytesread = read(fd_stdout,&(read_buffer[0]),read_buffer_length);
+             if (bytesread > 0) 
+             {
+                std::string exitcode = read_buffer.substr(0,bytesread);	
+                std::istringstream iss(exitcode);
+                iss >> syscall_->exitcode_;
+                syscall_->hasexitcode_ = true;
+             }
+             
+             
+             syscall_->signal_exit();
+             doexit = false;
           }
 
         if (FD_ISSET(fd_stdout,&selectset))
@@ -340,7 +350,9 @@ namespace SCIRun {
     isexit_(false),
     exit_("systemcall_exit_condition"),
     stdoutbuffersize_(0),
-    stderrbuffersize_(0)
+    stderrbuffersize_(0),
+    exitcode_(0),
+    hasexitcode_(false)
   {
   }
 
