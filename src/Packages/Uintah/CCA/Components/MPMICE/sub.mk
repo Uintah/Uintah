@@ -6,6 +6,7 @@ SRCDIR   := Packages/Uintah/CCA/Components/MPMICE
 
 SRCS     += \
 	$(SRCDIR)/MPMICE.cc \
+	$(SRCDIR)/MPMICERF.cc \
 	$(SRCDIR)/MPMICELabel.cc \
        $(SRCDIR)/MPMICEDebug.cc \
 
