@@ -3,7 +3,7 @@
 <Uintah_Include>
   <density>8930.0</density>
   <toughness>10.e6</toughness>
-  <thermal_conductivity>1.0</thermal_conductivity>
+  <thermal_conductivity>386.0</thermal_conductivity>
   <specific_heat>383</specific_heat>
   <room_temp>294.0</room_temp>
   <melt_temp>1356.0</melt_temp>
