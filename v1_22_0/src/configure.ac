@@ -69,11 +69,11 @@
 ##  --------------------------------------------------------------------
 
 ##  initialize configure 
-AC_INIT([SCIRun],[1.20],[scirun-users@sci.utah.edu])
+AC_INIT([SCIRun],[1.22],[scirun-users@sci.utah.edu])
 
-##  require autoconf version 2.57 (I think this is the RH9 default.)
+##  require autoconf version 2.59 
 ##  type "autoconf --version" to find out what version you have.
-AC_PREREQ(2.57)
+AC_PREREQ(2.59)
 
 AC_COPYRIGHT(
 ##
