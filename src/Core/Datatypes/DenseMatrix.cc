@@ -28,6 +28,7 @@
  */
 
 #include <stdio.h>
+#include <sci_defs.h>
 #include <Core/Datatypes/ColumnMatrix.h>
 #include <Core/Datatypes/DenseMatrix.h>
 #include <Core/Datatypes/SparseRowMatrix.h>
@@ -36,6 +37,17 @@
 #include <Core/Math/MiscMath.h>
 #include <iostream>
 #include <vector>
+
+#if defined(HAVE_LAPACK)
+#include <Core/Math/lapack.h>
+#endif
+
+#if defined(HAVE_BLAS)
+extern "C"{
+#include <cblas.h>
+}
+#endif
+
 using std::cerr;
 using std::cout;
 using std::endl;
@@ -603,6 +615,10 @@ bool
 DenseMatrix::invert()
 {
   if (nr != nc) return false;
+#if defined(HAVE_LAPACK)
+     lapackinvert(dataptr, nr);
+  return true;
+#else
   double** newdata=scinew double*[nr];
   double* tmp=scinew double[nr*nc];
   double* newdataptr=tmp;
@@ -696,6 +712,7 @@ DenseMatrix::invert()
   dataptr=newdataptr;
   data=newdata;
   return true;
+#endif
 }
 
 void Mult(DenseMatrix& out, const DenseMatrix& m1, const DenseMatrix& m2)
@@ -703,6 +720,13 @@ void Mult(DenseMatrix& out, const DenseMatrix& m1, const DenseMatrix& m2)
   ASSERTEQ(m1.ncols(), m2.nrows());
   ASSERTEQ(out.nrows(), m1.nrows());
   ASSERTEQ(out.ncols(), m2.ncols());
+#if defined(HAVE_BLAS)
+  double ALPHA = 1.0;
+  double BETA = 0.0;
+  cblas_dgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans, m1.nrows(), 
+	      m2.ncols(), m1.ncols(), ALPHA, m1.dataptr, m1.ncols(), 
+	      m2.dataptr, m2.ncols(), BETA, out.dataptr, out.ncols());
+#else
   int nr=out.nrows();
   int nc=out.ncols();
   int ndot=m1.ncols();
@@ -716,6 +740,7 @@ void Mult(DenseMatrix& out, const DenseMatrix& m1, const DenseMatrix& m2)
       out[i][j]=d;
     }
   }
+#endif
 }
 
 void Add(DenseMatrix& out, const DenseMatrix& m1, const DenseMatrix& m2)
@@ -862,4 +887,56 @@ DenseMatrix::determinant()
   return q;
 }
 
+/*
+#if defined(HAVE_LAPACK)
+
+void DenseMatrix::svd(DenseMatrix& U, SparseRowMatrix& S, DenseMatrix& VT){
+
+  ASSERTEQ(U.ncols(), U.nrows());
+  ASSERTEQ(VT.ncols(), VT.nrows());
+  ASSERTEQ(U.nrows(), nr);
+  ASSERTEQ(VT.ncols(), nc);
+  ASSERTEQ(S.nrows(), nr);
+  ASSERTEQ(S.ncols(), nc);
+
+  lapacksvd(data, nr, nc, S.a, U.data, VT.data); 
+
+}  
+
+void DenseMatrix::eigenvalues(ColumnMatrix& R, ColumnMatrix& I){
+  
+  ASSERTEQ(nc, nr);
+  ASSERTEQ(R.nrows(), I.nrows());
+  ASSERTEQ(nc, R.nrows());
+
+  double *Er = scinew double[nr];
+  double *Ei = scinew double[nr];
+  
+  lapackeigen(data, nr, Er, Ei);
+
+  for(int i = 0; i<nr; i++){
+    R[i] = Er[i];
+    I[i] = Ei[i];
+  }
+}
+
+void DenseMatrix::eigenvectors(ColumnMatrix& R, ColumnMatrix& I, DenseMatrix& Vecs){
+  
+  ASSERTEQ(nc, nr);
+  ASSERTEQ(R.nrows(), I.nrows());
+  ASSERTEQ(nc, R.nrows());
+
+  double *Er = scinew double[nr];
+  double *Ei = scinew double[nr];
+  
+  lapackeigen(data, nr, Er, Ei, Vecs.data);
+
+  for(int i = 0; i<nr; i++){
+    R[i] = Er[i];
+    I[i] = Ei[i];
+  }
+
+}
+#endif
+*/
 } // End namespace SCIRun

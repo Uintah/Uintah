@@ -74,13 +74,13 @@ SparseRowMatrix::SparseRowMatrix()
 
 SparseRowMatrix::SparseRowMatrix(int nnrows, int nncols,
 				 int* rows, int* columns,
-				 int nnz, double* a)
+				 int nnz, double* a_)
   : nnrows(nnrows),
     nncols(nncols),
     rows(rows),
     columns(columns),
     nnz(nnz),
-    a(a)
+    a(a_)
 {
   if (a == 0) { a = scinew double[nnz]; }
 }
