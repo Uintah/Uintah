@@ -25,11 +25,11 @@ itcl_class Teem_Filters_NrrdJoin {
     }
 
     method set_defaults {} {
-	global $this-label
+	global $this-dim
 	global $this-join-axis
 	global $this-incr-dim
 
-	set $this-label "unknown"
+	set $this-dim 0
 	set $this-join-axis sink
 	set $this-incr-dim 0
     }
@@ -45,6 +45,29 @@ itcl_class Teem_Filters_NrrdJoin {
 	return 1
     }
 
+
+    method axis_radio {} {
+        set w .ui[modname]
+        if {[winfo exists $w]} {
+	    if {[winfo exists $w.f.rfr.radio]} { destroy $w.f.rfr.radio }
+
+	    set choices [list]
+
+	    for {set i 0} {$i < [set $this-dim]} {incr i} {
+		if {$i == 0} {
+		    lappend choices [list "Tuple Axis" $i]
+		} else {
+		    set lab "Axis $i"
+		    lappend choices [list $lab $i]
+		}
+	    }
+
+	    make_labeled_radio $w.f.rfr.radio \
+		"Join Axis"  "" top $this-join-axis $choices		
+	    pack $w.f.rfr.radio -fill both -expand 1 -side top
+        }	
+    }
+
     method ui {} {
         set w .ui[modname]
         if {[winfo exists $w]} {
@@ -53,19 +76,19 @@ itcl_class Teem_Filters_NrrdJoin {
         }
         toplevel $w
 
-	frame $w.fr -relief groove -borderwidth 2
+	frame $w.f -borderwidth 2
+	pack $w.f -side top -e y -f both -padx 5 -pady 5
 
-	make_labeled_radio $w.fr.radio \
-	    "Join Axis"  "" top $this-join-axis \
-	    {{"X Axis" x} {"Y Axis" y} {"Z Axis" z} {"Set Axis" sink}}
+	#frame to pack and repack radio button in
+	frame $w.f.rfr -relief groove -borderwidth 2
 
-	checkbutton $w.fr.incrdim \
+	axis_radio
+
+	checkbutton $w.f.incrdim \
 		-text "Increment Dimension" \
 		-variable $this-incr-dim
-
-	pack $w.fr -side top -e y -f both -padx 5 -pady 5
 	
-	pack $w.fr.radio $w.fr.incrdim -side top
+	pack $w.f.rfr $w.f.incrdim -fill both -expand 1 -side top
 
 	button $w.execute -text "Ok" -command "destroy $w"
 	pack $w.execute -side top -e n -f both
