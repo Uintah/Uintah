@@ -52,28 +52,23 @@
 				// make sure socketinitializer
 				// constructor gets called before any
 				// socket constructor can
-#pragma init_seg(lib)
+//#pragma init_seg(lib)
 #else
+#include <errno.h>
 				// do I need to do this under unix &
 				// how?
 #endif
 
-#ifdef _WIN32
-				// todo: errno in windows?
-int errno;
-#else
-#include <errno.h>
-#endif
-
 //----------------------------------------------------------------------
-#ifdef _WIN32
-static void prError(int err);
-#endif
 
 using namespace std;
 
 namespace SCIRun {
   
+#ifdef _WIN32
+static void prError(int err);
+#endif
+
 // MAX -----------------------------------------------------------------
 template <class T>
 inline T MMAX(T a, T b) { 
@@ -137,7 +132,7 @@ Socket::FindReadyToRead(Socket** sockArray, int n, bool block) {
 
   FD_ZERO(&readset);
   int i;
-  int maxfd = -1;
+  SOCKET maxfd = 0;
 
 				// clear the socket set
   for (i = 0; i < n; i++) {
@@ -207,7 +202,11 @@ Socket::Socket() {
 				// without TIME_WAIT problems
   
 				// sources say to use this sparingly
+#ifdef _WIN32
+  char reuse_addr = 1;
+#else
   int reuse_addr = 1;
+#endif
   setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &reuse_addr,
     sizeof(reuse_addr));
 
@@ -445,7 +444,11 @@ Socket::Read(char* location, int numBytes) {
 				// if there was an error, then we are
 				// probably no longer connected, unless
 				// blocking is turned off
+#ifdef _WIN32
+      if (synchronous == false && WSAGetLastError() == WSAEWOULDBLOCK) {
+#else
       if (synchronous == false && errno == EWOULDBLOCK) {
+#endif
 	return 0;
       }
       else {
@@ -476,7 +479,11 @@ Socket::Write(char* location, int numBytes) {
     if (amt == SOCKET_ERROR || amt == 0) {
 				// if there was an error, then we are
 				// no longer connected
+#ifdef _WIN32
+      if (synchronous == false && WSAGetLastError() == WSAEWOULDBLOCK) {
+#else
       if (synchronous == false && errno == EWOULDBLOCK) {
+#endif
 	return 0;
       }
       else {
