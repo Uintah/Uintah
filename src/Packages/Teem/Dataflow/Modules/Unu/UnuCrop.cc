@@ -49,8 +49,6 @@ public:
   virtual void execute();
   void load_gui();
 private:
-  NrrdIPort*      inrrd_;
-  NrrdOPort*      onrrd_;
   vector<GuiInt*> mins_;
   vector<GuiInt*> maxs_;
   vector<GuiInt*> absmaxs_;
@@ -109,18 +107,18 @@ UnuCrop::execute()
 {
   NrrdDataHandle nrrdH;
   update_state(NeedData);
-  inrrd_ = (NrrdIPort *)get_iport("Nrrd");
-  onrrd_ = (NrrdOPort *)get_oport("Nrrd");
+  NrrdIPort* inrrd = (NrrdIPort *)get_iport("Nrrd");
+  NrrdOPort* onrrd = (NrrdOPort *)get_oport("Nrrd");
 
-  if (!inrrd_) {
+  if (!inrrd) {
     error("Unable to initialize iport 'Nrrd'.");
     return;
   }
-  if (!onrrd_) {
+  if (!onrrd) {
     error("Unable to initialize oport 'Nrrd'.");
     return;
   }
-  if (!inrrd_->get(nrrdH))
+  if (!inrrd->get(nrrdH))
     return;
   if (!nrrdH.get_rep()) {
     error("Empty input Nrrd.");
@@ -198,10 +196,12 @@ UnuCrop::execute()
     absmaxs_[a]->reset();
   }
 
-
-
   if (last_generation_ == nrrdH->generation && last_nrrdH_.get_rep()) {
+
+    last_generation_ = nrrdH->generation;
+    
     bool same = true;
+
     for (int i = 0; i < num_axes_.get(); i++) {
       if (lastmin_[i] != mins_[i]->get()) {
 	same = false;
@@ -213,15 +213,13 @@ UnuCrop::execute()
       }
     }
     if (same) {
-      onrrd_->send(last_nrrdH_);
+      onrrd->send(last_nrrdH_);
       return;
     }
   }
-  last_generation_ = nrrdH->generation;
 
   Nrrd *nin = nrrdH->nrrd;
   Nrrd *nout = nrrdNew();
-
 
   int *min = scinew int[num_axes_.get()];
   int *max = scinew int[num_axes_.get()];
@@ -230,8 +228,10 @@ UnuCrop::execute()
     min[i] = mins_[i]->get();
     max[i] = maxs_[i]->get();
 
-    if (nrrdKindSize(nin->axis[i].kind) > 1 && (min[i] != 0 || max[i] != absmaxs_[i]->get())) {
-      warning("Trying to crop axis " + to_string(i) + " which does not have a kind of nrrdKindDomain or nrrdKindUnknown");
+    if (nrrdKindSize(nin->axis[i].kind) > 1 &&
+	(min[i] != 0 || max[i] != absmaxs_[i]->get())) {
+      warning("Trying to crop axis " + to_string(i) +
+	      " which does not have a kind of nrrdKindDomain or nrrdKindUnknown");
     }
   }
 
@@ -244,9 +244,22 @@ UnuCrop::execute()
 
   NrrdData *nrrd = scinew NrrdData;
   nrrd->nrrd = nout;
+
+  // Copy the properies, kinds, and labels.
+  *((PropertyManager *)nrrd) = *((PropertyManager *)(nrrdH.get_rep()));
+
+  for( int i=0; i<nin->dim; i++ ) {
+    nout->axis[i].kind  = nin->axis[i].kind;
+    nout->axis[i].label = nin->axis[i].label;
+   }
+
+  if( (nout->axis[0].kind == nrrdKind3Vector     && nout->axis[0].size != 3) ||
+      (nout->axis[0].kind == nrrdKind3DSymTensor && nout->axis[0].size != 6) )
+    nout->axis[0].kind = nrrdKindDomain;
+
   //nrrd->copy_sci_data(*nrrdH.get_rep());
   last_nrrdH_ = nrrd;
-  onrrd_->send(last_nrrdH_);
+  onrrd->send(last_nrrdH_);
 
   delete min;
   delete max;
