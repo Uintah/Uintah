@@ -33,9 +33,9 @@
 #include <Core/Geometry/Point.h>
 #include <Core/Geom/GeomTriangles.h>
 #include <Core/Algorithms/Visualization/mcube2.h>
-#include <Core/Datatypes/Field.h>
 #include <Core/Datatypes/TriSurfField.h>
 #include <Core/Datatypes/QuadSurfField.h>
+#include <Core/Datatypes/SparseRowMatrix.h>
 
 namespace SCIRun {
 
@@ -80,6 +80,7 @@ public:
   void reset( int, bool build_field, bool build_geom );
   GeomHandle get_geom() { return triangles_; };
   FieldHandle get_field(double val);
+  MatrixHandle get_interpolant();
 };
   
 
@@ -318,6 +319,13 @@ HexMC<Field>::get_field(double value)
   }
 }
 
+
+template<class Field>
+MatrixHandle
+HexMC<Field>::get_interpolant()
+{
+  return 0;
+}
      
 } // End namespace SCIRun
 

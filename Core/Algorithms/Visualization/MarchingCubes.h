@@ -20,16 +20,16 @@
 #if !defined(Visualization_MarchingCubes_h)
 #define Visualization_MarchingCubes_h
 
+#include <Core/Thread/Thread.h>
+#include <Core/Geom/GeomGroup.h>
+#include <Core/Util/DynamicLoader.h>
+#include <Core/Datatypes/Field.h>
+#include <Core/Datatypes/Matrix.h>
+
 #include <sgi_stl_warnings_off.h>
 #include <string>
 #include <vector>
 #include <sgi_stl_warnings_on.h>
-
-#include <Core/Thread/Thread.h>
-#include <Core/Geom/GeomGroup.h>
-#include <Core/Geom/GeomObj.h>
-#include <Core/Util/DynamicLoader.h>
-#include <Core/Datatypes/Field.h>
 
 namespace SCIRun {
 class Field;
@@ -48,6 +48,7 @@ public:
   virtual void search( double ival, bool field, bool geom ) = 0;
   virtual GeomHandle get_geom() = 0;
   virtual FieldHandle get_field(int n) = 0;
+  virtual MatrixHandle get_interpolant(int n) = 0;
 
   //! support the dynamically compiled algorithm concept
   static const string& get_h_file_path();
@@ -67,6 +68,7 @@ protected:
   mesh_handle_type mesh_;
   GeomHandle geom_;
   vector<FieldHandle> output_field_;
+  vector<MatrixHandle> output_matrix_;
 public:
   MarchingCubes() : mesh_(0) { tess_.resize( np_, 0 ); }
   virtual ~MarchingCubes() { release(); }
@@ -78,6 +80,9 @@ public:
   virtual GeomHandle get_geom() { return geom_; } 
   virtual FieldHandle get_field(int n)
   { ASSERT((unsigned int)n < output_field_.size()); return output_field_[n]; }
+  virtual MatrixHandle get_interpolant(int n)
+  { ASSERT((unsigned int)n < output_matrix_.size()); return output_matrix_[n];}
+
 
   void parallel_search( int, double, bool field, bool geom);
 };
@@ -105,6 +110,7 @@ MarchingCubes<Tesselator>::set_np( int np )
     geom_ = 0;
   
   output_field_.resize(np);
+  output_matrix_.resize(np);
 
   np_ = np;
 }  
@@ -157,9 +163,11 @@ MarchingCubes<Tesselator>::search( double iso, bool bf, bool bg )
     }
   }
   output_field_.resize(np_);
+  output_matrix_.resize(np_);
   for (int i = 0; i < np_; i++)
   {
     output_field_[i] = tess_[i]->get_field(iso);
+    output_matrix_[i] = tess_[i]->get_interpolant();
   }
 }
 

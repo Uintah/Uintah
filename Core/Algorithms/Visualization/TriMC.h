@@ -33,7 +33,7 @@
 #include <Core/Geom/GeomLine.h>
 #include <Core/Datatypes/TriSurfMesh.h>
 #include <Core/Datatypes/CurveField.h>
-#include <Core/Datatypes/Field.h>
+#include <Core/Datatypes/SparseRowMatrix.h>
 
 namespace SCIRun {
 
@@ -78,6 +78,7 @@ public:
   void reset( int, bool build_field, bool build_geom );
   GeomHandle get_geom() { return lines_; }
   FieldHandle get_field(double val);
+  MatrixHandle get_interpolant();
 };
   
 
@@ -260,6 +261,13 @@ TriMC<Field>::get_field(double value)
   return fld;
 }
 
+
+template<class Field>
+MatrixHandle
+TriMC<Field>::get_interpolant()
+{
+  return 0;
+}
 
      
 } // End namespace SCIRun

@@ -33,8 +33,8 @@
 #include <Core/Algorithms/Visualization/mcube2.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Geom/GeomTriangles.h>
-#include <Core/Datatypes/Field.h>
 #include <Core/Datatypes/TriSurfField.h>
+#include <Core/Datatypes/SparseRowMatrix.h>
 
 namespace SCIRun {
 
@@ -80,6 +80,7 @@ public:
   void reset( int, bool build_field, bool build_geom);
   GeomHandle get_geom() { return triangles_; }
   FieldHandle get_field(double val);
+  MatrixHandle get_interpolant();
 };
   
 
@@ -299,6 +300,14 @@ PrismMC<Field>::get_field(double value)
     while (iter != fld->fdata().end()) { (*iter)=value; ++iter; }
   }
   return fld;
+}
+
+
+template<class Field>
+MatrixHandle
+PrismMC<Field>::get_interpolant()
+{
+  return 0;
 }
 
      

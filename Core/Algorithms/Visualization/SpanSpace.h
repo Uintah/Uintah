@@ -31,10 +31,7 @@
 #ifndef SpanSpace_h
 #define SpanSpace_h 
 
-#include <Core/Persistent/Persistent.h>
-#include <Core/Datatypes/Datatype.h>
 #include <Core/Datatypes/Field.h>
-#include <Core/Containers/LockingHandle.h>
 
 
 namespace SCIRun {

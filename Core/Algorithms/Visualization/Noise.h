@@ -33,7 +33,8 @@
 #include <Core/Algorithms/Visualization/SpanSpace.h>
 #include <Core/Util/DynamicLoader.h>
 #include <Core/Geom/GeomObj.h>
-#include <Core/Datatypes/TriSurfField.h>
+#include <Core/Datatypes/Field.h>
+#include <Core/Datatypes/Matrix.h>
 
 namespace SCIRun {
 
@@ -55,7 +56,10 @@ public:
 					    bool face_centered_p);
 
   FieldHandle trisurf_;
+  MatrixHandle interpolant_;
+
   FieldHandle get_field();
+  MatrixHandle get_interpolant();
 };
 
 // Noise<T>
@@ -209,8 +213,8 @@ GeomHandle Noise<Tesselator>::search( double iso, bool bf, bool bg )
   
   search_min_max( &space_->span[0], space_->span.size() );
 
-
   trisurf_ = tess_->get_field(iso);
+  interpolant_ = tess_->get_interpolant();
   return tess_->get_geom();
 }
 
