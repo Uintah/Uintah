@@ -115,6 +115,10 @@ ICELabel::ICELabel()
 
     scratch_FCZLabel   =
      scinew VarLabel("scratch_FCZ",SFCZVariable<double>::getTypeDescription());
+
+    scratch_FCVectorLabel   =
+     scinew VarLabel("scratch_FCVector",
+		     SFCXVariable<Vector>::getTypeDescription());
     IveBeenHereLabel     =
      scinew VarLabel("IveBeenHere",CCVariable<int>::getTypeDescription() );
      
@@ -181,6 +185,7 @@ ICELabel::~ICELabel()
     // Misc labels
     delete IveBeenHereLabel;
     delete scratchLabel;
+    delete scratch_FCVectorLabel;
     
     // Reduction Variables
     delete delTLabel;

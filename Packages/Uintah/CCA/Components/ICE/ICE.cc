@@ -1617,12 +1617,34 @@ void ICE::addExchangeContributionToFCVel(const ProcessorGroup*,
 
 /*`==========TESTING==========*/ 
 #if setBC_FC
+    #if 0
+    SFCXVariable<Vector> vel_FC;
+    new_dw->allocate(vel_FC,lb->scratch_FCVectorLabel,0,patch);
+    #endif
     for (int m = 0; m < numMatls; m++)  {
       Material* matl = d_sharedState->getMaterial( m );
       int indx = matl->getDWIndex();
+      #if 0
+      for(CellIterator iter = patch->getExtraCellIterator();!iter.done();
+	  iter++){  
+	IntVector cell = *iter; 
+	vel_FC[cell] = 
+	  Vector(uvel_FCME[m][cell],vvel_FCME[m][cell],wvel_FCME[m][cell]);
+      }
+      setBC(vel_FC,"Velocity",patch,indx);
+      for(CellIterator iter = patch->getExtraCellIterator();!iter.done();
+	  iter++){  
+	IntVector cell = *iter; 
+	uvel_FCME[m][cell] = vel_FC[cell].x();
+	vvel_FCME[m][cell] = vel_FC[cell].y();
+	wvel_FCME[m][cell] = vel_FC[cell].z();
+      }
+      #endif
+      #if 1
       setBC(uvel_FCME[m],"Velocity","x",patch,indx);
       setBC(vvel_FCME[m],"Velocity","y",patch,indx);
       setBC(wvel_FCME[m],"Velocity","z",patch,indx);
+      #endif
     }
 #endif
  /*==========TESTING==========`*/
@@ -3026,11 +3048,11 @@ void ICE::setBC(SFCXVariable<double>& variable, const  string& kind,
   Vector dx = patch->dCell();
   for(Patch::FaceType face = Patch::startFace; face <= Patch::endFace;
       face=Patch::nextFace(face)){
-    BoundCondBase* bcs;
+    BoundCondBase *bcs;
     BoundCond<Vector>* new_bcs;
     if (patch->getBCType(face) == Patch::None) {
       bcs = patch->getBCValues(mat_id,kind,face);
-    new_bcs = dynamic_cast<BoundCond<Vector> *>(bcs);
+      new_bcs = dynamic_cast<BoundCond<Vector> *>(bcs);
     } else
       continue;
 
@@ -3067,7 +3089,7 @@ void ICE::setBC(SFCYVariable<double>& variable, const  string& kind,
   Vector dx = patch->dCell();
   for(Patch::FaceType face = Patch::startFace;
       face <= Patch::endFace; face=Patch::nextFace(face)){
-    BoundCondBase* bcs;
+    BoundCondBase *bcs;
     BoundCond<Vector>* new_bcs;
     if (patch->getBCType(face) == Patch::None) {
       bcs = patch->getBCValues(mat_id,kind,face);
@@ -3107,7 +3129,7 @@ void ICE::setBC(SFCZVariable<double>& variable, const  string& kind,
   Vector dx = patch->dCell();
   for(Patch::FaceType face = Patch::startFace;
       face <= Patch::endFace; face=Patch::nextFace(face)){
-    BoundCondBase* bcs;
+    BoundCondBase *bcs;
     BoundCond<Vector>* new_bcs;
     if (patch->getBCType(face) == Patch::None) {
       bcs = patch->getBCValues(mat_id,kind,face);
@@ -3135,6 +3157,46 @@ void ICE::setBC(SFCZVariable<double>& variable, const  string& kind,
 	if (comp == "z")
 	  variable.fillFaceFlux(face,new_bcs->getValue().z(),dx,offset);
       }
+    }
+  }
+}
+
+/* --------------------------------------------------------------------- 
+ Function~  ICE::setBC--      
+ Purpose~   Takes care of vel_FC
+ ---------------------------------------------------------------------  */
+void ICE::setBC(SFCXVariable<Vector>& variable, const  string& kind, 
+		const Patch* patch, const int mat_id) 
+{
+  Vector dx = patch->dCell();
+  for(Patch::FaceType face = Patch::startFace; face <= Patch::endFace;
+      face=Patch::nextFace(face)){
+    BoundCondBase *bcs, *sym_bcs;
+    BoundCond<Vector>* new_bcs;
+    if (patch->getBCType(face) == Patch::None) {
+      bcs = patch->getBCValues(mat_id,kind,face);
+      sym_bcs = patch->getBCValues(mat_id,"Symmetric",face);
+      new_bcs = dynamic_cast<BoundCond<Vector> *>(bcs);
+    } else
+      continue;
+
+    IntVector offset(1,1,1);  // so you hit the inside walls of the domain
+
+    if (sym_bcs != 0) {
+      // First set the Neumann conditions for the non-normal faces
+      variable.fillFaceFlux(face,Vector(0.,0.,0.),dx,offset);
+      // Then zero out the component that is normal to the face, the
+      // Neumann conditions will be retained.
+      variable.fillFaceNormal(face,offset);
+    }
+      
+    if (new_bcs != 0) {
+      if (new_bcs->getKind() == "Dirichlet") 
+	variable.fillFace(face,new_bcs->getValue(),offset);
+            
+      if (new_bcs->getKind() == "Neumann") 
+	variable.fillFaceFlux(face,new_bcs->getValue(),dx,offset);
+	
     }
   }
 }
