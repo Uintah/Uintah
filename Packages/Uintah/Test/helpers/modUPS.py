@@ -31,6 +31,18 @@ def modUPS(directory, filename, changes):
     except Exception:
       mkdir("%s/tmp" % realdir)
 
+    # append numbers to the end of tmp file
+    # go through loop until stat fails
+    append = 1
+    try:
+      while 1:
+        appendedFilename = "%s.%d" % (newfilename,append)
+	stat(appendedFilename)
+	append = append + 1
+    except Exception:
+      newfilename = "%s.%d" % (newfilename, append)
+      filename = "%s.%d" % (filename, append)
+
     # copy filename to tmp
     command = "cp %s %s" % (origfilename, newfilename)
     system(command)
@@ -57,8 +69,12 @@ def modUPS(directory, filename, changes):
       command = "mv %s %s" % (tempfilename, newfilename)
       system(command)
     system("rm -f sedscript")
+    system("rm -rf tempfilename")
     return "tmp/MOD-%s" % filename
 
 
+file1 = modUPS("inputs/ICE","advect.ups",[])
+file2 = modUPS("inputs/ICE","advect.ups",[])
+file3 = modUPS("inputs/ICE","advect.ups",[])
 
-
+print "%s %s %s" % (file1, file2, file3)
