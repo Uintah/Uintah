@@ -35,6 +35,9 @@
 #include <Dataflow/Ports/FieldPort.h>
 #include <Teem/Dataflow/Ports/NrrdPort.h>
 
+#include <Core/Datatypes/ColumnMatrix.h>
+#include <Dataflow/Ports/MatrixPort.h>
+
 #include <sci_defs.h>
 
 #include <sys/stat.h>
@@ -60,6 +63,7 @@ private:
   GuiFilename filename_;
 
   NrrdDataHandle nHandles_[9];
+  MatrixHandle mHandle_;
 
   string old_filename_;
   time_t old_filemodification_;
@@ -82,15 +86,16 @@ VULCANDataReader::~VULCANDataReader(){
 void
 VULCANDataReader::execute(){
 
-  string portNames[9] = { "Grid Points",
-			  "Grid Vector",
-			  "Cell Connections",
-			  "Cell Density",
-			  "Cell Temperature",
-			  "Cell Pressure",
-			  "Cell Ye Fraction",
-			  "Cell Entropy",
-			  "Cell Angular Velocity" };
+  string portNames[10] = { "Grid Points",
+			   "Grid Vector",
+			   "Cell Connections",
+			   "Cell Density",
+			   "Cell Temperature",
+			   "Cell Pressure",
+			   "Cell Ye Fraction",
+			   "Cell Entropy",
+			   "Cell Angular Velocity",
+			   "Time Slice" };
 
   string new_filename(filename_.get());
 
@@ -149,6 +154,12 @@ VULCANDataReader::execute(){
       error_ = true;
       return;
     }
+
+    // Time 
+    ColumnMatrix *selected = scinew ColumnMatrix(1);
+    selected->put(0, 0, (double) time);
+    mHandle_ = MatrixHandle(selected);
+
 
     /* Throw away the next 7 lines of the file. */
     for(int i=0; i<8; i++)
@@ -307,6 +318,17 @@ VULCANDataReader::execute(){
       // Send the data downstream
       ofield_port->send( nHandles_[i] );
     }
+  }
+
+  if( mHandle_.get_rep() ) {
+    MatrixOPort *omatrix_port = (MatrixOPort *)get_oport("Time Slice");
+    
+    if (!omatrix_port) {
+      error("Unable to initialize oport 'Time Slice'.");
+      return;
+    }
+    
+    omatrix_port->send(mHandle_);
   }
 }
 
