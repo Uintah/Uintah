@@ -57,7 +57,18 @@ using namespace SCIRun;
 #include <Core/Persistent/PersistentSTL.h>
 #include <Core/Datatypes/PropertyManager.h>
 
-
+template void Pio<char, char>(Piostream&, pair<char, char>&);
+template void Pio<int, int>(Piostream&, pair<int, int>&);
+template void Pio<float, float>(Piostream&, pair<float, float>&);
+template void Pio<int, double>(Piostream&, pair<int, double>&);
+template void Pio<double, double>(Piostream&, pair<double, double>&);
+template void Pio<short, short>(Piostream&, pair<short, short>&);
+template void Pio<unsigned char, unsigned char>(Piostream&, pair<unsigned char,
+		  unsigned char>&);
+template void Pio<unsigned int, unsigned int>(Piostream&, pair<unsigned int,
+		  unsigned int>&);
+template void Pio<unsigned short, unsigned short>(Piostream&, pair<unsigned short,
+		  unsigned short>&);
 
 template class LockingHandle<ColumnMatrix>;
 template class LockingHandle<Matrix>;
@@ -86,6 +97,7 @@ template class Property<pair<unsigned short,unsigned short> >;
 template class Property<pair<short,short> >;
 template class Property<pair<unsigned char,unsigned char> >;
 template class Property<pair<char,char> >;
+
 
 
 //! Compute the gradient g in cell ci.
