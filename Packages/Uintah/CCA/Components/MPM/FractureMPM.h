@@ -344,9 +344,21 @@ private:
   void scheduleAdjustCrackContactIntegrated(SchedulerP& sched,    
                                      const PatchSet* patches,
                                      const MaterialSet* matls);
+  void scheduleDoCrackPropagation(SchedulerP& sched,
+                                     const PatchSet* patches,
+                                     const MaterialSet* matls);
   void scheduleMoveCracks(SchedulerP& sched,             
                                      const PatchSet* patches,
                                      const MaterialSet* matls);
+  void GetNodalSolutions(const ProcessorGroup*, 
+                                     const PatchSubset* patches,
+                                     const MaterialSubset* matls,
+                                     DataWarehouse* old_dw,
+                                     DataWarehouse* new_dw);
+  void ConvertJToK(const ProcessorGroup*, const PatchSubset* patches,
+                                     const MaterialSubset* matls,
+                                     DataWarehouse* old_dw,
+                                     DataWarehouse* new_dw);
   // -----------------------------------------------
 
   FractureMPM(const FractureMPM&);
