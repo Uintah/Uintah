@@ -40,13 +40,11 @@ void IdealGas::addComputesAndRequiresSS(Task* task,
 				 DataWarehouseP& old_dw,
 				 DataWarehouseP& new_dw) const
 {
-  task->requires(old_dw,lb->temp_CCLabel,
-		matl->getDWIndex(),patch,Ghost::None);
-  task->requires(old_dw,lb->rho_micro_CCLabel,
-		matl->getDWIndex(),patch,Ghost::None);
-  task->requires(old_dw,lb->cv_CCLabel,
-		matl->getDWIndex(),patch,Ghost::None);
-  task->computes(new_dw,lb->speedSound_CCLabel,matl->getDWIndex(), patch);
+  int dwindex = matl->getDWIndex();
+  task->requires(old_dw,lb->temp_CCLabel,      dwindex, patch,Ghost::None);
+  task->requires(old_dw,lb->rho_micro_CCLabel, dwindex, patch,Ghost::None);
+  task->requires(old_dw,lb->cv_CCLabel,        dwindex, patch,Ghost::None);
+  task->computes(new_dw,lb->speedSound_CCLabel,dwindex, patch);
 
 }
 
@@ -55,13 +53,11 @@ void IdealGas::addComputesAndRequiresRM(Task* task,
 				 DataWarehouseP& old_dw,
 				 DataWarehouseP& new_dw) const
 {
-  task->requires(old_dw,lb->temp_CCLabel,
-		matl->getDWIndex(),patch,Ghost::None);
-  task->requires(old_dw,lb->press_CCLabel,
-		matl->getDWIndex(),patch,Ghost::None);
-  task->requires(old_dw,lb->cv_CCLabel,
-		matl->getDWIndex(),patch,Ghost::None);
-  task->computes(new_dw,lb->rho_micro_CCLabel,matl->getDWIndex(), patch);
+  int dwindex = matl->getDWIndex();
+  task->requires(old_dw,lb->temp_CCLabel,     dwindex, patch,Ghost::None);
+  task->requires(old_dw,lb->press_CCLabel,    dwindex, patch,Ghost::None);
+  task->requires(old_dw,lb->cv_CCLabel,       dwindex, patch,Ghost::None);
+  task->computes(new_dw,lb->rho_micro_CCLabel,dwindex, patch);
 
 }
 
@@ -70,13 +66,11 @@ void IdealGas::addComputesAndRequiresPEOS(Task* task,
 				 DataWarehouseP& old_dw,
 				 DataWarehouseP& new_dw) const
 {
-  task->requires(old_dw,lb->rho_micro_CCLabel,
-		matl->getDWIndex(),patch,Ghost::None);
-  task->requires(old_dw,lb->temp_CCLabel,
-		matl->getDWIndex(),patch,Ghost::None);
-  task->requires(old_dw,lb->cv_CCLabel,
-		matl->getDWIndex(),patch,Ghost::None);
-  task->computes(new_dw,lb->press_CCLabel,matl->getDWIndex(), patch);
+  int dwindex = matl->getDWIndex();
+  task->requires(old_dw,lb->rho_micro_CCLabel, dwindex, patch,Ghost::None);
+  task->requires(old_dw,lb->temp_CCLabel,      dwindex, patch,Ghost::None);
+  task->requires(old_dw,lb->cv_CCLabel,        dwindex, patch,Ghost::None);
+  task->computes(new_dw,lb->press_CCLabel,     dwindex, patch);
 
 }
 
@@ -92,27 +86,23 @@ void IdealGas::computeSpeedSound(const Patch* patch,
   CCVariable<double> cv;
   CCVariable<double> speedSound;
 
-  int vfindex = matl->getVFIndex();
+  int dwindex = matl->getDWIndex();
   double gamma = matl->getGamma();
 
-  old_dw->get(temp, lb->temp_CCLabel, vfindex,patch,Ghost::None, 0); 
-  old_dw->get(rho_micro, lb->rho_micro_CCLabel, vfindex,patch,Ghost::None, 0); 
-  old_dw->get(cv, lb->cv_CCLabel, vfindex,patch,Ghost::None, 0); 
-  new_dw->allocate(speedSound,lb->speedSound_CCLabel,vfindex,patch);
-
+  old_dw->get(temp,      lb->temp_CCLabel,      dwindex,patch,Ghost::None, 0); 
+  old_dw->get(rho_micro, lb->rho_micro_CCLabel, dwindex,patch,Ghost::None, 0); 
+  old_dw->get(cv,        lb->cv_CCLabel,        dwindex,patch,Ghost::None, 0); 
+  new_dw->allocate(speedSound,lb->speedSound_CCLabel,dwindex,patch);
 
   for(CellIterator iter = patch->getExtraCellIterator(); !iter.done(); iter++){
-    double dp_drho = (gamma - 1.0) * cv[*iter] * temp[*iter];
-    double dp_de   = (gamma - 1.0) * rho_micro[*iter];
-    double press   = (gamma - 1.0) * rho_micro[*iter]*cv[*iter]*temp[*iter];
-    double denom = rho_micro[*iter]*rho_micro[*iter];
+    double dp_drho  = (gamma - 1.0)   * cv[*iter] * temp[*iter];
+    double dp_de    = (gamma - 1.0)   * rho_micro[*iter];
+    double press    = (gamma - 1.0)   * rho_micro[*iter]*cv[*iter]*temp[*iter];
+    double denom    = rho_micro[*iter]*rho_micro[*iter];
     speedSound[*iter] =  sqrt(dp_drho + dp_de* (press/(denom)));
   }
 
-
-
-  new_dw->put(speedSound,lb->speedSound_CCLabel,vfindex,patch);
-
+  new_dw->put(speedSound,lb->speedSound_CCLabel,dwindex,patch);
 }
 
 double IdealGas::computeRhoMicro(double& press, double& gamma,
@@ -144,12 +134,12 @@ void IdealGas::computeRhoMicro(const Patch* patch,
   CCVariable<double> cv;
   CCVariable<double> press;
   
-  int vfindex = matl->getVFIndex();
+  int dwindex = matl->getDWIndex();
 
-  old_dw->get(temp, lb->temp_CCLabel, vfindex,patch,Ghost::None, 0); 
-  old_dw->get(cv, lb->cv_CCLabel, vfindex,patch,Ghost::None, 0); 
-  old_dw->get(press, lb->press_CCLabel, vfindex,patch,Ghost::None, 0); 
-  new_dw->allocate(rho_micro,lb->rho_micro_CCLabel,vfindex,patch);
+  old_dw->get(temp,  lb->temp_CCLabel,  dwindex,patch,Ghost::None, 0); 
+  old_dw->get(cv,    lb->cv_CCLabel  ,  dwindex,patch,Ghost::None, 0); 
+  old_dw->get(press, lb->press_CCLabel, 0,     patch,Ghost::None, 0); 
+  new_dw->allocate(rho_micro,lb->rho_micro_CCLabel,dwindex,patch);
 
   double gamma = matl->getGamma();
 
@@ -157,9 +147,7 @@ void IdealGas::computeRhoMicro(const Patch* patch,
     rho_micro[*iter] = press[*iter]/((gamma -1.)*cv[*iter]*temp[*iter]);
   }
 
-  new_dw->put(rho_micro,lb->rho_micro_CCLabel,vfindex,patch);
-
-
+  new_dw->put(rho_micro,lb->rho_micro_CCLabel,dwindex,patch);
 }
 
 void IdealGas::computePressEOS(const Patch* patch,
@@ -167,8 +155,7 @@ void IdealGas::computePressEOS(const Patch* patch,
                                DataWarehouseP& old_dw,
                                DataWarehouseP& new_dw)
 {
-
-  int vfindex = matl->getVFIndex();
+  int dwindex = matl->getDWIndex();
   CCVariable<double> rho_micro;
   CCVariable<double> temp;
   CCVariable<double> cv;
@@ -176,22 +163,25 @@ void IdealGas::computePressEOS(const Patch* patch,
 
   double gamma = matl->getGamma();
 
-  old_dw->get(temp, lb->temp_CCLabel, vfindex,patch,Ghost::None, 0); 
-  old_dw->get(cv, lb->cv_CCLabel, vfindex,patch,Ghost::None, 0); 
-  old_dw->get(rho_micro, lb->rho_micro_CCLabel, vfindex,patch,Ghost::None, 0); 
-  new_dw->allocate(press,lb->press_CCLabel,vfindex,patch);
+  old_dw->get(temp,      lb->temp_CCLabel,      dwindex,patch,Ghost::None, 0); 
+  old_dw->get(cv,        lb->cv_CCLabel,        dwindex,patch,Ghost::None, 0); 
+  old_dw->get(rho_micro, lb->rho_micro_CCLabel, dwindex,patch,Ghost::None, 0); 
+  new_dw->allocate(press,lb->press_CCLabel,     dwindex,patch);
 
 
   for(CellIterator iter = patch->getExtraCellIterator(); !iter.done(); iter++){
     press[*iter] = (gamma - 1.)* rho_micro[*iter] * cv[*iter] * temp[*iter];
   }
 
-  new_dw->put(press,lb->press_CCLabel,vfindex,patch);
-
+  new_dw->put(press,lb->press_CCLabel,dwindex,patch);
 }
 
 
 //$Log$
+//Revision 1.9  2000/11/15 00:51:55  guilkey
+//Changed code to take advantage of the ICEMaterial stuff I committed
+//recently in preparation for coupling the two codes.
+//
 //Revision 1.8  2000/11/14 04:02:12  jas
 //Added getExtraCellIterator and things now appear to be working up to
 //face centered velocity calculations.
