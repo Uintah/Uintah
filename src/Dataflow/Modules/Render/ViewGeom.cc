@@ -60,46 +60,51 @@ GeomViewerPort::~GeomViewerPort()
     // maybee flush mesages, or do nothing...
 }
 
-GeomViewerItem::GeomViewerItem()
-:child(0),lock(0)
+GeomViewerItem::GeomViewerItem() :
+  child_(0),
+  crowd_lock_(0)
 {
 }
 
-GeomViewerItem::GeomViewerItem(GeomObj* obj,const string& nm, 
+GeomViewerItem::GeomViewerItem(GeomObjHandle obj,const string& nm, 
 			       CrowdMonitor* lck)
-  :child(obj), name(nm), lock(lck)
+  :child_(obj), name_(nm), crowd_lock_(lck)
 {
-    if (!lock)
-	child = new GeomBBoxCache(obj);
+    if (!crowd_lock_)
+	child_ = scinew GeomBBoxCache(obj);
 }
 
 GeomViewerItem::~GeomViewerItem()
 {
-    if (child)
-	delete child;  // I'm not sure if this should be here...
 }
 
 void GeomViewerItem::get_triangles( Array1<float> &v)
 {
-  if ( child )
-    child->get_triangles(v);
+  if ( child_)
+    child_->get_triangles(v);
 }
 
 GeomObj*
 GeomViewerItem::clone()
 {
   // Untested.
-  return new GeomViewerItem(child, name, lock);
+  return scinew GeomViewerItem(child_, name_, crowd_lock_);
 }
 
 void GeomViewerItem::reset_bbox()
 {
-    child->reset_bbox();
+  if (child_)
+  {
+    child_->reset_bbox();
+  }
 }
 
 void GeomViewerItem::get_bounds(BBox& box)
 {
-    child->get_bounds(box);
+  if (child_)
+  {
+    child_->get_bounds(box);
+  }
 }
 
 #define GeomViewerITEM_VERSION 1
@@ -110,22 +115,26 @@ void GeomViewerItem::io(Piostream& stream)
     stream.begin_class("GeomViewerItem", GeomViewerITEM_VERSION);
     int have_lock;
     if(stream.writing())
-	have_lock=lock?1:0;
+	have_lock=crowd_lock_?1:0;
     Pio(stream, have_lock);
     if(stream.reading())
 	if(have_lock)
-	    lock=new CrowdMonitor("GeomViewerItem crowd monitor");
+	    crowd_lock_ = scinew CrowdMonitor("GeomViewerItem crowd monitor");
 	else
-	    lock=0;
-    Pio(stream, name);
-    Pio(stream, child);
+	    crowd_lock_ = 0;
+    Pio(stream, name_);
+    Pio(stream, child_);
     stream.end_class();
 }
 
 bool GeomViewerItem::saveobj(ostream& out, const string& format,
 			     GeomSave* saveinfo)
 {
-    return child->saveobj(out, format, saveinfo);
+  if (child_)
+  {
+    return child_->saveobj(out, format, saveinfo);
+  }
+  return true;
 }
 
 } // End namespace SCIRun

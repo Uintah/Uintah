@@ -69,14 +69,15 @@ public:
  */
 
 class GeomViewerItem: public GeomObj {
-  GeomObj *child;
-  string name;
-  CrowdMonitor* lock;
+private:  
+  GeomObj *child_;
+  string name_;
+  CrowdMonitor *crowd_lock_;
 
 public:
   friend class ViewWindow;
   GeomViewerItem();
-  GeomViewerItem(GeomObj*,const string&, CrowdMonitor* lock);
+  GeomViewerItem(GeomObj *,const string&, CrowdMonitor* lock);
   virtual ~GeomViewerItem();
 
   virtual GeomObj* clone();
@@ -92,7 +93,7 @@ public:
   bool saveobj(std::ostream& out, const string& format,
 	       GeomSave* saveinfo);
     
-  string& getString(void) { return name;}
+  string& getString(void) { return name_;}
 };
 
 } // End namespace SCIRun
