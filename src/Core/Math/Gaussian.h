@@ -37,9 +37,6 @@
 
 namespace SCIRun {
 
-using std::cout;
-using std::endl;
-
 //   http://mathworld.wolfram.com/GaussianDistribution.html
 class SCICORESHARE Gaussian {
 public:
