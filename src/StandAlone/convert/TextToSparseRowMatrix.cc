@@ -35,13 +35,17 @@
 // the user has specified the -noHeader flag, in which case the next three 
 // command line arguments must be the number of rows, number of columns,
 // and number of entries in the matrix).
+// The user can specify the -oneBasedIndexing flag to support fortran
+// and matlab type matrices; the default is zero-based indexing.
+// Matrix entries must have ascending row indices, and for rows with
+// multiple entries, their column indices must be in ascending order.
 // The SCIRun .mat file will be saved as ASCII by default, unless the
 // user specified the -binOutput flag.
 
 #include <Core/Datatypes/SparseRowMatrix.h>
 #include <Core/Persistent/Pstreams.h>
 #include <Core/Containers/HashTable.h>
-
+#include <StandAlone/convert/FileUtils.h>
 #include <iostream>
 #include <fstream>
 #include <stdlib.h>
@@ -58,6 +62,7 @@ bool debugOn;
 int nr;
 int nc;
 int nnz;
+int baseIndex;
 
 void setDefaults() {
   header=true;
@@ -66,10 +71,11 @@ void setDefaults() {
   nr=0;
   nc=0;
   nnz=0;
+  baseIndex=0;
 }
 
 int parseArgs(int argc, char *argv[]) {
-  int currArg = 4;
+  int currArg = 3;
   while (currArg < argc) {
     if (!strcmp(argv[currArg],"-noHeader")) {
       header=false;
@@ -83,6 +89,9 @@ int parseArgs(int argc, char *argv[]) {
     } else if (!strcmp(argv[currArg],"-binOutput")) {
       binOutput=true;
       currArg++;
+    } else if (!strcmp(argv[currArg],"-oneBasedIndexing")) {
+      baseIndex=1;
+      currArg++;
     } else if (!strcmp(argv[currArg],"-debugOn")) {
       debugOn=true;
       currArg++;
@@ -94,40 +103,45 @@ int parseArgs(int argc, char *argv[]) {
   return 1;
 }
 
-int getNumNonEmptyLines(char *fname) {
-  // read through the file -- when you see a non-white-space set a flag to one.
-  // when you get to the end of the line (or EOF), see if the flag has
-  // been set.  if it has, increment the count and reset the flag to zero.
-
-  FILE *fin = fopen(fname, "rt");
-  int count=0;
-  int haveNonWhiteSpace=0;
-  int c;
-  while ((c=fgetc(fin)) != EOF) {
-    if (!isspace(c)) haveNonWhiteSpace=1;
-    else if (c=='\n' && haveNonWhiteSpace) {
-      count++;
-      haveNonWhiteSpace=0;
-    }
-  }
-  if (haveNonWhiteSpace) count++;
-  cerr << "number of nonempty lines was: "<<count<<"\n";
-  return count;
+void printUsageInfo(char *progName) {
+  cerr << "\n Usage: "<<progName<<" textfile SparseRowMatix [-noHeader nrows ncols nnz] [-binOutput] [-debugOn]\n\n";
+  cerr << "\t This program will read in a .txt file specifying a matrix. \n";
+  cerr << "\t The .txt file will have one matrix entry per line (each \n";
+  cerr << "\t line will consist of a row index, a column index, and a \n";
+  cerr << "\t data value, all white-space separated), and will have a one \n";
+  cerr << "\t line header indicating the number of rows, number of \n";
+  cerr << "\t columns, and number of entries in the matrix (unless the \n";
+  cerr << "\t user has specified the -noHeader flag, in which case the \n";
+  cerr << "\t next three command line arguments must be the number of \n";
+  cerr << "\t rows, number of columns, and number of entries in the \n";
+  cerr << "\t matrix). \n";
+  cerr << "\t The user can specify the -oneBasedIndexing flag to support \n";
+  cerr << "\t fortran and matlab type matrices; the default is zero-based \n";
+  cerr << "\t indexing. \n";
+  cerr << "\t Matrix entries must have ascending row indices, and for rows \n";
+  cerr << "\t with multiple entries, their column indices must be in \n";
+  cerr << "\t ascending order. \n";
+  cerr << "\t The SCIRun .mat file will be saved as ASCII by default, \n";
+  cerr << "\t unless the user specified the -binOutput flag.\n\n";
 }
 
 int
 main(int argc, char **argv) {
-  if (argc < 3 || argc > 8) {
-    cerr << "Usage: "<<argv[0]<<" textfile SparseRowMatix [-noHeader nrows ncols] [-binOutput] [-debugOn]\n";
+  if (argc < 3 || argc > 9) {
+    printUsageInfo(argv[0]);
     return 0;
   }
   setDefaults();
 
   char *textfileName = argv[1];
   char *matrixName = argv[2];
-  if (!parseArgs(argc, argv)) return 0;
+  if (!parseArgs(argc, argv)) {
+    printUsageInfo(argv[0]);
+    return 0;
+  }
+
   ifstream matstream(textfileName);
-  if (!header) matstream >> nr >> nc >> nnz;
+  if (header) matstream >> nr >> nc >> nnz;
 
   cerr << "nrows="<<nr<<" ncols="<<nc<<" # of non-zeros="<<nnz<<"\n";
 
@@ -143,14 +157,21 @@ main(int argc, char **argv) {
     matstream >> r >> c >> d;
     if (debugOn)
       cerr << "matrix["<<r<<"]["<<c<<"]="<<d<<"\n";
+    r-=baseIndex;
+    c-=baseIndex;
     columns[e]=c;
     a[e]=d;
-    while(r<last_r) {
+    while(last_r<r) {
       last_r++;
-      rows[r]=e;
+      rows[last_r]=e;
     }
   }
-  SparseRowMatrix *srm = scinew SparseRowMatrix(nr,nc, rows, columns, nnz, a);
+  while(last_r<nr) {
+    last_r++;
+    rows[last_r]=nnz;
+  }
+
+  SparseRowMatrix *srm = scinew SparseRowMatrix(nr, nc, rows, columns, nnz, a);
 
   cerr << "Done building matrix.\n";
 

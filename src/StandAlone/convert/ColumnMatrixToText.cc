@@ -36,9 +36,11 @@
 
 #include <Core/Datatypes/ColumnMatrix.h>
 #include <Core/Persistent/Pstreams.h>
+#include <StandAlone/convert/FileUtils.h>
 #include <iostream>
 #include <fstream>
 #include <stdlib.h>
+
 using std::cerr;
 using std::ifstream;
 using std::endl;
@@ -52,7 +54,7 @@ void setDefaults() {
 }
 
 int parseArgs(int argc, char *argv[]) {
-  int currArg = 4;
+  int currArg = 3;
   while (currArg < argc) {
     if (!strcmp(argv[currArg],"-noHeader")) {
       header=false;
@@ -65,37 +67,30 @@ int parseArgs(int argc, char *argv[]) {
   return 1;
 }
 
-int getNumNonEmptyLines(char *fname) {
-  // read through the file -- when you see a non-white-space set a flag to one.
-  // when you get to the end of the line (or EOF), see if the flag has
-  // been set.  if it has, increment the count and reset the flag to zero.
-
-  FILE *fin = fopen(fname, "rt");
-  int count=0;
-  int haveNonWhiteSpace=0;
-  int c;
-  while ((c=fgetc(fin)) != EOF) {
-    if (!isspace(c)) haveNonWhiteSpace=1;
-    else if (c=='\n' && haveNonWhiteSpace) {
-      count++;
-      haveNonWhiteSpace=0;
-    }
-  }
-  if (haveNonWhiteSpace) count++;
-  cerr << "number of nonempty lines was: "<<count<<"\n";
-  return count;
+void printUsageInfo(char *progName) {
+  cerr << "\n Usage: "<<progName<<" ColumnMatrix textfile [-noHeader]\n\n";
+  cerr << "\t This program will read in a SCIRun ColumnMatrix, and will \n";
+  cerr << "\t save it out to a text version: a .txt file. \n";
+  cerr << "\t The .txt file will contain one data value per line; the \n";
+  cerr << "\t file will also have a one line header, specifying the \n";
+  cerr << "\t number of entries in the matrix, unless the user specifies \n";
+  cerr << "\t the -noHeader command-line argument.\n\n";
 }
 
 int
 main(int argc, char **argv) {
   if (argc < 3 || argc > 4) {
-    cerr << "Usage: "<<argv[0]<<" ColumnMatrix textfile [-noHeader]\n";
+    printUsageInfo(argv[0]);
     return 0;
   }
+  setDefaults();
 
   char *matrixName = argv[1];
   char *textfileName = argv[2];
-  if (!parseArgs(argc, argv)) return 0;
+  if (!parseArgs(argc, argv)) {
+    printUsageInfo(argv[0]);
+    return 0;
+  }
 
   MatrixHandle handle;
   Piostream* stream=auto_istream(matrixName);

@@ -38,7 +38,7 @@
 #include <Core/Datatypes/StructHexVolField.h>
 #include <Core/Persistent/Pstreams.h>
 #include <Core/Containers/HashTable.h>
-
+#include <StandAlone/convert/FileUtils.h>
 #include <iostream>
 #include <fstream>
 #include <stdlib.h>
@@ -91,38 +91,31 @@ int parseArgs(int argc, char *argv[]) {
   return 1;
 }
 
-int getNumNonEmptyLines(char *fname) {
-  // read through the file -- when you see a non-white-space set a flag to one.
-  // when you get to the end of the line (or EOF), see if the flag has
-  // been set.  if it has, increment the count and reset the flag to zero.
-
-  FILE *fin = fopen(fname, "rt");
-  int count=0;
-  int haveNonWhiteSpace=0;
-  int c;
-  while ((c=fgetc(fin)) != EOF) {
-    if (!isspace(c)) haveNonWhiteSpace=1;
-    else if (c=='\n' && haveNonWhiteSpace) {
-      count++;
-      haveNonWhiteSpace=0;
-    }
-  }
-  if (haveNonWhiteSpace) count++;
-  cerr << "number of nonempty lines was: "<<count<<"\n";
-  return count;
+void printUsageInfo(char *progName) {
+  cerr << "\n Usage: "<<progName<<" pts StructHexVolMesh [-noHeader ni nj nk] [-binOutput] [-debug]\n\n";
+  cerr << "\t This program will read in a .pts (specifying the x/y/z \n";
+  cerr << "\t coords of each point, one per line, entries separated by \n";
+  cerr << "\t white space.  If file doesn't have a one line header \n";
+  cerr << "\t specifying ni nj nk (white-space separated), the user must \n";
+  cerr << "\t specify a -noHeader command line argument, followed by ni, \n";
+  cerr << "\t nj, and nk.  The SCIRun output file is written in ASCII, \n";
+  cerr << "\t unless you specify -binOutput.\n\n";
 }
 
 int
 main(int argc, char **argv) {
   if (argc < 3 || argc > 9) {
-    cerr << "Usage: "<<argv[0]<<" pts StructHexVolMesh [-noHeader ni nj nk] [-binOutput] [-debug]\n";
+    printUsageInfo(argv[0]);
     return 0;
   }
   setDefaults();
 
   char *ptsName = argv[1];
   char *fieldName = argv[2];
-  if (!parseArgs(argc, argv)) return 0;
+  if (!parseArgs(argc, argv)) {
+    printUsageInfo(argv[0]);
+    return 0;
+  }
 
   ifstream ptsstream(ptsName);
   if (header) ptsstream >> ni >> nj >> nk;
