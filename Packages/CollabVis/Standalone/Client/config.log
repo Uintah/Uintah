@@ -1,0 +1,34 @@
+This file contains any messages produced by compilers while
+running configure, to aid debugging if configure makes a mistake.
+
+configure:563: checking host system type
+configure:670: checking for ar
+configure:867: checking for gcc
+configure:980: checking whether the C compiler (gcc  ) works
+configure:996: gcc -o conftest    conftest.c  1>&5
+configure:1022: checking whether the C compiler (gcc  ) is a cross-compiler
+configure:1027: checking whether we are using GNU C
+configure:1055: checking whether gcc accepts -g
+configure:1091: checking for c++
+configure:1123: checking whether the C++ compiler (c++  ) works
+configure:1139: c++ -o conftest    conftest.C  1>&5
+configure:1165: checking whether the C++ compiler (c++  ) is a cross-compiler
+configure:1170: checking whether we are using GNU C++
+configure:1198: checking whether c++ accepts -g
+configure:1247: gcc -c -g -O2  conftest.c 1>&5
+configure:1264: gcc -c -g -O2  conftest.c 1>&5
+configure:1282: checking how to run the C preprocessor
+configure:1378: checking for sstream
+configure:1976: checking for glutGetWindow in -lglut
+configure:2054: checking for limits.h
+configure:2094: checking for sys/select.h
+configure:2134: checking for unistd.h
+configure:2174: checking for sys/time.h
+configure:2215: checking for X
+configure:2529: checking for dnet_ntoa in -ldnet
+configure:2570: checking for dnet_ntoa in -ldnet_stub
+configure:2618: checking for gethostbyname
+configure:2716: checking for connect
+configure:2808: checking for remove
+configure:2900: checking for shmat
+configure:3001: checking for IceConnectionNumber in -lICE
