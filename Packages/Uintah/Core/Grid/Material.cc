@@ -1,7 +1,6 @@
 //  Material.cc
 
 #include <Packages/Uintah/Core/Grid/Material.h>
-#include <Core/Util/NotFinished.h>
 
 using namespace Uintah;
 
