@@ -15,7 +15,6 @@
 #include <Packages/Uintah/CCA/Ports/Scheduler.h>
 #include <Packages/Uintah/CCA/Ports/LoadBalancer.h>
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
-#include <Packages/Uintah/CCA/Components/Schedulers/SchedulerCommon.h>
 #include <Core/Exceptions/InternalError.h>
 #include <Core/OS/ProcessInfo.h>
 #include <Core/OS/Dir.h>
@@ -249,8 +248,7 @@ namespace Uintah {
     sched->problemSetup(d_ups);
     d_scheduler = sched;
     
-    d_lb = dynamic_cast<LoadBalancer*>
-      (dynamic_cast<SchedulerCommon*>(sched)->getPort("load balancer"));
+    d_lb = sched->getLoadBalancer();
     d_lb->problemSetup(d_ups, d_sharedState);
     
     // done after the sim->problemSetup to get defaults into the
