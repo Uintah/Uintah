@@ -8,6 +8,7 @@ original version by:  Nikos Drakos, CBLU, University of Leeds
 <HTML>
 <HEAD>
 <TITLE>XML Component Specification Guide</TITLE>
+<!-- Changed by: TjD, 05-Oct-2000 -->
 <META NAME="description" CONTENT="XML Component Specification Guide">
 <META NAME="keywords" CONTENT="component">
 <META NAME="resource-type" CONTENT="document">
@@ -17,7 +18,7 @@ original version by:  Nikos Drakos, CBLU, University of Leeds
 <META NAME="Generator" CONTENT="LaTeX2HTML v99.2beta6">
 <META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
 
-<LINK REL="STYLESHEET" HREF="component.css">
+<LINK REL="STYLESHEET" HREF="http://www.sci.utah.edu/scirun_docs/doc/ReferenceGuide/component.css">
 
 </HEAD>
 
@@ -111,7 +112,7 @@ design and implementation of a component.
 
 <P>
 The XML component specification documents the use, design,
-implementation, and testing of a SCIRuncomponent.  It also serves as data for
+implementation, and testing of a SCIRun component.  It also serves as data for
 applications and databases.  For example:
 
 <P>
@@ -258,7 +259,8 @@ must be followed:
 <P>
 <PRE>
 &lt;?xml version="1.0" encoding="UTF-8" ?&gt;
-&lt;!DOCTYPE component SYSTEM "&lt;top-of-cvs-tree&gt;/doc/ReferenceGuide/component.dtd}"&gt;
+&lt;!DOCTYPE component SYSTEM 
+    "&lt;top-of-cvs-tree&gt;/doc/ReferenceGuide/component.dtd}"&gt;
 </PRE>
 
 <P>
@@ -320,43 +322,43 @@ element, which is used in several contexts, is not described in detail here
 
 <P>
 <DL>
-<DT><STRONG><I>&lt;component name="component-name" package="package-name"
-    category="category-name"&gt;</I></STRONG></DT>
+<DT><STRONG><TT>&lt;component name="component-name" package="package-name"
+    category="category-name"&gt;</TT></STRONG></DT>
 <DD>Starts the component specification.  All
   other elements are nested within this one.  This element requires the
   <TT>name</TT>, <TT>package</TT>, and <TT>category</TT> attributes.  These
   attributes name your component, the package the component belongs to, and
   the category the component belongs to respectively.
   <DL>
-<DT><STRONG><I>&lt;overview&gt;</I></STRONG></DT>
+<DT><STRONG><TT>&lt;overview&gt;</TT></STRONG></DT>
 <DD>Starts the overview section.  Contains only
     nested elements.
     <DL>
-<DT><STRONG><I>&lt;authors&gt;</I></STRONG></DT>
+<DT><STRONG><TT>&lt;authors&gt;</TT></STRONG></DT>
 <DD>List of component's authors.  Contains 1 or more
       &lt;<TT>author</TT>&gt; elements.
       <DL>
-<DT><STRONG><I>&lt;author&gt;</I></STRONG></DT>
+<DT><STRONG><TT>&lt;author&gt;</TT></STRONG></DT>
 <DD>Name of 1 author.
         
 </DD>
-<DT><STRONG><I>&lt;/author&gt;</I></STRONG></DT>
+<DT><STRONG><TT>&lt;/author&gt;</TT></STRONG></DT>
 <DD>
 </DD>
 </DL>
       
 </DD>
-<DT><STRONG><I>&lt;/authors&gt;</I></STRONG></DT>
+<DT><STRONG><TT>&lt;/authors&gt;</TT></STRONG></DT>
 <DD>
 </DD>
-<DT><STRONG><I>&lt;summary&gt;</I></STRONG></DT>
+<DT><STRONG><TT>&lt;summary&gt;</TT></STRONG></DT>
 <DD>Short (1 or 2 sentance) summary of component's function.
       
 </DD>
-<DT><STRONG><I>&lt;/summary&gt;</I></STRONG></DT>
+<DT><STRONG><TT>&lt;/summary&gt;</TT></STRONG></DT>
 <DD>
 </DD>
-<DT><STRONG><I>&lt;description&gt;</I></STRONG></DT>
+<DT><STRONG><TT>&lt;description&gt;</TT></STRONG></DT>
 <DD>Comprehensive description of component's
       function.  The &lt;<TT>description</TT>&gt; element is a mini-documentation
       environment.  See
@@ -364,28 +366,28 @@ element, which is used in several contexts, is not described in detail here
       for details on the use of the &lt;<TT>description</TT>&gt; element.
       
 </DD>
-<DT><STRONG><I>&lt;/description&gt;</I></STRONG></DT>
+<DT><STRONG><TT>&lt;/description&gt;</TT></STRONG></DT>
 <DD>
 </DD>
-<DT><STRONG><I>&lt;examplesr&gt;</I></STRONG></DT>
+<DT><STRONG><TT>&lt;examplesr&gt;</TT></STRONG></DT>
 <DD>The name of an <TT>.sr</TT> file that
       demonstrates the component's use.
       
 </DD>
-<DT><STRONG><I>&lt;/examplesr&gt;</I></STRONG></DT>
+<DT><STRONG><TT>&lt;/examplesr&gt;</TT></STRONG></DT>
 <DD>
 </DD>
 </DL>
     
 </DD>
-<DT><STRONG><I>&lt;/overview&gt;</I></STRONG></DT>
+<DT><STRONG><TT>&lt;/overview&gt;</TT></STRONG></DT>
 <DD>
 </DD>
-<DT><STRONG><I>&lt;io&gt;</I></STRONG></DT>
+<DT><STRONG><TT>&lt;io&gt;</TT></STRONG></DT>
 <DD>Component's inputs and outputs.  Contains 2 elements,
     &lt;<TT>inputs</TT>&gt; followed by &lt;<TT>outputs</TT>&gt;.
     <DL>
-<DT><STRONG><I>&lt;inputs&gt;</I></STRONG></DT>
+<DT><STRONG><TT>&lt;inputs&gt;</TT></STRONG></DT>
 <DD>Describes the components's inputs. Inputs may
       come from a port, a file, or a device.  Zero or more &lt;<TT>port</TT>&gt;
       elements are used to describe inputs from ports.  Zero or more
@@ -394,304 +396,304 @@ element, which is used in several contexts, is not described in detail here
       devices.  There must be at least 1 &lt;<TT>port</TT>&gt; element or 1
       &lt;<TT>file</TT>&gt; element or 1 &lt;<TT>device</TT>&gt; element.
       <DL>
-<DT><STRONG><I>&lt;port&gt;</I></STRONG></DT>
+<DT><STRONG><TT>&lt;port&gt;</TT></STRONG></DT>
 <DD>States that input data comes from a port. 
         Subelements describe the data further.
         <DL>
-<DT><STRONG><I>&lt;description&gt;</I></STRONG></DT>
+<DT><STRONG><TT>&lt;description&gt;</TT></STRONG></DT>
 <DD>High level description of the data 
           accepted by the port, e.g. ``These are potential data from body 
           surface of a human.''
           
 </DD>
-<DT><STRONG><I>&lt;/description&gt;</I></STRONG></DT>
+<DT><STRONG><TT>&lt;/description&gt;</TT></STRONG></DT>
 <DD>
 </DD>
-<DT><STRONG><I>&lt;datatype&gt;</I></STRONG></DT>
+<DT><STRONG><TT>&lt;datatype&gt;</TT></STRONG></DT>
 <DD>The name of a PSE datatype, i.e. the 
           datatype that is being transmitted on this port.
           
 </DD>
-<DT><STRONG><I>&lt;/datatype&gt;</I></STRONG></DT>
+<DT><STRONG><TT>&lt;/datatype&gt;</TT></STRONG></DT>
 <DD>
 </DD>
-<DT><STRONG><I>&lt;componentname&gt;</I></STRONG></DT>
+<DT><STRONG><TT>&lt;componentname&gt;</TT></STRONG></DT>
 <DD>The name of an upstream component
           that is commonly used to send data to this component on this
           port.  This element may occur multiple times. 
           
 </DD>
-<DT><STRONG><I>&lt;/componentname&gt;</I></STRONG></DT>
+<DT><STRONG><TT>&lt;/componentname&gt;</TT></STRONG></DT>
 <DD>
 </DD>
 </DL>
         
 </DD>
-<DT><STRONG><I>&lt;/port&gt;</I></STRONG></DT>
+<DT><STRONG><TT>&lt;/port&gt;</TT></STRONG></DT>
 <DD>
 </DD>
-<DT><STRONG><I>&lt;file&gt;</I></STRONG></DT>
+<DT><STRONG><TT>&lt;file&gt;</TT></STRONG></DT>
 <DD>States that input comes from a file.
         Subelements describe the data further.
         <DL>
-<DT><STRONG><I>&lt;description&gt;</I></STRONG></DT>
+<DT><STRONG><TT>&lt;description&gt;</TT></STRONG></DT>
 <DD>High level description of the data 
           provided by the file, e.g. ``These are potential data from body 
           surface of a human.''
           
 </DD>
-<DT><STRONG><I>&lt;/description&gt;</I></STRONG></DT>
+<DT><STRONG><TT>&lt;/description&gt;</TT></STRONG></DT>
 <DD>
 </DD>
-<DT><STRONG><I>&lt;datatype&gt;</I></STRONG></DT>
+<DT><STRONG><TT>&lt;datatype&gt;</TT></STRONG></DT>
 <DD>The name of a PSE datatype, i.e. the 
           datatype being read from the file.  <I>Note: Only PSE datatypes
             may be read from files - no custom formats allowed!</I>
           
 </DD>
-<DT><STRONG><I>&lt;/datatype&gt;</I></STRONG></DT>
+<DT><STRONG><TT>&lt;/datatype&gt;</TT></STRONG></DT>
 <DD>
 </DD>
 </DL>
         
 </DD>
-<DT><STRONG><I>&lt;/file&gt;</I></STRONG></DT>
+<DT><STRONG><TT>&lt;/file&gt;</TT></STRONG></DT>
 <DD>
 </DD>
-<DT><STRONG><I>&lt;device&gt;</I></STRONG></DT>
+<DT><STRONG><TT>&lt;device&gt;</TT></STRONG></DT>
 <DD>States that input comes from a device.
         Subelements describe the data further.
         <DL>
-<DT><STRONG><I>&lt;devicename&gt;</I></STRONG></DT>
+<DT><STRONG><TT>&lt;devicename&gt;</TT></STRONG></DT>
 <DD>Device's name.
           
 </DD>
-<DT><STRONG><I>&lt;/devicename&gt;</I></STRONG></DT>
+<DT><STRONG><TT>&lt;/devicename&gt;</TT></STRONG></DT>
 <DD>
 </DD>
-<DT><STRONG><I>&lt;description&gt;</I></STRONG></DT>
+<DT><STRONG><TT>&lt;description&gt;</TT></STRONG></DT>
 <DD>High level description of the data 
           provided by the device.
           
 </DD>
-<DT><STRONG><I>&lt;/description&gt;</I></STRONG></DT>
+<DT><STRONG><TT>&lt;/description&gt;</TT></STRONG></DT>
 <DD>
 </DD>
 </DL>
         
 </DD>
-<DT><STRONG><I>&lt;/device&gt;</I></STRONG></DT>
+<DT><STRONG><TT>&lt;/device&gt;</TT></STRONG></DT>
 <DD>
 </DD>
 </DL>
       
 </DD>
-<DT><STRONG><I>&lt;/inputs&gt;</I></STRONG></DT>
+<DT><STRONG><TT>&lt;/inputs&gt;</TT></STRONG></DT>
 <DD>
 </DD>
-<DT><STRONG><I>&lt;outputs&gt;</I></STRONG></DT>
+<DT><STRONG><TT>&lt;outputs&gt;</TT></STRONG></DT>
 <DD>Describes the component's outputs.  Outputs may
       go to a port or to a file or to a device.  Use 0 or more
       &lt;<TT>port</TT>&gt; elements to describe outputs to ports, 0 or more
       &lt;<TT>file</TT>&gt; elements to describe outputs to files, and 0 or more
       &lt;<TT>device</TT>&gt; elements to describe outputs to devices.
       <DL>
-<DT><STRONG><I>&lt;port&gt;</I></STRONG></DT>
+<DT><STRONG><TT>&lt;port&gt;</TT></STRONG></DT>
 <DD>States that output is sent a port. Subelements describe the data further.
         <DL>
-<DT><STRONG><I>&lt;description&gt;</I></STRONG></DT>
+<DT><STRONG><TT>&lt;description&gt;</TT></STRONG></DT>
 <DD>A high level description of the data
           sent to the port, e.g. ``These are potential data from the body
           surface of a human.''
           
 </DD>
-<DT><STRONG><I>&lt;/description&gt;</I></STRONG></DT>
+<DT><STRONG><TT>&lt;/description&gt;</TT></STRONG></DT>
 <DD>
 </DD>
-<DT><STRONG><I>&lt;datatype&gt;</I></STRONG></DT>
+<DT><STRONG><TT>&lt;datatype&gt;</TT></STRONG></DT>
 <DD>The name of a PSE datatype, i.e. the 
           datatype that is being transmitted on this port.
           
 </DD>
-<DT><STRONG><I>&lt;/datatype&gt;</I></STRONG></DT>
+<DT><STRONG><TT>&lt;/datatype&gt;</TT></STRONG></DT>
 <DD>
 </DD>
-<DT><STRONG><I>&lt;componentname&gt;</I></STRONG></DT>
+<DT><STRONG><TT>&lt;componentname&gt;</TT></STRONG></DT>
 <DD>The name of a downstream component
           that is commonly connected to this output port.  This
           element may occur multiple times. 
           
 </DD>
-<DT><STRONG><I>&lt;/componentname&gt;</I></STRONG></DT>
+<DT><STRONG><TT>&lt;/componentname&gt;</TT></STRONG></DT>
 <DD>
 </DD>
 </DL>
         
 </DD>
-<DT><STRONG><I>&lt;/port&gt;</I></STRONG></DT>
+<DT><STRONG><TT>&lt;/port&gt;</TT></STRONG></DT>
 <DD>
 </DD>
-<DT><STRONG><I>&lt;file&gt;</I></STRONG></DT>
+<DT><STRONG><TT>&lt;file&gt;</TT></STRONG></DT>
 <DD>States that output is sent to a file.  It's 
         subelements describe the outputs.
         <DL>
-<DT><STRONG><I>&lt;description&gt;</I></STRONG></DT>
+<DT><STRONG><TT>&lt;description&gt;</TT></STRONG></DT>
 <DD>A high level description of the data 
           sent to the file, e.g. ``These are potential data from body 
           surface of a human.''
           
 </DD>
-<DT><STRONG><I>&lt;/description&gt;</I></STRONG></DT>
+<DT><STRONG><TT>&lt;/description&gt;</TT></STRONG></DT>
 <DD>
 </DD>
-<DT><STRONG><I>&lt;datatype&gt;</I></STRONG></DT>
+<DT><STRONG><TT>&lt;datatype&gt;</TT></STRONG></DT>
 <DD>The name of a PSE datatype, i.e. the 
           datatype being written to the file.
           
 </DD>
-<DT><STRONG><I>&lt;/datatype&gt;</I></STRONG></DT>
+<DT><STRONG><TT>&lt;/datatype&gt;</TT></STRONG></DT>
 <DD>
 </DD>
 </DL>
         
 </DD>
-<DT><STRONG><I>&lt;/file&gt;</I></STRONG></DT>
+<DT><STRONG><TT>&lt;/file&gt;</TT></STRONG></DT>
 <DD>
 </DD>
-<DT><STRONG><I>&lt;device&gt;</I></STRONG></DT>
+<DT><STRONG><TT>&lt;device&gt;</TT></STRONG></DT>
 <DD>States that output goes to a device.
         Subelements describe the output further.
         <DL>
-<DT><STRONG><I>&lt;devicename&gt;</I></STRONG></DT>
+<DT><STRONG><TT>&lt;devicename&gt;</TT></STRONG></DT>
 <DD>Device's name.
           
 </DD>
-<DT><STRONG><I>&lt;/devicename&gt;</I></STRONG></DT>
+<DT><STRONG><TT>&lt;/devicename&gt;</TT></STRONG></DT>
 <DD>
 </DD>
-<DT><STRONG><I>&lt;description&gt;</I></STRONG></DT>
+<DT><STRONG><TT>&lt;description&gt;</TT></STRONG></DT>
 <DD>High level description of the data
           sent to the device.
           
 </DD>
-<DT><STRONG><I>&lt;/description&gt;</I></STRONG></DT>
+<DT><STRONG><TT>&lt;/description&gt;</TT></STRONG></DT>
 <DD>
 </DD>
 </DL>
         
 </DD>
-<DT><STRONG><I>&lt;/device&gt;</I></STRONG></DT>
+<DT><STRONG><TT>&lt;/device&gt;</TT></STRONG></DT>
 <DD>
 </DD>
 </DL>
     
 </DD>
-<DT><STRONG><I>&lt;/outputs&gt;</I></STRONG></DT>
+<DT><STRONG><TT>&lt;/outputs&gt;</TT></STRONG></DT>
 <DD>
 </DD>
 </DL>
   
 </DD>
-<DT><STRONG><I>&lt;/io&gt;</I></STRONG></DT>
+<DT><STRONG><TT>&lt;/io&gt;</TT></STRONG></DT>
 <DD>
 </DD>
-<DT><STRONG><I>&lt;gui&gt;</I></STRONG></DT>
+<DT><STRONG><TT>&lt;gui&gt;</TT></STRONG></DT>
 <DD>States that the component supports a GUI.
   Subelements describe the GUI.
   <DL>
-<DT><STRONG><I>&lt;description&gt;</I></STRONG></DT>
+<DT><STRONG><TT>&lt;description&gt;</TT></STRONG></DT>
 <DD>Describes the purpose of the GUI, e.g.
     ``The GUI allows you to steer the simulation.''
     
 </DD>
-<DT><STRONG><I>&lt;/description&gt;</I></STRONG></DT>
+<DT><STRONG><TT>&lt;/description&gt;</TT></STRONG></DT>
 <DD>
 </DD>
-<DT><STRONG><I>&lt;parameter&gt;</I></STRONG></DT>
+<DT><STRONG><TT>&lt;parameter&gt;</TT></STRONG></DT>
 <DD>Declares 1 GUI  parameter.  A parameter is a
     GUI  item that can be modified by the user.  Subelements describe the
     parameter.  Use 1 parameter element for each item in the GUI.
     <DL>
-<DT><STRONG><I>&lt;widget&gt;</I></STRONG></DT>
+<DT><STRONG><TT>&lt;widget&gt;</TT></STRONG></DT>
 <DD>The type name of parameter's tcl widget.
       
 </DD>
-<DT><STRONG><I>&lt;/widget&gt;</I></STRONG></DT>
+<DT><STRONG><TT>&lt;/widget&gt;</TT></STRONG></DT>
 <DD>
 </DD>
-<DT><STRONG><I>&lt;label&gt;</I></STRONG></DT>
+<DT><STRONG><TT>&lt;label&gt;</TT></STRONG></DT>
 <DD>Name of parameter as it appears in GUI.
       
 </DD>
-<DT><STRONG><I>&lt;/label&gt;</I></STRONG></DT>
+<DT><STRONG><TT>&lt;/label&gt;</TT></STRONG></DT>
 <DD>
 </DD>
-<DT><STRONG><I>&lt;description&gt;</I></STRONG></DT>
+<DT><STRONG><TT>&lt;description&gt;</TT></STRONG></DT>
 <DD>Describes the purpose of the parameter and
       how it can be used to control the component's behavior.
       
 </DD>
-<DT><STRONG><I>&lt;/description&gt;</I></STRONG></DT>
+<DT><STRONG><TT>&lt;/description&gt;</TT></STRONG></DT>
 <DD>
 </DD>
 </DL>
     
 </DD>
-<DT><STRONG><I>&lt;/parameter&gt;</I></STRONG></DT>
+<DT><STRONG><TT>&lt;/parameter&gt;</TT></STRONG></DT>
 <DD>
 </DD>
-<DT><STRONG><I>&lt;img&gt;</I></STRONG></DT>
+<DT><STRONG><TT>&lt;img&gt;</TT></STRONG></DT>
 <DD>Name of a file that contains a picture of the GUI.
     
 </DD>
-<DT><STRONG><I>&lt;/img&gt;</I></STRONG></DT>
+<DT><STRONG><TT>&lt;/img&gt;</TT></STRONG></DT>
 <DD>
 </DD>
 </DL>
   
 </DD>
-<DT><STRONG><I>&lt;/gui&gt;</I></STRONG></DT>
+<DT><STRONG><TT>&lt;/gui&gt;</TT></STRONG></DT>
 <DD>
 </DD>
-<DT><STRONG><I>&lt;testing&gt;</I></STRONG></DT>
+<DT><STRONG><TT>&lt;testing&gt;</TT></STRONG></DT>
 <DD>Starts the testing section.  Subelements specify
   1 or more testing plans.
   <DL>
-<DT><STRONG><I>&lt;plan&gt;</I></STRONG></DT>
+<DT><STRONG><TT>&lt;plan&gt;</TT></STRONG></DT>
 <DD>Declares 1 testing plan.  Subelements specify the
     testing plan's details.
     <DL>
-<DT><STRONG><I>&lt;description&gt;</I></STRONG></DT>
+<DT><STRONG><TT>&lt;description&gt;</TT></STRONG></DT>
 <DD>High level description of the testing
       plan.  The &lt;<TT>description</TT>&gt; element is followed by 1 or more
       &lt;<TT>step</TT>&gt; elements.
       
 </DD>
-<DT><STRONG><I>&lt;/description&gt;</I></STRONG></DT>
+<DT><STRONG><TT>&lt;/description&gt;</TT></STRONG></DT>
 <DD>
 </DD>
-<DT><STRONG><I>&lt;step&gt;</I></STRONG></DT>
+<DT><STRONG><TT>&lt;step&gt;</TT></STRONG></DT>
 <DD><I>Yet to be done</I>
       
 </DD>
-<DT><STRONG><I>&lt;/step&gt;</I></STRONG></DT>
+<DT><STRONG><TT>&lt;/step&gt;</TT></STRONG></DT>
 <DD>
 </DD>
 </DL>
     
 </DD>
-<DT><STRONG><I>&lt;/plan&gt;</I></STRONG></DT>
+<DT><STRONG><TT>&lt;/plan&gt;</TT></STRONG></DT>
 <DD>
 </DD>
 </DL>
   
 </DD>
-<DT><STRONG><I>&lt;/testing&gt;</I></STRONG></DT>
+<DT><STRONG><TT>&lt;/testing&gt;</TT></STRONG></DT>
 <DD>
 </DD>
 </DL>
 </DD>
-<DT><STRONG><I>&lt;/component&gt;</I></STRONG></DT>
+<DT><STRONG><TT>&lt;/component&gt;</TT></STRONG></DT>
 <DD>
 </DD>
 </DL>
@@ -845,69 +847,69 @@ shown by indentation.
 
 <P>
 <DL>
-<DT><STRONG><I>&lt;description&gt;</I></STRONG></DT>
+<DT><STRONG><TT>&lt;description&gt;</TT></STRONG></DT>
 <DD>Starts a description.  A description consists
   of any combination of paragraphs (&lt;<TT>p</TT>&gt;), lists
   (&lt;<TT>orderedlist</TT>&gt;, &lt;<TT>unorderedlist</TT>&gt;, and &lt;<TT>desclist</TT>&gt;),
   admonitions (&lt;<TT>note</TT>&gt;, &lt;<TT>tip</TT>&gt;, or &lt;<TT>warning</TT>&gt;), and developer
   notes (&lt;<TT>developer</TT>&gt;).
   <DL>
-<DT><STRONG><I>&lt;p&gt;</I></STRONG></DT>
+<DT><STRONG><TT>&lt;p&gt;</TT></STRONG></DT>
 <DD>Starts a paragraph.  A paragraph consists of character
     data,  phrases (&lt;<TT>term</TT>&gt;, &lt;<TT>keyword</TT>&gt;, &lt;<TT>keyboard</TT>&gt;,
     &lt;<TT>cite</TT>&gt;, and &lt;<TT>acronym</TT>&gt;) and links (&lt;<TT>slink</TT>&gt; and
     &lt;<TT>rlink</TT>&gt;). 
     <DL>
-<DT><STRONG><I>&lt;term&gt;</I></STRONG></DT>
+<DT><STRONG><TT>&lt;term&gt;</TT></STRONG></DT>
 <DD>Encloses a <I>term</I>.  A term is a word or short
       phrase you are introducing to your readers for the first time.
       
 </DD>
-<DT><STRONG><I>&lt;/term&gt;</I></STRONG></DT>
+<DT><STRONG><TT>&lt;/term&gt;</TT></STRONG></DT>
 <DD>
 </DD>
-<DT><STRONG><I>&lt;keyword&gt;</I></STRONG></DT>
+<DT><STRONG><TT>&lt;keyword&gt;</TT></STRONG></DT>
 <DD>Encloses a <I>keyword</I>.
       
 </DD>
-<DT><STRONG><I>&lt;/keyword&gt;</I></STRONG></DT>
+<DT><STRONG><TT>&lt;/keyword&gt;</TT></STRONG></DT>
 <DD>
 </DD>
-<DT><STRONG><I>&lt;keyboard&gt;</I></STRONG></DT>
+<DT><STRONG><TT>&lt;keyboard&gt;</TT></STRONG></DT>
 <DD>Encloses material that is typed at a keyboard.
       
 </DD>
-<DT><STRONG><I>&lt;/keyboard&gt;</I></STRONG></DT>
+<DT><STRONG><TT>&lt;/keyboard&gt;</TT></STRONG></DT>
 <DD>
 </DD>
-<DT><STRONG><I>&lt;cite&gt;</I></STRONG></DT>
+<DT><STRONG><TT>&lt;cite&gt;</TT></STRONG></DT>
 <DD>Encloses a reference to a paper or other
       publication.  Is not itself a hyperlink but it may be used within the
       &lt;<TT>slink</TT>&gt; and &lt;<TT>rlink</TT>&gt; elements.
       
 </DD>
-<DT><STRONG><I>&lt;/cite&gt;</I></STRONG></DT>
+<DT><STRONG><TT>&lt;/cite&gt;</TT></STRONG></DT>
 <DD>
 </DD>
-<DT><STRONG><I>&lt;acronym&gt;</I></STRONG></DT>
+<DT><STRONG><TT>&lt;acronym&gt;</TT></STRONG></DT>
 <DD>Encloses an acronym (e.g.
         &lt;<TT>acronym</TT>&gt;XML&lt;<TT>/acronym</TT>&gt;).
       
 </DD>
-<DT><STRONG><I>&lt;/acronym&gt;</I></STRONG></DT>
+<DT><STRONG><TT>&lt;/acronym&gt;</TT></STRONG></DT>
 <DD>
 </DD>
-<DT><STRONG><I>&lt;slink&gt;</I></STRONG></DT>
+<DT><STRONG><TT>&lt;slink&gt;</TT></STRONG></DT>
 <DD>Defines a SCI web site relative link.  It
       requires 1 attribute which is the path of the target relative to
       http://www.sci.utah.edu.  Text bracketed by the start and end tags will be presented
       as a link in online documents.  The text may include phrase elements.
       
 </DD>
-<DT><STRONG><I>&lt;/slink&gt;</I></STRONG></DT>
+<DT><STRONG><TT>&lt;/slink&gt;</TT></STRONG></DT>
 <DD>
 </DD>
-<DT><STRONG><I>&lt;rlink&gt;</I></STRONG></DT>
+<DT><STRONG><TT>&lt;rlink&gt;</TT></STRONG></DT>
 <DD>Defines a PSE CVS relative link
       (&lt;<TT>rlink</TT>&gt; actually links to material on the documentation web
       site but it is more easily explained as a path into the cvs tree).  It
@@ -917,134 +919,134 @@ shown by indentation.
       include phrase elements.
       
 </DD>
-<DT><STRONG><I>&lt;/rlink&gt;</I></STRONG></DT>
+<DT><STRONG><TT>&lt;/rlink&gt;</TT></STRONG></DT>
 <DD>
 </DD>
 </DL>
     
 </DD>
-<DT><STRONG><I>&lt;/p&gt;</I></STRONG></DT>
+<DT><STRONG><TT>&lt;/p&gt;</TT></STRONG></DT>
 <DD>
 </DD>
-<DT><STRONG><I>&lt;orderedlist&gt;</I></STRONG></DT>
+<DT><STRONG><TT>&lt;orderedlist&gt;</TT></STRONG></DT>
 <DD>An ordered (numbered) list.  Contains 1 or
     more &lt;<TT>listitem</TT>&gt; elements.
     <DL>
-<DT><STRONG><I>&lt;listitem&gt;</I></STRONG></DT>
+<DT><STRONG><TT>&lt;listitem&gt;</TT></STRONG></DT>
 <DD>An item in an ordered list.  A
       &lt;<TT>listitem</TT>&gt; may contain paragraphs and nested lists.
       
 </DD>
-<DT><STRONG><I>&lt;/listitem&gt;</I></STRONG></DT>
+<DT><STRONG><TT>&lt;/listitem&gt;</TT></STRONG></DT>
 <DD>
 </DD>
 </DL>
     
 </DD>
-<DT><STRONG><I>&lt;/orderedlist&gt;</I></STRONG></DT>
+<DT><STRONG><TT>&lt;/orderedlist&gt;</TT></STRONG></DT>
 <DD>
 </DD>
-<DT><STRONG><I>&lt;unorderedlist&gt;</I></STRONG></DT>
+<DT><STRONG><TT>&lt;unorderedlist&gt;</TT></STRONG></DT>
 <DD>An unordered list.  Contains 1 or
     more &lt;<TT>listitem</TT>&gt; elements.
     <DL>
-<DT><STRONG><I>&lt;listitem&gt;</I></STRONG></DT>
+<DT><STRONG><TT>&lt;listitem&gt;</TT></STRONG></DT>
 <DD>An item in an unordered list.  A
       &lt;<TT>listitem</TT>&gt; may contain paragraphs and nested lists.
       
 </DD>
-<DT><STRONG><I>&lt;/listitem&gt;</I></STRONG></DT>
+<DT><STRONG><TT>&lt;/listitem&gt;</TT></STRONG></DT>
 <DD>
 </DD>
 </DL>
     
 </DD>
-<DT><STRONG><I>&lt;/unorderedlist&gt;</I></STRONG></DT>
+<DT><STRONG><TT>&lt;/unorderedlist&gt;</TT></STRONG></DT>
 <DD>
 </DD>
-<DT><STRONG><I>&lt;desclist&gt;</I></STRONG></DT>
+<DT><STRONG><TT>&lt;desclist&gt;</TT></STRONG></DT>
 <DD>A description list.  Contains a list of terms or
     short phrases
     and their definitions or descriptions.  Consists of 1 or more &lt;<TT>desclistitem</TT>&gt;
     elements. 
     <DL>
-<DT><STRONG><I>&lt;desclistitem&gt;</I></STRONG></DT>
+<DT><STRONG><TT>&lt;desclistitem&gt;</TT></STRONG></DT>
 <DD>Contains 1 &lt;<TT>desclistterm</TT>&gt; and 1
       &lt;<TT>desclistdef</TT>&gt;. 
       <DL>
-<DT><STRONG><I>&lt;desclistterm&gt;</I></STRONG></DT>
+<DT><STRONG><TT>&lt;desclistterm&gt;</TT></STRONG></DT>
 <DD>A word or short phrase (not enclosed in
         &lt;<TT>p</TT>&gt; element).
         
 </DD>
-<DT><STRONG><I>&lt;/desclistterm&gt;</I></STRONG></DT>
+<DT><STRONG><TT>&lt;/desclistterm&gt;</TT></STRONG></DT>
 <DD>
 </DD>
-<DT><STRONG><I>&lt;desclistdef&gt;</I></STRONG></DT>
+<DT><STRONG><TT>&lt;desclistdef&gt;</TT></STRONG></DT>
 <DD>Definition or description of the
         corresponding term.  May consist of a mix of paragraph elements and
         list elements.
         
 </DD>
-<DT><STRONG><I>&lt;/desclistdef&gt;</I></STRONG></DT>
+<DT><STRONG><TT>&lt;/desclistdef&gt;</TT></STRONG></DT>
 <DD>
 </DD>
 </DL>
       
 </DD>
-<DT><STRONG><I>&lt;/desclistitem&gt;</I></STRONG></DT>
+<DT><STRONG><TT>&lt;/desclistitem&gt;</TT></STRONG></DT>
 <DD>
 </DD>
 </DL>
     
 </DD>
-<DT><STRONG><I>&lt;/desclist&gt;</I></STRONG></DT>
+<DT><STRONG><TT>&lt;/desclist&gt;</TT></STRONG></DT>
 <DD>
 </DD>
-<DT><STRONG><I>&lt;note&gt;</I></STRONG></DT>
+<DT><STRONG><TT>&lt;note&gt;</TT></STRONG></DT>
 <DD>Calls attention to a piece of information.  Aimed
     towards users of the component.  Presumably the information within a
     &lt;<TT>note</TT>&gt; element will be rendered in a special
     way.  A note consists of paragraphs and lists only.
     
 </DD>
-<DT><STRONG><I>&lt;/note&gt;</I></STRONG></DT>
+<DT><STRONG><TT>&lt;/note&gt;</TT></STRONG></DT>
 <DD>
 </DD>
-<DT><STRONG><I>&lt;tip&gt;</I></STRONG></DT>
+<DT><STRONG><TT>&lt;tip&gt;</TT></STRONG></DT>
 <DD>Contains an especially helpful piece of information.
     Aimed towards users of the component.  Presumably the information
     within a &lt;<TT>tip</TT>&gt; element will be rendered in a special way.  A
     tip consists of paragraphs and lists only.
     
 </DD>
-<DT><STRONG><I>&lt;/tip&gt;</I></STRONG></DT>
+<DT><STRONG><TT>&lt;/tip&gt;</TT></STRONG></DT>
 <DD>
 </DD>
-<DT><STRONG><I>&lt;warning&gt;</I></STRONG></DT>
+<DT><STRONG><TT>&lt;warning&gt;</TT></STRONG></DT>
 <DD>Contains a warning (e.g., ``Don't press the red
     button!''). Aimed towards users of the component.  Presumably the
     information within a &lt;<TT>warning</TT>&gt; element will be rendered in a
     special way.  A warning consists of paragraphs and lists only.
     
 </DD>
-<DT><STRONG><I>&lt;/warning&gt;</I></STRONG></DT>
+<DT><STRONG><TT>&lt;/warning&gt;</TT></STRONG></DT>
 <DD>
 </DD>
-<DT><STRONG><I>&lt;developer&gt;</I></STRONG></DT>
+<DT><STRONG><TT>&lt;developer&gt;</TT></STRONG></DT>
 <DD>Starts a developer section.  Material
     here should be aimed towards fellow programmers.  The
     &lt;<TT>developer</TT>&gt; element acts like the &lt;<TT>description</TT>&gt; element
     except that &lt;<TT>developer</TT>&gt; elements may not be nested.
     
 </DD>
-<DT><STRONG><I>&lt;/developer&gt;</I></STRONG></DT>
+<DT><STRONG><TT>&lt;/developer&gt;</TT></STRONG></DT>
 <DD>
 </DD>
 </DL>
   
 </DD>
-<DT><STRONG><I>&lt;/description&gt;</I></STRONG></DT>
+<DT><STRONG><TT>&lt;/description&gt;</TT></STRONG></DT>
 <DD>
 </DD>
 </DL>
@@ -1107,9 +1109,9 @@ XML mode if you get the message
 <TT>[No match]</TT> in return.
 
 <P>
-If you are a UUCS person then you may use the XML mode installed under
-<TT>/usr/local/contrib/mcole/psgml</TT>.  You must add the following bit
-of lisp code to your <TT>.emacs</TT> file:
+If you are a University of Utah Computer Science person then you may use
+the XML mode installed under <TT>/usr/local/contrib/mcole/psgml</TT>.
+You must add the following bit of lisp code to your <TT>.emacs</TT> file:
 
 <P>
 <PRE>
@@ -1185,23 +1187,32 @@ To start a new component specification with [x]emacs do this:
 <P>
 
 <OL>
-<LI>Create a file and insert the following lines:
+<LI>Use the <TT>C-x C-f</TT> (<TT>find-file</TT>) command to create a
+  new file.  The file's name must have the suffix <TT>.xml</TT>.
 <PRE>
 &lt;?xml version="1.0" encoding="UTF-8" ?&gt;
-&lt;!DOCTYPE component SYSTEM \
-  "&lt;top-of-cvs-tree&gt;/doc/ReferenceGuide/component.dtd"&gt;
+&lt;!DOCTYPE component SYSTEM 
+    "&lt;top-of-cvs-tree&gt;/doc/ReferenceGuide/component.dtd"&gt;
 </PRE>
+  Replace <TT>&lt;top-of-cvs-tree&gt;</TT> with the path to the top of your SCIRun   CVS tree.
+</LI>
+<LI>Select the <B>Parse DTD</B> item from the <B>DTD</B> menu
+  which can be found in the window's main menu bar.  Or type <TT>C-c
+    C-p</TT>.
 </LI>
 <LI>Insert the top level &lt;<TT>component</TT>&gt; element using [x]emacs popup
   menu (shift-button1 or shift-button3 for emacs and button3 for xemacs):
   Position the cursor at the end of the file and select the item named
-  <I><B>component</B></I> from the popup menu.  After doing this you will be
-  prompted for the &lt;<TT>component</TT>&gt; element's <TT>name</TT>
-  attribute.  Type in the name of your component and press return.  [X]Emacs 
-  will then automatically insert a number of other required elements.
+  <B>component</B> from the popup menu.  After doing this you will be
+  prompted for the &lt;<TT>component</TT>&gt; element's <TT>name</TT>,
+  <TT>package</TT>, and <TT>category</TT> attributes.
+  attribute.  After typing in each of the attributes [X]Emacs 
+  will then insert a number of other required elements.
 </LI>
 <LI>Insert content into these elements.  For example, you may insert your
   name between the start and end tags of the &lt;<TT>author</TT>&gt; element.
+  Refer to section&nbsp;<A HREF="component.html#Rules__Structure__and_Content"><I>Rules, Structure, and Content</I></A> if you have question about the
+  content of any elements.
 </LI>
 <LI>Some elements, like the &lt;<TT>description</TT>&gt; element, are composed of
   subelements.  To add subelements, position the cursor between the start
@@ -1219,7 +1230,7 @@ To start a new component specification with [x]emacs do this:
 <LI>A few elements (namely &lt;<TT>slink</TT>&gt; and &lt;<TT>rlink</TT>&gt;)
   elements take attributes.  If these elements are added via [x]emacs popup
   menu then [x]emacs will prompt you for the element's attribute values.  If
-  these element's are added manuall then you may add the attributes via the
+  these element's are added manually then you may add the attributes via the
   popup menu: position the cursor anywhere within the element's start tag
   and select the desired attribute from the popup menu's list of
   attributes.  [X]Emacs will prompt you for the value of the attribute and
@@ -1253,8 +1264,8 @@ preamble section to the following:
 
 <P>
 <PRE>
-&lt;!DOCTYPE component SYSTEM \
-"http://www.sci.utah.edu/scirun_docs/doc/ReferenceGuide/component.dtd"&gt;
+&lt;!DOCTYPE component SYSTEM 
+  "http://www.sci.utah.edu/scirun_docs/doc/ReferenceGuide/component.dtd"&gt;
 </PRE>
 
 <P>
@@ -1326,11 +1337,11 @@ Mathematics Department, Macquarie University, Sydney.
 The command line arguments were: <BR>
  <STRONG>latex2html</STRONG> <TT>-split 0 -no_navigation component.tex</TT>
 <P>
-The translation was initiated by Ted Dustman on 2000-10-04
+The translation was initiated by Ted Dustman on 2000-10-05
 <BR><HR>
 <ADDRESS>
 Ted Dustman
-2000-10-04
+2000-10-05
 </ADDRESS>
 </BODY>
 </HTML>
