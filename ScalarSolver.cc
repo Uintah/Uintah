@@ -465,7 +465,9 @@ void ScalarSolver::buildLinearMatrixPred(const ProcessorGroup* pc,
   delt_vartype delT;
   old_dw->get(delT, d_lab->d_sharedState->get_delt_label() );
   double delta_t = delT;
-  
+#ifdef correctorstep
+  delta_t /= 2.0;
+#endif
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
@@ -587,6 +589,8 @@ ScalarSolver::sched_scalarLinearSolvePred(SchedulerP& sched,
   tsk->requires(Task::OldDW, d_lab->d_sharedState->get_delt_label());
 
   // coefficient for the variable for which solve is invoked
+  tsk->requires(Task::OldDW, d_lab->d_densityINLabel, 
+		Ghost::None, zeroGhostCells);
   tsk->requires(Task::NewDW, d_lab->d_densityINLabel, 
 		Ghost::AroundCells, numGhostCells+1);
   tsk->requires(Task::NewDW, d_lab->d_scalarOUTBCLabel, 
@@ -617,6 +621,9 @@ ScalarSolver::scalarLinearSolvePred(const ProcessorGroup* pc,
   delt_vartype delT;
   old_dw->get(delT, d_lab->d_sharedState->get_delt_label() );
   double delta_t = delT;
+#ifdef correctorstep
+  delta_t /= 2.0;
+#endif
   
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
@@ -642,6 +649,8 @@ ScalarSolver::scalarLinearSolvePred(const ProcessorGroup* pc,
     }
     CellInformation* cellinfo = cellInfoP.get().get_rep();
     new_dw->getCopy(scalarVars.old_density, d_lab->d_densityINLabel, 
+		matlIndex, patch, Ghost::None, zeroGhostCells);
+    old_dw->getCopy(scalarVars.old_old_density, d_lab->d_densityINLabel, 
 		matlIndex, patch, Ghost::None, zeroGhostCells);
     // for explicit calculation
     {

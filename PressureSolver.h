@@ -190,6 +190,12 @@ private:
 			       ArchesVariables& pressureVars);
 
 
+      void buildLinearMatrixCorr(const ProcessorGroup* pc,
+				 const PatchSubset* patches,
+				 const MaterialSubset* matls,
+				 DataWarehouse* new_dw,
+				 DataWarehouse* matrix_dw);
+
       void buildLinearMatrixPressCorr(const ProcessorGroup* pc,
 				  const PatchSubset* patches,
 				  const MaterialSubset* matls,
@@ -226,6 +232,10 @@ private:
       void normPressure(const ProcessorGroup* pc,
 			const Patch* patch,
 			ArchesVariables* vars);
+
+      void updatePressure(const ProcessorGroup* pc,
+			  const Patch* patch,
+			  ArchesVariables* vars);
 
   
 

@@ -232,6 +232,8 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
     // the same subroutine can be used to solve multiple scalars
     d_scalarSolver->solveCorr(sched, patches, matls, index);
   }
+  if (d_enthalpySolve)
+    d_enthalpySolver->solveCorr(sched, patches, matls);
   // same as corrector
   d_props->sched_reComputeProps(sched, patches, matls);
   // linearizes and solves pressure eqn

@@ -349,6 +349,11 @@ ArchesLabel::ArchesLabel()
   d_co2INLabel = VarLabel::create("co2IN",
 				  CCVariable<double>::getTypeDescription() );
 
+  d_tempINPredLabel = VarLabel::create("tempINPred",
+				  CCVariable<double>::getTypeDescription() );
+  d_co2INPredLabel = VarLabel::create("co2INPred",
+				  CCVariable<double>::getTypeDescription() );
+
 
   // Array containing the reference density multiplied by the void fraction
   // used for correct reference density subtraction in the multimaterial
@@ -444,7 +449,48 @@ ArchesLabel::ArchesLabel()
 
   d_densityPredLabel = VarLabel::create("densityPred",
 				   CCVariable<double>::getTypeDescription() );
+  // for corrector step
+  d_uVelCoefPBLMCorrLabel = VarLabel::create("uVelCoefPBLMCorr",
+			       SFCXVariable<double>::getTypeDescription() );
+  // U-Velocity Convection Coeff Labels
+  d_uVelConvCoefPBLMCorrLabel = VarLabel::create("uVelConvCoefPBLMCorr",
+				        SFCXVariable<double>::getTypeDescription() );
+  // U-Velocity Linear Src Labels
+  d_uVelLinSrcPBLMCorrLabel = VarLabel::create("uVelLinSrcPBLMCorr",
+				 SFCXVariable<double>::getTypeDescription() );
+  // U-Velocity Non Linear Src Labels
+  d_uVelNonLinSrcPBLMCorrLabel = VarLabel::create("uVelNonLinSrcPBLMCorr",
+				    SFCXVariable<double>::getTypeDescription() );
+  d_vVelCoefPBLMCorrLabel = VarLabel::create("vVelCoefPBLMCorr",
+			       SFCXVariable<double>::getTypeDescription() );
+  // U-Velocity Convection Coeff Labels
+  d_vVelConvCoefPBLMCorrLabel = VarLabel::create("vVelConvCoefPBLMCorr",
+				        SFCXVariable<double>::getTypeDescription() );
+  // U-Velocity Linear Src Labels
+  d_vVelLinSrcPBLMCorrLabel = VarLabel::create("vVelLinSrcPBLMCorr",
+				 SFCXVariable<double>::getTypeDescription() );
+  // U-Velocity Non Linear Src Labels
+  d_vVelNonLinSrcPBLMCorrLabel = VarLabel::create("vVelNonLinSrcPBLMCorr",
+				    SFCXVariable<double>::getTypeDescription() );
+  d_wVelCoefPBLMCorrLabel = VarLabel::create("wVelCoefPBLMCorr",
+			       SFCXVariable<double>::getTypeDescription() );
+  // U-Velocity Convection Coeff Labels
+  d_wVelConvCoefPBLMCorrLabel = VarLabel::create("wVelConvCoefPBLMCorr",
+				        SFCXVariable<double>::getTypeDescription() );
+  // U-Velocity Linear Src Labels
+  d_wVelLinSrcPBLMCorrLabel = VarLabel::create("wVelLinSrcPBLMCorr",
+				 SFCXVariable<double>::getTypeDescription() );
+  // U-Velocity Non Linear Src Labels
+  d_wVelNonLinSrcPBLMCorrLabel = VarLabel::create("wVelNonLinSrcPBLMCorr",
+				    SFCXVariable<double>::getTypeDescription() );
 
+  d_uVelRhoHatCorrLabel = VarLabel::create("uvelRhoHatCorr",
+				   SFCXVariable<double>::getTypeDescription() );
+  d_vVelRhoHatCorrLabel= VarLabel::create("vvelRhoHatCorr",
+				  SFCYVariable<double>::getTypeDescription() );
+  d_wVelRhoHatCorrLabel= VarLabel::create("wvelRhoHatCorr",
+				   SFCZVariable<double>::getTypeDescription() );
+  
   d_uVelRhoHatLabel = VarLabel::create("uvelRhoHat",
 				   SFCXVariable<double>::getTypeDescription() );
   d_vVelRhoHatLabel= VarLabel::create("vvelRhoHat",
@@ -453,6 +499,8 @@ ArchesLabel::ArchesLabel()
 				   SFCZVariable<double>::getTypeDescription() );
 
   d_pressurePredLabel = VarLabel::create("pressurePred", 
+				    CCVariable<double>::getTypeDescription() );
+  d_pressureCorrSPBCLabel = VarLabel::create("pressureCorrSPBC", 
 				    CCVariable<double>::getTypeDescription() );
   // Pressure Coeff Labels
   d_presCoefCorrLabel = VarLabel::create("presCoefCorr", 
@@ -481,6 +529,9 @@ ArchesLabel::ArchesLabel()
 				   CCVariable<double>::getTypeDescription() );
 
   d_enthalpyRXNLabel = VarLabel::create("enthalpyRXN",
+				   CCVariable<double>::getTypeDescription() );
+
+  d_enthalpyRXNPredLabel = VarLabel::create("enthalpyRXNPred",
 				   CCVariable<double>::getTypeDescription() );
 
   d_enthalpyCPBCLabel = VarLabel::create("enthalpyCPBC",
@@ -536,6 +587,14 @@ ArchesLabel::ArchesLabel()
 				    CCVariable<double>::getTypeDescription() );
 
   d_reactscalarSRCINLabel = VarLabel::create("reactscalarSRCIN",
+				    CCVariable<double>::getTypeDescription() );
+
+  d_absorpINPredLabel = VarLabel::create("absorpINPred",
+				    CCVariable<double>::getTypeDescription() );
+  d_sootFVINPredLabel = VarLabel::create("sootFVINPred",
+				    CCVariable<double>::getTypeDescription() );
+
+  d_reactscalarSRCINPredLabel = VarLabel::create("reactscalarSRCINPred",
 				    CCVariable<double>::getTypeDescription() );
 
 
