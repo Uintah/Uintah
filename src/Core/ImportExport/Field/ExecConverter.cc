@@ -515,6 +515,20 @@ VTKtoTriSurfField_plugin("VTKtoTriSurfField",
 			     ".vtk", "",
 			     VTKtoTriSurfField_reader,
 			     NULL);
+
+// WGET wrapper, example for fetching urls remotely.
+static FieldHandle
+wget_field_reader(ProgressReporter *pr, const char *filename)
+{
+  const string command = "wget -O %t %f";
+  return Exec_reader(pr, filename, command);
+}
+
+static FieldIEPlugin
+wget_field_plugin("WGET a SCIRun file",
+		  ".fld", "",
+		  wget_field_reader,
+		  NULL);
 			     
 // Conversion of a tetrahedra FE mesh in VGRID *.gmv format into SCIRun *.pts/*.tet format
 static FieldHandle
