@@ -85,18 +85,6 @@ Isosurface::Isosurface(GuiContext* ctx) :
 
 Isosurface::~Isosurface()
 {
-  if (geom_id_)
-  {
-    GeometryOPort *ogport = (GeometryOPort*)get_oport("Geometry");
-    if (!ogport)
-    {
-      error("Unable to initialize " + name + "'s oport.");
-      return;
-    }
-    ogport->delObj(geom_id_);
-    ogport->flushViews();
-    geom_id_ = 0;
-  }
 }
 
 
@@ -401,12 +389,13 @@ Isosurface::execute()
   }
   
   // Stop showing the previous surface.
+  bool geomflush = false;
   if ( geom_id_ )
   {
     ogeom->delObj( geom_id_ );
     geom_id_ = 0;
+    geomflush = true;
   }
-
   if (bg)
   {
     // Merged send_results.
@@ -439,7 +428,12 @@ Isosurface::execute()
     else
     {
       geom_id_ = ogeom->addObj( geom, surface_name );
+      geomflush = true;
     }
+  }
+  if (geomflush)
+  {
+    ogeom->flushViews();
   }
 
   // Output surface.
