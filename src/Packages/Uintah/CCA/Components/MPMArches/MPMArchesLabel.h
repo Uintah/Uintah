@@ -36,33 +36,38 @@ namespace Uintah {
       const VarLabel* zvel_FCYLabel;
       const VarLabel* zvel_FCZLabel;
 
+      // temperature labels for solid materials
+
+      const VarLabel* tempSolid_CCLabel;
+      const VarLabel* tempSolid_FCXLabel;
+      const VarLabel* tempSolid_FCYLabel;
+      const VarLabel* tempSolid_FCZLabel;
+
       // reqd by MPM
 
       const VarLabel* DragForceX_CCLabel;
       const VarLabel* DragForceY_CCLabel;
       const VarLabel* DragForceZ_CCLabel;
 
-#if 0
-      const VarLabel* DragForceX_FCXLabel; 
-#endif
       const VarLabel* DragForceY_FCXLabel; 
       const VarLabel* DragForceZ_FCXLabel; 
 
       const VarLabel* DragForceX_FCYLabel; 
-#if 0
-      const VarLabel* DragForceY_FCYLabel; 
-#endif
       const VarLabel* DragForceZ_FCYLabel; 
 
       const VarLabel* DragForceX_FCZLabel; 
       const VarLabel* DragForceY_FCZLabel; 
-#if 0
-      const VarLabel* DragForceZ_FCZLabel; 
-#endif
 
       const VarLabel* PressureForce_FCXLabel; 
       const VarLabel* PressureForce_FCYLabel; 
       const VarLabel* PressureForce_FCZLabel; 
+
+      const VarLabel* heaTranSolid_CCLabel;
+      const VarLabel* heaTranSolid_tmp_CCLabel;
+      const VarLabel* heaTranSolid_FCXLabel;
+      const VarLabel* heaTranSolid_FCYLabel;
+      const VarLabel* heaTranSolid_FCZLabel;
+      const VarLabel* heaTranSolid_NCLabel;
 
       const VarLabel* SumAllForcesCCLabel; 
       const VarLabel* AccArchesCCLabel; 
@@ -115,6 +120,21 @@ namespace Uintah {
       const VarLabel* d_wVel_mmNonlinSrcLabel;
       const VarLabel* d_wVel_mmNonlinSrc_FCXLabel;
       const VarLabel* d_wVel_mmNonlinSrc_FCYLabel;
+
+      // enthalpy source term labels
+
+      const VarLabel* d_enth_mmLinSrc_tmp_CCLabel;
+      const VarLabel* d_enth_mmLinSrc_FCXLabel;
+      const VarLabel* d_enth_mmLinSrc_FCYLabel;
+      const VarLabel* d_enth_mmLinSrc_FCZLabel;
+      const VarLabel* d_enth_mmLinSrc_CCLabel;
+
+      const VarLabel* d_enth_mmNonLinSrc_tmp_CCLabel;
+      const VarLabel* d_enth_mmNonLinSrc_FCXLabel;
+      const VarLabel* d_enth_mmNonLinSrc_FCYLabel;
+      const VarLabel* d_enth_mmNonLinSrc_FCZLabel;
+      const VarLabel* d_enth_mmNonLinSrc_CCLabel;
+
     };
 
 } // end namespace Uintah

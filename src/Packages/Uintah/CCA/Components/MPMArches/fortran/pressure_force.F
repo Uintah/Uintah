@@ -3,7 +3,7 @@
 #include "../../Arches/fortran/param4.h"
 #else
       subroutine pressure_force(
-     $     pressforcex_fcx, pressforcey_fcy, pressforcez_fcz,
+     $     pforcex_fcx, pforcey_fcy, pforcez_fcz,
      $     epsg, 
      $     epsg_solid,
      $     pres, 
@@ -27,13 +27,13 @@ c     gas on continuous solid surfaces.
 c
 c     This routine calculates
 c
-c     pressforcex_fcx: gas pressure force acting on a solid wall 
+c     pforcex_fcx: gas pressure force acting on a solid wall 
 c     perpendicular to the x-direction, stored at x-face centers
 c
-c     pressforcey_fcy: gas pressure force acting on a solid wall 
+c     pforcey_fcy: gas pressure force acting on a solid wall 
 c     perpendicular to the y-direction, stored at y-face centers
 c
-c     pressforcez_fcz: gas pressure force acting on a solid wall
+c     pforcez_fcz: gas pressure force acting on a solid wall
 c     perpendicular to the z-direction, stored at z-face centers
 c
 c     The routine requires here, as inputs:
@@ -47,13 +47,13 @@ c
 c     sew, sns, stb: dimensions of sides of p-cell
 c
 c     dim_lo_fcx, dim_hi_fcx: extents of the dimension of the input 
-c     array pressforcex_fcx
+c     array pforcex_fcx
 c
 c     dim_lo_fcy, dim_hi_fcy: extents of the dimension of the input 
-c     array pressforcey_fcy
+c     array pforcey_fcy
 c
 c     dim_lo_fcz, dim_hi_fcz: extents of the dimension of the input 
-c     array pressforcez_fcz
+c     array pforcez_fcz
 c
 c     dim_lo_eps, dim_hi_eps: extents of the dimension of the input 
 c     array epsg
@@ -100,17 +100,17 @@ C-----------------------------------------------------------------------
       integer dim_lo_p(3)
       integer dim_hi_p(3)
       
-      double precision pressforcex_fcx(
+      double precision pforcex_fcx(
      $     dim_lo_fcx(1):dim_hi_fcx(1),
      $     dim_lo_fcx(2):dim_hi_fcx(2),
      $     dim_lo_fcx(3):dim_hi_fcx(3))
 
-      double precision pressforcey_fcy(
+      double precision pforcey_fcy(
      $     dim_lo_fcy(1):dim_hi_fcy(1),
      $     dim_lo_fcy(2):dim_hi_fcy(2),
      $     dim_lo_fcy(3):dim_hi_fcy(3))
 
-      double precision pressforcez_fcz(
+      double precision pforcez_fcz(
      $     dim_lo_fcz(1):dim_hi_fcz(1),
      $     dim_lo_fcz(2):dim_hi_fcz(2),
      $     dim_lo_fcz(3):dim_hi_fcz(3))      
@@ -165,30 +165,30 @@ c--------------------------------------------------------------------
 #ifdef __GNUC__
 C The variable names are too long the use the PASS3 macros,
 C so we have to do this - Steve
-      call arrass(pressforcex_fcx_low_x, pressforcex_fcx_low_y,
-     $ pressforcex_fcx_low_z, pressforcex_fcx_high_x,
-     $ pressforcex_fcx_high_y, pressforcex_fcx_high_z,
-     $ pressforcex_fcx, zero, valid_lo, valid_hi)
+      call arrass(pforcex_fcx_low_x, pforcex_fcx_low_y,
+     $ pforcex_fcx_low_z, pforcex_fcx_high_x,
+     $ pforcex_fcx_high_y, pforcex_fcx_high_z,
+     $ pforcex_fcx, zero, valid_lo, valid_hi)
 
-      call arrass(pressforcey_fcy_low_x, pressforcey_fcy_low_y,
-     $ pressforcey_fcy_low_z, pressforcey_fcy_high_x,
-     $ pressforcey_fcy_high_y, pressforcey_fcy_high_z,
-     $ pressforcey_fcy, zero, valid_lo, valid_hi)
+      call arrass(pforcey_fcy_low_x, pforcey_fcy_low_y,
+     $ pforcey_fcy_low_z, pforcey_fcy_high_x,
+     $ pforcey_fcy_high_y, pforcey_fcy_high_z,
+     $ pforcey_fcy, zero, valid_lo, valid_hi)
 
-      call arrass(pressforcez_fcz_low_x, pressforcez_fcz_low_y,
-     $ pressforcez_fcz_low_z, pressforcez_fcz_high_x,
-     $ pressforcez_fcz_high_y, pressforcez_fcz_high_z,
-     $ pressforcez_fcz, zero, valid_lo, valid_hi)
+      call arrass(pforcez_fcz_low_x, pforcez_fcz_low_y,
+     $ pforcez_fcz_low_z, pforcez_fcz_high_x,
+     $ pforcez_fcz_high_y, pforcez_fcz_high_z,
+     $ pforcez_fcz, zero, valid_lo, valid_hi)
 
 #else
-      call arrass(pressforcex_fcx_low, pressforcex_fcx_high,
-     $ pressforcex_fcx, zero, valid_lo, valid_hi)
+      call arrass(pforcex_fcx_low, pforcex_fcx_high,
+     $ pforcex_fcx, zero, valid_lo, valid_hi)
 
-      call arrass(pressforcey_fcy_low, pressforcey_fcy_high,
-     $ pressforcey_fcy, zero, valid_lo, valid_hi)
+      call arrass(pforcey_fcy_low, pforcey_fcy_high,
+     $ pforcey_fcy, zero, valid_lo, valid_hi)
 
-      call arrass(pressforcez_fcz_low, pressforcez_fcz_high,
-     $ pressforcez_fcz, zero, valid_lo, valid_hi)
+      call arrass(pforcez_fcz_low, pforcez_fcz_high,
+     $ pforcez_fcz, zero, valid_lo, valid_hi)
 
 #endif
 
@@ -208,14 +208,14 @@ c     debug, sk, April 14, 2001
                   if (pcell(i-1,j,k).eq.ffield) then
 
                      areayz = sns(j)*stb(k)
-                     pressforcex_fcx(i,j,k) = 
-     $                    pressforcex_fcx(i,j,k) +
+                     pforcex_fcx(i,j,k) = 
+     $                    pforcex_fcx(i,j,k) +
      $                    pres(i-1,j,k)*areayz
      $                    *epsg(i-1,j,k)*epsg_solid(i,j,k)
 
 c     debug, sk, April 14, 2001
                      print*, i,j,k, pres(i-1,j,k), 
-     $                    pressforcex_fcx(i,j,k)
+     $                    pforcex_fcx(i,j,k)
 
                   endif
 
@@ -224,8 +224,8 @@ c     debug, sk, April 14, 2001
                   if (pcell(i,j-1,k).eq.ffield) then
 
                      areaxz = sew(i)*stb(k)
-                     pressforcey_fcy(i,j,k) = 
-     $                    pressforcey_fcy(i,j,k) +
+                     pforcey_fcy(i,j,k) = 
+     $                    pforcey_fcy(i,j,k) +
      $                    pres(i,j-1,k)*areaxz
      $                    *epsg(i,j-1,k)*epsg_solid(i,j,k)
 
@@ -236,8 +236,8 @@ c     debug, sk, April 14, 2001
                   if (pcell(i,j,k-1).eq.ffield) then
 
                      areaxy = sew(i)*sns(j)
-                     pressforcez_fcz(i,j,k) = 
-     $                    pressforcez_fcz(i,j,k) +
+                     pforcez_fcz(i,j,k) = 
+     $                    pforcez_fcz(i,j,k) +
      $                    pres(i,j,k-1)*areaxy
      $                    *epsg(i,j,k-1)*epsg_solid(i,j,k)
 
@@ -260,14 +260,14 @@ c     debug, sk, April 14, 2001
                   if (pcell(i+1,j,k).eq.ffield) then
 
                      areayz = sns(j)*stb(k)
-                     pressforcex_fcx(i+1,j,k) = 
-     $                    pressforcex_fcx(i+1,j,k) -
+                     pforcex_fcx(i+1,j,k) = 
+     $                    pforcex_fcx(i+1,j,k) -
      $                    pres(i+1,j,k)*areayz
      $                    *epsg(i+1,j,k)*epsg_solid(i,j,k)
 
 c     debug, sk, April 14, 2001
                      print*, i+1,j,k, pres(i+1,j,k), 
-     $                    pressforcex_fcx(i+1,j,k)
+     $                    pforcex_fcx(i+1,j,k)
 
                   endif
 
@@ -288,8 +288,8 @@ c     debug, sk, April 14, 2001
                   if (pcell(i,j+1,k).eq.ffield) then
 
                      areaxz = sew(i)*stb(k)
-                     pressforcey_fcy(i,j+1,k) = 
-     $                    pressforcey_fcy(i,j+1,k) -
+                     pforcey_fcy(i,j+1,k) = 
+     $                    pforcey_fcy(i,j+1,k) -
      $                    pres(i,j+1,k)*areaxz
      $                    *epsg(i,j+1,k)*epsg_solid(i,j,k)
 
@@ -312,8 +312,8 @@ c     debug, sk, April 14, 2001
                   if (pcell(i,j,k+1).eq.ffield) then
 
                      areaxy = sew(i)*sns(j)
-                     pressforcez_fcz(i,j,k+1) = 
-     $                    pressforcez_fcz(i,j,k+1) -
+                     pforcez_fcz(i,j,k+1) = 
+     $                    pforcez_fcz(i,j,k+1) -
      $                    pres(i,j,k+1)*areaxy
      $                    *epsg(i,j,k+1)*epsg_solid(i,j,k)
 
@@ -330,30 +330,30 @@ c     debug: set pressure forces to zero
 #ifdef __GNUC__
 C The variable names are too long the use the PASS3 macros,
 C so we have to do this - Steve
-      call arrass(pressforcex_fcx_low_x, pressforcex_fcx_low_y,
-     $ pressforcex_fcx_low_z, pressforcex_fcx_high_x,
-     $ pressforcex_fcx_high_y, pressforcex_fcx_high_z,
-     $ pressforcex_fcx, zero, valid_lo, valid_hi)
+      call arrass(pforcex_fcx_low_x, pforcex_fcx_low_y,
+     $ pforcex_fcx_low_z, pforcex_fcx_high_x,
+     $ pforcex_fcx_high_y, pforcex_fcx_high_z,
+     $ pforcex_fcx, zero, valid_lo, valid_hi)
 
-      call arrass(pressforcey_fcy_low_x, pressforcey_fcy_low_y,
-     $ pressforcey_fcy_low_z, pressforcey_fcy_high_x,
-     $ pressforcey_fcy_high_y, pressforcey_fcy_high_z,
-     $ pressforcey_fcy, zero, valid_lo, valid_hi)
+      call arrass(pforcey_fcy_low_x, pforcey_fcy_low_y,
+     $ pforcey_fcy_low_z, pforcey_fcy_high_x,
+     $ pforcey_fcy_high_y, pforcey_fcy_high_z,
+     $ pforcey_fcy, zero, valid_lo, valid_hi)
 
-      call arrass(pressforcez_fcz_low_x, pressforcez_fcz_low_y,
-     $ pressforcez_fcz_low_z, pressforcez_fcz_high_x,
-     $ pressforcez_fcz_high_y, pressforcez_fcz_high_z,
-     $ pressforcez_fcz, zero, valid_lo, valid_hi)
+      call arrass(pforcez_fcz_low_x, pforcez_fcz_low_y,
+     $ pforcez_fcz_low_z, pforcez_fcz_high_x,
+     $ pforcez_fcz_high_y, pforcez_fcz_high_z,
+     $ pforcez_fcz, zero, valid_lo, valid_hi)
 
 #else
-      call arrass(pressforcex_fcx_low, pressforcex_fcx_high,
-     $ pressforcex_fcx, zero, valid_lo, valid_hi)
+      call arrass(pforcex_fcx_low, pforcex_fcx_high,
+     $ pforcex_fcx, zero, valid_lo, valid_hi)
 
-      call arrass(pressforcey_fcy_low, pressforcey_fcy_high,
-     $ pressforcey_fcy, zero, valid_lo, valid_hi)
+      call arrass(pforcey_fcy_low, pforcey_fcy_high,
+     $ pforcey_fcy, zero, valid_lo, valid_hi)
 
-      call arrass(pressforcez_fcz_low, pressforcez_fcz_high,
-     $ pressforcez_fcz, zero, valid_lo, valid_hi)
+      call arrass(pforcez_fcz_low, pforcez_fcz_high,
+     $ pforcez_fcz, zero, valid_lo, valid_hi)
 
 #endif
       return
