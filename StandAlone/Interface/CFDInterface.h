@@ -67,6 +67,7 @@ namespace Uintah {
       virtual void scheduleTimeAdvance(double t, double dt,
 				       const LevelP& level, SchedulerP&,
 				       DataWarehouseP&, DataWarehouseP&) = 0;
+
    private:
       CFDInterface(const CFDInterface&);
       CFDInterface& operator=(const CFDInterface&);
@@ -76,6 +77,9 @@ namespace Uintah {
 
 //
 // $Log$
+// Revision 1.14  2000/06/14 23:38:54  jas
+// Added FCVariables.
+//
 // Revision 1.13  2000/06/04 23:55:10  bbanerje
 // Removed const from int DataWarehouseP& old_dw in ScheduleTimeAdvance
 //
