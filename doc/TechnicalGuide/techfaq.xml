@@ -1,4 +1,6 @@
- 
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE faq SYSTEM "../faq.dtd">
+
 <!-- 
 
   each faq is a collection of entries.  Entries are a paired question and
@@ -374,5 +376,67 @@ Occured for thread:
       </para>
     </answer>
   </entry>
-
+  <entry>
+    <keywords>memory, unmapping, leaks, sgi</keywords>
+    <question>
+      <para>
+	Recently I've been getting the following message across my screen while
+	running SCIRun on my sgi octane:
+      </para>
+      <pre>
+Error unmapping memory
+munmap: errno=16
+Unmap failed - leaking memory
+      </pre>
+      <para>
+	Is this something that I'm causing via a coding error or is this a
+	memory issue with my machine?
+      </para>
+    </question>
+    <answer>
+      <para>
+	There is nothing wrong with your machine, nor is it your fault.  It
+	is something weird about IRIX and the SCIRun memory allocator that
+	has never been tracked down, and it is a fairly rare occurrence.
+      </para>
+    </answer>
+  </entry>
+  <entry>
+    <keywords>geometry object, color</keywords>
+    <question>
+      <para>
+	I created some simple geometry objects like cylinders, but I don't
+	know how to customize their color, anyone knows that?
+      </para>
+    </question>
+    <answer>
+      <para>
+	We have container classes for GeomObj's -- these are themselves
+	GeomObj's that contain one of more other GeomObj's inside of them.
+	They're very useful for building up scene graphs.  The
+	container you want to use is a GeomMaterial -- its constructor
+	takes a GeomObj (e.g. a GeomCylinder) and a MaterialHandle.  (Note:
+	the constructor for a Material can be as simple as passing in a
+	Color triple!)
+      </para>
+    </answer>
+  </entry>
+  <entry>
+    <keywords></keywords>
+    <question>
+      <para>
+	I created a user data type, but I don't know how to specify a new
+	color to represent its port type in the module. Now I'm using
+	yellow, the same color as field.
+      </para>
+    </question>
+    <answer>
+      <para>
+	When you created the new Port, you added a file into
+	Dataflow/Ports/ -- the .cc file for your new Port type should have
+	a specification for a name and for a color.  See
+	SCIRun/src/Dataflow/Ports/MatrixPort.cc as an example.
+      </para>
+    </answer>
+  </entry>
 </faq>

@@ -1,3 +1,5 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE faq SYSTEM "../faq.dtd">
 
 <!-- 
 
@@ -505,6 +507,28 @@ with associated vector attribute: </para>
         tool</A> requires against which to test the XML file.  This
         document description describes all the legal tags and other
         elements of the document structure.
+      </para>
+    </answer>
+  </entry>
+  <entry>
+    <keywords>Viewer, axes orientation</keywords>
+    <question>
+      <para>
+	By default, what directions the positive x,y,z axis point to in the
+	viewer module?
+      </para>
+    </question>
+    <answer>
+      <para>
+	By default you're looking down the negative-z axis, positive-x
+	point to your right, and positive-y points up.  If you have the
+	Axes turned on, you'll see arrows pointing in +/-{x,y,z}.  The way
+	to remember which is which is: (R,G,B) = (X,Y,Z).  And the arrows
+	pointing in the positive directions are brighter than the ones
+	pointing in the negative directions.  One last note, you can click
+	on the "Views" button at the botton-right of the ViewWindow, and
+	snap to a "canonical" view whenever you'd like (e.g. "Look down +Z
+	axis, Up vector +Y").
       </para>
     </answer>
   </entry>
