@@ -7,11 +7,13 @@ globalParams;
 
 % If compatible fluxes: q will be T=Energy/rho for this routine, as we want to limit
 % the gradient of T
-qOverRho = q ./ (rho + d_SMALL_NUM);
+%qOverRho = q ./ (rho);  % oren:  this is only for compatible fluxes
+
+qOverRho = q;
 
 [gradLim, grad_x]           = gradientLimiter(qOverRho, rho, rho_vrtx_1, rho_vrtx_2, delX, nCells);
 [q_slab,gradLim, grad_x]    = qAverageFlux(qOverRho, rho, rho_slab, rx, grad_x, gradLim, delX, nCells);
-q_advected                  = advectSlabs(xvel_FC, q_slab, ofs, nCells);
+q_advected                  = advectSlabs(xvel_FC, q_slab, ofs, nCells, delX);
 
 %_____________________________________________________________
 % Function: gradientLimiter
