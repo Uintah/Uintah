@@ -16,7 +16,8 @@ SRCS     += $(SRCDIR)/GridVisualizer.cc \
 	$(SRCDIR)/ParticleFieldExtractor.cc \
 	$(SRCDIR)/RescaleColorMapForParticles.cc \
 	$(SRCDIR)/ParticleVis.cc \
-	$(SRCDIR)/EigenEvaluator.cc
+	$(SRCDIR)/EigenEvaluator.cc \
+	$(SRCDIR)/InPlaneEigenEvaluator.cc
 
 
 PSELIBS :=  PSECore/Dataflow PSECore/Datatypes \
@@ -33,6 +34,9 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.6  2000/08/25 17:27:30  witzel
+# Added InPlaneEigenEvaluator
+#
 # Revision 1.5  2000/08/22 22:20:54  witzel
 # Added EigenEvaluator
 #
