@@ -1,5 +1,5 @@
 //  ICEMaterial.cc
-
+#include "ICE.h"
 #include "ICEMaterial.h"
 #include <Core/Geometry/IntVector.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
@@ -15,7 +15,7 @@
 #include <Packages/Uintah/CCA/Components/ICE/EOS/EquationOfStateFactory.h>
 
 
-#define d_SMALL_NUM 1.0e-100
+#define SMALL_NUM 1.0e-100
 using namespace std;
 using namespace Uintah;
 using namespace SCIRun;
@@ -195,7 +195,7 @@ void ICEMaterial::initializeCells(CCVariable<double>& rho_micro,
           press_CC[*iter]   = d_geom_objs[obj]->getInitialPressure();
           vel_CC[*iter]     = d_geom_objs[obj]->getInitialVelocity();
           rho_micro[*iter]  = d_geom_objs[obj]->getInitialDensity();
-          rho_CC[*iter]     = rho_micro[*iter] + d_SMALL_NUM;
+          rho_CC[*iter]     = rho_micro[*iter] + SMALL_NUM;
           temp[*iter]       = d_geom_objs[obj]->getInitialTemperature();
           speedSound[*iter] = d_speed_of_sound;
           visc_CC[*iter]    = d_viscosity;
@@ -208,7 +208,7 @@ void ICEMaterial::initializeCells(CCVariable<double>& rho_micro,
           press_CC[*iter]   = d_geom_objs[obj]->getInitialPressure();
           vel_CC[*iter]     = d_geom_objs[obj]->getInitialVelocity();
           rho_micro[*iter]  = d_geom_objs[obj]->getInitialDensity();
-          rho_CC[*iter]     = rho_micro[*iter] + d_SMALL_NUM;
+          rho_CC[*iter]     = rho_micro[*iter] + SMALL_NUM;
           temp[*iter]       = d_geom_objs[obj]->getInitialTemperature();
           speedSound[*iter] = d_speed_of_sound;
           visc_CC[*iter]    = d_viscosity;
@@ -219,19 +219,29 @@ void ICEMaterial::initializeCells(CCVariable<double>& rho_micro,
       if (numMatls > 1 ) {
         if( count > 0)
         {
-           vol_frac_CC[*iter]= count/totalppc;
-        }
-        press_CC[*iter]   = d_geom_objs[obj]->getInitialPressure();
-        vel_CC[*iter]     = d_geom_objs[obj]->getInitialVelocity();
-        rho_micro[*iter]  = d_geom_objs[obj]->getInitialDensity();
-        rho_CC[*iter]     = rho_micro[*iter] * vol_frac_CC[*iter] + d_SMALL_NUM;
-        temp[*iter]       = d_geom_objs[obj]->getInitialTemperature();
-        speedSound[*iter] = d_speed_of_sound;
-        visc_CC[*iter]    = d_viscosity;
-        cv[*iter]         = d_specificHeat; 
-        IveBeenHere[*iter]= obj;    
+           vol_frac_CC[*iter]= count/totalppc;       
+           press_CC[*iter]   = d_geom_objs[obj]->getInitialPressure();
+           vel_CC[*iter]     = d_geom_objs[obj]->getInitialVelocity();
+           rho_micro[*iter]  = d_geom_objs[obj]->getInitialDensity();
+           rho_CC[*iter]     = rho_micro[*iter] * vol_frac_CC[*iter] + SMALL_NUM;
+           temp[*iter]       = d_geom_objs[obj]->getInitialTemperature();
+           speedSound[*iter] = d_speed_of_sound;
+           visc_CC[*iter]    = d_viscosity;
+           cv[*iter]         = d_specificHeat; 
+           IveBeenHere[*iter]= obj; 
+        }   
       }    
     }  // Loop over domain
+    //__________________________________
+    // John is there a cleaner way to use
+    //  printData
+    /*`==========DEBUGGING==========*/
+#if 0
+    ICE* d_ice;
+    d_ice->printData( patch,1, "cellInitialization","IveBeenHere",IveBeenHere);
+    d_ice->printData( patch,1, "cellInitialization","press_CC",press_CC);
+#endif
+    /*==========DEBUGGING==========`*/
   }  // Loop over geom_objects
 }
 
