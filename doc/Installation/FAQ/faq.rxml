@@ -376,6 +376,57 @@ machine).
 
 </qandaentry>
 
+<qandaentry>
+  <revhistory>
+    <revision>
+      <revnumber>1.20</revnumber>
+      <date>2/09/04</date>
+    </revision>
+  </revhistory>
+  <question>
+    <para> SCIRun configure fails with an error about not finding the
+           mdsplus library.  What is this all about?
+    </para>
+  </question>
+
+  <answer>
+    <para>
+       You don't have the mdsplus libraries installed on your machine.
+       You need them if you plan to use the Fusion package.  However,
+       if you do not want to, or do not think that you are using
+       Fusion, then it is most likely because your configure line
+       either explicitly states to use Fusion or does not explicitly
+       list the SCIRun packages to use (and thus SCIRun is trying to use
+       all packages in your SCIRun/src/Packages directory.)  To fix this,
+       use something like this: '--enable-package="BioPSE Teem"' to get
+       only the packages you want.
+    </para>
+  </answer>
+</qandaentry>
+
+<!--  THIS IS A TEMPLATE OF A FAQ ENTRY... Copy it and then edit it.
+<qandaentry>
+  <revhistory>
+    <revision>
+      <revnumber>1.0</revnumber>
+      <date>7/29/01</date>
+    </revision>
+  </revhistory>
+  <question>
+    <para> Question
+    </para>
+  </question>
+
+  <answer>
+    <para>
+       Answer
+    </para>
+  </answer>
+</qandaentry>
+
+-- THIS IS THE END OF THE FAQ ENTRY TEMPLATE -->
+
+
 </qandaset>
 
 </article>
