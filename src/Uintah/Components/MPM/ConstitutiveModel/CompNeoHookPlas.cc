@@ -198,16 +198,18 @@ void CompNeoHookPlas::computeStressTensor(const Patch* patch,
   old_dw->get(delT, lb->delTLabel);
 
   ParticleVariable<Vector> pCrackSurfaceNormal;
+  ParticleVariable<double> pMicrocrackSize;
   ParticleVariable<int> pIsBroken;
   Lattice* lattice;
   BrokenCellShapeFunction* brokenCellShapeFunction;
   if(matl->getFractureModel()) {
-        old_dw->get(pCrackSurfaceNormal, lb->pCrackSurfaceNormalLabel, pset);
-	old_dw->get(pIsBroken, lb->pIsBrokenLabel, pset);
+    old_dw->get(pCrackSurfaceNormal, lb->pCrackSurfaceNormalLabel, pset);
+    old_dw->get(pMicrocrackSize, lb->pMicrocrackSizeLabel, pset);
+    old_dw->get(pIsBroken, lb->pIsBrokenLabel, pset);
 	
-        lattice = scinew Lattice(px);
-	brokenCellShapeFunction = scinew BrokenCellShapeFunction(*lattice,
-	   pIsBroken,pCrackSurfaceNormal);
+    lattice = scinew Lattice(px);
+    brokenCellShapeFunction = scinew BrokenCellShapeFunction(*lattice,
+	   pIsBroken,pCrackSurfaceNormal,pMicrocrackSize);
   }
 
   for(ParticleSubset::iterator iter = pset->begin();
@@ -387,6 +389,8 @@ void CompNeoHookPlas::addComputesAndRequires(Task* task,
 			Ghost::AroundNodes, 1 );
       task->requires(old_dw, lb->pCrackSurfaceNormalLabel, matl->getDWIndex(),
                         patch,Ghost::AroundNodes, 1 );
+      task->requires(old_dw, lb->pMicrocrackSizeLabel, matl->getDWIndex(), patch,
+			Ghost::AroundNodes, 1 );
    }
 
    task->computes(new_dw, lb->pStressLabel_preReloc, matl->getDWIndex(),  patch);
@@ -425,6 +429,9 @@ const TypeDescription* fun_getTypeDescription(CompNeoHookPlas::CMData*)
 }
 
 // $Log$
+// Revision 1.41  2000/09/07 21:11:09  tan
+// Added particle variable pMicrocrackSize for fracture.
+//
 // Revision 1.40  2000/09/06 19:45:09  jas
 // Changed new to scinew in constitutive models related to crack stuff.
 //

@@ -33,17 +33,21 @@ initializeFractureModelData(const Patch* patch,
    ParticleVariable<int> pIsBroken;
    new_dw->allocate(pIsBroken, lb->pIsBrokenLabel, pset);
    ParticleVariable<Vector> pCrackSurfaceNormal;
-   new_dw->allocate(pCrackSurfaceNormal, lb->pCrackSurfaceNormalLabel, pset);
+   new_dw->allocate(pCrackSurfaceNormal, lb->pCrackSurfaceNormalLabel, pset);   
+   ParticleVariable<double> pMicrocrackSize;
+   new_dw->allocate(pMicrocrackSize, lb->pMicrocrackSizeLabel, pset);
    
    for(ParticleSubset::iterator iter = pset->begin();
           iter != pset->end(); iter++) {
         particleIndex idx = *iter;
 	pIsBroken[idx] = 0;
 	pCrackSurfaceNormal[idx] = Vector(0.,0.,0.);
+	pMicrocrackSize[idx] = 0;
    }
 
    new_dw->put(pIsBroken, lb->pIsBrokenLabel);
    new_dw->put(pCrackSurfaceNormal, lb->pCrackSurfaceNormalLabel);
+   new_dw->put(pMicrocrackSize, lb->pMicrocrackSizeLabel);
 }
 
 void
@@ -59,10 +63,12 @@ crackGrow(const Patch* patch,
    ParticleVariable<Matrix3> pStress;
    ParticleVariable<int> pIsBroken;
    ParticleVariable<Vector> pCrackSurfaceNormal;
+   ParticleVariable<double> pMicrocrackSize;
 
    new_dw->get(pStress, lb->pStressLabel_preReloc, pset);
    old_dw->get(pIsBroken, lb->pIsBrokenLabel, pset);
    old_dw->get(pCrackSurfaceNormal, lb->pCrackSurfaceNormalLabel, pset);
+   old_dw->get(pMicrocrackSize, lb->pMicrocrackSizeLabel, pset);   
    
    for(ParticleSubset::iterator iter = pset->begin();
           iter != pset->end(); iter++)
@@ -86,6 +92,7 @@ crackGrow(const Patch* patch,
 
    new_dw->put(pIsBroken, lb->pIsBrokenLabel_preReloc);
    new_dw->put(pCrackSurfaceNormal, lb->pCrackSurfaceNormalLabel_preReloc);
+   new_dw->put(pMicrocrackSize, lb->pMicrocrackSizeLabel_preReloc);
 }
 
 Fracture::
@@ -104,6 +111,9 @@ Fracture::~Fracture()
 } //namespace Uintah
 
 // $Log$
+// Revision 1.33  2000/09/07 21:11:10  tan
+// Added particle variable pMicrocrackSize for fracture.
+//
 // Revision 1.32  2000/09/07 00:39:25  tan
 // Fixed a bug in ForceBC.
 //

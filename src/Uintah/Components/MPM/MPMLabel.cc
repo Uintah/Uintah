@@ -59,6 +59,9 @@ MPMLabel::MPMLabel()
   pCrackSurfaceNormalLabel = scinew VarLabel( "p.crackSurfaceNormal",
 			ParticleVariable<Vector>::getTypeDescription() );
 
+  pMicrocrackSizeLabel = scinew VarLabel( "p.microcrackSize",
+			ParticleVariable<double>::getTypeDescription() );
+
   pParticleIDLabel = scinew VarLabel("p.particleID",
 			ParticleVariable<long>::getTypeDescription() );
 
@@ -110,6 +113,9 @@ MPMLabel::MPMLabel()
 
   pCrackSurfaceNormalLabel_preReloc = scinew VarLabel( "p.crackSurfaceNormal+",
 			ParticleVariable<Vector>::getTypeDescription() );
+
+  pMicrocrackSizeLabel_preReloc = scinew VarLabel( "p.microcrackSize+",
+			ParticleVariable<double>::getTypeDescription() );
 
   pParticleIDLabel_preReloc = scinew VarLabel("p.particleID+",
 			ParticleVariable<long>::getTypeDescription() );
@@ -232,6 +238,7 @@ MPMLabel::~MPMLabel()
   delete pSurfLabel;
   delete pIsBrokenLabel;
   delete pCrackSurfaceNormalLabel;
+  delete pMicrocrackSizeLabel;
   delete pParticleIDLabel;
   delete pIsIgnitedLabel;
   delete pMassRateLabel;
@@ -249,6 +256,7 @@ MPMLabel::~MPMLabel()
   delete pSurfLabel_preReloc;
   delete pIsBrokenLabel_preReloc;
   delete pCrackSurfaceNormalLabel_preReloc;
+  delete pMicrocrackSizeLabel_preReloc;
   delete pParticleIDLabel_preReloc;
   delete pIsIgnitedLabel_preReloc;
   delete pMassRateLabel_preReloc;
@@ -302,6 +310,9 @@ void MPMLabel::registerPermanentParticleState(int i,
 }
 
 // $Log$
+// Revision 1.28  2000/09/07 21:11:04  tan
+// Added particle variable pMicrocrackSize for fracture.
+//
 // Revision 1.27  2000/09/05 05:16:02  tan
 // Moved Fracture Model to MPMMaterial class.
 //

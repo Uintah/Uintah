@@ -17,7 +17,8 @@ public:
 
         BrokenCellShapeFunction( const Lattice& lattice,
                                  const ParticleVariable<int>& pIsBroken,
-				 const ParticleVariable<Vector>& pCrackSurfaceNormal );
+				 const ParticleVariable<Vector>& pCrackSurfaceNormal,
+				 const ParticleVariable<double>& pMicrocrackSize );
 
   bool  findCellAndWeights( int partIdx, 
                             IntVector nodeIdx[8], 
@@ -41,6 +42,7 @@ private:
   const Lattice&                  d_lattice;
   const ParticleVariable<int>&    d_pIsBroken;
   const ParticleVariable<Vector>& d_pCrackSurfaceNormal;
+  const ParticleVariable<double>& d_pMicrocrackSize;
 };
 
 } //namespace MPM
@@ -49,6 +51,9 @@ private:
 #endif //__Uintah_MPM_BrokenCellShapeFunction__
 
 // $Log$
+// Revision 1.5  2000/09/07 21:11:10  tan
+// Added particle variable pMicrocrackSize for fracture.
+//
 // Revision 1.4  2000/09/05 07:44:17  tan
 // Applied BrokenCellShapeFunction to constitutive models where fracture
 // is involved.
