@@ -81,6 +81,10 @@ public:
       virtual void sched_reComputeTurbSubmodel(SchedulerP&, const PatchSet* patches,
 					       const MaterialSet* matls);
 
+      virtual void sched_computeScalarVariance(SchedulerP&, const PatchSet* patches,
+					       const MaterialSet* matls);
+
+
 protected:
 
 private:
@@ -123,6 +127,19 @@ private:
 			      const MaterialSubset* matls,
 			      DataWarehouse* old_dw,
 			      DataWarehouse* new_dw);
+
+
+      ///////////////////////////////////////////////////////////////////////
+      // Actually Calculate the subgrid scale variance
+      //    [in] 
+      //        documentation here
+      void computeScalarVariance(const ProcessorGroup*,
+				 const PatchSubset* patches,
+				 const MaterialSubset* matls,
+				 DataWarehouse* old_dw,
+				 DataWarehouse* new_dw);
+
+
  private:
 
       // const VarLabel* variables 

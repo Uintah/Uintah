@@ -1732,6 +1732,7 @@ DynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
 				     DataWarehouse*,
 				     DataWarehouse* new_dw)
 {
+  double time = d_lab->d_sharedState->getElapsedTime();
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
@@ -1825,8 +1826,14 @@ DynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
       }
     }
 #endif
+    
 	  //     calculate the local Smagorinsky coefficient
 	  //     perform "clipping" in case MLij is negative...
+    double factor = 1;
+#if 1
+    if (time < 2.0)
+      factor = (time+0.000001)*0.5;
+#endif
     for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
       for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
 	for (int colX = indexLow.x(); colX <= indexHigh.x(); colX ++) {
@@ -1846,9 +1853,11 @@ DynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
 	      Cs[currCell] = sqrt(MLHatI[currCell]/MMHatI[currCell]);
 	    }
 	  else {
-	    viscosity[currCell] = MLHatI[currCell]/MMHatI[currCell]
+	    viscosity[currCell] = factor*factor*
+	                          MLHatI[currCell]/MMHatI[currCell]
 	                          *filter*filter*IsI[currCell]*den[currCell] + viscos;
 	    Cs[currCell] = sqrt(MLHatI[currCell]/MMHatI[currCell]);
+	    Cs[currCell] *= factor;
 	  }
 	}
       }
@@ -1926,3 +1935,133 @@ DynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
 }
 
 
+void 
+DynamicProcedure::sched_computeScalarVariance(SchedulerP& sched, 
+					      const PatchSet* patches,
+					      const MaterialSet* matls)
+{
+  Task* tsk = scinew Task("DynamicProcedure::computeScalarVar",
+			  this,
+			  &DynamicProcedure::computeScalarVariance);
+
+  
+  // Requires, only the scalar corresponding to matlindex = 0 is
+  //           required. For multiple scalars this will be put in a loop
+#ifdef correctorstep
+  tsk->requires(Task::NewDW, d_lab->d_scalarPredLabel, 
+		Ghost::AroundCells, Arches::ONEGHOSTCELL);
+#else  
+  tsk->requires(Task::NewDW, d_lab->d_scalarSPLabel, 
+		Ghost::AroundCells, Arches::ONEGHOSTCELL);
+#endif
+
+  // Computes
+  tsk->computes(d_lab->d_scalarVarSPLabel);
+
+  sched->addTask(tsk, patches, matls);
+}
+
+
+void 
+DynamicProcedure::computeScalarVariance(const ProcessorGroup* pc,
+					const PatchSubset* patches,
+					const MaterialSubset*,
+					DataWarehouse*,
+					DataWarehouse* new_dw)
+{
+  for (int p = 0; p < patches->size(); p++) {
+    const Patch* patch = patches->get(p);
+    int archIndex = 0; // only one arches material
+    int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+    // Variables
+    constCCVariable<double> scalar;
+    CCVariable<double> scalarVar;
+    // Get the velocity, density and viscosity from the old data warehouse
+#ifdef correctorstep
+    new_dw->get(scalar, d_lab->d_scalarPredLabel, matlIndex, patch, Ghost::AroundCells,
+		Arches::ONEGHOSTCELL);
+#else
+    new_dw->get(scalar, d_lab->d_scalarSPLabel, matlIndex, patch, Ghost::AroundCells,
+		Arches::ONEGHOSTCELL);
+#endif
+    new_dw->allocateAndPut(scalarVar, d_lab->d_scalarVarSPLabel, matlIndex, patch);
+    scalarVar.initialize(0.0);
+    
+    // Get the PerPatch CellInformation data
+    PerPatch<CellInformationP> cellInfoP;
+    if (new_dw->exists(d_lab->d_cellInfoLabel, matlIndex, patch)) 
+      new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
+    else {
+      cellInfoP.setData(scinew CellInformation(patch));
+      new_dw->put(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
+    }
+    CellInformation* cellinfo = cellInfoP.get().get_rep();
+    
+    int numGC = 1;
+    IntVector idxLo = patch->getGhostCellLowIndex(numGC);
+    IntVector idxHi = patch->getGhostCellHighIndex(numGC);
+    Array3<double> phiSqr(idxLo, idxHi);
+
+    for (int colZ = idxLo.z(); colZ < idxHi.z(); colZ ++) {
+      for (int colY = idxLo.y(); colY < idxHi.y(); colY ++) {
+	for (int colX = idxLo.x(); colX < idxHi.x(); colX ++) {
+	  IntVector currCell(colX, colY, colZ);
+	  phiSqr[currCell] = scalar[currCell]*scalar[currCell];
+	}
+      }
+    }
+
+    Array3<double> filterPhi(patch->getLowIndex(), patch->getHighIndex());
+    Array3<double> filterPhiSqr(patch->getLowIndex(), patch->getHighIndex());
+    filterPhi.initialize(0.0);
+    filterPhiSqr.initialize(0.0);
+
+    IntVector indexLow = patch->getCellFORTLowIndex();
+    IntVector indexHigh = patch->getCellFORTHighIndex();
+#ifdef PetscFilter
+    d_filter->applyFilter(pc, patch,scalar, filterPhi);
+    d_filter->applyFilter(pc, patch,phiSqr, filterPhiSqr);
+#else
+
+    for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
+      for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
+	for (int colX = indexLow.x(); colX <= indexHigh.x(); colX ++) {
+	  IntVector currCell(colX, colY, colZ);
+	  double cube_delta = (2.0*cellinfo->sew[colX])*(2.0*cellinfo->sns[colY])*
+                 	    (2.0*cellinfo->stb[colZ]);
+	  double invDelta = 1.0/cube_delta;
+	  for (int kk = -1; kk <= 1; kk ++) {
+	    for (int jj = -1; jj <= 1; jj ++) {
+	      for (int ii = -1; ii <= 1; ii ++) {
+		IntVector filterCell = IntVector(colX+ii,colY+jj,colZ+kk);
+		double vol = cellinfo->sew[colX+ii]*cellinfo->sns[colY+jj]*
+		             cellinfo->stb[colZ+kk]*
+		             (1.0-0.5*abs(ii))*
+		             (1.0-0.5*abs(jj))*(1.0-0.5*abs(kk));
+		filterPhi[currCell] += scalar[filterCell]*vol; 
+		filterPhiSqr[currCell] += phiSqr[filterCell]*vol; 
+	      }
+	    }
+	  }
+	  
+	  filterPhi[currCell] *= invDelta;
+	  filterPhiSqr[currCell] *= invDelta;
+	}
+      }
+    }
+#endif
+    for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
+      for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
+	for (int colX = indexLow.x(); colX <= indexHigh.x(); colX ++) {
+	  IntVector currCell(colX, colY, colZ);
+
+
+	  // compute scalar variance
+	  scalarVar[currCell] = d_CFVar*(filterPhiSqr[currCell]-
+					 (filterPhi[currCell]*filterPhi[currCell]));
+	}
+      }
+    }
+    // Put the calculated viscosityvalue into the new data warehouse
+  }
+}
