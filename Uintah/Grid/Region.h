@@ -9,7 +9,12 @@
 #include <SCICore/Geometry/Vector.h>
 #include <SCICore/Geometry/IntVector.h>
 #include <SCICore/Math/MiscMath.h>
+
+#include <string>
 #include <iosfwd>
+#include <stdio.h>
+
+using std::string;
 
 namespace Uintah {
     
@@ -116,12 +121,54 @@ WARNING
       //////////
       // Insert Documentation Here:
       inline bool contains(const IntVector& idx) const {
-	 return idx.x() >= 0 && idx.y() >= 0 && idx.z() >= 0
-     && idx.x() <= d_res.x() && idx.y() <= d_res.y() && idx.z() <= d_res.z();
+	 return idx.x() >= 0 && idx.y() >= 0 && idx.z() >= 0 &&
+	   idx.x() <= d_res.x() && idx.y() <= d_res.y() && 
+	   idx.z() <= d_res.z();
       }
+
+      //////////
+      // Determines if "region" is within (or the same as) this
+      // region.
+      inline bool contains(const Region& region) const {
+	 return ( ( ( ( region.d_box.lower().x() >= d_box.lower().x() &&
+			region.d_box.lower().x() <= d_box.upper().x() ) || 
+		      ( region.d_box.lower().x() <= d_box.lower().x() &&
+			region.d_box.lower().x() >= d_box.upper().x() ) ) &&
+
+		    ( ( region.d_box.lower().y() >= d_box.lower().y() &&
+			region.d_box.lower().y() <= d_box.upper().y() ) || 
+		      ( region.d_box.lower().y() <= d_box.lower().y() &&
+			region.d_box.lower().y() >= d_box.upper().y() ) ) &&
+
+		    ( ( region.d_box.lower().z() >= d_box.lower().z() &&
+			region.d_box.lower().z() <= d_box.upper().z() ) || 
+		      ( region.d_box.lower().z() <= d_box.lower().z() &&
+			region.d_box.lower().z() >= d_box.upper().z() ) ) ) &&
+
+		  ( ( ( region.d_box.upper().x() >= d_box.lower().x() &&
+			region.d_box.upper().x() <= d_box.upper().x() ) || 
+		      ( region.d_box.upper().x() <= d_box.lower().x() &&
+			region.d_box.upper().x() >= d_box.upper().x() ) ) &&
+
+		    ( ( region.d_box.upper().y() >= d_box.lower().y() &&
+			region.d_box.upper().y() <= d_box.upper().y() ) || 
+		      ( region.d_box.upper().y() <= d_box.lower().y() &&
+			region.d_box.upper().y() >= d_box.upper().y() ) ) &&
+
+		    ( ( region.d_box.upper().z() >= d_box.lower().z() &&
+			region.d_box.upper().z() <= d_box.upper().z() ) || 
+		      ( region.d_box.upper().z() <= d_box.lower().z() &&
+			region.d_box.upper().z() >= d_box.upper().z() ) ) ) );
+      }
+
+      //////////
+      // Insert Documentation Here:
       Point nodePosition(const IntVector& idx) const {
 	 return d_box.lower() + dCell()*idx;
       }
+
+      string toString() const;
+
    protected:
       friend class Level;
       
@@ -153,6 +200,9 @@ std::ostream& operator<<(std::ostream& out, const Uintah::Region* r);
 
 //
 // $Log$
+// Revision 1.16  2000/05/05 06:42:45  dav
+// Added some _hopefully_ good code mods as I work to get the MPI stuff to work.
+//
 // Revision 1.15  2000/05/04 19:06:48  guilkey
 // Added the beginnings of grid boundary conditions.  Functions still
 // need to be filled in.

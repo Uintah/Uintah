@@ -234,11 +234,15 @@ WARNING
       
       //////////
       // Insert Documentation Here:
-      void addComps(std::vector<Dependency*>&) const;
+      void addComps(vector<Dependency*>&) const;
+
+      //////////
+      // Insert Documentation Here:
+      const vector<Dependency*>& getComputes() const;
       
       //////////
       // Insert Documentation Here:
-      void addReqs(std::vector<Dependency*>&) const;
+      void addReqs(vector<Dependency*>&) const;
       
    private:
       //////////
@@ -264,6 +268,9 @@ WARNING
 
 //
 // $Log$
+// Revision 1.9  2000/05/05 06:42:45  dav
+// Added some _hopefully_ good code mods as I work to get the MPI stuff to work.
+//
 // Revision 1.8  2000/04/26 06:49:00  sparker
 // Streamlined namespaces
 //

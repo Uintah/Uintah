@@ -140,7 +140,8 @@ BrainDamagedScheduler::setupTaskConnections()
 }
 
 void
-BrainDamagedScheduler::execute(const ProcessorContext* pc)
+BrainDamagedScheduler::execute(const ProcessorContext * pc,
+			             DataWarehouseP   & dwp )
 {
     if(d_tasks.size() == 0){
 	cerr << "WARNING: Scheduler executed, but no tasks\n";
@@ -157,15 +158,48 @@ BrainDamagedScheduler::execute(const ProcessorContext* pc)
 	    TaskRecord* task=*iter;
 	    double start = Time::currentSeconds();
 	    if(!task->task->isCompleted() && allDependenciesCompleted(task)){
-		if(task->task->usesThreads()){
-		    //cerr << "Performing task with " << numThreads << " threads: " << task->task->getName() << '\n';
-                    d_pool->parallel(this, &BrainDamagedScheduler::runThreadedTask,
-				   numThreads,
-				   task, pc, d_reducer);
-//task->task->doit(threadpc);
-		} else {
-		    //cerr << "Performing task: " << task->task->getName() << '\n';
+
+	        // Figure out which MPI node should be doing this task.
+
+	        int taskLocation = d_MpiRank; // need to actually
+		                              // figure it out...
+
+	        // If it is this node, then kick off the task.
+	        // Either way, record which node is doing the task so
+	        // so that if one of our tasks needs data from it, we
+	        // will know where to go get it from.
+
+	        if( d_MpiRank == taskLocation ) { 
+		  // I am responsible for this task
+		  if(task->task->usesThreads()){
+		    //cerr << "Performing task with " << numThreads 
+		    //     << " threads: " << task->task->getName() << '\n';
+                    d_pool->parallel(this,
+				     &BrainDamagedScheduler::runThreadedTask,
+				     numThreads,
+				     task, pc, d_reducer);
+		    //task->task->doit(threadpc);
+		  } else {
+		    //cerr << "Performing task: " << task->task->getName() 
+		    //     << '\n';
 		    task->task->doit(pc);
+		  }
+		} else { // I am not responsible for this task, so run
+		         // through all the variables that it computes
+		         // and register them in the DataWarehouse so
+		         // that it will know where to find them if it
+		         // needs to at some future point.
+
+		  const vector<Task::Dependency*> & computes = 
+		                                     task->task->getComputes();
+		  vector<Task::Dependency*>::const_iterator iter = 
+		                                              computes.begin();
+		  while( iter != computes.end() ) {
+		    dwp->registerOwnership( (*iter)->d_var,
+					    (*iter)->d_region,
+					    taskLocation );
+		    iter++;
+		  }
 		}
 		double dt = Time::currentSeconds()-start;
 		cout << "Completed task: " << task->task->getName() << " (" << dt << " seconds)\n";
@@ -230,6 +264,9 @@ TaskRecord::TaskRecord(Task* t)
 
 //
 // $Log$
+// Revision 1.10  2000/05/05 06:42:42  dav
+// Added some _hopefully_ good code mods as I work to get the MPI stuff to work.
+//
 // Revision 1.9  2000/04/28 21:12:04  jas
 // Added some includes to get it to compile on linux.
 //

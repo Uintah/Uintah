@@ -12,12 +12,15 @@ SRCS     += $(SRCDIR)/BrainDamagedScheduler.cc \
 
 PSELIBS := Uintah/Grid Uintah/Interface SCICore/Thread Uintah/Parallel \
 	Uintah/Exceptions SCICore/Exceptions
-LIBS :=
+LIBS := -lmpi
 
 include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.4  2000/05/05 06:42:43  dav
+# Added some _hopefully_ good code mods as I work to get the MPI stuff to work.
+#
 # Revision 1.3  2000/04/12 22:59:56  sparker
 # Link with xerces
 #

@@ -118,7 +118,7 @@ void SimulationController::run()
 				 cfd, mpm);
    
    ProcessorContext* pc = ProcessorContext::getRootContext();
-   scheduler->execute(pc);
+   scheduler->execute(pc, old_ds);
    
    Output* output = dynamic_cast<Output*>(getPort("output"));
    
@@ -156,7 +156,7 @@ void SimulationController::run()
       // Begin next time step...
       scheduleComputeStableTimestep(level, scheduler, new_ds, cfd, mpm);
       scheduler->addTarget(sharedState->get_delt_label());
-      scheduler->execute(pc);
+      scheduler->execute(pc, new_ds);
       
       old_ds = new_ds;
    }
@@ -366,6 +366,9 @@ void SimulationController::scheduleTimeAdvance(double t, double delt,
 
 //
 // $Log$
+// Revision 1.15  2000/05/05 06:42:44  dav
+// Added some _hopefully_ good code mods as I work to get the MPI stuff to work.
+//
 // Revision 1.14  2000/05/04 18:38:32  jas
 // Now the max_dt is used in the simulation if it is smaller than the
 // stable dt computed in the constitutive model.
