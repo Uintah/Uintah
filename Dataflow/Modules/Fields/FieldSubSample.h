@@ -106,7 +106,9 @@ FieldSubSampleAlgoT<FIELD>::execute(FieldHandle field_h,
 
   register unsigned int i, j, k, inode, jnode, knode;
 
-  Array1<unsigned int> dim = imesh->get_dim();
+  vector<unsigned int> dim;
+
+  imesh->get_dim( dim );
 
   if( dim.size() == 3 ) {
     idim_in = dim[0];
