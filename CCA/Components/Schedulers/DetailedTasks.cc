@@ -3,6 +3,7 @@
 #include <Packages/Uintah/CCA/Components/Schedulers/TaskGraph.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
 #include <Packages/Uintah/CCA/Components/Schedulers/MemoryLog.h>
+#include <Dataflow/XMLUtil/XMLUtil.h>
 #include <Core/Containers/ConsecutiveRangeSet.h>
 #include <Core/Util/NotFinished.h>
 #include <Core/Util/DebugStream.h>

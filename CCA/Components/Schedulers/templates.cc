@@ -16,7 +16,7 @@
 #include <Packages/Uintah/CCA/Components/Schedulers/TaskGraph.h>
 #include <Packages/Uintah/CCA/Components/Schedulers/CommRecMPI.h>
 
-#ifdef __sgi
+#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
 #pragma set woff 1468
 #endif
 
