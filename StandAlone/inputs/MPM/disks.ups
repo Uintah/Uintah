@@ -97,40 +97,26 @@
                         <BCType label = "Kinematic" var = "velocity">
                            <velocity> [0.0,0.0,0.0] </velocity>
                         </BCType>
-                        <BCType label = "Thermal" var = "temperature">
-                            <temperature> 100.0 </temperature>
-                        </BCType>
                 </Face>
                 <Face side = "x+">
                         <BCType label = "Kinematic" var = "velocity">
 			     <velocity> [0.0,0.0,0.0] </velocity>
-                        </BCType>
-                        <BCType label = "Thermal" var = "temperature">
-                            <temperature> 100.0 </temperature>
                         </BCType>
                 </Face>
                 <Face side = "y-">
                         <BCType label = "Kinematic" var = "velocity">
                            <velocity> [0.0,0.0,0.0] </velocity>
                         </BCType>
-                        <BCType label = "Thermal" var = "heat_flux">
-                            <heat_flux> 10.0 </heat_flux>
-                        </BCType>
                 </Face>                  
 		<Face side = "y+">
                         <BCType label = "Kinematic" var = "velocity">            			    <velocity> [0.0,0.0,0.0] </velocity>
                         </BCType>
-                        <BCType label = "Thermal" var = "heat_flux">
-                            <heat_flux> 10.0 </heat_flux>
-                        </BCType>
                 </Face>
                 <Face side = "z-">
                         <BCType label = "Symmetric" var = "symmetry"> </BCType>
-                        <BCType label = "Thermal" var = "symmetry"> </BCType>
                 </Face>
                 <Face side = "z+">
                         <BCType label = "Symmetric" var = "symmetry"> </BCType>
-                        <BCType label = "Thermal" var = "symmetry"> </BCType>
                 </Face>                           
 	</BoundaryConditions>
 	<Level>
