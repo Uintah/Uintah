@@ -60,7 +60,7 @@ itcl_class SCIRun_Visualization_ShowField {
 	global $this-text-show-edges
 	global $this-text-show-faces
 	global $this-text-show-cells
-	set $this-node_display_type Spheres
+	set $this-node_display_type Points
 	set $this-edge_display_type Lines
 	set $this-node_scale 0.03
 	set $this-edge_scale 0.015
@@ -186,12 +186,12 @@ itcl_class SCIRun_Visualization_ShowField {
 	    make_labeled_radio $node.radio \
 		    "Node Display Type" "$this-c node_display_type" top \
 		    $this-node_display_type \
-		    {{Spheres Spheres} {Axes Axes} {Point Points} {Disks Disks}}
+		    {{Spheres Spheres} {Axes Axes} {Points Points} {Disks Disks}}
 	} else {
 	    make_labeled_radio $node.radio \
 		    "Node Display Type" "$this-c node_display_type" top \
 		    $this-node_display_type \
-		    {{Spheres Spheres} {Axes Axes} {Point Points}}
+		    {{Spheres Spheres} {Axes Axes} {Points Points}}
 	}
 
 	pack $node.show_nodes $node.radio -fill y -anchor w
