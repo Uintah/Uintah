@@ -80,27 +80,47 @@ namespace Uintah {
    // we have the ignoreFaceFluxes functions.  This really cuts down on Code
    // bloat by eliminating the need for a specialized version of advect 
   
-  inline void ignoreFaceFluxesD( const IntVector&,SFCXVariable<double>&, 
-                                                 SFCYVariable<double>&,  
-                                                 SFCZVariable<double>&,  
-                                                 double[],  double[])
+  inline void ignoreFaceFluxesD( const IntVector&,
+                                 SFCXVariable<double>&, 
+                                 SFCYVariable<double>&,  
+                                 SFCZVariable<double>&,  
+                                 double[],  
+                                 double[],
+                                 const CCVariable<double>&)
   { 
   }
-  inline void ignoreFaceFluxesV( const IntVector&,SFCXVariable<double>&, 
-                                                 SFCYVariable<double>&,  
-                                                 SFCZVariable<double>&,  
-                                                 double[],  Vector[])
+  inline void ignoreFaceFluxesV( const IntVector&,
+                                 SFCXVariable<double>&, 
+                                 SFCYVariable<double>&,  
+                                 SFCZVariable<double>&,  
+                                 double[],  
+                                 Vector[],
+                                 const CCVariable<Vector>&)
   { 
   }
-  inline void saveFaceFluxes( const IntVector& c, SFCXVariable<double>& q_XFC,           
-                                                  SFCYVariable<double>& q_YFC,           
-                                                  SFCZVariable<double>& q_ZFC,           
-                                                  double faceVol[], 
-                                                  double q_face_flux[]) 
+  
+  inline double equalZero(double d1, double d2, double d3)
   {
-    q_XFC[c] = q_face_flux[LEFT]  /faceVol[LEFT];          
-    q_YFC[c] = q_face_flux[BOTTOM]/faceVol[BOTTOM];        
-    q_ZFC[c] = q_face_flux[BACK]  /faceVol[BACK];          
+    return d1 == 0.0 ? d2:d3;
+  }
+  
+  inline void saveFaceFluxes( const IntVector& c, 
+                              SFCXVariable<double>& q_XFC,           
+                              SFCYVariable<double>& q_YFC,           
+                              SFCZVariable<double>& q_ZFC,           
+                              double faceVol[], 
+                              double q_face_flux[],
+                              const CCVariable<double>& q_CC) 
+  {
+    double d_SMALL_NUM = 1e-100;
+    q_XFC[c] = fabs(q_face_flux[LEFT])  /(faceVol[LEFT]   + d_SMALL_NUM);
+    q_YFC[c] = fabs(q_face_flux[BOTTOM])/(faceVol[BOTTOM] + d_SMALL_NUM);
+    q_ZFC[c] = fabs(q_face_flux[BACK])  /(faceVol[BACK]   + d_SMALL_NUM);
+    
+    // if q_(X,Y,Z)FC = 0.0 then set it equal to q_CC[c]
+    q_XFC[c] = equalZero(q_face_flux[LEFT],   q_CC[c], q_XFC[c]);
+    q_YFC[c] = equalZero(q_face_flux[BOTTOM], q_CC[c], q_YFC[c]);
+    q_ZFC[c] = equalZero(q_face_flux[BACK],   q_CC[c], q_ZFC[c]);
   }  
 }  // Uintah namespace
 
