@@ -24,67 +24,59 @@
 
 namespace Uintah {
 
-using namespace SCIRun;
+  using namespace SCIRun;
 
-inline int getVolume(IntVector low, IntVector high)
-{ return Patch::getVolume(low, high); }
+  inline int getVolume(const IntVector& low, const IntVector& high)
+  { return Patch::getVolume(low, high); }
 
-typedef SuperBox<const Patch*, IntVector, int, int,
-  InternalAreaSuperBoxEvaluator<const Patch*, int> > SuperPatch;
+  typedef SuperBox<const Patch*, IntVector, int, int,
+    InternalAreaSuperBoxEvaluator<const Patch*, int> > SuperPatch;
 
-typedef SuperBoxSet<const Patch*, IntVector, int, int,
-  InternalAreaSuperBoxEvaluator<const Patch*, int> > SuperPatchSet;
-typedef SuperPatchSet::SuperBoxContainer SuperPatchContainer;
+  typedef SuperBoxSet<const Patch*, IntVector, int, int,
+    InternalAreaSuperBoxEvaluator<const Patch*, int> > SuperPatchSet;
+  typedef SuperPatchSet::SuperBoxContainer SuperPatchContainer;
 
-class LocallyComputedPatchVarMap
-{
-public:
-  LocallyComputedPatchVarMap() {}
-  ~LocallyComputedPatchVarMap();
-
-  void addComputedPatchSet(const VarLabel* label, const PatchSubset* patches);
-
-  const SuperPatch* getConnectedPatchGroup(const VarLabel* label,
-					   const Patch* patch) const;
-
-  const SuperPatchContainer* getSuperPatches(const VarLabel* label) const;
-
-public:
-  class ConnectedPatchGrouper
-  {
+  class LocallyComputedPatchVarMap {
   public:
-    ConnectedPatchGrouper(const set<const Patch*>& patchSet);
-    ~ConnectedPatchGrouper()
-    { delete connectedPatchGroups_; }
+    LocallyComputedPatchVarMap();
+    ~LocallyComputedPatchVarMap();
 
-    const SuperPatch* getConnectedPatchGroup(const Patch* patch) const
-    {
-      map<const Patch*, const SuperPatch*>::const_iterator findIt =
-	map_.find(patch);
-      return (findIt != map_.end()) ? findIt->second : 0;
-    }
+    void reset();
+    void addComputedPatchSet(const VarLabel* label, const PatchSubset* patches);
 
-    const SuperPatchContainer& getSuperPatches() const
-    { return connectedPatchGroups_->getSuperBoxes(); }
+    const SuperPatch* getConnectedPatchGroup(const VarLabel* label,
+					     const Patch* patch) const;
+    const SuperPatchContainer* getSuperPatches(const VarLabel* label,
+					       const Level* level) const;
+    void makeGroups();
+
+    class Compare {
+      VarLabel::Compare vlcomp;
+    public:
+      inline bool operator()(const pair<const VarLabel*, const Level*>& p1,
+			     const pair<const VarLabel*, const Level*>& p2) const
+      {
+	return p1.second == p2.second?vlcomp(p1.first, p2.first): p1.second < p2.second;
+      }
+    };
+    class LocallyComputedPatchSet {
+    public:
+      LocallyComputedPatchSet();
+      ~LocallyComputedPatchSet();
+      void addPatches(const PatchSubset* patches);
+      const SuperPatch* getConnectedPatchGroup(const Patch* patch) const;
+      const SuperPatchContainer* getSuperPatches() const;
+      void makeGroups();
+    private:
+      typedef map<const Patch*, const SuperPatch*> PatchMapType;
+      PatchMapType map_;
+      SuperPatchSet* connectedPatchGroups_;
+    };
   private:
-    SuperPatchSet* connectedPatchGroups_;
-    map<const Patch*, const SuperPatch*> map_;
+
+    typedef map<pair<const VarLabel*, const Level*>, LocallyComputedPatchSet*, Compare> MapType;
+    MapType map_;
+    bool groupsMade;
   };
-
-private:
-  ConnectedPatchGrouper* getConnectedPatchGrouper(const VarLabel* label) const;
-  
-  typedef map< set<const Patch*>, ConnectedPatchGrouper* >
-  ConnectedPatchGrouperMap;
-
-  // mutable because it creates ConnectedPatchGroupMap's as needed.
-  mutable ConnectedPatchGrouperMap connectedPatchGroupers_;
-  
-  typedef map<const VarLabel*, const set<const Patch*>*, VarLabel::Compare >
-  Map;
-  Map map_;
-
-  static SuperPatchContainer emptySuperPatchContainer;
-};
 
 } // End namespace Uintah

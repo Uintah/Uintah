@@ -3,126 +3,36 @@
 
 #include <iostream>
 using namespace std;
-
 using namespace Uintah;
-
-SuperPatchContainer LocallyComputedPatchVarMap::emptySuperPatchContainer;
 
 class PatchRangeQuerier
 {
 public:
   typedef Level::selectType ResultContainer;
 public:
-  PatchRangeQuerier(const Level* level)
-    : level_(level) {}
+  PatchRangeQuerier(const Level* level, set<const Patch*>& patches)
+    : level_(level), patches_(patches) {}
   
-  inline void query(IntVector low, IntVector high, ResultContainer& result)
-  {
-    level_->selectPatches(low, high, result);
-  }
+  void query(IntVector low, IntVector high, ResultContainer& result);
 
   void queryNeighbors(IntVector low, IntVector high, ResultContainer& result);
 private:
   const Level* level_;
+  set<const Patch*>& patches_;
 };
 
-void LocallyComputedPatchVarMap::
-addComputedPatchSet(const VarLabel* label,
-		    const PatchSubset* patches)
+void PatchRangeQuerier::query(IntVector low, IntVector high,
+			      ResultContainer& result)
 {
-  if (patches == 0)
-    return; // don't worry about reduction variables
-
-  set<const Patch*> patchSet;  
-  if (map_.find(label) != map_.end()) {
-    patchSet = *map_[label];
-  }
-
-  for (int i = 0; i < patches->size(); i++) {
-    patchSet.insert((*patches)[i]);
-  }
-
-  ConnectedPatchGrouper* nullGrouper = 0;
-  ConnectedPatchGrouperMap::iterator insertedIter =
-    connectedPatchGroupers_.insert(make_pair(patchSet, nullGrouper)).first;
-  map_[label] = &((*insertedIter).first);
-}
-
-LocallyComputedPatchVarMap::ConnectedPatchGrouper* LocallyComputedPatchVarMap::
-getConnectedPatchGrouper(const VarLabel* label) const
-{
-  Map::const_iterator foundIter = map_.find(label);
-  if (foundIter == map_.end())
-    return 0;
-  const set<const Patch*>& patchSet = *(*foundIter).second;
-  ConnectedPatchGrouper*& connectedPatchGrouper =
-    connectedPatchGroupers_[patchSet];
-  if (connectedPatchGrouper != 0)
-    return connectedPatchGrouper;
-  else
-    return connectedPatchGrouper = scinew ConnectedPatchGrouper(patchSet);
-}
-
-const SuperPatch*
-LocallyComputedPatchVarMap::getConnectedPatchGroup(const VarLabel* label,
-						   const Patch* patch) const
-{
-  ConnectedPatchGrouper* connectedPatchGrouper =
-    getConnectedPatchGrouper(label);
-  return (connectedPatchGrouper == 0) ? 0 :
-    connectedPatchGrouper->getConnectedPatchGroup(patch);
-}
-
-const SuperPatchContainer*
-LocallyComputedPatchVarMap::getSuperPatches(const VarLabel* label) const
-{
-  ConnectedPatchGrouper* connectedPatchGrouper =
-    getConnectedPatchGrouper(label);
-  return (connectedPatchGrouper == 0) ? 0 :
-    &connectedPatchGrouper->getSuperPatches();
-}
-
-LocallyComputedPatchVarMap::~LocallyComputedPatchVarMap()
-{
-  ConnectedPatchGrouperMap::iterator iter;
-  for (iter = connectedPatchGroupers_.begin();
-       iter != connectedPatchGroupers_.end(); iter++) {
-    delete iter->second;
-  }
-}
-
-LocallyComputedPatchVarMap::ConnectedPatchGrouper::
-ConnectedPatchGrouper(const set<const Patch*>& patchSet)
-{
-  if (patchSet.size() < 1)
-    throw InternalError("LocallyComputedPatchVarMap::ConnectedPatchGroupMap::ConnectedPatchGroupMap, empty patch set");
-  const Level* level = (*patchSet.begin())->getLevel();
-
-  if (patchSet.size() > 1)
-    cerr << "patchSet size: " << patchSet.size() << "\n";
+  back_insert_iterator<ResultContainer> result_ii(result);
   
-  PatchRangeQuerier patchRangeQuerier(level);
-  connectedPatchGroups_ =
-    SuperPatchSet::makeNearOptimalSuperBoxSet(patchSet.begin(),
-					      patchSet.end(),
-					      patchRangeQuerier);
-
-  //cerr << "ConnectedPatchGroups: " << "\n";
-  //cerr << *connectedPatchGroups_ << "\n";
-  // map each patch to its SuperBox
-  const SuperPatchContainer& superBoxes =
-    connectedPatchGroups_->getSuperBoxes();
-  SuperPatchContainer::const_iterator iter;
-  for (iter = superBoxes.begin(); iter != superBoxes.end(); iter++) {
-    const SuperPatch* superBox = *iter;
-    vector<const Patch*>::const_iterator SBiter;
-    for (SBiter = superBox->getBoxes().begin();
-	 SBiter != superBox->getBoxes().end(); SBiter++) {
-      map_[*SBiter] = superBox;
-    }
+  ResultContainer tmp;
+  level_->selectPatches(low, high, tmp);
+  for(ResultContainer::iterator iter = tmp.begin(); iter != tmp.end(); iter++){
+    if(patches_.find(*iter) != patches_.end())
+      *result_ii++ = *iter;
   }
 }
-
 void
 PatchRangeQuerier::queryNeighbors(IntVector low, IntVector high,
 				  PatchRangeQuerier::ResultContainer& result)
@@ -137,13 +47,178 @@ PatchRangeQuerier::queryNeighbors(IntVector low, IntVector high,
     sideHigh[i] = sideLow[i]--;
     tmp.resize(0);
     level_->selectPatches(sideLow, sideHigh, tmp);
-    copy(tmp.begin(), tmp.end(), result_ii);
+    for(ResultContainer::iterator iter = tmp.begin(); iter != tmp.end(); iter++){
+      if(patches_.find(*iter) != patches_.end())
+	*result_ii++ = *iter;
+    }
 
     sideHigh = high;
     sideLow = low;
     sideLow[i] = sideHigh[i]++;
     tmp.resize(0);
     level_->selectPatches(sideLow, sideHigh, tmp);
-    copy(tmp.begin(), tmp.end(), result_ii);
+    for(ResultContainer::iterator iter = tmp.begin(); iter != tmp.end(); iter++){
+      if(patches_.find(*iter) != patches_.end())
+	*result_ii++ = *iter;
+    }
   }
+}
+
+LocallyComputedPatchVarMap::LocallyComputedPatchVarMap()
+{
+  reset();
+}
+
+LocallyComputedPatchVarMap::~LocallyComputedPatchVarMap()
+{
+  reset();
+}
+
+void
+LocallyComputedPatchVarMap::reset()
+{
+  groupsMade=false;
+  for(MapType::iterator iter = map_.begin(); iter != map_.end(); ++iter)
+    delete iter->second;
+  map_.clear();
+}
+
+void
+LocallyComputedPatchVarMap::addComputedPatchSet(const VarLabel* label,
+						const PatchSubset* patches)
+{
+  ASSERT(!groupsMade);
+  if (!patches || !patches->size())
+    return; // don't worry about reduction variables
+
+  const Level* level = patches->get(0)->getLevel();
+#if SCI_ASSERTION_LEVEL >= 1
+  // Each call to this should contain only one level (one level at a time)
+  for(int i=i;i<patches->size();i++){
+    const Patch* patch = patches->get(i);
+    ASSERT(patch->getLevel() == level);
+  }
+#endif
+
+  MapType::iterator iter = map_.find(make_pair(label, level));
+  if(iter == map_.end()){
+    map_.insert(make_pair(make_pair(label, level), new LocallyComputedPatchSet()));
+    iter = map_.find(make_pair(label, level));
+  }
+  LocallyComputedPatchSet* lcpatches = iter->second;
+  lcpatches->addPatches(patches);
+}
+
+const SuperPatch*
+LocallyComputedPatchVarMap::getConnectedPatchGroup(const VarLabel* label,
+						   const Patch* patch) const
+{
+  ASSERT(groupsMade);
+  const Level* level = patch->getLevel();
+  MapType::const_iterator iter = map_.find(make_pair(label, level));
+  if(iter == map_.end())
+    return 0;
+  return iter->second->getConnectedPatchGroup(patch);
+}
+
+const SuperPatchContainer*
+LocallyComputedPatchVarMap::getSuperPatches(const VarLabel* label,
+					    const Level* level) const
+{
+  ASSERT(groupsMade);
+  MapType::const_iterator iter = map_.find(make_pair(label, level));
+  if(iter == map_.end())
+    return 0;
+  return iter->second->getSuperPatches();
+}
+
+void LocallyComputedPatchVarMap::makeGroups()
+{
+  ASSERT(!groupsMade);
+  for(MapType::iterator iter = map_.begin(); iter != map_.end(); ++iter)
+    iter->second->makeGroups();
+  groupsMade=true;
+}
+
+LocallyComputedPatchVarMap::LocallyComputedPatchSet::LocallyComputedPatchSet()
+{
+  connectedPatchGroups_=0;
+}
+
+LocallyComputedPatchVarMap::LocallyComputedPatchSet::~LocallyComputedPatchSet()
+{
+  if(connectedPatchGroups_)
+    delete connectedPatchGroups_;
+}
+
+void
+LocallyComputedPatchVarMap::LocallyComputedPatchSet::addPatches(const PatchSubset* patches)
+{
+  ASSERT(connectedPatchGroups_ == 0);
+  for (int i = 0; i < patches->size(); i++){
+    if(map_.find(patches->get(i)) == map_.end())
+      map_.insert(make_pair(patches->get(i), static_cast<SuperPatch*>(0)));
+  }
+}
+
+const SuperPatchContainer*
+LocallyComputedPatchVarMap::LocallyComputedPatchSet::getSuperPatches() const
+{
+  ASSERT(connectedPatchGroups_ != 0);
+  return &connectedPatchGroups_->getSuperBoxes();
+}
+
+const SuperPatch*
+LocallyComputedPatchVarMap::LocallyComputedPatchSet::getConnectedPatchGroup(const Patch* patch) const
+{
+  ASSERT(connectedPatchGroups_ != 0);
+  PatchMapType::const_iterator iter = map_.find(patch);
+  if(iter == map_.end())
+    return 0;
+  return iter->second;
+}
+
+void
+LocallyComputedPatchVarMap::LocallyComputedPatchSet::makeGroups()
+{
+  ASSERT(connectedPatchGroups_ == 0);
+  // Need to copy the patch list into a vector (or a set, but a
+  // vector would do), since the grouper cannot deal with a map
+  // We know that it is a unique list, because it is a map
+  set<const Patch*> patches;
+  for(PatchMapType::iterator iter = map_.begin(); iter != map_.end(); ++iter)
+    patches.insert(iter->first);
+
+  ASSERT(patches.begin() != patches.end());
+  const Level* level = (*patches.begin())->getLevel();
+#if SCI_ASSERTION_LEVEL >= 1
+  for(set<const Patch*>::iterator iter = patches.begin(); iter != patches.end(); iter++){
+    ASSERT((*iter)->getLevel() == level);
+  }
+#endif
+
+  PatchRangeQuerier patchRangeQuerier(level, patches);
+  connectedPatchGroups_ =
+    SuperPatchSet::makeNearOptimalSuperBoxSet(patches.begin(),
+					      patches.end(),
+					      patchRangeQuerier);
+  //cerr << "ConnectedPatchGroups: \n";
+  //cerr << *connectedPatchGroups_ << "\n";
+
+  // map each patch to its SuperBox
+  const SuperPatchContainer& superBoxes =
+    connectedPatchGroups_->getSuperBoxes();
+  SuperPatchContainer::const_iterator iter;
+  for (iter = superBoxes.begin(); iter != superBoxes.end(); iter++) {
+    const SuperPatch* superBox = *iter;
+    vector<const Patch*>::const_iterator SBiter;
+    for (SBiter = superBox->getBoxes().begin();
+	 SBiter != superBox->getBoxes().end(); SBiter++) {
+      map_[*SBiter] = superBox;
+    }
+  }
+#if SCI_ASSERTION_LEVEL >= 1
+  for(PatchMapType::iterator iter = map_.begin(); iter != map_.end(); ++iter)
+    ASSERT(iter->second != 0);
+#endif
 }

@@ -1,7 +1,9 @@
 #include <Packages/Uintah/CCA/Components/Schedulers/DetailedTasks.h>
 #include <Packages/Uintah/CCA/Components/Schedulers/TaskGraph.h>
+#include <Packages/Uintah/CCA/Components/Schedulers/OnDemandDataWarehouse.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
 #include <Packages/Uintah/CCA/Components/Schedulers/MemoryLog.h>
+#include <Packages/Uintah/CCA/Components/Schedulers/SchedulerCommon.h>
 #include <Core/Containers/ConsecutiveRangeSet.h>
 #include <Core/Util/NotFinished.h>
 #include <Core/Util/DebugStream.h>
@@ -19,29 +21,33 @@ extern SCIRun::Mutex cerrLock;
 extern DebugStream mixedDebug;
 
 static DebugStream dbg("TaskGraph", false);
+static DebugStream scrubout("Scrubbing", false);
 
-const int NO_SCRUB = -1;
-
-DetailedTasks::DetailedTasks(const ProcessorGroup* pg,
+DetailedTasks::DetailedTasks(SchedulerCommon* sc, const ProcessorGroup* pg,
 			     const TaskGraph* taskgraph,
-			     bool scrubNew /*= true */,
 			     bool mustConsiderInternalDependencies /*= false*/)
-  : taskgraph(taskgraph),
+  : sc(sc), taskgraph(taskgraph),
     mustConsiderInternalDependencies_(mustConsiderInternalDependencies),
     currentDependencyGeneration_(1),
     readyQueueMutex_("DetailedTasks Ready Queue"),
-    readyQueueSemaphore_("Number of Ready DetailedTasks", 0),
-    scrubNew_(scrubNew)
+    readyQueueSemaphore_("Number of Ready DetailedTasks", 0)
 {
   int nproc = pg->size();
   stasks.resize(nproc);
   tasks.resize(nproc);
+
+  // Set up mappings for the initial send tasks
+  int dwmap[Task::TotalDWs];
+  for(int i=0;i<Task::TotalDWs;i++)
+    dwmap[i]=Task::InvalidDW;
+  dwmap[Task::OldDW] = 0;
+  dwmap[Task::NewDW] = Task::NoDW;
   for(int i=0;i<nproc;i++) {
     stasks[i]=scinew Task("send old data", Task::InitialSend);
+    stasks[i]->setMapping(dwmap);
     tasks[i]=scinew DetailedTask(stasks[i], 0, 0, this);
     tasks[i]->assignResource(i);
   }
-  scrubExtraneousOldDW_ = false;
 }
 
 DetailedTasks::~DetailedTasks()
@@ -65,7 +71,6 @@ DependencyBatch::~DependencyBatch()
     dep = tmp;
   }
   delete lock_;
-  //delete cv_;
 }
 
 void
@@ -189,8 +194,9 @@ DetailedTask::~DetailedTask()
 }
 
 void
-DetailedTask::doit(const ProcessorGroup* pg, DataWarehouse* old_dw,
-		   DataWarehouse* new_dw)
+DetailedTask::doit(const ProcessorGroup* pg,
+		   vector<OnDemandDataWarehouseP>& oddws,
+		   vector<DataWarehouseP>& dws)
 {
   if( mixedDebug.active() ) {
     cerrLock.lock();
@@ -208,141 +214,222 @@ DetailedTask::doit(const ProcessorGroup* pg, DataWarehouse* old_dw,
       }
     cerrLock.unlock();
   }
-  
-  task->doit(pg, patches, matls, old_dw, new_dw);
+  for(int i=0;i<(int)dws.size();i++){
+    if(oddws[i] != 0)
+      oddws[i]->pushRunningTask(task, &oddws);
+  }
+  task->doit(pg, patches, matls, dws);
+  for(int i=0;i<(int)dws.size();i++){
+    if(oddws[i] != 0){
+      oddws[i]->checkTasksAccesses(patches, matls);
+      oddws[i]->popRunningTask();
+    }
+  }
+}
+
+void DetailedTasks::initializeScrubs(vector<OnDemandDataWarehouseP>& dws)
+{
+  scrubout << "Begin initialize scrubs\n";
+  for(int i=0;i<(int)dws.size();i++){
+    if(dws[i] != 0 && dws[i]->getScrubMode() == DataWarehouse::ScrubComplete){
+      scrubout << "Initializing scrubs on dw: " << dws[i]->getID() << '\n';
+      dws[i]->initializeScrubs(i, scrubCountMap_);
+    }
+  }
+  scrubout << "End initialize scrubs\n";
 }
 
 void
-DetailedTask::scrub(DataWarehouse* old_dw, DataWarehouse* new_dw)
+DetailedTask::scrub(vector<OnDemandDataWarehouseP>& dws)
 {
-  Handle<PatchSubset> default_patches = scinew PatchSubset();
-  Handle<MaterialSubset> default_matls = scinew MaterialSubset();
-  default_patches->add(0);
-  default_matls->add(-1);
+  const Task* task = getTask();
 
-  list<VarLabelMatlPatch>::iterator vmpIter;    
-  
-  if (taskGroup->doScrubNew()) {
-    // handle scrub counters -- scrubbing when the count gets to zero
-    for (Task::Dependency* dep = task->getComputes(); dep != 0;
-	 dep = dep->next){
-      constHandle<PatchSubset> compPatches =
-	dep->getPatchesUnderDomain(patches);
-      constHandle<MaterialSubset> compMatls =
-	dep->getMaterialsUnderDomain(matls);
-      if (dep->var->typeDescription() &&
-	  dep->var->typeDescription()->isReductionVariable()) {
-	compPatches = default_patches.get_rep();
-      }
-      else if (compPatches == 0) {
-	compPatches = default_patches.get_rep();
-      }
-      if (compMatls == 0) {
-	compMatls = default_matls.get_rep();
-      }
-      for (int m = 0; m < compMatls->size(); m++) {
-	int matl = compMatls->get(m);
-	for (int p = 0; p < compPatches->size(); p++) {
-	  const Patch* patch = compPatches->get(p);
-	  int scrubCount = taskGroup->getScrubCount(dep->var, matl, patch);
-	  if (scrubCount != NO_SCRUB) {
-	    new_dw->setScrubCountIfZero(dep->var, matl, patch, scrubCount);
+  scrubout << "Starting scrub after task: " << *this << '\n';
+  const set<const VarLabel*, VarLabel::Compare>& initialRequires
+    = taskGroup->getTaskGraph()->getInitialRequiredVars();
+  // Decrement the scrub count for each of the required variables
+  for(const Task::Dependency* req = task->getRequires();
+      req != 0; req=req->next){
+    if(req->var->typeDescription()->getType() != TypeDescription::ReductionVariable){
+      int dw = req->mapDataWarehouse();
+      DataWarehouse::ScrubMode scrubmode = dws[dw]->getScrubMode();
+      if(scrubmode == DataWarehouse::ScrubComplete ||
+	 (scrubmode == DataWarehouse::ScrubNonPermanent &&
+	  initialRequires.find(req->var) == initialRequires.end())){
+	constHandle<PatchSubset> patches = req->getPatchesUnderDomain(getPatches());
+	constHandle<MaterialSubset> matls = req->getMaterialsUnderDomain(getMaterials());
+	for(int i=0;i<patches->size();i++){
+	  const Patch* patch = patches->get(i);
+	  Level::selectType neighbors;
+	  IntVector low, high;
+	  patch->computeVariableExtents(req->var->typeDescription()->getType(),
+					req->gtype, req->numGhostCells,
+					neighbors, low, high);
+	  for(int i=0;i<neighbors.size();i++){
+	    const Patch* neighbor=neighbors[i];
+	    for (int m=0;m<matls->size();m++){
+	      scrubout << "  decrementing scrub count for requires of " << dws[dw]->getID() << "/" << neighbor->getID() << "/" << matls->get(m) << "/" << req->var->getName() << '\n';
+	      dws[dw]->decrementScrubCount(req->var, matls->get(m), neighbor);
+	    }
 	  }
 	}
       }
     }
-    for (vmpIter = requiresForNewData_.begin();
-	 vmpIter != requiresForNewData_.end(); ++vmpIter) {
-      const VarLabelMatlPatch& vmp = *vmpIter;
-      int scrubCount = taskGroup->getScrubCount(vmp.label_, vmp.matlIndex_,
-						vmp.patch_);
-      if (scrubCount != NO_SCRUB) {
-	new_dw->decrementScrubCount(vmp.label_, vmp.matlIndex_,
-				    vmp.patch_, 1, scrubCount);
+  }
+
+  // Scrub modifies
+  for(const Task::Dependency* mod = task->getModifies(); mod != 0; mod=mod->next){
+    int dw = mod->mapDataWarehouse();
+    DataWarehouse::ScrubMode scrubmode = dws[dw]->getScrubMode();
+    if(scrubmode == DataWarehouse::ScrubComplete ||
+       (scrubmode == DataWarehouse::ScrubNonPermanent &&
+	initialRequires.find(mod->var) == initialRequires.end())){
+      constHandle<PatchSubset> patches = mod->getPatchesUnderDomain(getPatches());
+      constHandle<MaterialSubset> matls = mod->getMaterialsUnderDomain(getMaterials());
+      if(mod->var->typeDescription()->getType() != TypeDescription::ReductionVariable){
+	for(int i=0;i<patches->size();i++){
+	  const Patch* patch = patches->get(i);
+	  for (int m=0;m<matls->size();m++){
+	    scrubout << "  decrementing scrub count for modifies of " << dws[dw]->getID() << "/" << patch->getID() << "/" << matls->get(m) << "/" << mod->var->getName() << '\n';
+	    dws[dw]->decrementScrubCount(mod->var, matls->get(m), patch);
+	  }
+	}
       }
     }
   }
-  for (vmpIter = requiresForOldData_.begin();
-       vmpIter != requiresForOldData_.end(); ++vmpIter) {
-    const VarLabelMatlPatch& vmp = *vmpIter;    
-    int scrubCount = taskGroup->getOldDWScrubCount(vmp.label_, vmp.matlIndex_,
-						   vmp.patch_);
-    old_dw->decrementScrubCount(vmp.label_, vmp.matlIndex_,
-				vmp.patch_, 1, scrubCount);
-  }
-
-  if (task->getType() == Task::InitialSend) {
-    if (taskGroup->scrubExtraneousOldDW_) {
-      taskGroup->actuallyScrubExtraneous(old_dw);
-    }
-  }
   
-  if( mixedDebug.active() ) {
-    cerrLock.lock();
-    mixedDebug << this << " DetailedTask::done doit() for task " 
-	       << task << "\n";
-    cerrLock.unlock();
-  }
-}
-
-void DetailedTasks::scrubExtraneousOldDW()
-{
-  // scrub after doing the initial send just in case anything something is
-  // required by another processor and not this one.
-  scrubExtraneousOldDW_ = true;
-}
-
-void DetailedTasks::actuallyScrubExtraneous(DataWarehouse* old_dw)
-{
-  // must add scrub count stuff here so only the non-required data will
-  // get scrubbed
-  for (ScrubCountMap::iterator iter = oldDWScrubCountMap_.begin();
-       iter != oldDWScrubCountMap_.end(); ++iter) {
-    VarLabelMatlPatch vmp = iter->first;
-    // If it doesn't exist, it will be received later, so don't worry about it.
-    if (old_dw->exists(vmp.label_, vmp.matlIndex_, vmp.patch_)) {
-	old_dw->setScrubCountIfZero(vmp.label_, vmp.matlIndex_, vmp.patch_,
-				    iter->second);
-    }
-  }
-  
-  old_dw->scrubExtraneous();
-  scrubExtraneousOldDW_ = false;
-}
-
-void
-DetailedTasks::scrubCountDependency(DetailedTask* to,
-				    Task::Dependency* req,
-				    const Patch *fromPatch,
-				    int matl, Task::WhichDW dw)
-{
-  // Dav's conjectures on how this works:
-  //   This function is called once for each time a dependency is found
-  //   while creating the task graph.  After it has been called X times,
-  //   scrubCountMap_[VAR] == X.  Later, each time a task that uses VAR,
-  //   scrubCountMap_[VAR] is decremented.  When it reaches 0, the VAR
-  //   can be scrubbed as no one will be using it after that.
-  //   
-  // Questions:
-  //   What is "doScrubNew()" used for?
-  //
-
-  if (matl < 0) fromPatch = 0;
-  if (dw == Task::NewDW) {
-    if (doScrubNew()) {
-      int & scrubCount =
-	scrubCountMap_[VarLabelMatlPatch(req->var, matl, fromPatch)];
-      if (scrubCount != NO_SCRUB) {
-	scrubCount++;    
-	to->addRequiresForNewData(req->var, matl, fromPatch);
+  // Set the scrub count for each of the computes variables
+  for(const Task::Dependency* comp = task->getComputes();
+      comp != 0; comp=comp->next){
+    if(comp->var->typeDescription()->getType() != TypeDescription::ReductionVariable){
+      int dw = comp->mapDataWarehouse();
+      DataWarehouse::ScrubMode scrubmode = dws[dw]->getScrubMode();
+      if(scrubmode == DataWarehouse::ScrubComplete ||
+	 (scrubmode == DataWarehouse::ScrubNonPermanent &&
+	  initialRequires.find(comp->var) == initialRequires.end())){
+	constHandle<PatchSubset> patches = comp->getPatchesUnderDomain(getPatches());
+	constHandle<MaterialSubset> matls = comp->getMaterialsUnderDomain(getMaterials());
+	for(int i=0;i<patches->size();i++){
+	  const Patch* patch = patches->get(i);
+	  for (int m=0;m<matls->size();m++){
+	    int matl = matls->get(m);
+	    int count;
+	    if(taskGroup->getScrubCount(comp->var, matl, patch, dw, count)){
+	      scrubout << "  setting scrub count for computes of " << dws[dw]->getID() << "/" << patch->getID() << "/" << matls->get(m) << "/" << comp->var->getName() << " to " << count << '\n';
+	      dws[dw]->setScrubCount(comp->var, matl, patch, count);
+	    } else {
+	      // Not in the scrub map, must be never needed...
+	      scrubout << "  trashing variable immediately after compute: " << dws[dw]->getID() << "/" << patch->getID() << "/" << matls->get(m) << "/" << comp->var->getName() << '\n';
+	      dws[dw]->scrub(comp->var, matl, patch);
+	    }
+	  }
+	}
       }
     }
   }
-  else {
-    oldDWScrubCountMap_[VarLabelMatlPatch(req->var, matl, fromPatch)]++;
-    to->addRequiresForOldData(req->var, matl, fromPatch);
-    // Don't scrub what may be required on the next timestep
-    scrubCountMap_[VarLabelMatlPatch(req->var, matl, fromPatch)] = NO_SCRUB;
+}
+
+void DetailedTasks::addScrubCount(const VarLabel* var, int matlindex,
+				  const Patch* patch, int dw)
+{
+  VarLabelMatlPatchDW key(var, matlindex, patch, dw);
+  ScrubCountMap::iterator iter = scrubCountMap_.find(key);
+  if(iter == scrubCountMap_.end()){
+    scrubCountMap_.insert(make_pair(key, 1));
+  } else {
+    iter->second++;
+  }
+}
+
+void DetailedTasks::setScrubCount(const VarLabel* label, int matlIndex,
+				  const Patch* patch, int dw,
+				  vector<OnDemandDataWarehouseP>& dws)
+{
+  DataWarehouse::ScrubMode scrubmode = dws[dw]->getScrubMode();
+  const set<const VarLabel*, VarLabel::Compare>& initialRequires
+    = getTaskGraph()->getInitialRequiredVars();
+  if(scrubmode == DataWarehouse::ScrubComplete ||
+     (scrubmode == DataWarehouse::ScrubNonPermanent &&
+      initialRequires.find(label) == initialRequires.end())){
+    int scrubcount;
+    if(!getScrubCount(label, matlIndex, patch, dw, scrubcount)){
+      SCI_THROW(InternalError("No scrub count for received MPIVariable: "+label->getName()));
+    }
+    scrubout << "setting scrubcount for recv of " << dw << "/" << patch->getID() << "/" << matlIndex << "/" << label->getName() << ": " << scrubcount << '\n';
+    dws[dw]->setScrubCount(label, matlIndex, patch, scrubcount);
+  }
+}
+
+bool DetailedTasks::getScrubCount(const VarLabel* label, int matlIndex,
+				  const Patch* patch, int dw, int& count)
+{
+  VarLabelMatlPatchDW key(label, matlIndex, patch, dw);
+  ScrubCountMap::iterator iter = scrubCountMap_.find(key);
+  if(scrubout.active()){
+    scrubout << "getScrubCount for: " << dw << "/" << patch->getID() << "/" << matlIndex << "/" << label->getName() << ": ";
+    if(iter == scrubCountMap_.end())
+      scrubout << "not found\n";
+    else
+      scrubout << iter->second << '\n';
+  }
+
+  if(iter == scrubCountMap_.end())
+    return false;
+  count=iter->second;
+  return true;
+}
+
+void DetailedTasks::createScrubCounts()
+{
+  scrubCountMap_.clear();
+  
+  // Go through each of the tasks and determine which variables it will require
+  for(int i=0;i<(int)localtasks.size();i++){
+    DetailedTask* dtask = localtasks[i];
+    const Task* task = dtask->getTask();
+    for(const Task::Dependency* req = task->getRequires(); req != 0; req=req->next){
+      constHandle<PatchSubset> patches = req->getPatchesUnderDomain(dtask->getPatches());
+      constHandle<MaterialSubset> matls = req->getMaterialsUnderDomain(dtask->getMaterials());
+      int dw = req->mapDataWarehouse();
+      if(req->var->typeDescription()->getType() != TypeDescription::ReductionVariable){
+	for(int i=0;i<patches->size();i++){
+	  const Patch* patch = patches->get(i);
+	  Level::selectType neighbors;
+	  IntVector low, high;
+	  patch->computeVariableExtents(req->var->typeDescription()->getType(),
+					req->gtype, req->numGhostCells,
+					neighbors, low, high);
+	  for(int i=0;i<neighbors.size();i++){
+	    const Patch* neighbor=neighbors[i];
+	    for (int m=0;m<matls->size();m++)
+	      addScrubCount(req->var, matls->get(m), neighbor, dw);
+	  }
+	}
+      }
+    }
+    for(const Task::Dependency* req = task->getModifies(); req != 0; req=req->next){
+      constHandle<PatchSubset> patches = req->getPatchesUnderDomain(dtask->getPatches());
+      constHandle<MaterialSubset> matls = req->getMaterialsUnderDomain(dtask->getMaterials());
+      int dw = req->mapDataWarehouse();
+      if(req->var->typeDescription()->getType() != TypeDescription::ReductionVariable){
+	for(int i=0;i<patches->size();i++){
+	  const Patch* patch = patches->get(i);
+	  for (int m=0;m<matls->size();m++)
+	    addScrubCount(req->var, matls->get(m), patch, dw);
+	}
+      }
+    }
+  }
+  if(scrubout.active()){
+    scrubout << "scrub counts:\n";
+    scrubout << "DW/Patch/Matl/Label\tCount\n";
+    for(ScrubCountMap::iterator iter = scrubCountMap_.begin();
+	iter != scrubCountMap_.end(); iter++){
+      const VarLabelMatlPatchDW& rec = iter->first;
+      scrubout << rec.dw_ << '/' << (rec.patch_?rec.patch_->getID():0) << '/'
+	       << rec.matlIndex_ << '/' <<  rec.label_->getName()
+	       << "\t\t" << iter->second << '\n';
+    }
   }
 }
 
@@ -391,11 +478,11 @@ DetailedTasks::possiblyCreateDependency(DetailedTask* from,
   ASSERT(from->getAssignedResourceIndex() != -1);
   ASSERT(to->getAssignedResourceIndex() != -1);
   if(dbg.active()) {
-    dbg << *to << " depends on " << *from << "\n";
+    dbg << "        " << *to << " depends on " << *from << "\n";
     if(comp)
-      dbg << "From comp " << *comp;
+      dbg << "          From comp " << *comp;
     else
-      dbg << "From OldDW ";
+      dbg << "          From OldDW ";
     dbg << " to req " << *req << '\n';
   }
 
@@ -417,8 +504,7 @@ DetailedTasks::possiblyCreateDependency(DetailedTask* from,
     ASSERT(newRequireBatch);
     if(dbg.active())
       dbg << "NEW BATCH!\n";
-  }
-  else if (mustConsiderInternalDependencies_) { // i.e. threaded mode
+  } else if (mustConsiderInternalDependencies_) { // i.e. threaded mode
     if (to->addRequires(batch)) {
       // this is a new requires batch for this task, so add
       // to the batch's toTasks.
@@ -432,7 +518,7 @@ DetailedTasks::possiblyCreateDependency(DetailedTask* from,
     if(fromPatch == dep->fromPatch && matl == dep->matl
        && (req == dep->req
 	   || (req->var->equals(dep->req->var)
-	       && req->dw == dep->req->dw)))
+	       && req->mapDataWarehouse() == dep->req->mapDataWarehouse())))
       break;
   }
   if(!dep){
@@ -440,7 +526,7 @@ DetailedTasks::possiblyCreateDependency(DetailedTask* from,
 			     low, high);
     batch->head = dep;
     if(dbg.active()) {
-      dbg << "ADDED " << low << " " << high << ", fromPatch = ";
+      dbg << "          ADDED " << low << " " << high << ", fromPatch = ";
       if (fromPatch)
 	dbg << fromPatch->getID() << '\n';
       else
@@ -468,7 +554,7 @@ DetailedTasks::possiblyCreateDependency(DetailedTask* from,
       }
     }
     if(dbg.active()){
-      dbg << "EXTENDED from " << dep->low << " " << dep->high << " to " << l << " " << h << "\n";
+      dbg << "          EXTENDED from " << dep->low << " " << dep->high << " to " << l << " " << h << "\n";
       dbg << *req->var << '\n';
       dbg << *dep->req->var << '\n';
       if(comp)
@@ -525,10 +611,10 @@ DetailedTask::addInternalDependency(DetailedTask* prerequisiteTask,
 }
 
 void
-DetailedTask::done(DataWarehouse* old_dw, DataWarehouse* new_dw)
+DetailedTask::done(vector<OnDemandDataWarehouseP>& dws)
 {
   // Important to scrub first, before dealing with the internal dependencies
-  scrub(old_dw, new_dw);  
+  scrub(dws);
   
   if( mixedDebug.active() ) {
     cerrLock.lock();
@@ -692,9 +778,15 @@ DetailedTasks::initTimestep()
   initializeBatches();
 }
 
+void DetailedTasks::incrementDependencyGeneration()
+{
+  if (currentDependencyGeneration_ >= ULONG_MAX)
+    SCI_THROW(InternalError("DetailedTasks::currentDependencySatisfyingGeneration has overflowed"));
+  currentDependencyGeneration_++;
+}
+
 void DetailedTasks::initializeBatches()
 {
-//  cerr << "Initializing Batches\n";
   for (int i = 0; i < (int)batches.size(); i++) {
     batches[i]->reset();
   }
@@ -709,58 +801,6 @@ void DependencyBatch::reset()
   received_ = false;
   madeMPIRequest_ = false; 
 }
-
-/*
-bool DependencyBatch::makeMPIRequest()
-{
-  if (toTasks.size() > 1) {
-    if (!received_) {
-      lock_->lock();
-      if (!received_) {
-	if (!madeMPIRequest_) {
-	  madeMPIRequest_ = true;
-	  lock_->unlock();
-	  return true;
-	}
-	else {
-	  lock_->unlock();
-	  return false;
-	}
-      }
-      lock_->unlock();
-    }
-    return false;
-  }
-  else {
-    return true;
-  }
-}
-
-bool DependencyBatch::waitForMPIRequest()
-{
-  if (toTasks.size() > 1) {
-    if (!received_) {
-      lock_->lock();
-      if (!received_) {
-	if (!madeMPIRequest_) {
-	  madeMPIRequest_ = true;
-	  lock_->unlock();
-	  return true;
-	}
-	else {
-	  cv_->wait(*lock_);
-	  lock_->unlock();
-	  return false;
-	}
-      }
-      lock_->unlock();
-    }
-    return false;
-  }
-  else
-    return true;
-}
-*/
 
 bool DependencyBatch::makeMPIRequest()
 {
@@ -800,8 +840,6 @@ void DependencyBatch::addReceiveListener(int mpiSignal)
 void DependencyBatch::received(const ProcessorGroup * pg)
 {
   received_ = true;
-  //cv_->conditionBroadcast(); -- replaced with mpi "listeners" below
-  //lock_->unlock();
   
   if( mixedDebug.active() ) {
     cerrLock.lock();

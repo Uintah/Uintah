@@ -1,9 +1,9 @@
 
-
 #include <Packages/Uintah/CCA/Components/Schedulers/SimpleLoadBalancer.h>
 #include <Packages/Uintah/CCA/Components/Schedulers/DetailedTasks.h>
 #include <Packages/Uintah/Core/Parallel/Parallel.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
+#include <Packages/Uintah/Core/Grid/Grid.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Packages/Uintah/Core/Grid/Level.h>
 
@@ -105,13 +105,8 @@ SimpleLoadBalancer::getPatchwiseProcessorAssignment(const Patch* patch,
   int maxThreads = Parallel::getMaxThreads();
   int numProcs = group->size();
 
-  // If there are less patches than threads, "divBy" will distribute
-  // the work to both processors.
-  int divBy = min( maxThreads, numProcs - 1 );
-  // If there is only one processor, we need divBy to be 1.
-  divBy = max( divBy, 1 );
-
-  return ( (patch->getID() / divBy) % numProcs );
+  int proc = (patch->getLevelIndex()*numProcs)/patch->getLevel()->numPatches();
+  return proc;
 }
 
 const PatchSet*
@@ -133,25 +128,28 @@ SimpleLoadBalancer::createPerProcessorPatchSet(const LevelP& level,
 }
 
 void
-SimpleLoadBalancer::createNeighborhood(const Level* level,
+SimpleLoadBalancer::createNeighborhood(const GridP& grid,
 				       const ProcessorGroup* group)
 {
   int me = group->myrank();
   // WARNING - this should be determined from the taskgraph? - Steve
   int maxGhost = 2;
   neighbors.clear();
-  for(Level::const_patchIterator iter = level->patchesBegin();
-      iter != level->patchesEnd(); iter++){
-    const Patch* patch = *iter;
-    if(getPatchwiseProcessorAssignment(patch, group) == me){
-      Level::selectType n;
-      IntVector lowIndex, highIndex;
-      patch->computeVariableExtents(Patch::CellBased, Ghost::AroundCells,
-				    maxGhost, n, lowIndex, highIndex);
-      for(int i=0;i<(int)n.size();i++){
-	const Patch* neighbor = n[i]->getRealPatch();
-	if(neighbors.find(neighbor) == neighbors.end())
-	  neighbors.insert(neighbor);
+  for(int l=0;l<grid->numLevels();l++){
+    const LevelP& level = grid->getLevel(l);
+    for(Level::const_patchIterator iter = level->patchesBegin();
+	iter != level->patchesEnd(); iter++){
+      const Patch* patch = *iter;
+      if(getPatchwiseProcessorAssignment(patch, group) == me){
+	Level::selectType n;
+	IntVector lowIndex, highIndex;
+	patch->computeVariableExtents(Patch::CellBased, Ghost::AroundCells,
+				      maxGhost, n, lowIndex, highIndex);
+	for(int i=0;i<(int)n.size();i++){
+	  const Patch* neighbor = n[i]->getRealPatch();
+	  if(neighbors.find(neighbor) == neighbors.end())
+	    neighbors.insert(neighbor);
+	}
       }
     }
   }

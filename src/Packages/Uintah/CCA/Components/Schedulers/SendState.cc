@@ -35,6 +35,6 @@ SendState::add_sendset(const Patch* patch, int matlIndex, int dest,
 								matlIndex),
 						      dest));
   if(iter != sendSubsets.end())
-    throw InternalError("sendSubset already exists");
+    SCI_THROW(InternalError("sendSubset already exists"));
   sendSubsets[make_pair(make_pair(patch, matlIndex), dest)]=sendset;
 }

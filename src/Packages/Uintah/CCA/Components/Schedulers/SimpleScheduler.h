@@ -51,7 +51,7 @@ WARNING
       
     //////////
     // Insert Documentation Here:
-    virtual void execute( const ProcessorGroup * pg );
+    virtual void execute( const ProcessorGroup * pg);
     
     virtual SchedulerP createSubScheduler();
       
@@ -66,8 +66,7 @@ WARNING
 					    const MaterialSet* matls);
 
   protected:
-    virtual void actuallyCompile( const ProcessorGroup * pg,
-				  bool scrubNew );
+    virtual void actuallyCompile( const ProcessorGroup * pg );
     
   private:
     SPRelocate reloc;

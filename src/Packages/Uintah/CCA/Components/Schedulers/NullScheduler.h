@@ -50,7 +50,7 @@ WARNING
      
       //////////
       // Insert Documentation Here:
-     virtual void execute( const ProcessorGroup * pc );
+     virtual void execute( const ProcessorGroup * pc);
      virtual SchedulerP createSubScheduler();
       
       //////////
@@ -70,7 +70,7 @@ WARNING
    protected:
      //////////
      // Insert Documentation Here:
-     virtual void actuallyCompile( const ProcessorGroup * pg, bool scrubNew );
+      virtual void actuallyCompile( const ProcessorGroup * pg );
      
    private:
       NullScheduler(const NullScheduler&);

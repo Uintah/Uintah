@@ -48,8 +48,7 @@ SingleProcessorScheduler::verifyChecksum()
 }
 
 void
-SingleProcessorScheduler::actuallyCompile(const ProcessorGroup* pg,
-					  bool scrubNew)
+SingleProcessorScheduler::actuallyCompile(const ProcessorGroup* pg)
 {
   if(dts_)
     delete dts_;
@@ -61,52 +60,19 @@ SingleProcessorScheduler::actuallyCompile(const ProcessorGroup* pg,
 
   UintahParallelPort* lbp = getPort("load balancer");
   LoadBalancer* lb = dynamic_cast<LoadBalancer*>(lbp);
-  if( useInternalDeps() ) {
-    dts_ = graph.createDetailedTasks( pg, lb, scrubNew, true );
-  }
-  else {
-    dts_ = graph.createDetailedTasks( pg, lb, scrubNew, false );
-  }
+  dts_ = graph.createDetailedTasks( pg, lb, useInternalDeps() );
 
   lb->assignResources(*dts_, d_myworld);
 
-  //if (useInternalDeps()) { -- for scrubbing as well
-  graph.createDetailedDependencies(dts_, lb, pg);
-  //}
+  if (useInternalDeps()) {
+    graph.createDetailedDependencies(dts_, lb, pg);
+  }
   
   releasePort("load balancer");
 }
 
 void
 SingleProcessorScheduler::execute(const ProcessorGroup * pg)
-{
-  execute_tasks(pg, dws_[Task::OldDW].get_rep(), dws_[Task::NewDW].get_rep());
-  dws_[ Task::NewDW ]->finalize();
-  finalizeNodes();
-}
-
-void
-SingleProcessorScheduler::executeTimestep(const ProcessorGroup * pg)
-{
-  execute_tasks(pg, dws_[Task::OldDW].get_rep(), dws_[Task::NewDW].get_rep());
-}
-
-void
-SingleProcessorScheduler::executeRefine(const ProcessorGroup * pg)
-{
-  execute_tasks(pg, m_parent->dws_[Task::OldDW].get_rep(),
-		dws_[Task::NewDW].get_rep());
-}
-
-void
-SingleProcessorScheduler::executeCoarsen(const ProcessorGroup * pg)
-{
-  execute_tasks(pg, dws_[Task::NewDW].get_rep(),
-		m_parent->dws_[Task::NewDW].get_rep());
-}
-
-void
-SingleProcessorScheduler::execute_tasks(const ProcessorGroup * pg, DataWarehouse* oldDW, DataWarehouse* newDW)
 {
   if(dts_ == 0){
     cerr << "SingleProcessorScheduler skipping execute, no tasks\n";
@@ -116,9 +82,34 @@ SingleProcessorScheduler::execute_tasks(const ProcessorGroup * pg, DataWarehouse
   if(ntasks == 0){
     cerr << "WARNING: Scheduler executed, but no tasks\n";
   }
-  dbg << "Executing " << ntasks << " tasks\n";
+  ASSERT(dws.size()>=2);
+  vector<DataWarehouseP> plain_old_dws(dws.size());
+  for(int i=0;i<(int)dws.size();i++)
+    plain_old_dws[i] = dws[i].get_rep();
+  if(dbg.active()){
+    dbg << "Executing " << ntasks << " tasks, ";
+    for(int i=0;i<numOldDWs;i++){
+      dbg << "from DWs: ";
+      if(dws[i])
+	dbg << dws[i]->getID() << ", ";
+      else
+	dbg << "Null, ";
+    }
+    if(dws.size()-numOldDWs>1){
+      dbg << "intermediate DWs: ";
+      for(unsigned int i=numOldDWs;i<dws.size()-1;i++)
+	dbg << dws[i]->getID() << ", ";
+    }
+    if(dws[dws.size()-1])
+      dbg << " to DW: " << dws[dws.size()-1]->getID();
+    else
+      dbg << " to DW: Null";
+    dbg << "\n";
+  }
 
   makeTaskGraphDoc( dts_ );
+
+  dts_->initializeScrubs(dws);
 
   for(int i=0;i<ntasks;i++){
 #ifdef USE_PERFEX_COUNTERS
@@ -126,31 +117,23 @@ SingleProcessorScheduler::execute_tasks(const ProcessorGroup * pg, DataWarehouse
 #endif    
     double start = Time::currentSeconds();
     DetailedTask* task = dts_->getTask( i );
-
     dbg << "Running task: " << task->getTask()->getName() << "\n";
-
-    task->doit(pg, oldDW, newDW);
+    task->doit(pg, dws, plain_old_dws);
     dbg << "calling done\n";
-    task->done(oldDW, newDW);
+    task->done(dws);
+
     double delT = Time::currentSeconds()-start;
     long long flop_count = 0;
 #ifdef USE_PERFEX_COUNTERS
     long long dummy;
     read_counters(0, &dummy, 19, &flop_count);
 #endif
-    dbg << "Completed task: " << task->getTask()->getName()
+    dbg << "Completed task: " << *task->getTask()
 	<< " (" << delT << " seconds)\n";
     //scrub(task);
     emitNode( task, start, delT, delT, flop_count );
   }
-}
-
-void
-SingleProcessorScheduler::finalizeTimestep(const GridP& grid)
-{
-  finalizeNodes();
-  dws_[Task::NewDW]->finalize();
-  advanceDataWarehouse(grid);
+  finalizeTimestep();
 }
 
 void
