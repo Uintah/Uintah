@@ -492,8 +492,14 @@ EnthalpySolver::sched_buildLinearMatrixPred(const LevelP& level,
   //DataWarehouseP old_dw = new_dw->getTop();
   tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel,
 		Ghost::AroundCells, Arches::ONEGHOSTCELL);
+
+  if (d_conv_scheme > 0)
   tsk->requires(Task::NewDW, d_lab->d_enthalpyOUTBCLabel,
 		Ghost::AroundCells, Arches::TWOGHOSTCELLS);
+  else
+  tsk->requires(Task::NewDW, d_lab->d_enthalpyOUTBCLabel,
+		Ghost::AroundCells, Arches::ZEROGHOSTCELLS);
+  
   tsk->requires(Task::NewDW, d_lab->d_densityINLabel, 
 		Ghost::AroundCells, Arches::TWOGHOSTCELLS);
   tsk->requires(Task::NewDW, d_lab->d_viscosityINLabel,
@@ -1097,8 +1103,13 @@ EnthalpySolver::sched_buildLinearMatrixCorr(const LevelP& level,
 		Ghost::AroundCells, Arches::TWOGHOSTCELLS);
   tsk->requires(Task::NewDW, d_lab->d_viscosityIntermLabel,
 		Ghost::AroundCells, Arches::ONEGHOSTCELL);
+  if (d_conv_scheme > 0)
   tsk->requires(Task::NewDW, d_lab->d_enthalpyIntermLabel,
 		Ghost::AroundCells, Arches::TWOGHOSTCELLS);
+  else
+  tsk->requires(Task::NewDW, d_lab->d_enthalpyIntermLabel,
+		Ghost::AroundCells, Arches::ZEROGHOSTCELLS);
+
   tsk->requires(Task::NewDW, d_lab->d_uVelocityIntermLabel,
 		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
   tsk->requires(Task::NewDW, d_lab->d_vVelocityIntermLabel,
@@ -1116,8 +1127,13 @@ EnthalpySolver::sched_buildLinearMatrixCorr(const LevelP& level,
 		Ghost::AroundCells, Arches::TWOGHOSTCELLS);
   tsk->requires(Task::NewDW, d_lab->d_viscosityPredLabel,
 		Ghost::AroundCells, Arches::ONEGHOSTCELL);
+  if (d_conv_scheme > 0)
   tsk->requires(Task::NewDW, d_lab->d_enthalpyPredLabel,
 		Ghost::AroundCells, Arches::TWOGHOSTCELLS);
+  else
+  tsk->requires(Task::NewDW, d_lab->d_enthalpyPredLabel,
+		Ghost::AroundCells, Arches::ZEROGHOSTCELLS);
+
   tsk->requires(Task::NewDW, d_lab->d_uVelocityPredLabel,
 		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
   tsk->requires(Task::NewDW, d_lab->d_vVelocityPredLabel,
@@ -1721,8 +1737,13 @@ EnthalpySolver::sched_buildLinearMatrixInterm(const LevelP& level, SchedulerP& s
 		Ghost::AroundCells, Arches::TWOGHOSTCELLS);
   tsk->requires(Task::NewDW, d_lab->d_viscosityPredLabel,
 		Ghost::AroundCells, Arches::ONEGHOSTCELL);
+  if (d_conv_scheme > 0)
   tsk->requires(Task::NewDW, d_lab->d_enthalpyPredLabel,
 		Ghost::AroundCells, Arches::TWOGHOSTCELLS);
+  else
+  tsk->requires(Task::NewDW, d_lab->d_enthalpyPredLabel,
+		Ghost::AroundCells, Arches::ZEROGHOSTCELLS);
+
   tsk->requires(Task::NewDW, d_lab->d_uVelocityPredLabel,
 		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
   tsk->requires(Task::NewDW, d_lab->d_vVelocityPredLabel,
