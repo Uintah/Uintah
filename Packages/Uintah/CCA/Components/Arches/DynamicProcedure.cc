@@ -1997,7 +1997,7 @@ DynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
 		      tempCs.getHighIndex());
 
     double factor = 1.0;
-#if 1
+#if 0
     if (time < 2.0)
       factor = (time+0.000001)*0.5;
 #endif
