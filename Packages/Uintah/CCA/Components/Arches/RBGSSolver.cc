@@ -127,8 +127,6 @@ RBGSSolver::computePressOrderOfMagnitude(const ProcessorGroup* ,
 void 
 RBGSSolver::computePressUnderrelax(const ProcessorGroup*,
 				   const Patch* patch,
-				   DataWarehouseP&,
-				   DataWarehouseP&, 
 				   ArchesVariables* vars)
 {
   // Get the patch bounds and the variable bounds
@@ -437,8 +435,6 @@ RBGSSolver::computeVelOrderOfMagnitude(const ProcessorGroup* ,
 void 
 RBGSSolver::computeVelUnderrelax(const ProcessorGroup* ,
 				 const Patch* patch,
-				 DataWarehouseP& ,
-				 DataWarehouseP& , 
 				 int index, ArchesVariables* vars)
 {
   // Get the patch bounds and the variable bounds
@@ -618,8 +614,6 @@ RBGSSolver::computeVelUnderrelax(const ProcessorGroup* ,
 void 
 RBGSSolver::velocityLisolve(const ProcessorGroup* pc,
 			    const Patch* patch,
-			    DataWarehouseP& old_dw ,
-			    DataWarehouseP& new_dw, 
 			    int index, double delta_t,
 			    ArchesVariables* vars,
 			    CellInformation* cellinfo,
@@ -973,8 +967,6 @@ RBGSSolver::computeScalarOrderOfMagnitude(const ProcessorGroup* ,
 void 
 RBGSSolver::computeScalarUnderrelax(const ProcessorGroup* ,
 				    const Patch* patch,
-				    DataWarehouseP& ,
-				    DataWarehouseP& , 
 				    int index,
 				    ArchesVariables* vars)
 {
@@ -1010,8 +1002,6 @@ RBGSSolver::computeScalarUnderrelax(const ProcessorGroup* ,
 void 
 RBGSSolver::scalarLisolve(const ProcessorGroup* pc,
 			  const Patch* patch,
-			  DataWarehouseP& old_dw,
-			  DataWarehouseP& new_dw, 
 			  int index, double delta_t,
 			  ArchesVariables* vars,
 			  CellInformation* cellinfo,
@@ -1149,8 +1139,6 @@ RBGSSolver::destroyMatrix()
 void 
 RBGSSolver::setPressMatrix(const ProcessorGroup* ,
 			    const Patch* patch,
-			    DataWarehouseP&,
-			    DataWarehouseP&,
 			    ArchesVariables* vars,
 			    const ArchesLabel* lab)
 {

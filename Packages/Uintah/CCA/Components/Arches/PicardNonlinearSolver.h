@@ -84,11 +84,10 @@ public:
       //        documentation here
       //    [out] 
       //        documentation here
-      virtual int nonlinearSolve(const LevelP&,
+      virtual int nonlinearSolve(const LevelP& level,
 				 SchedulerP& sched,
-				 DataWarehouseP& old_dw,
-				 DataWarehouseP& new_dw,
 				 double time, double deltat);
+
   
       ///////////////////////////////////////////////////////////////////////
       // Schedule the Initialization of non linear solver
@@ -132,22 +131,25 @@ private:
       //    [in] 
       //        data User data needed for solve 
       void setInitialGuess(const ProcessorGroup* pc,
-			   const Patch* patch,
-			   DataWarehouseP& old_dw,
-			   DataWarehouseP& new_dw);
+			   const PatchSubset* patches,
+			   const MaterialSubset* matls,
+			   DataWarehouse* old_dw,
+			   DataWarehouse* new_dw);
 
       ///////////////////////////////////////////////////////////////////////
       // Actually Interpolate from SFCX, SFCY, SFCZ to CC<Vector>
       //    [in] 
       void interpolateFromFCToCC(const ProcessorGroup* pc,
-				 const Patch* patch,
-				 DataWarehouseP& old_dw,
-				 DataWarehouseP& new_dw);
+				 const PatchSubset* patches,
+				 const MaterialSubset* matls,
+				 DataWarehouse* old_dw,
+				 DataWarehouse* new_dw);
 
       void probeData(const ProcessorGroup* pc,
-		     const Patch* patch,
-		     DataWarehouseP& old_dw,
-		     DataWarehouseP& new_dw);
+		     const PatchSubset* patches,
+		     const MaterialSubset* matls,
+		     DataWarehouse* old_dw,
+		     DataWarehouse* new_dw);
 
 private:
 

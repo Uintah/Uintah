@@ -7,6 +7,7 @@
 #include <Packages/Uintah/CCA/Components/Arches/SmagorinskyModel.h>
 #include <Packages/Uintah/CCA/Components/Arches/BoundaryCondition.h>
 #include <Packages/Uintah/CCA/Components/Arches/Properties.h>
+#include <Packages/Uintah/CCA/Components/Arches/ArchesMaterial.h>
 #include <Packages/Uintah/Core/Grid/Array3Index.h>
 #include <Packages/Uintah/Core/Grid/Grid.h>
 #include <Packages/Uintah/Core/Grid/Level.h>
@@ -67,6 +68,9 @@ Arches::problemSetup(const ProblemSpecP& params,
 		     SimulationStateP& sharedState)
 {
   d_sharedState = sharedState;
+  d_lab->setSharedState(sharedState);
+  ArchesMaterial* mat = scinew ArchesMaterial();
+  sharedState->registerArchesMaterial(mat);
   ProblemSpecP db = params->findBlock("CFD")->findBlock("ARCHES");
   // not sure, do we need to reduce and put in datawarehouse
   db->require("grow_dt", d_deltaT);
@@ -161,13 +165,45 @@ void
 Arches::scheduleInitialize(const LevelP& level,
 			   SchedulerP& sched)
 {
-#if 0
+  
+  const PatchSet* patches = level->eachPatch();
+  const MaterialSet* matls = d_sharedState->allArchesMaterials();
+
   // schedule the initialization of parameters
   // require : None
   // compute : [u,v,w]VelocityIN, pressureIN, scalarIN, densityIN,
   //           viscosityIN
-  sched_paramInit(level, sched, dw, dw);
+  sched_paramInit(level, sched);
+  // schedule init of cell type
+  // require : NONE
+  // compute : cellType
+  d_boundaryCondition->sched_cellTypeInit(sched, patches, matls);
 
+  // computing flow inlet areas
+  d_boundaryCondition->sched_calculateArea(sched, patches, matls);
+
+  // Set the profile (output Varlabel have SP appended to them)
+  // require : densityIN,[u,v,w]VelocityIN
+  // compute : densitySP, [u,v,w]VelocitySP, scalarSP
+  d_boundaryCondition->sched_setProfile(sched, patches, matls);
+
+  // Compute props (output Varlabel have CP appended to them)
+  // require : densitySP
+  // require scalarSP
+  // compute : densityCP
+  d_props->sched_computeProps(sched, patches, matls);
+
+  // Compute Turb subscale model (output Varlabel have CTS appended to them)
+  // require : densityCP, viscosityIN, [u,v,w]VelocitySP
+  // compute : viscosityCTS
+  d_turbModel->sched_computeTurbSubmodel(sched, patches, matls);
+
+  // Computes velocities at apecified pressure b.c's
+  // require : densityCP, pressureIN, [u,v,w]VelocitySP
+  // compute : pressureSPBC, [u,v,w]VelocitySPBC
+  if (d_boundaryCondition->getPressureBC()) 
+    d_boundaryCondition->sched_computePressureBC(sched, patches, matls);
+#if 0
   // schedule init of cell type
   // require : NONE
   // compute : cellType
@@ -197,8 +233,6 @@ Arches::scheduleInitialize(const LevelP& level,
   // compute : pressureSPBC, [u,v,w]VelocitySPBC
   if (d_boundaryCondition->getPressureBC()) 
     d_boundaryCondition->sched_computePressureBC(level, sched, dw, dw);
-#else
-  NOT_FINISHED("new task stuff");
 #endif
 }
 
@@ -206,9 +240,23 @@ Arches::scheduleInitialize(const LevelP& level,
 // schedule the initialization of parameters
 // ****************************************************************************
 void 
-Arches::sched_paramInit(SchedulerP& sched, const PatchSet* patches,
-			const MaterialSet* matls)
+Arches::sched_paramInit(const LevelP& level,
+			SchedulerP& sched)
 {
+    // primitive variable initialization
+    Task* tsk = scinew Task( "Arches::paramInit",
+			    this, &Arches::paramInit);
+    tsk->computes(d_lab->d_uVelocityINLabel);
+    tsk->computes(d_lab->d_vVelocityINLabel);
+    tsk->computes(d_lab->d_wVelocityINLabel);
+    tsk->computes(d_lab->d_pressureINLabel);
+    for (int ii = 0; ii < d_nofScalars; ii++) 
+      tsk->computes(d_lab->d_scalarINLabel); // only work for 1 scalar
+    tsk->computes(d_lab->d_densityINLabel);
+    tsk->computes(d_lab->d_viscosityINLabel);
+    sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials());
+
+  
 #if 0
   for(Level::const_patchIterator iter=level->patchesBegin();
       iter != level->patchesEnd(); iter++){
@@ -229,8 +277,6 @@ Arches::sched_paramInit(SchedulerP& sched, const PatchSet* patches,
     tsk->computes(new_dw, d_lab->d_viscosityINLabel, matlIndex, patch);
     sched->addTask(tsk);
   }
-#else
-  NOT_FINISHED("new task stuff");
 #endif
 }
 
@@ -238,16 +284,33 @@ Arches::sched_paramInit(SchedulerP& sched, const PatchSet* patches,
 // schedule computation of stable time step
 // ****************************************************************************
 void 
-Arches::scheduleComputeStableTimestep(const LevelP&,
-				      SchedulerP&)
+Arches::scheduleComputeStableTimestep(const LevelP& level,
+				      SchedulerP& sched)
 {
+  // primitive variable initialization
+  Task* tsk = scinew Task( "Arches::computeStableTimeStep",
+			   this, &Arches::computeStableTimeStep);
+  tsk->computes(d_sharedState->get_delt_label());
+  sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials());
+
+
 #if 0
   dw->put(delt_vartype(d_deltaT),  d_sharedState->get_delt_label()); 
-#else
-  NOT_FINISHED("new task stuff");
 #endif
 }
 
+void 
+Arches::computeStableTimeStep(const ProcessorGroup* ,
+			      const PatchSubset* patches,
+			      const MaterialSubset* matls,
+			      DataWarehouse* ,
+			      DataWarehouse* new_dw)
+{
+  for (int p = 0; p < patches->size(); p++) {
+    const Patch* patch = patches->get(p);
+    new_dw->put(delt_vartype(d_deltaT),  d_sharedState->get_delt_label()); 
+  }
+}
 // ****************************************************************************
 // Schedule time advance
 // ****************************************************************************
@@ -256,6 +319,7 @@ Arches::scheduleTimeAdvance(double time, double dt,
 			    const LevelP& level, 
 			    SchedulerP& sched)
 {
+  d_nlSolver->nonlinearSolve(level, sched, time, dt);
 #if 0
 #ifdef ARCHES_MAIN_DEBUG
   cerr << "Begin: Arches::scheduleTimeAdvance\n";
@@ -276,8 +340,6 @@ Arches::scheduleTimeAdvance(double time, double dt,
 #ifdef ARCHES_MAIN_DEBUG
   cerr << "Done: Arches::scheduleTimeAdvance\n";
 #endif
-#else
-  NOT_FINISHED("new task stuff");
 #endif
 }
 
@@ -287,81 +349,87 @@ Arches::scheduleTimeAdvance(double time, double dt,
 // ****************************************************************************
 void
 Arches::paramInit(const ProcessorGroup* ,
-		  const Patch* patch,
-		  DataWarehouseP& old_dw,
-		  DataWarehouseP& )
+		  const PatchSubset* patches,
+		  const MaterialSubset* matls,
+		  DataWarehouse* ,
+		  DataWarehouse* new_dw)
 {
   // ....but will only compute for computational domain
-  SFCXVariable<double> uVelocity;
-  SFCYVariable<double> vVelocity;
-  SFCZVariable<double> wVelocity;
-  CCVariable<double> pressure;
-  vector<CCVariable<double> > scalar(d_nofScalars);
-  CCVariable<double> density;
-  CCVariable<double> viscosity;
-
-  int matlIndex = 0;
-  old_dw->allocate(uVelocity, d_lab->d_uVelocityINLabel, matlIndex, patch);
-  old_dw->allocate(vVelocity, d_lab->d_vVelocityINLabel, matlIndex, patch);
-  old_dw->allocate(wVelocity, d_lab->d_wVelocityINLabel, matlIndex, patch);
-  old_dw->allocate(pressure, d_lab->d_pressureINLabel, matlIndex, patch);
-  for (int ii = 0; ii < d_nofScalars; ii++) {
-    old_dw->allocate(scalar[ii], d_lab->d_scalarINLabel, ii, patch);
-  }
-  old_dw->allocate(density, d_lab->d_densityINLabel, matlIndex, patch);
-  old_dw->allocate(viscosity, d_lab->d_viscosityINLabel, matlIndex, patch);
+  for (int p = 0; p < patches->size(); p++) {
+    const Patch* patch = patches->get(p);
+    int archIndex = 0; // only one arches material
+    int matlIndex = d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+    SFCXVariable<double> uVelocity;
+    SFCYVariable<double> vVelocity;
+    SFCZVariable<double> wVelocity;
+    CCVariable<double> pressure;
+    vector<CCVariable<double> > scalar(d_nofScalars);
+    CCVariable<double> density;
+    CCVariable<double> viscosity;
+    std::cerr << "Material Index: " << matlIndex << endl;
+    new_dw->allocate(uVelocity, d_lab->d_uVelocityINLabel, matlIndex, patch);
+    new_dw->allocate(vVelocity, d_lab->d_vVelocityINLabel, matlIndex, patch);
+    new_dw->allocate(wVelocity, d_lab->d_wVelocityINLabel, matlIndex, patch);
+    new_dw->allocate(pressure, d_lab->d_pressureINLabel, matlIndex, patch);
+    // will only work for one scalar
+    for (int ii = 0; ii < d_nofScalars; ii++) {
+      new_dw->allocate(scalar[ii], d_lab->d_scalarINLabel, matlIndex, patch);
+    }
+    new_dw->allocate(density, d_lab->d_densityINLabel, matlIndex, patch);
+    new_dw->allocate(viscosity, d_lab->d_viscosityINLabel, matlIndex, patch);
 
   // ** WARNING **  this needs to be changed soon (6/9/2000)
-  IntVector domLoU = uVelocity.getFortLowIndex();
-  IntVector domHiU = uVelocity.getFortHighIndex();
-  IntVector idxLoU = domLoU;
-  IntVector idxHiU = domHiU;
-  IntVector domLoV = vVelocity.getFortLowIndex();
-  IntVector domHiV = vVelocity.getFortHighIndex();
-  IntVector idxLoV = domLoV;
-  IntVector idxHiV = domHiV;
-  IntVector domLoW = wVelocity.getFortLowIndex();
-  IntVector domHiW = wVelocity.getFortHighIndex();
-  IntVector idxLoW = domLoW;
-  IntVector idxHiW = domHiW;
-  IntVector domLo = pressure.getFortLowIndex();
-  IntVector domHi = pressure.getFortHighIndex();
-  IntVector idxLo = domLo;
-  IntVector idxHi = domHi;
+    IntVector domLoU = uVelocity.getFortLowIndex();
+    IntVector domHiU = uVelocity.getFortHighIndex();
+    IntVector idxLoU = domLoU;
+    IntVector idxHiU = domHiU;
+    IntVector domLoV = vVelocity.getFortLowIndex();
+    IntVector domHiV = vVelocity.getFortHighIndex();
+    IntVector idxLoV = domLoV;
+    IntVector idxHiV = domHiV;
+    IntVector domLoW = wVelocity.getFortLowIndex();
+    IntVector domHiW = wVelocity.getFortHighIndex();
+    IntVector idxLoW = domLoW;
+    IntVector idxHiW = domHiW;
+    IntVector domLo = pressure.getFortLowIndex();
+    IntVector domHi = pressure.getFortHighIndex();
+    IntVector idxLo = domLo;
+    IntVector idxHi = domHi;
 
   //can read these values from input file 
-  double uVal = 0.0, vVal = 0.0, wVal = 0.0;
-  double pVal = 0.0, denVal = 0.0;
-  double visVal = d_physicalConsts->getMolecularViscosity();
-  FORT_INIT(domLoU.get_pointer(), domHiU.get_pointer(), 
-	    idxLoU.get_pointer(), idxHiU.get_pointer(),
-	    uVelocity.getPointer(), &uVal, 
-	    domLoV.get_pointer(), domHiV.get_pointer(), 
-	    idxLoV.get_pointer(), idxHiV.get_pointer(),
-	    vVelocity.getPointer(), &vVal, 
-	    domLoW.get_pointer(), domHiW.get_pointer(), 
-	    idxLoW.get_pointer(), idxHiW.get_pointer(),
-	    wVelocity.getPointer(), &wVal,
-	    domLo.get_pointer(), domHi.get_pointer(), 
-	    idxLo.get_pointer(), idxHi.get_pointer(),
-	    pressure.getPointer(), &pVal, 
-	    density.getPointer(), &denVal, 
-	    viscosity.getPointer(), &visVal);
-  for (int ii = 0; ii < d_nofScalars; ii++) {
-    double scalVal = 0.0;
-    FORT_INIT_SCALAR(domLo.get_pointer(), domHi.get_pointer(),
-		     idxLo.get_pointer(), idxHi.get_pointer(), 
-		     scalar[ii].getPointer(), &scalVal);
-  }
+    double uVal = 0.0, vVal = 0.0, wVal = 0.0;
+    double pVal = 0.0, denVal = 0.0;
+    double visVal = d_physicalConsts->getMolecularViscosity();
+    FORT_INIT(domLoU.get_pointer(), domHiU.get_pointer(), 
+	      idxLoU.get_pointer(), idxHiU.get_pointer(),
+	      uVelocity.getPointer(), &uVal, 
+	      domLoV.get_pointer(), domHiV.get_pointer(), 
+	      idxLoV.get_pointer(), idxHiV.get_pointer(),
+	      vVelocity.getPointer(), &vVal, 
+	      domLoW.get_pointer(), domHiW.get_pointer(), 
+	      idxLoW.get_pointer(), idxHiW.get_pointer(),
+	      wVelocity.getPointer(), &wVal,
+	      domLo.get_pointer(), domHi.get_pointer(), 
+	      idxLo.get_pointer(), idxHi.get_pointer(),
+	      pressure.getPointer(), &pVal, 
+	      density.getPointer(), &denVal, 
+	      viscosity.getPointer(), &visVal);
+    for (int ii = 0; ii < d_nofScalars; ii++) {
+      double scalVal = 0.0;
+      FORT_INIT_SCALAR(domLo.get_pointer(), domHi.get_pointer(),
+		       idxLo.get_pointer(), idxHi.get_pointer(), 
+		       scalar[ii].getPointer(), &scalVal);
+    }
+    
+    new_dw->put(uVelocity, d_lab->d_uVelocityINLabel, matlIndex, patch);
+    new_dw->put(vVelocity, d_lab->d_vVelocityINLabel, matlIndex, patch);
+    new_dw->put(wVelocity, d_lab->d_wVelocityINLabel, matlIndex, patch);
+    new_dw->put(pressure, d_lab->d_pressureINLabel, matlIndex, patch);
+    for (int ii = 0; ii < d_nofScalars; ii++) {
+      new_dw->put(scalar[ii], d_lab->d_scalarINLabel, ii, patch);
+    }
+    new_dw->put(density, d_lab->d_densityINLabel, matlIndex, patch);
+    new_dw->put(viscosity, d_lab->d_viscosityINLabel, matlIndex, patch);
 
-  old_dw->put(uVelocity, d_lab->d_uVelocityINLabel, matlIndex, patch);
-  old_dw->put(vVelocity, d_lab->d_vVelocityINLabel, matlIndex, patch);
-  old_dw->put(wVelocity, d_lab->d_wVelocityINLabel, matlIndex, patch);
-  old_dw->put(pressure, d_lab->d_pressureINLabel, matlIndex, patch);
-  for (int ii = 0; ii < d_nofScalars; ii++) {
-    old_dw->put(scalar[ii], d_lab->d_scalarINLabel, ii, patch);
   }
-  old_dw->put(density, d_lab->d_densityINLabel, matlIndex, patch);
-  old_dw->put(viscosity, d_lab->d_viscosityINLabel, matlIndex, patch);
-
 }

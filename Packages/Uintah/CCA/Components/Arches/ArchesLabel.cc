@@ -17,7 +17,11 @@ using namespace Uintah;
 //****************************************************************************
 ArchesLabel::ArchesLabel()
 {
-
+  int noStencil = 7;
+  d_stencilMatl = scinew MaterialSubset();
+  for (int i = 0; i < noStencil; i++)
+    d_stencilMatl->add(i);
+  d_stencilMatl->addReference();
 
   // Cell Information
   d_cellInfoLabel = scinew VarLabel("cellInformation",
@@ -277,5 +281,7 @@ ArchesLabel::ArchesLabel()
 //****************************************************************************
 ArchesLabel::~ArchesLabel()
 {
+  if (d_stencilMatl->removeReference())
+    delete d_stencilMatl;
 }
 

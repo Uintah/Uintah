@@ -32,7 +32,7 @@ WARNING
 
 #include <Packages/Uintah/Core/Exceptions/InvalidValue.h>
 #include <vector>
-
+#include <iostream>
 using std::vector;
 
 namespace Uintah {
@@ -105,8 +105,10 @@ template<class T>
   T&
   StencilMatrix<T>::operator[](int index)
   {
-    if (index < 0 || index > 6) 
+    if (index < 0 || index > 6){
+      std::cerr << "Invalid Index" << index << std::endl;
       throw InvalidValue("Valid Indices for StencilMatrix are AP,AE,AW,AN,AS,AT and AB ");
+    }
     return d_data[index];
   }
 } // End namespace Uintah
