@@ -410,7 +410,7 @@ itcl_class SCIRun_Visualization_ShowField {
 	make_labeled_radio $tensor.radio \
 	    "Tensor Display Type" "$this-c data_display_type" top \
 	    $this-tensor_display_type \
-	    {{Boxes Boxes} {Ellipsoids Ellipsoids} \
+	    {{Boxes Boxes} {Ellipsoids Ellipsoids} {Quadrics Quadrics} \
 		 {"Colored Boxes" "Colored Boxes"}}
 	
 	checkbutton $tensor.usedefcol \
