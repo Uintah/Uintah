@@ -145,6 +145,10 @@ void ImpMPM::problemSetup(const ProblemSpecP& prob_spec, GridP& /*grid*/,
      d_solver[m]->initialize();
    }
 
+  // Pull out from Time section
+  d_initialDt = 10000.0;
+  ProblemSpecP time_ps = prob_spec->findBlock("Time");
+  time_ps->get("delt_init",d_initialDt);
 }
 
 void ImpMPM::scheduleInitialize(const LevelP& level,
@@ -214,10 +218,18 @@ void ImpMPM::actuallyInitialize(const ProcessorGroup*,
 
 }
 
-void ImpMPM::scheduleComputeStableTimestep(const LevelP&, SchedulerP&)
+void ImpMPM::scheduleComputeStableTimestep(const LevelP& lev, SchedulerP& sched)
 {
-   // Nothing to do here - delt is computed as a by-product of the
-   // consitutive model
+
+  Task* t;
+  cout_doing << "ImpMPM::scheduleComputeStableTimestep " << endl;
+  t = scinew Task("ImpMPM::actuallyComputeStableTimestep",
+                     this, &ImpMPM::actuallyComputeStableTimestep);
+
+  const MaterialSet* matls = d_sharedState->allMPMMaterials();
+  t->computes(d_sharedState->get_delt_label());
+  sched->addTask(t,lev->eachPatch(), matls);
+
 }
 
 void
@@ -1997,6 +2009,7 @@ void ImpMPM::actuallyComputeStableTimestep(const ProcessorGroup*,
 					   const PatchSubset*,
 					   const MaterialSubset*,
 					   DataWarehouse*,
-					   DataWarehouse*)
+					   DataWarehouse* new_dw)
 {
+    new_dw->put(delt_vartype(d_initialDt), lb->delTLabel);
 }
