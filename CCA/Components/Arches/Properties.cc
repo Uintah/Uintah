@@ -419,10 +419,6 @@ Properties::computeProps(const ProcessorGroup* pc,
 
       double den_ref = density[d_denRef];
 
-#ifdef ARCHES_DEBUG
-      cerr << "density_ref " << den_ref << endl;
-#endif
-
       new_dw->put(sum_vartype(den_ref),d_lab->d_refDensity_label);
     }
 
@@ -912,8 +908,6 @@ Properties::reComputeProps(const ProcessorGroup* pc,
 
     TAU_PROFILE_START(input);
 
-    //#define scalarSolve_debug
-
     double start_mixTime = Time::currentSeconds();
 
     const Patch* patch = patches->get(p);
@@ -1090,10 +1084,6 @@ Properties::reComputeProps(const ProcessorGroup* pc,
     IntVector indexLow = patch->getCellLowIndex();
     IntVector indexHigh = patch->getCellHighIndex();
 
-#ifdef ARCHES_DEBUG
-    IntVector test(6,9,9);
-    cout << "printing test "<<test<<endl;
-#endif
     TAU_PROFILE_STOP(input);
     TAU_PROFILE_START(compute);
     InletStream inStream(d_numMixingVars,
@@ -1109,23 +1099,11 @@ Properties::reComputeProps(const ProcessorGroup* pc,
 	  // of mixingModel
 	  for (int ii = 0; ii < d_numMixingVars; ii++ ) {
 	    inStream.d_mixVars[ii] = (scalar[ii])[currCell];
-#ifdef ARCHES_DEBUG
-	    if ((colX==6) && (colY==9) && (colZ==9))
-	      cerr << "Mixture Vars at test = " << (scalar[ii])[currCell];
-#endif
-#ifdef scalarSolve_debug
-	    if ((colX==0) && (colY==8) && (colZ==8))
-	      cerr << "Mixture Vars at test = " << (scalar[ii])[currCell] << endl;
-#endif
 	  }
 
 	  if (d_numMixStatVars > 0) {
 	    for (int ii = 0; ii < d_numMixStatVars; ii++ ) {
 	      inStream.d_mixVarVariance[ii] = (scalarVar[ii])[currCell];
-#ifdef scalarSolve_debug
-	    if ((colX==0) && (colY==8) && (colZ==8))
-	      cerr << "Mixture Variance Vars at test = " << (scalarVar[ii])[currCell] << endl;
-#endif
 	    }
 	  }
 
@@ -1142,11 +1120,6 @@ Properties::reComputeProps(const ProcessorGroup* pc,
 	  else
 	    inStream.d_enthalpy = 0.0;
 
-#ifdef scalarSolve_debug
-	    if ((colX==0) && (colY==8) && (colZ==8))
-	      cerr << "Enthalpy at test = " << inStream.d_enthalpy << endl;
-#endif
-
 
 	  if (d_flamelet) {
 	    if (colX >= 0)
@@ -1160,10 +1133,6 @@ Properties::reComputeProps(const ProcessorGroup* pc,
   TAU_PROFILE_STOP(mixing);
 
 	  double local_den = outStream.getDensity();
-#ifdef scalarSolve_debug
-	    if ((colX==0) && (colY==8) && (colZ==8))
-	      cerr << "Out Density at test = " << outStream.getDensity() << endl;
-#endif
 	  drhodf[currCell] = outStream.getdrhodf();
 
 	  if (d_flamelet) {
@@ -1238,64 +1207,6 @@ Properties::reComputeProps(const ProcessorGroup* pc,
       }
     }
     // Write the computed density to the new data warehouse
-#ifdef ARCHES_PRES_DEBUG
-    // Testing if correct values have been put
-    cerr << " AFTER COMPUTE PROPERTIES " << endl;
-    IntVector domLo = density.getFortLowIndex();
-    IntVector domHi = density.getFortHighIndex();
-    density.print(cerr);
-#endif
-
-#ifdef scalarSolve_debug
-
-    if (d_MAlab) {
-      cerr << " NEW DENSITY VALUES " << endl;
-
-      // code to print all values of any variable within
-      // a box, for multi-patch case
-
-      int ibot = 0;
-      int itop = 2;
-      int jbot = 7;
-      int jtop = 8;
-      int kbot = 7;
-      int ktop = 8;
-
-      cout << "Index Low and Hi for x = " << indexLow.x() << "  " << indexHigh.x() << endl;
-      cout << "Index Low and Hi for y = " << indexLow.y() << "  " << indexHigh.y() << endl;
-      cout << "Index Low and Hi for z = " << indexLow.z() << "  " << indexHigh.z() << endl;
-
-      // values above can be changed for each case as desired
-
-      bool printvalues = true;
-      int idloX = Max(indexLow.x(),ibot);
-      int idhiX = Min(indexHigh.x()-1,itop);
-      int idloY = Max(indexLow.y(),jbot);
-      int idhiY = Min(indexHigh.y()-1,jtop);
-      int idloZ = Max(indexLow.z(),kbot);
-      int idhiZ = Min(indexHigh.z()-1,ktop);
-      cout << "idloX, idhiX = " << idloX << "  " << idhiX << endl;
-      cout << "idloY, idhiY = " << idloY << "  " << idhiY << endl;
-      cout << "idloZ, idhiZ = " << idloZ << "  " << idhiZ << endl;
-      if ((idloX > idhiX) || (idloY > idhiY) || (idloZ > idhiZ))
-	printvalues = false;
-
-      if (printvalues) {
-	for (int ii = idloX; ii <= idhiX; ii++) {
-	  for (int jj = idloY; jj <= idhiY; jj++) {
-	    for (int kk = idloZ; kk <= idhiZ; kk++) {
-	      cerr.width(14);
-	      cerr << " point coordinates "<< ii << " " << jj << " " << kk;
-	      cerr << " new density = " << new_density[IntVector(ii,jj,kk)]; 
-	      cerr << " cellType = " << cellType[IntVector(ii,jj,kk)]; 
-	      cerr << " void fraction = " << voidFraction[IntVector(ii,jj,kk)] << endl; 
-	    }
-	  }
-	}
-      }
-    }
-#endif
-
     if (modify_ref_density) {
       double den_ref = 0.0;
       if (patch->containsCell(d_denRef)) {

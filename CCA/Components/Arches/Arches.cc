@@ -2,6 +2,7 @@
 
 #include <Packages/Uintah/CCA/Components/Arches/Arches.h>
 #include <Packages/Uintah/CCA/Components/Arches/ArchesLabel.h>
+#include <Packages/Uintah/CCA/Components/MPMArches/MPMArchesLabel.h>
 #include <Packages/Uintah/CCA/Components/Arches/ArchesMaterial.h>
 #include <Packages/Uintah/CCA/Components/Arches/BoundaryCondition.h>
 #include <Packages/Uintah/CCA/Components/Arches/CellInformation.h>
@@ -325,6 +326,16 @@ Arches::scheduleComputeStableTimestep(const LevelP& level,
 		Ghost::None, Arches::ZEROGHOSTCELLS);
   tsk->requires(Task::NewDW, d_lab->d_viscosityCTSLabel,
 		Ghost::None, Arches::ZEROGHOSTCELLS);
+
+  if (d_MAlab) {
+    tsk->requires(Task::NewDW, d_MAlab->KStabilityULabel,
+		  Ghost::None, Arches::ZEROGHOSTCELLS);
+    tsk->requires(Task::NewDW, d_MAlab->KStabilityVLabel,
+		  Ghost::None, Arches::ZEROGHOSTCELLS);
+    tsk->requires(Task::NewDW, d_MAlab->KStabilityWLabel,
+		  Ghost::None, Arches::ZEROGHOSTCELLS);
+  }
+
   tsk->computes(d_sharedState->get_delt_label());
   sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials());
 
@@ -335,7 +346,7 @@ void
 Arches::computeStableTimeStep(const ProcessorGroup* ,
 			      const PatchSubset* patches,
 			      const MaterialSubset*,
-			      DataWarehouse* ,
+			      DataWarehouse* old_dw,
 			      DataWarehouse* new_dw)
 {
   for (int p = 0; p < patches->size(); p++) {
@@ -348,6 +359,11 @@ Arches::computeStableTimeStep(const ProcessorGroup* ,
     constSFCZVariable<double> wVelocity;
     constCCVariable<double> den;
     constCCVariable<double> visc;
+
+    constCCVariable<double> KStabilityU;
+    constCCVariable<double> KStabilityV;
+    constCCVariable<double> KStabilityW;
+    
     PerPatch<CellInformationP> cellInfoP;
 
     if (new_dw->exists(d_lab->d_cellInfoLabel, matlIndex, patch)) 
@@ -373,6 +389,16 @@ Arches::computeStableTimeStep(const ProcessorGroup* ,
 		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
     new_dw->get(visc, d_lab->d_viscosityCTSLabel, 
 		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+
+    if (d_MAlab) {
+      new_dw->get(KStabilityU, d_MAlab->KStabilityULabel,
+		  matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+      new_dw->get(KStabilityV, d_MAlab->KStabilityULabel,
+		  matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+      new_dw->get(KStabilityW, d_MAlab->KStabilityULabel,
+		  matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+    }
+
     IntVector indexLow = patch->getCellFORTLowIndex();
     IntVector indexHigh = patch->getCellFORTHighIndex() + IntVector(1,1,1);
   // set density for the whole domain
@@ -383,16 +409,32 @@ Arches::computeStableTimeStep(const ProcessorGroup* ,
       for (int colY = indexLow.y(); colY < indexHigh.y(); colY ++) {
 	for (int colX = indexLow.x(); colX < indexHigh.x(); colX ++) {
 	  IntVector currCell(colX, colY, colZ);
+	  double tmp_time;
 // if statement to handle Kumar's wall with zero density
 	  if (den[currCell] > 0.0) {
-	  double tmp_time=Abs(uVelocity[currCell])/(cellinfo->sew[colX])+
-	                  Abs(vVelocity[currCell])/(cellinfo->sns[colY])+
-	                  Abs(wVelocity[currCell])/(cellinfo->stb[colZ])+
-	                  (visc[currCell]/den[currCell])* 
-	                    (1.0/(cellinfo->sew[colX]*cellinfo->sew[colX]) +
-			     1.0/(cellinfo->sns[colY]*cellinfo->sns[colY]) +
-	                     1.0/(cellinfo->stb[colZ]*cellinfo->stb[colZ])) +
-	                   small_num;
+	    if (d_MAlab) {
+	      tmp_time=Abs(uVelocity[currCell])/(cellinfo->sew[colX])+
+		Abs(vVelocity[currCell])/(cellinfo->sns[colY])+
+		Abs(wVelocity[currCell])/(cellinfo->stb[colZ])+
+		(visc[currCell]/den[currCell])* 
+		(1.0/(cellinfo->sew[colX]*cellinfo->sew[colX]) +
+		 1.0/(cellinfo->sns[colY]*cellinfo->sns[colY]) +
+		 1.0/(cellinfo->stb[colZ]*cellinfo->stb[colZ])) +
+		small_num;
+		//		2.0*KStabilityU[currCell] +
+		//		2.0*KStabilityV[currCell] +
+		//		2.0*KStabilityW[currCell] +
+	    }
+	    else {
+	      tmp_time=Abs(uVelocity[currCell])/(cellinfo->sew[colX])+
+		Abs(vVelocity[currCell])/(cellinfo->sns[colY])+
+		Abs(wVelocity[currCell])/(cellinfo->stb[colZ])+
+		(visc[currCell]/den[currCell])* 
+		(1.0/(cellinfo->sew[colX]*cellinfo->sew[colX]) +
+		 1.0/(cellinfo->sns[colY]*cellinfo->sns[colY]) +
+		 1.0/(cellinfo->stb[colZ]*cellinfo->stb[colZ])) +
+		small_num;
+	    }
 
 	  delta_t2=Min(1.0/tmp_time, delta_t2);
 #if 0								  
@@ -427,10 +469,12 @@ Arches::scheduleTimeAdvance( const LevelP& level,
 			     SchedulerP& sched,
 			     int /*step*/, int /*nsteps*/ ) // AMR Parameters
 {
+  double time = d_lab->d_sharedState->getElapsedTime();
   nofTimeSteps++ ;
   if (d_MAlab) {
 #ifndef ExactMPMArchesInitialize
-    if (nofTimeSteps < 2) {
+    //    if (nofTimeSteps < 2) {
+    if (time < 1.0E-10) {
       cout << "Calculating at time step = " << nofTimeSteps << endl;
       d_nlSolver->noSolve(level, sched);
     }

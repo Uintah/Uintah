@@ -1994,17 +1994,37 @@ DynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
     Cs.copy(tempCs, tempCs.getLowIndex(),
 		      tempCs.getHighIndex());
 #endif
-    for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
-      for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
-	for (int colX = indexLow.x(); colX <= indexHigh.x(); colX ++) {
-	  IntVector currCell(colX, colY, colZ);
-	  double delta = cellinfo->sew[colX]*cellinfo->sns[colY]*cellinfo->stb[colZ];
-	  double filter = pow(delta, 1.0/3.0);
-	  if (Cs[currCell] < 0.0) Cs[currCell] = 0.0;
-	  else if (Cs[currCell] > 100.0) Cs[currCell] = 100.0;
-	  Cs[currCell] = sqrt(Cs[currCell]);
-	  viscosity[currCell] =  Cs[currCell]* filter * filter *
-				  IsI[currCell] * den[currCell] + viscos;
+
+    if (d_MAlab) {
+
+      for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
+	for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
+	  for (int colX = indexLow.x(); colX <= indexHigh.x(); colX ++) {
+	    IntVector currCell(colX, colY, colZ);
+	    double delta = cellinfo->sew[colX]*cellinfo->sns[colY]*cellinfo->stb[colZ];
+	    double filter = pow(delta, 1.0/3.0);
+	    if (Cs[currCell] < 0.0) Cs[currCell] = 0.0;
+	    else if (Cs[currCell] > 100.0) Cs[currCell] = 100.0;
+	    Cs[currCell] = sqrt(Cs[currCell]);
+	    viscosity[currCell] =  Cs[currCell]* filter * filter *
+	      IsI[currCell] * den[currCell] + viscos*voidFraction[currCell];
+	  }
+	}
+      }
+    }
+    else {
+      for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
+	for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
+	  for (int colX = indexLow.x(); colX <= indexHigh.x(); colX ++) {
+	    IntVector currCell(colX, colY, colZ);
+	    double delta = cellinfo->sew[colX]*cellinfo->sns[colY]*cellinfo->stb[colZ];
+	    double filter = pow(delta, 1.0/3.0);
+	    if (Cs[currCell] < 0.0) Cs[currCell] = 0.0;
+	    else if (Cs[currCell] > 100.0) Cs[currCell] = 100.0;
+	    Cs[currCell] = sqrt(Cs[currCell]);
+	    viscosity[currCell] =  Cs[currCell]* filter * filter *
+	      IsI[currCell] * den[currCell] + viscos;
+	  }
 	}
       }
     }
