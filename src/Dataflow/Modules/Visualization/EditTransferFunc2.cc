@@ -179,7 +179,6 @@ EditTransferFunc2::tcl_command(GuiArgs& args, void* userdata)
 
   // mouse commands are motion, down, release
   if (args[1] == "mouse") {
-    //cerr << "EVENT: mouse" << endl;
     int x, y, b, m;
     string_to_int(args[3], x);
     string_to_int(args[4], y);
@@ -197,15 +196,12 @@ EditTransferFunc2::tcl_command(GuiArgs& args, void* userdata)
       }
     }
   } else if (args[1] == "resize") {
-    //cerr << "EVENT: resize" << endl;
     string_to_int(args[2], width_);
     string_to_int(args[3], height_);
     redraw();
   } else if (args[1] == "expose") {
-    //cerr << "EVENT: expose" << endl;
     redraw();
   } else if (args[1] == "redraw") {
-    //cerr << "EVENT: expose" << endl;
     reset_vars();
     if (args.count() > 2)
     {
@@ -213,11 +209,9 @@ EditTransferFunc2::tcl_command(GuiArgs& args, void* userdata)
     }
     redraw();
   } else if (args[1] == "redrawcmap") {
-    //cerr << "EVENT: expose" << endl;
     cmap_dirty_ = true;
     redraw();
   } else if (args[1] == "closewindow") {
-    //cerr << "EVENT: close" << endl;
     ctx_ = 0;
   } else if (!args[1].compare(0, 13, "color_change-")) {
     int n;
@@ -454,10 +448,6 @@ EditTransferFunc2::tcl_unpickle()
       widgets_.push_back(scinew RectangleCM2Widget());
       widgets_[widgets_.size()-1]->tcl_unpickle(gui_wstate_[i]->get());
     }
-    else
-    {
-      cerr << "EditTransferFunc debug: No widget state saved.\n";
-    }
   }
 
   // Grab colors
@@ -469,8 +459,6 @@ EditTransferFunc2::tcl_unpickle()
 void
 EditTransferFunc2::push(int x, int y, int button, int modifier)
 {
-  //cerr << "push: " << x << " " << y << " " << button << " " << width_ << " " << height_ << " " << modifier << endl;
-
   int i;
 
   button_ = button;
@@ -523,8 +511,6 @@ EditTransferFunc2::push(int x, int y, int button, int modifier)
 void
 EditTransferFunc2::motion(int x, int y)
 {
-  //cerr << "motion: " << x << " " << y << endl;
-
   if (pick_widget_ != -1)
   {
     if (first_motion_)
@@ -548,8 +534,6 @@ EditTransferFunc2::motion(int x, int y)
 void
 EditTransferFunc2::release(int x, int y, int button)
 {
-  //cerr << "release: " << x << " " << y << " " << button << endl;
-
   button_ = 0;
   if (pick_widget_ != -1)
   {
@@ -568,8 +552,6 @@ EditTransferFunc2::release(int x, int y, int button)
 void
 EditTransferFunc2::execute()
 {
-  //cerr << "EditTransferFunc2::execute" << endl;
-  
   NrrdIPort* histo_port = (NrrdIPort*)get_iport("Histogram");
   if(histo_port) {
     NrrdDataHandle h;

@@ -161,7 +161,6 @@ TextureBuilder::build_texture(Reporter* reporter, FieldHandle vfield, FieldHandl
 {
   // start new algorithm based code
   const TypeDescription* td = vfield->get_type_description();
-  cerr << "DC: type description = " << td->get_name() << std::endl;
   LockingHandle<TextureBuilderAlgoBase> builder;
   CompileInfoHandle ci = TextureBuilderAlgoBase::get_compile_info(td);
   if (!DynamicCompilation::compile(ci, builder, reporter)) {
