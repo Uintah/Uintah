@@ -62,7 +62,7 @@ AC_CONFIG_AUX_DIR(scripts)
 IFS=' '
 
 ##  initialize the recognized argument lists
-SCI_ARG_WITH_LIST=""
+SCI_ARG_WITH_LIST="--no-create --no-recursion"
 SCI_ARG_ENABLE_LIST=""
 
 ##  ---------------------------------------------------------------------
@@ -130,7 +130,7 @@ EOF
          test "$1" != "/usr/lib/" &&
          test "$1" != "/lib" &&
          test "$1" != "/lib/"; then
-        eval $_SCI_VAR_NAME_='-L$1'
+        eval $_SCI_VAR_NAME_='$1'
         eval $_SCI_VAR_HAVE_=yes
       else
         eval $_SCI_VAR_NAME_='\ '
@@ -187,7 +187,7 @@ EOF
     if test -z "$ac_err"; then
       if test "$1" != "/usr/include" &&
          test "$1" != "/usr/include/"; then
-        eval $_SCI_VAR_NAME_='-I$1'
+        eval $_SCI_VAR_NAME_='$1'
       else
         eval $_SCI_VAR_NAME_='\ '
       fi
@@ -260,7 +260,7 @@ EOF
     if test "$_SCI_LOOPTEST_" = "true"; then
       if test "$1" != "/usr/include" &&
          test "$1" != "/usr/include/"; then
-        eval $_SCI_VAR_NAME_='-I$1'
+        eval $_SCI_VAR_NAME_='$1'
       else
         eval $_SCI_VAR_NAME_='\ '
       fi
@@ -782,29 +782,11 @@ case $host in
     else
       SCI_LAB_TP_DEFAULT=/res/sci/data1/SCIRun_Thirdparty_32
     fi
-    if test "$is_64bit" = "yes"; then
-      BINARYFLAGS="-64 -mips4"
-    else
-      BINARYFLAGS="-n32 -mips4"
-    fi
-    # this WOFF is required for configure 
-    WOFF="-woff 1047 -Wl,-woff -Wl,84"
-    CPPFLAGS=" -E $WOFF -LANG:std"
-    FFLAGS="$BINARYFLAGS $extra_cflags"
-    CFLAGS="-fullwarn -xansi -LANG:std $BINARYFLAGS $extra_cflags"
-    ASFLAGS="$BINARYFLAGS"
-    SOFLAGS="-shared $BINARYFLAGS -LANG:std -no_unresolved -J\$(MAKE_PARALLELISM) -update_registry \$(LIBDIR)so_locations ${SOFLAGS}"
-    LDFLAGS="$BINARYFLAGS -LANG:std -no_unresolved"
     ;;
   *linux*)
     SCI_LAB_TP_DEFAULT="/res/sci/data1/SCIRun_Thirdparty_32_linux \
                         /local/SCIRun_Thirdparty_32 \
                         /local"
-    WOFF=" -w"
-    CFLAGS="-Wall $extra_cflags"
-    FFLAGS="$extra_cflags"
-    SOFLAGS="-shared ${SOFLAGS}"
-    NEED_SONAME=yes
     ;;
   *-aix*)
     AC_MSG_WARN(AIX is not completely supported!)
@@ -815,7 +797,6 @@ case $host in
 esac
 
 AC_SUBST(ASSERTION_LEVEL)
-AC_SUBST(NEED_SONAME)
 AC_SUBST(NOPRINTDIR)
 AC_SUBST(MALLOC_DEFINE)
 AC_SUBST(PACKAGE_DIRS)
@@ -839,24 +820,100 @@ echo
 AC_CHECKING(for required build tools...)
 echo 
 
+AC_MSG_CHECKING(whether debug was enabled)
+if test "$debug" = "no"; then
+  AC_MSG_RESULT(no)
+elif test "$debug" = "yes"; then
+  extra_cflags="-g ${extra_cflags}";
+  AC_MSG_RESULT(yes (-g) )
+else
+  extra_cflags="$debug ${extra_cflags}";
+  AC_MSG_RESULT(yes ($debug) )
+fi
+
+AC_MSG_CHECKING(whether optimize was enabled)
+if test "$optimize" = "no"; then
+  if test "$debug" = "no"; then
+    extra_cflags="-O2 ${extra_cflags}";
+    AC_MSG_RESULT(no (-O2) )
+  else
+    AC_MSG_RESULT(no)
+  fi
+elif test "$optimize" = "yes"; then
+  extra_cflags="-O2 ${extra_cflags}";
+  AC_MSG_RESULT(yes (-O2) )
+else
+  extra_cflags="$optimize ${extra_cflags}";
+  AC_MSG_RESULT(yes ($optimize) )
+fi
+
+if ! test "$perfex" = "no"; then
+  extra_cflags="-DUSE_PERFEX_COUNTERS ${extra_cflags}"
+fi
+
 case $host in 
   *-irix*)
     MIPSPRO=/opt/MIPSpro/bin
+    USRBIN=/usr/bin
     AC_PATH_PROG(CC,cc,,$MIPSPRO,)
+    if test -z "$CC"; then
+      AC_PATH_PROG(CC,cc,,$USRBIN,)
+      if test -z "$CC"; then
+        AC_MSG_ERROR(couldn't find the MIPSPro C compiler (cc))
+      fi
+    fi
     SCI_CHECK_VERSION($CC,-version,7.3.1.1,,
       echo configure: error: wrong $CC version.; exit)
     AC_PATH_PROG(F77,f77,,$MIPSPRO,)
+    if test -z "$F77"; then
+      AC_PATH_PROG(F77,f77,,$USRBIN,)
+      if test -z "$F77"; then
+        AC_MSG_ERROR(couldn't find the MIPSPro Fortran compiler (f77))
+      fi
+    fi
     SCI_CHECK_VERSION($F77,-version,7.3.1.1,,
       echo configure: error: wrong $CC version.; exit)
     AC_PATH_PROG(CXX,CC,,$MIPSPRO,)
+    if test -z "$CXX"; then
+      AC_PATH_PROG(CXX,CC,,$USRBIN,)
+      if test -z "$CXX"; then
+        AC_MSG_ERROR(couldn't find the MIPSPro C++ compiler (CC))
+      fi
+    fi
     SCI_CHECK_VERSION($CXX,-version,7.3.1.1,,
       echo configure: error: wrong $CXX version.; exit)
     AC_PATH_PROG(AS,as,,$MIPSPRO,)
+    if test -z "$AS"; then
+      AC_PATH_PROG(AS,as,,$USRBIN,)
+      if test -z "$AS"; then
+        AC_MSG_ERROR(couldn't find the MIPSPro assembler (as))
+      fi
+    fi
     SCI_CHECK_VERSION($AS,-version,7.3.1.1,,
       echo configure: error: wrong $CC version.; exit)
     AC_PATH_PROG(LD,ld,,$MIPSPRO,)
+    if test -z "$LD"; then
+      AC_PATH_PROG(LD,ld,,$USRBIN,)
+      if test -z "$LD"; then
+        AC_MSG_ERROR(couldn't find the MIPSPro linker (ld))
+      fi
+    fi
     CPP="$CC"
     CXXCPP="$CXX"
+    # this WOFF is required for configure 
+    WOFF="-woff 1047 -Wl,-woff -Wl,84"
+    CPPFLAGS=" -E $WOFF -LANG:std"
+    if test "$is_64bit" = "yes"; then
+      BINARYFLAGS="-64 -mips4"
+    else
+      BINARYFLAGS="-n32 -mips4"
+    fi
+    FFLAGS="$BINARYFLAGS $extra_cflags"
+    CFLAGS="-fullwarn -xansi -LANG:std $BINARYFLAGS $extra_cflags"
+    CXXFLAGS="$CFLAGS"
+    ASFLAGS="$BINARYFLAGS"
+    SOFLAGS="-shared $BINARYFLAGS -LANG:std -no_unresolved -J\$(MAKE_PARALLELISM) -update_registry \$(LIBDIR)so_locations $(TLINK) ${SOFLAGS}"
+    LDFLAGS="$BINARYFLAGS -LANG:std -no_unresolved"
     AC_MSG_CHECKING(if ${CC} talks too much)
     touch wow.c
     if ${CC} -c wow.c 2>&1 | fgrep "requires a license password" > /dev/null ; then
@@ -876,6 +933,7 @@ case $host in
     rm -f wow.c wow.o
     ;;
   *)
+    CFLAGS=" -Wall"
     AC_PROG_CC
     SCI_CHECK_VERSION($CC,--version,2.95.3,,
       echo configure: error: wrong $CC version.; exit)
@@ -889,7 +947,13 @@ case $host in
     AC_PROG_CXXCPP
     AC_CHECK_PROG(AS,as,as)
     AC_CHECK_PROG(LD,ld,ld)
+    WOFF=" -w"
     CPPFLAGS="$CPPFLAGS $WOFF"
+    CFLAGS="$CFLAGS $extra_cflags"
+    FFLAGS="$FFLAGS $extra_cflags"
+    CXXFLAGS="$CXXFLAGS $extra_cflags"
+    SOFLAGS="-shared ${SOFLAGS}"
+    NEED_SONAME=yes
     ;;
 esac
 
@@ -937,33 +1001,6 @@ rm -f configure-test.*
 rm -rf configure-test-dir
 
 F77_DEPEND_REGEN=$CC_DEPEND_REGEN
-
-AC_MSG_CHECKING(whether debug was enabled)
-if test "$debug" = "no"; then
-  AC_MSG_RESULT(no)
-elif test "$debug" = "yes"; then
-  extra_cflags="-g ${extra_cflags}";
-  AC_MSG_RESULT(yes (-g) )
-else
-  extra_cflags="$debug ${extra_cflags}";
-  AC_MSG_RESULT(yes ($debug) )
-fi
-
-AC_MSG_CHECKING(whether optimize was enabled)
-if test "$optimize" = "no"; then
-  if test "$debug" = "no"; then
-    extra_cflags="-O2 ${extra_cflags}";
-    AC_MSG_RESULT(no (-O2) )
-  else
-    AC_MSG_RESULT(no)
-  fi
-elif test "$optimize" = "yes"; then
-  extra_cflags="-O2 ${extra_cflags}";
-  AC_MSG_RESULT(yes (-O2) )
-else
-  extra_cflags="$optimize ${extra_cflags}";
-  AC_MSG_RESULT(yes ($optimize) )
-fi
 
 AC_PATH_PROG(MAKE,gmake,NOT_FOUND,,)
 if test "$MAKE" = "NOT_FOUND"; then
@@ -1013,6 +1050,7 @@ AC_SUBST(CC_DEPEND_REGEN)
 AC_SUBST(CC_DEPEND_REGEN_MOVE)
 AC_SUBST(F77_DEPEND_REGEN)
 AC_SUBST(MAKE_PARALLELISM)
+AC_SUBST(NEED_SONAME)
 
 ##  set the default language after the build tools are found
 AC_LANG_CPLUSPLUS
@@ -1058,13 +1096,13 @@ echo
 AC_PATH_X
 if test "$x_libraries" &&
    test "$x_libraries" != "/usr/lib"; then
-  LIBX=-L$x_libraries
+  LIBX=$x_libraries
 else
   LIBX=""
 fi
 if test "$x_includes" &&
    test "$x_includes" != "/usr/include"; then
-  INCX_H=-I$x_includes
+  INCX_H=$x_includes
 else
   INCX_H=""
 fi
@@ -1127,7 +1165,7 @@ case $host in
 esac
 
 if test "$THREAD_DEFINE" = "yes"; then
-  THREAD_DEFINE="#define SCI_PTHREADS"
+  THREAD_DEFINE="#define SCI_PTHREAD"
 fi
 
 THREAD_IMPL="Thread_$threads.cc"
@@ -1139,24 +1177,22 @@ AC_SUBST(CFLAGS)
 
 ##  --  search for OpenGL  -----------------------------------------------
 
-FOUND_ALL_GL=no
-for i in $thirdparty /usr/X11/lib $SCI_LAB_TP_DEFAULT; do
-  SCI_CHECK_LIB($thirdparty/lib,GL,main,HAVE_LIBGL=yes,continue,)
-  SCI_CHECK_LIB($thirdparty/lib,GLU,main,HAVE_LIBGLU=yes,continue,-lGL)
-  AC_CHECK_HEADERS(GL/gl.h GL/glu.h GL/glx.h,,HAVE_GL_H=no;continue)
+SCI_CHECK_LIB(/usr/lib,GL,main,HAVE_LIBGL=yes,,)
+SCI_CHECK_LIB(/usr/lib,GLU,main,HAVE_LIBGLU=yes,,-lGL)
+SCI_CHECK_HEADERS(/usr/include,GL/gl.h GL/glu.h GL/glx.h,,HAVE_GL_H=no)
 
-  if test "$HAVE_LIBGL" &&
-     test "$HAVE_LIBGLU" &&
-     test "$HAVE_GL_H" != "no"; then
-    FOUND_ALL_GL=yes
-    break
-  fi
-done
+if test "$HAVE_LIBGL" &&
+   test "$HAVE_LIBGLU" &&
+   test "$HAVE_GL_H" != "no"; then
+  FOUND_ALL_GL=yes
+  break
+fi
 
-if test "$FOUND_ALL_GL" = "no"; then
+if test "$FOUND_ALL_GL" != "yes"; then
   AC_MSG_ERROR(one or more OpenGL components is missing. exiting.)
 fi
 
+AC_SUBST(GL_INCLUDE_FLAG)
 AC_SUBST(LIBGL)
 AC_SUBST(INCGL_H)
 
@@ -1172,12 +1208,17 @@ if (test -z "$HAVE_LIBDL" &&
     test -z "$HAVE_LIBC") ||
     test -z "$HAVE_DLFCN_H"; then
   AC_MSG_ERROR(couldn't find the required dynamic library components. exiting.)
+else
+  LIBDL_FLAG=-ldl
 fi
 
 PLATFORM_LDFLAGS="-ldl"
 
+
+
 AC_SUBST(PLATFORM_LDFLAGS)
 AC_SUBST(LIBDL)
+AC_SUBST(LIBDL_FLAG)
 
 ##  --  search for required headers  --------------------------------------
 
@@ -1221,23 +1262,23 @@ for i in $tcl $thirdparty $SCI_LAB_TP_DEFAULT; do
 
   SCI_CHECK_LIB($i/lib,tk,main,
     if test -f "$i/lib/tkConfig.sh"; then . $i/lib/tkConfig.sh; fi,continue,
-    $LIBTCL -ltcl)
+    -L$LIBTCL -ltcl)
   SCI_CHECK_HEADERS($TK_SRC_DIR/generic/, tk.h tk3d.h tkPort.h,,
-    break,$INCTCL_H)
+    break,-I$INCTCL_H)
 
   SCI_CHECK_LIB($i/lib,itcl,main,
     if test -f "$i/lib/itclConfig.sh"; then . $i/lib/itclConfig.sh; fi,
-    continue, $LIBTCL -ltcl)
-  SCI_CHECK_HEADER($ITCL_SRC_DIR/generic,itcl.h,,, $INCTCL_H)
+    continue, -L$LIBTCL -ltcl)
+  SCI_CHECK_HEADER($ITCL_SRC_DIR/generic,itcl.h,,,-I$INCTCL_H)
 
   SCI_CHECK_LIB($i/lib,itk,main,
     if test -f "$i/lib/itkConfig.sh"; then . $i/lib/itkConfig.sh; fi,continue,
-    $LIBITCL -litcl3.1 $LIBTK -ltk $LIBTCL -ltcl)
+    -L$LIBITCL -litcl3.1 -L$LIBTK -ltk -L$LIBTCL -ltcl)
   SCI_CHECK_HEADER($ITK_SRC_DIR/generic,itk.h,,, 
-    $INCITCL_H $INCTK_H $INCTCL_H)
+    -I$INCITCL_H -I$INCTK_H -I$INCTCL_H)
 
-  SCI_CHECK_LIB($i/lib,BLT,main,,continue,$LIBTK -ltk $LIBTCL -ltcl)
-  SCI_CHECK_HEADER($i/include,blt.h,,, $INCTCL_H $INCTK_H)
+  SCI_CHECK_LIB($i/lib,BLT,main,,continue,-L$LIBTK -ltk -L$LIBTCL -ltcl)
+  SCI_CHECK_HEADER($i/include,blt.h,,, -I$INCTCL_H -I$INCTK_H)
 
   if test "$LIBTCL" &&
      test "$LIBTK" &&
@@ -1259,6 +1300,7 @@ for i in $tcl $thirdparty $SCI_LAB_TP_DEFAULT; do
     SCI_CHECK_VAR_VERSION([[[[incr Tcl/Tk]]]],
       $ITCL_VERSION.$ITCL_RELEASE_LEVEL,3.1.0,,continue)
     FOUND_ALL_TCL=yes
+    ITCL_BIN_DIR=$i/bin
     break
   fi
 done
@@ -1276,7 +1318,6 @@ AC_SUBST(INCTCL_H)
 AC_SUBST(TK_SRC_DIR)
 AC_SUBST(TK_VERSION)
 AC_SUBST(TK_INIT_DIR)
-AC_SUBST(TK_LIB_SPEC)
 AC_SUBST(LIBTK)
 AC_SUBST(INCTK_H)
 AC_SUBST(ITCL_SRC_DIR)
@@ -1309,7 +1350,7 @@ for i in $xercesc $thirdparty $SCI_LAB_TP_DEFAULT; do
     parsers/DOMParser.hpp dom/DOM_Node.hpp \
     util/XMLUni.hpp sax/SAXException.hpp \
     sax/SAXParseException.hpp sax/ErrorHandler.hpp,
-    INCXERCESC_H="-I$i/include/xercesc",INCXERCESC_H='';break,)
+    INCXERCESC_H="$i/include/xercesc",INCXERCESC_H='';break,)
 
   if test "$LIBXERCES_C" &&
      test "$INCXERCESC_H"; then
@@ -1353,7 +1394,7 @@ for i in $mpi $thirdparty $SCI_LAB_TP_DEFAULT; do
   if (test "$LIBMPI" ||
       test "$LIBMPICH") &&
      test "$INCBLT_H"; then
-    LIBMPI="-L$i/lib"
+    LIBMPI="$i/lib"
     FOUND_ALL_MPI=yes
     break
   else
@@ -1496,9 +1537,7 @@ for i in $perfex $thirdparty $SCI_LAB_TP_DEFAULT; do
   SCI_CHECK_LIB($i/lib,perfex,main,,continue,)
 done
 
-if ! test "$perfex" = "no" &&
-     test "$HAVE_LIBPERFEX"; then
-  extra_cflags="-DUSE_PERFEX_COUNTERS ${extra_cflags}"
+if test "$LIBPERFEX"; then
   PERFEX_LIBRARY=-lperfex
 fi
 
@@ -1567,15 +1606,16 @@ for i in $with_globus $thirdparty $SCI_LAB_TP_DEFAULT; do
   if test ! -d "$i"; then
     continue
   fi
-  SCI_CHECK_LIB($i/lib$NBITS,globus_utp,main,,continue,-lssl -lcrypto)
+  SCI_CHECK_LIB($i/lib$NBITS,globus_utp,main,,continue,
+    -L$LIBSSL -lssl -L$LIBCRYPTO -lcrypto)
   SCI_CHECK_LIB($i/lib$NBITS,globus_mp,main,,continue,
-    -lglobus_utp -lssl -lcrypto)
+    -lglobus_utp -L$LIBSSL -lssl -L$LIBCRYPTO -lcrypto)
   SCI_CHECK_LIB($i/lib$NBITS,globus_gss_assist,main,,continue,
-    -lglobus_mp -lglobus_utp -lssl -lcrypto)
+    -lglobus_mp -lglobus_utp -L$LIBSSL -lssl -L$LIBCRYPTO -lcrypto)
   SCI_CHECK_LIB($i/lib$NBITS,globus_gss,main,,continue,
-    -lglobus_gss_assist -lglobus_mp -lglobus_utp -lssl -lcrypto)
+    -lglobus_gss_assist -lglobus_mp -lglobus_utp -L$LIBSSL -lssl -L$LIBCRYPTO -lcrypto)
   SCI_CHECK_LIB($i/lib$NBITS,globus_gaa,main,,continue,
-    -lglobus_gss -lglobus_gss_assist -lglobus_mp -lglobus_utp -lssl -lcrypto)
+    -lglobus_gss -lglobus_gss_assist -lglobus_mp -lglobus_utp -L$LIBSSL -lssl -L$LIBCRYPTO -lcrypto)
   #
   # which globus headers should be tested for?
   #
@@ -1585,11 +1625,11 @@ for i in $with_globus $thirdparty $SCI_LAB_TP_DEFAULT; do
      test "$HAVE_LIBGLOBUS_GSS" &&
      test "$HAVE_LIBGLOBUS_GAA"; then
     FOUND_ALL_GLOBUS=yes
-    GLOBUS_INCLUDE="-I`dirname $LIBGLOBUS_UTP`/include"
+    GLOBUS_INCLUDE="-I$i/include"
     GLOBUS_LIB="$LIBGLOBUS_UTP"
     is_linux=`echo $host | sed 's/.*linux.*/linux/'`
     if test "$is_linux" = "linux"; then
-      GLOBUS_EXTRA_DIRS="-lglobus_gaa -lglobus_gss -lglobus_gss_assist -lglobus_mp -lglobus_utp -lssl -lcrypto"
+      GLOBUS_EXTRA_DIRS="-lglobus_gaa -lglobus_gss -lglobus_gss_assist -lglobus_mp -lglobus_utp -L$LIBSSL -lssl -L$LIBCRYPTO -lcrypto"
     fi
     break
   fi
@@ -1630,15 +1670,18 @@ AC_SUBST(BUILD_PARALLEL)
 ##  --  search fo gzopen (and related)  ----------------------------------
 
 SCI_CHECK_LIB($thirdparty/lib,z,main,,,)
-AC_CHECK_HEADERS(zlib.h)
+SCI_CHECK_HEADERS($thirdparty/include,zlib.h)
 
 if test -z "$HAVE_LIBZ" ||
    test -z "$INCZLIB_H"; then
   HAVE_LIBZ=''
+else
+  LIBZ_FLAG=-lz
 fi
 
 AC_SUBST(HAVE_LIBZ)
 AC_SUBST(LIBZ)
+AC_SUBST(LIBZ_FLAG)
 
 ##  --  search for blas stuff  -------------------------------------------
 for i in $blas $thirdparty $SCI_LAB_TP_DEFAULT; do
@@ -1657,14 +1700,14 @@ AC_SUBST(HAVE_LIBBLAS)
 AC_SUBST(LIBBLAS)
 
 ##  --  search for lapack stuff  -----------------------------------------
-for i in $lapack $thirdparty $SCI_LAB_TP_DEFAULT; do
+for i in $lapack `dirname $LIBBLAS` $thirdparty $SCI_LAB_TP_DEFAULT; do
   if test ! -d "$i"; then 
     continue
   fi
-  SCI_CHECK_LIB($i/lib,lapack,main,break,continue,-lblas $FLIBS)
+  SCI_CHECK_LIB($i/lib,lapack,main,break,continue,-L$LIBBLAS -lblas $FLIBS)
 done
 
-if test "$HAVE_LIBLAPACK"; then
+if test "$LIBLAPACK"; then
   LAPACK_DEF="#define LAPACK_ENABLED 1"
 fi
 
@@ -1678,10 +1721,10 @@ for i in $petsc $thirdparty $SCI_LAB_TP_DEFAULT; do
   if test ! -d "$i"; then 
     continue
   fi
-  SCI_CHECK_LIB($i/lib,petsc,main,break,continue,
+  SCI_CHECK_LIB($i/lib,petsc,main,,continue,
     -lpetsccontrib -lpetscdm -lpetscmat -lpetscsles -lpetscsnes \
-    -lpetscts -lpetscvec $LIBLAPACK -llapack $LIBBLAS -lblas $LIBX \
-    -lX11 $LIBMPI $MPI $FLIBS -lm)
+    -lpetscts -lpetscvec -L$LIBLAPACK -llapack -L$LIBBLAS -lblas -L$LIBX \
+    -lX11 -L$LIBMPI $MPI $FLIBS -lm)
   SCI_CHECK_HEADERS($i/include,petsc.h petscsles.h,,break,)
   if test "$LIBPETSC" &&
      test "$INCPETSC_H" &&
@@ -1694,8 +1737,8 @@ for i in $petsc $thirdparty $SCI_LAB_TP_DEFAULT; do
       PETSC_SUB=libO
     fi
     PETSC_EXTRA_LIBS="-lpetsccontrib -lpetscdm -lpetscmat \
-      -lpetscsles -lpetscsnes -lpetscts -lpetscvec $LIBLAPACK -llapack \
-      $LIBBLAS -lblas $LIBX -lX11 $LIBMPI $MPI $FLIBS -lm"
+      -lpetscsles -lpetscsnes -lpetscts -lpetscvec -L$LIBLAPACK -llapack \
+      -L$LIBBLAS -lblas -L$LIBX -lX11 -L$LIBMPI $MPI $FLIBS -lm"
     PETSC_ARCH=`$i/bin/petscarch`
     if test "$is_64bit" != "yes" -a "$PETSC_ARCH" = "IRIX64"; then
       PETSC_ARCH="IRIX"
@@ -1724,10 +1767,9 @@ for i in $unipetsc $thirdparty $SCI_LAB_TP_DEFAULT; do
   if test ! -d "$i"; then 
     continue
   fi
-  SCI_CHECK_LIB($i/lib,petsc,main,break,continue,
-    -lpetsccontrib -lpetscdm -lpetscmat -lpetscsles -lpetscsnes \
-    -lpetscts -lpetscvec $LIBLAPACK -llapack $LIBBLAS -lblas $LIBX \
-    -lX11 -lmpiuni $FLIBS -lm)
+  SCI_CHECK_LIB($i/lib,petsc,main,,continue,-lpetscsles -lpetscmat -lpetscvec \
+      -lpetscdm -lpetsccontrib -L$LIBLAPACK -llapack \
+      -L$LIBBLAS -lblas -L$LIBX -lX11 -lmpiuni $FLIBS -lm)
   SCI_CHECK_HEADERS($i/include,petsc.h petscsles.h,,break,)
   if test "$LIBPETSC" &&
      test "$INCPETSC_H" &&
@@ -1739,10 +1781,9 @@ for i in $unipetsc $thirdparty $SCI_LAB_TP_DEFAULT; do
     else
       UNIPETSC_SUB=libO
     fi
-    UNIPETSC_EXTRA_LIBS="-lpetsccontrib -lpetscdm -lpetscmat \
-      -lpetscsles -lpetscsnes -lpetscts -lpetscvec $LIBLAPACK -llapack \
-      $LIBBLAS -lblas $LIBX -lX11 -lmpiuni $FLIBS -lm"
-
+    UNIPETSC_EXTRA_LIBS="-lpetscsles -lpetscmat -lpetscvec \
+      -lpetscdm -lpetsccontrib -L$LIBLAPACK -llapack \
+      -L$LIBBLAS -lblas -L$LIBX -lX11 -lmpiuni $FLIBS -lm"
     UNIPETSC_ARCH=`$i/bin/petscarch`
     if test "$is_64bit" != "yes" -a "$UNIPETSC_ARCH" = "IRIX64"; then
       UNIPETSC_ARCH="IRIX"
