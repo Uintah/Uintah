@@ -173,6 +173,7 @@ private:
   // private methods
   void executeProbe();
   void execAdjacency();
+  void traverseDOMtree(DOMNode &, int, VH_injury **);
   void execInjuryList();
   void executeOQAFMA();
   void executeHighlight();
@@ -193,9 +194,9 @@ public:
 
 };
 
-/*
+/*****************************************************************************
  * Default Constructor
- */
+ *****************************************************************************/
 
 DECLARE_MAKER(HotBox)
 
@@ -559,6 +560,9 @@ HotBox::execute()
   injured_tissue.clear();
 } // end HotBox::execute()
 
+/*****************************************************************************
+ * method HotBox::execAdjacency()
+ *****************************************************************************/
 void
 HotBox::execAdjacency()
 {
@@ -740,6 +744,10 @@ HotBox::execAdjacency()
     VS_HotBoxUI->set_text(7, string(adjacentName, 0, 18));
   } // end if(adjacencytable->get_num_rel(labelIndexVal) >= 9)
 } // end HotBox::execAdjacency()
+
+/*****************************************************************************
+ * method HotBox::executeOQAFMA()
+ *****************************************************************************/
 
 void
 HotBox::executeOQAFMA()
@@ -962,6 +970,200 @@ HotBox::executeOQAFMA()
   num_struQLret = 0;
 } // end HotBox::executeOQAFMA()
 
+/*****************************************************************************
+ * method HotBox::execInjuryList()
+  // walk the DOM document collecting information on injured tissues
+  // <wound woundName="Left ventricular penetration" woundID="1.0">
+  //     <timeStamp time="1"/>
+  //     <primaryInjuryList>
+  //         <injuryEntity injuryName="Ablated LV myocardium" injuryID="1.1" >
+  //             <ablateRegion>
+  //             <fmaEntity FMAname="Wall of left ventricle" FMAID="9556"/>
+  //             <probability="...">
+  //             <geometry>
+  //                 <spatialObject ID="cylinder">
+  //                     <pathEntity PATname="Location-3D" PATID="TBD">
+  //                         <label>Axis end point</label>
+  //                         <value>400., 250., 1460.</value>
+  //                         <unit>mm</unit>
+  //                     </patEntity>
+  //                     <patEntity PATname="Location-3D" PATID="TBD">
+  //                         <label>Axis start point</label>
+  //                         <value>400., 250., 1460.</value>
+  //                         <unit>mm</unit>
+  //                     </patEntity>
+  //                     <patEntity PATname="Length" PATID="TBD">
+  //                         <label>diameter</label>
+  //                         <value>200.0</value>
+  //                         <unit>mm</unit>^M
+  //                     </patEntity>
+  //                 </spatialObject>
+  //             </geometry>
+  //         </ablateRegion>
+  //         </injuryEntity>
+  //     </primaryInjuryList>
+  // </wound>
+ *****************************************************************************/
+void
+HotBox::traverseDOMtree(DOMNode &woundNode, int nodeIndex,
+                        VH_injury **injuryPtr)
+{
+  // debugging...
+  // if(!strcmp(to_char_ptr(woundNode.getNodeName()), "timeStamp") ||
+  //    !strcmp(to_char_ptr(woundNode.getNodeName()), "fmaEntity") ||
+  //    !strcmp(to_char_ptr(woundNode.getNodeName()), "spatialObject")
+  //   )
+  // {
+  //   cout << "Node[" << nodeIndex << "] type: " << woundNode.getNodeType();
+  //   cout << " name: " << to_char_ptr(woundNode.getNodeName());
+  //   cout << " value: " << to_char_ptr(woundNode.getNodeValue()) << endl;
+  // }
+
+  // key on node name
+  if(!strcmp(to_char_ptr(woundNode.getNodeName()), "label"))
+  {
+    // check context for geometry
+    if((*injuryPtr)->isGeometry)
+    {
+      // get the value of the label
+      string geomParamName =
+              string(to_char_ptr(woundNode.getFirstChild()->getNodeValue()));
+      // debugging...
+      // cout << geomParamName << endl;
+
+      if(geomParamName == string("Axis start point"))
+      {
+        (*injuryPtr)->context = SET_AXIS_START_POINT;
+      }
+      else if(geomParamName == string("Axis end point"))
+      {
+        (*injuryPtr)->context = SET_AXIS_END_POINT;
+      }
+      else if(geomParamName == string("Diameter") ||
+              geomParamName == string("diameter"))
+      {
+        (*injuryPtr)->context = SET_DIAMETER;
+      }
+      else
+      { // unset context
+        (*injuryPtr)->context = UNSET;
+        cerr << "Unknown label" << geomParamName << endl;
+      }
+    } // end if((*injuryPtr)->isGeometry)
+  } // end if(woundNode.getNodeName() == "label")
+  else if(!strcmp(to_char_ptr(woundNode.getNodeName()), "value"))
+  {
+    // check context for geometry
+    if((*injuryPtr)->isGeometry)
+    {
+      // fill in the value for the correct context
+      char *geomValueStr = (char *)
+              to_char_ptr(woundNode.getFirstChild()->getNodeValue());
+      // debugging...
+      // cout << geomValueStr << endl;
+      float x, y, z, diam;
+
+      if( (*injuryPtr)->context == SET_AXIS_START_POINT)
+      { // expect a float triple
+        if(sscanf(geomValueStr, "%f, %f, %f", &x, &y, &z) != 3)
+          cerr << "Error reading Axis Start Point" << endl;
+        (*injuryPtr)->axisX0 = x;
+        (*injuryPtr)->axisY0 = y;
+        (*injuryPtr)->axisZ0 = z;
+        (*injuryPtr)->point0set = true;
+      }
+      else if( (*injuryPtr)->context == SET_AXIS_END_POINT)
+      { // expect a float triple
+        if(sscanf(geomValueStr, "%f, %f, %f", &x, &y, &z) != 3)
+          cerr << "Error reading Axis End Point" << endl;
+        (*injuryPtr)->axisX1 = x;
+        (*injuryPtr)->axisY1 = y;
+        (*injuryPtr)->axisZ1 = z;
+        (*injuryPtr)->point1set = true;
+      }
+      else if( (*injuryPtr)->context == SET_DIAMETER)
+      { // expect a single float
+        if(sscanf(geomValueStr, "%f", &diam) != 1)
+          cerr << "Error reading Axis End Point" << endl;
+        (*injuryPtr)->rad0 = (*injuryPtr)->rad1 = diam/2.0;
+        (*injuryPtr)->rad0set = (*injuryPtr)->rad1set = true;
+      }
+      else
+      {
+        cerr << "Bad Context" << endl;
+      }
+    } // end if((*injuryPtr)->isGeometry)
+  } // end if(woundNode.getNodeName() == "value")
+  // get attributes
+  if(woundNode.hasAttributes())
+  {
+    int num_attr = woundNode.getAttributes()->getLength();
+    for(int i = 0; i < num_attr; i++)
+    {
+      DOMNode *
+      elem = woundNode.getAttributes()->item(i);
+
+      // debugging...
+      // if(!strcmp(to_char_ptr(woundNode.getNodeName()), "timeStamp") ||
+      //    !strcmp(to_char_ptr(woundNode.getNodeName()), "fmaEntity") ||
+      //    !strcmp(to_char_ptr(woundNode.getNodeName()), "spatialObject")
+      //   )
+      // {
+      //   cout << " attr name: " << to_char_ptr(elem->getNodeName());
+      //   cout << " value: " << to_char_ptr(elem->getNodeValue()) << endl;
+      // }
+
+      if(!strcmp(to_char_ptr(woundNode.getNodeName()), "timeStamp") &&
+         !strcmp(to_char_ptr(elem->getNodeName()), "time"))
+      {
+        (*injuryPtr)->timeStamp = atoi(to_char_ptr(elem->getNodeValue()));
+        (*injuryPtr)->timeSet = true;
+      }
+      else if(!strcmp(to_char_ptr(woundNode.getNodeName()), "fmaEntity") &&
+              !strcmp(to_char_ptr(elem->getNodeName()), "FMAname"))
+      {
+        (*injuryPtr)->anatomyname = string(to_char_ptr(elem->getNodeValue()));
+        (*injuryPtr)->nameSet = true;
+      }
+      else if(!strcmp(to_char_ptr(woundNode.getNodeName()), "spatialObject") &&
+              !strcmp(to_char_ptr(elem->getNodeName()), "ID"))
+      {
+        (*injuryPtr)->geom_type = string(to_char_ptr(elem->getNodeValue()));
+        (*injuryPtr)->isGeometry = true;
+      }
+    } // end for(int i = 0; i < num_attr; i++)
+  } // end if(woundNode.hasAttributes())
+
+  // if this node is complete
+  if((*injuryPtr)->isset())
+  { // add this node to the injured tissue list
+
+    cerr << "Adding: " << endl;
+    (*injuryPtr)->print();
+    injured_tissue.push_back(**injuryPtr);
+    int curTime = (*injuryPtr)->timeStamp;
+    // create the next injury record
+    *injuryPtr = new VH_injury();
+
+    // carry through timeStamp
+    (*injuryPtr)->timeStamp =  curTime;
+    (*injuryPtr)->timeSet = true;
+  }
+  if(woundNode.hasChildNodes())
+  {
+    DOMNodeList *
+    woundChildList = woundNode.getChildNodes();
+    int num_woundChildList = woundChildList->getLength();
+    // traverse the children of this node
+    for(int i = 0; i < num_woundChildList; i++)
+    {
+      DOMNode &woundChild = *(woundChildList->item(i));
+      // recurse down the tree
+      traverseDOMtree(woundChild, i, injuryPtr);
+    } // end for(int i = 0; i < num_woundChildList; i++)
+  } // end if(woundNode.hasChildNodes())
+} // end HotBox::traverseDOMtree()
+
 void
 HotBox::execInjuryList()
 {
@@ -987,58 +1189,44 @@ HotBox::execInjuryList()
       xmlto_string(toCatch.getMessage());
       return;
   }
-  // we are interested in injured tissues -- look for "region"
-  // <wound entity="..." timestamp="...1">
-  //        <primaryInjury>
-  //            <ablate/stunRegion probability="...">
-  //                <region entity="...tissue name..."/> 
-  //            </ablateRegion>
-  //        </primaryInjury>
-  // </wound>
 
-
+  // get the DOM document tree structure from the file
   DOMDocument *injListDoc = injListParser.getDocument();
-  DOMNodeList *
-  injList = injListDoc->getElementsByTagName(to_xml_ch_ptr("region"));
-  unsigned long i, num_injList = injList->getLength();
 
-  if (num_injList == 0) {
-    cout << "HotBox.cc: no entities in Injury List" << endl;
+  DOMNodeList *
+  woundList = injListDoc->getElementsByTagName(to_xml_ch_ptr("wound"));
+  int num_woundList = woundList->getLength();
+
+  if (num_woundList == 0)
+  {
+    cout << "HotBox.cc: no wounded entities in Injury List" << endl;
   }
   else
   {
     cout << "HotBox.cc: xml file: " << injuryListDataSrc << ": "
-         << num_injList << " wounded region entities" << endl;
-    for (i = 0;i < num_injList; i++)
+         << num_woundList << " wounded region entities" << endl;
+    for (int i = 0;i < num_woundList; i++)
     {
-      if (!(injList->item(i)))
+      if (!(woundList->item(i)))
       {
         std::cerr << "Error: NULL DOM node" << std::endl;
         continue;
       }
-      DOMNode &node = *(injList->item(i));
-      cout << "Node[" << i << "] type: " << node.getNodeType();
-      cout << " name: " << to_char_ptr(node.getNodeName());
-      if(node.hasAttributes())
-      {
-          cout << " " << node.getAttributes()->getLength()
-               << " attributes" << endl;
-          DOMNode *
-          elem = node.getAttributes()->item(0);
-          if(elem == 0)
-              cout << " Cannot get element from node" << endl;
-          else
-          {
-              cout << " value: " << to_char_ptr(elem->getNodeValue()) << endl;
-              injured_tissue.push_back(
-                     VH_injury((char *)to_char_ptr(elem->getNodeValue()))
-                     );
-          }
-      } // end if(node.hasAttributes())
+      // create the first injury record
+      VH_injury *injuryPtr = new VH_injury();
+      DOMNode &woundNode = *(woundList->item(i));
+      traverseDOMtree(woundNode, i, &injuryPtr);
     } // end for (i = 0;i < num_injList; i++)
   } // end else (num_injList != 0)
+
+  // report number of injuries read
+  cerr << "HotBox::execInjuryList(): ";
+  cerr << injured_tissue.size() << " injuries found" << endl;
 } // end execInjuryList()
 
+/*****************************************************************************
+ * method HotBox::executeHighlight()
+ *****************************************************************************/
 void
 HotBox::executeHighlight()
 {

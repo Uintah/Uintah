@@ -537,4 +537,40 @@ is_injured(char *targetName, vector<VH_injury> &injured_tissue_list)
   return false;
 } // end is_injured()
  
+/******************************************************************************
+ * VH_injury::isset()
+ *
+ * Return whether node is in its completed state or not.
+ ******************************************************************************/
+bool VH_injury::isset()
+{
+  bool state = isGeometry == true && timeSet == true && nameSet == true &&
+               (((geom_type == "line") &&
+                  point0set == true && point1set == true) ||
+                ((geom_type == "sphere") && 
+                  point0set == true && rad0set == true) ||
+                ((geom_type == "cylinder") &&
+                  point0set == true && point1set == true &&
+                  rad0set == true && rad1set == true) ||
+                ((geom_type == "hollow_cylinder") &&
+                  point0set == true && point1set == true &&
+                  rad0set == true && rad1set == true)
+               );
+  return state;
+} // end VH_injury::isset()
 
+/******************************************************************************
+ * VH_injury::print()
+ ******************************************************************************/
+
+void VH_injury::print()
+{
+  cout << "fmaEntity: " << anatomyname;
+  cout << " timeStamp: " << timeStamp;
+  cout << " spatialObject: " << geom_type << endl;
+  cout << " Axis start point: (";
+  cout << axisX0 << ", " << axisY0 << ", " << axisZ0 << ")";
+  cout << " Axis end point: (";
+  cout << axisX1 << ", " << axisY1 << ", " << axisZ1 << ")";
+  cout << " Diameter: " << rad0 << endl;
+} // end VH_injury::print()

@@ -134,24 +134,39 @@ VH_AnatomyBoundingBox *
 VH_Anatomy_findMaxBoundingBox(VH_AnatomyBoundingBox *list);
 
 /******************************************************************************
- * class VH_injuryList
+ * class VH_injury
  *
- * description: A doubly-linked list of nodes consisting of nodes containing
- *              the name of an injured tissue and iconic geometry to display
+ * description: A node consisting of the name of an injured tissue, timestamp
+ *              when this tissue becaem injured  and iconic geometry to display
  *              to indicate the extent of the injury.
  ******************************************************************************/
+
+#define UNSET -1
+#define SET_AXIS_START_POINT 0
+#define SET_AXIS_END_POINT 1
+#define SET_DIAMETER 2
 
 class VH_injury
 {
   public:
   string anatomyname;
-  int geom_type; // sphere, cylinder, hollow cylinder
+  int timeStamp;
+  // flags to test our tree traversal context
+  int context;
+  bool isPrimaryInjury, isSecondaryInjury, isGeometry;
+  // flags to test whether this node is complete
+  bool timeSet, nameSet, point0set, point1set, rad0set, rad1set;
+  string geom_type; // line, sphere, cylinder, hollow cylinder
   float axisX0, axisY0, axisZ0; // center axis endpoint 0
   float axisX1, axisY1, axisZ1; // center axis endpoint 1
   float rad0, rad1;
 
-  VH_injury() { };
-  VH_injury(char *newName) { anatomyname = string(newName); };
+  VH_injury() { context = UNSET;
+                nameSet = timeSet = point0set = point1set = false; };
+  VH_injury(char *newName) { anatomyname = string(newName);
+             nameSet = true; timeSet = point0set = point1set = false; };
+  bool isset();
+  void print();
 };
 
 bool
