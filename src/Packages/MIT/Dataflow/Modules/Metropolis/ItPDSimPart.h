@@ -18,14 +18,23 @@ using namespace SCIRun;
 
 class Sampler;
 class ItPDSimPart : public PDSimPart {
+private:
+  vector<double> mean_;
+  float df_;
+
 public:
   ItPDSimPart( Sampler *, PartInterface *parent, 
-			      const string &name="ItPDSim");
+	       const string &name="ItPDSim");
   virtual ~ItPDSimPart();
 
   virtual void compute( vector<double> &, vector<double> & );
   virtual double lpr( vector<double> &);
 
+  // get values
+  float df() { return df_; }
+
+  // set values
+  void df( float v ) { df_ = v; }
 };
   
 

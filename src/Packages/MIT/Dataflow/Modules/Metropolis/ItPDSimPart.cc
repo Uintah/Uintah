@@ -7,6 +7,7 @@
  *
  */
 
+#include <Core/Malloc/Allocator.h>
 #include <Packages/MIT/Dataflow/Modules/Metropolis/Sampler.h>
 #include <Packages/MIT/Dataflow/Modules/Metropolis/ItPDSimPart.h>
 
@@ -16,19 +17,18 @@ extern "C" {
 	       double *, int &, double *, int &, 
 	       double &, 
 	       double *, int &);
-  double genchi_( double & );
+  float genchi_( float & );
+  void mvtpdf_( double *, double *, double *, float &, double &, int &);
 }
 	       
 namespace MIT {
 
 using namespace SCIRun;
 
-static double sqr( double x ) { return x*x; }
-
 ItPDSimPart::ItPDSimPart( Sampler *sampler, 
-							PartInterface *parent,
-							const string &name )
-  :PDSimPart( sampler, parent, name )
+			  PartInterface *parent,
+			  const string &name )
+  : PDSimPart( sampler, parent, name )
 {
   UNUR_DISTR *distr = unur_distr_normal(0,0);
   UNUR_PAR *par = unur_arou_new(distr);
@@ -40,8 +40,8 @@ ItPDSimPart::ItPDSimPart( Sampler *sampler,
   mean_.push_back(-3.14);
   mean_.push_back(-3.73);
   mean_.push_back(-8.82);
-  mean_.push_back(-7.07);
-  mean_.push_back(-1.85);
+  mean_.push_back(-6.07);
+  mean_.push_back( 1.85);
 
   df_ = 5.0;
 }
@@ -54,7 +54,7 @@ void
 ItPDSimPart::compute( vector<double> &, 
 		      vector<double> &star )
 {
-  int n = theta.size();
+  int n = star.size();
 
   vector<double> r(n);
 
@@ -62,29 +62,26 @@ ItPDSimPart::compute( vector<double> &,
     r[i] = unur_sample_cont(gen_);
   
   Array2<double> &lkappa = sampler_->get_lkappa();
-  double *result = scinew double[n];
-
-  char a='N';
-  char b='T';
-  int  cols=1;
-  double alpha=1;
-  double beta=0;
-  
-  dgemm( a, b, n, cols, n, alpha, 
-	 *(lkappa.get_dataptr()), n, r, cols, 
-	 beta, result, n );
-	 
-  double v = sqrt( df / genchi(df) );
-
-  for (int i=0; i<n; i++) 
-    star[i] += result[i]*v + mean_[i];
-  
+    
+  double v = sqrt( df_ / genchi_(df_) );
+  cerr << "df = " << df_ << endl;
+  for (int i=0; i<n; i++) {
+    double mult = 0;
+    for (int j=0; j<n; j++)
+      mult += lkappa(j,i)*r[j]; 
+    star[i] = mult*v + mean_[i];
+  }
 }
 
 double
-ItPDSimPart::lpr( vector<double> &)
+ItPDSimPart::lpr( vector<double> &theta )
 {
-  return 0;
+  int n = theta.size();
+  Array2<double> &lkappa = sampler_->get_lkappa();
+  double value;
+  mvtpdf_( &theta[0], &mean_[0], *(lkappa.get_dataptr()), 
+	   df_, value, n );
+  return value;
 }
 
 } // End namespace MIT

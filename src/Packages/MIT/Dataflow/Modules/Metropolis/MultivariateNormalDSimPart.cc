@@ -14,8 +14,6 @@ namespace MIT {
 
 using namespace SCIRun;
 
-static double sqr( double x ) { return x*x; }
-
 MultivariateNormalDSimPart::MultivariateNormalDSimPart( Sampler *sampler, 
 							PartInterface *parent,
 							const string &name )

@@ -56,12 +56,8 @@ IUniformPDSimPart::compute( vector<double> &,
   for (int i=0; i<n; i++)
     r[i] = unur_sample_cont(gen_);
 
-  //  cerr << "IU compute: ";
-  for (int i=0; i<n; i++) {
+  for (int i=0; i<n; i++) 
     star[i] = (r[i]-0.5) * par_[i] + center_[i];;
-    //cerr << star[i] << "  ";
-  }
-  //cerr << endl << endl;
 }
 
 double

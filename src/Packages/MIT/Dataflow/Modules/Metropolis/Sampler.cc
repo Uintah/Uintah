@@ -29,7 +29,9 @@ extern "C" {
 #include <Packages/MIT/Dataflow/Modules/Metropolis/PriorPart.h>
 #include <Packages/MIT/Dataflow/Modules/Metropolis/LikelihoodPart.h>
 #include <Packages/MIT/Dataflow/Modules/Metropolis/PDSimPart.h>
+#include <Packages/MIT/Dataflow/Modules/Metropolis/IGaussianPDSimPart.h>
 #include <Packages/MIT/Dataflow/Modules/Metropolis/IUniformPDSimPart.h>
+#include <Packages/MIT/Dataflow/Modules/Metropolis/ItPDSimPart.h>
 #include <Packages/MIT/Dataflow/Modules/Metropolis/MultivariateNormalDSimPart.h>
 #include <Packages/MIT/Dataflow/Modules/Metropolis/Sampler.h>
 
@@ -39,7 +41,6 @@ extern "C" {
 namespace MIT {
 
 using namespace SCIRun;
-
 
 extern "C" MITSHARE Module* make_Sampler(const string& id) {
   return scinew Sampler(id);
@@ -60,14 +61,6 @@ Sampler::Sampler(const string& id)
   // init random number generator
   srand48(seed);
 
-  // init unuran
-  UNUR_DISTR *distr = unur_distr_normal(0,0);
-  UNUR_PAR *par = unur_arou_new(distr);
-  gen = unur_init(par);
-  if ( ! gen ) 
-    cerr << "Error, cannot create generator object\n";
-  unur_distr_free(distr);
-
   user_ready = false;
   
   // install Interface
@@ -81,8 +74,11 @@ Sampler::Sampler(const string& id)
   pdsim_.set_parent( interface_ );
   pdsim_.add_part( new MultivariateNormalDSimPart( this, 0, "MVNormal") );
   pdsim_.add_part( new IUniformPDSimPart( this, 0, "IU" ) );
+  pdsim_.add_part( new IGaussianPDSimPart( this, 0, "IG" ) );
+  pdsim_.add_part( new ItPDSimPart( this, 0, "It" ) );
 
   graph_ = 0;
+
 }
 
 Sampler::~Sampler() 
@@ -168,31 +164,30 @@ Sampler::get_lkappa()
   if ( !has_lkappa_ ) {
     // init Cholesky of proposal distribution covariance matrix
   
+    kappa = distribution_->kappa;
+    
     lkappa.newsize( nparms, nparms );
 
     Array2<double> A(nparms, nparms);
   
     for (int i=0; i<nparms; i++) 
       for (int j=0; j<nparms; j++) 
-	A(i,j) = distribution_->sigma(i,j);
+	A(i,j) = distribution_->sigma(i,j)*kappa; 
     
     int info;
     
-    char cmd = 'L';  // 'L' if fortran means 'U' in C
+    char cmd = 'U';  // 'U' in C means 'L' in Fortran
     dpotrf_( cmd, nparms, *(A.get_dataptr()), nparms, info ); 
     if ( info != 0 ) {
       cerr << "Cholesky factorization error = " << info << endl;
       return lkappa; // trow exeption ?
     }
     
-    kappa = distribution_->kappa;
-    
-    double k2 = sqrt(kappa);
     for (int i=0; i<nparms; i++) {
-      lkappa(i,i) = A(i,i)*k2;
+      lkappa(i,i) = A(i,i);
       for (int j=i+1; j<nparms; j++) {
-	lkappa(j,i) = A(i,j)*k2;
-	lkappa(i,j) = 0;
+	lkappa(i,j) = A(i,j);
+	lkappa(j,i) = 0;
       }
     }
     
@@ -229,7 +224,6 @@ void Sampler::metropolis()
     double new_lpr = pdsim_->lpr( theta[star] );
     double new_post = logpost( theta[star] );
     double sum = new_post - post + lpr - new_lpr;
-    
     double u = drand48();
 
     if ( sum <= 500 && exp(sum) >= u ) {
@@ -243,15 +237,14 @@ void Sampler::metropolis()
     {
       results->k_.add(k) ;
 
-      vector<double> v;
-      v.resize(1);
+      vector<double> v(nparms);
+      //v.resize(1);
       for (int i=0; i<nparms; i++) {
 	results->data_[i].add(theta[old][i]);
-	if ( graph_ ) {
-          v[0]=theta[old][i];
-	  //graph_->add_values(i,v);      
-	}
+	v[i]=theta[old][i];
       }
+      if ( graph_ ) 
+	graph_->add_values(nparms,v);      
     }
   }
 
@@ -292,6 +285,7 @@ Sampler::tcl_command( TCLArgs &args, void *data)
   }
   else Module::tcl_command( args, data );
 }
+
 
 } // End namespace MIT
 
