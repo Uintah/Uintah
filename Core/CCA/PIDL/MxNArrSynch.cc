@@ -157,12 +157,12 @@ void MxNArrSynch::doReceive(int rank)
   //Find the proper arr. representation and mark it is received
   for(unsigned int i=0; i < _sched->caller_rep.size(); i++) {
     if (_sched->caller_rep[i]->getRank() == rank) {
-      //::std::cout << "received dist rank=" << i << "\n";
+      ::std::cout << "received dist rank=" << i << "\n";
       //If we have already received this, something is happening
       //out of order, so we yield until things sort out.
-      
       while(_sched->caller_rep[i]->received) {
 	recv_sema.up();
+        ::std::cout << "already have dist rank=" << i << "\n";
 	//Thread::yield();
       }
       

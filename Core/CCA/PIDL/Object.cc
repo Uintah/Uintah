@@ -204,6 +204,16 @@ void Object::createSubset(int localsize, int remotesize)
   ::std::cerr << "createSubset(int,int) has no effect on this object\n";
 }
 
+void Object::setRankAndSize(int size, int rank)
+{
+  ::std::cerr << "setRankAndSize(int,int) has no effect on this object\n";
+}
+
+void Object::resetRankAndSize()
+{
+  ::std::cerr << "resetRankAndSize() has no effect on this object\n";
+}
+
 void Object::getException() {}
 
 int Object::getRefCount()

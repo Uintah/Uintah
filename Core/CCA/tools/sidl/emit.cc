@@ -1106,7 +1106,11 @@ void CI::emit_proxyclass(EmitState& e)
   }
     
   e.proxy << "\n";
-  e.proxy << leader2 << "virtual void createSubset(int localsize, int remotesize);\n";   
+  e.proxy << leader2 << "virtual void createSubset(int localsize, int remotesize);\n";
+  e.proxy << "\n";
+  e.proxy << leader2 << "virtual void setRankAndSize(int size, int rank);\n";
+  e.proxy << "\n";
+  e.proxy << leader2 << "virtual void resetRankAndSize();\n"; 
   e.proxy << "\n";
   e.proxy << leader2 << "virtual void getException();\n";
 
@@ -1171,7 +1175,11 @@ void CI::emit_header(EmitState& e)
   }
 
   e.decl << "\n";
-  e.decl << leader2 << "virtual void createSubset(int localsize, int remotesize);\n";   
+  e.decl << leader2 << "virtual void createSubset(int localsize, int remotesize);\n";
+  e.decl << "\n";
+  e.decl << leader2 << "virtual void setRankAndSize(int size, int rank);\n";
+  e.decl << "\n";
+  e.decl << leader2 << "virtual void resetRankAndSize();\n";    
   e.decl << "\n";
   e.decl << leader2 << "virtual void getException();\n";
     
@@ -1231,6 +1239,11 @@ void CI::emit_interface(EmitState& e)
   e.out << "void " << fn << "::createSubset(int localsize, int remotesize)\n"; 
   e.out << "{\n";
   e.out << "}\n\n";
+
+  e.out << "void " << fn << "::setRankAndSize(int size, int rank)\n";
+  e.out << "{\n}\n\n";
+  e.out << "void " << fn << "::resetRankAndSize()\n";
+  e.out << "{\n}\n\n";
 
   e.out << "// retreive all exceptions method\n";
   e.out << "void " << fn << "::getException()\n";
@@ -1347,6 +1360,21 @@ void CI::emit_proxy(EmitState& e)
   e.out << "  _proxycreateSubset(localsize, remotesize);\n";
 #endif
   e.out << "}\n";
+
+  e.out << "\n// set rank and size methods\n";
+  e.out << "void " << fn << "::setRankAndSize(int size, int rank)\n"; 
+  e.out << "{\n";
+#ifdef HAVE_MPI
+  e.out << "  _proxysetRankAndSize(size, rank);\n";
+#endif
+  e.out << "}\n";
+  e.out << "void " << fn << "::resetRankAndSize()\n"; 
+  e.out << "{\n";
+#ifdef HAVE_MPI
+  e.out << "  _proxyresetRankAndSize();\n";
+#endif
+  e.out << "}\n";
+
 
   e.out << "\n// \"smoke\" out all exceptions method\n";
   e.out << "void " << fn << "::getException()\n";

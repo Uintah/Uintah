@@ -124,6 +124,12 @@ DESCRIPTION
     void _proxycreateSubset(int localsize, int remotesize);
 
     /////////
+    // Set rank and size of this component; and reset the values
+    // to the defaults.
+    void _proxysetRankAndSize(int size, int rank);
+    void _proxyresetRankAndSize();
+
+    /////////
     // Synchronizes parallel processes and receives all existing exceptions
     // Returns: exception id of prevailing exception 
     int _proxygetException(int xid=0, int lineid=0); 

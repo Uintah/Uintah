@@ -130,6 +130,14 @@ DESCRIPTION
     // number larger than the  parallel size has no effect.
     void createSubset(int localsize, int remotesize);
 
+    ////////
+    // Modifies the size and the rank. Shouldn't be called together
+    // with createSubset. The previous rank and size are not saved.
+    void ReferenceMgr::setRankAndSize(int rank, int size);
+    ///////
+    // Resets the rank and size to that that of the default constuctor.
+    void ReferenceMgr::resetRankAndSize();
+
     /////////
     // An object used to facilitate intra-component communication
     // (parallel component case)

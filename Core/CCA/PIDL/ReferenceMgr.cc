@@ -141,7 +141,17 @@ void ReferenceMgr::createSubset(int localsize, int remotesize)
     /*reset subsetting*/
     s_refSize=d_ref.size();
   } 
-
-
 }
 
+void ReferenceMgr::setRankAndSize(int rank, int size)
+{
+  localRank = rank;
+  localSize = size;
+  s_lSize = localSize;  
+}
+
+void ReferenceMgr::resetRankAndSize()
+{
+  localSize=PIDL::size; 
+  localRank=PIDL::rank;
+}
