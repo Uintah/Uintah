@@ -18,6 +18,8 @@ SRCS     += $(SRCDIR)/Arches.cc $(SRCDIR)/BoundaryCondition.cc \
 
 ifneq ($(PETSC_DIR),)
 SRCS +=	$(SRCDIR)/PetscSolver.cc
+else
+SRCS +=	$(SRCDIR)/FakePetscSolver.cc
 endif
 
 

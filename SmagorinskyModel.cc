@@ -227,7 +227,7 @@ SmagorinskyModel::sched_reComputeTurbSubmodel(SchedulerP& sched,
 // Actual compute 
 //****************************************************************************
 void 
-SmagorinskyModel::computeTurbSubmodel(const ProcessorGroup* pc,
+SmagorinskyModel::computeTurbSubmodel(const ProcessorGroup*,
 				      const PatchSubset* patches,
 				      const MaterialSubset* matls,
 				      DataWarehouse* old_dw,
