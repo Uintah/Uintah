@@ -1106,7 +1106,8 @@ void ViewWindow::MyRotateCamera( Point  center,
   need_redraw=true;
 }
 
-void ViewWindow::NormalizeMouseXY( int X, int Y, float *NX, float *NY )
+void
+ViewWindow::NormalizeMouseXY( int X, int Y, float *NX, float *NY )
 {
   double w = current_renderer->xres;
   double h = current_renderer->yres;
