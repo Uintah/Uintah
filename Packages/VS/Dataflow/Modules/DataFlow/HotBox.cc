@@ -152,7 +152,7 @@ private:
   GuiString enableDraw_;
 
   // the HotBox/Viewer interaction
-  VS_SCI_Hotbox *VS_HotBoxUI;
+  VS_SCI_Hotbox *VS_HotBoxUI_;
 
   // file or OQAFMA
   GuiInt datasource_;
@@ -180,20 +180,20 @@ private:
   int currentTime_, lastTime_;
 
   // fixed anatomical label map files
-  VH_MasterAnatomy *anatomytable;
-  VH_AdjacencyMapping *adjacencytable;
-  VH_AnatomyBoundingBox *boundBoxList;
-  VH_AnatomyBoundingBox *maxSegmentVol;
+  VH_MasterAnatomy *anatomytable_;
+  VH_AdjacencyMapping *adjacencytable_;
+  VH_AnatomyBoundingBox *boundBoxList_;
+  VH_AnatomyBoundingBox *maxSegmentVol_;
   // transform bounding boxes into field volume
-  Point boxTran, boxScale;
+  Point boxTran_, boxScale_;
 
   // physiology parameter mapping
-  VH_HIPvarMap *hipVarFileList;
+  VH_HIPvarMap *hipVarFileList_;
 
   // the injured tissue list
-  XercesDOMParser injListParser;
-  DOMDocument *injListDoc;
-  vector <VH_injury> injured_tissue;
+  XercesDOMParser injListParser_;
+  DOMDocument *injListDoc_;
+  vector <VH_injury> injured_tissue_;
 
   // the probe widget
   PointWidget *probeWidget_;
@@ -203,18 +203,19 @@ private:
   GuiDouble gui_probeLocz_;
   GuiDouble gui_probe_scale_;
 
-  FieldHandle InputFieldHandle;
-  NrrdDataHandle InputNrrdHandle;
+  FieldHandle InputFieldHandle_;
+  NrrdDataHandle InputNrrdHandle_;
   int probeWidgetid_;
-  Point probeLoc;
-  int labelIndexVal;
-  BBox inFieldBBox;
-  Point maxSegBBextent;
+  Point probeLoc_;
+  int labelIndexVal_;
+  BBox inFieldBBox_;
+  Point maxSegBBextent_;
   double l2norm_;
 
   // private methods
   void executeProbe();
   void execAdjacency();
+  // void readColorMap();
   void traverseDOMtree(DOMNode &, int, int, VH_injury **);
   void execInjuryList();
   void makeInjGeometry();
@@ -319,24 +320,24 @@ HotBox::HotBox(GuiContext* ctx)
   probeWidgetid_(-1)
 {
   // instantiate the HotBox-specific interaction structure
-  VS_HotBoxUI = new VS_SCI_Hotbox();
+  VS_HotBoxUI_ = new VS_SCI_Hotbox();
   // instantiate label maps
-  anatomytable = new VH_MasterAnatomy();
-  adjacencytable = new VH_AdjacencyMapping();
-  boundBoxList = (VH_AnatomyBoundingBox *)NULL;
-  hipVarFileList = new VH_HIPvarMap();
+  anatomytable_ = new VH_MasterAnatomy();
+  adjacencytable_ = new VH_AdjacencyMapping();
+  boundBoxList_ = (VH_AnatomyBoundingBox *)NULL;
+  hipVarFileList_ = new VH_HIPvarMap();
   // create the probe widget
   probeWidget_ = scinew PointWidget(this, &probeWidget_lock_, 1.0);
   probeWidget_->Connect((GeometryOPort*)get_oport("Probe Widget"));
 
-  injListDoc = (DOMDocument *)0;
+  injListDoc_ = (DOMDocument *)0;
 }
 
 HotBox::~HotBox(){
-  delete anatomytable;
-  delete adjacencytable;
+  delete anatomytable_;
+  delete adjacencytable_;
   delete probeWidget_;
-  delete hipVarFileList;
+  delete hipVarFileList_;
 }
 
 void
@@ -351,30 +352,30 @@ HotBox::execute()
   }
  
   // get handle to field from the input port
-  if (!inputFieldPort->get(InputFieldHandle) ||
-      !InputFieldHandle.get_rep())
+  if (!inputFieldPort->get(InputFieldHandle_) ||
+      !InputFieldHandle_.get_rep())
   {
     remark("HotBox::execute(): No data on input field port.");
     return;
   }
   // get bounding box of input field
-  inFieldBBox = InputFieldHandle->mesh()->get_bounding_box();
-  Point bmin = inFieldBBox.min();
-  Point bmax = inFieldBBox.max();
+  inFieldBBox_ = InputFieldHandle_->mesh()->get_bounding_box();
+  Point bmin = inFieldBBox_.min();
+  Point bmax = inFieldBBox_.max();
   Vector inFieldBBextent = bmax - bmin;
   l2norm_ = inFieldBBextent.length();
 
-  if(InputFieldHandle->query_scalar_interface(this).get_rep() != 0)
+  if(InputFieldHandle_->query_scalar_interface(this).get_rep() != 0)
   {
     // we have scalar data in the input field
     remark("Scalar Data on Input");
-  } // end if(InputFieldHandle->query_scalar_interface()...)
-  else if(InputFieldHandle->query_vector_interface(this).get_rep() != 0)
+  } // end if(InputFieldHandle_->query_scalar_interface()...)
+  else if(InputFieldHandle_->query_vector_interface(this).get_rep() != 0)
   {
     // we have vector data in the input field
     remark("Vector Data on Input");
   }
-  else if(InputFieldHandle->query_tensor_interface(this).get_rep() != 0)
+  else if(InputFieldHandle_->query_tensor_interface(this).get_rep() != 0)
   {
     // we have tensor data in the input field
     remark("Tensor Data on Input");
@@ -433,14 +434,23 @@ HotBox::execute()
     }
   } // end else (data on input matrix port)
 
-  labelIndexVal = 0;
+  labelIndexVal_ = 0;
+
+  const string selectionSource(selectionsource_.get());
+  if(selectionSource == "UIsetProbeLoc")
+  { // move the probe to position set in UI numeric fields
+    probeLoc_ = Point(gui_probeLocx_.get(),
+                      gui_probeLocy_.get(),
+                      gui_probeLocz_.get()
+                     );
+    probeWidget_->SetPosition(probeLoc_);
+  } // end else if(selectionSource == "UIsetProbeLoc")
 
   // run the probe's functions
   executeProbe();
 
   // get parameters from HotBox Tcl GUI
   const int dataSource(datasource_.get());
-  const string selectionSource(selectionsource_.get());
   const string currentSelection(currentselection_.get());
   const string anatomyDataSrc(anatomydatasource_.get());
   const string adjacencyDataSrc(adjacencydatasource_.get());
@@ -459,21 +469,21 @@ HotBox::execute()
     error("File '" + anatomyDataSrc + "' not found.");
     return;
   }
-  if(!anatomytable->get_num_names())
+  if(!anatomytable_->get_num_names())
   { // label maps have not been read
-    anatomytable->readFile((char *)anatomyDataSrc.c_str());
+    anatomytable_->readFile((char *)anatomyDataSrc.c_str());
   }
-  else if(anatomyDataSrc != anatomytable->getActiveFile())
+  else if(anatomyDataSrc != anatomytable_->getActiveFile())
   { // label map data source has changed
-    delete anatomytable;
-    anatomytable = new VH_MasterAnatomy();
-    anatomytable->readFile((char *)anatomyDataSrc.c_str());
+    delete anatomytable_;
+    anatomytable_ = new VH_MasterAnatomy();
+    anatomytable_->readFile((char *)anatomyDataSrc.c_str());
   }
   else
   {
-    cout << "Master Anatomy file contains " << anatomytable->get_num_names();
+    cout << "Master Anatomy file contains " << anatomytable_->get_num_names();
     cout << " names, max labelindex ";
-    cout << anatomytable->get_max_labelindex() << endl;
+    cout << anatomytable_->get_max_labelindex() << endl;
   }
 
   // if the selection source is from the HotBox UI -- ignore the probe
@@ -486,9 +496,9 @@ HotBox::execute()
     selectionsource_.set("fromProbe");
   }
   else
-  { // selection was from probe
-    if(anatomytable->get_anatomyname(labelIndexVal) != 0)
-      strcpy(selectName, anatomytable->get_anatomyname(labelIndexVal));
+  { // selection was from probe navigation
+    if(anatomytable_->get_anatomyname(labelIndexVal_) != 0)
+      strcpy(selectName, anatomytable_->get_anatomyname(labelIndexVal_));
     else
       strcpy(selectName, "unknown");
     // set currentselection in HotBox UI
@@ -505,70 +515,73 @@ HotBox::execute()
   }
 
   double segVolXextent, segVolYextent, segVolZextent;
-  if(!boundBoxList || boundingBoxDataSrc != activeBoundBoxSrc)
+  if(!boundBoxList_ || boundingBoxDataSrc != activeBoundBoxSrc)
   { // bounding boxes have not been read or data source has changed
     if (stat(boundingBoxDataSrc.c_str(), &buf)) {
     error("File '" + boundingBoxDataSrc + "' not found.");
     }
 
-    if(boundBoxList != NULL && boundingBoxDataSrc != activeBoundBoxSrc)
+    if(boundBoxList_ != NULL && boundingBoxDataSrc != activeBoundBoxSrc)
     {
-      // destroy boundBoxList
-      VH_Anatomy_destroyBBox_list(boundBoxList);
+      // destroy boundBoxList_
+      VH_Anatomy_destroyBBox_list(boundBoxList_);
     }
-    boundBoxList =
+    boundBoxList_ =
          VH_Anatomy_readBoundingBox_File((char *)boundingBoxDataSrc.c_str());
     activeBoundBoxSrc = boundingBoxDataSrc;
 
     // find the largest bounding volume of the segmentation
-    if((maxSegmentVol = VH_Anatomy_findMaxBoundingBox(boundBoxList)) != NULL)
+    if((maxSegmentVol_ = VH_Anatomy_findMaxBoundingBox(boundBoxList_)) != NULL)
     {
       segVolXextent = (double)
-        maxSegmentVol->get_maxX() - maxSegmentVol->get_minX() + 0.001;
+        maxSegmentVol_->get_maxX() - maxSegmentVol_->get_minX() + 0.001;
       segVolYextent = (double)
-        maxSegmentVol->get_maxY() - maxSegmentVol->get_minY() + 0.001;
+        maxSegmentVol_->get_maxY() - maxSegmentVol_->get_minY() + 0.001;
       segVolZextent = (double)
-        maxSegmentVol->get_maxZ() - maxSegmentVol->get_minZ() + 0.001;
-      maxSegBBextent = Point(segVolXextent, segVolYextent, segVolZextent);
+        maxSegmentVol_->get_maxZ() - maxSegmentVol_->get_minZ() + 0.001;
+      maxSegBBextent_ = Point(segVolXextent, segVolYextent, segVolZextent);
 
       // derive factors to translate/scale segmentation bounding boxes
       // to the input labelmap field
-      boxTran = Point(inFieldBBox.min().x() - (double)maxSegmentVol->get_minX(),
-                      inFieldBBox.min().y() - (double)maxSegmentVol->get_minY(),
-                      inFieldBBox.min().z() - (double)maxSegmentVol->get_minZ()
-                     );
-      boxScale.x(inFieldBBextent.x() / maxSegBBextent.x());
-      boxScale.y(inFieldBBextent.y() / maxSegBBextent.y());
-      boxScale.z(inFieldBBextent.z() / maxSegBBextent.z());
-    } // end if(maxSegmentVol != NULL)
+      boxTran_ =
+          Point(inFieldBBox_.min().x()-(double)maxSegmentVol_->get_minX(),
+                inFieldBBox_.min().y()-(double)maxSegmentVol_->get_minY(),
+                inFieldBBox_.min().z()-(double)maxSegmentVol_->get_minZ()
+               );
+      boxScale_.x(inFieldBBextent.x() / maxSegBBextent_.x());
+      boxScale_.y(inFieldBBextent.y() / maxSegBBextent_.y());
+      boxScale_.z(inFieldBBextent.z() / maxSegBBextent_.z());
+    } // end if(maxSegmentVol_ != NULL)
     else
     {
-      boxTran = Point(0.0, 0.0, 0.0);
-      boxScale = Point(1.0, 1.0, 1.0);
+      boxTran_ = Point(0.0, 0.0, 0.0);
+      boxScale_ = Point(1.0, 1.0, 1.0);
     }
-  } // end if(!boundBoxList)
+  } // end if(!boundBoxList_)
 
   // compare the bounding box of the input field
   // with the largest bounding volume of the segmentation
-  cerr << "HotBox::execute(): input field(" << inFieldBBox.min();
-  cerr << "," << inFieldBBox.max() << "), extent(" << inFieldBBextent;
+  cerr << "HotBox::execute(): input field(" << inFieldBBox_.min();
+  cerr << "," << inFieldBBox_.max() << "), extent(" << inFieldBBextent;
   cerr << ")" << endl;
-  cerr << "                  segmentation([" << maxSegmentVol->get_minX();
-  cerr << "," << maxSegmentVol->get_minY() << "," << maxSegmentVol->get_minZ();
-  cerr << "],[" << maxSegmentVol->get_maxX() << "," << maxSegmentVol->get_maxY();
-  cerr << "," << maxSegmentVol->get_maxZ() << "]), extent(";
-  cerr << maxSegBBextent << ")" << endl;
-  cerr << "Max Volume: " <<  maxSegmentVol->get_anatomyname() << endl;
+  cerr << "                  segmentation([" << maxSegmentVol_->get_minX();
+  cerr << "," << maxSegmentVol_->get_minY() << ",";
+  cerr << maxSegmentVol_->get_minZ();
+  cerr << "],[" << maxSegmentVol_->get_maxX() << ",";
+  cerr << maxSegmentVol_->get_maxY();
+  cerr << "," << maxSegmentVol_->get_maxZ() << "]), extent(";
+  cerr << maxSegBBextent_ << ")" << endl;
+  cerr << "Max Volume: " <<  maxSegmentVol_->get_anatomyname() << endl;
 
 
-  cerr << "boxTran = " << boxTran << ", boxScale = " << boxScale << endl;
+  cerr << "boxTran = " << boxTran_ << ", boxScale = " << boxScale_ << endl;
 
   // get the bounding box information for the selected entity
   VH_AnatomyBoundingBox *selectBox =
-      VH_Anatomy_findBoundingBox( boundBoxList, selectName);
+      VH_Anatomy_findBoundingBox( boundBoxList_, selectName);
 
   // we now have the anatomy name corresponding to the label value at the voxel
-  if(!injListDoc)
+  if(!injListDoc_)
   { // Read the Injury List -- First time the HotBox Evaluates
     try {
       XMLPlatformUtils::Initialize();
@@ -579,11 +592,11 @@ HotBox::execute()
     }
 
     // Instantiate a DOM parser for the injury list file.
-    injListParser.setDoValidation(false);
+    injListParser_.setDoValidation(false);
     const string injuryListDataSrc(injurylistdatasource_.get());
 
     try {
-      injListParser.parse(injuryListDataSrc.c_str());
+      injListParser_.parse(injuryListDataSrc.c_str());
     }  catch (const XMLException& toCatch) {
       std::cerr << "Error during parsing: '" <<
         injuryListDataSrc << "'\nException message is:  " <<
@@ -592,15 +605,15 @@ HotBox::execute()
     }
 
     // get the DOM document tree structure from the file
-    injListDoc = injListParser.getDocument();
-  } // end if(!injListDoc)
+    injListDoc_ = injListParser_.getDocument();
+  } // end if(!injListDoc_)
 
   currentTime_ = gui_curTime_.get();
   // extract the injured tissues from the DOM Document whenever time changes
   if(currentTime_ != lastTime_)
   { // re-populate injury list with data from new timestep
-    if(injured_tissue.size() > 0)
-      injured_tissue.clear();
+    if(injured_tissue_.size() > 0)
+      injured_tissue_.clear();
     execInjuryList();
     lastTime_ = currentTime_;
   }
@@ -615,19 +628,25 @@ HotBox::execute()
   // dataSource == FILES -- adjacency can only come from segmentation FILES
   fprintf(stderr, "dataSource = FILES[%d]\n", dataSource);
   // use fixed Adjacency Map files
-  if(!adjacencytable->get_num_names())
+  if(!adjacencytable_->get_num_names())
   { // adjacency data has not been read
-    adjacencytable->readFile((char *)adjacencyDataSrc.c_str());
+    adjacencytable_->readFile((char *)adjacencyDataSrc.c_str());
+
+    // read the color map which corresponds to the adjacency graph
+    // readColorMap();
   }
-  else if(adjacencytable->getActiveFile() != adjacencyDataSrc)
+  else if(adjacencytable_->getActiveFile() != adjacencyDataSrc)
   { // adjacency data source has changed
-    delete adjacencytable;
-    adjacencytable = new VH_AdjacencyMapping();
-    adjacencytable->readFile((char *)adjacencyDataSrc.c_str());
+    delete adjacencytable_;
+    adjacencytable_ = new VH_AdjacencyMapping();
+    adjacencytable_->readFile((char *)adjacencyDataSrc.c_str());
+
+    // read the color map which corresponds to the adjacency graph
+    // readColorMap();
   }
   else
   {
-    cout << "Adjacency Map file contains " << adjacencytable->get_num_names();
+    cout << "Adjacency Map file contains " << adjacencytable_->get_num_names();
     cout << " entries" << endl;
   } // end else(adjacency list has been read)
 
@@ -645,19 +664,19 @@ HotBox::execute()
     {
       error("File '" + hipFileMapName + "' not found.");
     }
-    if(!hipVarFileList->get_num_names())
+    if(!hipVarFileList_->get_num_names())
     { // label maps have not been read
-      hipVarFileList->readFile((char *)hipFileMapName.c_str());
+      hipVarFileList_->readFile((char *)hipFileMapName.c_str());
     }
-    else if(hipFileMapName != hipVarFileList->getActiveFile())
+    else if(hipFileMapName != hipVarFileList_->getActiveFile())
     { // label map data source has changed
-      delete hipVarFileList;
-      hipVarFileList = new VH_HIPvarMap();
-      hipVarFileList->readFile((char *)(hipFileMapName.c_str()));
+      delete hipVarFileList_;
+      hipVarFileList_ = new VH_HIPvarMap();
+      hipVarFileList_->readFile((char *)(hipFileMapName.c_str()));
     }
     else
     {
-      cout << "HIP file map contains " << hipVarFileList->get_num_names();
+      cout << "HIP file map contains " << hipVarFileList_->get_num_names();
       cout << " names" << endl;
     }
   } // end else (HIP data path has been selected)
@@ -679,8 +698,8 @@ HotBox::execute()
   GeomLines *lines = scinew GeomLines();
   GeomTexts *texts = scinew GeomTexts();
 
-  VS_HotBoxUI->setOutput(lines, texts);
-  VS_HotBoxUI->setOutMtl(text_material);
+  VS_HotBoxUI_->setOutput(lines, texts);
+  VS_HotBoxUI_->setOutMtl(text_material);
 
   // get the adjacency info for the current selection
   // and populate the adjacency UI
@@ -688,7 +707,7 @@ HotBox::execute()
 
   if(enableDraw == "yes")
   { // draw HotBox UI in the Viewer
-    VS_HotBoxUI->draw(0, 0, 0.005);
+    VS_HotBoxUI_->draw(0, 0, 0.005);
   
     HB_geomGroup->add(lines);
     HB_geomGroup->add(texts);
@@ -737,7 +756,7 @@ HotBox::execute()
   if(geomFilehandle_.get_rep() != 0)
     highlightOutport->send(geomFilehandle_);
 
-  if(injured_tissue.size() > 0)
+  if(injured_tissue_.size() > 0)
   {
     // build geometry from wound icon descriptions
     makeInjGeometry();
@@ -762,8 +781,8 @@ HotBox::execute()
     error("Unable to initialize nrrdOutPort 'Physiology Data'");
     return;
   }
-  if(InputNrrdHandle.get_rep())
-      nrrdOutPort->send(InputNrrdHandle);
+  if(InputNrrdHandle_.get_rep())
+      nrrdOutPort->send(InputNrrdHandle_);
 
   if(selectBox && selectionSource == "fromHotBoxUI")
   { // set the Probe location to center of selection
@@ -773,22 +792,22 @@ HotBox::execute()
     Point bmin((double)selectBox->get_minX(),
     	       (double)selectBox->get_minY(),
     	       (double)selectBox->get_minZ());
-    probeLoc = bmin + Vector(bmax - bmin) * 0.5;
+    probeLoc_ = bmin + Vector(bmax - bmin) * 0.5;
     // scale the bounding box of the segmented region
     // to match the bounding box of the labelmap volume
-    probeLoc = Point(probeLoc.x() + boxTran.x(),
-                     probeLoc.y() + boxTran.y(),
-                     probeLoc.z() + boxTran.z());
-    probeLoc = Point(probeLoc.x()*boxScale.x(),
-                     probeLoc.y()*boxScale.y(),
-                     probeLoc.z()*boxScale.z()
+    probeLoc_ = Point(probeLoc_.x() + boxTran_.x(),
+                     probeLoc_.y() + boxTran_.y(),
+                     probeLoc_.z() + boxTran_.z());
+    probeLoc_ = Point(probeLoc_.x()*boxScale_.x(),
+                     probeLoc_.y()*boxScale_.y(),
+                     probeLoc_.z()*boxScale_.z()
                     );
-    probeWidget_->SetPosition(probeLoc);
+    probeWidget_->SetPosition(probeLoc_);
 
     // update probe location in the Tcl GUI
-    gui_probeLocx_.set(probeLoc.x());
-    gui_probeLocy_.set(probeLoc.y());
-    gui_probeLocz_.set(probeLoc.z());
+    gui_probeLocx_.set(probeLoc_.x());
+    gui_probeLocy_.set(probeLoc_.y());
+    gui_probeLocz_.set(probeLoc_.z());
   } // end if(selectBox && selectionSource == "fromHotBoxUI")
 
   double probeScale = gui_probe_scale_.get();
@@ -797,7 +816,7 @@ HotBox::execute()
   // cerr << probeScale * l2norm_ * 0.003;
   probeWidget_->SetScale(probeScale * l2norm_ * 0.01);
 
-  if(selectionSource == "fromHotBoxUI")
+  if(selectionSource != "fromProbe")
   { // clear selection source
     selectionsource_.set("fromProbe");
   }
@@ -812,7 +831,7 @@ HotBox::execAdjacency()
 {
   // get the adjacency info for the selected entity
   int *adjPtr;
-  if((adjPtr = adjacencytable->adjacent_to(labelIndexVal)) == NULL)
+  if((adjPtr = adjacencytable_->adjacent_to(labelIndexVal_)) == NULL)
   {
     error("HotBox::execAdjacency(): NULL pointer");
     return;
@@ -820,178 +839,178 @@ HotBox::execAdjacency()
 
   // fill in text labels in the HotBox
   char *adjacentName;
-  if(adjacencytable->get_num_rel(labelIndexVal) >= 1)
+  if(adjacencytable_->get_num_rel(labelIndexVal_) >= 1)
   { // Note: TCL UI is 1-indexed, row-major
-    if(adjPtr[1] < anatomytable->get_max_labelindex())
-        adjacentName = anatomytable->get_anatomyname(adjPtr[1]);
+    if(adjPtr[1] < anatomytable_->get_max_labelindex())
+        adjacentName = anatomytable_->get_anatomyname(adjPtr[1]);
     else
     {
       cerr << "HotBox::execute(): adjacent index[" << adjPtr[1];
       cerr << "] out of range" << endl;
       // set result to "unknown"
-      adjacentName = anatomytable->get_anatomyname(0);
+      adjacentName = anatomytable_->get_anatomyname(0);
     }
     cerr << "HotBox::execute(): adjacent[" << adjPtr[1] << "]: ";
     cerr << adjacentName << endl;
     gui_label1_.set(adjacentName);
-    if(is_injured(adjacentName, injured_tissue))
+    if(is_injured(adjacentName, injured_tissue_))
     { gui_is_injured1_.set(1); }
     else
     { gui_is_injured1_.set(0); }
     // OpenGL UI is indexed 0-7, column-major
-    VS_HotBoxUI->set_text(0, string(adjacentName, 0, 18));
-  } // end if(adjacencytable->get_num_rel(labelIndexVal) >= 1)
-  if(adjacencytable->get_num_rel(labelIndexVal) >= 2)
+    VS_HotBoxUI_->set_text(0, string(adjacentName, 0, 18));
+  } // end if(adjacencytable_->get_num_rel(labelIndexVal_) >= 1)
+  if(adjacencytable_->get_num_rel(labelIndexVal_) >= 2)
   { // Note: TCL UI is 1-indexed, row-major
-    if(adjPtr[2] < anatomytable->get_max_labelindex())
-        adjacentName = anatomytable->get_anatomyname(adjPtr[2]);
+    if(adjPtr[2] < anatomytable_->get_max_labelindex())
+        adjacentName = anatomytable_->get_anatomyname(adjPtr[2]);
     else
     {
       cerr << "HotBox::execute(): adjacent index[" << adjPtr[2];
       cerr << "] out of range" << endl;
       // set result to "unknown"
-      adjacentName = anatomytable->get_anatomyname(0);
+      adjacentName = anatomytable_->get_anatomyname(0);
     }
     cerr << "HotBox::execute(): adjacent[" << adjPtr[2] << "]: ";
     cerr << adjacentName << endl;
     gui_label2_.set(adjacentName);
-    if(is_injured(adjacentName, injured_tissue))
+    if(is_injured(adjacentName, injured_tissue_))
     { gui_is_injured2_.set(1); }
     else
     { gui_is_injured2_.set(0); }
     // OpenGL UI is indexed 0-7, column-major
-    VS_HotBoxUI->set_text(3, string(adjacentName, 0, 18));
-  } // end if(adjacencytable->get_num_rel(labelIndexVal) >= 2)
-  if(adjacencytable->get_num_rel(labelIndexVal) >= 3)
+    VS_HotBoxUI_->set_text(3, string(adjacentName, 0, 18));
+  } // end if(adjacencytable_->get_num_rel(labelIndexVal_) >= 2)
+  if(adjacencytable_->get_num_rel(labelIndexVal_) >= 3)
   {  // Note: TCL UI is 1-indexed, row-major
-    if(adjPtr[3] < anatomytable->get_max_labelindex())
-        adjacentName = anatomytable->get_anatomyname(adjPtr[3]);
+    if(adjPtr[3] < anatomytable_->get_max_labelindex())
+        adjacentName = anatomytable_->get_anatomyname(adjPtr[3]);
     else
     {
       cerr << "HotBox::execute(): adjacent index[" << adjPtr[3];
       cerr << "] out of range" << endl;
       // set result to "unknown"
-      adjacentName = anatomytable->get_anatomyname(0);
+      adjacentName = anatomytable_->get_anatomyname(0);
     }
     cerr << "HotBox::execute(): adjacent[" << adjPtr[3] << "]: ";
     cerr << adjacentName << endl;
     gui_label3_.set(adjacentName);
-    if(is_injured(adjacentName, injured_tissue))
+    if(is_injured(adjacentName, injured_tissue_))
     { gui_is_injured3_.set(1); }
     else
     { gui_is_injured3_.set(0); }
     // OpenGL UI is indexed 0-7, column-major
-    VS_HotBoxUI->set_text(5, string(adjacentName, 0, 18));
-  } // end if(adjacencytable->get_num_rel(labelIndexVal) >= 3)
-  if(adjacencytable->get_num_rel(labelIndexVal) >= 4)
+    VS_HotBoxUI_->set_text(5, string(adjacentName, 0, 18));
+  } // end if(adjacencytable_->get_num_rel(labelIndexVal_) >= 3)
+  if(adjacencytable_->get_num_rel(labelIndexVal_) >= 4)
   { // Note: TCL UI is 1-indexed, row-major
-    if(adjPtr[4] < anatomytable->get_max_labelindex())
-        adjacentName = anatomytable->get_anatomyname(adjPtr[4]);
+    if(adjPtr[4] < anatomytable_->get_max_labelindex())
+        adjacentName = anatomytable_->get_anatomyname(adjPtr[4]);
     else
     {
       cerr << "HotBox::execute(): adjacent index[" << adjPtr[4];
       cerr << "] out of range" << endl;
       // set result to "unknown"
-      adjacentName = anatomytable->get_anatomyname(0);
+      adjacentName = anatomytable_->get_anatomyname(0);
     }
     cerr << "HotBox::execute(): adjacent[" << adjPtr[4] << "]: ";
     cerr << adjacentName << endl;
     gui_label4_.set(adjacentName);
-    if(is_injured(adjacentName, injured_tissue))
+    if(is_injured(adjacentName, injured_tissue_))
     { gui_is_injured4_.set(1); }
     else
     { gui_is_injured4_.set(0); }
     // OpenGL UI is indexed 0-7, column-major
-    VS_HotBoxUI->set_text(1, string(adjacentName, 0, 18));
-  } // end if(adjacencytable->get_num_rel(labelIndexVal) >= 4)
+    VS_HotBoxUI_->set_text(1, string(adjacentName, 0, 18));
+  } // end if(adjacencytable_->get_num_rel(labelIndexVal_) >= 4)
 
   string selectName = currentselection_.get();
   gui_label5_.set(selectName);
   
-  if(adjacencytable->get_num_rel(labelIndexVal) >= 6)
+  if(adjacencytable_->get_num_rel(labelIndexVal_) >= 6)
   { // Note: TCL UI is 1-indexed, row-major
-    if(adjPtr[6] < anatomytable->get_max_labelindex())
-        adjacentName = anatomytable->get_anatomyname(adjPtr[6]);
+    if(adjPtr[6] < anatomytable_->get_max_labelindex())
+        adjacentName = anatomytable_->get_anatomyname(adjPtr[6]);
     else
     {
       cerr << "HotBox::execute(): adjacent index[" << adjPtr[6];
       cerr << "] out of range" << endl;
       // set result to "unknown"
-      adjacentName = anatomytable->get_anatomyname(0);
+      adjacentName = anatomytable_->get_anatomyname(0);
     }
     cerr << "HotBox::execute(): adjacent[" << adjPtr[6] << "]: ";
     cerr << adjacentName << endl;
     gui_label6_.set(adjacentName);
-    if(is_injured(adjacentName, injured_tissue))
+    if(is_injured(adjacentName, injured_tissue_))
     { gui_is_injured6_.set(1); }
     else
     { gui_is_injured6_.set(0); }
     // OpenGL UI is indexed 0-7, column-major
-    VS_HotBoxUI->set_text(6, string(adjacentName, 0, 18));
-  } // end if(adjacencytable->get_num_rel(labelIndexVal) >= 6)
-  if(adjacencytable->get_num_rel(labelIndexVal) >= 7)
+    VS_HotBoxUI_->set_text(6, string(adjacentName, 0, 18));
+  } // end if(adjacencytable_->get_num_rel(labelIndexVal_) >= 6)
+  if(adjacencytable_->get_num_rel(labelIndexVal_) >= 7)
   { // Note: TCL UI is 1-indexed, row-major
-    if(adjPtr[7] < anatomytable->get_max_labelindex())
-        adjacentName = anatomytable->get_anatomyname(adjPtr[7]);
+    if(adjPtr[7] < anatomytable_->get_max_labelindex())
+        adjacentName = anatomytable_->get_anatomyname(adjPtr[7]);
     else
     {
       cerr << "HotBox::execute(): adjacent index[" << adjPtr[7];
       cerr << "] out of range" << endl;
       // set result to "unknown"
-      adjacentName = anatomytable->get_anatomyname(0);
+      adjacentName = anatomytable_->get_anatomyname(0);
     }
     cerr << "HotBox::execute(): adjacent[" << adjPtr[7] << "]: ";
     cerr << adjacentName << endl;
     gui_label7_.set(adjacentName);
-    if(is_injured(adjacentName, injured_tissue))
+    if(is_injured(adjacentName, injured_tissue_))
     { gui_is_injured7_.set(1); }
     else
     { gui_is_injured7_.set(0); }
     // OpenGL UI is 0-indexed, column-major
-    VS_HotBoxUI->set_text(2, string(adjacentName, 0, 18));
-  } // end if(adjacencytable->get_num_rel(labelIndexVal) >= 7)
-  if(adjacencytable->get_num_rel(labelIndexVal) >= 8)
+    VS_HotBoxUI_->set_text(2, string(adjacentName, 0, 18));
+  } // end if(adjacencytable_->get_num_rel(labelIndexVal_) >= 7)
+  if(adjacencytable_->get_num_rel(labelIndexVal_) >= 8)
   { // Note: TCL UI is 1-indexed, row-major 
-    if(adjPtr[8] < anatomytable->get_max_labelindex())
-        adjacentName = anatomytable->get_anatomyname(adjPtr[8]);
+    if(adjPtr[8] < anatomytable_->get_max_labelindex())
+        adjacentName = anatomytable_->get_anatomyname(adjPtr[8]);
     else
     {
       cerr << "HotBox::execute(): adjacent index[" << adjPtr[8];
       cerr << "] out of range" << endl;
       // set result to "unknown"
-      adjacentName = anatomytable->get_anatomyname(0);
+      adjacentName = anatomytable_->get_anatomyname(0);
     }
     cerr << "HotBox::execute(): adjacent[" << adjPtr[8] << "]: ";
     cerr << adjacentName << endl;
     gui_label8_.set(adjacentName);
-    if(is_injured(adjacentName, injured_tissue))
+    if(is_injured(adjacentName, injured_tissue_))
     { gui_is_injured8_.set(1); }
     else
     { gui_is_injured8_.set(0); }
     // OpenGL UI is indexed 0-7, column-major
-    VS_HotBoxUI->set_text(4, string(adjacentName, 0, 18));
-  } // end if(adjacencytable->get_num_rel(labelIndexVal) >= 8)
-  if(adjacencytable->get_num_rel(labelIndexVal) >= 9)
+    VS_HotBoxUI_->set_text(4, string(adjacentName, 0, 18));
+  } // end if(adjacencytable_->get_num_rel(labelIndexVal_) >= 8)
+  if(adjacencytable_->get_num_rel(labelIndexVal_) >= 9)
   { // Note: TCL UI is 1-indexed, row-major
-    if(adjPtr[9] < anatomytable->get_max_labelindex())
-        adjacentName = anatomytable->get_anatomyname(adjPtr[9]);
+    if(adjPtr[9] < anatomytable_->get_max_labelindex())
+        adjacentName = anatomytable_->get_anatomyname(adjPtr[9]);
     else
     {
       cerr << "HotBox::execute(): adjacent index[" << adjPtr[9];
       cerr << "] out of range" << endl;
       // set result to "unknown"
-      adjacentName = anatomytable->get_anatomyname(0);
+      adjacentName = anatomytable_->get_anatomyname(0);
     }
     cerr << "HotBox::execute(): adjacent[" << adjPtr[9] << "]: ";
     cerr << adjacentName << endl;
     gui_label9_.set(adjacentName);
-    if(is_injured(adjacentName, injured_tissue))
+    if(is_injured(adjacentName, injured_tissue_))
     { gui_is_injured9_.set(1); }
     else
     { gui_is_injured9_.set(0); }
     // OpenGL UI is indexed 0-7, column-major
-    VS_HotBoxUI->set_text(7, string(adjacentName, 0, 18));
-  } // end if(adjacencytable->get_num_rel(labelIndexVal) >= 9)
+    VS_HotBoxUI_->set_text(7, string(adjacentName, 0, 18));
+  } // end if(adjacencytable_->get_num_rel(labelIndexVal_) >= 9)
 } // end HotBox::execAdjacency()
 
 /*****************************************************************************
@@ -1620,7 +1639,7 @@ HotBox::traverseDOMtree(DOMNode &woundNode, int nodeIndex, int curTime,
 
     cerr << "Adding: " << endl;
     (*injuryPtr)->print();
-    injured_tissue.push_back(**injuryPtr);
+    injured_tissue_.push_back(**injuryPtr);
     int woundTime = (*injuryPtr)->timeStamp;
     // create the next injury record
     *injuryPtr = new VH_injury();
@@ -1652,7 +1671,7 @@ HotBox::execInjuryList()
   const string injuryListDataSrc(injurylistdatasource_.get());
 
   DOMNodeList *
-  woundList = injListDoc->getElementsByTagName(to_xml_ch_ptr("wound"));
+  woundList = injListDoc_->getElementsByTagName(to_xml_ch_ptr("wound"));
   int num_woundList = woundList->getLength();
 
   if (num_woundList == 0)
@@ -1679,7 +1698,7 @@ HotBox::execInjuryList()
 
   // report number of injuries read
   cerr << "HotBox::execInjuryList(): ";
-  cerr << injured_tissue.size() << " injuries found" << endl;
+  cerr << injured_tissue_.size() << " injuries found" << endl;
 
 } // end execInjuryList()
 
@@ -1695,11 +1714,11 @@ HotBox::makeInjGeometry()
   QuadSurfField<double> *qsf;
 
   cerr << "HotBox::makeInjGeometry(): ";
-  cerr << injured_tissue.size() << " injuries ";
+  cerr << injured_tissue_.size() << " injuries ";
   // traverse the injured tissue list
-  for(unsigned int i = 0; i < injured_tissue.size(); i++)
+  for(unsigned int i = 0; i < injured_tissue_.size(); i++)
   {
-    VH_injury injPtr = (VH_injury)injured_tissue[i];
+    VH_injury injPtr = (VH_injury)injured_tissue_[i];
 
     if(injPtr.geom_type == "line")
     {
@@ -1769,7 +1788,7 @@ HotBox::makeInjGeometry()
         mvindx += 2;
       } // end for(int j = 1; j <= CYLREZ; j++)
     } // end else if(injPtr.geom_type == "cylinder" ... )
-  } // end for(int i = 0; i < injured_tissue.size(); i++)
+  } // end for(int i = 0; i < injured_tissue_.size(); i++)
   if(numLines > 0)
   {
     cerr << numLines << " lines ";
@@ -1796,7 +1815,7 @@ HotBox::executePhysio()
   const string currentSelection(currentselection_.get());
   // get the name of the Nrrd file containing the parameters for this selection
   char *nrrdFileName = 
-                 hipVarFileList->get_HIPvarFile((char *)
+                 hipVarFileList_->get_HIPvarFile((char *)
                                                 currentSelection.c_str());
 
   if(!nrrdFileName)
@@ -1814,7 +1833,7 @@ HotBox::executePhysio()
   }
 
   // (else) read the Nrrd file
-  InputNrrdHandle = 0;
+  InputNrrdHandle_ = 0;
   int namelen = nrrdFileNameStr.size();
   const string ext(".nd");
 
@@ -1829,8 +1848,8 @@ HotBox::executePhysio()
     }
 
     // Read the file
-    Pio(*stream, InputNrrdHandle);
-    if (!InputNrrdHandle.get_rep() || stream->error())
+    Pio(*stream, InputNrrdHandle_);
+    if (!InputNrrdHandle_.get_rep() || stream->error())
     {
       error("Error reading data from file '" + nrrdFileNameStr +"'.");
       delete stream;
@@ -1909,17 +1928,17 @@ HotBox::executeProbe() {
   const string selectionSource(selectionsource_.get());
   if(selectionSource == "fromProbe")
   { // get current position of widget
-    probeLoc = probeWidget_->GetPosition();
+    probeLoc_ = probeWidget_->GetPosition();
     cerr << "HotBox::executeProbe(): probeWidget->Position: ";
-    cerr << probeLoc << endl;
+    cerr << probeLoc_ << endl;
     // update the probe location in the Tcl GUI
-    gui_probeLocx_.set(probeLoc.x());
-    gui_probeLocy_.set(probeLoc.y());
-    gui_probeLocz_.set(probeLoc.z());
+    gui_probeLocx_.set(probeLoc_.x());
+    gui_probeLocy_.set(probeLoc_.y());
+    gui_probeLocz_.set(probeLoc_.z());
   }
 
   const TypeDescription *
-  meshTypeDescr = InputFieldHandle->mesh()->get_type_description();
+  meshTypeDescr = InputFieldHandle_->mesh()->get_type_description();
   CompileInfoHandle ci = ProbeLocateAlgo::get_compile_info(meshTypeDescr);
   Handle<ProbeLocateAlgo> algo;
   if (!module_dynamic_compile(ci, algo)) return;
@@ -1927,21 +1946,21 @@ HotBox::executeProbe() {
   string nodestr, edgestr, facestr, cellstr;
   
   // use probe defaults show-node=1 show-edge=0 show-face=0 show-cell=1
-  algo->execute(InputFieldHandle->mesh(), probeLoc,
+  algo->execute(InputFieldHandle_->mesh(), probeLoc_,
                   1, nodestr,
                   0, edgestr,
                   0, facestr,
                   1, cellstr);
 
   ScalarFieldInterfaceHandle sfi = 0;
-  if ((sfi = InputFieldHandle->query_scalar_interface(this)).get_rep())
+  if ((sfi = InputFieldHandle_->query_scalar_interface(this)).get_rep())
   {
     double result;
-    if (!sfi->interpolate(result, probeLoc))
+    if (!sfi->interpolate(result, probeLoc_))
     {
-      sfi->find_closest(result, probeLoc);
+      sfi->find_closest(result, probeLoc_);
     }
-    labelIndexVal = (int)result;
+    labelIndexVal_ = (int)result;
   } // end if(ifieldhandle->query_scalar_interface(this)).get_rep())
   else
   {
