@@ -252,8 +252,8 @@ itcl_class VS_DataFlow_HotBox {
 
     frame $w.controls
     set ::datasource "2"
-    radiobutton $w.controls.adjOQAFMA -value 1 -text "OQAFMA" -variable datasource -command "$this set_data_source $::datasource"
-    radiobutton $w.controls.adjFILES -value 2 -text "Files" -variable datasource -command "$this set_data_source $::datasource"
+    radiobutton $w.controls.adjOQAFMA -value 1 -text "OQAFMA" -variable datasource -command "$this set_data_source 1"
+    radiobutton $w.controls.adjFILES -value 2 -text "Files" -variable datasource -command "$this set_data_source 2"
 
     checkbutton $w.controls.togFME -text "Connect to FME" -command "$this toggle_FME_on"
     $w.controls.togFME select
