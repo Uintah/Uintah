@@ -151,6 +151,8 @@ TendEvecRGB::execute()
     return;
   }
 
+  nout->axis[0].kind = nrrdKind3Vector;
+  remark("nrrdKind changed to nrrdKind3Vector");
   //nout->axis[0].label = strdup("RGB:Vector");
   NrrdData *nrrd = scinew NrrdData;
   nrrd->nrrd = nout;
