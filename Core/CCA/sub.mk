@@ -22,6 +22,7 @@ include $(SCIRUN_SCRIPTS)/largeso_prologue.mk
 SRCDIR := Core/CCA
 
 SUBDIRS := \
+	$(SRCDIR)/spec \
 	$(SRCDIR)/tools \
 	$(SRCDIR)/Component
 
