@@ -6,6 +6,9 @@
 </head>
 
 <body bgcolor="#a9a9a9">
+
+<A name="chapter-6">
+
 <table align="center" border="0" cellpadding="0" cellspacing="0" width="306" bgcolor="#cccccc">
 <tr>
 <td><img height="92" width="600" src="images/sub-banner.jpg" border="0"
@@ -34,109 +37,112 @@
 <td>
 <center>
 <table border="0" cellpadding="0" cellspacing="5" width="600">
-	<tr>
-	<td>
-	<center>
-	<br><A name="section-3"></A>
-	<font size="4"
-	face="Arial,Helvetica,Geneva,Swiss,SunSans-Regular"
-	color="maroon">
-	<b>Chapter 6: Putting Simulation and Visualization
-	    Together</b></font> </p> 
-        <p>&nbsp; </p>
-        </center>
-        <div align="left">
-	<p><b><H4><A href="#section-1">ManageFieldData</H4></b></A>
-	<p><b><H4><A href="#section-2">Combining simulation and
-	    visualization</H4></b></A> 
-        <p><b>Chapter Overview</b><br>
+<tr>
+<td>
 
-        <p>Chapters 1-4, demonstrate the construction of a set of visualization
-	networks to explore scalar and vector fields. In the previous chapter, 
-	A network to solve a bioelectric finite element problem was implemented.  
-	The output of that network was a solution vector, <img height="16"
-	    width="13" 
-	src="images/phi.gif">, containing the potential at each of the
-	nodes in the finite element mesh.
+<center>
+<font face="Arial,Helvetica,Geneva,Swiss,SunSans-Regular" color="maroon">
+<H1>Chapter 6: Putting Simulation and Visualization Together</H1></font>
+</center>
 
-	<p>This chapter will reuse the finite element simulation network from <a
-	    href="chapter_5.html">Chapter 5</a>,  
-	as well as the visualization network from  <a
-	    href="chapter_4.html">Chapter 4</a>.  The 
-	only missing piece is a module that connects the solution
-	vector of scalar values to the nodes of the tetrahedral finite
-	element mesh.  The ManageFieldData module accomplishes this task,
-	as described in the sections that follow.
+<H2>Chapter Sections</H2>
 
-     <p><b><A name="section-1">ManageFieldData</b><br></A>
+<UL>
+  <LI> <A href="#section-0">Chapter Overview</A>
+  <LI> <A href="#section-1">ManageFieldData</A>
+  <LI> <A href="#section-2">Combining Simulation and Visualization</A>
+  <LI> <A href="#summary">Summary</A>
+</UL>    
 
-     <p>The ManageFieldData module performs two simultaneous operations.  First, the module splits the input Field into its mesh part and data values. These data values are then passed through the output matrix port.  Second, the module combines the mesh part with the matrix input, creating a new Field output.</p> 
-        
-<p>There are a few rules for the behavior of the module that
-increase its versatility and its complexity:
-       
-        <p><ul><li>If the module has no input matrix, then the output Field will be
-            the same as the input Field.</p>
-        <p><li>If the input Field's data are scalar, then the output matrix
-            will be a column matrix.</p>
-        <p><li>If the input Field's data contains N vectors, then the output
-	    matrix will be of dimension Nx3.</p>
-        <p><li>If the Field contains N tensors, the output matrix will be of
-            dimension Nx9 where the
-             tensor is flattened out in left-to-right, top-to-bottom, order.</p>
-         <p><li>The number of rows in the input matrix should equal the number
-            of data values in the input Field.</p>
-        <p><li> The output Field's type is the same as the input Field's
+<H2><A name="section-0">Chapter Overview</A></H2>
+
+Chapters 1-4 demonstrated the construction of a set of visualization
+networks to explore scalar and vector fields. In the previous chapter,
+a network to solve a bioelectric finite element problem was
+implemented.  The output of that network was a solution vector, <img
+height="16" width="13" src="images/phi.gif">, containing the potential
+at each of the nodes in the finite element mesh.
+<p>
+This chapter will reuse the finite element simulation network from <a
+href="chapter_5.html">Chapter 5</a>, as well as the visualization
+network from <a href="chapter_4.html">Chapter 4</a>.  The only missing
+piece is a module that connects the solution vector of scalar values
+to the nodes of the tetrahedral finite element mesh.  The
+ManageFieldData module accomplishes this task.  It is described in the
+sections that follow.
+
+<H2><A name="section-1">ManageFieldData</A></H2>
+
+The ManageFieldData module performs two simultaneous operations.
+First, the module splits the input Field into its mesh part and data
+values. The data values are passed out through the output matrix
+port.  Second, the module combines the mesh part with the matrix
+input, creating a new Field output.
+<p>
+There are a few rules for the behavior of the module that increase its
+versatility and its complexity:
+<p>
+<ul>
+   <li>If the module has no input matrix, then the output Field will be
+            the same as the input Field.
+   <li>If the input Field's data are scalar, then the output matrix
+            will be a column matrix.
+   <li>If the input Field's data contains N vectors, then the output
+	    matrix will be of dimension Nx3.
+   <li>If the Field contains N tensors, the output matrix will be of
+            dimension Nx9 where the tensor is flattened out in
+            left-to-right, top-to-bottom, order.
+   <li>The number of rows in the input matrix should equal the number
+            of data values in the input Field.
+   <li> The output Field's type is the same as the input Field's
          type.  For instance, if the input Field is a vector Field, the
          output Field will also be a vector Field (and the input matrix
          must be Nx3 where N is equal to the number of
-         data values in the input Field).</p>
-        </ul>
+         data values in the input Field).
+</ul>
 
-        <p><b><A name="section-2">Combining simulation and
-	visualization</b><br></A> 
+<H2><A name="section-2">Combines Simulation and Visualization</A></H2>
 
-	<p>Use the File/Insert option to combine the finite element simulation net from <a
-	href="chapter_5.html#figure-5.2"> Chapter 5, Figure 5.2,</a>  
-	with the visualization net from <a
-	href="chapter_4.html#figure-4.1">Chapter 4, Figure 4.1.</a> 
-	   Add a ManageFieldData module between them, and you
-	should have a net that looks like that in <b>Figure 6.1</b>.  Note that all of the modules from the Chapter 4 net, that were connected to the left FieldReader module, are now connected to the ManageFieldData module. 
+Use the File->Insert option to combine the finite element simulation
+net from <a href="chapter_5.html#figure-5.2"> Chapter 5, Figure
+5.2,</a> with the visualization net from <a
+href="chapter_4.html#figure-4.2">Chapter 4, Figure 4.2.</a> Add a
+ManageFieldData module between them, and you should have a net that
+looks similar to <b>Figure 6.1</b> (Notice that in <B>figure 6.1</B>
+the modules have been placed in more of a horizontal layout then in
+<B>Figure 4.2</B>.)  Note also that all of the modules from the
+Chapter 4 net that were connected to the left FieldReader module, are
+now connected to the ManageFieldData module.
 
-      </div>
-	<center>
-	<p><img height="513" width="500" src="images/figures/6_1.gif"><br>
-	<b>Figure 6.1, Chapter 6 network</b></p>
-	</center>
-	<div align="left">
-	</p>
+<center>
+<p><img height="513" width="500" src="images/figures/6_1.gif"><br>
+<b>Figure 6.1, Chapter 6 network</b></p>
+</center>
+<p>
+After executing the network, the image in the ViewWindow should look
+similar to <b>Figure 6.2</b>.  (Remember to press the <I>Autoview</I>
+button to center the dataset in the view window.)
+<P>
+<center>
+<p><img height="451" width="450" src="images/figures/6_2.gif"><br>
+<b>Figure 6.2, showing net with ManageFieldData module</b></p>
+</center>
 
-	<p> Executing the network, the image in the
-	ViewWindow should look like <b>Figure 6.2</b>.</p>
+<H2><A name="summary">Summary</A></H2>
 
-      </div>
-	<center>
-	<p><img height="451" width="450" src="images/figures/6_2.gif"><br>
-	<b>Figure 6.2, showing net with ManageFieldData module</b></p>
-	</center>
-	<div align="left">
-	<p><br>
-	<p><H4><b>Summary</H4></b>
-	<p>This chapter demonstrated how to combine two existing
-	networks , reusing the finite element simulation network from
-	Chapter 5, and the visualization network from Chapter 4. The
-	ManageFieldData module was used to connect the solution vector
-	of scalar values to the nodes of the tetrahedral finite
-	element mesh .
+This chapter demonstrated how to combine two existing networks,
+reusing the finite element simulation network from Chapter 5, and the
+visualization network from Chapter 4. The ManageFieldData module was
+used to connect the solution vector of scalar values to the nodes of
+the tetrahedral finite element mesh.
+<p>
+Chapter 7 will illustrate how to add a feedback module and interactively
+visualize the results.
+<p>	
+<A href="#chapter-6">Return to Top</A>
 
-	<p>Chapter 7 illustrates how to add a feedback module and
-	interactively visualize the results.
-	<p>	
-	<br>
-	<br><A href="#section-3">Return to Top</A>
-        </div>
-	</td>
-	</tr>
+</td>
+</tr>
 </table>
 </center>
 </td>
