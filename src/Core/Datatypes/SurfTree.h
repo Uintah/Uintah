@@ -26,6 +26,17 @@
 
 namespace SCIRun {
 
+
+struct TSEdge {
+  int i1;
+  int i2;
+  inline TSEdge(int ii1 = -1, int ii2 = -1) : i1(ii1), i2(ii2) {}
+  inline TSEdge(const TSEdge& e) : i1(e.i1), i2(e.i2) {}
+};
+
+void Pio (Piostream& stream, TSEdge &data);
+
+
 typedef struct SurfInfo {
   string name;		        // names of surfaces
   Array1<int> faces;		// indices of faces in each surface
@@ -72,7 +83,7 @@ class SCICORESHARE SurfTree : public Surface {
   friend class TriSurface;
 private:
   Array1<TSElement> faces_;		// array of all faces/elements
-  Array1<TSEdge*>   edges_;		// array of all edges
+  Array1<TSEdge>    edges_;		// array of all edges
 
   Array1<SurfInfo> surfI_;
   Array1<FaceInfo> faceI_;
