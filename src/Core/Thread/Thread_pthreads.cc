@@ -900,9 +900,9 @@ Mutex::lock()
     oldstate=Thread::push_bstack(p, Thread::BLOCK_MUTEX, name_);
   }
 
-#ifdef __APPLE__
+#if defined( __APPLE__ ) || defined ( _AIX )
   // Temporary hack:
-  // On OSX this call may come before the constructor (for static vars) for some reason.
+  // On OSX and AIX, this call may come before the constructor (for static vars) for some reason.
   // To solve this problem we allocate priv_ and init it if the constructor was not called yet.
   if ( !priv_ ) {
     //fprintf(stderr, "Mutex:lock() - priv_ does not exits. reallocating\n");
