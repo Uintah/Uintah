@@ -50,14 +50,14 @@ ICELabel::ICELabel()
     VarLabel::create("mom_source_CC",CCVariable<Vector>::getTypeDescription());
   int_eng_source_CCLabel = 
     VarLabel::create("intE_source_CC",CCVariable<double>::getTypeDescription());
-  spec_vol_source_CCLabel = 
-   VarLabel::create("spVol_source_CC",CCVariable<double>::getTypeDescription());
+  sp_vol_src_CCLabel = 
+   VarLabel::create("sp_vol_src_CC", CCVariable<double>::getTypeDescription());
   mom_L_CCLabel = 
     VarLabel::create("mom_L_CC",     CCVariable<Vector>::getTypeDescription());
   int_eng_L_CCLabel = 
     VarLabel::create("int_eng_L_CC", CCVariable<double>::getTypeDescription());
-  spec_vol_L_CCLabel = 
-    VarLabel::create("spec_vol_L_CC",CCVariable<double>::getTypeDescription());
+  sp_vol_L_CCLabel = 
+    VarLabel::create("sp_vol_L_CC",CCVariable<double>::getTypeDescription());
   mass_L_CCLabel = 
     VarLabel::create("mass_L_CC",    CCVariable<double>::getTypeDescription());
   mom_L_ME_CCLabel = 
@@ -212,10 +212,10 @@ ICELabel::~ICELabel()
     VarLabel::destroy(press_force_CCLabel); 
     VarLabel::destroy(mom_source_CCLabel);
     VarLabel::destroy(int_eng_source_CCLabel);
-    VarLabel::destroy(spec_vol_source_CCLabel);
+    VarLabel::destroy(sp_vol_src_CCLabel);
     VarLabel::destroy(mom_L_CCLabel);
     VarLabel::destroy(int_eng_L_CCLabel);
-    VarLabel::destroy(spec_vol_L_CCLabel);
+    VarLabel::destroy(sp_vol_L_CCLabel);
     VarLabel::destroy(mass_L_CCLabel);
     VarLabel::destroy(mom_L_ME_CCLabel);
     VarLabel::destroy(eng_L_ME_CCLabel);
