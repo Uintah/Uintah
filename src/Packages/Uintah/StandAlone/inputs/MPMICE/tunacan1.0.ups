@@ -248,6 +248,7 @@
                   <ThresholdPressure>   50000           </ThresholdPressure>
                   <Enthalpy>            2000000.0       </Enthalpy>
                   <BurnCoeff>           9.6e-5          </BurnCoeff>
+                  <refPressure>         1               </refPressure>
                 <activationEnergy>    17900           </activationEnergy>
                 <preExponent>              0.2e11          </preExponent>
                 </burn>
