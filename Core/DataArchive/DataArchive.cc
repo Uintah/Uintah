@@ -608,7 +608,7 @@ DataArchive::restartInitialize(int& timestep, const GridP& grid, DataWarehouse* 
   d_restartTimestepURL = d_tsurl[i];
 
   if (lb)
-    lb->restartInitialize(d_restartTimestepDoc, d_restartTimestepURL);
+    lb->restartInitialize(d_restartTimestepDoc, d_restartTimestepURL, grid);
 
   ASSERTL3(indices.size() == d_tstop.size());
   ASSERTL3(d_tsurl.size() == d_tstop.size());
