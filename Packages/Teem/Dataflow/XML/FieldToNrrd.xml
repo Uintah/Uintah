@@ -37,15 +37,14 @@ mesh. Output: a NrrdData.
 NrrdData is the SCIRun object that is mostly a wrapper around a Nrrd*.
 There are many operations that can be applied to the data as a nrrd,
 <slink path="http://www.cs.utah.edu/~gk/teem/unnrrdu/index.html"></slink>
-many of which are supported in this Teem package. 
+many of which are supported in this Teem package. </p>
       <p>
         We store a handle to the Field that is input to this module in
 the NrrdData, so that if it ever gets converted back to a Field, we
 have a preffered target field type instead of one of the structured
 defaults that NrrdToField will use if it cannot determine a prefferred
 type. The User may want to use NrrdJoin to combine sets of data that
-map to the same mesh into a single NrrdData.
-      </p>
+map to the same mesh into a single NrrdData. </p>
     </description>
     <examplesr>Teem/nets/test/to_and_from_lvd.fld.net</examplesr>
   </overview>
