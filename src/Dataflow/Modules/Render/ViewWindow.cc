@@ -2242,91 +2242,79 @@ void ViewWindow::tcl_command(GuiArgs& args, void*)
     // the negative x axis) and then which axis is up
     // represented the same way
     string position = pos.get();
-    Vector lookdir(df.eyep()-df.lookat()); 
+    const Vector lookdir(df.eyep()-df.lookat()); 
     double distance = lookdir.length();
     if(position == "x1_y1") {
-      df.eyep(Point(distance, 0.0, 0.0));
+      df.eyep(df.lookat() + Vector(distance, 0.0, 0.0));
       df.up(Vector(0.0, 1.0, 0.0));
     } else if(position == "x1_y0") {
-      df.eyep(Point(distance, 0.0, 0.0));
+      df.eyep(df.lookat() + Vector(distance, 0.0, 0.0));
       df.up(Vector(0.0, -1.0, 0.0));
     } else if(position == "x1_z1") {
-      df.eyep(Point(distance, 0.0, 0.0));
+      df.eyep(df.lookat() + Vector(distance, 0.0, 0.0));
       df.up(Vector(0.0, 0.0, 1.0));
     } else if(position == "x1_z0") {
-      df.eyep(Point(distance, 0.0, 0.0));
+      df.eyep(df.lookat() + Vector(distance, 0.0, 0.0));
       df.up(Vector(0.0, 0.0, -1.0));
     } else if(position == "x0_y1") {
-      distance *= -1;
-      df.eyep(Point(distance, 0.0, 0.0));
+      df.eyep(df.lookat() - Vector(distance, 0.0, 0.0));
       df.up(Vector(0.0, 1.0, 0.0));
     } else if(position == "x0_y0") {
-      distance *= -1;
-      df.eyep(Point(distance, 0.0, 0.0));
+      df.eyep(df.lookat() - Vector(distance, 0.0, 0.0));
       df.up(Vector(0.0, -1.0, 0.0));
     } else if(position == "x0_z1") {
-      distance *= -1;
-      df.eyep(Point(distance, 0.0, 0.0));
+      df.eyep(df.lookat() - Vector(distance, 0.0, 0.0));
       df.up(Vector(0.0, 0.0, 1.0));
     } else if(position == "x0_z0") {
-      distance *= -1;
-      df.eyep(Point(distance, 0.0, 0.0));
+      df.eyep(df.lookat() - Vector(distance, 0.0, 0.0));
       df.up(Vector(0.0, 0.0, -1.0));
     } else if(position == "y1_x1") {
-      df.eyep(Point(0.0, distance, 0.0));
+      df.eyep(df.lookat() + Vector(0.0, distance, 0.0));
       df.up(Vector(1.0, 0.0, 0.0));
     } else if(position == "y1_x0") {
-      df.eyep(Point(0.0, distance, 0.0));
+      df.eyep(df.lookat() + Vector(0.0, distance, 0.0));
       df.up(Vector(-1.0, 0.0, 0.0));
     } else if(position == "y1_z1") {
-      df.eyep(Point(0.0, distance, 0.0));
+      df.eyep(df.lookat() + Vector(0.0, distance, 0.0));
       df.up(Vector(0.0, 0.0, 1.0));
     } else if(position == "y1_z0") {
-      df.eyep(Point(0.0, distance, 0.0));
+      df.eyep(df.lookat() + Vector(0.0, distance, 0.0));
       df.up(Vector(0.0, 0.0, -1.0));
     } else if(position == "y0_x1") {
-      distance *= -1;
-      df.eyep(Point(0.0, distance, 0.0));
+      df.eyep(df.lookat() - Vector(0.0, distance, 0.0));
       df.up(Vector(1.0, 0.0, 0.0));
     } else if(position == "y0_x0") {
-      distance *= -1;
-      df.eyep(Point(0.0, distance, 0.0));
+      df.eyep(df.lookat() - Vector(0.0, distance, 0.0));
       df.up(Vector(-1.0, 0.0, 0.0));
     } else if(position == "y0_z1") {
-      distance *= -1;
-      df.eyep(Point(0.0, distance, 0.0));
+      df.eyep(df.lookat() - Vector(0.0, distance, 0.0));
       df.up(Vector(0.0, 0.0, 1.0));
     } else if(position == "y0_z0") {
-      distance *= -1;
-      df.eyep(Point(0.0, distance, 0.0));
+      df.eyep(df.lookat() - Vector(0.0, distance, 0.0));
       df.up(Vector(0.0, 0.0, -1.0));
     } else if(position == "z1_x1") {
-      df.eyep(Point(0.0, 0.0, distance));
+      df.eyep(df.lookat() + Vector(0.0, 0.0, distance));
       df.up(Vector(1.0, 0.0, 0.0));
     } else if(position == "z1_x0") {
-      df.eyep(Point(0.0, 0.0, distance));
+      df.eyep(df.lookat() + Vector(0.0, 0.0, distance));
       df.up(Vector(-1.0, 0.0, 0.0));
     } else if(position == "z1_y1") {
-      df.eyep(Point(0.0, 0.0, distance));
+      df.eyep(df.lookat() + Vector(0.0, 0.0, distance));
       df.up(Vector(0.0, 1.0, 0.0));
     } else if(position == "z1_y0") {
-      df.eyep(Point(0.0, 0.0, distance));
+      df.eyep(df.lookat() + Vector(0.0, 0.0, distance));
       df.up(Vector(0.0, -1.0, 0.0));
     } else if(position == "z0_x1") {
-      distance *= -1;
-      df.eyep(Point(0.0, 0.0, distance));
+      df.eyep(df.lookat() - Vector(0.0, 0.0, distance));
       df.up(Vector(1.0, 0.0, 0.0));
     } else if(position == "z0_x0") {
-      distance *= -1;
-      df.eyep(Point(0.0, 0.0, distance));
+      df.eyep(df.lookat() - Vector(0.0, 0.0, distance));
       df.up(Vector(-1.0, 0.0, 0.0));
     } else if(position == "z0_y1") {
-      distance *= -1;
-      df.eyep(Point(0.0, 0.0, distance));
+      df.eyep(df.lookat() - Vector(0.0, 0.0, distance));
       df.up(Vector(0.0, 1.0, 0.0));
     } else if(position == "z0_y0") {
-      distance *= -1;
-      df.eyep(Point(0.0, 0.0, distance));
+      df.eyep(df.lookat() - Vector(0.0, 0.0, distance));
       df.up(Vector(0.0, -1.0, 0.0));
     }
     animate_to_view(df, 2.0);
