@@ -384,17 +384,17 @@ itcl_class SCIRun_Visualization_GenStandardColorMaps {
 	return $result
     }
 
-    method findByName_aux { name } {
+    method findByName_aux { cname } {
 	set size [llength $colorMaps]
 	for {set i 0}  {$i < $size} {incr i} {
-	    set name1 [lindex [lindex $colorMaps $i] 0]
-	    if {$name == $name1} { return $i }
+	    set cname1 [lindex [lindex $colorMaps $i] 0]
+	    if {$cname == $cname1} { return $i }
 	}
 	return 0
     }
 
-    method findByName { name } {
-	set index [findByName_aux $name]
+    method findByName { cname } {
+	set index [findByName_aux $cname]
 	set color [lindex [lindex $colorMaps $index] 1]
 	if {[set $this-reverse]} { set color [lreverse $color] }
 	return $color
@@ -404,8 +404,8 @@ itcl_class SCIRun_Visualization_GenStandardColorMaps {
 	set size [llength $colorMaps]
 	set result {}
 	for {set i 0}  {$i < $size} {incr i} {
-	    set name [lindex [lindex $colorMaps $i] 0]
-	    set result [concat $result [list [list $name $name]]]
+	    set cname [lindex [lindex $colorMaps $i] 0]
+	    set result [concat $result [list [list $cname $cname]]]
 	}
 	return $result
     }
