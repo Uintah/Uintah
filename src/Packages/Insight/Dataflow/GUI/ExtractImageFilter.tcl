@@ -39,75 +39,105 @@ itcl_class Insight_Filters_ExtractImageFilter {
     method set_defaults {} {
 	global $this-num-dims
 	global $this-reset
+	global $this-minDim0
+	global $this-minDim1
+	global $this-minDim2
+	global $this-minDim3
+	global $this-maxDim0
+	global $this-maxDim1
+	global $this-maxDim2
+	global $this-maxDim3
+	global $this-absmaxDim0
+	global $this-absmaxDim1
+	global $this-absmaxDim2
+	global $this-absmaxDim3
+	global $this-uis
 
 	set $this-num-dims 0
 	set $this-reset 0
+	set $this-minDim0 0
+	set $this-minDim1 0
+	set $this-minDim2 0
+	set $this-minDim3 0
+	set $this-maxDim0 1024
+	set $this-maxDim1 1024
+	set $this-maxDim2 1024
+	set $this-maxDim3 1024
+	set $this-absmaxDim0 0
+	set $this-absmaxDim1 0
+	set $this-absmaxDim2 0
+	set $this-absmaxDim3 0
+	set $this-uis 4
     }
 
-    method set_max_vals {} {
+    method reset_vals {} {
+	set w .ui[modname]
+	for {set i 0} {$i < [set $this-num-dims]} {incr i} {
+	    set $this-minDim$i 0
+	    set $this-maxDim$i 1024
+	}
+    }
+
+    method make_min_max {i} {
+	set w .ui[modname]
+        if {[winfo exists $w]} {
+  
+	    if {[winfo exists $w.f.mmf.t]} {
+		destroy $w.f.mmf.t
+	    }
+	    if {! [winfo exists $w.f.mmf.a$i]} {
+		if {![info exists $this-absmaxDim$i]} {
+		    set $this-minDim$i 0
+		    set $this-maxDim$i 1024
+		    set $this-absmaxDim$i 0
+		}
+		iwidgets::labeledframe $w.f.mmf.a$i -labeltext "Axis $i" \
+		    -labelpos nw
+		pack $w.f.mmf.a$i -side top -anchor nw -padx 3
+
+		set fr [$w.f.mmf.a$i childsite]
+		iwidgets::entryfield $fr.min -labeltext "Min:" \
+		    -labelpos w -textvariable $this-minDim$i
+		Tooltip $fr.min "Lower corner of the bounding box."
+
+		iwidgets::entryfield $fr.max -labeltext "Max:" \
+		    -labelpos w -textvariable $this-maxDim$i
+		Tooltip $fr.max "Higher corner of the bounding box."
+
+		pack $fr.min $fr.max -side left
+	    }
+	}
+    }
+
+   method clear_axis {i} {
+	set w .ui[modname]
+        if {[winfo exists $w]} {
+	    if {[winfo exists $w.f.mmf.t]} {
+		destroy $w.f.mmf.t
+	    }
+	    if {[winfo exists $w.f.mmf.a$i]} {
+		destroy $w.f.mmf.a$i
+	    }
+	    unset $this-minDim$i
+	    unset $this-maxDim$i
+	    unset $this-absmaxDim$i
+
+	    set $this-reset 1
+	}
+    }
+
+    method update_sizes {} {
 	set w .ui[modname]
 
 	if {[winfo exists $w]} {
-	    for {set i 0} {$i < [set $this-num-dims]} {incr i} {
+	    set sizes ""
+	    for {set i 0} {$i < [expr [set $this-uis] - 1]} {incr i} {
+		set sizes [concat $sizes [expr [set $this-absmaxDim$i] + 1] ", "]
+	    }
 
-		set ax $this-absmaxDim$i
-		set_scale_max_value $w.f.mmf.a$i [set $ax]
-		if {[set $this-maxDim$i] == -1 || [set $this-reset]} {
-		    set $this-maxDim$i [set $this-absmaxDim$i]
-		}
-	    }
-	    set $this-reset 0
-	}
-    }
-
-    method init_dims {} {
-	for {set i 0} {$i < [set $this-num-dims]} {incr i} {
-
-	    if { [catch { set t [set $this-minDim$i] } ] } {
-		set $this-minDim$i 0
-	    }
-	    if { [catch { set t [set $this-maxDim$i]}] } {
-		set $this-maxDim$i -1
-	    }
-	    if { [catch { set t [set $this-absmaxDim$i]}] } {
-		set $this-absmaxDim$i 0
-	    }
-	}
-	make_min_max
-    }
-
-    method make_min_max {} {
-	set w .ui[modname]
-        if {[winfo exists $w]} {
-  
-	    if {[winfo exists $w.f.mmf.t]} {
-		destroy $w.f.mmf.t
-	    }
-	    for {set i 0} {$i < [set $this-num-dims]} {incr i} {
-		if {! [winfo exists $w.f.mmf.a$i]} {
-		    min_max_widget $w.f.mmf.a$i "Dim $i" \
-			$this-minDim$i $this-maxDim$i $this-absmaxDim$i 
-		}
-	    }
-	}
-    }
-
-   method clear_dims {} {
-	set w .ui[modname]
-        if {[winfo exists $w]} {
-  
-	    if {[winfo exists $w.f.mmf.t]} {
-		destroy $w.f.mmf.t
-	    }
-	    for {set i 0} {$i < [set $this-num-dims]} {incr i} {
-		if {[winfo exists $w.f.mmf.a$i]} {
-		    destroy $w.f.mmf.a$i
-		}
-		unset $this-minDim$i
-		unset $this-maxDim$i
-		unset $this-absmaxDim$i
-	    }
-	    set $this-reset 1
+	    set last [expr [set $this-uis] - 1]
+	    set sizes [concat $sizes [expr [set $this-absmaxDim$last] + 1]]
+	    $w.f.sizes configure -text "Samples: $sizes"
 	}
     }
 
@@ -122,20 +152,32 @@ itcl_class Insight_Filters_ExtractImageFilter {
         wm minsize $w 150 80
         frame $w.f
 	pack $w.f -padx 2 -pady 2 -side top -expand yes
+
+	# Indicate number of samples
+	label $w.f.sizes -text "Samples: "
+	pack $w.f.sizes -side top -anchor nw
+	$this update_sizes
 	
 	frame $w.f.mmf
 	pack $w.f.mmf -padx 2 -pady 2 -side top -expand yes
-	
-	
-	if {[set $this-num-dims] == 0} {
-	    label $w.f.mmf.t -text "Need to Execute to know the number of Dimensions."
-	    pack $w.f.mmf.t
-	} else {
-	    init_dims 
+
+	# Add crop axes
+	for {set i 0} {$i < [set $this-uis]} {incr i} {
+	    make_min_max $i
 	}
 
-	button $w.f.b -text "Execute" -command "$this-c needexecute"
-	pack $w.f.b -side top -expand 1 -fill x
+	# add buttons to increment/decrement resample axes
+	frame $w.f.buttons
+	pack $w.f.buttons -side top -anchor n
+
+	button $w.f.buttons.add -text "Add Axis" -command "$this-c add_axis"
+	button $w.f.buttons.remove -text "Remove Axis" -command "$this-c remove_axis"
+
+	pack $w.f.buttons.add $w.f.buttons.remove -side left -anchor nw -padx 5 -pady 4
+
+        makeSciButtonPanel $w $w $this
+	moveToCursor $w
+
 	pack $w.f -expand 1 -fill x
     }
 }

@@ -31,10 +31,14 @@ itcl_class Insight_DataIO_ImageReaderFloat3D {
     inherit Module
     constructor {config} {
         set name ImageReaderFloat3D
+
+	global $this-filename
+
         set_defaults
     }
 
     method set_defaults {} {
+	set $this-filename "MyImage.mhd"
     }
 
     method ui {} {
