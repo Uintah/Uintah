@@ -492,8 +492,7 @@ void MPMICE::doCCMomExchange(const ProcessorGroup*,
     Material* matl = d_sharedState->getMaterial( m );
     ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
     if(ice_matl){
-//      d_ice->setBC(vel_CC[m],"Velocity",patch);
-      //ICE::setBC(Temp_CC[m],"Temperature",patch);
+      d_ice->setBC(vel_CC[m],"Velocity",patch);
     }
   }
   //__________________________________
@@ -605,6 +604,9 @@ void MPMICE::interpolateNCToCC(const ProcessorGroup*,
 }
 
 // $Log$
+// Revision 1.16  2001/01/17 00:02:04  guilkey
+// MPMICE::doCCMomentumExchange now updates BCs of ICE matls.
+//
 // Revision 1.15  2001/01/15 23:21:54  guilkey
 // Cleaned up CCMomentum exchange, so it now looks more like Todd's.
 // Added effects back to solid material.  Need NodeIterator to be fixed,
