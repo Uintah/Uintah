@@ -581,7 +581,7 @@ itcl_class ViewWindow {
 	set "$this-global-fog" 0
 	set "$this-global-type" Gouraud
 	set "$this-global-debug" 0
-	set "$this-global-clip" 0
+	set "$this-global-clip" 1
 	set "$this-global-cull" 0
 	set "$this-global-dl" 0
 	set "$this-global-movie" 0
@@ -999,7 +999,7 @@ itcl_class ViewWindow {
 	
 	set menun $m.objlist.canvas.frame.menu$objid.menu
 
-	menubutton $m.objlist.canvas.frame.menu$objid -text Shading \
+	menubutton $m.objlist.canvas.frame.menu$objid -text Options \
 		-relief raised -menu $menun
 	menu $menun
 	$menun add checkbutton -label Lighting -variable $this-$objid-light \
@@ -1014,7 +1014,11 @@ itcl_class ViewWindow {
 		-command "$this-c redraw"
 	$menun add checkbutton -label "Display List" -variable $this-$objid-dl\
 		-command "$this-c redraw"
-
+	$menun add separator
+	$menun add radiobutton -label Default -variable $this-$objid-type
+	$menun add radiobutton -label Wire -variable $this-$objid-type
+	$menun add radiobutton -label Flat -variable $this-$objid-type
+	$menun add radiobutton -label Gouraud -variable $this-$objid-type
 	global "$this-$objid-light"
 	global "$this-$objid-fog"
 	global "$this-$objid-type"
@@ -1027,22 +1031,13 @@ itcl_class ViewWindow {
 	set "$this-$objid-light" 1
 	set "$this-$objid-fog" 0
 	set "$this-$objid-debug" 0
-	set "$this-$objid-clip" 0
+	set "$this-$objid-clip" 1
 	set "$this-$objid-cull" 0
 	set "$this-$objid-dl" 0
 
 
-
-
-	set menuvar  $m.objlist.canvas.frame.menu2_$objid
-	set menup [tk_optionMenu $menuvar $this-$objid-type Wire Flat Gouraud Default]
-
-	$menup entryconfigure 0 -command "[$menup entrycget 0 -command] ; $this-c redraw"
-	$menup entryconfigure 1 -command "[$menup entrycget 1 -command] ; $this-c redraw"
-	$menup entryconfigure 2 -command "[$menup entrycget 2 -command] ; $this-c redraw"
-	$menup entryconfigure 3 -command "[$menup entrycget 3 -command] ; $this-c redraw"
 	pack $m.objlist.canvas.frame.objt$objid -side top -anchor w
-	pack $m.objlist.canvas.frame.obj$objid  $m.objlist.canvas.frame.menu$objid $m.objlist.canvas.frame.menu2_$objid -in $m.objlist.canvas.frame.objt$objid -side left -anchor w
+	pack $m.objlist.canvas.frame.obj$objid  $m.objlist.canvas.frame.menu$objid -in $m.objlist.canvas.frame.objt$objid -side left -anchor w
 	#tkwait visibility $m.objlist.canvas.frame.obj$objid
 	update idletasks
 	set width [winfo width $m.objlist.canvas.frame]
@@ -1066,7 +1061,7 @@ itcl_class ViewWindow {
 	set w .ui[modname]
 	set m $frame.f
 	pack $m.objlist.canvas.frame.objt$objid -side top -anchor w
-	pack $m.objlist.canvas.frame.obj$objid  $m.objlist.canvas.frame.menu$objid $m.objlist.canvas.frame.menu2_$objid -in $m.objlist.canvas.frame.objt$objid -side left -anchor w
+	pack $m.objlist.canvas.frame.obj$objid  $m.objlist.canvas.frame.menu$objid -in $m.objlist.canvas.frame.objt$objid -side left -anchor w
     }
     
 
@@ -1988,7 +1983,7 @@ itcl_class EmbeddedViewWindow {
 	set $this-global-fog 0
 	set $this-global-type Gouraud
 	set $this-global-debug 0
-	set $this-global-clip 0
+	set $this-global-clip 1
 	set $this-global-cull 0
 	set $this-global-dl 0
 	set $this-global-movie 0
