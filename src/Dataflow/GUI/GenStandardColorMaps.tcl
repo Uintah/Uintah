@@ -45,8 +45,8 @@ itcl_class SCIRun_Visualization_GenStandardColorMaps {
 	global $this-height
 	set $this-gamma 0
 	set $this-mapType 3
-	set $this-resolution 12
-	set $this-realres 12
+	set $this-resolution 255
+	set $this-realres 255
 	set $this-minRes 12
 	set exposed 0
 	set colorMap {}
