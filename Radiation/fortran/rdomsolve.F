@@ -1,6 +1,6 @@
 #include <Packages/Uintah/CCA/Components/Arches/Radiation/fortran/rdomsolve_fort.h>
 
-      integer i,j,k,l,ii,jj,kk,iii,jjj,kkk
+      integer i,j,k,ii,jj,kk,iii,jjj,kkk
 
       double precision PI,PI1,SIG
 

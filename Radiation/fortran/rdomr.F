@@ -20,7 +20,7 @@ C	  XINTBC,YINTBC,ZINTBC - intensities at 'upstream' cell faces
 C	  XINTFC,YINTFC,ZINTFC - intensities at 'downstream' cell faces
 C***********************************************************************
 
-        double precision AF,PI,PI1,qerrst,SIG,AREAEW
+        double precision PI,PI1,qerrst,SIG,AREAEW
 
         integer negint,I,J,K,L,II,JJ,KK,IST,IEND,JST,JEND,KST,KEND
 	
