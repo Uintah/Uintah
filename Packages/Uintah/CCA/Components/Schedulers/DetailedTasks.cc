@@ -496,6 +496,19 @@ DetailedTasks::createScrublists(bool init_timestep)
 	}
       }
     }
+    for(const Task::Dependency* req = task->getModifies();
+	req != 0; req=req->next){
+      if(req->var->typeDescription()->getType() ==
+	 TypeDescription::ReductionVariable)
+	continue;
+      ASSERTEQ(req->dw, Task::NewDW);
+      // Only scrub if this is not an initialization timestep.
+	// Only scrub if it is not part of the original requires and
+	// This is not an initialization timestep
+      if(!init_timestep && initreqs.find(req->var) == initreqs.end()){
+	newmap[req->var]=dtask;
+      }
+    }
   }
   for(unsigned int i=0;i<localtasks.size();i++){
     DetailedTask* dtask = localtasks[i];
