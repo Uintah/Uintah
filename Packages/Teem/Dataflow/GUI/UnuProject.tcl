@@ -30,7 +30,7 @@ itcl_class Teem_Unu_UnuProject {
         set $this-axis 0
 
         global $this-measure
-        set $this-measure ""
+        set $this-measure 2
 
 
     }
@@ -52,7 +52,22 @@ itcl_class Teem_Unu_UnuProject {
 
         iwidgets::entryfield $w.f.options.axis -labeltext "axis:" -textvariable $this-axis
         pack $w.f.options.axis -side top -expand yes -fill x
-        iwidgets::entryfield $w.f.options.measure -labeltext "measure:" -textvariable $this-measure
+
+	make_labeled_radio $w.f.options.measure \
+	    "Projection Measure"  "" top  $this-measure \
+	    {{"Minimum" 1} \
+		 {"Maximum" 2} \
+		 {"Mean" 3} \
+		 {"Median" 4} \
+		 {"Mode" 5} \
+		 {"Product" 6} \
+		 {"Sum" 7} \
+		 {"L1" 8} \
+		 {"L2" 9} \
+		 {"L-infinity" 10} \
+		 {"Variance" 11} \
+		 {"Standard Deviation" 12}}
+		 
         pack $w.f.options.measure -side top -expand yes -fill x
 
 	button $w.f.b -text "Execute" -command "$this-c needexecute"
