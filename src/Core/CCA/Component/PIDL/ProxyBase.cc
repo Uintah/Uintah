@@ -33,24 +33,19 @@
 #include <iostream>
 #include <Core/CCA/tools/sidl/uuid_wrapper.h>
 
-#if HAVE_MPI || HAVE_MPICH
-#define TRANSFER_UUID 1
-#include <mpi.h>
-#endif
-
 using namespace SCIRun;
 
 ProxyBase::ProxyBase() 
-: proxy_uuid("NONE") { }
+: proxy_uuid("NONENONENONENONENONENONENONENONENONE") { }
 
 ProxyBase::ProxyBase(const Reference& ref)
-: proxy_uuid("NONE")
+: proxy_uuid("NONENONENONENONENONENONENONENONENONE")
 { 
   rm.insertReference(ref);
 }
 
 ProxyBase::ProxyBase(const ReferenceMgr& refM)
-: proxy_uuid("NONE")
+: proxy_uuid("NONENONENONENONENONENONENONENONENONE")
 { 
   rm = refM;
 }
@@ -104,13 +99,15 @@ ReferenceMgr* ProxyBase::_proxyGetReferenceMgr()
 
 ::std::string ProxyBase::getProxyUUID()
 {
-  if(proxy_uuid == "NONE") {
+  if(proxy_uuid == "NONENONENONENONENONENONENONENONENONE") {
     if(rm.localRank == 0) {
-//    proxy_uuid = getUUID(); 
+      proxy_uuid = getUUID(); 
     }
-#ifdef TRANSFER_UUID
-//    MPI_Bcast(const_cast<char*>(proxy_uuid.c_str()),64,MPI_CHAR,0,MPI_COMM_WORLD);
-#endif
+    if(rm.localSize > 1) { 
+      // Exchange component ID among all parallel processes
+      std::cout << rm.localRank << "='" << proxy_uuid.c_str() << "'=" << proxy_uuid.size() << "\n";
+      (rm.intracomm)->broadcast(0,const_cast<char*>(proxy_uuid.c_str()),36);
+    }
   }
   return proxy_uuid;
 }

@@ -32,8 +32,8 @@ using namespace SCIRun;
 
 ReferenceMgr::ReferenceMgr()
 {
-  //modified by Keming
   localSize=1; 
+  localRank=0;
 }
 
 ReferenceMgr::ReferenceMgr(int rank, int size)
@@ -49,12 +49,13 @@ ReferenceMgr& ReferenceMgr::operator=(const ReferenceMgr& copy)
   }
   localSize = copy.localSize;
   localRank = copy.localRank;
+  intracomm = copy.intracomm;
   return *this;
 }
 
 ReferenceMgr::ReferenceMgr(const ReferenceMgr& copy)
   :localSize(copy.localSize),localRank(copy.localRank),
-   d_ref(copy.d_ref) 
+   d_ref(copy.d_ref), intracomm(copy.intracomm) 
 {
   for(unsigned int i=0; i < d_ref.size(); i++) {
     d_ref[i].chan = (copy.d_ref[i].chan)->SPFactory(true);

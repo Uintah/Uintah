@@ -36,6 +36,7 @@
 #define Component_PIDL_ReferenceMgr_h
 
 #include <Core/CCA/Component/PIDL/Reference.h>
+#include <Core/CCA/Component/Comm/Intra/IntraComm.h>
 #include <vector>
 
 namespace SCIRun {
@@ -121,6 +122,12 @@ DESCRIPTION
     //////////
     // A vector of reference to the remote objects.
     refList d_ref;
+
+    /////////
+    // An object used to facilitate intra-component communication
+    // (parallel component case)
+    IntraComm* intracomm;
+
   };
 } // End namespace SCIRun
 
