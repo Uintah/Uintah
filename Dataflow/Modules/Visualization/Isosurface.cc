@@ -166,7 +166,6 @@ void Isosurface::execute()
   
   if ( field->generation != last_generation ) {
     // new field
-    cerr << "new field\n";
     new_field( field );
     last_generation = field->generation;
     if ( !extract_from_new_field.get() )
@@ -180,7 +179,6 @@ void Isosurface::execute()
   have_ColorMap=inColorMap->get(cmap);
   
   iso_value = gui_iso_value.get();
-  cerr << "isovalue: iso = " << iso_value << endl; 
   switch ( use_algorithm.get() ) {
   case 0:  // Marching Cubes
     // for now, use a trivial MC
@@ -191,21 +189,7 @@ void Isosurface::execute()
 	error( "can not work with this field\n");
 	return;
       }
-      cerr << "mc alg. found\n";
       mc_alg->set_field( field.get_rep() );
-
-//       if ( type == "TetVol<double>" ) {
-// 	mc_alg = make_tet_mc_alg( this, 
-// 			      dynamic_cast<TetVol<double> *>(field.get_rep()));
-//       }
-//       if ( type == "LatticeVol<double>" ) {
-// 	mc_alg = make_lattice_mc_alg( this, 
-// 			 dynamic_cast<LatticeVol<double> *>(field.get_rep()));
-//       }
-//       else {
-// 	error( "can not work with this field\n");
-// 	return;
-//       }
     }
     // mc_alg should be set now
     surface = mc_alg->search( iso_value );
@@ -213,16 +197,17 @@ void Isosurface::execute()
     break;
   case 1:  // Noise
     error("Noise not implemented\n");
+    surface = 0;
     break;
   case 2:  // View Dependent
     error("View dependent not implemented\n");
+    surface = 0;
     break;
   default: // Error
     error("Unknow Algorithm requested\n");
     return;
     break;
   }
-
 
   send_results();
 }
@@ -303,6 +288,13 @@ Isosurface::new_field( FieldHandle &field )
   }
   
   // reset the GUI
+
+  // 1: field info
+  ostringstream info;
+  info << id << " set_info " << type << " " << field->generation;
+  TCL::execute(info.str().c_str());
+
+  // 2: min/max
   if(minmax.first != prev_min || minmax.second != prev_max){
     ostringstream str;
     str << id << " set_minmax " << minmax.first << " " << minmax.second;
