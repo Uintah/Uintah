@@ -127,7 +127,7 @@ void ComputeCurrent::execute() {
     tris->get_center(p0, nodes[0]);
     tris->get_center(p1, nodes[1]);
     tris->get_center(p2, nodes[2]);
-    Vector normal(Cross(p2-p0,p2-p1));
+    Vector normal(Cross(p2-p1,p2-p0));
     normal.normalize();
     TetVolMesh::Cell::index_type tet;
     if (!efield->get_typed_mesh()->locate(tet, center)) {
