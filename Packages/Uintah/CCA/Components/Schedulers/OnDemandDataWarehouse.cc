@@ -646,7 +646,7 @@ OnDemandDataWarehouse::allocate(ParticleVariableBase& var,
 
 void
 OnDemandDataWarehouse::put(const ParticleVariableBase& var,
-			   const VarLabel* label)
+			   const VarLabel* label, bool replace /*= false*/)
 {
    ASSERT(!d_finalized);
 
@@ -657,7 +657,7 @@ OnDemandDataWarehouse::put(const ParticleVariableBase& var,
    int matlIndex = pset->getMatlIndex();
 
    // Error checking
-   if(d_particleDB.exists(label, matlIndex, patch))
+   if(!replace && d_particleDB.exists(label, matlIndex, patch))
       throw InternalError("Variable already exists: "+label->getName());
 
 #if DAV_DEBUG
@@ -751,7 +751,8 @@ OnDemandDataWarehouse::allocate(NCVariableBase& var,
 void
 OnDemandDataWarehouse::put(const NCVariableBase& var,
 			   const VarLabel* label,
-			   int matlIndex, const Patch* patch)
+			   int matlIndex, const Patch* patch,
+			   bool replace /*= false*/)
 {
   d_lock.writeLock();
    ASSERT(!d_finalized);
@@ -761,7 +762,7 @@ OnDemandDataWarehouse::put(const NCVariableBase& var,
        << *patch << " into DW: " << d_generation << "\n";
 #endif
    // Error checking
-   if(d_ncDB.exists(label, matlIndex, patch))
+   if(!replace && d_ncDB.exists(label, matlIndex, patch))
       throw InternalError("put: NC variable already exists: " +
 			  label->getName());
 
@@ -785,13 +786,14 @@ OnDemandDataWarehouse::get(PerPatchBase& var, const VarLabel* label,
 void
 OnDemandDataWarehouse::put(const PerPatchBase& var,
 			   const VarLabel* label,
-			   int matlIndex, const Patch* patch)
+			   int matlIndex, const Patch* patch,
+			   bool replace /*= false*/)
 {
   d_lock.writeLock();
    ASSERT(!d_finalized);
 
    // Error checking
-   if(d_perpatchDB.exists(label, matlIndex, patch))
+   if(!replace && d_perpatchDB.exists(label, matlIndex, patch))
      throw InternalError("PerPatch variable already exists: "+label->getName());
 
    // Put it in the database
@@ -894,12 +896,13 @@ OnDemandDataWarehouse::get(CCVariableBase& var, const VarLabel* label,
 
 void
 OnDemandDataWarehouse::put(const CCVariableBase& var, const VarLabel* label,
-			   int matlIndex, const Patch* patch )
+			   int matlIndex, const Patch* patch,
+			   bool replace /*= false*/)
 {
   d_lock.writeLock();
    ASSERT(!d_finalized);
    // Error checking
-   if(d_ccDB.exists(label, matlIndex, patch))
+   if(!replace && d_ccDB.exists(label, matlIndex, patch))
       throw InternalError("CC variable already exists: "+label->getName());
 
    IntVector low, high, size;
@@ -1013,13 +1016,14 @@ OnDemandDataWarehouse::allocate(SFCXVariableBase& var,
 void
 OnDemandDataWarehouse::put(const SFCXVariableBase& var,
 			   const VarLabel* label,
-			   int matlIndex, const Patch* patch)
+			   int matlIndex, const Patch* patch,
+			   bool replace /*= false*/)
 {
   d_lock.writeLock();
    ASSERT(!d_finalized);
 
    // Error checking
-   if(d_sfcxDB.exists(label, matlIndex, patch))
+   if(!replace && d_sfcxDB.exists(label, matlIndex, patch))
       throw InternalError("SFCX variable already exists: "+label->getName());
 
    IntVector low, high, size;
@@ -1131,13 +1135,14 @@ OnDemandDataWarehouse::allocate(SFCYVariableBase& var,
 void
 OnDemandDataWarehouse::put(const SFCYVariableBase& var,
 			   const VarLabel* label,
-			   int matlIndex, const Patch* patch)
+			   int matlIndex, const Patch* patch,
+			   bool replace /*= false*/)
 {
   d_lock.writeLock();
    ASSERT(!d_finalized);
 
    // Error checking
-   if(d_sfcyDB.exists(label, matlIndex, patch))
+   if(!replace && d_sfcyDB.exists(label, matlIndex, patch))
       throw InternalError("SFCY variable already exists: "+label->getName());
 
    IntVector low, high, size;
@@ -1249,10 +1254,15 @@ OnDemandDataWarehouse::allocate(SFCZVariableBase& var,
 void
 OnDemandDataWarehouse::put(const SFCZVariableBase& var,
 			   const VarLabel* label,
-			   int matlIndex, const Patch* patch)
+			   int matlIndex, const Patch* patch,
+			   bool replace /*= false*/)
 {
   d_lock.writeLock();
    ASSERT(!d_finalized);
+
+   // Error checking
+   if(!replace && d_sfczDB.exists(label, matlIndex, patch))
+      throw InternalError("SFCZ variable already exists: "+label->getName());
 
    IntVector low, high, size;
    var.getSizes(low, high, size);
