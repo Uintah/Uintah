@@ -70,9 +70,16 @@ void DataArchiver::problemSetup(const ProblemSpecP& params)
 {
    ProblemSpecP p = params->findBlock("DataArchiver");
    p->require("filebase", d_filebase);
-   if(!p->get("outputInterval", d_outputInterval))
-      d_outputInterval = 1.0;
+   d_outputInterval = 0;
+   if(!p->get("outputTimestepInterval", d_outputTimestepInterval))
+     d_outputTimestepInterval = 0;
+   if(!p->get("outputInterval", d_outputInterval)
+      && d_outputTimestepInterval == 0)
+     d_outputInterval = 1.0; // default
 
+   if (d_outputInterval != 0.0 && d_outputTimestepInterval != 0)
+     throw ProblemSetupException("Use <outputInterval> or <outputTimestepInterval>, not both");
+   
    string defaultCompressionMode = "";
    if (p->get("compression", defaultCompressionMode)) {
      VarLabel::setDefaultCompressionMode(defaultCompressionMode);
@@ -104,6 +111,7 @@ void DataArchiver::problemSetup(const ProblemSpecP& params)
    }
    
    d_checkpointInterval = 0.0;
+   d_checkpointTimestepInterval = 0;
    d_checkpointCycle = 2; /* 2 is the smallest number that is safe
 			     (always keeping an older copy for backup) */
    ProblemSpecP checkpoint = p->findBlock("checkpoint");
@@ -113,21 +121,29 @@ void DataArchiver::problemSetup(const ProblemSpecP& params)
       string attrib = attributes["interval"];
       if (attrib != "")
 	d_checkpointInterval = atof(attrib.c_str());
+      attrib = attributes["timestepInterval"];
+      if (attrib != "")
+	d_checkpointTimestepInterval = atof(attrib.c_str());
       attrib = attributes["cycle"];
       if (attrib != "")
 	d_checkpointCycle = atoi(attrib.c_str());
    }
+   if (d_checkpointInterval != 0.0 && d_checkpointTimestepInterval != 0)
+     throw ProblemSetupException("Use <checkpoint interval=...> or <checkpoint timestepInterval=...>, not both");
+ 
    
    d_currentTimestep = 0;
    d_lastTimestepLocation = "invalid";
    d_wasOutputTimestep = false;
 
-   if (d_outputInterval == 0.0 && d_checkpointInterval == 0.0) 
+   if (d_outputInterval == 0.0 && d_outputTimestepInterval == 0 && d_checkpointInterval == 0.0 && d_checkpointTimestepInterval == 0) 
 	return;
 
    d_nextOutputTime=0.0;
+   d_nextOutputTimestep=0;
    d_nextCheckpointTime=d_checkpointInterval; // no need to checkpoint t=0
-
+   d_nextCheckpointTimestep=d_checkpointTimestepInterval;
+   
    if(Parallel::usingMPI()){
      // See how many shared filesystems that we have
      double start=Time::currentSeconds();
@@ -257,7 +273,7 @@ void DataArchiver::problemSetup(const ProblemSpecP& params)
       out << params->getNode()->getOwnerDocument() << endl;
       createIndexXML(d_dir);
       
-      if (d_checkpointInterval != 0.0) {
+      if (d_checkpointInterval != 0.0 || d_checkpointTimestepInterval != 0) {
 	 d_checkpointsDir = d_dir.createSubdir("checkpoints");
 	 createIndexXML(d_checkpointsDir);
       }
@@ -305,10 +321,14 @@ void DataArchiver::restartSetup(Dir& restartFromDir, int startTimestep,
    
    if (d_outputInterval > 0)
       d_nextOutputTime = d_outputInterval * ceil(time / d_outputInterval);
-
+   else if (d_outputTimestepInterval > 0)
+      d_nextOutputTimestep = d_currentTimestep + d_outputTimestepInterval;
+   
    if (d_checkpointInterval > 0)
       d_nextCheckpointTime = d_checkpointInterval *
 	 ceil(time / d_checkpointInterval);
+   else if (d_checkpointTimestepInterval > 0)
+      d_nextCheckpointTimestep = d_currentTimestep + d_checkpointTimestepInterval;
 }
 
 void DataArchiver::copySection(Dir& fromDir, string section)
@@ -511,13 +531,13 @@ void DataArchiver::finalizeTimestep(double time, double delt,
     // timestep and will need to change if the TaskGraph becomes dynamic. 
     wereSavesAndCheckpointsInitialized = true;
     
-    if (d_outputInterval != 0.0) {
+    if (d_outputInterval != 0.0 || d_outputTimestepInterval != 0) {
       initSaveLabels(sched);
       indexAddGlobals(); /* add saved global (reduction)
 			    variables to index.xml */
     }
 
-    if (d_checkpointInterval != 0)
+    if (d_checkpointInterval != 0.0 || d_checkpointTimestepInterval != 0)
       initCheckpoints(sched);
   }
   
@@ -584,8 +604,22 @@ void DataArchiver::beginOutputTimestep(double time, double delt,
     else
       d_wasOutputTimestep = false;
   }
+  else if (d_outputTimestepInterval != 0 && delt != 0) {
+    if(d_currentTimestep >= d_nextOutputTimestep) {
+      // output timestep
+      d_wasOutputTimestep = true;
+      outputTimestep(d_dir, d_saveLabels, time, delt, level,
+		     &d_lastTimestepLocation);
+      while (d_currentTimestep >= d_nextOutputTimestep)
+	d_nextOutputTimestep+=d_outputTimestepInterval;
+    }
+    else
+      d_wasOutputTimestep = false;
+  }
   
-  if (d_checkpointInterval != 0 && d_currentTime >= d_nextCheckpointTime) {
+  if ((d_checkpointInterval != 0.0 && d_currentTime >= d_nextCheckpointTime) ||
+      (d_checkpointTimestepInterval != 0 &&
+       d_currentTimestep >= d_nextCheckpointTimestep)) {
     d_wasCheckpointTimestep=true;
     string timestepDir;
     outputTimestep(d_checkpointsDir, d_checkpointLabels, time, delt,
@@ -623,8 +657,14 @@ void DataArchiver::beginOutputTimestep(double time, double delt,
       }
       d_checkpointTimestepDirs.pop_front();
     }
-    while (d_currentTime >= d_nextCheckpointTime)
-      d_nextCheckpointTime += d_checkpointInterval;
+    if (d_checkpointInterval != 0.0) {
+      while (d_currentTime >= d_nextCheckpointTime)
+	d_nextCheckpointTime += d_checkpointInterval;
+    }
+    else if (d_checkpointTimestepInterval != 0) {
+      while (d_currentTimestep >= d_nextCheckpointTimestep)
+	d_nextCheckpointTimestep += d_checkpointTimestepInterval;
+    }
   } else {
     d_wasCheckpointTimestep=false;
   }
@@ -1355,7 +1395,7 @@ void DataArchiver::SaveItem::setMaterials(const ConsecutiveRangeSet& matls,
   }
 }
 
-bool DataArchiver::need_recompile(double time, double dt ,
+bool DataArchiver::need_recompile(double time, double dt,
 				  const LevelP& level )
 {
   d_currentTime=time+dt;
@@ -1363,7 +1403,8 @@ bool DataArchiver::need_recompile(double time, double dt ,
   d_currentTimestep++;
   bool recompile=false;
   bool do_output=false;
-  if (d_outputInterval != 0 && time+dt >= d_nextOutputTime){
+  if ((d_outputInterval != 0 && time+dt >= d_nextOutputTime) ||
+      (d_outputTimestepInterval != 0 && d_currentTimestep+1 > d_nextOutputTimestep)){
     do_output=true;
     if(!d_wasOutputTimestep)
       recompile=true;
@@ -1371,7 +1412,8 @@ bool DataArchiver::need_recompile(double time, double dt ,
     if(d_wasOutputTimestep)
       recompile=true;
   }
-  if (d_checkpointInterval != 0 && time+dt >= d_nextCheckpointTime) {
+  if ((d_checkpointInterval != 0 && time+dt >= d_nextCheckpointTime) ||
+      (d_checkpointTimestepInterval != 0 && d_currentTimestep+1 > d_nextCheckpointTimestep)) {
     do_output=true;
     if(!d_wasCheckpointTimestep)
       recompile=true;
