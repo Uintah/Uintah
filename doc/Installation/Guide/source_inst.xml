@@ -49,20 +49,21 @@ third party software, sample data sets, and documentation.</para>
 
 <note>
 <para>If building &sr; for the Itanium architecture the GNU compiler
-collection (gcc) must be used.  Also, the values of the environment
+collection (gcc) must be used.  Also, before building &sr; and its third party libraries, the values of the environment
 variables <envar>CFLAGS</envar> and <envar>CXXFFLAGS</envar> must be
-set as follows before building &sr; and its third party libraries:
+set as follows :
+for csh-type shells 
 <programlisting>
 setenv CFLAGS fPIC
 setenv CXXFLAGS fPIC
 </programlisting>
-for csh-type shells or
+for sh-type shells
 <programlisting>
 CFLAGS=fPIC
 CXXFLAGS=fPIC
 export CFLAGS CXXFLAGS
 </programlisting>
-for sh-type shells,
+
 </para>
 </note>
 </section>
@@ -115,7 +116,7 @@ Unpack the &sr; sources:
 <literallayout class="monospaced">
 gunzip -c &sr;.<replaceable>x.x.x</replaceable>.tar.gz | tar xf -
 </literallayout>
-This will create a directory called <filename>&sr;</filename>. Below
+This will create a directory called <filename>&sr;</filename>. Below,
 the term <quote>&sr;</quote> is used to refer to this
 directory.
 </para>
@@ -125,10 +126,10 @@ directory.
 <para>
 Unpack the compressed package sources into
 <filename>&sr;/src/Packages</filename>, for example:
+to unpack the BioPSE package,
 <literallayout class="monospaced">
 gunzip -c BioPSE.PKG.<replaceable>x.x.x</replaceable>.tar.gz | (cd &sr;/src/Packages &amp;&amp; tar xf -)
 </literallayout>
-to unpack the BioPSE package.
 </para>
 </listitem>
 
@@ -138,8 +139,7 @@ Unpack the sample datasets:
 <literallayout class="monospaced">
 gunzip -c DataSets.<replaceable>x.x.x</replaceable>.tar.gz | tar xf -
 </literallayout>
-This will create the directory <filename>&sr;Data</filename>.  You
-may want to move this directory to a location accessible to all &sr;
+This will create the directory <filename>&sr;Data</filename>.  The directory can be moved to a location accessible to all &sr;
 users.
 </para>
 </listitem>
@@ -161,8 +161,7 @@ Unpack the documentation:
 <literallayout class="monospaced">
 gunzip -c docs.<replaceable>x.x.x</replaceable>.tar.gz | tar xf -
 </literallayout>
-This will create the directory <filename>&sr;Docs</filename>.  You
-may want to move this directory to a location accessible to all &sr;
+This will create the directory <filename>&sr;Docs</filename>. This directory can be moved to a location accessible to all &sr;
 users.  Point a browser at
 <filename>&sr;Docs/doc/index.html</filename> to access &sr;'s online
 documentation.
@@ -176,7 +175,7 @@ documentation.
 method for putting the downloaded &sr; sources under control of the
 CVS version control system.  This is useful if the &sr; distribution
 will be used for development.  This is <emphasis>not</emphasis> a
-requirement for installing &sr; though!</para>
+requirement for installing &sr;</para>
 </note>
 
 </section>
@@ -211,8 +210,7 @@ script invocation requires a single argument:
 <literallayout class="monospaced">
 python install <replaceable>dir</replaceable>
 </literallayout>
-where <replaceable>dir</replaceable> is the directory where
-third-party software will be installed.
+where <replaceable>dir</replaceable> is the third-party installation directory.
 </para>
 
 <para>
@@ -234,8 +232,8 @@ or
 python install /usr/local/&sr;/Third_Party 32 1
 </literallayout>
 When finished, the installation script displays the complete path
-of the third-party software installation directory&mdash;please make note of
-this value&mdash;it is needed later.
+of the third-party software installation directory. Please make note of
+this value, it is needed later.
 </para>
 </listitem>
 
@@ -259,11 +257,10 @@ will create the installation under:
 </para>
 
 <para>
-All or part of the third-party software may be reinstalled by repeating
-the install command line exactly.  The script will ask for a
+All, or part, of the third-party software may be reinstalled by repeating
+the install command line.  The script will ask for a
 <userinput>y</userinput> or <userinput>n</userinput> response to each
-tarball in the distribution.  Answer <userinput>y</userinput> to those
-tarballs to reinstall.
+tarball in the distribution.  Answer <userinput>y</userinput> to reinstall.
 </para>
 
 </section>
@@ -286,7 +283,7 @@ cd &sr;/<replaceable>dir</replaceable>
 ../src/configure --with-thirdparty=<replaceable>third-party-dir</replaceable> \
 --enable-package="<replaceable>package-name1 package-name2 &hellip;</replaceable>"
 </literallayout>
-in which case &sr; will be built in the directory
+in which case &sr; is built in the directory
 <filename>&sr;/<replaceable>dir</replaceable></filename> (where
 <replaceable>dir</replaceable> is a directory name).  Above,
 <replaceable>third-party-dir</replaceable> is replaced by the name of
@@ -317,8 +314,7 @@ For example:
 </literallayout>
 </para>
 <para>
-There are many options to the configure command in addition to those
-already mentioned.  The <command>configure --help</command> command
+There are options to the configure command that have not been mentioned. The <command>configure --help</command> command
 lists them all.
 </para>
 
@@ -326,12 +322,12 @@ lists them all.
 
 <listitem>
 <para>
-Run (GNU) make from the directory used previously when running
+Run (GNU) make from the previously used directory when running
 configure (e.g. <filename>&sr;/linux</filename>,
 <filename>&sr;/sgi32</filename>, or
 <filename>&sr;/sgi64</filename>).  Note that the
 <quote>configure</quote> directory will be called
-<replaceable>build_dir</replaceable> from now on.
+<replaceable>build_dir</replaceable> from this point on.
 <literallayout class="monospaced">
 cd <replaceable>build_dir</replaceable>
 make
@@ -366,16 +362,16 @@ will contain the <filename>scirun</filename> executable.
 
 <tip>
 <para>
-It is possible to build &sr; for multiple machine architectures, say,
+It is possible to build &sr; for multiple machine architectures. For instance, 
 a Linux version and 32 bit and 64 bit Irix versions.  If the
 <filename>&sr;</filename> directory resides on a volume shared by all
-machines then do this:
+machines then do the following:
 <literallayout class="monospaced">
 mkdir &sr;/linux
 mkdir &sr;/sgi32
 mkdir &sr;/sgi64
 </literallayout>
-Then, after logging onto the Linux machine:
+After logging onto the Linux machine:
 <literallayout class="monospaced">
 cd &sr;/linux
 ../src/configure <replaceable>options</replaceable>

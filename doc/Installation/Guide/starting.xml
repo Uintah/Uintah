@@ -19,13 +19,13 @@
 <title>Starting &sr;</title>
 
 <para>
-If installed from its rpm you can test &sr;'s installation by
+If installed from its rpm, &sr;'s installation can be tested by
 typing <command>/usr/local/&sr;/bin/scirun</command>.
 </para>
 
 <para>
-If  built from its source code tarballs then you can test
-&sr;'s installation by <command>cd</command>ing to its build directory
+If  built from its source code tarballs, 
+&sr;'s installation can be tested by <command>cd</command>ing to its build directory
 and typing <command>./scirun</command>.
 </para>
 
@@ -35,7 +35,7 @@ After starting &sr;, its network editor window and
 </para>
 
 <para>
-If the window does not appear note any displayed errors and see <xref
+If the window does not appear, note any displayed errors and see <xref
 endterm="title.help" linkend="sec.help"/>.
 </para>
 

@@ -54,7 +54,7 @@ code distribution.
 <listitem>
 <para>
 &sr; only supports the uniprocessor build of <acronym>PETSc</acronym>.
-This is because &sr; assumes a shared memory architecture while
+This is because &sr; assumes a shared memory architecture, while
 multi-processor <acronym>PETSc</acronym> assumes a distributed memory
 architecture.
 </para>
@@ -163,11 +163,11 @@ export PETSC_ARCH
 </title>
 
 <para>
-Because <acronym>PETSc</acronym> depends on <acronym>BLAS</acronym>
-and <acronym>LAPACK</acronym> they must be installed before installing
+<acronym>PETSc</acronym> depends on <acronym>BLAS</acronym>
+and <acronym>LAPACK</acronym>, so they must be installed before installing
 <acronym>PETSc</acronym>.  A vendor version of <acronym>BLAS</acronym>
 is recommended.  <acronym>BLAS</acronym> and <acronym>LAPACK</acronym>
-may already be installed.  Check with your system administrator.
+may already be installed.  Check with the system administrator.
 <link linkend="sec.petsc_inst">Skip</link>
 this section if <acronym>BLAS</acronym> and <acronym>LAPACK</acronym>
 are installed.
@@ -200,7 +200,7 @@ and
 </literallayout>
 </para>
 <para>
-Become the root user:
+To become the root user:
 <literallayout class="monospaced">
 su -
 </literallayout>
@@ -246,7 +246,7 @@ Build <acronym>BLAS</acronym>/<acronym>LAPACK</acronym>:
 cd fblaslapack
 make
 </literallayout>
-The creates libraries <filename>libfblas.a</filename> and
+This creates libraries <filename>libfblas.a</filename> and
 <filename>liblapack.a</filename> in directory
 <filename>fblaslapack</filename>.
 </para>
@@ -265,7 +265,7 @@ Follow these steps to build <acronym>PETSc</acronym>:
 <orderedlist>
 <listitem>
 <para>
-Change your working directory to the petsc directory:
+Change the working directory to the petsc directory:
 <literallayout class="monospaced">
 cd ${PETSC_DIR}
 </literallayout>
@@ -292,7 +292,7 @@ follows:
 <para>
 If using vendor supplied <acronym>BLAS</acronym>/
 <acronym>LAPACK</acronym> libraries or if using 
-the <acronym>RPM</acronym> installed libraries then:
+the <acronym>RPM</acronym> installed libraries:
 <literallayout class="monospaced">
 BLASLAPACK_LIB = -llapack -lblas
 </literallayout>
@@ -301,7 +301,7 @@ BLASLAPACK_LIB = -llapack -lblas
 <listitem>
 <para>
 If using the source <acronym>BLAS</acronym>/<acronym>LAPACK</acronym>
-distribution then:
+distribution:
 <literallayout class="monospaced">
 BLASLAPACK_LIB = -L <replaceable>path-to-fblaslapack</replaceable> -lflapack -lfblas
 </literallayout>
@@ -402,7 +402,7 @@ Not needed if using a vendor supplied library or if the
 <section>
 <title>The SolveMatrix Module</title>
 
-<para>When &sr; is built with <acronym>PETSc</acronym> support the
+<para>When &sr; is built with <acronym>PETSc</acronym> support, the
 SolveMatrix module lets the user choose from one of 12
 <acronym>PETSc</acronym> solvers.</para>
 
