@@ -44,12 +44,12 @@ extern "C" Module* make_MatrixSelectVector(const clString& id)
 
 MatrixSelectVector::MatrixSelectVector(const clString& id)
 : Module("MatrixSelectVector", id, Filter),
-  row_("row_", id, this),
-  row_max_("row_max_", id, this),
-  col_("col_", id, this),
-  col_max_("col_max_", id, this),
-  row_or_col_("row_or_col_", id, this),
-  animate_("animate_", id, this)
+  row_("row", id, this),
+  row_max_("row_max", id, this),
+  col_("col", id, this),
+  col_max_("col_max", id, this),
+  row_or_col_("row_or_col", id, this),
+  animate_("animate", id, this)
 {
   // Create the input port
   imat_=new MatrixIPort(this, "Matrix", MatrixIPort::Atomic);
@@ -158,7 +158,7 @@ void MatrixSelectVector::tcl_command(TCLArgs& args, void* userdata)
     args.error("MatrixSelectVector needs a minor command");
     return;
   }
-  if (args[1] == "stop_") stop_=1;
+  if (args[1] == "stop") stop_=1;
   else Module::tcl_command(args, userdata);
 }
 } // End namespace SCIRun
