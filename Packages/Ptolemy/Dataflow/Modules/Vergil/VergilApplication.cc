@@ -57,23 +57,27 @@ public:
     // virtual execute function
     virtual void execute();
 
+protected:
+    GuiString filename_;
+
 private:
     JavaVM *jvm;
-    std::string *defaultConfig;
-    std::string *defaultModel;
+    std::string defaultConfig;
+    std::string defaultModel;
+    std::string file;
 };
 
 DECLARE_MAKER(VergilApplication)
-VergilApplication::VergilApplication(GuiContext* ctx) :
-    Module("VergilApplication", ctx, Source, "Vergil", "Ptolemy")
+VergilApplication::VergilApplication(GuiContext* ctx)
+    : Module("VergilApplication", ctx, Source, "Vergil", "Ptolemy"), filename_(ctx->subVar("filename"))
 {
     std::cerr << "VergilApplication::VergilApplication" << std::endl;
     jvm = JNIUtil::getJavaVM();
     ASSERT(jvm != 0);
     // hardcoded for now
     std::string path(PTOLEMY_PATH);
-    defaultConfig = new std::string(path + "/ptolemy/configs");
-    defaultModel = new std::string(path + "/ptolemy/moml/demo/modulation.xml");
+    defaultConfig = path + "/ptolemy/configs";
+    defaultModel = path + "/ptolemy/moml/demo/modulation.xml";
 }
 
 VergilApplication::~VergilApplication()
@@ -88,17 +92,22 @@ void VergilApplication::execute()
     std::cerr << "VergilApplication::execute" << std::endl;
 
     try {
-	// use defaults for now
-	JNIUtil::getVergilApplication(*defaultConfig, *defaultModel);
+        file = filename_.get();
+        // use defaults if a file name was not set
+        if (file.empty()) {
+            JNIUtil::getVergilApplication(defaultConfig, defaultModel);
+        } else {
+            JNIUtil::getVergilApplication(defaultConfig, file);
+        }
     }
     catch (const Exception& e) {
-	std::cerr << "Caught exception:\n";
-	std::cerr << e.message() << std::endl;
-	abort();
+        std::cerr << "Caught exception:\n";
+        std::cerr << e.message() << std::endl;
+        abort();
     }
     catch (...) {
-	std::cerr << "Caught unexpected exception!\n";
-	abort();
+        std::cerr << "Caught unexpected exception!\n";
+        abort();
     }
 }
 
