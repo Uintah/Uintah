@@ -4,7 +4,13 @@
 
 if grep -q Packages/Teem __OBJ_DIR__/configVars.mk
 then
-__OBJ_DIR__/scirun __SRC_DIR__/Packages/Teem/nets/PowerApps/BioTensor.app $1
+   # Just loading the needed packages.
+   export LOAD_PACKAGE=SCIRun,Teem
+
+  __OBJ_DIR__/scirun __SRC_DIR__/Packages/Teem/nets/PowerApps/BioTensor.app $1
 else
-echo "Please build the Teem Package before to run BioTensor"
+  echo "Your scirun was not compiled with the Teem Package.  Please"
+  echo "reconfigure by adding 'Teem' to the --enable-package='package list'" 
+  echo "argument to configure and then run gmake.  This will allow you to"
+  echo "run BioTensor."
 fi
