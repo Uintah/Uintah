@@ -14,8 +14,10 @@
 #ifndef Geometry_IntVector_h
 #define Geometry_IntVector_h
 
+#include <iosfwd>
+
 namespace SCICore {
-namespace Geometry {
+  namespace Geometry {
     class IntVector {
     public:
 	inline IntVector() {
@@ -70,11 +72,16 @@ namespace Geometry {
 	int d_x, d_y, d_z;
     };
 
-} // End namespace Geometry
+  } // End namespace Geometry
 } // End namespace SCICore
+
+std::ostream& operator<<(std::ostream&, const SCICore::Geometry::IntVector&);
 
 //
 // $Log$
+// Revision 1.2  2000/04/13 06:48:38  sparker
+// Implemented more of IntVector class
+//
 // Revision 1.1  2000/04/12 22:55:59  sparker
 // Added IntVector (a vector of you-guess-what)
 // Added explicit ctors from point to vector and vice-versa
