@@ -36,7 +36,9 @@ template class GenericWriter<MatrixHandle>;
 
 class MatrixWriter : public GenericWriter<MatrixHandle> {
 public:
+  GuiInt split_;
   MatrixWriter(const string& id);
+  virtual void execute();
 };
 
 
@@ -46,9 +48,50 @@ extern "C" Module* make_MatrixWriter(const string& id) {
 
 
 MatrixWriter::MatrixWriter(const string& id)
-  : GenericWriter<MatrixHandle>("MatrixWriter", id, "DataIO", "SCIRun")
+  : GenericWriter<MatrixHandle>("MatrixWriter", id, "DataIO", "SCIRun"),
+    split_("split", id, this)
 {
 }
 
+void MatrixWriter::execute()
+{
+  // Read data from the input port
+  SimpleIPort<MatrixHandle> *inport = 
+    (SimpleIPort<MatrixHandle> *)get_iport("Input Data");
+
+  MatrixHandle handle;
+  if(!inport->get(handle) || !handle.get_rep())
+  {
+    remark("No data on input port.");
+    return;
+  }
+
+  // If no name is provided, return.
+  const string fn(filename_.get());
+  if (fn == "")
+  {
+    warning("No filename specified.");
+    return;
+  }
+   
+  // Open up the output stream
+  Piostream* stream;
+  string ft(filetype_.get());
+  if (ft == "Binary")
+  {
+    stream = scinew BinaryPiostream(fn, Piostream::Write);
+  }
+  else
+  {
+    stream = scinew TextPiostream(fn, Piostream::Write);
+  }
+
+  // Check whether the file should be split into header and data
+  handle->set_raw(split_.get());
+  
+  // Write the file
+  Pio(*stream, handle);
+  delete stream;
+}
 
 } // End namespace SCIRun
