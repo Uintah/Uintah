@@ -9,7 +9,7 @@ itcl_class IsoSurface {
     }
     method set_defaults {} {
 	global $this-have_seedpoint
-	set $this-have_seedpoint 1
+	set $this-have_seedpoint 0
 	global $this-do_3dwidget
 	set $this-do_3dwidget 1
 	global $this-isoval

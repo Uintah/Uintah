@@ -15,16 +15,16 @@ OPENGLSRCS =
 #endif
 
 OBJS = BitVisualize.o  BoxClipSField.o  CuttingPlane.o FastRender.o    \
-	GenAxes.o GenColormap.o  GenFieldEdges.o GenTransferFunc.o  \
+	GenAxes.o GenColorMap.o  GenFieldEdges.o GenTransferFunc.o  \
 	Hedgehog.o  IsoMask.o  IsoSurface.o IsoSurfaceSP.o \
 	OctIsoSurface.o     \
-	RescaleColormap.o  Streamline.o  VectorSeg.o  VolVis.o   \
+	RescaleColorMap.o  Streamline.o  VectorSeg.o  VolVis.o   \
 	WidgetTest.o
 SRCS = BitVisualize.cc BoxClipSField.cc CuttingPlane.cc FastRender.c    \
-	GenAxes.cc GenColormap.cc GenFieldEdges.cc GenTransferFunc.cc \
+	GenAxes.cc GenColorMap.cc GenFieldEdges.cc GenTransferFunc.cc \
 	Hedgehog.cc IsoMask.o  IsoSurface.cc IsoSurfaceSP.cc \
 	 OctIsoSurface.cc    \
-	RescaleColormap.cc Streamline.cc VectorSeg.cc  VolVis.cc \
+	RescaleColorMap.cc Streamline.cc VectorSeg.cc  VolVis.cc \
 	WidgetTest.cc
 
 LIBNAME = Visualization

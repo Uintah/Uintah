@@ -407,7 +407,8 @@ VolVis::VolVis(const clString& id)
   salmonData("salmon", id, this),
   stepSize("stepsize", id, this),
   Xarray("Xarray", id, this),
-  Yarray("Yarray", id, this)
+  Yarray("Yarray", id, this),
+  msgs(10)
 {
   cerr << "Welcome to VolVis\n";
   
@@ -449,7 +450,8 @@ VolVis::VolVis(const clString& id)
   // (size of 0,0) array of pixels
 
   Image.newsize(600,600);
-  Image.initialize( myview.bg() );
+  Color bg(myview.bg());
+  Image.initialize( bg );
 
   iEView.bg.set( BLACK );
 
@@ -521,7 +523,8 @@ VolVis::VolVis(const VolVis& copy, int deep)
   salmonData("salmon", id, this),
   stepSize("stepsize", id, this),
   Xarray("Xarray", id, this),
-  Yarray("Yarray", id, this)
+  Yarray("Yarray", id, this),
+  msgs(10)
 {
   NOT_FINISHED("VolVis::VolVis");
 }
@@ -1526,7 +1529,8 @@ VolVis::RenderLoop( )
 	  
 	  box.PrepareIntersect( myview.eyep() );
 
-	  Image.initialize( myview.bg() );
+	  Color bg(myview.bg());
+	  Image.initialize( bg );
   
 	  NewView = 0;
 	}
