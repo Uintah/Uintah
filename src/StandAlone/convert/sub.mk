@@ -118,3 +118,7 @@ include $(SCIRUN_SCRIPTS)/program.mk
 PROGRAM := $(SRCDIR)/VtkToTriSurf
 SRCS := $(SRCDIR)/VtkToTriSurf.cc
 include $(SCIRUN_SCRIPTS)/program.mk
+
+PROGRAM := $(SRCDIR)/TriSurfToOBJ
+SRCS := $(SRCDIR)/TriSurfToOBJ.cc
+include $(SCIRUN_SCRIPTS)/program.mk
