@@ -63,3 +63,8 @@ ostream& operator<<( ostream& os, const Vector& v )
    return os;
 }
 
+int
+Vector::operator== ( const Vector& v ) const
+{
+    return v._x == _x && v._y == _y && v._z == _z;
+}

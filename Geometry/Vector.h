@@ -32,6 +32,10 @@ public:
 //    friend inline double Dot(const Point&, const Vector&);
     friend inline double Dot(const Vector&, const Point&);
     Vector& operator=(const Vector&);
+
+    // Aleksandra
+    int operator==(const Vector&) const;
+    
     Vector operator*(const double) const;
     Vector& operator*=(const double);
     Vector operator/(const double) const;
