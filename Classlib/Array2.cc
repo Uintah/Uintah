@@ -40,7 +40,7 @@ void Array2<T>::allocate()
 template<class T>
 void Array2<T>::newsize(int d1, int d2)
 {
-    if(objs && dm1==d2 && dm2==d2)return;
+    if(objs && dm1==d1 && dm2==d2)return;
     dm1=d1;
     dm2=d2;
     if(objs){
