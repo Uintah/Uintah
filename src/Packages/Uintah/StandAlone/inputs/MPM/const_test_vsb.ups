@@ -69,11 +69,11 @@
 
 	    <material>
                 <burn type = "null" />
-                <include href="inputs/MPM/MaterialData/MaterialConstPBX9501Binder.xml"/>
+                <include href="MaterialData/MaterialConstPBX9501Binder.xml"/>
                 <constitutive_model type="visco_scram_binder">
-                    <include href="inputs/MPM/MaterialData/ViscoPBX9501Binder.xml"/>
+                    <include href="MaterialData/ViscoPBX9501Binder.xml"/>
 <!--
-                    <include href="inputs/MPM/MaterialData/ScramPBX9501Binder.xml"/>
+                    <include href="MaterialData/ScramPBX9501Binder.xml"/>
 -->
                 </constitutive_model>
 		<geom_object>
