@@ -35,9 +35,11 @@ SRCS     += \
 	$(SRCDIR)/CastTVtoMLV.cc\
 	$(SRCDIR)/ClipField.cc\
 	$(SRCDIR)/ClipLattice.cc\
+	$(SRCDIR)/Coregister.cc\
 	$(SRCDIR)/DirectInterpolate.cc\
 	$(SRCDIR)/EditField.cc\
 	$(SRCDIR)/FieldBoundary.cc\
+	$(SRCDIR)/GatherPoints.cc\
 	$(SRCDIR)/Gradient.cc\
 	$(SRCDIR)/ManageFieldData.cc\
 	$(SRCDIR)/ManageFieldSet.cc\
@@ -61,7 +63,7 @@ PSELIBS := Dataflow/Network Dataflow/Ports Dataflow/XMLUtil Dataflow/Widgets \
 	Core/Datatypes Core/Disclosure Core/Persistent Core/Exceptions \
 	Core/Thread Core/Containers Core/GuiInterface Core/Geom \
 	Core/Datatypes Core/Geometry Core/TkExtensions \
-	Core/Math Core/Util
+	Core/Math Core/Util Core/Algorithms/Geometry
 LIBS := $(TK_LIBRARY) $(GL_LIBS) $(FLEX_LIBS) -lm $(XML_LIBRARY) $(THREAD_LIBS)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
