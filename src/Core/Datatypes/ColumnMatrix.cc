@@ -446,6 +446,14 @@ void Mult(ColumnMatrix& result, const ColumnMatrix& a, double s)
 	result.data[i]=a.data[i]*s;
 }
 
+void ColumnMatrix::scalar_multiply(double s)
+{
+  for (int i=0;i<rows;i++)
+  {
+    data[i] *= s;
+  }
+}
+
 } // End namespace SCIRun
 
 

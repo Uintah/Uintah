@@ -37,7 +37,10 @@ namespace SCIRun {
 
 
 MatrixHandle operator+(MatrixHandle A, MatrixHandle B);
+MatrixHandle operator-(MatrixHandle A, MatrixHandle B);
 MatrixHandle operator*(MatrixHandle A, MatrixHandle B);
+MatrixHandle operator*(double a, MatrixHandle B);
+MatrixHandle operator*(MatrixHandle A, double b);
 
 } // End namespace SCIRun
 

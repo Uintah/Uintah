@@ -469,4 +469,93 @@ AddSparse(const SparseRowMatrix &a, const SparseRowMatrix &b)
 				vcols, vals.size(), vvals);
 }
 
+
+SparseRowMatrix *
+SubSparse(const SparseRowMatrix &a, const SparseRowMatrix &b)
+{
+  ASSERT(a.nrows() == b.nrows() && a.ncols() == b.ncols());
+
+  int *rows = scinew int[a.nrows() + 1];
+  vector<int> cols;
+  vector<double> vals;
+
+  int r, ca, cb;
+
+  rows[0] = 0;
+  for (r = 0; r < a.nrows(); r++)
+  {
+    rows[r+1] = rows[r];
+    ca = a.rows[r];
+    cb = b.rows[r];
+    while (1)
+    {
+      if (ca >= a.rows[r+1] && cb >= b.rows[r+1])
+      {
+	break;
+      }
+      else if (ca >= a.rows[r+1])
+      {
+	cols.push_back(b.columns[cb]);
+	vals.push_back(-b.a[cb]);
+	rows[r+1]++;
+	cb++;
+      }
+      else if (cb >= b.rows[r+1])
+      {
+	cols.push_back(a.columns[ca]);
+	vals.push_back(a.a[ca]);
+	rows[r+1]++;
+	ca++;
+      }
+      else if (a.columns[ca] < b.columns[cb])
+      {
+	cols.push_back(a.columns[ca]);
+	vals.push_back(a.a[ca]);
+	rows[r+1]++;
+	ca++;
+      }
+      else if (a.columns[ca] > b.columns[cb])
+      {
+	cols.push_back(b.columns[cb]);
+	vals.push_back(-b.a[cb]);
+	rows[r+1]++;
+	cb++;
+      }
+      else
+      {
+	cols.push_back(a.columns[ca]);
+	vals.push_back(a.a[ca] - b.a[cb]);
+	rows[r+1]++;
+	ca++;
+	cb++;
+      }
+    }
+  }
+
+  unsigned int i;
+  int *vcols = scinew int[cols.size()];
+  for (i = 0; i < cols.size(); i++)
+  {
+    vcols[i] = cols[i];
+  }
+
+  double *vvals = scinew double[vals.size()];
+  for (i = 0; i < vals.size(); i++)
+  {
+    vvals[i] = vals[i];
+  }
+
+  return scinew SparseRowMatrix(a.nrows(), a.ncols(), rows,
+				vcols, vals.size(), vvals);
+}
+
+
+void SparseRowMatrix::scalar_multiply(double s)
+{
+  for (int i=0;i<nnz;i++)
+  {
+    a[i] *= s;
+  }
+}
+
 } // End namespace SCIRun

@@ -502,6 +502,18 @@ void DenseMatrix::print(ostream& ostr) const
   }
 }
 
+void DenseMatrix::scalar_multiply(double s)
+{
+  for (int i=0;i<nr;i++)
+  {
+    for (int j=0;j<nc;j++)
+    {
+      data[i][j] *= s;
+    }
+  }
+}
+
+
 #define DENSEMATRIX_VERSION 3
 
 void DenseMatrix::io(Piostream& stream)
@@ -703,6 +715,21 @@ void Add(DenseMatrix& out, const DenseMatrix& m1, const DenseMatrix& m2)
   for(int i=0;i<nr;i++)
     for (int j=0; j<nc; j++)
       out[i][j]=m1.data[i][j]+m2.data[i][j];
+}
+
+void Sub(DenseMatrix& out, const DenseMatrix& m1, const DenseMatrix& m2)
+{
+  ASSERTEQ(m1.ncols(), m2.ncols());
+  ASSERTEQ(out.ncols(), m2.ncols());
+  ASSERTEQ(m1.nrows(), m2.nrows());
+  ASSERTEQ(out.nrows(), m2.nrows());
+
+  int nr=out.nrows();
+  int nc=out.ncols();
+
+  for(int i=0;i<nr;i++)
+    for (int j=0; j<nc; j++)
+      out[i][j]=m1.data[i][j]-m2.data[i][j];
 }
 
 void Add(DenseMatrix& out, double f1, const DenseMatrix& m1, double f2, const DenseMatrix& m2){
