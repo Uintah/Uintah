@@ -720,17 +720,24 @@ ShowField::execute()
 	vectors_on_.get())
     {
       if (data_id_) ogeom_->delObj(data_id_);
-      GeomHandle data =
-	data_vector_renderer_->render_data(vfld_handle,
-					   fld_handle,
-					   color_map_,
-					   def_material_,
-					   vdt, vscale,
-					   normalize_vectors_.get(),
-					   bidirectional_.get(),
-					   data_resolution_);
+      if (do_data)
+      {
+	data_geometry_ = 
+	  data_vector_renderer_->render_data(vfld_handle,
+					     fld_handle,
+					     color_map_,
+					     def_material_,
+					     vdt, vscale,
+					     normalize_vectors_.get(),
+					     bidirectional_.get(),
+					     data_resolution_);
+      }
       const string vdname = (vdt=="Needles")?"Transparent Vectors":"Vectors";
-      data_id_ = ogeom_->addObj(data, fname + vdname);
+      GeomHandle gmat =
+	scinew GeomMaterial(data_geometry_, def_material_);
+      GeomHandle geom =
+	scinew GeomSwitch(scinew GeomColorMap(gmat, color_map_));
+      data_id_ = ogeom_->addObj(geom, fname + vdname);
     }
     else if (vfld_handle.get_rep() &&
 	     data_tensor_renderer_.get_rep() &&

@@ -29,6 +29,7 @@
 #include <Core/Geom/GeomSphere.h>
 #include <Core/Geom/GeomLine.h>
 #include <Core/Geom/GeomCylinder.h>
+#include <Core/Geom/GeomCone.h>
 #include <Core/Geom/GeomTriangles.h>
 #include <Core/Geom/GeomQuads.h>
 #include <Core/Geom/GeomBox.h>
@@ -1610,18 +1611,6 @@ public:
   static CompileInfoHandle get_compile_info(const TypeDescription *vftd,
 					    const TypeDescription *cftd,
 					    const TypeDescription *ltd);
-
-protected:
-
-  void add_disk(const Point &p, const Vector &vin,
-		double scale, int resolution,
-		GeomCappedCylinders *cg, GeomSpheres *sg, MaterialHandle mh,
-		bool normalize, bool colorify);
-
-  void add_cone(const Point &p, const Vector &vin,
-		double scale, int resolution,
-		GeomGroup *g, MaterialHandle mh,
-		bool normalize, bool colorify);
 };
 
 
@@ -1656,10 +1645,8 @@ RenderVectorField<VFld, CFld, Loc>::render_data(FieldHandle vfld_handle,
   VFld *vfld = dynamic_cast<VFld*>(vfld_handle.get_rep());
   CFld *cfld = dynamic_cast<CFld*>(cfld_handle.get_rep());
 
-  const bool colorify = false;
-  
   GeomLines *lines = 0;
-  GeomGroup *cones = 0;
+  GeomCones *cones = 0;
   GeomArrows *arrows = 0;
   GeomCappedCylinders *disks = 0;
   GeomSpheres *spheres = 0;
@@ -1669,47 +1656,70 @@ RenderVectorField<VFld, CFld, Loc>::render_data(FieldHandle vfld_handle,
   const bool arrows_p = (display_mode == "Arrows");
   const bool disks_p = (display_mode == "Disks");
   GeomHandle data_switch;
-  if (lines_p || needles_p)
+  if (lines_p)
   {
-    if (lines_p)
-    {
-      lines = scinew GeomLines();
-    }
-    else
-    {
-      lines = scinew GeomTranspLines();
-    }
-
-    data_switch =
-      scinew GeomSwitch(scinew GeomColorMap(scinew GeomDL(scinew GeomMaterial(lines, default_material)), cmap));
+    lines = scinew GeomLines();
+    data_switch = scinew GeomDL(lines);
+  }
+  else if (needles_p)
+  {
+    lines = scinew GeomTranspLines();
+    data_switch = lines;
   }
   else if (cones_p)
   {
-    cones = scinew GeomGroup();
-    data_switch =
-      scinew GeomSwitch(scinew GeomDL(scinew GeomMaterial(cones,
-							  default_material)));
+    cones = scinew GeomCones(resolution, scale/6.0);
+    spheres = scinew GeomSpheres(scale/6.0, resolution, resolution);
+    GeomGroup *grp = scinew GeomGroup();
+    grp->add(cones);
+    grp->add(spheres);
+    data_switch = scinew GeomDL(grp);
   }
   else if (arrows_p)
   {
     arrows = scinew GeomArrows(0.15, 0.6);
-    data_switch = scinew GeomSwitch(scinew GeomDL(arrows));
+    data_switch = scinew GeomDL(arrows);
   }
   else if (disks_p)
   {
     disks = scinew GeomCappedCylinders(resolution, scale);
-    spheres = scinew GeomSpheres(scale, resolution, resolution);
+    spheres = scinew GeomSpheres(scale * 0.75, resolution, resolution);
     GeomGroup *grp = scinew GeomGroup();
     grp->add(disks);
     grp->add(spheres);
-    data_switch =
-      scinew GeomSwitch(scinew GeomColorMap(scinew GeomDL(scinew GeomMaterial(grp, default_material)), cmap));
+    data_switch = scinew GeomDL(grp);
   }
 
-  MaterialHandle opaque = scinew Material(Color(1.0, 1.0, 1.0));
-  opaque->transparency = 1.0;
-  MaterialHandle transparent = scinew Material(Color(1.0, 1.0, 1.0));
-  transparent->transparency = 0.0;
+  // Use a default color?
+  bool def_color = !(cmap.get_rep());
+  bool vec_color = false;
+  MaterialHandle vcol(0);
+  if (def_color && cfld->query_vector_interface().get_rep())
+  {
+    def_color = false;
+    vec_color = true;
+    vcol = scinew Material();
+    vcol->transparency = 1.0;
+  }
+
+  MaterialHandle opaque, transparent;
+  if (needles_p)
+  {
+    if (def_color)
+    {
+      opaque = scinew Material(default_material->diffuse);
+      opaque->transparency = default_material->transparency;
+      transparent = scinew Material(default_material->diffuse);
+      transparent->transparency = 0.0;
+    }
+    else
+    {
+      opaque = scinew Material(Color(1.0, 1.0, 1.0));
+      opaque->transparency = 1.0;
+      transparent = scinew Material(Color(1.0, 1.0, 1.0));
+      transparent->transparency = 0.0;
+    }
+  }
 
   typename VFld::mesh_handle_type mesh = vfld->get_typed_mesh();
 
@@ -1724,72 +1734,284 @@ RenderVectorField<VFld, CFld, Loc>::render_data(FieldHandle vfld_handle,
       Point p;
       mesh->get_center(p, *iter);
 
-      typename CFld::value_type ctmp;
-      cfld->value(ctmp, *iter);
-
-      double ctmpd;
-      to_double(ctmp, ctmpd);
-
       if (disks_p)
       {
-	add_disk(p, tmp, scale, resolution, disks, spheres,
-		 (cmap.get_rep())?(cmap->lookup(ctmpd)):0,
-		 normalize, colorify);
+	if (tmp.length2() > 1.0e-10)
+	{
+	  if (normalize) { tmp.safe_normalize(); }
+	  tmp *= (scale / 6.0);
+	  
+	  if (def_color)
+	  {
+	    if (normalize)
+	    {
+	      disks->add(p+tmp, p-tmp);
+	    }
+	    else
+	    {
+	      disks->add_radius(p+tmp, p+tmp, 6*tmp.length());
+	    }
+	  }
+	  else if (vec_color)
+	  {
+	    typename CFld::value_type ctmp;
+	    cfld->value(ctmp, *iter);
+	    Vector vtmp;
+	    to_vector(ctmp, vtmp);
+	    vcol->diffuse = Color(vtmp.x(), vtmp.y(), vtmp.z());
+	    if (normalize)
+	    {
+	      disks->add(p+tmp, vcol, p-tmp, vcol);
+	    }
+	    else
+	    {
+	      disks->add_radius(p+tmp, vcol, p-tmp, vcol, 6*tmp.length());
+	    }
+	  }
+	  else
+	  {
+	    typename CFld::value_type ctmp;
+	    cfld->value(ctmp, *iter);
+	    double ctmpd;
+	    to_double(ctmp, ctmpd);
+	    if (normalize)
+	    {
+	      disks->add(p+tmp, ctmpd, p-tmp, ctmpd);
+	    }
+	    else
+	    {
+	      disks->add_radius(p+tmp, ctmpd, p+tmp, ctmpd, 6*tmp.length());
+	    }
+	  }
+	}
+	else if (normalize)
+	{
+	  if (def_color)
+	  {
+	    spheres->add(p);
+	  }
+	  else if (vec_color)
+	  {
+	    typename CFld::value_type ctmp;
+	    cfld->value(ctmp, *iter);
+	    Vector vtmp;
+	    to_vector(ctmp, vtmp);
+	    vcol->diffuse = Color(vtmp.x(), vtmp.y(), vtmp.z());
+	    spheres->add(p, vcol);
+	  }
+	  else
+	  {
+	    typename CFld::value_type ctmp;
+	    cfld->value(ctmp, *iter);
+	    double ctmpd;
+	    to_double(ctmp, ctmpd);
+	    spheres->add(p, ctmpd);
+	  }
+	}
       }
       else if (cones_p)
       {
-	add_cone(p, tmp, scale, resolution, cones,
-		 (cmap.get_rep())?(cmap->lookup(ctmpd)):0,
-		 normalize, colorify);
+	if (tmp.length2() > 1.0e-10)
+	{
+	  if (normalize) { tmp.safe_normalize(); }
+	  tmp *= scale;
+
+	  if (def_color)
+	  {
+	    if (normalize)
+	    {
+	      cones->add(p, p+tmp);
+	      if (bidirectional)
+	      {
+		cones->add(p, p-tmp);
+	      }
+	    }
+	    else
+	    {
+	      cones->add_radius(p, p+tmp, tmp.length()/6.0);
+	      if (bidirectional)
+	      {
+		cones->add_radius(p, p-tmp, tmp.length()/6.0);
+	      }
+	    }
+	  }
+	  else if (vec_color)
+	  {
+	    typename CFld::value_type ctmp;
+	    cfld->value(ctmp, *iter);
+	    Vector vtmp;
+	    to_vector(ctmp, vtmp);
+	    vcol->diffuse = Color(vtmp.x(), vtmp.y(), vtmp.z());
+	    if (normalize)
+	    {
+	      cones->add(p, p+tmp, vcol);
+	      if (bidirectional)
+	      {
+		cones->add(p, p-tmp, vcol);
+	      }
+	    }
+	    else
+	    {
+	      cones->add_radius(p, p+tmp, vcol, tmp.length()/6.0);
+	      if (bidirectional)
+	      {
+		cones->add_radius(p, p-tmp, vcol, tmp.length()/6.0);
+	      }
+	    }
+	  }
+	  else
+	  {
+	    typename CFld::value_type ctmp;
+	    cfld->value(ctmp, *iter);
+	    double ctmpd;
+	    to_double(ctmp, ctmpd);
+	    if (normalize)
+	    {
+	      cones->add(p, p+tmp, ctmpd);
+	      if (bidirectional)
+	      {
+		cones->add(p, p-tmp, ctmpd);
+	      }
+	    }
+	    else
+	    {
+	      cones->add_radius(p, p+tmp, ctmpd, tmp.length()/6.0);
+	      if (bidirectional)
+	      {
+		cones->add_radius(p, p-tmp, ctmpd, tmp.length()/6.0);
+	      }
+	    }
+	  }
+	}
+	else if (normalize)
+	{
+	  if (def_color)
+	  {
+	    spheres->add(p);
+	  }
+	  else if (vec_color)
+	  {
+	    typename CFld::value_type ctmp;
+	    cfld->value(ctmp, *iter);
+	    Vector vtmp;
+	    to_vector(ctmp, vtmp);
+	    vcol->diffuse = Color(vtmp.x(), vtmp.y(), vtmp.z());
+	    spheres->add(p, vcol);
+	  }
+	  else
+	  {
+	    typename CFld::value_type ctmp;
+	    cfld->value(ctmp, *iter);
+	    double ctmpd;
+	    to_double(ctmp, ctmpd);
+	    spheres->add(p, ctmpd);
+	  }
+	}
       }
       else if (arrows_p)
       {
+	typename CFld::value_type ctmp;
+	cfld->value(ctmp, *iter);
+	double ctmpd;
+	to_double(ctmp, ctmpd);
 	add_data(p, tmp, arrows,
 		 (cmap.get_rep())?(cmap->lookup(ctmpd)):default_material,
 		 display_mode, scale, normalize, bidirectional);
       }
       else if (lines_p)
       {
-	if (normalize)
-	{
-	  tmp.safe_normalize();
-	}
+	if (normalize) { tmp.safe_normalize(); }
 	tmp *= scale;
+
 	if (bidirectional)
 	{
-	  if (cmap.get_rep())
+	  if (def_color)
 	  {
-	    lines->add(p - tmp, ctmpd, p + tmp, ctmpd);
+	    lines->add(p - tmp, p + tmp);
+	  }
+	  else if (vec_color)
+	  {
+	    typename CFld::value_type ctmp;
+	    cfld->value(ctmp, *iter);
+	    Vector vtmp;
+	    to_vector(ctmp, vtmp);
+	    vcol->diffuse = Color(vtmp.x(), vtmp.y(), vtmp.z());
+	    lines->add(p - tmp, vcol, p + tmp, vcol);
 	  }
 	  else
 	  {
-	    lines->add(p - tmp, p + tmp);
+	    typename CFld::value_type ctmp;
+	    cfld->value(ctmp, *iter);
+	    double ctmpd;
+	    to_double(ctmp, ctmpd);
+	    lines->add(p - tmp, ctmpd, p + tmp, ctmpd);
 	  }
 	}
 	else
 	{
-	  if (cmap.get_rep())
+	  if (def_color)
 	  {
-	    lines->add(p, ctmpd, p + tmp, ctmpd);
+	    lines->add(p, p + tmp);
+	  }
+	  else if (vec_color)
+	  {
+	    typename CFld::value_type ctmp;
+	    cfld->value(ctmp, *iter);
+	    Vector vtmp;
+	    to_vector(ctmp, vtmp);
+	    vcol->diffuse = Color(vtmp.x(), vtmp.y(), vtmp.z());
+	    lines->add(p, vcol, p + tmp, vcol);
 	  }
 	  else
 	  {
-	    lines->add(p, p + tmp);
+	    typename CFld::value_type ctmp;
+	    cfld->value(ctmp, *iter);
+	    double ctmpd;
+	    to_double(ctmp, ctmpd);
+	    lines->add(p, ctmpd, p + tmp, ctmpd);
 	  }
 	}
       }
       else // Needles
       {
-	if (normalize)
-	{
-	  tmp.safe_normalize();
-	}
+	if (normalize) { tmp.safe_normalize(); }
 	tmp *= scale;
-
-	lines->add(p, opaque, ctmpd, p + tmp, transparent, ctmpd);
-	if (bidirectional)
+	
+	if (def_color)
 	{
-	  lines->add(p, opaque, ctmpd, p - tmp, transparent, ctmpd);
+	  lines->add(p, opaque, p + tmp, transparent);
+	  if (bidirectional)
+	  {
+	    lines->add(p, opaque, p - tmp, transparent);
+	  }
+	}
+	else if (vec_color)
+	{
+	  typename CFld::value_type ctmp;
+	  cfld->value(ctmp, *iter);
+	  Vector vtmp;
+	  to_vector(ctmp, vtmp);
+	  vcol->diffuse = Color(vtmp.x(), vtmp.y(), vtmp.z());
+	  transparent->diffuse = vcol->diffuse;
+	  
+	  lines->add(p, vcol, p + tmp, transparent);
+	  if (bidirectional)
+	  {
+	    lines->add(p, vcol, p - tmp, transparent);
+	  }
+	}
+	else
+	{
+	  typename CFld::value_type ctmp;
+	  cfld->value(ctmp, *iter);
+	  double ctmpd;
+	  to_double(ctmp, ctmpd);
+
+	  lines->add(p, opaque, ctmpd, p + tmp, transparent, ctmpd);
+	  if (bidirectional)
+	  {
+	    lines->add(p, opaque, ctmpd, p - tmp, transparent, ctmpd);
+	  }
 	}
       }
     }

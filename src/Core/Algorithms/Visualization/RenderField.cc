@@ -233,61 +233,6 @@ add_data(const Point &p, const Vector &d, GeomArrows *arrows,
   return false;
 }
 
-void 
-RenderVectorFieldBase::add_disk(const Point &p, const Vector &vin,
-				double scale, int resolution,
-				GeomCappedCylinders *cg,
-				GeomSpheres *sg,
-				MaterialHandle mh,
-				bool normalize, bool colorify)
-{
-  Vector v = vin;
-  double len;
-  if (normalize && v.safe_normalize() * scale > 1.0e-12)
-  {
-    v *= (scale / 6.0);
-    if (mh.get_rep()) { cg->add(p+v, mh, p-v, mh); }
-    else { cg->add(p+v, p-v); }
-  }
-  else if (!normalize && (len = v.length() * scale) > 1.0e-12)
-  {
-    v *= (scale / 6.0);
-    if (mh.get_rep()) { cg->add_radius(p+v, mh, p-v, mh, len); }
-    else { cg->add_radius(p+v, p-v, len); }
-  }
-  else
-  {
-    if (mh.get_rep()) { sg->add(p, mh); }
-    else { sg->add(p); }
-  }
-}
-
-
-void 
-RenderVectorFieldBase::add_cone(const Point &p, const Vector &vin,
-				double scale, int resolution,
-				GeomGroup *g, MaterialHandle mh,
-				bool normalize, bool colorify)
-{
-  Vector v = vin;
-  if (v.length2() * scale > 1.0e-10)
-  {
-    if (normalize) { v.safe_normalize(); }
-    const double len = v.length() * scale;
-    v*=scale;
-    GeomCone *c = scinew GeomCone(p, p + v, len/6.0, 0, resolution, 1);
-
-    if (mh.get_rep()) { g->add(scinew GeomMaterial(c, mh)); }
-    else { g->add(c); }
-  }
-  else
-  {
-    GeomSphere *s = scinew GeomSphere(p, scale, resolution, resolution);
-    if (mh.get_rep()) { g->add(scinew GeomMaterial(s, mh)); }
-    else { g->add(s); }
-  }
-}
-
 
 void 
 RenderTensorFieldBase::add_item(GeomHandle glyph,
