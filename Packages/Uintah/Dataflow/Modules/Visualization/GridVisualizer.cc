@@ -72,10 +72,7 @@ public:
   
   virtual void widget_moved(bool last);
   void tcl_command(GuiArgs& args, void* userdata);
-  virtual void geom_pick(GeomPick* pick, void* userdata, GeomObj* picked);
-  virtual void geom_pick(GeomPick* pick, void* userdata);
-  virtual void geom_pick(GeomPick* pick, ViewWindow* window,
-			 int data, const BState& bs);
+  virtual void geom_pick(GeomPickHandle pick, void* userdata, GeomHandle picked);
   
 protected:
   void addBoxGeometry(GeomLines* edges, const Box& box);
@@ -495,8 +492,8 @@ void GridVisualizer::tcl_command(GuiArgs& args, void* userdata)
 }
 
 // if a pick event was received extract the id from the picked
-void GridVisualizer::geom_pick(GeomPick* /*pick*/, void* /*userdata*/,
-			       GeomObj* picked) {
+void GridVisualizer::geom_pick(GeomPickHandle /*pick*/, void* /*userdata*/,
+			       GeomHandle picked) {
 #if DEBUG
   cerr << "Caught pick event in GridVisualizer!\n";
   cerr << "this = " << this << ", pick = " << pick << endl;
@@ -516,15 +513,6 @@ void GridVisualizer::geom_pick(GeomPick* /*pick*/, void* /*userdata*/,
   }
   else
     cerr<<"Not getting the correct data\n";
-}
-
-// this doesn't do anything.  They are only here to eliminate compiler warnings
-void GridVisualizer::geom_pick(GeomPick* /*pick*/, void* /*userdata*/) {
-}
-
-// this doesn't do anything.  They are only here to eliminate compiler warnings
-void GridVisualizer::geom_pick(GeomPick* /*pick*/, ViewWindow* /*window*/,
-			       int /*data*/, const BState& /*bs*/) {
 }
 
 // adds the lines to edges that make up the box defined by box 
