@@ -55,7 +55,7 @@ extern BasicTexture * backgroundTex;     // from rtrt.cc
 
 extern "C" Display *__glutDisplay;
 
-double ORBIT_SPEED  = 1;
+double ORBIT_SPEED  = 0;
 double ROTATE_SPEED = 1;
 
 using namespace rtrt;
@@ -568,7 +568,8 @@ Gui::handleKeyPressCB( unsigned char key, int /*mouse_x*/, int /*mouse_y*/ )
   case '+':
     if (activeGui->shiftDown_) {
       // increase planet orbit speed
-      ORBIT_SPEED*=1.9;
+      if (ORBIT_SPEED==0) ORBIT_SPEED=1;
+      else ORBIT_SPEED*=1.9;
     } else if (activeGui->ctrlDown_) {
       // increase planet rotate speed
       ROTATE_SPEED*=1.1;
@@ -580,7 +581,8 @@ Gui::handleKeyPressCB( unsigned char key, int /*mouse_x*/, int /*mouse_y*/ )
   case '-':
     if (activeGui->shiftDown_) {
       // decrease planet orbit speed
-      ORBIT_SPEED*=.6;
+      if (ORBIT_SPEED<.1) ORBIT_SPEED=0;
+      else ORBIT_SPEED*=.6;
     } else if (activeGui->ctrlDown_) {
       // decrease planet rotate speed
       ROTATE_SPEED*=.6;
