@@ -32,7 +32,82 @@ The HDF5 Field Reader module reads a HDF5 file containing data.
     </summary>
     <description>
       <p>
-The HDF5 Field Reader module reads a HDF5 file containing data.
+The HDF5 Field Reader module reads a HDF5 file containing data. The
+reader will read simple and scalar data. Compound data is not read at
+this time. The user first selects the file through the browser. Files
+with a suffix h5 will be displayed.
+</p>
+<p>
+Once the file has been read the contents will be displayed in the File
+Treeview. The user may scroll through the contents using the arrows
+keys or by using left mouse clicks on the to open the folders. Only
+HDF5 groups, attributes, and dataset nodes are displayed in the
+treeview. For attribute and dataset nodes their type value aredisplayed in
+the Type and Value columns, respectufully. In the case of the
+attrbiutes the data values are displayed. For datasets the dimensions
+of the dataset are displayed.
+</p>
+<p>
+A single dataset may be selected using a left mouse click. When a
+dataset has been selected it with be highlighted in white and listed
+in the Selected Data listbox. The dataset can be deselected using a
+left mouse click as well. Multiple datasets may be selected using
+the ctrl and shift left mouse clicks. If a group is selected all
+chilren will be selected. Attrbiutes can not be selected and are only
+provided as suplementary information. 
+</p>
+<p>
+Exact and regular expression searches for data can be used to select
+the data based on the node's full path name or its terminal name. When
+searchiing the full path a space is used as a separator between the
+parent and child name. For example, "/ parent child grandchild". If
+the name contains brackets [] the name must be surrounded by braces
+{}. For example, {data[0]} 
+</p>
+<p>
+When using a regular expression two strings will match when their
+contents are identical except that the following special sequences may
+appear in pattern: 
+</p>
+<p>
+    *   Matches any sequence of characters in string, including a null string. 
+</p>
+<p>
+    ?   Matches any single character in string. 
+</p>
+<p>
+    [chars]   Matches any character in the set given by chars. If a
+              sequence of the form x-y appears in chars, then any character
+              between x and y, inclusive, will match.
+</p>
+<p>
+    \x  Matches the single character x. This provides a way of
+        avoiding the special interpretation of the characters *?[]\ in 
+        the pattern.
+</p>
+<p>
+Once the data has been selected its name will appear in the "Selected
+Data" listbox. A data set can be deselected by selecting it in the
+listbox and pressing the "Delete Selection" button.
+</p>
+<p>
+When reading the data it is possible to select a hyperslab or subset
+of the data using the sliders. 
+</p>
+<p>
+Once the data has been read it can be merged into one output NRRD if
+it has the same dimensionality and data type. When the data is merged
+a new "Time" axis will be constructed. The time axis represents the
+number datasets merged together. Combining datasets is necessasry when
+using the NrrdSelectTime to animating data.  If the data is not merged
+dataset will be outputed individually. The maximum outputs is six. 
+</p>
+<p>
+The "Assume Vector-Tensor data" will convert datasets that have the
+last dimension of either 3 or 6 into SCIRun "Vectors" or "Tensors".
+This is needed for animating mutliple datasets when using the
+NrrdSelectTime. If it is not selected data will be assumed to be
+"Scalar" 
       </p>
     </description>
   </overview>
