@@ -792,8 +792,8 @@ EditTransferFunc2::redraw()
         dummy.destroy();
         use_pbuffer_ = false;
         use_back_buffer_ = false;
-        cerr << "[EditTransferFunction2] Shaders not supported; "
-             << "switching to software rasterization" << std::endl;
+        warning ("[EditTransferFunction2] Shaders not supported;");
+	warning ("  switching to software rasterization.");
       }
       dummy.destroy();
     }
@@ -811,12 +811,11 @@ EditTransferFunc2::redraw()
       delete pbuffer_;
       pbuffer_ = 0;
       use_pbuffer_ = false;
-      cerr << "[EditTransferFunction2] Pbuffers not supported; "
-           << "switching to back buffer rasterization" << std::endl;
+      warning("[EditTransferFunction2] Pbuffers not supported;");
+      warning("  switching to back buffer rasterization.");
     } else {
       use_back_buffer_ = false;
-      cerr << "[EditTransferFunction2] Using Pbuffer rasterization" <<
-	std::endl;
+      remark("[EditTransferFunction2] Using Pbuffer rasterization.");
     }
   }
 

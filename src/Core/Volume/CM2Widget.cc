@@ -229,7 +229,6 @@ TriangleCM2Widget::rasterize(Array3<float>& array, bool faux)
 {
   if(!onState_) return;
 
-  //std::cerr << tex->size(0) << " " << tex->size(1) << std::endl;
   if(array.dim3() != 4) return;
   int size_x = array.dim2();
   int size_y = array.dim1();
@@ -239,7 +238,6 @@ TriangleCM2Widget::rasterize(Array3<float>& array, bool faux)
   int le = (int)(top_y_*size_y);
   int ilb = Clamp(lb, 0, size_y-1);
   int ile = Clamp(le, 0, size_y-1);
-  //cerr << lb << " | " << le << endl; 
   if (shadeType_ == CM2_SHADE_FLAT) 
   {
     for(int i=ilb; i<=ile; i++) {
@@ -293,7 +291,6 @@ TriangleCM2Widget::rasterize(Array3<float>& array, bool faux)
       r = color_.r() - abs(rm-jrm)*dr;
       g = color_.g() - abs(rm-jrm)*dg;
       b = color_.b() - abs(rm-jrm)*db;
-      //cerr << mTop.x << " " << fm << " -> " << fe << std::endl;
       for (int j=jrm; j<=jre; j++, a-=da, r-=dr, b-=db, g-=dg)
       {
         array(i,j,0) = array(i,j,0)*(1-a) + r;
@@ -323,7 +320,6 @@ TriangleCM2Widget::rasterize(Array3<float>& array, bool faux)
       }
       da = alpha_/(re-rm);
       a = alpha_ - abs(rm-jrm)*da;
-      //cerr << mTop.x << " " << fm << " -> " << fe << std::endl;
       for (int j=jrm; j<=jre; j++, a-=da)
       {
         array(i,j,0) = Clamp(array(i,j,0)*(1.0f-a) + (float)color_.r(), 0.0f, 1.0f);
