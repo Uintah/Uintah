@@ -142,7 +142,6 @@ void VorticityConfinement::scheduleComputeModelSources(SchedulerP& sched,
                    this,&VorticityConfinement::computeModelSources, mi);
                     
   Ghost::GhostType  gn = Ghost::None;  
-  Ghost::GhostType  gac = Ghost::AroundCells;
   t->requires(Task::OldDW, mi->velocity_CCLabel, Ghost::AroundCells, 2);;
   t->requires(Task::OldDW, mi->density_CCLabel,          gn);
 
