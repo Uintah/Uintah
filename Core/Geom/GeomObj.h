@@ -23,6 +23,7 @@
 #include <iosfwd.h>  // Forward declarations for KCC C++ I/O routines
 #else
 class istream;
+class ostream;
 #endif
 
 namespace SCICore {
@@ -81,6 +82,9 @@ void Pio(Piostream&, GeomObj*&);
 
 //
 // $Log$
+// Revision 1.5  1999/09/08 02:26:50  sparker
+// Various #include cleanups
+//
 // Revision 1.4  1999/08/19 05:30:55  sparker
 // Configuration updates:
 //  - renamed config.h to sci_config.h

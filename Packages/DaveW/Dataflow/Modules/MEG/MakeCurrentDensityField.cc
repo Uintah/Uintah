@@ -21,10 +21,8 @@
 #include <SCICore/Datatypes/VectorFieldRG.h>
 #include <SCICore/Datatypes/VectorFieldUG.h>
 #include <SCICore/Geometry/Point.h>
-#include <SCICore/Malloc/Allocator.h>
 #include <SCICore/Math/Trig.h>
 #include <SCICore/TclInterface/TCLvar.h>
-#include <iostream.h>
 
 namespace DaveW {
 namespace Modules {
@@ -145,6 +143,9 @@ Vector MakeCurrentDensityField::mult(Array1<double> matrix, Vector elemField) {
 
 //
 // $Log$
+// Revision 1.2  1999/09/08 02:26:29  sparker
+// Various #include cleanups
+//
 // Revision 1.1  1999/09/02 04:27:09  dmw
 // Rob V's modules
 //

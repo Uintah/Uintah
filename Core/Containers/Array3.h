@@ -126,20 +126,6 @@ public:
 
 };
 
-} // End namespace Containers
-} // End namespace SCICore
-
-////////////////////////////////////////////////////////////
-//
-// Start of included Array3.cc
-//
-
-#include <SCICore/Containers/String.h>
-#include <SCICore/Malloc/Allocator.h>
-
-namespace SCICore {
-namespace Containers {
-
 template<class T>
 Array3<T>::Array3()
 {
@@ -149,9 +135,9 @@ Array3<T>::Array3()
 template<class T>
 void Array3<T>::allocate()
 {
-    objs=scinew T**[dm1];
-    T** p=scinew T*[dm1*dm2];
-    T* pp=scinew T[dm1*dm2*dm3];
+    objs=new T**[dm1];
+    T** p=new T*[dm1*dm2];
+    T* pp=new T[dm1*dm2*dm3];
     for(int i=0;i<dm1;i++){
 	objs[i]=p;
 	p+=dm2;
@@ -232,7 +218,7 @@ template<class T>
 T* Array3<T>::get_onedim()
 {
   int i,j,k, index;
-  T* a = scinew T[dm1*dm2*dm3];
+  T* a = new T[dm1*dm2*dm3];
   
   index=0;
   for( i=0; i<dm1; i++)
@@ -296,7 +282,7 @@ void Pio(Piostream& stream, Containers::Array3<T>& data)
 template<class T>
 void Pio(Piostream& stream, Containers::Array3<T>*& data) {
     if (stream.reading()) {
-	data=scinew Array3<T>;
+	data=new Array3<T>;
     }
     Containers::Pio(stream, *data);
 }
@@ -306,6 +292,9 @@ void Pio(Piostream& stream, Containers::Array3<T>*& data) {
 
 //
 // $Log$
+// Revision 1.8  1999/09/08 02:26:45  sparker
+// Various #include cleanups
+//
 // Revision 1.7  1999/09/03 06:07:20  dmw
 // added a Makefile.in for Leonid's files
 //

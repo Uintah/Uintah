@@ -27,12 +27,6 @@
 #include <SCICore/Thread/Thread.h>
 #include <SCICore/Containers/String.h>
 
-#include <iostream.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <dlfcn.h>
-
 using SCICore::TclInterface::TCLTask;
 using SCICore::TclInterface::GuiManager;
 using SCICore::TclInterface::GuiServer;
@@ -137,6 +131,9 @@ int main(int argc, char** argv)
 
 //
 // $Log$
+// Revision 1.9  1999/09/08 02:27:09  sparker
+// Various #include cleanups
+//
 // Revision 1.8  1999/09/01 21:58:02  sparker
 // Restored the ITCL_WIDGETS configuration that somewhow got lost
 // Now the itk widgets should work

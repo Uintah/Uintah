@@ -16,7 +16,6 @@
 #include <SCICore/Geom/Light.h>
 #include <SCICore/Persistent/Persistent.h>
 #include <SCICore/Containers/String.h>
-#include <iostream.h>
 
 namespace SCICore {
 namespace GeomSpace {
@@ -48,6 +47,9 @@ void Pio( Piostream& stream, Lighting & l )
 
 //
 // $Log$
+// Revision 1.3  1999/09/08 02:26:51  sparker
+// Various #include cleanups
+//
 // Revision 1.2  1999/08/17 06:39:19  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

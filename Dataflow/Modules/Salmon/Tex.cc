@@ -15,18 +15,13 @@
 #include <PSECommon/Modules/Salmon/Tex.h>
 
 #include <SCICore/Malloc/Allocator.h>
-#include <strstream.h>
-#include <fstream.h>
 #include <strings.h>
 
 #include <SCICore/Geometry/BBox.h>
+#include <SCICore/Math/MiscMath.h>
 #include <SCICore/TclInterface/TCLTask.h>
 #include <SCICore/Util/NotFinished.h>
-#include <tcl.h>
-#include <tk.h>
 #include <GL/gl.h>
-#include <GL/glu.h>
-#include <GL/glx.h>
 
 #define USELUMIALPH 1
 
@@ -35,6 +30,7 @@ namespace Modules {
 
 using SCICore::Geometry::Dot;
 using SCICore::PersistentSpace::Persistent;
+using SCICore::Math::Abs;
 
 // these are some functions for the cube primitive...
 
@@ -122,7 +118,7 @@ void oCubeEdge::InitView(Vector& view, double d)
 
   double nv = Dot(view,v);
   flip=0;
-  if (fabs(nv) < 0.0001) { // are the perpendicular?
+  if (Abs(nv) < 0.0001) { // are the perpendicular?
     end = start;
     fac = 1.0; // doesn't matter...
 //    cerr << id << " " << start << " " << end << endl;
@@ -611,6 +607,9 @@ void GeomTexVolRender::Clear()
 
 //
 // $Log$
+// Revision 1.6  1999/09/08 02:26:35  sparker
+// Various #include cleanups
+//
 // Revision 1.5  1999/08/23 06:30:32  sparker
 // Linux port
 // Added X11 configuration options

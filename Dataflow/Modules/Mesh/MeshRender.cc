@@ -19,7 +19,6 @@
 #include <SCICore/Geom/GeomGroup.h>
 #include <SCICore/Geom/Material.h>
 #include <SCICore/Geom/GeomSphere.h>
-#include <SCICore/Malloc/Allocator.h>
 #include <SCICore/TclInterface/TCLvar.h>
 
 namespace SCIRun {
@@ -136,6 +135,9 @@ void MeshRender::execute()
 
 //
 // $Log$
+// Revision 1.2  1999/09/08 02:27:06  sparker
+// Various #include cleanups
+//
 // Revision 1.1  1999/09/05 05:32:29  dmw
 // updated and added Modules from old tree to new
 //

@@ -18,8 +18,8 @@
 #include <sci_config.h>
 
 #include <SCICore/share/share.h>
-
 #include <SCICore/Util/Assert.h>
+#include <SCICore/Malloc/Allocator.h>
 #include <SCICore/Persistent/Persistent.h>
 
 namespace SCICore {
@@ -237,22 +237,6 @@ template<class Key, class Data> class HashKey {
     HashKey(const HashKey<Key, Data>&, int deep=0);
     friend void TEMPLATE_TAG Pio TEMPLATE_BOX (Piostream&, HashTable<Key, Data>&);
 };
-
-} // End namespace Containers
-} // End namespace SCICore
-
-
-////////////////////////////////////////////////////////////
-//
-// Start of included HashTable.cc
-//
-
-#include <SCICore/Containers/String.h>
-#include <SCICore/Util/Assert.h>
-#include <SCICore/Malloc/Allocator.h>
-
-namespace SCICore {
-namespace Containers {
 
 // Create a hashtable
 template<class Key, class Data>
@@ -546,6 +530,9 @@ void Pio(Piostream& stream, HashTable<Key, Data>& t)
 
 //
 // $Log$
+// Revision 1.10  1999/09/08 02:26:46  sparker
+// Various #include cleanups
+//
 // Revision 1.9  1999/09/04 06:01:42  sparker
 // Updates to .h files, to minimize #includes
 // removed .icc files (yeah!)

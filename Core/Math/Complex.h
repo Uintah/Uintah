@@ -20,9 +20,12 @@
 #include<math.h>
 
 // KCC stuff
+#ifdef KCC
 #include <iostream.h>
-//class ostream;
-//class istream;
+#else
+class ostream;
+class istream;
+#endif
 
 namespace SCICore {
 namespace Math {
@@ -65,6 +68,9 @@ public:
 
 //
 // $Log$
+// Revision 1.3  1999/09/08 02:26:53  sparker
+// Various #include cleanups
+//
 // Revision 1.2  1999/08/17 06:39:32  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

@@ -7,9 +7,6 @@
 #include <SCICore/Datatypes/VectorField.h>
 #include <SCICore/Malloc/Allocator.h>
 
-#include <iostream.h> 
-#include <stdio.h>
-
 #define TENSOR_CONFIG "tensor_cfg"  
 
 namespace DaveW {
@@ -115,6 +112,9 @@ void TensorAccessFields::execute()
 
 //
 // $Log$
+// Revision 1.2  1999/09/08 02:26:31  sparker
+// Various #include cleanups
+//
 // Revision 1.1  1999/09/02 04:50:36  dmw
 // Eric's modules
 //

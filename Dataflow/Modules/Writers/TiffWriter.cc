@@ -8,7 +8,6 @@
  *    July 1997
  */
 
-#include <SCICore/Util/NotFinished.h>
 #include <PSECore/Dataflow/Module.h>
 #include <PSECore/Datatypes/ScalarFieldPort.h>
 #include <SCICore/Datatypes/ScalarField.h>
@@ -202,6 +201,9 @@ void TiffWriter::execute()
 
 //
 // $Log$
+// Revision 1.5  1999/09/08 02:27:06  sparker
+// Various #include cleanups
+//
 // Revision 1.4  1999/08/31 08:55:38  sparker
 // Bring SCIRun modules up to speed
 //

@@ -22,7 +22,6 @@
 
 #include <PSECore/Dataflow/NetworkEditor.h>
   
-#include <SCICore/Util/NotFinished.h>
 #include <SCICore/Containers/Queue.h>
 #include <PSECore/Comm/MessageBase.h>
 #include <PSECore/Dataflow/Connection.h>
@@ -673,6 +672,9 @@ void NetworkEditor::tcl_command(TCLArgs& args, void*)
 
 //
 // $Log$
+// Revision 1.8  1999/09/08 02:26:41  sparker
+// Various #include cleanups
+//
 // Revision 1.7  1999/08/30 18:47:52  kuzimmer
 // Modified so that dataflow scripts can be read and written properly
 //

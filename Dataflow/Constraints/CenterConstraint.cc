@@ -15,6 +15,7 @@
 
 #include <PSECore/Constraints/CenterConstraint.h>
 #include <SCICore/Util/Debug.h>
+#include <iostream.h>
 
 namespace PSECore {
 namespace Constraints {
@@ -123,7 +124,7 @@ CenterConstraint::Satisfy( const Index index, const Scheme scheme, const Real,
 
    if (cc_debug) {
       ChooseChange(index, scheme);
-      print();
+      print(cout);
    }
    
    switch (ChooseChange(index, scheme)) {
@@ -178,6 +179,9 @@ CenterConstraint::Satisfy( const Index index, const Scheme scheme, const Real,
 
 //
 // $Log$
+// Revision 1.4  1999/09/08 02:26:38  sparker
+// Various #include cleanups
+//
 // Revision 1.3  1999/08/18 20:20:17  sparker
 // Eliminated copy constructor and clone in all modules
 // Added a private copy ctor and a private clone method to Module so

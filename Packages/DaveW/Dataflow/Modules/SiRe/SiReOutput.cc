@@ -23,7 +23,6 @@
 #include <SCICore/Math/MinMax.h>
 #include <SCICore/Persistent/Pstreams.h>
 #include <SCICore/Tester/RigorousTest.h>
-#include <SCICore/Util/NotFinished.h>
 
 #include <iostream.h>
 #include <stdio.h>
@@ -326,6 +325,9 @@ void SiReOutput::execute()
 
 //
 // $Log$
+// Revision 1.4  1999/09/08 02:26:31  sparker
+// Various #include cleanups
+//
 // Revision 1.3  1999/08/30 20:19:21  sparker
 // Updates to compile with -LANG:std on SGI
 // Other linux/irix porting oscillations

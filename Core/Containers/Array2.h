@@ -135,21 +135,6 @@ public:
 
 };
 
-} // End namespace Containers
-} // End namespace SCICore
-
-////////////////////////////////////////////////////////////
-//
-// Start of included Array2.cc
-//
-
-#include <SCICore/Containers/String.h>
-#include <SCICore/Malloc/Allocator.h>
-#include <SCICore/Persistent/Persistent.h>
-
-namespace SCICore {
-namespace Containers {
-
 template<class T>
 Array2<T>::Array2()
 {
@@ -283,6 +268,9 @@ void Pio(Piostream& stream, Containers::Array2<T>*& data) {
 
 //
 // $Log$
+// Revision 1.7  1999/09/08 02:26:45  sparker
+// Various #include cleanups
+//
 // Revision 1.6  1999/08/30 20:19:26  sparker
 // Updates to compile with -LANG:std on SGI
 // Other linux/irix porting oscillations

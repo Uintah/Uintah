@@ -14,7 +14,6 @@
 
 #include <PSECore/Dataflow/Port.h>
 
-#include <SCICore/Util/NotFinished.h>
 #include <PSECore/Dataflow/Connection.h>
 #include <PSECore/Dataflow/Module.h>
 
@@ -203,6 +202,9 @@ clString Port::get_colorname()
 
 //
 // $Log$
+// Revision 1.3  1999/09/08 02:26:42  sparker
+// Various #include cleanups
+//
 // Revision 1.2  1999/08/17 06:38:25  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

@@ -28,17 +28,10 @@
 #include <SCICore/TclInterface/TCLTask.h>
 #include <SCICore/TclInterface/TCLvar.h>
 #include <SCICore/TclInterface/TCL.h>
-#include <SCICore/Util/NotFinished.h>
 #define Colormap XColormap
 #include "/home/sci/u2/dmw/itcltk-8.0.4/include/tcl.h"
 #include "/home/sci/u2/dmw/itcltk-8.0.4/include/tk.h"
 #undef Colormap
-
-#include <iostream.h>
-#include <math.h>
-#include <string.h>
-#include <stdlib.h>
-#include <stdio.h>
 
 namespace DaveW {
 namespace Modules {
@@ -223,6 +216,9 @@ void RayTest::execute()
 } // End namespace DaveW
 //
 // $Log$
+// Revision 1.3  1999/09/08 02:26:20  sparker
+// Various #include cleanups
+//
 // Revision 1.2  1999/08/25 03:47:37  sparker
 // Changed SCICore/CoreDatatypes to SCICore/Datatypes
 // Changed PSECore/CommonDatatypes to PSECore/Datatypes

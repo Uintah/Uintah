@@ -13,8 +13,6 @@
 #include <SCICore/Math/MiscMath.h>
 #include <SCICore/Util/NotFinished.h>
 
-#include <iostream.h>
-
 namespace DaveW {
 namespace Datatypes {
     using namespace SCICore::Math;
@@ -226,6 +224,9 @@ void TensorField<DATA>::io(Piostream& stream)
 
 //
 // $Log$
+// Revision 1.3  1999/09/08 02:26:18  sparker
+// Various #include cleanups
+//
 // Revision 1.2  1999/09/01 16:45:50  sparker
 // namespace updates to get tensorfield to compile/link
 //
