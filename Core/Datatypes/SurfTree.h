@@ -68,8 +68,6 @@ typedef struct NodeInfo {
     friend SCICORESHARE void Pio(Piostream& stream, Datatypes::NodeInfo& node);
 } NodeInfo;
 
-class TopoSurfTree;
-
 void Pio(Piostream& stream, SurfInfo& surf);
 void Pio(Piostream& stream, FaceInfo& face);
 void Pio(Piostream& stream, EdgeInfo& edge);
@@ -122,7 +120,6 @@ public:
     virtual void construct_hash(int, int, const Point &, double);
 
     virtual GeomObj* get_obj(const ColorMapHandle&);
-    TopoSurfTree* toTopoSurfTree();
     
     // Persistent representation...
     virtual void io(Piostream&);
@@ -134,6 +131,9 @@ public:
 
 //
 // $Log$
+// Revision 1.4  1999/09/01 06:16:28  dmw
+// took out dependence of SurfTree on TopoSurfTree
+//
 // Revision 1.3  1999/08/25 03:48:42  sparker
 // Changed SCICore/CoreDatatypes to SCICore/Datatypes
 // Changed PSECore/CommonDatatypes to PSECore/Datatypes
