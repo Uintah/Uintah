@@ -1,0 +1,5 @@
+
+class y {
+      void x();
+      void y() throws x;
+};

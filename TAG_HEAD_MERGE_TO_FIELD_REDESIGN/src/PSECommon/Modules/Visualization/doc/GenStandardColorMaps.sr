@@ -1,0 +1,107 @@
+# SCI Network 1.0
+
+::netedit dontschedule
+
+global userName
+set userName "kuzimmer"
+
+global runDate
+set runDate " Tue  Jul 4 19100"
+
+global runTime
+set runTime " 10:54:31"
+
+set m0 [addModuleAtPosition "PSECommon" "Visualization" "GenStandardColorMaps" 10 10]
+set m1 [addModuleAtPosition "PSECommon" "Visualization" "RescaleColorMap" 104 104]
+set m2 [addModuleAtPosition "PSECommon" "Visualization" "CuttingPlane" 178 200]
+set m3 [addModuleAtPosition "PSECommon" "Salmon" "Salmon" 179 295]
+set m4 [addModuleAtPosition "PSECommon" "Readers" "ScalarFieldReader" 229 5]
+
+addConnection $m2 0 $m3 0
+addConnection $m4 0 $m1 1
+addConnection $m4 0 $m2 0
+addConnection $m0 0 $m1 0
+addConnection $m1 0 $m2 1
+
+set ::PSECommon_Visualization_GenStandardColorMaps_0-notes {}
+set ::PSECommon_Visualization_GenStandardColorMaps_0-show_status 1
+set ::PSECommon_Visualization_GenStandardColorMaps_0-tcl_status {Calling GenStandardColorMaps!}
+set ::PSECommon_Visualization_GenStandardColorMaps_0-positionList {}
+set ::PSECommon_Visualization_GenStandardColorMaps_0-nodeList {}
+set ::PSECommon_Visualization_GenStandardColorMaps_0-width 366
+set ::PSECommon_Visualization_GenStandardColorMaps_0-height 40
+set ::PSECommon_Visualization_GenStandardColorMaps_0-mapType 3
+set ::PSECommon_Visualization_GenStandardColorMaps_0-minRes 12
+set ::PSECommon_Visualization_GenStandardColorMaps_0-resolution 12
+set ::PSECommon_Visualization_RescaleColorMap_0-notes {}
+set ::PSECommon_Visualization_RescaleColorMap_0-show_status 1
+set ::PSECommon_Visualization_RescaleColorMap_0-isFixed 0
+set ::PSECommon_Visualization_RescaleColorMap_0-min 0
+set ::PSECommon_Visualization_RescaleColorMap_0-max 121
+set ::PSECommon_Visualization_CuttingPlane_0-notes {}
+set ::PSECommon_Visualization_CuttingPlane_0-show_status 1
+set ::PSECommon_Visualization_CuttingPlane_0-cutting_plane_type 0
+set ::PSECommon_Visualization_CuttingPlane_0-num_contours 20
+set ::PSECommon_Visualization_CuttingPlane_0-offset 0
+set ::PSECommon_Visualization_CuttingPlane_0-scale 1
+set ::PSECommon_Visualization_CuttingPlane_0-where 0.5
+set ::PSECommon_Visualization_CuttingPlane_0-need_find 1
+set ::PSECommon_Visualization_CuttingPlane_0-localMinMaxTCL 0
+set ::PSECommon_Visualization_CuttingPlane_0-fullRezTCL 0
+set ::PSECommon_Visualization_CuttingPlane_0-exhaustiveTCL 0
+set ::PSECommon_Salmon_Salmon_0-notes {}
+set ::PSECommon_Salmon_Salmon_0-show_status 1
+PSECommon_Salmon_Salmon_0 ui ::PSECommon_Salmon_Salmon_0-Roe_0
+set ::PSECommon_Salmon_Salmon_0-Roe_0-view-eyep-x -1.16292
+set ::PSECommon_Salmon_Salmon_0-Roe_0-view-eyep-y 0.0537747
+set ::PSECommon_Salmon_Salmon_0-Roe_0-view-eyep-z -3.67492
+set ::PSECommon_Salmon_Salmon_0-Roe_0-view-lookat-x 0.488215
+set ::PSECommon_Salmon_Salmon_0-Roe_0-view-lookat-y 0.488215
+set ::PSECommon_Salmon_Salmon_0-Roe_0-view-lookat-z 0.5
+set ::PSECommon_Salmon_Salmon_0-Roe_0-view-up-x 0.93003
+set ::PSECommon_Salmon_Salmon_0-Roe_0-view-up-y -0.00333917
+set ::PSECommon_Salmon_Salmon_0-Roe_0-view-up-z -0.367469
+set ::PSECommon_Salmon_Salmon_0-Roe_0-view-fov 20
+set ::PSECommon_Salmon_Salmon_0-Roe_0-view-eyep-x -1.16292
+set ::PSECommon_Salmon_Salmon_0-Roe_0-view-eyep-y 0.0537747
+set ::PSECommon_Salmon_Salmon_0-Roe_0-view-eyep-z -3.67492
+set ::PSECommon_Salmon_Salmon_0-Roe_0-view-eyep-x -1.16292
+set ::PSECommon_Salmon_Salmon_0-Roe_0-view-eyep-y 0.0537747
+set ::PSECommon_Salmon_Salmon_0-Roe_0-view-eyep-z -3.67492
+set ::PSECommon_Salmon_Salmon_0-Roe_0-view-lookat-x 0.488215
+set ::PSECommon_Salmon_Salmon_0-Roe_0-view-lookat-y 0.488215
+set ::PSECommon_Salmon_Salmon_0-Roe_0-view-lookat-z 0.5
+set ::PSECommon_Salmon_Salmon_0-Roe_0-view-lookat-x 0.488215
+set ::PSECommon_Salmon_Salmon_0-Roe_0-view-lookat-y 0.488215
+set ::PSECommon_Salmon_Salmon_0-Roe_0-view-lookat-z 0.5
+set ::PSECommon_Salmon_Salmon_0-Roe_0-view-up-x 0.93003
+set ::PSECommon_Salmon_Salmon_0-Roe_0-view-up-y -0.00333917
+set ::PSECommon_Salmon_Salmon_0-Roe_0-view-up-z -0.367469
+set ::PSECommon_Salmon_Salmon_0-Roe_0-view-up-x 0.93003
+set ::PSECommon_Salmon_Salmon_0-Roe_0-view-up-y -0.00333917
+set ::PSECommon_Salmon_Salmon_0-Roe_0-view-up-z -0.367469
+set ::PSECommon_Salmon_Salmon_0-Roe_0-view-fov 20
+set ::PSECommon_Salmon_Salmon_0-Roe_0-view-eyep_offset-x -1.79769e+308
+set ::PSECommon_Salmon_Salmon_0-Roe_0-view-eyep_offset-y -1.79769e+308
+set ::PSECommon_Salmon_Salmon_0-Roe_0-view-eyep_offset-z -1.79769e+308
+set ::PSECommon_Salmon_Salmon_0-Roe_0-view-eyep_offset-x -1.79769e+308
+set ::PSECommon_Salmon_Salmon_0-Roe_0-view-eyep_offset-y -1.79769e+308
+set ::PSECommon_Salmon_Salmon_0-Roe_0-view-eyep_offset-z -1.79769e+308
+set ::PSECommon_Salmon_Salmon_0-Roe_0-bgcolor-r 0
+set ::PSECommon_Salmon_Salmon_0-Roe_0-bgcolor-g 0
+set ::PSECommon_Salmon_Salmon_0-Roe_0-bgcolor-b 0
+set ::PSECommon_Salmon_Salmon_0-Roe_0-bgcolor-r 0
+set ::PSECommon_Salmon_Salmon_0-Roe_0-bgcolor-g 0
+set ::PSECommon_Salmon_Salmon_0-Roe_0-bgcolor-b 0
+set ::PSECommon_Salmon_Salmon_0-Roe_0-shading {}
+set ::PSECommon_Salmon_Salmon_0-Roe_0-do_stereo 0
+set ::PSECommon_Salmon_Salmon_0-Roe_0-do_bawgl 0
+set ::PSECommon_Salmon_Salmon_0-Roe_0-drawimg -2147483647
+set ::PSECommon_Salmon_Salmon_0-Roe_0-saveprefix {}
+set {::PSECommon_Salmon_Salmon_0-Roe_0-CuttingPlane Widget (1)} 1
+set {::PSECommon_Salmon_Salmon_0-Roe_0-Cutting Plane (1)} 1
+set ::PSECommon_Readers_ScalarFieldReader_0-notes {}
+set ::PSECommon_Readers_ScalarFieldReader_0-show_status 1
+set ::PSECommon_Readers_ScalarFieldReader_0-filename {/home/sci/data1/development/data/brain.16.bin}
+
+::netedit scheduleok
