@@ -47,7 +47,7 @@ WARNING
   
 ****************************************/
 
-  class SchedulerCommon : public UintahParallelComponent, public Scheduler {
+  class SchedulerCommon : public Scheduler, public UintahParallelComponent {
   public:
     SchedulerCommon(const ProcessorGroup* myworld, Output* oport);
     virtual ~SchedulerCommon();

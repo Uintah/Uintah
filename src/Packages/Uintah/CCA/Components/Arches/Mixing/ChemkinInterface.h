@@ -155,7 +155,7 @@ namespace Uintah {
     // given the pressure(Pa), temperature(K), and species mass fractions
     //
     double getMassDensity(double press, double temp, 
-			  const vector<double> Yvec);
+			  vector<double> Yvec);
     //////////////////////////////////////////////////////////////////////
     // convertMolestoMass returns the array of species mass fractions
     // given the mole fractions

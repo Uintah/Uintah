@@ -392,7 +392,7 @@ void AMRSimulationController::subCycle(std::vector<SchedulerP>& schedulers, Grid
    fineSched->initialize();
 
    // Get the Datawarehouses
-   DataWarehouse* coarseDW = coarseSched->get_new_dw(); 
+   //DataWarehouse* coarseDW = coarseSched->get_new_dw(); 
    DataWarehouse* fineDW = coarseSched->get_new_dw(); 
 
    // halve the delta

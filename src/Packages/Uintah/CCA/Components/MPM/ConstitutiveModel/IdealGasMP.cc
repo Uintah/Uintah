@@ -246,8 +246,8 @@ void IdealGasMP::computeStressTensor(const PatchSubset* patches,
   }
 }
 
-void IdealGasMP::addInitialComputesAndRequires(Task* task,
-                                               const MPMMaterial* matl,
+void IdealGasMP::addInitialComputesAndRequires(Task*,
+                                               const MPMMaterial*,
                                                const PatchSet*) const
 {
 
@@ -280,7 +280,7 @@ void IdealGasMP::addComputesAndRequires(Task* task,
 // The "CM" versions use the pressure-volume relationship of the CNH model
 double IdealGasMP::computeRhoMicroCM(double press, 
                                       const double Temp,
-                                      const MPMMaterial* matl)
+                                      const MPMMaterial*)
 {
   double gamma = d_initialData.gamma;
   double cv    = d_initialData.cv;
@@ -291,7 +291,7 @@ double IdealGasMP::computeRhoMicroCM(double press,
 void IdealGasMP::computePressEOSCM(const double rhoM,double& pressure, 
                                                const double Temp,
                                                double& dp_drho, double& tmp,
-                                                const MPMMaterial* matl)
+                                                const MPMMaterial*)
 {
   double gamma = d_initialData.gamma;
   double cv    = d_initialData.cv;

@@ -513,14 +513,14 @@ double Membrane::computeRhoMicroCM(double pressure,
   return rho_cur;
 }
 
-void Membrane::computePressEOSCM(const double rho_cur,double& pressure, 
-                                               const double p_ref,
-                                               double& dp_drho, double& tmp,
-                                                const MPMMaterial* matl)
+void Membrane::computePressEOSCM(double rho_cur,double& pressure, 
+				 double p_ref,
+				 double& dp_drho, double& tmp,
+				 const MPMMaterial* matl)
 {
   //double p_ref=101325.0;
   double bulk = d_initialData.Bulk;
-  double shear = d_initialData.Shear;
+  //double shear = d_initialData.Shear;
   double rho_orig = matl->getInitialDensity();
 
   double p_g = .5*bulk*(rho_cur/rho_orig - rho_orig/rho_cur);

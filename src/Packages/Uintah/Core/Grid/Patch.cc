@@ -986,14 +986,11 @@ Patch::getSFCZIterator(const int offset) const
 CellIterator
 Patch::getSFCIterator(const int dir, const int offset) const
 {
-  IntVector low,hi; 
   if (dir == 0) {
     return getSFCXIterator(offset);
-  }
-  if (dir == 1) {
+  } else if (dir == 1) {
     return getSFCYIterator(offset);
-  }
-  if (dir == 2) {
+  } else {
     return getSFCZIterator(offset);
   } 
 } 

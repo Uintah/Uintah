@@ -108,8 +108,8 @@ public:
       ///////////////////////////////////////////////////////////////////////
       // Schedule Build of linearized matrix
       void sched_buildLinearMatrixCorr(SchedulerP&, const PatchSet* patches,
-				   const MaterialSet* matls,
-				   int index);
+				       const MaterialSet* matls,
+				       int index);
 
       ///////////////////////////////////////////////////////////////////////
       // Schedule Linear Solve for ReactiveScalar[index]
@@ -151,11 +151,11 @@ private:
       //        add documentation here
 
       void buildLinearMatrixPred(const ProcessorGroup* pc,
-			     const PatchSubset* patches,
-			     const MaterialSubset* /*matls*/,
-			     DataWarehouse* old_dw,
-			     DataWarehouse* new_dw,
-			     const int index);
+				 const PatchSubset* patches,
+				 const MaterialSubset* /*matls*/,
+				 DataWarehouse* old_dw,
+				 DataWarehouse* new_dw,
+				 int index);
 
       ///////////////////////////////////////////////////////////////////////
       // Actually Solve the Linear System for ReactiveScalar[index]
@@ -174,11 +174,11 @@ private:
       //        add documentation here
 
       void buildLinearMatrixCorr(const ProcessorGroup* pc,
-			     const PatchSubset* patches,
-			     const MaterialSubset* /*matls*/,
-			     DataWarehouse* old_dw,
-			     DataWarehouse* new_dw,
-			     const int index);
+				 const PatchSubset* patches,
+				 const MaterialSubset* /*matls*/,
+				 DataWarehouse* old_dw,
+				 DataWarehouse* new_dw,
+				 int index);
 
       ///////////////////////////////////////////////////////////////////////
       // Actually Solve the Linear System for ReactiveScalar[index]
@@ -201,7 +201,7 @@ private:
 			     const MaterialSubset* /*matls*/,
 			     DataWarehouse* old_dw,
 			     DataWarehouse* new_dw,
-			     const int index);
+			     int index);
 
       ///////////////////////////////////////////////////////////////////////
       // Actually Solve the Linear System for ReactiveScalar[index]

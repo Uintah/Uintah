@@ -5,7 +5,8 @@
 
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
-#include <iostream.h>
+#include <iostream>
+using namespace std;
 
 using namespace Uintah;
 

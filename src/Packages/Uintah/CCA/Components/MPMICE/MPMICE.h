@@ -54,7 +54,7 @@ WARNING
   
 ****************************************/
 
-class MPMICE : public UintahParallelComponent, public SimulationInterface {
+class MPMICE : public SimulationInterface, public UintahParallelComponent {
 public:
   MPMICE(const ProcessorGroup* myworld);
   virtual ~MPMICE();

@@ -224,6 +224,10 @@ template <class T> void FirstOrderAdvector::advect(const CCVariable<T>& q_CC,
 
 }
 
+#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
+#pragma set woff 1209
+#endif
+
 namespace Uintah {
 
   static MPI_Datatype makeMPI_fflux()

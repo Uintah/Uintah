@@ -268,8 +268,8 @@ void CompMooneyRivlin::addParticleState(std::vector<const VarLabel*>& from,
    to.push_back(lb->pStressLabel_preReloc);
 }
 
-void CompMooneyRivlin::addInitialComputesAndRequires(Task* task,
-                                                     const MPMMaterial* matl,
+void CompMooneyRivlin::addInitialComputesAndRequires(Task*,
+                                                     const MPMMaterial*,
                                                      const PatchSet* ) const
 {
 
@@ -320,8 +320,8 @@ double CompMooneyRivlin::computeRhoMicroCM(double /*pressure*/,
   return rho_cur;
 }
 
-void CompMooneyRivlin::computePressEOSCM(const double /*rho_cur*/,double& /*pressure*/,
-                                         const double /*p_ref*/,
+void CompMooneyRivlin::computePressEOSCM(double /*rho_cur*/,double& /*pressure*/,
+                                         double /*p_ref*/,
                                          double& /*dp_drho*/, double& /*tmp*/,
                                          const MPMMaterial* /*matl*/)
 {

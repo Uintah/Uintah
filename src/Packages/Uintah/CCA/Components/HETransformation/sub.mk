@@ -9,7 +9,8 @@ SRCS     += $(SRCDIR)/NullBurn.cc $(SRCDIR)/SimpleBurn.cc \
 	$(SRCDIR)/IgnitionCombustion.cc
 
 PSELIBS	:= Packages/Uintah/Core/ProblemSpec \
-	Packages/Uintah/Core/Exceptions
+	Packages/Uintah/Core/Exceptions \
+	Core/Exceptions
 
 LIBS := $(XML_LIBRARY) -lm
 

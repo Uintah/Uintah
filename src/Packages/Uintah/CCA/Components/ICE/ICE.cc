@@ -2597,7 +2597,7 @@ void ICE::computeLagrangianValues(const ProcessorGroup*,
 void ICE::computeLagrangianSpecificVolume(const ProcessorGroup*,  
                                           const PatchSubset* patches,
                                           const MaterialSubset* /*matls*/,
-                                          DataWarehouse* old_dw, 
+                                          DataWarehouse*,
                                           DataWarehouse* new_dw)
 {
   for(int p=0;p<patches->size();p++){
@@ -2608,7 +2608,7 @@ void ICE::computeLagrangianSpecificVolume(const ProcessorGroup*,
 
     int numALLMatls = d_sharedState->getNumMatls();
     Vector  dx = patch->dCell();
-    double cell_vol = dx.x()*dx.y()*dx.z();
+    //double cell_vol = dx.x()*dx.y()*dx.z();
 
     constCCVariable<double> rho_CC, spec_vol_src, sp_vol;
     constCCVariable<double> mass_L_CC;

@@ -261,8 +261,8 @@ void HypoElastic::computeStressTensor(const PatchSubset* patches,
   }
 }
 
-void HypoElastic::addInitialComputesAndRequires(Task* task,
-                                                const MPMMaterial* matl,
+void HypoElastic::addInitialComputesAndRequires(Task*,
+                                                const MPMMaterial*,
                                                 const PatchSet* ) const
 {
 
@@ -314,13 +314,13 @@ double HypoElastic::computeRhoMicroCM(double pressure,
 #endif
 }
 
-void HypoElastic::computePressEOSCM(const double rho_cur, double& pressure,
-                                    const double p_ref,
+void HypoElastic::computePressEOSCM(double rho_cur, double& pressure,
+                                    double p_ref,
                                     double& dp_drho,      double& tmp,
                                     const MPMMaterial* matl)
 {
 
-  double G = d_initialData.G;
+  //double G = d_initialData.G;
   double bulk = d_initialData.K;
   double rho_orig = matl->getInitialDensity();
 

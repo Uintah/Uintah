@@ -255,7 +255,7 @@ ILDMReactionModel::problemSetup(const ProblemSpecP& params,
       //Check to see if number of entries in datafile match the size of table 
       //specified above
       cerr << "dataCount = " << dataCount << " totalEntries = " << totalEntries << endl;
-      assert(dataCount==totalEntries);
+      ASSERT(dataCount==totalEntries);
 }
 
 

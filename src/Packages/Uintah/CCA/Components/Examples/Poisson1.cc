@@ -27,7 +27,7 @@ Poisson1::~Poisson1()
   delete lb_;
 }
 
-void Poisson1::problemSetup(const ProblemSpecP& params, GridP& grid,
+void Poisson1::problemSetup(const ProblemSpecP& params, GridP& /*grid*/,
 			 SimulationStateP& sharedState)
 {
   sharedState_ = sharedState;
@@ -68,9 +68,10 @@ void Poisson1::scheduleTimeAdvance(const LevelP& level, SchedulerP& sched)
 }
 
 void Poisson1::computeStableTimestep(const ProcessorGroup* pg,
-				  const PatchSubset* patches,
-				  const MaterialSubset* matls,
-				  DataWarehouse* old_dw, DataWarehouse* new_dw)
+				     const PatchSubset* /*patches*/,
+				     const MaterialSubset* /*matls*/,
+				     DataWarehouse*,
+				     DataWarehouse* new_dw)
 {
   if(pg->myrank() == 0){
     sum_vartype residual;
@@ -81,9 +82,9 @@ void Poisson1::computeStableTimestep(const ProcessorGroup* pg,
 }
 
 void Poisson1::initialize(const ProcessorGroup*,
-		       const PatchSubset* patches,
-		       const MaterialSubset* matls,
-		       DataWarehouse* old_dw, DataWarehouse* new_dw)
+			  const PatchSubset* patches,
+			  const MaterialSubset* matls,
+			  DataWarehouse* /*old_dw*/, DataWarehouse* new_dw)
 {
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);

@@ -151,7 +151,7 @@ private:
 			   const MaterialSubset* matls,
 			   DataWarehouse* old_dw,
 			   DataWarehouse* new_dw,
-			   const bool recursion);
+			   bool recursion);
 
   void computeStressTensorOnly(const ProcessorGroup*,
 			       const PatchSubset* patches,
@@ -177,7 +177,7 @@ private:
 			    const MaterialSubset* matls,
 			    DataWarehouse* old_dw,
 			    DataWarehouse* new_dw,
-			    const bool recursion);
+			    bool recursion);
 
 
   void iterate(const ProcessorGroup* pg,
@@ -258,16 +258,16 @@ private:
 					       const MaterialSet*);
 
   void scheduleComputeStressTensorI(SchedulerP&, const PatchSet*,
-				   const MaterialSet*,
-				   const bool recursion = false);
+				    const MaterialSet*,
+				    bool recursion = false);
 
   void scheduleComputeStressTensorR(SchedulerP&, const PatchSet*,
-				   const MaterialSet*,
-				   const bool recursion = false);
+				    const MaterialSet*,
+				    bool recursion = false);
 
   void scheduleComputeStressTensorOnly(SchedulerP&, const PatchSet*,
 				       const MaterialSet*,
-				       const bool recursion = false);
+				       bool recursion = false);
 
   void scheduleFormStiffnessMatrixI(SchedulerP&, const PatchSet*,
 				   const MaterialSet*,const bool recursion);
@@ -278,15 +278,15 @@ private:
 
   void scheduleComputeInternalForceI(SchedulerP&, const PatchSet*,
 				     const MaterialSet*,
-				     const bool recursion);
+				     bool recursion);
 
   void scheduleComputeInternalForceII(SchedulerP&, const PatchSet*,
-				    const MaterialSet*,
-				    const bool recursion);
+				      const MaterialSet*,
+				      bool recursion);
 
   void scheduleComputeInternalForceR(SchedulerP&, const PatchSet*,
-				    const MaterialSet*,
-				    const bool recursion);
+				     const MaterialSet*,
+				     bool recursion);
 
   void scheduleIterate(SchedulerP&, const LevelP&,const PatchSet*, 
 		       const MaterialSet*);
@@ -310,10 +310,10 @@ private:
 			       const MaterialSet*,const bool recursion);
 
   void scheduleSolveForDuCGI(SchedulerP&, const PatchSet*, const MaterialSet*,
-			     const bool recursion);
+			     bool recursion);
 
   void scheduleSolveForDuCGR(SchedulerP&, const PatchSet*, const MaterialSet*,
-			     const bool recursion);
+			     bool recursion);
 
   void scheduleUpdateGridKinematicsI(SchedulerP&, const PatchSet*, 
 				    const MaterialSet*,const bool recursion);
@@ -322,11 +322,11 @@ private:
 				    const MaterialSet*,const bool recursion);
 
   void scheduleCheckConvergenceI(SchedulerP&, const LevelP&, const PatchSet*,
-				const MaterialSet*, const bool recursion);
+				const MaterialSet*, bool recursion);
 
 
   void scheduleCheckConvergenceR(SchedulerP&, const LevelP&, const PatchSet*,
-				const MaterialSet*, const bool recursion);
+				const MaterialSet*, bool recursion);
 
   void scheduleComputeAcceleration(SchedulerP&, const PatchSet*,
 				   const MaterialSet*);
