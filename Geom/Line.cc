@@ -12,6 +12,7 @@
  */
 
 #include <Geom/Line.h>
+#include <Classlib/NotFinished.h>
 #include <Geometry/BBox.h>
 
 GeomLine::GeomLine(const Point& p1, const Point& p2)
@@ -46,3 +47,8 @@ void GeomLine::make_prims(Array1<GeomObj*>&,
     dontfree.add(line);
 }
 
+void GeomLine::intersect(const Ray&, const MaterialHandle&,
+			 Hit&)
+{
+    NOT_FINISHED("GeomLine::intersect");
+}

@@ -20,8 +20,9 @@
 class GeomGroup : public GeomObj {
     Array1<GeomObj*> objs;
     BBox bb;
+    int del_children;
 public:
-    GeomGroup();
+    GeomGroup(int del_children=1);
     GeomGroup(const GeomGroup&);
     virtual ~GeomGroup();
     virtual GeomObj* clone();
@@ -37,6 +38,8 @@ public:
 #endif
     virtual void make_prims(Array1<GeomObj*>& free,
 			    Array1<GeomObj*>& dontfree);
+    virtual void intersect(const Ray& ray, const MaterialHandle& matl,
+			   Hit& hit);
 };
 
 #endif /* SCI_Geom_Group_h */

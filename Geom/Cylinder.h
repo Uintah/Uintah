@@ -35,7 +35,7 @@ public:
     void adjust();
     void move(const Point&, const Point&, double, int nu=20, int nv=4);
 
-    GeomCylinder();
+    GeomCylinder(int nu=20, int nv=4);
     GeomCylinder(const Point&, const Point&, double, int nu=20, int nv=4);
     GeomCylinder(const GeomCylinder&);
     virtual ~GeomCylinder();
@@ -48,6 +48,8 @@ public:
 #endif
     virtual void make_prims(Array1<GeomObj*>& free,
 			    Array1<GeomObj*>& dontfree);
+    virtual void intersect(const Ray& ray, const MaterialHandle& matl,
+			   Hit& hit);
 };
 
 #endif /* SCI_Geom_Cylinder_h */

@@ -18,8 +18,8 @@
 #include <Math/TrigTable.h>
 #include <Math/Trig.h>
 
-GeomCone::GeomCone()
-: GeomObj(1)
+GeomCone::GeomCone(int nu, int nv)
+: GeomObj(1), nu(nu), nv(nv)
 {
 }
 
@@ -126,4 +126,10 @@ void GeomCone::make_prims(Array1<GeomObj*>& free,
 	    l2=p2;
 	}
     }
+}
+
+void GeomCone::intersect(const Ray&, const MaterialHandle&,
+			 Hit&)
+{
+    NOT_FINISHED("GeomCone::intersect");
 }

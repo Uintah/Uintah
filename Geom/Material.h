@@ -29,6 +29,8 @@ public:
     Color specular;
     double shininess;
     Color emission;
+
+    double reflectivity;
     Material();
     Material(const Color&, const Color&, const Color&, double);
     Material(const Material&);

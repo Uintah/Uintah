@@ -243,7 +243,7 @@ void GeomTube::objdraw(DrawInfoOpenGL* di) {
 
 void GeomRenderMode::objdraw(DrawInfoOpenGL* di)
 {
-    int save_lighting=di->lighting;
+//    int save_lighting=di->lighting;
     NOT_FINISHED("GeomRenderMode");
     if(child){
 	child->draw(di);

@@ -12,6 +12,7 @@
  */
 
 #include <Geom/Polyline.h>
+#include <Classlib/NotFinished.h>
 #include <Geometry/BBox.h>
 #include <Geom/Line.h>
 
@@ -53,3 +54,8 @@ void GeomPolyline::make_prims(Array1<GeomObj*>& free,
 }
 
 
+void GeomPolyline::intersect(const Ray&, const MaterialHandle&,
+			 Hit&)
+{
+    NOT_FINISHED("GeomPolyline::intersect");
+}

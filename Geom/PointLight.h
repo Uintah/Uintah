@@ -30,6 +30,8 @@ public:
 #ifdef SCI_OPENGL
     virtual void opengl_setup(const View& view, DrawInfoOpenGL*, int& idx);
 #endif
+    virtual void lintens(const OcclusionData& od, const Point& hit_position,
+			 Color& light, Vector& light_dir);
 };
 
 #endif /* SCI_Geom_PointLight_h */

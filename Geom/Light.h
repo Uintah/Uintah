@@ -20,6 +20,7 @@
 class Color;
 class DrawInfoOpenGL;
 class GeomObj;
+class OcclusionData;
 class Point;
 class Vector;
 class View;
@@ -36,6 +37,8 @@ public:
 #ifdef SCI_OPENGL
     virtual void opengl_setup(const View& view, DrawInfoOpenGL*, int& idx)=0;
 #endif
+    virtual void lintens(const OcclusionData& od, const Point& hit_position,
+			 Color& light, Vector& light_dir)=0;
 };
 
 #endif /* SCI_Geom_Light_h */

@@ -13,13 +13,13 @@
 
 #include <Geom/Group.h>
 
-GeomGroup::GeomGroup()
-: GeomObj(0), objs(0, 100)
+GeomGroup::GeomGroup(int del_children)
+: GeomObj(0), objs(0, 100), del_children(del_children)
 {
 }
 
 GeomGroup::GeomGroup(const GeomGroup& copy)
-: GeomObj(copy), bb(copy.bb)
+: GeomObj(copy), bb(copy.bb), del_children(copy.del_children)
 {
     objs.grow(copy.objs.size());
     for(int i=0;i<objs.size();i++){
@@ -30,8 +30,10 @@ GeomGroup::GeomGroup(const GeomGroup& copy)
 
 GeomGroup::~GeomGroup()
 {
-    for(int i=0;i<objs.size();i++)
-	delete objs[i];
+    if(del_children){
+	for(int i=0;i<objs.size();i++)
+	    delete objs[i];
+    }
 }
 
 void GeomGroup::add(GeomObj* obj)
@@ -71,4 +73,12 @@ void GeomGroup::reset_bbox()
     for(int i=0;i<objs.size();i++)
 	objs[i]->reset_bbox();
     bb.reset();
+}
+
+void GeomGroup::intersect(const Ray& ray, const MaterialHandle& matl,
+			  Hit& hit)
+{
+    for(int i=0;i<objs.size();i++){
+	objs[i]->intersect(ray, matl, hit);
+    }
 }

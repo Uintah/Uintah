@@ -33,7 +33,7 @@ public:
     void adjust();
     void move(const Point&, const Vector&, double, int nu=20, int nv=2);
 
-    GeomDisc();
+    GeomDisc(int nu=20, int nv=2);
     GeomDisc(const Point&, const Vector&, double, int nu=20, int nv=2);
     GeomDisc(const GeomDisc&);
     virtual ~GeomDisc();
@@ -46,6 +46,8 @@ public:
 #endif
     virtual void make_prims(Array1<GeomObj*>& free,
 			    Array1<GeomObj*>& dontfree);
+    virtual void intersect(const Ray& ray, const MaterialHandle& matl,
+			   Hit& hit);
 };
 
 #endif /* SCI_Geom_Disc_h */

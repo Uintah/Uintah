@@ -12,13 +12,15 @@
  */
 
 #include <Geom/Sphere.h>
+#include <Geom/GeomRaytracer.h>
 #include <Geom/Tri.h>
 #include <Geometry/BBox.h>
+#include <Geometry/Ray.h>
 #include <Math/TrigTable.h>
 #include <Math/Trig.h>
 
-GeomSphere::GeomSphere()
-: GeomObj(1)
+GeomSphere::GeomSphere(int nu, int nv)
+: GeomObj(1), nu(nu), nv(nv)
 {
 }
 
@@ -97,3 +99,41 @@ void GeomSphere::make_prims(Array1<GeomObj*>& free,
 	}
     }
 }
+
+void GeomSphere::intersect(const Ray& ray, const MaterialHandle& matl,
+			   Hit& hit)
+{
+    Vector OC(cen-ray.origin());
+    double tca=Dot(OC, ray.direction());
+    double l2oc=OC.length2();
+    double radius_sq=rad*rad;
+    if(l2oc <= radius_sq){
+	// Inside the sphere
+	double t2hc=radius_sq-l2oc+tca*tca;
+	double thc=Sqrt(t2hc);
+	double t=tca+thc;
+	hit.hit(t, this, matl);
+    } else {
+	if(tca < 0.0){
+	    // Behind ray, no intersections...
+	    return;
+	} else {
+	    double t2hc=radius_sq-l2oc+tca*tca;
+	    if(t2hc <= 0.0){
+		// Ray misses, no intersections...
+		return;
+	    } else {
+		double thc=Sqrt(t2hc);
+		hit.hit(tca-thc, this, matl);
+		// hit.hit(tca+thc, this, ???);
+	    }
+	}
+    }
+}
+Vector GeomSphere::normal(const Point& hitp)
+{
+    Vector normal(hitp-cen);
+    normal.normalize();
+    return normal;
+}
+

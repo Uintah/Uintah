@@ -12,6 +12,7 @@
  */
 
 #include <Geom/PointLight.h>
+#include <Classlib/NotFinished.h>
 #include <Geom/Sphere.h>
 
 PointLight::PointLight(const clString& name,
@@ -35,5 +36,13 @@ void PointLight::compute_lighting(const View&, const Point& at,
 GeomObj* PointLight::geom()
 {
     return new GeomSphere(p, 1.0);
+}
+
+void PointLight::lintens(const OcclusionData&, const Point&,
+			 Color& light, Vector& light_dir)
+{
+    NOT_FINISHED("PointLight::lintens");
+    light=Color(1,1,1);
+    light_dir=Vector(0,1,0);
 }
 
