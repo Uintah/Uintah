@@ -100,6 +100,7 @@ DirectInterpolate::execute()
   {
     return;
   }
+  sfieldhandle->mesh()->synchronize(Mesh::LOCATE_E);
 
   ScalarFieldInterface *sfi;
   VectorFieldInterface *vfi;
