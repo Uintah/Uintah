@@ -138,23 +138,22 @@ OffsetArray1<T>::OffsetArray1(const OffsetArray1<T>& a)
   int size = _h-_l;
   ASSERT(size>=0);
   if(size)
-    objs=new T[size];
+    objs=new T[size]-_l;
   else
     objs=0;
-  objs-=l;
   for(int i=l;i<h;i++)objs[i]=a.objs[i];
 }
 
 template<class T>
 OffsetArray1<T>& OffsetArray1<T>::operator=(const OffsetArray1<T>& copy)
 {
-  if (objs)delete [] objs;
+  if (objs)delete [] (objs+_l);
   _l=copy._l;
   _h=copy._h;
   int size = _h-_l;
   ASSERT(size>=0);
   if(size)
-    objs=new T[size];
+    objs=new T[size]-_l;
   else
     objs=0;
   for(int i=_l;i<_h;i++)objs[i]=copy.objs[i];
@@ -163,11 +162,12 @@ OffsetArray1<T>& OffsetArray1<T>::operator=(const OffsetArray1<T>& copy)
 
 template<class T>
 OffsetArray1<T>::OffsetArray1(int l, int h)
+  : _l(l), _h(h)
 {
   int size=_h-_l;
   ASSERT(size >= 0);
   if(size)
-    objs=new T[size];
+    objs=new T[size]-_l;
   else
     objs=0;
 }	
@@ -175,7 +175,7 @@ OffsetArray1<T>::OffsetArray1(int l, int h)
 template<class T>
 OffsetArray1<T>::~OffsetArray1()
 {
-  if(objs)delete [] objs;
+  if(objs)delete [] (objs+_l);
 }
 
 template<class T>
@@ -184,11 +184,11 @@ void OffsetArray1<T>::resize(int l, int h)
   int newsize=h-l;
   int cursize=_h-_l;
   if(newsize == cursize){
-    objs+=l-_l;
+    objs+=_l-l;
   } else {
-    delete objs;
+    delete[] (objs+_l);
     if(newsize != 0)
-      objs = new T[newsize];
+      objs = new T[newsize]-l;
     else
       objs = 0;
   }
