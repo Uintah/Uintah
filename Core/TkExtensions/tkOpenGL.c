@@ -507,7 +507,8 @@ OpenGLDestroy(clientData)
         /* this needs some additional checking first */
 	wglDeleteContext(OpenGLPtr->cx);
 #else
-    glXDestroyContext(OpenGLPtr->display, OpenGLPtr->cx);
+    // Mandrake 9 crashes here on window close.
+    //glXDestroyContext(OpenGLPtr->display, OpenGLPtr->cx);
 #endif
 
     Tk_FreeOptions(configSpecs, (char *) OpenGLPtr, OpenGLPtr->display, 0);
