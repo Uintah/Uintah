@@ -383,9 +383,9 @@ OPort* Module::get_oport(char* portname)
   return 0;
 }
 
-void Module::connection(ConnectionMode mode, int which_port, int)
+void Module::connection(ConnectionMode mode, int which_port, int is_oport)
 {
-  if(lastportdynamic && dynamic_port_maker) {
+  if(!is_oport && lastportdynamic && dynamic_port_maker) {
     if(mode == Disconnected) {
       remove_iport(which_port);
     } else {
