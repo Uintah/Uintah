@@ -77,8 +77,9 @@ protected:
   // Flag letting the control loop know to stop executing and
   // close the display.  Setting this to true will kill the thread.
   bool on_death_row;
-  // This will test a few things and let the thread know it should stop.
-  bool should_close();
+  // This will test on_death_row as well as if the exit_scene is true
+  // with the rtrt_engine.
+  virtual bool should_close();
   
   ////////////////////////////////////////////////////////////////////////
   // These event functions do a whole lot of nothing.  If you want them to
