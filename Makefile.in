@@ -176,6 +176,11 @@ NEED_SONAME	:= @NEED_SONAME@
 F77		:= @F77@
 FFLAGS		:= @FFLAGS@ $(FFLAGS)
 F77_DEPEND_REGEN = @F77_DEPEND_REGEN@
+ifeq ($(NEED_SONAME),yes)
+SONAMEFLAG = -Wl,-soname,$(notdir $@)
+else
+SONAMEFLAG = 
+endif
 
 .SUFFIXES: .cc .c .o .d .s .F
 
@@ -311,6 +316,9 @@ endif
 
 #
 # $Log$
+# Revision 1.28  2000/06/12 18:39:00  sparker
+# Added F77 configuration
+#
 # Revision 1.27  2000/06/10 04:18:22  moulding
 # added a section to search for GL headers
 #
