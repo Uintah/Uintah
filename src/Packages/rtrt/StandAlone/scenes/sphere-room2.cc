@@ -182,14 +182,19 @@ Scene *make_scene(int /*argc*/, char* /*argv*/[], int /*nworkers*/)
                           FLIP_IMAGES);
 
   string earthppm(IMAGEDIR); earthppm+=table[1].name_; earthppm+=".ppm";
+
+  TileImageMaterial *espec0 = 
+    new TileImageMaterial(earthppm, 1, 
+                          Color(1,1,1), 20, 0, 0,
+                          FLIP_IMAGES);
+  TileImageMaterial *espec1 = 
+    new TileImageMaterial(earthppm, 1, 
+                          Color(1,1,1), 0, 0, 0,
+                          FLIP_IMAGES);
+
   MapBlendMaterial *earth_spec = 
     new MapBlendMaterial(IMAGEDIR"earthspec4k.ppm", 
-                         new TileImageMaterial(earthppm, 1, 
-                                               Color(1,1,1), 20, 0, 0,
-                                               FLIP_IMAGES),
-                         new TileImageMaterial(earthppm, 1, 
-                                               Color(1,1,1), 0, 0, 0,
-                                               FLIP_IMAGES),
+                         espec0, espec1,
                          FLIP_IMAGES);
 
   MapBlendMaterial *earth_m = 
@@ -212,6 +217,14 @@ Scene *make_scene(int /*argc*/, char* /*argv*/[], int /*nworkers*/)
   MultiMaterial *holo1 = new MultiMaterial();
   holo1->insert(matl1,1);
   holo1->insert(starfield,1);
+
+  // add the light (the sun, as mentioned above)
+  Light2 *light = new Light2(sol_m, Color(1,.9,.8), 
+                             Point(ROOMCENTER, ROOMHEIGHT/2.), .2*ROOMSCALE,4);
+  //Light *light = new Light(Color(1,.9,.8), 
+  //                         Point(ROOMCENTER, ROOMHEIGHT/2.), .2*ROOMSCALE);
+  scene->add_perm_per_matl_light( light );
+  scene->addObjectOfInterest(light->getSphere(),ANIMATE, false);
 
   //
   // objects
@@ -242,7 +255,7 @@ Scene *make_scene(int /*argc*/, char* /*argv*/[], int /*nworkers*/)
   Parallelogram2 *wall0 = new Parallelogram2(holo1, 
                                              Point(ROOMOFFSETX,ROOMOFFSETY,
                                                    ROOMFLOOR),
-                                             Vector(ROOMRADIUS*2,0,0),
+                                            Vector(ROOMRADIUS*2,0,0),
                                              Vector(0,0,ROOMHEIGHT));
   // north
   Parallelogram *wall1 = new Parallelogram(holo1, \
@@ -327,8 +340,8 @@ Scene *make_scene(int /*argc*/, char* /*argv*/[], int /*nworkers*/)
   galaxy_room->add( outwall3 );
 
   // to animate the holo room on/off
-  scene->addObjectOfInterest( "floor", floor, true, false );
-  scene->addObjectOfInterest( "wall0", wall0, true, false );
+  scene->addObjectOfInterest( floor, true, false );
+  scene->addObjectOfInterest( wall0, true, false );
 
   // doors
   
@@ -401,7 +414,8 @@ Scene *make_scene(int /*argc*/, char* /*argv*/[], int /*nworkers*/)
 #endif
   scene->addObjectOfInterest( earth->get_name(), earth, ANIMATE, true);
 #else
-  scene->addObjectOfInterest( earth, ANIMATE );
+  cerr << "adding animate object " << earth->get_name() << endl;
+  scene->addObjectOfInterest( earth, ANIMATE, false );
 #endif
 
   // build the other satellites
@@ -411,6 +425,7 @@ Scene *make_scene(int /*argc*/, char* /*argv*/[], int /*nworkers*/)
     Material *newmat = 
         new TileImageMaterial(satppm, 1, Color(1,1,1), 0, 0, 0, FLIP_IMAGES);
 
+    newmat->my_lights.add(light);
     radius = table[loop].radius_*SYSTEM_SIZE_SCALE;
     orb_radius = table[loop].orb_radius_*SYSTEM_DISTANCE_SCALE;
 
@@ -437,7 +452,8 @@ Scene *make_scene(int /*argc*/, char* /*argv*/[], int /*nworkers*/)
 #endif
     scene->addObjectOfInterest( newsat->get_name(), newsat, ANIMATE, true );
 #else
-    scene->addObjectOfInterest( newsat, ANIMATE );
+    cerr << "adding animate object " << earth->get_name() << endl;
+    scene->addObjectOfInterest( newsat, ANIMATE, false );
 #endif
 
     if (newsat->get_name() == "saturn") {
@@ -463,19 +479,26 @@ Scene *make_scene(int /*argc*/, char* /*argv*/[], int /*nworkers*/)
 #endif
       scene->addObjectOfInterest( "rings", rings, ANIMATE, true );
 #else
-      scene->addObjectOfInterest( rings, ANIMATE );
+      scene->addObjectOfInterest( rings, ANIMATE, false );
 #endif
     }
   }
 #endif
 
-  // add the light (the sun, as mentioned above)
-  Light2 *light = new Light2(sol_m, Color(1,.9,.8), 
-                             Point(ROOMCENTER, ROOMHEIGHT/2.), .2*ROOMSCALE,4);
-  //Light *light = new Light(Color(1,.9,.8), 
-  //                         Point(ROOMCENTER, ROOMHEIGHT/2.), .2*ROOMSCALE);
-  scene->add_permanent_light( light );
-  scene->addObjectOfInterest(light->getSphere(),ANIMATE);
+  // set material lighting
+
+  white->my_lights.add(light);
+  //starfield->my_lights.add(light);
+  rings_m->my_lights.add(light);
+  sol_m->my_lights.add(light);
+  espec0->my_lights.add(light);
+  espec1->my_lights.add(light);
+  earth_spec->my_lights.add(light);
+  earth_m->my_lights.add(light);
+  matl0->my_lights.add(light);
+  matl1->my_lights.add(light);
+  holo0->my_lights.add(light);
+  holo1->my_lights.add(light);
 
   return scene;
 }
