@@ -168,10 +168,9 @@ itcl_class SCIRun_Visualization_ShowField {
 
 	expscale $nodes.slide -label NodeScale \
 		-orient horizontal \
-		-variable $this-node_scale -command "$this-c node_scale"
+		-variable $this-node_scale
 
-	bind $nodes.slide.scale <ButtonRelease> \
-		"$this-c node_scale"
+	bind $nodes.slide.scale <ButtonRelease> "$this-c node_scale"
     }
 
     # Edges Tab
@@ -194,10 +193,9 @@ itcl_class SCIRun_Visualization_ShowField {
 
 	expscale $edge.slide -label CylinderScale \
 		-orient horizontal \
-		-variable $this-edge_scale -command "$this-c edge_scale"
+		-variable $this-edge_scale
 
-	bind $edge.slide.scale <ButtonRelease> \
-		"$this-c edge_scale"
+	bind $edge.slide.scale <ButtonRelease> "$this-c edge_scale"
     }
 
     # Faces Tab
@@ -286,7 +284,6 @@ itcl_class SCIRun_Visualization_ShowField {
 	# node frame holds ui related to vert display (left side)
 	frame $window.options.disp -borderwidth 2
 	pack $window.options.disp -padx 2 -pady 2 -side left -fill y
-	set n "$this-c needexecute"	
 
 	# Display Options
 	iwidgets::labeledframe $window.options.disp.frame_title \
@@ -349,7 +346,8 @@ itcl_class SCIRun_Visualization_ShowField {
 
 
 	frame $window.control.excdis -borderwidth 2
-	button $window.control.excdis.execute -text Execute -command $n
+	button $window.control.excdis.execute -text Execute \
+	    -command "$this-c needexecute"
 	button $window.control.excdis.dismiss -text Dismiss \
 		-command "destroy $window"
 
