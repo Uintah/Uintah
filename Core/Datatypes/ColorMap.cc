@@ -323,14 +323,14 @@ ColorMap::lookup2(double nvalue)
 
 
 double
-ColorMap::getMin()
+ColorMap::getMin() const
 {
   return min_;
 }
 
 
 double
-ColorMap::getMax()
+ColorMap::getMax() const
 {
   return max_;
 }
