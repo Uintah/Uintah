@@ -72,26 +72,24 @@ DirectInterpScalarAlgo<Fld, Loc>::execute(FieldHandle fldhandle,
 
   double val = 0;
   Point p;
-
-  while (itr != itr_end)
-  {
+  while (itr != itr_end) {
     mesh->get_center(p, *itr);
 
-    if (interp && sfi->interpolate(val, p))
-    {
+    if (interp && sfi->interpolate(val, p)) {
+      fld->set_value((typename Fld::value_type)val, *itr);
+    } 
+    else if ((closest) && (sfi->find_closest(val, p) < dist))  {
       fld->set_value((typename Fld::value_type)val, *itr);
     }
-    else if (closest)
-    {
-      if (sfi->find_closest(val, p) < dist)
-      {
-	fld->set_value((typename Fld::value_type)val, *itr);
-      }
-    }
-
+    /* The following useless output is a workaround for a bug on linux 
+     * with the gcc-2.96 compiler. For some reason without a print in this loop
+     * values are all being set to one value.  If you have an alternate fix, 
+     * test it with SCIRun/src/Packages/BioPSE/nets/forward-fem.net */
+    cerr << ""; 
     ++itr;
   }
-
+  cerr << endl;
+  
   FieldHandle ofh(fld);
   return ofh;
 }
