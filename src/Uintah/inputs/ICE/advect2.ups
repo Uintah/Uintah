@@ -48,7 +48,7 @@
                            <value> 300. </value>
                         </BCType>
 			<BCType label = "Density" var = "Dirichlet">
-                           <value> 1. </value>
+                           <value> 1.1792946927374306000e+00 </value>
                         </BCType>
                 </Face>
                 <Face side = "x+">
@@ -62,8 +62,8 @@
                            <value> 300. </value>
                         </BCType>
 			<BCType label = "Density" var = "Dirichlet">
-                           <value> 1. </value>
-                        </BCType>
+                           <value> 1.1792946927374306000e+00 </value>
+                     	 </BCType>
                 </Face>
                 <Face side = "y-">
 			<BCType label = "Pressure" var = "Neumann">
@@ -76,8 +76,8 @@
                            <value> 300. </value>
                         </BCType>
 			<BCType label = "Density" var = "Dirichlet">
-                           <value> 1. </value>
-                        </BCType>
+	          	   <value> 1.1792946927374306000e+00 </value>
+                  	</BCType>
                 </Face>                  
 		<Face side = "y+">
 			<BCType label = "Pressure" var = "Neumann">
@@ -90,37 +90,19 @@
                            <value> 300. </value>
                         </BCType>
 			<BCType label = "Density" var = "Dirichlet">
-                           <value> 1. </value>
-                        </BCType>
-                </Face>
-                <Face side = "z-">
-			 <BCType label = "Pressure" var = "Neumann">
-                           <value> 0. </value>
-                        </BCType>
-			<BCType label = "Velocity" var = "Dirichlet">
-                           <value> [1.,1.,0.] </value>
-                        </BCType>
-			<BCType label = "Temperature" var = "Dirichlet">
-                           <value> 300. </value>
-                        </BCType>
-			<BCType label = "Density" var = "Dirichlet">
-                           <value> 1. </value>
-                        </BCType>
-                </Face>
-                <Face side = "z+">
-			 <BCType label = "Pressure" var = "Neumann">
-                           <value> 0. </value>
-                        </BCType>
-			<BCType label = "Velocity" var = "Dirichlet">
-                           <value> [1.,1.,0.] </value>
-                        </BCType>
-			<BCType label = "Temperature" var = "Dirichlet">
-                           <value> 300. </value>
-                        </BCType>
-			<BCType label = "Density" var = "Dirichlet">
-                           <value> 1. </value>
-                        </BCType>
-		</Face>                           
+			   <value> 1.1792946927374306000e+00 </value>	
+                         </BCType>
+		</Face>
+		<Face side = "z-">
+			<BCType label = "Pressure" var = "Neumann">
+        	                 <value> 0. </value>
+			</BCType>
+	        </Face>
+		<Face side = "z+">
+			<BCType label = "Pressure" var = "Neumann">
+        	              <value> 0. </value>
+			</BCType>
+	        </Face>
 	</BoundaryConditions>
 	<Level>
 	    <Box label="1">
@@ -186,7 +168,7 @@
 	    <ideal_gas>
 		<gas_constant>287 </gas_constant>
 	    </ideal_gas>
-	    <density> 1.1 </density>
+	    <density> 1.1792946927374306000e+00 </density>
 	    <viscosity>      0.0         </viscosity>
 	    <thermal_conductivity>0.0    </thermal_conductivity>
 	    <specific_heat>  716.0         </specific_heat>
