@@ -16,6 +16,7 @@
 #include <Packages/rtrt/Core/Ring.h>
 #include <Packages/rtrt/Core/Rect.h>
 #include <Packages/rtrt/Core/MetalMaterial.h>
+#include <Packages/rtrt/Core/ImageMaterial.h>
 #include <Packages/rtrt/Core/LambertianMaterial.h>
 #include <Packages/rtrt/Core/Phong.h>
 #include <Packages/rtrt/Core/CoupledMaterial.h>
@@ -39,12 +40,20 @@ Scene* make_scene(int /*argc*/, char* /*argv*/[], int /*nworkers*/)
   Object* obj  = new Sphere( matl, Point(0,-10,0), 1 );
   Object* obj1 = new Rect(matl2, Point(0,0,0), Vector(6,0,0), Vector(0,6,0));
   Object* obj2 = new Ring(matl3, Point(0, -8, 1), Vector(0,0,1), 5, 1);
-			  
+
+  ImageMaterial * painting = 
+    new ImageMaterial( "/usr/sci/projects/rtrt/paintings/delaware.ppm",
+		       ImageMaterial::Clamp, ImageMaterial::Clamp,
+		       1, Color(0,0,0), 0 );
+
+  Object * picture = new Rect( painting,
+			       Point(5,5,5), Vector(0,1,0), Vector(0,0,-1) );
 
   Group * group = new Group();
-  group->add( obj );
-  group->add( obj1 );
-  group->add( obj2 );
+  //  group->add( obj );
+  group->add( picture );
+  //  group->add( obj1 );
+  //  group->add( obj2 );
 
   double ambient_scale=1.0;
   Color bgcolor(0.1, 0.2, 0.45);
@@ -55,13 +64,21 @@ Scene* make_scene(int /*argc*/, char* /*argv*/[], int /*nworkers*/)
   Scene* scene=new Scene(group, cam,
 			 bgcolor, cdown, cup, groundplane,
 			 ambient_scale);
-  scene->add_light( new Light(Point(20,20,50), Color(1,1,1), 0.8) );
+  Light * light = new Light(Point(20,20,50), Color(1,1,1), 0.8);
+  light->name_ = "main light";
+  scene->add_light( light );
+
+  light = new Light(Point(20,5,5), Color(1,1,1), 0.5);
+  light->name_ = "picture light";
+
+  scene->add_light( light );
+
   scene->ambient_hack = true;
 
   scene->set_background_ptr( new LinearBackground( Color(1.0, 1.0, 1.0),
 						   Color(0.0,0.0,0.0),
 						   Vector(0,0,1)) );
-  scene->select_shadow_mode("hard");
+  scene->select_shadow_mode( Hard_Shadows );
   return scene;
 }
 

@@ -15,7 +15,6 @@
 #include <Core/Geometry/Vector.h>
 #include <Packages/rtrt/Core/Mesh.h>
 #include <Packages/rtrt/Core/ASEReader.h>
-#include <Packages/rtrt/Core/ObjReader.h>
 #include <Packages/rtrt/Core/Bezier.h>
 #include <Packages/rtrt/Core/BV1.h>
 #include <Packages/rtrt/Core/Checker.h>
@@ -62,8 +61,6 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
 				   Color(0.5,0.6,0.6),
 				   Color(0.4,0.55,0.52),
 				   Color(0.35,0.45,0.42));
-  marble1->my_lights.add(new Light(Point(-7.5,7.5,3.9), Color(.7,.4,.4),0));
-  
   Material* marble2=new CrowMarble(7.5,
 				   Vector(-1,3,0),
 				   Color(0.4,0.3,0.2),
@@ -85,7 +82,7 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   Material* whittedimg = 
     new ImageMaterial(1, "/usr/sci/data/Geometry/textures/whitted",
 		      ImageMaterial::Clamp, ImageMaterial::Clamp,
-		      1, Color(0,0,0), 0);
+		      Color(0,0,0), 1, Color(0,0,0), 0);
   
   Object* pic1=
     new Parallelogram(whittedimg, Point(-7.35, 11.9, 2.5), 
@@ -94,7 +91,7 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   Material* bumpimg = 
     new ImageMaterial(1, "/usr/sci/data/Geometry/textures/bump",
 		      ImageMaterial::Clamp, ImageMaterial::Clamp,
-		      1, Color(0,0,0), 0);
+		      Color(0,0,0), 1, Color(0,0,0), 0);
 
   Object* pic2=
     new Parallelogram(bumpimg, Point(-11.9, 7.35, 2.5), 
@@ -241,10 +238,7 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
     double rad=(65+35*i)*(M_PI/180.);
     t.pre_rotate(rad, Vector(0,0,1));
     t.pre_translate(center.vector()+Vector(cos(rad),sin(rad),0)*2.9);
-
-//    if (!readASEFile("/usr/sci/data/Geometry/models/corbusier.ASE", t, g, matls, env_map)) {
-    if (!readObjFile("/usr/sci/data/Geometry/models/corbu-ch.obj",
-		     "/usr/sci/data/Geometry/models/cc.mtl", t, g)) {
+    if (!readASEFile("/usr/sci/data/Geometry/models/lebebe.ASE", t, g, matls, env_map)) {
       exit(0);
     }
   }
@@ -257,7 +251,7 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   Scene *scene = new Scene(g, cam, bgcolor, cdown, cup, groundplane, 0.5);
   scene->ambient_hack = false;
 
-  scene->select_shadow_mode( No_Shadows );
+  scene->select_shadow_mode( Hard_Shadows );
   scene->maxdepth = 8;
   scene->add_light(new Light(Point(-8, 8, 3.9), Color(.8,.8,.8), 0));
   scene->animate=false;

@@ -88,8 +88,7 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
 				    //				    .6, .7, .6, 50,  0);
 				    .9, .9, .9, 50,  0);
     } else {
-	matl0=new Phong(Color(0,0,0), Color(.6,1,.4),
-			      Color(0,0,0), 100, 0);
+	matl0=new Phong(Color(.6,1,.4), Color(0,0,0), 100, 0);
     }
 
 /*
@@ -110,11 +109,11 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
 #endif
 	obj=group;
 	for(int i=0;i<files.size();i++){
-	  matl0=new Phong(Color(0,0,0), Color(.6,1,.4),
+	  matl0=new Phong(Color(.6,1,.4),
 			  Color(0,0,0), 100, 0);
 #if 0
 	  if (false) {
-	    matl0=new Phong(Color(0,0,0), Color(1,0.1,0.1),
+	    matl0=new Phong(Color(1,0.1,0.1),
 			    Color(0,0,0), 100, 0);
 	  }
 #endif
@@ -171,7 +170,7 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
                                Color(0.0,0.0,0.0),
                                Vector(1, 0, 0)) );
 
-    scene->select_shadow_mode("none");
+    scene->select_shadow_mode( No_Shadows );
     scene->ambient_hack=false;
     scene->attach_display(dpy);
     return scene;

@@ -32,12 +32,19 @@ Scene* make_scene(int /*argc*/, char* /*argv*/[], int /*nworkers*/)
   Material* matl=new MetalMaterial( Color( .9,.1,.4 ) );
   Material* matl2=new MetalMaterial( Color( .1,.9,.1 ) );
 
+  Material* lammat=new LambertianMaterial( Color( 0.0,1.0,1.0 ) );
+
   Group * group = new Group();
 
   for( int i = 0; i < 3; i++ )
     for( int j = 0; j < 3; j++ )
       {
-	Object* obj  = new Sphere( matl, Point(i*10,j*10,0), 1 );
+	Material * matlp;
+	if( j == 1 )
+	  matlp = lammat;
+	else
+	  matlp = matl;
+	Object* obj  = new Sphere( matlp, Point(i*10,j*10,0), 1 );
 	group->add( obj );
       }
 
@@ -47,21 +54,29 @@ Scene* make_scene(int /*argc*/, char* /*argv*/[], int /*nworkers*/)
   group->add( obj1 );
 
   double ambient_scale=1.0;
-  Color bgcolor(0.1, 0.2, 0.45);
-  Color cdown(0.82, 0.62, 0.62);
-  Color cup(0.1, 0.3, 0.8);
+  Color bgcolor(0.0, 0.0, 0.0);
+  Color cdown(1.0, 1.0, 1.0);
+  Color cup(1.0, 1.0, 1.0);
 
-  rtrt::Plane groundplane ( Point(0, 0, 0), Vector(0, 0, 1) );
+  rtrt::Plane groundplane ( Point(0, 0, -0.5), Vector(0, 0, 1) );
   Scene* scene=new Scene(group, cam,
 			 bgcolor, cdown, cup, groundplane,
 			 ambient_scale);
-  scene->add_light( new Light(Point(20,20,50), Color(1,1,1), 0.8) );
+  Light * mainLight = new Light(Point(20,20,50), Color(1,1,1), 0.8, 1.0 );
+  mainLight->name_ = "main light";
+
+  Light * botLight = new Light(Point(0,0,-50), Color(1,1,0), 0.8, 1.0 );
+  botLight->name_ = "bottom light";
+
+  scene->add_light( mainLight );
+  scene->add_light( botLight );
+  
   scene->ambient_hack = true;
 
-  scene->set_background_ptr( new LinearBackground( Color(1.0, 1.0, 1.0),
-						   Color(0.0,0.0,0.0),
+  scene->set_background_ptr( new LinearBackground( Color(0.0, 0.0, 0.0),
+						   Color(1.0,0.0,1.0),
 						   Vector(0,0,1)) );
-  scene->select_shadow_mode("hard");
+  scene->select_shadow_mode( Hard_Shadows );
   return scene;
 }
 

@@ -113,13 +113,13 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
     if(!tex){
 	if(bone){
 	    Color bone(0.9608, 0.8706, 0.7020);
-	    matl0=new Phong(bone*.1, bone*.6, bone*.6, 100, 0);
+	    matl0=new Phong(bone*.6, bone*.6, 100, 0);
 	} else {
 	    Color flesh(1.0000, 0.4900, 0.2500);
 	    if(!transp)
-		matl0=new Phong(flesh*.1, flesh*.6, flesh*.6, 100, 0);
+		matl0=new Phong(flesh*.6, flesh*.6, 100, 0);
 	    else
-		matl0=new Phong(flesh*.02, flesh*.1, flesh*.1, 100, 0);
+		matl0=new Phong(flesh*.1, flesh*.1, 100, 0);
 	}
     } else {
 	if(!texfile)
@@ -164,7 +164,7 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
 	Material* matl1;
 	if(!tex){
 	    Color bone(0.9608, 0.8706, 0.7020);
-	    matl1=new Phong(bone*.1, bone*.6, bone*.6, 100, 0);
+	    matl1=new Phong( bone*.6, bone*.6, 100, 0);
 	} else {
 	    matl1=matl0;
 	}
@@ -217,6 +217,6 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
     scene->set_object(obj);
     scene->add_light(new Light(Point(1000,-3000,0), Color(1,1,1), 0));
     scene->ambient_hack=false;
-    scene->select_shadow_mode("none");
+    scene->select_shadow_mode( No_Shadows );
     return scene;
 }

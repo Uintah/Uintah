@@ -121,7 +121,7 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
     for(int i=0;i<ncolors;i++){
       float frac=float(i)/(ncolors-1);
       Color c(spline(frac));
-      matls[i]=new Phong(c*Ka, c*Kd, c*Ks, specpow, refl);
+      matls[i]=new Phong( c*Kd, c*Ks, specpow, refl);
       //matls[i]=new LambertianMaterial(c*Kd);
     }
   }
@@ -328,7 +328,7 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
 						  Color(0.0,0.0,0.0),
 						  Vector(1, 0, 0)) );
 
-  scene->select_shadow_mode("none");
+  scene->select_shadow_mode( No_Shadows );
   scene->ambient_hack=false;
 
   for (int n = 0; n < num_non_trans; n++) {

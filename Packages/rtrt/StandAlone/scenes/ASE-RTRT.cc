@@ -50,15 +50,16 @@ extern "C" Scene *make_scene(int argc, char** argv, int)
   
   Color bgcolor(.2,.2,.4);
   
-  rtrt::Plane groundplane ( Point(0, 0, 0), Vector(0, 0, 1) );
+  rtrt::Plane groundplane ( Point(0, 0, 0), Vector(0, 1, 0) );
   Scene* scene=new Scene(all, cam, bgcolor, 
-//			 Color(0.4,0.6,0.7), Color(0.5,0.5,0.5),
-			 Color(0.2,0.2,0.2), Color(0.5,0.5,0.5),
+			 Color(1,0,0), Color(0,0,01),
 			 groundplane, ambient_scale);
-  scene->add_light(new Light(Point(-6250,-11800,15000), Color(.4,.4,.4), 0));
+
+  scene->ambient_hack = true;
+  scene->add_light(new Light(Point(-6250,-11800,15000), Color(1,1,1), 1));
   if (env_map!="")
     scene->set_background_ptr(new EnvironmentMapBackground((char*)env_map.c_str()));
-  scene->select_shadow_mode("none");
+  scene->select_shadow_mode( No_Shadows );
   scene->set_materials(ase_matls);
   return scene;
 }

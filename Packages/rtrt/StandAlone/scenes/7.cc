@@ -115,19 +115,19 @@ static Object* make_obj(int size, char* texfile)
     Material* matl3=new MetalMaterial( Color(.7,.4,.1));
     world->add(new Sphere(matl3, corner+diag1*1.25+diag2*.6+z*2+Vector(0,0,.6), .6));
 #if 1
-    Material* matl2=new Checker(new Phong(Color(.05,.05,.05), Color(.95,.95,.95), Color(.6,.6,.6), 10),
-				new Phong(Color(.05,.0,0), Color(.7,.3,.3), Color(.6,.6,.6), 10),
-				Vector(1,1.1,0), Vector(-1.1,1,0));
+    Material* matl2 = 
+      new Checker( new Phong(Color(.95,.95,.95), Color(.6,.6,.6), 10),
+		   new Phong(Color(.7,.3,.3), Color(.6,.6,.6), 10),
+		   Vector(1,1.1,0), Vector(-1.1,1,0) );
 #else
-    Material* matl2=new Phong(Color(.05,.05,.05), Color(.95,.95,.95), Color(.6,.6,.6), 10);
+    Material* matl2=new Phong( Color(.95,.95,.95), Color(.6,.6,.6), 10 );
 #endif
     double planesize=15;
     Object* obj1=new Rect(matl2, Point(0,0,0), Vector(planesize,planesize*1.1,0), Vector(-planesize*1.1,planesize,0));
     world->add(obj1);
 
     ImageMaterial* texmatl=new ImageMaterial(1, texfile, ImageMaterial::Tile,
-					     ImageMaterial::Tile,
-					     Color(0,0,0), 1,
+					     ImageMaterial::Tile, 1,
 					     Color(0,0,0), 0);
     Object* obj2=new Rect(texmatl, Point(1,1,1), Vector(0,0,1), Vector(-.707,.707,0));
     world->add(obj2);
@@ -176,6 +176,6 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
     scene->add_light(new Light(Point(5,-3,3), Color(1,1,.8)*2, light_radius));
     scene->ambient_hack = true;
 
-    scene->select_shadow_mode("single");
+    scene->select_shadow_mode( Single_Soft_Shadow );
     return scene;
 }

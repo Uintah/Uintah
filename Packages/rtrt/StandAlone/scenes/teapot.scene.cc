@@ -64,7 +64,7 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
 
 
 
-      //Material* red_shiny = new Phong(Color(0,0,0), Color(.3,0,0), Color(1,1,1), 25, 0);
+      //Material* red_shiny = new Phong( Color(.3,0,0), Color(1,1,1), 25, 0);
       Material* silver = new MetalMaterial( Color(0.8, 0.8, 0.8) );
       //Material* green = new CoupledMaterial( Color(0.1, 0.3, 0.2) );
 
@@ -127,7 +127,7 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
     int i;
     double minval = MAXFLOAT;
 //    //Material* bunnymat=new LambertianMaterial (Color(.4,.4,.4));
-    Material *bunnymat = new Phong(Color(.1,.1,.1),Color(.63,.51,.5),Color(.3,.3,.3),400);
+    Material *bunnymat = new Phong(Color(.63,.51,.5),Color(.3,.3,.3),400);
   
     for (i=0; i<num_verts; i++) {
       fscanf(fp,"%lf %lf %lf %lf %lf",&vert[i][0],&vert[i][2],&vert[i][1],
@@ -152,7 +152,7 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
     delete vert;
     fclose(fp);
     
-    Material* vwmat=new Phong (Color(.4,.4,.4),Color(.6,.6,0),Color(.5,.5,.5),30);
+    Material* vwmat=new Phong (Color(.6,.6,0),Color(.5,.5,.5),30);
     fp = fopen("/usr/sci/data/Geometry/models/vw.geom","r");
     if (!fp) {
       fprintf(stderr,"No such file!\n");
@@ -215,8 +215,7 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
    Material* bookcoverimg = new ImageMaterial(1,
 					      "/usr/sci/data/Geometry/textures/i3d97.smaller.gamma",
                                               ImageMaterial::Clamp,
-                                              ImageMaterial::Clamp,
-                                              Color(0,0,0), 1,
+                                              ImageMaterial::Clamp, 1,
                                               Color(0,0,0), 0);
    Material* papermat = new LambertianMaterial(Color(1,1,1));
    Material* covermat = new LambertianMaterial(Color(0,0,0));
@@ -314,8 +313,7 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
       Material* whittedimg = new ImageMaterial(1,
 					       "/usr/sci/data/Geometry/textures/whitted",
 					       ImageMaterial::Clamp,
-					       ImageMaterial::Clamp,
-					       Color(0,0,0), 1,
+					       ImageMaterial::Clamp, 1,
 					       Color(0,0,0), 0);
 
       Vector whittedframev1(0,0,-350*1.2);
@@ -327,8 +325,7 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
       Material* bumpimg = new ImageMaterial(1,
 					    "/usr/sci/data/Geometry/textures/bump",
 					    ImageMaterial::Clamp,
-					    ImageMaterial::Clamp,
-					    Color(0,0,0), 1,
+					    ImageMaterial::Clamp, 1,
 					    Color(0,0,0), 0);
 
       Vector bumpframev1(0,0,-214*2);
@@ -434,7 +431,7 @@ Material *brick = new Speckle(0.01, Color(0.5,0.5,0.5), Color(0.6, 0.62, 0.64) )
       Scene *scene = new Scene(g,cam,bgcolor,cdown, cup,groundplane,ambient_scale);
       scene->ambient_hack = true;
 
-      scene->select_shadow_mode("hard");
+      scene->select_shadow_mode( Hard_Shadows );
       scene->maxdepth = 8;
       scene->shadowobj = new BV1(shadow);
       scene->add_light(new Light(Point(200,400,1300), Color(.8,.8,.8), 0));

@@ -101,8 +101,7 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
         matl0=new HVolumeBrickColor(texfile, nworkers,
 				    .6, .7, .6, 50,  0);
     } else {
-	matl0=new Phong(Color(0,0,0), Color(.6,1,.4),
-			      Color(0,0,0), 100, 0);
+	matl0=new Phong(Color(.6,1,.4), Color(0,0,0), 100, 0);
     }
 
 /*
@@ -123,7 +122,7 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
 	    if(showgrid){
 		// This is lame - it only works for one data file...
 #if 0
-		Material* cylmatl=new Phong(Color(.3,.3,.3), Color(.4,.4,.4),
+		Material* cylmatl=new Phong(Color(.4,.4,.4),
 					    Color(.5,.5,.5), 100, 0);
 		Material* cylmatl=new DielectricMaterial(1,1,.1,100,Color(.45,.97,.7), Color(1,1,1));
 #endif
@@ -244,7 +243,7 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
                                Color(0.0,0.0,0.0),
                                Vector(1, 0, 0)) );
 
-    scene->select_shadow_mode("none");
+    scene->select_shadow_mode( No_Shadows );
     scene->ambient_hack=false;
     scene->attach_display(dpy);
     return scene;

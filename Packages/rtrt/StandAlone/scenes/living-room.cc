@@ -75,7 +75,7 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   Material* whittedimg = 
     new ImageMaterial(1, "/usr/sci/data/Geometry/textures/whitted",
 		      ImageMaterial::Clamp, ImageMaterial::Clamp,
-		      Color(0,0,0), 1, Color(0,0,0), 0);
+		      1, Color(0,0,0), 0);
   
   Object* pic1=
     new Parallelogram(whittedimg, Point(7.35, 11.9, 2.5), 
@@ -84,7 +84,7 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   Material* bumpimg = 
     new ImageMaterial(1, "/usr/sci/data/Geometry/textures/bump",
 		      ImageMaterial::Clamp, ImageMaterial::Clamp,
-		      Color(0,0,0), 1, Color(0,0,0), 0);
+		      1, Color(0,0,0), 0);
 
   Object* pic2=
     new Parallelogram(bumpimg, Point(11.9, 8.65, 2.5), 
@@ -150,7 +150,7 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   Scene *scene = new Scene(g, cam, bgcolor, cdown, cup, groundplane, 0.5);
   scene->ambient_hack = false;
 
-  scene->select_shadow_mode("hard");
+  scene->select_shadow_mode( Hard_Shadows );
   scene->maxdepth = 8;
   scene->add_light(new Light(Point(8, 8, 3.9), Color(.8,.8,.8), 0));
   scene->animate=false;

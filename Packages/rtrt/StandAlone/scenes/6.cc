@@ -30,12 +30,12 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
     Color bgcolor(.5,0,.5);
 
     Group* group=new Group();
-    Material* matl0=new Phong(Color(0,0,0), Color(.2,.2,.2), Color(.3,.3,.3), 10, 0);
+    Material* matl0=new Phong(Color(.2,.2,.2), Color(.3,.3,.3), 10, 0);
     group->add(new Sphere(matl0, Point(0,0,0), 50));
     Plane groundplane ( Point(0, 0, 0), Vector(1, 0, 0) );
     Scene* scene=new Scene(group, cam,
 			   bgcolor, groundcolor*averagelight, bgcolor,  groundplane, 
 			   ambient_scale);
-    scene->select_shadow_mode("single");
+    scene->select_shadow_mode( Single_Soft_Shadow );
     return scene;
 }

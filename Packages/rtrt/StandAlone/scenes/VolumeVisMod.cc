@@ -501,7 +501,7 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
 			 ambient_scale);
   
   scene->add_light(new Light(Point(500,-300,300), Color(.8,.8,.8), 0));
-  scene->shadow_mode=1;
+  //scene->shadow_mode=1;
   scene->attach_display(dpy);
   
   return scene;

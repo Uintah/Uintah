@@ -54,7 +54,7 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
 	       Vector(0,1,0), 60);
 
     Color surf(.50000, 0.0, 0.00);
-    Material* matl0=new Phong(surf*0.1, surf*0.6, surf*0.6, 100, .4);
+    Material* matl0=new Phong(surf*0.6, surf*0.6, 100, .4);
     VolumeDpy* dpy=new VolumeDpy();
     ifstream in(file);
     PlaneDpy* pdpy=new PlaneDpy(Vector(1,0,0), Point(0,0,0));
@@ -96,7 +96,7 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
 			   bgcolor, groundcolor*averagelight, bgcolor, groundplane, 
 			   ambient_scale);
     scene->add_light(new Light(Point(5,-3,3), Color(1,1,.8)*2, 0));
-    scene->select_shadow_mode("none");
+    scene->select_shadow_mode( No_Shadows );
     scene->ambient_hack=false;
     scene->maxdepth=0;
     scene->attach_display(dpy);

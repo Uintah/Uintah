@@ -58,7 +58,7 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
     Vector fn2 = -Cross(p11-p01,p21-p01);
     Vector fn1 = .5*(fn0+fn2);
 
-    Material* mat = new Phong(Color(.4,.4,.4),Color(0,.4,0),Color(.2,.2,.2), 30);
+    Material* mat = new Phong(Color(0,.4,0),Color(.2,.2,.2), 30);
 
     Object* obj=new Tri(mat,p0,p1,p2,fn0,fn1,fn1);
     Object* obj1=new Tri(mat,p01,p11,p21,fn2,fn1,fn1);
@@ -86,6 +86,6 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
                                Vector(0,0,1)) );
 
 
-    scene->select_shadow_mode("hard");
+    scene->select_shadow_mode( Hard_Shadows );
     return scene;
 }

@@ -129,7 +129,7 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
   }
 
   Color surf(.50000, 0.0, 0.00);
-  Material* matl0=new Phong(surf*0.1, surf*0.6, surf*0.6, 100, .4);
+  Material* matl0=new Phong( surf*0.6, surf*0.6, 100, .4);
   VolumeDpy* dpy=new VolumeDpy();
 
   TimeObj* timeobj1=new TimeObj(rate);
@@ -458,7 +458,7 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
   scene->set_background_ptr( new LinearBackground(Color(0.2, 0.4, 0.9),
 						  Color(0.0,0.0,0.0),
 						  rtrt::Vector(1, 0, 0)) );
-  scene->shadow_mode=0;
+  //scene->shadow_mode=0;
   scene->ambient_hack=false;
   scene->maxdepth=0;
   scene->attach_display(dpy);

@@ -30,8 +30,8 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
 
     Color bgcolor(.2,.2,.2);
     Group* group=new Group();
-    Material* matl0=new Phong(Color(0,0,0), Color(.2,.2,.2), Color(.3,.3,.3), 10, .5);
-    Material* matl2=new Phong(Color(0,0,0), Color(.05,.05,.05), Color(.05,.05,.05), 10, .05);
+    Material* matl0=new Phong(Color(.2,.2,.2), Color(.3,.3,.3), 10, .5);
+    Material* matl2=new Phong(Color(.05,.05,.05), Color(.05,.05,.05), 10, .05);
     Material* matl1=new CrowMarble(10, Vector(1,1,1), Color(0.5,0.5,0.5), Color(0.4,0.2, 0.1),Color(0.1,0.05,0.1));
     Object* obj1=new Rect(matl1, Point(0,0,0), Vector(6,0,0), Vector(0,6,0));
 
@@ -45,6 +45,6 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
     Scene* scene=new Scene(group, cam,
 			   bgcolor, groundcolor*averagelight, bgcolor, groundplane,
 			   ambient_scale);
-    scene->select_shadow_mode("single");
+    scene->select_shadow_mode(Single_Soft_Shadow);
     return scene;
 }

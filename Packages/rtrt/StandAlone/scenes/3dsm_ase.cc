@@ -21,8 +21,7 @@
 using namespace rtrt;
 using namespace std;
 
-Material *default_material = (Material*) new Phong(Color(0,0,0),
-						   Color(.6,1,.4),
+Material *default_material = (Material*) new Phong(Color(.6,1,.4),
 						   Color(0,0,0), 100, 0);
 Array1<Material*> ase_matls;
 
@@ -79,11 +78,11 @@ Material* get_material(ifstream &infile) {
   cout << "ambient("<<ambient<<"), diffuse("<<diffuse<<"), specular("<<specular<<"), specpow("<<specpow<<"), reflectance("<<reflectance<<")\n";
   if (!result)
     if (transparency == 0) {
-      result = (Material*) new Phong(ambient, diffuse, specular*shinestrength,
+      result = (Material*) new Phong( diffuse, specular*shinestrength,
 				     specpow, reflectance);
     } else {
       result = (Material*) new DielectricMaterial(1.0, 1.0, 0.3, 400.0, Color(1,1,1), Color(1,1,1), false);
-//      result = (Material*) new Phong(ambient, Color(1,0,0), Color(1,0,0), 10, 0);
+//      result = (Material*) new Phong( Color(1,0,0), Color(1,0,0), 10, 0);
     }
   return result;
 }
@@ -691,7 +690,7 @@ Scene* make_scene(int argc, char* argv[], int) {
 			 ambient_scale);
   scene->add_light(new Light(Point(500,-300,300), Color(.8,.8,.8), 0));
   scene->set_background_ptr(new EnvironmentMapBackground("/home/sci/dmw/stadium/SKY.ppm"));
-  scene->select_shadow_mode("hard");
+  scene->select_shadow_mode(Hard_Shadows);
   scene->set_materials(ase_matls);
   cerr << "num materials="<<ase_matls.size()<<"\n";
   CycleMaterial *cm;
