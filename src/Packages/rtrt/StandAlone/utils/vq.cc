@@ -3,10 +3,10 @@
 // #endif
 // #define PEDANTIC 1
 
-// #ifdef CHECK_VERBOSITY
-// #  undef CHECK_VERBOSITY
-// #endif
-// #define CHECK_VERBOSITY 1
+#ifdef CHECK_VERBOSITY
+#  undef CHECK_VERBOSITY
+#endif
+#define CHECK_VERBOSITY 1
 
 #ifdef PARTIAL_DISTORTION
 #  undef PARTIAL_DISTORTION
@@ -58,7 +58,7 @@ int main(int argc, char *argv[]) {
   int num_dims=2;
   int num_vecs=10;
   int num_cwords=2;
-  double thresh=1e-5;
+  float thresh=1e-5;
   int max_iteration = 100;
   int seed=12;
 #ifdef COLLECT_STATS
@@ -118,13 +118,13 @@ int main(int argc, char *argv[]) {
   }
 
   // forward declare data structures for vectors
-  double* vec;
+  float* vec;
   int* cluster_idx;
   int* ir_idx;
 
   // allocate memory for codewords
-  double* prev_cw=new double[num_cwords*num_dims];
-  double* current_cw=new double[num_cwords*num_dims];
+  float* prev_cw=new float[num_cwords*num_dims];
+  float* current_cw=new float[num_cwords*num_dims];
 
   // seed the RNGs
   srand48(seed);
@@ -145,7 +145,7 @@ int main(int argc, char *argv[]) {
       exit(1);
     }
     
-    num_vecs=(int)(statbuf.st_size/(num_dims*sizeof(double)));
+    num_vecs=(int)(statbuf.st_size/(num_dims*sizeof(float)));
   }
 
   if (num_cwords>num_vecs) {
@@ -155,14 +155,14 @@ int main(int argc, char *argv[]) {
   }
   
   // allocate the memory for vector structures
-  vec=new double[num_vecs*num_dims];
+  vec=new float[num_vecs*num_dims];
   cluster_idx=new int[num_vecs];
   ir_idx=new int[num_vecs];
 
   if (in_fd>-1) {
     // slurp up the vector data
-    double* data=&(vec[0]);
-    size_t data_size=num_vecs*num_dims*sizeof(double);
+    float* data=&(vec[0]);
+    size_t data_size=num_vecs*num_dims*sizeof(float);
 
     if (verbosity>4) {
       cout<<"slurping vector data ("<<num_vecs<<" vectors = " <<data_size
@@ -233,13 +233,13 @@ int main(int argc, char *argv[]) {
 #ifdef DOUBLE_TEST  
   // precompute the maximum component of each vector and
   // twice the sum of each vector's components
-  double* vec_max=new double[num_vecs];
-  double* vec_2sum=new double[num_vecs];
+  float* vec_max=new float[num_vecs];
+  float* vec_2sum=new float[num_vecs];
   for (int i=0;i<num_vecs;i++)
     vec_max[i]=0;
   
   for (int i=0;i<num_vecs;i++) {
-    double tmp=0;
+    float tmp=0;
     for (int j=0;j<num_dims;j++) {
       if (vec[i*num_dims+j]>vec_max[i])
 	vec_max[i]=vec[i*num_dims+j];
@@ -255,11 +255,11 @@ int main(int argc, char *argv[]) {
   bool done=false;
   bool first=true;
   unsigned int iteration=0;
-  double* tmp_mean=new double[num_dims];
+  float* tmp_mean=new float[num_dims];
 #ifdef DOUBLE_TEST  
-  double* codeword_mag=new double[num_cwords];
-  double* codeword_max=new double[num_cwords];
-  double* codeword_2sum=new double[num_cwords];
+  float* codeword_mag=new float[num_cwords];
+  float* codeword_max=new float[num_cwords];
+  float* codeword_2sum=new float[num_cwords];
 #endif
 #ifdef COLLECT_STATS
   unsigned long real_distortion_cnt=0;
@@ -270,6 +270,12 @@ int main(int argc, char *argv[]) {
 #endif
 #endif
   do {
+#ifdef CHECK_VERBOSITY
+    // output a status message
+    if (verbosity>4)
+      cout<<"Beginning iteration "<<iteration<<endl;
+#endif
+    
 #ifdef DOUBLE_TEST    
     // compute the magnitude and maximum component of each codeword, and
     // twice the sum of each codeword's components
@@ -277,7 +283,7 @@ int main(int argc, char *argv[]) {
       codeword_max[i]=0;
 
     for (int i=0;i<num_cwords;i++) {
-      double tmp=0;
+      float tmp=0;
       for (int j=0;j<num_dims;j++) {
         if (current_cw[i*num_dims+j]>codeword_max[i])
           codeword_max[i]=current_cw[i*num_dims+j];
@@ -291,10 +297,10 @@ int main(int argc, char *argv[]) {
 #endif    
     
     for (int i=0;i<num_vecs;i++) {
-      double min=DBL_MAX;
+      float min=FLT_MAX;
       int my_cluster=-1;
       for (int j=0;j<num_cwords;j++) {
-	double distance=0;
+	float distance=0;
 #ifdef DOUBLE_TEST	
 	// compute the first distortion
 	distance=codeword_mag[j]-vec_max[i]*codeword_2sum[j];
@@ -321,7 +327,7 @@ int main(int argc, char *argv[]) {
 #endif
 	distance=0;
 	for (int k=0;k<num_dims;k++) {
-	  double tmp=vec[i*num_dims+k]-current_cw[j*num_dims+k];
+	  float tmp=vec[i*num_dims+k]-current_cw[j*num_dims+k];
 	  distance+=tmp*tmp;
 #ifdef PARTIAL_DISTORTION
 	  if (distance>min) {
@@ -387,7 +393,7 @@ int main(int argc, char *argv[]) {
       // update codewords
       for (int k=0;k<num_dims;k++) {
 	prev_cw[i*num_dims+k]=current_cw[i*num_dims+k];
-	current_cw[i*num_dims+k]=tmp_mean[k]/(double)count;
+	current_cw[i*num_dims+k]=tmp_mean[k]/(float)count;
 	
 	// compute the difference between iterations
 	if (!first) {
@@ -441,10 +447,8 @@ int main(int argc, char *argv[]) {
 #endif
   
   // output the final codewords
-  if (verbosity>0) {
-    cout<<"Codewords";
-    if (verbosity>4)
-      cout<<" (after "<<iteration<<" iterations)";
+  if (verbosity>9) {
+    cout<<"Codewords (after "<<iteration<<" iterations)";
     cout<<endl;
     cout<<"-----------------------"<<endl;
     for (int i=0;i<num_cwords;i++) {
@@ -459,7 +463,7 @@ int main(int argc, char *argv[]) {
   if (cw_outfilename) {
     FILE *cw_outfile=fopen(cw_outfilename, "wb");
     if (cw_outfile) {
-      unsigned long num_bytes=fwrite(current_cw, sizeof(double),
+      unsigned long num_bytes=fwrite(current_cw, sizeof(float),
 				     num_cwords*num_dims, cw_outfile);
       if (num_bytes!=num_cwords*num_dims) {
 	cerr<<"couldn't write all "<<num_cwords<<" codewords"<<endl;
