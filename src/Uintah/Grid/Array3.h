@@ -105,6 +105,9 @@ public:
 	return d_window->get(idx.i(), idx.j(), idx.k());
     }
 
+    Array3Index getLowIndex() const;
+    Array3Index getHighIndex() const;
+
 private:
     Array3Window<T>* d_window;
 };
@@ -119,6 +122,12 @@ Array3<T>::~Array3()
 
 //
 // $Log$
+// Revision 1.4  2000/03/22 00:32:12  sparker
+// Added Face-centered variable class
+// Added Per-region data class
+// Added new task constructor for procedures with arguments
+// Use Array3Index more often
+//
 // Revision 1.3  2000/03/21 02:22:57  dav
 // few more updates to make it compile including moving Array3 stuff out of namespace as I do not know where it should be
 //

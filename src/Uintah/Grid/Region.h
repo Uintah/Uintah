@@ -87,6 +87,9 @@ public:
     // Insert Documentation Here:
     SubRegion subregion(int i, int n) const;
 
+    Array3Index getLowIndex() const;
+    Array3Index getHighIndex() const;
+
     //////////
     // Insert Documentation Here:
     inline int getNx() const {
@@ -160,6 +163,12 @@ inline NodeIterator Region::end() const
 
 //
 // $Log$
+// Revision 1.4  2000/03/22 00:32:13  sparker
+// Added Face-centered variable class
+// Added Per-region data class
+// Added new task constructor for procedures with arguments
+// Use Array3Index more often
+//
 // Revision 1.3  2000/03/21 01:29:42  dav
 // working to make MPM stuff compile successfully
 //
