@@ -28,6 +28,7 @@ SUBDIRS := \
 	$(SRCDIR)/Forward\
 	$(SRCDIR)/Inverse\
 	$(SRCDIR)/LeadField\
+	$(SRCDIR)/Modeling\
 	$(SRCDIR)/Visualization\
 	$(SRCDIR)/DataIO\
 #[INSERT NEW CATEGORY DIR HERE]
