@@ -26,7 +26,10 @@ public:
     Array1<clString> surfNames;		// names of surfaces
     Array1<Array1<int> > surfEls;	// indices of elements in each surface
     Array1<Array1<int> > surfOrient;	// is each element properly oriented
+
     Array1<TSElement*> elements;	// array of all elements
+    Array1<Array1<int> > elemEdges;	// indices of the edges of each elem
+    Array1<Array1<int> > elemOrient;	// are the edges properly oriented
     Array1<TSEdge*> edges;		// array of all edges
     Array1<Point> points;		// array of all points
     Array1<int> bcIdx;			// which nodes have boundary conditions
