@@ -133,6 +133,7 @@ void ICE::actuallyComputeStableTimestepRF(const ProcessorGroup*,
            
       delt_CFL = std::min(delt_CFL, matl_delt);
       
+//    cout << " delT Based on currant number "<< delt_CFL << endl;
       //__________________________________
       // stability constraint due to heat conduction
       //  I C E  O N L Y
@@ -152,7 +153,7 @@ void ICE::actuallyComputeStableTimestepRF(const ProcessorGroup*,
         }  //
       }  // ice_matl     
     }  //  matl loop
-    
+//  cout << "delT based on conduction "<< delt_cond<<endl;
     delt = std::min(delt_CFL, delt_cond);
     delt = std::min(delt, d_initialDt);
     d_initialDt = 10000.0;
@@ -783,9 +784,9 @@ void ICE::accumulateEnergySourceSinks_RF(const ProcessorGroup*,
             top    = c + IntVector(0,1,0);    bottom = c ;    
             front  = c + IntVector(0,0,1);    back   = c ; 
 
-            int_eng_source[c] += (q_X_FC[right] - q_X_FC[left])  * areaX +
-                                 (q_Y_FC[top]   - q_Y_FC[bottom])* areaY +
-                                 (q_Z_FC[front] - q_Z_FC[back])  * areaZ; 
+            int_eng_source[c]-=((q_X_FC[right] - q_X_FC[left])  * areaX +         
+                                (q_Y_FC[top]   - q_Y_FC[bottom])* areaY +         
+                                (q_Z_FC[front] - q_Z_FC[back])  * areaZ)*delT;  
           }
         } 
       }
