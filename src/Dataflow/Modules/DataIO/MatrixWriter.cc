@@ -81,9 +81,9 @@ MatrixWriter::MatrixWriter(GuiContext* ctx)
   for (unsigned int i = 0; i < exporters.size(); i++)
   {
     MatrixIEPlugin *pl = mgr.get_plugin(exporters[i]);
-    if (pl->fileextension != "")
+    if (pl->fileExtension_ != "")
     {
-      exporttypes += "{{" + exporters[i] + "} {" + pl->fileextension + "} } ";
+      exporttypes += "{{" + exporters[i] + "} {" + pl->fileExtension_ + "} } ";
     }
     else
     {
@@ -108,7 +108,7 @@ MatrixWriter::call_exporter(const string &filename)
   MatrixIEPlugin *pl = mgr.get_plugin(ft);
   if (pl)
   {
-    return pl->filewriter(this, handle_, filename.c_str());
+    return pl->fileWriter_(this, handle_, filename.c_str());
   }
   return false;
 }
