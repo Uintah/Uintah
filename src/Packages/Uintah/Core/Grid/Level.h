@@ -94,12 +94,23 @@ WARNING
       int numPatches() const;
       long totalCells() const;
 
-      void getIndexRange(BBox& b) const;
       void getSpatialRange(BBox& b) const;
 
       // it is better that IndexRange expressed by IntVector
       // instead of BBox, and the function is const. --tan
-      void getIndexRange(IntVector& lowIndex,IntVector& highIndex) const;
+      void getIndexRange(IntVector& lowIndex,IntVector& highIndex) const {
+	if(d_finalized) { lowIndex = d_idxLow; highIndex = d_idxHigh;}
+	else findIndexRange( lowIndex, highIndex);
+      }
+      void getLowIndex(IntVector& idx) const {
+	if(d_finalized) { idx = d_idxLow;}
+	else{ IntVector tmp; findIndexRange( idx, tmp ); }
+      }
+      void getHighIndex(IntVector& idx) const {
+	if(d_finalized) { idx = d_idxHigh;}
+	else{ IntVector tmp; findIndexRange( tmp, idx); }
+      }
+      void findIndexRange(IntVector& lowIndex, IntVector& highIndex) const;
       
       void performConsistencyCheck() const;
       GridP getGrid() const;
@@ -144,6 +155,8 @@ WARNING
       Point d_anchor;
       Vector d_dcell;
       bool d_finalized;
+      IntVector d_idxLow;
+      IntVector d_idxHigh;
       IntVector d_patchDistribution;
 
 #ifdef SELECT_GRID
