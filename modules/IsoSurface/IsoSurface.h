@@ -19,12 +19,14 @@
 #include <ScalarField.h>
 #include <ScalarFieldPort.h>
 class ColormapPort;
+class Element;
 class GeomCone;
 class GeomCylinder;
 class GeomDisc;
 class GeomSphere;
 class GeometryOPort;
 class MaterialProp;
+class Mesh;
 class MUI_slider_real;
 class ObjGroup;
 
@@ -61,7 +63,7 @@ class IsoSurface : public UserModule {
     MaterialProp* widget_highlight_matl;
 
     int iso_cube(int, int, int, double, ObjGroup*, ScalarFieldRG*);
-    void iso_tetra(int, double, ObjGroup*, ScalarFieldUG*);
+    int iso_tetra(Element*, Mesh*, ScalarFieldUG*, double, ObjGroup*);
 
     void iso_reg_grid(ScalarFieldRG*, const Point&, ObjGroup*);
     void iso_reg_grid(ScalarFieldRG*, double, ObjGroup*);

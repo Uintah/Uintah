@@ -16,13 +16,22 @@
 #include <ScalarFieldUG.h>
 #include <Geom.h>
 #include <GeometryPort.h>
+#include <Mesh.h>
 #include <ModuleList.h>
 #include <MUI.h>
 #include <NotFinished.h>
 #include <iostream.h>
 #include <fstream.h>
+#include <Classlib/BitArray1.h>
 #include <Classlib/HashTable.h>
 #include <Classlib/Queue.h>
+
+#define FACE1 8
+#define FACE2 4
+#define FACE3 2
+#define FACE4 1
+#define ALLFACES (FACE1|FACE2|FACE3|FACE4)
+
 struct MCubeTable {
     int which_case;
     int permute[8];
@@ -559,17 +568,191 @@ void IsoSurface::iso_reg_grid(ScalarFieldRG* field, const Point& p,
 	ogeom->delObj(groupid);
 }
 
-
-void IsoSurface::iso_tetrahedra(ScalarFieldUG*, const Point&,
-				ObjGroup*)
+int IsoSurface::iso_tetra(Element* element, Mesh* mesh,
+			  ScalarFieldUG* field, double isoval,
+			  ObjGroup* group)
 {
-    NOT_FINISHED("IsoSurface::iso_tetrahedra");
+    double v1=field->data[element->n1]-isoval;
+    double v2=field->data[element->n2]-isoval;
+    double v3=field->data[element->n3]-isoval;
+    double v4=field->data[element->n4]-isoval;
+    Node* n1=mesh->nodes[element->n1];
+    Node* n2=mesh->nodes[element->n2];
+    Node* n3=mesh->nodes[element->n3];
+    Node* n4=mesh->nodes[element->n4];
+    int f1=v1<0;
+    int f2=v2<0;
+    int f3=v3<0;
+    int f4=v4<0;
+    int mask=(f1<<3)|(f2<<2)|(f3<<1)|f4;
+    int faces=0;
+    switch(mask){
+    case 0:
+    case 15:
+	// Nothing to do....
+	break;
+    case 1:
+    case 14:
+	// Point 4 is inside
+ 	{
+	    Point p1(Interpolate(n4->p, n1->p, v4/(v4-v1)));
+	    Point p2(Interpolate(n4->p, n2->p, v4/(v4-v2)));
+	    Point p3(Interpolate(n4->p, n3->p, v4/(v4-v3)));
+	    group->add(new Triangle(p1, p2, p3));
+	    faces=FACE1|FACE2|FACE3;
+	}
+	break;
+    case 2:
+    case 13:
+	// Point 3 is inside
+ 	{
+	    Point p1(Interpolate(n3->p, n1->p, v3/(v3-v1)));
+	    Point p2(Interpolate(n3->p, n2->p, v3/(v3-v2)));
+	    Point p3(Interpolate(n3->p, n4->p, v3/(v3-v4)));
+	    group->add(new Triangle(p1, p2, p3));
+	    faces=FACE1|FACE2|FACE4;
+	}
+	break;
+    case 3:
+    case 12:
+	// Point 3 and 4 are inside
+ 	{
+	    Point p1(Interpolate(n3->p, n1->p, v3/(v3-v1)));
+	    Point p2(Interpolate(n3->p, n2->p, v3/(v3-v2)));
+	    Point p3(Interpolate(n4->p, n1->p, v4/(v4-v1)));
+	    Point p4(Interpolate(n4->p, n2->p, v4/(v4-v2)));
+	    group->add(new Triangle(p1, p2, p3));
+	    group->add(new Triangle(p2, p3, p4));
+	    faces=ALLFACES;
+	}
+	break;
+    case 4:
+    case 11:
+	// Point 2 is inside
+ 	{
+	    Point p1(Interpolate(n2->p, n1->p, v2/(v2-v1)));
+	    Point p2(Interpolate(n2->p, n3->p, v2/(v2-v3)));
+	    Point p3(Interpolate(n2->p, n4->p, v2/(v2-v4)));
+	    group->add(new Triangle(p1, p2, p3));
+	    faces=FACE1|FACE3|FACE4;
+	}
+	break;
+    case 5:
+    case 10:
+	// Point 2 and 4 are inside
+ 	{
+	    Point p1(Interpolate(n2->p, n1->p, v2/(v2-v1)));
+	    Point p2(Interpolate(n2->p, n3->p, v2/(v2-v3)));
+	    Point p3(Interpolate(n4->p, n1->p, v4/(v4-v1)));
+	    Point p4(Interpolate(n4->p, n3->p, v4/(v4-v3)));
+	    group->add(new Triangle(p1, p2, p3));
+	    group->add(new Triangle(p2, p3, p4));
+	    faces=ALLFACES;
+	}
+	break;
+    case 6:
+    case 9:
+	// Point 2 and 3 are inside
+ 	{
+	    Point p1(Interpolate(n2->p, n1->p, v2/(v2-v1)));
+	    Point p2(Interpolate(n2->p, n4->p, v2/(v2-v4)));
+	    Point p3(Interpolate(n3->p, n1->p, v3/(v3-v1)));
+	    Point p4(Interpolate(n3->p, n4->p, v3/(v3-v4)));
+	    group->add(new Triangle(p1, p2, p3));
+	    group->add(new Triangle(p2, p3, p4));
+	    faces=ALLFACES;
+	}
+	break;
+    case 7:
+    case 8:
+	// Point 1 is inside
+ 	{
+	    Point p1(Interpolate(n1->p, n2->p, v1/(v1-v2)));
+	    Point p2(Interpolate(n1->p, n3->p, v1/(v1-v3)));
+	    Point p3(Interpolate(n1->p, n4->p, v1/(v1-v4)));
+	    group->add(new Triangle(p1, p2, p3));
+	    faces=FACE2|FACE3|FACE4;
+	}
+	break;
+    }
+    return faces;
 }
 
-void IsoSurface::iso_tetrahedra(ScalarFieldUG*, double,
-				ObjGroup*)
+void IsoSurface::iso_tetrahedra(ScalarFieldUG* field, double isoval,
+				ObjGroup* group)
 {
-    NOT_FINISHED("IsoSurface::iso_tetrahedra");
+    Mesh* mesh=field->mesh.get_rep();
+    int nelems=mesh->elems.size();
+    for(int i=0;i<nelems;i++){
+	update_progress(i, nelems);
+	Element* element=mesh->elems[i];
+	iso_tetra(element, mesh, field, isoval, group);
+	if(abort_flag)
+	    return;
+    }
+}
+
+void IsoSurface::iso_tetrahedra(ScalarFieldUG* field, const Point& p,
+				ObjGroup* group)
+{
+    Mesh* mesh=field->mesh.get_rep();
+    int nelems=mesh->elems.size();
+    if(!field->interpolate(p, isoval)){
+	error("Seed point not in field boundary");
+	return;
+    }
+    value_slider->set_value(isoval);
+    cerr << "Isoval = " << isoval << "\n";
+    BitArray1 visited(nelems, 0);
+    Queue<int> surfQ;
+    int ix;
+    mesh->locate(p, ix);
+    visited.set(ix);
+    surfQ.append(ix);
+    int groupid=0;
+    int counter=1;
+    while(!surfQ.is_empty()){
+	if(abort_flag)
+	    break;
+	if(counter%400 == 0){
+	    if(!ogeom->busy()){
+		if(groupid)
+		    ogeom->delObj(groupid);
+		groupid=ogeom->addObj(group->clone(), surface_name);
+		ogeom->flushViews();
+	    }
+	}
+	ix=surfQ.pop();
+	Element* element=mesh->elems[ix];
+	int nbrs=iso_tetra(element, mesh, field, isoval, group);
+	if(nbrs & FACE1){
+	    if(!visited.is_set(element->face[0])){
+		visited.set(element->face[0]);
+		surfQ.append(element->face[0]);
+	    }
+	}
+	if(nbrs & FACE2){
+	    if(!visited.is_set(element->face[1])){
+		visited.set(element->face[1]);
+		surfQ.append(element->face[1]);
+	    }
+	}
+	if(nbrs & FACE3){
+	    if(!visited.is_set(element->face[2])){
+		visited.set(element->face[2]);
+		surfQ.append(element->face[2]);
+	    }
+	}
+	if(nbrs & FACE4){
+	    if(!visited.is_set(element->face[3])){
+		visited.set(element->face[3]);
+		surfQ.append(element->face[3]);
+	    }
+	}
+	counter++;
+    }
+    if(groupid)
+	ogeom->delObj(groupid);
 }
 
 void IsoSurface::find_seed_from_value(const ScalarFieldHandle& field)
