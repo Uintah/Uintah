@@ -37,12 +37,14 @@
 #include <Packages/Uintah/CCA/Components/Schedulers/NirvanaLoadBalancer.h>
 #include <Packages/Uintah/CCA/Components/Schedulers/RoundRobinLoadBalancer.h>
 #include <Packages/Uintah/CCA/Components/Schedulers/SimpleLoadBalancer.h>
+#include <Packages/Uintah/CCA/Components/PatchCombiner/PatchCombiner.h>
 #include <Packages/Uintah/CCA/Components/DataArchiver/DataArchiver.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
 #include <Packages/Uintah/Core/Disclosure/TypeDescription.h>
 
 #include <Core/Exceptions/Exception.h>
+#include <Core/Exceptions/InternalError.h>
 #include <Core/Thread/Mutex.h>
 #include <Core/Util/DebugStream.h>
 
@@ -129,6 +131,7 @@ usage( const std::string & message,
       cerr << "                           of boxes you are using.\n";
       cerr << "-emit_taskgraphs     : Output taskgraph information\n";
       cerr << "-restart             : Give the checkpointed uda directory as the input file\n";
+      cerr << "-combine_patches     : Give a uda directory as the input file\n";      
       cerr << "-t <timestep>        : Restart timestep (last checkpoint is default,\n\t\t\tyou can use -t 0 for the first checkpoint)\n";
       cerr << "-copy                : Copy from old uda when restarting\n";
       cerr << "-move                : Move from old uda when restarting\n";
@@ -173,8 +176,9 @@ main( int argc, char** argv )
     bool   do_AMR=false;
     bool   emit_graphs=false;
     bool   restart=false;
+    bool   combine_patches=false;
     int    restartTimestep = -1;
-    string restartFromDir;
+    string udaDir; // for restart or combine_patches
     bool   restartFromScratch = true;
     bool   restartRemoveOldDir = false;
     int    numThreads = 0;
@@ -269,6 +273,8 @@ main( int argc, char** argv )
 	   emit_graphs = true;
 	} else if(s == "-restart") {
 	   restart=true;
+	} else if(s == "-combine_patches") {
+	   combine_patches=true;	   
 	} else if(s == "-nocopy") { // default anyway, but that's fine
  	   restartFromScratch = true;
 	} else if(s == "-copy") {
@@ -300,8 +306,8 @@ main( int argc, char** argv )
       usage("No input file specified", "", argv[0]);
     }
 
-    if (restart) {
-       restartFromDir = filename;
+    if (restart || combine_patches) {
+       udaDir = filename;
        filename = filename + "/input.xml";
     }
 
@@ -316,7 +322,7 @@ main( int argc, char** argv )
 	usage( "ICE and Arches do not work together", "", argv[0]);
     }
 
-    if(!(do_ice || do_arches || do_mpm || do_impmpm || do_burger || do_poisson1 || do_poisson2 || do_poisson3)){
+    if(!(do_ice || do_arches || do_mpm || do_impmpm || do_burger || do_poisson1 || do_poisson2 || do_poisson3 || combine_patches)){
 	usage( "You need to specify -arches, -ice, or -mpm", "", argv[0]);
     }
 
@@ -376,6 +382,7 @@ main( int argc, char** argv )
 	  sim = scinew ImpMPM(world);
 	} else if(do_arches){
 	  sim = scinew Arches(world);
+	  cerr << "Arches sim = " << sim << endl;
 	} else if(do_ice) {
 	  ICE* ice = scinew ICE(world);
 	  ice->attachPort("output", output);
@@ -388,6 +395,9 @@ main( int argc, char** argv )
 	  sim = scinew Poisson2(world);
 	} else if(do_poisson3){
 	  sim = scinew Poisson3(world);
+	} else if (combine_patches) {
+	  sim = scinew PatchCombiner(world, udaDir);
+	  ctl->doCombinePatches(udaDir);
 	} else {
 	  usage("You need to specify a simulation: -arches, -ice, -mpm, "
 		"-impm -mpmice, -mpmarches, -burger, -poisson1, -poisson2, or -poisson3",
@@ -480,7 +490,7 @@ main( int argc, char** argv )
 	}
 
 	if (restart) {
-	  ctl->doRestart(restartFromDir, restartTimestep,
+	  ctl->doRestart(udaDir, restartTimestep,
 			 restartFromScratch, restartRemoveOldDir);
 	}
 
