@@ -109,20 +109,24 @@ public:
   virtual const string get_type_name(int n = -1) const { return type_name(n); }
 
   // Extra functionality needed by this specific geometry.
-  void add_point(const Point &p) { points_.push_back(p); }
+
   node_index add_find_point(const Point &p, double err = 1.0e-3);
-  void add_triangle(node_index a, node_index b, node_index c,
-		    bool cw_p = true);
-  void add_triangle(const Point &p0, const Point &p1, const Point &p2,
-		    bool cw_p = true);
+  void add_triangle(node_index a, node_index b, node_index c);
+  void add_triangle(const Point &p0, const Point &p1, const Point &p2);
+
+  // Must call connect after adding triangles this way.
+  node_index add_point(const Point &p);
+  void add_triangle_unconnected(const Point &p0, const Point &p1,
+				const Point &p2);
+
+  void connect(double err = 1.0e-3);
+
 
   //bool intersect(const Point &p, const Vector &dir, double &min, double &max,
   //		 face_index &face, double &u, double &v);
 
 
   const Point &point(node_index i) { return points_[i]; }
-
-  void connect(double err = 1.0e-3);
 
 private:
 

@@ -315,21 +315,11 @@ TriSurfMesh::add_find_point(const Point &p, double err)
 
 
 void
-TriSurfMesh::add_triangle(node_index a, node_index b, node_index c,
-		      bool cw_p)
+TriSurfMesh::add_triangle(node_index a, node_index b, node_index c)
 {
-  if (cw_p)
-  {
-    faces_.push_back(a);
-    faces_.push_back(b);
-    faces_.push_back(c);
-  }
-  else
-  {
-    faces_.push_back(c);
-    faces_.push_back(b);
-    faces_.push_back(a);
-  }
+  faces_.push_back(a);
+  faces_.push_back(b);
+  faces_.push_back(c);
 }
 
 
@@ -410,13 +400,26 @@ TriSurfMesh::connect(double err)
 }
 
 
-void
-TriSurfMesh::add_triangle(const Point &p0, const Point &p1, const Point &p2,
-		      bool cw_p)
+TriSurfMesh::node_index
+TriSurfMesh::add_point(const Point &p)
 {
-  add_triangle(add_find_point(p0),
-	       add_find_point(p1),
-	       add_find_point(p2), cw_p);
+  points_.push_back(p);
+  return points_.size() - 1;
+}
+
+
+void
+TriSurfMesh::add_triangle(const Point &p0, const Point &p1, const Point &p2)
+{
+  add_triangle(add_find_point(p0), add_find_point(p1), add_find_point(p2));
+}
+
+void
+TriSurfMesh::add_triangle_unconnected(const Point &p0,
+				      const Point &p1,
+				      const Point &p2)
+{
+  add_triangle(add_point(p0), add_point(p1), add_point(p2));
 }
 
 
