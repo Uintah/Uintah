@@ -7,7 +7,7 @@
 
 using namespace Uintah;
 
-SmagorinskyModel::SmagorinskyModel(ProblemSpecP& ps)
+Smagorinsky_Model::Smagorinsky_Model(ProblemSpecP& ps)
 {
   //__________________________________
   //typically filter_width=grid spacing(uniform) for implicit filter.
@@ -17,11 +17,11 @@ SmagorinskyModel::SmagorinskyModel(ProblemSpecP& ps)
 
 }
 
-SmagorinskyModel::SmagorinskyModel()
+Smagorinsky_Model::Smagorinsky_Model()
 {
 }
 
-SmagorinskyModel::~SmagorinskyModel()
+Smagorinsky_Model::~Smagorinsky_Model()
 {
 }
 
@@ -29,7 +29,7 @@ SmagorinskyModel::~SmagorinskyModel()
   Function~  computeTurbViscosity
   Purpose~ Calculate the turbulent viscosity
   -----------------------------------------------------------------------  */
-void SmagorinskyModel::computeTurbViscosity(DataWarehouse* new_dw,
+void Smagorinsky_Model::computeTurbViscosity(DataWarehouse* new_dw,
                                             const Patch* patch,
                                             const CCVariable<Vector>& /*vel_CC*/,
                                             const SFCXVariable<double>& uvel_FC,
@@ -79,7 +79,7 @@ void SmagorinskyModel::computeTurbViscosity(DataWarehouse* new_dw,
   Function~  computeStrainRate
   Purpose~ Calculate the grid strain rate
   -----------------------------------------------------------------------  */  
-void SmagorinskyModel::computeStrainRate(const Patch* patch,
+void Smagorinsky_Model::computeStrainRate(const Patch* patch,
                                     const SFCXVariable<double>& uvel_FC,
                                     const SFCYVariable<double>& vvel_FC,
                                     const SFCZVariable<double>& wvel_FC,
