@@ -332,30 +332,6 @@ GeomFastTriangles::add(const Point &p0, const MaterialHandle &m0,
     return;
   }
 #endif
-  add(p0, n, m0, p1, n, m1, p2, n, m2);
-}
-
-
-void
-GeomFastTriangles::add(const Point &p0, const Vector &n0,
-		       const MaterialHandle &m0,
-		       const Point &p1, const Vector &n1,
-		       const MaterialHandle &m1,
-		       const Point &p2, const Vector &n2,
-		       const MaterialHandle &m2)
-{
-  Vector n(Cross(p1-p0, p2-p0));
-#ifndef SCI_NORM_OGL
-  if(n.length2() > 0)
-  {
-    n.normalize();
-  }
-  else
-  {
-    cerr << "Degenerate triangle in GeomTriangles::add(" << p1 << ", " << p2 << ", " << p3 << ")" << endl;
-    return;
-  }
-#endif
 
   points_.push_back(p0.x());
   points_.push_back(p0.y());
@@ -399,6 +375,20 @@ GeomFastTriangles::add(const Point &p0, const Vector &n0,
   face_normals_.push_back(n.y());
   face_normals_.push_back(n.z());
 
+  material_ = m0;
+}
+
+
+void
+GeomFastTriangles::add(const Point &p0, const Vector &n0,
+		       const MaterialHandle &m0,
+		       const Point &p1, const Vector &n1,
+		       const MaterialHandle &m1,
+		       const Point &p2, const Vector &n2,
+		       const MaterialHandle &m2)
+{
+  add(p0, m0, p1, m1, p2, m2);
+
   normals_.push_back(n0.x());
   normals_.push_back(n0.y());
   normals_.push_back(n0.z());
@@ -410,8 +400,6 @@ GeomFastTriangles::add(const Point &p0, const Vector &n0,
   normals_.push_back(n2.x());
   normals_.push_back(n2.y());
   normals_.push_back(n2.z());
-
-  material_ = m0;
 }
 
 

@@ -3325,10 +3325,13 @@ GeomFastTriangles::draw(DrawInfoOpenGL* di, Material* matl, double)
 #ifdef SCI_NORM_OGL
     glEnable(GL_NORMALIZE);
 #endif
-    if (di->get_drawtype() == DrawInfoOpenGL::Flat) {
+    if (di->get_drawtype() == DrawInfoOpenGL::Flat ||
+	normals_.size() < face_normals_.size())
+    {
       glNormalPointer(GL_FLOAT, 0, &(face_normals_.front()));
     }
-    else {
+    else
+    {
       glNormalPointer(GL_FLOAT, 0, &(normals_.front()));
       glShadeModel(GL_SMOOTH);
     }
