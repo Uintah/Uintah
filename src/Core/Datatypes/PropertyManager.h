@@ -211,7 +211,7 @@ public:
 				      bool is_transient);
   template<class T> bool get_property( const string &, T &);
   bool is_property( const string & );
-  string get_property_name( unsigned int index );
+  string get_property_name( size_t index );
 
 
   //! -- mutability --
@@ -226,7 +226,7 @@ public:
   bool is_frozen() const { return frozen_; }
 
   void remove_property( const string & );
-  unsigned int nproperties() const { return properties_.size(); }
+  size_t nproperties() const { return properties_.size(); }
 
   void    io(Piostream &stream);
   static  PersistentTypeID type_id;
