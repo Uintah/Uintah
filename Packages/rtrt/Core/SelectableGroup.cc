@@ -7,7 +7,7 @@
 using namespace rtrt;
 
 SelectableGroup::SelectableGroup(float secs)
-  : Group(), autoswitch_secs(secs), autoswitch(true)
+  : Group(), autoswitch_secs(secs), autoswitch(true), no_skip(false)
 {
   child = 0;
 }
@@ -21,9 +21,6 @@ void SelectableGroup::light_intersect(Ray& ray, HitInfo& hit,
 			    Color& atten, DepthStats* st,
 			    PerProcessorContext* ppc)
 {
-  //double min_t = hit.min_t;
-  //if (!bbox.intersect(ray, min_t)) return;
-
   if (child >=0) objs[child]->light_intersect(ray, hit, atten, st, ppc);
 }
 
@@ -31,15 +28,14 @@ void SelectableGroup::softshadow_intersect(Light* light, Ray& ray, HitInfo& hit,
 				 double dist, Color& atten, DepthStats* st,
 				 PerProcessorContext* ppc)
 {
-  if (child >=0) objs[child]->light_intersect(ray, hit, atten, st, ppc);
+  if (child >=0)
+    objs[child]->softshadow_intersect(light, ray, hit, dist, atten, st, ppc);
 }
 
 void
 SelectableGroup::intersect(Ray& ray, HitInfo& hit, DepthStats* st,
 			   PerProcessorContext* ppc)
 {
-  //double min_t = hit.min_t;
-  //if (!bbox.intersect(ray, min_t)) return;
   if (child >=0) objs[child]->intersect(ray, hit, st, ppc);
 }
 
@@ -56,21 +52,31 @@ SelectableGroup::multi_light_intersect(Light* light, const Point& orig,
 }
 
 void
+SelectableGroup::preprocess(double maxradius, int& pp_offset, int& scratchsize)
+{
+  Group::preprocess(maxradius, pp_offset, scratchsize);
+  if (objs.size() == 0)
+    child = -1;
+}
+
+void
 SelectableGroup::animate(double t, bool& changed)
 {
   // Automatic cycling of child based on the clock passed in with t
   if (autoswitch && (child >= 0)) {
+    int oldchild = child;
     int sec = (int)(t/autoswitch_secs);
-    int ochild = child;
+    child = sec%objs.size();
     // Should probably watch for changes and then pass back changed
-    child = sec%objs.size(); 
-    if ((child-ochild)) changed = true;
+    if ((child-oldchild)) {
+      changed = true;
+      // child has changed, force it to be the next child
+      if (no_skip)
+	child = (oldchild+1)%objs.size();
+    }
   }
 
-  // Animate all of them even if they aren't showing
-  //for(int i=0;i<objs.size();i++){
-    objs[child]->animate(t, changed);
-    //}
+  objs[child]->animate(t, changed);
 }
 
 void
@@ -83,8 +89,10 @@ SelectableGroup::collect_prims(Array1<Object*>& prims)
 
 Object *
 SelectableGroup::getCurrentChild()
-{ 
-  if( objs.size() != 0 )
+{
+  // Since we have maintained that child is a valid index into objs, we
+  // only need to check it for validity.
+  if( child >= 0 )
     return objs[child];
   else
     return NULL;
