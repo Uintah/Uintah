@@ -1,3 +1,4 @@
+
 #include <Packages/Uintah/CCA/Components/ICE/ICE.h>
 #include <Packages/Uintah/CCA/Components/ICE/Diffusion.h>
 #include <Packages/Uintah/CCA/Components/ICE/BoundaryCond.h>
@@ -5,6 +6,7 @@
 #include <Packages/Uintah/CCA/Components/ICE/ICEMaterial.h>
 #include <Packages/Uintah/CCA/Components/ICE/Advection/AdvectionFactory.h>
 #include <Packages/Uintah/CCA/Components/ICE/TurbulenceFactory.h>
+#include <Packages/Uintah/CCA/Components/ICE/EOS/EquationOfState.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
 #include <Packages/Uintah/CCA/Ports/Scheduler.h>
