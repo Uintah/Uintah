@@ -138,7 +138,7 @@
     <!--____________________________________________________________________-->
    <DataArchiver>
         <filebase>Confined599Kheatx.vs.uda</filebase>
-        <outputInterval>2e-5</outputInterval>
+        <outputTimestepInterval> 10 </outputTimestepInterval>
         <save label = "vel_CC"/>
         <save label = "press_CC"/>
         <save label = "rho_CC"/>
@@ -154,9 +154,10 @@
         <save label = "p.volume"/>
         <save label = "p.velocity"/>
 	<save label = "p.temperature"/>
-	<save label = "p.stress_afterStrainRate"/>
+	<save label = "p.CrackRadius"/>
+	<save label = "p.stress"/>
 
-	<checkpoint cycle = "2" interval = "5.e-5"/>
+	<checkpoint cycle = "2" timestepInterval = "400"/>
    </DataArchiver>
 
    <Debug>

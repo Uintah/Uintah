@@ -27,7 +27,7 @@
 	<save label = "p.velocity"/>
 	<save label = "p.volume"/>
 	<save label = "p.mass"/>
-	<save label = "p.stress_afterStrainRate"/>
+	<save label = "p.stress"/>
 	<save label = "g.mass"/>
 	<save label = "g.stressFS"/>
    </DataArchiver>
