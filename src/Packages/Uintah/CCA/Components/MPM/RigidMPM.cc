@@ -174,6 +174,7 @@ void RigidMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   t->requires(Task::NewDW, lb->gTemperatureRateLabel,  gac,NGN);
   t->requires(Task::NewDW, lb->gTemperatureLabel,      gac,NGN);
   t->requires(Task::NewDW, lb->gTemperatureNoBCLabel,  gac,NGN);
+  t->requires(Task::NewDW, lb->gAccelerationLabel,     gac,NGN);
   t->requires(Task::OldDW, lb->pXLabel,                Ghost::None);
   t->requires(Task::OldDW, lb->pMassLabel,             Ghost::None);
   t->requires(Task::OldDW, lb->pParticleIDLabel,       Ghost::None);
@@ -318,6 +319,7 @@ void RigidMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       new_dw->get(gTemperatureRate,lb->gTemperatureRateLabel,dwi,patch,gac,NGP);
       new_dw->get(gTemperature,    lb->gTemperatureLabel,    dwi,patch,gac,NGP);
       new_dw->get(gTemperatureNoBC,lb->gTemperatureNoBCLabel,dwi,patch,gac,NGP);
+      new_dw->get(gacceleration,   lb->gAccelerationLabel,   dwi,patch,gac,NGP);
       if(d_with_ice){
         new_dw->get(dTdt,          lb->dTdt_NCLabel,         dwi,patch,gac,NGP);
       }
@@ -354,21 +356,23 @@ void RigidMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
         }
 
         double tempRate = 0.0;
+        Vector acc(0.0,0.0,0.0);
 
         // Accumulate the contribution from each surrounding vertex
         // All we care about is the temperature field, everything else
         // should be zero.
         for (int k = 0; k < flags->d_8or27; k++) {
           tempRate += (gTemperatureRate[ni[k]] + dTdt[ni[k]])   * S[k];
+          acc      += gacceleration[ni[k]]   * S[k];
         }
         pTempNew[idx]        = pTemperature[idx] + tempRate  * delT;
+        pvelocitynew[idx]    = pvelocity[idx]+acc*delT;
         // If there is no adiabatic heating, add the plastic temperature
         // to the particle temperature
 
         // Update the particle's position and velocity
         pxnew[idx]           = px[idx] + pvelocity[idx]*delT;
         pdispnew[idx]        = pvelocity[idx]*delT;
-        pvelocitynew[idx]    = pvelocity[idx];
         pSp_volNew[idx]      = pSp_vol[idx];
         pmassNew[idx]        = pmass[idx];
         pvolumeNew[idx]      = pvolume[idx];
