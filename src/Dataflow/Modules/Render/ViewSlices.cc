@@ -48,6 +48,7 @@
 #include <tk.h>
 #include <stdlib.h>
 
+#include <Core/Exceptions/GuiException.h>
 #include <Core/Containers/Array3.h>
 #include <Core/GuiInterface/TCLTask.h>
 #include <Core/Malloc/Allocator.h>
@@ -2572,23 +2573,14 @@ ViewSlices::rebind_slice(NrrdSlice &slice) {
   
 void
 ViewSlices::handle_gui_motion(GuiArgs &args) {
-  int state;
-  if (!string_to_int(args[5], state)) {
-    args.error ("Cannot convert motion state");
-    return;
-  }
-
-  if (layouts_.find(args[2]) == layouts_.end()) {
-    error ("Cannot handle motion on "+args[2]);
-    return;
-  }
+  ASSERT(layouts_.find(args[2]) != layouts_.end());
+  int state = args.get_int(5);
   WindowLayout &layout = *layouts_[args[2]];
 
-  int x, y, X, Y;
-  string_to_int(args[3], x);
-  string_to_int(args[4], y);
-  string_to_int(args[7], X);
-  string_to_int(args[8], Y);
+  int x = args.get_int(3);
+  int y = args.get_int(4);
+  int X = args.get_int(7);
+  int Y = args.get_int(8);
   y = layout.opengl_->height() - 1 - y;
 
   // Take care of zooming/panning first because it can affect cursor position
@@ -2667,42 +2659,11 @@ ViewSlices::handle_gui_leave(GuiArgs &args) {
 
 void
 ViewSlices::handle_gui_button_release(GuiArgs &args) {
-  int button;
-  int state;
-  int x;
-  int y;
+  if (args.count() != 7)
+    SCI_THROW(GuiException(args[0]+" "+args[1]+
+			   " expects a window #, button #, and state"));
 
-  if (args.count() != 7) {
-    args.error(args[0]+" "+args[1]+" expects a window #, button #, and state");
-    return;
-  }
-
-  if (!string_to_int(args[3], button)) {
-    args.error ("Cannot convert window #");
-    return;
-  }
-
-  if (!string_to_int(args[4], state)) {
-    args.error ("Cannot convert button state");
-    return;
-  }
-
-  if (!string_to_int(args[5], x)) {
-    args.error ("Cannot convert X");
-    return;
-  }
-
-  if (!string_to_int(args[6], y)) {
-    args.error ("Cannot convert Y");
-    return;
-  }
-
-  if (layouts_.find(args[2]) == layouts_.end()) {
-    error ("Cannot handle button release on "+args[2]);
-    return;
-  }
-
-
+  int button = args.get_int(3);
   window_level_ = 0;
   probe_ = 0;
   zooming_ = 0;
@@ -2729,45 +2690,20 @@ ViewSlices::handle_gui_button_release(GuiArgs &args) {
 
 void
 ViewSlices::handle_gui_button(GuiArgs &args) {
-  int button;
-  int state;
-  int x;
-  int y;
+  if (args.count() != 7)
+    SCI_THROW(GuiException(args[0]+" "+args[1]+
+			   " expects a window #, button #, and state"));
 
-  if (args.count() != 7) {
-    args.error(args[0]+" "+args[1]+" expects a window #, button #, and state");
-    return;
-  }
-
-  if (!string_to_int(args[3], button)) {
-    args.error ("Cannot convert window #");
-    return;
-  }
-
-  if (!string_to_int(args[4], state)) {
-    args.error ("Cannot convert button state");
-    return;
-  }
-
-  if (!string_to_int(args[5], x)) {
-    args.error ("Cannot convert X");
-    return;
-  }
-
-  if (!string_to_int(args[6], y)) {
-    args.error ("Cannot convert Y");
-    return;
-  }
-
-  if (layouts_.find(args[2]) == layouts_.end()) {
-    error ("Cannot handle motion on "+args[2]);
-    return;
-  }
-
-  WindowLayout &layout = *layouts_[args[2]];
-  
+  int button = args.get_int(3);
+  int state = args.get_int(4);
+  int x = args.get_int(5);
+  int y = args.get_int(6);
   pick_x_ = x;
   pick_y_ = y;
+
+  ASSERT(layouts_.find(args[2]) != layouts_.end());
+  WindowLayout &layout = *layouts_[args[2]];
+  
 
   for (unsigned int w = 0; w < layout.windows_.size(); ++w) {
     SliceWindow &window = *layout.windows_[w];
@@ -2829,27 +2765,11 @@ ViewSlices::handle_gui_button(GuiArgs &args) {
   
 void
 ViewSlices::handle_gui_keypress(GuiArgs &args) {
-  int keycode;
+  if (args.count() != 6)
+    SCI_THROW(GuiException(args[0]+" "+args[1]+
+			   " expects a win #, keycode, keysym,& time"));
 
-  if (false)
-    for (int i = 0; i < args.count(); ++i)
-      cerr << args[i] << ((i == args.count()-1)?"\n":" ");
-  
-  if (args.count() != 6) {
-    args.error(args[0]+" "+args[1]+" expects a win #, keycode, keysym,& time");
-    return;
-  }
-  
-  if (!string_to_int(args[3], keycode)) {
-    args.error ("Cannot convert keycode");
-    return;
-  }
-
-  if (layouts_.find(args[2]) == layouts_.end()) {
-    error ("Cannot handle motion on "+args[2]);
-    return;
-  }
-
+  ASSERT(layouts_.find(args[2]) != layouts_.end());
   WindowLayout &layout = *layouts_[args[2]];
 
   for (unsigned int w = 0; w < layout.windows_.size(); ++w) {
@@ -2906,11 +2826,8 @@ ViewSlices::tcl_command(GuiArgs& args, void* userdata) {
   else if (args[1] == "undo") undo_paint_stroke();
   else if (args[1] == "set_font_sizes") set_font_sizes(font_size_());
   else if(args[1] == "setgl") {
-    int visualid = 0;
-    if (args.count() == 5 && !string_to_int(args[4], visualid))
-      error("setgl bad visual id: "+args[4]);
-    
-    TkOpenGLContext *context = scinew TkOpenGLContext(args[2], visualid, 512, 512);
+    TkOpenGLContext *context = \
+      scinew TkOpenGLContext(args[2], args.get_int(4), 512, 512);
     XSync(context->display_, 0);
     ASSERT(layouts_.find(args[2]) == layouts_.end());
     layouts_[args[2]] = scinew WindowLayout(ctx->subVar(args[3],0));
