@@ -11,6 +11,7 @@
 #include <Packages/Uintah/CCA/Components/MPM/Solver.h>
 #include <Packages/Uintah/Core/Grid/NCVariable.h>
 #include <Packages/Uintah/Core/Grid/ParticleVariable.h>
+#include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
 
 #define MAX_BASIS 27
 
@@ -192,6 +193,11 @@ namespace Uintah {
 				    ParticleVariable<int>& damage, int dwi,
 				    DataWarehouse* new_dw);
 
+    inline void setWorld(const ProcessorGroup* myworld)
+    {
+      d_world = myworld;
+    }
+
   protected:
 
     // Calculate velocity gradient for 27 noded interpolation
@@ -235,6 +241,7 @@ namespace Uintah {
     int NGN;
     std::string d_erosionAlgorithm;
     double d_adiabaticHeating;
+    const ProcessorGroup* d_world;
   };
 } // End namespace Uintah
       
