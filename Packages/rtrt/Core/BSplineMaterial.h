@@ -130,7 +130,8 @@ public:
 		  double specpow, double refl=0);
   virtual ~BSplineMaterial();
 
-  virtual void io(SCIRun::Piostream &stream) { ASSERTFAIL("not implemented"); }
+  virtual void io(SCIRun::Piostream &/*stream*/)
+  { ASSERTFAIL("not implemented"); }
   virtual int get_scratchsize();
   virtual void shade(Color& result, const Ray& ray,
 		     const HitInfo& hit, int depth, 

@@ -20,7 +20,7 @@ public:
   DummyObject(Object* obj, Material* m) 
     : Object(m), obj(obj)
   {}
-  virtual void io(SCIRun::Piostream &stream) 
+  virtual void io(SCIRun::Piostream &/*stream*/) 
   { ASSERTFAIL("Pio not supported"); }
   void SetNormal(Vector& v)
   {

@@ -26,7 +26,7 @@ public:
   RationalBezier(Material *, RationalMesh *, double u0=0., double u1=1., double v0=0., double v1=1.);
   RationalBezier(Material *, RationalMesh *, RationalMesh *, double u0, double u1, double v0, double v1);
 
-  virtual void io(SCIRun::Piostream &stream) 
+  virtual void io(SCIRun::Piostream &/*stream*/) 
   { ASSERTFAIL("Pio not supported"); }
   inline void setParams(double u0, double u1, double v0, double v1)
   {

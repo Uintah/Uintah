@@ -10,7 +10,7 @@ class MIPGroup : public Group {
 public:
   MIPGroup();
   virtual ~MIPGroup();
-  virtual void io(SCIRun::Piostream &stream) 
+  virtual void io(SCIRun::Piostream &/*stream*/) 
   { ASSERTFAIL("Pio not supported"); }
   virtual void intersect(Ray& ray, HitInfo& hit, DepthStats* st,
 			 PerProcessorContext*);

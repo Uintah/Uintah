@@ -30,7 +30,8 @@ public:
   HVolumeMaterial(VolumeDpy *dpy, ScalarTransform1D<float,float> *f1_to_f2,
 		  ScalarTransform1D<float,Material*> *f2_to_material);
   virtual ~HVolumeMaterial() {}
-  virtual void io(SCIRun::Piostream &stream) { ASSERTFAIL("not implemented"); }
+  virtual void io(SCIRun::Piostream &/*stream*/)
+  { ASSERTFAIL("not implemented"); }
   virtual void shade(Color& result, const Ray& ray,
 		     const HitInfo& hit, int depth,
 		     double atten, const Color& accumcolor,
