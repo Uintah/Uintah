@@ -18,18 +18,6 @@ ProblemSpec::~ProblemSpec()
 {
 }
 
-double ProblemSpec::getStartTime() const
-{
-    return 0;
-}
-
-double ProblemSpec::getMaximumTime() const
-{
-    //    return 0.00002;
-    //return 1.e-5;
-    return MAXTIME;
-}
-
 const TypeDescription* ProblemSpec::getTypeDescription()
 {
     //cerr << "ProblemSpec::getTypeDescription() not done\n";
@@ -41,6 +29,9 @@ const TypeDescription* ProblemSpec::getTypeDescription()
 
 //
 // $Log$
+// Revision 1.3  2000/03/21 18:52:11  sparker
+// Prototyped header file for new problem spec functionality
+//
 // Revision 1.2  2000/03/16 22:08:00  dav
 // Added the beginnings of cocoon docs.  Added namespaces.  Did a few other coding standards updates too
 //
