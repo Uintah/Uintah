@@ -89,8 +89,6 @@ global filter2Dtextures
 set filter2Dtextures 1
 global planes_mapType
 set planes_mapType 0
-global planes_threshold
-set planes_threshold 0
 
 global slice_frame
 set slice_frame(axial) ""
@@ -409,6 +407,7 @@ class BioImageApp {
 		set $mods(ViewSlices)-sagittal-viewport0-clut_wl $wl
 		set $mods(ViewSlices)-coronal-viewport0-clut_wl $wl
 
+		$mods(ViewSlices)-c setclut
 
 		global slice_frame
                 $mods(ViewSlices)-c rebind $slice_frame(axial).axial
@@ -419,9 +418,9 @@ class BioImageApp {
 		# rebind 2D windows to call the ViewSlices callback and then BioImage's so we
 		# can catch the release
 	        
-		bind  $slice_frame(axial).axial <ButtonRelease> "$mods(ViewSlices)-c release  %W %b %s %X %Y; $this update_ViewSlices_button_release %b"
-		bind   $slice_frame(sagittal).sagittal <ButtonRelease> "$mods(ViewSlices)-c release  %W %b %s %X %Y; $this update_ViewSlices_button_release %b"
-		bind  $slice_frame(coronal).coronal <ButtonRelease> "$mods(ViewSlices)-c release  %W %b %s %X %Y; $this update_ViewSlices_button_release %b"
+		bind  $slice_frame(axial).axial <ButtonRelease> "$mods(ViewSlices)-c release  %W %b %s %X %Y;" ;#$this update_ViewSlices_button_release %b"
+		bind   $slice_frame(sagittal).sagittal <ButtonRelease> "$mods(ViewSlices)-c release  %W %b %s %X %Y" ;# $this update_ViewSlices_button_release %b"
+		bind  $slice_frame(coronal).coronal <ButtonRelease> "$mods(ViewSlices)-c release  %W %b %s %X %Y";# $this update_ViewSlices_button_release %b"
 
 		global vol_width vol_level
 		set vol_width $ww
@@ -440,20 +439,19 @@ class BioImageApp {
  		set [set UnuJhisto]-maxs "$max nan"
  		set [set UnuJhisto]-mins "$min nan"
 
-		global planes_threshold $mods(ViewSlices)-min
-		set planes_threshold [set $mods(ViewSlices)-min]
+		upvar \#0 $mods(ViewSlices)-min min_val 
+		upvar \#0 $mods(ViewSlices)-background_threshold thresh
+		set thresh $min_val
 
-
-
- 	    # turn off MIP stuff
-              after 100 "uplevel \#0 set \"\{$mods(Viewer)-ViewWindow_0-MIP Slice0 (1)\}\" 0; $mods(Viewer)-ViewWindow_0-c redraw"
-              after 100 "uplevel \#0 set \"\{$mods(Viewer)-ViewWindow_0-MIP Slice1 (1)\}\" 0; $mods(Viewer)-ViewWindow_0-c redraw"
-              after 100 "uplevel \#0 set \"\{$mods(Viewer)-ViewWindow_0-MIP Slice2 (1)\}\" 0; $mods(Viewer)-ViewWindow_0-c redraw"
+		# turn off MIP stuff
+		after 100 "uplevel \#0 set \"\{$mods(Viewer)-ViewWindow_0-MIP Slice0 (1)\}\" 0; $mods(Viewer)-ViewWindow_0-c redraw"
+		after 100 "uplevel \#0 set \"\{$mods(Viewer)-ViewWindow_0-MIP Slice1 (1)\}\" 0; $mods(Viewer)-ViewWindow_0-c redraw"
+		after 100 "uplevel \#0 set \"\{$mods(Viewer)-ViewWindow_0-MIP Slice2 (1)\}\" 0; $mods(Viewer)-ViewWindow_0-c redraw"
 
                 set 2D_fixed 1
 
 		# re-execute ViewSlices so that all the planes show up (hack)
-                $mods(ViewSlices)-c needexecute
+                #$mods(ViewSlices)-c needexecute
 	    } 
 
 	    global $mods(ViewSlices)-min $mods(ViewSlices)-max
@@ -831,7 +829,7 @@ class BioImageApp {
 	    -sashwidth 5000 -sashindent 0 -sashborderwidth 2 -sashheight 6 \
 	    -sashcursor sb_v_double_arrow -width $viewer_width -height $viewer_height
 	pack $w.topbot -expand 1 -fill both -padx 0 -ipadx 0 -pady 0 -ipady 0
-	Tooltip $w.topbot "Click and drag to resize"
+#	Tooltip $w.topbot "Click and drag to resize"
 	
 	$w.topbot add top -margin 3 -minimum 0
 	$w.topbot add bottom  -margin 0 -minimum 0
@@ -843,7 +841,7 @@ class BioImageApp {
 	iwidgets::panedwindow $top.lmr -orient vertical -thickness 0 \
 	    -sashheight 5000 -sashwidth 6 -sashindent 0 -sashborderwidth 2 \
 	    -sashcursor sb_h_double_arrow
-	Tooltip $top.lmr "Click and drag to resize"
+#	Tooltip $top.lmr "Click and drag to resize"
 
 	$top.lmr add left -margin 3 -minimum 0
 	$top.lmr add middle -margin 3 -minimum 0
@@ -1035,10 +1033,9 @@ class BioImageApp {
 		    [set UnuJhisto]-c needexecute
 		}
  	    }
-		
+
  	    # update background threshold slider min/max 
- 	    # $this update_planes_threshold_slider_min_max
- 	    $this update_planes_threshold
+	    $mods(ViewSlices)-c background_thresh
  	}
     }
 
@@ -1227,6 +1224,7 @@ class BioImageApp {
 	    set m36 [addModuleAtPosition "Teem" "NrrdData" "ChooseNrrd" 10 485]
 	    set m37 [addModuleAtPosition "Teem" "NrrdData" "ChooseNrrd" 183 2398]
 
+
 	    # store some in mods
 	    set mods(EditTransferFunc) $m14
 
@@ -1295,6 +1293,9 @@ class BioImageApp {
 	    set c45 [addConnection $m37 0 $m12 0]
 
 
+	    set c46 [addConnection $m26 1 $m14 0]
+
+
 	    # disable the volume rendering
  	    disableModule $m8 1
  	    disableModule $m15 1
@@ -1359,24 +1360,28 @@ class BioImageApp {
 	    set $m14-0-color-b {0.17}
 	    set $m14-0-color-a {1.0}
 	    set $m14-state-0 {r 0 0.0429688 0.335938 0.367187 0.453125 0.427807}
+	    set $m14-on-0 {1}
 	    set $m14-name-1 {Generic}
 	    set $m14-1-color-r {0.82}
 	    set $m14-1-color-g {0.84}
 	    set $m14-1-color-b {0.33}
 	    set $m14-1-color-a {0.600000023842}
 	    set $m14-state-1 {t 0.462891 0.0679688 0.554687 0.295832 0.304965}
+	    set $m14-on-1 {1}
 	    set $m14-name-2 {Generic}
 	    set $m14-2-color-r {0.38}
 	    set $m14-2-color-g {0.4}
 	    set $m14-2-color-b {1.0}
 	    set $m14-2-color-a {0.72000002861}
 	    set $m14-state-2 {r 0 0.607422 0.222656 0.277344 0.300781 0.465753}
+	    set $m14-on-2 {1}
 	    set $m14-name-3 {Generic}
 	    set $m14-3-color-r {1.0}
 	    set $m14-3-color-g {1.0}
 	    set $m14-3-color-b {1.0}
 	    set $m14-3-color-a {0.810000002384}
 	    set $m14-state-3 {r 0 0.443359 0.722656 0.367188 0.253906 0.515625}
+	    set $m14-on-3 {1}
 	    set $m14-marker {end}
 
 	    global $m15-sw_raster $m15-alpha_scale
@@ -2156,7 +2161,6 @@ class BioImageApp {
             trace variable $mods(ViewSlices)-min w "$this update_window_level_scales"
             trace variable $mods(ViewSlices)-max w "$this update_window_level_scales"
             # Background threshold
-            global planes_threshold
             frame $page.thresh 
             pack $page.thresh -side top -anchor nw -expand no -fill x
 
@@ -2166,9 +2170,12 @@ class BioImageApp {
                 -from 0 -to 100 \
  	        -orient horizontal -showvalue false \
  	        -length 100 -width 15 \
-	        -variable planes_threshold
+	        -variable $mods(ViewSlices)-background_threshold \
+                -command "$mods(ViewSlices)-c background_thresh"
+	    bind $page.thresh.s <Button1-Motion> "$mods(ViewSlices)-c background_thresh"
+            bind $page.thresh.s <ButtonPress-1> "$this check_crop"
+            label $page.thresh.l2 -textvariable $mods(ViewSlices)-background_threshold
             Tooltip $page.thresh.s "Clip out values less than\nspecified background threshold"
-            label $page.thresh.l2 -textvariable planes_threshold
 
             pack $page.thresh.l $page.thresh.s $page.thresh.l2 -side left -anchor nw \
                 -padx 2 -pady 2
@@ -2176,9 +2183,6 @@ class BioImageApp {
             Tooltip $page.thresh.l "Change background threshold. Data\nvalues less than or equal to the threshold\nwill be transparent in planes."
             Tooltip $page.thresh.s "Change background threshold. Data\nvalues less than or equal to the threshold\nwill be transparent in planes."
             Tooltip $page.thresh.l2 "Change background threshold. Data\nvalues less than or equal to the threshold\nwill be transparent in planes."
-
-            bind $page.thresh.s <ButtonRelease> "$this update_planes_threshold"
-            bind $page.thresh.s <ButtonPress-1> "$this check_crop"
 
 
 	    checkbutton $page.lines -text "Show Guidelines" \
@@ -2449,8 +2453,8 @@ class BioImageApp {
             -command "$this change_volume_window_width_and_level"
         Tooltip $winlevel.ww.s "Control the window width of\nthe volume rendering"
         bind $winlevel.ww.s <ButtonRelease> "$this execute_vol_ren"
-        entry $winlevel.ww.e -textvariable vol_width            
-        bind $winlevel.ww.e <Return> "$this change_volume_window_width_and_level 1; $this update_planes_threshold"
+        entry $winlevel.ww.e -textvariable vol_width 
+	bind $winlevel.ww.e <Return> "$this change_volume_window_width_and_level 1; $mods(ViewSlices)-c background_thresh"
         pack $winlevel.ww.l $winlevel.ww.s $winlevel.ww.e -side left -anchor n -pady 1
 
         label $winlevel.wl.l -text "Window Level "
@@ -2460,8 +2464,8 @@ class BioImageApp {
             -command "$this change_volume_window_width_and_level"
         Tooltip $winlevel.wl.s "Control the window width of\nthe volume rendering"
        bind $winlevel.wl.s <ButtonRelease> "$this execute_vol_ren"
-        entry $winlevel.wl.e -textvariable vol_level           
-       bind $winlevel.wl.e <Return> "$this change_volume_window_width_and_level 1; $this update_planes_threshold"
+       entry $winlevel.wl.e -textvariable vol_level
+       bind $winlevel.wl.e <Return> "$this change_volume_window_width_and_level 1; $mods(ViewSlices)-c background_thresh"
         pack $winlevel.wl.l $winlevel.wl.s $winlevel.wl.e -side left -anchor n -pady 1
 
         trace variable $mods(ViewSlices)-min w "$this update_volume_window_level_scales"
@@ -3356,8 +3360,8 @@ class BioImageApp {
         global mods
 
         if {!$loading && [lindex $filters($which) $filter_type] == "crop"} {
-	 if {$turn_off_crop == 0} {
-	    global $mods(ViewSlices)-crop_minPadAxis0 $mods(ViewSlices)-crop_maxPadAxis0
+	    if {$turn_off_crop == 0} {
+	       global $mods(ViewSlices)-crop_minPadAxis0 $mods(ViewSlices)-crop_maxPadAxis0
             global $mods(ViewSlices)-crop_minPadAxis1 $mods(ViewSlices)-crop_maxPadAxis1
 	    global $mods(ViewSlices)-crop_minPadAxis2 $mods(ViewSlices)-crop_maxPadAxis2
 
@@ -3399,7 +3403,7 @@ class BioImageApp {
 		global $mods(ViewSlices)-crop_minAxis1 $mods(ViewSlices)-crop_maxAxis1
 		global $mods(ViewSlices)-crop_minAxis2 $mods(ViewSlices)-crop_maxAxis2
 
-                $mods(ViewSlices)-c startcrop
+                $mods(ViewSlices)-c startcrop 1
 		set $mods(ViewSlices)-crop_minAxis0 [set [set UnuCrop]-minAxis0]
 		set $mods(ViewSlices)-crop_minAxis1 [set [set UnuCrop]-minAxis1]
 		set $mods(ViewSlices)-crop_minAxis2 [set [set UnuCrop]-minAxis2]
@@ -4441,10 +4445,6 @@ class BioImageApp {
         puts $fileid "global planes_mapType"
         puts $fileid "set planes_mapType \{[set planes_mapType]\}"
 
-        global planes_threshold
-        puts $fileid "global planes_threshold"
-        puts $fileid "set planes_threshold \{[set planes_threshold]\}"
-
         global show_vol_ren
         puts $fileid "global show_vol_ren"
         puts $fileid "set show_vol_ren \{[set show_vol_ren]\}"
@@ -4703,7 +4703,7 @@ class BioImageApp {
         $this update_orientations
         $this update_planes_color_by
         $this update_planes_threshold_slider_min_max [set $mods(ViewSlices)-min] [set $mods(ViewSlices)-max]
-        $this update_planes_threshold
+        $mods(ViewSlices)-c background_thresh
         $this update_window_level_scales 1 2 3
         $this change_volume_window_width_and_level -1
         $this toggle_show_guidelines
@@ -4836,45 +4836,6 @@ class BioImageApp {
     method update_planes_threshold_slider_min_max { min max } {
 	$attachedVFr.f.vis.childsite.tnb.canvas.notebook.cs.page1.cs.thresh.s configure -from $min -to $max
 	$detachedVFr.f.vis.childsite.tnb.canvas.notebook.cs.page1.cs.thresh.s configure -from $min -to $max
-    }
-
-    method update_planes_threshold {} {
-	global mods planes_threshold 
-        global $mods(ViewSlices)-axial-viewport0-clut_ww $mods(ViewSlices)-axial-viewport0-clut_wl
-        set ww [set $mods(ViewSlices)-axial-viewport0-clut_ww]
-        set wl [set $mods(ViewSlices)-axial-viewport0-clut_wl]
-        set min [expr $wl-$ww/2]
-        set max [expr $wl+$ww/2]
-
-	set m1 [lindex [lindex $filters(0) $modules] 26]
-        global $m1-nodeList $m1-positionList
-
-        # the node positions are based on the threshold value which must
-        # be within the min/max of the data. Therefore, this cannot compute
-        # ranges unless it has been executed at least once.
-
-        if {$has_executed == 1} {
-	    # if threshold is set at borders, only have two control points
-	    if {$planes_threshold == $min} {
-                set $m1-positionList {{0 0} {441 0}}
-                set $m1-nodeList {514 1055}
-            } elseif {$planes_threshold == $max} {
-	        set $m1-positionList {{0 40} {441 40}}
-                set $m1-nodeList {514 803}	    
-	    } else {	    
-	        # otherwise, use 4 points
-	        set range [expr $max - $min]
-                set new_x [expr round ([expr [expr 441.0 / $range] * $planes_threshold])]
-
-                set $m1-positionList {{0 40} {$new_x 40} {$new_x 0} {441 0}}
-                set $m1-positionList [lreplace [set $m1-positionList] 1 1 "[expr $new_x - 5] 40"]
-                set $m1-positionList [lreplace [set $m1-positionList] 2 2 "[expr $new_x + 5] 0"]
-                set $m1-nodeList {514 797 1072 1425}
-            }
-            if {!$loading} {
-	        $m1-c needexecute
-            }
-       }
     }
 
    method toggle_filter2Dtextures {} {
