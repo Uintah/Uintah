@@ -48,11 +48,10 @@ itcl_class SCIRun_Visualization_RescaleColorMap {
 	} 
 	
 	toplevel $w 
-	wm minsize $w 200 50 
  
 	# Base Frame
 	frame $w.bf
-	pack $w.bf -padx 4 -pady 4
+	pack $w.bf -padx 4 -pady 4 -fill both -expand y
 
 	# Auto Scale Frame
 	frame $w.bf.f1
@@ -83,7 +82,7 @@ itcl_class SCIRun_Visualization_RescaleColorMap {
 	    "values of the data that will correspond to the color map."
 
 	frame $w.bf.f3.min
-	label $w.bf.f3.min.l1 -text "Min:"
+	label $w.bf.f3.min.l1 -text " Min:"
 	entry $w.bf.f3.min.e1 -textvariable $this-min -width 10
 
 	frame $w.bf.f3.max
@@ -91,14 +90,17 @@ itcl_class SCIRun_Visualization_RescaleColorMap {
 	entry $w.bf.f3.max.e2 -textvariable $this-max -width 10
 
 	pack $w.bf.f3.fs -anchor w -padx 2
-	pack $w.bf.f3.min.l1 $w.bf.f3.min.e1 -expand yes -fill x -anchor e -side left
-	pack $w.bf.f3.max.l2 $w.bf.f3.max.e2 -expand yes -fill x -anchor e -side left
+	pack $w.bf.f3.min.l1 -anchor e -side left
+	pack $w.bf.f3.min.e1 -expand yes -fill x -anchor e -side left
+	pack $w.bf.f3.max.l2 -anchor e -side left
+	pack $w.bf.f3.max.e2 -expand yes -fill x -anchor e -side left 
 
-	pack $w.bf.f3.min -side top -anchor e -padx 2 -pady 2
-	pack $w.bf.f3.max -side top -anchor e -padx 2 -pady 2
+	pack $w.bf.f3.min -side top -anchor e -padx 2 -pady 2 -fill x 
+	pack $w.bf.f3.max -side top -anchor e -padx 2 -pady 2 -fill x
 
 	# pack in the auto scale and the fixed scale frames
-	pack $w.bf.f1 $w.bf.f3 -side left -expand yes -fill x -anchor n
+	pack $w.bf.f1 -side left -anchor n
+	pack $w.bf.f3 -side left -expand yes -fill both -anchor n
 
 	bind $w.bf.f3.min.e1 <Return> "$this-c needexecute"
 	bind $w.bf.f3.max.e2 <Return> "$this-c needexecute"
@@ -113,6 +115,14 @@ itcl_class SCIRun_Visualization_RescaleColorMap {
 
 	makeSciButtonPanel $w $w $this
 	moveToCursor $w
+
+	# Don't let the GUI be smaller than it originally starts as.
+	# (This works because moveToCursor forces the GUI to size
+	#  itself.  Without the "update idletasks" in moveToCursor
+        #  winfo would return 0.)
+	set guiWidth [winfo reqwidth $w]
+	set guiHeight [winfo reqheight $w]
+	wm minsize $w $guiWidth $guiHeight
     }
 
     method autoScale { } {
