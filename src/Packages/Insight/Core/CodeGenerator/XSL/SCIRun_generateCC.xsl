@@ -150,10 +150,9 @@ public:
   // refers to the last template type of the filter intstantiation.
   template&lt;</xsl:text>
 <xsl:for-each select="/filter/filter-itk/templated/template">
-<xsl:variable name="type"><xsl:value-of select="@type"/></xsl:variable>
 <xsl:choose>
-   <xsl:when test="$type = ''">class </xsl:when>
-   <xsl:otherwise><xsl:value-of select="$type"/><xsl:text> </xsl:text> </xsl:otherwise>
+   <xsl:when test="@type"><xsl:value-of select="@type"/><xsl:text> </xsl:text> </xsl:when>
+   <xsl:otherwise>class </xsl:otherwise>
 </xsl:choose> 
 <xsl:value-of select="."/>
 <xsl:if test="position() &lt; last()">
@@ -254,10 +253,9 @@ GuiDouble </xsl:otherwise>
 <xsl:text disable-output-escaping="yes">
 template&lt;</xsl:text>
 <xsl:for-each select="/filter/filter-itk/templated/template">
-<xsl:variable name="type"><xsl:value-of select="@type"/></xsl:variable>
 <xsl:choose>
-   <xsl:when test="$type = ''">class </xsl:when>
-   <xsl:otherwise><xsl:value-of select="$type"/><xsl:text> </xsl:text> </xsl:otherwise>
+   <xsl:when test="@type"><xsl:value-of select="@type"/><xsl:text> </xsl:text> </xsl:when>
+   <xsl:otherwise>class </xsl:otherwise>
 </xsl:choose>
 
 <xsl:value-of select="."/>
