@@ -20,6 +20,7 @@
 class ScalarFieldRGdouble;
 class ScalarFieldRGfloat;
 class ScalarFieldRGint;
+class ScalarFieldRGshort;
 class ScalarFieldRGchar;
 
 class ScalarFieldRGBase : public ScalarField {
@@ -28,6 +29,7 @@ public:
 	Double,
 	Float,
 	Int,
+	Short,
 	Char,
 	Void
     };
@@ -43,6 +45,7 @@ public:
     ScalarFieldRGdouble* getRGDouble();
     ScalarFieldRGfloat* getRGFloat();
     ScalarFieldRGint* getRGInt();
+    ScalarFieldRGshort* getRGShort();
     ScalarFieldRGchar* getRGChar();
 
     Point get_point(int, int, int);

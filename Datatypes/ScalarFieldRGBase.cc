@@ -30,6 +30,8 @@ ScalarFieldRGBase::ScalarFieldRGBase(clString r)
 	rep = Float;
     else if (r=="int")
 	rep = Int;
+    else if (r=="short")
+	rep = Short;
     else if (r=="char")
 	rep = Char;
     else if (r=="double")
@@ -46,6 +48,8 @@ ScalarFieldRGBase::ScalarFieldRGBase(const ScalarFieldRGBase& copy)
 	rep = Float;
     else if (r=="int")
 	rep = Int;
+    else if (r=="short")
+	rep = Short;
     else if (r=="char")
 	rep = Char;
     else if (r=="double")
@@ -65,6 +69,8 @@ clString ScalarFieldRGBase::getType() const {
         return ("float");
     else if (rep==Int)
         return ("int");
+    else if (rep==Short)
+        return ("short");
     else if (rep==Char)
         return ("char");
     else if (rep==Void)
@@ -93,6 +99,14 @@ ScalarFieldRGint* ScalarFieldRGBase::getRGInt()
 {
     if (rep==Int)
 	return (ScalarFieldRGint*) this;
+    else
+	return 0;
+}
+
+ScalarFieldRGshort* ScalarFieldRGBase::getRGShort()
+{
+    if (rep==Short)
+	return (ScalarFieldRGshort*) this;
     else
 	return 0;
 }
