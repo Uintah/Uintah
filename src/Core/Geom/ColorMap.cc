@@ -289,8 +289,8 @@ ColorMap::io(Piostream& stream)
 }
 
 
-MaterialHandle&
-ColorMap::lookup(double value)
+const MaterialHandle&
+ColorMap::lookup(double value) const
 {
   int idx=int((colors_.size()-1)*(value-min_)/(max_-min_));
   if(idx<0)
@@ -301,8 +301,8 @@ ColorMap::lookup(double value)
 }
 
 
-MaterialHandle&
-ColorMap::lookup2(double nvalue)
+const MaterialHandle&
+ColorMap::lookup2(double nvalue) const
 {
   int idx;
   idx=int((colors_.size()-1)*nvalue);
