@@ -14,6 +14,9 @@
 #include <Packages/rtrt/Core/CycleMaterial.h>
 #include <Packages/rtrt/Core/FontString.h>
 #include <Packages/rtrt/Core/DynamicInstance.h>
+#include <Packages/rtrt/Core/Stats.h>
+#include <Packages/rtrt/Core/Worker.h>
+#include <Packages/rtrt/Core/params.h>
 
 #include <Core/Math/Trig.h>
 #include <Core/Thread/Time.h>
@@ -23,6 +26,10 @@
 #include <glui.h>
 
 #include <unistd.h>  // for sleep
+#include <strings.h> // for bzero
+#include <errno.h>
+
+extern "C" Display *__glutDisplay;
 
 using namespace rtrt;
 using namespace SCIRun;
@@ -74,12 +81,16 @@ static Transform prev_trans;
 
 #define TOGGLE_GUI                 1
 #define TOGGLE_HOT_SPOTS           2
-#define QUIT_MENU_ID               3
+#define TOGGLE_RIGHT_BUTTON_MENU   3
+#define QUIT_MENU_ID               4
 
 // Defines how much you can manually increase/decrease movement
 // controls sensitivity.
 #define MIN_SENSITIVITY      0.1
 #define MAX_SENSITIVITY    200.0
+
+#define MIN_FOV   10.0
+#define MAX_FOV  160.0
 
 // Used for loading in routes.  (Is monotonicly increasing)
 static int routeNumber = 0;
@@ -92,10 +103,11 @@ Gui::Gui() :
   r_color_spin(NULL), g_color_spin(NULL), b_color_spin(NULL), 
   lightIntensity_(NULL),
   lightBrightness_(1.0), ambientBrightness_(1.0),
-  mouseDown_(0), shiftDown_(false), beQuiet_(true),
+  mouseDown_(0), beQuiet_(true),
   lightsOn_(true), lightsBeingRendered_(false),
-  keypadAttached_(false)
+  keypadAttached_(false), rightButtonMenuActive_(true)
 {
+  inputString_[0] = 0;
 }
 
 Gui::~Gui()
@@ -121,6 +133,18 @@ Gui::handleMenuCB( int item )
     break;
   case TOGGLE_GUI:
     activeGui->toggleGui();
+    break;
+  case TOGGLE_RIGHT_BUTTON_MENU:
+    if( activeGui->rightButtonMenuActive_ )
+      {
+	activeGui->rightButtonMenuActive_ = false;
+	glutDetachMenu(GLUT_RIGHT_BUTTON);
+      }
+    else
+      {
+	activeGui->rightButtonMenuActive_ = true;
+	glutAttachMenu(GLUT_RIGHT_BUTTON);
+      }
     break;
   case QUIT_MENU_ID:
     activeGui->quit();
@@ -149,28 +173,98 @@ Gui::setDpy( Dpy * dpy )
   camera_  = dpy_->guiCam_;
 }
 
+GLuint        fontbase, fontbase2;
+XFontStruct * fontInfo;
+XFontStruct * fontInfo2;
+
+void
+Gui::setupFonts()
+{
+  fontInfo = XLoadQueryFont(__glutDisplay, __FONTSTRING__);
+
+  if (fontInfo == NULL) {
+    cerr << "no font found" << __FILE__ << "," << __LINE__ << std::endl;
+    Thread::exitAll(1);
+  }
+
+  Font id = fontInfo->fid;
+  unsigned int first = fontInfo->min_char_or_byte2;
+  unsigned int last = fontInfo->max_char_or_byte2;
+
+  fontbase = glGenLists((GLuint) 2);/* last-first+1);*/
+  if (fontbase == 0) {
+    cout << "Out of display lists: errno: " << errno << "\n";
+    Thread::exitAll(0);
+  }
+  glXUseXFont(id, first, last-first+1, fontbase+first);
+
+  fontInfo2 = XLoadQueryFont(__glutDisplay, __FONTSTRING__);
+
+  if (fontInfo2 == NULL) {
+    cerr << "no font found" << __FILE__ << "," << __LINE__ << std::endl;
+    Thread::exitAll(1);
+  }
+
+  id = fontInfo2->fid;
+  first = fontInfo2->min_char_or_byte2;
+  last = fontInfo2->max_char_or_byte2;
+
+  fontbase2 = glGenLists((GLuint) last+1);
+  if (fontbase2 == 0) {
+    cout << "Out of display lists (fontbase2) : errno: " << errno << "\n";
+    Thread::exitAll(0);
+  }
+  glXUseXFont(id, first, last-first+1, fontbase2+first);
+}
+
 void
 Gui::idleFunc()
 {
+  Dpy               * dpy = activeGui->dpy_;
+  struct DpyPrivate * priv = activeGui->priv;
+
+  // Hacking these vars for now:
+  static double lasttime  = SCIRun::Time::currentSeconds();
+  static double cum_ttime = 0;
+  static double cum_dt    = 0;
+
   // I know this is a hack... 
-  if( activeGui->dpy_->showImage_ ){
+  if( dpy->showImage_ ){
 
     glutSetWindow( activeGui->glutDisplayWindowId );
 
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    gluOrtho2D(0, activeGui->priv->xres, 0, activeGui->priv->yres);
+    gluOrtho2D(0, priv->xres, 0, priv->yres);
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
     glTranslatef(0.375, 0.375, 0.0);
 
-    activeGui->dpy_->showImage_->draw();
-    activeGui->dpy_->showImage_ = NULL;
+    dpy->showImage_->draw();
+
+    if( activeGui->displayRStats_ )
+      {
+	activeGui->drawrstats(dpy->nworkers, dpy->workers,
+			      priv->showing_scene, fontbase2, 
+			      priv->xres, priv->yres,
+			      fontInfo2, priv->left, priv->up,
+			      0.0 /* dt */);
+      }
+    if( activeGui->displayPStats_ )
+      {
+	Stats * mystats = dpy->drawstats[priv->showing_scene];
+	activeGui->drawpstats(mystats, dpy->nworkers, dpy->workers, 
+			      /*draw_framerate*/true, priv->showing_scene,
+			      fontbase, lasttime, cum_ttime,
+			      cum_dt);
+      }
+
+    dpy->showImage_ = NULL;
 
     // Display textual information on the screen:
     char buf[100];
     sprintf( buf, "%3.1lf fps", activeGui->priv->FrameRate );
-    activeGui->displayText(GLUT_BITMAP_HELVETICA_10, 10, 3, buf, Color(1,1,1));
+    activeGui->displayText(fontbase, 10, 3, buf, Color(1,1,1));
 
     glutSwapBuffers(); 
 
@@ -241,6 +335,7 @@ Gui::handleKeyPressCB( unsigned char key, int /*mouse_x*/, int /*mouse_y*/ )
   case '.':
     activeGui->stealth_->slowDown();
     break;
+  case ' ':
   case '0':
     activeGui->stealth_->stopAllMovement();
     break;
@@ -267,14 +362,15 @@ Gui::handleKeyPressCB( unsigned char key, int /*mouse_x*/, int /*mouse_y*/ )
   case 'Q':
     activeGui->beQuiet_ = !activeGui->beQuiet_;
     break;
-
   case 's':
     activeGui->cycleShadowMode();
     break;
   case 'h':
     activeGui->cycleAmbientMode();
     break;
-
+  case 'z':
+    handleMenuCB( TOGGLE_RIGHT_BUTTON_MENU );
+    break;
   case 'v':
     {
       if(activeGui->priv->followPath) { activeGui->priv->followPath = false; }
@@ -346,14 +442,14 @@ Gui::handleKeyPressCB( unsigned char key, int /*mouse_x*/, int /*mouse_y*/ )
     toggleJitterCB( -1 );
     break;
 
+  case 'r':
+    activeGui->displayRStats_ = !activeGui->displayRStats_;
+    break;
+  case 'p':
+    activeGui->displayPStats_ = !activeGui->displayPStats_;
+    break;
 
 #if 0
-  case 'p':
-    draw_pstats=!draw_pstats;
-    break;
-  case 'r':
-    draw_rstats=!draw_rstats;
-    break;
     // below is for blending "pixels" in
     // frameless rendering...
 
@@ -439,7 +535,12 @@ Gui::handleMousePress(int button, int mouse_x, int mouse_y)
   double     & last_time = priv->last_time;
   BallData  *& ball = priv->ball;
 
+  // Record the mouse button so that the mouse motion handler will
+  // know what operation to perform.
   mouseDown_ = button;
+
+  // Figure out if the shift is down at this point because you can't
+  // do it in the mouse motion handler.
   shiftDown_ = glutGetModifiers() & GLUT_ACTIVE_SHIFT;
 
   activeGui->last_x_ = mouse_x;
@@ -591,6 +692,47 @@ Gui::handleMouseMotionCB( int mouse_x, int mouse_y )
   BallData  *& ball      = priv->ball;
 
   switch( activeGui->mouseDown_ ) {
+  case GLUT_RIGHT_BUTTON:
+    {
+      if( activeGui->rightButtonMenuActive_ )
+	{ // Note: This should actually never be the case as the right 
+	  // button menu gets the click if it is active.
+	  return;
+	}
+      if( activeGui->shiftDown_ )
+	{
+	  double scl;
+	  double xmtn=-(last_x-mouse_x);
+	  double ymtn=-(last_y-mouse_y);
+	  xmtn/=300;
+	  ymtn/=300;
+	  last_x = mouse_x;
+	  last_y = mouse_y;
+	  if (Abs(xmtn)>Abs(ymtn)) scl=xmtn; else scl=ymtn;
+	  Vector dir = activeGui->camera_->lookat - activeGui->camera_->eye;
+	  activeGui->camera_->eye += dir*scl;
+	} else {
+	  double scl;
+	  double xmtn= last_x - mouse_x;
+	  double ymtn= last_y - mouse_y;
+	  xmtn/=30;
+	  ymtn/=30;
+	  last_x = mouse_x;
+	  last_y = mouse_y;
+	  if (Abs(xmtn)>Abs(ymtn)) scl=xmtn; else scl=ymtn;
+	  if (scl<0) scl=1/(1-scl); else scl+=1;
+
+	  double fov = RtoD(2*atan(scl*tan(DtoR(activeGui->camera_->fov/2.))));
+	  if( fov < MIN_FOV )
+	    fov = MIN_FOV;
+	  else if( fov > MAX_FOV )
+	    fov = MAX_FOV;
+	  activeGui->camera_->fov= fov;
+	  activeGui->fovSpinner_->set_float_val( fov );
+	}
+      activeGui->camera_->setup();
+    }
+    break;
   case GLUT_LEFT_BUTTON:
     {
       double xmtn =  double(last_x-mouse_x)/double(priv->xres);
@@ -917,9 +1059,24 @@ void
 Gui::createLightWindow( GLUI * window )
 {
   GLUI_Panel * panel = window->add_panel( "Lights" );
+
+  ambientIntensity_ = 
+    window->add_spinner_to_panel( panel, "Ambient Level:", GLUI_SPINNER_FLOAT,
+				  &ambientBrightness_, -1, updateAmbientCB );
+  ambientIntensity_->set_float_limits( 0.0, 1.0 );
+  ambientIntensity_->set_speed( 0.01 );
+
+  window->add_separator_to_panel( panel );
+
   lightList = window->add_listbox_to_panel( panel, "Selected Light:",
 					    &selectedLightId_, 
 					    LIGHT_LIST_ID, updateLightPanelCB);
+  lightIntensity_ = 
+    window->add_spinner_to_panel( panel, "Intensity:", GLUI_SPINNER_FLOAT,
+				  &lightBrightness_, -1, updateIntensityCB );
+  lightIntensity_->set_float_limits( 0.0, 1.0 );
+  lightIntensity_->set_speed( 0.01 );
+
   lightsColorPanel_ = window->add_panel_to_panel( panel, "Color" );
 
   r_color_spin = 
@@ -937,12 +1094,6 @@ Gui::createLightWindow( GLUI * window )
   b_color_spin->set_float_limits( 0.0, 1.0 );
   b_color_spin->set_speed( 0.01 );
 
-  lightIntensity_ = 
-    window->add_spinner_to_panel( panel, "Intensity:", GLUI_SPINNER_FLOAT,
-				  &lightBrightness_, -1, updateIntensityCB );
-  lightIntensity_->set_float_limits( 0.0, 1.0 );
-  lightIntensity_->set_speed( 0.01 );
-
   lightsPositionPanel_ = window->add_panel_to_panel( panel, "Position" );
   lightPosX_ = 
     window->add_spinner_to_panel(lightsPositionPanel_,"X:",GLUI_SPINNER_FLOAT,
@@ -956,14 +1107,6 @@ Gui::createLightWindow( GLUI * window )
     window->add_spinner_to_panel(lightsPositionPanel_,"Z:",GLUI_SPINNER_FLOAT,
 			  &(activeGui->lightZ_),
 			  LIGHT_Z_POS_ID, updateLightPositionCB );
-
-  window->add_separator_to_panel( panel );
-
-  ambientIntensity_ = 
-    window->add_spinner_to_panel( panel, "Ambient Level:", GLUI_SPINNER_FLOAT,
-				  &ambientBrightness_, -1, updateAmbientCB );
-  ambientIntensity_->set_float_limits( 0.0, 1.0 );
-  ambientIntensity_->set_speed( 0.01 );
 
   GLUI_Rollout * moreControls = 
     window->add_rollout_to_panel( panel, "More Controls", false );  
@@ -989,14 +1132,19 @@ Gui::createMenus( int winId )
 {
   printf("createmenus\n");
 
+  // Need to do this at this point as glut has now been initialized.
+  activeGui->setupFonts();
+
   activeGui->glutDisplayWindowId = winId;
 
   /*int modemenu = */glutCreateMenu( Gui::handleMenuCB );
 
-  glutAddMenuEntry( "Toggle Gui", TOGGLE_GUI );
-  glutAddMenuEntry( "Toggle Hot Spots", TOGGLE_HOT_SPOTS );
+  glutAddMenuEntry( "Toggle Gui [G]", TOGGLE_GUI );
+  glutAddMenuEntry( "Toggle Hot Spots [t]", TOGGLE_HOT_SPOTS );
   glutAddMenuEntry( "----------------", -1);
-  glutAddMenuEntry( "Quit", QUIT_MENU_ID );
+  glutAddMenuEntry( "Toggle On/Off This Menu [z]", TOGGLE_RIGHT_BUTTON_MENU );
+  glutAddMenuEntry( "----------------", -1);
+  glutAddMenuEntry( "Quit [q]", QUIT_MENU_ID );
   //glutAddSubMenu("Texture mode", modemenu);
   glutAttachMenu(GLUT_RIGHT_BUTTON);
 
@@ -1131,10 +1279,10 @@ Gui::createMenus( int winId )
   // FOV
   activeGui->fovValue_ = activeGui->camera_->get_fov();
   activeGui->fovSpinner_ = activeGui->mainWindow->
-    add_spinner_to_panel( display_panel, "FOV:", GLUI_SPINNER_INT,
+    add_spinner_to_panel( display_panel, "FOV:", GLUI_SPINNER_FLOAT,
 			   &(activeGui->fovValue_), FOV_SPINNER_ID,
 			  updateFovCB );
-  activeGui->fovSpinner_->set_int_limits( 20, 150 );
+  activeGui->fovSpinner_->set_float_limits( MIN_FOV, MAX_FOV );
   activeGui->fovSpinner_->set_speed( 0.1 );
 
   // Other Controls
@@ -1572,24 +1720,308 @@ Gui::cycleShadowMode()
 // Draws the string "s" to the GL window at x,y.
 //
 void
-Gui::displayText(void * font, double x, double y, char *s, const Color& c)
+Gui::displayText(GLuint fontbase, double x, double y, char *s, const Color& c)
 {
   glColor3f(c.red(), c.green(), c.blue());
-  glRasterPos2d(x, y);
-
-  int len = (int) strlen(s);
-  for( int i = 0; i < len; i++ ) {
-    glutBitmapCharacter(font, s[i]);
-  }
+  
+  glRasterPos2d(x,y);
+  /*glBitmap(0, 0, x, y, 1, 1, 0);*/
+  glPushAttrib (GL_LIST_BIT);
+  glListBase(fontbase);
+  glCallLists((int)strlen(s), GL_UNSIGNED_BYTE, (GLubyte *)s);
+  glPopAttrib ();
 }
 
 // Looks like this displays the string with a shadow on it...
 void
-Gui::displayShadowText(void * font,
+Gui::displayShadowText(GLuint fontbase,
 		       double x, double y, char *s, const Color& c)
 {
   Color b(0,0,0);
-  displayText(font, x-1, y-1, s, b);
-  displayText(font, x, y, s, c);
+  displayText(fontbase, x-1, y-1, s, b);
+  displayText(fontbase, x, y, s, c);
 }
+
+int
+calc_width(XFontStruct* font_struct, char* str)
+{
+  XCharStruct overall;
+  int ascent, descent;
+  int dir;
+  XTextExtents(font_struct, str, (int)strlen(str), &dir,
+	       &ascent, &descent, &overall);
+  if (overall.width < 20) return 50;
+  else return overall.width;
+}
+
+#define PS(str) \
+displayShadowText(fontbase, x, y, str, c); y-=dy; \
+width=calc_width(font_struct, str); \
+maxwidth=width>maxwidth?width:maxwidth;
+
+void
+Gui::draw_labels(XFontStruct* font_struct, GLuint fontbase,
+		 int& column, int dy, int top)
+{
+  int x=column;
+  int y=top;
+  int maxwidth=0;
+  int width;
+  Color c(0,1,0);
+  PS("");
+  PS("Number of Rays");
+  PS("Hit background");
+  PS("Reflection rays");
+  PS("Tranparency rays");
+  PS("Shadow rays");
+  PS("Rays in shadow");
+  PS("Shadow cache tries");
+  PS("Shadow cache misses");
+  PS("BV intersections");
+  PS("BV primitive intersections");
+  PS("Light BV intersections");
+  PS("Light BV prim intersections");
+  PS("Sphere intersections");
+  PS("Sphere hits");
+  PS("Sphere light intersections");
+  PS("Sphere light hits");
+  PS("Sphere light hit penumbra");
+  PS("Tri intersections");
+  PS("Tri hits");
+  PS("Tri light intersections");
+  PS("Tri light hits");
+  PS("Tri light hit penumbra");
+  PS("Rect intersections");
+  PS("Rect hits");
+  PS("Rect light intersections");
+  PS("Rect light hits");
+  PS("Rect light hit penumbra");
+  y-=dy;
+  PS("Rays/second");
+  PS("Rays/second/processor");
+  PS("Rays/pixel");
+  column+=maxwidth;
+} // end draw_labels()
+
+#define PN(n) \
+sprintf(buf, "%d", n); \
+width=calc_width(font_struct, buf); \
+displayShadowText(fontbase, x-width-w2, y, buf, c); y-=dy;
+
+#define PD(n) \
+sprintf(buf, "%g", n); \
+width=calc_width(font_struct, buf); \
+displayShadowText(fontbase, x-width-w2, y, buf, c); y-=dy;
+
+#define PP(n, den) \
+if(den==0) \
+percent=0; \
+else \
+percent=100.*n/den; \
+sprintf(buf, "%d", n); \
+width=calc_width(font_struct, buf); \
+displayShadowText(fontbase, x-width-w2, y, buf, c); \
+sprintf(buf, " (%4.1f%%)", percent); \
+displayShadowText(fontbase, x-w2, y, buf, c); \
+y-=dy;
+  
+void
+Gui::draw_column(XFontStruct* font_struct,
+		 GLuint fontbase, char* heading, DepthStats& sum,
+		 int x, int w2, int dy, int top,
+		 bool first/*=false*/, double dt/*=1*/, int nworkers/*=0*/,
+		 int npixels/*=0*/)
+{
+  char buf[100];
+  int y=top;
+  Color c(0,1,0);
+  double percent;
+
+  int width=calc_width(font_struct, heading);
+  displayShadowText(fontbase, x-width-w2, y, heading, Color(1,0,0)); y-=dy;
+  
+  PN(sum.nrays);
+  PP(sum.nbg, sum.nrays);
+  PP(sum.nrefl, sum.nrays);
+  PP(sum.ntrans, sum.nrays);
+  PN(sum.nshadow);
+  PP(sum.inshadow, sum.nshadow);
+  PP(sum.shadow_cache_try, sum.nshadow);
+  PP(sum.shadow_cache_miss, sum.shadow_cache_try);
+  PN(sum.bv_total_isect);
+  PP(sum.bv_prim_isect, sum.bv_total_isect);
+  PN(sum.bv_total_isect_light);
+  PP(sum.bv_prim_isect_light, sum.bv_total_isect_light);
+  
+  PN(sum.sphere_isect);
+  PP(sum.sphere_hit, sum.sphere_isect);
+  PN(sum.sphere_light_isect);
+  PP(sum.sphere_light_hit, sum.sphere_light_isect);
+  PP(sum.sphere_light_penumbra, sum.sphere_light_isect);
+  
+  PN(sum.tri_isect);
+  PP(sum.tri_hit, sum.tri_isect);
+  PN(sum.tri_light_isect);
+  PP(sum.tri_light_hit, sum.tri_light_isect);
+  PP(sum.tri_light_penumbra, sum.tri_light_isect);
+  
+  PN(sum.rect_isect);
+  PP(sum.rect_hit, sum.rect_isect);
+  PN(sum.rect_light_isect);
+  PP(sum.rect_light_hit, sum.rect_light_isect);
+  PP(sum.rect_light_penumbra, sum.rect_light_isect);
+  if(first){
+    y-=dy;
+    double rps=sum.nrays/dt;
+    PD(rps);
+    double rpspp=rps/nworkers;
+    PD(rpspp);
+    double rpp=sum.nrays/(double)npixels;
+    PD(rpp);
+  }
+} // end draw_column()
+
+
+void
+Gui::drawpstats(Stats* mystats, int nworkers, Worker** workers,
+		bool draw_framerate, int showing_scene,
+		GLuint fontbase, double& lasttime,
+		double& cum_ttime, double& cum_dt)
+{
+  double thickness=.3;
+  double border=.5;
+
+  double mintime=1.e99;
+  double maxtime=0;
+  for(int i=0;i<nworkers;i++){
+    Stats* stats=workers[i]->get_stats(showing_scene);
+    int nstats=stats->nstats();
+    if(stats->time(0)<mintime)
+      mintime=stats->time(0);
+    if(stats->time(nstats-1)>maxtime)
+      maxtime=stats->time(nstats-1);
+  }
+  double maxworker=maxtime;
+  if(mystats->time(0)<mintime)
+    mintime=mystats->time(0);
+  int nstats=mystats->nstats();
+  if(mystats->time(nstats-1)>maxtime)
+    maxtime=mystats->time(nstats-1);
+    
+  if(draw_framerate){
+    char buf[100];
+    double total_dt=0;
+    for(int i=0;i<nworkers;i++){
+      Stats* stats=workers[i]->get_stats(showing_scene);
+      int nstats=stats->nstats();
+      double dt=maxtime-stats->time(nstats-1);
+      total_dt+=dt;
+    }
+    double ttime=(maxtime-lasttime)*nworkers;
+    double imbalance=total_dt/ttime*100;
+    cum_ttime+=ttime;
+    cum_dt+=total_dt;
+    double cum_imbalance=cum_dt/cum_ttime*100;
+    sprintf(buf, "%5.1fms  %5.1f%% %5.1f%%", (maxtime-maxworker)*1000,
+	    imbalance, cum_imbalance);
+    displayText(fontbase, 80, 3, buf, Color(0,1,0));
+    lasttime=maxtime;
+  }
+  //cerr << mintime << " " << maxworker << " " << maxtime << " " << (maxtime-maxworker)*1000 << '\n';
+
+  glMatrixMode(GL_PROJECTION);
+  glLoadIdentity();
+  gluOrtho2D(mintime, maxtime, -border, nworkers+2+border);
+  glMatrixMode(GL_MODELVIEW);
+  glLoadIdentity();
+	    
+  for(int i=0;i<nworkers;i++){
+    Stats* stats=workers[i]->get_stats(showing_scene);
+    int nstats=stats->nstats();
+    double tlast=stats->time(0);
+    for(int j=1;j<nstats;j++){
+      double tnow=stats->time(j);
+      glColor3dv(stats->color(j));
+      glRectd(tlast, i+1, tnow, i+thickness+1);
+      tlast=tnow;
+    }
+  }
+
+  double tlast=mystats->time(0);
+  int i=nworkers+1;
+  for(int j=1;j<nstats;j++){
+    double tnow=mystats->time(j);
+    glColor3dv(mystats->color(j));
+    glRectd(tlast, i, tnow, i+thickness);
+    tlast=tnow;
+  }	
+} // end drawpstats()
+
+void
+Gui::drawrstats(int nworkers, Worker** workers,
+		int showing_scene,
+		GLuint fontbase, int xres, int yres,
+		XFontStruct* font_struct,
+		int left, int up,
+		double dt)
+{
+  DepthStats sums[MAXDEPTH];
+  DepthStats sum;
+  bzero(sums, sizeof(sums));
+  bzero(&sum, sizeof(sum));
+  int md=0;
+  for(int i=0;i<nworkers;i++){
+    int depth=md;
+    while(depth<MAXDEPTH){
+      Stats* st=workers[i]->get_stats(showing_scene);
+      if(st->ds[depth].nrays==0)
+	break;
+      depth++;
+    }
+    md=depth;
+  }
+
+  for(int i=0;i<nworkers;i++){
+    for(int depth=0;depth<md;depth++){
+      Stats* st=workers[i]->get_stats(showing_scene);
+      sums[depth].addto(st->ds[depth]);
+    }
+  }
+  for(int depth=0;depth<md;depth++){
+    sum.addto(sums[depth]);
+  }
+
+  glMatrixMode(GL_PROJECTION);
+  glLoadIdentity();
+  gluOrtho2D(0, xres, 0, yres);
+  glMatrixMode(GL_MODELVIEW);
+  glLoadIdentity();
+  glTranslatef(0.375, 0.375, 0.0);
+
+  XCharStruct overall;
+  int ascent, descent;
+  char* str="123456789 (100%)";
+  int dir;
+  XTextExtents(font_struct, str, (int)strlen(str), &dir, &ascent, &descent, &overall);
+  int dy=ascent+descent;
+  if (dy == 0) dy=15;
+  int dx=overall.width;
+  if (dx == 0) dx=175;
+  int column=3-left;
+  int top=yres-3-dy+up;
+  char* str2="(100%)";
+  XTextExtents(font_struct, str2, (int)strlen(str2), &dir, &ascent, &descent, &overall);
+  int w2=overall.width;
+  draw_labels(font_struct, fontbase, column, dy, top);
+  column+=dx;
+  draw_column(font_struct, fontbase, "Total", sum, column, w2, dy, top,
+  	      true, dt, nworkers, xres*yres);
+  column+=dx;
+  for(int depth=0;depth<md;depth++){
+    char buf[20];
+    sprintf(buf, "%d", depth);
+    draw_column(font_struct, fontbase, buf, sums[depth], column, w2, dy, top);
+    column+=dx;
+  }
+} // end draw_rstats()
 
