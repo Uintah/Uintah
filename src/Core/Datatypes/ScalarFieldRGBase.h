@@ -59,7 +59,7 @@ private:
     Representation rep;
 
 public:
-    clString getType() const;
+    const char *getType() const;
     ScalarFieldRGdouble* getRGDouble();
     ScalarFieldRGfloat* getRGFloat();
     ScalarFieldRGint* getRGInt();
