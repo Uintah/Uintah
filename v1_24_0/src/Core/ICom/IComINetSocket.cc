@@ -46,7 +46,7 @@ namespace SCIRun {
 
 
 IComINetSocket::IComINetSocket() :
-secs_(0), microsecs_(0), socketfd_(0), hassocket_(false), isconnected_(false)
+  socketfd_(0), hassocket_(false), isconnected_(false), secs_(0), microsecs_(0)
 {
 
 }
