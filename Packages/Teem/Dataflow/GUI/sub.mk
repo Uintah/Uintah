@@ -27,19 +27,38 @@ SRCDIR := Packages/Teem/Dataflow/GUI
 SRCS := \
 	$(SRCDIR)/axis_info_sel_box.tcl\
 	$(SRCDIR)/FieldToNrrd.tcl\
+	$(SRCDIR)/HDF5DataReader.tcl\
+	$(SRCDIR)/NrrdAxmerge.tcl\
+	$(SRCDIR)/NrrdAxsplit.tcl\
 	$(SRCDIR)/NrrdCmedian.tcl\
 	$(SRCDIR)/NrrdConvert.tcl\
 	$(SRCDIR)/NrrdCrop.tcl\
+	$(SRCDIR)/NrrdDhisto.tcl\
+	$(SRCDIR)/NrrdFlip.tcl\
+	$(SRCDIR)/NrrdHisto.tcl\
 	$(SRCDIR)/NrrdInfo.tcl\
 	$(SRCDIR)/NrrdJoin.tcl\
 	$(SRCDIR)/NrrdPad.tcl\
 	$(SRCDIR)/NrrdPermute.tcl\
+	$(SRCDIR)/NrrdProject.tcl\
 	$(SRCDIR)/NrrdQuantize.tcl\
 	$(SRCDIR)/NrrdReader.tcl\
 	$(SRCDIR)/NrrdResample.tcl\
 	$(SRCDIR)/NrrdSelectTime.tcl\
+	$(SRCDIR)/NrrdSlice.tcl\
 	$(SRCDIR)/NrrdWriter.tcl\
-	$(SRCDIR)/HDF5DataReader.tcl\
+	$(SRCDIR)/TendAnvol.tcl\
+	$(SRCDIR)/TendBmat.tcl\
+	$(SRCDIR)/TendEpireg.tcl\
+	$(SRCDIR)/TendEstim.tcl\
+	$(SRCDIR)/TendEval.tcl\
+	$(SRCDIR)/TendEvec.tcl\
+	$(SRCDIR)/TendExpand.tcl\
+	$(SRCDIR)/TendMake.tcl\
+	$(SRCDIR)/TendPoint.tcl\
+	$(SRCDIR)/TendSatin.tcl\
+	$(SRCDIR)/TendShrink.tcl\
+
 #[INSERT NEW TCL FILE HERE]
 
 include $(SCIRUN_SCRIPTS)/tclIndex.mk

@@ -22,15 +22,33 @@
 # if you want to edit this file by hand, see the "Create A New Core/CCA/Component"
 # documentation on how to do it correctly.
 
-SRCDIR := Packages/Teem/Dataflow/Modules
+include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
-SUBDIRS := \
-	$(SRCDIR)/DataIO\
-	$(SRCDIR)/Filters\
-	$(SRCDIR)/NrrdData\
-	$(SRCDIR)/Tensor\
-#[INSERT NEW CATEGORY DIR HERE]
-
-include $(SCIRUN_SCRIPTS)/recurse.mk
+SRCDIR   := Packages/Teem/Dataflow/Modules/Tensor
 
 
+SRCS     += \
+	$(SRCDIR)/TendAnvol.cc\
+	$(SRCDIR)/TendBmat.cc\
+	$(SRCDIR)/TendEpireg.cc\
+	$(SRCDIR)/TendEstim.cc\
+	$(SRCDIR)/TendEval.cc\
+	$(SRCDIR)/TendEvec.cc\
+	$(SRCDIR)/TendExpand.cc\
+	$(SRCDIR)/TendMake.cc\
+	$(SRCDIR)/TendPoint.cc\
+	$(SRCDIR)/TendSatin.cc\
+	$(SRCDIR)/TendShrink.cc\
+#[INSERT NEW CODE FILE HERE]
+
+PSELIBS := Packages/Teem/Core/Datatypes Core/Datatypes \
+	Dataflow/Network Dataflow/Ports \
+        Core/Persistent Core/Containers Core/Util \
+        Core/Exceptions Core/Thread Core/GuiInterface \
+        Core/Geom Core/GeomInterface Core/Datatypes Core/Geometry \
+        Core/TkExtensions Packages/Teem/Core/Datatypes \
+	Packages/Teem/Dataflow/Ports
+
+LIBS := $(TEEM_LIBRARY)
+
+include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk

@@ -28,15 +28,22 @@ SRCDIR   := Packages/Teem/Dataflow/Modules/Filters
 
 
 SRCS     += \
+	$(SRCDIR)/NrrdAxmerge.cc\
+	$(SRCDIR)/NrrdAxsplit.cc\
 	$(SRCDIR)/NrrdCmedian.cc\
 	$(SRCDIR)/NrrdConvert.cc\
 	$(SRCDIR)/NrrdCrop.cc\
+	$(SRCDIR)/NrrdDhisto.cc\
+	$(SRCDIR)/NrrdFlip.cc\
+	$(SRCDIR)/NrrdHisto.cc\
 	$(SRCDIR)/NrrdJoin.cc\
 	$(SRCDIR)/NrrdPad.cc\
 	$(SRCDIR)/NrrdPermute.cc\
+	$(SRCDIR)/NrrdProject.cc\
 	$(SRCDIR)/NrrdQuantize.cc\
 	$(SRCDIR)/NrrdResample.cc\
 	$(SRCDIR)/NrrdSelectTime.cc\
+	$(SRCDIR)/NrrdSlice.cc\
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS := Packages/Teem/Core/Datatypes Core/Datatypes \
