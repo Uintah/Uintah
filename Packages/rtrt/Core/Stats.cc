@@ -53,7 +53,7 @@ void Stats::add(double time, const Color& c)
     int idx=4*n;
     n++;
     if(n>=maxstats){
-	cerr << "STATS OVERFLOW! n=" << n << "\n";
+      //	cerr << "STATS OVERFLOW! n=" << n << "\n";
     } else {
 	buf[idx++]=time;
 	buf[idx++]=c.red();
