@@ -2547,6 +2547,9 @@ case $host in
          SCI_CHECK_LIB($dirs,lam,main,-lutil,,optional)
          if test -n "$HAVE_LIB_LAM"; then
             SCI_CHECK_LIB($dirs,mpi,main,-llam -lutil,,optional)
+	    if test -n "$HAVE_LIB_MPI"; then
+	       MPI_LIB_FLAG="$MPI_LIB_FLAG $LAM_LIB_FLAG $UTIL_LIB_FLAG"
+            fi
          fi
       fi
       
