@@ -31,7 +31,7 @@ SRCS     += $(SRCDIR)/Guard.cc $(SRCDIR)/MutexPool.cc \
 SRCS += $(TIME_IMPL) $(THREAD_IMPL)
 
 PSELIBS := Core/Exceptions
-LIBS := $(THREAD_LIBS) $(TRACEBACK_LIB)
+LIBS := $(THREAD_LIBS) $(TRACEBACK_LIB) $(SEMAPHORE_LIB)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
