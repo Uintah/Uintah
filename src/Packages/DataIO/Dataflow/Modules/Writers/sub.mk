@@ -40,7 +40,7 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
 INCLUDES += $(TEEM_INCLUDE) $(HDF5_INCLUDE) $(MDSPLUS_INCLUDE)
 
-SRCDIR   := Packages/DataIO/Dataflow/Modules/Readers
+SRCDIR   := Packages/DataIO/Dataflow/Modules/Writers
 
 SRCS     += \
 #[INSERT NEW CODE FILE HERE]
