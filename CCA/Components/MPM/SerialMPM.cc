@@ -993,9 +993,10 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
   static Vector zero(0.,0.,0.);
   
   int numMatls = d_sharedState->getNumMPMMatls();
+  int numALLMatls = d_sharedState->getNumMatls();
 
   NCVariable<double> totalgmass;
-  new_dw->allocate(totalgmass,          lb->gMassLabel,        numMatls, patch);
+  new_dw->allocate(totalgmass,lb->gMassLabel,numALLMatls, patch);
   totalgmass.initialize(0);
 
   for(int m = 0; m < numMatls; m++){
@@ -1027,14 +1028,14 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       NCVariable<double> gexternalheatrate;
       NCVariable<double> gTemperature;
 
-      new_dw->allocate(gmass,          lb->gMassLabel,        matlindex, patch);
-      new_dw->allocate(gvolume,        lb->gVolumeLabel,      matlindex, patch);
-      new_dw->allocate(gvelocity,      lb->gVelocityLabel,    matlindex, patch);
-      new_dw->allocate(gTemperature,   lb->gTemperatureLabel, matlindex, patch);
-      new_dw->allocate(gexternalforce, lb->gExternalForceLabel,
-							      matlindex, patch);
+      new_dw->allocate(gmass,  lb->gMassLabel,        matlindex, patch);
+      new_dw->allocate(gvolume,lb->gVolumeLabel,      matlindex, patch);
+      new_dw->allocate(gvelocity,lb->gVelocityLabel,    matlindex, patch);
+      new_dw->allocate(gTemperature, lb->gTemperatureLabel, matlindex, patch);
+      new_dw->allocate(gexternalforce,lb->gExternalForceLabel,matlindex, 
+		       patch);
       new_dw->allocate(gexternalheatrate, lb->gExternalHeatRateLabel,
-							      matlindex, patch);
+		       matlindex, patch);
 
       gmass.initialize(0);
       gvolume.initialize(0);
@@ -1054,7 +1055,7 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
 
    if(mpm_matl->getFractureModel()) {  // Do interpolation with fracture
 
-      new_dw->allocate(gmassContact,   lb->gMassContactLabel, matlindex, patch);
+      new_dw->allocate(gmassContact,lb->gMassContactLabel, matlindex, patch);
       gmassContact.initialize(0);
 
       ParticleVariable<int> pConnectivity;
@@ -1143,8 +1144,7 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
 
    //    cout << "Particle momentum before intToGrid = " << total_mom << endl;
 
-      for(NodeIterator iter = patch->getNodeIterator();
-				!iter.done(); iter++)
+      for(NodeIterator iter = patch->getNodeIterator();	!iter.done(); iter++)
       {
          if(mpm_matl->getFractureModel()) {  // Do interpolation with fracture
 	   if(gmassContact[*iter] >= 1.e-10) {
@@ -1204,7 +1204,7 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
         new_dw->put(gmassContact, lb->gMassContactLabel,  matlindex, patch);
       }
   }
-  new_dw->put(totalgmass,         lb->gMassLabel,          numMatls, patch);
+  new_dw->put(totalgmass,         lb->gMassLabel,          numALLMatls, patch);
 }
 
 void SerialMPM::computeStressTensor(const ProcessorGroup*,
@@ -1281,8 +1281,8 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
 
   NCVariable<Matrix3>       gstressglobal;
   NCVariable<double>        gmassglobal;
-  new_dw->get(gmassglobal,  lb->gMassLabel, numMPMMatls, patch, Ghost::None, 0);
-  new_dw->allocate(gstressglobal,lb->gStressForSavingLabel, numMPMMatls, patch);
+  new_dw->get(gmassglobal,  lb->gMassLabel,numALLMatls,patch, Ghost::None, 0);
+  new_dw->allocate(gstressglobal,lb->gStressForSavingLabel, numALLMatls, patch);
 
   for(int m = 0; m < numMPMMatls; m++){
     MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
@@ -1466,7 +1466,7 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
       gstressglobal[*iter] /= gmassglobal[*iter];
     }
   }
-  new_dw->put(gstressglobal,       lb->gStressForSavingLabel, numMPMMatls, patch);
+  new_dw->put(gstressglobal,  lb->gStressForSavingLabel, numALLMatls, patch);
 }
 
 void SerialMPM::computeInternalHeatRate(const ProcessorGroup*,
@@ -1846,7 +1846,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       new_dw->get(dTdt, lb->dTdt_NCLabel, dwindex, patch, Ghost::AroundCells,1);
     }
     else{
-      new_dw->allocate(dTdt, lb->dTdt_NCLabel, dwindex, patch);
+      new_dw->allocate(dTdt, lb->dTdt_NCLabel,dwindex,patch,IntVector(1,1,1));
       dTdt.initialize(0.);
     }
 
@@ -2082,7 +2082,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
   new_dw->put(sumvec_vartype(CMX), lb->CenterOfMassPositionLabel);
   new_dw->put(sumvec_vartype(CMV), lb->CenterOfMassVelocityLabel);
 
-//  cout << "Solid momentum after advection = " << CMV << endl;
+  cout << "Solid momentum after advection = " << CMV << endl;
 
 //  cout << "THERMAL ENERGY " << thermal_energy << endl;
 }
