@@ -473,6 +473,8 @@ namespace Uintah {
                                     const MaterialSubset* matls,
                                     DataWarehouse*,
                                     DataWarehouse*);
+                                    
+      void printData_problemSetup(const ProblemSpecP& prob_spec);
 
       void printData( int indx,
                       const  Patch* patch,
@@ -677,8 +679,8 @@ namespace Uintah {
       double d_dbgStopTime;
       double d_dbgOutputInterval;
       double d_dbgNextDumpTime;
-      double d_dbgOldTime;
       bool   d_dbgGnuPlot;
+      bool   d_dbgTime_to_printData;
       IntVector d_dbgBeginIndx;
       IntVector d_dbgEndIndx; 
       vector<int> d_dbgMatls;
