@@ -297,7 +297,6 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   p8o=Point(p8+east*wall_thickness);
 
   Point e3(p3), e4(p4), e7(p7), e8(p8); 
-  Point e3o(p3o), e4o(p4o), e7o(p7o), e8o(p8o);
   
   tri = new TexturedTri(stucco, p1, p2, p3);
   tri->set_texcoords(p1t,p2t,p3t);
