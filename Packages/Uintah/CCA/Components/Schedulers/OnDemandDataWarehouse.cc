@@ -1785,7 +1785,7 @@ OnDemandDataWarehouse::checkGetAccess(const VarLabel* label,
             highOffset == IntVector(0, 0, 0)){
           // allow non ghost cell get if any access (get, put, or modify)
           // is allowed
-          cout << "allowing non-ghost cell access\n";
+          //cout << "allowing non-ghost cell access\n";
           return;
         }
         if (runningTask == 0 ||
