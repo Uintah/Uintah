@@ -45,6 +45,13 @@ Parallel::getMaxThreads()
 }
 
 void
+Parallel::setMaxThreads( int maxNumThreads )
+{
+   ::maxThreads = maxNumThreads;
+   ::allowThreads = true;
+}
+
+void
 Parallel::noThreading()
 {
   ::allowThreads = false;
@@ -98,11 +105,13 @@ Parallel::initializeManager(int& argc, char**& argv)
    }
 
    ProcessorGroup* world = getRootProcessorGroup();
-   cerr << "Parallel: processor " << world->myrank() + 1 
-	<< " of " << world->size();
-   if(::usingMPI)
-      cerr << " (using MPI)";
-   cerr << '\n';
+
+   if(world->myrank() == 0){
+      cerr << "Parallel: " << world->size() << " processors";
+      if(::usingMPI)
+	 cerr << " (using MPI)";
+      cerr << '\n';
+   }
 }
 
 void
@@ -110,6 +119,9 @@ Parallel::finalizeManager(Circumstances circumstances)
 {
    if(::usingMPI){
       if(circumstances == Abort){
+	 cerr.flush();
+	 cout.flush();
+	 sleep(1);
 	 MPI_Abort(worldComm, 1);
       } else {
 	 int status;
@@ -130,6 +142,9 @@ Parallel::getRootProcessorGroup()
 
 //
 // $Log$
+// Revision 1.13.2.1  2000/10/17 19:54:26  dav
+// added a few things that got lost in the risky move
+//
 // Revision 1.13  2000/09/28 22:21:34  dav
 // Added code that allows the MPIScheduler to run correctly even if
 // PSE_MAX_THREADS is set.  This was messing up the assigning of resources.
