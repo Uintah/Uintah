@@ -82,7 +82,7 @@ namespace Uintah {
 
     virtual void setDynamicAlgorithm(std::string algo, double interval, 
                                      int timestepInterval, float cellFactor,
-                                     double threshold);
+                                     bool spaceCurve, double threshold);
     
     std::vector<int> d_processorAssignment; ///< stores which proc each patch is on
     std::vector<int> d_oldAssignment; ///< stores which proc each patch used to be on
@@ -104,6 +104,7 @@ namespace Uintah {
     double d_lbThreshold; //< gain threshold to exceed to require lb'ing
     float d_cellFactor;
     int d_dynamicAlgorithm;
+    bool d_doSpaceCurve;
     int d_particleAlgo;
     int d_state; //< idle, postLB, checkLB, initLB
   };

@@ -211,6 +211,7 @@ LoadBalancerCommon::problemSetup(ProblemSpecP& pspec, SimulationStateP& state)
   int timestepInterval = 0;
   d_outputNthProc = 1;
   double threshold = 0.0;
+  bool spaceCurve = false;
   
   if (p != 0) {
     p->getWithDefault("outputNthProc", d_outputNthProc, 1);
@@ -221,7 +222,8 @@ LoadBalancerCommon::problemSetup(ProblemSpecP& pspec, SimulationStateP& state)
     p->getWithDefault("dynamicAlgorithm", dynamicAlgo, "static");
     p->getWithDefault("cellFactor", cellFactor, .1);
     p->getWithDefault("gainThreshold", threshold, 0.0);
+    p->getWithDefault("doSpaceCurve", spaceCurve, false);
   }
 
-  setDynamicAlgorithm(dynamicAlgo, interval, timestepInterval, cellFactor, threshold);
+  setDynamicAlgorithm(dynamicAlgo, interval, timestepInterval, cellFactor, spaceCurve, threshold);
 }
