@@ -192,7 +192,7 @@ void OpenGL::redraw(Viewer* s, ViewWindow* r, double _tbeg, double _tend,
     my_openglname=clString("OpenGL: ")+myname;
     helper=new OpenGLHelper(this);
     helper_thread=new Thread(helper, my_openglname());
-    //helper_thread->detach();
+    helper_thread->detach();
   }
   
   send_mb.send(DO_REDRAW);
@@ -202,6 +202,12 @@ void OpenGL::redraw(Viewer* s, ViewWindow* r, double _tbeg, double _tend,
   }
 }
 
+void OpenGL::kill_helper() 
+{ 
+  // kill the helper thread
+  dead = true;
+  send_mb.send(86);
+}
 
 void OpenGL::redraw_loop()
 {
@@ -289,8 +295,11 @@ void OpenGL::redraw_loop()
       
     } else {
       for (;;) {
+	if (dead) return;
 	int r=send_mb.receive();
-	if (r == DO_PICK) {
+	if (r == 86)
+	  return;
+	else if (r == DO_PICK) {
 	  real_get_pick(viewer, viewwindow, send_pick_x, send_pick_y, 
 			ret_pick_obj, ret_pick_pick, ret_pick_index);
 	  recv_mb.send(PICK_DONE);

@@ -194,7 +194,7 @@ GLint    get_depth_view[4];
     // compute world space point under cursor (x,y).  If successful,
     // set 'p' to that value & return true.  Otherwise, return false.
     virtual int    pick_scene(int x, int y, Point *p);
-    virtual void kill_helper() { dead = 1; }
+    virtual void kill_helper();
 
     clString myname;
     virtual void redraw_loop();

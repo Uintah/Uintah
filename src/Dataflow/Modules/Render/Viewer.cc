@@ -143,27 +143,27 @@ Viewer::~Viewer()
 //----------------------------------------------------------------------
 void Viewer::do_execute()
 {
-    for(;;){
-	if(mailbox.numItems() == 0){
-	    // See if anything needs to be redrawn...
+  for(;;){
+    if(mailbox.numItems() == 0){
+      // See if anything needs to be redrawn...
 	    int did_some=1;
 	    while(did_some){
-		did_some=0;
-		for(int i=0;i<viewwindow.size();i++){
-		    did_some+=viewwindow[i]->need_redraw;
-		    viewwindow[i]->redraw_if_needed();
-		}
+	      did_some=0;
+	      for(int i=0;i<viewwindow.size();i++){
+		did_some+=viewwindow[i]->need_redraw;
+		viewwindow[i]->redraw_if_needed();
+	      }
 	    }
-	}
-	if (process_event(1) == 86) {
-	  for(int i=0;i<viewwindow.size();i++){
-	    ViewWindow* r=viewwindow[i];
-	    r->current_renderer->kill_helper();
-	  }
-
-	  return;
-	}
     }
+    if (process_event(1) == 86) {
+      for(int i=0;i<viewwindow.size();i++){
+	ViewWindow* r=viewwindow[i];
+	r->current_renderer->kill_helper();
+      }
+      
+      return;
+    }
+  }
 }
 
 //----------------------------------------------------------------------
