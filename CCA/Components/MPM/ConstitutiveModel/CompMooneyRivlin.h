@@ -2,11 +2,12 @@
 #define __COMPMOONRIV_CONSTITUTIVE_MODEL_H__
 
 
-#include "ConstitutiveModel.h"	
-#include <math.h>
+#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
 #include <Packages/Uintah/Core/Math/Matrix3.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouseP.h>
+
+#include <math.h>
 
 namespace Uintah {
   class MPMLabel;
