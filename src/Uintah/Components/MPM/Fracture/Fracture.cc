@@ -6,7 +6,7 @@
 #include <Uintah/Grid/NCVariable.h>
 
 #include <Uintah/Interface/DataWarehouse.h>
-#include <Uintah/Grid/Region.h>
+#include <Uintah/Grid/Patch.h>
 #include <Uintah/Grid/NodeIterator.h>
 #include <Uintah/Grid/CellIterator.h>
 
@@ -23,14 +23,14 @@ using SCICore::Geometry::Point;
  
 void
 Fracture::
-materialDefectsInitialize(const Region* region,
+materialDefectsInitialize(const Patch* patch,
                           DataWarehouseP& new_dw)
 {
 }
 
 void
 Fracture::
-initializeFracture(const Region* region,
+initializeFracture(const Patch* patch,
                   DataWarehouseP& new_dw)
 {
   int vfindex = d_sharedState->getMaterial(0)->getVFIndex();
@@ -40,14 +40,14 @@ initializeFracture(const Region* region,
   //For CCVariables
   //set default cSelfContact to false
   CCVariable<bool> cSelfContact;
-  new_dw->allocate(cSelfContact, lb->cSelfContactLabel, vfindex, region);
+  new_dw->allocate(cSelfContact, lb->cSelfContactLabel, vfindex, patch);
 
   //set default cSurfaceNormal to [0.,0.,0.]
   CCVariable<Vector> cSurfaceNormal;
-  new_dw->allocate(cSurfaceNormal, lb->cSurfaceNormalLabel, vfindex, region);
+  new_dw->allocate(cSurfaceNormal, lb->cSurfaceNormalLabel, vfindex, patch);
   Vector zero(0.,0.,0.);
 
-  for(CellIterator iter = region->getCellIterator(region->getBox());
+  for(CellIterator iter = patch->getCellIterator(patch->getBox());
                    !iter.done(); 
                    iter++)
   {
@@ -57,9 +57,9 @@ initializeFracture(const Region* region,
 
   //For NCVariables
   NCVariable<bool> gSelfContact;
-  new_dw->allocate(gSelfContact, lb->gSelfContactLabel, vfindex, region);
+  new_dw->allocate(gSelfContact, lb->gSelfContactLabel, vfindex, patch);
 
-  for(NodeIterator iter = region->getNodeIterator();
+  for(NodeIterator iter = patch->getNodeIterator();
                    !iter.done(); 
                    iter++)
   {
@@ -69,18 +69,18 @@ initializeFracture(const Region* region,
 
 
   //put back to DatawareHouse
-  new_dw->put(cSelfContact, lb->cSelfContactLabel, vfindex, region);
-  new_dw->put(cSurfaceNormal, lb->cSurfaceNormalLabel, vfindex, region);
-  new_dw->put(gSelfContact, lb->gSelfContactLabel, vfindex, region);
+  new_dw->put(cSelfContact, lb->cSelfContactLabel, vfindex, patch);
+  new_dw->put(cSurfaceNormal, lb->cSurfaceNormalLabel, vfindex, patch);
+  new_dw->put(gSelfContact, lb->gSelfContactLabel, vfindex, patch);
 
-  materialDefectsInitialize(region, new_dw);
+  materialDefectsInitialize(patch, new_dw);
 }
 
 void
 Fracture::
 labelSelfContactNodesAndCells(
            const ProcessorContext*,
-           const Region* region,
+           const Patch* patch,
            DataWarehouseP& old_dw,
            DataWarehouseP& new_dw)
 {
@@ -91,7 +91,7 @@ void
 Fracture::
 updateParticleInformationInContactCells (
            const ProcessorContext*,
-           const Region* region,
+           const Patch* patch,
            DataWarehouseP& old_dw,
            DataWarehouseP& new_dw)
 {
@@ -101,7 +101,7 @@ void
 Fracture::
 updateSurfaceNormalOfBoundaryParticle(
 	   const ProcessorContext*,
-           const Region* region,
+           const Patch* patch,
            DataWarehouseP& old_dw,
            DataWarehouseP& new_dw)
 {
@@ -112,7 +112,7 @@ void
 Fracture::
 updateNodeInformationInContactCells (
            const ProcessorContext*,
-           const Region* region,
+           const Patch* patch,
            DataWarehouseP& old_dw,
            DataWarehouseP& new_dw)
 {
@@ -123,7 +123,7 @@ void
 Fracture::
 crackGrow(
            const ProcessorContext*,
-           const Region* region,
+           const Patch* patch,
            DataWarehouseP& old_dw,
            DataWarehouseP& new_dw)
 {
@@ -142,6 +142,10 @@ Fracture(ProblemSpecP& ps,SimulationStateP& d_sS)
 } //namespace Uintah
 
 // $Log$
+// Revision 1.12  2000/05/30 20:19:12  sparker
+// Changed new to scinew to help track down memory leaks
+// Changed region to patch
+//
 // Revision 1.11  2000/05/30 04:37:00  tan
 // Using MPMLabel instead of VarLabel.
 //

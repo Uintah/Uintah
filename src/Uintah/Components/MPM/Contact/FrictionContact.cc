@@ -12,7 +12,7 @@ static char *id="@(#) $Id$";
 #include <Uintah/Grid/Grid.h>
 #include <Uintah/Grid/Level.h>
 #include <Uintah/Grid/NCVariable.h>
-#include <Uintah/Grid/Region.h>
+#include <Uintah/Grid/Patch.h>
 #include <Uintah/Grid/NodeIterator.h>
 #include <Uintah/Grid/ReductionVariable.h>
 #include <Uintah/Grid/SimulationState.h>
@@ -45,22 +45,14 @@ FrictionContact::FrictionContact(ProblemSpecP& ps,
 
   d_sharedState = d_sS;
 
-  gNormTractionLabel = new VarLabel( "g.normtraction",
+  gNormTractionLabel = scinew VarLabel( "g.normtraction",
                    NCVariable<double>::getTypeDescription() );
 
-  gSurfNormLabel = new VarLabel( "g.surfnorm",
+  gSurfNormLabel = scinew VarLabel( "g.surfnorm",
                    NCVariable<Vector>::getTypeDescription() );
 
-  gStressLabel   = new VarLabel( "g.stress",
+  gStressLabel   = scinew VarLabel( "g.stress",
                    NCVariable<Matrix3>::getTypeDescription() );
-  /*
-  pStressLabel   = new VarLabel( "p.stress",
-                   ParticleVariable<Matrix3>::getTypeDescription() );
-
-  pXLabel        = new VarLabel( "p.x",
-	           ParticleVariable<Point>::getTypeDescription(),
-                   VarLabel::PositionVariable);
-  */
 }
 
 FrictionContact::~FrictionContact()
@@ -69,26 +61,26 @@ FrictionContact::~FrictionContact()
 
 }
 
-void FrictionContact::initializeContact(const Region* region,
+void FrictionContact::initializeContact(const Patch* patch,
                                         int vfindex,
                                         DataWarehouseP& new_dw)
 {
   NCVariable<double> normtraction;
   NCVariable<Vector> surfnorm;
 
-  new_dw->allocate(normtraction,gNormTractionLabel,vfindex , region);
-  new_dw->allocate(surfnorm, gSurfNormLabel,vfindex , region);
+  new_dw->allocate(normtraction,gNormTractionLabel,vfindex , patch);
+  new_dw->allocate(surfnorm, gSurfNormLabel,vfindex , patch);
 
   normtraction.initialize(0.0);
   surfnorm.initialize(Vector(0.0,0.0,0.0));
 
-  new_dw->put(normtraction,gNormTractionLabel,vfindex , region);
-  new_dw->put(surfnorm, gSurfNormLabel,vfindex , region);
+  new_dw->put(normtraction,gNormTractionLabel,vfindex , patch);
+  new_dw->put(surfnorm, gSurfNormLabel,vfindex , patch);
 
 }
 
 void FrictionContact::exMomInterpolated(const ProcessorContext*,
-					const Region* region,
+					const Patch* patch,
 					DataWarehouseP& old_dw,
 					DataWarehouseP& new_dw)
 {
@@ -115,18 +107,18 @@ void FrictionContact::exMomInterpolated(const ProcessorContext*,
     MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
     if(mpm_matl){
       int vfindex = matl->getVFIndex();
-      new_dw->get(gmass[vfindex], lb->gMassLabel,vfindex , region,
+      new_dw->get(gmass[vfindex], lb->gMassLabel,vfindex , patch,
 		  Ghost::None, 0);
-      new_dw->get(gvelocity[vfindex], lb->gVelocityLabel, vfindex, region,
+      new_dw->get(gvelocity[vfindex], lb->gVelocityLabel, vfindex, patch,
 		  Ghost::None, 0);
-      old_dw->get(normtraction[vfindex],gNormTractionLabel,vfindex , region,
+      old_dw->get(normtraction[vfindex],gNormTractionLabel,vfindex , patch,
 		  Ghost::None, 0);
-      old_dw->get(surfnorm[vfindex], gSurfNormLabel,vfindex , region,
+      old_dw->get(surfnorm[vfindex], gSurfNormLabel,vfindex , patch,
 		  Ghost::None, 0);
     }
   }
 
-  for(NodeIterator iter = region->getNodeIterator(); !iter.done(); iter++){
+  for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){
     centerOfMassMom=zero;
     centerOfMassMass=0.0; 
     for(int n = 0; n < NVFs; n++){
@@ -182,12 +174,12 @@ void FrictionContact::exMomInterpolated(const ProcessorContext*,
 
   // Store new velocities in DataWarehouse
   for(int n=0; n< NVFs; n++){
-    new_dw->put(gvelocity[n], lb->gMomExedVelocityLabel, n, region);
+    new_dw->put(gvelocity[n], lb->gMomExedVelocityLabel, n, patch);
   }
 }
 
 void FrictionContact::exMomIntegrated(const ProcessorContext*,
-				  const Region* region,
+				  const Patch* patch,
 				  DataWarehouseP& old_dw,
 				  DataWarehouseP& new_dw)
 {
@@ -198,7 +190,7 @@ void FrictionContact::exMomIntegrated(const ProcessorContext*,
   double centerOfMassMass;
   IntVector onex(1,0,0), oney(0,1,0), onez(0,0,1);
   typedef IntVector IV;
-  Vector dx = region->dCell();
+  Vector dx = patch->dCell();
 
   int numMatls = d_sharedState->getNumMatls();
   int NVFs = d_sharedState->getNumVelFields();
@@ -228,8 +220,8 @@ void FrictionContact::exMomIntegrated(const ProcessorContext*,
     MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
     if(mpm_matl){
       int vfi = matl->getVFIndex();
-      new_dw->get(gmass[vfi], lb->gMassLabel, vfi, region, Ghost::None, 0);
-      new_dw->allocate(gsurfnorm[vfi], gSurfNormLabel, vfi, region);
+      new_dw->get(gmass[vfi], lb->gMassLabel, vfi, patch, Ghost::None, 0);
+      new_dw->allocate(gsurfnorm[vfi], gSurfNormLabel, vfi, patch);
 
       gsurfnorm[vfi].initialize(Vector(0.0,0.0,0.0));
 
@@ -255,7 +247,7 @@ void FrictionContact::exMomIntegrated(const ProcessorContext*,
         }
       }
 
-     // Compute normals on the surface nodes assuming a single region
+     // Compute normals on the surface nodes assuming a single patch
      // with reflective boundaries.  This needs to be generalized for
      // running in parallel.
 
@@ -331,13 +323,13 @@ void FrictionContact::exMomIntegrated(const ProcessorContext*,
         }
       }
 
-      new_dw->put(gsurfnorm[vfi], gSurfNormLabel, vfi, region);
+      new_dw->put(gsurfnorm[vfi], gSurfNormLabel, vfi, patch);
 
     }
   }
 
 #if 0
-  new_dw->get(gsurfnorm[0], gSurfNormLabel, 0, region, Ghost::None, 0);
+  new_dw->get(gsurfnorm[0], gSurfNormLabel, 0, patch, Ghost::None, 0);
   IntVector lowi(gsurfnorm[0].getLowIndex());
   IntVector highi(gsurfnorm[0].getHighIndex());
   ofstream tfile("tecplotfile");
@@ -426,12 +418,12 @@ void FrictionContact::exMomIntegrated(const ProcessorContext*,
       // Create arrays for the particle stress and grid stress
       ParticleVariable<Matrix3> pstress;
       NCVariable<Matrix3>       gstress;
-      new_dw->get(pstress, lb->pStressLabel, matlindex, region, Ghost::None, 0);
-      new_dw->allocate(gstress, gStressLabel, vfindex, region);
+      new_dw->get(pstress, lb->pStressLabel, matlindex, patch, Ghost::None, 0);
+      new_dw->allocate(gstress, gStressLabel, vfindex, patch);
       gstress.initialize(Matrix3(0.0));
 
       ParticleVariable<Point> px;
-      old_dw->get(px, lb->pXLabel, matlindex, region, Ghost::None, 0);
+      old_dw->get(px, lb->pXLabel, matlindex, patch, Ghost::None, 0);
 
 
       ParticleSubset* pset = pstress.getParticleSubset();
@@ -442,7 +434,7 @@ void FrictionContact::exMomIntegrated(const ProcessorContext*,
          // Get the node indices that surround the cell
          IntVector ni[8];
 	 double S[8];
-         if(!region->findCellAndWeights(px[idx], ni, S))
+         if(!patch->findCellAndWeights(px[idx], ni, S))
             continue;
          // Add each particles contribution to the local mass & velocity
          // Must use the node indices
@@ -450,7 +442,7 @@ void FrictionContact::exMomIntegrated(const ProcessorContext*,
              gstress[ni[k]] += pstress[idx] * S[k];
          }
       }
-      new_dw->put(gstress, gStressLabel, vfindex, region);
+      new_dw->put(gstress, gStressLabel, vfindex, patch);
 
     }
   }
@@ -464,16 +456,16 @@ void FrictionContact::exMomIntegrated(const ProcessorContext*,
       NCVariable<Matrix3>      gstress;
       NCVariable<double>       gnormtraction;
       NCVariable<Vector>       surfnorm;
-      new_dw->get(gstress, gStressLabel, vfindex, region, Ghost::None, 0);
-      new_dw->get(surfnorm, gSurfNormLabel, vfindex, region, Ghost::None, 0);
-      new_dw->allocate(gnormtraction, gNormTractionLabel, vfindex, region);
+      new_dw->get(gstress, gStressLabel, vfindex, patch, Ghost::None, 0);
+      new_dw->get(surfnorm, gSurfNormLabel, vfindex, patch, Ghost::None, 0);
+      new_dw->allocate(gnormtraction, gNormTractionLabel, vfindex, patch);
 
-      for(NodeIterator iter = region->getNodeIterator(); !iter.done(); iter++){
+      for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){
 	gnormtraction[*iter]=
 			Dot(surfnorm[*iter]*gstress[*iter],surfnorm[*iter]);
       }
 
-      new_dw->put(gnormtraction, gNormTractionLabel, vfindex, region);
+      new_dw->put(gnormtraction, gNormTractionLabel, vfindex, patch);
     }
   }
 
@@ -487,21 +479,21 @@ void FrictionContact::exMomIntegrated(const ProcessorContext*,
     MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
     if(mpm_matl){
       int vfindex = matl->getVFIndex();
-      new_dw->get(gmass[vfindex], lb->gMassLabel,vfindex , region, Ghost::None, 0);
+      new_dw->get(gmass[vfindex], lb->gMassLabel,vfindex , patch, Ghost::None, 0);
       new_dw->get(gvelocity_star[vfindex], lb->gVelocityStarLabel,
-		  vfindex, region, Ghost::None, 0);
-      new_dw->get(gacceleration[vfindex],lb->gAccelerationLabel,vfindex,region,
+		  vfindex, patch, Ghost::None, 0);
+      new_dw->get(gacceleration[vfindex],lb->gAccelerationLabel,vfindex,patch,
 		  Ghost::None, 0);
-      new_dw->get(normtraction[vfindex],gNormTractionLabel,vfindex , region,
+      new_dw->get(normtraction[vfindex],gNormTractionLabel,vfindex , patch,
 		  Ghost::None, 0);
-      new_dw->get(gsurfnorm[vfindex], gSurfNormLabel,vfindex , region,
+      new_dw->get(gsurfnorm[vfindex], gSurfNormLabel,vfindex , patch,
 		  Ghost::None, 0);
     }
   }
   delt_vartype delT;
-  old_dw->get(delT, lb->delTLabel);
+  old_dw->get(delT, lb->deltLabel);
 
-  for(NodeIterator iter = region->getNodeIterator(); !iter.done(); iter++){
+  for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){
     centerOfMassMom=zero;
     centerOfMassMass=0.0; 
     for(int  n = 0; n < NVFs; n++){
@@ -560,52 +552,56 @@ void FrictionContact::exMomIntegrated(const ProcessorContext*,
 
   // Store new velocities and accelerations in DataWarehouse
   for(int n = 0; n < NVFs; n++){
-    new_dw->put(gvelocity_star[n], lb->gMomExedVelocityStarLabel, n, region);
-    new_dw->put(gacceleration[n], lb->gMomExedAccelerationLabel, n, region);
+    new_dw->put(gvelocity_star[n], lb->gMomExedVelocityStarLabel, n, patch);
+    new_dw->put(gacceleration[n], lb->gMomExedAccelerationLabel, n, patch);
   }
 }
 
 void FrictionContact::addComputesAndRequiresInterpolated( Task* t,
                                              const MPMMaterial* matl,
-                                             const Region* region,
+                                             const Patch* patch,
                                              DataWarehouseP& old_dw,
                                              DataWarehouseP& new_dw) const
 {
 
   int idx = matl->getDWIndex();
   const MPMLabel* lb = MPMLabel::getLabels();
-  t->requires( old_dw, gNormTractionLabel,idx , region, Ghost::None, 0);
-  t->requires( old_dw, gSurfNormLabel,idx , region, Ghost::None, 0);
-  t->requires( new_dw, lb->gMassLabel, idx, region, Ghost::None);
-  t->requires( new_dw, lb->gVelocityLabel, idx, region, Ghost::None);
+  t->requires( old_dw, gNormTractionLabel,idx , patch, Ghost::None, 0);
+  t->requires( old_dw, gSurfNormLabel,idx , patch, Ghost::None, 0);
+  t->requires( new_dw, lb->gMassLabel, idx, patch, Ghost::None);
+  t->requires( new_dw, lb->gVelocityLabel, idx, patch, Ghost::None);
 
-  t->computes( new_dw, lb->gMomExedVelocityLabel, idx, region );
+  t->computes( new_dw, lb->gMomExedVelocityLabel, idx, patch );
 
 
 }
 
 void FrictionContact::addComputesAndRequiresIntegrated( Task* t,
                                              const MPMMaterial* matl,
-                                             const Region* region,
+                                             const Patch* patch,
                                              DataWarehouseP& old_dw,
                                              DataWarehouseP& new_dw) const
 {
 
   int idx = matl->getDWIndex();
   const MPMLabel* lb = MPMLabel::getLabels();
-  t->requires(new_dw, lb->gMassLabel, idx, region, Ghost::None);
-  t->requires(new_dw, lb->gVelocityStarLabel, idx, region, Ghost::None);
-  t->requires(new_dw, lb->gAccelerationLabel, idx, region, Ghost::None);
+  t->requires(new_dw, lb->gMassLabel, idx, patch, Ghost::None);
+  t->requires(new_dw, lb->gVelocityStarLabel, idx, patch, Ghost::None);
+  t->requires(new_dw, lb->gAccelerationLabel, idx, patch, Ghost::None);
 
-  t->computes( new_dw, gNormTractionLabel,idx , region);
-  t->computes( new_dw, gSurfNormLabel,idx , region);
-  t->computes( new_dw, lb->gMomExedVelocityStarLabel, idx, region);
-  t->computes( new_dw, lb->gMomExedAccelerationLabel, idx, region);
+  t->computes( new_dw, gNormTractionLabel,idx , patch);
+  t->computes( new_dw, gSurfNormLabel,idx , patch);
+  t->computes( new_dw, lb->gMomExedVelocityStarLabel, idx, patch);
+  t->computes( new_dw, lb->gMomExedAccelerationLabel, idx, patch);
 
 
 }
 
 // $Log$
+// Revision 1.22  2000/05/30 20:19:08  sparker
+// Changed new to scinew to help track down memory leaks
+// Changed region to patch
+//
 // Revision 1.21  2000/05/30 17:08:54  dav
 // Changed delt to delT
 //
@@ -631,7 +627,7 @@ void FrictionContact::addComputesAndRequiresIntegrated( Task* t,
 // Do not schedule fracture tasks if fracture not enabled
 // Added fracture directory to MPM sub.mk
 // Be more uniform about using IntVector
-// Made regions have a single uniform index space - still needs work
+// Made patches have a single uniform index space - still needs work
 //
 // Revision 1.15  2000/05/08 22:45:34  guilkey
 // Fixed a few stupid errors in the FrictionContact.

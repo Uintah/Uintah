@@ -1,12 +1,12 @@
 /* REFERENCED */
 static char *id="@(#) $Id$";
 
-#include "SubRegion.h"
+#include "SubPatch.h"
 
 using namespace Uintah;
 using SCICore::Geometry::Point;
 
-SubRegion::SubRegion(const Point& lower, const Point& upper,
+SubPatch::SubPatch(const Point& lower, const Point& upper,
 		     int sx, int sy, int sz,
 		     int ex, int ey, int ez)
     : d_lower(lower), d_upper(upper),
@@ -15,19 +15,23 @@ SubRegion::SubRegion(const Point& lower, const Point& upper,
 {
 }
 
-SubRegion::SubRegion(const SubRegion& copy)
+SubPatch::SubPatch(const SubPatch& copy)
     : d_lower(copy.d_lower), d_upper(copy.d_upper),
       d_sx(copy.d_sx), d_sy(copy.d_sy), d_sz(copy.d_sz),
       d_ex(copy.d_ex), d_ey(copy.d_ey), d_ez(copy.d_ez)
 {
 }
 
-SubRegion::~SubRegion()
+SubPatch::~SubPatch()
 {
 }
 
 //
 // $Log$
+// Revision 1.1  2000/05/30 20:19:34  sparker
+// Changed new to scinew to help track down memory leaks
+// Changed region to patch
+//
 // Revision 1.3  2000/04/26 06:48:58  sparker
 // Streamlined namespaces
 //

@@ -93,7 +93,7 @@ class ScalarSolver
  private:
 
    void buildLinearMatrix(const ProcessorContext* pc,
-			  const Region* region,
+			  const Patch* patch,
 			  const DataWarehouseP& old_dw,
 			  DataWarehouseP& new_dw,
 			  double delta_t, const int index);

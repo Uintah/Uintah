@@ -34,56 +34,56 @@ void RBGSSolver::sched_pressureSolve(const LevelP& level,
 			     const DataWarehouseP& old_dw,
 			     DataWarehouseP& new_dw)
 {
-  for(Level::const_regionIterator iter=level->regionsBegin();
-      iter != level->regionsEnd(); iter++){
-    const Region* region=*iter;
+  for(Level::const_patchIterator iter=level->patchesBegin();
+      iter != level->patchesEnd(); iter++){
+    const Patch* patch=*iter;
     {
-      Task* tsk = new Task("RBGSSolver::press_residual",
-			   region, old_dw, new_dw, this,
-			   RBGSSolver::press_residual);
+      Task* tsk = scinew Task("RBGSSolver::press_residual",
+			      patch, old_dw, new_dw, this,
+			      RBGSSolver::press_residual);
       // coefficient for the variable for which solve is invoked
       // not sure if the var is of type CCVariable or FCVariable
-      tsk->requires(new_dw, "pressureCoeff", region, 0,
+      tsk->requires(new_dw, "pressureCoeff", patch, 0,
 		    CCVariable<Vector>::getTypeDescription());
-      tsk->requires(old_dw, "pressure", region, 0,
+      tsk->requires(old_dw, "pressure", patch, 0,
 		    CCVariable<double>::getTypeDescription());
       // computes global residual
-      tsk->computes(new_dw, "pressureResidual", region, 0,
+      tsk->computes(new_dw, "pressureResidual", patch, 0,
 		    CCVariable<double>::getTypeDescription());
       sched->addTask(tsk);
     }
     {
-      Task* tsk = new Task("RBGSSolver::press_underrelax",
-			   region, old_dw, new_dw, this,
-			   RBGSSolver::press_underrelax);
+      Task* tsk = scinew Task("RBGSSolver::press_underrelax",
+			      patch, old_dw, new_dw, this,
+			      RBGSSolver::press_underrelax);
       // coefficient for the variable for which solve is invoked
       // not sure if the var is of type CCVariable or FCVariable
-      tsk->requires(old_dw, "pressure", region, 0,
+      tsk->requires(old_dw, "pressure", patch, 0,
 		    CCVariable<double>::getTypeDescription());
-      tsk->requires(new_dw, "pressureCoeff", region, 0,
+      tsk->requires(new_dw, "pressureCoeff", patch, 0,
 		    CCVariable<Vector>::getTypeDescription());
-      tsk->requires(new_dw, "pressureNonlinearSource", region, 0,
+      tsk->requires(new_dw, "pressureNonlinearSource", patch, 0,
 		    CCVariable<Vector>::getTypeDescription());
-      tsk->computes(new_dw, "pressureCoeff", region, 0,
+      tsk->computes(new_dw, "pressureCoeff", patch, 0,
 		    CCVariable<Vector>::getTypeDescription());
-      tsk->computes(new_dw, "pressureNonlinearSource", region, 0,
+      tsk->computes(new_dw, "pressureNonlinearSource", patch, 0,
 		    CCVariable<Vector>::getTypeDescription());
       sched->addTask(tsk);
     }
     {
       // use a recursive task based on number of sweeps reqd
-      Task* tsk = new Task("RBGSSolver::press_lisolve",
-			   region, old_dw, new_dw, this,
-			   RBGSSolver::press_lisolve);
+      Task* tsk = scinew Task("RBGSSolver::press_lisolve",
+			      patch, old_dw, new_dw, this,
+			      RBGSSolver::press_lisolve);
       // coefficient for the variable for which solve is invoked
       // not sure if the var is of type CCVariable or FCVariable
-      tsk->requires(new_dw, "pressureCoeff", region, 0,
+      tsk->requires(new_dw, "pressureCoeff", patch, 0,
 		    CCVariable<Vector>::getTypeDescription());
-      tsk->requires(new_dw, "pressureNonlinearSource", region, 0,
+      tsk->requires(new_dw, "pressureNonlinearSource", patch, 0,
 		    CCVariable<Vector>::getTypeDescription());
-      tsk->requires(old_dw, "pressure", region, 0,
+      tsk->requires(old_dw, "pressure", patch, 0,
 		    CCVariable<double>::getTypeDescription());
-      tsk->computes(new_dw, "pressure", region, 0,
+      tsk->computes(new_dw, "pressure", patch, 0,
 		    CCVariable<double>::getTypeDescription());
       sched->addTask(tsk);
     }
@@ -92,43 +92,43 @@ void RBGSSolver::sched_pressureSolve(const LevelP& level,
 }
 
 void RBGSSolver::press_underrelax(const ProcessorContext*,
-				  const Region* region,
+				  const Patch* patch,
 				  const DataWarehouseP& old_dw,
 				  DataWarehouseP& new_dw)
 {
   CCVariable<double> pressure;
-  old_dw->get(pressure, "pressure", region, 0);
+  old_dw->get(pressure, "pressure", patch, 0);
   CCVariable<Vector> pressCoeff;
-  new_dw->get(pressCoeff,"pressureCoeff",region, 0);
+  new_dw->get(pressCoeff,"pressureCoeff",patch, 0);
   CCVariable<double> pressNlSrc;
-  new_dw->get(pressNlSrc,"pressNonlinearSrc",region, 0);
-  Array3Index lowIndex = region->getLowIndex();
-  Array3Index highIndex = region->getHighIndex();
+  new_dw->get(pressNlSrc,"pressNonlinearSrc",patch, 0);
+  Array3Index lowIndex = patch->getLowIndex();
+  Array3Index highIndex = patch->getHighIndex();
 
   //fortran call
   FORT_UNDERELAX(pressCoeff, pressNonlinearSrc, pressure,
 		 lowIndex, highIndex, d_underrelax);
-  new_dw->put(pressCoeff, "pressureCoeff", region, 0);
-  new_dw->put(pressNlSrc, "pressureNonlinearSource", region, 0);
+  new_dw->put(pressCoeff, "pressureCoeff", patch, 0);
+  new_dw->put(pressNlSrc, "pressureNonlinearSource", patch, 0);
 }
 
 void RBGSSolver::press_lisolve(const ProcessorContext*,
-			       const Region* region,
+			       const Patch* patch,
 			       const DataWarehouseP& old_dw,
 			       DataWarehouseP& new_dw)
 {
   CCVariable<double> pressure;
-  old_dw->get(pressure, "pressure", region, 0);
+  old_dw->get(pressure, "pressure", patch, 0);
   CCVariable<Vector> pressCoeff;
-  new_dw->get(pressCoeff,"pressureCoeff",region, 0);
+  new_dw->get(pressCoeff,"pressureCoeff",patch, 0);
   CCVariable<double> pressNlSrc;
-  new_dw->get(pressNlSrc,"pressNonlinearSrc",region, 0);
-  Array3Index lowIndex = region->getLowIndex();
-  Array3Index highIndex = region->getHighIndex();
+  new_dw->get(pressNlSrc,"pressNonlinearSrc",patch, 0);
+  Array3Index lowIndex = patch->getLowIndex();
+  Array3Index highIndex = patch->getHighIndex();
 
   //fortran call for red-black GS solver
   FORT_RBGSLISOLV(pressCoeff, pressNonlinearSrc, pressure,
 	      lowIndex, highIndex);
-  new_dw->put(pressure, "pressure", region, 0);
+  new_dw->put(pressure, "pressure", patch, 0);
 }
 

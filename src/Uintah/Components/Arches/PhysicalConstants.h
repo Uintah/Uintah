@@ -8,7 +8,7 @@
 
 #include <Uintah/Parallel/UintahParallelComponent.h>
 #include <Uintah/Interface/CFDInterface.h>
-#include <Uintah/Grid/Region.h>
+#include <Uintah/Grid/Patch.h>
 #include <Uintah/Parallel/ProcessorContext.h>
 #include <SCICore/Geometry/Vector.h>
 

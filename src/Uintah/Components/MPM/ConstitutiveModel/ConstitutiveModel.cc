@@ -6,13 +6,15 @@
 #include <Uintah/Grid/NCVariable.h>
 #include <Uintah/Components/MPM/Util/Matrix3.h>
 #include <Uintah/Interface/DataWarehouse.h>
-#include <Uintah/Grid/Region.h>
+#include <Uintah/Grid/Patch.h>
 #include <Uintah/Grid/VarTypes.h>
+#include <SCICore/Malloc/Allocator.h>
 
 using namespace Uintah::MPM;
 
 ConstitutiveModel::ConstitutiveModel()
 {
+   // Constructor
 }
 
 ConstitutiveModel::~ConstitutiveModel()

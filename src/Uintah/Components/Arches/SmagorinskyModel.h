@@ -64,18 +64,18 @@ public:
 					 const DataWarehouseP& old_dw,
 					 DataWarehouseP& new_dw);
   virtual void calcVelocityWallBC(const ProcessorContext*,
-				  const Region* region,
+				  const Patch* patch,
 				  const DataWarehouseP& old_dw,
 				  DataWarehouseP& new_dw, int index);
   virtual void calcVelocitySource(const ProcessorContext*,
-				  const Region* region,
+				  const Patch* patch,
 				  const DataWarehouseP& old_dw,
 				  DataWarehouseP& new_dw, int index);
 
 
 private:
   void computeTurbSubmodel(const ProcessorContext*,
-			   const Region* region,
+			   const Patch* patch,
 			   const DataWarehouseP& old_dw,
 			   DataWarehouseP& new_dw);
   PhysicalConstants* d_physicalConsts;

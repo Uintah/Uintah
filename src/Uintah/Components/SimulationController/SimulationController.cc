@@ -11,7 +11,7 @@ static char *id="@(#) $Id$";
 #include <Uintah/Grid/Grid.h>
 #include <Uintah/Grid/Level.h>
 #include <Uintah/Grid/SimulationTime.h>
-#include <Uintah/Grid/Region.h>
+#include <Uintah/Grid/Patch.h>
 #include <Uintah/Grid/ReductionVariable.h>
 #include <Uintah/Grid/SimulationState.h>
 #include <Uintah/Grid/SoleVariable.h>
@@ -43,7 +43,7 @@ SimulationController::SimulationController( int MpiRank, int MpiProcesses ) :
 {
    d_restarting = false;
    d_generation = 0;
-   d_dwMpiHandler = new DWMpiHandler();
+   d_dwMpiHandler = scinew DWMpiHandler();
 }
 
 SimulationController::~SimulationController()
@@ -69,7 +69,7 @@ void SimulationController::run()
    output->problemSetup(ups);
    
    // Setup the initial grid
-   GridP grid=new Grid();
+   GridP grid=scinew Grid();
    
    problemSetup(ups, grid);
    
@@ -83,7 +83,7 @@ void SimulationController::run()
    // Print out meta data
    grid->printStatistics();
 
-   SimulationStateP sharedState = new SimulationState(ups);
+   SimulationStateP sharedState = scinew SimulationState(ups);
    
    // Initialize the CFD and/or MPM components
    CFDInterface* cfd = dynamic_cast<CFDInterface*>(getPort("cfd"));
@@ -108,7 +108,7 @@ void SimulationController::run()
    // let it do the single assignment operation that will actually
    // have no effect?
    if( d_MpiProcesses > 1 ) {
-     d_MpiThread = new Thread( d_dwMpiHandler, "DWMpiHandler" );
+     d_MpiThread = scinew Thread( d_dwMpiHandler, "DWMpiHandler" );
    }
 
    old_ds->setGrid(grid);
@@ -164,7 +164,7 @@ void SimulationController::run()
       }
       
       // Needs to be fixed - steve
-//      old_ds->put(delt_vartype(delt), sharedState->get_delt_label());
+      //old_ds->put(delt_vartype(delt), sharedState->get_delt_label());
       cout << "Time=" << t << ", delt=" << delt 
 	   << ", elapsed time = " << wallTime << '\n';
 
@@ -206,7 +206,7 @@ void SimulationController::problemSetup(const ProblemSpecP& params,
    
    for(ProblemSpecP level_ps = grid_ps->findBlock("Level");
        level_ps != 0; level_ps = level_ps->findNextBlock("Level")){
-      LevelP level = new Level(grid.get_rep());
+      LevelP level = scinew Level(grid.get_rep());
       
       for(ProblemSpecP box_ps = level_ps->findBlock("Box");
 	  box_ps != 0; box_ps = box_ps->findNextBlock("Box")){
@@ -245,23 +245,23 @@ void SimulationController::problemSetup(const ProblemSpecP& params,
 	 if(box_ps->get("patches", patches)){
 	    Vector diag(upper-lower);
 	    Vector scale(1./patches.x(), 1./patches.y(), 1./patches.z());
-	    Array3<Region*> all(patches.x(), patches.y(), patches.z());
+	    Array3<Patch*> all(patches.x(), patches.y(), patches.z());
 	    for(int i=0;i<patches.x();i++){
 	       for(int j=0;j<patches.y();j++){
 		  for(int k=0;k<patches.z();k++){
 		     IntVector startcell = resolution*IntVector(i,j,k)/patches;
 		     IntVector endcell = resolution*IntVector(i+1,j+1,k+1)/patches;
-		     const Region* r = level->addRegion(lower+diag*Vector(i,j,k)*scale,
+		     const Patch* r = level->addPatch(lower+diag*Vector(i,j,k)*scale,
 							lower+diag*Vector(i+1,j+1,k+1)*scale,
 							startcell, endcell);
-		     all(i,j,k)=const_cast<Region*>(r);
+		     all(i,j,k)=const_cast<Patch*>(r);
 		  }
 	       }
 	    }
 	    for(int i=0;i<patches.x();i++){
 	       for(int j=0;j<patches.y();j++){
 		  for(int k=0;k<patches.z();k++){
-		     Region* r = all(i,j,k);
+		     Patch* r = all(i,j,k);
 		     for(int ix=-1;ix<=1;ix++){
 			for(int iy=-1;iy<=1;iy++){
 			   for(int iz=-1;iz<=1;iz++){
@@ -283,7 +283,7 @@ void SimulationController::problemSetup(const ProblemSpecP& params,
 	       }
 	    }
 	 } else {
-	    level->addRegion(lower, upper, IntVector(0,0,0), resolution);
+	    level->addPatch(lower, upper, IntVector(0,0,0), resolution);
 	 }
       }
       grid->addLevel(level);
@@ -428,6 +428,10 @@ void SimulationController::scheduleTimeAdvance(double t, double delt,
 
 //
 // $Log$
+// Revision 1.26  2000/05/30 20:19:25  sparker
+// Changed new to scinew to help track down memory leaks
+// Changed region to patch
+//
 // Revision 1.25  2000/05/30 19:43:28  guilkey
 // Unfixed the maximum timestep size fix, which wasn't much of a
 // fix at all...
@@ -464,7 +468,7 @@ void SimulationController::scheduleTimeAdvance(double t, double delt,
 // Do not schedule fracture tasks if fracture not enabled
 // Added fracture directory to MPM sub.mk
 // Be more uniform about using IntVector
-// Made regions have a single uniform index space - still needs work
+// Made patches have a single uniform index space - still needs work
 //
 // Revision 1.16  2000/05/07 06:02:10  sparker
 // Added beginnings of multiple patch support and real dependencies

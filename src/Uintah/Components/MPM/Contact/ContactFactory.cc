@@ -2,6 +2,7 @@
 #include "NullContact.h"
 #include "SingleVelContact.h"
 #include "FrictionContact.h"
+#include <SCICore/Malloc/Allocator.h>
 #include <string>
 using std::cerr;
 
@@ -20,13 +21,13 @@ Contact* ContactFactory::create(const ProblemSpecP& ps, SimulationStateP &ss)
       cerr << "con_type = " << con_type << std::endl;
     
       if (con_type == "null")
-	 return(new NullContact(child,ss));
+	 return(scinew NullContact(child,ss));
       
       else if (con_type == "single_velocity")
-	 return(new SingleVelContact(child,ss));
+	 return(scinew SingleVelContact(child,ss));
 
       else if (con_type == "friction")
-	 return(new FrictionContact(child,ss));
+	 return(scinew FrictionContact(child,ss));
     
       else {
 	 cerr << "Unknown Contact Type R (" << con_type << ")" << std::endl;;
@@ -38,6 +39,10 @@ Contact* ContactFactory::create(const ProblemSpecP& ps, SimulationStateP &ss)
 }
 
 // $Log$
+// Revision 1.4  2000/05/30 20:19:08  sparker
+// Changed new to scinew to help track down memory leaks
+// Changed region to patch
+//
 // Revision 1.3  2000/05/02 06:07:14  sparker
 // Implemented more of DataWarehouse and SerialMPM
 //

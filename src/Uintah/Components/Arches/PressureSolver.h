@@ -99,11 +99,11 @@ class PressureSolver
  private:
 
    void buildLinearMatrix(const ProcessorContext* pc,
-			  const Region* region,
+			  const Patch* patch,
 			  const DataWarehouseP& old_dw,
 			  DataWarehouseP& new_dw,
 			  double delta_t);
-   void normPressure(const Region* region,
+   void normPressure(const Patch* patch,
 		     SchedulerP& sched,
 		     const DataWarehouseP& old_dw,
 		     DataWarehouseP& new_dw);

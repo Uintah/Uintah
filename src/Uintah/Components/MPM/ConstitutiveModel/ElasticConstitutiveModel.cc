@@ -31,7 +31,7 @@ ElasticConstitutiveModel::ElasticConstitutiveModel(ProblemSpecP &ps)
 {
   ps->require("youngs_modulus",d_initialData.YngMod);
   ps->require("poissons_ratio",d_initialData.PoiRat); 
-  p_cmdata_label = new VarLabel("p.cmdata",
+  p_cmdata_label = scinew VarLabel("p.cmdata",
 				ParticleVariable<CMData>::getTypeDescription());
 
 }
@@ -262,7 +262,7 @@ void ElasticConstitutiveModel::computeStressIncrement()
 }
 #endif
 
-void ElasticConstitutiveModel::computeStressTensor(const Region* region,
+void ElasticConstitutiveModel::computeStressTensor(const Patch* patch,
 						   const MPMMaterial* matl,
 						   DataWarehouseP& new_dw,
 						   DataWarehouseP& old_dw)
@@ -270,24 +270,24 @@ void ElasticConstitutiveModel::computeStressTensor(const Region* region,
   cerr << "computeStressTensor not finished\n";
 }
 
-double ElasticConstitutiveModel::computeStrainEnergy(const Region* region,
+double ElasticConstitutiveModel::computeStrainEnergy(const Patch* patch,
 						     const MPMMaterial* matl,
 						     DataWarehouseP& new_dw)
 {
   cerr << "computeStrainEnergy not finished\n";
 }
 
-void ElasticConstitutiveModel::initializeCMData(const Region* region,
+void ElasticConstitutiveModel::initializeCMData(const Patch* patch,
 						const MPMMaterial* matl,
 						DataWarehouseP& new_dw)
 {
    ParticleVariable<CMData> cmdata;
-   new_dw->allocate(cmdata, p_cmdata_label, matl->getDWIndex(), region);
+   new_dw->allocate(cmdata, p_cmdata_label, matl->getDWIndex(), patch);
    ParticleSubset* pset = cmdata.getParticleSubset();
    for(ParticleSubset::iterator iter = pset->begin();
        iter != pset->end(); iter++)
       cmdata[*iter] = d_initialData;
-   new_dw->put(cmdata, p_cmdata_label, matl->getDWIndex(), region);
+   new_dw->put(cmdata, p_cmdata_label, matl->getDWIndex(), patch);
 }
 
 #ifdef WONT_COMPILE_YET
@@ -348,7 +348,7 @@ void ElasticConstitutiveModel::computeStressTensor
 
 void ElasticConstitutiveModel::addComputesAndRequires(Task* task,
 						      const MPMMaterial* matl,
-						      const Region* region,
+						      const Patch* patch,
 						      DataWarehouseP& old_dw,
 						      DataWarehouseP& new_dw) const
 {
@@ -414,7 +414,7 @@ ConstitutiveModel*
 ElasticConstitutiveModel::create(double *p_array)
 {
 #ifdef WONT_COMPILE_YET
-  return(new ElasticConstitutiveModel(p_array[0], p_array[1]));
+  return(scinew ElasticConstitutiveModel(p_array[0], p_array[1]));
 #else
   return 0;
 #endif
@@ -453,7 +453,7 @@ const TypeDescription* fun_getTypeDescription(ElasticConstitutiveModel::CMData*)
    static TypeDescription* td = 0;
    if(!td){
       ASSERTEQ(sizeof(ElasticConstitutiveModel::CMData), sizeof(double)*2);
-      td = new TypeDescription(TypeDescription::Other, "ElasticConstitutiveModel::CMData", true);
+      td = scinew TypeDescription(TypeDescription::Other, "ElasticConstitutiveModel::CMData", true);
    }
    return td;   
 }
@@ -464,7 +464,7 @@ ConstitutiveModel*
 ElasticConstitutiveModel::copy() const
 {
 #ifdef WONT_COMPILE_YET
-  return( new ElasticConstitutiveModel(*this) );
+  return( scinew ElasticConstitutiveModel(*this) );
 #else
   return 0;
 #endif
@@ -498,6 +498,10 @@ int ElasticConstitutiveModel::getSize() const
 
 
 // $Log$
+// Revision 1.13  2000/05/30 20:19:03  sparker
+// Changed new to scinew to help track down memory leaks
+// Changed region to patch
+//
 // Revision 1.12  2000/05/20 08:09:07  sparker
 // Improved TypeDescription
 // Finished I/O

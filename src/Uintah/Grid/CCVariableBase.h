@@ -10,7 +10,7 @@ namespace SCICore {
 
 namespace Uintah {
 
-   class Region;
+   class Patch;
    using SCICore::Geometry::IntVector;
 
 /**************************************
@@ -55,7 +55,7 @@ WARNING
 
       virtual void allocate(const IntVector& lowIndex,
 			    const IntVector& highIndex) = 0;
-      virtual void copyRegion(CCVariableBase* src,
+      virtual void copyPatch(CCVariableBase* src,
 			      const IntVector& lowIndex,
 			      const IntVector& highIndex) = 0;
    protected:
@@ -70,6 +70,10 @@ WARNING
 
 //
 // $Log$
+// Revision 1.2  2000/05/30 20:19:28  sparker
+// Changed new to scinew to help track down memory leaks
+// Changed region to patch
+//
 // Revision 1.1  2000/05/11 20:12:11  dav
 // Added CCVaraibleBase
 //

@@ -5,6 +5,7 @@
 #include <Uintah/Grid/Ghost.h>
 #include <Uintah/Grid/Handle.h>
 #include <Uintah/Grid/VarLabel.h>
+#include <SCICore/Malloc/Allocator.h>
 #include <string>
 #include <vector>
 
@@ -15,7 +16,7 @@ namespace Uintah {
 
    class ProcessorContext;
    class VarLabel;
-   class Region;
+   class Patch;
    class TypeDescription;
    
 /**************************************
@@ -53,7 +54,7 @@ WARNING
       public:
 	 virtual ~ActionBase();
 	 virtual void doit(const ProcessorContext* pc,
-			   const Region* region,
+			   const Patch* patch,
 			   DataWarehouseP& fromDW,
 			   DataWarehouseP& toDW) = 0;
       };
@@ -63,13 +64,13 @@ WARNING
 	 
 	 T* ptr;
 	 void (T::*pmf)(const ProcessorContext*,
-			const Region*,
+			const Patch*,
 			DataWarehouseP&,
 			DataWarehouseP&);
       public:
 	 Action( T* ptr,
 		 void (T::*pmf)(const ProcessorContext*, 
-				const Region*, 
+				const Patch*, 
 				DataWarehouseP&,
 				DataWarehouseP&) )
 	    : ptr(ptr), pmf(pmf) {}
@@ -78,10 +79,10 @@ WARNING
 	 //////////
 	 // Insert Documentation Here:
 	 virtual void doit(const ProcessorContext* pc,
-			   const Region* region,
+			   const Patch* patch,
 			   DataWarehouseP& fromDW,
 			   DataWarehouseP& toDW) {
-	    (ptr->*pmf)(pc, region, fromDW, toDW);
+	    (ptr->*pmf)(pc, patch, fromDW, toDW);
 	 }
       };
       template<class T, class Arg1>
@@ -90,14 +91,14 @@ WARNING
 	 T* ptr;
 	 Arg1 arg1;
 	 void (T::*pmf)(const ProcessorContext*,
-			const Region*,
+			const Patch*,
 			DataWarehouseP&,
 			DataWarehouseP&,
 			Arg1 arg1);
       public:
 	 Action1( T* ptr,
 		 void (T::*pmf)(const ProcessorContext*, 
-				const Region*, 
+				const Patch*, 
 				DataWarehouseP&,
 				DataWarehouseP&,
 				Arg1),
@@ -108,10 +109,10 @@ WARNING
 	 //////////
 	 // Insert Documentation Here:
 	 virtual void doit(const ProcessorContext* pc,
-			   const Region* region,
+			   const Patch* patch,
 			   DataWarehouseP& fromDW,
 			   DataWarehouseP& toDW) {
-	    (ptr->*pmf)(pc, region, fromDW, toDW, arg1);
+	    (ptr->*pmf)(pc, patch, fromDW, toDW, arg1);
 	 }
       };
       
@@ -122,14 +123,14 @@ WARNING
 	 Arg1 arg1;
 	 Arg2 arg2;
 	 void (T::*pmf)(const ProcessorContext*,
-			const Region*,
+			const Patch*,
 			DataWarehouseP&,
 			DataWarehouseP&,
 			Arg1 arg1, Arg2 arg2);
       public:
 	 Action2( T* ptr,
 		 void (T::*pmf)(const ProcessorContext*, 
-				const Region*, 
+				const Patch*, 
 				DataWarehouseP&,
 				DataWarehouseP&,
 				Arg1, Arg2),
@@ -140,10 +141,10 @@ WARNING
 	 //////////
 	 // Insert Documentation Here:
 	 virtual void doit(const ProcessorContext* pc,
-			   const Region* region,
+			   const Patch* patch,
 			   DataWarehouseP& fromDW,
 			   DataWarehouseP& toDW) {
-	    (ptr->*pmf)(pc, region, fromDW, toDW, arg1, arg2);
+	    (ptr->*pmf)(pc, patch, fromDW, toDW, arg1, arg2);
 	 }
       };
 
@@ -155,14 +156,14 @@ WARNING
 	 Arg2 arg2;
 	 Arg3 arg3;
 	 void (T::*pmf)(const ProcessorContext*,
-			const Region*,
+			const Patch*,
 			DataWarehouseP&,
 			DataWarehouseP&,
 			Arg1 arg1, Arg2 arg2, Arg3 arg3);
       public:
 	 Action3( T* ptr,
 		 void (T::*pmf)(const ProcessorContext*, 
-				const Region*, 
+				const Patch*, 
 				DataWarehouseP&,
 				DataWarehouseP&,
 				Arg1, Arg2, Arg3),
@@ -173,34 +174,34 @@ WARNING
 	 //////////
 	 // Insert Documentation Here:
 	 virtual void doit(const ProcessorContext* pc,
-			   const Region* region,
+			   const Patch* patch,
 			   DataWarehouseP& fromDW,
 			   DataWarehouseP& toDW) {
-	    (ptr->*pmf)(pc, region, fromDW, toDW, arg1, arg2, arg3);
+	    (ptr->*pmf)(pc, patch, fromDW, toDW, arg1, arg2, arg3);
 	 }
       };
 
    public:
       template<class T>
       Task(const string&         taskName,
-	   const Region*         region,
+	   const Patch*         patch,
 	   DataWarehouseP&       fromDW,
 	   DataWarehouseP&       toDW,
 	   T*                    ptr,
 	   void (T::*pmf)(const ProcessorContext*,
-			  const Region*,
+			  const Patch*,
 			  DataWarehouseP&,
 			  DataWarehouseP&) )
 	 : d_taskName( taskName ), 
-	   d_region( region ),
-	   d_action( new Action<T>(ptr, pmf) ),
+	   d_patch( patch ),
+	   d_action( scinew Action<T>(ptr, pmf) ),
 	   d_fromDW( fromDW ),
 	   d_toDW( toDW )
       {
 	 d_completed = false;
 	 d_usesThreads = false;
 	 d_usesMPI = false;
-	 d_subregionCapable = false;
+	 d_subpatchCapable = false;
       }
       
       template<class T>
@@ -209,91 +210,91 @@ WARNING
 	   DataWarehouseP&       toDW,
 	   T*                    ptr,
 	   void (T::*pmf)(const ProcessorContext*,
-			  const Region*,
+			  const Patch*,
 			  DataWarehouseP&,
 			  DataWarehouseP&) )
 	 : d_taskName( taskName ), 
-	   d_region( 0 ),
-	   d_action( new Action<T>(ptr, pmf) ),
+	   d_patch( 0 ),
+	   d_action( scinew Action<T>(ptr, pmf) ),
 	   d_fromDW( fromDW ),
 	   d_toDW( toDW )
       {
 	 d_completed = false;
 	 d_usesThreads = false;
 	 d_usesMPI = false;
-	 d_subregionCapable = false;
+	 d_subpatchCapable = false;
       }
       
       template<class T, class Arg1>
       Task(const string&         taskName,
-	   const Region*         region,
+	   const Patch*         patch,
 	   DataWarehouseP&       fromDW,
 	   DataWarehouseP&       toDW,
 	   T*                    ptr,
 	   void (T::*pmf)(const ProcessorContext*,
-			  const Region*,
+			  const Patch*,
 			  DataWarehouseP&,
 			  DataWarehouseP&,
 			  Arg1),
 	   Arg1 arg1)
 	 : d_taskName( taskName ), 
-	   d_region( region ),
-	   d_action( new Action1<T, Arg1>(ptr, pmf, arg1) ),
+	   d_patch( patch ),
+	   d_action( scinew Action1<T, Arg1>(ptr, pmf, arg1) ),
 	   d_fromDW( fromDW ),
 	   d_toDW( toDW )
       {
 	 d_completed = false;
 	 d_usesThreads = false;
 	 d_usesMPI = false;
-	 d_subregionCapable = false;
+	 d_subpatchCapable = false;
       }
       
       template<class T, class Arg1, class Arg2>
       Task(const string&         taskName,
-	   const Region*         region,
+	   const Patch*         patch,
 	   DataWarehouseP&       fromDW,
 	   DataWarehouseP&       toDW,
 	   T*                    ptr,
 	   void (T::*pmf)(const ProcessorContext*,
-			  const Region*,
+			  const Patch*,
 			  DataWarehouseP&,
 			  DataWarehouseP&,
 			  Arg1, Arg2),
 	   Arg1 arg1, Arg2 arg2)
 	 : d_taskName( taskName ), 
-	   d_region( region ),
-	   d_action( new Action2<T, Arg1, Arg2>(ptr, pmf, arg1, arg2) ),
+	   d_patch( patch ),
+	   d_action( scinew Action2<T, Arg1, Arg2>(ptr, pmf, arg1, arg2) ),
 	   d_fromDW( fromDW ),
 	   d_toDW( toDW )
       {
 	 d_completed = false;
 	 d_usesThreads = false;
 	 d_usesMPI = false;
-	 d_subregionCapable = false;
+	 d_subpatchCapable = false;
       }
       
       template<class T, class Arg1, class Arg2, class Arg3>
       Task(const string&         taskName,
-	   const Region*         region,
+	   const Patch*         patch,
 	   DataWarehouseP&       fromDW,
 	   DataWarehouseP&       toDW,
 	   T*                    ptr,
 	   void (T::*pmf)(const ProcessorContext*,
-			  const Region*,
+			  const Patch*,
 			  DataWarehouseP&,
 			  DataWarehouseP&,
 			  Arg1, Arg2, Arg3),
 	   Arg1 arg1, Arg2 arg2, Arg3 arg3)
 	 : d_taskName( taskName ), 
-	   d_region( region ),
-	   d_action( new Action3<T, Arg1, Arg2, Arg3>(ptr, pmf, arg1, arg2, arg3) ),
+	   d_patch( patch ),
+	   d_action( scinew Action3<T, Arg1, Arg2, Arg3>(ptr, pmf, arg1, arg2, arg3) ),
 	   d_fromDW( fromDW ),
 	   d_toDW( toDW )
       {
 	 d_completed = false;
 	 d_usesThreads = false;
 	 d_usesMPI = false;
-	 d_subregionCapable = false;
+	 d_subpatchCapable = false;
       }
       
       ~Task();
@@ -306,7 +307,7 @@ WARNING
       
       //////////
       // Insert Documentation Here:
-      void subregionCapable(bool state=true);
+      void subpatchCapable(bool state=true);
       
       //////////
       // Insert Documentation Here:
@@ -315,7 +316,7 @@ WARNING
       //////////
       // Insert Documentation Here:
       void requires(const DataWarehouseP& ds, const VarLabel*, int matlIndex,
-		    const Region* region, Ghost::GhostType gtype,
+		    const Patch* patch, Ghost::GhostType gtype,
 		    int numGhostCells = 0);
       
       //////////
@@ -325,7 +326,7 @@ WARNING
       //////////
       // Insert Documentation Here:
       void computes(const DataWarehouseP& ds, const VarLabel*, int matlIndex,
-		    const Region* region);
+		    const Patch* patch);
 
       //////////
       // Insert Documentation Here:
@@ -333,8 +334,8 @@ WARNING
       const string& getName() const {
 	 return d_taskName;
       }
-      const Region* getRegion() const {
-	 return d_region;
+      const Patch* getPatch() const {
+	 return d_patch;
       }
       
       //////////
@@ -348,13 +349,13 @@ WARNING
 	 DataWarehouseP   d_dw;
 	 const VarLabel*  d_var;
 	 int		  d_matlIndex;
-	 const Region*    d_region;
+	 const Patch*    d_patch;
 	 
 	 Dependency(      Task*           task,
 			  const DataWarehouseP& dw,
 			  const VarLabel* d_var,
 			  int matlIndex,
-			  const Region*);
+			  const Patch*);
 	 
       }; // end struct Dependency
       
@@ -374,7 +375,7 @@ WARNING
       //////////
       // Insert Documentation Here:
       string              d_taskName;
-      const Region*       d_region;
+      const Patch*       d_patch;
       ActionBase*         d_action;
       DataWarehouseP      d_fromDW;
       DataWarehouseP      d_toDW;
@@ -384,7 +385,7 @@ WARNING
       
       bool                d_usesMPI;
       bool                d_usesThreads;
-      bool                d_subregionCapable;
+      bool                d_subpatchCapable;
       
       Task(const Task&);
       Task& operator=(const Task&);
@@ -394,6 +395,10 @@ WARNING
 
 //
 // $Log$
+// Revision 1.15  2000/05/30 20:19:35  sparker
+// Changed new to scinew to help track down memory leaks
+// Changed region to patch
+//
 // Revision 1.14  2000/05/28 17:25:06  dav
 // adding mpi stuff
 //
@@ -410,7 +415,7 @@ WARNING
 // Do not schedule fracture tasks if fracture not enabled
 // Added fracture directory to MPM sub.mk
 // Be more uniform about using IntVector
-// Made regions have a single uniform index space - still needs work
+// Made patches have a single uniform index space - still needs work
 //
 // Revision 1.10  2000/05/07 06:02:13  sparker
 // Added beginnings of multiple patch support and real dependencies
@@ -427,7 +432,7 @@ WARNING
 //
 // Revision 1.6  2000/03/22 00:32:13  sparker
 // Added Face-centered variable class
-// Added Per-region data class
+// Added Per-patch data class
 // Added new task constructor for procedures with arguments
 // Use Array3Index more often
 //

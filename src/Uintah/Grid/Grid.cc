@@ -54,9 +54,9 @@ void Grid::printStatistics() const
   for(int i=0;i<numLevels();i++){
     LevelP l = getLevel(i);
     cerr << "Level " << i << ":\n";
-    cerr << "  Number of regions:\t\t" << l->numRegions() << '\n';
-    totalPatches += l->numRegions();
-    double ppc = double(l->totalCells())/double(l->numRegions());
+    cerr << "  Number of patches:\t\t" << l->numPatches() << '\n';
+    totalPatches += l->numPatches();
+    double ppc = double(l->totalCells())/double(l->numPatches());
     cerr << "  Total number of cells:\t" << l->totalCells() << " (" << ppc << " avg. per patch)\n";
     totalCells += l->totalCells();
   }

@@ -5,7 +5,7 @@
 
 namespace Uintah {
    class ProcessorContext;
-   class Region;
+   class Patch;
    namespace MPM {
 /**************************************
 
@@ -56,35 +56,35 @@ public:
 			  const DataWarehouseP&, DataWarehouseP&);
 private:
     void actuallyComputeStableTimestep(const ProcessorContext*,
-				       const Region* region,
+				       const Patch* patch,
 				       const DataWarehouseP&,
 				       DataWarehouseP&);
     void findOwners(const ProcessorContext*,
-		    const Region* region,
+		    const Patch* patch,
 		    const DataWarehouseP&,
 		    DataWarehouseP&);
     void interpolateParticlesToGrid(const ProcessorContext*,
-				    const Region* region,
+				    const Patch* patch,
 				    const DataWarehouseP&,
 				    DataWarehouseP&);
     void computeStressTensor(const ProcessorContext*,
-			     const Region* region,
+			     const Patch* patch,
 			     const DataWarehouseP&,
 			     DataWarehouseP&);
     void computeInternalForce(const ProcessorContext*,
-			      const Region* region,
+			      const Patch* patch,
 			      const DataWarehouseP&,
 			      DataWarehouseP&);
     void solveEquationsMotion(const ProcessorContext*,
-			      const Region* region,
+			      const Patch* patch,
 			      const DataWarehouseP&,
 			      DataWarehouseP&);
     void integrateAcceleration(const ProcessorContext*,
-			       const Region* region,
+			       const Patch* patch,
 			       const DataWarehouseP&,
 			       DataWarehouseP&);
     void interpolateToParticlesAndUpdate(const ProcessorContext*,
-					 const Region* region,
+					 const Patch* patch,
 					 const DataWarehouseP&,
 					 DataWarehouseP&);
 
@@ -97,6 +97,10 @@ private:
 
 //
 // $Log$
+// Revision 1.7  2000/05/30 20:18:59  sparker
+// Changed new to scinew to help track down memory leaks
+// Changed region to patch
+//
 // Revision 1.6  2000/04/26 06:48:12  sparker
 // Streamlined namespaces
 //

@@ -71,29 +71,29 @@ WARNING
 	 virtual ~SingleVelContact();
 
 	 // Initialiation function, empty for Single Velocity contact
-	 virtual void initializeContact(const Region* region,
+	 virtual void initializeContact(const Patch* patch,
 					int vfindex,
 					DataWarehouseP& new_dw);
 	 
 	 // Basic contact methods
 	 virtual void exMomInterpolated(const ProcessorContext*,
-					const Region* region,
+					const Patch* patch,
 					DataWarehouseP& old_dw,
 					DataWarehouseP& new_dw);
 	 
 	 virtual void exMomIntegrated(const ProcessorContext*,
-				      const Region* region,
+				      const Patch* patch,
 				      DataWarehouseP& old_dw,
 				      DataWarehouseP& new_dw);
 
          virtual void addComputesAndRequiresInterpolated(Task* task,
                                              const MPMMaterial* matl,
-                                             const Region* region,
+                                             const Patch* patch,
                                              DataWarehouseP& old_dw,
                                              DataWarehouseP& new_dw) const;	 
          virtual void addComputesAndRequiresIntegrated(Task* task,
                                              const MPMMaterial* matl,
-                                             const Region* region,
+                                             const Patch* patch,
                                              DataWarehouseP& old_dw,
                                              DataWarehouseP& new_dw) const;	 
       };
@@ -104,6 +104,10 @@ WARNING
 #endif /* __SINGLE_VEL_H__ */
 
 // $Log$
+// Revision 1.11  2000/05/30 20:19:10  sparker
+// Changed new to scinew to help track down memory leaks
+// Changed region to patch
+//
 // Revision 1.10  2000/05/26 21:37:35  jas
 // Labels are now created and accessed using Singleton class MPMLabel.
 //

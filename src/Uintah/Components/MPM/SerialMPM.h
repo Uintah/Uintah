@@ -80,25 +80,25 @@ private:
   //////////
   // Insert Documentation Here:
   void actuallyInitialize(const ProcessorContext*,
-			  const Region* region,
+			  const Patch* patch,
 			  DataWarehouseP& old_dw,
 			  DataWarehouseP& new_dw);
   //////////
   // Insert Documentation Here:
   void actuallyComputeStableTimestep(const ProcessorContext*,
-				     const Region* region,
+				     const Patch* patch,
 				     DataWarehouseP& old_dw,
 				     DataWarehouseP& new_dw);
   //////////
   // Insert Documentation Here:
   void interpolateParticlesToGrid(const ProcessorContext*,
-				  const Region* region,
+				  const Patch* patch,
 				  DataWarehouseP& old_dw,
 				  DataWarehouseP& new_dw);
   //////////
   // Insert Documentation Here:
   void computeStressTensor(const ProcessorContext*,
-			   const Region* region,
+			   const Patch* patch,
 			   DataWarehouseP& old_dw,
 			   DataWarehouseP& new_dw);
 
@@ -108,14 +108,14 @@ private:
   //
   void updateSurfaceNormalOfBoundaryParticle(
 					     const ProcessorContext*,
-					     const Region* region,
+					     const Patch* patch,
 					     DataWarehouseP& old_dw,
 					     DataWarehouseP& new_dw);
 
   //////////
   // Insert Documentation Here:
   void computeInternalForce(const ProcessorContext*,
-			    const Region* region,
+			    const Patch* patch,
 			    DataWarehouseP& old_dw,
 			    DataWarehouseP& new_dw);
 
@@ -123,34 +123,34 @@ private:
   // Insert Documentation Here:
   void computeInternalHeatRate(
 			       const ProcessorContext*,
-			       const Region* region,
+			       const Patch* patch,
 			       DataWarehouseP& old_dw,
 			       DataWarehouseP& new_dw);
 
   //////////
   // Insert Documentation Here:
   void solveEquationsMotion(const ProcessorContext*,
-			    const Region* region,
+			    const Patch* patch,
 			    DataWarehouseP& old_dw,
 			    DataWarehouseP& new_dw);
 
   //////////
   // Insert Documentation Here:
   void solveHeatEquations(const ProcessorContext*,
-			  const Region* region,
+			  const Patch* patch,
 			  DataWarehouseP& /*old_dw*/,
 			  DataWarehouseP& new_dw);
 
   //////////
   // Insert Documentation Here:
   void integrateAcceleration(const ProcessorContext*,
-			     const Region* region,
+			     const Patch* patch,
 			     DataWarehouseP& old_dw,
 			     DataWarehouseP& new_dw);
   //////////
   // Insert Documentation Here:
   void interpolateToParticlesAndUpdate(const ProcessorContext*,
-				       const Region* region,
+				       const Patch* patch,
 				       DataWarehouseP& old_dw,
 				       DataWarehouseP& new_dw);
 
@@ -159,7 +159,7 @@ private:
   // if the microcrack will grow.  If fracture occur,
   // more interior particles become boundary particles
   void crackGrow(const ProcessorContext*,
-		 const Region* region,
+		 const Patch* patch,
 		 DataWarehouseP& old_dw,
 		 DataWarehouseP& new_dw);
 
@@ -177,6 +177,10 @@ private:
    
 //
 // $Log$
+// Revision 1.36  2000/05/30 20:18:59  sparker
+// Changed new to scinew to help track down memory leaks
+// Changed region to patch
+//
 // Revision 1.35  2000/05/30 18:17:05  dav
 // few more fixes
 //

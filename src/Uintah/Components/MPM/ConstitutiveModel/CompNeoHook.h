@@ -47,30 +47,30 @@ namespace Uintah {
        
          // destructor
          virtual ~CompNeoHook();
-         // compute stable timestep for this region
-         virtual void computeStableTimestep(const Region* region,
+         // compute stable timestep for this patch
+         virtual void computeStableTimestep(const Patch* patch,
                                             const MPMMaterial* matl,
                                             DataWarehouseP& new_dw);
 
-         // compute stress at each particle in the region
-         virtual void computeStressTensor(const Region* region,
+         // compute stress at each particle in the patch
+         virtual void computeStressTensor(const Patch* patch,
                                           const MPMMaterial* matl,
                                           DataWarehouseP& old_dw,
                                           DataWarehouseP& new_dw);
 
-         // compute total strain energy for all particles in the region
-         virtual double computeStrainEnergy(const Region* region,
+         // compute total strain energy for all particles in the patch
+         virtual double computeStrainEnergy(const Patch* patch,
                                             const MPMMaterial* matl,
                                             DataWarehouseP& new_dw);
 
          // initialize  each particle's constitutive model data
-         virtual void initializeCMData(const Region* region,
+         virtual void initializeCMData(const Patch* patch,
                                        const MPMMaterial* matl,
                                        DataWarehouseP& new_dw);
 
          virtual void addComputesAndRequires(Task* task,
                                              const MPMMaterial* matl,
-                                             const Region* region,
+                                             const Patch* patch,
                                              DataWarehouseP& old_dw,
                                              DataWarehouseP& new_dw) const;
 
@@ -104,6 +104,10 @@ namespace Uintah {
 #endif  // __NEOHOOK_CONSTITUTIVE_MODEL_H__ 
 
 // $Log$
+// Revision 1.11  2000/05/30 20:19:02  sparker
+// Changed new to scinew to help track down memory leaks
+// Changed region to patch
+//
 // Revision 1.10  2000/05/26 18:15:11  guilkey
 // Brought the CompNeoHook constitutive model up to functionality
 // with the UCF.  Also, cleaned up all of the working models to

@@ -6,7 +6,7 @@
 #include <Uintah/Grid/Task.h>
 #include <Uintah/Grid/FCVariable.h>
 #include <Uintah/Grid/CCVariable.h>
-#include <Uintah/Grid/PerRegion.h>
+#include <Uintah/Grid/PerPatch.h>
 #include <Uintah/Grid/SoleVariable.h>
 #include <Uintah/Interface/ProblemSpec.h>
 #include <Uintah/Interface/DataWarehouse.h>
@@ -47,7 +47,7 @@ void BoundaryCondition::problemSetup(const ProblemSpecP& params)
   // change
   dw->get(numMixingScalars, "NumMixingScalars");
   for (int i = 0; i < numFlowInlets; i++) {
-    FlowInlet* flow_inlet = new FlowInlet(numMixingScalars);
+    FlowInlet* flow_inlet = scinew FlowInlet(numMixingScalars);
     // put flow_inlet to the database, use celltype info to
     // differentiate between different inlets
     flow_inlet->problemSetup(db, dw);
@@ -56,13 +56,13 @@ void BoundaryCondition::problemSetup(const ProblemSpecP& params)
   // set the boolean in the section where cell type info is read
   dw->get(pressureBC, "bool_pressureBC");
   if (pressureBC) {
-    PressureInlet* press_inlet = new PressureInlet(numMixingScalars);
+    PressureInlet* press_inlet = scinew PressureInlet(numMixingScalars);
     press_inlet->problemSetup(db, dw);
   }
   bool outletBC;
   dw->get(outletBC, "bool_outletBC");
   if (outletBC) {
-    FlowOutlet* flow_outlet = new FlowOutlet(numMixingScalars);
+    FlowOutlet* flow_outlet = scinew FlowOutlet(numMixingScalars);
     flow_outlet->problemSetup(db, dw);
   }
 #endif
@@ -76,20 +76,20 @@ void BoundaryCondition::sched_setFlatProfile(const LevelP& level,
 					     const DataWarehouseP& old_dw)
 {
 #if 0
-  for(Level::const_regionIterator iter=level->regionsBegin();
-      iter != level->regionsEnd(); iter++){
-    const Region* region=*iter;
+  for(Level::const_patchIterator iter=level->patchesBegin();
+      iter != level->patchesEnd(); iter++){
+    const Patch* patch=*iter;
     {
-      Task* tsk = new Task("BoundaryCondition::setProfile",
-			   region, old_dw, new_dw, this,
-			   BoundaryCondition::setFlatProfile);
-      tsk->requires(old_dw, "velocity", region, 1,
+      Task* tsk = scinew Task("BoundaryCondition::setProfile",
+			      patch, old_dw, new_dw, this,
+			      BoundaryCondition::setFlatProfile);
+      tsk->requires(old_dw, "velocity", patch, 1,
 		    FCVariable<Vector>::getTypeDescription());
-      tsk->requires(old_dw, "density", region, 1,
+      tsk->requires(old_dw, "density", patch, 1,
 		    CCVariable<double>::getTypeDescription());
-      tsk->computes(old_dw, "velocity", region, 1,
+      tsk->computes(old_dw, "velocity", patch, 1,
 		    FCVariable<Vector>::getTypeDescription());
-      tsk->computes(old_dw, "density", region, 1,
+      tsk->computes(old_dw, "density", patch, 1,
 		    CCVariable<double>::getTypeDescription());
       sched->addTask(tsk);
     }
@@ -99,19 +99,19 @@ void BoundaryCondition::sched_setFlatProfile(const LevelP& level,
 
 
 void BoundaryCondition::setFlatProfile(const ProcessorContext* pc,
-				       const Region* region,
+				       const Patch* patch,
 				       const DataWarehouseP& old_dw)
 {
 #if 0
   FCVariable<Vector> velocity;
-  old_dw->get(velocity, "velocity", region, 1);
+  old_dw->get(velocity, "velocity", patch, 1);
   CCVariable<double> density;
-  old_dw->get(density, "density", region, 1);
-  Array3Index lowIndex = region->getLowIndex();
-  Array3Index highIndex = region->getHighIndex();
-  // stores cell type info for the region with the ghost cell type
+  old_dw->get(density, "density", patch, 1);
+  Array3Index lowIndex = patch->getLowIndex();
+  Array3Index highIndex = patch->getHighIndex();
+  // stores cell type info for the patch with the ghost cell type
   CCVariable<int> cellType;
-  top_dw->get(cellType, "CellType", region, 1);
+  top_dw->get(cellType, "CellType", patch, 1);
   int num_flow_inlets;
   old_dw->get(num_flow_inlets, "NumFlowInlets");
   for (int indx = 0; indx < num_flow_inlets; indx++) {
@@ -121,8 +121,8 @@ void BoundaryCondition::setFlatProfile(const ProcessorContext* pc,
     FORT_PROFV(velocity, density, lowIndex, highIndex, cellType,
 	       flowinletp->flowrate, flowinletp->area,
 	       flowinletp->density, flowinletp->inletType);
-    old_dw->put(velocity, "velocity", region, 1);
-    old_dw->put(density, "density", region, 1);
+    old_dw->put(velocity, "velocity", patch, 1);
+    old_dw->put(density, "density", patch, 1);
   }
 #endif
 }
@@ -135,16 +135,16 @@ void BoundaryCondition::sched_setInletVelocityBC(const LevelP& level,
 						 DataWarehouseP& new_dw)
 {
 #ifdef WONT_COMPILE_YET
-  for(Level::const_regionIterator iter=level->regionsBegin();
-      iter != level->regionsEnd(); iter++){
-    const Region* region=*iter;
+  for(Level::const_patchIterator iter=level->patchesBegin();
+      iter != level->patchesEnd(); iter++){
+    const Patch* patch=*iter;
     {
-      Task* tsk = new Task("BoundaryCondition::setProfile",
-			   region, old_dw, new_dw, this,
-			   BoundaryCondition::setInletVelocityBC);
-      tsk->requires(old_dw, "velocity", region, 1,
+      Task* tsk = scinew Task("BoundaryCondition::setProfile",
+			      patch, old_dw, new_dw, this,
+			      BoundaryCondition::setInletVelocityBC);
+      tsk->requires(old_dw, "velocity", patch, 1,
 		    FCVariable<Vector>::getTypeDescription());
-      tsk->computes(new_dw, "velocity", region, 1,
+      tsk->computes(new_dw, "velocity", patch, 1,
 		    FCVariable<Vector>::getTypeDescription());
       sched->addTask(tsk);
     }
@@ -154,18 +154,18 @@ void BoundaryCondition::sched_setInletVelocityBC(const LevelP& level,
 
 
 void BoundaryCondition::setInletVelocityBC(const ProcessorContext* pc,
-					   const Region* region,
+					   const Patch* patch,
 					   const DataWarehouseP& old_dw,
 					   DataWarehouseP& new_dw) 
 {
 #if 0
   FCVariable<Vector> velocity;
-  old_dw->get(velocity, "velocity", region, 1);
-  Array3Index lowIndex = region->getLowIndex();
-  Array3Index highIndex = region->getHighIndex();
-  // stores cell type info for the region with the ghost cell type
+  old_dw->get(velocity, "velocity", patch, 1);
+  Array3Index lowIndex = patch->getLowIndex();
+  Array3Index highIndex = patch->getHighIndex();
+  // stores cell type info for the patch with the ghost cell type
   CCVariable<int> cellType;
-  top_dw->get(cellType, "CellType", region, 1);
+  top_dw->get(cellType, "CellType", patch, 1);
   int num_flow_inlets;
   old_dw->get(num_flow_inlets, "NumFlowInlets");
   for (int indx = 0; indx < num_flow_inlets; indx++) {
@@ -178,8 +178,8 @@ void BoundaryCondition::setInletVelocityBC(const ProcessorContext* pc,
 		flowinletp->flowrate, flowinletp->area,
 		flowinletp->density, flowinletp->inletType,
 		flowType);
-    new_dw->put(velocity, "velocity", region, 1);
-    new_dw->put(density, "density", region, 1);
+    new_dw->put(velocity, "velocity", patch, 1);
+    new_dw->put(density, "density", patch, 1);
   }
 #endif
 }
@@ -192,20 +192,20 @@ void BoundaryCondition::sched_computePressureBC(const LevelP& level,
 						DataWarehouseP& new_dw)
 {
 #ifdef WONT_COMPILE_YET
-  for(Level::const_regionIterator iter=level->regionsBegin();
-      iter != level->regionsEnd(); iter++){
-    const Region* region=*iter;
+  for(Level::const_patchIterator iter=level->patchesBegin();
+      iter != level->patchesEnd(); iter++){
+    const Patch* patch=*iter;
     {
-      Task* tsk = new Task("BoundaryCondition::setProfile",
-			   region, old_dw, new_dw, this,
-			   BoundaryCondition::calculatePressBC);
-      tsk->requires(old_dw, "pressure", region, 1,
+      Task* tsk = scinew Task("BoundaryCondition::setProfile",
+			      patch, old_dw, new_dw, this,
+			      BoundaryCondition::calculatePressBC);
+      tsk->requires(old_dw, "pressure", patch, 1,
 		    CCVariable<double>::getTypeDescription());
-      tsk->requires(old_dw, "velocity", region, 1,
+      tsk->requires(old_dw, "velocity", patch, 1,
 		    FCVariable<Vector>::getTypeDescription());
-      tsk->requires(old_dw, "density", region, 1,
+      tsk->requires(old_dw, "density", patch, 1,
 		    CCVariable<double>::getTypeDescription());
-      tsk->computes(new_dw, "velocity", region, 1,
+      tsk->computes(new_dw, "velocity", patch, 1,
 		    FCVariable<Vector>::getTypeDescription());
       sched->addTask(tsk);
     }
@@ -215,26 +215,26 @@ void BoundaryCondition::sched_computePressureBC(const LevelP& level,
 
 
 void BoundaryCondition::calculatePressBC(const ProcessorContext* pc,
-					 const Region* region,
+					 const Patch* patch,
 					 const DataWarehouseP& old_dw,
 					 DataWarehouseP& new_dw) 
 {
 #if 0
   FCVariable<Vector> velocity;
-  old_dw->get(velocity, "velocity", region, 1);
+  old_dw->get(velocity, "velocity", patch, 1);
   CCVariable<double> pressure;
-  old_dw->get(pressure, "pressure", region, 1);
-  Array3Index lowIndex = region->getLowIndex();
-  Array3Index highIndex = region->getHighIndex();
-  // stores cell type info for the region with the ghost cell type
+  old_dw->get(pressure, "pressure", patch, 1);
+  Array3Index lowIndex = patch->getLowIndex();
+  Array3Index highIndex = patch->getHighIndex();
+  // stores cell type info for the patch with the ghost cell type
   CCVariable<int> cellType;
-  top_dw->get(cellType, "CellType", region, 1);
+  top_dw->get(cellType, "CellType", patch, 1);
   PressureInlet* pressinletp;
   old_dw->get(pressinletp, "PressureInlet");
   FORT_CALPBC(velocity, pressure, density, lowIndex, highIndex, cellType,
 	      pressinletp->refPressure, pressinletp->area,
 	      pressinletp->density, pressinletp->inletType);
-  new_dw->put(velocity, "velocity", region, 1);
+  new_dw->put(velocity, "velocity", patch, 1);
 #endif
 } 
 // sets velocity bc
@@ -245,61 +245,61 @@ void BoundaryCondition::sched_velocityBC(const int index,
 					 DataWarehouseP& new_dw)
 {
 #ifdef WONT_COMPILE_YET
-  for(Level::const_regionIterator iter=level->regionsBegin();
-      iter != level->regionsEnd(); iter++){
-    const Region* region=*iter;
+  for(Level::const_patchIterator iter=level->patchesBegin();
+      iter != level->patchesEnd(); iter++){
+    const Patch* patch=*iter;
     {
-      Task* tsk = new Task("BoundaryCondition::VelocityBC",
-			   region, old_dw, new_dw, this,
-			   BoundaryCondition::velocityBC,
-			   index);
-      tsk->requires(old_dw, "velocity", region, 1,
+      Task* tsk = scinew Task("BoundaryCondition::VelocityBC",
+			      patch, old_dw, new_dw, this,
+			      BoundaryCondition::velocityBC,
+			      index);
+      tsk->requires(old_dw, "velocity", patch, 1,
 		    FCVariable<Vector>::getTypeDescription());
-      tsk->requires(old_dw, "density", region, 1,
+      tsk->requires(old_dw, "density", patch, 1,
 		    CCVariable<double>::getTypeDescription());
-      tsk->requires(old_dw, "viscosity", region, 1,
+      tsk->requires(old_dw, "viscosity", patch, 1,
 		    CCVariable<double>::getTypeDescription());
       if (index == 1) {
-	tsk->requires(new_dw, "uVelocityCoeff", region, 0,
+	tsk->requires(new_dw, "uVelocityCoeff", patch, 0,
 		      FCVariable<Vector>::getTypeDescription());
-	tsk->requires(new_dw, "uLinearSource", region, 0,
+	tsk->requires(new_dw, "uLinearSource", patch, 0,
 		      FCVariable<Vector>::getTypeDescription());
-	tsk->requires(new_dw, "uNonlinearSource", region, 0,
+	tsk->requires(new_dw, "uNonlinearSource", patch, 0,
 		      FCVariable<Vector>::getTypeDescription());
-	tsk->computes(new_dw, "uVelocityCoeff", region, 0,
+	tsk->computes(new_dw, "uVelocityCoeff", patch, 0,
 		      FCVariable<Vector>::getTypeDescription());
-	tsk->computes(new_dw, "uLinearSource", region, 0,
+	tsk->computes(new_dw, "uLinearSource", patch, 0,
 		      FCVariable<Vector>::getTypeDescription());
-	tsk->computes(new_dw, "uNonlinearSource", region, 0,
+	tsk->computes(new_dw, "uNonlinearSource", patch, 0,
 		      FCVariable<Vector>::getTypeDescription());
 
       }
       else if (index == 2) {
-	tsk->requires(new_dw, "vVelocityCoeff", region, 0,
+	tsk->requires(new_dw, "vVelocityCoeff", patch, 0,
 		    FCVariable<Vector>::getTypeDescription());
-	tsk->requires(new_dw, "vLinearSource", region, 0,
+	tsk->requires(new_dw, "vLinearSource", patch, 0,
 		      FCVariable<Vector>::getTypeDescription());
-	tsk->requires(new_dw, "vNonlinearSource", region, 0,
+	tsk->requires(new_dw, "vNonlinearSource", patch, 0,
 		      FCVariable<Vector>::getTypeDescription());
-	tsk->computes(new_dw, "vVelocityCoeff", region, 0,
+	tsk->computes(new_dw, "vVelocityCoeff", patch, 0,
 		    FCVariable<Vector>::getTypeDescription());
-	tsk->computes(new_dw, "vLinearSource", region, 0,
+	tsk->computes(new_dw, "vLinearSource", patch, 0,
 		      FCVariable<Vector>::getTypeDescription());
-	tsk->computes(new_dw, "vNonlinearSource", region, 0,
+	tsk->computes(new_dw, "vNonlinearSource", patch, 0,
 		      FCVariable<Vector>::getTypeDescription());
       }
       else if (index == 3) {
-	tsk->requires(new_dw, "wVelocityCoeff", region, 0,
+	tsk->requires(new_dw, "wVelocityCoeff", patch, 0,
 		    FCVariable<Vector>::getTypeDescription());
-	tsk->requires(new_dw, "wLinearSource", region, 0,
+	tsk->requires(new_dw, "wLinearSource", patch, 0,
 		      FCVariable<Vector>::getTypeDescription());
-	tsk->requires(new_dw, "wNonlinearSource", region, 0,
+	tsk->requires(new_dw, "wNonlinearSource", patch, 0,
 		      FCVariable<Vector>::getTypeDescription());
-	tsk->computes(new_dw, "wVelocityCoeff", region, 0,
+	tsk->computes(new_dw, "wVelocityCoeff", patch, 0,
 		    FCVariable<Vector>::getTypeDescription());
-	tsk->computes(new_dw, "wLinearSource", region, 0,
+	tsk->computes(new_dw, "wLinearSource", patch, 0,
 		      FCVariable<Vector>::getTypeDescription());
-	tsk->computes(new_dw, "wNonlinearSource", region, 0,
+	tsk->computes(new_dw, "wNonlinearSource", patch, 0,
 		      FCVariable<Vector>::getTypeDescription());
       }
       else {
@@ -313,31 +313,31 @@ void BoundaryCondition::sched_velocityBC(const int index,
 }
 
 void BoundaryCondition::velocityBC(const ProcessorContext* pc,
-				   const Region* region,
+				   const Patch* patch,
 				   const DataWarehouseP& old_dw,
 				   DataWarehouseP& new_dw,
 				   const int index) 
 {
 #if 0
   FCVariable<Vector> velocity;
-  old_dw->get(velocity, "velocity", region, 1);
+  old_dw->get(velocity, "velocity", patch, 1);
   CCVariable<double> density;
-  old_dw->get(density, "density", region, 1);
+  old_dw->get(density, "density", patch, 1);
   // using chain of responsibility pattern for getting cell information
   DataWarehouseP top_dw = new_dw->getTop();
-  PerRegion<CellInformation*> cellinfop;
-  if(top_dw->exists("cellinfo", region)){
-    top_dw->get(cellinfop, "cellinfo", region);
+  PerPatch<CellInformation*> cellinfop;
+  if(top_dw->exists("cellinfo", patch)){
+    top_dw->get(cellinfop, "cellinfo", patch);
   } else {
-    cellinfop.setData(new CellInformation(region));
-    top_dw->put(cellinfop, "cellinfo", region);
+    cellinfop.setData(scinew CellInformation(patch));
+    top_dw->put(cellinfop, "cellinfo", patch);
   } 
   CellInformation* cellinfo = cellinfop;
-  Array3Index lowIndex = region->getLowIndex();
-  Array3Index highIndex = region->getHighIndex();
-  // stores cell type info for the region with the ghost cell type
+  Array3Index lowIndex = patch->getLowIndex();
+  Array3Index highIndex = patch->getHighIndex();
+  // stores cell type info for the patch with the ghost cell type
   CCVariable<int> cellType;
-  top_dw->get(cellType, "CellType", region, 1);
+  top_dw->get(cellType, "CellType", patch, 1);
   //get Molecular Viscosity of the fluid
   SoleVariable<double> VISCOS_CONST;
   top_dw->get(VISCOS_CONST, "viscosity"); 
@@ -345,18 +345,18 @@ void BoundaryCondition::velocityBC(const ProcessorContext* pc,
 
   if (Index == 1) {
     Stencil<double> uVelocityCoeff;
-    new_dw->get(uVelocityCoeff, "uVelocityCoeff", region, 0);
+    new_dw->get(uVelocityCoeff, "uVelocityCoeff", patch, 0);
     //SP term in Arches
     FCVariable<double> uLinearSrc;
-    new_dw->get(uLinearSrc, "uLinearSource", region, 0);
+    new_dw->get(uLinearSrc, "uLinearSource", patch, 0);
     // SU in Arches
     FCVariable<double> uNonlinearSource;
-    new_dw->get(uNonlinearSrc, "uNonlinearSource", region, 0);
+    new_dw->get(uNonlinearSrc, "uNonlinearSource", patch, 0);
     int ioff = 1;
     int joff = 0;
     int koff = 0;
     // 3-d array for volume - fortran uses it for temporary storage
-    Array3<double> volume(region->getLowIndex(), region->getHighIndex());
+    Array3<double> volume(patch->getLowIndex(), patch->getHighIndex());
     // computes remianing diffusion term and also computes source due to gravity
     FORT_BCUVEL(uVelocityCoeff, uLinearSrc, uNonlinearSrc, velocity,  
 		density, VISCOS, ioff, joff, koff, lowIndex, highIndex,
@@ -370,28 +370,28 @@ void BoundaryCondition::velocityBC(const ProcessorContext* pc,
 		cellinfo->fac3u, cellinfo->fac4u,cellinfo->iesdu,
 		cellinfo->iwsdu, cellinfo->enfac, cellinfo->sfac,
 		cellinfo->tfac, cellinfo->bfac, volume);
-    new_dw->put(uVelocityCoeff, "uVelocityCoeff", region, 0);
-    new_dw->put(uLinearSrc, "uLinearSource", region);
-    new_dw->put(uNonlinearSrc, "uNonlinearSource", region);
+    new_dw->put(uVelocityCoeff, "uVelocityCoeff", patch, 0);
+    new_dw->put(uLinearSrc, "uLinearSource", patch);
+    new_dw->put(uNonlinearSrc, "uNonlinearSource", patch);
 
     // it computes the wall bc and updates ucoef and usource
-    d_turbModel->calcVelocityWallBC(pc, region, old_dw, new_dw, Index);
+    d_turbModel->calcVelocityWallBC(pc, patch, old_dw, new_dw, Index);
   }
 
   else if (Index == 2) {
     Stencil<double> vVelocityCoeff;
-    new_dw->get(vVelocityCoeff, "vVelocityCoeff", region, 0);
+    new_dw->get(vVelocityCoeff, "vVelocityCoeff", patch, 0);
     //SP term in Arches
     FCVariable<double> vLinearSrc;
-    new_dw->get(vLinearSrc, "vLinearSource", region, 0);
+    new_dw->get(vLinearSrc, "vLinearSource", patch, 0);
     // SU in Arches
     FCVariable<double> vNonlinearSource;
-    new_dw->get(vNonlinearSrc, "vNonlinearSource", region, 0);
+    new_dw->get(vNonlinearSrc, "vNonlinearSource", patch, 0);
     int ioff = 1;
     int joff = 0;
     int koff = 0;
     // 3-d array for volume - fortran uses it for temporary storage
-    Array3<double> volume(region->getLowIndex(), region->getHighIndex());
+    Array3<double> volume(patch->getLowIndex(), patch->getHighIndex());
     // computes remianing diffusion term and also computes source due to gravity
     FORT_BCVVEL(vVelocityCoeff, vLinearSrc, vNonlinearSrc, velocity,  
 		density, VISCOS, ioff, joff, koff, lowIndex, highIndex,
@@ -405,27 +405,27 @@ void BoundaryCondition::velocityBC(const ProcessorContext* pc,
 		cellinfo->fac3u, cellinfo->fac4u,cellinfo->iesdu,
 		cellinfo->iwsdu, cellinfo->enfac, cellinfo->sfac,
 		cellinfo->tfac, cellinfo->bfac, volume);
-    new_dw->put(vVelocityCoeff, "vVelocityCoeff", region, 0);
-    new_dw->put(vLinearSrc, "vLinearSource", region);
-    new_dw->put(vNonlinearSrc, "vNonlinearSource", region);
+    new_dw->put(vVelocityCoeff, "vVelocityCoeff", patch, 0);
+    new_dw->put(vLinearSrc, "vLinearSource", patch);
+    new_dw->put(vNonlinearSrc, "vNonlinearSource", patch);
 
     // it computes the wall bc and updates ucoef and usource
-    d_turbModel->calcVelocityWallBC(pc, region, old_dw, new_dw, Index);
+    d_turbModel->calcVelocityWallBC(pc, patch, old_dw, new_dw, Index);
   }
   else if (Index == 3) {
     Stencil<double> wVelocityCoeff;
-    new_dw->get(wVelocityCoeff, "wVelocityCoeff", region, 0);
+    new_dw->get(wVelocityCoeff, "wVelocityCoeff", patch, 0);
     //SP term in Arches
     FCVariable<double> wLinearSrc;
-    new_dw->get(wLinearSrc, "wLinearSource", region, 0);
+    new_dw->get(wLinearSrc, "wLinearSource", patch, 0);
     // SU in Arches
     FCVariable<double> wNonlinearSource;
-    new_dw->get(wNonlinearSrc, "wNonlinearSource", region, 0);
+    new_dw->get(wNonlinearSrc, "wNonlinearSource", patch, 0);
     int ioff = 1;
     int joff = 0;
     int koff = 0;
     // 3-d array for volume - fortran uses it for temporary storage
-    Array3<double> volume(region->getLowIndex(), region->getHighIndex());
+    Array3<double> volume(patch->getLowIndex(), patch->getHighIndex());
     // computes remianing diffusion term and also computes source due to gravity
     FORT_BCWVEL(wVelocityCoeff, wLinearSrc, wNonlinearSrc, velocity,  
 		density, VISCOS, ioff, joff, koff, lowIndex, highIndex,
@@ -439,12 +439,12 @@ void BoundaryCondition::velocityBC(const ProcessorContext* pc,
 		cellinfo->fac3u, cellinfo->fac4u,cellinfo->iesdu,
 		cellinfo->iwsdu, cellinfo->enfac, cellinfo->sfac,
 		cellinfo->tfac, cellinfo->bfac, volume);
-    new_dw->put(wVelocityCoeff, "wVelocityCoeff", region, 0);
-    new_dw->put(wLinearSrc, "wLinearSource", region);
-    new_dw->put(wNonlinearSrc, "wNonlinearSource", region);
+    new_dw->put(wVelocityCoeff, "wVelocityCoeff", patch, 0);
+    new_dw->put(wLinearSrc, "wLinearSource", patch);
+    new_dw->put(wNonlinearSrc, "wNonlinearSource", patch);
 
     // it computes the wall bc and updates ucoef and usource
-    d_turbModel->calcVelocityWallBC(pc, region, old_dw, new_dw, Index);
+    d_turbModel->calcVelocityWallBC(pc, patch, old_dw, new_dw, Index);
   }
     else {
     cerr << "Invalid Index value" << endl;
@@ -453,25 +453,25 @@ void BoundaryCondition::velocityBC(const ProcessorContext* pc,
 }
 
 void BoundaryCondition::sched_pressureBC(const LevelP& level,
-					 const Region* region,
+					 const Patch* patch,
 					 const DataWarehouseP& old_dw,
 					 DataWarehouseP& new_dw)
 {
 #if 0
-  for(Level::const_regionIterator iter=level->regionsBegin();
-      iter != level->regionsEnd(); iter++){
-    const Region* region=*iter;
+  for(Level::const_patchIterator iter=level->patchesBegin();
+      iter != level->patchesEnd(); iter++){
+    const Patch* patch=*iter;
     {
       //copies old db to new_db and then uses non-linear
       //solver to compute new values
-      Task* tsk = new Task("BoundaryCondition::PressureBC",region,
-			   old_dw, new_dw, this,
-			   Discretization::pressureBC);
-      tsk->requires(old_dw, "pressure", region, 1,
+      Task* tsk = scinew Task("BoundaryCondition::PressureBC",patch,
+			      old_dw, new_dw, this,
+			      Discretization::pressureBC);
+      tsk->requires(old_dw, "pressure", patch, 1,
 		    CCVariable<double>::getTypeDescription());
-      tsk->requires(new_dw, "pressureCoeff", region, 0,
+      tsk->requires(new_dw, "pressureCoeff", patch, 0,
 		    CCVariable<Vector>::getTypeDescription());
-      tsk->computes(new_dw, "pressureCoeff", region, 0,
+      tsk->computes(new_dw, "pressureCoeff", patch, 0,
 		    CCVariable<double>::getTypeDescription());
       sched->addTask(tsk);
     }
@@ -483,34 +483,34 @@ void BoundaryCondition::sched_pressureBC(const LevelP& level,
 
 
 void BoundaryCondition::pressureBC(const ProcessorContext*,
-				   const Region* region,
+				   const Patch* patch,
 				   const DataWarehouseP& old_dw,
 				   DataWarehouseP& new_dw)
 {
 #if 0
   CCVariable<double> pressure;
-  old_dw->get(pressure, "pressure", region, 1);
+  old_dw->get(pressure, "pressure", patch, 1);
   CCVariable<Vector> pressCoeff; //7 point stencil
-  new_dw->get(pressCoeff,"pressureCoeff",region, 0);
+  new_dw->get(pressCoeff,"pressureCoeff",patch, 0);
   // using chain of responsibility pattern for getting cell information
   DataWarehouseP top_dw = new_dw->getTop();
-  PerRegion<CellInformation*> cellinfop;
-  if(top_dw->exists("cellinfo", region)){
-    top_dw->get(cellinfop, "cellinfo", region);
+  PerPatch<CellInformation*> cellinfop;
+  if(top_dw->exists("cellinfo", patch)){
+    top_dw->get(cellinfop, "cellinfo", patch);
   } else {
-    cellinfop.setData(new CellInformation(region));
-    top_dw->put(cellinfop, "cellinfo", region);
+    cellinfop.setData(scinew CellInformation(patch));
+    top_dw->put(cellinfop, "cellinfo", patch);
   } 
   CellInformation* cellinfo = cellinfop;
-  Array3Index lowIndex = region->getLowIndex();
-  Array3Index highIndex = region->getHighIndex();
-  // stores cell type info for the region with the ghost cell type
+  Array3Index lowIndex = patch->getLowIndex();
+  Array3Index highIndex = patch->getHighIndex();
+  // stores cell type info for the patch with the ghost cell type
   CCVariable<int> cellType;
-  top_dw->get(cellType, "CellType", region, 1);
+  top_dw->get(cellType, "CellType", patch, 1);
   //fortran call
   FORT_PRESSBC(pressCoeff, pressure, 
 	       lowIndex, highIndex, cellType);
-  new_dw->put(pressCoeff, "pressureCoeff", region, 0);
+  new_dw->put(pressCoeff, "pressureCoeff", patch, 0);
 #endif
 }
 

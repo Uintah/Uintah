@@ -21,7 +21,7 @@ namespace Uintah {
    using SCICore::Math::Min;
 
    class ProcessorContext;
-   class Region;
+   class Patch;
    class VarLabel;
    class Task;
    namespace MPM {
@@ -59,51 +59,32 @@ WARNING
       class Contact {
       public:
          // Constructor
-	 Contact(){
-	   /*	 gMassLabel         = new VarLabel( "g.mass", 
-			      NCVariable<double>::getTypeDescription() );
-	 gVelocityLabel     = new VarLabel( "g.velocity",
-                              NCVariable<Vector>::getTypeDescription() );
-	 gMomExedVelocityLabel     = new VarLabel( "g.momexedvelocity",
-                              NCVariable<Vector>::getTypeDescription() );
-	 gVelocityStarLabel = new VarLabel( "g.velocity_star",
-                              NCVariable<Vector>::getTypeDescription() );
-	 gMomExedVelocityStarLabel = new VarLabel( "g.momexedvelocity_star",
-                              NCVariable<Vector>::getTypeDescription() );
-	 gAccelerationLabel = new VarLabel( "g.acceleration",
-                              NCVariable<Vector>::getTypeDescription() );
-	 gMomExedAccelerationLabel = new VarLabel( "g.momexedacceleration",
-                              NCVariable<Vector>::getTypeDescription() );
-	 deltLabel          = new VarLabel( "delt",
-				    delt_vartype::getTypeDescription() );
-	   */
-
-	 };
+	 Contact();
 
 	 // Basic contact methods
 	 virtual void exMomInterpolated(const ProcessorContext*,
-					const Region* region,
+					const Patch* patch,
 					DataWarehouseP& old_dw,
 					DataWarehouseP& new_dw) = 0;
 	 
 	 virtual void exMomIntegrated(const ProcessorContext*,
-				      const Region* region,
+				      const Patch* patch,
 				      DataWarehouseP& old_dw,
 				      DataWarehouseP& new_dw) = 0;
 
-	 virtual void initializeContact(const Region* region,
+	 virtual void initializeContact(const Patch* patch,
 					int vfindex,
 					DataWarehouseP& new_dw) = 0;
 
          virtual void addComputesAndRequiresInterpolated(Task* task,
                                              const MPMMaterial* matl,
-                                             const Region* region,
+                                             const Patch* patch,
                                              DataWarehouseP& old_dw,
                                              DataWarehouseP& new_dw) const = 0;
 	 
          virtual void addComputesAndRequiresIntegrated(Task* task,
                                              const MPMMaterial* matl,
-                                             const Region* region,
+                                             const Patch* patch,
                                              DataWarehouseP& old_dw,
                                              DataWarehouseP& new_dw) const = 0;
 
@@ -133,6 +114,10 @@ WARNING
 } // end namespace Uintah
    
 // $Log$
+// Revision 1.17  2000/05/30 20:19:08  sparker
+// Changed new to scinew to help track down memory leaks
+// Changed region to patch
+//
 // Revision 1.16  2000/05/26 21:37:34  jas
 // Labels are now created and accessed using Singleton class MPMLabel.
 //

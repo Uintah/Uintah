@@ -75,6 +75,10 @@ WARNING
 
 //
 // $Log$
+// Revision 1.9  2000/05/30 20:19:30  sparker
+// Changed new to scinew to help track down memory leaks
+// Changed region to patch
+//
 // Revision 1.8  2000/05/20 08:09:24  sparker
 // Improved TypeDescription
 // Finished I/O
@@ -93,7 +97,7 @@ WARNING
 // Do not schedule fracture tasks if fracture not enabled
 // Added fracture directory to MPM sub.mk
 // Be more uniform about using IntVector
-// Made regions have a single uniform index space - still needs work
+// Made patches have a single uniform index space - still needs work
 //
 // Revision 1.4  2000/04/28 07:35:36  sparker
 // Started implementation of DataWarehouse

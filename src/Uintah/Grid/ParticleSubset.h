@@ -126,6 +126,10 @@ WARNING
 
 //
 // $Log$
+// Revision 1.7  2000/05/30 20:19:31  sparker
+// Changed new to scinew to help track down memory leaks
+// Changed region to patch
+//
 // Revision 1.6  2000/05/20 08:09:24  sparker
 // Improved TypeDescription
 // Finished I/O
@@ -140,7 +144,7 @@ WARNING
 // Do not schedule fracture tasks if fracture not enabled
 // Added fracture directory to MPM sub.mk
 // Be more uniform about using IntVector
-// Made regions have a single uniform index space - still needs work
+// Made patches have a single uniform index space - still needs work
 //
 // Revision 1.3  2000/04/26 06:48:51  sparker
 // Streamlined namespaces

@@ -39,7 +39,7 @@ none
 #define included_Discretization
 
 #include <Uintah/Grid/LevelP.h>
-#include <Uintah/Grid/Region.h>
+#include <Uintah/Grid/Patch.h>
 #include <Uintah/Interface/SchedulerP.h>
 #include <Uintah/Interface/DataWarehouseP.h>
 #include <Uintah/Parallel/ProcessorContext.h>
@@ -79,34 +79,34 @@ public:
    // Set stencil weights. It uses second order hybrid differencing for computing
    // coefficients
     void calculateVelocityCoeff(const ProcessorContext*,
-				const Region* region,
+				const Patch* patch,
 				const DataWarehouseP& old_dw,
 				DataWarehouseP& new_dw,
 				double delta_t,
 				const int Index);
     void calculatePressureCoeff(const ProcessorContext*,
-				const Region* region,
+				const Patch* patch,
 				const DataWarehouseP& old_dw,
 				DataWarehouseP& new_dw,
 				double delta_t); 
     void calculateScalarCoeff(const ProcessorContext*,
-			      const Region* region,
+			      const Patch* patch,
 			      const DataWarehouseP& old_dw,
 			      DataWarehouseP& new_dw,
 			      double delta_t,
 			      const int Index);
 
     void calculateVelDiagonal(const ProcessorContext*,
-			      const Region* region,
+			      const Patch* patch,
 			      const DataWarehouseP& old_dw,
 			      DataWarehouseP& new_dw,
 			      const int Index);
     void calculatePressDiagonal(const ProcessorContext*,
-				const Region* region,
+				const Patch* patch,
 				const DataWarehouseP& old_dw,
 				DataWarehouseP& new_dw);
     void calculateScalarDiagonal(const ProcessorContext*,
-				 const Region* region,
+				 const Patch* patch,
 				 const DataWarehouseP& old_dw,
 				 DataWarehouseP& new_dw,
 				 const int Index);

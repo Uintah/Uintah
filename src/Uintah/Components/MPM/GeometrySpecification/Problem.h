@@ -14,7 +14,7 @@
 #include <Uintah/Grid/GridP.h>
 
 namespace Uintah {
-   class Region;
+   class Patch;
    namespace MPM {
       class GeometryObject;
       using SCICore::Geometry::Vector;
@@ -29,7 +29,7 @@ namespace Uintah {
       
 	 void preProcessor(const ProblemSpecP& prob_spec, GridP& grid,
 			   SimulationStateP& sharedState);
-	 void createParticles(const Region* region, 
+	 void createParticles(const Patch* patch, 
 			      DataWarehouseP&);
 	 
 	 int getNumObjects() const;
@@ -47,6 +47,10 @@ namespace Uintah {
 #endif // __PROBLEM_H__
 
 // $Log$
+// Revision 1.10  2000/05/30 20:19:15  sparker
+// Changed new to scinew to help track down memory leaks
+// Changed region to patch
+//
 // Revision 1.9  2000/04/26 06:48:25  sparker
 // Streamlined namespaces
 //

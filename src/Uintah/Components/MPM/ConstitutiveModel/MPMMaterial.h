@@ -15,7 +15,7 @@ namespace SCICore {
 }
 
 namespace Uintah {
-   class Region;
+   class Patch;
    class VarLabel;
    namespace MPM {
       class GeometryObject;
@@ -63,11 +63,11 @@ WARNING
 	 // Return correct constitutive model pointer for this material
 	 ConstitutiveModel * getConstitutiveModel();
 	 
-	 particleIndex countParticles(const Region*) const;
+	 particleIndex countParticles(const Patch*) const;
 	 particleIndex countParticles(GeometryObject* obj,
-				      const Region*) const;
+				      const Patch*) const;
 	 void createParticles(particleIndex numParticles,
-			      const Region*,
+			      const Patch*,
 			      DataWarehouseP& new_dw);
 	 particleIndex createParticles(GeometryObject* obj,
 				       particleIndex start,
@@ -77,7 +77,7 @@ WARNING
 				       ParticleVariable<double>& mass,
 				       ParticleVariable<double>& volume,
 				       ParticleVariable<int>& pissurf,
-				       const Region*);
+				       const Patch*);
 
 	 int checkForSurface(const GeometryPiece* piece,
 				const Point p, const Vector dxpp);
@@ -118,6 +118,10 @@ WARNING
 #endif // __MPM_MATERIAL_H__
 
 // $Log$
+// Revision 1.15  2000/05/30 20:19:05  sparker
+// Changed new to scinew to help track down memory leaks
+// Changed region to patch
+//
 // Revision 1.14  2000/05/26 01:43:29  tan
 // Added getThermalConductivity() and getSpecificHeat()
 // for computation on heat conduction.

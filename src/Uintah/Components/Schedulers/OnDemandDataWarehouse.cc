@@ -14,7 +14,7 @@ static char *id="@(#) $Id$";
 #include <Uintah/Grid/VarLabel.h>
 #include <Uintah/Grid/ParticleVariable.h>
 #include <Uintah/Grid/Level.h>
-#include <Uintah/Grid/Region.h>
+#include <Uintah/Grid/Patch.h>
 #include <SCICore/Malloc/Allocator.h>
 
 #include <iostream>
@@ -94,7 +94,7 @@ OnDemandDataWarehouse::put(const ReductionVariableBase& var,
 
 void
 OnDemandDataWarehouse::sendMpiDataRequest( const string & varName,
-					         Region * region,
+					         Patch * patch,
 					         int      numGhostCells )
 {
   if( d_MpiProcesses == 1 ) {
@@ -119,8 +119,8 @@ OnDemandDataWarehouse::sendMpiDataRequest( const string & varName,
   //  8 is directly above 17 which is directly above 26
 
 
-  // Figure out the bottom and top points of the ghost region
-  // immediately above this region.  (Ie: Determine Top (Area 4))
+  // Figure out the bottom and top points of the ghost patch
+  // immediately above this patch.  (Ie: Determine Top (Area 4))
 
   int                           currentTag;
   DWMpiHandler::MpiDataRequest  request;
@@ -136,7 +136,7 @@ OnDemandDataWarehouse::sendMpiDataRequest( const string & varName,
 
   request.type = DWMpiHandler::GridVar;
   sprintf( request.varName, "varA" );
-  request.region = 0;
+  request.patch = 0;
   request.generation = d_generation;
 
   cerr << "OnDemandDataWarehouse " << d_MpiRank << ": sending data request\n";
@@ -169,19 +169,19 @@ void
 OnDemandDataWarehouse::get(ParticleVariableBase& var,
 			   const VarLabel* label,
 			   int matlIndex,
-			   const Region* region,
+			   const Patch* patch,
 			   Ghost::GhostType gtype,
 			   int numGhostCells)
 {
-   if(!d_particleDB.exists(label, matlIndex, region))
+   if(!d_particleDB.exists(label, matlIndex, patch))
       throw UnknownVariable(label->getName());
-#if 0
+#if 1
    if(gtype == Ghost::None){
       if(numGhostCells != 0)
 	 throw InternalError("Ghost cells specified with task type none!\n");
 #endif
-      d_particleDB.get(label, matlIndex, region, var);
-#if 0
+      d_particleDB.get(label, matlIndex, patch, var);
+#if 1
    } else {
       int l,h;
       switch(gtype){
@@ -202,14 +202,14 @@ OnDemandDataWarehouse::get(ParticleVariableBase& var,
       default:
 	 throw InternalError("Illegal ghost type");
       }
-      Box box = region->getGhostBox(l, h);
+      Box box = patch->getGhostBox(l, h);
       particleIndex totalParticles = 0;
       vector<ParticleVariableBase*> neighborvars;
       vector<ParticleSubset*> subsets;
       for(int ix=l;ix<=h;ix++){
 	 for(int iy=l;iy<=h;iy++){
 	    for(int iz=l;iz<=h;iz++){
-	       const Region* neighbor=region->getNeighbor(IntVector(ix,iy,iz));
+	       const Patch* neighbor = patch->getNeighbor(IntVector(ix,iy,iz));
 	       if(neighbor){
 		  if(!d_particleDB.exists(d_positionLabel,matlIndex,neighbor))
 		     throw InternalError("Position variable does not exist: "+ 
@@ -252,15 +252,15 @@ OnDemandDataWarehouse::allocate(int numParticles,
 				ParticleVariableBase& var,
 				const VarLabel* label,
 				int matlIndex,
-				const Region* region)
+				const Patch* patch)
 {
    // Error checking
-   if(d_particleDB.exists(label, matlIndex, region))
+   if(d_particleDB.exists(label, matlIndex, patch))
       throw InternalError("Particle variable already exists: "+label->getName());
    if(!label->isPositionVariable())
       throw InternalError("Particle allocate via numParticles should "
 			  "only be used for position variables");
-   if(d_particleDB.exists(d_positionLabel, matlIndex, region))
+   if(d_particleDB.exists(d_positionLabel, matlIndex, patch))
       throw InternalError("Particle position already exists in datawarehouse");
 
    // Create the particle set and variable
@@ -269,24 +269,24 @@ OnDemandDataWarehouse::allocate(int numParticles,
    var.allocate(psubset);
 
    // Put it in the database
-   d_particleDB.put(d_positionLabel, matlIndex, region, var, false);
+   d_particleDB.put(d_positionLabel, matlIndex, patch, var, false);
 }
 
 void
 OnDemandDataWarehouse::allocate(ParticleVariableBase& var,
 				const VarLabel* label,
 				int matlIndex,
-				const Region* region)
+				const Patch* patch)
 {
    // Error checking
-   if(d_particleDB.exists(label, matlIndex, region))
+   if(d_particleDB.exists(label, matlIndex, patch))
       throw InternalError("Particle variable already exists: " +
 			  label->getName());
-   if(!d_particleDB.exists(d_positionLabel, matlIndex, region))
+   if(!d_particleDB.exists(d_positionLabel, matlIndex, patch))
       throw InternalError("Position variable does not exist: " + 
 			  d_positionLabel->getName());
    ParticleVariable<Point> pos;
-   d_particleDB.get(d_positionLabel, matlIndex, region, pos);
+   d_particleDB.get(d_positionLabel, matlIndex, patch, pos);
 
    // Allocate the variable
    var.allocate(pos.getParticleSubset());
@@ -296,33 +296,33 @@ void
 OnDemandDataWarehouse::put(const ParticleVariableBase& var,
 			   const VarLabel* label,
 			   int matlIndex,
-			   const Region* region)
+			   const Patch* patch)
 {
    ASSERT(!d_finalized);
 
    // Error checking
-   if(d_particleDB.exists(label, matlIndex, region))
+   if(d_particleDB.exists(label, matlIndex, patch))
       throw InternalError("Variable already exists: "+label->getName());
 
    // Put it in the database
-   d_particleDB.put(label, matlIndex, region, var, true);
+   d_particleDB.put(label, matlIndex, patch, var, true);
 }
 
 void
 OnDemandDataWarehouse::get(NCVariableBase& var, const VarLabel* label,
-			   int matlIndex, const Region* region,
+			   int matlIndex, const Patch* patch,
 			   Ghost::GhostType gtype,
 			   int numGhostCells)
 {
-#if 0
+#if 1
    if(gtype == Ghost::None) {
       if(numGhostCells != 0)
 	 throw InternalError("Ghost cells specified with task type none!\n");
 #endif
-      if(!d_ncDB.exists(label, matlIndex, region))
+      if(!d_ncDB.exists(label, matlIndex, patch))
 	 throw UnknownVariable(label->getName());
-      d_ncDB.get(label, matlIndex, region, var);
-#if 0
+      d_ncDB.get(label, matlIndex, patch, var);
+#if 1
    } else {
       int l,h;
       IntVector gc(numGhostCells, numGhostCells, numGhostCells);
@@ -335,8 +335,8 @@ OnDemandDataWarehouse::get(NCVariableBase& var, const VarLabel* label,
 	 // All 27 neighbors
 	 l=-1;
 	 h=1;
-	 lowIndex = region->getNodeLowIndex()-gc;
-	 highIndex = region->getNodeHighIndex()+gc;
+	 lowIndex = patch->getNodeLowIndex()-gc;
+	 highIndex = patch->getNodeHighIndex()+gc;
 	 cerr << "Nodes around nodes is probably not functional!\n";
 	 break;
       case Ghost::AroundCells:
@@ -345,8 +345,8 @@ OnDemandDataWarehouse::get(NCVariableBase& var, const VarLabel* label,
 	 // Upper neighbors
 	 l=0;
 	 h=1;
-	 lowIndex = region->getCellLowIndex();
-         highIndex = region->getCellHighIndex()+gc;
+	 lowIndex = patch->getCellLowIndex();
+         highIndex = patch->getCellHighIndex()+gc;
 	 break;
       default:
 	 throw InternalError("Illegal ghost type");
@@ -356,7 +356,7 @@ OnDemandDataWarehouse::get(NCVariableBase& var, const VarLabel* label,
       for(int ix=l;ix<=h;ix++){
 	 for(int iy=l;iy<=h;iy++){
 	    for(int iz=l;iz<=h;iz++){
-	       const Region* neighbor = region->getNeighbor(IntVector(ix,iy,iz));
+	       const Patch* neighbor = patch->getNeighbor(IntVector(ix,iy,iz));
 	       if(neighbor){
 		  if(!d_ncDB.exists(label, matlIndex, neighbor))
 		     throw InternalError("Position variable does not exist: "+ 
@@ -372,9 +372,9 @@ OnDemandDataWarehouse::get(NCVariableBase& var, const VarLabel* label,
 
 		  if( ( high.x() < low.x() ) || ( high.y() < low.y() ) 
 		      || ( high.z() < low.z() ) )
-		     throw InternalError("Region doesn't overlap?");
+		     throw InternalError("Patch doesn't overlap?");
 
-		  var.copyRegion(srcvar, low, high);
+		  var.copyPatch(srcvar, low, high);
 		  IntVector dnodes = high-low;
 		  totalNodes+=dnodes.x()*dnodes.y()*dnodes.z();
 	       }
@@ -392,69 +392,69 @@ void
 OnDemandDataWarehouse::allocate(NCVariableBase& var,
 				const VarLabel* label,
 				int matlIndex,
-				const Region* region)
+				const Patch* patch)
 {
    // Error checking
-   if(d_ncDB.exists(label, matlIndex, region))
+   if(d_ncDB.exists(label, matlIndex, patch))
       throw InternalError("NC variable already exists: "+label->getName());
 
    // Allocate the variable
-   var.allocate(region->getNodeLowIndex(), region->getNodeHighIndex());
+   var.allocate(patch->getNodeLowIndex(), patch->getNodeHighIndex());
 }
 
 void
 OnDemandDataWarehouse::put(const NCVariableBase& var,
 			   const VarLabel* label,
-			   int matlIndex, const Region* region)
+			   int matlIndex, const Patch* patch)
 {
    ASSERT(!d_finalized);
 
    // Error checking
-   if(d_ncDB.exists(label, matlIndex, region))
+   if(d_ncDB.exists(label, matlIndex, patch))
       throw InternalError("NC variable already exists: "+label->getName());
 
    // Put it in the database
-   d_ncDB.put(label, matlIndex, region, var, true);
+   d_ncDB.put(label, matlIndex, patch, var, true);
 }
 
 void
 OnDemandDataWarehouse::allocate(CCVariableBase& var,
 				const VarLabel* label,
 				int matlIndex,
-				const Region* region)
+				const Patch* patch)
 {
    // Error checking
-   if(d_ccDB.exists(label, matlIndex, region))
+   if(d_ccDB.exists(label, matlIndex, patch))
       throw InternalError("CC variable already exists: "+label->getName());
 
    // Allocate the variable
-   var.allocate(region->getNodeLowIndex(), region->getNodeHighIndex());
+   var.allocate(patch->getNodeLowIndex(), patch->getNodeHighIndex());
 }
 
 void
 OnDemandDataWarehouse::get(CCVariableBase&, const VarLabel*, int matlIndex,
-			   const Region*, Ghost::GhostType, int numGhostCells)
+			   const Patch*, Ghost::GhostType, int numGhostCells)
 {
   throw InternalError( "CC Var get not implemented yet!" );    
 }
 
 void
 OnDemandDataWarehouse::put(const CCVariableBase& var, const VarLabel* label,
-			   int matlIndex, const Region* region )
+			   int matlIndex, const Patch* patch )
 {
    ASSERT(!d_finalized);
 
    // Error checking
-   if(d_ccDB.exists(label, matlIndex, region))
+   if(d_ccDB.exists(label, matlIndex, patch))
       throw InternalError("CC variable already exists: "+label->getName());
 
    // Put it in the database
-   d_ccDB.put(label, matlIndex, region, var, true);
+   d_ccDB.put(label, matlIndex, patch, var, true);
 }
 
 int
 OnDemandDataWarehouse::findMpiNode( const VarLabel * label,
-				    const Region   * region )
+				    const Patch   * patch )
 {
   variableListType * varList = d_dataLocation[ label ];
 
@@ -462,31 +462,31 @@ OnDemandDataWarehouse::findMpiNode( const VarLabel * label,
 
   if( varList == 0 ) {
     sprintf( msg, "findMpiNode: Requested variable: %s for\n"
-	     "region %s is not in d_dataLocation",
-	     label->getName().c_str(), region->toString().c_str() );
+	     "patch %s is not in d_dataLocation",
+	     label->getName().c_str(), patch->toString().c_str() );
     throw InternalError( string( msg ) );
   }
-  // Run through all the different regions associated with "label" to
-  // find which one contains the "region" that has been requested.
+  // Run through all the different patches associated with "label" to
+  // find which one contains the "patch" that has been requested.
 
   variableListType::iterator iter = varList->begin();
 
   while( iter != varList->end() ) {
-    if( (*iter)->region->contains( *region ) ) {
+    if( (*iter)->patch->contains( *patch ) ) {
       return (*iter)->mpiNode;
     }
     iter++;
   }
 
-  sprintf( msg, "findMpiNode: Requested region: %s for\n"
-	   "region %s is not in d_dataLocation",
-	   label->getName().c_str(), region->toString().c_str() );
+  sprintf( msg, "findMpiNode: Requested patch: %s for\n"
+	   "patch %s is not in d_dataLocation",
+	   label->getName().c_str(), patch->toString().c_str() );
   throw InternalError( string( msg ) );
 }
 
 void
 OnDemandDataWarehouse::registerOwnership( const VarLabel * label,
-					  const Region   * region,
+					  const Patch   * patch,
 					        int        mpiNode )
 {
   variableListType * varList = d_dataLocation[ label ];
@@ -497,12 +497,12 @@ OnDemandDataWarehouse::registerOwnership( const VarLabel * label,
   }
 
   // Possibly should make sure that varList does not already have
-  // this "label" with this "region" in it...  for now assuming that 
+  // this "label" with this "patch" in it...  for now assuming that 
   // this doesn't happen...
 
   dataLocation * location = scinew dataLocation();
 
-  location->region = region;
+  location->patch = patch;
   location->mpiNode = mpiNode;
 
   varList->push_back( location );
@@ -517,11 +517,11 @@ OnDemandDataWarehouse::carryForward(const DataWarehouseP& fromp)
 
    for(int l = 0; l < d_grid->numLevels(); l++){
       const LevelP& level = d_grid->getLevel(l);
-      for(Level::const_regionIterator iter = level->regionsBegin();
-	  iter != level->regionsEnd(); iter++){
-	 const Region* region = *iter;
+      for(Level::const_patchIterator iter = level->patchesBegin();
+	  iter != level->patchesEnd(); iter++){
+	 const Patch* patch = *iter;
 
-	 d_particleDB.copyAll(from->d_particleDB, d_positionLabel, region);
+	 d_particleDB.copyAll(from->d_particleDB, d_positionLabel, patch);
       }
    }
 }
@@ -544,31 +544,31 @@ OnDemandDataWarehouse::getSaveSet(std::vector<const VarLabel*>& vars,
 }
 
 bool
-OnDemandDataWarehouse::exists(const VarLabel* label, const Region* region) const
+OnDemandDataWarehouse::exists(const VarLabel* label, const Patch* patch) const
 {
-   if(!region){
+   if(!patch){
       reductionDBtype::const_iterator iter = d_reductionDB.find(label);
       if(iter != d_reductionDB.end())
 	 return true;
    } else {
-      if(d_ncDB.exists(label, region))
+      if(d_ncDB.exists(label, patch))
 	 return true;
-      if(d_particleDB.exists(label, region))
+      if(d_particleDB.exists(label, patch))
 	 return true;
    }
    return false;
 }
 
 void OnDemandDataWarehouse::emit(OutputContext& oc, const VarLabel* label,
-				 int matlIndex, const Region* region) const
+				 int matlIndex, const Patch* patch) const
 {
-   if(d_ncDB.exists(label, matlIndex, region)) {
-      NCVariableBase* var = d_ncDB.get(label, matlIndex, region);
+   if(d_ncDB.exists(label, matlIndex, patch)) {
+      NCVariableBase* var = d_ncDB.get(label, matlIndex, patch);
       var->emit(oc);
       return;
    }
-   if(d_particleDB.exists(label, matlIndex, region)) {
-      ParticleVariableBase* var = d_particleDB.get(label, matlIndex, region);
+   if(d_particleDB.exists(label, matlIndex, patch)) {
+      ParticleVariableBase* var = d_particleDB.get(label, matlIndex, patch);
       var->emit(oc);
       return;
    }
@@ -584,6 +584,10 @@ OnDemandDataWarehouse::ReductionRecord::ReductionRecord(ReductionVariableBase* v
 
 //
 // $Log$
+// Revision 1.26  2000/05/30 20:19:23  sparker
+// Changed new to scinew to help track down memory leaks
+// Changed region to patch
+//
 // Revision 1.25  2000/05/30 17:09:37  dav
 // MPI stuff
 //
@@ -609,7 +613,7 @@ OnDemandDataWarehouse::ReductionRecord::ReductionRecord(ReductionVariableBase* v
 // Do not schedule fracture tasks if fracture not enabled
 // Added fracture directory to MPM sub.mk
 // Be more uniform about using IntVector
-// Made regions have a single uniform index space - still needs work
+// Made patches have a single uniform index space - still needs work
 //
 // Revision 1.19  2000/05/07 06:02:07  sparker
 // Added beginnings of multiple patch support and real dependencies

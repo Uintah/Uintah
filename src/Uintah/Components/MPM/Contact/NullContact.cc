@@ -16,7 +16,7 @@ static char *id="@(#) $Id$";
 #include <Uintah/Grid/Grid.h>
 #include <Uintah/Grid/Level.h>
 #include <Uintah/Grid/NCVariable.h>
-#include <Uintah/Grid/Region.h>
+#include <Uintah/Grid/Patch.h>
 #include <Uintah/Grid/NodeIterator.h>
 #include <Uintah/Grid/ReductionVariable.h>
 #include <Uintah/Grid/SimulationState.h>
@@ -46,7 +46,7 @@ NullContact::~NullContact()
 
 }
 
-void NullContact::initializeContact(const Region* /*region*/,
+void NullContact::initializeContact(const Patch* /*patch*/,
                                     int /*vfindex*/,
                                     DataWarehouseP& /*new_dw*/)
 {
@@ -54,7 +54,7 @@ void NullContact::initializeContact(const Region* /*region*/,
 }
 
 void NullContact::exMomInterpolated(const ProcessorContext*,
-				    const Region* region,
+				    const Patch* patch,
 				    DataWarehouseP& old_dw,
 				    DataWarehouseP& new_dw)
 {
@@ -75,10 +75,10 @@ void NullContact::exMomInterpolated(const ProcessorContext*,
     MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
     if(mpm_matl){
       int vfindex = matl->getVFIndex();
-      new_dw->get(gvelocity[vfindex], lb->gVelocityLabel, vfindex, region,
+      new_dw->get(gvelocity[vfindex], lb->gVelocityLabel, vfindex, patch,
                   Ghost::None, 0);
 
-      new_dw->put(gvelocity[vfindex], lb->gMomExedVelocityLabel, vfindex, region);
+      new_dw->put(gvelocity[vfindex], lb->gMomExedVelocityLabel, vfindex, patch);
     }
   }
 
@@ -87,7 +87,7 @@ void NullContact::exMomInterpolated(const ProcessorContext*,
 }
 
 void NullContact::exMomIntegrated(const ProcessorContext*,
-				  const Region* region,
+				  const Patch* patch,
                                   DataWarehouseP& old_dw,
                                   DataWarehouseP& new_dw)
 {
@@ -109,14 +109,14 @@ void NullContact::exMomIntegrated(const ProcessorContext*,
     if(mpm_matl){
       int vfindex = matl->getVFIndex();
       new_dw->get(gvelocity_star[vfindex], lb->gVelocityStarLabel, vfindex,
-                  region, Ghost::None, 0);
+                  patch, Ghost::None, 0);
       new_dw->get(gacceleration[vfindex], lb->gAccelerationLabel, vfindex,
-                  region, Ghost::None, 0);
+                  patch, Ghost::None, 0);
 
     new_dw->put(gvelocity_star[vfindex], lb->gMomExedVelocityStarLabel,
-							 vfindex, region);
+							 vfindex, patch);
     new_dw->put(gacceleration[vfindex], lb->gMomExedAccelerationLabel,
-							 vfindex, region);
+							 vfindex, patch);
     }
   }
 
@@ -125,39 +125,43 @@ void NullContact::exMomIntegrated(const ProcessorContext*,
 
 void NullContact::addComputesAndRequiresInterpolated( Task* t,
                                              const MPMMaterial* matl,
-                                             const Region* region,
+                                             const Patch* patch,
                                              DataWarehouseP& old_dw,
                                              DataWarehouseP& new_dw) const
 {
   const MPMLabel* lb = MPMLabel::getLabels();
   int idx = matl->getDWIndex();
-  t->requires( new_dw, lb->gVelocityLabel, idx, region, Ghost::None);
+  t->requires( new_dw, lb->gVelocityLabel, idx, patch, Ghost::None);
 
-  t->computes( new_dw, lb->gMomExedVelocityLabel, idx, region );
+  t->computes( new_dw, lb->gMomExedVelocityLabel, idx, patch );
 
 
 }
 
 void NullContact::addComputesAndRequiresIntegrated( Task* t,
                                              const MPMMaterial* matl,
-                                             const Region* region,
+                                             const Patch* patch,
                                              DataWarehouseP& old_dw,
                                              DataWarehouseP& new_dw) const
 {
 
   const MPMLabel* lb = MPMLabel::getLabels();
   int idx = matl->getDWIndex();
-  t->requires(new_dw, lb->gVelocityStarLabel, idx, region, Ghost::None);
-  t->requires(new_dw, lb->gAccelerationLabel, idx, region, Ghost::None);
+  t->requires(new_dw, lb->gVelocityStarLabel, idx, patch, Ghost::None);
+  t->requires(new_dw, lb->gAccelerationLabel, idx, patch, Ghost::None);
 
-  t->computes( new_dw, lb->gMomExedVelocityStarLabel, idx, region);
-  t->computes( new_dw, lb->gMomExedAccelerationLabel, idx, region);
+  t->computes( new_dw, lb->gMomExedVelocityStarLabel, idx, patch);
+  t->computes( new_dw, lb->gMomExedAccelerationLabel, idx, patch);
 
 
 }
 
 
 // $Log$
+// Revision 1.12  2000/05/30 20:19:09  sparker
+// Changed new to scinew to help track down memory leaks
+// Changed region to patch
+//
 // Revision 1.11  2000/05/26 21:37:35  jas
 // Labels are now created and accessed using Singleton class MPMLabel.
 //
@@ -176,7 +180,7 @@ void NullContact::addComputesAndRequiresIntegrated( Task* t,
 // Do not schedule fracture tasks if fracture not enabled
 // Added fracture directory to MPM sub.mk
 // Be more uniform about using IntVector
-// Made regions have a single uniform index space - still needs work
+// Made patches have a single uniform index space - still needs work
 //
 // Revision 1.7  2000/05/08 18:42:46  guilkey
 // Added an initializeContact function to all contact classes.  This is

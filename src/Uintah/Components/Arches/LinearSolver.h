@@ -37,7 +37,7 @@ none
 #define included_LinearSolver
 
 #include <Uintah/Grid/LevelP.h>
-#include <Uintah/Grid/Region.h>
+#include <Uintah/Grid/Patch.h>
 #include <Uintah/Interface/SchedulerP.h>
 #include <Uintah/Interface/DataWarehouseP.h>
 #include <Uintah/Parallel/ProcessorContext.h>

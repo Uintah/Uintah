@@ -4,7 +4,7 @@ static char *id="@(#) $Id$";
 #include <Uintah/Components/Schedulers/BrainDamagedScheduler.h>
 #include <Uintah/Components/Schedulers/OnDemandDataWarehouse.h>
 #include <Uintah/Exceptions/TypeMismatchException.h>
-#include <Uintah/Grid/Region.h>
+#include <Uintah/Grid/Patch.h>
 #include <Uintah/Grid/Task.h>
 #include <Uintah/Grid/TypeDescription.h>
 #include <Uintah/Parallel/ProcessorContext.h>
@@ -83,10 +83,10 @@ BrainDamagedScheduler::setupTaskConnections()
 	 Task::Dependency* dep = *iter;
 	 OnDemandDataWarehouse* dw = dynamic_cast<OnDemandDataWarehouse*>(dep->d_dw.get_rep());;
 	 if(dw->isFinalized()){
-	    if(!dw->exists(dep->d_var, dep->d_region))
+	    if(!dw->exists(dep->d_var, dep->d_patch))
 	       throw InternalError("Variable required from old datawarehouse, but it does not exist: "+dep->d_var->getName());
 	 } else {
-	    TaskProduct p(dep->d_region, dep->d_matlIndex, dep->d_var);
+	    TaskProduct p(dep->d_patch, dep->d_matlIndex, dep->d_var);
 	    map<TaskProduct, TaskRecord*>::iterator aciter = d_allcomps.find(p);
 	    if(aciter == d_allcomps.end())
 	       throw InternalError("Scheduler could not find production for variable: "+dep->d_var->getName());
@@ -101,7 +101,7 @@ void
 BrainDamagedScheduler::performTask(TaskRecord* task,
 				   const ProcessorContext * pc) const
 {
-   //   cerr << "Looking at task: " << task->task->getName() << " on region " << (void*)task->task->getRegion()->getID() << '\n';
+   //   cerr << "Looking at task: " << task->task->getName() << " on patch " << (void*)task->task->getPatch()->getID() << '\n';
    if(task->visited)
       throw InternalError("Cycle detected in task graph");
    task->visited=true;
@@ -111,7 +111,7 @@ BrainDamagedScheduler::performTask(TaskRecord* task,
       Task::Dependency* dep = *iter;
       OnDemandDataWarehouse* dw = dynamic_cast<OnDemandDataWarehouse*>(dep->d_dw.get_rep());
       if(!dw->isFinalized()){
-	 TaskProduct p(dep->d_region, dep->d_matlIndex, dep->d_var);
+	 TaskProduct p(dep->d_patch, dep->d_matlIndex, dep->d_var);
 	 map<TaskProduct, TaskRecord*>::const_iterator aciter = d_allcomps.find(p);
 	 if(!aciter->second->task->isCompleted())
 	    performTask(aciter->second, pc);
@@ -120,9 +120,8 @@ BrainDamagedScheduler::performTask(TaskRecord* task,
 
    double start = Time::currentSeconds();
    task->task->doit(pc);
-   double dt = Time::currentSeconds()-start;
-   cout << "Completed task: " << task->task->getName() << " on region: " 
-	<< task->task->getRegion()->getID() << " (" << dt << " seconds)\n";
+   //double dt = Time::currentSeconds()-start;
+   //cout << "Completed task: " << task->task->getName() << " on patch: " << task->task->getPatch()->getID() << " (" << dt << " seconds)\n";
 }
 
 void
@@ -142,17 +141,17 @@ BrainDamagedScheduler::execute(const ProcessorContext * pc,
        TaskRecord* task = *iter;
        if(!task->task->isCompleted()){
 
-	 const Region * region = task->task->getRegion();
+	 const Patch * patch = task->task->getPatch();
 
 	 // Figure out which MPI node should be doing this task.
 	 // need to actually figure it out... THIS IS A HACK
 	 int taskLocation;
-	 if( region->getID() >= 0 && region->getID() <= 2 )
+	 if( patch->getID() >= 0 && patch->getID() <= 2 )
 	   taskLocation = 0;
-	 else if( region->getID() >= 3 && region->getID() <= 11 )
+	 else if( patch->getID() >= 3 && patch->getID() <= 11 )
 	   taskLocation = 1;
 	 else
-	    throw InternalError("BrainDamagedScheduler: Unknown region");		                              
+	    throw InternalError("BrainDamagedScheduler: Unknown patch");		                              
 	 // If it is this node, then kick off the task.
 	 // Either way, record which node is doing the task so
 	 // so that if one of our tasks needs data from it, we
@@ -167,7 +166,7 @@ BrainDamagedScheduler::execute(const ProcessorContext * pc,
 		                                  computes.begin();
 	 while( iter != computes.end() ) {
 	   dwp->registerOwnership( (*iter)->d_var,
-				   (*iter)->d_region,
+				   (*iter)->d_patch,
 				   taskLocation );
 	   iter++;
 	 }
@@ -227,7 +226,7 @@ BrainDamagedScheduler::execute(const ProcessorContext * pc,
 		                                              computes.begin();
 		  while( iter != computes.end() ) {
 		    dwp->registerOwnership( (*iter)->d_var,
-					    (*iter)->d_region,
+					    (*iter)->d_patch,
 					    taskLocation );
 		    iter++;
 		  }
@@ -265,7 +264,7 @@ BrainDamagedScheduler::addTask(Task* task)
        iter != comps.end(); iter++){
       Task::Dependency* dep = *iter;
       if(!dep->d_var->typeDescription()->isReductionVariable()){
-	 TaskProduct p(dep->d_region, dep->d_matlIndex, dep->d_var);
+	 TaskProduct p(dep->d_patch, dep->d_matlIndex, dep->d_var);
 	 map<TaskProduct,TaskRecord*>::iterator aciter = d_allcomps.find(p);
 	 if(aciter != d_allcomps.end()) {
 	    throw InternalError("Two tasks compute the same result: "+dep->d_var->getName());
@@ -330,17 +329,17 @@ BrainDamagedScheduler::dumpDependencies()
 	    	dynamic_cast<OnDemandDataWarehouse*>(dep->d_dw.get_rep());
 	    if (!dw->isFinalized()) {
 
-		TaskProduct p(dep->d_region, dep->d_matlIndex, dep->d_var);
+		TaskProduct p(dep->d_patch, dep->d_matlIndex, dep->d_var);
 		map<TaskProduct, TaskRecord*>::const_iterator deptask =
 	    	    d_allcomps.find(p);
 
 		const Task* task1 = taskrec->task;
 		const Task* task2 = deptask->second->task;
 
-		depfile << task1->getName() << "\\nRegion"
-	   		<< task1->getRegion()->getID() << " "
-			<< task2->getName() << "\\nRegion"
-			<< task2->getRegion()->getID() << endl;
+		depfile << task1->getName() << "\\nPatch"
+	   		<< task1->getPatch()->getID() << " "
+			<< task2->getName() << "\\nPatch"
+			<< task2->getPatch()->getID() << endl;
 	    }
 	}
     }
@@ -363,6 +362,10 @@ TaskRecord::TaskRecord(Task* t)
 
 //
 // $Log$
+// Revision 1.16  2000/05/30 20:19:22  sparker
+// Changed new to scinew to help track down memory leaks
+// Changed region to patch
+//
 // Revision 1.15  2000/05/30 17:09:37  dav
 // MPI stuff
 //

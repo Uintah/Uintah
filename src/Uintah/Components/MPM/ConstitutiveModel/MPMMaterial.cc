@@ -4,7 +4,7 @@
 #include "MPMMaterial.h"
 #include "ConstitutiveModel.h"
 #include <SCICore/Geometry/IntVector.h>
-#include <Uintah/Grid/Region.h>
+#include <Uintah/Grid/Patch.h>
 #include <Uintah/Grid/CellIterator.h>
 #include <Uintah/Grid/VarLabel.h>
 #include <Uintah/Components/MPM/GeometrySpecification/GeometryPieceFactory.h>
@@ -25,27 +25,27 @@ MPMMaterial::MPMMaterial(ProblemSpecP& ps)
 {
    // Constructor
    pDeformationMeasureLabel = 
-               new VarLabel("p.deformationMeasure",
+               scinew VarLabel("p.deformationMeasure",
 			    ParticleVariable<Matrix3>::getTypeDescription());
    pStressLabel = 
-               new VarLabel( "p.stress",
+               scinew VarLabel( "p.stress",
 			     ParticleVariable<Matrix3>::getTypeDescription() );
 
    pVolumeLabel = 
-               new VarLabel( "p.volume",
+               scinew VarLabel( "p.volume",
 			     ParticleVariable<double>::getTypeDescription());
-   pMassLabel = new VarLabel( "p.mass",
+   pMassLabel = scinew VarLabel( "p.mass",
 			      ParticleVariable<double>::getTypeDescription() );
    pVelocityLabel =
-               new VarLabel( "p.velocity", 
+               scinew VarLabel( "p.velocity", 
 			     ParticleVariable<Vector>::getTypeDescription() );
    pExternalForceLabel =
-               new VarLabel( "p.externalforce",
+               scinew VarLabel( "p.externalforce",
 			     ParticleVariable<Vector>::getTypeDescription() );
-   pXLabel =   new VarLabel( "p.x",
+   pXLabel =   scinew VarLabel( "p.x",
 			     ParticleVariable<Point>::getTypeDescription(),
 			     VarLabel::PositionVariable);
-   pSurfLabel = new VarLabel( "p.issurf",
+   pSurfLabel = scinew VarLabel( "p.issurf",
 			      ParticleVariable<int>::getTypeDescription() );
 
   // Follow the layout of the input file
@@ -88,14 +88,14 @@ MPMMaterial::MPMMaterial(ProblemSpecP& ps)
       if(pieces.size() == 0){
 	 throw ParameterNotFound("No piece specified in geom_object");
       } else if(pieces.size() > 1){
-	 mainpiece = new UnionGeometryPiece(pieces);
+	 mainpiece = scinew UnionGeometryPiece(pieces);
       } else {
 	 mainpiece = pieces[0];
       }
 
       piece_num++;
       cerr << "piece: " << piece_num << '\n';
-      d_geom_objs.push_back(new GeometryObject(mainpiece, geom_obj_ps));
+      d_geom_objs.push_back(scinew GeometryObject(mainpiece, geom_obj_ps));
 
       // Step 4 -- Assign the boundary conditions to the object
 
@@ -125,63 +125,63 @@ ConstitutiveModel * MPMMaterial::getConstitutiveModel()
   return d_cm;
 }
 
-particleIndex MPMMaterial::countParticles(const Region* region) const
+particleIndex MPMMaterial::countParticles(const Patch* patch) const
 {
    particleIndex sum = 0;
    for(int i=0; i<d_geom_objs.size(); i++)
-      sum+= countParticles(d_geom_objs[i], region);
+      sum+= countParticles(d_geom_objs[i], patch);
    return sum;
 }
 
 void MPMMaterial::createParticles(particleIndex numParticles,
-				  const Region* region,
+				  const Patch* patch,
 				  DataWarehouseP& new_dw)
 {
    ParticleVariable<Point> position;
    new_dw->allocate(numParticles, position, pXLabel,
-		    getDWIndex(), region);
+		    getDWIndex(), patch);
    ParticleVariable<Vector> pvelocity;
-   new_dw->allocate(pvelocity, pVelocityLabel, getDWIndex(), region);
+   new_dw->allocate(pvelocity, pVelocityLabel, getDWIndex(), patch);
    ParticleVariable<Vector> pexternalforce;
-   new_dw->allocate(pexternalforce, pExternalForceLabel, getDWIndex(), region);
+   new_dw->allocate(pexternalforce, pExternalForceLabel, getDWIndex(), patch);
    ParticleVariable<double> pmass;
-   new_dw->allocate(pmass, pMassLabel, getDWIndex(), region);
+   new_dw->allocate(pmass, pMassLabel, getDWIndex(), patch);
    ParticleVariable<double> pvolume;
-   new_dw->allocate(pvolume, pVolumeLabel, getDWIndex(), region);
+   new_dw->allocate(pvolume, pVolumeLabel, getDWIndex(), patch);
    ParticleVariable<int> pissurf;
-   new_dw->allocate(pissurf, pSurfLabel, getDWIndex(), region);
+   new_dw->allocate(pissurf, pSurfLabel, getDWIndex(), patch);
 
    particleIndex start = 0;
    for(int i=0; i<d_geom_objs.size(); i++)
       start += createParticles(d_geom_objs[i], start, position,
 			       pvelocity,pexternalforce,pmass,pvolume,
-							pissurf,region);
+							pissurf,patch);
 
-   new_dw->put(position, pXLabel, getDWIndex(), region);
-   new_dw->put(pvelocity, pVelocityLabel, getDWIndex(), region);
-   new_dw->put(pexternalforce, pExternalForceLabel, getDWIndex(), region);
-   new_dw->put(pmass, pMassLabel, getDWIndex(), region);
-   new_dw->put(pvolume, pVolumeLabel, getDWIndex(), region);
-   new_dw->put(pissurf, pSurfLabel, getDWIndex(), region);
+   new_dw->put(position, pXLabel, getDWIndex(), patch);
+   new_dw->put(pvelocity, pVelocityLabel, getDWIndex(), patch);
+   new_dw->put(pexternalforce, pExternalForceLabel, getDWIndex(), patch);
+   new_dw->put(pmass, pMassLabel, getDWIndex(), patch);
+   new_dw->put(pvolume, pVolumeLabel, getDWIndex(), patch);
+   new_dw->put(pissurf, pSurfLabel, getDWIndex(), patch);
 }
 
 particleIndex MPMMaterial::countParticles(GeometryObject* obj,
-					  const Region* region) const
+					  const Patch* patch) const
 {
    GeometryPiece* piece = obj->getPiece();
    Box b1 = piece->getBoundingBox();
-   Box b2 = region->getBox();
+   Box b2 = patch->getBox();
    Box b = b1.intersect(b2);
    if(b.degenerate())
       return 0;
 
    IntVector ppc = obj->getNumParticlesPerCell();
-   Vector dxpp = region->dCell()/obj->getNumParticlesPerCell();
+   Vector dxpp = patch->dCell()/obj->getNumParticlesPerCell();
    Vector dcorner = dxpp*0.5;
 
    particleIndex count = 0;
-   for(CellIterator iter = region->getCellIterator(b); !iter.done(); iter++){
-      Point lower = region->nodePosition(*iter) + dcorner;
+   for(CellIterator iter = patch->getCellIterator(b); !iter.done(); iter++){
+      Point lower = patch->nodePosition(*iter) + dcorner;
       for(int ix=0;ix < ppc.x(); ix++){
 	 for(int iy=0;iy < ppc.y(); iy++){
 	    for(int iz=0;iz < ppc.z(); iz++){
@@ -206,22 +206,22 @@ particleIndex MPMMaterial::createParticles(GeometryObject* obj,
 				   ParticleVariable<double>& mass,
 				   ParticleVariable<double>& volume,
 				   ParticleVariable<int>& pissurf,
-				   const Region* region)
+				   const Patch* patch)
 {
    GeometryPiece* piece = obj->getPiece();
    Box b1 = piece->getBoundingBox();
-   Box b2 = region->getBox();
+   Box b2 = patch->getBox();
    Box b = b1.intersect(b2);
    if(b.degenerate())
       return 0;
 
    IntVector ppc = obj->getNumParticlesPerCell();
-   Vector dxpp = region->dCell()/obj->getNumParticlesPerCell();
+   Vector dxpp = patch->dCell()/obj->getNumParticlesPerCell();
    Vector dcorner = dxpp*0.5;
 
    particleIndex count = 0;
-   for(CellIterator iter = region->getCellIterator(b); !iter.done(); iter++){
-      Point lower = region->nodePosition(*iter) + dcorner;
+   for(CellIterator iter = patch->getCellIterator(b); !iter.done(); iter++){
+      Point lower = patch->nodePosition(*iter) + dcorner;
       for(int ix=0;ix < ppc.x(); ix++){
 	 for(int iy=0;iy < ppc.y(); iy++){
 	    for(int iz=0;iz < ppc.z(); iz++){
@@ -293,6 +293,10 @@ double  MPMMaterial::getSpecificHeat() const
 }
 
 // $Log$
+// Revision 1.21  2000/05/30 20:19:04  sparker
+// Changed new to scinew to help track down memory leaks
+// Changed region to patch
+//
 // Revision 1.20  2000/05/26 01:43:41  tan
 // Added getThermalConductivity() and getSpecificHeat()
 // for computation on heat conduction.

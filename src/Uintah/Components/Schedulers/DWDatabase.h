@@ -44,30 +44,30 @@ public:
    DWDatabase();
    ~DWDatabase();
 
-   bool exists(const VarLabel* label, int matlIndex, const Region* region) const;
-   bool exists(const VarLabel* label, const Region* region) const;
-   void put(const VarLabel* label, int matlindex, const Region* region,
+   bool exists(const VarLabel* label, int matlIndex, const Patch* patch) const;
+   bool exists(const VarLabel* label, const Patch* patch) const;
+   void put(const VarLabel* label, int matlindex, const Patch* patch,
 	    const VarType& var, bool replace);
-   void get(const VarLabel* label, int matlindex, const Region* region,
+   void get(const VarLabel* label, int matlindex, const Patch* patch,
 	    VarType& var) const;
    VarType* get(const VarLabel* label, int matlindex,
-		const Region* region) const;
-   void copyAll(const DWDatabase& from, const VarLabel*, const Region* region);
+		const Patch* patch) const;
+   void copyAll(const DWDatabase& from, const VarLabel*, const Patch* patch);
 private:
    typedef std::vector<VarType*> dataDBtype;
 
-   struct RegionRecord {
-      const Region* region;
+   struct PatchRecord {
+      const Patch* patch;
       dataDBtype vars;
 
-      RegionRecord(const Region*);
-      ~RegionRecord();
+      PatchRecord(const Patch*);
+      ~PatchRecord();
    };
 
-   typedef std::map<const Region*, RegionRecord*> regionDBtype;
+   typedef std::map<const Patch*, PatchRecord*> patchDBtype;
    struct NameRecord {
       const VarLabel* label;
-      regionDBtype regions;
+      patchDBtype patches;
 
       NameRecord(const VarLabel* label);
       ~NameRecord();
@@ -104,20 +104,20 @@ DWDatabase<VarType>::NameRecord::NameRecord(const VarLabel* label)
 template<class VarType>
 DWDatabase<VarType>::NameRecord::~NameRecord()
 {
-   for(regionDBtype::iterator iter = regions.begin();
-       iter != regions.end(); iter++){
+   for(patchDBtype::iterator iter = patches.begin();
+       iter != patches.end(); iter++){
       delete iter->second;
    }   
 }
 
 template<class VarType>
-DWDatabase<VarType>::RegionRecord::RegionRecord(const Region* region)
-   : region(region)
+DWDatabase<VarType>::PatchRecord::PatchRecord(const Patch* patch)
+   : patch(patch)
 {
 }
 
 template<class VarType>
-DWDatabase<VarType>::RegionRecord::~RegionRecord()
+DWDatabase<VarType>::PatchRecord::~PatchRecord()
 {
    for(dataDBtype::iterator iter = vars.begin();
        iter != vars.end(); iter++){
@@ -129,14 +129,14 @@ DWDatabase<VarType>::RegionRecord::~RegionRecord()
 
 template<class VarType>
 bool DWDatabase<VarType>::exists(const VarLabel* label, int matlIndex,
-				 const Region* region) const
+				 const Patch* patch) const
 {
    nameDBtype::const_iterator nameiter = names.find(label);
    if(nameiter != names.end()) {
       NameRecord* nr = nameiter->second;
-      regionDBtype::const_iterator regioniter = nr->regions.find(region);
-      if(regioniter != nr->regions.end()) {
-	 RegionRecord* rr = regioniter->second;
+      patchDBtype::const_iterator patchiter = nr->patches.find(patch);
+      if(patchiter != nr->patches.end()) {
+	 PatchRecord* rr = patchiter->second;
 	 if(matlIndex >= 0 && matlIndex < rr->vars.size()){
 	    if(rr->vars[matlIndex] != 0){
 	       return true;
@@ -148,14 +148,14 @@ bool DWDatabase<VarType>::exists(const VarLabel* label, int matlIndex,
 }
 
 template<class VarType>
-bool DWDatabase<VarType>::exists(const VarLabel* label, const Region* region) const
+bool DWDatabase<VarType>::exists(const VarLabel* label, const Patch* patch) const
 {
    nameDBtype::const_iterator nameiter = names.find(label);
    if(nameiter != names.end()) {
       NameRecord* nr = nameiter->second;
-      regionDBtype::const_iterator regioniter = nr->regions.find(region);
-      if(regioniter != nr->regions.end()) {
-	 RegionRecord* rr = regioniter->second;
+      patchDBtype::const_iterator patchiter = nr->patches.find(patch);
+      if(patchiter != nr->patches.end()) {
+	 PatchRecord* rr = patchiter->second;
 	 for(int i=0; i<rr->vars.size(); i++){
 	    if(rr->vars[i] != 0){
 	       return true;
@@ -168,7 +168,7 @@ bool DWDatabase<VarType>::exists(const VarLabel* label, const Region* region) co
 
 template<class VarType>
 void DWDatabase<VarType>::put(const VarLabel* label, int matlIndex,
-			      const Region* region,
+			      const Patch* patch,
 			      const VarType& var,
 			      bool replace)
 {
@@ -179,13 +179,13 @@ void DWDatabase<VarType>::put(const VarLabel* label, int matlIndex,
    }
 
    NameRecord* nr = nameiter->second;
-   regionDBtype::const_iterator regioniter = nr->regions.find(region);
-   if(regioniter == nr->regions.end()) {
-      nr->regions[region] = scinew RegionRecord(region);
-      regioniter = nr->regions.find(region);
+   patchDBtype::const_iterator patchiter = nr->patches.find(patch);
+   if(patchiter == nr->patches.end()) {
+      nr->patches[patch] = scinew PatchRecord(patch);
+      patchiter = nr->patches.find(patch);
    }
 
-   RegionRecord* rr = regioniter->second;
+   PatchRecord* rr = patchiter->second;
    if(matlIndex < 0)
       throw InternalError("matlIndex must be >= 0");
 
@@ -208,18 +208,18 @@ void DWDatabase<VarType>::put(const VarLabel* label, int matlIndex,
 
 template<class VarType>
 VarType* DWDatabase<VarType>::get(const VarLabel* label, int matlIndex,
-				  const Region* region) const
+				  const Patch* patch) const
 {
    nameDBtype::const_iterator nameiter = names.find(label);
    if(nameiter == names.end())
       throw UnknownVariable(label->getName());
 
    NameRecord* nr = nameiter->second;
-   regionDBtype::const_iterator regioniter = nr->regions.find(region);
-   if(regioniter == nr->regions.end())
+   patchDBtype::const_iterator patchiter = nr->patches.find(patch);
+   if(patchiter == nr->patches.end())
       throw UnknownVariable(label->getName());
 
-   RegionRecord* rr = regioniter->second;
+   PatchRecord* rr = patchiter->second;
    if(matlIndex < 0)
       throw InternalError("matlIndex must be >= 0");
 
@@ -234,31 +234,31 @@ VarType* DWDatabase<VarType>::get(const VarLabel* label, int matlIndex,
 
 template<class VarType>
 void DWDatabase<VarType>::get(const VarLabel* label, int matlIndex,
-			      const Region* region,
+			      const Patch* patch,
 			      VarType& var) const
 {
-   var.copyPointer(*get(label, matlIndex, region));
+   var.copyPointer(*get(label, matlIndex, patch));
 }
 
 template<class VarType>
 void DWDatabase<VarType>::copyAll(const DWDatabase& from,
 				  const VarLabel* label,
-				  const Region* region)
+				  const Patch* patch)
 {
    nameDBtype::const_iterator nameiter = from.names.find(label);
    if(nameiter == from.names.end())
       throw UnknownVariable(label->getName());
 
    NameRecord* nr = nameiter->second;
-   regionDBtype::const_iterator regioniter = nr->regions.find(region);
-   if(regioniter == nr->regions.end())
+   patchDBtype::const_iterator patchiter = nr->patches.find(patch);
+   if(patchiter == nr->patches.end())
       throw UnknownVariable(label->getName());
 
-   RegionRecord* rr = regioniter->second;
+   PatchRecord* rr = patchiter->second;
 
    for(int i=0;i<rr->vars.size();i++){
       if(rr->vars[i])
-	 put(label, i, region, *rr->vars[i], false);
+	 put(label, i, patch, *rr->vars[i], false);
    }
 }
 
@@ -266,6 +266,10 @@ void DWDatabase<VarType>::copyAll(const DWDatabase& from,
 
 //
 // $Log$
+// Revision 1.9  2000/05/30 20:19:23  sparker
+// Changed new to scinew to help track down memory leaks
+// Changed region to patch
+//
 // Revision 1.8  2000/05/21 20:10:49  sparker
 // Fixed memory leak
 // Added scinew to help trace down memory leak
@@ -278,7 +282,7 @@ void DWDatabase<VarType>::copyAll(const DWDatabase& from,
 // Do not schedule fracture tasks if fracture not enabled
 // Added fracture directory to MPM sub.mk
 // Be more uniform about using IntVector
-// Made regions have a single uniform index space - still needs work
+// Made patches have a single uniform index space - still needs work
 //
 // Revision 1.6  2000/05/07 06:02:07  sparker
 // Added beginnings of multiple patch support and real dependencies

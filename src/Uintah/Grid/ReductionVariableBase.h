@@ -5,7 +5,7 @@
 
 namespace Uintah {
    
-   class Region;
+   class Patch;
 
 /**************************************
 
@@ -56,6 +56,10 @@ WARNING
 
 //
 // $Log$
+// Revision 1.4  2000/05/30 20:19:32  sparker
+// Changed new to scinew to help track down memory leaks
+// Changed region to patch
+//
 // Revision 1.3  2000/05/02 06:07:22  sparker
 // Implemented more of DataWarehouse and SerialMPM
 //

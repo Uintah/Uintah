@@ -73,19 +73,23 @@ void Problem::preProcessor(const ProblemSpecP& prob_spec, GridP&,
 }
 
 #if 0
-void Problem::createParticles(const Region* region, DataWarehouseP& dw)
+void Problem::createParticles(const Patch* patch, DataWarehouseP& dw)
 {
   for (int i = 0; i < d_objects.size(); i++)
     {
 
 #ifdef WONT_COMPILE_YET
-      d_objects[i].fillWithParticles(d_materials, d_bcs, region, dw);
+      d_objects[i].fillWithParticles(d_materials, d_bcs, patch, dw);
 #endif
     }
 }
 #endif
 
 // $Log$
+// Revision 1.15  2000/05/30 20:19:15  sparker
+// Changed new to scinew to help track down memory leaks
+// Changed region to patch
+//
 // Revision 1.14  2000/04/28 07:35:31  sparker
 // Started implementation of DataWarehouse
 // MPM particle initialization now works

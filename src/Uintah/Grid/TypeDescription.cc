@@ -1,5 +1,6 @@
 
 #include <Uintah/Grid/TypeDescription.h>
+#include <SCICore/Malloc/Allocator.h>
 #include <map>
 #include <iostream>
 
@@ -41,7 +42,7 @@ TypeDescription::Register::Register(const TypeDescription* td)
 {
    //cerr << "Register: td=" << td << ", name=" << td->getName() << '\n';
    if(!types)
-     types=new map<string, const TypeDescription*>;
+     types=scinew map<string, const TypeDescription*>;
    (*types)[td->getName()]=td;
 }
 
@@ -51,6 +52,10 @@ TypeDescription::Register::~Register()
 
 //
 // $Log$
+// Revision 1.6  2000/05/30 20:19:35  sparker
+// Changed new to scinew to help track down memory leaks
+// Changed region to patch
+//
 // Revision 1.5  2000/05/21 08:19:09  sparker
 // Implement NCVariable read
 // Do not fail if variable type is not known

@@ -14,9 +14,9 @@ SRCS     += $(SRCDIR)/Array3Index.cc $(SRCDIR)/Box.cc \
 	$(SRCDIR)/NCVariableBase.cc $(SRCDIR)/ParticleSet.cc \
 	$(SRCDIR)/ParticleSubset.cc $(SRCDIR)/ParticleVariableBase.cc \
 	$(SRCDIR)/ReductionVariableBase.cc \
-	$(SRCDIR)/RefCounted.cc $(SRCDIR)/Region.cc \
+	$(SRCDIR)/RefCounted.cc $(SRCDIR)/Patch.cc \
 	$(SRCDIR)/SimulationState.cc \
-	$(SRCDIR)/SimulationTime.cc $(SRCDIR)/SubRegion.cc \
+	$(SRCDIR)/SimulationTime.cc $(SRCDIR)/SubPatch.cc \
 	$(SRCDIR)/Task.cc $(SRCDIR)/TypeDescription.cc \
 	$(SRCDIR)/TypeUtils.cc $(SRCDIR)/VarLabel.cc \
 	$(SRCDIR)/templates.cc
@@ -29,6 +29,10 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.16  2000/05/30 20:19:35  sparker
+# Changed new to scinew to help track down memory leaks
+# Changed region to patch
+#
 # Revision 1.15  2000/05/21 08:19:09  sparker
 # Implement NCVariable read
 # Do not fail if variable type is not known

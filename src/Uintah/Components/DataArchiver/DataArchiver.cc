@@ -5,7 +5,7 @@
 #include <SCICore/Util/FancyAssert.h>
 #include <Uintah/Grid/Grid.h>
 #include <Uintah/Grid/Level.h>
-#include <Uintah/Grid/Region.h>
+#include <Uintah/Grid/Patch.h>
 #include <Uintah/Grid/Task.h>
 #include <Uintah/Grid/VarTypes.h>
 #include <Uintah/Interface/DataWarehouse.h>
@@ -118,21 +118,21 @@ void DataArchiver::finalizeTimestep(double time, double delt,
 	 DOM_Element levelElem = doc.createElement("Level");
 	 gridElem.appendChild(levelElem);
 
-	 appendElement(levelElem, "numRegions", level->numRegions());
+	 appendElement(levelElem, "numPatches", level->numPatches());
 	 appendElement(levelElem, "totalCells", level->totalCells());
-	 Level::const_regionIterator iter;
-	 for(iter=level->regionsBegin(); iter != level->regionsEnd(); iter++){
-	    const Region* region=*iter;
-	    DOM_Element regionElem = doc.createElement("Region");
-	    levelElem.appendChild(regionElem);
-	    appendElement(regionElem, "id", region->getID());
-	    appendElement(regionElem, "lowIndex", region->getCellLowIndex());
-	    appendElement(regionElem, "highIndex", region->getCellHighIndex());
-	    appendElement(regionElem, "resolution", region->getNCells());
-	    Box box = region->getBox();
-	    appendElement(regionElem, "lower", box.lower());
-	    appendElement(regionElem, "upper", box.upper());
-	    appendElement(regionElem, "totalCells", region->totalCells());
+	 Level::const_patchIterator iter;
+	 for(iter=level->patchesBegin(); iter != level->patchesEnd(); iter++){
+	    const Patch* patch=*iter;
+	    DOM_Element patchElem = doc.createElement("Patch");
+	    levelElem.appendChild(patchElem);
+	    appendElement(patchElem, "id", patch->getID());
+	    appendElement(patchElem, "lowIndex", patch->getCellLowIndex());
+	    appendElement(patchElem, "highIndex", patch->getCellHighIndex());
+	    appendElement(patchElem, "resolution", patch->getNCells());
+	    Box box = patch->getBox();
+	    appendElement(patchElem, "lower", box.lower());
+	    appendElement(patchElem, "upper", box.upper());
+	    appendElement(patchElem, "totalCells", patch->totalCells());
 	 }
       }
       DOM_Element dataElem = doc.createElement("Data");
@@ -181,19 +181,19 @@ void DataArchiver::finalizeTimestep(double time, double delt,
    vector<int> number;
    new_dw->getSaveSet(vars, number);
 
-   // Schedule a bunch o tasks - one for each variable, for each region
+   // Schedule a bunch o tasks - one for each variable, for each patch
    // This will need to change for parallel code
    int n=0;
-   Level::const_regionIterator iter;
-   for(iter=level->regionsBegin(); iter != level->regionsEnd(); iter++){
+   Level::const_patchIterator iter;
+   for(iter=level->patchesBegin(); iter != level->patchesEnd(); iter++){
 
-      const Region* region=*iter;
+      const Patch* patch=*iter;
       for(int i=0;i<vars.size();i++){
 	 for(int j=0;j<number[i];j++){
-	    Task* t = new Task("DataArchiver::output", region, new_dw, new_dw,
-			       this, &DataArchiver::output, timestep,
-			       vars[i], j);
-	    t->requires(new_dw, vars[i], j, region, Ghost::None);
+	    Task* t = scinew Task("DataArchiver::output", patch, new_dw, new_dw,
+				  this, &DataArchiver::output, timestep,
+				  vars[i], j);
+	    t->requires(new_dw, vars[i], j, patch, Ghost::None);
 	    sched->addTask(t);
 	    n++;
 	 }
@@ -218,14 +218,14 @@ static bool get(const DOM_Node& node, int &value)
 }
 
 void DataArchiver::output(const ProcessorContext*,
-			  const Region* region,
+			  const Patch* patch,
 			  DataWarehouseP& /*old_dw*/,
 			  DataWarehouseP& new_dw,
 			  int timestep,
 			  const VarLabel* var,
 			  int matlIndex)
 {
-   cerr << "output called on region: " << region->getID() << ", variable: " << var->getName() << ", material: " << matlIndex << " at time: " << timestep << "\n";
+   cerr << "output called on patch: " << patch->getID() << ", variable: " << var->getName() << ", material: " << matlIndex << " at time: " << timestep << "\n";
    
    ostringstream tname;
    tname << "t" << setw(4) << setfill('0') << timestep;
@@ -297,7 +297,7 @@ void DataArchiver::output(const ProcessorContext*,
 
    appendElement(pdElem, "variable", var->getName());
    appendElement(pdElem, "index", matlIndex);
-   appendElement(pdElem, "region", region->getID());
+   appendElement(pdElem, "patch", patch->getID());
    pdElem.setAttribute("type", var->typeDescription()->getName().c_str());
 
    // Open the data file
@@ -322,7 +322,7 @@ void DataArchiver::output(const ProcessorContext*,
    // Pad appropriately
    if(cur%PADSIZE != 0){
       long pad = PADSIZE-cur%PADSIZE;
-      char* zero = new char[pad];
+      char* zero = scinew char[pad];
       bzero(zero, pad);
       write(fd, zero, pad);
       cur+=pad;
@@ -332,7 +332,7 @@ void DataArchiver::output(const ProcessorContext*,
    appendElement(pdElem, "start", cur);
 
    OutputContext oc(fd, cur, pdElem);
-   new_dw->emit(oc, var, matlIndex, region);
+   new_dw->emit(oc, var, matlIndex, patch);
    appendElement(pdElem, "end", oc.cur);
    appendElement(pdElem, "filename", base.str());
    s = fstat(fd, &st);
@@ -436,6 +436,10 @@ void DataArchiver::output(const ProcessorContext*,
 
 //
 // $Log$
+// Revision 1.3  2000/05/30 20:18:54  sparker
+// Changed new to scinew to help track down memory leaks
+// Changed region to patch
+//
 // Revision 1.2  2000/05/20 08:09:03  sparker
 // Improved TypeDescription
 // Finished I/O

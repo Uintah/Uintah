@@ -6,10 +6,15 @@
 SRCDIR   := Uintah/Components/MPM/Contact
 
 SRCS     += $(SRCDIR)/NullContact.cc $(SRCDIR)/SingleVelContact.cc \
-            $(SRCDIR)/FrictionContact.cc $(SRCDIR)/ContactFactory.cc
+            $(SRCDIR)/FrictionContact.cc $(SRCDIR)/ContactFactory.cc \
+	    $(SRCDIR)/Contact.cc
 
 #
 # $Log$
+# Revision 1.5  2000/05/30 20:19:10  sparker
+# Changed new to scinew to help track down memory leaks
+# Changed region to patch
+#
 # Revision 1.4  2000/04/27 21:28:58  jas
 # Contact is now created using a factory.
 #

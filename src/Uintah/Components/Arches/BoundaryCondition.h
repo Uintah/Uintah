@@ -33,7 +33,7 @@ none
 #ifndef included_BoundaryCondition
 #define included_BoundaryCondition
 #include <Uintah/Grid/LevelP.h>
-#include <Uintah/Grid/Region.h>
+#include <Uintah/Grid/Patch.h>
 #include <Uintah/Interface/SchedulerP.h>
 #include <Uintah/Interface/ProblemSpecP.h>
 #include <Uintah/Interface/DataWarehouseP.h>
@@ -82,7 +82,7 @@ public:
 			 const DataWarehouseP& old_dw,
 			 DataWarehouseP& new_dw);
    void sched_pressureBC(const LevelP& level,
-			 const Region* region,
+			 const Patch* patch,
 			 const DataWarehouseP& old_dw,
 			 DataWarehouseP& new_dw);
    void sched_scalarBC(const int index,
@@ -116,30 +116,30 @@ public:
 			     const DataWarehouseP& old_dw);
  private:
    void setFlatProfile(const ProcessorContext* pc,
-		       const Region* region,
+		       const Patch* patch,
 		       const DataWarehouseP& old_dw);
    void setPropsProfile(const ProcessorContext* pc,
-		       const Region* region,
+		       const Patch* patch,
 		       const DataWarehouseP& old_dw);
    void setInletVelocityBC(const ProcessorContext* pc,
-			   const Region* region,
+			   const Patch* patch,
 			   const DataWarehouseP& old_dw,
 			   DataWarehouseP& new_dw);
    void calculatePressBC(const ProcessorContext* pc,
-			 const Region* region,
+			 const Patch* patch,
 			 const DataWarehouseP& old_dw,
 			 DataWarehouseP& new_dw);
    void velocityBC(const ProcessorContext* pc,
-		   const Region* region,
+		   const Patch* patch,
 		   const DataWarehouseP& old_dw,
 		   DataWarehouseP& new_dw,
 		   const int index);
    void pressureBC(const ProcessorContext*,
-		   const Region* region,
+		   const Patch* patch,
 		   const DataWarehouseP& old_dw,
 		   DataWarehouseP& new_dw);
    void scalarBC(const ProcessorContext* pc,
-		 const Region* region,
+		 const Patch* patch,
 		 const DataWarehouseP& old_dw,
 		 DataWarehouseP& new_dw,
 		 const int index);

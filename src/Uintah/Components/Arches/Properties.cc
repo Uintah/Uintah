@@ -32,16 +32,16 @@ void Properties::sched_computeProps(const LevelP& level,
 				    SchedulerP&, DataWarehouseP& old,
 				    DataWarehouseP& new)
 {
-  for(Level::const_regionIterator iter=level->regionsBegin();
-      iter != level->regionsEnd(); iter++){
-    const Region* region=*iter;
+  for(Level::const_patchIterator iter=level->patchesBegin();
+      iter != level->patchesEnd(); iter++){
+    const Patch* patch=*iter;
     {
-      Task* tsk = new Task("Properties::ComputeProps",
-			   region, old_dw, new_dw, this,
-			   Properties::computeProps);
-      tsk->requires(old_dw, "density", region, 0,
+      Task* tsk = scinew Task("Properties::ComputeProps",
+			      patch, old_dw, new_dw, this,
+			      Properties::computeProps);
+      tsk->requires(old_dw, "density", patch, 0,
 		    CCVariable<Vector>::getTypeDescription());
-      tsk->computes(new_dw, "density", region, 0,
+      tsk->computes(new_dw, "density", patch, 0,
 		    CCVariable<Vector>::getTypeDescription());
       sched->addTask(tsk);
     }
@@ -50,21 +50,21 @@ void Properties::sched_computeProps(const LevelP& level,
 }
 
 void Properties::computeProps(const ProcessorContext* pc,
-			      const Region* region,
+			      const Patch* patch,
 			      const DataWarehouseP& old_dw,
 			      DataWarehouseP& new_dw)
 {
   CCVariable<double> density;
-  old_dw->get(density, "density", region, 1);
-  Array3Index lowIndex = region->getLowIndex();
-  Array3Index highIndex = region->getHighIndex();
+  old_dw->get(density, "density", patch, 1);
+  Array3Index lowIndex = patch->getLowIndex();
+  Array3Index highIndex = patch->getHighIndex();
   CCVariable<double> new_density;
   // this calculation will be done by MixingModel class
   // for more complicated cases...this will only work for
   // helium plume
   FORT_COLDPROPS(new_density, density,
 		 lowIndex, highIndex, d_denUnderrelax);
-  new_dw->put(new_density, "density", region);
+  new_dw->put(new_density, "density", patch);
 }
 
 #endif

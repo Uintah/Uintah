@@ -1,12 +1,12 @@
 /* REFERENCED */
 static char *id="@(#) $Id$";
 
-#include <Uintah/Grid/Region.h>
+#include <Uintah/Grid/Patch.h>
 #include <Uintah/Exceptions/InvalidGrid.h>
 #include <Uintah/Grid/CellIterator.h>
 #include <Uintah/Grid/NodeIterator.h>
 #include <Uintah/Grid/NodeSubIterator.h>
-#include <Uintah/Grid/SubRegion.h>
+#include <Uintah/Grid/SubPatch.h>
 #include <Uintah/Math/Primes.h>
 
 #include <SCICore/Exceptions/InternalError.h>
@@ -20,9 +20,9 @@ using namespace SCICore::Geometry;
 using namespace std;
 using SCICore::Exceptions::InternalError;
 using SCICore::Math::Floor;
-static SCICore::Thread::AtomicCounter ids("Region ID counter");
+static SCICore::Thread::AtomicCounter ids("Patch ID counter");
 
-Region::Region(const Point& lower, const Point& upper,
+Patch::Patch(const Point& lower, const Point& upper,
 	       const IntVector& lowIndex, const IntVector& highIndex,
 	       int id)
     : d_box(lower, upper), d_lowIndex(lowIndex), d_highIndex(highIndex),
@@ -37,15 +37,17 @@ Region::Region(const Point& lower, const Point& upper,
       d_neighbors[i]=0;
    d_neighbors[1*9+1*3+1]=this;
 
-   d_numGhostCells = -1;
+   int gc = 2; // Number of ghostcells for this patch...
+
+   determineGhostPatches( gc );
 }
 
-Region::~Region()
+Patch::~Patch()
 {
 }
 
 #if 0
-void Region::findCell(const Vector& pos, int& ix, int& iy, int& iz) const
+void Patch::findCell(const Vector& pos, int& ix, int& iy, int& iz) const
 {
     Vector cellpos = (pos-d_lower.asVector()) * 
                       Vector(d_nx, d_ny, d_nz) / (d_upper-d_lower);
@@ -55,7 +57,7 @@ void Region::findCell(const Vector& pos, int& ix, int& iy, int& iz) const
 }
 #endif
 
-bool Region::findCellAndWeights(const Point& pos,
+bool Patch::findCellAndWeights(const Point& pos,
 				IntVector ni[8], double S[8]) const
 {
    Vector cellpos = (pos-d_box.lower())*d_res/(d_box.upper()-d_box.lower());
@@ -88,7 +90,7 @@ bool Region::findCellAndWeights(const Point& pos,
 }
 
 
-bool Region::findCellAndShapeDerivatives(const Point& pos,
+bool Patch::findCellAndShapeDerivatives(const Point& pos,
 					 IntVector ni[8],
 					 Vector d_S[8]) const
 {
@@ -167,7 +169,7 @@ void decompose(int numProcessors, int sizex, int sizey, int sizez,
 }
 
 #if 0
-void Region::subregionIteratorPair(int i, int n,
+void Patch::subpatchIteratorPair(int i, int n,
 				   NodeSubIterator& iter,
 				   NodeSubIterator& end) const
 {
@@ -189,7 +191,7 @@ void Region::subregionIteratorPair(int i, int n,
     end = NodeSubIterator(ex, ey, ez, ex, ey, ez);
 }
 
-SubRegion Region::subregion(int i, int n) const
+SubPatch Patch::subpatch(int i, int n) const
 {
     int npx, npy, npz;
     int nodesx = d_nx+1;
@@ -210,32 +212,32 @@ SubRegion Region::subregion(int i, int n) const
     Point u(d_lower+diag*Vector(ex+1, ey+1, ez+1)/Vector(d_nx, d_ny, d_nz));
     l=Max(l, d_lower); // For "ghost cell"
     u=Min(u, d_upper);
-    return SubRegion(l, u, sx, sy, sz, ex, ey, ez);
+    return SubPatch(l, u, sx, sy, sz, ex, ey, ez);
 }
 #endif
 
-ostream& operator<<(ostream& out, const Region* r)
+ostream& operator<<(ostream& out, const Patch* r)
 {
-  out << "(Region: box=" << r->getBox() << ", res=" << r->getNCells() << ")";
+  out << "(Patch: box=" << r->getBox() << ", res=" << r->getNCells() << ")";
   return out;
 }
 
-long Region::totalCells() const
+long Patch::totalCells() const
 {
   return d_res.x()*d_res.y()*d_res.z();
 }
 
-void Region::performConsistencyCheck() const
+void Patch::performConsistencyCheck() const
 {
   if(d_res.x() < 1 || d_res.y() < 1 || d_res.z() < 1)
-    throw InvalidGrid("Degenerate region");
+    throw InvalidGrid("Degenerate patch");
 }
 
-Region::BCType 
-Region::getBCType(Region::FaceType face) const
+Patch::BCType 
+Patch::getBCType(Patch::FaceType face) const
 {
   // Put in code to return whether the face is a symmetry plane,
-  // a fixed boundary, borders a neighboring region or none
+  // a fixed boundary, borders a neighboring patch or none
   // The value of face ranges from 0-5.
 
   return None;
@@ -244,7 +246,7 @@ Region::getBCType(Region::FaceType face) const
 }
 
 string
-Region::toString() const
+Patch::toString() const
 {
   char str[ 1024 ];
 
@@ -256,7 +258,7 @@ Region::toString() const
 }
 
 CellIterator
-Region::getCellIterator(const Box& b) const
+Patch::getCellIterator(const Box& b) const
 {
    Vector diag = d_box.upper()-d_box.lower();
    Vector l = (b.lower() - d_box.lower())*d_res/diag;
@@ -265,18 +267,18 @@ Region::getCellIterator(const Box& b) const
 		       RoundUp(u.x()), RoundUp(u.y()), RoundUp(u.z()));
 }
       
-NodeIterator Region::getNodeIterator() const
+NodeIterator Patch::getNodeIterator() const
 {
    return NodeIterator(getNodeLowIndex(), getNodeHighIndex());
 }
 
-const Region* Region::getNeighbor(const IntVector& n) const
+const Patch* Patch::getNeighbor(const IntVector& n) const
 {
    if(n.x() == 0 && n.y() == 0 && n.z() == 0)
       return this;
    if(n.x() < -1 || n.y() < -1 || n.z() < -1
       || n.x() > 1 || n.y() > 1 || n.z() > 1)
-      throw InternalError("Region::getNeighbor not implemented for distant neighbors");
+      throw InternalError("Patch::getNeighbor not implemented for distant neighbors");
    int ix=n.x()+1;
    int iy=n.y()+1;
    int iz=n.z()+1;
@@ -284,7 +286,7 @@ const Region* Region::getNeighbor(const IntVector& n) const
    return d_neighbors[idx];
 }
 
-IntVector Region::getNodeHighIndex() const
+IntVector Patch::getNodeHighIndex() const
 {
    IntVector h(d_highIndex+
 	       IntVector(getNeighbor(IntVector(1,0,0))?0:1,
@@ -293,75 +295,71 @@ IntVector Region::getNodeHighIndex() const
    return h;
 }
 
-void Region::setNeighbor(const IntVector& n, const Region* neighbor)
+void Patch::setNeighbor(const IntVector& n, const Patch* neighbor)
 {
    if(n.x() == 0 && n.y() == 0 && n.z() == 0)
       throw InternalError("Cannot set neighbor 0,0,0");
    if(n.x() < -1 || n.y() < -1 || n.z() < -1
       || n.x() > 1 || n.y() > 1 || n.z() > 1)
-      throw InternalError("Region::getNeighbor not implemented for distant neighbors");
+      throw InternalError("Patch::getNeighbor not implemented for distant neighbors");
    int ix=n.x()+1;
    int iy=n.y()+1;
    int iz=n.z()+1;
    int idx = ix*9+iy*3+iz;
-   cerr << "Region " << getID() << " neighbor " << n << " is now " << neighbor->getID() << '\n';
+   cerr << "Patch " << getID() << " neighbor " << n << " is now " << neighbor->getID() << '\n';
    d_neighbors[idx]=neighbor;
 }
 
 void
-Region::determineGhostRegions( int numGhostCells )
+Patch::determineGhostPatches( int numGhostCells )
 {
-   // if the number of ghost cells changes, then we have to recalculate.
-   if( d_numGhostCells != numGhostCells ) {
+   int gc = numGhostCells;
 
-      int gc = numGhostCells;
-      d_numGhostCells = numGhostCells;
+   // Determine the coordinates of all the sub-ghostPatches around
+   // this patch.
 
-      // Determine the coordinates of all the sub-ghostRegions around
-      // this region.
+   int minX = Min( d_box.lower().x(), d_box.upper().x() );
+   int minY = Min( d_box.lower().y(), d_box.upper().y() );
+   int minZ = Min( d_box.lower().z(), d_box.upper().z() );
 
-      int minX = Min( d_box.lower().x(), d_box.upper().x() );
-      int minY = Min( d_box.lower().y(), d_box.upper().y() );
-      int minZ = Min( d_box.lower().z(), d_box.upper().z() );
+   int maxX = Max( d_box.lower().x(), d_box.upper().x() );
+   int maxY = Max( d_box.lower().y(), d_box.upper().y() );
+   int maxZ = Max( d_box.lower().z(), d_box.upper().z() );
 
-      int maxX = Max( d_box.lower().x(), d_box.upper().x() );
-      int maxY = Max( d_box.lower().y(), d_box.upper().y() );
-      int maxZ = Max( d_box.lower().z(), d_box.upper().z() );
-
-      d_top.set( minX, minY, maxZ, maxX, maxY, maxZ + gc );
-      d_topRight.set( maxX, minY, maxZ, maxX + gc, maxY, maxZ + gc );
-      d_topLeft.set( minX - gc, minY, maxZ ,minX, maxY, maxZ + gc );
-      d_topBack.set( minX, maxY, maxZ ,maxX, maxY + gc, maxZ + gc );
-      d_topFront.set( minX, minY - gc, maxZ , maxX, minY, maxZ + gc );
-      d_topRightBack.set( maxX, maxY, maxZ, maxX + gc, maxY + gc, maxZ + gc );
-      d_topRightFront.set( maxX, minY, maxZ, maxX + gc, minY - gc, maxZ + gc );
-      d_topLeftBack.set( minX, maxY, maxZ, minX - gc, maxY + gc, maxZ + gc );
-      d_topLeftFront.set( minX - gc, minY - gc, maxX, minX, minY, maxZ + gc );
-      d_bottom.set( minX, minY, minZ - gc, maxX, maxY, minZ );
-      d_bottomRight.set( maxX, minY, minZ - gc, maxX + gc, maxY, minZ );
-      d_bottomLeft.set( minX - gc, minY, minZ - gc, minX, maxY, minZ );
-      d_bottomBack.set( minX, maxY, minZ - gc, maxX, maxY + gc, minZ );
-      d_bottomFront.set( minX, minY - gc, minZ - gc, maxX, minY, minZ );
-      d_bottomRightBack.set( maxX, maxY, minZ, maxX + gc, maxY+gc, minZ-gc );
-      d_bottomRightFront.set( maxX, minY, minZ, maxX + gc, minY-gc, minZ-gc );
-      d_bottomLeftBack .set( minX, maxY, minZ, minX - gc, maxY + gc, minZ-gc );
-      d_bottomLeftFront.set( minX, minY, minZ, minX-gc, minY-gc, minZ-gc );
-      d_right.set( maxX, minY, minZ, maxX + gc, maxY, maxZ );
-      d_left.set( minX, minY, minZ, minX - gc, maxY, maxZ );
-      d_back.set( minX, maxY, minZ, maxX, maxY + gc, maxZ );
-      d_front.set( minX, minY, minZ, maxX, minY - gc, maxZ );
-      d_rightBack.set( maxX, maxY, minZ, maxX + gc, maxY + gc, maxZ );
-      d_rightFront.set( maxX, minY, minZ, maxX + gc, maxY, minZ - gc );
-      d_leftBack.set( minX, maxY, minZ, minX - gc, maxY - gc, maxZ );
-      d_leftFront.set( minX, minY, minZ, minX - gc, minY - gc, maxZ );
-   }
+   d_top.set( minX, minY, maxZ, maxX, maxY, maxZ + gc );
+   d_topRight.set( maxX, minY, maxZ, maxX + gc, maxY, maxZ + gc );
+   d_topLeft.set( minX - gc, minY, maxZ ,minX, maxY, maxZ + gc );
+   d_topBack.set( minX, maxY, maxZ ,maxX, maxY + gc, maxZ + gc );
+   d_topFront.set( minX, minY - gc, maxZ , maxX, minY, maxZ + gc );
+   d_topRightBack.set( maxX, maxY, maxZ, maxX + gc, maxY + gc, maxZ + gc );
+   d_topRightFront.set( maxX, minY, maxZ, maxX + gc, minY - gc, maxZ + gc );
+   d_topLeftBack.set( minX, maxY, maxZ, minX - gc, maxY + gc, maxZ + gc );
+   d_topLeftFront.set( minX - gc, minY - gc, maxX, minX, minY, maxZ + gc );
+   d_bottom.set( minX, minY, minZ - gc, maxX, maxY, minZ );
+   d_bottomRight.set( maxX, minY, minZ - gc, maxX + gc, maxY, minZ );
+   d_bottomLeft.set( minX - gc, minY, minZ - gc, minX, maxY, minZ );
+   d_bottomBack.set( minX, maxY, minZ - gc, maxX, maxY + gc, minZ );
+   d_bottomFront.set( minX, minY - gc, minZ - gc, maxX, minY, minZ );
+   d_bottomRightBack.set( maxX, maxY, minZ, maxX + gc, maxY + gc, minZ - gc );
+   d_bottomRightFront.set( maxX, minY, minZ, maxX + gc, minY - gc, minZ - gc );
+   d_bottomLeftBack .set( minX, maxY, minZ, minX - gc, maxY + gc, minZ - gc );
+   d_bottomLeftFront.set( minX, minY, minZ, minX - gc, minY - gc, minZ - gc );
+   d_right.set( maxX, minY, minZ, maxX + gc, maxY, maxZ );
+   d_left.set( minX, minY, minZ, minX - gc, maxY, maxZ );
+   d_back.set( minX, maxY, minZ, maxX, maxY + gc, maxZ );
+   d_front.set( minX, minY, minZ, maxX, minY - gc, maxZ );
+   d_rightBack.set( maxX, maxY, minZ, maxX + gc, maxY + gc, maxZ );
+   d_rightFront.set( maxX, minY, minZ, maxX + gc, maxY, minZ - gc );
+   d_leftBack.set( minX, maxY, minZ, minX - gc, maxY - gc, maxZ );
+   d_leftFront.set( minX, minY, minZ, minX - gc, minY - gc, maxZ );
 }
       
 
 //
 // $Log$
-// Revision 1.21  2000/05/30 17:10:11  dav
-// MPI stuff
+// Revision 1.1  2000/05/30 20:19:31  sparker
+// Changed new to scinew to help track down memory leaks
+// Changed region to patch
 //
 // Revision 1.20  2000/05/28 17:25:06  dav
 // adding mpi stuff
@@ -381,7 +379,7 @@ Region::determineGhostRegions( int numGhostCells )
 // Do not schedule fracture tasks if fracture not enabled
 // Added fracture directory to MPM sub.mk
 // Be more uniform about using IntVector
-// Made regions have a single uniform index space - still needs work
+// Made patches have a single uniform index space - still needs work
 //
 // Revision 1.16  2000/05/09 03:24:39  jas
 // Added some enums for grid boundary conditions.

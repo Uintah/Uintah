@@ -36,7 +36,7 @@ void PressureSolver::problemSetup(const ProblemSpecP& params)
   string finite_diff;
   db->require("finite_difference", finite_diff);
   if (finite_diff == "Secondorder") 
-    d_discretize = new Discretization();
+    d_discretize = scinew Discretization();
   else 
     throw InvalidValue("Finite Differencing scheme "
 		       "not supported: " + finite_diff, db);
@@ -45,7 +45,7 @@ void PressureSolver::problemSetup(const ProblemSpecP& params)
   string linear_sol;
   db->require("linear_solver", linear_sol);
   if (linear_sol == "RBGaussSeidel")
-    d_linearSolver = new RBGSSolver();
+    d_linearSolver = scinew RBGSSolver();
   else 
     throw InvalidValue("linear solver option"
 		       " not supported" + linear_sol, db);
@@ -81,38 +81,38 @@ void PressureSolver::sched_buildLinearMatrix(const LevelP& level,
 					     DataWarehouseP& new_dw,
 					     delta_t)
 {
-  for(Level::const_regionIterator iter=level->regionsBegin();
-      iter != level->regionsEnd(); iter++){
-    const Region* region=*iter;
+  for(Level::const_patchIterator iter=level->patchesBegin();
+      iter != level->patchesEnd(); iter++){
+    const Patch* patch=*iter;
     {
-      Task* tsk = new Task("PressureSolver::BuildCoeff",
-			   region, old_dw, new_dw, this,
+      Task* tsk = scinew Task("PressureSolver::BuildCoeff",
+			   patch, old_dw, new_dw, this,
 			   Discretization::buildLinearMatrix,
 			   delta_t);
-      tsk->requires(old_dw, "velocity", region, 1,
+      tsk->requires(old_dw, "velocity", patch, 1,
 		    FCVariable<Vector>::getTypeDescription());
-      tsk->requires(old_dw, "density", region, 1,
+      tsk->requires(old_dw, "density", patch, 1,
 		    CCVariable<double>::getTypeDescription());
-      tsk->requires(old_dw, "viscosity", region, 1,
+      tsk->requires(old_dw, "viscosity", patch, 1,
 		    CCVariable<double>::getTypeDescription());
-      tsk->requires(old_dw, "pressure", region, 1,
+      tsk->requires(old_dw, "pressure", patch, 1,
 		    CCVariable<double>::getTypeDescription());
       /// requires convection coeff because of the nodal
       // differencing
       // computes all the components of velocity
-      tsk->computes(new_dw, "VelocityConvectCoeff", region, 0,
+      tsk->computes(new_dw, "VelocityConvectCoeff", patch, 0,
 		    FCVariable<Vector>::getTypeDescription());
-      tsk->computes(new_dw, "VelocityCoeff", region, 0,
+      tsk->computes(new_dw, "VelocityCoeff", patch, 0,
 		    FCVariable<Vector>::getTypeDescription());
-      tsk->computes(new_dw, "VelLinearSource", region, 0,
+      tsk->computes(new_dw, "VelLinearSource", patch, 0,
 		    FCVariable<Vector>::getTypeDescription());
-      tsk->computes(new_dw, "VelNonlinearSource", region, 0,
+      tsk->computes(new_dw, "VelNonlinearSource", patch, 0,
 		    FCVariable<Vector>::getTypeDescription());
-      tsk->computes(new_dw, "pressureCoeff", region, 0,
+      tsk->computes(new_dw, "pressureCoeff", patch, 0,
 		    CCVariable<Vector>::getTypeDescription());
-      tsk->computes(new_dw, "pressureLinearSource", region, 0,
+      tsk->computes(new_dw, "pressureLinearSource", patch, 0,
 		    CCVariable<double>::getTypeDescription());
-      tsk->computes(new_dw, "pressureNonlinearSource", region, 0,
+      tsk->computes(new_dw, "pressureNonlinearSource", patch, 0,
 		    CCVariable<double>::getTypeDescription());
      
       sched->addTask(tsk);
@@ -123,32 +123,32 @@ void PressureSolver::sched_buildLinearMatrix(const LevelP& level,
 
 
 void PressureSolver::buildLinearMatrix(const ProcessorContext* pc,
-				       const Region* region,
+				       const Patch* patch,
 				       const DataWarehouseP& old_dw,
 				       DataWarehouseP& new_dw,
 				       double delta_t)
 {
   // compute all three componenets of velocity stencil coefficients
   for(int index = 1; index <= NDIM; ++index) {
-    d_discretize->calculateVelocityCoeff(pc, region, old_dw,
+    d_discretize->calculateVelocityCoeff(pc, patch, old_dw,
 					 new_dw,delta_t, index);
-    d_source->calculateVelocitySource(pc, region, old_dw,
+    d_source->calculateVelocitySource(pc, patch, old_dw,
 				      new_dw,delta_t, index);
-    d_boundaryCondition->velocityBC(pc, region, old_dw,
+    d_boundaryCondition->velocityBC(pc, patch, old_dw,
 				    new_dw,delta_t, index);
     // similar to mascal
-    d_source->modifyMassSource(pc, region, old_dw,
+    d_source->modifyMassSource(pc, patch, old_dw,
 			       new_dw,delta_t, index);
-    d_discretize->calculateVelDiagonal(pc, region, old_dw,
+    d_discretize->calculateVelDiagonal(pc, patch, old_dw,
 				       new_dw,delta_t, index);
   }
-  d_discretize->calculatePressureCoeff(pc, region, old_dw,
+  d_discretize->calculatePressureCoeff(pc, patch, old_dw,
 				       new_dw,delta_t);
-  d_source->calculatePressureSource(pc, region, old_dw,
+  d_source->calculatePressureSource(pc, patch, old_dw,
 				    new_dw,delta_t);
-  d_boundaryCondition->pressureBC(pc, region, old_dw,
+  d_boundaryCondition->pressureBC(pc, patch, old_dw,
 				  new_dw,delta_t);
-  d_discretize->calculatePressDiagonal(pc, region, old_dw,
+  d_discretize->calculatePressDiagonal(pc, patch, old_dw,
 				       new_dw);
 
 }

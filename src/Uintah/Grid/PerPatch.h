@@ -1,5 +1,5 @@
-#ifndef UINTAH_HOMEBREW_PERREGION_H
-#define UINTAH_HOMEBREW_PERREGION_H
+#ifndef UINTAH_HOMEBREW_PERPATCH_H
+#define UINTAH_HOMEBREW_PERPATCH_H
 
 #include <Uintah/Grid/DataItem.h>
 #include <Uintah/Exceptions/TypeMismatchException.h>
@@ -9,13 +9,13 @@ namespace Uintah {
 /**************************************
 
 CLASS
-   PerRegion
+   PerPatch
    
    Short description...
 
 GENERAL INFORMATION
 
-   PerRegion.h
+   PerPatch.h
 
    Steven G. Parker
    Department of Computer Science
@@ -35,12 +35,12 @@ WARNING
   
 ****************************************/
 
-   template<class T> class PerRegion : public DataItem {
+   template<class T> class PerPatch : public DataItem {
    public:
-      inline PerRegion() {}
-      inline PerRegion(T value) : value(value) {}
-      inline PerRegion(const PerRegion<T>& copy) : value(copy.value) {}
-      virtual ~PerRegion();
+      inline PerPatch() {}
+      inline PerPatch(T value) : value(value) {}
+      inline PerPatch(const PerPatch<T>& copy) : value(copy.value) {}
+      virtual ~PerPatch();
       
       static const TypeDescription* getTypeDescription();
       
@@ -49,45 +49,45 @@ WARNING
       }
       virtual void get(DataItem&) const;
       virtual void setData(const T&);
-      virtual PerRegion<T>* clone() const;
-      virtual void allocate(const Region*);
+      virtual PerPatch<T>* clone() const;
+      virtual void allocate(const Patch*);
    private:
-      PerRegion<T>& operator=(const PerRegion<T>& copy);
+      PerPatch<T>& operator=(const PerPatch<T>& copy);
       T value;
    };
    
    template<class T>
       const TypeDescription*
-      PerRegion<T>::getTypeDescription()
+      PerPatch<T>::getTypeDescription()
       {
 	 return 0;
       }
    
    template<class T>
       void
-      PerRegion<T>::get(DataItem& copy) const
+      PerPatch<T>::get(DataItem& copy) const
       {
-	 PerRegion<T>* ref = dynamic_cast<PerRegion<T>*>(&copy);
+	 PerPatch<T>* ref = dynamic_cast<PerPatch<T>*>(&copy);
 	 if(!ref)
-	    throw TypeMismatchException("PerRegion<T>");
+	    throw TypeMismatchException("PerPatch<T>");
 	 *ref = *this;
       }
    
    template<class T>
-      PerRegion<T>::~PerRegion()
+      PerPatch<T>::~PerPatch()
       {
       }
    
    template<class T>
-      PerRegion<T>*
-      PerRegion<T>::clone() const
+      PerPatch<T>*
+      PerPatch<T>::clone() const
       {
-	 return new PerRegion<T>(*this);
+	 return scinew PerPatch<T>(*this);
       }
    
    template<class T>
-      PerRegion<T>&
-      PerRegion<T>::operator=(const PerRegion<T>& copy)
+      PerPatch<T>&
+      PerPatch<T>::operator=(const PerPatch<T>& copy)
       {
 	 value = copy.value;
 	 return *this;
@@ -95,15 +95,19 @@ WARNING
    
    template<class T>
       void
-      PerRegion<T>::allocate(const Region*)
+      PerPatch<T>::allocate(const Patch*)
       {
-	 throw TypeMismatchException("PerRegion shouldn't use allocate");
+	 throw TypeMismatchException("PerPatch shouldn't use allocate");
       }
    
 } // end namespace Uintah
 
 //
 // $Log$
+// Revision 1.1  2000/05/30 20:19:32  sparker
+// Changed new to scinew to help track down memory leaks
+// Changed region to patch
+//
 // Revision 1.3  2000/05/15 19:39:49  sparker
 // Implemented initial version of DataArchive (output only so far)
 // Other misc. cleanups
@@ -113,7 +117,7 @@ WARNING
 //
 // Revision 1.1  2000/03/22 00:32:13  sparker
 // Added Face-centered variable class
-// Added Per-region data class
+// Added Per-patch data class
 // Added new task constructor for procedures with arguments
 // Use Array3Index more often
 //

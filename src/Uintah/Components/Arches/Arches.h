@@ -13,7 +13,8 @@
 #include <Uintah/Interface/ProblemSpecP.h>
 #include <Uintah/Grid/GridP.h>
 #include <Uintah/Grid/LevelP.h>
-#include <Uintah/Grid/Region.h>
+#include <Uintah/Grid/Patch.h>
+#include <Uintah/Grid/SimulationState.h>
 #include <Uintah/Grid/VarTypes.h>
 #include <Uintah/Grid/SimulationState.h>
 #include <Uintah/Grid/SimulationStateP.h>
@@ -91,7 +92,7 @@ private:
     Arches(const Arches&);
     Arches& operator=(const Arches&);
     void paramInit(const ProcessorContext*,
-		   const Region* region,
+		   const Patch* patch,
 		   DataWarehouseP& old_dw,
 		   DataWarehouseP& );
     double d_deltaT;
@@ -121,6 +122,10 @@ private:
 
 //
 // $Log$
+// Revision 1.22  2000/05/30 20:18:45  sparker
+// Changed new to scinew to help track down memory leaks
+// Changed region to patch
+//
 // Revision 1.21  2000/05/30 17:06:11  dav
 // added Cocoon doc template.  fixed non compilation problem.
 //

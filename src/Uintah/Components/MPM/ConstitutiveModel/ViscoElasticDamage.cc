@@ -38,6 +38,7 @@
 
 #include "ConstitutiveModelFactory.h"
 #include "ViscoElasticDamage.h"
+#include <SCICore/Malloc/Allocator.h>
 #include <fstream>
 #include <iostream>
 using namespace std;
@@ -206,7 +207,7 @@ std::vector<double> ViscoElasticDamage::getMechProps() const
 
 }
 
-void ViscoElasticDamage::computeStressTensor(const Region* region,
+void ViscoElasticDamage::computeStressTensor(const Patch* patch,
 					     const MPMMaterial* matl,
 					     DataWarehouseP& old_dw,
 					     DataWarehouseP& new_dw)
@@ -308,7 +309,7 @@ void ViscoElasticDamage::computeStressTensor(const Region* region,
 #endif
 }
 
-double ViscoElasticDamage::computeStrainEnergy(const Region* region,
+double ViscoElasticDamage::computeStrainEnergy(const Patch* patch,
 					       const MPMMaterial* matl,
 					       DataWarehouseP& new_dw)
 {
@@ -321,7 +322,7 @@ double ViscoElasticDamage::computeStrainEnergy(const Region* region,
 
 }
 
-void ViscoElasticDamage::initializeCMData(const Region* region,
+void ViscoElasticDamage::initializeCMData(const Patch* patch,
 		      const MPMMaterial* matl,
 		      DataWarehouseP& new_dw)
 {
@@ -410,7 +411,7 @@ ConstitutiveModel* ViscoElasticDamage::readRestartParametersAndCreate(ProblemSpe
 
 ConstitutiveModel* ViscoElasticDamage::create(double *p_array)
 {
-  return(new ViscoElasticDamage(p_array[0],p_array[1],p_array[2],p_array[3],
+  return(scinew ViscoElasticDamage(p_array[0],p_array[1],p_array[2],p_array[3],
 		p_array[4],p_array[5],p_array[6]));
 }
 
@@ -442,7 +443,7 @@ void ViscoElasticDamage::printParameterNames(ofstream& out) const
 
 void ViscoElasticDamage::addComputesAndRequires(Task* task,
 						const MPMMaterial* matl,
-						const Region* region,
+						const Patch* patch,
 						DataWarehouseP& old_dw,
 						DataWarehouseP& new_dw) const
 {
@@ -451,7 +452,7 @@ void ViscoElasticDamage::addComputesAndRequires(Task* task,
 
 ConstitutiveModel* ViscoElasticDamage::copy() const
 {
-  return( new ViscoElasticDamage(*this) );
+  return( scinew ViscoElasticDamage(*this) );
 }
 
 int ViscoElasticDamage::getSize() const

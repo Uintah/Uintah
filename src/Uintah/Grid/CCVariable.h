@@ -4,7 +4,7 @@
 #include <Uintah/Grid/Array3.h>
 #include <Uintah/Grid/CCVariableBase.h>
 #include <Uintah/Exceptions/TypeMismatchException.h>
-
+#include <SCICore/Malloc/Allocator.h>
 #include <SCICore/Exceptions/InternalError.h>
 
 #include <iostream> // TEMPORARY
@@ -68,7 +68,7 @@ class CCVariable : public Array3<T>, public CCVariableBase {
       
       //////////
       // Insert Documentation Here:
-      void copyRegion(CCVariableBase* src,
+      void copyPatch(CCVariableBase* src,
 		      const IntVector& lowIndex,
 		      const IntVector& highIndex);
 
@@ -113,7 +113,7 @@ class CCVariable : public Array3<T>, public CCVariableBase {
       CCVariable<T>*
       CCVariable<T>::clone() const
       {
-	 return new CCVariable<T>(*this);
+	 return scinew CCVariable<T>(*this);
       }
    
    template<class T>
@@ -159,10 +159,10 @@ class CCVariable : public Array3<T>, public CCVariableBase {
       }
    
    template<class T>
-      void CCVariable<T>::copyRegion(CCVariableBase* src,
+      void CCVariable<T>::copyPatch(CCVariableBase* src,
 		      const IntVector& lowIndex,
 		      const IntVector& highIndex) {
-	 std::cerr << "CCVariable::copyRegion!\n";
+	 std::cerr << "CCVariable::copyPatch!\n";
       }
 
    template<class T>
@@ -174,6 +174,10 @@ class CCVariable : public Array3<T>, public CCVariableBase {
 
 //
 // $Log$
+// Revision 1.12  2000/05/30 20:19:27  sparker
+// Changed new to scinew to help track down memory leaks
+// Changed region to patch
+//
 // Revision 1.11  2000/05/28 17:25:55  dav
 // adding code. someone should check to see if i did it corretly
 //
@@ -189,7 +193,7 @@ class CCVariable : public Array3<T>, public CCVariableBase {
 // Fixed copyPointer and other CCVariable methods - still not implemented
 //
 // Revision 1.7  2000/05/12 01:48:34  tan
-// Put two empty functions copyPointer and copyRegion just to make the
+// Put two empty functions copyPointer and copyPatch just to make the
 // compiler work.
 //
 // Revision 1.6  2000/05/11 20:10:21  dav
