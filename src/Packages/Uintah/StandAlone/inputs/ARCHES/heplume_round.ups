@@ -11,16 +11,16 @@
    </Meta>
 
    <Time>
-	<maxTime>1.0</maxTime>
+	<maxTime>4.0</maxTime>
 	<initTime>0.0</initTime>
-	<delt_min>0.001</delt_min>
+	<delt_min>0.0001</delt_min>
 	<delt_max>0.01</delt_max>
 	<timestep_multiplier>1.0</timestep_multiplier>
    </Time>
 
    <DataArchiver>
         <filebase>test_mpi.uda</filebase>
-	<outputInterval>0.01</outputInterval>
+	<outputInterval>0.005</outputInterval>
    </DataArchiver>
 
     <PhysicalConstants>
@@ -33,10 +33,10 @@
 	<Level>
 	    <Box label="1">
 	        <lower>[0,0,0]</lower>
-	        <upper>[1,1,1]</upper>
-	        <resolution>[50,50,50]</resolution>
+	        <upper>[2,1,1]</upper>
+	        <resolution>[200,100,100]</resolution>
                 <extraCells>[1,1,1]</extraCells>
-		<patches>[1,1,1]</patches>
+		<patches>[10,10,10]</patches>
 	    </Box>
 	</Level>
     </Grid>
@@ -58,7 +58,7 @@
 
 	    <Properties>
 		<denUnderrelax>1.0</denUnderrelax>
-                <ref_point>[3,3,3]</ref_point>	
+	        <ref_point>[10,3,3]</ref_point>
 		<Stream>
 		    <density>0.162059</density>
 		    <temperature>298</temperature>
@@ -104,7 +104,7 @@
 		    <RefPressure>0.0</RefPressure>
 		    <geom_object>
 		      <box label="topWall">
-			<min>[1,-1,-1]</min>
+			<min>[2,-1,-1]</min>
 			<max>[3,2,2]</max>
 		      </box>
 		      <box label="posY_xzWall">
@@ -140,7 +140,7 @@
 
 		<cal_pressure>true</cal_pressure>
 		<PressureSolver>
-		    <ref_point>[3,3,3]</ref_point>
+		    <ref_point>[10,3,3]</ref_point>
 		    <finite_difference>second</finite_difference>
 		    <linear_solver>petsc</linear_solver>
 		    <LinearSolver>
