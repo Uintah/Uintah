@@ -108,7 +108,6 @@ int TriSurface::get_closest_vertex_id(const Point &p1, const Point &p2,
 	if (vid != -1) return vid;
 	rad++;
     }
-    return 0;
 }
 
 int TriSurface::find_or_add(const Point &p) {
@@ -336,7 +335,6 @@ double TriSurface::distance(const Point &p, int el, int *type, Point *pp) {
     double u2=V[I][i[1]]-V[0][i[1]];
     double v2=V[I][i[2]]-V[0][i[2]];
 
-    int inside=0;	// so far we're not inside
     double alpha, beta;
     int inter=0;
 
@@ -410,19 +408,21 @@ double TriSurface::distance(const Point &p, int el, int *type, Point *pp) {
 	}
     }
     // now make sure we have all of the signs right!
-    for (X=0; X<3; X++)
+    for (X=0; X<3; X++){
 	for (int j=0; j<3; j++) 
 	    if (A[X][j]*V[(X+2-j)%3][i[1]]+B[X][j]*V[(X+2-j)%3][i[2]]+C[X][j] 
 		< 0) {
 		A[X][j]*=-1; B[X][j]*=-1; C[X][j]*=-1;
 	    }
+    }
     
     // we'll use the variable out to tell us if we're "outside" of that
     // edge.  
     int out[3][3];
-    for (X=0; X<3; X++)
+    for (X=0; X<3; X++){
 	for (int j=0; j<3; j++)
 	    out[X][j]=(A[X][j]*P[i[1]]+B[X][j]*P[i[2]]+C[X][j] < 0); 
+    }
 
     if (out[2][0] && out[1][1]) { 
 	*type=1; 
@@ -534,3 +534,9 @@ void TriSurface::construct_grid()
     int nz=RoundUp(d.z()/spacing);
     construct_grid(nx, ny, nz, bbox.min(), spacing);
 }
+
+void TriSurface::get_surfpoints(Array1<Point>&)
+{
+    NOT_FINISHED("TriSurface::get_surfpoints");
+}
+
