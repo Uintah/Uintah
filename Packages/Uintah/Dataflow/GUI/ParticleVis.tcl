@@ -186,7 +186,7 @@ itcl_class Uintah_Visualization_ParticleVis {
  		-labelpos nw -labeltext "Display Options"
  	set dof [$w.options.disp.frame_title childsite]
 
- 	iwidgets::tabnotebook  $dof.tabs -height 350 -width 330 \
+ 	iwidgets::tabnotebook  $dof.tabs -height 420 -width 300 \
  	    -raiseselect true 
 
  	pack $dof.tabs -side top -fill x -expand yes
@@ -210,11 +210,12 @@ itcl_class Uintah_Visualization_ParticleVis {
 	set sf $w.f3.sf
 	checkbutton $sf.cb -text "Fixed Range" -variable $this-isFixed \
 	    -onvalue 1 -offvalue 0 -command "$this fixedScale"
+	pack $sf.cb -side top -expand yes -fill x
 	label $sf.l1 -text "min: "
 	entry $sf.e1 -textvariable $this-min_
 	label $sf.l2 -text " max: "
 	entry $sf.e2 -textvariable $this-max_
-	pack $sf.cb $sf.l1 $sf.e1 $sf.l2 $sf.e2 -side left \
+	pack $sf.l1 $sf.e1 $sf.l2 $sf.e2 -side left \
 	    -expand yes -fill x -padx 2 -pady 2
 
 
