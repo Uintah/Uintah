@@ -2420,7 +2420,7 @@ Gui::createMenus( int winId, bool soundOn /* = false */,
   activeGui->glyphThresholdSpinner_->set_float_limits( 0, 1 );
   
   activeGui->sceneDepthSpinner_ = activeGui->mainWindow->
-    add_spinner_to_panel( otherControls, "Max Depth",
+    add_spinner_to_panel( otherControls, "Sil Value",
 			  GLUI_SPINNER_FLOAT, 
 			  &(activeGui->dpy_->scene->max_depth),
 			  0, updateSceneDepthCB);
