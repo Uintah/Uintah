@@ -289,7 +289,7 @@ itcl_class DataIO_Readers_HDF5DataReader {
 	button $sel.path -text "Full Path" -command "$this AddSelection 0"
 	button $sel.node -text "Terminal"  -command "$this AddSelection 1"
 
-	pack $sel.node $sel.path $sel.regexp $sel.label -side right -padx 3
+	pack $sel.node $sel.path $sel.label $sel.regexp -side right -padx 3
 	pack $sel.name -side left -fill x -expand yes
 	pack $w.sel -fill x -expand yes -side top
 
