@@ -41,6 +41,7 @@ WARNING
 #define FORT_CELLG cellg_
 #define FORT_AREAIN areain_
 #define FORT_PROFV profv_
+#define FORT_PROFSCALAR profscalar_
 #define FORT_INLBCS inlbcs_
 #define FORT_CALPBC calpbc_
 #define FORT_BCUVEL bcuvel_
@@ -139,12 +140,36 @@ extern "C"
 		  double* sew, double* sns,
 		double* stb, double* area, int* celltype, 
 		int* celltypeID);
+
+    ////////////////////////////////////////////////////////////////////////
+    //
+    // Cset flat profiles:
+    //
+    void
+    FORT_PROFV(const int* domainLow, const int* domainHigh, 
+	       const int* indexLow, const int* indexHigh,
+	       double* uVelocity, double* vVelocity, double* wVelocity, 
+	       int* celltype, double * area, const int* celltypeval,
+	       double* flowrate, double* density);
+    ////////////////////////////////////////////////////////////////////////
+    //
+    // Cset flat profiles for scalars:
+    //
+    void
+    FORT_PROFSCALAR(const int* domainLow, const int* domainHigh, 
+		    const int* indexLow, const int* indexHigh,
+		    double* scalar, int* cellType,
+		    double * sValue, const int* celltypeval);
 }
 
 #endif
 
 //
 // $Log$
+// Revision 1.5  2000/06/20 20:42:36  rawat
+// added some more boundary stuff and modified interface to IntVector. Before
+// compiling the code you need to update /SCICore/Geometry/IntVector.h
+//
 // Revision 1.4  2000/06/15 23:47:56  rawat
 // modified Archesfort to fix function call
 //

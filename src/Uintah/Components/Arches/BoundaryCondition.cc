@@ -239,26 +239,30 @@ BoundaryCondition::cellTypeInit(const ProcessorGroup*,
   old_dw->allocate(cellType, d_cellTypeLabel, matlIndex, patch);
   // initialize CCVariable to -1 which corresponds to flowfield
   // ** WARNING **  this needs to be changed soon (6/9/2000)
-  // IntVector domainLow = patch->getCellLowIndex();
-  // IntVector domainHigh = patch->getCellHighIndex();
+  IntVector domainLow = patch->getCellLowIndex();
+  IntVector domainHigh = patch->getCellHighIndex() - IntVector(1,1,1);
   // IntVector indexLow = patch->getCellLowIndex();
   // IntVector indexHigh = patch->getCellHighIndex();
-  int domainLow[3], domainHigh[3];
-  int indexLow[3], indexHigh[3];
-  domainLow[2] = (patch->getCellLowIndex()).x()+1;
-  domainLow[1] = (patch->getCellLowIndex()).y()+1;
-  domainLow[0] = (patch->getCellLowIndex()).z()+1;
-  domainHigh[2] = (patch->getCellHighIndex()).x();
-  domainHigh[1] = (patch->getCellHighIndex()).y();
-  domainHigh[0] = (patch->getCellHighIndex()).z();
-  for (int ii = 0; ii < 3; ii++) {
-    indexLow[ii] = domainLow[ii]+1;
-    indexHigh[ii] = domainHigh[ii]-1;
-  }
+  //  int domainLow[3], domainHigh[3];
+  //  int indexLow[3], indexHigh[3];
+  //  domainLow[2] = (patch->getCellLowIndex()).x()+1;
+  //  domainLow[1] = (patch->getCellLowIndex()).y()+1;
+  //  domainLow[0] = (patch->getCellLowIndex()).z()+1;
+  //  domainHigh[2] = (patch->getCellHighIndex()).x();
+  //  domainHigh[1] = (patch->getCellHighIndex()).y();
+  //  domainHigh[0] = (patch->getCellHighIndex()).z();
+  IntVector indexLow = domainLow;
+  IntVector indexHigh = domainHigh;
+  //  for (int ii = 0; ii < 3; ii++) {
+  //
+  //    indexLow[ii] = domainLow[ii]+1;
+  //    indexHigh[ii] = domainHigh[ii]-1;
+  //  }
  
   int celltypeval = -1;
   cerr << "Just before geom init" << endl;
-  FORT_CELLTYPEINIT(domainLow, domainHigh, indexLow, indexHigh,
+  FORT_CELLTYPEINIT(domainLow.get_pointer(), domainHigh.get_pointer(), 
+		    indexLow.get_pointer(), indexHigh.get_pointer(),
 		    cellType.getPointer(), &celltypeval);
   // set boundary type for inlet flow field
   cerr << "Just after fortran call "<< endl;
@@ -271,18 +275,19 @@ BoundaryCondition::cellTypeInit(const ProcessorGroup*,
   // check for another geometry
   if (!(b.degenerate())) {
     CellIterator iter = patch->getCellIterator(b);
-    domainLow[0] = (iter.begin()).x()+1;
-    domainLow[1] = (iter.begin()).y()+1;
-    domainLow[2] = (iter.begin()).z()+1;
-    domainHigh[0] = (iter.end()).x();
-    domainHigh[1] = (iter.end()).y();
-    domainHigh[2] = (iter.end()).z();
-    for (int indx = 0; indx < 3; indx++) {
-      indexLow[indx] = domainLow[indx]+1;
-      indexHigh[indx] = domainHigh[indx]-1;
-    }
+    //    domainLow[0] = (iter.begin()).x()+1;
+    //    domainLow[1] = (iter.begin()).y()+1;
+    //   domainLow[2] = (iter.begin()).z()+1;
+    //   domainHigh[0] = (iter.end()).x();
+    //  domainHigh[1] = (iter.end()).y();
+    //  domainHigh[2] = (iter.end()).z();
+    domainLow = iter.begin();
+    domainHigh = iter.end() - IntVector(1,1,1);
+    indexLow = domainLow;
+    indexHigh = domainHigh;
     celltypeval = d_wallBdry->d_cellTypeID;
-    FORT_CELLTYPEINIT(domainLow, domainHigh, indexLow, indexHigh,
+    FORT_CELLTYPEINIT(domainLow.get_pointer(), domainHigh.get_pointer(), 
+		      indexLow.get_pointer(), indexHigh.get_pointer(),
 		      cellType.getPointer(), &celltypeval);
   }
 
@@ -296,18 +301,13 @@ BoundaryCondition::cellTypeInit(const ProcessorGroup*,
     // iterates thru box b, converts from geometry space to index space
     // make sure this works
     CellIterator iter = patch->getCellIterator(b);
-    domainLow[0] = (iter.begin()).x()+1;
-    domainLow[1] = (iter.begin()).y()+1;
-    domainLow[2] = (iter.begin()).z()+1;
-    domainHigh[0] = (iter.end()).x();
-    domainHigh[1] = (iter.end()).y();
-    domainHigh[2] = (iter.end()).z();
-    for (int indx = 0; indx < 3; indx++) {
-      indexLow[indx] = domainLow[indx]+1;
-      indexHigh[indx] = domainHigh[indx]-1;
-    }
+    domainLow = iter.begin();
+    domainHigh = iter.end() - IntVector(1,1,1);
+    indexLow = domainLow;
+    indexHigh = domainHigh;
     celltypeval = d_flowInlets[ii].d_cellTypeID;
-    FORT_CELLTYPEINIT(domainLow, domainHigh, indexLow, indexHigh,
+    FORT_CELLTYPEINIT(domainLow.get_pointer(), domainHigh.get_pointer(),
+		      indexLow.get_pointer(), indexHigh.get_pointer(),
 		      cellType.getPointer(), &celltypeval);
   }
   // initialization for pressure boundary
@@ -318,18 +318,13 @@ BoundaryCondition::cellTypeInit(const ProcessorGroup*,
     // check for another geometry
     if (!(b.degenerate())) {
       CellIterator iter = patch->getCellIterator(b);
-      domainLow[0] = (iter.begin()).x()+1;
-      domainLow[1] = (iter.begin()).y()+1;
-      domainLow[2] = (iter.begin()).z()+1;
-      domainHigh[0] = (iter.end()).x();
-      domainHigh[1] = (iter.end()).y();
-      domainHigh[2] = (iter.end()).z();
-      for (int indx = 0; indx < 3; indx++) {
-	indexLow[indx] = domainLow[indx]+1;
-	indexHigh[indx] = domainHigh[indx]-1;
-      }
+      domainLow = iter.begin();
+      domainHigh = iter.end() - IntVector(1,1,1);
+      indexLow = domainLow;
+      indexHigh = domainHigh;
       celltypeval = d_pressureBdry->d_cellTypeID;
-      FORT_CELLTYPEINIT(domainLow, domainHigh, indexLow, indexHigh,
+      FORT_CELLTYPEINIT(domainLow.get_pointer(), domainHigh.get_pointer(),
+			indexLow.get_pointer(), indexHigh.get_pointer(),
 			cellType.getPointer(), &celltypeval);
     }
   }
@@ -341,18 +336,13 @@ BoundaryCondition::cellTypeInit(const ProcessorGroup*,
     // check for another geometry
     if (!(b.degenerate())) {
       CellIterator iter = patch->getCellIterator(b);
-      domainLow[0] = (iter.begin()).x()+1;
-      domainLow[1] = (iter.begin()).y()+1;
-      domainLow[2] = (iter.begin()).z()+1;
-      domainHigh[0] = (iter.end()).x();
-      domainHigh[1] = (iter.end()).y();
-      domainHigh[2] = (iter.end()).z();
-      for (int indx = 0; indx < 3; indx++) {
-	indexLow[indx] = domainLow[indx]+1;
-	indexHigh[indx] = domainHigh[indx]-1;
-      }
+      domainLow = iter.begin();
+      domainHigh = iter.end() - IntVector(1,1,1);
+      indexLow = domainLow;
+      indexHigh = domainHigh;
       celltypeval = d_outletBC->d_cellTypeID;
-      FORT_CELLTYPEINIT(domainLow, domainHigh, indexLow, indexHigh,
+      FORT_CELLTYPEINIT(domainLow.get_pointer(), domainHigh.get_pointer(),
+			indexLow.get_pointer(), indexHigh.get_pointer(),
 			cellType.getPointer(), &celltypeval);
     }
   }
@@ -375,23 +365,12 @@ BoundaryCondition::computeInletFlowArea(const ProcessorGroup*,
 	      Ghost::None, numGhostCells);
   // initialize CCVariable to -1 which corresponds to flowfield
   // ** WARNING **  this needs to be changed soon (6/9/2000)
-  // IntVector domainLow = patch->getCellLowIndex();
-  // IntVector domainHigh = patch->getCellHighIndex();
-  // IntVector indexLow = patch->getCellLowIndex();
-  // IntVector indexHigh = patch->getCellHighIndex();
-  int domainLow[3], domainHigh[3];
-  int indexLow[3], indexHigh[3];
-  domainLow[2] = (patch->getCellLowIndex()).x()+1;
-  domainLow[1] = (patch->getCellLowIndex()).y()+1;
-  domainLow[0] = (patch->getCellLowIndex()).z()+1;
-  domainHigh[2] = (patch->getCellHighIndex()).x();
-  domainHigh[1] = (patch->getCellHighIndex()).y();
-  domainHigh[0] = (patch->getCellHighIndex()).z();
-  for (int ii = 0; ii < 3; ii++) {
-    indexLow[ii] = domainLow[ii]+1;
-    indexHigh[ii] = domainHigh[ii]-1;
-  }
- 
+  IntVector domainLow = patch->getCellLowIndex();
+  IntVector domainHigh = patch->getCellHighIndex();
+  IntVector indexLow = patch->getCellLowIndex();
+  IntVector indexHigh = patch->getCellHighIndex();
+  domainLow = patch->getCellLowIndex();
+  domainHigh = patch->getCellHighIndex() - IntVector(1,1,1);
   Box patchBox = patch->getBox();
   for (int ii = 0; ii < d_numInlets; ii++) {
     GeometryPiece*  piece = d_flowInlets[ii].d_geomPiece;
@@ -403,17 +382,10 @@ BoundaryCondition::computeInletFlowArea(const ProcessorGroup*,
     // iterates thru box b, converts from geometry space to index space
     // make sure this works
     CellIterator iter = patch->getCellIterator(b);
-    domainLow[0] = (iter.begin()).x()+1;
-    domainLow[1] = (iter.begin()).y()+1;
-    domainLow[2] = (iter.begin()).z()+1;
-    domainHigh[0] = (iter.end()).x();
-    domainHigh[1] = (iter.end()).y();
-    domainHigh[2] = (iter.end()).z();
-    for (int indx = 0; indx < 3; indx++) {
-      indexLow[indx] = domainLow[indx]+1;
-      indexHigh[indx] = domainHigh[indx]-1;
-    }
-  
+    domainLow = iter.begin();
+    domainHigh = iter.end() - IntVector(1,1,1);
+    indexLow = domainLow;
+    indexHigh = domainHigh;
 #ifdef WONT_COMPILE_YET
   // using chain of responsibility pattern for getting cell information
     DataWarehouseP top_dw = new_dw->getTop();
@@ -430,7 +402,8 @@ BoundaryCondition::computeInletFlowArea(const ProcessorGroup*,
     CellInformation* cellinfo = scinew CellInformation(patch);
     double inlet_area;
     int cellid = d_flowInlets[ii].d_cellTypeID;
-    FORT_AREAIN(domainLow, domainHigh, indexLow, indexHigh,
+    FORT_AREAIN(domainLow.get_pointer(), domainHigh.get_pointer(),
+		indexLow.get_pointer(), indexHigh.get_pointer(),
 		cellinfo->sew.get_objs(),
 		cellinfo->sns.get_objs(), cellinfo->stb.get_objs(),
 		&inlet_area, cellType.getPointer(), &cellid);
@@ -1386,9 +1359,9 @@ BoundaryCondition::setFlatProfile(const ProcessorGroup* pc,
   }
   // Get the low and high index for the patch
   IntVector domainLow = patch->getCellLowIndex();
-  IntVector domainHigh = patch->getCellHighIndex();
-  IntVector lowIndex = patch->getCellLowIndex();
-  IntVector highIndex = patch->getCellHighIndex();
+  IntVector domainHigh = patch->getCellHighIndex() - IntVector(1,1,1);
+  IntVector lowIndex = domainLow;
+  IntVector highIndex = domainHigh;
 
   // loop thru the flow inlets to set all the components of velocity and density
   for (int indx = 0; indx < d_numInlets; indx++) {
@@ -1399,38 +1372,38 @@ BoundaryCondition::setFlatProfile(const ProcessorGroup* pc,
     // check if given patch intersects with the inlet boundary of type index
     FlowInlet fi = d_flowInlets[indx];
 
-#ifdef WONT_COMPILE_YET
-    FORT_PROFV(domainLow, domainHigh, indexLow, indexHigh,
-	       uVelocity.getPointer(), vVelocity.getPointer(), wVelocity.getPointer(),
-	       cellType.getPointer(), &area, &fi.d_cellTypeID, &fi.flowRate,  &fi.density);
-    FORT_PROFSCALAR(domainLow, domainHigh, indexLow, indexHigh,
+
+    FORT_PROFV(domainLow.get_pointer(), domainHigh.get_pointer(),
+	       lowIndex.get_pointer(), highIndex.get_pointer(),
+	       uVelocity.getPointer(), vVelocity.getPointer(),
+	       wVelocity.getPointer(),
+	       cellType.getPointer(), &area, &fi.d_cellTypeID, &fi.flowRate, 
+	       &fi.density);
+    FORT_PROFSCALAR(domainLow.get_pointer(), domainHigh.get_pointer(),
+		    lowIndex.get_pointer(), highIndex.get_pointer(),
 		    density.getPointer(), cellType.getPointer(),
 		    &fi.density, &fi.d_cellTypeID);
-#endif
   }   
   if (d_pressureBdry) {
-#ifdef WONT_COMPILE_YET
-    FORT_PROFSCALAR(domainLow, domainHigh, indexLow, indexHigh,
+    FORT_PROFSCALAR(domainLow.get_pointer(), domainHigh.get_pointer(), 
+		    lowIndex.get_pointer(), highIndex.get_pointer(),
 		    density.getPointer(), cellType.getPointer(),
 		    &d_pressureBdry->density, &d_pressureBdry->d_cellTypeID);
-#endif
   }    
   for (int indx = 0; indx < d_nofScalars; indx++) {
     for (int ii = 0; ii < d_numInlets; ii++) {
       double scalarValue = d_flowInlets[ii].streamMixturefraction[indx];
-#ifdef WONT_COMPILE_YET
-      FORT_PROFSCALAR(domainLow, domainHigh, indexLow, indexHigh,
+      FORT_PROFSCALAR(domainLow.get_pointer(), domainHigh.get_pointer(), 
+		      lowIndex.get_pointer(), highIndex.get_pointer(),
 		      scalar[indx].getPointer(), cellType.getPointer(),
 		      &scalarValue, &d_flowInlets[ii].d_cellTypeID);
-#endif
     }
     if (d_pressBoundary) {
       double scalarValue = d_pressureBdry->streamMixturefraction[indx];
-#ifdef WONT_COMPILE_YET
-      FORT_PROFSCALAR(domainLow, domainHigh, indexLow, indexHigh,
+      FORT_PROFSCALAR(domainLow.get_pointer(), domainHigh.get_pointer(),
+		      lowIndex.get_pointer(), highIndex.get_pointer(),
 		      scalar[indx].getPointer(), cellType.getPointer(),
 		      &scalarValue, &d_pressureBdry->d_cellTypeID);
-#endif
     }
   }
       
@@ -1613,6 +1586,10 @@ BoundaryCondition::FlowOutlet::problemSetup(ProblemSpecP& params)
 
 //
 // $Log$
+// Revision 1.25  2000/06/20 20:42:36  rawat
+// added some more boundary stuff and modified interface to IntVector. Before
+// compiling the code you need to update /SCICore/Geometry/IntVector.h
+//
 // Revision 1.24  2000/06/19 18:00:29  rawat
 // added function to compute velocity and density profiles and inlet bc.
 // Fixed bugs in CellInformation.cc
