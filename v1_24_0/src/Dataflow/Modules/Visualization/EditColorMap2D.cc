@@ -164,7 +164,6 @@ private:
 
   bool				updating_; // updating the tf or not
 
-  GuiInt			gui_faux_;
   GuiDouble			gui_histo_;
 
   // The currently selected widget
@@ -173,6 +172,7 @@ private:
   GuiInt			gui_selected_object_;
 
   GuiInt			gui_num_entries_;
+  GuiInt			gui_faux_;
   vector<GuiString *>		gui_name_;
   vector<GuiDouble *>		gui_color_r_;
   vector<GuiDouble *>		gui_color_g_;
@@ -187,8 +187,7 @@ private:
   string			old_filename_;
   time_t			old_filemodification_;
   GuiString *			end_marker_;
-  double			value_offset_;
-  double			value_scale_;
+  pair<float,float>		value_range_;
 };
 
 
@@ -229,11 +228,11 @@ EditColorMap2D::EditColorMap2D(GuiContext* ctx)
     pan_y_(ctx->subVar("pany")),
     scale_(ctx->subVar("scale_factor")),
     updating_(false),
-    gui_faux_(ctx->subVar("faux")),
     gui_histo_(ctx->subVar("histo")),
     gui_selected_widget_(ctx->subVar("selected_widget"), -1),
     gui_selected_object_(ctx->subVar("selected_object"), -1),
     gui_num_entries_(ctx->subVar("num-entries")),
+    gui_faux_(ctx->subVar("faux")),
     gui_name_(),
     gui_color_r_(),
     gui_color_g_(),
@@ -246,8 +245,7 @@ EditColorMap2D::EditColorMap2D(GuiContext* ctx)
     old_filename_(),
     old_filemodification_(0),
     end_marker_(0),
-    value_offset_(0.0),
-    value_scale_(1.0)
+    value_range_(0.0, -1.0)
 {
   pan_x_.set(0.0);
   pan_y_.set(0.0);
@@ -261,7 +259,8 @@ EditColorMap2D::EditColorMap2D(GuiContext* ctx)
 
 EditColorMap2D::~EditColorMap2D()
 {
-  delete shader_factory_;
+  if (shader_factory_) 
+    delete shader_factory_;
   if (end_marker_) 
     delete end_marker_;
 }
@@ -429,7 +428,7 @@ EditColorMap2D::tcl_command(GuiArgs& args, void* userdata)
     const double a = gui_color_a_[n]->get();
     Color new_color
       (gui_color_r_[n]->get(), gui_color_g_[n]->get(),  gui_color_b_[n]->get());
-    if (new_color != widgets_[n]->color() || a != widgets_[n]->alpha())
+    if (new_color != widgets_[n]->get_color() || a != widgets_[n]->get_alpha())
     {
       undo_stack_.push(UndoItem(UndoItem::UNDO_CHANGE, n,
 				widgets_[n]->clone()));
@@ -743,12 +742,12 @@ EditColorMap2D::update_to_gui(bool forward)
   resize_gui();
   for (unsigned int i = 0; i < widgets_.size(); i++)
   {
-    gui_name_[i]->set(widgets_[i]->name());
-    Color c(widgets_[i]->color());
+    gui_name_[i]->set(widgets_[i]->get_name());
+    Color c(widgets_[i]->get_color());
     gui_color_r_[i]->set(c.r());
     gui_color_g_[i]->set(c.g());
     gui_color_b_[i]->set(c.b());
-    gui_color_a_[i]->set(widgets_[i]->alpha());
+    gui_color_a_[i]->set(widgets_[i]->get_alpha());
     gui_sstate_[i]->set(widgets_[i]->get_shadeType());
     gui_onstate_[i]->set(widgets_[i]->get_onState());
   }
@@ -765,19 +764,19 @@ EditColorMap2D::update_from_gui()
   resize_gui();   // Make sure we have enough GUI vars to read through
   for (unsigned int i = 0; i < widgets_.size(); i++)
   {
-    if (widgets_[i]->name() != gui_name_[i]->get()) {
-      widgets_[i]->name() = gui_name_[i]->get();
+    if (widgets_[i]->get_name() != gui_name_[i]->get()) {
+      widgets_[i]->set_name(gui_name_[i]->get());
       cmap_dirty_ = true;
     }
     Color new_color(gui_color_r_[i]->get(),
 		    gui_color_g_[i]->get(),
 		    gui_color_b_[i]->get());
-    if (widgets_[i]->color() != new_color) {
+    if (widgets_[i]->get_color() != new_color) {
       widgets_[i]->set_color(new_color);
       cmap_dirty_ = true;
     }
     
-    if (widgets_[i]->alpha() != gui_color_a_[i]->get()) {
+    if (widgets_[i]->get_alpha() != gui_color_a_[i]->get()) {
       widgets_[i]->set_alpha(gui_color_a_[i]->get());
       cmap_dirty_ = true;
     }
@@ -858,11 +857,13 @@ EditColorMap2D::push(int x, int y, int button)
   select_widget(mouse_widget_, mouse_object_);
 
   // If the currently selected widget is a paint layer, start a new stroke
-  paint_widget_ = 
-    dynamic_cast<PaintCM2Widget *>(widgets_[mouse_widget_].get_rep());
-  if (paint_widget_) {
-    paint_widget_->add_stroke();
-    paint_widget_->add_coordinate(normalized_val(x,y));
+  if (mouse_widget_ > 0 && mouse_widget_ < int(widgets_.size())) {
+    paint_widget_ = 
+      dynamic_cast<PaintCM2Widget *>(widgets_[mouse_widget_].get_rep());
+    if (paint_widget_) {
+      paint_widget_->add_stroke();
+      paint_widget_->add_coordinate(normalized_val(x,y));
+    }
   }
 
   redraw();
@@ -982,14 +983,17 @@ EditColorMap2D::execute()
     histo_ = 0;
   }
 
+  for (unsigned int w = 0; w < widgets_.size(); ++w)
+    widgets_[w]->set_faux(bool(gui_faux_.get()));
   
   redraw();
 
   if (!just_resend_selection_)
-    sent_cmap2_ = scinew ColorMap2(widgets_, updating_, gui_faux_.get());
+    sent_cmap2_ = scinew ColorMap2(widgets_, updating_, 
+				   gui_selected_widget_.get(),
+				   value_range_);
   just_resend_selection_ = false;
   icmap_generation_ = sent_cmap2_->generation;
-  sent_cmap2_->selected() = gui_selected_widget_.get();
   cmap_oport_->send(sent_cmap2_);
 
 }
@@ -1050,37 +1054,37 @@ void EditColorMap2D::save_ppm(const string &filename,
 void
 EditColorMap2D::init_shader_factory() 
 {
-  //----------------------------------------------------------------
-  // decide what rasterization to use
-  if (use_back_buffer_) {
-    if(!shader_factory_) {
-      shader_factory_ = new CM2ShaderFactory();
-
-      if (sci_getenv("SCIRUN_SOFTWARE_CM2")) {
-	if (use_back_buffer_) 
-	  warning("SCIRUN_SOFWARE_CM2 set.  Rasterizing Colormap in software.");
-	use_back_buffer_ = false;
-	return;
-      }
-
-      FragmentProgramARB dummy("!!ARBfp1.0\nMOV result.color, 0.0;\nEND");
-      if(dummy.create()) {
-        dummy.destroy();
-        use_back_buffer_ = false;
-        remark ("Shaders not supported.");
-	remark ("Using software rasterization for widgets.");
-      } else {
-        remark ("ARB Shaders are supported.");
-	remark ("Using hardware rasterization for widgets.");
-      }
-      dummy.destroy();
+  if (sci_getenv_p("SCIRUN_SOFTWARE_CM2")) {
+    if (use_back_buffer_) 
+      remark("SCIRUN_SOFWARE_CM2 set. Rasterizing Colormap in software.");
+    use_back_buffer_ = false;
+  } else if (use_back_buffer_ && !shader_factory_ && 
+	     ShaderProgramARB::shaders_supported()) {
+    shader_factory_ = new CM2ShaderFactory();
+    remark ("ARB Shaders are supported.");
+    remark ("Using hardware rasterization for widgets.");
+  } else {
+    if (use_back_buffer_) {
+      remark ("Shaders not supported.");
+      remark ("Using software rasterization for widgets.");
     }
+    use_back_buffer_ = false;
   }
 }
 
 void
 EditColorMap2D::build_colormap_texture()
 {
+  glMatrixMode(GL_PROJECTION);
+  glPushMatrix();
+  glLoadIdentity();
+  glMatrixMode(GL_MODELVIEW);
+  glPushMatrix();
+  glLoadIdentity();
+
+  glScalef(2.0, 2.0, 2.0);
+  glTranslatef(-0.5 , -0.5, 0.0);
+
   glDrawBuffer(GL_BACK);
   glReadBuffer(GL_BACK);
 
@@ -1116,13 +1120,12 @@ EditColorMap2D::build_colormap_texture()
       glDrawBuffer(GL_BACK);
       glReadBuffer(GL_BACK);
       glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);  
-      glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);  
+      glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA); 
       for(unsigned int i=0; i<widgets_.size(); i++) {
-	if (! widgets_[i]->is_empty()) {
-	  widgets_[i]->set_value_range(value_offset_, value_scale_);
-	  widgets_[i]->rasterize(*shader_factory_, gui_faux_.get(), 0);
-	}
+	widgets_[i]->set_value_range(value_range_);
+	widgets_[i]->rasterize(*shader_factory_, 0);
       }
+
       if (rebuild_texture)
 	glCopyTexImage2D(GL_TEXTURE_2D,0,GL_RGBA8, 0,0,width_, height_,0);
       else
@@ -1135,10 +1138,8 @@ EditColorMap2D::build_colormap_texture()
 	colormap_texture_.resize(height_, width_, 4);
       colormap_texture_.initialize(0.0);
       for (unsigned int i=0; i<widgets_.size(); i++) {
-	if (! widgets_[i]->is_empty()) {
-	  widgets_[i]->set_value_range(value_offset_, value_scale_);
-	  widgets_[i]->rasterize(colormap_texture_, gui_faux_.get());
-	}
+	widgets_[i]->set_value_range(value_range_);
+	widgets_[i]->rasterize(colormap_texture_);
       }
 
       if (rebuild_texture)
@@ -1154,6 +1155,12 @@ EditColorMap2D::build_colormap_texture()
     glBindTexture(GL_TEXTURE_2D, 0);
     cmap_dirty_ = false;
   }
+  glMatrixMode(GL_MODELVIEW);
+  glPopMatrix();
+
+  glMatrixMode(GL_PROJECTION);
+  glPopMatrix();
+
 } 
 
 
@@ -1165,8 +1172,6 @@ EditColorMap2D::build_histogram_texture()
   if (!histo_dirty_) return;
   
   histo_dirty_ = false;
-  value_offset_ = 0.0;
-  value_scale_ = 1.0;
   
   if(glIsTexture(histogram_texture_id_)) {
     glDeleteTextures(1, &histogram_texture_id_);
@@ -1194,16 +1199,13 @@ EditColorMap2D::build_histogram_texture()
     glBindTexture(GL_TEXTURE_2D, 0);
     
     if (histo_->kvp) {
-      const char *min = nrrdKeyValueGet(histo_, "jhisto_nrrd0_min");
-      const char *max = nrrdKeyValueGet(histo_, "jhisto_nrrd0_max");
-      const char *new_min = nrrdKeyValueGet(histo_, "jhisto_nrrd0_new_min");
-      const char *new_max = nrrdKeyValueGet(histo_, "jhisto_nrrd0_new_max");
-      double dmin, dmax, new_dmin, new_dmax;
-      if (min && max && new_min && new_max && 
-	  string_to_double(min, dmin) && string_to_double(max, dmax) &&
-	  string_to_double(new_min, new_dmin) && string_to_double(new_max, new_dmax)) {
-	value_offset_ = (new_dmin - dmin) / (dmax - dmin);
-	value_scale_ = (new_dmax - new_dmin) / (dmax - dmin);
+      const char *min = nrrdKeyValueGet(histo_, "jhisto_nrrd0_new_min");
+      const char *max = nrrdKeyValueGet(histo_, "jhisto_nrrd0_new_max");
+      double dmin, dmax;
+      if (min && max &&
+	  string_to_double(min, dmin) && string_to_double(max, dmax))
+      {
+	value_range_ = make_pair(float(dmin), float(dmax));
 	cmap_dirty_ = true;
       }
     }
@@ -1254,14 +1256,12 @@ EditColorMap2D::redraw()
   glViewport(0, 0, width_, height_);
   glViewport(0, 0, 512, 256);//width_, height_);
 
+  build_histogram_texture();
+  build_colormap_texture();
+
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();
   glMatrixMode(GL_MODELVIEW);
-  glLoadIdentity();
-
-  glScalef(2.0, 2.0, 2.0);
-  glTranslatef(-0.5 , -0.5, 0.0);
-  build_colormap_texture();
   glLoadIdentity();
 
   const float scale_factor = 2.0 * scale_.get();
@@ -1271,8 +1271,6 @@ EditColorMap2D::redraw()
   glEnable(GL_BLEND);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);  
 
-  // Draw Histogram
-  build_histogram_texture();
   glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
   glColor4f(gui_histo_.get(), gui_histo_.get(), gui_histo_.get(), 1.0);
   draw_texture(histogram_texture_id_);
@@ -1283,11 +1281,8 @@ EditColorMap2D::redraw()
 
   glDisable(GL_BLEND);
   // Draw Colormap Widget Frames
-  for(unsigned int i=0; i<widgets_.size(); i++) {
-    if (! widgets_[i]->is_empty()) {
-      widgets_[i]->draw();
-    }
-  }
+  for(unsigned int i=0; i<widgets_.size(); i++)
+    widgets_[i]->draw();
 
   // draw outline of the image space.
   glColor4f(0.25, 0.35, 0.25, 1.0); 
