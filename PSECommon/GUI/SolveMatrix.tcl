@@ -202,7 +202,7 @@ itcl_class PSECommon_Matrix_SolveMatrix {
 	
 	blt::graph $w.graph -title "Convergence" -height 250 \
 		-plotbackground gray99
-	$w.graph yaxis configure -logscale true -title "error (RMS)"  -min [expr $err/10] -max [expr $err*10] -loose true
+	$w.graph yaxis configure -logscale true -title "error (RMS)"  -min [expr $err/10] -max 1 -loose true
 	$w.graph xaxis configure -title "Iteration" \
 		-loose true
 	bind $w.graph <ButtonPress-1> "$this select_error %x %y"
@@ -264,14 +264,14 @@ itcl_class PSECommon_Matrix_SolveMatrix {
     protected min_error
     
     method reset_graph {} {
-	puts "resetting graph!"
+#	puts "resetting graph!"
 	set w .ui[modname]
 	if {![winfo exists $w]} {
 	    return
 	}
 	catch "$w.graph element delete {Target Error}"
 	catch "$w.graph element delete {Current Error}"
-	puts "$w.graph"
+#	puts "$w.graph"
 	$w.graph element create "Target Error" -linewidth 2 -color blue -symbol ""
 	$w.graph element create "Current Error" -linewidth 2 -color red -symbol ""
 	global $this-target_error
@@ -279,6 +279,7 @@ itcl_class PSECommon_Matrix_SolveMatrix {
 	set iter 1
 	$w.graph element configure "Target Error" -data "0 $err $iter $err"
 	set min_error $err
+	$w.graph yaxis configure -min [expr $err/10] -max 1
 	$w.graph element configure "Current Target" -data "0 $err"
     }
     
@@ -326,9 +327,9 @@ itcl_class PSECommon_Matrix_SolveMatrix {
     }
     
     method finish_graph {} {
-	puts "finishing graph!"
+#	puts "finishing graph!"
 	set w .ui[modname]
-	puts "$w.graph"
+#	puts "$w.graph"
 	$w.graph element configure "Current Error" -color green
     }
 }
