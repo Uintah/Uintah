@@ -7,6 +7,7 @@
 #include <Packages/Uintah/CCA/Components/Arches/Mixing/MixingModel.h>
 #include <Packages/Uintah/CCA/Components/Arches/Mixing/ColdflowMixingModel.h>
 #include <Packages/Uintah/CCA/Components/Arches/Mixing/PDFMixingModel.h>
+#include <Packages/Uintah/CCA/Components/Arches/Mixing/MeanMixingModel.h>
 #include <Packages/Uintah/CCA/Components/Arches/Mixing/Stream.h>
 #include <Packages/Uintah/CCA/Components/Arches/Mixing/InletStream.h>
 #include <Packages/Uintah/CCA/Components/Arches/ArchesMaterial.h>
@@ -65,6 +66,8 @@ Properties::problemSetup(const ProblemSpecP& params)
     d_mixingModel = scinew ColdflowMixingModel();
   else if (mixModel == "pdfMixingModel")
     d_mixingModel = scinew PDFMixingModel();
+  else if (mixModel == "meanMixingModel")
+    d_mixingModel = scinew MeanMixingModel();
   else
     throw InvalidValue("Mixing Model not supported" + mixModel);
   d_mixingModel->problemSetup(db);
