@@ -25,7 +25,6 @@ SUBDIRS := \
 	$(SRCDIR)/Algorithms \
 	$(SRCDIR)/Containers \
 	$(SRCDIR)/Datatypes \
-	$(SRCDIR)/Disclosure \
 	$(SRCDIR)/Exceptions \
 	$(SRCDIR)/GUI \
 	$(SRCDIR)/Geom \

@@ -25,8 +25,7 @@ SRCS     += \
         $(SRCDIR)/CoregPts.cc \
 
 PSELIBS := Core/Datatypes Core/Containers Core/Thread \
-	Core/Exceptions Core/Geometry Core/Disclosure \
-	Core/Math
+	Core/Exceptions Core/Geometry Core/Util Core/Math
 
 LIBS := $(TK_LIBRARY) $(GL_LIBS) -lm
 

@@ -34,7 +34,6 @@
 #include <Core/Geometry/Point.h>
 #include <Core/Containers/LockingHandle.h>
 #include <Core/Datatypes/LatVolField.h>
-#include <Core/Disclosure/TypeDescription.h>
 #include <Core/share/share.h>
 #include <Core/Math/MusilRNG.h>
 #include <string>

@@ -18,7 +18,7 @@
 //    Date   : Fri Jun 15 21:33:04 2001
 
 #include <Core/Algorithms/Visualization/TetMC.h>
-#include <Core/Disclosure/TypeDescription.h>
+#include <Core/Util/TypeDescription.h>
 
 namespace SCIRun {
 

@@ -25,7 +25,6 @@ PSELIBS := \
 	Dataflow/Ports    \
 	Dataflow/XMLUtil  \
 	Core/Containers   \
-	Core/Disclosure   \
 	Core/Persistent   \
 	Core/Exceptions   \
 	Core/GuiInterface \

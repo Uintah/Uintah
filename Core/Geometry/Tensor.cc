@@ -27,7 +27,7 @@
  *  Copyright (C) 200  SCI Group
  */
 
-#include <Core/Disclosure/TypeDescription.h>
+#include <Core/Util/TypeDescription.h>
 #include <Core/Geometry/Tensor.h>
 #include <Core/Util/Assert.h>
 #include <Core/Persistent/Persistent.h>

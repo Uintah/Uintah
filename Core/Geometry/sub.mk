@@ -33,7 +33,7 @@ SRCS     += $(SRCDIR)/BBox.cc \
 	    $(SRCDIR)/Transform.cc \
 	    $(SRCDIR)/Vector.cc
 
-PSELIBS := Core/Persistent Core/Disclosure Core/Containers \
+PSELIBS := Core/Persistent Core/Containers \
 	   Core/Exceptions
 LIBS := $(DEFAULT_LIBS) -lm
 

@@ -25,7 +25,7 @@ PSELIBS := \
 	Core/Datatypes   \
 	Core/Containers  \
 	Core/Thread      \
-	Core/Disclosure  \
+	Core/Util        \
 	Packages/Uintah/Core/Grid        \
 	Packages/Uintah/Core/Math        \
 	Packages/Uintah/Core/Disclosure  \

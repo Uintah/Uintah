@@ -16,7 +16,7 @@ SRCS     += \
 	$(SRCDIR)/MetropolisData.cc
 #[INSERT NEW CODE FILE HERE]
 
-PSELIBS := Core/Persistent Core/Disclosure Core/Exceptions Core/Containers \
+PSELIBS := Core/Persistent Core/Exceptions Core/Containers \
 	Core/Util Core/Datatypes Core/Geom
 LIBS :=
 

@@ -33,8 +33,8 @@
 #include <Core/Geom/Pt.h>
 #include <Core/Datatypes/Field.h>
 #include <Core/Datatypes/ColorMap.h>
-#include <Core/Disclosure/TypeDescription.h>
-#include <Core/Disclosure/DynamicLoader.h>
+#include <Core/Util/TypeDescription.h>
+#include <Core/Util/DynamicLoader.h>
 #include <sci_hash_map.h>
 
 namespace SCIRun {

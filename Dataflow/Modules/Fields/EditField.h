@@ -22,8 +22,8 @@
 #if !defined(EditField_h)
 #define EditField_h
 
-#include <Core/Disclosure/TypeDescription.h>
-#include <Core/Disclosure/DynamicLoader.h>
+#include <Core/Util/TypeDescription.h>
+#include <Core/Util/DynamicLoader.h>
 #include <Core/Datatypes/Field.h>
 
 namespace SCIRun {

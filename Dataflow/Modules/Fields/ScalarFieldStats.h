@@ -23,8 +23,8 @@
 #define ScalarFieldStats_h
 
 #include <Dataflow/Network/Module.h>
-#include <Core/Disclosure/TypeDescription.h>
-#include <Core/Disclosure/DynamicLoader.h>
+#include <Core/Util/TypeDescription.h>
+#include <Core/Util/DynamicLoader.h>
 #include <Core/Datatypes/Matrix.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <algorithm>

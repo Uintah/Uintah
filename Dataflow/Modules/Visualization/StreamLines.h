@@ -22,8 +22,8 @@
 #if !defined(StreamLines_h)
 #define StreamLines_h
 
-#include <Core/Disclosure/TypeDescription.h>
-#include <Core/Disclosure/DynamicLoader.h>
+#include <Core/Util/TypeDescription.h>
+#include <Core/Util/DynamicLoader.h>
 #include <Core/Datatypes/Field.h>
 #include <Core/Datatypes/CurveField.h>
 #include <algorithm>

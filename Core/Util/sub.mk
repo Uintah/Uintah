@@ -23,15 +23,17 @@ SRCDIR   := Core/Util
 
 SRCS     += \
 	$(SRCDIR)/Debug.cc \
-	$(SRCDIR)/soloader.cc \
 	$(SRCDIR)/DebugStream.cc \
+	$(SRCDIR)/DynamicLoader.cc \
 	$(SRCDIR)/Endian.cc \
-	$(SRCDIR)/Timer.cc \
-	$(SRCDIR)/sci_system.c \
+	$(SRCDIR)/MacroSubstitute.cc \
 	$(SRCDIR)/RCParse.cc \
 	$(SRCDIR)/RWS.cc \
-	$(SRCDIR)/MacroSubstitute.cc \
+	$(SRCDIR)/sci_system.c \
+	$(SRCDIR)/soloader.cc \
         $(SRCDIR)/Signals.cc \
+	$(SRCDIR)/Timer.cc \
+	$(SRCDIR)/TypeDescription.cc \
         $(SRCDIR)/XMLParser.cc \
 
 PSELIBS := Core/Containers Core/Exceptions Core/Thread

@@ -22,8 +22,8 @@
 #if !defined(SelectField_h)
 #define SelectField_h
 
-#include <Core/Disclosure/TypeDescription.h>
-#include <Core/Disclosure/DynamicLoader.h>
+#include <Core/Util/TypeDescription.h>
+#include <Core/Util/DynamicLoader.h>
 #include <Core/Datatypes/Clipper.h>
 #include <Core/Datatypes/Matrix.h>
 
