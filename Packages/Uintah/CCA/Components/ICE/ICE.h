@@ -99,10 +99,12 @@ using namespace SCIRun;
                                                    const MaterialSubset*,
                                                    const MaterialSet*);
 
-      void scheduleAddExchangeToMomentumAndEnergy(SchedulerP&, 
+      void scheduleAddExchangeToMomentumAndEnergy(SchedulerP& sched,
                                                   const PatchSet*,
-                                                  const MaterialSet*);
-      
+                                                  const MaterialSubset*,
+                                                  const MaterialSubset*,
+                                                  const MaterialSet* );
+                                                        
       void scheduleAdvectAndAdvanceInTime(SchedulerP&, 
                                           const PatchSet*,
                                           const MaterialSubset*,
@@ -207,11 +209,11 @@ using namespace SCIRun;
                                            DataWarehouse*);
 
       void addExchangeToMomentumAndEnergy(const ProcessorGroup*,
-                                          const PatchSubset* patches,
-                                          const MaterialSubset* matls,
+                                          const PatchSubset*,
+                                          const MaterialSubset*,
                                           DataWarehouse*,
-                                          DataWarehouse*);
-      
+                                          DataWarehouse*); 
+                                  
       void advectAndAdvanceInTime(const ProcessorGroup*,
                                   const PatchSubset* patches,
                                   const MaterialSubset* matls,
