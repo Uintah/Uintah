@@ -54,7 +54,7 @@ class GridSpheres : public Object, public Material {
 	     const Vector& cellcorner, const Vector& celldir,
 	     const Ray& ray, HitInfo& hit,
 	     DepthStats* st, PerProcessorContext* ppc);
-  void intersect_print(const Ray& ray,
+  void intersect_print(Ray& ray,
 		       HitInfo& hit, DepthStats* st,
 		       PerProcessorContext*);
   void calc_mcell(int depth, int idx, MCell& mcell);
@@ -64,10 +64,9 @@ public:
 	      float radius, int nmatls, Material** matls,
 	      string *var_names = 0);
   virtual ~GridSpheres();
-
   virtual void io(SCIRun::Piostream &stream);
 
-  virtual void intersect(const Ray& ray,
+  virtual void intersect(Ray& ray,
 			 HitInfo& hit, DepthStats* st,
 			 PerProcessorContext*);
   virtual Vector normal(const Point&, const HitInfo& hit);

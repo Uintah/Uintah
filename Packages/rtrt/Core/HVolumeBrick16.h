@@ -68,7 +68,7 @@ public:
 		   char* filebase, int depth, int np);
     HVolumeBrick16(Material* matl, VolumeDpy* dpy, HVolumeBrick16* share);
     virtual ~HVolumeBrick16();
-    virtual void intersect(const Ray& ray, HitInfo& hit, DepthStats* st,
+    virtual void intersect(Ray& ray, HitInfo& hit, DepthStats* st,
 			   PerProcessorContext*);
     virtual Vector normal(const Point&, const HitInfo& hit);
     virtual void compute_bounds(BBox&, double offset);

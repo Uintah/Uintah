@@ -125,7 +125,7 @@ extern int HitCell(const Ray& r, const Point& pmin, const Point& pmax,
 		   float rho[2][2][2], float iso, double tmin, double tmax, double& t);
 } // end namespace rtrt
 
-void Volume::intersect(const Ray& ray, HitInfo& hit,
+void Volume::intersect(Ray& ray, HitInfo& hit,
 		       DepthStats*, PerProcessorContext*)
 {
     Point max(min+diag);
@@ -439,7 +439,7 @@ Vector aVolume::normal(const Point& p, const HitInfo& hit)
   return vols[ctime]->normal(p,hit);
 }
 
-void aVolume::intersect(const Ray& ray, HitInfo& hit,
+void aVolume::intersect(Ray& ray, HitInfo& hit,
 			DepthStats* st, PerProcessorContext* ppc)
 {
   vols[ctime]->intersect(ray,hit,st,ppc);

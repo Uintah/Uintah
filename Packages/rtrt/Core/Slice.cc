@@ -93,7 +93,7 @@ extern Vector GradientCell(const Point& pmin, const Point& pmax,
 } // end namespace rtrt
 
 template<class T, class A, class B>
-void Slice<T,A,B>::intersect(const Ray& ray, HitInfo& hit,
+void Slice<T,A,B>::intersect(Ray& ray, HitInfo& hit,
 			    DepthStats*, PerProcessorContext*)
 {
     Vector dir(ray.direction());

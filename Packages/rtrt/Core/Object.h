@@ -64,11 +64,11 @@ public:
   inline UVMapping * get_uvmapping() { return uv; }
   inline void        set_uvmapping(UVMapping* uv) { this->uv=uv; }
 
-  virtual void intersect(const Ray& ray, HitInfo& hit, DepthStats* st,
+  virtual void intersect(Ray& ray, HitInfo& hit, DepthStats* st,
 			 PerProcessorContext*)=0;
-  virtual void light_intersect(const Ray& ray, HitInfo& hit, Color& atten,
+  virtual void light_intersect(Ray& ray, HitInfo& hit, Color& atten,
 			       DepthStats* st, PerProcessorContext* ppc);
-  virtual void softshadow_intersect(Light* light, const Ray& ray,
+  virtual void softshadow_intersect(Light* light, Ray& ray,
 				    HitInfo& hit, double dist, Color& atten,
 				    DepthStats* st, PerProcessorContext* ppc);
   virtual void multi_light_intersect(Light* light, const Point& orig,

@@ -107,7 +107,7 @@ public:
     b.extend(*bbox);
   }
   
-  inline void intersect(const Ray &r, HitInfo &hit, DepthStats*,
+  inline void intersect(Ray &r, HitInfo &hit, DepthStats*,
 			PerProcessorContext *ppc) 
   {
     
@@ -126,7 +126,7 @@ public:
     }
   }
 
-  /*inline void intersect(const Ray &r, HitInfo &hit, DepthStats* st,
+  /*inline void intersect(Ray &r, HitInfo &hit, DepthStats* st,
 			  PerProcessorContext *ppc) {
       
       Point orig(r.origin());    

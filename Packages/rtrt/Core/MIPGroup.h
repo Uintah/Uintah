@@ -10,7 +10,7 @@ class MIPGroup : public Group {
 public:
     MIPGroup();
     virtual ~MIPGroup();
-    virtual void intersect(const Ray& ray, HitInfo& hit, DepthStats* st,
+    virtual void intersect(Ray& ray, HitInfo& hit, DepthStats* st,
 			   PerProcessorContext*);
 };
 

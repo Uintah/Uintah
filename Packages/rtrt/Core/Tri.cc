@@ -143,7 +143,7 @@ Tri::~Tri()
 
 // I changed the epsilon to 1e-9 to avoid holes in the bunny -- Bill
 
-void Tri::intersect(const Ray& ray, HitInfo& hit, DepthStats* st,
+void Tri::intersect(Ray& ray, HitInfo& hit, DepthStats* st,
 		    PerProcessorContext*)
 {
     st->tri_isect++;
@@ -257,7 +257,7 @@ Tri::pairMeUp( Tri * tri )
   return NULL;
 }
 
-void Tri::light_intersect(const Ray& ray, HitInfo& hit, Color&,
+void Tri::light_intersect(Ray& ray, HitInfo& hit, Color&,
 			  DepthStats* st, PerProcessorContext*)
 {
   st->tri_isect++;
@@ -305,7 +305,7 @@ Vector Tri::normal(const Point&, const HitInfo& hitinfo)
 
 // I changed epsilon to 1e-9 to avoid holes in the bunny! -- Bill
 
-void Tri::softshadow_intersect(Light* light, const Ray& ray,
+void Tri::softshadow_intersect(Light* light, Ray& ray,
 			       HitInfo&, double dist, Color& atten,
 			       DepthStats* st, PerProcessorContext*)
 {

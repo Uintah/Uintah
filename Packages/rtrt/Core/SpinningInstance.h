@@ -23,7 +23,7 @@ namespace rtrt {
       SpinningInstance(InstanceWrapperObject* o, Transform* trans, Point cen, Vector axis, double rate);
       virtual void compute_bounds(BBox& b, double /*offset*/);
       virtual void animate(double t, bool& changed);
-      void intersect(const Ray& ray, HitInfo& hit, DepthStats* st,
+      void intersect(Ray& ray, HitInfo& hit, DepthStats* st,
 		     PerProcessorContext* ppc);
 
       void toggleDoSpin() { dorotate = !dorotate; };	

@@ -376,7 +376,7 @@ void Heightfield<A,B>::isect_up(int depth, double t,
 			     int dix_dx, int diy_dy,
 			     int startx, int starty,
 			     const Vector& cellcorner, const Vector& celldir,
-			     const Ray& ray, HitInfo& hit,
+			     Ray& ray, HitInfo& hit,
 			     DepthStats* st, PerProcessorContext* ppc)
 {
 #ifdef DEBUG
@@ -570,7 +570,7 @@ void Heightfield<A,B>::isect_down(int depth, double t,
 				  int dix_dx, int diy_dy,
 				  int startx, int starty,
 				  const Vector& cellcorner, const Vector& celldir,
-				  const Ray& ray, HitInfo& hit,
+				  Ray& ray, HitInfo& hit,
 				  DepthStats* st, PerProcessorContext* ppc)
 {
 #ifdef DEBUG
@@ -758,8 +758,8 @@ void Heightfield<A,B>::isect_down(int depth, double t,
 
 
 template<class A, class B>
-void Heightfield<A,B>::intersect(const Ray& ray, HitInfo& hit,
-			    DepthStats* st, PerProcessorContext* ppc)
+void Heightfield<A,B>::intersect(Ray& ray, HitInfo& hit,
+				 DepthStats* st, PerProcessorContext* ppc)
 {
     const Vector dir(ray.direction());
     const Point orig(ray.origin());

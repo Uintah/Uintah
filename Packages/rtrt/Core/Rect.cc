@@ -43,7 +43,7 @@ Rect::~Rect()
 {
 }
 
-void Rect::intersect(const Ray& ray, HitInfo& hit, DepthStats* st,
+void Rect::intersect(Ray& ray, HitInfo& hit, DepthStats* st,
 		     PerProcessorContext*)
 {
     st->rect_isect++;
@@ -65,7 +65,7 @@ void Rect::intersect(const Ray& ray, HitInfo& hit, DepthStats* st,
     hit.hit(this, t);
 }
 
-void Rect::light_intersect(const Ray& ray, HitInfo& hit, Color& /*atten*/,
+void Rect::light_intersect(Ray& ray, HitInfo& hit, Color& /*atten*/,
 			   DepthStats* st, PerProcessorContext*)
 {
     st->rect_isect++;
@@ -92,7 +92,7 @@ Vector Rect::normal(const Point&, const HitInfo&)
     return n;
 }
 
-void Rect::softshadow_intersect(Light* light, const Ray& ray,
+void Rect::softshadow_intersect(Light* light, Ray& ray,
 				HitInfo& hit, double dist, Color& atten,
 				DepthStats* st, PerProcessorContext*)
 {

@@ -323,9 +323,20 @@ void Grid::preprocess(double maxradius, int& pp_offset, int& scratchsize)
     cerr << "Done building grid\n";
 }
 
-void Grid::intersect(const Ray& ray, HitInfo& hit,
-		     DepthStats* st, PerProcessorContext* ppc)
+void Grid::intersect(Ray& ray, HitInfo& hit,
+		    DepthStats* st, PerProcessorContext* ppc)
 {
+  if (ray.already_tested[0] == this ||
+      ray.already_tested[1] == this ||
+      ray.already_tested[2] == this ||
+      ray.already_tested[3] == this)
+    return;
+  else {
+    ray.already_tested[3] = ray.already_tested[2];
+    ray.already_tested[2] = ray.already_tested[1];
+    ray.already_tested[1] = ray.already_tested[0];
+    ray.already_tested[0] = this;
+  }
   const Vector dir(ray.direction());
   const Point orig(ray.origin());
   Point min(bbox.min());
@@ -477,9 +488,21 @@ void Grid::intersect(const Ray& ray, HitInfo& hit,
   }
 }
 
-void Grid::light_intersect(const Ray& ray, HitInfo& hit, Color& atten,
+void Grid::light_intersect(Ray& ray, HitInfo& hit, Color& atten,
 			   DepthStats* st, PerProcessorContext* ppc)
 {
+  if (ray.already_tested[0] == this ||
+      ray.already_tested[1] == this ||
+      ray.already_tested[2] == this ||
+      ray.already_tested[3] == this)
+    return;
+  else {
+    ray.already_tested[3] = ray.already_tested[2];
+    ray.already_tested[2] = ray.already_tested[1];
+    ray.already_tested[1] = ray.already_tested[0];
+    ray.already_tested[0] = this;
+  }
+
   const Vector dir(ray.direction());
   const Point orig(ray.origin());
   Point min(bbox.min());
@@ -633,10 +656,22 @@ void Grid::light_intersect(const Ray& ray, HitInfo& hit, Color& atten,
   }
 }
 
-void Grid::softshadow_intersect(Light* light, const Ray& ray,
+void Grid::softshadow_intersect(Light* light, Ray& ray,
 				HitInfo& hit, double dist, Color& atten,
 				DepthStats* st, PerProcessorContext* ppc)
 {
+  if (ray.already_tested[0] == this ||
+      ray.already_tested[1] == this ||
+      ray.already_tested[2] == this ||
+      ray.already_tested[3] == this)
+    return;
+  else {
+    ray.already_tested[3] = ray.already_tested[2];
+    ray.already_tested[2] = ray.already_tested[1];
+    ray.already_tested[1] = ray.already_tested[0];
+    ray.already_tested[0] = this;
+  }
+
   const Vector dir(ray.direction());
   const Point orig(ray.origin());
   Point min(bbox.min());

@@ -78,7 +78,7 @@ public:
 	  T _datamin, T _datamax, Array3<T> _indata);
   HVolume(Material* matl, VolumeDpy* dpy, HVolume<T,A,B>* share);
   virtual ~HVolume();
-  virtual void intersect(const Ray& ray, HitInfo& hit, DepthStats* st,
+  virtual void intersect(Ray& ray, HitInfo& hit, DepthStats* st,
 			 PerProcessorContext*);
   virtual Vector normal(const Point&, const HitInfo& hit);
   virtual void compute_bounds(BBox&, double offset);
@@ -907,7 +907,7 @@ void HVolume<T,A,B>::isect(int depth, float isoval, double t,
 }
 
 template<class T, class A, class B>
-void HVolume<T,A,B>::intersect(const Ray& ray, HitInfo& hit,
+void HVolume<T,A,B>::intersect(Ray& ray, HitInfo& hit,
 			       DepthStats* st, PerProcessorContext* ppc)
 {
   const Vector dir(ray.direction());

@@ -384,9 +384,20 @@ inline void isect_bbox(const Point& orig, const Vector& idir,
 #endif
 }
 
-void BV1::intersect(const Ray& ray, HitInfo& hit,
+void BV1::intersect(Ray& ray, HitInfo& hit,
 		    DepthStats* st, PerProcessorContext* ppc)
 {
+  if (ray.already_tested[0] == this ||
+      ray.already_tested[1] == this ||
+      ray.already_tested[2] == this ||
+      ray.already_tested[3] == this)
+    return;
+  else {
+    ray.already_tested[3] = ray.already_tested[2];
+    ray.already_tested[2] = ray.already_tested[1];
+    ray.already_tested[1] = ray.already_tested[0];
+    ray.already_tested[0] = this;
+  }
     int idx=0;
     int sp=0;
     double* slabs=normal_tree->slabs;
@@ -456,10 +467,22 @@ void BV1::intersect(const Ray& ray, HitInfo& hit,
     }
 }
 
-void BV1::light_intersect(const Ray& lightray,
+void BV1::light_intersect(Ray& lightray,
 			  HitInfo& hit, Color& atten,
 			  DepthStats* st, PerProcessorContext* ppc)
 {
+  if (lightray.already_tested[0] == this ||
+      lightray.already_tested[1] == this ||
+      lightray.already_tested[2] == this ||
+      lightray.already_tested[3] == this)
+    return;
+  else {
+    lightray.already_tested[3] = lightray.already_tested[2];
+    lightray.already_tested[2] = lightray.already_tested[1];
+    lightray.already_tested[1] = lightray.already_tested[0];
+    lightray.already_tested[0] = this;
+  }
+
   double* slabs=normal_tree->slabs;
   int primStart=normal_tree->primStart;
   Object** prims=&normal_tree->prims[0];
@@ -541,10 +564,22 @@ void BV1::light_intersect(const Ray& lightray,
 }
 
 
-void BV1::softshadow_intersect(Light* light, const Ray& lightray,
+void BV1::softshadow_intersect(Light* light, Ray& lightray,
 			       HitInfo& hit, double dist, Color& atten,
 			       DepthStats* st, PerProcessorContext* ppc)
 {
+  if (lightray.already_tested[0] == this ||
+      lightray.already_tested[1] == this ||
+      lightray.already_tested[2] == this ||
+      lightray.already_tested[3] == this)
+    return;
+  else {
+    lightray.already_tested[3] = lightray.already_tested[2];
+    lightray.already_tested[2] = lightray.already_tested[1];
+    lightray.already_tested[1] = lightray.already_tested[0];
+    lightray.already_tested[0] = this;
+  }
+
   double* slabs=light_tree->slabs;
   int primStart=light_tree->primStart;
   Object** prims=&light_tree->prims[0];

@@ -23,7 +23,7 @@ BumpObject::~BumpObject()
 {
 }
 
-void BumpObject::intersect(const Ray& /*ray*/, HitInfo& /*hit*/, 
+void BumpObject::intersect(Ray& /*ray*/, HitInfo& /*hit*/, 
 			   DepthStats* /*st*/,
 			   PerProcessorContext*) {
   cout << "If you're interesecting this object - stop it. This is the Bump Object and should only be used for its normal." << endl;
@@ -32,7 +32,7 @@ void BumpObject::intersect(const Ray& /*ray*/, HitInfo& /*hit*/,
 
 
 /*
-void BumpObject::light_intersect(Light* light, const Ray& ray, HitInfo&,
+void BumpObject::light_intersect(Light* light, Ray& ray, HitInfo&,
 			     double dist, Color& atten, DepthStats* st,
 			     PerProcessorContext*)
 {

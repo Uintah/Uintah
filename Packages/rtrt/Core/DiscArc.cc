@@ -21,7 +21,7 @@ DiscArc::~DiscArc()
 {
 }
 
-void DiscArc::intersect(const Ray& ray, HitInfo& hit, DepthStats*,
+void DiscArc::intersect(Ray& ray, HitInfo& hit, DepthStats*,
 			PerProcessorContext*)
 {
   Vector xdir(xform.unproject(ray.direction()));
@@ -40,7 +40,7 @@ void DiscArc::intersect(const Ray& ray, HitInfo& hit, DepthStats*,
     hit.hit(this, t);
 }
 
-void DiscArc::light_intersect(const Ray& ray, HitInfo& hit, Color&,
+void DiscArc::light_intersect(Ray& ray, HitInfo& hit, Color&,
 				DepthStats*, PerProcessorContext*)
 {
   Vector xdir(xform.unproject(ray.direction()));

@@ -61,7 +61,7 @@ public:
 		int dix_dx, int diy_dy,
 		int startx, int starty,
 		const Vector& cellcorner, const Vector& celldir,
-		const Ray& ray, HitInfo& hit,
+		Ray& ray, HitInfo& hit,
 		DepthStats* st, PerProcessorContext* ppc);
   void isect_down(int depth, double t,
 		  double dtdx, double dtdy,
@@ -70,7 +70,7 @@ public:
 		  int dix_dx, int diy_dy,
 		  int startx, int starty,
 		  const Vector& cellcorner, const Vector& celldir,
-		  const Ray& ray, HitInfo& hit,
+		  Ray& ray, HitInfo& hit,
 		  DepthStats* st, PerProcessorContext* ppc);
   Heightfield(Material* matl,
 	      char* filebase, int depth, int np);
@@ -79,7 +79,7 @@ public:
 
   virtual void io(SCIRun::Piostream &stream);
 
-  virtual void intersect(const Ray& ray, HitInfo& hit, DepthStats* st,
+  virtual void intersect(Ray& ray, HitInfo& hit, DepthStats* st,
 			 PerProcessorContext*);
   virtual Vector normal(const Point&, const HitInfo& hit);
   virtual void compute_bounds(BBox&, double offset);

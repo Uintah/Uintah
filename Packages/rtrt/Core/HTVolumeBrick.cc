@@ -999,7 +999,7 @@ void HTVolumeBrick::isect(int depth, float isoval, double t,
   //cerr << "end depth: " << depth << "\n";
 }
 
-void HTVolumeBrick::intersect(const Ray& ray, HitInfo& hit,
+void HTVolumeBrick::intersect(Ray& ray, HitInfo& hit,
 			      DepthStats* st, PerProcessorContext* ppc)
 {
   const Vector dir(ray.direction());

@@ -34,13 +34,13 @@ public:
 	obj->compute_bounds(bbox, offset);
     }
     
-    virtual void intersect(const Ray& ray, HitInfo& hit, DepthStats* st,
+    virtual void intersect(Ray& ray, HitInfo& hit, DepthStats* st,
                            PerProcessorContext* ppc)
     {
 	obj->intersect(ray, hit, st, ppc);
     }
     
-    virtual void light_intersect(const Ray& ray,
+    virtual void light_intersect(Ray& ray,
                                  HitInfo& hit, Color& atten,
                                  DepthStats* st, PerProcessorContext* ppc)
     {

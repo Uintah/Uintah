@@ -29,8 +29,8 @@ Box::~Box()
 {
 }
 
-void Box::intersect(const Ray& r, HitInfo& hit, DepthStats* st,
-		       PerProcessorContext*)
+void Box::intersect(Ray& r, HitInfo& hit, DepthStats* st,
+		    PerProcessorContext*)
 {
    st->box_isect++;
     

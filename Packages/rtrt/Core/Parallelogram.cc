@@ -47,7 +47,7 @@ Parallelogram::~Parallelogram()
 {
 }
 
-void Parallelogram::intersect(const Ray& ray, HitInfo& hit, DepthStats* st,
+void Parallelogram::intersect(Ray& ray, HitInfo& hit, DepthStats* st,
 		     PerProcessorContext*)
 {
     st->parallelogram_isect++;
@@ -86,7 +86,7 @@ Vector Parallelogram::normal(const Point&, const HitInfo&)
     return n;
 }
 
-void Parallelogram::light_intersect(const Ray& ray, HitInfo& hit, Color&,
+void Parallelogram::light_intersect(Ray& ray, HitInfo& hit, Color&,
 				    DepthStats* st, PerProcessorContext*)
 {
     st->rect_light_isect++;

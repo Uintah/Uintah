@@ -55,7 +55,7 @@ void UVSphere::preprocess(double, int&, int&)
     ixform.pre_translate(cen.asVector());
 }
 
-void UVSphere::intersect(const Ray& ray, HitInfo& hit, DepthStats* st,
+void UVSphere::intersect(Ray& ray, HitInfo& hit, DepthStats* st,
                          PerProcessorContext*)
 {
   Vector v=xform.project(ray.direction());

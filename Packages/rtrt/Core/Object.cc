@@ -44,13 +44,13 @@ void Object::print(ostream& out)
   out << "Unknown object: " << this << '\n';
 }
 
-void Object::light_intersect(const Ray& ray, HitInfo& hit, Color&,
+void Object::light_intersect(Ray& ray, HitInfo& hit, Color&,
 			     DepthStats* st, PerProcessorContext* ppc)
 {
   intersect(ray, hit, st, ppc);
 }
 
-void Object::softshadow_intersect(Light*, const Ray& ray,
+void Object::softshadow_intersect(Light*, Ray& ray,
 				  HitInfo& hit, double, Color& atten,
 				  DepthStats* st, PerProcessorContext* ppc)
 {

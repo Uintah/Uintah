@@ -36,9 +36,9 @@ public:
   virtual void io(SCIRun::Piostream &stream);
   friend void SCIRun::Pio(SCIRun::Piostream&, Parallelogram*&);
 
-  virtual void intersect(const Ray& ray, HitInfo& hit, DepthStats* st,
+  virtual void intersect(Ray& ray, HitInfo& hit, DepthStats* st,
 			 PerProcessorContext*);
-  virtual void light_intersect(const Ray& ray, HitInfo& hit, Color& atten,
+  virtual void light_intersect(Ray& ray, HitInfo& hit, Color& atten,
 			       DepthStats* st, PerProcessorContext* ppc);
   virtual Vector normal(const Point&, const HitInfo& hit);
   virtual void uv(UV& uv, const Point&, const HitInfo& hit);

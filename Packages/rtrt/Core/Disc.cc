@@ -37,7 +37,7 @@ void Disc::preprocess(double, int&, int&)
   xform.pre_translate(cen.asVector());
 }
 
-void Disc::intersect(const Ray& ray, HitInfo& hit, DepthStats*,
+void Disc::intersect(Ray& ray, HitInfo& hit, DepthStats*,
 		     PerProcessorContext*)
 {
   Vector xdir(xform.unproject(ray.direction()));
@@ -59,7 +59,7 @@ Vector Disc::normal(const Point&, const HitInfo&)
     return n;
 }
 
-void Disc::light_intersect(const Ray& ray, HitInfo& hit, Color&,
+void Disc::light_intersect(Ray& ray, HitInfo& hit, Color&,
 			   DepthStats*, PerProcessorContext*)
 {
   Vector xdir(xform.unproject(ray.direction()));

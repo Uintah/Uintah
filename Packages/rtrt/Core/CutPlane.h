@@ -19,9 +19,9 @@ public:
     CutPlane(Object* child, const Point& cen, const Vector& n);
     CutPlane(Object* child, PlaneDpy* dpy);
     virtual ~CutPlane();
-    virtual void intersect(const Ray& ray, HitInfo& hit, DepthStats* st,
+    virtual void intersect(Ray& ray, HitInfo& hit, DepthStats* st,
 			   PerProcessorContext*);
-  virtual void light_intersect(const Ray& ray, HitInfo& hit, Color& atten,
+  virtual void light_intersect(Ray& ray, HitInfo& hit, Color& atten,
 			       DepthStats* st, PerProcessorContext* ppc);
     virtual Vector normal(const Point&, const HitInfo& hit);
     virtual void compute_bounds(BBox&, double offset);

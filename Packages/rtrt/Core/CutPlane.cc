@@ -33,7 +33,7 @@ CutPlane::~CutPlane()
 {
 }
 
-void CutPlane::intersect(const Ray& ray, HitInfo& hit, DepthStats* st,
+void CutPlane::intersect(Ray& ray, HitInfo& hit, DepthStats* st,
 		     PerProcessorContext* ppc)
 {
     Vector dir(ray.direction());
@@ -70,7 +70,7 @@ Vector CutPlane::normal(const Point&, const HitInfo&)
     return Vector(0,0,0);
 }
 
-void CutPlane::light_intersect(const Ray& ray, HitInfo& hit, Color& atten,
+void CutPlane::light_intersect(Ray& ray, HitInfo& hit, Color& atten,
 			       DepthStats* st, PerProcessorContext* ppc)
 {
     Vector dir(ray.direction());

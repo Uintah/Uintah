@@ -70,7 +70,7 @@ public:
   HTVolumeBrick(Material* matl, VolumeDpy* dpy,
 		char* filebase, int depth, int np, double density);
   virtual ~HTVolumeBrick();
-  virtual void intersect(const Ray& ray, HitInfo& hit, DepthStats* st,
+  virtual void intersect(Ray& ray, HitInfo& hit, DepthStats* st,
 			 PerProcessorContext*);
   virtual Vector normal(const Point&, const HitInfo& hit);
   virtual void compute_bounds(BBox&, double offset);

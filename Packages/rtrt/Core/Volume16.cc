@@ -120,7 +120,7 @@ extern int HitCell(const Ray& r, const Point& pmin, const Point& pmax,
 		   float rho[2][2][2], float iso, double tmin, double tmax, double& t);
 } // end namespace rtrt
 
-void Volume16::intersect(const Ray& ray, HitInfo& hit,
+void Volume16::intersect(Ray& ray, HitInfo& hit,
 		       DepthStats*, PerProcessorContext*)
 {
     Point max(min+diag);

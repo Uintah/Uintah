@@ -672,6 +672,7 @@ Group* insert_rtrt_room(Point& cen, double radius)
       Material* matl1=new Checker(marble1,
 				  marble2,
 				  grmusT.project(Vector(0.005,0,0)), grmusT.project(Vector(0,0.0050,0)));
+
       Object* check_floor=new Rect(matl1, grmusT.project(Point(0,0,-200)), grmusT.project(Vector(1600,0,0)), grmusT.project(Vector(0,1600,0)));
       Group* room00=new Group();
       Group* room01=new Group();
@@ -940,10 +941,140 @@ void build_history_hall (Group* main_group, Scene *scene) {
 		      EastPoint, EastRight, EastDown, 
 		      historyg);
   PedPoint.y(EastPoint.y()-ped_div);
+  Point CBoxPoint (PedPoint-Vector(ped_size/2.,ped_size/2.,0)); 
   add_pedestal_and_year (historyg,"/usr/sci/data/Geometry/textures/museum/history/years-blur/1984.ppm",
 			 PedPoint-Vector(ped_size,ped_size,0),Vector(ped_size,ped_size,-ped_ht),
 			 PedPoint-Vector(ped_size,ped_size,-gbox_ht),Vector(ped_size,ped_size,-gbox_ht));
 
+  // read in and place the Cornell box.
+  Parallelogram *cboxfloor, *cboxceiling, *back_wall, *left_wall, *right_wall,
+    *cboxlight,
+    *short_block_top, *short_block_left, *short_block_right,
+    *short_block_front, *short_block_back,
+    *tall_block_top, *tall_block_left, *tall_block_right,
+    *tall_block_front, *tall_block_back;
+  
+  Point cbmin(0,0,0);
+  Point cbmax(556,548.8,559.2);
+  Vector cbdiag = cbmax-cbmin;
+
+  Transform cboxT;
+  cboxT.pre_translate(-Vector((cbmax.x()+cbmin.x())/2.,cbmin.y(),(cbmax.z()+cbmin.z())/2.)); // center cbox over 0
+  cboxT.pre_rotate(M_PI_2,Vector(1,0,0));  // make z up
+  cboxT.pre_rotate(M_PI_4,Vector(0,0,1));
+  double cb_scale = ped_size/(sqrt(cbdiag.x()*cbdiag.x()+cbdiag.z()*cbdiag.z()));
+  cboxT.pre_scale(Vector(cb_scale,cb_scale,cb_scale)); // scale to pedestal
+  cboxT.pre_translate(CBoxPoint.asVector()+Vector(0,0,1E-2));
+
+  cboxfloor = new Parallelogram(flat_white,
+			    cboxT.project(Point(0,0,0)),
+			    cboxT.project(Vector(0,0,559.2)),
+			    cboxT.project(Vector(556.0,0,0)));
+  cboxlight = new Parallelogram(flat_white,
+			    cboxT.project(Point(213,548.79,227)),
+			    cboxT.project(Vector(130.,0,0)),
+			    cboxT.project(Vector(0,0,105.)));
+  back_wall = new Parallelogram(flat_white,
+				cboxT.project(Point(0,0,559.2)),
+				cboxT.project(Vector(0,548.8,0)),
+				cboxT.project(Vector(556.0,0,0)));
+  cboxceiling = new Parallelogram(flat_white,
+			      cboxT.project(Point(0,548.8,0)),
+			      cboxT.project(Vector(556,0,0)),
+			      cboxT.project(Vector(0,0,559.2)));
+  left_wall = new Parallelogram(flat_white,
+				cboxT.project(Point(556.0,0,0)),
+				cboxT.project(Vector(0,0,559.2)),
+				cboxT.project(Vector(0,548.8,0)));
+  right_wall = new Parallelogram(flat_white,
+				 cboxT.project(Point(0,0,0)),
+				 cboxT.project(Vector(0,548.8,0)),
+				 cboxT.project(Vector(0,0,559.2)));
+  
+  
+  short_block_top = new Parallelogram(flat_white,
+				      cboxT.project(Point(130.0, 165.0, 65.0)),
+				      cboxT.project(Vector(-48,0,160)),
+				      cboxT.project(Vector(158,0,47)));
+  
+  short_block_left = new Parallelogram(flat_white,
+				       cboxT.project(Point(288.0,   0.0, 112.0)),
+				       cboxT.project(Vector(0,165,0)),
+				       cboxT.project(Vector(-48,0,160)));
+  
+  short_block_right = new Parallelogram(flat_white,
+					cboxT.project(Point(82.0,0.0, 225.0)),
+					cboxT.project(Vector(0,165,0)),
+					cboxT.project(Vector(48,0,-160)));
+  
+  short_block_front = new Parallelogram(flat_white,
+					cboxT.project(Point(130.0,   0.0,  65.0)),
+					cboxT.project(Vector(0,165,0)),
+					cboxT.project(Vector(158,0,47)));
+  short_block_back = new Parallelogram(flat_white,
+				       cboxT.project(Point(240.0,   0.0, 272.0)),
+				       cboxT.project(Vector(0,165,0)),
+				       cboxT.project(Vector(-158,0,-47)));
+  
+  
+  
+  
+  tall_block_top = new Parallelogram(flat_white,
+				     cboxT.project(Point(423.0, 330.0, 247.0)),
+				     cboxT.project(Vector(-158,0,49)),
+				     cboxT.project(Vector(49,0,160)));
+  tall_block_left = new Parallelogram(flat_white,
+				      cboxT.project(Point(423.0,   0.0, 247.0)),
+				      cboxT.project(Vector(0,330,0)),
+				      cboxT.project(Vector(49,0,159)));
+  tall_block_right = new Parallelogram(flat_white,
+				       cboxT.project(Point(314.0,   0.0, 456.0)),
+				       cboxT.project(Vector(0,330,0)),
+				       cboxT.project(Vector(-49,0,-160)));
+  tall_block_front = new Parallelogram(flat_white,
+				       cboxT.project(Point(265.0,   0.0, 296.0)),
+				       cboxT.project(Vector(0,330,0)),
+				       cboxT.project(Vector(158,0,-49)));
+  tall_block_back = new Parallelogram(flat_white,
+				      cboxT.project(Point(472.0,   0.0, 406.0)),
+				      cboxT.project(Vector(0,330,0)),
+				      cboxT.project(Vector(-158,0,50)));
+  
+  Group *cornellg = new Group();
+  
+  cornellg->add(cboxfloor);
+  cornellg->add(cboxlight);
+  cornellg->add(back_wall);
+  cornellg->add(cboxceiling);
+  cornellg->add(left_wall);
+  cornellg->add(right_wall);
+  cornellg->add(short_block_top);
+  cornellg->add(short_block_left);
+  cornellg->add(short_block_right);
+  cornellg->add(short_block_front);
+  cornellg->add(short_block_back);
+  cornellg->add(tall_block_top);
+  cornellg->add(tall_block_left);
+  cornellg->add(tall_block_right);
+  cornellg->add(tall_block_front);
+  cornellg->add(tall_block_back);
+  
+  char tens_buf[256];
+  
+  for (int i=0; i<cornellg->numObjects(); i++)
+    {
+      sprintf(tens_buf,"/usr/sci/data/Geometry/textures/museum/history/cbox/TENSOR.%d.rad.tex",i);
+      cornellg->objs[i]->set_matl(new ImageMaterial(tens_buf,
+						    ImageMaterial::Clamp,
+						    ImageMaterial::Clamp,
+						    1,
+						    Color(0,0,0), 0));
+    }
+
+  main_group->add(cornellg);
+  
+  // end Cornell box
+  
   EastPoint -= Vector(0, 2*img_div+img_size, 0); 
   add_poster_on_wall ("/usr/sci/data/Geometry/textures/museum/history/museum-4.ppm",
 		      EastPoint, EastRight, EastDown, 
@@ -1175,14 +1306,18 @@ historyg);
   sofa_trans.pre_scale(Vector(0.001, 0.001, 0.002));
 
   // now rotate/translate it to the right angle/position
+
+
   for (int i=0; i<2; i++) {
     Transform t = sofa_trans;
     t.pre_translate(sofa_center+Vector(6*i,0,0));
+    Group *couchg = new Group();
     if (!readObjFile("/usr/sci/data/Geometry/models/museum/museum-couch.obj",
 		     "/usr/sci/data/Geometry/models/museum/museum-couch.mtl",
-		     t, main_group)) {
+		     t, couchg)) {
       exit(0);
     }
+    main_group->add(new Grid(couchg,10));
   }
 
   //  cerr << "South Wall: " << SouthPoint-Vector(img_size, 0,0) << endl;
@@ -1196,6 +1331,8 @@ historyg);
   
    fp = fopen("/usr/sci/data/Geometry/models/teapot.dat","r");
   
+   Group* teapot_g = new Group();
+
   while (fscanf(fp,"%s",buf) != EOF) {
     if (!strcasecmp(buf,"bezier")) {
       int numumesh, numvmesh, numcoords=3;
@@ -1218,10 +1355,12 @@ historyg);
           }
           b = new Bezier(silver,m);
           b->SubDivide(subdivlevel,.5);
-          main_group->add(b->MakeBVH());
+          teapot_g->add(b->MakeBVH());
     }
   }
   fclose(fp);
+
+  main_group->add(new Grid(teapot_g,5));
 
   /* **************** car **************** */
   historyg->add (new Parallelogram(lightblue,
@@ -1278,8 +1417,7 @@ historyg);
 	  }
       }
   }
-  main_group->add(vw);
-
+  main_group->add(new Grid(vw,15));
   /* **************** bump-mapped sphere **************** */
   historyg->add (new Parallelogram(blue,
 				   BumpMapPoint+Vector(ped_size/2.,ped_size/2.,0.001),
@@ -1341,12 +1479,17 @@ historyg);
   t.pre_rotate(rot, Vector(1,0,0));
   t.pre_rotate(rot, Vector(0,0,1));
   t.pre_translate(TronVector+Vector(0,0,0.3));
+
+  Group* tron_g = new Group();
+
   if (!readObjFile("/usr/sci/data/Geometry/models/museum/LightSycle.obj",
 		   "/usr/sci/data/Geometry/models/museum/LightSycle.mtl",
-		   t, main_group)) {
+		   t, tron_g)) {
       exit(0);
   }
 
+  main_group->add(new Grid(tron_g,10));
+  
   /* **************** Billiard Balls **************** */
   historyg->add (new Parallelogram(black,
 				   BallsPoint-Vector(ped_size/2.,ped_size/2.,-0.001),
@@ -1482,7 +1625,7 @@ void build_david_room (Group* main_group, Scene *scene) {
 
   /*  0 for David, 1 for Bender */
 
-#if 1
+#if 0
  Transform bender_trans;
   Point bender_center (-12.5,-20,0);
 
@@ -1492,11 +1635,15 @@ void build_david_room (Group* main_group, Scene *scene) {
 
     Transform bt(bender_trans);
     bt.pre_translate(Vector(-14,-20,1));
+    Group* bender_g = new Group();
     if (!readObjFile("/usr/sci/data/Geometry/models/museum/bender-2.obj",
 		     "/usr/sci/data/Geometry/models/museum/bender-2.mtl",
-		     bt, main_group)) {
+		     bt, bender_g)) {
       exit(0);
     }
+
+    main_group->add(new Grid(bender_g,25));
+    
 
 #else
     /*  
@@ -1547,7 +1694,7 @@ void build_david_room (Group* main_group, Scene *scene) {
 	 min.x(),min.y(), min.z(),
 	 max.x(),max.y(), max.z(),
 	 diag.x(),diag.y(),diag.z());
-  main_group->add(davidg);
+  main_group->add(new Grid(davidg,64));
 
 #endif
 
@@ -1565,11 +1712,14 @@ void build_david_room (Group* main_group, Scene *scene) {
     double rad=(M_PI/2.);
     t.pre_rotate(rad, Vector(0,0,1));
     t.pre_translate(sofa_center.vector()+Vector(10*i,0,0));
-  if (!readObjFile("/usr/sci/data/Geometry/models/museum/museum-couch.obj",
-		   "/usr/sci/data/Geometry/models/museum/museum-couch.mtl",
-		   t, main_group)) {
+    
+    Group* couchg = new Group();
+    if (!readObjFile("/usr/sci/data/Geometry/models/museum/museum-couch.obj",
+		     "/usr/sci/data/Geometry/models/museum/museum-couch.mtl",
+		     t, couchg)) {
       exit(0);
     }
+    main_group->add(new Grid(couchg,10));
   }
 
   /* **************** image on West wall in David room **************** */
@@ -1585,6 +1735,15 @@ void build_david_room (Group* main_group, Scene *scene) {
 		     david_signs);
 
   /* **************** rope barrier in David room **************** */
+  Group *ropeg1, *ropeg2, *ropeg3, *ropeg4, *ropeg5, *ropeg6;
+
+  ropeg1 = new Group();
+  ropeg2 = new Group();
+  ropeg3 = new Group();
+  ropeg4 = new Group();
+  ropeg5 = new Group();
+  ropeg6 = new Group();
+
   Vector rope_center = dav_ped_top.vector()-Vector(0,0,1);
 
   /*
@@ -1605,34 +1764,43 @@ void build_david_room (Group* main_group, Scene *scene) {
   t.pre_translate(rope_center);
   if (!readObjFile("/usr/sci/data/Geometry/models/museum/barrier-01.obj",
 		   "/usr/sci/data/Geometry/models/museum/barrier.mtl",
-		   t, main_group)) {
+		   t, ropeg1)) {
     exit(0);
   }
+
   if (!readObjFile("/usr/sci/data/Geometry/models/museum/barrier-02.obj",
 		   "/usr/sci/data/Geometry/models/museum/barrier.mtl",
-		   t, main_group)) {
+		   t, ropeg2)) {
     exit(0);
   }
   if (!readObjFile("/usr/sci/data/Geometry/models/museum/barrier-03.obj",
 		   "/usr/sci/data/Geometry/models/museum/barrier.mtl",
-		   t, main_group)) {
+		   t, ropeg3)) {
     exit(0);
   }
   if (!readObjFile("/usr/sci/data/Geometry/models/museum/barrier-04.obj",
 		   "/usr/sci/data/Geometry/models/museum/barrier.mtl",
-		   t, main_group)) {
+		   t, ropeg4)) {
     exit(0);
   }
+
   if (!readObjFile("/usr/sci/data/Geometry/models/museum/barrier-05.obj",
 		   "/usr/sci/data/Geometry/models/museum/barrier.mtl",
-		   t, main_group)) {
+		   t, ropeg5)) {
     exit(0);
   }
   if (!readObjFile("/usr/sci/data/Geometry/models/museum/barrier-06.obj",
 		   "/usr/sci/data/Geometry/models/museum/barrier.mtl",
-		   t, main_group)) {
+		   t, ropeg6)) {
     exit(0);
   }
+  main_group->add(new Grid(ropeg1,15));
+  main_group->add(new Grid(ropeg2,15));
+  main_group->add(new Grid(ropeg3,15));
+  main_group->add(new Grid(ropeg4,15));
+  main_group->add(new Grid(ropeg5,15));
+  main_group->add(new Grid(ropeg6,15));
+
 
   /* **************** images on North partition in David room **************** */
   Group* david_nwall=new Group();
@@ -1819,8 +1987,13 @@ void build_modern_room (Group *main_group, Scene *scene) {
   add_pedestal (moderng, dragon_ped_top-Vector(half_ped_size,half_ped_size,0),
 		Vector(2.*half_ped_size,2.*half_ped_size,-ped_ht));
 
+  Color dragon_green(.2,.9,.2);
+  Material* shiny_green = new Phong(dragon_green,
+				    Color(1,1,1),
+				    60);
+
   // read in the dragon geometry
-  Group* dragong = read_ply("/usr/sci/data/Geometry/Stanford_Sculptures/dragon_vrip_res4.ply",flat_white);
+  Group* dragong = read_ply("/usr/sci/data/Geometry/Stanford_Sculptures/dragon_vrip_res4.ply",shiny_green);
   
   BBox dragon_bbox;
 
@@ -1859,7 +2032,7 @@ void build_modern_room (Group *main_group, Scene *scene) {
 	 dmin.x(),dmin.y(), dmin.z(),
 	 dmax.x(),dmax.y(), dmax.z(),
 	 ddiag.x(),ddiag.y(),ddiag.z());
-  main_group->add(dragong);
+  main_group->add(new Grid(dragong,64));
 
   /* SCI torso */
   Vector torso_ped_top (-16,-14,ped_ht);
@@ -1876,26 +2049,30 @@ void build_modern_room (Group *main_group, Scene *scene) {
   double rot=(M_PI);
   t.pre_rotate(rot, Vector(0,0,1));
   t.pre_translate(torso_ped_top+Vector(0,0,0.3));
+
+  Group *torsog = new Group();
   if (!readObjFile("/usr/sci/data/Geometry/models/museum/utahtorso/utahtorso-isosurface.obj",
 		   "/usr/sci/data/Geometry/models/museum/utahtorso/utahtorso-isosurface.mtl",
-		   t, main_group)) {
+		   t, torsog)) {
       exit(0);
   }
   if (!readObjFile("/usr/sci/data/Geometry/models/museum/utahtorso/utahtorso-heart.obj",
 		   "/usr/sci/data/Geometry/models/museum/utahtorso/utahtorso-heart.mtl",
-		   t, main_group)) {
+		   t, torsog)) {
       exit(0);
   }
   if (!readObjFile("/usr/sci/data/Geometry/models/museum/utahtorso/utahtorso-lung.obj",
 		   "/usr/sci/data/Geometry/models/museum/utahtorso/utahtorso-lung.mtl",
-		   t, main_group)) {
+		   t, torsog)) {
       exit(0);
   }
   if (!readObjFile("/usr/sci/data/Geometry/models/museum/utahtorso/utahtorso-skin.obj",
 		   "/usr/sci/data/Geometry/models/museum/utahtorso/utahtorso-skin.mtl",
-		   t, main_group)) {
+		   t, torsog)) {
       exit(0);
   }
+
+  main_group->add(new Grid(torsog,10));
 
   // along west wall 
   /* buddha */
@@ -1904,7 +2081,13 @@ void build_modern_room (Group *main_group, Scene *scene) {
 		Vector(2.*half_ped_size,2.*half_ped_size,-ped_ht));
 
   // read in the buddha geometry
-    Group* buddhag = read_ply("/usr/sci/data/Geometry/Stanford_Sculptures/happy_vrip_res2.ply",flat_white);
+  Color buddha_diff(113/255,  53/255,  17/255);
+  Color buddha_spec(180/255,  180/255,  180/255);
+  Material* buddha_mat = new Phong(buddha_diff,
+				    buddha_spec,
+				    40);
+
+Group* buddhag = read_ply("/usr/sci/data/Geometry/Stanford_Sculptures/happy_vrip_res2.ply",buddha_mat);
 
   BBox buddha_bbox;
 
@@ -1943,22 +2126,24 @@ void build_modern_room (Group *main_group, Scene *scene) {
 	 bmin.x(),bmin.y(), bmin.z(),
 	 bmax.x(),bmax.y(), bmax.z(),
 	 bdiag.x(),bdiag.y(),bdiag.z());
-  main_group->add(buddhag);
+  main_group->add(new Grid(buddhag,64));
 
 
   /*  UNC well */
   Point unc_ped_top (-18,-10,short_ped_ht);
   add_pedestal (moderng,unc_ped_top-Vector(half_ped_size,half_ped_size,0),
 		Vector(2.*half_ped_size,2.*half_ped_size,-ped_ht));
+  Group* well_g = new Group();
 
   t.load_identity();
   t.pre_translate(unc_ped_top.vector()); 
   if (!readObjFile("/usr/sci/data/Geometry/models/museum/old-well.obj",
 		   "/usr/sci/data/Geometry/models/museum/old-well.mtl",
-		   t, main_group)) {
-    exit(0);
+		   t, well_g)) {
+      exit(0);
   }
-  
+  main_group->add( new Grid(well_g,10));
+
   // along north wall
   /* Stanford bunny */
   Point bun_ped_top (-15,-6,ped_ht);
@@ -2019,7 +2204,7 @@ void build_modern_room (Group *main_group, Scene *scene) {
   delete vert;
   fclose(fp);
 
-  main_group->add (bunny);
+  main_group->add (new Grid(bunny,32));
 
   /*  Venus  */
   Point venus_ped_top(-13,-6,0.2*ped_ht);
@@ -2063,7 +2248,7 @@ void build_modern_room (Group *main_group, Scene *scene) {
 	 vmin.x(),vmin.y(), vmin.z(),
 	 vmax.x(),vmax.y(), vmax.z(),
 	 vdiag.x(),vdiag.y(),vdiag.z());
-  main_group->add(venusg);
+  main_group->add(new Grid(venusg,64));
 
 
   // center of room
@@ -2286,7 +2471,13 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
 			       dark_marble1,
 			       Vector(3,0,0), Vector(0,3,0));
 
-  Object* check_floor=new Rect(marble, Point(-12, -16, 0),
+  //    Material* floor_mat = new LambertianMaterial(Color(.7,.7,.5));
+  Material* floor_mat = new ImageMaterial("/usr/sci/data/Geometry/textures/museum/carpet/carpet_black_blued2.ppm",
+					  ImageMaterial::Clamp,
+					  ImageMaterial::Clamp, 1,
+					  Color(0,0,0), 0);
+
+  Object* check_floor=new Rect(floor_mat, Point(-12, -16, 0),
 			       Vector(8, 0, 0), Vector(0, 12, 0));
 
   Group* south_wall=new Group();

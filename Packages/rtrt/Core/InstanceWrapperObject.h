@@ -56,7 +56,7 @@ class InstanceWrapperObject : public SCIRun::Persistent {
       }
     }
    
-  inline void intersect(const Ray& ray, HitInfo& hit, DepthStats* st,
+  inline void intersect(Ray& ray, HitInfo& hit, DepthStats* st,
 			PerProcessorContext* ppc)
     {
       obj->intersect(ray, hit, st,ppc);

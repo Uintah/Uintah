@@ -43,7 +43,7 @@ public:
   friend void SCIRun::Pio(SCIRun::Piostream&, UVCylinder*&);
 
   virtual ~UVCylinder();
-  virtual void intersect(const Ray& ray, HitInfo& hit, DepthStats* st,
+  virtual void intersect(Ray& ray, HitInfo& hit, DepthStats* st,
 			 PerProcessorContext*);
   virtual void preprocess(double maxradius, int& pp_offset, int& scratchsize);
   virtual Vector normal(const Point&, const HitInfo& hit);

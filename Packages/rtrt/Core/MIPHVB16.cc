@@ -527,7 +527,7 @@ void MIPHVB16::compute_bounds(BBox& bbox, double offset)
     bbox.extend(min+datadiag+Vector(offset,offset,offset));
 }
 
-void MIPHVB16::intersect(const Ray& ray, HitInfo& hit,
+void MIPHVB16::intersect(Ray& ray, HitInfo& hit,
 			 DepthStats*, PerProcessorContext* ppc)
 {
     const Vector dir(ray.direction());

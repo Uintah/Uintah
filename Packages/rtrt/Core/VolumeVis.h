@@ -42,13 +42,12 @@ public:
 	    double spec_coeff, double ambient,
 	    double diffuse, double specular, VolumeVisDpy *dpy);
   virtual ~VolumeVis();
-
   //! Persistent I/O.
   //static  SCIRun::PersistentTypeID type_id;
   virtual void io(SCIRun::Piostream &stream);
   //friend void SCIRun::Pio(SCIRun::Piostream&, VolumeVis*&);
 
-  virtual void intersect(const Ray& ray, HitInfo& hit, DepthStats* st,
+  virtual void intersect(Ray& ray, HitInfo& hit, DepthStats* st,
 			 PerProcessorContext*);
   virtual Vector normal(const Point&, const HitInfo& hit);
   virtual void compute_bounds(BBox&, double offset);

@@ -34,10 +34,9 @@ public:
   static  SCIRun::PersistentTypeID type_id;
   virtual void io(SCIRun::Piostream &stream);
   friend void SCIRun::Pio(SCIRun::Piostream&, Disc*&);
-
-  virtual void intersect(const Ray& ray, HitInfo& hit, DepthStats* st,
+  virtual void intersect(Ray& ray, HitInfo& hit, DepthStats* st,
 			 PerProcessorContext*);
-  virtual void light_intersect(const Ray& ray, HitInfo& hit, Color& atten,
+  virtual void light_intersect(Ray& ray, HitInfo& hit, Color& atten,
 			       DepthStats* st, PerProcessorContext* ppc);
   virtual void preprocess(double maxradius, int& pp_offset, int& scratchsize);
   virtual Vector normal(const Point&, const HitInfo& hit);
