@@ -36,6 +36,7 @@ SRCS     += \
 	$(SRCDIR)/InterpolantTypes.cc\
 	$(SRCDIR)/ManageFieldData.cc\
 	$(SRCDIR)/ManageFieldSet.cc\
+	$(SRCDIR)/ScaleFieldData.cc\
 	$(SRCDIR)/SeedField.cc\
 	$(SRCDIR)/TransformField.cc\
 #[INSERT NEW CODE FILE HERE]
