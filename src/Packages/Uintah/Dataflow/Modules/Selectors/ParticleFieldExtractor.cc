@@ -350,7 +350,6 @@ void ParticleFieldExtractor::graph(string idx, string var)
 //----------------------------------------------------------------
 void ParticleFieldExtractor::execute() 
 { 
-  module_lock.lock();
   tcl_status.set("Calling ParticleFieldExtractor!"); 
 
   in = (ArchiveIPort *) get_iport("Data Archive");
@@ -401,7 +400,6 @@ void ParticleFieldExtractor::execute()
    pvout->send( vp );
    ptout->send( tp );	  
    tcl_status.set("Done");
-   module_lock.unlock();
 }
 
 
