@@ -1,5 +1,6 @@
 
-#include "Vector.h"
+#include <Packages/rtrt/Core/Vector.h>
+#include <Packages/rtrt/Core/Point.h>
 #include <iostream>
 
 using namespace rtrt;
@@ -10,6 +11,14 @@ namespace rtrt {
     return out;
   }
 } // end namespace rtrt
+
+Vector Vector::operator/(double s) const {
+  return Vector(d[0]/s, d[1]/s, d[2]/s);
+}
+
+Point Vector::asPoint() const {
+  return Point(d[0],d[1],d[2]);
+}
 
 void Vector::make_ortho(Vector& v1, Vector& v2) const
 {
