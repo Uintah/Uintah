@@ -270,7 +270,7 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
     // museum credits
     ppm = new PPMImage(ifpath+"museum/museum_credits11.ppm", true);
     loc.clear(); loc.push_back(Point(0,0,0));
-    trig = new Trigger( "Museum Credits11", loc, 0, 3, ppm, false );
+    trig = new Trigger( "Museum Credits11", loc, 0, 6, ppm, false );
     last = trig;
 
     ppm = new PPMImage(ifpath+"museum/museum_credits10.ppm", true);
@@ -312,6 +312,7 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
     ppm = new PPMImage(ifpath+"museum/museum_credits1.ppm", true);
     loc.clear(); loc.push_back(Point(-4,-6,2));
     trig = new Trigger( "Museum Credits", loc, 1,6,ppm,true,NULL,true,trig );
+    trig->setBasePriority( Trigger::MediumTriggerPriority );
     scene->addTrigger( trig );
 
     last->setNext( trig );
@@ -321,8 +322,8 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
 
     ///// Entrance room
     ppm = new PPMImage(ifpath+"museum/intro.ppm", true);
-    loc.clear(); loc.push_back(Point(-4,16,2));
-    trig = new Trigger( "Museum Intro", loc, 2,10,ppm, true );
+    loc.clear(); loc.push_back(Point(-4,-4,2));
+    trig = new Trigger( "Museum Intro", loc, 2,30,ppm, true );
     last = trig;
 
     ///// Modern room
