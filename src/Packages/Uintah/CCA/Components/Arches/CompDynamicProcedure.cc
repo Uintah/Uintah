@@ -661,6 +661,8 @@ CompDynamicProcedure::reComputeTurbSubmodel(const ProcessorGroup* pc,
 		   bndry_count++;
 	  bool corner = (bndry_count==3);
 	  double totalVol = 0.0;
+	  if ((cellType[currCell+shift] == flowID)&&
+	      (cellType[currCell+shift-IntVector(1,0,0)] != mmWallID)) {
 	  for (int kk = -1; kk <= 1; kk ++) {
 	    for (int jj = -1; jj <= 1; jj ++) {
 	      for (int ii = -1; ii <= 1; ii ++) {
@@ -689,6 +691,7 @@ CompDynamicProcedure::reComputeTurbSubmodel(const ProcessorGroup* pc,
 	    }
 	  }
 	  filterRhoU[currCell] /= totalVol;
+	  }
         }
       }
     }
@@ -715,6 +718,8 @@ CompDynamicProcedure::reComputeTurbSubmodel(const ProcessorGroup* pc,
 		   bndry_count++;
 	  bool corner = (bndry_count==3);
 	  double totalVol = 0.0;
+	  if ((cellType[currCell+shift] == flowID)&&
+	      (cellType[currCell+shift-IntVector(0,1,0)] != mmWallID)) {
 	  for (int kk = -1; kk <= 1; kk ++) {
 	    for (int jj = -1; jj <= 1; jj ++) {
 	      for (int ii = -1; ii <= 1; ii ++) {
@@ -743,6 +748,7 @@ CompDynamicProcedure::reComputeTurbSubmodel(const ProcessorGroup* pc,
 	    }
 	  }
 	  filterRhoV[currCell] /= totalVol;
+	  }
         }
       }
     }
@@ -769,6 +775,8 @@ CompDynamicProcedure::reComputeTurbSubmodel(const ProcessorGroup* pc,
 		   bndry_count++;
 	  bool corner = (bndry_count==3);
 	  double totalVol = 0.0;
+	  if ((cellType[currCell+shift] == flowID)&&
+	      (cellType[currCell+shift-IntVector(0,0,1)] != mmWallID)) {
 	  for (int kk = -1; kk <= 1; kk ++) {
 	    for (int jj = -1; jj <= 1; jj ++) {
 	      for (int ii = -1; ii <= 1; ii ++) {
@@ -797,6 +805,7 @@ CompDynamicProcedure::reComputeTurbSubmodel(const ProcessorGroup* pc,
 	    }
 	  }
 	  filterRhoW[currCell] /= totalVol;
+	  }
         }
       }
     }
