@@ -3597,7 +3597,7 @@ void SerialMPM::setNeedAddMaterialFlag(const ProcessorGroup*,
     sum_vartype need_add_flag;
     new_dw->get(need_add_flag, lb->NeedAddMPMMaterialLabel);
 
-    if(need_add_flag<0.1){
+    if(need_add_flag < -0.1){
       d_sharedState->setNeedAddMaterial(-1);
       flags->d_canAddMPMMaterial=false;
     }
