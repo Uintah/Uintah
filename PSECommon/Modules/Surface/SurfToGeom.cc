@@ -71,7 +71,7 @@ class SurfToGeom : public Module {
     TCLdouble range_min;
     TCLdouble range_max;
     TCLdouble rad;
-    TCLint best;
+    TCLstring range;
     TCLint named;
     TCLint invert;
     TCLint nodes;
@@ -96,7 +96,7 @@ extern "C" Module* make_SurfToGeom(const clString& id) {
 
 SurfToGeom::SurfToGeom(const clString& id)
 : Module("SurfToGeom", id, Filter), range_min("range_min", id, this),
-  range_max("range_max", id, this), best("best", id, this),
+  range_max("range_max", id, this), range("range", id, this),
   invert("invert", id, this), nodes("nodes", id, this),
   ntype("ntype", id, this), rad("rad", id, this), resol("resol", id, this),
   named("named", id, this), clr_r("clr-r", id, this), clr_g("clr-g", id, this),
@@ -202,11 +202,14 @@ void SurfToGeom::execute()
 		if (have_cm && (have_sf || ts->bcVal.size())) {
 		    if (have_sf) {
 			double min, max;
-			if (best.get()) {
+			if (range.get() == "best") {
 			    sfield->get_minmax(min,max);
-			} else {
+			} else if (range.get() == "manual") {
 			    min=range_min.get();
 			    max=range_max.get();
+			} else { // range.get() == "cmap"
+			    min=cmap->min;
+			    max=cmap->max;
 			}
 			//				min--;max++;
 			if (invert.get()) {
@@ -249,16 +252,19 @@ void SurfToGeom::execute()
 			}
 		    } else {	// !have_sf
 			double min, max;
-			if (best.get()) {
+			if (range.get() == "best") {
 			    min=max=ts->bcVal[0];
 			    for (int i=1; i<ts->bcVal.size(); i++) {
 				double a=ts->bcVal[i];
 				if (a<min) min=a;
 				else if (a>max) max=a;
 			    }
-			} else {
+			} else if (range.get() == "manual") {
 			    min=range_min.get();
 			    max=range_max.get();
+			} else { // range.get() == "cmap"
+			    min=cmap->min;
+			    max=cmap->max;
 			}
 			//				min--;max++;
 			if (invert.get()) {
@@ -286,7 +292,7 @@ void SurfToGeom::execute()
 			    } else {
 				mat1=black;
 			    }
-			    spheres->add(scinew GeomMaterial(scinew GeomSphere(ts->points[i], radius, res, res), mat1));
+//			    spheres->add(scinew GeomMaterial(scinew GeomSphere(ts->points[i], radius, res, res), mat1));
 			    if (dsk && (used[i1]!=-1) && ts->normType==TriSurface::PointType && ts->normals.size()>i) {
 				Vector v(ts->normals[i]);
 				v.normalize();
@@ -337,20 +343,23 @@ void SurfToGeom::execute()
 	    if (have_cm && (have_sf || ts->bcVal.size())) {
 		if (have_sf) {
 		    double min, max;
-		    if (best.get()) {
+		    if (range.get() == "best") {
 			sfield->get_minmax(min,max);
 			cerr << "SurfToGeom - min="<<min<<"\n";
 			cerr << "SurfToGeom - max="<<max<<"\n";
 			range_min.set(min);
 			range_max.set(max);
-		    } else {
+		    } else if (range.get() == "manual") {
 			min=range_min.get();
 			max=range_max.get();
+		    } else { // range.get() == "cmap"
+			min=cmap->min;
+			max=cmap->max;
 		    }
 		    //				min--;max++;
 		    if (invert.get()) {
 			cmap->min=max;
-			    cmap->max=min;
+			cmap->max=min;
 		    } else {
 			cmap->min=min;
 			cmap->max=max;
@@ -428,7 +437,7 @@ void SurfToGeom::execute()
 		} else {
 //			cerr << "Using SurfToGeom w/ TriSurf, BCs and cmap!\n";
 		    double min, max;
-		    if (best.get()) {
+		    if (range.get() == "best") {
 			min=max=ts->bcVal[0];
 			for (int i=1; i<ts->bcVal.size(); i++) {
 			    double a=ts->bcVal[i];
@@ -439,9 +448,12 @@ void SurfToGeom::execute()
 			cerr << "SurfToGeom - max="<<max<<"\n";
 			range_min.set(min);
 			range_max.set(max);
-		    } else {
+		    } else if (range.get() == "manual") {
 			min=range_min.get();
 			max=range_max.get();
+		    } else { // range.get() == "cmap"
+			min=cmap->min;
+			max=cmap->max;
 		    }
 //				min--;max++;
 		    if (invert.get()) {
@@ -674,6 +686,9 @@ void SurfToGeom::execute()
 
 //
 // $Log$
+// Revision 1.13  2000/08/04 19:19:44  dmw
+// adding TransformSurface.cc to makefile
+//
 // Revision 1.12  2000/03/17 09:27:22  sparker
 // New makefile scheme: sub.mk instead of Makefile.in
 // Use XML-based files for module repository
