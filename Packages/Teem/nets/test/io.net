@@ -50,7 +50,7 @@ set m5 [addModuleAtPosition "SCIRun" "Fields" "FieldInfo" 216 164]
 set m6 [addModuleAtPosition "Teem" "NrrdData" "NrrdInfo" 416 86]
 
 addConnection $m1 0 $m2 0
-addConnection $m2 0 $m0 0
+addConnection $m2 2 $m0 0
 addConnection $m3 0 $m4 2
 addConnection $m4 0 $m5 0
 addConnection $m3 0 $m6 0

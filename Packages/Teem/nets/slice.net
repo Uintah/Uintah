@@ -49,7 +49,7 @@ addConnection $m3 0 $m7 1
 addConnection $m6 0 $m7 0
 addConnection $m7 0 $m5 1
 addConnection $m3 0 $m2 0
-addConnection $m2 0 $m0 0
+addConnection $m2 2 $m0 0
 addConnection $m0 0 $m8 2
 addConnection $m3 0 $m8 3
 addConnection $m8 0 $m9 0

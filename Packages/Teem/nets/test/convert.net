@@ -53,7 +53,7 @@ set m5 [addModuleAtPosition "Teem" "DataIO" "NrrdToField" 65 236]
 set m6 [addModuleAtPosition "Teem" "NrrdData" "NrrdInfo" 401 238]
 
 addConnection $m1 0 $m2 0
-addConnection $m2 0 $m0 0
+addConnection $m2 2 $m0 0
 addConnection $m0 0 $m5 2
 addConnection $m1 0 $m3 0
 addConnection $m5 0 $m4 0

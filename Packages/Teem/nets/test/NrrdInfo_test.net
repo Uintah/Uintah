@@ -46,7 +46,7 @@ set m1 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 10 10]
 set m2 [addModuleAtPosition "Teem" "DataIO" "FieldToNrrd" 10 90]
 
 addConnection $m1 0 $m2 0
-addConnection $m2 0 $m0 0
+addConnection $m2 2 $m0 0
 
 set $m0-notes {}
 set $m0-show_status {1}
