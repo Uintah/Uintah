@@ -5,6 +5,7 @@
 #include <Uintah/Grid/RefCounted.h>
 #include <Uintah/Interface/ProblemSpecP.h>
 #include <string>
+#include <SCICore/Geometry/Vector.h>
 
 #ifdef __sgi
 #define IRIX
@@ -77,13 +78,17 @@ public:
     void require(const std::string& name, int& value);
     void require(const std::string& name, bool& value);
     void require(const std::string& name, std::string& value);
+    void require(const std::string& name, SCICore::Geometry::Vector& value);
 
     ProblemSpecP get(const std::string& name, double& value);
     ProblemSpecP get(const std::string& name, int& value);
     ProblemSpecP get(const std::string& name, bool& value);
     ProblemSpecP get(const std::string& name, std::string& value);
+    ProblemSpecP get(const std::string& name, 
+		     SCICore::Geometry::Vector& value);
 
     static const TypeDescription* getTypeDescription();
+
 private:
     ProblemSpec(const ProblemSpec&);
     ProblemSpec& operator=(const ProblemSpec&);
@@ -98,6 +103,9 @@ private:
 
 //
 // $Log$
+// Revision 1.8  2000/04/12 15:33:49  jas
+// Can now read a Vector type [num,num,num] from the ProblemSpec.
+//
 // Revision 1.7  2000/04/06 02:33:33  jas
 // Added findNextBlock which will find all of the tags named name within a
 // given block.
