@@ -10,6 +10,7 @@ SRCS     += \
 
 PSELIBS := \
 	Packages/Uintah/Core/Datatypes \
+	Packages/Uintah/Core/Math \
 	Packages/Uintah/CCA/Ports \
 	Dataflow/Network \
 	Dataflow/Ports \
