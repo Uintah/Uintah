@@ -180,12 +180,16 @@ GeometryOPort::addLight(LightHandle obj,
 bool
 GeometryOPort::direct_forward(GeometryComm* msg)
 {
-  for (unsigned int i = 0; i < outbox_.size(); i++)
+  // Send msg to last port directly, but copy to all of the prior ones.
+  // Note that msg is not deleted if this function returns false.
+  unsigned int i;
+  for (i = 0; i < outbox_.size()-1; i++)
   {
     GeometryComm *cpy = scinew GeometryComm(*msg);
-//    cpy->portno = portid_[i];
     outbox_[i]->send(cpy);
   }
+  if (outbox_.size()) { outbox_[i]->send(msg); }
+
   return outbox_.size() > 0;
 }
 
