@@ -9,10 +9,10 @@
 #define __MATRIX3_H__
 
 #include <Core/Geometry/Vector.h>
+#include <Core/Util/Assert.h>
 #include <Core/share/share.h>
 
 #include <math.h>
-#include <assert.h>
 #include <iosfwd>
 #include <vector>
 
@@ -386,7 +386,7 @@ inline void Matrix3::operator /= (const double value)
 {
   // Divide each component of the Matrix3 by the value
 
-  assert(value != 0.);
+  ASSERT(value != 0.);
   double ivalue = 1./value;
   for(int i=0;i<3;i++){
     for(int j=0;j<3;j++){
@@ -459,7 +459,7 @@ inline Matrix3 Matrix3::operator / (const double value) const
 {
 //   Divide a Matrix3 by a constant
 
-  assert(value != 0.);
+  ASSERT(value != 0.);
   double ivalue = 1.0/value;
 
   return Matrix3(mat3[0][0]*ivalue,mat3[0][1]*ivalue,mat3[0][2]*ivalue,
