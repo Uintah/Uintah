@@ -125,6 +125,7 @@ $(SRCDIR)/normpress.o: $(SRCDIR)/normpress_fort.h
 $(SRCDIR)/outarea.o: $(SRCDIR)/outarea_fort.h
 $(SRCDIR)/outletbc.o: $(SRCDIR)/outletbc_fort.h
 $(SRCDIR)/outletbcenth.o: $(SRCDIR)/outletbcenth_fort.h
+$(SRCDIR)/outletbcrscal.o: $(SRCDIR)/outletbcrscal_fort.h
 $(SRCDIR)/prdbc1.o: $(SRCDIR)/prdbc1_fort.h
 $(SRCDIR)/prdbc2.o: $(SRCDIR)/prdbc2_fort.h
 $(SRCDIR)/prescoef.o: $(SRCDIR)/prescoef_fort.h
