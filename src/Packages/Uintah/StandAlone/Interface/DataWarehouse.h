@@ -27,6 +27,7 @@ namespace Geometry {
 
 namespace Uintah {
    class OutputContext;
+   class ProcessorGroup;
    class VarLabel;
 
 /**************************************
@@ -168,9 +169,15 @@ WARNING
 
       virtual void emit(ostream& intout, const VarLabel* label) const = 0;
 
+      // For the schedulers
+      virtual bool isFinalized() const = 0;
+      virtual bool exists(const VarLabel*, const Patch*) const = 0;
+      virtual void finalize() = 0;
+
    protected:
-      DataWarehouse( int MpiRank, int MpiProcesses, int generation );
-      int d_MpiRank, d_MpiProcesses;
+      DataWarehouse(const ProcessorGroup* myworld, int generation );
+      // These two things should be removed from here if possible - Steve
+      const ProcessorGroup* d_myworld;
       int d_generation;
       
    private:
@@ -183,6 +190,9 @@ WARNING
 
 //
 // $Log$
+// Revision 1.32  2000/06/17 07:06:46  sparker
+// Changed ProcessorContext to ProcessorGroup
+//
 // Revision 1.31  2000/06/16 19:46:46  sparker
 // Output interface doesn't need old_dw
 // DataWarehouse no longer needs carryForward

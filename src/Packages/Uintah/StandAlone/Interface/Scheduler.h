@@ -1,5 +1,6 @@
-#ifndef UINTAH_HOMEBREW_MAPPER_H
-#define UINTAH_HOMEBREW_MAPPER_H
+
+#ifndef UINTAH_HOMEBREW_SCHEDULER_H
+#define UINTAH_HOMEBREW_SCHEDULER_H
 
 #include <Uintah/Parallel/UintahParallelPort.h>
 #include <Uintah/Interface/DataWarehouseP.h>
@@ -8,7 +9,7 @@
 namespace Uintah {
     class Task;
     class VarLabel;
-    class ProcessorContext;
+    class ProcessorGroup;
 /**************************************
 
 CLASS
@@ -49,7 +50,7 @@ WARNING
        
        //////////
        // Insert Documentation Here:
-       virtual void execute(const ProcessorContext * pc, 
+       virtual void execute(const ProcessorGroup * pc, 
 			          DataWarehouseP   & dwp ) = 0;
        
        //////////
@@ -69,6 +70,9 @@ WARNING
 
 //
 // $Log$
+// Revision 1.11  2000/06/17 07:06:47  sparker
+// Changed ProcessorContext to ProcessorGroup
+//
 // Revision 1.10  2000/06/15 23:14:10  sparker
 // Cleaned up scheduler code
 // Renamed BrainDamagedScheduler to SingleProcessorScheduler
