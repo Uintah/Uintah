@@ -50,7 +50,8 @@ WARNING
   
 ****************************************/
 
-   template<class T> class NCVariable : public Array3<T>, public NCVariableBase{
+template<class T>
+class NCVariable : public Array3<T>, public NCVariableBase {
    public:
      
      NCVariable();
@@ -265,7 +266,8 @@ WARNING
 			      const IntVector& highIndex)
       {
 	 if(getWindow())
-	    throw InternalError("Allocating an NCvariable that is apparently already allocated!");
+	    throw InternalError("Allocating an NCvariable that "
+				"is apparently already allocated!");
 	 resize(lowIndex, highIndex);
       }
    template<class T>
@@ -333,6 +335,9 @@ WARNING
 
 //
 // $Log$
+// Revision 1.23  2000/05/28 17:25:54  dav
+// adding code. someone should check to see if i did it corretly
+//
 // Revision 1.22  2000/05/21 08:19:09  sparker
 // Implement NCVariable read
 // Do not fail if variable type is not known
