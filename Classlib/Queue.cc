@@ -18,8 +18,8 @@
 #endif
 
 template<class T> Queue<T>::Queue()
+: _length(0), head(0), tail(0)
 {
-    head=tail=0;
 }
 
 template<class T> Queue<T>::~Queue()
@@ -41,6 +41,7 @@ template<class T> void Queue<T>::append(const T& item)
     } else {
 	head=tail=p;
     }
+    _length++;
 }
 
 template<class T> T Queue<T>::pop()
@@ -51,10 +52,16 @@ template<class T> T Queue<T>::pop()
     head=head->next;
     if(!head)tail=0;
     delete oldhead;
+    _length--;
     return item;
 }
 
 template<class T> Queue<T>::is_empty()
 {
     return head==0;
+}
+
+template<class T> Queue<T>::length()
+{
+    return _length;
 }

@@ -33,12 +33,14 @@ template<class T> class QueueNode {
 template<class T> class Queue {
     QueueNode<T>* head;
     QueueNode<T>* tail;
+    int _length;
 public:
     Queue();
     ~Queue();
     void append(const T&);
     T pop();
     int is_empty();
+    int length();
 };
 
 #endif
