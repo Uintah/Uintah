@@ -140,6 +140,7 @@ set $m4-ViewWindow_0-view-up-x ${view-up-x}
 set $m4-ViewWindow_0-view-up-y ${view-up-y}
 set $m4-ViewWindow_0-view-up-z ${view-up-z}
 set $m4-ViewWindow_0-view-fov ${view-fov}
+set $m4-ViewWindow_0-specular-scale {0.4}
 
 set $m5-filename $DATADIR/$DATASET/$DATASET-mesh.tvt.fld
 
