@@ -13,7 +13,8 @@ SRCS     += \
 	$(SRCDIR)/VectorParticlesPort.cc \
 	$(SRCDIR)/TensorParticles.cc \
 	$(SRCDIR)/TensorParticlesPort.cc \
-	$(SRCDIR)/PSet.cc
+	$(SRCDIR)/PSet.cc \
+	$(SRCDIR)/LevelMesh.cc
 
 #	$(SRCDIR)/NCTensorField.cc \
 #	$(SRCDIR)/CCTensorField.cc \
