@@ -13,6 +13,7 @@
 #include <Classlib/NotFinished.h>
 #include <Dataflow/Module.h>
 #include <Dataflow/ModuleList.h>
+#include <Datatypes/ColormapPort.h>
 #include <Datatypes/GeometryPort.h>
 #include <Datatypes/ScalarField.h>
 #include <Datatypes/ScalarFieldRG.h>
@@ -28,6 +29,7 @@
 #include <Geom/Pick.h>
 #include <Geom/Polyline.h>
 #include <Geom/Sphere.h>
+#include <Geom/VCTriStrip.h>
 #include <Geometry/Point.h>
 #include <TCL/TCLvar.h>
 
@@ -35,7 +37,7 @@
 
 class Streamline : public Module {
     VectorFieldIPort* infield;
-//    ColormapPort* incolormap;
+    ColormapIPort* incolormap;
     ScalarFieldIPort* incolorfield;
     GeometryOPort* ogeom;
 
@@ -130,27 +132,40 @@ class SRibbon                // Stream Ribbon class
     Point lp, rp;           // left and right tracer 
     Vector perturb;         // initial perturb vector
     GeomTriStrip* tri;      // triangle trip
+    GeomVCTriStrip* vtri;   // Vertex colored tri strip
     double width;           // the fixed width of Ribbons
     int outside;            
     int first;
 public:
-    SRibbon(GeomGroup*, const Point&, double, const Vector&); 
-    int advance(const VectorFieldHandle&, int rk4, double); 
+    SRibbon(GeomGroup*, const Point&, double, const Vector&, int); 
+    int advance(const VectorFieldHandle&, int rk4, double,
+		const ScalarFieldHandle&, const ColormapHandle&,
+		int, const MaterialHandle&, double, double); 
 }; 
 
 SRibbon::SRibbon(GeomGroup* group, const Point& p, double w, 
-const Vector& ptb)
-: p(p), perturb(ptb), tri(new GeomTriStrip), width(w), first(1)
+		 const Vector& ptb, int have_sfield)
+: p(p), perturb(ptb), width(w), first(1)
 {
-    group->add(tri);       
+    if(!have_sfield){
+	tri=new GeomTriStrip;
+	group->add(tri);
+	vtri=0;
+    } else {
+	vtri=new GeomVCTriStrip;
+	group->add(vtri);
+	tri=0;
+    }
     outside=0;    
     lp = p + perturb; 
     rp = p - perturb;    
- 
 }
 
 int SRibbon::advance(const VectorFieldHandle& field, int rk4,
-		   double stepsize)
+		     double stepsize, const ScalarFieldHandle& sfield,
+		     const ColormapHandle& cmap, int have_sfield,
+		     const MaterialHandle& outmatl,
+		     double smin, double smax)
 {
     if(first){
 	Vector v1;
@@ -171,7 +186,19 @@ int SRibbon::advance(const VectorFieldHandle& field, int rk4,
 	Vector n1 ( Cross(v1, diag) ); // the normals here are not percise,
 	Vector n2 ( Cross(v2, diag) ); // need to be improved .....
 
-	tri->add(p1, n1); tri->add(p2, n2); 
+	if(!have_sfield){
+	    tri->add(p1, n1); tri->add(p2, n2); 
+	} else {
+	    double sval;
+	    if(sfield->interpolate(p1, sval)){
+		MaterialHandle matl(cmap->lookup(sval, smin, smax));
+		vtri->add(p1, n1, matl);
+		vtri->add(p2, n2, matl);
+	    } else {
+		vtri->add(p1, n1, outmatl);
+		vtri->add(p2, n2, outmatl);
+	    }
+	}
 	first=0;
     }
 
@@ -203,8 +230,20 @@ int SRibbon::advance(const VectorFieldHandle& field, int rk4,
         n1 = Cross(v1, diag); // the normals here are not percise,
         n2 = Cross(v2, diag); // need to be improved .....
 
-        tri->add(p1, n1); tri->add(p2, n2); 
-      }
+	if(!have_sfield){
+	    tri->add(p1, n1); tri->add(p2, n2); 
+	} else {
+	    double sval;
+	    if(sfield->interpolate(p1, sval)){
+		MaterialHandle matl(cmap->lookup(sval, smin, smax));
+		vtri->add(p1, n1, matl);
+		vtri->add(p2, n2, matl);
+	    } else {
+		vtri->add(p1, n1, outmatl);
+		vtri->add(p2, n2, outmatl);
+	    }
+	}
+    }
     return 1;
 }
 
@@ -221,10 +260,10 @@ Streamline::Streamline(const clString& id)
     // Create the input ports
     infield=new VectorFieldIPort(this, "Vector Field", ScalarFieldIPort::Atomic);
     add_iport(infield);
-    //incolormap=new ColormapIPort(this, "Colormap");
-    //add_iport(incolormap);
     incolorfield=new ScalarFieldIPort(this, "Color Field", ScalarFieldIPort::Atomic);
     add_iport(incolorfield);
+    incolormap=new ColormapIPort(this, "Colormap", ColormapIPort::Atomic);
+    add_iport(incolormap);
 
     // Create the output port
     ogeom=new GeometryOPort(this, "Geometry", GeometryIPort::Atomic);
@@ -272,6 +311,16 @@ void Streamline::execute()
     VectorFieldHandle field;
     if(!infield->get(field))
 	return;
+    ScalarFieldHandle sfield;
+    int have_sfield=incolorfield->get(sfield);
+    ColormapHandle cmap;
+    int have_cmap=incolormap->get(cmap);
+    if(have_sfield && !have_cmap)
+	have_sfield=0;
+    double smin, smax;
+    if(have_sfield)
+	sfield->get_minmax(smin, smax);
+    MaterialHandle outmatl(new Material(Color(0,0,0), Color(1,1,1), Color(1,1,1), 10.0));
     if(need_p1){
 	Point min, max;
 	field->get_bounds(min, max);
@@ -420,14 +469,15 @@ void Streamline::execute()
     } else if(markertype.get() == "Ribbon"){
 	Array1<SRibbon*> sribbons;
 	if(widgettype.get() == "Point"){
-	    sribbons.add(new SRibbon(group, p1, widget_scale, Vector(0,widget_scale/20,0)));
+	    sribbons.add(new SRibbon(group, p1, widget_scale,
+				     Vector(0,widget_scale/20,0), have_sfield));
 	} else if(widgettype.get() == "Line"){
 	    Vector line(p2-p1);
 	    double l=line.length();
 	    Vector nline(line/50);
 	    for(double x=0;x<=l;x+=slider1_dist){
 		sribbons.add(new SRibbon(group, p1+line*(x/l),
-					 slider1_dist/4., nline));
+					 slider1_dist/4., nline, have_sfield));
 	    }
 	} else if(widgettype.get() == "Square"){
 	    NOT_FINISHED("Square with ribbons");
@@ -452,7 +502,9 @@ void Streamline::execute()
 	    int oldn=n;
 	    double ss=stepsize.get();
 	    for(int i=0;i<sribbons.size();i++)
-		n+=sribbons[i]->advance(field, alg, ss);
+		n+=sribbons[i]->advance(field, alg, ss, sfield,
+					cmap, have_sfield, outmatl,
+					smin, smax);
 	    if(abort_flag || n==oldn)
 		break;
 	    if(n>500){
