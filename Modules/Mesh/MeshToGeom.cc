@@ -91,6 +91,9 @@ void MeshToGeom::execute()
     GeomTrianglesP* groups[7];
     for(int i=0;i<7;i++) groups[i] = scinew GeomTrianglesP;
 #endif
+    bool have_tris[7];
+    for(int j=0;j<7;j++)
+      have_tris[j]=false;
     for (i=0; i<mesh->elems.size(); i++) {
 	if (i%500 == 0) update_progress(i, mesh->elems.size());
 	if (mesh->elems[i]) {
@@ -116,6 +119,7 @@ void MeshToGeom::execute()
 				   mesh->nodes[mesh->elems[i]->n[3]]->p));
 
 #else
+	    have_tris[cond%7]=true;
 	    groups[cond%7]->add(mesh->nodes[mesh->elems[i]->n[0]]->p,
 			      mesh->nodes[mesh->elems[i]->n[1]]->p,
 			      mesh->nodes[mesh->elems[i]->n[2]]->p);
@@ -135,12 +139,16 @@ void MeshToGeom::execute()
 	}
     }
     GeomPts *pts[7];
+    bool have_pts[7];
 
-    for(i=0;i<7;i++)
+    for(i=0;i<7;i++){
 	pts[i] = scinew GeomPts(1);
+	have_pts[i]=false;
+    }
 
     for (i=0; i<mesh->elems.size(); i++) {
 	if (mesh->elems[i]) {
+	  have_pts[mesh->elems[i]->cond%7]=true;
 	    pts[mesh->elems[i]->cond%7]->add(mesh->elems[i]->centroid());
 	}
     }
@@ -151,7 +159,7 @@ void MeshToGeom::execute()
 
     ogeom->delAll();
 	
-    Material *c[7];
+    MaterialHandle c[7];
     c[0]=scinew Material(Color(.2,.2,.2),Color(.7,.1,.1),Color(.5,.5,.5),20);
     c[1]=scinew Material(Color(.2,.2,.2),Color(.1,.7,.1),Color(.5,.5,.5),20);
     c[2]=scinew Material(Color(.2,.2,.2),Color(.1,.1,.7),Color(.5,.5,.5),20);
@@ -173,9 +181,14 @@ void MeshToGeom::execute()
 	clString tmpb("Tris ");
 	tmpb += (char) ('0' + i);
 
-	if (showNodes.get()) ogeom->addObj(matls[i],tmps());
-	if (showElems.get()) ogeom->addObj(matlsb[i],tmpb());
-	
+	if (have_pts[i] && showNodes.get())
+	  ogeom->addObj(matls[i],tmps());
+	else
+	  delete matls[i];
+	if (have_tris[i] && showElems.get())
+	  ogeom->addObj(matlsb[i],tmpb());
+	else
+	  delete groups[i];	
     }	
 
 #if 0

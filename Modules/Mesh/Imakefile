@@ -17,7 +17,7 @@ SRCS = BuildMultiMesh.cc BuildOctree.cc \
 	Delaunay.cc ExtractMesh.cc GenerateMesh.cc \
 	HexMeshToGeom.cc \
 	InsertDelaunay.cc MakeScalarField.cc MeshBoundary.cc \
-	MeshToGeom.cc MeshView.cc \
+	MeshToGeom.cc MeshBoundary.cc MeshView.cc \
 	OctreeToGeom.cc SelectMesh.cc MeshRender.cc \
 	$(TEMPLATE_SRCS)
 
