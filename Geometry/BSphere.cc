@@ -109,6 +109,18 @@ void BSphere::extend(const Point& p)
     }
 }
 
+Point BSphere::center() const
+{
+    ASSERT(have_some);
+    return cen;
+}
+
+double BSphere::radius() const
+{
+    ASSERT(have_some);
+    return rad;
+}
+
 void Pio(Piostream& stream, BSphere& s)
 {
     stream.begin_cheap_delim();

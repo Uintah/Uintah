@@ -11,11 +11,15 @@ class Transform {
     int inverse_valid;
     void install_mat(double[4][4]);
     void compute_imat();
+    void build_rotate(double m[4][4], double, const Vector&);
+    void build_scale(double m[4][4], const Vector&);
+    void build_translate(double m[4][4], const Vector&);
     void pre_mulmat(double[4][4]);
     void post_mulmat(double[4][4]);
     void invmat(double[4][4]);
     void switch_rows(double m[4][4], int row1, int row2) const;
     void sub_rows(double m[4][4], int row1, int row2, double mul) const;
+    void load_identity(double[4][4]);
 public:
     Transform();
     Transform(const Transform&);
@@ -40,6 +44,7 @@ public:
     Point project(const Point& p);
     Vector project(const Vector& p);
     void get(double*);
+    void get_trans(double*);
     void set(double*);
     void load_identity();
     void perspective(const Point& eyep, const Point& lookat,

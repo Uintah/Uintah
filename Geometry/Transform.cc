@@ -99,59 +99,56 @@ void Transform::printi(void)
     printf("\n");
 	
 }
+
+void Transform::build_scale(double m[4][4], const Vector& v)
+{
+    load_identity(m);
+    m[0][0]=v.x();
+    m[1][1]=v.y();
+    m[2][2]=v.z();
+}
+    
 void Transform::pre_scale(const Vector& v)
 {
-    for(int i=0;i<4;i++){
-	mat[0][i]*=v.x();
-	mat[1][i]*=v.y();
-	mat[2][i]*=v.z();
-    }
+    double m[4][4];
+    build_scale(m,v);
+    pre_mulmat(m);
     inverse_valid=0;
 }
 
 void Transform::post_scale(const Vector& v)
 {
-    for(int i=0;i<4;i++){
-	mat[i][0]*=v.x();
-	mat[i][1]*=v.y();
-	mat[i][2]*=v.z();
-    }
+    double m[4][4];
+    build_scale(m,v);
+    post_mulmat(m);
     inverse_valid=0;
+}
+
+void Transform::build_translate(double m[4][4], const Vector& v)
+{
+    load_identity(m);
+    m[0][3]=v.x();
+    m[1][3]=v.y();
+    m[2][3]=v.z();
 }
 
 void Transform::pre_translate(const Vector& v)
 {
-    double dmat[4][4];
-    dmat[0][0]=mat[0][0]+v.x()*mat[3][0];
-    dmat[0][1]=mat[0][1]+v.x()*mat[3][1];
-    dmat[0][2]=mat[0][2]+v.x()*mat[3][2];
-    dmat[0][3]=mat[0][3]+v.x()*mat[3][3];
-    dmat[1][0]=mat[1][0]+v.y()*mat[3][0];
-    dmat[1][1]=mat[1][1]+v.y()*mat[3][1];
-    dmat[1][2]=mat[1][2]+v.y()*mat[3][2];
-    dmat[1][3]=mat[1][3]+v.y()*mat[3][3];
-    dmat[2][0]=mat[2][0]+v.z()*mat[3][0];
-    dmat[2][1]=mat[2][1]+v.z()*mat[3][1];
-    dmat[2][2]=mat[2][2]+v.z()*mat[3][2];
-    dmat[2][3]=mat[2][3]+v.z()*mat[3][3];
-    dmat[3][0]=mat[3][0];
-    dmat[3][1]=mat[3][1];
-    dmat[3][2]=mat[3][2];
-    dmat[3][3]=mat[3][3];
-    install_mat(dmat);
+    double m[4][4];
+    build_translate(m,v);
+    pre_mulmat(m);
     inverse_valid=0;
 }
 
 void Transform::post_translate(const Vector& v)
 {
-    mat[0][3]+=mat[0][0]*v.x()+mat[0][1]*v.y()+mat[0][2]*v.z()+mat[0][3];
-    mat[1][3]+=mat[1][0]*v.x()+mat[1][1]*v.y()+mat[1][2]*v.z()+mat[1][3];
-    mat[2][3]+=mat[2][0]*v.x()+mat[2][1]*v.y()+mat[2][2]*v.z()+mat[2][3];
-    mat[3][3]+=mat[3][0]*v.x()+mat[3][1]*v.y()+mat[3][2]*v.z()+mat[3][3];
+    double m[4][4];
+    build_translate(m,v);    
+    post_mulmat(m);
     inverse_valid=0;
 }
 
-void Transform::pre_rotate(double angle, const Vector& axis)
+void Transform::build_rotate(double m[4][4], double angle, const Vector& axis)
 {
     // From Foley and Van Dam, Pg 227
     // NOTE: Element 0,1 is wrong in the text!
@@ -160,28 +157,40 @@ void Transform::pre_rotate(double angle, const Vector& axis)
     double ux=axis.x();
     double uy=axis.y();
     double uz=axis.z();
-    double newmat[4][4];
-    newmat[0][0]=ux*ux+costheta*(1-ux*ux);
-    newmat[0][1]=ux*uy*(1-costheta)-uz*sintheta;
-    newmat[0][2]=uz*ux*(1-costheta)+uy*sintheta;
-    newmat[0][3]=0;
+    m[0][0]=ux*ux+costheta*(1-ux*ux);
+    m[0][1]=ux*uy*(1-costheta)-uz*sintheta;
+    m[0][2]=uz*ux*(1-costheta)+uy*sintheta;
+    m[0][3]=0;
 
-    newmat[1][0]=ux*uy*(1-costheta)+uz*sintheta;
-    newmat[1][1]=uy*uy+costheta*(1-uy*uy);
-    newmat[1][2]=uy*uz*(1-costheta)-ux*sintheta;
-    newmat[1][3]=0;
+    m[1][0]=ux*uy*(1-costheta)+uz*sintheta;
+    m[1][1]=uy*uy+costheta*(1-uy*uy);
+    m[1][2]=uy*uz*(1-costheta)-ux*sintheta;
+    m[1][3]=0;
 
-    newmat[2][0]=uz*ux*(1-costheta)-uy*sintheta;
-    newmat[2][1]=uy*uz*(1-costheta)+ux*sintheta;
-    newmat[2][2]=uz*uz+costheta*(1-uz*uz);
-    newmat[2][3]=0;
+    m[2][0]=uz*ux*(1-costheta)-uy*sintheta;
+    m[2][1]=uy*uz*(1-costheta)+ux*sintheta;
+    m[2][2]=uz*uz+costheta*(1-uz*uz);
+    m[2][3]=0;
 
-    newmat[3][0]=0;
-    newmat[3][1]=0;
-    newmat[3][2]=0;
-    newmat[3][3]=1;
+    m[3][0]=0;
+    m[3][1]=0;
+    m[3][2]=0;
+    m[3][3]=1;
+}
 
-    pre_mulmat(newmat);
+void Transform::pre_rotate(double angle, const Vector& axis)
+{
+    double m[4][4];
+    build_rotate(m, angle, axis);
+    pre_mulmat(m);
+    inverse_valid=0;
+}	
+
+void Transform::post_rotate(double angle, const Vector& axis)
+{
+    double m[4][4];
+    build_rotate(m, angle, axis);
+    post_mulmat(m);
     inverse_valid=0;
 }	
 
@@ -219,6 +228,17 @@ void Transform::get(double* gmat)
     }
 }
 
+// GL stores its matrices column-major.  Need to take the transpose...
+void Transform::get_trans(double* gmat)
+{
+    double* p=gmat;
+    for(int i=0;i<4;i++){
+	for(int j=0;j<4;j++){
+	    *p++=mat[j][i];
+	}
+    }
+}
+
 void Transform::set(double* pmat)
 {
     double* p=pmat;
@@ -250,6 +270,16 @@ void Transform::install_mat(double m[4][4])
     }
 }
 
+void Transform::load_identity(double m[4][4]) 
+{
+    for(int i=0;i<4;i++){
+	for(int j=0;j<4;j++){
+	    m[i][j]=0;
+	}
+	m[i][i]=1.0;
+    }
+}
+    
 void Transform::compute_imat()
 {
     cerr << "Transform::compute_imat not finished\n";

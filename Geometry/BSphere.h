@@ -36,7 +36,8 @@ public:
     void extend(const Point& p);
     void extend(const Point& p, double radius);
     void extend(const BSphere& b);
-
+    Point center() const;
+    double radius() const;
     double volume();
     int intersect(const Ray& ray);
 };
