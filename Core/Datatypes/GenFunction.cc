@@ -212,7 +212,7 @@ void GenFunction::set_num_comp(int nc){
   ASSERT(nc>=0);
   unsigned int unc = nc;
   if (unc>=d_fns.size()){
-    throw DimensionMismatch(unc, (long)d_fns.size());
+    throw DimensionMismatch((long)unc, (long)d_fns.size());
   }
   d_resDims=nc+1;
 }
