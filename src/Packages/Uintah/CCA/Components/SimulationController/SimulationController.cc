@@ -229,7 +229,7 @@ void SimulationController::run()
    
    double dt=Time::currentSeconds()-start;
    if(d_myworld->myrank() == 0)
-     cout << "done (" << dt << " seconds)\n";
+     cout << "done taskgraph compile (" << dt << " seconds)\n";
    scheduler->execute(d_myworld);
 
 #ifdef OUTPUT_AVG_ELAPSED_WALLTIME
@@ -299,7 +299,6 @@ void SimulationController::run()
 	}
 	avg_highwater /= d_myworld->size();
       }
-      
       
       if(log_dw_mem){
 	scheduler->logMemoryUse();
@@ -371,7 +370,7 @@ void SimulationController::run()
 
 	double dt=Time::currentSeconds()-start;
 	if(d_myworld->myrank() == 0)
-	  cout << "done (" << dt << " seconds)\n";
+	  cout << "DONE TASKGRAPH RE-COMPILE (" << dt << " seconds)\n";
       }
       // Execute the current timestep
       scheduler->execute(d_myworld);
