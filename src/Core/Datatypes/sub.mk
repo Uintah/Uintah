@@ -52,12 +52,8 @@ SRCS += $(SRCDIR)/Brick.cc		    \
 	$(SRCDIR)/SliceTable.cc \
 	$(SRCDIR)/VolumeUtils.cc \
 
-#        $(SRCDIR)/MeshRG.cc		    \
-#        $(SRCDIR)/ScalarFieldRG.cc          \
-#        $(SRCDIR)/ScalarFieldRGBase.cc      \
-#        $(SRCDIR)/ScalarFieldRGCC.cc        \
-#        $(SRCDIR)/VectorFieldRG.cc	    \
-#        $(SRCDIR)/VectorFieldRGCC.cc	    \
+#        $(SRCDIR)/LatVolMesh.cc		    \
+
 
 PSELIBS := Core/Persistent Core/Exceptions Core/Containers \
 	Core/Thread Core/Geometry Core/Geom Core/GuiInterface \
