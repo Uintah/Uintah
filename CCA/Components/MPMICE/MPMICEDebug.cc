@@ -18,8 +18,8 @@ using namespace Uintah;
 //______________________________________________________________________
 //
 void    MPMICE::printData(const Patch* patch, int include_EC,
-        char    message1[],           
-        char    message2[],     
+        const string&    message1,        
+        const string&    message2,      
         const NCVariable<double>& q_NC)
 {
  //__________________________________
@@ -69,8 +69,8 @@ void    MPMICE::printData(const Patch* patch, int include_EC,
 //______________________________________________________________________
 //
 void    MPMICE::printNCVector(const Patch* patch, int include_EC,
-        char    message1[],             
-        char    message2[],             
+        const string&    message1,        
+        const string&    message2,              
         int     component,              /*  x = 0,y = 1, z = 2          */
         const NCVariable<Vector>& q_NC)
 {
