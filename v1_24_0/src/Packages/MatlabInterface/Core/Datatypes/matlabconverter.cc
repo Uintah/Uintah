@@ -2498,8 +2498,8 @@ matlabconverter::fieldstruct matlabconverter::analyzefieldstruct(matlabarray &ma
 	{
 		if ((fs.fieldlocation.getm()*fs.fieldlocation.getn())==1)
 		{
-			vector<int> mat;
-			ma.getnumericarray(mat);
+			std::vector<int> mat;
+			fs.fieldlocation.getnumericarray(mat);
 			fs.basis_order = mat[0];
 			if (fs.basis_order < -1) fs.basis_order = -1;
 		}
