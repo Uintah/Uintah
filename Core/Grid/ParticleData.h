@@ -87,6 +87,14 @@ WARNING
       ParticleData<T>::~ParticleData()
       {
       }
+
+   template<class T>
+   ParticleData<T>& ParticleData<T>::operator=(const ParticleData<T>& copy)
+   {
+     data = copy.data;
+     return *this;
+   }
+
 } // End namespace Uintah
    
 #endif
