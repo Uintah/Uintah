@@ -170,8 +170,8 @@ void
 FieldBoundaryAlgoT<Msh>::execute(const MeshBaseHandle mesh,
 				 FieldHandle &boundary, FieldHandle &interp)
 {
-  if (get_type_description((typename Msh::Elem *)0) !=
-      get_type_description((typename Msh::Cell *)0))
+  if (get_type_description((typename Msh::Elem *)0)->get_name() !=
+      get_type_description((typename Msh::Cell *)0)->get_name())
   {
     cout << "Boundary module only works on volumes\n";
     return;
