@@ -46,6 +46,7 @@
 #include <Dataflow/Ports/NrrdPort.h>
 #include <Core/Util/sci_system.h>
 #include <Core/Containers/StringUtil.h>
+#include <Core/ImportExport/Nrrd/NrrdIEPlugin.h>
 #include <sys/stat.h>
 #include <sstream>
 #ifdef _WIN32
@@ -61,20 +62,24 @@ public:
   NrrdReader(SCIRun::GuiContext* ctx);
   virtual ~NrrdReader();
   virtual void execute();
-  virtual void tcl_command(GuiArgs& args, void* userdata);
+
 private:
   bool read_nrrd();
   bool read_file(string filename);
   bool write_tmpfile(string filename, string *tmpfilename, string conv_command);
+  bool call_importer(const string &filename);
 
   GuiFilename     filename_;
-
+  GuiString       gui_types_;
+  GuiString       gui_filetype_;
+  
   NrrdDataHandle  read_handle_;
 
   string          old_filename_;
   time_t          old_filemodification_;
   int             cached_label_generation_;
   char *          cached_label_;
+  bool            importing_;
 };
 
 } // end namespace SCITeem
@@ -88,11 +93,44 @@ DECLARE_MAKER(NrrdReader)
 NrrdReader::NrrdReader(SCIRun::GuiContext* ctx) : 
   Module("NrrdReader", ctx, Filter, "DataIO", "Teem"),
   filename_(ctx->subVar("filename")),
+  gui_types_(ctx->subVar("types", false)),
+  gui_filetype_(ctx->subVar("filetype")),
   read_handle_(0),
   old_filemodification_(0),
   cached_label_generation_(0),
-  cached_label_(0)
+  cached_label_(0),
+  importing_(false)
 {
+  NrrdIEPluginManager mgr;
+  vector<string> importers;
+  mgr.get_importer_list(importers);
+  
+  string importtypes = "{";
+  importtypes += "{{Nrrd Files} {.nhdr .nrrd .nd .vff .pic .pict .vol .v} } ";
+  importtypes += "{{NrrdData File}     {.nd} } ";
+  importtypes += "{{VFF File}          {.vff} } ";
+  importtypes += "{{PICT File}         {.pic .pict} } ";
+  importtypes += "{{geovoxel VOL File} {.vol} } ";
+  importtypes += "{{Vista File}        {.v} } ";
+  importtypes += "{{All Files}         {.*} } ";
+
+  for (unsigned int i = 0; i < importers.size(); i++)
+  {
+    NrrdIEPlugin *pl = mgr.get_plugin(importers[i]);
+    if (pl->fileExtension_ != "")
+    {
+      importtypes += "{{" + importers[i] + "} {" + pl->fileExtension_ + "} } ";
+    }
+    else
+    {
+      importtypes += "{{" + importers[i] + "} {.*} } ";
+    }
+  }
+
+  importtypes += "}";
+
+  gui_types_.set(importtypes);
+
 }
 
 
@@ -110,7 +148,7 @@ NrrdReader::read_nrrd()
   filename_.reset();
   string fn(filename_.get());
   if (fn == "") { 
-    error("Please specify nrrd filename");
+    error("No file has been selected.  Please choose a file.");
     return false; 
   }
 
@@ -118,8 +156,22 @@ NrrdReader::read_nrrd()
   struct stat buf;
   if (stat(fn.c_str(), &buf) == - 1)
   {
-    error(string("FieldReader error - file not found: '")+fn+"'");
-    return false;
+    if (!importing_)
+    {
+      error("File '" + fn + "' not found.");
+      return false;
+    }
+    else
+    {
+      warning("File '" + fn + "' not found.  Maybe the plugin can find it.");
+
+      // This causes the item to cache.  Maybe a forced reread would be better?
+#ifdef __sgi
+      buf.st_mtim.tv_sec = 0;
+#else
+      buf.st_mtime = 0;
+#endif
+    }
   }
 
   // If we haven't read yet, or if it's a new filename, 
@@ -138,6 +190,16 @@ NrrdReader::read_nrrd()
     old_filename_=fn;
     read_handle_ = 0;
 
+    if (importing_)
+    {
+      if (!call_importer(fn))
+      {
+        error("Import failed.");
+        return false;
+      }
+      return true;
+    }
+
     int len = fn.size();
     // Filename as string
     const string filename(fn);
@@ -151,7 +213,6 @@ NrrdReader::read_nrrd()
     const string vol_conv_command("GeoProbeToNhdr %f %t");
     const string vista_ext(".v");
     const string vista_conv_command("VistaToNrrd %f %t");
-
 
     // check that the last 3 chars are .nd for us to pio
     if (fn.substr(len - ext.size(), ext.size()) == ext)
@@ -180,7 +241,6 @@ NrrdReader::read_nrrd()
 	string tmpfilename;
 	write_tmpfile(filename, &tmpfilename, vff_conv_command);
 	return read_file(tmpfilename);	
-	
       }
       else if ((fn.substr(len - pic_ext.size(), pic_ext.size()) == pic_ext) ||
                fn.substr(len - pic_ext2.size(), pic_ext2.size()) == pic_ext2)
@@ -188,21 +248,19 @@ NrrdReader::read_nrrd()
 	string tmpfilename;
 	write_tmpfile(filename, &tmpfilename, pic_conv_command);
 	return read_file(tmpfilename);
-	
       }
       else if (fn.substr(len - vol_ext.size(), vol_ext.size()) == vol_ext)
       {
 	string tmpfilename;
 	write_tmpfile(filename, &tmpfilename, vol_conv_command);
 	return read_file(tmpfilename);
-	
       }
-      else if (fn.substr(len - vista_ext.size(), vista_ext.size()) == vista_ext)
+      else if (fn.substr(len - vista_ext.size(), vista_ext.size()) ==
+               vista_ext)
       {
 	string tmpfilename;
 	write_tmpfile(filename, &tmpfilename, vista_conv_command);
 	return read_file(tmpfilename);
-	
       }
       else
       {
@@ -282,6 +340,19 @@ NrrdReader::execute()
 {
   update_state(NeedData);
 
+  const string ftpre = gui_filetype_.get();
+  const string::size_type loc = ftpre.find(" (");
+  const string ft = ftpre.substr(0, loc);
+
+  importing_ = !(ft == "" ||
+                 ft == "Nrrd Files" ||
+                 ft == "NrrdData File" ||
+                 ft == "VFF File" ||
+                 ft == "PICT File" ||
+                 ft == "geovoxel VOL File" ||
+                 ft == "Vista File" ||
+                 ft == "All Files");
+
   read_nrrd();
 
   if (!read_handle_.get_rep()) { 
@@ -297,13 +368,22 @@ NrrdReader::execute()
 }
 
 
-void 
-NrrdReader::tcl_command(GuiArgs& args, void* userdata)
+bool
+NrrdReader::call_importer(const string &filename)
 {
-  if (args.count() < 2)
+  const string ftpre = gui_filetype_.get();
+  const string::size_type loc = ftpre.find(" (");
+  const string ft = ftpre.substr(0, loc);
+  
+  NrrdIEPluginManager mgr;
+  NrrdIEPlugin *pl = mgr.get_plugin(ft);
+  if (pl)
   {
-    args.error("NrrdReader needs a minor command");
-    return;
+    read_handle_ = pl->fileReader_(this, filename.c_str());
+    msgStream_flush();
+    return read_handle_.get_rep();
   }
-  Module::tcl_command(args, userdata);
+  return false;
 }
+
+
