@@ -61,6 +61,15 @@ namespace rtrt {
     
   
   public:
+    struct voxel_valuepair {
+      int value;
+      int gradient;
+    };
+    // maintains cutplane voxels being examined
+    vector<voxel_valuepair*> cp_voxels;
+
+    // Deletes cutplane voxel information
+    void delete_voxel_storage();
     // Called whenever the histogram borders need to be redrawn
     void display_hist_perimeter();
     // Called whenever the sliders need to be redrawn
@@ -71,6 +80,10 @@ namespace rtrt {
     void adjustCutplaneOpacity( float x );
     // Called whenever the user adjusts the cutplane grayscale
     void adjustCutplaneGS( float x );
+    // Stores a voxel's gradient/value pair
+    void store_voxel( Voxel2D<float> voxel );
+    // Displays cutplane voxels on the histogram
+    void display_cp_voxels();
     // Assigns a color and opacity corresponding to a given voxel
     void voxel_lookup( Voxel2D<float> voxel, Color &color, float &opacity );
     // Attaches a volume to be rendered through this user interface
