@@ -29,7 +29,7 @@ STYLESHEET =../../Utilities/XML/docbook.xsl
 
 define xmltohtml
 java org.apache.xalan.xslt.Process -IN ${BOOK} -XSL ${STYLESHEET} \
--OUT $@ -PARAM dir 2 -PARAM cont ${patsubst %.html,%,$@} -HTML
+-OUT $@ -PARAM treetop ../../../ -PARAM cont ${patsubst %.html,%,$@} -HTML
 endef
 
 default: $(HTMLNAMES)
