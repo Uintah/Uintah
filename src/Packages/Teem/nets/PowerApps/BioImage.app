@@ -3381,9 +3381,11 @@ class BioImageApp {
 	if { [expr $eye+1] == $which } {
 	    setGlobal eye $prev
 	    change_eye 1
-	}
+	} 
 	arrange_filter_modules
 
+	# enable update button
+	$this enable_update $prev
     }
 
     method update_changes {} {
