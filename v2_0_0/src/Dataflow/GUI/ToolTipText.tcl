@@ -20,11 +20,11 @@ proc loadToolTipText {} {
     set ToolTipText(Notes) "L - Edit\nM - Hide"
 
     set ToolTipText(FileMenu) [subst {\
-       Save             \tSave the current dataflow network.\n\
-       Save As...       \tSave the current dataflow network under a new name.\n\
        Load...          \tLoads a new network.  The current network will be lost!\n\
        Insert...        \tInserts a new network with your current network.\n\
-       Clear            \tRemoves (destroys) all modules from the network editory canvas.\n\
+       Save             \tSave the current dataflow network.\n\
+       Save As...       \tSave the current dataflow network under a new name.\n\
+       Clear Network    \tRemoves (destroys) all modules from the network editory canvas.\n\
        Execute All      \tTells the dataflow network to execute all modules.\n\
        New              \tAllows the user to create a new module.  (Mostly for code developers!)\n\
        Add Info...      \tAllows the user to annotate the current dataflow network.\n\
