@@ -3,9 +3,11 @@ static char *id="@(#) $Id$";
 
 #include <Uintah/Components/Arches/Arches.h>
 #include <Uintah/Components/Arches/PicardNonlinearSolver.h>
+#if 0
 #include <Uintah/Components/Arches/SmagorinskyModel.h>
 #include <Uintah/Components/Arches/BoundaryCondition.h>
 #include <Uintah/Components/Arches/Properties.h>
+#endif
 #include <SCICore/Util/NotFinished.h>
 #include <Uintah/Interface/ProblemSpec.h>
 #include <Uintah/Interface/DataWarehouse.h>
@@ -24,11 +26,13 @@ Arches::Arches()
 
 Arches::~Arches()
 {
+
 }
-#if 0
+
 void Arches::problemSetup(const ProblemSpecP& params, GridP&,
 			  DataWarehouseP& dw)
 {
+#if 0
   ProblemSpecP db = params->findBlock("Arches");
 
   db->require("grow_dt", d_deltaT);
@@ -57,8 +61,10 @@ void Arches::problemSetup(const ProblemSpecP& params, GridP&,
 
   //d_nlSolver->problemSetup(db, dw); /* 2 params ? */
   d_nlSolver->problemSetup(db);
-}
+#else
+  NOT_FINISHED("Arches::probemSetup");
 #endif
+}
 #if 0
 void Arches::problemInit(const LevelP& level,
 			 SchedulerP& sched, DataWarehouseP& dw,
@@ -101,6 +107,10 @@ void Arches::timeStep(double time, double dt,
 
 //
 // $Log$
+// Revision 1.14  2000/04/11 07:10:35  sparker
+// Completing initialization and problem setup
+// Finishing Exception modifications
+//
 // Revision 1.13  2000/04/10 23:11:23  rawat
 // Added sub-grid scale turbulence models
 //

@@ -2,7 +2,6 @@
 #define UINTAH_HOMEBREW_MPMInterface_H
 
 #include <Uintah/Parallel/UintahParallelPort.h>
-#include <Uintah/Interface/MPMInterfaceP.h>
 #include <Uintah/Interface/DataWarehouseP.h>
 #include <Uintah/Grid/GridP.h>
 #include <Uintah/Grid/Handle.h>
@@ -76,6 +75,10 @@ private:
 
 //
 // $Log$
+// Revision 1.7  2000/04/11 07:10:53  sparker
+// Completing initialization and problem setup
+// Finishing Exception modifications
+//
 // Revision 1.6  2000/03/23 20:42:24  sparker
 // Added copy ctor to exception classes (for Linux/g++)
 // Helped clean up move of ProblemSpec from Interface to Grid

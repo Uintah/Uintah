@@ -3,32 +3,59 @@ static char *id="@(#) $Id$";
 
 #include <Uintah/Parallel/UintahParallelComponent.h>
 #include <SCICore/Util/NotFinished.h>
+#include <algorithm>
+using std::map;
+using std::find;
 
-namespace Uintah {
-namespace Parallel {
+using Uintah::Parallel::UintahParallelComponent;
+using Uintah::Parallel::UintahParallelPort;
 
 UintahParallelComponent::UintahParallelComponent()
 {
-    NOT_FINISHED("UintahParallelComponent::UintahParallelComponent");
 }
 
 UintahParallelComponent::~UintahParallelComponent()
 {
-    NOT_FINISHED("UintahParallelComponent::~UintahParallelComponent");
 }
 
 void
-UintahParallelComponent::setPort(const string&             name,
-				       UintahParallelPort* port)
+UintahParallelComponent::attachPort(const string& name,
+				    UintahParallelPort* port)
 {
-    NOT_FINISHED("UintahParallelComponent::setPort");
+    map<string, PortRecord*>::iterator iter = portmap.find(name);
+    if(iter == portmap.end()){
+	portmap[name]=new PortRecord(port);
+    } else {
+	iter->second->connections.push_back(port);
+    }
 }
 
-} // end namespace Parallel
-} // end namespace Uintah
+UintahParallelComponent::PortRecord::PortRecord(UintahParallelPort* port)
+{
+    connections.push_back(port);
+}
+
+UintahParallelPort* UintahParallelComponent::getPort(const std::string& name)
+{
+    map<string, PortRecord*>::iterator iter = portmap.find(name);
+    if(iter == portmap.end())
+	return 0;
+    else if(iter->second->connections.size()> 0)
+	return 0;
+    else
+	return iter->second->connections[0];
+}
+
+void UintahParallelComponent::releasePort(const std::string& name)
+{
+}
 
 //
 // $Log$
+// Revision 1.3  2000/04/11 07:10:56  sparker
+// Completing initialization and problem setup
+// Finishing Exception modifications
+//
 // Revision 1.2  2000/03/16 22:08:39  dav
 // Added the beginnings of cocoon docs.  Added namespaces.  Did a few other coding standards updates too
 //

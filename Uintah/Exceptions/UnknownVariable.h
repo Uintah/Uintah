@@ -2,7 +2,7 @@
 // $Id$
 
 /*
- *  TypeMismatchException.h: 
+ *  UnknownVariable.h: 
  *
  *  Written by:
  *   Steven G. Parker
@@ -13,25 +13,25 @@
  *  Copyright (C) 2000 SCI Group
  */
 
-#ifndef Uintah_Exceptions_TypeMismatchException_h
-#define Uintah_Exceptions_TypeMismatchException_h
+#ifndef Uintah_Exceptions_UnknownVariable_h
+#define Uintah_Exceptions_UnknownVariable_h
 
 #include <SCICore/Exceptions/Exception.h>
 #include <string>
 
 namespace Uintah {
     namespace Exceptions {
-	class TypeMismatchException : public SCICore::Exceptions::Exception {
+	class UnknownVariable : public SCICore::Exceptions::Exception {
 	public:
-	    TypeMismatchException(const std::string& msg);
-	    TypeMismatchException(const TypeMismatchException&);
-	    virtual ~TypeMismatchException();
+	    UnknownVariable(const std::string& msg);
+	    UnknownVariable(const UnknownVariable&);
+	    virtual ~UnknownVariable();
 	    virtual const char* message() const;
 	    virtual const char* type() const;
 	protected:
 	private:
 	    std::string d_msg;
-	    TypeMismatchException& operator=(const TypeMismatchException&);
+	    UnknownVariable& operator=(const UnknownVariable&);
 	};
     }
 }
@@ -40,7 +40,7 @@ namespace Uintah {
 
 //
 // $Log$
-// Revision 1.5  2000/04/11 07:10:46  sparker
+// Revision 1.1  2000/04/11 07:10:46  sparker
 // Completing initialization and problem setup
 // Finishing Exception modifications
 //

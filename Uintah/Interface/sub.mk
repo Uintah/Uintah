@@ -9,7 +9,7 @@ SRCDIR   := Uintah/Interface
 
 SRCS     += $(SRCDIR)/CFDInterface.cc $(SRCDIR)/DataWarehouse.cc \
 	$(SRCDIR)/MPMInterface.cc $(SRCDIR)/Output.cc \
-	$(SRCDIR)/ProblemSpec.cc \
+	$(SRCDIR)/ProblemSpec.cc $(SRCDIR)/ProblemSpecInterface.cc \
 	$(SRCDIR)/Scheduler.cc
 
 PSELIBS := Uintah/Parallel Uintah/Grid
@@ -19,6 +19,10 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.5  2000/04/11 07:10:54  sparker
+# Completing initialization and problem setup
+# Finishing Exception modifications
+#
 # Revision 1.4  2000/03/29 02:00:00  jas
 # Filled in the findBlock method.
 #

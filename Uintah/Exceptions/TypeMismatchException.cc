@@ -1,19 +1,25 @@
 
 #include "TypeMismatchException.h"
 
+using Uintah::Exceptions::TypeMismatchException;
+
 TypeMismatchException::TypeMismatchException(const std::string& msg)
-    : msg(msg)
+    : d_msg(msg)
 {
 }
 
 TypeMismatchException::TypeMismatchException(const TypeMismatchException& copy)
-    : msg(copy.msg)
+    : d_msg(copy.d_msg)
+{
+}
+
+TypeMismatchException::~TypeMismatchException()
 {
 }
 
 const char* TypeMismatchException::message() const
 {
-    return msg.c_str();
+    return d_msg.c_str();
 }
 
 const char* TypeMismatchException::type() const

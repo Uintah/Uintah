@@ -1,4 +1,12 @@
 
+Look at problem spec input file
+read grid
+Region -> Patch/Box
+get MPM working
+
+
+
+Region contains point
 Pass const Matrix3& in const. models.
 2 pass particle creation
 profile parallel version - look for serial bottlenecks (free?)

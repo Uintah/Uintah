@@ -7,9 +7,8 @@ include $(SRCTOP)/scripts/smallso_prologue.mk
 
 SRCDIR   := Uintah/Exceptions
 
-SRCS     += $(SRCDIR)/DataWarehouseException.cc \
-	$(SRCDIR)/ParticleException.cc $(SRCDIR)/ProblemSetupException.cc \
-	$(SRCDIR)/SchedulerException.cc $(SRCDIR)/TypeMismatchException.cc
+SRCS     += $(SRCDIR)/InvalidValue.cc $(SRCDIR)/ProblemSetupException.cc \
+	$(SRCDIR)/TypeMismatchException.cc $(SRCDIR)/UnknownVariable.cc
 
 PSELIBS := SCICore/Exceptions
 LIBS :=
@@ -18,6 +17,10 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.4  2000/04/11 07:10:47  sparker
+# Completing initialization and problem setup
+# Finishing Exception modifications
+#
 # Revision 1.3  2000/03/23 10:30:30  sparker
 # Update to use new Exception base class
 #

@@ -1,17 +1,28 @@
 
 #include "ProblemSetupException.h"
 
+using Uintah::Exceptions::ProblemSetupException;
+
 ProblemSetupException::ProblemSetupException(const std::string& msg)
-    : msg(msg)
+    : d_msg(msg)
 {
 }
 
 ProblemSetupException::ProblemSetupException(const ProblemSetupException& copy)
-    : msg(copy.msg)
+    : d_msg(copy.d_msg)
+{
+}
+
+ProblemSetupException::~ProblemSetupException()
 {
 }
 
 const char* ProblemSetupException::message() const
 {
-    return msg.c_str();
+    return d_msg.c_str();
+}
+
+const char* ProblemSetupException::type() const
+{
+    return "Uintah::Exceptions::ProblemSetupException";
 }

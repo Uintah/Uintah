@@ -2,7 +2,6 @@
 #define UINTAH_HOMEBREW_PARTICLEDATA_H
 
 #include <Uintah/Grid/RefCounted.h>
-#include <Uintah/Exceptions/ParticleException.h>
 #include <vector>
 
 namespace Uintah {
@@ -87,6 +86,10 @@ ParticleData<T>::~ParticleData()
 
 //
 // $Log$
+// Revision 1.4  2000/04/11 07:10:50  sparker
+// Completing initialization and problem setup
+// Finishing Exception modifications
+//
 // Revision 1.3  2000/03/16 22:07:59  dav
 // Added the beginnings of cocoon docs.  Added namespaces.  Did a few other coding standards updates too
 //

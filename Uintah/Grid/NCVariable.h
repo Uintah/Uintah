@@ -3,12 +3,12 @@
 
 #include <Uintah/Grid/Array3.h>
 #include <Uintah/Grid/DataItem.h>
-#include <Uintah/Exceptions/DataWarehouseException.h>
+#include <SCICore/Exceptions/InternalError.h>
 
 namespace Uintah {
 namespace Grid {
 
-using Uintah::Exceptions::DataWarehouseException;
+    using SCICore::Exceptions::InternalError;
 
 class TypeDescription;
 
@@ -121,7 +121,7 @@ void
 NCVariable<T>::allocate(const Region* region)
 {
     if(getWindow())
-	throw DataWarehouseException("Allocating an NCvariable that is apparently already allocated!");
+	throw InternalError("Allocating an NCvariable that is apparently already allocated!");
     resize(region->getNx()+1, region->getNy()+1, region->getNz()+1);
 }
 
@@ -130,6 +130,10 @@ NCVariable<T>::allocate(const Region* region)
 
 //
 // $Log$
+// Revision 1.5  2000/04/11 07:10:50  sparker
+// Completing initialization and problem setup
+// Finishing Exception modifications
+//
 // Revision 1.4  2000/03/21 02:22:57  dav
 // few more updates to make it compile including moving Array3 stuff out of namespace as I do not know where it should be
 //

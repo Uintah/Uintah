@@ -1,4 +1,5 @@
 #include <Uintah/Components/ProblemSpecification/ProblemSpecReader.h>
+#include <Uintah/Interface/ProblemSpec.h>
 #include <string>
 #include <iostream>
 
@@ -13,10 +14,10 @@ using Uintah::Interface::ProblemSpecP;
 int main()
 {
 
-  ProblemSpecReader reader;
+  ProblemSpecReader reader("input.ups");
   
   ProblemSpecP prob_spec;
-  prob_spec = reader.readInputFile("input.ups");
+  prob_spec = reader.readInputFile();
 
   cout << "works after reading file . . ." << endl;
 

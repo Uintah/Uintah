@@ -1,24 +1,26 @@
 #ifndef __PROBLEM_SPEC_READER_H__ 
 #define __PROBLEM_SPEC_READER_H__
 
-#include <Uintah/Interface/ProblemSpec.h>
+#include <Uintah/Interface/ProblemSpecInterface.h>
+#include <string>
 
 using Uintah::Interface::ProblemSpecP;
 using Uintah::Interface::ProblemSpec;
+using Uintah::Interface::ProblemSpecInterface;
 
-class ProblemSpecReader {
+class ProblemSpecReader : public ProblemSpecInterface {
 
 public:
-  ProblemSpecReader();
+  ProblemSpecReader(const std::string& filename);
   ~ProblemSpecReader();
    
-  ProblemSpecP readInputFile(const std::string name);
+  virtual ProblemSpecP readInputFile();
 
 private:
   ProblemSpecReader(const ProblemSpecReader&);
   ProblemSpecReader& operator=(const ProblemSpecReader&);
   
-  ProblemSpecP d_prob_spec; 
+  std::string filename;
 };
 
 #endif // __PROBLEM_SPEC_READER_H__
