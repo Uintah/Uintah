@@ -17,6 +17,7 @@ include $(SRCTOP)/scripts/smallso_prologue.mk
 
 SRCDIR   := DaveW/Modules/MEG
 
+
 SRCS     += \
 	$(SRCDIR)/EleValuesToMatLabFile.cc\
 	$(SRCDIR)/FieldCurl.cc\
@@ -25,7 +26,9 @@ SRCS     += \
 	$(SRCDIR)/MagneticScalarField.cc\
 	$(SRCDIR)/NegateGradient.cc\
 	$(SRCDIR)/SurfToVectGeom.cc\
-#[INSERT NEW CODE FILE HERE]
+	$(SRCDIR)/ForwardMEG.cc \
+#[INSERT NEW MODULE HERE]
+
 
 PSELIBS := DaveW/Datatypes/General PSECore/Dataflow PSECore/Datatypes \
 	SCICore/Persistent SCICore/Exceptions SCICore/Thread \
@@ -37,7 +40,12 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.6  2000/11/27 22:37:17  vanuiter
+# added ForwardMEG
+#
 # Revision 1.5  2000/10/24 05:57:15  moulding
+#
+#
 # new module maker Phase 2: new module maker goes online
 #
 # These changes clean out the last remnants of the old module maker and
