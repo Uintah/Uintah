@@ -89,6 +89,8 @@ int Renderer::compute_depth(Roe* roe, const View& view,
 	Point max(bb.max());
 	Point eyep(view.eyep());
 	Vector dir(view.lookat()-eyep);
+	if(dir.length2() < 1.e-6)
+	  return 0;
 	dir.normalize();
 	double d=-Dot(eyep, dir);
 	for(int ix=0;ix<2;ix++){
