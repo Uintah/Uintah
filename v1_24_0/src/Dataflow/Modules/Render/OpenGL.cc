@@ -959,13 +959,14 @@ OpenGL::redraw_frame()
 	throttle.wait_for_time(realtime);
       }
       //gui->lock();
-      gui_->execute("update idletasks");
 
       // Show the pretty picture
 #if defined(HAVE_PBUFFER)
       if (!have_pbuffer_ ||(!doing_movie_p_ && !doing_image_p_))
 #endif
 	tk_gl_context_->swap();
+      view_window_->gui_total_frames_.set(view_window_->gui_total_frames_.get()+1);
+      gui_->execute("update idletasks");
     }
     throttle.stop();
     double fps;
@@ -993,7 +994,7 @@ OpenGL::redraw_frame()
   }
 
   viewer_->geomlock_.readUnlock();
-  view_window_->gui_total_frames_.set(view_window_->gui_total_frames_.get()+1);
+
   // Look for errors
   CHECK_OPENGL_ERROR("OpenGL::redraw after drawing objects: ")
 
