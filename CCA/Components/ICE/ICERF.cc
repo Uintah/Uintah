@@ -628,6 +628,10 @@ void ICE::computeLagrangianSpecificVolumeRF(const ProcessorGroup*,
        spec_vol_source[c] = term1 + if_mpm_matl_ignore[m] * term2;
        spec_vol_L[c] = vol*sp_vol_CC[c] + spec_vol_source[c]/rho_CC[c];
      }
+
+      //  Set Neumann = 0 if symmetric Boundary conditions
+      setBC(spec_vol_L, "set_if_sym_BC",patch, d_sharedState, indx); 
+
       //---- P R I N T   D A T A ------ 
       if (switchDebugLagrangianSpecificVol ) {
         ostringstream desc;
