@@ -415,8 +415,10 @@ void
     nrrdKeyValueAdd(last_nrrdH_->nrrd, "jhisto_nrrd0_max", to_string(nrrd0_minmax->max).c_str());
     nrrdRangeNix(nrrd0_minmax);
 
-    nrrdKeyValueAdd(last_nrrdH_->nrrd, "jhisto_nrrd0_new_min", to_string(min[0]).c_str());
-    nrrdKeyValueAdd(last_nrrdH_->nrrd, "jhisto_nrrd0_new_max", to_string(max[0]).c_str());
+    NrrdRange *nout_minmax = nrrdRangeNewSet(nout, nrrdBlind8BitRangeFalse);
+    nrrdKeyValueAdd(last_nrrdH_->nrrd, "jhisto_nrrd0_new_min", to_string(nout_minmax->min).c_str());
+    nrrdKeyValueAdd(last_nrrdH_->nrrd, "jhisto_nrrd0_new_max", to_string(nout_minmax->max).c_str());
+    nrrdRangeNix(nout_minmax);
 
     delete bin;
     delete min;
