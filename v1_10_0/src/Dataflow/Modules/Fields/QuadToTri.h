@@ -87,7 +87,7 @@ QuadToTriAlgoT<FSRC>::execute(FieldHandle srcH, FieldHandle& dstH)
   typename FSRC::mesh_type::Elem::iterator bi, ei;
   qsmesh->begin(bi); qsmesh->end(ei);
 
-  const unsigned int surfsize = pow(hesize, 2.0 / 3.0);
+  const unsigned int surfsize = (unsigned int)pow(hesize, 2.0 / 3.0);
   vector<typename FSRC::mesh_type::Elem::index_type> buffers[2];
   buffers[0].reserve(surfsize);
   buffers[1].reserve(surfsize);
@@ -134,7 +134,7 @@ QuadToTriAlgoT<FSRC>::execute(FieldHandle srcH, FieldHandle& dstH)
 	  }
 
 	  elemmap.push_back(buffers[flipflop][i]);
-
+	  qsmesh->synchronize(Mesh::EDGE_NEIGHBORS_E);
 	  typename FSRC::mesh_type::Face::array_type neighbors;
 	  qsmesh->get_neighbors(neighbors, buffers[flipflop][i]);
 
@@ -161,7 +161,7 @@ QuadToTriAlgoT<FSRC>::execute(FieldHandle srcH, FieldHandle& dstH)
   typename FSRC::value_type val;
 
   if (qsfield->data_at() == Field::NODE) {
-    for (unsigned int i = 0; i < hnsize; i++)
+    for (unsigned int i = 0; i < (unsigned int)hnsize; i++)
     {
       qsfield->value(val, (typename FSRC::mesh_type::Node::index_type)(i));
       tvfield->set_value(val, (TriSurfMesh::Node::index_type)(i));
