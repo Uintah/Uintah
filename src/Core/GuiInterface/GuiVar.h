@@ -32,11 +32,15 @@
 #define SCI_project_GuiVar_h 1
 
 #include <Core/share/share.h>
-
+#include <Core/GuiInterface/GuiManager.h>
+#include <Core/GuiInterface/Remote.h>
 #include <string>
+#include <Core/Geometry/Point.h>
+#include <Core/Geometry/Vector.h>
 
+#include <iostream>
 using std::string;
-
+using std::endl;
 
 namespace SCIRun {
   class Vector;
@@ -45,116 +49,98 @@ namespace SCIRun {
 
 namespace SCIRun {
 
+//extern GuiManager* gm_;
 
 class TCL;
 
 class SCICORESHARE GuiVar {
 protected:
-    string varname;
-    int is_reset;
-    TCL* tcl;
+  string varname_;
+  int is_reset_;
+  TCL* tcl;
 public:
-    GuiVar(const string& name, const string& id, TCL* tcl);
-    virtual ~GuiVar();
-    virtual void reset();
+  GuiVar(const string& name, const string& id, TCL* tcl);
+  virtual ~GuiVar();
+  virtual void reset();
 
-    string format_varname();
+  string format_varname();
 
-    string str();
-    virtual void emit(std::ostream& out, string& midx)=0;
+  string str();
+  virtual void emit(std::ostream& out, string& midx)=0;
+};
+  
+  
+  
+template <class T>
+class GuiSingle : public GuiVar
+{
+  T value_;
+public:
+  GuiSingle(const string& name, const string& id, TCL* tcl) :
+    GuiVar(name, id, tcl) {}
+  
+  virtual ~GuiSingle() {}
+
+  inline T get() {
+    return GuiManager::get(value_, varname_, is_reset_);
+  }
+  inline void set(const T value) {
+    if(value != value_) {
+      value_ = value;
+      GuiManager::set(value_, varname_, is_reset_);
+    }
+  }
+  virtual void emit(std::ostream& out, string& midx) {
+    out << "set " << midx << "-" << format_varname() << " {"
+	<< get() << "}" << endl;
+  }
 };
 
-class SCICORESHARE GuiString : public GuiVar {
-    string value;
-public:
-    GuiString(const string& name, const string& id, TCL* tcl);
-    virtual ~GuiString();
+typedef GuiSingle<string> GuiString;
+typedef GuiSingle<double> GuiDouble;
+typedef GuiSingle<double> GuiVardouble;  // NEED TO GET RID OF
+typedef GuiSingle<int> GuiInt;
+typedef GuiSingle<int> GuiVarint;   // NEED TO GET RID OF
 
-    string get();
-    void set(const string&);
-    virtual void emit(std::ostream& out, string& midx);
+template <class T>
+class GuiTriple : public GuiVar
+{
+  GuiDouble x_;
+  GuiDouble y_;
+  GuiDouble z_;
+public:
+  GuiTriple(const string& name, const string& id, TCL* tcl) :
+    GuiVar(name, id, tcl),
+    x_("x", str(), tcl),
+    y_("y", str(), tcl),
+    z_("z", str(), tcl)
+  {}
+  virtual ~GuiTriple() {}
+
+  inline T get() {
+    T result;
+    result.x(x_.get());
+    result.y(y_.get());
+    result.z(z_.get());
+    return result;
+  }
+  inline void set(const T var) {
+    if((var.x() != x_.get()) || (var.y() != y_.get()) || (var.z() != z_.get())) {
+      x_.set(var.x());
+      y_.set(var.y());
+      z_.set(var.z());
+    }
+  }
+  virtual void emit(std::ostream& out, string& midx) {
+    x_.emit(out, midx);
+    y_.emit(out, midx);
+    z_.emit(out, midx);
+  }
 };
 
-class SCICORESHARE GuiDouble : public GuiVar {
-    double value;
-public:
-    GuiDouble(const string& name, const string& id, TCL* tcl);
-    virtual ~GuiDouble();
+typedef GuiTriple<Point> GuiPoint;
+typedef GuiTriple<Vector> GuiVector;
 
-    double get();
-    void set(double);
-    virtual void emit(std::ostream& out, string& midx);
-};
-
-class SCICORESHARE GuiInt : public GuiVar {
-    int value;
-public:
-    GuiInt(const string& name, const string& id, TCL* tcl);
-    virtual ~GuiInt();
-
-    int get();
-    void set(int);
-    virtual void emit(std::ostream& out, string& midx);
-};
-
-class SCICORESHARE GuiVardouble : public GuiVar {
-    double value;
-public:
-    GuiVardouble(const string& name, const string& id, TCL* tcl);
-    virtual ~GuiVardouble();
-
-    double get();
-    void set(double);
-    virtual void emit(std::ostream& out, string& midx);
-};
-
-class SCICORESHARE GuiVarint : public GuiVar {
-    int value;
-public:
-    GuiVarint(const string& name, const string& id, TCL* tcl);
-    virtual ~GuiVarint();
-
-    int get();
-    void set(int);
-    virtual void emit(std::ostream& out, string& midx);
-};
-
-class SCICORESHARE GuiVarintp : public GuiVar {
-    int* value;
-public:
-    GuiVarintp(int*, const string& name, const string& id, TCL* tcl);
-    virtual ~GuiVarintp();
-
-    int get();
-    void set(int);
-    virtual void emit(std::ostream& out, string& midx);
-};
-
-class SCICORESHARE GuiPoint : public GuiVar {
-    GuiDouble x;
-    GuiDouble y;
-    GuiDouble z;
-public:
-    GuiPoint(const string& name, const string& id, TCL* tcl);
-    virtual ~GuiPoint();
-
-    Point get();
-    void set(const Point&);
-    virtual void emit(std::ostream& out, string& midx);
-};
-
-class SCICORESHARE GuiVector : public GuiVar {
-    GuiDouble x;
-    GuiDouble y;
-    GuiDouble z;
-public:
-    GuiVector(const string& name, const string& id, TCL* tcl);
-    virtual ~GuiVector();
-
-    Vector get();
-    void set(const Vector&);
-    virtual void emit(std::ostream& out, string& midx);
-};
 
 } // End namespace SCIRun
 

@@ -33,9 +33,7 @@
  */
 
 #include <Core/GuiInterface/GuiVar.h>
-
 #include <Core/GuiInterface/GuiManager.h>
-#include <Core/GuiInterface/Remote.h>
 #include <Core/GuiInterface/TCL.h>
 #include <Core/GuiInterface/TCLTask.h>
 #include <Core/Geometry/Point.h>
@@ -78,11 +76,11 @@ extern "C" GLXContext OpenGLGetContext(Tcl_Interp*, char*);
 
 namespace SCIRun {
 
-extern GuiManager* gm;
+extern GuiManager* gm_;
 
 GuiVar::GuiVar(const string& name, const string& id,
 	       TCL* tcl)
-: varname(id+"-"+name), is_reset(1), tcl(tcl)
+: varname_(id+"-"+name), is_reset_(1), tcl(tcl)
 {
     if(tcl)
 	tcl->register_var(this);
@@ -96,12 +94,12 @@ GuiVar::~GuiVar()
 
 void GuiVar::reset()
 {
-    is_reset=1;
+    is_reset_=1;
 }
 
 string GuiVar::str()
 {
-    return varname;
+    return varname_;
 }
 
 #if 0
@@ -142,433 +140,43 @@ string GuiVar::format_varname() {
   int state=0;
   int end_of_modulename = -1;
   //int space = 0;
-  for (unsigned int i=0; i<varname.size(); i++) {
-    if (varname[i] == ' ') return "unused";
-    if (state == 0 && varname[i] == '_') state=1;
-    else if (state == 1 && isdigit(varname[i])) state = 2;
-    else if (state == 2 && isdigit(varname[i])) state = 2;
-    else if (state == 2 && varname[i] == '-') {
+  for (unsigned int i=0; i<varname_.size(); i++) {
+    if (varname_[i] == ' ') return "unused";
+    if (state == 0 && varname_[i] == '_') state=1;
+    else if (state == 1 && isdigit(varname_[i])) state = 2;
+    else if (state == 2 && isdigit(varname_[i])) state = 2;
+    else if (state == 2 && varname_[i] == '-') {
       end_of_modulename = i;
       state = 0;
     } else state = 0;
   }
   if (end_of_modulename == -1)
-    cerr << "Error -- couldn't format name "<< varname << endl;
-  return varname.substr(end_of_modulename+1);
+    cerr << "Error -- couldn't format name "<< varname_ << endl;
+  return varname_.substr(end_of_modulename+1);
 }
 
-GuiDouble::GuiDouble(const string& name, const string& id, TCL* tcl)
-: GuiVar(name, id, tcl)
-{
-  value=-MAXDOUBLE;
-}
-
-GuiDouble::~GuiDouble()
-{
-}
-
-double GuiDouble::get()
-{
-    // need access to network scope to get remote info.  I can't even look
-    // up mod_id in hash table because the network has that.
-    if(is_reset){
-#ifndef _WIN32
-	if (gm != NULL) {
-            int skt = gm->getConnection();
-#ifdef DEBUG
- 	    cerr << "GuiDouble::get(): Got skt from gm->getConnection() = "
-		 << skt << endl;
-#endif
-            // format request 
-            TCLMessage msg;
-	    msg.f = getDouble;
-            strcpy (msg.tclName, varname.c_str());
-            msg.un.tdouble = 0.0;
-
-            // send request to server - no need for reply, error goes to Tk
-            if (sendRequest (&msg, skt) == -1) {
-                // error case ???
-            }
-            if (receiveReply (&msg, skt) == -1) {
-		// error case ???
-	    }
-            gm->putConnection (skt);
-	    value = msg.un.tdouble;
-#ifdef DEBUG
-	    cerr << "GuiDouble::get(): value from server = " << value << endl;
-#endif
-
-        } else {
-#endif
-	    TCLTask::lock();
-	    char* l=Tcl_GetVar(the_interp, ccast_unsafe(varname),
-			       TCL_GLOBAL_ONLY);
-	    if(l){
-	        Tcl_GetDouble(the_interp, l, &value);
-	       	is_reset=0;
-	    }
-	    TCLTask::unlock();
-#ifndef _WIN32
-	}
-#endif
-    }
-    return value;
-}
-
-void GuiDouble::set(double val)
-{
-    is_reset=0;
-    if(val != value){
-	TCLTask::lock();
-	value=val;
-	char buf[50];
-	sprintf(buf, "%g", val);
-	
-	Tcl_SetVar(the_interp, ccast_unsafe(varname),
-		   buf, TCL_GLOBAL_ONLY);
-	TCLTask::unlock();
-    }
-}
-
-void GuiDouble::emit(ostream& out, string& midx)
-{
-  out << "set " << midx << "-" << format_varname() << " " << get() << endl;
-}
-
-GuiInt::GuiInt(const string& name, const string& id, TCL* tcl)
-: GuiVar(name, id, tcl)
-{
-  value=-MAXINT;
-}
-
-GuiInt::~GuiInt()
-{
-}
-
-int GuiInt::get()
-{
-    if(is_reset){
-#ifndef _WIN32
-        if (gm != NULL) {
-            int skt = gm->getConnection();
-#ifdef DEBUG
-	    cerr << "GuiInt::get(): Got skt from gm->getConnection() = "
-		 << skt << endl;
-#endif
-            // format request
-            TCLMessage msg;
-            msg.f = getInt;
-            strcpy (msg.tclName, varname.c_str());
-            msg.un.tint = 0;
-
-            // send request to server - no need for reply, error goes to Tk
-            if (sendRequest (&msg, skt) == -1) {
-                // error case ???
-            }
-            if (receiveReply (&msg, skt) == -1) {
-                // error case ???
-            }
-            gm->putConnection (skt);
-            value = msg.un.tint;
-#ifdef DEBUG
-	    cerr << "GuiInt::get(): value from server = " << value << endl;
-#endif
-
-        } else {
-#endif
-
-	    TCLTask::lock();
-	    char* l=Tcl_GetVar(the_interp, ccast_unsafe(varname),
-			       TCL_GLOBAL_ONLY);
-	    if(l){
-	        Tcl_GetInt(the_interp, l, &value);
-	        is_reset=0;
-	    }
-	    TCLTask::unlock();
-#ifndef _WIN32
-	}
-#endif
-    }
-    return value;
-}
-
-void GuiInt::set(int val)
-{
-    is_reset=0;
-    if(val != value){
-	TCLTask::lock();
-	value=val;
-	char buf[20];
-	sprintf(buf, "%d", val);
-	Tcl_SetVar(the_interp, ccast_unsafe(varname), buf, TCL_GLOBAL_ONLY);
-	TCLTask::unlock();
-    }
-}
-
-void GuiInt::emit(ostream& out, string& midx)
-{
-  if (format_varname() == "pid") return;
-  out << "set " << midx << "-" << format_varname() << " " << get() << endl;
-}
-
-GuiString::GuiString(const string& name, const string& id, TCL* tcl)
-: GuiVar(name, id, tcl)
-{
-}
-
-GuiString::~GuiString()
-{
-}
-
-string GuiString::get()
-{
-    if(is_reset){
-#ifndef _WIN32
-        if (gm != NULL) {
-            int skt = gm->getConnection();
-#ifdef DEBUG
-	    cerr << "GuiString::get(): Got skt from gm->getConnection() = "
-		 << skt << endl;
-#endif
-
-            // format request
-            TCLMessage msg;
-            msg.f = getString;
-            strcpy (msg.tclName, varname.c_str());
-            strcpy (msg.un.tstring, "");
-
-            // send request to server - no need for reply, error goes to Tk
-            if (sendRequest (&msg, skt) == -1) {
-                // error case ???
-            }
-            if (receiveReply (&msg, skt) == -1) {
-                // error case ???
-            }
-            gm->putConnection (skt);
-	    value = string(msg.un.tstring);
-#ifdef DEBUG
-	    cerr << "GuiString::get(): value from server = " << value << endl;
-#endif
-
-        } else {
-#endif
-	    TCLTask::lock();
-	    char* l=Tcl_GetVar(the_interp, ccast_unsafe(varname),
-			       TCL_GLOBAL_ONLY);
-	    if(!l){
-	        l="";
-	    }
-	    value=string(l);
-	    is_reset=0;
-	    TCLTask::unlock();
-#ifndef _WIN32
-   	}
-#endif
-    }
-    return value;
-}
-
-void GuiString::set(const string& val)
-{
-    is_reset=0;
-    if(val != value){
-	TCLTask::lock();
-	value=val;
-	Tcl_SetVar(the_interp, ccast_unsafe(varname),
-		   ccast_unsafe(value), TCL_GLOBAL_ONLY);
-	TCLTask::unlock();
-    }
-}
-
-void GuiString::emit(ostream& out, string& midx)
-{
-  out << "set " << midx << "-" << format_varname() << " {" << get() << "}" << endl;
-}
-
-GuiVardouble::GuiVardouble(const string& name, const string& id, TCL* tcl)
-: GuiVar(name, id, tcl)
-{
-    TCLTask::lock();
-    char* l=Tcl_GetVar(the_interp, ccast_unsafe(varname), TCL_GLOBAL_ONLY);
-    if(l){
-	if(Tcl_GetDouble(the_interp, l, &value) != TCL_OK)
-	    value=0;
-    } else {
-	value=0;
-    }
-    if(Tcl_LinkVar(the_interp, ccast_unsafe(varname), (char*)&value,
-		   TCL_LINK_DOUBLE) != TCL_OK){
-	cerr << "Error linking variable: " << varname << endl;
-    }
-    TCLTask::unlock();
-}
-
-GuiVardouble::~GuiVardouble()
-{
-    Tcl_UnlinkVar(the_interp, ccast_unsafe(varname));
-}
-
-double GuiVardouble::get()
-{
-/*
-    if (is_remote) {
-    	// package remote request
-        // send request over socket
-	// block on reply
-    } else {
- */
-    	return value;
-    //}
-}
-
-void GuiVardouble::emit(ostream& out, string& midx)
-{
-  out << "set " << midx << "-" << format_varname() << " " << get() << endl;
-}
-
-GuiVarint::GuiVarint(const string& name, const string& id, TCL* tcl)
-: GuiVar(name, id, tcl)
-{
-    TCLTask::lock();
-    char* l=Tcl_GetVar(the_interp, ccast_unsafe(varname), TCL_GLOBAL_ONLY);
-    if(l){
-	if(Tcl_GetInt(the_interp, l, &value) != TCL_OK)
-	    value=0;
-    } else {
-	value=0;
-    }
-    if(Tcl_LinkVar(the_interp, ccast_unsafe(varname),
-		   (char*)&value, TCL_LINK_INT) != TCL_OK){
-	cerr << "Error linking variable: " << varname << endl;
-    }
-    TCLTask::unlock();
-}
-
-GuiVarint::~GuiVarint()
-{
-    Tcl_UnlinkVar(the_interp, ccast_unsafe(varname));
-}
-
-int GuiVarint::get()
-{
-/*
-    if (is_remote) {
-        // package remote request
-        // send request over socket
-        // block on reply
-    } else {
- */
-        return value;
-    // }
-}
-
-void GuiVarint::set(int nv)
-{
-    value=nv;
-}
-
-void GuiVardouble::set(double dv)
-{
-    value=dv;
-}
-
-void GuiVarint::emit(ostream& out, string& midx)
-{
-  out << "set " << midx << "-" << format_varname() << " " << get() << endl;
-}
-
-GuiVarintp::GuiVarintp(int* value,
-		       const string& name, const string& id, TCL* tcl)
-: GuiVar(name, id, tcl), value(value)
-{
-    TCLTask::lock();
-    char* l=Tcl_GetVar(the_interp, ccast_unsafe(varname), TCL_GLOBAL_ONLY);
-    if(l)
-	Tcl_GetInt(the_interp, l, value);
-    if(Tcl_LinkVar(the_interp, ccast_unsafe(varname),
-		   (char*)value, TCL_LINK_INT) != TCL_OK){
-	cerr << "Error linking variable: " << varname << endl;
-    }
-    TCLTask::unlock();
-}
-
-GuiVarintp::~GuiVarintp()
-{
-    Tcl_UnlinkVar(the_interp, ccast_unsafe(varname));
-}
-
-// mm - must use Pio to get ptr
-int GuiVarintp::get()
-{
-    return *value;
-}
-
-void GuiVarintp::set(int nv)
-{
-    *value=nv;
-}
-
-void GuiVarintp::emit(ostream& out, string& midx)
-{
-  out << "set " << midx << "-" << format_varname() << " " << get() << endl;
-}
-
-GuiPoint::GuiPoint(const string& name, const string& id, TCL* tcl)
-: GuiVar(name, id, tcl), x("x", str(), tcl), y("y", str(), tcl),
-  z("z", str(), tcl)
-{
-}
-
-GuiPoint::~GuiPoint()
-{
-}
-
-Point GuiPoint::get()
-{
-    return Point(x.get(), y.get(), z.get());
-}
-
-void GuiPoint::set(const Point& p)
-{
-    x.set(p.x());
-    y.set(p.y());
-    z.set(p.z());
-}
-
-void GuiPoint::emit(ostream& out, string& midx)
-{
-    x.emit(out, midx);
-    y.emit(out, midx);
-    z.emit(out, midx);
-}
-
-GuiVector::GuiVector(const string& name, const string& id, TCL* tcl)
-: GuiVar(name, id, tcl), x("x", str(), tcl), y("y", str(), tcl),
-  z("z", str(), tcl)
-{
-}
-
-GuiVector::~GuiVector()
-{
-}
-
-Vector GuiVector::get()
-{
-    return Vector(x.get(), y.get(), z.get());
-}
-
-void GuiVector::set(const Vector& p)
-{
-    x.set(p.x());
-    y.set(p.y());
-    z.set(p.z());
-}
-
-void GuiVector::emit(ostream& out, string& midx)
-{
-    x.emit(out, midx);
-    y.emit(out, midx);
-    z.emit(out, midx);
-}
+template class GuiSingle<string>;
+template class GuiSingle<double>;
+template class GuiSingle<int>;
+template class GuiTriple<Point>;
+template class GuiTriple<Vector>;
 
 } // End namespace SCIRun
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
