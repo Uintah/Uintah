@@ -46,28 +46,30 @@
 
 namespace SCIRun {
 
-#define NNODES 6
-#define NEDGES 9
-#define NFACES 5
-#define NTRIS  2
-#define NQUADS 3
+#define PRISM_NNODES 6
+#define PRISM_NEDGES 9
+#define PRISM_NFACES 5
+#define PRISM_NTRIS  2
+#define PRISM_NQUADS 3
 
-#define isTRI(i)  (0<=i&&i<NTRIS)
-#define isQUAD(i) (NTRIS<=i&&i<NTRIS+NQUADS)
+#define isTRI(i)  (0<=i&&i< PRISM_NTRIS)
+#define isQUAD(i) ( PRISM_NTRIS<=i&&i< PRISM_NTRIS+ PRISM_NQUADS)
 
-static const unsigned int PrismFaceTable[5][4] = { { 0, 1, 2, 6 },
-						   { 5, 4, 3, 6 },
-						   { 4, 5, 2, 1 },
-						   { 3, 4, 1, 0 },
-						   { 3, 5, 2, 0 } };
+static const unsigned int
+PrismFaceTable[PRISM_NFACES][4] = { { 0, 1, 2, 6 },
+				    { 5, 4, 3, 6 },
+				    { 4, 5, 2, 1 },
+				    { 3, 4, 1, 0 },
+				    { 0, 2, 5, 3 } };
 
-static const unsigned int PrismNodeNeighborTable[NNODES][3] = { { 1,2,3 },
-								{ 0,2,4 },
-								{ 0,1,5 },
-								{ 0,4,5 },
-								{ 1,3,5 },
-								{ 2,3,4 } };
-
+static const unsigned int
+PrismNodeNeighborTable[PRISM_NNODES][3] = { { 1,2,3 },
+					    { 0,2,4 },
+					    { 0,1,5 },
+					    { 0,4,5 },
+					    { 1,3,5 },
+					    { 2,3,4 } };
+ 
 
 class SCICORESHARE PrismVolMesh : public Mesh
 {
@@ -105,8 +107,8 @@ public:
     //! edgei return the two nodes make the edge
     static pair<Node::index_type, Node::index_type> edgei(index_type idx)
     { 
-      const int base = (idx / NEDGES) * NNODES;
-      switch (idx % NEDGES)
+      const int base = (idx / PRISM_NEDGES) * PRISM_NNODES;
+      switch (idx % PRISM_NEDGES)
       {
       case 0: return pair<Node::index_type,Node::index_type>(base+0,base+1);
       case 1: return pair<Node::index_type,Node::index_type>(base+0,base+2);
@@ -190,27 +192,35 @@ public:
 	cells_(cells) {};
       bool operator()(index_type fi1, index_type fi2) const
       {
-	const int f1_offset = fi1 % NFACES;
-	const int f1_base = fi1 / NFACES * NNODES;
+	const int f1_offset = fi1 % PRISM_NFACES;
+	const int f1_base = fi1 / PRISM_NFACES * PRISM_NNODES;
 
-	const int f2_offset = fi2 % NFACES;
-	const int f2_base = fi2 / NFACES * NNODES;
+	const int f2_offset = fi2 % PRISM_NFACES;
+	const int f2_base = fi2 / PRISM_NFACES * PRISM_NNODES;
 
-	const under_type f1_n0 = cells_[f1_base + PrismFaceTable[f1_offset][0] ];
-	const under_type f1_n1 = cells_[f1_base + PrismFaceTable[f1_offset][1] ];
-	const under_type f1_n2 = cells_[f1_base + PrismFaceTable[f1_offset][2] ];
+	const under_type f1_n0 =
+	  cells_[f1_base + PrismFaceTable[f1_offset][0] ];
+	const under_type f1_n1 =
+	  cells_[f1_base + PrismFaceTable[f1_offset][1] ];
+	const under_type f1_n2 =
+	  cells_[f1_base + PrismFaceTable[f1_offset][2] ];
 	
-	const under_type f2_n0 = cells_[f2_base + PrismFaceTable[f2_offset][0] ];
-	const under_type f2_n1 = cells_[f2_base + PrismFaceTable[f2_offset][1] ];
-	const under_type f2_n2 = cells_[f2_base + PrismFaceTable[f2_offset][2] ];
+	const under_type f2_n0 =
+	  cells_[f2_base + PrismFaceTable[f2_offset][0] ];
+	const under_type f2_n1 =
+	  cells_[f2_base + PrismFaceTable[f2_offset][1] ];
+	const under_type f2_n2 =
+	  cells_[f2_base + PrismFaceTable[f2_offset][2] ];
 	
 	if( isTRI(f1_offset) && isTRI(f2_offset) ) {
 	  return (Max(f1_n0, f1_n1, f1_n2) == Max(f2_n0, f2_n1, f2_n2) &&
 		  Mid(f1_n0, f1_n1, f1_n2) == Mid(f2_n0, f2_n1, f2_n2) &&
 		  Min(f1_n0, f1_n1, f1_n2) == Min(f2_n0, f2_n1, f2_n2));
 	} else if( isQUAD(f1_offset) && isQUAD(f2_offset) ) {
-	  const under_type f1_n3 = cells_[f1_base + PrismFaceTable[f1_offset][3] ];
-	  const under_type f2_n3 = cells_[f2_base + PrismFaceTable[f2_offset][3] ];
+	  const under_type f1_n3 =
+	    cells_[f1_base + PrismFaceTable[f1_offset][3] ];
+	  const under_type f2_n3 =
+	    cells_[f2_base + PrismFaceTable[f2_offset][3] ];
 
 	  return
 	    (Max( Max(f1_n0, f1_n1), Max(f1_n2, f1_n3)) ==
@@ -241,8 +251,8 @@ public:
       static const int mask = (~(unsigned int)0) >> (sizeof_uint - size);
       size_t operator()(index_type idx) const 
       {
-	const unsigned int offset = idx%NFACES;
-	const unsigned int base   = idx / NFACES * NNODES; // base cell index
+	const unsigned int offset = idx%PRISM_NFACES;
+	const unsigned int base   = idx / PRISM_NFACES * PRISM_NNODES; // base cell index
 
 	const under_type n0 = cells_[base + PrismFaceTable[offset][0]] & mask;
 	const under_type n1 = cells_[base + PrismFaceTable[offset][1]] & mask;
@@ -356,9 +366,9 @@ public:
     get_point(p1,ra[1]);
     get_point(p2,ra[2]);
 
-    if( isTRI( idx % NFACES ) )
+    if( isTRI( idx % PRISM_NFACES ) )
       return (Cross(p0-p1,p2-p0)).length()*0.5;
-    else if( isQUAD( idx % NFACES ) ){
+    else if( isQUAD( idx % PRISM_NFACES ) ){
       Point p3;
       get_point(p3,ra[3]);
       return ((Cross(p0-p1,p2-p0)).length()+
@@ -368,7 +378,7 @@ public:
   }
   double get_size(Cell::index_type idx) const
   {
-    Node::array_type ra(NNODES);
+    Node::array_type ra(PRISM_NNODES);
     get_nodes(ra,idx);
     Point p0,p1,p2,p3,p4,p5;
     get_point(p0,ra[0]);
@@ -378,9 +388,9 @@ public:
     get_point(p4,ra[4]);
     get_point(p5,ra[5]);
 
-    return ((Cross(Cross(p1-p0,p2-p0),p4-p0)).length() +
-	    (Cross(Cross(p2-p0,p3-p0),p4-p0)).length() +
-	    (Cross(Cross(p3-p2,p4-p2),p5-p2)).length() ) * 0.1666666666666666;
+    return ((Dot(Cross(p1-p0,p2-p0),p4-p0)) +
+	    (Dot(Cross(p2-p0,p3-p0),p4-p0)) +
+	    (Dot(Cross(p3-p2,p4-p2),p5-p2)) ) * 0.1666666666666666;
   } 
   double get_length(Edge::index_type idx) const { return get_size(idx); };
   double get_area  (Face::index_type idx) const { return get_size(idx); };
@@ -415,6 +425,8 @@ public:
   bool locate(Cell::index_type &loc, const Point &p);
 
   double polygon_area(const Node::array_type &ni, const Vector N) const;
+  void orient(Cell::index_type idx);
+  bool inside(Cell::index_type idx, const Point &p);
 
   void get_weights(const Point &p, Node::array_type &l, vector<double> &w);
   void get_weights(const Point &, Edge::array_type &, vector<double> &) 
@@ -449,8 +461,8 @@ public:
   //! function to test if at least one of cell's nodes are in supplied range
   inline bool test_nodes_range(Cell::index_type ci, int sn, int en){
 
-    for( int i=0; i<NNODES; i++ ) {
-      if (sn<=cells_[ci*NNODES+i] && cells_[ci*NNODES+i]<en )
+    for( int i=0; i<PRISM_NNODES; i++ ) {
+      if (sn<=cells_[ci*PRISM_NNODES+i] && cells_[ci*PRISM_NNODES+i]<en )
 	return true;
     }
 
@@ -524,10 +536,6 @@ protected:
   void			compute_edges();
   void			compute_faces();
   void			compute_grid();
-
-  void			orient(Cell::index_type ci);
-  double		volume(PrismVolMesh::Cell::index_type ci);
-  bool                  inside6_p(Cell::index_type idx, const Point &p);
 
   //! Used to recompute data for individual cells
   void			create_cell_edges(Cell::index_type);
@@ -627,12 +635,12 @@ void
 PrismVolMesh::fill_cells(Iter begin, Iter end, Functor fill_ftor) {
   cells_lock_.lock();
   Iter iter = begin;
-  cells_.resize((end - begin) * NNODES); // resize to the new size
+  cells_.resize((end - begin) * PRISM_NNODES); // resize to the new size
   vector<under_type>::iterator citer = cells_.begin();
   while (iter != end) {
     int *nodes = fill_ftor(*iter); // returns an array of length NNODES
 
-    for( int i=0; i<NNODES; i++ ) {
+    for( int i=0; i<PRISM_NNODES; i++ ) {
       *citer = nodes[i];
       ++citer;
     }
