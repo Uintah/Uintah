@@ -1,0 +1,45 @@
+<?xml version="1.0"?>
+<!DOCTYPE filter-itk SYSTEM "itk_filter.dtd">
+<filter-itk name="itk::ReflectImageFilter">
+  <description>
+Implements a Reflection of an image along a selected direction.
+This class is parameterized over the type of the input image and 
+the type of the output image. 
+  </description>
+  <templated>
+    <base>itk::Object</base>
+    <template>InputImageType</template>
+    <template>OutputImageType</template>
+    <defaults>
+      <default>itk::Image&lt;float, 2&gt;</default>
+      <default>itk::Image&lt;float, 2&gt;</default>
+    </defaults>
+  </templated>
+
+  <inputs>
+    <input num="1">
+      <value>InputImageType</value>
+      <call>SetInput</call>
+      <name>InputImage</name>
+    </input>  
+  </inputs>
+  <outputs>
+    <output num="1">
+      <value>OutputImageType</value>
+      <call>GetOutput</call>
+      <name>OutputImage</name>
+    </output>
+  </outputs>
+
+  <parameters>
+    <param>
+      <name>direction</name>
+      <type>int</type>
+      <call>SetDirection</call>
+    </param>
+  </parameters>
+
+  <includes>
+    <file>itkReflectImageFilter.h</file>
+  </includes>
+</filter-itk>

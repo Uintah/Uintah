@@ -1,0 +1,59 @@
+<?xml version="1.0"?>
+<!DOCTYPE filter-itk SYSTEM "itk_filter.dtd">
+<filter-itk name="itk::BinaryThresholdImageFilter">
+  <description>
+This filter produces an output image whose pixels are either one of two values ( OutsideValue or InsideValue ), depending on whether of not the corresponding input image pixel lie between the two thresholds ( LowerThreshold and UpperThreshold ). Values equal to either threshold is considered to be between the thresholds.
+  </description>
+  <templated>
+    <base>itk::Object</base>
+    <template>InputImageType</template>
+    <template>OutputImageType</template>
+    <defaults>
+      <default>itk::Image&lt;float, 2&gt;</default>
+      <default>itk::Image&lt;float, 2&gt;</default>
+    </defaults>
+  </templated>
+
+  <inputs>
+    <input num="1">
+      <value>InputImageType</value>
+      <call>SetInput</call>
+      <name>InputImage</name>
+    </input>  
+  </inputs>
+  <outputs>
+    <output num="1">
+      <value>OutputImageType</value>
+      <call>GetOutput</call>
+      <name>OutputImage</name>
+    </output>
+  </outputs>
+
+  <parameters>
+    <param>
+      <name>lower_threshold</name>
+      <type>float</type>
+      <call>SetLowerThreshold</call>
+    </param>
+    <param>
+      <name>upper_threshold</name>
+      <type>float</type>
+      <call>SetUpperThreshold</call>
+    </param>
+    <param>
+      <name>inside_value</name>
+      <type>float</type>
+      <call>SetInsideValue</call>
+    </param>
+    <param>
+      <name>outside_value</name>
+      <type>float</type>
+      <call>SetOutsideValue</call>
+    </param>
+  </parameters>
+
+
+  <includes>
+    <file>itkBinaryThresholdImageFilter.h</file>
+  </includes>
+</filter-itk>
