@@ -69,17 +69,13 @@ originally by Nikos Drakos (nikos@cbl.leeds.ac.uk), CBLU, University of Leeds
 
 <P>
 
-<H2><A NAME="SECTION00041000000000000000">&#160;</A>
-<A NAME="sec:sciruncmd">&#160;</A>
-<BR>
-3.1 The <TT>scirun</TT> Command
-</H2>
-
-<P>
-Start <EM>SCIRun</EM> by typing <TT>scirun</TT> in a terminal (<EM>e.g.,</EM><TT>xterm</TT>)
-window.  <EM>Note: Don't start <EM>SCIRun</EM> in the background, <EM>i.e.,</EM>don't type
-<TT>scirun &amp;</TT></EM>.
-
+<blockquote>
+  <H2><A NAME="SECTION00041000000000000000">&#160;</A> <A NAME="sec:sciruncmd">&#160;</A> 
+    <BR>
+    3.1 The <TT>scirun</TT> Command </H2>
+</blockquote>
+<P> Start <EM>SCIRun</EM> by typing <TT>scirun</TT> in a terminal (<EM>e.g.,</EM><TT>xterm</TT>) 
+  window. <EM>Note: Don't start <EM>SCIRun</EM> in the background.</EM>
 <P>
 The <TT>scirun</TT> command is located in the
 <TT>src</TT> directory of the <TT><EM>SCIRun</EM></TT> install directory.  The
@@ -104,42 +100,31 @@ window as shown in Figure&nbsp;<A HREF="node4.html#fig:srwindow">2</A>.  The mai
 window are discussed in <A HREF="node4.html#sec:windowanatomy"><EM>Anatomy of the Main
   Window</EM></A>.
 
-<P>
-The <TT>scirun</TT> command may take 1 argument
-which is the name of a <EM>SCIRun</EM> <EM>network</EM> <A NAME="876">&#160;</A> file (these
-files have a <TT>.net</TT> extension).  These files hold previously
-defined <EM>SCIRun</EM> networks.  <EM>SCIRun</EM> will load the specified network.  Network
-files will be discussed in a later section.
-
-<P>
-<EM>SCIRun</EM> may encounter errors during start up.  These will be displayed in
-<EM>SCIRun</EM>'s error message pane (see Figure&nbsp;<A HREF="node4.html#fig:srwindow">2</A>).  These errors
-should be <A NAME="tex2html20"
- HREF="sec:bugs">reported</A>
-to the <EM>SCIRun</EM> development
-team.  See <A HREF="node2.html#sec:bugs"><EM>Reporting Bugs</EM></A> for information on
-  reporting bugs.
-
+<P> The <TT>scirun</TT> command may take one argument which is the name of a <EM>SCIRun</EM> 
+  <EM>network</EM> <A NAME="876">&#160;</A> file (these files have a <TT>.net</TT> 
+  extension). These files hold previously defined <EM>SCIRun</EM> networks. <EM>SCIRun</EM> 
+  will load the specified network. Network files will be discussed in a later 
+  section. 
+<P> Errors encourntered during <i>SCIRun</i> start up will appear in <EM>SCIRun</EM>'s 
+  error message pane (see Figure&nbsp;<A HREF="node4.html#fig:srwindow">2</A>). 
+  These errors should be <A NAME="tex2html20"
+ HREF="sec:bugs">reported</A> to the <EM>SCIRun</EM> development team. See <A HREF="node2.html#sec:bugs"><EM>Reporting 
+  Bugs</EM></A> for information about reporting bugs. 
 <P>
 
-<H2><A NAME="SECTION00042000000000000000">&#160;</A>
-<A NAME="sec:windowanatomy">&#160;</A>
-<BR>
-3.2 Anatomy of the Main Window
-</H2>
-
-<P>
-The <EM>SCIRun</EM> main window consists of 4 main components (see
-Figure&nbsp;<A HREF="node4.html#fig:srwindow">2</A>): 
-
+<blockquote>
+  <H2><A NAME="SECTION00042000000000000000">&#160;</A> <A NAME="sec:windowanatomy">&#160;</A> 
+    <BR>
+    3.2 Anatomy of the Main Window </H2>
+</blockquote>
+<P> The <EM>SCIRun</EM> main window consists of four main components (see Figure&nbsp;<A HREF="node4.html#fig:srwindow">2</A>): 
 <P>
 <DL>
 <DT><STRONG>Menu Bar</STRONG>
-<DD>The menu bar is used to load networks, save networks, quit
-<EM>SCIRun</EM>, create network modules, and perform other tasks.  The menu bar
-  consists of the following menu items:
-
-<P>
+  <DD>The menu bar is used to load networks, save networks, quit <EM>SCIRun</EM>, 
+    create network modules and perform other tasks. The menu bar consists of the 
+    following menu items: 
+    <P>
 <DL>
 <DT><STRONG><B>File</B></STRONG>
 <DD>The <B>File</B> menu contains the following items:
@@ -159,18 +144,18 @@ Figure&nbsp;<A HREF="node4.html#fig:srwindow">2</A>):
     </DL></DL>  
   <DL>
 <DT><STRONG><B>SCIRun</B></STRONG>
-<DD>The <B>SCIRun</B> menu is used to create modules
-(from the <EM>SCIRun</EM> package) for use in the network pane.  This menu is
-    composed of sub-menus. Each sub-menu corresponds to a <EM>category</EM>
-    <A NAME="904">&#160;</A> within the <EM>SCIRun</EM> package.  A category is group of
-    related modules.  Each menu item in a category sub-menu creates a
-    specific module and places it in the network pane.  The network pane's
-    pop-up menu (activated by clicking the right most mouse button when the
-    mouse pointer is in the network pane) also provides access to the
-    <B><EM>SCIRun</EM></B> and <B><EM>BioPSE</EM></B> (and possibly other) package menus.  An
-    overview of the contents of the <EM>SCIRun</EM> package is given in <A HREF="node7.html#sec:biopsepackage"><EM>The
-      <EM>BioPSE</EM> Package</EM></A>.
-  </DL>
+      <DD>The <B>SCIRun</B> menu is used to create modules (from the <EM>SCIRun</EM> 
+        package) for use in the network pane. This menu is composed of sub-menus. 
+        Each sub-menu corresponds to a <EM>category</EM> <A NAME="904">&#160;</A> 
+        within the <EM>SCIRun</EM> package. A <i>category</i> is group of related 
+        modules. Each menu item in a category sub-menu creates a specific module 
+        and places it in the network pane. The network pane's pop-up menu (activated 
+        by clicking the right mouse button when the mouse pointer is in the network 
+        pane) also provides access to the <B><EM>SCIRun</EM></B> and <B><EM>BioPSE</EM></B> 
+        (and possibly other) package menus. An overview of the contents of the 
+        <EM>SCIRun</EM> package is given in <A HREF="node7.html#sec:biopsepackage"><EM>The 
+        <EM>BioPSE</EM> Package</EM></A>. 
+    </DL>
 <P>
 <DL>
 <DT><STRONG><B>BioPSE</B></STRONG>
@@ -183,71 +168,58 @@ Figure&nbsp;<A HREF="node4.html#fig:srwindow">2</A>):
 <P>
 <DL>
 <DT><STRONG><I>Other Package Menus</I></STRONG>
-<DD>There may be other package
-menus if other packages have been installed.  They too will consist
-    of category sub-menus and module menu items.
-  </DL>  
+      <DD>There may be other package menus if other packages have been installed. 
+        They, too, will consist of category sub-menus and module menu items. 
+    </DL>  
 <DT><STRONG>Navigator Pane</STRONG>
-<DD>The Navigator Pane is located in the upper left
-  corner of the main window (see Figure&nbsp;<A HREF="node4.html#fig:srwindow">2</A>). It is used to
-  navigate complex networks.  The use of the Navigator Pane will be
-  described in <A HREF="node5.html#sec:navnetwork"><EM>Navigating a Network</EM></A>.
-  
-<DT><STRONG>Error Pane</STRONG>
-<DD>Errors during program startup are displayed in the Error
-  Pane.  It is located in the upper right corner of the main window(see
-  Figure&nbsp;<A HREF="node4.html#fig:srwindow">2</A>).  Errors on startup may mean that <EM>SCIRun</EM> has
-  been installed incorrectly or has been installed from a buggy
-  distribution.  Please <A HREF="node2.html#sec:bugs">report</A> these
-  errors.
-  
-<DT><STRONG>Network Pane</STRONG>
-<DD>The Network Pane occupies the bottom of the main
-  window(see Figure&nbsp;<A HREF="node4.html#fig:srwindow">2</A>).  It is used to build and execute
-  networks.  <A HREF="node5.html#sec:workwithnets"><EM>Building Networks</EM></A> discusses the use
-  of this pane.
-
-<P>
+  <DD>The Navigator Pane is located in the upper left corner of the main window 
+    (see Figure&nbsp;<A HREF="node4.html#fig:srwindow">2</A>), and is used to 
+    navigate complex networks. The use of the Navigator Pane will be described 
+    in <A HREF="node5.html#sec:navnetwork"><EM>Navigating a Network</EM></A>. 
+  <DT><STRONG>Error Pane</STRONG>
+  <DD>Errors during program startup are displayed in the Error Pane, located in 
+    the upper right corner of the main window(see Figure&nbsp;<A HREF="node4.html#fig:srwindow">2</A>). 
+    Errors on startup may mean that <EM>SCIRun</EM> has been incorrectly installed, 
+    or has been installed from a buggy distribution. Please <A HREF="node2.html#sec:bugs">report</A> 
+    these errors. 
+  <DT><STRONG>Network Pane</STRONG>
+  <DD>The Network Pane occupies the bottom of the main window(see Figure&nbsp;<A HREF="node4.html#fig:srwindow">2</A>), 
+    and is used to build and execute networks. <A HREF="node5.html#sec:workwithnets"><EM>Building 
+    Networks</EM></A> discusses the use of this pane. 
+    <P>
 </DL>
 <P>
 
-<H2><A NAME="SECTION00043000000000000000">&#160;</A>
-<A NAME="sec:termwinapp">&#160;</A>
-<BR>
-3.3 The Terminal Window
-</H2>
-
-<P>
-After starting, <EM>SCIRun</EM> will also run a shell-like application in the
-terminal window called the <EM><EM>SCIRun</EM> shell</EM>.  The <EM>SCIRun</EM> shell displays the
-prompt <TT>scirun&gt;</TT>.  This program is actually a modified <EM>Tool
-  Command Language</EM> (TCL) shell program and it is possible to type in
-TCL'ish <EM>SCIRun</EM> commands at the prompt. The use of this program
-will be described in <A HREF="node5.html#sec:termapp">a later section</A>.
-
+<blockquote>
+  <H2><A NAME="SECTION00043000000000000000">&#160;</A> <A NAME="sec:termwinapp">&#160;</A> 
+    <BR>
+    3.3 The Terminal Window </H2>
+</blockquote>
+<P> After starting, <EM>SCIRun</EM> also runs a shell-like application in the 
+  terminal window called the <EM><EM>SCIRun</EM> shell</EM>. The <EM>SCIRun</EM> 
+  shell displays the prompt <TT>scirun&gt;</TT>. This program is actually a modified 
+  <EM>Tool Command Language</EM> (TCL) shell program. It isand it is possible 
+  to type in TCL-like <EM>SCIRun</EM> commands at the prompt. The use of this 
+  program will be described in <A HREF="node5.html#sec:termapp">a later section</A>. 
 <P>
 
-<H2><A NAME="SECTION00044000000000000000">&#160;</A>
-<A NAME="sec:scirundata">&#160;</A>
-<BR>
-3.4 <TT>SCIRUN_DATA</TT>
-</H2>
-
-<P>
-The environment variable <TT>SCIRUN_DATA</TT> specifies the default
-directory of <EM>SCIRun</EM> data files.  <EM>SCIRun</EM>will first look in this directory to
-find data and network files.  It affects the behavior of file browsing
-dialogs - they will prompt for a file within the <TT>SCIRUN_DATA</TT>
-directory (of course you may have the dialog look elsewhere).
-
+<blockquote>
+  <H2><A NAME="SECTION00044000000000000000">&#160;</A> <A NAME="sec:scirundata">&#160;</A> 
+    <BR>
+    3.4 <TT>SCIRUN_DATA</TT> </H2>
+</blockquote>
+<P> The environment variable <TT>SCIRUN_DATA,</TT> specifies the default directory 
+  of <EM>SCIRun</EM> data files. <EM>SCIRun</EM> will first look in this directory 
+  to find data and network files, and will affect the behavior of file browsing 
+  dialogs--they will prompt for a file within the <TT>SCIRUN_DATA</TT> directory 
+  (of course you may have the dialog look elsewhere). 
 <P>
 
-<H2><A NAME="SECTION00045000000000000000">&#160;</A>
-<A NAME="sec:stopping">&#160;</A>
-<BR>
-3.5 Stopping
-</H2>
-
+<blockquote>
+  <H2><A NAME="SECTION00045000000000000000">&#160;</A> <A NAME="sec:stopping">&#160;</A> 
+    <BR>
+    3.5 Stopping </H2>
+</blockquote>
 <P>
 Quit <EM>SCIRun</EM> by selecting the <B>Quit</B> item from the <B>File</B> menu
 
