@@ -25,89 +25,57 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //  
-//    File   : Shader.h
+//    File   : ShaderProgramARB.h
 //    Author : Milan Ikits
-//    Date   : Sun Jun 27 17:39:44 2004
+//    Date   : Wed Jul  7 23:20:59 2004
 
-#ifndef Shader_h
-#define Shader_h
+#ifndef ShaderProgramARB_h 
+#define ShaderProgramARB_h
 
 #include <string>
 
 namespace Volume {
 
-class Shader
+class ShaderProgramARB
 {
 public:
-  Shader (const std::string& name);
-  virtual ~Shader () {}
-
-  virtual void create () = 0;
-  virtual void update () = 0;
-  virtual void destroy () = 0;
-
-  virtual void bind () = 0;
-  virtual void release () = 0;
-  virtual void makeCurrent () = 0;
+  ShaderProgramARB(const std::string& program);
+  ~ShaderProgramARB();
   
-  inline const std::string& getName () const { return mName; }
-  inline uint getId () { return mId; }
-  inline bool isDirty () { return mDirty; }
-  
+  void create();
+  bool valid();
+  void destroy();
+
+  void bind();
+  void release();
+  void enable();
+  void disable();
+  void makeCurrent();
+
+  void setLocalParam(int, float, float, float, float);
+
 protected:
-  std::string mName;
-  uint mId;
-  bool mDirty;
-};
-
-//-------------------------------------------------------------------------------
-// ARB -- R3xx/NV3x and up
-//-------------------------------------------------------------------------------
-
-class ShaderProgramARB : public Shader
-{
-public:
-  ShaderProgramARB (const std::string& name, const std::string& program = "");
-  ~ShaderProgramARB () {}
-
-  void setFileName (const std::string& name);
-  inline const std::string& getFilename () const { return mFilename; }
-
-  void load (const std::string& filename); // same as setFileName + reload
-  void reload ();
-
-  void create ();
-  void update ();
-  void destroy ();
-
-  void bind ();
-  void release ();
-  void makeCurrent ();
-  
-  void setLocalParam (int i, float x, float y, float z, float w);
-
-  bool valid ();
-  
-protected:
-  uint mType;
-  std::string mFilename;
+  unsigned int mType;
+  unsigned int mId;
   std::string mProgram;
+  static bool mInit;
+  static bool mSupported;
 };
 
 class VertexProgramARB : public ShaderProgramARB
 {
 public:
-  VertexProgramARB (const std::string& name, const std::string& program = "");
-  ~VertexProgramARB () {}
+  VertexProgramARB(const std::string& program);
+  ~VertexProgramARB();
 };
 
 class FragmentProgramARB : public ShaderProgramARB
 {
 public:
-  FragmentProgramARB (const std::string& name, const std::string& program = "");
-  ~FragmentProgramARB () {}
+  FragmentProgramARB(const std::string& program);
+  ~FragmentProgramARB();
 };
 
 } // end namespace Volume
 
-#endif // Shader_h
+#endif // ShaderProgramARB_h

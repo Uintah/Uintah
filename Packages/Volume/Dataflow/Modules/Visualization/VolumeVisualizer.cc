@@ -106,6 +106,7 @@ VolumeVisualizer::~VolumeVisualizer(){
 void
 VolumeVisualizer::execute(){
 
+  cerr << "VolumeVisualizer::execute" << endl;
   static Point oldmin(0,0,0), oldmax(0,0,0);
   static int oldni = 0, oldnj = 0, oldnk = 0;
   static GeomID geomID  = 0;
