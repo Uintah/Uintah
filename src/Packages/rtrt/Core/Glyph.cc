@@ -82,7 +82,7 @@ void Glyph::print(ostream& out) {
   child->print(out);
 }
 
-void Glyph::animate(double t, bool& changed) {
+void Glyph::animate(double /*t*/, bool& /*changed*/) {
   //child->animate(t, changed);
 }
 

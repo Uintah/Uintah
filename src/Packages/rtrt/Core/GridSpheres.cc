@@ -97,7 +97,7 @@ GridSpheres::~GridSpheres()
 }
 
 void 
-GridSpheres::io(SCIRun::Piostream &str)
+GridSpheres::io(SCIRun::Piostream&)
 {
   ASSERTFAIL("Pio for GridSpheres not implemented");
 }
