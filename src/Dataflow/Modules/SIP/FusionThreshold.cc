@@ -154,15 +154,13 @@ void FusionThreshold::execute()
 	}
     }
     if (!have_ever_executed || new_field) {
-	fieldHndl=fieldRG=0;
-	fieldHndl=fieldRG=scinew ScalarFieldRG;
 	last_min.newsize(numFields.get(), NUM_MATERIALS);
 	last_max.newsize(numFields.get(), NUM_MATERIALS);
 	last_fld_sel.resize(numFields.get());
 	min.newsize(numFields.get(),NUM_MATERIALS);
 	max.newsize(numFields.get(),NUM_MATERIALS);
 	fld_sel.resize(numFields.get());
-	fieldRG->resize(nx, ny, nz);
+	fieldHndl=fieldRG=scinew ScalarFieldRG(nx, ny, nz);
 	Point old_min, old_max;
 	rg->get_bounds(old_min, old_max);
 	fieldRG->set_bounds(old_min, old_max);
@@ -194,7 +192,7 @@ void FusionThreshold::parallel_vec_seg(int proc) {
     int ex=(proc+1)*(nx-1)/np;
     for (int f=0; f<numFields.get(); f++) {
 	if (fld_sel[f]->get()) {
-	    ScalarFieldRG* rg_in=fields[f]->getRG();
+	    ScalarFieldRG* rg_in = fields[f]->getRG();
 	    for (int x=sx; x<ex; x++) {
 		for (int y=0; y<ny; y++) {
 		    for (int z=0; z<nz; z++) {
@@ -231,7 +229,6 @@ void FusionThreshold::vec_seg()
 void FusionThreshold::vector_seg_rg(const Array1<ScalarFieldHandle> &, 
 			      ScalarFieldRG* ofieldRG)
 {
-    //ScalarFieldRG* rg=ifields[0]->getRG();
     isoChanged=0;
     int fld_changed;
     int min_changed;

@@ -31,7 +31,7 @@ static Persistent* make_SegFld()
 PersistentTypeID SegFld::type_id("SegFld", "ScalarFieldRGint", make_SegFld);
 
 SegFld::SegFld()
-: ScalarFieldRGint()
+: ScalarFieldRGint(0, 0, 0)
 {
 }
 
@@ -101,8 +101,9 @@ SegFld::SegFld(const SegFld& copy)
 {
 }
 
-SegFld::SegFld(ScalarFieldRGchar* sf) {
-    resize(sf->nx, sf->ny, sf->nz);
+SegFld::SegFld(ScalarFieldRGchar* sf)
+  : ScalarFieldRGint(sf->nx, sf->ny, sf->nz)
+{
     Point min, max;
     sf->get_bounds(min,max);
     set_bounds(min,max);
@@ -143,10 +144,9 @@ void SegFld::io(Piostream& stream)
 }
 
 ScalarFieldRGchar* SegFld::getTypeFld() {
-    ScalarFieldRGchar* c=scinew ScalarFieldRGchar();
+    ScalarFieldRGchar* c=scinew ScalarFieldRGchar(nx, ny, nz);
     Point min, max;
     get_bounds(min, max);
-    c->resize(nx, ny, nz);
     c->set_bounds(min, max);
     for (int i=0; i<nx; i++)
 	for (int j=0; j<ny; j++)
@@ -156,10 +156,9 @@ ScalarFieldRGchar* SegFld::getTypeFld() {
 }
 
 ScalarFieldRG* SegFld::getBitFld() {
-    ScalarFieldRG* c=scinew ScalarFieldRG();
+    ScalarFieldRG* c=scinew ScalarFieldRG(nx, ny, nz);
     Point min, max;
     get_bounds(min, max);
-    c->resize(nx, ny, nz);
     c->set_bounds(min, max);
     for (int i=0; i<nx; i++)
 	for (int j=0; j<ny; j++)

@@ -131,7 +131,6 @@ Gauss::Gauss(const clString& id)
   add_iport( inscalarfield);
   add_oport( outscalarfield);
 
-  outgrid = new ScalarFieldRG;
 #ifdef __sgi  
   pbuf = 0;
 #endif
@@ -185,23 +184,18 @@ void Gauss::execute()
 
   gen=ingrid->generation;
     
-  if (gen!=outgrid->generation) {
-    outgrid=new ScalarFieldRG(*ingrid);
-    dgrid=new ScalarFieldRGfloat;
-  } 
-  
   if (ingrid) {
     width = ingrid->grid.dim2();
     height = ingrid->grid.dim1();
   } 
-   
   
-  outgrid->resize(height,width,1);
-   
-  dgrid = new ScalarFieldRGfloat;
-  dgrid->resize(height,width,1);
+  if (gen!=outgrid->generation) {
+  } 
 
-  double maxval,minval;
+  outgrid = scinew ScalarFieldRG(*ingrid);
+  dgrid = scinew ScalarFieldRGfloat(height, width, 1);
+
+  double maxval, minval;
 
 /*  for (int x=0;x<width;x++)
     for (int y=0;y<height;y++) {

@@ -78,7 +78,6 @@ Hist::Hist(const clString& id)
     outscalarfield = scinew ScalarFieldOPort( this, "Scalar Field",
 					ScalarFieldIPort::Atomic);
     add_oport( outscalarfield);
-    newgrid=new ScalarFieldRG;
 }
 
 Hist::~Hist()
@@ -114,12 +113,6 @@ void Hist::execute()
     }
     gen=rg->generation;
     
-    if (gen!=newgrid->generation){
-      //  newgrid=new ScalarFieldRGint;
-      // New input
-    }
-    newgrid=new ScalarFieldRG;
-
     rg->compute_minmax();
     rg->get_minmax(min,max);
     
@@ -130,7 +123,7 @@ void Hist::execute()
     include = includeval.get();
     numbins = numbinsval.get();
 
-    newgrid->resize(1,numbins,1);
+    newgrid = scinew ScalarFieldRG(1, numbins, 1);
 
     for (int i=0; i<numbins; i++)
       newgrid->grid(0,i,0)=0;

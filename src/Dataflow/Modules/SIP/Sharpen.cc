@@ -80,8 +80,6 @@ Sharpen::Sharpen(const clString& id)
   outscalarfield = scinew ScalarFieldOPort( this, "Scalar Field",
 					    ScalarFieldIPort::Atomic);
   add_oport( outscalarfield);
-  newgrid=new ScalarFieldRG;
-  
   fact = 1.0;
 }
 
@@ -134,7 +132,7 @@ void Sharpen::execute()
     gen=rg->generation;
     
     if (gen!=newgrid->generation){
-      newgrid=new ScalarFieldRG(*rg);
+      //newgrid=new ScalarFieldRG(*rg);
       //New input..";
     }
 
@@ -142,7 +140,7 @@ void Sharpen::execute()
     int ny=rg->grid.dim2();
     int nz=rg->grid.dim3();
 
-    newgrid->resize(nx,ny,nz);
+    newgrid = new ScalarFieldRG(nx, ny, nz);
     
     if ((nx!=blur->grid.dim1()) || (ny!=blur->grid.dim2())) {
       cerr << "Blurred image must be the same size as input image..\n";

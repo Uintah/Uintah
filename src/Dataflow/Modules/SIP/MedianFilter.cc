@@ -118,9 +118,8 @@ void MedianFilter::execute() {
 
     Point min, max;
     isf->get_bounds(min, max);
-    osf = new ScalarFieldRGuchar();
+    osf = new ScalarFieldRGuchar(isf->nx, isf->ny, isf->nz);
     osf->set_bounds(min, max);
-    osf->resize(isf->nx, isf->ny, isf->nz);
     osf->grid.initialize(0);
     oFldHandle = osf;
     filter(lastKernel);

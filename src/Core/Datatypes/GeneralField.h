@@ -44,11 +44,6 @@ template <class G, class A=DiscreteAttrib<double> >
   virtual typename A::value_type &operator[](int);
 
   //////////
-  // Resize the geom and return true if it is of type LatticeGeom,
-  // return false if not.
-  virtual bool resize(int, int, int);
-  
-  //////////
   // If geom is set, set its name
   virtual bool set_geom_name(string iname);
   
@@ -151,21 +146,6 @@ template <class G, class A >
 GeneralField<G,A>::GeneralField(const GeneralField&)
 {
 }
-
-
-template <class G, class A >
-bool
-GeneralField<G, A>::resize(int x, int y, int z)
-{
-  A *typedattrib = attrib.get_rep();
-  if (typedattrib) { typedattrib->resize(x, y, z); }
-  
-  G *typedgeom = geom.get_rep();
-  if (typedgeom) { typedgeom->resize(x, y, z); }
-
-  return true;
-}
-
 
 
 template <class G, class A >

@@ -114,28 +114,22 @@ void TransformField::execute()
     Point max;
     sfrgb->get_bounds(min, max);
     if (ifd) {
-	ofd=scinew ScalarFieldRGdouble(); 
-	ofd->resize(nx,ny,nz);
+	ofd=scinew ScalarFieldRGdouble(nx, ny, nz); 
 	ofb=ofd;
     } else if (iff) {
-	off=scinew ScalarFieldRGfloat(); 
-	off->resize(nx,ny,nz);
+	off=scinew ScalarFieldRGfloat(nx, ny, nz); 
 	ofb=off;
     } else if (ifi) {
-	ofi=scinew ScalarFieldRGint(); 
-	ofi->resize(nx,ny,nz);
+	ofi=scinew ScalarFieldRGint(nx, ny, nz); 
 	ofb=ofi;
     } else if (ifs) {
-	ofs=scinew ScalarFieldRGshort(); 
-	ofs->resize(nx,ny,nz);
+	ofs=scinew ScalarFieldRGshort(nx, ny, nz); 
 	ofb=ofs;
     } else if (ifu) {
-	ofu=scinew ScalarFieldRGuchar(); 
-	ofu->resize(nx,ny,nz);
+	ofu=scinew ScalarFieldRGuchar(nx, ny, nz); 
 	ofb=ofu;
     } else if (ifc) {
-	ofc=scinew ScalarFieldRGchar(); 
-	ofc->resize(nx,ny,nz);
+	ofc=scinew ScalarFieldRGchar(nx, ny, nz); 
 	ofb=ofc;
     }
     ofb->set_bounds(Point(min.x(), min.y(), min.z()), 

@@ -295,7 +295,7 @@ private:
 
 public:
   
-  bool locate(const Point &p, int &start);
+  bool locate(int *start, const Point &p);
   
   double interpolate (const Point & P,
 		      const Array1<double> & data, int & start);

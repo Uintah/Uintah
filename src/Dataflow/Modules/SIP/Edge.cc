@@ -103,12 +103,6 @@ Edge::Edge(const clString& id)
 					ScalarFieldIPort::Atomic);
     add_oport( outscalarfield2);
     
-    newgrid=new ScalarFieldRG;
-    orient=new ScalarFieldRG;
-    tempgrid=new ScalarFieldRG;
-
-    mu=new ScalarFieldRGchar;
-    
     normal = 1;
     gen=genblur=99;  // ?
 }
@@ -387,19 +381,13 @@ void Edge::execute()
 
     
 /*    if (gen!=rg->generation) { */
-      newgrid=new ScalarFieldRG;
-      orient=new ScalarFieldRG;
-      d1 = new ScalarFieldRG;
-      tempgrid=new ScalarFieldRG;
-      mu=new ScalarFieldRGchar;
+      newgrid = new ScalarFieldRG(nx, ny, nz);
+      orient = new ScalarFieldRG(nx, ny, nz);
+      d1  =  new ScalarFieldRG(nx, ny, nz);
+      tempgrid = new ScalarFieldRG(nx, ny, nz);
+      mu = new ScalarFieldRGchar(nx, ny, nz);
 
-      newgrid->resize(nx,ny,nz);
-      orient->resize(nx,ny,nz);
-      d1->resize(nx,ny,nz);
-      tempgrid->resize(nx,ny,nz);
-      mu->resize(nx,ny,nz);
-
-      gen=rg->generation;
+      gen = rg->generation;
 
 /*    }   */
 

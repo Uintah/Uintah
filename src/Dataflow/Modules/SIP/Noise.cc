@@ -77,7 +77,6 @@ Noise::Noise(const clString& id)
     outscalarfield = scinew ScalarFieldOPort( this, "Scalar Field",
 					ScalarFieldIPort::Atomic);
     add_oport( outscalarfield);
-    newgrid=new ScalarFieldRG;
 
     freq = 0;
     mag = 1;
@@ -211,7 +210,6 @@ void Noise::execute()
     gen=rg->generation;
     
     if (gen!=newgrid->generation){
-      newgrid=new ScalarFieldRG(*rg);
       //New input..";
     }
 
@@ -221,7 +219,7 @@ void Noise::execute()
     int ny=rg->grid.dim2();
     int nz=rg->grid.dim3();
 
-    newgrid->resize(nx,ny,nz);
+    newgrid = new ScalarFieldRG(nx, ny, nz);
 
     clString ft(funcname.get());
 

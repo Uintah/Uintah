@@ -120,12 +120,11 @@ void GenScalarField::execute()
   cout << "x: (" << _xmin << "," << _xmax << ")" << endl;
   cout << "y: (" << _ymin << "," << _ymax << ")" << endl;
   cout << "z: (" << _zmin << "," << _zmax << ")" << endl;
-  sfd = scinew ScalarFieldRGdouble();
+  sfd = scinew ScalarFieldRGdouble(_resz, _resy, _resz);
   handle = sfd;
   
-  sfd->resize(_resx,_resy,_resz);
   sfd->set_bounds(Point(_xmin, _ymin, _zmin),
-    Point(_xmax, _ymax, _zmax));
+		  Point(_xmax, _ymax, _zmax));
 
   double dx = (_xmax-_xmin) / double(_resx);
   double dy = (_ymax-_ymin) / double(_resy);

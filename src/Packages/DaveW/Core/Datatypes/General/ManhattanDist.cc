@@ -33,7 +33,7 @@ PersistentTypeID ManhattanDist::type_id("ManhattanDist", "ScalarFieldRGint", mak
 ManhattanDist::ManhattanDist(const Array1<Point>&Pts, int n, int init,
 			     double minX, double minY, double minZ,
 			     double maxX, double maxY, double maxZ)
-: pts(Pts), fullyInitialized(init)
+: ScalarFieldRGint(0, 0, 0), pts(Pts), fullyInitialized(init)
 {
 
     Point min(minX, minY, minZ);
@@ -64,7 +64,9 @@ fullyInitialized(copy.fullyInitialized)
 {
 }
 
-ManhattanDist::ManhattanDist() {
+ManhattanDist::ManhattanDist()
+  : ScalarFieldRGint(0, 0, 0)
+{
 }
 
 ManhattanDist::~ManhattanDist()

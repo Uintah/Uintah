@@ -102,7 +102,6 @@ Subsample::Subsample(const clString& id)
     outscalarfield = scinew ScalarFieldOPort( this, "Scalar Field",
 					ScalarFieldIPort::Atomic);
     add_oport( outscalarfield);
-    newgrid=new ScalarFieldRG;
     scalex=scaley=1.0;  // default to 1 to 1 scale
     mode=2;
 }
@@ -317,9 +316,6 @@ void Subsample::execute()
     //  newgrid=new ScalarFieldRGint;
       // New input
     }
-    newgrid=new ScalarFieldRG;
-    tmp=new ScalarFieldRG;
-    
     if (mode==2) {
       newx = rg->grid.dim2()*scalex;
       newy = rg->grid.dim1()*scaley;
@@ -329,8 +325,9 @@ void Subsample::execute()
     }
     cerr << "Re-sampling to  : " << newx << " " << newy << "\n";
     cerr << "Scale Factors   : " << scalex << " " << scaley << "\n";
-    newgrid->resize(newy,newx,rg->grid.dim3());
 
+    newgrid = new ScalarFieldRG(newy, newx, rg->grid.dim3());
+    
     np = Thread::numProcessors();    
 
     clString ft(funcname.get());
@@ -342,7 +339,7 @@ void Subsample::execute()
     
     if (ft=="Mitchell") {
 
-      tmp->resize(rg->grid.dim1(),newx,rg->grid.dim3());
+      tmp = new ScalarFieldRG(rg->grid.dim1(), newx, rg->grid.dim3());
     
       compute_hcontribs();  // Horizontal contributions
       Thread::parallel(Parallel<Subsample>(this, &Subsample::do_mitchell_row),

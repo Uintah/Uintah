@@ -83,7 +83,6 @@ Binop::Binop(const clString& id)
     outscalarfield = scinew ScalarFieldOPort( this, "Scalar Field",
 					ScalarFieldIPort::Atomic);
     add_oport( outscalarfield);
-    newgrid=new ScalarFieldRG;
     mode=0;
 }
 
@@ -158,10 +157,10 @@ void Binop::execute()
       return;
     }
 
-    newgrid=new ScalarFieldRG;
+    newgrid = scinew ScalarFieldRG(a->grid.dim1(),
+				   a->grid.dim2(),
+				   a->grid.dim3());
     
-    newgrid->resize(a->grid.dim1(),a->grid.dim2(),a->grid.dim3());
-
     np = Thread::numProcessors();    
 
     // see which radio button is pressed..

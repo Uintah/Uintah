@@ -92,7 +92,6 @@ Transforms::Transforms(const clString& id)
 					ScalarFieldIPort::Atomic);
     add_oport( outscalarfield);
 
-    newgrid=new ScalarFieldRG;
     gen=99;
     snaxels=0;
 }
@@ -199,7 +198,7 @@ void Transforms::execute()
     gen=rg->generation;    
     
     if (gen!=newgrid->generation){
-      newgrid=new ScalarFieldRG(*rg);
+      //newgrid=new ScalarFieldRG(*rg);
     }
     
     double coeft = coef.get();
@@ -220,7 +219,7 @@ void Transforms::execute()
       return;
     }
 
-    newgrid->resize(nx,ny,nz);
+    newgrid = new ScalarFieldRG(nx, ny, nz);
 
     /*    np = Task::nprocessors();
     Task::multiprocess(np, do_parallel_stuff, this); */

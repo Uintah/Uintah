@@ -72,8 +72,7 @@ public:
     void locate(const Point&, int&, int&, int&);
     void midLocate(const Point&, int&, int&, int&);
     void set_bounds(const Point &min, const Point &max);
-    ScalarFieldRGBase();
-    ScalarFieldRGBase(clString);
+    ScalarFieldRGBase(clString, int x, int y, int z);
     ScalarFieldRGBase(const ScalarFieldRGBase&);
     virtual ~ScalarFieldRGBase();
     virtual void compute_bounds();

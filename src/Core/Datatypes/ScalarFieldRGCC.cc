@@ -24,13 +24,13 @@ namespace SCIRun {
 
 static Persistent* CCmaker()
 {
-    return scinew ScalarFieldRGCC;
+    return scinew ScalarFieldRGCC(0, 0, 0);
 }
 
 PersistentTypeID ScalarFieldRGCC::type_id("ScalarFieldRGCC", "ScalarField", CCmaker);
 
-ScalarFieldRGCC::ScalarFieldRGCC()
-: ScalarFieldRG()
+ScalarFieldRGCC::ScalarFieldRGCC(int x, int y, int z)
+: ScalarFieldRG(x, y, z)
 {
 }
 

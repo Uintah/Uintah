@@ -85,7 +85,6 @@ Radon::Radon(const clString& id)
     outscalarfield = scinew ScalarFieldOPort( this, "Scalar Field",
 					ScalarFieldIPort::Atomic);
     add_oport( outscalarfield);
-    newgrid=new ScalarFieldRG;
 }
 
 Radon::~Radon()
@@ -141,7 +140,6 @@ void Radon::execute()
     //  newgrid=new ScalarFieldRGint;
       // New input
     }
-    newgrid=new ScalarFieldRG(*rg);
 
     rg->compute_minmax();
     rg->get_minmax(min,max);
@@ -163,7 +161,7 @@ void Radon::execute()
     cerr << "thetastep = " << thetastep << "\n";
 
     
-    newgrid->resize(diag,numtheta,rg->grid.dim3());
+    newgrid = new ScalarFieldRG(diag, numtheta, rg->grid.dim3());
 
     // Run the radon code in parallel
     

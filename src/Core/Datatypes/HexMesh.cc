@@ -1090,20 +1090,20 @@ void HexMesh::classify ()
  * given point, if any.  The node to start searching at is specified.
  *******************************************************************************/
 
-bool HexMesh::locate (const Point& P, int & idx)
+bool HexMesh::locate(int *idx, const Point& P)
 {
   Hexahedron * h;
   int c, max_iter, m, next, fail;
   double smallest, dist;
       
-  if (idx < 1)
-    idx = 1;
+  if (*idx < 1)
+    *idx = 1;
 
   // Do smart search here, artificially limit the depth.
 
-  for (max_iter = 150; idx >= 0 && max_iter--;)
+  for (max_iter = 150; *idx >= 0 && max_iter--;)
   {
-    h = find_element (idx);
+    h = find_element (*idx);
     
     if (h == NULL)
       break;
@@ -1130,10 +1130,10 @@ bool HexMesh::locate (const Point& P, int & idx)
 
     if (!fail)
     {
-      return idx;
+      return *idx;
     }
     else  
-      idx = next;
+      *idx = next;
   }
   
   // Smart search failed -- do stupid search.
@@ -1151,7 +1151,7 @@ bool HexMesh::locate (const Point& P, int & idx)
   if (P.x() < KD.min.x() || P.y() < KD.min.y() || P.z() < KD.min.z() || 
       P.x() > KD.max.x() || P.y() > KD.max.y() || P.z() > KD.max.z())
   {
-    idx = -1;
+    *idx = -1;
     return false;
   }
     
@@ -1170,7 +1170,7 @@ bool HexMesh::locate (const Point& P, int & idx)
           break;
       if (c == -1)
       {
-	idx = h->index();
+	*idx = h->index();
 	return true;
       }
     }
@@ -1197,7 +1197,7 @@ bool HexMesh::locate (const Point& P, int & idx)
       break;
     }
   }
-  idx = -1;
+  *idx = -1;
   return false;
 }
 
@@ -1215,7 +1215,7 @@ double HexMesh::interpolate (const Point & p, const Array1<double> & data, int &
 
   // Find which node has this point.
   
-  locate (p, start);
+  locate (&start, p);
   if (start < 0)
     return -1;
     
@@ -1254,7 +1254,7 @@ double HexMesh::interpolate (const Point & P, const Array1<Vector> & data,
 
   // Find which node has this point.
 
-  locate (P, start);
+  locate (&start, P);
   if (start < 0)
     return -1;
 

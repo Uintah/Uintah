@@ -79,7 +79,6 @@ Unop::Unop(const clString& id)
     outscalarfield = scinew ScalarFieldOPort( this, "Scalar Field",
 					ScalarFieldIPort::Atomic);
     add_oport( outscalarfield);
-    newgrid=new ScalarFieldRG;
     mode=0;
 }
 
@@ -151,11 +150,8 @@ void Unop::execute()
       return;
     }
 
-    newgrid=new ScalarFieldRG;
-    
     np = Thread::numProcessors();
 
-    
     clString ft(funcname.get());
 
     if (ft=="Abs") mode=0;
@@ -176,12 +172,21 @@ void Unop::execute()
       int pow = 2;
       while (pow<Max(rg->grid.dim1(),rg->grid.dim2()))
 	pow*=2;
-      newgrid->resize(pow,pow,rg->grid.dim3());
-    } else
+      newgrid = new ScalarFieldRG(pow, pow, rg->grid.dim3());
+    }
+    else
+    {
       if (mode==4)
-	newgrid->resize(rg->grid.dim1(),rg->grid.dim2(),1); else
-	  newgrid->resize(rg->grid.dim1(),rg->grid.dim2(),rg->grid.dim3());
-    
+      {
+	newgrid = new ScalarFieldRG(rg->grid.dim1(), rg->grid.dim2(), 1);
+      }
+      else
+      {
+	newgrid = new ScalarFieldRG(rg->grid.dim1(),
+				    rg->grid.dim2(),
+				    rg->grid.dim3());
+      }
+    }
     rg->compute_minmax();
     rg->get_minmax(min,max);
 

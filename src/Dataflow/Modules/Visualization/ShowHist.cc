@@ -78,7 +78,6 @@ ShowHist::ShowHist(const clString& id)
     outscalarfield = scinew ScalarFieldOPort( this, "Scalar Field",
 					ScalarFieldIPort::Atomic);
     add_oport( outscalarfield);
-    newgrid=new ScalarFieldRG;
 }
 
 ShowHist::~ShowHist()
@@ -120,15 +119,13 @@ void ShowHist::execute()
     //  newgrid=new ScalarFieldRGint;
       // New input
     }
-    newgrid=new ScalarFieldRG;
+    newgrid = new ScalarFieldRG(500, rg->grid.dim2(), 1);
 
     rg->compute_minmax();
     rg->get_minmax(min,max);
 
     cerr << "ShowHist min/max : " << min << " " << max << "\n";
     
-    newgrid->resize(500,rg->grid.dim2(),1);
-
     np = Thread::numProcessors();    
       
     Thread::parallel(Parallel<ShowHist>(this, &ShowHist::do_ShowHist),

@@ -99,7 +99,6 @@ Snakes::Snakes(const clString& id)
 					ScalarFieldIPort::Atomic);
     add_oport( outscalarfield);
 
-    newgrid=new ScalarFieldRG;
     gen=99;
     snaxels=0;
 }
@@ -428,7 +427,6 @@ void Snakes::execute()
     gen=rg->generation;    
     
     if (gen!=newgrid->generation){
-      newgrid=new ScalarFieldRG(*rg);
     }
     
     a = aval.get();
@@ -450,7 +448,7 @@ void Snakes::execute()
 
     int maxpoints=sn->grid.dim1();
     
-    newgrid->resize(nx,ny,nz);
+    newgrid = new ScalarFieldRG(nx, ny, nz);
 
     np = Thread::numProcessors();
     Thread::parallel(Parallel<Snakes>(this, &Snakes::do_parallel),

@@ -154,8 +154,7 @@ void LocalMinMax::execute()
 	int nx=isfrg->nx;
 	int ny=isfrg->ny;
 	int nz=isfrg->nz;
-	ScalarFieldRG *osfrg=new ScalarFieldRG;
-	osfrg->resize(nx, ny, nz);
+	ScalarFieldRG *osfrg = new ScalarFieldRG(nx, ny, nz);
 	osfrg->grid.initialize(0);
 	Point min, max;
 	isfrg->get_bounds(min, max);

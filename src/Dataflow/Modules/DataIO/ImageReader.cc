@@ -77,8 +77,7 @@ void ImageReader::execute()
 
 	int xdim=dims[0],ydim=dims[1],zdim=1;
 	
-	ScalarFieldRGchar* sf=new ScalarFieldRGchar;
-	sf->resize(xdim, ydim, zdim);
+	ScalarFieldRGchar* sf=new ScalarFieldRGchar(xdim, ydim, zdim);
 	sf->compute_bounds();
 	Point pmin(0,0,0),pmax(xdim,ydim,zdim);
 	sf->set_bounds(pmin,pmax);  // something more reasonable later...
