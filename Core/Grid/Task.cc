@@ -403,17 +403,17 @@ Task::doit(const ProcessorGroup* pc, const PatchSubset* patches,
            const MaterialSubset* matls, DataWarehouse* fromDW,
            DataWarehouse* toDW)
 {
-  if (fromDW) fromDW->setCurrentTask(this);
-  if (toDW) toDW->setCurrentTask(this);    
+  if (fromDW) fromDW->pushRunningTask(this);
+  if (toDW) toDW->pushRunningTask(this);    
   if(d_action)
      d_action->doit(pc, patches, matls, fromDW, toDW);
   if (fromDW) {
     fromDW->checkTasksAccesses(patches, matls);
-    fromDW->setCurrentTask(0);
+    fromDW->popRunningTask();
   }
   if (toDW) {
     toDW->checkTasksAccesses(patches, matls);
-    toDW->setCurrentTask(0);
+    toDW->popRunningTask();
   }
 }
 
