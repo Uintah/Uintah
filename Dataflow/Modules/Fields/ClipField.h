@@ -62,10 +62,16 @@ ClipFieldAlgoT<FIELD>::execute_cell(FieldHandle fieldh, ClipperHandle clipper)
     dynamic_cast<typename FIELD::mesh_type *>(fieldh->mesh().get_rep());
   typename FIELD::mesh_type *clipped = scinew typename FIELD::mesh_type();
 
+#ifdef HAVE_HASH_MAP
   typedef hash_map<unsigned int,
     typename FIELD::mesh_type::Node::index_type,
     hash<unsigned int>,
     equal_to<unsigned int> > hash_type;
+#else
+  typedef map<unsigned int,
+    typename FIELD::mesh_type::Node::index_type,
+    equal_to<unsigned int> > hash_type;
+#endif
 
   hash_type nodemap;
 
@@ -151,10 +157,16 @@ ClipFieldAlgoT<FIELD>::execute_node(FieldHandle fieldh, ClipperHandle clipper,
     dynamic_cast<typename FIELD::mesh_type *>(fieldh->mesh().get_rep());
   typename FIELD::mesh_type *clipped = scinew typename FIELD::mesh_type();
 
+#ifdef HAVE_HASH_MAP
   typedef hash_map<unsigned int,
     typename FIELD::mesh_type::Node::index_type,
     hash<unsigned int>,
     equal_to<unsigned int> > hash_type;
+#else
+  typedef map<unsigned int,
+    typename FIELD::mesh_type::Node::index_type,
+    equal_to<unsigned int> > hash_type;
+#endif
 
   hash_type nodemap;
 

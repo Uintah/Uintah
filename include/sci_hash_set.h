@@ -23,6 +23,7 @@
 #if !defined SCI_HASH_SET_H
 #define SCI_HASH_SET_H
 
+#define HAVE_HASH_SET
 #ifdef HAVE_STD_HASHMAP
 #include <hash_set>
 using std::hash_set;
@@ -38,7 +39,7 @@ using std::hash_multiset;
 using __gnu_cxx::hash_set;
 using __gnu_cxx::hash_multiset;
 #else
-#error Do not know location of hash_set
+#undef HAVE_HASH_SET
 #endif
 #endif
 #endif

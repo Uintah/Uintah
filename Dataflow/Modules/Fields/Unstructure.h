@@ -111,15 +111,26 @@ UnstructureAlgoT<FSRC, FDST>::execute(FieldHandle field_h)
 
   typename FDST::mesh_handle_type outmesh = scinew typename FDST::mesh_type();
 
+#ifdef HAVE_HASH_MAP
   typedef hash_map<typename FSRC::mesh_type::Node::index_type,
     typename FDST::mesh_type::Node::index_type,
     SpecialUnstructuredHash, SpecialUnstructuredEqual> node_hash_type;
-
+#else
+  typedef map<typename FSRC::mesh_type::Node::index_type,
+    typename FDST::mesh_type::Node::index_type,
+    SpecialUnstructuredEqual> node_hash_type;
+#endif
   node_hash_type nodemap;
 
+#ifdef HAVE_HASH_MAP
   typedef hash_map<typename FSRC::mesh_type::Elem::index_type,
     typename FDST::mesh_type::Elem::index_type,
     SpecialUnstructuredHash, SpecialUnstructuredEqual> elem_hash_type;
+#else
+  typedef map<typename FSRC::mesh_type::Elem::index_type,
+    typename FDST::mesh_type::Elem::index_type,
+    SpecialUnstructuredEqual> elem_hash_type;
+#endif
   
   elem_hash_type elemmap;
 
