@@ -116,7 +116,7 @@ TextureBuilderAlgo<FieldType>::build(TextureHandle texture,
   nb[0] = gfield.get_rep() ? 4 : 1;
   nb[1] = gfield.get_rep() ? 1 : 0;
   Transform tform;
-  mesh->transform(tform);
+  //mesh->transform(tform);
 
   texture->lock_bricks();
   vector<TextureBrick*>& bricks = texture->bricks();
