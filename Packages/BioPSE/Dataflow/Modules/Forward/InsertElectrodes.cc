@@ -248,21 +248,16 @@ void InsertElectrodes::execute() {
   }
 
   vector<pair<int, double> > dirichlet_nodes;
-  imeshH->get("dirichlet", dirichlet_nodes);
+  imeshH->get_property("dirichlet", dirichlet_nodes);
   vector<pair<string, Tensor> > conds;
-  imeshH->get("conductivity_table", conds);
-  vector<pair<string, Tensor> > *newConds =
-    new vector<pair<string, Tensor> >(conds);
+  imeshH->get_property("conductivity_table", conds);
   int have_units = 0;
   string units;
-  if (imeshH->mesh()->get("units", units)) have_units=1;
+  if (imeshH->mesh()->get_property("units", units)) have_units=1;
 
-  for (int ii=0; ii<newConds->size(); ii++) {
+  for (int ii=0; ii<conds.size(); ii++) {
 //    cerr << "New conds ["<<ii<<"] = "<<(*newConds)[ii].first<<" , "<<(*newConds)[ii].second<<"\n";
   }
-
-  vector<pair<int, double> > *mergedDirichletNodes = 
-    new vector<pair<int, double> >(dirichlet_nodes);
 
   port_range_type range = get_iports("Electrodes");
   if (range.first != range.second) {
@@ -316,15 +311,15 @@ void InsertElectrodes::execute() {
       if (pi == range.first) electrodeElements = scinew TetVolMesh;
 
       // modify mergedDirichletNodes, and mergedMesh to have new nodes
-      insertContourIntoTetMesh(*mergedDirichletNodes, mesh,
+      insertContourIntoTetMesh(dirichlet_nodes, mesh,
 			       inner, outer, voltage, electrodeElements);
       
       if (pi == range.first) elecElemsH = electrodeElements;
       ++pi;
     }
-    imeshH->store("dirichlet", *mergedDirichletNodes, false);
-    imeshH->store("conductivity_table", *newConds, false);
-    if (have_units) imeshH->mesh()->store("units", units, false);
+    imeshH->set_property("dirichlet", dirichlet_nodes, false);
+    imeshH->set_property("conductivity_table", conds, false);
+    if (have_units) imeshH->mesh()->set_property("units", units, false);
     omesh->send(imeshH);
     if (elecElemsH.get_rep()) {
       TetVol<double>* elec = scinew TetVol<double>(elecElemsH, Field::NODE);

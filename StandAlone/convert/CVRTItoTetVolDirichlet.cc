@@ -108,7 +108,7 @@ main(int argc, char **argv) {
   }
   
   FieldHandle tvH(tv);
-  tvH->store("dirichlet", dirBC, true);
+  tvH->set_property("dirichlet", dirBC, true);
 
   TextPiostream out_stream(argv[5], Piostream::Write);
   Pio(out_stream, tvH);

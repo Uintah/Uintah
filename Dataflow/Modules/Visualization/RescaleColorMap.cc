@@ -102,10 +102,10 @@ RescaleColorMap::execute()
 	} else if (vfi) {
 	  // get minmax of the vector field.
 	  static pair<Vector, Vector> minmax;
-	  if ( !field->get("minmax", minmax)) {
+	  if ( !field->get_property("minmax", minmax)) {
 	    vfi->compute_min_max(minmax.first, minmax.second);
 	    // cache this potentially expensive to compute value.
-	    field->store("minmax", minmax, true);
+	    field->set_property("minmax", minmax, true);
 	  }
 	  minmax_.first = 0.0;
 	  minmax_.second = minmax.second.length();

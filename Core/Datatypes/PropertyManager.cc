@@ -39,34 +39,7 @@ PropertyBase::type_id("PropertyBase", "Datatype", maker);
 
 Persistent* PropertyBase::maker()
 {
-  return scinew PropertyBase;
-}
-
-
-/*
- * Get
- */
-
-template<> bool PropertyManager::get(const string &name, char &ref) 
-{
-  return get_scalar( name, ref );
-}
-
-template<> bool PropertyManager::get(const string &name, short &ref) 
-{
-  return get_scalar( name, ref );
-}
-template<> bool PropertyManager::get(const string &name, int &ref) 
-{
-  return get_scalar( name, ref );
-}
-template<> bool PropertyManager::get(const string &name, float &ref) 
-{
-  return get_scalar( name, ref );
-}
-template<> bool PropertyManager::get(const string &name, double &ref) 
-{
-  return get_scalar( name, ref );
+  return scinew PropertyBase(false);
 }
 
 
@@ -94,7 +67,7 @@ PropertyManager::PropertyManager(const PropertyManager &copy) :
   map_type::const_iterator pi = copy.properties_.begin();
   while (pi != copy.properties_.end()) {
     if (! pi->second->transient()) {
-      properties_[pi->first]=pi->second->copy();
+      properties_[pi->first]=pi->second->clone();
       ++size_;
     }
     ++pi;
@@ -133,7 +106,7 @@ PropertyManager::freeze()
 }
 
 void
-PropertyManager::remove( const string &name )
+PropertyManager::remove_property( const string &name )
 {
   lock.lock();
 

@@ -200,7 +200,7 @@ void EditField::update_input_attributes(FieldHandle f)
   }
 
   string fldname;
-  if (f->get("name",fldname))
+  if (f->get_property("name",fldname))
     TCL::execute(string("set ")+id+"-fldname "+fldname);
   else
     TCL::execute(string("set ")+id+"-fldname \"--- Name Not Assigned ---\"");
@@ -511,7 +511,7 @@ EditField::execute()
   // Set some field attributes.
   if (cfldname_.get())
   {
-    ef->store(string("name"), fldname_.get(), false);
+    ef->set_property(string("name"), fldname_.get(), false);
   }
 
   ScalarFieldInterface* sfi = ef->query_scalar_interface();
@@ -519,7 +519,7 @@ EditField::execute()
   {
     std::pair<double, double> minmax(1, 0);
     sfi->compute_min_max(minmax.first, minmax.second);
-    ef->store(string("minmax"), minmax, true);
+    ef->set_property(string("minmax"), minmax, true);
   }
     
   oport->send(ef);

@@ -140,9 +140,9 @@ void RawToDenseMatrix::execute(){
   start_.reset();
   end_.reset();
   
-  handle_->store("time-units", units_.get(), false);
-  handle_->store("time-start", start_.get(), true);
-  handle_->store("time-end", end_.get(), true);
+  handle_->set_property("time-units", units_.get(), false);
+  handle_->set_property("time-start", start_.get(), true);
+  handle_->set_property("time-end", end_.get(), true);
 
   oport_->send(handle_);
 }

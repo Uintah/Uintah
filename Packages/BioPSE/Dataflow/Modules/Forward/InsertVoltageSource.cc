@@ -96,14 +96,10 @@ void InsertVoltageSource::execute() {
   TriSurfMesh *tsm = triSurf->get_typed_mesh().get_rep();
 
   vector<pair<int, double> > dirichlet;
-  imeshH->get("dirichlet", dirichlet);
-  vector<pair<int, double> > *new_dirichlet = 
-    new vector<pair<int, double> >(dirichlet);
+  imeshH->get_property("dirichlet", dirichlet);
 
   vector<pair<string, Tensor> > conds;
-  imeshH->get("conductivity_table", conds);
-  vector<pair<string, Tensor> > *new_conds =
-    new vector<pair<string, Tensor> >(conds);
+  imeshH->get_property("conductivity_table", conds);
 
   // get our own local copy of the Field and mesh
   imeshH.detach();  
@@ -195,10 +191,10 @@ void InsertVoltageSource::execute() {
     for (j=0; j<contrib[node].size(); j++) {
       avg_val += contrib[node][j].second * contrib[node][j].first;
     }
-    new_dirichlet->push_back(pair<int, double>(node, avg_val));
+    dirichlet.push_back(pair<int, double>(node, avg_val));
   }
-  imeshH->store("dirichlet", *new_dirichlet, false);
-  imeshH->store("conductivity_table", *new_conds, false);
+  imeshH->set_property("dirichlet", dirichlet, false);
+  imeshH->set_property("conductivity_table", conds, false);
   omesh->send(imeshH);
 }
 } // End namespace BioPSE

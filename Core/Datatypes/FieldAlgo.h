@@ -72,31 +72,29 @@ bool
 field_minmax( Field &field, pair<T,T>& minmax )
 {
   typedef typename Field::value_type value_type; 
-  typedef pair<value_type,value_type> Minmax;
 
-  Minmax *tmp;
+  pair<value_type,value_type> tmp;
   
-  if ( !field.get( "minmax", tmp ) ) {
+  if ( !field.get_property( "minmax", tmp ) ) {
     // compute minmax
     typename Field::fdata_type::iterator i = field.fdata().begin();
 
     if ( i == field.fdata().end() ) 
       return false;// error! empty field
 
-    tmp = new Minmax;
-    tmp->first = tmp->second = *i;
+    tmp.first = tmp.second = *i;
     for (++i; i != field.fdata().end(); i++ ) {
-      value_type v = *i;
-      if ( v < tmp->first ) tmp->first = v;
-      else if ( v > tmp->second ) tmp->second = v;
+      const value_type v = *i;
+      if (v < tmp.first ) tmp.first = v;
+      else if ( v > tmp.second ) tmp.second = v;
     }
 
     // cache in the field properties
-    field.store("minmax", tmp, true);
+    field.set_property("minmax", tmp, true);
   }
   
-  minmax.first = T(tmp->first);
-  minmax.second = T(tmp->second);
+  minmax.first = T(tmp.first);
+  minmax.second = T(tmp.second);
 
   return true;
 }

@@ -235,7 +235,7 @@ ModifyConductivities::execute()
   // Get the tensors from the field.
   bool created_p = false;
   vector<pair<string, Tensor> > tensors;
-  if (!field->get("conductivity_table", tensors))
+  if (!field->get_property("conductivity_table", tensors))
   {
     remark("Using identity conductivity tensors.");
     created_p = true;
@@ -298,9 +298,7 @@ ModifyConductivities::execute()
 
     field.detach();
 
-    vector<pair<string, Tensor> > *mtensors =
-      new vector<pair<string, Tensor> >(tensors);
-    field->store("conductivity_table", *mtensors, false);
+    field->set_property("conductivity_table", tensors, false);
 
     stored_p = true;
   }

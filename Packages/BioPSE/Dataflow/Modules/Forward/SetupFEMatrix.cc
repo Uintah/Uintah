@@ -147,7 +147,7 @@ void SetupFEMatrix::execute(){
 
   double unitsScale = 1;
   string units;
-  if (uiUseCond_.get()==1 && hCondMesh->mesh()->get("units", units)) {
+  if (uiUseCond_.get()==1 && hCondMesh->mesh()->get_property("units", units)) {
     cerr << "units = "<<units<<"\n";
     if (units == "mm") unitsScale = 1./1000;
     else if (units == "cm") unitsScale = 1./100;
@@ -158,7 +158,8 @@ void SetupFEMatrix::execute(){
     }
     cerr << "unitsScale = "<<unitsScale<<"\n";
   }
-  if (uiUseCond_.get()==1 && hCondMesh->get("conductivity_table", tens)){
+  if (uiUseCond_.get()==1 &&
+      hCondMesh->get_property("conductivity_table", tens)){
     msgStream_ << "Using supplied conductivity tensors "  << endl;
   }
   else {

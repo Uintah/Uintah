@@ -69,9 +69,9 @@ void SetProperty::execute() {
   // set this new property
   if (mesh_prop_.get()) {
     fldH->mesh()->generation++;
-    fldH->mesh()->store(prop_.get(), val_.get(), false);
+    fldH->mesh()->set_property(prop_.get(), val_.get(), false);
   } else 
-    fldH->store(prop_.get(), val_.get(), false);
+    fldH->set_property(prop_.get(), val_.get(), false);
   
   ofield->send(fldH);
 }

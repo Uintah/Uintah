@@ -81,9 +81,9 @@ OpenGL::OpenGL()
     get_mb("OpenGL renderer request mailbox", 5),
     img_mb("OpenGL renderer image data mailbox", 5),
     helper_thread(0),
-    dead(0),
     do_hi_res(false),
-    encoding_mpeg(false)
+    encoding_mpeg(false),
+    dead(0)
 {
   drawinfo=scinew DrawInfoOpenGL;
   fpstimer.start();

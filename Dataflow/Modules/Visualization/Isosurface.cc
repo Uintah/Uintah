@@ -252,10 +252,10 @@ Isosurface::new_field( FieldHandle &field )
   }
 
   pair<double, double> minmax;
-  if ( !field->get("minmax", minmax)) {
+  if ( !field->get_property("minmax", minmax)) {
     sfi->compute_min_max(minmax.first, minmax.second);
     // cache this potentially expensive to compute value.
-    field->store("minmax", minmax, true);
+    field->set_property("minmax", minmax, true);
   }
   
   // reset the GUI
