@@ -25,13 +25,17 @@ include $(SRCTOP)/scripts/recurse.mk
 
 PSELIBS := Uintah/Interface Uintah/Grid Uintah/Parallel \
 	Uintah/Exceptions SCICore/Exceptions SCICore/Thread \
-	SCICore/Geometry PSECore/XMLUtil
+	SCICore/Geometry PSECore/XMLUtil Uintah/Math
 LIBS := $(XML_LIBRARY) -lm
 
 include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.18  2000/08/15 19:18:23  witzel
+# Added Uintah/Math to list of PSE libraries (for CubicPolyRoots used
+# by Matrix3::getEigenValues).
+#
 # Revision 1.17  2000/08/07 00:44:09  tan
 # Added MPMPhysicalBC class to handle all kinds of physical boundary conditions
 # in MPM.  Currently implemented force boundary conditions.
