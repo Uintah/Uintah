@@ -74,7 +74,12 @@ def choose_message(l) :
     index = 0
     for msg in l :
         print '------------ message %d is in %s ------------' % (index, msg)
-        fp = open(msg, 'r')        
+        try:
+            fp = open(msg, 'r')
+        except IOError :
+            print "----EMPTY MESSAGE---"
+            continue
+            
         for ln in fp.readlines() :
             print ln[:-1]
         print ""
