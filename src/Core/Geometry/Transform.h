@@ -15,19 +15,6 @@
   University of Utah. All Rights Reserved.
 */
 
-
-/*
- *  Transform.h:  ?
- *
- *  Written by:
- *   Author: ?
- *   Department of Computer Science
- *   University of Utah
- *   Date: ?
- *
- *  Copyright (C) 199? SCI Group
- */
-
 #ifndef Geometry_Transform_h
 #define Geometry_Transform_h 1
 

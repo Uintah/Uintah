@@ -70,10 +70,7 @@ public:
 
   void Reload() { state_->Reload(); }
 
-/*   void DrawFullRes(){ state_ = FullRes::Instance(this);} */
-/*   void DrawLOS(){ state_ = LOS::Instance(this);} */
-/*   void DrawROI(){ state_ = ROI::Instance(this);} */
-/*   void DrawPlanes(){ state_ = TexPlanes::Instance(this); } */
+
   void DrawFullRes(){ state_ = state(fr_, 0);}
   void DrawLOS(){ state_ = state(los_, 0);}
   void DrawROI(){ state_ = state(roi_, 0);}
@@ -84,14 +81,32 @@ public:
   void SetZ(bool b){ if(b){drawView_ = false;} drawZ_ = b; }
   void SetView(bool b){ if(b){drawX_=false; drawY_=false; drawZ_=false;}
                         drawView_ = b; }
-/*   void GLOverOp(){ tex_ren_state_ = GLOverOp::Instance( this ); } */
-/*   void GLMIP(){ tex_ren_state_ = GLMIP::Instance( this ); } */
-/*   void GLAttenuate(){ tex_ren_state_ = GLAttenuate::Instance( this ); } */
-/*   void GLPlanes(){ tex_ren_state_ = GLPlanes::Instance(this);} */
-  void _GLOverOp(){ tex_ren_state_ = state(oo_, 0);}
-  void _GLMIP(){ tex_ren_state_ = state(mip_, 0); }
-  void _GLAttenuate(){ tex_ren_state_ = state(atten_, 0 ); }
-  void _GLPlanes(){ tex_ren_state_ = state(planes_, 1);}
+
+  enum tex_ren_mode_e {
+    TRS_GLOverOp,
+    TRS_GLMIP,
+    TRS_GLAttenuate,
+    TRS_GLPlanes
+  };
+
+  void set_tex_ren_state(tex_ren_mode_e mode) {
+    switch (mode) {
+    case TRS_GLOverOp:
+      tex_ren_state_ = state(oo_, 0);
+      break;
+    case TRS_GLMIP:
+      tex_ren_state_ = state(mip_, 0);
+      break;
+    case TRS_GLAttenuate:
+      tex_ren_state_ = state(atten_, 0);
+      break;
+    case TRS_GLPlanes:
+      tex_ren_state_ = state(planes_, 1);
+      break;
+    default:
+      ASSERTFAIL("invalid tex_ren_state");
+    }
+  }
 
   void SetInterp( bool i) { interp_ = i; }
 
@@ -116,7 +131,14 @@ public:
   void cleanup();
 
   void drawWireFrame(){ glColor4f(0.8,0.8,0.8,1.0); state_->drawWireFrame(); }
-
+  void set_cylindrical(bool cyl_active, bool draw_phi0, double phi0, 
+		       bool draw_phi1, double phi1) {
+    draw_cyl_ = cyl_active;
+    draw_phi0_ = draw_phi0;
+    phi0_ = phi0;
+    draw_phi1_ = draw_phi1;
+    phi1_ = phi1;
+  }
   
   //! accessors.
   GLTexture3DHandle get_tex3d_handle() const { return tex_; }
@@ -132,6 +154,12 @@ public:
   bool drawY() const { return drawY_; }
   bool drawZ() const { return drawZ_; }
   bool drawView() const { return drawView_; }
+
+  bool draw_phi_0() const { return draw_phi0_; }
+  bool draw_phi_1() const { return draw_phi1_; }
+  double phi0() const { return phi0_; }
+  double phi1() const { return phi1_; }
+  bool draw_cyl() const { return draw_cyl_; }
 private:
   int                   slices_;
   GLTexture3DHandle     tex_;
@@ -163,6 +191,11 @@ private:
   bool                  drawY_;
   bool                  drawZ_;
   bool                  drawView_;
+  bool                  draw_phi0_;
+  double                phi0_;
+  bool                  draw_phi1_;
+  double                phi1_;
+  bool                  draw_cyl_;
   DrawInfoOpenGL       *di_;
  
   //! Sets the state function without having to write a bunch of code

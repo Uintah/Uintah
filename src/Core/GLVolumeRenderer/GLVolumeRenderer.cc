@@ -166,7 +166,11 @@ GLVolumeRenderer::draw(DrawInfoOpenGL* di, Material* mat, double)
     setup();
     //AuditAllocator(default_allocator);
     preDraw();
-    //AuditAllocator(default_allocator);
+
+    // calls state_->draw()
+    BBox bb;
+    tex_->get_bounds(bb);
+    state_->set_bounding_box(bb);
     draw();
     //AuditAllocator(default_allocator);
     postDraw();

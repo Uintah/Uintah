@@ -17,11 +17,6 @@
 
 #ifndef TEXCUTTINGPLANES_H
 #define TEXCUTTINGPLANES_H
-/*
- * TexCuttingPlanes.cc
- *
- * Simple interface to volume rendering stuff
- */
 
 #include <Dataflow/Network/Module.h>
 #include <Core/Datatypes/ColorMap.h>
@@ -39,8 +34,6 @@ namespace SCIRun {
 
 class GeomObj;
 
-
-
 class TexCuttingPlanes : public Module {
 
 public:
@@ -52,34 +45,29 @@ public:
   void tcl_command( TCLArgs&, void* );
 
 private:
-
-   
-  GLTexture3DHandle tex;
-
-  ColorMapIPort* incolormap;
-  GLTexture3DIPort* intexture;
-  GeometryOPort* ogeom;
-   
-  CrowdMonitor control_lock; 
-  PointWidget *control_widget;
-  GeomID control_id;
-
-
-  int cmap_id;  // id associated with color map...
-  
-
-  GuiInt drawX;
-  GuiInt drawY;
-  GuiInt drawZ;
-  GuiInt drawView;
-  GuiInt interp_mode;
-
-  GLVolumeRenderer* volren;
-  Point dmin;
-  Vector ddx;
-  Vector ddy;
-  Vector ddz;
-  double ddview;
+  GLTexture3DHandle       tex_;
+  ColorMapIPort          *incolormap_;
+  GLTexture3DIPort       *intexture_;
+  GeometryOPort          *ogeom_;
+  CrowdMonitor            control_lock_; 
+  PointWidget            *control_widget_;
+  GeomID                  control_id_;
+  GuiInt                  drawX_;
+  GuiInt                  drawY_;
+  GuiInt                  drawZ_;
+  GuiInt                  drawView_;
+  GuiInt                  interp_mode_;
+  GuiInt                  draw_phi0_;
+  GuiInt                  draw_phi1_;
+  GuiDouble		  phi0_;
+  GuiDouble		  phi1_;
+  GuiInt                  cyl_active_;
+  GLVolumeRenderer       *volren_;
+  Point                   dmin_;
+  Vector                  ddx_;
+  Vector                  ddy_;
+  Vector                  ddz_;
+  double                  ddview_;
 };
 
 

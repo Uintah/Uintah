@@ -149,13 +149,13 @@ void TextureVolVis::execute(void)
 
   switch( render_style.get() ) {
   case 0:
-    volren->_GLOverOp();
+    volren->set_tex_ren_state(GLVolumeRenderer::TRS_GLOverOp);
     break;
   case 1:
-    volren->_GLMIP();
+    volren->set_tex_ren_state(GLVolumeRenderer::TRS_GLMIP);
     break;
   case 2:
-    volren->_GLAttenuate();
+    volren->set_tex_ren_state(GLVolumeRenderer::TRS_GLAttenuate);
   }
   
   switch( draw_mode.get()) {
