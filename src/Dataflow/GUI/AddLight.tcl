@@ -3,6 +3,9 @@ itcl_class SCIRun_Visualization_AddLight {
     constructor {config} {
         set name AddLight
         set_defaults
+# 	if { [set $this-on] == 1 } {
+# 	    $this-c needexecute  
+# 	}
     }
 
     method set_defaults {} {
@@ -41,8 +44,11 @@ itcl_class SCIRun_Visualization_AddLight {
 	checkbutton  $w.on  -text "on/off" \
 	    -variable $this-on \
 	    -command $n
-	button $w.close -text "Close" -command "wm withdraw $w"
-	pack $w.light_type $w.on $w.close -side top
+	pack $w.light_type $w.on  -side top
+
+	makeSciButtonPanel $w $w $this
+	moveToCursor $w
+	
     }
 }
 
