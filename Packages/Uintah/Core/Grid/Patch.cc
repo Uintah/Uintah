@@ -60,12 +60,12 @@ Patch::Patch(const Level* level,
       ids->set(d_id+1);
    }
 
-   d_bcs.resize(numFaces);
+  d_bcs.resize(numFaces);
 
-   d_nodeHighIndex = d_highIndex+
-	       IntVector(getBCType(xplus) == Neighbor?0:1,
-			 getBCType(yplus) == Neighbor?0:1,
-			 getBCType(zplus) == Neighbor?0:1);
+  d_nodeHighIndex = d_highIndex+
+    IntVector(getBCType(xplus) == Neighbor?0:1,
+	      getBCType(yplus) == Neighbor?0:1,
+	      getBCType(zplus) == Neighbor?0:1);
 }
 
 Patch::Patch(const Patch* realPatch, const IntVector& virtualOffset)
@@ -77,6 +77,7 @@ Patch::Patch(const Patch* realPatch, const IntVector& virtualOffset)
       d_inHighIndex(realPatch->d_inHighIndex + virtualOffset),
       d_nodeHighIndex(realPatch->d_nodeHighIndex + virtualOffset),
       d_bcs(realPatch->d_bcs),
+      array_bcs(realPatch->array_bcs),
       have_layout(realPatch->have_layout),
       layouthint(realPatch->layouthint)
 {
@@ -928,10 +929,93 @@ Patch::setBCValues(Patch::FaceType face, BCData& bc)
 	      getBCType(zplus) == Neighbor?0:1);
 }
 
+void 
+Patch::setArrayBCValues(Patch::FaceType face, BCDataArray& bc)
+{
+  // At this point need to set up the iterators for each BCData type:
+  // Side, Rectangle, Circle, Difference, and Union.
+  IntVector l,h,li,hi,lx,ly,lz;
+  getFaceCells(face,0,l,h);
+  getFaceCells(face,-1,li,hi);
+
+  lx = ly = lz = l;
+  IntVector adjustx(0,0,0),adjusty(0,0,0),adjustz(0,0,0);
+  int numGC = 0;
+  // SFCX needs to add (1,0,0) if there is no neighboring patch on the xminus.
+  if (face == Patch::xminus)
+    adjustx=IntVector(getBCType(Patch::xminus)==Patch::Neighbor?numGC:1,
+		      getBCType(Patch::yminus)==Patch::Neighbor?numGC:0,
+		      getBCType(Patch::zminus)==Patch::Neighbor?numGC:0);
+  lx = l+adjustx;
+  // SFCY needs to add (0,1,0) if there is no neighboring patch on yminus.
+  if (face == Patch::yminus)
+    adjusty=IntVector(getBCType(Patch::xminus)==Patch::Neighbor?numGC:0,
+		      getBCType(Patch::yminus)==Patch::Neighbor?numGC:1,
+		      getBCType(Patch::zminus)==Patch::Neighbor?numGC:0);
+  ly = l+adjusty;
+  // SFCZ needs to add (0,0,1) if there is no neighboring patch on zminus.
+  if (face == Patch::zminus)
+    adjustz=IntVector(getBCType(Patch::xminus)==Patch::Neighbor?numGC:0,
+		      getBCType(Patch::yminus)==Patch::Neighbor?numGC:0,
+		      getBCType(Patch::zminus)==Patch::Neighbor?numGC:1);
+  lz = l+adjustz;
+   
+  for (int c = 0; c < bc.getNumberChildren(); c++) {
+    CellIterator interior(li,hi),sfcx(lx,h),sfcy(ly,h),sfcz(lz,h);
+    vector<IntVector> bound,inter,sfx,sfy,sfz;
+    for (CellIterator boundary(l,h);!boundary.done();boundary++,interior++,
+	   sfcx++,sfcy++,sfcz++) {
+      Point p = this->getLevel()->getCellPosition(*boundary);
+      if ((bc.getChild(c))->inside(p)) {
+	bound.push_back(*boundary);
+	inter.push_back(*interior);
+	sfx.push_back(*sfcx);
+	sfy.push_back(*sfcy);
+	sfz.push_back(*sfcz);
+      }
+    }
+    bc.setBoundaryIterator(bound,c);
+    bc.setInteriorIterator(inter,c);
+    bc.setSFCXIterator(sfx,c);
+    bc.setSFCYIterator(sfy,c);
+    bc.setSFCZIterator(sfz,c);
+  }
+  array_bcs[face] = bc;
+}
+
+
+
 const BoundCondBase*
 Patch::getBCValues(int mat_id,string type,Patch::FaceType face) const
 {
   return d_bcs[face].getBCValues(mat_id,type);
+}
+
+BCDataArray Patch::getBCDataArray(Patch::FaceType face) const
+{
+  map<Patch::FaceType,BCDataArray > m = this->array_bcs;
+  return  m[face];
+}
+
+const BoundCondBase*
+Patch::getArrayBCValues(Patch::FaceType face,int mat_id,string type,
+			vector<IntVector>& bound, 
+			vector<IntVector>& inter, 
+			vector<IntVector>& sfcx,
+			vector<IntVector>& sfcy,
+			vector<IntVector>& sfcz,
+			int child) const
+{
+  map<Patch::FaceType,BCDataArray > m = this->array_bcs;
+  BCData bc_data;
+  BCDataArray ubc = m[face];
+  ubc.getBCData(bc_data,child);
+  ubc.getBoundaryIterator(bound,child);
+  ubc.getInteriorIterator(inter,child);
+  ubc.getSFCXIterator(sfcx,child);
+  ubc.getSFCYIterator(sfcy,child);
+  ubc.getSFCZIterator(sfcz,child);
+  return bc_data.getBCValues(mat_id,type);
 }
 
 
@@ -997,32 +1081,67 @@ IntVector Patch::faceDirection(FaceType face) const
 void
 Patch::getFaceNodes(FaceType face, int offset,IntVector& l, IntVector& h) const
 {
-   l=getNodeLowIndex();
-   h=getNodeHighIndex();
+   IntVector lorig=l=getNodeLowIndex();
+   IntVector horig=h=getNodeHighIndex();
    switch(face){
    case xminus:
-      l.x(l.x()-offset);
-      h.x(l.x()+1-offset);
+      l.x(lorig.x()-offset);
+      h.x(lorig.x()+1-offset);
       break;
    case xplus:
-      l.x(h.x()-1+offset);
-      h.x(h.x()+offset);
+      l.x(horig.x()-1+offset);
+      h.x(horig.x()+offset);
       break;
    case yminus:
-      l.y(l.y()-offset);
-      h.y(l.y()+1-offset);
+      l.y(lorig.y()-offset);
+      h.y(lorig.y()+1-offset);
       break;
    case yplus:
-      l.y(h.y()-1+offset);
-      h.y(h.y()+offset);
+      l.y(horig.y()-1+offset);
+      h.y(horig.y()+offset);
       break;
    case zminus:
-      l.z(l.z()-offset);
-      h.z(l.z()+1-offset);
+      l.z(lorig.z()-offset);
+      h.z(lorig.z()+1-offset);
       break;
    case zplus:
-      l.z(h.z()-1+offset);
-      h.z(h.z()+offset);
+      l.z(horig.z()-1+offset);
+      h.z(horig.z()+offset);
+      break;
+   default:
+     SCI_THROW(InternalError("Illegal FaceType in Patch::getFaceNodes"));
+   }
+}
+
+void
+Patch::getFaceCells(FaceType face, int offset,IntVector& l, IntVector& h) const
+{
+   IntVector lorig=l=getCellLowIndex();
+   IntVector horig=h=getCellHighIndex();
+   switch(face){
+   case xminus:
+      l.x(lorig.x()-offset);
+      h.x(lorig.x()+1-offset);
+      break;
+   case xplus:
+      l.x(horig.x()-1+offset);
+      h.x(horig.x()+offset);
+      break;
+   case yminus:
+      l.y(lorig.y()-offset);
+      h.y(lorig.y()+1-offset);
+      break;
+   case yplus:
+      l.y(horig.y()-1+offset);
+      h.y(horig.y()+offset);
+      break;
+   case zminus:
+      l.z(lorig.z()-offset);
+      h.z(lorig.z()+1-offset);
+      break;
+   case zplus:
+      l.z(horig.z()-1+offset);
+      h.z(horig.z()+offset);
       break;
    default:
      SCI_THROW(InternalError("Illegal FaceType in Patch::getFaceNodes"));
