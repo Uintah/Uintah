@@ -15,6 +15,7 @@
 #include <Packages/Uintah/Core/Grid/VarLabel.h>
 #include <Packages/Uintah/Core/Grid/VarTypes.h>
 #include <Packages/Uintah/Core/Labels/MPMLabel.h>
+#include <Packages/Uintah/Core/Exceptions/ParameterNotFound.h>
 
 #include <Core/Malloc/Allocator.h>
 #include <Core/Util/Endian.h>
@@ -360,6 +361,7 @@ ViscoScram::computeStressTensor(const PatchSubset* patches,
   Ghost::GhostType gac = Ghost::AroundCells;
 
   // Material constants
+  double rho_0 = matl->getInitialDensity();
   double Cp0   = matl->getSpecificHeat();
   double cf    = d_initialData.CrackFriction;
   double nu    = d_initialData.PR;
@@ -745,6 +747,12 @@ ViscoScram::computeStressTensor(const PatchSubset* patches,
 
       // Update the deformation gradient tensor to its time n+1 value.
       pDefGrad_new[idx] = pDefGradInc*pDefGrad[idx];
+      double J = pDefGrad_new[idx].Determinant();
+      if (!(J > 0.0)) {
+        cerr << getpid() 
+             << "**ERROR** Negative Jacobian of deformation gradient" << endl;
+        throw ParameterNotFound("**ERROR**:ViscoScram");
+      }
 
       // Update the volume
       pVol_new[idx] = Jinc*pVol[idx];
@@ -753,7 +761,8 @@ ViscoScram::computeStressTensor(const PatchSubset* patches,
       //double cpnew = Cp0 + d_initialData.DCp_DTemperature*pTemperature[idx];
       //double Cv = cpnew/(1+d_initialData.Beta*pTemperature[idx]);
       double Cv = Cp0;
-      double rhoCv = (pMass[idx]/pVol_new[idx])*Cv;
+      double rho_cur = rho_0/J;
+      double rhoCv = rho_cur*Cv;
 
       // Update the Viscoelastic work rate
       double svedot = 0.;
@@ -796,7 +805,7 @@ ViscoScram::computeStressTensor(const PatchSubset* patches,
 
       // Compute wave speed at each particle, store the maximum
       Vector pVel = pVelocity[idx];
-      double c_dil = sqrt((bulk + 4.*G/3.)*pVol_new[idx]/pMass[idx]);
+      double c_dil = sqrt((bulk + 4.*G/3.)/rho_cur);
       WaveSpeed=Vector(Max(c_dil+fabs(pVel.x()),WaveSpeed.x()),
                        Max(c_dil+fabs(pVel.y()),WaveSpeed.y()),
                        Max(c_dil+fabs(pVel.z()),WaveSpeed.z()));
