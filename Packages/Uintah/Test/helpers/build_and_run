@@ -1,10 +1,13 @@
 #!/bin/sh
 
-# $BUILD_DIR $BUILDROOT, $HTMLLOG, $PARALLELISM, and $MAKE_PARALLELISM must be set
+# $BUILD_DIR $BUILDROOT, $HTMLLOG, $NOTESTS, $PARALLELISM, and $MAKE_PARALLELISM must be set
 
 mode=$1 # dbg or opt
-CONFIGURE_ARGS=$2 # configure command line arguments
+CONFIGURE_ARGS=$2
 WithArches="yes"
+WithMPMICE="yes"
+
+export WithArches WithMPMICE
 
 if [ ! -d "${BUILDROOT}/${mode}/build" ]; then
   mkdir "${BUILDROOT}/${mode}/build"
@@ -13,7 +16,6 @@ fi
 cd "${BUILDROOT}/${mode}/build"
 
 rm -f "$BUILDROOT"/${mode}/configure.log
-
 echo ""
 echo "Starting configure on `date`"
 echo "...this is for the ${mode} build using these arguments:"
@@ -21,221 +23,12 @@ echo "  $CONFIGURE_ARGS"
 echo "#!/bin/tcsh" > configure_command
 echo "nice ../../src/configure $CONFIGURE_ARGS" >> configure_command
 chmod a+x configure_command
-./configure_command > "$BUILDROOT"/${mode}/configure.log 2>&1
+
+build $mode $CONFIGURE_ARGS
 retval=$?
-if [ $retval != "0" ]; then
-	echo "Configure failed:" >> $HTMLLOG
-	cat "${BUILDROOT}"/"${mode}"/configure.log >> $HTMLLOG
-
-	echo "*** Configure failed with code $retval"
-	echo ""
-#	echo "Showing configure log:"
-#	cat "${BUILDROOT}/${mode}/configure.log"
-
-	cd "${BUILD_DIR}"
-	if [ ! -d "configure-${mode}.lock" ]; then
-	    # failed ${mode} configure, set a lock
-	    ln -s "$BUILDROOT" "configure-${mode}.lock"
-	fi
-	exit 1
-fi
-
-if [ -d "${BUILD_DIR}/configure-${mode}.lock" ]; then
-	# configured successfully - remove old configure lock 
-	rm "${BUILD_DIR}/configure-${mode}.lock"
-fi
-
-echo "Starting build on `date`:"
-
-cd "${BUILDROOT}/${mode}/build"
-    
-rm -f "../make.log" "../make_results.log"
-
-nice gmake -k -j$MAKE_PARALLELISM >> ../make.log 2>&1
-retval=$?
-if [ $retval != "0" ]; then
-    # try it again -- it may not go all the way the first time
-    echo "Failed first compile, try again"
-    nice gmake -k -j$MAKE_PARALLELISM >> ../make.log 2>&1
-    retval=$?
-fi
-if [ $retval != "0" ]; then
-    # try it again -- it may not go all the way the first time
-    echo "Failed second compile, try again (storing make errors)"
-    nice gmake -k -j$MAKE_PARALLELISM > ../remake_with_arches.log 2>&1
-    retval=$?
-fi
-if [ $retval != "0" ]; then
-    # failed 3 times
-    if  [ -x "${BUILDROOT}/${mode}/build/Packages/Uintah/StandAlone/sus" ]; then
-	# sus compiled alone
-	mv ../remake_with_arches.log ../remake_failed_scirun.log
-	echo "*** Make failed, but sus was compiled successfully"
-	echo "A log of build errors can be found in"
-	echo "${BUILDROOT}/${mode}/remake_failed_scirun.log"
-	echo "A full log of trying to compile everything twice can be found in"
-	echo "${BUILDROOT}/${mode}/make.log"
-	echo ""
-    else
-	# No sus compiled -- try compiling without arches
-	# Run Todd's perl script to use fake arches instead of arches.
-	echo "Failed third compile, try without arches."
-
-	cp "${BUILDROOT}/src/Packages/Uintah/StandAlone/sub.mk" "${BUILDROOT}/src/Packages/Uintah/StandAlone/sub.mk.orig"
-	cp "${BUILDROOT}/src/Packages/Uintah/CCA/Components/sub.mk" "${BUILDROOT}/src/Packages/Uintah/CCA/Components/sub.mk.orig"
-
-	useFakeArches.pl "$BUILDROOT" > ../remake_without_arches.log 2>&1
-	cd "${BUILDROOT}/${mode}/build"
-	nice gmake -k -j$MAKE_PARALLELISM >> ../remake_without_arches.log 2>&1
-	retval=$?
-
-	# Restore sub.mk's -- I keep forgetting when arches is taken out
-	# and wondering why arches can't run after the problems been fixed.
-	cp "${BUILDROOT}/src/Packages/Uintah/StandAlone/sub.mk.orig" "${BUILDROOT}/src/Packages/Uintah/StandAlone/sub.mk"
-	cp "${BUILDROOT}/src/Packages/Uintah/CCA/Components/sub.mk.orig" "${BUILDROOT}/src/Packages/Uintah/CCA/Components/sub.mk"
-
-	failed_sus=0
-	if [ $retval == "0" ]; then
-	    echo "*** Make failed with ARCHES, but passed without it."
-	    echo ""
-	    echo "Showing make errors with ARCHES:" > ../make_results.log
-	    WithArches="no"
-	elif  [ -x "${BUILDROOT}/${mode}/build/Packages/Uintah/StandAlone/sus" ]; then
-	    echo "*** Make failed, but sus was compiled successfully without ARCHES"
-	    echo ""
-	    echo "Showing make errors with ARCHES:" > ../make_results.log
-	    WithArches="no"
-	else
-	    echo "*** Make failed with code $retval"
-	    echo ""
-	    echo "Showing make errors:"  > ../make_results.log
-	    failed_sus=1
-	fi
-	# show the compile errors (just the stuff it can't compile)
-	cat ../remake_with_arches.log >> ../make_results.log
-	
-        echo ""
-
-	# Add compilation problems to webpage
-	cat ../make_results.log >> "$HTMLLOG"
-
-	# failed make, set a lock for this build
-	if [ ! -d "${BUILD_DIR}/make-${mode}.lock" ]; then
-	    ln -s "$BUILDROOT" "${BUILD_DIR}/make-${mode}.lock"
-	fi
-
-	if [ $failed_sus != "0" ]; then
-	    exit 1
-	fi
-    fi
-fi
-
-if [ -d "${BUILD_DIR}/make-${mode}.lock" ]; then
-    # built successfully - remove old make lock 
-    rm "${BUILD_DIR}/make-${mode}.lock"
-fi
-
-failed=0
-
-if [ ! -d "$TEST_DATA" ]; then
-    echo "TEST_DATA directory doesn't exist: $TEST_DATA"
-    exit -1;
-fi
-
-if [ ! -d "${TEST_DATA}/${mode}" ]; then
-    mkdir "${TEST_DATA}/${mode}"
-fi
-
-
-cd "${BUILDROOT}/${mode}"
-if [ ! -d TestScripts ]; then
-    ln -s ../src/Packages/Uintah/Test TestScripts
-fi
-if [ ! -d susdir ]; then
-    ln -s build/Packages/Uintah/StandAlone susdir
-fi
-if [ ! -d inputs ]; then
-    ln -s ../src/Packages/Uintah/StandAlone/inputs inputs
-fi
-if [ ! -d goldStandard ]; then
-    ln -s "${TEST_DATA}/${mode}" goldStandard
-fi
-
-summary_log="${BUILDROOT}/${mode}/summary_log"
-rm -f $summary_log
-
-
-cd TestScripts
-
-for test in *; do
-
-# match this test to being run in a daily or weekly context
-    runThisTest=0;
-    if [ "$WEEKLY" == "1" ]; then
-      case "$test" in
-        *.wk) runThisTest=1
-              ;;
-        *)    runThisTest=0
-              ;;
-      esac
-    else
-      case "$test" in
-        *.wk) runThisTest=0
-              ;;
-        *)    runThisTest=1
-              ;;
-      esac
-    fi
-    if [ "$runThisTest" == "0" ]; then
-      continue
-    fi
-    if [ -f "$test" -a -x "$test" ]; then
-	if [ $WithArches == "no" -a $test == "ARCHES" ]; then
-	    echo ""
-	    echo "Skipping test \"${test}-${mode}\" at `date`"
-	    echo "(ARCHES did not compile)"
-	    failed=1
-	    continue; # skip arches test
-	fi
-	echo ""
-	echo "Running test \"${test}-${mode}\" at `date`"
-
-	cd "${BUILDROOT}/${mode}"
-	doTestScript="do${test}tests"
-	echo "#!/bin/tcsh" > "$doTestScript"
-	echo "setenv PATH $PATH" >> "$doTestScript"
-        echo "setenv OS $OS" >> "$doTestScript"
-	echo "python TestScripts/$test susdir inputs goldStandard $mode $PARALLELISM "'$1' >> "$doTestScript"
-	/bin/chmod a+x "$doTestScript"
-	nice "$doTestScript" > "${test}.log"  2>&1
-	retval=$?
-	cat "${test}.log" >> "$summary_log"
-	cat "${test}.log" >> "$HTMLLOG"
-	cd TestScripts
-
-	if [ $retval == "0" ]; then
-	    echo "   Test Passed"
-	    # It was successful, so it can remove the lock
-	    if [ -d "${BUILD_DIR}/${test}-${mode}.lock" ]; then
-	        # test ran successfully - remove the lock
-	        rm "${BUILD_DIR}/${test}-${mode}.lock"
-	    fi
-	else
-	    echo "*** Test failed with code $retval"
-	    if [ ! -d "${BUILD_DIR}/${test}-${mode}.lock" ]; then
-	        ln -s "$BUILDROOT" "${BUILD_DIR}/${test}-${mode}.lock" > /dev/null 2>&1
-	    fi
-	    failed=1
-	fi
-    fi
-done
-
-echo ""
-echo "Finished $mode tests on `date`"
-if [ $failed == "0" ]; then
-    echo "All $mode tests passed!"
+if [ "$retval" == "0" -a "$NOTESTS" == "0" ]; then
+  run $1
+  exit $?
 else
-    echo "*** Some $mode tests failed."
+  exit $retval
 fi
-
-exit $failed
