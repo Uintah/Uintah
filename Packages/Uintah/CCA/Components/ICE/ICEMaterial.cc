@@ -136,7 +136,6 @@ void ICEMaterial::initializeCells(CCVariable<double>& rho_micro,
                               CCVariable<double>& sp_vol_CC,
 				  CCVariable<double>& rho_CC,
 				  CCVariable<double>& temp,
-				  CCVariable<double>& cv,
 				  CCVariable<double>& speedSound,
 				  CCVariable<double>& visc_CC,
 				  CCVariable<double>& vol_frac_CC,
@@ -156,8 +155,7 @@ void ICEMaterial::initializeCells(CCVariable<double>& rho_micro,
   vol_frac_CC.initialize(0.);
   speedSound.initialize(0.);
   visc_CC.initialize(0.);
-  cv.initialize(0.);
-
+  
   for(int obj=0; obj<(int)d_geom_objs.size(); obj++){
    GeometryPiece* piece = d_geom_objs[obj]->getPiece();
    Box b1 = piece->getBoundingBox();
@@ -201,7 +199,6 @@ void ICEMaterial::initializeCells(CCVariable<double>& rho_micro,
           temp[*iter]       = d_geom_objs[obj]->getInitialTemperature();
           speedSound[*iter] = d_speed_of_sound;
           visc_CC[*iter]    = d_viscosity;
-          cv[*iter]         = d_specificHeat;
           IveBeenHere[*iter]= 1;
         }
 
@@ -215,7 +212,6 @@ void ICEMaterial::initializeCells(CCVariable<double>& rho_micro,
           temp[*iter]       = d_geom_objs[obj]->getInitialTemperature();
           speedSound[*iter] = d_speed_of_sound;
           visc_CC[*iter]    = d_viscosity;
-          cv[*iter]         = d_specificHeat;
           IveBeenHere[*iter]= 2;
         } 
       }   
@@ -232,7 +228,6 @@ void ICEMaterial::initializeCells(CCVariable<double>& rho_micro,
            temp[*iter]       = d_geom_objs[obj]->getInitialTemperature();
            speedSound[*iter] = d_speed_of_sound;
            visc_CC[*iter]    = d_viscosity;
-           cv[*iter]         = d_specificHeat; 
            IveBeenHere[*iter]= obj; 
        //} //Bracket goes here for MPMICE problems  this is cheese
            vel_CC[*iter]     = d_geom_objs[obj]->getInitialVelocity();  
@@ -240,7 +235,6 @@ void ICEMaterial::initializeCells(CCVariable<double>& rho_micro,
            rho_micro[*iter]  = d_geom_objs[obj]->getInitialDensity();
            sp_vol_CC[*iter]  = 1.0/rho_micro[*iter];
            temp[*iter]       = d_geom_objs[obj]->getInitialTemperature();
-           cv[*iter]         = d_specificHeat; 
       }    
     }  // Loop over domain
     /*`==========DEBUGGING==========*/

@@ -70,7 +70,7 @@ WARNING
 	 void initializeCells(CCVariable<double>& rhom,
                            CCVariable<double>&sp_vol,
                            CCVariable<double>& rhC,
-			      CCVariable<double>& temp,  CCVariable<double>& cv,
+			      CCVariable<double>& temp, 
 			      CCVariable<double>& ss,    CCVariable<double>& vsc,
 			      CCVariable<double>& volf,  CCVariable<Vector>& vCC,
                            CCVariable<double>& press,
