@@ -21,10 +21,10 @@ proc ComponentWizard { {window .componentWizard} } {
     
     toplevel $w -width [concat $MAIN_WIDTH i] -height [concat $MAIN_HEIGHT i]
     wm title $w "Component Wizard"
+    wm resizable $w 0 0
 
     iwidgets::tabnotebook $w.tabs -width [concat $WIDTH i]\
 	                  -height [concat $HEIGHT i] -backdrop [$w cget -background]
-    #place $w.tabs -x [concat $PAD i] -y [concat $PAD i] 
     pack $w.tabs -padx $PADi -pady $PADi -fill both -expand yes -side top
 
     frame $w.buttons
@@ -42,18 +42,8 @@ proc ComponentWizard { {window .componentWizard} } {
     button $w.buttons.cancel -text "Cancel" -command "destroy $w"  
     pack $w.buttons.cancel -padx $PADi -ipadx $PADi -ipady $PADi -expand no -side left
 
-    set tab1 [$w.tabs add -label "I/O and GUI"]
-    canvas $tab1.c -relief sunken -borderwidth 3 -background #038
-    place $tab1.c -x .25i -y .25i -width 5i -height 3.5i
-
-    global $tab1.hasgui_value 0
-    checkbutton $tab1.hasgui -text "Has GUI" -variable $tab1.hasgui_value\
-        -command "eval gui $tab1.c \[set $tab1.hasgui_value\]"
-    place $tab1.hasgui -x .25i -y 3.95i -width 1i -height .33i
-    checkbutton $tab1.dynamicport -text "Last port is dynamic"
-    place $tab1.dynamicport -x 1.5i -y 3.95i -width 2i -height .33i
-
-    make_icon $tab1.c 2.5i 1.75i [set $tab1.hasgui_value]
+    set io_gui [$w.tabs add -label "I/O and GUI"]
+    make_io_gui_pane $io_gui
 
     set tab2 [$w.tabs add -label "Overview"]
     frame $tab2.f
@@ -76,8 +66,41 @@ proc ComponentWizard { {window .componentWizard} } {
     $w.tabs view "I/O and GUI"
 }
 
+proc make_io_gui_pane {p} {
+    set PAD .1
+    set PADi [concat $PAD i]
+
+    canvas $p.c -relief sunken -borderwidth 3 -background #038
+    place $p.c -x .25i -y .25i -width 5i -height 3.5i
+
+    global $p.hasgui_value 0
+    checkbutton $p.hasgui -text "Has GUI" -variable $p.hasgui_value\
+        -command "eval gui $p.c \[set $p.hasgui_value\]"
+    place $p.hasgui -x .25i -y 3.95i -width 1i -height .33i
+    checkbutton $p.dynamicport -text "Last port is dynamic"
+    place $p.dynamicport -x 1.5i -y 3.95i -width 2i -height .33i
+
+    make_icon $p.c 2.5i 1.75i [set $p.hasgui_value]
+
+    frame $p.cmds
+    
+    set modframe $p.c.moduleFakeModule
+    global $modframe.iports
+    set $modframe.iports [list]
+    button $p.cmds.add_port -text "Add Input Port" \
+        -command "global $modframe.iports; \
+                  set port $modframe.iport_info\[llength \[set $modframe.iports\]\]; \
+                  global \$port; \
+                  lappend $modframe.iports \$port; \
+                  configIPorts $modframe"
+    pack $p.cmds.add_port -padx $PADi -pady $PADi \
+        -ipadx $PADi -ipady $PADi -expand yes -side top -anchor nw -fill x
+
+    pack $p.cmds -expand no -side right -anchor ne -padx $PADi -pady $PADi
+}
+
 proc description_pane {p} {
-    frame $p.f
+    frame $p
     
 }
 
@@ -103,7 +126,7 @@ proc make_ui_button {p} {
 
 proc make_icon {canvas modx mody {gui 0} } {
     
-    lappend canvases $canvas
+    #lappend canvases $canvas
     set modframe $canvas.moduleFakeModule
     frame $modframe -relief raised -borderwidth 3
     
@@ -145,5 +168,27 @@ proc make_icon {canvas modx mody {gui 0} } {
     
     $canvas create window $modx $mody -window $modframe \
 	    -tags FakeModule -anchor center
+}
+
+proc configIPorts {icon} {
+    set port_width 13
+    set port_spacing 18
+    set port_height 7
+    set i 0
+    global $icon.iports
+    foreach t [set $icon.iports] {
+        puts $t
+        set portcolor red
+        set x [expr $i * $port_spacing + 6]
+        set e top
+        if [ expr [lsearch [place slaves $icon] $icon.iport$i] == -1 ] {
+            bevel $icon.iport$i -width $port_width \
+                -height $port_height -borderwidth 3 \
+                -edge $e -background $portcolor \
+                -pto 2 -pwidth 7 -pborder 2       
+            place $icon.iport$i -bordermode outside -x $x -y 0 -anchor nw
+        }
+        incr i
+    }
 }
 	
