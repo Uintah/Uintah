@@ -227,7 +227,17 @@ itcl_class Module {
     }
 
 
+    method have_ui {} {
+	if {[$this info method ui] != ""} {
+	    return 1;
+	} else {
+	    return 0;
+	}
+    }
 
+    method popup_ui {} {
+	initialize_ui
+    }
 
     #  Make the modules icon on a particular canvas
     method make_icon {canvas minicanvas modx mody} {
@@ -817,32 +827,35 @@ itcl_class Module {
 	set $varName
     }
     
-    method module_grow {ports} { 
-	global maincanvas
-	global modname_font
-	global port_spacing
-	
-	set temp_spacing [expr $port_spacing+1]
-	set mod_width [winfo width $maincanvas.module[modname] ]
-	
-	#initialize all values first time through
-	if { [set $this-original_title_size] == 0} {
-	    set $this-original_title_size [font measure $modname_font $name]
-	}
+    method module_grow {ports} {
+	global scirun2
+	if {!$scirun2} {
+	    global maincanvas
+	    global modname_font
+	    global port_spacing
+	    
+	    set temp_spacing [expr $port_spacing+1]
+	    set mod_width [winfo width $maincanvas.module[modname] ]
+	    
+	    #initialize all values first time through
+	    if { [set $this-original_title_size] == 0} {
+		set $this-original_title_size [font measure $modname_font $name]
+	    }
 
-	# thread problem - if mod_width=1, then
-	# module isn't done being created and it
-	# adds on too many extra_ports
+	    # thread problem - if mod_width=1, then
+	    # module isn't done being created and it
+	    # adds on too many extra_ports
 
-	if {[set $this-done_bld_icon]} {
-	    if { [expr $mod_width-[expr $ports*$temp_spacing] ] < \
-		    $temp_spacing } {
-		incr $this-extra_ports 1
-		set title_width [expr [set $this-original_title_size]+\
-			[expr $temp_spacing*[set $this-extra_ports]]]
-		set title_width [expr int(\
-			[expr ceil([expr $title_width/[set $this-font_pixel_width]])])]
-		$maincanvas.module[modname].ff.title configure -width $title_width
+	    if {[set $this-done_bld_icon]} {
+		if { [expr $mod_width-[expr $ports*$temp_spacing] ] < \
+			$temp_spacing } {
+		    incr $this-extra_ports 1
+		    set title_width [expr [set $this-original_title_size]+\
+			    [expr $temp_spacing*[set $this-extra_ports]]]
+		    set title_width [expr int(\
+			    [expr ceil([expr $title_width/[set $this-font_pixel_width]])])]
+		    $maincanvas.module[modname].ff.title configure -width $title_width
+		}
 	    }
 	}
     }

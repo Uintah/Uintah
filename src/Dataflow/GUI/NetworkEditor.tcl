@@ -510,6 +510,18 @@ proc addModuleAtPosition {package category module xpos ypos} {
     return $modid
 }
 
+proc addModule2 {package category module modid} {
+    set className [removeSpaces "${package}_${category}_${module}"]
+    if {[catch "$className $modid" exception]} {
+	# Use generic module
+	if {$exception != "invalid command name \"$className\""} {
+	    bgerror "Error instantiating iTcl class for module:\n$exception";
+	}
+	Module $modid -name "$module"
+    }
+    return $modid
+}
+
 proc addConnection {omodid owhich imodid iwhich} {
 
     set connid [netedit addconnection $omodid $owhich $imodid $iwhich]
