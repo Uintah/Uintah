@@ -39,6 +39,7 @@
 #include <testprograms/Component/pingpongArr/PingPong_impl.h>
 #include <testprograms/Component/pingpongArr/PingPong_sidl.h>
 #include <Core/Thread/Time.h>
+#include <signal.h>
 
 using namespace std;
 using namespace SCIRun;
@@ -59,7 +60,6 @@ void init(SSIDL::array1<int>& a, int s, int f)
   for(int i=s;i<f;i++)
     a[i-s]=i;
 }
-
 
 int main(int argc, char* argv[])
 {
@@ -116,6 +116,7 @@ int main(int argc, char* argv[])
 
 	if(server) {
 	  PingPong_impl* pp=new PingPong_impl;
+          //pp->createSubset(0);
 
           //Set up server's requirement of the distribution array 
 	  Index** dr = new Index* [1]; 
@@ -137,6 +138,7 @@ int main(int argc, char* argv[])
 	    abort();
 	  }
 
+	  pp->createSubset(2);
 	  //Set up the array and the timer  
 	  double stime=Time::currentSeconds();
           cerr << mysize << ", " << myrank << "\n";
@@ -172,10 +174,11 @@ int main(int argc, char* argv[])
 	abort();
     } catch(...) {
 	cerr << "Caught unexpected exception!\n";
+        getchar();
 	abort();
     }
     PIDL::serveObjects();
-
+    PIDL::finalize();
     MPI_Finalize();
 
     return 0;
