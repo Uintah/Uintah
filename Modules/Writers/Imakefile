@@ -5,23 +5,25 @@ OBJS = ColorMapWriter.o  ColumnMatrixWriter.o  ContourSetWriter.o   \
 	MatrixWriter.o  MeshWriter.o   \
 	MultiMeshWriter.o   ScalarFieldWriter.o \
 	SurfaceWriter.o   VectorFieldWriter.o   VoidStarWriter.o \
-	TetraWriter.o MultiScalarFieldWriter.o
+	TetraWriter.o MultiScalarFieldWriter.o TiffWriter.o
 GENSRCS = ColorMapWriter.cc ColumnMatrixWriter.cc ContourSetWriter.cc  \
 	MatrixWriter.cc MeshWriter.cc  \
 	MultiMeshWriter.cc  ScalarFieldWriter.cc  \
-	SurfaceWriter.cc  VectorFieldWriter.cc  VoidStarWriter.cc
-SRCS = $(GENSRCS) TetraWriter.cc  MultiScalarFieldWriter.cc
+	SurfaceWriter.cc  VectorFieldWriter.cc  VoidStarWriter.cc MultiScalarFieldWriter.cc
+SRCS = $(GENSRCS) TetraWriter.cc TiffWriter.cc MultiScalarFieldWriter.cc
 GENTCLS = ColorMapWriter.tcl ColumnMatrixWriter.tcl ContourSetWriter.tcl \
 	MatrixWriter.tcl MeshWriter.tcl \
 	MultiMeshWriter.tcl ScalarFieldWriter.tcl \
 	SurfaceWriter.tcl VectorFieldWriter.tcl VoidStarWriter.tcl
-TCLS = $(GENTCLS) TetraWriter.tcl
+TCLS = $(GENTCLS) TetraWriter.tcl TiffWriter.tcl
 
 LIBNAME = Writers
 
+LOCALINCLUDES = -I~/libtiff/libtiff
 SO_LIBS =
 SO_LDFLAGS = -L$(TOP)/lib -lDatatypes -lDataflow -lGeom -lTCL \
-	-lClasslib -lMultitask -lMalloc -lm -lC -lc
+	-lClasslib -lMultitask -lMalloc -lm -lC -lc \
+	~/libtiff/libtiff/libtiff.a
 
 depend:: $(GENSRCS)
 
