@@ -254,6 +254,7 @@ void ImpMPM::scheduleInterpolateParticlesToGrid(SchedulerP& sched,
   t->computes(lb->gAccelerationLabel);
   t->computes(lb->gExternalForceLabel);
   t->computes(lb->gInternalForceLabel);
+  t->computes(lb->gStressForSavingLabel);
   t->computes(lb->TotalMassLabel);
   
   sched->addTask(t, patches, matls);
@@ -363,14 +364,20 @@ void ImpMPM::scheduleComputeInternalForce(SchedulerP& sched,
 
   if (recursion) {
     t->requires(Task::ParentOldDW,lb->pXLabel,        Ghost::AroundNodes,1);
+    t->requires(Task::ParentOldDW,lb->pMassLabel,     Ghost::AroundNodes,1);
+    t->requires(Task::ParentNewDW,lb->gMassLabel,     Ghost::None);
     t->requires(Task::NewDW,lb->pStressLabel_preReloc,Ghost::AroundNodes,1);
     t->requires(Task::NewDW,lb->pVolumeDeformedLabel, Ghost::AroundNodes,1);
     t->computes(lb->gInternalForceLabel);  
+    t->computes(lb->gStressForSavingLabel);  
   } else {
     t->requires(Task::NewDW,lb->pStressLabel_preReloc,Ghost::AroundNodes,1);
     t->requires(Task::NewDW,lb->pVolumeDeformedLabel, Ghost::AroundNodes,1);
     t->requires(Task::OldDW,lb->pXLabel,              Ghost::AroundNodes,1);
+    t->requires(Task::OldDW,lb->pMassLabel,           Ghost::AroundNodes,1);
+    t->requires(Task::NewDW,lb->gMassLabel,           Ghost::None);
     t->modifies(lb->gInternalForceLabel);  
+    t->modifies(lb->gStressForSavingLabel);  
   }
   
   sched->addTask(t, patches, matls);
@@ -915,15 +922,17 @@ void ImpMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       NCVariable<double> gmass,gvolume;
       NCVariable<Vector> gvelocity,gvelocity_old,gacceleration,dispNew;
       NCVariable<Vector> gexternalforce,ginternalforce;
+      NCVariable<Matrix3> gstress;
 
-      new_dw->allocateAndPut(gmass,lb->gMassLabel,                  matl,patch);
-      new_dw->allocateAndPut(gvolume,lb->gVolumeLabel,              matl,patch);
-      new_dw->allocateAndPut(gvelocity,lb->gVelocityLabel,          matl,patch);
-      new_dw->allocateAndPut(gvelocity_old,lb->gVelocityOldLabel,   matl,patch);
-      new_dw->allocateAndPut(dispNew,lb->dispNewLabel,              matl,patch);
-      new_dw->allocateAndPut(gacceleration,lb->gAccelerationLabel,  matl,patch);
+      new_dw->allocateAndPut(gmass,         lb->gMassLabel,         matl,patch);
+      new_dw->allocateAndPut(gvolume,       lb->gVolumeLabel,       matl,patch);
+      new_dw->allocateAndPut(gvelocity,     lb->gVelocityLabel,     matl,patch);
+      new_dw->allocateAndPut(gvelocity_old, lb->gVelocityOldLabel,  matl,patch);
+      new_dw->allocateAndPut(dispNew,       lb->dispNewLabel,       matl,patch);
+      new_dw->allocateAndPut(gacceleration, lb->gAccelerationLabel, matl,patch);
       new_dw->allocateAndPut(gexternalforce,lb->gExternalForceLabel,matl,patch);
       new_dw->allocateAndPut(ginternalforce,lb->gInternalForceLabel,matl,patch);
+      new_dw->allocateAndPut(gstress,     lb->gStressForSavingLabel,matl,patch);
 
 
       gmass.initialize(d_SMALL_NUM_MPM);
@@ -934,6 +943,7 @@ void ImpMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       gacceleration.initialize(Vector(0,0,0));
       gexternalforce.initialize(Vector(0,0,0));
       ginternalforce.initialize(Vector(0,0,0));
+      gstress.initialize(Matrix3(0.));
 
       // Interpolate particle data to Grid data.
       // This currently consists of the particle velocity and mass
@@ -943,6 +953,7 @@ void ImpMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       
       double totalmass = 0;
       Vector total_mom(0.0,0.0,0.0);
+      Vector pmom, pmassacc;
 
       for(ParticleSubset::iterator iter = pset->begin();
 	  iter != pset->end(); iter++){
@@ -953,31 +964,30 @@ void ImpMPM::interpolateParticlesToGrid(const ProcessorGroup*,
 	double S[8];
 	
 	patch->findCellAndWeights(px[idx], ni, S);
-	
-	total_mom += pvelocity[idx]*pmass[idx];
-
-	// cerr << "particle accel = " << pacceleration[idx] << "\n";
+	  
+        pmassacc    = pacceleration[idx]*pmass[idx];
+        pmom        = pvelocity[idx]*pmass[idx];
+	total_mom  += pvelocity[idx]*pmass[idx];
+	totalmass  += pmass[idx];
 
 	// Add each particles contribution to the local mass & velocity 
 	// Must use the node indices
 	for(int k = 0; k < 8; k++) {
 	  if(patch->containsNode(ni[k])) {
-	    gmassglobal[ni[k]]    += pmass[idx]          * S[k];
 	    gmass[ni[k]]          += pmass[idx]          * S[k];
 	    gvolume[ni[k]]        += pvolumeold[idx]     * S[k];
 	    gexternalforce[ni[k]] += pexternalforce[idx] * S[k];
-	    gvelocity[ni[k]]      += pvelocity[idx]     * pmass[idx] * S[k];
-	    gacceleration[ni[k]]  += pacceleration[idx] * pmass[idx] * S[k];
-	    totalmass += pmass[idx] * S[k];
+	    gvelocity[ni[k]]      += pmom                * S[k];
+	    gacceleration[ni[k]]  += pmassacc            * S[k];
 	  }
 	}
       }
       
       for(NodeIterator iter = patch->getNodeIterator(); !iter.done();iter++){
-	if (!compare(gmass[*iter],0.)) {
-	  gvelocity[*iter] /= gmass[*iter];
-	  gacceleration[*iter] /= gmass[*iter];
-	}
+	IntVector c = *iter;
+        gvelocity[c]     /= (gmass[*iter] + 1.e-200);
+        gacceleration[c] /= (gmass[*iter] + 1.e-200);
+        gmassglobal[c]   += gmass[c];
       }
       gvelocity_old.copyData(gvelocity);
 
@@ -1254,55 +1264,70 @@ void ImpMPM::computeInternalForce(const ProcessorGroup*,
     
     for(int m = 0; m < numMPMMatls; m++){
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
-      int matlindex = mpm_matl->getDWIndex();
+      int dwi = mpm_matl->getDWIndex();
       constParticleVariable<Point>   px;
       constParticleVariable<double>  pvol;
+      constParticleVariable<double>  pmass;
       constParticleVariable<Matrix3> pstress;
-      NCVariable<Vector>        internalforce;
+      NCVariable<Vector>        int_force;
+      NCVariable<Matrix3>       gstress;
+      constNCVariable<double>   gmass;
       ParticleSubset* pset;
       
       if (recursion) {
 	DataWarehouse* parent_old_dw = 
 	  new_dw->getOtherDataWarehouse(Task::ParentOldDW);
-	pset = parent_old_dw->getParticleSubset(matlindex, patch,
-						Ghost::AroundNodes, 1,
+	DataWarehouse* parent_new_dw = 
+	  new_dw->getOtherDataWarehouse(Task::ParentNewDW);
+	pset = parent_old_dw->getParticleSubset(dwi, patch,
+                                                Ghost::AroundNodes, 1,
 						lb->pXLabel);
-	parent_old_dw->get(px,lb->pXLabel, pset);
-      	new_dw->allocateAndPut(internalforce,lb->gInternalForceLabel,matlindex,
-			       patch);
+	parent_old_dw->get(px,   lb->pXLabel,    pset);
+        parent_old_dw->get(pmass,lb->pMassLabel, pset);
+	parent_new_dw->get(gmass,lb->gMassLabel, dwi, patch,Ghost::None,0);
+      	new_dw->allocateAndPut(int_force,lb->gInternalForceLabel,  dwi, patch);
+      	new_dw->allocateAndPut(gstress,  lb->gStressForSavingLabel,dwi, patch);
       } else {
-	pset = old_dw->getParticleSubset(matlindex, patch,
-						Ghost::AroundNodes, 1,
+	pset = old_dw->getParticleSubset(dwi, patch, Ghost::AroundNodes, 1,
 						lb->pXLabel);
-	old_dw->get(px,lb->pXLabel,pset);
-
-	new_dw->getModifiable(internalforce,lb->gInternalForceLabel,matlindex,
-			      patch);
+	old_dw->get(px,   lb->pXLabel,   pset);
+	old_dw->get(pmass,lb->pMassLabel,pset);
+	new_dw->get(gmass,lb->gMassLabel,dwi, patch, Ghost::None,0);
+	new_dw->getModifiable(int_force,lb->gInternalForceLabel,  dwi, patch);
+      	new_dw->getModifiable(gstress,  lb->gStressForSavingLabel,dwi, patch);
       }
       
-      new_dw->get(pvol,    lb->pVolumeDeformedLabel, pset);
+      new_dw->get(pvol,    lb->pVolumeDeformedLabel,  pset);
       new_dw->get(pstress, lb->pStressLabel_preReloc, pset);
 
-      internalforce.initialize(Vector(0,0,0));
-      
+      int_force.initialize(Vector(0,0,0));
+      gstress.initialize(Matrix3(0.));
+      IntVector ni[8];
+      Vector d_S[8];
+      double S[8];
+      Matrix3 stressmass;
+      Matrix3 stresspress;
+
       for(ParticleSubset::iterator iter = pset->begin();
 	  iter != pset->end(); iter++){
 	particleIndex idx = *iter;
 	
 	// Get the node indices that surround the cell
-	IntVector ni[8];
-	Vector d_S[8];
-	double S[8];
-	
 	patch->findCellAndWeightsAndShapeDerivatives(px[idx], ni, S, d_S);
 	
+        stressmass  = pstress[idx]*pmass[idx];              
+
 	for (int k = 0; k < 8; k++){
 	  if(patch->containsNode(ni[k])){
-	    Vector div(d_S[k].x()*oodx[0],d_S[k].y()*oodx[1],
-		       d_S[k].z()*oodx[2]);
-	    internalforce[ni[k]] -= (div * pstress[idx] * pvol[idx]);
+	   Vector div(d_S[k].x()*oodx[0],d_S[k].y()*oodx[1],d_S[k].z()*oodx[2]);
+           int_force[ni[k]] -= (div * pstress[idx])  * pvol[idx];    
+           gstress[ni[k]]       += stressmass * S[k];
 	  }
 	}
+      }
+      for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++) {
+        IntVector c = *iter;                                  
+        gstress[c] /= (gmass[c]+1.e-200);                               
       }
     }
   }
@@ -1459,7 +1484,13 @@ void ImpMPM::removeFixedDOF(const ProcessorGroup*,
         dof[2] = l2g_node_num+2;
         
         // Just look on the grid to see if the gmass is 0 and then remove that  
-        if (compare(mass[n],0.) || !compare(mass_rig[n],0.)) {
+        if (compare(mass[n],0.)) {
+           d_solver->d_DOF.insert(dof[0]);
+           d_solver->d_DOF.insert(dof[1]);
+           d_solver->d_DOF.insert(dof[2]);
+        }
+        if (!compare(mass_rig[n],0.)) {
+//         Y_ONLY  (Comment out 0 and 2 to get rigid effect in y-dir only)
            d_solver->d_DOF.insert(dof[0]);
            d_solver->d_DOF.insert(dof[1]);
            d_solver->d_DOF.insert(dof[2]);
@@ -1614,7 +1645,20 @@ void ImpMPM::updateGridKinematics(const ProcessorGroup*,
         for (NodeIterator iter = patch->getNodeIterator();!iter.done();iter++){
 	  IntVector n = *iter;
           if(!compare(mass_rig[n],0.)){
+//  Y_ONLY  // Switch the #if 1 to #if 0 and the #if 0 to #if 1 to 
+            // only get rigid effect in the y-direction
+#if 0
+            if(m==0){
+              dispNew[n] = Vector(dispNew[n].x(),velocity_rig[n].y()*dt,
+                                  dispNew[n].z());
+            }
+            if(m==1){
+              dispNew[n] = Vector(0.0,velocity_rig[n].y()*dt,0.0);
+            }
+#endif
+#if 1
             dispNew[n]  = velocity_rig[n]*dt;
+#endif
             velocity[n] = dispNew[n]*(2./dt) - oneifdyn*velocity_old[n];
           } // if mass
         } // for
