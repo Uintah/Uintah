@@ -889,7 +889,7 @@ CuttingPlane::interpolate(FieldHandle texfld_, const Point& p, double& val)
   } else if( texfld_->get_type_name(0) == "LatticeVol" ){
     // use virtual field interpolation
     ScalarFieldInterface *sfi;
-    if( sfi = texfld_->query_scalar_interface()){
+    if(( sfi = texfld_->query_scalar_interface())){
       return sfi->interpolate( val, p);
     }
   } else {

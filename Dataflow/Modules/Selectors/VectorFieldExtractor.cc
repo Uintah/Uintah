@@ -187,7 +187,7 @@ void VectorFieldExtractor::execute()
   // set the index for the correct timestep.
   int idx = handle->timestep();
   double dt = -1;
-  if (idx < times.size() - 1)
+  if (idx < (int)times.size() - 1)
     dt = times[idx+1] - times[idx];
   else if (times.size() > 1)
     dt = times[idx] - times[idx-1];
