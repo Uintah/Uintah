@@ -4,7 +4,6 @@
  *  Written by:
  *    Scott Morris
  *    July 1998
- *
  */
 
 #include <Classlib/Array1.h>
