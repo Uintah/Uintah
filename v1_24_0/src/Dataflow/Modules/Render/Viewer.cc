@@ -76,6 +76,7 @@ namespace SCIRun {
 // revert this back to just deleting the viewwindow directly.
 static void delete_viewwindow_callback(void *vwptr)
 {
+  if (sci_getenv("SCI_REGRESSION_TESTING")) return;
   ViewWindow *vw = (ViewWindow *)vwptr;
   delete vw;
 }
