@@ -50,7 +50,7 @@ LatticeGeom::LatticeGeom(int ix,
 			 const Point &a, const Point &b)
 {
   d_dim = 1;
-  d_nx = Min(ix, 1);
+  d_nx = Max(ix, 1);
   d_ny = 1;
   d_nz = 1;
 
@@ -64,8 +64,8 @@ LatticeGeom::LatticeGeom(int ix, int iy,
 			 const Point &a, const Point &b)
 {
   d_dim = 2;
-  d_nx = Min(ix, 1);
-  d_ny = Min(iy, 1);
+  d_nx = Max(ix, 1);
+  d_ny = Max(iy, 1);
   d_nz = 1;
 
   BBox box;
@@ -78,9 +78,9 @@ LatticeGeom::LatticeGeom(int ix, int iy, int iz,
 			 const Point &a, const Point &b)
 {
   d_dim = 3;
-  d_nx = Min(ix, 1);
-  d_ny = Min(iy, 1);
-  d_nz = Min(iz, 1);
+  d_nx = Max(ix, 1);
+  d_ny = Max(iy, 1);
+  d_nz = Max(iz, 1);
 
   BBox box;
   box.extend(a);
@@ -101,7 +101,6 @@ LatticeGeom::getInfo()
     "x = " << d_nx << endl <<
     "y = " << d_ny << endl <<
     "z = " << d_nz << endl;
-  
   return retval.str();
 }
 
@@ -171,7 +170,7 @@ void
 LatticeGeom::resize(int x)
 {
   d_dim = 1;
-  d_nx = Min(x, 1);
+  d_nx = Max(x, 1);
   d_ny = 1;
   d_nz = 1;
   updateTransform();
@@ -181,8 +180,8 @@ void
 LatticeGeom::resize(int x, int y)
 {
   d_dim = 2;
-  d_nx = Min(x, 1);
-  d_ny = Min(y, 1);
+  d_nx = Max(x, 1);
+  d_ny = Max(y, 1);
   d_nz = 1;
   updateTransform();
 }
@@ -191,9 +190,9 @@ void
 LatticeGeom::resize(int x, int y, int z)
 {
   d_dim = 3;
-  d_nx = Min(x, 1);
-  d_ny = Min(y, 1);
-  d_nz = Min(z, 1);
+  d_nx = Max(x, 1);
+  d_ny = Max(y, 1);
+  d_nz = Max(z, 1);
   updateTransform();
 }
 
@@ -252,11 +251,14 @@ void
 LatticeGeom::updateTransform()
 {
   d_transform = d_prescale;
-  const double x = Min(d_nx - 1.0, 1.0);
-  const double y = Min(d_ny - 1.0, 1.0);
-  const double z = Min(d_nz - 1.0, 1.0);
+
+  const double x = 1.0 / Max(d_nx - 1.0, 1.0);
+  const double y = 1.0 / Max(d_ny - 1.0, 1.0);
+  const double z = 1.0 / Max(d_nz - 1.0, 1.0);
   Vector scale(x, y, z);
-  d_transform.pre_scale(scale);
+  d_transform.post_scale(scale);
+
+  d_transform.compute_imat();
 
   computeBoundingBox();
 }
