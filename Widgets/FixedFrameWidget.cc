@@ -165,7 +165,7 @@ FixedFrameWidget::FixedFrameWidget( Module* module, CrowdMonitor* lock, Real wid
    picks[FFrameW_PickResizeU]->set_highlight(materials[FFrameW_HighMatl]);
    picks[FFrameW_PickResizeU]->set_cbdata((void*)FFrameW_PickResizeU);
    resizes->add(picks[FFrameW_PickResizeU]);
-   geometries[geom] = new GeomCappedCylinder;
+   geometries[FFrameW_PickResizeD] = new GeomCappedCylinder;
    picks[FFrameW_PickResizeD] = new GeomPick(geometries[FFrameW_GeomResizeD], module);
    picks[FFrameW_PickResizeD]->set_highlight(materials[FFrameW_HighMatl]);
    picks[FFrameW_PickResizeD]->set_cbdata((void*)FFrameW_PickResizeD);
