@@ -372,14 +372,12 @@ void NetworkEditor::save_network(const clString& filename)
       return;
     out << "# SCI Network 1.0\n";
     out << "\n";
-    out << "::netedit dontschedule\n";
-    out << "\n";
     out << "######################\n";
     out << "# These commands generated automatically, DO NOT REMOVE!\n";
-    out << "puts \"Sorry, PSE files may no longer be sourced,\"\n";
-    out << "puts \"please use \'loadfile\' instead \"\n";
+    out << "loadfile "<<filename<<"\n";
     out << "return\n";
     out << "######################\n";
+    out << "::netedit dontschedule\n";
     net->read_lock();
 
     // Added by Mohamed Dekhil for saving extra information
@@ -711,6 +709,16 @@ void NetworkEditor::tcl_command(TCLArgs& args, void*)
 	  args.error("create_mod failed.");
 	  return;
 	}
+    } else if (args[1] == "set_group") {
+	if (args.count()!=3) {
+	    args.error("create_mod needs 1 argument");	
+	    return;
+	}
+	
+	cerr << "group name: args[2]";
+	// group=args[2];
+	    
+
     } else {
 	args.error("Unknown minor command for netedit");
     }
@@ -721,6 +729,9 @@ void NetworkEditor::tcl_command(TCLArgs& args, void*)
 
 //
 // $Log$
+// Revision 1.15  2000/08/31 15:25:47  nbenson
+// modified save_network()
+//
 // Revision 1.14  2000/08/25 17:40:51  nbenson
 // Modified save_network() member function as part of module-loading bug
 // fix.  See /PSECore/GUI/NetworkEditor.tcl for more info.
