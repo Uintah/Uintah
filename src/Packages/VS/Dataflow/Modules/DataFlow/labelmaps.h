@@ -20,7 +20,7 @@
 
 using namespace std;
 
-#define VH_LM_NUM_NAMES 512
+#define VH_LM_NUM_NAMES 2500
 
 /* misc string manip functions */
 char *space_to_underbar(char *dst, char *src);
@@ -42,13 +42,17 @@ public:
 	~VH_MasterAnatomy();
 	void readFile(char *infilename);
 	void readFile(FILE *infileptr);
+	string getActiveFile() { return activeFile; };
 	char *get_anatomyname(int labelindex);
 	int get_labelindex(char *anatomyname);
 	int get_num_names() { return num_names; };
+	int get_max_labelindex() { return maxLabelIndex; };
 private:
+	string activeFile;
 	char **anatomyname;
 	int *labelindex;
 	int num_names;
+	int maxLabelIndex;
 };
 
 /******************************************************************************
@@ -67,10 +71,12 @@ public:
 	~VH_AdjacencyMapping();
 	void readFile(char *infilename);
         void readFile(FILE *infileptr);
+	string getActiveFile() { return activeFile; };
 	int get_num_rel(int index);
 	int get_num_names() { return num_names; };
 	int *adjacent_to(int index);
 private:
+	string activeFile;
 	int **rellist;
 	int *numrel;
 	int num_names;
@@ -92,8 +98,11 @@ private:
 	VH_AnatomyBoundingBox *blink, *flink;
 public:
         VH_AnatomyBoundingBox() { flink = blink = this; };
+        VH_AnatomyBoundingBox *next() { return flink; };
+        VH_AnatomyBoundingBox *prev() { return blink; };
+        void set_next(VH_AnatomyBoundingBox *new_next) { flink = new_next; };
+        void set_prev(VH_AnatomyBoundingBox *new_prev) { blink = new_prev; };
 	void append(VH_AnatomyBoundingBox *newNode);
-        VH_AnatomyBoundingBox * next() { return flink; };
         void readFile(FILE *infileptr);
 	char *get_anatomyname() { return(anatomyname_); };
 	void set_anatomyname(char *newName) { anatomyname_ = newName; };
@@ -114,6 +123,12 @@ public:
         int get_maxSlice() { return maxSlice_; };
         void set_maxSlice(int newMaxSlice) { maxSlice_ = newMaxSlice; };
 };
+
+void
+VH_Anatomy_deleteBBox_node(VH_AnatomyBoundingBox *delNode);
+
+void
+VH_Anatomy_destroyBBox_list(VH_AnatomyBoundingBox *delList);
 
 /******************************************************************************
  * Read an ASCII AnatomyBoundingBox file into a linked list

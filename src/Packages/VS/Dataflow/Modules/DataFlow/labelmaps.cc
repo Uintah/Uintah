@@ -49,8 +49,10 @@ char *capitalize(char *dst, char *src)
     return(dst);
   }
   if( 'a' <= *srcPtr )
+  {
       *dstPtr++ = *srcPtr - 32; 
-  srcPtr++;
+      srcPtr++;
+  }
   /* copy the rest of the string */
   while(*srcPtr != '\0')
   {
@@ -169,6 +171,7 @@ VH_MasterAnatomy::VH_MasterAnatomy()
   anatomyname = new (char *)[VH_LM_NUM_NAMES];
   labelindex = new int[VH_LM_NUM_NAMES];
   num_names = 0;
+  maxLabelIndex = 0;
 }
 
 VH_MasterAnatomy::~VH_MasterAnatomy()
@@ -198,6 +201,7 @@ VH_MasterAnatomy::readFile(char *infilename)
   inLine = new char[VH_FILE_MAXLINE];
   int buffsize = VH_FILE_MAXLINE;
 
+  activeFile = string(infilename);
   cerr << "VH_MasterAnatomy::readFile(" << infilename << ")";
   char *indexStr;
   // skip first line
@@ -218,7 +222,10 @@ VH_MasterAnatomy::readFile(char *infilename)
     { // expect lines of the form: AnatomyName,Label
       if(!splitAtComma((char *)inLine,
                    &anatomyname[num_names], &indexStr)) break;
+      // labe indices to not correspond 1-1 to lines in the file
       labelindex[num_names] = atoi(indexStr);
+      if(maxLabelIndex < labelindex[num_names])
+         maxLabelIndex = labelindex[num_names];
     } // end if(strlen(inLine) > 0)
     // (else) blank line -- ignore
     // clear input buffer line
@@ -233,16 +240,29 @@ VH_MasterAnatomy::readFile(char *infilename)
 } // end VH_MasterAnatomy::readFile(char *infilename)
 
 char *
-VH_MasterAnatomy::get_anatomyname(int labelindex)
+VH_MasterAnatomy::get_anatomyname(int targetindex)
 {
-  if(labelindex < 0 || labelindex >= num_names)
+  if(targetindex < 0)
   {
-    cerr << "VH_MasterAnatomy::get_anatomyname(): index " << labelindex;
+    cerr << "VH_MasterAnatomy::get_anatomyname(): index " << targetindex;
     cerr << " out of range " << num_names << endl;
     // return "UNKNOWN"
     return(anatomyname[0]);
   }
-  return(anatomyname[labelindex]);
+  int nameIndex;
+  for(nameIndex = 0; nameIndex < num_names; nameIndex++)
+  {
+    if(labelindex[nameIndex] == targetindex) break;
+  }
+  if(nameIndex >= num_names)
+  {
+    cerr << "VH_MasterAnatomy::get_anatomyname(): index " << targetindex;
+    cerr << " out of range " << maxLabelIndex << endl;
+    // return "UNKNOWN"
+    return(anatomyname[0]);
+  }
+  // (else)
+  return(anatomyname[nameIndex]);
 } // end VH_MasterAnatomy::get_anatomyname(int labelindex)
 
 int
@@ -251,7 +271,7 @@ VH_MasterAnatomy::get_labelindex(char *targetname)
   for(int index = 0; index < num_names; index++)
   {
     if(anatomyname[index] != 0 && strcmp(anatomyname[index], targetname) == 0)
-      return(index);
+      return(labelindex[index]);
   }
 
   return(-1);
@@ -292,6 +312,7 @@ VH_AdjacencyMapping::readFile(char *infilename)
   inLine = new char[VH_FILE_MAXLINE];
   int buffsize = VH_FILE_MAXLINE;
 
+  activeFile = string(infilename);
   cerr << "VH_AdjacencyMapping::readFile(" << infilename << ")";
   num_names = 0;
   char *indexStr;
@@ -325,7 +346,11 @@ VH_AdjacencyMapping::readFile(char *infilename)
       {
         *intPtr++ = atoi(indexStr);
       }
-      num_names++;
+      if(++num_names >= VH_LM_NUM_NAMES)
+      {
+        cerr << "VH_AdjacencyMapping::readFile(): too many names" << endl;
+        return;
+      }
       cerr << ".";
     } if(strlen(inLine) > 0)
     // (else) blank line -- ignore
@@ -389,6 +414,39 @@ VH_AnatomyBoundingBox::append(VH_AnatomyBoundingBox *newNode)
   newNode->blink = lastNode;
   blink = newNode;
 }
+
+void
+VH_Anatomy_deleteBBox_node(VH_AnatomyBoundingBox *delNode)
+{
+  VH_AnatomyBoundingBox *lastNode, *nextNode;
+  //  ------------------
+  // |   ----    ----   |
+  //  ->|    |->|    |--
+  //  --|    |<-|    |<-
+  // |   ----    ----   |
+  //  ------------------
+  if(delNode != (VH_AnatomyBoundingBox *)0 &&
+     (lastNode = delNode->prev()) != (VH_AnatomyBoundingBox *)0 &&
+     (nextNode = delNode->next()) != (VH_AnatomyBoundingBox *)0)
+  {
+    lastNode->set_next(nextNode);
+    nextNode->set_prev(lastNode);
+    delete delNode;
+  } // (else) empty list
+} // end VH_Anatomy_deleteBBox_node()
+
+void
+VH_Anatomy_destroyBBox_list(VH_AnatomyBoundingBox *delList)
+{
+  while(delList != (VH_AnatomyBoundingBox *)0 &&
+        delList->next() != delList->prev() &&
+        delList->prev() != (VH_AnatomyBoundingBox *)0)
+  {
+    VH_Anatomy_deleteBBox_node(delList->prev());
+  }
+  if(delList != (VH_AnatomyBoundingBox *)0)
+    delete delList;
+} // end VH_Anatomy_destroyBBox_list()
 
 VH_AnatomyBoundingBox *
 VH_Anatomy_readBoundingBox_File(char *infilename)
@@ -501,7 +559,7 @@ VH_AnatomyBoundingBox *
 VH_Anatomy_findMaxBoundingBox(VH_AnatomyBoundingBox *list)
 {
   VH_AnatomyBoundingBox *listPtr = list, *maxBoxPtr = list;
-  while(listPtr->next() != list)
+  while(listPtr != (VH_AnatomyBoundingBox *)NULL && listPtr->next() != list)
   {
     if(listPtr->get_minX() <= maxBoxPtr->get_minX() &&
        listPtr->get_minY() <= maxBoxPtr->get_minY() &&
