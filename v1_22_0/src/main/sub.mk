@@ -43,7 +43,7 @@ else
   endif
 endif
 
-LIBS := $(TCL_LIBRARY)
+LIBS := 
 ifeq ($(NEED_SONAME),yes)
   LIBS := $(LIBS) $(XML_LIBRARY) $(PLPLOT_LIBRARY) $(TK_LIBRARY) $(DL_LIBRARY) $(Z_LIBRARY) $(SCISOCK_LIBRARY)
 endif
