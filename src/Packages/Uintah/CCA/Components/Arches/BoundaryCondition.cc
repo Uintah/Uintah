@@ -3929,7 +3929,7 @@ BoundaryCondition::velRhoHatOutletBC(const ProcessorGroup*,
   }
   if (xplus) {
       cout.precision(25);
-      cout << maxAbsU << endl;
+//      cout << maxAbsU << endl;
 //    double gravity = d_physicalConsts->getGravity(Arches::XDIR);
     int colX = idxHi.x();
     for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
