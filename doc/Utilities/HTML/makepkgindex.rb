@@ -61,7 +61,6 @@ def main
 
       # Insert boilerplate at top of file
       index.print <<EndOfString
-<!doctype html public "-//w3c//dtd html 4.0 transitional//en">
 <!--
 The contents of this file are subject to the University of Utah Public
 License (the "License"); you may not use this file except in compliance
@@ -78,7 +77,7 @@ The Original Source Code was developed by the University of Utah.
 Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
 University of Utah. All Rights Reserved.
 -->
-<html>
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
 <script type="text/javascript">
 var treetop="";
@@ -103,9 +102,10 @@ if (inDocTree) {
 <body>
 <script type="text/javascript">
 if (inDocTree) {
-  document.write('<script type="text/javascript" src="',treetop,'doc/Utilities/HTML/banner_top.js"><\\/script>');
+  document.write('<script type="text/javascript" src="',treetop,'doc/Utilities/HTML/tools.js"><\\/script>');
 }
 </script>
+<script type="text/javascript">preContent();</script>
 EndOfString
 
       version = File.open("../../edition.xml") do |f|
@@ -120,13 +120,11 @@ EndOfString
           entries << Entry.new(f)
       end
 		    
-      Dir["#{texDir}/*/*/*.html"].each do |f|
-        entries << LatexEntry.new(f)
-      end
+#       Dir["#{texDir}/*/*/*.html"].each do |f|
+#         entries << LatexEntry.new(f)
+#       end
       entries.sort!
-      index.print("<div class=\"block-center\">\n")
-      index.print("<a href=\"index.html\">Back to Package Listing</a>\n")
-      index.print("<table class=\"default\" cellspacing='0' border='1' l
+      index.print("<table cellspacing='0' border='1' l
 cellpadding='2'> \n")
       # Generate page title and subtitle
       etable = []
@@ -136,7 +134,7 @@ cellpadding='2'> \n")
 	numRowsArray = [ numRows ]
 	etable[0] = entries
 	extras = 0
-      elsif entries.size() <= 50
+      elsif entries.size() <= 50 or packageName == "Insight"
 	numCols = 2
 	numRows = entries.size() / numCols
 	extras = entries.size() % numCols
@@ -162,11 +160,8 @@ cellpadding='2'> \n")
 
       index.print("
 <th colspan=\"#{numCols}\">
-<span class=\"title\">#{packageName} Module Descriptions</span>
-<br/>
-<span class=\"subtitle\">alphabetically (and <a class=\"alt\" href=\"#{packageName}_bycat.html\">by category</a>)</span>
-<br/>
-<span class=\"subtitle\">for SCIRun version #{version}</span>
+<h1>#{packageName} Module Descriptions (v. #{version})</h1>
+<h2><a class=\"alt\" href=\"index.html\">package index</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <a class=\"alt\" href=\"#{packageName}_bycat.html\">by category</a></h2>
 </th>
 \n")
       numRows.times do |i|
@@ -188,15 +183,9 @@ cellpadding='2'> \n")
         index.print("<p><sup>*</sup>Denotes additional documentation for a module.</p>\n")
       end
 
-      index.print("</div>\n")
-
       # Generate end of file boilerplate.
       index.print <<EndOfString
-<script type="text/javascript">
-if (inDocTree) {
-  document.write('<script type="text/javascript" src="',treetop,'doc/Utilities/HTML/banner_bottom.js"><\\/script>');
-}
-</script>
+<script type="text/javascript">postContent();</script>
 </body>
 </html>
 EndOfString
