@@ -56,7 +56,9 @@ void bisect(const string& div, int num, int factor,
   static int levels_of_recursion = -1;
 
   int index;
-  if(div[num] == 'l') { // l is to bisect in the dimension of the largest amount of cells
+
+  // l is to bisect in the dimension of the largest amount of cells
+  if(div[num] == 'l') { 
     int x = high.x() - low.x();
     int y = high.y() - low.y();
     int z = high.z() - low.z();
