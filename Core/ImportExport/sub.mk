@@ -19,43 +19,11 @@
 
 include $(SCIRUN_SCRIPTS)/largeso_prologue.mk
 
-SRCDIR := Core
+SRCDIR := Core/ImportExport
 
 SUBDIRS := \
-	$(SRCDIR)/Algorithms \
-	$(SRCDIR)/Containers \
-	$(SRCDIR)/Datatypes \
-	$(SRCDIR)/Exceptions \
-	$(SRCDIR)/GUI \
-	$(SRCDIR)/Geom \
-	$(SRCDIR)/GeomInterface \
-	$(SRCDIR)/Geometry \
-	$(SRCDIR)/GLVolumeRenderer \
-	$(SRCDIR)/GuiInterface \
-	$(SRCDIR)/ImportExport \
-	$(SRCDIR)/Malloc \
-	$(SRCDIR)/Math \
-	$(SRCDIR)/OS \
-	$(SRCDIR)/Persistent \
-	$(SRCDIR)/Process \
-	$(SRCDIR)/Thread \
-	$(SRCDIR)/TkExtensions \
-	$(SRCDIR)/Util \
-	$(SRCDIR)/2d \
-#	$(SRCDIR)/Parts \
-#	$(SRCDIR)/PartsGui
+	$(SRCDIR)/Field
 
-
-ifeq ($(BUILD_SCIRUN2),yes)
-SUBDIRS := \
-	$(SUBDIRS) \
-	$(SRCDIR)/CCA \
-	$(SRCDIR)/Babel 
-endif
-
-ifeq ($(HAVE_GLOBUS),yes)
-SUBDIRS+=$(SRCDIR)/globus_threads
-endif
 
 include $(SCIRUN_SCRIPTS)/recurse.mk
 
