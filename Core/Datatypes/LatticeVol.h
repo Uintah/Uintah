@@ -6,29 +6,36 @@
 #include <Core/Datatypes/LatVolMesh.h>
 #include <Core/Containers/LockingHandle.h>
 #include <Core/Containers/Array3.h>
-#include <vector>
 
 namespace SCIRun {
 
-using namespace vector;
-
 template <class Data>
-class FData3d : public Array3<Data>
-
+class FData3d : public Array3<Data> {
+public:
   typedef Data value_type;
  
-  FData3d():Array3(){}
-  virtual ~FData3d(){}
+  FData3d():Array3<Data>(){}
+  ~FData3d(){}
  
   value_type operator[](typename LatVolMesh::cell_index idx) const
-    { return operator(idx.i_,idx.j_,idx.k_); } 
+    { return operator()(idx.i_,idx.j_,idx.k_); } 
   value_type operator[](typename LatVolMesh::face_index idx) const
     { return (Data)0; }
   value_type operator[](typename LatVolMesh::edge_index idx) const
     { return (Data)0; }
   value_type operator[](typename LatVolMesh::node_index idx) const
-    { return operator(idx.i_,idx.j_,idx.k_); }
+    { return operator()(idx.i_,idx.j_,idx.k_); }
+
+  static const string type_name(int);
 };
+
+template <class Data>
+const string
+FData3d<Data>::type_name(int )
+{
+  const static string name =  "FDatat3d<" + find_type_name((Data *)0) + ">";
+  return name;
+}
 
 template <class Data>
 class LatticeVol: public GenericField< LatVolMesh, FData3d<Data> > { 
@@ -179,9 +186,8 @@ struct LinearInterp : public InterpFunctor<Data> {
 };
 
 */  // go into base field class
-
-} // end namespace SCIRun
 #endif
+} // end namespace SCIRun
 
 #endif // Datatypes_TetVol_h
 
