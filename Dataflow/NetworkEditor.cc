@@ -344,6 +344,6 @@ void NetworkEditor::tcl_command(TCLArgs& args, void*)
 	}
 	args.result(args.make_list(oports));
     } else {
-	args.error("Unknown minor command for threadstats");
+	args.error("Unknown minor command for netedit");
     }
 }

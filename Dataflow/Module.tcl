@@ -106,7 +106,7 @@ proc configureIPorts {modid} {
 		-pto 2 -pwidth 7 -pborder 2
 	place $w.iport$i -bordermode outside -x $x -y 0 -anchor nw
 	frame $w.iportlight$i -width $port_width -height 4 \
-		-relief raised -background black -borderwidth 1
+		-relief raised -background black -borderwidth 0
 	place $w.iportlight$i -in $w.iport$i \
 		-x 0 -rely 1.0 -anchor nw
 	bind $w.iport$i <2> "startIPortConnection $modid $i"
@@ -149,7 +149,7 @@ proc configureOPorts {modid} {
 	    -pto 2 -pwidth 7 -pborder 2
 	place $w.oport$i -bordermode ignore -rely 1 -anchor sw -x $x
 	frame $w.oportlight$i -width $port_width -height 4 \
-	    -relief raised -background black -borderwidth 1
+	    -relief raised -background black -borderwidth 0
 	place $w.oportlight$i -in $w.oport$i \
 	    -x 0 -y 0 -anchor sw
 	bind $w.oport$i <2> "startOPortConnection $modid $i"

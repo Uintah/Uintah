@@ -53,10 +53,10 @@ void DebugSettings::tcl_command(TCLArgs& args, void*)
     DebugIter iter(debug);
     int i=0;
     for(iter.first();iter.ok();++iter){
-	DebugVars& debug(*iter.get_data());
-	Array1<clString> vars(debug.size());
-	for(int j=0;j<debug.size();j++){
-	    DebugSwitch* sw=debug[j];
+	DebugVars& debug_vars=*iter.get_data();
+	Array1<clString> vars(debug_vars.size());
+	for(int j=0;j<debug_vars.size();j++){
+	    DebugSwitch* sw=debug_vars[j];
 	    vars[j]=sw->get_var();
 	    if(makevars)
 		variables.add(new TCLvarintp(sw->get_flagpointer(),
