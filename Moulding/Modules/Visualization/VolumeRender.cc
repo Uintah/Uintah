@@ -33,7 +33,7 @@ extern "C" MouldingSHARE Module* make_VolumeRender(const clString& id) {
 }
 
 VolumeRender::VolumeRender(const clString& id)
-  : Module("VolumeRender", id, Source)
+  : Module("VolumeRender", id, Source,"Visualization","Moulding")
 {
 }
 
