@@ -12,9 +12,18 @@
 
 itcl_class PSECommon_Visualization_Hedgehog {
     inherit Module
+    protected l_s ""
     constructor {config} {
 	set name Hedgehog
 	set_defaults
+    }
+    destructor {
+	set w .ui[modname]
+	if {[winfo exists $w]} {
+	    ::delete object $l_s
+	}
+
+	set l_s ""
     }
     method set_defaults {} {
 	global $this-length_scale
@@ -69,6 +78,16 @@ itcl_class PSECommon_Visualization_Hedgehog {
 	pack $w.use_loc -side top
 
 	frame $w.a
+	scale $w.locus_size -orient horizontal \
+		-label "Percent of volume in locus:" \
+		-from 0 -to 100 -showvalue true -resolution 1 \
+		-variable $this-locus_size
+	pack $w.locus_size -side top -fill x -pady 2
+
+	set l_s [ expscale $w.a.length_scale -orient horizontal \
+		    -label "Length scale:" \
+		    -variable $this-length_scale -command $n ]
+	pack $w.a.length_scale -side top -fill x
 	scale $w.a.head_length -orient horizontal -label "Head length:" \
 		-from 0 -to 1 -length 3c \
                 -showvalue true \
@@ -82,13 +101,24 @@ itcl_class PSECommon_Visualization_Hedgehog {
 		-variable $this-width_scale -command "$this exec_check"
 	pack $w.a.width_scale -side right -fill x -pady 2
 	pack $w.a -side top -fill x -pady 2
+	scale $w.a.shaft_scale -orient horizontal -label "Shaft Radius" \
+		-from 0 -to 1 -length 3c \
+		-showvalue true -resolution 0.001 \
+		-variable $this-shaft_rad -command $n
+	pack $w.a.shaft_scale -side left -fill x -pady 2
 
-	scale $w.locus_size -orient horizontal \
-		-label "Percent of volume in locus:" \
-		-from 0 -to 100 -showvalue true -resolution 1 \
-		-variable $this-locus_size
-	pack $w.locus_size -side bottom -fill x -pady 2
+
+	button $w.close -text "Close" -command "$this close"
+	pack $w.close -side top -expand yes -fill x
+
     }
+
+    method close {} {
+	set w .ui[modname]
+	::delete object $l_s
+	destroy $w
+    }
+
 
     method exec_check2 { } {
 	exec_check 0
