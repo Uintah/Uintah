@@ -1,7 +1,9 @@
 #!/usr/local/bin/wish -f
 
-if {![info exists sci_root]} {
-    set sci_root .
+if {[catch {set sci_root $env(SCI_WORK)}]} {
+    puts "The environment variable SCI_WORK must be set!";
+    puts "Cannot continue";
+    netedit quit
 }
 
 source $sci_root/defaults.tcl
@@ -17,7 +19,8 @@ proc makeNetworkEditor {} {
     menubutton .main_menu.file -text "File" -underline 0 \
 	-menu .main_menu.file.menu
     menu .main_menu.file.menu
-    .main_menu.file.menu add command -label "Quit" -underline 0
+    .main_menu.file.menu add command -label "Quit" -underline 0 \
+	    -command "netedit quit"
     
     menubutton .main_menu.stats -text "Statistics" -underline 0 \
 	-menu .main_menu.stats.menu
