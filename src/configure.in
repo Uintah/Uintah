@@ -1090,6 +1090,7 @@ AC_SUBST(LEXLIB)
 
 AC_OUTPUT(	configVars.mk \
 		Makefile \
+                Dataflow/Modules/Fields/Manip/Makefile\
 		sci_defs.h \
 		, echo timestamp > stamp-h)
 
