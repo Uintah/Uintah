@@ -192,14 +192,14 @@ using namespace SCIRun;
       void setBC(CCVariable<double>& variable,const std::string& type, 
 		 const Patch* p, const int mat_id);
                
-      void setBC(CCVariable<double>& press_CC, CCVariable<double>& rho,
+      void setBC(CCVariable<double>& press_CC, const CCVariable<double>& rho,
                const std::string& type, const Patch* p, const int mat_id);
                
       void setBC(CCVariable<double>& press_CC, 
-                StaticArray<CCVariable<double> >& rho_micro_CC,
-                StaticArray<CCVariable<double> >& rho_CC,
-                StaticArray<CCVariable<double> >& vol_frac_CC,
-                StaticArray<CCVariable<Vector> >& vel_CC,
+                StaticArray<constCCVariable<double> >& rho_micro_CC,
+                StaticArray<constCCVariable<double> >& rho_CC,
+                StaticArray<constCCVariable<double> >& vol_frac_CC,
+                StaticArray<constCCVariable<Vector> >& vel_CC,
                 DataWarehouse* old_dw,
                 const string& kind, 
                 const Patch* patch, 
@@ -249,10 +249,10 @@ using namespace SCIRun;
                                 Patch::FaceType face,
                                 DataWarehouse* old_dw,
                                 CCVariable<double>& press_CC, 
-                          const StaticArray<CCVariable<double> >& rho_micro_CC,
-                          const StaticArray<CCVariable<double> >& rho_CC,
-                          const StaticArray<CCVariable<double> >& vol_frac_CC,
-                          const StaticArray<CCVariable<Vector> >& vel_CC);
+                          const StaticArray<constCCVariable<double> >& rho_micro_CC,
+                          const StaticArray<constCCVariable<double> >& rho_CC,
+                          const StaticArray<constCCVariable<double> >& vol_frac_CC,
+                          const StaticArray<constCCVariable<Vector> >& vel_CC);
                              
       void getExchangeCoefficients( DenseMatrix& K,
                                     DenseMatrix& H );  
