@@ -63,37 +63,37 @@ class Crack
                                 DataWarehouse* new_dw);
 
 
-    void addComputesAndRequiresCrackAdjustInterpolated(Task* task,
+    void addComputesAndRequiresAdjustCrackContactInterpolated(Task* task,
                                 const PatchSet* patches,
                                 const MaterialSet* matls) const;
-    void CrackContactAdjustInterpolated(const ProcessorGroup*,
+    void AdjustCrackContactInterpolated(const ProcessorGroup*,
                                 const PatchSubset* patches,
                                 const MaterialSubset* matls,
                                 DataWarehouse* old_dw,
                                 DataWarehouse* new_dw);
 
-    void addComputesAndRequiresCrackAdjustIntegrated(Task* task,
+    void addComputesAndRequiresAdjustCrackContactIntegrated(Task* task,
                                 const PatchSet* patches,
                                 const MaterialSet* matls) const;
-    void CrackContactAdjustIntegrated(const ProcessorGroup*,
+    void AdjustCrackContactIntegrated(const ProcessorGroup*,
                                 const PatchSubset* patches,
                                 const MaterialSubset* matls,
                                 DataWarehouse* old_dw,
                                 DataWarehouse* new_dw);
 
-    void addComputesAndRequiresPrepareMovingCrack(Task* task,
+    void addComputesAndRequiresInitializeMovingCracks(Task* task,
                                 const PatchSet* patches,
                                 const MaterialSet* matls) const;
-    void PrepareMovingCrack(const ProcessorGroup*,
+    void InitializeMovingCracks(const ProcessorGroup*,
                                 const PatchSubset* patches,
                                 const MaterialSubset* matls,
                                 DataWarehouse* old_dw,
                                 DataWarehouse* new_dw);
 
-    void addComputesAndRequiresMoveCrack(Task* task,
+    void addComputesAndRequiresMoveCracks(Task* task,
                                 const PatchSet* patches,
                                 const MaterialSet* matls) const;
-    void MoveCrack(const ProcessorGroup*,
+    void MoveCracks(const ProcessorGroup*,
                                 const PatchSubset* patches,
                                 const MaterialSubset* matls,
                                 DataWarehouse* old_dw,
