@@ -39,9 +39,9 @@
 using namespace std;
 using namespace SCIRun;
 
-extern "C" gov::cca::Component::pointer make_SCIRun_TableTennis()
+extern "C" sci::cca::Component::pointer make_SCIRun_TableTennis()
 {
-  return gov::cca::Component::pointer(new TableTennis());
+  return sci::cca::Component::pointer(new TableTennis());
 }
 
 
@@ -55,18 +55,18 @@ TableTennis::~TableTennis()
   cerr << "called ~TableTennis()\n";
 }
 
-void TableTennis::setServices(const gov::cca::Services::pointer& svc)
+void TableTennis::setServices(const sci::cca::Services::pointer& svc)
 {
   services=svc;
   //register provides ports here ...  
 
-  gov::cca::TypeMap::pointer props = svc->createTypeMap();
+  sci::cca::TypeMap::pointer props = svc->createTypeMap();
   myUIPort::pointer uip(&uiPort);
   myGoPort::pointer gop(&goPort);
   myTTPort::pointer ttp(&ttPort);
-  svc->addProvidesPort(uip,"ui","gov.cca.UIPort", props);
-  svc->addProvidesPort(gop,"go","gov.cca.GoPort", props);
-  svc->addProvidesPort(ttp,"tt","gov.cca.TTPort", props);
+  svc->addProvidesPort(uip,"ui","sci.cca.UIPort", props);
+  svc->addProvidesPort(gop,"go","sci.cca.GoPort", props);
+  svc->addProvidesPort(ttp,"tt","sci.cca.TTPort", props);
   // Remember that if the PortInfo is created but not used in a call to the svc object
   // then it must be freed.
   // Actually - the ref counting will take care of that automatically - Steve
