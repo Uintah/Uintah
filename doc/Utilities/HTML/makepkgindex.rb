@@ -124,23 +124,48 @@ EndOfString
         entries << LatexEntry.new(f)
       end
       entries.sort!
-      numCols = 3
-      numRows = entries.size() / numCols
-      extras = entries.size() % numCols
-      numRowsArray = [ numRows, numRows, numRows ]
-      if extras > 0
-        numRowsArray[0] += 1
-      end
-      if extras > 1
-        numRowsArray[1] += 1
-      end
-      etable = []
-      etable[0] = entries[0, numRowsArray[0]]
-      etable[1] = entries[numRowsArray[0], numRowsArray[1]]
-      etable[2] = entries[numRowsArray[0] + numRowsArray[1], numRowsArray[2]]
       index.print("<table align='center' cellspacing='0' border='1' cellpadding='2'>\n")
       # Generate page title and subtitle
-index.print("<th colspan=\"#{numCols}\"><span class=\"title\">#{packageName} Module Descriptions</span><br/><span class=\"subtitle\">(for SCIRun version #{version})</span></th>\n")
+      etable = []
+      if entries.size() <= 25
+	numCols = 1
+	numRows = entries.size()
+	numRowsArray = [ numRows ]
+	etable[0] = entries
+	extras = 0
+      elsif entries.size() <= 50
+	numCols = 2
+	numRows = entries.size() / numCols
+	extras = entries.size() % numCols
+	numRowsArray = [ numRows, numRows ]
+	extras.times do |i|
+	  numRowsArray[i] += 1
+	end
+	etable[0] = entries[0, numRowsArray[0]]
+	etable[1] = entries[numRowsArray[0], numRowsArray[1]]
+      else
+	numCols = 3
+	numRows = entries.size() / numCols
+	extras = entries.size() % numCols
+	numRowsArray = [ numRows, numRows, numRows ]
+	extras.times do |i|
+	  numRowsArray[i] += 1
+	end
+	etable = []
+	etable[0] = entries[0, numRowsArray[0]]
+	etable[1] = entries[numRowsArray[0], numRowsArray[1]]
+	etable[2] = entries[numRowsArray[0] + numRowsArray[1], numRowsArray[2]]
+      end
+
+      index.print("
+<th colspan=\"#{numCols}\">
+<span class=\"title\">#{packageName} Module Descriptions</span>
+<br/>
+<span class=\"subtitle\">alphabetically [<a class=\"alt\" href=\"#{packageName}_bycat.html\">by category</a>]</span>
+<br/>
+<span class=\"subtitle\">for SCIRun version #{version}</span>
+</th>
+\n")
       numRows.times do |i|
         index.print("<tr>\n")
         numCols.times do |j|
@@ -148,14 +173,12 @@ index.print("<th colspan=\"#{numCols}\"><span class=\"title\">#{packageName} Mod
         end
         index.print("</tr>\n")
       end
-      if extras > 0
-        index.print("<tr>\n")
-        index.print((etable[0][numRows]).get, "\n")
-        if extras > 1
-          index.print((etable[1][numRows]).get, "\n")
-        end        
-        index.print("</tr>\n")
+      extras.times do |i|
+	index.print("<tr>\n")
+	index.print((etable[i][numRows]).get, "\n")
+	index.print("</tr>\n")
       end
+
       index.print("</table>\n")
 
       if LatexEntry.count > 0
