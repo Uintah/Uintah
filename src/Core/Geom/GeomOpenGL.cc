@@ -2588,8 +2588,11 @@ void GeomTranspPoints::draw(DrawInfoOpenGL* di, Material* matl, double)
     else { di->dir = -1; }
   }
 
-  const vector<unsigned int> &clist =
+  vector<unsigned int> &clist =
     (di->axis==0)?xindices_:((di->axis==1)?yindices_:zindices_);
+  
+  bool &reverse = 
+    (di->axis==0)?xreverse_:((di->axis==1)?yreverse_:zreverse_);
 
   glVertexPointer(3, GL_FLOAT, 0, &(points_[0]));
   glEnableClientState(GL_VERTEX_ARRAY);
@@ -2600,19 +2603,14 @@ void GeomTranspPoints::draw(DrawInfoOpenGL* di, Material* matl, double)
   glEnable(GL_BLEND);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-  if (di->dir == 1)
+  if (di->dir == 1 && reverse ||
+      di->dir == -1 && !reverse)
   {
-    glDrawElements(GL_POINTS, clist.size(), GL_UNSIGNED_INT, &(clist[0]));
+    std::reverse(clist.begin(), clist.end());
+    reverse = !reverse;
   }
-  else
-  {
-    glBegin(GL_POINTS);
-    for (int j=clist.size()-1; j >= 0; j--)
-    {
-      glArrayElement(clist[j]);
-    }
-    glEnd();
-  }
+
+  glDrawElements(GL_POINTS, clist.size(), GL_UNSIGNED_INT, &(clist[0]));
 
   glDisable(GL_BLEND);
 

@@ -145,15 +145,23 @@ GeomPoints::saveobj(ostream&, const string&, GeomSave*)
 }
 
 
-GeomTranspPoints::GeomTranspPoints() : GeomPoints()
+GeomTranspPoints::GeomTranspPoints()
+  : GeomPoints(),
+    xreverse_(false),
+    yreverse_(false),
+    zreverse_(false)
 {
 }
+
 
 GeomTranspPoints::GeomTranspPoints(const GeomTranspPoints &copy)
   : GeomPoints(copy),
     xindices_(copy.xindices_),
     yindices_(copy.yindices_),
-    zindices_(copy.zindices_)
+    zindices_(copy.zindices_),
+    xreverse_(copy.xreverse_),
+    yreverse_(copy.yreverse_),
+    zreverse_(copy.zreverse_)
 {
 }
 
@@ -183,6 +191,10 @@ GeomTranspPoints::sort()
 {
   const unsigned int vsize = points_.size() / 3;
   if (xindices_.size() == vsize) return;
+
+  xreverse_ = false;
+  yreverse_ = false;
+  zreverse_ = false;
 
   vector<pair<float, unsigned int> > tmp(vsize);
   unsigned int i;
