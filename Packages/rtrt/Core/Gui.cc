@@ -1814,12 +1814,49 @@ Gui::createMaterialsWindow( GLUI * window )
       
       window->add_statictext_to_panel( panel, name );
       
-      GLUI_Spinner *sm_sil_thickness =
-	window->add_spinner_to_panel( panel, "Sihouette Thickness",
+      // Show Silhouette
+      window->add_checkbox_to_panel( panel, "Show Silhouettes",
+				     &(sm->gui_show_silhouettes));
+
+      // Silhouette thickness
+      GLUI_Spinner *sil_thickness =
+	window->add_spinner_to_panel( panel, "Silhouette Thickness",
 				      GLUI_SPINNER_FLOAT,
 				      &(sm->gui_sil_thickness));
-      sm_sil_thickness->set_float_limits(0, 10);
-      sm_sil_thickness->set_speed(0.1);
+      sil_thickness->set_float_limits(0, 10);
+      sil_thickness->set_speed(0.1);
+
+      // Silhouette Color
+      GLUI_Rollout *sil_color =
+	window->add_rollout_to_panel(panel, "Silhouette Color", false);
+      
+      GLUI_Spinner *sil_color_r = 
+	window->add_spinner_to_panel( sil_color, "Red",
+				      GLUI_SPINNER_FLOAT,
+				      &(sm->gui_sil_color_r));
+      sil_color_r->set_float_limits(0, 1);
+      sil_color_r->set_speed(0.1);
+
+      GLUI_Spinner *sil_color_g = 
+	window->add_spinner_to_panel( sil_color, "Green",
+				      GLUI_SPINNER_FLOAT,
+				      &(sm->gui_sil_color_g));
+      sil_color_g->set_float_limits(0, 1);
+      sil_color_g->set_speed(0.1);
+
+      GLUI_Spinner *sil_color_b = 
+	window->add_spinner_to_panel( sil_color, "Blue",
+				      GLUI_SPINNER_FLOAT,
+				      &(sm->gui_sil_color_b));
+      sil_color_b->set_float_limits(0, 1);
+      sil_color_b->set_speed(0.1);
+
+      // Normal type
+      GLUI_RadioGroup *normal_method =
+	window->add_radiogroup_to_panel( panel,
+					 &(sm->gui_normal_method));
+      window->add_radiobutton_to_group(normal_method, "Trilinear");
+      window->add_radiobutton_to_group(normal_method, "Fancy");
     }
   }
   window->add_separator_to_panel( panel );
