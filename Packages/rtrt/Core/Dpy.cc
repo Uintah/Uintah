@@ -171,13 +171,14 @@ namespace rtrt {
 
 //////////////////////////////////////////////////////////////////
 
-Dpy::Dpy( Scene* scene, char* criteria1, char* criteria2,
+Dpy::Dpy( Scene* scene, RTRT* rtrt_engine, char* criteria1, char* criteria2,
 	  int nworkers, bool bench, int ncounters, int c0, int c1,
 	  float, float, bool display_frames, 
 	  int pp_size, int scratchsize, bool fullscreen, bool frameless,
 	  bool rserver, bool stereo)
   : DpyBase("Real-time Ray Tracer", DoubleBuffered, false),
-  fullScreenMode_( fullscreen ), 
+  fullScreenMode_( fullscreen ),
+  parentSema("Dpy window wait", 0),
   doAutoJitter_( false ),
   showLights_( false ), lightsShowing_( false ),
   turnOnAllLights_( false ), turnOffAllLights_( false ),
@@ -186,13 +187,13 @@ Dpy::Dpy( Scene* scene, char* criteria1, char* criteria2,
   turnOnTransmissionMode_(false), 
   numThreadsRequested_(nworkers), changeNumThreads_(false),
   stealth_(NULL), attachedObject_(NULL), holoToggle_(false),
-  scene(scene), criteria1(criteria1), criteria2(criteria2),
+  scene(scene), rtrt_engine(rtrt_engine),
+  criteria1(criteria1), criteria2(criteria2),
   nworkers(nworkers), pp_size_(pp_size), scratchsize_(scratchsize),
   bench(bench), bench_warmup(10), bench_num_frames(110),
   exit_after_bench(true), ncounters(ncounters),
   c0(c0), c1(c1),
-  frameless(frameless),synch_frameless(0), display_frames(display_frames),
-  parentSema("Dpy window wait", 0)
+  frameless(frameless),synch_frameless(0), display_frames(display_frames)
 {
   if(rserver)
     this->rserver = new RServer();
@@ -344,10 +345,15 @@ Dpy::run()
       //cerr << "priv->xres = "<<priv->xres<<", priv->yres = "<<priv->yres<<'\n';
 
       // Exit if you are supposed to.
-      if (nworkers == 0 || should_close()) {
-        cout << "Dpy is closing\n";
-	parentSema.up();
+      if (should_close()) {
+        cerr << "Dpy is closing\n";
         cleanup();
+        cerr << "Dpy::cleanup finished\n";
+        // This can't proceed until someone calls wait_on_close which
+        // calls down on the sema.
+	parentSema.up();
+        cerr << "parentSema.up finished\n";
+        //for(;;) {}
         return;
       }
   
@@ -360,7 +366,7 @@ Dpy::run()
 	  cerr << "Benchmark completed in " <<  dt << " seconds ("
 	       << (frame-bench_warmup)/dt << " frames/second)\n";
           if (exit_after_bench)
-            numThreadsRequested_ = 0;//Thread::exitAll(0);
+            rtrt_engine->stop_engine();//Thread::exitAll(0);
           else
             bench = false;
 	}
@@ -370,7 +376,7 @@ Dpy::run()
       if (frame == 3) {
 	if (!display_frames) {
 	  scene->get_image(priv->showing_scene)->save_ppm("displayless");
-          numThreadsRequested_ = 0;//Thread::exitAll(0);
+          rtrt_engine->stop_engine();//Thread::exitAll(0);
 	}
       }
 
@@ -522,6 +528,11 @@ Dpy::checkGuiFlags()
     priv->exposed=false;
   }
 
+  // If we've been told to exit go ahead and check this
+  if (rtrt_engine->exit_engine) {
+    numThreadsRequested_ = 0;
+  }
+  
   if( priv->showing_scene == 0 )
     {
       // Only create new threads if showing_scene is 0.  This will
@@ -578,6 +589,11 @@ Dpy::start_bench(int num_frames, int warmup) {
 void
 Dpy::stop_bench() {
   bench = false;
+}
+
+bool Dpy::should_close() {
+  // The only time you should close is if the number of workers equals zero
+  return nworkers == 0;
 }
 
 void
@@ -859,6 +875,7 @@ Dpy::get_barriers( Barrier *& mainBarrier, Barrier *& addSubThreads )
 
 void Dpy::wait_on_close() {
   parentSema.down();
+  cerr << "Dpy::wait_on_close::parentSema.down()\n";
   // Now wait for the thread to have exited
   unsigned int i =0;
   while(my_thread_ != 0) {
