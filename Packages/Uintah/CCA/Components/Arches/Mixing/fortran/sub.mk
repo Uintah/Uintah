@@ -10,7 +10,7 @@ SRCDIR   := Packages/Uintah/CCA/Components/Arches/Mixing/fortran
 SRCS     += $(SRCDIR)/dqagpe.F $(SRCDIR)/dqelg.F $(SRCDIR)/dqk21.F \
 	$(SRCDIR)/dqpsrt.F $(SRCDIR)/d1mach.F $(SRCDIR)/dgammaln.F \
 	$(SRCDIR)/eqlib.F $(SRCDIR)/stanlib.F $(SRCDIR)/cklib.F \
-	$(SRCDIR)/ChemkinHacks.F
+	$(SRCDIR)/ChemkinHacks.F $(SRCDIR)/dqagp.F
 
 PSELIBS :=
 #LIBS := $(F_LIBRARY) $(M_LIBRARY) $(BLAS_LIBRARY)
@@ -24,6 +24,9 @@ FFLAGS +=
 
 #
 # $Log$
+# Revision 1.6  2003/01/22 00:36:27  spinti
+# Added new integrator, dqagp.F
+#
 # Revision 1.5  2002/10/10 17:34:15  allen
 # removed -l flags and replaced with *_LIB_FLAG from configure script
 #
