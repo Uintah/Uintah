@@ -1,1 +1,2 @@
 Makefile
+ScalarFieldRG{,double,float,int,short,uchar,char}.{cc,h}
