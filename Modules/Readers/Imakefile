@@ -4,17 +4,17 @@
 OBJS = ColumnMatrixReader.o  ContourSetReader.o   GeomReader.o  \
 	MatrixReader.o  MeshReader.o   \
 	MultiMeshReader.o   ScalarFieldReader.o   SigmaSetReader.o   \
-	SurfaceReader.o   VectorFieldReader.o \
-	PointsReader.o
+	SurfaceReader.o   VectorFieldReader.o VectorFieldOceanReader.o  \
+	PointsReader.o 
 GENSRCS = ColumnMatrixReader.cc ContourSetReader.cc  MatrixReader.cc \
 	MeshReader.cc  MultiMeshReader.cc  ScalarFieldReader.cc  \
 	SigmaSetReader.cc  SurfaceReader.cc  VectorFieldReader.cc
-SRCS = $(GENSRCS) GeomReader.cc PointsReader.cc
+SRCS = $(GENSRCS) GeomReader.cc PointsReader.cc VectorFieldOceanReader.cc
 GENTCLS = ColumnMatrixReader.tcl ContourSetReader.tcl GeomReader.tcl \
 	MatrixReader.tcl MeshReader.tcl \
 	MultiMeshReader.tcl ScalarFieldReader.tcl SigmaSetReader.tcl \
 	SurfaceReader.tcl VectorFieldReader.tcl
-TCLS = $(GENTCLS) PointsReader.tcl
+TCLS = $(GENTCLS) PointsReader.tcl VectorFieldOceanReader.tcl
 
 LIBNAME = Readers
 
@@ -87,3 +87,7 @@ VectorFieldReader.cc: Reader.cc
 
 VectorFieldReader.tcl: Reader.tcl
 	sed 's/TYPE/VectorField/g' < Reader.tcl > VectorFieldReader.tcl
+
+VectorFieldOceanReader.tcl: Reader.tcl
+	sed 's/TYPE/VectorFieldOcean/g' < Reader.tcl > VectorFieldOceanReader.tcl
+
