@@ -4,6 +4,8 @@
 
 #include <Packages/rtrt/Core/Object.h>
 #include <Core/Geometry/Point.h>
+#include <Packages/rtrt/Core/UVMapping.h>
+#include <Packages/rtrt/Core/UV.h>
 
 namespace rtrt {
 class Ring;
@@ -15,7 +17,7 @@ void Pio(Piostream&, rtrt::Ring*&);
 
 namespace rtrt {
 
-class Ring : public Object {
+class Ring : public Object, public UVMapping {
 protected:
   Point cen;
   Vector n;
@@ -28,6 +30,8 @@ public:
   virtual ~Ring();
     
   Ring() : Object(0) {} // for Pio.
+
+  virtual void uv(UV& uv, const Point&, const HitInfo& hit);
 
   //! Persistent I/O.
   static  SCIRun::PersistentTypeID type_id;
