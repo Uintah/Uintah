@@ -118,6 +118,10 @@ TLINK := $(BLT_TLINK) $(GLOBUS_TLINK) $(XML_TLINK)
 
 INCLUDES += -I$(SRCTOP)/include -I$(SRCTOP) -I$(OBJTOP) -I@TCL_INCLUDE_DIR@ -I@TK_INCLUDE_DIR@ -I@ITCL_INCLUDE_DIR@ -I@BLT_INCLUDE_DIR@ @GLOBUS_INCLUDE@ $(XML_INCLUDE)
 
+SSTREAM_COMPAT := @SSTREAM_COMPAT@
+ifeq ($(SSTREAM_COMPAT),yes)
+INCLUDES := $(INCLUDES) -I$(SRCTOP)/include/compat
+endif
 INCLUDES := $(sort $(INCLUDES))
 
 #
@@ -156,9 +160,15 @@ NEED_SONAME	:= @NEED_SONAME@
 
 .cc.o: $<
 	$(CXX) $(CFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) -c $< -o $@
+ifeq ($(CC_DEPEND_REGEN),-MD)
+	mv $(basename $(notdir $@)).d $(basename $@).d
+endif
 
 .c.o: $<
 	$(CC) $(CFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) -c $< -o $@
+ifeq ($(CC_DEPEND_REGEN),-MD)
+	mv $(basename $(notdir $@)).d $(basename $@).d
+endif
 
 .s.o: $<
 	$(AS) $(ASFLAGS) -o $@ $< -o $@
@@ -193,7 +203,7 @@ $(ALLOBJS): $(ALLGEN)
 #
 $(MAKEFILES): scripts/Makefile.tmpl
 	@echo creating $@
-	@sed s,@TOP@,$(shell echo $(foreach t,$(subst /," ",$(dir $@)),../) | sed -e 's,../ ,../,g' -e 's,/../$$,,'), $< > $@
+	sed -e s,@OBJTOP@,$(shell echo $(foreach t,$(subst /," ",$(dir $(subst $(OBJTOP_ABS)/,,$@))),../) | sed -e 's,../ ,../,g' -e 's,/../$$,,'), -e s,@SRCTOP@,$(SRCTOP), $< > $@
 
 clean::
 	rm -f $(CLEANOBJS)
@@ -213,10 +223,18 @@ distclean:: clean
 	rm -f $(patsubst %,%/Makefile, $(ALLSUBDIRS))
 	rm -f sci_config.h sci_defs.h stamp-h
 
+ifeq ($(CC_DEPEND_REGEN),-MD)
+-include $(patsubst %.o,%.d, $(CLEANOBJS))
+else
 -include $(patsubst %,%/depend.mk, $(ALLSUBDIRS))
+endif
 
 #
 # $Log$
+# Revision 1.13  2000/03/20 23:07:05  yarden
+#  enable compilation in any subdir (sparker)
+#  fix sstream include
+#
 # Revision 1.12  2000/03/20 21:43:30  yarden
 # Linux port: add NEED_SONAME
 #
