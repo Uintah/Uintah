@@ -766,9 +766,10 @@ MPIScheduler::gatherParticles(const ProcessorGroup* pc,
 	 ASSERTEQ(start, totalParticles);
 	 new_dw->put(*newvar, reloc_new_labels[m][v]);
       }
-
+#if 0
       for(int i=0;i<subsets.size();i++)
 	 delete subsets[i];
+#endif
    }
    for(int i=0;i<neighbors.size();i++){
       ASSERTEQ(recvsize[i], recvpos[i]);
@@ -780,6 +781,9 @@ MPIScheduler::gatherParticles(const ProcessorGroup* pc,
 
 //
 // $Log$
+// Revision 1.11  2000/08/21 15:40:57  jas
+// Commented out the deletion of subsets.  It may be the cause of some troubles.
+//
 // Revision 1.10  2000/08/08 01:32:45  jas
 // Changed new to scinew and eliminated some(minor) memory leaks in the scheduler
 // stuff.
