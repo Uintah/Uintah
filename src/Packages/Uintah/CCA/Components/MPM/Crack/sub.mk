@@ -8,6 +8,7 @@ SRCS     += \
 	$(SRCDIR)/CrackSurfaceContact.cc \
 	$(SRCDIR)/FractureParametersCalculation.cc \
 	$(SRCDIR)/CrackPropagation.cc \
-	$(SRCDIR)/MoveCracks.cc \
+	$(SRCDIR)/MoveCrackPoints.cc \
+	$(SRCDIR)/UpdateCrackFront.cc \
 	$(SRCDIR)/PrivateMethods.cc 
 
