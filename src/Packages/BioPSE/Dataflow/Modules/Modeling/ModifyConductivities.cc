@@ -225,6 +225,10 @@ ModifyConductivities::execute()
   bool new_field_p = false;
   if (field->generation != last_field_generation_)
   {
+    if (last_field_generation_ == 0)
+    {
+      update_from_gui(last_gui_tensors_);
+    }
     last_field_generation_ = field->generation;
     new_field_p = true;
   }
