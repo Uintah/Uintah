@@ -112,8 +112,8 @@ void MeshRender::execute()
     for(eiter = edge_table.begin(); eiter != edge_table.end(); ++eiter)
     {
 	Edge e((*eiter).first);
-	const Point &p1 = mesh->node(e.n[0]).p;
-	const Point &p2 = mesh->node(e.n[1]).p;
+	const Point &p1 = mesh->point(e.n[0]);
+	const Point &p2 = mesh->point(e.n[1]);
 	GeomCylinder* cyl = new GeomCylinder(p1, p2, radius, 10, 2);
 	group -> add(cyl);
     }

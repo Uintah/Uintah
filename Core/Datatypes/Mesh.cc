@@ -93,7 +93,9 @@ PersistentTypeID Mesh::type_id("Mesh", "Datatype", make_Mesh);
 PersistentTypeID Node::type_id("Node", "0", make_Node);
 
 Mesh::Mesh()
-  : have_all_neighbors(0), current_generation(2), bld_grid(0)
+  : have_all_neighbors(0),
+    bld_grid(0),
+    delaunay_generation(NULL)
 {
   octree=0;
   grid.nx=grid.ny=grid.nz=0;
@@ -108,7 +110,10 @@ Mesh::Mesh()
 }
 
 Mesh::Mesh(int nnodes, int nelems)
-  : nodes(nnodes), elems(nelems), have_all_neighbors(0), current_generation(2),
+  : nodes(nnodes),
+    elems(nelems),
+    have_all_neighbors(0),
+    delaunay_generation(NULL),
     bld_grid(0)
 {
   octree=0;
@@ -124,15 +129,18 @@ Mesh::Mesh(int nnodes, int nelems)
 }
 
 Mesh::Mesh(const Mesh& copy)
-  : nodes(copy.nodes.size()), elems(copy.elems.size()),
-    cond_tensors(copy.cond_tensors), have_all_neighbors(0),
-    current_generation(2), bld_grid(0)
+  : nodes(copy.nodes.size()),
+    elems(copy.elems.size()),
+    cond_tensors(copy.cond_tensors),
+    have_all_neighbors(0),
+    delaunay_generation(NULL),
+    bld_grid(0)
 {
   // we're gonna copy the nodes, rather than share pointers... otherwise
   // detach() doesn't really work, since the nodes are still "attached"
   int i;
   for (i=0; i<copy.nodes.size(); i++) {
-    nodes[i] = new Node(copy.nodes[i]->p);
+    nodes[i] = new Node(copy.point(i));
   }
   octree=0;
   grid.nx=grid.ny=grid.nz=0;
@@ -262,7 +270,7 @@ Node::~Node()
 }
 
 Element::Element(Mesh* mesh, int n1, int n2, int n3, int n4)
-  : generation(0), cond(0), mesh(mesh)
+  : cond(0), mesh(mesh)
 {
   n[0]=n1; n[1]=n2; n[2]=n3; n[3]=n4;
   faces[0]=faces[1]=faces[2]=faces[3]=-2;
@@ -278,10 +286,10 @@ Element::Element(Mesh* mesh, int n1, int n2, int n3, int n4)
 void Element::compute_basis()
 {
 #ifdef STORE_ELEMENT_BASIS
-  const Point &p1(mesh->node(n[0]).p);
-  const Point &p2(mesh->node(n[1]).p);
-  const Point &p3(mesh->node(n[2]).p);
-  const Point &p4(mesh->node(n[3]).p);
+  const Point &p1 = mesh->point(n[0]);
+  const Point &p2 = mesh->point(n[1]);
+  const Point &p3 = mesh->point(n[2]);
+  const Point &p4 = mesh->point(n[3]);
   double x1=p1.x();
   double y1=p1.y();
   double z1=p1.z();
@@ -326,7 +334,7 @@ void Element::compute_basis()
 }
 
 Element::Element(const Element& copy, Mesh* mesh)
-  : generation(0), cond(copy.cond), mesh(mesh)
+  : cond(copy.cond), mesh(mesh)
 {
   faces[0]=copy.faces[0];
   faces[1]=copy.faces[1];
@@ -414,10 +422,10 @@ int Mesh::unify(Element* not,
 
 void Element::get_sphere2(Point& cen, double& rad2, double& err)
 {
-  const Point &p0(mesh->node(n[0]).p);
-  const Point &p1(mesh->node(n[1]).p);
-  const Point &p2(mesh->node(n[2]).p);
-  const Point &p3(mesh->node(n[3]).p);
+  const Point &p0 = mesh->point(n[0]);
+  const Point &p1 = mesh->point(n[1]);
+  const Point &p2 = mesh->point(n[2]);
+  const Point &p3 = mesh->point(n[3]);
   double mat[3][3];
   mat[0][0]=p1.x()-p0.x();
   mat[0][1]=p1.y()-p0.y();
@@ -451,10 +459,10 @@ void Element::get_sphere2(Point& cen, double& rad2, double& err)
 Point Element::centroid()
 {
   
-  const Point &p0(mesh->node(n[0]).p);
-  const Point &p1(mesh->node(n[1]).p);
-  const Point &p2(mesh->node(n[2]).p);
-  const Point &p3(mesh->node(n[3]).p);
+  const Point &p0 = mesh->point(n[0]);
+  const Point &p1 = mesh->point(n[1]);
+  const Point &p2 = mesh->point(n[2]);
+  const Point &p3 = mesh->point(n[3]);
   return AffineCombination(p0, .25, p1, .25, p2, .25, p3, .25);
 }
 
@@ -558,10 +566,10 @@ int Mesh::inside(const Point& p, Element* elem)
 {
   //    cerr << "inside called...\n";
 #ifndef STORE_ELEMENT_BASIS
-  Point p1(nodes[elem->n[0]]->p);
-  Point p2(nodes[elem->n[1]]->p);
-  Point p3(nodes[elem->n[2]]->p);
-  Point p4(nodes[elem->n[3]]->p);
+  const Point &p1 = point(elem->n[0]);
+  const Point &p2 = point(elem->n[1]);
+  const Point &p3 = point(elem->n[2]);
+  const Point &p4 = point(elem->n[3]);
   double x1=p1.x();
   double y1=p1.y();
   double z1=p1.z();
@@ -629,10 +637,10 @@ void Mesh::get_interp(Element* elem, const Point& p,
 		      double& s0, double& s1, double& s2, double& s3)
 {
 #ifndef STORE_ELEMENT_BASIS
-  Point p1(nodes[elem->n[0]]->p);
-  Point p2(nodes[elem->n[1]]->p);
-  Point p3(nodes[elem->n[2]]->p);
-  Point p4(nodes[elem->n[3]]->p);
+  const Point &p1 = point(elem->n[0]);
+  const Point &p2 = point(elem->n[1]);
+  const Point &p3 = point(elem->n[2]);
+  const Point &p4 = point(elem->n[3]);
   double x1=p1.x();
   double y1=p1.y();
   double z1=p1.z();
@@ -679,10 +687,10 @@ double Mesh::get_grad(Element* elem, const Point&,
 		      Vector& g0, Vector& g1, Vector& g2, Vector& g3)
 {
 #ifndef STORE_ELEMENT_BASIS
-  Point p1(nodes[elem->n[0]]->p);
-  Point p2(nodes[elem->n[1]]->p);
-  Point p3(nodes[elem->n[2]]->p);
-  Point p4(nodes[elem->n[3]]->p);
+  const Point &p1 = point(elem->n[0]);
+  const Point &p2 = point(elem->n[1]);
+  const Point &p3 = point(elem->n[2]);
+  const Point &p4 = point(elem->n[3]);
   double x1=p1.x();
   double y1=p1.y();
   double z1=p1.z();
@@ -732,10 +740,9 @@ double Mesh::get_grad(Element* elem, const Point&,
 void print_element(Element* e, Mesh* mesh)
 {
   cerr << "Element is composed of nodes: " << e->n[0] << ", " << e->n[1] << ", " << e->n[2] << ", " << e->n[3] << endl;
-  for (int i=0;i<4;i++) {
-    int nn=e->n[i];
-    const Node &n=mesh->node(nn);
-    cerr << nn << ": " << n.p << endl;
+  for (int i=0; i<4; i++) {
+    int nn = e->n[i];
+    cerr << nn << ": " << mesh->point(nn) << endl;
   }
 }
 
@@ -781,10 +788,10 @@ bool Mesh::locate(const Point& p, int& ix, double epsilon1, double epsilon2)
   while(count++<nelems) {
     Element* elem=elems[i];
 #ifndef STORE_ELEMENT_BASIS
-    const Point &p1 = node(elem->n[0]).p;
-    const Point &p2 = node(elem->n[1]).p;
-    const Point &p3 = node(elem->n[2]).p;
-    const Point &p4 = node(elem->n[3]).p;
+    const Point &p1 = point(elem->n[0]);
+    const Point &p2 = point(elem->n[1]);
+    const Point &p3 = point(elem->n[2]);
+    const Point &p4 = point(elem->n[3]);
     double x1=p1.x();
     double y1=p1.y();
     double z1=p1.z();
@@ -917,10 +924,10 @@ bool Mesh::tetra_edge_in_box(const Point&  min, const Point&  max,
 
 bool Mesh::overlaps(Element* e, const Point& v0, const Point& v1)
 {
-  const Point &p0 = e->mesh->node(e->n[0]).p;
-  const Point &p1 = e->mesh->node(e->n[1]).p;
-  const Point &p2 = e->mesh->node(e->n[2]).p;
-  const Point &p3 = e->mesh->node(e->n[3]).p;
+  const Point &p0 = e->mesh->point(e->n[0]);
+  const Point &p1 = e->mesh->point(e->n[1]);
+  const Point &p2 = e->mesh->point(e->n[2]);
+  const Point &p3 = e->mesh->point(e->n[3]);
 
 
   if(inside(Point(v0.x(),v0.y(),v0.z()), e))
@@ -1061,7 +1068,7 @@ void Mesh::make_grid(int nx, int ny, int nz, const Point &min,
   for (int i=0; i<elems.size(); i++) {
     int imin, imax, jmin, jmax, kmin, kmax;
     for (int j=0; j<4; j++) {
-      Vector v(nodes[elems[i]->n[j]]->p-min);
+      Vector v(point(elems[i]->n[j]) - min);
       int w;
       w=Max(0.,(v.x()-eps)/dx);
       if (!j || imin>w) imin=w;
@@ -1170,10 +1177,10 @@ int Element::orient()
 
 double Element::volume()
 {
-  const Point &p1(mesh->node(n[0]).p);
-  const Point &p2(mesh->node(n[1]).p);
-  const Point &p3(mesh->node(n[2]).p);
-  const Point &p4(mesh->node(n[3]).p);
+  const Point &p1 = mesh->point(n[0]);
+  const Point &p2 = mesh->point(n[1]);
+  const Point &p3 = mesh->point(n[2]);
+  const Point &p4 = mesh->point(n[3]);
   double x1=p1.x();
   double y1=p1.y();
   double z1=p1.z();
@@ -1195,11 +1202,11 @@ double Element::volume()
 
 void Mesh::get_bounds(Point& min, Point& max)
 {
-  min=node(0).p;
-  max=node(0).p;
+  min=point(0);
+  max=point(0);
   for (int i=1;i<nodes.size();i++) {
-    min=Min(min, node(i).p);
-    max=Max(max, node(i).p);
+    min=Min(min, point(i));
+    max=Max(max, point(i));
   }
 }    
 
@@ -1287,14 +1294,6 @@ int Mesh::face_idx(int p, int f)
   return 0;
 }
 
-int
-Mesh::insert_delaunay( const Point& p )
-{
-  int idx=nodes.size();
-  nodes.add(new Node(p));
-  return insert_delaunay( idx );
-}
-
 MaterialHandle ptmatl(scinew Material(Color(0,0,0), Color(1,1,0), Color(.6,.6,.6), 10));
 MaterialHandle inmatl(ptmatl);
 MaterialHandle remmatl(scinew Material(Color(0,0,0), Color(1,0,0), Color(.6, .6, .6), 10));
@@ -1305,10 +1304,10 @@ MaterialHandle lamatl(scinew Material(Color(0,0,0), Color(0, 0, 1), Color(.6, .6
 
 void Mesh::draw_element(Element* e, GeomGroup* group)
 {
-  const Point &p1 = node(e->n[0]).p;
-  const Point &p2 = node(e->n[1]).p;
-  const Point &p3 = node(e->n[2]).p;
-  const Point &p4 = node(e->n[3]).p;
+  const Point &p1 = point(e->n[0]);
+  const Point &p2 = point(e->n[1]);
+  const Point &p3 = point(e->n[2]);
+  const Point &p4 = point(e->n[3]);
   GeomPolyline* poly=new GeomPolyline;
   poly->add(p1);
   poly->add(p2);
@@ -1327,12 +1326,26 @@ void Mesh::draw_element(int in_element, GeomGroup* group)
   draw_element(e, group);
 }
 
-int
+bool
+Mesh::insert_delaunay( const Point& p )
+{
+  int idx=nodes.size();
+  nodes.add(new Node(p));
+  return insert_delaunay( idx );
+}
+
+bool
 Mesh::insert_delaunay( int nn )
 {
+  if (delaunay_generation == NULL)
+  {
+    delaunay_generation = new std::vector<int>(elems.size(), 0);
+    current_generation = 0;
+  }
+
   if(!have_all_neighbors)
     compute_face_neighbors();
-  const Point &p = node(nn).p;
+  const Point &p = point(nn);
 
   // Start the element search at the last added element...
   int in_element=elems.size()-1;
@@ -1341,7 +1354,7 @@ Mesh::insert_delaunay( int nn )
   if(!locate(p, in_element)) {
     if(!locate2(p, in_element)) {
       cerr << "Error locating point: " << p << endl;
-      return 0;
+      return false;
     }
   }
 
@@ -1352,7 +1365,7 @@ Mesh::insert_delaunay( int nn )
 
   // Find it's neighbors...
   current_generation++;
-  elems[in_element]->generation=current_generation;
+  (*delaunay_generation)[in_element] = current_generation;
 
   FastHashTable<DFace> face_table;
   int i=0;
@@ -1389,7 +1402,7 @@ Mesh::insert_delaunay( int nn )
 	  cerr << "node=" << nn << endl;
 	  cerr << "WHAT!!!!!!!!!!\n";
 	}
-	if(ne->generation != current_generation) {
+	if((*delaunay_generation)[neighbor] != current_generation) {
 	  Point cen;
 	  double rad2;
 	  double err;
@@ -1400,7 +1413,7 @@ Mesh::insert_delaunay( int nn )
 	    to_remove.add(neighbor);
 	  }
 	}
-	ne->generation=current_generation;
+	(*delaunay_generation)[neighbor] = current_generation;
       }
     }
     i++;
@@ -1457,7 +1470,7 @@ Mesh::insert_delaunay( int nn )
     } else {
       cerr << "Degenerate element (node=" << nn << ")\n";
       cerr << "Volume=" << ne->volume() << endl;
-      return 0;
+      return false;
     }
   }
 
@@ -1473,9 +1486,9 @@ Mesh::insert_delaunay( int nn )
       int d1a=0;
       int d1b=-999;
       double d1l=0;
-      const Point &p0 = node(e->n[0]).p;
+      const Point &p0 = point(e->n[0]);
       for (int i=1;i<4;i++) {
-	double l=(node(e->n[i]).p-p0).length2();
+	double l=(point(e->n[i]) - p0).length2();
 	if(l>d1l) {
 	  d1l=l;
 	  d1b=i;
@@ -1485,7 +1498,7 @@ Mesh::insert_delaunay( int nn )
       while(d2a == d1b)d2a++;
       int d2b=1;
       while(d2b == d1b || d2b == d2a)d2b++;
-      double d2l=(node(e->n[d2a]).p - node(e->n[d2b]).p).length2();
+      double d2l=(point(e->n[d2a]) - point(e->n[d2b])).length2();
       cerr << "d1l=" << d1l << ", d2l=" << d2l << endl;
       int a, b;
       int c, d;
@@ -1596,7 +1609,7 @@ Mesh::insert_delaunay( int nn )
 	double err;
 	e->get_sphere2(cen, rad2, err);
 	for (int ii=0;ii<node;ii++) {
-	  Point p(nodes[ii]->p);
+	  const Point &p = point(ii);
 	  double ndist2=(p-cen).length2();
 	  if(ndist2 < rad2-1.e-6) {
 	    cerr << "Invalid tesselation!\n";
@@ -1642,8 +1655,9 @@ Mesh::insert_delaunay( int nn )
   }
 #endif
 
-  return 1;
+  return true;
 }
+
 
 void Mesh::pack_elems()
 {
@@ -1664,7 +1678,7 @@ void Mesh::pack_elems()
   elems.resize(idx);
   int nnodes=nodes.size();
   for (i=0;i<nnodes;i++) {
-    NodeHandle&  n=nodes[i];
+    NodeHandle &n = nodes[i];
     if(n.get_rep()) {
       int ne=n->elems.size();
       for (int j=0;j<ne;j++) {
@@ -1729,7 +1743,7 @@ void Mesh::pack_all()
 void Mesh::remove_delaunay(int node, int fill)
 {
   if(!fill) {
-    NodeHandle& n=nodes[node];
+    NodeHandle &n = nodes[node];
     for (int i=0;i<n->elems.size();i++) {
       if(elems[n->elems[i]]) {
 	delete elems[n->elems[i]];

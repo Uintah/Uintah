@@ -25,7 +25,8 @@
 namespace SCIRun {
 
 
-class FEMError : public Module {
+class FEMError : public Module
+{
     ScalarFieldIPort* infield;
     ScalarFieldOPort* upbound_field;
     ScalarFieldOPort* lowbound_field;
@@ -34,7 +35,7 @@ class FEMError : public Module {
     ScalarFieldUG* lowf;
     ScalarFieldUG* upf;
     int np;
-    Mesh* mesh;
+    Mesh *mesh;
     ScalarFieldUG* sfield;
 public:
     FEMError(const clString& id);
@@ -42,6 +43,7 @@ public:
     virtual void execute();
     void parallel(int);
 };
+
 
 extern "C" Module* make_FEMError(const clString& id) {
   return new FEMError(id);
@@ -121,10 +123,10 @@ void FEMError::parallel(int proc)
 	Vector pvz(pv/(totalvolume*dv.z()));
 	Vector vupper(Abs(pvx)+Abs(pvy)+Abs(pvz));
 	double uu=vupper.x()+vupper.y()+vupper.z();
-	const Point &p0 = mesh->node(e->n[0]).p;
+	const Point &p0 = mesh->point(e->n[0]);
 	double rad1=(e->centroid()-p0).length2();
 	double upper=4*e->volume()*uu*uu*rad1;
-	upf->data[i]=upper;
+	upf->data[i] = upper;
 	umin=Min(upper, umin);
 	umax=Max(upper, umax);
 
@@ -143,7 +145,7 @@ void FEMError::parallel(int proc)
 	lowf->data[i]=lower;
 	lmin=Min(lower, lmin);
 	lmax=Max(lower, lmax);
-	if(proc == 0 && i%500 == 0)
+	if (proc == 0 && i % 500 == 0)
 	  update_progress(i, end_elem);
     }
 }

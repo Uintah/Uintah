@@ -394,10 +394,10 @@ void MeshView::doChecks(const MeshHandle& mesh, const ColorMapHandle& cmap)
 	Element* elem = mesh->element(Seed);
 
 	// Put the crosshair widget in the center of the seed
-	const Point &p1(mesh->node(elem->n[0]).p);
-	const Point &p2(mesh->node(elem->n[1]).p);
-	const Point &p3(mesh->node(elem->n[2]).p);
-	const Point &p4(mesh->node(elem->n[3]).p);
+	const Point &p1 = mesh->point(elem->n[0]);
+	const Point &p2 = mesh->point(elem->n[1]);
+	const Point &p3 = mesh->point(elem->n[2]);
+	const Point &p4 = mesh->point(elem->n[3]);
 
 	Point center((p1.x() + p2.x() + p3.x() + p4.x()) / 4.,
 		     (p1.y() + p2.y() + p3.y() + p4.y()) / 4.,
@@ -724,9 +724,9 @@ void MeshView::getTetra(const MeshHandle& mesh)
 			int i1=e->n[(j+1)%4];
 			int i2=e->n[(j+2)%4];
 			int i3=e->n[(j+3)%4];
-			const Point &p1 = mesh->node(i1).p;
-			const Point &p2 = mesh->node(i2).p;
-			const Point &p3 = mesh->node(i3).p;
+			const Point &p1 = mesh->point(i1);
+			const Point &p2 = mesh->point(i2);
+			const Point &p3 = mesh->point(i3);
 			GeomTri *tri = new GeomTri(p1, p2, p3);
 			tetra[toDrawTet[i]] -> add(tri);
 		    }
@@ -744,8 +744,8 @@ void MeshView::getTetra(const MeshHandle& mesh)
     for(eiter = edge_table.begin(); eiter != edge_table.end(); ++eiter)
     {
 	Edge e((*eiter).first);
-	const Point &p1 = mesh->node(e.n[0]).p;
-	const Point &p2 = mesh->node(e.n[1]).p;
+	const Point &p1 = mesh->point(e.n[0]);
+	const Point &p2 = mesh->point(e.n[1]);
 	GeomCylinder* cyl = new GeomCylinder(p1, p2, rad, 8, 1);
 	tetra[0] -> add(cyl);
     }
@@ -858,10 +858,10 @@ int MeshView::doClip(int n, const MeshHandle& mesh)
 {
 
     Element* e=mesh->element(n);
-    const Point &p1 = mesh->node(e->n[0]).p;
-    const Point &p2 = mesh->node(e->n[1]).p;
-    const Point &p3 = mesh->node(e->n[2]).p;
-    const Point &p4 = mesh->node(e->n[3]).p;
+    const Point &p1 = mesh->point(e->n[0]);
+    const Point &p2 = mesh->point(e->n[1]);
+    const Point &p3 = mesh->point(e->n[2]);
+    const Point &p4 = mesh->point(e->n[3]);
 
 
     double cX, cY, cZ, cNX, cNY, cNZ;
@@ -909,10 +909,10 @@ void MeshView::calcMeasures(const MeshHandle& mesh, double *min, double *max)
 	for (i = 0; i < numTetra; i++)
 	{
 	    Element* e=mesh->element(i);
-	    volMeas[i] = volume(mesh->node(e->n[0]).p,
-				mesh->node(e->n[1]).p,
-				mesh->node(e->n[2]).p,
-				mesh->node(e->n[3]).p);
+	    volMeas[i] = volume(mesh->point(e->n[0]),
+				mesh->point(e->n[1]),
+				mesh->point(e->n[2]),
+				mesh->point(e->n[3]));
 	    if (*min > volMeas[i])
 		*min = volMeas[i];
 	    if (*max < volMeas[i])
@@ -928,10 +928,10 @@ void MeshView::calcMeasures(const MeshHandle& mesh, double *min, double *max)
 	for (i = 0; i < numTetra; i++)
 	{
 	    Element* e=mesh->element(i);
-	    aspMeas[i] = aspect_ratio(mesh->node(e->n[0]).p,
-				      mesh->node(e->n[1]).p,
-				      mesh->node(e->n[2]).p,
-				      mesh->node(e->n[3]).p);
+	    aspMeas[i] = aspect_ratio(mesh->point(e->n[0]),
+				      mesh->point(e->n[1]),
+				      mesh->point(e->n[2]),
+				      mesh->point(e->n[3]));
 	    if (*min > aspMeas[i])
 		*min = aspMeas[i];
 	    if (*max < aspMeas[i])
@@ -949,10 +949,10 @@ void MeshView::calcMeasures(const MeshHandle& mesh, double *min, double *max)
 	    for (i = 0; i < numTetra; i++)
 	    {
 		Element* e=mesh->element(i);
-		volMeas[i] = volume(mesh->node(e->n[0]).p,
-				    mesh->node(e->n[1]).p,
-				    mesh->node(e->n[2]).p,
-				    mesh->node(e->n[3]).p);
+		volMeas[i] = volume(mesh->point(e->n[0]),
+				    mesh->point(e->n[1]),
+				    mesh->point(e->n[2]),
+				    mesh->point(e->n[3]));
 	    }
 		haveVol = 1; 
 	}
@@ -1086,9 +1086,9 @@ int MeshView::getMeas(const MeshHandle& mesh, const ColorMapHandle& genColors)
 			int i1=e->n[(j+1)%4];
 			int i2=e->n[(j+2)%4];
 			int i3=e->n[(j+3)%4];
-			const Point &p1 = mesh->node(i1).p;
-			const Point &p2 = mesh->node(i2).p;
-			const Point &p3 = mesh->node(i3).p;
+			const Point &p1 = mesh->point(i1);
+			const Point &p2 = mesh->point(i2);
+			const Point &p3 = mesh->point(i3);
 			GeomTri *tri = new GeomTri(p1, p2, p3);
 			measTetra[toDrawMeas[i]] -> add(tri);
 		    }
@@ -1110,8 +1110,8 @@ int MeshView::getMeas(const MeshHandle& mesh, const ColorMapHandle& genColors)
 	for(eiter = edge_table.begin(); eiter != edge_table.end(); ++eiter)
 	{
 	    Edge e((*eiter).first);
-	    const Point &p1 = mesh->node(e.n[0]).p;
-	    const Point &p2 = mesh->node(e.n[1]).p;
+	    const Point &p1 = mesh->point(e.n[0]);
+	    const Point &p2 = mesh->point(e.n[1]);
 	    GeomLine* gline = new GeomLine(p1, p2);
 	    measAuxTetra -> add(gline);
 	    measAuxMatl -> setMaterial(Materials[cSize]);
@@ -1316,10 +1316,10 @@ int MeshView::findElement(Point p, const MeshHandle& mesh,
 	{
 	    Element* elem=mesh->element(i);
 	    
-	    const Point &p1 = mesh->node(elem->n[0]).p;
-	    const Point &p2 = mesh->node(elem->n[1]).p;
-	    const Point &p3 = mesh->node(elem->n[2]).p;
-	    const Point &p4 = mesh->node(elem->n[3]).p;
+	    const Point &p1 = mesh->point(elem->n[0]);
+	    const Point &p2 = mesh->point(elem->n[1]);
+	    const Point &p3 = mesh->point(elem->n[2]);
+	    const Point &p4 = mesh->point(elem->n[3]);
 	    double x1=p1.x();
 	    double y1=p1.y();
 	    double z1=p1.z();
@@ -1401,10 +1401,10 @@ int MeshView::doEdit(const MeshHandle& mesh)
     if (editMode.get() == 1)
     {
 	// Find the center of the tetrahedron and add a node there
-        const Point &p1 = mesh->node(elem->n[0]).p;
-	const Point &p2 = mesh->node(elem->n[1]).p;
-	const Point &p3 = mesh->node(elem->n[2]).p;
-	const Point &p4 = mesh->node(elem->n[3]).p;
+        const Point &p1 = mesh->point(elem->n[0]);
+	const Point &p2 = mesh->point(elem->n[1]);
+	const Point &p3 = mesh->point(elem->n[2]);
+	const Point &p4 = mesh->point(elem->n[3]);
 
 	Point center((p1.x() + p2.x() + p3.x() + p4.x()) / 4.,
 		     (p1.y() + p2.y() + p3.y() + p4.y()) / 4.,
@@ -1444,10 +1444,10 @@ int MeshView::doEdit(const MeshHandle& mesh)
 	Seed = 0; toEdit = 0;
 	Element* elem = mesh->element(Seed);
 
-	const Point &p1 = mesh->node(elem->n[0]).p;
-	const Point &p2 = mesh->node(elem->n[1]).p;
-	const Point &p3 = mesh->node(elem->n[2]).p;
-	const Point &p4 = mesh->node(elem->n[3]).p;
+	const Point &p1 = mesh->point(elem->n[0]);
+	const Point &p2 = mesh->point(elem->n[1]);
+	const Point &p3 = mesh->point(elem->n[2]);
+	const Point &p4 = mesh->point(elem->n[3]);
 
 	Point center((p1.x() + p2.x() + p3.x() + p4.x()) / 4.,
 		     (p1.y() + p2.y() + p3.y() + p4.y()) / 4.,
@@ -1474,7 +1474,7 @@ int MeshView::newTesselation(const MeshHandle& mesh)
     int nn = mesh -> nodes.size();
     BBox bbox;
     for (int i = 0; i < nn; i++)
-	bbox.extend(mesh->node(i).p);
+	bbox.extend(mesh->point(i));
     
     double eps = 1.e-4;
     
@@ -1541,10 +1541,10 @@ int MeshView::findNode(const MeshHandle& mesh)
 {
     Element* e = mesh -> element(toEdit);
     
-    const Point &p1 = mesh->node(e->n[0]).p;
-    const Point &p2 = mesh->node(e->n[1]).p;
-    const Point &p3 = mesh->node(e->n[2]).p;
-    const Point &p4 = mesh->node(e->n[3]).p;
+    const Point &p1 = mesh->point(e->n[0]);
+    const Point &p2 = mesh->point(e->n[1]);
+    const Point &p3 = mesh->point(e->n[2]);
+    const Point &p4 = mesh->point(e->n[3]);
 
     Point newp = editPoint;
 
@@ -1586,15 +1586,15 @@ void MeshView::updateInfo(const MeshHandle& mesh)
     if (!haveAsp)
     {
 	Element* e=mesh->element(Seed);
-	t2 = aspect_ratio(mesh->node(e->n[0]).p,
-			  mesh->node(e->n[1]).p,
-			  mesh->node(e->n[2]).p,
-			  mesh->node(e->n[3]).p);
+	t2 = aspect_ratio(mesh->point(e->n[0]),
+			  mesh->point(e->n[1]),
+			  mesh->point(e->n[2]),
+			  mesh->point(e->n[3]));
 	e=mesh->element(toEdit);
-	t4 = aspect_ratio(mesh->node(e->n[0]).p,
-			  mesh->node(e->n[1]).p,
-			  mesh->node(e->n[2]).p,
-			  mesh->node(e->n[3]).p);
+	t4 = aspect_ratio(mesh->point(e->n[0]),
+			  mesh->point(e->n[1]),
+			  mesh->point(e->n[2]),
+			  mesh->point(e->n[3]));
 	
     }
     else

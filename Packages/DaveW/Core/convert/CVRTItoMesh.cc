@@ -64,7 +64,7 @@ int main(int argc, char **argv)
 	cerr << "HERE\n";
 
 	int nnodes=mesh->nodes.size();
-	if (mesh->nodes[nnodes-1]->p == mesh->nodes[nnodes-2]->p) {
+	if (mesh->point(nnodes-1) == mesh->point(nnodes-2)) {
 	    mesh->nodes.resize(nnodes-1);
 	    nnodes--;
 	}

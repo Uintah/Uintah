@@ -118,7 +118,7 @@ void MeshFindSurfNodes::execute()
       if (!meshH->locate(ts->points[i], ix, 1.e-4, 1.e-4)) {
 	int foundIt=0;
 	for (j=0; j<meshH->nodesize(); j++) {
-	  if ((meshH->node(j).p-ts->points[i]).length2()<0.001) {
+	  if ((meshH->point(j) - ts->points[i]).length2() < 0.001) {
 	    ix=meshH->node(j).elems[0];
 	    foundIt=1;
 	    break;
@@ -135,7 +135,7 @@ void MeshFindSurfNodes::execute()
       Element *e=meshH->element(ix);
       for (sum=0,j=0; j<4; j++) {
 	nodes[j]=e->n[j];
-	dist[j]=(ts->points[i] - meshH->node(nodes[j]).p).length();
+	dist[j]=(ts->points[i] - meshH->point(nodes[j])).length();
 	sum+=dist[j];
       }
       sortpts(dist, nodes);

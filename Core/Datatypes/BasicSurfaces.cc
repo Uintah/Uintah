@@ -229,8 +229,7 @@ GeomObj* CylinderSurface::get_obj(const ColorMapHandle& cmap)
     int i;
     double v1=nodes[0]->bc->value;
     Color cc1(cmap->lookup(v1)->diffuse);
-    //Point& pp1(nodes[0]->p);
-	Point& pp1 = nodes[0]->p;
+    const Point &pp1 = nodes[0]->p;
     int j;
     for(j=0;j<nv;j++){
 	int i2=1+(j%nv);
@@ -239,10 +238,8 @@ GeomObj* CylinderSurface::get_obj(const ColorMapHandle& cmap)
 	double v3=nodes[i3]->bc->value;
 	Color cc2(cmap->lookup(v2)->diffuse);
 	Color cc3(cmap->lookup(v3)->diffuse);
-	//Point& pp2(nodes[i2]->p);
-	//Point& pp3(nodes[i3]->p);
-	Point& pp2 = nodes[i2]->p;
-	Point& pp3 = nodes[i3]->p;
+	const Point &pp2 = nodes[i2]->p;
+	const Point &pp3 = nodes[i3]->p;
 	tris->add(pp1, cc1, pp2, cc2, pp3, cc3);
     }
     for(i=0;i<2*(ndiscu-2)+nu;i++){
@@ -259,14 +256,10 @@ GeomObj* CylinderSurface::get_obj(const ColorMapHandle& cmap)
 	    Color cc2(cmap->lookup(v2)->diffuse);
 	    Color cc3(cmap->lookup(v3)->diffuse);
 	    Color cc4(cmap->lookup(v4)->diffuse);
-	    //Point& pp1(nodes[i1]->p);
-	    //Point& pp2(nodes[i2]->p);
-	    //Point& pp3(nodes[i3]->p);
-	    //Point& pp4(nodes[i4]->p);
-		Point& pp1 = nodes[i1]->p;
-		Point& pp2 = nodes[i2]->p;
-		Point& pp3 = nodes[i3]->p;
-		Point& pp4 = nodes[i4]->p;
+	    const Point &pp1 = nodes[i1]->p;
+	    const Point &pp2 = nodes[i2]->p;
+	    const Point &pp3 = nodes[i3]->p;
+	    const Point &pp4 = nodes[i4]->p;
 	    tris->add(pp1, cc1, pp2, cc2, pp3, cc3);
 	    tris->add(pp2, cc2, pp3, cc3, pp4, cc4);
 	}
@@ -275,8 +268,7 @@ GeomObj* CylinderSurface::get_obj(const ColorMapHandle& cmap)
     int last=nodes.size()-1;
     double v3=nodes[last]->bc->value;
     Color cc3(cmap->lookup(v3)->diffuse);
-    //Point& pp3(nodes[last]->p);
-	Point& pp3 = nodes[last]->p;
+    const Point &pp3 = nodes[last]->p;
     for(j=0;j<nv;j++){
 	int i1=s+(j%nv);
 	int i2=s+((j+1)%nv);
@@ -284,10 +276,8 @@ GeomObj* CylinderSurface::get_obj(const ColorMapHandle& cmap)
 	double v2=nodes[i2]->bc->value;
 	Color cc1(cmap->lookup(v1)->diffuse);
 	Color cc2(cmap->lookup(v2)->diffuse);
-	//Point& pp1(nodes[i1]->p);
-	//Point& pp2(nodes[i2]->p);
-	Point& pp1 = nodes[i1]->p;
-	Point& pp2 = nodes[i2]->p;
+	const Point &pp1 = nodes[i1]->p;
+	const Point &pp2 = nodes[i2]->p;
 
 	tris->add(pp1, cc1, pp2, cc2, pp3, cc3);
     }
@@ -460,8 +450,7 @@ GeomObj* SphereSurface::get_obj(const ColorMapHandle& cmap)
     int i;
     double v1=nodes[0]->bc->value;
     Color cc1(cmap->lookup(v1)->diffuse);
-    //Point& pp1(nodes[0]->p);
-	Point& pp1 = nodes[0]->p;
+    const Point &pp1 = nodes[0]->p;
     int j;
     for(j=0;j<nv;j++){
 	int i2=1+(j%nv);
@@ -470,10 +459,8 @@ GeomObj* SphereSurface::get_obj(const ColorMapHandle& cmap)
 	double v3=nodes[i3]->bc->value;
 	Color cc2(cmap->lookup(v2)->diffuse);
 	Color cc3(cmap->lookup(v3)->diffuse);
-	//Point& pp2(nodes[i2]->p);
-	//Point& pp3(nodes[i3]->p);
-	Point& pp2 = nodes[i2]->p;
-	Point& pp3 = nodes[i3]->p;
+	const Point &pp2 = nodes[i2]->p;
+	const Point &pp3 = nodes[i3]->p;
 	tris->add(pp1, cc1, pp2, cc2, pp3, cc3);
     }
     for(i=0;i<nu-3;i++){
@@ -490,14 +477,10 @@ GeomObj* SphereSurface::get_obj(const ColorMapHandle& cmap)
 	    Color cc2(cmap->lookup(v2)->diffuse);
 	    Color cc3(cmap->lookup(v3)->diffuse);
 	    Color cc4(cmap->lookup(v4)->diffuse);
-	    //Point& pp1(nodes[i1]->p);
-	    //Point& pp2(nodes[i2]->p);
-	    //Point& pp3(nodes[i3]->p);
-	    //Point& pp4(nodes[i4]->p);
-		Point& pp1 = nodes[i1]->p;
-		Point& pp2 = nodes[i2]->p;
-		Point& pp3 = nodes[i3]->p;
-		Point& pp4 = nodes[i4]->p;
+	    const Point &pp1 = nodes[i1]->p;
+	    const Point &pp2 = nodes[i2]->p;
+	    const Point &pp3 = nodes[i3]->p;
+	    const Point &pp4 = nodes[i4]->p;
 	    tris->add(pp1, cc1, pp2, cc2, pp3, cc3);
 	    tris->add(pp2, cc2, pp3, cc3, pp4, cc4);
 	}
@@ -506,8 +489,7 @@ GeomObj* SphereSurface::get_obj(const ColorMapHandle& cmap)
     int last=nodes.size()-1;
     double v3=nodes[last]->bc->value;
     Color cc3(cmap->lookup(v3)->diffuse);
-    //Point& pp3(nodes[last]->p);
-	Point& pp3 = nodes[last]->p;
+    const Point &pp3 = nodes[last]->p;
     for(j=0;j<nv;j++){
 	int i1=s+(j%nv);
 	int i2=s+((j+1)%nv);
@@ -515,10 +497,8 @@ GeomObj* SphereSurface::get_obj(const ColorMapHandle& cmap)
 	double v2=nodes[i2]->bc->value;
 	Color cc1(cmap->lookup(v1)->diffuse);
 	Color cc2(cmap->lookup(v2)->diffuse);
-	//Point& pp1(nodes[i1]->p);
-	//Point& pp2(nodes[i2]->p);
-	Point& pp1 = nodes[i1]->p;
-	Point& pp2 = nodes[i2]->p;
+	const Point &pp1 = nodes[i1]->p;
+	const Point &pp2 = nodes[i2]->p;
 	tris->add(pp1, cc1, pp2, cc2, pp3, cc3);
     }
     return group;

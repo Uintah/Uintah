@@ -58,13 +58,13 @@ void MeshNodeComponent::execute()
     int i;
     if (compTCL.get() == "x") {
 	for (i=0; i<mesh->nodesize(); i++)
-	    (*comp)[i]=mesh->node(i).p.x();
+	    (*comp)[i]=mesh->point(i).x();
     } else if (compTCL.get() == "y") {
 	for (i=0; i<mesh->nodesize(); i++)
-	    (*comp)[i]=mesh->node(i).p.y();
+	    (*comp)[i]=mesh->point(i).y();
     } else { // if (compTCL.get() == "z") {
 	for (i=0; i<mesh->nodesize(); i++)
-	    (*comp)[i]=mesh->node(i).p.z();
+	    (*comp)[i]=mesh->point(i).z();
     }
 
     oport->send(ColumnMatrixHandle(comp));

@@ -480,8 +480,10 @@ void SurfTree::set_surfnodes(const Array1<NodeHandle> &n)
     cerr << "SurfTree::set_surfnodes - wrong sized array!\n";
     return;
   }
-  for (int i=0; i<nodes.size(); i++)
-    nodes[i]=n[i]->p;
+  for (int i=0; i < nodes.size(); i++)
+  {
+    nodes[i] = n[i]->p;
+  }
 }
 
 void SurfTree::get_surfnodes(Array1<NodeHandle>&n, clString name) {

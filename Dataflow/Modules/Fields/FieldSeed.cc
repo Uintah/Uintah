@@ -325,12 +325,10 @@ void FieldSeed::ComputeWidgetNodes()
 
   Mesh* ugmesh = ug->mesh.get_rep();
 
-
   for (i=0;i<ugmesh->nodesize();i++) {
-    const Node &test = ugmesh->node(i);
     int j;
     for (j = 0; j < 3; j++) {
-      double dist = Dot(test.p, n[j])+d[j];
+      double dist = Dot(ugmesh->point(i), n[j])+d[j];
       if ((dist < 0) || (dist > testd[j])) 
 	j = 8;
     }

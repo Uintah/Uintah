@@ -28,6 +28,7 @@
 #include <Core/Geometry/Vector.h>
 
 #include <stdlib.h> // For size_t
+#include <vector>
 
 namespace SCIRun {
 
@@ -35,7 +36,7 @@ class GeomGroup;
 struct Node;
 typedef Handle<Node> NodeHandle;
 
-#define STORE_ELEMENT_BASIS
+//#define STORE_ELEMENT_BASIS
 
 class RPoint;
 class BigRational;
@@ -45,7 +46,7 @@ class Mesh;
 struct Element {
   int faces[4];
   int n[4];
-  int generation; // For insert_delaunay
+  //int generation; // For insert_delaunay
   int cond; // index to the conductivities array for the cond
   // tensor of this element
 
@@ -58,16 +59,17 @@ struct Element {
   void compute_basis();
 
   Mesh* mesh;
+
   Element(Mesh*, int, int, int, int);
-  Element(const Element&, Mesh* mesh);
-  void* operator new(size_t);
+  Element(const Element &e, Mesh *mesh);
+  void *operator new(size_t);
   void operator delete(void*, size_t);
   inline int face(int);
 
   double volume();
   int orient();
-  void get_sphere2(Point& cen, double& rad2, double& err);
-  void get_sphere2(RPoint& cen, BigRational& rad2);
+  void get_sphere2(Point &cen, double &rad2, double &err);
+  void get_sphere2(RPoint &cen, BigRational &rad2);
   Point centroid();
 };
 
@@ -87,22 +89,25 @@ struct PotentialDifferenceBC {
 
 
 struct Node : public Persistent {
-  //struct Node {
   Point p;
+
   int ref_cnt;
-  Node(const Point&);
+
   Array1<int> elems;
 
   DirichletBC* bc;
   int fluxBC;
   PotentialDifferenceBC* pdBC;
 
-  Node(const Node&);
-  virtual ~Node();
-  virtual void io(Piostream&);
-  virtual Node *clone();
+  Node(const Point &p);
+  Node(const Node &n);
+  Node *clone();
+  ~Node();
+
+  void io(Piostream&);
   static PersistentTypeID type_id;
-  void* operator new(size_t);
+
+  void *operator new(size_t);
   void operator delete(void*, size_t);
 };
 
@@ -169,14 +174,18 @@ typedef LockingHandle<Mesh> MeshHandle;
 class SCICORESHARE Mesh : public Datatype {
   friend class MeshGrid;
   friend class MeshOctree;
+  friend class Element;
+
 protected:
   MeshGrid grid;
-  MeshOctree* octree;
+  MeshOctree *octree;
   int bld_grid;
-  Array1<int> ids;
   //Array1<NodeHandle> nodes;
   //Array1<Element*> elems;
   //Array1<Array1<double> > cond_tensors;
+
+  std::vector<int> *delaunay_generation;
+  int current_generation;
 
 public:
   Array1<NodeHandle> nodes;
@@ -184,8 +193,10 @@ public:
   Array1<Array1<double> > cond_tensors;
   int have_all_neighbors;
 
-  const Node &node(int i) { return *(nodes[i].get_rep()); }
-  Element *element(int i) { return elems[i]; }
+  const Node &node(int i) const { return *(nodes[i].get_rep()); }
+  //const Point &point(int i) const { return nodes[i].get_rep()->p; }
+  Point tmp;  const Point &point(int) const { return tmp; }
+  Element *element(int i) const { return elems[i]; }
   int nodesize() const { return nodes.size(); }
   int elemsize() const { return elems.size(); }
 
@@ -206,9 +217,6 @@ public:
   void get_interp(Element* elem, const Point& p, double& s1,
 		  double& s2, double& s3, double& s4);
 
-  int unify(Element*, const Array1<int>&, const Array1<int>&,
-	    const Array1<int>&);
-
   void get_bounds(Point& min, Point& max);
 
   void get_boundary_lines(Array1<Point>& lines);
@@ -216,14 +224,14 @@ public:
   void get_node_nbrhd(int nidx, Array1<int>& nbrs, int dupsOk=1);
 
   double get_grad(Element* elem, const Point& p, Vector& g1,
-		  Vector& g2, Vector& g3, Vector& g4);
+  		  Vector& g2, Vector& g3, Vector& g4);
 
   void detach_nodes();
   void compute_neighbors();
   void compute_face_neighbors();
 
-  int insert_delaunay( int node );
-  int insert_delaunay( const Point& );
+  bool insert_delaunay( int node );
+  bool insert_delaunay( const Point& );
   void remove_delaunay(int node, int fill);
   void pack_nodes();
   void pack_elems();
@@ -235,8 +243,8 @@ public:
   int inside(const Point& p, Element* elem);
 
 private:
-
-  int current_generation;
+  int unify(Element*, const Array1<int>&, const Array1<int>&,
+	    const Array1<int>&);
 
   int face_idx(int, int);
   void new_element(Element* ne, HashTable<Face, int> *new_faces);

@@ -177,7 +177,7 @@ void MeshInterpVals::execute()
 		double d;
 		for (int bb=firstNode; bb<meshH->nodesize(); bb++) {
 		    if (selected[bb]) continue;
-		    dt=Vector(p[aa]-meshH->node(bb).p).length2();
+		    dt = Vector(p[aa] - meshH->point(bb)).length2();
 		    if (si==-1 || dt<d) {
 			si=bb;
 			d=dt;
@@ -191,7 +191,7 @@ void MeshInterpVals::execute()
 		    counter++;
 		}
 		vals[aa]=si;
-		ots->points.add(meshH->node(si).p);
+		ots->points.add(meshH->point(si));
 	    }
 	}
     } else {
