@@ -76,7 +76,7 @@ public:
   void get_ears( Point & left, Point & right, double separation ) const;
 
   inline bool operator != (const Camera& c) const {
-    return eye != c.eye || lookat != c.lookat || up != c.up || fov != c.fov || eyesep != c.eyesep;
+    return eye != c.eye || lookat != c.lookat || up != c.up || fov != c.fov || verticalFov_ != c.verticalFov_ || eyesep != c.eyesep;
   }
 
   void set_lookat(const Point&);
