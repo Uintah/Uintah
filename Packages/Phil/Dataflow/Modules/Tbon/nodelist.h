@@ -1,4 +1,4 @@
-$Id$
+//static char *id="@(#) $Id$";
 
 /*
   nodelist.h
@@ -135,6 +135,9 @@ NodeList<T>::getNode( int bricknum, int nodenum ) {
 
 //
 // $Log$
+// Revision 1.2  2000/02/04 22:15:09  psutton
+// fixed ID problem
+//
 // Revision 1.1  2000/02/04 21:11:59  psutton
 // initial revision
 //

@@ -1,4 +1,4 @@
-$Id$
+//static char *id="@(#) $Id$";
 
 /* TbonCL.cc
    Temporal Branch-on-Need tree (T-BON) - curvilinear grid implementation
@@ -403,6 +403,9 @@ TbonCL::processQuery() {
 
 //
 // $Log$
+// Revision 1.2  2000/02/04 22:13:03  psutton
+// fixed ID problem
+//
 // Revision 1.1  2000/02/04 21:05:41  psutton
 // initial revision
 //

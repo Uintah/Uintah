@@ -1,4 +1,4 @@
-$Id$
+//static char *id="@(#) $Id$";
 
 /* TbonTreeP.h
    class declarations and code for the parallel T-BON tree
@@ -1294,6 +1294,9 @@ TbonTreeP<T>::assignPoints( int myindex, int d, int x, int y, int z,
 
 //
 // $Log$
+// Revision 1.2  2000/02/04 22:13:03  psutton
+// fixed ID problem
+//
 // Revision 1.1  2000/02/04 21:03:16  psutton
 // initial revision
 //
