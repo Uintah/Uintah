@@ -260,6 +260,7 @@ StructHexVolMesh::locate(Node::index_type &node, const Point &p)
       if (dist < min_dist)
       {
 	node = *ni;
+	min_dist = dist;
       }
       ++ni;
     }

@@ -665,6 +665,7 @@ HexVolMesh::locate(Node::index_type &loc, const Point &p)
       if (dist < min_dist)
       {
 	loc = *ni;
+	min_dist = dist;
       }
       ++ni;
     }
