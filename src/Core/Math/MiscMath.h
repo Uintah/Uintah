@@ -93,7 +93,7 @@ inline SCICORESHARE double SmoothStep(double d, double min, double max)
 template <class T>
 inline SCICORESHARE T Interpolate(T d1, T d2, double weight)
 {
-  return d2*weight+d1*(1.0-weight);
+  return T(d2*weight+d1*(1.0-weight));
 }
 
 
