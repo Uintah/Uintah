@@ -52,20 +52,20 @@ class NrrdPermute : public Module {
   NrrdDataHandle last_nrrdH_;
 public:
   int valid_data(int* axes);
-  NrrdPermute(const string& id);
+  NrrdPermute(GuiContext *ctx);
   virtual ~NrrdPermute();
   virtual void execute();
 };
 
-extern "C" Module* make_NrrdPermute(const string& id)
-{
-    return new NrrdPermute(id);
-}
+} // End namespace SCITeem
 
-NrrdPermute::NrrdPermute(const string& id)
-  : Module("NrrdPermute", id, Filter, "Filters", "Teem"),
-    axis0_("axis0", id, this), axis1_("axis1", id, this),
-    axis2_("axis2", id, this), last_axis0_(0), last_axis1_(0), 
+using namespace SCITeem;
+DECLARE_MAKER(NrrdPermute)
+
+  NrrdPermute::NrrdPermute(GuiContext *ctx)
+  : Module("NrrdPermute", ctx, Filter, "Filters", "Teem"),
+    axis0_(ctx->subVar("axis0")), axis1_(ctx->subVar("axis1")),
+    axis2_(ctx->subVar("axis2")), last_axis0_(0), last_axis1_(0), 
     last_axis2_(0), last_generation_(-1), last_nrrdH_(0)
 {
 }
@@ -146,4 +146,3 @@ NrrdPermute::execute()
   onrrd_->send(last_nrrdH_);
 }
 
-} // End namespace SCITeem

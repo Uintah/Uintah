@@ -47,19 +47,20 @@ class NrrdConvert : public Module {
   int last_generation_;
   NrrdDataHandle last_nrrdH_;
 public:
-  NrrdConvert(const string& id);
+  NrrdConvert(SCIRun::GuiContext *ctx);
   virtual ~NrrdConvert();
   virtual void execute();
 };
 
-extern "C" Module* make_NrrdConvert(const string& id)
-{
-    return new NrrdConvert(id);
-}
+} //end namespace SCITeem
 
-NrrdConvert::NrrdConvert(const string& id)
-  : Module("NrrdConvert", id, Filter, "Filters", "Teem"), type_("type", id, this),
-    last_type_(0), last_generation_(-1), last_nrrdH_(0)
+using namespace SCITeem;
+DECLARE_MAKER(NrrdConvert)
+
+NrrdConvert::NrrdConvert(SCIRun::GuiContext *ctx)
+  : Module("NrrdConvert", ctx, Filter, "Filters", "Teem"), 
+  type_(ctx->subVar("type")),
+  last_type_(0), last_generation_(-1), last_nrrdH_(0)
 {
 }
 
@@ -119,4 +120,3 @@ NrrdConvert::execute()
   onrrd_->send(last_nrrdH_);
 }
 
-} // End namespace SCITeem

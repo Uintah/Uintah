@@ -59,21 +59,26 @@ class NrrdPad : public Module {
 public:
   int valid_data(string *minS, string *maxS, int *min, int *max, Nrrd *nrrd);
   int getint(const char *str, int *n);
-  NrrdPad(const string& id);
+  NrrdPad(GuiContext *ctx);
   virtual ~NrrdPad();
   virtual void execute();
 };
 
-extern "C" Module* make_NrrdPad(const string& id)
-{
-    return new NrrdPad(id);
-}
+} // End namespace SCITeem
 
-NrrdPad::NrrdPad(const string& id)
-  : Module("NrrdPad", id, Filter, "Filters", "Teem"), minAxis0_("minAxis0", id, this),
-    maxAxis0_("maxAxis0", id, this), minAxis1_("minAxis1", id, this),
-    maxAxis1_("maxAxis1", id, this), minAxis2_("minAxis2", id, this),
-    maxAxis2_("maxAxis2", id, this), last_minAxis0_(""), last_maxAxis0_(""),
+using namespace SCITeem;
+
+DECLARE_MAKER(NrrdPad)
+
+NrrdPad::NrrdPad(GuiContext *ctx)
+  : Module("NrrdPad", ctx, Filter, "Filters", "Teem"),
+    minAxis0_(ctx->subVar("minAxis0")),
+    maxAxis0_(ctx->subVar("maxAxis0")),
+    minAxis1_(ctx->subVar("minAxis1")),
+    maxAxis1_(ctx->subVar("maxAxis1")),
+    minAxis2_(ctx->subVar("minAxis2")),
+    maxAxis2_(ctx->subVar("maxAxis2")),
+    last_minAxis0_(""), last_maxAxis0_(""),
     last_minAxis1_(""), last_maxAxis1_(""), last_minAxis2_(""), 
     last_maxAxis2_(""),
     last_generation_(-1), last_nrrdH_(0)
@@ -201,4 +206,3 @@ NrrdPad::execute()
   onrrd_->send(last_nrrdH_);
 }
 
-} // End namespace SCITeem

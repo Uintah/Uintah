@@ -48,17 +48,19 @@ class FieldToNrrd : public Module {
   FieldIPort* ifield;
   NrrdOPort* onrrd;
 public:
-  FieldToNrrd(const string& id);
+  FieldToNrrd(GuiContext *ctx);
   virtual ~FieldToNrrd();
   virtual void execute();
 };
 
-extern "C" Module* make_FieldToNrrd(const string& id) {
-  return new FieldToNrrd(id);
-}
+} // end namespace SCITeem
+
+using namespace SCITeem;
+DECLARE_MAKER(FieldToNrrd)
 
 
-FieldToNrrd::FieldToNrrd(const string& id):Module("FieldToNrrd", id, Filter, "DataIO", "Teem")
+FieldToNrrd::FieldToNrrd(GuiContext *ctx):
+  Module("FieldToNrrd", ctx, Filter, "DataIO", "Teem")
 {
 }
 
@@ -237,4 +239,3 @@ void FieldToNrrd::execute()
   onrrd->send(noutH);
 }
 
-} // End namespace SCITeem

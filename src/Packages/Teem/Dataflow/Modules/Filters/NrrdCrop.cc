@@ -59,24 +59,30 @@ class NrrdCrop : public Module {
 public:
   int valid_data(string *minS, string *maxS, int *min, int *max, Nrrd *nrrd);
   int getint(const char *str, int *n);
-  NrrdCrop(const string& id);
+  NrrdCrop(SCIRun::GuiContext *ctx);
   virtual ~NrrdCrop();
   virtual void execute();
 };
 
-extern "C" Module* make_NrrdCrop(const string& id)
-{
-    return new NrrdCrop(id);
-}
+} // End namespace SCITeem
+using namespace SCITeem;
+DECLARE_MAKER(NrrdCrop)
 
-NrrdCrop::NrrdCrop(const string& id)
-  : Module("NrrdCrop", id, Filter, "Filters", "Teem"), minAxis0_("minAxis0", id, this),
-    maxAxis0_("maxAxis0", id, this), minAxis1_("minAxis1", id, this),
-    maxAxis1_("maxAxis1", id, this), minAxis2_("minAxis2", id, this),
-    maxAxis2_("maxAxis2", id, this), last_minAxis0_(""), last_maxAxis0_(""),
-    last_minAxis1_(""), last_maxAxis1_(""), last_minAxis2_(""), 
-    last_maxAxis2_(""),
-    last_generation_(-1), last_nrrdH_(0)
+NrrdCrop::NrrdCrop(SCIRun::GuiContext *ctx)
+  : Module("NrrdCrop", ctx, Filter, "Filters", "Teem"), 
+  minAxis0_(ctx->subVar("minAxis0")),
+  maxAxis0_(ctx->subVar("maxAxis0")),
+  minAxis1_(ctx->subVar("minAxis1")),
+  maxAxis1_(ctx->subVar("maxAxis1")),
+  minAxis2_(ctx->subVar("minAxis2")),
+  maxAxis2_(ctx->subVar("maxAxis2")), 
+  last_minAxis0_(std::string("")),
+  last_maxAxis0_(std::string("")),
+  last_minAxis1_(std::string("")),
+  last_maxAxis1_(std::string("")),
+  last_minAxis2_(std::string("")), 
+  last_maxAxis2_(std::string("")),
+  last_generation_(-1), last_nrrdH_(0)
 {
 }
 
@@ -200,4 +206,3 @@ NrrdCrop::execute()
   onrrd_->send(last_nrrdH_);
 }
 
-} // End namespace SCITeem

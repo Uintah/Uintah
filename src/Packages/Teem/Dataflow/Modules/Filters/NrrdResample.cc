@@ -58,23 +58,24 @@ class NrrdResample : public Module {
 public:
   int getint(const char *str, int *n, int *none);
   int get_sizes(string *resampAxis, Nrrd *nrrd, nrrdResampleInfo *info);
-  NrrdResample(const string& id);
+  NrrdResample(GuiContext *ctx);
   virtual ~NrrdResample();
   virtual void execute();
 };
 
-extern "C" Module* make_NrrdResample(const string& id)
-{
-    return new NrrdResample(id);
-}
+} // End namespace SCITeem
+using namespace SCITeem;
 
-NrrdResample::NrrdResample(const string& id)
-  : Module("NrrdResample", id, Filter, "Filters", "Teem"), filtertype_("filtertype", id, this),
-    resampAxis0_("resampAxis0", id, this), 
-    resampAxis1_("resampAxis1", id, this), 
-    resampAxis2_("resampAxis2", id, this), 
-    sigma_("sigma", id, this),
-    extent_("extent", id, this),
+DECLARE_MAKER(NrrdResample)
+
+NrrdResample::NrrdResample(GuiContext *ctx)
+  : Module("NrrdResample", ctx, Filter, "Filters", "Teem"),
+    filtertype_(ctx->subVar("filtertype")),
+    resampAxis0_(ctx->subVar("resampAxis0")), 
+    resampAxis1_(ctx->subVar("resampAxis1")), 
+    resampAxis2_(ctx->subVar("resampAxis2")), 
+    sigma_(ctx->subVar("sigma")),
+    extent_(ctx->subVar("extent")),
     last_filtertype_(""), last_resampAxis0_(""), last_resampAxis1_(""),
     last_resampAxis2_(""), last_generation_(-1), last_nrrdH_(0)
 {
@@ -207,4 +208,3 @@ NrrdResample::execute()
   onrrd_->send(last_nrrdH_);
 }
 
-} // End namespace SCITeem
