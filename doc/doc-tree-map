@@ -24,7 +24,8 @@ doc/Developer/Guide                     Developer Guide XML sources.  Makefile
 doc/Developer/Guide/Figures             Developer Guide Figures (if needed).
 doc/Developer/FAQ                       faq.xml
 doc/Developer/FAQ/Figures               FAQ figures
-doc/Developer/CodeViews                 index.html. Cover page for source code views.  Makefile (?)
+doc/Developer/CodeViews                 Makefile
+doc/Developer/Modules			Makefile, index.html
 
 doc/Installation/                       index.html (cover page). Makefile
 doc/Installation/Guide                  Installation Guide XML sources.  Makefile
