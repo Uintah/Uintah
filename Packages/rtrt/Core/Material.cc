@@ -156,10 +156,16 @@ void Material::phongshade(Color& result,
     
   Color difflight(0,0,0);
   Color speclight(0,0,0);
-  int nlights=cx->scene->nlights();
+  int ngloblights=cx->scene->nlights();
+  int nloclights=my_lights.size();
+  int nlights=ngloblights+nloclights;
   cx->stats->ds[depth].nshadow+=nlights;
   for(int i=0;i<nlights;i++){
-    Light* light=cx->scene->light(i);
+    Light* light;
+    if (i<ngloblights)
+      light=cx->scene->light(i);
+    else 
+      light=my_lights[i-ngloblights];
     Vector light_dir=light->get_pos()-hitpos;
     if (ray_objnormal_dot*Dot(normal,light_dir)>0) {
       cx->stats->ds[depth].inshadow++;

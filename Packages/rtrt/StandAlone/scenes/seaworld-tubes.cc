@@ -3,6 +3,7 @@
 #include <Packages/rtrt/Core/Group.h>
 #include <Packages/rtrt/Core/Phong.h>
 #include <Packages/rtrt/Core/LambertianMaterial.h>
+#include <Packages/rtrt/Core/PhongMaterial.h>
 #include <Packages/rtrt/Core/Scene.h>
 #include <iostream>
 #include <math.h>
@@ -40,9 +41,16 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   Group *north_tube = new Group;
   Group *west_tube = new Group;
   Group *east_tube = new Group;
+  Group *middle = new Group;
+  Material *red = new PhongMaterial(Color(0.9,0.1,0.1), 1, 0.3, 10, 0);
+  
+  middle->add(new Sphere(red, Point(-2, 3, 1), 1));
+  middle->add(new Sphere(red, Point(2, 2.3, 0.4), 1));
+  middle->add(new Sphere(red, Point(3, -3.4, 2,1), 1));
+  middle->add(new Sphere(red, Point(-1.2, -2.1, 1.7), 1));
 
   Material* glass_to_air = new DielectricMaterial(1.0, 1.5, 0.04, 400.0, Color(.80, .93 , .87), Color(1,1,1), false);
-  Material* water_to_glass = new DielectricMaterial(1.5, 1.3, 0.04, 400.0, Color(.80, .84 , .93), Color(1,1,1), false);
+  Material* water_to_glass = new DielectricMaterial(1.5, 1.3, 0.04, 400.0, Color(.80, .84 , .93), Color(1,1,1), false, 1);
   Material* white = new LambertianMaterial(Color(0.8,0.8,0.8));
 
   Object *south_tube_inner = new Cylinder(glass_to_air, Point(-4, -10, 1), 
@@ -88,9 +96,10 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
 		      Vector(2, 0, 0), Vector(0, 4, 0)));
   
   all_tubes->add(east_tube);
+  all_tubes->add(middle);
 
-  Color cdown(0.1, 0.1, 0.7);
-  Color cup(0.5, 0.5, 0.0);
+  Color cdown(0.3, 0.3, 0.3);
+  Color cup(0.3, 0.3, 0.3);
 
   rtrt::Plane groundplane(Point(0,0,-5), Vector(0,0,1));
   Color bgcolor(0.1, 0.1, 0.4);

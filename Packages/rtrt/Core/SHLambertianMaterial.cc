@@ -118,10 +118,16 @@ SHLambertianMaterial::shade( Color& result, const Ray& ray,
     
     // result = albedo * ( irradCoeffs( normal ) + ambient_hack(cx->scene, hitpos, normal ) );
     result = fudgeFactor * albedo * irradCoeffs( normal );
-    int nlights=cx->scene->nlights();
+    int ngloblights=cx->scene->nlights();
+    int nloclights=my_lights.size();
+    int nlights=ngloblights+nloclights;
     cx->stats->ds[depth].nshadow+=nlights;
     for(int i=0;i<nlights;i++){
-	Light* light=cx->scene->light(i);
+        Light* light;
+        if (i<ngloblights)
+	  light=cx->scene->light(i);
+	else 
+	  light=my_lights[i-ngloblights];
 	Vector light_dir=light->get_pos()-hitpos;
 	double dist=light_dir.normalize();
 	Color shadowfactor(1,1,1);

@@ -925,6 +925,26 @@ void Worker::traceRay(Color& result, const Ray& ray, int depth,
 
 void Worker::traceRay(Color& result, const Ray& ray, int depth,
 		      double atten, const Color& accumcolor,
+		      Context* cx, double &dist)
+{
+  HitInfo hit;
+  Object* obj=scene->get_object();
+  cx->stats->ds[depth].nrays++;
+  obj->intersect(ray, hit, &cx->stats->ds[depth], ppc);
+  if(hit.was_hit){
+    cx->ppc = ppc;
+    hit.hit_obj->get_matl()->shade(result, ray, hit, depth,
+				   atten, accumcolor, cx);
+    dist=hit.min_t;
+  } else {
+    cx->stats->ds[depth].nbg++;
+    scene->get_bgcolor( ray.direction(), result );
+    dist = MAXDOUBLE;
+  }
+}
+
+void Worker::traceRay(Color& result, const Ray& ray, int depth,
+		      double atten, const Color& accumcolor,
 		      Context* cx, Object* obj)
 {
   HitInfo hit;
@@ -936,6 +956,24 @@ void Worker::traceRay(Color& result, const Ray& ray, int depth,
   } else {
     cx->stats->ds[depth].nbg++;
     scene->get_bgcolor( ray.direction(), result );
+  }
+}
+
+void Worker::traceRay(Color& result, const Ray& ray, int depth,
+		      double atten, const Color& accumcolor,
+		      Context* cx, Object* obj, double &dist)
+{
+  HitInfo hit;
+  cx->stats->ds[depth].nrays++;
+  obj->intersect(ray, hit, &cx->stats->ds[depth], ppc);
+  if(hit.was_hit){
+    hit.hit_obj->get_matl()->shade(result, ray, hit, depth,
+				   atten, accumcolor, cx);
+    dist = hit.min_t;
+  } else {
+    cx->stats->ds[depth].nbg++;
+    scene->get_bgcolor( ray.direction(), result );
+    dist = MAXDOUBLE;
   }
 }
 
@@ -951,8 +989,8 @@ void Worker::traceRay(Color& result, const Ray& ray,
     hitpos=ray.origin()+ray.direction()*hit.min_t;
     hitobj=hit.hit_obj;
   } else {
-      hitobj=0;
-      scene->get_bgcolor( ray.direction(), result );
+    hitobj=0;
+    scene->get_bgcolor( ray.direction(), result );
   }
 }
 

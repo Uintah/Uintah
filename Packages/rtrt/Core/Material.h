@@ -4,6 +4,7 @@
 
 #include <Packages/rtrt/Core/Color.h>
 #include <Packages/rtrt/Core/Scene.h>
+#include <Packages/rtrt/Core/Array1.h>
 #include <math.h>
 
 namespace SCIRun {
@@ -40,6 +41,7 @@ protected:
 public:
     Material();
     virtual ~Material();
+    Array1<Light *> my_lights;
 
     //ambient color (irradiance/pi) at position with surface normal
   inline Color ambient_hack(Scene* scene, const Vector& normal) const {

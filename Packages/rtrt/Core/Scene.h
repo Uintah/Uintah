@@ -43,6 +43,7 @@ class Scene {
   int shadow_mode;
   int lightbits;
   Array1<Light*> lights;
+  Array1<Light*> per_matl_lights;
   RTRT *rtrt_engine;
   Array1<DpyBase*> displays;
   
@@ -145,6 +146,9 @@ public:
   inline Light* light(int i) {
     return lights[i];
   }
+  inline Light* per_matl_light(int i) {
+    return per_matl_lights[i];
+  }
   inline int nlightBits() {
     return lightbits;
   }
@@ -158,6 +162,7 @@ public:
   }
   
   void add_light(Light*);
+  void add_per_matl_light(Light*);
   int nprims();
   
   WorkQueue work;
