@@ -17,16 +17,18 @@ SRCS     += \
 	$(SRCDIR)/StreamReader.cc\
 	$(SRCDIR)/SendIntermediateTest.cc\
 	$(SRCDIR)/Mesh3dReader.cc\
+#	$(SRCDIR)/NetConnector.cc\
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS := Core/Datatypes Dataflow/Network Dataflow/Ports \
         Core/Persistent Core/Containers Core/Util \
         Core/Exceptions Core/Thread Core/GuiInterface \
         Core/Geom Core/Geometry Core/TkExtensions \
-	Packages/DDDAS/Core/Datatypes \
-    	Packages/DDDAS/Core/Utils
+	Packages/DDDAS/Core/Datatypes Packages/DDDAS/Core/Utils \
+#        Core/Util/Comm \
 
-LIBS := $(TK_LIBRARY) $(GL_LIBRARY) $(M_LIBRARY)
+#INCLUDES += $(SCISOCK_INCLUDE)
+LIBS := $(TK_LIBRARY) $(GL_LIBRARY) $(M_LIBRARY) #$(SCISOCK_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 

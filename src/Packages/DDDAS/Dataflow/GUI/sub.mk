@@ -14,6 +14,7 @@ SRCS := \
 	$(SRCDIR)/StreamReader.tcl\
 	$(SRCDIR)/Mesh3dReader.tcl\
 	$(SRCDIR)/FEM.tcl\
+#        $(SRCDIR)/NetConnector.tcl\
 #[INSERT NEW TCL FILE HERE]
 
 include $(SCIRUN_SCRIPTS)/tclIndex.mk
