@@ -70,6 +70,7 @@ private:
   //! Handle on the generated surface.
   FieldHandle              tri_fh_;
   GeomTriangles           *geom_tris_;
+  int                      tris_id_;
 };
 
 extern "C" Module* make_FieldBoundary(const clString& id)
@@ -81,7 +82,8 @@ FieldBoundary::FieldBoundary(const clString& id) :
   Module("FieldBoundary", id, Filter, "Fields", "SCIRun"),
   infield_gen_(-1),
   tri_fh_(scinew TriSurf<double>),
-  geom_tris_(0)
+  geom_tris_(0),
+  tris_id_(0)
 {
   // Create the input port
   infield_ = scinew FieldIPort(this, "Field", FieldIPort::Atomic);
@@ -167,7 +169,9 @@ FieldBoundary::boundary(const Msh *mesh)
   }
   // FIX_ME remove duplicates and build neighbors
   // osurf->resolve_surf();
-
+  if (tris_id_) viewer_->delObj(tris_id_);
+  tris_id_ = viewer_->addObj(geom_tris_, "Boundary Surface");
+  viewer_->flushViews();
 }
 
 
@@ -187,8 +191,6 @@ FieldBoundary::execute()
     dispatch_mesh1(input->mesh(), boundary);
   }
 
-  viewer_->addObj(geom_tris_, "Boundary Surface");
-  viewer_->flushViews();
 }
 
 
