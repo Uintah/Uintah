@@ -38,7 +38,7 @@ const Index NumVars = 10;
 const Index NumGeoms = 18;
 const Index NumPcks = 11;
 const Index NumMatls = 4;
-const Index NumMdes = 4;
+const Index NumMdes = 6;
 const Index NumSwtchs = 4;
 const Index NumSchemes = 5;
 
@@ -193,10 +193,16 @@ ScaledFrameWidget::ScaledFrameWidget( Module* module, CrowdMonitor* lock, Real w
    materials[SliderMatl] = scinew GeomMaterial(sliders, DefaultSliderMaterial);
    CreateModeSwitch(3, materials[SliderMatl]);
 
+   // Switch0 are the bars
+   // Switch1 are the rotation points
+   // Switch2 are the resize cylinders
+   // Switch3 are the sliders
    SetMode(Mode0, Switch0|Switch1|Switch2|Switch3);
    SetMode(Mode1, Switch0|Switch1|Switch2);
    SetMode(Mode2, Switch0|Switch3);
    SetMode(Mode3, Switch0);
+   SetMode(Mode4, Switch0|Switch1|Switch3);
+   SetMode(Mode5, Switch0|Switch2|Switch3);
    
    FinishWidget();
 }
@@ -238,6 +244,7 @@ ScaledFrameWidget::redraw()
    Point D(Center+Down);
    Point L(Center-Right);
 
+   // draw the bars
    if (mode_switches[0]->get_state()) {
       ((GeomCylinder*)geometries[GeomCylU])->move(UL, UR, cylinderrad);
       ((GeomCylinder*)geometries[GeomCylR])->move(UR, DR, cylinderrad);
@@ -248,7 +255,8 @@ ScaledFrameWidget::redraw()
       ((GeomSphere*)geometries[GeomSPointDR])->move(DR, cylinderrad);
       ((GeomSphere*)geometries[GeomSPointDL])->move(DL, cylinderrad);
    }
-   
+
+   // draw the rotation points
    if (mode_switches[1]->get_state()) {
       ((GeomSphere*)geometries[GeomPointU])->move(U, sphererad);
       ((GeomSphere*)geometries[GeomPointR])->move(R, sphererad);
@@ -256,6 +264,7 @@ ScaledFrameWidget::redraw()
       ((GeomSphere*)geometries[GeomPointL])->move(L, sphererad);
    }
 
+   // draw the resize cylinders
    if (mode_switches[2]->get_state()) {
       Vector resizeR(GetRightAxis()*1.5*widget_scale),
 	 resizeD(GetDownAxis()*1.5*widget_scale);
@@ -266,6 +275,7 @@ ScaledFrameWidget::redraw()
       ((GeomCappedCylinder*)geometries[GeomResizeL])->move(L, L - resizeR, resizerad);
    }
 
+   // draw the sliders
    if (mode_switches[3]->get_state()) {
       Point SliderR(UL+GetRightAxis()*variables[SDistRVar]->real()*2.0);
       Point SliderD(UL+GetDownAxis()*variables[SDistDVar]->real()*2.0);
@@ -380,6 +390,8 @@ ScaledFrameWidget::geom_moved( GeomPick*, int axis, double dist,
    case PickCyls:
       MoveDelta(delta);
       break;
+   default:
+     break;
    }
    execute(0);
 }
@@ -587,6 +599,11 @@ ScaledFrameWidget::GetMaterialName( const Index mindex ) const
 
 //
 // $Log$
+// Revision 1.3  2000/06/21 20:57:25  bigler
+// Added additional modes for widget grid.
+// One of the additional modes create a scaled widget frame that allows for resizing, but restricts movement to be axis alligned (no rotation).
+// The other mode allows for rotation without resizing.
+//
 // Revision 1.2  1999/08/17 06:38:32  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.
