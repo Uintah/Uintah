@@ -52,6 +52,12 @@ using std::ostream;
 #include <sys/mman.h>
 #endif
 
+// According to (at least) one man page, xdr_hyper() is the same as
+// xdr_longlong_t().  AIX does not have xdr_longlong_t, hence...
+#if defined(_AIX) && defined(_LONG_LONG)
+#  define xdr_longlong_t xdr_hyper
+#endif
+
 #ifdef __digital__
 typedef longlong_t __int64_t;
 #endif
@@ -837,7 +843,7 @@ void BinaryPiostream::io(unsigned long& data)
 void BinaryPiostream::io(long long& data)
 {
     if(err)return;
-    if(!xdr_longlong_t(xdr, (__int64_t*)(&data))){
+    if(!xdr_longlong_t(xdr, (int64_t*)(&data))){
 	err=1;
 	cerr << "xdr_longlong_t failed\n";
     }
@@ -1470,4 +1476,4 @@ void GunzipPiostream::emit_pointer(int& have_data, int& pointer_id)
 
 } // End namespace SCIRun
 
-// $log$
+
