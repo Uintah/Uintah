@@ -622,7 +622,7 @@ void ICE::updatePressure(const ProcessorGroup*,
     old_dw->get(pressure,             lb->press_CCLabel,    0,patch,gn,0);
     new_dw->get(imp_delP,             lb->imp_delPLabel,    0,patch,gn,0);
     new_dw->allocateAndPut(press_CC,  lb->press_CCLabel,    0,patch);  
-    press_CC.initialize(0.0);
+    press_CC.initialize(getNan());
     
     for(int m = 0; m < numMatls; m++) {
       Material* matl = d_sharedState->getMaterial( m );
@@ -790,10 +790,9 @@ void ICE::implicitPressureSolve(const ProcessorGroup* pg,
                                 const MaterialSubset* mpm_matls)
 {
   cout_doing<<"Doing implicitPressureSolve "<<"\t\t\t\t ICE" << endl;
-  static int n_passes;                  
-  n_passes ++;
+
   //__________________________________
-  // define Matls   
+  // define Matl sets and subsets
   Ghost::GhostType  gn = Ghost::None;
   const MaterialSet* all_matls = d_sharedState->allMaterials();
   MaterialSubset* one_matl    = scinew MaterialSubset();
@@ -803,19 +802,17 @@ void ICE::implicitPressureSolve(const ProcessorGroup* pg,
   one_matl->addReference();
   press_matlSet->addReference(); 
   MaterialSubset* press_matl = one_matl;
- 
+
   //__________________________________
-  // - create subScheduler
-  // - turn scrubbing off
-  // - assign Data Warehouse
-  
+  //  turn off parentDW scrubbing
   DataWarehouse::ScrubMode ParentOldDW_scrubmode =
                            ParentOldDW->setScrubbing(DataWarehouse::ScrubNone);
   DataWarehouse::ScrubMode ParentNewDW_scrubmode =
                            ParentNewDW->setScrubbing(DataWarehouse::ScrubNone);
-                           
+  //__________________________________
+  // create a new subscheduler
   SchedulerP subsched = sched->createSubScheduler();
-  subsched->setRestartable(true);
+  subsched->setRestartable(true); 
   subsched->initialize(3, 1, ParentOldDW, ParentNewDW);
   subsched->clearMappings();
   subsched->mapDataWarehouse(Task::ParentOldDW, 0);
@@ -824,39 +821,12 @@ void ICE::implicitPressureSolve(const ProcessorGroup* pg,
   subsched->mapDataWarehouse(Task::NewDW, 3);
   
   DataWarehouse* subOldDW = subsched->get_dw(2);
-  DataWarehouse* subNewDW = subsched->get_dw(3); 
-     
+  DataWarehouse* subNewDW = subsched->get_dw(3);
+
   GridP grid = level->getGrid();
   subsched->advanceDataWarehouse(grid);
-  
   const PatchSet* patch_set = level->eachPatch();
-  //__________________________________
-  // Create the tasks
-  bool recursion = true;
-  scheduleImplicitVel_FC( subsched,     patch_set,      ice_matls,
-                                                        mpm_matls, 
-                                                        press_matl, 
-                                                        all_matls,
-                                                        recursion);
-                                                        
-  scheduleSetupRHS(       subsched, level,  patch_set,  one_matl, 
-                                                        all_matls);
-                                                        
-  scheduleSetupMatrix(    subsched, level,  patch_set,  one_matl, 
-                                                        all_matls);
-  
-  solver->scheduleSolve(level, subsched, press_matlSet,
-                        lb->matrixLabel, lb->imp_delPLabel, false,
-                        lb->rhsLabel,    lb->initialGuessLabel,
-                        Task::NewDW,     solver_parameters);
-                        
-  scheduleUpdatePressure( subsched,  level, patch_set,  ice_matls,
-                                                        mpm_matls, 
-                                                        press_matl,  
-                                                        all_matls);
 
-  subsched->compile();
-                                                      
   //__________________________________
   //  Move data from parentOldDW to subSchedNewDW.
   delt_vartype dt;
@@ -871,19 +841,49 @@ void ICE::implicitPressureSolve(const ProcessorGroup* pg,
   max_vartype max_RHS = 1/d_SMALL_NUM;
   double smallest_max_RHS_sofar = max_RHS;
   bool restart = false;
+  bool recursion = true;
   
   while( counter < d_max_iter_implicit && max_RHS > d_outer_iter_tolerance) {
+  
+    //__________________________________
+    // schedule the tasks
+    subsched->initialize(3, 1, ParentOldDW, ParentNewDW);
+   
+    scheduleImplicitVel_FC( subsched,     patch_set,      ice_matls,
+                                                          mpm_matls, 
+                                                          press_matl, 
+                                                          all_matls,
+                                                          recursion);
+
+    scheduleSetupRHS(       subsched, level,  patch_set,  one_matl, 
+                                                          all_matls);
+
+    scheduleSetupMatrix(    subsched, level,  patch_set,  one_matl, 
+                                                          all_matls);
+
+    solver->scheduleSolve(level, subsched, press_matlSet,
+                          lb->matrixLabel, lb->imp_delPLabel, false,
+                          lb->rhsLabel,    lb->initialGuessLabel,
+                          Task::NewDW,     solver_parameters);
+
+    scheduleUpdatePressure( subsched,  level, patch_set,  ice_matls,
+                                                          mpm_matls, 
+                                                          press_matl,  
+                                                          all_matls);
+
+    subsched->compile();
+    //__________________________________
     subsched->advanceDataWarehouse(grid);   // move subscheduler forward
-    
     subOldDW = subsched->get_dw(2);
     subNewDW = subsched->get_dw(3);
     subOldDW->setScrubbing(DataWarehouse::ScrubComplete);
     subNewDW->setScrubbing(DataWarehouse::ScrubNone);
+    
     subsched->execute();
     subNewDW->get(max_RHS,   lb->max_RHSLabel);
 
-    if(switchDebugConvergence && counter == 1){
-      // Save the residual (rhs) after the first iteration...
+    // Save the residual (rhs) after the first iteration...
+    if(switchDebugConvergence && counter == 1){ 
       ParentNewDW->transferFrom(subNewDW, lb->rhsLabel, patch_sub, press_matl);
     }
     counter ++;
@@ -921,7 +921,9 @@ void ICE::implicitPressureSolve(const ProcessorGroup* pg,
     if(pg->myrank() == 0) {
       cout << "Outer iteration " << counter<< " max_rhs "<< max_RHS<< endl;
     }
-  }
+  }  // outer iteration loop
+  
+  
   //__________________________________
   //  BULLET PROOFING
   if ( (counter == d_max_iter_implicit)   && 
