@@ -244,6 +244,8 @@ def runSusTest(test, susdir, inputxml, compare_root, algo, mode, max_parallelism
     command = "%s/sus -%s %s" % (susdir, algo, extra_flags)
     mpimsg = ""
   else:
+    if environ['OS'] == "Linux":
+      system("/usr/local/lam-mpi/bin/lamboot > /dev/null")
     command = "mpirun -np %s %s/sus -mpi -%s %s" % (int(np), susdir, algo, extra_flags)
     mpimsg = " (mpi %s proc)" % (int(np))
 
