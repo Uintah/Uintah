@@ -252,7 +252,8 @@ WARNING
 	   d_patch(0),
 	   d_action(0),
 	   d_fromDW(0),
-	   d_toDW(0)
+	   d_toDW(0),
+	   d_resourceIndex(-1)
       {
 	 d_completed = false;
 	 d_usesThreads = false;
@@ -275,7 +276,8 @@ WARNING
 	   d_patch( patch ),
 	   d_action( scinew Action<T>(ptr, pmf) ),
 	   d_fromDW( fromDW ),
-	   d_toDW( toDW )
+	   d_toDW( toDW ),
+	   d_resourceIndex( -1 )
       {
 	 d_completed = false;
 	 d_usesThreads = false;
@@ -459,21 +461,19 @@ WARNING
 		    const Patch* patch);
 
       //////////
-      // Insert Documentation Here:
+      // Tells the task to actually execute the function assigned to it.
       void doit(const ProcessorGroup* pc);
-      const string& getName() const {
+
+      inline const string& getName() const {
 	 return d_taskName;
       }
-      const Patch* getPatch() const {
+      inline const Patch* getPatch() const {
 	 return d_patch;
       }
-      
-      //////////
-      // Insert Documentation Here:
-      bool isCompleted() const {
+      inline bool isCompleted() const {
 	 return d_completed;
       }
-      
+
       struct Dependency {
 	 DataWarehouseP   d_dw;
 	 const VarLabel*  d_var;
@@ -512,11 +512,11 @@ WARNING
 	 return d_tasktype;
       }
 
-      void assignResource(int idx) {
-	 resourceIndex = idx;
+      void assignResource( int idx ) {
+	 d_resourceIndex = idx;
       }
       int getAssignedResourceIndex() const {
-	 return resourceIndex;
+	 return d_resourceIndex;
       }
 
       //////////
@@ -531,7 +531,7 @@ WARNING
       friend class TaskGraph;
       bool visited;
       bool sorted;
-      int resourceIndex;
+      int  d_resourceIndex;
    private: // class Task
       //////////
       // Insert Documentation Here:
@@ -561,6 +561,9 @@ ostream & operator << ( ostream & out, const Uintah::Task::Dependency & dep );
 
 //
 // $Log$
+// Revision 1.24  2000/09/26 21:38:36  dav
+// minor updates
+//
 // Revision 1.23  2000/09/25 20:37:43  sparker
 // Quiet g++ compiler warnings
 // Work around g++ compiler bug instantiating vector<NCVariable<Vector> >
