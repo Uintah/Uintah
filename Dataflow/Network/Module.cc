@@ -373,6 +373,17 @@ void Module::rename_iport(int, const clString&)
     NOT_FINISHED("Module::rename_iport");
 }
 
+
+IPort *Module::get_iport(const char *name)
+{
+  return get_iport(get_iports(name).first->second);
+}
+
+OPort *Module::get_oport(const char *name)
+{
+  return get_oport(get_oports(name).first->second);
+}
+
 void Module::connection(ConnectionMode mode, int which_port, int is_oport)
 {
   if(!is_oport && lastportdynamic && dynamic_port_maker) {
