@@ -1,4 +1,3 @@
-
 #include <Packages/Uintah/CCA/Components/Schedulers/SchedulerCommon.h>
 #include <Packages/Uintah/CCA/Ports/Output.h>
 #include <Packages/Uintah/CCA/Ports/LoadBalancer.h>
@@ -19,6 +18,9 @@
 #include <Core/Util/NotFinished.h>
 #include <Core/Util/DebugStream.h>
 #include <Core/Util/FancyAssert.h>
+
+#include <dom/DOMImplementation.hpp>
+#include <dom/DOMImplementationRegistry.hpp>
 
 #include <fstream>
 #include <iostream>
@@ -72,22 +74,24 @@ SchedulerCommon::makeTaskGraphDoc(const DetailedTasks*/* dt*/, int rank)
   if (!m_outPort->wasOutputTimestep())
     return;
   
-  DOM_DOMImplementation impl;
-  m_graphDoc = scinew DOM_Document();
-  *m_graphDoc = impl.createDocument(0, "Uintah_TaskGraph", DOM_DocumentType());
-  DOM_Element root = m_graphDoc->getDocumentElement();
+  DOMImplementation* impl = DOMImplementationRegistry::getDOMImplementation(XMLString::transcode("LS"));
+
+  //m_graphDoc = scinew DOMDocument();
+  m_graphDoc = impl->createDocument(0, XMLString::transcode("Uintah_TaskGraph"), 0);
+  DOMElement* root = m_graphDoc->getDocumentElement();
   
-  DOM_Element meta = m_graphDoc->createElement("Meta");
-  root.appendChild(meta);
-  appendElement(meta, "username", getenv("LOGNAME"));
+  DOMElement* meta = m_graphDoc->createElement(XMLString::transcode("Meta"));
+  root->appendChild(meta);
+  appendElement(meta, m_graphDoc->createTextNode(XMLString::transcode("username")), getenv("LOGNAME"));
   time_t t = time(NULL);
-  appendElement(meta, "date", ctime(&t));
+  appendElement(meta, m_graphDoc->createTextNode(XMLString::transcode("date")), ctime(&t));
   
-  m_nodes = scinew DOM_Element(m_graphDoc->createElement("Nodes"));
-  root.appendChild(*m_nodes);
+  //m_nodes = scinew DOMElement(m_graphDoc->createElement("Nodes"));
+  m_nodes = m_graphDoc->createElement(XMLString::transcode("Nodes"));
+  root->appendChild(m_nodes);
   
-  DOM_Element edgesElement = m_graphDoc->createElement("Edges");
-  root.appendChild(edgesElement);
+  DOMElement* edgesElement = m_graphDoc->createElement(XMLString::transcode("Edges"));
+  root->appendChild(edgesElement);
   
   if (dts_) {
     dts_->emitEdges(edgesElement, rank);
@@ -104,7 +108,7 @@ SchedulerCommon::makeTaskGraphDoc(const DetailedTasks*/* dt*/, int rank)
       cerr << "SchedulerCommon::emitEdges(): unable to open output file!\n";
       return;   // dependency dump failure shouldn't be fatal to anything else
     }
-    graphfile << *m_graphDoc << "\n";
+    graphfile << m_graphDoc << "\n";
   }
 }
 
@@ -127,18 +131,18 @@ SchedulerCommon::emitNode( const DetailedTask* task,
     if (m_nodes == NULL)
         return;
     
-    DOM_Element node = m_graphDoc->createElement("node");
+    DOMElement* node = m_graphDoc->createElement(XMLString::transcode("node"));
     m_nodes->appendChild(node);
 
-    appendElement(node, "name", task->getName());
-    appendElement(node, "start", start);
-    appendElement(node, "duration", duration);
+    appendElement(node, node->getOwnerDocument()->createTextNode(XMLString::transcode("name")), task->getName());
+    appendElement(node, node->getOwnerDocument()->createTextNode(XMLString::transcode("start")), start);
+    appendElement(node, node->getOwnerDocument()->createTextNode(XMLString::transcode("duration")), duration);
     if (execution_duration > 0)
-      appendElement(node, "execution_duration", execution_duration);
+      appendElement(node, node->getOwnerDocument()->createTextNode(XMLString::transcode("execution_duration")), execution_duration);
     if (execution_flops > 0)
-      appendElement(node, "execution_flops", (long)execution_flops);
+      appendElement(node, node->getOwnerDocument()->createTextNode(XMLString::transcode("execution_flops")), (long)execution_flops);
     if (communication_flops > 0)
-      appendElement(node, "communication_flops", (long)communication_flops);
+      appendElement(node, node->getOwnerDocument()->createTextNode(XMLString::transcode("communication_flops")), (long)communication_flops);
 }
 
 void
@@ -154,7 +158,7 @@ SchedulerCommon::finalizeNodes(int process /* = 0*/)
       fname << "/taskgraph_" << setw(5) << setfill('0') << process << ".xml";
       string file_name(timestep_dir + fname.str());
       ofstream graphfile(file_name.c_str());
-      graphfile << *m_graphDoc << "\n";
+      graphfile << m_graphDoc << "\n";
     }
     
     delete m_nodes;

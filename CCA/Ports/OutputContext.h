@@ -5,7 +5,7 @@
 #define IRIX
 #pragma set woff 1375
 #endif
-#include <dom/DOM_Element.hpp>
+#include <dom/DOMElement.hpp>
 
 namespace Uintah {
    /**************************************
@@ -39,7 +39,7 @@ namespace Uintah {
     
    class OutputContext {
    public:
-      OutputContext(int fd, long cur, const DOM_Element& varnode)
+      OutputContext(int fd, long cur, DOMElement* varnode)
 	 : fd(fd), cur(cur), varnode(varnode)
       {
       }
@@ -47,7 +47,7 @@ namespace Uintah {
 
       int fd;
       long cur;
-      DOM_Element varnode;
+      DOMElement* varnode;
    private:
       OutputContext(const OutputContext&);
       OutputContext& operator=(const OutputContext&);

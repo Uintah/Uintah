@@ -15,9 +15,10 @@
 #pragma set woff 1375
 #endif
 #include <util/PlatformUtils.hpp>
-#include <parsers/DOMParser.hpp>
-#include <dom/DOM_Node.hpp>
-#include <dom/DOM_NamedNodeMap.hpp>
+#include <parsers/XercesDOMParser.hpp>
+#include <dom/DOMNode.hpp>
+#include <dom/DOMNamedNodeMap.hpp>
+#include <util/XMLString.hpp>
 #if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
 #pragma reset woff 1375
 #endif
@@ -27,8 +28,9 @@ using namespace SCIRun;
 
 using namespace std;
 
-ProblemSpec::ProblemSpec(const DOM_Node& node, bool doWrite)
-  : d_node(scinew DOM_Node(node)), d_write(doWrite)
+ProblemSpec::ProblemSpec(const DOMNode* node, bool doWrite)
+  : d_node(node->cloneNode(true)), d_write(doWrite)
+  // call cloneNode instead of scinew DOMNode
 {
 }
 ProblemSpec::~ProblemSpec()
@@ -38,15 +40,15 @@ ProblemSpec::~ProblemSpec()
 
 ProblemSpecP ProblemSpec::findBlock() const
 {
-  ProblemSpecP prob_spec = scinew ProblemSpec(*d_node, d_write);
+  ProblemSpecP prob_spec = scinew ProblemSpec(d_node, d_write);
 
-  DOM_Node child = d_node->getFirstChild();
+  const DOMNode* child = d_node->getFirstChild();
   if (child != 0) {
-    if (child.getNodeType() == DOM_Node::TEXT_NODE) {
-      child = child.getNextSibling();
+    if (child->getNodeType() == DOMNode::TEXT_NODE) {
+      child = child->getNextSibling();
     }
   }
-  if (child.isNull() )
+  if (child == NULL)
      return 0;
   else
      return scinew ProblemSpec(child, d_write);
@@ -55,9 +57,9 @@ ProblemSpecP ProblemSpec::findBlock() const
 
 ProblemSpecP ProblemSpec::findBlock(const std::string& name) const 
 {
-   DOM_Node found_node = findNode(name,*d_node);
+   const DOMNode* found_node = findNode(name,d_node);
 
-  if (found_node.isNull()) {
+  if (found_node == NULL) {
     return 0;
   }
   else {
@@ -67,15 +69,15 @@ ProblemSpecP ProblemSpec::findBlock(const std::string& name) const
 
 ProblemSpecP ProblemSpec::findNextBlock() const
 {
-  DOM_Node found_node = d_node->getNextSibling();
+  const DOMNode* found_node = d_node->getNextSibling();
   
   if (found_node != 0) {
-    if (found_node.getNodeType() == DOM_Node::TEXT_NODE) {
-      found_node = found_node.getNextSibling();
+    if (found_node->getNodeType() == DOMNode::TEXT_NODE) {
+      found_node = found_node->getNextSibling();
     }
   }
     
-  if (found_node.isNull() ) {
+  if (found_node == NULL ) {
      return 0;
   }
   else {
@@ -87,23 +89,23 @@ ProblemSpecP ProblemSpec::findNextBlock(const std::string& name) const
 {
   // Iterate through all of the child nodes that have this name
 
-  DOM_Node found_node = d_node->getNextSibling();
+  const DOMNode* found_node = d_node->getNextSibling();
 
-  DOMString search_name(name.c_str());
   while(found_node != 0){
-    DOMString node_name = found_node.getNodeName();
-    char *s = node_name.transcode();
+    char *s = XMLString::transcode(found_node->getNodeName());
     std::string c_name(s);
     delete[] s;
-    if (search_name.equals(node_name) ) {
+
+    if (c_name == name) {
       break;
     }
-    //DOM_Node tmp = findNode(name,child);
-    found_node = found_node.getNextSibling();
+
+    //const DOMNode* tmp = findNode(name,child);
+    found_node = found_node->getNextSibling();
 
   }
    
-  if (found_node.isNull()) {
+  if (found_node == NULL) {
      return 0;
   }
   else {
@@ -115,8 +117,8 @@ ProblemSpecP ProblemSpec::findNextBlock(const std::string& name) const
 std::string ProblemSpec::getNodeName() const
 {
 
-  DOMString node_name = d_node->getNodeName();
-  char *s = node_name.transcode();
+  //DOMString node_name = d_node->getNodeName();
+  char *s = XMLString::transcode(d_node->getNodeName());
   std::string name(s);
   delete[] s;
 
@@ -128,17 +130,17 @@ ProblemSpecP ProblemSpec::get(const std::string& name, double &value)
 {
   ProblemSpecP ps = this;
 
-  DOM_Node found_node = findNode(name,*d_node);
-  if (found_node.isNull()) {
+  const DOMNode* found_node = findNode(name,d_node);
+  if (found_node == NULL) {
     ps = 0;
     return ps;
   }
   else {
-    for (DOM_Node child = found_node.getFirstChild(); child != 0;
-	 child = child.getNextSibling()) {
-      if (child.getNodeType() == DOM_Node::TEXT_NODE) {
-	DOMString val = child.getNodeValue();
-	char* s = val.transcode();
+    for (DOMNode* child = found_node->getFirstChild(); child != 0;
+	 child = child->getNextSibling()) {
+      if (child->getNodeType() == DOMNode::TEXT_NODE) {
+	//DOMString val = child->getNodeValue();
+	char* s = XMLString::transcode(child->getNodeValue());
 	value = atof(s);
 	delete[] s;
       }
@@ -151,17 +153,17 @@ ProblemSpecP ProblemSpec::get(const std::string& name, double &value)
 ProblemSpecP ProblemSpec::get(const std::string& name, int &value)
 {
   ProblemSpecP ps = this;
-  DOM_Node found_node = findNode(name,*d_node);
-  if (found_node.isNull()) {
+  const DOMNode* found_node = findNode(name,d_node);
+  if (found_node == NULL) {
     ps = 0;
     return ps;
   }
   else {
-    for (DOM_Node child = found_node.getFirstChild(); child != 0;
-	 child = child.getNextSibling()) {
-      if (child.getNodeType() == DOM_Node::TEXT_NODE) {
-	DOMString val = child.getNodeValue();
-	char* s = val.transcode();
+    for (DOMNode* child = found_node->getFirstChild(); child != 0;
+	 child = child->getNextSibling()) {
+      if (child->getNodeType() == DOMNode::TEXT_NODE) {
+	//DOMString val = child->getNodeValue();
+	char* s = XMLString::transcode(child->getNodeValue());
 	value = atoi(s);
 	delete[] s;
       }
@@ -175,17 +177,17 @@ ProblemSpecP ProblemSpec::get(const std::string& name, int &value)
 ProblemSpecP ProblemSpec::get(const std::string& name, bool &value)
 {
   ProblemSpecP ps = this;
-  DOM_Node found_node = findNode(name,*d_node);
-  if (found_node.isNull()) {
+  const DOMNode* found_node = findNode(name,d_node);
+  if (found_node == NULL) {
     ps = 0;
     return ps;
   }
   else {
-    for (DOM_Node child = found_node.getFirstChild(); child != 0;
-	 child = child.getNextSibling()) {
-      if (child.getNodeType() == DOM_Node::TEXT_NODE) {
-	DOMString val = child.getNodeValue();
-	char *s = val.transcode();
+    for (DOMNode* child = found_node->getFirstChild(); child != 0;
+	 child = child->getNextSibling()) {
+      if (child->getNodeType() == DOMNode::TEXT_NODE) {
+	//DOMString val = child->getNodeValue();
+	char *s = XMLString::transcode(child->getNodeValue());
 	std::string cmp(s);
 	delete[] s;
 	// Slurp up any spaces that were put in before or after the cmp string.
@@ -212,17 +214,17 @@ ProblemSpecP ProblemSpec::get(const std::string& name, bool &value)
 ProblemSpecP ProblemSpec::get(const std::string& name, std::string &value)
 {
   ProblemSpecP ps = this;
-  DOM_Node found_node = findNode(name,*d_node);
-  if (found_node.isNull()) {
+  const DOMNode* found_node = findNode(name,d_node);
+  if (found_node == NULL) {
     ps = 0;
     return ps;
   }
   else {
-    for (DOM_Node child = found_node.getFirstChild(); child != 0;
-	 child = child.getNextSibling()) {
-      if (child.getNodeType() == DOM_Node::TEXT_NODE) {
-	DOMString val = child.getNodeValue();
-	char *s = val.transcode();
+    for (DOMNode* child = found_node->getFirstChild(); child != 0;
+	 child = child->getNextSibling()) {
+      if (child->getNodeType() == DOMNode::TEXT_NODE) {
+	//DOMString val = child->getNodeValue();
+	char *s = XMLString::transcode(child->getNodeValue());
 	value = std::string(s);
 	delete[] s;
       }
@@ -248,17 +250,17 @@ ProblemSpecP ProblemSpec::get(const std::string& name,
 
   std::string string_value;
   ProblemSpecP ps = this;
-  DOM_Node found_node = findNode(name, *d_node);
-  if (found_node.isNull()) {
+  const DOMNode* found_node = findNode(name, d_node);
+  if (found_node == NULL) {
     ps = 0;
     return ps;
   }
   else {
-    for (DOM_Node child = found_node.getFirstChild(); child != 0;
-	 child = child.getNextSibling()) {
-      if (child.getNodeType() == DOM_Node::TEXT_NODE) {
-	DOMString val = child.getNodeValue();
-	char *s = val.transcode();
+    for (DOMNode* child = found_node->getFirstChild(); child != 0;
+	 child = child->getNextSibling()) {
+      if (child->getNodeType() == DOMNode::TEXT_NODE) {
+	//DOMString val = child->getNodeValue();
+	char *s = XMLString::transcode(child->getNodeValue());
 	string_value = std::string(s);
 	delete[] s;
 	// Parse out the [num,num,num]
@@ -289,17 +291,17 @@ ProblemSpecP ProblemSpec::get(const std::string& name,
 
   std::string string_value;
   ProblemSpecP ps = this;
-  DOM_Node found_node = findNode(name, *d_node);
-  if (found_node.isNull()) {
+  const DOMNode* found_node = findNode(name, d_node);
+  if (found_node == NULL) {
     ps = 0;
     return ps;
   }
   else {
-    for (DOM_Node child = found_node.getFirstChild(); child != 0;
-	 child = child.getNextSibling()) {
-      if (child.getNodeType() == DOM_Node::TEXT_NODE) {
-	DOMString val = child.getNodeValue();
-	char *s = val.transcode();
+    for (DOMNode* child = found_node->getFirstChild(); child != 0;
+	 child = child->getNextSibling()) {
+      if (child->getNodeType() == DOMNode::TEXT_NODE) {
+	//DOMString val = child->getNodeValue();
+	char *s = XMLString::transcode(child->getNodeValue());
 	string_value = std::string(s);
 	delete[] s;
 
@@ -334,17 +336,17 @@ ProblemSpecP ProblemSpec::get(const std::string& name,
 
   std::string string_value;
   ProblemSpecP ps = this;
-  DOM_Node found_node = findNode(name, *d_node);
-  if (found_node.isNull()) {
+  const DOMNode* found_node = findNode(name, d_node);
+  if (found_node == NULL) {
     ps = 0;
     return ps;
   }
   else {
-    for (DOM_Node child = found_node.getFirstChild(); child != 0;
-	 child = child.getNextSibling()) {
-      if (child.getNodeType() == DOM_Node::TEXT_NODE) {
-	DOMString val = child.getNodeValue();
-	char *s = val.transcode();
+    for (DOMNode* child = found_node->getFirstChild(); child != 0;
+	 child = child->getNextSibling()) {
+      if (child->getNodeType() == DOMNode::TEXT_NODE) {
+	//DOMString val = child->getNodeValue();
+	char *s = XMLString::transcode(child->getNodeValue());
 	string_value = std::string(s);
 	delete[] s;
 
@@ -378,17 +380,17 @@ ProblemSpecP ProblemSpec::get(const std::string& name,
 
   std::string string_value;
   ProblemSpecP ps = this;
-  DOM_Node found_node = findNode(name, *d_node);
-  if (found_node.isNull()) {
+  const DOMNode* found_node = findNode(name, d_node);
+  if (found_node == NULL) {
     ps = 0;
     return ps;
   }
   else {
-    for (DOM_Node child = found_node.getFirstChild(); child != 0;
-	 child = child.getNextSibling()) {
-      if (child.getNodeType() == DOM_Node::TEXT_NODE) {
-	DOMString val = child.getNodeValue();
-	char *s = val.transcode();
+    for (DOMNode* child = found_node->getFirstChild(); child != 0;
+	 child = child->getNextSibling()) {
+      if (child->getNodeType() == DOMNode::TEXT_NODE) {
+	//DOMString val = child->getNodeValue();
+	char *s = XMLString::transcode(child->getNodeValue());
 	string_value = std::string(s);
 	delete[] s;
 	// Parse out the [num,num,num]
@@ -512,25 +514,25 @@ ProblemSpecP ProblemSpec::getOptional(const std::string& name,
 				      std::string &value)
 {
   ProblemSpecP ps = this;
-  DOM_Node attr_node;
-  DOM_Node found_node = findNode(name,*d_node);
-  std::cout << "node name = " << found_node.getNodeName() << std::endl;
-  if (found_node.isNull()) {
+  DOMNode* attr_node;
+  const DOMNode* found_node = findNode(name,d_node);
+  std::cout << "node name = " << found_node->getNodeName() << std::endl;
+  if (found_node == NULL) {
     ps = 0;
     return ps;
   }
   else {
-    if (found_node.getNodeType() == DOM_Node::ELEMENT_NODE) {
+    if (found_node->getNodeType() == DOMNode::ELEMENT_NODE) {
       // We have an element node and attributes
-      DOM_NamedNodeMap attr = found_node.getAttributes();
-      int num_attr = attr.getLength();
+      DOMNamedNodeMap* attr = found_node->getAttributes();
+      int num_attr = attr->getLength();
       if (num_attr >= 1)
-	attr_node = attr.item(0);
+	attr_node = attr->item(0);
       else 
 	return ps = 0;
-      if (attr_node.getNodeType() == DOM_Node::ATTRIBUTE_NODE) {
-	DOMString val = attr_node.getNodeValue();
-	char *s = val.transcode();
+      if (attr_node->getNodeType() == DOMNode::ATTRIBUTE_NODE) {
+	//DOMString val = attr_node->getNodeValue();
+	char *s = XMLString::transcode(attr_node->getNodeValue());
 	value = std::string(s);
 	delete[] s;
       }
@@ -556,12 +558,12 @@ void ProblemSpec::requireOptional(const std::string& name, std::string& value)
 void ProblemSpec::getAttributes(map<string,string>& attributes)
 {
 
-  DOM_NamedNodeMap attr = d_node->getAttributes();
-  int num_attr = attr.getLength();
+  DOMNamedNodeMap* attr = d_node->getAttributes();
+  int num_attr = attr->getLength();
 
   for (int i = 0; i<num_attr; i++) {
-    string name(toString(attr.item(i).getNodeName()));
-    string value(toString(attr.item(i).getNodeValue()));
+    string name(XMLString::transcode(attr->item(i)->getNodeName()));
+    string value(XMLString::transcode(attr->item(i)->getNodeValue()));
 		
     attributes[name]=value;
   }
@@ -571,13 +573,14 @@ void ProblemSpec::getAttributes(map<string,string>& attributes)
 bool ProblemSpec::getAttribute(const string& attribute, string& result)
 {
 
-  DOM_NamedNodeMap attr = d_node->getAttributes();
-  DOMString search_name(attribute.c_str());
-  DOM_Node n = attr.getNamedItem(search_name);
+  DOMNamedNodeMap* attr = d_node->getAttributes();
+  //DOMString search_name(attribute.c_str());
+
+  const DOMNode* n = attr->getNamedItem(XMLString::transcode(attribute.c_str()));
   if(n == 0)
      return false;
-  DOMString val = n.getNodeValue();
-  char* s = val.transcode();
+  //DOMString val = n.getNodeValue();
+  char* s = XMLString::transcode(n->getNodeValue());
   result=s;
   delete[] s;
   return true;

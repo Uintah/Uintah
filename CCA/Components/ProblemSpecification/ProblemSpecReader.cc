@@ -1,4 +1,3 @@
-
 #include <Packages/Uintah/CCA/Components/ProblemSpecification/ProblemSpecReader.h>
 #include <Packages/Uintah/Core/Parallel/Parallel.h>        // Only used for MPI cerr
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>  // process determination
@@ -31,13 +30,13 @@ ProblemSpecP ProblemSpecReader::readInputFile()
     XMLPlatformUtils::Initialize();
   }
   catch(const XMLException& toCatch) {
-      throw ProblemSetupException("XML Exception: "+toString(toCatch.getMessage()));
+      throw ProblemSetupException("XML Exception: "+ string(XMLString::transcode(toCatch.getMessage())));
   }
   
   ProblemSpecP prob_spec;
   try {
       // Instantiate the DOM parser.
-      DOMParser parser;
+      XercesDOMParser parser;
       parser.setDoValidation(false);
 
       SimpleErrorHandler handler;
@@ -54,10 +53,10 @@ ProblemSpecP ProblemSpecReader::readInputFile()
 
       // Add the parser contents to the ProblemSpecP d_doc
 
-      DOM_Document doc = parser.getDocument();
-      prob_spec = scinew ProblemSpec(doc.getDocumentElement());
+      DOMDocument* doc = parser.getDocument();
+      prob_spec = scinew ProblemSpec(doc->getDocumentElement());
   } catch(const XMLException& ex) {
-      throw ProblemSetupException("XML Exception: "+toString(ex.getMessage()));
+      throw ProblemSetupException("XML Exception: "+string(XMLString::transcode(ex.getMessage())));
   }
 
   return prob_spec;
