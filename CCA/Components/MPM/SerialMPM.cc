@@ -32,6 +32,7 @@
 #include <Packages/Uintah/Core/Exceptions/ParameterNotFound.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
 #include <Packages/Uintah/Core/Grid/fillFace.h>
+#include <Packages/Uintah/CCA/Components/MPM/ParticleCreator/ParticleCreator.h>
 
 #include <Core/Geometry/Vector.h>
 #include <Core/Geometry/Point.h>
@@ -315,6 +316,7 @@ SerialMPM::scheduleTimeAdvance(const LevelP & level,
   scheduleSetGridBoundaryConditions(      sched, patches, matls);
   scheduleApplyExternalLoads(             sched, patches, matls);
   scheduleCalculateDampingRate(           sched, patches, matls);
+  //  scheduleAddNewParticles(           sched, patches, matls);
   scheduleInterpolateToParticlesAndUpdate(sched, patches, matls);
 
   sched->scheduleParticleRelocation(level, lb->pXLabel_preReloc,
@@ -743,6 +745,24 @@ void SerialMPM::scheduleCalculateDampingRate(SchedulerP& sched,
     sched->addTask(t, patches, matls);
   }
 }
+
+void SerialMPM::scheduleAddNewParticles(SchedulerP& sched,
+					const PatchSet* patches,
+					const MaterialSet* matls)
+{
+ /*
+  * AddNewParticles
+  * Create new particles
+  */
+  Task* t=scinew Task("MPM::addNewParticles", this, 
+		      &SerialMPM::addNewParticles);
+
+
+
+  sched->addTask(t, patches, matls);
+}
+
+
 
 void SerialMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
 						       const PatchSet* patches,
@@ -2145,6 +2165,54 @@ void SerialMPM::calculateDampingRate(const ProcessorGroup*,
   }
 }
 
+void SerialMPM::addNewParticles(const ProcessorGroup*,
+				const PatchSubset* patches,
+				const MaterialSubset* ,
+				DataWarehouse* old_dw,
+				DataWarehouse* new_dw)
+{
+
+  cout << "Adding new particles" << endl;
+  for (int p = 0; p<patches->size(); p++) {
+    const Patch* patch = patches->get(p);
+    int numMPMMatls=d_sharedState->getNumMPMMatls();
+    for(int m = 0; m < numMPMMatls; m++){
+      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
+      int dwi = mpm_matl->getDWIndex();
+      
+      int numparticles = 1;
+      ParticleCreator* particle_creator = mpm_matl->getParticleCreator();
+
+
+      ParticleSet* set_add = scinew ParticleSet(numparticles);
+      ParticleSubset* subset_add = scinew ParticleSubset(set_add,true,dwi,
+							 patch,numparticles);
+
+      map<const VarLabel*, ParticleVariableBase*>* newState
+	= new map<const VarLabel*, ParticleVariableBase*>;
+
+      particle_creator->allocateVariablesAdd(lb,new_dw,subset_add,newState);
+
+      // Need to do the constitutive models particle variables;
+
+      mpm_matl->getConstitutiveModel()->allocateCMData(new_dw,subset_add,
+						       newState);
+
+
+      // Need to carry forward the cellNAPID for each time step;
+      // Move the particle variable declarations in ParticleCreator.h to one
+      // of the functions to save on memory;
+
+      cout << " subset_add num particles = " << subset_add->numParticles()
+	   << endl;
+      new_dw->addParticles(patch,dwi,newState);
+      //      particle_creator->initializeParticlesAdd();
+
+
+    }
+  }
+
+}
 
 void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 						const PatchSubset* patches,
@@ -2227,8 +2295,8 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       new_dw->allocateAndPut(pTempNew,     lb->pTemperatureLabel_preReloc,pset);
       new_dw->allocateAndPut(pSp_volNew,   lb->pSp_volLabel_preReloc,     pset);
      
-      ParticleSubset* delset = scinew ParticleSubset
-	(pset->getParticleSet(),false,dwi,patch, 0);
+      ParticleSubset* delset = scinew ParticleSubset(pset->getParticleSet(),
+						     false,dwi,patch, 0);
 
       pids_new.copyData(pids);
       if(d_8or27==27){
