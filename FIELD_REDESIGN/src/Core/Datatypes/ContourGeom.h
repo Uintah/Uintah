@@ -1,4 +1,4 @@
-//  MeshGeom.h - A base class for regular geometries with alligned axes
+//  ContourGeom.h - A base class for regular geometries with alligned axes
 //
 //  Written by:
 //   Eric Kuehne
@@ -9,8 +9,8 @@
 //  Copyright (C) 2000 SCI Institute
 
 
-#ifndef SCI_project_MeshGeom_h
-#define SCI_project_MeshGeom_h 1
+#ifndef SCI_project_ContourGeom_h
+#define SCI_project_ContourGeom_h 1
 
 #include <SCICore/Geometry/Vector.h>
 #include <SCICore/Geometry/Point.h>
@@ -42,12 +42,13 @@ using SCICore::PersistentSpace::PersistentTypeID;
 using SCICore::Math::Interpolate;
 using SCICore::Util::DebugStream;
 
-class MeshGeom:public UnstructuredGeom
+class ContourGeom:public UnstructuredGeom
 {
 public:
 
-  MeshGeom();
-  
+  ContourGeom(const vector<NodeSimp>&, const vector<EdgeSimp>&);
+  ~ContourGeom();
+
   virtual string get_info();
   
   //////////
@@ -55,9 +56,16 @@ public:
   virtual bool compute_bbox();
 
   //////////
+  // Interpolate
+  template <class A>
+  int slinterpolate(A* att, elem_t, const Point& p, double& outval,
+		    double eps=1.0e-6);
+
+  //////////
   // set nodes and tets vectors
   // deletes these pointers if they are allready set
   void set_nodes(const vector<NodeSimp>&);
+  void set_edges(const vector<EdgeSimp>&);
 
  ///////////
   // Persistent representation...
@@ -65,13 +73,20 @@ public:
   static PersistentTypeID type_id;
  
   vector<NodeSimp> nodes;
+  vector<EdgeSimp> edges;
 
 protected:
   bool has_bbox;
+  bool has_neighbors;
 
 private:
   static DebugStream dbg;
 };
+
+template <class A>
+int ContourGeom::slinterpolate(A* att, elem_t elem_type, const Point& p, double& outval,
+				    double eps){
+}
 
 } // end Datatypes
 } // end SCICore

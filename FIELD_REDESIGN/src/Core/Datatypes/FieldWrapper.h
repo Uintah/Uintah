@@ -35,8 +35,6 @@ namespace Datatypes{
 using SCICore::Containers::LockingHandle;
 using SCICore::PersistentSpace::Piostream;
 using SCICore::PersistentSpace::PersistentTypeID;
-using SCICore::PersistentSpace::Piostream;
-using SCICore::PersistentSpace::PersistentTypeID;
 
 class FieldWrapper;
 typedef LockingHandle<FieldWrapper> FieldWrapperHandle;

@@ -1,4 +1,4 @@
-//  SField.cc - Scalar Field
+ //  SField.cc - Scalar Field
 //
 //  Written by:
 //   Eric Kuehne
