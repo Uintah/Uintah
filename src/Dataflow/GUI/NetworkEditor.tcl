@@ -86,30 +86,37 @@ proc makeNetworkEditor {} {
 
     # Create the "File" Menu sub-menus.  Create (most of) them in the
     # disabled state.  They will be enabled when all packages are loaded.
+    .main_menu.file.menu add command -label "Load..." -underline 0 \
+	-command "popupLoadMenu" -state disabled
+    .main_menu.file.menu add command -label "Insert" -underline 0 \
+	-command "popupInsertMenu" -state disabled
     .main_menu.file.menu add command -label "Save" -underline 0 \
 	-command "popupSaveMenu" -state disabled
     .main_menu.file.menu add command -label "Save As..." -underline 0 \
 	-command "popupSaveAsMenu" -state disabled
-    .main_menu.file.menu add command -label "Load..." -underline 0 \
-	-command "popupLoadMenu" -state disabled
 
-    .main_menu.file.menu add command -label "Insert" -underline 0 \
-	-command "popupInsertMenu" -state disabled
-    .main_menu.file.menu add command -label "Clear" -underline 0 \
+    .main_menu.file.menu add separator
+
+    .main_menu.file.menu add command -label "Clear Network" -underline 0 \
 	-command "ClearCanvas" -state disabled
     if 0 {
+        .main_menu.file.menu add separator
 	.main_menu.file.menu add command -label "Save Postscript..." -underline 0 \
 	    -command ".bot.neteditFrame.canvas postscript -file /tmp/canvas.ps -x 0 -y 0 -width 4500 -height 4500" -state disabled
     }
     .main_menu.file.menu add command -label "Execute All" -underline 0 \
 	-command "netedit schedule" -state disabled
+
+    .main_menu.file.menu add separator
     .main_menu.file.menu add cascade -label "New" -underline 0\
         -menu .main_menu.file.menu.new -state disabled
+    .main_menu.file.menu add separator
 
     # This was added by Mohamed Dekhil to add some infor to the net
     .main_menu.file.menu add command -label "Add Info..." -underline 0 \
 	-command "popupInfoMenu"
 
+    .main_menu.file.menu add separator
     .main_menu.file.menu add command -label "Quit" -underline 0 \
 	    -command "NiceQuit"
 
@@ -124,13 +131,15 @@ proc makeNetworkEditor {} {
     .main_menu.help.menu add checkbutton -label "Show Tooltips" -underline 0 \
 	-variable tooltipsOn
 
+    # Mac hack to fix size of 'About' window ... sigh... 
     .main_menu.help.menu add command -label "About..." -underline 0 \
-	-command  "showSplash"
+	-command  "showSplash; after 0 {wm geometry .splash \"\"}"
+
     .main_menu.help.menu add command -label "License..." -underline 0 \
 	-command  "licenseDialog"
 
     pack .main_menu.help -side right
-    Tooltip .main_menu.file $ToolTipText(HelpMenu)
+    Tooltip .main_menu.help $ToolTipText(HelpMenu)
     
     tk_menuBar .main_menu .main_menu.file
 
@@ -242,14 +251,14 @@ proc canvasScroll { canvas { dx 0.0 } { dy 0.0 } } {
 
 # Activate the "File" menu items - called from C after all packages are loaded
 proc activate_file_submenus { } {
-    .main_menu.file.menu entryconfig 0 -state active
-    .main_menu.file.menu entryconfig 1 -state active
-    .main_menu.file.menu entryconfig 2 -state active
-    .main_menu.file.menu entryconfig 3 -state active
-    .main_menu.file.menu entryconfig 4 -state active
-    .main_menu.file.menu entryconfig 5 -state active
-    .main_menu.file.menu entryconfig 6 -state active
-    .main_menu.file.menu entryconfig 7 -state active
+    .main_menu.file.menu entryconfig  0 -state active
+    .main_menu.file.menu entryconfig  1 -state active
+    .main_menu.file.menu entryconfig  2 -state active
+    .main_menu.file.menu entryconfig  3 -state active
+    .main_menu.file.menu entryconfig  5 -state active
+    .main_menu.file.menu entryconfig  6 -state active
+    .main_menu.file.menu entryconfig  8 -state active
+    .main_menu.file.menu entryconfig 10 -state active
 }
 
 proc modulesMenu { subnet x y } {
@@ -641,8 +650,8 @@ proc compute_bbox { canvas { items "" } { cheat 0 } } {
 proc popupLoadMenu {} {
     global NetworkChanged
     if $NetworkChanged {
-	set result [tk_messageBox -type yesnocancel -parent . -message \
-			"Your network has not been saved.\nWould you like to save before loading a new one?" -icon warning ]
+	set result [tk_messageBox -type yesnocancel -parent . -message -title "Warning" \
+			"Your network has not been saved.\n\nWould you like to save before loading a new one?" -icon warning ]
 	if {![string compare "yes" $result]} { popupSaveMenu }
 	if {![string compare "cancel" $result]} { return }
     }
@@ -667,10 +676,10 @@ proc ClearCanvas { {confirm 1} {subnet 0} } {
     set result "ok"
     if { $confirm && $NetworkChanged } {
 	set result \
-	    [tk_messageBox -type okcancel -parent . -icon warning -message \
-		 "Your network has not been saved.\nALL modules and connections will be cleared.\nReally clear?"]	
+	    [tk_messageBox -title "Warning" -type yesno -parent . -icon warning -message \
+		 "Your network has not been saved.\n\nAll modules and connections will be deleted.\n\nReally clear?"]	
     }
-    if {!$confirm || [string compare "ok" $result] == 0} {
+    if {!$confirm || [string compare "yes" $result] == 0} {
 	global Subnet netedit_savefile CurrentlySelectedModules
 	foreach module $Subnet(Subnet${subnet}_Modules) {
 	    moduleDestroy $module
@@ -831,9 +840,9 @@ proc loadnet {netedit_loadfile } {
 # (Because the enviroment variable SCIRUN_DATA was not set)
 proc getDataDirectory { dataset } {
    set answer [tk_messageBox -type okcancel -parent . -message \
-         "The '$dataset' dataset was specified (either by the enviroment variable SCIRUN_DATASET or by the network loaded).  However, the location of this dataset was not specified (with the SCIRUN_DATA env var).  Please select a directory (eg: /usr/sci/data/SCIRunData/1.10.0).  Note, this directory must have the '$dataset' subdirectory in it." ]
+         "The '$dataset' dataset was specified (either by the enviroment variable SCIRUN_DATASET or by the network loaded).  However, the location of this dataset was not specified (with the SCIRUN_DATA env var).  Please select a directory (eg: /usr/sci/data/SCIRunData/1.20.0).  Note, this directory must have the '$dataset' subdirectory in it." ]
    case $answer {
-       ok "return [tk_chooseDirectory -mustexist true -initialdir /usr/sci/data/SCIRunData/1.10.0]"
+       ok "return [tk_chooseDirectory -mustexist true -initialdir /usr/sci/data/SCIRunData/1.20.0]"
        cancel "netedit quit"
    }
 }
@@ -848,13 +857,13 @@ proc getSettingsDirectory { warn_user } {
 
    if { "$warn_user" == "true" } {
       set answer [tk_messageBox -type okcancel -parent . -message \
-         "The enviroment variables SCIRUN_DATA and/or SCIRUN_DATASET are not set (or are invalid).  You must specify a valid data set directory in order to use this net!  You will now be asked to select the directory of the dataset you are interested in.  (eg: /usr/sci/data/SCIRunData/1.10.0/sphere) (FYI, if you set these environment variables, you will not need to select a directory manually when you load this network.)" ]
+         "The enviroment variables SCIRUN_DATA and/or SCIRUN_DATASET are not set (or are invalid).  You must specify a valid data set directory in order to use this net!  You will now be asked to select the directory of the dataset you are interested in.  (eg: /usr/sci/data/SCIRunData/1.20.0/sphere)\n\nFYI, if you set these environment variables, you will not need to select a directory manually when you load this network." ]
        case $answer {
-	   ok "return [tk_chooseDirectory -mustexist true -initialdir /usr/sci/data/SCIRunData/1.10.0]"
+	   ok "return [tk_chooseDirectory -mustexist true -initialdir /usr/sci/data/SCIRunData/1.20.0]"
 	   cancel "netedit quit"
        }
    }
-   return [tk_chooseDirectory -mustexist true -initialdir /usr/sci/data/SCIRunData/1.10.0]
+   return [tk_chooseDirectory -mustexist true -initialdir /usr/sci/data/SCIRunData/1.20.0]
 }
 
 #
@@ -866,11 +875,11 @@ proc getSettingsDirectory { warn_user } {
 proc verifyFile { file_name } {
   if {![file isfile $file_name]} {
 
-     set message "Error: $file_name is not a valid file.  Please select a valid directory (eg: /usr/sci/data/SCIRunData/1.10.0/sphere)"
+     set message "Error: $file_name is not a valid file.  Please select a valid directory (eg: /usr/sci/data/SCIRunData/1.20.0/sphere)"
 
      # This occurs if the user presses "cancel".
      if { "$file_name" == "//.settings" } {
-        set message "You must select a data set directory for use with this network. Eg: /usr/sci/data/SCIRunData/1.10.0/sphere"
+        set message "You must select a data set directory for use with this network. Eg: /usr/sci/data/SCIRunData/1.20.0/sphere"
      }
 
      tk_messageBox -type ok -parent . -message "$message" -icon warning
@@ -974,6 +983,7 @@ proc showSplash { imgname {steps none} } {
     set filename [file join $SCIRUN_SRCDIR $imgname]
     image create photo ::img::splash -file "$filename"
     toplevel .splash
+    wm geometry .splash +135+170
 
     wm protocol .splash WM_DELETE_WINDOW "wm withdraw .splash"
 
@@ -981,16 +991,16 @@ proc showSplash { imgname {steps none} } {
     label .splash.splash -image ::img::splash
     pack .splash.splash
     if { ![string equal $steps none ] } {
-        wm geometry .splash 504x462+135+170
 	iwidgets::feedback .splash.fb -steps $steps -labeltext \
 	    "{Loading package:                 }"
 	pack .splash.fb -padx 5 -fill x
+	# The following line forces the window to be the correct size... this is a
+	# hack to fix things on the mac. -Dav
+	wm geometry .splash "" 
     } else {
-        wm geometry .splash 504x435+135+170
 	button .splash.ok -text " OK " -command "wm withdraw .splash"
 	pack .splash.ok -side bottom -padx 5 -pady 5 -fill none
     }
-
     update idletasks
 }
 
