@@ -106,7 +106,7 @@ for test in *; do
 
 	cd "${BUILDROOT}/${mode}"
 	doTestScript="do${test}tests"
-	echo "TestScripts/$test susdir inputs goldStandard $mode $PARALLELISM "'$1' > "$doTestScript"
+	echo "python TestScripts/$test susdir inputs goldStandard $mode $PARALLELISM "'$1' > "$doTestScript"
 	/bin/chmod a+x "$doTestScript"
 	"$doTestScript" > "${test}.log"  2>&1
 	retval=$?
