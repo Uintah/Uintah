@@ -1,4 +1,4 @@
-//  MeshGeom.h - A base class for regular geometries with alligned axes
+//  SurfaceGeom.h - A base class for regular geometries with alligned axes
 //
 //  Written by:
 //   Eric Kuehne
@@ -9,8 +9,8 @@
 //  Copyright (C) 2000 SCI Institute
 
 
-#ifndef SCI_project_MeshGeom_h
-#define SCI_project_MeshGeom_h 1
+#ifndef SCI_project_SurfaceGeom_h
+#define SCI_project_SurfaceGeom_h 1
 
 #include <SCICore/Geometry/Vector.h>
 #include <SCICore/Geometry/Point.h>
@@ -42,11 +42,11 @@ using SCICore::PersistentSpace::PersistentTypeID;
 using SCICore::Math::Interpolate;
 using SCICore::Util::DebugStream;
 
-class MeshGeom:public UnstructuredGeom
+class SurfaceGeom:public UnstructuredGeom
 {
 public:
 
-  MeshGeom();
+  SurfaceGeom();
   
   virtual string get_info();
   

@@ -11,7 +11,6 @@
 #ifndef SCI_project_Field_h
 #define SCI_project_Field_h 1
 #include <SCICore/Datatypes/Datatype.h>
-#include <SCICore/Datatypes/LatticeGeom.h>
 #include <SCICore/Datatypes/FieldInterface.h>
 #include <SCICore/Containers/LockingHandle.h>
 #include <SCICore/Geometry/Vector.h>
@@ -67,14 +66,6 @@ public:
   virtual ~Field() { };
 
   //////////
-  // If geom is set, set its name
-  virtual bool set_geom_name(string iname) = 0;
-
-  //////////
-  // If attrib is set, set its name
-  virtual bool set_attrib_name(string iname) = 0;
-
-  //////////
   // Return geometry
   virtual Geom* get_geom() = 0;
   
@@ -82,18 +73,8 @@ public:
   // Return the attribute
   virtual Attrib* get_attrib() = 0;
 
-  //////////
-  // Return the upper and lower bounds
-  virtual bool get_bbox(BBox&) = 0;
 
-  //////////
-  // Set the bounding box
-  virtual bool set_bbox(const BBox&) = 0;
-  virtual bool set_bbox(const Point&, const Point&) = 0;
 
-  virtual bool longest_dimension(double&) = 0;
-  
- 
   //////////
   // Test to see if this field includes (is derived from)
   // the given interface. As convention, the input string should be in

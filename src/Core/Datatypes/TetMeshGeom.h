@@ -1,4 +1,4 @@
-//  MeshGeom.h - A base class for regular geometries with alligned axes
+//  TetMeshGeom.h - A base class for regular geometries with alligned axes
 //
 //  Written by:
 //   Eric Kuehne
@@ -9,14 +9,14 @@
 //  Copyright (C) 2000 SCI Institute
 
 
-#ifndef SCI_project_MeshGeom_h
-#define SCI_project_MeshGeom_h 1
+#ifndef SCI_project_TetMeshGeom_h
+#define SCI_project_TetMeshGeom_h 1
 
 #include <SCICore/Geometry/Vector.h>
 #include <SCICore/Geometry/Point.h>
 #include <SCICore/Geom/GeomTriangles.h>
 #include <SCICore/Geom/GeomPolyline.h>
-#include <SCICore/Datatypes/UnstructuredGeom.h>
+#include <SCICore/Datatypes/MeshGeom.h>
 #include <SCICore/Containers/LockingHandle.h>
 #include <SCICore/Math/MiscMath.h>
 #include <SCICore/Util/DebugStream.h>
@@ -42,36 +42,39 @@ using SCICore::PersistentSpace::PersistentTypeID;
 using SCICore::Math::Interpolate;
 using SCICore::Util::DebugStream;
 
-class MeshGeom:public UnstructuredGeom
+class TetMeshGeom:public MeshGeom
 {
 public:
 
-  MeshGeom();
-  
-  virtual string get_info();
-  
-  //////////
-  // Compute the bounding box and diagnal, set has_bbox to true
-  virtual bool compute_bbox();
+  TetMeshGeom(const vector<NodeSimp>&, const vector<TetSimp>&);
+  ~TetMeshGeom();
 
   //////////
-  // set nodes and tets vectors
-  // deletes these pointers if they are allready set
-  void set_nodes(const vector<NodeSimp>&);
+  // Interpolate
+  template <class A>
+  int slinterpolate(A* att, elem_t, const Point& p, double& outval,
+		    double eps=1.0e-6);
+
+  void set_tets(const vector<TetSimp>&);
 
  ///////////
   // Persistent representation...
   virtual void io(Piostream&);
   static PersistentTypeID type_id;
  
-  vector<NodeSimp> nodes;
+  vector<TetSimp> tets;
 
 protected:
-  bool has_bbox;
+  bool has_neighbors;
 
 private:
   static DebugStream dbg;
 };
+
+template <class A>
+int TetMeshGeom::slinterpolate(A* att, elem_t elem_type, const Point& p, double& outval,
+				    double eps){
+}
 
 } // end Datatypes
 } // end SCICore
