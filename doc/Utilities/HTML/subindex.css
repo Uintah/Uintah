@@ -22,40 +22,12 @@ Stylesheet for 2nd level index.html files (e.g. doc/User/index.html).
 */
 
 @import url(common.css);
-
-.title {
-font-weight:bold;
-font-size:100%;
-font-style: oblique;
-color:#FFCC33;
-background-color: #003333;
-text-align:center}
-
-.subtitle {
-font-style: oblique;
-height: 1.75em;
-color:#FFCC33;
-background-color: #003333;
-text-align:center;
-font-weight:bold;
-font-size:75%}
-
-table {
-}
-
-table ul li { 
-font-size: medium;
-list-style-type: none}
+@import url(indexcommon.css);
 
 th { 
 font-size: large;
 background-color:#003333;
+border-bottom: 5px solid #FFCC33;
 color:#FFCC33;
 width:100%}
 
-p {
-font-size: small}
-
-a { 
-font-style: oblique;
-font-size: 100% }

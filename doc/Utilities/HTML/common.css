@@ -22,7 +22,7 @@ Stylesheet imported by most other stylesheets.
 */
 
 body {
-background-color:#CCCCCC; 
+background-color:#CCCCCC;
 font-family: Arial, Helvetica, sans-serif;
 margin-left:50px; 
 margin-right:50px; 
@@ -43,7 +43,7 @@ color:#FFCC33;}
 div.top-banner-margins {
 margin-left:-50px;
 margin-right:-50px;
-margin-top:0em}
+margin-top:0em;}
 
 div.top-banner-margins table {
 border-style: none}
@@ -53,7 +53,7 @@ border-style: none}
 
 div.bottom-banner-margins {
 margin-left:-50px;
-margin-right:-50px}
+margin-right:-50px;}
 
 div.bottom-banner-margins table {
 border-style: none}
@@ -69,3 +69,22 @@ margin-right: auto;}
 table.default {
 margin-left: auto;
 margin-right: auto}
+
+.title {
+font-weight:bold;
+font-size:100%;
+font-style: oblique;
+color:#FFCC33;
+text-align:center}
+
+.subtitle {
+font-style: oblique;
+height: 1.75em;
+color:#FFCC33;
+text-align:center;
+font-weight:bold;
+font-size:75%}
+
+a.heading {
+font-style: oblique;
+font-size: 100% }
