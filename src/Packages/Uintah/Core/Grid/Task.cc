@@ -157,7 +157,7 @@ Task::computes(const VarLabel* var, const MaterialSubset* matls)
 Task::Dependency::Dependency(Task* task, WhichDW dw, const VarLabel* var,
 			     const PatchSubset* patches,
 			     const MaterialSubset* matls,
-			     Ghost::GhostType gtype = Ghost::None,
+			     Ghost::GhostType gtype,
 			     int numGhostCells)
 : task(task), var(var), patches(patches), matls(matls),
   gtype(gtype), dw(dw), numGhostCells(numGhostCells)

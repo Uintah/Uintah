@@ -146,8 +146,8 @@ void CompNeoHookPlas::computeStressTensor(const PatchSubset* patches,
 					  DataWarehouse* old_dw,
 					  DataWarehouse* new_dw)
 {
-  for(int p=0;p<patches->size();p++){
-    const Patch* patch = patches->get(p);
+  for(int pp=0;pp<patches->size();pp++){
+    const Patch* patch = patches->get(pp);
 
   Matrix3 bElBarTrial,deformationGradientInc;
   Matrix3 shearTrial,Shear,normal;

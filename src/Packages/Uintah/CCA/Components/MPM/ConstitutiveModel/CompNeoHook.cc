@@ -127,8 +127,8 @@ void CompNeoHook::computeStressTensor(const PatchSubset* patches,
 				      DataWarehouse* old_dw,
 				      DataWarehouse* new_dw)
 {
-  for(int p=0;p<patches->size();p++){
-    const Patch* patch = patches->get(p);
+  for(int pp=0;pp<patches->size();pp++){
+    const Patch* patch = patches->get(pp);
   Matrix3 velGrad,Shear,fbar,deformationGradientInc;
   double J,p,IEl,U,W,se=0.;
   double c_dil=0.0,Jinc;
