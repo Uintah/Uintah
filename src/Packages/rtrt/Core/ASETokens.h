@@ -28,7 +28,7 @@ class SceneToken : public Token
     AddChildMoniker("*SCENE_ENVMAP");
     AddChildMoniker("*SCENE_AMBIENT_STATIC");
   }
-  virtual ~SceneToken() { destroy_children(); }
+  virtual ~SceneToken() {}
     
   virtual Token *MakeToken() { return new SceneToken(); }
 };
@@ -43,7 +43,7 @@ class SceneEnvMapToken : public Token
   SceneEnvMapToken() : Token("*SCENE_ENVMAP") {
     AddChildMoniker("*BITMAP");
   }
-  virtual ~SceneEnvMapToken() { destroy_children(); }
+  virtual ~SceneEnvMapToken() {}
 
   virtual Token *MakeToken() { return new SceneEnvMapToken(); }
 };
@@ -56,7 +56,7 @@ class SceneAmbientStaticToken : public Token
  public:
 
   SceneAmbientStaticToken() : Token("*SCENE_AMBIENT_STATIC") { nargs_ = 3; }
-  virtual ~SceneAmbientStaticToken() { destroy_children(); }
+  virtual ~SceneAmbientStaticToken() {}
 
   virtual Token *MakeToken() { return new SceneAmbientStaticToken(); }
 };
@@ -71,7 +71,7 @@ class MaterialListToken : public Token
   MaterialListToken() : Token("*MATERIAL_LIST") {
     AddChildMoniker("*MATERIAL");
   }
-  virtual ~MaterialListToken() { destroy_children(); }
+  virtual ~MaterialListToken() {}
 
   virtual Token *MakeToken() { return new MaterialListToken(); }
 };
@@ -84,7 +84,7 @@ class BitmapToken : public Token
  public:
 
   BitmapToken() : Token("*BITMAP") { nargs_ = 1; }
-  virtual ~BitmapToken() { destroy_children(); }
+  virtual ~BitmapToken() {}
 
   virtual void Write(ofstream &str) {
     Indent(str);
@@ -102,9 +102,7 @@ class MaterialToken : public Token
  protected:
 
   string   name_;
-  string   class_;
   unsigned index_;
-  unsigned num_submtls_;
   double   ambient_[3];
   double   diffuse_[3];
   double   specular_[3];
@@ -114,21 +112,12 @@ class MaterialToken : public Token
   string   bmap_filename_;
   string   omap_filename_;
   string   imap_filename_;
-  double   tmap_uoffset_;
-  double   tmap_voffset_;
-  double   tmap_utiling_;
-  double   tmap_vtiling_;
 
  public:
 
-  MaterialToken(const string &s="*MATERIAL") : Token(s) {
-    num_submtls_ = 0;
-    tmap_uoffset_ = 0;
-    tmap_voffset_ = 0;
-    tmap_utiling_ = 1;
-    tmap_vtiling_ = 1;
+  MaterialToken() : Token("*MATERIAL") {
+    nargs_ = 1;
     AddChildMoniker("*MATERIAL_NAME");
-    AddChildMoniker("*MATERIAL_CLASS");
     AddChildMoniker("*MATERIAL_AMBIENT");
     AddChildMoniker("*MATERIAL_DIFFUSE");
     AddChildMoniker("*MATERIAL_SPECULAR");
@@ -138,17 +127,15 @@ class MaterialToken : public Token
     AddChildMoniker("*MAP_BUMP");
     AddChildMoniker("*MAP_OPACITY");
     AddChildMoniker("*MAP_SELFILLUM");
-    AddChildMoniker("*SUBMATERIAL");
-    AddChildMoniker("*NUMSUBMTLS");
+    //AddChildMoniker("*SUBMATERIAL");
   }
-  virtual ~MaterialToken() { destroy_children(); }
+  virtual ~MaterialToken() {}
 
   virtual bool Parse(ifstream &str) {
     str >> index_;
     ParseChildren(str);
 
     cout << "Material " << index_ << ": " << name_ << endl
-         << num_submtls_ << endl
          << ambient_[0] << ", " << ambient_[1] << ", " << ambient_[2] << endl
          << diffuse_[0] << ", " << diffuse_[1] << ", " << diffuse_[2] << endl
          << specular_[0] << ", " << specular_[1] << ", " << specular_[2] 
@@ -175,9 +162,6 @@ class MaterialToken : public Token
   
   string GetName() { return name_; }
   void SetName(const string& s) { name_ = s; }
-  
-  string GetClass() { return class_; }
-  void SetClass(const string& s) { class_ = s; }
   
   void GetAmbient(double c[3]) { 
     c[0] = ambient_[0];
@@ -212,23 +196,8 @@ class MaterialToken : public Token
     specular_[2] = c[2];
   } 
 
-  double GetNumSubMtls() { return num_submtls_; } 
-  void SetNumSubMtls(double s) { num_submtls_ = s; } 
-
   double GetShine() { return shine_; } 
   void SetShine(double s) { shine_ = s; } 
-
-  double GetTMapUOffset() { return tmap_uoffset_; } 
-  void SetTMapUOffset(double s) { tmap_uoffset_ = s; } 
-
-  double GetTMapVOffset() { return tmap_voffset_; } 
-  void SetTMapVOffset(double s) { tmap_voffset_ = s; } 
-
-  double GetTMapUTiling() { return tmap_utiling_; } 
-  void SetTMapUTiling(double s) { tmap_utiling_ = s; } 
-
-  double GetTMapVTiling() { return tmap_vtiling_; } 
-  void SetTMapVTiling(double s) { tmap_vtiling_ = s; } 
 
   double GetTransparency() { return transparency_; }
   void SetTransparency(double s) { transparency_ = s; }
@@ -250,105 +219,13 @@ class MaterialToken : public Token
 
 
 
-class SubMaterialToken : public MaterialToken
-{
-
- public:
-
-  SubMaterialToken() : MaterialToken("*SUBMATERIAL") {}
-  virtual ~SubMaterialToken() { destroy_children(); }
-
-  virtual bool Parse(ifstream &str) {
-    str >> index_;
-    ParseChildren(str);
-
-    cout << "SubMaterial " << index_ << ": " << name_ << endl
-         << num_submtls_ << endl
-         << ambient_[0] << ", " << ambient_[1] << ", " << ambient_[2] << endl
-         << diffuse_[0] << ", " << diffuse_[1] << ", " << diffuse_[2] << endl
-         << specular_[0] << ", " << specular_[1] << ", " << specular_[2] 
-         << endl
-         << shine_ << endl
-         << transparency_ << endl 
-         << tmap_filename_ << endl << endl;
-    return true;
-  }
-
-  virtual void Write(ofstream &str) {
-    Indent(str);
-    str << "*SUBMATERIAL " << index_ << " {" << endl;
-    ++indent_;
-    unsigned length = children_.size();
-    for (unsigned loop=0; loop<length; ++loop)
-      children_[loop]->Write(str);
-    --indent_;
-    Indent(str);
-    str << "}" << endl;
-  }
-
-  Token *MakeToken() { return new SubMaterialToken(); }
-};
-
-
-
-class NumSubMtlsToken : public Token
-{
-
- public:
-  
-  NumSubMtlsToken() : Token("*NUMSUBMTLS") {}
-  virtual ~NumSubMtlsToken() { destroy_children(); }
-
-  virtual bool Parse(ifstream &str) {
-    unsigned num;
-    str >> num;
-    ((MaterialToken*)parent_)->SetNumSubMtls(num);
-    return true;
-  }
-
-  virtual void Write(ofstream &str) {
-    Indent(str);
-    str << "*NUMSUBMTLS " << ((MaterialToken*)parent_)->GetNumSubMtls() 
-        << endl;
-  }
-
-  Token *MakeToken() { return new NumSubMtlsToken(); }
-};
-
-
-
-class MaterialClassToken : public Token
-{
-
- public:
-  
-  MaterialClassToken() : Token("*MATERIAL_CLASS") { nargs_ = 1; }
-  virtual ~MaterialClassToken() { destroy_children(); }
-
-  virtual bool Parse(ifstream &str) {
-    ParseArgs(str);
-    ((MaterialToken*)parent_)->SetClass(args_[0]);
-    return true;
-  }
-
-  virtual void Write(ofstream &str) {
-    Indent(str);
-    str << "*MATERIAL_CLASS \"" << ((MaterialToken*)parent_)->GetClass() 
-        << "\"" << endl;
-  }
-
-  Token *MakeToken() { return new MaterialClassToken(); }
-};
-
-
-
 class MaterialNameToken : public Token
 {
 
  public:
   
   MaterialNameToken() : Token("*MATERIAL_NAME") { nargs_ = 1; }
-  virtual ~MaterialNameToken() { destroy_children(); }
+  ~MaterialNameToken() {}
 
   virtual bool Parse(ifstream &str) {
     ParseArgs(str);
@@ -373,7 +250,7 @@ class MaterialAmbientToken : public Token
  public:
   
   MaterialAmbientToken() : Token("*MATERIAL_AMBIENT") {}
-  virtual ~MaterialAmbientToken() { destroy_children(); }
+  ~MaterialAmbientToken() {}
 
   virtual bool Parse(ifstream &str) {
     double color[3];
@@ -403,8 +280,8 @@ class MaterialDiffuseToken : public Token
  public:
   
   MaterialDiffuseToken() : Token("*MATERIAL_DIFFUSE") {}
-  virtual ~MaterialDiffuseToken() { destroy_children(); }
- 
+  ~MaterialDiffuseToken() {}
+
   virtual bool Parse(ifstream &str) {
     double color[3];
     str >> color[0] >> color[1] >> color [2];
@@ -433,7 +310,7 @@ class MaterialSpecularToken : public Token
  public:
   
   MaterialSpecularToken() : Token("*MATERIAL_SPECULAR") {}
-  virtual ~MaterialSpecularToken() { destroy_children(); }
+  ~MaterialSpecularToken() {}
 
   virtual bool Parse(ifstream &str) {
     double color[3];
@@ -463,7 +340,7 @@ class MaterialShineToken : public Token
  public:
   
   MaterialShineToken() : Token("*MATERIAL_SHINE") {}
-  virtual ~MaterialShineToken() { destroy_children(); }
+  ~MaterialShineToken() {}
 
   virtual bool Parse(ifstream &str) {
     double shine;
@@ -488,7 +365,7 @@ class MaterialTransparencyToken : public Token
  public:
   
   MaterialTransparencyToken() : Token("*MATERIAL_TRANSPARENCY") {}
-  virtual ~MaterialTransparencyToken() { destroy_children(); }
+  ~MaterialTransparencyToken() {}
 
   virtual bool Parse(ifstream &str) {
     double t;
@@ -508,58 +385,6 @@ class MaterialTransparencyToken : public Token
 
 
 
-class UVWUOffsetToken : public Token
-{
-
- public:
-    
-  UVWUOffsetToken() : Token("*UVW_U_OFFSET") { nargs_ = 1; }
-  virtual ~UVWUOffsetToken() { destroy_children(); }
-
-  virtual Token *MakeToken() { return new UVWUOffsetToken(); }
-};
-
-
-
-class UVWVOffsetToken : public Token
-{
-
- public:
-    
-  UVWVOffsetToken() : Token("*UVW_V_OFFSET") { nargs_ = 1; }
-  virtual ~UVWVOffsetToken() { destroy_children(); }
-
-  virtual Token *MakeToken() { return new UVWVOffsetToken(); }
-};
-
-
-
-class UVWUTilingToken : public Token
-{
-
- public:
-    
-  UVWUTilingToken() : Token("*UVW_U_TILING") { nargs_ = 1; }
-  virtual ~UVWUTilingToken() { destroy_children(); }
-
-  virtual Token *MakeToken() { return new UVWUTilingToken(); }
-};
-
-
-
-class UVWVTilingToken : public Token
-{
-
- public:
-    
-  UVWVTilingToken() : Token("*UVW_V_TILING") { nargs_ = 1; }
-  virtual ~UVWVTilingToken() { destroy_children(); }
-
-  virtual Token *MakeToken() { return new UVWVTilingToken(); }
-};
-
-
-
 class MapDiffuseToken : public Token
 {
 
@@ -567,33 +392,14 @@ class MapDiffuseToken : public Token
   
   MapDiffuseToken() : Token("*MAP_DIFFUSE") {
     AddChildMoniker("*BITMAP");
-    AddChildMoniker("*UVW_U_OFFSET");
-    AddChildMoniker("*UVW_V_OFFSET");
-    AddChildMoniker("*UVW_U_TILING");
-    AddChildMoniker("*UVW_V_TILING");
   }
-  virtual ~MapDiffuseToken() { destroy_children(); }
+  ~MapDiffuseToken() {}
 
   virtual bool Parse(ifstream &str) {
     ParseChildren(str);
-    unsigned length = children_.size();
-    for (unsigned loop=0; loop<length; ++loop) {
-      if (children_[loop]->GetMoniker() == "*BITMAP") {
-        string name = (*(children_[0]->GetArgs()))[0];
-        ((MaterialToken*)parent_)->SetTMapFilename(name);
-      } else if (children_[loop]->GetMoniker() == "*UVW_U_OFFSET") {
-        double uoffset = atof((*(children_[loop]->GetArgs()))[0].c_str());
-        ((MaterialToken*)parent_)->SetTMapUOffset(uoffset);
-      } else if (children_[loop]->GetMoniker() == "*UVW_V_OFFSET") {
-        double voffset = atof((*(children_[loop]->GetArgs()))[0].c_str());
-        ((MaterialToken*)parent_)->SetTMapVOffset(voffset);
-      } else if (children_[loop]->GetMoniker() == "*UVW_U_TILING") {
-        double utiling = atof((*(children_[loop]->GetArgs()))[0].c_str());
-        ((MaterialToken*)parent_)->SetTMapUTiling(utiling);
-      } else if (children_[loop]->GetMoniker() == "*UVW_V_TILING") {
-        double vtiling = atof((*(children_[loop]->GetArgs()))[0].c_str());
-        ((MaterialToken*)parent_)->SetTMapVTiling(vtiling);
-      }
+    if (children_.size()>0) {
+      string name = (*(children_[0]->GetArgs()))[0];
+      ((MaterialToken*)parent_)->SetTMapFilename(name);
     }
     return true;
   }
@@ -611,7 +417,7 @@ class MapBumpToken : public Token
   MapBumpToken() : Token("*MAP_BUMP") {
     AddChildMoniker("*BITMAP");
   }
-  virtual ~MapBumpToken() { destroy_children(); }
+  ~MapBumpToken() {}
 
   virtual bool Parse(ifstream &str) {
     ParseChildren(str);
@@ -635,7 +441,7 @@ class MapOpacityToken : public Token
   MapOpacityToken() : Token("*MAP_OPACITY") { 
     AddChildMoniker("*BITMAP");
   }
-  virtual ~MapOpacityToken() { destroy_children(); }
+  ~MapOpacityToken() {}
 
   virtual bool Parse(ifstream &str) {
     ParseChildren(str);
@@ -659,7 +465,7 @@ class MapSelfIllumToken : public Token
   MapSelfIllumToken() : Token("*MAP_SELFILLUM") { 
     AddChildMoniker("*BITMAP");
   }
-  virtual ~MapSelfIllumToken() { destroy_children(); }
+  ~MapSelfIllumToken() {}
 
   virtual bool Parse(ifstream &str) {
     ParseChildren(str);
@@ -671,6 +477,131 @@ class MapSelfIllumToken : public Token
   }
 
   Token *MakeToken() { return new MapSelfIllumToken(); }
+};
+
+
+
+class SubMaterialToken : public Token
+{
+
+ protected:
+
+  string   name_;
+  unsigned index_;
+  double   ambient_[3];
+  double   diffuse_[3];
+  double   specular_[3];
+  double   shine_;
+  double   transparency_;
+  string   tmap_filename_;
+  string   bmap_filename_;
+  string   omap_filename_;
+  string   imap_filename_;
+
+ public:
+
+  SubMaterialToken() : Token("*MATERIAL") {
+    nargs_ = 1;
+    AddChildMoniker("*MATERIAL_NAME");
+    AddChildMoniker("*MATERIAL_AMBIENT");
+    AddChildMoniker("*MATERIAL_DIFFUSE");
+    AddChildMoniker("*MATERIAL_SPECULAR");
+    AddChildMoniker("*MATERIAL_SHINE");
+    AddChildMoniker("*MATERIAL_TRANSPARENCY");
+    AddChildMoniker("*MAP_DIFFUSE");
+    AddChildMoniker("*MAP_BUMP");
+    AddChildMoniker("*MAP_OPACITY");
+    AddChildMoniker("*MAP_SELFILLUM");
+  }
+  virtual ~SubMaterialToken() {}
+
+  virtual bool Parse(ifstream &str) {
+    str >> index_;
+    ParseChildren(str);
+
+    cout << "SubMaterial " << index_ << ": " << name_ << endl
+         << ambient_[0] << ", " << ambient_[1] << ", " << ambient_[2] << endl
+         << diffuse_[0] << ", " << diffuse_[1] << ", " << diffuse_[2] << endl
+         << specular_[0] << ", " << specular_[1] << ", " << specular_[2] 
+         << endl
+         << shine_ << endl
+         << transparency_ << endl 
+         << tmap_filename_ << endl 
+         << bmap_filename_ << endl 
+         << omap_filename_ << endl 
+         << imap_filename_ << endl << endl;
+    return true;
+  }
+
+  virtual void Write(ofstream &str) {
+    Indent(str);
+    str << "*SUBMATERIAL " << index_ << " {" << endl;
+    ++indent_;
+    unsigned length = children_.size();
+    for (unsigned loop=0; loop<length; ++loop)
+      children_[loop]->Write(str);
+    --indent_;
+    Indent(str);
+    str << "}" << endl;
+  }
+
+  unsigned GetIndex() { return index_; }
+
+  string GetName() { return name_; }
+  void SetName(const string& s) { name_ = s; }
+  
+  void GetAmbient(double c[3]) { 
+    c[0] = ambient_[0];
+    c[1] = ambient_[1];
+    c[2] = ambient_[2];
+  } 
+  void SetAmbient(double c[3]) { 
+    ambient_[0] = c[0];
+    ambient_[1] = c[1];
+    ambient_[2] = c[2];
+  } 
+
+  void GetDiffuse(double c[3]) { 
+    c[0] = diffuse_[0];
+    c[1] = diffuse_[1];
+    c[2] = diffuse_[2];
+  } 
+  void SetDiffuse(double c[3]) { 
+    diffuse_[0] = c[0];
+    diffuse_[1] = c[1];
+    diffuse_[2] = c[2];
+  } 
+
+  void GetSpecular(double c[3]) { 
+    c[0] = specular_[0];
+    c[1] = specular_[1];
+    c[2] = specular_[2];
+  } 
+  void SetSpecular(double c[3]) { 
+    specular_[0] = c[0];
+    specular_[1] = c[1];
+    specular_[2] = c[2];
+  } 
+
+  double GetShine() { return shine_; } 
+  void SetShine(double s) { shine_ = s; } 
+
+  double GetTransparency() { return transparency_; }
+  void SetTransparency(double s) { transparency_ = s; }
+
+  string GetTMapFilename() { return tmap_filename_; }
+  void SetTMapFilename(const string& s) { tmap_filename_ = s; }
+
+  string GetBMapFilename() { return bmap_filename_; }
+  void SetBMapFilename(const string& s) { bmap_filename_ = s; }
+
+  string GetOMapFilename() { return omap_filename_; }
+  void SetOMapFilename(const string& s) { omap_filename_ = s; }
+
+  string GetIMapFilename() { return imap_filename_; }
+  void SetIMapFilename(const string& s) { imap_filename_ = s; }
+
+  Token *MakeToken() { return new SubMaterialToken(); }
 };
 
 
@@ -691,7 +622,7 @@ class GeomObjectToken : public Token
     AddChildMoniker("*NODE_NAME");
     AddChildMoniker("*MESH");
   }
-  virtual ~GeomObjectToken() { destroy_children(); }
+  virtual ~GeomObjectToken() {}
 
   virtual bool Parse(ifstream &str) {
     ParseArgs(str);
@@ -722,7 +653,7 @@ class NodeNameToken : public Token
  public:
 
   NodeNameToken() : Token("*NODE_NAME") { nargs_ = 1; }
-  virtual ~NodeNameToken() { destroy_children(); }
+  virtual ~NodeNameToken() {}
 
   virtual bool Parse(ifstream &str) {
     bool status = ParseArgs(str);
@@ -761,13 +692,12 @@ class MeshToken : public Token
   vector<unsigned> *tfaces_;
   vector<double>   *face_normals_;
   vector<double>   *vertex_normals_;
-  vector<unsigned> *mtlid_;
 
  public:
 
   MeshToken() : Token("*MESH"), numvertices_(0), numfaces_(0),
     vertices_(0), tvertices_(0), faces_(0), tfaces_(0), 
-    face_normals_(0), vertex_normals_(0), mtlid_(0) {
+    face_normals_(0), vertex_normals_(0) {
     AddChildMoniker("*MESH_NUMVERTEX");
     AddChildMoniker("*MESH_NUMFACES");
     AddChildMoniker("*MESH_VERTEX_LIST");
@@ -779,7 +709,7 @@ class MeshToken : public Token
     AddChildMoniker("*MESH_TFACELIST");
     AddChildMoniker("*MESH_NORMALS");
   }
-  virtual ~MeshToken() { destroy_children(); }
+  virtual ~MeshToken() {}
 
   unsigned GetNumVertices() { return numvertices_; }
   void SetNumVertices(unsigned n) {
@@ -815,9 +745,6 @@ class MeshToken : public Token
   vector<double> *GetVertexNormals() { return vertex_normals_; }
   void SetVertexNormals(vector<double> *v) { vertex_normals_ = v; }
   
-  vector<unsigned> *GetMtlId() { return mtlid_; }
-  void SetMtlId(vector<unsigned> *v) { mtlid_ = v; }
-  
   virtual Token *MakeToken() { return new MeshToken(); }
 };
 
@@ -829,7 +756,7 @@ class MeshNumVertexToken : public Token
  public:
 
   MeshNumVertexToken() : Token("*MESH_NUMVERTEX") { nargs_ = 1; }
-  virtual ~MeshNumVertexToken() { destroy_children(); }
+  virtual ~MeshNumVertexToken() {}
 
   virtual bool Parse(ifstream &str) {
     unsigned num;
@@ -855,7 +782,7 @@ class MeshNumTVertexToken : public Token
  public:
 
   MeshNumTVertexToken() : Token("*MESH_NUMTVERTEX") { nargs_ = 1; }
-  virtual ~MeshNumTVertexToken() { destroy_children(); }
+  virtual ~MeshNumTVertexToken() {}
 
   virtual bool Parse(ifstream &str) {
     unsigned num;
@@ -881,7 +808,7 @@ class MeshNumFacesToken : public Token
  public:
 
   MeshNumFacesToken() : Token("*MESH_NUMFACES") { nargs_ = 1; }
-  virtual ~MeshNumFacesToken() { destroy_children(); }
+  virtual ~MeshNumFacesToken() {}
 
   virtual bool Parse(ifstream &str) {
     unsigned num;
@@ -907,7 +834,7 @@ class MeshNumTVFacesToken : public Token
  public:
 
   MeshNumTVFacesToken() : Token("*MESH_NUMTVFACES") { nargs_ = 1; }
-  virtual ~MeshNumTVFacesToken() { destroy_children(); }
+  virtual ~MeshNumTVFacesToken() {}
 
   virtual bool Parse(ifstream &str) {
     unsigned num;
@@ -937,7 +864,7 @@ class MeshVertexListToken : public Token
  public:
 
   MeshVertexListToken() : Token("*MESH_VERTEX_LIST") {}
-  virtual ~MeshVertexListToken() { destroy_children(); }
+  virtual ~MeshVertexListToken() {}
 
   virtual bool Parse(ifstream &str) {
     unsigned index;
@@ -1003,7 +930,7 @@ class MeshTVertListToken : public Token
  public:
 
   MeshTVertListToken() : Token("*MESH_TVERTLIST") {}
-  virtual ~MeshTVertListToken() { destroy_children(); }
+  virtual ~MeshTVertListToken() {}
 
   virtual bool Parse(ifstream &str) {
     unsigned numtvertices = ((MeshToken*)parent_)->GetNumTVertices();
@@ -1067,17 +994,15 @@ class MeshFaceListToken : public Token
  protected:
 
   vector<unsigned> faces_;
-  vector<unsigned> mtlid_;
 
  public:
 
   MeshFaceListToken() : Token("*MESH_FACE_LIST") {}
-  virtual ~MeshFaceListToken() { destroy_children(); }
+  virtual ~MeshFaceListToken() {}
 
   virtual bool Parse(ifstream &str) {
     unsigned numfaces = ((MeshToken*)parent_)->GetNumFaces();
     faces_.resize(numfaces*3);
-    mtlid_.resize(numfaces);   // each face has a material ID
     string curstring;
     unsigned index;
     str >> curstring; // opening delimiter
@@ -1101,10 +1026,10 @@ class MeshFaceListToken : public Token
 	str >> curstring; //
 	str >> curstring; // *MESH_SMOOTHING
 	str >> curstring;
-	while (curstring != "*MESH_MTLID") 
-	  str >> curstring;   // *MESH_MTLID
-	str >> mtlid_[index]; // material ID
-	str >> curstring;     // get next token (maybe closing delimiter)
+	if (curstring != "*MESH_MTLID") 
+	  str >> curstring; // *MESH_MTLID
+	str >> curstring; // material ID
+	str >> curstring; // get next token (maybe closing delimiter)
       } else {
         if (match(delimiter,(DELIMITER)curstring[0]))
           break;
@@ -1118,7 +1043,6 @@ class MeshFaceListToken : public Token
 #endif
     
     ((MeshToken*)parent_)->SetFaces(&faces_);
-    ((MeshToken*)parent_)->SetMtlId(&mtlid_);
     
     return true;
   }
@@ -1146,7 +1070,6 @@ class MeshFaceListToken : public Token
   }
 
   vector<unsigned> *GetFaces() { return &faces_; }
-  vector<unsigned> *GetMtlId() { return &mtlid_; }
 
   virtual Token *MakeToken() { return new MeshFaceListToken(); }
 };
@@ -1161,7 +1084,7 @@ class MeshTFaceListToken : public Token
  public:
 
   MeshTFaceListToken() : Token("*MESH_TFACELIST") {}
-  virtual ~MeshTFaceListToken() { destroy_children(); }
+  virtual ~MeshTFaceListToken() {}
 
   virtual bool Parse(ifstream &str) {
     unsigned numtfaces = ((MeshToken*)parent_)->GetNumTFaces();
@@ -1235,7 +1158,7 @@ class MeshNormalsToken : public Token
     AddChildMoniker("*MESH_FACENORMAL");
     AddChildMoniker("*MESH_VERTEXNORMAL");
   }
-  virtual ~MeshNormalsToken() { destroy_children(); }
+  virtual ~MeshNormalsToken() {}
 
   virtual bool Parse(ifstream &str) {
     unsigned faceindex;
@@ -1342,7 +1265,7 @@ class MaterialRefToken : public Token
  public:
 
   MaterialRefToken() : Token("*MATERIAL_REF") {}
-  virtual ~MaterialRefToken() { destroy_children(); }
+  virtual ~MaterialRefToken() {}
 
   virtual bool Parse(ifstream &str) {
     str >> index_;
@@ -1369,9 +1292,8 @@ class GroupToken : public Token
   GroupToken() : Token("*GROUP") {
     nargs_ = 1;
     AddChildMoniker("*GEOMOBJECT");
-    AddChildMoniker("*GROUP");
   }
-  virtual ~GroupToken() { destroy_children(); }
+  virtual ~GroupToken() {}
 
   virtual bool Parse(ifstream &str) {
     ParseArgs(str);
@@ -1393,7 +1315,7 @@ class ASEFile : public Token
 
  protected:
 
-  // initialize all recognized ASE tokens
+  // initialize all possible tokens
   SceneToken A;
   SceneEnvMapToken B;
   SceneAmbientStaticToken C;
@@ -1425,12 +1347,6 @@ class ASEFile : public Token
   MapBumpToken NN;
   MapOpacityToken OO;
   MapSelfIllumToken PP;
-  MaterialClassToken QQ;
-  NumSubMtlsToken RR;
-  UVWUOffsetToken SS;
-  UVWVOffsetToken TT;
-  UVWUTilingToken UU;
-  UVWVTilingToken VV;
 
   bool is_open_;
   ifstream str_;
@@ -1451,7 +1367,7 @@ class ASEFile : public Token
     // try to open the given file
     is_open_ = str_.is_open();
   }
-  virtual ~ASEFile() { destroy_children(); }
+  virtual ~ASEFile() {}
 
   void open(const string& s) {
     moniker_ = s;
@@ -1600,23 +1516,12 @@ class ASEDir
 {
   
   string dir_;
-  vector<ASEFile*> asefiles_;
+  vector<ASEFile*> asefiles;
 
  public:
 
   ASEDir(const string& s) : dir_(s) {}
-  virtual ~ASEDir() { destroy_children(); }
-
-  void destroy_children()
-  {
-    unsigned length = asefiles_.size();
-    unsigned loop;
-    for (loop=0; loop<length; ++loop) {
-      asefiles_[loop]->destroy_children();
-      delete asefiles_[loop];
-    }
-    asefiles_.resize(0);
-  }    
+  virtual ~ASEDir() {}
 
   bool Parse() {
     char buf[100];
@@ -1634,7 +1539,7 @@ class ASEDir
 
     dirlist.getline(buf,100);
     while (!dirlist.eof()) {
-      asefiles_.push_back(new ASEFile(buf));
+      asefiles.push_back(new ASEFile(buf));
       dirlist.getline(buf,100);
     }
     dirlist.close();
@@ -1643,11 +1548,11 @@ class ASEDir
     curstring += dir_ + "/__++temp++__";
     system(curstring.c_str());
     
-    unsigned length = asefiles_.size();
+    unsigned length = asefiles.size();
     cout << "found " << length << " ASE files" << endl;
     unsigned loop;
     for (loop=0; loop<length; ++loop) {
-      asefiles_[loop]->Parse();
+      asefiles[loop]->Parse();
     }
 
     return true;
