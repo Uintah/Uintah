@@ -29,9 +29,8 @@ Dir.chdir("..")
 $stdout.print("#{root}/doc/index.html
 #{root}/doc/.htaccess
 #{root}/doc/Documentum/module-latex
-#{root}/doc/Documentum/module-desc-template.tex
-#{root}/doc/Documentum/latex-article-template.tex
 #{root}/doc/Documentum/module-xml
+#{root}/doc/Documentum/templates
 #{root}/doc/Installation/index.html
 #{root}/doc/Installation/Guide/srig.pdf
 #{root}/doc/Installation/FAQ/faq.html
@@ -64,8 +63,6 @@ $stdout.print(Dir["
 #{root}/doc/User/FAQ/*.gif
 #{root}/doc/Documentum/*.html
 #{root}/doc/Documentum/*.pdf
-#{root}/doc/Documentum/docbook_*_template.xml
-#{root}/doc/Documentum/*_template.html
 #{root}/doc/Installation/Guide/*.html
 #{root}/doc/Installation/Guide/*.gif
 #{root}/doc/Developer/Guide/*.html
