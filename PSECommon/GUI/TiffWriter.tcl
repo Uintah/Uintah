@@ -14,7 +14,7 @@ itcl_class TiffWriter {
 	$this-c needexecute
     }
     method ui {} {
-	set w .ui$this
+	set w .ui[modname]
 	if {[winfo exists $w]} {
 	    raise $w
 	    return;
