@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE component SYSTEM "../../../../../doc/ReferenceGuide/component.dtd">
 
-<component name="TensorFieldExtractor" category="Visualization">
+<component name="TensorFieldExtractor" category="Selectors">
   <overview>
     <authors>
       <author>Packages/Kurt Zimmerman</author>

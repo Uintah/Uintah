@@ -34,7 +34,7 @@
 #include <Core/GuiInterface/GuiVar.h>
 #include <Core/Datatypes/ColorMap.h>
 #include <Core/Math/MinMax.h>
-#include <Packages/Uintah/Dataflow/Modules/Visualization/ParticleFieldExtractor.h>
+#include <Packages/Uintah/Dataflow/Modules/Selectors/ParticleFieldExtractor.h>
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Ports/GeometryPort.h>
 #include <Dataflow/Ports/ColorMapPort.h>

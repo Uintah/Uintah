@@ -3,7 +3,7 @@
 #if !defined(Datatypes_Dispatch1_h)
 #define Datatypes_Dispatch1_h
 
-// uintah_dispatch_non_scalar1 macro follows
+// dispatch_non_scalar1 macro follows
 #define uintah_dispatch_non_scalar1(field1, callback)\
   bool disp_error = false;\
   string disp_msg;\

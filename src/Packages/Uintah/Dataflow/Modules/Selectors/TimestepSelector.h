@@ -1,38 +1,34 @@
 /****************************************
 CLASS
-    VectorFieldExtractor
+    TimestepSelector
 
-    
 
 OVERVIEW TEXT
-    This module receives a DataArchive object.  The user
-    interface is dynamically created based information provided by the
-    DataArchive.  The user can then select which variables he/she
-    wishes to view in a visualization.
+    This module receives a DataArchive and selects the visualized timestep.
+    Or Animates the data.
 
 
 
 KEYWORDS
-    ParticleGridReader, Material/Particle Method
+    
 
 AUTHOR
     Packages/Kurt Zimmerman
     Department of Computer Science
     University of Utah
-    June, 2000
+    June 2000
 
-    Copyright (C) 2000 SCI Group
+    Copyright (C) 1999 SCI Group
 
 LOG
-    Created June 27, 2000
+    Created June 26, 2000
 ****************************************/
-#ifndef VECTORFIELDEXTRACTOR_H
-#define VECTORFIELDEXTRACTOR_H 1
+#ifndef TIMESTEPSELECTOR_H
+#define TIMESTEPSELECTOR_H 1
 
 
 #include <Packages/Uintah/Core/Datatypes/Archive.h>
 #include <Packages/Uintah/Core/Datatypes/ArchivePort.h>
-#include <Dataflow/Ports/FieldPort.h>
 #include <Dataflow/Network/Module.h> 
 #include <Core/GuiInterface/GuiVar.h> 
 #include <string>
@@ -40,19 +36,20 @@ LOG
 
 
 namespace Uintah {
+
 using namespace SCIRun;
 
-class VectorFieldExtractor : public Module { 
+class TimestepSelector : public Module { 
   
 public: 
 
   // GROUP: Constructors
   //////////
-  VectorFieldExtractor(const string& id); 
+  TimestepSelector(const string& id); 
 
   // GROUP: Destructors
   //////////
-  virtual ~VectorFieldExtractor(); 
+  virtual ~TimestepSelector(); 
 
   // GROUP: cloning and execution 
   ////////// 
@@ -68,22 +65,18 @@ private:
 
   GuiString tcl_status;
 
-  GuiString sVar;
-  GuiInt sMatNum;
-
-  const TypeDescription *type;
+  GuiInt animate;
+  GuiInt anisleep;
+  GuiInt time;
+  GuiDouble timeval;
 
   ArchiveIPort *in;
-  FieldOPort *sfout;
+  ArchiveOPort *out;
   
-  std::string positionName;
-
-  ArchiveHandle  archiveH;
-  void setVars();
+  ArchiveHandle archiveH;
+  void setVars(ArchiveHandle ar);
 
 }; //class 
 } // End namespace Uintah
-
-
 
 #endif

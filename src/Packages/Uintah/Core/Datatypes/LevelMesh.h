@@ -49,8 +49,8 @@ public:
   {
     public:
     LevelIndex(const LevelMesh* m, int i, int j, int k);
-    int i_, j_, k_;
     const LevelMesh *mesh_;
+    int i_, j_, k_;
     const Patch* patch_;
     protected:
     LevelIndex(){}   
@@ -59,15 +59,14 @@ public:
   struct CellIndex : public LevelIndex
   {
     CellIndex() : LevelIndex() {}
-    CellIndex(const LevelMesh *m, int i, int j, int k) :
-      LevelIndex(m,i,j,k) {}    
+    CellIndex(const LevelMesh *m, int i, int j, int k);
   };
   
   struct NodeIndex : public LevelIndex
   {
     NodeIndex() : LevelIndex() {}
-    NodeIndex(const LevelMesh *m, int i, int j, int k) :
-      LevelIndex(m,i,j,k) {}    
+    NodeIndex(const LevelMesh *m, int i, int j, int k):
+      LevelIndex(m, i, j, k) {}
   };
   
   struct LevelIter : public LevelIndex
@@ -144,7 +143,7 @@ public:
 	}
       }
       IntVector idx = IntVector( i_, j_, k_);
-      if( !(patch_->containsCell( idx ) ))
+      if( !(patch_->containsNode( idx ) ))
 	patch_ = mesh_->grid_->getLevel(mesh_->level_)-> 
 	  selectPatchForCellIndex( idx ); 
       return *this;
@@ -270,6 +269,10 @@ public:
   friend class CellIter;
   friend class EdgeIter;
   friend class FaceIter;
+  friend class LevelIter;
+  friend class LevelIndex;
+  friend class NodeIndex;
+  friend class CellIndex;
 
   // For now we must create a Level Mesh for each level of the Level
   LevelMesh() : grid_(0), level_(0) {}
@@ -370,8 +373,6 @@ public:
 
 private:
 
-  friend class LevelIter;
-  friend class LevelIndex;
   // each LevelMesh needs grid and level index
   GridP grid_; 
   int level_;

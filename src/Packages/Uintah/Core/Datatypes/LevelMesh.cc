@@ -53,16 +53,21 @@ LevelMesh::init()
 
 LevelMesh::LevelIndex::LevelIndex(const LevelMesh *m, int i,
 				int j, int k ) :
-  mesh_(m)
+  mesh_(m), i_(m->idxLow_.x() + i), j_(m->idxLow_.y() + j),
+  k_(m->idxLow_.z() + k)
 {
-  i_ = mesh_->idxLow_.x() + i;
-  j_ = mesh_->idxLow_.y() + j;
-  k_ = mesh_->idxLow_.z() + k;
-  cerr<<"i_,j_,k_ = "<<i_<<","<<j_<<","<<k_<<endl;
+  cerr<<"index i_,j_,k_ = ("<<i_<<","<<j_<<","<<k_<<")\n";
 
-  LevelP l = mesh_->grid_->getLevel( mesh_->level_ );
-  patch_ = l->selectPatchForNodeIndex( IntVector(i_,j_,k_));
+  patch_ = mesh_->grid_->getLevel( mesh_->level_ )->
+    selectPatchForNodeIndex( IntVector(i_,j_,k_));
 }
+LevelMesh::CellIndex::CellIndex(const LevelMesh *m, int i,
+				int j, int k ) :
+  LevelMesh::LevelIndex(m, i, j, k)
+{
+  patch_ = mesh_->grid_->getLevel(mesh_->level_)-> 
+    selectPatchForCellIndex(IntVector(i_,j_,k_));
+}  
 
 BBox LevelMesh::get_bounding_box() const
 {

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE component SYSTEM "../../../../../doc/ReferenceGuide/component.dtd">
 
-<component name="TensorFieldOperator" category="Visualization">
+<component name="TensorFieldOperator" category="Operators">
   <overview>
     <authors>
       <author>Wayne Witzel</author>

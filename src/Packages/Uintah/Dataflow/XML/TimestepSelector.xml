@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE component SYSTEM "../../../../../doc/ReferenceGuide/component.dtd">
 
-<component name="TimestepSelector" category="Visualization">
+<component name="TimestepSelector" category="Selectors">
   <overview>
     <authors>
       <author>Packages/Kurt Zimmerman</author>
