@@ -29,7 +29,7 @@ if {[llength [array get env SCIRUN_DATA]] == 0} {
 set DATADIR $env(SCIRUN_DATA)
 puts "*** Using SCIRUN_DATA $DATADIR"
 
-source $DATADIR/aneurysm/aneurysm-settings.net
+source $DATADIR/aneurysm/aneurysm.settings
 
 ::netedit dontschedule
 
@@ -42,92 +42,49 @@ set runDate " Sat  Oct 7 19100"
 global runTime
 set runTime " 16:35:33"
 
-set bbox {24.0 20.0 399 374}
+set bbox {13.0 17.0 398 318}
 
-set m0 [addModuleAtPosition "SCIRun" "Visualization" "GLTextureBuilder" 24 130]
-set m1 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 24 20]
-set m2 [addModuleAtPosition "SCIRun" "Render" "Viewer" 137 330]
-set m3 [addModuleAtPosition "SCIRun" "Visualization" "TextureVolVis" 137 238]
-set m4 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 204 21]
-set m5 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 204 131]
+set m0 [addModuleAtPosition "SCIRun" "Visualization" "GLTextureBuilder" 13 93]
+set m1 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 13 17]
+set m2 [addModuleAtPosition "SCIRun" "Render" "Viewer" 13 274]
+set m3 [addModuleAtPosition "SCIRun" "Visualization" "TextureVolVis" 13 181]
+set m4 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 203 78]
+set m5 [addModuleAtPosition "SCIRun" "Visualization" "TexCuttingPlanes" 185 192]
 
-addConnection $m1 0 $m0 0
 addConnection $m0 0 $m3 0
 addConnection $m3 0 $m2 0
-addConnection $m4 0 $m5 0
-addConnection $m1 0 $m5 1
-addConnection $m5 0 $m3 1
+addConnection $m5 0 $m2 1
+addConnection $m0 0 $m5 0
+addConnection $m1 0 $m0 0
+addConnection $m4 0 $m3 1
+addConnection $m4 0 $m5 1
 
 set $m0-notes {}
 set $m0-show_status {1}
 set $m0-is_fixed {0}
 set $m0-max_brick_dim {64}
+set $m0-sel_brick_dim {64}
 set $m0-min {0}
-set $m0-max {251}
+set $m0-max {181}
 set $m1-notes {}
 set $m1-show_status {1}
-set $m1-filename $DATADIR/aneurysm/aneurysm-mra.lvs.fld
-$m2 ui
-set $m2-ViewWindow_0-pos {z1_x1}
-set $m2-ViewWindow_0-caxes {0}
-set $m2-ViewWindow_0-iaxes {40}
-set $m2-ViewWindow_0-view-eyep-x {0}
-set $m2-ViewWindow_0-view-eyep-y {0}
-set $m2-ViewWindow_0-view-eyep-z {2897.98}
-set $m2-ViewWindow_0-view-lookat-x {382.9}
-set $m2-ViewWindow_0-view-lookat-y {334.4}
-set $m2-ViewWindow_0-view-lookat-z {119.4}
-set $m2-ViewWindow_0-view-up-x {1}
-set $m2-ViewWindow_0-view-up-y {0}
-set $m2-ViewWindow_0-view-up-z {0}
-set $m2-ViewWindow_0-view-fov {20}
-set $m2-ViewWindow_0-view-eyep-x {0}
-set $m2-ViewWindow_0-view-eyep-y {0}
-set $m2-ViewWindow_0-view-eyep-z {2897.98}
-set $m2-ViewWindow_0-view-eyep-x {0}
-set $m2-ViewWindow_0-view-eyep-y {0}
-set $m2-ViewWindow_0-view-eyep-z {2897.98}
-set $m2-ViewWindow_0-view-lookat-x {382.9}
-set $m2-ViewWindow_0-view-lookat-y {334.4}
-set $m2-ViewWindow_0-view-lookat-z {119.4}
-set $m2-ViewWindow_0-view-lookat-x {382.9}
-set $m2-ViewWindow_0-view-lookat-y {334.4}
-set $m2-ViewWindow_0-view-lookat-z {119.4}
-set $m2-ViewWindow_0-view-up-x {1}
-set $m2-ViewWindow_0-view-up-y {0}
-set $m2-ViewWindow_0-view-up-z {0}
-set $m2-ViewWindow_0-view-up-x {1}
-set $m2-ViewWindow_0-view-up-y {0}
-set $m2-ViewWindow_0-view-up-z {0}
-set $m2-ViewWindow_0-view-fov {20}
-set $m2-ViewWindow_0-view-eyep_offset-x {3.90872e-311}
-set $m2-ViewWindow_0-view-eyep_offset-y {1.44126e-310}
-set $m2-ViewWindow_0-view-eyep_offset-z {4.15699e-311}
-set $m2-ViewWindow_0-view-eyep_offset-x {3.90872e-311}
-set $m2-ViewWindow_0-view-eyep_offset-y {1.44126e-310}
-set $m2-ViewWindow_0-view-eyep_offset-z {4.15699e-311}
-set $m2-ViewWindow_0-bgcolor-r {0}
-set $m2-ViewWindow_0-bgcolor-g {0}
-set $m2-ViewWindow_0-bgcolor-b {0}
-set $m2-ViewWindow_0-bgcolor-r {0}
-set $m2-ViewWindow_0-bgcolor-g {0}
-set $m2-ViewWindow_0-bgcolor-b {0}
-set $m2-ViewWindow_0-shading {}
-set $m2-ViewWindow_0-do_stereo {0}
-set $m2-ViewWindow_0-ambient-scale {1}
-set $m2-ViewWindow_0-diffuse-scale {1}
-set $m2-ViewWindow_0-specular-scale {1}
-set $m2-ViewWindow_0-emission-scale {1}
-set $m2-ViewWindow_0-shininess-scale {1}
-set $m2-ViewWindow_0-sbase {1}
-set $m2-ViewWindow_0-sr {1}
-set $m2-ViewWindow_0-do_bawgl {0}
-set $m2-ViewWindow_0-drawimg {126}
-set $m2-ViewWindow_0-saveprefix {}
-set $m2-ViewWindow_0-unused {1}
+set $m1-filename $DATADIR/aneurysm/aneurysm-mra-lowres.lvs.fld
+set $m2-notes {}
+set $m2-show_status {1}
+$m2 initialize_ui
+set $m2-ViewWindow_0-view-eyep-x ${view-eyep-x}
+set $m2-ViewWindow_0-view-eyep-y ${view-eyep-y}
+set $m2-ViewWindow_0-view-eyep-z ${view-eyep-z}
+set $m2-ViewWindow_0-view-lookat-x ${view-lookat-x}
+set $m2-ViewWindow_0-view-lookat-y ${view-lookat-y}
+set $m2-ViewWindow_0-view-lookat-z ${view-lookat-z}
+set $m2-ViewWindow_0-view-up-x ${view-up-x}
+set $m2-ViewWindow_0-view-up-y ${view-up-y}
+set $m2-ViewWindow_0-view-up-z ${view-up-z}
+set $m2-ViewWindow_0-view-fov ${view-fov}
 set $m3-notes {}
 set $m3-show_status {1}
-set $m3-num_slices {300}
+set $m3-num_slices {417}
 set $m3-draw_mode {0}
 set $m3-render_style {1}
 set $m3-alpha_scale {-0.613}
@@ -146,9 +103,12 @@ set $m4-realres {12}
 set $m4-gamma {0}
 set $m5-notes {}
 set $m5-show_status {1}
-set $m5-isFixed {0}
-set $m5-min {0}
-set $m5-max {251}
+set $m5-drawX {1}
+set $m5-drawY {1}
+set $m5-drawZ {1}
+set $m5-drawView {0}
+set $m5-interp_mode {1}
+
 $m3-c needexecute
 
 ::netedit scheduleok

@@ -29,7 +29,7 @@ if {[llength [array get env SCIRUN_DATA]] == 0} {
 set DATADIR $env(SCIRUN_DATA)
 puts "*** Using SCIRUN_DATA $DATADIR"
 
-source $DATADIR/brain-dmw/brain-dmw-settings.net
+source $DATADIR/brain-dmw/brain-dmw.settings
 
 ::netedit dontschedule
 
