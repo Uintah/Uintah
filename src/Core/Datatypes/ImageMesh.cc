@@ -184,7 +184,7 @@ ImageMesh::get_neighbor(Face::index_type &neighbor,
   const int j_idx = edge - (ni_-1) * nj_;
   if (j_idx >= 0)
   {
-    const int i = j_idx / (nj_ - 1);
+    const unsigned int i = j_idx / (nj_ - 1);
     if (i == 0 || i == ni_-1) 
       return false;
     neighbor.j_ = from.j_;
@@ -195,7 +195,7 @@ ImageMesh::get_neighbor(Face::index_type &neighbor,
   }
   else
   {
-    const int j = edge / (ni_ - 1);;
+    const unsigned int j = edge / (ni_ - 1);;
     if (j == 0 || j == nj_-1) 
       return false;
     neighbor.i_ = from.i_;
