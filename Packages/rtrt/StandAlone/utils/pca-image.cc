@@ -159,7 +159,7 @@ int main(int argc, char *argv[]) {
   meanY=nrrdNuke(meanY);
   
   // Write out the mean value
-  string meanname(string(outfilename_base) + "-mean.nrrd");
+  string meanname(string(outfilename_base) + "-mean.nhdr");
   if (nrrdSave(meanname.c_str(), mean, 0)) {
     err = biffGet(NRRD);
     fprintf(stderr, "%s: trouble saving to %s: %s\n", me, meanname.c_str(), err);
@@ -382,7 +382,7 @@ int main(int argc, char *argv[]) {
   mean = nrrdNuke(mean);
   
   // Write out the basis textures
-  string basisname(string(outfilename_base) + "-bases.nrrd");
+  string basisname(string(outfilename_base) + "-bases.nhdr");
   if (nrrdSave(basisname.c_str(), basesTextures, 0)) {
     err = biffGet(NRRD);
     fprintf(stderr, "%s: trouble saving to %s: %s\n", me, basisname.c_str(), err);
@@ -404,7 +404,7 @@ int main(int argc, char *argv[]) {
   // Free old transform
   transform = nrrdNuke(transform);
   
-  string transname(string(outfilename_base) + "-transform.nrrd");
+  string transname(string(outfilename_base) + "-transform.nhdr");
   if (nrrdSave(transname.c_str(), newTrans, 0)) {
     err = biffGet(NRRD);
     fprintf(stderr, "%s: trouble saving to %s: %s\n", me, transname.c_str(), err);
