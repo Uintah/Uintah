@@ -792,7 +792,8 @@ TaskGraph::createDetailedDependencies(DetailedTasks* dt, LoadBalancer* lb,
     DetailedTask* task = dt->getTask(i);
     if (task->task->getType() == Task::Reduction) {
       if (lastReductionTask != 0)
-	task->addInternalDependency(lastReductionTask);
+	task->addInternalDependency(lastReductionTask,
+				    task->task->getComputes()->var);
       lastReductionTask = task;
     }
   }
@@ -820,7 +821,7 @@ TaskGraph::createDetailedDependencies(DetailedTasks* dt, LoadBalancer* lb,
 		// about it anyways.
 		if(task->getAssignedResourceIndex() == 
 		   creator->getAssignedResourceIndex()) {
-		  task->addInternalDependency(creator);
+		  task->addInternalDependency(creator, req->var);
 		}
 	      }
 	    }
@@ -938,38 +939,38 @@ TaskGraph::createDetailedDependencies(DetailedTasks* dt, LoadBalancer* lb,
 		}
 	      }
 	    }
-	    if (!alreadyThere) {
-	      dt->possiblyCreateDependency(creator, comp, neighbor,
-					   task, req, patch,
-					   matl, l, h);
-	    }
 	    if (modifies) {
 	      // Add links to the modifying task from anything requiring
 	      // the variable before it's modified so that it never gets
 	      // modified before it gets used.
-	      for (DependencyBatch* batch = creator->getComputes(); batch != 0;
-		   batch = batch->comp_next) {
-		for (DetailedDep* dep = batch->head; dep != 0; 
-		     dep = dep->next) {
-		  if (dep->req->var == req->var) {
-		    list<DetailedTask*>::iterator toTaskIter;
-		    for (toTaskIter = dep->toTasks.begin(); 
-			 toTaskIter != dep->toTasks.end(); toTaskIter++) {
-		      DetailedTask* toTask = *toTaskIter;
-		      // dep requires what is to be modified before it is to be
-		      // modified so create a dependency between them so the
-		      // modifying won't conflist with the previous require.
-		      if (dbg.active()) {
-			dbg << "Requires to modifies dependency from "
-			    << toTask->getTask()->getName()
-			    << " to " << task->getTask()->getName() << endl;
-		      }
-		      dt->possiblyCreateDependency(toTask, 0, 0, task, req, 0,
-						   matl, l, h);
-		    }
+	      list<DetailedTask*> requireBeforeModifiedTasks;
+	      creator->findRequiringTasks(req->var,
+					  requireBeforeModifiedTasks);
+
+	      list<DetailedTask*>::iterator reqTaskIter;
+	      for (reqTaskIter = requireBeforeModifiedTasks.begin();
+		   reqTaskIter != requireBeforeModifiedTasks.end();
+		   ++reqTaskIter) {
+		DetailedTask* prevReqTask = *reqTaskIter;
+		if (prevReqTask != task) {		
+		  // dep requires what is to be modified before it is to be
+		  // modified so create a dependency between them so the
+		  // modifying won't conflist with the previous require.
+		  if (dbg.active()) {
+		    dbg << "Requires to modifies dependency from "
+			<< prevReqTask->getTask()->getName()
+			<< " to " << task->getTask()->getName() << endl;
 		  }
+		  dt->possiblyCreateDependency(prevReqTask, 0, 0, task, req, 0,
+					       matl, l, h);
 		}
 	      }
+	    }
+	    
+	    if (!alreadyThere) {
+	      dt->possiblyCreateDependency(creator, comp, neighbor,
+					   task, req, patch,
+					   matl, l, h);
 	    }
 	  }
 	}
@@ -989,7 +990,7 @@ TaskGraph::createDetailedDependencies(DetailedTasks* dt, LoadBalancer* lb,
 	}
 	if(task->getAssignedResourceIndex() == 
 	   creator->getAssignedResourceIndex()) {
-	  task->addInternalDependency(creator);
+	  task->addInternalDependency(creator, req->var);
 	}
       }
     }
