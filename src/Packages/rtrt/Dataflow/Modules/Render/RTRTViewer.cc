@@ -19,6 +19,7 @@
 #include <Core/GuiInterface/GuiVar.h>
 
 #include <Core/Thread/Thread.h>
+#include <Core/Thread/Parallel.h>
 #include <Packages/rtrt/Core/Worker.h>
 #include <Packages/rtrt/Core/BV1.h>
 #include <Packages/rtrt/Core/BV2.h>
@@ -37,14 +38,7 @@
 #include <string.h>
 #include <sys/param.h>
 
-// for scene 1
-#include <Packages/rtrt/Core/BouncingSphere.h>
-#include <Packages/rtrt/Core/DielectricMaterial.h>
-#include <Packages/rtrt/Core/Checker.h>
-#include <Packages/rtrt/Core/Group.h>
-#include <Packages/rtrt/Core/Phong.h>
-#include <Packages/rtrt/Core/Rect.h>
-
+#include <Packages/rtrt/Core/Gui.h>
 
 namespace rtrt {
 
@@ -59,10 +53,12 @@ public:
   virtual ~RTRTViewer();
   virtual void execute();
   void tcl_command(GuiArgs& args, void* userdata);
-
+  bool startSoundThread;
+  bool show_gui;
 private:
   Scene *current_scene, *next_scene;
   RTRT *rtrt_engine;
+  bool first_time;
   
   GuiInt nworkers;
   GuiInt xres_gui, yres_gui; 	// default to 400
@@ -75,11 +71,13 @@ private:
   void start_rtrt();
   void stop_rtrt();
 
-  Scene* make_scene_1();
   SceneIPort *in_scene_port;
+  void GlutHelper(int, int, int);
 };
 
 static string widget_name("RTRTViewer Widget");
+int mainWindowId;
+
 
 DECLARE_MAKER(RTRTViewer)
 
@@ -91,7 +89,8 @@ RTRTViewer::RTRTViewer(GuiContext* ctx)
   yres_gui(ctx->subVar("yres_gui")),
   render_mode(ctx->subVar("render_mode")),
   scene_opt_type(ctx->subVar("scene_opt_type")),
-  gridcellsize_gui(ctx->subVar("gridcellsize_gui"))
+  gridcellsize_gui(ctx->subVar("gridcellsize_gui")),
+  startSoundThread(false),show_gui(true),first_time(true)
 {
   //  inColorMap = scinew ColorMapIPort( this, "ColorMap",
   //				     ColorMapIPort::Atomic);
@@ -105,6 +104,8 @@ RTRTViewer::~RTRTViewer()
 void RTRTViewer::execute()
 {
   reset_vars();
+  int xres=xres_gui.get();
+  int yres=yres_gui.get();
 
   // get the scene
   in_scene_port = (SceneIPort*) get_iport("Scene");
@@ -119,7 +120,6 @@ void RTRTViewer::execute()
   if (next_scene == 0) {
     std::cerr<<"Didn't get a non null scene pointer, bailing\n";
     return;
-    //    scene = make_scene_1();
   }
 }
 
@@ -171,145 +171,6 @@ void RTRTViewer::start_rtrt() {
   rtrt_engine->np = rtrt_engine->nworkers;
 
   cout << "xres = "<<xres<<", yres = "<<yres<<endl;
-#if 0
-  if(strcmp(argv[i], "-nobv")==0){
-    use_bv=0;
-  } else if(strcmp(argv[i], "-bv")==0){
-    i++;
-    use_bv=atoi(argv[i]);
-  } else if(strcmp(argv[i], "-gridcellsize")==0){
-    i++;
-    gridcellsize=atoi(argv[i]);
-  } else if(strcmp(argv[i], "-scene")==0){
-    i++;
-    scenename=argv[i];
-    scene_argc=argc-i;
-    scene_argv=argv+i;
-    break;
-  } else if(strcmp(argv[i], "-perfex")==0){
-    i++;
-    ncounters=sscanf(argv[i], "%d,%d", &c0, &c1);
-    if(ncounters==1){
-      if(c0 >= 32 || c0<0){
-	cerr << "Illegal counter number: " << c0 << '\n';
-	exit(1);
-      }
-      cerr << "enabling 1 counter: " << c0 << '\n';
-    } else if(ncounters==2){
-      if(c0 >= 32 || c0<0){
-	cerr << "Illegal counter number: " << c0 << '\n';
-	exit(1);
-      }
-      if(c1 >= 32 || c1<0){
-	cerr << "Illegal counter number: " << c0 << '\n';
-	exit(1);
-      }
-      if((c0 <16 && c1<16) || (c0>=16 && c1>=16)){
-	cerr << "Illegal counter combination: " << c0 << " and " << c1 << '\n';
-	exit(1);
-      }
-      cerr << "enabling 2 counters: " << c0 << " and " << c1 << '\n';
-    } else {
-      cerr << "Error parsing counter numbers: " << argv[i] << '\n';
-      exit(1);
-    }
-  } else if(strcmp(argv[i], "-visual")==0){
-    i++;
-    criteria1=argv[i];
-  } else if(strcmp(argv[i], "-bench")==0){
-    bench=true;
-  } else if(strcmp(argv[i], "-no_shadows")==0){
-    shadow_mode=No_Shadows;
-  } else if(strcmp(argv[i], "-shadows")==0){
-    i++;
-    shadow_mode = (ShadowType)atoi(argv[i]);
-
-  } else if(strcmp(argv[i], "-no_aa")==0){
-    no_aa=true;
-  } else if(strcmp(argv[i], "-bvscale")==0){
-    i++;
-    bvscale=atof(argv[i]);
-  } else if(strcmp(argv[i], "-light")==0){
-    i++;
-    light_radius=atof(argv[i]);
-  } else if(strcmp(argv[i], "-res")==0){
-    i++;
-    if(sscanf(argv[i], "%dx%d", &xres, &yres) != 2){
-      cerr << "Error parsing resolution: " << argv[i] << '\n';
-      exit(1);
-    }
-  } else if (strcmp(argv[i],"-nchnk")==0){
-    i++;
-    rtrt_engine->NUMCHUNKS = 1<<atoi(argv[i]);
-    cerr << rtrt_engine->NUMCHUNKS << endl;
-  } else if (strcmp(argv[i],"-clstr")==0){
-    i++;
-    rtrt_engine->clusterSize = atoi(argv[i]);
-  } else if (strcmp(argv[i],"-noshuffle")==0){
-    rtrt_engine->shuffleClusters=0;
-  } else if (strcmp(argv[i],"-udp")==0){
-    i++;
-    rtrt_engine->updatePercent = atof(argv[i]);
-  } else if (strcmp(argv[i],"-displayless")==0) {
-    display_frames = false;
-  } else if (strcmp(argv[i],"-frameless")==0) {
-    do_frameless=true;
-    i++;
-    if (argv[i][0] == '-') {
-      i--; // just use default mode...
-    } else {
-      if (0==strcmp(argv[i],"Hilbert")) {
-	rtrt_engine->framelessMode = 0; // 0 is hilbert, outch
-      } else if (0 ==strcmp(argv[i],"Scan")) {
-	rtrt_engine->framelessMode = 1; // 1 is pixel interleaving
-      } else {
-	cerr << "Woah - bad frameless argument, Hilbert or Scan\n";
-      }
-    }
-  } else if(strcmp(argv[i],"-jitter")==0) {
-    rtrt_engine->do_jitter=1;
-  } else if(strcmp(argv[i], "-eye") == 0){
-    Point p;
-    i++;
-    p.x(atof(argv[i]));
-    i++;
-    p.y(atof(argv[i]));
-    i++;
-    p.z(atof(argv[i]));
-    usercamera.set_eye(p);
-    use_usercamera=true;
-  } else if(strcmp(argv[i], "-lookat") == 0){
-    Point p;
-    i++;
-    p.x(atof(argv[i]));
-    i++;
-    p.y(atof(argv[i]));
-    i++;
-    p.z(atof(argv[i]));
-    usercamera.set_lookat(p);
-    use_usercamera=true;
-  } else if(strcmp(argv[i], "-up") == 0){
-    Vector v;
-    i++;
-    v.x(atof(argv[i]));
-    i++;
-    v.y(atof(argv[i]));
-    i++;
-    v.z(atof(argv[i]));
-    usercamera.set_up(v);
-    use_usercamera=true;
-  } else if(strcmp(argv[i], "-fov") == 0){
-    i++;
-    double fov=atof(argv[i]);
-    usercamera.set_fov(fov);
-    use_usercamera=true;
-  } else {
-    cerr << "Unknown option: " << argv[i] << '\n';
-    usage(argv[0]);
-    exit(1);
-  }
-#endif
-  
   // set the scenes rtrt_engine pointer
   current_scene->set_rtrt_engine(rtrt_engine);
   
@@ -379,6 +240,11 @@ void RTRTViewer::start_rtrt() {
   Dpy* dpy=new Dpy(current_scene, criteria1, criteria2, rtrt_engine->nworkers,
 		   bench, ncounters, c0, c1, 1.0, 1.0, display_frames,
 		   pp_size, scratchsize, false, do_frameless==true, false);
+
+  Gui * gui = new Gui();
+  Gui::setActiveGui( gui );
+  gui->setDpy( dpy );
+
   /* <<<< bigler >>>> */
   Thread* t = new Thread(dpy, "Display thread");
   t->detach();
@@ -387,13 +253,7 @@ void RTRTViewer::start_rtrt() {
   for(int i=0;i<rtrt_engine->nworkers;i++){
     char buf[100];
     sprintf(buf, "worker %d", i);
-#if 0
-    /* Thread* t=*/new Thread(new Worker(dpy, current_scene, i,
-					 pp_size, scratchsize,
-					 ncounters, c0, c1),
-			      buf);
-    //t->migrate(i);
-#endif
+
     /* <<<< bigler >>>> */
     Thread* t= new Thread(new Worker(dpy, current_scene, i,
 				     pp_size, scratchsize,
@@ -401,6 +261,42 @@ void RTRTViewer::start_rtrt() {
 			  buf);
     t->detach();
   }
+
+  if (first_time){
+    cout << "about to start GlutHelper()\n";
+//      Thread::parallel(Parallel<RTRTViewer>(this,&RTRTViewer::GlutHelper),
+//  		     1,false);
+    Thread::parallel(this, &RTRTViewer::GlutHelper, 1, false, xres, yres);
+    cout << "thread started\n";
+    first_time = false;
+  }
+} // end start_rtrt()
+
+void RTRTViewer::GlutHelper(int, int xres, int yres) {
+
+  // Initialize GLUT and GLUI stuff.
+  printf("start glut inits\n");
+  glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE);
+  glutInitWindowPosition( 0, 0 );
+  mainWindowId = glutCreateWindow("RTRT");
+  glutReshapeWindow (xres,yres);
+
+  glutKeyboardFunc( Gui::handleKeyPressCB );
+  glutSpecialFunc( Gui::handleSpecialKeyCB );
+  glutMouseFunc( Gui::handleMouseCB );
+  glutMotionFunc( Gui::handleMouseMotionCB );
+  glutSpaceballMotionFunc( Gui::handleSpaceballMotionCB );
+  glutSpaceballRotateFunc( Gui::handleSpaceballRotateCB );
+  glutSpaceballButtonFunc( Gui::handleSpaceballButtonCB );
+
+  glutReshapeFunc( Gui::handleWindowResizeCB );
+  glutDisplayFunc( Gui::redrawBackgroundCB );
+
+  // Must do this after glut is initialized.
+  Gui::createMenus( mainWindowId, startSoundThread, show_gui);
+
+  cout << "running glutMainLoop()\n";
+  glutMainLoop();
 }
 
 void RTRTViewer::stop_rtrt() {
@@ -429,36 +325,6 @@ void RTRTViewer::tcl_command(GuiArgs& args, void* userdata)
   }
 }
 
-Scene* RTRTViewer::make_scene_1() {
-    Camera cam(Point(4,4,1.7), Point(0,0,0),
-		 Vector(0,0,1), 60.0);
-
-    double bgscale=0.5;
-    double ambient_scale=.5;
-
-    Color bgcolor(bgscale*108/255., bgscale*166/255., bgscale*205/255.);
-
-    Material* matl0=new Phong( Color(.2,.2,.2), Color(.3,.3,.3), 100, .5);
-    Material* matl00=new Phong( Color(.2,.2,.2), Color(.3,.3,.3), 10, 0);
-    Material* matl1=new Checker(new Phong( Color(.2,.2,.5), Color(.1,.1,.1), 0, .1),
-				new Phong( Color(.2,.2,.2), Color(.1,.1,.1), 0, .1),
-				Vector(1,1.1,0), Vector(-1.1,1,0));
-    Object* obj1=new Rect(matl1, Point(0,0,0), Vector(20,0,0), Vector(0,20,0));
-    
-    Group* group=new Group();
-    group->add(obj1);
-    group->add(new BouncingSphere(matl00, Point(0,0,1.5), .5, Vector(0,0,1.2)));
-    group->add(new BouncingSphere(matl0, Point(0,0,2.5), .5, Vector(0,0,1.4)));
-    group->add(new BouncingSphere(matl00, Point(0,0,3.5), .5, Vector(0,0,1.6)));
-    group->add(new BouncingSphere(matl0, Point(0,0,.5), .5, Vector(0,0,1)));
-
-    Plane groundplane ( Point(0, 0, 0), Vector(1, 0, 0) );
-    Scene* scene=new Scene(group, cam,
-			   bgcolor, Color(0,0,0), bgcolor, groundplane,
-			   ambient_scale);
-    scene->select_shadow_mode( Hard_Shadows );
-    return scene;
-}
 
 } // End namespace rtrt
 
