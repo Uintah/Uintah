@@ -282,6 +282,8 @@ c
       double precision x1,x2,x3,x4,x5,x6,xx2,xx4
       double precision diff,t0,t1,t2,t3
       integer bin(21),i,k,kk,nits
+      double precision second
+      external second
 c
       double precision CYCLE
 c
@@ -413,6 +415,8 @@ c
       integer bin(20)
       integer i,k,kk,n,nits
       integer p(n)
+      double precision second
+      external second
 c
       double precision CYCLE
 c
