@@ -39,6 +39,7 @@ else
         Core/Thread       \
         Core/Geometry     \
         Core/Util         \
+        Core/Math         \
         Packages/Uintah/Core/DataArchive   \
         Packages/Uintah/Core/Grid \
         Packages/Uintah/Core/Parallel \
