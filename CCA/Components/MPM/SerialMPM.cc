@@ -96,7 +96,6 @@ void SerialMPM::problemSetup(const ProblemSpecP& prob_spec, GridP&,
 
   if(mpm_soln_ps) {
     mpm_soln_ps->get("nodes8or27", flags->d_8or27);
-    mpm_soln_ps->get("withColor",  flags->d_with_color);
     mpm_soln_ps->get("do_grid_reset", d_doGridReset);
     mpm_soln_ps->get("minimum_particle_mass",    d_min_part_mass);
     mpm_soln_ps->get("maximum_particle_velocity",d_max_vel);
@@ -206,11 +205,6 @@ void SerialMPM::scheduleInitialize(const LevelP& level,
   t->computes(lb->pSizeLabel);
   t->computes(d_sharedState->get_delt_label());
   t->computes(lb->pCellNAPIDLabel,zeroth_matl);
-  
-  // Debugging Scalar
-  if (flags->d_with_color) {
-    t->computes(lb->pColorLabel);
-  }
 
   if (flags->d_useLoadCurves) {
     // Computes the load curve ID associated with each particle
@@ -846,7 +840,6 @@ void SerialMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   t->requires(Task::OldDW, lb->pSp_volLabel,           Ghost::None); 
   t->requires(Task::OldDW, lb->pVelocityLabel,         Ghost::None);
   t->requires(Task::OldDW, lb->pDispLabel,             Ghost::None);
-  
   if(flags->d_8or27==27){
     t->requires(Task::OldDW, lb->pSizeLabel,            Ghost::None);
   }
@@ -879,23 +872,14 @@ void SerialMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   t->computes(lb->pSp_volLabel_preReloc);
   t->computes(lb->pMassLabel_preReloc);
   t->computes(lb->pVolumeLabel_preReloc);
-  
   if(flags->d_8or27==27){
     t->computes(lb->pSizeLabel_preReloc);
   }
   t->computes(lb->pXXLabel);
-   
 
   t->computes(lb->KineticEnergyLabel);
   t->computes(lb->CenterOfMassPositionLabel);
   t->computes(lb->CenterOfMassVelocityLabel);
-  
-  // debugging scalar
-  if(flags->d_with_color) {
-    t->requires(Task::OldDW, lb->pColorLabel,  Ghost::None);
-    t->computes(lb->pColorLabel_preReloc);
-  }
-  
   sched->addTask(t, patches, matls);
 }
 
@@ -1061,8 +1045,6 @@ void SerialMPM::actuallyInitialize(const ProcessorGroup*,
       //NOT_FINISHED("not quite right - mapping of matls, use matls->get()");
       //cerrLock.unlock();
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
-      int index = mpm_matl->getDWIndex();
-      
       particleIndex numParticles = mpm_matl->countParticles(patch);
       totalParticles+=numParticles;
 
@@ -1071,25 +1053,12 @@ void SerialMPM::actuallyInitialize(const ProcessorGroup*,
       mpm_matl->getConstitutiveModel()->initializeCMData(patch,
                                                          mpm_matl,
                                                          new_dw);
-                                                         
-            
-      ParticleSubset* pset = new_dw->getParticleSubset(index, patch);
       if (flags->d_doErosion) {
+        int index = mpm_matl->getDWIndex();
+        ParticleSubset* pset = new_dw->getParticleSubset(index, patch);
         ParticleVariable<double> pErosion;
         setParticleDefault(pErosion, lb->pErosionLabel, pset, new_dw, 1.0);
       }
-      
-      // scalar used for debugging
-      if(flags->d_with_color) {
-        ParticleVariable<double> pcolor;
-        setParticleDefault(pcolor, lb->pColorLabel, pset, new_dw, 0.0);
-        //__________________________________
-        //  hardwiring for Northrup Grumman nozzle   
-        #define SerialMPM_1
-        #include "../MPMICE/NGC_nozzle.i"
-        #undef SerialMPM_1
-      }
-
     }
   }
 
@@ -1223,6 +1192,7 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       IntVector ni[MAX_BASIS];
       double S[MAX_BASIS];
       Vector pmom;
+      int n8or27=flags->d_8or27;
 
       for (ParticleSubset::iterator iter = pset->begin();
            iter != pset->end(); 
@@ -1230,10 +1200,10 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
         particleIndex idx = *iter;
 
         // Get the node indices that surround the cell
-        if(flags->d_8or27==8){
+        if(n8or27==8){
           patch->findCellAndWeights(px[idx], ni, S);
         }
-        else if(flags->d_8or27==27){
+        else if(n8or27==27){
           patch->findCellAndWeights27(px[idx], ni, S, psize[idx]);
         }
 
@@ -1242,7 +1212,7 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
 
         // Add each particles contribution to the local mass & velocity 
         // Must use the node indices
-        for(int k = 0; k < flags->d_8or27; k++) {
+        for(int k = 0; k < n8or27; k++) {
           if(patch->containsNode(ni[k])) {
             S[k] *= pErosion[idx];
             gmass[ni[k]]          += pmass[idx]                     * S[k];
@@ -1257,8 +1227,7 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
         }
       } // End of particle loop
 
-      for(NodeIterator iter = patch->getNodeIterator(flags->d_8or27);
-                       !iter.done();iter++){
+      for(NodeIterator iter=patch->getNodeIterator(n8or27);!iter.done();iter++){
         IntVector c = *iter; 
         totalmass       += gmass[c];
         gmassglobal[c]  += gmass[c];
@@ -1273,9 +1242,9 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       // Apply grid boundary conditions to the velocity before storing the data
 
       MPMBoundCond bc;
-      bc.setBoundaryCondition(patch,dwi,"Velocity", gvelocity);
-      bc.setBoundaryCondition(patch,dwi,"Symmetric",gvelocity);
-      bc.setBoundaryCondition(patch,dwi,"Temperature",gTemperature);
+      bc.setBoundaryCondition(patch,dwi,"Velocity",   gvelocity,    n8or27);
+      bc.setBoundaryCondition(patch,dwi,"Symmetric",  gvelocity,    n8or27);
+      bc.setBoundaryCondition(patch,dwi,"Temperature",gTemperature, n8or27);
 
       new_dw->put(sum_vartype(totalmass), lb->TotalMassLabel);
 
@@ -1510,6 +1479,7 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
       Vector d_S[MAX_BASIS];
       Matrix3 stressmass;
       Matrix3 stresspress;
+      int n8or27 = flags->d_8or27;
 
       for (ParticleSubset::iterator iter = pset->begin();
            iter != pset->end(); 
@@ -1517,10 +1487,10 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
         particleIndex idx = *iter;
   
         // Get the node indices that surround the cell
-        if(flags->d_8or27==8){
+        if(n8or27==8){
           patch->findCellAndWeightsAndShapeDerivatives(px[idx], ni, S,  d_S);
         }
-        else if(flags->d_8or27==27){
+        else if(n8or27==27){
           patch->findCellAndWeightsAndShapeDerivatives27(px[idx], ni, S,d_S,
                                                          psize[idx]);
         }
@@ -1528,7 +1498,7 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
         stressmass  = pstress[idx]*pmass[idx];
         stresspress = pstress[idx] + Id*p_pressure[idx] - Id*p_q[idx];
 
-        for (int k = 0; k < flags->d_8or27; k++){
+        for (int k = 0; k < n8or27; k++){
           if(patch->containsNode(ni[k])){
             Vector div(d_S[k].x()*oodx[0],d_S[k].y()*oodx[1],
                        d_S[k].z()*oodx[2]);
@@ -1574,7 +1544,7 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
 #endif
 
       MPMBoundCond bc;
-      bc.setBoundaryCondition(patch,dwi,"Symmetric",internalforce);
+      bc.setBoundaryCondition(patch,dwi,"Symmetric",internalforce,n8or27);
 
 #ifdef KUMAR
       internalforce.initialize(Vector(0,0,0));
@@ -1756,9 +1726,10 @@ void SerialMPM::solveEquationsMotion(const ProcessorGroup*,
         AccArchesNC = AccArchesNC_create; // reference created data      
       }
 
-      //    Uncomment to use damping
-      //    constNCVariable<Vector> velocity;
-      //    new_dw->get(velocity,      lb->gVelocityLabel,      dwi, patch, gnone, 0);
+      //Uncomment to use damping
+      //constNCVariable<Vector> velocity;
+      //new_dw->get(velocity,  lb->gVelocityLabel,      dwi, patch, gnone, 0);
+      //cout << "Damping is on" << endl;
 
       // Create variables for the results
       NCVariable<Vector> acceleration;
@@ -1771,10 +1742,10 @@ void SerialMPM::solveEquationsMotion(const ProcessorGroup*,
         acceleration[c] =
           (internalforce[c] + externalforce[c])/mass[c] +
           gravity + gradPAccNC[c] + AccArchesNC[c];
-        //         acceleration[c] =
-        //            (internalforce[c] + externalforce[c]
-        //                                        -1000.*velocity[c]*mass[c])/mass[c]
-        //                                + gravity + gradPAccNC[c] + AccArchesNC[c];
+//                 acceleration[c] =
+//                    (internalforce[c] + externalforce[c]
+//                    -5000.*velocity[c]*mass[c])/mass[c]
+//                    + gravity + gradPAccNC[c] + AccArchesNC[c];
       }
     }
   }
@@ -1828,19 +1799,20 @@ void SerialMPM::solveHeatEquations(const ProcessorGroup*,
 
       MPMBoundCond bc;
       bc.setBoundaryCondition(patch,dwi,"Temperature",internalHeatRate,
-                              gvolume);
+                              gvolume,flags->d_8or27);
 
       // Create variables for the results
       NCVariable<double> tempRate;
       new_dw->allocateAndPut(tempRate, lb->gTemperatureRateLabel, dwi, patch);
       tempRate.initialize(0.0);
+      int n8or27=flags->d_8or27;
 
-      for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){
+      for(NodeIterator iter=patch->getNodeIterator(n8or27);!iter.done();iter++){
         IntVector c = *iter;
         tempRate[c] = (internalHeatRate[c]
-                       +  externalHeatRate[c]
-                       +  htrate_gasNC[c]) /
-          (mass[c] * specificHeat) + 
+                    +  externalHeatRate[c]
+                    +  htrate_gasNC[c]) /
+                                         (mass[c] * specificHeat) + 
           thermalContactHeatExchangeRate[c];
       }
     }
@@ -1914,8 +1886,9 @@ void SerialMPM::integrateTemperatureRate(const ProcessorGroup*,
 
       new_dw->allocateAndPut(tempStar, lb->gTemperatureStarLabel, dwi,patch);
       tempStar.initialize(0.0);
+      int n8or27=flags->d_8or27;
 
-      for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){
+      for(NodeIterator iter=patch->getNodeIterator(n8or27);!iter.done();iter++){
         IntVector c = *iter;
         tempStar[c] = temp_old[c] + temp_rate[c] * delT;
       }
@@ -1923,12 +1896,11 @@ void SerialMPM::integrateTemperatureRate(const ProcessorGroup*,
       // Apply grid boundary conditions to the temperature 
 
       MPMBoundCond bc;
-      bc.setBoundaryCondition(patch,dwi,"Temperature",tempStar);
-
+      bc.setBoundaryCondition(patch,dwi,"Temperature",tempStar,n8or27);
 
       // Now recompute temp_rate as the difference between the temperature
       // interpolated to the grid (no bcs applied) and the new tempStar
-      for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){
+      for(NodeIterator iter=patch->getNodeIterator(n8or27);!iter.done();iter++){
         IntVector c = *iter;
         temp_rate[c] = (tempStar[c] - temp_oldNoBC[c]) / delT;
       }
@@ -1957,6 +1929,7 @@ void SerialMPM::setGridBoundaryConditions(const ProcessorGroup*,
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
       int dwi = mpm_matl->getDWIndex();
       NCVariable<Vector> gvelocity_star, gacceleration;
+      int n8or27=flags->d_8or27;
 
       new_dw->getModifiable(gacceleration, lb->gAccelerationLabel,  dwi,patch);
       new_dw->getModifiable(gvelocity_star,lb->gVelocityStarLabel,  dwi,patch);
@@ -1964,10 +1937,10 @@ void SerialMPM::setGridBoundaryConditions(const ProcessorGroup*,
       // acceleration before interpolating back to the particles
 
       MPMBoundCond bc;
-      bc.setBoundaryCondition(patch,dwi,"Velocity",gvelocity_star);
-      bc.setBoundaryCondition(patch,dwi,"Acceleration",gacceleration);
-      bc.setBoundaryCondition(patch,dwi,"Symmetric",gvelocity_star);
-      bc.setBoundaryCondition(patch,dwi,"Symmetric",gacceleration);
+      bc.setBoundaryCondition(patch,dwi,"Velocity",     gvelocity_star, n8or27);
+      bc.setBoundaryCondition(patch,dwi,"Acceleration", gacceleration,  n8or27);
+      bc.setBoundaryCondition(patch,dwi,"Symmetric",    gvelocity_star, n8or27);
+      bc.setBoundaryCondition(patch,dwi,"Symmetric",    gacceleration,  n8or27);
 
     } // matl loop
   }  // patch loop
@@ -2532,15 +2505,15 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       new_dw->get(gTemperatureNoBC,lb->gTemperatureNoBCLabel,dwi,patch,gac,NGP);
       new_dw->get(frictionTempRate,lb->frictionalWorkLabel,  dwi,patch,gac,NGP);
       if(d_with_ice){
-        new_dw->get(dTdt,           lb->dTdt_NCLabel,         dwi,patch,gac,NGP);
-        new_dw->get(gSp_vol_src,    lb->gSp_vol_srcLabel,     dwi,patch,gac,NGP);
-        new_dw->get(massBurnFrac,   lb->massBurnFractionLabel,dwi,patch,gac,NGP);
+        new_dw->get(dTdt,          lb->dTdt_NCLabel,         dwi,patch,gac,NGP);
+        new_dw->get(gSp_vol_src,   lb->gSp_vol_srcLabel,     dwi,patch,gac,NGP);
+        new_dw->get(massBurnFrac,  lb->massBurnFractionLabel,dwi,patch,gac,NGP);
       }
       else{
         NCVariable<double> dTdt_create,massBurnFrac_create,gSp_vol_src_create;
-        new_dw->allocateTemporary(dTdt_create,                    patch,gac,NGP);
-        new_dw->allocateTemporary(gSp_vol_src_create,             patch,gac,NGP);
-        new_dw->allocateTemporary(massBurnFrac_create,            patch,gac,NGP);
+        new_dw->allocateTemporary(dTdt_create,                   patch,gac,NGP);
+        new_dw->allocateTemporary(gSp_vol_src_create,            patch,gac,NGP);
+        new_dw->allocateTemporary(massBurnFrac_create,           patch,gac,NGP);
         dTdt_create.initialize(0.);
         gSp_vol_src_create.initialize(0.);
         massBurnFrac_create.initialize(0.);
@@ -2669,16 +2642,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
         }
        }
       }
-      new_dw->deleteParticles(delset);  
-      //__________________________________
-      //  particle debugging label-- carry forward
-      if (flags->d_with_color) {
-        constParticleVariable<double> pColor;
-        ParticleVariable<double>pColor_new;
-        old_dw->get(pColor, lb->pColorLabel, pset);
-        new_dw->allocateAndPut(pColor_new, lb->pColorLabel_preReloc, pset);
-        pColor_new.copyData(pColor);
-      }    
+      new_dw->deleteParticles(delset);      
     }
 
     if(combustion_problem){  // Adjust the min. part. mass if dt gets small
