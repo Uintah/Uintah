@@ -497,8 +497,32 @@ AC_SUBST(ITCL_LIB_DIR)
 AC_SUBST(ITCL_LIB_FLAG)
 AC_SUBST(ITCL_WIDGETS)
 
-##-- Find BLT ---------------------------------------------------------------
+##-- Find Nektar--------------------------------------------------------------
 
+echo -n "Looking for Pre-built Nektar... "
+
+AC_ARG_WITH(with_nektar,
+	[  --with-nektar=DIR		Use the globus installation in DIR],
+	[with_nektar="$withval"],
+	[with_nektar=${with_nektar='no'}])
+
+if ! test "$with_nextar" = "no"; then
+  NEKTAR_PREFIX=${with_nektar}
+  NEKTAR_INCLUDE_DIR="${NEKTAR_PREFIX}/include"
+  NEKTAR_LIB_DIR="${NEKTAR_PREFIX/lib"
+  NEKTAR_LIB_FLAG="-lhybridopt -lvec"
+fi
+
+##-- Find etags ------------------------------------------------------------
+
+AC_PATH_PROG(ETAGS, etags, notfound)
+if test "$ETAGS" = "notfound" ; then
+  echo "\tetags not found"
+else
+  echo "\tFound etags at " $ETAGS
+fi
+ 
+##-- Find BLT ---------------------------------------------------------------
 echo -n "Looking for Pre-built blt2.4... "
 
 if test "$blt" ; then
@@ -700,7 +724,12 @@ AC_OUTPUT(Makefile \
 
 #
 # $Log$
+# Revision 1.62  2000/08/10 03:33:36  yarden
+# add --with-nektar
+#
 # Revision 1.61  2000/08/01 19:17:37  moulding
+#
+#
 # Added Todd Miller's "-with-tcl" stuff
 #
 # Revision 1.60  2000/07/11 20:21:56  yarden
