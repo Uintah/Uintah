@@ -1553,8 +1553,8 @@ Patch::addGhostCell_Iter(CellIterator hi_lo, const int nCells) const
 } 
 
 //__________________________________
-//  Returns the main axis along a face and
-//  the orthognonal axes to that face.
+//  Returns the principal axis along a face and
+//  the orthognonal axes to that face (right hand rule).
 IntVector
 Patch::faceAxes(const FaceType& face) const
 {
@@ -1563,7 +1563,7 @@ Patch::faceAxes(const FaceType& face) const
     dir = IntVector(0,1,2);
   }
   if (face == yminus || face == yplus ) {
-    dir = IntVector(1,0,2);
+    dir = IntVector(1,2,0);
   }
   if (face == zminus || face == zplus ) {
     dir = IntVector(2,0,1);
