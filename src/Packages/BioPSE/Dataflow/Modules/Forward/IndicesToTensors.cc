@@ -76,7 +76,7 @@ void IndicesToTensors::execute() {
   const string &field_src_name = field_src_td->get_name();
   string::size_type idx = field_src_name.find('<');
   string field_dst_name = field_src_name.substr(0,idx)+"<Tensor>";
-  cerr << "field_dst_name = "<<field_dst_name<<"\n";
+//  cerr << "field_dst_name = "<<field_dst_name<<"\n";
 
   CompileInfoHandle ci =
     IndicesToTensorsAlgo::get_compile_info(field_src_td, field_dst_name);
