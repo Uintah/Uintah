@@ -145,7 +145,8 @@ Exec_execute_command(ProgressReporter *pr,
 
 
 static FieldHandle
-Exec_reader(ProgressReporter *pr, const char *cfilename, const string &precommand)
+Exec_reader(ProgressReporter *pr,
+	    const char *cfilename, const string &precommand)
 {
   string command, tmpfilename;
   Exec_setup_command(cfilename, precommand, command, tmpfilename);
@@ -180,7 +181,8 @@ Exec_reader(ProgressReporter *pr, const char *cfilename, const string &precomman
 
 static bool
 Exec_writer(ProgressReporter *pr,
-	    FieldHandle field, const char *cfilename, const string &precommand)
+	    FieldHandle field,
+	    const char *cfilename, const string &precommand)
 {
   string command, tmpfilename;
   bool result = true;

@@ -39,12 +39,13 @@
  *  Copyright (C) 2004 SCI Institute
  */
 
-// Use a standalone converter to do the field conversion into a
+// Use a standalone converter to do the colormap conversion into a
 // temporary file, then read in that file.
 
 #include <Core/Malloc/Allocator.h>
 #include <Core/ImportExport/ColorMap/ColorMapIEPlugin.h>
 #include <Core/Persistent/Pstreams.h>
+#include <Core/Containers/StringUtil.h>
 #include <Core/Util/sci_system.h>
 #include <iostream>
 #include <fstream>
@@ -64,14 +65,16 @@ Exec_setup_command(const char *cfilename, const string &precommand,
   
   // Base filename.
   string::size_type loc = filename.find_last_of("/");
-  const string basefilename = filename.substr(loc);
+  const string basefilename =
+    (loc==string::npos)?filename:filename.substr(loc+1);
 
   // Base filename with first extension removed.
   loc = basefilename.find_last_of(".");
   const string basenoext = basefilename.substr(0, loc);
 
   // Temporary filename.
-  tmpfilename = "/tmp/" + basenoext + "-" + "123456" + ".fld";
+  tmpfilename = "/tmp/" + basenoext + "-" +
+    to_string((unsigned int)(getpid())) + ".fld";
 
   // Filename with first extension removed.
   loc = filename.find_last_of(".");
@@ -95,9 +98,10 @@ Exec_setup_command(const char *cfilename, const string &precommand,
 
 
 static bool
-Exec_execute_command(const string &icommand, const string &tmpfilename)
+Exec_execute_command(ProgressReporter *pr,
+		     const string &icommand, const string &tmpfilename)
 {
-  cerr << "ExecConverter - Executing: " << icommand << endl;
+  pr->remark("ExecConverter - Executing: " + icommand + ".");
 
   FILE *pipe = 0;
   bool result = true;
@@ -106,7 +110,7 @@ Exec_execute_command(const string &icommand, const string &tmpfilename)
   pipe = popen(command.c_str(), "r");
   if (pipe == NULL)
   {
-    cerr << "ExecConverter syscal error, command was: '" << command << "'\n";
+    pr->error("ExecConverter syscal error, command was: '" + command + ".");
     result = false;
   }
 #else
@@ -114,8 +118,8 @@ Exec_execute_command(const string &icommand, const string &tmpfilename)
   const int status = sci_system(command.c_str());
   if (status != 0)
   {
-    cerr << "ExecConverter syscal error " << status << ": "
-	 << "command was '" << command << "'" << endl;
+    pr->error("ExecConverter syscal error " + to_string(status) + ": "
+	      + "command was '" + command + "'.");
     result = false;
   }
   pipe = fopen((tmpfilename + ".log").c_str(), "r");
@@ -124,7 +128,7 @@ Exec_execute_command(const string &icommand, const string &tmpfilename)
   char buffer[256];
   while (pipe && fgets(buffer, 256, pipe) != NULL)
   {
-    cerr << buffer;
+    pr->msgStream() << buffer;
   }
 
 #ifdef __sgi
@@ -142,29 +146,32 @@ Exec_execute_command(const string &icommand, const string &tmpfilename)
 
 
 static ColorMapHandle
-Exec_reader(ProgressReporter *pr, const char *cfilename, const string &precommand)
+Exec_reader(ProgressReporter *pr,
+	    const char *cfilename, const string &precommand)
 {
   string command, tmpfilename;
   Exec_setup_command(cfilename, precommand, command, tmpfilename);
 
-  if (Exec_execute_command(command, tmpfilename))
+  if (Exec_execute_command(pr, command, tmpfilename))
   {
     Piostream *stream = auto_istream(tmpfilename);
     if (!stream)
     {
-      cerr << "Error reading converted file '" + tmpfilename + "'." << endl;
+      pr->error("ExecConverter - Error reading converted file '" +
+		tmpfilename + "'.");
       return 0;
     }
     
     // Read the file
-    ColorMapHandle field;
-    Pio(*stream, field);
+    ColorMapHandle colormap;
+    Pio(*stream, colormap);
 
-    cerr << "ExecConverter - Successfully converted " << cfilename << endl;
+    pr->remark(string("ExecConverter - Successfully converted ")
+	       + cfilename + ".");
 
     unlink(tmpfilename.c_str());
     
-    return field;
+    return colormap;
   }
 
   unlink(tmpfilename.c_str());
@@ -175,7 +182,8 @@ Exec_reader(ProgressReporter *pr, const char *cfilename, const string &precomman
 
 static bool
 Exec_writer(ProgressReporter *pr,
-	    ColorMapHandle field, const char *cfilename, const string &precommand)
+	    ColorMapHandle colormap,
+	    const char *cfilename, const string &precommand)
 {
   string command, tmpfilename;
   bool result = true;
@@ -185,15 +193,15 @@ Exec_writer(ProgressReporter *pr,
   Piostream *stream = scinew BinaryPiostream(tmpfilename, Piostream::Write);
   if (stream->error())
   {
-    cerr << "Could not open temporary file '" + tmpfilename +
-      "' for writing." << endl;
+    pr->error("ExecConverter - Could not open temporary file '" + tmpfilename +
+	      "' for writing.");
     result = false;
   }
   else
   {
-    Pio(*stream, field);
+    Pio(*stream, colormap);
     
-    result = Exec_execute_command(command, tmpfilename);
+    result = Exec_execute_command(pr, command, tmpfilename);
   }
   unlink(tmpfilename.c_str());
   delete stream;
@@ -216,12 +224,12 @@ TextColorMap_reader(ProgressReporter *pr, const char *filename)
 
 static bool
 TextColorMap_writer(ProgressReporter *pr,
-		    ColorMapHandle field, const char *filename)
+		    ColorMapHandle colormap, const char *filename)
 {
   const string command =
     string(SCIRUN_OBJDIR) + "/StandAlone/convert/" +
     "ColorMapToText %f %t";
-  return Exec_writer(pr, field, filename, command);
+  return Exec_writer(pr, colormap, filename, command);
 }
 
 static ColorMapIEPlugin
