@@ -156,7 +156,8 @@ Gui::Gui() :
   rightButtonMenuActive_(true),
   displayRStats_(false), displayPStats_(false),
   bottomGraphicTrig_(NULL), activeMTT_(NULL), queuedMTT_(NULL),
-  leftGraphicTrig_(NULL)
+  leftGraphicTrig_(NULL), recheckBackgroundCnt_(10),
+  csafeTrig_(NULL), geophysicsTrig_(NULL), visWomanTrig_(NULL)
 {
   inputString_[0] = 0;
 }
@@ -324,6 +325,8 @@ Gui::handleTriggers()
       bool result = trigger->check( activeGui->camera_->eye );
       if( result == true && trigger != activeGui->activeMTT_ )
 	{
+	  // The trigger is in range, so determine what to do with it
+	  // based on its priority and the active triggers priority.
 	  if( activeGui->activeMTT_ )
 	    {
 	      if( trigger == activeGui->queuedMTT_ ) // already queued.
@@ -331,7 +334,7 @@ Gui::handleTriggers()
 	      double trigPriority = trigger->getPriority();
 	      double currPriority = activeGui->activeMTT_->getPriority();
 	      if( currPriority <= trigPriority )
-		{
+		{ // Tell current to stop and queue up new trigger.
 		  cout << "deactivating current trigger: " <<
 		    activeGui->activeMTT_->getName() << " to start " <<
 		    trigger->getName() << "\n";
@@ -346,10 +349,6 @@ Gui::handleTriggers()
 		      activeGui->queuedMTT_ = trigger;
 		    }
 		  
-		}
-	      else
-		{
-		  activeGui->queuedMTT_ = trigger;
 		}
 	    }
 	  else
@@ -397,32 +396,40 @@ Gui::handleTriggers()
 } // end handleTriggers()
 
 void
+Gui::drawBackground()
+{
+  glutSetWindow( glutDisplayWindowId );
+
+  glViewport(0, 0, 1280, 1024);
+  glMatrixMode(GL_PROJECTION);
+  glLoadIdentity();
+  gluOrtho2D(0, 1280, 0, 1024);
+  glDisable( GL_DEPTH_TEST );
+  glMatrixMode(GL_MODELVIEW);
+  glLoadIdentity();
+  glTranslatef(0.375, 0.375, 0.0);
+
+  backgroundTex->reset( GL_FLOAT, &((*(activeGui->backgroundImage_))(0,0)) );
+  backgroundTexQuad->draw();
+}
+
+void
 Gui::redrawBackgroundCB()
 {
   if( activeGui->dpy_->fullScreenMode_ ) {
     if( !activeGui->backgroundImage_ ) return;
-    glutSetWindow( activeGui->glutDisplayWindowId );
-
-    glViewport(0, 0, 1280, 1024);
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    gluOrtho2D(0, 1280, 0, 1024);
-    glDisable( GL_DEPTH_TEST );
-    glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
-    glTranslatef(0.375, 0.375, 0.0);
-
-    backgroundTex->reset( GL_FLOAT, &((*(activeGui->backgroundImage_))(0,0)) );
-    backgroundTexQuad->draw();
-    glutSwapBuffers();
-    backgroundTexQuad->draw();
+    // update loop will check for a new background, see it is different,
+    // and update correctly.
+    activeGui->recheckBackgroundCnt_ = 10; // forces a redraw
+    activeGui->backgroundImage_ = NULL;
   }
 }
 
-
-void
+bool
 Gui::setBackgroundImage( int room )
 {
+  PPMImage * current = backgroundImage_;
+
   switch( room ) {
   case 0:
     backgroundImage_ = scienceRoomImage;
@@ -434,12 +441,14 @@ Gui::setBackgroundImage( int room )
     backgroundImage_ = galaxyRoomImage;
     break;
   case 3:
-    backgroundImage_ = underwaterRoomImage;
-    break;
-  default:
     backgroundImage_ = museumRoomImage;
     break;
+  default:
+    backgroundImage_ = underwaterRoomImage;
+    break;
   }
+
+  return (current != backgroundImage_);
 }
 
 void
@@ -473,6 +482,13 @@ Gui::idleFunc()
     char buf[100];
     sprintf( buf, "%3.1lf fps", activeGui->priv->FrameRate );
 
+    bool redrawBG = false;
+    if( dpy->fullScreenMode_ )
+      {
+	redrawBG = activeGui->checkBackgroundWindow();
+	if( redrawBG ) activeGui->drawBackground();
+      }
+
     dpy->showImage_->draw( dpy->renderWindowSize_, dpy->fullScreenMode_ );
     if( dpy->fullScreenMode_ )
       activeGui->displayText(fontbase, 133, 333, buf, Color(1,1,1));
@@ -483,6 +499,7 @@ Gui::idleFunc()
       glutSwapBuffers();
       // Need to draw into other buffer so that as we "continuously"
       // flip them, it doesn't look bad.
+      if( redrawBG ) activeGui->drawBackground();
       dpy->showImage_->draw( dpy->renderWindowSize_, dpy->fullScreenMode_ );
       activeGui->displayText(fontbase, 133, 333, buf, Color(1,1,1));
     }
@@ -1598,10 +1615,41 @@ void Gui::SGAutoCycleCB( int id ) {
   obj->toggleAutoswitch();
 }
 
-void Gui::SGNextItemCB( int id ) {
+void Gui::SGNextItemCB( int id )
+{
   Array1<Object*> & objects = activeGui->dpy_->scene->objectsOfInterest_;
-  SelectableGroup *obj = dynamic_cast<SelectableGroup*>(objects[id]);  
-  obj->nextChild();
+  SelectableGroup * sg = dynamic_cast<SelectableGroup*>(objects[id]);  
+  sg->nextChild();
+  Object * newObj = sg->getCurrentChild();
+  if( Names::hasName( newObj ) ) {
+    Trigger * trig = NULL;
+
+    if( Names::getName(newObj) == "Visible Female Volume" ) {
+      trig = activeGui->visWomanTrig_;
+    } else if( Names::getName(newObj) == "Brain Volume" ) {
+      trig = NULL;
+    } else if( Names::getName(newObj) == "CSAFE Fire Volume" ) {
+      trig = activeGui->csafeTrig_;
+    } else if( Names::getName(newObj) == "Geological Volume" ) {
+      trig = activeGui->geophysicsTrig_;
+    } else if( Names::getName(newObj) == "Sheep Heart Volume" ) {
+      trig = NULL;
+    }
+
+    if( trig ) {
+      trig->setPriority( Trigger::HighTriggerPriority );
+      if( activeGui->activeMTT_ ) // If a trigger is already running...
+	{
+	  activeGui->activeMTT_->deactivate(); // then tell it to stop.
+	  activeGui->queuedMTT_ = trig;        // and queue up the new trigger.
+	}
+      else // just start this trigger
+	{
+	  activeGui->activeMTT_ = trig;
+	  activeGui->activeMTT_->activate();
+	}
+    }
+  }
 }
 
 void Gui::SISpinCB( int id ) {
@@ -2025,6 +2073,25 @@ Gui::createMenus( int winId, bool soundOn /* = false */,
 	"/usr/sci/data/Geometry/interface/backgrounds/bkgrnd_galaxy.ppm",
 	true );
       activeGui->backgroundImage_ = scienceRoomImage;
+
+      ///////// CREATE SOME TRIGGERS
+      ///// VIS WOMEN
+      string ifpath = "/usr/sci/data/Geometry/interface/";      
+      vector<Point> loc;
+      PPMImage * ppm = 
+	new PPMImage(ifpath+"scienceroom/science_vis-woman.ppm", true);
+      loc.clear(); loc.push_back(Point(-30,-30,1.9));
+      activeGui->visWomanTrig_ = new Trigger( "Visible Woman", loc, 1,
+					      60,ppm,true );
+      ///// GEOPHYSICS
+      ppm = new PPMImage(ifpath+"scienceroom/science_geophysics.ppm", true);
+      loc.clear(); loc.push_back(Point(-40,-40,1.9));
+      activeGui->geophysicsTrig_ = new Trigger( "Geophysics", loc, 1,
+						30,ppm,true );
+      ///// C-SAFE
+      ppm = new PPMImage(ifpath+"scienceroom/science_firespread.ppm", true);
+      loc.clear(); loc.push_back(Point(-50,-50,1.9));
+      activeGui->csafeTrig_ = new Trigger( "C-SAFE Fire", loc, 1,30,ppm,true );
     }
   printf("done createmenus\n");
 } // end createMenus()
@@ -2130,6 +2197,53 @@ Gui::update()
   updateSoundPanel();
 
 } // end update()
+
+bool
+Gui::checkBackgroundWindow()
+{
+  // See if we have moved nearer to another room... return true if so.
+
+  if( recheckBackgroundCnt_ == 10 )
+    {
+      recheckBackgroundCnt_ = 0;
+      static vector<Point> positions;
+      if( positions.size() == 0 )
+	{
+	  positions.push_back( Point(  -8,  8, 2) ); //  science
+	  positions.push_back( Point(  10, -6, 2) ); //  living
+	  positions.push_back( Point(   8, 10, 2) ); //  galaxy
+	  positions.push_back( Point(  -7, -5, 2) ); //  museum
+
+	  positions.push_back( Point(  0,  -6, 2) ); //  southTube
+	  positions.push_back( Point(  0,  10, 2) ); //  northTube
+	  positions.push_back( Point( -10, -2, 2) ); //  westTube
+	  positions.push_back( Point(  10,  2, 2) ); //  eastTube
+	}
+
+      double minDist = 99999;
+      int    index   = -1;
+
+      const Point & eye = camera_->get_eye();
+
+      for( int cnt = 0; cnt < 8; cnt++ )
+	{
+	  double dist = (positions[cnt] - eye).length2();
+	  if( dist < minDist )
+	    {
+	      minDist = dist;
+	      index = cnt;
+	    }
+	}
+      cout << "closest to " << index << "\n";
+      if( index != -1 )
+	return setBackgroundImage( index );
+    }
+  else
+    {
+      recheckBackgroundCnt_++;
+    }
+  return false;
+}
 
 void
 Gui::updateSoundPanel()

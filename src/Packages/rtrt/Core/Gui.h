@@ -121,7 +121,14 @@ private:
   Trigger * bottomGraphicTrig_;
   Trigger * leftGraphicTrig_;
 
+  // Specific Triggers
+  Trigger * visWomanTrig_;
+  Trigger * csafeTrig_;
+  Trigger * geophysicsTrig_;
+
   PPMImage * backgroundImage_;
+  int        recheckBackgroundCnt_; // Check to see if we have
+                                    // moved to another room every X cycles.
 
   // Gui Component Variables
 
@@ -383,7 +390,10 @@ private:
   void updateSoundPanel();
   void loadAllRoutes();
   void handleTriggers();
-  void setBackgroundImage( int room );
+  bool checkBackgroundWindow();
+  bool setBackgroundImage( int room );
+  void drawBackground();
+
 
   // Functions to draw text, etc on GL window.
   void displayText(GLuint fontbase, double x, double y,
