@@ -30,30 +30,30 @@ namespace MPM {
 class Fracture {
 public:
 
-  void   initializeFractureModelData(const Patch* patch,
+  virtual void   initializeFractureModelData(const Patch* patch,
                             const MPMMaterial* matl,
-                            DataWarehouseP& new_dw);
+                            DataWarehouseP& new_dw) = 0;
 
-  void   computeNodeVisibility(
+  virtual void   computeNodeVisibility(
                   const Patch* patch,
                   MPMMaterial* mpm_matl, 
 		  DataWarehouseP& old_dw, 
-		  DataWarehouseP& new_dw);
+		  DataWarehouseP& new_dw) = 0;
 
-  void   crackGrow(const Patch* patch,
+  virtual void   crackGrow(const Patch* patch,
                   MPMMaterial* mpm_matl, 
 		  DataWarehouseP& old_dw, 
-		  DataWarehouseP& new_dw);
+		  DataWarehouseP& new_dw) = 0;
 
-  void   stressRelease(const Patch* patch,
+  virtual void   stressRelease(const Patch* patch,
                   MPMMaterial* mpm_matl, 
 		  DataWarehouseP& old_dw, 
-		  DataWarehouseP& new_dw);
+		  DataWarehouseP& new_dw) = 0;
 
 	 Fracture(ProblemSpecP& ps);
         ~Fracture();
 
-private:
+protected:
   MPMLabel*        lb;
 };
 
@@ -63,6 +63,12 @@ private:
 #endif //__FRACTURE_H__
 
 // $Log$
+// Revision 1.31  2000/11/21 20:47:57  tan
+// Implemented different models for fracture simulations.  SimpleFracture model
+// is for the simulation where the resolution focus only on macroscopic major
+// cracks. NormalFracture and ExplosionFracture models are more sophiscated
+// and specific fracture models that are currently underconstruction.
+//
 // Revision 1.30  2000/09/22 07:18:57  tan
 // MPM code works with fracture in three point bending.
 //

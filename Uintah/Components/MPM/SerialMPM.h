@@ -12,6 +12,8 @@
 #include <Uintah/Components/MPM/MPMLabel.h>
 #include <Uintah/Components/MPM/PhysicalBC/MPMPhysicalBC.h>
 
+#include <Uintah/Interface/PatchDataAnalyze.h>
+
 using SCICore::Geometry::Vector;
 
 namespace Uintah {
@@ -90,6 +92,9 @@ public:
                 FIXED,
                 SYMMETRY,
                 NEIGHBOR };
+
+  void setAnalyze(PatchDataAnalyze* analyze);
+
 public:
   //////////
   // Insert Documentation Here:
@@ -243,6 +248,8 @@ public:
 
   vector<MPMPhysicalBC*> d_physicalBCs;
   bool             d_fracture;
+
+  PatchDataAnalyze*  d_analyze;
 };
       
 } // end namespace MPM
@@ -250,6 +257,12 @@ public:
    
 //
 // $Log$
+// Revision 1.62  2000/11/21 20:51:02  tan
+// Implemented different models for fracture simulations.  SimpleFracture model
+// is for the simulation where the resolution focus only on macroscopic major
+// cracks. NormalFracture and ExplosionFracture models are more sophiscated
+// and specific fracture models that are currently underconstruction.
+//
 // Revision 1.61  2000/11/15 01:39:43  guilkey
 // Made the way in which materials were looped over more consistent.
 // Got rid of references to VFIndex, use only DWIndex now.

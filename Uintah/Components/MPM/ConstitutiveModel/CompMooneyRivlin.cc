@@ -153,9 +153,11 @@ void CompMooneyRivlin::computeStressTensor(const Patch* patch,
 
   ParticleVariable<int> pVisibility;
   ParticleVariable<Vector> pRotationRate;
+  ParticleVariable<double> pStrainEnergy;
   if(matl->getFractureModel()) {
     new_dw->get(pVisibility, lb->pVisibilityLabel, pset);
     new_dw->allocate(pRotationRate, lb->pRotationRateLabel, pset);
+    new_dw->allocate(pStrainEnergy, lb->pStrainEnergyLabel, pset);
   }
 
   double C1 = d_initialData.C1;
@@ -256,9 +258,13 @@ void CompMooneyRivlin::computeStressTensor(const Patch* patch,
 		     Max(c_dil+fabs(pvelocity[idx].z()),WaveSpeed.z()));
 
       // Compute the strain energy for all the particles
-      se += (C1*(invar1-3.0) + C2*(invar2-3.0) +
+      double e = (C1*(invar1-3.0) + C2*(invar2-3.0) +
             C3*(1.0/(invar3*invar3) - 1.0) +
             C4*(invar3-1.0)*(invar3-1.0))*pvolume[idx]/J;
+
+      if(matl->getFractureModel()) pStrainEnergy[idx] = e;
+      
+      se += e;
     }
         
     WaveSpeed = dx/WaveSpeed;
@@ -272,6 +278,7 @@ void CompMooneyRivlin::computeStressTensor(const Patch* patch,
     //
     if( matl->getFractureModel() ) {
       new_dw->put(pRotationRate, lb->pRotationRateLabel);
+      new_dw->put(pStrainEnergy, lb->pStrainEnergyLabel);
     }
 
     new_dw->put(sum_vartype(se), lb->StrainEnergyLabel);
@@ -308,8 +315,8 @@ void CompMooneyRivlin::addComputesAndRequires(Task* task,
    
    if(matl->getFractureModel()) {
       task->requires(new_dw, lb->pVisibilityLabel,   idx, patch, Ghost::None);
-      task->requires(new_dw, lb->gMassLabel,         idx, patch, Ghost::None);
       task->computes(new_dw, lb->pRotationRateLabel, idx, patch);
+      task->computes(new_dw, lb->pStrainEnergyLabel, idx,  patch);
    }
 }
 
@@ -504,6 +511,12 @@ const TypeDescription* fun_getTypeDescription(CompMooneyRivlin::CMData*)
 }
 
 // $Log$
+// Revision 1.73  2000/11/21 20:51:04  tan
+// Implemented different models for fracture simulations.  SimpleFracture model
+// is for the simulation where the resolution focus only on macroscopic major
+// cracks. NormalFracture and ExplosionFracture models are more sophiscated
+// and specific fracture models that are currently underconstruction.
+//
 // Revision 1.72  2000/11/15 18:37:23  guilkey
 // Reduced warnings in constitutive models.
 //

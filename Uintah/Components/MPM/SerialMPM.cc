@@ -70,6 +70,7 @@ SerialMPM::SerialMPM(const ProcessorGroup* myworld) :
   lb = scinew MPMLabel();
   d_nextOutputTime=0.;
   d_fracture = false;
+  d_analyze = NULL;
 }
 
 SerialMPM::~SerialMPM()
@@ -79,6 +80,9 @@ SerialMPM::~SerialMPM()
 void SerialMPM::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
 			     SimulationStateP& sharedState)
 {
+   //The next line is used for data analyze, please do not move.  --tan
+   if(d_analyze) d_analyze->problemSetup(prob_spec, grid, sharedState);
+
    d_sharedState = sharedState;
 
    MPMPhysicalModules::build(prob_spec,d_sharedState);
@@ -135,6 +139,8 @@ void SerialMPM::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
 					  lb->pIsBrokenLabel_preReloc); 
        lb->registerPermanentParticleState(m,lb->pCrackSurfaceContactForceLabel,
 				  lb->pCrackSurfaceContactForceLabel_preReloc); 
+       lb->registerPermanentParticleState(m,lb->pImageVelocityLabel,
+					  lb->pImageVelocityLabel_preReloc); 
      }
      
      lb->registerPermanentParticleState(m,lb->pTemperatureLabel,
@@ -201,6 +207,9 @@ void SerialMPM::scheduleTimeAdvance(double t, double dt,
 
       const Patch* patch=*iter;
     
+      //The next line is used for data analyze, please do not move.  --tan
+      if(d_analyze) d_analyze->performAnalyze(patch, sched, old_dw, new_dw);
+
       if(d_fracture) {
 	 /*
 	  * computeNodeVisibility
@@ -596,12 +605,14 @@ void SerialMPM::scheduleTimeAdvance(double t, double dt,
 			Ghost::None);
 	       t->requires(old_dw, lb->pCrackSurfaceContactForceLabel,
 						idx, patch, Ghost::None);
+	       t->requires(old_dw, lb->pImageVelocityLabel, idx, patch,
+			Ghost::None);
    	    }
 
 	    t->requires(old_dw, d_sharedState->get_delt_label() );
 						
 	    t->requires(old_dw, lb->pMassLabel, idx, patch, Ghost::None);
-	    t->computes(new_dw, lb->pVelocityLabel_preReloc, idx, patch );
+	    t->computes(new_dw, lb->pVelocityAfterUpdateLabel, idx, patch );
 	    t->computes(new_dw, lb->pXLabel_preReloc, idx, patch );
 	    t->computes(new_dw, lb->pExternalForceLabel_preReloc,
 							idx, patch);
@@ -670,38 +681,25 @@ void SerialMPM::scheduleTimeAdvance(double t, double dt,
 			    this,&SerialMPM::crackGrow);
 
 	 for(int m = 0; m < numMatls; m++) {
-	    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
-	    int idx = mpm_matl->getDWIndex();
+	    Material* matl = d_sharedState->getMaterial(m);
+	    int idx = matl->getDWIndex();
+	    MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);     
 	    if(mpm_matl->getFractureModel()) {
 	      t->requires( new_dw, lb->pStressAfterStrainRateLabel,
 			idx, patch, Ghost::None);
 	      t->requires( old_dw, lb->pIsBrokenLabel, idx, patch,
 			 Ghost::None);
-	      t->requires( old_dw, lb->pCrackSurfaceNormalLabel,
-			idx, patch, Ghost::None);
 	      t->requires( old_dw, lb->pTensileStrengthLabel, idx, patch,
 			 Ghost::None);
-	      t->requires( old_dw, lb->pVolumeLabel, idx, patch,
-			 Ghost::None);
-	      t->requires( new_dw, lb->pRotationRateLabel, idx, patch,
-			 Ghost::None);
-	      t->requires( new_dw, lb->pStressAfterStrainRateLabel,
-			idx, patch, Ghost::None);
 			 
- 	      t->requires(old_dw, lb->delTLabel );
- 	      t->requires(new_dw, lb->delTAfterConstitutiveModelLabel );
-
-	      t->computes( new_dw, lb->pIsBrokenLabel_preReloc,
-			 idx, patch);
-	      t->computes( new_dw, lb->pCrackSurfaceNormalLabel_preReloc,
+	      t->computes( new_dw, lb->pIsNewlyBrokenLabel, idx, patch );
+	      t->computes( new_dw, lb->pNewlyBrokenSurfaceNormalLabel,
 			idx, patch );
 	      t->computes( new_dw, lb->pTensileStrengthLabel_preReloc,
 			idx, patch );
-	      t->computes( new_dw, lb->pIsNewlyBrokenLabel, idx, patch );
 	    }
 	 }
 
-         t->computes(new_dw, lb->delTAfterFractureLabel);
 	 sched->addTask(t);
       }
 
@@ -719,24 +717,61 @@ void SerialMPM::scheduleTimeAdvance(double t, double dt,
 			    this,&SerialMPM::stressRelease);
 
 	 for(int m = 0; m < numMatls; m++) {
-	    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
-	    int idx = mpm_matl->getDWIndex();
+	    Material* matl = d_sharedState->getMaterial(m);
+	    int idx = matl->getDWIndex();
+	    MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);     
 	    if(mpm_matl->getFractureModel()) {
-	      t->requires( old_dw, lb->pXLabel, idx, patch,
-			Ghost::AroundNodes, 1 );
-	      t->requires( new_dw, lb->pIsNewlyBrokenLabel, idx, patch,
-			Ghost::AroundNodes, 1 );
-	      t->requires( new_dw, lb->pCrackSurfaceNormalLabel_preReloc,
+	      t->requires( old_dw, lb->pXLabel, 
+			idx, patch, Ghost::AroundNodes, 1 );
+	      t->requires( new_dw, lb->pIsNewlyBrokenLabel,
+			idx, patch, Ghost::AroundNodes, 1 );
+	      t->requires( new_dw, lb->pNewlyBrokenSurfaceNormalLabel,
 			idx, patch, Ghost::AroundNodes, 1 );
 	      t->requires( new_dw, lb->pStressAfterStrainRateLabel,
-			idx, patch, Ghost::None);			 
+			idx, patch, Ghost::AroundNodes, 1 );
+
+	      t->requires(old_dw, d_sharedState->get_delt_label() );
+
+	      //explosive fracture type
+	      t->requires( old_dw, lb->pImageVelocityLabel,
+			idx, patch, Ghost::None);
+
+	      //normal fracture type
+	      t->requires( old_dw, lb->pIsBrokenLabel, idx, patch,
+			 Ghost::None);
+	      t->requires( old_dw, lb->pCrackSurfaceNormalLabel,
+			idx, patch, Ghost::None);
+	      t->requires( new_dw, lb->pRotationRateLabel, idx, patch,
+			 Ghost::None);
+			 
+	      t->requires( old_dw, lb->pMassLabel,
+			idx, patch, Ghost::None);
+	      t->requires( new_dw, lb->pStrainEnergyLabel,
+			idx, patch, Ghost::None);
+	      t->requires( new_dw, lb->pVelocityAfterUpdateLabel,
+			idx, patch, Ghost::None);
+			 
+
+ 	      t->requires(new_dw, lb->delTAfterConstitutiveModelLabel );
+
+	      t->computes( new_dw, lb->pStressReleasedLabel,
+			idx, patch );
 	      t->computes( new_dw, lb->pStressAfterFractureReleaseLabel,
 			idx, patch );
+	      t->computes( new_dw, lb->pImageVelocityLabel_preReloc,
+			idx, patch );
+	      t->computes( new_dw, lb->pVelocityAfterFractureLabel,
+			idx, patch );
+	      t->computes( new_dw, lb->pIsBrokenLabel_preReloc,
+			 idx, patch);
+	      t->computes( new_dw, lb->pCrackSurfaceNormalLabel_preReloc,
+			 idx, patch);
 	    }
 	 }
+         t->computes(new_dw, lb->delTAfterFractureLabel);
 	 sched->addTask(t);
       }
-      
+
       if(d_fracture) {
 	 /*
 	  * computeCrackSurfaceContactForce
@@ -774,9 +809,11 @@ void SerialMPM::scheduleTimeAdvance(double t, double dt,
 			    this,&SerialMPM::carryForwardVariables);
 
 	 for(int m = 0; m < numMatls; m++) {
-	    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
-	    int idx = mpm_matl->getDWIndex();
+	    Material* matl = d_sharedState->getMaterial(m);
+	    int idx = matl->getDWIndex();
+	    MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);     
 	    
+	    //stress
 	    if(mpm_matl->getFractureModel()) {
 	      t->requires( new_dw, lb->pStressAfterFractureReleaseLabel,
 			idx, patch, Ghost::None);
@@ -788,8 +825,19 @@ void SerialMPM::scheduleTimeAdvance(double t, double dt,
 	      t->requires( new_dw, lb->delTAfterConstitutiveModelLabel);
             }
 	    t->computes(new_dw, lb->pStressLabel_preReloc, idx, patch);
+
+	    //velocity
+	    if(mpm_matl->getFractureModel()) {
+	      t->requires( new_dw, lb->pVelocityAfterFractureLabel,
+			idx, patch, Ghost::None);
+	    }
+	    else {
+	      t->requires( new_dw, lb->pVelocityAfterUpdateLabel,
+			idx, patch, Ghost::None);			 
+            }
+	    t->computes(new_dw, lb->pVelocityLabel_preReloc, idx, patch);
 	 }
-	 t->computes(new_dw, lb->delTLabel);
+	 t->computes(new_dw, d_sharedState->get_delt_label() );
 	 sched->addTask(t);
       }
 
@@ -1280,24 +1328,36 @@ void SerialMPM::carryForwardVariables( const ProcessorGroup*,
 				    DataWarehouseP& old_dw,
 				    DataWarehouseP& new_dw)
 {
-  for(int m = 0; m < d_sharedState->getNumMPMMatls(); m++) {
-    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
+  for(int m = 0; m < d_sharedState->getNumMatls(); m++) {
+    Material* matl = d_sharedState->getMaterial(m);
+    //int idx = matl->getDWIndex();
+    MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
 
-    int matlindex = mpm_matl->getDWIndex();
-    
-    ParticleVariable<Matrix3> pStress;
-    
+    int matlindex = matl->getDWIndex();
+        
     ParticleSubset* pset = old_dw->getParticleSubset(matlindex, patch);
 
+    //stress
+    ParticleVariable<Matrix3> pStress;
     if(mpm_matl->getFractureModel()) {
       new_dw->get(pStress, lb->pStressAfterFractureReleaseLabel, pset);
     }
     else {
       new_dw->get(pStress, lb->pStressAfterStrainRateLabel, pset);
     }
-
     new_dw->put(pStress, lb->pStressLabel_preReloc);
 
+    //stress
+    ParticleVariable<Vector> pVelocity;
+    if(mpm_matl->getFractureModel()) {
+      new_dw->get(pVelocity, lb->pVelocityAfterFractureLabel, pset);
+    }
+    else {
+      new_dw->get(pVelocity, lb->pVelocityAfterUpdateLabel, pset);
+    }
+    new_dw->put(pVelocity, lb->pVelocityLabel_preReloc);
+
+    //timestep
     delt_vartype delT;
     if(d_fracture) {
       new_dw->get(delT, lb->delTAfterCrackSurfaceContactLabel);
@@ -1655,6 +1715,11 @@ void SerialMPM::integrateTemperatureRate(const ProcessorGroup*,
 }
 
 
+void SerialMPM::setAnalyze(PatchDataAnalyze* analyze)
+{
+  d_analyze = analyze;
+}
+
 void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 						const Patch* patch,
 						DataWarehouseP& old_dw,
@@ -1885,7 +1950,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 
       // Store the new result
       new_dw->put(pxnew,        lb->pXLabel_preReloc);
-      new_dw->put(pvelocitynew, lb->pVelocityLabel_preReloc);
+      new_dw->put(pvelocitynew, lb->pVelocityAfterUpdateLabel);
       new_dw->put(pexternalForce, lb->pExternalForceLabel_preReloc);
 
       ParticleVariable<long> pids;
@@ -1907,6 +1972,12 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 
 
 // $Log$
+// Revision 1.163  2000/11/21 20:51:02  tan
+// Implemented different models for fracture simulations.  SimpleFracture model
+// is for the simulation where the resolution focus only on macroscopic major
+// cracks. NormalFracture and ExplosionFracture models are more sophiscated
+// and specific fracture models that are currently underconstruction.
+//
 // Revision 1.162  2000/11/15 18:51:50  guilkey
 // Reduced warnings.
 //

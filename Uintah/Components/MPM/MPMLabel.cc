@@ -36,6 +36,19 @@ MPMLabel::MPMLabel()
 
   pStressAfterFractureReleaseLabel = scinew VarLabel("p.stressAfterFractureRelease",
 			ParticleVariable<Matrix3>::getTypeDescription());
+
+  pVelocityAfterUpdateLabel = scinew VarLabel("p.velocityAfterUpdate",
+			ParticleVariable<Vector>::getTypeDescription());
+
+  pVelocityAfterFractureLabel = scinew VarLabel("p.velocityAfterFracture",
+			ParticleVariable<Vector>::getTypeDescription());
+
+  pStrainEnergyLabel = scinew VarLabel("p.strainEnergy",
+			ParticleVariable<double>::getTypeDescription());
+
+  pNewlyBrokenSurfaceNormalLabel = scinew VarLabel("p.newlyBrokenSurfaceNormal",
+			ParticleVariable<Vector>::getTypeDescription());
+
   
   //PermanentParticleState
   pStressLabel = scinew VarLabel( "p.stress",
@@ -88,6 +101,9 @@ MPMLabel::MPMLabel()
 
   pEnergyReleaseRateLabel = scinew VarLabel( "p.energyReleaseRateLabel",
 			ParticleVariable<double>::getTypeDescription() );
+
+  pImageVelocityLabel = scinew VarLabel( "p.imageVelocity",
+			ParticleVariable<Vector>::getTypeDescription() );
 
   pParticleIDLabel = scinew VarLabel("p.particleID",
 			ParticleVariable<long>::getTypeDescription() );
@@ -149,6 +165,9 @@ MPMLabel::MPMLabel()
 
   pEnergyReleaseRateLabel_preReloc = scinew VarLabel( "p.energyReleaseRateLabel+",
 			ParticleVariable<double>::getTypeDescription() );
+
+  pImageVelocityLabel_preReloc = scinew VarLabel( "p.imageVelocity+",
+			ParticleVariable<Vector>::getTypeDescription() );
 
   pParticleIDLabel_preReloc = scinew VarLabel("p.particleID+",
 			ParticleVariable<long>::getTypeDescription() );
@@ -234,13 +253,15 @@ MPMLabel::MPMLabel()
 
   // Reduction variables
 
-  delTAfterConstitutiveModelLabel = scinew VarLabel( "delTAfterConstitutiveModel", 
+  delTAfterConstitutiveModelLabel = scinew VarLabel( 
+    "delTAfterConstitutiveModel", 
     delt_vartype::getTypeDescription() );
 
   delTAfterFractureLabel = scinew VarLabel( "delTAfterFracture", 
     delt_vartype::getTypeDescription() );
 
-  delTAfterCrackSurfaceContactLabel = scinew VarLabel( "delTAfterCrackSurafceContact", 
+  delTAfterCrackSurfaceContactLabel = scinew VarLabel( 
+    "delTAfterCrackSurafceContact", 
     delt_vartype::getTypeDescription() );
 
   delTLabel = scinew VarLabel( "delT", delt_vartype::getTypeDescription() );
@@ -277,6 +298,12 @@ MPMLabel::~MPMLabel()
   
   delete pStressAfterStrainRateLabel;
   delete pStressAfterFractureReleaseLabel;
+
+  delete pVelocityAfterUpdateLabel;
+  delete pVelocityAfterFractureLabel;
+  
+  delete pStrainEnergyLabel;
+  delete pNewlyBrokenSurfaceNormalLabel;
 
   //PermanentParticleState
   delete pStressLabel;
@@ -374,6 +401,12 @@ void MPMLabel::registerPermanentParticleState(int i,
 }
 
 // $Log$
+// Revision 1.42  2000/11/21 20:51:02  tan
+// Implemented different models for fracture simulations.  SimpleFracture model
+// is for the simulation where the resolution focus only on macroscopic major
+// cracks. NormalFracture and ExplosionFracture models are more sophiscated
+// and specific fracture models that are currently underconstruction.
+//
 // Revision 1.41  2000/09/25 20:23:13  sparker
 // Quiet g++ warnings
 //
