@@ -469,7 +469,6 @@ OPort* Module::get_oport(int item)
 
 IPort* Module::get_iport(const string& name)
 {
-  update_state(NeedData);
   IPort *p = getIPort(name);
   if (p == 0) throw "Unable to initialize iport '" + name + "'.";
   return p;
