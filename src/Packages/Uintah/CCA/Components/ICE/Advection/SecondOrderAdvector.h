@@ -59,16 +59,7 @@ namespace Uintah {
     template<class T> 
       void qAverageFlux(const CCVariable<T>& q_CC,
 		          const Patch* patch,
-		          CCVariable<T>& grad_lim,
-		          const CCVariable<T>& q_grad_x,
-		          const CCVariable<T>& q_grad_y,
-		          const CCVariable<T>& q_grad_z,
-		          CCVariable<facedata<T> >& q_OAFS);
-    template <class T>
-      void  allocateAndCompute_Q_ave(const CCVariable<T>& q_CC,
-                                     const Patch* patch,
-                                     DataWarehouse* new_dw,
-                                     CCVariable<facedata<T> >& q_OAFS );
+                        CCVariable<facedata<T> >& q_OAFS);
                                          
     template<class T, typename F> 
       void advectSlabs(CCVariable<facedata<T> >& q_OAFS,
