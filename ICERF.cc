@@ -533,13 +533,12 @@ void ICE::computeFaceCenteredVelocitiesRF(const ProcessorGroup*,
       SFCXVariable<double> uvel_FC, pressDiffX_FC;
       SFCYVariable<double> vvel_FC, pressDiffY_FC;
       SFCZVariable<double> wvel_FC, pressDiffZ_FC;
-      new_dw->allocateAndPut(uvel_FC,      lb->uvel_FCLabel,       indx,patch);  
-      new_dw->allocateAndPut(vvel_FC,      lb->vvel_FCLabel,       indx,patch);  
-      new_dw->allocateAndPut(wvel_FC,      lb->wvel_FCLabel,       indx,patch);  
-      
-      new_dw->allocateAndPut(pressDiffX_FC,lb->press_diffX_FCLabel,indx,patch);  
-      new_dw->allocateAndPut(pressDiffY_FC,lb->press_diffY_FCLabel,indx,patch);  
-      new_dw->allocateAndPut(pressDiffZ_FC,lb->press_diffZ_FCLabel,indx,patch);     
+      new_dw->allocateAndPut(uvel_FC,      lb->uvel_FCLabel,       indx,patch); 
+      new_dw->allocateAndPut(vvel_FC,      lb->vvel_FCLabel,       indx,patch); 
+      new_dw->allocateAndPut(wvel_FC,      lb->wvel_FCLabel,       indx,patch); 
+      new_dw->allocateAndPut(pressDiffX_FC,lb->press_diffX_FCLabel,indx,patch); 
+      new_dw->allocateAndPut(pressDiffY_FC,lb->press_diffY_FCLabel,indx,patch); 
+      new_dw->allocateAndPut(pressDiffZ_FC,lb->press_diffZ_FCLabel,indx,patch); 
 
       uvel_FC.initialize(0.0);     
       vvel_FC.initialize(0.0);     
