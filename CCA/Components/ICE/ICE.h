@@ -57,6 +57,9 @@ namespace Uintah {
       virtual void scheduleInitialize(const LevelP& level, 
                                       SchedulerP&);
 
+      virtual void scheduleInitializeAddedMaterial(const LevelP& level, 
+                                                   SchedulerP&);
+
       virtual void restartInitialize();
       
       virtual void scheduleComputeStableTimestep(const LevelP&,
@@ -160,6 +163,9 @@ namespace Uintah {
                                             const MaterialSubset*,
                                             const MaterialSet*);
                                        
+      void scheduleCheckNeedAddMaterial(SchedulerP&, 
+                                        const PatchSet*,
+                                        const MaterialSet*);
 //__________________________________ 
 //  I M P L I C I T   I C E
                                          
@@ -232,6 +238,12 @@ namespace Uintah {
                               const MaterialSubset* matls,
                               DataWarehouse*, 
                               DataWarehouse* new_dw);
+                              
+      void actuallyInitializeAddedMaterial(const ProcessorGroup*, 
+                                           const PatchSubset* patches,
+                                           const MaterialSubset* matls,
+                                           DataWarehouse*, 
+                                           DataWarehouse* new_dw);
                               
       void initializeSubTask_hydrostaticAdj(const ProcessorGroup*, 
                                      const PatchSubset*,
@@ -337,6 +349,12 @@ namespace Uintah {
 
       
       void computeLagrangianValues(const ProcessorGroup*,
+                                   const PatchSubset* patches,
+                                   const MaterialSubset* matls,
+                                   DataWarehouse*,
+                                   DataWarehouse*);
+      
+      void checkNeedAddMaterial(const ProcessorGroup*,
                                    const PatchSubset* patches,
                                    const MaterialSubset* matls,
                                    DataWarehouse*,
