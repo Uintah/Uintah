@@ -24,6 +24,21 @@
 #include <Core/Thread/ThreadGroup.h>
 
 using std::pair;
+
+
+namespace SCIRun{
+template<> 
+bool SCIRun::GLTexture3D::get_dimensions(Uintah::LevelMeshHandle m,
+				 int& nx, int& ny, int& nz)
+  {
+    nx = m->get_nx();
+    ny = m->get_ny();
+    nz = m->get_nz();
+    return true;
+  }
+} // End namespace SCIRun
+
+
 namespace Uintah {
 
 using SCIRun::Thread;

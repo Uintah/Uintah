@@ -80,17 +80,6 @@ protected:
 
 } // End namespace Uintah
 
-namespace SCIRun{
-template<> 
-bool SCIRun::GLTexture3D::get_dimensions(Uintah::LevelMeshHandle m,
-				 int& nx, int& ny, int& nz)
-  {
-    nx = m->get_nx();
-    ny = m->get_ny();
-    nz = m->get_nz();
-    return true;
-  }
-} // End namespce SCIRun
 
 
 #endif //UINTAH_GLTEXTURE3D_H
