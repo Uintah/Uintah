@@ -7,6 +7,7 @@
 #include <Core/Malloc/Allocator.h>
 #include <set>
 #include <iostream>
+#include <algorithm>
 using namespace SCIRun;
 using namespace Uintah;
 using namespace std;
