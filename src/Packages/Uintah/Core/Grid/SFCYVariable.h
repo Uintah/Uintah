@@ -160,20 +160,20 @@ WARNING
       return true;
     }
     
-    virtual void readNormal(istream& in)
+    virtual void readNormal(istream& in, bool swapBytes)
     {
       const TypeDescription* td = fun_getTypeDescription((T*)0);
       if(td->isFlat())
-	Array3<T>::read(in);
+	Array3<T>::read(in, swapBytes);
       else
 	throw InternalError("Cannot yet read non-flat objects!\n");
     }
     
-    virtual void readRLE(istream& in)
+    virtual void readRLE(istream& in, bool swapBytes, int nByteMode)
     {
       const TypeDescription* td = fun_getTypeDescription((T*)0);
       if(td->isFlat()){
-	RunLengthEncoder<T> rle(in);
+	RunLengthEncoder<T> rle(in, swapBytes, nByteMode);
 	rle.copyOut(Array3<T>::begin(), Array3<T>::end());
       }
       else

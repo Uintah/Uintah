@@ -4,6 +4,7 @@
 #include <Core/Util/FancyAssert.h>
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Util/Assert.h>
+#include <Core/Util/Endian.h>
 #include <Core/Malloc/Allocator.h>
 #include <Dataflow/XMLUtil/XMLUtil.h>
 #include <Packages/Uintah/Core/Grid/ParticleVariableBase.h>
@@ -140,8 +141,8 @@ public:
   virtual void emitNormal(ostream& out, DOM_Element varnode);
   virtual bool emitRLE(ostream& out, DOM_Element varnode);
   
-  virtual void readNormal(istream& in);
-  virtual void readRLE(istream& in);
+  virtual void readNormal(istream& in, bool swapBytes);
+  virtual void readRLE(istream& in, bool swapBytes, int nByteMode);
   
   virtual void* getBasePointer() const;
   virtual const TypeDescription* virtualGetTypeDescription() const;
@@ -494,7 +495,7 @@ template<class T>
   
   template<class T>
   void
-  ParticleVariable<T>::readNormal(istream& in)
+  ParticleVariable<T>::readNormal(istream& in, bool swapBytes)
   {
     const TypeDescription* td = fun_getTypeDescription((T*)0);
     if(!td->isFlat()) {
@@ -513,13 +514,18 @@ template<class T>
 	}
 	ssize_t size = (ssize_t)(sizeof(T)*(end-start));
 	in.read((char*)&(*this)[start], size);
+	if (swapBytes) {
+	  for (particleIndex idx = start; idx != end; idx++) {
+	    swapbytes((*this)[idx]);
+	  }
+	}
       }
     }
   }
 
   template<class T>
   void
-  ParticleVariable<T>::readRLE(istream& in)
+  ParticleVariable<T>::readRLE(istream& in, bool swapBytes, int nByteMode)
   {
     const TypeDescription* td = fun_getTypeDescription((T*)0);
     if(!td->isFlat()) {
@@ -527,7 +533,7 @@ template<class T>
     }
     else {
       RunLengthEncoder<T> rle;
-      rle.read(in);
+      rle.read(in, swapBytes, nByteMode);
       ParticleSubset::iterator iter = d_pset->begin();
       typename RunLengthEncoder<T>::iterator rle_iter = rle.begin();
       for ( ; iter != d_pset->end() && rle_iter != rle.end();

@@ -62,13 +62,14 @@ public:
   }
 
   void emit(OutputContext&, const string& compressionModeHint);
-  void read(InputContext&, long end, const string& compressionMode);
+  void read(InputContext&, long end, bool swapbytes, int nByteMode,
+	    const string& compressionMode);
 
   virtual void emitNormal(ostream& out, DOM_Element varnode) = 0;
-  virtual void readNormal(istream& in) = 0;
+  virtual void readNormal(istream& in, bool swapbytes) = 0;
 
   virtual bool emitRLE(ostream& /*out*/, DOM_Element /*varnode*/);
-  virtual void readRLE(istream& /*in*/);
+  virtual void readRLE(istream& /*in*/, bool swapbytes, int nByteMode);
   
   virtual void allocate(const Patch* patch) = 0;
 

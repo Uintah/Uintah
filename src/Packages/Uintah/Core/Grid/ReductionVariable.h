@@ -9,6 +9,11 @@
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Malloc/Allocator.h>
 #include <Packages/Uintah/Core/Grid/Reductions.h>
+#include <Core/Util/Endian.h>
+
+namespace SCIRun {
+  void swapbytes( Uintah::Matrix3& m);
+} //end namespace SCIRun
 
 #if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
 #define IRIX
@@ -74,8 +79,11 @@ WARNING
     { out << value; }
     virtual void emitNormal(ostream& out, DOM_Element /*varnode*/)
     { out.write((char*)&value, sizeof(double)); }
-    virtual void readNormal(istream& in)
-    { in.read((char*)&value, sizeof(double)); }
+    virtual void readNormal(istream& in, bool swapBytes)
+    {
+      in.read((char*)&value, sizeof(double));
+      if (swapBytes) swapbytes(value);
+    }
      
     virtual void allocate(const Patch*)
     {

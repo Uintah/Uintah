@@ -56,6 +56,7 @@ PSELIBS := \
 	Core/Thread                      \
 	Core/Exceptions                  \
 	Core/Geometry                    \
+	Core/Util                        \
 	Dataflow/XMLUtil
 
 LIBS := $(XML_LIBRARY) $(MPI_LIBRARY) -lm $(GZ_LIBRARY)
