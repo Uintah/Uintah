@@ -159,6 +159,7 @@ void MPMArches::scheduleTimeAdvance(double time, double delt,
 
   if(d_fracture) {
     d_mpm->scheduleComputeFracture(sched, patches, mpm_matls);
+    d_mpm->scheduleComputeCrackExtension(sched, patches, mpm_matls);
   }
   d_mpm->scheduleCarryForwardVariables(sched, patches, mpm_matls);
 
