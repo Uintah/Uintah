@@ -41,6 +41,12 @@ namespace Uintah {
 
   protected:
     
+    // Get the LoadCurveID applicable for this material point
+    int getLoadCurveID(const Point& pp, const Vector& dxpp);
+
+    // Print MPM physical boundary condition information
+    void printPhysicalBCs();
+
     void applyForceBC(const Vector& dxpp, 
                       const Point& pp,
                       const double& pMass, 
@@ -58,6 +64,8 @@ namespace Uintah {
     ParticleVariable<Vector> pvelocity, pexternalforce, psize;
     ParticleVariable<double> pmass, pvolume, ptemperature, psp_vol;
     ParticleVariable<long64> pparticleID;
+
+    ParticleVariable<int> pLoadCurveID;
 
     int d_8or27;
 
