@@ -4492,18 +4492,21 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup* pg,
             // - q_L_CC must be computed in the extra cells
             // - q_src must be 0.0 in the extra cells 
             if(tvar->src){
-              for(CellIterator iter = patch->getExtraCellIterator(); 
+              for(CellIterator iter = patch->getCellIterator(); 
                                       !iter.done(); iter++) {
                 IntVector c = *iter;                            
                 q_L_CC[c]  = (q_old[c] + q_src[c])*mass_L[c];   // with source
               }
             } else {       
-              for(CellIterator iter = patch->getExtraCellIterator(); 
+              for(CellIterator iter = patch->getCellIterator(); 
                                       !iter.done(); iter++) {
                 IntVector c = *iter;                            
                 q_L_CC[c]  = q_old[c]*mass_L[c];                // no source
               }
             }
+
+            // Set boundary conditions on lagrangian values
+            setBC(q_L_CC, Labelname,  patch, d_sharedState, indx, new_dw);
             
             // now advect
             advector->advectQ(q_L_CC,patch,q_advected, new_dw);
@@ -4512,7 +4515,7 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup* pg,
                  ("q_L_CC",q_CC, q_L_CC, q_advected, 
                   mass_L, mass_new, mass_advected, PH, PH2, patch);
 
-            //  Set Boundary Conditions 
+            //  Set Boundary Conditions again on the advected values
             string Labelname = tvar->var->getName();
             setBC(q_CC, Labelname,  patch, d_sharedState, indx, new_dw);
           }
