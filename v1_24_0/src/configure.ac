@@ -682,7 +682,6 @@ case $host in
     SCI_CHECK_OS_VERSION(6.5,,
       configure: error: wrong Irix version. exiting.;exit)
     NUM_CPUS="`TERM=dumb top -n 1 | fgrep CPUs | cut -d' ' -f1`"    
-    WOFF_NUMBERS="$WOFF_NUMBERS 3625 3649"
     ;;
   *linux*)
     SCI_CHECK_OS_VERSION(2.2.17,,
@@ -946,6 +945,14 @@ fi
 case $host in 
   *-irix*)
     ac_objext=o
+
+    # Check for the use of the 7.4 compiler (so that we can turn off
+    # some extra warnings.)
+    SCI_CHECK_VERSION($CXX,-version,7.4,USING_74=yes,)
+    if test "$USING_74" = "yes"; then
+      WOFF_NUMBERS="$WOFF_NUMBERS 3625 3649"
+    fi
+
     SCI_CHECK_VERSION($CC,-version,7.3.1.1,,
                       echo configure: error: wrong $CC version.; exit)
     SCI_CHECK_VERSION($CXX,-version,7.3.1.1,,
