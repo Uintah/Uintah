@@ -140,7 +140,7 @@ int DpyBase::open_display(Window parent, bool needevents) {
     strcpy(criteria,"sb");
     
 #if !defined(__APPLE__)
-  strcat(criteria, ", max rgba");
+  strcat(criteria, ", max rgb");
 #endif
 
   if(!visPixelFormat(criteria)){
@@ -338,7 +338,7 @@ bool DpyBase::should_close() {
 }
 
 void DpyBase::post_redraw() {
-  cerr << "Sending redraw event\n";
+  //  cerr << "Sending redraw event\n";
   XEvent event;
   event.type = Expose;
   if (useXThreads) XLockDisplay(dpy);
@@ -399,7 +399,7 @@ void DpyBase::wait_and_handle_events() {
     XNextEvent(dpy, &e);	
     switch(e.type){
     case Expose:
-      cerr << window_name << ": "<< "Expose event found.  " << XPending(dpy) << " events left to process\n";
+      //      cerr << window_name << ": "<< "Expose event found.  " << XPending(dpy) << " events left to process\n";
       redraw=true;
       break;
     case ConfigureNotify:
