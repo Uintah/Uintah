@@ -67,7 +67,7 @@ namespace SCIRun {
 
 using std::string;
 
-class SCICORESHARE StructQuadSurfMesh : public ImageMesh
+class StructQuadSurfMesh : public ImageMesh
 {
 public:
   StructQuadSurfMesh();

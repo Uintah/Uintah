@@ -95,7 +95,7 @@ struct TriSurfMeshCell {
 };
 
 
-class SCICORESHARE TriSurfMesh : public Mesh
+class TriSurfMesh : public Mesh
 {
 public:
 

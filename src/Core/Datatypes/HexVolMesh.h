@@ -89,7 +89,7 @@ struct HexVolMeshCell {
 };
 
 
-class SCICORESHARE HexVolMesh : public Mesh
+class HexVolMesh : public Mesh
 {
 public:
 

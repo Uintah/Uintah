@@ -52,7 +52,7 @@ namespace SCIRun {
 class ColumnMatrix;
 class SparseRowMatrix;
 
-class SCICORESHARE SparseRowMatrix : public Matrix {
+class SparseRowMatrix : public Matrix {
   int nnrows;
   int nncols;
 public:
@@ -144,9 +144,9 @@ public:
   static PersistentTypeID type_id;
 
 
-  friend SCICORESHARE SparseRowMatrix *AddSparse(const SparseRowMatrix &a,
+  friend SparseRowMatrix *AddSparse(const SparseRowMatrix &a,
 						 const SparseRowMatrix &b);
-  friend SCICORESHARE SparseRowMatrix *SubSparse(const SparseRowMatrix &a,
+  friend SparseRowMatrix *SubSparse(const SparseRowMatrix &a,
 						 const SparseRowMatrix &b);
 
 

@@ -42,8 +42,6 @@
 #ifndef SCI_project_ColumnMatrix_h
 #define SCI_project_ColumnMatrix_h 1
 
-#include <Core/share/share.h>
-
 #include <Core/Datatypes/Datatype.h>
 #include <Core/Containers/LockingHandle.h>
 #include <Core/Util/FancyAssert.h>
@@ -58,7 +56,7 @@ namespace SCIRun {
 class DenseMatrix;
 class SparseRowMatrix;
 
-class SCICORESHARE ColumnMatrix : public Matrix {
+class ColumnMatrix : public Matrix {
   int rows;
   double* data;
 public:
@@ -108,37 +106,37 @@ public:
   double vector_norm(int& flops, int& memrefs) const;
   double vector_norm(int& flops, int& memrefs, int beg, int end) const;
   
-  friend SCICORESHARE void Mult(ColumnMatrix&, const ColumnMatrix&, double s);
-  friend SCICORESHARE void Mult(ColumnMatrix&, const ColumnMatrix&, const ColumnMatrix&);
-  friend SCICORESHARE void Mult(ColumnMatrix&, const ColumnMatrix&, const ColumnMatrix&,
+  friend void Mult(ColumnMatrix&, const ColumnMatrix&, double s);
+  friend void Mult(ColumnMatrix&, const ColumnMatrix&, const ColumnMatrix&);
+  friend void Mult(ColumnMatrix&, const ColumnMatrix&, const ColumnMatrix&,
 				int& flops, int& memrefs);
-  friend SCICORESHARE void Mult(ColumnMatrix&, const ColumnMatrix&, const ColumnMatrix&,
+  friend void Mult(ColumnMatrix&, const ColumnMatrix&, const ColumnMatrix&,
 				int& flops, int& memrefs, int beg, int end);
-  friend SCICORESHARE void Sub(ColumnMatrix&, const ColumnMatrix&, const ColumnMatrix&);
-  friend SCICORESHARE void Sub(ColumnMatrix&, const ColumnMatrix&, const ColumnMatrix&,
+  friend void Sub(ColumnMatrix&, const ColumnMatrix&, const ColumnMatrix&);
+  friend void Sub(ColumnMatrix&, const ColumnMatrix&, const ColumnMatrix&,
 			       int& flops, int& memrefs);
-  friend SCICORESHARE double Dot(const ColumnMatrix&, const ColumnMatrix&);
-  friend SCICORESHARE double Dot(const ColumnMatrix&, const ColumnMatrix&,
+  friend double Dot(const ColumnMatrix&, const ColumnMatrix&);
+  friend double Dot(const ColumnMatrix&, const ColumnMatrix&,
 				 int& flops, int& memrefs);
-  friend SCICORESHARE double Dot(const ColumnMatrix&, const ColumnMatrix&,
+  friend double Dot(const ColumnMatrix&, const ColumnMatrix&,
 				 int& flops, int& memrefs, int beg, int end);
-  friend SCICORESHARE void ScMult_Add(ColumnMatrix&, double s, const ColumnMatrix&,
+  friend void ScMult_Add(ColumnMatrix&, double s, const ColumnMatrix&,
 				      const ColumnMatrix&);
-  friend SCICORESHARE void ScMult_Add(ColumnMatrix&, double s, const ColumnMatrix&,
+  friend void ScMult_Add(ColumnMatrix&, double s, const ColumnMatrix&,
 				      const ColumnMatrix&, int& flops, int& memrefs);
-  friend SCICORESHARE void ScMult_Add(ColumnMatrix&, double s, const ColumnMatrix&,
+  friend void ScMult_Add(ColumnMatrix&, double s, const ColumnMatrix&,
 				      const ColumnMatrix&, int& flops, int& memrefs,
 				      int beg, int end);
   
-  friend SCICORESHARE void Copy(ColumnMatrix&, const ColumnMatrix&);
-  friend SCICORESHARE void Copy(ColumnMatrix&, const ColumnMatrix&, 
+  friend void Copy(ColumnMatrix&, const ColumnMatrix&);
+  friend void Copy(ColumnMatrix&, const ColumnMatrix&, 
 				int& flops, int& refs);
-  friend SCICORESHARE void Copy(ColumnMatrix&, const ColumnMatrix&, 
+  friend void Copy(ColumnMatrix&, const ColumnMatrix&, 
 				int& flops, int& refs,
 				int beg, int end);
-  friend SCICORESHARE void AddScMult(ColumnMatrix&, const ColumnMatrix&, double s, const ColumnMatrix&);
-  friend SCICORESHARE void Add(ColumnMatrix&, const ColumnMatrix&, const ColumnMatrix&);
-  friend SCICORESHARE void Add(ColumnMatrix&, const ColumnMatrix&, const ColumnMatrix&, const ColumnMatrix&);
+  friend void AddScMult(ColumnMatrix&, const ColumnMatrix&, double s, const ColumnMatrix&);
+  friend void Add(ColumnMatrix&, const ColumnMatrix&, const ColumnMatrix&);
+  friend void Add(ColumnMatrix&, const ColumnMatrix&, const ColumnMatrix&, const ColumnMatrix&);
   
   virtual void print() const;
   virtual void print(std::ostream&) const;

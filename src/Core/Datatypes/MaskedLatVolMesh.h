@@ -434,7 +434,7 @@ struct MaskedLatVolMeshCell {
 
 
 
-class SCICORESHARE MaskedLatVolMesh : public LatVolMesh
+class MaskedLatVolMesh : public LatVolMesh
 {
 private:
 

@@ -321,7 +321,7 @@ struct LatVolMeshCell {
 };
 
 
-class SCICORESHARE LatVolMesh : public Mesh
+class LatVolMesh : public Mesh
 {
 public:
 

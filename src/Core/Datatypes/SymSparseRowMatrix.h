@@ -44,15 +44,13 @@
 #ifndef SCI_project_SymSparseRowMatrix_h
 #define SCI_project_SymSparseRowMatrix_h 1
 
-#include <Core/share/share.h>
-
 #include <Core/Datatypes/Matrix.h>
 #include <Core/Containers/Array1.h>
 
 namespace SCIRun {
 
 class AddMatrices;
-class SCICORESHARE SymSparseRowMatrix : public Matrix {
+class SymSparseRowMatrix : public Matrix {
     int nnrows;
     int nncols;
     double dummy;
@@ -99,7 +97,7 @@ public:
     virtual void print(std::ostream &) const;
 
     MatrixRow operator[](int r);
-    friend SCICORESHARE class AddMatrices;
+    friend class AddMatrices;
 
     // Persistent representation...
     virtual void io(Piostream&);

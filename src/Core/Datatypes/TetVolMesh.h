@@ -80,7 +80,7 @@ struct TetVolMeshCell {
 };
 
 
-class SCICORESHARE TetVolMesh : public Mesh
+class TetVolMesh : public Mesh
 {
 public:
 

@@ -37,7 +37,7 @@
 
 namespace SCIRun {
 
-class SCICORESHARE QuadraticTetVolMesh : public TetVolMesh
+class QuadraticTetVolMesh : public TetVolMesh
 {
 public:
   QuadraticTetVolMesh();

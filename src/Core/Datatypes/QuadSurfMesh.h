@@ -91,7 +91,7 @@ struct QuadSurfMeshCell {
 };
 
 
-class SCICORESHARE QuadSurfMesh : public Mesh
+class QuadSurfMesh : public Mesh
 {
 public:
   

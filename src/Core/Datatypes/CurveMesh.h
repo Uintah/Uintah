@@ -91,7 +91,7 @@ struct CurveMeshCell {
 };
 
 
-class SCICORESHARE CurveMesh : public Mesh
+class CurveMesh : public Mesh
 {
 public:
   typedef CurveMeshNode Node;
