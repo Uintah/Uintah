@@ -175,16 +175,6 @@ private:
 				       DataWarehouseP& new_dw);
 
   //////////
-  // check the stress on each boundary particle to see
-  // if the microcrack will grow.  If fracture occur,
-  // more interior particles become boundary particles
-  void crackGrow(const ProcessorGroup*,
-		 const Patch* patch,
-		 DataWarehouseP& old_dw,
-		 DataWarehouseP& new_dw);
-
-
-  //////////
   // Insert Documentation Here:
   void checkLeave(const ProcessorGroup*,
 		  const Patch* patch,
@@ -199,7 +189,6 @@ private:
   Fracture*        d_fractureModel;
   ThermalContact*  d_thermalContactModel;
 
-  bool             d_heatConductionInvolved;
   bool             d_burns;
 };
       
@@ -208,6 +197,11 @@ private:
    
 //
 // $Log$
+// Revision 1.43  2000/06/20 04:12:41  tan
+// WHen d_thermalContactModel != NULL, heat conduction will be included in MPM
+// algorithm.  The d_thermalContactModel is set by ThermalContactFactory according
+// to the information in ProblemSpec from input file.
+//
 // Revision 1.42  2000/06/19 23:52:13  guilkey
 // Added boolean d_burns so that certain stuff only gets done
 // if a burn model is present.  Not to worry, the if's on this
