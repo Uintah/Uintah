@@ -72,7 +72,7 @@ namespace SCIRun {
 // **************************** Class: DicomImage *****************************
 // ****************************************************************************
 
-typedef int PixelType;
+typedef float PixelType;
 typedef itk::Image<PixelType, 3> ImageNDType;
 
 class DicomImage
@@ -100,7 +100,6 @@ public:
   double get_origin( int i );
   double get_spacing( int i );
   int get_index( int i );
-  unsigned int get_nrrd_type();
   void print_image_info();
 
 private:
@@ -113,7 +112,6 @@ private:
   double * spacing_;
   int * index_;
   std::string id_;
-  unsigned int nrrd_type_;
 
 protected:
 
