@@ -1,18 +1,12 @@
-This is TeX, Version 3.14159 (Web2C 7.3.1) (format=latex 2000.11.17)  19 JUL 2001 18:18
+This is TeX, Version 3.14159 (Web2C 7.2) (format=latex 2000.1.7)  9 AUG 2001 00:26
 **./images.tex
 (./images.tex
-LaTeX2e <1999/12/01> patch level 1
-Babel <v3.6Z> and hyphenation patterns for american, french, german, ngerman, n
-ohyphenation, loaded.
+LaTeX2e <1999/06/01> patch level 1
 
-
-(/nfs/facility/sys/os/generic/usr/local/contrib/thompson/teTeX-1.0.5/share/texm
-f/tex/latex/base/article.cls
-Document Class: article 1999/09/10 v1.4a Standard LaTeX document class
-
-(/nfs/facility/sys/os/generic/usr/local/contrib/thompson/teTeX-1.0.5/share/texm
-f/tex/latex/base/size11.clo
-File: size11.clo 1999/09/10 v1.4a Standard LaTeX file (size option)
+(/usr/local/share/texmf/tex/latex/base/article.cls
+Document Class: article 1999/01/07 v1.4a Standard LaTeX document class
+(/usr/local/share/texmf/tex/latex/base/size11.clo
+File: size11.clo 1999/01/07 v1.4a Standard LaTeX file (size option)
 )
 \c@part=\count79
 \c@section=\count80
@@ -25,38 +19,25 @@ File: size11.clo 1999/09/10 v1.4a Standard LaTeX file (size option)
 \abovecaptionskip=\skip41
 \belowcaptionskip=\skip42
 \bibindent=\dimen102
-)
-(/nfs/facility/sys/os/generic/usr/local/contrib/thompson/teTeX-1.0.5/share/texm
-f/tex/latex/fancyhdr/fancyhdr.sty
+) (/usr/local/share/texmf/tex/latex/base/ifthen.sty
+Package: ifthen 1999/01/07 v1.1a Standard LaTeX ifthen package (DPC)
+) (/u/macleod/tex/latex/fancyhdr.sty
 \headwidth=\dimen103
-) (/home/macleod/scirun/SCIRun/doc/UserGuide/usersguide.sty)
-(/nfs/facility/sys/os/generic/usr/local/contrib/thompson/teTeX-1.0.5/share/texm
-f/tex/latex/graphics/graphics.sty
-Package: graphics 1999/02/16 v1.0l Standard LaTeX Graphics (DPC,SPQR)
-
-(/nfs/facility/sys/os/generic/usr/local/contrib/thompson/teTeX-1.0.5/share/texm
-f/tex/latex/graphics/trig.sty
-Package: trig 1999/03/16 v1.09 sin cos tan (DPC)
-)
-(/nfs/facility/sys/os/generic/usr/local/contrib/thompson/teTeX-1.0.5/share/texm
-f/tex/latex/config/graphics.cfg)
-Package graphics Info: Driver file: dvips.def on input line 80.
-
-(/nfs/facility/sys/os/generic/usr/local/contrib/thompson/teTeX-1.0.5/share/texm
-f/tex/latex/graphics/dvips.def
-File: dvips.def 1999/02/16 v3.0i Driver-dependant file (DPC,SPQR)
-))
-(/nfs/facility/sys/os/generic/usr/local/contrib/thompson/teTeX-1.0.5/share/texm
-f/tex/latex/graphics/epsfig.sty
-Package: epsfig 1999/02/16 v1.7a (e)psfig emulation (SPQR)
-
-(/nfs/facility/sys/os/generic/usr/local/contrib/thompson/teTeX-1.0.5/share/texm
-f/tex/latex/graphics/graphicx.sty
-Package: graphicx 1999/02/16 v1.0f Enhanced LaTeX Graphics (DPC,SPQR)
-
-(/nfs/facility/sys/os/generic/usr/local/contrib/thompson/teTeX-1.0.5/share/texm
-f/tex/latex/graphics/keyval.sty
-Package: keyval 1999/03/16 v1.13 key=value parser (DPC)
+) (/scratch/macleod/scirun-cvs/SCIRun/doc/UserGuide/usersguide.sty) (/usr/local
+/share/texmf/tex/latex/graphics/graphics.sty
+Package: graphics 1998/05/27 v1.0h Standard LaTeX Graphics (DPC,SPQR)
+(/usr/local/share/texmf/tex/latex/graphics/trig.sty
+Package: trig 1994/10/16 v1.08 sin cos tan (DPC)
+) (/usr/local/share/texmf/tex/latex/config/graphics.cfg)
+Package graphics Info: Driver file: dvips.def on input line 85.
+(/usr/local/share/texmf/tex/latex/graphics/dvips.def
+File: dvips.def 1998/05/03 v3.0f Driver-dependant file (DPC,SPQR)
+)) (/usr/local/share/texmf/tex/latex/graphics/epsfig.sty
+Package: epsfig 1996/10/04 v1.7 (e)psfig emulation (SPQR)
+(/usr/local/share/texmf/tex/latex/graphics/graphicx.sty
+Package: graphicx 1997/06/09 v1.0d Enhanced LaTeX Graphics (DPC,SPQR)
+(/usr/local/share/texmf/tex/latex/graphics/keyval.sty
+Package: keyval 1998/06/05 v1.11 key=value parser (DPC)
 \KV@toks@=\toks14
 )
 \Gin@req@height=\dimen104
@@ -64,7 +45,7 @@ Package: keyval 1999/03/16 v1.13 key=value parser (DPC)
 )
 \epsfxsize=\dimen106
 \epsfysize=\dimen107
-) (/home/macleod/tex/latex/html.sty
+) (/usr/local/share/texmf/tex/latex/html/html.sty
 Package: html 1999/07/19 v1.38 hypertext commands for latex2html (nd, hws, rrm)
 
 \c@lpart=\count87
@@ -77,103 +58,357 @@ Package: html 1999/07/19 v1.38 hypertext commands for latex2html (nd, hws, rrm)
 \c@lsubparagraph=\count94
 \c@lsubsubparagraph=\count95
 \ptrfile=\write3
-)
-(/nfs/facility/sys/os/generic/usr/local/contrib/thompson/teTeX-1.0.5/share/texm
-f/tex/latex/base/makeidx.sty
-Package: makeidx 1999/09/17 v1.0l Standard LaTeX package
-) (/home/macleod/tex/latex/citexp.sty)
+) (/usr/local/share/texmf/tex/latex/base/makeidx.sty
+Package: makeidx 1998/08/17 v1.0k Standard LaTeX package
+) (/u/macleod/tex/latex/citexp.sty)
 \@indexfile=\write4
 \openout4 = `images.idx'.
 
 Writing index file images.idx
-
-(/nfs/facility/sys/os/generic/usr/local/contrib/thompson/teTeX-1.0.5/share/texm
-f/tex/latex/graphics/color.sty
-Package: color 1999/02/16 v1.0i Standard LaTeX Color (DPC)
-
-(/nfs/facility/sys/os/generic/usr/local/contrib/thompson/teTeX-1.0.5/share/texm
-f/tex/latex/config/color.cfg)
-Package color Info: Driver file: dvips.def on input line 125.
-
-(/nfs/facility/sys/os/generic/usr/local/contrib/thompson/teTeX-1.0.5/share/texm
-f/tex/latex/graphics/dvipsnam.def
-File: dvipsnam.def 1999/02/16 v3.0i Driver-dependant file (DPC,SPQR)
-))
+(/usr/local/share/texmf/tex/latex/graphics/color.sty
+Package: color 1998/05/27 v1.0g Standard LaTeX Color (DPC)
+(/usr/local/share/texmf/tex/latex/config/color.cfg)
+Package color Info: Driver file: dvips.def on input line 130.
+(/usr/local/share/texmf/tex/latex/graphics/dvipsnam.def
+File: dvipsnam.def 1998/05/03 v3.0f Driver-dependant file (DPC,SPQR)
+)) (/usr/local/share/texmf/tex/latex/base/inputenc.sty beta test version
+Package: inputenc 1999/04/14 v0.99 Input encoding file (test version: still lia
+ble to change)
+)
 \sizebox=\box26
 \lthtmlwrite=\write5
 (images.aux)
 \openout1 = `images.aux'.
 
-LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 96.
-LaTeX Font Info:    ... okay on input line 96.
-LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 96.
-LaTeX Font Info:    ... okay on input line 96.
-LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 96.
-LaTeX Font Info:    ... okay on input line 96.
-LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 96.
-LaTeX Font Info:    ... okay on input line 96.
-LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 96.
-LaTeX Font Info:    ... okay on input line 96.
-LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 96.
-LaTeX Font Info:    ... okay on input line 96.
+LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 134.
+LaTeX Font Info:    ... okay on input line 134.
+LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 134.
+LaTeX Font Info:    ... okay on input line 134.
+LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 134.
+LaTeX Font Info:    ... okay on input line 134.
+LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 134.
+LaTeX Font Info:    ... okay on input line 134.
+LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 134.
+LaTeX Font Info:    ... okay on input line 134.
+LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 134.
+LaTeX Font Info:    ... okay on input line 134.
+(/scratch/macleod/scirun-cvs/SCIRun/doc/UserGuide/usersguide.aux
+
+LaTeX Warning: Label `sec:intro' multiply defined.
+
+
+LaTeX Warning: Label `sec:roadmap' multiply defined.
+
+
+LaTeX Warning: Label `sec:help' multiply defined.
+
+
+LaTeX Warning: Label `sec:bugs' multiply defined.
+
+
+LaTeX Warning: Label `sec:concepts' multiply defined.
+
+
+LaTeX Warning: Label `sec:con-steering' multiply defined.
+
+
+LaTeX Warning: Label `sec:srversuspse' multiply defined.
+
+
+LaTeX Warning: Label `sec:con-modules' multiply defined.
+
+
+LaTeX Warning: Label `fig:conc-module' multiply defined.
+
+
+LaTeX Warning: Label `sec:con-links' multiply defined.
+
+
+LaTeX Warning: Label `sec:concept-matlab' multiply defined.
+
+
+LaTeX Warning: Label `sec:con-extend' multiply defined.
+
+
+LaTeX Warning: Label `sec:con-detach' multiply defined.
+
+
+LaTeX Warning: Label `sec:startingup' multiply defined.
+
+
+LaTeX Warning: Label `sec:sciruncmd' multiply defined.
+
+
+LaTeX Warning: Label `fig:srwindow' multiply defined.
+
+
+LaTeX Warning: Label `sec:windowanatomy' multiply defined.
+
+
+LaTeX Warning: Label `sec:termwinapp' multiply defined.
+
+
+LaTeX Warning: Label `sec:scirundata' multiply defined.
+
+
+LaTeX Warning: Label `sec:stopping' multiply defined.
+
+
+LaTeX Warning: Label `sec:workwithnets' multiply defined.
+
+
+LaTeX Warning: Label `sec:creatingmodules' multiply defined.
+
+
+LaTeX Warning: Label `sec:modanatomy' multiply defined.
+
+
+LaTeX Warning: Label `tab:portcolors' multiply defined.
+
+
+LaTeX Warning: Label `fig:modgraphic' multiply defined.
+
+
+LaTeX Warning: Label `sec:connectmods' multiply defined.
+
+
+LaTeX Warning: Label `fig:moddialog' multiply defined.
+
+
+LaTeX Warning: Label `sec:setmodprops' multiply defined.
+
+
+LaTeX Warning: Label `sec:executenet' multiply defined.
+
+
+LaTeX Warning: Label `sec:deleteconnections' multiply defined.
+
+
+LaTeX Warning: Label `sec:selectmods' multiply defined.
+
+
+LaTeX Warning: Label `sec:movemod' multiply defined.
+
+
+LaTeX Warning: Label `sec:destroymod' multiply defined.
+
+
+LaTeX Warning: Label `sec:docmodule' multiply defined.
+
+
+LaTeX Warning: Label `sec:viewmodslog' multiply defined.
+
+
+LaTeX Warning: Label `sec:docnetwork' multiply defined.
+
+
+LaTeX Warning: Label `sec:savenet' multiply defined.
+
+
+LaTeX Warning: Label `sec:opennet' multiply defined.
+
+
+LaTeX Warning: Label `sec:navnetwork' multiply defined.
+
+
+LaTeX Warning: Label `sec:termapp' multiply defined.
+
+
+LaTeX Warning: Label `sec:viewer' multiply defined.
+
+
+LaTeX Warning: Label `sec:viewer-anatomy' multiply defined.
+
+
+LaTeX Warning: Label `fig:viewwindow' multiply defined.
+
+
+LaTeX Warning: Label `sec:view-mouse' multiply defined.
+
+
+LaTeX Warning: Label `tab:view-mouse' multiply defined.
+
+
+LaTeX Warning: Label `sec:view-control' multiply defined.
+
+
+LaTeX Warning: Label `tab:view-unicam' multiply defined.
+
+
+LaTeX Warning: Label `fig:extviewwindow' multiply defined.
+
+
+LaTeX Warning: Label `sec:view-rendering' multiply defined.
+
+
+LaTeX Warning: Label `sec:view-movies' multiply defined.
+
+
+LaTeX Warning: Label `sec:view-widgets' multiply defined.
+
+
+LaTeX Warning: Label `sec:view-gaugewidget' multiply defined.
+
+
+LaTeX Warning: Label `fig:gaugewidget' multiply defined.
+
+
+LaTeX Warning: Label `sec:view-framewidget' multiply defined.
+
+
+LaTeX Warning: Label `fig:framewidget' multiply defined.
+
+
+LaTeX Warning: Label `sec:view-boxwidget' multiply defined.
+
+
+LaTeX Warning: Label `fig:boxwidget' multiply defined.
+
+
+LaTeX Warning: Label `sec:view-ringwidget' multiply defined.
+
+
+LaTeX Warning: Label `fig:ringwidget' multiply defined.
+
+
+LaTeX Warning: Label `sec:packages' multiply defined.
+
+
+LaTeX Warning: Label `sec:srpackage' multiply defined.
+
+
+LaTeX Warning: Label `sec:biopsepackage' multiply defined.
+
+
+LaTeX Warning: Label `sec:import' multiply defined.
+
+
+LaTeX Warning: Label `CRJ:Sch95b' multiply defined.
+
+
+LaTeX Warning: Label `CRJ:Sch93b' multiply defined.
+
+
+LaTeX Warning: Label `RSM:And93' multiply defined.
+
+
+LaTeX Warning: Label `RSM:All91' multiply defined.
+
+
+LaTeX Warning: Label `MM:Bur94' multiply defined.
+
+
+LaTeX Warning: Label `MM:Vet96' multiply defined.
+
+
+LaTeX Warning: Label `MM:Gei96' multiply defined.
+
+
+LaTeX Warning: Label `MM:Koh97' multiply defined.
+
+
+LaTeX Warning: Label `MM:Vet95' multiply defined.
+
+
+LaTeX Warning: Label `MM:Vet97a' multiply defined.
+
+
+LaTeX Warning: Label `CRJ:Joh94c' multiply defined.
+
+
+LaTeX Warning: Label `RSM:Par95' multiply defined.
+
+
+LaTeX Warning: Label `RSM:Par95b' multiply defined.
+
+
+LaTeX Warning: Label `RSM:Par97' multiply defined.
+
+
+LaTeX Warning: Label `RSM:Par97b' multiply defined.
+
+
+LaTeX Warning: Label `CRJ:Parker99b' multiply defined.
+
+
+LaTeX Warning: Label `RSM:Dav2000' multiply defined.
+
+)
+
 latex2htmlLength hsize=349.0pt
+
 latex2htmlLength vsize=694.0437pt
+
 latex2htmlLength hoffset=0.0pt
+
 latex2htmlLength voffset=0.0pt
+
 latex2htmlLength topmargin=0.0pt
+
 latex2htmlLength topskip=0.00003pt
+
 latex2htmlLength headheight=0.0pt
+
 latex2htmlLength headsep=0.0pt
+
 latex2htmlLength parskip=3.0pt plus 1.0pt minus 1.0pt
+
 latex2htmlLength oddsidemargin=-18.06749pt
+
 latex2htmlLength evensidemargin=-18.06749pt
-l2hSize :tex2html_wrap1859:10.88248pt::3.4pt::349.0pt.
+
+l2hSize :tex2html_nomath_inline1981:11.38248pt::11.38248pt::55.71008pt.
 [1
 
 
+
 ]
-l2hSize :tex2html_wrap1861:10.88248pt::3.4pt::349.0pt.
+l2hSize :tex2html_nomath_inline1983:11.38248pt::11.38248pt::84.60593pt.
 [2
 
 
 ]
-l2hSize :tex2html_wrap1863:11.00415pt::3.4pt::349.0pt.
+l2hSize :tex2html_nomath_inline1985:11.50415pt::11.50415pt::53.65695pt.
 [3
 
 
 ]
-l2hSize :tex2html_wrap1865:10.88248pt::3.4pt::349.0pt.
+l2hSize :tex2html_nomath_inline1987:11.38248pt::11.38248pt::38.73755pt.
 [4
 
 
 ]
-l2hSize :tex2html_wrap1875:11.00415pt::3.4pt::349.0pt.
+l2hSize :tex2html_nomath_inline1997:11.50415pt::11.50415pt::31.22464pt.
 [5
 
 
 ]
-l2hSize :tex2html_wrap1877:11.00415pt::3.4pt::349.0pt.
+l2hSize :tex2html_nomath_inline1999:11.50415pt::11.50415pt::40.56256pt.
 [6
 
 
 ]
-l2hSize :tex2html_wrap1917:11.00415pt::5.52916pt::349.0pt.
+l2hSize :tex2html_nomath_inline2037:11.50415pt::11.50415pt::45.67258pt.
 [7
 
 
 ]
-l2hSize :tex2html_wrap1919:11.00415pt::3.4pt::349.0pt.
+l2hSize :tex2html_nomath_inline2039:11.50415pt::11.50415pt::42.78299pt.
 [8
 
 
-] (images.aux) ) 
-Here is how much of TeX's memory you used:
- 1186 strings out of 10901
- 15444 string characters out of 70971
- 57389 words of memory out of 263001
- 4156 multiletter control sequences out of 10000+0
- 3940 words of font info for 15 fonts, out of 400000 for 1000
- 14 hyphenation exceptions out of 1000
- 30i,6n,40p,185b,222s stack positions out of 300i,100n,500p,50000b,4000s
+] (images.aux)
 
-Output written on images.dvi (8 pages, 2092 bytes).
+LaTeX Warning: There were multiply-defined labels.
+
+ ) 
+Here is how much of TeX's memory you used:
+ 1342 strings out of 10974
+ 15925 string characters out of 73476
+ 57198 words of memory out of 263001
+ 4250 multiletter control sequences out of 10000+0
+ 3940 words of font info for 15 fonts, out of 200000 for 1000
+ 14 hyphenation exceptions out of 1000
+ 25i,5n,40p,192b,221s stack positions out of 300i,100n,500p,30000b,4000s
+
+Output written on images.dvi (8 pages, 2356 bytes).

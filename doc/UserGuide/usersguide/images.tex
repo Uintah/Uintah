@@ -1,6 +1,9 @@
 \batchmode
+
 \documentclass[11pt]{article}
-\makeatletter
+\RequirePackage{ifthen}
+
+
 \usepackage{fancyhdr}
 \usepackage{usersguide}
 \usepackage{graphics}
@@ -9,13 +12,32 @@
 \usepackage{makeidx}
 \usepackage{citexp}
 \makeindex
+
 \usepackage[dvips]{color}
+
+
 \pagecolor[gray]{.7}
+
+\usepackage[]{inputenc}
+
 
 
 \makeatletter
+\AtBeginDocument{\makeatletter
+\input /scratch/macleod/scirun-cvs/SCIRun/doc/UserGuide/usersguide.aux
+\makeatother
+}
+
+\makeatletter
 \count@=\the\catcode`\_ \catcode`\_=8 
-\newenvironment{tex2html_wrap}{}{} \catcode`\_=\count@
+\newenvironment{tex2html_wrap}{}{}%
+\catcode`\<=12\catcode`\_=\count@
+\newcommand{\providedcommand}[1]{\expandafter\providecommand\csname #1\endcsname}%
+\newcommand{\renewedcommand}[1]{\expandafter\providecommand\csname #1\endcsname{}%
+  \expandafter\renewcommand\csname #1\endcsname}%
+\newcommand{\newedenvironment}[1]{\newenvironment{#1}{}{}\renewenvironment{#1}}%
+\let\newedcommand\renewedcommand
+\let\renewedenvironment\newedenvironment
 \makeatother
 \let\mathon=$
 \let\mathoff=$
@@ -33,49 +55,65 @@
 \global\topskip=2sp
 \def\preveqno{}\let\real@float=\@float \let\realend@float=\end@float
 \def\@float{\let\@savefreelist\@freelist\real@float}
+\def\liih@math{\ifmmode$\else\bad@math\fi}
 \def\end@float{\realend@float\global\let\@freelist\@savefreelist}
 \let\real@dbflt=\@dbflt \let\end@dblfloat=\end@float
 \let\@largefloatcheck=\relax
+\let\if@boxedmulticols=\iftrue
 \def\@dbflt{\let\@savefreelist\@freelist\real@dbflt}
 \def\adjustnormalsize{\def\normalsize{\mathsurround=0pt \realnormalsize
- \parindent=0pt\abovedisplayskip=0pt\belowdisplayskip=0pt}\normalsize}%
-\def\lthtmltypeout#1{{\let\protect\string\immediate\write\lthtmlwrite{#1}}}%
-\newcommand\lthtmlhboxmathA{\adjustnormalsize\setbox\sizebox=\hbox\bgroup}%
-\newcommand\lthtmlvboxmathA{\adjustnormalsize\setbox\sizebox=\vbox\bgroup%
- \let\ifinner=\iffalse }%
+ \parindent=0pt\abovedisplayskip=0pt\belowdisplayskip=0pt}%
+ \def\phantompar{\csname par\endcsname}\normalsize}%
+\def\lthtmltypeout#1{{\let\protect\string \immediate\write\lthtmlwrite{#1}}}%
+\newcommand\lthtmlhboxmathA{\adjustnormalsize\setbox\sizebox=\hbox\bgroup\kern.05em }%
+\newcommand\lthtmlhboxmathB{\adjustnormalsize\setbox\sizebox=\hbox to\hsize\bgroup\hfill }%
+\newcommand\lthtmlvboxmathA{\adjustnormalsize\setbox\sizebox=\vbox\bgroup %
+ \let\ifinner=\iffalse \let\)\liih@math }%
 \newcommand\lthtmlboxmathZ{\@next\next\@currlist{}{\def\next{\voidb@x}}%
  \expandafter\box\next\egroup}%
-\newcommand\lthtmlmathtype[1]{\def\lthtmlmathenv{#1}}%
+\newcommand\lthtmlmathtype[1]{\gdef\lthtmlmathenv{#1}}%
 \newcommand\lthtmllogmath{\lthtmltypeout{l2hSize %
 :\lthtmlmathenv:\the\ht\sizebox::\the\dp\sizebox::\the\wd\sizebox.\preveqno}}%
 \newcommand\lthtmlfigureA[1]{\let\@savefreelist\@freelist
        \lthtmlmathtype{#1}\lthtmlvboxmathA}%
+\newcommand\lthtmlpictureA{\bgroup\catcode`\_=8 \lthtmlpictureB}%
+\newcommand\lthtmlpictureB[1]{\lthtmlmathtype{#1}\egroup
+       \let\@savefreelist\@freelist \lthtmlhboxmathB}%
+\newcommand\lthtmlpictureZ[1]{\hfill\lthtmlfigureZ}%
 \newcommand\lthtmlfigureZ{\lthtmlboxmathZ\lthtmllogmath\copy\sizebox
        \global\let\@freelist\@savefreelist}%
-\newcommand\lthtmldisplayA[1]{\lthtmlmathtype{#1}\lthtmlvboxmathA}%
+\newcommand\lthtmldisplayA{\bgroup\catcode`\_=8 \lthtmldisplayAi}%
+\newcommand\lthtmldisplayAi[1]{\lthtmlmathtype{#1}\egroup\lthtmlvboxmathA}%
 \newcommand\lthtmldisplayB[1]{\edef\preveqno{(\theequation)}%
   \lthtmldisplayA{#1}\let\@eqnnum\relax}%
 \newcommand\lthtmldisplayZ{\lthtmlboxmathZ\lthtmllogmath\lthtmlsetmath}%
-\newcommand\lthtmlinlinemathA[1]{\lthtmlmathtype{#1}\lthtmlhboxmathA  \vrule height1.5ex width0pt }%
-\newcommand\lthtmlinlineA[1]{\lthtmlmathtype{#1}\lthtmlhboxmathA}%
+\newcommand\lthtmlinlinemathA{\bgroup\catcode`\_=8 \lthtmlinlinemathB}
+\newcommand\lthtmlinlinemathB[1]{\lthtmlmathtype{#1}\egroup\lthtmlhboxmathA
+  \vrule height1.5ex width0pt }%
+\newcommand\lthtmlinlineA{\bgroup\catcode`\_=8 \lthtmlinlineB}%
+\newcommand\lthtmlinlineB[1]{\lthtmlmathtype{#1}\egroup\lthtmlhboxmathA}%
 \newcommand\lthtmlinlineZ{\egroup\expandafter\ifdim\dp\sizebox>0pt %
   \expandafter\centerinlinemath\fi\lthtmllogmath\lthtmlsetinline}
 \newcommand\lthtmlinlinemathZ{\egroup\expandafter\ifdim\dp\sizebox>0pt %
   \expandafter\centerinlinemath\fi\lthtmllogmath\lthtmlsetmath}
-\def\lthtmlsetinline{\hbox{\vrule width.1em\vtop{\vbox{%
+\newcommand\lthtmlindisplaymathZ{\egroup %
+  \centerinlinemath\lthtmllogmath\lthtmlsetmath}
+\def\lthtmlsetinline{\hbox{\vrule width.1em \vtop{\vbox{%
   \kern.1em\copy\sizebox}\ifdim\dp\sizebox>0pt\kern.1em\else\kern.3pt\fi
   \ifdim\hsize>\wd\sizebox \hrule depth1pt\fi}}}
-\def\lthtmlsetmath{\hbox{\vrule width.1em\vtop{\vbox{%
+\def\lthtmlsetmath{\hbox{\vrule width.1em\kern-.05em\vtop{\vbox{%
   \kern.1em\kern0.8 pt\hbox{\hglue.17em\copy\sizebox\hglue0.8 pt}}\kern.3pt%
   \ifdim\dp\sizebox>0pt\kern.1em\fi \kern0.8 pt%
   \ifdim\hsize>\wd\sizebox \hrule depth1pt\fi}}}
-\def\centerinlinemath{%\dimen1=\ht\sizebox
+\def\centerinlinemath{%
   \dimen1=\ifdim\ht\sizebox<\dp\sizebox \dp\sizebox\else\ht\sizebox\fi
   \advance\dimen1by.5pt \vrule width0pt height\dimen1 depth\dimen1 
  \dp\sizebox=\dimen1\ht\sizebox=\dimen1\relax}
 
-\def\lthtmlcheckvsize{\ifdim\ht\sizebox<\vsize\expandafter\vfill
+\def\lthtmlcheckvsize{\ifdim\ht\sizebox<\vsize 
+  \ifdim\wd\sizebox<\hsize\expandafter\hfill\fi \expandafter\vfill
   \else\expandafter\vss\fi}%
+\providecommand{\selectlanguage}[1]{}%
 \makeatletter \tracingstats = 1 
 \providecommand{\Mu}{\textrm{M}}
 \providecommand{\Nu}{\textrm{N}}
@@ -94,21 +132,255 @@
 
 
 \begin{document}
-\pagestyle{empty}\thispagestyle{empty}%
-\lthtmltypeout{latex2htmlLength hsize=\the\hsize}%
-\lthtmltypeout{latex2htmlLength vsize=\the\vsize}%
-\lthtmltypeout{latex2htmlLength hoffset=\the\hoffset}%
-\lthtmltypeout{latex2htmlLength voffset=\the\voffset}%
-\lthtmltypeout{latex2htmlLength topmargin=\the\topmargin}%
-\lthtmltypeout{latex2htmlLength topskip=\the\topskip}%
-\lthtmltypeout{latex2htmlLength headheight=\the\headheight}%
-\lthtmltypeout{latex2htmlLength headsep=\the\headsep}%
-\lthtmltypeout{latex2htmlLength parskip=\the\parskip}%
-\lthtmltypeout{latex2htmlLength oddsidemargin=\the\oddsidemargin}%
+\pagestyle{empty}\thispagestyle{empty}\lthtmltypeout{}%
+\lthtmltypeout{latex2htmlLength hsize=\the\hsize}\lthtmltypeout{}%
+\lthtmltypeout{latex2htmlLength vsize=\the\vsize}\lthtmltypeout{}%
+\lthtmltypeout{latex2htmlLength hoffset=\the\hoffset}\lthtmltypeout{}%
+\lthtmltypeout{latex2htmlLength voffset=\the\voffset}\lthtmltypeout{}%
+\lthtmltypeout{latex2htmlLength topmargin=\the\topmargin}\lthtmltypeout{}%
+\lthtmltypeout{latex2htmlLength topskip=\the\topskip}\lthtmltypeout{}%
+\lthtmltypeout{latex2htmlLength headheight=\the\headheight}\lthtmltypeout{}%
+\lthtmltypeout{latex2htmlLength headsep=\the\headsep}\lthtmltypeout{}%
+\lthtmltypeout{latex2htmlLength parskip=\the\parskip}\lthtmltypeout{}%
+\lthtmltypeout{latex2htmlLength oddsidemargin=\the\oddsidemargin}\lthtmltypeout{}%
 \makeatletter
 \if@twoside\lthtmltypeout{latex2htmlLength evensidemargin=\the\evensidemargin}%
 \else\lthtmltypeout{latex2htmlLength evensidemargin=\the\oddsidemargin}\fi%
+\lthtmltypeout{}%
 \makeatother
+\setcounter{page}{1}
+\onecolumn
+
+% !!! IMAGES START HERE !!!
+
+
+%
+\providecommand{\SCI}{\emph{SCI}}%
+
+
+%
+\providecommand{\sci}{\emph{SCI}}%
+
+
+%
+\providecommand{\scii}{SCI Institute}%
+
+
+%
+\providecommand{\PSE}{\emph{BioPSE}}%
+
+
+%
+\providecommand{\pse}{\emph{BioPSE}}%
+
+
+%
+\providecommand{\SR}{\emph{SCIRun}}%
+
+
+%
+\providecommand{\sr}{\emph{SCIRun}}%
+
+
+%
+\providecommand{\eg}{{\em e.g.,}}%
+
+
+%
+\providecommand{\ie}{{\em i.e.,}}%
+
+
+%
+\providecommand{\etc}{{\em etc.,}}%
+
+
+%
+\providecommand{\etal}{{\em et al.}}%
+
+
+%
+\providecommand{\degrees}{{$^{\circ}$}}%
+
+
+%
+\providecommand{\splitline}{\begin{center}\rule{\columnwidth}{.7mm}\end{center}}%
+
+
+%
+\providecommand{\X}[1]{#1}%
+
+
+%
+\providecommand{\version}{1.1}%
+
+
+%
+\providecommand{\rob}{Rob MacLeod (macleod@cvrti.utah.edu)}%
+
+
+%
+\providecommand{\ted}{Ted Dustman (dustman@cvrti.utah.edu)}%
+
+
+%
+\providecommand{\srug}{\emph{SCIRun}{} User's Guide}%
+
+
+%
+\providecommand{\srig}{\emph{SCIRun}{} Installation Guide}%
+
+
+%
+\providecommand{\viewer}{\emph{Viewer}}%
+
+
+%
+\providecommand{\ltilde}{\symbol{'176}}%
+
+
+%
+\providecommand{\ab}[1]{<#1>}%
+
+
+%
+\providecommand{\la}{<}%
+
+
+%
+\providecommand{\ra}{>}%
+
+
+%
+\providecommand{\scisoftwareurl}{http://software.sci.utah.edu}%
+
+
+%
+\providecommand{\sciurl}{http://www.sci.utah.edu}%
+
+
+%
+\providecommand{\scidocurl}{http://software.sci.utah.edu/software}%
+
+
+%
+\providecommand{\bugsurl}{http://software.sci.utah.edu/research/software/bugzilla}%
+
+
+%
+\providecommand{\installguideurl}{../../InstallGuide/installguide.xml?cont=0\\&dir=2}%
+
+
+%
+\providecommand{\modulemakerguideurl}{../../DeveloperGuide/create_module.html}%
+
+
+%
+\providecommand{\acronym}[1]{#1}%
+
+
+%
+\providecommand{\gui}{GUI}%
+
+
+%
+\providecommand{\tcl}{TCL}%
+
+
+%
+\providecommand{\dfn}[1]{\emph{#1}}%
+
+
+%
+\providecommand{\dfna}[2]{\emph{#1} (#2)}%
+
+
+%
+\providecommand{\directory}[1]{\texttt{#1}}%
+
+
+%
+\providecommand{\filename}[1]{\texttt{#1}}%
+
+
+%
+\providecommand{\command}[1]{\texttt{#1}}%
+
+
+%
+\providecommand{\keyboard}[1]{\texttt{#1}}%
+
+
+%
+\providecommand{\ptext}[1]{\textit{<#1>}}%
+
+
+%
+\providecommand{\screen}[1]{\texttt{#1}}%
+
+
+%
+\providecommand{\menu}[1]{\textbf{#1}}%
+
+
+%
+\providecommand{\menuitem}[1]{\textbf{#1}}%
+
+
+%
+\providecommand{\button}[1]{\textbf{#1}}%
+
+
+%
+\providecommand{\icode}[1]{\texttt{#1}}%
+
+
+%
+\providecommand{\module}[1]{\texttt{#1}}%
+
+
+%
+\providecommand{\package}[1]{\texttt{#1}}%
+
+
+%
+\providecommand{\category}[1]{\texttt{#1}}%
+
+
+%
+\providecommand{\note}[1]{\emph{Note: #1}}%
+
+
+%
+\providecommand{\warning}[1]{\emph{Warning: #1}}%
+
+
+%
+\providecommand{\tip}[1]{\emph{Tip: #1}}%
+
+
+%
+\providecommand{\envvar}[1]{\texttt{#1}}%
+
+
+%
+\providecommand{\etitle}[1]{\texttt{#1}}%
+
+
+%
+\providecommand{\secref}[2]{\hyperref[ref]{\emph{#1}}{Section~}{}{#2}}%
+
+
+%
+\providecommand{\missing}[1]{\emph{#1 - Coming Soon.}}%
+
+
+%
+\providecommand{\incomplete}{\emph{More Comming Soon.}}%
+
+
+%
+\providecommand{\mailto}[1]{\texttt{#1}}%
+
 \stepcounter{section}
 \stepcounter{subsection}
 \stepcounter{subsection}
@@ -116,6 +388,12 @@
 \stepcounter{subsubsection}
 \stepcounter{subsubsection}
 \stepcounter{subsection}
+
+%
+\providecommand{\basicmodule}{%%
+  \htmladdimg[align=top,width=766,alt="module"]
+  {../figures/biopse-modmap.gif}}%
+
 \stepcounter{section}
 \stepcounter{subsection}
 \stepcounter{subsection}
@@ -126,12 +404,30 @@
 \stepcounter{subsubsection}
 \stepcounter{subsection}
 \stepcounter{subsection}
+
+%
+\providecommand{\srwindow}{%%
+  \htmladdimg[align=top,alt="SCIRun Window"]
+  {../figures/srwindow-1.jpg}}%
+
 \stepcounter{section}
 \stepcounter{subsection}
 \stepcounter{subsection}
 \stepcounter{subsection}
 \stepcounter{subsection}
 \stepcounter{subsection}
+
+%
+\providecommand{\modgraphic}{%%
+  \htmladdimg[align=top,width="256",alt="SCIRun Module Graphic"]
+  {../figures/modgraphic-1.gif}}%
+
+
+%
+\providecommand{\moddialog}{%%
+  \htmladdimg[align=top,alt="SCIRun Module Dialog"]
+  {../figures/moddialog.jpg}}%
+
 \stepcounter{section}
 \stepcounter{subsection}
 \stepcounter{subsection}
@@ -153,59 +449,99 @@
 \stepcounter{subsection}
 \stepcounter{subsection}
 \stepcounter{subsection}
+
+%
+\providecommand{\viewerwindow}{%%
+  \htmladdimg[align=top,width=645,alt="module"]
+  {../figures/viewwindow.jpg}}%
+
+
+%
+\providecommand{\extendedwindow}{%%
+  \htmladdimg[align=top,width=649,alt="extended view window"]
+  {../figures/viewwindow-ext.jpg}}%
+
+
+%
+\providecommand{\gaugewidget}{%%
+  \htmladdimg[align=top,width=458,alt="gaugewidget"]
+  {../figures/widget-gauge.gif}}%
+
+
+%
+\providecommand{\framewidget}{%%
+  \htmladdimg[align=top,width=329,alt="framewidget"]
+  {../figures/widget-frame.gif}}%
+
+
+%
+\providecommand{\boxwidget}{%%
+  \htmladdimg[align=top,width=459,alt="boxwidget"]
+  {../figures/widget-box.gif}}%
+
+
+%
+\providecommand{\ringwidget}{%%
+  \htmladdimg[align=top,width=508,alt="ringwidget"]
+  {../figures/widget-ring.gif}}%
+
+
+%
+\providecommand{\graphics}{\emph{Graphics}}%
+
 \stepcounter{section}
 \stepcounter{subsection}
 {\newpage\clearpage
-\lthtmlfigureA{tex2html_wrap1859}%
+\lthtmlinlineA{tex2html_nomath_inline1981}%
 \fbox{Autoview:}%
-\lthtmlfigureZ
-\hfill\lthtmlcheckvsize\clearpage}
+\lthtmlinlineZ
+\lthtmlcheckvsize\clearpage}
 
 {\newpage\clearpage
-\lthtmlfigureA{tex2html_wrap1861}%
+\lthtmlinlineA{tex2html_nomath_inline1983}%
 \fbox{Set Home View:}%
-\lthtmlfigureZ
-\hfill\lthtmlcheckvsize\clearpage}
+\lthtmlinlineZ
+\lthtmlcheckvsize\clearpage}
 
 {\newpage\clearpage
-\lthtmlfigureA{tex2html_wrap1863}%
+\lthtmlinlineA{tex2html_nomath_inline1985}%
 \fbox{Go home:}%
-\lthtmlfigureZ
-\hfill\lthtmlcheckvsize\clearpage}
+\lthtmlinlineZ
+\lthtmlcheckvsize\clearpage}
 
 {\newpage\clearpage
-\lthtmlfigureA{tex2html_wrap1865}%
+\lthtmlinlineA{tex2html_nomath_inline1987}%
 \fbox{Views:}%
-\lthtmlfigureZ
-\hfill\lthtmlcheckvsize\clearpage}
+\lthtmlinlineZ
+\lthtmlcheckvsize\clearpage}
 
 \stepcounter{subsubsection}
 {\newpage\clearpage
-\lthtmlfigureA{tex2html_wrap1875}%
+\lthtmlinlineA{tex2html_nomath_inline1997}%
 \fbox{Edit:}%
-\lthtmlfigureZ
-\hfill\lthtmlcheckvsize\clearpage}
+\lthtmlinlineZ
+\lthtmlcheckvsize\clearpage}
 
 {\newpage\clearpage
-\lthtmlfigureA{tex2html_wrap1877}%
+\lthtmlinlineA{tex2html_nomath_inline1999}%
 \fbox{Visual:}%
-\lthtmlfigureZ
-\hfill\lthtmlcheckvsize\clearpage}
+\lthtmlinlineZ
+\lthtmlcheckvsize\clearpage}
 
 \stepcounter{subsection}
 \stepcounter{subsection}
 \stepcounter{subsubsection}
 {\newpage\clearpage
-\lthtmlfigureA{tex2html_wrap1917}%
+\lthtmlinlineA{tex2html_nomath_inline2037}%
 \fbox{Shading}%
-\lthtmlfigureZ
-\hfill\lthtmlcheckvsize\clearpage}
+\lthtmlinlineZ
+\lthtmlcheckvsize\clearpage}
 
 {\newpage\clearpage
-\lthtmlfigureA{tex2html_wrap1919}%
+\lthtmlinlineA{tex2html_nomath_inline2039}%
 \fbox{Default}%
-\lthtmlfigureZ
-\hfill\lthtmlcheckvsize\clearpage}
+\lthtmlinlineZ
+\lthtmlcheckvsize\clearpage}
 
 \stepcounter{subsubsection}
 \stepcounter{paragraph}
@@ -227,6 +563,9 @@
 \stepcounter{paragraph}
 \stepcounter{paragraph}
 \stepcounter{paragraph}
+\stepcounter{section}
+\stepcounter{subsection}
+\stepcounter{subsection}
 \stepcounter{section}
 \stepcounter{subsection}
 \stepcounter{paragraph}

@@ -1,162 +1,188 @@
-<!--Converted with LaTeX2HTML 98.1p1 release (March 2nd, 1998)
-originally by Nikos Drakos (nikos@cbl.leeds.ac.uk), CBLU, University of Leeds
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+
+<!--Converted with LaTeX2HTML 99.2beta6 (1.42)
+original version by:  Nikos Drakos, CBLU, University of Leeds
 * revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
 * with significant contributions from:
   Jens Lippmann, Marek Rouchal, Martin Wilck and others -->
 <HTML>
 <HEAD>
-<TITLE>6. Packages</TITLE>
-<META NAME="description" CONTENT="6. Packages">
+<TITLE>6 Packages</TITLE>
+<META NAME="description" CONTENT="6 Packages">
 <META NAME="keywords" CONTENT="usersguide">
 <META NAME="resource-type" CONTENT="document">
 <META NAME="distribution" CONTENT="global">
+
 <META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-1">
+<META NAME="Generator" CONTENT="LaTeX2HTML v99.2beta6">
+<META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
+
 <LINK REL="STYLESHEET" HREF="usersguide.css">
+
 <LINK REL="next" HREF="node8.html">
 <LINK REL="previous" HREF="node6.html">
 <LINK REL="up" HREF="usersguide.html">
 <LINK REL="next" HREF="node8.html">
 </HEAD>
+
 <BODY >
 <!--Navigation Panel-->
-<A NAME="tex2html210"
- HREF="node8.html">
-<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next_motif.gif"></A> 
-<A NAME="tex2html206"
- HREF="usersguide.html">
-<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up_motif.gif"></A> 
-<A NAME="tex2html200"
- HREF="node6.html">
-<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="previous_motif.gif"></A> 
-<A NAME="tex2html208"
- HREF="node1.html">
-<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents_motif.gif"></A> 
-<A NAME="tex2html209"
- HREF="node10.html">
-<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index_motif.gif"></A> 
+<A NAME="tex2html226"
+  HREF="node8.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.gif"></A> 
+<A NAME="tex2html220"
+  HREF="usersguide.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.gif"></A> 
+<A NAME="tex2html214"
+  HREF="node6.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.gif"></A> 
+<A NAME="tex2html222"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents.gif"></A> 
+<A NAME="tex2html224"
+  HREF="node10.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index.gif"></A> 
 <BR>
-<B> Next:</B> <A NAME="tex2html211"
- HREF="node8.html">7. Importing data into</A>
-<B> Up:</B> <A NAME="tex2html207"
- HREF="usersguide.html">No Title</A>
-<B> Previous:</B> <A NAME="tex2html201"
- HREF="node6.html">5. Visualization with the</A>
+<B> Next:</B> <A NAME="tex2html227"
+  HREF="node8.html">7 Importing data into</A>
+<B> Up:</B> <A NAME="tex2html221"
+  HREF="usersguide.html">usersguide</A>
+<B> Previous:</B> <A NAME="tex2html215"
+  HREF="node6.html">5 Visualization with the</A>
+ &nbsp <B>  <A NAME="tex2html223"
+  HREF="node1.html">Contents</A></B> 
+ &nbsp <B>  <A NAME="tex2html225"
+  HREF="node10.html">Index</A></B> 
 <BR>
 <BR>
 <!--End of Navigation Panel-->
 <!--Table of Child-Links-->
-<A NAME="CHILD_LINKS"><strong>Subsections</strong></A>
+<A NAME="CHILD_LINKS"><STRONG>Subsections</STRONG></A>
+
 <UL>
-<LI><A NAME="tex2html212"
- HREF="node7.html#SECTION00071000000000000000">6.1 The <EM>SCIRun</EM> Package</A>
-<LI><A NAME="tex2html213"
- HREF="node7.html#SECTION00072000000000000000">6.2 The BioPSE Package</A>
+<LI><A NAME="tex2html228"
+  HREF="node7.html#SECTION00071000000000000000">6.1 The <I>SCIRun</I> Package</A>
+<LI><A NAME="tex2html229"
+  HREF="node7.html#SECTION00072000000000000000">6.2 The BioPSE Package</A>
 </UL>
 <!--End of Table of Child-Links-->
 <HR>
 
-<H1><A NAME="SECTION00070000000000000000">&#160;</A>
-<A NAME="sec:packages">&#160;</A><A NAME="2035">&#160;</A>
+<H1><A NAME="SECTION00070000000000000000"></A>
+<A NAME="sec:packages"></A><A NAME="2123"></A>
 <BR>
-6. Packages
+6 Packages
 </H1>
 
 <P>
-Packages are what provide the real utility of <EM>SCIRun</EM> from most users'
-perspectives.  The are sets of modules that use the basic <EM>SCIRun</EM>
+Packages are what provide the real utility of <I>SCIRun</I> from most users'
+perspectives.  The are sets of modules that use the basic <I>SCIRun</I>
 functionality to perform specific tasks such a solving bioelectric field
 problems.  To remind yourself about the way packages fit into the picture,
-see <A HREF="node3.html#sec:srversuspse"><EM>SCIRun versus BioPSE</EM></A>.
+see <A HREF="node3.html#sec:srversuspse"><I>SCIRun versus BioPSE</I></A>.
 
 <P>
 
-<H2><A NAME="SECTION00071000000000000000">&#160;</A>
-<A NAME="sec:srpackage">&#160;</A>
+<H2><A NAME="SECTION00071000000000000000"></A>
+<A NAME="sec:srpackage"></A>
 <BR>
-6.1 The <EM>SCIRun</EM> Package
+6.1 The <I>SCIRun</I> Package
 </H2>
-<A NAME="2078">&#160;</A>
+<A NAME="2166"></A>
 
 <P>
-The <EM>SCIRun</EM> package contains these categories:
+The <I>SCIRun</I> package contains these categories:
 
 <P>
 <DL>
-<DD><P>
-<DT><STRONG><TT>DataIO</TT></STRONG>
-<DD>Contains modules for reading and writing <EM>SCIRun</EM>
-  type data.  Use these to read <EM>SCIRun</EM> type data into a network and write
-  data to disk from a network.  These only know about <EM>SCIRun</EM> type data.
-  Non-<EM>SCIRun</EM> (foreign) data may be converted to <EM>SCIRun</EM> type data using
-  <EM>SCIRun</EM>'s converter programs.  See <A HREF="node8.html#sec:import"><EM>Importing data into
-  <EM>SCIRun</EM></EM></A> for more information.
+<DT><STRONG><TT>DataIO</TT></STRONG></DT>
+<DD>Contains modules for reading and writing <I>SCIRun</I>
+  type data.  Use these to read <I>SCIRun</I> type data into a network and write
+  data to disk from a network.  These only know about <I>SCIRun</I> type data.
+  Non-<I>SCIRun</I> (foreign) data may be converted to <I>SCIRun</I> type data using
+  <I>SCIRun</I>'s converter programs.  See <A HREF="node8.html#sec:import"><I>Importing data into
+  <I>SCIRun</I></I></A> for more information.
 
 <P>
-<DT><STRONG><TT>Fields</TT></STRONG>
-<DD><EM> - Coming Soon.</EM>
-<DT><STRONG><TT>Math</TT></STRONG>
-<DD><EM> - Coming Soon.</EM>
-<DT><STRONG><TT>Render</TT></STRONG>
-<DD><EM> - Coming Soon.</EM>
-<DT><STRONG><TT>Visualization</TT></STRONG>
+</DD>
+<DT><STRONG><TT>Fields</TT></STRONG></DT>
+<DD><I> - Coming Soon.</I>
+</DD>
+<DT><STRONG><TT>Math</TT></STRONG></DT>
+<DD><I> - Coming Soon.</I>
+</DD>
+<DT><STRONG><TT>Render</TT></STRONG></DT>
+<DD><I> - Coming Soon.</I>
+</DD>
+<DT><STRONG><TT>Visualization</TT></STRONG></DT>
 <DD>the main visualization tool at present is
-  the Viewer, which is described in more detail in <A HREF="node6.html#sec:viewer"><EM>Visualization
-  with the <EM>Viewer</EM></EM></A>.
+  the Viewer, which is described in more detail in <A HREF="node6.html#sec:viewer"><I>Visualization
+  with the <I>Viewer</I></I></A>.
+</DD>
 </DL>
+
 <P>
 
-<H2><A NAME="SECTION00072000000000000000">&#160;</A>
-<A NAME="sec:biopsepackage">&#160;</A>
+<H2><A NAME="SECTION00072000000000000000"></A>
+<A NAME="sec:biopsepackage"></A>
 <BR>
 6.2 The BioPSE Package
 </H2>
-<A NAME="2081">&#160;</A>
+<A NAME="2169"></A>
 
 <P>
 These modules provide you with tools tailored to solving bioelectric field
 problems, which is the theme of the <A NAME="tex2html32"
- HREF="http://www.sci.utah.edu/ncrr">NCRR
+  HREF="http://www.sci.utah.edu/ncrr">NCRR
 center</A>
 we have developed.
 
 <P>
 <DL>
-<DT><STRONG><TT>Forward Problems</TT></STRONG>
-<DD><EM> - Coming Soon.</EM>
-<DT><STRONG><TT>Inverse Problems</TT></STRONG>
-<DD><EM> - Coming Soon.</EM>
-<DT><STRONG><TT>LeadField Calculations</TT></STRONG>
-<DD><EM> - Coming Soon.</EM>
+<DT><STRONG><TT>Forward Problems</TT></STRONG></DT>
+<DD><I> - Coming Soon.</I>
+</DD>
+<DT><STRONG><TT>Inverse Problems</TT></STRONG></DT>
+<DD><I> - Coming Soon.</I>
+</DD>
+<DT><STRONG><TT>LeadField Calculations</TT></STRONG></DT>
+<DD><I> - Coming Soon.</I>
+</DD>
 </DL>
+
 <P>
 <HR>
 <!--Navigation Panel-->
-<A NAME="tex2html210"
- HREF="node8.html">
-<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next_motif.gif"></A> 
-<A NAME="tex2html206"
- HREF="usersguide.html">
-<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up_motif.gif"></A> 
-<A NAME="tex2html200"
- HREF="node6.html">
-<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="previous_motif.gif"></A> 
-<A NAME="tex2html208"
- HREF="node1.html">
-<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents_motif.gif"></A> 
-<A NAME="tex2html209"
- HREF="node10.html">
-<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index_motif.gif"></A> 
+<A NAME="tex2html226"
+  HREF="node8.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next" SRC="next.gif"></A> 
+<A NAME="tex2html220"
+  HREF="usersguide.html">
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up" SRC="up.gif"></A> 
+<A NAME="tex2html214"
+  HREF="node6.html">
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous" SRC="prev.gif"></A> 
+<A NAME="tex2html222"
+  HREF="node1.html">
+<IMG WIDTH="65" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="contents" SRC="contents.gif"></A> 
+<A NAME="tex2html224"
+  HREF="node10.html">
+<IMG WIDTH="43" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="index" SRC="index.gif"></A> 
 <BR>
-<B> Next:</B> <A NAME="tex2html211"
- HREF="node8.html">7. Importing data into</A>
-<B> Up:</B> <A NAME="tex2html207"
- HREF="usersguide.html">No Title</A>
-<B> Previous:</B> <A NAME="tex2html201"
- HREF="node6.html">5. Visualization with the</A>
+<B> Next:</B> <A NAME="tex2html227"
+  HREF="node8.html">7 Importing data into</A>
+<B> Up:</B> <A NAME="tex2html221"
+  HREF="usersguide.html">usersguide</A>
+<B> Previous:</B> <A NAME="tex2html215"
+  HREF="node6.html">5 Visualization with the</A>
+ &nbsp <B>  <A NAME="tex2html223"
+  HREF="node1.html">Contents</A></B> 
+ &nbsp <B>  <A NAME="tex2html225"
+  HREF="node10.html">Index</A></B> 
 <!--End of Navigation Panel-->
 <ADDRESS>
-<I>Rob MacLeod</I>
-<BR><I>2001-07-19</I>
+Rob MacLeod
+2001-08-09
 </ADDRESS>
 </BODY>
 </HTML>
