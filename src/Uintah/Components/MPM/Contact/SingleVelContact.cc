@@ -16,7 +16,7 @@
 #include <SCICore/Geometry/IntVector.h>
 #include <Uintah/Grid/Array3Index.h>
 #include <Uintah/Grid/Grid.h>
-#include <Uintah/Grid/Level.h>
+//#include <Uintah/Grid/Level.h>
 #include <Uintah/Grid/NCVariable.h>
 #include <Uintah/Grid/Patch.h>
 #include <Uintah/Grid/NodeIterator.h>
@@ -179,7 +179,7 @@ void SingleVelContact::addComputesAndRequiresInterpolated( Task* t,
                                              DataWarehouseP& new_dw) const
 {
   int idx = matl->getDWIndex();
-  t->requires( new_dw, lb->gMassLabel, idx, patch, Ghost::None);
+  t->requires( new_dw, lb->gMassLabel,     idx, patch, Ghost::None);
   t->requires( new_dw, lb->gVelocityLabel, idx, patch, Ghost::None);
 
   t->computes( new_dw, lb->gMomExedVelocityLabel, idx, patch );
@@ -204,6 +204,9 @@ void SingleVelContact::addComputesAndRequiresIntegrated( Task* t,
 }
 
 // $Log$
+// Revision 1.27  2000/11/15 18:51:29  guilkey
+// Reduced warnings.
+//
 // Revision 1.26  2000/11/15 01:39:49  guilkey
 // Made the way in which materials were looped over more consistent.
 // Got rid of references to VFIndex, use only DWIndex now.
