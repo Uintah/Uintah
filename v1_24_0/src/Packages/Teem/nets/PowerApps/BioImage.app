@@ -175,10 +175,7 @@ class BioImageApp {
         set 2D_fixed 0
 	set ViewSlices_executed_on_error 0
         set current_crop -1
-	set enter_crop 0
 
-        set turn_off_crop 0
-        set updating_crop_ui 0
         set needs_update 1
 
 	set axial-size 0
@@ -292,8 +289,8 @@ class BioImageApp {
 
         # disregard UnuCrop errors, hopefully they are due to 
 	# upstream crops changing bounds
-	if {[string first "UnuCrop" $which] != -1 && ($msg_state == "Warning" \
-						      || $msg_state == "Error")} {
+	if {[string first "UnuCrop" $which] != -1 && \
+		($msg_state == "Warning" || $msg_state == "Error")} {
 	    if {![winfo exists .standalone.cropwarn]} {
 		toplevel .standalone.cropwarn
 		wm minsize .standalone.cropwarn 150 50
@@ -371,83 +368,90 @@ class BioImageApp {
     # We only care about "JustStarted" and "Completed" calls.
     method update_progress { which state } {
 	global mods
-	
 	set ChooseNrrd [lindex [lindex $filters(0) $modules] 5]
-
  	if {[string first $ChooseNrrd $which] != -1 && $state == "Completed"} {
 	    if {$execute_choose == 1} {
 		set ChooseNrrd2 [lindex [lindex $filters(0) $modules] 35]
 		set execute_choose 0
 	    }
-	} elseif {[string first "NrrdSetupTexture" $which] != -1 && $state == "JustStarted"} {
+	} elseif {[string first "NrrdSetupTexture" $which] != -1 && \
+		      $state == "JustStarted"} {
 	    change_indicator_labels "Volume Rendering..."
 	    change_indicate_val 1
-	} elseif {[string first "NrrdSetupTexture" $which] != -1 && $state == "Completed"} {
+	} elseif {[string first "NrrdSetupTexture" $which] != -1 && \
+		      $state == "Completed"} {
 	    change_indicate_val 2
-	} elseif {[string first "NrrdTextureBuilder" $which] != -1 && $state == "JustStarted"} {
+	} elseif {[string first "NrrdTextureBuilder" $which] != -1 && \
+		      $state == "JustStarted"} {
 	    change_indicator_labels "Volume Rendering..."
 	    change_indicate_val 1
-	} elseif {[string first "NrrdTextureBuilder" $which] != -1 && $state == "Completed"} {
+	} elseif {[string first "NrrdTextureBuilder" $which] != -1 && \
+		      $state == "Completed"} {
 	    change_indicate_val 2
-	} elseif {[string first "VolumeVisualizer" $which] != -1 && $state == "JustStarted"} {
+	} elseif {[string first "VolumeVisualizer" $which] != -1 && \
+		      $state == "JustStarted"} {
 	    change_indicator_labels "Volume Rendering..."
 	    change_indicate_val 1
-        } elseif {[string first "VolumeVisualizer" $which] != -1 && $state == "Completed"} {
+        } elseif {[string first "VolumeVisualizer" $which] != -1 && \
+		      $state == "Completed"} {
 	    change_indicate_val 2
 	    change_indicator_labels "Done Volume Rendering"
-        } elseif {[string first "ViewSlices" $which] != -1 && $state == "JustStarted"} {
+        } elseif {[string first "ViewSlices" $which] != -1 && \
+		      $state == "JustStarted"} {
 	    change_indicate_val 1
-	} elseif {[string first "ViewSlices" $which] != -1 && $state == "Completed"} {
+	} elseif {[string first "ViewSlices" $which] != -1 && \
+		      $state == "Completed"} {
             if {$2D_fixed == 0} {
 		global mods
-		set VS $mods(ViewSlices)
+		set ViewSlices $mods(ViewSlices)
 		
-		setGlobal $VS-sagittal-viewport0-axis 0
-		setGlobal $VS-coronal-viewport0-axis 1
-		setGlobal $VS-axial-viewport0-axis 2
+		setGlobal $ViewSlices-sagittal-viewport0-axis 0
+		setGlobal $ViewSlices-coronal-viewport0-axis 1
+		setGlobal $ViewSlices-axial-viewport0-axis 2
 
-		global $VS-clut_ww $VS-clut_wl
+		global $ViewSlices-clut_ww $ViewSlices-clut_wl
 		set command "$this change_window_width_and_level 0"
-		trace variable $VS-clut_ww w $command
-		trace variable $VS-clut_wl w $command
+		trace variable $ViewSlices-clut_ww w $command
+		trace variable $ViewSlices-clut_wl w $command
 
 		global vol_width vol_level
 		set command "$this change_volume_window_width_and_level 0"
 		trace variable vol_width w $command
 		trace variable vol_level w $command
 
-		global $VS-min $VS-max
+		global $ViewSlices-min $ViewSlices-max
 		set command "$this update_window_level_scales"
-		trace variable $VS-min w $command
-		trace variable $VS-max w $command
+		trace variable $ViewSlices-min w $command
+		trace variable $ViewSlices-max w $command
 
-		global $VS-background_threshold
-		set command "$VS-c background_thresh"
-		trace variable $VS-background_threshold w $command
+		global $ViewSlices-background_threshold
+		set command "$ViewSlices-c background_thresh"
+		trace variable $ViewSlices-background_threshold w $command
 
 		$this update_window_level_scales
 
-		upvar \#0 $VS-min min $VS-max max
+		upvar \#0 $ViewSlices-min min $ViewSlices-max max
                 set ww [expr abs($max-$min)]
                 set wl [expr ($min+$max)/2.0]
 
-		setGlobal $VS-clut_ww $ww
-		setGlobal $VS-clut_wl $wl
+		setGlobal $ViewSlices-clut_ww $ww
+		setGlobal $ViewSlices-clut_wl $wl
 		setGlobal vol_width $ww
 		setGlobal vol_level $wl
-                setGlobal $VS-background_threshold $min
+                setGlobal $ViewSlices-background_threshold $min
 				
 		global slice_frame
 		foreach axis {axial sagittal coronal} {
-		    $VS-c rebind $slice_frame($axis).bd.$axis
+		    $ViewSlices-c rebind $slice_frame($axis).bd.$axis
 		}
 
-		$VS-c setclut
+		$ViewSlices-c setclut
 
                 set 2D_fixed 1
 	    } 
 	    change_indicate_val 2
-	} elseif {[string first "Teem_NrrdData_NrrdInfo_1" $which] != -1 && $state == "Completed"} {
+	} elseif {[string first "Teem_NrrdData_NrrdInfo_1" $which] != -1 && \
+		      $state == "Completed"} {
 	    set axis_num 0
 	    global slice_frame
 	    foreach axis "sagittal coronal axial" {
@@ -476,10 +480,12 @@ class BioImageApp {
 		$mods(ViewSlices)-c rebind $slice_frame($axis).bd.$axis
 	    }
 	    $mods(ViewSlices)-c redrawall
-	} elseif {[string first "Teem_NrrdData_NrrdInfo_0" $which] != -1 && $state == "JustStarted"} {
+	} elseif {[string first "Teem_NrrdData_NrrdInfo_0" $which] != -1 && \
+		      $state == "JustStarted"} {
 	    change_indicate_val 1
 	    change_indicator_labels "Loading Volume..."
-	} elseif {[string first "Teem_NrrdData_NrrdInfo_0" $which] != -1 && $state == "Completed"} {
+	} elseif {[string first "Teem_NrrdData_NrrdInfo_0" $which] != -1 && \
+		      $state == "Completed"} {
 	    change_indicate_val 2
 	    set NrrdInfo $which
  	    global $NrrdInfo-dimension
@@ -503,10 +509,12 @@ class BioImageApp {
  		    $history1.0.f0.childsite.ui.samples configure -text \
  			"Original Samples: ($0_samples, $1_samples, $2_samples)"
  		} else {
-		    tk_messageBox -message "BioImage only supports 3D data.\nPlease load in a 3D dataset." -type ok -icon info -parent .standalone
+		    tk_messageBox -type ok -icon info -parent .standalone \
+			-message "BioImage only supports 3D data.\nPlease load in a 3D dataset." 
  		}
 	    }	
-	} elseif {[string first "NrrdInfo" $which 0] != -1 && $state == "Completed"} { 
+	} elseif {[string first "NrrdInfo" $which 0] != -1 && \
+		      $state == "Completed"} { 
 	    # possibly one of the crop NrrdInfos
 	    # if it is, set the bounds values in the filters array
             for {set i 1} {$i < $num_filters} {incr i} {
@@ -525,34 +533,46 @@ class BioImageApp {
 		}
 	    }
 
-        } elseif {[string first "UnuResample" $which 0] != -1 && $state == "JustStarted"} {
+        } elseif {[string first "UnuResample" $which 0] != -1 && \
+		      $state == "JustStarted"} {
 	    change_indicate_val 1
 	    change_indicator_labels "Resampling Volume..."
-	} elseif {[string first "UnuResample" $which 0] != -1 && $state == "Completed"} {
+	} elseif {[string first "UnuResample" $which 0] != -1 && \
+		      $state == "Completed"} {
 	    change_indicate_val 2
 	    change_indicator_labels "Done Resampling Volume"
-	} elseif {[string first "UnuCrop" $which 0] != -1 && $state == "JustStarted"} {
+	} elseif {[string first "UnuCrop" $which 0] != -1 && \
+		      $state == "JustStarted"} {
 	    change_indicate_val 1
 	    change_indicator_labels "Cropping Volume..."
-	} elseif {[string first "UnuCrop" $which 0] != -1 && $state == "Completed"} {
+	} elseif {[string first "UnuCrop" $which 0] != -1 && \
+		      $state == "Completed"} {
 	    change_indicate_val 2
 	    change_indicator_labels "Done Cropping Volume"
-	} elseif {[string first "UnuHeq" $which 0] != -1 && $which != "Teem_UnuAtoM_UnuHeq_0" && $state == "JustStarted"} {
+	} elseif {[string first "UnuHeq" $which 0] != -1 && \
+		      $which != "Teem_UnuAtoM_UnuHeq_0" && \
+		      $state == "JustStarted"} {
 	    change_indicate_val 1
 	    change_indicator_labels "Performing Histogram Equilization..."
-	} elseif {[string first "UnuHeq" $which 0] != -1 && $which != "Teem_UnuAtoM_UnuHeq_0" && $state == "Completed"} {
+	} elseif {[string first "UnuHeq" $which 0] != -1 && \
+		      $which != "Teem_UnuAtoM_UnuHeq_0" && \
+		      $state == "Completed"} {
 	    change_indicate_val 2
 	    change_indicator_labels "Done Performing Histogram Equilization"
-	} elseif {[string first "UnuCmedian" $which 0] != -1 && $state == "JustStarted"} {
+	} elseif {[string first "UnuCmedian" $which 0] != -1 && \
+		      $state == "JustStarted"} {
 	    change_indicate_val 1
 	    change_indicator_labels "Performing Median Filtering..."
-	} elseif {[string first "UnuCmedian" $which 0] != -1 && $state == "Completed"} {
+	} elseif {[string first "UnuCmedian" $which 0] != -1 && \
+		      $state == "Completed"} {
 	    change_indicate_val 2
 	    change_indicator_labels "Done Performing Median Filtering"
-	} elseif {[string first "ScalarFieldStats" $which] != -1 && $state == "JustStarted"} {
+	} elseif {[string first "ScalarFieldStats" $which] != -1 && \
+		      $state == "JustStarted"} {
 	    change_indicate_val 1
 	    change_indicator_labels "Building Histogram..."
-	} elseif {[string first "ScalarFieldStats" $which] != -1 && $state == "Completed"} {
+	} elseif {[string first "ScalarFieldStats" $which] != -1 && \
+		      $state == "Completed"} {
 	    change_indicate_val 2
 	    change_indicator_labels "Done Building Histogram"
 	}
@@ -584,7 +604,6 @@ class BioImageApp {
 		    # only change indicator if progress isn't running
 		    set indicate 2
 		    change_indicator
-
 		    if {$loading} {
 			set loading 0
 			if {$grid_rows == 1} {
@@ -595,7 +614,8 @@ class BioImageApp {
 				change_indicator_labels "Loading Volume..."
 			    }
 			} else {
-			    change_indicator_labels "Updating Pipeline and Visualizing..."
+			    change_indicator_labels \
+				"Updating Pipeline and Visualizing..."
 			}
 		    }
 
@@ -615,7 +635,8 @@ class BioImageApp {
 				change_indicator_labels "Loading Volume..."
 			    }			    
 			} else {
-			    change_indicator_labels "Done Updating Pipeline and Visualizing"
+			    change_indicator_labels \
+				"Done Updating Pipeline and Visualizing"
 			}		     
 		    }
 
@@ -639,7 +660,8 @@ class BioImageApp {
 	# make sure there is a slash on the end
 	if {[string first "/" $d] != -1 && [string index $d end] != "/"} {
 	    set d "$d/"
-	} elseif {[string first "\\" $d] != -1 && [string index $d end] != "\\"} {
+	} elseif {[string first "\\" $d] != -1 && \
+		      [string index $d end] != "\\"} {
 	    set d "$d\\"
 	}
 
@@ -749,85 +771,15 @@ class BioImageApp {
 	wm deiconify .standalone
     }
 
-    method old_build_viewers {viewer viewimage} {
-	set w $win.viewers
-	
-	global mods
-	set mods(ViewSlices) $ViewSlices
-
-	iwidgets::panedwindow $w.topbot -orient horizontal -thickness 0 \
-	    -sashwidth 5000 -sashindent 0 -sashborderwidth 2 -sashheight 6 \
-	    -sashcursor sb_v_double_arrow -width $viewer_width -height $viewer_height
-	pack $w.topbot -expand 1 -fill both -padx 0 -ipadx 0 -pady 0 -ipady 0
-	
-	$w.topbot add top -margin 0 -minimum 0
-	$w.topbot add bottom  -margin 0 -minimum 0
-
-	set top [$w.topbot childsite top]
-	set bot [$w.topbot childsite bottom]
-
-	Linkedpane $top.lr -orient vertical -thickness 0 \
-	    -sashheight 5000 -sashwidth 6 -sashindent 0 -sashborderwidth 2 \
-	    -sashcursor sb_h_double_arrow
-
-	$top.lr add left -margin 3 -minimum 0
-	$top.lr add right -margin 3 -minimum 0
-	set topl [$top.lr childsite left]
-	set topr [$top.lr childsite right]
-
-	Linkedpane $bot.lr  -orient vertical -thickness 0 \
-	    -sashheight 5000 -sashwidth 6 -sashindent 0 -sashborderwidth 2 \
-	    -sashcursor sb_h_double_arrow
-
-	$bot.lr set_link $top.lr
-	$top.lr set_link $bot.lr
-
-	$bot.lr add left -margin 3 -minimum 0
-	$bot.lr add right -margin 3 -minimum 0
-	set botl [$bot.lr childsite left]
-	set botr [$bot.lr childsite right]
-
-	pack $top.lr -expand 1 -fill both -padx 0 -ipadx 0 -pady 0 -ipady 0
-	pack $bot.lr -expand 1 -fill both -padx 0 -ipadx 0 -pady 0 -ipady 0
-
-	$ViewSlices control_panel $w.cp
-	$ViewSlices add_nrrd_tab $w 1
-	global slice_frame
-	set slice_frame(3d) $topl
-	set slice_frame(axial) $topr
-	set slice_frame(coronal) $botr
-	set slice_frame(sagittal) $botl
-	
-	foreach axis "sagittal coronal axial" {
-	    create_2d_frame $slice_frame($axis) $axis
-	    $ViewSlices gl_frame $slice_frame($axis).$axis
-	    bind <ButtonRelease-1> $slice_frame($axis).$axis "puts hi"
-	    pack $slice_frame($axis).$axis \
-		-side top -padx 0 -ipadx 0 -pady 0 -ipady 0
-	}
-
-	# embed viewer in top left
-	global mods
- 	set eviewer [$mods(Viewer) ui_embedded]
-
- 	$eviewer setWindow $topl [expr $viewer_width/2] \
- 	    [expr $viewer_height/2] \
-
- 	pack $topl -side top -anchor n \
- 	    -expand 1 -fill both -padx 0 -pady 0
-
-    }
-
-
     method build_viewers {viewer ViewSlices} {
 	set w $win.viewers
 	
 	global mods
-	set mods(ViewSlices) $ViewSlices
 
 	iwidgets::panedwindow $w.topbot -orient horizontal -thickness 0 \
 	    -sashwidth 5000 -sashindent 0 -sashborderwidth 2 -sashheight 6 \
-	    -sashcursor sb_v_double_arrow -width $viewer_width -height $viewer_height
+	    -sashcursor sb_v_double_arrow \
+	    -width $viewer_width -height $viewer_height
 	pack $w.topbot -expand 1 -fill both -padx 0 -ipadx 0 -pady 0 -ipady 0
 #	Tooltip $w.topbot "Click and drag to resize"
 	
@@ -871,7 +823,8 @@ class BioImageApp {
 	    bind $slice_frame($axis).bd.$axis <Shift-ButtonRelease-1> \
 		"$ViewSlices-c release %W %b %s %X %Y"
 	    bind $slice_frame($axis).bd.$axis <ButtonRelease-1> \
-		"$ViewSlices-c release %W %b %s %X %Y; $this change_window_width_and_level 1"
+		"$ViewSlices-c release %W %b %s %X %Y
+                 $this change_window_width_and_level 1"
 
 	    pack $slice_frame($axis).bd.$axis -expand 1 -fill both \
 		-side top -padx 0 -ipadx 0 -pady 0 -ipady 0
@@ -1055,7 +1008,8 @@ class BioImageApp {
 		-background $scolor -padx 3 \
 		-activebackground "#6c90ce" \
 		-command "$this add_Histo -1"
-	    Tooltip $filter.histo "Perform Histogram Equilization\nusing UnuHeq"
+	    Tooltip $filter.histo \
+		"Perform Histogram Equilization\nusing UnuHeq"
 
 	    pack $filter.resamp $filter.crop $filter.histo $filter.cmedian \
 		-side left -padx 2 -expand no
@@ -1066,7 +1020,8 @@ class BioImageApp {
 
 	    set history [$m.p.sf childsite]
 
-	    Tooltip $history "Shows a history of steps\nin the dynamic pipeline"
+	    Tooltip $history \
+		"Shows a history of steps\nin the dynamic pipeline"
 
 	    # Add Load UI
 	    $this add_Load $history $case
@@ -1128,7 +1083,214 @@ class BioImageApp {
 	
     }
 
-    
+
+    method create_network {} {
+	global mods
+	set m1 [addModuleAtPosition "Teem" "DataIO" "NrrdReader" 10 10]
+	set m2 [addModuleAtPosition "Teem" "DataIO" "DicomNrrdReader" 28 68]
+	set m3 [addModuleAtPosition "Teem" "DataIO" "AnalyzeNrrdReader" 46 128]
+	set m4 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 91 184]
+	set m5 [addModuleAtPosition "Teem" "Converters" "FieldToNrrd" 91 242]
+	set m6 [addModuleAtPosition "Teem" "NrrdData" "ChooseNrrd" 10 322]
+	set m7 [addModuleAtPosition "Teem" "UnuNtoZ" "UnuPermute" 76 402]
+	set m8 [addModuleAtPosition "Teem" "NrrdData" "ChooseNrrd" 10 479]
+	set m9 [addModuleAtPosition "Teem" "UnuAtoM" "UnuFlip" 72 563]
+	set m10 [addModuleAtPosition "Teem" "NrrdData" "ChooseNrrd" 10 641]
+	set m11 [addModuleAtPosition "Teem" "UnuAtoM" "UnuFlip" 62 723]
+	set m12 [addModuleAtPosition "Teem" "NrrdData" "ChooseNrrd" 10 808]
+	set m13 [addModuleAtPosition "Teem" "UnuAtoM" "UnuFlip" 54 890]
+	set m14 [addModuleAtPosition "Teem" "NrrdData" "ChooseNrrd" 10 972]
+	set m15 [addModuleAtPosition "Teem" "NrrdData" "NrrdInfo" 139 1055]
+	set m16 [addModuleAtPosition "Teem" "NrrdData" "ChooseNrrd" 238 2012]
+	set m17 [addModuleAtPosition "Teem" "NrrdData" "NrrdInfo" 29 2121]
+	set m18 [addModuleAtPosition "Teem" "NrrdData" "NrrdSetupTexture" \
+		     310 2126]
+	set m19 [addModuleAtPosition "Teem" "UnuAtoM" "UnuJhisto" 527 2209]
+	set m20 [addModuleAtPosition "Teem" "UnuNtoZ" "UnuQuantize" 328 2268]
+	set m21 [addModuleAtPosition "Teem" "UnuAtoM" "Unu2op" 509 2267]
+	set m22 [addModuleAtPosition "Teem" "UnuAtoM" "Unu1op" 509 2330]
+	set m23 [addModuleAtPosition "Teem" "UnuAtoM" "UnuHeq" 509 2392]
+	set m24 [addModuleAtPosition "Teem" "UnuAtoM" "UnuGamma" 509 2455]
+	set m25 [addModuleAtPosition "Teem" "UnuNtoZ" "UnuQuantize" 509 2517]
+	set m26 [addModuleAtPosition "SCIRun" "Visualization" \
+		     "NrrdTextureBuilder" 42 2350]
+	set m27 [addModuleAtPosition "SCIRun" "Visualization" \
+		     "GenStandardColorMaps" 274 2432]
+	set m28 [addModuleAtPosition "SCIRun" "Render" "ViewSlices" 238 2519]
+	set m29 [addModuleAtPosition "SCIRun" "Visualization" \
+		     "EditColorMap2D" 256 2597]
+	set m30 [addModuleAtPosition "SCIRun" "Visualization" \
+		     "RescaleColorMap" 60 2629]
+	set m31 [addModuleAtPosition "SCIRun" "Visualization" \
+		     "VolumeVisualizer" 42 2700]
+	
+	# Create the Connections between Modules
+	set c1 [addConnection $m4 0 $m5 0]
+	set c2 [addConnection $m28 1 $m29 0]
+	set c3 [addConnection $m27 0 $m30 0]
+	set c4 [addConnection $m26 0 $m31 0]
+	set c5 [addConnection $m1 0 $m6 0]
+	set c6 [addConnection $m6 0 $m8 0]
+	set c7 [addConnection $m6 0 $m7 0]
+	set c8 [addConnection $m8 0 $m10 0]
+	set c9 [addConnection $m8 0 $m9 0]
+	set c10 [addConnection $m10 0 $m12 0]
+	set c11 [addConnection $m10 0 $m11 0]
+	set c12 [addConnection $m12 0 $m14 0]
+	set c13 [addConnection $m12 0 $m13 0]
+	set c14 [addConnection $m14 0 $m16 0]
+	set c15 [addConnection $m14 0 $m15 0]
+	set c16 [addConnection $m16 0 $m28 0]
+	set c17 [addConnection $m16 0 $m17 0]
+	set c18 [addConnection $m16 0 $m18 0]
+	set c19 [addConnection $m18 0 $m26 0]
+	set c20 [addConnection $m18 1 $m20 0]
+	set c21 [addConnection $m22 0 $m23 0]
+	set c22 [addConnection $m21 0 $m22 0]
+	set c23 [addConnection $m24 0 $m25 0]
+	set c24 [addConnection $m23 0 $m24 0]
+	set c25 [addConnection $m30 0 $m31 1]
+	set c26 [addConnection $m2 0 $m6 1]
+	set c27 [addConnection $m16 0 $m19 1]
+	set c28 [addConnection $m9 0 $m10 1]
+	set c29 [addConnection $m11 0 $m12 1]
+	set c30 [addConnection $m13 0 $m14 1]
+	set c31 [addConnection $m19 0 $m21 1]
+	set c32 [addConnection $m7 0 $m8 1]
+	set c33 [addConnection $m20 0 $m26 1]
+	set c34 [addConnection $m25 0 $m29 1]
+	set c35 [addConnection $m29 0 $m31 2]
+	set c36 [addConnection $m27 0 $m28 2]
+	set c37 [addConnection $m3 0 $m6 2]
+	set c38 [addConnection $m18 1 $m19 2]
+	set c39 [addConnection $m5 2 $m6 3]
+	set c40 [addConnection $m29 0 $m28 4]
+	set c41 [addConnection $m20 0 $m28 5]
+	set c42 [addConnection $m31 0 $mods(Viewer) 0]
+	set c42 [addConnection $m28 0 $mods(Viewer) 1]
+
+	# set some ui parameters
+	setGlobal $m1-filename ${data_dir}volume/tooth.nhdr
+
+	setGlobal $m20-nbits {8}
+	setGlobal $m20-useinputmin 1
+	setGlobal $m20-useinputmax 1
+
+	setGlobal $m18-valuesonly {0}
+	setGlobal $m18-useinputmin {0}
+	setGlobal $m18-useinputmax {0}
+
+	# CHANGE THESE VARS FOR TRANSFER FUNCTION 
+	setGlobal $m29-panx {0.0}
+	setGlobal $m29-pany {0.0}
+	setGlobal $m29-scale_factor {1.0}
+	setGlobal $m29-faux {1}
+	setGlobal $m29-histo {0.5}
+	setGlobal $m29-name-0 {Triangle}
+	setGlobal $m29-0-color-r {0.12221829371}
+	setGlobal $m29-0-color-g {0.773248783139}
+	setGlobal $m29-0-color-b {0.741646733309}
+	setGlobal $m29-0-color-a {0.800000011921}
+	setGlobal $m29-state-0 {t 0.670178 0.0621057 0.540499 \
+				    0.495436 0.464177}
+	setGlobal $m29-shadeType-0 {0}
+	setGlobal $m29-on-0 {1}
+	setGlobal $m29-name-1 {Rectangle}
+	setGlobal $m29-1-color-r {0.0157082642279}
+	setGlobal $m29-1-color-g {0.602349504633}
+	setGlobal $m29-1-color-b {0.310323060825}
+	setGlobal $m29-1-color-a {0.800000011921}
+	setGlobal $m29-state-1 {r 0 0.222522 0.0544884 0.212415 \
+				    0.318622 0.612325}
+	setGlobal $m29-shadeType-1 {0}
+	setGlobal $m29-on-1 {1}
+	setGlobal $m29-marker {end}
+
+	setGlobal $m31-alpha_scale {0.0}
+	setGlobal $m31-shading {1}
+	setGlobal $m31-ambient {0.5}
+	setGlobal $m31-diffuse {0.5}
+	setGlobal $m31-specular {0.388}
+	setGlobal $m31-shine {24}
+	setGlobal $m31-adaptive {1}
+	global $m31-shading-button-state
+	trace variable $m31-shading-button-state w \
+	    "$this update_BioImage_shading_button_state"
+
+	setGlobal $m23-bins {3000}
+	setGlobal $m23-sbins {1}
+
+	setGlobal $m24-gamma {0.5}
+
+	setGlobal $m25-nbits {8}
+	setGlobal $m25-useinputmin 1
+	setGlobal $m25-useinputmax 1
+
+	setGlobal $m19-bins {512 256}
+	setGlobal $m19-mins {nan nan}
+	setGlobal $m19-maxs {nan nan}
+	setGlobal $m19-type {nrrdTypeFloat}
+
+	setGlobal $m21-operator {+}
+
+	setGlobal $m22-operator {log}
+
+	set axes "minAxis0 minAxis1 minAxis2 maxAxis0 maxAxis1 maxAxis2"
+	foreach axis $axes {
+	    global $m28-crop_$axis
+	    trace variable $m28-crop_$axis w "$this viewslices_crop_trace"
+	}
+	trace variable $m28-geom_flushed  w "$this maybe_autoview"
+
+	global planes_mapType
+	setGlobal $m27-mapType $planes_mapType
+	setGlobal $m27-width 441
+	setGlobal $m27-height 40
+	setGlobal $m27-positionList {{0 0} {441 0}}
+	setGlobal $m27-nodeList {514 1055}
+
+	setGlobal $m9-axis 0
+
+	setGlobal $m11-axis 1
+
+	setGlobal $m13-axis 2
+
+	setGlobal $m30-isFixed 1
+	setGlobal $m30-min 0
+	setGlobal $m30-max 0
+
+	# disable other load modules
+	disableModule $m2 1
+	disableModule $m3 1
+	disableModule $m4 1
+
+	# disable the volume rendering
+	disableModule $m31 1
+	disableModule $m18 1
+	disableModule $m19 1
+	disableModule $m29 1
+	disableModule $m26 1
+	disableModule $m20 1
+
+	# disable flip/permute modules
+	disableModule $m7 1
+	disableModule $m9 1
+	disableModule $m11 1
+	disableModule $m13 1
+
+	set mods(ViewSlices) $m28
+	set mods(EditColorMap2D) $m29
+
+	set mod_list [list $m1 $m2 $m3 $m4 $m5 $m6 $m16 0 $m20 0 $m18 \
+			  $m26 0 $m29 $m31 0 0 0 $m23 $m24 $m25 $m19 \
+			  $m21 $m22 $m15 $m28 $m27 $m17 $m7 $m9 $m11 \
+			  $m13 $m10 $m12 $m14 $m8 $m30]
+
+	set filters(0) [list load $mod_list [list $m6] [list $m14 0] \
+			    start end 0 0 1 "Data - Unknown"]
+    }
+
+         	
     # Method to create Load/Vis modules, and build
     # Load UI.  Variable m gives the path and case
     # indicates whether it is being built for the attached
@@ -1136,443 +1298,14 @@ class BioImageApp {
     # once, so when case equals 0, create modules and ui, for case 1
     # just create ui.
     method add_Load {history case} {
-	
 	# if first time in this method (case == 0)
 	# create the modules and connections
 	if {$case == 0} {
+	    create_network
 	    global mods
-	    
-# # 	    # create load modules and inner connections
-# # 	    set m1 [addModuleAtPosition "Teem" "DataIO" "NrrdReader" 10 10]
-# # 	    set m2 [addModuleAtPosition "Teem" "DataIO" "DicomNrrdReader" 28 70]
-# # 	    set m3 [addModuleAtPosition "Teem" "DataIO" "AnalyzeNrrdReader" 46 128]
-# # 	    set m4 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 65 186]
-# # 	    set m5 [addModuleAtPosition "Teem" "DataIO" "FieldToNrrd" 65 245]
-# # 	    set m6 [addModuleAtPosition "Teem" "NrrdData" "ChooseNrrd" 10 324]
-# # 	    set m25 [addModuleAtPosition "Teem" "NrrdData" "NrrdInfo" 65 1054]
-	    	  
-# # 	    set c1 [addConnection $m4 0 $m5 0]
-# # 	    set c2 [addConnection $m1 0 $m6 0]
-# # 	    set c3 [addConnection $m2 0 $m6 1]
-# # 	    set c4 [addConnection $m3 0 $m6 2]
-# # 	    set c5 [addConnection $m5 2 $m6 3]
-
-	    
-# # 	    # Disable other load modules (Dicom, Analyze, Field)
-# # 	    disableModule $m2 1
-# # 	    disableModule $m3 1
-# # 	    disableModule $m4 1
-	    
-# # 	    # create vis modules and inner connections
-# # 	    set m7 [addModuleAtPosition "Teem" "NrrdData" "ChooseNrrd" 163 1848]
-# # #	    set m8 [addModuleAtPosition "Teem" "UnuNtoZ" "UnuQuantize" 10 2191]
-# # 	    set m9 [addModuleAtPosition "Teem" "UnuNtoZ" "UnuQuantize" 253 2139]
-# # #	    set m10 [addModuleAtPosition "Teem" "UnuAtoM" "UnuJoin" 218 2278]
-# # #	    set m11 [addModuleAtPosition "Teem" "UnuNtoZ" "UnuQuantize" 218 2198]
-# # 	    set m11 [addModuleAtPosition "Teem" "NrrdData" "NrrdSetupTexture" 235 1998]
-# # 	    set m12 [addModuleAtPosition "SCIRun" "Visualization" "NrrdTextureBuilder" 0 2263]
-# # #	    set m13 [addModuleAtPosition "Teem" "UnuNtoZ" "UnuProject" 447 2138]
-# # 	    set m14 [addModuleAtPosition "SCIRun" "Visualization" "EditColorMap2D" 181 2471]
-# # 	    set m15 [addModuleAtPosition "SCIRun" "Visualization" "VolumeVisualizer" 0 2548]
-# # #	    set m16 [addModuleAtPosition "Teem" "DataIO" "NrrdToField" 182 1937]
-# # #	    set m17 [addModuleAtPosition "SCIRun" "FieldsData" "NodeGradient" 182 1997]
-# # #	    set m18 [addModuleAtPosition "Teem" "DataIO" "FieldToNrrd" 182 2056]
-# # 	    set m19 [addModuleAtPosition "Teem" "UnuAtoM" "UnuHeq" 422 2266]
-# # 	    set m20 [addModuleAtPosition "Teem" "UnuAtoM" "UnuGamma" 422 2330]
-# # 	    set m21 [addModuleAtPosition "Teem" "UnuNtoZ" "UnuQuantize" 422 2393]
-# # 	    set m22 [addModuleAtPosition "Teem" "UnuAtoM" "UnuJhisto" 440 2075]
-# # 	    set m23 [addModuleAtPosition "Teem" "UnuAtoM" "Unu2op" 422 2139]
-# # 	    set m24 [addModuleAtPosition "Teem" "UnuAtoM" "Unu1op" 422 2202]
-# #             set m26 [addModuleAtPosition "SCIRun" "Render" "ViewSlices" 163 2397]
-# # 	    set m27 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 199 2264]
-# # 	    set m28 [addModuleAtPosition "Teem" "NrrdData" "NrrdInfo" 0 1998]
-
-# # 	    set m29 [addModuleAtPosition "Teem" "UnuNtoZ" "UnuPermute" 81 408]
-# # 	    set m30 [addModuleAtPosition "Teem" "UnuAtoM" "UnuFlip" 81 575]
-# # 	    set m31 [addModuleAtPosition "Teem" "UnuAtoM" "UnuFlip" 60 731]
-# # 	    set m32 [addModuleAtPosition "Teem" "UnuAtoM" "UnuFlip" 50 892]
-# # 	    set m33 [addModuleAtPosition "Teem" "NrrdData" "ChooseNrrd" 9 653]
-# # 	    set m34 [addModuleAtPosition "Teem" "NrrdData" "ChooseNrrd" 8 813]
-# # 	    set m35 [addModuleAtPosition "Teem" "NrrdData" "ChooseNrrd" 8 970]
-# # 	    set m36 [addModuleAtPosition "Teem" "NrrdData" "ChooseNrrd" 10 485]
-# #             set m37 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 18 2486]
-
-
-# # 	    # store some in mods
-# # 	    set mods(EditColorMap2D) $m14
-	    
-# # 	    set c1 [addConnection $m11 0 $m12 0]
-# # 	    set c2 [addConnection $m12 0 $m15 0]
-# # 	    set c3 [addConnection $m11 1 $m9 0]
-# # 	    set c4 [addConnection $m11 1 $m22 2]
-# # 	    set c5 [addConnection $m27 0 $m37 0]
-# # 	    set c6 [addConnection $m24 0 $m19 0]
-# # 	    set c7 [addConnection $m23 0 $m24 0]
-# # 	    set c8 [addConnection $m20 0 $m21 0]
-# # 	    set c9 [addConnection $m19 0 $m20 0]
-# # 	    set c10 [addConnection $m37 0 $m15 1]
-# # #	    set c11 [addConnection $m13 0 $m9 0]
-# # #	    set c12 [addConnection $m11 1 $m10 0]
-# # 	    set c13 [addConnection $m22 0 $m23 1]
-# # #	    set c14 [addConnection $m8 0 $m10 1]
-# # 	    set c15 [addConnection $m9 0 $m12 1]
-# # 	    set c16 [addConnection $m21 0 $m14 1]
-# # 	    set c17 [addConnection $m14 0 $m15 2]
-# # #	    set c18 [addConnection $m13 0 $m22 2]
-# # 	    set c19 [addConnection $m7 0 $m26 0]
-# # 	    set c20 [addConnection $m27 0 $m26 2]
-# # 	    set c29 [addConnection $m7 0 $m28 0]
-
-# # 	    # connect load to vis
-# # 	    set c21 [addConnection $m6 0 $m36 0]
-# # #	    set c22 [addConnection $m7 0 $m8 0]
-# # 	    set c23 [addConnection $m7 0 $m11 0]
-# # 	    set c24 [addConnection $m7 0 $m22 1]
-
-# # 	    # connect vis to Viewer
-# # 	    set c25 [addConnection $m15 0 $mods(Viewer) 0]
-
-# # 	    # flip connections
-# # 	    # might want to connect this to $m6 instead of $m36
-# # 	    # depending on desired behavior
-
-# #  	    set c26 [addConnection $m33 0 $m34 0]
-# #  	    set c27 [addConnection $m33 0 $m31 0]
-# #  	    set c28 [addConnection $m34 0 $m35 0]
-# #  	    set c29 [addConnection $m34 0 $m32 0]
-# #             set c32 [addConnection $m6 0 $m29 0]
-# #             set c33 [addConnection $m6 0 $m36 0]
-# #             set c34 [addConnection $m29 0 $m36 1]
-# # 	    set c35 [addConnection $m36 0 $m30 0]
-# # 	    set c36 [addConnection $m36 0 $m33 0]
-# # 	    set c36 [addConnection $m30 0 $m33 1]
-# # 	    set c38 [addConnection $m31 0 $m34 1]
-# # 	    set c39 [addConnection $m32 0 $m35 1]
-# # 	    set c40 [addConnection $m35 0 $m25 0]
-# # 	    set c41 [addConnection $m35 0 $m7 0]
-
-# # 	    # connect 2D Viewer to 3D Viewer
-# # 	    set c37 [addConnection $m26 0 $mods(Viewer) 1]
-
-# # 	    # connect EditColorMap2D to ViewSlices for painting
-# # 	    set c42 [addConnection $m14 0 $m26 4]
-
-# # 	    # connect Gradient Magnitude to ViewSlices for painting
-# # 	    set c43 [addConnection $m9 0 $m26 5]
-
-# # 	    set c46 [addConnection $m26 1 $m14 0]
-
-# # 	    # disable the volume rendering
-# #  	    disableModule $m15 1
-# # 	    disableModule $m11 1
-# #  	    disableModule $m22 1
-# #             disableModule $m14 1
-# # 	    disableModule $m12 1
-# # 	    disableModule $m9 1
-
-# # 	    # disable flip/permute modules
-# # 	    disableModule $m29 1
-# # 	    disableModule $m30 1
-# # 	    disableModule $m31 1
-# # 	    disableModule $m32 1
-
-# # 	    # set some ui parameters
-# # 	    setGlobal $m1-filename ${data_dir}volume/tooth.nhdr
-
-# # 	    setGlobal $m9-nbits {8}
-# # 	    setGlobal $m9-useinputmin 1
-# # 	    setGlobal $m9-useinputmax 1
-
-# # 	    setGlobal $m11-valuesonly {0}
-# # 	    setGlobal $m11-useinputmin {0}
-# # 	    setGlobal $m11-useinputmax {0}
-
-# # 	    # CHANGE THESE VARS FOR TRANSFER FUNCTION 
-# #             setGlobal $m14-panx {0.0}
-# #             setGlobal $m14-pany {0.0}
-# #             setGlobal $m14-scale_factor {1.0}
-# #             setGlobal $m14-faux {1}
-# #             setGlobal $m14-histo {0.5}
-# #             setGlobal $m14-name-0 {Triangle}
-# #             setGlobal $m14-0-color-r {0.12221829371}
-# #             setGlobal $m14-0-color-g {0.773248783139}
-# #             setGlobal $m14-0-color-b {0.741646733309}
-# #             setGlobal $m14-0-color-a {0.800000011921}
-# #             setGlobal $m14-state-0 {t 0.670178 0.0621057 0.540499 0.495436 0.464177}
-# #             setGlobal $m14-shadeType-0 {0}
-# #             setGlobal $m14-on-0 {1}
-# #             setGlobal $m14-name-1 {Rectangle}
-# #             setGlobal $m14-1-color-r {0.0157082642279}
-# #             setGlobal $m14-1-color-g {0.602349504633}
-# #             setGlobal $m14-1-color-b {0.310323060825}
-# #             setGlobal $m14-1-color-a {0.800000011921}
-# #             setGlobal $m14-state-1 {r 0 0.222522 0.0544884 0.212415 0.318622 0.612325}
-# #             setGlobal $m14-shadeType-1 {0}
-# #             setGlobal $m14-on-1 {1}
-# #             setGlobal $m14-marker {end}
-
-# # 	    setGlobal $m15-alpha_scale {0.0}
-# # 	    setGlobal $m15-shading {1}
-# # 	    setGlobal $m15-ambient {0.5}
-# # 	    setGlobal $m15-diffuse {0.5}
-# # 	    setGlobal $m15-specular {0.388}
-# # 	    setGlobal $m15-shine {24}
-# #             setGlobal $m15-adaptive {1}
-# # 	    global $m15-shading-button-state
-# # 	    trace variable $m15-shading-button-state w \
-# # 		"$this update_BioImage_shading_button_state"
-
-# # 	    setGlobal $m19-bins {3000}
-# # 	    setGlobal $m19-sbins {1}
-
-# # 	    setGlobal $m20-gamma {0.5}
-
-# # 	    setGlobal $m21-nbits {8}
-# # 	    setGlobal $m21-useinputmin 1
-# # 	    setGlobal $m21-useinputmax 1
-
-# # 	    setGlobal $m22-bins {512 256}
-# # 	    setGlobal $m22-mins {nan nan}
-# # 	    setGlobal $m22-maxs {nan nan}
-# # 	    setGlobal $m22-type {nrrdTypeFloat}
-
-# # 	    setGlobal $m23-operator {+}
-
-# # 	    setGlobal $m24-operator {log}
-
-# #             global $m26-crop_minAxis0 $m26-crop_maxAxis0
-# #             global $m26-crop_minAxis1 $m26-crop_maxAxis1
-# #             global $m26-crop_minAxis2 $m26-crop_maxAxis2
-# # 	    trace variable $m26-crop_minAxis0 w "$this update_crop_values"
-# # 	    trace variable $m26-crop_minAxis1 w "$this update_crop_values"
-# # 	    trace variable $m26-crop_minAxis2 w "$this update_crop_values"
-# # 	    trace variable $m26-crop_maxAxis0 w "$this update_crop_values"
-# # 	    trace variable $m26-crop_maxAxis1 w "$this update_crop_values"
-# # 	    trace variable $m26-crop_maxAxis2 w "$this update_crop_values"
-# # 	    trace variable $m26-geom_flushed  w "$this maybe_autoview"
-
-# # 	    global planes_mapType
-# # 	    setGlobal $m27-mapType $planes_mapType
-# # 	    setGlobal $m27-width 441
-# # 	    setGlobal $m24-height 40
-	    
-# # 	    # intialize at full alpha
-# # 	    setGlobal $m27-positionList {{0 0} {441 0}}
-# # 	    setGlobal $m27-nodeList {514 1055}
-
-# # 	    setGlobal $m30-axis 0
-
-# # 	    setGlobal $m31-axis 1
-
-# # 	    setGlobal $m32-axis 2
-
-# # 	    setGlobal $m37-isFixed 1
-# # 	    setGlobal $m37-min 0
-# # 	    setGlobal $m37-max 0
-
-	    set m1 [addModuleAtPosition "Teem" "DataIO" "NrrdReader" 10 10]
-	    set m2 [addModuleAtPosition "Teem" "DataIO" "DicomNrrdReader" 28 68]
-	    set m3 [addModuleAtPosition "Teem" "DataIO" "AnalyzeNrrdReader" 46 128]
-	    set m4 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 91 184]
-	    set m5 [addModuleAtPosition "Teem" "Converters" "FieldToNrrd" 91 242]
-	    set m6 [addModuleAtPosition "Teem" "NrrdData" "ChooseNrrd" 10 322]
-	    set m7 [addModuleAtPosition "Teem" "UnuNtoZ" "UnuPermute" 76 402]
-	    set m8 [addModuleAtPosition "Teem" "NrrdData" "ChooseNrrd" 10 479]
-	    set m9 [addModuleAtPosition "Teem" "UnuAtoM" "UnuFlip" 72 563]
-	    set m10 [addModuleAtPosition "Teem" "NrrdData" "ChooseNrrd" 10 641]
-	    set m11 [addModuleAtPosition "Teem" "UnuAtoM" "UnuFlip" 62 723]
-	    set m12 [addModuleAtPosition "Teem" "NrrdData" "ChooseNrrd" 10 808]
-	    set m13 [addModuleAtPosition "Teem" "UnuAtoM" "UnuFlip" 54 890]
-	    set m14 [addModuleAtPosition "Teem" "NrrdData" "ChooseNrrd" 10 972]
-	    set m15 [addModuleAtPosition "Teem" "NrrdData" "NrrdInfo" 139 1055]
-	    set m16 [addModuleAtPosition "Teem" "NrrdData" "ChooseNrrd" 238 2012]
-	    set m17 [addModuleAtPosition "Teem" "NrrdData" "NrrdInfo" 29 2121]
-	    set m18 [addModuleAtPosition "Teem" "NrrdData" "NrrdSetupTexture" 310 2126]
-	    set m19 [addModuleAtPosition "Teem" "UnuAtoM" "UnuJhisto" 527 2209]
-	    set m20 [addModuleAtPosition "Teem" "UnuNtoZ" "UnuQuantize" 328 2268]
-	    set m21 [addModuleAtPosition "Teem" "UnuAtoM" "Unu2op" 509 2267]
-	    set m22 [addModuleAtPosition "Teem" "UnuAtoM" "Unu1op" 509 2330]
-	    set m23 [addModuleAtPosition "Teem" "UnuAtoM" "UnuHeq" 509 2392]
-	    set m24 [addModuleAtPosition "Teem" "UnuAtoM" "UnuGamma" 509 2455]
-	    set m25 [addModuleAtPosition "Teem" "UnuNtoZ" "UnuQuantize" 509 2517]
-	    set m26 [addModuleAtPosition "SCIRun" "Visualization" "NrrdTextureBuilder" 42 2350]
-	    set m27 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 274 2432]
-	    set m28 [addModuleAtPosition "SCIRun" "Render" "ViewSlices" 238 2519]
-	    set m29 [addModuleAtPosition "SCIRun" "Visualization" "EditColorMap2D" 256 2597]
-	    set m30 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 60 2629]
-	    set m31 [addModuleAtPosition "SCIRun" "Visualization" "VolumeVisualizer" 42 2700]
-	    
-	    # Create the Connections between Modules
-	    set c1 [addConnection $m4 0 $m5 0]
-	    set c2 [addConnection $m28 1 $m29 0]
-	    set c3 [addConnection $m27 0 $m30 0]
-	    set c4 [addConnection $m26 0 $m31 0]
-	    set c5 [addConnection $m1 0 $m6 0]
-	    set c6 [addConnection $m6 0 $m8 0]
-	    set c7 [addConnection $m6 0 $m7 0]
-	    set c8 [addConnection $m8 0 $m10 0]
-	    set c9 [addConnection $m8 0 $m9 0]
-	    set c10 [addConnection $m10 0 $m12 0]
-	    set c11 [addConnection $m10 0 $m11 0]
-	    set c12 [addConnection $m12 0 $m14 0]
-	    set c13 [addConnection $m12 0 $m13 0]
-	    set c14 [addConnection $m14 0 $m16 0]
-	    set c15 [addConnection $m14 0 $m15 0]
-	    set c16 [addConnection $m16 0 $m28 0]
-	    set c17 [addConnection $m16 0 $m17 0]
-	    set c18 [addConnection $m16 0 $m18 0]
-	    set c19 [addConnection $m18 0 $m26 0]
-	    set c20 [addConnection $m18 1 $m20 0]
-	    set c21 [addConnection $m22 0 $m23 0]
-	    set c22 [addConnection $m21 0 $m22 0]
-	    set c23 [addConnection $m24 0 $m25 0]
-	    set c24 [addConnection $m23 0 $m24 0]
-	    set c25 [addConnection $m30 0 $m31 1]
-	    set c26 [addConnection $m2 0 $m6 1]
-	    set c27 [addConnection $m16 0 $m19 1]
-	    set c28 [addConnection $m9 0 $m10 1]
-	    set c29 [addConnection $m11 0 $m12 1]
-	    set c30 [addConnection $m13 0 $m14 1]
-	    set c31 [addConnection $m19 0 $m21 1]
-	    set c32 [addConnection $m7 0 $m8 1]
-	    set c33 [addConnection $m20 0 $m26 1]
-	    set c34 [addConnection $m25 0 $m29 1]
-	    set c35 [addConnection $m29 0 $m31 2]
-	    set c36 [addConnection $m27 0 $m28 2]
-	    set c37 [addConnection $m3 0 $m6 2]
-	    set c38 [addConnection $m18 1 $m19 2]
-	    set c39 [addConnection $m5 2 $m6 3]
-	    set c40 [addConnection $m29 0 $m28 4]
-	    set c41 [addConnection $m20 0 $m28 5]
-	    set c42 [addConnection $m31 0 $mods(Viewer) 0]
-	    set c42 [addConnection $m28 0 $mods(Viewer) 1]
-
- 	    # set some ui parameters
- 	    setGlobal $m1-filename ${data_dir}volume/tooth.nhdr
-
- 	    setGlobal $m20-nbits {8}
- 	    setGlobal $m20-useinputmin 1
- 	    setGlobal $m20-useinputmax 1
-
- 	    setGlobal $m18-valuesonly {0}
- 	    setGlobal $m18-useinputmin {0}
- 	    setGlobal $m18-useinputmax {0}
-
- 	    # CHANGE THESE VARS FOR TRANSFER FUNCTION 
-	    setGlobal $m29-panx {0.0}
-	    setGlobal $m29-pany {0.0}
-	    setGlobal $m29-scale_factor {1.0}
-	    setGlobal $m29-faux {1}
-	    setGlobal $m29-histo {0.5}
-	    setGlobal $m29-name-0 {Triangle}
-	    setGlobal $m29-0-color-r {0.12221829371}
-	    setGlobal $m29-0-color-g {0.773248783139}
-	    setGlobal $m29-0-color-b {0.741646733309}
-	    setGlobal $m29-0-color-a {0.800000011921}
-	    setGlobal $m29-state-0 {t 0.670178 0.0621057 0.540499 0.495436 0.464177}
-	    setGlobal $m29-shadeType-0 {0}
-	    setGlobal $m29-on-0 {1}
-	    setGlobal $m29-name-1 {Rectangle}
-	    setGlobal $m29-1-color-r {0.0157082642279}
-	    setGlobal $m29-1-color-g {0.602349504633}
-	    setGlobal $m29-1-color-b {0.310323060825}
-	    setGlobal $m29-1-color-a {0.800000011921}
-	    setGlobal $m29-state-1 {r 0 0.222522 0.0544884 0.212415 0.318622 0.612325}
-	    setGlobal $m29-shadeType-1 {0}
-	    setGlobal $m29-on-1 {1}
-	    setGlobal $m29-marker {end}
-
-  	    setGlobal $m31-alpha_scale {0.0}
-  	    setGlobal $m31-shading {1}
-  	    setGlobal $m31-ambient {0.5}
-  	    setGlobal $m31-diffuse {0.5}
-  	    setGlobal $m31-specular {0.388}
-  	    setGlobal $m31-shine {24}
-              setGlobal $m31-adaptive {1}
-  	    global $m31-shading-button-state
-  	    trace variable $m31-shading-button-state w \
-  		"$this update_BioImage_shading_button_state"
-
- 	    setGlobal $m23-bins {3000}
- 	    setGlobal $m23-sbins {1}
-
- 	    setGlobal $m24-gamma {0.5}
-
- 	    setGlobal $m25-nbits {8}
- 	    setGlobal $m25-useinputmin 1
- 	    setGlobal $m25-useinputmax 1
-
- 	    setGlobal $m19-bins {512 256}
- 	    setGlobal $m19-mins {nan nan}
- 	    setGlobal $m19-maxs {nan nan}
- 	    setGlobal $m19-type {nrrdTypeFloat}
-
- 	    setGlobal $m21-operator {+}
-
- 	    setGlobal $m22-operator {log}
-
-	    global $m28-crop_minAxis0 $m28-crop_maxAxis0
-	    global $m28-crop_minAxis1 $m28-crop_maxAxis1
-	    global $m28-crop_minAxis2 $m28-crop_maxAxis2
-  	    trace variable $m28-crop_minAxis0 w "$this update_crop_values"
-  	    trace variable $m28-crop_minAxis1 w "$this update_crop_values"
-  	    trace variable $m28-crop_minAxis2 w "$this update_crop_values"
-  	    trace variable $m28-crop_maxAxis0 w "$this update_crop_values"
-  	    trace variable $m28-crop_maxAxis1 w "$this update_crop_values"
-  	    trace variable $m28-crop_maxAxis2 w "$this update_crop_values"
-  	    trace variable $m28-geom_flushed  w "$this maybe_autoview"
-
- 	    global planes_mapType
- 	    setGlobal $m27-mapType $planes_mapType
- 	    setGlobal $m27-width 441
- 	    setGlobal $m27-height 40
- 	    setGlobal $m27-positionList {{0 0} {441 0}}
- 	    setGlobal $m27-nodeList {514 1055}
-
- 	    setGlobal $m9-axis 0
-
- 	    setGlobal $m11-axis 1
-
- 	    setGlobal $m13-axis 2
-
- 	    setGlobal $m30-isFixed 1
- 	    setGlobal $m30-min 0
- 	    setGlobal $m30-max 0
-
-	    # disable other load modules
-	    disableModule $m2 1
-	    disableModule $m3 1
-	    disableModule $m4 1
-
-  	    # disable the volume rendering
-   	    disableModule $m31 1
-  	    disableModule $m18 1
-   	    disableModule $m19 1
-	    disableModule $m29 1
-  	    disableModule $m26 1
-  	    disableModule $m20 1
-
-  	    # disable flip/permute modules
-  	    disableModule $m7 1
-  	    disableModule $m9 1
-  	    disableModule $m11 1
-  	    disableModule $m13 1
-
- 	    set mods(EditColorMap2D) $m29
-
-
-
-#	    set mod_list [list $m1 $m2 $m3 $m4 $m5 $m6 $m7 0 $m9 0 $m11 $m12 0 $m14 $m15 0 0 0 $m19 $m20 $m21 $m22 $m23 $m24 $m25 $m26 $m27 $m28 $m29 $m30 $m31 $m32 $m33 $m34 $m35 $m36 $m37]
-#	    set filters(0) [list load $mod_list [list $m6] [list $m35 0] start end 0 0 1 "Data - Unknown"]
-	    set mod_list [list $m1 $m2 $m3 $m4 $m5 $m6 $m16 0 $m20 0 $m18 $m26 0 $m29 $m31 0 0 0 $m23 $m24 $m25 $m19 $m21 $m22 $m15 $m28 $m27 $m17 $m7 $m9 $m11 $m13 $m10 $m12 $m14 $m8 $m30]
-
-	    set filters(0) [list load $mod_list [list $m6] [list $m14 0] start end 0 0 1 "Data - Unknown"]
-
-            $this build_viewers $mods(Viewer) $m28
+	    $this build_viewers $mods(Viewer) $mods(ViewSlices)
 	}
-	
 	set f [add_Load_UI $history 0 0]
-	# Add insert bar
 	$this add_insert_bar $f 0
     }
     
@@ -1644,12 +1377,11 @@ class BioImageApp {
 	    -fill x 
 
 	bind $page.file.e <Return> "$this update_changes"
-	bind $page.file.e <ButtonPress-1> "$this check_crop"
 
 	trace variable $NrrdReader-filename w "$this enable_update $which"
 	
 	button $page.load -text "Browse" \
-	    -command "$this check_crop; $this open_nrrd_reader_ui $which" \
+	    -command "$this open_nrrd_reader_ui $which" \
 	    -width 12
 	Tooltip $page.load "Use a file browser to\nselect a Nrrd data set"
 	pack $page.load -side top -anchor n -padx 3 -pady 1
@@ -1660,8 +1392,7 @@ class BioImageApp {
 		      -command "$this set_cur_data_tab Dicom; $this configure_readers Dicom"]
 	
 	button $page.load -text "Dicom Loader" \
-	    -command "$this check_crop
-                      $this enable_update $which
+	    -command "$this enable_update $which
                       $this dicom_ui"
 	Tooltip $page.load "Open Dicom Load user interface"
 	
@@ -1673,8 +1404,7 @@ class BioImageApp {
 		      -command "$this set_cur_data_tab Analyze; $this configure_readers Analyze"]
 	
 	button $page.load -text "Analyze Loader" \
-	    -command "$this check_crop
-                      $this enable_update $which
+	    -command "$this enable_update $which
                       $this analyze_ui"
 	Tooltip $page.load "Open Dicom Load user interface"
 	
@@ -1695,7 +1425,6 @@ class BioImageApp {
 	    -fill x 
 
 	bind $page.file.e <Return> "$this update_changes"
-	bind $page.file.e <ButtonPress-1> "$this check_crop"
 
 	button $page.load -text "Browse" \
 	    -command "$this open_field_reader_ui $which" \
@@ -1712,46 +1441,44 @@ class BioImageApp {
 	pack $data.ui.f
 	
 	set w $data.ui.f
-	
+
+	set orient_text "Options include Superior (S) or Inferior (I),\nAnterior (A) or Posterior (P), and Left (L) or Right (R).\nTo update the orientations, press the cube image."
+
 	# Orientations button
 	global orientimg
 	button $w.orient -image $orientimg -anchor nw \
-	    -command "$this check_crop; $this update_orientations"
-	Tooltip $w.orient "Edit the entries to indicate the various orientations.\nOptions include Superior (S) or Inferior (I),\nAnterior (A) or Posterior (P), and Left (L) or Right (R).\nTo update the orientations, press the cube image."
+	    -command "$this update_orientations"
+	TooltipMultiline $w.orient \
+	    "Edit the entries to indicate the various orientations.\n" \
+	    $orient_text
+	
 	grid config $w.orient -row 0 -column 1 -columnspan 3 -rowspan 4 -sticky "n"
-
+	set orient_text "Indicates the current orientation.\n$orient_text"
 
 	# Top entry
 	global top
 	entry $w.tentry -textvariable top -width 3
-	Tooltip $w.tentry "Indicates the current orientation.\nOptions include Superior (S) or Inferior (I),\nAnterior (A) or Posterior (P), and Left (L) or Right (R).\nTo update the orientations, press the cube image."
+	Tooltip $w.tentry $orient_text
 	grid config $w.tentry -row 0 -column 0 -sticky "e"
-
-        bind $w.tentry <ButtonPress-1> "$this check_crop"
 
 	# Front entry
 	global front
 	entry $w.fentry -textvariable front -width 3
-	Tooltip $w.fentry "Indicate the current orientation.\nOptions include Superior (S) or Inferior (I),\nAnterior (A) or Posterior (P), and Left (L) or Right (R).\nTo update the orientations, press the cube image."
+	Tooltip $w.fentry $orient_text
 	grid config $w.fentry -row 4 -column 2 -sticky "nw"
-
-        bind $w.fentry <ButtonPress-1> "$this check_crop"
-	
 	
 	# Side entry
 	global side
 	entry $w.sentry -textvariable side -width 3
-	Tooltip $w.sentry "Indicates the current orientations.\nOptions include Superior (S) or Inferior (I),\nAnterior (A) or Posterior (P), and Left (L) or Right (R).\nTo update the orientations, press the cube image."
+	Tooltip $w.sentry $orient_text
 	grid config $w.sentry -row 1 -column 4 -sticky "n"
-
-        bind $w.sentry <ButtonPress-1> "$this check_crop"
 
         trace variable top w "$this enable_update $which"
         trace variable front w "$this enable_update $which"
         trace variable side w "$this enable_update $which"
 
         # reset button
-	button $data.ui.reset -text "Reset" -command "$this check_crop; $this reset_orientations"
+	button $data.ui.reset -text "Reset" -command "$this reset_orientations"
 	Tooltip $data.ui.reset "Reset the orientation labels to defaults."
 	pack $data.ui.reset -side right -anchor se -padx 4 -pady 4
 
@@ -2143,9 +1870,6 @@ class BioImageApp {
     # data tab is selected (Nrrd, Dicom, Analyze) the other
     # readers must be disabled to avoid errors.
     method configure_readers { which } {
-
-        $this check_crop
-	
 	set ChooseNrrd  [lindex [lindex $filters(0) $modules] $load_choose_input]
 	set NrrdReader  [lindex [lindex $filters(0) $modules] $load_nrrd]
 	set DicomNrrdReader  [lindex [lindex $filters(0) $modules] $load_dicom]
@@ -2234,7 +1958,7 @@ class BioImageApp {
             set vis_frame_tab$case $vis.tnb
 
 
-	    set command "$this change_vis_frame Planes; $this check_crop"
+	    set command "$this change_vis_frame Planes"
 	    set page [$vis.tnb add -label "Planes" -command $command]
 
             frame $page.planes 
@@ -2329,7 +2053,6 @@ class BioImageApp {
  	        -orient horizontal -showvalue false \
  	        -length 140 -width 14 \
 	        -variable $mods(ViewSlices)-background_threshold
-            bind $page.thresh.s <ButtonPress-1> "$this check_crop"
             entry $page.thresh.l2 -textvariable $mods(ViewSlices)-background_threshold -width 6
             Tooltip $page.thresh.s "Clip out values less than\nspecified background threshold"
 
@@ -2431,8 +2154,7 @@ class BioImageApp {
 
             #######
             set page [$vis.tnb add -label "Volume Rendering" \
-			  -command "$this change_vis_frame \"Volume Rendering\"; 
-                                    $this check_crop"]
+			  -command "$this change_vis_frame {Volume Rendering}"]
 
             global show_volume_ren
 	    checkbutton $page.toggle -text "Show Volume Rendering" \
@@ -2449,7 +2171,7 @@ class BioImageApp {
             pack $page.vol -side top -anchor n -padx 3 -pady 3
             
             set VolumeVisualizer [lindex [lindex $filters(0) $modules] 14]
-            set n "$this check_crop; $VolumeVisualizer-c needexecute"
+            set n "$VolumeVisualizer-c needexecute"
 
             global $VolumeVisualizer-render_style
 
@@ -2659,7 +2381,6 @@ class BioImageApp {
 
     method open_transfer_function_editor {} {
 	global mods
-	$this check_crop
 	$mods(EditColorMap2D) initialize_ui
 	wm title .ui${mods(EditColorMap2D)} "Transfer Function Editor"
 	pack forget .ui$mods(EditColorMap2D).buttonPanel.btnBox.highlight
@@ -2926,16 +2647,12 @@ class BioImageApp {
 
 	insert_filter $num_filters
 	create_filter_UI $num_filters
+	start_crop $num_filters
+
 	incr num_filters
 
         change_indicator_labels "Press Update to Crop Volume..."
         $this disable_update
-
-        if {!$loading} {
-	    set current_crop [expr $num_filters-1]
-	    after 500 "$m2-c needexecute"
-            $this start_crop [expr $num_filters-1]
-        }
     }
     
     method add_Cmedian { which } {
@@ -3228,116 +2945,46 @@ class BioImageApp {
  	 }
      }
 
-    method check_crop {} {
-	if {$turn_off_crop == 1} {
-	    $this stop_crop
-	}
-    }
-
-    method start_crop {which} {
-        global mods
-
-        if {!$loading && [lindex $filters($which) $filter_type] == "crop"} {
-	    if {$turn_off_crop == 0} {
-	       global $mods(ViewSlices)-crop_minPadAxis0 $mods(ViewSlices)-crop_maxPadAxis0
-            global $mods(ViewSlices)-crop_minPadAxis1 $mods(ViewSlices)-crop_maxPadAxis1
-	    global $mods(ViewSlices)-crop_minPadAxis2 $mods(ViewSlices)-crop_maxPadAxis2
-
-            # turn on Cropping widgets in ViewSlices windows
-	    # corresponding with padding values from filter $which
-            set pad_vals [lindex $filters($which) 12]
-            set $mods(ViewSlices)-crop_minPadAxis0 [lindex $pad_vals 0]
-	    set $mods(ViewSlices)-crop_maxPadAxis0 [lindex $pad_vals 1]
-	    set $mods(ViewSlices)-crop_minPadAxis1 [lindex $pad_vals 2]
-	    set $mods(ViewSlices)-crop_maxPadAxis1 [lindex $pad_vals 3]
-	    set $mods(ViewSlices)-crop_minPadAxis2 [lindex $pad_vals 4]
-	    set $mods(ViewSlices)-crop_maxPadAxis2 [lindex $pad_vals 5]
-
-            # if crop values are all 0, this is the first time using the crop
-            # and the values should be set to bounding box
-            set first_time 0
-   	    set UnuCrop [lindex [lindex $filters($which) $modules] 0]
-	    global $UnuCrop-minAxis0 $UnuCrop-maxAxis0
-	    global $UnuCrop-minAxis1 $UnuCrop-maxAxis1
-	    global $UnuCrop-minAxis2 $UnuCrop-maxAxis2
-
-            if {[set $UnuCrop-minAxis0] == 0 && [set $UnuCrop-maxAxis0] == 0 &&
-                [set $UnuCrop-minAxis1] == 0 && [set $UnuCrop-maxAxis1] == 0 &&
-                [set $UnuCrop-minAxis2] == 0 && [set $UnuCrop-maxAxis2] == 0} {
-                set first_time 1
-            }
-
-            if {$first_time == 0} {
-		set enter_crop 1
-            }
-                
-
-            # should set ViewSlices crop vals if they have been set
-            if {$needs_update == 1 && !$first_time} {
-                set updating_crop_ui 1
-		update
-
-		global $mods(ViewSlices)-crop_minAxis0 $mods(ViewSlices)-crop_maxAxis0
-		global $mods(ViewSlices)-crop_minAxis1 $mods(ViewSlices)-crop_maxAxis1
-		global $mods(ViewSlices)-crop_minAxis2 $mods(ViewSlices)-crop_maxAxis2
-
-                $mods(ViewSlices)-c startcrop 1
-		set $mods(ViewSlices)-crop_minAxis0 [set $UnuCrop-minAxis0]
-		set $mods(ViewSlices)-crop_minAxis1 [set $UnuCrop-minAxis1]
-		set $mods(ViewSlices)-crop_minAxis2 [set $UnuCrop-minAxis2]
-		set $mods(ViewSlices)-crop_maxAxis0 [set $UnuCrop-maxAxis0]
-		set $mods(ViewSlices)-crop_maxAxis1 [set $UnuCrop-maxAxis1]
-		set $mods(ViewSlices)-crop_maxAxis2 [set $UnuCrop-maxAxis2]
-                $mods(ViewSlices)-c updatecrop
-            } else {
-                $mods(ViewSlices)-c startcrop
-            }
-            set enter_crop 0
-	    set turn_off_crop 1
-	    set updating_crop_ui 0
-	    set current_crop $which
-}
-        } else {
-	    tk_messageBox -message "No crop widget specified" -type ok -icon info -parent .standalone
+    method update_crop_roi { which } {
+	if {$which >= $num_filters || \
+		[lindex $filters($which) $filter_type] != "crop"} {
+	    stop_crop
 	    return
-        }
-
-    }
-
-    method update_crop_widget {which type i} {
-	global mods
-
-	# get values from UnuCrop, then
-	# set ViewSlices crop values
- 	set UnuCrop [lindex [lindex $filters($which) $modules] 0]
-        set updating_crop_ui 1
-        if {$type == "min"} {
-    	    global $UnuCrop-minAxis$i $mods(ViewSlices)-crop_minAxis$i
-            set min [set $UnuCrop-minAxis$i]
-            set $mods(ViewSlices)-crop_minAxisi$ $min           
-        } else {
-    	    global $UnuCrop-maxAxis$i $mods(ViewSlices)-crop_maxAxis$i
-            set max [set $UnuCrop-maxAxis$i]
-            set $mods(ViewSlices)-crop_maxAxisi$ $max 
-        }
-        set updating_crop_ui 0
-
-	# if crop on, update it
-        $this update_crop $which
-    }
-
-    method update_crop {which} {
-	if {$turn_off_crop == 1} {
-	    set updating_crop_ui 1
-	    $this stop_crop
-	    after 300 "$this start_crop $which"
+	}
+	set UnuCrop [lindex [lindex $filters($which) $modules] 0]
+	upvar \#0 $UnuCrop-show_roi show
+	if {$show} {
+	    start_crop $which
+	} else {
+	    stop_crop
 	}
     }
 
-    method stop_crop {} {
+    method stop_crop { } {
         global mods
-        $mods(ViewSlices)-c stopcrop
-        set turn_off_crop 0
+	set ViewSlices $mods(ViewSlices)
+	$ViewSlices-c stopcrop
+	set current_crop -1
+    }
+    
+    method start_crop { which args } {
+        global mods eye
+	if { $loading || [expr $eye+1] != $which || \
+		 [lindex $filters($which) $filter_type] != "crop"} return
+
+
+	set ViewSlices $mods(ViewSlices)
+	set current_crop $which
+	set UnuCrop [lindex [lindex $filters($which) $modules] 0]
+	set reset 0
+	foreach axis "minAxis0 minAxis1 minAxis2 maxAxis0 maxAxis1 maxAxis2" {
+	    upvar \#0 $UnuCrop-$axis cropval
+	    set $ViewSlices-crop_$axis $cropval
+	    if { $cropval == "M" } {
+		set reset 1		
+	    }
+	}
+	$ViewSlices-c startcrop $reset
     }
 
 
@@ -3375,7 +3022,8 @@ class BioImageApp {
  	    -command "$this filter_Delete $which" \
  	    -relief flat
 
-	Tooltip $w.expand.c "Click to delete this filter from\nthe pipeline. All settings\nfor this filter will be lost."
+	TooltipMultiline $w.expand.c "Click to delete this filter from\n" \
+	    "the pipeline. All settings\nfor this filter will be lost."
 
 	pack $w.expand.b $w.expand.l $w.expand.c -side left -anchor nw
 
@@ -3390,11 +3038,10 @@ class BioImageApp {
 	    if {!$loading_ui} {
                set $UnuResample-resampAxis$i "x1"
             }
-            trace variable $UnuResample-resampAxis$i w "$this enable_update $which"
+            trace variable $UnuResample-resampAxis$i w \
+		"$this enable_update $which"
 	    make_entry $w.ui.$i "Axis $i:" $UnuResample-resampAxis$i $which
 	    pack $w.ui.$i -side top -anchor nw -expand yes -fill x
-
-            bind $w.ui.$i <ButtonPress-1> "$this check_crop"
 	}
 
         # configure labels
@@ -3402,13 +3049,11 @@ class BioImageApp {
         $w.ui.1.l configure -text "Coronal" -width 10
         $w.ui.2.l configure -text "Axial" -width 10
 
-        global $UnuResample-sigma $UnuResample-extent
-        global $UnuResample-filtertype
         if {!$loading} {
-	    set $UnuResample-filtertype cubicBS
+	    setGlobal $UnuResample-filtertype cubicBS
         }
-        set $UnuResample-sigma 2
-        set $UnuResample-extent 2
+        setGlobal $UnuResample-sigma 2
+        setGlobal $UnuResample-extent 2
 
  	iwidgets::optionmenu $w.ui.kernel -labeltext "Filter Type:" \
  	    -labelpos w \
@@ -3429,11 +3074,8 @@ class BioImageApp {
 	frame $history.$which
 	grid config $history.$which -column 0 -row $row -sticky "nw" -pady 0
 
-
-	iwidgets::labeledframe $history.$which.f$which \
-	    -labeltext "Crop" \
-	    -labelpos nw \
-	    -borderwidth 2 
+	iwidgets::labeledframe $history.$which.f$which -labeltext Crop \
+	    -labelpos nw  -borderwidth 2 
 	grid config $history.$which.f$which -column 1 -row 0 -sticky "nw"
 
 	set w [$history.$which.f$which childsite]
@@ -3441,126 +3083,110 @@ class BioImageApp {
 	frame $w.expand
 	pack $w.expand -side top -anchor nw
 
+
 	global expandimg close_img
-	button $w.expand.b -image $expandimg \
-	    -anchor nw \
-	    -command "$this change_visibility $which" \
-	    -relief flat
+	# Expand/Hide button
+	button $w.expand.b -image $expandimg -anchor nw -relief flat \
+	    -command "$this change_visibility $which"
 	Tooltip $w.expand.b "Click to minimize/show\nthe Crop UI"
-	label $w.expand.l -text "Crop - Unknown" -width $label_width \
-	    -anchor nw
+	# Filter Label
+	set title [lindex $filters($which) $filter_label]
+	label $w.expand.l -text $title -width $label_width  -anchor nw
 	Tooltip $w.expand.l "Right click to edit label"
-
-
- 	button $w.expand.c -image $close_img \
- 	    -anchor nw \
- 	    -command "$this filter_Delete $which" \
- 	    -relief flat
-
-	Tooltip $w.expand.c "Click to delete this filter from\nthe pipeline. All settings\nfor the filter will be lost."
-
+	bind $w.expand.l <ButtonPress-3> "$this change_label %X %Y $which"
+	# Delete filter button
+ 	button $w.expand.c -image $close_img -anchor nw -relief flat \
+ 	    -command "$this filter_Delete $which"
+	TooltipMultiline $w.expand.c "Click to delete this filter from\n" \
+	    "the pipeline. All settings\nfor the filter will be lost."
 	pack $w.expand.b $w.expand.l $w.expand.c -side left -anchor nw 
 
-	bind $w.expand.l <ButtonPress-3> "$this change_label %X %Y $which"
-	
 	frame $w.ui
 	pack $w.ui -side top -anchor nw -expand yes -fill x
 	
 	set UnuCrop [lindex [lindex $filters($which) $modules] 0]
-	global $UnuCrop-num-axes
-	set $UnuCrop-num-axes $dimension        
+	setGlobal $UnuCrop-num-axes $dimension        
+        setGlobal $UnuCrop-reset_data 0
+        setGlobal $UnuCrop-digits_only 1
+	setGlobal $UnuCrop-show_roi 1
 
-        global $UnuCrop-reset_data
-        set $UnuCrop-reset_data 0
-        global $UnuCrop-digits_only
-        set $UnuCrop-digits_only 1
+	checkbutton $w.ui.roi -text "Show 2D Crop Region" -anchor w \
+	    -variable $UnuCrop-show_roi -command "$this update_crop_roi $which"
+	pack $w.ui.roi -side top -fill x -anchor w -pady 2 -expand 1 
 
 	for {set i 0} {$i < $dimension} {incr i} {
-	    global $UnuCrop-minAxis$i
-	    global $UnuCrop-maxAxis$i
-            if {!$loading_ui} {
-	        set $UnuCrop-minAxis$i 0
-	    }
-	    
-            trace variable $UnuCrop-minAxis$i w "$this enable_update $which"
-            trace variable $UnuCrop-maxAxis$i w "$this enable_update $which"
+	    upvar \#0 $UnuCrop-minAxis$i min $UnuCrop-maxAxis$i max
 
-	    frame $w.ui.$i
-	    pack $w.ui.$i -side top -anchor nw -expand yes -fill x
+            trace variable min w "$this ui_crop_trace"
+            trace variable max w "$this ui_crop_trace"
 
-	    label $w.ui.$i.minl -text "Min Axis $i:"
-	    entry $w.ui.$i.minv -textvariable $UnuCrop-minAxis$i \
-		-width 4
-	    label $w.ui.$i.maxl -text "Max Axis $i:"
-	    entry $w.ui.$i.maxv -textvariable $UnuCrop-maxAxis$i \
-		-width 4
+	    set f $w.ui.$i
+	    frame $f
+	    pack $f -side top -anchor nw -expand yes -fill x
 
-            bind $w.ui.$i.minv <ButtonPress-1> "$this start_crop $which"
-            bind $w.ui.$i.maxv <ButtonPress-1> "$this start_crop $which"
-            bind $w.ui.$i.minv <Return> "$this update_crop_widget $which min $i"
-            bind $w.ui.$i.maxv <Return> "$this update_crop_widget $which max $i"
+	    label $f.minl
+	    iwidgets::spinner $f.minv -textvariable $UnuCrop-minAxis$i \
+	        -increment "incr $UnuCrop-minAxis$i" \
+		-decrement "incr $UnuCrop-minAxis$i -1" -width 4
+	    label $f.maxl
+	    iwidgets::spinner $f.maxv -textvariable $UnuCrop-maxAxis$i \
+		-increment "incr $UnuCrop-maxAxis$i" \
+		-decrement "incr $UnuCrop-maxAxis$i -1" -width 4
 
-            grid configure $w.ui.$i.minl -row $i -column 0 -sticky "w"
-            grid configure $w.ui.$i.minv -row $i -column 1 -sticky "e"
-            grid configure $w.ui.$i.maxl -row $i -column 2 -sticky "w"
-            grid configure $w.ui.$i.maxv -row $i -column 3 -sticky "e"
+	    set r [expr $i+1]
+            grid configure $f.minl -row $r -column 0 -sticky "w" -padx 2
+            grid configure $f.minv -row $r -column 1 -sticky "e" -padx 2
+            grid configure $f.maxl -row $r -column 2 -sticky "w" -padx 2
+            grid configure $f.maxv -row $r -column 3 -sticky "e" -padx 2
 	}
 
         # Configure labels
-        $w.ui.0.minl configure -text "Right:" -width 10
-        $w.ui.0.maxl configure -text "Left:" -width 10
+        $w.ui.0.minl configure -text "Right:" -width 7 -anchor w
+        $w.ui.0.maxl configure -text "Left:" -width 7 -anchor w
 
-        $w.ui.1.minl configure -text "Posterior:" -width 10
-        $w.ui.1.maxl configure -text "Anterior:" -width 10
+        $w.ui.1.minl configure -text "Posterior:" -width 7 -anchor w
+        $w.ui.1.maxl configure -text "Anterior:" -width 7 -anchor w
 
-        $w.ui.2.minl configure -text "Inferior:" -width 10
-        $w.ui.2.maxl configure -text "Superior:" -width 10
+        $w.ui.2.minl configure -text "Inferior:" -width 7 -anchor w
+        $w.ui.2.maxl configure -text "Superior:" -width 7 -anchor w
 
 	return $history.$which
     }
 
+    method viewslices_crop_trace { varname args } {
+	global mods
 
-    method update_crop_values { varname varele varop } {
- 	    global mods 
+	if {$current_crop == -1} return
+	if {[lindex $filters($current_crop) $filter_type] != "crop"} return
+	
+	set UnuCrop [lindex [lindex $filters($current_crop) $modules] 0]
+	set axis [lindex [split $varname _] end]
+	upvar \#0 $varname val
+	# disables trace to not call crop_ui_trace
+	set cache_crop $current_crop
+	set current_crop -1
+#	puts "setGlobal $UnuCrop-$axis $val"
+	setGlobal $UnuCrop-$axis $val
+	set current_crop $cache_crop
+	enable_update $current_crop
+    }
 
-	if {$current_crop != -1 && $updating_crop_ui == 0 && $enter_crop == 0} {
- 	    # verify that a crop is selected
- 	    if {[lindex $filters($current_crop) $filter_type] != "crop"} {
-                 return
-            }
-             # determine which crop to update
-             set UnuCrop [lindex [lindex $filters($current_crop) $modules] 0]
-          
-             # get list of pad values
-             set pad_vals [lindex $filters($current_crop) 12]
-
-             # update the correct UnuCrop variable
-             if {[string first "crop_minAxis0" $varname] != -1} {
-		 global $UnuCrop-minAxis0
-                 global $mods(ViewSlices)-crop_minAxis0
-                 set $UnuCrop-minAxis0 [expr [set $mods(ViewSlices)-crop_minAxis0] + [lindex $pad_vals 0]]
-             } elseif {[string first "crop_maxAxis0" $varname] != -1} {
-		 global $UnuCrop-maxAxis0
-                 global $mods(ViewSlices)-crop_maxAxis0
-                 set $UnuCrop-maxAxis0 [set $mods(ViewSlices)-crop_maxAxis0] 
-             } elseif {[string first "crop_minAxis1" $varname] != -1} {
-		 global $UnuCrop-minAxis1
-                 global $mods(ViewSlices)-crop_minAxis1
-                 set $UnuCrop-minAxis1 [expr [set $mods(ViewSlices)-crop_minAxis1] + [lindex $pad_vals 2]]
- 	    } elseif {[string first "crop_maxAxis1" $varname] != -1} {
- 	        global $UnuCrop-maxAxis1
-		global $mods(ViewSlices)-crop_maxAxis1
-                 set $UnuCrop-maxAxis1 [set $mods(ViewSlices)-crop_maxAxis1]
-             } elseif {[string first "crop_minAxis2" $varname] != -1} {
-		 global $UnuCrop-minAxis2
-                 global $mods(ViewSlices)-crop_minAxis2
-                 set $UnuCrop-minAxis2 [expr [set $mods(ViewSlices)-crop_minAxis2] + [lindex $pad_vals 4]]
- 	    } elseif {[string first "crop_maxAxis2" $varname] != -1} {
- 	        global $UnuCrop-maxAxis2
-		global $mods(ViewSlices)-crop_maxAxis2
-                set $UnuCrop-maxAxis2 [set $mods(ViewSlices)-crop_maxAxis2]
-             }
-         }
+    method ui_crop_trace { varname args } {
+	if {$current_crop == -1} return
+	if {[lindex $filters($current_crop) $filter_type] != "crop"} return
+	
+	set UnuCrop [lindex [lindex $filters($current_crop) $modules] 0]
+	set axis [lindex [split $varname -] end]
+	global mods
+	upvar \#0 $varname val
+	# This aint tobacco were dealin with here, folks.
+	set cache_crop $current_crop
+	set current_crop -1
+#	puts "setGlobal $mods(ViewSlices)-crop_$axis $val"
+	setGlobal $mods(ViewSlices)-crop_$axis $val
+	$mods(ViewSlices)-c updatecrop
+	set current_crop $cache_crop
+	enable_update $current_crop
     }
 
 
@@ -3612,8 +3238,6 @@ class BioImageApp {
 	label $w.ui.radius.l -text "Radius:"
 	entry $w.ui.radius.v -textvariable $UnuCmedian-radius \
 	    -width 6
-
-        bind $w.ui.radius.v <ButtonPress-1> "$this check_crop"
 
 	pack $w.ui.radius.l $w.ui.radius.v -side left -anchor nw \
 	    -expand yes -fill x
@@ -3699,8 +3323,6 @@ class BioImageApp {
 	    -resolution 0.01
 	pack $w.ui.amount -side top -anchor nw -expand yes -fill x
 
-        bind $w.ui.amount <ButtonPress-1> "$this check_crop"
-
         global $UnuQuantize-minf $UnuQuantize-maxf
         global $UnuQuantize-useinputmin $UnuQuantize-useinputmax
         trace variable $UnuQuantize-minf w $updatecmd
@@ -3714,14 +3336,11 @@ class BioImageApp {
         iwidgets::entryfield $w.ui.min.v -labeltext "Min:" \
 	    -textvariable $UnuQuantize-minf
         pack $w.ui.min.v -side top -expand yes -fill x
-        bind $w.ui.min.v <ButtonPress-1> "$this check_crop"
 
         checkbutton $w.ui.min.useinputmin \
 	    -text "Use lowest value of input nrrd as min" \
 	    -variable $UnuQuantize-useinputmin
         pack $w.ui.min.useinputmin -side top -expand yes -fill x
-        bind $w.ui.min.useinputmin <ButtonPress-1> "$this check_crop"
-
 
 	frame $w.ui.max -relief groove -borderwidth 2
 	pack $w.ui.max -side top -expand yes -fill x
@@ -3729,13 +3348,11 @@ class BioImageApp {
         iwidgets::entryfield $w.ui.max.v -labeltext "Max:" \
 	    -textvariable $UnuQuantize-maxf
         pack $w.ui.max.v -side top -expand yes -fill x
-        bind $w.ui.max.v <ButtonPress-1> "$this check_crop"
 
         checkbutton $w.ui.max.useinputmax \
 	    -text "Use highest value of input nrrd as max" \
 	    -variable $UnuQuantize-useinputmax
         pack $w.ui.max.useinputmax -side top -expand yes -fill x
-        bind $w.ui.max.useinputmax <ButtonPress-1> "$this check_crop"
 	
 	return $history.$which
     }
@@ -3954,15 +3571,12 @@ class BioImageApp {
 	set ChooseNrrd [lindex [lindex $filters(0) $modules] $load_choose_vis] 
 	setGlobal $ChooseNrrd-port-index [lindex $filters($eye) $choose_port]
 	if { $execute } {
-	    disable_update
 	    $ChooseNrrd-c needexecute
 	}
+	update_crop_roi [expr $eye+1]
     }
 
     method change_label {x y which} {
-
-        $this check_crop
-
 	if {![winfo exists .standalone.change_label]} {
 	    # bring up ui to type name
 	    global new_label
@@ -4011,33 +3625,26 @@ class BioImageApp {
     }
 
     method change_visibility {num} {
+	# v represents the new visibilty state
+	set v [expr ![lindex $filters($num) $visibility]]
+	# set the new visibility state in the filter
+	set filters($num) [lreplace $filters($num) $visibility $visibility $v]
 
-        $this check_crop
-
-	set visible [lindex $filters($num) $visibility]
 	global expandimg play_img
-	if {$visible == 1} {
-	    # hide
-
-	    $history0.$num.f$num.childsite.expand.b configure -image $play_img
-	    $history1.$num.f$num.childsite.expand.b configure -image $play_img
-	    
-	    pack forget $history0.$num.f$num.childsite.ui 
-	    pack forget $history1.$num.f$num.childsite.ui 
-
-	    set filters($num) [lreplace $filters($num) $visibility $visibility 0]
-	} else {
-	    # show
-
-	    $history0.$num.f$num.childsite.expand.b configure -image $expandimg
-	    $history1.$num.f$num.childsite.expand.b configure -image $expandimg
-
-	    pack $history0.$num.f$num.childsite.ui -side top -expand yes -fill both
-	    pack $history1.$num.f$num.childsite.ui -side top -expand yes -fill both
-
-	    set filters($num) [lreplace $filters($num) $visibility $visibility 1]
+	set subf $num.f$num.childsite
+	if {!$v} { ;# hide
+	    $history0.$subf.expand.b configure -image $play_img
+	    $history1.$subf.expand.b configure -image $play_img
+	    pack forget $history0.$subf.ui 
+	    pack forget $history1.$subf.ui 
+	    set filters($num) \
+		[lreplace $filters($num) $visibility $visibility 0]
+	} else { ;# show
+	    $history0.$subf.expand.b configure -image $expandimg
+	    $history1.$subf.expand.b configure -image $expandimg
+	    pack $history0.$subf.ui -side top -expand yes -fill both
+	    pack $history1.$subf.ui -side top -expand yes -fill both
 	}
-	
     }
 
 
@@ -4047,10 +3654,8 @@ class BioImageApp {
     # Update the resampling kernel variable and
     # update the other attached/detached optionmenu
     method change_kernel { w which } {
-#        $this check_crop
 	set UnuResample [lindex [lindex $filters($which) $modules] 0]
 	set num [$w get]
-
 	if {$num == "Box"} {
 	    setGlobal $UnuResample-filtertype box
 	} elseif {$num == "Tent"} {
@@ -4068,8 +3673,8 @@ class BioImageApp {
         $this enable_update $which
 
 	# update attach/detach one
-        $history0.$which.f$which.childsite.ui.kernel select $which
-	$history1.$which.f$which.childsite.ui.kernel select $which
+        $history0.$which.f$which.childsite.ui.kernel select $num
+	$history1.$which.f$which.childsite.ui.kernel select $num
 
     }
 
@@ -4520,7 +4125,6 @@ class BioImageApp {
     }	
 
     method toggle_show_guidelines {} {
-	$this check_crop
 	global mods show_guidelines
 	foreach axis {axial sagittal coronal} {
 	    setGlobal $mods(ViewSlices)-$axis-viewport0-show_guidelines \
@@ -4529,8 +4133,6 @@ class BioImageApp {
     }
 
     method update_planes_color_by {} {
-        $this check_crop
-
         global planes_mapType
         set GenStandard [lindex [lindex $filters(0) $modules] 26]
 	setGlobal $GenStandard-mapType $planes_mapType
@@ -4540,7 +4142,6 @@ class BioImageApp {
     }
 
     method toggle_show_vol_ren {} {
-        $this check_crop
 	global mods show_vol_ren 
 
 	set VolumeVisualizer [lindex [lindex $filters(0) $modules] 14]
@@ -4775,10 +4376,7 @@ class BioImageApp {
     variable ViewSlices_executed_on_error
     variable last_filter_changed
     variable current_crop
-    variable turn_off_crop
-    variable updating_crop_ui
     variable needs_update
-    variable enter_crop
 
     variable cur_data_tab
     variable c_vis_tab
