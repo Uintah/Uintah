@@ -902,7 +902,7 @@ proc drawConnections { connlist } {
 # Deletes red connections on canvas and turns port lights black
 proc deleteTraces {} {
     global Subnet Color TracedSubnets TracedConnections
-    set backup $TracedConnections
+    setIfExists backup TracedConnections ""
     set TracedConnections ""
     drawConnections $backup
     unselectAll
