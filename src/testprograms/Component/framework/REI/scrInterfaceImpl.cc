@@ -3,6 +3,7 @@
 
 #include <sstream>
 #include <iostream>
+using namespace std;
 
 namespace sci_cca {
 
