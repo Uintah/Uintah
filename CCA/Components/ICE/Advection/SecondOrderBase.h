@@ -6,6 +6,7 @@
 #include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Packages/Uintah/Core/Grid/CCVariable.h>
 
+#define d_SMALL_NUM 1e-100
 namespace Uintah {
 
 class SecondOrderBase {
@@ -20,7 +21,6 @@ public:
                                          const CCVariable<T>& q_grad_x,
                                          const CCVariable<T>& q_grad_y,
                                          const CCVariable<T>& q_grad_z,
-                                         T unit, T SN,
                                          DataWarehouse* new_dw);
                       
   template<class T> void q_CCMaxMin(const CCVariable<T>& q_CC,
@@ -63,12 +63,13 @@ SecondOrderBase::gradientLimiter(const CCVariable<T>& q_CC,
 				 const CCVariable<T>& q_grad_x,
 				 const CCVariable<T>& q_grad_y,
 				 const CCVariable<T>& q_grad_z,
-				 T unit, T SN,
                              DataWarehouse* new_dw)
 {
   T  frac,temp, zero(0.);
   T  grad_lim_max, grad_lim_min;
-
+  T unit = T(1.0);
+  T SN = T(d_SMALL_NUM);
+  
   CCVariable<T> q_vrtx_max;
   CCVariable<T> q_vrtx_min;
   CCVariable<T> q_CC_max;
@@ -104,7 +105,7 @@ SecondOrderBase::gradientLimiter(const CCVariable<T>& q_CC,
     
     temp = Min(unit, grad_lim_max);
     temp = Min(temp, grad_lim_min);
-    grad_lim[c] = temp;
+    grad_lim[c] = temp; 
   }
 }
 /* ---------------------------------------------------------------------
