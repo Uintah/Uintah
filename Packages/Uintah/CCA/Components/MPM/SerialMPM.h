@@ -68,6 +68,24 @@ public:
 	 
   void schedulePrintParticleCount(const LevelP& level, 
                                   SchedulerP& sched);
+
+  // AMR tasks
+  virtual void scheduleRefine(const LevelP& fineLevel, 
+                              SchedulerP& scheduler);
+  virtual void scheduleRefineInterface(const LevelP& fineLevel, 
+                                       SchedulerP& scheduler,
+                                       int step, int nsteps);
+  virtual void scheduleCoarsen(const LevelP& coarseLevel, 
+                               SchedulerP& scheduler);
+  
+  /// Schedule to mark flags for AMR regridding
+  virtual void scheduleErrorEstimate(const LevelP& coarseLevel,
+                                     SchedulerP& sched);
+  
+  /// Schedule to mark initial flags for AMR regridding
+  virtual void scheduleInitialErrorEstimate(const LevelP& coarseLevel,
+                                            SchedulerP& sched);
+  
   //////////
   // Insert Documentation Here:
   virtual void scheduleComputeStableTimestep(const LevelP& level,
@@ -320,6 +338,12 @@ protected:
 				       DataWarehouse* old_dw,
 				       DataWarehouse* new_dw);
 
+
+  void errorEstimate(const ProcessorGroup*,
+                     const PatchSubset* patches,
+                     const MaterialSubset* matls,
+                     DataWarehouse*,
+                     DataWarehouse* new_dw);
 
   virtual void scheduleInterpolateParticlesToGrid(SchedulerP&, const PatchSet*,
                                                   const MaterialSet*);
