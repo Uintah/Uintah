@@ -1,4 +1,3 @@
-
 /*
  *  GeomOpenGL.cc: Rendering for OpenGL windows
  *
@@ -2065,51 +2064,80 @@ void GeomPolylineTC::draw(DrawInfoOpenGL* di, Material* matl, double currenttime
 void GeomPts::draw(DrawInfoOpenGL* di, Material* matl, double)
 {
 
-//    if (have_normal) 
-//	pre_draw(di, matl, 1);
-//    else 
-	pre_draw(di, matl, 0);
-    di->polycount+=pts.size()/3;
-//    glPushAttrib(GL_POINT_BIT);
-    glHint(GL_POINT_SMOOTH_HINT, GL_NICEST);
-    glPointSize(di->point_size);
+  if (have_normal) 
+    pre_draw(di, matl, 1);
+  else 
+    pre_draw(di, matl, 0);
 
-    if (di->pickmode) {
-	if (pickable) {
-	    glPushName(0);
-	    float* p=&pts[0];
-	    for (int i=0; i<pts.size(); i+=3) {
-		glLoadName(i/3);
-		glBegin(GL_POINTS);
-		glVertex3fv(p);
-		glEnd();
-		p+=3;
-	    }
-	    glPopName();
-	}
-	return;
+  di->polycount+=pts.size()/3;
+  //  glPushAttrib(GL_POINT_BIT);
+  glHint(GL_POINT_SMOOTH_HINT, GL_NICEST);
+  glPointSize(di->point_size);
+  
+  if (di->pickmode) {
+    if (pickable) {
+      glPushName(0);
+      float* p=&pts[0];
+      for (int i=0; i<pts.size(); i+=3) {
+	glLoadName(i/3);
+	glBegin(GL_POINTS);
+	glVertex3fv(p);
+	glEnd();
+	p+=3;
+      }
+      glPopName();
     }
+    return;
+  }
+  
+#ifdef SCI_NORM_OGL
+	glEnable(GL_NORMALIZE);
+#else
+	glDisable(GL_NORMALIZE);
+#endif
 
-    glBegin(GL_POINTS);
-    float* p=&pts[0];
-//    if (have_normal)
-//	glNormal3d(n.x(), n.y(), n.z());
+  glBegin(GL_POINTS);
+  float* p=&pts[0];
+
+  if ( have_normal ) {
+    float* n=&normals[0];
     if(colors.size() > 0){
-	float* c=&colors[0];
-	for (int i=0; i<pts.size(); i+=3) {
-	    glColor3fv(c);
-	    glVertex3fv(p);
-	    p+=3;
-	    c+=3;
-	}
+      float* c=&colors[0];
+      for (int i=0; i<pts.size(); i+=3) {
+	glColor3fv(c);
+	glNormal3fv(n);
+	glVertex3fv(p);
+	p+=3;
+	c+=3;
+	n+=3;
+      }
     } else {
-	for (int i=0; i<pts.size(); i+=3) {
-	    glVertex3fv(p);
-	    p+=3;
-	}
+      for (int i=0; i<pts.size(); i+=3) {
+	glNormal3fv(n);
+	glVertex3fv(p);
+	p+=3;
+	n+=3;
+      }
     }
-    glEnd();
-//    glPopAttrib();
+  }
+  else { // no normals
+    if(colors.size() > 0){
+      float* c=&colors[0];
+      for (int i=0; i<pts.size(); i+=3) {
+	glColor3fv(c);
+	glVertex3fv(p);
+	p+=3;
+	c+=3;
+      }
+    } else {
+      for (int i=0; i<pts.size(); i+=3) {
+	glVertex3fv(p);
+	p+=3;
+      }
+    }
+  }
+  glEnd();
+  //glPopAttrib();
 }
 
 void GeomTexSlices::draw(DrawInfoOpenGL* di, Material* matl, double) {
@@ -4059,6 +4087,9 @@ void GeomSticky::draw(DrawInfoOpenGL* di, Material* matl, double t) {
 
 //
 // $Log$
+// Revision 1.10  1999/10/06 23:22:58  yarden
+// GeomPts: add support for normals
+//
 // Revision 1.9  1999/09/23 01:09:41  moulding
 // removed the Cheesy hacks (VC++ doesn't need them anymore - I think)
 // and added a #ifdef for win32 for the call to gluQuadricCallback()
