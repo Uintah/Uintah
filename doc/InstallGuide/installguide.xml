@@ -1,5 +1,15 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<!DOCTYPE book SYSTEM "../docbook/docbookx.dtd">
+<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.1//EN" 
+"../docbookx.dtd" 
+[
+<!ENTITY chapter1 SYSTEM "chapter1.xml">
+<!ENTITY chapter2 SYSTEM "chapter2.xml">
+<!ENTITY chapter3 SYSTEM "chapter3.xml">
+<!ENTITY requirements SYSTEM "requirements.xml">
+<!ENTITY recommendations SYSTEM "recommendations.xml">
+]>
+
+
 <?xml-stylesheet href="../docbook.xsl" type="text/xsl"?>
 <?cocoon-process type="xslt"?>
 
@@ -20,14 +30,11 @@
   University of Utah. All Rights Reserved.
 -->
 
-<!ENTITY chapter1 SYSTEM "chapter1.xml">
-<!ENTITY chapter2 SYSTEM "chapter2.xml">
-<!ENTITY chapter3 SYSTEM "chapter3.xml">
-
 <book>
 
   <bookinfo>
     <title>SCIRun Installation Guide</title>
+    <subtitle>(UNIX version - Updated June 22, 2001)</subtitle>
     <authorgroup>
       <author>
         <firstname>Chris</firstname>
@@ -47,13 +54,16 @@
   <preface>
     <para>
       The <citetitle>SCIRun Installation Guide</citetitle> contains
-      instructions and information for installing and building SCIRun and the
-      thirdparty libraries that it requires.
+      instructions and information for installing and building SCIRun,
+      it's packages and the thirdparty libraries that it requires.
+      See the technical FAQ for information on troubleshooting these
+      processes.
     </para>
   </preface>
 
   &chapter1;
+<!--
   &chapter2;
   &chapter3;
-
+-->
 </book>

@@ -1,7 +1,3 @@
-<?xml version="1.0" encoding="UTF-8" ?>
-<!DOCTYPE chapter SYSTEM "../docbook/docbookx.dtd">
-<?xml-stylesheet href="../docbook.xsl" type="text/xsl"?>
-<?cocoon-process type="xslt"?>
 
 <!--
   The contents of this file are subject to the University of Utah Public
@@ -20,17 +16,14 @@
   University of Utah. All Rights Reserved.
 -->
 
-<!ENTITY requirements SYSTEM "requirements.xml">
-<!ENTITY recommendations SYSTEM "recommendations.xml">
 
 <chapter>
   <title>Quick Start SCIRun Installation</title>
-  <subtitle>(UNIX version - Updated June 22, 2001)</subtitle>
 
   <sect1>
     <para>
-      This document is a quick installation checklist.  See the next chapter 
-      <ulink url="installguide.xml?chapter=2"><citetitle>SCIRun Installation
+      This chapter is a quick installation checklist.  See the next chapter 
+      <ulink url="installguide.xml?cont=2&amp;dir=2"><citetitle>SCIRun Installation
       and Build Instructions</citetitle></ulink> for more details.
     </para>
   </sect1>
@@ -43,20 +36,20 @@
     </para>
 
     <para>
-      Refer to the chapter <ulink url="installguide.xml?chapter=3">
+      Refer to the chapter <ulink url="installguide.xml?cont=3&amp;dir=2">
       <citetitle>Third Party Software Installation and Build Information
-      </citetitle> for information on installing the required software
+      </citetitle></ulink> for information on installing the required software
       listed below.
     </para>
 
     &requirements;
 
-  </sect1>
-
-  <sect1>
+  <sect2>
     <title>Minimum System Recommendations</title>
 
     &recommendations;
+
+  </sect2>
 
   </sect1>
 
@@ -89,10 +82,10 @@
         </listitem>
         <listitem>
           Run configure from a directory of your choosing.  The chosen
-          directory will be referred to as BUILD_DIR from now on.
+          directory will be referred to as <term>BUILD_DIR</term> from now on.
         </listitem>
         <listitem>
-          Run GNU make in the BUILD_DIR directory.
+          Run GNU make in the <term>BUILD_DIR</term> directory.
         </listitem>
       </orderedlist>
     </para>
