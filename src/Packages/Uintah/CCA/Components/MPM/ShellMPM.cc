@@ -20,6 +20,7 @@
 #include <Core/Geometry/Vector.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Util/DebugStream.h>
+#include <Core/Thread/Mutex.h>
 
 #include <sgi_stl_warnings_off.h>
 #include <iostream>
