@@ -65,7 +65,7 @@ Filter::problemSetup(const ProblemSpecP& params)
   int argc = 4;
   char** argv;
   argv = new char*[argc];
-  argv[0] = "PetscSolver::problemSetup";
+  argv[0] = "Filter::problemSetup";
   //argv[1] = "-on_error_attach_debugger";
   argv[1] = "-no_signal_handler";
   argv[2] = "-log_exclude_actions";
@@ -309,6 +309,7 @@ Filter::setFilterMatrix(const ProcessorGroup* ,
      
      Array3<int> l2g(lowIndex, highIndex);
      l2g.copy(d_petscLocalToGlobal[patch]);
+     int flowID = d_boundaryCondition->getFlowId();
      for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
        for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
 	 for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
@@ -326,7 +327,7 @@ Filter::setFilterMatrix(const ProcessorGroup* ,
 		 col[count] = l2g[filterCell];  //ab
 #if 1
 		 // on the boundary
-		 if (cellType[currCell] != d_boundaryCondition->getFlowId())
+		 if (cellType[currCell] != flowID)
 		   if (filterCell == currCell) {
 		     totalVol = vol;
 		     value[count] = vol;
@@ -334,7 +335,7 @@ Filter::setFilterMatrix(const ProcessorGroup* ,
 		   else
 		     value[count] = 0;
 		 else if ((col[count] != -1234)&&
-		     (cellType[filterCell] == d_boundaryCondition->getFlowId())) {
+		     (cellType[filterCell] == flowID)) {
 		   totalVol += vol;
 		   value[count] = vol;
 		 }
