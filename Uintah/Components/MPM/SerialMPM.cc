@@ -128,7 +128,7 @@ void SerialMPM::scheduleInitialize(const LevelP& level,
       
       {
 	 Task* t = new Task("SerialMPM::initialize", region, dw, dw,
-			    this, SerialMPM::actuallyInitialize);
+			    this, &SerialMPM::actuallyInitialize);
 	 t->computes(dw, d_sharedState->get_delt_label());
 	 sched->addTask(t);
       }
@@ -162,7 +162,7 @@ void SerialMPM::scheduleTimeAdvance(double t, double dt,
 	  */
 	 Task* t = new Task("SerialMPM::interpolateParticlesToGrid",
 			    region, old_dw, new_dw,
-			    this, SerialMPM::interpolateParticlesToGrid);
+			    this,&SerialMPM::interpolateParticlesToGrid);
 	 t->requires(old_dw, pMassLabel, region, 0 );
 	 t->requires(old_dw, pVelocityLabel, region, 0 );
 	 t->requires(old_dw, pExternalForceLabel, region, 0 );
@@ -186,7 +186,7 @@ void SerialMPM::scheduleTimeAdvance(double t, double dt,
 
 	 Task* t = new Task("Contact::exMomInterpolated",
 			    region, old_dw, new_dw,
-			    d_contactModel, Contact::exMomInterpolated);
+			    d_contactModel, &Contact::exMomInterpolated);
 	 t->requires( new_dw, gMassLabel, region, 0 );
 	 t->requires( new_dw, gVelocityLabel, region, 0 );
 
@@ -209,7 +209,7 @@ void SerialMPM::scheduleTimeAdvance(double t, double dt,
 	  */
 	 Task* t = new Task("SerialMPM::computeStressTensor",
 			    region, old_dw, new_dw,
-			    this, SerialMPM::computeStressTensor);
+			    this, &SerialMPM::computeStressTensor);
 	 t->requires(new_dw, gVelocityLabel, region, 0);
 	 /*
 	   #warning
@@ -237,7 +237,7 @@ void SerialMPM::scheduleTimeAdvance(double t, double dt,
 	  */
 	 Task* t = new Task("SerialMPM::computeInternalForce",
 			    region, old_dw, new_dw,
-			    this, SerialMPM::computeInternalForce);
+			    this, &SerialMPM::computeInternalForce);
 	 t->requires( new_dw, pStressLabel, region, 0 );
 	 t->requires( old_dw, pVolumeLabel, region, 0 );
 
@@ -256,7 +256,7 @@ void SerialMPM::scheduleTimeAdvance(double t, double dt,
 	  */
 	 Task* t = new Task("SerialMPM::solveEquationsMotion",
 			    region, old_dw, new_dw,
-			    this, SerialMPM::solveEquationsMotion);
+			    this, &SerialMPM::solveEquationsMotion);
 	 t->requires( new_dw, gMassLabel, region, 0 );
 	 t->requires( new_dw, gInternalForceLabel, region, 0 );
 
@@ -275,7 +275,7 @@ void SerialMPM::scheduleTimeAdvance(double t, double dt,
 	  */
 	 Task* t = new Task("SerialMPM::integrateAcceleration",
 			    region, old_dw, new_dw,
-			    this, SerialMPM::integrateAcceleration);
+			    this, &SerialMPM::integrateAcceleration);
 	 t->requires(new_dw, gAccelerationLabel, region, 0 );
 	 t->requires(new_dw, gVelocityLabel, region, 0 );
 	 t->requires(old_dw, deltLabel );
@@ -323,7 +323,7 @@ void SerialMPM::scheduleTimeAdvance(double t, double dt,
 	  */
 	 Task* t = new Task("SerialMPM::interpolateToParticlesAndUpdate",
 			    region, old_dw, new_dw,
-			    this, SerialMPM::interpolateToParticlesAndUpdate);
+			    this, &SerialMPM::interpolateToParticlesAndUpdate);
 	 t->requires(new_dw, gAccelerationLabel, region, 0 );
 	 t->requires(new_dw, gVelocityStarLabel, region, 0 );
 
@@ -385,11 +385,11 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorContext*,
       NCVariable<double> gmass;
       NCVariable<Vector> gvelocity;
       NCVariable<Vector> externalforce;
-
+#if WONT_COMPILE_YET
       new_dw->allocate(gmass,         gMassLabel, vfindex, region, 0);
       new_dw->allocate(gvelocity,     gVelocityLabel, vfindex, region, 0);
       new_dw->allocate(externalforce, gExternalForceLabel, vfindex, region, 0);
-
+#endif
 #if WONT_COMPILE_YET
       ParticleSubset* pset = px.getParticleSubset(matlindex);
       ASSERT(pset == pmass.getParticleSubset(matlindex));
@@ -489,10 +489,10 @@ void SerialMPM::computeInternalForce(const ProcessorContext*,
       old_dw->get(px,      pXLabel, matlindex, region, 0);
       old_dw->get(pvol,    pVolumeLabel, matlindex, region, 0);
       old_dw->get(pstress, pStressLabel, matlindex, region, 0);
-
+#if WONT_COMPILE_YET
       new_dw->allocate(internalforce, gInternalForceLabel, vfindex, region, 0);
   
-#if WONT_COMPILE_YET
+
       ParticleSubset* pset = px.getParticleSubset(matlindex);
       ASSERT(pset == px.getParticleSubset(matlindex));
       ASSERT(pset == pvol.getParticleSubset(matlindex));
@@ -549,10 +549,11 @@ void SerialMPM::solveEquationsMotion(const ProcessorContext*,
 
       // Create variables for the results
       NCVariable<Vector> acceleration;
+#if WONT_COMPILE_YET
       new_dw->allocate(acceleration, gAccelerationLabel, vfindex, region, 0);
 
       // Do the computation of a = F/m for nodes where m!=0.0
-#if WONT_COMPILE_YET
+
       for(NodeIterator  iter  = region->begin();
 			iter != region->end(); iter++){
 	if(mass[*iter]>0.0){
@@ -594,22 +595,23 @@ void SerialMPM::integrateAcceleration(const ProcessorContext*,
       new_dw->get(velocity, gVelocityLabel, vfindex, region, 0);
 
       old_dw->get(delt, deltLabel);
-
+#if WONT_COMPILE_YET
       // Create variables for the results
       NCVariable<Vector> velocity_star;
       new_dw->allocate(velocity_star, gVelocityStarLabel, vfindex, region, 0);
 
       // Do the computation
 
-#if WONT_COMPILE_YET
+
       for(NodeIterator  iter  = region->begin();
 			iter != region->end(); iter++) {
 	velocity_star[*iter] = velocity[*iter] + acceleration[*iter] * delt;
       }
-#endif
+
 
       // Put the result in the datawarehouse
       new_dw->put( velocity_star, gVelocityStarLabel, vfindex, region );
+#endif
     }
   }
 }
@@ -718,6 +720,10 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorContext*,
 } // end namespace Uintah
 
 // $Log$
+// Revision 1.24  2000/04/21 17:46:52  jas
+// Inserted & for function pointers needed by Task constructor (required by
+// gcc).  Moved around WONT_COMPILE_YET to get around allocate.
+//
 // Revision 1.23  2000/04/20 23:20:26  dav
 // updates
 //
