@@ -90,7 +90,7 @@ ViscoScram::ViscoScram(ProblemSpecP& ps, MPMLabel* Mlb,
       ParticleVariable<StateData>::getTypeDescription());
   pRandLabel              = VarLabel::create("p.rand",
       ParticleVariable<double>::getTypeDescription() );
-  pStrainRateLabel        = VarLabel::create("p.strainRate",
+  pStrainRateLabel        = VarLabel::create("p.deformRate",
       ParticleVariable<Matrix3>::getTypeDescription() );
 
   pVolChangeHeatRateLabel_preReloc = VarLabel::create("p.volHeatRate+",
@@ -105,7 +105,7 @@ ViscoScram::ViscoScram(ProblemSpecP& ps, MPMLabel* Mlb,
       ParticleVariable<StateData>::getTypeDescription());
   pRandLabel_preReloc              = VarLabel::create("p.rand+",
       ParticleVariable<double>::getTypeDescription());
-  pStrainRateLabel_preReloc        = VarLabel::create("p.strainRate+",
+  pStrainRateLabel_preReloc        = VarLabel::create("p.deformRate+",
       ParticleVariable<Matrix3>::getTypeDescription());
 
   if(flag->d_8or27==8){
@@ -171,7 +171,7 @@ ViscoScram::ViscoScram(const ViscoScram* cm)
       ParticleVariable<StateData>::getTypeDescription());
   pRandLabel              = VarLabel::create("p.rand",
       ParticleVariable<double>::getTypeDescription() );
-  pStrainRateLabel        = VarLabel::create("p.strainRate",
+  pStrainRateLabel        = VarLabel::create("p.deformRate",
       ParticleVariable<Matrix3>::getTypeDescription() );
 
   pVolChangeHeatRateLabel_preReloc = VarLabel::create("p.volHeatRate+",
@@ -186,7 +186,7 @@ ViscoScram::ViscoScram(const ViscoScram* cm)
       ParticleVariable<StateData>::getTypeDescription());
   pRandLabel_preReloc              = VarLabel::create("p.rand+",
       ParticleVariable<double>::getTypeDescription() );
-  pStrainRateLabel_preReloc        = VarLabel::create("p.strainRate+",
+  pStrainRateLabel_preReloc        = VarLabel::create("p.deformRate+",
       ParticleVariable<Matrix3>::getTypeDescription());
 }
 
@@ -739,6 +739,8 @@ ViscoScram::computeStressTensor(const PatchSubset* patches,
       // Update crack radius
       crad += onesixth*(rk1c + rk4c) + onethird*(rk2c + rk3c);
       pCrackRadius_new[idx] = crad;
+      dbgSig << " Crack Radius = " << crad << endl;
+      ASSERT(crad > 0.0);
 
       // Compute the deformation gradient increment using the time_step
       // velocity gradient (F_n^np1 = dudx * dt + Identity)
@@ -840,6 +842,9 @@ ViscoScram::carryForward(const PatchSubset* patches,
     carryForwardSharedData(pset, old_dw, new_dw, matl);
 
     // Carry forward the data local to this constitutive model 
+    constParticleVariable<double>  pCrackRadius;
+    old_dw->get(pCrackRadius,    pCrackRadiusLabel,    pset);
+
     ParticleVariable<double>    pVolHeatRate_new, pVeHeatRate_new;
     ParticleVariable<double>    pCrHeatRate_new, pCrackRadius_new;
     ParticleVariable<Matrix3>   pStrainRate_new;
@@ -869,7 +874,7 @@ ViscoScram::carryForward(const PatchSubset* patches,
       pVolHeatRate_new[idx] = 0.0;
       pVeHeatRate_new[idx]  = 0.0;
       pCrHeatRate_new[idx]  = 0.0;
-      pCrackRadius_new[idx] = 0.0;
+      pCrackRadius_new[idx] = pCrackRadius[idx];
       pStrainRate_new[idx] = zero;
     }
     new_dw->put(delt_vartype(patch->getLevel()->adjustDelt(1.e10)), 
