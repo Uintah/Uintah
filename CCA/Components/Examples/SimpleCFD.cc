@@ -199,12 +199,13 @@ void SimpleCFD::problemSetup(const ProblemSpecP& params, GridP& grid,
   ics.problemSetup(cfd, regiondb);
 
   bcs.setupCondition<double>("density", IntVector(0,0,0));
-  if(do_thermal)
+  if(do_thermal) {
     bcs.setupCondition<double>("temperature", IntVector(0,0,0));
+  }
   bcs.setupCondition<double>("xvelocity", IntVector(1,0,0));
   bcs.setupCondition<double>("yvelocity", IntVector(0,1,0));
   bcs.setupCondition<double>("zvelocity", IntVector(0,0,1));
-  bcs.setupCondition<double>("pressure", IntVector(0,0,0));
+  bcs.setupCondition<double>("pressure",  IntVector(0,0,0));
   bcs.problemSetup(cfd, regiondb);
 
   SolverInterface* solver = dynamic_cast<SolverInterface*>(getPort("solver"));
@@ -212,9 +213,9 @@ void SimpleCFD::problemSetup(const ProblemSpecP& params, GridP& grid,
     throw InternalError("SimpleCFD needs a solver component to work");
 
   ProblemSpecP solverinfo = cfd->findBlock("Solver");
-  diffusion_params_ = solver->readParameters(solverinfo, "diffusion");
-  viscosity_params_ = solver->readParameters(solverinfo, "viscosity");
-  pressure_params_ = solver->readParameters(solverinfo, "pressure");
+  diffusion_params_  = solver->readParameters(solverinfo, "diffusion");
+  viscosity_params_  = solver->readParameters(solverinfo, "viscosity");
+  pressure_params_   = solver->readParameters(solverinfo, "pressure");
   conduction_params_ = solver->readParameters(solverinfo, "conduction");
 
   releasePort("solver");
@@ -385,7 +386,7 @@ SimpleCFD::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched,
   task->requires(Task::NewDW, lb_->xvelocity, Ghost::AroundCells, maxadvect_+1);
   task->requires(Task::NewDW, lb_->yvelocity, Ghost::AroundCells, maxadvect_+1);
   task->requires(Task::NewDW, lb_->zvelocity, Ghost::AroundCells, maxadvect_+1);
-  task->requires(Task::OldDW, lb_->density, Ghost::AroundCells, maxadvect_);
+  task->requires(Task::OldDW, lb_->density,   Ghost::AroundCells, maxadvect_);
   task->computes(lb_->density);
   if(level->getIndex()>0){        // REFINE
     addRefineDependencies(task, lb_->xvelocity, step+1, nsteps);
@@ -422,7 +423,7 @@ SimpleCFD::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched,
     task->requires(Task::OldDW, sharedState_->get_delt_label());
 #endif
     task->requires(Task::OldDW, lb_->bctype, Ghost::None, 0);
-    task->requires(Task::NewDW, lb_->density, Ghost::None, 0);
+    task->requires(Task::NewDW, lb_->density,Ghost::None, 0);
     task->modifies(lb_->density);
     sched->addTask(task, level->eachPatch(), sharedState_->allMaterials());
   }
@@ -570,10 +571,10 @@ void SimpleCFD::initialize(const ProcessorGroup*,
     for(int m = 0;m<matls->size();m++){
       int matl = matls->get(m);
       SFCXVariable<double> xvel;
-      new_dw->allocateAndPut(xvel, lb_->xvelocity, matl, patch);
       SFCYVariable<double> yvel;
-      new_dw->allocateAndPut(yvel, lb_->yvelocity, matl, patch);
       SFCZVariable<double> zvel;
+      new_dw->allocateAndPut(xvel, lb_->xvelocity, matl, patch);
+      new_dw->allocateAndPut(yvel, lb_->yvelocity, matl, patch);
       new_dw->allocateAndPut(zvel, lb_->zvelocity, matl, patch);
 
       ics.getCondition<double>("xvelocity")->apply(xvel, patch);
@@ -833,7 +834,8 @@ void SimpleCFD::advectVelocity(const ProcessorGroup*,
   delt_vartype delT;
   const Level* level = getLevel(patches);
   old_dw->get(delT, sharedState_->get_delt_label(), level);
-  
+  Ghost::GhostType  gac = Ghost::AroundCells;
+    
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     cout_doing << "Doing advectVelocity patch " << patch->getID()<< "\t\t\t SimpleCFD" << '\n';
@@ -843,36 +845,33 @@ void SimpleCFD::advectVelocity(const ProcessorGroup*,
 
       constNCVariable<int> bctype;
       old_dw->get(bctype, lb_->bctype, matl, patch, Ghost::AroundNodes, 2);
-
       constSFCXVariable<double> xvel_old;
-      old_dw->get(xvel_old, lb_->xvelocity, matl, patch,
-		  Ghost::AroundCells, maxadvect_+1);
-      SFCXVariable<double> xvel;
-      new_dw->allocateAndPut(xvel, lb_->xvelocity, matl, patch);
-
       constSFCYVariable<double> yvel_old;
-      old_dw->get(yvel_old, lb_->yvelocity, matl, patch,
-		  Ghost::AroundCells, maxadvect_+1);
-      SFCYVariable<double> yvel;
-      new_dw->allocateAndPut(yvel, lb_->yvelocity, matl, patch);
-
       constSFCZVariable<double> zvel_old;
-      old_dw->get(zvel_old, lb_->zvelocity, matl, patch,
-		  Ghost::AroundCells, maxadvect_+1);
+      
+      SFCXVariable<double> xvel;
+      SFCYVariable<double> yvel;
       SFCZVariable<double> zvel;
+      
+      old_dw->get(xvel_old, lb_->xvelocity, matl, patch,gac, maxadvect_+1);
+      old_dw->get(yvel_old, lb_->yvelocity, matl, patch,gac, maxadvect_+1);
+      old_dw->get(zvel_old, lb_->zvelocity, matl, patch,gac, maxadvect_+1);
+      
+      new_dw->allocateAndPut(xvel, lb_->xvelocity, matl, patch);
+      new_dw->allocateAndPut(yvel, lb_->yvelocity, matl, patch);
       new_dw->allocateAndPut(zvel, lb_->zvelocity, matl, patch);
 
       if(level->getIndex() > 0){        // REFINE
-       double refineFactor = double(step)/double(nsteps);
+       double subCycleProgress = double(step)/double(nsteps);
        
 	refineBoundaries(patch, xvel_old.castOffConst(),
-			 new_dw, lb_->xvelocity, matl, refineFactor);
+			 new_dw, lb_->xvelocity, matl, subCycleProgress);
                       
 	refineBoundaries(patch, yvel_old.castOffConst(),
-			 new_dw, lb_->yvelocity, matl, refineFactor);
+			 new_dw, lb_->yvelocity, matl, subCycleProgress);
                       
 	refineBoundaries(patch, zvel_old.castOffConst(),
-			 new_dw, lb_->zvelocity, matl, refineFactor);
+			 new_dw, lb_->zvelocity, matl, subCycleProgress);
       }
       advect(xvel, xvel_old, patch->getSFCXIterator(), patch, delT,
 	     Vector(0, 0.5, 0.5), xvel_old, yvel_old, zvel_old, bctype,
@@ -880,12 +879,14 @@ void SimpleCFD::advectVelocity(const ProcessorGroup*,
 	     bcs.getCondition<double>("xvelocity", Patch::XFaceBased),
 	     bcs.getCondition<double>("yvelocity", Patch::YFaceBased),
 	     bcs.getCondition<double>("zvelocity", Patch::ZFaceBased));
+            
       advect(yvel, yvel_old, patch->getSFCYIterator(), patch, delT,
 	     Vector(0.5, 0, 0.5), xvel_old, yvel_old, zvel_old, bctype,
 	     bcs.getCondition<double>("yvelocity", Patch::YFaceBased),
 	     bcs.getCondition<double>("xvelocity", Patch::XFaceBased),
 	     bcs.getCondition<double>("yvelocity", Patch::YFaceBased),
 	     bcs.getCondition<double>("zvelocity", Patch::ZFaceBased));
+            
       advect(zvel, zvel_old, patch->getSFCZIterator(), patch, delT,
 	     Vector(0.5, 0.5, 0), xvel_old, yvel_old, zvel_old, bctype,
 	     bcs.getCondition<double>("zvelocity", Patch::ZFaceBased),
@@ -1491,10 +1492,10 @@ void SimpleCFD::applyViscosity(const ProcessorGroup*,
 	IntVector h=patch->getGhostCellHighIndex(1);
 	if(patch->getBCType(Patch::xplus) != Patch::Neighbor)
 	  h += IntVector(1,0,0);
-	Condition<double>* xvel_bc = bcs.getCondition<double>("xvelocity", Patch::XFaceBased);
+	Condition<double>* xvel_bc       = bcs.getCondition<double>("xvelocity", Patch::XFaceBased);
 	Condition<double>* xvel_bc_yface = bcs.getCondition<double>("xvelocity", Patch::YFaceBased);
 	Condition<double>* xvel_bc_zface = bcs.getCondition<double>("xvelocity", Patch::ZFaceBased);
-	Condition<double>* xvel_bc_cc = bcs.getCondition<double>("xvelocity", Patch::CellBased);
+	Condition<double>* xvel_bc_cc    = bcs.getCondition<double>("xvelocity", Patch::CellBased);
 
 	IntVector FW=IntVector(-1,0,0);
 	IntVector FE=IntVector(0,0,0);
@@ -1526,10 +1527,10 @@ void SimpleCFD::applyViscosity(const ProcessorGroup*,
 	IntVector h=patch->getGhostCellHighIndex(1);
 	if(patch->getBCType(Patch::yplus) != Patch::Neighbor)
 	  h += IntVector(0,1,0);
-	Condition<double>* yvel_bc = bcs.getCondition<double>("yvelocity", Patch::YFaceBased);
+	Condition<double>* yvel_bc       = bcs.getCondition<double>("yvelocity", Patch::YFaceBased);
 	Condition<double>* yvel_bc_xface = bcs.getCondition<double>("yvelocity", Patch::XFaceBased);
 	Condition<double>* yvel_bc_zface = bcs.getCondition<double>("yvelocity", Patch::ZFaceBased);
-	Condition<double>* yvel_bc_cc = bcs.getCondition<double>("yvelocity", Patch::CellBased);
+	Condition<double>* yvel_bc_cc    = bcs.getCondition<double>("yvelocity", Patch::CellBased);
 
 	IntVector FW=IntVector(0,0,0);
 	IntVector FE=IntVector(1,0,0);
@@ -1561,10 +1562,10 @@ void SimpleCFD::applyViscosity(const ProcessorGroup*,
 	IntVector h=patch->getGhostCellHighIndex(1);
 	if(patch->getBCType(Patch::zplus) != Patch::Neighbor)
 	  h += IntVector(0,0,1);
-	Condition<double>* zvel_bc = bcs.getCondition<double>("zvelocity", Patch::ZFaceBased);
+	Condition<double>* zvel_bc       = bcs.getCondition<double>("zvelocity", Patch::ZFaceBased);
 	Condition<double>* zvel_bc_xface = bcs.getCondition<double>("zvelocity", Patch::XFaceBased);
 	Condition<double>* zvel_bc_yface = bcs.getCondition<double>("zvelocity", Patch::YFaceBased);
-	Condition<double>* zvel_bc_cc = bcs.getCondition<double>("zvelocity", Patch::CellBased);
+	Condition<double>* zvel_bc_cc    = bcs.getCondition<double>("zvelocity", Patch::CellBased);
 
 	IntVector FW=IntVector(0,0,0);
 	IntVector FE=IntVector(1,0,0);
@@ -1620,29 +1621,27 @@ void SimpleCFD::projectVelocity(const ProcessorGroup*,
       old_dw->get(bctype, lb_->bctype, matl, patch, Ghost::AroundNodes, 1);
 
       constSFCXVariable<double> xvel;
-      new_dw->get(xvel, lb_->xvelocity, matl, patch, Ghost::AroundCells, 1);
-
       constSFCYVariable<double> yvel;
-      new_dw->get(yvel, lb_->yvelocity, matl, patch, Ghost::AroundCells, 1);
-
       constSFCZVariable<double> zvel;
+      new_dw->get(xvel, lb_->xvelocity, matl, patch, Ghost::AroundCells, 1);
+      new_dw->get(yvel, lb_->yvelocity, matl, patch, Ghost::AroundCells, 1);
       new_dw->get(zvel, lb_->zvelocity, matl, patch, Ghost::AroundCells, 1);
 
       CCVariable<Stencil7> A;
-      new_dw->allocateAndPut(A, pressure_matrix, matl, patch);
       CCVariable<double> rhs;
+      new_dw->allocateAndPut(A, pressure_matrix, matl, patch);
       new_dw->allocateAndPut(rhs, pressure_rhs, matl, patch);
 
       // Velocity correction...
       IntVector l(patch->getCellLowIndex());
       IntVector h(patch->getCellHighIndex());
       l -= IntVector(patch->getBCType(Patch::xminus) == Patch::Neighbor?1:0,
-		     patch->getBCType(Patch::yminus) == Patch::Neighbor?1:0,
-		     patch->getBCType(Patch::zminus) == Patch::Neighbor?1:0);
+		       patch->getBCType(Patch::yminus) == Patch::Neighbor?1:0,
+		       patch->getBCType(Patch::zminus) == Patch::Neighbor?1:0);
 
       h += IntVector(patch->getBCType(Patch::xplus) == Patch::Neighbor?1:0,
-		     patch->getBCType(Patch::yplus) == Patch::Neighbor?1:0,
-		     patch->getBCType(Patch::zplus) == Patch::Neighbor?1:0);
+		       patch->getBCType(Patch::yplus) == Patch::Neighbor?1:0,
+		       patch->getBCType(Patch::zplus) == Patch::Neighbor?1:0);
       Condition<double>* xbc = bcs.getCondition<double>("xvelocity", Patch::XFaceBased);
       Condition<double>* ybc = bcs.getCondition<double>("yvelocity", Patch::YFaceBased);
       Condition<double>* zbc = bcs.getCondition<double>("zvelocity", Patch::ZFaceBased);
@@ -1962,21 +1961,18 @@ void SimpleCFD::applyProjection(const ProcessorGroup*,
       old_dw->get(bctype, lb_->bctype, matl, patch, Ghost::AroundNodes, 1);
 
       SFCXVariable<double> xvel;
-      new_dw->getModifiable(xvel, lb_->xvelocity, matl, patch);
-
       SFCYVariable<double> yvel;
-      new_dw->getModifiable(yvel, lb_->yvelocity, matl, patch);
-
       SFCZVariable<double> zvel;
-      new_dw->getModifiable(zvel, lb_->zvelocity, matl, patch);
-      
       constCCVariable<double> sol;
+      new_dw->getModifiable(xvel, lb_->xvelocity, matl, patch);
+      new_dw->getModifiable(yvel, lb_->yvelocity, matl, patch);
+      new_dw->getModifiable(zvel, lb_->zvelocity, matl, patch);
       new_dw->get(sol, pressure, matl, patch, Ghost::AroundFaces, 1);
 
       Condition<double>* xbc = bcs.getCondition<double>("xvelocity", Patch::XFaceBased);
       Condition<double>* ybc = bcs.getCondition<double>("yvelocity", Patch::YFaceBased);
       Condition<double>* zbc = bcs.getCondition<double>("zvelocity", Patch::ZFaceBased);
-      Condition<double>* pbc = bcs.getCondition<double>("pressure", Patch::CellBased);
+      Condition<double>* pbc = bcs.getCondition<double>("pressure",  Patch::CellBased);
 
       for(CellIterator iter(patch->getSFCXIterator(0)); !iter.done(); iter++){
 	IntVector idx(*iter);
@@ -2163,49 +2159,52 @@ void SimpleCFD::advectScalars(const ProcessorGroup*,
   const Level* level = getLevel(patches);
   delt_vartype delT;
   old_dw->get(delT, sharedState_->get_delt_label(), level);
+  
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     cout_doing << "Doing advectScalars patch " << patch->getID()<< "\t\t\t SimpleCFD" << '\n';
    
     for(int m = 0;m<matls->size();m++){
       int matl = matls->get(m);
-
+      Ghost::GhostType  gac = Ghost::AroundCells;
       constNCVariable<int> bctype;
+      constSFCXVariable<double> xvel;
+      constSFCYVariable<double> yvel;
+      constSFCZVariable<double> zvel;
       old_dw->get(bctype, lb_->bctype, matl, patch, Ghost::AroundNodes, 2);
 
-      constSFCXVariable<double> xvel;
-      new_dw->get(xvel, lb_->xvelocity, matl, patch,
-		  Ghost::AroundCells, maxadvect_+1);
-
-      constSFCYVariable<double> yvel;
-      new_dw->get(yvel, lb_->yvelocity, matl, patch,
-		  Ghost::AroundCells, maxadvect_+1);
-
-      constSFCZVariable<double> zvel;
-      new_dw->get(zvel, lb_->zvelocity, matl, patch,
-		  Ghost::AroundCells, maxadvect_+1);
+      new_dw->get(xvel, lb_->xvelocity, matl, patch,gac, maxadvect_+1);
+      new_dw->get(yvel, lb_->yvelocity, matl, patch,gac, maxadvect_+1);
+      new_dw->get(zvel, lb_->zvelocity, matl, patch,gac, maxadvect_+1);
 
       {
 	constCCVariable<double> den_old;
-	old_dw->get(den_old, lb_->density, matl, patch,
-		    Ghost::AroundCells, maxadvect_);
-	CCVariable<double> den;
+       CCVariable<double> den;
+	old_dw->get(den_old, lb_->density, matl, patch, gac, maxadvect_);
 	new_dw->allocateAndPut(den, lb_->density, matl, patch);
 
-	if(level->getIndex() > 0){   // REFINE 
-	  refineBoundaries(patch, xvel.castOffConst(),
+	if(level->getIndex() > 0){   // REFINE
+         double subCycleProgress_vel = double(step+1)/double(nsteps);
+         double subCycleProgress_den = double(step)/double(nsteps);
+	  // X-velocity
+         refineBoundaries(patch, xvel.castOffConst(),
 			   new_dw, lb_->xvelocity, matl,
-			   double(step+1)/double(nsteps));
-	  refineBoundaries(patch, yvel.castOffConst(),
+			   subCycleProgress_vel);
+	  // Y-velocity
+         refineBoundaries(patch, yvel.castOffConst(),
 			   new_dw, lb_->yvelocity, matl,
-			   double(step+1)/double(nsteps));
-	  refineBoundaries(patch, zvel.castOffConst(),
+			   subCycleProgress_vel);
+	  // Z-velocity
+         refineBoundaries(patch, zvel.castOffConst(),
 			   new_dw, lb_->zvelocity, matl,
-			   double(step+1)/double(nsteps));
+			   subCycleProgress_vel);
+         // Density               
 	  refineBoundaries(patch, den_old.castOffConst(),
 			   new_dw, lb_->density, matl,
-			   double(step)/double(nsteps));
+			   subCycleProgress_den);
 	}
+       
+       // Advection step
 	advect(den, den_old, patch->getCellIterator(), patch, delT,
 	       Vector(0.5, 0.5, 0.5), xvel, yvel, zvel, bctype,
 	       bcs.getCondition<double>("density", Patch::CellBased),
@@ -2213,6 +2212,8 @@ void SimpleCFD::advectScalars(const ProcessorGroup*,
 	       bcs.getCondition<double>("yvelocity", Patch::YFaceBased),
 	       bcs.getCondition<double>("zvelocity", Patch::ZFaceBased));
       }
+      //__________________________________
+      //  Thermal
       if(do_thermal){
 	constCCVariable<double> temp_old;
 	old_dw->get(temp_old, lb_->temperature, matl, patch,
@@ -2470,7 +2471,7 @@ SimpleCFD::refineBoundaries(const Patch* /*patch*/,
 			    DataWarehouse* /*new_dw*/,
 			    const VarLabel* /*label*/,
 			    int /*matl*/,
-			    double /*factor*/)
+			    double /*subCycleProgress_var*/)
 {
   throw InternalError("trying to do AMR iwth the non-AMR component!");
 }
@@ -2481,7 +2482,7 @@ SimpleCFD::refineBoundaries(const Patch* /*patch*/,
 			    DataWarehouse* /*new_dw*/,
 			    const VarLabel* /*label*/,
 			    int /*matl*/,
-			    double /*factor*/)
+			    double /*subCycleProgress_var*/)
 {
   throw InternalError("trying to do AMR iwth the non-AMR component!");
 }
@@ -2492,7 +2493,7 @@ SimpleCFD::refineBoundaries(const Patch* /*patch*/,
 			    DataWarehouse* /*new_dw*/,
 			    const VarLabel* /*label*/,
 			    int /*matl*/,
-			    double /*factor*/)
+			    double /*subCycleProgress_var*/)
 {
   throw InternalError("trying to do AMR iwth the non-AMR component!");
 }
@@ -2503,7 +2504,7 @@ SimpleCFD::refineBoundaries(const Patch* /*patch*/,
 			    DataWarehouse* /*new_dw*/,
 			    const VarLabel* /*label*/,
 			    int /*matl*/,
-			    double /*factor*/)
+			    double /*subCycleProgress_var*/)
 {
   throw InternalError("trying to do AMR iwth the non-AMR component!");
 }
