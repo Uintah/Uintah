@@ -63,7 +63,13 @@ private:
 
   GuiInt       rescale_;
   GuiDouble    min_;
+  GuiInt       useinputmin_;
   GuiDouble    max_;
+  GuiInt       useinputmax_;
+  GuiString    type_;
+  GuiInt       usetype_;
+
+  unsigned int get_type(string type);
 };
 
 
@@ -73,7 +79,11 @@ UnuRmap::UnuRmap(GuiContext* ctx)
     inrrd_(0), idmap_(0), onrrd_(0),
     rescale_(ctx->subVar("rescale")),
     min_(ctx->subVar("min")),
-    max_(ctx->subVar("max"))
+    useinputmin_(ctx->subVar("min")),
+    max_(ctx->subVar("max")),
+    useinputmax_(ctx->subVar("max")),
+    type_(ctx->subVar("type")),
+    usetype_(ctx->subVar("usetype"))
 {
 }
 
@@ -122,7 +132,7 @@ void
   Nrrd *nin = nrrd_handle->nrrd;
   Nrrd *dmap = dmap_handle->nrrd;
   Nrrd *nout = nrrdNew();
-  NrrdRange *range = 0;
+  NrrdRange *range = NULL;
 
   int rescale = rescale_.get();
   if (!( airExists_d(dmap->axis[dmap->dim - 1].min) && 
@@ -131,14 +141,27 @@ void
   }
 
   if (rescale) {
-    range = nrrdRangeNew(min_.get(), max_.get());
+    double min = AIR_NAN, max = AIR_NAN;
+    if (!useinputmin_.get())
+      min = min_.get();
+    if (!useinputmax_.get())
+      max = max_.get();
+    range = nrrdRangeNew(min, max);
     nrrdRangeSafeSet(range, nin, nrrdBlind8BitRangeState);
   }
 
-  if (nrrdApply1DRegMap(nout, nin, range, dmap, dmap->type, rescale)) {
-    char *err = biffGetDone(NRRD);
-    error(string("Error Mapping Nrrd to Lookup Table: ") + err);
-    free(err);
+  if (usetype_.get()) {
+    if (nrrdApply1DRegMap(nout, nin, range, dmap, dmap->type, rescale)) {
+      char *err = biffGetDone(NRRD);
+      error(string("Error Mapping Nrrd to Lookup Table: ") + err);
+      free(err);
+    }
+  } else {
+    if (nrrdApply1DRegMap(nout, nin, range, dmap, get_type(type_.get()), rescale)) {
+      char *err = biffGetDone(NRRD);
+      error(string("Error Mapping Nrrd to Lookup Table: ") + err);
+      free(err);
+    }
   }
 
   NrrdData *nrrd = scinew NrrdData;
@@ -163,6 +186,28 @@ void
  UnuRmap::tcl_command(GuiArgs& args, void* userdata)
 {
   Module::tcl_command(args, userdata);
+}
+
+unsigned int
+UnuRmap::get_type(string type) {
+  if (type == "nrrdTypeChar") 
+    return nrrdTypeChar;
+  else if (type == "nrrdTypeUChar")  
+    return nrrdTypeUChar;
+  else if (type == "nrrdTypeShort")  
+    return nrrdTypeShort;
+  else if (type == "nrrdTypeUShort") 
+    return nrrdTypeUShort;
+  else if (type == "nrrdTypeInt")  
+    return nrrdTypeInt;
+  else if (type == "nrrdTypeUInt")   
+    return nrrdTypeUInt;
+  else if (type == "nrrdTypeFloat") 
+    return nrrdTypeFloat;
+  else if (type == "nrrdTypeDouble")  
+    return nrrdTypeDouble;
+  else    
+    return nrrdTypeUInt;
 }
 
 } // End namespace Teem
