@@ -147,11 +147,11 @@ void GeomGrid::io(Piostream& stream)
 {
     int version=stream.begin_class("GeomGrid", GEOMGRID_VERSION);
     GeomObj::io(stream);
-    if(version == 1){
-	cerr << "Go talk to Steve and tell him to implement this code real quick\n";
-	ASSERT(0);
+    if(version == 1)
+    {
+      ASSERTFAIL("Go talk to Steve and tell him to implement this code real quick\n");
     }
-    ASSERT(!"Not finished");
+    ASSERTFAIL("Not finished");
     if(stream.reading())
 	adjust();
     stream.end_class();
