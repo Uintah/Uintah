@@ -84,17 +84,23 @@ namespace PSECommon {
 
 	 // control parameters
 	 int scan, bbox_visibility, reduce, extract_all, min_size;
-	 
+
+	 bool region_on;
+	 double region_min0, region_min1;
+	 double region_max0, region_max1;
+
 	 SysTime::SysClock extract_time;
 	 SysTime::SysClock scan_time;
 	 int scan_number, tri_number;
       public:
-	 SageBase( AI *ai) : ai(ai) {}
+	 SageBase( AI *ai) : ai(ai), region_on(false) {}
 	 virtual ~SageBase() {}
 
 	 void setScreen( Screen *s ) { screen = s; }
 	 void setView( const View &, double, double, int, int  );
 	 void setParameters( int, int, int, int, int);
+	 void setRegion( bool set ) { region_on = set; }
+	 void setRegion( double, double, double, double );
 	 virtual void search( double, GeomGroup*, GeomPts * ) {}
       };
     
@@ -248,6 +254,15 @@ namespace PSECommon {
       this->min_size = size;
     }
 
+    template <class AI>
+      void SageBase<AI>::setRegion( double x0, double x1, double y0,double y1)
+      {
+	region_on = true;
+	region_min0 = x0;
+	region_min1 = x1;
+	region_max0 = y0;
+	region_max1 = y1;
+      }
 
     /*
      * SageCell
@@ -356,7 +371,7 @@ namespace PSECommon {
     {
       stack = new SageStack<T>;
       tree = new BonTree::Tree<T,F>;
-
+      
       new_field();
     }
 
@@ -448,6 +463,7 @@ namespace PSECommon {
     void Sage<T,F,AI>::search( double iso, 
 			    GeomGroup *group, GeomPts *points )
     {
+      cerr << "Sage search" << endl;
       this->group = group;
       this->points = points;
 
@@ -687,7 +703,28 @@ namespace PSECommon {
 	extract_time += SysTime::currentTicks() - start;
 	return 0;
       }
-      
+
+      if ( region_on ) {
+	double min, max;
+	min = max = val[0];
+	for ( int i=1; i<8; i++) 
+	  if ( val[i] < min ) min = val[i];
+	  else if ( val[i] > max ) max = val[i];
+
+	min += iso;
+	max += iso;
+
+	if ( min < region_min0 || min > region_min1 ||
+	       max < region_max0 || max > region_max1 ) {
+	    extract_time += SysTime::currentTicks() - start;
+/* 	    cerr << "Sage region reject ["  */
+/* 		 << region_min0 << " - "<< region_min1 << " x "  */
+/* 		 << region_max0 << " - "<< region_max1 << " ]\n" */
+/* 		 << "  at : " << min << " " << max << endl; */
+	    return 0;
+	}
+      }
+	
       counter++;
       // #ifdef VIS_WOMAM
       //  double ps = pixel_size[offset+k];
