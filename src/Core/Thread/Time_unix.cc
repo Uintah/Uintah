@@ -18,6 +18,7 @@
 #include <SCICore/Thread/ThreadError.h>
 #include <stdio.h>
 #include <sys/time.h>
+#include <errno.h>
 
 static bool initialized=false;
 static struct timeval start_time;
@@ -115,6 +116,9 @@ Time::waitFor(SysClock time)
 
 //
 // $Log$
+// Revision 1.4  1999/08/29 07:50:59  sparker
+// Mods to compile on linux
+//
 // Revision 1.3  1999/08/28 03:46:53  sparker
 // Final updates before integration with PSE
 //

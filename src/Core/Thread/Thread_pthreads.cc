@@ -12,6 +12,8 @@
  *  Copyright (C) 1997 SCI Group
  */
 
+#define __USE_UNIX98
+#include <pthread.h>
 #define private public
 #define protected public
 #include <SCICore/Thread/Thread.h>
@@ -30,15 +32,14 @@
 #include "Thread_unix.h"
 #include <errno.h>
 #include <iostream.h>
-#include <pthread.h>
 extern "C" {
 #include <semaphore.h>
 };
-#include <sigcontext.h>
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string>
+#include <unistd.h>
 
 typedef void (*SIG_HANDLER_T)(int);
 
@@ -612,7 +613,7 @@ RecursiveMutex::RecursiveMutex(const char* name)
     if(pthread_mutexattr_init(&attr) != 0)
 	throw ThreadError(std::string("pthread_mutexattr_init: ")
 			  +strerror(errno));
-    if(pthread_mutexattr_setkind_np(&attr, PTHREAD_MUTEX_RECURSIVE_NP) != 0)
+    if(pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE_NP) != 0)
 	throw ThreadError(std::string("pthread_mutexattr_setkind_np: ")
 			  +strerror(errno));
     if(pthread_mutex_init(&d_priv->mutex, &attr) != 0)
@@ -763,6 +764,9 @@ ConditionVariable::conditionBroadcast()
 
 //
 // $Log$
+// Revision 1.7  1999/08/29 07:50:59  sparker
+// Mods to compile on linux
+//
 // Revision 1.6  1999/08/29 00:47:02  sparker
 // Integrated new thread library
 // using statement tweaks to compile with both MipsPRO and g++
