@@ -268,7 +268,7 @@ _______________________________________________________________________ */
 void    ICE::readData(const Patch* patch, int include_GC,
         char    filename[],             /* message1                     */
         char    var_name[],             /* var_name              */
-        const CCVariable<double>& q_CC)
+        CCVariable<double>& q_CC)
 {
   int i, j, k,xLo, yLo, zLo, xHi, yHi, zHi;
   IntVector lowIndex, hiIndex; 
