@@ -184,9 +184,9 @@ GeomSuperquadric::compute_geometry()
     for (ti = 0; ti < nu_; ti++)
     {
       const double t = (ti / (double)nv_) * (2.0 * M_PI);
-      const float x = spow(cos(p), B_);
-      const float y = spow(cos(t), A_) * spow(sin(p), B_);
-      const float z = spow(sin(t), A_) * spow(sin(p), B_);
+      const double x = spow(cos(p), B_);
+      const double y = spow(cos(t), A_) * spow(sin(p), B_);
+      const double z = spow(sin(t), A_) * spow(sin(p), B_);
 
       const double xxb = pow(x*x, 1/B_);
       const double yya = pow(y*y, 1/A_);
