@@ -104,8 +104,18 @@ PROGRAM := $(SRCDIR)/WatsonToMesh
 SRCS := $(SRCDIR)/WatsonToMesh.cc
 include $(SRCTOP)/scripts/program.mk
 
+PROGRAM := $(SRCDIR)/GEtoSF
+SRCS := $(SRCDIR)/GEtoSF.cc
+include $(SRCTOP)/scripts/program.mk
+
 #
 # $Log$
+# Revision 1.2.2.1  2000/09/28 03:19:39  mcole
+# merge trunk into FIELD_REDESIGN branch
+#
+# Revision 1.3  2000/07/18 17:44:03  lfox
+# added GEtoSF.cc
+#
 # Revision 1.2  2000/03/20 19:36:34  sparker
 # Added VPATH support
 #

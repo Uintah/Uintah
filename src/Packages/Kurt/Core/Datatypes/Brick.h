@@ -102,7 +102,7 @@ public:
   // perpendicular to r that run through the vertices of the Brick.
   void ComputePolys(Ray r, double  tmin, double  tmax,
 		    double dt, double* ts, vector<Polygon*>& polys) const;
-  void ComputePoly(Ray r, double t, Polygon* p) const;
+  void ComputePoly(Ray r, double t, Polygon*& p) const;
    unsigned int texName() const { return name;}
    unsigned int* texNameP(){ return &name; }
 

@@ -7,7 +7,6 @@ namespace GeomSpace  {
 
 using namespace Kurt::Datatypes;
 
-GLTexRenState* GLAttenuate::_instance = 0;
 
 GLAttenuate::GLAttenuate(const GLVolumeRenderer* glvr) :
   GLTexRenState( glvr )
@@ -25,17 +24,6 @@ void GLAttenuate::preDraw()
 void GLAttenuate::postDraw()
 {
   glDisable(GL_BLEND);
-}
-
-GLTexRenState* GLAttenuate::Instance(const GLVolumeRenderer* glvr)
-{
-  // Not a true Singleton class, but this does make sure that 
-  // there is only one instance per volume renderer.
-  if( _instance == 0 ){
-    _instance = new GLAttenuate( glvr );
-  } 
-
-  return _instance;
 }
 
 } // end namespace Datatypes
