@@ -1188,6 +1188,57 @@ else
   fi
 fi
 
+for ac_declaration in \
+   ''\
+   '#include <stdlib.h>' \
+   'extern "C" void std::exit (int) throw (); using std::exit;' \
+   'extern "C" void std::exit (int); using std::exit;' \
+   'extern "C" void exit (int) throw ();' \
+   'extern "C" void exit (int);' \
+   'void exit (int);'
+do
+  cat > conftest.$ac_ext <<EOF
+#line 1202 "configure"
+#include "confdefs.h"
+#include <stdlib.h>
+$ac_declaration
+int main() {
+exit (42);
+; return 0; }
+EOF
+if { (eval echo configure:1210: \"$ac_compile\") 1>&5; (eval $ac_compile) 2>&5; }; then
+  :
+else
+  echo "configure: failed program was:" >&5
+  cat conftest.$ac_ext >&5
+  rm -rf conftest*
+  continue
+fi
+rm -f conftest*
+  cat > conftest.$ac_ext <<EOF
+#line 1220 "configure"
+#include "confdefs.h"
+$ac_declaration
+int main() {
+exit (42);
+; return 0; }
+EOF
+if { (eval echo configure:1227: \"$ac_compile\") 1>&5; (eval $ac_compile) 2>&5; }; then
+  rm -rf conftest*
+  break
+else
+  echo "configure: failed program was:" >&5
+  cat conftest.$ac_ext >&5
+fi
+rm -f conftest*
+done
+if test -n "$ac_declaration"; then
+  echo '#ifdef __cplusplus' >>confdefs.h
+  echo $ac_declaration      >>confdefs.h
+  echo '#endif'             >>confdefs.h
+fi
+
+
   echo "configure: warning: C++ compiler not specified with 'CXX' environment variable.\
 	    Using default... $CXX" 1>&2
 
@@ -1199,7 +1250,7 @@ do
 # Extract the first word of "$ac_prog", so it can be a program name with args.
 set dummy $ac_prog; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:1203: checking for $ac_word" >&5
+echo "configure:1254: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_prog_F77'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -1232,7 +1283,7 @@ done
 fi
 
 echo $ac_n "checking whether the Fortran 77 compiler ($F77 $FFLAGS $LDFLAGS) works""... $ac_c" 1>&6
-echo "configure:1236: checking whether the Fortran 77 compiler ($F77 $FFLAGS $LDFLAGS) works" >&5
+echo "configure:1287: checking whether the Fortran 77 compiler ($F77 $FFLAGS $LDFLAGS) works" >&5
 
 ac_ext=f
 ac_compile='${F77-f77} -c $FFLAGS conftest.$ac_ext 1>&5'
@@ -1245,7 +1296,7 @@ cat > conftest.$ac_ext << EOF
       end
 
 EOF
-if { (eval echo configure:1249: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:1300: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   ac_cv_prog_f77_works=yes
   # If we can't run a trivial program, we are probably using a cross compiler.
   if (./conftest; exit) 2>/dev/null; then
@@ -1271,12 +1322,12 @@ if test $ac_cv_prog_f77_works = no; then
   { echo "configure: error: installation or configuration problem: Fortran 77 compiler cannot create executables." 1>&2; exit 1; }
 fi
 echo $ac_n "checking whether the Fortran 77 compiler ($F77 $FFLAGS $LDFLAGS) is a cross-compiler""... $ac_c" 1>&6
-echo "configure:1275: checking whether the Fortran 77 compiler ($F77 $FFLAGS $LDFLAGS) is a cross-compiler" >&5
+echo "configure:1326: checking whether the Fortran 77 compiler ($F77 $FFLAGS $LDFLAGS) is a cross-compiler" >&5
 echo "$ac_t""$ac_cv_prog_f77_cross" 1>&6
 cross_compiling=$ac_cv_prog_f77_cross
 
 echo $ac_n "checking whether we are using GNU Fortran 77""... $ac_c" 1>&6
-echo "configure:1280: checking whether we are using GNU Fortran 77" >&5
+echo "configure:1331: checking whether we are using GNU Fortran 77" >&5
 if eval "test \"`echo '$''{'ac_cv_prog_g77'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -1285,7 +1336,7 @@ else
   yes
 #endif
 EOF
-if { ac_try='$F77 -E conftest.fpp'; { (eval echo configure:1289: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }; } | egrep yes >/dev/null 2>&1; then
+if { ac_try='$F77 -E conftest.fpp'; { (eval echo configure:1340: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }; } | egrep yes >/dev/null 2>&1; then
   ac_cv_prog_g77=yes
 else
   ac_cv_prog_g77=no
@@ -1300,7 +1351,7 @@ if test $ac_cv_prog_g77 = yes; then
   ac_save_FFLAGS="$FFLAGS"
   FFLAGS=
   echo $ac_n "checking whether $F77 accepts -g""... $ac_c" 1>&6
-echo "configure:1304: checking whether $F77 accepts -g" >&5
+echo "configure:1355: checking whether $F77 accepts -g" >&5
 if eval "test \"`echo '$''{'ac_cv_prog_f77_g'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -2112,7 +2163,7 @@ else { echo "configure: error: can not run $ac_config_sub" 1>&2; exit 1; }
 fi
 
 echo $ac_n "checking host system type""... $ac_c" 1>&6
-echo "configure:2116: checking host system type" >&5
+echo "configure:2167: checking host system type" >&5
 
 host_alias=$host
 case "$host_alias" in
@@ -2147,7 +2198,7 @@ case $host in
     _CUR_2_=""
 
     echo $ac_n "checking for OS version 6.5""... $ac_c" 1>&6
-echo "configure:2151: checking for OS version 6.5" >&5
+echo "configure:2202: checking for OS version 6.5" >&5
 
     if test ""; then
       _SCI_CORRECT_=''
@@ -2208,7 +2259,7 @@ echo "configure:2151: checking for OS version 6.5" >&5
     _CUR_2_=""
 
     echo $ac_n "checking for OS version 2.2.17""... $ac_c" 1>&6
-echo "configure:2212: checking for OS version 2.2.17" >&5
+echo "configure:2263: checking for OS version 2.2.17" >&5
 
     if test ""; then
       _SCI_CORRECT_=''
@@ -2278,7 +2329,7 @@ esac
 
 
 echo $ac_n "checking physical processor count""... $ac_c" 1>&6
-echo "configure:2282: checking physical processor count" >&5
+echo "configure:2333: checking physical processor count" >&5
 if test -z "$NUM_CPUS"; then
   NUM_CPUS="1"
 fi
@@ -2299,7 +2350,7 @@ else
 fi
 
 echo $ac_n "checking host system word length""... $ac_c" 1>&6
-echo "configure:2303: checking host system word length" >&5
+echo "configure:2354: checking host system word length" >&5
 if test "$enable_64bit" = "yes"; then
   echo "$ac_t""64 bits" 1>&6
   if test "$enable_32bit" = "yes"; then
@@ -2475,11 +2526,11 @@ is_linux=`echo $host | sed 's/.*linux.*/linux/'`
 
 echo
 echo "checking for required build tools..." 1>&6
-echo "configure:2479: checking for required build tools..." >&5
+echo "configure:2530: checking for required build tools..." >&5
 echo 
 
 echo $ac_n "checking whether debug was enabled""... $ac_c" 1>&6
-echo "configure:2483: checking whether debug was enabled" >&5
+echo "configure:2534: checking whether debug was enabled" >&5
 if test "$debug" = "no"; then
   echo "$ac_t""no" 1>&6
 elif test "$debug" = "yes"; then
@@ -2491,7 +2542,7 @@ else
 fi
 
 echo $ac_n "checking whether optimize was enabled""... $ac_c" 1>&6
-echo "configure:2495: checking whether optimize was enabled" >&5
+echo "configure:2546: checking whether optimize was enabled" >&5
 if test "$optimize" = "no"; then
   if test "$debug" = "no"; then
     extra_cflags="-O2 ${extra_cflags}"
@@ -2571,7 +2622,7 @@ case $host in
     _CUR_2_=""
 
     echo $ac_n "checking for `basename $CC` version 7.3.1.1""... $ac_c" 1>&6
-echo "configure:2575: checking for `basename $CC` version 7.3.1.1" >&5
+echo "configure:2626: checking for `basename $CC` version 7.3.1.1" >&5
 
     if test ""; then
       _SCI_CORRECT_=''
@@ -2628,7 +2679,7 @@ echo "configure:2575: checking for `basename $CC` version 7.3.1.1" >&5
     _CUR_2_=""
 
     echo $ac_n "checking for `basename $CXX` version 7.3.1.1""... $ac_c" 1>&6
-echo "configure:2632: checking for `basename $CXX` version 7.3.1.1" >&5
+echo "configure:2683: checking for `basename $CXX` version 7.3.1.1" >&5
 
     if test ""; then
       _SCI_CORRECT_=''
@@ -2685,7 +2736,7 @@ echo "configure:2632: checking for `basename $CXX` version 7.3.1.1" >&5
     _CUR_2_=""
 
     echo $ac_n "checking for `basename $F77` version 7.3.1.1""... $ac_c" 1>&6
-echo "configure:2689: checking for `basename $F77` version 7.3.1.1" >&5
+echo "configure:2740: checking for `basename $F77` version 7.3.1.1" >&5
 
     if test ""; then
       _SCI_CORRECT_=''
@@ -2735,7 +2786,7 @@ echo "configure:2689: checking for `basename $F77` version 7.3.1.1" >&5
     # Extract the first word of "as", so it can be a program name with args.
 set dummy as; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:2739: checking for $ac_word" >&5
+echo "configure:2790: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_path_AS'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -2781,7 +2832,7 @@ fi
     _CUR_2_=""
 
     echo $ac_n "checking for `basename $AS` version 7.3.1.1""... $ac_c" 1>&6
-echo "configure:2785: checking for `basename $AS` version 7.3.1.1" >&5
+echo "configure:2836: checking for `basename $AS` version 7.3.1.1" >&5
 
     if test ""; then
       _SCI_CORRECT_=''
@@ -2831,7 +2882,7 @@ echo "configure:2785: checking for `basename $AS` version 7.3.1.1" >&5
     # Extract the first word of "ld", so it can be a program name with args.
 set dummy ld; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:2835: checking for $ac_word" >&5
+echo "configure:2886: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_path_LD'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -2886,7 +2937,7 @@ fi
     SOFLAGS="-shared $BINARYFLAGS -LANG:std -no_unresolved -J\$(MAKE_PARALLELISM) -update_registry \$(LIBDIR)so_locations $(TLINK) ${SOFLAGS}"
     LDFLAGS="$BINARYFLAGS -LANG:std -no_unresolved"
     echo $ac_n "checking if ${CC} talks too much""... $ac_c" 1>&6
-echo "configure:2890: checking if ${CC} talks too much" >&5
+echo "configure:2941: checking if ${CC} talks too much" >&5
     touch wow.c
     if ${CC} -c wow.c 2>&1 | fgrep "requires a license password" > /dev/null ; then
       echo "$ac_t""yes" 1>&6
@@ -2994,7 +3045,7 @@ echo "configure:2890: checking if ${CC} talks too much" >&5
     _CUR_2_=""
 
     echo $ac_n "checking for `basename $CC` version 2.95.3""... $ac_c" 1>&6
-echo "configure:2998: checking for `basename $CC` version 2.95.3" >&5
+echo "configure:3049: checking for `basename $CC` version 2.95.3" >&5
 
     if test ""; then
       _SCI_CORRECT_=''
@@ -3051,7 +3102,7 @@ echo "configure:2998: checking for `basename $CC` version 2.95.3" >&5
     _CUR_2_=""
 
     echo $ac_n "checking for `basename $F77` version 0.5.25""... $ac_c" 1>&6
-echo "configure:3055: checking for `basename $F77` version 0.5.25" >&5
+echo "configure:3106: checking for `basename $F77` version 0.5.25" >&5
 
     if test ""; then
       _SCI_CORRECT_=''
@@ -3108,7 +3159,7 @@ echo "configure:3055: checking for `basename $F77` version 0.5.25" >&5
     _CUR_2_=""
 
     echo $ac_n "checking for `basename $CXX` version 2.95.3""... $ac_c" 1>&6
-echo "configure:3112: checking for `basename $CXX` version 2.95.3" >&5
+echo "configure:3163: checking for `basename $CXX` version 2.95.3" >&5
 
     if test ""; then
       _SCI_CORRECT_=''
@@ -3156,7 +3207,7 @@ echo "configure:3112: checking for `basename $CXX` version 2.95.3" >&5
     fi
       
     echo $ac_n "checking how to run the C preprocessor""... $ac_c" 1>&6
-echo "configure:3160: checking how to run the C preprocessor" >&5
+echo "configure:3211: checking how to run the C preprocessor" >&5
 # On Suns, sometimes $CPP names a directory.
 if test -n "$CPP" && test -d "$CPP"; then
   CPP=
@@ -3171,13 +3222,13 @@ else
   # On the NeXT, cc -E runs the code through the compiler's parser,
   # not just through cpp.
   cat > conftest.$ac_ext <<EOF
-#line 3175 "configure"
+#line 3226 "configure"
 #include "confdefs.h"
 #include <assert.h>
 Syntax Error
 EOF
 ac_try="$ac_cpp conftest.$ac_ext >/dev/null 2>conftest.out"
-{ (eval echo configure:3181: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
+{ (eval echo configure:3232: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
 ac_err=`grep -v '^ *+' conftest.out | grep -v "^conftest.${ac_ext}\$"`
 if test -z "$ac_err"; then
   :
@@ -3188,13 +3239,13 @@ else
   rm -rf conftest*
   CPP="${CC-cc} -E -traditional-cpp"
   cat > conftest.$ac_ext <<EOF
-#line 3192 "configure"
+#line 3243 "configure"
 #include "confdefs.h"
 #include <assert.h>
 Syntax Error
 EOF
 ac_try="$ac_cpp conftest.$ac_ext >/dev/null 2>conftest.out"
-{ (eval echo configure:3198: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
+{ (eval echo configure:3249: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
 ac_err=`grep -v '^ *+' conftest.out | grep -v "^conftest.${ac_ext}\$"`
 if test -z "$ac_err"; then
   :
@@ -3205,13 +3256,13 @@ else
   rm -rf conftest*
   CPP="${CC-cc} -nologo -E"
   cat > conftest.$ac_ext <<EOF
-#line 3209 "configure"
+#line 3260 "configure"
 #include "confdefs.h"
 #include <assert.h>
 Syntax Error
 EOF
 ac_try="$ac_cpp conftest.$ac_ext >/dev/null 2>conftest.out"
-{ (eval echo configure:3215: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
+{ (eval echo configure:3266: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
 ac_err=`grep -v '^ *+' conftest.out | grep -v "^conftest.${ac_ext}\$"`
 if test -z "$ac_err"; then
   :
@@ -3236,7 +3287,7 @@ fi
 echo "$ac_t""$CPP" 1>&6
 
     echo $ac_n "checking how to run the C++ preprocessor""... $ac_c" 1>&6
-echo "configure:3240: checking how to run the C++ preprocessor" >&5
+echo "configure:3291: checking how to run the C++ preprocessor" >&5
 if test -z "$CXXCPP"; then
 if eval "test \"`echo '$''{'ac_cv_prog_CXXCPP'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
@@ -3249,12 +3300,12 @@ ac_link='${CXX-g++} -o conftest${ac_exeext} $CXXFLAGS $CPPFLAGS $LDFLAGS conftes
 cross_compiling=$ac_cv_prog_cxx_cross
   CXXCPP="${CXX-g++} -E"
   cat > conftest.$ac_ext <<EOF
-#line 3253 "configure"
+#line 3304 "configure"
 #include "confdefs.h"
 #include <stdlib.h>
 EOF
 ac_try="$ac_cpp conftest.$ac_ext >/dev/null 2>conftest.out"
-{ (eval echo configure:3258: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
+{ (eval echo configure:3309: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
 ac_err=`grep -v '^ *+' conftest.out | grep -v "^conftest.${ac_ext}\$"`
 if test -z "$ac_err"; then
   :
@@ -3281,7 +3332,7 @@ echo "$ac_t""$CXXCPP" 1>&6
     # Extract the first word of "as", so it can be a program name with args.
 set dummy as; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:3285: checking for $ac_word" >&5
+echo "configure:3336: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_prog_AS'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -3310,7 +3361,7 @@ fi
     # Extract the first word of "ld", so it can be a program name with args.
 set dummy ld; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:3314: checking for $ac_word" >&5
+echo "configure:3365: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_prog_LD'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -3347,7 +3398,7 @@ fi
 esac
 
 echo $ac_n "checking $CC dependency regen switch""... $ac_c" 1>&6
-echo "configure:3351: checking $CC dependency regen switch" >&5
+echo "configure:3402: checking $CC dependency regen switch" >&5
 rm -f configure-test.*
 rm -rf configure-test-dir
 mkdir configure-test-dir
@@ -3450,7 +3501,7 @@ F77_DEPEND_EXT=$CC_DEPEND_EXT
 # Extract the first word of "gmake", so it can be a program name with args.
 set dummy gmake; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:3454: checking for $ac_word" >&5
+echo "configure:3505: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_path_GMAKE'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -3487,7 +3538,7 @@ if test "$GMAKE" = "NOT_FOUND"; then
   # Extract the first word of "make", so it can be a program name with args.
 set dummy make; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:3491: checking for $ac_word" >&5
+echo "configure:3542: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_path_MAKE'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -3545,7 +3596,7 @@ fi
     _CUR_2_=""
 
     echo $ac_n "checking for `basename $MAKE` version 3.78.1""... $ac_c" 1>&6
-echo "configure:3549: checking for `basename $MAKE` version 3.78.1" >&5
+echo "configure:3600: checking for `basename $MAKE` version 3.78.1" >&5
 
     if test ""; then
       _SCI_CORRECT_=''
@@ -3593,12 +3644,12 @@ echo "configure:3549: checking for `basename $MAKE` version 3.78.1" >&5
     fi
   
 
-for ac_prog in mawk gawk nawk awk
+for ac_prog in gawk mawk nawk awk
 do
 # Extract the first word of "$ac_prog", so it can be a program name with args.
 set dummy $ac_prog; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:3602: checking for $ac_word" >&5
+echo "configure:3653: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_prog_AWK'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -3632,7 +3683,7 @@ done
 # Extract the first word of "bison", so it can be a program name with args.
 set dummy bison; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:3636: checking for $ac_word" >&5
+echo "configure:3687: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_prog_YACC'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -3671,7 +3722,7 @@ fi
 # Extract the first word of "flex", so it can be a program name with args.
 set dummy flex; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:3675: checking for $ac_word" >&5
+echo "configure:3726: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_prog_LEX'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -3705,7 +3756,7 @@ then
   *) ac_lib=l ;;
   esac
   echo $ac_n "checking for yywrap in -l$ac_lib""... $ac_c" 1>&6
-echo "configure:3709: checking for yywrap in -l$ac_lib" >&5
+echo "configure:3760: checking for yywrap in -l$ac_lib" >&5
 ac_lib_var=`echo $ac_lib'_'yywrap | sed 'y%./+-%__p_%'`
 if eval "test \"`echo '$''{'ac_cv_lib_$ac_lib_var'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
@@ -3713,7 +3764,7 @@ else
   ac_save_LIBS="$LIBS"
 LIBS="-l$ac_lib  $LIBS"
 cat > conftest.$ac_ext <<EOF
-#line 3717 "configure"
+#line 3768 "configure"
 #include "confdefs.h"
 /* Override any gcc2 internal prototype to avoid an error.  */
 /* We use char because int might match the return type of a gcc2
@@ -3724,7 +3775,7 @@ int main() {
 yywrap()
 ; return 0; }
 EOF
-if { (eval echo configure:3728: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:3779: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   eval "ac_cv_lib_$ac_lib_var=yes"
 else
@@ -3754,7 +3805,7 @@ if test "$pkg_uintah" = "yes" ; then
   # Extract the first word of "perl", so it can be a program name with args.
 set dummy perl; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:3758: checking for $ac_word" >&5
+echo "configure:3809: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_prog_PERL'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -3785,7 +3836,7 @@ else
   # Extract the first word of "perl", so it can be a program name with args.
 set dummy perl; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:3789: checking for $ac_word" >&5
+echo "configure:3840: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_prog_PERL'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -3820,7 +3871,7 @@ fi
 # Extract the first word of "etags", so it can be a program name with args.
 set dummy etags; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:3824: checking for $ac_word" >&5
+echo "configure:3875: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_prog_ETAGS'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -3893,7 +3944,7 @@ cross_compiling=$ac_cv_prog_cxx_cross
 
 ##  ----------  See if this is a 64 bit machine --------------------------
 echo $ac_n "checking size of void*""... $ac_c" 1>&6
-echo "configure:3897: checking size of void*" >&5
+echo "configure:3948: checking size of void*" >&5
 if eval "test \"`echo '$''{'ac_cv_sizeof_voidp'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -3901,21 +3952,18 @@ else
   ac_cv_sizeof_voidp=0
 else
   cat > conftest.$ac_ext <<EOF
-#line 3905 "configure"
+#line 3956 "configure"
 #include "confdefs.h"
-#ifdef __cplusplus
-extern "C" void exit(int);
-#endif
 #include <stdio.h>
-main()
+int main()
 {
   FILE *f=fopen("conftestval", "w");
-  if (!f) exit(1);
+  if (!f) return(1);
   fprintf(f, "%d\n", sizeof(void*));
-  exit(0);
+  return(0);
 }
 EOF
-if { (eval echo configure:3919: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext} && (./conftest; exit) 2>/dev/null
+if { (eval echo configure:3967: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext} && (./conftest; exit) 2>/dev/null
 then
   ac_cv_sizeof_voidp=`cat conftestval`
 else
@@ -3976,7 +4024,7 @@ if test "$pkg_insight" = "yes"; then
    # include and lib Insight dirs exist.
 
    echo $ac_n "checking for Insight.""... $ac_c" 1>&6
-echo "configure:3980: checking for Insight." >&5
+echo "configure:4028: checking for Insight." >&5
 
    if test "$with_insight"; then
       dir="$with_insight"
@@ -4161,7 +4209,7 @@ esac
 
 echo 
 echo "checking for required standard components..." 1>&6
-echo "configure:4165: checking for required standard components..." >&5
+echo "configure:4213: checking for required standard components..." >&5
 echo
 
 ##  --  search for the math library  -------------------------------------
@@ -4234,7 +4282,7 @@ echo
        EXTERN_BEGIN=""
        EXTERN_END=""
        echo $ac_n "checking for both libm.so and libm.a""... $ac_c" 1>&6
-echo "configure:4238: checking for both libm.so and libm.a" >&5
+echo "configure:4286: checking for both libm.so and libm.a" >&5
     else
       if test "main" = "main"; then
          _SCI_DECL_=""
@@ -4242,13 +4290,13 @@ echo "configure:4238: checking for both libm.so and libm.a" >&5
          EXTERN_BEGIN=""
          EXTERN_END=""
          echo $ac_n "checking for -lm""... $ac_c" 1>&6
-echo "configure:4246: checking for -lm" >&5
+echo "configure:4294: checking for -lm" >&5
       else
         _SCI_DECL_="char main();"
         _SCI_CALL_="main();"
 
         echo $ac_n "checking for main in -lm""... $ac_c" 1>&6
-echo "configure:4252: checking for main in -lm" >&5
+echo "configure:4300: checking for main in -lm" >&5
         if test "$_SCI_USING_CXX_" != "yes"; then
           EXTERN_BEGIN="extern \"C\" {"
           EXTERN_END="}"
@@ -4594,7 +4642,7 @@ EOF
     if test $num_headers -gt 1; then
 
        echo $ac_n "checking for all headers at the same time: $_HEADER_LIST_""... $ac_c" 1>&6
-echo "configure:4598: checking for all headers at the same time: $_HEADER_LIST_" >&5
+echo "configure:4646: checking for all headers at the same time: $_HEADER_LIST_" >&5
        for _CHECK_PATH_ in $_SCI_CHECK_PATHS_; do
 
           if test "$debugging" = "yes"; then
@@ -4714,7 +4762,7 @@ echo "configure:4598: checking for all headers at the same time: $_HEADER_LIST_"
     for _HEADER_ in $_HEADER_LIST_; do
 
        echo $ac_n "checking for $_HEADER_""... $ac_c" 1>&6
-echo "configure:4718: checking for $_HEADER_" >&5
+echo "configure:4766: checking for $_HEADER_" >&5
 
        for _CHECK_PATH_ in $_SCI_CHECK_PATHS_; do
 
@@ -4901,7 +4949,7 @@ dirs="$with_X11_lib /usr/lib /usr/X11R6/lib"
        EXTERN_BEGIN=""
        EXTERN_END=""
        echo $ac_n "checking for both libX11.so and libX11.a""... $ac_c" 1>&6
-echo "configure:4905: checking for both libX11.so and libX11.a" >&5
+echo "configure:4953: checking for both libX11.so and libX11.a" >&5
     else
       if test "main" = "main"; then
          _SCI_DECL_=""
@@ -4909,13 +4957,13 @@ echo "configure:4905: checking for both libX11.so and libX11.a" >&5
          EXTERN_BEGIN=""
          EXTERN_END=""
          echo $ac_n "checking for -lX11""... $ac_c" 1>&6
-echo "configure:4913: checking for -lX11" >&5
+echo "configure:4961: checking for -lX11" >&5
       else
         _SCI_DECL_="char main();"
         _SCI_CALL_="main();"
 
         echo $ac_n "checking for main in -lX11""... $ac_c" 1>&6
-echo "configure:4919: checking for main in -lX11" >&5
+echo "configure:4967: checking for main in -lX11" >&5
         if test "$_SCI_USING_CXX_" != "yes"; then
           EXTERN_BEGIN="extern \"C\" {"
           EXTERN_END="}"
@@ -5258,7 +5306,7 @@ EOF
        EXTERN_BEGIN=""
        EXTERN_END=""
        echo $ac_n "checking for both libXext.so and libXext.a""... $ac_c" 1>&6
-echo "configure:5262: checking for both libXext.so and libXext.a" >&5
+echo "configure:5310: checking for both libXext.so and libXext.a" >&5
     else
       if test "main" = "main"; then
          _SCI_DECL_=""
@@ -5266,13 +5314,13 @@ echo "configure:5262: checking for both libXext.so and libXext.a" >&5
          EXTERN_BEGIN=""
          EXTERN_END=""
          echo $ac_n "checking for -lXext""... $ac_c" 1>&6
-echo "configure:5270: checking for -lXext" >&5
+echo "configure:5318: checking for -lXext" >&5
       else
         _SCI_DECL_="char main();"
         _SCI_CALL_="main();"
 
         echo $ac_n "checking for main in -lXext""... $ac_c" 1>&6
-echo "configure:5276: checking for main in -lXext" >&5
+echo "configure:5324: checking for main in -lXext" >&5
         if test "$_SCI_USING_CXX_" != "yes"; then
           EXTERN_BEGIN="extern \"C\" {"
           EXTERN_END="}"
@@ -5615,7 +5663,7 @@ EOF
        EXTERN_BEGIN=""
        EXTERN_END=""
        echo $ac_n "checking for both libXaw.so and libXaw.a""... $ac_c" 1>&6
-echo "configure:5619: checking for both libXaw.so and libXaw.a" >&5
+echo "configure:5667: checking for both libXaw.so and libXaw.a" >&5
     else
       if test "main" = "main"; then
          _SCI_DECL_=""
@@ -5623,13 +5671,13 @@ echo "configure:5619: checking for both libXaw.so and libXaw.a" >&5
          EXTERN_BEGIN=""
          EXTERN_END=""
          echo $ac_n "checking for -lXaw""... $ac_c" 1>&6
-echo "configure:5627: checking for -lXaw" >&5
+echo "configure:5675: checking for -lXaw" >&5
       else
         _SCI_DECL_="char main();"
         _SCI_CALL_="main();"
 
         echo $ac_n "checking for main in -lXaw""... $ac_c" 1>&6
-echo "configure:5633: checking for main in -lXaw" >&5
+echo "configure:5681: checking for main in -lXaw" >&5
         if test "$_SCI_USING_CXX_" != "yes"; then
           EXTERN_BEGIN="extern \"C\" {"
           EXTERN_END="}"
@@ -5972,7 +6020,7 @@ EOF
        EXTERN_BEGIN=""
        EXTERN_END=""
        echo $ac_n "checking for both libXi.so and libXi.a""... $ac_c" 1>&6
-echo "configure:5976: checking for both libXi.so and libXi.a" >&5
+echo "configure:6024: checking for both libXi.so and libXi.a" >&5
     else
       if test "main" = "main"; then
          _SCI_DECL_=""
@@ -5980,13 +6028,13 @@ echo "configure:5976: checking for both libXi.so and libXi.a" >&5
          EXTERN_BEGIN=""
          EXTERN_END=""
          echo $ac_n "checking for -lXi""... $ac_c" 1>&6
-echo "configure:5984: checking for -lXi" >&5
+echo "configure:6032: checking for -lXi" >&5
       else
         _SCI_DECL_="char main();"
         _SCI_CALL_="main();"
 
         echo $ac_n "checking for main in -lXi""... $ac_c" 1>&6
-echo "configure:5990: checking for main in -lXi" >&5
+echo "configure:6038: checking for main in -lXi" >&5
         if test "$_SCI_USING_CXX_" != "yes"; then
           EXTERN_BEGIN="extern \"C\" {"
           EXTERN_END="}"
@@ -6329,7 +6377,7 @@ EOF
        EXTERN_BEGIN=""
        EXTERN_END=""
        echo $ac_n "checking for both libXt.so and libXt.a""... $ac_c" 1>&6
-echo "configure:6333: checking for both libXt.so and libXt.a" >&5
+echo "configure:6381: checking for both libXt.so and libXt.a" >&5
     else
       if test "main" = "main"; then
          _SCI_DECL_=""
@@ -6337,13 +6385,13 @@ echo "configure:6333: checking for both libXt.so and libXt.a" >&5
          EXTERN_BEGIN=""
          EXTERN_END=""
          echo $ac_n "checking for -lXt""... $ac_c" 1>&6
-echo "configure:6341: checking for -lXt" >&5
+echo "configure:6389: checking for -lXt" >&5
       else
         _SCI_DECL_="char main();"
         _SCI_CALL_="main();"
 
         echo $ac_n "checking for main in -lXt""... $ac_c" 1>&6
-echo "configure:6347: checking for main in -lXt" >&5
+echo "configure:6395: checking for main in -lXt" >&5
         if test "$_SCI_USING_CXX_" != "yes"; then
           EXTERN_BEGIN="extern \"C\" {"
           EXTERN_END="}"
@@ -6686,7 +6734,7 @@ EOF
        EXTERN_BEGIN=""
        EXTERN_END=""
        echo $ac_n "checking for both libXmu.so and libXmu.a""... $ac_c" 1>&6
-echo "configure:6690: checking for both libXmu.so and libXmu.a" >&5
+echo "configure:6738: checking for both libXmu.so and libXmu.a" >&5
     else
       if test "main" = "main"; then
          _SCI_DECL_=""
@@ -6694,13 +6742,13 @@ echo "configure:6690: checking for both libXmu.so and libXmu.a" >&5
          EXTERN_BEGIN=""
          EXTERN_END=""
          echo $ac_n "checking for -lXmu""... $ac_c" 1>&6
-echo "configure:6698: checking for -lXmu" >&5
+echo "configure:6746: checking for -lXmu" >&5
       else
         _SCI_DECL_="char main();"
         _SCI_CALL_="main();"
 
         echo $ac_n "checking for main in -lXmu""... $ac_c" 1>&6
-echo "configure:6704: checking for main in -lXmu" >&5
+echo "configure:6752: checking for main in -lXmu" >&5
         if test "$_SCI_USING_CXX_" != "yes"; then
           EXTERN_BEGIN="extern \"C\" {"
           EXTERN_END="}"
@@ -7047,7 +7095,7 @@ EOF
     if test $num_headers -gt 1; then
 
        echo $ac_n "checking for all headers at the same time: $_HEADER_LIST_""... $ac_c" 1>&6
-echo "configure:7051: checking for all headers at the same time: $_HEADER_LIST_" >&5
+echo "configure:7099: checking for all headers at the same time: $_HEADER_LIST_" >&5
        for _CHECK_PATH_ in $_SCI_CHECK_PATHS_; do
 
           if test "$debugging" = "yes"; then
@@ -7167,7 +7215,7 @@ echo "configure:7051: checking for all headers at the same time: $_HEADER_LIST_"
     for _HEADER_ in $_HEADER_LIST_; do
 
        echo $ac_n "checking for $_HEADER_""... $ac_c" 1>&6
-echo "configure:7171: checking for $_HEADER_" >&5
+echo "configure:7219: checking for $_HEADER_" >&5
 
        for _CHECK_PATH_ in $_SCI_CHECK_PATHS_; do
 
@@ -7371,7 +7419,7 @@ case $host in
        EXTERN_BEGIN=""
        EXTERN_END=""
        echo $ac_n "checking for both libftn.so and libftn.a""... $ac_c" 1>&6
-echo "configure:7375: checking for both libftn.so and libftn.a" >&5
+echo "configure:7423: checking for both libftn.so and libftn.a" >&5
     else
       if test "main" = "main"; then
          _SCI_DECL_=""
@@ -7379,13 +7427,13 @@ echo "configure:7375: checking for both libftn.so and libftn.a" >&5
          EXTERN_BEGIN=""
          EXTERN_END=""
          echo $ac_n "checking for -lftn""... $ac_c" 1>&6
-echo "configure:7383: checking for -lftn" >&5
+echo "configure:7431: checking for -lftn" >&5
       else
         _SCI_DECL_="char main();"
         _SCI_CALL_="main();"
 
         echo $ac_n "checking for main in -lftn""... $ac_c" 1>&6
-echo "configure:7389: checking for main in -lftn" >&5
+echo "configure:7437: checking for main in -lftn" >&5
         if test "$_SCI_USING_CXX_" != "yes"; then
           EXTERN_BEGIN="extern \"C\" {"
           EXTERN_END="}"
@@ -7728,7 +7776,7 @@ EOF
        EXTERN_BEGIN=""
        EXTERN_END=""
        echo $ac_n "checking for both libfortran.so and libfortran.a""... $ac_c" 1>&6
-echo "configure:7732: checking for both libfortran.so and libfortran.a" >&5
+echo "configure:7780: checking for both libfortran.so and libfortran.a" >&5
     else
       if test "main" = "main"; then
          _SCI_DECL_=""
@@ -7736,13 +7784,13 @@ echo "configure:7732: checking for both libfortran.so and libfortran.a" >&5
          EXTERN_BEGIN=""
          EXTERN_END=""
          echo $ac_n "checking for -lfortran""... $ac_c" 1>&6
-echo "configure:7740: checking for -lfortran" >&5
+echo "configure:7788: checking for -lfortran" >&5
       else
         _SCI_DECL_="char main();"
         _SCI_CALL_="main();"
 
         echo $ac_n "checking for main in -lfortran""... $ac_c" 1>&6
-echo "configure:7746: checking for main in -lfortran" >&5
+echo "configure:7794: checking for main in -lfortran" >&5
         if test "$_SCI_USING_CXX_" != "yes"; then
           EXTERN_BEGIN="extern \"C\" {"
           EXTERN_END="}"
@@ -8091,7 +8139,7 @@ EOF
        EXTERN_BEGIN=""
        EXTERN_END=""
        echo $ac_n "checking for both libxlf90.so and libxlf90.a""... $ac_c" 1>&6
-echo "configure:8095: checking for both libxlf90.so and libxlf90.a" >&5
+echo "configure:8143: checking for both libxlf90.so and libxlf90.a" >&5
     else
       if test "main" = "main"; then
          _SCI_DECL_=""
@@ -8099,13 +8147,13 @@ echo "configure:8095: checking for both libxlf90.so and libxlf90.a" >&5
          EXTERN_BEGIN=""
          EXTERN_END=""
          echo $ac_n "checking for -lxlf90""... $ac_c" 1>&6
-echo "configure:8103: checking for -lxlf90" >&5
+echo "configure:8151: checking for -lxlf90" >&5
       else
         _SCI_DECL_="char main();"
         _SCI_CALL_="main();"
 
         echo $ac_n "checking for main in -lxlf90""... $ac_c" 1>&6
-echo "configure:8109: checking for main in -lxlf90" >&5
+echo "configure:8157: checking for main in -lxlf90" >&5
         if test "$_SCI_USING_CXX_" != "yes"; then
           EXTERN_BEGIN="extern \"C\" {"
           EXTERN_END="}"
@@ -8454,7 +8502,7 @@ EOF
        EXTERN_BEGIN=""
        EXTERN_END=""
        echo $ac_n "checking for both libg2c.so and libg2c.a""... $ac_c" 1>&6
-echo "configure:8458: checking for both libg2c.so and libg2c.a" >&5
+echo "configure:8506: checking for both libg2c.so and libg2c.a" >&5
     else
       if test "main" = "main"; then
          _SCI_DECL_=""
@@ -8462,13 +8510,13 @@ echo "configure:8458: checking for both libg2c.so and libg2c.a" >&5
          EXTERN_BEGIN=""
          EXTERN_END=""
          echo $ac_n "checking for -lg2c""... $ac_c" 1>&6
-echo "configure:8466: checking for -lg2c" >&5
+echo "configure:8514: checking for -lg2c" >&5
       else
         _SCI_DECL_="char main();"
         _SCI_CALL_="main();"
 
         echo $ac_n "checking for main in -lg2c""... $ac_c" 1>&6
-echo "configure:8472: checking for main in -lg2c" >&5
+echo "configure:8520: checking for main in -lg2c" >&5
         if test "$_SCI_USING_CXX_" != "yes"; then
           EXTERN_BEGIN="extern \"C\" {"
           EXTERN_END="}"
@@ -8816,7 +8864,7 @@ EOF
        EXTERN_BEGIN=""
        EXTERN_END=""
        echo $ac_n "checking for both libfor.so and libfor.a""... $ac_c" 1>&6
-echo "configure:8820: checking for both libfor.so and libfor.a" >&5
+echo "configure:8868: checking for both libfor.so and libfor.a" >&5
     else
       if test "main" = "main"; then
          _SCI_DECL_=""
@@ -8824,13 +8872,13 @@ echo "configure:8820: checking for both libfor.so and libfor.a" >&5
          EXTERN_BEGIN=""
          EXTERN_END=""
          echo $ac_n "checking for -lfor""... $ac_c" 1>&6
-echo "configure:8828: checking for -lfor" >&5
+echo "configure:8876: checking for -lfor" >&5
       else
         _SCI_DECL_="char main();"
         _SCI_CALL_="main();"
 
         echo $ac_n "checking for main in -lfor""... $ac_c" 1>&6
-echo "configure:8834: checking for main in -lfor" >&5
+echo "configure:8882: checking for main in -lfor" >&5
         if test "$_SCI_USING_CXX_" != "yes"; then
           EXTERN_BEGIN="extern \"C\" {"
           EXTERN_END="}"
@@ -9179,7 +9227,7 @@ EOF
        EXTERN_BEGIN=""
        EXTERN_END=""
        echo $ac_n "checking for both libg2c.so and libg2c.a""... $ac_c" 1>&6
-echo "configure:9183: checking for both libg2c.so and libg2c.a" >&5
+echo "configure:9231: checking for both libg2c.so and libg2c.a" >&5
     else
       if test "main" = "main"; then
          _SCI_DECL_=""
@@ -9187,13 +9235,13 @@ echo "configure:9183: checking for both libg2c.so and libg2c.a" >&5
          EXTERN_BEGIN=""
          EXTERN_END=""
          echo $ac_n "checking for -lg2c""... $ac_c" 1>&6
-echo "configure:9191: checking for -lg2c" >&5
+echo "configure:9239: checking for -lg2c" >&5
       else
         _SCI_DECL_="char main();"
         _SCI_CALL_="main();"
 
         echo $ac_n "checking for main in -lg2c""... $ac_c" 1>&6
-echo "configure:9197: checking for main in -lg2c" >&5
+echo "configure:9245: checking for main in -lg2c" >&5
         if test "$_SCI_USING_CXX_" != "yes"; then
           EXTERN_BEGIN="extern \"C\" {"
           EXTERN_END="}"
@@ -9541,7 +9589,7 @@ EOF
        EXTERN_BEGIN=""
        EXTERN_END=""
        echo $ac_n "checking for both libF77.so and libF77.a""... $ac_c" 1>&6
-echo "configure:9545: checking for both libF77.so and libF77.a" >&5
+echo "configure:9593: checking for both libF77.so and libF77.a" >&5
     else
       if test "main" = "main"; then
          _SCI_DECL_=""
@@ -9549,13 +9597,13 @@ echo "configure:9545: checking for both libF77.so and libF77.a" >&5
          EXTERN_BEGIN=""
          EXTERN_END=""
          echo $ac_n "checking for -lF77""... $ac_c" 1>&6
-echo "configure:9553: checking for -lF77" >&5
+echo "configure:9601: checking for -lF77" >&5
       else
         _SCI_DECL_="char main();"
         _SCI_CALL_="main();"
 
         echo $ac_n "checking for main in -lF77""... $ac_c" 1>&6
-echo "configure:9559: checking for main in -lF77" >&5
+echo "configure:9607: checking for main in -lF77" >&5
         if test "$_SCI_USING_CXX_" != "yes"; then
           EXTERN_BEGIN="extern \"C\" {"
           EXTERN_END="}"
@@ -9960,7 +10008,7 @@ case $threads in
        EXTERN_BEGIN=""
        EXTERN_END=""
        echo $ac_n "checking for both libfetchop.so and libfetchop.a""... $ac_c" 1>&6
-echo "configure:9964: checking for both libfetchop.so and libfetchop.a" >&5
+echo "configure:10012: checking for both libfetchop.so and libfetchop.a" >&5
     else
       if test "main" = "main"; then
          _SCI_DECL_=""
@@ -9968,13 +10016,13 @@ echo "configure:9964: checking for both libfetchop.so and libfetchop.a" >&5
          EXTERN_BEGIN=""
          EXTERN_END=""
          echo $ac_n "checking for -lfetchop""... $ac_c" 1>&6
-echo "configure:9972: checking for -lfetchop" >&5
+echo "configure:10020: checking for -lfetchop" >&5
       else
         _SCI_DECL_="char main();"
         _SCI_CALL_="main();"
 
         echo $ac_n "checking for main in -lfetchop""... $ac_c" 1>&6
-echo "configure:9978: checking for main in -lfetchop" >&5
+echo "configure:10026: checking for main in -lfetchop" >&5
         if test "$_SCI_USING_CXX_" != "yes"; then
           EXTERN_BEGIN="extern \"C\" {"
           EXTERN_END="}"
@@ -10324,7 +10372,7 @@ EOF
        EXTERN_BEGIN=""
        EXTERN_END=""
        echo $ac_n "checking for both libpthread.so and libpthread.a""... $ac_c" 1>&6
-echo "configure:10328: checking for both libpthread.so and libpthread.a" >&5
+echo "configure:10376: checking for both libpthread.so and libpthread.a" >&5
     else
       if test "main" = "main"; then
          _SCI_DECL_=""
@@ -10332,13 +10380,13 @@ echo "configure:10328: checking for both libpthread.so and libpthread.a" >&5
          EXTERN_BEGIN=""
          EXTERN_END=""
          echo $ac_n "checking for -lpthread""... $ac_c" 1>&6
-echo "configure:10336: checking for -lpthread" >&5
+echo "configure:10384: checking for -lpthread" >&5
       else
         _SCI_DECL_="char main();"
         _SCI_CALL_="main();"
 
         echo $ac_n "checking for main in -lpthread""... $ac_c" 1>&6
-echo "configure:10342: checking for main in -lpthread" >&5
+echo "configure:10390: checking for main in -lpthread" >&5
         if test "$_SCI_USING_CXX_" != "yes"; then
           EXTERN_BEGIN="extern \"C\" {"
           EXTERN_END="}"
@@ -10688,7 +10736,7 @@ EOF
     if test $num_headers -gt 1; then
 
        echo $ac_n "checking for all headers at the same time: $_HEADER_LIST_""... $ac_c" 1>&6
-echo "configure:10692: checking for all headers at the same time: $_HEADER_LIST_" >&5
+echo "configure:10740: checking for all headers at the same time: $_HEADER_LIST_" >&5
        for _CHECK_PATH_ in $_SCI_CHECK_PATHS_; do
 
           if test "$debugging" = "yes"; then
@@ -10808,7 +10856,7 @@ echo "configure:10692: checking for all headers at the same time: $_HEADER_LIST_
     for _HEADER_ in $_HEADER_LIST_; do
 
        echo $ac_n "checking for $_HEADER_""... $ac_c" 1>&6
-echo "configure:10812: checking for $_HEADER_" >&5
+echo "configure:10860: checking for $_HEADER_" >&5
 
        for _CHECK_PATH_ in $_SCI_CHECK_PATHS_; do
 
@@ -10920,13 +10968,13 @@ EOF
 
   
       echo $ac_n "checking for semaphore library""... $ac_c" 1>&6
-echo "configure:10924: checking for semaphore library" >&5
+echo "configure:10972: checking for semaphore library" >&5
       old_LIBS=$LIBS
       SEMAPHORE_LIB_FLAG=unknown
       for i in "" "$THREAD_LIB_FLAG" -lrt; do
         LIBS="$old_LIBS $i"
         cat > conftest.$ac_ext <<EOF
-#line 10930 "configure"
+#line 10978 "configure"
 #include "confdefs.h"
 
 #include <semaphore.h>
@@ -10939,7 +10987,7 @@ int main() {
       
 ; return 0; }
 EOF
-if { (eval echo configure:10943: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:10991: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   
          SEMAPHORE_LIB_FLAG=$i
@@ -11071,7 +11119,7 @@ fi
        EXTERN_BEGIN=""
        EXTERN_END=""
        echo $ac_n "checking for both libGL.so and libGL.a""... $ac_c" 1>&6
-echo "configure:11075: checking for both libGL.so and libGL.a" >&5
+echo "configure:11123: checking for both libGL.so and libGL.a" >&5
     else
       if test "main" = "main"; then
          _SCI_DECL_=""
@@ -11079,13 +11127,13 @@ echo "configure:11075: checking for both libGL.so and libGL.a" >&5
          EXTERN_BEGIN=""
          EXTERN_END=""
          echo $ac_n "checking for -lGL""... $ac_c" 1>&6
-echo "configure:11083: checking for -lGL" >&5
+echo "configure:11131: checking for -lGL" >&5
       else
         _SCI_DECL_="char main();"
         _SCI_CALL_="main();"
 
         echo $ac_n "checking for main in -lGL""... $ac_c" 1>&6
-echo "configure:11089: checking for main in -lGL" >&5
+echo "configure:11137: checking for main in -lGL" >&5
         if test "$_SCI_USING_CXX_" != "yes"; then
           EXTERN_BEGIN="extern \"C\" {"
           EXTERN_END="}"
@@ -11428,7 +11476,7 @@ EOF
        EXTERN_BEGIN=""
        EXTERN_END=""
        echo $ac_n "checking for both libGLU.so and libGLU.a""... $ac_c" 1>&6
-echo "configure:11432: checking for both libGLU.so and libGLU.a" >&5
+echo "configure:11480: checking for both libGLU.so and libGLU.a" >&5
     else
       if test "main" = "main"; then
          _SCI_DECL_=""
@@ -11436,13 +11484,13 @@ echo "configure:11432: checking for both libGLU.so and libGLU.a" >&5
          EXTERN_BEGIN=""
          EXTERN_END=""
          echo $ac_n "checking for -lGLU""... $ac_c" 1>&6
-echo "configure:11440: checking for -lGLU" >&5
+echo "configure:11488: checking for -lGLU" >&5
       else
         _SCI_DECL_="char main();"
         _SCI_CALL_="main();"
 
         echo $ac_n "checking for main in -lGLU""... $ac_c" 1>&6
-echo "configure:11446: checking for main in -lGLU" >&5
+echo "configure:11494: checking for main in -lGLU" >&5
         if test "$_SCI_USING_CXX_" != "yes"; then
           EXTERN_BEGIN="extern \"C\" {"
           EXTERN_END="}"
@@ -11788,7 +11836,7 @@ EOF
     if test $num_headers -gt 1; then
 
        echo $ac_n "checking for all headers at the same time: $_HEADER_LIST_""... $ac_c" 1>&6
-echo "configure:11792: checking for all headers at the same time: $_HEADER_LIST_" >&5
+echo "configure:11840: checking for all headers at the same time: $_HEADER_LIST_" >&5
        for _CHECK_PATH_ in $_SCI_CHECK_PATHS_; do
 
           if test "$debugging" = "yes"; then
@@ -11908,7 +11956,7 @@ echo "configure:11792: checking for all headers at the same time: $_HEADER_LIST_
     for _HEADER_ in $_HEADER_LIST_; do
 
        echo $ac_n "checking for $_HEADER_""... $ac_c" 1>&6
-echo "configure:11912: checking for $_HEADER_" >&5
+echo "configure:11960: checking for $_HEADER_" >&5
 
        for _CHECK_PATH_ in $_SCI_CHECK_PATHS_; do
 
@@ -12105,7 +12153,7 @@ if test "$pkg_remote" = "yes"; then
        EXTERN_BEGIN=""
        EXTERN_END=""
        echo $ac_n "checking for both libjpeg.so and libjpeg.a""... $ac_c" 1>&6
-echo "configure:12109: checking for both libjpeg.so and libjpeg.a" >&5
+echo "configure:12157: checking for both libjpeg.so and libjpeg.a" >&5
     else
       if test "main" = "main"; then
          _SCI_DECL_=""
@@ -12113,13 +12161,13 @@ echo "configure:12109: checking for both libjpeg.so and libjpeg.a" >&5
          EXTERN_BEGIN=""
          EXTERN_END=""
          echo $ac_n "checking for -ljpeg""... $ac_c" 1>&6
-echo "configure:12117: checking for -ljpeg" >&5
+echo "configure:12165: checking for -ljpeg" >&5
       else
         _SCI_DECL_="char main();"
         _SCI_CALL_="main();"
 
         echo $ac_n "checking for main in -ljpeg""... $ac_c" 1>&6
-echo "configure:12123: checking for main in -ljpeg" >&5
+echo "configure:12171: checking for main in -ljpeg" >&5
         if test "$_SCI_USING_CXX_" != "yes"; then
           EXTERN_BEGIN="extern \"C\" {"
           EXTERN_END="}"
@@ -12469,7 +12517,7 @@ EOF
        EXTERN_BEGIN=""
        EXTERN_END=""
        echo $ac_n "checking for both libtiff.so and libtiff.a""... $ac_c" 1>&6
-echo "configure:12473: checking for both libtiff.so and libtiff.a" >&5
+echo "configure:12521: checking for both libtiff.so and libtiff.a" >&5
     else
       if test "main" = "main"; then
          _SCI_DECL_=""
@@ -12477,13 +12525,13 @@ echo "configure:12473: checking for both libtiff.so and libtiff.a" >&5
          EXTERN_BEGIN=""
          EXTERN_END=""
          echo $ac_n "checking for -ltiff""... $ac_c" 1>&6
-echo "configure:12481: checking for -ltiff" >&5
+echo "configure:12529: checking for -ltiff" >&5
       else
         _SCI_DECL_="char main();"
         _SCI_CALL_="main();"
 
         echo $ac_n "checking for main in -ltiff""... $ac_c" 1>&6
-echo "configure:12487: checking for main in -ltiff" >&5
+echo "configure:12535: checking for main in -ltiff" >&5
         if test "$_SCI_USING_CXX_" != "yes"; then
           EXTERN_BEGIN="extern \"C\" {"
           EXTERN_END="}"
@@ -12845,7 +12893,7 @@ if test "$pkg_netsolve" = "yes"; then
        EXTERN_BEGIN=""
        EXTERN_END=""
        echo $ac_n "checking for both libnetsolve.so and libnetsolve.a""... $ac_c" 1>&6
-echo "configure:12849: checking for both libnetsolve.so and libnetsolve.a" >&5
+echo "configure:12897: checking for both libnetsolve.so and libnetsolve.a" >&5
     else
       if test "main" = "main"; then
          _SCI_DECL_=""
@@ -12853,13 +12901,13 @@ echo "configure:12849: checking for both libnetsolve.so and libnetsolve.a" >&5
          EXTERN_BEGIN=""
          EXTERN_END=""
          echo $ac_n "checking for -lnetsolve""... $ac_c" 1>&6
-echo "configure:12857: checking for -lnetsolve" >&5
+echo "configure:12905: checking for -lnetsolve" >&5
       else
         _SCI_DECL_="char main();"
         _SCI_CALL_="main();"
 
         echo $ac_n "checking for main in -lnetsolve""... $ac_c" 1>&6
-echo "configure:12863: checking for main in -lnetsolve" >&5
+echo "configure:12911: checking for main in -lnetsolve" >&5
         if test "$_SCI_USING_CXX_" != "yes"; then
           EXTERN_BEGIN="extern \"C\" {"
           EXTERN_END="}"
@@ -13220,7 +13268,7 @@ if test "$pkg_rtrt" = "yes"; then
        EXTERN_BEGIN=""
        EXTERN_END=""
        echo $ac_n "checking for both libglut.so and libglut.a""... $ac_c" 1>&6
-echo "configure:13224: checking for both libglut.so and libglut.a" >&5
+echo "configure:13272: checking for both libglut.so and libglut.a" >&5
     else
       if test "main" = "main"; then
          _SCI_DECL_=""
@@ -13228,13 +13276,13 @@ echo "configure:13224: checking for both libglut.so and libglut.a" >&5
          EXTERN_BEGIN=""
          EXTERN_END=""
          echo $ac_n "checking for -lglut""... $ac_c" 1>&6
-echo "configure:13232: checking for -lglut" >&5
+echo "configure:13280: checking for -lglut" >&5
       else
         _SCI_DECL_="char main();"
         _SCI_CALL_="main();"
 
         echo $ac_n "checking for main in -lglut""... $ac_c" 1>&6
-echo "configure:13238: checking for main in -lglut" >&5
+echo "configure:13286: checking for main in -lglut" >&5
         if test "$_SCI_USING_CXX_" != "yes"; then
           EXTERN_BEGIN="extern \"C\" {"
           EXTERN_END="}"
@@ -13580,7 +13628,7 @@ EOF
     if test $num_headers -gt 1; then
 
        echo $ac_n "checking for all headers at the same time: $_HEADER_LIST_""... $ac_c" 1>&6
-echo "configure:13584: checking for all headers at the same time: $_HEADER_LIST_" >&5
+echo "configure:13632: checking for all headers at the same time: $_HEADER_LIST_" >&5
        for _CHECK_PATH_ in $_SCI_CHECK_PATHS_; do
 
           if test "$debugging" = "yes"; then
@@ -13700,7 +13748,7 @@ echo "configure:13584: checking for all headers at the same time: $_HEADER_LIST_
     for _HEADER_ in $_HEADER_LIST_; do
 
        echo $ac_n "checking for $_HEADER_""... $ac_c" 1>&6
-echo "configure:13704: checking for $_HEADER_" >&5
+echo "configure:13752: checking for $_HEADER_" >&5
 
        for _CHECK_PATH_ in $_SCI_CHECK_PATHS_; do
 
@@ -13886,7 +13934,7 @@ EOF
        EXTERN_BEGIN=""
        EXTERN_END=""
        echo $ac_n "checking for both libglui.so and libglui.a""... $ac_c" 1>&6
-echo "configure:13890: checking for both libglui.so and libglui.a" >&5
+echo "configure:13938: checking for both libglui.so and libglui.a" >&5
     else
       if test "main" = "main"; then
          _SCI_DECL_=""
@@ -13894,13 +13942,13 @@ echo "configure:13890: checking for both libglui.so and libglui.a" >&5
          EXTERN_BEGIN=""
          EXTERN_END=""
          echo $ac_n "checking for -lglui""... $ac_c" 1>&6
-echo "configure:13898: checking for -lglui" >&5
+echo "configure:13946: checking for -lglui" >&5
       else
         _SCI_DECL_="char main();"
         _SCI_CALL_="main();"
 
         echo $ac_n "checking for main in -lglui""... $ac_c" 1>&6
-echo "configure:13904: checking for main in -lglui" >&5
+echo "configure:13952: checking for main in -lglui" >&5
         if test "$_SCI_USING_CXX_" != "yes"; then
           EXTERN_BEGIN="extern \"C\" {"
           EXTERN_END="}"
@@ -14246,7 +14294,7 @@ EOF
     if test $num_headers -gt 1; then
 
        echo $ac_n "checking for all headers at the same time: $_HEADER_LIST_""... $ac_c" 1>&6
-echo "configure:14250: checking for all headers at the same time: $_HEADER_LIST_" >&5
+echo "configure:14298: checking for all headers at the same time: $_HEADER_LIST_" >&5
        for _CHECK_PATH_ in $_SCI_CHECK_PATHS_; do
 
           if test "$debugging" = "yes"; then
@@ -14366,7 +14414,7 @@ echo "configure:14250: checking for all headers at the same time: $_HEADER_LIST_
     for _HEADER_ in $_HEADER_LIST_; do
 
        echo $ac_n "checking for $_HEADER_""... $ac_c" 1>&6
-echo "configure:14370: checking for $_HEADER_" >&5
+echo "configure:14418: checking for $_HEADER_" >&5
 
        for _CHECK_PATH_ in $_SCI_CHECK_PATHS_; do
 
@@ -14566,7 +14614,7 @@ EOF
        EXTERN_BEGIN=""
        EXTERN_END=""
        echo $ac_n "checking for both liboogl.so and liboogl.a""... $ac_c" 1>&6
-echo "configure:14570: checking for both liboogl.so and liboogl.a" >&5
+echo "configure:14618: checking for both liboogl.so and liboogl.a" >&5
     else
       if test "main" = "main"; then
          _SCI_DECL_=""
@@ -14574,13 +14622,13 @@ echo "configure:14570: checking for both liboogl.so and liboogl.a" >&5
          EXTERN_BEGIN=""
          EXTERN_END=""
          echo $ac_n "checking for -loogl""... $ac_c" 1>&6
-echo "configure:14578: checking for -loogl" >&5
+echo "configure:14626: checking for -loogl" >&5
       else
         _SCI_DECL_="char main();"
         _SCI_CALL_="main();"
 
         echo $ac_n "checking for main in -loogl""... $ac_c" 1>&6
-echo "configure:14584: checking for main in -loogl" >&5
+echo "configure:14632: checking for main in -loogl" >&5
         if test "$_SCI_USING_CXX_" != "yes"; then
           EXTERN_BEGIN="extern \"C\" {"
           EXTERN_END="}"
@@ -14926,7 +14974,7 @@ EOF
     if test $num_headers -gt 1; then
 
        echo $ac_n "checking for all headers at the same time: $_HEADER_LIST_""... $ac_c" 1>&6
-echo "configure:14930: checking for all headers at the same time: $_HEADER_LIST_" >&5
+echo "configure:14978: checking for all headers at the same time: $_HEADER_LIST_" >&5
        for _CHECK_PATH_ in $_SCI_CHECK_PATHS_; do
 
           if test "$debugging" = "yes"; then
@@ -15046,7 +15094,7 @@ echo "configure:14930: checking for all headers at the same time: $_HEADER_LIST_
     for _HEADER_ in $_HEADER_LIST_; do
 
        echo $ac_n "checking for $_HEADER_""... $ac_c" 1>&6
-echo "configure:15050: checking for $_HEADER_" >&5
+echo "configure:15098: checking for $_HEADER_" >&5
 
        for _CHECK_PATH_ in $_SCI_CHECK_PATHS_; do
 
@@ -15232,7 +15280,7 @@ EOF
        EXTERN_BEGIN=""
        EXTERN_END=""
        echo $ac_n "checking for both libaudio.so and libaudio.a""... $ac_c" 1>&6
-echo "configure:15236: checking for both libaudio.so and libaudio.a" >&5
+echo "configure:15284: checking for both libaudio.so and libaudio.a" >&5
     else
       if test "main" = "main"; then
          _SCI_DECL_=""
@@ -15240,13 +15288,13 @@ echo "configure:15236: checking for both libaudio.so and libaudio.a" >&5
          EXTERN_BEGIN=""
          EXTERN_END=""
          echo $ac_n "checking for -laudio""... $ac_c" 1>&6
-echo "configure:15244: checking for -laudio" >&5
+echo "configure:15292: checking for -laudio" >&5
       else
         _SCI_DECL_="char main();"
         _SCI_CALL_="main();"
 
         echo $ac_n "checking for main in -laudio""... $ac_c" 1>&6
-echo "configure:15250: checking for main in -laudio" >&5
+echo "configure:15298: checking for main in -laudio" >&5
         if test "$_SCI_USING_CXX_" != "yes"; then
           EXTERN_BEGIN="extern \"C\" {"
           EXTERN_END="}"
@@ -15589,7 +15637,7 @@ EOF
        EXTERN_BEGIN=""
        EXTERN_END=""
        echo $ac_n "checking for both libaudiofile.so and libaudiofile.a""... $ac_c" 1>&6
-echo "configure:15593: checking for both libaudiofile.so and libaudiofile.a" >&5
+echo "configure:15641: checking for both libaudiofile.so and libaudiofile.a" >&5
     else
       if test "main" = "main"; then
          _SCI_DECL_=""
@@ -15597,13 +15645,13 @@ echo "configure:15593: checking for both libaudiofile.so and libaudiofile.a" >&5
          EXTERN_BEGIN=""
          EXTERN_END=""
          echo $ac_n "checking for -laudiofile""... $ac_c" 1>&6
-echo "configure:15601: checking for -laudiofile" >&5
+echo "configure:15649: checking for -laudiofile" >&5
       else
         _SCI_DECL_="char main();"
         _SCI_CALL_="main();"
 
         echo $ac_n "checking for main in -laudiofile""... $ac_c" 1>&6
-echo "configure:15607: checking for main in -laudiofile" >&5
+echo "configure:15655: checking for main in -laudiofile" >&5
         if test "$_SCI_USING_CXX_" != "yes"; then
           EXTERN_BEGIN="extern \"C\" {"
           EXTERN_END="}"
@@ -15988,7 +16036,7 @@ fi
        EXTERN_BEGIN=""
        EXTERN_END=""
        echo $ac_n "checking for both libc.so and libc.a""... $ac_c" 1>&6
-echo "configure:15992: checking for both libc.so and libc.a" >&5
+echo "configure:16040: checking for both libc.so and libc.a" >&5
     else
       if test "dlopen" = "main"; then
          _SCI_DECL_=""
@@ -15996,13 +16044,13 @@ echo "configure:15992: checking for both libc.so and libc.a" >&5
          EXTERN_BEGIN=""
          EXTERN_END=""
          echo $ac_n "checking for -lc""... $ac_c" 1>&6
-echo "configure:16000: checking for -lc" >&5
+echo "configure:16048: checking for -lc" >&5
       else
         _SCI_DECL_="char dlopen();"
         _SCI_CALL_="dlopen();"
 
         echo $ac_n "checking for dlopen in -lc""... $ac_c" 1>&6
-echo "configure:16006: checking for dlopen in -lc" >&5
+echo "configure:16054: checking for dlopen in -lc" >&5
         if test "$_SCI_USING_CXX_" != "yes"; then
           EXTERN_BEGIN="extern \"C\" {"
           EXTERN_END="}"
@@ -16348,7 +16396,7 @@ else
        EXTERN_BEGIN=""
        EXTERN_END=""
        echo $ac_n "checking for both libdl.so and libdl.a""... $ac_c" 1>&6
-echo "configure:16352: checking for both libdl.so and libdl.a" >&5
+echo "configure:16400: checking for both libdl.so and libdl.a" >&5
     else
       if test "dlopen" = "main"; then
          _SCI_DECL_=""
@@ -16356,13 +16404,13 @@ echo "configure:16352: checking for both libdl.so and libdl.a" >&5
          EXTERN_BEGIN=""
          EXTERN_END=""
          echo $ac_n "checking for -ldl""... $ac_c" 1>&6
-echo "configure:16360: checking for -ldl" >&5
+echo "configure:16408: checking for -ldl" >&5
       else
         _SCI_DECL_="char dlopen();"
         _SCI_CALL_="dlopen();"
 
         echo $ac_n "checking for dlopen in -ldl""... $ac_c" 1>&6
-echo "configure:16366: checking for dlopen in -ldl" >&5
+echo "configure:16414: checking for dlopen in -ldl" >&5
         if test "$_SCI_USING_CXX_" != "yes"; then
           EXTERN_BEGIN="extern \"C\" {"
           EXTERN_END="}"
@@ -16710,7 +16758,7 @@ fi
     if test $num_headers -gt 1; then
 
        echo $ac_n "checking for all headers at the same time: $_HEADER_LIST_""... $ac_c" 1>&6
-echo "configure:16714: checking for all headers at the same time: $_HEADER_LIST_" >&5
+echo "configure:16762: checking for all headers at the same time: $_HEADER_LIST_" >&5
        for _CHECK_PATH_ in $_SCI_CHECK_PATHS_; do
 
           if test "$debugging" = "yes"; then
@@ -16830,7 +16878,7 @@ echo "configure:16714: checking for all headers at the same time: $_HEADER_LIST_
     for _HEADER_ in $_HEADER_LIST_; do
 
        echo $ac_n "checking for $_HEADER_""... $ac_c" 1>&6
-echo "configure:16834: checking for $_HEADER_" >&5
+echo "configure:16882: checking for $_HEADER_" >&5
 
        for _CHECK_PATH_ in $_SCI_CHECK_PATHS_; do
 
@@ -17047,7 +17095,7 @@ fi
     if test $num_headers -gt 1; then
 
        echo $ac_n "checking for all headers at the same time: $_HEADER_LIST_""... $ac_c" 1>&6
-echo "configure:17051: checking for all headers at the same time: $_HEADER_LIST_" >&5
+echo "configure:17099: checking for all headers at the same time: $_HEADER_LIST_" >&5
        for _CHECK_PATH_ in $_SCI_CHECK_PATHS_; do
 
           if test "$debugging" = "yes"; then
@@ -17167,7 +17215,7 @@ echo "configure:17051: checking for all headers at the same time: $_HEADER_LIST_
     for _HEADER_ in $_HEADER_LIST_; do
 
        echo $ac_n "checking for $_HEADER_""... $ac_c" 1>&6
-echo "configure:17171: checking for $_HEADER_" >&5
+echo "configure:17219: checking for $_HEADER_" >&5
 
        for _CHECK_PATH_ in $_SCI_CHECK_PATHS_; do
 
@@ -17354,7 +17402,7 @@ case $host in
     if test $num_headers -gt 1; then
 
        echo $ac_n "checking for all headers at the same time: $_HEADER_LIST_""... $ac_c" 1>&6
-echo "configure:17358: checking for all headers at the same time: $_HEADER_LIST_" >&5
+echo "configure:17406: checking for all headers at the same time: $_HEADER_LIST_" >&5
        for _CHECK_PATH_ in $_SCI_CHECK_PATHS_; do
 
           if test "$debugging" = "yes"; then
@@ -17474,7 +17522,7 @@ echo "configure:17358: checking for all headers at the same time: $_HEADER_LIST_
     for _HEADER_ in $_HEADER_LIST_; do
 
        echo $ac_n "checking for $_HEADER_""... $ac_c" 1>&6
-echo "configure:17478: checking for $_HEADER_" >&5
+echo "configure:17526: checking for $_HEADER_" >&5
 
        for _CHECK_PATH_ in $_SCI_CHECK_PATHS_; do
 
@@ -17659,7 +17707,7 @@ esac
     if test $num_headers -gt 1; then
 
        echo $ac_n "checking for all headers at the same time: $_HEADER_LIST_""... $ac_c" 1>&6
-echo "configure:17663: checking for all headers at the same time: $_HEADER_LIST_" >&5
+echo "configure:17711: checking for all headers at the same time: $_HEADER_LIST_" >&5
        for _CHECK_PATH_ in $_SCI_CHECK_PATHS_; do
 
           if test "$debugging" = "yes"; then
@@ -17779,7 +17827,7 @@ echo "configure:17663: checking for all headers at the same time: $_HEADER_LIST_
     for _HEADER_ in $_HEADER_LIST_; do
 
        echo $ac_n "checking for $_HEADER_""... $ac_c" 1>&6
-echo "configure:17783: checking for $_HEADER_" >&5
+echo "configure:17831: checking for $_HEADER_" >&5
 
        for _CHECK_PATH_ in $_SCI_CHECK_PATHS_; do
 
@@ -17964,7 +18012,7 @@ EOF
     if test $num_headers -gt 1; then
 
        echo $ac_n "checking for all headers at the same time: $_HEADER_LIST_""... $ac_c" 1>&6
-echo "configure:17968: checking for all headers at the same time: $_HEADER_LIST_" >&5
+echo "configure:18016: checking for all headers at the same time: $_HEADER_LIST_" >&5
        for _CHECK_PATH_ in $_SCI_CHECK_PATHS_; do
 
           if test "$debugging" = "yes"; then
@@ -18084,7 +18132,7 @@ echo "configure:17968: checking for all headers at the same time: $_HEADER_LIST_
     for _HEADER_ in $_HEADER_LIST_; do
 
        echo $ac_n "checking for $_HEADER_""... $ac_c" 1>&6
-echo "configure:18088: checking for $_HEADER_" >&5
+echo "configure:18136: checking for $_HEADER_" >&5
 
        for _CHECK_PATH_ in $_SCI_CHECK_PATHS_; do
 
@@ -18197,10 +18245,10 @@ EOF
   
 
 echo $ac_n "checking for location of hash_map""... $ac_c" 1>&6
-echo "configure:18201: checking for location of hash_map" >&5
+echo "configure:18249: checking for location of hash_map" >&5
 DEF_HASHMAP=None
 cat > conftest.$ac_ext <<EOF
-#line 18204 "configure"
+#line 18252 "configure"
 #include "confdefs.h"
 #include <hash_map>
                 std::hash_map<int, int> xx;
@@ -18208,7 +18256,7 @@ int main() {
 
 ; return 0; }
 EOF
-if { (eval echo configure:18212: \"$ac_compile\") 1>&5; (eval $ac_compile) 2>&5; }; then
+if { (eval echo configure:18260: \"$ac_compile\") 1>&5; (eval $ac_compile) 2>&5; }; then
   rm -rf conftest*
   DEF_HASHMAP=HAVE_STD_HASHMAP
 else
@@ -18218,7 +18266,7 @@ fi
 rm -f conftest*
 if test "$DEF_HASHMAP" = "None"; then
   cat > conftest.$ac_ext <<EOF
-#line 18222 "configure"
+#line 18270 "configure"
 #include "confdefs.h"
 #include <ext/hash_map>
                  std::hash_map<int, int> xx;
@@ -18226,7 +18274,7 @@ int main() {
 
 ; return 0; }
 EOF
-if { (eval echo configure:18230: \"$ac_compile\") 1>&5; (eval $ac_compile) 2>&5; }; then
+if { (eval echo configure:18278: \"$ac_compile\") 1>&5; (eval $ac_compile) 2>&5; }; then
   rm -rf conftest*
   DEF_HASHMAP=HAVE_EXT_HASHMAP
 else
@@ -18237,7 +18285,7 @@ rm -f conftest*
 fi
 if test "$DEF_HASHMAP" = "None"; then
   cat > conftest.$ac_ext <<EOF
-#line 18241 "configure"
+#line 18289 "configure"
 #include "confdefs.h"
 #include <ext/hash_map>
                  __gnu_cxx::hash_map<int, int> xx;
@@ -18245,7 +18293,7 @@ int main() {
 
 ; return 0; }
 EOF
-if { (eval echo configure:18249: \"$ac_compile\") 1>&5; (eval $ac_compile) 2>&5; }; then
+if { (eval echo configure:18297: \"$ac_compile\") 1>&5; (eval $ac_compile) 2>&5; }; then
   rm -rf conftest*
   DEF_HASHMAP=HAVE_GNU_HASHMAP
 else
@@ -18268,17 +18316,17 @@ for ac_hdr in ext/algorithm
 do
 ac_safe=`echo "$ac_hdr" | sed 'y%./+-%__p_%'`
 echo $ac_n "checking for $ac_hdr""... $ac_c" 1>&6
-echo "configure:18272: checking for $ac_hdr" >&5
+echo "configure:18320: checking for $ac_hdr" >&5
 if eval "test \"`echo '$''{'ac_cv_header_$ac_safe'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
   cat > conftest.$ac_ext <<EOF
-#line 18277 "configure"
+#line 18325 "configure"
 #include "confdefs.h"
 #include <$ac_hdr>
 EOF
 ac_try="$ac_cpp conftest.$ac_ext >/dev/null 2>conftest.out"
-{ (eval echo configure:18282: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
+{ (eval echo configure:18330: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
 ac_err=`grep -v '^ *+' conftest.out | grep -v "^conftest.${ac_ext}\$"`
 if test -z "$ac_err"; then
   rm -rf conftest*
@@ -18308,7 +18356,7 @@ done
 ##  --  search for tcl stuff  ---------------------------------------------
 echo 
 echo "checking for required Tcl components..." 1>&6
-echo "configure:18312: checking for required Tcl components..." >&5
+echo "configure:18360: checking for required Tcl components..." >&5
 echo
 
 if test -z "$with_tcl"; then
@@ -18385,7 +18433,7 @@ fi
        EXTERN_BEGIN=""
        EXTERN_END=""
        echo $ac_n "checking for both libtcl.so and libtcl.a""... $ac_c" 1>&6
-echo "configure:18389: checking for both libtcl.so and libtcl.a" >&5
+echo "configure:18437: checking for both libtcl.so and libtcl.a" >&5
     else
       if test "main" = "main"; then
          _SCI_DECL_=""
@@ -18393,13 +18441,13 @@ echo "configure:18389: checking for both libtcl.so and libtcl.a" >&5
          EXTERN_BEGIN=""
          EXTERN_END=""
          echo $ac_n "checking for -ltcl""... $ac_c" 1>&6
-echo "configure:18397: checking for -ltcl" >&5
+echo "configure:18445: checking for -ltcl" >&5
       else
         _SCI_DECL_="char main();"
         _SCI_CALL_="main();"
 
         echo $ac_n "checking for main in -ltcl""... $ac_c" 1>&6
-echo "configure:18403: checking for main in -ltcl" >&5
+echo "configure:18451: checking for main in -ltcl" >&5
         if test "$_SCI_USING_CXX_" != "yes"; then
           EXTERN_BEGIN="extern \"C\" {"
           EXTERN_END="}"
@@ -18746,7 +18794,7 @@ if test -f "$LIB_DIR_TCL/tclConfig.sh"; then . $LIB_DIR_TCL/tclConfig.sh; fi
     if test $num_headers -gt 1; then
 
        echo $ac_n "checking for all headers at the same time: $_HEADER_LIST_""... $ac_c" 1>&6
-echo "configure:18750: checking for all headers at the same time: $_HEADER_LIST_" >&5
+echo "configure:18798: checking for all headers at the same time: $_HEADER_LIST_" >&5
        for _CHECK_PATH_ in $_SCI_CHECK_PATHS_; do
 
           if test "$debugging" = "yes"; then
@@ -18866,7 +18914,7 @@ echo "configure:18750: checking for all headers at the same time: $_HEADER_LIST_
     for _HEADER_ in $_HEADER_LIST_; do
 
        echo $ac_n "checking for $_HEADER_""... $ac_c" 1>&6
-echo "configure:18870: checking for $_HEADER_" >&5
+echo "configure:18918: checking for $_HEADER_" >&5
 
        for _CHECK_PATH_ in $_SCI_CHECK_PATHS_; do
 
@@ -19053,7 +19101,7 @@ EOF
        EXTERN_BEGIN=""
        EXTERN_END=""
        echo $ac_n "checking for both libtk.so and libtk.a""... $ac_c" 1>&6
-echo "configure:19057: checking for both libtk.so and libtk.a" >&5
+echo "configure:19105: checking for both libtk.so and libtk.a" >&5
     else
       if test "main" = "main"; then
          _SCI_DECL_=""
@@ -19061,13 +19109,13 @@ echo "configure:19057: checking for both libtk.so and libtk.a" >&5
          EXTERN_BEGIN=""
          EXTERN_END=""
          echo $ac_n "checking for -ltk""... $ac_c" 1>&6
-echo "configure:19065: checking for -ltk" >&5
+echo "configure:19113: checking for -ltk" >&5
       else
         _SCI_DECL_="char main();"
         _SCI_CALL_="main();"
 
         echo $ac_n "checking for main in -ltk""... $ac_c" 1>&6
-echo "configure:19071: checking for main in -ltk" >&5
+echo "configure:19119: checking for main in -ltk" >&5
         if test "$_SCI_USING_CXX_" != "yes"; then
           EXTERN_BEGIN="extern \"C\" {"
           EXTERN_END="}"
@@ -19419,7 +19467,7 @@ fi
     if test $num_headers -gt 1; then
 
        echo $ac_n "checking for all headers at the same time: $_HEADER_LIST_""... $ac_c" 1>&6
-echo "configure:19423: checking for all headers at the same time: $_HEADER_LIST_" >&5
+echo "configure:19471: checking for all headers at the same time: $_HEADER_LIST_" >&5
        for _CHECK_PATH_ in $_SCI_CHECK_PATHS_; do
 
           if test "$debugging" = "yes"; then
@@ -19539,7 +19587,7 @@ echo "configure:19423: checking for all headers at the same time: $_HEADER_LIST_
     for _HEADER_ in $_HEADER_LIST_; do
 
        echo $ac_n "checking for $_HEADER_""... $ac_c" 1>&6
-echo "configure:19543: checking for $_HEADER_" >&5
+echo "configure:19591: checking for $_HEADER_" >&5
 
        for _CHECK_PATH_ in $_SCI_CHECK_PATHS_; do
 
@@ -19724,7 +19772,7 @@ EOF
        EXTERN_BEGIN=""
        EXTERN_END=""
        echo $ac_n "checking for both libitcl.so and libitcl.a""... $ac_c" 1>&6
-echo "configure:19728: checking for both libitcl.so and libitcl.a" >&5
+echo "configure:19776: checking for both libitcl.so and libitcl.a" >&5
     else
       if test "main" = "main"; then
          _SCI_DECL_=""
@@ -19732,13 +19780,13 @@ echo "configure:19728: checking for both libitcl.so and libitcl.a" >&5
          EXTERN_BEGIN=""
          EXTERN_END=""
          echo $ac_n "checking for -litcl""... $ac_c" 1>&6
-echo "configure:19736: checking for -litcl" >&5
+echo "configure:19784: checking for -litcl" >&5
       else
         _SCI_DECL_="char main();"
         _SCI_CALL_="main();"
 
         echo $ac_n "checking for main in -litcl""... $ac_c" 1>&6
-echo "configure:19742: checking for main in -litcl" >&5
+echo "configure:19790: checking for main in -litcl" >&5
         if test "$_SCI_USING_CXX_" != "yes"; then
           EXTERN_BEGIN="extern \"C\" {"
           EXTERN_END="}"
@@ -20084,7 +20132,7 @@ EOF
     if test $num_headers -gt 1; then
 
        echo $ac_n "checking for all headers at the same time: $_HEADER_LIST_""... $ac_c" 1>&6
-echo "configure:20088: checking for all headers at the same time: $_HEADER_LIST_" >&5
+echo "configure:20136: checking for all headers at the same time: $_HEADER_LIST_" >&5
        for _CHECK_PATH_ in $_SCI_CHECK_PATHS_; do
 
           if test "$debugging" = "yes"; then
@@ -20204,7 +20252,7 @@ echo "configure:20088: checking for all headers at the same time: $_HEADER_LIST_
     for _HEADER_ in $_HEADER_LIST_; do
 
        echo $ac_n "checking for $_HEADER_""... $ac_c" 1>&6
-echo "configure:20208: checking for $_HEADER_" >&5
+echo "configure:20256: checking for $_HEADER_" >&5
 
        for _CHECK_PATH_ in $_SCI_CHECK_PATHS_; do
 
@@ -20390,7 +20438,7 @@ EOF
        EXTERN_BEGIN=""
        EXTERN_END=""
        echo $ac_n "checking for both libitk.so and libitk.a""... $ac_c" 1>&6
-echo "configure:20394: checking for both libitk.so and libitk.a" >&5
+echo "configure:20442: checking for both libitk.so and libitk.a" >&5
     else
       if test "main" = "main"; then
          _SCI_DECL_=""
@@ -20398,13 +20446,13 @@ echo "configure:20394: checking for both libitk.so and libitk.a" >&5
          EXTERN_BEGIN=""
          EXTERN_END=""
          echo $ac_n "checking for -litk""... $ac_c" 1>&6
-echo "configure:20402: checking for -litk" >&5
+echo "configure:20450: checking for -litk" >&5
       else
         _SCI_DECL_="char main();"
         _SCI_CALL_="main();"
 
         echo $ac_n "checking for main in -litk""... $ac_c" 1>&6
-echo "configure:20408: checking for main in -litk" >&5
+echo "configure:20456: checking for main in -litk" >&5
         if test "$_SCI_USING_CXX_" != "yes"; then
           EXTERN_BEGIN="extern \"C\" {"
           EXTERN_END="}"
@@ -20750,7 +20798,7 @@ EOF
     if test $num_headers -gt 1; then
 
        echo $ac_n "checking for all headers at the same time: $_HEADER_LIST_""... $ac_c" 1>&6
-echo "configure:20754: checking for all headers at the same time: $_HEADER_LIST_" >&5
+echo "configure:20802: checking for all headers at the same time: $_HEADER_LIST_" >&5
        for _CHECK_PATH_ in $_SCI_CHECK_PATHS_; do
 
           if test "$debugging" = "yes"; then
@@ -20870,7 +20918,7 @@ echo "configure:20754: checking for all headers at the same time: $_HEADER_LIST_
     for _HEADER_ in $_HEADER_LIST_; do
 
        echo $ac_n "checking for $_HEADER_""... $ac_c" 1>&6
-echo "configure:20874: checking for $_HEADER_" >&5
+echo "configure:20922: checking for $_HEADER_" >&5
 
        for _CHECK_PATH_ in $_SCI_CHECK_PATHS_; do
 
@@ -21055,7 +21103,7 @@ EOF
        EXTERN_BEGIN=""
        EXTERN_END=""
        echo $ac_n "checking for both libBLT.so and libBLT.a""... $ac_c" 1>&6
-echo "configure:21059: checking for both libBLT.so and libBLT.a" >&5
+echo "configure:21107: checking for both libBLT.so and libBLT.a" >&5
     else
       if test "main" = "main"; then
          _SCI_DECL_=""
@@ -21063,13 +21111,13 @@ echo "configure:21059: checking for both libBLT.so and libBLT.a" >&5
          EXTERN_BEGIN=""
          EXTERN_END=""
          echo $ac_n "checking for -lBLT""... $ac_c" 1>&6
-echo "configure:21067: checking for -lBLT" >&5
+echo "configure:21115: checking for -lBLT" >&5
       else
         _SCI_DECL_="char main();"
         _SCI_CALL_="main();"
 
         echo $ac_n "checking for main in -lBLT""... $ac_c" 1>&6
-echo "configure:21073: checking for main in -lBLT" >&5
+echo "configure:21121: checking for main in -lBLT" >&5
         if test "$_SCI_USING_CXX_" != "yes"; then
           EXTERN_BEGIN="extern \"C\" {"
           EXTERN_END="}"
@@ -21415,7 +21463,7 @@ EOF
     if test $num_headers -gt 1; then
 
        echo $ac_n "checking for all headers at the same time: $_HEADER_LIST_""... $ac_c" 1>&6
-echo "configure:21419: checking for all headers at the same time: $_HEADER_LIST_" >&5
+echo "configure:21467: checking for all headers at the same time: $_HEADER_LIST_" >&5
        for _CHECK_PATH_ in $_SCI_CHECK_PATHS_; do
 
           if test "$debugging" = "yes"; then
@@ -21535,7 +21583,7 @@ echo "configure:21419: checking for all headers at the same time: $_HEADER_LIST_
     for _HEADER_ in $_HEADER_LIST_; do
 
        echo $ac_n "checking for $_HEADER_""... $ac_c" 1>&6
-echo "configure:21539: checking for $_HEADER_" >&5
+echo "configure:21587: checking for $_HEADER_" >&5
 
        for _CHECK_PATH_ in $_SCI_CHECK_PATHS_; do
 
@@ -21720,7 +21768,7 @@ if test "$pkg_fusion" = "yes"; then
        EXTERN_BEGIN=""
        EXTERN_END=""
        echo $ac_n "checking for both libplplot.so and libplplot.a""... $ac_c" 1>&6
-echo "configure:21724: checking for both libplplot.so and libplplot.a" >&5
+echo "configure:21772: checking for both libplplot.so and libplplot.a" >&5
     else
       if test "main" = "main"; then
          _SCI_DECL_=""
@@ -21728,13 +21776,13 @@ echo "configure:21724: checking for both libplplot.so and libplplot.a" >&5
          EXTERN_BEGIN=""
          EXTERN_END=""
          echo $ac_n "checking for -lplplot""... $ac_c" 1>&6
-echo "configure:21732: checking for -lplplot" >&5
+echo "configure:21780: checking for -lplplot" >&5
       else
         _SCI_DECL_="char main();"
         _SCI_CALL_="main();"
 
         echo $ac_n "checking for main in -lplplot""... $ac_c" 1>&6
-echo "configure:21738: checking for main in -lplplot" >&5
+echo "configure:21786: checking for main in -lplplot" >&5
         if test "$_SCI_USING_CXX_" != "yes"; then
           EXTERN_BEGIN="extern \"C\" {"
           EXTERN_END="}"
@@ -22080,7 +22128,7 @@ EOF
        EXTERN_BEGIN=""
        EXTERN_END=""
        echo $ac_n "checking for both libplplotd.so and libplplotd.a""... $ac_c" 1>&6
-echo "configure:22084: checking for both libplplotd.so and libplplotd.a" >&5
+echo "configure:22132: checking for both libplplotd.so and libplplotd.a" >&5
     else
       if test "main" = "main"; then
          _SCI_DECL_=""
@@ -22088,13 +22136,13 @@ echo "configure:22084: checking for both libplplotd.so and libplplotd.a" >&5
          EXTERN_BEGIN=""
          EXTERN_END=""
          echo $ac_n "checking for -lplplotd""... $ac_c" 1>&6
-echo "configure:22092: checking for -lplplotd" >&5
+echo "configure:22140: checking for -lplplotd" >&5
       else
         _SCI_DECL_="char main();"
         _SCI_CALL_="main();"
 
         echo $ac_n "checking for main in -lplplotd""... $ac_c" 1>&6
-echo "configure:22098: checking for main in -lplplotd" >&5
+echo "configure:22146: checking for main in -lplplotd" >&5
         if test "$_SCI_USING_CXX_" != "yes"; then
           EXTERN_BEGIN="extern \"C\" {"
           EXTERN_END="}"
@@ -22450,7 +22498,7 @@ EOF
     if test $num_headers -gt 1; then
 
        echo $ac_n "checking for all headers at the same time: $_HEADER_LIST_""... $ac_c" 1>&6
-echo "configure:22454: checking for all headers at the same time: $_HEADER_LIST_" >&5
+echo "configure:22502: checking for all headers at the same time: $_HEADER_LIST_" >&5
        for _CHECK_PATH_ in $_SCI_CHECK_PATHS_; do
 
           if test "$debugging" = "yes"; then
@@ -22570,7 +22618,7 @@ echo "configure:22454: checking for all headers at the same time: $_HEADER_LIST_
     for _HEADER_ in $_HEADER_LIST_; do
 
        echo $ac_n "checking for $_HEADER_""... $ac_c" 1>&6
-echo "configure:22574: checking for $_HEADER_" >&5
+echo "configure:22622: checking for $_HEADER_" >&5
 
        for _CHECK_PATH_ in $_SCI_CHECK_PATHS_; do
 
@@ -22760,7 +22808,7 @@ EOF
        EXTERN_BEGIN=""
        EXTERN_END=""
        echo $ac_n "checking for both libtclmatrix.so and libtclmatrix.a""... $ac_c" 1>&6
-echo "configure:22764: checking for both libtclmatrix.so and libtclmatrix.a" >&5
+echo "configure:22812: checking for both libtclmatrix.so and libtclmatrix.a" >&5
     else
       if test "main" = "main"; then
          _SCI_DECL_=""
@@ -22768,13 +22816,13 @@ echo "configure:22764: checking for both libtclmatrix.so and libtclmatrix.a" >&5
          EXTERN_BEGIN=""
          EXTERN_END=""
          echo $ac_n "checking for -ltclmatrix""... $ac_c" 1>&6
-echo "configure:22772: checking for -ltclmatrix" >&5
+echo "configure:22820: checking for -ltclmatrix" >&5
       else
         _SCI_DECL_="char main();"
         _SCI_CALL_="main();"
 
         echo $ac_n "checking for main in -ltclmatrix""... $ac_c" 1>&6
-echo "configure:22778: checking for main in -ltclmatrix" >&5
+echo "configure:22826: checking for main in -ltclmatrix" >&5
         if test "$_SCI_USING_CXX_" != "yes"; then
           EXTERN_BEGIN="extern \"C\" {"
           EXTERN_END="}"
@@ -23120,7 +23168,7 @@ EOF
        EXTERN_BEGIN=""
        EXTERN_END=""
        echo $ac_n "checking for both libtclmatrixd.so and libtclmatrixd.a""... $ac_c" 1>&6
-echo "configure:23124: checking for both libtclmatrixd.so and libtclmatrixd.a" >&5
+echo "configure:23172: checking for both libtclmatrixd.so and libtclmatrixd.a" >&5
     else
       if test "main" = "main"; then
          _SCI_DECL_=""
@@ -23128,13 +23176,13 @@ echo "configure:23124: checking for both libtclmatrixd.so and libtclmatrixd.a" >
          EXTERN_BEGIN=""
          EXTERN_END=""
          echo $ac_n "checking for -ltclmatrixd""... $ac_c" 1>&6
-echo "configure:23132: checking for -ltclmatrixd" >&5
+echo "configure:23180: checking for -ltclmatrixd" >&5
       else
         _SCI_DECL_="char main();"
         _SCI_CALL_="main();"
 
         echo $ac_n "checking for main in -ltclmatrixd""... $ac_c" 1>&6
-echo "configure:23138: checking for main in -ltclmatrixd" >&5
+echo "configure:23186: checking for main in -ltclmatrixd" >&5
         if test "$_SCI_USING_CXX_" != "yes"; then
           EXTERN_BEGIN="extern \"C\" {"
           EXTERN_END="}"
@@ -23490,7 +23538,7 @@ EOF
     if test $num_headers -gt 1; then
 
        echo $ac_n "checking for all headers at the same time: $_HEADER_LIST_""... $ac_c" 1>&6
-echo "configure:23494: checking for all headers at the same time: $_HEADER_LIST_" >&5
+echo "configure:23542: checking for all headers at the same time: $_HEADER_LIST_" >&5
        for _CHECK_PATH_ in $_SCI_CHECK_PATHS_; do
 
           if test "$debugging" = "yes"; then
@@ -23610,7 +23658,7 @@ echo "configure:23494: checking for all headers at the same time: $_HEADER_LIST_
     for _HEADER_ in $_HEADER_LIST_; do
 
        echo $ac_n "checking for $_HEADER_""... $ac_c" 1>&6
-echo "configure:23614: checking for $_HEADER_" >&5
+echo "configure:23662: checking for $_HEADER_" >&5
 
        for _CHECK_PATH_ in $_SCI_CHECK_PATHS_; do
 
@@ -23758,7 +23806,7 @@ CORRECT_ITCL_VERSION=no
     _CUR_2_=""
 
     echo $ac_n "checking for Tcl version 8.3.2""... $ac_c" 1>&6
-echo "configure:23762: checking for Tcl version 8.3.2" >&5
+echo "configure:23810: checking for Tcl version 8.3.2" >&5
 
     if test ""; then
       _SCI_CORRECT_=''
@@ -23815,7 +23863,7 @@ echo "configure:23762: checking for Tcl version 8.3.2" >&5
     _CUR_2_=""
 
     echo $ac_n "checking for Tk version 8.3.2""... $ac_c" 1>&6
-echo "configure:23819: checking for Tk version 8.3.2" >&5
+echo "configure:23867: checking for Tk version 8.3.2" >&5
 
     if test ""; then
       _SCI_CORRECT_=''
@@ -23872,7 +23920,7 @@ echo "configure:23819: checking for Tk version 8.3.2" >&5
     _CUR_2_=""
 
     echo $ac_n "checking for equal Tcl and Tk version $TK_VERSION$TK_PATCH_LEVEL""... $ac_c" 1>&6
-echo "configure:23876: checking for equal Tcl and Tk version $TK_VERSION$TK_PATCH_LEVEL" >&5
+echo "configure:23924: checking for equal Tcl and Tk version $TK_VERSION$TK_PATCH_LEVEL" >&5
 
     if test ""; then
       _SCI_CORRECT_=''
@@ -23929,7 +23977,7 @@ echo "configure:23876: checking for equal Tcl and Tk version $TK_VERSION$TK_PATC
 ##  --  search for xerces-c++ stuff  --------------------------------------
 echo
 echo "checking for required Xerces-C++ components..." 1>&6
-echo "configure:23933: checking for required Xerces-C++ components..." >&5
+echo "configure:23981: checking for required Xerces-C++ components..." >&5
 echo
 
 if test "$with_xercesc"; then
@@ -24009,7 +24057,7 @@ case $host in
        EXTERN_BEGIN=""
        EXTERN_END=""
        echo $ac_n "checking for both libcfgdce.so and libcfgdce.a""... $ac_c" 1>&6
-echo "configure:24013: checking for both libcfgdce.so and libcfgdce.a" >&5
+echo "configure:24061: checking for both libcfgdce.so and libcfgdce.a" >&5
     else
       if test "main" = "main"; then
          _SCI_DECL_=""
@@ -24017,13 +24065,13 @@ echo "configure:24013: checking for both libcfgdce.so and libcfgdce.a" >&5
          EXTERN_BEGIN=""
          EXTERN_END=""
          echo $ac_n "checking for -lcfgdce""... $ac_c" 1>&6
-echo "configure:24021: checking for -lcfgdce" >&5
+echo "configure:24069: checking for -lcfgdce" >&5
       else
         _SCI_DECL_="char main();"
         _SCI_CALL_="main();"
 
         echo $ac_n "checking for main in -lcfgdce""... $ac_c" 1>&6
-echo "configure:24027: checking for main in -lcfgdce" >&5
+echo "configure:24075: checking for main in -lcfgdce" >&5
         if test "$_SCI_USING_CXX_" != "yes"; then
           EXTERN_BEGIN="extern \"C\" {"
           EXTERN_END="}"
@@ -24369,7 +24417,7 @@ esac
        EXTERN_BEGIN=""
        EXTERN_END=""
        echo $ac_n "checking for both libxerces-c.so and libxerces-c.a""... $ac_c" 1>&6
-echo "configure:24373: checking for both libxerces-c.so and libxerces-c.a" >&5
+echo "configure:24421: checking for both libxerces-c.so and libxerces-c.a" >&5
     else
       if test "main" = "main"; then
          _SCI_DECL_=""
@@ -24377,13 +24425,13 @@ echo "configure:24373: checking for both libxerces-c.so and libxerces-c.a" >&5
          EXTERN_BEGIN=""
          EXTERN_END=""
          echo $ac_n "checking for -lxerces-c""... $ac_c" 1>&6
-echo "configure:24381: checking for -lxerces-c" >&5
+echo "configure:24429: checking for -lxerces-c" >&5
       else
         _SCI_DECL_="char main();"
         _SCI_CALL_="main();"
 
         echo $ac_n "checking for main in -lxerces-c""... $ac_c" 1>&6
-echo "configure:24387: checking for main in -lxerces-c" >&5
+echo "configure:24435: checking for main in -lxerces-c" >&5
         if test "$_SCI_USING_CXX_" != "yes"; then
           EXTERN_BEGIN="extern \"C\" {"
           EXTERN_END="}"
@@ -24744,7 +24792,7 @@ EOF
     if test $num_headers -gt 1; then
 
        echo $ac_n "checking for all headers at the same time: $_HEADER_LIST_""... $ac_c" 1>&6
-echo "configure:24748: checking for all headers at the same time: $_HEADER_LIST_" >&5
+echo "configure:24796: checking for all headers at the same time: $_HEADER_LIST_" >&5
        for _CHECK_PATH_ in $_SCI_CHECK_PATHS_; do
 
           if test "$debugging" = "yes"; then
@@ -24864,7 +24912,7 @@ echo "configure:24748: checking for all headers at the same time: $_HEADER_LIST_
     for _HEADER_ in $_HEADER_LIST_; do
 
        echo $ac_n "checking for $_HEADER_""... $ac_c" 1>&6
-echo "configure:24868: checking for $_HEADER_" >&5
+echo "configure:24916: checking for $_HEADER_" >&5
 
        for _CHECK_PATH_ in $_SCI_CHECK_PATHS_; do
 
@@ -24988,12 +25036,12 @@ INC_XERCESC_H=$INC_XERCESC_DOM_DOMNAMEDNODEMAP_HPP
 if test "$pkg_uintah" = "yes"; then
   echo
   echo "checking for required MPI components..." 1>&6
-echo "configure:24992: checking for required MPI components..." >&5
+echo "configure:25040: checking for required MPI components..." >&5
   echo
 else
   echo
   echo "checking for optional components..." 1>&6
-echo "configure:24997: checking for optional components..." >&5
+echo "configure:25045: checking for optional components..." >&5
   echo
 fi
 
@@ -25093,7 +25141,7 @@ case $host in
        EXTERN_BEGIN=""
        EXTERN_END=""
        echo $ac_n "checking for both libutil.so and libutil.a""... $ac_c" 1>&6
-echo "configure:25097: checking for both libutil.so and libutil.a" >&5
+echo "configure:25145: checking for both libutil.so and libutil.a" >&5
     else
       if test "main" = "main"; then
          _SCI_DECL_=""
@@ -25101,13 +25149,13 @@ echo "configure:25097: checking for both libutil.so and libutil.a" >&5
          EXTERN_BEGIN=""
          EXTERN_END=""
          echo $ac_n "checking for -lutil""... $ac_c" 1>&6
-echo "configure:25105: checking for -lutil" >&5
+echo "configure:25153: checking for -lutil" >&5
       else
         _SCI_DECL_="char main();"
         _SCI_CALL_="main();"
 
         echo $ac_n "checking for main in -lutil""... $ac_c" 1>&6
-echo "configure:25111: checking for main in -lutil" >&5
+echo "configure:25159: checking for main in -lutil" >&5
         if test "$_SCI_USING_CXX_" != "yes"; then
           EXTERN_BEGIN="extern \"C\" {"
           EXTERN_END="}"
@@ -25451,7 +25499,7 @@ EOF
        EXTERN_BEGIN=""
        EXTERN_END=""
        echo $ac_n "checking for both liblam.so and liblam.a""... $ac_c" 1>&6
-echo "configure:25455: checking for both liblam.so and liblam.a" >&5
+echo "configure:25503: checking for both liblam.so and liblam.a" >&5
     else
       if test "main" = "main"; then
          _SCI_DECL_=""
@@ -25459,13 +25507,13 @@ echo "configure:25455: checking for both liblam.so and liblam.a" >&5
          EXTERN_BEGIN=""
          EXTERN_END=""
          echo $ac_n "checking for -llam""... $ac_c" 1>&6
-echo "configure:25463: checking for -llam" >&5
+echo "configure:25511: checking for -llam" >&5
       else
         _SCI_DECL_="char main();"
         _SCI_CALL_="main();"
 
         echo $ac_n "checking for main in -llam""... $ac_c" 1>&6
-echo "configure:25469: checking for main in -llam" >&5
+echo "configure:25517: checking for main in -llam" >&5
         if test "$_SCI_USING_CXX_" != "yes"; then
           EXTERN_BEGIN="extern \"C\" {"
           EXTERN_END="}"
@@ -25809,7 +25857,7 @@ EOF
        EXTERN_BEGIN=""
        EXTERN_END=""
        echo $ac_n "checking for both libmpi.so and libmpi.a""... $ac_c" 1>&6
-echo "configure:25813: checking for both libmpi.so and libmpi.a" >&5
+echo "configure:25861: checking for both libmpi.so and libmpi.a" >&5
     else
       if test "main" = "main"; then
          _SCI_DECL_=""
@@ -25817,13 +25865,13 @@ echo "configure:25813: checking for both libmpi.so and libmpi.a" >&5
          EXTERN_BEGIN=""
          EXTERN_END=""
          echo $ac_n "checking for -lmpi""... $ac_c" 1>&6
-echo "configure:25821: checking for -lmpi" >&5
+echo "configure:25869: checking for -lmpi" >&5
       else
         _SCI_DECL_="char main();"
         _SCI_CALL_="main();"
 
         echo $ac_n "checking for main in -lmpi""... $ac_c" 1>&6
-echo "configure:25827: checking for main in -lmpi" >&5
+echo "configure:25875: checking for main in -lmpi" >&5
         if test "$_SCI_USING_CXX_" != "yes"; then
           EXTERN_BEGIN="extern \"C\" {"
           EXTERN_END="}"
@@ -26167,7 +26215,7 @@ EOF
        EXTERN_BEGIN=""
        EXTERN_END=""
        echo $ac_n "checking for both libpmpi.so and libpmpi.a""... $ac_c" 1>&6
-echo "configure:26171: checking for both libpmpi.so and libpmpi.a" >&5
+echo "configure:26219: checking for both libpmpi.so and libpmpi.a" >&5
     else
       if test "main" = "main"; then
          _SCI_DECL_=""
@@ -26175,13 +26223,13 @@ echo "configure:26171: checking for both libpmpi.so and libpmpi.a" >&5
          EXTERN_BEGIN=""
          EXTERN_END=""
          echo $ac_n "checking for -lpmpi""... $ac_c" 1>&6
-echo "configure:26179: checking for -lpmpi" >&5
+echo "configure:26227: checking for -lpmpi" >&5
       else
         _SCI_DECL_="char main();"
         _SCI_CALL_="main();"
 
         echo $ac_n "checking for main in -lpmpi""... $ac_c" 1>&6
-echo "configure:26185: checking for main in -lpmpi" >&5
+echo "configure:26233: checking for main in -lpmpi" >&5
         if test "$_SCI_USING_CXX_" != "yes"; then
           EXTERN_BEGIN="extern \"C\" {"
           EXTERN_END="}"
@@ -26532,7 +26580,7 @@ EOF
        EXTERN_BEGIN=""
        EXTERN_END=""
        echo $ac_n "checking for both libmpi.so and libmpi.a""... $ac_c" 1>&6
-echo "configure:26536: checking for both libmpi.so and libmpi.a" >&5
+echo "configure:26584: checking for both libmpi.so and libmpi.a" >&5
     else
       if test "main" = "main"; then
          _SCI_DECL_=""
@@ -26540,13 +26588,13 @@ echo "configure:26536: checking for both libmpi.so and libmpi.a" >&5
          EXTERN_BEGIN=""
          EXTERN_END=""
          echo $ac_n "checking for -lmpi""... $ac_c" 1>&6
-echo "configure:26544: checking for -lmpi" >&5
+echo "configure:26592: checking for -lmpi" >&5
       else
         _SCI_DECL_="char main();"
         _SCI_CALL_="main();"
 
         echo $ac_n "checking for main in -lmpi""... $ac_c" 1>&6
-echo "configure:26550: checking for main in -lmpi" >&5
+echo "configure:26598: checking for main in -lmpi" >&5
         if test "$_SCI_USING_CXX_" != "yes"; then
           EXTERN_BEGIN="extern \"C\" {"
           EXTERN_END="}"
@@ -26891,7 +26939,7 @@ EOF
        EXTERN_BEGIN=""
        EXTERN_END=""
        echo $ac_n "checking for both libmpich.so and libmpich.a""... $ac_c" 1>&6
-echo "configure:26895: checking for both libmpich.so and libmpich.a" >&5
+echo "configure:26943: checking for both libmpich.so and libmpich.a" >&5
     else
       if test "main" = "main"; then
          _SCI_DECL_=""
@@ -26899,13 +26947,13 @@ echo "configure:26895: checking for both libmpich.so and libmpich.a" >&5
          EXTERN_BEGIN=""
          EXTERN_END=""
          echo $ac_n "checking for -lmpich""... $ac_c" 1>&6
-echo "configure:26903: checking for -lmpich" >&5
+echo "configure:26951: checking for -lmpich" >&5
       else
         _SCI_DECL_="char main();"
         _SCI_CALL_="main();"
 
         echo $ac_n "checking for main in -lmpich""... $ac_c" 1>&6
-echo "configure:26909: checking for main in -lmpich" >&5
+echo "configure:26957: checking for main in -lmpich" >&5
         if test "$_SCI_USING_CXX_" != "yes"; then
           EXTERN_BEGIN="extern \"C\" {"
           EXTERN_END="}"
@@ -27248,7 +27296,7 @@ EOF
        EXTERN_BEGIN=""
        EXTERN_END=""
        echo $ac_n "checking for both libpmpich.so and libpmpich.a""... $ac_c" 1>&6
-echo "configure:27252: checking for both libpmpich.so and libpmpich.a" >&5
+echo "configure:27300: checking for both libpmpich.so and libpmpich.a" >&5
     else
       if test "main" = "main"; then
          _SCI_DECL_=""
@@ -27256,13 +27304,13 @@ echo "configure:27252: checking for both libpmpich.so and libpmpich.a" >&5
          EXTERN_BEGIN=""
          EXTERN_END=""
          echo $ac_n "checking for -lpmpich""... $ac_c" 1>&6
-echo "configure:27260: checking for -lpmpich" >&5
+echo "configure:27308: checking for -lpmpich" >&5
       else
         _SCI_DECL_="char main();"
         _SCI_CALL_="main();"
 
         echo $ac_n "checking for main in -lpmpich""... $ac_c" 1>&6
-echo "configure:27266: checking for main in -lpmpich" >&5
+echo "configure:27314: checking for main in -lpmpich" >&5
         if test "$_SCI_USING_CXX_" != "yes"; then
           EXTERN_BEGIN="extern \"C\" {"
           EXTERN_END="}"
@@ -27619,7 +27667,7 @@ EOF
     if test $num_headers -gt 1; then
 
        echo $ac_n "checking for all headers at the same time: $_HEADER_LIST_""... $ac_c" 1>&6
-echo "configure:27623: checking for all headers at the same time: $_HEADER_LIST_" >&5
+echo "configure:27671: checking for all headers at the same time: $_HEADER_LIST_" >&5
        for _CHECK_PATH_ in $_SCI_CHECK_PATHS_; do
 
           if test "$debugging" = "yes"; then
@@ -27739,7 +27787,7 @@ echo "configure:27623: checking for all headers at the same time: $_HEADER_LIST_
     for _HEADER_ in $_HEADER_LIST_; do
 
        echo $ac_n "checking for $_HEADER_""... $ac_c" 1>&6
-echo "configure:27743: checking for $_HEADER_" >&5
+echo "configure:27791: checking for $_HEADER_" >&5
 
        for _CHECK_PATH_ in $_SCI_CHECK_PATHS_; do
 
@@ -27956,7 +28004,7 @@ fi
        EXTERN_BEGIN=""
        EXTERN_END=""
        echo $ac_n "checking for both libmpiuni.so and libmpiuni.a""... $ac_c" 1>&6
-echo "configure:27960: checking for both libmpiuni.so and libmpiuni.a" >&5
+echo "configure:28008: checking for both libmpiuni.so and libmpiuni.a" >&5
     else
       if test "main" = "main"; then
          _SCI_DECL_=""
@@ -27964,13 +28012,13 @@ echo "configure:27960: checking for both libmpiuni.so and libmpiuni.a" >&5
          EXTERN_BEGIN=""
          EXTERN_END=""
          echo $ac_n "checking for -lmpiuni""... $ac_c" 1>&6
-echo "configure:27968: checking for -lmpiuni" >&5
+echo "configure:28016: checking for -lmpiuni" >&5
       else
         _SCI_DECL_="char main();"
         _SCI_CALL_="main();"
 
         echo $ac_n "checking for main in -lmpiuni""... $ac_c" 1>&6
-echo "configure:27974: checking for main in -lmpiuni" >&5
+echo "configure:28022: checking for main in -lmpiuni" >&5
         if test "$_SCI_USING_CXX_" != "yes"; then
           EXTERN_BEGIN="extern \"C\" {"
           EXTERN_END="}"
@@ -28315,7 +28363,7 @@ if test "$HAVE_LIB_MPIUNI"; then
        EXTERN_BEGIN=""
        EXTERN_END=""
        echo $ac_n "checking for both libmpiunich.so and libmpiunich.a""... $ac_c" 1>&6
-echo "configure:28319: checking for both libmpiunich.so and libmpiunich.a" >&5
+echo "configure:28367: checking for both libmpiunich.so and libmpiunich.a" >&5
     else
       if test "main" = "main"; then
          _SCI_DECL_=""
@@ -28323,13 +28371,13 @@ echo "configure:28319: checking for both libmpiunich.so and libmpiunich.a" >&5
          EXTERN_BEGIN=""
          EXTERN_END=""
          echo $ac_n "checking for -lmpiunich""... $ac_c" 1>&6
-echo "configure:28327: checking for -lmpiunich" >&5
+echo "configure:28375: checking for -lmpiunich" >&5
       else
         _SCI_DECL_="char main();"
         _SCI_CALL_="main();"
 
         echo $ac_n "checking for main in -lmpiunich""... $ac_c" 1>&6
-echo "configure:28333: checking for main in -lmpiunich" >&5
+echo "configure:28381: checking for main in -lmpiunich" >&5
         if test "$_SCI_USING_CXX_" != "yes"; then
           EXTERN_BEGIN="extern \"C\" {"
           EXTERN_END="}"
@@ -28672,7 +28720,7 @@ EOF
        EXTERN_BEGIN=""
        EXTERN_END=""
        echo $ac_n "checking for both libpmpiunich.so and libpmpiunich.a""... $ac_c" 1>&6
-echo "configure:28676: checking for both libpmpiunich.so and libpmpiunich.a" >&5
+echo "configure:28724: checking for both libpmpiunich.so and libpmpiunich.a" >&5
     else
       if test "main" = "main"; then
          _SCI_DECL_=""
@@ -28680,13 +28728,13 @@ echo "configure:28676: checking for both libpmpiunich.so and libpmpiunich.a" >&5
          EXTERN_BEGIN=""
          EXTERN_END=""
          echo $ac_n "checking for -lpmpiunich""... $ac_c" 1>&6
-echo "configure:28684: checking for -lpmpiunich" >&5
+echo "configure:28732: checking for -lpmpiunich" >&5
       else
         _SCI_DECL_="char main();"
         _SCI_CALL_="main();"
 
         echo $ac_n "checking for main in -lpmpiunich""... $ac_c" 1>&6
-echo "configure:28690: checking for main in -lpmpiunich" >&5
+echo "configure:28738: checking for main in -lpmpiunich" >&5
         if test "$_SCI_USING_CXX_" != "yes"; then
           EXTERN_BEGIN="extern \"C\" {"
           EXTERN_END="}"
@@ -29042,7 +29090,7 @@ fi
     if test $num_headers -gt 1; then
 
        echo $ac_n "checking for all headers at the same time: $_HEADER_LIST_""... $ac_c" 1>&6
-echo "configure:29046: checking for all headers at the same time: $_HEADER_LIST_" >&5
+echo "configure:29094: checking for all headers at the same time: $_HEADER_LIST_" >&5
        for _CHECK_PATH_ in $_SCI_CHECK_PATHS_; do
 
           if test "$debugging" = "yes"; then
@@ -29162,7 +29210,7 @@ echo "configure:29046: checking for all headers at the same time: $_HEADER_LIST_
     for _HEADER_ in $_HEADER_LIST_; do
 
        echo $ac_n "checking for $_HEADER_""... $ac_c" 1>&6
-echo "configure:29166: checking for $_HEADER_" >&5
+echo "configure:29214: checking for $_HEADER_" >&5
 
        for _CHECK_PATH_ in $_SCI_CHECK_PATHS_; do
 
@@ -29358,7 +29406,7 @@ fi
 
 echo
 echo "checking for optional components..." 1>&6
-echo "configure:29362: checking for optional components..." >&5
+echo "configure:29410: checking for optional components..." >&5
 echo
 
 
@@ -29432,7 +29480,7 @@ echo
     if test $num_headers -gt 1; then
 
        echo $ac_n "checking for all headers at the same time: $_HEADER_LIST_""... $ac_c" 1>&6
-echo "configure:29436: checking for all headers at the same time: $_HEADER_LIST_" >&5
+echo "configure:29484: checking for all headers at the same time: $_HEADER_LIST_" >&5
        for _CHECK_PATH_ in $_SCI_CHECK_PATHS_; do
 
           if test "$debugging" = "yes"; then
@@ -29552,7 +29600,7 @@ echo "configure:29436: checking for all headers at the same time: $_HEADER_LIST_
     for _HEADER_ in $_HEADER_LIST_; do
 
        echo $ac_n "checking for $_HEADER_""... $ac_c" 1>&6
-echo "configure:29556: checking for $_HEADER_" >&5
+echo "configure:29604: checking for $_HEADER_" >&5
 
        for _CHECK_PATH_ in $_SCI_CHECK_PATHS_; do
 
@@ -29732,7 +29780,7 @@ EOF
        EXTERN_BEGIN=""
        EXTERN_END=""
        echo $ac_n "checking for both libfl.so and libfl.a""... $ac_c" 1>&6
-echo "configure:29736: checking for both libfl.so and libfl.a" >&5
+echo "configure:29784: checking for both libfl.so and libfl.a" >&5
     else
       if test "main" = "main"; then
          _SCI_DECL_=""
@@ -29740,13 +29788,13 @@ echo "configure:29736: checking for both libfl.so and libfl.a" >&5
          EXTERN_BEGIN=""
          EXTERN_END=""
          echo $ac_n "checking for -lfl""... $ac_c" 1>&6
-echo "configure:29744: checking for -lfl" >&5
+echo "configure:29792: checking for -lfl" >&5
       else
         _SCI_DECL_="char main();"
         _SCI_CALL_="main();"
 
         echo $ac_n "checking for main in -lfl""... $ac_c" 1>&6
-echo "configure:29750: checking for main in -lfl" >&5
+echo "configure:29798: checking for main in -lfl" >&5
         if test "$_SCI_USING_CXX_" != "yes"; then
           EXTERN_BEGIN="extern \"C\" {"
           EXTERN_END="}"
@@ -30089,7 +30137,7 @@ EOF
        EXTERN_BEGIN=""
        EXTERN_END=""
        echo $ac_n "checking for both libld.so and libld.a""... $ac_c" 1>&6
-echo "configure:30093: checking for both libld.so and libld.a" >&5
+echo "configure:30141: checking for both libld.so and libld.a" >&5
     else
       if test "main" = "main"; then
          _SCI_DECL_=""
@@ -30097,13 +30145,13 @@ echo "configure:30093: checking for both libld.so and libld.a" >&5
          EXTERN_BEGIN=""
          EXTERN_END=""
          echo $ac_n "checking for -lld""... $ac_c" 1>&6
-echo "configure:30101: checking for -lld" >&5
+echo "configure:30149: checking for -lld" >&5
       else
         _SCI_DECL_="char main();"
         _SCI_CALL_="main();"
 
         echo $ac_n "checking for main in -lld""... $ac_c" 1>&6
-echo "configure:30107: checking for main in -lld" >&5
+echo "configure:30155: checking for main in -lld" >&5
         if test "$_SCI_USING_CXX_" != "yes"; then
           EXTERN_BEGIN="extern \"C\" {"
           EXTERN_END="}"
@@ -30455,7 +30503,7 @@ fi
        EXTERN_BEGIN=""
        EXTERN_END=""
        echo $ac_n "checking for both libair.so and libair.a""... $ac_c" 1>&6
-echo "configure:30459: checking for both libair.so and libair.a" >&5
+echo "configure:30507: checking for both libair.so and libair.a" >&5
     else
       if test "main" = "main"; then
          _SCI_DECL_=""
@@ -30463,13 +30511,13 @@ echo "configure:30459: checking for both libair.so and libair.a" >&5
          EXTERN_BEGIN=""
          EXTERN_END=""
          echo $ac_n "checking for -lair""... $ac_c" 1>&6
-echo "configure:30467: checking for -lair" >&5
+echo "configure:30515: checking for -lair" >&5
       else
         _SCI_DECL_="char main();"
         _SCI_CALL_="main();"
 
         echo $ac_n "checking for main in -lair""... $ac_c" 1>&6
-echo "configure:30473: checking for main in -lair" >&5
+echo "configure:30521: checking for main in -lair" >&5
         if test "$_SCI_USING_CXX_" != "yes"; then
           EXTERN_BEGIN="extern \"C\" {"
           EXTERN_END="}"
@@ -30812,7 +30860,7 @@ EOF
        EXTERN_BEGIN=""
        EXTERN_END=""
        echo $ac_n "checking for both libbiff.so and libbiff.a""... $ac_c" 1>&6
-echo "configure:30816: checking for both libbiff.so and libbiff.a" >&5
+echo "configure:30864: checking for both libbiff.so and libbiff.a" >&5
     else
       if test "main" = "main"; then
          _SCI_DECL_=""
@@ -30820,13 +30868,13 @@ echo "configure:30816: checking for both libbiff.so and libbiff.a" >&5
          EXTERN_BEGIN=""
          EXTERN_END=""
          echo $ac_n "checking for -lbiff""... $ac_c" 1>&6
-echo "configure:30824: checking for -lbiff" >&5
+echo "configure:30872: checking for -lbiff" >&5
       else
         _SCI_DECL_="char main();"
         _SCI_CALL_="main();"
 
         echo $ac_n "checking for main in -lbiff""... $ac_c" 1>&6
-echo "configure:30830: checking for main in -lbiff" >&5
+echo "configure:30878: checking for main in -lbiff" >&5
         if test "$_SCI_USING_CXX_" != "yes"; then
           EXTERN_BEGIN="extern \"C\" {"
           EXTERN_END="}"
@@ -31169,7 +31217,7 @@ EOF
        EXTERN_BEGIN=""
        EXTERN_END=""
        echo $ac_n "checking for both libell.so and libell.a""... $ac_c" 1>&6
-echo "configure:31173: checking for both libell.so and libell.a" >&5
+echo "configure:31221: checking for both libell.so and libell.a" >&5
     else
       if test "main" = "main"; then
          _SCI_DECL_=""
@@ -31177,13 +31225,13 @@ echo "configure:31173: checking for both libell.so and libell.a" >&5
          EXTERN_BEGIN=""
          EXTERN_END=""
          echo $ac_n "checking for -lell""... $ac_c" 1>&6
-echo "configure:31181: checking for -lell" >&5
+echo "configure:31229: checking for -lell" >&5
       else
         _SCI_DECL_="char main();"
         _SCI_CALL_="main();"
 
         echo $ac_n "checking for main in -lell""... $ac_c" 1>&6
-echo "configure:31187: checking for main in -lell" >&5
+echo "configure:31235: checking for main in -lell" >&5
         if test "$_SCI_USING_CXX_" != "yes"; then
           EXTERN_BEGIN="extern \"C\" {"
           EXTERN_END="}"
@@ -31526,7 +31574,7 @@ EOF
        EXTERN_BEGIN=""
        EXTERN_END=""
        echo $ac_n "checking for both libnrrd.so and libnrrd.a""... $ac_c" 1>&6
-echo "configure:31530: checking for both libnrrd.so and libnrrd.a" >&5
+echo "configure:31578: checking for both libnrrd.so and libnrrd.a" >&5
     else
       if test "main" = "main"; then
          _SCI_DECL_=""
@@ -31534,13 +31582,13 @@ echo "configure:31530: checking for both libnrrd.so and libnrrd.a" >&5
          EXTERN_BEGIN=""
          EXTERN_END=""
          echo $ac_n "checking for -lnrrd""... $ac_c" 1>&6
-echo "configure:31538: checking for -lnrrd" >&5
+echo "configure:31586: checking for -lnrrd" >&5
       else
         _SCI_DECL_="char main();"
         _SCI_CALL_="main();"
 
         echo $ac_n "checking for main in -lnrrd""... $ac_c" 1>&6
-echo "configure:31544: checking for main in -lnrrd" >&5
+echo "configure:31592: checking for main in -lnrrd" >&5
         if test "$_SCI_USING_CXX_" != "yes"; then
           EXTERN_BEGIN="extern \"C\" {"
           EXTERN_END="}"
@@ -31886,7 +31934,7 @@ EOF
     if test $num_headers -gt 1; then
 
        echo $ac_n "checking for all headers at the same time: $_HEADER_LIST_""... $ac_c" 1>&6
-echo "configure:31890: checking for all headers at the same time: $_HEADER_LIST_" >&5
+echo "configure:31938: checking for all headers at the same time: $_HEADER_LIST_" >&5
        for _CHECK_PATH_ in $_SCI_CHECK_PATHS_; do
 
           if test "$debugging" = "yes"; then
@@ -32006,7 +32054,7 @@ echo "configure:31890: checking for all headers at the same time: $_HEADER_LIST_
     for _HEADER_ in $_HEADER_LIST_; do
 
        echo $ac_n "checking for $_HEADER_""... $ac_c" 1>&6
-echo "configure:32010: checking for $_HEADER_" >&5
+echo "configure:32058: checking for $_HEADER_" >&5
 
        for _CHECK_PATH_ in $_SCI_CHECK_PATHS_; do
 
@@ -32215,7 +32263,7 @@ fi
        EXTERN_BEGIN=""
        EXTERN_END=""
        echo $ac_n "checking for both libmpege.so and libmpege.a""... $ac_c" 1>&6
-echo "configure:32219: checking for both libmpege.so and libmpege.a" >&5
+echo "configure:32267: checking for both libmpege.so and libmpege.a" >&5
     else
       if test "main" = "main"; then
          _SCI_DECL_=""
@@ -32223,13 +32271,13 @@ echo "configure:32219: checking for both libmpege.so and libmpege.a" >&5
          EXTERN_BEGIN=""
          EXTERN_END=""
          echo $ac_n "checking for -lmpege""... $ac_c" 1>&6
-echo "configure:32227: checking for -lmpege" >&5
+echo "configure:32275: checking for -lmpege" >&5
       else
         _SCI_DECL_="char main();"
         _SCI_CALL_="main();"
 
         echo $ac_n "checking for main in -lmpege""... $ac_c" 1>&6
-echo "configure:32233: checking for main in -lmpege" >&5
+echo "configure:32281: checking for main in -lmpege" >&5
         if test "$_SCI_USING_CXX_" != "yes"; then
           EXTERN_BEGIN="extern \"C\" {"
           EXTERN_END="}"
@@ -32524,9 +32572,9 @@ fi
 if test "$pkg_fusion" = "yes"; then
 
   if test "$with_mdsplus"; then
-  dirs="$with_mdsplus/lib $SCI_LAB_TP_LIBS"
+    dirs="$with_mdsplus/lib $SCI_LAB_TP_LIBS"
   else
-    dirs="$SCI_LAB_TP_LIBS"
+    dirs="/usr/local/mdsplus/lib $SCI_LAB_TP_LIBS"
   fi
 
   
@@ -32597,7 +32645,7 @@ if test "$pkg_fusion" = "yes"; then
        EXTERN_BEGIN=""
        EXTERN_END=""
        echo $ac_n "checking for both libMdsLib_client.so and libMdsLib_client.a""... $ac_c" 1>&6
-echo "configure:32601: checking for both libMdsLib_client.so and libMdsLib_client.a" >&5
+echo "configure:32649: checking for both libMdsLib_client.so and libMdsLib_client.a" >&5
     else
       if test "main" = "main"; then
          _SCI_DECL_=""
@@ -32605,13 +32653,13 @@ echo "configure:32601: checking for both libMdsLib_client.so and libMdsLib_clien
          EXTERN_BEGIN=""
          EXTERN_END=""
          echo $ac_n "checking for -lMdsLib_client""... $ac_c" 1>&6
-echo "configure:32609: checking for -lMdsLib_client" >&5
+echo "configure:32657: checking for -lMdsLib_client" >&5
       else
         _SCI_DECL_="char main();"
         _SCI_CALL_="main();"
 
         echo $ac_n "checking for main in -lMdsLib_client""... $ac_c" 1>&6
-echo "configure:32615: checking for main in -lMdsLib_client" >&5
+echo "configure:32663: checking for main in -lMdsLib_client" >&5
         if test "$_SCI_USING_CXX_" != "yes"; then
           EXTERN_BEGIN="extern \"C\" {"
           EXTERN_END="}"
@@ -32957,7 +33005,7 @@ EOF
     if test $num_headers -gt 1; then
 
        echo $ac_n "checking for all headers at the same time: $_HEADER_LIST_""... $ac_c" 1>&6
-echo "configure:32961: checking for all headers at the same time: $_HEADER_LIST_" >&5
+echo "configure:33009: checking for all headers at the same time: $_HEADER_LIST_" >&5
        for _CHECK_PATH_ in $_SCI_CHECK_PATHS_; do
 
           if test "$debugging" = "yes"; then
@@ -33077,7 +33125,7 @@ echo "configure:32961: checking for all headers at the same time: $_HEADER_LIST_
     for _HEADER_ in $_HEADER_LIST_; do
 
        echo $ac_n "checking for $_HEADER_""... $ac_c" 1>&6
-echo "configure:33081: checking for $_HEADER_" >&5
+echo "configure:33129: checking for $_HEADER_" >&5
 
        for _CHECK_PATH_ in $_SCI_CHECK_PATHS_; do
 
@@ -33280,7 +33328,7 @@ dirs="$with_perfex $SCI_LAB_TP_LIBS"
        EXTERN_BEGIN=""
        EXTERN_END=""
        echo $ac_n "checking for both libperfex.so and libperfex.a""... $ac_c" 1>&6
-echo "configure:33284: checking for both libperfex.so and libperfex.a" >&5
+echo "configure:33332: checking for both libperfex.so and libperfex.a" >&5
     else
       if test "main" = "main"; then
          _SCI_DECL_=""
@@ -33288,13 +33336,13 @@ echo "configure:33284: checking for both libperfex.so and libperfex.a" >&5
          EXTERN_BEGIN=""
          EXTERN_END=""
          echo $ac_n "checking for -lperfex""... $ac_c" 1>&6
-echo "configure:33292: checking for -lperfex" >&5
+echo "configure:33340: checking for -lperfex" >&5
       else
         _SCI_DECL_="char main();"
         _SCI_CALL_="main();"
 
         echo $ac_n "checking for main in -lperfex""... $ac_c" 1>&6
-echo "configure:33298: checking for main in -lperfex" >&5
+echo "configure:33346: checking for main in -lperfex" >&5
         if test "$_SCI_USING_CXX_" != "yes"; then
           EXTERN_BEGIN="extern \"C\" {"
           EXTERN_END="}"
@@ -33655,7 +33703,7 @@ dirs="$with_fastm $SCI_LAB_TP_LIBS"
        EXTERN_BEGIN=""
        EXTERN_END=""
        echo $ac_n "checking for both libfastm.so and libfastm.a""... $ac_c" 1>&6
-echo "configure:33659: checking for both libfastm.so and libfastm.a" >&5
+echo "configure:33707: checking for both libfastm.so and libfastm.a" >&5
     else
       if test "main" = "main"; then
          _SCI_DECL_=""
@@ -33663,13 +33711,13 @@ echo "configure:33659: checking for both libfastm.so and libfastm.a" >&5
          EXTERN_BEGIN=""
          EXTERN_END=""
          echo $ac_n "checking for -lfastm""... $ac_c" 1>&6
-echo "configure:33667: checking for -lfastm" >&5
+echo "configure:33715: checking for -lfastm" >&5
       else
         _SCI_DECL_="char main();"
         _SCI_CALL_="main();"
 
         echo $ac_n "checking for main in -lfastm""... $ac_c" 1>&6
-echo "configure:33673: checking for main in -lfastm" >&5
+echo "configure:33721: checking for main in -lfastm" >&5
         if test "$_SCI_USING_CXX_" != "yes"; then
           EXTERN_BEGIN="extern \"C\" {"
           EXTERN_END="}"
@@ -34031,7 +34079,7 @@ dirs="$with_ssl $SCI_LAB_TP_LIBS"
        EXTERN_BEGIN=""
        EXTERN_END=""
        echo $ac_n "checking for both libssl.so and libssl.a""... $ac_c" 1>&6
-echo "configure:34035: checking for both libssl.so and libssl.a" >&5
+echo "configure:34083: checking for both libssl.so and libssl.a" >&5
     else
       if test "main" = "main"; then
          _SCI_DECL_=""
@@ -34039,13 +34087,13 @@ echo "configure:34035: checking for both libssl.so and libssl.a" >&5
          EXTERN_BEGIN=""
          EXTERN_END=""
          echo $ac_n "checking for -lssl""... $ac_c" 1>&6
-echo "configure:34043: checking for -lssl" >&5
+echo "configure:34091: checking for -lssl" >&5
       else
         _SCI_DECL_="char main();"
         _SCI_CALL_="main();"
 
         echo $ac_n "checking for main in -lssl""... $ac_c" 1>&6
-echo "configure:34049: checking for main in -lssl" >&5
+echo "configure:34097: checking for main in -lssl" >&5
         if test "$_SCI_USING_CXX_" != "yes"; then
           EXTERN_BEGIN="extern \"C\" {"
           EXTERN_END="}"
@@ -34407,7 +34455,7 @@ dirs="$with_crypto $SCI_LAB_TP_LIBS"
        EXTERN_BEGIN=""
        EXTERN_END=""
        echo $ac_n "checking for both libcrypto.so and libcrypto.a""... $ac_c" 1>&6
-echo "configure:34411: checking for both libcrypto.so and libcrypto.a" >&5
+echo "configure:34459: checking for both libcrypto.so and libcrypto.a" >&5
     else
       if test "main" = "main"; then
          _SCI_DECL_=""
@@ -34415,13 +34463,13 @@ echo "configure:34411: checking for both libcrypto.so and libcrypto.a" >&5
          EXTERN_BEGIN=""
          EXTERN_END=""
          echo $ac_n "checking for -lcrypto""... $ac_c" 1>&6
-echo "configure:34419: checking for -lcrypto" >&5
+echo "configure:34467: checking for -lcrypto" >&5
       else
         _SCI_DECL_="char main();"
         _SCI_CALL_="main();"
 
         echo $ac_n "checking for main in -lcrypto""... $ac_c" 1>&6
-echo "configure:34425: checking for main in -lcrypto" >&5
+echo "configure:34473: checking for main in -lcrypto" >&5
         if test "$_SCI_USING_CXX_" != "yes"; then
           EXTERN_BEGIN="extern \"C\" {"
           EXTERN_END="}"
@@ -34783,7 +34831,7 @@ dirs="$with_exc $SCI_LAB_TP_LIBS"
        EXTERN_BEGIN=""
        EXTERN_END=""
        echo $ac_n "checking for both libexc.so and libexc.a""... $ac_c" 1>&6
-echo "configure:34787: checking for both libexc.so and libexc.a" >&5
+echo "configure:34835: checking for both libexc.so and libexc.a" >&5
     else
       if test "main" = "main"; then
          _SCI_DECL_=""
@@ -34791,13 +34839,13 @@ echo "configure:34787: checking for both libexc.so and libexc.a" >&5
          EXTERN_BEGIN=""
          EXTERN_END=""
          echo $ac_n "checking for -lexc""... $ac_c" 1>&6
-echo "configure:34795: checking for -lexc" >&5
+echo "configure:34843: checking for -lexc" >&5
       else
         _SCI_DECL_="char main();"
         _SCI_CALL_="main();"
 
         echo $ac_n "checking for main in -lexc""... $ac_c" 1>&6
-echo "configure:34801: checking for main in -lexc" >&5
+echo "configure:34849: checking for main in -lexc" >&5
         if test "$_SCI_USING_CXX_" != "yes"; then
           EXTERN_BEGIN="extern \"C\" {"
           EXTERN_END="}"
@@ -35143,7 +35191,7 @@ EOF
     if test $num_headers -gt 1; then
 
        echo $ac_n "checking for all headers at the same time: $_HEADER_LIST_""... $ac_c" 1>&6
-echo "configure:35147: checking for all headers at the same time: $_HEADER_LIST_" >&5
+echo "configure:35195: checking for all headers at the same time: $_HEADER_LIST_" >&5
        for _CHECK_PATH_ in $_SCI_CHECK_PATHS_; do
 
           if test "$debugging" = "yes"; then
@@ -35263,7 +35311,7 @@ echo "configure:35147: checking for all headers at the same time: $_HEADER_LIST_
     for _HEADER_ in $_HEADER_LIST_; do
 
        echo $ac_n "checking for $_HEADER_""... $ac_c" 1>&6
-echo "configure:35267: checking for $_HEADER_" >&5
+echo "configure:35315: checking for $_HEADER_" >&5
 
        for _CHECK_PATH_ in $_SCI_CHECK_PATHS_; do
 
@@ -35468,7 +35516,7 @@ MISC_LIB_FLAG="$SSL_LIB_DIR_FLAG $SSL_LIB_FLAG $CRYPTO_LIB_DIR_FLAG $CRYPTO_LIB_
        EXTERN_BEGIN=""
        EXTERN_END=""
        echo $ac_n "checking for both libglobus_dc.so and libglobus_dc.a""... $ac_c" 1>&6
-echo "configure:35472: checking for both libglobus_dc.so and libglobus_dc.a" >&5
+echo "configure:35520: checking for both libglobus_dc.so and libglobus_dc.a" >&5
     else
       if test "main" = "main"; then
          _SCI_DECL_=""
@@ -35476,13 +35524,13 @@ echo "configure:35472: checking for both libglobus_dc.so and libglobus_dc.a" >&5
          EXTERN_BEGIN=""
          EXTERN_END=""
          echo $ac_n "checking for -lglobus_dc""... $ac_c" 1>&6
-echo "configure:35480: checking for -lglobus_dc" >&5
+echo "configure:35528: checking for -lglobus_dc" >&5
       else
         _SCI_DECL_="char main();"
         _SCI_CALL_="main();"
 
         echo $ac_n "checking for main in -lglobus_dc""... $ac_c" 1>&6
-echo "configure:35486: checking for main in -lglobus_dc" >&5
+echo "configure:35534: checking for main in -lglobus_dc" >&5
         if test "$_SCI_USING_CXX_" != "yes"; then
           EXTERN_BEGIN="extern \"C\" {"
           EXTERN_END="}"
@@ -35825,7 +35873,7 @@ EOF
        EXTERN_BEGIN=""
        EXTERN_END=""
        echo $ac_n "checking for both libglobus_common.so and libglobus_common.a""... $ac_c" 1>&6
-echo "configure:35829: checking for both libglobus_common.so and libglobus_common.a" >&5
+echo "configure:35877: checking for both libglobus_common.so and libglobus_common.a" >&5
     else
       if test "" = "main"; then
          _SCI_DECL_=""
@@ -35833,13 +35881,13 @@ echo "configure:35829: checking for both libglobus_common.so and libglobus_commo
          EXTERN_BEGIN=""
          EXTERN_END=""
          echo $ac_n "checking for -lglobus_common""... $ac_c" 1>&6
-echo "configure:35837: checking for -lglobus_common" >&5
+echo "configure:35885: checking for -lglobus_common" >&5
       else
         _SCI_DECL_="char ();"
         _SCI_CALL_="();"
 
         echo $ac_n "checking for  in -lglobus_common""... $ac_c" 1>&6
-echo "configure:35843: checking for  in -lglobus_common" >&5
+echo "configure:35891: checking for  in -lglobus_common" >&5
         if test "$_SCI_USING_CXX_" != "yes"; then
           EXTERN_BEGIN="extern \"C\" {"
           EXTERN_END="}"
@@ -36182,7 +36230,7 @@ EOF
        EXTERN_BEGIN=""
        EXTERN_END=""
        echo $ac_n "checking for both libglobus_nexus.so and libglobus_nexus.a""... $ac_c" 1>&6
-echo "configure:36186: checking for both libglobus_nexus.so and libglobus_nexus.a" >&5
+echo "configure:36234: checking for both libglobus_nexus.so and libglobus_nexus.a" >&5
     else
       if test "" = "main"; then
          _SCI_DECL_=""
@@ -36190,13 +36238,13 @@ echo "configure:36186: checking for both libglobus_nexus.so and libglobus_nexus.
          EXTERN_BEGIN=""
          EXTERN_END=""
          echo $ac_n "checking for -lglobus_nexus""... $ac_c" 1>&6
-echo "configure:36194: checking for -lglobus_nexus" >&5
+echo "configure:36242: checking for -lglobus_nexus" >&5
       else
         _SCI_DECL_="char ();"
         _SCI_CALL_="();"
 
         echo $ac_n "checking for  in -lglobus_nexus""... $ac_c" 1>&6
-echo "configure:36200: checking for  in -lglobus_nexus" >&5
+echo "configure:36248: checking for  in -lglobus_nexus" >&5
         if test "$_SCI_USING_CXX_" != "yes"; then
           EXTERN_BEGIN="extern \"C\" {"
           EXTERN_END="}"
@@ -36543,7 +36591,7 @@ EOF
     if test $num_headers -gt 1; then
 
        echo $ac_n "checking for all headers at the same time: $_HEADER_LIST_""... $ac_c" 1>&6
-echo "configure:36547: checking for all headers at the same time: $_HEADER_LIST_" >&5
+echo "configure:36595: checking for all headers at the same time: $_HEADER_LIST_" >&5
        for _CHECK_PATH_ in $_SCI_CHECK_PATHS_; do
 
           if test "$debugging" = "yes"; then
@@ -36663,7 +36711,7 @@ echo "configure:36547: checking for all headers at the same time: $_HEADER_LIST_
     for _HEADER_ in $_HEADER_LIST_; do
 
        echo $ac_n "checking for $_HEADER_""... $ac_c" 1>&6
-echo "configure:36667: checking for $_HEADER_" >&5
+echo "configure:36715: checking for $_HEADER_" >&5
 
        for _CHECK_PATH_ in $_SCI_CHECK_PATHS_; do
 
@@ -36861,7 +36909,7 @@ fi
        EXTERN_BEGIN=""
        EXTERN_END=""
        echo $ac_n "checking for both libglobus_io.so and libglobus_io.a""... $ac_c" 1>&6
-echo "configure:36865: checking for both libglobus_io.so and libglobus_io.a" >&5
+echo "configure:36913: checking for both libglobus_io.so and libglobus_io.a" >&5
     else
       if test "" = "main"; then
          _SCI_DECL_=""
@@ -36869,13 +36917,13 @@ echo "configure:36865: checking for both libglobus_io.so and libglobus_io.a" >&5
          EXTERN_BEGIN=""
          EXTERN_END=""
          echo $ac_n "checking for -lglobus_io""... $ac_c" 1>&6
-echo "configure:36873: checking for -lglobus_io" >&5
+echo "configure:36921: checking for -lglobus_io" >&5
       else
         _SCI_DECL_="char ();"
         _SCI_CALL_="();"
 
         echo $ac_n "checking for  in -lglobus_io""... $ac_c" 1>&6
-echo "configure:36879: checking for  in -lglobus_io" >&5
+echo "configure:36927: checking for  in -lglobus_io" >&5
         if test "$_SCI_USING_CXX_" != "yes"; then
           EXTERN_BEGIN="extern \"C\" {"
           EXTERN_END="}"
@@ -37220,7 +37268,7 @@ if test "$is_linux" = "linux"; then
        EXTERN_BEGIN=""
        EXTERN_END=""
        echo $ac_n "checking for both libglobus_utp.so and libglobus_utp.a""... $ac_c" 1>&6
-echo "configure:37224: checking for both libglobus_utp.so and libglobus_utp.a" >&5
+echo "configure:37272: checking for both libglobus_utp.so and libglobus_utp.a" >&5
     else
       if test "" = "main"; then
          _SCI_DECL_=""
@@ -37228,13 +37276,13 @@ echo "configure:37224: checking for both libglobus_utp.so and libglobus_utp.a" >
          EXTERN_BEGIN=""
          EXTERN_END=""
          echo $ac_n "checking for -lglobus_utp""... $ac_c" 1>&6
-echo "configure:37232: checking for -lglobus_utp" >&5
+echo "configure:37280: checking for -lglobus_utp" >&5
       else
         _SCI_DECL_="char ();"
         _SCI_CALL_="();"
 
         echo $ac_n "checking for  in -lglobus_utp""... $ac_c" 1>&6
-echo "configure:37238: checking for  in -lglobus_utp" >&5
+echo "configure:37286: checking for  in -lglobus_utp" >&5
         if test "$_SCI_USING_CXX_" != "yes"; then
           EXTERN_BEGIN="extern \"C\" {"
           EXTERN_END="}"
@@ -37577,7 +37625,7 @@ EOF
        EXTERN_BEGIN=""
        EXTERN_END=""
        echo $ac_n "checking for both libglobus_mp.so and libglobus_mp.a""... $ac_c" 1>&6
-echo "configure:37581: checking for both libglobus_mp.so and libglobus_mp.a" >&5
+echo "configure:37629: checking for both libglobus_mp.so and libglobus_mp.a" >&5
     else
       if test "" = "main"; then
          _SCI_DECL_=""
@@ -37585,13 +37633,13 @@ echo "configure:37581: checking for both libglobus_mp.so and libglobus_mp.a" >&5
          EXTERN_BEGIN=""
          EXTERN_END=""
          echo $ac_n "checking for -lglobus_mp""... $ac_c" 1>&6
-echo "configure:37589: checking for -lglobus_mp" >&5
+echo "configure:37637: checking for -lglobus_mp" >&5
       else
         _SCI_DECL_="char ();"
         _SCI_CALL_="();"
 
         echo $ac_n "checking for  in -lglobus_mp""... $ac_c" 1>&6
-echo "configure:37595: checking for  in -lglobus_mp" >&5
+echo "configure:37643: checking for  in -lglobus_mp" >&5
         if test "$_SCI_USING_CXX_" != "yes"; then
           EXTERN_BEGIN="extern \"C\" {"
           EXTERN_END="}"
@@ -37934,7 +37982,7 @@ EOF
        EXTERN_BEGIN=""
        EXTERN_END=""
        echo $ac_n "checking for both libglobus_gss_assist.so and libglobus_gss_assist.a""... $ac_c" 1>&6
-echo "configure:37938: checking for both libglobus_gss_assist.so and libglobus_gss_assist.a" >&5
+echo "configure:37986: checking for both libglobus_gss_assist.so and libglobus_gss_assist.a" >&5
     else
       if test "" = "main"; then
          _SCI_DECL_=""
@@ -37942,13 +37990,13 @@ echo "configure:37938: checking for both libglobus_gss_assist.so and libglobus_g
          EXTERN_BEGIN=""
          EXTERN_END=""
          echo $ac_n "checking for -lglobus_gss_assist""... $ac_c" 1>&6
-echo "configure:37946: checking for -lglobus_gss_assist" >&5
+echo "configure:37994: checking for -lglobus_gss_assist" >&5
       else
         _SCI_DECL_="char ();"
         _SCI_CALL_="();"
 
         echo $ac_n "checking for  in -lglobus_gss_assist""... $ac_c" 1>&6
-echo "configure:37952: checking for  in -lglobus_gss_assist" >&5
+echo "configure:38000: checking for  in -lglobus_gss_assist" >&5
         if test "$_SCI_USING_CXX_" != "yes"; then
           EXTERN_BEGIN="extern \"C\" {"
           EXTERN_END="}"
@@ -38291,7 +38339,7 @@ EOF
        EXTERN_BEGIN=""
        EXTERN_END=""
        echo $ac_n "checking for both libglobus_gss.so and libglobus_gss.a""... $ac_c" 1>&6
-echo "configure:38295: checking for both libglobus_gss.so and libglobus_gss.a" >&5
+echo "configure:38343: checking for both libglobus_gss.so and libglobus_gss.a" >&5
     else
       if test "" = "main"; then
          _SCI_DECL_=""
@@ -38299,13 +38347,13 @@ echo "configure:38295: checking for both libglobus_gss.so and libglobus_gss.a" >
          EXTERN_BEGIN=""
          EXTERN_END=""
          echo $ac_n "checking for -lglobus_gss""... $ac_c" 1>&6
-echo "configure:38303: checking for -lglobus_gss" >&5
+echo "configure:38351: checking for -lglobus_gss" >&5
       else
         _SCI_DECL_="char ();"
         _SCI_CALL_="();"
 
         echo $ac_n "checking for  in -lglobus_gss""... $ac_c" 1>&6
-echo "configure:38309: checking for  in -lglobus_gss" >&5
+echo "configure:38357: checking for  in -lglobus_gss" >&5
         if test "$_SCI_USING_CXX_" != "yes"; then
           EXTERN_BEGIN="extern \"C\" {"
           EXTERN_END="}"
@@ -38648,7 +38696,7 @@ EOF
        EXTERN_BEGIN=""
        EXTERN_END=""
        echo $ac_n "checking for both libglobus_gaa.so and libglobus_gaa.a""... $ac_c" 1>&6
-echo "configure:38652: checking for both libglobus_gaa.so and libglobus_gaa.a" >&5
+echo "configure:38700: checking for both libglobus_gaa.so and libglobus_gaa.a" >&5
     else
       if test "" = "main"; then
          _SCI_DECL_=""
@@ -38656,13 +38704,13 @@ echo "configure:38652: checking for both libglobus_gaa.so and libglobus_gaa.a" >
          EXTERN_BEGIN=""
          EXTERN_END=""
          echo $ac_n "checking for -lglobus_gaa""... $ac_c" 1>&6
-echo "configure:38660: checking for -lglobus_gaa" >&5
+echo "configure:38708: checking for -lglobus_gaa" >&5
       else
         _SCI_DECL_="char ();"
         _SCI_CALL_="();"
 
         echo $ac_n "checking for  in -lglobus_gaa""... $ac_c" 1>&6
-echo "configure:38666: checking for  in -lglobus_gaa" >&5
+echo "configure:38714: checking for  in -lglobus_gaa" >&5
         if test "$_SCI_USING_CXX_" != "yes"; then
           EXTERN_BEGIN="extern \"C\" {"
           EXTERN_END="}"
@@ -38951,6 +38999,7 @@ fi
 
 
 
+
 ##  --  search for Qt  ----------------------------------------------------
 
 if test "$with_qt"; then
@@ -39027,7 +39076,7 @@ fi
        EXTERN_BEGIN=""
        EXTERN_END=""
        echo $ac_n "checking for both libqt-mt.so and libqt-mt.a""... $ac_c" 1>&6
-echo "configure:39031: checking for both libqt-mt.so and libqt-mt.a" >&5
+echo "configure:39080: checking for both libqt-mt.so and libqt-mt.a" >&5
     else
       if test "main" = "main"; then
          _SCI_DECL_=""
@@ -39035,13 +39084,13 @@ echo "configure:39031: checking for both libqt-mt.so and libqt-mt.a" >&5
          EXTERN_BEGIN=""
          EXTERN_END=""
          echo $ac_n "checking for -lqt-mt""... $ac_c" 1>&6
-echo "configure:39039: checking for -lqt-mt" >&5
+echo "configure:39088: checking for -lqt-mt" >&5
       else
         _SCI_DECL_="char main();"
         _SCI_CALL_="main();"
 
         echo $ac_n "checking for main in -lqt-mt""... $ac_c" 1>&6
-echo "configure:39045: checking for main in -lqt-mt" >&5
+echo "configure:39094: checking for main in -lqt-mt" >&5
         if test "$_SCI_USING_CXX_" != "yes"; then
           EXTERN_BEGIN="extern \"C\" {"
           EXTERN_END="}"
@@ -39319,11 +39368,11 @@ EOF
 
 QT_MOC_BIN=""
 echo "checking for moc in $LIB_DIR_QT_MT/../bin" 1>&6
-echo "configure:39323: checking for moc in $LIB_DIR_QT_MT/../bin" >&5
+echo "configure:39372: checking for moc in $LIB_DIR_QT_MT/../bin" >&5
 # Extract the first word of "moc", so it can be a program name with args.
 set dummy moc; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:39327: checking for $ac_word" >&5
+echo "configure:39376: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_prog_QT_MOC_BIN'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -39444,7 +39493,7 @@ fi
        EXTERN_BEGIN=""
        EXTERN_END=""
        echo $ac_n "checking for both libsidl.so and libsidl.a""... $ac_c" 1>&6
-echo "configure:39448: checking for both libsidl.so and libsidl.a" >&5
+echo "configure:39497: checking for both libsidl.so and libsidl.a" >&5
     else
       if test "main" = "main"; then
          _SCI_DECL_=""
@@ -39452,13 +39501,13 @@ echo "configure:39448: checking for both libsidl.so and libsidl.a" >&5
          EXTERN_BEGIN=""
          EXTERN_END=""
          echo $ac_n "checking for -lsidl""... $ac_c" 1>&6
-echo "configure:39456: checking for -lsidl" >&5
+echo "configure:39505: checking for -lsidl" >&5
       else
         _SCI_DECL_="char main();"
         _SCI_CALL_="main();"
 
         echo $ac_n "checking for main in -lsidl""... $ac_c" 1>&6
-echo "configure:39462: checking for main in -lsidl" >&5
+echo "configure:39511: checking for main in -lsidl" >&5
         if test "$_SCI_USING_CXX_" != "yes"; then
           EXTERN_BEGIN="extern \"C\" {"
           EXTERN_END="}"
@@ -39736,11 +39785,11 @@ EOF
 
 BABEL_BIN=""
 echo "checking for babel in $LIB_DIR_SIDL/../bin" 1>&6
-echo "configure:39740: checking for babel in $LIB_DIR_SIDL/../bin" >&5
+echo "configure:39789: checking for babel in $LIB_DIR_SIDL/../bin" >&5
 # Extract the first word of "babel", so it can be a program name with args.
 set dummy babel; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:39744: checking for $ac_word" >&5
+echo "configure:39793: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_prog_BABEL_BIN'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -39844,7 +39893,7 @@ fi
     if test $num_headers -gt 1; then
 
        echo $ac_n "checking for all headers at the same time: $_HEADER_LIST_""... $ac_c" 1>&6
-echo "configure:39848: checking for all headers at the same time: $_HEADER_LIST_" >&5
+echo "configure:39897: checking for all headers at the same time: $_HEADER_LIST_" >&5
        for _CHECK_PATH_ in $_SCI_CHECK_PATHS_; do
 
           if test "$debugging" = "yes"; then
@@ -39964,7 +40013,7 @@ echo "configure:39848: checking for all headers at the same time: $_HEADER_LIST_
     for _HEADER_ in $_HEADER_LIST_; do
 
        echo $ac_n "checking for $_HEADER_""... $ac_c" 1>&6
-echo "configure:39968: checking for $_HEADER_" >&5
+echo "configure:40017: checking for $_HEADER_" >&5
 
        for _CHECK_PATH_ in $_SCI_CHECK_PATHS_; do
 
@@ -40178,7 +40227,7 @@ if test "$pkg_vdt" = "yes"; then
        EXTERN_BEGIN=""
        EXTERN_END=""
        echo $ac_n "checking for both libesi.so and libesi.a""... $ac_c" 1>&6
-echo "configure:40182: checking for both libesi.so and libesi.a" >&5
+echo "configure:40231: checking for both libesi.so and libesi.a" >&5
     else
       if test "" = "main"; then
          _SCI_DECL_=""
@@ -40186,13 +40235,13 @@ echo "configure:40182: checking for both libesi.so and libesi.a" >&5
          EXTERN_BEGIN=""
          EXTERN_END=""
          echo $ac_n "checking for -lesi""... $ac_c" 1>&6
-echo "configure:40190: checking for -lesi" >&5
+echo "configure:40239: checking for -lesi" >&5
       else
         _SCI_DECL_="char ();"
         _SCI_CALL_="();"
 
         echo $ac_n "checking for  in -lesi""... $ac_c" 1>&6
-echo "configure:40196: checking for  in -lesi" >&5
+echo "configure:40245: checking for  in -lesi" >&5
         if test "$_SCI_USING_CXX_" != "yes"; then
           EXTERN_BEGIN="extern \"C\" {"
           EXTERN_END="}"
@@ -40535,7 +40584,7 @@ EOF
        EXTERN_BEGIN=""
        EXTERN_END=""
        echo $ac_n "checking for both libelixir.so and libelixir.a""... $ac_c" 1>&6
-echo "configure:40539: checking for both libelixir.so and libelixir.a" >&5
+echo "configure:40588: checking for both libelixir.so and libelixir.a" >&5
     else
       if test "" = "main"; then
          _SCI_DECL_=""
@@ -40543,13 +40592,13 @@ echo "configure:40539: checking for both libelixir.so and libelixir.a" >&5
          EXTERN_BEGIN=""
          EXTERN_END=""
          echo $ac_n "checking for -lelixir""... $ac_c" 1>&6
-echo "configure:40547: checking for -lelixir" >&5
+echo "configure:40596: checking for -lelixir" >&5
       else
         _SCI_DECL_="char ();"
         _SCI_CALL_="();"
 
         echo $ac_n "checking for  in -lelixir""... $ac_c" 1>&6
-echo "configure:40553: checking for  in -lelixir" >&5
+echo "configure:40602: checking for  in -lelixir" >&5
         if test "$_SCI_USING_CXX_" != "yes"; then
           EXTERN_BEGIN="extern \"C\" {"
           EXTERN_END="}"
@@ -40892,7 +40941,7 @@ EOF
        EXTERN_BEGIN=""
        EXTERN_END=""
        echo $ac_n "checking for both liblpk.so and liblpk.a""... $ac_c" 1>&6
-echo "configure:40896: checking for both liblpk.so and liblpk.a" >&5
+echo "configure:40945: checking for both liblpk.so and liblpk.a" >&5
     else
       if test "" = "main"; then
          _SCI_DECL_=""
@@ -40900,13 +40949,13 @@ echo "configure:40896: checking for both liblpk.so and liblpk.a" >&5
          EXTERN_BEGIN=""
          EXTERN_END=""
          echo $ac_n "checking for -llpk""... $ac_c" 1>&6
-echo "configure:40904: checking for -llpk" >&5
+echo "configure:40953: checking for -llpk" >&5
       else
         _SCI_DECL_="char ();"
         _SCI_CALL_="();"
 
         echo $ac_n "checking for  in -llpk""... $ac_c" 1>&6
-echo "configure:40910: checking for  in -llpk" >&5
+echo "configure:40959: checking for  in -llpk" >&5
         if test "$_SCI_USING_CXX_" != "yes"; then
           EXTERN_BEGIN="extern \"C\" {"
           EXTERN_END="}"
@@ -41249,7 +41298,7 @@ EOF
        EXTERN_BEGIN=""
        EXTERN_END=""
        echo $ac_n "checking for both libpirat.so and libpirat.a""... $ac_c" 1>&6
-echo "configure:41253: checking for both libpirat.so and libpirat.a" >&5
+echo "configure:41302: checking for both libpirat.so and libpirat.a" >&5
     else
       if test "" = "main"; then
          _SCI_DECL_=""
@@ -41257,13 +41306,13 @@ echo "configure:41253: checking for both libpirat.so and libpirat.a" >&5
          EXTERN_BEGIN=""
          EXTERN_END=""
          echo $ac_n "checking for -lpirat""... $ac_c" 1>&6
-echo "configure:41261: checking for -lpirat" >&5
+echo "configure:41310: checking for -lpirat" >&5
       else
         _SCI_DECL_="char ();"
         _SCI_CALL_="();"
 
         echo $ac_n "checking for  in -lpirat""... $ac_c" 1>&6
-echo "configure:41267: checking for  in -lpirat" >&5
+echo "configure:41316: checking for  in -lpirat" >&5
         if test "$_SCI_USING_CXX_" != "yes"; then
           EXTERN_BEGIN="extern \"C\" {"
           EXTERN_END="}"
@@ -41606,7 +41655,7 @@ EOF
        EXTERN_BEGIN=""
        EXTERN_END=""
        echo $ac_n "checking for both liblobs3d.so and liblobs3d.a""... $ac_c" 1>&6
-echo "configure:41610: checking for both liblobs3d.so and liblobs3d.a" >&5
+echo "configure:41659: checking for both liblobs3d.so and liblobs3d.a" >&5
     else
       if test "" = "main"; then
          _SCI_DECL_=""
@@ -41614,13 +41663,13 @@ echo "configure:41610: checking for both liblobs3d.so and liblobs3d.a" >&5
          EXTERN_BEGIN=""
          EXTERN_END=""
          echo $ac_n "checking for -llobs3d""... $ac_c" 1>&6
-echo "configure:41618: checking for -llobs3d" >&5
+echo "configure:41667: checking for -llobs3d" >&5
       else
         _SCI_DECL_="char ();"
         _SCI_CALL_="();"
 
         echo $ac_n "checking for  in -llobs3d""... $ac_c" 1>&6
-echo "configure:41624: checking for  in -llobs3d" >&5
+echo "configure:41673: checking for  in -llobs3d" >&5
         if test "$_SCI_USING_CXX_" != "yes"; then
           EXTERN_BEGIN="extern \"C\" {"
           EXTERN_END="}"
@@ -41963,7 +42012,7 @@ EOF
        EXTERN_BEGIN=""
        EXTERN_END=""
        echo $ac_n "checking for both liblobs2d.so and liblobs2d.a""... $ac_c" 1>&6
-echo "configure:41967: checking for both liblobs2d.so and liblobs2d.a" >&5
+echo "configure:42016: checking for both liblobs2d.so and liblobs2d.a" >&5
     else
       if test "" = "main"; then
          _SCI_DECL_=""
@@ -41971,13 +42020,13 @@ echo "configure:41967: checking for both liblobs2d.so and liblobs2d.a" >&5
          EXTERN_BEGIN=""
          EXTERN_END=""
          echo $ac_n "checking for -llobs2d""... $ac_c" 1>&6
-echo "configure:41975: checking for -llobs2d" >&5
+echo "configure:42024: checking for -llobs2d" >&5
       else
         _SCI_DECL_="char ();"
         _SCI_CALL_="();"
 
         echo $ac_n "checking for  in -llobs2d""... $ac_c" 1>&6
-echo "configure:41981: checking for  in -llobs2d" >&5
+echo "configure:42030: checking for  in -llobs2d" >&5
         if test "$_SCI_USING_CXX_" != "yes"; then
           EXTERN_BEGIN="extern \"C\" {"
           EXTERN_END="}"
@@ -42320,7 +42369,7 @@ EOF
        EXTERN_BEGIN=""
        EXTERN_END=""
        echo $ac_n "checking for both liblobs1d.so and liblobs1d.a""... $ac_c" 1>&6
-echo "configure:42324: checking for both liblobs1d.so and liblobs1d.a" >&5
+echo "configure:42373: checking for both liblobs1d.so and liblobs1d.a" >&5
     else
       if test "" = "main"; then
          _SCI_DECL_=""
@@ -42328,13 +42377,13 @@ echo "configure:42324: checking for both liblobs1d.so and liblobs1d.a" >&5
          EXTERN_BEGIN=""
          EXTERN_END=""
          echo $ac_n "checking for -llobs1d""... $ac_c" 1>&6
-echo "configure:42332: checking for -llobs1d" >&5
+echo "configure:42381: checking for -llobs1d" >&5
       else
         _SCI_DECL_="char ();"
         _SCI_CALL_="();"
 
         echo $ac_n "checking for  in -llobs1d""... $ac_c" 1>&6
-echo "configure:42338: checking for  in -llobs1d" >&5
+echo "configure:42387: checking for  in -llobs1d" >&5
         if test "$_SCI_USING_CXX_" != "yes"; then
           EXTERN_BEGIN="extern \"C\" {"
           EXTERN_END="}"
@@ -42677,7 +42726,7 @@ EOF
        EXTERN_BEGIN=""
        EXTERN_END=""
        echo $ac_n "checking for both libg3d.so and libg3d.a""... $ac_c" 1>&6
-echo "configure:42681: checking for both libg3d.so and libg3d.a" >&5
+echo "configure:42730: checking for both libg3d.so and libg3d.a" >&5
     else
       if test "" = "main"; then
          _SCI_DECL_=""
@@ -42685,13 +42734,13 @@ echo "configure:42681: checking for both libg3d.so and libg3d.a" >&5
          EXTERN_BEGIN=""
          EXTERN_END=""
          echo $ac_n "checking for -lg3d""... $ac_c" 1>&6
-echo "configure:42689: checking for -lg3d" >&5
+echo "configure:42738: checking for -lg3d" >&5
       else
         _SCI_DECL_="char ();"
         _SCI_CALL_="();"
 
         echo $ac_n "checking for  in -lg3d""... $ac_c" 1>&6
-echo "configure:42695: checking for  in -lg3d" >&5
+echo "configure:42744: checking for  in -lg3d" >&5
         if test "$_SCI_USING_CXX_" != "yes"; then
           EXTERN_BEGIN="extern \"C\" {"
           EXTERN_END="}"
@@ -43034,7 +43083,7 @@ EOF
        EXTERN_BEGIN=""
        EXTERN_END=""
        echo $ac_n "checking for both libckit.so and libckit.a""... $ac_c" 1>&6
-echo "configure:43038: checking for both libckit.so and libckit.a" >&5
+echo "configure:43087: checking for both libckit.so and libckit.a" >&5
     else
       if test "" = "main"; then
          _SCI_DECL_=""
@@ -43042,13 +43091,13 @@ echo "configure:43038: checking for both libckit.so and libckit.a" >&5
          EXTERN_BEGIN=""
          EXTERN_END=""
          echo $ac_n "checking for -lckit""... $ac_c" 1>&6
-echo "configure:43046: checking for -lckit" >&5
+echo "configure:43095: checking for -lckit" >&5
       else
         _SCI_DECL_="char ();"
         _SCI_CALL_="();"
 
         echo $ac_n "checking for  in -lckit""... $ac_c" 1>&6
-echo "configure:43052: checking for  in -lckit" >&5
+echo "configure:43101: checking for  in -lckit" >&5
         if test "$_SCI_USING_CXX_" != "yes"; then
           EXTERN_BEGIN="extern \"C\" {"
           EXTERN_END="}"
@@ -43391,7 +43440,7 @@ EOF
        EXTERN_BEGIN=""
        EXTERN_END=""
        echo $ac_n "checking for both libmeschach.so and libmeschach.a""... $ac_c" 1>&6
-echo "configure:43395: checking for both libmeschach.so and libmeschach.a" >&5
+echo "configure:43444: checking for both libmeschach.so and libmeschach.a" >&5
     else
       if test "" = "main"; then
          _SCI_DECL_=""
@@ -43399,13 +43448,13 @@ echo "configure:43395: checking for both libmeschach.so and libmeschach.a" >&5
          EXTERN_BEGIN=""
          EXTERN_END=""
          echo $ac_n "checking for -lmeschach""... $ac_c" 1>&6
-echo "configure:43403: checking for -lmeschach" >&5
+echo "configure:43452: checking for -lmeschach" >&5
       else
         _SCI_DECL_="char ();"
         _SCI_CALL_="();"
 
         echo $ac_n "checking for  in -lmeschach""... $ac_c" 1>&6
-echo "configure:43409: checking for  in -lmeschach" >&5
+echo "configure:43458: checking for  in -lmeschach" >&5
         if test "$_SCI_USING_CXX_" != "yes"; then
           EXTERN_BEGIN="extern \"C\" {"
           EXTERN_END="}"
@@ -43754,7 +43803,7 @@ EOF
        EXTERN_BEGIN=""
        EXTERN_END=""
        echo $ac_n "checking for both libvdt.so and libvdt.a""... $ac_c" 1>&6
-echo "configure:43758: checking for both libvdt.so and libvdt.a" >&5
+echo "configure:43807: checking for both libvdt.so and libvdt.a" >&5
     else
       if test "VDT_triangulate" = "main"; then
          _SCI_DECL_=""
@@ -43762,13 +43811,13 @@ echo "configure:43758: checking for both libvdt.so and libvdt.a" >&5
          EXTERN_BEGIN=""
          EXTERN_END=""
          echo $ac_n "checking for -lvdt""... $ac_c" 1>&6
-echo "configure:43766: checking for -lvdt" >&5
+echo "configure:43815: checking for -lvdt" >&5
       else
         _SCI_DECL_="char VDT_triangulate();"
         _SCI_CALL_="VDT_triangulate();"
 
         echo $ac_n "checking for VDT_triangulate in -lvdt""... $ac_c" 1>&6
-echo "configure:43772: checking for VDT_triangulate in -lvdt" >&5
+echo "configure:43821: checking for VDT_triangulate in -lvdt" >&5
         if test "$_SCI_USING_CXX_" != "yes"; then
           EXTERN_BEGIN="extern \"C\" {"
           EXTERN_END="}"
@@ -44167,7 +44216,7 @@ for i in $with_imagemagick $SCI_LAB_TP_DEFAULT; do
        EXTERN_BEGIN=""
        EXTERN_END=""
        echo $ac_n "checking for both libMagick.so and libMagick.a""... $ac_c" 1>&6
-echo "configure:44171: checking for both libMagick.so and libMagick.a" >&5
+echo "configure:44220: checking for both libMagick.so and libMagick.a" >&5
     else
       if test "WriteImage" = "main"; then
          _SCI_DECL_=""
@@ -44175,13 +44224,13 @@ echo "configure:44171: checking for both libMagick.so and libMagick.a" >&5
          EXTERN_BEGIN=""
          EXTERN_END=""
          echo $ac_n "checking for -lMagick""... $ac_c" 1>&6
-echo "configure:44179: checking for -lMagick" >&5
+echo "configure:44228: checking for -lMagick" >&5
       else
         _SCI_DECL_="char WriteImage();"
         _SCI_CALL_="WriteImage();"
 
         echo $ac_n "checking for WriteImage in -lMagick""... $ac_c" 1>&6
-echo "configure:44185: checking for WriteImage in -lMagick" >&5
+echo "configure:44234: checking for WriteImage in -lMagick" >&5
         if test "$_SCI_USING_CXX_" != "yes"; then
           EXTERN_BEGIN="extern \"C\" {"
           EXTERN_END="}"
@@ -44527,7 +44576,7 @@ EOF
     if test $num_headers -gt 1; then
 
        echo $ac_n "checking for all headers at the same time: $_HEADER_LIST_""... $ac_c" 1>&6
-echo "configure:44531: checking for all headers at the same time: $_HEADER_LIST_" >&5
+echo "configure:44580: checking for all headers at the same time: $_HEADER_LIST_" >&5
        for _CHECK_PATH_ in $_SCI_CHECK_PATHS_; do
 
           if test "$debugging" = "yes"; then
@@ -44647,7 +44696,7 @@ echo "configure:44531: checking for all headers at the same time: $_HEADER_LIST_
     for _HEADER_ in $_HEADER_LIST_; do
 
        echo $ac_n "checking for $_HEADER_""... $ac_c" 1>&6
-echo "configure:44651: checking for $_HEADER_" >&5
+echo "configure:44700: checking for $_HEADER_" >&5
 
        for _CHECK_PATH_ in $_SCI_CHECK_PATHS_; do
 
@@ -44857,7 +44906,7 @@ fi
        EXTERN_BEGIN=""
        EXTERN_END=""
        echo $ac_n "checking for both libz.so and libz.a""... $ac_c" 1>&6
-echo "configure:44861: checking for both libz.so and libz.a" >&5
+echo "configure:44910: checking for both libz.so and libz.a" >&5
     else
       if test "main" = "main"; then
          _SCI_DECL_=""
@@ -44865,13 +44914,13 @@ echo "configure:44861: checking for both libz.so and libz.a" >&5
          EXTERN_BEGIN=""
          EXTERN_END=""
          echo $ac_n "checking for -lz""... $ac_c" 1>&6
-echo "configure:44869: checking for -lz" >&5
+echo "configure:44918: checking for -lz" >&5
       else
         _SCI_DECL_="char main();"
         _SCI_CALL_="main();"
 
         echo $ac_n "checking for main in -lz""... $ac_c" 1>&6
-echo "configure:44875: checking for main in -lz" >&5
+echo "configure:44924: checking for main in -lz" >&5
         if test "$_SCI_USING_CXX_" != "yes"; then
           EXTERN_BEGIN="extern \"C\" {"
           EXTERN_END="}"
@@ -45217,7 +45266,7 @@ EOF
     if test $num_headers -gt 1; then
 
        echo $ac_n "checking for all headers at the same time: $_HEADER_LIST_""... $ac_c" 1>&6
-echo "configure:45221: checking for all headers at the same time: $_HEADER_LIST_" >&5
+echo "configure:45270: checking for all headers at the same time: $_HEADER_LIST_" >&5
        for _CHECK_PATH_ in $_SCI_CHECK_PATHS_; do
 
           if test "$debugging" = "yes"; then
@@ -45337,7 +45386,7 @@ echo "configure:45221: checking for all headers at the same time: $_HEADER_LIST_
     for _HEADER_ in $_HEADER_LIST_; do
 
        echo $ac_n "checking for $_HEADER_""... $ac_c" 1>&6
-echo "configure:45341: checking for $_HEADER_" >&5
+echo "configure:45390: checking for $_HEADER_" >&5
 
        for _CHECK_PATH_ in $_SCI_CHECK_PATHS_; do
 
@@ -45542,7 +45591,7 @@ case $host in
        EXTERN_BEGIN=""
        EXTERN_END=""
        echo $ac_n "checking for both libessl.so and libessl.a""... $ac_c" 1>&6
-echo "configure:45546: checking for both libessl.so and libessl.a" >&5
+echo "configure:45595: checking for both libessl.so and libessl.a" >&5
     else
       if test "main" = "main"; then
          _SCI_DECL_=""
@@ -45550,13 +45599,13 @@ echo "configure:45546: checking for both libessl.so and libessl.a" >&5
          EXTERN_BEGIN=""
          EXTERN_END=""
          echo $ac_n "checking for -lessl""... $ac_c" 1>&6
-echo "configure:45554: checking for -lessl" >&5
+echo "configure:45603: checking for -lessl" >&5
       else
         _SCI_DECL_="char main();"
         _SCI_CALL_="main();"
 
         echo $ac_n "checking for main in -lessl""... $ac_c" 1>&6
-echo "configure:45560: checking for main in -lessl" >&5
+echo "configure:45609: checking for main in -lessl" >&5
         if test "$_SCI_USING_CXX_" != "yes"; then
           EXTERN_BEGIN="extern \"C\" {"
           EXTERN_END="}"
@@ -45908,7 +45957,7 @@ EOF
        EXTERN_BEGIN=""
        EXTERN_END=""
        echo $ac_n "checking for both libblas.so and libblas.a""... $ac_c" 1>&6
-echo "configure:45912: checking for both libblas.so and libblas.a" >&5
+echo "configure:45961: checking for both libblas.so and libblas.a" >&5
     else
       if test "main" = "main"; then
          _SCI_DECL_=""
@@ -45916,13 +45965,13 @@ echo "configure:45912: checking for both libblas.so and libblas.a" >&5
          EXTERN_BEGIN=""
          EXTERN_END=""
          echo $ac_n "checking for -lblas""... $ac_c" 1>&6
-echo "configure:45920: checking for -lblas" >&5
+echo "configure:45969: checking for -lblas" >&5
       else
         _SCI_DECL_="char main();"
         _SCI_CALL_="main();"
 
         echo $ac_n "checking for main in -lblas""... $ac_c" 1>&6
-echo "configure:45926: checking for main in -lblas" >&5
+echo "configure:45975: checking for main in -lblas" >&5
         if test "$_SCI_USING_CXX_" != "yes"; then
           EXTERN_BEGIN="extern \"C\" {"
           EXTERN_END="}"
@@ -46290,7 +46339,7 @@ if test "$HAVE_LIB_F" && test "$HAVE_LIB_BLAS"; then
        EXTERN_BEGIN=""
        EXTERN_END=""
        echo $ac_n "checking for both liblapack.so and liblapack.a""... $ac_c" 1>&6
-echo "configure:46294: checking for both liblapack.so and liblapack.a" >&5
+echo "configure:46343: checking for both liblapack.so and liblapack.a" >&5
     else
       if test "main" = "main"; then
          _SCI_DECL_=""
@@ -46298,13 +46347,13 @@ echo "configure:46294: checking for both liblapack.so and liblapack.a" >&5
          EXTERN_BEGIN=""
          EXTERN_END=""
          echo $ac_n "checking for -llapack""... $ac_c" 1>&6
-echo "configure:46302: checking for -llapack" >&5
+echo "configure:46351: checking for -llapack" >&5
       else
         _SCI_DECL_="char main();"
         _SCI_CALL_="main();"
 
         echo $ac_n "checking for main in -llapack""... $ac_c" 1>&6
-echo "configure:46308: checking for main in -llapack" >&5
+echo "configure:46357: checking for main in -llapack" >&5
         if test "$_SCI_USING_CXX_" != "yes"; then
           EXTERN_BEGIN="extern \"C\" {"
           EXTERN_END="}"
@@ -46649,7 +46698,7 @@ EOF
        EXTERN_BEGIN=""
        EXTERN_END=""
        echo $ac_n "checking for both libcomplib.sgimath.so and libcomplib.sgimath.a""... $ac_c" 1>&6
-echo "configure:46653: checking for both libcomplib.sgimath.so and libcomplib.sgimath.a" >&5
+echo "configure:46702: checking for both libcomplib.sgimath.so and libcomplib.sgimath.a" >&5
     else
       if test "main" = "main"; then
          _SCI_DECL_=""
@@ -46657,13 +46706,13 @@ echo "configure:46653: checking for both libcomplib.sgimath.so and libcomplib.sg
          EXTERN_BEGIN=""
          EXTERN_END=""
          echo $ac_n "checking for -lcomplib.sgimath""... $ac_c" 1>&6
-echo "configure:46661: checking for -lcomplib.sgimath" >&5
+echo "configure:46710: checking for -lcomplib.sgimath" >&5
       else
         _SCI_DECL_="char main();"
         _SCI_CALL_="main();"
 
         echo $ac_n "checking for main in -lcomplib.sgimath""... $ac_c" 1>&6
-echo "configure:46667: checking for main in -lcomplib.sgimath" >&5
+echo "configure:46716: checking for main in -lcomplib.sgimath" >&5
         if test "$_SCI_USING_CXX_" != "yes"; then
           EXTERN_BEGIN="extern \"C\" {"
           EXTERN_END="}"
@@ -47041,7 +47090,7 @@ if test "$pkg_uintah" = "yes"; then
        EXTERN_BEGIN=""
        EXTERN_END=""
        echo $ac_n "checking for both libHYPRE_struct_mv.so and libHYPRE_struct_mv.a""... $ac_c" 1>&6
-echo "configure:47045: checking for both libHYPRE_struct_mv.so and libHYPRE_struct_mv.a" >&5
+echo "configure:47094: checking for both libHYPRE_struct_mv.so and libHYPRE_struct_mv.a" >&5
     else
       if test "main" = "main"; then
          _SCI_DECL_=""
@@ -47049,13 +47098,13 @@ echo "configure:47045: checking for both libHYPRE_struct_mv.so and libHYPRE_stru
          EXTERN_BEGIN=""
          EXTERN_END=""
          echo $ac_n "checking for -lHYPRE_struct_mv""... $ac_c" 1>&6
-echo "configure:47053: checking for -lHYPRE_struct_mv" >&5
+echo "configure:47102: checking for -lHYPRE_struct_mv" >&5
       else
         _SCI_DECL_="char main();"
         _SCI_CALL_="main();"
 
         echo $ac_n "checking for main in -lHYPRE_struct_mv""... $ac_c" 1>&6
-echo "configure:47059: checking for main in -lHYPRE_struct_mv" >&5
+echo "configure:47108: checking for main in -lHYPRE_struct_mv" >&5
         if test "$_SCI_USING_CXX_" != "yes"; then
           EXTERN_BEGIN="extern \"C\" {"
           EXTERN_END="}"
@@ -47398,7 +47447,7 @@ EOF
        EXTERN_BEGIN=""
        EXTERN_END=""
        echo $ac_n "checking for both libHYPRE_struct_ls.so and libHYPRE_struct_ls.a""... $ac_c" 1>&6
-echo "configure:47402: checking for both libHYPRE_struct_ls.so and libHYPRE_struct_ls.a" >&5
+echo "configure:47451: checking for both libHYPRE_struct_ls.so and libHYPRE_struct_ls.a" >&5
     else
       if test "main" = "main"; then
          _SCI_DECL_=""
@@ -47406,13 +47455,13 @@ echo "configure:47402: checking for both libHYPRE_struct_ls.so and libHYPRE_stru
          EXTERN_BEGIN=""
          EXTERN_END=""
          echo $ac_n "checking for -lHYPRE_struct_ls""... $ac_c" 1>&6
-echo "configure:47410: checking for -lHYPRE_struct_ls" >&5
+echo "configure:47459: checking for -lHYPRE_struct_ls" >&5
       else
         _SCI_DECL_="char main();"
         _SCI_CALL_="main();"
 
         echo $ac_n "checking for main in -lHYPRE_struct_ls""... $ac_c" 1>&6
-echo "configure:47416: checking for main in -lHYPRE_struct_ls" >&5
+echo "configure:47465: checking for main in -lHYPRE_struct_ls" >&5
         if test "$_SCI_USING_CXX_" != "yes"; then
           EXTERN_BEGIN="extern \"C\" {"
           EXTERN_END="}"
@@ -47755,7 +47804,7 @@ EOF
        EXTERN_BEGIN=""
        EXTERN_END=""
        echo $ac_n "checking for both libHYPRE_blas.so and libHYPRE_blas.a""... $ac_c" 1>&6
-echo "configure:47759: checking for both libHYPRE_blas.so and libHYPRE_blas.a" >&5
+echo "configure:47808: checking for both libHYPRE_blas.so and libHYPRE_blas.a" >&5
     else
       if test "main" = "main"; then
          _SCI_DECL_=""
@@ -47763,13 +47812,13 @@ echo "configure:47759: checking for both libHYPRE_blas.so and libHYPRE_blas.a" >
          EXTERN_BEGIN=""
          EXTERN_END=""
          echo $ac_n "checking for -lHYPRE_blas""... $ac_c" 1>&6
-echo "configure:47767: checking for -lHYPRE_blas" >&5
+echo "configure:47816: checking for -lHYPRE_blas" >&5
       else
         _SCI_DECL_="char main();"
         _SCI_CALL_="main();"
 
         echo $ac_n "checking for main in -lHYPRE_blas""... $ac_c" 1>&6
-echo "configure:47773: checking for main in -lHYPRE_blas" >&5
+echo "configure:47822: checking for main in -lHYPRE_blas" >&5
         if test "$_SCI_USING_CXX_" != "yes"; then
           EXTERN_BEGIN="extern \"C\" {"
           EXTERN_END="}"
@@ -48112,7 +48161,7 @@ EOF
        EXTERN_BEGIN=""
        EXTERN_END=""
        echo $ac_n "checking for both libHYPRE_LSI.so and libHYPRE_LSI.a""... $ac_c" 1>&6
-echo "configure:48116: checking for both libHYPRE_LSI.so and libHYPRE_LSI.a" >&5
+echo "configure:48165: checking for both libHYPRE_LSI.so and libHYPRE_LSI.a" >&5
     else
       if test "main" = "main"; then
          _SCI_DECL_=""
@@ -48120,13 +48169,13 @@ echo "configure:48116: checking for both libHYPRE_LSI.so and libHYPRE_LSI.a" >&5
          EXTERN_BEGIN=""
          EXTERN_END=""
          echo $ac_n "checking for -lHYPRE_LSI""... $ac_c" 1>&6
-echo "configure:48124: checking for -lHYPRE_LSI" >&5
+echo "configure:48173: checking for -lHYPRE_LSI" >&5
       else
         _SCI_DECL_="char main();"
         _SCI_CALL_="main();"
 
         echo $ac_n "checking for main in -lHYPRE_LSI""... $ac_c" 1>&6
-echo "configure:48130: checking for main in -lHYPRE_LSI" >&5
+echo "configure:48179: checking for main in -lHYPRE_LSI" >&5
         if test "$_SCI_USING_CXX_" != "yes"; then
           EXTERN_BEGIN="extern \"C\" {"
           EXTERN_END="}"
@@ -48472,7 +48521,7 @@ EOF
     if test $num_headers -gt 1; then
 
        echo $ac_n "checking for all headers at the same time: $_HEADER_LIST_""... $ac_c" 1>&6
-echo "configure:48476: checking for all headers at the same time: $_HEADER_LIST_" >&5
+echo "configure:48525: checking for all headers at the same time: $_HEADER_LIST_" >&5
        for _CHECK_PATH_ in $_SCI_CHECK_PATHS_; do
 
           if test "$debugging" = "yes"; then
@@ -48592,7 +48641,7 @@ echo "configure:48476: checking for all headers at the same time: $_HEADER_LIST_
     for _HEADER_ in $_HEADER_LIST_; do
 
        echo $ac_n "checking for $_HEADER_""... $ac_c" 1>&6
-echo "configure:48596: checking for $_HEADER_" >&5
+echo "configure:48645: checking for $_HEADER_" >&5
 
        for _CHECK_PATH_ in $_SCI_CHECK_PATHS_; do
 
@@ -48870,7 +48919,7 @@ if test "$HAVE_LIB_MPI" && test "$HAVE_LIB_BLAS" &&
        EXTERN_BEGIN=""
        EXTERN_END=""
        echo $ac_n "checking for both libpetsc.so and libpetsc.a""... $ac_c" 1>&6
-echo "configure:48874: checking for both libpetsc.so and libpetsc.a" >&5
+echo "configure:48923: checking for both libpetsc.so and libpetsc.a" >&5
     else
       if test "main" = "main"; then
          _SCI_DECL_=""
@@ -48878,13 +48927,13 @@ echo "configure:48874: checking for both libpetsc.so and libpetsc.a" >&5
          EXTERN_BEGIN=""
          EXTERN_END=""
          echo $ac_n "checking for -lpetsc""... $ac_c" 1>&6
-echo "configure:48882: checking for -lpetsc" >&5
+echo "configure:48931: checking for -lpetsc" >&5
       else
         _SCI_DECL_="char main();"
         _SCI_CALL_="main();"
 
         echo $ac_n "checking for main in -lpetsc""... $ac_c" 1>&6
-echo "configure:48888: checking for main in -lpetsc" >&5
+echo "configure:48937: checking for main in -lpetsc" >&5
         if test "$_SCI_USING_CXX_" != "yes"; then
           EXTERN_BEGIN="extern \"C\" {"
           EXTERN_END="}"
@@ -49234,7 +49283,7 @@ EOF
     if test $num_headers -gt 1; then
 
        echo $ac_n "checking for all headers at the same time: $_HEADER_LIST_""... $ac_c" 1>&6
-echo "configure:49238: checking for all headers at the same time: $_HEADER_LIST_" >&5
+echo "configure:49287: checking for all headers at the same time: $_HEADER_LIST_" >&5
        for _CHECK_PATH_ in $_SCI_CHECK_PATHS_; do
 
           if test "$debugging" = "yes"; then
@@ -49354,7 +49403,7 @@ echo "configure:49238: checking for all headers at the same time: $_HEADER_LIST_
     for _HEADER_ in $_HEADER_LIST_; do
 
        echo $ac_n "checking for $_HEADER_""... $ac_c" 1>&6
-echo "configure:49358: checking for $_HEADER_" >&5
+echo "configure:49407: checking for $_HEADER_" >&5
 
        for _CHECK_PATH_ in $_SCI_CHECK_PATHS_; do
 
@@ -49536,7 +49585,7 @@ EOF
        EXTERN_BEGIN=""
        EXTERN_END=""
        echo $ac_n "checking for both libpetscvec.so and libpetscvec.a""... $ac_c" 1>&6
-echo "configure:49540: checking for both libpetscvec.so and libpetscvec.a" >&5
+echo "configure:49589: checking for both libpetscvec.so and libpetscvec.a" >&5
     else
       if test "main" = "main"; then
          _SCI_DECL_=""
@@ -49544,13 +49593,13 @@ echo "configure:49540: checking for both libpetscvec.so and libpetscvec.a" >&5
          EXTERN_BEGIN=""
          EXTERN_END=""
          echo $ac_n "checking for -lpetscvec""... $ac_c" 1>&6
-echo "configure:49548: checking for -lpetscvec" >&5
+echo "configure:49597: checking for -lpetscvec" >&5
       else
         _SCI_DECL_="char main();"
         _SCI_CALL_="main();"
 
         echo $ac_n "checking for main in -lpetscvec""... $ac_c" 1>&6
-echo "configure:49554: checking for main in -lpetscvec" >&5
+echo "configure:49603: checking for main in -lpetscvec" >&5
         if test "$_SCI_USING_CXX_" != "yes"; then
           EXTERN_BEGIN="extern \"C\" {"
           EXTERN_END="}"
@@ -49897,7 +49946,7 @@ EOF
        EXTERN_BEGIN=""
        EXTERN_END=""
        echo $ac_n "checking for both libpetscmat.so and libpetscmat.a""... $ac_c" 1>&6
-echo "configure:49901: checking for both libpetscmat.so and libpetscmat.a" >&5
+echo "configure:49950: checking for both libpetscmat.so and libpetscmat.a" >&5
     else
       if test "main" = "main"; then
          _SCI_DECL_=""
@@ -49905,13 +49954,13 @@ echo "configure:49901: checking for both libpetscmat.so and libpetscmat.a" >&5
          EXTERN_BEGIN=""
          EXTERN_END=""
          echo $ac_n "checking for -lpetscmat""... $ac_c" 1>&6
-echo "configure:49909: checking for -lpetscmat" >&5
+echo "configure:49958: checking for -lpetscmat" >&5
       else
         _SCI_DECL_="char main();"
         _SCI_CALL_="main();"
 
         echo $ac_n "checking for main in -lpetscmat""... $ac_c" 1>&6
-echo "configure:49915: checking for main in -lpetscmat" >&5
+echo "configure:49964: checking for main in -lpetscmat" >&5
         if test "$_SCI_USING_CXX_" != "yes"; then
           EXTERN_BEGIN="extern \"C\" {"
           EXTERN_END="}"
@@ -50258,7 +50307,7 @@ EOF
        EXTERN_BEGIN=""
        EXTERN_END=""
        echo $ac_n "checking for both libpetscdm.so and libpetscdm.a""... $ac_c" 1>&6
-echo "configure:50262: checking for both libpetscdm.so and libpetscdm.a" >&5
+echo "configure:50311: checking for both libpetscdm.so and libpetscdm.a" >&5
     else
       if test "main" = "main"; then
          _SCI_DECL_=""
@@ -50266,13 +50315,13 @@ echo "configure:50262: checking for both libpetscdm.so and libpetscdm.a" >&5
          EXTERN_BEGIN=""
          EXTERN_END=""
          echo $ac_n "checking for -lpetscdm""... $ac_c" 1>&6
-echo "configure:50270: checking for -lpetscdm" >&5
+echo "configure:50319: checking for -lpetscdm" >&5
       else
         _SCI_DECL_="char main();"
         _SCI_CALL_="main();"
 
         echo $ac_n "checking for main in -lpetscdm""... $ac_c" 1>&6
-echo "configure:50276: checking for main in -lpetscdm" >&5
+echo "configure:50325: checking for main in -lpetscdm" >&5
         if test "$_SCI_USING_CXX_" != "yes"; then
           EXTERN_BEGIN="extern \"C\" {"
           EXTERN_END="}"
@@ -50619,7 +50668,7 @@ EOF
        EXTERN_BEGIN=""
        EXTERN_END=""
        echo $ac_n "checking for both libpetsccontrib.so and libpetsccontrib.a""... $ac_c" 1>&6
-echo "configure:50623: checking for both libpetsccontrib.so and libpetsccontrib.a" >&5
+echo "configure:50672: checking for both libpetsccontrib.so and libpetsccontrib.a" >&5
     else
       if test "main" = "main"; then
          _SCI_DECL_=""
@@ -50627,13 +50676,13 @@ echo "configure:50623: checking for both libpetsccontrib.so and libpetsccontrib.
          EXTERN_BEGIN=""
          EXTERN_END=""
          echo $ac_n "checking for -lpetsccontrib""... $ac_c" 1>&6
-echo "configure:50631: checking for -lpetsccontrib" >&5
+echo "configure:50680: checking for -lpetsccontrib" >&5
       else
         _SCI_DECL_="char main();"
         _SCI_CALL_="main();"
 
         echo $ac_n "checking for main in -lpetsccontrib""... $ac_c" 1>&6
-echo "configure:50637: checking for main in -lpetsccontrib" >&5
+echo "configure:50686: checking for main in -lpetsccontrib" >&5
         if test "$_SCI_USING_CXX_" != "yes"; then
           EXTERN_BEGIN="extern \"C\" {"
           EXTERN_END="}"
@@ -50980,7 +51029,7 @@ EOF
        EXTERN_BEGIN=""
        EXTERN_END=""
        echo $ac_n "checking for both libpetscsles.so and libpetscsles.a""... $ac_c" 1>&6
-echo "configure:50984: checking for both libpetscsles.so and libpetscsles.a" >&5
+echo "configure:51033: checking for both libpetscsles.so and libpetscsles.a" >&5
     else
       if test "main" = "main"; then
          _SCI_DECL_=""
@@ -50988,13 +51037,13 @@ echo "configure:50984: checking for both libpetscsles.so and libpetscsles.a" >&5
          EXTERN_BEGIN=""
          EXTERN_END=""
          echo $ac_n "checking for -lpetscsles""... $ac_c" 1>&6
-echo "configure:50992: checking for -lpetscsles" >&5
+echo "configure:51041: checking for -lpetscsles" >&5
       else
         _SCI_DECL_="char main();"
         _SCI_CALL_="main();"
 
         echo $ac_n "checking for main in -lpetscsles""... $ac_c" 1>&6
-echo "configure:50998: checking for main in -lpetscsles" >&5
+echo "configure:51047: checking for main in -lpetscsles" >&5
         if test "$_SCI_USING_CXX_" != "yes"; then
           EXTERN_BEGIN="extern \"C\" {"
           EXTERN_END="}"
@@ -51342,7 +51391,7 @@ EOF
        EXTERN_BEGIN=""
        EXTERN_END=""
        echo $ac_n "checking for both libpetscsnes.so and libpetscsnes.a""... $ac_c" 1>&6
-echo "configure:51346: checking for both libpetscsnes.so and libpetscsnes.a" >&5
+echo "configure:51395: checking for both libpetscsnes.so and libpetscsnes.a" >&5
     else
       if test "main" = "main"; then
          _SCI_DECL_=""
@@ -51350,13 +51399,13 @@ echo "configure:51346: checking for both libpetscsnes.so and libpetscsnes.a" >&5
          EXTERN_BEGIN=""
          EXTERN_END=""
          echo $ac_n "checking for -lpetscsnes""... $ac_c" 1>&6
-echo "configure:51354: checking for -lpetscsnes" >&5
+echo "configure:51403: checking for -lpetscsnes" >&5
       else
         _SCI_DECL_="char main();"
         _SCI_CALL_="main();"
 
         echo $ac_n "checking for main in -lpetscsnes""... $ac_c" 1>&6
-echo "configure:51360: checking for main in -lpetscsnes" >&5
+echo "configure:51409: checking for main in -lpetscsnes" >&5
         if test "$_SCI_USING_CXX_" != "yes"; then
           EXTERN_BEGIN="extern \"C\" {"
           EXTERN_END="}"
@@ -51706,7 +51755,7 @@ EOF
        EXTERN_BEGIN=""
        EXTERN_END=""
        echo $ac_n "checking for both libpetscts.so and libpetscts.a""... $ac_c" 1>&6
-echo "configure:51710: checking for both libpetscts.so and libpetscts.a" >&5
+echo "configure:51759: checking for both libpetscts.so and libpetscts.a" >&5
     else
       if test "main" = "main"; then
          _SCI_DECL_=""
@@ -51714,13 +51763,13 @@ echo "configure:51710: checking for both libpetscts.so and libpetscts.a" >&5
          EXTERN_BEGIN=""
          EXTERN_END=""
          echo $ac_n "checking for -lpetscts""... $ac_c" 1>&6
-echo "configure:51718: checking for -lpetscts" >&5
+echo "configure:51767: checking for -lpetscts" >&5
       else
         _SCI_DECL_="char main();"
         _SCI_CALL_="main();"
 
         echo $ac_n "checking for main in -lpetscts""... $ac_c" 1>&6
-echo "configure:51724: checking for main in -lpetscts" >&5
+echo "configure:51773: checking for main in -lpetscts" >&5
         if test "$_SCI_USING_CXX_" != "yes"; then
           EXTERN_BEGIN="extern \"C\" {"
           EXTERN_END="}"
@@ -52131,7 +52180,7 @@ if test "$DEF_PETSC" &&
     if test $num_headers -gt 1; then
 
        echo $ac_n "checking for all headers at the same time: $_HEADER_LIST_""... $ac_c" 1>&6
-echo "configure:52135: checking for all headers at the same time: $_HEADER_LIST_" >&5
+echo "configure:52184: checking for all headers at the same time: $_HEADER_LIST_" >&5
        for _CHECK_PATH_ in $_SCI_CHECK_PATHS_; do
 
           if test "$debugging" = "yes"; then
@@ -52251,7 +52300,7 @@ echo "configure:52135: checking for all headers at the same time: $_HEADER_LIST_
     for _HEADER_ in $_HEADER_LIST_; do
 
        echo $ac_n "checking for $_HEADER_""... $ac_c" 1>&6
-echo "configure:52255: checking for $_HEADER_" >&5
+echo "configure:52304: checking for $_HEADER_" >&5
 
        for _CHECK_PATH_ in $_SCI_CHECK_PATHS_; do
 
@@ -52461,7 +52510,7 @@ fi
     if test $num_headers -gt 1; then
 
        echo $ac_n "checking for all headers at the same time: $_HEADER_LIST_""... $ac_c" 1>&6
-echo "configure:52465: checking for all headers at the same time: $_HEADER_LIST_" >&5
+echo "configure:52514: checking for all headers at the same time: $_HEADER_LIST_" >&5
        for _CHECK_PATH_ in $_SCI_CHECK_PATHS_; do
 
           if test "$debugging" = "yes"; then
@@ -52581,7 +52630,7 @@ echo "configure:52465: checking for all headers at the same time: $_HEADER_LIST_
     for _HEADER_ in $_HEADER_LIST_; do
 
        echo $ac_n "checking for $_HEADER_""... $ac_c" 1>&6
-echo "configure:52585: checking for $_HEADER_" >&5
+echo "configure:52634: checking for $_HEADER_" >&5
 
        for _CHECK_PATH_ in $_SCI_CHECK_PATHS_; do
 
@@ -52720,9 +52769,9 @@ esac
 
 # This is typical on SGI and ??
 echo $ac_n "checking for uuid_create in sys/uuid.h""... $ac_c" 1>&6
-echo "configure:52724: checking for uuid_create in sys/uuid.h" >&5
+echo "configure:52773: checking for uuid_create in sys/uuid.h" >&5
 cat > conftest.$ac_ext <<EOF
-#line 52726 "configure"
+#line 52775 "configure"
 #include "confdefs.h"
 #include <sys/types.h>
              extern "C" {
@@ -52735,7 +52784,7 @@ char* uuid_str;
 	 uuid_create(&uuid, &status);
 ; return 0; }
 EOF
-if { (eval echo configure:52739: \"$ac_compile\") 1>&5; (eval $ac_compile) 2>&5; }; then
+if { (eval echo configure:52788: \"$ac_compile\") 1>&5; (eval $ac_compile) 2>&5; }; then
   rm -rf conftest*
   have_uuid=yes
          cat >> confdefs.h <<\EOF
@@ -52754,9 +52803,9 @@ echo "$ac_t""$have_uuid" 1>&6
 if test "$have_uuid" != "yes"; then
   # This is typical on linux and ??
   echo $ac_n "checking for uuid_generate in uuid/uuid.h""... $ac_c" 1>&6
-echo "configure:52758: checking for uuid_generate in uuid/uuid.h" >&5
+echo "configure:52807: checking for uuid_generate in uuid/uuid.h" >&5
   cat > conftest.$ac_ext <<EOF
-#line 52760 "configure"
+#line 52809 "configure"
 #include "confdefs.h"
 
 extern "C" { // The linux uuid.h doesn't have this, so we need exter C here
@@ -52769,7 +52818,7 @@ uuid_t uuid;
 	 uuid_unparse(uuid, uuid_str);
 ; return 0; }
 EOF
-if { (eval echo configure:52773: \"$ac_compile\") 1>&5; (eval $ac_compile) 2>&5; }; then
+if { (eval echo configure:52822: \"$ac_compile\") 1>&5; (eval $ac_compile) 2>&5; }; then
   rm -rf conftest*
   have_uuid=yes
          cat >> confdefs.h <<\EOF
@@ -52788,12 +52837,12 @@ fi
 
 if test "$have_uuid" = "yes"; then
   echo $ac_n "checking for uuid library""... $ac_c" 1>&6
-echo "configure:52792: checking for uuid library" >&5
+echo "configure:52841: checking for uuid library" >&5
   old_LIBS=$LIBS
   for i in "" -luuid; do
     LIBS="$old_LIBS $i"
     cat > conftest.$ac_ext <<EOF
-#line 52797 "configure"
+#line 52846 "configure"
 #include "confdefs.h"
 
 #if HAVE_SYS_UUID_H
@@ -52831,7 +52880,7 @@ int main() {
 	
 ; return 0; }
 EOF
-if { (eval echo configure:52835: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:52884: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   
   UUID_LIB_FLAG=$i
