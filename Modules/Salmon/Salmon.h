@@ -90,6 +90,8 @@ public:
 
     int lookup_specific(const clString& key, void*&);
     void insert_specific(const clString& key, void* data);
+
+    CrowdMonitor geomlock;
 };
 
 class SalmonMessage : public MessageBase {

@@ -143,6 +143,7 @@ int Salmon::process_event(int block)
 	break;
     case MessageTypes::RoeDumpObjects:
 	{
+	    geomlock.read_lock();
 	    SalmonMessage* rmsg=(SalmonMessage*)msg;
 	    for(int i=0;i<roe.size();i++){
 		Roe* r=roe[i];
@@ -151,6 +152,7 @@ int Salmon::process_event(int block)
 		    break;
 		}
 	    }
+	    geomlock.read_unlock();
 	}
 	break;
     case MessageTypes::RoeMouse:
@@ -159,14 +161,16 @@ int Salmon::process_event(int block)
 	    for(int i=0;i<roe.size();i++){
 		Roe* r=roe[i];
 		if(r->id == rmsg->rid){
-		    (r->*(rmsg->handler))(rmsg->action, rmsg->x, rmsg->y, rmsg->state, rmsg->btn);
+		    (r->*(rmsg->handler))(rmsg->action, rmsg->x, rmsg->y, rmsg->state, rmsg->btn, rmsg->time);
 		    break;
 		}
 	    }
 	}
 	break;
     case MessageTypes::GeometryInit:
+	geomlock.write_lock();
 	initPort(gmsg->reply);
+	geomlock.write_unlock();
 	break;	
     case MessageTypes::GeometryAddObj:
     case MessageTypes::GeometryDelObj:
@@ -175,11 +179,15 @@ int Salmon::process_event(int block)
 	msg=0; // Don't delete it yet...
 	break;
     case MessageTypes::GeometryFlush:
+	geomlock.write_lock();
 	flushPort(gmsg->portno);
+	geomlock.write_unlock();
 	break;
     case MessageTypes::GeometryFlushViews:
+	geomlock.write_lock();
 	flushPort(gmsg->portno);
-	flushViews();	
+	geomlock.write_unlock();
+	flushViews();
 	if(gmsg->wait){
 	    // Synchronized redraw - do it now and signal them...
 	    for(int i=0;i<roe.size();i++)

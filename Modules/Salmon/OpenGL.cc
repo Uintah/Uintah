@@ -40,13 +40,13 @@
 #endif
 
 const int STRINGSIZE=200;
+class OpenGLHelper;
 
 class OpenGL : public Renderer {
     Tk_Window tkwin;
     Window win;
     Display* dpy;
     GLXContext cx;
-    clString myname;
     char* strbuf;
     int maxlights;
     DrawInfoOpenGL* drawinfo;
@@ -57,6 +57,8 @@ class OpenGL : public Renderer {
 
     void redraw_obj(Salmon* salmon, Roe* roe, GeomObj* obj);
     void pick_draw_obj(Salmon* salmon, Roe* roe, GeomObj* obj);
+    OpenGLHelper* helper;
+    clString my_openglname;
 public:
     OpenGL();
     virtual ~OpenGL();
@@ -71,6 +73,18 @@ public:
     virtual void dump_image(const clString&);
     virtual void put_scanline(int y, int width, Color* scanline, int repeat=1);
 
+    clString myname;
+    void redraw_loop();
+    Semaphore send_sema;
+    Semaphore recv_sema;
+
+    Salmon* salmon;
+    Roe* roe;
+    double tbeg;
+    double tend;
+    int nframes;
+    double framerate;
+    void redraw_frame();
     // these functions were added to clean things up a bit...
 
 protected:
@@ -103,7 +117,7 @@ static int query_OpenGL()
 RegisterRenderer OpenGL_renderer("OpenGL", &query_OpenGL, &make_OpenGL);
 
 OpenGL::OpenGL()
-: tkwin(0)
+: tkwin(0), send_sema(0), recv_sema(0)
 {
     strbuf=scinew char[STRINGSIZE];
     drawinfo=scinew DrawInfoOpenGL;
@@ -135,46 +149,131 @@ void OpenGL::initState(void)
     
 }
 
-void OpenGL::redraw(Salmon* salmon, Roe* roe, double tbeg, double tend,
-		    int nframes, double framerate)
+class OpenGLHelper : public Task {
+    OpenGL* opengl;
+public:
+    OpenGLHelper(char* name, OpenGL* opengl);
+    virtual ~OpenGLHelper();
+    virtual int body(int);
+};
+
+OpenGLHelper::OpenGLHelper(char*, OpenGL* opengl)
+: Task(name, 1, DEFAULT_PRIORITY), opengl(opengl)
+{
+}
+
+OpenGLHelper::~OpenGLHelper()
+{
+}
+
+int OpenGLHelper::body(int)
+{
+    opengl->redraw_loop();
+    return 0;
+}
+
+void OpenGL::redraw(Salmon* s, Roe* r, double _tbeg, double _tend,
+		    int _nframes, double _framerate)
+{
+    // This is the first redraw - if there is not an OpenGL thread,
+    // start one...
+    if(!helper){
+	my_openglname=clString("OpenGL: ")+myname;
+	helper=new OpenGLHelper(my_openglname(), this);
+	helper->activate(0);
+    }
+    salmon=s;
+    roe=r;
+    tbeg=_tbeg;
+    tend=_tend;
+    nframes=_nframes;
+    framerate=_framerate;
+    send_sema.up(); // Tell it to redraw...
+    recv_sema.down(); // Wait until it is done...
+}
+
+
+void OpenGL::redraw_loop()
+{
+    // Get window information
+    void* spec;
+    if(salmon->lookup_specific("opengl_context", spec)){
+	cx=(GLXContext)spec;
+	TCLTask::lock(); // Unlock after MakeCurrent
+    } else {
+	TCLTask::lock();
+	tkwin=Tk_NameToWindow(the_interp, myname(), Tk_MainWindow(the_interp));
+	if(!tkwin){
+	    cerr << "Unable to locate window!\n";
+	    TCLTask::unlock();
+	    return;
+	}
+	dpy=Tk_Display(tkwin);
+	win=Tk_WindowId(tkwin);
+	cx=OpenGLGetContext(the_interp, myname());
+	if(!cx){
+	    cerr << "Unable to create OpenGL Context!\n";
+	    TCLTask::unlock();
+	    return;
+	}
+    }
+    fprintf(stderr, "dpy=%p, win=%p, cx=%p\n", dpy, win, cx);
+    glXMakeCurrent(dpy, win, cx);
+    glXWaitX();
+    current_drawer=this;
+    GLint data[1];
+    glGetIntegerv(GL_MAX_LIGHTS, data);
+    maxlights=data[0];
+    TCLTask::unlock();
+
+    // Tell the Roe that we are started...
+    TimeThrottle throttle;
+    throttle.start();
+    double newtime=0;
+    while(1){
+	if(roe->inertia_mode){
+	    cerr << "Inertia mode...";
+	    cerr << "framerate=" << framerate << endl;
+	    double current_time=throttle.time();
+	    if(framerate==0)
+		framerate=30;
+	    double frametime=1./framerate;
+	    cerr << "delta=" << current_time-newtime << endl;
+	    if(current_time-newtime > .85*frametime){
+		cerr << "Backing off framerate.." << endl;
+		framerate*=.9;
+		cerr << "now=" << framerate << endl;
+		frametime=1./framerate;
+	    } else if(current_time-newtime < .5*frametime){
+		cerr << "Advancing off framrate..." << endl;
+		framerate*=1.1;
+		if(framerate>30)
+		    framerate=30;
+		cerr << "now=" << framerate << endl;
+		frametime=1./framerate;
+	    }
+	    newtime+=frametime;
+	    throttle.wait_for_time(newtime);
+	    while(send_sema.try_down()) { /* Nothing */}
+	    View view(roe->view.get());
+	    view.eyep(view.eyep()+(view.eyep()-view.lookat())*0.01);
+	    roe->view.set(view);
+	} else {
+	    send_sema.down(); // Wait to be woken up...
+	    newtime=throttle.time();
+	}
+	redraw_frame();
+	recv_sema.up();
+    }
+}
+
+void OpenGL::redraw_frame()
 {
     // Start polygon counter...
     WallClockTimer timer;
     timer.clear();
     timer.start();
 
-    // Get window information
-    if(!tkwin){
-	void* spec;
-	if(salmon->lookup_specific("opengl_context", spec)){
-	    cx=(GLXContext)spec;
-	    TCLTask::lock(); // Unlock after MakeCurrent
-	} else {
-	    TCLTask::lock();
-	    tkwin=Tk_NameToWindow(the_interp, myname(), Tk_MainWindow(the_interp));
-	    if(!tkwin){
-		cerr << "Unable to locate window!\n";
-		TCLTask::unlock();
-		return;
-	    }
-	    dpy=Tk_Display(tkwin);
-	    win=Tk_WindowId(tkwin);
-	    cx=OpenGLGetContext(the_interp, myname());
-	    if(!cx){
-		cerr << "Unable to create OpenGL Context!\n";
-		TCLTask::unlock();
-		return;
-	    }
-	}
-	fprintf(stderr, "dpy=%p, win=%p, cx=%p\n", dpy, win, cx);
-	glXMakeCurrent(dpy, win, cx);
-	glXWaitX();
-	current_drawer=this;
-	GLint data[1];
-	glGetIntegerv(GL_MAX_LIGHTS, data);
-	maxlights=data[0];
-	TCLTask::unlock();
-    }
 
     initState();
 
@@ -203,6 +302,9 @@ void OpenGL::redraw(Salmon* salmon, Roe* roe, double tbeg, double tend,
     double fovy=RtoD(2*Atan(aspect*Tan(DtoR(view.fov()/2.))));
 
     drawinfo->reset();
+
+    // Get a lock on the geometry database...
+    salmon->geomlock.read_lock();
 
     // Compute znear and zfar...
     double znear;
@@ -372,10 +474,10 @@ void OpenGL::redraw(Salmon* salmon, Roe* roe, double tbeg, double tend,
 #endif
 
 	    // Wait for the right time before swapping buffers
-	    TCLTask::unlock();
+	    //TCLTask::unlock();
 	    double realtime=t*frametime;
-	    throttle.wait_for_time(realtime);
-	    TCLTask::lock();
+	    //throttle.wait_for_time(realtime);
+	    //TCLTask::lock();
 	    TCL::execute("update idletasks");
 
 	    // Show the pretty picture
@@ -397,6 +499,7 @@ void OpenGL::redraw(Salmon* salmon, Roe* roe, double tbeg, double tend,
 	glXSwapBuffers(dpy, win);
 	//	glXWaitGL();
     }
+    salmon->geomlock.read_unlock();
 
     // Look for errors
     int errcode;

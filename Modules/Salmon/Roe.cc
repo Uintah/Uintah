@@ -54,6 +54,7 @@ Roe::Roe(Salmon* s, const clString& id)
   do_stereo("do_stereo", id, this), tracker_state("tracker_state", id, this),
   id(id)
 {
+    inertia_mode=0;
     bgcolor.set(Color(0,0,0));
     view.set(homeview);
     TCL::add_command(id+"-c", this, 0);
@@ -243,7 +244,7 @@ void Roe::scale(Vector /*v*/, Point /*c*/)
 }
 
 
-void Roe::mouse_translate(int action, int x, int y, int, int)
+void Roe::mouse_translate(int action, int x, int y, int, int, int)
 {
     switch(action){
     case MouseStart:
@@ -299,7 +300,7 @@ void Roe::mouse_translate(int action, int x, int y, int, int)
     }
 }
 
-void Roe::mouse_scale(int action, int x, int y, int, int)
+void Roe::mouse_scale(int action, int x, int y, int, int, int)
 {
     switch(action){
     case MouseStart:
@@ -338,10 +339,8 @@ void Roe::mouse_scale(int action, int x, int y, int, int)
     }	
 }
 
-void Roe::mouse_rotate(int action, int x, int y, int, int)
+void Roe::mouse_rotate(int action, int x, int y, int, int, int time)
 {
-#ifdef OLD_ROTATE_CODE_THAT_DIDNT_WORK_GOOD
-#else
     switch(action){
     case MouseStart:
 	{
@@ -394,6 +393,8 @@ void Roe::mouse_rotate(int action, int x, int y, int, int)
 	    ball->BeginDrag();
 
 	    ball->Update();
+	    last_time=time;
+	    inertia_mode=0;
 	}
 	break;
     case MouseMove:
@@ -435,18 +436,27 @@ void Roe::mouse_rotate(int action, int x, int y, int, int)
 	    view.set(tmpview);
 	    need_redraw=1;
 	    update_mode_string("rotate:");
+
+	    last_time=time;
+	    inertia_mode=0;
 	}
 	break;
     case MouseEnd:
+	if(time-last_time < 10){
+	    // Go into inertia mode...
+	    inertia_mode=1;
+	    need_redraw=1;
+	} else {
+	    inertia_mode=0;
+	}
 	ball->EndDrag();
 	rot_point_valid = 0; // so we don't have to draw this...
 	update_mode_string("");
 	break;
     }
-#endif
 }
 
-void Roe::mouse_pick(int action, int x, int y, int state, int btn)
+void Roe::mouse_pick(int action, int x, int y, int state, int btn, int)
 {
     BState bs;
     bs.shift=1; // Always for widgets...
@@ -704,7 +714,7 @@ void Roe::tcl_command(TCLArgs& args, void*)
 
 void Roe::do_mouse(MouseHandler handler, TCLArgs& args)
 {
-    if(args.count() != 5 && args.count() != 7){
+    if(args.count() != 5 && args.count() != 7 && args.count() != 8 && args.count() != 6){
 	args.error(args[1]+" needs start/move/end and x y");
 	return;
     }
@@ -741,12 +751,25 @@ void Roe::do_mouse(MouseHandler handler, TCLArgs& args)
 	  return;
        }
     }
+    int time;
+    if(args.count() == 8){
+	if(!args[7].get_int(time)){
+	   args.error("err parsing time");
+	   return;
+       }
+    }
+    if(args.count() == 6){
+	if(!args[5].get_int(time)){
+	   args.error("err parsing time");
+	   return;
+       }
+    }
 
     // We have to send this to the salmon thread...
     if(manager->mailbox.nitems() >= manager->mailbox.size()-1){
 	cerr << "Mouse event dropped, mailbox full!\n";
     } else {
-	manager->mailbox.send(scinew RoeMouseMessage(id, handler, action, x, y, state, btn));
+	manager->mailbox.send(scinew RoeMouseMessage(id, handler, action, x, y, state, btn, time));
     }
 }
 
@@ -835,9 +858,10 @@ void TCLView::set(const View& view)
 }
 
 RoeMouseMessage::RoeMouseMessage(const clString& rid, MouseHandler handler,
-				 int action, int x, int y, int state, int btn)
+				 int action, int x, int y, int state, int btn,
+				 int time)
 : MessageBase(MessageTypes::RoeMouse), rid(rid), handler(handler),
-  action(action), x(x), y(y), state(state), btn(btn)
+  action(action), x(x), y(y), state(state), btn(btn), time(time)
 {
 }
 

@@ -60,7 +60,7 @@ public:
 };
 
 class Roe;
-typedef void (Roe::*MouseHandler)(int, int x, int y, int state, int btn);
+typedef void (Roe::*MouseHandler)(int, int x, int y, int state, int btn, int time);
 typedef void (Renderer::*RoeVisPMF)(Salmon*, Roe*, GeomObj*);
 
 class Roe : public TCL {
@@ -108,7 +108,10 @@ protected:
     void animate_to_view(const View& v, double time);
     void redraw();
     void redraw(double tbeg, double tend, int nframes, double framerate);
+
+    int last_time;
 public:
+    int inertia_mode;
     BallData *ball;  // this is the ball for arc ball stuff
 
     Renderer* current_renderer;
@@ -133,10 +136,10 @@ public:
     void redraw_if_needed();
     void force_redraw();
 
-    void mouse_translate(int, int, int, int, int);
-    void mouse_scale(int, int, int, int, int);
-    void mouse_rotate(int, int, int, int, int);
-    void mouse_pick(int, int, int, int, int);
+    void mouse_translate(int, int, int, int, int, int);
+    void mouse_scale(int, int, int, int, int, int);
+    void mouse_rotate(int, int, int, int, int, int);
+    void mouse_pick(int, int, int, int, int, int);
 
     void tcl_command(TCLArgs&, void*);
     void get_bounds(BBox&);
@@ -186,10 +189,12 @@ public:
     int x, y;
     int state;
     int btn;
+    int time;
     
     
     RoeMouseMessage(const clString& rid, MouseHandler handler,
-		    int action, int x, int y, int state, int btn);
+		    int action, int x, int y, int state, int btn,
+		    int time);
     virtual ~RoeMouseMessage();
 };
 
