@@ -4,14 +4,17 @@
 #include <Packages/Uintah/CCA/Ports/LoadBalancer.h>
 #include <Packages/Uintah/CCA/Components/Schedulers/TaskGraph.h>
 #include <Packages/Uintah/CCA/Components/Schedulers/OnDemandDataWarehouse.h>
+#include <Packages/Uintah/CCA/Components/Schedulers/OnDemandDataWarehouseP.h>
 #include <Packages/Uintah/CCA/Components/Schedulers/DetailedTasks.h>
 #include <Packages/Uintah/Core/Grid/Task.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
+#include <Packages/Uintah/Core/ProblemSpec/Handle.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
 
 #include <Dataflow/XMLUtil/XMLUtil.h>
 #include <Core/Exceptions/ErrnoException.h>
+#include <Core/Exceptions/InternalError.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Util/NotFinished.h>
 #include <Core/Util/DebugStream.h>
@@ -47,10 +50,7 @@ SchedulerCommon::SchedulerCommon(const ProcessorGroup* myworld, Output* oport)
 
 SchedulerCommon::~SchedulerCommon()
 {
-  if( dws_[ Task::OldDW ] )
-    delete dws_[ Task::OldDW ];
-  if( dws_[ Task::NewDW ] )
-    delete dws_[ Task::NewDW ];
+  dws_[ Task::OldDW ] = dws_[ Task::NewDW ] = 0;
   if( dts_ )
     delete dts_;
   if(memlogfile)
@@ -194,10 +194,32 @@ SchedulerCommon::initialize()
 }
 
 void 
+SchedulerCommon::set_old_dw(DataWarehouse* oldDW)
+{
+  OnDemandDataWarehouse* dw = dynamic_cast<OnDemandDataWarehouse*>(oldDW);
+  if (dw) {
+    dws_[ Task::OldDW ] = dw;
+  }
+  else {
+    throw InternalError("SchedulerCommon::set_old_dw: expecting OnDemandDataWarehous");
+  }
+}
+
+void 
+SchedulerCommon::set_new_dw(DataWarehouse* newDW)
+{
+  OnDemandDataWarehouse* dw = dynamic_cast<OnDemandDataWarehouse*>(newDW);
+  if (dw) {
+    dws_[ Task::NewDW ] = dw;
+  }
+  else {
+    throw InternalError("SchedulerCommon::set_old_dw: expecting OnDemandDataWarehous");
+  }
+}
+
+  void 
 SchedulerCommon::advanceDataWarehouse(const GridP& grid)
 {
-  if( dws_[ Task::OldDW ] )
-    delete dws_[ Task::OldDW ];
   dws_[ Task::OldDW ] = dws_[ Task::NewDW ];
   int generation = d_generation++;
   if (dws_[Task::OldDW] == 0) {
@@ -215,13 +237,13 @@ SchedulerCommon::advanceDataWarehouse(const GridP& grid)
 DataWarehouse*
 SchedulerCommon::get_old_dw()
 {
-  return dws_[Task::OldDW];
+  return dws_[Task::OldDW].get_rep();
 }
 
 DataWarehouse*
 SchedulerCommon::get_new_dw()
 {
-  return dws_[ Task::NewDW ];
+  return dws_[ Task::NewDW ].get_rep();
 }
 
 const vector<const Patch*>* SchedulerCommon::
@@ -237,14 +259,18 @@ getSuperPatchExtents(const VarLabel* label, const Patch* patch,
   SuperPatch::Region extents = connectedPatchGroup->getRegion();
 
   // expand to cover the entire connected patch group
+  bool containsGivenPatch;
   for (unsigned int i = 0; i < connectedPatchGroup->getBoxes().size(); i++) {
     // get the minimum extents containing both the expected ghost cells
     // to be needed and the given ghost cells.
-    const Patch* patch = connectedPatchGroup->getBoxes()[i];
-    m_ghostOffsetVarMap.getExtents(label, patch, gtype, numGhostCells,
+    const Patch* memberPatch = connectedPatchGroup->getBoxes()[i];
+    m_ghostOffsetVarMap.getExtents(label, memberPatch, gtype, numGhostCells,
 				   lowIndex, highIndex);
     extents = extents.enclosingRegion(SuperPatch::Region(lowIndex, highIndex));
+    if (memberPatch == patch)
+      containsGivenPatch = true;
   }
+  ASSERT(containsGivenPatch);
   
   lowIndex = extents.low_;
   highIndex = extents.high_;

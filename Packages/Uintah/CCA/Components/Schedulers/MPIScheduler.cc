@@ -161,7 +161,7 @@ MPIScheduler::initiateTask( const ProcessorGroup  * pg,
 			    mpi_timing_info_s     & mpi_info,
 			    SendRecord            & sends,
 			    SendState             & ss,
-			    OnDemandDataWarehouse * dws[2],
+			    OnDemandDataWarehouseP  dws[2],
 			    const VarLabel        * reloc_label )
 {
   long long communication_flops = 0;
@@ -198,7 +198,7 @@ MPIScheduler::initiateTask( const ProcessorGroup  * pg,
   read_counters(0, &dummy, 19, &communication_flops);
   start_counters(0, 19);
 #endif  
-  task->doit(pg, dws_[Task::OldDW], dws_[Task::NewDW]);
+  task->doit(pg, dws[Task::OldDW].get_rep(), dws[Task::NewDW].get_rep());
 #ifdef USE_PERFEX_COUNTERS
   read_counters(0, &dummy, 19, &execution_flops);
   start_counters(0, 19);
@@ -251,7 +251,7 @@ MPIScheduler::sendMPIData( const ProcessorGroup * pg,
 			   mpi_timing_info_s    & mpi_info,
 			   SendRecord & sends,
 			   SendState  & ss,
-			   OnDemandDataWarehouse * dws[2],
+			   OnDemandDataWarehouseP  dws[2],
 			   const VarLabel        * reloc_label )
 {
   if( mixedDebug.active() ) {
@@ -277,7 +277,7 @@ MPIScheduler::sendMPIData( const ProcessorGroup * pg,
     // Create the MPI type
     int to = batch->toTasks.front()->getAssignedResourceIndex();
     for(DetailedDep* req = batch->head; req != 0; req = req->next){
-      OnDemandDataWarehouse* dw = dws[req->req->dw];
+      OnDemandDataWarehouse* dw = dws[req->req->dw].get_rep();
       if( mixedDebug.active() ) {
 	cerrLock.lock();
 	mixedDebug << " --> sending " << *req << '\n';
@@ -286,7 +286,7 @@ MPIScheduler::sendMPIData( const ProcessorGroup * pg,
 
       dbg << pg->myrank() << " --> sending " << *req << '\n';
       dw->sendMPI(ss, batch, pg, reloc_label,
-		  mpibuff, dws[Task::OldDW], req);
+		  mpibuff, dws[Task::OldDW].get_rep(), req);
     }
     // Post the send
     if(mpibuff.count()>0){
@@ -325,7 +325,7 @@ void
 MPIScheduler::recvMPIData( const ProcessorGroup * pg,
 			   DetailedTask * task, 
 			   mpi_timing_info_s & mpi_info,
-			   OnDemandDataWarehouse * dws[2] )
+			   OnDemandDataWarehouseP dws[2] )
 {
   TAU_PROFILE("MPIScheduler::recvMPIData()", " ", TAU_USER); 
 
@@ -387,7 +387,7 @@ MPIScheduler::recvMPIData( const ProcessorGroup * pg,
 
     // Create the MPI type
     for(DetailedDep* req = batch->head; req != 0; req = req->next){
-      OnDemandDataWarehouse* dw = dws[req->req->dw];
+      OnDemandDataWarehouse* dw = dws[req->req->dw].get_rep();
       dbg << pg->myrank() << " <-- receiving " << *req << '\n';
 
       if( mixedDebug.active() ) {
@@ -397,7 +397,7 @@ MPIScheduler::recvMPIData( const ProcessorGroup * pg,
 	cerrLock.unlock();
       }
 
-      dw->recvMPI(mpibuff, batch, pg, dws[Task::OldDW], req);
+      dw->recvMPI(mpibuff, batch, pg, dws[Task::OldDW].get_rep(), req);
 
       if( mixedDebug.active() ) {
 	cerrLock.lock();
@@ -610,7 +610,7 @@ MPIScheduler::execute(const ProcessorGroup * pg )
 	double reducestart = Time::currentSeconds();
 	const Task::Dependency* comp = task->getTask()->getComputes();
 	ASSERT(!comp->next);
-	OnDemandDataWarehouse* dw = this->dws_[Task::NewDW];
+	OnDemandDataWarehouse* dw = dws_[Task::NewDW].get_rep();
 	dw->reduceMPI(comp->var, comp->matls /*task->getMaterials() */,
 		      d_myworld);
 	double reduceend = Time::currentSeconds();
@@ -637,7 +637,7 @@ MPIScheduler::execute(const ProcessorGroup * pg )
 	}
 
 	initiateTask( pg, task, mpi_info, sends, ss, 
-		      this->dws_, reloc_new_posLabel_ );
+		      dws_, reloc_new_posLabel_ );
 
 	if( mixedDebug.active() ) {
 	  cerrLock.lock();

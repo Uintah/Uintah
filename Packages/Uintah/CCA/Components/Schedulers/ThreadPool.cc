@@ -1,5 +1,6 @@
 
 #include <Packages/Uintah/CCA/Components/Schedulers/ThreadPool.h>
+#include <Packages/Uintah/CCA/Components/Schedulers/OnDemandDataWarehouse.h>
 
 #include <TauProfilerForSCIRun.h>
 
@@ -7,6 +8,7 @@
 #include <Packages/Uintah/CCA/Components/Schedulers/SendState.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
 #include <Packages/Uintah/Core/Parallel/Parallel.h>
+#include <Packages/Uintah/Core/ProblemSpec/Handle.h>
 
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Thread/Time.h>
@@ -97,7 +99,7 @@ Worker::assignTask( const ProcessorGroup  * pg,
 		    mpi_timing_info_s     & mpi_info,
 		    SendRecord            & sends,
 		    SendState             & ss,
-		    OnDemandDataWarehouse * dws[2],
+		    OnDemandDataWarehouseP  dws[2],
 		    const VarLabel        * reloc_label )
 {
 #if DAV_DEBUG
@@ -221,7 +223,8 @@ Worker::run()
   TAU_PROFILE_START(doittimer);
   TAU_MAPPING_PROFILE_START(doitprofiler,0);
 
-      task->doit( d_pg, dws_[ Task::OldDW ], dws_[ Task::NewDW ] );
+      task->doit( d_pg, dws_[ Task::OldDW ].get_rep(),
+		  dws_[ Task::NewDW ].get_rep() );
 
   TAU_MAPPING_PROFILE_STOP(0);
   TAU_PROFILE_STOP(doittimer);
@@ -422,7 +425,7 @@ ThreadPool::assignThread( const ProcessorGroup  * pg,
 			  mpi_timing_info_s     & mpi_info,
 			  SendRecord            & sends,
 			  SendState             & ss,
-			  OnDemandDataWarehouse * dws[2],
+			  OnDemandDataWarehouseP  dws[2],
 			  const VarLabel        * reloc_label )
 {
 

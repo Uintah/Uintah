@@ -68,7 +68,7 @@ private:
 			     mpi_timing_info_s     & mpi_info,
 			     SendRecord            & sends,
 			     SendState             & ss,
-			     OnDemandDataWarehouse * dws[2],
+			     OnDemandDataWarehouseP  dws[2],
 			     const VarLabel        * reloc_label );
 
   // Waits until all tasks have finished. (Ie: talks to the ThreadPool
