@@ -26,6 +26,7 @@
 #include <vector>
 #include <sstream>
 #include <iomanip>
+#include <math.h>
 
 
 using namespace SCIRun;
@@ -58,7 +59,9 @@ void usage(const std::string& badarg, const std::string& progname)
     cerr << "Usage: " << progname << " [options] <archive file 1> <archive file 2\n\n";
     cerr << "Valid options are:\n";
     cerr << "  -h[elp]\n";
-    cerr << "  -tolerance [double] (allowable absolute difference of any numbers)\n";
+    cerr << "  -abs_tolerance [double] (allowable absolute difference of any numbers)\n";
+    cerr << "  -rel_tolerance [double] (allowable relative difference of any numbers)\n";
+    cerr << "\nNote: The absolute and relative tolerance tests must both fail\n      for a comparison to fail.\n";
     exit(1);
 }
 
@@ -94,29 +97,36 @@ void displayProblemLocation(const string& var, int matl,
   cerr << "Material: " << matl << endl << endl;
 }
 
-bool compare(double a, double b, double tolerance)
+bool compare(double a, double b, double abs_tolerance, double rel_tolerance)
 {
-  if (fabs(a - b) > tolerance)
-    return false;
+  double max_abs = fabs(a);
+  if (fabs(b) > max_abs) max_abs = fabs(b);
+  if (fabs(a - b) > abs_tolerance) {
+    if (max_abs > 0 && (fabs(a-b) / max_abs) > rel_tolerance)
+      return false;
+    else
+      return true;
+  }
   else
     return true;
 }
 
-bool compare(Vector a, Vector b, double tolerance)
+bool compare(Vector a, Vector b, double abs_tolerance, double rel_tolerance)
 {
-  return compare(a.x(), b.x(), tolerance) &&
-    compare(a.y(), b.y(), tolerance) &&
-    compare(a.z(), b.z(), tolerance);
+  return compare(a.x(), b.x(), abs_tolerance, rel_tolerance) &&
+    compare(a.y(), b.y(), abs_tolerance, rel_tolerance) &&
+    compare(a.z(), b.z(), abs_tolerance, rel_tolerance);
 }
 
-bool compare(Point a, Point b, double tolerance)
-{ return compare(a.asVector(), b.asVector(), tolerance); }
+bool compare(Point a, Point b, double abs_tolerance, double rel_tolerance)
+{ return compare(a.asVector(), b.asVector(), abs_tolerance, rel_tolerance); }
 
-bool compare(const Matrix3& a, const Matrix3& b, double tolerance)
+bool compare(const Matrix3& a, const Matrix3& b, double abs_tolerance,
+	     double rel_tolerance)
 {
   for (int i = 1; i <= 3; i++)
     for (int j = 1; j <= 3; j++)
-      if (!compare(a(i,j), b(i, j), tolerance))
+      if (!compare(a(i,j), b(i, j), abs_tolerance, rel_tolerance))
 	return false;
   return true;
 }
@@ -124,7 +134,8 @@ bool compare(const Matrix3& a, const Matrix3& b, double tolerance)
 template <class T>
 void compareParticles(DataArchive* da1, DataArchive* da2, const string& var,
 		      int matl, const Patch* patch1, const Patch* patch2,
-		      double time, double time2, double tolerance)
+		      double time, double time2, double abs_tolerance,
+		      double rel_tolerance)
 {
   ParticleVariable<T> value1;
   ParticleVariable<T> value2;
@@ -144,11 +155,12 @@ void compareParticles(DataArchive* da1, DataArchive* da2, const string& var,
   ParticleSubset::iterator iter2 = pset2->begin();
   
   for ( ; iter1 != pset1->end() && iter2 != pset2->end(); iter1++, iter2++) {
-    if (!compare(value1[*iter1], value2[*iter2], tolerance)) {
+    if (!compare(value1[*iter1], value2[*iter2], abs_tolerance,
+		 rel_tolerance)) {
       cerr << "Values differ too much.\n";
       displayProblemLocation(var, matl, patch1, time);    
-      cerr << filebase1 << ": " << value1[*iter1] << endl;
-      cerr << filebase2 << ": " << value2[*iter2] << endl;
+      cerr << filebase1 << ":\n" << value1[*iter1] << endl;
+      cerr << filebase2 << ":\n" << value2[*iter2] << endl;
       tolerance_failure();
     }
   }
@@ -160,8 +172,8 @@ void compareParticles(DataArchive* da1, DataArchive* da2, const string& var,
 template <class Field, class Iterator>
 void compareFields(DataArchive* da1, DataArchive* da2, const string& var,
 		   int matl, const Patch* patch1, const Patch* patch2,
-		   double time, double time2, double tolerance,
-		   Iterator iter1, Iterator iter2)
+		   double time, double time2, double abs_tolerance,
+		   double rel_tolerance, Iterator iter1, Iterator iter2)
 {
   Field value1;
   Field value2;
@@ -181,11 +193,12 @@ void compareFields(DataArchive* da1, DataArchive* da2, const string& var,
   }
   
   for ( ; !iter1.done() && !iter2.done(); iter1++, iter2++ ) {
-    if (!compare(value1[*iter1], value2[*iter2], tolerance)) {
+    if (!compare(value1[*iter1], value2[*iter2], abs_tolerance,
+		 rel_tolerance)) {
       cerr << "Values differ too much.\n";
       displayProblemLocation(var, matl, patch1, time);    
-      cerr << filebase1 << ": " << value1[*iter1] << endl;
-      cerr << filebase2 << ": " << value2[*iter2] << endl;
+      cerr << filebase1 << ":\n" << value1[*iter1] << endl;
+      cerr << filebase2 << ":\n" << value2[*iter2] << endl;
       tolerance_failure();
     }
   }
@@ -200,18 +213,25 @@ int main(int argc, char** argv)
   /*
    * Default values
    */
-  double tolerance = 1e-5;
+  double rel_tolerance = 1e-5;
+  double abs_tolerance = 1e-8;
 
   /*
    * Parse arguments
    */
   for(int i=1;i<argc;i++){
     string s=argv[i];
-    if(s == "-tolerance"){
+    if(s == "-abs_tolerance"){
       if (++i == argc)
-	usage("-tolerance, no value given", argv[0]);
+	usage("-abs_tolerance, no value given", argv[0]);
       else
-	tolerance = atof(argv[i]);
+	abs_tolerance = atof(argv[i]);
+    }
+    else if(s == "-rel_tolerance"){
+      if (++i == argc)
+	usage("-rel_tolerance, no value given", argv[0]);
+      else
+	rel_tolerance = atof(argv[i]);
     } else {
       if (filebase1 != "") {
 	if (filebase2 != "")
@@ -228,6 +248,15 @@ int main(int argc, char** argv)
     cerr << "Must specify two archive directories.\n";
     usage("", argv[0]);
   }
+
+  if (rel_tolerance <= 0) {
+    cerr << "Must have a positive value rel_tolerance.\n";
+    exit(1);
+  }
+
+  int digits_precision = (int)ceil(-log10(rel_tolerance)) + 1;
+  cerr << setprecision(digits_precision);
+  cout << setprecision(digits_precision);
 
   try {
     XMLPlatformUtils::Initialize();
@@ -291,7 +320,7 @@ int main(int argc, char** argv)
     }
 
     for (int i = 0; i < times.size(); i++) {
-      if (!compare(times[i], times2[i], tolerance)) {
+      if (!compare(times[i], times2[i], abs_tolerance, rel_tolerance)) {
 	cerr << "Timestep at time " << times[i] << " in " << filebase1
 	     << " does not match\n";
 	cerr << "timestep at time " << times2[i] << " in " << filebase2
@@ -352,9 +381,9 @@ int main(int argc, char** argv)
 	    cout << "\t\tPatch: " << patch->getID() << "\n";
 
 	    if (!compare(patch->getBox().lower(), patch2->getBox().lower(),
-			 tolerance) ||
+			 abs_tolerance, rel_tolerance) ||
 		!compare(patch->getBox().upper(), patch2->getBox().upper(),
-			 tolerance)) {
+			 abs_tolerance, rel_tolerance)) {
 	      cerr << "Inconsistent patch bounds on patch " << patch->getID()
 		   << " at time " << time << endl;
 	      cerr << filebase1 << " has bounds " << patch->getBox().lower()
@@ -388,19 +417,19 @@ int main(int argc, char** argv)
 		switch(subtype->getType()){
 		case TypeDescription::double_type:
 		  compareParticles<double>(da1, da2, var, matl, patch, patch2,
-					   time, time2, tolerance);
+					   time, time2, abs_tolerance, rel_tolerance);
 		  break;
 		case TypeDescription::Point:
 		  compareParticles<Point>(da1, da2, var, matl, patch, patch2,
-					  time, time2, tolerance);
+					  time, time2, abs_tolerance, rel_tolerance);
 		  break;
 		case TypeDescription::Vector:
 		  compareParticles<Vector>(da1, da2, var, matl, patch, patch2,
-					   time, time2, tolerance);
+					   time, time2, abs_tolerance, rel_tolerance);
 		  break;
 		case TypeDescription::Matrix3:
 		  compareParticles<Matrix3>(da1, da2, var, matl, patch, patch2,
-					    time, time2, tolerance);
+					    time, time2, abs_tolerance, rel_tolerance);
 		  break;
 		default:
 		  cerr << "ParticleVariable of unknown type: " << subtype->getType() << '\n';
@@ -411,22 +440,22 @@ int main(int argc, char** argv)
 		switch(subtype->getType()){
 		case TypeDescription::double_type:
 		  compareFields< NCVariable<double> >
-		    (da1, da2, var, matl, patch, patch2, time,time2, tolerance,
+		    (da1, da2, var, matl, patch, patch2, time,time2, abs_tolerance, rel_tolerance,
 		     patch->getNodeIterator(), patch2->getNodeIterator());
 		  break;
 		case TypeDescription::Point:
 		  compareFields< NCVariable<Point> >
-		    (da1, da2, var, matl, patch, patch2, time,time2, tolerance,
+		    (da1, da2, var, matl, patch, patch2, time,time2, abs_tolerance, rel_tolerance,
 		     patch->getNodeIterator(), patch2->getNodeIterator());
 		  break;
 		case TypeDescription::Vector:
 		  compareFields< NCVariable<Vector> >
-		    (da1, da2, var, matl, patch, patch2, time,time2, tolerance,
+		    (da1, da2, var, matl, patch, patch2, time,time2, abs_tolerance, rel_tolerance,
 		     patch->getNodeIterator(), patch2->getNodeIterator());
 		  break;
 		case TypeDescription::Matrix3:
 		  compareFields< NCVariable<Matrix3> >
-		    (da1, da2, var, matl, patch, patch2, time,time2, tolerance,
+		    (da1, da2, var, matl, patch, patch2, time,time2, abs_tolerance, rel_tolerance,
 		     patch->getNodeIterator(), patch2->getNodeIterator());
 		  break;
 		default:
@@ -438,22 +467,22 @@ int main(int argc, char** argv)
 		switch(subtype->getType()){
 		case TypeDescription::double_type:
 		  compareFields< CCVariable<double> >
-		    (da1, da2, var, matl, patch, patch2, time,time2, tolerance,
+		    (da1, da2, var, matl, patch, patch2, time,time2, abs_tolerance, rel_tolerance,
 		     patch->getNodeIterator(), patch2->getNodeIterator());
 		  break;
 		case TypeDescription::Point:
 		  compareFields< CCVariable<Point> >
-		    (da1, da2, var, matl, patch, patch2, time,time2, tolerance,
+		    (da1, da2, var, matl, patch, patch2, time,time2, abs_tolerance, rel_tolerance,
 		     patch->getNodeIterator(), patch2->getNodeIterator());
 		  break;
 		case TypeDescription::Vector:
 		  compareFields< CCVariable<Vector> >
-		    (da1, da2, var, matl, patch, patch2, time,time2, tolerance,
+		    (da1, da2, var, matl, patch, patch2, time,time2, abs_tolerance, rel_tolerance,
 		     patch->getNodeIterator(), patch2->getNodeIterator());
 		  break;
 		case TypeDescription::Matrix3:
 		  compareFields< CCVariable<Matrix3> >
-		    (da1, da2, var, matl, patch, patch2, time,time2, tolerance,
+		    (da1, da2, var, matl, patch, patch2, time,time2, abs_tolerance, rel_tolerance,
 		     patch->getNodeIterator(), patch2->getNodeIterator());
 		  break;
 		default:
