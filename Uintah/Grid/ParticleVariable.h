@@ -1,50 +1,111 @@
-
-#ifndef UINTAH_HOMEBREW_ParticleVariable_H
-#define UINTAH_HOMEBREW_ParticleVariable_H
+#ifndef UINTAH_HOMEBREW_PARTICLEVARIABLE_H
+#define UINTAH_HOMEBREW_PARTICLEVARIABLE_H
 
 #include <Uintah/Grid/DataItem.h>
 #include <Uintah/Exceptions/TypeMismatchException.h>
 #include <Uintah/Grid/ParticleData.h>
 #include <Uintah/Grid/ParticleSubset.h>
-class TypeDescription;
 #include <iostream> //TEMPORARY
+
+namespace Uintah {
+namespace Grid {
+
+class TypeDescription;
+
+/**************************************
+
+CLASS
+   ParticleVariable
+   
+   Short description...
+
+GENERAL INFORMATION
+
+   ParticleVariable.h
+
+   Steven G. Parker
+   Department of Computer Science
+   University of Utah
+
+   Center for the Simulation of Accidental Fires and Explosions (C-SAFE)
+  
+   Copyright (C) 2000 SCI Group
+
+KEYWORDS
+   Particle_Variable
+
+DESCRIPTION
+   Long description...
+  
+WARNING
+  
+****************************************/
 
 template<class T>
 class ParticleVariable : public DataItem {
-    ParticleData<T>* pdata;
-    ParticleSubset* pset;
 public:
     ParticleVariable();
     virtual ~ParticleVariable();
     ParticleVariable(ParticleSubset* pset);
+
+    //////////
+    // Insert Documentation Here:
     static const TypeDescription* getTypeDescription();
 
-    void add(ParticleSet::index idx, const T& value);
+    //////////
+    // Insert Documentation Here:
+    void add(particleIndex idx, const T& value);
+
+    //////////
+    // Insert Documentation Here:
     ParticleSet* getParticleSet() const {
-	return pset->getParticleSet();
+	return d_pset->getParticleSet();
     }
 
+    //////////
+    // Insert Documentation Here:
     ParticleSubset* getParticleSubset() const {
-	return pset;
+	return d_pset;
     }
 
+    //////////
+    // Insert Documentation Here:
     virtual void get(DataItem&) const;
+
+    //////////
+    // Insert Documentation Here:
     virtual ParticleVariable<T>* clone() const;
+
+    //////////
+    // Insert Documentation Here:
     virtual void allocate(const Region*);
-    T& operator[](ParticleSet::index idx) {
+
+    //////////
+    // Insert Documentation Here:
+    T& operator[](particleIndex idx) {
 	//ASSERTRANGE(idx, 0, pdata->data.size());
-	return pdata->data[idx];
+	return d_pdata->data[idx];
     }
+
+    //////////
+    // Insert Documentation Here:
     void resize(int newSize) {
-	pdata->resize(newSize);
+	d_pdata->resize(newSize);
     }
 private:
+
+    //////////
+    // Insert Documentation Here:
+    ParticleData<T>* d_pdata;
+    ParticleSubset*  d_pset;
+
     ParticleVariable(const ParticleVariable<T>&);
     ParticleVariable<T>& operator=(const ParticleVariable<T>&);
 };
 
 template<class T>
-const TypeDescription* ParticleVariable<T>::getTypeDescription()
+const TypeDescription*
+ParticleVariable<T>::getTypeDescription()
 {
     //cerr << "ParticleVariable::getTypeDescription not done\n";
     return 0;
@@ -52,30 +113,31 @@ const TypeDescription* ParticleVariable<T>::getTypeDescription()
 
 template<class T>
 ParticleVariable<T>::ParticleVariable()
-    : pdata(0), pset(0)
+    : d_pdata(0), pset(0)
 {
 }
 
 template<class T>
 ParticleVariable<T>::~ParticleVariable()
 {
-    if(pdata && pdata->removeReference())
-	delete pdata;
-    if(pset && pset->removeReference())
-	delete pset;
+    if(d_pdata && d_pdata->removeReference())
+	delete d_pdata;
+    if(d_pset && d_pset->removeReference())
+	delete d_pset;
 }
 
 template<class T>
 ParticleVariable<T>::ParticleVariable(ParticleSubset* pset)
-    : pset(pset)
+    : d_pset(pset)
 {
-    pset->addReference();
-    pdata=new ParticleData<T>();
-    pdata->addReference();
+    d_pset->addReference();
+    d_pdata=new ParticleData<T>();
+    d_pdata->addReference();
 }
 
 template<class T>
-void ParticleVariable<T>::get(DataItem& copy) const
+void
+ParticleVariable<T>::get(DataItem& copy) const
 {
     ParticleVariable<T>* ref = dynamic_cast<ParticleVariable<T>*>(&copy);
     if(!ref)
@@ -84,49 +146,63 @@ void ParticleVariable<T>::get(DataItem& copy) const
 }
 
 template<class T>
-ParticleVariable<T>* ParticleVariable<T>::clone() const
+ParticleVariable<T>*
+ParticleVariable<T>::clone() const
 {
     return new ParticleVariable<T>(*this);
 }
 
 template<class T>
 ParticleVariable<T>::ParticleVariable(const ParticleVariable<T>& copy)
-    : pdata(copy.pdata), pset(copy.pset)
+    : d_pdata(copy.d_pdata), d_pset(copy.d_pset)
 {
-    if(pdata)
-	pdata->addReference();
-    if(pset)
-	pset->addReference();
+    if(d_pdata)
+	d_pdata->addReference();
+    if(d_pset)
+	d_pset->addReference();
 }
 
 template<class T>
-ParticleVariable<T>& ParticleVariable<T>::operator=(const ParticleVariable<T>& copy)
+ParticleVariable<T>&
+ParticleVariable<T>::operator=(const ParticleVariable<T>& copy)
 {
     if(this != &copy){
-	if(pdata && pdata->removeReference())
-	    delete pdata;
-	if(pset && pset->removeReference())
-	    delete pset;
-	pset = copy.pset;
-	pdata = copy.pdata;
-	if(pdata)
-	    pdata->addReference();
-	if(pset)
-	    pset->addReference();
+	if(d_pdata && d_pdata->removeReference())
+	    delete d_pdata;
+	if(d_pset && d_pset->removeReference())
+	    delete d_pset;
+	d_pset = copy.d_pset;
+	d_pdata = copy.d_pdata;
+	if(d_pdata)
+	    d_pdata->addReference();
+	if(d_pset)
+	    d_pset->addReference();
     }
     return *this;
 }
 
 template<class T>
-void ParticleVariable<T>::add(ParticleSet::index idx, const T& value)
+void
+ParticleVariable<T>::add(particleIndex idx, const T& value)
 {
-    pdata->add(idx, value);
+    d_pdata->add(idx, value);
 }
 
 template<class T>
-void ParticleVariable<T>::allocate(const Region*)
+void
+ParticleVariable<T>::allocate(const Region*)
 {
     std::cerr << "ParticleVariable::allocate not done!\n";
 }
+
+} // end namespace Grid
+} // end namespace Uintah
+
+//
+// $Log$
+// Revision 1.3  2000/03/16 22:08:00  dav
+// Added the beginnings of cocoon docs.  Added namespaces.  Did a few other coding standards updates too
+//
+//
 
 #endif
