@@ -64,7 +64,7 @@ FieldBoundaryAlgoAuxT<Msh>::execute(const MeshHandle mesh_untyped,
   Msh *mesh = dynamic_cast<Msh *>(mesh_untyped.get_rep());
   map<typename Msh::Node::index_type, typename TriSurfMesh::Node::index_type> vertex_map;
   map<typename Msh::Node::index_type, typename TriSurfMesh::Node::index_type>::iterator node_iter;
-  Array1<typename Msh::Node::index_type> reverse_map;
+  vector<typename Msh::Node::index_type> reverse_map;
 
   TriSurfMesh::Node::index_type node_idx[3];
 
@@ -100,7 +100,7 @@ FieldBoundaryAlgoAuxT<Msh>::execute(const MeshHandle mesh_untyped,
 	  if (node_iter == vertex_map.end()) {
 	    node_idx[i] = tmesh->add_point(p[i]);
 	    vertex_map[*niter] = node_idx[i];
-	    reverse_map.add(*niter);
+	    reverse_map.push_back(*niter);
 	  } else {
 	    node_idx[i] = (*node_iter).second;
 	  }
@@ -120,7 +120,7 @@ FieldBoundaryAlgoAuxT<Msh>::execute(const MeshHandle mesh_untyped,
 	  if (node_iter == vertex_map.end()) {
 	    node_idx[2] = tmesh->add_point(p[2]);
 	    vertex_map[*niter] = node_idx[2];
-	    reverse_map.add(*niter);
+	    reverse_map.push_back(*niter);
 	  } else {
 	    node_idx[2] = (*node_iter).second;
 	  }

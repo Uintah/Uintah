@@ -170,8 +170,7 @@ PathPoint::PathPoint( PathWidget* w, const Index i, const Point& p )
    w->tangentgroup->add(&PickTangent);
    w->orientgroup->add(&PickOrient);
    w->upgroup->add(&PickUp);
-   w->points.insert(i, (PathPoint*)this);
-   w->npoints++;
+   w->points.insert(w->points.begin() + i, (PathPoint*)this);
 }
 
 PathPoint::~PathPoint()
@@ -180,8 +179,7 @@ PathPoint::~PathPoint()
    widget->tangentgroup->remove(&PickTangent);
    widget->orientgroup->remove(&PickOrient);
    widget->upgroup->remove(&PickUp);
-   widget->points.remove(index);
-   widget->npoints--;
+   widget->points.erase(widget->points.begin() + index);
 }
 
 void
@@ -299,7 +297,7 @@ const Index NumSwtchs = 5;
 PathWidget::PathWidget( Module* module, CrowdMonitor* lock, double widget_scale,
 			Index num_points )
 : BaseWidget(module, lock, "PathWidget", NumVars, NumCons, 0, 0, 0, NumMdes, NumSwtchs, widget_scale),
-  npoints(0), points(num_points)
+  points(num_points)
 {
    dist = variables[0] = scinew RealVariable("Dist", solve, Scheme3, widget_scale*5.0);
    hypo = variables[1] = scinew RealVariable("hypo", solve, Scheme3, sqrt(2.0)*widget_scale*5.0);
@@ -348,10 +346,9 @@ PathWidget::PathWidget( Module* module, CrowdMonitor* lock, double widget_scale,
  */
 PathWidget::~PathWidget()
 {
-   for (Index i=0; i<npoints; i++)
+   for (Index i=0; i<points.size(); i++)
       delete points[i];
-   points.remove_all();
-   npoints = 0;
+   points.clear();
 }
 
 
@@ -371,7 +368,7 @@ PathWidget::redraw()
 
    if (mode_switches[0]->get_state()) GenerateSpline();
 
-   for (Index i=0; i<npoints; i++) {
+   for (Index i=0; i<points.size(); i++) {
       points[i]->execute();
    }
 }
@@ -381,7 +378,7 @@ void
 PathWidget::GenerateSpline()
 {
    splinegroup->remove_all();
-   for (Index i=1; i<npoints; i++) {
+   for (Index i=1; i<points.size(); i++) {
       splinegroup->add(scinew GeomCylinder(points[i-1]->ReferencePoint(),
 					points[i]->ReferencePoint(),
 					0.33*widget_scale));
@@ -429,7 +426,7 @@ PathWidget::geom_moved( GeomPick*, int /* axis */, double /* dist */,
 void
 PathWidget::MoveDelta( const Vector& delta )
 {
-   for (Index i=0; i<npoints; i++)
+   for (Index i=0; i<points.size(); i++)
       points[i]->MoveDelta(delta);
    
    execute(1);
@@ -444,7 +441,7 @@ PathWidget::MoveDelta( const Vector& delta )
 Point
 PathWidget::ReferencePoint() const
 {
-    ASSERT(npoints>0);
+    ASSERT(points.size()>0);
     return points[0]->ReferencePoint();
 }
 
@@ -452,7 +449,7 @@ PathWidget::ReferencePoint() const
 Index
 PathWidget::GetNumPoints() const
 {
-   return npoints;
+   return points.size();
 }
 
 

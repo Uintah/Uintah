@@ -73,8 +73,7 @@ private:
    GeomGroup* upgroup;
    GeomGroup* splinegroup;
 
-   Index npoints;
-   Array1<PathPoint*> points;
+   vector<PathPoint*> points;
 
    void GenerateSpline();
 };

@@ -371,7 +371,7 @@ BaseWidget::GetWidget()
 void
 BaseWidget::Connect(GeometryOPort* oport)
 {
-   oports.add(oport);
+   oports.push_back(oport);
 }
 
 
@@ -538,8 +538,10 @@ BaseWidget::GetRealVar( const Index vindex ) const
 void
 BaseWidget::flushViews() const
 {
-   for(int i=0;i<oports.size();i++)
+   for(unsigned int i=0; i<oports.size(); i++)
+   {
       oports[i]->flushViews();
+   }
 }
 
 
