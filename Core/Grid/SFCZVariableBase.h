@@ -3,18 +3,17 @@
 #define UINTAH_HOMEBREW_SFCZVariableBase_H
 
 #include <Packages/Uintah/Core/Grid/Variable.h>
-#include <mpi.h>
 
 namespace SCIRun {
   class IntVector;
 }
 
 namespace Uintah {
-
-using namespace SCIRun;
-
-class OutputContext;
-class Patch;
+  using namespace SCIRun;
+  
+  class BufferInfo;
+  class OutputContext;
+  class Patch;
 
 /**************************************
 
@@ -64,10 +63,8 @@ WARNING
       virtual void copyPatch(SFCZVariableBase* src,
 			      const IntVector& lowIndex,
 			      const IntVector& highIndex) = 0;
-      void getMPIBuffer(void*& buf, int& count,
-			MPI_Datatype& datatype, bool& free_datatype,
+      void getMPIBuffer(BufferInfo& buffer,
 			const IntVector& low, const IntVector& high);
-      void getMPIBuffer(void*& buf, int& count, MPI_Datatype& datatype);
       virtual void* getBasePointer() = 0;
       virtual const TypeDescription* virtualGetTypeDescription() const = 0;
       virtual void getSizes(IntVector& low, IntVector& high, IntVector& siz) const = 0;
