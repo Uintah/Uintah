@@ -65,6 +65,14 @@ void Burger::scheduleTimeAdvance(const LevelP& level, SchedulerP& sched)
   sched->addTask(task, level->eachPatch(), sharedState_->allMaterials());
 }
 
+// scheduleTimeAdvance version called by the AMR simulation controller.
+void
+Burger::scheduleTimeAdvance( const LevelP&, SchedulerP&, int , int )
+{
+  cout << "Burger component does not support ARM yet.\n";
+  throw InternalError("Burger component does not support AMR yet.");
+}
+
 void Burger::computeStableTimestep(const ProcessorGroup*,
 				  const PatchSubset*,
 				  const MaterialSubset*,

@@ -461,6 +461,16 @@ void ICE::scheduleTimeAdvance(const LevelP& level, SchedulerP& sched)
 }
 
 /* ---------------------------------------------------------------------
+ Function~  ICE::scheduleTimeAdvance-- AMR Version
+_____________________________________________________________________*/
+void
+ICE::scheduleTimeAdvance(const LevelP&, SchedulerP&, int, int)
+{
+  cout << "ICE component does not support ARM yet.\n";
+  throw InternalError("ICE component does not support AMR yet.");
+}
+
+/* ---------------------------------------------------------------------
  Function~  ICE::scheduleComputePressure--
 _____________________________________________________________________*/
 void ICE::scheduleComputePressure(SchedulerP& sched,
