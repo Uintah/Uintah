@@ -157,7 +157,6 @@ Arches::problemSetup(const ProblemSpecP& params,
 						 d_calcEnthalpy);
   // send params, boundary type defined at the level of Grid
   d_boundaryCondition->problemSetup(db);
-//  string turbModel;
   db->require("turbulence_model", turbModel);
   if (turbModel == "smagorinsky") 
     d_turbModel = scinew SmagorinskyModel(d_lab, d_MAlab, d_physicalConsts,
