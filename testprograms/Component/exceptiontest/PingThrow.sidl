@@ -18,6 +18,6 @@
 package PingThrow_ns {
     class PPException extends SSIDL.BaseException { }
     interface PingThrow {
-	int pingthrow(in int test) throws PPException;
+	collective int pingthrow(in int test) throws PPException;
     };
 };

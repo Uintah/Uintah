@@ -27,12 +27,13 @@ PSELIBS := Core/CCA/SSIDL Core/CCA/PIDL Core/Thread \
 endif
 
 ifeq ($(HAVE_GLOBUS),yes)
-PSELIBS+=Core/globus_threads
+PSELIBS += Core/globus_threads
 LIBS := $(GLOBUS_LIBRARY)
 else
 LIBS :=
 endif
 
+LIBS += $(MPI_LIBRARY)
 
 PROGRAM := $(SRCDIR)/pingthrow
 SRCS := $(SRCDIR)/pingthrow.cc $(SRCDIR)/PingThrow_sidl.cc \
