@@ -36,7 +36,7 @@ c
 c     Calculates the wall shear stress for the gas phase
 c     written by Seshadri Kumar, August 8, 2000
 c     
-c     modified, January 8, 2000, Seshadri Kumar
+c     modified, January 8, 2001, Seshadri Kumar
 c     Now taucal also calculates the drag force 
 c     on the solid intrusions due to the fluid
 c
@@ -197,12 +197,12 @@ c     length model
 
             tmult = tmult*epss(iorig,jorig,korig)
 
-            kstabu(i,j,k) = kstabu(i,j,k) + 
-     $           ((csmag*yp)**2*
-     $           abs((up_fcy(ii,jj,kk) - ug_cc(i,j,k))/yp)+
-     $           viscos/dmicr(i,j,k))*
-     $           epss(iorig,jorig,korig)*
-     $           sew(idf)*stb(idt2)/yp
+c            kstabu(i,j,k) = kstabu(i,j,k) + 
+c     $           ((csmag*yp)**2*
+c     $           abs((up_fcy(ii,jj,kk) - ug_cc(i,j,k))/yp)+
+c     $           viscos/dmicr(i,j,k))*
+c     $           epss(iorig,jorig,korig)*
+c     $           sew(idf)*stb(idt2)/yp
 
          else
 
@@ -211,10 +211,10 @@ c     laminar flow
             tmult = eps*viscos/yp
             tmult = tmult*epss(iorig,jorig,korig)
 
-            kstabu(i,j,k) = kstabu(i,j,k) + 
-     $           (viscos/dmicr(i,j,k))*
-     $           epss(iorig,jorig,korig)*
-     $           sew(idf)*stb(idt2)/yp
+c            kstabu(i,j,k) = kstabu(i,j,k) + 
+c     $           (viscos/dmicr(i,j,k))*
+c     $           epss(iorig,jorig,korig)*
+c     $           sew(idf)*stb(idt2)/yp
 
          endif
 
