@@ -4608,6 +4608,7 @@ class BioTensorApp {
 	if {$do_registration == 1} {
 	    disableModule $mods(TendEpireg) 0
 	    disableModule $mods(UnuJoin) 0
+	    disableModule $mods(NrrdReader-Gradient) 0
 	    
 	    activate_registration
 
@@ -4616,6 +4617,7 @@ class BioTensorApp {
         } else {
 	    disableModule $mods(TendEpireg) 1
 	    disableModule $mods(UnuJoin) 1
+	    disableModule $mods(NrrdReader-Gradient) 1
 	    
 	    # disable registration tab
 	    foreach w [winfo children $reg_tab1] {
