@@ -9,11 +9,11 @@
 #include <Core/Geometry/Vector.h>
 
 namespace rtrt {
-class Camera;
+  class Camera;
 }
 
 namespace SCIRun {
-void Pio(Piostream&, rtrt::Camera*&);
+  void Pio(Piostream&, rtrt::Camera*&);
 }
 
 namespace rtrt {
@@ -27,6 +27,7 @@ class Scene;
 class PerProcessorContext;
 class Dpy;
 class Gui;
+class BBox;
 
 class Camera : public SCIRun::Persistent {
 
@@ -131,9 +132,8 @@ public:
   void scaleFOV(double);
   void translate(Vector);
   void dolly(double);
-#if 0
-  void autoview(double fov);
-#endif
+  // newfov == -1 means use current field of view
+  void autoview(BBox& bbox, double new_fov=-1);
   
   // Some math to combine and blend cameras.  You should call setup
   // once you get the final camera, as u,v, and direction are not
