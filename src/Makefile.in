@@ -235,7 +235,7 @@ else
 endif
 $(SUBMAKEFILES): scripts/Makefile.tmpl
 	@echo creating $@
-	@sed -e s,@OBJTOP@,$(shell echo $(foreach t,$(subst /," ",$(dir $(subst $(OBJTOP_ABS)/,,$@))),../) | sed -e 's,../ ,../,g' -e 's,/../$$,,'), -e s,@SRCTOP@,$(strip $(SRCTOP)), -e s,@HERE_TARGET@,$(strip $(HERE)), $< > $@
+	@sed -e s,@OBJTOP@,$(shell echo $(foreach t,$(subst /," ",$(dir $(subst $(OBJTOP_ABS)/,,$@))),../) | sed -e 's,../ ,../,g' -e 's,/../$$,,'), -e s,@SRCTOP@,$(strip $(SRCTOP)), -e 's,@HERE_TARGET@,$(strip $(HERE)),' $< > $@
 
 clean::
 	rm -f $(CLEANOBJS)
@@ -281,6 +281,10 @@ endif
 
 #
 # $Log$
+# Revision 1.20  2000/03/31 17:24:57  moulding
+# added ' (tick marks) to the sed script that copies the Makefile.tmpl to SCICore
+# , PSECore, etc.
+#
 # Revision 1.19  2000/03/23 10:54:26  sparker
 # Moved sidl pattern rule to after the recursive include - so that
 #  $(SIDL_EXE) will be defined
