@@ -91,7 +91,7 @@ NIMRODMeshConverterAlgoT< NTYPE >::execute(vector< NrrdDataHandle >& nHandles,
 					   vector< int >& modes,
 					   int idim, int jdim, int kdim)
 {
-  int sink_size = 1;
+  int rank = 3;
   int ndims = 3;
 
   NrrdData *nout = scinew NrrdData(true);
@@ -147,23 +147,35 @@ NIMRODMeshConverterAlgoT< NTYPE >::execute(vector< NrrdDataHandle >& nHandles,
 
   if( source == string("MDSPlus") )
     nrrdWrap(nout->nrrd, ndata, nHandles[mesh[PHI]]->nrrd->type,
-	     ndims+1, sink_size, idim, kdim, jdim );
+	     ndims+1, rank, idim, kdim, jdim );
   else if( source == string("HDF5") )
     nrrdWrap(nout->nrrd, ndata, nHandles[mesh[PHI]]->nrrd->type,
-	     ndims+1, sink_size, idim, jdim, kdim);
+	     ndims+1, rank, idim, jdim, kdim);
 
   nrrdAxisInfoSet(nout->nrrd, nrrdAxisInfoCenter,
-		  nrrdCenterNode, nrrdCenterNode, nrrdCenterNode);
+		  nrrdCenterNode, nrrdCenterNode,
+		  nrrdCenterNode, nrrdCenterNode);
 
-  nout->nrrd->axis[0].label = strdup("XYZ:Vector");
+  string nrrdName;
+  nHandles[mesh[PHI]]->get_property( "Name", nrrdName );
+
+  string::size_type pos = nrrdName.find( "PHI:Scalar" );
+  if( pos != string::npos )
+    nrrdName.replace( pos, 10, "XYZ:Vector" );
+
+
+  nout->nrrd->axis[0].kind  = nrrdKind3Vector;
+  nout->nrrd->axis[0].label = strdup("Mesh Points");
   nout->nrrd->axis[1].label = strdup("Phi");
   nout->nrrd->axis[2].label = strdup("Theta");
   nout->nrrd->axis[3].label = strdup("Radial");
+
 
   *((PropertyManager *)nout) =
     *((PropertyManager *)(nHandles[mesh[PHI]].get_rep()));
 
   nout->set_property( "Coordinate System", string("Cartesian - XYZ"), false );
+  nout->set_property( "Name", nrrdName, false );
 
   return  NrrdDataHandle( nout );	
 }
@@ -191,7 +203,6 @@ execute(vector< NrrdDataHandle >& nHandles,
 	vector< int >& modes,
 	int idim, int jdim, int kdim)
 {
-  int sink_size = 1;
   int ndims = 3;
 
   NrrdData *nout = scinew NrrdData(true);
@@ -218,29 +229,31 @@ execute(vector< NrrdDataHandle >& nHandles,
 
   nHandles[data[0]]->get_property( string("Source"), source);
 
+  cerr << source << idim << jdim << kdim << endl;
+
   if( source == string("MDSPlus") )
     nrrdWrap(nout->nrrd, ndata, nHandles[data[0]]->nrrd->type,
-	     ndims+1, sink_size, kdim, jdim, idim);
+	     ndims, kdim, jdim, idim);
   else if( source == string("HDF5") )
     nrrdWrap(nout->nrrd, ndata, nHandles[data[0]]->nrrd->type,
-	     ndims+1, sink_size, idim, jdim, kdim);
+	     ndims, idim, jdim, kdim);
 
   nrrdAxisInfoSet(nout->nrrd, nrrdAxisInfoCenter,
 		  nrrdCenterNode, nrrdCenterNode, nrrdCenterNode);
 
-  vector< string > dataset;
+  string nrrdName;
+  nHandles[data[0]]->get_property( "Name", nrrdName );
 
-  nHandles[data[0]]->get_tuple_indecies(dataset);
-
-  nout->nrrd->axis[0].label = strdup(dataset[0].c_str());
-  nout->nrrd->axis[1].label = strdup("Phi");
-  nout->nrrd->axis[2].label = strdup("Theta");
-  nout->nrrd->axis[3].label = strdup("Radial");
+  nout->nrrd->axis[0].kind  = nrrdKindDomain;
+  nout->nrrd->axis[0].label = strdup("Phi");
+  nout->nrrd->axis[1].label = strdup("Theta");
+  nout->nrrd->axis[2].label = strdup("Radial");
 
   *((PropertyManager *)nout) =
     *((PropertyManager *)(nHandles[data[0]].get_rep()));
 
   nout->set_property( "Coordinate System", string("Cartesian - XYZ"), false );
+  nout->get_property( "Name", nrrdName );
 
   return  NrrdDataHandle( nout );	
 }
@@ -268,7 +281,7 @@ execute(vector< NrrdDataHandle >& nHandles,
 	vector< int >& modes,
 	int idim, int jdim, int kdim)
 {
-  int sink_size = 1;
+  int rank = 3;
   int ndims = 3;
 
   NrrdData *nout = scinew NrrdData(true);
@@ -277,27 +290,52 @@ execute(vector< NrrdDataHandle >& nHandles,
 
   register int i,j,k,cc = 0;
 
-  NTYPE *ptrR   = (NTYPE *)(nHandles[data[R]]->nrrd->data);
-  NTYPE *ptrZ   = (NTYPE *)(nHandles[data[Z]]->nrrd->data);
-  NTYPE *ptrPhi = (NTYPE *)(nHandles[data[PHI]]->nrrd->data);
+  if( data.size() == 3 ) {
+    NTYPE *ptrR   = (NTYPE *)(nHandles[data[R]]->nrrd->data);
+    NTYPE *ptrZ   = (NTYPE *)(nHandles[data[Z]]->nrrd->data);
+    NTYPE *ptrPhi = (NTYPE *)(nHandles[data[PHI]]->nrrd->data);
   
-  NTYPE *ptrMeshPhi = (NTYPE *)(nHandles[mesh[PHI]]->nrrd->data);
+    NTYPE *ptrMeshPhi = (NTYPE *)(nHandles[mesh[PHI]]->nrrd->data);
 
-  for( i=0; i<idim; i++ ) {
-    double cosPhi = cos( ptrMeshPhi[i] );
-    double sinPhi = sin( ptrMeshPhi[i] );
+    for( i=0; i<idim; i++ ) {
+      double cosPhi = cos( ptrMeshPhi[i] );
+      double sinPhi = sin( ptrMeshPhi[i] );
 
-    for( j=0; j<jdim; j++ ) {
-      for( k=0; k<kdim; k++ ) {
+      for( j=0; j<jdim; j++ ) {
+	for( k=0; k<kdim; k++ ) {
       
-	unsigned int index = (i * jdim + j) * kdim + k;
+	  unsigned int index = (i * jdim + j) * kdim + k;
 
-	// Value
-	ndata[cc*3  ] =  ptrR[index] * cosPhi - ptrPhi[index] * sinPhi;
-	ndata[cc*3+1] = -ptrR[index] * sinPhi - ptrPhi[index] * cosPhi;
-	ndata[cc*3+2] =  ptrZ[index];
+	  // Value
+	  ndata[cc*3  ] =  ptrR[index] * cosPhi - ptrPhi[index] * sinPhi;
+	  ndata[cc*3+1] = -ptrR[index] * sinPhi - ptrPhi[index] * cosPhi;
+	  ndata[cc*3+2] =  ptrZ[index];
 	  
-	++cc;
+	  ++cc;
+	}
+      }
+    }
+  } else if( data.size() == 1 ) {
+
+    NTYPE *ptr        = (NTYPE *)(nHandles[data[0  ]]->nrrd->data);  
+    NTYPE *ptrMeshPhi = (NTYPE *)(nHandles[mesh[PHI]]->nrrd->data);
+
+    for( i=0; i<idim; i++ ) {
+      double cosPhi = cos( ptrMeshPhi[i] );
+      double sinPhi = sin( ptrMeshPhi[i] );
+
+      for( j=0; j<jdim; j++ ) {
+	for( k=0; k<kdim; k++ ) {
+      
+	  unsigned int index = (i * jdim + j) * kdim + k;
+
+	  // Value
+	  ndata[cc*3  ] =  ptr[index*3+1] * cosPhi - ptr[index*3] * sinPhi;
+	  ndata[cc*3+1] = -ptr[index*3+1] * sinPhi - ptr[index*3] * cosPhi;
+	  ndata[cc*3+2] =  ptr[index*3+2];
+	  
+	  ++cc;
+	}
       }
     }
   }
@@ -308,29 +346,38 @@ execute(vector< NrrdDataHandle >& nHandles,
 
   if( source == string("MDSPlus") )
     nrrdWrap(nout->nrrd, ndata, nHandles[data[0]]->nrrd->type,
-	     ndims+1, sink_size, kdim, jdim, idim);
+	     ndims+1, rank, kdim, jdim, idim);
   else if( source == string("HDF5") )
     nrrdWrap(nout->nrrd, ndata, nHandles[data[0]]->nrrd->type,
-	     ndims+1, sink_size, idim, jdim, kdim);
+	     ndims+1, rank, idim, jdim, kdim);
 
   nrrdAxisInfoSet(nout->nrrd, nrrdAxisInfoCenter,
-		  nrrdCenterNode, nrrdCenterNode, nrrdCenterNode);
+		  nrrdCenterNode, nrrdCenterNode,
+		  nrrdCenterNode, nrrdCenterNode);
 
-  vector< string > dataset;
+  string nrrdName;
+  nHandles[data[0]]->get_property( "Name", nrrdName );
 
-  nHandles[data[PHI]]->get_tuple_indecies(dataset);
+  string::size_type pos = nrrdName.find( "R:Scalar" );
+  if( pos != string::npos )
+    nrrdName.replace( pos, 10, "XYZ:Vector" );
 
-  dataset[0].replace( dataset[0].find( "PHI:Scalar" ), 10, "XYZ:Vector" );
+  pos = nrrdName.find( "PHI-R-Z:Vector" );
+  if( pos != string::npos )
+    nrrdName.replace( pos, 14, "XYZ:Vector" );
 
-  nout->nrrd->axis[0].label = strdup(dataset[0].c_str());
+  nout->nrrd->axis[0].kind = nrrdKind3Vector;
+
+  nout->nrrd->axis[0].label = strdup("Vector Data");
   nout->nrrd->axis[1].label = strdup("Phi");
   nout->nrrd->axis[2].label = strdup("Theta");
   nout->nrrd->axis[3].label = strdup("Radial");
 
   *((PropertyManager *)nout) =
-    *((PropertyManager *)(nHandles[data[PHI]].get_rep()));
+    *((PropertyManager *)(nHandles[data[0]].get_rep()));
 
   nout->set_property( "Coordinate System", string("Cartesian - XYZ"), false );
+  nout->set_property( "Name", nrrdName, false );
 
   return  NrrdDataHandle( nout );	
 }
@@ -357,7 +404,6 @@ execute(vector< NrrdDataHandle >& nHandles,
 	vector< int >& modes,
 	int idim, int jdim, int kdim)
 {
-  unsigned int sink_size = 1;
   unsigned int ndims = 3;
 
   NrrdData *nout = scinew NrrdData(true);
@@ -409,19 +455,31 @@ execute(vector< NrrdDataHandle >& nHandles,
 
   nHandles[data[0]]->get_property( string("Source"), source);
 
-  if( source == string("MDSPlus") )
-    nrrdWrap(nout->nrrd, ndata, nHandles[data[0]]->nrrd->type,
-	     ndims+1, sink_size, kdim, jdim, idim);
-  else if( source == string("HDF5") )
-    nrrdWrap(nout->nrrd, ndata, nHandles[data[0]]->nrrd->type,
-	     ndims+1, sink_size, idim, jdim, kdim);
+  if( rank == 1 ) {
+    if( source == string("MDSPlus") )
+      nrrdWrap(nout->nrrd, ndata, nHandles[data[0]]->nrrd->type,
+	       ndims, kdim, jdim, idim);
+    else if( source == string("HDF5") )
+      nrrdWrap(nout->nrrd, ndata, nHandles[data[0]]->nrrd->type,
+	       ndims, idim, jdim, kdim);
 
-  nrrdAxisInfoSet(nout->nrrd, nrrdAxisInfoCenter,
-		  nrrdCenterNode, nrrdCenterNode, nrrdCenterNode);
+    nrrdAxisInfoSet(nout->nrrd, nrrdAxisInfoCenter,
+		    nrrdCenterNode, nrrdCenterNode, nrrdCenterNode);
+  } else {
+    if( source == string("MDSPlus") )
+      nrrdWrap(nout->nrrd, ndata, nHandles[data[0]]->nrrd->type,
+	       ndims+1, rank, kdim, jdim, idim);
+    else if( source == string("HDF5") )
+      nrrdWrap(nout->nrrd, ndata, nHandles[data[0]]->nrrd->type,
+	       ndims+1, rank, idim, jdim, kdim);
 
-  vector< string > dataset;
+    nrrdAxisInfoSet(nout->nrrd, nrrdAxisInfoCenter,
+		    nrrdCenterNode, nrrdCenterNode,
+		    nrrdCenterNode, nrrdCenterNode);
+  }
 
-  nHandles[data[0]]->get_tuple_indecies(dataset);
+  string nrrdName;
+  nHandles[data[0]]->get_property( "Name", nrrdName );
 
   char tmpstr[12];
   
@@ -430,21 +488,30 @@ execute(vector< NrrdDataHandle >& nHandles,
   else
     sprintf( tmpstr,"SUM-MODE" );
 
-  dataset[0].replace( dataset[0].find( "REAL" ), 4, tmpstr );
+  nrrdName.replace( nrrdName.find( "REAL" ), 4, tmpstr );
 
-  string::size_type pos = dataset[0].find( "R:Scalar" );
+  string::size_type pos = nrrdName.find( "R:Scalar" );
   if( pos != string::npos )
-    dataset[0].replace( pos, 10, "XYZ:Vector" );
+    nrrdName.replace( pos, 10, "XYZ:Vector" );
 
-  nout->nrrd->axis[0].label = strdup(dataset[0].c_str());
-  nout->nrrd->axis[1].label = strdup("Phi");
-  nout->nrrd->axis[2].label = strdup("Theta");
-  nout->nrrd->axis[3].label = strdup("Radial");
+  if( rank == 1 ) {
+    nout->nrrd->axis[0].kind  = nrrdKindDomain;
+    nout->nrrd->axis[0].label = strdup("Phi");
+    nout->nrrd->axis[1].label = strdup("Theta");
+    nout->nrrd->axis[2].label = strdup("Radial");
+  } else {
+    nout->nrrd->axis[0].kind  = nrrdKind3Vector; 
+    nout->nrrd->axis[0].label = strdup("Vector Data");
+    nout->nrrd->axis[1].label = strdup("Phi");
+    nout->nrrd->axis[2].label = strdup("Theta");
+    nout->nrrd->axis[3].label = strdup("Radial");
+  }
 
   *((PropertyManager *)nout) =
     *((PropertyManager *)(nHandles[data[0]].get_rep()));
 
   nout->set_property( "Coordinate System", string("Cartesian - XYZ"), false );
+  nout->set_property( "Name", nrrdName, false );
 
   return  NrrdDataHandle( nout );	
 }

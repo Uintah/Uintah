@@ -179,7 +179,7 @@ VULCANDataReader::execute(){
       strcpy( base_filename, new_filename.c_str() );
     }
 
-    int sink_size = 1;
+    int rank = 3;
     int ndims = 1;
 
     FILE *fp;
@@ -258,31 +258,59 @@ VULCANDataReader::execute(){
       }
     }
 
+    string nrrdName;
+
     // Points
     NrrdData *nout = scinew NrrdData(true);
 
-    nrrdWrap(nout->nrrd, pdata, nrrdTypeDouble, ndims+1, sink_size, npos);
+    nrrdWrap(nout->nrrd, pdata, nrrdTypeDouble, ndims+1, rank, npos);
 
-    nout->nrrd->axis[0].label = strdup("ZR:Vector");
+    nout->nrrd->axis[0].kind  = nrrdKind3Vector;
+    nout->nrrd->axis[0].label = strdup("ZR");
     nout->nrrd->axis[1].label = strdup("Domain");
     
+    nrrdAxisInfoSet(nout->nrrd, nrrdAxisInfoCenter,
+		    nrrdCenterNode, nrrdCenterNode);
+
     nout->set_property( "Topology",          string("Unstructured"), false );
     nout->set_property( "Coordinate System", string("Cylindrical - VULCAN"), false );
-    
-    nHandles_[0] = NrrdDataHandle( nout );	
 
-    // Vector
+    {
+      ostringstream str;
+      str << "Time-" << time << "-Points-ZR:Vector";
+
+      nrrdName = string(str.str());
+
+      nout->set_property( "Name", nrrdName, false );
+    }
+
+    nHandles_[0] = NrrdDataHandle( nout );
+
+    // Velocity Vector
     nout = scinew NrrdData(true);
 
-    nrrdWrap(nout->nrrd, vdata, nrrdTypeDouble, ndims+1, sink_size, npos);
+    nrrdWrap(nout->nrrd, vdata, nrrdTypeDouble, ndims+1, rank, npos);
 
-    nout->nrrd->axis[0].label = strdup("ZR:Vector");
+    nout->nrrd->axis[0].kind  = nrrdKind3Vector;
+    nout->nrrd->axis[0].label = strdup("ZR");
     nout->nrrd->axis[1].label = strdup("Domain");
     
+    nrrdAxisInfoSet(nout->nrrd, nrrdAxisInfoCenter,
+		    nrrdCenterNode, nrrdCenterNode);
+
     nout->set_property( "DataSpace",         string("REALSPACE"), false );
     nout->set_property( "Coordinate System", string("Cylindrical - VULCAN"), false );
     
-    nHandles_[1] = NrrdDataHandle( nout );	
+    {
+      ostringstream str;
+      str << "Time-" << time << "-Veclocity-ZR:Vector";
+
+      nrrdName = string(str.str());
+
+      nout->set_property( "Name", nrrdName, false );
+    }
+
+    nHandles_[1] = NrrdDataHandle( nout );
 
 
     // Cell Data
@@ -326,29 +354,48 @@ VULCANDataReader::execute(){
     // Connections
     nout = scinew NrrdData(true);
 
-    nrrdWrap(nout->nrrd, cdata, nrrdTypeDouble, ndims+2, sink_size, ncon, 4);
+    nrrdWrap(nout->nrrd, cdata, nrrdTypeDouble, ndims+1, 4, ncon);
 
-    nout->nrrd->axis[0].label = strdup("Connections:Scalar");
+    nout->nrrd->axis[0].label = strdup("Connections");
     nout->nrrd->axis[1].label = strdup("Domain");
-    nout->nrrd->axis[2].label = strdup("Connections");
     
+    nrrdAxisInfoSet(nout->nrrd, nrrdAxisInfoCenter,
+		    nrrdCenterNode, nrrdCenterNode);
+
     nout->set_property( "Topology",  string("Unstructured"), false );
     nout->set_property( "Cell Type", string("Quad"), false );
     
+    {
+      ostringstream str;
+      str << "Time-" << time << "-Connections-Quad:Scalar";
+
+      nrrdName = string(str.str());
+
+      nout->set_property( "Name", nrrdName, false );
+    }
+
     nHandles_[2] = NrrdDataHandle( nout );
 
     // Data
     for( int i=0; i<6; i++ ) {
       nout = scinew NrrdData(true);
 
-      nrrdWrap(nout->nrrd, data[i], nrrdTypeDouble, ndims+1, sink_size, ncon);
+      nrrdWrap(nout->nrrd, data[i], nrrdTypeDouble, ndims, ncon);
 
-      nout->nrrd->axis[0].label = strdup("Data:Scalar");
-      nout->nrrd->axis[1].label = strdup("Domain");
+      nout->nrrd->axis[0].label = strdup("Domain");
     
       nout->set_property( "DataSpace",         string("REALSPACE"), false );
       nout->set_property( "Coordinate System", string("Cylindrical - VULCAN"), false );
     
+      {
+	ostringstream str;
+	str << "Time-" << time << "-Data-" << portNames[i] << ":Scalar";
+
+	nrrdName = string(str.str());
+
+	nout->set_property( "Name", nrrdName, false );
+      }
+ 
       nHandles_[3+i] = NrrdDataHandle( nout );	
     }
 
@@ -371,6 +418,8 @@ VULCANDataReader::execute(){
 	error("Unable to initialize "+name+"'s oport" + portNames[i]+ "\n");
 	return;
       }
+
+      nHandles_[i]->set_property( "Source", string("Vulcan Reader"), false );
 
       // Send the data downstream
       ofield_port->send( nHandles_[i] );
