@@ -16,7 +16,7 @@ Field::~Field()
 {
 }
 
-const double FIELD_VERSION = 1.0;
+const int FIELD_VERSION = 1;
 
 void 
 Field::io(Piostream& stream){

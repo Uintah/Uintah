@@ -97,10 +97,6 @@ public:
   double get_gradient_basis(cell_index ci, Vector& g0, Vector& g1, 
 			    Vector& g2, Vector& g3);
 
-  //! compute the gradient g in cell ci, given the scalar values at the nodes
-  Vector cell_gradient(cell_index ci, double s0, double s1, 
-		       double s2, double s3);
-
   template <class Iter, class Functor>
   void fill_points(Iter begin, Iter end, Functor fill_ftor);
   template <class Iter, class Functor>

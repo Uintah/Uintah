@@ -503,17 +503,6 @@ TetVolMesh::inside4_p(int i, const Point &p) const
   return true;
 }
 
-//! given the four scalars (doubles) at the nodes, compute the gradient
-//! over the element ci
-Vector
-TetVolMesh::cell_gradient(cell_index ci, double s0, double s1,
-			  double s2, double s3)
-{
-  Vector g0, g1, g2, g3;
-  /* double vol = */ get_gradient_basis(ci, g0, g1, g2, g3);
-  return Vector(g0*s0 + g1*s1 + g2*s2 + g3*s3);
-}
-
 //! return the volume of the tet.
 double 
 TetVolMesh::get_gradient_basis(cell_index ci, Vector& g0, Vector& g1, 
@@ -704,13 +693,11 @@ TetVolMesh::io(Piostream &stream)
 {
   stream.begin_class(type_id.type.c_str(), TETVOLMESH_VERSION);
 
+  MeshBase::io(stream);
   Pio(stream, points_);
   Pio(stream, cells_);
   Pio(stream, neighbors_);
 
   stream.end_class();
 }
-
-
-
 } // namespace SCIRun
