@@ -241,7 +241,8 @@ void RTRTViewer::start_rtrt() {
   }
   
   // Start up display thread...
-  Dpy* dpy=new Dpy(current_scene, criteria1, criteria2, rtrt_engine->nworkers,
+  Dpy* dpy=new Dpy(current_scene, rtrt_engine, criteria1, criteria2,
+                   rtrt_engine->nworkers,
 		   bench, ncounters, c0, c1, 1.0, 1.0, display_frames,
 		   pp_size, scratchsize, false, do_frameless==true, false);
 
@@ -322,7 +323,7 @@ void RTRTViewer::GlutHelper(int, int xres, int yres) {
 void RTRTViewer::stop_rtrt() {
   cout << "Stoping the rtrt\n";
   if (rtrt_engine) {
-    rtrt_engine->exit_clean(1);
+    rtrt_engine->stop_engine();
     delete(rtrt_engine);
   }
   current_scene = 0;
