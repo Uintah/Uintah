@@ -153,9 +153,9 @@ void SimpleSolver::copyL2G(Array3<int>& mapping,const Patch* patch)
   mapping.copy(d_petscLocalToGlobal[patch]);
 }
 
-void SimpleSolver::removeFixedDOF(set<int>& fixedDOF,int num_nodes)
+void SimpleSolver::removeFixedDOF(int num_nodes)
 {
-  for (set<int>::iterator iter = fixedDOF.begin(); iter != fixedDOF.end(); 
+  for (set<int>::iterator iter = d_DOF.begin(); iter != d_DOF.end(); 
        iter++) {
     // Take care of the right hand side
     Q[*iter] = 0;
@@ -165,13 +165,13 @@ void SimpleSolver::removeFixedDOF(set<int>& fixedDOF,int num_nodes)
        itr != KK.end(); itr++) {
     int i = KK.Index1(itr);
     int j = KK.Index2(itr);
-    set<int>::iterator find_itr_j = fixedDOF.find(j);
-    set<int>::iterator find_itr_i = fixedDOF.find(i);
+    set<int>::iterator find_itr_j = d_DOF.find(j);
+    set<int>::iterator find_itr_i = d_DOF.find(i);
     
-    if (find_itr_j != fixedDOF.end() && i == j)
+    if (find_itr_j != d_DOF.end() && i == j)
       KKK[i][j] = 1.;
     
-    else if (find_itr_i != fixedDOF.end() && i == j)
+    else if (find_itr_i != d_DOF.end() && i == j)
       KKK[i][j] = 1.;
     
     else
