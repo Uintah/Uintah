@@ -33,7 +33,7 @@ TriWidget::TriWidget( float x, float w, float h, float c[3], float o ) {
   lowVertex[0] = x;	       	      lowVertex[1] = 85;
   midLeftVertex[0] = x-w/4;	      midLeftVertex[1] = (170+h)*0.5f;
   topLeftVertex[0] = x-w/2;	      topLeftVertex[1] = 85+h;
-  topRightVertex[0] = x+w/2;        topRightVertex[1] = 85+h;
+  topRightVertex[0] = x+w/2;          topRightVertex[1] = 85+h;
   midRightVertex[0] = x+w/4;	      midRightVertex[1] = (170+h)*0.5f;
   opac_x = x;
   opac_y = topRightVertex[1];
@@ -156,10 +156,20 @@ TriWidget::draw( void ) {
 
 // moves widget around the screen
 void
-TriWidget::translate( float dx, float /*dy*/ ) {
+TriWidget::translate( float x, float /*dy*/ ) {
+  float dx = x - lowVertex[0];
+  if( topLeftVertex[0]+dx < 5.0 )
+    dx = 5.0 - topLeftVertex[0];
+  else if( lowVertex[0]+dx < 5.0 )
+    dx = 5.0 - lowVertex[0];
+  else if( topRightVertex[0]+dx > 495.0 )
+    dx = 495.0 - topRightVertex[0];
+  else if( lowVertex[0]+dx > 495.0 )
+    dx = 495.0 - lowVertex[0];
+
   // as long as translation keeps widget entirely inside its window
-  if( topLeftVertex[0]+dx > 5.0 && topRightVertex[0]+dx < 495.0 &&
-      lowVertex[0]+dx > 5.0 && lowVertex[0]+dx < 495.0 ) { 
+  if( topLeftVertex[0]+dx >= 5.0 && topRightVertex[0]+dx <= 495.0 &&
+      lowVertex[0]+dx >= 5.0 && lowVertex[0]+dx <= 495.0 ) { 
     translateStar->translate( dx, 0 );
     lowerBoundStar->translate( dx, 0 );
     widthStar->translate( dx, 0 );
@@ -180,124 +190,88 @@ TriWidget::translate( float dx, float /*dy*/ ) {
 // adjusts the shear of the triangle widget by translating the topmost part
 //  and reconnecting it to the rest of the widget
 void 
-TriWidget::adjustShear( float dx, float dy ) { 
+TriWidget::adjustShear( float x, float y ) { 
+  // bound x and y between meaningful values
+  if( x > 495.0 - this->width*0.5 ) {x = 495.0 - this->width*0.5;}
+  else if( x < 5.0 + this->width*0.5 ) { x = 5.0 + this->width*0.5;}
+  float dx = x - (topRightVertex[0]+topLeftVertex[0])*0.5;
+  if( y > 325.0 ) {y = 325.0;}
+  // prevent division by 0 in fractionalHeight calculation
+  else if( y < 86.0 ) {y = 86.0;}
+  float dy = y - topLeftVertex[1];
+
   // ratio of distances from the lowerBound and topBound to the bottom tip
   float fractionalHeight = (midRightVertex[1]-lowVertex[1])/
     (topRightVertex[1]-lowVertex[1]);
 
-  // quicker computation if x and y translations keep widget inside window
-  if( topLeftVertex[0]+dx >= 5.0 && topRightVertex[0]+dx <= 495.0  &&
-      topLeftVertex[1]+dy-3 > lowVertex[1] &&
-      topLeftVertex[1]+dy <= 325.0 ) {
-    height += dy;
-    widthStar->translate( dx, dy );
-    barRounder->translate( dx, dy );
-    shearBar->translate( dx, dy );
-    lowerBoundStar->translate( dx*fractionalHeight, dy*fractionalHeight );
-    opacityStar->translate( dx, dy );
-    opac_x += dx;
-    opac_y += dy;
-    midLeftVertex[0] += dx*fractionalHeight;
-    midLeftVertex[1] += dy*fractionalHeight;
-    midRightVertex[0] += dx*fractionalHeight;
-    midRightVertex[1] = midLeftVertex[1];
-    topLeftVertex[0] += dx;
-    topLeftVertex[1] += dy;
-    topRightVertex[0] += dx;
-    topRightVertex[1] = topLeftVertex[1];
-  } // if
-
-  // if either x or y translation moves widget outside window, then slow
-  // computation must be done, inspecting the x and y dimensions independently
-  else {
-    if( topLeftVertex[0]+dx >= 5.0 && topRightVertex[0]+dx <= 495.0 ) {
-      widthStar->translate( dx, 0 );
-      barRounder->translate( dx, 0 );
-      shearBar->translate( dx, 0 );
-      lowerBoundStar->translate( dx*fractionalHeight, 0 );
-      opacityStar->translate( dx, 0 );
-      opac_x += dx;
-      midLeftVertex[0] += dx*fractionalHeight;
-      midRightVertex[0] += dx*fractionalHeight;
-      topLeftVertex[0] += dx;
-      topRightVertex[0] += dx;
-    } // if()
-    else if( topLeftVertex[1]+dy-3 > lowVertex[1] && 
-	     topLeftVertex[1]+dy <= 325.0 ) {
-      height += dy;
-      widthStar->translate( 0, dy );
-      barRounder->translate( 0, dy );
-      shearBar->translate( 0, dy );
-      lowerBoundStar->translate( 0, dy*fractionalHeight );
-      opacityStar->translate( 0, dy );
-      opac_y += dy;
-      midLeftVertex[1] += dy*fractionalHeight;
-      midRightVertex[1] = midLeftVertex[1];
-      topLeftVertex[1] += dy;
-      topRightVertex[1] = topLeftVertex[1];
-    } // else if()
-  } // else
+  height += dy;
+  widthStar->translate( dx, dy );
+  barRounder->translate( dx, dy );
+  shearBar->translate( dx, dy );
+  lowerBoundStar->translate( dx*fractionalHeight, dy*fractionalHeight );
+  opacityStar->translate( dx, dy );
+  opac_x += dx;
+  opac_y += dy;
+  midLeftVertex[0] += dx*fractionalHeight;
+  midLeftVertex[1] += dy*fractionalHeight;
+  midRightVertex[0] += dx*fractionalHeight;
+  midRightVertex[1] = midLeftVertex[1];
+  topLeftVertex[0] += dx;
+  topLeftVertex[1] += dy;
+  topRightVertex[0] += dx;
+  topRightVertex[1] = topLeftVertex[1];
 } // adjustShear()
 
 
 
 // adjusts this widget's shearBar's width
 void 
-TriWidget::adjustWidth( float dx ) {
-  // if  adjustment doesn't cause part of the widget to fall outside its window
-  if( topLeftVertex[0]-dx+3 < topRightVertex[0]+dx && 
-      topLeftVertex[0]-dx >= 5.0 && topRightVertex[0]+dx <= 495.0 ) {
+TriWidget::adjustWidth( float x ) {
+  // bound x between meaningful values
+  if( x > 495.0 )
+    x = 495.0;
+  else if( x < (topLeftVertex[0]+topRightVertex[0])*0.5+3 )
+    x = (topLeftVertex[0]+topRightVertex[0])*0.5+3;
+  float dx = x - topRightVertex[0];
 
-    float frac_dist = ((opac_x-topLeftVertex[0])/
-		       (topRightVertex[0]-topLeftVertex[0]));
-
-    float fractionalHeight = ((midRightVertex[1]-lowVertex[1])/
-			      (topRightVertex[1]-lowVertex[1]));
-    width += 2*dx;
-    shearBar->resize( dx, 0 );
-    opac_x += 2*dx*frac_dist-dx;
-    midLeftVertex[0] -= dx*fractionalHeight;
-    midRightVertex[0] += dx*fractionalHeight;
-    topLeftVertex[0] -= dx;
-    topRightVertex[0] += dx;
-    opacityStar->translate( 2*dx*frac_dist-dx, 0 );
-    barRounder->translate( -dx, 0 );
-    widthStar->translate( dx, 0 );
-    lowerBoundStar->translate( dx*fractionalHeight, 0 );
-  } // if()
+  topLeftVertex[0] -= dx;
+  topRightVertex[0] += dx;
+  float frac_dist = ((opac_x-topLeftVertex[0])/
+		     (topRightVertex[0]-topLeftVertex[0]));
+  float fractionalHeight = ((midRightVertex[1]-lowVertex[1])/
+			    (topRightVertex[1]-lowVertex[1]));
+  width += 2*dx;
+  shearBar->resize( dx, 0 );
+  opac_x += 2*dx*frac_dist-dx;
+  midLeftVertex[0] -= dx*fractionalHeight;
+  midRightVertex[0] += dx*fractionalHeight;
+  opacityStar->translate( 2*dx*frac_dist-dx, 0 );
+  barRounder->translate( -dx, 0 );
+  widthStar->translate( dx, 0 );
+  lowerBoundStar->translate( dx*fractionalHeight, 0 );
 } // adjustWidth()
 
 
 
 // adjusts the lowerBoundStar's position along the right side of the widget
 void 
-TriWidget::adjustLowerBound( float dx, float dy ) {
+TriWidget::adjustLowerBound( float y ) {
+  if( y > topRightVertex[1] ) {y = topRightVertex[1];}
+  else if( y < lowVertex[1] ) {y = lowVertex[1];}
+
+  midLeftVertex[1] = y;
+  midRightVertex[1] = midLeftVertex[1];
+
   // slope of the right side of the widget
   float m = (topRightVertex[1]-lowVertex[1])/(topRightVertex[0]-lowVertex[0]);
   // ratio of distances from the lowerBound and topBound to the bottom tip
   float fractionalHeight = (midRightVertex[1]-lowVertex[1])/
     (topRightVertex[1]-lowVertex[1]);
-
-  // following conditionals attempt to manipulate lowerBoundStar more efficiently
-
-  // if the mouse cursor is changing more in the x-direction...
-  if( fabs(dx) > fabs(dy) && (midRightVertex[1]+dx*m) >= lowVertex[1] &&
-      (midRightVertex[1]+dx*m) <= topRightVertex[1] ) {
-    midRightVertex[0] += dx;
-    midRightVertex[1] += dx*m;
-    midLeftVertex[0] = midRightVertex[0]-(fractionalHeight*width);
-    midLeftVertex[1] = midRightVertex[1];
-    lowerBoundStar->translate( dx, dx*m );
-  } // if
-  // otherwise, it's moving more in the y-direction...
-  else if( (midRightVertex[1]+dy) >= lowVertex[1] &&
-	   (midRightVertex[1]+dy) <= topRightVertex[1] ) {
-    midLeftVertex[1] += dy;
-    midRightVertex[1] = midLeftVertex[1];
-    midRightVertex[0] += dy/m;		
-    midLeftVertex[0] = midRightVertex[0]-(fractionalHeight*width);
-    lowerBoundStar->translate( dy/m, dy );
-  } // else if
+  
+  midRightVertex[0] = (y-85.0)/m + lowVertex[0];
+  midLeftVertex[0] = midRightVertex[0]-(fractionalHeight*width);
+  lowerBoundStar->left = midRightVertex[0] - lowerBoundStar->width*0.5;
+  lowerBoundStar->top = y + lowerBoundStar->width*0.5;
 } // adjustLowerBound()
 
 
@@ -305,31 +279,30 @@ TriWidget::adjustLowerBound( float dx, float dy ) {
 // adjusts the position of the opacityStar along this widget's shearBar
 //  and the overall opacity of this widget's texture
 void
-TriWidget::adjustOpacity( float dx ) {
-  // if the opacityStar's position adjustment will keep it on the shearBar
-  if( opac_x+dx >= topLeftVertex[0] && opac_x+dx <= topRightVertex[0] ) {
-    opac_x += dx;
-    opacityStar->left += dx;
-  } // if
+TriWidget::adjustOpacity( float x ) {
+  if( x < topLeftVertex[0] ) {opac_x = topLeftVertex[0];}
+  else if( x > topRightVertex[0] ) {opac_x = topRightVertex[0];}
+  else {opac_x = x;}
+  opacityStar->left = opac_x - opacityStar->width*0.5;
 } // adjustOpacity()
 
 
 
 // controls in which way this widget is manipulated
 void 
-TriWidget::manipulate( float x, float dx, float y, float dy ) {
+TriWidget::manipulate( float x, float y ) {
   // the following block of if statements allow for continuous manipulation
   //  without conducting parameter checks every time (quicker)
   if( drawFlag == 1)
-    adjustOpacity( dx );
+    adjustOpacity( x );
   else if( drawFlag == 2 )
-    adjustLowerBound( dx, dy );
+    adjustLowerBound( y );
   else if( drawFlag == 3 )
-    adjustWidth( dx );
+    adjustWidth( x );
   else if( drawFlag == 4 )
-    adjustShear( dx, dy );
+    adjustShear( x, y );
   else if( drawFlag == 5 )
-    translate( dx, dy );
+    translate( x, 0 );
 
   // if drawFlag has not been set from main, then a parameter check must be
   //  conducted to determine in which way the user wishes to manipulate
@@ -339,31 +312,31 @@ TriWidget::manipulate( float x, float dx, float y, float dy ) {
     if( x >= opac_x - 5 && x <= opac_x + 5 &&
 	y >= opac_y - 5 && y <= opac_y + 5 ) {
       drawFlag = 1;
-      adjustOpacity( dx );
+      adjustOpacity( x );
     } // if()
     // if mouse cursor near lowerBoundStar
     else if( x >= midRightVertex[0] - 5 && x <= midRightVertex[0] + 5 && 
 	     y >= midRightVertex[1] - 5 && y <= midRightVertex[1] + 5 ) {
       drawFlag = 2;
-      adjustLowerBound( dx, dy );
+      adjustLowerBound( y );
     } // if()
     // if mouse cursor near widthStar
     else if( x >= topRightVertex[0] - 5 && x <= topRightVertex[0] + 5 &&
 	     y >= topRightVertex[1] - 5 && y <= topRightVertex[1] + 5 ) {
       drawFlag = 3;
-      adjustWidth( dx );
+      adjustWidth( x );
     } // if()
     // if mouse cursor on shearBar
     else if( x >= topLeftVertex[0] - 5 && x <= topRightVertex[0] + 5 && 
 	     y >= topRightVertex[1] - 5 && y <= topRightVertex[1] + 5 ) {
       drawFlag = 4;
-      adjustShear( dx, dy );
+      adjustShear( x, y );
     } // if()
     // if mouse cursor near translateStar
     else if( x >= lowVertex[0] - 5 && x <= lowVertex[0] + 5 &&
 	     y >= lowVertex[1] - 5 && y <= lowVertex[1] + 5 ) {
       drawFlag = 5;
-      translate( dx, dy );
+      translate( x, 0 );
     } // if()
     // otherwise nothing pertinent was selected...
     else {
@@ -632,98 +605,85 @@ RectWidget::draw( void ) {
 
 // moves this widget around the screen
 void 
-RectWidget::translate( float dx, float dy ) {
-  // if x and y translations keep widget inside its window,
-  //  then a faster computation can be undertaken
-  if(topLeftVertex[0]+dx > 5.0 && lowRightVertex[0]+dx < 495.0 &&
-     topLeftVertex[1]+dy < 325.0 &&lowRightVertex[1]+dy > 85.0 ) {
-    translateStar->translate( dx, dy );
-    barRounder->translate( dx, dy );
-    resizeStar->translate( dx, dy );
-    focusStar->translate( dx, dy );
-    focus_x += dx;
-    focus_y += dy;
-    opac_x += dx;
-    opac_y += dy;
-    opacityStar->translate( dx, dy );
-    translateBar->translate( dx, dy );
-    topLeftVertex[0] += dx;
-    topLeftVertex[1] += dy;
-    lowRightVertex[0] += dx;
-    lowRightVertex[1] += dy;
-  } // if
-  // otherwise each dimension must be inspected separately (slow)
-  else {
-    if( topLeftVertex[0]+dx > 5.0 && lowRightVertex[0]+dx < 495.0 ) {
-      translateStar->translate( dx, 0 );
-      barRounder->translate( dx, 0 );
-      resizeStar->translate( dx, 0 );
-      focusStar->translate( dx, 0 );
-      focus_x += dx;
-      opac_x += dx;
-      opacityStar->translate( dx, 0 );
-      translateBar->translate( dx, 0 );
-      topLeftVertex[0] += dx;
-      lowRightVertex[0] += dx;
-    } // if
-    else if( topLeftVertex[1]+dy < 325.0 && lowRightVertex[1]+dy > 85.0 ) {
-      translateStar->translate( 0, dy );
-      translateBar->translate( 0, dy );
-      barRounder->translate( 0, dy );
-      resizeStar->translate( 0, dy );
-      focusStar->translate( 0, dy );
-      focus_y += dy;
-      opac_y += dy;
-      opacityStar->translate( 0, dy );
-      topLeftVertex[1] += dy;
-      lowRightVertex[1] += dy;
-    } // else if
-  } // else
+RectWidget::translate( float x, float y ) {
+  float dx = x - (topLeftVertex[0] + lowRightVertex[0])*0.5;
+  if( topLeftVertex[0]+dx < 5.0 )
+    dx = 5.0 - topLeftVertex[0];
+  else if( lowRightVertex[0]+dx > 495.0 )
+    dx = 495.0 - lowRightVertex[0];
+  float dy = y - topLeftVertex[1];
+  if( topLeftVertex[1]+dy > 325.0 )
+    dy = 325.0 - topLeftVertex[1];
+  else if( lowRightVertex[1]+dy < 85.0 )
+    dy = 85.0 - lowRightVertex[1];
+
+  translateStar->translate( dx, dy );
+  barRounder->translate( dx, dy );
+  resizeStar->translate( dx, dy );
+  focusStar->translate( dx, dy );
+  focus_x += dx;
+  focus_y += dy;
+  opac_x += dx;
+  opac_y += dy;
+  opacityStar->translate( dx, dy );
+  translateBar->translate( dx, dy );
+  topLeftVertex[0] += dx;
+  topLeftVertex[1] += dy;
+  lowRightVertex[0] += dx;
+  lowRightVertex[1] += dy;
 } // translate()
 
 
 
 // resizes widget while restricting minimum width/height to  positive values
 void 
-RectWidget::resize( float dx, float dy ) {
+RectWidget::resize( float x, float y ) {
+  float dx = x - lowRightVertex[0];
+  if( lowRightVertex[0]+dx-3 < topLeftVertex[0] )
+    dx = topLeftVertex[0]+3-lowRightVertex[0];
+  else if( lowRightVertex[0]+dx > 495.0 )
+    dx = 495.0 - lowRightVertex[0];
+  float dy = y - lowRightVertex[1];
+  if( lowRightVertex[1]+dy+3 > topLeftVertex[1] )
+    dy = topLeftVertex[1]-3-lowRightVertex[1];
+  else if( lowRightVertex[1]+dy < 85.0 )
+    dy = 85.0 - lowRightVertex[1];
   float frac_dist = ((focus_x-topLeftVertex[0])/
 		     (lowRightVertex[0]-topLeftVertex[0]));
-  // restricts width to positive values
-  if( lowRightVertex[0]+dx-3 > topLeftVertex[0] && 
-      lowRightVertex[0]+dx < 495.0 ) {
-    frac_dist = ((focus_x-topLeftVertex[0])/
-		 (lowRightVertex[0]-topLeftVertex[0]));
-    focusStar->translate( dx*frac_dist, 0 );
-    focus_x += dx*frac_dist;
-    frac_dist = ((opac_x-topLeftVertex[0])/
-		 (lowRightVertex[0]-topLeftVertex[0]));
-    opac_x += dx*frac_dist;
-    opacityStar->translate( dx*frac_dist, 0 );
-    width += dx;
-    lowRightVertex[0] += dx;
-    resizeStar->translate( dx, 0 );
-    translateBar->translate( dx/2, 0 );
-    translateBar->resize( dx/2, 0.0f );
-    barRounder->translate( dx, 0 );
-  } // if
-  // restricts height to positive values
-  if( lowRightVertex[1]+dy+3 < topLeftVertex[1] && 
-      lowRightVertex[1]+dy > 85.0 ) {
-    frac_dist = 1-((focus_y-lowRightVertex[1])/
-		   (topLeftVertex[1]-lowRightVertex[1]));
-    height -= dy;
-    lowRightVertex[1] += dy;
-    resizeStar->top += dy;
-    focusStar->top += dy*frac_dist;
-    focus_y += dy*frac_dist;
-  } // if
+
+  // x resize
+  frac_dist = ((focus_x-topLeftVertex[0])/
+	       (lowRightVertex[0]-topLeftVertex[0]));
+  focusStar->translate( dx*frac_dist, 0 );
+  focus_x += dx*frac_dist;
+  frac_dist = ((opac_x-topLeftVertex[0])/
+	       (lowRightVertex[0]-topLeftVertex[0]));
+  opac_x += dx*frac_dist;
+  opacityStar->translate( dx*frac_dist, 0 );
+  width += dx;
+  lowRightVertex[0] += dx;
+  resizeStar->translate( dx, 0 );
+  translateBar->translate( dx/2, 0 );
+  translateBar->resize( dx/2, 0.0f );
+  barRounder->translate( dx, 0 );
+  
+  // y resize
+  frac_dist = 1-((focus_y-lowRightVertex[1])/
+		 (topLeftVertex[1]-lowRightVertex[1]));
+  height -= dy;
+  lowRightVertex[1] += dy;
+  resizeStar->top += dy;
+  focusStar->top += dy*frac_dist;
+  focus_y += dy*frac_dist;
 } // resize()
 
 
 
 // moves the focusStar around inside the widget
 void
-RectWidget::adjustFocus( float dx, float dy ) {
+RectWidget::adjustFocus( float x, float y ) {
+  float dx = x - focus_x;
+  float dy = y - focus_y;
   if( focus_x + dx >= topLeftVertex[0] && focus_x + dx <= lowRightVertex[0] ) {
     focus_x += dx;
     focusStar->translate( dx, 0 );
@@ -738,29 +698,28 @@ RectWidget::adjustFocus( float dx, float dy ) {
 
 // adjusts widget's texture's overall opacity
 void
-RectWidget::adjustOpacity( float dx ) {
-  // if opacityStar remains inside translateBar
-  if( opac_x+dx <= lowRightVertex[0] && opac_x+dx >= topLeftVertex[0] ) {
-    opac_x += dx;
-    opacityStar->translate( dx, 0 );
-  } // if
+RectWidget::adjustOpacity( float x ) {
+  if( x > lowRightVertex[0] ) {opac_x = lowRightVertex[0];}
+  else if( x < topLeftVertex[0] ) {opac_x = topLeftVertex[0];}
+  else {opac_x = x;}
+  opacityStar->left = opac_x - opacityStar->width*0.5;
 } // adjustOpacity()
 
 
 
 // controls which way this widget is manipulated
 void 
-RectWidget::manipulate( float x, float dx, float y, float dy ) {
+RectWidget::manipulate( float x, float y ) {
   // the following block of if statements allow for continuous manipulation
   //  without conducting parameter checks every time (quicker)
   if( drawFlag == 1 )
-    adjustOpacity( dx );
+    adjustOpacity( x );
   else if( drawFlag == 2 )
-    adjustFocus( dx, dy );
+    adjustFocus( x, y );
   else if( drawFlag == 3 )
-    resize( dx, dy );
+    resize( x, y );
   else if( drawFlag == 4 )
-    translate( dx, dy );
+    translate( x, y );
 
   // if drawFlag has not been set from main, then a parameter check must be
   //  conducted to determine in which way the user wishes to manipulate
@@ -770,25 +729,25 @@ RectWidget::manipulate( float x, float dx, float y, float dy ) {
     if( x >= opac_x - 5 && x <= opac_x + 5 &&
 	y >= opac_y - 5 && y <= opac_y + 5 ) {
       drawFlag = 1;
-      adjustOpacity( dx );
+      adjustOpacity( x );
     } // if
     // if mouse cursor near focusStar
     else if( x >= focus_x - 5 && x <= focus_x + 5 &&
 	     y >= focus_y - 5 && y <= focus_y + 5 ) {
       drawFlag = 2;
-      adjustFocus( dx, dy );
+      adjustFocus( x, y );
     } // else if
     // if mouse cursor near resizeStar
     else if( x >= lowRightVertex[0] - 5 && x <= lowRightVertex[0] + 5 &&
 	     y >= lowRightVertex[1] - 5 && y <= lowRightVertex[1] + 5 ) {
       drawFlag = 3;
-      resize( dx, dy );
+      resize( x, y );
     } // else if
     // if mouse cursor on translateBar
     else if( x >= topLeftVertex[0] - 5 && x <= lowRightVertex[0] + 5 &&
 	     y >= topLeftVertex[1] - 5 && y <= topLeftVertex[1] + 5 ) {
       drawFlag = 4;
-      translate( dx, dy );
+      translate( x, y );
     } // else if
     // otherwise nothing pertinent was selected
     else {
