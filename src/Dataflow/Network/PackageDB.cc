@@ -63,6 +63,9 @@ static string lib_ext = ".so";
 #endif
 
 namespace SCIRun {
+  bool sci_show_splash_flag = true;
+
+
   PackageDB* packageDB = 0;
   //env_map scirunrc;                        // contents of .scirunrc
 
@@ -385,7 +388,8 @@ void PackageDB::loadPackage(bool resolve)
       }
     }
   }
-  if(gui){
+  if (gui && sci_show_splash_flag)
+  {
     gui->execute("toplevel .loading; "
 		 "wm geometry .loading 504x482+135+170; "
 		 "wm title .loading {SCIRun Splash Screen}; "
@@ -412,9 +416,12 @@ void PackageDB::loadPackage(bool resolve)
 
     if(gui){
       gui->postMessage("Loading package '" + pname + "'", false);
-      gui->execute(".loading.fb configure -labeltext {Loading package: " +
-		   pname + " }");
-      gui->eval("update idletasks",result);
+      if (sci_show_splash_flag)
+      {
+	gui->execute(".loading.fb configure -labeltext {Loading package: " +
+		     pname + " }");
+	gui->eval("update idletasks",result);
+      }
     } else {
       cerr << "Loading package '" << pname << "'\n";
     }
@@ -444,7 +451,7 @@ void PackageDB::loadPackage(bool resolve)
 	  numreg++;
 	  registerModule((*mi).second);
 	}
-	if(gui)
+	if (gui && sci_show_splash_flag)
 	{
 	  gui->execute("if [winfo exists .loading.fb] "
 		       "{.loading.fb step; update idletasks}");
@@ -469,9 +476,12 @@ void PackageDB::loadPackage(bool resolve)
 
   if(gui){
     gui->postMessage("\nFinished loading packages.",false);
-    gui->execute("if [winfo exists .loading] {destroy .loading}");
-    gui->execute("image delete ::img::splash");
-    gui->eval("update idletasks",result);
+    if (sci_show_splash_flag)
+    {
+      gui->execute("if [winfo exists .loading] {destroy .loading}");
+      gui->execute("image delete ::img::splash");
+      gui->eval("update idletasks",result);
+    }
   } else {
     cerr << "Finished loading packages\n";
   }

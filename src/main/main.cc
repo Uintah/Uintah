@@ -57,6 +57,7 @@ using namespace SCIRun;
 namespace SCIRun {
 extern env_map scirunrc;             // contents of .scirunrc
 extern bool regression_testing_flag;
+extern bool sci_show_splash_flag;
 }
 
 #ifndef PSECORETCL
@@ -86,6 +87,7 @@ usage()
   cout << "       [-]-e[xecute]    : executes the given network on startup\n";
   cout << "       [-]-v[ersion]    : prints out version information\n";
   cout << "       [-]-h[elp]       : prints usage information\n";
+  cout << "       [--nosplash]     : disable the splash screen\n";
   cout << "       net_file         : SCIRun Network Input File\n";
   exit( 0 );
 }
@@ -122,6 +124,10 @@ parse_args( int argc, char *argv[] )
 	      ( arg == "-r" ) ||  ( arg == "--r" ) )
     {
       regression_testing_flag = true;
+    }
+    else if ( arg == "--nosplash" )
+    {
+      sci_show_splash_flag = false;
     }
     else
     {
