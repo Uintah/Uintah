@@ -12,7 +12,9 @@ static char *id="@(#) $Id$";
 #include <Uintah/Interface/Scheduler.h>
 #include <Uintah/Interface/DataWarehouse.h>
 #include <Uintah/Grid/Task.h>
-#include <Uintah/Grid/FCVariable.h>
+#include <Uintah/Grid/SFCXVariable.h>
+#include <Uintah/Grid/SFCYVariable.h>
+#include <Uintah/Grid/SFCZVariable.h>
 #include <Uintah/Grid/CCVariable.h>
 #include <Uintah/Grid/PerPatch.h>
 #include <Uintah/Grid/SoleVariable.h>
@@ -32,60 +34,60 @@ Discretization::Discretization()
 {
   // inputs
   d_uVelocitySIVBCLabel = scinew VarLabel("uVelocitySIVBC",
-				    FCVariable<double>::getTypeDescription() );
+				    SFCXVariable<double>::getTypeDescription() );
   d_vVelocitySIVBCLabel = scinew VarLabel("vVelocitySIVBC",
-				    FCVariable<double>::getTypeDescription() );
+				    SFCYVariable<double>::getTypeDescription() );
   d_wVelocitySIVBCLabel = scinew VarLabel("wVelocitySIVBC",
-				    FCVariable<double>::getTypeDescription() );
+				    SFCZVariable<double>::getTypeDescription() );
   d_densitySIVBCLabel = scinew VarLabel("densitySIVBC",
 				   CCVariable<double>::getTypeDescription() );
   d_viscosityCTSLabel = scinew VarLabel("viscosityCTS",
 				   CCVariable<double>::getTypeDescription() );
   d_uVelocityCPBCLabel = scinew VarLabel("uVelocityCPBC",
-				    FCVariable<double>::getTypeDescription() );
+				    SFCXVariable<double>::getTypeDescription() );
   d_vVelocityCPBCLabel = scinew VarLabel("vVelocityCPBC",
-				    FCVariable<double>::getTypeDescription() );
+				    SFCYVariable<double>::getTypeDescription() );
   d_wVelocityCPBCLabel = scinew VarLabel("wVelocityCPBC",
-				    FCVariable<double>::getTypeDescription() );
+				    SFCZVariable<double>::getTypeDescription() );
 
   // computes (calculateVelocityCoeff)
   d_uVelCoefPBLMLabel = scinew VarLabel("uVelCoefPBLM",
-				   FCVariable<double>::getTypeDescription() );
+				   SFCXVariable<double>::getTypeDescription() );
   d_vVelCoefPBLMLabel = scinew VarLabel("vVelCoefPBLM",
-				   FCVariable<double>::getTypeDescription() );
+				   SFCYVariable<double>::getTypeDescription() );
   d_wVelCoefPBLMLabel = scinew VarLabel("wVelCoefPBLM",
-				   FCVariable<double>::getTypeDescription() );
+				   SFCZVariable<double>::getTypeDescription() );
   d_uVelConvCoefPBLMLabel = scinew VarLabel("uVelConvCoefPBLM",
-				   FCVariable<double>::getTypeDescription() );
+				   SFCXVariable<double>::getTypeDescription() );
   d_vVelConvCoefPBLMLabel = scinew VarLabel("vVelConvCoefPBLM",
-				   FCVariable<double>::getTypeDescription() );
+				   SFCYVariable<double>::getTypeDescription() );
   d_wVelConvCoefPBLMLabel = scinew VarLabel("wVelConvCoefPBLM",
-				   FCVariable<double>::getTypeDescription() );
+				   SFCZVariable<double>::getTypeDescription() );
   d_uVelCoefMBLMLabel = scinew VarLabel("uVelCoefMBLM",
-				   FCVariable<double>::getTypeDescription() );
+				   SFCXVariable<double>::getTypeDescription() );
   d_vVelCoefMBLMLabel = scinew VarLabel("vVelCoefMBLM",
-				   FCVariable<double>::getTypeDescription() );
+				   SFCYVariable<double>::getTypeDescription() );
   d_wVelCoefMBLMLabel = scinew VarLabel("wVelCoefMBLM",
-				   FCVariable<double>::getTypeDescription() );
+				   SFCZVariable<double>::getTypeDescription() );
   d_uVelConvCoefMBLMLabel = scinew VarLabel("uVelConvCoefMBLM",
-				   FCVariable<double>::getTypeDescription() );
+				   SFCXVariable<double>::getTypeDescription() );
   d_vVelConvCoefMBLMLabel = scinew VarLabel("vVelConvCoefMBLM",
-				   FCVariable<double>::getTypeDescription() );
+				   SFCYVariable<double>::getTypeDescription() );
   d_wVelConvCoefMBLMLabel = scinew VarLabel("wVelConvCoefMBLM",
-				   FCVariable<double>::getTypeDescription() );
+				   SFCZVariable<double>::getTypeDescription() );
   // calculateVelDiagonal
   d_uVelLinSrcPBLMLabel = scinew VarLabel("uVelLinSrcPBLM",
-				   FCVariable<double>::getTypeDescription() );
+				   SFCXVariable<double>::getTypeDescription() );
   d_vVelLinSrcPBLMLabel = scinew VarLabel("vVelLinSrcPBLM",
-				   FCVariable<double>::getTypeDescription() );
+				   SFCYVariable<double>::getTypeDescription() );
   d_wVelLinSrcPBLMLabel = scinew VarLabel("wVelLinSrcPBLM",
-				   FCVariable<double>::getTypeDescription() );
+				   SFCZVariable<double>::getTypeDescription() );
   d_uVelLinSrcMBLMLabel = scinew VarLabel("uVelLinSrcMBLM",
-				   FCVariable<double>::getTypeDescription() );
+				   SFCXVariable<double>::getTypeDescription() );
   d_vVelLinSrcMBLMLabel = scinew VarLabel("vVelLinSrcMBLM",
-				   FCVariable<double>::getTypeDescription() );
+				   SFCYVariable<double>::getTypeDescription() );
   d_wVelLinSrcMBLMLabel = scinew VarLabel("wVelLinSrcMBLM",
-				   FCVariable<double>::getTypeDescription() );
+				   SFCZVariable<double>::getTypeDescription() );
   // calculatePressureCoeff
   d_pressureINLabel = scinew VarLabel("pressureIN",
 				   CCVariable<double>::getTypeDescription() );
@@ -100,11 +102,11 @@ Discretization::Discretization()
   d_scalarSPLabel = scinew VarLabel("scalarSP",
 				   CCVariable<double>::getTypeDescription() );
   d_uVelocityMSLabel = scinew VarLabel("uVelocityMS",
-				    FCVariable<double>::getTypeDescription() );
+				    SFCXVariable<double>::getTypeDescription() );
   d_vVelocityMSLabel = scinew VarLabel("vVelocityMS",
-				    FCVariable<double>::getTypeDescription() );
+				    SFCYVariable<double>::getTypeDescription() );
   d_wVelocityMSLabel = scinew VarLabel("wVelocityMS",
-				    FCVariable<double>::getTypeDescription() );
+				    SFCZVariable<double>::getTypeDescription() );
   d_scalCoefSBLMLabel = scinew VarLabel("scalCoefSBLM",
 				   CCVariable<double>::getTypeDescription() );
 
@@ -136,17 +138,17 @@ Discretization::calculateVelocityCoeff(const ProcessorGroup* pc,
   int numGhostCells = 0;
   int nofStencils = 7;
 
-  FCVariable<double> uVelocity;
-  FCVariable<double> vVelocity;
-  FCVariable<double> wVelocity;
+  SFCXVariable<double> uVelocity;
+  SFCYVariable<double> vVelocity;
+  SFCZVariable<double> wVelocity;
   CCVariable<double> density;
   CCVariable<double> viscosity;
-  StencilMatrix<FCVariable<double> > uVelocityCoeff;
-  StencilMatrix<FCVariable<double> > vVelocityCoeff;
-  StencilMatrix<FCVariable<double> > wVelocityCoeff;
-  StencilMatrix<FCVariable<double> > uVelocityConvectCoeff;
-  StencilMatrix<FCVariable<double> > vVelocityConvectCoeff;
-  StencilMatrix<FCVariable<double> > wVelocityConvectCoeff;
+  StencilMatrix<SFCXVariable<double> > uVelocityCoeff;
+  StencilMatrix<SFCYVariable<double> > vVelocityCoeff;
+  StencilMatrix<SFCZVariable<double> > wVelocityCoeff;
+  StencilMatrix<SFCXVariable<double> > uVelocityConvectCoeff;
+  StencilMatrix<SFCYVariable<double> > vVelocityConvectCoeff;
+  StencilMatrix<SFCZVariable<double> > wVelocityConvectCoeff;
 
   // Get the required data
   switch(eqnType) {
@@ -191,9 +193,6 @@ Discretization::calculateVelocityCoeff(const ProcessorGroup* pc,
   CellInformation* cellinfo = cellinfop;
 #endif
 
-  IntVector lowIndex = patch->getCellLowIndex();
-  IntVector highIndex = patch->getCellHighIndex();
-
   // Allocate space in new datawarehouse
   for (int ii = 0; ii < nofStencils; ii++) {
     switch(eqnType) {
@@ -224,6 +223,24 @@ Discretization::calculateVelocityCoeff(const ProcessorGroup* pc,
     }
   }
 
+  // Get the domain size and the patch indices
+  IntVector domLoU = uVelocity.getFortLowIndex();
+  IntVector domHiU = uVelocity.getFortHighIndex();
+  IntVector idxLoU = patch->getSFCXFORTLowIndex();
+  IntVector idxHiU = patch->getSFCXFORTHighIndex();
+  IntVector domLoV = vVelocity.getFortLowIndex();
+  IntVector domHiV = vVelocity.getFortHighIndex();
+  IntVector idxLoV = patch->getSFCYFORTLowIndex();
+  IntVector idxHiV = patch->getSFCYFORTHighIndex();
+  IntVector domLoW = wVelocity.getFortLowIndex();
+  IntVector domHiW = wVelocity.getFortHighIndex();
+  IntVector idxLoW = patch->getSFCZFORTLowIndex();
+  IntVector idxHiW = patch->getSFCZFORTHighIndex();
+  IntVector domLo = density.getFortLowIndex();
+  IntVector domHi = density.getFortHighIndex();
+  IntVector idxLo = patch->getCellFORTLowIndex();
+  IntVector idxHi = patch->getCellFORTHighIndex();
+
 #ifdef WONT_COMPILE_YET
 
   int ioff = 1;
@@ -232,9 +249,35 @@ Discretization::calculateVelocityCoeff(const ProcessorGroup* pc,
 
   // 3-d array for volume - fortran uses it for temporary storage
   Array3<double> volume(patch->getLowIndex(), patch->getHighIndex());
-  FORT_VELCOEF(velocity, viscosity, density,
-	       uVelocityConvectCoeff, uVelocityCoeff, delta_t,
-	       ioff, joff, koff, lowIndex, highIndex,
+  FORT_VELCOEF(domLoU.get_pointer(), domHiU.get_pointer(),
+	       idxLoU.get_pointer(), idxHiU.get_pointer(),
+	       uVelocity.getPointer(),
+	       domLoV.get_pointer(), domHiV.get_pointer(),
+	       idxLoV.get_pointer(), idxHiV.get_pointer(),
+	       vVelocity.getPointer(),
+	       domLoW.get_pointer(), domHiW.get_pointer(),
+	       idxLoW.get_pointer(), idxHiW.get_pointer(),
+	       wVelocity.getPointer(),
+	       domLo.get_pointer(), domHi.get_pointer(),
+	       idxLo.get_pointer(), idxHi.get_pointer(),
+	       density.getPointer(),
+	       viscosity.getPointer(),
+	       uVelocityConvectCoeff[StencilMatrix::AP].getPointer(), 
+	       uVelocityConvectCoeff[StencilMatrix::AE].getPointer(), 
+	       uVelocityConvectCoeff[StencilMatrix::AW].getPointer(), 
+	       uVelocityConvectCoeff[StencilMatrix::AN].getPointer(), 
+	       uVelocityConvectCoeff[StencilMatrix::AS].getPointer(), 
+	       uVelocityConvectCoeff[StencilMatrix::AT].getPointer(), 
+	       uVelocityConvectCoeff[StencilMatrix::AB].getPointer(), 
+	       uVelocityCoeff[StencilMatrix::AP].getPointer(), 
+	       uVelocityCoeff[StencilMatrix::AE].getPointer(), 
+	       uVelocityCoeff[StencilMatrix::AW].getPointer(), 
+	       uVelocityCoeff[StencilMatrix::AN].getPointer(), 
+	       uVelocityCoeff[StencilMatrix::AS].getPointer(), 
+	       uVelocityCoeff[StencilMatrix::AT].getPointer(), 
+	       uVelocityCoeff[StencilMatrix::AB].getPointer(), 
+	       delta_t,
+	       ioff, joff, koff, 
 	       cellinfo->ceeu, cellinfo->cweu, cellinfo->cwwu,
 	       cellinfo->cnn, cellinfo->csn, cellinfo->css,
 	       cellinfo->ctt, cellinfo->cbt, cellinfo->cbb,
@@ -295,9 +338,9 @@ Discretization::calculatePressureCoeff(const ProcessorGroup*,
   int nofStencils = 0;
 
   CCVariable<double> pressure;
-  FCVariable<double> uVelocity;
-  FCVariable<double> vVelocity;
-  FCVariable<double> wVelocity;
+  SFCXVariable<double> uVelocity;
+  SFCYVariable<double> vVelocity;
+  SFCZVariable<double> wVelocity;
   CCVariable<double> viscosity;
 
   old_dw->get(pressure, d_pressureINLabel, matlIndex, patch, Ghost::None,
@@ -311,9 +354,9 @@ Discretization::calculatePressureCoeff(const ProcessorGroup*,
   old_dw->get(viscosity, d_viscosityCTSLabel, matlIndex, patch, Ghost::None,
 	      numGhostCells);
 
-  StencilMatrix<FCVariable<double> > uVelCoeff;
-  StencilMatrix<FCVariable<double> > vVelCoeff;
-  StencilMatrix<FCVariable<double> > wVelCoeff;
+  StencilMatrix<SFCXVariable<double> > uVelCoeff;
+  StencilMatrix<SFCYVariable<double> > vVelCoeff;
+  StencilMatrix<SFCZVariable<double> > wVelCoeff;
   for (int ii = 0; ii < nofStencils; ii++) {
     new_dw->get(uVelCoeff[ii], d_uVelCoefPBLMLabel, ii, patch, Ghost::None,
 		numGhostCells);
@@ -344,9 +387,6 @@ Discretization::calculatePressureCoeff(const ProcessorGroup*,
   CellInformation* cellinfo = cellinfop;
 #endif
 
-  IntVector lowIndex = patch->getCellLowIndex();
-  IntVector highIndex = patch->getCellHighIndex();
-
   // Create vars for new_dw
   StencilMatrix<CCVariable<double> > pressCoeff; //7 point stencil
   for (int ii = 0; ii < nofStencils; ii++) {
@@ -354,10 +394,66 @@ Discretization::calculatePressureCoeff(const ProcessorGroup*,
   }
   //new_dw->allocate(pressCoeff,"pressureCoeff",patch, 0);
 
+  // Get the domain size and the patch indices
+  IntVector domLoU = uVelocity.getFortLowIndex();
+  IntVector domHiU = uVelocity.getFortHighIndex();
+  IntVector idxLoU = patch->getSFCXFORTLowIndex();
+  IntVector idxHiU = patch->getSFCXFORTHighIndex();
+  IntVector domLoV = vVelocity.getFortLowIndex();
+  IntVector domHiV = vVelocity.getFortHighIndex();
+  IntVector idxLoV = patch->getSFCYFORTLowIndex();
+  IntVector idxHiV = patch->getSFCYFORTHighIndex();
+  IntVector domLoW = wVelocity.getFortLowIndex();
+  IntVector domHiW = wVelocity.getFortHighIndex();
+  IntVector idxLoW = patch->getSFCZFORTLowIndex();
+  IntVector idxHiW = patch->getSFCZFORTHighIndex();
+  IntVector domLo = pressure.getFortLowIndex();
+  IntVector domHi = pressure.getFortHighIndex();
+  IntVector idxLo = patch->getCellFORTLowIndex();
+  IntVector idxHi = patch->getCellFORTHighIndex();
+
 #ifdef WONT_COMPILE_YET
-  FORT_PRESSSOURCE(pressCoeff, pressure, velocity, density
-		   uVelocityCoeff, vVelocityCoeff, wVelocityCoeff,
-		   lowIndex, highIndex,
+  FORT_PRESSSOURCE(domLo.get_pointer(), domHi.get_pointer(),
+		   idxLo.get_pointer(), idxHi.get_pointer(),
+		   pressure.getPointer(),
+		   pressCoeff[StencilMatrix::AP].getPointer(), 
+		   pressCoeff[StencilMatrix::AE].getPointer(), 
+		   pressCoeff[StencilMatrix::AW].getPointer(), 
+		   pressCoeff[StencilMatrix::AN].getPointer(), 
+		   pressCoeff[StencilMatrix::AS].getPointer(), 
+		   pressCoeff[StencilMatrix::AT].getPointer(), 
+		   pressCoeff[StencilMatrix::AB].getPointer(), 
+		   domLoU.get_pointer(), domHiU.get_pointer(),
+		   idxLoU.get_pointer(), idxHiU.get_pointer(),
+		   uVelocity.getPointer(),
+		   domLoV.get_pointer(), domHiV.get_pointer(),
+		   idxLoV.get_pointer(), idxHiV.get_pointer(),
+		   vVelocity.getPointer(),
+		   domLoW.get_pointer(), domHiW.get_pointer(),
+		   idxLoW.get_pointer(), idxHiW.get_pointer(),
+		   wVelocity.getPointer(),
+		   density.getPointer(),
+		   uVelCoeff[StencilMatrix::AP].getPointer(), 
+		   uVelCoeff[StencilMatrix::AE].getPointer(), 
+		   uVelCoeff[StencilMatrix::AW].getPointer(), 
+		   uVelCoeff[StencilMatrix::AN].getPointer(), 
+		   uVelCoeff[StencilMatrix::AS].getPointer(), 
+		   uVelCoeff[StencilMatrix::AT].getPointer(), 
+		   uVelCoeff[StencilMatrix::AB].getPointer(), 
+		   vVelCoeff[StencilMatrix::AP].getPointer(), 
+		   vVelCoeff[StencilMatrix::AE].getPointer(), 
+		   vVelCoeff[StencilMatrix::AW].getPointer(), 
+		   vVelCoeff[StencilMatrix::AN].getPointer(), 
+		   vVelCoeff[StencilMatrix::AS].getPointer(), 
+		   vVelCoeff[StencilMatrix::AT].getPointer(), 
+		   vVelCoeff[StencilMatrix::AB].getPointer(), 
+		   wVelCoeff[StencilMatrix::AP].getPointer(), 
+		   wVelCoeff[StencilMatrix::AE].getPointer(), 
+		   wVelCoeff[StencilMatrix::AW].getPointer(), 
+		   wVelCoeff[StencilMatrix::AN].getPointer(), 
+		   wVelCoeff[StencilMatrix::AS].getPointer(), 
+		   wVelCoeff[StencilMatrix::AT].getPointer(), 
+		   wVelCoeff[StencilMatrix::AB].getPointer(), 
 		   cellinfo->sew, cellinfo->sns, cellinfo->stb,
 		   cellinfo->dxep, cellinfo->dxpw, cellinfo->dynp,
 		   cellinfo->dyps, cellinfo->dztp, cellinfo->dzpb);
@@ -384,9 +480,9 @@ Discretization::calculateScalarCoeff(const ProcessorGroup* pc,
   int numGhostCells = 0;
   int nofStencils = 7;
 
-  FCVariable<double> uVelocity;
-  FCVariable<double> vVelocity;
-  FCVariable<double> wVelocity;
+  SFCXVariable<double> uVelocity;
+  SFCYVariable<double> vVelocity;
+  SFCZVariable<double> wVelocity;
   CCVariable<double> density;
   CCVariable<double> viscosity;
   CCVariable<double> scalar;
@@ -418,9 +514,6 @@ Discretization::calculateScalarCoeff(const ProcessorGroup* pc,
   CellInformation* cellinfo = cellinfop;
 #endif
 
-  IntVector lowIndex = patch->getCellLowIndex();
-  IntVector highIndex = patch->getCellHighIndex();
-
   //7pt stencil declaration
   StencilMatrix<CCVariable<double> > scalarCoeff;
 
@@ -428,11 +521,49 @@ Discretization::calculateScalarCoeff(const ProcessorGroup* pc,
     new_dw->allocate(scalarCoeff[ii], d_scalCoefSBLMLabel, ii, patch);
   }
 
+  // Get the domain size and the patch indices
+  IntVector domLoU = uVelocity.getFortLowIndex();
+  IntVector domHiU = uVelocity.getFortHighIndex();
+  IntVector idxLoU = patch->getSFCXFORTLowIndex();
+  IntVector idxHiU = patch->getSFCXFORTHighIndex();
+  IntVector domLoV = vVelocity.getFortLowIndex();
+  IntVector domHiV = vVelocity.getFortHighIndex();
+  IntVector idxLoV = patch->getSFCYFORTLowIndex();
+  IntVector idxHiV = patch->getSFCYFORTHighIndex();
+  IntVector domLoW = wVelocity.getFortLowIndex();
+  IntVector domHiW = wVelocity.getFortHighIndex();
+  IntVector idxLoW = patch->getSFCZFORTLowIndex();
+  IntVector idxHiW = patch->getSFCZFORTHighIndex();
+  IntVector domLo = scalar.getFortLowIndex();
+  IntVector domHi = scalar.getFortHighIndex();
+  IntVector idxLo = patch->getCellFORTLowIndex();
+  IntVector idxHi = patch->getCellFORTHighIndex();
+
 #ifdef WONT_COMPILE_YET
   // 3-d array for volume - fortran uses it for temporary storage
   Array3<double> volume(patch->getLowIndex(), patch->getHighIndex());
-  FORT_SCALARCOEF(scalarCoeff, scalar, velocity, viscosity, density,
-		  delta_t, lowIndex, highIndex,
+  FORT_SCALARCOEF(domLo.get_pointer(), domHi.get_pointer(),
+		  idxLo.get_pointer(), idxHi.get_pointer(),
+		  scalar.getPointer(),
+		  scalarCoeff[StencilMatrix::AP].getPointer(), 
+		  scalarCoeff[StencilMatrix::AE].getPointer(), 
+		  scalarCoeff[StencilMatrix::AW].getPointer(), 
+		  scalarCoeff[StencilMatrix::AN].getPointer(), 
+		  scalarCoeff[StencilMatrix::AS].getPointer(), 
+		  scalarCoeff[StencilMatrix::AT].getPointer(), 
+		  scalarCoeff[StencilMatrix::AB].getPointer(), 
+		  domLoU.get_pointer(), domHiU.get_pointer(),
+		  idxLoU.get_pointer(), idxHiU.get_pointer(),
+		  uVelocity.getPointer(),
+		  domLoV.get_pointer(), domHiV.get_pointer(),
+		  idxLoV.get_pointer(), idxHiV.get_pointer(),
+		  vVelocity.getPointer(),
+		  domLoW.get_pointer(), domHiW.get_pointer(),
+		  idxLoW.get_pointer(), idxHiW.get_pointer(),
+		  wVelocity.getPointer(),
+		  density.getPointer(),
+		  viscosity.getPointer(), 
+		  delta_t, 
 		  cellinfo->ceeu, cellinfo->cweu, cellinfo->cwwu,
 		  cellinfo->cnn, cellinfo->csn, cellinfo->css,
 		  cellinfo->ctt, cellinfo->cbt, cellinfo->cbb,
@@ -466,15 +597,12 @@ Discretization::calculateVelDiagonal(const ProcessorGroup*,
   int numGhostCells = 0;
   int nofStencils = 7;
 
-  IntVector lowIndex = patch->getCellLowIndex();
-  IntVector highIndex = patch->getCellHighIndex();
-
-  StencilMatrix<FCVariable<double> > uVelCoeff;
-  StencilMatrix<FCVariable<double> > vVelCoeff;
-  StencilMatrix<FCVariable<double> > wVelCoeff;
-  FCVariable<double> uVelLinearSrc;
-  FCVariable<double> vVelLinearSrc;
-  FCVariable<double> wVelLinearSrc;
+  StencilMatrix<SFCXVariable<double> > uVelCoeff;
+  StencilMatrix<SFCYVariable<double> > vVelCoeff;
+  StencilMatrix<SFCZVariable<double> > wVelCoeff;
+  SFCXVariable<double> uVelLinearSrc;
+  SFCYVariable<double> vVelLinearSrc;
+  SFCZVariable<double> wVelLinearSrc;
 
   switch(eqnType) {
   case PRESSURE:
@@ -513,8 +641,51 @@ Discretization::calculateVelDiagonal(const ProcessorGroup*,
     break;
   }
 
+  // Get the domain size and the patch indices
+  IntVector domLoU = uVelLinearSrc.getFortLowIndex();
+  IntVector domHiU = uVelLinearSrc.getFortHighIndex();
+  IntVector idxLoU = patch->getSFCXFORTLowIndex();
+  IntVector idxHiU = patch->getSFCXFORTHighIndex();
+  IntVector domLoV = vVelLinearSrc.getFortLowIndex();
+  IntVector domHiV = vVelLinearSrc.getFortHighIndex();
+  IntVector idxLoV = patch->getSFCYFORTLowIndex();
+  IntVector idxHiV = patch->getSFCYFORTHighIndex();
+  IntVector domLoW = wVelLinearSrc.getFortLowIndex();
+  IntVector domHiW = wVelLinearSrc.getFortHighIndex();
+  IntVector idxLoW = patch->getSFCZFORTLowIndex();
+  IntVector idxHiW = patch->getSFCZFORTHighIndex();
+
 #ifdef WONT_COMPILE_YET
-  FORT_APCAL(uVelCoeffvelocity, uVelLinearSrc, lowIndex, highIndex);
+  FORT_APCAL(domLoU.get_pointer(), domHiU.get_pointer(),
+	     idxLoU.get_pointer(), idxHiU.get_pointer(),
+	     uVelLinearSrc.getPointer(),
+	     uVelCoeff[StencilMatrix::AP].getPointer(), 
+	     uVelCoeff[StencilMatrix::AE].getPointer(), 
+	     uVelCoeff[StencilMatrix::AW].getPointer(), 
+	     uVelCoeff[StencilMatrix::AN].getPointer(), 
+	     uVelCoeff[StencilMatrix::AS].getPointer(), 
+	     uVelCoeff[StencilMatrix::AT].getPointer(), 
+	     uVelCoeff[StencilMatrix::AB].getPointer());
+  FORT_APCAL(domLoV.get_pointer(), domHiV.get_pointer(),
+	     idxLoV.get_pointer(), idxHiV.get_pointer(),
+	     vVelLinearSrc.getPointer(),
+	     vVelCoeff[StencilMatrix::AP].getPointer(), 
+	     vVelCoeff[StencilMatrix::AE].getPointer(), 
+	     vVelCoeff[StencilMatrix::AW].getPointer(), 
+	     vVelCoeff[StencilMatrix::AN].getPointer(), 
+	     vVelCoeff[StencilMatrix::AS].getPointer(), 
+	     vVelCoeff[StencilMatrix::AT].getPointer(), 
+	     vVelCoeff[StencilMatrix::AB].getPointer());
+  FORT_APCAL(domLoW.get_pointer(), domHiW.get_pointer(),
+	     idxLoW.get_pointer(), idxHiW.get_pointer(),
+	     wVelLinearSrc.getPointer(),
+	     wVelCoeff[StencilMatrix::AP].getPointer(), 
+	     wVelCoeff[StencilMatrix::AE].getPointer(), 
+	     wVelCoeff[StencilMatrix::AW].getPointer(), 
+	     wVelCoeff[StencilMatrix::AN].getPointer(), 
+	     wVelCoeff[StencilMatrix::AS].getPointer(), 
+	     wVelCoeff[StencilMatrix::AT].getPointer(), 
+	     wVelCoeff[StencilMatrix::AB].getPointer());
 #endif
 
   switch(eqnType) {
@@ -552,9 +723,6 @@ Discretization::calculatePressDiagonal(const ProcessorGroup*,
   int numGhostCells = 0;
   int nofStencils = 7;
 
-  IntVector lowIndex = patch->getCellLowIndex();
-  IntVector highIndex = patch->getCellHighIndex();
-
   StencilMatrix<CCVariable<double> > pressCoeff;
   for (int ii = 0; ii < nofStencils; ii++) {
     new_dw->get(pressCoeff[ii], d_presCoefPBLMLabel, ii, patch, Ghost::None,
@@ -569,8 +737,23 @@ Discretization::calculatePressDiagonal(const ProcessorGroup*,
   //FCVariable<double> pressLinearSrc;
   //new_dw->get(pressLinearSrc, "pressureLinearSource", patch, 0);
 
+  // Get the domain size and the patch indices
+  IntVector domLo = presLinearSrc.getFortLowIndex();
+  IntVector domHi = presLinearSrc.getFortHighIndex();
+  IntVector idxLo = patch->getCellFORTLowIndex();
+  IntVector idxHi = patch->getCellFORTHighIndex();
+
 #ifdef WONT_COMPILE_YET
-  FORT_APCAL(pressCoeff, presLinearSrc, lowIndex, highIndex);
+  FORT_APCAL(domLo.get_pointer(), domHi.get_pointer(),
+	     idxLo.get_pointer(), idxHi.get_pointer(),
+	     presLinearSrc.getPointer(),
+	     pressCoeff[StencilMatrix::AP].getPointer(), 
+	     pressCoeff[StencilMatrix::AE].getPointer(), 
+	     pressCoeff[StencilMatrix::AW].getPointer(), 
+	     pressCoeff[StencilMatrix::AN].getPointer(), 
+	     pressCoeff[StencilMatrix::AS].getPointer(), 
+	     pressCoeff[StencilMatrix::AT].getPointer(), 
+	     pressCoeff[StencilMatrix::AB].getPointer());
 #endif
 
   for (int ii = 0; ii < nofStencils; ii++) {
@@ -594,9 +777,6 @@ Discretization::calculateScalarDiagonal(const ProcessorGroup*,
   int numGhostCells = 0;
   int nofStencils = 7;
 
-  IntVector lowIndex = patch->getCellLowIndex();
-  IntVector highIndex = patch->getCellHighIndex();
-
   // **WARNING** Don't know how to get the stencil data yet for scalars
   //             Currently overwriting scalarCoeff[ii] with the same data
   //             for the current scalar
@@ -614,8 +794,23 @@ Discretization::calculateScalarDiagonal(const ProcessorGroup*,
   //FCVariable<double> scalarLinearSrc;
   //new_dw->get(scalarLinearSrc, "ScalarLinearSource", patch, index, 0);
 
+  // Get the domain size and the patch indices
+  IntVector domLo = scalarLinearSrc.getFortLowIndex();
+  IntVector domHi = scalarLinearSrc.getFortHighIndex();
+  IntVector idxLo = patch->getCellFORTLowIndex();
+  IntVector idxHi = patch->getCellFORTHighIndex();
+
 #ifdef WONT_COMPILE_YET
-  FORT_APCAL(scalarCoeff, scalarLinearSrc, lowIndex, highIndex);
+  FORT_APCAL(domLo.get_pointer(), domHi.get_pointer(),
+	     idxLo.get_pointer(), idxHi.get_pointer(),
+	     scalarLinearSrc.getPointer(),
+	     scalarCoeff[StencilMatrix::AP].getPointer(), 
+	     scalarCoeff[StencilMatrix::AE].getPointer(), 
+	     scalarCoeff[StencilMatrix::AW].getPointer(), 
+	     scalarCoeff[StencilMatrix::AN].getPointer(), 
+	     scalarCoeff[StencilMatrix::AS].getPointer(), 
+	     scalarCoeff[StencilMatrix::AT].getPointer(), 
+	     scalarCoeff[StencilMatrix::AB].getPointer());
 #endif
 
   // **WARNING** Don't know how to get the stencil data yet for scalars
@@ -629,6 +824,10 @@ Discretization::calculateScalarDiagonal(const ProcessorGroup*,
 
 //
 // $Log$
+// Revision 1.19  2000/06/29 21:48:58  bbanerje
+// Changed FC Vars to SFCX,Y,ZVars and added correct getIndex() to get domainhi/lo
+// and index hi/lo
+//
 // Revision 1.18  2000/06/22 23:06:33  bbanerje
 // Changed velocity related variables to FCVariable type.
 // ** NOTE ** We may need 3 types of FCVariables (one for each direction)

@@ -37,13 +37,13 @@ WARNING
 none
 ****************************************/
 
-#include <Uintah/Components/Arches/StencilMatrix.h>
-#include <Uintah/Grid/CCVariable.h>
-#include <Uintah/Grid/FCVariable.h>
-#include <Uintah/Grid/LevelP.h>
-#include <Uintah/Grid/Patch.h>
+//#include <Uintah/Components/Arches/StencilMatrix.h>
+//#include <Uintah/Grid/CCVariable.h>
+//#include <Uintah/Grid/FCVariable.h>
 #include <Uintah/Interface/SchedulerP.h>
 #include <Uintah/Interface/DataWarehouseP.h>
+#include <Uintah/Grid/LevelP.h>
+#include <Uintah/Grid/Patch.h>
 #include <Uintah/Grid/VarLabel.h>
 
 #include <SCICore/Containers/Array1.h>
@@ -163,12 +163,12 @@ private:
    
       // Stencil weights.
       // Array of size NDIM and of depth determined by stencil coefficients
-      StencilMatrix<CCVariable<double> >* d_press_stencil_matrix;
+      //StencilMatrix<CCVariable<double> >* d_press_stencil_matrix;
       // stores coefficients for all the velocity components
       // coefficients should be saved on staggered grid
-      StencilMatrix<FCVariable<double> >* d_mom_stencil_matrix;
+      //StencilMatrix<FCVariable<double> >* d_mom_stencil_matrix;
       // coefficients for all the scalar components
-      StencilMatrix<CCVariable<double> >* d_scalar_stencil_matrix;
+      //StencilMatrix<CCVariable<double> >* d_scalar_stencil_matrix;
 
       // const VarLabel*
 
@@ -227,6 +227,10 @@ private:
   
 //
 // $Log$
+// Revision 1.20  2000/06/29 21:48:59  bbanerje
+// Changed FC Vars to SFCX,Y,ZVars and added correct getIndex() to get domainhi/lo
+// and index hi/lo
+//
 // Revision 1.19  2000/06/22 23:06:34  bbanerje
 // Changed velocity related variables to FCVariable type.
 // ** NOTE ** We may need 3 types of FCVariables (one for each direction)
