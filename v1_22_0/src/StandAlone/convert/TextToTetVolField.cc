@@ -151,6 +151,10 @@ main(int argc, char **argv) {
   int npts;
   if (!ptsCountHeader) npts = getNumNonEmptyLines(ptsName);
   ifstream ptsstream(ptsName);
+  if (ptsstream.fail()) {
+    cerr << "Error -- Could not open file " << ptsName << "\n";
+    return 2;
+  }
   if (ptsCountHeader) ptsstream >> npts;
   cerr << "number of points = "<< npts <<"\n";
   int i;
@@ -166,6 +170,10 @@ main(int argc, char **argv) {
   int ntets;
   if (!elementsCountHeader) ntets = getNumNonEmptyLines(tetsName);
   ifstream tetsstream(tetsName);
+  if (tetsstream.fail()) {
+    cerr << "Error -- Could not open file " << tetsName << "\n";
+    return 2;
+  }
   if (elementsCountHeader) tetsstream >> ntets;
   cerr << "number of tets = "<< ntets <<"\n";
   for (i=0; i<ntets; i++) {

@@ -144,6 +144,10 @@ main(int argc, char **argv) {
   int npts;
   if (!ptsCountHeader) npts = getNumNonEmptyLines(ptsName);
   ifstream ptsstream(ptsName);
+  if (ptsstream.fail()) {
+    cerr << "Error -- Could not open file " << ptsName << "\n";
+    return 2;
+  }
   if (ptsCountHeader) ptsstream >> npts;
   cerr << "number of points = "<< npts <<"\n";
   int i;
@@ -159,6 +163,10 @@ main(int argc, char **argv) {
   int nhexes;
   if (!elementsCountHeader) nhexes = getNumNonEmptyLines(hexesName);
   ifstream hexesstream(hexesName);
+  if (hexesstream.fail()) {
+    cerr << "Error -- Could not open file " << hexesName << "\n";
+    return 2;
+  }
   if (elementsCountHeader) hexesstream >> nhexes;
   cerr << "number of hexes = "<< nhexes <<"\n";
   for (i=0; i<nhexes; i++) {

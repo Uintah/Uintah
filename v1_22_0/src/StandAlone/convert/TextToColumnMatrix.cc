@@ -125,6 +125,10 @@ main(int argc, char **argv) {
   int nr;
   if (!header) nr = getNumNonEmptyLines(textfileName);
   ifstream matstream(textfileName);
+  if (matstream.fail()) {
+    cerr << "Error -- Could not open file " << textfileName << "\n";
+    return 2;
+  }
   if (header) matstream >> nr;
   cerr << "nrows="<<nr<<"\n";
   ColumnMatrix *cm = scinew ColumnMatrix(nr);
