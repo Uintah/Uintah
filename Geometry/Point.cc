@@ -26,9 +26,12 @@ clString Point::string() const
 
 int Point::operator==(const Point& p) const
 {
-    int r=1;
-    if(p._x != _x || p._y != _y || p._z != _z)r=0;
-    return r;
+    return p._x == _x && p._y == _y && p._z == _z;
+}
+
+int Point::operator!=(const Point& p) const
+{
+    return p._x != _x || p._y != _y || p._z != _z;
 }
 
 Point::Point(double x, double y, double z, double w)
