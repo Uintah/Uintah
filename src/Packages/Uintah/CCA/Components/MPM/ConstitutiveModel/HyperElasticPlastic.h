@@ -104,6 +104,9 @@ WARNING
 				     DataWarehouse* new_dw);
 
     // initialize  each particle's constitutive model data
+    virtual void addParticleState(std::vector<const VarLabel*>& from,
+				  std::vector<const VarLabel*>& to);
+
     virtual void initializeCMData(const Patch* patch,
 				  const MPMMaterial* matl,
 				  DataWarehouse* new_dw);
@@ -116,8 +119,16 @@ WARNING
 					const MPMMaterial* matl,
 					const PatchSet* patches) const;
 
-    virtual void addParticleState(std::vector<const VarLabel*>& from,
-				  std::vector<const VarLabel*>& to);
+    virtual double computeRhoMicroCM(double pressure,
+				     const double p_ref,
+				     const MPMMaterial* matl);
+
+    virtual void computePressEOSCM(double rho_m, double& press_eos,
+				   double p_ref,
+				   double& dp_drho, double& ss_new,
+				   const MPMMaterial* matl);
+
+    virtual double getCompressibility();
 
     // class function to read correct number of parameters
     // from the input file
