@@ -150,6 +150,11 @@ AC_SUBST(LARGESOS)
 AC_CHECK_LIB(c, dlopen, DL_LIBRARY="", AC_CHECK_LIB(dl, dlopen, DL_LIBRARY="-ldl"))
 AC_SUBST(DL_LIBRARY)
 
+##-- Find gzopen (and related) -----------------------------------------------
+
+AC_CHECK_LIB(z,gzopen,GZ_LIBRARY="-lz")
+AC_SUBST(GZ_LIBRARY)
+
 ##-- Find MPI ----------------------------------------------------------------
 
 AC_ARG_WITH(mpi,
