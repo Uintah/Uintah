@@ -63,22 +63,26 @@ public:
   
 #ifdef SCI_OPENGL
   virtual void draw(DrawInfoOpenGL*, Material*, double time);
+//    virtual void draw();
+
+  virtual void draw_wireframe();
+  void multi_level_draw();
+  virtual void draw_volume();
 #endif
 
   double num_slices_to_rate(int slices);
   
   virtual GeomObj* clone();
-
+  void set_draw_level( int i, bool b){ draw_level_[i] = b; }
+  void set_level_alpha(int i, double v) { level_alpha_[i] = v; }
 protected:
   bool shading_;
   double ambient_, diffuse_, specular_, shine_;
   int light_;
   bool adaptive_;
+  vector< bool > draw_level_;
+  vector< double > level_alpha_;
 
-#ifdef SCI_OPENGL
-  virtual void draw_volume();
-  virtual void draw_wireframe();
-#endif
 };
 
 } // End namespace SCIRun

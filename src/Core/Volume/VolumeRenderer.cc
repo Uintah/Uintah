@@ -57,9 +57,19 @@ VolumeRenderer::VolumeRenderer(TextureHandle tex,
   specular_(0.0),
   shine_(30.0),
   light_(0),
-  adaptive_(true)
+  adaptive_(true),
+  draw_level_(20),
+  level_alpha_(20)
 {
   mode_ = MODE_OVER;
+  vector<bool>::iterator it = draw_level_.begin();
+  for(;it != draw_level_.end(); ++it){
+    (*it) = false;
+  }
+  vector< double >::iterator it2 = level_alpha_.begin();
+  for(;it2 != level_alpha_.end(); ++it2){
+    (*it2) = 0;
+  }
 }
 
 VolumeRenderer::VolumeRenderer(const VolumeRenderer& copy):
@@ -70,7 +80,9 @@ VolumeRenderer::VolumeRenderer(const VolumeRenderer& copy):
   specular_(copy.specular_),
   shine_(copy.shine_),
   light_(copy.light_),
-  adaptive_(copy.adaptive_)
+  adaptive_(copy.adaptive_),
+  draw_level_(copy.draw_level_),
+  level_alpha_(copy.level_alpha_)
 {}
 
 VolumeRenderer::~VolumeRenderer()
@@ -144,6 +156,11 @@ void
 VolumeRenderer::draw_volume()
 {
 #ifdef HAVE_AVR_SUPPORT
+  if( tex_->nlevels() > 1 ){
+    multi_level_draw();
+    return;
+  }
+
   tex_->lock_bricks();
   
   Ray view_ray = compute_view();
@@ -273,8 +290,11 @@ VolumeRenderer::draw_volume()
     bind_colormap2();
   } else {
     // rebuild if needed
-    build_colormap1();
-    bind_colormap1();
+//     build_colormap1();
+//     bind_colormap1();
+    // rebuild if needed
+    build_colormap1(cmap1_array_, cmap1_tex_, cmap1_dirty_, alpha_dirty_);
+    bind_colormap1(cmap1_tex_);
   }
   
   //--------------------------------------------------------------------------
@@ -432,6 +452,419 @@ VolumeRenderer::draw_volume()
   }
   tex_->unlock_bricks();
 #endif
+}
+
+void
+VolumeRenderer::multi_level_draw()
+{
+
+  // all temporary ************************
+  vector< cmap_data* > cmaps; //(  tex_->nlevels() );
+  for(int i = 0; i < tex_->nlevels(); i++ ){
+    cmaps.push_back( new cmap_data );
+  }
+  // ***************************************
+  tex_->lock_bricks();  
+
+    
+  Ray view_ray = compute_view();
+  vector<TextureBrick*> bricks;
+  tex_->get_sorted_bricks(bricks, view_ray, 0);
+  int levels = tex_->nlevels();
+
+  // set interactive mode
+  if(adaptive_ &&
+     ((cmap2_.get_rep() && cmap2_->updating()) || di_->mouse_action))
+    set_interactive_mode(true);
+  else
+    set_interactive_mode(false);
+  
+  // set sampling rate based on interaction.
+  double rate = imode_ ? irate_ : sampling_rate_;
+
+  Vector diag = tex_->bbox().diagonal();
+  Vector cell_diag(diag.x()/(tex_->nx()*pow(2.0,levels-1)),
+		   diag.y()/(tex_->ny()*pow(2.0,levels-1)),
+		   diag.z()/(tex_->nz()*pow(2.0,levels-1)));
+  
+  double dt = cell_diag.length()/rate;
+//   cerr<<"dt = "<<dt<<"\n";
+  int num_slices = (int)(diag.length()/dt);
+  
+//    Array1<float> vertex(0, 100, num_slices*6);
+//    Array1<float> texcoord(0, 100, num_slices*6);
+//    Array1<int> size(0, 100, num_slices*6);
+  vector<float> vertex;
+  vector<float> texcoord;
+  vector<int> size;
+  vertex.reserve(num_slices*6);
+  texcoord.reserve(num_slices*6);
+  size.reserve(num_slices*6);
+  //--------------------------------------------------------------------------
+
+  int nc = bricks[0]->nc();
+  int nb0 = bricks[0]->nb(0);
+  bool use_cmap2 = cmap2_.get_rep() && nc == 2;
+  bool use_shading = shading_ && nb0 == 4;
+  GLboolean use_fog = glIsEnabled(GL_FOG);
+  // glGetBooleanv(GL_FOG, &use_fog);
+  GLfloat light_pos[4];
+  glGetLightfv(GL_LIGHT0+light_, GL_POSITION, light_pos);
+  GLfloat clear_color[4];
+  glGetFloatv(GL_COLOR_CLEAR_VALUE, clear_color);
+  int vp[4];
+  glGetIntegerv(GL_VIEWPORT, vp);
+  
+  //--------------------------------------------------------------------------
+  // set up blending
+  
+  int psize[2];
+  psize[0] = NextPowerOf2(vp[2]);
+  psize[1] = NextPowerOf2(vp[3]);
+  
+  if(blend_num_bits_ != 8) {
+    if(!blend_buffer_ || blend_num_bits_ != blend_buffer_->num_color_bits()
+       || psize[0] != blend_buffer_->width()
+       || psize[1] != blend_buffer_->height()) {
+      blend_buffer_ = new Pbuffer(psize[0], psize[1], GL_FLOAT, blend_num_bits_, true,
+				  GL_FALSE, GL_DONT_CARE, 24);
+      if(blend_buffer_->create()) {
+	blend_buffer_->destroy();
+	delete blend_buffer_;
+	blend_buffer_ = 0;
+	blend_num_bits_ = 8;
+	use_blend_buffer_ = false;
+      } else {
+	blend_buffer_->set_use_default_shader(false);
+	blend_buffer_->set_use_texture_matrix(false);
+      }
+    }
+  }
+  
+  if(blend_num_bits_ == 8) {
+    glEnable(GL_BLEND);
+    switch(mode_) {
+    case MODE_OVER:
+      glBlendEquation(GL_FUNC_ADD);
+      glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+      break;
+    case MODE_MIP:
+      glBlendEquation(GL_MAX);
+      glBlendFunc(GL_ONE, GL_ONE);
+      break;
+    default:
+      break;
+    }
+  } else {
+    double mv[16], pr[16];
+    glGetDoublev(GL_MODELVIEW_MATRIX, mv);
+    glGetDoublev(GL_PROJECTION_MATRIX, pr);
+    
+    blend_buffer_->activate();
+    glDrawBuffer(GL_FRONT);
+    float* cc = clear_color;
+    glClearColor(cc[0], cc[1], cc[2], cc[3]);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    blend_buffer_->swapBuffers();
+    
+    glViewport(vp[0], vp[1], vp[2], vp[3]);
+    glMatrixMode(GL_PROJECTION);
+    glLoadMatrixd(pr);
+    glMatrixMode(GL_MODELVIEW);
+    glLoadMatrixd(mv);
+  }
+  
+  glColor4f(1.0, 1.0, 1.0, 1.0);
+  glDepthMask(GL_FALSE);
+  
+  //--------------------------------------------------------------------------
+  // load colormap texture
+  if(use_cmap2) {
+    // rebuild if needed
+    build_colormap2();
+    bind_colormap2();
+  } else {
+    // rebuild if needed
+
+    for(int i = 0; i < levels; ++i ){
+      build_colormap1( cmaps[levels - i - 1]->data_,
+		       cmaps[levels - i - 1]->tex_id_,
+		       cmaps[levels - i - 1]->dirty_,
+		       cmaps[levels - i - 1]->alpha_dirty_,
+		       double( invert_opacity_  ? 
+			       tan(1.570796327 * 
+				   (0.5 - level_alpha_[levels - i - 1])*
+				   0.49999) : i ));;
+//        bind_colormap1( cmaps[levels -1 -1]->tex_id_ );
+    }
+//      build_colormap1(cmap1_array_, cmap1_tex_, cmap1_dirty_, alpha_dirty_);
+//      //      
+//      bind_colormap1( cmap1_tex_ );
+
+  }
+  
+  //--------------------------------------------------------------------------
+  // enable data texture unit 0
+  glActiveTexture(GL_TEXTURE0_ARB);
+  glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+  glEnable(GL_TEXTURE_3D);
+
+  //--------------------------------------------------------------------------
+  // set up shaders
+  FragmentProgramARB* shader = 0;
+  int blend_mode = 0;
+  if(blend_num_bits_ != 8) {
+    if(mode_ == MODE_OVER) {
+      if(blend_buffer_->need_shader()) {
+	blend_mode = 1;
+      } else {
+	blend_mode = 3;
+      }
+    } else {
+      if(blend_buffer_->need_shader()) {
+	blend_mode = 2;
+      } else {
+	blend_mode = 4;
+      }
+    }
+  }
+  shader = vol_shader_factory_->shader(use_cmap2 ? 2 : 1, nb0, use_shading, false,
+				       use_fog, blend_mode);
+  if(shader) {
+    if(!shader->valid()) {
+      shader->create();
+    }
+    shader->bind();
+  }
+  
+  if(use_shading) {
+    // set shader parameters
+    Vector l(light_pos[0], light_pos[1], light_pos[2]);
+    //cerr << "LIGHTING: " << pos << endl;
+    double m[16];
+    glGetDoublev(GL_MODELVIEW_MATRIX, m);
+    Transform mv;
+    mv.set_trans(m);
+    Transform t = tex_->transform();
+    l = mv.unproject(l);
+    l = t.unproject(l);
+    shader->setLocalParam(0, l.x(), l.y(), l.z(), 1.0);
+    shader->setLocalParam(1, ambient_, diffuse_, specular_, shine_);
+  }
+  
+  //-------------------------------------------------------------------------
+  // set up stenciling
+  if(use_stencil_){
+//     cerr<<"Using Stencil\n";
+    glClearStencil(0);
+    glStencilMask(1);
+    glStencilFunc(GL_EQUAL, 0, 1);
+    glStencilOp(GL_KEEP, GL_KEEP,GL_INCR);
+    glEnable(GL_STENCIL_TEST);
+  } 
+
+  //--------------------------------------------------------------------------
+  // render bricks
+  
+  // set up transform
+  Transform tform = tex_->transform();
+  double mvmat[16];
+  tform.get_trans(mvmat);
+  glMatrixMode(GL_MODELVIEW);
+  glPushMatrix();
+  glMultMatrixd(mvmat);
+  
+  Point corner[8];
+  BBox bbox = tex_->bbox();
+  corner[0] = bbox.min();
+  corner[1] = Point(bbox.min().x(), bbox.min().y(), bbox.max().z());
+  corner[2] = Point(bbox.min().x(), bbox.max().y(), bbox.min().z());
+  corner[3] = Point(bbox.min().x(), bbox.max().y(), bbox.max().z());
+  corner[4] = Point(bbox.max().x(), bbox.min().y(), bbox.min().z());
+  corner[5] = Point(bbox.max().x(), bbox.min().y(), bbox.max().z());
+  corner[6] = Point(bbox.max().x(), bbox.max().y(), bbox.min().z());
+  corner[7] = bbox.max();
+  double ts[8];
+  for(unsigned int i = 0; i < 8; i++) {
+    ts[i] = Dot(corner[i]-view_ray.origin(), view_ray.direction());
+  }
+  Sort(ts, 8);
+  double tmin = (floor(ts[0]/dt) + 1)*dt;
+  double tmax = floor(ts[7]/dt)*dt;
+  int count = 1;
+  int reset_val = (int)(pow(2.0, levels - 1));
+//   cerr<<"tmin = "<<tmin<<", tmax = "<<tmax<<"\n";
+
+  vector<vector<TextureBrick *> > blevels;
+  blevels.resize(levels);
+  for(int i = levels - 1; i >= 0;  --i ){
+    tex_->get_sorted_bricks(blevels[levels - (i + 1)], view_ray, i);
+//  //      vector<TextureBrick*>& lbricks = blevels[levels - (i + 1)];
+//      lbricks.resize(0);
+//      int bsize = bricks.size();
+//      for(unsigned int j = 0; j < bsize ; j++ ){
+//        lbricks.push_back( bricks[j] );
+//      }
+  }
+
+
+  for(double t = tmax ; t >= tmin; t -= dt){
+    if( use_stencil_){
+      glStencilMask(~0);
+      glClear(GL_STENCIL_BUFFER_BIT);
+      glStencilMask(1);
+    }
+//      int i = 2;
+
+    for(unsigned int i = 0; i < levels; ++i ){
+      if( !draw_level_[i] ) continue;
+      if( i > 0 ){
+	bool go_on = false;
+	int k = i;
+	while( k < levels ){
+	  int draw_level = int(pow(2.0, k));
+//    	  cerr<<"count = "<<count<<", draw_level = "<<draw_level<<"\n";
+	  if( count < draw_level ){
+	    break;
+	  } else if( count == draw_level ) {
+	    go_on = true;
+	    break;
+	  } else {
+	    ++k;
+	  }
+	}
+
+	if( !go_on ){
+	  // cerr<<"Not drawing level "<<i<<", t = "<<t<<"\n";
+	  break;
+	} 
+//  else if( count == reset_val ){
+//  	  count = 0;
+	  
+//  	}
+      }
+     
+//        tex_->get_sorted_bricks(bricks, view_ray, levels -i -1);
+      bind_colormap1( cmaps[i]->tex_id_ );
+      vector<TextureBrick*>& bs  = blevels[i];
+      for(unsigned int j =0; j < bs.size(); j++) {
+	TextureBrick* b = bs[j];
+	vertex.resize(0);
+	texcoord.resize(0);
+	size.resize(0);
+	b->compute_polygon( view_ray, t, vertex, texcoord, size);
+	if( vertex.size() == 0 ) {
+	  //cerr<<"skipping not inside brick "<<j<<" level "<<i<<"\n";
+	  continue;
+	}
+//    	cerr<<"drawing poly at level "<<i<<" with count = "<<count<<"\n";
+	load_brick(b);
+	draw_polygons(vertex, texcoord, size, false, use_fog,
+		      blend_num_bits_ > 8 ? blend_buffer_ : 0);
+      }
+      release_colormap1();
+    }
+    if( count == reset_val ) count = 0;
+    ++count;
+  }
+  //________________________________________________________________________
+  // undo transform
+  glPopMatrix();
+  
+  //-------------------------------------------------------------------------
+  // turn off stenciling
+  if(use_stencil_)
+    glDisable(GL_STENCIL_TEST);
+
+  glDepthMask(GL_TRUE);
+
+  
+  //--------------------------------------------------------------------------
+  // release shader
+
+  if(shader && shader->valid())
+    shader->release();
+  
+  //--------------------------------------------------------------------------
+  // release textures
+  if(use_cmap2) {
+    release_colormap2();
+  } else {
+    release_colormap1();
+  }
+  glActiveTexture(GL_TEXTURE0_ARB);
+  glDisable(GL_TEXTURE_3D);
+  glBindTexture(GL_TEXTURE_3D, 0);
+
+  //--------------------------------------------------------------------------
+
+  if(blend_num_bits_ == 8) {
+    glDisable(GL_BLEND);
+  } else {
+    blend_buffer_->deactivate();
+    blend_buffer_->set_use_default_shader(true);
+
+    glMatrixMode(GL_PROJECTION);
+    glPushMatrix();
+    glLoadIdentity();
+    glMatrixMode(GL_MODELVIEW);
+    glPushMatrix();
+    glLoadIdentity();
+    glTranslatef(-1.0, -1.0, 0.0);
+    glScalef(2.0, 2.0, 2.0);
+
+    GLboolean depth_test = glIsEnabled(GL_DEPTH_TEST);
+    GLboolean lighting = glIsEnabled(GL_LIGHTING);
+    GLboolean cull_face = glIsEnabled(GL_CULL_FACE);
+    
+    glDisable(GL_DEPTH_TEST);
+    glDisable(GL_LIGHTING);
+    glDisable(GL_CULL_FACE);
+    
+    glActiveTexture(GL_TEXTURE0);
+    glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+    blend_buffer_->bind(GL_FRONT);
+
+    glBegin(GL_QUADS);
+    {
+      glTexCoord2f(0.0,  0.0);
+      glVertex2f( 0.0,  0.0);
+      glTexCoord2f(vp[2],  0.0);
+      glVertex2f( 1.0,  0.0);
+      glTexCoord2f(vp[2],  vp[3]);
+      glVertex2f( 1.0,  1.0);
+      glTexCoord2f( 0.0,  vp[3]);
+      glVertex2f( 0.0,  1.0);
+    }
+    glEnd();
+    
+    blend_buffer_->release(GL_FRONT);
+
+    if(depth_test) glEnable(GL_DEPTH_TEST);
+    if(lighting) glEnable(GL_LIGHTING);
+    if(cull_face) glEnable(GL_CULL_FACE);
+    
+    glMatrixMode(GL_PROJECTION);
+    glPopMatrix();
+    glMatrixMode(GL_MODELVIEW);
+    glPopMatrix();
+
+    blend_buffer_->set_use_default_shader(false);
+  }
+ 
+
+  vector< cmap_data* >::iterator it =  cmaps.begin(); //(  tex_->nlevels() );
+  for(; it != cmaps.end(); ++it){
+    delete *it;
+  }
+
+  // Look for errors
+  GLenum errcode;
+  if((errcode=glGetError()) != GL_NO_ERROR) {
+    cerr << "VolumeRenderer::end | "
+         << (char*)gluErrorString(errcode) << "\n";
+  }
+  tex_->unlock_bricks();
 }
 
 void
