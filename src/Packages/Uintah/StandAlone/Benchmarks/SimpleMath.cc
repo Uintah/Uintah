@@ -21,6 +21,17 @@ using namespace std;
 
 const long SIZE_DEFAULT = 400;
 
+void usage ( void )
+{
+  cerr << "Usage: SimpleMath <size>" << endl;
+  cerr << endl;
+  cerr << "  <size>    This must be a number greater than zero." << endl;
+  cerr << endl;
+  cerr << "  This program will perform the operation 'result = a*x+b'" << endl;
+  cerr << "  <size> cubed times using Uintah data structures and" << endl;
+  cerr << "  calculate the MFLOPS achieved." << endl;
+}
+
 int main ( int argc, char** argv )
 {
   long size = SIZE_DEFAULT;
@@ -32,9 +43,13 @@ int main ( int argc, char** argv )
      size = strtol( argv[1], (char**)NULL, 10 );
 
      if (size <= 0) {
-       cerr << "Invalid size, using default." << endl;
-       size = SIZE_DEFAULT;
+       usage();
+       return EXIT_FAILURE;
      }
+  }
+  else {
+    usage();
+    return EXIT_FAILURE;
   }
 
   cout << "Simple Math Benchmark: Using size of " << size << endl;
@@ -59,8 +74,10 @@ int main ( int argc, char** argv )
     result[*iter] = a[*iter] * x[*iter] + b[*iter];
 
   double deltaTime = Time::currentSeconds() - startTime;
+  double megaFlops = (size * size * size * 2.0) / 1000000.0 / deltaTime;
 
-  cout << "Completed in " << deltaTime << " seconds." << endl;
+  cout << "Completed in " << deltaTime << " seconds.";
+  cout << " (" << megaFlops << " MFLOPS)" << endl;
 
   return EXIT_SUCCESS;
 }
