@@ -74,7 +74,7 @@ class VarLabel;
     // to store a list of the subpatches in sorted order
     class IntVectorCompare {
     public:
-      bool operator() (const IntVector &a, const IntVector& b)
+      bool operator() (const IntVector &a, const IntVector& b) const
       {
         // we want to sort IntVectors by x first then y then z
         if (a.x() < b.x())
