@@ -187,6 +187,7 @@ class Configuration < ConfHash
   ToolsPath = "toolspath"
   ClassPath = "classpath"
   Stylesheet_XSL_HTML = "stylesheet_XSL_HTML"
+  Stylesheet_XSL_Print = "stylesheet_XSL_Print"
   Stylesheet_DSSSL_Print = "stylesheet_DSSSL_Print"
   XML_DCL = "XML_DCL"
   Catalog = "catalog"
@@ -288,6 +289,8 @@ class Configuration < ConfHash
     errorIfNotString(ClassPath)
     errorIfMissing(Stylesheet_XSL_HTML)
     errorIfNotString(Stylesheet_XSL_HTML)
+    errorIfMissing(Stylesheet_XSL_Print)
+    errorIfNotString(Stylesheet_XSL_Print)
     errorIfMissing(Stylesheet_DSSSL_Print)
     errorIfNotString(Stylesheet_DSSSL_Print)
     errorIfMissing(XML_DCL)
@@ -384,8 +387,7 @@ class Docs
     ENV["PATH"] = ENV["PATH"] + ":" + @conf[Configuration::ToolsPath]
     ENV["CLASSPATH"] = @conf[Configuration::ClassPath]
     ENV["STYLESHEET_XSL_HTML"] = @conf[Configuration::Stylesheet_XSL_HTML]
-    # Next one is for compatibility with 1.10.1 and earlier docs.
-    ENV["STYLESHEET_PATH"] = ENV["STYLESHEET_XSL_HTML"]
+    ENV["STYLESHEET_XSL_PRINT"] = @conf[Configuration::Stylesheet_XSL_Print]
     ENV["STYLESHEET_DSSSL_PRINT"] = @conf[Configuration::Stylesheet_DSSSL_Print]
     ENV["XML_DCL"] = @conf[Configuration::XML_DCL]
     ENV["CATALOG"] = @conf[Configuration::Catalog]
