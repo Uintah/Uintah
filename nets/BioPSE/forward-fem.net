@@ -53,25 +53,25 @@ set runDate " Tue  Mar 13 2001"
 global runTime
 set runTime " 0:22:14"
 
-set m0 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 6 4]
-set m1 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 371 5]
-set m2 [addModuleAtPosition "BioPSE" "Forward" "SetupFEMatrix" 24 154]
-set m3 [addModuleAtPosition "BioPSE" "Forward" "ApplyFEMCurrentSource" 181 149]
-set m4 [addModuleAtPosition "SCIRun" "Math" "SolveMatrix" 24 228]
-set m5 [addModuleAtPosition "BioPSE" "Visualization" "ShowDipoles" 371 70]
-set m6 [addModuleAtPosition "SCIRun" "Fields" "ManageFieldData" 6 296]
-set m7 [addModuleAtPosition "SCIRun" "Visualization" "Isosurface" 238 375]
-set m8 [addModuleAtPosition "SCIRun" "Fields" "Gradient" 6 373]
-set m9 [addModuleAtPosition "SCIRun" "Fields" "SeedField" 24 453]
-set m10 [addModuleAtPosition "SCIRun" "Visualization" "StreamLines" 6 519]
-set m11 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 175 601]
-set m12 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 193 213]
-set m13 [addModuleAtPosition "SCIRun" "Render" "Viewer" 335 690]
-set m14 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 535 84]
-set m15 [addModuleAtPosition "SCIRun" "Fields" "BuildInterpolant" 517 200]
-set m16 [addModuleAtPosition "SCIRun" "Fields" "ApplyInterpolant" 499 293]
-set m17 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 499 388]
-set m18 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 193 285]
+set m0 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 91 8]
+set m1 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 401 3]
+set m2 [addModuleAtPosition "BioPSE" "Forward" "SetupFEMatrix" 148 168]
+set m3 [addModuleAtPosition "BioPSE" "Forward" "ApplyFEMCurrentSource" 307 168]
+set m4 [addModuleAtPosition "SCIRun" "Math" "SolveMatrix" 148 281]
+set m5 [addModuleAtPosition "BioPSE" "Visualization" "ShowDipoles" 401 69]
+set m6 [addModuleAtPosition "SCIRun" "Fields" "ManageFieldData" 91 360]
+set m7 [addModuleAtPosition "SCIRun" "Visualization" "Isosurface" 294 462]
+set m8 [addModuleAtPosition "SCIRun" "Fields" "Gradient" 91 448]
+set m9 [addModuleAtPosition "SCIRun" "Fields" "SeedField" 91 525]
+set m10 [addModuleAtPosition "SCIRun" "Visualization" "StreamLines" 92 610]
+set m11 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 294 700]
+set m12 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 312 264]
+set m13 [addModuleAtPosition "SCIRun" "Render" "Viewer" 498 779]
+set m14 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 558 70]
+set m15 [addModuleAtPosition "SCIRun" "Fields" "BuildInterpolant" 540 169]
+set m16 [addModuleAtPosition "SCIRun" "Fields" "ApplyInterpolant" 522 253]
+set m17 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 522 365]
+set m18 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 312 363]
 
 addConnection $m0 0 $m3 0
 addConnection $m0 0 $m2 0
@@ -178,5 +178,6 @@ set $m18-min -0.254406
 set $m18-max 1.22203
 $m4 ui
 $m7 ui
+
 
 ::netedit scheduleok
