@@ -20,18 +20,22 @@
 #include <iostream.h>
 #include <values.h>
 
-static AVLTree<clString, make_Renderer>* known_renderers=0;
+static AVLTree<clString, RegisterRenderer*>* known_renderers=0;
+static int db_trimmed=0;
 
 RegisterRenderer::RegisterRenderer(const clString& name,
+				   query_Renderer query,
 				   make_Renderer maker)
+: name(name), query(query), maker(maker)
 {
-    make_Renderer tmp;
+    RegisterRenderer* tmp;
     if(!known_renderers)
-	known_renderers=new AVLTree<clString, make_Renderer>;
+	known_renderers=new AVLTree<clString, RegisterRenderer*>;
     if(known_renderers->lookup(name, tmp)){
 	cerr << "Error: Two renderers of the same name!" << endl;
     } else {
-	known_renderers->insert(name, maker);
+	RegisterRenderer* that=this;
+	known_renderers->insert(name, that);
     }
 }
 
@@ -41,16 +45,28 @@ RegisterRenderer::~RegisterRenderer()
 
 Renderer* Renderer::create(const clString& type)
 {
-    make_Renderer maker;
-    if(known_renderers->lookup(type, maker)){
+    RegisterRenderer* rr;
+    if(known_renderers->lookup(type, rr)){
+	make_Renderer maker=rr->maker;
 	return (*maker)();
     } else {
 	return 0;
     }
 }
 
-AVLTree<clString, make_Renderer>* Renderer::get_db()
+AVLTree<clString, RegisterRenderer*>* Renderer::get_db()
 {
+    if(!db_trimmed){
+	AVLTreeIter<clString, RegisterRenderer*> iter(known_renderers);
+	for(iter.first();iter.ok();++iter){
+	    query_Renderer query=iter.get_data()->query;
+	    if(! (*query)()){
+		// This renderer is not supported, remove it...
+		known_renderers->remove(iter);
+	    }
+	}
+	db_trimmed=1;
+    }
     return known_renderers;
 }
 

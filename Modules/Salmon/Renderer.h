@@ -15,6 +15,7 @@
 
 #include <Classlib/AVLTree.h>
 #include <Classlib/String.h>
+class Color;
 class GeomObj;
 class GeomPick;
 class Renderer;
@@ -23,19 +24,23 @@ class Salmon;
 class View;
 
 typedef Renderer* (*make_Renderer)();
+typedef int (*query_Renderer)();
+class RegisterRenderer;
 
 class Renderer {
 public:
     static Renderer* create(const clString& type);
-    static AVLTree<clString, make_Renderer>* get_db();
+    static AVLTree<clString, RegisterRenderer*>* get_db();
 
-    virtual clString create_window(const clString& name,
+    virtual clString create_window(Roe* roe,
+				   const clString& name,
 				   const clString& width,
 				   const clString& height)=0;
     virtual void redraw(Salmon*, Roe*)=0;
     virtual void get_pick(Salmon*, Roe*, int x, int y,
 			  GeomObj*&, GeomPick*&)=0;
     virtual void hide()=0;
+    virtual void put_scanline(int y, int width, Color* scanline, int repeat=1)=0;
 
     int compute_depth(Roe* roe, const View& view, double& near, double& far);
 
@@ -44,7 +49,11 @@ public:
 
 class RegisterRenderer {
 public:
-    RegisterRenderer(const clString& name, make_Renderer maker);
+    clString name;
+    query_Renderer query;
+    make_Renderer maker;
+    RegisterRenderer(const clString& name, query_Renderer tester,
+		     make_Renderer maker);
     ~RegisterRenderer();
 };
 
