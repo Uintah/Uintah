@@ -776,16 +776,8 @@ ScaledBoxWidget::get_clipper()
   GetPosition(center, right, down, in);
 
   // Rotate * Scale * Translate.
-  Transform t, r;
-  Point unused;
-  t.load_identity();
-  r.load_frame(unused, (right-center).normal(),
-	       (down-center).normal(),
-	       (in-center).normal());
-  t.pre_trans(r);
-  t.pre_scale(Vector((right-center).length(),
-		     (down-center).length(),
-		     (in-center).length()));
+  Transform t;
+  t.load_frame(center, (right-center), (down-center), (in-center));
   t.pre_translate(Vector(center.x(), center.y(), center.z()));
   t.invert();
 
