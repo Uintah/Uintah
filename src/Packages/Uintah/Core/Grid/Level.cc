@@ -8,6 +8,7 @@
 #include <Core/Util/FancyAssert.h>
 #include <iostream>
 #include <Dataflow/XMLUtil/XMLUtil.h>
+#include <Core/Util/NotFinished.h>
 
 #include <algorithm>
 #include <map>
@@ -25,10 +26,12 @@ Level::Level(Grid* grid, const Point& anchor, const Vector& dcell)
    : grid(grid), d_anchor(anchor), d_dcell(dcell),
      d_patchDistribution(-1,-1,-1)
 {
+  each_patch=0;
+  all_patches=0;
 #ifdef SELECT_RANGETREE
-   d_rangeTree = NULL;
+  d_rangeTree = NULL;
 #endif
-   d_finalized=false;
+  d_finalized=false;
 }
 
 Level::~Level()
@@ -37,9 +40,16 @@ Level::~Level()
   for(patchIterator iter=d_patches.begin(); iter != d_patches.end(); iter++)
     delete *iter;
 
+  for(int i=0;i<(int)allbcs.size();i++)
+    delete allbcs[i];
+
 #ifdef SELECT_RANGETREE
   delete d_rangeTree;
-#endif 
+#endif
+  if(each_patch && each_patch->removeReference())
+    delete each_patch;
+  if(all_patches && all_patches->removeReference())
+    delete all_patches;
 }
 
 void Level::setPatchDistributionHint(const IntVector& hint)
@@ -281,6 +291,18 @@ bool Level::containsPoint(const Point& p) const
 
 void Level::finalizeLevel()
 {
+  each_patch = scinew PatchSet();
+  each_patch->addReference();
+
+  // The compute set requires an array const Patch*, we must copy d_patches
+  vector<const Patch*> tmp_patches(d_patches.size());
+  for(int i=0;i<(int)d_patches.size();i++)
+    tmp_patches[i]=d_patches[i];
+  each_patch->addEach(tmp_patches);
+  all_patches = scinew PatchSet();
+  all_patches->addReference();
+  all_patches->addAll(tmp_patches);
+
 #ifdef SELECT_GRID
    if(d_patchDistribution.x() >= 0 && d_patchDistribution.y() >= 0 &&
       d_patchDistribution.z() >= 0){
@@ -395,6 +417,8 @@ void Level::assignBCS(const ProblemSpecP& grid_ps)
 
     vector<BoundCondBase*> bcs;
     BoundCondFactory::create(face_ps,bcs);
+    for(int i=0;i<(int)bcs.size();i++)
+      allbcs.push_back(bcs[i]);
 
     for(patchIterator iter=d_patches.begin(); iter != d_patches.end(); 
 	iter++){
@@ -413,4 +437,24 @@ void Level::assignBCS(const ProblemSpecP& grid_ps)
 Box Level::getBox(const IntVector& l, const IntVector& h) const
 {
    return Box(getNodePosition(l), getNodePosition(h));
+}
+
+const PatchSet* Level::eachPatch() const
+{
+  ASSERT(each_patch != 0);
+  return each_patch;
+}
+
+const PatchSet* Level::allPatches() const
+{
+  ASSERT(all_patches != 0);
+  return all_patches;
+}
+
+const Patch* Level::selectPatch( const IntVector& idx) const
+{
+  selectType pv;
+  selectPatches(idx,idx,pv);
+  // may need to check if pv is empty
+  return pv[0];
 }

@@ -13,6 +13,7 @@
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
 #include <Packages/Uintah/Core/Grid/fixedvector.h>
+#include <Packages/Uintah/Core/Grid/ComputeSet.h>
 
 #include <string>
 #include <vector>
@@ -27,6 +28,7 @@ class PatchRangeTree;
   
 using namespace SCIRun;
 
+  class BoundCondBase;
 class Patch;
 class Task;
    
@@ -122,20 +124,18 @@ WARNING
       void selectPatches(const IntVector&, const IntVector&,
 			 selectType&) const;
 
-      const Patch* selectPatch( const IntVector& idx) const
-      {
-	selectType pv;
-	selectPatches(idx,idx,pv);
-	// may need to check if pv is empty
-	return pv[0];
-      }
-
       bool containsPoint(const Point&) const;
+
+      const PatchSet* eachPatch() const;
+      const PatchSet* allPatches() const;
+      const Patch* selectPatch( const IntVector& idx) const;
    private:
       Level(const Level&);
       Level& operator=(const Level&);
       
       std::vector<Patch*> d_patches;
+
+     std::vector<BoundCondBase*> allbcs;
      
       Grid* grid;
       Point d_anchor;
@@ -144,6 +144,9 @@ WARNING
       IntVector d_idxLow;
       IntVector d_idxHigh;
       IntVector d_patchDistribution;
+
+      PatchSet* each_patch;
+      PatchSet* all_patches;
 
 #ifdef SELECT_GRID
       IntVector d_idxLow;
