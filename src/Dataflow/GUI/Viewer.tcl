@@ -30,11 +30,12 @@ itcl_class SCIRun_Render_Viewer {
     inherit Module
 
     # List of ViewWindows that are children of this Viewer
-    protected openViewersList
+    protected openViewersList ""
 
     constructor {config} {
 	set name Viewer
-	set_defaults
+	set make_progress_graph 0
+	set make_time 0
     }
 
     destructor {
@@ -44,14 +45,7 @@ itcl_class SCIRun_Render_Viewer {
     }
 
     method number {} {
-	set parts [split $this _]
-	return [expr 1+[lindex $parts end]]
-    }
-
-    method set_defaults {} {
-	set make_progress_graph 0
-	set make_time 0
-	set openViewersList ""
+	return [lindex [split $this _] end]
     }
 
     method makeViewWindowID {} {
@@ -64,11 +58,15 @@ itcl_class SCIRun_Render_Viewer {
 	return $id
     }
 
-    method addViewer {} {
+    method addViewer { { old_vw "" } } {
 	set rid [makeViewWindowID]
 	$this-c addviewwindow $rid
 	ViewWindow $rid -viewer $this 
 	lappend openViewersList $rid
+	if { [string length $old_vw] } { ;# set view to same view as old_vw
+	    set $rid-pos ViewWindow[$old_vw number]
+	    $rid-c Views
+	}
 	return $rid
     }
 
@@ -77,35 +75,6 @@ itcl_class SCIRun_Render_Viewer {
 	listFindAndRemove openViewersList $rid
 	destroy .ui[$rid modname]
 	$rid delete
-    }
-
-    method duplicateViewer {old_vw} {
-	# Button "New Viewer" was pressed.
-	# Create a new viewer with the same eyep, lookat, up and fov.
-	set rid [$this addViewer]
-
-	# Use position of previous viewer if not the first one
-	set new_id [lindex [split $rid _] end]
-	set old_id [lindex [split $old_vw _] end]
-
-	set new_win $this-ViewWindow_$new_id
-	set old_win $this-ViewWindow_$old_id
-
-	setGlobal $new_win-view-eyep-x [set $old_win-view-eyep-x]
-	setGlobal $new_win-view-eyep-y [set $old_win-view-eyep-y]
-	setGlobal $new_win-view-eyep-z [set $old_win-view-eyep-z]
-
-	setGlobal $new_win-view-lookat-x [set $old_win-view-lookat-x]
-	setGlobal $new_win-view-lookat-y [set $old_win-view-lookat-y]
-	setGlobal $new_win-view-lookat-z [set $old_win-view-lookat-z]
-
-	setGlobal $new_win-view-up-x [set $old_win-view-up-x]
-	setGlobal $new_win-view-up-y [set $old_win-view-up-y]
-	setGlobal $new_win-view-up-z [set $old_win-view-up-z]
-
-	setGlobal $new_win-view-fov [set $old_win-view-fov]
-
-	$new_win-c redraw
     }
     
     method ui {} {
@@ -120,22 +89,28 @@ itcl_class SCIRun_Render_Viewer {
 
     method ui_embedded {} {
 	set rid [makeViewWindowID]
+	$this-c addviewwindow $rid
+	BaseViewWindow $rid -viewer $this
 	lappend openViewersList $rid
-	return [EmbeddedViewWindow $rid -viewer $this]
+	return $rid
     }
 }
 
 
 
-itcl_class ViewWindow {
-    public viewer
-    
-    # parameters to hold current state of detachable part
-    protected IsAttached 
-    protected IsDisplayed
-    # hold names of detached and attached windows
-    protected detachedFr
-    protected attachedFr
+itcl_class BaseViewWindow {
+    protected renderWindow ""
+    public viewer ""
+
+    constructor {config} {
+	set_defaults
+    }
+
+    destructor {
+	if { [winfo exists $renderWindow] } {
+	    destroy $renderWindow
+	}
+    }
 
     method modname {} {
 	return [string trimleft $this :]
@@ -143,7 +118,7 @@ itcl_class ViewWindow {
 
     method number {} {
 	set parts [split $this _]
-	return [expr 1+[lindex $parts end]]
+	return [lindex $parts end]
     }
 
     method set_defaults {} {
@@ -183,10 +158,6 @@ itcl_class ViewWindow {
 	initGlobal $this-global-light1 0
 	initGlobal $this-global-light2 0
 	initGlobal $this-global-light3 0
-	trace variable $this-global-light0 w "$this traceLight 0"
-	trace variable $this-global-light1 w "$this traceLight 1"
-	trace variable $this-global-light2 w "$this traceLight 2"
-	trace variable $this-global-light3 w "$this traceLight 3"
 	initGlobal $this-lightVectors \
 	    {{ 0 0 1 } { 0 0 1 } { 0 0 1 } { 0 0 1 }}
 	initGlobal $this-lightColors \
@@ -204,9 +175,6 @@ itcl_class ViewWindow {
 	initGlobal $this-currentvisual 0
 
 	initGlobal $this-trackViewWindow0 1
-
-	initGlobal $this-geometry [wm geometry .ui[modname]]
-	trace variable $this-geometry w "$this traceGeom"
 
         # CollabVis code begin
         if { [set $this-have_collab_vis] } {
@@ -233,6 +201,148 @@ itcl_class ViewWindow {
 	setGlobal $this-currentvisualhelper 0
     }
 
+    method bindEvents {w} {
+	bind $w <Expose> "$this-c redraw"
+	bind $w <Configure> "$this-c redraw"
+
+	bind $w <ButtonPress-1> "$this-c mtranslate start %x %y"
+	bind $w <Button1-Motion> "$this-c mtranslate move %x %y"
+	bind $w <ButtonRelease-1> "$this-c mtranslate end %x %y"
+	bind $w <ButtonPress-2> "$this-c mrotate start %x %y %t"
+	bind $w <Button2-Motion> "$this-c mrotate move %x %y %t"
+	bind $w <ButtonRelease-2> "$this-c mrotate end %x %y %t"
+	bind $w <ButtonPress-3> "$this-c mscale start %x %y"
+	bind $w <Button3-Motion> "$this-c mscale move %x %y"
+	bind $w <ButtonRelease-3> "$this-c mscale end %x %y"
+
+	bind $w <Control-ButtonPress-1> "$this-c mdolly start %x %y"
+	bind $w <Control-Button1-Motion> "$this-c mdolly move %x %y"
+	bind $w <Control-ButtonRelease-1> "$this-c mdolly end %x %y"
+	bind $w <Control-ButtonPress-2> "$this-c mrotate_eyep start %x %y %t"
+	bind $w <Control-Button2-Motion> "$this-c mrotate_eyep move %x %y %t"
+	bind $w <Control-ButtonRelease-2> "$this-c mrotate_eyep end %x %y %t"
+	bind $w <Control-ButtonPress-3> "$this-c municam start %x %y %t"
+	bind $w <Control-Button3-Motion> "$this-c municam move %x %y %t"
+	bind $w <Control-ButtonRelease-3> "$this-c municam end %x %y %t"
+
+	bind $w <Shift-ButtonPress-1> "$this-c mpick start %x %y %s %b"
+	bind $w <Shift-ButtonPress-2> "$this-c mpick start %x %y %s %b"
+	bind $w <Shift-ButtonPress-3> "$this-c mpick start %x %y %s %b"
+	bind $w <Shift-Button1-Motion> "$this-c mpick move %x %y %s 1"
+	bind $w <Shift-Button2-Motion> "$this-c mpick move %x %y %s 2"
+	bind $w <Shift-Button3-Motion> "$this-c mpick move %x %y %s 3"
+	bind $w <Shift-ButtonRelease-1> "$this-c mpick end %x %y %s %b"
+	bind $w <Shift-ButtonRelease-2> "$this-c mpick end %x %y %s %b"
+	bind $w <Shift-ButtonRelease-3> "$this-c mpick end %x %y %s %b"
+	bind $w <Lock-ButtonPress-1> "$this-c mpick start %x %y %s %b"
+	bind $w <Lock-ButtonPress-2> "$this-c mpick start %x %y %s %b"
+	bind $w <Lock-ButtonPress-3> "$this-c mpick start %x %y %s %b"
+	bind $w <Lock-Button1-Motion> "$this-c mpick move %x %y %s 1"
+	bind $w <Lock-Button2-Motion> "$this-c mpick move %x %y %s 2"
+	bind $w <Lock-Button3-Motion> "$this-c mpick move %x %y %s 3"
+	bind $w <Lock-ButtonRelease-1> "$this-c mpick end %x %y %s %b"
+	bind $w <Lock-ButtonRelease-2> "$this-c mpick end %x %y %s %b"
+	bind $w <Lock-ButtonRelease-3> "$this-c mpick end %x %y %s %b"
+    }
+
+    method setWindow { w width height } {
+	set renderWindow $w
+	if {[winfo exists $renderWindow]} {
+	    destroy $renderWindow
+	}
+	$this-c listvisuals .standalone
+	$this-c switchvisual $renderWindow 0 $width $height
+	bindEvents $renderWindow
+	$this-c startup
+    }
+
+    method addObject {objid name} {
+	setGlobal "$this-$objid-type" Default
+	setGlobal "$this-$objid-light" 1
+	setGlobal "$this-$objid-fog" 0
+	setGlobal "$this-$objid-debug" 0
+	setGlobal "$this-$objid-clip" 1
+	setGlobal "$this-$objid-cull" 0
+	setGlobal "$this-$objid-dl" 0
+    }
+
+	
+    method makeSaveImagePopup {} {
+	upvar \#0 $this-resx resx $this-resy resy
+	set resx [winfo width $renderWindow]
+	set resy [winfo height $renderWindow]
+	
+	set w .ui[modname]-saveImage
+	if {[winfo exists $w]} {
+	    SciRaise $w
+	    return
+        }
+	toplevel $w -class TkFDialog
+
+	set initdir [pwd]
+	set defext "" ;# extension to append if no extension supplied by user
+	set defname "MyImage.ppm" ;# filename to appear initially
+	set title "Save ViewWindow Image"
+
+	# file types to appers in filter box
+	set types {
+	    {{All Files}    {.*}}
+	    {{PPM File}     {.ppm}}
+	    {{Raw File}     {.raw}}
+	}
+	
+	makeSaveFilebox \
+	    -parent $w \
+	    -filevar $this-saveFile \
+	    -command "$this doSaveImage; wm withdraw $w" \
+	    -commandname Save \
+	    -cancel "wm withdraw $w" \
+	    -title $title \
+	    -filetypes $types \
+	    -initialfile $defname \
+	    -initialdir $initdir \
+	    -defaultextension $defext \
+	    -formatvar $this-saveType \
+	    -formats {ppm raw "by_extension"} \
+	    -imgwidth $this-resx \
+	    -imgheight $this-resy
+	moveToCursor $w
+	wm deiconify $w
+    }
+
+    method doSaveImage {} {
+	upvar \#0 $this-saveFile file $this-saveType type
+	upvar \#0 $this-resx resx $this-resy resy
+	$this-c dump_viewwindow $file $type $resx $resy
+	$this-c redraw
+    }
+
+    method updateMode {args} {}
+    method updatePerf {args} {}
+}
+
+
+
+itcl_class ViewWindow {
+    inherit BaseViewWindow
+
+    # parameters to hold current state of detachable part
+    protected IsAttached 1
+    protected IsDisplayed 0
+    # hold names of detached and attached windows
+    protected detachedFr ""
+    protected attachedFr ""
+
+    method set_traces {} {
+	trace variable $this-global-light0 w "$this traceLight 0"
+	trace variable $this-global-light1 w "$this traceLight 1"
+	trace variable $this-global-light2 w "$this traceLight 2"
+	trace variable $this-global-light3 w "$this traceLight 3"
+	
+	initGlobal $this-geometry [wm geometry .ui[modname]]
+	trace variable $this-geometry w "$this traceGeom"
+    }
+
     destructor {
 	destroy .ui[modname]
     }
@@ -247,10 +357,11 @@ itcl_class ViewWindow {
 	wm withdraw $w
 
 	wm protocol $w WM_DELETE_WINDOW "$viewer deleteViewWindow $this"
-	wm title $w "Viewer [$viewer number] Window [number]"
-	wm iconname $w "Viewer [$viewer number] Window [number]"
+	set title "Viewer [expr [$viewer number]+1] Window [expr [number]+1]"
+	wm title $w $title
+	wm iconname $w $title
 	wm minsize $w 100 100
-	set_defaults 
+	set_traces
 
 	frame $w.menu -relief raised -borderwidth 3
 	pack $w.menu -fill x
@@ -302,7 +413,7 @@ itcl_class ViewWindow {
 
 	# New ViewWindow button
 	button $w.menu.newviewer -text "NewViewer" \
-	    -command "$viewer duplicateViewer [modname]" -borderwidth 0
+	    -command "$viewer addViewer [modname]" -borderwidth 0
 	
 	pack $w.menu.file -side left
 	pack $w.menu.edit -side left
@@ -434,50 +545,6 @@ itcl_class ViewWindow {
         }
     }
     # end constructor()
-
-    method bindEvents {w} {
-	bind $w <Expose> "$this-c redraw"
-	bind $w <Configure> "$this-c redraw"
-
-	bind $w <ButtonPress-1> "$this-c mtranslate start %x %y"
-	bind $w <Button1-Motion> "$this-c mtranslate move %x %y"
-	bind $w <ButtonRelease-1> "$this-c mtranslate end %x %y"
-	bind $w <ButtonPress-2> "$this-c mrotate start %x %y %t"
-	bind $w <Button2-Motion> "$this-c mrotate move %x %y %t"
-	bind $w <ButtonRelease-2> "$this-c mrotate end %x %y %t"
-	bind $w <ButtonPress-3> "$this-c mscale start %x %y"
-	bind $w <Button3-Motion> "$this-c mscale move %x %y"
-	bind $w <ButtonRelease-3> "$this-c mscale end %x %y"
-
-	bind $w <Control-ButtonPress-1> "$this-c mdolly start %x %y"
-	bind $w <Control-Button1-Motion> "$this-c mdolly move %x %y"
-	bind $w <Control-ButtonRelease-1> "$this-c mdolly end %x %y"
-	bind $w <Control-ButtonPress-2> "$this-c mrotate_eyep start %x %y %t"
-	bind $w <Control-Button2-Motion> "$this-c mrotate_eyep move %x %y %t"
-	bind $w <Control-ButtonRelease-2> "$this-c mrotate_eyep end %x %y %t"
-	bind $w <Control-ButtonPress-3> "$this-c municam start %x %y %t"
-	bind $w <Control-Button3-Motion> "$this-c municam move %x %y %t"
-	bind $w <Control-ButtonRelease-3> "$this-c municam end %x %y %t"
-
-	bind $w <Shift-ButtonPress-1> "$this-c mpick start %x %y %s %b"
-	bind $w <Shift-ButtonPress-2> "$this-c mpick start %x %y %s %b"
-	bind $w <Shift-ButtonPress-3> "$this-c mpick start %x %y %s %b"
-	bind $w <Shift-Button1-Motion> "$this-c mpick move %x %y %s 1"
-	bind $w <Shift-Button2-Motion> "$this-c mpick move %x %y %s 2"
-	bind $w <Shift-Button3-Motion> "$this-c mpick move %x %y %s 3"
-	bind $w <Shift-ButtonRelease-1> "$this-c mpick end %x %y %s %b"
-	bind $w <Shift-ButtonRelease-2> "$this-c mpick end %x %y %s %b"
-	bind $w <Shift-ButtonRelease-3> "$this-c mpick end %x %y %s %b"
-	bind $w <Lock-ButtonPress-1> "$this-c mpick start %x %y %s %b"
-	bind $w <Lock-ButtonPress-2> "$this-c mpick start %x %y %s %b"
-	bind $w <Lock-ButtonPress-3> "$this-c mpick start %x %y %s %b"
-	bind $w <Lock-Button1-Motion> "$this-c mpick move %x %y %s 1"
-	bind $w <Lock-Button2-Motion> "$this-c mpick move %x %y %s 2"
-	bind $w <Lock-Button3-Motion> "$this-c mpick move %x %y %s 3"
-	bind $w <Lock-ButtonRelease-1> "$this-c mpick end %x %y %s %b"
-	bind $w <Lock-ButtonRelease-2> "$this-c mpick end %x %y %s %b"
-	bind $w <Lock-ButtonRelease-3> "$this-c mpick end %x %y %s %b"
-    }
 
     method create_other_viewers_view_menu { m } {
 	if { [winfo exists $m] } {
@@ -791,13 +858,14 @@ itcl_class ViewWindow {
 
     method switchvisual { idx } {
 	set w .ui[modname]
-	if { [winfo exists $w.wframe.draw] } {
-	    destroy $w.wframe.draw
+	set renderWindow $w.wframe.draw
+	if { [winfo exists $renderWindow] } {
+	    destroy $renderWindow
 	}
-	$this-c switchvisual $w.wframe.draw $idx 640 512
-	if { [winfo exists $w.wframe.draw] } {
-	    bindEvents $w.wframe.draw
-	    pack $w.wframe.draw -expand yes -fill both
+	$this-c switchvisual $renderWindow $idx 640 512
+	if { [winfo exists $renderWindow] } {
+	    bindEvents $renderWindow
+	    pack $renderWindow -expand yes -fill both
 	}
 	upvar \#0 $this-currentvisual visual $this-currentvisualhelper helper
 	set helper $visual
@@ -872,9 +940,9 @@ itcl_class ViewWindow {
     }   
 
     method addObject {objid name} {
+	BaseViewWindow::addObject $objid $name
 	addObjectToFrame $objid $name $detachedFr
-	set msframe [$attachedFr childsite]
-	addObjectToFrame $objid $name $msframe
+	addObjectToFrame $objid $name [$attachedFr childsite]
     }
 
     method addObjectToFrame {objid name frame} {
@@ -920,14 +988,6 @@ itcl_class ViewWindow {
 	$menun add radiobutton -label Gouraud -variable $this-$objid-type \
 	    -command "$this-c redraw"
 
-	setGlobal "$this-$objid-type" Default
-	setGlobal "$this-$objid-light" 1
-	setGlobal "$this-$objid-fog" 0
-	setGlobal "$this-$objid-debug" 0
-	setGlobal "$this-$objid-clip" 1
-	setGlobal "$this-$objid-cull" 0
-	setGlobal "$this-$objid-dl" 0
-
 	pack $m.objlist.canvas.frame.objt$objid \
 	    -side top -anchor w -fill x -expand y
 	pack $m.objlist.canvas.frame.obj$objid \
@@ -952,8 +1012,7 @@ itcl_class ViewWindow {
 
     method addObject2 {objid} {
 	addObjectToFrame_2 $objid $detachedFr
-	set msframe [$attachedFr childsite]
-	addObjectToFrame_2 $objid $msframe
+	addObjectToFrame_2 $objid [$attachedFr childsite]
     }
     
     method addObjectToFrame_2 {objid frame} {
@@ -969,14 +1028,11 @@ itcl_class ViewWindow {
     
     method removeObject {objid} {
 	removeObjectFromFrame $objid $detachedFr
-	set msframe [$attachedFr childsite]
-	removeObjectFromFrame $objid $msframe
+	removeObjectFromFrame $objid [$attachedFr childsite]
     }
 
     method removeObjectFromFrame {objid frame} {
-	set w .ui[modname]
-	set m $frame.f
-	pack forget $m.objlist.canvas.frame.objt$objid
+	pack forget $frame.f.objlist.canvas.frame.objt$objid
     }
 
     method makeLineWidthPopup {} {
@@ -1269,57 +1325,6 @@ itcl_class ViewWindow {
 	wm geometry .ui[modname] $geometry
     }
 
-    method makeSaveImagePopup {} {
-	upvar \#0 $this-resx resx $this-resy resy
-	set resx [winfo width .ui[modname].wframe.draw]
-	set resy [winfo height .ui[modname].wframe.draw]
-	
-	set w .ui[modname]-saveImage
-	if {[winfo exists $w]} {
-	    SciRaise $w
-	    return
-        }
-	toplevel $w -class TkFDialog
-
-	set initdir [pwd]
-	set defext "" ;# extension to append if no extension supplied by user
-	
-	set defname "MyImage.ppm" ;# filename to appear initially
-	set title "Save ViewWindow Image"
-
-	# file types to appers in filter box
-	set types {
-	    {{All Files}    {.*}}
-	    {{PPM File}     {.ppm}}
-	    {{Raw File}     {.raw}}
-	}
-	
-	makeSaveFilebox \
-	    -parent $w \
-	    -filevar $this-saveFile \
-	    -command "$this doSaveImage; wm withdraw $w" \
-	    -commandname Save \
-	    -cancel "wm withdraw $w" \
-	    -title $title \
-	    -filetypes $types \
-	    -initialfile $defname \
-	    -initialdir $initdir \
-	    -defaultextension $defext \
-	    -formatvar $this-saveType \
-	    -formats {ppm raw "by_extension"} \
-	    -imgwidth $this-resx \
-	    -imgheight $this-resy
-	moveToCursor $w
-	wm deiconify $w
-    }
-    
-    method doSaveImage {} {
-	upvar \#0 $this-saveFile file $this-saveType type
-	upvar \#0 $this-resx resx $this-resy resy
-	$this-c dump_viewwindow $file $type $resx $resy
-	$this-c redraw
-    }
-
     method makeSaveMoviePopup {} {
 	set w .ui[modname]-saveMovie
 
@@ -1411,461 +1416,6 @@ itcl_class ViewWindow {
 	    $w.resize_f.e2 configure -state disabled -foreground $color
 	}
     }
-
-    # TODO: Remvoe this method
-    method setFrameRate { args } {
-    }
 }
 
-
-itcl_class EmbeddedViewWindow {
-    public viewer
-    
-    method modname {} {
-	set n $this
-	if {[string first "::" "$n"] == 0} {
-	    set n "[string range $n 2 end]"
-	}
-	return $n
-    }
-
-    method set_defaults {} {
-
-	# set defaults values for parameters that weren't set in a script
-
-        # CollabVis code begin 
-        global $this-have_collab_vis 
-        # CollabVis code end
-
-	global $this-saveFile
-	global $this-saveType
-	if {![info exists $this-File]} {set $this-saveFile "out.raw"}
-	if {![info exists $this-saveType]} {set $this-saveType "raw"}
-
-	# Animation parameters
-	global $this-current_time
-	if {![info exists $this-current_time]} {set $this-current_time 0}
-	global $this-tbeg
-	if {![info exists $this-tbeg]} {set $this-tbeg 0}
-	global $this-tend
-	if {![info exists $this-tend]} {set $this-tend 1}
-	global $this-framerate
-	if {![info exists $this-framerate]} {set $this-framerate 15}
-	global $this-totframes
-	if {![info exists $this-totframes]} {set $this-totframes 30}
-	global $this-caxes
-        if {![info exists $this-caxes]} {set $this-caxes 0}
-	global $this-raxes
-        if {![info exists $this-raxes]} {set $this-raxes 1}
-
-	# Need to initialize the background color
-	global $this-bgcolor-r
-	if {![info exists $this-bgcolor-r]} {set $this-bgcolor-r 0}
-	global $this-bgcolor-g
-	if {![info exists $this-bgcolor-g]} {set $this-bgcolor-g 0}
-	global $this-bgcolor-b
-	if {![info exists $this-bgcolor-b]} {set $this-bgcolor-b 0}
-
-	# Need to initialize the scene material scales
-	global $this-ambient-scale
-	if {![info exists $this-ambient-scale]} {set $this-ambient-scale 1.0}
-	global $this-diffuse-scale
-	if {![info exists $this-diffuse-scale]} {set $this-diffuse-scale 1.0}
-	global $this-specular-scale
-	if {![info exists $this-specular-scale]} {set $this-specular-scale 0.4}
-	global $this-emission-scale
-	if {![info exists $this-emission-scale]} {set $this-emission-scale 1.0}
-	global $this-shininess-scale
-	if {![info exists $this-shininess-scale]} {set $this-shininess-scale 1.0}
-	# Initialize point size, line width, and polygon offset
-	global $this-point-size
-	if {![info exists $this-point-size]} {set $this-point-size 1.0}
-	global $this-line-width
-	if {![info exists $this-line-width]} {set $this-line-width 1.0}
-	global $this-polygon-offset-factor
- 	if {![info exists $this-polygon-offset-factor]} \
-	    {set $this-polygon-offset-factor 1.0}
-	global $this-polygon-offset-units
-	if {![info exists $this-polygon-offset-units]} \
-	    {set $this-polygon-offset-units 0.0}
-
-	# Set up lights
-	global $this-global-light0 # light 0 is the head light
-	if {![info exists $this-global-light0]} { set $this-global-light0 1 }
-	global $this-global-light1 
-	if {![info exists $this-global-light1]} { set $this-global-light1 0 }
-	global $this-global-light2 
-	if {![info exists $this-global-light2]} { set $this-global-light2 0 }
-	global $this-global-light3 
-	if {![info exists $this-global-light3]} { set $this-global-light3 0 }
-# 	global $this-global-light4 
-# 	if {![info exists $this-global-light4]} { set $this-global-light4 0 }
-# 	global $this-global-light5 
-# 	if {![info exists $this-global-light5]} { set $this-global-light5 0 }
-# 	global $this-global-light6
-# 	if {![info exists $this-global-light6]} { set $this-global-light6 0 }
-# 	global $this-global-light7 
-# 	if {![info exists $this-global-light7]} { set $this-global-light7 0 }
-	global $this-lightVectors
-	if {![info exists $this-lightVectors]} { 
-	    set $this-lightVectors \
-		[list { 0 0 1 } { 0 0 1 } { 0 0 1 } { 0 0 1 }]
-# 		     { 0 0 1 } { 0 0 1 } { 0 0 1 } { 0 0 1 }]
-	}
-	if {![info exists $this-lightColors]} {
-	    set $this-lightColors \
-		[list {1.0 1.0 1.0} {1.0 1.0 1.0} \
-		     {1.0 1.0 1.0} {1.0 1.0 1.0} ]
-# 		     {1.0 1.0 1.0} {1.0 1.0 1.0} \
-# 		     {1.0 1.0 1.0} {1.0 1.0 1.0} ]
-	}
-
-	global $this-sbase
-	if {![info exists $this-sbase]} {set $this-sbase 0.4}
-	global $this-sr
-	if {![info exists $this-sr]} {set $this-sr 1}
-	global $this-do_stereo
-	if {![info exists $this-do_stereo]} {set $this-do_stereo 0}
-
-	global $this-def-color-r
-	global $this-def-color-g
-	global $this-def-color-b
-	set $this-def-color-r 1.0
-	set $this-def-color-g 1.0
-	set $this-def-color-b 1.0
-
-        # CollabVis code begin
-        if {[set $this-have_collab_vis]} {
-	    global $this-view_server
-	    if {![info exists $this-view_server]} {set $this-view_server 0}
-        }
-        # CollabVis code end
-
-	global $this-ortho-view
-	if {![info exists $this-ortho-view]} { set $this-ortho-view 0 }
-    }
-
-    destructor {
-    }
-
-    constructor {config} {
-	$viewer-c addviewwindow $this
-	set_defaults
-	init_frame
-    }
-
-    method setWindow {w width height} {
-	$this-c listvisuals .standalone
-
-	if {[winfo exists $w]} {
-	    destroy $w
-	}
-
-	global emb_win
-	set emb_win $w
-
-	#$this-c switchvisual $w 0 640 670
-	$this-c switchvisual $w 0 $width $height
-	
-	if {[winfo exists $w]} {
-	    bindEvents $w
-	}
-	$this-c startup
-    }
-
-    method bindEvents {w} {
-	bind $w <Expose> "$this-c redraw"
-	bind $w <Configure> "$this-c redraw"
-
-	bind $w <ButtonPress-1> "$this-c mtranslate start %x %y"
-	bind $w <Button1-Motion> "$this-c mtranslate move %x %y"
-	bind $w <ButtonRelease-1> "$this-c mtranslate end %x %y"
-	bind $w <ButtonPress-2> "$this-c mrotate start %x %y %t"
-	bind $w <Button2-Motion> "$this-c mrotate move %x %y %t"
-	bind $w <ButtonRelease-2> "$this-c mrotate end %x %y %t"
-	bind $w <ButtonPress-3> "$this-c mscale start %x %y"
-	bind $w <Button3-Motion> "$this-c mscale move %x %y"
-	bind $w <ButtonRelease-3> "$this-c mscale end %x %y"
-
-	bind $w <Control-ButtonPress-1> "$this-c mdolly start %x %y"
-	bind $w <Control-Button1-Motion> "$this-c mdolly move %x %y"
-	bind $w <Control-ButtonRelease-1> "$this-c mdolly end %x %y"
-	bind $w <Control-ButtonPress-2> "$this-c mrotate_eyep start %x %y %t"
-	bind $w <Control-Button2-Motion> "$this-c mrotate_eyep move %x %y %t"
-	bind $w <Control-ButtonRelease-2> "$this-c mrotate_eyep end %x %y %t"
-	bind $w <Control-ButtonPress-3> "$this-c municam start %x %y %t"
-	bind $w <Control-Button3-Motion> "$this-c municam move %x %y %t"
-	bind $w <Control-ButtonRelease-3> "$this-c municam end %x %y %t"
-
-	bind $w <Shift-ButtonPress-1> "$this-c mpick start %x %y %s %b"
-	bind $w <Shift-ButtonPress-2> "$this-c mpick start %x %y %s %b"
-	bind $w <Shift-ButtonPress-3> "$this-c mpick start %x %y %s %b"
-	bind $w <Shift-Button1-Motion> "$this-c mpick move %x %y %s 1"
-	bind $w <Shift-Button2-Motion> "$this-c mpick move %x %y %s 2"
-	bind $w <Shift-Button3-Motion> "$this-c mpick move %x %y %s 3"
-	bind $w <Shift-ButtonRelease-1> "$this-c mpick end %x %y %s %b"
-	bind $w <Shift-ButtonRelease-2> "$this-c mpick end %x %y %s %b"
-	bind $w <Shift-ButtonRelease-3> "$this-c mpick end %x %y %s %b"
-	bind $w <Lock-ButtonPress-1> "$this-c mpick start %x %y %s %b"
-	bind $w <Lock-ButtonPress-2> "$this-c mpick start %x %y %s %b"
-	bind $w <Lock-ButtonPress-3> "$this-c mpick start %x %y %s %b"
-	bind $w <Lock-Button1-Motion> "$this-c mpick move %x %y %s 1"
-	bind $w <Lock-Button2-Motion> "$this-c mpick move %x %y %s 2"
-	bind $w <Lock-Button3-Motion> "$this-c mpick move %x %y %s 3"
-	bind $w <Lock-ButtonRelease-1> "$this-c mpick end %x %y %s %b"
-	bind $w <Lock-ButtonRelease-2> "$this-c mpick end %x %y %s %b"
-	bind $w <Lock-ButtonRelease-3> "$this-c mpick end %x %y %s %b"
-    }
-
-    method removeMFrame {w} {
-    }
-    
-    method addMFrame {w} {
-    }
-
-    method init_frame {} {
-	global $this-global-light
-	global $this-global-fog
-	global $this-global-type
-	global $this-global-debug
-	global $this-global-clip
-	global $this-global-cull
-	global $this-global-dl
-	global $this-global-movie
-	global $this-global-movieName
-	global $this-global-movieFrame
-	global $this-global-resize
-	global $this-x-resize
-	global $this-y-resize
-	global $this-do_stereo
-	global $this-sbase
-	global $this-sr
-	global $this-do_bawgl
-	global $this-tracker_state
-	
-	set $this-global-light 1
-	set $this-global-fog 0
-	set $this-global-type Gouraud
-	set $this-global-debug 0
-	set $this-global-clip 1
-	set $this-global-cull 0
-	set $this-global-dl 0
-	set $this-global-movie 0
-	set $this-global-movieName "movie"
-	set $this-global-movieFrame 0
-	set $this-global-resize 0
-	set $this-x-resize 700
-	set $this-y-resize 512
-	set $this-do_bawgl 0
-	set $this-tracker_state 0
-    }
-
-    method resize { } {
-    }
-
-    method switch_frames {} {
-    }
-
-    method updatePerf {p1 p2 p3} {
-    }
-
-    method switchvisual {idx width height} {
-	set w .ui[modname]
-	if {[winfo exists $w.wframe.draw]} {
-	    destroy $w.wframe.draw
-	}
-	$this-c switchvisual $w.wframe.draw $idx $width $height
-	if {[winfo exists $w.wframe.draw]} {
-	    bindEvents $w.wframe.draw
-	    pack $w.wframe.draw -expand yes -fill both
-	}
-    }	
-
-    method makeViewPopup {} {
-    }
-
-    method makeSceneMaterialsPopup {} {
-    }
-
-    method makeBackgroundPopup {} {
-    }
-
-    method updateMode {msg} {
-    }   
-
-    method addObject {objid name} {
-	global "$this-$objid-light"
-	global "$this-$objid-fog"
-	global "$this-$objid-type"
-	global "$this-$objid-debug"
-	global "$this-$objid-clip"
-	global "$this-$objid-cull"
-	global "$this-$objid-dl"
-
-	set "$this-$objid-type" Default
-	set "$this-$objid-light" 1
-	set "$this-$objid-fog" 0
-	set "$this-$objid-debug" 0
-	set "$this-$objid-clip" 0
-	set "$this-$objid-cull" 0
-	set "$this-$objid-dl" 0
-
-	# $this-c autoview
-    }
-
-    method addObjectToFrame {objid name frame} {
-    }
-
-    method addObject2 {objid} {
-	# $this-c autoview
-    }
-    
-    method addObjectToFrame_2 {objid frame} {
-    }
-    
-
-    method removeObject {objid} {
-    }
-
-    method removeObjectFromFrame {objid frame} {
-    }
-
-    method makeLineWidthPopup {} {
-    }	
-
-    method makePolygonOffsetPopup {} {
-    }	
-
-    method makePointSizePopup {} {
-    }	
-
-    method makeClipPopup {} {
-    }
-
-    method useClip {} {
-    }
-
-    method setClip {} {
-    }
-
-    method invertClip {} {
-    }
-
-    method makeAnimationPopup {} {
-    }
-
-    method setFrameRate {rate} {
-    }
-
-    method frametime {} {
-    }
-
-    method rstep {} {
-    }
-
-    method rew {} {
-    }
-
-    method rplay {} {
-    }
-
-    method play {} {
-    }
-
-    method step {} {
-    }
-
-    method ff {} {
-    }
-
-    method makeLightSources {} {
-    }
-	
-    method makeLightControl { w i } {
-    }
-
-    method lightColor { w c i } {
-    }
-
-    method setColor { w c  i color} {
-    }
-
-    method resetLights { w } {
-    }
-
-    method moveLight { c i x y } {
-    }
-
-    method lightSwitch {i} {
-    }
-	
-    method makeSaveImagePopup {} {
-	global $this-saveFile
-	global $this-saveType
-	global $this-resx
-	global $this-resy
-	global $this-aspect
-	global emb_win
-
-	set $this-resx [winfo width $emb_win]
-	set $this-resy [winfo height $emb_win]
-	
-	set w .ui[modname]-saveImage
-
-	if {[winfo exists $w]} {
-	    SciRaise $w
-	    return
-        }
-
-	toplevel $w -class TkFDialog
-
-	set initdir [pwd]
-
-	#######################################################
-	# to be modified for particular reader
-
-	# extansion to append if no extension supplied by user
-	set defext ""
-	
-	# name to appear initially
-	set defname "MyImage.ppm"
-	set title "Save ViewWindow Image"
-
-	# file types to appers in filter box
-	set types {
-	    {{All Files}    {.*}}
-	    {{Raw File}     {.raw}}
-	    {{PPM File}     {.ppm}}
-	}
-	
-	######################################################
-	
-	makeSaveFilebox \
-		-parent $w \
-		-filevar $this-saveFile \
-		-command "$this doSaveImage; wm withdraw $w" \
-		-cancel "wm withdraw $w" \
-		-title $title \
-		-filetypes $types \
-	        -initialfile $defname \
-		-initialdir $initdir \
-		-defaultextension $defext \
-		-formatvar $this-saveType \
-                -formats {ppm raw "by_extension"} \
-	        -imgwidth $this-resx \
-	        -imgheight $this-resy
-	moveToCursor $w
-	wm deiconify $w
-    }
-    
-    method changeName { w type} {
-    }
-
-    method doSaveImage {} {
-	global $this-saveFile
-	global $this-saveType
-	$this-c dump_viewwindow [set $this-saveFile] [set $this-saveType] [set $this-resx] [set $this-resy]
-	$this-c redraw
-    }
-}
 
