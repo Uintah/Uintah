@@ -53,6 +53,8 @@ c     Author: Seshadri Kumar, July 2, 2001
 c     Last modified: July 2, 2001
 c
 C-----------------------------------------------------------------------
+c#define debugEnergyExchange
+
       implicit none
       include 'param4.h'
       include 'pconst.h'
@@ -298,8 +300,11 @@ c     alone,) so we don't need to divide by (1-epsg).
      $                    ts_fcx(i,j,k))
 
 c     debug, SK, July 12, 2001
-c                     print*, i,j,k, hts_fcx(i,j,k), 
-c     $                    tg(i-1,j,k), ts_fcx(i,j,k)
+#ifdef debugEnergyExchange
+                     print*, i,j,k, hts_fcx(i,j,k), 
+     $                    tg(i-1,j,k), ts_fcx(i,j,k),
+     $                    epsg(i-1,j,k)
+#endif
 
                   endif
 
@@ -334,8 +339,11 @@ c     $                    tg(i-1,j,k), ts_fcx(i,j,k)
      $                    ts_fcx(i,j,k))
 
 c     debug, SK, July 12, 2001
-c                     print*, i+1,j,k, hts_fcx(i+1,j,k),
-c     $                    tg(i+1,j,k), ts_fcx(i,j,k)
+#ifdef debugEnergyExchange
+                     print*, i+1,j,k, hts_fcx(i+1,j,k),
+     $                    tg(i+1,j,k), ts_fcx(i,j,k),
+     $                    epsg(i+1,j,k)
+#endif
 
                   endif
 
@@ -370,8 +378,11 @@ c     south face of intrusion
      $                    ts_fcy(i,j,k))
 
 c     debug, SK, July 12, 2001
-c                     print*, i,j,k, hts_fcy(i,j,k),
-c     $                    tg(i,j-1,k), ts_fcy(i,j,k)
+#ifdef debugEnergyExchange
+                     print*, i,j,k, hts_fcy(i,j,k),
+     $                    tg(i,j-1,k), ts_fcy(i,j,k),
+     $                    epsg(i,j-1,k)
+#endif
 
                   endif
 
@@ -406,8 +417,11 @@ c     $                    tg(i,j-1,k), ts_fcy(i,j,k)
      $                    ts_fcx(i,j,k))
 
 c     debug, SK, July 12, 2001
-c                     print*, i,j+1,k, hts_fcy(i,j+1,k),
-c     $                    tg(i,j+1,k), ts_fcx(i,j,k)
+#ifdef debugEnergyExchange
+                     print*, i,j+1,k, hts_fcy(i,j+1,k),
+     $                    tg(i,j+1,k), ts_fcx(i,j,k),
+     $                    epsg(i,j+1,k)
+#endif
 
                   endif
 
@@ -442,8 +456,11 @@ c     $                    tg(i,j+1,k), ts_fcx(i,j,k)
      $                    ts_fcz(i,j,k))
 
 c     debug, SK, July 12, 2001
-c                     print*, i,j,k, hts_fcz(i,j,k),
-c     $                    tg(i,j,k-1), ts_fcz(i,j,k)
+#ifdef debugEnergyExchange
+                     print*, i,j,k, hts_fcz(i,j,k),
+     $                    tg(i,j,k-1), ts_fcz(i,j,k),
+     $                    epsg(i,j,k-1)
+#endif
 
                   endif
 
@@ -478,8 +495,11 @@ c     $                    tg(i,j,k-1), ts_fcz(i,j,k)
      $                    ts_fcz(i,j,k))
 
 c     debug, SK, July 12, 2001
-c                     print*, i,j,k+1, hts_fcz(i,j,k+1),
-c     $                    tg(i,j,k+1), ts_fcz(i,j,k)
+#ifdef debugEnergyExchange
+                     print*, i,j,k+1, hts_fcz(i,j,k+1),
+     $                    tg(i,j,k+1), ts_fcz(i,j,k),
+     $                    epsg(i,j,k+1)
+#endif
 
                   endif
 
@@ -490,7 +510,9 @@ c     $                    tg(i,j,k+1), ts_fcz(i,j,k)
  620  continue
 
 c     debug, SK, July 12, 2001
-c      print*, 'now for mixed cells'
+#ifdef debugEnergyExchange
+      print*, 'now for mixed cells'
+#endif
 
 c     part 2: cells that have both fluid and solid
 
@@ -527,8 +549,11 @@ c     then factor = one.
      $                 tg(i,j,k))
 
 c     debug, SK, July 12, 2001
-c                  print*, i,j,k, hts_cc(i,j,k),
-c     $                 tg(i,j,k), ts_cc(i,j,k)
+#ifdef debugEnergyExchange
+                  print*, i,j,k, hts_cc(i,j,k),
+     $                 tg(i,j,k), ts_cc(i,j,k),
+     $                 epsg(i,j,k)
+#endif
                      
                end if
 
