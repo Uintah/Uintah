@@ -42,7 +42,7 @@ MieGruneisenEOS::computePressure(const MPMMaterial* matl,
    
   // Calc. zeta
   double zeta = (rho/rho_0 - 1.0);
-  if (zeta == 0) return 0.0;
+  if (zeta == 0.0) return 0.0;
 
   // Calculate internal energy E
   double E = (matl->getSpecificHeat())*T;
@@ -51,6 +51,7 @@ MieGruneisenEOS::computePressure(const MPMMaterial* matl,
   double numer = rho_0*(d_const.C_0*d_const.C_0)*(1.0/zeta+
                          (1.0-0.5*d_const.Gamma_0));
   double denom = 1.0/zeta - (d_const.S_alpha-1.0);
+  if (denom == 0.0) denom = 1.0e-5;
   double p = numer/(denom*denom) + d_const.Gamma_0*E;
   return -p;
 }

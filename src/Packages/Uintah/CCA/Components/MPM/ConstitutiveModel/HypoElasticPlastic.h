@@ -101,6 +101,7 @@ namespace Uintah {
     bool   d_useModifiedEOS;
     bool   d_removeParticles;
     bool   d_setStressToZero;
+    bool   d_evolvePorosity;
 
     YieldCondition*     d_yield;
     StabilityCheck*     d_stable;
@@ -148,6 +149,19 @@ namespace Uintah {
 				     const MPMMaterial* matl,
 				     DataWarehouse* old_dw,
 				     DataWarehouse* new_dw);
+
+    virtual void computeStressTensor(const PatchSubset* ,
+				     const MPMMaterial* ,
+				     DataWarehouse* ,
+				     DataWarehouse* ,
+#ifdef HAVE_PETSC
+                                     MPMPetscSolver* ,
+#else
+                                     SimpleSolver* ,
+#endif
+				     const bool )
+    {
+    }
 
     ////////////////////////////////////////////////////////////////////////
     /*! \brief carry forward CM data for RigidMPM */
