@@ -9,6 +9,7 @@
 #include <stdio.h>
 #include <math.h>
 #include <vector>
+#include <algorithm>
 #include <Packages/rtrt/Core/shape.h>
 #include <Packages/rtrt/Core/texture.h>
 #include <Packages/rtrt/Core/widget.h>
@@ -178,8 +179,10 @@ Volvis2DDpy::drawBackground( void ) {
   glTexEnvf( GL_TEXTURE_ENV, GL_TEXTURE_ENV_COLOR, GL_BLEND );
   glBindTexture( GL_TEXTURE_2D, transFuncTextName );
   if( transFunc_changed ) {
+//  #if 0
     glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA, textureWidth, 
 		  textureHeight, 0, GL_RGBA, GL_FLOAT, transTexture1 );
+//  #endif
     transFunc_changed = false;
   }
   
@@ -461,6 +464,9 @@ Volvis2DDpy::display_controls() {
     printString( fontbase, 10, 10, text, textColor );
     sprintf( text, "cutplane grayscale = %.3g", cp_gs );
     printString( fontbase, 260, 10, text, textColor );
+  } else {
+    sprintf( text, "CUTPLANE IS INACTIVE" );
+    printString( fontbase, 185, 15, text, textColor );
   }
   // display adjustable global variables
   sprintf( text, "master opacity = %.3g", master_opacity );
@@ -523,7 +529,7 @@ Volvis2DDpy::display() {
   drawBackground();
   drawWidgets( GL_RENDER );
   if( hist_adjust ) { display_hist_perimeter(); }
-  if( cut ) { display_cp_voxels(); }
+  if( cut && cp_voxels.size() == 9 ) { display_cp_voxels(); }
   glFlush();
   glXSwapBuffers(dpy, win);
 } // display()
@@ -1100,30 +1106,42 @@ Volvis2DDpy::display_cp_voxels( void )
 {
   // connect points
   glColor3f( 0.0, 0.4, 0.7 );
-  for( int i = 1; i < cp_voxels.size(); i++ ) {
-    
-  }
-
+  glBegin( GL_LINE_LOOP );
+  glVertex2f( cp_voxels[0]->value, cp_voxels[0]->gradient );
+  glVertex2f( cp_voxels[2]->value, cp_voxels[2]->gradient );
+  glVertex2f( cp_voxels[3]->value, cp_voxels[3]->gradient );
+  glVertex2f( cp_voxels[1]->value, cp_voxels[1]->gradient );
+  glEnd();
+  glBegin( GL_LINE_LOOP );
+  glVertex2f( cp_voxels[4]->value, cp_voxels[4]->gradient );
+  glVertex2f( cp_voxels[5]->value, cp_voxels[5]->gradient );
+  glVertex2f( cp_voxels[7]->value, cp_voxels[7]->gradient );
+  glVertex2f( cp_voxels[6]->value, cp_voxels[6]->gradient );
+  glEnd();
+  glBegin( GL_LINES );
+  glVertex2f( cp_voxels[3]->value, cp_voxels[3]->gradient );
+  glVertex2f( cp_voxels[7]->value, cp_voxels[7]->gradient );
+  glVertex2f( cp_voxels[2]->value, cp_voxels[2]->gradient );
+  glVertex2f( cp_voxels[6]->value, cp_voxels[6]->gradient );
+  glVertex2f( cp_voxels[1]->value, cp_voxels[1]->gradient );
+  glVertex2f( cp_voxels[5]->value, cp_voxels[5]->gradient );
+  glVertex2f( cp_voxels[0]->value, cp_voxels[0]->gradient );
+  glVertex2f( cp_voxels[4]->value, cp_voxels[4]->gradient );
+  glEnd();
+  
   // display points (after connections to draw points on top)
   glColor3f( 0.0, 0.2, 0.9 );
-  for( int i = 0; i < cp_voxels.size(); i++ ) {
+  for( int i = 0; i < cp_voxels.size()-1; i++ ) {
     glBegin( GL_POINTS );
     glVertex2f( cp_voxels[i]->value, cp_voxels[i]->gradient );
     glEnd();
   }
 
-//    for( int i = 1; i < cp_voxels.size(); i++ ) {
-//      glColor4f( 0.0, 0.2, 0.9, 1.0 );
-//      glBegin( GL_LINES );
-//      float x = (float)cp_voxels[i]->value * 500.0 / 256.0 + 5.0;
-//      float y = (float)cp_voxels[i]->value * 330.0 / 256.0 + 85.0;
-//      cerr << "x = " << x << ", y = " << y << "\n";
-//      glVertex2f( (float)cp_voxels[i]->value * 500.0 / 256.0 + 5.0,
-//  		(float)cp_voxels[i]->gradient * 330.0 / 256.0 + 85.0 );
-//      glVertex2f( (float)cp_voxels[i-1]->value * 500.0 / 256.0 + 5.0,
-//  		(float)cp_voxels[i-1]->gradient * 330.0 / 256.0 + 85.0 );
-//      glEnd();
-//    }
+  glColor3f( 0.9, 0.0, 0.1 );
+  glBegin( GL_POINTS );
+  glVertex2f( cp_voxels[cp_voxels.size()-1]->value,
+	      cp_voxels[cp_voxels.size()-1]->gradient );
+  glEnd();
 }
 
 
@@ -1558,6 +1576,9 @@ Volvis2DDpy::Volvis2DDpy( float t_inc, bool cut ):DpyBase("Volvis2DDpy"),
 } // Volvis2DDpy()
 
 // template<class T>
-void Volvis2DDpy::animate(bool &/*changed*/) {
-  
+void Volvis2DDpy::animate(bool &cutplane_active) {
+  if( cut != cutplane_active ) {
+    cut = cutplane_active;
+    redraw = true;
+  }
 }
