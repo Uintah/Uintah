@@ -68,6 +68,13 @@ Matrix3 Matrix3::Inverse() const
 
 } //end Inverse()
 
+inline void swap(double& v1, double& v2)
+{
+  double tmp = v1;
+  v1 = v2;
+  v2 = tmp;
+}
+
 // Reduce the matrix and rhs, representing the equation system:
 // A*x = y = rhs, to a matrix in upper triangular form with
 // corresponding rhs for an equivalent equation systme.
@@ -351,7 +358,30 @@ int Matrix3::getEigenValues(double& e1, double& e2, double& e3) const
   cout << "c " << c << endl;
   cout << "d " << d << endl;
 
-  return cubic_poly_roots(b, c, d, e1, e2, e3);
+  // num_values will be either 1 or 3
+  double r1, r2, r3;
+  int num_values = cubic_poly_roots(b, c, d, r1, r2, r3);
+
+  if (num_values == 3) {
+    int least = 1;
+    e1 = r1;    
+    if (r2 < e1) {
+      e1 = r2;
+      least = 2;
+    }
+    if (r3 < e1) {
+      e1 = r3;
+      least = 3;
+    }
+    e2 = (least != 2) ? r2 : r1;
+    e3 = (least != 3) ? r3 : r1;
+    if (e2 > e3)
+      swap(e2, e3);
+  }
+  else
+    e1 = r1;
+
+  return num_values;
 }
 
 ostream & operator << (ostream &out_file, const Matrix3 &m3)
@@ -387,6 +417,9 @@ MPI_Datatype makeMPI_Matrix3()
 }
 
 //$Log$
+//Revision 1.6  2000/08/15 22:01:59  witzel
+//Sorting eigenvalues e1, e2, e3.
+//
 //Revision 1.5  2000/08/15 19:15:19  witzel
 //Added methods for finding eigenvalues, eigenvectors and solving
 //equation systems of the form Ax=b and Ax=0.  Also added M*v
