@@ -45,7 +45,7 @@
                 <comp_neo_hook_plastic>
                     <bulk_modulus>2000.0</bulk_modulus>
                     <shear_modulus>1500.0</shear_modulus>
-                    <yield_stress>1000.0</yield_stress>
+                    <yield_stress>10000.0</yield_stress>
                     <hardening_modulus>500.0</hardening_modulus>
 		    <alpha> 0.0 </alpha>
                 </comp_neo_hook_plastic>
@@ -64,6 +64,7 @@
 			<NormalForce>5</NormalForce>
 			<FaceForce face="x+">[1,0,0]</FaceForce>
 		    </BoundaryConditions>
+		    <temperature>12</temperature>
  		</geom_object>
 
 		<geom_object>
@@ -78,8 +79,8 @@
 			<NormalForce>5</NormalForce>
 			<FaceForce face="x+">[1,0,0]</FaceForce>
 		    </BoundaryConditions>
+		    <temperature>12</temperature>
  		</geom_object>
-		<temperature>12</temperature>
 		<velocity_field>0</velocity_field>
 	    </material>
 
