@@ -79,6 +79,8 @@ class Matrix3 {
 
   // compare two Matrix3s
   inline bool operator==(const Matrix3 &m3) const;
+  inline bool operator!=(const Matrix3 &m3) const
+  { return !(*this == m3); }
 
   // multiply by constant
   inline void operator *= (const double value);
