@@ -31,22 +31,31 @@
 
 #include <Core/CCA/spec/cca_sidl.h>
 
+
 namespace SCIRun {
   class BuilderWindow;
+  class myBuilderPort : public virtual gov::cca::ports::BuilderPort {
+  public:
+    virtual ~myBuilderPort(){}
+    virtual void setServices(const gov::cca::Services::pointer& svc);
+    virtual void buildRemotePackageMenus(const  gov::cca::ports::ComponentRepository::pointer &reg,
+				    const string &frameworkURL);
+  protected:
+    gov::cca::Services::pointer services;
+    BuilderWindow* builder;
+  };
+
   class Builder : public gov::cca::Component {
   public:
     Builder();
     virtual ~Builder();
-
     virtual void setServices(const gov::cca::Services::pointer& svc);
   private:
-
-    BuilderWindow* builder;
     Builder(const Builder&);
     Builder& operator=(const Builder&);
+    myBuilderPort builderPort;
 
-    gov::cca::Services::pointer services;
   };
-}
+} //namespace SCIRun
 
 #endif
