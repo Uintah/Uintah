@@ -31,8 +31,8 @@ class SCICORESHARE SymSparseRowMatrix : public Matrix {
     double maxVal;
 protected:
 public:
-    int* columns;
     int* rows;
+    int* columns;
     int nnz;
     double* a;
     int* upper_columns;

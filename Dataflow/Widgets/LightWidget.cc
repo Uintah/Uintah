@@ -270,6 +270,8 @@ LightWidget::geom_moved( GeomPick* gp, int axis, double dist,
    case AreaLight:
       arealight->geom_moved(gp, axis, dist, delta, pick, state);
       break;
+   default:
+     ASSERT(0)
    }
    
    execute(0);
@@ -346,13 +348,17 @@ LightWidget::NextMode()
       arealight->SetPosition(variables[SourceVar]->point(), GetAxis(), s1, s2);
       break;
    case AreaLight:
-      Point center;
-      Vector normal;
-      arealight->GetPosition(center, normal, s1, s2);
+     {
+       Point center;
+       Vector normal;
+       arealight->GetPosition(center, normal, s1, s2);
 
-      variables[SourceVar]->Move(center);
-      variables[DirectVar]->Set(center+normal, Scheme4);
-      break;
+       variables[SourceVar]->Move(center);
+       variables[DirectVar]->Set(center+normal, Scheme4);
+       break;
+     }
+   default:
+     ASSERT(0);
    }
    
    Index s;

@@ -265,51 +265,69 @@ void GeometryOPort::setView(int which_viewwindow, View view)
 }
 
 GeometryComm::GeometryComm(Mailbox<GeomReply>* reply)
-: MessageBase(MessageTypes::GeometryInit), reply(reply)
+  : MessageBase(MessageTypes::GeometryInit),
+    reply(reply)
 {
 }
 
 GeometryComm::GeometryComm(int portno, GeomID serial, GeomObj* obj,
 			   const clString& name, CrowdMonitor* lock)
-: MessageBase(MessageTypes::GeometryAddObj),
-  portno(portno), serial(serial), obj(obj), name(name), lock(lock)
+  : MessageBase(MessageTypes::GeometryAddObj),
+    portno(portno),
+    serial(serial),
+    obj(obj),
+    name(name),
+    lock(lock)
 {
 }
 
 GeometryComm::GeometryComm(int portno, GeomID serial, int del)
-: MessageBase(MessageTypes::GeometryDelObj),
-  portno(portno), serial(serial), del(del)
+  : MessageBase(MessageTypes::GeometryDelObj),
+    portno(portno),
+    serial(serial),
+    del(del)
 {
 }
 
-GeometryComm::GeometryComm(MessageTypes::MessageType type, int portno, Semaphore* wait)
-: MessageBase(type), portno(portno), wait(wait)
+GeometryComm::GeometryComm(MessageTypes::MessageType type,
+			   int portno, Semaphore* wait)
+  : MessageBase(type),
+    portno(portno),
+    wait(wait)
 {
 }
 
 GeometryComm::GeometryComm(MessageTypes::MessageType type, int portno)
-: MessageBase(type), portno(portno)
+  : MessageBase(type),
+    portno(portno)
 {
 }
 
 GeometryComm::GeometryComm(MessageTypes::MessageType type, int portno,
 			   FutureValue<GeometryData*>* datareply,
 			   int which_viewwindow, int datamask)
-: MessageBase(type), portno(portno), datareply(datareply),
-  which_viewwindow(which_viewwindow), datamask(datamask)
+  : MessageBase(type),
+    portno(portno),
+    which_viewwindow(which_viewwindow),
+    datamask(datamask),
+    datareply(datareply)
 {
 }
 
 GeometryComm::GeometryComm(MessageTypes::MessageType type, int portno,
 			   int which_viewwindow, View view)
-: MessageBase(type), portno(portno), which_viewwindow(which_viewwindow), 
-  view(view)
+: MessageBase(type),
+  portno(portno),
+  view(view),
+  which_viewwindow(which_viewwindow)
 {
 }
 
 GeometryComm::GeometryComm(MessageTypes::MessageType type, int portno,
 			   FutureValue<int>* nreply)
-: MessageBase(type), portno(portno), nreply(nreply)
+  : MessageBase(type),
+    portno(portno),
+    nreply(nreply)
 {
 }
 
@@ -322,7 +340,8 @@ GeomReply::GeomReply()
 }
 
 GeomReply::GeomReply(int portid, int* busy_bit)
-: portid(portid), busy_bit(busy_bit)
+  : portid(portid),
+    busy_bit(busy_bit)
 {
 }
 

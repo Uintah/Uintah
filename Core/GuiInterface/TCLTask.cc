@@ -110,9 +110,9 @@ static int exitproc(ClientData, Tcl_Interp*, int, char* [])
 }
 
 TCLTask::TCLTask(int argc, char* argv[])
-: cont("TCLTask startup continue semaphore", 0),
-  start("TCLTask startup semaphore", 0),
-  argc(argc), argv(argv)
+  : argc(argc), argv(argv),
+    cont("TCLTask startup continue semaphore", 0),
+    start("TCLTask startup semaphore", 0)
 {
     // Setup the error handler to catch errors...
     // The default one exits, and makes it very hard to 

@@ -104,8 +104,6 @@ class GeomTexVolRender: public GeomObj {
   int nslice;
   float s_alpha;
 
-  double start_t,end_t; // for doing the draw...
-
   void CreateTexMatrix3D(void); // creates texture matrix...
   
   unsigned char *vol3d;

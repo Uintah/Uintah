@@ -31,7 +31,13 @@ PersistentTypeID TimeGrid::type_id("TimeGrid", "GeomObj", make_TimeGrid);
 
 TimeGrid::TimeGrid(int nf,int nu, int nv, const Point& corner,
 		   const Vector& u, const Vector& v)
-: corner(corner), u(u), v(v), dimU(nu), dimV(nv), tmap_size(0), bmap(0)
+  : bmap(0),
+    dimU(nu),
+    dimV(nv),
+    tmap_size(0),
+    corner(corner),
+    u(u),
+    v(v)
 {
   adjust();
   

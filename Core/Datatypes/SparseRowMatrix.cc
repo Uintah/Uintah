@@ -38,15 +38,21 @@ SparseRowMatrix* SparseRowMatrix::clone(){
 }
 
 SparseRowMatrix::SparseRowMatrix()
-: Matrix(Matrix::symmetric, Matrix::sparse), nnrows(0), nncols(0), a(0),
-  columns(0), rows(0), nnz(0)
+: Matrix(Matrix::symmetric, Matrix::sparse),
+  nnrows(0),
+  nncols(0),
+  rows(0),
+  columns(0),
+  nnz(0),
+  a(0)
 {
 }
 
 SparseRowMatrix::SparseRowMatrix(int nnrows, int nncols,
 				       Array1<int>& in_rows,
 				       Array1<int>& in_cols)
-: Matrix(Matrix::symmetric, Matrix::sparse), nnrows(nnrows), 
+: Matrix(Matrix::symmetric, Matrix::sparse),
+  nnrows(nnrows), 
   nncols(nncols)
 {
     nnz=in_cols.size();
@@ -65,28 +71,36 @@ SparseRowMatrix::SparseRowMatrix(int nnrows, int nncols,
 SparseRowMatrix::SparseRowMatrix(int nnrows, int nncols,
 				 int* rows, int* columns,
 				 int nnz, double* a)
-: Matrix(Matrix::symmetric, Matrix::sparse), nnrows(nnrows),
-  nncols(nncols), rows(rows), columns(columns), nnz(nnz), a(a)
+  : Matrix(Matrix::symmetric, Matrix::sparse),
+    nnrows(nnrows),
+    nncols(nncols),
+    rows(rows),
+    columns(columns),
+    nnz(nnz), a(a)
 {
 }
 
 SparseRowMatrix::SparseRowMatrix(int nnrows, int nncols,
 				 int* rows, int* columns,
 				 int nnz)
-: Matrix(Matrix::symmetric, Matrix::sparse), nnrows(nnrows),
-  nncols(nncols), rows(rows), columns(columns), nnz(nnz)
+  : Matrix(Matrix::symmetric, Matrix::sparse),
+    nnrows(nnrows),
+    nncols(nncols),
+    rows(rows),
+    columns(columns),
+    nnz(nnz)
 {
     a=scinew double[nnz];
 }
 
 SparseRowMatrix::SparseRowMatrix(const SparseRowMatrix& copy)
-  :Matrix(copy),
-   nnrows(copy.nnrows),
-   nncols(copy.nncols),
-   nnz(copy.nnz),
-   dummy(copy.dummy),
-   minVal(copy.minVal),
-   maxVal(copy.maxVal)
+  : Matrix(copy),
+    nnrows(copy.nnrows),
+    nncols(copy.nncols),
+    dummy(copy.dummy),
+    minVal(copy.minVal),
+    maxVal(copy.maxVal),
+    nnz(copy.nnz)
 {
   rows = scinew int[nnrows];
   columns = scinew int[nncols];

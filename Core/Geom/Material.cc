@@ -39,23 +39,24 @@ Persistent* make_GeomMaterial()
 PersistentTypeID GeomMaterial::type_id("GeomMaterial", "GeomObj", make_GeomMaterial);
 
 Material::Material()
-: lock("Material mutex"), ref_cnt(0), ambient(0,0,0), diffuse(0,0,0),
-  specular(0,0,0), shininess(0), emission(0,0,0), reflectivity(0.5),
-  transparency(0), refraction_index(1)
+  : ref_cnt(0), lock("Material mutex"), ambient(0,0,0), diffuse(0,0,0),
+    specular(0,0,0), shininess(0), emission(0,0,0), reflectivity(0.5),
+    transparency(0), refraction_index(1)
 {
 }
 
 Material::Material(const Color& ambient, const Color& diffuse,
 		   const Color& specular, double shininess)
-: lock("Material mutex"), ref_cnt(0), ambient(ambient), diffuse(diffuse),
-  specular(specular), shininess(shininess), emission(0,0,0), reflectivity(0.5),
-  transparency(0), refraction_index(1)
+  : ref_cnt(0), lock("Material mutex"), ambient(ambient), diffuse(diffuse),
+    specular(specular), shininess(shininess),
+    emission(0,0,0), reflectivity(0.5),
+    transparency(0), refraction_index(1)
 {
 }
 
 Material::Material(const Color& diffuse)
-: lock("Material mutex"), ref_cnt(0), diffuse(diffuse), emission(0,0,0),
-  reflectivity(0.5), transparency(0), refraction_index(1)
+  : ref_cnt(0), lock("Material mutex"), diffuse(diffuse), emission(0,0,0),
+    reflectivity(0.5), transparency(0), refraction_index(1)
 {
     ambient=Color(.2,.2,.2);
     specular=Color(.8,.8,.8);
@@ -63,7 +64,7 @@ Material::Material(const Color& diffuse)
 }
 
 Material::Material(const Material& copy)
-: lock("Material mutex"), ref_cnt(0), ambient(copy.ambient),
+: ref_cnt(0), lock("Material mutex"), ambient(copy.ambient),
   diffuse(copy.diffuse),
   specular(copy.specular), shininess(copy.shininess),
   emission(copy.emission), reflectivity(copy.reflectivity),

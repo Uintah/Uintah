@@ -34,7 +34,6 @@ LOS::draw()
 
   
   vector<Polygon* > polys;
-  Point vertex;
   double tmin, tmax, dt;
   double ts[8];
   int i;

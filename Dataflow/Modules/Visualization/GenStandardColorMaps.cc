@@ -94,15 +94,14 @@ extern "C" Module* make_GenStandardColorMaps(const clString& id) {
 //--------------------------------------------------------------- 
 GenStandardColorMaps::GenStandardColorMaps(const clString& id) 
   : Module("GenStandardColorMaps", id, Filter),
+    tcl_status("tcl_status",id,this),
+    positionList("positionList", id, this),
+    nodeList("nodeList", id, this),
+    width("width", id, this),
+    height("height", id, this),
     mapType("mapType", id, this),
     minRes("minRes", id, this),
-    resolution("resolution", id, this),
-  tcl_status("tcl_status",id,this) ,
-  positionList("positionList", id, this),
-  nodeList("nodeList", id, this),
-  width("width", id, this), height("height", id, this)
-  
-
+    resolution("resolution", id, this)
 { 
  // Create the output port
   outport = scinew ColorMapOPort(this,"ColorMap", ColorMapIPort::Atomic);

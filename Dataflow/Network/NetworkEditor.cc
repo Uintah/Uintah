@@ -106,8 +106,10 @@ void init_notes ()
 }
 
 NetworkEditor::NetworkEditor(Network* net)
-: mailbox("NetworkEditor request FIFO", 100), net(net),
-    first_schedule(1), schedule(1)
+  : net(net),
+    first_schedule(1),
+    schedule(1),
+    mailbox("NetworkEditor request FIFO", 100)
 {
     // Create User interface...
     TCL::add_command("netedit", this, 0);
@@ -686,7 +688,7 @@ void NetworkEditor::tcl_command(TCLArgs& args, void*)
                             "  category: ")+args[2]);
 	return;
       }
-      sprintf(string,"%d",(long)n);
+      sprintf(string,"%ld",(long)n);
       TCL::execute(clString("GetPathAndPackage {")+string+"} {"+
 		   n->name+"} {"+n->category+"}");
     } else if (args[1] == "create_pac_cat_mod"){

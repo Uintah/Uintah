@@ -370,12 +370,14 @@ bool stepsimplify(Function** f) {
 	case power:	FINISH(new Function((*f)->arg1->num));
 	case product:	FINISH(new Function(0.0));
 	case quotient:	FINISH(new Function(0.0));
+	default: throw "bad enum";
 	}
       }
       else if ((*f)->arg1->num == 1.0) {
 	switch((*f)->type) {
 	case product:	FINISH(new Function((*f)->arg2));
 	case power:	FINISH(new Function(1.0));
+	default: throw "bad enum";
 	}
       }
     }
@@ -390,6 +392,7 @@ bool stepsimplify(Function** f) {
 	  cerr << "Function::simplify() warning: "
 	       << "division by zero\n";
 	  return false;
+	default: throw "bad enum";
 	}
       }
       else if ((*f)->arg2->num == 1.0 && (((*f)->type == product) ||
@@ -619,6 +622,7 @@ ostream& operator<<(ostream& os, const Function* f) {
     case difference:	os << " - "; break;
     case product:	os << " * "; break;
     case quotient:	os << " / "; break;
+    default: throw "bad enum";
     }
     os << f->arg2 << ")";
     break;
@@ -638,6 +642,7 @@ ostream& operator<<(ostream& os, const Function* f) {
     case squareroot:	os << "sqrt";	break;
     case square:	os << "sqr";	break;
     case absolutevalue:	os << "abs";	break;
+    default: throw "bad enum";
     }
     os << "(" << f->arg1 << ")";
     break;
@@ -673,6 +678,7 @@ void Function::tex(ostream& texfile) {
     switch(type) {
     case sum: texfile << "+"; break;
     case difference: texfile << "-"; break;
+    default: throw "bad enum";
     }
     if (arg2->type == sum || arg2->type == difference) {
       texfile << "\\left(";
@@ -743,6 +749,7 @@ void Function::tex(ostream& texfile) {
     case cosine:	texfile << "cos";	break;
     case logarithm:	texfile << "ln";	break;
     case exponential:	texfile << "e^";	break;
+    default: throw "bad enum";
     }
     if (type == exponential) texfile << "{";
     else texfile << "\\left(";

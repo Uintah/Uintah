@@ -52,7 +52,7 @@ GeomPts::GeomPts(int size)
 }
 
 GeomPts::GeomPts(int size, const Vector &n)
-: pts(0, size*3), n(n), have_normal(1), pickable(0)
+: pts(0, size*3), have_normal(1), n(n), pickable(0)
 {
 }
 

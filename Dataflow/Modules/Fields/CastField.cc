@@ -41,14 +41,21 @@ extern "C" Module* make_CastField(const clString& id)
 
 static clString module_name("CastField");
 CastField::CastField(const clString& id)
-: Module("CastField", id, Filter), haveMinMaxTCL("haveMinMaxTCL", id, this),
-  haveOutVoxelTCL("haveOutVoxelTCL", id, this), 
-  haveBBoxTCL("haveBBoxTCL", id, this), NminTCL("NminTCL", id, this),
-  NmaxTCL("NmaxTCL", id, this), CminTCL("CminTCL", id, this),
-  CmaxTCL("CmaxTCL", id, this), minOutTCLX("minOutTCLX", id, this),
-  minOutTCLY("minOutTCLY", id, this), minOutTCLZ("minOutTCLZ", id, this),
-  maxOutTCLX("maxOutTCLX", id, this), maxOutTCLY("maxOutTCLY", id, this), 
-  maxOutTCLZ("maxOutTCLZ", id, this), outVoxelTCL("outVoxelTCL", id, this)
+  : Module("CastField", id, Filter),
+    haveMinMaxTCL("haveMinMaxTCL", id, this),
+    haveOutVoxelTCL("haveOutVoxelTCL", id, this), 
+    haveBBoxTCL("haveBBoxTCL", id, this),
+    outVoxelTCL("outVoxelTCL", id, this),
+    NminTCL("NminTCL", id, this),
+    NmaxTCL("NmaxTCL", id, this),
+    CminTCL("CminTCL", id, this),
+    CmaxTCL("CmaxTCL", id, this),
+    minOutTCLX("minOutTCLX", id, this),
+    minOutTCLY("minOutTCLY", id, this),
+    minOutTCLZ("minOutTCLZ", id, this),
+    maxOutTCLX("maxOutTCLX", id, this),
+    maxOutTCLY("maxOutTCLY", id, this), 
+    maxOutTCLZ("maxOutTCLZ", id, this)
 {
     iField=new FieldIPort(this, "Geometry", FieldIPort::Atomic);
     add_iport(iField);

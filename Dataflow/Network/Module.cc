@@ -138,12 +138,22 @@ oport_maker FindOPort(const char* package, const char* datatype)
 Module::Module(const clString& name, const clString& id, 
 	       SchedClass sched_class, const clString& cat,
 	       const clString& pack)
-: state(NeedData), helper(0), have_own_dispatch(0),
-  mailbox("Module execution FIFO", 100),
-  name(name), abort_flag(0), need_execute(0), sched_class(sched_class),
-  id(id), progress(0), handle(0), remote(0), skeleton(0),
-  notes("notes", id, this), show_status("show_status", id, this),
-  msgStream_("msgStream", id, this)
+  : notes("notes", id, this),
+    show_status("show_status", id, this),
+    msgStream_("msgStream", id, this),
+    state(NeedData),
+    helper(0),
+    have_own_dispatch(0),
+    progress(0),
+    mailbox("Module execution FIFO", 100),
+    name(name),
+    abort_flag(0),
+    need_execute(0),
+    sched_class(sched_class),
+    id(id),
+    handle(0),
+    remote(0),
+    skeleton(0)
 {
   packageName=pack;
   categoryName=cat;

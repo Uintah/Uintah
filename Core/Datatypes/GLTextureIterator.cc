@@ -36,12 +36,15 @@ int GLTextureIterator::traversalTable[27][8] = { {7,3,5,6,1,2,4,0},
 
 
 GLTextureIterator::GLTextureIterator(const GLTexture3D* tex,
-				       Ray view,
-				       Point c ):
-    tex(tex), view(view), control( c ), done( false )
+				     Ray view,
+				     Point c )
+  : view(view),
+    control(c),
+    tex(tex),
+    done(false)
 {
-
 }
+
 
 GLTextureIterator::~GLTextureIterator()
 {
@@ -57,7 +60,7 @@ GLTextureIterator::traversal(const Octree<Brick*>* n)
   int *traversal;
   int traversalIndex, x, y, z;
 
-  Point min, max, mid;
+  Point min, mid;
   mid = child()->bbox().max();
   min = child()->bbox().min();
 

@@ -31,7 +31,7 @@ static Persistent* maker()
 PersistentTypeID ColumnMatrix::type_id("ColumnMatrix", "Datatype", maker);
 
 ColumnMatrix::ColumnMatrix(int rows)
-  : rows(rows), Matrix(Matrix::non_symmetric, Matrix::column)
+  : Matrix(Matrix::non_symmetric, Matrix::column), rows(rows)
 {
     if(rows)
 	data=scinew double[rows];
@@ -40,7 +40,7 @@ ColumnMatrix::ColumnMatrix(int rows)
 }
 
 ColumnMatrix::ColumnMatrix(const ColumnMatrix& c)
-: rows(c.rows), Matrix(Matrix::non_symmetric, Matrix::column)
+  : Matrix(Matrix::non_symmetric, Matrix::column), rows(c.rows)
 {
     if(rows){
 	data=scinew double[rows];

@@ -59,9 +59,12 @@ enum { PickSphR, PickSphL, PickSphD, PickSphU, PickSphI, PickSphO,
  */
 BoxWidget::BoxWidget( Module* module, CrowdMonitor* lock, double widget_scale,
 		      Index aligned )
-: BaseWidget(module, lock, "BoxWidget", NumVars, NumCons, NumGeoms, NumPcks, NumMatls, NumMdes, NumSwtchs, widget_scale),
-  oldrightaxis(1, 0, 0), olddownaxis(0, 1, 0), oldinaxis(0, 0, 1),
-  aligned(aligned)
+  : BaseWidget(module, lock, "BoxWidget", NumVars, NumCons, NumGeoms,
+	       NumPcks, NumMatls, NumMdes, NumSwtchs, widget_scale),
+  aligned(aligned),
+  oldrightaxis(1, 0, 0),
+  olddownaxis(0, 1, 0),
+  oldinaxis(0, 0, 1)
 {
    Real INIT = 5.0*widget_scale;
    variables[CenterVar] = scinew PointVariable("Center", solve, Scheme1, Point(0, 0, 0));

@@ -175,7 +175,13 @@ static void quad_error(GLenum code)
 #endif
 
 DrawInfoOpenGL::DrawInfoOpenGL()
-: current_matl(0),lighting(1),currently_lit(1),pickmode(1),fog(0),cull(0),pickchild(0)
+  : lighting(1),
+    currently_lit(1),
+    pickmode(1),
+    pickchild(0),
+    fog(0),
+    cull(0),
+    current_matl(0)
 {
     qobj=gluNewQuadric();
 #ifdef _WIN32

@@ -37,21 +37,24 @@ namespace SCIRun {
 
 static clString control_name("Control Widget");
 			 
-extern "C" Module* make_TextureVolVis( const clString& id) {
+extern "C" Module* make_TextureVolVis( const clString& id)
+{
   return new TextureVolVis(id);
 }
 
 
 TextureVolVis::TextureVolVis(const clString& id)
   : Module("TextureVolVis", id, Filter), 
-  alpha_scale("alpha_scale", id, this),
-  num_slices("num_slices", id, this),
-  draw_mode("draw_mode", id, this),
-  render_style("render_style", id, this),
-  control_lock("TextureVolVis resolution lock"),
-  interp_mode("interp_mode", id, this),
-  control_widget(0), control_id(-1),
-  volren(0), tex(0)
+    tex(0),
+    control_lock("TextureVolVis resolution lock"),
+    control_widget(0),
+    control_id(-1),
+    num_slices("num_slices", id, this),
+    draw_mode("draw_mode", id, this),
+    render_style("render_style", id, this),
+    alpha_scale("alpha_scale", id, this),
+    interp_mode("interp_mode", id, this),
+    volren(0)
 {
   // Create the input ports
   intexture = scinew GLTexture3DIPort( this, "GL Texture",

@@ -32,8 +32,13 @@ static Persistent* maker()
 PersistentTypeID SymSparseRowMatrix::type_id("SymSparseRowMatrix", "Matrix", maker);
 
 SymSparseRowMatrix::SymSparseRowMatrix()
-: Matrix(Matrix::symmetric, Matrix::symsparse), nnrows(0), nncols(0), a(0),
-  columns(0), rows(0), nnz(0)
+  : Matrix(Matrix::symmetric, Matrix::symsparse),
+    nnrows(0),
+    nncols(0),
+    rows(0),
+    columns(0),
+    nnz(0),
+    a(0)
 {
     upper_rows=0;
     upper_columns=0;
@@ -44,7 +49,8 @@ SymSparseRowMatrix::SymSparseRowMatrix()
 SymSparseRowMatrix::SymSparseRowMatrix(int nnrows, int nncols,
 				       Array1<int>& in_rows,
 				       Array1<int>& in_cols)
-: Matrix(Matrix::symmetric, Matrix::symsparse), nnrows(nnrows), 
+: Matrix(Matrix::symmetric, Matrix::symsparse),
+  nnrows(nnrows), 
   nncols(nncols)
 {
     nnz=in_cols.size();
@@ -64,8 +70,12 @@ SymSparseRowMatrix::SymSparseRowMatrix(int nnrows, int nncols,
 SymSparseRowMatrix::SymSparseRowMatrix(int nnrows, int nncols,
 				       int* rows, int* columns,
 				       int nnz)
-: Matrix(Matrix::symmetric, Matrix::symsparse), nnrows(nnrows),
-  nncols(nncols), rows(rows), columns(columns), nnz(nnz)
+: Matrix(Matrix::symmetric, Matrix::symsparse),
+  nnrows(nnrows),
+  nncols(nncols),
+  rows(rows),
+  columns(columns),
+  nnz(nnz)
 {
     a=scinew double[nnz];
     //compute_upper();
