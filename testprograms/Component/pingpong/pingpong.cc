@@ -60,9 +60,7 @@ int main(int argc, char* argv[])
     using PingPong_ns::PingPong;
 
     try {
-      cout << "initialize:\n";
 	PIDL::PIDL::initialize(argc, argv);
-      cout << "done initialize:\n";
 
 	bool client=false;
 	bool server=false;
@@ -94,24 +92,17 @@ int main(int argc, char* argv[])
 	    usage(argv[0]);
 
 	if(server) {
-	    cerr << "Creating PingPong object\n";
 	    PingPong_impl* pp=new PingPong_impl;
 	    cerr << "Waiting for pingpong connections...\n";
 	    cerr << pp->getURL().getString() << '\n';
 	} else {
-	  cout << "objectFrom: " << client_url << "\n";
 	    PIDL::Object obj=PIDL::PIDL::objectFrom(client_url);
-	    cout << "got it\n";
 	    PingPong pp=pidl_cast<PingPong>(obj);
-	    cout << "done with pidl_cast\n";
 	    if(!pp){
-		cerr << "Wrong object type!\n";
 		abort();
 	    }
 	    double stime=Time::currentSeconds();
-	    cout << "time is: " << stime << "\n";
 	    for(int i=0;i<reps;i++){
-	      cerr << i << ": ping!\n";
 		int j=pp->pingpong(i);
 		if(i != j)
 		    cerr << "BAD data: " << i << " vs. " << j << '\n';
@@ -132,10 +123,7 @@ int main(int argc, char* argv[])
 	cerr << "Caught unexpected exception!\n";
 	abort();
     }
-	cerr << "Serve Objects!\n";
-	//int k; cin >> k;
-	PIDL::PIDL::serveObjects();
-	cerr << "Done Serve Objects!\n";
+    PIDL::PIDL::serveObjects();
     return 0;
 }
 
