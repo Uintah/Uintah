@@ -186,8 +186,8 @@
 	    </geom_object>
 	  </material>
 	  <exchange_coefficients>
-	     <momentum>	[0,0,0] </momentum>
-	     <heat>     [0,0,0]  </heat>
+	     <momentum>	[0.0] </momentum>
+	     <heat>     [0.0]  </heat>
 	 </exchange_coefficients>
 	</ICE>	
     </MaterialProperties>
