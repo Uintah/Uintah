@@ -482,7 +482,20 @@ Dpy::renderFrame() {
     // If keypad is attached to an object.
     if( attachedObject_ ) {
 //      attachedObject_->updatePosition( objectStealth_, guiCam_ );
-      attachedObject_->updateNewTransform( objectRotationMatrix_ );
+
+      Point  origin;
+      Vector lookdir, up, side;
+      double fov;
+      cam1->getParams( origin, lookdir, up, side, fov );
+
+      lookdir.normalize();
+      up.normalize();
+      side.normalize();
+
+      Transform viewpoint( Point(0,0,0), -lookdir, side, up );
+
+      attachedObject_->updateNewTransform( objectRotationMatrix_,
+					   viewpoint );
     }
 
     if (display_frames) {
