@@ -1384,7 +1384,7 @@ class BioImageApp {
 	    global $m15-diffuse $m15-specular
 	    global $m15-shine
             global $m15-adaptive
-	    set $m15-alpha_scale {-0.554}
+	    set $m15-alpha_scale {0.0}
 	    set $m15-shading {1}
 	    set $m15-ambient {0.5}
 	    set $m15-diffuse {0.5}
@@ -3530,17 +3530,11 @@ class BioImageApp {
         $w.ui.2.l configure -text "Axial" -width 10
 
         global [set UnuResample]-sigma [set UnuResample]-extent
-        trace variable [set UnuResample]-sigma w "$this enable_update"
-        trace variable [set UnuResample]-extent w "$this enable_update"
+        global [set UnuResample]-filtertype 
+        set [set UnuResample]-filtertype cubicBS
+        set [set UnuResample]-sigma 2
+        set [set UnuResample]-extent 2
 
-        make_entry $w.ui.sigma "Gaussian Sigma:" [set UnuResample]-sigma $which
-        make_entry $w.ui.extent "Gaussian Extent:" [set UnuResample]-extent $which
-	
-	pack $w.ui.sigma $w.ui.extent -side top -anchor nw -fill x 
-
-        bind $w.ui.sigma <ButtonPress-1> "$this check_crop"
-        bind $w.ui.extent <ButtonPress-1> "$this check_crop"
-	
  	iwidgets::optionmenu $w.ui.kernel -labeltext "Filter Type:" \
  	    -labelpos w \
             -command "$this change_kernel $w.ui.kernel $which"
@@ -3549,7 +3543,7 @@ class BioImageApp {
  	$w.ui.kernel insert end Box Tent "Cubic (Catmull-Rom)" \
  	    "Cubic (B-spline)" Quartic Gaussian
 	
- 	$w.ui.kernel select Gaussian
+ 	$w.ui.kernel select "Cubic (B-spline)"
 
 	return $history.$which
     }
