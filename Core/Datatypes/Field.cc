@@ -65,11 +65,12 @@ Field::io(Piostream& stream){
 
     unsigned int tmp;
     Pio(stream, tmp);
-    if (tmp == 3) {
-      // data_at_ was CELL
-      order_ = 0;
-    } else {
+    if (tmp == 1) {
+      // data_at_ was NODE
       order_ = 1;
+    } else {
+      // data_at_ was somewhere else
+      order_ = 0;
     }
   } else {
     Pio(stream, order_);

@@ -146,10 +146,24 @@ template <class Mesh, class FData>
 void
 GenericField<Mesh, FData>::resize_fdata()
 {
-  if (basis_order() == 0)
+  if (basis_order() == 0 && mesh_->dimensionality() == 3)
   {
     typename mesh_type::Cell::size_type ssize;
     mesh_->synchronize(Mesh::CELLS_E);
+    mesh_->size(ssize);
+    fdata().resize(ssize);
+  } 
+  if (basis_order() == 0 && mesh_->dimensionality() == 2)
+  {
+    typename mesh_type::Face::size_type ssize;
+    mesh_->synchronize(Mesh::FACES_E);
+    mesh_->size(ssize);
+    fdata().resize(ssize);
+  } 
+  if (basis_order() == 0 && mesh_->dimensionality() == 1)
+  {
+    typename mesh_type::Edge::size_type ssize;
+    mesh_->synchronize(Mesh::EDGES_E);
     mesh_->size(ssize);
     fdata().resize(ssize);
   } 
@@ -277,40 +291,40 @@ template <class Mesh, class FData>
 bool
 GenericField<Mesh, FData>::value(value_type &val, typename mesh_type::Node::index_type i) const
 {
-  ASSERTL3(basis_order() == 1);
+  ASSERTL3(basis_order() == 1 || mesh_->dimensionality() == 0);
   CHECKARRAYBOUNDS(i, 0, fdata_.size());
-  if (basis_order() != 1) return false; val = fdata_[i]; return true;
+  if (!(basis_order() == 1 || mesh_->dimensionality() == 0)) return false;
+  val = fdata_[i]; return true;
 }
 
 template <class Mesh, class FData>
 bool
 GenericField<Mesh, FData>::value(value_type &val, typename mesh_type::Edge::index_type i) const
 {
-  ASSERTFAIL("Edge data not supported");
-  return false;
-  //   ASSERTL3(basis_order() == EDGE);
-  //   CHECKARRAYBOUNDS(i, 0, fdata_.size());
-  //   if (basis_order() != EDGE) return false; val = fdata_[i]; return true;
+  ASSERTL3(basis_order() == 0 && mesh_->dimensionality() == 1);
+  CHECKARRAYBOUNDS(i, 0, fdata_.size());
+  if (basis_order() != 0) return false;
+  val = fdata_[i]; return true;
 }
 
 template <class Mesh, class FData>
 bool
 GenericField<Mesh, FData>::value(value_type &val, typename mesh_type::Face::index_type i) const
 {
-  ASSERTFAIL("Face data not supported");
-  return false;
-  // ASSERTL3(basis_order() == FACE);
-  //   CHECKARRAYBOUNDS(i, 0, fdata_.size());
-  //   if (basis_order() != FACE) return false; val = fdata_[i]; return true;
+  ASSERTL3(basis_order() == 0 && mesh_->dimensionality() == 2);
+  CHECKARRAYBOUNDS(i, 0, fdata_.size());
+  if (basis_order() != 0) return false;
+  val = fdata_[i]; return true;
 }
 
 template <class Mesh, class FData>
 bool
 GenericField<Mesh, FData>::value(value_type &val, typename mesh_type::Cell::index_type i) const
 {
-  ASSERTL3(basis_order() == 0);
+  ASSERTL3(basis_order() == 0 && mesh_->dimensionality() == 3);
   CHECKARRAYBOUNDS(i, 0, fdata_.size());
-  if (basis_order() != 0) return false; val = fdata_[i]; return true;
+  if (basis_order() != 0) return false;
+  val = fdata_[i]; return true;
 } 
 
 //! Required interface to support Field Concept.
@@ -318,7 +332,7 @@ template <class Mesh, class FData>
 void
 GenericField<Mesh, FData>::set_value(const value_type &val, typename mesh_type::Node::index_type i)
 {
-  ASSERTL3(basis_order() == 1);
+  ASSERTL3(basis_order() == 1 || mesh_->dimensionality() == 0);
   CHECKARRAYBOUNDS(i, 0, fdata_.size());
   fdata_[i] = val;
 }
@@ -326,25 +340,23 @@ template <class Mesh, class FData>
 void
 GenericField<Mesh, FData>::set_value(const value_type &val, typename mesh_type::Edge::index_type i)
 {
-  ASSERTFAIL("Edge data not supported");
-//   ASSERTL3(basis_order() == EDGE);
-//   CHECKARRAYBOUNDS(i, 0, fdata_.size());
-//   fdata_[i] = val;
+  ASSERTL3(basis_order() == 0 && mesh_->dimensionality() == 1);
+  CHECKARRAYBOUNDS(i, 0, fdata_.size());
+  fdata_[i] = val;
 }
 template <class Mesh, class FData>
 void
 GenericField<Mesh, FData>::set_value(const value_type &val, typename mesh_type::Face::index_type i)
 {
-  ASSERTFAIL("Face data not supported");
-//   ASSERTL3(basis_order() == FACE);
-//   CHECKARRAYBOUNDS(i, 0, fdata_.size());
-//   fdata_[i] = val;
+  ASSERTL3(basis_order() == 0 && mesh_->dimensionality() == 2);
+  CHECKARRAYBOUNDS(i, 0, fdata_.size());
+  fdata_[i] = val;
 }
 template <class Mesh, class FData>
 void
 GenericField<Mesh, FData>::set_value(const value_type &val, typename mesh_type::Cell::index_type i)
 {
-  ASSERTL3(basis_order() == 0);
+  ASSERTL3(basis_order() == 0 && mesh_->dimensionality() == 3);
   CHECKARRAYBOUNDS(i, 0, fdata_.size());
   fdata_[i] = val;
 }
@@ -353,7 +365,7 @@ template <class Mesh, class FData>
 const typename GenericField<Mesh, FData>::value_type &
 GenericField<Mesh, FData>::value(typename mesh_type::Node::index_type i) const
 {
-  ASSERTL3(basis_order() == 1);
+  ASSERTL3(basis_order() == 1 || mesh_->dimensionality() == 0);
   CHECKARRAYBOUNDS(i, 0, fdata_.size());
   return fdata_[i];
 }
@@ -361,28 +373,23 @@ template <class Mesh, class FData>
 const typename GenericField<Mesh, FData>::value_type &
 GenericField<Mesh, FData>::value(typename mesh_type::Edge::index_type i) const
 {
-  ASSERTFAIL("Edge data not supported");
+  ASSERTL3(basis_order() == 0 && mesh_->dimensionality() == 1);
+  CHECKARRAYBOUNDS(i, 0, fdata_.size());
   return fdata_[i];
-
-  // ASSERTL3(basis_order() == EDGE);
-//   CHECKARRAYBOUNDS(i, 0, fdata_.size());
-//   return fdata_[i];
 }
 template <class Mesh, class FData>
 const typename GenericField<Mesh, FData>::value_type &
 GenericField<Mesh, FData>::value(typename mesh_type::Face::index_type i) const 
 {
-  ASSERTFAIL("Face data not supported");
+  ASSERTL3(basis_order() == 0 && mesh_->dimensionality() == 2);
+  CHECKARRAYBOUNDS(i, 0, fdata_.size());
   return fdata_[i];
-  // ASSERTL3(basis_order() == FACE);
-//   CHECKARRAYBOUNDS(i, 0, fdata_.size());
-//   return fdata_[i];
 }
 template <class Mesh, class FData>
 const typename GenericField<Mesh, FData>::value_type &
 GenericField<Mesh, FData>::value(typename mesh_type::Cell::index_type i) const 
 {
-  ASSERTL3(basis_order() == 0);
+  ASSERTL3(basis_order() == 0 && mesh_->dimensionality() == 3);
   CHECKARRAYBOUNDS(i, 0, fdata_.size());
   return fdata_[i];
 }
@@ -450,16 +457,26 @@ template <class Mesh, class FData>
 const TypeDescription *
 GenericField<Mesh, FData>::order_type_description() const
 {
-  switch(basis_order())
+  const int order = basis_order();
+  const int dim = mesh_->dimensionality();
+  if (order == 0 && dim == 3)
   {
-  case 0:
     return SCIRun::get_type_description((typename Mesh::Cell *)0);
-  case 1:
-  default:
+  }
+  else if (order == 0 && dim == 2)
+  {
+    return SCIRun::get_type_description((typename Mesh::Face *)0);
+  }
+  else if (order == 0 && dim == 1)
+  {
+    return SCIRun::get_type_description((typename Mesh::Edge *)0);
+  }
+  else
+  {
     return SCIRun::get_type_description((typename Mesh::Node *)0);
   }
-  return 0;
 }
+
 
 } // end namespace SCIRun
 
