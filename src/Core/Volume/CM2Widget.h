@@ -224,8 +224,6 @@ public:
   static SCIRun::PersistentTypeID type_id;
 
 protected:
-  static Persistent *maker();
-
   // nrrdSpatialResample ...
   Nrrd* resize(int w, int h);
 
