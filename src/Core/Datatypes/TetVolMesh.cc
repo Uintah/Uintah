@@ -2142,11 +2142,11 @@ TetVolMesh::refine_elements(const Cell::array_type &cells,
 			    cell_2_cell_map_t &green_children)
 {
 #ifdef HAVE_HASH_MAP
-  typedef hash_multimap<Edge::index_type, Node::index_type, Edge::CellEdgeHasher, Edge::EdgeComparitor>  HalfEdgeMap;
 #ifdef __ECC
   typedef hash_multimap<Edge::index_type, Node::index_type, Edge::CellEdgeHasher>  HalfEdgeMap;
   HalfEdgeMap inserted_nodes(edge_hasher_);
 #else
+  typedef hash_multimap<Edge::index_type, Node::index_type, Edge::CellEdgeHasher, Edge::EdgeComparitor>  HalfEdgeMap;
   HalfEdgeMap inserted_nodes(100, edge_hasher_, edge_comp_);
 #endif // ifdef __ECC
 #else // ifdef HAVE_HASH_SET
