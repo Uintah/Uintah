@@ -198,7 +198,8 @@ GridP DataArchive::queryGrid( double time )
 	       long totalCells;
 	       if(!get(r, "totalCells", totalCells))
 		  throw InternalError("Error parsing patch total cells");
-	       Patch* r = level->addPatch(lowIndex, highIndex, id);
+	       Patch* r = level->addPatch(lowIndex, highIndex,lowIndex,
+					  highIndex,id);
 	       ASSERTEQ(r->totalCells(), totalCells);
 	    } else if(r.getNodeName().equals("anchor")
 		      || r.getNodeName().equals("cellspacing")){
@@ -497,6 +498,9 @@ int DataArchive::queryNumMaterials( const string& name, const Patch* patch, doub
 
 //
 // $Log$
+// Revision 1.14  2000/11/14 04:00:03  jas
+// Added limits for extraCells.
+//
 // Revision 1.13  2000/11/02 19:19:21  kuzimmer
 // Added particleVariable  query function
 //
