@@ -528,7 +528,7 @@ void SerialMPM::scheduleIntegrateAcceleration(SchedulerP& sched,
 
   t->requires(Task::OldDW, d_sharedState->get_delt_label() );
 
-  t->modifies(             lb->gAccelerationLabel, mss, Ghost::None);
+  t->modifies(             lb->gAccelerationLabel, mss);
   t->requires(Task::NewDW, lb->gVelocityLabel,          Ghost::None);
 
   t->computes(lb->gVelocityStarLabel);

@@ -94,7 +94,7 @@ void NullContact::addComputesAndRequiresInterpolated( Task* t,
 						const MaterialSet* ms) const
 {
   const MaterialSubset* mss = ms->getUnion();
-  t->modifies(lb->gVelocityLabel, mss, Ghost::None);
+  t->modifies(lb->gVelocityLabel, mss);
 }
 
 void NullContact::addComputesAndRequiresIntegrated( Task* t,
@@ -102,6 +102,6 @@ void NullContact::addComputesAndRequiresIntegrated( Task* t,
 					     const MaterialSet* ms) const
 {
   const MaterialSubset* mss = ms->getUnion();
-  t->modifies(lb->gVelocityStarLabel, mss, Ghost::None);
-  t->modifies(lb->gAccelerationLabel, mss, Ghost::None);
+  t->modifies(lb->gVelocityStarLabel, mss);
+  t->modifies(lb->gAccelerationLabel, mss);
 }

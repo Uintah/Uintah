@@ -497,7 +497,7 @@ void FrictionContact::addComputesAndRequiresInterpolated( Task* t,
   t->requires(Task::OldDW, lb->gNormTractionLabel,  Ghost::None);
   t->requires(Task::OldDW, lb->gSurfNormLabel,      Ghost::None);
   t->requires(Task::NewDW, lb->gMassLabel,          Ghost::None);
-  t->modifies(             lb->gVelocityLabel, mss, Ghost::None);
+  t->modifies(             lb->gVelocityLabel, mss);
 }
 
 void FrictionContact::addComputesAndRequiresIntegrated( Task* t,
@@ -508,8 +508,8 @@ void FrictionContact::addComputesAndRequiresIntegrated( Task* t,
   t->requires(Task::NewDW,lb->pStressLabel_afterStrainRate,
 	      Ghost::AroundNodes, 1);
   t->requires(Task::NewDW, lb->gMassLabel,              Ghost::AroundNodes, 1);
-  t->modifies(             lb->gVelocityStarLabel, mss, Ghost::None);
-  t->modifies(             lb->gAccelerationLabel, mss, Ghost::None);
+  t->modifies(             lb->gVelocityStarLabel, mss);
+  t->modifies(             lb->gAccelerationLabel, mss);
 
   t->computes(lb->gNormTractionLabel);
   t->computes(lb->gSurfNormLabel);
