@@ -122,7 +122,9 @@ namespace Uintah {
       };
 } // End namespace Uintah
       
-
+namespace SCIRun {
+  void swapbytes( Uintah::ViscoScram::StateData& d);
+} // namespace SCIRun
 
 #endif  // __VISCOSCRAM_CONSTITUTIVE_MODEL_H__ 
 
