@@ -71,6 +71,7 @@ itcl_class Uintah_Visualization_AnimatedStreams {
 	    -orient horizontal 
 
 	pack $w.linewidth -side top -fill x
+	bind $w.linewidth <ButtonRelease> "$this-c update_linewidth"
 
 	button $w.reset -text "Reset Streams" -command "$this-c reset_streams"
 	pack $w.reset -side top -fill x
