@@ -59,5 +59,7 @@ itcl_class WidgetTest {
 	pack $w.f.nextmode -fill x -pady 2
 	button $w.f.ui -text "UI" -command "$this-c ui"
 	pack $w.f.ui -fill x -pady 2
+	button $w.f.histo -text "Histogram" -command "$this-c histo"
+	pack $w.f.histo -fill x -pady 2
     }
 }

@@ -31,6 +31,8 @@
 #include <Widgets/LightWidget.h>
 #include <Widgets/PathWidget.h>
 
+#include <TCL/Histogram.h>
+
 #include <iostream.h>
 
 enum WidgetTypes { WT_Point, WT_Arrow, WT_Crit, WT_Cross, WT_Gauge, WT_Ring,
@@ -51,6 +53,8 @@ private:
 
    virtual void geom_moved(int, double, const Vector&, void*);
    virtual void geom_release(void*);
+
+   Histogram histo;
 public:
    WidgetTest(const clString& id);
    WidgetTest(const WidgetTest&, int deep);
@@ -95,6 +99,18 @@ WidgetTest::WidgetTest(const clString& id)
    widgets[WT_View] = new ViewWidget(this, &widget_lock, INIT);
    widgets[WT_Light] = new LightWidget(this, &widget_lock, INIT);
    widgets[WT_Path] = new PathWidget(this, &widget_lock, INIT);
+
+   srand(666);
+   Array1<double> data(5000);
+   for (int i=0; i<5000; i++) {
+      int t(random());
+      data[i] = t%5000;
+   }
+   histo.SetData(data);
+   histo.SetTitle(id+" Histogram");
+   histo.SetValueTitle("Volume");
+   histo.SetFrequencyTitle("Number");
+   histo.ShowGrid();
 }
 
 WidgetTest::WidgetTest(const WidgetTest& copy, int deep)
@@ -163,6 +179,9 @@ void WidgetTest::tcl_command(TCLArgs& args, void* userdata)
       if(!abort_flag){
 	 abort_flag=1;
 	 want_to_execute();
+	 double l,r;
+	 histo.GetRange(l,r);
+	 cout << "(" << l << "," << r << ")" << endl;
       }
    } else if(args[1] == "select"){
        // Select the appropriate widget
@@ -184,6 +203,8 @@ void WidgetTest::tcl_command(TCLArgs& args, void* userdata)
       ogeom->flushViews();
    } else if(args[1] == "ui"){
       widgets[widget_type.get()]->ui();
+   } else if(args[1] == "histo"){
+      histo.ui();
    } else {
       Module::tcl_command(args, userdata);
    }
