@@ -35,7 +35,8 @@ public:
     virtual ~Matrix();
     virtual Matrix* Matrix::clone();
     virtual double& get(int, int)=0;
-    MatrixRow operator[](int r);
+    inline MatrixRow operator[](int r);
+
     virtual void zero()=0;
     int isolve(ColumnMatrix& lhs, ColumnMatrix& rhs,
 	       double error);
@@ -55,10 +56,15 @@ class MatrixRow {
     Matrix* matrix;
     int row;
 public:
-    MatrixRow(Matrix* matrix, int row);
-    ~MatrixRow();
+    inline MatrixRow(Matrix* matrix, int row) : matrix(matrix), row(row) {}
+    inline ~MatrixRow() {}
 
-    double& operator[](int);
+    inline double& operator[](int col) {return matrix->get(row, col);}
 };
+
+inline MatrixRow Matrix::operator[](int row)
+{
+    return MatrixRow(this, row);
+}
 
 #endif

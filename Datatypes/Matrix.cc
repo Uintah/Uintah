@@ -37,25 +37,6 @@ Matrix* Matrix::clone()
     return 0;
 }
 
-MatrixRow::MatrixRow(Matrix* matrix, int row)
-: matrix(matrix), row(row)
-{
-}
-
-MatrixRow::~MatrixRow()
-{
-}
-
-double& MatrixRow::operator[](int col)
-{
-    return matrix->get(row, col);
-}
-
-MatrixRow Matrix::operator[](int row)
-{
-    return MatrixRow(this, row);
-}
-
 int Matrix::isolve(ColumnMatrix& lhs, ColumnMatrix& rhs, double max_error)
 {
     int size=nrows();
