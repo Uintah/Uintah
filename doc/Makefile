@@ -26,7 +26,9 @@ $(FINALTARGET): SCIRunDocs.tar
 SCIRunDocs.tar: doc_styles.css index.html TechnicalGuide/TOC.html \
                 UserGuide/usersguide/usersguide.html
 	rm -f SCIRunDocs.tar
-	cd ..; tar cvf doc/SCIRunDocs.tar doc/UserGuide/usersguide/*.html \
+	cd ..; tar cvf doc/SCIRunDocs.tar doc/UserGuide/usersguide \
+		   doc/UserGuide/figures doc/UserGuide/tutorial \
+		   doc/UserGuide/usersguide.ps.gz \
                    doc/TechnicalGuide/*.html \
                    doc/doc_styles.css doc/index.html doc/images
 
