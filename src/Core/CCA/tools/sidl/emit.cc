@@ -912,12 +912,12 @@ void CI::emit_interface(EmitState& e)
   e.out << fn << "::" << cn << "(bool initServer)\n";
   if(parent_ifaces.size() != 0 || parentclass)
     e.out << " : ";
+  SymbolTable* localScope=symbols->getParent();
   if(parentclass)
-    e.out << parentclass->cppclassname() << "_interface(false)";
+    e.out << parentclass->cppfullname(localScope) << "_interface(false)";
   if(parent_ifaces.size() > 0){
     vector<Interface*> parents;
     gatherParentInterfaces(parents);
-    SymbolTable* localScope=symbols->getParent();
     for(vector<Interface*>::iterator iter=parents.begin();
 	iter != parents.end(); iter++){
       if(*iter != this){
