@@ -54,20 +54,15 @@ source $DATADIR/$DATASET/$DATASET.settings
 
 ::netedit dontschedule
 
-global notes
-set notes ""
-
 set m0 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 44 2]
 set m1 [addModuleAtPosition "SCIRun" "Fields" "InterpolantToTransferMatrix" 346 248]
 set m2 [addModuleAtPosition "SCIRun" "Fields" "BuildInterpolant" 231 160]
 set m3 [addModuleAtPosition "SCIRun" "Fields" "ManageFieldData" 180 248]
-set m4 [addModuleAtPosition "SCIRun" "Math" "LinAlgBinary" 277 397]
+set m4 [addModuleAtPosition "SCIRun" "Math" "LinAlgBinary" 276 334]
 set m5 [addModuleAtPosition "SCIRun" "Fields" "ApplyInterpolant" 32 244]
-set m6 [addModuleAtPosition "SCIRun" "Fields" "ManageFieldData" 57 377]
-set m7 [addModuleAtPosition "SCIRun" "Math" "ErrorMetric" 149 501]
+set m6 [addModuleAtPosition "SCIRun" "Fields" "ManageFieldData" 59 335]
+set m7 [addModuleAtPosition "SCIRun" "Math" "ErrorMetric" 147 438]
 set m8 [addModuleAtPosition "SCIRun" "Fields" "SampleLattice" 291 80]
-set m9 [addModuleAtPosition "SCIRun" "DataIO" "MatrixWriter" 36 589]
-set m10 [addModuleAtPosition "SCIRun" "DataIO" "MatrixWriter" 371 536]
 
 addConnection $m2 0 $m1 0
 addConnection $m0 0 $m3 0
@@ -81,8 +76,6 @@ addConnection $m8 0 $m2 1
 addConnection $m0 0 $m8 0
 addConnection $m1 0 $m4 0
 addConnection $m3 1 $m4 1
-addConnection $m4 0 $m10 0
-addConnection $m6 1 $m9 0
 
 set $m0-notes {}
 set $m0-show_status {1}
@@ -118,16 +111,6 @@ set $m8-sizey {5}
 set $m8-sizez {5}
 set $m8-padpercent {0}
 set $m8-data-at {Nodes}
-set $m9-notes {}
-set $m9-show_status {1}
-set $m9-filename {/tmp/interp.mat}
-set $m9-filetype {ASCII}
-set $m9-split {0}
-set $m10-notes {}
-set $m10-show_status {1}
-set $m10-filename {/tmp/transfer.mat}
-set $m10-filetype {ASCII}
-set $m10-split {0}
 $m7 initialize_ui
 
 ::netedit scheduleok
