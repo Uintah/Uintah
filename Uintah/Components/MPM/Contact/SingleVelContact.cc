@@ -58,7 +58,7 @@ SingleVelContact::~SingleVelContact()
 }
 
 void SingleVelContact::initializeContact(const Patch* /*patch*/,
-					 int /*vfindex*/,
+					 int /*dwindex*/,
 					 DataWarehouseP& /*new_dw*/)
 {
 
@@ -81,10 +81,10 @@ void SingleVelContact::exMomInterpolated(const ProcessorGroup*,
   vector<NCVariable<Vector> > gvelocity(numMatls);
   for(int m = 0; m < numMatls; m++){
     MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
-    int vfindex = mpm_matl->getVFIndex();
-    new_dw->get(gmass[vfindex], lb->gMassLabel,vfindex , patch,
+    int dwindex = mpm_matl->getDWIndex();
+    new_dw->get(gmass[m], lb->gMassLabel,dwindex , patch,
 		  Ghost::None, 0);
-    new_dw->get(gvelocity[vfindex], lb->gVelocityLabel, vfindex, patch,
+    new_dw->get(gvelocity[m], lb->gVelocityLabel, dwindex, patch,
 		  Ghost::None, 0);
   }
 
@@ -107,7 +107,9 @@ void SingleVelContact::exMomInterpolated(const ProcessorGroup*,
 
   // Store new velocities in DataWarehouse
   for(int n=0; n< numMatls; n++){
-    new_dw->put(gvelocity[n], lb->gMomExedVelocityLabel, n, patch);
+    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( n );
+    int dwindex = mpm_matl->getDWIndex();
+    new_dw->put(gvelocity[n], lb->gMomExedVelocityLabel, dwindex, patch);
   }
 }
 
@@ -130,11 +132,11 @@ void SingleVelContact::exMomIntegrated(const ProcessorGroup*,
   vector<NCVariable<Vector> > gacceleration(numMatls);
   for(int m = 0; m < numMatls; m++){
     MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
-    int vfindex = mpm_matl->getVFIndex();
-    new_dw->get(gmass[vfindex],lb->gMassLabel,vfindex ,patch, Ghost::None, 0);
-    new_dw->get(gvelocity_star[vfindex], lb->gVelocityStarLabel, vfindex,
+    int dwindex = mpm_matl->getDWIndex();
+    new_dw->get(gmass[m],lb->gMassLabel,dwindex ,patch, Ghost::None, 0);
+    new_dw->get(gvelocity_star[m], lb->gVelocityStarLabel, dwindex,
 		  patch, Ghost::None, 0);
-    new_dw->get(gacceleration[vfindex], lb->gAccelerationLabel, vfindex,
+    new_dw->get(gacceleration[m], lb->gAccelerationLabel, dwindex,
 		  patch, Ghost::None, 0);
   }
 
@@ -163,8 +165,10 @@ void SingleVelContact::exMomIntegrated(const ProcessorGroup*,
 
   // Store new velocities and accelerations in DataWarehouse
   for(int n = 0; n < numMatls; n++){
-    new_dw->put(gvelocity_star[n], lb->gMomExedVelocityStarLabel, n, patch);
-    new_dw->put(gacceleration[n], lb->gMomExedAccelerationLabel, n, patch);
+    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( n );
+    int dwindex = mpm_matl->getDWIndex();
+    new_dw->put(gvelocity_star[n], lb->gMomExedVelocityStarLabel,dwindex,patch);
+    new_dw->put(gacceleration[n],  lb->gMomExedAccelerationLabel,dwindex,patch);
   }
 }
 
@@ -200,6 +204,10 @@ void SingleVelContact::addComputesAndRequiresIntegrated( Task* t,
 }
 
 // $Log$
+// Revision 1.26  2000/11/15 01:39:49  guilkey
+// Made the way in which materials were looped over more consistent.
+// Got rid of references to VFIndex, use only DWIndex now.
+//
 // Revision 1.25  2000/11/07 22:52:22  guilkey
 // Changed the way that materials are looped over.  Instead of each
 // function iterating over all materials, and then figuring out which ones
