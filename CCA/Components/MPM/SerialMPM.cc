@@ -896,10 +896,12 @@ void SerialMPM::initializePressureBC(const ProcessorGroup*,
 
       // Get the material points per load curve
       sumlong_vartype numPart = 0;
-      new_dw->get(numPart, lb->materialPointsPerLoadCurveLabel, 0, nofPressureBCs++); 
+      new_dw->get(numPart, lb->materialPointsPerLoadCurveLabel,
+                                                           0, nofPressureBCs++);
 
       // Save the material points per load curve in the PressureBC object
-      PressureBC* pbc = dynamic_cast<PressureBC*>(MPMPhysicalBCFactory::mpmPhysicalBCs[ii]);
+      PressureBC* pbc =
+            dynamic_cast<PressureBC*>(MPMPhysicalBCFactory::mpmPhysicalBCs[ii]);
       pbc->numMaterialPoints(numPart);
       cout_doing << "    Load Curve = " << nofPressureBCs 
 	         << " Num Particles = " << numPart << endl;
@@ -2094,7 +2096,7 @@ void SerialMPM::calculateDampingRate(const ProcessorGroup*,
 	old_dw->get(px, lb->pXLabel, pset);
 	if(d_8or27==27) old_dw->get(psize, lb->pSizeLabel, pset);
 	Ghost::GhostType  gac = Ghost::AroundCells;
-	new_dw->get(gvelocity_star,   lb->gVelocityStarLabel,   dwi,patch,gac,NGP);
+	new_dw->get(gvelocity_star,   lb->gVelocityStarLabel,dwi,patch,gac,NGP);
 
 	IntVector ni[MAX_BASIS];
 	double S[MAX_BASIS];
@@ -2107,9 +2109,10 @@ void SerialMPM::calculateDampingRate(const ProcessorGroup*,
 	for(;iter != pset->end(); iter++){
 	  particleIndex idx = *iter;
 	  if (d_8or27 == 27) 
-	    patch->findCellAndWeightsAndShapeDerivatives27(px[idx],ni,S,d_S,psize[idx]);
+	    patch->findCellAndWeightsAndShapeDerivatives27(px[idx],ni,S,d_S,
+                                                                    psize[idx]);
 	  else
-	    patch->findCellAndWeightsAndShapeDerivatives(px[idx],ni,S,d_S);
+	    patch->findCellAndWeightsAndShapeDerivatives(  px[idx],ni,S,d_S);
 	  Vector vel(0.0,0.0,0.0);
 	  for (int k = 0; k < d_8or27; k++) vel += gvelocity_star[ni[k]]*S[k];
 	  alphaDot += Dot(vel,vel);
@@ -2180,7 +2183,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       // Get the arrays of grid data on which the new part. values depend
       constNCVariable<Vector> gvelocity_star, gacceleration;
       constNCVariable<double> gTemperatureRate, gTemperature, gTemperatureNoBC;
-      constNCVariable<double> dTdt, massBurnFraction, frictionTempRate;
+      constNCVariable<double> dTdt, massBurnFrac, frictionTempRate;
       constNCVariable<double> gSp_vol_src;
 
       ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
@@ -2214,28 +2217,28 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       }
 
       Ghost::GhostType  gac = Ghost::AroundCells;
-      new_dw->get(gvelocity_star,   lb->gVelocityStarLabel,   dwi,patch,gac,NGP);
-      new_dw->get(gacceleration,    lb->gAccelerationLabel,   dwi,patch,gac,NGP);
-      new_dw->get(gTemperatureRate, lb->gTemperatureRateLabel,dwi,patch,gac,NGP);
-      new_dw->get(gTemperature,     lb->gTemperatureLabel,    dwi,patch,gac,NGP);
-      new_dw->get(gTemperatureNoBC, lb->gTemperatureNoBCLabel,dwi,patch,gac,NGP);
-      new_dw->get(frictionTempRate, lb->frictionalWorkLabel,  dwi,patch,gac,NGP);    
+      new_dw->get(gvelocity_star,  lb->gVelocityStarLabel,   dwi,patch,gac,NGP);
+      new_dw->get(gacceleration,   lb->gAccelerationLabel,   dwi,patch,gac,NGP);
+      new_dw->get(gTemperatureRate,lb->gTemperatureRateLabel,dwi,patch,gac,NGP);
+      new_dw->get(gTemperature,    lb->gTemperatureLabel,    dwi,patch,gac,NGP);
+      new_dw->get(gTemperatureNoBC,lb->gTemperatureNoBCLabel,dwi,patch,gac,NGP);
+      new_dw->get(frictionTempRate,lb->frictionalWorkLabel,  dwi,patch,gac,NGP);
       if(d_with_ice){
-	new_dw->get(dTdt,            lb->dTdt_NCLabel,         dwi,patch,gac,NGP);
-	new_dw->get(gSp_vol_src,     lb->gSp_vol_srcLabel,     dwi,patch,gac,NGP);
-	new_dw->get(massBurnFraction,lb->massBurnFractionLabel,dwi,patch,gac,NGP);
+       new_dw->get(dTdt,           lb->dTdt_NCLabel,         dwi,patch,gac,NGP);
+       new_dw->get(gSp_vol_src,    lb->gSp_vol_srcLabel,     dwi,patch,gac,NGP);
+       new_dw->get(massBurnFrac,   lb->massBurnFractionLabel,dwi,patch,gac,NGP);
       }
       else{
-	NCVariable<double> dTdt_create,massBurnFraction_create,gSp_vol_src_create;
-	new_dw->allocateTemporary(dTdt_create,                     patch,gac,NGP);
-	new_dw->allocateTemporary(gSp_vol_src_create,              patch,gac,NGP);
-	new_dw->allocateTemporary(massBurnFraction_create,         patch,gac,NGP);
-	dTdt_create.initialize(0.);
-	gSp_vol_src_create.initialize(0.);
-	massBurnFraction_create.initialize(0.);
-	dTdt = dTdt_create;                         // reference created data
-	gSp_vol_src = gSp_vol_src_create;           // reference created data
-	massBurnFraction = massBurnFraction_create; // reference created data
+       NCVariable<double> dTdt_create,massBurnFrac_create,gSp_vol_src_create;
+       new_dw->allocateTemporary(dTdt_create,                    patch,gac,NGP);
+       new_dw->allocateTemporary(gSp_vol_src_create,             patch,gac,NGP);
+       new_dw->allocateTemporary(massBurnFrac_create,            patch,gac,NGP);
+       dTdt_create.initialize(0.);
+       gSp_vol_src_create.initialize(0.);
+       massBurnFrac_create.initialize(0.);
+       dTdt = dTdt_create;                         // reference created data
+       gSp_vol_src = gSp_vol_src_create;           // reference created data
+       massBurnFrac = massBurnFrac_create;         // reference created data
       }
 
       // Get the particle erosion information
@@ -2287,16 +2290,16 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 	  acc      += gacceleration[ni[k]]   * S[k];
 	  tempRate += (gTemperatureRate[ni[k]] + dTdt[ni[k]] +
 		       frictionTempRate[ni[k]])   * S[k];
-	  burnFraction += massBurnFraction[ni[k]] * S[k];
-	  sp_vol_dt += gSp_vol_src[ni[k]]   * S[k];
+	  burnFraction += massBurnFrac[ni[k]]     * S[k];
+	  sp_vol_dt += gSp_vol_src[ni[k]]         * S[k];
 	}
 
 	// Update the particle's position and velocity
-	pxnew[idx]           = px[idx] + vel * delT;
-        pdispnew[idx]        = pdisp[idx] + vel * delT;
-	pvelocitynew[idx]    = pvelocity[idx] + (acc - alpha*vel)*delT;
-	pTempNew[idx]        = pTemperature[idx] + tempRate * delT;
-	pSp_volNew[idx]      = pSp_vol[idx] + sp_vol_dt * delT;
+	pxnew[idx]           = px[idx]    + vel*delT;
+        pdispnew[idx]        = pdisp[idx] + vel*delT;
+	pvelocitynew[idx]    = pvelocity[idx]    + (acc - alpha*vel)*delT;
+	pTempNew[idx]        = pTemperature[idx] + tempRate  * delT;
+	pSp_volNew[idx]      = pSp_vol[idx]      + sp_vol_dt * delT;
 
 	double rho;
 	if(pvolume[idx] > 0.){
