@@ -205,13 +205,6 @@ class CCVariable : public Array3<T>, public CCVariableBase {
       virtual void emit(OutputContext&);
       virtual void read(InputContext&);
       static TypeDescription::Register registerMe;
-      //////////
-      // Insert Documentation Here:
-      void initialize(const T& value);
-      
-      //////////
-      // Insert Documentation Here:
-      T& operator[](const IntVector& idx) const;
       
    private:
    };
@@ -354,21 +347,15 @@ class CCVariable : public Array3<T>, public CCVariableBase {
 	    throw InternalError("Cannot yet write non-flat objects!\n");
 	 }
       }
-   // why do we need this function
-   template<class T>
-      void CCVariable<T>::initialize(const T& value) {
-	 std::cerr << "CCVariable::initialize!\n";
-      }
-      
-   template<class T>
-      T& CCVariable<T>::operator[](const IntVector& idx) const {
-	 std::cerr << "CCVariable::operator[]!\n";
-      }
 
 } // end namespace Uintah
 
 //
 // $Log$
+// Revision 1.14  2000/06/01 22:04:23  tan
+// Using operator[](const IntVector&) and void initialize(const T&)
+// from Array3.
+//
 // Revision 1.13  2000/05/31 04:01:50  rawat
 // partially completed CCVariable implementation
 //
