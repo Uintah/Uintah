@@ -16,6 +16,7 @@ PARALLELISM=0
 VERBOSE="no"
 WEEKLY="0"
 MONTHLYBACKUP="no"
+mallocstrict="no"
 LD_LIBRARY_PATH=""
 
 # test OS, if Linux or IRIX, set appropriate compiler env. vars, else, abort
@@ -81,6 +82,9 @@ while [ "$#" -gt 0 ]; do
     -monthlybackup)
         MONTHLYBACKUP="1"
         ;;
+    -malloc_strict)
+        mallocstrict="yes"
+        ;;
      -help)
 	show_help=1
 	;;
@@ -101,6 +105,7 @@ if [ $show_help != "0" ]; then
 	    -sendmail:  Send error messages to the default people
 	    -sendmailto "emails":  Send error messages to these people
 	    -j #:  Use # number of processors maximum
+            -malloc_strict:  Have debug runs use malloc_strict 
 	    -use_tree "tree": Use the given tree instead of checking one out
 	    -use_prevtree: Use the previous (last_ran.lock) checkout and/or build
             -verbose: Display verbose output
@@ -117,7 +122,7 @@ fi
 PATH="$SCRIPT_DIR":/local/bin:/usr/sci/local/bin/:/usr/gnu/bin:/usr/local/bin:/usr/bin:/bin:"$PATH":.
 CVSROOT="csf.cs.utah.edu:/csafe_noexport/cvs/cvsroot"
 CVS_RSH=ssh
-export PATH CVSROOT CVS_RSH WEEKLY
+export PATH CVSROOT CVS_RSH WEEKLY mallocstrict
 
 # set number of processors to use when building
 if [ "$PARALLELISM" == "0" ]; then
