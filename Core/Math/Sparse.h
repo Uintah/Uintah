@@ -72,7 +72,7 @@ template<class ValueType, class IndexType> class SparseMatrix {
  public:
   typedef pair<IndexType, IndexType> IndexPair;
   typedef map<IndexPair, ValueType, less<IndexPair> > ContainerType;
-  typedef MatrixElement<ValueType, IndexType, ContainerType> MatrixElement;
+  typedef MatrixElement<ValueType, IndexType, ContainerType> ME;
 
   typedef IndexType size_type;
 
@@ -118,10 +118,10 @@ template<class ValueType, class IndexType> class SparseMatrix {
     Aux(size_type r, size_type maxs, ContainerType& Cont) 
       : Row(r), maxColumns(maxs), C(Cont) {};
     
-    MatrixElement operator[] (size_type c)
+    ME operator[] (size_type c)
       {
 	assert(c >= 0 && c < maxColumns);
-	return MatrixElement(C, Row, c);
+	return ME(C, Row, c);
       }
     
   private:
