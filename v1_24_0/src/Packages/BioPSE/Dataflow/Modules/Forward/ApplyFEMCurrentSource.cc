@@ -126,7 +126,7 @@ void
 ApplyFEMCurrentSource::execute_dipole()
 {
   FieldIPort *iportField = (FieldIPort *)get_iport("Mesh");
-  FieldIPort *iportSource = (FieldIPort *)get_iport("Dipole Sources");
+  FieldIPort *iportSource = (FieldIPort *)get_iport("Sources");
   MatrixIPort *iportRhs = (MatrixIPort *)get_iport("Input RHS");
 
   MatrixOPort *oportRhs = (MatrixOPort *)get_oport("Output RHS");
@@ -149,7 +149,7 @@ ApplyFEMCurrentSource::execute_dipole()
     dynamic_cast<PointCloudField<Vector>*> (hSource.get_rep());
   if (!hDipField)
   {
-    error("Dipole Sources field is not of type PointCloudField<Vector>.");
+    error("Sources field is not of type PointCloudField<Vector>.");
     return;
   }
 	
@@ -419,7 +419,7 @@ void
 ApplyFEMCurrentSource::execute_sources_and_sinks()
 {
   FieldIPort *iportField = (FieldIPort *)get_iport("Mesh");
-  FieldIPort *iportSource = (FieldIPort *)get_iport("Dipole Sources");
+  FieldIPort *iportSource = (FieldIPort *)get_iport("Sources");
   MatrixIPort *iportMapping = (MatrixIPort *)get_iport("Mapping");
   MatrixIPort *iportRhs = (MatrixIPort *)get_iport("Input RHS");
 
