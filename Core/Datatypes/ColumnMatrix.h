@@ -17,6 +17,7 @@
 
 #include <SCICore/Datatypes/Datatype.h>
 #include <SCICore/Containers/LockingHandle.h>
+#include <SCICore/Util/FancyAssert.h>
 
 #include <iosfwd>  // Forward declarations for KCC C++ I/O routines
 
@@ -101,6 +102,10 @@ inline double& ColumnMatrix::operator[](int i) const
 
 //
 // $Log$
+// Revision 1.5  2000/03/23 10:29:19  sparker
+// Use new exceptions/ASSERT macros
+// Fixed compiler warnings
+//
 // Revision 1.4  1999/10/07 02:07:30  sparker
 // use standard iostreams and complex type
 //

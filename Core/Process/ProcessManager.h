@@ -15,6 +15,7 @@
 #define SCICore_Process_ProcessManager_h
 
 #include <SCICore/Process/ProcessManagerException.h>
+#include <string>
 
 namespace SCICore {
     namespace Process {
