@@ -21,11 +21,14 @@ package require Iwidgets 3.1
 class SamplerGui {
 
     variable w
+    variable n
 
     constructor {} {
     }
 
     method ui { window } {
+
+	puts "SamplerGui UI"
 	set w $window
 
         iwidgets::entryfield $w.burning -labeltext "Burning:" \
@@ -42,14 +45,27 @@ class SamplerGui {
 
 	button $w.exec -text "Execute" -command "$this-c exec"
 
-	iwidgets::Labeledframe $w.graph -labeltext "Progress"
+	frame $w.children
 
-	pack $w.burning $w.monitor $w.thin $w.exec -anchor w
-	pack $w.graph -expand yes -fill both
+
+	pack $w.burning $w.monitor $w.thin  -anchor w
+	pack $w.children
+	pack $w.exec -anchor w
+
+	set n 0
+	#iwidgets::Labeledframe $w.graph -labeltext "Progress"
+	#pack $w.graph -expand yes -fill both
     }
 
-    method new-child-window {} {
-	return [$w.graph childsite]
+    method new-child-window { name } {
+#	set child [frame $w.children.$n]
+#	pack $child -side top
+#	incr n
+#	return $child
+	set child [iwidgets::Labeledframe $w.children.$n -labeltext $name]
+	pack $child -side top -anchor w
+	incr n
+	return [$child childsite]
     }
 }
 
