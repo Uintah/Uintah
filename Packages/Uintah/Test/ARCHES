@@ -1,0 +1,54 @@
+#!/usr/local/bin/python
+
+from os import environ,mkdir,path,system,chdir,symlink
+from time import asctime,localtime,time
+from sys import argv,exit
+from helpers.runSusTest import runSusTest,input,modes,num_processes
+
+TESTS = [   ("methane_explicit.ups",		["dbg", "dbgmpi", "mpi"], 1, "chem_meth.bin")
+    	]
+
+def chemfile (test):
+    return test[3]
+
+
+if len(argv) < 2:
+    print "usage: %s <mode>" % argv[0]
+    print "    where <mode> is a short string used to select tests to run."
+    exit(1)
+mode = argv[1]
+
+testdir = "%s/ARCHES-%s" % (environ['BUILDROOT'], mode)
+susdir = "%s/SCIRun/src/Packages/Uintah/StandAlone" % (environ['BUILDROOT'])
+mkdir(testdir)
+chdir(testdir)
+
+failcode = 0
+
+DO_RESTART = "yes"
+
+for test in TESTS:
+  if mode not in modes(test):
+    continue
+
+  testname = path.splitext(input(test))[0];
+  mkdir(testname)
+  chdir(testname)
+  
+  symlink("%s/inputs/ARCHES/input.dtd" % (susdir), "input.dtd")
+  symlink("%s/inputs/ARCHES/%s" % (susdir, chemfile(test)), "chem.bin")
+
+  # Run normal test
+  rc = runSusTest(test, mode, susdir, "arches")
+  if rc == 0:
+    # Run restart test
+    rc = runSusTest(test, mode, susdir, "arches", DO_RESTART)
+    if rc == 1:
+	failcode = 1
+  else:
+    failcode = 1
+
+  chdir("..")
+
+exit(failcode)
+
