@@ -41,7 +41,7 @@ void    ICE::printData(const Patch* patch, int include_GC,
     for(int j = low.y(); j < high.y(); j++) {
       for(int i = low.x(); i < high.x(); i++) {
 	IntVector idx(i, j, k);
-	fprintf(stderr,"[%d,%d,%d]~ %15.14f  ",
+	fprintf(stderr,"[%d,%d,%d]~ %10.9f  ",
 		i,j,k, q_CC[idx]);
 	
 	/*  fprintf(stderr,"\n"); */
@@ -123,7 +123,7 @@ void    ICE::printVector(const Patch* patch, int include_GC,
     for(int j = low.y(); j < high.y(); j++) {
       for(int i = low.x(); i < high.x(); i++) {
 	IntVector idx(i, j, k);
-	fprintf(stderr,"[%d,%d,%d]~ %15.14f  ",
+	fprintf(stderr,"[%d,%d,%d]~ %10.9f  ",
 		i,j,k, q_CC[idx](component));
 	
 	/*  fprintf(stderr,"\n"); */
@@ -165,7 +165,7 @@ void    ICE::printData_FC(const Patch* patch, int include_GC,
     for(int j = low.y(); j < high.y(); j++) {
       for(int i = low.x(); i < high.x(); i++) {
 	IntVector idx(i, j, k);
-	fprintf(stderr,"[%d,%d,%d]~ %15.14f  ",
+	fprintf(stderr,"[%d,%d,%d]~ %10.9f  ",
 		i,j,k, q_FC[idx]);
 	
 	/*  fprintf(stderr,"\n"); */
@@ -205,7 +205,7 @@ void    ICE::printData_FC(const Patch* patch, int include_GC,
     for(int j = low.y(); j < high.y(); j++) {
       for(int i = low.x(); i < high.x(); i++) {
 	IntVector idx(i, j, k);
-	fprintf(stderr,"[%d,%d,%d]~ %15.14f  ",
+	fprintf(stderr,"[%d,%d,%d]~ %10.9f  ",
 		i,j,k, q_FC[idx]);
 	
 	/*  fprintf(stderr,"\n"); */
@@ -246,7 +246,7 @@ void    ICE::printData_FC(const Patch* patch, int include_GC,
     for(int j = low.y(); j < high.y(); j++) {
       for(int i = low.x(); i < high.x(); i++) {
 	IntVector idx(i, j, k);
-	fprintf(stderr,"[%d,%d,%d]~ %15.14f  ",
+	fprintf(stderr,"[%d,%d,%d]~ %10.9f  ",
 		i,j,k, q_FC[idx]);
 	
 	/*  fprintf(stderr,"\n"); */
@@ -318,7 +318,7 @@ void    ICE::readData(const Patch* patch, int include_GC,
        if (num != 1)       
          Message(1,"ERROR","Having problem reading ",var_name);
               
-      // fprintf(stderr,"%15.14f  ",number);
+      // fprintf(stderr,"%10.9f  ",number);
        q_CC[idx] = number;
       }
       fscanf(fp,"\n");
@@ -347,7 +347,13 @@ void    ICE::Message(
   //______________________________
   // Now aborting program
   if(abort == 1) {
+    char c[2];
+    fprintf(stderr,"\n");
+    fprintf(stderr,"<c> = cvd\n");
+    scanf("%s",c);
     system("date");
+    if(strcmp(c, "c") == 0) system("cvd -P sus");
+    
     exit(1); 
   }
 }
