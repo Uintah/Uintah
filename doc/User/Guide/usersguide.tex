@@ -16,22 +16,30 @@
 %  University of Utah. All Rights Reserved.
 %
 
-\documentclass[11pt]{article}
+\documentclass[11pt,titlepage]{article}
 \usepackage[]{fancyhdr}
-%\begin{latexonly}
-\usepackage[]{srugmacros}
-%\end{latexonly}
 \usepackage[]{graphics}
 \usepackage[]{epsfig}
 \usepackage[]{html}
 \usepackage{makeidx}
-\usepackage{citexp}
+%\begin{latexonly}
+\usepackage[]{../../Utilities/TeX/scirun-doc}
+%\end{latexonly}
+\begin{htmlonly}
+\input{../../Utilities/TeX/scirun-doc.tex}
+\end{htmlonly}
+%\begin{latexonly}
+\usepackage[]{srugmacros}
+%\end{latexonly}
+\begin{htmlonly}
+\input{srugmacros.tex}
+\end{htmlonly}
 %\usepackage[]{makeindex}
 \makeindex
 \begin{htmlonly}
-  \include{srugmacros.tex}
+\input{srugmacros.tex}
 \end{htmlonly}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 \begin{document}
 
 % The title page
@@ -49,7 +57,7 @@
 \input{viewer}
 \input{packages}
 %\input{ui}
-\input{import}
+\input{converters}
 %\input{samples}
 
 % Include module references but only if we are producing dvi/ps.
@@ -64,7 +72,7 @@
 %\input{appendices}
 
 \newpage
-\bibliography{biglit,crj,mm}
+\bibliography{usersguide.bib}
 \bibliographystyle{unsrt}
 \newpage
 \printindex

@@ -60,9 +60,9 @@ class ModuleEntry < Entry
   end
   def category
     begin
-      categoryP
+      categoryP()
     rescue
-      "Error!"
+      "REMOVE THESE!"
     end
   end
   def categoryP
@@ -199,7 +199,9 @@ def genPage(packageName, list)
       etable[2] = list[numRowsArray[0] + numRowsArray[1], numRowsArray[2]]
     end
 
-    file.print("<table align='center' cellspacing='0' border='1' cellpadding='2'>\n")
+    file.print("<div class=\"block-center\">\n")
+    file.print("<a href=\"index.html\">Back to Package Listing</a>\n")
+    file.print("<table class='default' cellspacing='0' border='1' cellpadding='2'>\n")
     # Generate page title and subtitle
     file.print("
 <th colspan=\"#{numCols}\">
@@ -225,10 +227,12 @@ def genPage(packageName, list)
     end
 
     file.print("</table>\n")
-
     if LatexEntry.count > 0
       file.print("<p><sup>*</sup>Denotes additional documentation for a module.</p>\n")
     end
+    file.print("</div>\n")
+
+
     insertBottomBoilerPlate(file)
     
   end

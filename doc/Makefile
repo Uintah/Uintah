@@ -18,7 +18,7 @@
 .PHONY: tar tarball
 
 root := ${shell cd ..; basename `pwd` }
-TARFILE := ${notdir ${shell cd ..; pwd}}_Docs.tar
+TARFILE := ${notdir ${shell cd ..; pwd}}.tar
 TARBALL := ${TARFILE}.gz
 TARCMD := gnutar --exclude='*CVS*' --exclude='auto' \
 --create --verbose --file=${root}/doc/${TARFILE} 
@@ -36,7 +36,7 @@ tarball : tar
 
 # Construct list of files to be included in the tar archive.  Edit
 # tarlist to make changes to this list.
-tarlist := ${shell ruby tarlist}
+tarlist = ${shell ruby tarlist}
 
 # Build all docs and put them in a tar archive.
 tar: index.html products

@@ -34,23 +34,26 @@ text-align:center;
 font-weight:bold;
 font-size:small}
 
-table { 
-}
-
 table ul li { 
 font-size: medium;
 list-style-type: none}
 
+ul { 
+margin: 0px;
+}
+
 th { 
 font-size: large;
 background-color:#003333;
-color:#FFCC33}
+color:#FFCC33;
+}
 
 tr {}
 
 td { 
-vertical-align: top}
+vertical-align: top;
+width: 33%;
+}
 
 p {
 font-size: small}
-

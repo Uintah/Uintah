@@ -1,5 +1,0 @@
-memstress_sidl.h
-memstress_sidl.cc
-memstress
-Makefile
-depend.mk

@@ -21,11 +21,11 @@
 %
                                 %
 % (Mostly) Short cuts  ==============================
-\newcommand{\SCI}{\emph{SCI}}
+\newcommand{\SCI}{{\em SCI}}
 \newcommand{\sci}{\SCI}
 \newcommand{\scii}{SCI Institute}
-\newcommand{\PSE}{\emph{BioPSE}}
-\newcommand{\pse}{\PSE}
+\newcommand{\BIOPSE}{{\em BioPSE}}
+\newcommand{\biopse}{\BIOPSE}
 \newcommand{\SR}{{\em SCIRun}}
 \newcommand{\sr}{\SR}
 \newcommand{\eg}{{\em e.g.,}}
@@ -70,6 +70,7 @@
 \newcommand{\gui}{\acronym{GUI}}
 \newcommand{\tcl}{\acronym{TCL}}
 \newcommand{\xml}{\acronym{XML}}
+\newcommand{\pse}{\acronym{PSE}}
 
 % Markup the first time use of term that may be unfamiliar to the
 % reader. 
@@ -96,7 +97,7 @@
 
 % Parameterized text - marks up text that is to be
 % substituted for by the reader.
-\newcommand{\ptext}[1]{\textit{\ab{#1}}}
+\newcommand{\ptext}[1]{\textit{#1}}
 
 % Markup text the user might see on his screen.
 \newcommand{\screen}[1]{\texttt{#1}}
@@ -198,10 +199,13 @@
 % Mark up a mail address
 \newcommand{\mailto}[1]{\texttt{#1}}
 
-% Sci Urls =========================================
+% Sci Urls ========================================= 
 
 % www style urls.
-\newcommand{\scisoftwareurl}{\url{http://software.sci.utah.edu}}
-\newcommand{\sciurl}{\url{http://www.sci.utah.edu}}
-\newcommand{\scidocurl}{\scisoftwareurl}
-\newcommand{\bugsurl}{\scisoftwareurl/bugzilla}
+\newcommand{\scisoftware}{http://software.sci.utah.edu}
+\newcommand{\scisoftwareurl}{\htmlurl{\scisoftware}}
+\newcommand{\sciurl}{\htmlurl{http://www.sci.utah.edu}}
+\newcommand{\scidocurl}{\htmlurl{\scisoftware{}/doc}}
+\newcommand{\scidocurlplus}[1]{\htmlurl{\scisoftware{}/doc/#1}}
+\newcommand{\bugsurl}{\htmlurl{\scisoftware{}/bugzilla}}
+\newcommand{\scisoftwarearchiveurl}{\htmlurl{\scisoftware{}/archive\_entry.html}}

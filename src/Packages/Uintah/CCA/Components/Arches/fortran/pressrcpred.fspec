@@ -1,6 +1,0 @@
-void pressrcpred(IntVector idxLo, IntVector idxHi,
-     CCVariable<double> su, constCCVariable<double> den,
-     constSFCXVariable<double> uhat,
-     constSFCYVariable<double> vhat, constSFCZVariable<double> what,
-     double delta_t, OffsetArray1<double> sew,
-     OffsetArray1<double> sns, OffsetArray1<double> stb);

@@ -51,29 +51,29 @@
 	
 	<p><b>Chapter Overview</b><br>
 
-	<p>In Chapter 1, we constructed a small network to visualize
-	the geometry of a mesh.  In this chapter we will extend that
+	<p> Chapter 1 demonstrates the construction of a small network to visualize
+	the geometry of a mesh. This chapter demonstrates how to extend that
 	net, adding tools to look at data values on the geometry.
-	Specifically, we will visualize a scalar quantity (voltage) on
+	Specifically, how to visualize a scalar quantity (voltage) on
 	a set of points in space (a PointCloud of electrodes).
 	
-	<p>In our previous net, we hooked three modules
+	<p>In the previous net,  three modules were hooked
 	together--FieldReader, ShowField, and Viewer. In the user
-	interface of the ShowField module, we 
-	used the Default Color selector to render all of the geometry
-	in blue.  
+	interface of the ShowField module, the Default Color selector was used to render all  
+	geometry in blue.  
 
 	<p>In this chapter, rather than mapping a single
-	color to all of the geometry, we will vary the colors across the mesh based upon the data's scalar values.
+	color to the geometry, colors will vary across the mesh based on the data's scalar values.
 	
 	<p><b><A name="section-1">Color maps</b><br></A>
 
-	<p>First, we want to map the data value at each node of the mesh to a
+	<p>First, map the data value at each node of the mesh to a
 	meaningful color in order to differentiate one data value from another.   
 	The Color Map module in SCIRun provides this mapping.  
 	
 	<p>A ColorMap contains a set of spaced colors that evenly change,
-	RGBA (red, green, blue alpha),  mapped to a data value range, as specified by the minimum and maximum data value. <b>Figure 2.0</b> shows several example color maps. 
+	red, green, blue, alpha (RGBA),  mapped to a data value range, as specified by the minimum 
+	and maximum data value. <b>Figure 2.0</b> shows several example color maps. 
 	
 	</div>
 	<center>
@@ -96,11 +96,11 @@
         hand, or, you can auto-scale them to correspond with
        the min/max data value range from a scalar field.
                   
-        <p>Now, we will add a GenStandardColorMaps and a RescaleColorMap
-         module to the net we created in <a href="chapter_1.html#chapter1">Chapter
+        <p>Now, add a GenStandardColorMaps and a RescaleColorMap
+         module to the net created in <a href="chapter_1.html#chapter1">Chapter
          1</a>.</p>  
 <p><ol>
-<li>First, open your SCIRun environment and load the show-torso-mesh.net which you should locate in <b>../SCIRun/src/nets</b> (as saved in Chapter 1).</p> 
+<li>First, open the SCIRun environment and load the show-torso-mesh.net located in <b>../SCIRun/src/nets</b> (as saved in Chapter 1).</p> 
 <li><p>Now, add both modules; GenStandardColorMap and RescaleColorMap, located under the SCIRun/Visualization menu (see <b>Figure 2.1</b>).</p>  
 	  <p><li>Connect the output from GenStandardColorMaps to the input of
 	      RescaleColorMap.</p>
@@ -109,7 +109,7 @@
 	  <p><li>Finally, connect the output from RescaleColorMap to the input
 	      of ShowField.</p>  
 	</ol>
-	<p>Your network should now look like <b>Figure 2.1</b>.</p>
+	<p>The network should look like <b>Figure 2.1</b>.</p>
 
 	</div>
 	<center>
@@ -119,10 +119,10 @@
 	<div align="left">
 	<p><br>
 
-	<p>The RescaleColorMap, like the ShowField module from Chapter 1,  is another example of a module that has dynamic input ports.
+	<p>The RescaleColorMap, such as the ShowField module in Chapter 1,  is another example of a module with dynamic input ports.
 	If the user connects more than one field into RescaleColorMap,
 	the min/max range for auto-scaling corresponds to the
-	min/max range of data values from all of the input Fields.</p>
+	min/max range of data values from all input Fields.</p>
 
 	<p>The second input port on the ShowField module accepts a
         ColorMap that maps the data values in its input Field to a color in the
@@ -130,16 +130,16 @@
         present in ShowField the module ignores the Default
         Color, and uses the ColorMap value.</p>
                   
-        <p>To complete this net we must read in a Field.  
+        <p>To complete this net, read in a Field.  
 	
 	<p><ol><li> <A NAME=electrodes>
 	    Use the FieldReader User Interface (UI) to read in
         utahtorso-lowres-electrodes.pcd.fld (a point cloud of
         electrode positions, with voltages measured from a single
-        instant in time). You may have to briefly wait while several modules dynamically compile the code.</p>  
+        instant in time). There may be a brief wait while several modules dynamically compile the code.</p>  
 	<p><li>Select the Autoview option in the ViewWindow and rotate the image downward.</p>
 <p><li>In the ShowField UI, change the Node Scale to 6.</p> 
-<p><li>You should now see an image similar to <b>Figure 2.2</b> in
+<p><li>An image similar to <b>Figure 2.2</b> should appear in the ViewWindow.
 	  the ViewWindow.</p>
 	</ol>
 	</div>
@@ -152,8 +152,9 @@
                   
         <p><b><A name="section-2">GenStandardColorMaps UI</b><br></A>
 
-        <p>Now, we will explore the UIs for the GenStandardColorMaps and RescaleColorMaps modules.  Upon pressing the UI button on the GenStandardColorMaps module, you will
-        see the window, shown in <b>Figure 2.3</b>.
+        <p>Now, explore the UIs for the GenStandardColorMaps and RescaleColorMaps modules.   
+        Upon pressing the UI button on the GenStandardColorMaps module,  
+         the window shown in <b>Figure 2.3</b> will appear.
 
 	</div>
 	<center>
@@ -164,16 +165,16 @@
 	<p><br>
 <p>Please note the following:</p>
         <p><ul>
-	  <p><li>A selection of standard maps appears on the lower left.</p>
+	  <p><li>A selection of standard maps appears on the lower left side of the window.</p>
 	  <p><li>The selected color map appears at the top of the window, and
 	      has a clickable interface for changing the opacity of each
 	      color swatch in the map (the dot on the line in the middle of the color map).</p>  
-	  <p><li>Hold down the Shift key and click on the color map.  Additional control points will be added.  Right click on a control point to remove additonal control points.</p>
+	  <p><li>To add additional control points, hold down the Shift key and click on the color map. 
+	  To remove additonal control points, right click on a control point.</p>
 	  <p><li>The Resolution slider sets the number of
-	      distinct colors to be stored in the color table.</p>   
-	  <p><li>By choosing a low resolution, you can generate
-	      <i>banded</i> colors.</p> 
-	  <p><li>Choose a higher resolution for smoother color transitions, and a lower resolution for banded colors (0-256_.</p>
+	      distinct colors to be stored in the color table.</p>
+	  <p><li>To generate <it>banded</it> colors, choose a low resolution.</p>
+	  <p><li>For smoother color transitions, choose a higher resolution (0-256).</p>
 	</ul>  
 <p><b><A name="section-4">RescaleColorMaps UI</A></b></p>               
         <p><b>Figure 2.4</b> shows the UI for the RescaleColorMap module.</p>
@@ -186,14 +187,14 @@
 	<div align="left">
 	<p>
 
-	<p><ul><li>You can choose whether to set the minimum/maximum range of the
-        ColorMap manually or automatically.</p>  
+	<p><ul><li>The minimum/maximum range of the
+        ColorMap can be set manually or automatically.</p>  
 	<p><li>If the range is auto-scaled, it will correspond to the minimum
-        and maximum data values from all of the input Fields connected to
+        and maximum data values from all input Fields connected to
 	the module.</p></ul> 
                   
         <p>In GenStandardColorMaps, change
-	the color map from Inverse Rainbow to Inverse Darkhue, which changes the
+	the color map from Inverse Rainbow to Inverse Darkhue. This changes the
 	image in the 
         ViewWindow from <b>Figure 2.5</b> to <b>Figure 2.6</b>.</p>
 
@@ -218,9 +219,9 @@
         
 
 	<H4><b>Summary</b></H4>
-	<p>In this chapter, we have added tools for looking at data values 
-	and for varying colors over the geometry, rather than mapping a
-	single color.<br> 
+	<p> Chapter two demonstrated how to add tools for looking at
+	data values and for varying colors over the geometry, rather
+	than mapping a single color.<br>
 
 	<p>The next chapter features more visualization techniques, and
 	explores how  
