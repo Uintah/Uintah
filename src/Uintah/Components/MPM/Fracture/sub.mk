@@ -18,11 +18,13 @@ SRCS     += $(SRCDIR)/Fracture.cc \
 	$(SRCDIR)/QuarticSpline.cc \
 	$(SRCDIR)/ExponentialSpline.cc \
 	$(SRCDIR)/LeastSquare.cc \
-	$(SRCDIR)/BrokenCellShapeFunction.cc \
 	$(SRCDIR)/Visibility.cc
 	
 #
 # $Log$
+# Revision 1.13  2000/09/22 07:18:57  tan
+# MPM code works with fracture in three point bending.
+#
 # Revision 1.12  2000/09/09 19:34:16  tan
 # Added MPMLabel::pVisibilityLabel and SerialMPM::computerNodesVisibility().
 #

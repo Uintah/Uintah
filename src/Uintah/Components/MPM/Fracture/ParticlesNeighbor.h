@@ -21,41 +21,17 @@ class ParticlesNeighbor : public std::vector<particleIndex> {
 public:
 
         ParticlesNeighbor();
-        ParticlesNeighbor(const ParticleVariable<Point>& pX,
-	                  const ParticleVariable<int>& pIsBroken,
-			  const ParticleVariable<Vector>& pCrackSurfaceNormal,
-			  const ParticleVariable<double>& pMicrocrackSize,
-			  const ParticleVariable<double>& pMicrocrackPosition);
 
-  const ParticleVariable<int>& getpIsBroken() const;
-  
   void  buildIn(const IntVector& cellIndex,const Lattice& lattice);
   
-  bool  visible(const Point& A,const Point& B) const;
-
-  void  interpolateVector(LeastSquare& ls,
-                          const particleIndex& pIdx,
-                          const ParticleVariable<Vector>& pVector,
-                          Vector& data, 
-                          Matrix3& gradient) const;
-
-  void  interpolatedouble(LeastSquare& ls,
-                          const particleIndex& pIdx,
-                          const ParticleVariable<double>& pdouble,
-                          double& data,
-                          Vector& gradient) const;
-
-  void  interpolateInternalForce(LeastSquare& ls,
-                          const particleIndex& pIdx,
-                          const ParticleVariable<Matrix3>& pStress,
-                          Vector& pInternalForce) const;
+  bool  visible(particleIndex idx,
+                const Point& B,
+		const ParticleVariable<Point>& pX,
+		const ParticleVariable<int>& pIsBroken,
+		const ParticleVariable<Vector>& pCrackSurfaceNormal,
+		const ParticleVariable<double>& pVolume) const;
 
 private:
-  const ParticleVariable<Point>*  d_pX;
-  const ParticleVariable<int>*    d_pIsBroken;
-  const ParticleVariable<Vector>* d_pCrackSurfaceNormal;
-  const ParticleVariable<double>* d_pMicrocrackSize;
-  const ParticleVariable<double>* d_pMicrocrackPosition;
 };
 
 } //namespace MPM
@@ -64,6 +40,9 @@ private:
 #endif //__PARTICLESNEIGHBOR_H__
 
 // $Log$
+// Revision 1.10  2000/09/22 07:18:57  tan
+// MPM code works with fracture in three point bending.
+//
 // Revision 1.9  2000/09/12 16:52:11  tan
 // Reorganized crack surface contact force algorithm.
 //

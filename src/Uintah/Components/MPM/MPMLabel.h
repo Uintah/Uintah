@@ -20,14 +20,19 @@ namespace Uintah {
 
       //      static const MPMLabel* getLabels();
 
+      const VarLabel* delTAfterConstitutiveModelLabel;
+      const VarLabel* delTAfterFractureLabel;
+      const VarLabel* delTAfterCrackSurfaceContactLabel;
       const VarLabel* delTLabel;
       
       //non PermanentParticleState
       const VarLabel* pDeformationMeasureLabel;
-      const VarLabel* pDilationalWaveSpeedLabel;
       const VarLabel* pRotationRateLabel;
       const VarLabel* pVisibilityLabel;
-      const VarLabel* pCrackSurfaceContactForceLabel;
+      const VarLabel* pStressReleasedLabel;
+      const VarLabel* pIsNewlyBrokenLabel;
+      const VarLabel* pStressAfterStrainRateLabel;
+      const VarLabel* pStressAfterFractureReleaseLabel;
       
       //PermanentParticleState
       const VarLabel* pStressLabel;
@@ -40,9 +45,7 @@ namespace Uintah {
       const VarLabel* pSurfLabel;
       const VarLabel* pIsBrokenLabel; //for fracture
       const VarLabel* pCrackSurfaceNormalLabel; //for fracture
-      const VarLabel* pMicrocrackSizeLabel; //for fracture
-      const VarLabel* pMicrocrackPositionLabel; //for fracture
-      const VarLabel* pCrackingSpeedLabel; //for fracture
+      const VarLabel* pCrackSurfaceContactForceLabel;
       const VarLabel* pTensileStrengthLabel; //for fracture
       const VarLabel* pEnergyReleaseRateLabel; //for fracture
       const VarLabel* pTemperatureLabel; //for heat conduction
@@ -63,9 +66,7 @@ namespace Uintah {
       const VarLabel* pSurfLabel_preReloc;
       const VarLabel* pIsBrokenLabel_preReloc; //for fracture
       const VarLabel* pCrackSurfaceNormalLabel_preReloc; //for fracture
-      const VarLabel* pMicrocrackSizeLabel_preReloc; //for fracture
-      const VarLabel* pMicrocrackPositionLabel_preReloc; //for fracture
-      const VarLabel* pCrackingSpeedLabel_preReloc; //for fracture
+      const VarLabel* pCrackSurfaceContactForceLabel_preReloc;
       const VarLabel* pTensileStrengthLabel_preReloc; //for fracture
       const VarLabel* pEnergyReleaseRateLabel_preReloc; //for fracture
       const VarLabel* pTemperatureLabel_preReloc; //for heat conduction
@@ -117,6 +118,9 @@ namespace Uintah {
 
 
 // $Log$
+// Revision 1.35  2000/09/22 07:13:56  tan
+// MPM code works with fracture in three point bending.
+//
 // Revision 1.34  2000/09/16 04:27:34  tan
 // Modifications to make fracture works well.
 //

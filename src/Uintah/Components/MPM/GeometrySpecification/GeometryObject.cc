@@ -1,18 +1,24 @@
-
 #include "GeometryObject.h"
 #include <Uintah/Interface/ProblemSpec.h>
-#include <Uintah/Components/MPM/MPMPhysicalModules.h>
+#include <Uintah/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <iostream>
 
 using namespace Uintah::MPM;
 
-GeometryObject::GeometryObject(GeometryPiece* piece,
+GeometryObject::GeometryObject(MPMMaterial* mpm_matl,
+                               GeometryPiece* piece,
 			       ProblemSpecP& ps)
    : d_piece(piece)
 {
    ps->require("res", d_resolution);
    ps->require("velocity", d_initialVel);
    ps->require("temperature", d_initialTemperature);
+   
+   if(mpm_matl->getFractureModel()) {
+     ps->require("tensile_strength_min", d_tensileStrengthMin);
+     ps->require("tensile_strength_max", d_tensileStrengthMax);
+     ps->require("tensile_strength_variation", d_tensileStrengthVariation);
+   }
 }
 
 GeometryObject::~GeometryObject()
@@ -25,6 +31,9 @@ IntVector GeometryObject::getNumParticlesPerCell()
 }
 
 // $Log$
+// Revision 1.19  2000/09/22 07:11:50  tan
+// MPM code works with fracture in three point bending.
+//
 // Revision 1.18  2000/07/25 19:10:28  guilkey
 // Changed code relating to particle combustion as well as the
 // heat conduction.

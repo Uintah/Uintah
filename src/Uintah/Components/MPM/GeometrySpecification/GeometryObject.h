@@ -38,13 +38,14 @@ WARNING
 	
 ****************************************/
 
+      class MPMMaterial;
       
       class GeometryObject {
 	 
       public:
 	//////////
 	// Insert Documentation Here:
-	GeometryObject(GeometryPiece* piece, ProblemSpecP&);
+	GeometryObject(MPMMaterial* mpm_matl,GeometryPiece* piece, ProblemSpecP&);
 
 	//////////
 	// Insert Documentation Here:
@@ -68,11 +69,27 @@ WARNING
 	    return d_initialTemperature;
 	 }
 
+	 double getTensileStrengthMin() const {
+	    return d_tensileStrengthMin;
+	 }
+
+	 double getTensileStrengthMax() const {
+	    return d_tensileStrengthMax;
+	 }
+
+	 double getTensileStrengthVariation() const {
+	    return d_tensileStrengthVariation;
+	 }
+
       private:
 	 GeometryPiece* d_piece;
 	 IntVector d_resolution;
 	 Vector d_initialVel;
 	 double d_initialTemperature;
+
+	 double d_tensileStrengthMin;
+	 double d_tensileStrengthMax;
+	 double d_tensileStrengthVariation;
       };
       
    } // end namespace MPM
@@ -82,6 +99,9 @@ WARNING
 
 
 // $Log$
+// Revision 1.19  2000/09/22 07:11:51  tan
+// MPM code works with fracture in three point bending.
+//
 // Revision 1.18  2000/05/31 17:17:22  guilkey
 // Added getInitialTemperature to GeometryObject.
 //
