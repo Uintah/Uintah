@@ -2,6 +2,8 @@
 
 SRCDIR := Packages/rtrt/StandAlone/scenes
 
+INCLUDES += $(TEEM_INCLUDE)
+
 SCENES := $(SRCDIR)/0.mo \
 	$(SRCDIR)/obj_reader.mo \
 	$(SRCDIR)/gl.mo \
@@ -58,8 +60,11 @@ SCENES := $(SRCDIR)/0.mo \
 	$(SRCDIR)/molecule.mo  \
 	$(SRCDIR)/wine.mo \
 	$(SRCDIR)/FordField.mo \
+	$(SRCDIR)/david.mo \
+	$(SRCDIR)/davidhead.mo  \
 #	$(SRCDIR)/figure1.mo \
 #	$(SRCDIR)/dtiglyph.mo 
+#	$(SRCDIR)/david_old.mo \
 #	$(SRCDIR)/ramsey.mo \
 # 	$(SRCDIR)/miptest.mo \
 # 	$(SRCDIR)/venus.mo \
@@ -75,9 +80,6 @@ SCENES := $(SRCDIR)/0.mo \
 #	$(SRCDIR)/cutdemo.mo  \
 #	$(SRCDIR)/basic-sea.mo  \
 #	$(SRCDIR)/spinning_instance_demo.mo \
-#	$(SRCDIR)/david.mo \
-#	$(SRCDIR)/david_old.mo \
-#	$(SRCDIR)/davidhead.mo  \
 #	$(SRCDIR)/science-room.mo \
 #	$(SRCDIR)/science-room-full.mo \
 #	$(SRCDIR)/stadium.mo \

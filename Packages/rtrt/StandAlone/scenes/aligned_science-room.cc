@@ -73,11 +73,11 @@ using SCIRun::Thread;
 #ifdef ADD_DTIGLYPH
 
 #include <Packages/rtrt/Core/Glyph.h>
-#include <nrrd.h>
-#include <hest.h>
-#include <air.h>
-#include <biff.h>
-#include <ten.h>
+#include <teem/nrrd.h>
+#include <teem/hest.h>
+#include <teem/air.h>
+#include <teem/biff.h>
+#include <teem/ten.h>
 
 int
 dtiParseNrrd(void *ptr, char *str, char err[AIR_STRLEN_HUGE]) {
@@ -93,7 +93,7 @@ dtiParseNrrd(void *ptr, char *str, char err[AIR_STRLEN_HUGE]) {
   mop = airMopInit();
   *nrrdP = nrrdNew();
   airMopAdd(mop, *nrrdP, (airMopper)nrrdNuke, airMopOnError);
-  if (nrrdLoad(*nrrdP, str)) {
+  if (nrrdLoad(*nrrdP, str, 0)) {
     airMopAdd(mop, nerr = biffGetDone(NRRD), airFree, airMopOnError);
     if (strlen(nerr) > AIR_STRLEN_HUGE - 1)
       nerr[AIR_STRLEN_HUGE - 1] = '\0';
