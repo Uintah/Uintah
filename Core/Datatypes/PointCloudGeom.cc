@@ -31,6 +31,7 @@ void
 PointCloudGeom::io(Piostream& stream)
 {
   stream.begin_class(typeName(0).c_str(),  POINTCLOUDGEOM_VERSION);
+  UnstructuredGeom::io(stream);
   Pio(stream, d_node);
   stream.end_class();
 }

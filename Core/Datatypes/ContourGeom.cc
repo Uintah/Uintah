@@ -30,7 +30,7 @@ PersistentTypeID ContourGeom::type_id(ContourGeom::typeName(0),
 void ContourGeom::io(Piostream& stream)
 {
   stream.begin_class(typeName(0).c_str(), CONTOURGEOM_VERSION);
-  UnstructuredGeom::io(stream);
+  PointCloudGeom::io(stream);
   Pio(stream, d_edge);
   stream.end_class();
 }
