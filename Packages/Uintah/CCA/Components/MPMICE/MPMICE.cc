@@ -156,7 +156,8 @@ void MPMICE::scheduleTimeAdvance(double, double,
                                                                   all_matls);
   d_ice->scheduleAccumulateEnergySourceSinks(     sched, patches, press_matl,
                                                                   all_matls);
-  d_ice->scheduleComputeLagrangianValues(         sched, patches, ice_matls);
+  d_ice->scheduleComputeLagrangianValues(         sched, patches, mpm_matls_sub,
+                                                                  ice_matls);
 
   scheduleInterpolatePressCCToPressNC(            sched, patches, press_matl,
                                                                   mpm_matls);
