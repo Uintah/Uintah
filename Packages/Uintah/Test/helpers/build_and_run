@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# $BUILD_DIR $BUILDROOT, $PARALLELISM, and $MAKE_PARALLELISM must be set
+# $BUILD_DIR $BUILDROOT, $HTMLLOG, $PARALLELISM, and $MAKE_PARALLELISM must be set
 
 mode=$1 # dbg or opt
 CONFIGURE_ARGS=$2 # configure command line arguments
@@ -12,7 +12,7 @@ fi
 
 cd "${BUILDROOT}/${mode}/build"
 
-rm -f "$BUILDROOT"/${mode}/configure.log "${BUILDROOT}"/"${mode}"/configure.log.txt
+rm -f "$BUILDROOT"/${mode}/configure.log
 
 echo ""
 echo "Starting configure on `date`"
@@ -24,12 +24,14 @@ chmod a+x configure_command
 ./configure_command > "$BUILDROOT"/${mode}/configure.log 2>&1
 retval=$?
 if [ $retval != "0" ]; then
-	echo "Configure failed:" > "${BUILDROOT}/${mode}/configure.log.txt"
-	cat "${BUILDROOT}"/"${mode}"/configure.log >> "${BUILDROOT}"/"${mode}"/configure.log.txt
+	echo "Configure failed:" >> $HTMLLOG
+	cat "${BUILDROOT}"/"${mode}"/configure.log >> $HTMLLOG
+
 	echo "*** Configure failed with code $retval"
 	echo ""
-	echo "Showing configure log:"
-	cat "${BUILDROOT}/${mode}/configure.log"
+#	echo "Showing configure log:"
+#	cat "${BUILDROOT}/${mode}/configure.log"
+
 	cd "${BUILD_DIR}"
 	if [ ! -d "configure-${mode}.lock" ]; then
 	    # failed ${mode} configure, set a lock
@@ -113,6 +115,9 @@ if [ $retval != "0" ]; then
 	cat ../remake_with_arches.log >> ../make_results.log
 	
         echo ""
+
+	# Add compilation problems to webpage
+	cat ../make_results.log >> "$HTMLLOG"
 
 	# failed make, set a lock for this build
 	if [ ! -d "${BUILD_DIR}/make-${mode}.lock" ]; then
@@ -205,6 +210,7 @@ for test in *; do
 	nice "$doTestScript" > "${test}.log"  2>&1
 	retval=$?
 	cat "${test}.log" >> "$summary_log"
+	cat "${test}.log" >> "$HTMLLOG"
 	cd TestScripts
 
 	if [ $retval == "0" ]; then
