@@ -88,8 +88,9 @@ SetupBEMatrix::execute()
     {
       if (field.get_rep() == 0)
       {
-	error("Surface port '" + to_string(pi->second) + "' contained no data.");
-	return;
+	warning("Surface port '" + to_string(pi->second) + "' contained no data.");
+	++pi;
+	continue;
       }
 
 
