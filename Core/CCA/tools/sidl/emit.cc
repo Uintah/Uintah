@@ -2336,6 +2336,7 @@ void NamedType::emit_unmarshal(EmitState& e, const string& arg,
 {
   Symbol::Type symtype = name->getSymbol()->getType();
   if(symtype == Symbol::EnumType){
+    if(specialRedis) return;
     if(qty != "1"){
       cerr << "NamedType::emit_unmarshal called with qty != 1: " << qty << '\n';
       exit(1);
@@ -2347,6 +2348,7 @@ void NamedType::emit_unmarshal(EmitState& e, const string& arg,
       e.out << name->cppfullname(0) << " ";
     e.out << arg << "=(" << name->cppfullname(0) << ")" << arg << "_unmarshal;\n";
   } else if(symtype == Symbol::ClassType || symtype == Symbol::InterfaceType){
+    if(specialRedis) return;
     if(qty != "1"){
       cerr << "NamedType::emit_unmarshal called with qty != 1: " << qty << '\n';
       exit(1);
