@@ -82,37 +82,40 @@ public:
 };
 
 DECLARE_MAKER(BuildTransform)
-static string module_name("BuildTransform");
+  static string module_name("BuildTransform");
 static string widget_name("TransformWidget");
 
-BuildTransform::BuildTransform(GuiContext* ctx)
-  : Module("BuildTransform", ctx, Filter, "Math", "SCIRun"),
-    rotate_x_gui_(ctx->subVar("rotate_x")),
-    rotate_y_gui_(ctx->subVar("rotate_y")),
-    rotate_z_gui_(ctx->subVar("rotate_z")), 
-    rotate_theta_gui_(ctx->subVar("rotate_theta")),
-    translate_x_gui_(ctx->subVar("translate_x")),
-    translate_y_gui_(ctx->subVar("translate_y")),
-    translate_z_gui_(ctx->subVar("translate_z")),
-    scale_uniform_gui_(ctx->subVar("scale_uniform")),
-    scale_x_gui_(ctx->subVar("scale_x")),
-    scale_y_gui_(ctx->subVar("scale_y")), 
-    scale_z_gui_(ctx->subVar("scale_z")), 
-    shear_plane_a_gui_(ctx->subVar("shear_plane_a")),
-    shear_plane_b_gui_(ctx->subVar("shear_plane_b")),
-    shear_plane_c_gui_(ctx->subVar("shear_plane_c")),
-    shear_plane_d_gui_(ctx->subVar("shear_plane_d")),
-    widget_resizable_gui_(ctx->subVar("widget_resizable")),
-    permute_x_gui_(ctx->subVar("permute_x")),
-    permute_y_gui_(ctx->subVar("permute_y")), 
-    permute_z_gui_(ctx->subVar("permute_z")),
-    pre_transform_gui_(ctx->subVar("pre_transform")),
-    which_transform_gui_(ctx->subVar("which_transform")),
-    widget_scale_gui_(ctx->subVar("widget_scale")),
-    widget_lock_("BuildTransform widget lock"),
-    ignoring_widget_changes_(1),
-    have_been_initialized_(0),
-    widgetid_(0)
+BuildTransform::BuildTransform(GuiContext* ctx) : 
+  Module("BuildTransform", ctx, Filter, "Math", "SCIRun"),
+  imatrix_(0),
+  omatrix_(0),
+  ogeom_(0),
+  rotate_x_gui_(ctx->subVar("rotate_x")),
+  rotate_y_gui_(ctx->subVar("rotate_y")),
+  rotate_z_gui_(ctx->subVar("rotate_z")), 
+  rotate_theta_gui_(ctx->subVar("rotate_theta")),
+  translate_x_gui_(ctx->subVar("translate_x")),
+  translate_y_gui_(ctx->subVar("translate_y")),
+  translate_z_gui_(ctx->subVar("translate_z")),
+  scale_uniform_gui_(ctx->subVar("scale_uniform")),
+  scale_x_gui_(ctx->subVar("scale_x")),
+  scale_y_gui_(ctx->subVar("scale_y")), 
+  scale_z_gui_(ctx->subVar("scale_z")), 
+  shear_plane_a_gui_(ctx->subVar("shear_plane_a")),
+  shear_plane_b_gui_(ctx->subVar("shear_plane_b")),
+  shear_plane_c_gui_(ctx->subVar("shear_plane_c")),
+  shear_plane_d_gui_(ctx->subVar("shear_plane_d")),
+  widget_resizable_gui_(ctx->subVar("widget_resizable")),
+  permute_x_gui_(ctx->subVar("permute_x")),
+  permute_y_gui_(ctx->subVar("permute_y")), 
+  permute_z_gui_(ctx->subVar("permute_z")),
+  pre_transform_gui_(ctx->subVar("pre_transform")),
+  which_transform_gui_(ctx->subVar("which_transform")),
+  widget_scale_gui_(ctx->subVar("widget_scale")),
+  widget_lock_("BuildTransform widget lock"),
+  ignoring_widget_changes_(1),
+  have_been_initialized_(0),
+  widgetid_(0)
 {
   
   box_widget_=scinew BoxWidget(this, &widget_lock_, 0.2, false, false);
@@ -197,13 +200,13 @@ void BuildTransform::execute()
     local_transform.post_translate(-t);
   } else if (which_transform == "shear") {
     local_transform.post_shear(t, Plane(shear_plane_a_gui_.get(), 
-			     shear_plane_b_gui_.get(), 
-			     shear_plane_c_gui_.get(), 
-			     shear_plane_d_gui_.get()));
+					shear_plane_b_gui_.get(), 
+					shear_plane_c_gui_.get(), 
+					shear_plane_d_gui_.get()));
   } else if (which_transform == "permute") {
     local_transform.post_permute(permute_x_gui_.get(), 
-		      permute_y_gui_.get(), 
-		      permute_z_gui_.get());
+				 permute_y_gui_.get(), 
+				 permute_z_gui_.get());
   } else { // (which_transform == "widget")
     Point R, D, I, C;
     box_widget_->GetPosition(C, R, D, I);
@@ -257,10 +260,10 @@ void BuildTransform::widget_moved(bool last)
 void BuildTransform::tcl_command(GuiArgs& args, void* userdata) {
   if (args[1] == "hide_widget") {
     widget_switch_->set_state(0);
-    ogeom_->flushViews();
+    if (ogeom_) ogeom_->flushViews();
   } else if (args[1] == "show_widget") {
     widget_switch_->set_state(1);
-    ogeom_->flushViews();
+    if (ogeom_) ogeom_->flushViews();
   } else if (args[1] == "reset_widget" || args[1] == "reset" || 
 	     args[1] == "composite") {
     if (args[1] == "reset")
@@ -283,10 +286,10 @@ void BuildTransform::tcl_command(GuiArgs& args, void* userdata) {
   } else if (args[1] == "change_handles") {
     if (args[2] == "1") {	// start showing resize handles
       box_widget_->SetCurrentMode(1);
-      ogeom_->flushViews();
+      if (ogeom_) ogeom_->flushViews();
     } else {		        // stop showing resize handles
       box_widget_->SetCurrentMode(2);
-      ogeom_->flushViews();
+      if (ogeom_) ogeom_->flushViews();
     }
   } else {
     Module::tcl_command(args, userdata);
