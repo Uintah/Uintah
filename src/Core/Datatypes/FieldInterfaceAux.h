@@ -157,16 +157,18 @@ SFInterface<F, L>::compute_min_max(double &minout, double &maxout) const
   typename L::iterator bi, ei;
   mesh->begin(bi);
   mesh->end(ei);
+  int index = 0;
 
   while (bi != ei)
   {
     typename F::value_type val;
-    if (fld_->value(val, *bi))
+    if (fld_->value(val, (typename L::index_type)index))
     {
       if (!result || val < minout) minout = val;
       if (!result || val > maxout) maxout = val;
       result = true;
     }
+    ++index;
     ++bi;
   }      
 
@@ -183,7 +185,7 @@ SFInterface<F, L>::find_closest(double &minout, const Point &p) const
   mesh->synchronize(Mesh::ALL_ELEMENTS_E);
 
   typename L::index_type index;
-  typename L::iterator bi, ei, first;
+  typename L::iterator bi, ei;
   mesh->begin(bi); mesh->end(ei);
   while (bi != ei)
   {
