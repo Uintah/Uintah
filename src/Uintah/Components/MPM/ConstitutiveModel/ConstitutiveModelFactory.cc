@@ -3,6 +3,7 @@
 #include "CompNeoHook.h"
 #include "CompNeoHookPlas.h"
 #include "ViscoScram.h"
+#include "HypoElastic.h"
 #include <SCICore/Malloc/Allocator.h>
 #include <fstream>
 #include <iostream>
@@ -29,6 +30,9 @@ ConstitutiveModel* ConstitutiveModelFactory::create(ProblemSpecP& ps)
 
       else if (mat_type ==  "visco_scram")
 	 return(scinew ViscoScram(child));
+      
+      else if (mat_type ==  "hypo_elastic")
+	 return(scinew HypoElastic(child));
       
       else {
 	 cerr << "Unknown Material Type R (" << mat_type << ")" << std::endl;;
