@@ -119,9 +119,7 @@ private:
     PatchHashMaps();
     void init(XMLURL tsUrl, DOM_Node tsTopNode,
 	      int processor, int numProcessors);
-
     void purgeCache(); // purge the cached data
-    
     inline DOM_Node findVariable(const string& name, const Patch* patch,
 				 int matl, XMLURL& foundUrl);
     MaterialHashMaps* findPatchData(const Patch* patch);
@@ -262,7 +260,8 @@ public:
   template<class T> void get(T& data, const std::string& name,
 			     const Patch* patch, cellIndex min, cellIndex max);
 #endif
-  
+
+  static bool cacheOnlyCurrentTimestep;
 protected:
   DataArchive();
   
