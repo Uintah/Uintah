@@ -304,38 +304,37 @@ void ICE::scheduleTimeAdvance(double t, double dt,const LevelP& level,
 
   
   scheduleComputeEquilibrationPressure(sched, patches, press_matl,
-                                                       ice_matls);
+                                                       all_matls);
 
   scheduleComputeFaceCenteredVelocities(sched, patches, ice_matls_sub,
                                                         mpm_matls_sub,
                                                         press_matl, 
                                                         all_matls);
 
-  scheduleAddExchangeContributionToFCVel(sched, patches, ice_matls);    
+  scheduleAddExchangeContributionToFCVel(sched, patches, all_matls);    
 
   scheduleComputeDelPressAndUpdatePressCC(sched, patches, press_matl,
-                                                          ice_matls);
+                                                          all_matls);
 
   scheduleComputePressFC(sched, patches, press_matl,
-                                        ice_matls);
+                                        all_matls);
 
-  scheduleMassExchange(sched, patches, ice_matls);
+  scheduleMassExchange(sched, patches, all_matls);
 
   scheduleAccumulateMomentumSourceSinks(sched, patches, press_matl,
-                                                        ice_matls);
+                                                        all_matls);
 
   scheduleAccumulateEnergySourceSinks(sched, patches, press_matl,
-                                                      ice_matls);
+                                                      all_matls);
 
-  scheduleComputeLagrangianValues(sched, patches, ice_matls_sub, 
-                                                  all_matls);
+  scheduleComputeLagrangianValues(sched, patches,  all_matls);
 
-  scheduleAddExchangeToMomentumAndEnergy(sched, patches, ice_matls);
+  scheduleAddExchangeToMomentumAndEnergy(sched, patches, all_matls);
 
-  scheduleAdvectAndAdvanceInTime(sched, patches, ice_matls);
+  scheduleAdvectAndAdvanceInTime(sched, patches, all_matls);
 
   if (switchTestConservation){ 
-    schedulePrintConservedQuantities(sched, patches, ice_matls); 
+    schedulePrintConservedQuantities(sched, patches, all_matls); 
   }
 }
 
@@ -566,8 +565,7 @@ void ICE::scheduleAccumulateEnergySourceSinks(SchedulerP& sched,
 _____________________________________________________________________*/
 void ICE::scheduleComputeLagrangianValues(SchedulerP& sched,
 					  const PatchSet* patches,
-					  const MaterialSubset* ice_matls,
-                                     const MaterialSet* all_matls)
+                                     const MaterialSet* ice_matls)
 {
 #ifdef DOING
   cout << "ICE::scheduleComputeLagrangianValues" << endl;
@@ -575,19 +573,19 @@ void ICE::scheduleComputeLagrangianValues(SchedulerP& sched,
   Task* task = scinew Task("ICE::computeLagrangianValues",
                       this,&ICE::computeLagrangianValues);
 
-  task->requires(Task::NewDW,lb->rho_CCLabel,    ice_matls, Ghost::None);
-  task->requires(Task::OldDW,lb->vel_CCLabel,    ice_matls, Ghost::None);
-  task->requires(Task::OldDW,lb->temp_CCLabel,   ice_matls, Ghost::None);
-  task->requires(Task::NewDW,lb->mom_source_CCLabel, ice_matls, Ghost::None);
-  task->requires(Task::NewDW,lb->burnedMass_CCLabel, ice_matls, Ghost::None);
-  task->requires(Task::NewDW,lb->releasedHeat_CCLabel, ice_matls, Ghost::None);
-  task->requires(Task::NewDW,lb->int_eng_source_CCLabel, ice_matls, Ghost::None);
+  task->requires(Task::NewDW,lb->rho_CCLabel,             Ghost::None);
+  task->requires(Task::OldDW,lb->vel_CCLabel,             Ghost::None);
+  task->requires(Task::OldDW,lb->temp_CCLabel,            Ghost::None);
+  task->requires(Task::NewDW,lb->mom_source_CCLabel,      Ghost::None);
+  task->requires(Task::NewDW,lb->burnedMass_CCLabel,      Ghost::None);
+  task->requires(Task::NewDW,lb->releasedHeat_CCLabel,    Ghost::None);
+  task->requires(Task::NewDW,lb->int_eng_source_CCLabel,  Ghost::None);
 
   task->computes(lb->mom_L_CCLabel);
   task->computes(lb->int_eng_L_CCLabel);
   task->computes(lb->mass_L_CCLabel);
  
-  sched->addTask(task, patches, all_matls);
+  sched->addTask(task, patches, ice_matls);
 }
 
 /* ---------------------------------------------------------------------
