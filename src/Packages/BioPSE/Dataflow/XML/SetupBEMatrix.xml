@@ -36,13 +36,6 @@
     <inputs lastportdynamic="yes">
       <!-- one of (device port file) -->
       <port>
-	<name>Conductivity Tensors</name>
-	<description>
-	  <p>Conductivity tensors for the input surfaces.</p>
-	</description>
-	<datatype>SCIRun::Matrix</datatype>
-      </port>
-      <port>
 	<name>Surface</name>
 	<description>
 	  <p>A surface in the module.</p>
