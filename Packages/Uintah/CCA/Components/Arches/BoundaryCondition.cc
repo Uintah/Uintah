@@ -235,42 +235,26 @@ BoundaryCondition::cellTypeInit(const ProcessorGroup*,
     IntVector idxLo = domLo;
     IntVector idxHi = domHi;
  
-#ifdef ARCHES_GEOM_DEBUG
-    cerr << "Just before geom init" << endl;
-#endif
     // initialize CCVariable to -1 which corresponds to flowfield
     int celltypeval;
     fort_celltypeinit(idxLo, idxHi, cellType, d_flowfieldCellTypeVal);
     
     // Find the geometry of the patch
     Box patchBox = patch->getBox();
-#ifdef ARCHES_GEOM_DEBUG
-    cerr << "Patch box = " << patchBox << endl;
-#endif
-    
+
     // wall boundary type
     {
       int nofGeomPieces = (int)d_wallBdry->d_geomPiece.size();
       for (int ii = 0; ii < nofGeomPieces; ii++) {
 	GeometryPiece*  piece = d_wallBdry->d_geomPiece[ii];
 	Box geomBox = piece->getBoundingBox();
-#ifdef ARCHES_GEOM_DEBUG
-	cerr << "Wall Geometry box = " << geomBox << endl;
-#endif
 	Box b = geomBox.intersect(patchBox);
-#ifdef ARCHES_GEOM_DEBUG
-	cerr << "Wall Intersection box = " << b << endl;
-	cerr << "Just before geom wall "<< endl;
-#endif
 	// check for another geometry
 	if (!(b.degenerate())) {
 	  CellIterator iter = patch->getCellIterator(b);
 	  IntVector idxLo = iter.begin();
 	  IntVector idxHi = iter.end() - IntVector(1,1,1);
 	  celltypeval = d_wallBdry->d_cellTypeID;
-#ifdef ARCHES_GEOM_DEBUG
-	  cerr << "Wall cell type val = " << celltypeval << endl;
-#endif
 	  fort_celltypeinit(idxLo, idxHi, cellType, celltypeval);
 	}
       }
@@ -282,22 +266,13 @@ BoundaryCondition::cellTypeInit(const ProcessorGroup*,
 	for (int ii = 0; ii < nofGeomPieces; ii++) {
 	  GeometryPiece*  piece = d_pressureBdry->d_geomPiece[ii];
 	  Box geomBox = piece->getBoundingBox();
-#ifdef ARCHES_GEOM_DEBUG
-	  cerr << "Pressure Geometry box = " << geomBox << endl;
-#endif
 	  Box b = geomBox.intersect(patchBox);
-#ifdef ARCHES_GEOM_DEBUG
-	  cerr << "Pressure Intersection box = " << b << endl;
-#endif
 	  // check for another geometry
 	  if (!(b.degenerate())) {
 	    CellIterator iter = patch->getCellIterator(b);
 	    IntVector idxLo = iter.begin();
 	    IntVector idxHi = iter.end() - IntVector(1,1,1);
 	    celltypeval = d_pressureBdry->d_cellTypeID;
-#ifdef ARCHES_GEOM_DEBUG
-	    cerr << "Pressure Bdry  cell type val = " << celltypeval << endl;
-#endif
 	    fort_celltypeinit(idxLo, idxHi, cellType, celltypeval);
 	  }
 	}
@@ -310,22 +285,13 @@ BoundaryCondition::cellTypeInit(const ProcessorGroup*,
 	for (int ii = 0; ii < nofGeomPieces; ii++) {
 	  GeometryPiece*  piece = d_outletBC->d_geomPiece[ii];
 	  Box geomBox = piece->getBoundingBox();
-#ifdef ARCHES_GEOM_DEBUG
-	  cerr << "Outlet Geometry box = " << geomBox << endl;
-#endif
 	  Box b = geomBox.intersect(patchBox);
-#ifdef ARCHES_GEOM_DEBUG
-	  cerr << "Outlet Intersection box = " << b << endl;
-#endif
 	  // check for another geometry
 	  if (!(b.degenerate())) {
 	    CellIterator iter = patch->getCellIterator(b);
 	    IntVector idxLo = iter.begin();
 	    IntVector idxHi = iter.end() - IntVector(1,1,1);
 	    celltypeval = d_outletBC->d_cellTypeID;
-#ifdef ARCHES_GEOM_DEBUG
-	    cerr << "Flow Outlet cell type val = " << celltypeval << endl;
-#endif
 	    fort_celltypeinit(idxLo, idxHi, cellType, celltypeval);
 	  }
 	}
@@ -337,13 +303,7 @@ BoundaryCondition::cellTypeInit(const ProcessorGroup*,
       for (int jj = 0; jj < nofGeomPieces; jj++) {
 	GeometryPiece*  piece = d_flowInlets[ii].d_geomPiece[jj];
 	Box geomBox = piece->getBoundingBox();
-#ifdef ARCHES_GEOM_DEBUG
-	cerr << "Inlet " << ii << " Geometry box = " << geomBox << endl;
-#endif
 	Box b = geomBox.intersect(patchBox);
-#ifdef ARCHES_GEOM_DEBUG
-	cerr << "Inlet " << ii << " Intersection box = " << b << endl;
-#endif
 	// check for another geometry
 	if (b.degenerate())
 	  continue; // continue the loop for other inlets
@@ -354,9 +314,6 @@ BoundaryCondition::cellTypeInit(const ProcessorGroup*,
 	IntVector idxLo = iter.begin();
 	IntVector idxHi = iter.end() - IntVector(1,1,1);
 	celltypeval = d_flowInlets[ii].d_cellTypeID;
-#ifdef ARCHES_GEOM_DEBUG
-	cerr << "Flow inlet " << ii << " cell type val = " << celltypeval << endl;
-#endif
 	fort_celltypeinit(idxLo, idxHi, cellType, celltypeval);
 #endif
 	for (CellIterator iter = patch->getCellIterator(b); !iter.done(); iter++) {
@@ -384,26 +341,6 @@ BoundaryCondition::cellTypeInit(const ProcessorGroup*,
 	}
       }
     }
-
-
-#ifdef ARCHES_GEOM_DEBUG
-    // Testing if correct values have been put
-    cerr << " In C++ (BoundaryCondition.cc) after flow inlet init " << endl;
-    cerr.setf(ios_base::right, ios_base::adjustfield);
-    //cerr.setf(ios_base::showpoint);
-    cerr.precision(3);
-    cerr.setf(ios_base::scientific, ios_base::floatfield);
-    for (int ii = domLo.x(); ii <= domHi.x(); ii++) {
-      cerr << "Celltypes for ii = " << ii << endl;
-      for (int jj = domLo.y(); jj <= domHi.y(); jj++) {
-	for (int kk = domLo.z(); kk <= domHi.z(); kk++) {
-	  cerr.width(2);
-	  cerr << cellType[IntVector(ii,jj,kk)] << " " ; 
-	}
-	cerr << endl;
-      }
-    }
-#endif
   }
 }  
 
@@ -621,16 +558,6 @@ BoundaryCondition::computeInletFlowArea(const ProcessorGroup*,
 	double inlet_area;
 	int cellid = d_flowInlets[ii].d_cellTypeID;
 	
-	/*#define ARCHES_GEOM_DEBUG*/
-#ifdef ARCHES_GEOM_DEBUG
-	cerr << "Domain Lo = [" << domLo.x() << "," <<domLo.y()<< "," <<domLo.z()
-	     << "] Domain hi = [" << domHi.x() << "," <<domHi.y()<< "," <<domHi.z() 
-	     << "]" << endl;
-	cerr << "Index Lo = [" << idxLo.x() << "," <<idxLo.y()<< "," <<idxLo.z()
-	     << "] Index hi = [" << idxHi.x() << "," <<idxHi.y()<< "," <<idxHi.z()
-	     << "]" << endl;
-	cerr << "Cell ID = " << cellid << endl;
-#endif
 	bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
 	bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
 	bool yminus = patch->getBCType(Patch::yminus) != Patch::Neighbor;
@@ -641,10 +568,6 @@ BoundaryCondition::computeInletFlowArea(const ProcessorGroup*,
 	fort_areain(domLo, domHi, idxLo, idxHi, cellInfo->sew, cellInfo->sns,
 		    cellInfo->stb, inlet_area, cellType, cellid,
 		    xminus, xplus, yminus, yplus, zminus, zplus);
-	
-#ifdef ARCHES_GEOM_DEBUG
-	cerr << "Inlet area = " << inlet_area << endl;
-#endif
 	
 	// Write the inlet area to the old_dw
 	new_dw->put(sum_vartype(inlet_area),d_flowInlets[ii].d_area_label);
@@ -772,21 +695,6 @@ BoundaryCondition::computePressureBC(const ProcessorGroup* ,
 		d_pressureBdry->refPressure,
 		cellinfo->dxepu, cellinfo->dynpv, cellinfo->dztpw,
 		xminus, xplus, yminus, yplus, zminus, zplus);
-    
-
-#ifdef ARCHES_BC_DEBUG
-    // Testing if correct values have been put
-    cerr << " After CALPBC : " << endl;
-    cerr << "Print Pressure : " << endl;
-    pressure.print(cerr);
-    cerr << " After CALPBC : " << endl;
-    cerr << "Print U velocity : " << endl;
-    uVelocity.print(cerr);
-    cerr << "Print V velocity : " << endl;
-    vVelocity.print(cerr);
-    cerr << "Print W velocity : " << endl;
-    wVelocity.print(cerr);
-#endif
     
   } 
 }
@@ -965,30 +873,6 @@ BoundaryCondition::uVelocityBC(const Patch* patch,
 	      cellinfo->yy, cellinfo->yv, cellinfo->zz, cellinfo->zw,
 	      xminus, xplus, yminus, yplus, zminus, zplus);
 
-#ifdef ARCHES_BC_DEBUG
-  cerr << "AFTER UVELBC_FORT" << endl;
-  cerr << "Print UVel" << endl;
-  vars->uVelocity.print(cerr);
-  cerr << "Print UAP" << endl;
-  vars->uVelocityCoeff[Arches::AP].print(cerr);
-  cerr << "Print UAW" << endl;
-  vars->uVelocityCoeff[Arches::AW].print(cerr);
-  cerr << "Print UAE" << endl;
-  vars->uVelocityCoeff[Arches::AE].print(cerr);
-  cerr << "Print UAN" << endl;
-  vars->uVelocityCoeff[Arches::AN].print(cerr);
-  cerr << "Print UAS" << endl;
-  vars->uVelocityCoeff[Arches::AS].print(cerr);
-  cerr << "Print UAT" << endl;
-  vars->uVelocityCoeff[Arches::AT].print(cerr);
-  cerr << "Print UAB" << endl;
-  vars->uVelocityCoeff[Arches::AB].print(cerr);
-  cerr << "Print SU for U velocity: " << endl;
-  vars->uVelNonlinearSrc.print(cerr);
-  cerr << "Print SP for U velocity for:" << endl;
-  vars->uVelLinearSrc.print(cerr);
-#endif
-
 }
 
 //****************************************************************************
@@ -1042,30 +926,6 @@ BoundaryCondition::vVelocityBC(const Patch* patch,
 	      cellinfo->xx, cellinfo->xu, cellinfo->zz, cellinfo->zw,
 	      xminus, xplus, yminus, yplus, zminus, zplus);
 
-#ifdef ARCHES_BC_DEBUG
-  cerr << "AFTER VVELBC_FORT" << endl;
-  cerr << "Print VVel" << endl;
-  vars->vVelocity.print(cerr);
-  cerr << "Print VAP" << endl;
-  vars->vVelocityCoeff[Arches::AP].print(cerr);
-  cerr << "Print VAW" << endl;
-  vars->vVelocityCoeff[Arches::AW].print(cerr);
-  cerr << "Print VAE" << endl;
-  vars->vVelocityCoeff[Arches::AE].print(cerr);
-  cerr << "Print VAN" << endl;
-  vars->vVelocityCoeff[Arches::AN].print(cerr);
-  cerr << "Print VAS" << endl;
-  vars->vVelocityCoeff[Arches::AS].print(cerr);
-  cerr << "Print VAT" << endl;
-  vars->vVelocityCoeff[Arches::AT].print(cerr);
-  cerr << "Print VAB" << endl;
-  vars->vVelocityCoeff[Arches::AB].print(cerr);
-  cerr << "Print SU for V velocity: " << endl;
-  vars->vVelNonlinearSrc.print(cerr);
-  cerr << "Print SP for V velocity for:" << endl;
-  vars->vVelLinearSrc.print(cerr);
-#endif
-
 }
 
 //****************************************************************************
@@ -1117,30 +977,6 @@ BoundaryCondition::wVelocityBC(const Patch* patch,
 	      cellinfo->sew, cellinfo->sns, cellinfo->stbw,
 	      cellinfo->xx, cellinfo->xu, cellinfo->yy, cellinfo->yv,
 	      xminus, xplus, yminus, yplus, zminus, zplus);
-
-#ifdef ARCHES_BC_DEBUG
-  cerr << "AFTER WVELBC_FORT" << endl;
-  cerr << "Print WVel" << endl;
-  vars->wVelocity.print(cerr);
-  cerr << "Print WAP" << endl;
-  vars->wVelocityCoeff[Arches::AP].print(cerr);
-  cerr << "Print WAW" << endl;
-  vars->wVelocityCoeff[Arches::AW].print(cerr);
-  cerr << "Print WAE" << endl;
-  vars->wVelocityCoeff[Arches::AE].print(cerr);
-  cerr << "Print WAN" << endl;
-  vars->wVelocityCoeff[Arches::AN].print(cerr);
-  cerr << "Print WAS" << endl;
-  vars->wVelocityCoeff[Arches::AS].print(cerr);
-  cerr << "Print WAT" << endl;
-  vars->wVelocityCoeff[Arches::AT].print(cerr);
-  cerr << "Print WAB" << endl;
-  vars->wVelocityCoeff[Arches::AB].print(cerr);
-  cerr << "Print SU for W velocity: " << endl;
-  vars->wVelNonlinearSrc.print(cerr);
-  cerr << "Print SP for W velocity for:" << endl;
-  vars->wVelLinearSrc.print(cerr);
-#endif
 
 }
 
@@ -1195,29 +1031,6 @@ BoundaryCondition::pressureBC(const ProcessorGroup*,
 	       constvars->cellType, wall_celltypeval, symmetry_celltypeval,
 	       flow_celltypeval, xminus, xplus, yminus, yplus, zminus, zplus);
 
-#ifdef ARCHES_BC_DEBUG
-  cerr << "AFTER FORT_PRESSBC" << endl;
-  cerr << "Print Pressure" << endl;
-  vars->pressure.print(cerr);
-  cerr << "Print PAP" << endl;
-  vars->pressCoeff[Arches::AP].print(cerr);
-  cerr << "Print PAW" << endl;
-  vars->pressCoeff[Arches::AW].print(cerr);
-  cerr << "Print PAE" << endl;
-  vars->pressCoeff[Arches::AE].print(cerr);
-  cerr << "Print PAN" << endl;
-  vars->pressCoeff[Arches::AN].print(cerr);
-  cerr << "Print PAS" << endl;
-  vars->pressCoeff[Arches::AS].print(cerr);
-  cerr << "Print PAT" << endl;
-  vars->pressCoeff[Arches::AT].print(cerr);
-  cerr << "Print PAB" << endl;
-  vars->pressCoeff[Arches::AB].print(cerr);
-  cerr << "Print SU for Pressure: " << endl;
-  vars->pressNonlinearSrc.print(cerr);
-  cerr << "Print SP for Pressure for:" << endl;
-  vars->pressLinearSrc.print(cerr);
-#endif
 }
 
 //****************************************************************************
@@ -1275,13 +1088,6 @@ BoundaryCondition::scalarBC(const ProcessorGroup*,
 		d_flowInlets[0].d_cellTypeID, press_celltypeval, ffield,
 		sfield, outletfield,
 		xminus, xplus, yminus, yplus, zminus, zplus);
-#ifdef ARCHES_BC_DEBUG
-  cerr << "AFTER FORT_SCALARBC" << endl;
-  cerr << "Print Scalar" << endl;
-  constvars->scalar.print(cerr);
-  cerr << "Print scalar coeff, AE:" << endl;
-  vars->scalarCoeff[Arches::AE].print(cerr);
-#endif
 }
 
 
@@ -1318,51 +1124,6 @@ BoundaryCondition::enthalpyBC(const ProcessorGroup*,
   bool zminus = patch->getBCType(Patch::zminus) != Patch::Neighbor;
   bool zplus =  patch->getBCType(Patch::zplus) != Patch::Neighbor;
 
-  //#define enthalpySolve_debug
-#ifdef enthalpySolve_debug
-
-      // code to print all values of any variable within
-      // a box, for multi-patch case
-
-     IntVector indexLow = patch->getCellLowIndex();
-     IntVector indexHigh = patch->getCellHighIndex();
-
-      int ibot = 0;
-      int itop = 0;
-      int jbot = 8;
-      int jtop = 8;
-      int kbot = 8;
-      int ktop = 8;
-
-      // values above can be changed for each case as desired
-
-      bool printvalues = true;
-      int idloX = Max(indexLow.x(),ibot);
-      int idhiX = Min(indexHigh.x()-1,itop);
-      int idloY = Max(indexLow.y(),jbot);
-      int idhiY = Min(indexHigh.y()-1,jtop);
-      int idloZ = Max(indexLow.z(),kbot);
-      int idhiZ = Min(indexHigh.z()-1,ktop);
-      if ((idloX > idhiX) || (idloY > idhiY) || (idloZ > idhiZ))
-	printvalues = false;
-      printvalues = false;
-
-      if (printvalues) {
-	for (int ii = idloX; ii <= idhiX; ii++) {
-	  for (int jj = idloY; jj <= idhiY; jj++) {
-	    for (int kk = idloZ; kk <= idhiZ; kk++) {
-	      cerr.width(14);
-	      cerr << " point coordinates "<< ii << " " << jj << " " << kk << endl;
-	      cerr << "Source after Radiation" << endl;
-	      cerr << "Radiation source = " << vars->src[IntVector(ii,jj,kk)] << endl; 
-	      cerr << "Nonlinear source     = " << vars->scalarNonlinearSrc[IntVector(ii,jj,kk)] << endl; 
-	    }
-	  }
-	}
-      }
-
-#endif
-
   //fortran call
   fort_bcenthalpy(domLo, domHi, idxLo, idxHi, constvars->enthalpy,
 		  vars->scalarCoeff[Arches::AE],
@@ -1380,13 +1141,6 @@ BoundaryCondition::enthalpyBC(const ProcessorGroup*,
 		  press_celltypeval, ffield, sfield, outletfield,
 		  xminus, xplus, yminus, yplus, zminus, zplus);
 
-#ifdef ARCHES_BC_DEBUG
-  cerr << "AFTER FORT_ENTHALPYBC" << endl;
-  cerr << "Print Enthalpy" << endl;
-  vars->enthalpy.print(cerr);
-  cerr << "Print enthalpy coeff, AE:" << endl;
-  vars->scalarCoeff[Arches::AE].print(cerr);
-#endif
 }
 
 
@@ -1597,85 +1351,6 @@ BoundaryCondition::setFlatProfile(const ProcessorGroup* /*pc*/,
       }
       new_dw->put(max_vartype(maxAbsW), d_lab->d_maxAbsW_label); 
     
-#ifdef ARCHES_BC_DEBUG
-    // Testing if correct values have been put
-    cerr << "In set flat profile : " << endl;
-    cerr << "DomLo = (" << domLo.x() << "," << domLo.y() << "," << domLo.z() << ")\n";
-    cerr << "DomHi = (" << domHi.x() << "," << domHi.y() << "," << domHi.z() << ")\n";
-    cerr << "DomLoU = (" << domLoU.x()<<","<<domLoU.y()<< "," << domLoU.z() << ")\n";
-    cerr << "DomHiU = (" << domHiU.x()<<","<<domHiU.y()<< "," << domHiU.z() << ")\n";
-    cerr << "DomLoV = (" << domLoV.x()<<","<<domLoV.y()<< "," << domLoV.z() << ")\n";
-    cerr << "DomHiV = (" << domHiV.x()<<","<<domHiV.y()<< "," << domHiV.z() << ")\n";
-    cerr << "DomLoW = (" << domLoW.x()<<","<<domLoW.y()<< "," << domLoW.z() << ")\n";
-    cerr << "DomHiW = (" << domHiW.x()<<","<<domHiW.y()<< "," << domHiW.z() << ")\n";
-    cerr << "IdxLo = (" << idxLo.x() << "," << idxLo.y() << "," << idxLo.z() << ")\n";
-    cerr << "IdxHi = (" << idxHi.x() << "," << idxHi.y() << "," << idxHi.z() << ")\n";
-    cerr << "IdxLoU = (" << idxLoU.x()<<","<<idxLoU.y()<< "," << idxLoU.z() << ")\n";
-    cerr << "IdxHiU = (" << idxHiU.x()<<","<<idxHiU.y()<< "," << idxHiU.z() << ")\n";
-    cerr << "IdxLoV = (" << idxLoV.x()<<","<<idxLoV.y()<< "," << idxLoV.z() << ")\n";
-    cerr << "IdxHiV = (" << idxHiV.x()<<","<<idxHiV.y()<< "," << idxHiV.z() << ")\n";
-    cerr << "IdxLoW = (" << idxLoW.x()<<","<<idxLoW.y()<< "," << idxLoW.z() << ")\n";
-    cerr << "IdxHiW = (" << idxHiW.x()<<","<<idxHiW.y()<< "," << idxHiW.z() << ")\n";
-    
-    cerr << " After Set Flat Profile : " << endl;
-    for (int ii = domLo.x(); ii <= domHi.x(); ii++) {
-      cerr << "Density for ii = " << ii << endl;
-      for (int jj = domLo.y(); jj <= domHi.y(); jj++) {
-	for (int kk = domLo.z(); kk <= domHi.z(); kk++) {
-	  cerr.width(10);
-	  cerr << density[IntVector(ii,jj,kk)] << " " ; 
-	}
-	cerr << endl;
-      }
-    }
-    cerr << " After Set Flat Profile : " << endl;
-    for (int ii = domLoU.x(); ii <= domHiU.x(); ii++) {
-      cerr << "U velocity for ii = " << ii << endl;
-      for (int jj = domLoU.y(); jj <= domHiU.y(); jj++) {
-	for (int kk = domLoU.z(); kk <= domHiU.z(); kk++) {
-	  cerr.width(10);
-	  cerr << uVelocity[IntVector(ii,jj,kk)] << " " ; 
-	}
-	cerr << endl;
-      }
-    }
-    cerr << " After Set Flat Profile : " << endl;
-    for (int ii = domLoV.x(); ii <= domHiV.x(); ii++) {
-      cerr << "V velocity for ii = " << ii << endl;
-      for (int jj = domLoV.y(); jj <= domHiV.y(); jj++) {
-	for (int kk = domLoV.z(); kk <= domHiV.z(); kk++) {
-	  cerr.width(10);
-	  cerr << vVelocity[IntVector(ii,jj,kk)] << " " ; 
-	}
-	cerr << endl;
-      }
-    }
-    cerr << " After Set Flat Profile : " << endl;
-    for (int ii = domLoW.x(); ii <= domHiW.x(); ii++) {
-      cerr << "W velocity for ii = " << ii << endl;
-      for (int jj = domLoW.y(); jj <= domHiW.y(); jj++) {
-	for (int kk = domLoW.z(); kk <= domHiW.z(); kk++) {
-	  cerr.width(10);
-	  cerr << wVelocity[IntVector(ii,jj,kk)] << " " ; 
-	}
-	cerr << endl;
-      }
-    }
-    cerr << " After Set Flat Profile : " << endl;
-    cerr << " Number of scalars = " << d_nofScalars << endl;
-    for (int indx = 0; indx < d_nofScalars; indx++) {
-      for (int ii = domLo.x(); ii <= domHi.x(); ii++) {
-	cerr << "Scalar " << indx <<" for ii = " << ii << endl;
-	for (int jj = domLo.y(); jj <= domHi.y(); jj++) {
-	  for (int kk = domLo.z(); kk <= domHi.z(); kk++) {
-	    cerr.width(10);
-	    cerr << (scalar[indx])[IntVector(ii,jj,kk)] << " " ; 
-	  }
-	  cerr << endl;
-	}
-      }
-    }
-#endif
   }
 }
 
@@ -2958,28 +2633,6 @@ BoundaryCondition::scalarLisolve_mm(const ProcessorGroup*,
       }
     }
 
-#ifdef scalarSolve_debug
-
-     cerr << " NEW scalar VALUES " << endl;
-     for (int ii = 5; ii <= 9; ii++) {
-       for (int jj = 7; jj <= 12; jj++) {
-	 for (int kk = 7; kk <= 12; kk++) {
-	   cerr.width(14);
-	   cerr << " point coordinates "<< ii << " " << jj << " " << kk ;
-	   cerr << " new scalar = " << vars->scalar[IntVector(ii,jj,kk)] ; 
-	   cerr << " cellType = " << constvars->cellType[IntVector(ii,jj,kk)] ; 
-	   cerr << " void fraction = " << constvars->voidFraction[IntVector(ii,jj,kk)] << endl; 
-	 }
-       }
-     }
-#endif
-
-#ifdef ARCHES_DEBUG
-    cerr << " After Scalar Explicit solve : " << endl;
-    cerr << "Print Scalar: " << endl;
-    vars->scalar.print(cerr);
-#endif
-
     vars->residScalar = 1.0E-7;
     vars->truncScalar = 1.0;
 
@@ -3070,71 +2723,6 @@ BoundaryCondition::enthalpyLisolve_mm(const ProcessorGroup*,
 			    cellinfo->sew, cellinfo->sns, cellinfo->stb, 
 			    delta_t,
 			    constvars->cellType, d_mmWallID);
-
-  //#define enthalpySolve_debug
-#ifdef enthalpySolve_debug
-
-     cerr << " NEW enthalpy VALUES " << endl;
-
-      // code to print all values of any variable within
-      // a box, for multi-patch case
-
-     IntVector indexLow = patch->getCellLowIndex();
-     IntVector indexHigh = patch->getCellHighIndex();
-
-      int ibot = 0;
-      int itop = 0;
-      int jbot = 8;
-      int jtop = 8;
-      int kbot = 8;
-      int ktop = 8;
-
-      // values above can be changed for each case as desired
-
-      bool printvalues = true;
-      int idloX = Max(indexLow.x(),ibot);
-      int idhiX = Min(indexHigh.x()-1,itop);
-      int idloY = Max(indexLow.y(),jbot);
-      int idhiY = Min(indexHigh.y()-1,jtop);
-      int idloZ = Max(indexLow.z(),kbot);
-      int idhiZ = Min(indexHigh.z()-1,ktop);
-      if ((idloX > idhiX) || (idloY > idhiY) || (idloZ > idhiZ))
-	printvalues = false;
-
-      if (printvalues) {
-	for (int ii = idloX; ii <= idhiX; ii++) {
-	  for (int jj = idloY; jj <= idhiY; jj++) {
-	    for (int kk = idloZ; kk <= idhiZ; kk++) {
-	      cerr.width(14);
-	      cerr << " point coordinates "<< ii << " " << jj << " " << kk << endl;
-	      cerr << "Enthalpy after solve = " << vars->enthalpy[IntVector(ii,jj,kk)] << endl;
-	      cerr << "Void Fraction after solve = " << constvars->voidFraction[IntVector(ii,jj,kk)] << endl;
-	      cerr << "CellType for enthalpy solve = " << constvars->cellType[IntVector(ii,jj,kk)] << endl; 
-	      cerr << "Printing Coefficients and Sources" << endl;
-	      cerr << "East     coefficient = " << constvars->scalarCoeff[Arches::AE][IntVector(ii,jj,kk)] << endl; 
-	      cerr << "West     coefficient = " << constvars->scalarCoeff[Arches::AW][IntVector(ii,jj,kk)] << endl; 
-	      cerr << "North    coefficient = " << constvars->scalarCoeff[Arches::AN][IntVector(ii,jj,kk)] << endl; 
-	      cerr << "South    coefficient = " << constvars->scalarCoeff[Arches::AS][IntVector(ii,jj,kk)] << endl; 
-	      cerr << "Top      coefficient = " << constvars->scalarCoeff[Arches::AT][IntVector(ii,jj,kk)] << endl; 
-	      cerr << "Bottom   coefficient = " << constvars->scalarCoeff[Arches::AB][IntVector(ii,jj,kk)] << endl; 
-	      cerr << "Diagonal coefficient = " << constvars->scalarCoeff[Arches::AP][IntVector(ii,jj,kk)] << endl; 
-	      cerr << "Nonlinear source     = " << constvars->scalarNonlinearSrc[IntVector(ii,jj,kk)] << endl; 
-	      cerr << "Old Density          = " << constvars->old_density[IntVector(ii,jj,kk)] << endl; 
-	      cerr << "delta_t = " << delta_t << endl;
-	      
-	    }
-	  }
-	}
-      }
-
-#endif
-
-
-#ifdef ARCHES_DEBUG
-    cerr << " After Scalar Explicit solve : " << endl;
-    cerr << "Print Scalar: " << endl;
-    vars->enthalpy.print(cerr);
-#endif
 
     vars->residScalar = 1.0E-7;
     vars->truncScalar = 1.0;
