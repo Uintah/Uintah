@@ -60,6 +60,11 @@ public:
   bool transient() const { return transient_; }
   void set_transient(bool t) { transient_ = t; }
 
+  virtual bool operator==(PropertyBase &pb) const {
+    ASSERTFAIL( "Not defined."); }
+  virtual bool operator!=(PropertyBase &pb) const {
+    ASSERTFAIL( "Not defined."); }
+
 protected:
   //! Transient properties are deleted when the PropertyManager that this
   //! Property belongs to is thawed. 
@@ -85,6 +90,24 @@ public:
   static const string type_name(int n = -1);
   virtual void io(Piostream &stream);
   static  PersistentTypeID type_id;
+
+  virtual bool operator==(PropertyBase &pb) const {
+    const Property<T> *prop = dynamic_cast<Property<T> *>(&pb);
+
+    if (prop && obj_ == prop->obj_ )
+      return true;
+
+    return false;
+  }
+
+  virtual bool operator!=(PropertyBase &pb) const {
+    const Property<T> *prop = dynamic_cast<Property<T> *>(&pb);
+
+    if (prop && obj_ == prop->obj_ )
+      return false;
+
+    return true;
+  }
 
 protected:
   // Only Pio should use this constructor.
@@ -167,6 +190,8 @@ public:
   virtual ~PropertyManager();
 
   PropertyManager & operator=(const PropertyManager &pm);
+  bool operator==(const PropertyManager &pm);
+  bool operator!=(const PropertyManager &pm);
   
   template<class T> void set_property(const string &, const T &,
 				      bool is_transient);

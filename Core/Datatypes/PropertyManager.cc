@@ -91,6 +91,54 @@ PropertyManager::operator=(const PropertyManager &copy)
   return *this;
 }
 
+bool
+PropertyManager::operator==(const PropertyManager &pm)
+{
+  if (size_ != pm.size_)
+    return false;
+
+  map_type::const_iterator pi = pm.properties_.begin();
+
+  while (pi != pm.properties_.end()) {
+    
+    map_type::iterator loc = properties_.find(pi->first);
+
+    if (loc == properties_.end() )
+      return false;
+
+    if( *(pi->second) != *(loc->second) )
+      return false;
+
+    ++pi;
+  }
+  
+  return true;
+}
+
+bool
+PropertyManager::operator!=(const PropertyManager &pm)
+{
+  if (size_ != pm.size_)
+    return true;
+
+  map_type::const_iterator pi = pm.properties_.begin();
+
+  while (pi != pm.properties_.end()) {
+    
+    map_type::iterator loc = properties_.find(pi->first);
+
+    if (loc == properties_.end() )
+      return true;
+
+    if( *(pi->second) != *(loc->second) )
+      return true;
+
+    ++pi;
+  }
+  
+  return false;
+}
+
 
 PropertyManager::~PropertyManager()
 {
