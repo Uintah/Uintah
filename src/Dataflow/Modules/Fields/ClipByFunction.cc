@@ -45,7 +45,7 @@ namespace SCIRun {
 class ClipByFunction : public Module
 {
 private:
-  GuiString clipmode_;
+  GuiInt clipmode_;
   GuiString clipfunction_;
   int  last_input_generation_;
 
@@ -73,20 +73,6 @@ ClipByFunction::~ClipByFunction()
 }
 
 
-#if 0
-bool
-ClipByFunctionAlgo::inside_p(GuiInterface *gui, string id, string function,
-			     double x, double y, double z, double v)
-{
-  string result;
-  gui->eval(id + " functioneval2 " +
-	    to_string(x) + " " + to_string(y) + " " +  to_string(z) +
-  	    " " + to_string(v) + " {" + function + "}",
-	    result);
-  return (result == "1");
-}
-#endif
-
 
 void
 ClipByFunction::execute()
@@ -110,16 +96,26 @@ ClipByFunction::execute()
   }
 
   const TypeDescription *ftd = ifieldhandle->get_type_description();
-  const TypeDescription *ltd = ifieldhandle->data_at_type_description();
   CompileInfoHandle ci =
-    ClipByFunctionAlgo::get_compile_info(ftd, ltd, clipfunction_.get());
+    ClipByFunctionAlgo::get_compile_info(ftd, clipfunction_.get());
   Handle<ClipByFunctionAlgo> algo;
   if (!module_maybe_dynamic_compile(ci, algo))
   {
     error("Your function would not compile.");
     return;
   }
+
   int clipmode = 0;
+  if (ifieldhandle->data_at() != Field::NODE)
+  {
+    // Assume data at elements.
+    clipmode = 0;
+  }
+  else
+  {
+    clipmode = clipmode_.get();
+    if (clipmode > 8 || clipmode <= 0) clipmode = -1;
+  }
 
   FieldHandle ofield =
     algo->execute(this, ifieldhandle, clipmode);
@@ -138,7 +134,6 @@ ClipByFunction::execute()
 
 CompileInfoHandle
 ClipByFunctionAlgo::get_compile_info(const TypeDescription *fsrc,
-				     const TypeDescription *lsrc,
 				     string clipfunction)
 {
   hash<const char *> H;
@@ -151,17 +146,16 @@ ClipByFunctionAlgo::get_compile_info(const TypeDescription *fsrc,
 
   CompileInfo *rval = 
     scinew CompileInfo(template_name + "." +
-		       fsrc->get_filename() + "." +
-		       lsrc->get_filename() + ".",
+		       fsrc->get_filename() + ".",
                        base_class_name, 
                        template_name, 
-                       fsrc->get_name() + "," + lsrc->get_name() + " ");
+                       fsrc->get_name());
 
   // Add in the include path to compile this obj
   string class_declaration =
     string("\"\n\nusing namespace SCIRun;\n\n") + 
-    "template <class FIELD, class LOC>\n" +
-    "class " + template_name + " : public ClipByFunctionAlgoT<FIELD, LOC>\n" +
+    "template <class FIELD>\n" +
+    "class " + template_name + " : public ClipByFunctionAlgoT<FIELD>\n" +
     "{\n" +
     "  virtual bool vinside_p(double x, double y, double z,\n" +
     "                         typename FIELD::value_type v)\n" +
