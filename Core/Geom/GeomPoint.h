@@ -43,83 +43,35 @@ namespace SCIRun {
 
 class SCICORESHARE GeomPoints : public GeomObj {
 public:
-    Array1<float> pts;
-    inline void add(const Point& p) {
-	int s=pts.size();
-	pts.grow(3);
- 	pts[s]=p.x();
-	pts[s+1]=p.y();
-	pts[s+2]=p.z();
-    }
-    inline void add(const Point& p, const float &v) {
-	int s=pts.size();
-	pts.grow(3);
- 	pts[s]=p.x();
-	pts[s+1]=p.y();
-	pts[s+2]=p.z();
-	
-	scalars.add(v); // use this as well...
-    }
+  vector<float> points_;
+  vector<unsigned char> colors_;
 
-    inline void add(const Point& p, MaterialHandle c) {
-	int s=pts.size();
-	pts.grow(3);
- 	pts[s]=p.x();
-	pts[s+1]=p.y();
-	pts[s+2]=p.z();
-	
-	int ss=colors.size();
-	colors.grow(1);
-	colors[ss]=c;
-    }
+  inline void add(const Point& p) {
+    points_.push_back(p.x());
+    points_.push_back(p.y());
+    points_.push_back(p.z());
+  }
 
-    inline void add(const Point& p, const float &sv, const Vector& v) {
-	int s=pts.size();
-	pts.grow(3);
- 	pts[s]=p.x();
-	pts[s+1]=p.y();
-	pts[s+2]=p.z();
-	
-	scalars.add(sv); // use this as well...
+  void add(const Point& p, MaterialHandle c);
 
-	normals.add(v.x());
-	normals.add(v.y());
-	normals.add(v.z());
-    }
+  bool pickable;  // hack so we don't draw non-pickable pts during a pick
 
-    int have_normal;
-    Vector n;
-    int pickable;	// hack so we don't draw non-pickable pts during a pick
+  GeomPoints();
+  GeomPoints(const GeomPoints&);
+  virtual ~GeomPoints();
+  virtual GeomObj* clone();
 
-    unsigned char* cmap; // color map - if you have scalar values...
-
-    Array1<float>  scalars;  // change to something else???
-    Array1<float>  normals;  // ditto?
-    Array1<MaterialHandle> colors;
-
-    int list_pos; // posistion in the list...
-
-    Array1<unsigned int> sortx; // sorted arrays...
-    Array1<unsigned int> sorty;
-    Array1<unsigned int> sortz;
-
-    void DoSort(); // sorts the arrays...
-
-    GeomPoints(const GeomPoints&);
-    GeomPoints(int size);
-    GeomPoints(int size, const Vector &);
-    virtual ~GeomPoints();
-    virtual GeomObj* clone();
-    virtual void get_bounds(BBox&);
+  virtual void get_bounds(BBox&);
 
 #ifdef SCI_OPENGL
-    virtual void draw(DrawInfoOpenGL*, Material*, double time);
+  virtual void draw(DrawInfoOpenGL*, Material*, double time);
 #endif
 
-    virtual void io(Piostream&);
-    static PersistentTypeID type_id;
-    virtual bool saveobj(std::ostream&, const string& format, GeomSave*);
+  virtual void io(Piostream&);
+  static PersistentTypeID type_id;
+  virtual bool saveobj(std::ostream&, const string& format, GeomSave*);
 };
+
 
 // special stuff for particles...
 

@@ -541,9 +541,7 @@ RenderField<Fld, Loc>::render_nodes(const Fld *sfld,
   else if (node_display_mode == "Disks")   { mode = 3; }
 
   if (mode == 0) { // Points
-    typename Fld::mesh_type::Node::size_type nsize;
-    mesh->size(nsize);
-    pts = scinew GeomPoints((unsigned int)(nsize));
+    pts = scinew GeomPoints();
   }
   // First pass: over the nodes
   mesh->synchronize(Mesh::NODES_E);

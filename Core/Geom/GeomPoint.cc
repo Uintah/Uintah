@@ -33,6 +33,7 @@
 #include <Core/Geometry/BBox.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Util/NotFinished.h>
+#include <Core/Persistent/PersistentSTL.h>
 #include <iostream>
 using std::cerr;
 using std::cout;
@@ -43,7 +44,7 @@ namespace SCIRun {
 
 Persistent* make_GeomPoints()
 {
-    return scinew GeomPoints(0);
+  return scinew GeomPoints();
 }
 
 PersistentTypeID GeomPoints::type_id("GeomPoints", "GeomObj", make_GeomPoints);
@@ -51,7 +52,7 @@ PersistentTypeID GeomPoints::type_id("GeomPoints", "GeomObj", make_GeomPoints);
 
 Persistent* make_GeomTimedParticles()
 {
-    return scinew GeomTimedParticles(0);
+  return scinew GeomTimedParticles(0);
 }
 
 PersistentTypeID GeomTimedParticles::type_id("GeomTimedParticles", 
@@ -59,83 +60,13 @@ PersistentTypeID GeomTimedParticles::type_id("GeomTimedParticles",
 					     make_GeomTimedParticles);
 
 GeomPoints::GeomPoints(const GeomPoints &copy)
-: pts(copy.pts), have_normal(copy.have_normal), n(copy.n), pickable(copy.pickable), cmap(0) {
-}
-
-GeomPoints::GeomPoints(int size)
-: pts(0, size*3), have_normal(0), pickable(0), cmap(0)
+  : points_(copy.points_), pickable(copy.pickable)
 {
 }
 
-GeomPoints::GeomPoints(int size, const Vector &n)
-: pts(0, size*3), have_normal(1), n(n), pickable(0)
+GeomPoints::GeomPoints()
+  : pickable(false)
 {
-}
-
-void GeomPoints::DoSort()
-{
-
-  SortObjs sorter;
-  // first have to make arrays and stuff
-
-  Array1<unsigned int> remaped;
-
-  double minx,maxx;
-  double miny,maxy;
-  double minz,maxz;
-
-  minx = maxx = pts[0];
-  miny = maxy = pts[1];
-  minz = maxz = pts[2];
-
-  int i;
-  for(i=3;i<pts.size();i+=3) {
-    if (pts[i + 0] < minx) minx = pts[i + 0];
-    if (pts[i + 1] < miny) miny = pts[i + 1];
-    if (pts[i + 2] < minz) minz = pts[i + 2];
-
-    if (pts[i + 0] > maxx) maxx = pts[i + 0];
-    if (pts[i + 1] > maxy) maxy = pts[i + 1];
-    if (pts[i + 2] > maxz) maxz = pts[i + 2];
-  }
-
-  cerr << "Getting into sort...\n";
-
-  // now remap into the remaped array...
-
-  remaped.setsize(pts.size()/3);
-
-  const unsigned int BIGNUM= (1<<24);
-
-  float mapx = BIGNUM/(maxx-minx);
-  float mapy = BIGNUM/(maxy-miny);
-  float mapz = BIGNUM/(maxz-minz);
-
-  for(i=0;i<remaped.size();i++) {
-    remaped[i] = (unsigned int)((pts[i*3 + 0]-minx)*mapx);
-  }
-  
-  cerr << "Did first remap...\n";
-
-  sortx.setsize(remaped.size());
-
-  sorter.DoRadixSort(remaped,sortx);
-  cerr << "Done!\n";
-
-  for(i=0;i<remaped.size();i++) {
-    remaped[i] = (unsigned int)((pts[i*3 + 1]-miny)*mapy);
-  }
-  sorty.setsize(remaped.size());
-  sorter.DoRadixSort(remaped,sorty);
-
-  for(i=0;i<remaped.size();i++) {
-    remaped[i] = (unsigned int)((pts[i*3 + 2]-minz)*mapz);
-  }
-  sortz.setsize(remaped.size());
-  sorter.DoRadixSort(remaped,sortz);
-
-  cerr << "Done remaping!\n";
-
 }
 
 GeomPoints::~GeomPoints()
@@ -144,35 +75,68 @@ GeomPoints::~GeomPoints()
 
 GeomObj* GeomPoints::clone()
 {
-    return scinew GeomPoints(*this);
+  return scinew GeomPoints(*this);
 }
 
-void GeomPoints::get_bounds(BBox& bb)
+static unsigned char
+COLOR_FTOB(double v)
 {
-    for (int i=0; i<pts.size(); i+=3)
-	bb.extend(Point(pts[i], pts[i+1], pts[i+2]));
+  const int inter = (int)(v * 255 + 0.5);
+  if (inter > 255) return 255;
+  if (inter < 0) return 0;
+  return (unsigned char)inter;
 }
 
-#define GEOMPTS_VERSION 2
 
-void GeomPoints::io(Piostream& stream)
+void
+GeomPoints::add(const Point &p, MaterialHandle m)
 {
-
-    int version=stream.begin_class("GeomPoints", GEOMPTS_VERSION);
-    GeomObj::io(stream);
-    Pio(stream, pts);
-    if (version > 1) {
-	Pio(stream, have_normal);
-	Pio(stream, n);
-    }
-    stream.end_class();
+  add(p);
+  
+  colors_.push_back(COLOR_FTOB(m->diffuse.r()));
+  colors_.push_back(COLOR_FTOB(m->diffuse.g()));
+  colors_.push_back(COLOR_FTOB(m->diffuse.b()));
+  colors_.push_back(COLOR_FTOB(m->transparency));
 }
 
-bool GeomPoints::saveobj(ostream&, const string&, GeomSave*)
+
+
+void
+GeomPoints::get_bounds(BBox& bb)
 {
-    NOT_FINISHED("GeomPoints::saveobj");
-    return false;
+  for (int i=0; i<points_.size(); i+=3)
+  {
+    bb.extend(Point(points_[i], points_[i+1], points_[i+2]));
+  }
 }
+
+#define GEOMPOINTS_VERSION 3
+
+
+void
+GeomPoints::io(Piostream& stream)
+{
+  int version=stream.begin_class("GeomPoints", GEOMPOINTS_VERSION);
+  GeomObj::io(stream);
+  Pio(stream, points_);
+  if (version == 2)
+  {
+    int have_normal;
+    Vector n;
+    Pio(stream, have_normal);
+    Pio(stream, n);
+  }
+  stream.end_class();
+}
+
+
+bool
+GeomPoints::saveobj(ostream&, const string&, GeomSave*)
+{
+  NOT_FINISHED("GeomPoints::saveobj");
+  return false;
+}
+
 
 GeomTimedParticles::GeomTimedParticles(const GeomTimedParticles&)
 : cmap(0)
