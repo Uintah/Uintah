@@ -71,7 +71,7 @@ using std::istringstream;
 using std::ostringstream;
 
 namespace SCIRun {
-
+#if 0
 
 class Streamline;
 
@@ -2063,6 +2063,6 @@ void SLSourceInfo::pick_source(const clString& sname,
     }
 #endif
 }
-
+#endif
 } // End namespace SCIRun
 
