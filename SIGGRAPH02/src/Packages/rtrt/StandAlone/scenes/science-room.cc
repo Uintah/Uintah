@@ -798,16 +798,22 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
 
   VolumeDpy* firedpy = new VolumeDpy(1000);
 
-  int fstart = 00;
-  int fend = 01;
-  int finc = 1;
+  //  int fstart = 0;
+  //  int fend = 168;
+  int fstart = 0;
+  int fend = 168;
+  //  int finc = 8; // never less than 8, must be a multiple of 8
+  //  int finc = 16; // 0, 16, 32, 48, 64, 80, 96, 112, 128, 144, 160
+  //  int finc = 24; // 0, 24, 48, 72, 96, 120, 144, 168
+  //  int finc = 32; // 0, 32, 64, 96, 128, 160
+  int finc = 40; // 0, 40, 80, 120, 160
   SelectableGroup *fire_time = new SelectableGroup(1);
   fire_time->name_ = "CSAFE Fire Time Step Selector";
   //  TimeObj *fire_time = new TimeObj(5);
-  for(int f = fstart; f < fend; f+= finc) {
+  for(int f = fstart; f <= fend; f+= finc) {
     char buf[1000];
-    sprintf(buf, "/usr/sci/data/CSAFE/heptane300_3D_NRRD/float/h300_%04df.raw",
-	    f);
+    //    sprintf(buf, "/usr/sci/data/CSAFE/heptane300_3D_NRRD/float/h300_%04df.raw", f);
+    sprintf(buf, "/usr/sci/data/Geometry/volumes2/CSAFE/h300_%04df.raw", f);
     cout << "Reading "<<buf<<endl;
     Object *fire=new HVolume<float, BrickArray3<float>, BrickArray3<VMCell<float> > > (fmat, firedpy, buf, 3, nworkers);
     fire_time->add(fire);
@@ -816,12 +822,12 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
   InstanceWrapperObject *fire_iw = new InstanceWrapperObject(fire_time);
 
   Transform *fire_trans = new Transform();
+  fire_trans->pre_scale(Vector(1.245,1.245,1.245));
   fire_trans->rotate(Vector(1,0,0), Vector(0,0,1));
-  fire_trans->pre_scale(Vector(1.06,1.06,1.06));
   fire_trans->pre_translate(Vector(-8, 8, 1.75));
-  fire_trans->pre_translate(Vector(0,0,-0.18));
-
-  SpinningInstance *fire_inst = new SpinningInstance(fire_iw, fire_trans, Point(-8,8,1.56), Vector(0,0,1), 0.1);
+  fire_trans->pre_translate(Vector(0,0,-.00305));
+  
+  SpinningInstance *fire_inst = new SpinningInstance(fire_iw, fire_trans, Point(-8,8,1.75), Vector(0,0,1), 0.5);
   fire_inst->name_ = "Spinning CSAFE Fire";
 
   CutGroup *fire_cut = new CutGroup(cpdpy);
@@ -917,13 +923,16 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
   (new Thread(vcvdpy, "VFEM Volume Dpy"))->detach();
 #endif
 #ifdef ADD_DAVE_HEAD
+  scene->addObjectOfInterest( hcut, false );
   scene->addObjectOfInterest( dinst, false );
   scene->attach_auxiliary_display(hcvdpy);
   hcvdpy->setName("Brain Volume");
   scene->attach_display(hcvdpy);
   (new Thread(hcvdpy, "HEAD Volume Dpy"))->detach();
+  scene->addObjectOfInterest( hcut, false );
 #endif
 #ifdef ADD_CSAFE_FIRE
+  scene->addObjectOfInterest( fire_time, true );
   scene->addObjectOfInterest( fire_inst, true );
   scene->attach_auxiliary_display(firedpy);
   firedpy->setName("CSAFE Fire Volume");
@@ -937,9 +946,7 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
   scene->attach_display(gcvdpy);
   (new Thread(gcvdpy, "GEO Volume Dpy"))->detach();
 #endif
-#ifdef ADD_DAVE_HEAD
-  scene->addObjectOfInterest( hcut, false );
-#endif
+
   scene->attach_auxiliary_display(cpdpy);
   cpdpy->setName("Cutting Plane");
   scene->attach_display(cpdpy);
