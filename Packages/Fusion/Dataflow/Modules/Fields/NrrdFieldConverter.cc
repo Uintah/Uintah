@@ -441,15 +441,6 @@ NrrdFieldConverter::execute(){
 	  error_ = true;
 	  return;
 	}
-
-	if( mesh_rank >= 1 ) idim = dHandle->nrrd->axis[1].size;
-	if( mesh_rank >= 2 ) jdim = dHandle->nrrd->axis[2].size;
-	if( mesh_rank >= 3 ) kdim = dHandle->nrrd->axis[3].size;
-	
-	mdims.clear();
-	if( idim > 1) { mdims.push_back( idim ); }
-	if( jdim > 1) { mdims.push_back( jdim ); }
-	if( kdim > 1) { mdims.push_back( kdim ); }	
       } else if( mesh_.size() == 2 || mesh_.size() == 3 ) {
 
 	mesh_coor_rank = mesh_.size();
@@ -473,40 +464,19 @@ NrrdFieldConverter::execute(){
 	
 	  if( ic == 0 ) {
 	    mesh_rank = nrrdDim - 1;
-	  
-	    if( mesh_rank >= 1 ) idim = dHandle->nrrd->axis[1].size;
-	    if( mesh_rank >= 2 ) jdim = dHandle->nrrd->axis[2].size;
-	    if( mesh_rank >= 3 ) kdim = dHandle->nrrd->axis[3].size;
-	  
-	    mdims.clear();
-	    if( idim > 1) { mdims.push_back( idim ); }
-	    if( jdim > 1) { mdims.push_back( jdim ); }
-	    if( kdim > 1) { mdims.push_back( kdim ); }
-	    
 	  } else {
 	    if( mesh_rank != nrrdDim-1 ) {
 	      error( dataset[0] + " - Mesh rank mismatch." );
 	      error_ = true;
 	      return;
 	    }
-	  
-	    for( jc=0, kc=0; jc<nrrdDim; jc++ ) {
-	      unsigned int size = dHandle->nrrd->axis[jc].size;
+	  }
 
-	      if( size > 1 && mdims[kc++] != size ) {
-		error(  dataset[0] + "Data set sizes do not match." );
-	      
-		error_ = true;
-		return;
-	      }
-	    }
-	  
-	    if( dHandle->nrrd->axis[ mesh_rank ].size < 2 ) {
-	      error( dataset[0] +
-		     " Mesh dataset does not contain two points." );
-	      error_ = true;
-	      return;
-	    }
+	  if( dHandle->nrrd->axis[ mesh_rank ].size != 2 ) {
+	    error( dataset[0] +
+		   " Mesh dataset does not contain two points." );
+	    error_ = true;
+	    return;
 	  }
 	}
       } else {
@@ -516,70 +486,68 @@ NrrdFieldConverter::execute(){
       }
 
       // No mesh so set the mesh size based on the data.
-      if( mesh_.size() == 0 ) {
-	if( data_.size() == 1 || data_.size() == 3 || data_.size() == 6 ) {
+      if( data_.size() == 1 || data_.size() == 3 || data_.size() == 6 ) {
 
-	  for( ic=0; ic<data_.size(); ic++ ) {
-	    dHandle = nHandles[data_[ic]];
+	for( ic=0; ic<data_.size(); ic++ ) {
+	  dHandle = nHandles[data_[ic]];
 	    
-	    // Get the tuple axis name - there is only one.
-	    vector< string > dataset;
-	    dHandle->get_tuple_indecies(dataset);
+	  // Get the tuple axis name - there is only one.
+	  vector< string > dataset;
+	  dHandle->get_tuple_indecies(dataset);
 	    
-	    // If more than one dataset then all axii must be Scalar
-	    if( data_.size() > 1 ) {
-	      if( dataset[0].find( ":Scalar" ) == string::npos ) {
-		error( dataset[0] + " - Data type must be scalar." );
-		error_ = true;
-		return;
-	      }
+	  // If more than one dataset then all axii must be Scalar
+	  if( data_.size() > 1 ) {
+	    if( dataset[0].find( ":Scalar" ) == string::npos ) {
+	      error( dataset[0] + " - Data type must be scalar." );
+	      error_ = true;
+	      return;
+	    }
+	  }
+
+
+	  const unsigned int nrrdDim = dHandle->nrrd->dim;
+	    
+	  if( ic == 0 ) {
+	    mesh_rank = nrrdDim - 1;
+		
+	    if( mesh_rank >= 1 ) idim = dHandle->nrrd->axis[1].size;
+	    if( mesh_rank >= 2 ) jdim = dHandle->nrrd->axis[2].size;
+	    if( mesh_rank >= 3 ) kdim = dHandle->nrrd->axis[3].size;
+
+	    mdims.clear();
+	    if( idim > 1) { mdims.push_back( idim ); }
+	    if( jdim > 1) { mdims.push_back( jdim ); }
+	    if( kdim > 1) { mdims.push_back( kdim ); }
+
+	  } else {
+	    if( mesh_rank != nrrdDim-1 ) {
+	      error( dataset[0] + "Data are not of the same rank." );
+
+	      ostringstream str;
+
+	      str << "Mesh rank " << mesh_rank << "  ";
+	      str << "Data rank " << nrrdDim-1;
+	      error( str.str() );
+	      error_ = true;
+	      return;
 	    }
 
+	    for( jc=0, kc=0; jc<nrrdDim; jc++ ) {
+	      unsigned int size = dHandle->nrrd->axis[jc].size;
 
-	    const unsigned int nrrdDim = dHandle->nrrd->dim;
-	    
-	    if( ic == 0 ) {
-	      mesh_rank = nrrdDim - 1;
-		
-	      if( mesh_rank >= 1 ) idim = dHandle->nrrd->axis[1].size;
-	      if( mesh_rank >= 2 ) jdim = dHandle->nrrd->axis[2].size;
-	      if( mesh_rank >= 3 ) kdim = dHandle->nrrd->axis[3].size;
-
-	      mdims.clear();
-	      if( idim > 1) { mdims.push_back( idim ); }
-	      if( jdim > 1) { mdims.push_back( jdim ); }
-	      if( kdim > 1) { mdims.push_back( kdim ); }
-
-	    } else {
-	      if( mesh_rank != nrrdDim-1 ) {
-		error( dataset[0] + "Data are not of the same rank." );
-
-		ostringstream str;
-
-		str << "Mesh rank " << mesh_rank << "  ";
-		str << "Data rank " << nrrdDim-1;
-		error( str.str() );
+	      if( size > 1 && mdims[kc++] != size ) {
+		error(  dataset[0] + "Data set sizes do not match." );
+		    
 		error_ = true;
 		return;
-	      }
-
-	      for( jc=0, kc=0; jc<nrrdDim; jc++ ) {
-		unsigned int size = dHandle->nrrd->axis[jc].size;
-
-		if( size > 1 && mdims[kc++] != size ) {
-		  error(  dataset[0] + "Data set sizes do not match." );
-		    
-		  error_ = true;
-		  return;
-		}
 	      }
 	    }
 	  }
-	} else {
-	  error( "Can not determine the mesh size from the datasets." );
-	  error_ = true;
-	  return;
 	}
+      } else {
+	error( "Can not determine the mesh size from the datasets." );
+	error_ = true;
+	return;
       }
 
       // Create the mesh.
