@@ -45,11 +45,11 @@
                 <thermal_conductivity>237.0</thermal_conductivity>
                 <specific_heat>903</specific_heat>
                 <heat_transfer_coefficient>111</heat_transfer_coefficient>
-		<comp_mooney_rivlin> 
+		<constitutive_model type="comp_mooney_rivlin"> 
 		   <he_constant_1>1000000.0</he_constant_1>
 		   <he_constant_2>200000.0</he_constant_2>
 		   <he_PR>.49</he_PR>
-	        </comp_mooney_rivlin>
+	        </constitutive_model>
 		<geom_object>
 		    <box label="gp1">
 			<min>[ 0, -0.2, 0     ]</min>
