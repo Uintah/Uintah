@@ -48,6 +48,8 @@ static DebugStream cout_doing("MPMICE_DOING_COUT", false);
 #undef SHELL_MPM
 //#define SHELL_MPM
 
+#undef DUCT_TAPE
+
 MPMICE::MPMICE(const ProcessorGroup* myworld)
   : UintahParallelComponent(myworld)
 {
@@ -217,10 +219,12 @@ void MPMICE::scheduleInitialize(const LevelP& level,
   t->computes(Ilb->speedSound_CCLabel); 
   t->computes(MIlb->NC_CCweightLabel, one_matl);
   
+#if DUCT_TAPE
   //______ D U C T   T A P E__________
   //  WSB1 burn model
   t->computes(MIlb->TempGradLabel);
   t->computes(MIlb->aveSurfTempLabel);
+#endif
     
   sched->addTask(t, level->eachPatch(), d_sharedState->allMPMMaterials());
 
@@ -689,6 +693,7 @@ void MPMICE::scheduleHEChemistry(SchedulerP& sched,
   t->requires(Task::NewDW, MIlb->cMassLabel,      react_matls, gn);
   t->requires(Task::NewDW, Mlb->gMassLabel,       react_matls, gac,1);
   
+#if DUCT_TAPE
   //______ D U C T   T A P E__________
   //  WSB1 burn model
   t->requires(Task::OldDW, MIlb->TempGradLabel,   react_matls, gn);
@@ -696,6 +701,7 @@ void MPMICE::scheduleHEChemistry(SchedulerP& sched,
   t->computes( MIlb->TempGradLabel,    react_matls);
   t->computes( MIlb->aveSurfTempLabel, react_matls);
   //__________________________________
+#endif
   
   t->computes( Ilb->int_eng_comb_CCLabel); 
   t->computes( Ilb->created_vol_CCLabel);
@@ -839,6 +845,7 @@ void MPMICE::actuallyInitialize(const ProcessorGroup*,
         d_ice->printVector(indx, patch,1, desc.str(), "vel_CC", 0,   vel_CC);
       }
       
+#if DUCT_TAPE
       //______ D U C T   T A P E__________
       //  WSB1 burn model
       CCVariable<double>TempGrad, aveSurfTemp;
@@ -846,6 +853,7 @@ void MPMICE::actuallyInitialize(const ProcessorGroup*,
       new_dw->allocateAndPut(aveSurfTemp,MIlb->aveSurfTempLabel,indx,patch);  
       TempGrad.initialize(0.0);
       aveSurfTemp.initialize(0.0);
+#endif
                     
     }  // num_MPM_matls loop 
 
@@ -2113,6 +2121,7 @@ void MPMICE::HEChemistry(const ProcessorGroup*,
         new_dw->get(vel_CC,          MIlb->vel_CCLabel, react_indx,patch,gn, 0);
         new_dw->get(NCsolidMass,     Mlb->gMassLabel,   react_indx,patch,gac,1);
         
+#if DUCT_TAPE
         //______ D U C T   T A P E__________
         //  WSB1 burn model
         constCCVariable<double> beta, aveSurfTemp;
@@ -2127,6 +2136,7 @@ void MPMICE::HEChemistry(const ProcessorGroup*,
         beta_new.copyData(beta);
         aveSurfTemp_new.copyData(aveSurfTemp);
         //__________________________________
+#endif
       }
     }
     
