@@ -299,13 +299,13 @@ FieldSlicerWorkAlgoT<IFIELD, OFIELD>::execute(FieldHandle ifield_h,
 
     if( dim.size() == 3 && axis == 0 ) {
 
-	// Get two points that along with the origin define the "Y" plane.
-	++inodeItr;
-	imesh->get_center(p2, *inodeItr);
+      // Get two points that along with the origin define the "Y" plane.
+      ++inodeItr;
+      imesh->get_center(p2, *inodeItr);
 
-	for (it=0; it<old_i*old_j-1; it++)
-	  ++inodeItr;
-	imesh->get_center(p1, *inodeItr);
+      for (it=0; it<old_i*old_j-1; it++)
+	++inodeItr;
+      imesh->get_center(p1, *inodeItr);
 
     } else if( dim.size() == 3 && axis == 1 ) {
 
