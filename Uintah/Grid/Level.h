@@ -79,6 +79,10 @@ WARNING
 
       void getIndexRange(SCICore::Geometry::BBox& b);
       void getSpatialRange(SCICore::Geometry::BBox& b);
+
+      // it is better that IndexRange expressed by IntVector
+      // instead of BBox, and the function is const. --tan
+      void getIndexRange(IntVector& lowIndex,IntVector& highIndex) const;
       
       void performConsistencyCheck() const;
       GridP getGrid() const;
@@ -112,6 +116,10 @@ WARNING
 
 //
 // $Log$
+// Revision 1.17  2000/07/07 03:08:14  tan
+// It is better that IndexRange expressed by IntVector instead of BBox,
+// and the function is const.
+//
 // Revision 1.16  2000/06/27 22:49:03  jas
 // Added grid boundary condition support.
 //
