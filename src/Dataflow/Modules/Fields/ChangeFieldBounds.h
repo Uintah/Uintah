@@ -70,6 +70,8 @@ ChangeFieldBoundsAlgoCreateT<FSRC, FOUT>::execute(FieldHandle fsrc_h,
   // Copy the (possibly transformed) data to the new field.
   fout->resize_fdata();
 
+  *((PropertyManager *)fout) = *(PropertyManager *)fsrc;
+
   same_value_type_p =
     (get_type_description((typename FSRC::value_type *)0)->get_name() ==
      get_type_description((typename FOUT::value_type *)0)->get_name());
