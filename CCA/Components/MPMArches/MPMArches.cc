@@ -17,6 +17,9 @@
 #include <Packages/Uintah/Core/Grid/SFCZVariable.h>
 #include <Packages/Uintah/Core/Grid/NodeIterator.h>
 #include <Packages/Uintah/Core/Grid/CellIterator.h>
+#include <Packages/Uintah/CCA/Components/HETransformation/Burn.h>
+#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
+#include <Packages/Uintah/CCA/Components/MPM/ThermalContact/ThermalContact.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <Packages/Uintah/CCA/Components/Arches/ArchesMaterial.h>
 
@@ -104,18 +107,15 @@ void MPMArches::scheduleTimeAdvance(double time, double delt,
   const MaterialSet* all_matls = d_sharedState->allMaterials();
   const MaterialSubset* arches_matls_sub = arches_matls->getUnion();
   const MaterialSubset* mpm_matls_sub = mpm_matls->getUnion();
+
   if(d_fracture) {
     d_mpm->scheduleSetPositions(sched, patches, mpm_matls);
     d_mpm->scheduleComputeBoundaryContact(sched, patches, mpm_matls);
     d_mpm->scheduleComputeConnectivity(sched, patches, mpm_matls);
   }
   d_mpm->scheduleInterpolateParticlesToGrid(sched, patches, mpm_matls);
-#if 0
-  if (MPMPhysicalModules::thermalContactModel) {
-    d_mpm->scheduleComputeHeatExchange(sched, patches, mpm_matls);
-  }
-#endif
 
+  d_mpm->scheduleComputeHeatExchange(             sched, patches, mpm_matls);
   // interpolate mpm properties from node center to cell center
   // and subsequently to face center
   // these computed variables are used by void fraction and mom exchange
@@ -129,11 +129,6 @@ void MPMArches::scheduleTimeAdvance(double time, double delt,
 
   d_arches->getBoundaryCondition()->sched_mmWallCellTypeInit(sched,
 							     patches, arches_matls);
-
-  // interpolate arches properties from face center to cell center
-
-  d_arches->getNonlinearSolver()->sched_interpolateFromFCToCC(sched, 
-							      patches, arches_matls); 
 
   // for explicit calculation, exchange will be at the beginning
 
@@ -153,9 +148,9 @@ void MPMArches::scheduleTimeAdvance(double time, double delt,
   d_arches->scheduleTimeAdvance(time, delt, level, sched);
 
   // remaining MPM steps are explicitly shown here.
-
   d_mpm->scheduleExMomInterpolated(sched, patches, mpm_matls);
   d_mpm->scheduleComputeStressTensor(sched, patches, mpm_matls);
+
   d_mpm->scheduleComputeInternalForce(sched, patches, mpm_matls);
   d_mpm->scheduleComputeInternalHeatRate(sched, patches, mpm_matls);
   d_mpm->scheduleSolveEquationsMotion(sched, patches, mpm_matls);
@@ -164,18 +159,23 @@ void MPMArches::scheduleTimeAdvance(double time, double delt,
   d_mpm->scheduleIntegrateTemperatureRate(sched, patches, mpm_matls);
   d_mpm->scheduleExMomIntegrated(sched, patches, mpm_matls);
   d_mpm->scheduleInterpolateToParticlesAndUpdate(sched, patches, mpm_matls);
-  d_mpm->scheduleComputeMassRate(sched, patches, mpm_matls);
+  // Jim: ???
+  // d_mpm->scheduleComputeMassRate(sched, patches, mpm_matls);
+
   if(d_fracture) {
     d_mpm->scheduleComputeFracture(sched, patches, mpm_matls);
   }
   d_mpm->scheduleCarryForwardVariables(sched, patches, mpm_matls);
 
   int numMPMMatls = d_sharedState->getNumMPMMatls();
+
   sched->scheduleParticleRelocation(level, 
                                     Mlb->pXLabel_preReloc,
                                     Mlb->d_particleState_preReloc,
                                     Mlb->pXLabel, Mlb->d_particleState,
                                     mpm_matls);
+
+
 }
 
 //______________________________________________________________________
@@ -292,6 +292,13 @@ void MPMArches::scheduleMomExchange(SchedulerP& sched,
   t->requires(Task::NewDW, d_MAlb->zvel_CCLabel, mpm_matls->getUnion(),
 	      Ghost::None, zeroGhostCells);
 
+  t->requires(Task::NewDW, d_MAlb->xvel_FCXLabel, mpm_matls->getUnion(),
+	      Ghost::None, zeroGhostCells);
+  t->requires(Task::NewDW, d_MAlb->yvel_FCYLabel, mpm_matls->getUnion(),
+	      Ghost::None, zeroGhostCells);
+  t->requires(Task::NewDW, d_MAlb->zvel_FCZLabel, mpm_matls->getUnion(),
+	      Ghost::None, zeroGhostCells);
+
   t->requires(Task::NewDW, d_MAlb->xvel_FCYLabel, mpm_matls->getUnion(),
 	      Ghost::None, zeroGhostCells);
   t->requires(Task::NewDW, d_MAlb->xvel_FCZLabel, mpm_matls->getUnion(),
@@ -336,16 +343,16 @@ void MPMArches::scheduleMomExchange(SchedulerP& sched,
   // use old_dw since using at the beginning of the time advance loop
 
   // use modified celltype
-  t->requires(Task::OldDW, d_Alab->d_mmcellTypeLabel,      arches_matls->getUnion(), 
+  t->requires(Task::NewDW, d_Alab->d_mmcellTypeLabel,      arches_matls->getUnion(), 
 	      Ghost::AroundCells, numGhostCells);
   t->requires(Task::OldDW, d_Alab->d_pressureSPBCLabel,  arches_matls->getUnion(), 
 	      Ghost::AroundCells, numGhostCells);
   
-  t->requires(Task::NewDW, d_Alab->d_newCCUVelocityLabel, arches_matls->getUnion(),
+  t->requires(Task::OldDW, d_Alab->d_newCCUVelocityLabel, arches_matls->getUnion(),
 	      Ghost::AroundCells, numGhostCells);
-  t->requires(Task::NewDW, d_Alab->d_newCCVVelocityLabel, arches_matls->getUnion(),
+  t->requires(Task::OldDW, d_Alab->d_newCCVVelocityLabel, arches_matls->getUnion(),
 	      Ghost::AroundCells, numGhostCells);
-  t->requires(Task::NewDW, d_Alab->d_newCCWVelocityLabel, arches_matls->getUnion(),
+  t->requires(Task::OldDW, d_Alab->d_newCCWVelocityLabel, arches_matls->getUnion(),
 	      Ghost::AroundCells, numGhostCells);
   
   t->requires(Task::NewDW,  d_Alab->d_mmgasVolFracLabel,   arches_matls->getUnion(),
@@ -800,6 +807,7 @@ void MPMArches::computeVoidFrac(const ProcessorGroup*,
 	
       }
       void_frac[*iter] = 1.0 - solid_frac_sum;
+      //      void_frac[*iter] = 1.0;
     }
 
     // Computation done; now put back in dw
