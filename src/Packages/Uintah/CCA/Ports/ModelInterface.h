@@ -9,6 +9,7 @@
 #include <Packages/Uintah/Core/ProblemSpec/Handle.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
 #include <Packages/Uintah/CCA/Ports/SchedulerP.h>
+#include <Packages/Uintah/CCA/Ports/Output.h>
 
 #include <Packages/Uintah/Core/Grid/CCVariable.h>
 
@@ -96,36 +97,28 @@ WARNING
   private:
     ModelInfo(const ModelInfo&);
     ModelInfo& operator=(const ModelInfo&);
-  };
-
+  };  // class ModelInfo
+  
+  
+   //________________________________________________
    class ModelInterface : public UintahParallelPort {
    public:
      ModelInterface(const ProcessorGroup* d_myworld);
      virtual ~ModelInterface();
       
-     //////////
-     // Insert Documentation Here:
      virtual void problemSetup(GridP& grid, SimulationStateP& sharedState,
 			       ModelSetup* setup) = 0;
       
-     //////////
-     // Insert Documentation Here:
      virtual void scheduleInitialize(SchedulerP&,
 				     const LevelP& level,
 				     const ModelInfo*) = 0;
 
-     //////////
-     // Insert Documentation Here:
      virtual void restartInitialize() {}
       
-     //////////
-     // Insert Documentation Here:
      virtual void scheduleComputeStableTimestep(SchedulerP& sched,
 						const LevelP& level,
 						const ModelInfo*) = 0;
       
-     //////////
-     // Insert Documentation Here:
      virtual void scheduleMassExchange(SchedulerP&,
 				       const LevelP& level,
 				       const ModelInfo*) = 0;
@@ -145,7 +138,8 @@ WARNING
     
     bool computesThermoTransportProps() const;
     bool d_modelComputesThermoTransportProps;
-    
+    Output* d_dataArchiver;
+   
    protected:
      const ProcessorGroup* d_myworld;
    private:
