@@ -634,6 +634,7 @@ ______________________________________________________________________*/
 void AMRICE::scheduleInitialErrorEstimate(const LevelP& coarseLevel,
                                           SchedulerP& sched)
 {
+  scheduleErrorEstimate(coarseLevel, sched);
 }
 
 /*_____________________________________________________________________
@@ -666,8 +667,8 @@ void AMRICE::scheduleErrorEstimate(const LevelP& coarseLevel,
   t->computes(lb->vol_frac_CC_gradLabel);
   t->computes(lb->press_CC_gradLabel);
   
-  t->modifies(d_sharedState->get_refineFlag_label());
-  t->computes(d_sharedState->get_refinePatchFlag_label());
+  t->modifies(d_sharedState->get_refineFlag_label(), d_sharedState->refineFlagMaterials());
+  t->modifies(d_sharedState->get_refinePatchFlag_label(), d_sharedState->refineFlagMaterials());
   
   sched->addTask(t, coarseLevel->eachPatch(), d_sharedState->allMaterials());
 }
@@ -745,11 +746,18 @@ void AMRICE::errorEstimate(const ProcessorGroup*,
 {
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-    PerPatch<int> refinePatchFlag(0);
     
     Ghost::GhostType  gac  = Ghost::AroundCells;
     const VarLabel* refineFlagLabel = d_sharedState->get_refineFlag_label();
     const VarLabel* refinePatchLabel= d_sharedState->get_refinePatchFlag_label();
+    
+    CCVariable<int> refineFlag;
+    new_dw->getModifiable(refineFlag, refineFlagLabel, 0, patch);      
+
+    PerPatch<int> refinePatchFlag;
+    new_dw->get(refinePatchFlag, refinePatchLabel, 0, patch);
+
+
     //__________________________________
     //  PRESSURE       --- just computes the gradient
     //  I still need to figure out how 
@@ -776,7 +784,6 @@ void AMRICE::errorEstimate(const ProcessorGroup*,
       constCCVariable<Vector> vel_CC;
       CCVariable<Vector> rho_CC_grad, temp_CC_grad; 
       CCVariable<Vector> vel_CC_mag_grad, vol_frac_CC_grad;
-      CCVariable<int> refineFlag;
       
       new_dw->get(rho_CC,      lb->rho_CCLabel,      indx,patch,gac,1);
       new_dw->get(temp_CC,     lb->temp_CCLabel,     indx,patch,gac,1);
@@ -792,8 +799,6 @@ void AMRICE::errorEstimate(const ProcessorGroup*,
       new_dw->allocateAndPut(vol_frac_CC_grad,
                          lb->vol_frac_CC_gradLabel,indx,patch);
       
-      new_dw->getModifiable(refineFlag, refineFlagLabel,indx, patch);      
-
       //__________________________________
       // compute the gradients and set the refinement flags
                                         // Density
@@ -815,8 +820,6 @@ void AMRICE::errorEstimate(const ProcessorGroup*,
       compute_q_CC_gradient(vel_CC,      vel_CC_mag_grad,  patch); 
       set_refineFlags( vel_CC_mag_grad, d_vel_threshold,refineFlag, 
                             refinePatchFlag, patch);
-      
-      new_dw->put(refinePatchFlag, refinePatchLabel, indx, patch);
     }  // matls
   }  // patches
 }
