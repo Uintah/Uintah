@@ -30,8 +30,14 @@ public:
     ~View();
     View& operator=(const View&);
 
+    // compare 2 views; are they exactly the same?
+    int operator==(const View&);
+    
     void get_viewplane(double aspect, double zdist,
 		       Vector& u, Vector& v);
+
+    void get_normalized_viewplane(Vector& u, Vector& v);
+    
     Point eyespace_to_objspace(const Point& p, double aspect);
     Point objspace_to_eyespace(const Point& p, double aspect);
 
