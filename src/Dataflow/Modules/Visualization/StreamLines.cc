@@ -440,6 +440,7 @@ StreamLines::execute()
 			     tolerance, stepsize, maxsteps, direction, color,
 			     remove_colinear_.get(),
 			     method_.get(), np_.get()));
+  delete vfi;
 }
 
 
