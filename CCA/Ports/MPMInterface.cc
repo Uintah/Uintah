@@ -12,3 +12,7 @@ MPMInterface::~MPMInterface()
 {
 }
 
+void MPMInterface::setAnalyze(PatchDataAnalyze* analyze)
+{
+  d_analyze = analyze;
+}
