@@ -31,6 +31,10 @@ public:
   void setIndex(int index) { this->index=index; }
   int getIndex() const { return index; }
 
+  inline bool isOn() { return isOn_; }
+  inline void turnOn() { isOn_ = true; }
+  inline void turnOff() { isOn_ = false; }
+
 protected:
 
   // Parameters for changing light value:
@@ -42,6 +46,8 @@ protected:
   Color color;
   Array1<Vector> beamdirs;
   int index;
+
+  bool isOn_;
 
 };
 
