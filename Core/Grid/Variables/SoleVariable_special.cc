@@ -24,7 +24,7 @@ template<>
 void
 SoleVariable<double>::getMPIData(vector<char>& data, int& index)
 {
-  ASSERTRANGE(index+sizeof(double), 0, data.size()+1);
+  ASSERTRANGE(index, 0, static_cast<int>(data.size()+1-sizeof(double)));
   double* ptr = reinterpret_cast<double*>(&data[index]);
   *ptr = value;
   index += sizeof(double);
@@ -36,7 +36,7 @@ template<>
 void
 SoleVariable<double>::putMPIData(vector<char>& data, int& index)
 {
-  ASSERTRANGE(index+sizeof(double), 0, data.size()+1);
+  ASSERTRANGE(index, 0, static_cast<int>(data.size()+1-sizeof(double)));
   double* ptr = reinterpret_cast<double*>(&data[index]);
   value = *ptr;
   index += sizeof(double);
