@@ -16,6 +16,7 @@
 
 #include <SCICore/Datatypes/Datatype.h>
 #include <SCICore/Datatypes/ColorMap.h>
+#include <SCICore/Containers/Handle.h>
 #include <SCICore/Containers/LockingHandle.h>
 #include <SCICore/Containers/Array1.h>
 #include <SCICore/Containers/HashTable.h>
@@ -34,6 +35,7 @@ namespace Geom {
 
 namespace Datatypes {
 
+using Containers::Handle;
 using Containers::LockingHandle;
 using Geometry::Point;
 using Geometry::Grid;
@@ -49,7 +51,7 @@ class PointsSurface;
 class SurfTree;
 
 typedef LockingHandle<Surface> SurfaceHandle;
-typedef LockingHandle<Node> NodeHandle;
+typedef Handle<Node> NodeHandle;
 
 class SCICORESHARE Surface : public Datatype {
 protected:
@@ -109,6 +111,13 @@ public:
 
 //
 // $Log$
+// Revision 1.6  2000/02/02 22:07:11  dmw
+// Handle - added detach and Pio
+// TrivialAllocator - fixed mis-allignment problem in alloc()
+// Mesh - changed Nodes from LockingHandle to Handle so we won't run out
+// 	of locks for semaphores when building big meshes
+// Surface - just had to change the forward declaration of node
+//
 // Revision 1.5  1999/09/05 05:32:28  dmw
 // updated and added Modules from old tree to new
 //
