@@ -72,6 +72,9 @@ main(int argc, char *argv[] )
     SCIRunLoader *sl=new SCIRunLoader(loaderName, frameworkURL);
     ploader=sci::cca::Loader::pointer(sl);
     ploader->addReference();
+    ploader->addReference();
+    ploader->addReference();
+    ploader->addReference();
     cout<< "ploader started!"<<endl;
     cout<< "framwork url="<<frameworkURL<<endl;
 
