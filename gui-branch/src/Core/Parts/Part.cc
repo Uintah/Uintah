@@ -31,7 +31,7 @@
 #include <iostream>
 #include <Core/Persistent/Pstreams.h>
 #include <Core/Parts/Part.h>
-#include <Core/Framework/Framework.h>
+#include <Core/Framework/CoreFramework.h>
 #include <Core/Parts/GuiVar.h>
 #include <Core/GuiInterface/GuiManager.h>
 
@@ -129,6 +129,23 @@ Part::reset_vars()
      
 
 // tcl compatibity
+
+const string &
+Part::get_var( const string &obj, const string &var )
+{
+  static string res;
+  //  tcl_eval( obj + " get-var " + var, res );
+  tcl_eval( obj + " cget  -" + var, res );
+  cerr << "Part::get_var = " << obj << " cget -" << var << " =  " <<res<<endl;
+  return res;
+}
+
+void
+Part::set_var( const string &obj, const string &var, const string &value )
+{
+  cerr << "Part::set_var = " << obj << " configure -" << var << " " << value << endl;
+  tcl_execute( obj + " configure -" + var + " " + value );
+}
 
 int 
 Part::get_gui_stringvar(const string &base, const string &name, string &value )

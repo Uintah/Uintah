@@ -73,7 +73,9 @@ public:
 
   virtual void add_gui_var( GuiVar * );
   virtual void rem_gui_var( GuiVar * );
-
+  const string &get_var( const string &, const string &);
+  void set_var( const string &, const string &, const string & );
+  
   virtual void emit_vars( ostream& out, string &midx );
 
   // tcl compatibility
