@@ -44,7 +44,7 @@ HandlerStorage::~HandlerStorage()
   this->clear();
 }
 
-void HandlerStorage::clear(int handler_num = 0)
+void HandlerStorage::clear(int handler_num)
 {
   if (handler_num == 0) {
     /*CLEAR ALL*/
