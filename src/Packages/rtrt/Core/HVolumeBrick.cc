@@ -28,7 +28,6 @@ using namespace SCIRun;
 
 namespace rtrt {
   Mutex io_lock_("io lock");
-  extern Mutex xlock;
 } // end namespace rtrt
 
 namespace rtrt {
