@@ -27,8 +27,9 @@
                      tg(i,j,k) = 0.0
                      end if
                      ABSKG(I,J,K) = 1.0d0  
-
-                  END IF
+                     tg(i,j,k) = 293.0d0
+ 
+                 END IF
                endif
                if (xplus) then
                   i = iend + 1
@@ -38,7 +39,8 @@
                      if (lprobtwo)then
                      tg(i,j,k) = 0.0
                      end if
-                     ABSKG(I,J,K) = ABSKG(I-1,J,K)
+                     ABSKG(I,J,K) = 1.0d0
+                     tg(i,j,k) = 293.0d0
 
                   END IF
                endif
@@ -56,7 +58,8 @@
                      if (lprobtwo)then
                      tg(i,j,k) = 0.0
                      end if
-                     ABSKG(I,J,K) = ABSKG(I,J+1,K)
+                     ABSKG(I,J,K) = 1.0d0
+                     tg(i,j,k) = 293.0d0
 
                   END IF
                endif
@@ -68,7 +71,8 @@
                      if (lprobtwo)then
                      tg(i,j,k) = 0.0
                      end if
-                     ABSKG(I,J,K) = ABSKG(I,J-1,K)
+                     ABSKG(I,J,K) = 1.0d0
+                     tg(i,j,k) = 293.0d0
 
                   END IF
                endif
@@ -86,9 +90,10 @@
                      if (lprobtwo)then
                      tg(i,j,k) = 0.0
                      end if
-                     ABSKG(I,J,K) = ABSKG(I,J,K+1) 
-
-                  END IF
+                     ABSKG(I,J,K) = 1.0d0 
+                     tg(i,j,k) = 293.0d0
+ 
+                 END IF
                endif
                if (zplus) then
                   k = kend + 1
@@ -98,7 +103,8 @@
                      if (lprobtwo)then
                      tg(i,j,k) = 0.0
                      end if
-                     ABSKG(I,J,K) = ABSKG(I,J,K-1) 
+                     ABSKG(I,J,K) = 1.0d0 
+                     tg(i,j,k) = 293.0d0
 
                   END IF
                endif
