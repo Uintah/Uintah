@@ -4,6 +4,7 @@
 #include <Packages/Uintah/Core/Parallel/UintahParallelComponent.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouseP.h>
 #include <Packages/Uintah/CCA/Ports/SimulationInterface.h>
+#include <Packages/Uintah/CCA/Ports/Output.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
 #include <Packages/Uintah/Core/Grid/GridP.h>
 #include <Packages/Uintah/Core/Grid/LevelP.h>
@@ -363,6 +364,7 @@ private:
   FractureMPM& operator=(const FractureMPM&);
 	 
   SimulationStateP d_sharedState;
+  Output* dataArchiver;
   MPMLabel* lb;
 
   bool             d_artificial_viscosity;

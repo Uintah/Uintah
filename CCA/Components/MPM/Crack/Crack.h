@@ -20,7 +20,7 @@
 #include <Packages/Uintah/Core/Grid/SimulationStateP.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Packages/Uintah/Core/Grid/ComputeSet.h>
-
+#include <Packages/Uintah/CCA/Ports/Output.h>
 namespace Uintah {
 using namespace SCIRun;
 using std::vector;
@@ -38,6 +38,7 @@ class Crack
  public:
     // Constructor
     Crack(const ProblemSpecP& ps, SimulationStateP& d_sS,
+                           Output* dataArchiver,
                            MPMLabel* lb,int n8or27);
     // Destructor
      ~Crack();
@@ -160,6 +161,7 @@ class Crack
     double d_outputCrackInterval;
 
     SimulationStateP d_sharedState;
+    Output* dataArchiver;
     string udaDir;
     int d_8or27;
     int NGP;
