@@ -1,0 +1,12 @@
+
+
+User Interfaces:
+
+UserModule class has a ui*.
+
+ui->add(new MUI_RealSlider(&data_item, Vertical));
+ui->remove(MUI*);
+
+
+User interface must lock the module mutex when changing
+that stuff.

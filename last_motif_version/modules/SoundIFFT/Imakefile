@@ -1,0 +1,19 @@
+
+#include <config/sci.cf>
+
+LOCALINCLUDES = -I.. -I../../project
+MODULELIST = ../libmodules.a
+
+OBJS = SoundFilter.o
+SRCS = SoundFilter.cc
+
+.cc.o:
+	$(CCC) $(CCFLAGS) -c $<
+
+../modules.o: $(OBJS)
+	cd .. && make modules.o
+
+AllTarget(../modules.o)
+
+SCIDependTarget($(SRCS))
+

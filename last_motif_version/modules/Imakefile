@@ -1,0 +1,52 @@
+
+#include <config/sci.cf>
+
+SUBDIRS = ApplyBC BuildFEMatrix CrossFader \
+	ExtractMeshSF GenerateMesh GenSurface Gradient Hedgehog \
+	IsoSurface LaceContours MakeScalarField MeshView Readers \
+	Salmon SolveMatrix SoundInput SoundFilter SoundMixer \
+	SoundOutput SoundReader Streamline Streamsurf SurfToGeom \
+	VoiceRemover
+
+SCISubdirs($(SUBDIRS))
+
+all:: modules.o
+
+MODULES = \
+	ApplyBC/ApplyBC.o \
+	BuildFEMatrix/BuildFEMatrix.o \
+	CrossFader/CrossFader.o \
+	ExtractMeshSF/ExtractMeshSF.o \
+	GenerateMesh/GenerateMesh.o \
+	GenSurface/GenSurface.o \
+	Gradient/Gradient.o \
+	Hedgehog/Hedgehog.o \
+	IsoSurface/IsoSurface.o \
+	LaceContours/LaceContours.o \
+	MakeScalarField/MakeScalarField.o \
+	MeshView/MeshView.o \
+	Readers/ScalarFieldReader.o \
+	Readers/ContourSetReader.o \
+	Readers/SurfaceReader.o \
+	Readers/VectorFieldReader.o \
+	Salmon/Salmon.o \
+	Salmon/Roe.o \
+	SolveMatrix/SolveMatrix.o \
+	SoundInput/SoundInput.o \
+	SoundFilter/SoundFilter.o \
+	SoundMixer/SoundMixer.o \
+	SoundOutput/SoundOutput.o \
+	SoundReader/SoundReader.o \
+	Streamline/Streamline.o \
+	Streamsurf/Streamsurf.o \
+	SurfToGeom/SurfToGeom.o \
+	VoiceRemover/VoiceRemover.o
+
+$(MODULES):
+	@echo "Making in "`dirname $<`
+	@cd `dirname $<` && make
+
+modules.o: $(MODULES)
+	ld -r -o modules.o $(MODULES)
+
+
