@@ -139,7 +139,7 @@ $(SRCDIR)/VolumeVisRGBAMod.mo: $(SRCDIR)/VolumeVisRGBAMod.o
 	$(CXX) -o $@ $(LDFLAGS) $(SOFLAGS) $(patsubst %.mo,%.o,$(filter %.mo,$@)) -lPackages_rtrt_Core -lCore_Exceptions -lCore_Geometry -lCore_Persistent -lCore_Malloc -lCore_Thread $(SCI_THIRDPARTY_LIBRARY) $(TEEM_LIBRARY) $(M_LIBRARY) $(GLUI_LIBRARY) $(GLUT_LIBRARY)
 
 $(SRCDIR)/sketch.mo: $(SRCDIR)/sketch.o lib/libPackages_rtrt_Core.$(SO_OR_A_FILE)
-	$(CXX) -o $@ $(LDFLAGS) -shared $(patsubst %.mo,%.o,$(filter %.mo,$@)) -lPackages_rtrt_Core -lCore_Exceptions -lCore_Geometry -lCore_Persistent -lCore_Malloc -lCore_Thread $(SCI_THIRDPARTY_LIBRARY) $(TEEM_LIBRARY) $(M_LIBRARY) $(GLUI_LIBRARY) $(GLUT_LIBRARY)
+	$(CXX) -o $@ $(LDFLAGS) $(SOFLAGS) $(patsubst %.mo,%.o,$(filter %.mo,$@)) -lPackages_rtrt_Core -lCore_Exceptions -lCore_Geometry -lCore_Persistent -lCore_Malloc -lCore_Thread $(SCI_THIRDPARTY_LIBRARY) $(TEEM_LIBRARY) $(M_LIBRARY) $(GLUI_LIBRARY) $(GLUT_LIBRARY)
 
 $(SRCDIR)/dtiglyph.mo: $(SRCDIR)/dtiglyph.o
 	$(CXX) -o $@ $(LDFLAGS) $(SOFLAGS) $(patsubst %.mo,%.o,$(filter %.mo,$@)) -lPackages_rtrt_Core -lCore_Exceptions -lCore_Geometry -lCore_Persistent -lCore_Malloc -lCore_Thread -lten -ldye $(SCI_THIRDPARTY_LIBRARY) $(TEEM_LIBRARY) -lhest $(M_LIBRARY) $(GLUI_LIBRARY) $(GLUT_LIBRARY) -lm
