@@ -348,13 +348,13 @@ EnthalpySolver::sched_buildLinearMatrix(const LevelP& level,
       tsk->modifies(d_lab->d_radiationFluxBINLabel);
     }
   }
-  
-  /*
-  if (d_radiationCalc)
-    if (d_DORadiationCalc)
-      tsk->requires(d_MAlab->integTemp_CCLabel,
-		    Ghost::None, Arches::ZEROGHOSTCELLS);
-  */
+
+  if (d_MAlab) {
+    if (d_radiationCalc)
+      if (d_DORadiationCalc)
+	tsk->requires(Task::NewDW, d_MAlab->integTemp_CCLabel,
+		      Ghost::None, Arches::ZEROGHOSTCELLS);
+  }
 
   //  sched->addTask(tsk, patches, matls);
   sched->addTask(tsk, d_perproc_patches, matls);
@@ -381,9 +381,7 @@ void EnthalpySolver::buildLinearMatrix(const ProcessorGroup* pc,
   double delta_t = delT;
   delta_t *= timelabels->time_multiplier;
 
-  /*
   constCCVariable<double> solidTemp;
-  */
 
   if (d_radiationCalc) {
     if (d_DORadiationCalc){
@@ -687,16 +685,12 @@ void EnthalpySolver::buildLinearMatrix(const ProcessorGroup* pc,
 	d_DORadiation->boundarycondition(pc, patch, cellinfo,
 					 &enthalpyVars, &constEnthalpyVars);
 
-	/*
 	if (d_MAlab) {
 	  new_dw->get(solidTemp, d_MAlab->integTemp_CCLabel, 
 		      matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-	  new_dw->allocateAndPut(enthalpyVars.temperature, d_lab->tempOUTLabel,
-				 matlIndex, patch);
 	  d_boundaryCondition->mmWallTemperatureBC(pc, patch, constEnthalpyVars.cellType,
-						   solidTemp, constEnthalpyVars.temperature);
+						   solidTemp, enthalpyVars.temperature);
 	}
-	*/
 
 	  d_DORadiation->intensitysolve(pc, patch, cellinfo,
 					&enthalpyVars, &constEnthalpyVars);
