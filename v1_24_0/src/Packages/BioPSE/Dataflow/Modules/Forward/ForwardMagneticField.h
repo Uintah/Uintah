@@ -218,11 +218,11 @@ CalcFMField<ElecField, CondField, PointField, MagField>::calc_parallel(int proc,
     //cout <<  "scalar: " << p.first << endl;
     //cout << "vector: " << p.second << endl;
     data_out_[proc].push_back(p);
-    if (++count % 100) {
-      mod->accumulate_progress(prog);
-    }
+    //if (++count % 100) {
+      //mod->accumulate_progress(prog);
+    //}
   }
-  mod->accumulate_progress(chunk - count);
+  //mod->accumulate_progress(chunk - count);
 }
 
 //! Assume that the value_type for the input fields are Vector.
