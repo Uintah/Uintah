@@ -144,7 +144,6 @@ else
         Packages/Uintah/Core/Disclosure    \
         Packages/Uintah/Core/DataArchive   \
 	Packages/Uintah/CCA/Ports          \
-	Packages/Teem/Dataflow/Modules/DataIO \
 	Core/Persistent   \
 	Core/Datatypes    \
 	Core/Geom         \
