@@ -7,10 +7,6 @@ SRCDIR := Packages/Uintah/Core/Datatypes
 SRCS     += \
 	$(SRCDIR)/Archive.cc \
 	$(SRCDIR)/ArchivePort.cc \
-	$(SRCDIR)/NCTensorField.cc \
-	$(SRCDIR)/CCTensorField.cc \
-	$(SRCDIR)/TensorField.cc \
-	$(SRCDIR)/TensorFieldPort.cc \
 	$(SRCDIR)/ScalarParticles.cc \
 	$(SRCDIR)/ScalarParticlesPort.cc \
 	$(SRCDIR)/VectorParticles.cc \
@@ -18,6 +14,11 @@ SRCS     += \
 	$(SRCDIR)/TensorParticles.cc \
 	$(SRCDIR)/TensorParticlesPort.cc \
 	$(SRCDIR)/PSet.cc
+
+#	$(SRCDIR)/NCTensorField.cc \
+#	$(SRCDIR)/CCTensorField.cc \
+#	$(SRCDIR)/TensorField.cc \
+#	$(SRCDIR)/TensorFieldPort.cc \
 
 #	$(SRCDIR)/CCVectorField.cc \
 #	$(SRCDIR)/NCVectorField.cc \
