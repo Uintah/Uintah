@@ -372,6 +372,13 @@ class BioFEMApp {
 
         set initialized 1
 
+	global PowerAppSession
+	if {[info exists PowerAppSession] && [set PowerAppSession] != ""} { 
+	    set saveFile $PowerAppSession
+	    wm title .standalone "BioTensor - [getFileName $saveFile]"
+	    $this load_session
+	} 
+
     }
 
     method set_dataset { andexec } {
