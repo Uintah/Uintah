@@ -1978,7 +1978,8 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 	     if( conn[k] == Connectivity::connect || 
 	         conn[k] == Connectivity::contact) 
              {
-                tempRate += gTemperatureRate[ni[k]] * S_connect[k];
+                tempRate += (gTemperatureRate[ni[k]] + dTdt[ni[k]])
+							* S_connect[k];
                 for (int j = 0; j<3; j++) {
                   pTemperatureGradient[idx](j) += 
                     gTemperatureStar[ni[k]] * d_S_connect[k](j) * oodx[j];
@@ -2043,7 +2044,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 	      vel += gvelocity_star[ni[k]]  * S[k];
    	      acc += gacceleration[ni[k]]   * S[k];
 	   
-              tempRate += gTemperatureRate[ni[k]] * S[k];
+              tempRate += (gTemperatureRate[ni[k]] + dTdt[ni[k]]) * S[k];
               for (int j = 0; j<3; j++) {
                 pTemperatureGradient[idx](j) += 
                    gTemperatureStar[ni[k]] * d_S[k](j) * oodx[j];
