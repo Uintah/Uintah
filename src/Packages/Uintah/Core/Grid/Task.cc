@@ -400,7 +400,6 @@ Task::Dependency::~Dependency()
 }
 
 // MaterialSubset specialization
-template <>
 constHandle< MaterialSubset > Task::Dependency::
 getOtherLevelComputeSubset(Task::DomainSpec,
 			   const MaterialSubset*,
@@ -411,7 +410,6 @@ getOtherLevelComputeSubset(Task::DomainSpec,
 }
 
 // PatcheSubset specialization
-template <>
 constHandle< PatchSubset > Task::Dependency::
 getOtherLevelComputeSubset(Task::DomainSpec dom,
 			   const PatchSubset* subset,

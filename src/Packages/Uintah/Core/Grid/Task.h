@@ -517,12 +517,15 @@ WARNING
       getComputeSubsetUnderDomain(string domString, DomainSpec dom,
 				  const ComputeSubset<T>* subset,
 				  const ComputeSubset<T>* domainSubset);
-      template <class T>
-      static constHandle< ComputeSubset<T> >
+      static constHandle< MaterialSubset >
       getOtherLevelComputeSubset(DomainSpec dom,
-				 const ComputeSubset<T>* subset,
-				 const ComputeSubset<T>* domainSubset);
-      
+				 const MaterialSubset* subset,
+				 const MaterialSubset* domainSubset);
+      static constHandle< PatchSubset >
+      getOtherLevelComputeSubset(DomainSpec dom,
+				 const PatchSubset* subset,
+				 const PatchSubset* domainSubset);
+     
       Dependency();
       Dependency& operator=(const Dependency& copy);
       Dependency(const Dependency&);
@@ -688,17 +691,6 @@ WARNING
       throw InternalError(string("Unknown ") + domString + " type");
     }
   }
-
-  template <class T>
-  constHandle< ComputeSubset<T> > Task::Dependency::
-  getOtherLevelComputeSubset(Task::DomainSpec,
-			     const ComputeSubset<T>*,
-			     const ComputeSubset<T>*)
-  {
-    // PatchSubset and MaterialSubset specializations are in Task.cc
-    throw InternalError("Unhandled ComputeSubset type for Task::Dependency");
-  }
-  
 
 } // End namespace Uintah
 
