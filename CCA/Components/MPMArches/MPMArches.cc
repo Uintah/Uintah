@@ -1992,8 +1992,6 @@ void MPMArches::doMomExchange(const ProcessorGroup*,
     CCVariable<double> KStabilityW; 
 
     int numGhostCells = 1;
-    int zeroGhostCells = 0;
-    
     int numGhostCellsG = 1;
 
     new_dw->get(cellType, d_Alab->d_mmcellTypeLabel,          matlIndex, 
@@ -2370,7 +2368,7 @@ void MPMArches::doMomExchange(const ProcessorGroup*,
     for (int m = 0; m < numMPMMatls; m++) {
       
       Material* matl = d_sharedState->getMPMMaterial( m );
-      int idx = matl->getDWIndex();
+      //      int idx = matl->getDWIndex();
       
       // allocateAndPut instead:
       /* new_dw->put(dragForceX_cc[m], d_MAlb->DragForceX_CCLabel,

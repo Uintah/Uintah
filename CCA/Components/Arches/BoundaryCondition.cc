@@ -3888,7 +3888,7 @@ BoundaryCondition::velRhoHatOutletBC(const ProcessorGroup*,
   if (xplus) {
       cout.precision(25);
       cout << maxAbsU << endl;
-    double gravity = d_physicalConsts->getGravity(Arches::XDIR);
+//    double gravity = d_physicalConsts->getGravity(Arches::XDIR);
     int colX = idxHi.x();
     for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
       for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
@@ -3909,8 +3909,8 @@ BoundaryCondition::velRhoHatOutletBC(const ProcessorGroup*,
 			             constvars->old_density[currCell]);
            double avden = 0.5 * (constvars->density[xplusCell] +
 			         constvars->density[currCell]);
-           double ref_avden = 0.5 * (constvars->denRefArray[xplusCell] +
-			         constvars->denRefArray[currCell]);
+//           double ref_avden = 0.5 * (constvars->denRefArray[xplusCell] +
+//			         constvars->denRefArray[currCell]);
            double avdenlow = 0.5 * (constvars->density[currCell] +
 			            constvars->density[xminusCell]);
            double new_avden = 0.5 * (constvars->new_density[xplusCell] +
