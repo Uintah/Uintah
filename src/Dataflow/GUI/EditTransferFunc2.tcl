@@ -79,7 +79,11 @@ itcl_class SCIRun_Visualization_EditTransferFunc2 {
 	 set ib [expr int([set $color-b] * 65535)]
 
 	 set window .ui[modname]
-	 $col config -background [format #%04x%04x%04x $ir $ig $ib]
+	 $col config -background [format #%04x%04x%04x $ir $ig $ib]  \
+		     -activebackground [format #%04x%04x%04x $ir $ig $ib]
+					
+	 puts "$ir $ig $ib"
+				      
 	 $this-c $colMsg
     }
 
@@ -114,7 +118,7 @@ itcl_class SCIRun_Visualization_EditTransferFunc2 {
 			-textvariable $this-name-$i -width 16
 		    set cmmd "$this raise_color $widgets.e-$i.color $this-$i-color color_change-$i"
 		    button $widgets.e-$i.color -width 8 \
-			-command $cmmd
+			-command $cmmd 
 		    pack $widgets.e-$i.name $widgets.e-$i.color \
 			-side left
 		    pack $widgets.e-$i 
@@ -124,7 +128,8 @@ itcl_class SCIRun_Visualization_EditTransferFunc2 {
 		set ig [expr int([set $this-$i-color-g] * 65535)]
 		set ib [expr int([set $this-$i-color-b] * 65535)]
                 $widgets.e-$i.color configure \
-			-background [format #%04x%04x%04x $ir $ig $ib]
+			-background [format #%04x%04x%04x $ir $ig $ib] \
+                    	-activebackground [format #%04x%04x%04x $ir $ig $ib]
 	    }
 
 	    # Destroy all the left over entries from prior runs.
