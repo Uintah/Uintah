@@ -452,6 +452,8 @@ void ICE::scheduleInitialize(const LevelP& level,SchedulerP& sched)
   t->computes(lb->vol_frac_CCLabel);
   t->computes(lb->rho_micro_CCLabel);
   t->computes(lb->speedSound_CCLabel);
+  t->computes(lb->thermalCondLabel);
+  t->computes(lb->viscosityLabel);
   t->computes(lb->press_CCLabel, press_matl);
   t->computes(lb->imp_delPLabel, press_matl); 
   
@@ -495,18 +497,19 @@ void ICE::scheduleComputeStableTimestep(const LevelP& level,
 
   Ghost::GhostType  gac = Ghost::AroundCells;
   Ghost::GhostType  gn = Ghost::None;
-  const MaterialSet* all_matls = d_sharedState->allMaterials(); 
+  const MaterialSet* ice_matls = d_sharedState->allICEMaterials();
+                            // COMMON TO EQ AND RATE FORM
+  t->requires(Task::NewDW, lb->vel_CCLabel,        gac, 1);  
+  t->requires(Task::NewDW, lb->speedSound_CCLabel, gac, 1);
+  t->requires(Task::NewDW, lb->thermalCondLabel,   gn,  0);                            
   if (d_EqForm){            // EQ      
-    t->requires(Task::NewDW, lb->vel_CCLabel,        gac, 1);  
-    t->requires(Task::NewDW, lb->speedSound_CCLabel, gac, 1);
-    t->requires(Task::NewDW, lb->sp_vol_CCLabel,     gn,  0);  
+    t->requires(Task::NewDW, lb->sp_vol_CCLabel,   gn,  0);   
+    t->requires(Task::NewDW, lb->viscosityLabel,   gn,  0);        
   } else if (d_RateForm){   // RATE FORM
-    t->requires(Task::NewDW, lb->vel_CCLabel,        gac, 1);
-    t->requires(Task::NewDW, lb->speedSound_CCLabel, gac, 1);
-    t->requires(Task::NewDW, lb->sp_vol_CCLabel,     gac, 1); 
+    t->requires(Task::NewDW, lb->sp_vol_CCLabel,   gac, 1);   
   }
   t->computes(d_sharedState->get_delt_label());
-  sched->addTask(t,level->eachPatch(), all_matls); 
+  sched->addTask(t,level->eachPatch(), ice_matls); 
   
   //__________________________________
   //  If model needs to further restrict the timestep
@@ -535,7 +538,9 @@ ICE::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched, int, int )
   MaterialSubset* one_matl = press_matl;
   const MaterialSubset* ice_matls_sub = ice_matls->getUnion();
   const MaterialSubset* mpm_matls_sub = mpm_matls->getUnion();
-
+  
+  scheduleComputeThermoTransportProperties(sched, level,  ice_matls);
+  
   scheduleComputePressure(                sched, patches, press_matl,
                                                           all_matls);
 
@@ -620,6 +625,32 @@ ICE::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched, int, int )
   // whatever tasks use press_matl will have their own reference to it.
   if (press_matl->removeReference())
     delete press_matl;
+}
+/* ---------------------------------------------------------------------
+ Function~  ICE::scheduleComputeThermoTransportProperties--
+_____________________________________________________________________*/
+void ICE::scheduleComputeThermoTransportProperties(SchedulerP& sched,
+                                const LevelP& level,
+                                const MaterialSet* ice_matls)
+{ 
+  Task* t;
+  cout_doing << "ICE::schedulecomputeThermoTransportProperties" << endl;
+  t = scinew Task("ICE::computeThermoTransportProperties", 
+            this, &ICE::computeThermoTransportProperties);   
+  t->computes(lb->viscosityLabel);
+  t->computes(lb->thermalCondLabel);
+  sched->addTask(t, level->eachPatch(), ice_matls);
+
+ //__________________________________
+  //  If models want to compute the properties
+  if(d_models.size() != 0){
+    for(vector<ModelInterface*>::iterator iter = d_models.begin();
+       iter != d_models.end(); iter++){
+      ModelInterface* model = *iter;
+      cout << "I'm about to schecule computeThermoTransportProperties " << endl;
+      model->scheduleModifyThermoTransportProperties(sched, level, ice_matls); 
+    }
+  }
 }
 
 /* ---------------------------------------------------------------------
@@ -888,7 +919,7 @@ void ICE::scheduleAccumulateMomentumSourceSinks(SchedulerP& sched,
   Task* t;
   cout_doing << "ICE::scheduleAccumulateMomentumSourceSinks" << endl; 
   t = scinew Task("ICE::accumulateMomentumSourceSinks", 
-                   this, &ICE::accumulateMomentumSourceSinks);
+            this, &ICE::accumulateMomentumSourceSinks);
 
                        // EQ  & RATE FORM     
   t->requires(Task::OldDW, lb->delTLabel);
@@ -896,7 +927,8 @@ void ICE::scheduleAccumulateMomentumSourceSinks(SchedulerP& sched,
   t->requires(Task::NewDW,lb->pressX_FCLabel,   press_matl,    gac, 1);
   t->requires(Task::NewDW,lb->pressY_FCLabel,   press_matl,    gac, 1);
   t->requires(Task::NewDW,lb->pressZ_FCLabel,   press_matl,    gac, 1);
-  t->requires(Task::OldDW,lb->vel_CCLabel,      ice_matls_sub, gac, 2); 
+  t->requires(Task::NewDW,lb->viscosityLabel,   ice_matls_sub, gac, 2);
+  t->requires(Task::OldDW,lb->vel_CCLabel,      ice_matls_sub, gac, 2);
   t->requires(Task::NewDW,lb->sp_vol_CCLabel,   ice_matls_sub, gac, 2);
   t->requires(Task::NewDW,lb->rho_CCLabel,                     gac, 2);
   t->requires(Task::NewDW,lb->vol_frac_CCLabel, Ghost::None);
@@ -932,12 +964,12 @@ void ICE::scheduleAccumulateEnergySourceSinks(SchedulerP& sched,
   Task* t;              // EQ
     cout_doing << "ICE::scheduleAccumulateEnergySourceSinks" << endl;
     t = scinew Task("ICE::accumulateEnergySourceSinks",
-                     this, &ICE::accumulateEnergySourceSinks);
+              this, &ICE::accumulateEnergySourceSinks);
                      
   if (d_RateForm) {     //RATE FORM
     cout_doing << "ICE::scheduleAccumulateEnergySourceSinks_RF" << endl;
     t = scinew Task("ICE::accumulateEnergySourceSinks_RF",
-                       this, &ICE::accumulateEnergySourceSinks_RF);
+              this, &ICE::accumulateEnergySourceSinks_RF);
   }
   Ghost::GhostType  gac = Ghost::AroundCells;
   Ghost::GhostType  gn  = Ghost::None;  
@@ -945,9 +977,10 @@ void ICE::scheduleAccumulateEnergySourceSinks(SchedulerP& sched,
   t->requires(Task::NewDW, lb->press_CCLabel,     press_matl,gn);
   t->requires(Task::NewDW, lb->speedSound_CCLabel,           gn);
   t->requires(Task::OldDW, lb->temp_CCLabel,      ice_matls, gac,1);
+  t->requires(Task::NewDW, lb->thermalCondLabel,  ice_matls, gac,1);
   t->requires(Task::NewDW, lb->rho_CCLabel,                  gac,1);
   t->requires(Task::NewDW, lb->sp_vol_CCLabel,               gac,1);
-    
+
   if (d_EqForm) {       //EQ FORM
     t->requires(Task::NewDW, lb->delP_DilatateLabel,press_matl,gn);
     t->requires(Task::NewDW, lb->vol_frac_CCLabel,             gn);
@@ -967,7 +1000,6 @@ void ICE::scheduleAccumulateEnergySourceSinks(SchedulerP& sched,
     t->requires(Task::NewDW, lb->press_diffZ_FCLabel,        gac,1);
     t->requires(Task::NewDW, lb->vol_frac_CCLabel,           gac,1);          
   }
-
   t->computes(lb->int_eng_source_CCLabel);
   
   sched->addTask(t, patches, matls);
@@ -1224,7 +1256,7 @@ void ICE::actuallyComputeStableTimestep(const ProcessorGroup*,
     double inv_sum_invDelx_sqr = 1.0/( 1.0/(delX * delX) 
                                      + 1.0/(delY * delY) 
                                      + 1.0/(delZ * delZ) );
-    constCCVariable<double> speedSound, sp_vol_CC;
+    constCCVariable<double> speedSound, sp_vol_CC, thermalCond, viscosity;
     constCCVariable<Vector> vel_CC;
     Ghost::GhostType  gn  = Ghost::None; 
     Ghost::GhostType  gac = Ghost::AroundCells;
@@ -1239,7 +1271,9 @@ void ICE::actuallyComputeStableTimestep(const ProcessorGroup*,
       new_dw->get(speedSound, lb->speedSound_CCLabel, indx,patch,gac, 1);
       new_dw->get(vel_CC,     lb->vel_CCLabel,        indx,patch,gac, 1);
       new_dw->get(sp_vol_CC,  lb->sp_vol_CCLabel,     indx,patch,gn,  0);
-
+      new_dw->get(viscosity,  lb->viscosityLabel,     indx,patch,gn,  0);
+      new_dw->get(thermalCond,lb->thermalCondLabel,   indx,patch,gn,  0);
+      
       if (d_delT_scheme == "aggressive") {     //      A G G R E S S I V E
         for(CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
           IntVector c = *iter;
@@ -1279,12 +1313,9 @@ void ICE::actuallyComputeStableTimestep(const ProcessorGroup*,
                                  dx.z() * fabs(grav.z()) ); 
                                  
                                  
-        double thermalCond, cv, gamma;
-        double viscosity = 0.0;
-        thermalCond = ice_matl->getThermalConductivity();
-        viscosity   = ice_matl->getViscosity();
-        cv          = ice_matl->getSpecificHeat();
-        gamma       = ice_matl->getGamma();
+        double cv, gamma;
+        cv     = ice_matl->getSpecificHeat();     
+        gamma  = ice_matl->getGamma();            
 
         double cp    = cv * gamma;       
         double dx_length   = dx.length();
@@ -1310,8 +1341,8 @@ void ICE::actuallyComputeStableTimestep(const ProcessorGroup*,
 
             double relative_vel       = fabs(vel_R - vel_L);
 
-            double thermalDiffusivity = thermalCond * sp_vol_CC[c]/cp;
-            double diffusion_vel      = std::max(thermalDiffusivity, viscosity)
+            double thermalDiffusivity = thermalCond[c] * sp_vol_CC[c]/cp;
+            double diffusion_vel      = std::max(thermalDiffusivity, viscosity[c])
                                       /dx_length;
 
             double characteristicVel_R = vel_FC_R 
@@ -1342,15 +1373,15 @@ void ICE::actuallyComputeStableTimestep(const ProcessorGroup*,
       //__________________________________
       // stability constraint due to heat conduction
       //  I C E  O N L Y
-      double thermalCond = ice_matl->getThermalConductivity();
-      if (thermalCond !=0) {
+      double thermalCond_test = ice_matl->getThermalConductivity();
+      if (thermalCond_test !=0) {
         double cv    = ice_matl->getSpecificHeat();
         double gamma = ice_matl->getGamma();
         double cp = cv * gamma;
 
         for(CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
           IntVector c = *iter;
-          double inv_thermalDiffusivity = cp/(sp_vol_CC[c] * thermalCond);
+          double inv_thermalDiffusivity = cp/(sp_vol_CC[c] * thermalCond[c]);
           double A = d_CFL * 0.5 * inv_sum_invDelx_sqr * inv_thermalDiffusivity;
           delt_cond = std::min(A, delt_cond);
         }
@@ -1419,6 +1450,29 @@ void ICE::actuallyInitialize(const ProcessorGroup*,
     press_CC.initialize(0.0);
     imp_initialGuess.initialize(1.0); 
 
+    //__________________________________
+    //  Thermo and transport properties
+    for (int m = 0; m < numMatls; m++ ) {
+      ICEMaterial* ice_matl = d_sharedState->getICEMaterial(m);
+      int indx= ice_matl->getDWIndex();
+      CCVariable<double> viscosity, thermalCond;
+      new_dw->allocateAndPut(viscosity,     lb->viscosityLabel,    indx,patch);
+      new_dw->allocateAndPut(thermalCond,   lb->thermalCondLabel,  indx,patch);
+          
+      viscosity.initialize  ( ice_matl->getViscosity());
+      thermalCond.initialize( ice_matl->getThermalConductivity());
+      
+      if(ice_matl->isSurroundingMatl()) {
+        d_surroundingMatl_indx = indx;  // find which matl. is the surrounding matl
+      } 
+    }
+    // --------bulletproofing
+    if (grav.length() >0.0 && d_surroundingMatl_indx == -9)  {
+      throw ProblemSetupException("ERROR ICE::actuallyInitialize \n"
+            "You must have \n" 
+            "       <isSurroundingMatl> true </isSurroundingMatl> \n "
+            "specified inside the ICE material that is the background matl\n \n");
+    }
   //__________________________________
   // Note:
   // The press_CC isn't material dependent even though
@@ -1434,17 +1488,8 @@ void ICE::actuallyInitialize(const ProcessorGroup*,
       new_dw->allocateAndPut(speedSound[m], lb->speedSound_CCLabel,indx,patch); 
       new_dw->allocateAndPut(vol_frac_CC[m],lb->vol_frac_CCLabel,  indx,patch); 
       new_dw->allocateAndPut(vel_CC[m],     lb->vel_CCLabel,       indx,patch);
-      if(ice_matl->isSurroundingMatl()) {
-        d_surroundingMatl_indx = indx;  // find which matl. is the surrounding matl
-      } 
     }
-    // --------bulletproofing
-    if (grav.length() >0.0 && d_surroundingMatl_indx == -9)  {
-      throw ProblemSetupException("ERROR ICE::actuallyInitialize \n"
-            "You must have \n" 
-            "       <isSurroundingMatl> true </isSurroundingMatl> \n "
-            "specified inside the ICE material that is the background matl\n \n");
-    }
+
     
     for (int m = 0; m < numMatls; m++ ) {
       ICEMaterial* ice_matl = d_sharedState->getICEMaterial(m);
@@ -1529,7 +1574,35 @@ void ICE::actuallyInitialize(const ProcessorGroup*,
     }
   }  // patch loop 
 }
-
+/* ---------------------------------------------------------------------
+ Function~  ICE::computeThermoTransportProperties
+ Purpose~   compute the thermodynamic or transport properties
+ ---------------------------------------------------------------------  */
+void ICE::computeThermoTransportProperties(const ProcessorGroup*,
+                                          const PatchSubset* patches,
+                                          const MaterialSubset* /*ice_matls*/,
+                                          DataWarehouse* /*old_dw*/,
+                                          DataWarehouse* new_dw)
+{ 
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+    cout_doing << "Doing computeThermoTransportProperties on patch "<< patch->getID() << "\t\t ICE" << endl;
+    
+   
+    int numMatls = d_sharedState->getNumICEMatls();
+    
+    for (int m = 0; m < numMatls; m++) {
+      ICEMaterial* ice_matl = d_sharedState->getICEMaterial(m);
+      int indx = ice_matl->getDWIndex();
+      CCVariable<double> viscosity, thermalCond;
+      
+      new_dw->allocateAndPut(thermalCond, lb->thermalCondLabel,indx, patch);  
+      new_dw->allocateAndPut(viscosity,   lb->viscosityLabel,  indx, patch);  
+      viscosity.initialize  ( ice_matl->getViscosity());
+      thermalCond.initialize( ice_matl->getThermalConductivity());
+    }
+  }
+}
 /* --------------------------------------------------------------------- 
  Function~  ICE::computeEquilibrationPressure--
  Purpose~   Find the equilibration pressure  
@@ -2004,7 +2077,7 @@ void ICE::computeVel_FC(const ProcessorGroup*,
     const Patch* patch = patches->get(p);
     
     cout_doing << "Doing computeVel_FC on patch " 
-              << patch->getID() << "\t\t\t ICE" << endl;
+              << patch->getID() << "\t\t\t\t ICE" << endl;
 
     int numMatls = d_sharedState->getNumMatls();
     
@@ -2650,7 +2723,6 @@ void ICE::zeroModelSources(const ProcessorGroup*,
     }
   }
 }
-
 /* ---------------------------------------------------------------------
  Function~  ICE::accumulateMomentumSourceSinks--
  Purpose~   This function accumulates all of the sources/sinks of momentum
@@ -2673,7 +2745,7 @@ void ICE::accumulateMomentumSourceSinks(const ProcessorGroup*,
     IntVector right, left, top, bottom, front, back;
     Vector dx, gravity;
     double pressure_source, mass, vol;
-    double viscous_source,viscosity;
+    double viscous_source;
     double include_term;
 
     delt_vartype delT; 
@@ -2687,6 +2759,7 @@ void ICE::accumulateMomentumSourceSinks(const ProcessorGroup*,
     double areaZ = dx.x() * dx.y();
     constCCVariable<double>   rho_CC;
     constCCVariable<double>   sp_vol_CC;
+    constCCVariable<double>   viscosity_org;
     constCCVariable<Vector>   vel_CC;
     constCCVariable<double>   vol_frac;
     constSFCXVariable<double> pressX_FC;
@@ -2734,40 +2807,43 @@ void ICE::accumulateMomentumSourceSinks(const ProcessorGroup*,
       tau_X_FC.initialize(Vector(0.,0.,0.));
       tau_Y_FC.initialize(Vector(0.,0.,0.));
       tau_Z_FC.initialize(Vector(0.,0.,0.));
-      viscosity = 0.0;
+
       if(ice_matl){
-        old_dw->get(vel_CC,    lb->vel_CCLabel,     indx,patch,gac,2);
-        new_dw->get(sp_vol_CC, lb->sp_vol_CCLabel,  indx,patch,gac,2);
-        viscosity = ice_matl->getViscosity();
-        if(viscosity != 0.0){
-          CCVariable<double> tot_viscosity;
-          new_dw->allocateTemporary(tot_viscosity, patch, gac, 1);
-          tot_viscosity.initialize(viscosity);
-          
-         if(d_Turb){
-           TurbulenceFactory*  turbulence_factory = scinew TurbulenceFactory();
-           turbulence_factory->callTurb(new_dw,patch,vel_CC,rho_CC,indx,lb,
-                                       d_sharedState,d_turbulence, tot_viscosity);
-           delete turbulence_factory;
-         }//turb
+        new_dw->get(viscosity_org, lb->viscosityLabel, indx,patch,gac,2); 
+        old_dw->get(vel_CC,        lb->vel_CCLabel,    indx,patch,gac,2); 
+        new_dw->get(sp_vol_CC,     lb->sp_vol_CCLabel, indx,patch,gac,2); 
+        
+        //__________________________________
+        //  compute the shear stress terms
+        double viscosity_test = ice_matl->getViscosity();
+        if(viscosity_test != 0.0){
+        
+          CCVariable<double> viscosity;  // don't alter the original value
+          new_dw->allocateTemporary(viscosity, patch, gac, 2);
+          viscosity.copyData(viscosity_org);
+        
+          if(d_Turb){ 
+            TurbulenceFactory*  turbulence_factory = scinew TurbulenceFactory();
+            turbulence_factory->callTurb(new_dw,patch,vel_CC,rho_CC,indx,lb,
+                                         d_sharedState,d_turbulence, viscosity);
+            delete turbulence_factory;
+          }//turb
            
-          computeTauX(patch, rho_CC, sp_vol_CC, vel_CC,tot_viscosity,dx, tau_X_FC);
-          computeTauY(patch, rho_CC, sp_vol_CC, vel_CC,tot_viscosity,dx, tau_Y_FC);
-          computeTauZ(patch, rho_CC, sp_vol_CC, vel_CC,tot_viscosity,dx, tau_Z_FC); 
+          computeTauX(patch, rho_CC, sp_vol_CC, vel_CC,viscosity,dx, tau_X_FC);
+          computeTauY(patch, rho_CC, sp_vol_CC, vel_CC,viscosity,dx, tau_Y_FC);
+          computeTauZ(patch, rho_CC, sp_vol_CC, vel_CC,viscosity,dx, tau_Z_FC); 
         }
-        else{
-         if(d_Turb){
-           string warn="ERROR:\n input :viscosity can't be zero when calculate turbulence";
-           throw ProblemSetupException(warn);
-         }
+        if(viscosity_test == 0.0 && d_Turb){
+          string warn="ERROR:\n input :viscosity can't be zero when calculate turbulence";
+          throw ProblemSetupException(warn);
         }
-        include_term = 1.0;
-        // This multiplies terms that are only included in the ice_matls
-      }
-      else{
+      }  // ice_matl
+      
+      if (ice_matl) {
+        include_term = 1.0;// This multiplies terms that are only included in the ice_matls
+      }else{
         include_term = 0.0;
       }
-      
       //__________________________________
       //  accumulate sources
       for(CellIterator iter = patch->getCellIterator(); !iter.done();iter++){
@@ -2858,8 +2934,8 @@ void ICE::accumulateMomentumSourceSinks(const ProcessorGroup*,
         printVector(indx, patch, 1, desc.str(), "mom_source",  0, mom_source);
       //printVector(indx, patch, 1, desc.str(), "press_force", 0, press_force);        
       }
-    }
-  }
+    }  // matls loop
+  }  //patches
 }
 
 /* --------------------------------------------------------------------- 
@@ -2894,6 +2970,7 @@ void ICE::accumulateEnergySourceSinks(const ProcessorGroup*,
     constCCVariable<double> matl_press;
     constCCVariable<double> rho_CC;
     constCCVariable<double> Temp_CC;
+    constCCVariable<double> thermalCond;
         
     Ghost::GhostType  gn  = Ghost::None;
     Ghost::GhostType  gac = Ghost::AroundCells;
@@ -2906,6 +2983,7 @@ void ICE::accumulateEnergySourceSinks(const ProcessorGroup*,
 
       int indx    = matl->getDWIndex();   
       CCVariable<double> int_eng_source;
+      
       new_dw->get(sp_vol_CC,   lb->sp_vol_CCLabel,    indx,patch,gac,1);
       new_dw->get(rho_CC,      lb->rho_CCLabel,       indx,patch,gac,1);
       new_dw->get(speedSound,  lb->speedSound_CCLabel,indx,patch,gn,0);
@@ -2918,9 +2996,12 @@ void ICE::accumulateEnergySourceSinks(const ProcessorGroup*,
       //__________________________________
       //  Source due to conduction
       if(ice_matl){
-        double thermalCond = ice_matl->getThermalConductivity();
-        if(thermalCond != 0.0){ 
-          old_dw->get(Temp_CC, lb->temp_CCLabel, indx,patch,gac,1);
+        double thermalCond_test = ice_matl->getThermalConductivity();
+        new_dw->get(thermalCond, lb->thermalCondLabel, indx,patch,gac,1); 
+        old_dw->get(Temp_CC,     lb->temp_CCLabel,     indx,patch,gac,1); 
+        
+        if(thermalCond_test != 0.0){ 
+          
           bool use_vol_frac = true; // include vol_frac in diffusion calc.
           scalarDiffusionOperator(new_dw, patch, use_vol_frac,
                                   rho_CC, sp_vol_CC,  Temp_CC,
@@ -3895,8 +3976,7 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup*,
 	     }
             
             //  Set Boundary Conditions 
-            string Labelname = tvar->var->getName();
-	     setBC(q_CC, Labelname,  patch, d_sharedState, indx); 
+	     setBC(q_CC, "zeroNeumann",  patch, d_sharedState, indx);
           }
         }
       }
@@ -4113,7 +4193,8 @@ bool ICE::areAllValuesPositive( CCVariable<double> & src, IntVector& neg_cell )
   neg_cell = IntVector(0,0,0); 
   return true;      
 } 
-
+//______________________________________________________________________
+//  Models
 ICE::ICEModelSetup::ICEModelSetup()
 {
 }
