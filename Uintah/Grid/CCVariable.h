@@ -59,6 +59,16 @@ WARNING
       
       //////////
       // Insert Documentation Here:
+      void copyPointer(const CCVariableBase&);
+
+      //////////
+      // Insert Documentation Here:
+      void copyRegion(CCVariableBase* src,
+		      const IntVector& lowIndex,
+		      const IntVector& highIndex);
+
+      //////////
+      // Insert Documentation Here:
       void initialize(const T& value);
       
       CCVariable<T>& operator=(const CCVariable<T>&);
@@ -118,11 +128,27 @@ WARNING
       void initialize(const T& value) {
 	 std::cerr << "CCVariable::initialize!\n";
       }
+      
+   template<class T>
+      void copyPointer(const CCVariableBase&) {
+	 std::cerr << "CCVariable::copyPointer!\n";
+      }
    
+   template<class T>
+      void copyRegion(CCVariableBase* src,
+		      const IntVector& lowIndex,
+		      const IntVector& highIndex) {
+	 std::cerr << "CCVariable::copyRegion!\n";
+      }
+
 } // end namespace Uintah
 
 //
 // $Log$
+// Revision 1.7  2000/05/12 01:48:34  tan
+// Put two empty functions copyPointer and copyRegion just to make the
+// compiler work.
+//
 // Revision 1.6  2000/05/11 20:10:21  dav
 // adding MPI stuff.  The biggest change is that old_dws cannot be const and so a large number of declarations had to change.
 //
