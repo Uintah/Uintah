@@ -30,6 +30,9 @@
 //    Date   : Wed Jul  7 23:37:16 2004
 
 #include <string>
+
+#include <sci_gl.h>
+
 #include <Core/Geom/GeomOpenGL.h>
 #include <Core/Volume/SliceRenderer.h>
 #include <Core/Volume/VolShader.h>
