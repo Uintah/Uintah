@@ -171,7 +171,7 @@ itcl_class DataIO_Readers_HDF5DataReader {
 	makeOpenFilebox \
 	    -parent $w \
 	    -filevar $this-filename \
-	    -command "$this-c update_file; wm withdraw $w" \
+	    -command "$this-c update_file 0; wm withdraw $w" \
 	    -cancel "wm withdraw $w" \
 	    -title $title \
 	    -filetypes $types \
@@ -227,6 +227,7 @@ itcl_class DataIO_Readers_HDF5DataReader {
 	pack $w.f -fill x -expand yes -side top
 
 
+
 	option add *TreeView.font { Courier 12 }
 #	option add *TreeView.Button.background grey95
 #	option add *TreeView.Button.activeBackground grey90
@@ -273,6 +274,8 @@ itcl_class DataIO_Readers_HDF5DataReader {
 	    $treeview column configure $column \
 		-command [list $this SortColumn $column]
 	}
+
+
 
 	iwidgets::labeledframe $w.search -labeltext "Search Selection"
 	set search [$w.search childsite]
@@ -471,7 +474,9 @@ itcl_class DataIO_Readers_HDF5DataReader {
 	set allow_selection false
 
 	if { [string length [set $this-dumpname]] > 0 } {
-	    # Rebuild the tree
+	    # Make sure the dump file is up to date.
+	    $this-c check_dumpfile 0
+	    # Rebuild the tree.
 	    build_tree [set $this-dumpname]
 
 	    if { [string length $datasets] > 0 } {
@@ -573,11 +578,11 @@ itcl_class DataIO_Readers_HDF5DataReader {
 		# the file may have been removed from the /tmp dir so
 		# try to recreate it.
 		if { $read_error == 0 } {
-		    set read_error 1
-		    $this-c update_file
+		    set message "Can not find "
+		    append message $filename
+		    $this-c error $message
 		    return
 		} else {
-		    set read_error 0
 		    set message "Can not open "
 		    append message $filename
 		    $this-c error $message
@@ -996,50 +1001,53 @@ itcl_class DataIO_Readers_HDF5DataReader {
 	    set treeview $treeframe.tree.tree
 
 	    set ids [$treeview curselection]
-	    set names [eval $treeview get -full $ids]
 
-	    global $this-datasets
+	    if { $id != "" } {
+		set names [eval $treeview get -full $ids]
 
-	    if { {[set $this-datasets]} != {$names} } {
-		set $ports ""
-		set $this-ports ""
-	    }
+		global $this-datasets
+
+		if { {[set $this-datasets]} != {$names} } {
+		    set $ports ""
+		    set $this-ports ""
+		}
 		
-	    set $this-datasets $names
+		set $this-datasets $names
 
-	    set sd [$w.sd childsite]
-	    set listbox $sd.listbox
-	    $listbox.list delete 0 end
+		set sd [$w.sd childsite]
+		set listbox $sd.listbox
+		$listbox.list delete 0 end
 
-	    if { [string first "\{" $names] == 0 } {
-		set tmp $names
-	    } else {
-		set tmp "\{"
-		append tmp $names
-		append tmp "\}"
-	    }
-
-	    set cc 0
-
-	    foreach dataset $tmp {
-
-		set dsname $dataset
-
-		if { [string length $ports] > 0 } {
-		    set port [string range $ports [expr $cc*4] [expr $cc*4+3]]
-
-		    if { [string length $port] > 0 } {
-			append dsname "   Port "
-			append dsname $port
-		    }
+		if { [string first "\{" $names] == 0 } {
+		    set tmp $names
+		} else {
+		    set tmp "\{"
+		    append tmp $names
+		    append tmp "\}"
 		}
 
-		$listbox.list insert end $dsname
+		set cc 0
 
-		incr cc
+		foreach dataset $tmp {
+
+		    set dsname $dataset
+
+		    if { [string length $ports] > 0 } {
+			set port [string range $ports [expr $cc*4] [expr $cc*4+3]]
+
+			if { [string length $port] > 0 } {
+			    append dsname "   Port "
+			    append dsname $port
+			}
+		    }
+
+		    $listbox.list insert end $dsname
+
+		    incr cc
+		}
+
+		$this-c update_selection;
 	    }
-
-	    $this-c update_selection;
 	}
     }
 
