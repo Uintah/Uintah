@@ -76,18 +76,6 @@ WARNING
 
 	 virtual void addParticleState(std::vector<const VarLabel*>& from,
 				       std::vector<const VarLabel*>& to) = 0;
-	 /*
-         const VarLabel* deltLabel;
-
-         const VarLabel* pDeformationMeasureLabel;
-         const VarLabel* pStressLabel;
-         const VarLabel* pVolumeLabel;
-         const VarLabel* pMassLabel;
-         const VarLabel* pXLabel;
-
-         const VarLabel* gMomExedVelocityLabel;
-	 */
-
         protected:
 
 	 MPMLabel* lb;
@@ -97,6 +85,9 @@ WARNING
 } // end namespace Uintah
 
 // $Log$
+// Revision 1.21  2000/08/22 00:11:21  guilkey
+// Tidied up these files.
+//
 // Revision 1.20  2000/07/05 23:43:33  jas
 // Changed the way MPMLabel is used.  No longer a Singleton class.  Added
 // MPMLabel* lb to various classes to retain the original calling
