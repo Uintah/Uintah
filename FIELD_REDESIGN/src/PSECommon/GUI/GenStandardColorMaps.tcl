@@ -101,6 +101,9 @@ itcl_class PSECommon_Visualization_GenStandardColorMaps {
 		{ 181 130 216 }    { 192 129 186 }
 		{ 197 128 172 }    { 230 126  98 }
 		{ 240 126  49 }    { 255 133   0 }}}
+	    { "Dark Gray" {
+		{   0  0  0 }    {  0 0 0 }
+		{ 128 128 128 } { 255 255 255 }}}
 	}
     }
     
@@ -165,6 +168,7 @@ itcl_class PSECommon_Visualization_GenStandardColorMaps {
 		    { "Lighthue" 6} \
 		    { "Blackbody" 7} \
 		    { "Don" 8} \
+		    { "Dark Gray" 9} \
 		}
 	    
 	pack $w.f2.types -in $w.f2 -side left

@@ -15,7 +15,6 @@ $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/ColorMapReader.tcl $(SRCDIR)/ColorMapWriter.tcl \
 	$(SRCDIR)/ColumnMatrixReader.tcl $(SRCDIR)/ColumnMatrixWriter.tcl \
 	$(SRCDIR)/CuttingPlane.tcl $(SRCDIR)/CuttingPlaneTex.tcl \
-	$(SRCDIR)/DomainManager.tcl \
 	$(SRCDIR)/Downsample.tcl $(SRCDIR)/DukeRawRead.tcl \
 	$(SRCDIR)/EditMatrix.tcl $(SRCDIR)/ErrorInterval.tcl \
 	$(SRCDIR)/ExtractSubmatrix.tcl $(SRCDIR)/FieldCage.tcl \
@@ -37,8 +36,7 @@ $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/OpenGL_Ex.tcl $(SRCDIR)/PointsReader.tcl \
 	$(SRCDIR)/Reader.tcl $(SRCDIR)/RescaleColorMap.tcl \
 	$(SRCDIR)/Salmon.tcl $(SRCDIR)/ScalarFieldReader.tcl \
-	$(SRCDIR)/ScalarFieldWriter.tcl $(SRCDIR)/ShowGeometry.tcl \
-	$(SRCDIR)/SimpSurface.tcl \
+	$(SRCDIR)/ScalarFieldWriter.tcl $(SRCDIR)/SimpSurface.tcl \
 	$(SRCDIR)/SimpVolVis.tcl $(SRCDIR)/SolveMatrix.tcl \
 	$(SRCDIR)/Streamline.tcl $(SRCDIR)/SurfGen.tcl \
 	$(SRCDIR)/SurfInterpVals.tcl $(SRCDIR)/SurfToGeom.tcl \
@@ -64,11 +62,8 @@ CLEANPROGS := $(CLEANPROGS) $(SRCDIR)/tclIndex
 
 #
 # $Log$
-# Revision 1.2.2.4  2000/10/26 10:03:19  moulding
-# merge HEAD into FIELD_REDESIGN
-#
-# Revision 1.2.2.3  2000/09/28 03:16:46  mcole
-# merge trunk into FIELD_REDESIGN branch
+# Revision 1.2.2.5  2000/10/31 02:26:15  dmw
+# Merging PSECommon changes in HEAD into FIELD_REDESIGN branch
 #
 # Revision 1.7  2000/10/24 05:57:28  moulding
 # new module maker Phase 2: new module maker goes online

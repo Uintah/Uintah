@@ -128,8 +128,8 @@ void MatVec::execute() {
 
 //
 // $Log$
-// Revision 1.4.2.1  2000/09/28 03:16:02  mcole
-// merge trunk into FIELD_REDESIGN branch
+// Revision 1.4.2.2  2000/10/31 02:27:56  dmw
+// Merging PSECommon changes in HEAD into FIELD_REDESIGN branch
 //
 // Revision 1.5  2000/08/04 18:09:06  dmw
 // added widget-based transform generation

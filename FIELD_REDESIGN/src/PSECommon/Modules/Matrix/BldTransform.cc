@@ -275,8 +275,8 @@ void BldTransform::tcl_command(TCLArgs& args, void* userdata) {
 
 //
 // $Log$
-// Revision 1.4.2.1  2000/09/28 03:16:02  mcole
-// merge trunk into FIELD_REDESIGN branch
+// Revision 1.4.2.2  2000/10/31 02:27:55  dmw
+// Merging PSECommon changes in HEAD into FIELD_REDESIGN branch
 //
 // Revision 1.7  2000/08/13 05:14:18  dmw
 // cleaning up code

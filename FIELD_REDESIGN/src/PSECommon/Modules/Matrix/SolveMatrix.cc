@@ -50,6 +50,7 @@
 #include <PSECore/Datatypes/SurfacePort.h>
 #include <SCICore/Geometry/Point.h>
 #include <SCICore/Malloc/Allocator.h>
+#include <SCICore/Math/MiscMath.h>
 #include <SCICore/TclInterface/TCLvar.h>
 #include <SCICore/Thread/Parallel.h>
 #include <SCICore/Thread/SimpleReducer.h>
@@ -70,6 +71,7 @@ using SCICore::Containers::to_string;
 using SCICore::Thread::Parallel;
 using SCICore::Thread::SimpleReducer;
 using SCICore::Thread::Thread;
+using SCICore::Math::Abs;
 
 struct PStats {
     int flop;
@@ -794,7 +796,10 @@ void SolveMatrix::jacobi_sci(Matrix* matrix,
     int i;
 
     for(i=0;i<size;i++){
+      if (Abs(matrix->get(i,i)>0.000001))
 	invdiag[i]=1./matrix->get(i,i);
+      else
+	invdiag[i]=1;
     }
     flop+=size;
     memref=2*size*sizeof(double);
@@ -987,7 +992,10 @@ void SolveMatrix::parallel_conjugate_gradient(int processor)
     
     for(i=0;i<size;i++){
       ColumnMatrix& diag=*data.diag;
-      diag[i]=1./matrix->get(i,i);
+      if (Abs(matrix->get(i,i)>0.000001))
+	diag[i]=1./matrix->get(i,i);
+      else
+	diag[i]=1;
     }
     stats->flop+=size;
     stats->memref+=2*size*sizeof(double);
@@ -1261,7 +1269,10 @@ void SolveMatrix::parallel_bi_conjugate_gradient(int processor)
     
     ColumnMatrix& diag=*data.diag;
     for(i=0;i<size;i++){
-      diag[i]=1./matrix->get(i,i);
+      if (Abs(matrix->get(i,i)>0.000001))
+	diag[i]=1./matrix->get(i,i);
+      else
+	diag[i]=1;
     }
     stats->flop+=size;
     stats->memref+=2*size*sizeof(double);
@@ -1502,11 +1513,21 @@ void SolveMatrix::parallel_bi_conjugate_gradient(int processor)
 
 //
 // $Log$
-// Revision 1.15.2.2  2000/10/26 10:03:35  moulding
-// merge HEAD into FIELD_REDESIGN
+// Revision 1.15.2.3  2000/10/31 02:27:56  dmw
+// Merging PSECommon changes in HEAD into FIELD_REDESIGN branch
 //
-// Revision 1.15.2.1  2000/09/28 03:16:02  mcole
-// merge trunk into FIELD_REDESIGN branch
+// Revision 1.17  2000/10/29 04:34:53  dmw
+// BuildFEMatrix -- ground an arbitrary node
+// SolveMatrix -- when preconditioning, be careful with 0's on diagonal
+// MeshReader -- build the grid when reading
+// SurfToGeom -- support node normals
+// IsoSurface -- fixed tet mesh bug
+// MatrixWriter -- support split file (header + raw data)
+//
+// LookupSplitSurface -- split a surface across a place and lookup values
+// LookupSurface -- find surface nodes in a sfug and copy values
+// Current -- compute the current of a potential field (- grad sigma phi)
+// LocalMinMax -- look find local min max points in a scalar field
 //
 // Revision 1.16  2000/08/04 18:09:06  dmw
 // added widget-based transform generation

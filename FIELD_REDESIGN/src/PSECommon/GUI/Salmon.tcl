@@ -245,13 +245,13 @@ itcl_class Roe {
 	pack $w.bframe.dolly -side left -anchor nw 
 	frame $w.bframe.dolly.i
 	button $w.bframe.dolly.i.b -text "++" -command "$this-c dolly2 .8"
-	button $w.bframe.dolly.i.o -text "In" -command "$this-c dolly .8"
+	button $w.bframe.dolly.i.o -text "In" -command "$this-c dolly .95"
 	button $w.bframe.dolly.i.s -text "+" -command "$this-c dolly2 .96"
 	pack $w.bframe.dolly.i.b $w.bframe.dolly.i.o $w.bframe.dolly.i.s \
 		-fill x -padx 2 -pady 2 -side left -expand 1
 	frame $w.bframe.dolly.o
 	button $w.bframe.dolly.o.b -text "--" -command "$this-c dolly2 1.2"
-	button $w.bframe.dolly.o.o -text "Out" -command "$this-c dolly 1.25"
+	button $w.bframe.dolly.o.o -text "Out" -command "$this-c dolly 1.05"
 	button $w.bframe.dolly.o.s -text "-" -command "$this-c dolly2 1.04"
 	pack $w.bframe.dolly.o.b $w.bframe.dolly.o.o $w.bframe.dolly.o.s \
 		-fill x -padx 2 -pady 2 -side left -expand 1
