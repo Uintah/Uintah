@@ -8,10 +8,6 @@ SRCS     += \
 	$(SRCDIR)/MPMICE.cc \
 	$(SRCDIR)/MPMICELabel.cc
 
-SUBDIRS := $(SRCDIR)/Combustion
- 
-include $(SRCTOP)/scripts/recurse.mk   
-
 PSELIBS := \
 	Packages/Uintah/CCA/Ports          \
 	Packages/Uintah/Core/Grid          \
