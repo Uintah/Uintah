@@ -31,8 +31,8 @@
 #include <vector>
 #include <Uintah/Grid/BoundCond.h>
 #include <Uintah/Grid/PressureBoundCond.h>
-#include <Uintah/Grid/KinematicBoundCond.h>
-#include <Uintah/Grid/TempThermalBoundCond.h>
+#include <Uintah/Grid/VelocityBoundCond.h>
+#include <Uintah/Grid/TemperatureBoundCond.h>
 #include <Uintah/Grid/DensityBoundCond.h>
 
 using std::vector;
@@ -543,22 +543,26 @@ void ICE::actuallyInitialize(const ProcessorGroup*,
   // locations.
 
   // Store the pressure BCs
+
+  setBC(press,"Pressure",patch);
+#if 0
   for(Patch::FaceType face = Patch::startFace;
       face <= Patch::endFace; face=Patch::nextFace(face)){
-    vector<BoundCond* > bcs;
+    vector<BoundCondBase* > bcs;
     bcs = patch->getBCValues(face);
     for (int i = 0; i<(int)bcs.size(); i++ ) {
       string bcs_type = bcs[i]->getType();
       if (bcs_type == "Pressure") {
 	PressureBoundCond* bc = 
 	  static_cast<PressureBoundCond*>(bcs[i]);
-	cout << "bc value = " << bc->getPressure() << endl;
-	press.fillFace(face,bc->getPressure());
+	cout << "bc value = " << bc->getValue() << endl;
+	press.fillFace(face,bc->getValue());
       }
     }
   }
+#endif
 
-#if 0
+#if 1
   for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
     cout << "press["<< *iter<< "]=" << press[*iter] << endl;
   } 
@@ -596,33 +600,53 @@ void ICE::actuallyInitialize(const ProcessorGroup*,
 
       // Set the boundary conditions:
       //    uvel,vvel,wvel,temp,rho_CC
-
+      
+      setBC(rho_CC,"Density",patch);
+      setBC(temp,"Temperature",patch);
+      setBC(uvel_CC,"Velocity","x",patch);
+      setBC(vvel_CC,"Velocity","y",patch);
+      setBC(wvel_CC,"Velocity","z",patch);
+#if 0
       for(Patch::FaceType face = Patch::startFace;
 	  face <= Patch::endFace; face=Patch::nextFace(face)){
-	vector<BoundCond* > bcs;
+	vector<BoundCondBase* > bcs;
 	bcs = patch->getBCValues(face);
 	for (int i = 0; i<(int)bcs.size(); i++ ) {
 	  string bcs_type = bcs[i]->getType();
 	  if (bcs_type == "Density") {
 	    DensityBoundCond* bc =
 	      static_cast<DensityBoundCond*>(bcs[i]);
-	    rho_CC.fillFace(face,bc->getRho());
+	    if (bc->getKind() == "Dirichlet")
+	      rho_CC.fillFace(face,bc->getValue());
+	    if (bc->getKind() == "Neumann")
+	      rho_CC.fillFaceFlux(face,bc->getValue());
 	  }
 	  if (bcs_type == "Temperature") {
-	    TempThermalBoundCond* bc = 
-	      static_cast<TempThermalBoundCond*>(bcs[i]);
-	    temp.fillFace(face,bc->getTemp());
+	    TemperatureBoundCond* bc = 
+	      static_cast<TemperatureBoundCond*>(bcs[i]);
+	    if (bc->getKind() == "Dirichlet")
+	      temp.fillFace(face,bc->getValue());
+	    if (bc->getKind() == "Neumann")
+	      temp.fillFaceFlux(face,bc->getValue());
 	  }
-	  if (bcs_type == "Kinematic") {
-	    KinematicBoundCond* bc = 
-	      static_cast<KinematicBoundCond*>(bcs[i]);
-	    uvel_CC.fillFace(face,bc->getVelocity().x());
-	    vvel_CC.fillFace(face,bc->getVelocity().y());
-	    wvel_CC.fillFace(face,bc->getVelocity().z());
-	    
+	  if (bcs_type == "Velocity") {
+	    VelocityBoundCond* bc = 
+	      static_cast<VelocityBoundCond*>(bcs[i]);
+	    if (bc->getKind() == "Dirichlet") {
+	      uvel_CC.fillFace(face,bc->getValue().x());
+	      vvel_CC.fillFace(face,bc->getValue().y());
+	      wvel_CC.fillFace(face,bc->getValue().z());
+	    }
+	    if (bc->getKind() == "Neumann") {
+	      uvel_CC.fillFaceFlux(face,bc->getValue().x());
+	      vvel_CC.fillFaceFlux(face,bc->getValue().y());
+	      wvel_CC.fillFaceFlux(face,bc->getValue().z());
+	    }
+	
 	  }
 	}
       }
+#endif
 
 #if 0
       for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
@@ -864,21 +888,27 @@ void ICE::actuallyStep1b(const ProcessorGroup*,
   for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++) {
     cout << "press_new["<<*iter<<"]="<<press_new[*iter] << endl;
   }
-  
+
+
+  setBC(press_new,"Pressure",patch);
+#if 0
   for(Patch::FaceType face = Patch::startFace;
       face <= Patch::endFace; face=Patch::nextFace(face)){
-    vector<BoundCond* > bcs;
+    vector<BoundCondBase* > bcs;
     bcs = patch->getBCValues(face);
     for (int i = 0; i<(int)bcs.size(); i++ ) {
       string bcs_type = bcs[i]->getType();
       if (bcs_type == "Pressure") {
 	PressureBoundCond* bc = 
 	  static_cast<PressureBoundCond*>(bcs[i]);
-	press_new.fillFace(face,bc->getPressure());
+	if (bc->getType() == "Pressure")
+	  press_new.fillFace(face,bc->getPressure());
+	else if (bc->getType() == "Flux")
+	  press_new.fillFace(face,bc->getFlux());
       }
     }
   }
-  
+#endif  
  
   
   // Hydrostatic pressure adjustment - subtract off the hydrostatic pressure
@@ -1061,23 +1091,33 @@ void ICE::actuallyStep1c(const ProcessorGroup*,
 
       // Put Boundary condition stuff in here
       // Update any neumann boundary conditions
-
+      setBC(uvel_CC,"Velocity","x",patch);
+      setBC(vvel_CC,"Velocity","y",patch);
+      setBC(wvel_CC,"Velocity","z",patch);
+#if 0
       for(Patch::FaceType face = Patch::startFace;
 	  face <= Patch::endFace; face=Patch::nextFace(face)){
-	vector<BoundCond* > bcs;
+	vector<BoundCondBase* > bcs;
 	bcs = patch->getBCValues(face);
 	for (int i = 0; i<(int)bcs.size(); i++ ) {
 	  string bcs_type = bcs[i]->getType();
-	  if (bcs_type == "Kinematic") {
-	    KinematicBoundCond* bc = 
-	      static_cast<KinematicBoundCond*>(bcs[i]);
-	    uvel_CC.fillFace(face,bc->getVelocity().x());
-	    vvel_CC.fillFace(face,bc->getVelocity().y());
-	    wvel_CC.fillFace(face,bc->getVelocity().z());
-	    
+	  if (bcs_type == "Velocity") {
+	    VelocityBoundCond* bc = 
+	      static_cast<VelocityBoundCond*>(bcs[i]);
+	    if (bc->getKind() == "Dirichlet") {
+	      uvel_CC.fillFace(face,bc->getValue().x());
+	      vvel_CC.fillFace(face,bc->getValue().y());
+	      wvel_CC.fillFace(face,bc->getValue().z());
+	    }
+	    if (bc->getKind() == "Neumann") {
+	      uvel_CC.fillFaceFlux(face,bc->getValue().x());
+	      vvel_CC.fillFaceFlux(face,bc->getValue().y());
+	      wvel_CC.fillFaceFlux(face,bc->getValue().z());
+	    }
 	  }
 	}
       }
+#endif
 
             
       // Put the result in the datawarehouse
@@ -1194,16 +1234,23 @@ void ICE::actuallyStep1d(const ProcessorGroup*,
   for (int m = 0; m < NVFs; m++) {
     for(Patch::FaceType face = Patch::startFace;
 	face <= Patch::endFace; face=Patch::nextFace(face)){
-      vector<BoundCond* > bcs;
+      vector<BoundCondBase* > bcs;
       bcs = patch->getBCValues(face);
       for (int i = 0; i<(int)bcs.size(); i++ ) {
 	string bcs_type = bcs[i]->getType();
-	if (bcs_type == "Kinematic") {
-	  KinematicBoundCond* bc = 
-	    static_cast<KinematicBoundCond*>(bcs[i]);
-	  uvel_FCME[m].fillFace(face,bc->getVelocity().x());
-	  vvel_FCME[m].fillFace(face,bc->getVelocity().y());
-	  wvel_FCME[m].fillFace(face,bc->getVelocity().z());
+	if (bcs_type == "Velocity") {
+	  VelocityBoundCond* bc = 
+	    static_cast<VelocityBoundCond*>(bcs[i]);
+	  if (bc->getKind() == "Dirichlet") {
+	    uvel_FCME[m].fillFace(face,bc->getValue().x());
+	    vvel_FCME[m].fillFace(face,bc->getValue().y());
+	    wvel_FCME[m].fillFace(face,bc->getValue().z());
+	  }
+	  if (bc->getKind() == "Neumann") {
+	    uvel_FCME[m].fillFaceFlux(face,bc->getValue().x());
+	    vvel_FCME[m].fillFaceFlux(face,bc->getValue().y());
+	    wvel_FCME[m].fillFaceFlux(face,bc->getValue().z());
+	  }
 	}
       }
     }
@@ -1332,9 +1379,12 @@ void ICE::actuallyStep2(const ProcessorGroup*,
 
 
   // Update the pressure BC
+
+  setBC(pressdP,"Pressure",patch);
+#if 0
   for(Patch::FaceType face = Patch::startFace;
       face <= Patch::endFace; face=Patch::nextFace(face)){
-    vector<BoundCond* > bcs;
+    vector<BoundCondBase* > bcs;
     bcs = patch->getBCValues(face);
     for (int i = 0; i<(int)bcs.size(); i++ ) {
       string bcs_type = bcs[i]->getType();
@@ -1345,8 +1395,8 @@ void ICE::actuallyStep2(const ProcessorGroup*,
       }
     }
   }
+#endif
 
-  
 
   new_dw->put(delPress, lb->delPress_CCLabel, 0, patch);
   new_dw->put(pressdP,  lb->pressdP_CCLabel,  0, patch);
@@ -1447,16 +1497,17 @@ void ICE::actuallyStep3(const ProcessorGroup*,
     *___________________________________*/
 
     // Update the pressure BC
+
   for(Patch::FaceType face = Patch::startFace;
       face <= Patch::endFace; face=Patch::nextFace(face)){
-    vector<BoundCond* > bcs;
+    vector<BoundCondBase* > bcs;
     bcs = patch->getBCValues(face);
     for (int i = 0; i<(int)bcs.size(); i++ ) {
       string bcs_type = bcs[i]->getType();
       if (bcs_type == "Pressure") {
 	PressureBoundCond* bc = 
 	  static_cast<PressureBoundCond*>(bcs[i]);
-	press_FC.fillFace(face,bc->getPressure());
+	press_FC.fillFace(face,bc->getValue());
       }
     }
   }
@@ -1836,23 +1887,36 @@ void ICE::actuallyStep5b(const ProcessorGroup*,
   }
 
   // Update any neumann boundary conditions
-     // Update the velocity BC
+  // Update the velocity BC
+
   for (int m = 0; m < NVFs; m++) {
+    setBC(xmom_L_ME[m],"Velocity",patch);
+    setBC(ymom_L_ME[m],"Velocity",patch);
+    setBC(zmom_L_ME[m],"Velocity",patch);
+#if 0
     for(Patch::FaceType face = Patch::startFace;
 	face <= Patch::endFace; face=Patch::nextFace(face)){
-      vector<BoundCond* > bcs;
+      vector<BoundCondBase* > bcs;
       bcs = patch->getBCValues(face);
       for (int i = 0; i<(int)bcs.size(); i++ ) {
 	string bcs_type = bcs[i]->getType();
-	if (bcs_type == "Kinematic") {
-	  KinematicBoundCond* bc = 
-	    static_cast<KinematicBoundCond*>(bcs[i]);
-	  xmom_L_ME[m].fillFace(face,bc->getVelocity().x());
-	  ymom_L_ME[m].fillFace(face,bc->getVelocity().y());
-	  zmom_L_ME[m].fillFace(face,bc->getVelocity().z());
+	if (bcs_type == "Value") {
+	  VelocityBoundCond* bc = 
+	    static_cast<VelocityBoundCond*>(bcs[i]);
+	  if (bc->getKind() == "Dirichlet") {
+	    xmom_L_ME[m].fillFace(face,bc->getValue().x());
+	    ymom_L_ME[m].fillFace(face,bc->getValue().y());
+	    zmom_L_ME[m].fillFace(face,bc->getValue().z());
+	  }
+	  if (bc->getKind() == "Neumann") {
+	    xmom_L_ME[m].fillFaceFlux(face,bc->getValue().x());
+	    ymom_L_ME[m].fillFaceFlux(face,bc->getValue().y());
+	    zmom_L_ME[m].fillFaceFlux(face,bc->getValue().z());
+	  }
 	}
       }
     }
+#endif
   }
   
 
@@ -2015,34 +2079,52 @@ void ICE::actuallyStep6and7(const ProcessorGroup*,
       }
 
       // Update the BCs
+      setBC(rho_CC,"Density",patch);
+      setBC(temp,"Temperature",patch);
+      setBC(uvel_CC,"Velocity","x",patch);
+      setBC(vvel_CC,"Velocity","y",patch);
+      setBC(wvel_CC,"Velocity","z",patch);
 
-            for(Patch::FaceType face = Patch::startFace;
+#if 0
+      for(Patch::FaceType face = Patch::startFace;
 	  face <= Patch::endFace; face=Patch::nextFace(face)){
-	vector<BoundCond* > bcs;
+	vector<BoundCondBase* > bcs;
 	bcs = patch->getBCValues(face);
 	for (int i = 0; i<(int)bcs.size(); i++ ) {
 	  string bcs_type = bcs[i]->getType();
 	  if (bcs_type == "Density") {
 	    DensityBoundCond* bc =
 	      static_cast<DensityBoundCond*>(bcs[i]);
-	    rho_CC.fillFace(face,bc->getRho());
+	    if (bc->getKind() == "Dirichlet")
+	      rho_CC.fillFace(face,bc->getValue());
+	    if (bc->getKind() == "Neumann")
+	      rho_CC.fillFaceFlux(face,bc->getValue());
 	  }
 	  if (bcs_type == "Temperature") {
-	    TempThermalBoundCond* bc = 
-	      static_cast<TempThermalBoundCond*>(bcs[i]);
-	    temp.fillFace(face,bc->getTemp());
+	    TemperatureBoundCond* bc = 
+	      static_cast<TemperatureBoundCond*>(bcs[i]);
+	    if (bc->getKind() == "Dirichlet")
+	      temp.fillFace(face,bc->getValue());
+	    if (bc->getKind() == "Neumann")
+	      temp.fillFaceFlux(face,bc->getValue());
 	  }
-	  if (bcs_type == "Kinematic") {
-	    KinematicBoundCond* bc = 
-	      static_cast<KinematicBoundCond*>(bcs[i]);
-	    uvel_CC.fillFace(face,bc->getVelocity().x());
-	    vvel_CC.fillFace(face,bc->getVelocity().y());
-	    wvel_CC.fillFace(face,bc->getVelocity().z());
-	    
+	  if (bcs_type == "Velocity") {
+	    VelocityBoundCond* bc = 
+	      static_cast<VelocityBoundCond*>(bcs[i]);
+	    if (bc->getKind() == "Dirichlet") {
+	      uvel_CC.fillFace(face,bc->getValue().x());
+	      vvel_CC.fillFace(face,bc->getValue().y());
+	      wvel_CC.fillFace(face,bc->getValue().z());
+	    }
+	    if (bc->getKind() == "Neumann") {
+	      uvel_CC.fillFaceFlux(face,bc->getValue().x());
+	      vvel_CC.fillFaceFlux(face,bc->getValue().y());
+	      wvel_CC.fillFaceFlux(face,bc->getValue().z());
+	    }
 	  }
 	}
       }
-
+#endif
       new_dw->put(rho_CC,lb->rho_CCLabel,vfindex,patch);
       new_dw->put(uvel_CC,lb->uvel_CCLabel,vfindex,patch);
       new_dw->put(vvel_CC,lb->vvel_CCLabel,vfindex,patch);
@@ -2055,6 +2137,93 @@ void ICE::actuallyStep6and7(const ProcessorGroup*,
     }
   }
 }
+
+void ICE::setBC(CCVariable<double>& variable, const string& kind, 
+		const Patch* patch)
+{
+
+  Vector dx = patch->dCell();
+  for(Patch::FaceType face = Patch::startFace;
+      face <= Patch::endFace; face=Patch::nextFace(face)){
+    vector<BoundCondBase* > bcs;
+    bcs = patch->getBCValues(face);
+    
+    BoundCondBase* bc_base = 0;
+    for (int i = 0; i<(int)bcs.size(); i++ ) {
+      if (bcs[i]->getType() == kind) {
+	bc_base = bcs[i];
+	break;
+      }
+    }
+    
+    if (bc_base->getType() == "Pressure") {
+      PressureBoundCond* bc = dynamic_cast<PressureBoundCond*>(bc_base);
+      if (bc->getKind() == "Dirichlet") 
+	variable.fillFace(face,bc->getValue());
+      
+      if (bc->getKind() == "Neumann") 
+	variable.fillFaceFlux(face,bc->getValue(),dx);
+    }
+    if (bc_base->getType() == "Density") {
+      DensityBoundCond* bc = dynamic_cast<DensityBoundCond*>(bc_base);
+      if (bc->getKind() == "Dirichlet") 
+	variable.fillFace(face,bc->getValue());
+      
+      if (bc->getKind() == "Neumann") 
+	variable.fillFaceFlux(face,bc->getValue(),dx);
+    }
+    if (bc_base->getType() == "Temperature") {
+      TemperatureBoundCond* bc = dynamic_cast<TemperatureBoundCond*>(bc_base);
+      if (bc->getKind() == "Dirichlet") 
+	variable.fillFace(face,bc->getValue());
+      
+      if (bc->getKind() == "Neumann") 
+	variable.fillFaceFlux(face,bc->getValue(),dx);
+    }
+  }
+
+}
+
+void ICE::setBC(CCVariable<double>& variable, const  string& kind, 
+		const string& comp, const Patch* patch) 
+{
+  Vector dx = patch->dCell();
+  for(Patch::FaceType face = Patch::startFace;
+      face <= Patch::endFace; face=Patch::nextFace(face)){
+    vector<BoundCondBase* > bcs;
+    bcs = patch->getBCValues(face);
+    
+    BoundCondBase* bc_base = 0;
+    for (int i = 0; i<(int)bcs.size(); i++ ) {
+      if (bcs[i]->getType() == kind) {
+	bc_base = bcs[i];
+	break;
+      }
+    }
+    
+    if (bc_base->getType() == "Velocity") {
+      VelocityBoundCond* bc = dynamic_cast<VelocityBoundCond*>(bc_base);
+      if (bc->getKind() == "Dirichlet") 
+	if (comp == "x")
+	  variable.fillFace(face,bc->getValue().x());
+      if (comp == "y")
+	variable.fillFace(face,bc->getValue().y());
+      if (comp == "z")
+	variable.fillFace(face,bc->getValue().z());
+      
+      if (bc->getKind() == "Neumann") 
+	if (comp == "x")
+	  variable.fillFaceFlux(face,bc->getValue().x(),dx);
+      if (comp == "y")
+	variable.fillFaceFlux(face,bc->getValue().y(),dx);
+      if (comp == "z")
+	variable.fillFaceFlux(face,bc->getValue().z(),dx);
+    }
+  }
+
+}
+
+
 
 void ICE::influxOutfluxVolume(const FCVariable<double>& uvel_CC,
 			      const FCVariable<double>& vvel_CC,
@@ -2348,6 +2517,10 @@ const TypeDescription* fun_getTypeDescription(ICE::eflux*)
 
 //
 // $Log$
+// Revision 1.55  2000/11/02 21:33:05  jas
+// Added new bc implementation.  Things now work thru step 1b.  Neumann bcs
+// are now set correctly.
+//
 // Revision 1.54  2000/10/31 04:16:17  jas
 // Fixed some errors in speed of sound and equilibration pressure calculation.
 // Added initial conditions.

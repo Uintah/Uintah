@@ -169,6 +169,11 @@ void after_each_step_wrapper(
   friend const TypeDescription* fun_getTypeDescription(fflux*);
   friend const TypeDescription* fun_getTypeDescription(eflux*);
 
+  void setBC(CCVariable<double>& variable,const std::string& type, 
+	     const Patch* p);
+  void setBC(CCVariable<double>& variable,const std::string& type,
+	     const std::string& comp, const Patch* p);
+  
   void influxOutfluxVolume(const FCVariable<double>& uvel_CC,
 			   const FCVariable<double>& vvel_CC,
 			   const FCVariable<double>& wvel_CC,
@@ -277,6 +282,10 @@ void after_each_step_wrapper(
 #endif
 
 // $Log$
+// Revision 1.34  2000/11/02 21:33:06  jas
+// Added new bc implementation.  Things now work thru step 1b.  Neumann bcs
+// are now set correctly.
+//
 // Revision 1.33  2000/10/31 04:16:17  jas
 // Fixed some errors in speed of sound and equilibration pressure calculation.
 // Added initial conditions.
