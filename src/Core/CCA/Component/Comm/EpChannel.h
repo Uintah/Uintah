@@ -22,7 +22,7 @@
 #include <string>
 
 namespace SCIRun {
-  using namespace std;
+
   class Message;
   class SpChannel;
   class TypeInfo;
@@ -53,7 +53,7 @@ namespace SCIRun {
     virtual void openConnection() = 0;
     virtual void activateConnection(void* obj) = 0;
     virtual void closeConnection() = 0;
-    virtual string getUrl() = 0; 
+    virtual std::string getUrl() = 0; 
   
     ///////////////
     // Retrieves a Message associated with this particular object.

@@ -50,7 +50,7 @@ namespace SCIRun {
     void openConnection();
     void activateConnection(void *);
     void closeConnection();
-    string getUrl(); 
+    std::string getUrl(); 
     Message* getMessage();
     void allocateHandlerTable(int size);
     void registerHandler(int num, void* handle);
@@ -74,9 +74,6 @@ namespace SCIRun {
     globus_nexus_endpoint_t d_endpoint;
 
     void printDebug(const std::string& );
-    
-    //Toggles on/off whether debugging info gets printed
-    static const int kDEBUG=0;
   };
 }
 
