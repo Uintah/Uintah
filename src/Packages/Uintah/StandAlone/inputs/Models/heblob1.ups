@@ -212,7 +212,7 @@
               </difference>
               <res>                [2,2,2]             </res>
               <velocity>           [.0,.0,.0]          </velocity>
-              <density>       1.178471737613           </density>
+              <density>       1.176829268292683           </density>
               <pressure>      101325.0                 </pressure>     
               <temperature>   300.0                    </temperature>
            </geom_object>
@@ -224,7 +224,7 @@
                 </cylinder>
               <res>                [2,2,2]             </res>
               <velocity>           [0.0,0.0,0.0]       </velocity>
-              <density>        0.162527864325          </density>
+              <density>        0.1626119988637622          </density>
               <pressure>      101325.0                 </pressure>     
               <temperature>   300.0                    </temperature>
            </geom_object>
@@ -248,8 +248,8 @@
           <f_stoichometric>          0.06207   </f_stoichometric>
           <diffusivity>              0.0       </diffusivity>
           <initialize_diffusion_knob>  0       </initialize_diffusion_knob>
-          <rho_air>            1.178471737613  </rho_air>
-          <rho_fuel>           0.162527864325  </rho_fuel>
+          <rho_air>            1.176829268292683  </rho_air>
+          <rho_fuel>           0.1626119988637622  </rho_fuel>
           <cv_air>               716.5         </cv_air>
           <cv_fuel>              3115.6        </cv_fuel>
           <R_air>                287.0         </R_air>
