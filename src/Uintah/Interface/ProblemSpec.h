@@ -66,7 +66,7 @@ WARNING
    
    class ProblemSpec : public RefCounted {
    public:
-      ProblemSpec(const DOM_Node& node);
+      ProblemSpec(const DOM_Node& node, bool doWrite=true);
       virtual ~ProblemSpec();
       
       ProblemSpecP findBlock(const std::string& name) const;
@@ -109,8 +109,8 @@ WARNING
 	 return d_node;
       }
 
-      void writeMessages(bool do_write) {
-        d_write = do_write;
+      void writeMessages(bool doWrite) {
+        d_write = doWrite;
       }
 
       bool doWriteMessages() const
@@ -128,6 +128,9 @@ WARNING
 
 //
 // $Log$
+// Revision 1.17  2000/09/26 23:15:53  witzel
+// Added optional write parameter to constructor.
+//
 // Revision 1.16  2000/09/26 21:24:27  witzel
 // Added d_write flag and corresponding writeMessages(bool) method to
 // control whether or not to output error and warning messages.
