@@ -191,7 +191,7 @@ void DipoleInAnisoSpheres::execute() {
 	hMeshD->get_point(p, *iter);     // ... position
 	dipolePositions.push_back(p);
   }
-  numDipoles = dipolePositions.size();
+  numDipoles = (int)dipolePositions.size();
   DenseMatrix dipoleMatrix(numDipoles, 6);
   int i;
   for(i=0; i<numDipoles; i++) {
@@ -215,7 +215,7 @@ void DipoleInAnisoSpheres::execute() {
 	hMeshE->get_point(p, *iter);     // ... position
 	electrodePositions.push_back(p);
   }
-  numElectrodes = electrodePositions.size();
+  numElectrodes = (int)electrodePositions.size();
   DenseMatrix electrodeMatrix(numElectrodes, 3);
   for(i=0; i < numElectrodes; i++) {
 	p = electrodePositions[i];

@@ -369,7 +369,7 @@ void DipoleSearch::simplex_search() {
   double relative_tolerance;
   int num_evals = 0;
 
-  while(1) {
+  for( ;; ) {
     int best, worst, next_worst;
     best = 0;
     if (misfit_[0] > misfit_[1]) {
@@ -592,7 +592,7 @@ void DipoleSearch::execute() {
   last_intermediate_=0;
 
   // we have new, valid data -- run the simplex search
-  while (1) {
+  for( ;; ) {
     if (state_ == "SEEDING") {
       if (!pre_search()) break;
     } else if (state_ == "START_SEARCHING") {
