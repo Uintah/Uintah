@@ -197,7 +197,7 @@ Discretization::calculateVelocityCoeff(const ProcessorGroup* pc,
   // Allocate space in new datawarehouse
   switch(eqnType) {
   case Arches::PRESSURE:
-    if (index == Arches::UVEL) {
+    if (index == Arches::XDIR) {
       new_dw->allocate(variableCalledDU, d_DUPBLMLabel, matlIndex, patch);
     } 
     break;
@@ -209,17 +209,17 @@ Discretization::calculateVelocityCoeff(const ProcessorGroup* pc,
   for (int ii = 0; ii < nofStencils; ii++) {
     switch(eqnType) {
     case Arches::PRESSURE:
-      if (index == Arches::UVEL) {
+      if (index == Arches::XDIR) {
 	new_dw->allocate(uVelocityCoeff[ii], d_uVelCoefPBLMLabel, ii, patch);
 	new_dw->allocate(uVelocityConvectCoeff[ii], d_uVelConvCoefPBLMLabel, ii, 
 			 patch);
       }
-      else if (index == Arches::VVEL) {
+      else if (index == Arches::YDIR) {
 	new_dw->allocate(vVelocityCoeff[ii], d_vVelCoefPBLMLabel, ii, patch);
 	new_dw->allocate(vVelocityConvectCoeff[ii], d_vVelConvCoefPBLMLabel, ii, 
 			 patch);
       }
-      else if (index == Arches::WVEL) {
+      else if (index == Arches::ZDIR) {
 	new_dw->allocate(wVelocityCoeff[ii], d_wVelCoefPBLMLabel, ii, patch);
 	new_dw->allocate(wVelocityConvectCoeff[ii], d_wVelConvCoefPBLMLabel, ii, 
 			 patch);
@@ -228,12 +228,12 @@ Discretization::calculateVelocityCoeff(const ProcessorGroup* pc,
 	throw InvalidValue("Invalid index, should lie between {1,3]");
       break;
     case Arches::MOMENTUM:
-      if (index == Arches::UVEL) {
+      if (index == Arches::XDIR) {
 	new_dw->allocate(uVelocityCoeff[ii], d_uVelCoefMBLMLabel, ii, patch);
 	new_dw->allocate(uVelocityConvectCoeff[ii], d_uVelConvCoefMBLMLabel, ii, 
 			 patch);
       }
-      else if (index == Arches::VVEL) {
+      else if (index == Arches::YDIR) {
 	new_dw->allocate(vVelocityCoeff[ii], d_vVelCoefMBLMLabel, ii, patch);
 	new_dw->allocate(vVelocityConvectCoeff[ii], d_vVelConvCoefMBLMLabel, ii, 
 			 patch);
@@ -261,7 +261,7 @@ Discretization::calculateVelocityCoeff(const ProcessorGroup* pc,
   //IntVector idxLo = patch->getCellFORTLowIndex();
   //IntVector idxHi = patch->getCellFORTHighIndex();
 
-  if (index == Arches::UVEL) {
+  if (index == Arches::XDIR) {
 
     // Get the patch indices
     IntVector idxLoU = patch->getSFCXFORTLowIndex();
@@ -309,7 +309,7 @@ Discretization::calculateVelocityCoeff(const ProcessorGroup* pc,
 		  cellinfo->iesdu.get_objs(), cellinfo->iwsdu.get_objs(), 
 		  cellinfo->enfac.get_objs(), cellinfo->sfac.get_objs(),
 		  cellinfo->tfac.get_objs(), cellinfo->bfac.get_objs());
-  } else if (index == Arches::VVEL) {
+  } else if (index == Arches::YDIR) {
 
     // Get the patch indices
     IntVector idxLoV = patch->getSFCYFORTLowIndex();
@@ -357,7 +357,7 @@ Discretization::calculateVelocityCoeff(const ProcessorGroup* pc,
 		  cellinfo->jnsdv.get_objs(), cellinfo->jssdv.get_objs(), 
 		  cellinfo->efac.get_objs(), cellinfo->wfac.get_objs(),
 		  cellinfo->tfac.get_objs(), cellinfo->bfac.get_objs());
-  } else if (index == Arches::WVEL) {
+  } else if (index == Arches::ZDIR) {
 
     // Get the patch indices
     IntVector idxLoW = patch->getSFCZFORTLowIndex();
@@ -457,30 +457,30 @@ Discretization::calculateVelocityCoeff(const ProcessorGroup* pc,
   for (int ii = 0; ii < nofStencils; ii++) {
     switch(eqnType) {
     case Arches::PRESSURE:
-      if (index == Arches::UVEL) {
+      if (index == Arches::XDIR) {
 	new_dw->put(uVelocityCoeff[ii], d_uVelCoefPBLMLabel, ii, patch);
 	new_dw->put(uVelocityConvectCoeff[ii], d_uVelConvCoefPBLMLabel, ii, 
 		    patch);
-      } else if (index == Arches::VVEL) {
+      } else if (index == Arches::YDIR) {
 	new_dw->put(vVelocityCoeff[ii], d_vVelCoefPBLMLabel, ii, patch);
 	new_dw->put(vVelocityConvectCoeff[ii], d_vVelConvCoefPBLMLabel, ii, 
 		    patch);
-      } else if (index == Arches::WVEL) {
+      } else if (index == Arches::ZDIR) {
 	new_dw->put(wVelocityCoeff[ii], d_wVelCoefPBLMLabel, ii, patch);
 	new_dw->put(wVelocityConvectCoeff[ii], d_wVelConvCoefPBLMLabel, ii,
 		    patch);
       }
       break;
     case Arches::MOMENTUM:
-      if (index == Arches::UVEL) {
+      if (index == Arches::XDIR) {
 	new_dw->put(uVelocityCoeff[ii], d_uVelCoefMBLMLabel, ii, patch);
 	new_dw->put(uVelocityConvectCoeff[ii], d_uVelConvCoefMBLMLabel, ii, 
 		    patch);
-      } else if (index == Arches::VVEL) {
+      } else if (index == Arches::YDIR) {
 	new_dw->put(vVelocityCoeff[ii], d_vVelCoefMBLMLabel, ii, patch);
 	new_dw->put(vVelocityConvectCoeff[ii], d_vVelConvCoefMBLMLabel, ii, 
 		    patch);
-      } else if (index == Arches::WVEL) {
+      } else if (index == Arches::ZDIR) {
 	new_dw->put(wVelocityCoeff[ii], d_wVelCoefMBLMLabel, ii, patch);
 	new_dw->put(wVelocityConvectCoeff[ii], d_wVelConvCoefMBLMLabel, ii, 
 		    patch);
@@ -969,6 +969,9 @@ Discretization::calculateScalarDiagonal(const ProcessorGroup*,
 
 //
 // $Log$
+// Revision 1.26  2000/07/09 00:23:58  bbanerje
+// Made changes to calcVelocitySource .. still getting seg violation here.
+//
 // Revision 1.25  2000/07/08 23:42:54  bbanerje
 // Moved all enums to Arches.h and made corresponding changes.
 //

@@ -192,50 +192,109 @@ Source::calculateVelocitySource(const ProcessorGroup* pc,
   // allocate
   switch(eqnType) {
   case Arches::PRESSURE:
-    new_dw->allocate(uVelLinearSrc, d_uVelLinSrcPBLMLabel, matlIndex, patch);
-    new_dw->allocate(uVelNonlinearSrc, d_uVelNonLinSrcPBLMLabel, matlIndex, 
-		     patch);
-    new_dw->allocate(vVelLinearSrc, d_vVelLinSrcPBLMLabel, matlIndex, patch);
-    new_dw->allocate(vVelNonlinearSrc, d_vVelNonLinSrcPBLMLabel, matlIndex, 
-		     patch);
-    new_dw->allocate(wVelLinearSrc, d_wVelLinSrcPBLMLabel, matlIndex, patch);
-    new_dw->allocate(wVelNonlinearSrc, d_wVelNonLinSrcPBLMLabel, matlIndex, 
-		     patch);
+    switch(index) {
+    case Arches::XDIR:
+      new_dw->allocate(uVelLinearSrc, d_uVelLinSrcPBLMLabel, matlIndex, patch);
+      new_dw->allocate(uVelNonlinearSrc, d_uVelNonLinSrcPBLMLabel, matlIndex, 
+		       patch);
+      break;
+    case Arches::YDIR:
+      new_dw->allocate(vVelLinearSrc, d_vVelLinSrcPBLMLabel, matlIndex, patch);
+      new_dw->allocate(vVelNonlinearSrc, d_vVelNonLinSrcPBLMLabel, matlIndex, 
+		       patch);
+      break;
+    case Arches::ZDIR:
+      new_dw->allocate(wVelLinearSrc, d_wVelLinSrcPBLMLabel, matlIndex, patch);
+      new_dw->allocate(wVelNonlinearSrc, d_wVelNonLinSrcPBLMLabel, matlIndex, 
+		       patch);
+      break;
+    default:
+      throw InvalidValue("Invalid index in Pressure::calcVelSrc");
+    }
     break;
   case Arches::MOMENTUM:
-    new_dw->allocate(uVelLinearSrc, d_uVelLinSrcMBLMLabel, matlIndex, patch);
-    new_dw->allocate(uVelNonlinearSrc, d_uVelNonLinSrcMBLMLabel, matlIndex, 
-		     patch);
-    new_dw->allocate(vVelLinearSrc, d_vVelLinSrcMBLMLabel, matlIndex, patch);
-    new_dw->allocate(vVelNonlinearSrc, d_vVelNonLinSrcMBLMLabel, matlIndex, 
-		     patch);
-    new_dw->allocate(wVelLinearSrc, d_wVelLinSrcMBLMLabel, matlIndex, patch);
-    new_dw->allocate(wVelNonlinearSrc, d_wVelNonLinSrcMBLMLabel, matlIndex, 
-		     patch);
+    switch(index) {
+    case Arches::XDIR:
+      new_dw->allocate(uVelLinearSrc, d_uVelLinSrcMBLMLabel, matlIndex, patch);
+      new_dw->allocate(uVelNonlinearSrc, d_uVelNonLinSrcMBLMLabel, matlIndex, 
+		       patch);
+      break;
+    case Arches::YDIR:
+      new_dw->allocate(vVelLinearSrc, d_vVelLinSrcMBLMLabel, matlIndex, patch);
+      new_dw->allocate(vVelNonlinearSrc, d_vVelNonLinSrcMBLMLabel, matlIndex, 
+		       patch);
+      break;
+    case Arches::ZDIR:
+      new_dw->allocate(wVelLinearSrc, d_wVelLinSrcMBLMLabel, matlIndex, patch);
+      new_dw->allocate(wVelNonlinearSrc, d_wVelNonLinSrcMBLMLabel, matlIndex, 
+		       patch);
+      break;
+    default:
+      throw InvalidValue("Invalid index in Momentum::calcVelSrc");
+    }
     break;
   default:
-    break;
+    throw InvalidValue("Invalid eqnType in Source::calcVelSrc");
   }
 
   // Get the patch and variable indices
   IntVector domLoU = uVelocity.getFortLowIndex();
   IntVector domHiU = uVelocity.getFortHighIndex();
-  IntVector idxLoU = patch->getSFCXFORTLowIndex();
-  IntVector idxHiU = patch->getSFCXFORTHighIndex();
   IntVector domLoV = uVelocity.getFortLowIndex();
   IntVector domHiV = uVelocity.getFortHighIndex();
-  IntVector idxLoV = patch->getSFCYFORTLowIndex();
-  IntVector idxHiV = patch->getSFCYFORTHighIndex();
   IntVector domLoW = uVelocity.getFortLowIndex();
   IntVector domHiW = uVelocity.getFortHighIndex();
-  IntVector idxLoW = patch->getSFCZFORTLowIndex();
-  IntVector idxHiW = patch->getSFCZFORTHighIndex();
   IntVector domLo = density.getFortLowIndex();
   IntVector domHi = density.getFortHighIndex();
-  IntVector idxLo = patch->getCellFORTLowIndex();
-  IntVector idxHi = patch->getCellFORTHighIndex();
 
 #ifdef WONT_COMPILE_YET
+
+  switch(index) {
+  case Arches::XDIR:
+    IntVector idxLoU = patch->getSFCXFORTLowIndex();
+    IntVector idxHiU = patch->getSFCXFORTHighIndex();
+    // computes remaining diffusion term and also computes 
+    // source due to gravity...need to pass ipref, jpref and kpref
+    FORT_UVELSOURCE(domLoU.get_pointer(), domHiU.get_pointer(),
+		   idxLoU.get_pointer(), idxHiU.get_pointer(),
+		   uVelocity.getPointer(), 
+		   uVelLinearSrc.getPointer(), 
+		   uVelNonlinearSrc.getPointer(), 
+		   domLoV.get_pointer(), domHiV.get_pointer(),
+		   vVelocity.getPointer(), 
+		   domLoW.get_pointer(), domHiW.get_pointer(),
+		   wVelocity.getPointer(), 
+		   domLo.get_pointer(), domHi.get_pointer(),
+		   density.getPointer(),
+		   viscosity.getPointer(), 
+		   &gravity, 
+		   cellinfo->ceeu, cellinfo->cweu, cellinfo->cwwu,
+		   cellinfo->cnn, cellinfo->csn, cellinfo->css,
+		   cellinfo->ctt, cellinfo->cbt, cellinfo->cbb,
+		   cellinfo->sewu, cellinfo->sns, cellinfo->stb,
+		   cellinfo->dxepu, cellinfo->dynp, cellinfo->dztp,
+		   cellinfo->dxpwu, 
+		   cellinfo->fac1u, cellinfo->fac2u, cellinfo->fac3u, 
+		   cellinfo->fac4u,
+		   cellinfo->iesdu, cellinfo->iwsdu, 
+		   cellinfo->enfac, cellinfo->sfac,
+		   cellinfo->tfac, cellinfo->bfac);
+    break;
+  case Arches::YDIR:
+    IntVector idxLoV = patch->getSFCYFORTLowIndex();
+    IntVector idxHiV = patch->getSFCYFORTHighIndex();
+    break;
+  case Arches::ZDIR:
+    IntVector idxLoW = patch->getSFCZFORTLowIndex();
+    IntVector idxHiW = patch->getSFCZFORTHighIndex();
+    break;
+  default:
+    throw InvalidValue("Invalid index in Source::calcVelSrc");
+  }
+
+#endif
+
+#ifdef MAY_BE_USEFUL_LATER  
   int ioff = 1;
   int joff = 0;
   int koff = 0;
@@ -277,23 +336,43 @@ Source::calculateVelocitySource(const ProcessorGroup* pc,
 
   switch(eqnType) {
   case Arches::PRESSURE:
-    new_dw->put(uVelLinearSrc, d_uVelLinSrcPBLMLabel, matlIndex, patch);
-    new_dw->put(uVelNonlinearSrc, d_uVelNonLinSrcPBLMLabel, matlIndex, patch);
-    new_dw->put(vVelLinearSrc, d_vVelLinSrcPBLMLabel, matlIndex, patch);
-    new_dw->put(vVelNonlinearSrc, d_vVelNonLinSrcPBLMLabel, matlIndex, patch);
-    new_dw->put(wVelLinearSrc, d_wVelLinSrcPBLMLabel, matlIndex, patch);
-    new_dw->put(wVelNonlinearSrc, d_wVelNonLinSrcPBLMLabel, matlIndex, patch);
+    switch(index) {
+    case Arches::XDIR:
+      new_dw->put(uVelLinearSrc, d_uVelLinSrcPBLMLabel, matlIndex, patch);
+      new_dw->put(uVelNonlinearSrc, d_uVelNonLinSrcPBLMLabel, matlIndex, patch);
+      break;
+    case Arches::YDIR:
+      new_dw->put(vVelLinearSrc, d_vVelLinSrcPBLMLabel, matlIndex, patch);
+      new_dw->put(vVelNonlinearSrc, d_vVelNonLinSrcPBLMLabel, matlIndex, patch);
+      break;
+    case Arches::ZDIR:
+      new_dw->put(wVelLinearSrc, d_wVelLinSrcPBLMLabel, matlIndex, patch);
+      new_dw->put(wVelNonlinearSrc, d_wVelNonLinSrcPBLMLabel, matlIndex, patch);
+      break;
+    default:
+      throw InvalidValue("Invalid index in Pressure::calcVelSrc");
+    }
     break;
   case Arches::MOMENTUM:
-    new_dw->put(uVelLinearSrc, d_uVelLinSrcMBLMLabel, matlIndex, patch);
-    new_dw->put(uVelNonlinearSrc, d_uVelNonLinSrcMBLMLabel, matlIndex, patch);
-    new_dw->put(vVelLinearSrc, d_vVelLinSrcMBLMLabel, matlIndex, patch);
-    new_dw->put(vVelNonlinearSrc, d_vVelNonLinSrcMBLMLabel, matlIndex, patch);
-    new_dw->put(wVelLinearSrc, d_wVelLinSrcMBLMLabel, matlIndex, patch);
-    new_dw->put(wVelNonlinearSrc, d_wVelNonLinSrcMBLMLabel, matlIndex, patch);
+    switch(index) {
+    case Arches::XDIR:
+      new_dw->put(uVelLinearSrc, d_uVelLinSrcMBLMLabel, matlIndex, patch);
+      new_dw->put(uVelNonlinearSrc, d_uVelNonLinSrcMBLMLabel, matlIndex, patch);
+      break;
+    case Arches::YDIR:
+      new_dw->put(vVelLinearSrc, d_vVelLinSrcMBLMLabel, matlIndex, patch);
+      new_dw->put(vVelNonlinearSrc, d_vVelNonLinSrcMBLMLabel, matlIndex, patch);
+      break;
+    case Arches::ZDIR:
+      new_dw->put(wVelLinearSrc, d_wVelLinSrcMBLMLabel, matlIndex, patch);
+      new_dw->put(wVelNonlinearSrc, d_wVelNonLinSrcMBLMLabel, matlIndex, patch);
+      break;
+    default:
+      throw InvalidValue("Invalid index in Momentum::calcVelSrc");
+    }
     break;
   default:
-    break;
+    throw InvalidValue("Invalid eqnType in Source::calcVelSrc");
   }
 
   // pass the pointer to turbulence model object and make 
@@ -607,6 +686,9 @@ Source::addPressureSource(const ProcessorGroup* ,
 
 //
 //$Log$
+//Revision 1.21  2000/07/09 00:23:58  bbanerje
+//Made changes to calcVelocitySource .. still getting seg violation here.
+//
 //Revision 1.20  2000/07/08 23:42:56  bbanerje
 //Moved all enums to Arches.h and made corresponding changes.
 //
