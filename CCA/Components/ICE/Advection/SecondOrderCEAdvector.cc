@@ -387,7 +387,6 @@ template <class T, typename F>
     for(int f = TOP; f <= BACK; f++ )  {    
       double slab_vol = 0.0;
       T q_slab_flux = T(0.0);
-3      
       //__________________________________
       //   S L A B S
       IntVector ac = c + S_ac[f];     // slab adjacent cell
