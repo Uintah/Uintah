@@ -123,7 +123,7 @@ XML_INCLUDE := -I@XML_INCLUDE_DIR@
 XML_TLINK := -L$(XML_LIB_DIR)
 
 ifeq ($(BUILD_PARALLEL),yes)
-GLOBUS_LIB_DIR := /tmp/opt/globus64-1.1b16u/lib
+GLOBUS_LIB_DIR := @GLOBUS_LIB@
 GLOBUS_LIBS := $(LDRUN_PREFIX)$(GLOBUS_LIB_DIR) -L$(GLOBUS_LIB_DIR)
 GLOBUS_COMMON := $(LDRUN_PREFIX)$(GLOBUS_LIB_DIR) -L$(GLOBUS_LIB_DIR) -lglobus_common
 GLOBUS_TLINK := -L$(GLOBUS_LIB_DIR)
@@ -281,6 +281,9 @@ endif
 
 #
 # $Log$
+# Revision 1.21  2000/04/12 21:12:39  dav
+# fixed the globus_lib_dir in makefile.in to use @GLOBUS_LIB@ from the config script instead of being hard coded.
+#
 # Revision 1.20  2000/03/31 17:24:57  moulding
 # added ' (tick marks) to the sed script that copies the Makefile.tmpl to SCICore
 # , PSECore, etc.
