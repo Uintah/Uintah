@@ -471,22 +471,22 @@ class BioFEMApp {
 	    
 	set dataset [$f.dataset childsite]
 
-	radiobutton $dataset.brain-eg -text "Brain EG" -variable DATASET -value brain-eg -command "$this set_dataset 1"
-	radiobutton $dataset.cyl3 -text "Cyl3" -variable DATASET -value cyl3 -command "$this set_dataset 1"
-	radiobutton $dataset.sphere -text "Sphere" -variable DATASET -value sphere -command "$this set_dataset 1"
-	radiobutton $dataset.utahtorso-lowres -text "Utah Torso Lowres" -variable DATASET -value utahtorso-lowres -command "$this set_dataset 1"
-	radiobutton $dataset.utahtorso -text "Utah Torso" -variable DATASET -value utahtorso -command "$this set_dataset 1"
+	radiobutton $dataset.brain-eg -text "Head Model (70K nodes, 396K elements)" -variable DATASET -value brain-eg -command "$this set_dataset 1"
+	radiobutton $dataset.cyl3 -text "Cylinder Phantom (2.7K nodes, 13K elements)" -variable DATASET -value cyl3 -command "$this set_dataset 1"
+	radiobutton $dataset.sphere -text "Sphere Phantom (1K nodes, 6K elements)" -variable DATASET -value sphere -command "$this set_dataset 1"
+	radiobutton $dataset.utahtorso-lowres -text "Utah Torso Lowres (8K nodes, 51K elements)" -variable DATASET -value utahtorso-lowres -command "$this set_dataset 1"
+	radiobutton $dataset.utahtorso -text "Utah Torso (169K nodes, 1083K elements)" -variable DATASET -value utahtorso -command "$this set_dataset 1"
 
 	pack $dataset.brain-eg $dataset.cyl3 $dataset.sphere $dataset.utahtorso-lowres $dataset.utahtorso -anchor w -side top
 
 	frame $f.datadir
-	label $f.datadir.l -text "DATADIR:" -width 11 -anchor w
+	label $f.datadir.l -text "Data Directory:" -width 14 -anchor w
 	entry $f.datadir.e -textvar DATADIR -width 120 -relief flat
 	pack $f.datadir.l $f.datadir.e -side left
 	pack $f.datadir -padx 5 -anchor w
 
 	frame $f.cond
-	label $f.cond.l -text "Conductivity:" -width 11 -anchor w
+	label $f.cond.l -text "Conductivity File:" -width 14 -anchor w
 	label $f.cond.e -textvar filenameconductivities -width 28 -anchor w
 	button $f.cond.b -text Browse -command "$mods(FieldReader-conductivities) initialize_ui"
 	pack $f.cond.l $f.cond.e $f.cond.b -side left
@@ -494,7 +494,7 @@ class BioFEMApp {
 
 
 	frame $f.elec
-	label $f.elec.l -text "Electrodes:" -width 11 -anchor w
+	label $f.elec.l -text "Electrodes File:" -width 14 -anchor w
 	label $f.elec.e -textvar filenameelectrodes -width 28 -anchor w
 	button $f.elec.b -text Browse -command "$mods(FieldReader-electrodes) initialize_ui"
 	pack $f.elec.l $f.elec.e $f.elec.b -side left
@@ -502,7 +502,7 @@ class BioFEMApp {
 
 
 	frame $f.probe
-	label $f.probe.l -text "Probe:" -width 11 -anchor w
+	label $f.probe.l -text "Probe File:" -width 14 -anchor w
 	label $f.probe.e -textvar filenameprobe -width 28 -anchor w
 	button $f.probe.b -text Browse -command "$mods(FieldReader-probe) initialize_ui"
 	pack $f.probe.l $f.probe.e $f.probe.b -side left
@@ -544,7 +544,7 @@ class BioFEMApp {
 
 	    ### Isosurface
 	    iwidgets::labeledframe $page.isoframe -labelpos nw \
-		-labeltext "IsoSurface"
+		-labeltext "Isopotential Surface"
 
 	    set iso [$page.isoframe childsite]
 	    
@@ -560,7 +560,7 @@ class BioFEMApp {
 	    
 	    ### StreamLines
 	    iwidgets::labeledframe $page.slframe -labelpos nw \
-		-labeltext "StreamLines"
+		-labeltext "Electric Field Lines"
 
 	    set sl [$page.slframe childsite]
 	    
@@ -587,7 +587,7 @@ class BioFEMApp {
 
 	    ### ColorMaps
 	    iwidgets::labeledframe $page.colorframe -labelpos nw \
-		-labeltext "Color Map"
+		-labeltext "Color Map for Potentials"
 
 	    set color [$page.colorframe childsite]
 	    
@@ -928,7 +928,7 @@ class BioFEMApp {
 	global $mods(ShowField-StreamLines)-edges-on
 
 	if {![winfo exists $f.show]} {
-	    checkbutton $f.show -text "Show StreamLines" \
+	    checkbutton $f.show -text "Show Electric Field Lines" \
 		-variable $mods(ShowField-StreamLines)-edges-on \
 		-command "$this toggle_streamlines"
 	    pack $f.show -side top -anchor nw -padx 3 -pady 3
@@ -937,7 +937,7 @@ class BioFEMApp {
 	    frame $f.isoval
 	    pack $f.isoval -side top -anchor nw -padx 3 -pady 3
 	    
-	    label $f.isoval.l -text "Seeds:"
+	    label $f.isoval.l -text "Number of Field Lines:"
 	    scale $f.isoval.s -from 1 -to 200 \
 		-length 100 -width 15 \
 		-sliderlength 15 \
@@ -957,10 +957,10 @@ class BioFEMApp {
 	    pack $f.isoval.l $f.isoval.s $f.isoval.val \
 		-side left -anchor n -padx 3      
 	    
-	    radiobutton $f.fast -text "Fast" \
+	    radiobutton $f.fast -text "Fast Tracking" \
 		-variable $mods(StreamLines)-method -value 5 \
 		-command "$mods(StreamLines-rake)-c needexecute"
-	    radiobutton $f.adapt -text "Adaptive" \
+	    radiobutton $f.adapt -text "Adaptive Tracking" \
 		-variable $mods(StreamLines)-method -value 4 \
 		-command "$mods(StreamLines-rake)-c needexecute"
 
@@ -980,7 +980,7 @@ class BioFEMApp {
 		-command "$mods(ShowField-Electrodes)-c toggle_display_nodes"
 	    pack $f.show -side top -anchor nw -padx 3 -pady 3
 
-	    checkbutton $f.text -text "Show Values as Text" \
+	    checkbutton $f.text -text "Print Potentials at Electrodes" \
 		-variable $mods(ShowField-Electrodes)-text-on \
 		-command "$mods(ShowField-Electrodes)-c toggle_display_text"
 
@@ -994,7 +994,7 @@ class BioFEMApp {
 	global $mods(ShowField-Isosurface)-faces-on
 
 	if {![winfo exists $f.show]} {
-	    checkbutton $f.show -text "Show IsoSurface" \
+	    checkbutton $f.show -text "Show Isopotential Surface" \
 		-variable $mods(ShowField-Isosurface)-faces-on \
 		-command "$mods(ShowField-Isosurface)-c toggle_display_faces"
 	    pack $f.show -side top -anchor nw -padx 3 -pady 3
@@ -1003,7 +1003,7 @@ class BioFEMApp {
 	    frame $f.isoval
 	    pack $f.isoval -side top -anchor nw -padx 3 -pady 3
 	    
-	    label $f.isoval.l -text "Isoval:"
+	    label $f.isoval.l -text "Electric Potential Value:"
 	    scale $f.isoval.s -from -2.0 -to 2.0 \
 		-length 100 -width 15 \
 		-sliderlength 15 \
@@ -1023,7 +1023,7 @@ class BioFEMApp {
 	    pack $f.isoval.l $f.isoval.s $f.isoval.val \
 		-side left -anchor nw -padx 3
 
-	    checkbutton $f.normals -text "Interpolate Smooth Normals" \
+	    checkbutton $f.normals -text "Render Smooth Faces" \
 		    -variable $mods(ShowField-Isosurface)-use-normals \
 		    -command "$mods(ShowField-Isosurface)-c rerender_faces"
 
