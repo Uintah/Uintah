@@ -23,7 +23,7 @@ SimulationState::SimulationState(ProblemSpecP &ps)
 
   ProblemSpecP phys_cons_ps = ps->findBlock("PhysicalConstants");
   phys_cons_ps->require("gravity",d_gravity);
-  phys_cons_ps->require("reference_pressure",d_ref_press);
+  phys_cons_ps->get("reference_pressure",d_ref_press);
 
 }
 
