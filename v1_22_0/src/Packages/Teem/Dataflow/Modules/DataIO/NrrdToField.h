@@ -1104,20 +1104,22 @@ NrrdToFieldTestMesh<Fld>::execute(SCIRun::FieldHandle fld,
       typename Fld::mesh_type::Node::size_type sz;
       mesh->size(sz);
       dims.push_back(sz);
-    }
-    
-    // if vector/tensor data store 3 or 7 at the end of dims vector
-    if (a0_size > 1) 
-      dims.push_back(a0_size);
+    }    
   }
+
+  // if vector/tensor data store 3 or 7 at the end of dims vector
+  if (a0_size > 1) {
+    dims.push_back(a0_size);
+  }
+  
   if ((!uns) && fld->data_at() == Field::CELL) {
     off = 1;
   }
 
   // If the data was vector or tensor it will have an extra axis.
   // It is axis 0.  Make sure sizes along each dim still match.
-  if (inrrd->dim != (int)dims.size()) {
-    return false;
+  if (inrrd->dim != (int)dims.size()) { 
+    return false; 
   }
 
   // If a0_size equals 3 or 7 then the first axis contains
@@ -1150,8 +1152,8 @@ NrrdToFieldTestMesh<Fld>::execute(SCIRun::FieldHandle fld,
 	nx = inrrd->axis[0].size + off;
 	ny = inrrd->axis[1].size + off;
       }
-      if ((nx != dims[0]) || (ny != dims[1])) {
-	return false;
+      if ((nx != dims[0]) || (ny != dims[1])) {	
+	return false; 
       }
     }
     break;
