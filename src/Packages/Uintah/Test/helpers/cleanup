@@ -23,13 +23,13 @@ for BUILDROOT in SCIRun.*; do
       cd "$BUILDROOT"
       echo "y" | /usr/local/bin/cvs release -d SCIRun > /dev/null 2>&1
       cd ".."
-      rm -srf "$BUILDROOT"
+      rm -rf "$BUILDROOT"
     fi
   fi
 done
 
 # delete whatever can be deleted from the trash before adding to it
-rm -srf trash
+rm -rf trash
 
 # whatever couldn't get deleted, move to the trash
 for BUILDROOT in SCIRun.*; do
@@ -50,8 +50,7 @@ cat trash/need_removal | xargs ls -ld
 
 # I'm sure there is a better way to get at the user names, but I've spent
 # too much time trying to figure it out.
-cat trash/need_removal | xargs stat -u | grep "(.*)" > trash/stats
-cat trash/stats | sed "s/.*(//g" | sed "s/)//g" | sort -u > trash/usernames
+cat trash/need_removal | xargs ls -ld | awk '{ print $3 }' | sort -u > trash/usernames
 
 for username in `cat trash/usernames`; do
     sendto=$username
@@ -66,7 +65,7 @@ Under `pwd` on `hostname`:
 EOF
     find trash -user $username -prune >> trash/userRemoval
     
-    /usr/lib/sendmail $sendto < trash/userRemoval
+    #/usr/lib/sendmail $sendto < trash/userRemoval
     rm trash/userRemoval
 done
 
