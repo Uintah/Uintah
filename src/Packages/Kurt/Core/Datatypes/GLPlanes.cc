@@ -12,19 +12,14 @@ GLPlanes::GLPlanes(const GLVolumeRenderer* glvr) :
 
 void GLPlanes::preDraw()
 {
-  glDisable(GL_DEPTH_TEST);
-  glEnable(GL_BLEND);
-  //glBlendEquation(GL_FUNC_ADD_EXT);
-  glBlendFunc(GL_SRC_ALPHA, GL_ONE);
   //  glBlendColorEXT(1.f, 1.f, 1.f, 1.f/volren->slices);
-
+  glEnable(GL_ALPHA_TEST);
+  glAlphaFunc(GL_GREATER, 0.0);
 }
 
 void GLPlanes::postDraw()
 {
-  glDisable(GL_BLEND);
-  glEnable(GL_DEPTH_TEST);
-
+  glDisable(GL_ALPHA_TEST);
 }
 
 } // end namespace Datatypes
