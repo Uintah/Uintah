@@ -46,9 +46,11 @@
 #include <Core/CCA/Comm/SocketThread.h>
 #include <Core/CCA/Comm/Message.h>
 #include <Core/CCA/PIDL/ServerContext.h>
+#include <Core/CCA/Comm/PRMI.h>
 
 using namespace SCIRun;
 using namespace std;
+
 
   
 SocketThread::SocketThread(SocketEpChannel *ep, Message* msg, int id){
@@ -60,7 +62,13 @@ SocketThread::SocketThread(SocketEpChannel *ep, Message* msg, int id){
 void 
 SocketThread::run()
 {
+  //create and add data structure for the thread
+  PRMI::addStat(new PRMI::states);
+
   //cerr<<"calling handler #"<<id<<"\n";
   ep->handler_table[id](msg);
   //handler will call destroyMessage
+
+  //delete the data structure
+  PRMI::delStat();
 }

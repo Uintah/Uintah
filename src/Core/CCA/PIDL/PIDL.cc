@@ -88,6 +88,9 @@ PIDL::rank(0);
 int
 PIDL::size(1);
 
+bool
+PIDL::isfrwk(false);
+
 Object::pointer*
 PIDL::optr(NULL);
 
@@ -129,6 +132,12 @@ PIDL::initialize(int rank,int size)
   }
 
 }
+
+bool 
+PIDL::isFramework(){
+  return isfrwk;
+}
+
 
 void
 PIDL::finalize()

@@ -114,25 +114,13 @@ ReferenceMgr* ProxyBase::_proxyGetReferenceMgr() const
   return (ReferenceMgr*)(&rm);
 }
 
-//::std::string 
 ProxyID
 ProxyBase::getProxyUUID()
 {
-  /*  if(proxy_uuid == "NONENONENONENONENONENONENONENONENONE") {
-    if(rm.getRank() == 0) {
-      proxy_uuid = getUUID(); 
-    }
-    if(rm.getSize() > 1) { 
-      // Exchange component ID among all parallel processes
-      //std::cout << rm.getRank() << "='" << proxy_uuid.c_str() << "'=" << proxy_uuid.size() << "\n";
-      (rm.intracomm)->broadcast(0,const_cast<char*>(proxy_uuid.c_str()),36);
-    }
-  }
-  */
   if(proxy_uuid.isNull()){
-    proxy_uuid= DataTransmitter::nextProxyID();
+    proxy_uuid= PRMI::getProxyID();
   }
-
+  
   return proxy_uuid;
 }
 
