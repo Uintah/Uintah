@@ -489,8 +489,8 @@ itcl_class Uintah_Visualization_GridVisualizer {
 	# close button
 	button $w.close -text "Close" -command "wm withdraw $w"
 	pack $w.close -side bottom -expand yes -fill x
-	button $w.ttest -text "Table test" -command "$this table_test"
-	pack $w.ttest -side bottom -expand yes -fill x
+#	button $w.ttest -text "Table test" -command "$this table_test"
+#	pack $w.ttest -side bottom -expand yes -fill x
 #	button $w.gtest -text "Graph test" -command "$this graph_test"
 #	pack $w.gtest -side bottom -expand yes -fill x
     }
@@ -544,7 +544,7 @@ itcl_class Uintah_Visualization_GridVisualizer {
 #	puts "r=$r, g=$g, b=$b, c=$c"
 	return $c
     }
-    method graph_data { id var args } {
+    method graph_data { id var pointname args } {
 	set w .graph[modname]$display_data_id
         if {[winfo exists $w]} { 
             destroy $w 
@@ -560,7 +560,7 @@ itcl_class Uintah_Visualization_GridVisualizer {
 	button $w.close -text "Close" -command "destroy $w"
 	pack $w.close -side bottom -anchor s -expand yes -fill x
 	
-	blt::graph $w.graph -title "Plot of $var" \
+	blt::graph $w.graph -title "Plot of $var at $pointname" \
 		-height 250 -plotbackground gray99
 
 	set max 1e-10
@@ -623,7 +623,7 @@ itcl_class Uintah_Visualization_GridVisualizer {
 	
 	pack $w.graph
     }
-    method table_data { id var args } {
+    method table_data { id var pointname args } {
 	set w .table[modname]$display_data_id
         if {[winfo exists $w]} { 
             destroy $w 
@@ -632,7 +632,7 @@ itcl_class Uintah_Visualization_GridVisualizer {
 	incr display_data_id
 
 	button $w.close -text "Close" -command "destroy $w"
-	pack $w.close -side bottom -anchor s -expand yes -fill x
+	pack $w.close -side bottom -anchor s -fill x
 	
 	#seperate the materials from the types
 	set args_mat {}
@@ -645,7 +645,7 @@ itcl_class Uintah_Visualization_GridVisualizer {
 
 	# create the scrolled frame
 	iwidgets::scrolledframe $w.sf -width 300 -height 300 \
-		-labeltext "Data for $var" \
+		-labeltext "Data for $var at $pointname" \
 		-vscrollmode dynamic -hscrollmode dynamic \
 		-sbwidth 10
 
@@ -684,12 +684,12 @@ itcl_class Uintah_Visualization_GridVisualizer {
 	    set mat_vals_length [llength $mat_vals]
 	    for { set t 0 } { $t < $mat_vals_length } {incr t} {
 		set box_name "val$line_name"
-		append box_name "$t"
+		append box_name "_$t"
 		blt::table $cs [label $cs.$box_name -text [lindex $mat_vals $t]] [expr $t+1],$column
 	    }
 	}
 
-	pack $w.sf -fill both
+	pack $w.sf -fill both -expand yes -padx 10 -pady 10
     }
 
     # This is test code used to create a window with a scrollable blt table
@@ -701,7 +701,7 @@ itcl_class Uintah_Visualization_GridVisualizer {
 	}
 	toplevel $w
 
-	iwidgets::scrolledframe $w.sf -width 150 -height 180 \
+	iwidgets::scrolledframe $w.sf -width 60 -height 50 \
 		-labeltext scrolledframe \
 		-vscrollmode dynamic -hscrollmode dynamic \
 		-sbwidth 10
@@ -717,7 +717,13 @@ itcl_class Uintah_Visualization_GridVisualizer {
 		[label $cs.21 -text 4.5123123] 2,1 -fill y \
 		[label $cs.22 -text 0.54234134134] 2,2 -fill x
 
+#	frame $w.table_frame
+
 	pack $w.sf -expand yes -fill both -padx 10 -pady 10
+
+	button $w.close -text "Close" -command "destroy $w"
+	pack $w.close -side bottom -anchor s -fill x
+	
     }
 
     # This is test code used to create a window with a graph
