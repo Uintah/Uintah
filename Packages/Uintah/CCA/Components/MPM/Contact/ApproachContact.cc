@@ -170,14 +170,16 @@ void ApproachContact::exMomInterpolated(const ProcessorGroup*,
 	if (bc_type == Patch::Neighbor){
 		// Do nothing, we already got those
 	}
-	// Next the nodes which make up the problem domain
+	// Next the nodes which make up the problem domain boundary
 	else if (bc_type == Patch::None) {
+          int i=0,j=0,k=0;
 	  if(face==Patch::xplus || face==Patch::xminus){
             int I=0;
             if(face==Patch::xminus){ I=low.x(); }
             if(face==Patch::xplus) { I=high.x()-1; }
-            for (int j = JLOW; j<JHIGH; j++) {
-              for (int k = KLOW; k<KHIGH; k++) {
+            // Faces
+            for (j = JLOW; j<JHIGH; j++) {
+              for (k = KLOW; k<KHIGH; k++) {
            	surnor = Vector( 0.0,
                        -(gmass[m][IV(I,j+1,k)] - gmass[m][IV(I,j-1,k)])/dx.y(),
                        -(gmass[m][IV(I,j,k+1)] - gmass[m][IV(I,j,k-1)])/dx.z());
@@ -187,18 +189,67 @@ void ApproachContact::exMomInterpolated(const ProcessorGroup*,
                 }
               }
             }
+            // Edges
+            if(patch->getBCType(Patch::yminus)==Patch::None){
+              j=JLOW-1;
+              for (k = KLOW; k<KHIGH; k++) {
+                surnor = Vector( 0.0,0.0,
+                     -(gmass[m][IV(I,j,k+1)] - gmass[m][IV(I,j,k-1)])/dx.z());
+                double length = surnor.length();
+                if(length>0.0){
+                  gsurfnorm[m][IntVector(I,j,k)] = surnor/length;;
+                }
+              }
+            }
+            if(patch->getBCType(Patch::yplus)==Patch::None){
+              j=JHIGH;
+              for (k = KLOW; k<KHIGH; k++) {
+                surnor = Vector( 0.0,0.0,
+                     -(gmass[m][IV(I,j,k+1)] - gmass[m][IV(I,j,k-1)])/dx.z());
+                double length = surnor.length();
+                if(length>0.0){
+                  gsurfnorm[m][IntVector(I,j,k)] = surnor/length;;
+                }
+              }
+            }
           }
 
           if(face==Patch::yplus || face==Patch::yminus){
             int J=0;
             if(face==Patch::yminus){ J=low.y(); }
             if(face==Patch::yplus) { J=high.y()-1; }
-            for (int i = ILOW; i<IHIGH; i++) {
-              for (int k = KLOW; k<KHIGH; k++) {
+            // Faces
+            for (i = ILOW; i<IHIGH; i++) {
+              for (k = KLOW; k<KHIGH; k++) {
 		surnor = Vector(
 	               -(gmass[m][IV(i+1,J,k)] - gmass[m][IV(i-1,J,k)])/dx.x(),
 			 0.0,
 		       -(gmass[m][IV(i,J,k+1)] - gmass[m][IV(i,J,k-1)])/dx.z());
+		double length = surnor.length();
+		if(length>0.0){
+		  gsurfnorm[m][IntVector(i,J,k)] = surnor/length;;
+		}
+              }
+            }
+            // Edges
+            if(patch->getBCType(Patch::zminus)==Patch::None){
+              k=KLOW-1;
+              for (i = ILOW; i<IHIGH; i++) {
+		surnor = Vector(
+	               -(gmass[m][IV(i+1,J,k)] - gmass[m][IV(i-1,J,k)])/dx.x(),
+			 0.0,0.0);
+		double length = surnor.length();
+		if(length>0.0){
+		  gsurfnorm[m][IntVector(i,J,k)] = surnor/length;;
+		}
+              }
+            }
+            if(patch->getBCType(Patch::zplus)==Patch::None){
+              k=KHIGH;
+              for (i = ILOW; i<IHIGH; i++) {
+		surnor = Vector(
+	               -(gmass[m][IV(i+1,J,k)] - gmass[m][IV(i-1,J,k)])/dx.x(),
+			 0.0,0.0);
 		double length = surnor.length();
 		if(length>0.0){
 		  gsurfnorm[m][IntVector(i,J,k)] = surnor/length;;
@@ -211,8 +262,9 @@ void ApproachContact::exMomInterpolated(const ProcessorGroup*,
             int K=0;
             if(face==Patch::zminus){ K=low.z(); }
             if(face==Patch::zplus) { K=high.z()-1; }
-            for (int i = ILOW; i<IHIGH; i++) {
-              for (int j = JLOW; j<JHIGH; j++) {
+            // Faces
+            for (i = ILOW; i<IHIGH; i++) {
+              for (j = JLOW; j<JHIGH; j++) {
 		surnor = Vector(
 	               -(gmass[m][IV(i+1,j,K)] - gmass[m][IV(i-1,j,K)])/dx.x(),
 	               -(gmass[m][IV(i,j+1,K)] - gmass[m][IV(i,j-1,K)])/dx.y(), 
@@ -223,9 +275,33 @@ void ApproachContact::exMomInterpolated(const ProcessorGroup*,
 		}
               }
             }
-          }
-
-	}
+            // Edges
+            if(patch->getBCType(Patch::xminus)==Patch::None){
+              i=ILOW-1;
+              for (j = JLOW; j<JHIGH; j++) {
+		surnor = Vector(0.0,
+	               -(gmass[m][IV(i,j+1,K)] - gmass[m][IV(i,j-1,K)])/dx.y(), 
+	               0.0);
+		double length = surnor.length();
+		if(length>0.0){
+		  gsurfnorm[m][IntVector(i,j,K)] = surnor/length;;
+		}
+              }
+            }
+            if(patch->getBCType(Patch::xplus)==Patch::None){
+              i=IHIGH;
+              for (j = JLOW; j<JHIGH; j++) {
+		surnor = Vector(0.0,
+	               -(gmass[m][IV(i,j+1,K)] - gmass[m][IV(i,j-1,K)])/dx.y(), 
+	               0.0);
+		double length = surnor.length();
+		if(length>0.0){
+		  gsurfnorm[m][IntVector(i,j,K)] = surnor/length;;
+		}
+              }
+            }
+          } // if zsomething
+	} // else if (bc_type == Patch::None) {
       }
 
       // Create arrays for the particle stress and grid stress
