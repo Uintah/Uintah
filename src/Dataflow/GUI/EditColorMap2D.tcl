@@ -274,7 +274,7 @@ itcl_class SCIRun_Visualization_EditColorMap2D {
         set path "$path/.scirun"
         set curdir [pwd]
         cd $path
-        set res [glob -nocomplain  *.gif]
+        set res [glob -nocomplain  *.ppm]
         cd $curdir
         set w .ui[modname]
         
@@ -299,7 +299,8 @@ itcl_class SCIRun_Visualization_EditColorMap2D {
                 }
                 
                 set num [lindex [split $r "."] 0]
-                image create photo img-$r -format "gif" -file $path/$num.gif
+                #image create photo img-$r -format "ppm" -file $path/$num.ppm
+                image create photo img-$r -format "ppm" -file $path/$num.ppm
                 #Load in the image to diplay on the button and do that.
                 button $f.swatchFrame$row.swatch$num -image img-$r -command "set $this-filename $path/$num.ppm.xff; $this swatch_load $num"
                 grid configure $f.swatchFrame$row.swatch$num -row $row -col $col -sticky "nw"
@@ -329,7 +330,7 @@ itcl_class SCIRun_Visualization_EditColorMap2D {
 
             set r [lindex [file split $file] end]
             set num [lindex [split $r "."] 0]
-            image create photo img-$r -format "gif" -file $file
+            image create photo img-$r -format "ppm" -file $file
             #Load in the image to diplay on the button and do that.
             
             button $f.swatchFrame$row.swatch$num -image img-$r \
@@ -360,7 +361,7 @@ itcl_class SCIRun_Visualization_EditColorMap2D {
         set basename [lindex $basename end]
         set basename [lindex [split $basename "."] 0]
         set path "$env(HOME)/.scirun"
-        file delete "$path/$basename.gif"
+        file delete "$path/$basename.ppm"
         file delete "$path/$basename.ppm.xff"
 
         set w .ui[modname]
@@ -403,9 +404,18 @@ itcl_class SCIRun_Visualization_EditColorMap2D {
         set $this-filename "$path/.scirun/$numPPM.ppm"
         $this-c "saveppm"
 
-        exec convert $path/.scirun/$numPPM.ppm -resize 100x50 $path/.scirun/$numPPM.gif
-        file delete $path/.scirun/$numPPM.ppm
-        update_swatches $path/.scirun/$numPPM.gif
+	#set status [catch {exec ls} result]
+        #if [catch {exec ls&} res ] {
+         # puts stderr "$res"
+        #}
+        #else {
+        #  puts stderr "ls was fine"
+        #}
+	
+        #set output [exec ls]
+        # convert $path/.scirun/$numPPM.ppm -resize 100x50 $path/.scirun/$numPPM.gif
+        #file delete $path/.scirun/$numPPM.ppm
+        update_swatches $path/.scirun/$numPPM.ppm
     }
 
     method label_widget_columns { frame } {
@@ -481,7 +491,7 @@ itcl_class SCIRun_Visualization_EditColorMap2D {
 	    $w.controls.load $w.controls.save \
             -padx 8 -pady 4 -fill x -expand yes -side left
 	
-	if 0 {
+	if 1 {
 	    frame $w.swatchcontrol
 	    button $w.swatchcontrol.saveButton -text "QuickSave" \
 		-command "$this swatch_save" -width 20
@@ -497,7 +507,7 @@ itcl_class SCIRun_Visualization_EditColorMap2D {
         
 	add_frame [$w.widgets childsite]
         create_entries
-	if 0 {
+	if 1 {
 	    pack $w.swatchcontrol -side top -fill x
 	    pack $w.swatchpicker -side top -fill both -expand yes -padx 2
 	    create_swatches
