@@ -34,6 +34,7 @@ SRCS += $(SRCDIR)/Worker.cc \
 	$(SRCDIR)/BallMath.cc \
 	$(SRCDIR)/Light.cc \
 	$(SRCDIR)/Group.cc \
+	$(SRCDIR)/Gui.cc \
 	$(SRCDIR)/Rect.cc \
 	$(SRCDIR)/Checker.cc \
 	$(SRCDIR)/BBox.cc \
@@ -126,6 +127,6 @@ include $(SRCTOP)/scripts/recurse.mk
 PSELIBS :=  \
 	Core/Thread Core/Exceptions Core/Geometry Packages/rtrt/visinfo 
 
-LIBS := $(GL_LIBS) $(FASTM_LIBS) -lm $(THREAD_LIBS) $(PERFEX_LIBRARY)
+LIBS := $(GLUI_LIBRARY) $(GLUT_LIBRARY) $(GL_LIBS) $(FASTM_LIBS) -lm $(THREAD_LIBS) $(PERFEX_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
