@@ -75,6 +75,14 @@ DenseMatrix* Matrix::getDense()
 	return 0;
 }
 
+ColumnMatrix* Matrix::getColumn()
+{
+  if (rep==column)
+    return (ColumnMatrix*)this;
+  else
+    return 0;
+}
+
 Matrix* Matrix::clone()
 {
     return 0;

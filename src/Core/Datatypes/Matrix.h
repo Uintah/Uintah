@@ -64,6 +64,7 @@ public:
     SymSparseRowMatrix* getSymSparseRow();
     SparseRowMatrix* getSparseRow();
     DenseMatrix* getDense();
+    ColumnMatrix* getColumn();
     int is_symmetric();
     void is_symmetric(int symm);
     virtual ~Matrix();
