@@ -29,7 +29,6 @@
 #include <SCIRun/Dataflow/SCIRunComponentModel.h>
 #include <Core/Containers/StringUtil.h>
 #include <Core/OS/Dir.h>
-#include <Core/Util/scirun_env.h>
 #include <Core/Util/soloader.h>
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Network/Network.h>
