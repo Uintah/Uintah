@@ -18,7 +18,7 @@ BrokenCellShapeFunction( const Lattice& lattice,
 {
 }
 
-void
+bool
 BrokenCellShapeFunction::
 findCellAndWeights( int partIdx, 
                     IntVector nodeIdx[8], 
@@ -29,32 +29,37 @@ findCellAndWeights( int partIdx,
   
   if( !d_lattice.getPatch()->findCellAndWeights(d_lattice.getpX()[partIdx], 
      nodeIdx, completeShape) )
-  {
-    throw InternalError("Particle not in patch");
-  }
+  return false;
 
   for(int i=0;i<8;++i) {
     visiable[i] = getVisiability( partIdx,nodeIdx[i] );
   }
+  return true;
 }
 
-void
+bool
 BrokenCellShapeFunction::
-findCellAndShapeDerivatives( int partIdx, 
+findCellAndWeightsAndShapeDerivatives( int partIdx, 
                              IntVector nodeIdx[8], 
                              bool visiable[8],
-                             double d_S[8][3] ) const
+			     double S[8],
+                             Vector d_S[8] ) const
 {
+  double completeShape[8];
+  if( !d_lattice.getPatch()->findCellAndWeights(d_lattice.getpX()[partIdx], 
+     nodeIdx, completeShape) )
+  return false;
+
   double completeShapeDerivative[8];
   if( !d_lattice.getPatch()->findCellAndWeights(d_lattice.getpX()[partIdx], 
      nodeIdx, completeShapeDerivative) )
-  {
-    throw InternalError("Particle not in patch");
-  }
+  return false;
   
   for(int i=0;i<8;++i) {
     visiable[i] = getVisiability( partIdx,nodeIdx[i] );
   }
+
+  return true;
 }
 
 bool
@@ -68,6 +73,10 @@ getVisiability(int partIdx,const IntVector& nodeIdx) const
 } //namespace Uintah
 
 // $Log$
+// Revision 1.3  2000/09/05 06:59:28  tan
+// Applied BrokenCellShapeFunction to SerialMPM::interpolateToParticlesAndUpdate
+// where fracture is involved.
+//
 // Revision 1.2  2000/09/05 06:34:54  tan
 // Introduced BrokenCellShapeFunction for SerialMPM::interpolateParticlesToGrid
 // where farcture is involved.

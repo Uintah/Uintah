@@ -19,15 +19,16 @@ public:
                                  const ParticleVariable<int>& pIsBroken,
 				 const ParticleVariable<Vector>& pCrackSurfaceNormal );
 
-  void  findCellAndWeights( int partIdx, 
+  bool  findCellAndWeights( int partIdx, 
                             IntVector nodeIdx[8], 
                             bool visiable[8],
                             double S[8] ) const;
 
-  void  findCellAndShapeDerivatives( int partIdx, 
-                                     IntVector nodeIdx[8],
-                                     bool visiable[8],
-                                     double d_S[8][3] ) const;
+  bool  findCellAndWeightsAndShapeDerivatives( int partIdx, 
+                             IntVector nodeIdx[8], 
+                             bool visiable[8],
+			     double S[8],
+                             Vector d_S[8] ) const;
 
   bool  getVisiability(int partIdx,const IntVector& nodeIdx) const;
 
@@ -43,6 +44,10 @@ private:
 #endif //__Uintah_MPM_BrokenCellShapeFunction__
 
 // $Log$
+// Revision 1.3  2000/09/05 06:59:15  tan
+// Applied BrokenCellShapeFunction to SerialMPM::interpolateToParticlesAndUpdate
+// where fracture is involved.
+//
 // Revision 1.2  2000/09/05 06:34:42  tan
 // Introduced BrokenCellShapeFunction for SerialMPM::interpolateParticlesToGrid
 // where farcture is involved.

@@ -555,6 +555,7 @@ void SerialMPM::scheduleTimeAdvance(double t, double dt,
 			    this, &SerialMPM::interpolateToParticlesAndUpdate);
 	 for(int m = 0; m < numMatls; m++){
 	    Material* matl = d_sharedState->getMaterial(m);
+	    MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
 	    int idx = matl->getDWIndex();
 	    t->requires(new_dw, lb->gMomExedAccelerationLabel, idx, patch,
 			Ghost::AroundCells, 1);
@@ -564,6 +565,13 @@ void SerialMPM::scheduleTimeAdvance(double t, double dt,
 			Ghost::None);
 	    t->requires(old_dw, lb->pExternalForceLabel, idx, patch,
 			Ghost::None);
+
+	    if(mpm_matl->getFractureModel()) {
+	       t->requires(old_dw, lb->pIsBrokenLabel, idx, patch,
+			Ghost::AroundNodes, 1 );
+   	       t->requires(old_dw, lb->pCrackSurfaceNormalLabel, idx, patch,
+			Ghost::AroundNodes, 1 );
+   	    }
 						
 	    t->requires(old_dw, lb->pMassLabel, idx, patch, Ghost::None);
 	    t->requires(old_dw, d_sharedState->get_delt_label() );
@@ -975,7 +983,7 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
 	old_dw->get(pIsBroken, lb->pIsBrokenLabel, pset);
 	
         lattice = new Lattice(px);
-	brokenCellShapeFunction = new BrokenCellShapeFunction(px,
+	brokenCellShapeFunction = new BrokenCellShapeFunction(*lattice,
 	   pIsBroken,pCrackSurfaceNormal);
       }
 
@@ -1542,6 +1550,19 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       old_dw->get(pmass,     lb->pMassLabel, pset);
       old_dw->get(pexternalForce, lb->pExternalForceLabel, pset);
 
+      ParticleVariable<Vector> pCrackSurfaceNormal;
+      ParticleVariable<int> pIsBroken;
+      Lattice* lattice;
+      BrokenCellShapeFunction* brokenCellShapeFunction;
+      if(mpm_matl->getFractureModel()) {
+        old_dw->get(pCrackSurfaceNormal, lb->pCrackSurfaceNormalLabel, pset);
+	old_dw->get(pIsBroken, lb->pIsBrokenLabel, pset);
+	
+        lattice = new Lattice(px);
+	brokenCellShapeFunction = new BrokenCellShapeFunction(*lattice,
+	   pIsBroken,pCrackSurfaceNormal);
+      }
+
       // Get the arrays of grid data on which the new particle values depend
       NCVariable<Vector> gvelocity_star;
       NCVariable<Vector> gacceleration;
@@ -1652,11 +1673,21 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 	IntVector ni[8];
         double S[8];
         Vector d_S[8];
+        bool visiable[8];
 
-        if(!patch->findCellAndWeights(px[idx], ni, S))
-	  continue;
-        if(!patch->findCellAndShapeDerivatives(px[idx], ni, d_S))
-          continue;
+	for(int i=0;i<8;++i) visiable[i] = true;
+
+        if(mpm_matl->getFractureModel()) {
+      	   if( !brokenCellShapeFunction->findCellAndWeightsAndShapeDerivatives(
+	       idx, ni, visiable, S, d_S) )
+	     continue;
+	}
+	else {
+          if(!patch->findCellAndWeights(px[idx], ni, S))
+	    continue;
+          if(!patch->findCellAndShapeDerivatives(px[idx], ni, d_S))
+            continue;
+	}
 
         vel = Vector(0.0,0.0,0.0);
         acc = Vector(0.0,0.0,0.0);
@@ -1666,14 +1697,16 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 
         // Accumulate the contribution from each surrounding vertex
         for (int k = 0; k < 8; k++) {
-	   vel += gvelocity_star[ni[k]]  * S[k];
-	   acc += gacceleration[ni[k]]   * S[k];
+	   if( visiable[k] ) {
+	      vel += gvelocity_star[ni[k]]  * S[k];
+   	      acc += gacceleration[ni[k]]   * S[k];
 	   
-           tempRate += gTemperatureRate[ni[k]] * S[k];
-           for (int j = 0; j<3; j++) {
-             pTemperatureGradient[idx](j) += 
-                gTemperatureStar[ni[k]] * d_S[k](j) * oodx[j];
-           }
+              tempRate += gTemperatureRate[ni[k]] * S[k];
+              for (int j = 0; j<3; j++) {
+                pTemperatureGradient[idx](j) += 
+                   gTemperatureStar[ni[k]] * d_S[k](j) * oodx[j];
+              }
+	   }
         }
 
         // Update the particle's position and velocity
@@ -1769,6 +1802,10 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 
 
 // $Log$
+// Revision 1.125  2000/09/05 07:00:16  tan
+// Applied BrokenCellShapeFunction to SerialMPM::interpolateToParticlesAndUpdate
+// where fracture is involved.
+//
 // Revision 1.124  2000/09/05 06:33:43  tan
 // Introduced BrokenCellShapeFunction for SerialMPM::interpolateParticlesToGrid
 // where farcture is involved.
