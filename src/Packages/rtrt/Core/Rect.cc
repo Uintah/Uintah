@@ -13,7 +13,7 @@ using namespace SCIRun;
 
 Rect::Rect(Material* matl, const Point& cen, const Vector& u,
 	   const Vector& v)
-    : Object(matl, this), cen(cen), u(u), v(v)
+    : Object(matl, this), cen(cen), u(u), v(v), tex_scale(Vector(1,1,0))
 {
     n=Cross(u, v);
     n.normalize();
@@ -150,7 +150,7 @@ void Rect::compute_bounds(BBox& bbox, double offset)
 void Rect::uv(UV& uv, const Point& hitpos, const HitInfo&)
 {
     Vector p(hitpos-cen);
-    double uu=(Dot(un, p)*dv+1)*0.5;
-    double vv=(Dot(vn, p)*du+1)*0.5;
-    uv.set(uu,vv);
+    uv.set((Dot(un, p)/(2*du)+.5)*tex_scale.x(),
+           (Dot(vn, p)/(2*dv)+.5)*tex_scale.y());
 }
+
