@@ -481,6 +481,7 @@ void ICE::computeFaceCenteredVelocitiesRF(const ProcessorGroup*,
         printData(    patch,1, desc.str(), "rho_CC",     rho_CC);
         printData(    patch,1, desc.str(), "sp_vol_CC",  sp_vol_CC);
         printVector(  patch,1, desc.str(), "vel_CC",  0, vel_CC);
+        printVector(  patch,1, desc.str(), "D",       0, D);
       }
 
       SFCXVariable<double> uvel_FC, pressDiffX_FC;
@@ -668,19 +669,19 @@ void ICE::accumulateEnergySourceSinks_RF(const ProcessorGroup*,
           //__________________________________
           //  use the upwinded vol_frac
           IntVector upwc;    
-          upwc     = upwindCell_X(c, uvel_FC[mat][right],  1.0);
+          upwc     = upwindCell_X(c,       uvel_FC[mat][right],  1.0);
           tmp_R   += vol_frac[mat][upwc] * uvel_FC[mat][right];
-          upwc     = upwindCell_X(c, uvel_FC[mat][left],   0.0);
+          upwc     = upwindCell_X(c,       uvel_FC[mat][left],   0.0);
           tmp_L   += vol_frac[mat][upwc] * uvel_FC[mat][left];
           
-          upwc     = upwindCell_Y(c, vvel_FC[mat][top],    1.0);
+          upwc     = upwindCell_Y(c,       vvel_FC[mat][top],    1.0);
           tmp_T   += vol_frac[mat][upwc] * vvel_FC[mat][top];
-          upwc     = upwindCell_Y(c, vvel_FC[mat][bottom], 0.0);
+          upwc     = upwindCell_Y(c,       vvel_FC[mat][bottom], 0.0);
           tmp_BOT += vol_frac[mat][upwc] * vvel_FC[mat][bottom];
           
-          upwc     = upwindCell_Z(c, vvel_FC[mat][front],  1.0);
+          upwc     = upwindCell_Z(c,       wvel_FC[mat][front],  1.0);
           tmp_F   += vol_frac[mat][upwc] * wvel_FC[mat][front];
-          upwc     = upwindCell_Z(c, vvel_FC[mat][back],   0.0);
+          upwc     = upwindCell_Z(c,       wvel_FC[mat][back],   0.0);
           tmp_BK  += vol_frac[mat][upwc] * wvel_FC[mat][back];
         }
 
