@@ -148,15 +148,7 @@ DOM_Node DataArchive::getTimestep(double searchtime, XMLURL& found_url)
 DOM_Node DataArchive::findVariable(const string& name, const Patch* patch,
 				   int matl, double time, XMLURL& url)
 {
-   if (d_varHashMaps == NULL) {
-      vector<int> indices;
-      vector<double> times;
-      queryTimesteps(indices, times);
-      d_varHashMaps = scinew TimeHashMaps(times, d_tsurl, d_tstop,
-					  d_processor, d_numProcessors);
-   }
-   
-   return d_varHashMaps->findVariable(name, patch, matl, time, url);
+   return getTopLevelVarHashMaps()->findVariable(name, patch, matl, time, url);
 }
 
 GridP DataArchive::queryGrid( double time )
@@ -453,8 +445,7 @@ void DataArchive::restartInitialize(int& timestep, GridP grid,
 	   patchIter != patches.end(); patchIter++)
       {
 	 Patch* patch = *patchIter;
-	 int patchID = (patch ? patch->getID() : -1);
-	 const MaterialHashMaps* matlMap = patchMap.findPatchData(patchID);
+	 const MaterialHashMaps* matlMap = patchMap.findPatchData(patch);
 	 if (matlMap != NULL) {
 	    const vector<VarHashMap>& matVec = matlMap->getVarHashMaps();
 	    for (int matl = -1; matl < (int)matVec.size()-1; matl++) {
@@ -511,24 +502,42 @@ DataArchive::TimeHashMaps::TimeHashMaps(const vector<double>& tsTimes,
    d_lastFoundIt = d_patchHashMaps.end();
 }
 
-DOM_Node DataArchive::TimeHashMaps::findVariable(const string& name,
-						 const Patch* patch, int matl,
-						 double time,
-						 XMLURL& foundUrl)
+inline DOM_Node
+DataArchive::TimeHashMaps::findVariable(const string& name,
+					const Patch* patch, int matl,
+					double time, XMLURL& foundUrl)
+{
+   PatchHashMaps* timeData = findTimeData(time);
+   return (timeData == NULL) ? DOM_Node() :
+      timeData->findVariable(name, patch, matl, foundUrl);
+}
+
+inline DataArchive::MaterialHashMaps*
+DataArchive::TimeHashMaps::findPatchData(double time, const Patch* patch)
+{
+   PatchHashMaps* timeData = findTimeData(time);
+   return (timeData == NULL) ? NULL : timeData->findPatchData(patch);
+}
+
+DataArchive::PatchHashMaps*
+DataArchive::TimeHashMaps::findTimeData(double time)
 {
   // assuming nearby queries will often be made sequentially,
   // checking the lastFound can reduce overall query times.
   if ((d_lastFoundIt != d_patchHashMaps.end()) &&
       ((*d_lastFoundIt).first == time))
-    return (*d_lastFoundIt).second.findVariable(name, patch, matl, foundUrl);
+    return &(*d_lastFoundIt).second;
   map<double, PatchHashMaps>::iterator foundIt =
     d_patchHashMaps.find(time);
   if (foundIt != d_patchHashMaps.end()) {
     d_lastFoundIt = foundIt;
-    return (*foundIt).second.findVariable(name, patch, matl, foundUrl);
+    return &(*foundIt).second;
   }
-  return DOM_Node();
+  return NULL;
 }
+
+
+
 
 DataArchive::PatchHashMaps::PatchHashMaps()
   : d_matHashMaps(),
@@ -548,7 +557,6 @@ void DataArchive::PatchHashMaps::init(XMLURL tsUrl, DOM_Node tsTopNode,
       throw InternalError("Cannot find Data in timestep");
    for(DOM_Node n = datanode.getFirstChild(); n != 0; n=n.getNextSibling()){
       if(n.getNodeName().equals(DOMString("Datafile"))){
-	 int proc = -1;
 	 DOM_NamedNodeMap attributes = n.getAttributes();
 	 DOM_Node procNode = attributes.getNamedItem("proc");
 	 if (procNode != NULL) {
@@ -613,41 +621,36 @@ void DataArchive::PatchHashMaps::parse()
   d_lastFoundIt = d_matHashMaps.end();
 }
 
-DOM_Node DataArchive::PatchHashMaps::findVariable(const string& name,
-						  const Patch* patch,
-						  int matl,
-						  XMLURL& foundUrl)
+inline DOM_Node DataArchive::PatchHashMaps::findVariable(const string& name,
+							 const Patch* patch,
+							 int matl,
+							 XMLURL& foundUrl)
+{
+   MaterialHashMaps* patchData = findPatchData(patch);
+   return (patchData == NULL) ? DOM_Node() :
+      patchData->findVariable(name, matl, foundUrl);
+}
+
+DataArchive::MaterialHashMaps*
+DataArchive::PatchHashMaps::findPatchData(const Patch* patch)
 {
   if (!d_isParsed) parse(); // parse on demand
-  int patchid = patch->getID();
+  int patchid = (patch ? patch->getID() : -1);
   
   // assuming nearby queries will often be made sequentially,
   // checking the lastFound can reduce overall query times.
   if ((d_lastFoundIt != d_matHashMaps.end()) &&
       ((*d_lastFoundIt).first == patchid))
-    return (*d_lastFoundIt).second.findVariable(name, matl, foundUrl);
+    return &(*d_lastFoundIt).second;
 
   map<int, MaterialHashMaps>::iterator foundIt =
     d_matHashMaps.find(patchid);
   
   if (foundIt != d_matHashMaps.end()) {
     d_lastFoundIt = foundIt;
-    return (*foundIt).second.findVariable(name, matl, foundUrl);
+    return &(*foundIt).second;
   }
-  return DOM_Node();  
-}
-
-const DataArchive::MaterialHashMaps*
-DataArchive::PatchHashMaps::findPatchData(int patchid)
-{
-  if (!d_isParsed) parse(); // parse on demand
-
-  map<int, MaterialHashMaps>::iterator foundIt = d_matHashMaps.find(patchid);
-  
-  if (foundIt != d_matHashMaps.end())
-     return &((*foundIt).second);
-  return NULL;
-
+  return NULL;  
 }
 
 DOM_Node DataArchive::MaterialHashMaps::findVariable(const string& name,
@@ -684,23 +687,62 @@ void DataArchive::MaterialHashMaps::add(const string& name, int matl,
   }
 }
 
-int DataArchive::queryNumMaterials( const string& name, const Patch* patch, double time)
+ConsecutiveRangeSet DataArchive::queryMaterials( const string& name,
+						 const Patch* patch,
+						 double time)
 {
    double start = Time::currentSeconds();
-   int i=-1;
-   DOM_Node rnode;
-   do {
-      i++;
+
+   MaterialHashMaps* matlVarHashMaps =
+      getTopLevelVarHashMaps()->findPatchData(time, patch);
+
+   if (matlVarHashMaps == NULL) {
+      ostringstream msg;
+      msg << "Cannot find data for time = " << time << ", patch = " <<
+	 patch ? patch->getID() : -1;
+      throw InternalError(msg.str());
+   }
+   
+   ConsecutiveRangeSet result;
+   int numMatls = (int)matlVarHashMaps->getVarHashMaps().size() - 1;
+   for (int matl = -1; matl < numMatls; matl++) {
       XMLURL url;
-      rnode = findVariable(name, patch, i, time, url);
-   } while(rnode != 0);
-   dbg << "DataArchive::queryNumMaterials completed in " << Time::currentSeconds()-start << " seconds\n";
-   return i;
+      if (matlVarHashMaps->findVariable(name, matl, url) != 0)
+	 result.addInOrder(matl);
+   }
+
+   dbg << "DataArchive::queryMaterials completed in " << Time::currentSeconds()-start << " seconds\n";
+   return result;
 }
 
+int DataArchive::queryNumMaterials(const Patch* patch, double time)
+{
+   double start = Time::currentSeconds();
+
+   MaterialHashMaps* matlVarHashMaps =
+      getTopLevelVarHashMaps()->findPatchData(time, patch);
+
+   if (matlVarHashMaps == NULL) {
+      ostringstream msg;
+      msg << "Cannot find data for time = " << time << ", patch = " <<
+	 patch ? patch->getID() : -1;
+      throw InternalError(msg.str());
+   }
+
+   dbg << "DataArchive::queryNumMaterials completed in " << Time::currentSeconds()-start << " seconds\n";
+
+   return (int)matlVarHashMaps->getVarHashMaps().size() - 1 /* the other 1 is
+							       for globals */;
+}
 
 //
 // $Log$
+// Revision 1.16  2001/01/24 00:00:14  witzel
+// Added a queryMaterials method (to replace queryNumMaterials for the most
+// part), added some methods to some of the "...HashMaps" classes to support
+// that queryMaterials method, and mode some of the "...HashMaps" member
+// functions inline.
+//
 // Revision 1.15  2001/01/06 02:34:03  witzel
 // Added checkpoint/restart capabilities
 //

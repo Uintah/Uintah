@@ -11,6 +11,7 @@
 #include <SCICore/Thread/Mutex.h>
 #include <SCICore/Thread/Time.h>
 #include <SCICore/Util/DebugStream.h>
+#include <SCICore/Containers/ConsecutiveRangeSet.h>
 #include <string>
 #include <vector>
 #include <list>
@@ -99,8 +100,11 @@ private:
 		   const vector<DOM_Node>& tsTopNodes,
 		   int processor, int numProcessors);
       
-      DOM_Node findVariable(const string& name, const Patch* patch, int matl,
-			    double time, XMLURL& foundUrl);
+      inline DOM_Node findVariable(const string& name, const Patch* patch,
+				   int matl, double time, XMLURL& foundUrl);
+
+      inline PatchHashMaps* findTimeData(double time);
+      MaterialHashMaps* findPatchData(double time, const Patch* patch);
    private:
       map<double, PatchHashMaps> d_patchHashMaps;
       map<double, PatchHashMaps>::iterator d_lastFoundIt;
@@ -115,9 +119,9 @@ private:
       void init(XMLURL tsUrl, DOM_Node tsTopNode,
 		int processor, int numProcessors);
       
-      DOM_Node findVariable(const string& name, const Patch* patch,
-			    int matl, XMLURL& foundUrl);
-      const MaterialHashMaps* findPatchData(int patchid);
+      inline DOM_Node findVariable(const string& name, const Patch* patch,
+				   int matl, XMLURL& foundUrl);
+      MaterialHashMaps* findPatchData(const Patch* patch);
    private:
       void parse();    
       void add(const string& name, int patchid, int matl,
@@ -196,9 +200,16 @@ public:
    // how long does a patch live?  Not variable specific
    void queryLifetime( double& min, double& max, const Patch* patch);
 
-   int queryNumMaterials(const std::string& name, const Patch* patch,
-			double time);
+   ConsecutiveRangeSet queryMaterials(const std::string& name,
+				      const Patch* patch, double time);
 
+   int queryNumMaterials(const Patch* patch, double time);
+
+   // temporary just so I can compile and test with old vis tools
+   int queryNumMaterials(const std::string& name,
+			 const Patch* patch, double time)
+   { return (int)queryMaterials(name, patch, time).size(); }
+  
    void query( Variable& var, const std::string& name,
 	       int matlIndex, const Patch* patch, double tine );
    
@@ -262,6 +273,18 @@ private:
    void query( Variable& var, DOM_Node vnode, XMLURL url,
 			 int matlIndex,	const Patch* patch );
 
+   TimeHashMaps* getTopLevelVarHashMaps()
+   {
+      if (d_varHashMaps == NULL) {
+	 vector<int> indices;
+	 vector<double> times;
+	 queryTimesteps(indices, times);
+	 d_varHashMaps = scinew TimeHashMaps(times, d_tsurl, d_tstop,
+					     d_processor, d_numProcessors);
+      }
+      return d_varHashMaps;
+   }
+   
    // for restartInitialize
    void initVariable(const Patch* patch,
 		     DataWarehouseP& new_dw,
@@ -466,6 +489,12 @@ void DataArchive::query(std::vector<T>& values, const std::string& name,
 
 //
 // $Log$
+// Revision 1.16  2001/01/24 00:00:14  witzel
+// Added a queryMaterials method (to replace queryNumMaterials for the most
+// part), added some methods to some of the "...HashMaps" classes to support
+// that queryMaterials method, and mode some of the "...HashMaps" member
+// functions inline.
+//
 // Revision 1.15  2001/01/06 02:34:03  witzel
 // Added checkpoint/restart capabilities
 //
