@@ -11,9 +11,9 @@ itcl_class Uintah_Operators_Schlieren {
         global $this-dy
         global $this-dz
 
-	set $this-dx 0.0001
-	set $this-dy 0.0001
-	set $this-dz 0
+	set $this-dx 1.0
+	set $this-dy 1.0
+	set $this-dz 1.0
     }
 
     method ui {} {
@@ -34,7 +34,7 @@ itcl_class Uintah_Operators_Schlieren {
         entry $w.f_dy.dy_e -textvariable $this-dy
 
         label $w.f_dz.dz_l -text "DZ:"
-        entry $w.f_dz.dz_e -textvariable $this-dz -state disable
+        entry $w.f_dz.dz_e -textvariable $this-dz
 
         pack $w.f_dx $w.f_dy $w.f_dz
 
