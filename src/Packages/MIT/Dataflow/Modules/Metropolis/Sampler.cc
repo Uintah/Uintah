@@ -161,16 +161,16 @@ void Sampler::metropolis()
 {
   // init Cholesky of proposal distribution covariance matrix
 
-  double A[nparms][nparms];
+  Array2 <double> A(nparms, nparms);
 
   for (int i=0; i<nparms; i++) 
     for (int j=0; j<nparms; j++) 
-      A[i][j] = distribution_->sigma(i,j);
+      A(i,j) = distribution_->sigma(i,j);
   
   int info;
 
   char cmd = 'L';  // 'L' if fortran means 'U' in C
-  dpotrf_( cmd, nparms, (double *)A, nparms, info ); 
+  dpotrf_( cmd, nparms, *(A.get_dataptr()), nparms, info ); 
   if ( info != 0 ) {
     cerr << "Cholesky factorization error = " << info << endl;
     return;
@@ -180,9 +180,9 @@ void Sampler::metropolis()
 
   double k2 = sqrt(kappa);
   for (int i=0; i<nparms; i++) {
-    lkappa(i,i) = A[i][i]*k2;
+    lkappa(i,i) = A(i,i)*k2;
     for (int j=i+1; j<nparms; j++) {
-      lkappa(j,i) = A[i][j]*k2;
+      lkappa(j,i) = A(i,j)*k2;
       lkappa(i,j) = 0;
     }
   }
@@ -219,7 +219,7 @@ void Sampler::metropolis()
     }
     
     if ( k > interface_->burning()  
-	 && fmod(k-interface_->burning(), interface_->thin() ) == 0 ) 
+	 && fmod((double) k-interface_->burning(), interface_->thin() ) == 0 ) 
     {
       results->k_.add(k) ;
 
@@ -245,7 +245,7 @@ void Sampler::metropolis()
 
 void Sampler::pdsim( double theta[], double star[] )
 {
-  double r[nparms];
+  Array1 <double> r(nparms);
 
   for (int i=0; i<nparms; i++)
     r[i] = unur_sample_cont(gen);

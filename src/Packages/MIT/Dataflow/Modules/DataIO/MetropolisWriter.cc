@@ -30,11 +30,17 @@
 #include <Packages/MIT/Dataflow/Ports/MetropolisPorts.h>
 #include <Dataflow/Modules/DataIO/GenericWriter.h>
 
+
+namespace SCIRun {
+
+using namespace MIT;
+template class GenericWriter<ResultsHandle>;
+
+}
+
 namespace MIT {
 
 using namespace SCIRun;
-
-template class GenericWriter<ResultsHandle>;
 
 class MetropolisWriter : public GenericWriter<ResultsHandle> {
 public:

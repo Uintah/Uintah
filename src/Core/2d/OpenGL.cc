@@ -53,6 +53,7 @@
 
 namespace SCIRun {
 
+  using std::cerr;
 
 void 
 Polyline::draw( bool )

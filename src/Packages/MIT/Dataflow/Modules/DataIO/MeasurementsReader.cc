@@ -10,11 +10,16 @@
 #include <Packages/MIT/Dataflow/Ports/MetropolisPorts.h>
 #include <Dataflow/Modules/DataIO/GenericReader.h>
 
+namespace SCIRun {
+
+using namespace MIT;
+template class GenericReader<MeasurementsHandle>;
+  
+}
+
 namespace MIT {
 
 using namespace SCIRun;
-
-//template class GenericReader<MeasurementsHandle>;
 
 class MeasurementsReader : public GenericReader<MeasurementsHandle> {
 public:

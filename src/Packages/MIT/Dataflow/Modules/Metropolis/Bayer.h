@@ -25,4 +25,4 @@ public:
   F *f() { return bayer_function_; }
 };
 
-#endif Bayer_h
+#endif  //Bayer_h

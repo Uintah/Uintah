@@ -37,10 +37,12 @@
 
 namespace SCIRun {
 
+  using std::vector;
 /*
  * SlotBase & SignalBase
  */
 
+ 
 class SlotBase {
 private:
   int priority_;

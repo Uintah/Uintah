@@ -16,7 +16,6 @@ $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/Metropolis.tcl\
 	$(SRCDIR)/Sampler.tcl\
 	$(SRCDIR)/SamplerGui.tcl\
-	$(SRCDIR)/GraphGui.tcl\
 	$(SRCDIR)/BayerAnalysis.tcl\
 	$(SRCDIR)/MeasurementsReader.tcl\
 	$(SRCDIR)/DistributionReader.tcl\

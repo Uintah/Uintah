@@ -40,6 +40,7 @@ using std::ostringstream;
 #include <Core/Malloc/Allocator.h>
 #include <Core/2d/Hairline.h>
 #include <Core/2d/Diagram.h>
+#include <Core/Containers/Array1.h>
 
 namespace SCIRun {
 
@@ -94,8 +95,8 @@ Hairline::update()
     
     // get and sort the values
     
-    int index[poly_.size()];
-    double value[poly_.size()];
+    Array1<int> index(poly_.size());
+    Array1<double> value(poly_.size());
     
     // get value and insert them in acsending order (using insert sort)
     for (int i=0; i<poly_.size(); i++) {

@@ -20,6 +20,7 @@ extern "C" {
 
 #include <Packages/MIT/Dataflow/Modules/Metropolis/Bayer.h>
 #include <Packages/MIT/Dataflow/Modules/Metropolis/LikelihoodPart.h>
+#include <Core/Containers/Array1.h>
 
 namespace MIT {
 
@@ -47,8 +48,8 @@ LikelihoodPart::measurements( MeasurementsHandle &handle)
 double
 LikelihoodPart::compute( double theta[] )
 {
-  double ym1[neq_];
-  double ym2[neq_];
+  Array1 <double> ym1(neq_);
+  Array1 <double> ym2(neq_);
   double dt = exp(theta[4]);
   
   double reltol = 1e-6;   // should be input from the UI

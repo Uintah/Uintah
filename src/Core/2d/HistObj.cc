@@ -49,7 +49,7 @@ Persistent* make_HistObj()
 PersistentTypeID HistObj::type_id("HistObj", "DrawObj", make_HistObj);
 
 
-HistObj::HistObj( const string &name="")
+HistObj::HistObj( const string &name)
   :Polyline(name), bins_(128)
 {
 }

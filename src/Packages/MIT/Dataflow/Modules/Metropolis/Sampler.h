@@ -8,7 +8,7 @@
  */
 
 extern "C" {
-#include </usr/local/include/unuran.h>
+#include <unuran.h>
 };
 
 #include <Dataflow/Network/Module.h>

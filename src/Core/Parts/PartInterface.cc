@@ -32,9 +32,12 @@
 #include <Core/Persistent/Pstreams.h>
 #include <Core/Parts/PartInterface.h>
 #include <Core/Parts/GraphPart.h>
+#include <iostream>
 
 namespace SCIRun {
 
+using namespace std;
+  
 PartInterface::PartInterface( Part *part, PartInterface *parent, 
 			      const string &type, bool initialize )
   : type_(type), part_(part),  parent_(parent)
