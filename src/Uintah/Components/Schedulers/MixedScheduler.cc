@@ -508,7 +508,7 @@ MixedScheduler::makeAllRecvRequests( vector<Task*>       & tasks,
 #endif
 	  int size;
 	  dw->recvMPI(old_dw, need->d_var, need->d_matlIndex,
-		      need->d_patch, d_myworld,
+		      need->d_patch, d_myworld, need,
 		      MPI_ANY_SOURCE,
 		      need->d_serialNumber, &size, &requestid);
 	  if(size != -1){
@@ -709,8 +709,8 @@ MixedScheduler::execute(const ProcessorGroup * pc,
 	numTasksDone++;
 	continue;
       }
-      vector<DependData> & data = taskToDeps[ taskData ];
 #if DAV_DEBUG
+      vector<DependData> & data = taskToDeps[ taskData ];
       cerrLock->lock();
       //      if( tasks.size() == 1 ){
 
@@ -1009,7 +1009,7 @@ MixedScheduler::sendInitialData( vector<Task*> & tasks,
 #endif
 	    int size;
             dw->sendMPI(dep->d_var, dep->d_matlIndex,
-                        dep->d_patch, d_myworld,
+                        dep->d_patch, d_myworld, dep,
                         dep->d_task->getAssignedResourceIndex(),
                         dep->d_serialNumber, &size, &requestid);
 	    if(size != -1){
@@ -1078,7 +1078,7 @@ MixedScheduler::recvInitialData( vector<Task*>  & tasks,
 #endif
 	       int size;
                dw->recvMPI(old_dw, dep->d_var, dep->d_matlIndex,
-                           dep->d_patch, d_myworld,
+                           dep->d_patch, d_myworld, dep,
                            MPI_ANY_SOURCE,
                            dep->d_serialNumber, &size, &requestid);
 	       if(size != -1){
@@ -1611,7 +1611,7 @@ MixedScheduler::dependencySatisfied( const Task::Dependency * comp,
 #endif
 	  int size;
 	  dw->sendMPI(req->d_var, req->d_matlIndex,
-		      req->d_patch, d_myworld,
+		      req->d_patch, d_myworld, req,
 		      req->d_task->getAssignedResourceIndex(),
 		      req->d_serialNumber, &size, &requestid);
 
@@ -1697,6 +1697,10 @@ MixedScheduler::releaseLoadBalancer()
 
 //
 // $Log$
+// Revision 1.5.2.1  2000/09/29 06:09:54  sparker
+// g++ warnings
+// Support for sending only patch edges
+//
 // Revision 1.5  2000/09/28 23:16:45  jas
 // Added (int) for anything returning the size of a STL component.  Added
 // <algorithm> and using std::find.  Other minor modifications to get

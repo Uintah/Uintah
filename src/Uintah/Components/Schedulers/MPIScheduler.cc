@@ -218,7 +218,7 @@ MPIScheduler::execute(const ProcessorGroup * pc,
 		  dbg << me << " --> sending initial " << dep->d_var->getName() << " serial " << dep->d_serialNumber << ", to " << dep->d_task->getAssignedResourceIndex() << '\n';
 		  int size;
 		  dw->sendMPI(dep->d_var, dep->d_matlIndex,
-			      dep->d_patch, d_myworld,
+			      dep->d_patch, d_myworld, dep,
 			      dep->d_task->getAssignedResourceIndex(),
 			      dep->d_serialNumber, &size, &requestid);
 		  if(size != -1){
@@ -268,7 +268,7 @@ MPIScheduler::execute(const ProcessorGroup * pc,
 	       dbg << me << " <-- receiving initial " << dep->d_var->getName() << " serial " << dep->d_serialNumber << '\n';
 	       int size;
 	       dw->recvMPI(old_dw, dep->d_var, dep->d_matlIndex,
-			   dep->d_patch, d_myworld,
+			   dep->d_patch, d_myworld, dep,
 			   MPI_ANY_SOURCE,
 			   dep->d_serialNumber, &size, &requestid);
 	       if(size != -1){
@@ -361,7 +361,7 @@ MPIScheduler::execute(const ProcessorGroup * pc,
 			dbg << me << " <-- receiving " << req->d_var->getName() << " serial " << req->d_serialNumber << ' ' << *req << '\n';
 			int size;
 			dw->recvMPI(old_dw, req->d_var, req->d_matlIndex,
-				    req->d_patch, d_myworld,
+				    req->d_patch, d_myworld, req,
 				    MPI_ANY_SOURCE,
 				    req->d_serialNumber, &size, &requestid);
 			log.logRecv(req, size);
@@ -445,7 +445,7 @@ MPIScheduler::execute(const ProcessorGroup * pc,
 			   dbg << me << " --> sending " << dep->d_var->getName() << " serial " << dep->d_serialNumber << ", to " << dep->d_task->getAssignedResourceIndex() << " " << *dep << '\n';
 			   int size;
 			   dw->sendMPI(dep->d_var, dep->d_matlIndex,
-				       dep->d_patch, d_myworld,
+				       dep->d_patch, d_myworld, dep,
 				       dep->d_task->getAssignedResourceIndex(),
 				       dep->d_serialNumber,
 				       &size, &requestid);
@@ -700,7 +700,8 @@ MPIScheduler::scatterParticles(const ProcessorGroup* pc,
 		MPI_Pack(&numP, 1, MPI_INT, buf, sendsize, &position, pc->getComm());
               }   
 	    }
-	    ASSERTEQ(position, sendsize);
+	    // This may not be a valid assertion on some systems
+	    //ASSERTEQ(position, sendsize);
 	    MPI_Send(buf, sendsize, MPI_PACKED, sgargs.dest[i],
 		     sgargs.tags[i], pc->getComm());
 	    log.logSend(0, sizeof(int), "scatter");
@@ -857,7 +858,8 @@ MPIScheduler::gatherParticles(const ProcessorGroup* pc,
      delete sr[i];
    }
    for(int i=0;i<(int)neighbors.size();i++){
-      ASSERTEQ(recvsize[i], recvpos[i]);
+      // This may not be a valid assertion on some systems
+      // ASSERTEQ(recvsize[i], recvpos[i]);
       if(sgargs.dest[i] != me && recvsize[i] != 0){
 	 delete recvbuf[i];
       }
@@ -881,6 +883,10 @@ MPIScheduler::releaseLoadBalancer()
 
 //
 // $Log$
+// Revision 1.25.4.1  2000/09/29 06:09:54  sparker
+// g++ warnings
+// Support for sending only patch edges
+//
 // Revision 1.25  2000/09/27 20:49:55  witzel
 // It needed to receive in gatherParticles even for zero byte data.
 //

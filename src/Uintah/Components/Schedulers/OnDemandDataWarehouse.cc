@@ -1,5 +1,7 @@
-/* REFERENCED */
-static char *id="@(#) $Id$";
+
+//
+// $Id$
+//
 
 #include <SCICore/Exceptions/InternalError.h>
 #include <SCICore/Thread/Runnable.h>
@@ -40,10 +42,10 @@ extern Mutex * cerrSem;
 
 OnDemandDataWarehouse::OnDemandDataWarehouse( const ProcessorGroup* myworld,
 					      int generation, 
-					      DataWarehouseP& parent) :
-  d_lock("OnDemandDataWarehouse Lock"),
-  DataWarehouse( myworld, generation, parent),
-  d_finalized( false )
+					      DataWarehouseP& parent)
+   : DataWarehouse( myworld, generation, parent),
+     d_lock("DataWarehouse lock"),
+     d_finalized( false )
 {
 }
 
@@ -63,7 +65,7 @@ OnDemandDataWarehouse::~OnDemandDataWarehouse()
 
   for (dataLocationDBtype::const_iterator iter = d_dataLocation.begin();
        iter != d_dataLocation.end(); iter++) {
-    for (int i = 0; i<iter->second->size(); i++ )
+    for (int i = 0; i<(int)iter->second->size(); i++ )
       delete &(iter->second[i]);
     delete iter->second;
   }
@@ -123,8 +125,8 @@ OnDemandDataWarehouse::exists(const VarLabel* label, int matlIndex,
 void
 OnDemandDataWarehouse::sendMPI(const VarLabel* label, int matlIndex,
 			       const Patch* patch, const ProcessorGroup* world,
-			       int dest, int tag, int* size,
-			       MPI_Request* requestid)
+			       const Task::Dependency* dep, int dest,
+			       int tag, int* size, MPI_Request* requestid)
 {
   d_lock.readLock();
 
@@ -133,7 +135,9 @@ OnDemandDataWarehouse::sendMPI(const VarLabel* label, int matlIndex,
       void* buf;
       int count;
       MPI_Datatype datatype;
-      var->getMPIBuffer(buf, count, datatype);
+      bool free_datatype = false;
+      var->getMPIBuffer(buf, count, datatype, free_datatype,
+			dep->d_lowIndex, dep->d_highIndex);
 #if 0 //DAV_DEBUG
       cerr << "ISend NC: buf=" << buf << ", count=" << count << ", dest=" 
 	   << dest << ", tag=" << tag << ", comm=" << world->getComm() 
@@ -143,6 +147,13 @@ OnDemandDataWarehouse::sendMPI(const VarLabel* label, int matlIndex,
 
       // This is just FYI for the caller
       MPI_Pack_size(count, datatype, world->getComm(), size);
+#if 0
+      cerr << "ISend NC: buf=" << buf << ", count=" << count << ", dest=" 
+	   << dest << ", tag=" << tag << ", comm=" << world->getComm() 
+	   << ", req=" << requestid << ", size=" << *size << ", low=" << dep->d_lowIndex << ", high=" << dep->d_highIndex << '\n';
+#endif
+      if(free_datatype)
+	 MPI_Type_free(&datatype);
   d_lock.readUnlock();
 
       return;
@@ -243,7 +254,8 @@ void
 OnDemandDataWarehouse::recvMPI(DataWarehouseP& old_dw,
 			       const VarLabel* label, int matlIndex,
 			       const Patch* patch, const ProcessorGroup* world,
-			       int src, int tag, int* size,
+			       const Task::Dependency* dep, int src,
+			       int tag, int* size,
 			       MPI_Request* requestid)
 {
    switch(label->typeDescription()->getType()){
@@ -286,15 +298,24 @@ OnDemandDataWarehouse::recvMPI(DataWarehouseP& old_dw,
   d_lock.writeUnlock();
 	 NCVariableBase* var = dynamic_cast<NCVariableBase*>(v);
 	 ASSERT(var != 0);
-	 var->allocate(patch->getNodeLowIndex(), patch->getNodeHighIndex());
+	 var->allocate(dep->d_lowIndex, dep->d_highIndex);
 
 	 void* buf;
 	 int count;
 	 MPI_Datatype datatype;
-	 var->getMPIBuffer(buf, count, datatype);
+	 bool free_datatype = false;
+	 var->getMPIBuffer(buf, count, datatype, free_datatype,
+			   dep->d_lowIndex, dep->d_highIndex);
+#if 0
+	 cerr << "IRecv NC: buf=" << buf << ", count=" << count << ", src=" 
+	      << src << ", tag=" << tag << ", comm=" << world->getComm() 
+	      << ", req=" << requestid << ", low=" << dep->d_lowIndex << ", high=" << dep->d_highIndex << '\n';
+#endif
 	 MPI_Irecv(buf, count, datatype, src, tag, world->getComm(),requestid);
 	 // This is just FYI for the caller
 	 MPI_Pack_size(count, datatype, world->getComm(), size);
+	 if(free_datatype)
+	    MPI_Type_free(&datatype);
 	 d_ncDB.put(label, matlIndex, patch, var, false);
       }
    break;
@@ -530,37 +551,17 @@ OnDemandDataWarehouse::getParticleSubset(int matlIndex, const Patch* patch,
 	 throw InternalError("Ghost cells specified with task type none!\n");
       return getParticleSubset(matlIndex, patch);
    }
-   int l,h;
-   switch(gtype){
-   case Ghost::AroundNodes:
-      if(numGhostCells == 0)
-	 throw InternalError("No ghost cells specified with Task::AroundNodes");
-      // Lower neighbors
-      l=-1;
-      h=0;
-      break;
-   case Ghost::AroundCells:
-      if(numGhostCells == 0)
-	 throw InternalError("No ghost cells specified with Task::AroundCells");
-      // All 27 neighbors
-      l=-1;
-      h=1;
-      break;
-   default:
-      throw InternalError("Illegal ghost type");
-   }
+   vector<const Patch*> neighbors;
+   IntVector lowIndex, highIndex;
+   patch->computeVariableExtents(Patch::CellBased, gtype, numGhostCells,
+				 neighbors, lowIndex, highIndex);
+   Box box = patch->getLevel()->getBox(lowIndex, highIndex);
 
-   Box box = patch->getGhostBox(IntVector(l,l,l), IntVector(h,h,h));
    particleIndex totalParticles = 0;
    vector<ParticleVariableBase*> neighborvars;
    vector<ParticleSubset*> subsets;
-   const Level* level = patch->getLevel();
-   vector<const Patch*> neighbors;
-   IntVector low(patch->getCellLowIndex()+IntVector(l,l,l));
-   IntVector high(patch->getCellHighIndex()+IntVector(h,h,h));
 
-   level->selectPatches(low, high, neighbors);
-   for(int i=0;i<neighbors.size();i++){
+   for(int i=0;i<(int)neighbors.size();i++){
       const Patch* neighbor = neighbors[i];
       if(neighbor){
 	 ParticleSubset* pset = getParticleSubset(matlIndex, neighbor);
@@ -605,7 +606,7 @@ OnDemandDataWarehouse::get(ParticleVariableBase& var,
       const vector<const Patch*>& neighbors = pset->getNeighbors();
       const vector<ParticleSubset*>& neighbor_subsets = pset->getNeighborSubsets();
       vector<ParticleVariableBase*> neighborvars(neighbors.size());
-      for(int i=0;i<neighbors.size();i++){
+      for(int i=0;i<(int)neighbors.size();i++){
 	 const Patch* neighbor=neighbors[i];
 	 if(!d_particleDB.exists(label, matlIndex, neighbors[i]))
 	    throw UnknownVariable(label->getName(), neighbor->getID(),
@@ -686,52 +687,21 @@ OnDemandDataWarehouse::get(NCVariableBase& var, const VarLabel* label,
 			   int numGhostCells)
 {
   d_lock.readLock();
-#if 1
    if(gtype == Ghost::None) {
       if(numGhostCells != 0)
 	 throw InternalError("Ghost cells specified with task type none!\n");
-#endif
       if(!d_ncDB.exists(label, matlIndex, patch))
 	 throw UnknownVariable(label->getName(), patch->getID(),
 			       patch->toString(), matlIndex);
       d_ncDB.get(label, matlIndex, patch, var);
-#if 1
    } else {
-      int l,h;
-      IntVector gc(numGhostCells, numGhostCells, numGhostCells);
-      IntVector lowIndex;
-      IntVector highIndex;
-      switch(gtype){
-      case Ghost::AroundNodes:
-	 if(numGhostCells == 0)
-	    throw InternalError("No ghost cells specified with Task::AroundNodes");
-	 // All 27 neighbors
-	 l=-1;
-	 h=1;
-	 lowIndex = patch->getNodeLowIndex()-gc;
-	 highIndex = patch->getNodeHighIndex()+gc;
-	 cerr << "Nodes around nodes is probably not functional!\n";
-	 break;
-      case Ghost::AroundCells:
-	 if(numGhostCells == 0)
-	    throw InternalError("No ghost cells specified with Task::AroundCells");
-	 // Upper neighbors
-	 l=0;
-	 h=1;
-	 lowIndex = patch->getCellLowIndex();
-         highIndex = patch->getCellHighIndex()+gc;
-	 break;
-      default:
-	 throw InternalError("Illegal ghost type");
-      }
+      vector<const Patch*> neighbors;
+      IntVector lowIndex, highIndex;
+      patch->computeVariableExtents(Patch::NodeBased, gtype, numGhostCells,
+				    neighbors, lowIndex, highIndex);
       var.allocate(lowIndex, highIndex);
       long totalNodes=0;
-      const Level* level = patch->getLevel();
-      std::vector<const Patch*> neighbors;
-      IntVector low(patch->getCellLowIndex()+IntVector(l,l,l));
-      IntVector high(patch->getCellHighIndex()+IntVector(h,h,h));
-      level->selectPatches(low, high, neighbors);
-      for(int i=0;i<neighbors.size();i++){
+      for(int i=0;i<(int)neighbors.size();i++){
 	 const Patch* neighbor = neighbors[i];
 	 if(neighbor){
 	    if(!d_ncDB.exists(label, matlIndex, neighbor))
@@ -760,7 +730,6 @@ OnDemandDataWarehouse::get(NCVariableBase& var, const VarLabel* label,
       long wantnodes = dn.x()*dn.y()*dn.z();
       ASSERTEQ(wantnodes, totalNodes);
    }
-#endif
   d_lock.readUnlock();
 }
 
@@ -863,43 +832,20 @@ OnDemandDataWarehouse::get(CCVariableBase& var, const VarLabel* label,
 			   int numGhostCells)
 {
   d_lock.readLock();
-#if 1
    if(gtype == Ghost::None) {
       if(numGhostCells != 0)
 	 throw InternalError("Ghost cells specified with task type none!\n");
-#endif
       if(!d_ccDB.exists(label, matlIndex, patch))
 	 throw UnknownVariable(label->getName(), patch->getID(),
 			       patch->toString(), matlIndex);
       d_ccDB.get(label, matlIndex, patch, var);
-#if 1
    } else {
-      int l,h;
-      IntVector gc(numGhostCells, numGhostCells, numGhostCells);
-      IntVector lowIndex;
-      IntVector highIndex;
-      switch(gtype){
-      case Ghost::AroundNodes:
-	throw InternalError("Around Nodes not defined for CCVariable");
-      case Ghost::AroundCells:
-	 if(numGhostCells == 0)
-	    throw InternalError("No ghost cells specified with Task::AroundCells");
-	 // All 6 faces
-	 lowIndex = patch->getGhostCellLowIndex(numGhostCells);
-	 highIndex = patch->getGhostCellHighIndex(numGhostCells);
-	 cerr << "Cells around nodes is probably not functional!\n";
-	 break;
-      default:
-	 throw InternalError("Illegal ghost type");
-      }
-      var.allocate(lowIndex, highIndex);
+      vector<const Patch*> neighbors;
+      IntVector lowIndex, highIndex;
+      patch->computeVariableExtents(Patch::CellBased, gtype, numGhostCells,
+				    neighbors, lowIndex, highIndex);
       long totalCells=0;
-      const Level* level = patch->getLevel();
-      std::vector<const Patch*> neighbors;
-      IntVector low = lowIndex;
-      IntVector high = highIndex;
-      level->selectPatches(low, high, neighbors);
-      for(int i=0;i<neighbors.size();i++){
+      for(int i=0;i<(int)neighbors.size();i++){
 	 const Patch* neighbor = neighbors[i];
 	 if(neighbor){
 	    if(!d_ccDB.exists(label, matlIndex, neighbor))
@@ -927,7 +873,6 @@ OnDemandDataWarehouse::get(CCVariableBase& var, const VarLabel* label,
       long wantcells = dn.x()*dn.y()*dn.z();
       ASSERTEQ(wantcells, totalCells);
    }
-#endif
   d_lock.readUnlock();
 }
 
@@ -982,34 +927,10 @@ OnDemandDataWarehouse::get(FCVariableBase& var, const VarLabel* label,
       d_fcDB.get(label, matlIndex, patch, var);
 #if 0
    } else {
-      int l,h;
-      IntVector gc(numGhostCells, numGhostCells, numGhostCells);
-      IntVector lowIndex;
-      IntVector highIndex;
-      switch(gtype){
-      case Ghost::AroundNodes:
-	 if(numGhostCells == 0)
-	    throw InternalError("No ghost cells specified with Task::AroundNodes");
-	 // All 27 neighbors
-	 l=-1;
-	 h=1;
-	 lowIndex = patch->getCellLowIndex()-gc;
-	 highIndex = patch->getCellHighIndex()+gc;
-	 cerr << "Cells around nodes is probably not functional!\n";
-	 break;
-      case Ghost::AroundCells:
-	 if(numGhostCells == 0)
-	    throw InternalError("No ghost cells specified with Task::AroundCells");
-	 // all 6 faces
-	 l=-1;
-	 h=1;
-	 lowIndex = patch->getCellLowIndex()-gc;
-         highIndex = patch->getCellHighIndex()+gc;
-	 break;
-      default:
-	 throw InternalError("Illegal ghost type");
-      }
-      var.allocate(lowIndex, highIndex);
+      vector<const Patch*> neighbors;
+      IntVector lowIndex, highIndex;
+      patch->computeVariableExtents(Patch::AllFaceBased, gtype, numGhostCells,
+				    neighbors, lowIndex, highIndex);
       long totalCells=0;
       // change it to traverse only thru patches with adjoining faces
       for(int ix=l;ix<=h;ix++){
@@ -1072,43 +993,21 @@ OnDemandDataWarehouse::get(SFCXVariableBase& var, const VarLabel* label,
 			   int numGhostCells)
 {
   d_lock.readLock();
-#if 1
    if(gtype == Ghost::None) {
       if(numGhostCells != 0)
 	 throw InternalError("Ghost cells specified with task type none!\n");
-#endif
       if(!d_sfcxDB.exists(label, matlIndex, patch))
 	 throw UnknownVariable(label->getName(), patch->getID(),
 			       patch->toString(), matlIndex);
       d_sfcxDB.get(label, matlIndex, patch, var);
-#if 1
    } else {
-      int l,h;
-      IntVector gc(numGhostCells, numGhostCells, numGhostCells);
-      IntVector lowIndex;
-      IntVector highIndex;
-      switch(gtype){
-      case Ghost::AroundNodes:
-	throw InternalError("Ghost::AroundNodes: illegal ghost type for SFCX Variable");
-      case Ghost::AroundCells:
-	 if(numGhostCells == 0)
-	    throw InternalError("No ghost cells specified with Task::AroundCells");
-	 // Upper neighbors
-	 lowIndex = patch->getGhostSFCXLowIndex(numGhostCells);
-         highIndex = patch->getGhostSFCXHighIndex(numGhostCells);
-	 break;
-      default:
-	 throw InternalError("Illegal ghost type");
-      }
-      var.allocate(lowIndex, highIndex);
+      vector<const Patch*> neighbors;
+      IntVector lowIndex, highIndex;
+      patch->computeVariableExtents(Patch::XFaceBased, gtype, numGhostCells,
+				    neighbors, lowIndex, highIndex);
       long totalCells=0;
-      const Level* level = patch->getLevel();
-      std::vector<const Patch*> neighbors;
-      IntVector low = patch->getGhostCellLowIndex(numGhostCells);
-      IntVector high = patch->getGhostCellHighIndex(numGhostCells);
-      level->selectPatches(low, high, neighbors);
       // modify it to only ignore corner nodes
-      for(int i=0;i<neighbors.size();i++){
+      for(int i=0;i<(int)neighbors.size();i++){
 	 const Patch* neighbor = neighbors[i];
 	 if(neighbor){
 	    if(!d_sfcxDB.exists(label, matlIndex, neighbor))
@@ -1136,7 +1035,6 @@ OnDemandDataWarehouse::get(SFCXVariableBase& var, const VarLabel* label,
       long wantcells = dn.x()*dn.y()*dn.z();
       ASSERTEQ(wantcells, totalCells);
    }
-#endif
   d_lock.readUnlock();
 }
 
@@ -1180,42 +1078,20 @@ OnDemandDataWarehouse::get(SFCYVariableBase& var, const VarLabel* label,
 			   int numGhostCells)
 {
   d_lock.readLock();
-#if 1
    if(gtype == Ghost::None) {
       if(numGhostCells != 0)
 	 throw InternalError("Ghost cells specified with task type none!\n");
-#endif
       if(!d_sfcyDB.exists(label, matlIndex, patch))
 	 throw UnknownVariable(label->getName(), patch->getID(),
 			       patch->toString(), matlIndex);
       d_sfcyDB.get(label, matlIndex, patch, var);
-#if 1
    } else {
-      int l,h;
-      IntVector gc(numGhostCells, numGhostCells, numGhostCells);
-      IntVector lowIndex;
-      IntVector highIndex;
-      switch(gtype){
-      case Ghost::AroundNodes:
-	throw InternalError("Ghost::AroundNodes: illegal ghost type for SFCY Variable");
-      case Ghost::AroundCells:
-	 if(numGhostCells == 0)
-	    throw InternalError("No ghost cells specified with Task::AroundCells");
-	 // Upper neighbors
-	 lowIndex = patch->getGhostSFCYLowIndex(numGhostCells);
-         highIndex = patch->getGhostSFCYHighIndex(numGhostCells);
-	 break;
-      default:
-	 throw InternalError("Illegal ghost type");
-      }
-      var.allocate(lowIndex, highIndex);
+      vector<const Patch*> neighbors;
+      IntVector lowIndex, highIndex;
+      patch->computeVariableExtents(Patch::YFaceBased, gtype, numGhostCells,
+				    neighbors, lowIndex, highIndex);
       long totalCells=0;
-      const Level* level = patch->getLevel();
-      std::vector<const Patch*> neighbors;
-      IntVector low = patch->getGhostCellLowIndex(numGhostCells);
-      IntVector high = patch->getGhostCellHighIndex(numGhostCells);
-      level->selectPatches(low, high, neighbors);
-      for(int i=0;i<neighbors.size();i++){
+      for(int i=0;i<(int)neighbors.size();i++){
 	 const Patch* neighbor = neighbors[i];
 	 if(neighbor){
 	    if(!d_sfcyDB.exists(label, matlIndex, neighbor))
@@ -1243,7 +1119,6 @@ OnDemandDataWarehouse::get(SFCYVariableBase& var, const VarLabel* label,
       long wantcells = dn.x()*dn.y()*dn.z();
       ASSERTEQ(wantcells, totalCells);
    }
-#endif
   d_lock.readUnlock();
 }
 
@@ -1287,42 +1162,20 @@ OnDemandDataWarehouse::get(SFCZVariableBase& var, const VarLabel* label,
 			   int numGhostCells)
 {
   d_lock.readLock();
-#if 1
    if(gtype == Ghost::None) {
       if(numGhostCells != 0)
 	 throw InternalError("Ghost cells specified with task type none!\n");
-#endif
       if(!d_sfczDB.exists(label, matlIndex, patch))
 	 throw UnknownVariable(label->getName(), patch->getID(),
 			       patch->toString(), matlIndex);
       d_sfczDB.get(label, matlIndex, patch, var);
-#if 1
    } else {
-      int l,h;
-      IntVector gc(numGhostCells, numGhostCells, numGhostCells);
-      IntVector lowIndex;
-      IntVector highIndex;
-      switch(gtype){
-      case Ghost::AroundNodes:
-	throw InternalError("Ghost::AroundNodes: illegal ghost type for SFCZ Variable");
-      case Ghost::AroundCells:
-	 if(numGhostCells == 0)
-	    throw InternalError("No ghost cells specified with Task::AroundCells");
-	 // Upper neighbors
-	 lowIndex = patch->getGhostSFCZLowIndex(numGhostCells);
-         highIndex = patch->getGhostSFCZHighIndex(numGhostCells);
-	 break;
-      default:
-	 throw InternalError("Illegal ghost type");
-      }
-      var.allocate(lowIndex, highIndex);
+      vector<const Patch*> neighbors;
+      IntVector lowIndex, highIndex;
+      patch->computeVariableExtents(Patch::ZFaceBased, gtype, numGhostCells,
+				    neighbors, lowIndex, highIndex);
       long totalCells=0;
-      const Level* level = patch->getLevel();
-      std::vector<const Patch*> neighbors;
-      IntVector low = patch->getGhostCellLowIndex(numGhostCells);
-      IntVector high=patch->getGhostCellHighIndex(numGhostCells);
-      level->selectPatches(low, high, neighbors);
-      for(int i=0;i<neighbors.size();i++){
+      for(int i=0;i<(int)neighbors.size();i++){
 	 const Patch* neighbor = neighbors[i];
 	 if(neighbor){
 	    if(!d_sfczDB.exists(label, matlIndex, neighbor))
@@ -1350,7 +1203,6 @@ OnDemandDataWarehouse::get(SFCZVariableBase& var, const VarLabel* label,
       long wantcells = dn.x()*dn.y()*dn.z();
       ASSERTEQ(wantcells, totalCells);
    }
-#endif
   d_lock.readUnlock();
 }
 
@@ -1557,6 +1409,10 @@ OnDemandDataWarehouse::deleteParticles(ParticleSubset* delset)
 
 //
 // $Log$
+// Revision 1.52.4.1  2000/09/29 06:09:55  sparker
+// g++ warnings
+// Support for sending only patch edges
+//
 // Revision 1.52  2000/09/28 02:15:51  dav
 // updates due to not sending 0 particles
 //

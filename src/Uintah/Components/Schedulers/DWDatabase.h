@@ -252,7 +252,8 @@ void DWDatabase<VarType>::get(const VarLabel* label, int matlIndex,
 			      const Patch* patch,
 			      VarType& var) const
 {
-   var.copyPointer(*get(label, matlIndex, patch));
+   VarType* tmp = get(label, matlIndex, patch);
+   var.copyPointer(*tmp);
 }
 
 template<class VarType>
@@ -301,6 +302,10 @@ void DWDatabase<VarType>::print(std::ostream& out)
 
 //
 // $Log$
+// Revision 1.16.2.1  2000/09/29 06:09:54  sparker
+// g++ warnings
+// Support for sending only patch edges
+//
 // Revision 1.16  2000/09/28 23:16:45  jas
 // Added (int) for anything returning the size of a STL component.  Added
 // <algorithm> and using std::find.  Other minor modifications to get
