@@ -10,13 +10,13 @@ SRCDIR   := Kurt/Modules/Vis
 SRCS     += $(SRCDIR)/GLTextureBuilder.cc  $(SRCDIR)/PadField.cc \
 		$(SRCDIR)/TextureVolVis.cc \
 		$(SRCDIR)/TexCuttingPlanes.cc \
+		$(SRCDIR)/RescaleColorMapForParticles.cc \
+		$(SRCDIR)/ParticleColorMapKey.cc \
+		$(SRCDIR)/AnimatedStreams.cc 
 #		$(SRCDIR)/VolVis.cc \
 #		$(SRCDIR)/KurtScalarFieldReader.cc \
 #		$(SRCDIR)/VisControl.cc \
-		$(SRCDIR)/RescaleColorMapForParticles.cc \
-		$(SRCDIR)/ParticleColorMapKey.cc \
 #		$(SRCDIR)/ParticleVis.cc \
-		$(SRCDIR)/AnimatedStreams.cc 
 
 
 PSELIBS :=  PSECore/Dataflow PSECore/Datatypes \
@@ -25,7 +25,7 @@ PSELIBS :=  PSECore/Dataflow PSECore/Datatypes \
         SCICore/Geom SCICore/Geometry PSECore/Widgets PSECore/XMLUtil \
 	Kurt/Datatypes SCICore/Util \
 	Uintah/Datatypes Uintah/Grid Uintah/Interface Uintah/Exceptions \
-#        Kurt/DataArchive Kurt/Geom
+        Kurt/DataArchive Kurt/Geom
 
 LIBS := $(XML_LIBRARY) -lm
 
@@ -34,6 +34,9 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.11  2000/09/21 22:22:49  kuzimmer
+# some lines that weren't supposed to be commented out were.  fixed.
+#
 # Revision 1.10  2000/09/20 22:47:13  kuzimmer
 # changes so that the Kurt subtree can be compiled without Uintah by commenting out a few lines.
 #
