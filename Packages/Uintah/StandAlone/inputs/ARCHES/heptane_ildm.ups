@@ -15,7 +15,7 @@
 	<initTime>0.0</initTime>
 	<delt_min>0.000001</delt_min>
 	<delt_max>0.01</delt_max>
-	<timestep_multiplier>0.3</timestep_multiplier>
+	<timestep_multiplier>0.5</timestep_multiplier>
    </Time>
 
    <DataArchiver>
@@ -49,9 +49,9 @@
 	    <Box label="1">
 	        <lower>[0,0,0]</lower>
 	        <upper>[3,3,3]</upper>
-	        <resolution>[80,80,80]</resolution>
+	        <resolution>[60,60,60]</resolution>
                 <extraCells>[1,1,1]</extraCells>
-		<patches>[5,5,5]</patches>
+		<patches>[2,2,2]</patches>
 	    </Box>
 	</Level>
     </Grid>
