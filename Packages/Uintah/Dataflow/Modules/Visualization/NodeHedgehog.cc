@@ -116,7 +116,7 @@ class NodeHedgehog : public Module {
     double minlen;
     double maxlen;
     bool have_sfield;
-    ScalarFieldInterface *sf_interface;
+    ScalarFieldInterfaceHandle sf_interface;
     bool have_cmap;
     ColorMapHandle cmap;
   };
@@ -441,14 +441,14 @@ void NodeHedgehog::execute()
   // Get the scalar field and ColorMap...if you can
   FieldHandle ssfield;
   int have_sfield=inscalarfield->get( ssfield );
-  ScalarFieldInterface *sf_interface;
+  ScalarFieldInterfaceHandle sf_interface;
   if( have_sfield ){
     if( !ssfield->is_scalar() ){
       cerr<<"Second field is not a scalar field.  No Colormapping.\n";
       have_sfield = 0;
     } else {
       sf_interface = ssfield->query_scalar_interface();
-      if (sf_interface == 0)
+      if (sf_interface.get_rep() == 0)
 	have_sfield = 0;
     }
   }
