@@ -182,7 +182,7 @@ void DWDatabase<VarType>::scrubExtraneous()
 	 ++patchRecordIter) {
       PatchRecord* patchRecord = patchRecordIter->second;
       const dataDBtype& vars = patchRecord->getVars();
-      for (int m = 0; m < (int)vars.size(); m++) {
+      for (unsigned int m = 0; m < vars.size(); m++) {
 	DataItem* dataItem = patchRecord->getDataItem(m);
 	if (dataItem && dataItem->scrubCount == 0)
 	  patchRecord->removeVar(m);
@@ -234,7 +234,7 @@ DWDatabase<VarType>::cleanForeign()
 	    const VarType* var = pr->getVars()[m].var;
 	    if(var && var->isForeign()){
 	      pr->removeVar(m);
-	      cerr << "Cleaning foreign: " << nr->label->getName() << endl;
+	      cerr << "Cleaning foreign: " << nr->label->getName() << "\n";
 	    }
 	 }
       }
@@ -260,6 +260,13 @@ void DWDatabase<VarType>::
 addScrubCount(const VarLabel* label, int matlIndex,
 	      const Patch* patch, int count, unsigned int addIfZero)
 {
+  // Dav's conjectures on how this works:
+  //   addScrubCount is called the first time with "addIfZero" set to some X.  
+  //   This X represents the number of tasks that will use the var.  Later,
+  //   after a task has used the var, it will call addScrubCount with 
+  //   "count" set to -1 (in order to decrement the value of scrubCount.
+  //   If scrubCount then is equal to 0, the var is scrubbed.
+
   DataItem& data = const_cast<DataItem&>(getDataItem(label, matlIndex, patch));
 
   // If it was zero to begin with, then add addIfZero first.
@@ -267,7 +274,7 @@ addScrubCount(const VarLabel* label, int matlIndex,
     data.scrubCount += addIfZero;
   data.scrubCount += count;
   ASSERT(data.scrubCount >= 0);
-  if (data.scrubCount <= 0) {
+  if (data.scrubCount == 0) {
     // some things can get scrubbed right after the task creates it.
     scrub(label, matlIndex, patch);
   }
