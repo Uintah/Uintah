@@ -338,6 +338,9 @@ namespace Uintah {
       const VarLabel* d_maxUxplus_label;
       const VarLabel* d_maxUxplusPred_label;
       const VarLabel* d_maxUxplusInterm_label;
+      const VarLabel* d_avUxplus_label;
+      const VarLabel* d_avUxplusPred_label;
+      const VarLabel* d_avUxplusInterm_label;
 // filtered convection terms in momentum eqn
       const VarLabel* d_filteredRhoUjULabel;
       const VarLabel* d_filteredRhoUjVLabel;

@@ -144,10 +144,6 @@ public:
 				const MaterialSet* matls,
 			        const TimeIntegratorLabel* timelabels);
 
-      void sched_underrelaxation(SchedulerP&, const PatchSet* patches,
-				const MaterialSet* matls,
-			        const TimeIntegratorLabel* timelabels);
-
       void sched_getDensityGuess(SchedulerP&, const PatchSet* patches,
 				const MaterialSet* matls,
 			        const TimeIntegratorLabel* timelabels);
@@ -160,6 +156,13 @@ public:
 				const MaterialSet* matls,
 			        const TimeIntegratorLabel* timelabels);
 
+      inline double recomputeTimestep(double current_dt) {
+        return current_dt/2;
+      }
+      
+      inline bool restartableTimesteps() {
+        return true;
+      }
   
 protected :
 
@@ -234,13 +237,6 @@ private:
 			   DataWarehouse* old_dw,
 			   DataWarehouse* new_dw,
 			   LevelP level, Scheduler* sched);
-
-      void underrelaxation(const ProcessorGroup*,
-			  const PatchSubset* patches,
-			  const MaterialSubset* matls,
-			  DataWarehouse* old_dw,
-			  DataWarehouse* new_dw,
-			  const TimeIntegratorLabel* timelabels);
 
       void getDensityGuess(const ProcessorGroup*,
 			  const PatchSubset* patches,

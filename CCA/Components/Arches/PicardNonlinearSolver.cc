@@ -165,6 +165,10 @@ PicardNonlinearSolver::problemSetup(const ProblemSpecP& params)
   else {
     throw ProblemSetupException("Integrator type is not defined "+d_timeIntegratorType);
   }
+  double d_underrelax;
+  db->getWithDefault("underrelax",d_underrelax,1.0);
+  d_timeIntegratorLabels[0]->factor_new = d_underrelax;
+  d_timeIntegratorLabels[0]->factor_old = 1.0 - d_underrelax;
 
 #ifdef PetscFilter
     d_props->setFilter(d_turbModel->getFilter());
@@ -197,6 +201,7 @@ int PicardNonlinearSolver::nonlinearSolve(const LevelP& level,
   tsk->requires(Task::OldDW, d_lab->d_maxAbsV_label);
   tsk->requires(Task::OldDW, d_lab->d_maxAbsW_label);
   tsk->requires(Task::OldDW, d_lab->d_maxUxplus_label);
+  tsk->requires(Task::OldDW, d_lab->d_avUxplus_label);
   if (dynamic_cast<const ScaleSimilarityModel*>(d_turbModel)) {
     tsk->requires(Task::OldDW, d_lab->d_scalarFluxCompLabel,
 		  d_lab->d_scalarFluxMatl, Task::OutOfDomain,
@@ -351,6 +356,7 @@ int PicardNonlinearSolver::nonlinearSolve(const LevelP& level,
   tsk->computes(d_lab->d_maxAbsV_label);
   tsk->computes(d_lab->d_maxAbsW_label);
   tsk->computes(d_lab->d_maxUxplus_label);
+  tsk->computes(d_lab->d_avUxplus_label);
   tsk->computes(d_lab->d_oldDeltaTLabel);
   tsk->computes(d_lab->d_densityOldOldLabel);
   if (dynamic_cast<const ScaleSimilarityModel*>(d_turbModel)) {
@@ -452,6 +458,30 @@ PicardNonlinearSolver::recursiveSolver(const ProcessorGroup* pg,
     // first computes, hatted velocities and then computes
     // the pressure poisson equation
     d_momSolver->solveVelHat(level, subsched, d_timeIntegratorLabels[curr_level]);
+    // using RKSSP averaging to perform underrelaxation
+    if (d_timeIntegratorLabels[curr_level]->factor_new < 1.0) {
+      d_timeIntegratorLabels[curr_level]->integrator_step_number = TimeIntegratorStepNumber::Second;
+      d_props->sched_averageRKProps(subsched, local_patches, local_matls,
+			   	    d_timeIntegratorLabels[curr_level]);
+      d_props->sched_saveTempDensity(subsched, local_patches, local_matls,
+			   	     d_timeIntegratorLabels[curr_level]);
+      if (nofScalarVars > 0) {
+        for (int index = 0;index < nofScalarVars; index ++) {
+        // in this case we're only solving for one scalarVar...but
+        // the same subroutine can be used to solve multiple scalarVars
+          d_turbModel->sched_computeScalarVariance(subsched, local_patches, local_matls,
+					    d_timeIntegratorLabels[curr_level]);
+        }
+        d_turbModel->sched_computeScalarDissipation(subsched, local_patches, local_matls,
+					    d_timeIntegratorLabels[curr_level]);
+      }
+      d_props->sched_reComputeProps(subsched, local_patches, local_matls,
+				    d_timeIntegratorLabels[curr_level], false);
+
+      d_momSolver->sched_averageRKHatVelocities(subsched, local_patches, local_matls,
+					    d_timeIntegratorLabels[curr_level]);
+      d_timeIntegratorLabels[curr_level]->integrator_step_number = TimeIntegratorStepNumber::First;
+    } 
 
     d_props->sched_computeDrhodt(subsched, local_patches, local_matls,
 				 d_timeIntegratorLabels[curr_level]);
@@ -472,8 +502,6 @@ PicardNonlinearSolver::recursiveSolver(const ProcessorGroup* pg,
     d_boundaryCondition->sched_correctVelocityOutletBC(subsched, local_patches, local_matls,
 					    d_timeIntegratorLabels[curr_level]);
   
-    //sched_underrelaxation(subsched, local_patches, local_matls,
-//			   	  d_timeIntegratorLabels[curr_level]);
     sched_interpolateFromFCToCC(subsched, local_patches, local_matls,
 				d_timeIntegratorLabels[curr_level]);
     d_turbModel->sched_reComputeTurbSubmodel(subsched, local_patches, local_matls,
@@ -498,6 +526,7 @@ PicardNonlinearSolver::recursiveSolver(const ProcessorGroup* pg,
     subsched->compile();
     int nlIterations = 0;
     double norm;
+    double init_norm;
     subsched->advanceDataWarehouse(grid);
     max_vartype mxAbsU;
     max_vartype mxAbsV;
@@ -511,6 +540,12 @@ PicardNonlinearSolver::recursiveSolver(const ProcessorGroup* pg,
     subsched->get_dw(3)->put(mxAbsV, d_lab->d_maxAbsV_label);
     subsched->get_dw(3)->put(mxAbsW, d_lab->d_maxAbsW_label);
     subsched->get_dw(3)->put(mxUxplus, d_lab->d_maxUxplus_label);
+    int num_procs = d_myworld->size();
+    sum_vartype avUxplus;
+    old_dw->get(avUxplus, d_lab->d_avUxplus_label);
+    double avuxp = avUxplus;
+    avuxp /= num_procs;
+    subsched->get_dw(3)->put(sum_vartype(avuxp), d_lab->d_avUxplus_label);
     if (dynamic_cast<const ScaleSimilarityModel*>(d_turbModel)) {
     subsched->get_dw(3)->transferFrom(old_dw, d_lab->d_scalarFluxCompLabel, patches, matls); 
     subsched->get_dw(3)->transferFrom(old_dw, d_lab->d_stressTensorCompLabel, patches, matls); 
@@ -559,6 +594,10 @@ PicardNonlinearSolver::recursiveSolver(const ProcessorGroup* pg,
       max_vartype nm;
       subsched->get_dw(3)->get(nm, d_lab->d_InitNormLabel);
       norm = nm+d_u_norm+d_v_norm+d_w_norm;
+      if (nlIterations == 0) init_norm = norm;
+      if(pg->myrank() == 0)
+       cout << "PicardSolver init norm: " << init_norm << " current norm: " << norm << endl;
+      
 
       ++nlIterations;
     
@@ -566,6 +605,12 @@ PicardNonlinearSolver::recursiveSolver(const ProcessorGroup* pg,
     if ((nlIterations == d_nonlinear_its)&&(norm > d_resTol))
     if(pg->myrank() == 0)
        cout << "Maximum allowed number of iterations reached" << endl;
+    if (norm/(init_norm+1.0e-10) > 1) {
+    if(pg->myrank() == 0)
+       cout << "WARNING! Iterations diverge! Restarting timestep." << endl;
+      new_dw->abortTimestep();
+      new_dw->restartTimestep();
+    }
 
 
     new_dw->transferFrom(subsched->get_dw(3), d_lab->d_cellTypeLabel, patches, matls); 
@@ -627,7 +672,6 @@ PicardNonlinearSolver::recursiveSolver(const ProcessorGroup* pg,
     subsched->get_dw(3)->get(denaccum, d_lab->d_denAccumLabel);
     subsched->get_dw(3)->get(netflowoutbc, d_lab->d_netflowOUTBCLabel);
     subsched->get_dw(3)->get(totalkineticenergy, d_lab->d_totalKineticEnergyLabel);
-    int num_procs = d_myworld->size();
     double fin = flowin;
     double fout = flowout;
     double da = denaccum;
@@ -660,6 +704,10 @@ PicardNonlinearSolver::recursiveSolver(const ProcessorGroup* pg,
     new_dw->put(mxAbsV, d_lab->d_maxAbsV_label);
     new_dw->put(mxAbsW, d_lab->d_maxAbsW_label);
     new_dw->put(mxUxplus, d_lab->d_maxUxplus_label);
+    subsched->get_dw(3)->get(avUxplus, d_lab->d_avUxplus_label);
+    avuxp = avUxplus;
+    avuxp /= num_procs;
+    new_dw->put(sum_vartype(avuxp), d_lab->d_avUxplus_label);
     if (dynamic_cast<const ScaleSimilarityModel*>(d_turbModel))  {
     new_dw->transferFrom(subsched->get_dw(3), d_lab->d_scalarFluxCompLabel, patches, matls); 
     new_dw->transferFrom(subsched->get_dw(3), d_lab->d_stressTensorCompLabel, patches, matls); 
@@ -790,7 +838,8 @@ PicardNonlinearSolver::sched_setInitialGuess(SchedulerP& sched,
     tsk->computes(d_lab->d_enthalpyTempLabel);
   }
   tsk->computes(d_lab->d_densityCPLabel);
-  if (d_timeIntegratorLabels[0]->multiple_steps)
+  if ((d_timeIntegratorLabels[0]->multiple_steps)||
+      (d_timeIntegratorLabels[0]->factor_new < 1.0))
     tsk->computes(d_lab->d_densityTempLabel);
   tsk->computes(d_lab->d_viscosityCTSLabel);
   if (d_MAlab)
@@ -1889,7 +1938,8 @@ PicardNonlinearSolver::setInitialGuess(const ProcessorGroup* ,
     CCVariable<double> density_new;
     new_dw->allocateAndPut(density_new, d_lab->d_densityCPLabel, matlIndex, patch);
     density_new.copyData(density); // copy old into new
-    if (d_timeIntegratorLabels[0]->multiple_steps) {
+    if ((d_timeIntegratorLabels[0]->multiple_steps)||
+        (d_timeIntegratorLabels[0]->factor_new < 1.0)) {
       CCVariable<double> density_temp;
       new_dw->allocateAndPut(density_temp, d_lab->d_densityTempLabel, matlIndex, patch);
       density_temp.copyData(density); // copy old into new
@@ -2198,169 +2248,6 @@ PicardNonlinearSolver::saveTempCopies(const ProcessorGroup*,
 			  matlIndex, patch);
     new_dw->copyOut(temp_enthalpy, d_lab->d_enthalpySPLabel,
 		     matlIndex, patch);
-    }
-  }
-}
-//****************************************************************************
-// Schedule underrelaxation
-//****************************************************************************
-void 
-PicardNonlinearSolver::sched_underrelaxation(SchedulerP& sched, const PatchSet* patches,
-				  const MaterialSet* matls,
-			   	  const TimeIntegratorLabel* timelabels)
-{
-  string taskname =  "PicardNonlinearSolver::underrelaxation" +
-		     timelabels->integrator_step_name;
-  Task* tsk = scinew Task(taskname, this,
-			  &PicardNonlinearSolver::underrelaxation,
-			  timelabels);
-
-  tsk->requires(Task::OldDW, d_lab->d_scalarSPLabel,
-		Ghost::None, Arches::ZEROGHOSTCELLS);
-  tsk->requires(Task::OldDW, d_lab->d_densityCPLabel,
-		Ghost::None, Arches::ZEROGHOSTCELLS);
-  tsk->requires(Task::OldDW, d_lab->d_uVelocitySPBCLabel,
-		Ghost::None, Arches::ZEROGHOSTCELLS);
-  tsk->requires(Task::OldDW, d_lab->d_vVelocitySPBCLabel,
-		Ghost::None, Arches::ZEROGHOSTCELLS);
-  tsk->requires(Task::OldDW, d_lab->d_wVelocitySPBCLabel,
-		Ghost::None, Arches::ZEROGHOSTCELLS);
-  if (d_reactingScalarSolve)
-    tsk->requires(Task::OldDW, d_lab->d_reactscalarSPLabel, 
-		  Ghost::None, Arches::ZEROGHOSTCELLS);
-  if (d_enthalpySolve)
-    tsk->requires(Task::OldDW, d_lab->d_enthalpySPLabel, 
-		  Ghost::None, Arches::ZEROGHOSTCELLS);
- 
-  tsk->modifies(d_lab->d_scalarSPLabel);
-  tsk->modifies(d_lab->d_densityCPLabel);
-  tsk->modifies(d_lab->d_uVelocitySPBCLabel);
-  tsk->modifies(d_lab->d_vVelocitySPBCLabel);
-  tsk->modifies(d_lab->d_wVelocitySPBCLabel);
-  if (d_reactingScalarSolve)
-    tsk->modifies(d_lab->d_reactscalarSPLabel);
-  if (d_enthalpySolve)
-    tsk->modifies(d_lab->d_enthalpySPLabel);
-
-  sched->addTask(tsk, patches, matls);
-}
-//****************************************************************************
-// Actually perform underrelaxation
-//****************************************************************************
-void 
-PicardNonlinearSolver::underrelaxation(const ProcessorGroup*,
-			   const PatchSubset* patches,
-			   const MaterialSubset*,
-			   DataWarehouse* old_dw,
-			   DataWarehouse* new_dw,
-			   const TimeIntegratorLabel*)
-{
-  for (int p = 0; p < patches->size(); p++) {
-
-    const Patch* patch = patches->get(p);
-    int archIndex = 0; // only one arches material
-    int matlIndex = d_lab->d_sharedState->
-		     getArchesMaterial(archIndex)->getDWIndex(); 
-
-    constCCVariable<double> old_scalar;
-    constCCVariable<double> old_density;
-    constSFCXVariable<double> old_uvelocity;
-    constSFCYVariable<double> old_vvelocity;
-    constSFCZVariable<double> old_wvelocity;
-    constCCVariable<double> old_reactscalar;
-    constCCVariable<double> old_enthalpy;
-    CCVariable<double> new_scalar;
-    CCVariable<double> new_density;
-    SFCXVariable<double> new_uvelocity;
-    SFCYVariable<double> new_vvelocity;
-    SFCZVariable<double> new_wvelocity;
-    CCVariable<double> new_reactscalar;
-    CCVariable<double> new_enthalpy;
-
-    old_dw->get(old_scalar, d_lab->d_scalarSPLabel,
-		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-    new_dw->getModifiable(new_scalar, d_lab->d_scalarSPLabel,
-			  matlIndex, patch);
-    old_dw->get(old_density, d_lab->d_densityCPLabel,
-		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-    new_dw->getModifiable(new_density, d_lab->d_densityCPLabel,
-			  matlIndex, patch);
-    old_dw->get(old_uvelocity, d_lab->d_uVelocitySPBCLabel,
-		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-    new_dw->getModifiable(new_uvelocity, d_lab->d_uVelocitySPBCLabel,
-			  matlIndex, patch);
-    old_dw->get(old_vvelocity, d_lab->d_vVelocitySPBCLabel,
-		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-    new_dw->getModifiable(new_vvelocity, d_lab->d_vVelocitySPBCLabel,
-			  matlIndex, patch);
-    old_dw->get(old_wvelocity, d_lab->d_wVelocitySPBCLabel,
-		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-    new_dw->getModifiable(new_wvelocity, d_lab->d_wVelocitySPBCLabel,
-			  matlIndex, patch);
-    if (d_reactingScalarSolve) {
-    old_dw->get(old_reactscalar, d_lab->d_reactscalarSPLabel,
-		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-    new_dw->getModifiable(new_reactscalar, d_lab->d_reactscalarSPLabel,
-			  matlIndex, patch);
-    }
-    if (d_enthalpySolve) {
-    old_dw->get(old_enthalpy, d_lab->d_enthalpySPLabel,
-		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-    new_dw->getModifiable(new_enthalpy, d_lab->d_enthalpySPLabel,
-			  matlIndex, patch);
-    }
-    double underrelax = 1.0;
-    IntVector idxLo = patch->getCellLowIndex();
-    IntVector idxHi = patch->getCellHighIndex();
-    for (int ColX = idxLo.x(); ColX < idxHi.x(); ColX++) {
-      for (int ColY = idxLo.y(); ColY < idxHi.y(); ColY++) {
-        for (int ColZ = idxLo.z(); ColZ < idxHi.z(); ColZ++) {
-	    IntVector currCell(ColX,ColY,ColZ);
-	    new_scalar[currCell] = underrelax*new_scalar[currCell]+
-		    (1.0-underrelax)*old_scalar[currCell];
-	    new_density[currCell] = underrelax*new_density[currCell]+
-		    (1.0-underrelax)*old_density[currCell];
-    	    if (d_reactingScalarSolve)
-	    new_reactscalar[currCell] = underrelax*new_reactscalar[currCell]+
-		    (1.0-underrelax)*old_reactscalar[currCell];
-    	    if (d_enthalpySolve)
-	    new_enthalpy[currCell] = underrelax*new_enthalpy[currCell]+
-		    (1.0-underrelax)*old_enthalpy[currCell];
-        }
-      }
-    }
-    idxLo = patch->getSFCXLowIndex();
-    idxHi = patch->getSFCXHighIndex();
-    for (int ColX = idxLo.x(); ColX < idxHi.x(); ColX++) {
-      for (int ColY = idxLo.y(); ColY < idxHi.y(); ColY++) {
-        for (int ColZ = idxLo.z(); ColZ < idxHi.z(); ColZ++) {
-	    IntVector currCell(ColX,ColY,ColZ);
-	    new_uvelocity[currCell] = underrelax*new_uvelocity[currCell]+
-		    (1.0-underrelax)*old_uvelocity[currCell];
-        }
-      }
-    }
-    idxLo = patch->getSFCYLowIndex();
-    idxHi = patch->getSFCYHighIndex();
-    for (int ColX = idxLo.x(); ColX < idxHi.x(); ColX++) {
-      for (int ColY = idxLo.y(); ColY < idxHi.y(); ColY++) {
-        for (int ColZ = idxLo.z(); ColZ < idxHi.z(); ColZ++) {
-	    IntVector currCell(ColX,ColY,ColZ);
-	    new_vvelocity[currCell] = underrelax*new_vvelocity[currCell]+
-		    (1.0-underrelax)*old_vvelocity[currCell];
-        }
-      }
-    }
-    idxLo = patch->getSFCZLowIndex();
-    idxHi = patch->getSFCZHighIndex();
-    for (int ColX = idxLo.x(); ColX < idxHi.x(); ColX++) {
-      for (int ColY = idxLo.y(); ColY < idxHi.y(); ColY++) {
-        for (int ColZ = idxLo.z(); ColZ < idxHi.z(); ColZ++) {
-	    IntVector currCell(ColX,ColY,ColZ);
-	    new_wvelocity[currCell] = underrelax*new_wvelocity[currCell]+
-		    (1.0-underrelax)*old_wvelocity[currCell];
-        }
-      }
     }
   }
 }
