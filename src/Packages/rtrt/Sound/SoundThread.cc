@@ -61,7 +61,7 @@ SoundThread::SoundThread( const Camera * eyepoint, Scene * scene,
   alSetQueueSize( config_, samplingRate_ * 2 );
   alSetSampFmt(   config_, AL_SAMPFMT_TWOSCOMP );
   alSetChannels(  config_, numChannels_ );
-  alSetWidth(     config_, AL_SAMPLE_8 );
+  alSetWidth(     config_, AL_SAMPLE_16 );
 
   char portName[20];
   sprintf( portName, "rtrt sounds %d", portNum );
@@ -87,8 +87,8 @@ SoundThread::~SoundThread()
 void
 SoundThread::run()
 {
-  signed char * quiet = new signed char[(int)(samplingRate_+1) * numChannels_];
-  signed char * mix   = new signed char[(int)(samplingRate_+1) * numChannels_];
+  short * quiet = new short[(int)(samplingRate_+1) * numChannels_];
+  short * mix   = new short[(int)(samplingRate_+1) * numChannels_];
 
   // Initialize "quiet" buffer to all -128's.
   for( int cnt = 0; cnt < samplingRate_*numChannels_; cnt++ ) {
@@ -109,7 +109,7 @@ SoundThread::run()
       if( soundQueue_.size() > 0 )
 	{
 	  Point left, right;
-	  eyepoint_->get_ears( left, right, 1.0 );
+	  eyepoint_->get_ears( left, right, 0.3 );
 
 	  const Point & eye = eyepoint_->get_eye();
 
@@ -128,9 +128,9 @@ SoundThread::run()
 	  for( int cnt = 0; (globalVolume > 0) && (cnt < soundQueue_.size()); 
 	       cnt++ )
 	    {
-	      Sound       * sound = soundQueue_[cnt];
-	      int           frames;
-	      signed char * buffer;
+	      Sound * sound = soundQueue_[cnt];
+	      int     frames;
+	      short * buffer;
 
 	      double leftVolume = sound->volume( left );
 	      double rightVolume = sound->volume( right );

@@ -42,7 +42,7 @@ public:
   // Returns a pointer into the soundBuffer_; increments current sound
   // buffer location.  If there are less frames left in the sound then
   // requested, actualNumframes will hold the number of frames left.
-  signed char * getFrames( int numFrames, int & actualNumframes );
+  short * getFrames( int numFrames, int & actualNumframes );
 
   // Actually load the sound.  SOUND WILL NOT PLAY UNTIL THIS IS CALLED!
   void    activate();
@@ -61,7 +61,7 @@ public:
   const string getName() const { return name_; }
 
 private:
-  signed char * soundBuffer_;
+  short       * soundBuffer_;
   int           numFrames_;
 
   int           bufferLocation_;
