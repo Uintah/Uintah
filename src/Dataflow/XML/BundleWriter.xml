@@ -32,7 +32,19 @@
 <component name="BundleWriter" category="Bundle">
   <overview>
     <authors>
+    Jeroen Stinstra
     </authors>
+    <summary>
+      This module writes a bundle to disk.
+    </summary>
+    <description>
+      This module writes a bundle to disk. A bundle file
+      has a .bdl extension and can be written with the BundleWriter
+      module and can be read with the BundleReader module. 
+      In a bdl file every component is stored. Hence it can
+      be used to group a lot of different SCIRun objects together
+      and store it as one file.
+    </description>
   </overview>
   <implementation>
   </implementation>

@@ -32,7 +32,24 @@
 <component name="BundleGetMatrix" category="Bundle">
   <overview>
     <authors>
+    Jeroen Stinstra
     </authors>
+    <summary>
+      This module retrieves a 'matrix' object from a bundle. 
+    </summary>
+    <description>
+      This module retrieves a 'matrix' object from a bundle by specifying the
+      name of that object. The module has three output ports that each can be 
+      programmed to retrieve a specific 'matrix' object. 
+
+      Since Nrrd and Matrix objects can represent the same kind of data. The
+      bundle class has a built in converter from matrix to nrrd. Hence all
+      compatible matrix objects are listed as well and will be converted on 
+      the spot if they are selected.
+      
+      The module's first bundle output port just generates a copy of the input
+      bundle.
+    </description>
   </overview>
   <implementation>
   </implementation>

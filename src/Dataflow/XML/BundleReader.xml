@@ -32,7 +32,18 @@
 <component name="BundleReader" category="Bundle">
   <overview>
     <authors>
+    Jeroen Stinstra
     </authors>
+    <summary>
+      This module reads a bundle from disk.
+    </summary>
+    <description>
+      This module reads a bundle from disk. A bundle file
+      has a .bdl extension and can be written with the BundleWriter
+      module. In a bdl file every component is stored. Hence it can be used
+       to group a lot of different SCIRun objects together
+      and store it as one file.
+    </description>
   </overview>
   <implementation>
   </implementation>
