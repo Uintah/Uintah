@@ -11,6 +11,8 @@
 #include <Packages/Uintah/Core/Exceptions/UnknownVariable.h>
 #include <iostream>
 #include <fstream>
+#include <sys/stat.h>
+#include <sys/types.h>
 
 using std::ifstream;
 using std::cerr;
@@ -46,29 +48,55 @@ void    ICE::printData(const Patch* patch, int include_EC,
       high  = patch->getInteriorCellHighIndex();
     }
     adjust_dbg_indices( d_dbgBeginIndx, d_dbgEndIndx, low, high); 
-         
-    cerr << "______________________________________________\n";
-    cerr << "$" << message1 << "\n";
-    cerr << "$" << message2 << "\n";
+    
+    //__________________________________
+    // spew to stderr
+    if ( !d_dbgGnuPlot) {       
+      cerr << "______________________________________________\n";
+      cerr << "$" << message1 << "\n";
+      cerr << "$" << message2 << "\n";
 
-    cerr.setf(ios::scientific,ios::floatfield);
-    cerr.precision(d_dbgSigFigs);  
-    for(int k = low.z(); k < high.z(); k++)  {
-      for(int j = low.y(); j < high.y(); j++) {
-        for(int i = low.x(); i < high.x(); i++) {
-         IntVector idx(i, j, k);
-         cerr << "[" << i << "," << j << "," << k << "]~ " 
-              << q_CC[idx] << "  ";
+      cerr.setf(ios::scientific,ios::floatfield);
+      cerr.precision(d_dbgSigFigs);  
+      for(int k = low.z(); k < high.z(); k++)  {
+        for(int j = low.y(); j < high.y(); j++) {
+          for(int i = low.x(); i < high.x(); i++) {
+           IntVector idx(i, j, k);
+           cerr << "[" << i << "," << j << "," << k << "]~ " 
+                << q_CC[idx] << "  ";
 
-         /*  cerr << "\n"; */
+           /*  cerr << "\n"; */
+          }
+         cerr << "\n";
         }
-       cerr << "\n";
+        cerr << "\n";
       }
-      cerr << "\n";
+      cerr <<" ______________________________________________\n";
+      cerr.setf(ios::scientific ,ios::floatfield);
     }
-    cerr <<" ______________________________________________\n";
-    cerr.setf(ios::scientific ,ios::floatfield);
-  }
+    //__________________________________
+    //  spew to gnuPlot data files
+    if (d_dbgGnuPlot) {
+      FILE *fp;
+      string path;
+      createDirs(message1, path);
+        
+      string filename = path + "/" + message2;
+      fp = fopen(filename.c_str(), "w");
+      double x, dx;
+      find_gnuplot_origin_And_dx(patch, low, high, &dx, &x);
+      
+      for(int k = low.z(); k < high.z(); k++)  {
+        for(int j = low.y(); j < high.y(); j++) {
+          for(int i = low.x(); i < high.x(); i++) {
+            IntVector idx(i, j, k);
+            fprintf(fp, "%16.15E %16.15E\n", x+=dx, q_CC[idx]);
+          }
+        }
+      }
+      fclose(fp);
+    } // gnuplot 
+  }  // time to dump
 }
 
 /* 
@@ -100,29 +128,54 @@ void    ICE::printData(const Patch* patch, int include_EC,
     }
     adjust_dbg_indices( d_dbgBeginIndx, d_dbgEndIndx, low, high); 
     
-    
-    cerr << "______________________________________________\n";
-    cerr << "$" << message1 << "\n";
-    cerr << "$" << message2 << "\n";
-    
-    cerr.setf(ios::scientific,ios::floatfield);
-    cerr.precision(d_dbgSigFigs);
-    for(int k = low.z(); k < high.z(); k++)  {
-      for(int j = low.y(); j < high.y(); j++) {
-        for(int i = low.x(); i < high.x(); i++) {
-         IntVector idx(i, j, k);
-         cerr << "[" << i << "," << j << "," << k << "]~ " 
-              << q_CC[idx] << " ";
+    //__________________________________
+    // spew to stderr
+    if (!d_dbgGnuPlot) {   
+      cerr << "______________________________________________\n";
+      cerr << "$" << message1 << "\n";
+      cerr << "$" << message2 << "\n";
 
-         /*  cerr << "\n"; */
+      cerr.setf(ios::scientific,ios::floatfield);
+      cerr.precision(d_dbgSigFigs);
+      for(int k = low.z(); k < high.z(); k++)  {
+        for(int j = low.y(); j < high.y(); j++) {
+          for(int i = low.x(); i < high.x(); i++) {
+           IntVector idx(i, j, k);
+           cerr << "[" << i << "," << j << "," << k << "]~ " 
+                << q_CC[idx] << " ";
+
+           /*  cerr << "\n"; */
+          }
+         cerr << "\n";
         }
-       cerr << "\n";
+        cerr << "\n";
       }
-      cerr << "\n";
+      cerr << " ______________________________________________\n";
+      cerr.setf(ios::scientific ,ios::floatfield);
     }
-    cerr << " ______________________________________________\n";
-    cerr.setf(ios::scientific ,ios::floatfield);
-  }
+    //__________________________________
+    //  spew to gnuPlot data files
+    if (d_dbgGnuPlot) {
+      FILE *fp;
+      string path;
+      createDirs(message1, path);
+        
+      string filename = path + "/" + message2;
+      fp = fopen(filename.c_str(), "w");
+      double x, dx;
+      find_gnuplot_origin_And_dx(patch, low, high, &dx, &x);
+      
+      for(int k = low.z(); k < high.z(); k++)  {
+        for(int j = low.y(); j < high.y(); j++) {
+          for(int i = low.x(); i < high.x(); i++) {
+            IntVector idx(i, j, k);
+            fprintf(fp, "%16.15E %16.15E\n", x+=dx, q_CC[idx]);
+          }
+        }
+      }
+      fclose(fp);
+    } // gnuplot
+  }  // time to dump
 }
 /* 
  ======================================================================*
@@ -156,8 +209,7 @@ void    ICE::printVector(const Patch* patch, int include_EC,
     adjust_dbg_indices( d_dbgBeginIndx, d_dbgEndIndx, low, high); 
     
     string var_name;
-    cerr.setf(ios::scientific,ios::floatfield);
-    cerr.precision(d_dbgSigFigs); 
+ 
     
     for (int dir = 0; dir < 3 ; dir ++ ) { 
       if (dir == 0 ) {
@@ -169,26 +221,55 @@ void    ICE::printVector(const Patch* patch, int include_EC,
       if (dir == 2 ) {
         var_name="Z_" + message2;
       }
-      cerr << "______________________________________________\n";
-      cerr << "$" << message1 << "\n";
-      cerr << "$" << var_name << "\n";
-      for(int k = low.z(); k < high.z(); k++)  {
-        for(int j = low.y(); j < high.y(); j++) {
-          for(int i = low.x(); i < high.x(); i++) {
-           IntVector idx(i, j, k);
-           cerr << "[" << i << "," << j << "," << k << "]~ " 
-                <<  q_CC[idx](dir) << "  ";
+      //__________________________________
+      // spew to stderr
+      if( !d_dbgGnuPlot) {
+        cerr.setf(ios::scientific,ios::floatfield);
+        cerr.precision(d_dbgSigFigs);
+        cerr << "______________________________________________\n";
+        cerr << "$" << message1 << "\n";
+        cerr << "$" << var_name << "\n";
+        for(int k = low.z(); k < high.z(); k++)  {
+          for(int j = low.y(); j < high.y(); j++) {
+            for(int i = low.x(); i < high.x(); i++) {
+             IntVector idx(i, j, k);
+             cerr << "[" << i << "," << j << "," << k << "]~ " 
+                  <<  q_CC[idx](dir) << "  ";
 
-           /*  cerr << "\n"; */
+             /*  cerr << "\n"; */
+            }
+           cerr << "\n";
           }
-         cerr << "\n";
+          cerr << "\n";
         }
-        cerr << "\n";
+        cerr << " ______________________________________________\n";
+        cerr.setf(ios::scientific, ios::floatfield);
       }
-    }
-    cerr << " ______________________________________________\n";
-    cerr.setf(ios::scientific, ios::floatfield);
-  }
+
+      //__________________________________
+      //  spew to gnuPlot data files
+      if (d_dbgGnuPlot) {
+        FILE *fp;
+        string path;
+        createDirs(message1, path);
+
+        string filename = path + "/" + var_name;
+        fp = fopen(filename.c_str(), "w");
+        double x, dx;
+        find_gnuplot_origin_And_dx(patch, low, high, &dx, &x);
+
+        for(int k = low.z(); k < high.z(); k++)  {
+          for(int j = low.y(); j < high.y(); j++) {
+            for(int i = low.x(); i < high.x(); i++) {
+              IntVector idx(i, j, k);
+              fprintf(fp, "%16.15E %16.15E\n", x+=dx, q_CC[idx]);
+            }
+          }
+        }
+        fclose(fp);
+      } // gnuplot
+    }  // dir loop
+  } // time to dump
 }
 
 
@@ -220,30 +301,54 @@ void    ICE::printData_FC(const Patch* patch, int include_EC,
       high  = patch->getInteriorCellHighIndex();
     }
     adjust_dbg_indices( d_dbgBeginIndx, d_dbgEndIndx, low, high); 
-     
-     
-    cerr.setf(ios::scientific,ios::floatfield);
-    cerr.precision(d_dbgSigFigs); 
-    cerr << "______________________________________________\n";
-    cerr << "$" << message1 << "\n";
-    cerr << "$" << message2 << "\n"; 
-    for(int k = low.z(); k < high.z(); k++)  {
-      for(int j = low.y(); j < high.y(); j++) {
-      //for(int j = high.y()-1; j >= low.y(); j--) {
-        for(int i = low.x(); i < high.x(); i++) {
-         IntVector idx(i, j, k);
-         cerr << "[" << i << "," << j << "," << k << "]~ " <<
-           q_FC[idx] << "  ";
 
-         /* cerr <<"\n"; */
+    //__________________________________
+    // spew to stderr
+    if( !d_dbgGnuPlot) {    
+      cerr.setf(ios::scientific,ios::floatfield);
+      cerr.precision(d_dbgSigFigs); 
+      cerr << "______________________________________________\n";
+      cerr << "$" << message1 << "\n";
+      cerr << "$" << message2 << "\n"; 
+      for(int k = low.z(); k < high.z(); k++)  {
+        for(int j = low.y(); j < high.y(); j++) {
+          for(int i = low.x(); i < high.x(); i++) {
+           IntVector idx(i, j, k);
+           cerr << "[" << i << "," << j << "," << k << "]~ " <<
+             q_FC[idx] << "  ";
+
+           /* cerr <<"\n"; */
+          }
+          cerr << "\n";
         }
-        cerr << "\n";
+        cerr <<"\n";
       }
-      cerr <<"\n";
+      cerr << " ______________________________________________\n";
+      cerr.setf(ios::scientific, ios::floatfield);
     }
-    cerr << " ______________________________________________\n";
-    cerr.setf(ios::scientific, ios::floatfield);
-  }
+    //__________________________________
+    //  spew to gnuPlot data files
+    if (d_dbgGnuPlot) {
+      FILE *fp;
+      string path;
+      createDirs(message1, path);
+
+      string filename = path + "/" + message2;
+      fp = fopen(filename.c_str(), "w");
+      double x, dx;
+      find_gnuplot_origin_And_dx(patch, low, high, &dx, &x);
+
+      for(int k = low.z(); k < high.z(); k++)  {
+        for(int j = low.y(); j < high.y(); j++) {
+          for(int i = low.x(); i < high.x(); i++) {
+            IntVector idx(i, j, k);
+            fprintf(fp, "%16.15E %16.15E\n", x+=dx, q_FC[idx]);
+          }
+        }
+      }
+      fclose(fp);
+    } // gnuplot
+  }  // time to dump
 }
 /* 
  ======================================================================*
@@ -273,30 +378,54 @@ void    ICE::printData_FC(const Patch* patch, int include_EC,
       high  = patch->getInteriorCellHighIndex();
     }
     adjust_dbg_indices( d_dbgBeginIndx, d_dbgEndIndx, low, high); 
-    
-    
-    cerr.setf(ios::scientific,ios::floatfield);
-    cerr.precision(d_dbgSigFigs);
-    cerr << "______________________________________________\n";
-    cerr << "$" << message1 << "\n";
-    cerr << "$" << message2 << "\n";
-    for(int k = low.z(); k < high.z(); k++)  {
-      for(int j = low.y(); j < high.y(); j++) {
-      //for(int j = high.y()-1; j >= low.y(); j--) {
-        for(int i = low.x(); i < high.x(); i++) {
-         IntVector idx(i, j, k);
-         cerr << "[" << i << "," << j << "," << k << "]~ " <<  
-           q_FC[idx] << "  ";
+   
+    //__________________________________
+    // spew to stderr
+    if( !d_dbgGnuPlot) {
+      cerr.setf(ios::scientific,ios::floatfield);
+      cerr.precision(d_dbgSigFigs);
+      cerr << "______________________________________________\n";
+      cerr << "$" << message1 << "\n";
+      cerr << "$" << message2 << "\n";
+      for(int k = low.z(); k < high.z(); k++)  {
+        for(int j = low.y(); j < high.y(); j++) {
+          for(int i = low.x(); i < high.x(); i++) {
+           IntVector idx(i, j, k);
+           cerr << "[" << i << "," << j << "," << k << "]~ " <<  
+             q_FC[idx] << "  ";
 
-         /*  cerr << "\n"; */
+           /*  cerr << "\n"; */
+          }
+          cerr << "\n";
         }
         cerr << "\n";
       }
-      cerr << "\n";
+      cerr << " ______________________________________________\n";
+      cerr.setf(ios::scientific, ios::floatfield);
     }
-    cerr << " ______________________________________________\n";
-    cerr.setf(ios::scientific, ios::floatfield);
-  }
+    //__________________________________
+    //  spew to gnuPlot data files
+    if (d_dbgGnuPlot) {
+      FILE *fp;
+      string path;
+      createDirs(message1, path);
+
+      string filename = path + "/" + message2;
+      fp = fopen(filename.c_str(), "w");
+      double x, dx;
+      find_gnuplot_origin_And_dx(patch, low, high, &dx, &x);
+
+      for(int k = low.z(); k < high.z(); k++)  {
+        for(int j = low.y(); j < high.y(); j++) {
+          for(int i = low.x(); i < high.x(); i++) {
+            IntVector idx(i, j, k);
+            fprintf(fp, "%16.15E %16.15E\n", x+=dx, q_FC[idx]);
+          }
+        }
+      }
+      fclose(fp);
+    } // gnuplot
+  } // time to dump
 }
 
 /* 
@@ -329,29 +458,53 @@ void    ICE::printData_FC(const Patch* patch, int include_EC,
     }
     
     adjust_dbg_indices( d_dbgBeginIndx, d_dbgEndIndx, low, high); 
-    
-    cerr.setf(ios::scientific,ios::floatfield);
-    cerr.precision(d_dbgSigFigs);   
-    cerr << "______________________________________________\n";
-    cerr << "$" << message1 << "\n";
-    cerr << "$" << message2 << "\n";
-    for(int k = low.z(); k < high.z(); k++)  {
-      for(int j = low.y(); j < high.y(); j++) {
-      //for(int j = high.y()-1; j >= low.y(); j--) {
-        for(int i = low.x(); i < high.x(); i++) {
-         IntVector idx(i, j, k);
-         cerr << "[" << i << "," << j << "," << k << "]~ " << 
-           q_FC[idx] << "  ";
+    //__________________________________
+    // spew to stderr
+    if( !d_dbgGnuPlot) {
+      cerr.setf(ios::scientific,ios::floatfield);
+      cerr.precision(d_dbgSigFigs);   
+      cerr << "______________________________________________\n";
+      cerr << "$" << message1 << "\n";
+      cerr << "$" << message2 << "\n";
+      for(int k = low.z(); k < high.z(); k++)  {
+        for(int j = low.y(); j < high.y(); j++) {
+          for(int i = low.x(); i < high.x(); i++) {
+           IntVector idx(i, j, k);
+           cerr << "[" << i << "," << j << "," << k << "]~ " << 
+             q_FC[idx] << "  ";
 
-         /*  cerr << "\n"; */
+           /*  cerr << "\n"; */
+          }
+         cerr << "\n";
         }
-       cerr << "\n";
+        cerr << "\n";
       }
-      cerr << "\n";
+      cerr << " ______________________________________________\n";
+      cerr.setf(ios::scientific, ios::floatfield);
     }
-    cerr << " ______________________________________________\n";
-    cerr.setf(ios::scientific, ios::floatfield);
-  }
+    //__________________________________
+    //  spew to gnuPlot data files
+    if (d_dbgGnuPlot) {
+      FILE *fp;
+      string path;
+      createDirs(message1, path);
+
+      string filename = path + "/" + message2;
+      fp = fopen(filename.c_str(), "w");
+      double x, dx;
+      find_gnuplot_origin_And_dx(patch, low, high, &dx, &x);
+
+      for(int k = low.z(); k < high.z(); k++)  {
+        for(int j = low.y(); j < high.y(); j++) {
+          for(int i = low.x(); i < high.x(); i++) {
+            IntVector idx(i, j, k);
+            fprintf(fp, "%16.15E %16.15E\n", x+=dx, q_FC[idx]);
+          }
+        }
+      }
+      fclose(fp);
+    } // gnuplot
+  }  // time to dump
 }
 
 /* 
@@ -462,6 +615,86 @@ void    ICE::readData(const Patch* patch, int include_EC,
     fp >> c;
   }
   fp >> text;
+}
+
+/* 
+ ======================================================================
+ Function~  createDirs:
+ Purpose~   generate a bunch of directories based on desc and is used by
+            the gnuPlot option.  For example, if desc = 
+            BOT_Lagrangian_spVolRF_Mat_0_patch_0 then the dir structure
+            would be ./BOT_Lagrangian_spVolRF/patch_0/matl_0
+ _______________________________________________________________________ */
+void ICE::createDirs( const string& desc, string& path) 
+{
+  int pos  = desc.find ( "Mat" );
+  int pos2 = desc.find ( "patch" );
+  string dirName, matDir;
+  //__________________________________
+  // parse desc into dirName, matl and patch
+  if (pos == string::npos ){  // if Mat isn't in the desc
+    dirName   = desc.substr(0,pos2-1);
+  } else {                    // if Mat is in the desc
+    dirName   = desc.substr(0,pos-1);
+    matDir    = desc.substr(pos, 5);
+  }
+  string patchDir  = desc.substr(pos2);
+  
+  if (patchDir == ""||dirName == "") {
+    Message(1,"\nGNUPLOT the printData description isn't properly formatted",
+              " you must have _patch_ at the end of the description","");
+  }
+  //  cout << desc << " dirName "<< dirName << " matDir "<< matDir 
+  //        << " patchDir "<< patchDir<<endl;
+  //__________________________________
+  // make the directories
+  // code = 0 if successful
+  int code = mkdir( dirName.c_str(), 0777 );
+  
+  path = dirName + "/" + patchDir;
+  code = mkdir( path.c_str(), 0777 );
+  
+  if (matDir != "") { 
+    path = dirName + "/" + patchDir + "/" + matDir ;
+    code = mkdir( path.c_str(), 0777 );
+  }
+}
+/* 
+ ======================================================================
+ Function~  find_gnuplot_origin_And_dx:
+ Purpose~   which direction and
+ _______________________________________________________________________ */
+void ICE::find_gnuplot_origin_And_dx(const Patch* patch, 
+                                     const IntVector low, 
+                                     const IntVector high,
+                                     double *dx,
+                                     double *origin)
+{
+  int test=0;
+  Vector  dx_org = patch->dCell();
+  //__________________________________
+  // bullet proofing
+  if (high.x() - low.x() > 1) test +=1;
+  if (high.y() - low.y() > 1) test +=1;
+  if (high.z() - low.z() > 1) test +=1;
+  if (test !=1) {
+    Message(1, " \n GNUPLOT: you have more that one principal dir. specified",
+               " or you haven't specified one.",
+               " double check dbg_BeginIndex or dbg_EndIndex");
+  }
+               
+  if (high.x() - low.x() > 1) {
+    *dx = dx_org.x();
+    *origin = *dx * low.x();
+  } 
+  if (high.y() - low.y() > 1) {
+    *dx = dx_org.y();
+    *origin = *dx * low.y();
+  }
+  if (high.z() - low.z() > 1){
+    *dx = dx_org.z();
+    *origin = *dx * low.z();
+  }
 }
 
 /* 
