@@ -6,8 +6,10 @@
 #include <Core/Malloc/Allocator.h>
 #include <Core/Thread/Thread.h>
 
+#include <sgi_stl_warnings_off.h>
 #include <sstream>
 #include <iostream>
+#include <sgi_stl_warnings_on.h>
 
 using namespace Uintah;
 using SCIRun::Thread;

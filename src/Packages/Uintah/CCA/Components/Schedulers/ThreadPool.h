@@ -11,8 +11,10 @@
 #include <Core/Thread/RecursiveMutex.h>
 #include <Core/Thread/Semaphore.h>
 
+#include <sgi_stl_warnings_off.h>
 #include <vector>
 #include <stack>
+#include <sgi_stl_warnings_on.h>
 
 namespace Uintah {
 

@@ -4,7 +4,9 @@
 #include <Packages/Uintah/Core/Grid/BoundCondData.h>
 #include <Core/Geometry/IntVector.h>
 #include <Core/Geometry/Point.h>
+#include <sgi_stl_warnings_off.h>
 #include <vector>
+#include <sgi_stl_warnings_on.h>
 
 namespace Uintah {
 

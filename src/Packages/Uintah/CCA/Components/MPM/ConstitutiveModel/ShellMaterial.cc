@@ -432,7 +432,7 @@ ShellMaterial::computeStressTensor(const PatchSubset* patches,
 				   DataWarehouse* new_dw)
 {
   // Initialize contants
-  double onethird = (1.0/3.0);
+  //  double onethird = (1.0/3.0);
   Matrix3 One; One.Identity();
   double shear = d_initialData.Shear;
   double bulk  = d_initialData.Bulk;
@@ -801,7 +801,7 @@ ShellMaterial::addComputesRequiresRotAcceleration(Task* task,
 					          const PatchSet* patches) 
 {
   Ghost::GhostType  gac   = Ghost::AroundCells;
-  Ghost::GhostType  gnone = Ghost::None;
+  //  Ghost::GhostType  gnone = Ghost::None;
   const MaterialSubset* matlset = matl->thisMaterial();
 
   task->requires(Task::OldDW,   lb->pXLabel,                matlset, gac, NGN);
@@ -833,7 +833,7 @@ ShellMaterial::computeRotAcceleration(const PatchSubset* patches,
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     Vector dx = patch->dCell();
-    double oodx[3] = {1./dx.x(), 1./dx.y(), 1./dx.z()};
+    //    double oodx[3] = {1./dx.x(), 1./dx.y(), 1./dx.z()};
     ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
 
     // Get stuff from datawarehouse

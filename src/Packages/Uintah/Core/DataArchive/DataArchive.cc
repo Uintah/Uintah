@@ -86,7 +86,7 @@ DataArchive::~DataArchive()
 
 
   // need to delete the nodes
-  int size = d_tstop.size();
+  int size = static_cast<int>(d_tstop.size());
   for (int i = 0; i < size; i++) {
     d_tstop[i]->releaseDocument();
   }
@@ -468,7 +468,6 @@ DataArchive::query( Variable& var, ProblemSpecP vnode, XMLURL url,
   if(dataurl.getProtocol() != XMLURL::File) {
     char* urlpath = XMLString::transcode(dataurl.getPath());
     throw InternalError(string("Cannot read over: ")+urlpath);
-    delete [] urlpath;
   }
   char* urlpath = XMLString::transcode(dataurl.getPath());
   string datafile(urlpath);
@@ -767,7 +766,7 @@ DataArchive::PatchHashMaps::PatchHashMaps()
 }
 
 DataArchive::PatchHashMaps::~PatchHashMaps() {
-  int size = docs.size();
+  int size = static_cast<int>(docs.size());
   for (int i = 0; i < size; i++) {
     docs[i]->releaseDocument();
   }

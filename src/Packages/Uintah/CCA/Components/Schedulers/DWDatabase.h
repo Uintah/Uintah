@@ -12,11 +12,13 @@
 #include <Core/Malloc/Allocator.h>
 #include <Core/Util/FancyAssert.h>
 
+#include <sgi_stl_warnings_off.h>
 #include <map>
 #include <vector>
 #include <iosfwd>
 #include <list>
 #include <sstream>
+#include <sgi_stl_warnings_on.h>
 
 namespace Uintah {
 

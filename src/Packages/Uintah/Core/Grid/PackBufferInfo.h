@@ -4,7 +4,9 @@
 
 #include <sci_config.h> // For MPIPP_H on SGI
 #include <mpi.h>
+#include <sgi_stl_warnings_off.h>
 #include <vector>
+#include <sgi_stl_warnings_on.h>
 #include <Packages/Uintah/Core/Grid/BufferInfo.h>
 #include <Packages/Uintah/Core/ProblemSpec/RefCounted.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>

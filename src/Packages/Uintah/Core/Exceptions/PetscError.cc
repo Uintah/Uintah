@@ -1,6 +1,8 @@
 
 #include <Packages/Uintah/Core/Exceptions/PetscError.h>
+#include <sgi_stl_warnings_off.h>
 #include <sstream>
+#include <sgi_stl_warnings_on.h>
 
 using namespace Uintah;
 using namespace std;

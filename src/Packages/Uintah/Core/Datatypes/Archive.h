@@ -7,8 +7,6 @@
 
 #include <Packages/Uintah/Core/DataArchive/DataArchive.h>
 
-#include <iostream>
-
 namespace Uintah {
 
 using namespace SCIRun;

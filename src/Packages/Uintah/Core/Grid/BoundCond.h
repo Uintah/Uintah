@@ -2,7 +2,9 @@
 #define UINTAH_GRID_BoundCond_H
 
 #include <Packages/Uintah/Core/Grid/BoundCondBase.h>
+#include <sgi_stl_warnings_off.h>
 #include <string>
+#include <sgi_stl_warnings_on.h>
 
 namespace Uintah {
 using std::string;

@@ -2,7 +2,6 @@
 #define Package_Uintah_testprograms_TestBoxGrouper_Box
 
 #include <Core/Geometry/IntVector.h>
-#include <iostream>
 
 namespace Uintah {
   using namespace SCIRun;

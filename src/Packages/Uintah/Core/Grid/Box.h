@@ -3,7 +3,9 @@
 #define UINTAH_GRID_BOX_H
 
 #include <Core/Geometry/Point.h>
+#include <sgi_stl_warnings_off.h>
 #include <iosfwd>
+#include <sgi_stl_warnings_on.h>
 
 namespace Uintah {
 

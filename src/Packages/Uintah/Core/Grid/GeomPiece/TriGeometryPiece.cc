@@ -5,8 +5,10 @@
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <Core/Geometry/Plane.h>
 #include <Core/Geometry/Ray.h>
+#include <sgi_stl_warnings_off.h>
 #include <iostream>
 #include <fstream>
+#include <sgi_stl_warnings_on.h>
 
 using namespace Uintah;
 using namespace std;

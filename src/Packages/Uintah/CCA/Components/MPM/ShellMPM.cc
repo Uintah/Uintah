@@ -96,10 +96,10 @@ ShellMPM::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
 //
 void 
 ShellMPM::materialProblemSetup(const ProblemSpecP& prob_spec, 
-			        SimulationStateP& sharedState,
-                                MPMLabel* lb, int n8or27,
-			        string integrator, bool haveLoadCurve,
-			        bool doErosion)
+			       SimulationStateP& sharedState,
+			       MPMLabel* lb, int /*n8or27*/,
+			       string integrator, bool /*haveLoadCurve*/,
+			       bool /*doErosion*/)
 {
   //Search for the MaterialProperties block and then get the MPM section
   ProblemSpecP mat_ps =  prob_spec->findBlock("MaterialProperties");

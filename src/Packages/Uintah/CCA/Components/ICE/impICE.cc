@@ -31,7 +31,7 @@ _____________________________________________________________________*/
  Function~  ICE::scheduleSetupMatrix--
 _____________________________________________________________________*/
 void ICE::scheduleSetupMatrix(  SchedulerP& sched,
-                               const LevelP& level,
+                               const LevelP&,
                                const PatchSet* patches,
                                const MaterialSubset* one_matl,
                                const MaterialSet* all_matls)
@@ -66,7 +66,7 @@ void ICE::scheduleSetupMatrix(  SchedulerP& sched,
  Function~  ICE::scheduleSetupRHS--
 _____________________________________________________________________*/
 void ICE::scheduleSetupRHS(  SchedulerP& sched,
-                             const LevelP& level,
+                             const LevelP&,
                              const PatchSet* patches,
                              const MaterialSubset* one_matl,
                              const MaterialSet* all_matls)
@@ -107,7 +107,7 @@ void ICE::scheduleSetupRHS(  SchedulerP& sched,
  Function~  ICE::scheduleUpdatePressure--
 _____________________________________________________________________*/
 void ICE::scheduleUpdatePressure(  SchedulerP& sched,
-                                   const LevelP& level,
+                                   const LevelP&,
                                    const PatchSet* patches,
                                    const MaterialSubset* press_matl,
                                    const MaterialSet* all_matls)
@@ -186,7 +186,7 @@ void ICE::scheduleImplicitVel_FC(SchedulerP& sched,
  Function~  ICE::scheduleComputeDel_P--
 _____________________________________________________________________*/
 void ICE::scheduleComputeDel_P(  SchedulerP& sched,
-                                 const LevelP& level,               
+                                 const LevelP&,
                                  const PatchSet* patches,           
                                  const MaterialSubset* one_matl,    
                                  const MaterialSubset* press_matl,  
@@ -281,7 +281,7 @@ _____________________________________________________________________*/
 void ICE::setupMatrix(const ProcessorGroup*,
                       const PatchSubset* patches,
                       const MaterialSubset* ,
-                      DataWarehouse* old_dw,
+                      DataWarehouse*,
                       DataWarehouse* new_dw)
 {
   for(int p=0;p<patches->size();p++){
@@ -692,7 +692,7 @@ _____________________________________________________________________*/
 void ICE::computeDel_P(const ProcessorGroup*,
                          const PatchSubset* patches,                    
                          const MaterialSubset* ,                        
-                         DataWarehouse* old_dw,                         
+                         DataWarehouse*,
                          DataWarehouse* new_dw)                         
 {
    

@@ -8,15 +8,15 @@
 #include <Core/Geometry/Vector.h>
 #include <Core/Math/MinMax.h>
 
+#include <sgi_stl_warnings_off.h>
 #include <map>
 #include <vector>
 #include <iostream>
+#include <sgi_stl_warnings_on.h>
 
 namespace Uintah {
 
 using namespace SCIRun;
-using std::cerr;
-using std::endl;
 
 class VarLabel;
 class Material; 

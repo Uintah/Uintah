@@ -20,9 +20,11 @@
 #include <Core/Datatypes/Datatype.h>
 #include <Core/Persistent/Persistent.h>
 #include <Packages/Uintah/Core/Math/Matrix3.h>
+#include <sgi_stl_warnings_off.h>
 #include <vector>
 #include <string>
 #include <map>
+#include <sgi_stl_warnings_on.h>
 
 namespace Uintah {
   using std::vector;

@@ -4,10 +4,12 @@
 #include <Core/Geometry/Vector.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Malloc/Allocator.h>
+#include <sgi_stl_warnings_off.h>
 #include <iostream>
 #include <iomanip>
 #include <map>
 #include <sstream>
+#include <sgi_stl_warnings_on.h>
 
 #if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
 #define IRIX
@@ -710,7 +712,7 @@ ProblemSpecP ProblemSpec::getWithDefault(const std::string& name,
     ps = this;
 
     value.clear();
-    int size = defaultVal.size();
+    int size = static_cast<int>(defaultVal.size());
     for (int i = 0; i < size; i++)
       value.push_back(defaultVal[i]);
   }
@@ -730,7 +732,7 @@ ProblemSpecP ProblemSpec::getWithDefault(const std::string& name,
     // set default values
     ps = this;
     value.clear();
-    int size = defaultVal.size();
+    int size = static_cast<int>(defaultVal.size());
     for (int i = 0; i < size; i++)
       value.push_back(defaultVal[i]);
   }
@@ -1095,9 +1097,6 @@ ProblemSpecP ProblemSpec::createElement(char* str) {
 }
 void ProblemSpec::appendText(const char* str) {
   XMLCh* newstr = XMLString::transcode(str);
-  DOMNode* dn = d_node;
-  DOMDocument* dd = d_node->getOwnerDocument();
-  DOMNode* dt = dd->createTextNode(newstr);
   d_node->appendChild(d_node->getOwnerDocument()->createTextNode(newstr));
   delete [] newstr;
 }
@@ -1301,7 +1300,7 @@ std::ostream& operator<<(std::ostream& target, const DOMNode* toWrite) {
 
       // Output any attributes on this element
       DOMNamedNodeMap *attributes = toWrite->getAttributes();
-      int attrCount = attributes->getLength();
+      int attrCount = static_cast<int>(attributes->getLength());
       for (int i = 0; i < attrCount; i++) {
 	DOMNode  *attribute = attributes->item(i);
 	char* attrName = XMLString::transcode(attribute->getNodeName());

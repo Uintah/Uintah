@@ -8,9 +8,11 @@
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <Packages/Uintah/Core/Grid/NCVariable.h>
+#include <sgi_stl_warnings_off.h>
 #include <map>
 #include <string>
 #include <vector>
+#include <sgi_stl_warnings_on.h>
 
 #if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
 #pragma set woff 1424

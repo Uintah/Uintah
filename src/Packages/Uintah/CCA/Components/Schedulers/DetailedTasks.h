@@ -9,11 +9,13 @@
 #include <Core/Thread/Mutex.h>
 #include <Core/Thread/Semaphore.h>
 #include <Core/Thread/ConditionVariable.h>
+#include <sgi_stl_warnings_off.h>
 #include <list>
 #include <queue>
 #include <vector>
 #include <map>
 #include <set>
+#include <sgi_stl_warnings_on.h>
 
 namespace Uintah {
   using SCIRun::Min;

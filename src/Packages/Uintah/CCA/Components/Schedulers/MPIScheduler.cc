@@ -15,8 +15,10 @@
 #include <Core/Malloc/Allocator.h>
 #include <sci_config.h> // For MPIPP_H on SGI
 #include <mpi.h>
+#include <sgi_stl_warnings_off.h>
 #include <iomanip>
 #include <map>
+#include <sgi_stl_warnings_on.h>
 #include <Packages/Uintah/Core/Parallel/Vampir.h>
 #ifdef USE_PERFEX_COUNTERS
 #include "counters.h"
