@@ -125,7 +125,7 @@ int main(int argc, char* argv[])
   bool display_frames=true;
   
   Camera usercamera(Point(1,0,0), Point(0,0,0), Vector(0,0,1), 60);
-  bool use_usercamera;
+  bool use_usercamera = false;
   
   int scene_argc=-1;
   char** scene_argv=0;
