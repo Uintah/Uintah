@@ -52,7 +52,7 @@ public:
   Tensor(const double **);
   Tensor(const Vector&, const Vector&, const Vector&);
   Tensor& operator=(const Tensor&);
-  ~Tensor();
+  virtual ~Tensor();
   
   Tensor operator+(const Tensor&) const;
   Tensor& operator+=(const Tensor&);
