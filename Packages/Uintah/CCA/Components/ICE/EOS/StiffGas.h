@@ -34,34 +34,40 @@ WARNING
   
 ****************************************/
 
-      class StiffGas : public EquationOfState {
-      public:
-        
-        StiffGas(ProblemSpecP& ps);
-        virtual ~StiffGas();
-        
-        // Per cell
-        virtual double computeRhoMicro(double press,double gamma,
-                                    double cv, double Temp);
-        
-        virtual void computePressEOS(double rhoM, double gamma,
-                                  double cv, double Temp,
-                                  double& press, double& dp_drho,
-                                  double& dp_de);
-        //per patch                          
-        virtual void computeTempCC(const Patch* patch,
-                                const CCVariable<double>& press, 
-                                const double& gamma,
-                                const double& cv,
-                                const CCVariable<double>& rho_micro, 
-                                CCVariable<double>& Temp);
+  class StiffGas : public EquationOfState {
+  public:
 
+   StiffGas(ProblemSpecP& ps);
+   virtual ~StiffGas();
 
-        double getGasConstant() const;
+    virtual double computeRhoMicro(double press,double gamma,
+                                   double cv, double Temp);
 
-      private:
-       double d_gas_constant;
-      };
+    virtual void computePressEOS(double rhoM, double gamma,
+                                 double cv, double Temp,
+                                 double& press, double& dp_drho,
+                                 double& dp_de);
+
+    virtual void computeTempCC(const Patch* patch,
+                               const string& comp_domain,
+                               const CCVariable<double>& press, 
+                               const double& gamma,
+                               const double& cv,
+                               const CCVariable<double>& rho_micro, 
+                               CCVariable<double>& Temp,
+                               Patch::FaceType face);
+
+    virtual double getAlpha(double Temp,double sp_vol,double P, double cv);
+
+    virtual void hydrostaticTempAdjustment((Patch::FaceType face, 
+                                     const Patch* patch,
+                                     const vector<IntVector>& bound,
+                                     Vector& gravity,
+                                     const CCVariable<double>& gamma,
+                                     const CCVariable<double>& cv,
+                                     const Vector& dx,
+                                     CCVariable<double>& Temp_CC);
+  };
 } // End namespace Uintah
       
 #endif  // __STIFF_GAS_H__

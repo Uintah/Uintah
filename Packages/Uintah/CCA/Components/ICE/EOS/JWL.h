@@ -53,22 +53,23 @@ WARNING
         virtual void computeTempCC(const Patch* patch,
                                    const string& comp_domain,
                                    const CCVariable<double>& press, 
-                                   const double& gamma,
-                                   const double& cv,
-                                   const CCVariable<double>& rho_micro, 
+                                   const CCVariable<double>&,
+                                   const CCVariable<double>& cv,
+                                   const CCVariable<double>& rhoM, 
                                    CCVariable<double>& Temp,
-                                   Patch::FaceType face=Patch::xplus);
+                                   Patch::FaceType face);
        
 
         virtual double getAlpha(double Temp,double sp_vol, double P, double cv);
          
-        virtual void hydrostaticTempAdjustment(Patch::FaceType face,
-                                               const Patch* patch,
-                                               Vector& gravity,
-                                               const double& gamma,
-                                               const double& cv,
-                                               const Vector& dx,
-                                               CCVariable<double>& Temp_CC);
+        virtual void hydrostaticTempAdjustment(Patch::FaceType, 
+                                               const Patch*,
+                                               const vector<IntVector>&,
+                                               Vector&,
+                                               const CCVariable<double>&,
+                                               const CCVariable<double>&,
+                                               const Vector&,
+                                               CCVariable<double>&);
 
       private:
         double   A;   // Pascals

@@ -5,7 +5,7 @@
 
 using namespace Uintah;
 
-IdealGas::IdealGas(ProblemSpecP& ps)
+IdealGas::IdealGas(ProblemSpecP& )
 {
    // Constructor
 }
@@ -13,7 +13,7 @@ IdealGas::IdealGas(ProblemSpecP& ps)
 IdealGas::~IdealGas()
 {
 }
-
+//__________________________________
 double IdealGas::computeRhoMicro(double press, double gamma,
                                  double cv, double Temp)
 {
@@ -22,34 +22,33 @@ double IdealGas::computeRhoMicro(double press, double gamma,
 }
 
 //__________________________________
-//
 void IdealGas::computeTempCC(const Patch* patch,
-                          const string& comp_domain,
-                          const CCVariable<double>& press, 
-                          const double& gamma,
-                          const double& cv,
-                          const CCVariable<double>& rho_micro, 
-                          CCVariable<double>& Temp,
-                          Patch::FaceType face)
+                             const string& comp_domain,
+                             const CCVariable<double>& press, 
+                             const CCVariable<double>& gamma,
+                             const CCVariable<double>& cv,
+                             const CCVariable<double>& rho_micro, 
+                             CCVariable<double>& Temp,
+                             Patch::FaceType face)
 {
   if(comp_domain == "WholeDomain") {
     for (CellIterator iter = patch->getExtraCellIterator();!iter.done();iter++){
-      Temp[*iter]= press[*iter]/ ( (gamma - 1.0) * cv * rho_micro[*iter] );
+      IntVector c = *iter;
+      Temp[c]= press[c]/ ( (gamma[c] - 1.0) * cv[c] * rho_micro[c] );
     }
   } 
   // Although this isn't currently being used
   // keep it around it could be useful
   if(comp_domain == "FaceCells") {     
     for (CellIterator iter = patch->getFaceCellIterator(face);
-         !iter.done();iter++) {                     
-      Temp[*iter]= press[*iter]/ ( (gamma - 1.0) * cv * rho_micro[*iter] );
+         !iter.done();iter++) {
+      IntVector c = *iter;                    
+      Temp[c]= press[c]/ ( (gamma[c] - 1.0) * cv[c] * rho_micro[c] );
     }
   }
 }
 
 //__________________________________
-//
-
 void IdealGas::computePressEOS(double rhoM, double gamma,
                             double cv, double Temp,
                             double& press, double& dp_drho, double& dp_de)
@@ -59,7 +58,7 @@ void IdealGas::computePressEOS(double rhoM, double gamma,
   dp_drho = (gamma - 1.0)*cv*Temp;
   dp_de   = (gamma - 1.0)*rhoM;
 }
-
+//__________________________________
 // Return (1/v)*(dv/dT)  (constant pressure thermal expansivity)
 double IdealGas::getAlpha(double Temp, double , double , double )
 {
@@ -70,62 +69,24 @@ double IdealGas::getAlpha(double Temp, double , double , double )
 // Update temperature boundary conditions due to hydrostatic pressure gradient
 // call this after set Dirchlet and Neuman BC
 void IdealGas::hydrostaticTempAdjustment(Patch::FaceType face, 
-                          const Patch* patch,
-                          Vector& grav,
-                          const double& gamma,
-                          const double& cv,
-                          const Vector& dx,
-                          CCVariable<double>& Temp_CC)
-  { 
-
-    double delTemp_hydro;
-    switch (face) {
-    case Patch::xplus:
-      delTemp_hydro = grav.x()*dx.x()/ ( (gamma - 1.0) * cv );
-      for (CellIterator iter = patch->getFaceCellIterator(face,"plusEdgeCells");
-         !iter.done();iter++) { 
-        Temp_CC[*iter] += delTemp_hydro; 
-      }
-      break;
-    case Patch::xminus:
-      delTemp_hydro = grav.x()*dx.x()/ ( (gamma - 1.0) * cv );
-      for (CellIterator iter = patch->getFaceCellIterator(face,"plusEdgeCells");
-         !iter.done();iter++) { 
-        Temp_CC[*iter] -= delTemp_hydro; 
-      }
-      break;
-    case Patch::yplus:
-      delTemp_hydro = grav.y()*dx.y()/ ( (gamma - 1.0) * cv );
-      for (CellIterator iter = patch->getFaceCellIterator(face,"plusEdgeCells");
-         !iter.done();iter++) { 
-        Temp_CC[*iter] += delTemp_hydro; 
-      }
-      break;
-    case Patch::yminus:
-      delTemp_hydro = grav.y()*dx.y()/ ( (gamma - 1.0) * cv );
-      for (CellIterator iter = patch->getFaceCellIterator(face,"plusEdgeCells");
-         !iter.done();iter++) { 
-        Temp_CC[*iter] -= delTemp_hydro; 
-      }
-      break;
-    case Patch::zplus:
-      delTemp_hydro = grav.z()*dx.z()/ ( (gamma - 1.0) * cv );
-      for (CellIterator iter = patch->getFaceCellIterator(face,"plusEdgeCells");
-         !iter.done();iter++) { 
-        Temp_CC[*iter] += delTemp_hydro; 
-      }
-      break;
-    case Patch::zminus:
-      delTemp_hydro = grav.z()*dx.z()/ ( (gamma - 1.0) * cv );
-      for (CellIterator iter = patch->getFaceCellIterator(face,"plusEdgeCells");
-         !iter.done();iter++) { 
-        Temp_CC[*iter] -= delTemp_hydro; 
-      }
-      break;
-    case Patch::numFaces:
-      break;
-   case Patch::invalidFace:
-      break;
-    }
-
+                                         const Patch* patch,
+                                         const vector<IntVector>& bound,
+                                         Vector& gravity,
+                                         const CCVariable<double>& gamma,
+                                         const CCVariable<double>& cv,
+                                         const Vector& cell_dx,
+                                         CCVariable<double>& Temp_CC)
+{ 
+  IntVector axes = patch->faceAxes(face);
+  int P_dir = axes[0];  // principal direction
+  double plusMinusOne = patch->faceDirection(face)[P_dir];
+  // On xPlus yPlus zPlus you add the increment 
+  // on xminus yminus zminus you subtract the increment
+  double dx_grav = gravity[P_dir] * cell_dx[P_dir];
+  
+   vector<IntVector>::const_iterator iter;  
+   for (iter=bound.begin(); iter != bound.end(); iter++) {
+     IntVector c = *iter;
+     Temp_CC[c] += plusMinusOne * dx_grav/( (gamma[c] - 1.0) * cv[c] ); 
   }
+}
