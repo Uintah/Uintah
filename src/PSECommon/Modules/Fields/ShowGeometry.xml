@@ -9,7 +9,8 @@
     <description>
       <p>The ShowGeometry module is useful to verify a fields mesh. If you read in a field, but are not sure how it is organized this module will help you visualize it. The display is somewhat customizeable through its user interface.</p>
       <developer>
-	<p>This module tries to handle any field type that is input. It draws spheres or three fat crossing lines at its verticies. Connectivity is shown as thin lines connecting the verticies.  Colors for each are customizable in the user interface.</p>
+	<p>This module tries to handle any field type that is input. It draws spheres or a node local axis at its verticies. Connectivity is shown as thin lines connecting the verticies.  Colors for each are customizable in the user interface.</p>
+	<p>The size that spheres or axes are draw is 20 percent of a cell. Perhaps this should be another user control in the gui.</p>
       </developer>
     </description>
     <examplesr></examplesr>
