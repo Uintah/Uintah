@@ -33,7 +33,6 @@
 */
 
 #include <Core/Datatypes/StructQuadSurfMesh.h>
-#include <Core/Datatypes/FieldAlgo.h>
 #include <Core/Geometry/BBox.h>
 #include <Core/Math/MusilRNG.h>
 #include <iostream>
@@ -100,18 +99,18 @@ StructQuadSurfMesh::get_nodes(Node::array_type &array, Edge::index_type idx) con
 {
   array.resize(2);
 
-  const int yidx = idx - (nx_-1) * ny_;
+  const int yidx = idx - (ni_-1) * nj_;
   if (yidx >= 0)
   {
-    const int i = yidx / (ny_ - 1);
-    const int j = yidx % (ny_ - 1);
+    const int i = yidx / (nj_ - 1);
+    const int j = yidx % (nj_ - 1);
     array[0] = Node::index_type(i, j);
     array[1] = Node::index_type(i, j+1);
   }
   else
   {
-    const int i = idx % (nx_ - 1);
-    const int j = idx / (nx_ - 1);
+    const int i = idx % (ni_ - 1);
+    const int j = idx / (ni_ - 1);
     array[0] = Node::index_type(i, j);
     array[1] = Node::index_type(i+1, j);
   }
@@ -343,18 +342,18 @@ StructQuadSurfMesh::compute_normals()
 #endif
 }
 
-#define IMAGEMESH_VERSION 1
+#define STRUCT_QUAD_SURF_MESH_VERSION 1
 
 void
 StructQuadSurfMesh::io(Piostream& stream)
 {
-  stream.begin_class(type_name(-1), IMAGEMESH_VERSION);
+  stream.begin_class(type_name(-1), STRUCT_QUAD_SURF_MESH_VERSION);
 
   Mesh::io(stream);
 
   // IO data members, in order
-  Pio(stream, nx_);
-  Pio(stream, ny_);
+  Pio(stream, ni_);
+  Pio(stream, nj_);
 
   stream.end_class();
 }

@@ -4,7 +4,7 @@
   with the License.
 
   Software distributed under the License is distributed on an "AS IS"
-  basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+  basis, WITHOUT WARRANTY OF ANK KIND, either express or implied. See the
   License for the specific language governing rights and limitations under
   the License.
 
@@ -31,14 +31,9 @@
 #ifndef SCI_project_ImageMesh_h
 #define SCI_project_ImageMesh_h 1
 
-#include <Core/Geometry/Point.h>
-#include <Core/Containers/LockingHandle.h>
 #include <Core/Datatypes/Mesh.h>
 #include <Core/Datatypes/FieldIterator.h>
 #include <Core/Geometry/Transform.h>
-#include <Core/share/share.h>
-#include <string>
-#include <iostream>
 
 namespace SCIRun {
 
@@ -65,7 +60,7 @@ public:
       if (mesh_ == 0) 
         return i_*j_; 
       else
-        return i_ + j_ * mesh_->nx_;
+        return i_ + j_ * mesh_->ni_;
     }
 
     unsigned i_, j_;
@@ -112,7 +107,6 @@ public:
     }
   };
 
-
   struct INodeIter : public ImageIter
   {
     INodeIter() : ImageIter() {}
@@ -124,8 +118,8 @@ public:
     INodeIter &operator++()
     {
       i_++;
-      if (i_ >= mesh_->min_x_ + mesh_->nx_) {
-	i_ = mesh_->min_x_;
+      if (i_ >= mesh_->min_i_ + mesh_->ni_) {
+	i_ = mesh_->min_i_;
 	j_++;
       }
       return *this;
@@ -153,8 +147,8 @@ public:
     IFaceIter &operator++()
     {
       i_++;
-      if (i_ >= mesh_->min_x_+mesh_->nx_-1) {
-	i_ = mesh_->min_x_;
+      if (i_ >= mesh_->min_i_+mesh_->ni_-1) {
+	i_ = mesh_->min_i_;
 	j_++;
       }
       return *this;
@@ -207,31 +201,36 @@ public:
   friend class IFaceIter;
 
   ImageMesh()
-    : min_x_(0), min_y_(0),
-      nx_(1), ny_(1) {}
+    : min_i_(0), min_j_(0),
+      ni_(1), nj_(1) {}
   ImageMesh(unsigned x, unsigned y, const Point &min, const Point &max);
   ImageMesh(ImageMesh* mh, unsigned int mx, unsigned int my,
 	    unsigned int x, unsigned int y)
-    : min_x_(mx), min_y_(my), nx_(x), ny_(y), transform_(mh->transform_) {}
+    : min_i_(mx), min_j_(my), ni_(x), nj_(y), transform_(mh->transform_) {}
   ImageMesh(const ImageMesh &copy)
-    : min_x_(copy.min_x_), min_y_(copy.min_y_),
-      nx_(copy.get_nx()), ny_(copy.get_ny()), transform_(copy.transform_) {}
+    : min_i_(copy.min_i_), min_j_(copy.min_j_),
+      ni_(copy.get_ni()), nj_(copy.get_nj()), transform_(copy.transform_) {}
   virtual ImageMesh *clone() { return new ImageMesh(*this); }
   virtual ~ImageMesh() {}
 
   //! get the mesh statistics
-  unsigned get_nx() const { return nx_; }
-  unsigned get_ny() const { return ny_; }
-  unsigned get_nz() const { return 1; }
+  unsigned get_min_i() const { return min_i_; }
+  unsigned get_min_j() const { return min_j_; }
+  Array1<unsigned int> get_min() const;
+  unsigned get_ni() const { return ni_; }
+  unsigned get_nj() const { return nj_; }
+  Array1<unsigned int> get_dim() const;
   Vector diagonal() const;
   virtual BBox get_bounding_box() const;
   virtual void transform(Transform &t);
 
   //! set the mesh statistics
-  void set_min_x(unsigned x) {min_x_ = x; }
-  void set_min_y(unsigned y) {min_y_ = y; }
-  void set_nx(unsigned x) { nx_ = x; }
-  void set_ny(unsigned y) { ny_ = y; }
+  void set_min_x(unsigned i) {min_i_ = i; }
+  void set_min_y(unsigned j) {min_j_ = j; }
+  void set_min(Array1<unsigned int> mins);
+  void set_ni(unsigned i) { ni_ = i; }
+  void set_nj(unsigned j) { nj_ = j; }
+  void set_dim(Array1<unsigned int> dims);
 
   void begin(Node::iterator &) const;
   void begin(Edge::iterator &) const;
@@ -306,10 +305,10 @@ public:
 protected:
 
   //! the min_Node::index_type ( incase this is a subLattice )
-  unsigned min_x_, min_y_;
+  unsigned min_i_, min_j_;
   //! the Node::index_type space extents of a ImageMesh
   //! (min=min_Node::index_type, max=min+extents-1)
-  unsigned nx_, ny_;
+  unsigned ni_, nj_;
 
   //! the object space extents of a ImageMesh
   Transform transform_;

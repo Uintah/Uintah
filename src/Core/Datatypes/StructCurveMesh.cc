@@ -33,11 +33,10 @@
 */
 
 #include <Core/Datatypes/StructCurveMesh.h>
-#include <Core/Datatypes/FieldAlgo.h>
 #include <Core/Geometry/BBox.h>
-#include <float.h>  // for DBL_MAX
+#include <Core/Math/MusilRNG.h>
 #include <iostream>
-
+#include <float.h>  // for DBL_MAX
 
 namespace SCIRun {
 

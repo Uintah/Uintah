@@ -33,8 +33,8 @@
 */
 
 #include <Core/Datatypes/StructHexVolMesh.h>
-#include <Core/Datatypes/FieldAlgo.h>
 #include <Core/Geometry/BBox.h>
+#include <Core/Math/MusilRNG.h>
 #include <iostream>
 
 
@@ -61,7 +61,6 @@ StructHexVolMesh::get_bounding_box() const
   }
   return result;
 }
-
 
 void
 StructHexVolMesh::transform(Transform &t)

@@ -46,14 +46,8 @@
 #define SCI_project_StructQuadSurfMesh_h 1
 
 #include <Core/Datatypes/ImageMesh.h>
-#include <Core/Geometry/Point.h>
 #include <Core/Containers/Array2.h>
-#include <Core/Containers/LockingHandle.h>
-#include <Core/Datatypes/FieldIterator.h>
-#include <Core/Geometry/Transform.h>
-#include <Core/share/share.h>
-#include <string>
-#include <iostream>
+#include <Core/Geometry/Point.h>
 
 namespace SCIRun {
 

@@ -30,11 +30,9 @@
  */
 
 #include <Core/Datatypes/ImageMesh.h>
-#include <Core/Datatypes/FieldAlgo.h>
+#include <Core/Containers/Array1.h>
 #include <Core/Geometry/BBox.h>
 #include <Core/Math/MusilRNG.h>
-#include <iostream>
-
 
 namespace SCIRun {
 
@@ -44,25 +42,23 @@ using namespace std;
 PersistentTypeID ImageMesh::type_id("ImageMesh", "Mesh", maker);
 
 
-ImageMesh::ImageMesh(unsigned x, unsigned y,
+ImageMesh::ImageMesh(unsigned i, unsigned j,
 		     const Point &min, const Point &max)
-  : min_x_(0), min_y_(0), nx_(x), ny_(y)
+  : min_i_(0), min_j_(0), ni_(i), nj_(j)
 {
-  transform_.pre_scale(Vector(1.0 / (x-1.0), 1.0 / (y-1.0), 1.0));
+  transform_.pre_scale(Vector(1.0 / (i-1.0), 1.0 / (j-1.0), 1.0));
   transform_.pre_scale(max - min);
   transform_.pre_translate(Vector(min));
   transform_.compute_imat();
 }
 
-
-
 BBox
 ImageMesh::get_bounding_box() const
 {
   Point p0(0.0,   0.0,   0.0);
-  Point p1(nx_-1, 0.0,   0.0);
-  Point p2(nx_-1, ny_-1, 0.0);
-  Point p3(0.0,   ny_-1, 0.0);
+  Point p1(ni_-1, 0.0,   0.0);
+  Point p2(ni_-1, nj_-1, 0.0);
+  Point p3(0.0,   nj_-1, 0.0);
   
   BBox result;
   result.extend(transform_.project(p0));
@@ -72,6 +68,10 @@ ImageMesh::get_bounding_box() const
   return result;
 }
 
+Vector ImageMesh::diagonal() const
+{
+  return get_bounding_box().diagonal();
+}
 
 void
 ImageMesh::transform(Transform &t)
@@ -79,7 +79,41 @@ ImageMesh::transform(Transform &t)
   transform_.pre_trans(t);
 }
 
+Array1<unsigned int>
+ImageMesh::get_min() const
+{
+  Array1<unsigned int> array(2);
 
+  array[0] = min_i_;
+  array[1] = min_j_;
+
+  return array;
+}
+
+Array1<unsigned int>
+ImageMesh::get_dim() const
+{
+  Array1<unsigned int> array(2);
+
+  array[0] = ni_;
+  array[1] = nj_;
+
+  return array;
+}
+
+void
+ImageMesh::set_min(Array1<unsigned int> min)
+{
+  min_i_ = min[0];
+  min_j_ = min[1];
+}
+
+void
+ImageMesh::set_dim(Array1<unsigned int> dim)
+{
+  ni_ = dim[0];
+  nj_ = dim[1];
+}
 
 void
 ImageMesh::get_nodes(Node::array_type &array, Face::index_type idx) const
@@ -102,26 +136,21 @@ ImageMesh::get_nodes(Node::array_type &array, Edge::index_type idx) const
 {
   array.resize(2);
 
-  const int yidx = idx - (nx_-1) * ny_;
-  if (yidx >= 0)
+  const int j_idx = idx - (ni_-1) * nj_;
+  if (j_idx >= 0)
   {
-    const int i = yidx / (ny_ - 1);
-    const int j = yidx % (ny_ - 1);
+    const int i = j_idx / (nj_ - 1);
+    const int j = j_idx % (nj_ - 1);
     array[0] = Node::index_type(i, j);
     array[1] = Node::index_type(i, j+1);
   }
   else
   {
-    const int i = idx % (nx_ - 1);
-    const int j = idx / (nx_ - 1);
+    const int i = idx % (ni_ - 1);
+    const int j = idx / (ni_ - 1);
     array[0] = Node::index_type(i, j);
     array[1] = Node::index_type(i+1, j);
   }
-}
-
-Vector ImageMesh::diagonal() const
-{
-  return get_bounding_box().diagonal();
 }
 
 //! return all face_indecies that overlap the BBox in arr.
@@ -134,8 +163,8 @@ ImageMesh::get_faces(Face::array_type &arr, const BBox &bbox)
   Face::index_type max;
   locate(max, bbox.max());
 
-  if (max.i_ >= nx_ - 1) max.i_ = nx_ - 2;
-  if (max.j_ >= ny_ - 1) max.j_ = ny_ - 2;
+  if (max.i_ >= ni_ - 1) max.i_ = ni_ - 2;
+  if (max.j_ >= nj_ - 1) max.j_ = nj_ - 2;
 
   for (unsigned i = min.i_; i <= max.i_; i++) {
     for (unsigned j = min.j_; j <= max.j_; j++) {
@@ -184,8 +213,8 @@ ImageMesh::locate(Face::index_type &face, const Point &p)
   face.i_ = (unsigned int)r.x();
   face.j_ = (unsigned int)r.y();
 
-  if (face.i_ >= (nx_-1) ||
-      face.j_ >= (ny_-1))
+  if (face.i_ >= (ni_-1) ||
+      face.j_ >= (nj_-1))
   {
     return false;
   }
@@ -204,8 +233,8 @@ ImageMesh::locate(Node::index_type &node, const Point &p)
   node.i_ = (unsigned int)(r.x() + 0.5);
   node.j_ = (unsigned int)(r.y() + 0.5);
 
-  if (node.i_ >= nx_ ||
-      node.j_ >= ny_)
+  if (node.i_ >= ni_ ||
+      node.j_ >= nj_)
   {
     return false;
   }
@@ -226,8 +255,8 @@ ImageMesh::get_weights(const Point &p,
   node0.i_ = (unsigned int)r.x();
   node0.j_ = (unsigned int)r.y();
 
-  if (node0.i_ < (nx_-1) ||
-      node0.j_ < (ny_-1))
+  if (node0.i_ < (ni_-1) ||
+      node0.j_ < (nj_-1))
   {
     const double dx1 = r.x() - node0.i_;
     const double dy1 = r.y() - node0.j_;
@@ -369,8 +398,8 @@ ImageMesh::io(Piostream& stream)
   Mesh::io(stream);
 
   // IO data members, in order
-  Pio(stream, nx_);
-  Pio(stream, ny_);
+  Pio(stream, ni_);
+  Pio(stream, nj_);
 
   stream.end_class();
 }
@@ -387,19 +416,19 @@ ImageMesh::type_name(int n)
 void
 ImageMesh::begin(ImageMesh::Node::iterator &itr) const
 {
-  itr = Node::iterator(this, min_x_, min_y_);
+  itr = Node::iterator(this, min_i_, min_j_);
 }
 
 void
 ImageMesh::end(ImageMesh::Node::iterator &itr) const
 {
-  itr = Node::iterator(this, min_x_, min_y_ + ny_);
+  itr = Node::iterator(this, min_i_, min_j_ + nj_);
 }
 
 void
 ImageMesh::size(ImageMesh::Node::size_type &s) const
 {
-  s = Node::size_type(nx_, ny_);
+  s = Node::size_type(ni_, nj_);
 }
 
 
@@ -412,31 +441,31 @@ ImageMesh::begin(ImageMesh::Edge::iterator &itr) const
 void
 ImageMesh::end(ImageMesh::Edge::iterator &itr) const
 {
-  itr = (nx_-1) * (ny_) + (nx_) * (ny_ -1);
+  itr = (ni_-1) * (nj_) + (ni_) * (nj_ -1);
 }
 
 void
 ImageMesh::size(ImageMesh::Edge::size_type &s) const
 {
-  s = (nx_-1) * (ny_) + (nx_) * (ny_ -1);
+  s = (ni_-1) * (nj_) + (ni_) * (nj_ -1);
 }
 
 void
 ImageMesh::begin(ImageMesh::Face::iterator &itr) const
 {
-  itr = Face::iterator(this,  min_x_, min_y_);
+  itr = Face::iterator(this,  min_i_, min_j_);
 }
 
 void
 ImageMesh::end(ImageMesh::Face::iterator &itr) const
 {
-  itr = Face::iterator(this, min_x_, min_y_ + ny_ - 1);
+  itr = Face::iterator(this, min_i_, min_j_ + nj_ - 1);
 }
 
 void
 ImageMesh::size(ImageMesh::Face::size_type &s) const
 {
-  s = Face::size_type(nx_-1, ny_-1);
+  s = Face::size_type(ni_-1, nj_-1);
 }
 
 
