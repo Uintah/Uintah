@@ -233,7 +233,8 @@ void ScalarSolver::buildLinearMatrix(const ProcessorGroup* pc,
 
   // Get the PerPatch CellInformation data
   PerPatch<CellInformationP> cellInfoP;
-  old_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
+  //  old_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
+  new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
   CellInformation* cellinfo = cellInfoP.get().get_rep();
 
   // from old_dw get PCELL, DENO, FO(index)
@@ -331,7 +332,8 @@ ScalarSolver::scalarLinearSolve(const ProcessorGroup* pc,
   // Get the PerPatch CellInformation data
   PerPatch<CellInformationP> cellInfoP;
   // get old_dw from getTop function
-  old_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
+  //  old_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
+  new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
   //  old_dw->get(cellInfoP, d_cellInfoLabel, matlIndex, patch);
   //  if (old_dw->exists(d_cellInfoLabel, patch)) 
   //  old_dw->get(cellInfoP, d_cellInfoLabel, matlIndex, patch);

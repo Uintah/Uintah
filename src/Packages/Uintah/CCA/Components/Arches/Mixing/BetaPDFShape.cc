@@ -28,7 +28,7 @@ BetaPDFShape::~BetaPDFShape()
 // Problem Setup for BetaPDFShape
 //****************************************************************************
 void 
-BetaPDFShape::problemSetup(const ProblemSpecP& params)
+BetaPDFShape::problemSetup(const ProblemSpecP& /* params*/)
 {
 }
 
@@ -134,6 +134,9 @@ BetaPDFShape::computeShapeFunction(double *var) {
 
 //
 // $Log$
+// Revision 1.2  2001/02/02 01:54:33  rawat
+// cnges made for checkpointing to work
+//
 // Revision 1.1  2001/01/31 16:35:30  rawat
 // Implemented mixing and reaction models for fire.
 //
