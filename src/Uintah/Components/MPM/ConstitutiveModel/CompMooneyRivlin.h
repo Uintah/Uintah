@@ -67,6 +67,7 @@ WARNING
 	 // compute stable timestep for this region
 	 virtual void computeStableTimestep(const Region* region,
 					    const MPMMaterial* matl,
+//					    const DataWarehouseP& old_dw,
 					    DataWarehouseP& new_dw);
 	 
 	 // compute stress at each particle in the region
@@ -112,6 +113,9 @@ WARNING
 #endif  // __COMPMOONRIV_CONSTITUTIVE_MODEL_H__ 
 
 // $Log$
+// Revision 1.15  2000/05/02 19:31:23  guilkey
+// Added a put for cmdata.
+//
 // Revision 1.14  2000/05/02 06:07:11  sparker
 // Implemented more of DataWarehouse and SerialMPM
 //
