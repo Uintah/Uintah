@@ -150,6 +150,11 @@ public:
     return ambientColor_;
   }
 
+  inline void setBaseAmbientColor(const Color &c) {
+    origAmbientColor_ = c;
+    ambientColor_ = origAmbientColor_ * ambientScale_;
+  }
+
   inline double getAmbientLevel() { return ambientScale_; }
 
   inline void setAmbientLevel( float scale ) {
