@@ -14,14 +14,19 @@ namespace SCIRun {
 
 using std::string;
 
+
 template <class Data>
 class FData3d : public Array3<Data> {
 public:
   typedef Data value_type;
- 
+  typedef Data * iterator;
+
+  Data *begin() { return &(*this)(0,0,0); }
+  Data *end() { return &((*this)(dim1()-1,dim2()-1,dim3()-1))+1; }
+    
   FData3d():Array3<Data>(){}
   virtual ~FData3d(){}
-
+  
   const value_type &operator[](typename LatVolMesh::cell_index idx) const 
     { return operator()(idx.i_,idx.j_,idx.k_); } 
   value_type operator[](typename LatVolMesh::face_index) const
