@@ -133,7 +133,7 @@ static const double rkf_d[][5]=
    {-8.0/27, 2.0, -3544.0/2565, 1859.0/4104, -11.0/40}};
 
 static int
-ComputeRKFTerms(vector<Vector> &v, // storage for terms
+ComputeRKFTerms(Vector v[6],       // storage for terms
 		const Point &p,    // previous point
 		double s,          // current step size
 		const VectorFieldInterfaceHandle &vfi)
@@ -191,18 +191,14 @@ FindRKF(vector<Point> &v, // storage for points
 	int n,            // max number of steps
 	const VectorFieldInterfaceHandle &vfi) // the field
 {
-  vector <Vector> terms(6, Vector(0.0, 0.0, 0.0));
+  Vector terms[6];
 
   if (!interpolate(vfi, x, terms[0])) { return; }
   for (int i=0; i<n; i++)
   {
     // Compute the next set of terms.
-    int tmp = ComputeRKFTerms(terms, x, s, vfi);
-    if (tmp == -1)
-    {
-      break;
-    }
-    else if (tmp < 5)
+    const int tmp = ComputeRKFTerms(terms, x, s, vfi);
+    if (tmp < 5)
     {
       s /= 1.5;
       continue;
@@ -212,9 +208,11 @@ FindRKF(vector<Point> &v, // storage for points
     const Vector err = terms[0]*rkf_ab[0] + terms[1]*rkf_ab[1]
       + terms[2]*rkf_ab[2] + terms[3]*rkf_ab[3] + terms[4]*rkf_ab[4]
       + terms[5]*rkf_ab[5];
-    const double err2 = err.x()*err.x() + err.y()*err.y() + err.z()*err.z();
+    const double err2 = err.length2();
     
-    // Is the error tolerable?  Adjust the step size accordingly.
+    // Is the error tolerable?  Adjust the step size accordingly.  Too
+    // small?  Grow it for next time but keep small-error result.  Too
+    // big?  Recompute with smaller size.
     if (err2 * 16384.0 < t2)
     {
       s *= 2.0;
@@ -269,7 +267,6 @@ FindRK4(vector<Point> &v,
 	int n,
 	const VectorFieldInterfaceHandle &vfi)
 {
-  vector<Vector> terms(6, Vector(0.0, 0.0, 0.0));
   Vector f[4];
   int i;
 
