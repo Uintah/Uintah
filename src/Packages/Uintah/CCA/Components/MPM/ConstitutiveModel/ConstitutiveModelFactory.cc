@@ -15,7 +15,6 @@
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/HyperElasticPlastic.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/IdealGasMP.h>
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
-#include <Packages/Uintah/CCA/Components/MPM/MPMLabel.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Malloc/Allocator.h>
 #include <sgi_stl_warnings_off.h>

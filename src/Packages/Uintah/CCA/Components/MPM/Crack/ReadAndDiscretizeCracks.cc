@@ -6,7 +6,6 @@
 ********************************************************************************/
 
 #include "Crack.h"
-#include <Packages/Uintah/CCA/Components/MPM/MPMLabel.h>
 #include <Packages/Uintah/Core/Math/Matrix3.h>
 #include <Packages/Uintah/Core/Math/Short27.h> 
 #include <Core/Geometry/Vector.h>
@@ -24,7 +23,6 @@
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
 #include <Packages/Uintah/Core/Grid/VarTypes.h>
 #include <Core/Containers/StaticArray.h>
-#include <Core/Util/NotFinished.h>
 #include <vector>
 #include <iostream>
 #include <fstream>

@@ -1,12 +1,12 @@
 #include <Packages/Uintah/CCA/Components/MPM/Crack/FractureDefine.h>
 #include <Packages/Uintah/CCA/Components/MPM/ThermalContact/STThermalContact.h>
 #include <Core/Malloc/Allocator.h>
-#include <Packages/Uintah/CCA/Components/MPM/MPMLabel.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
 #include <Packages/Uintah/Core/Grid/NodeIterator.h>
 #include <Packages/Uintah/Core/Grid/Task.h>
 #include <Packages/Uintah/Core/Grid/VarTypes.h>
+#include <Packages/Uintah/Core/Labels/MPMLabel.h>
 #include <Core/Containers/StaticArray.h>
 #include <vector>
 

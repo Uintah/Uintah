@@ -5,7 +5,6 @@
 #include <Packages/Uintah/CCA/Components/MPM/Contact/RigidBodyContact.h>
 #include <Packages/Uintah/CCA/Components/MPM/Contact/ApproachContact.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
-#include <Packages/Uintah/CCA/Components/MPM/MPMLabel.h>
 #include <Core/Malloc/Allocator.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>

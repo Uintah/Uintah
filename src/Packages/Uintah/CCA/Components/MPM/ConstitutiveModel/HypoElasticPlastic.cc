@@ -14,6 +14,7 @@
 #include <Packages/Uintah/Core/Grid/ParticleVariable.h>
 #include <Packages/Uintah/Core/Grid/Task.h>
 #include <Packages/Uintah/Core/Grid/VarLabel.h>
+#include <Packages/Uintah/Core/Labels/MPMLabel.h>
 #include <Core/Math/MinMax.h>
 #include <Core/Math/Gaussian.h>
 #include <Packages/Uintah/Core/Math/Matrix3.h>
@@ -25,8 +26,6 @@
 #include <sgi_stl_warnings_off.h>
 #include <iostream>
 #include <sgi_stl_warnings_on.h>
-#include <Packages/Uintah/CCA/Components/MPM/MPMLabel.h>
-#include <Core/Util/NotFinished.h>
 
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Packages/Uintah/Core/Exceptions/ParameterNotFound.h>

@@ -9,6 +9,7 @@
 #include <Packages/Uintah/Core/Grid/NCVariable.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Packages/Uintah/Core/Grid/VarTypes.h>
+#include <Packages/Uintah/Core/Labels/MPMLabel.h>
 #include <Packages/Uintah/Core/Math/FastMatrix.h>
 #include <Core/Malloc/Allocator.h>
 #include <math.h>
