@@ -61,6 +61,7 @@ template<class T>
 void
 SCICore::Thread::Parallel<T>::run(int proc)
 {
+    // Copy out do make sure that the call is atomic
     T* obj=d_obj;
     void (T::*pmf)(int) = d_pmf;
     if(d_wait)
@@ -86,6 +87,20 @@ SCICore::Thread::Parallel<T>::~Parallel()
 
 //
 // $Log$
+// Revision 1.8  2000/02/15 00:23:49  sparker
+// Added:
+//  - new Thread::parallel method using member template syntax
+//  - Parallel2 and Parallel3 helper classes for above
+//  - min() reduction to SimpleReducer
+//  - ThreadPool class to help manage a set of threads
+//  - unmap page0 so that programs will crash when they deref 0x0.  This
+//    breaks OpenGL programs, so any OpenGL program linked with this
+//    library must call Thread::allow_sgi_OpenGL_page0_sillyness()
+//    before calling any glX functions.
+//  - Do not trap signals if running within CVD (if DEBUGGER_SHELL env var set)
+//  - Added "volatile" to fetchop barrier implementation to workaround
+//    SGI optimizer bug
+//
 // Revision 1.7  1999/09/03 19:51:15  sparker
 // Fixed bug where if Thread::parallel was called with block=false, the
 //   helper object could get destroyed before it was used.
