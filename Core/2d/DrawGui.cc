@@ -51,7 +51,7 @@ DrawGui::set_windows( const string &menu, const string &tb,
   ui_ = ui;
   
   string space(" ");
-  TclObj::set_window( name(), 
+  TclObj::set_window( id(), 
 		      menu+" "+tb+" "+ui+" "+ogl );
 }
 

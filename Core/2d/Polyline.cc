@@ -37,6 +37,8 @@ using std::ostream;
 #include <sstream>
 using std::ostringstream;
 
+#include <stdio.h>
+
 namespace SCIRun {
 
 Persistent* make_Polyline()
@@ -104,12 +106,11 @@ Polyline::set_color( const Color &c )
 string
 Polyline::tcl_color()
 {
-  std::ostringstream s;
-  s.setf(ios::hex,ios::basefield);
-  s << " #" << int(color_.r()*255) 
-    << int(color_.g()*255) << int(color_.b()*255);
-
-  return s.str();
+  char buffer[10];
+  sprintf( buffer, "#%02x%02x%02x", 
+	   int(color_.r()*255), int(color_.g()*255), int(color_.b()*255));
+  buffer[7] = '\0';
+  return string(buffer);
 }
 
 void

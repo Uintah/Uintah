@@ -147,7 +147,6 @@ OpenGLWindow::make_raster_font()
   if (!cx)
     return;
 
-  cerr << "Generating new raster font list!\n";
   XFontStruct *fontInfo;
   Font id;
   unsigned int first, last;

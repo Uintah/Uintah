@@ -106,8 +106,9 @@ Graph::update()
 {
   if ( !obj_ ) 
     return; 
-  
-  obj_->redraw();
+
+  if ( has_window() )
+    obj_->redraw();
 }
 
 void
