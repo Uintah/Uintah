@@ -30,6 +30,8 @@
 //    Author : Martin Cole
 //    Date   : Wed Mar 26 15:20:49 2003
 
+#include <Core/Datatypes/ColumnMatrix.h>
+#include <Dataflow/Ports/MatrixPort.h>
 #include <Teem/Dataflow/Ports/NrrdPort.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <iostream>
@@ -61,11 +63,9 @@ private:
   GuiInt         delay_;
   GuiInt         inc_amount_;
   int            inc_;
-  bool           stop_;
-  bool           restart_;
+  bool           loop_;
   int            last_input_;
   NrrdDataHandle last_output_;
-
 };
 
 
@@ -84,8 +84,7 @@ NrrdSelectTime::NrrdSelectTime(GuiContext* ctx) :
   delay_(ctx->subVar("delay")),
   inc_amount_(ctx->subVar("inc-amount")),
   inc_(1),
-  stop_(false),
-  restart_(false),
+  loop_(false),
   last_input_(-1),
   last_output_(0)
 {
@@ -99,7 +98,7 @@ NrrdSelectTime::~NrrdSelectTime()
 
 void
 NrrdSelectTime::send_selection(NrrdDataHandle nrrd_handle, 
-			       int which, unsigned int time_axis, bool last_p)
+			       int which, unsigned int time_axis, bool cache)
 {
   NrrdOPort *onrrd = (NrrdOPort *)get_oport("Time Slice");
 
@@ -108,17 +107,13 @@ NrrdSelectTime::send_selection(NrrdDataHandle nrrd_handle,
     return;
   }
 
-  onrrd->set_cache( 0 );
-
-  current_.set(which);
-
-  NrrdDataHandle onrrd_handle(0);
-
-  if (which < 0 || which > nrrd_handle->nrrd->axis[time_axis].size - 1)
-  {
-    warning("Row out of range, skipping.");
+  MatrixOPort *osel = (MatrixOPort *)get_oport("Selected Index");
+  if (!osel) {
+    error("Unable to initialize oport 'Selected Index'.");
     return;
   }
+
+  NrrdDataHandle onrrd_handle(0);
 
   // do the slice
   NrrdData *out = scinew NrrdData();
@@ -130,15 +125,18 @@ NrrdSelectTime::send_selection(NrrdDataHandle nrrd_handle,
     return;
   }
   onrrd_handle = out;
-  //onrrd_handle->copy_sci_data(*(nrrd_handle.get_rep()));
 
   // Copy the properties.
   onrrd_handle->copy_properties(nrrd_handle.get_rep());
 
-  if( !last_p )
-    onrrd->send_intermediate(onrrd_handle);
-  else
-    onrrd->send(onrrd_handle);
+  onrrd->set_cache( cache );
+  onrrd->send(onrrd_handle);
+
+
+  ColumnMatrix *selected = scinew ColumnMatrix(1);
+  selected->put(0, 0, (double)which);
+
+  osel->send(MatrixHandle(selected));
 }
 
 
@@ -146,56 +144,38 @@ int
 NrrdSelectTime::increment(int which, int lower, int upper)
 {
   // Do nothing if no range.
-  if (upper == lower)
-  {
+  if (upper == lower) {
     if (playmode_.get() == "once")
-    {
-      stop_ = true;
-    }
+      execmode_.set( "stop" );
     return upper;
   }
   const int inc_amount = Max(1, Min(upper, inc_amount_.get()));
+
   which += inc_ * inc_amount;
 
-  if (which > upper)
-  {
-    if (playmode_.get() == "bounce1")
-    {
+  if (which > upper) {
+    if (playmode_.get() == "bounce1") {
       inc_ *= -1;
       return increment(upper, lower, upper);
-    }
-    else if (playmode_.get() == "bounce2")
-    {
+    } else if (playmode_.get() == "bounce2") {
       inc_ *= -1;
       return upper;
-    }
-    else
-    {
+    } else {
       if (playmode_.get() == "once")
-      {
-	stop_ = true;
-      }
+	execmode_.set( "stop" );
       return lower;
     }
   }
-  if (which < lower)
-  {
-    if (playmode_.get() == "bounce1")
-    {
+  if (which < lower) {
+    if (playmode_.get() == "bounce1") {
       inc_ *= -1;
       return increment(lower, lower, upper);
-    }
-    else if (playmode_.get() == "bounce2")
-    {
+    } else if (playmode_.get() == "bounce2") {
       inc_ *= -1;
       return lower;
-    }
-    else
-    {
+    } else {
       if (playmode_.get() == "once")
-      {
-	stop_ = true;
-      }
+	execmode_.set( "stop" );
       return upper;
     }
   }
@@ -221,23 +201,22 @@ NrrdSelectTime::execute()
 
   update_state(JustStarted);
 
+  int which;
 
   // Must have a time axis.
-  unsigned int time_axis = 0;
+  int time_axis = -1;
 
   for (unsigned int i = 0; i < (unsigned int)nrrd_handle->nrrd->dim; i++) {
-    string al(nrrd_handle->nrrd->axis[i].label);
-    const string t("Time");
-    if (al == t) {
+    if (string(nrrd_handle->nrrd->axis[i].label) == string("Time")) {
       time_axis = i;
       break;
     }
   }
   
-  if (!time_axis) {
+  if (time_axis == -1) {
     warning("This nrrd has no time axis (Must be labeled 'Time')");
-    warning("Using the last axis as the time axis.");
-    time_axis = nrrd_handle->nrrd->dim - 1;
+    warning("Using the first axis as the time axis.");
+    time_axis = 0;
     //    return;
   }
 
@@ -253,93 +232,107 @@ NrrdSelectTime::execute()
  
   reset_vars();
 
-
-  // Update the increment.
-  const int start = range_min_.get();
-  const int end = range_max_.get();
-  if (playmode_.get() == "once" || playmode_.get() == "loop")
-  {
-    inc_ = (start>end)?-1:1;
+  // If there is a current index matrix, use it.
+  MatrixIPort *icur = (MatrixIPort *)get_iport("Current Index");
+  if (!icur) {
+    error("Unable to initialize iport 'Current Index'.");
+    return;
   }
 
-  // If the current value is invalid, reset it to the start.
-  int lower = start;
-  int upper = end;
-  if (lower > upper) {int tmp = lower; lower = upper; upper = tmp; }
-  if (current_.get() < lower || current_.get() > upper)
-  {
-    current_.set(start);
-    inc_ = (start>end)?-1:1;
-  }
+  MatrixHandle currentH;
 
-  // Cash execmode and reset it in case we bail out early.
-  const string execmode = execmode_.get();
-  // If updating, we're done for now.
-  if (execmode == "update")
-  {
-  }
-  else if (execmode == "step")
-  {
-    const int which = increment(current_.get(), lower, upper);
+  if (icur->get(currentH) && currentH.get_rep()) {
+    which = (int) (currentH->get(0, 0));
     send_selection(nrrd_handle, which, time_axis, true);
-  }
-  else if (execmode == "stepb")
-  {
-    inc_ *= -1;
-    const int which = increment(current_.get(), lower, upper);
-    inc_ *= -1;
-    send_selection(nrrd_handle, which, time_axis, true);
-  }
-  else if (execmode == "play")
-  {
-    stop_ = false;
-    int which = current_.get();
-    if (which >= end && playmode_.get() == "once")
-    {
-      which = start;
+
+  } else {
+
+    // Cache var
+    bool cache = (playmode_.get() != "inc_w_exec");
+
+    // Get the current start and end.
+    const int start = range_min_.get();
+    const int end   = range_max_.get();
+
+    int lower = start;
+    int upper = end;
+    if (lower > upper) {int tmp = lower; lower = upper; upper = tmp; }
+
+    // Update the increment.
+    if (playmode_.get() == "once" || playmode_.get() == "loop")
+      inc_ = (start>end)?-1:1;
+
+    // If the current value is invalid, reset it to the start.
+    if (current_.get() < lower || current_.get() > upper) {
+      current_.set(start);
+      inc_ = (start>end)?-1:1;
     }
-    const int delay = delay_.get();
-    int stop;
-    do {
-      int next;
-      if (playmode_.get() == "once")
-      {
-	next = increment(which, lower, upper);
+
+    // Cache execmode and reset it in case we bail out early.
+    const string execmode = execmode_.get();
+
+    which = current_.get();
+
+    // If updating, we're done for now.
+    if (execmode == "update") {
+
+    } else if (execmode == "step") {
+      which = increment(current_.get(), lower, upper);
+      send_selection(nrrd_handle, which, time_axis, cache);
+
+    } else if (execmode == "stepb") {
+      inc_ *= -1;
+      which = increment(current_.get(), lower, upper);
+      inc_ *= -1;
+      send_selection(nrrd_handle, which, time_axis, cache);
+      
+    } else if (execmode == "play") {
+
+      if( !loop_ ) {
+	if (playmode_.get() == "once" && which >= end)
+	  which = start;
       }
-      stop = stop_ || restart_;
-      send_selection(nrrd_handle, which, time_axis, stop);
-      if (!stop && delay > 0)
-      {
-	const unsigned int secs = delay / 1000;
-	const unsigned int msecs = delay % 1000;
-	if (secs)  { sleep(secs); }
-	if (msecs) { usleep(msecs * 1000); }
+
+      send_selection(nrrd_handle, which, time_axis, cache);
+
+      // User may have changed the execmode to stop so recheck.
+      execmode_.reset();
+      if ( loop_ = (execmode_.get() == "play") ) {
+	const int delay = delay_.get();
+      
+	if( delay > 0) {
+	  const unsigned int secs = delay / 1000;
+	  const unsigned int msecs = delay % 1000;
+	  if (secs)  { sleep(secs); }
+	  if (msecs) { usleep(msecs * 1000); }
+	}
+    
+	int next = increment(which, lower, upper);    
+
+	// Incrementing may cause a stop in the execmode so recheck.
+	execmode_.reset();
+	if( loop_ = (execmode_.get() == "play") ) {
+	  which = next;
+
+	  want_to_execute();
+	}
       }
-      if (playmode_.get() == "once")
-      {
-	which = next;
-      }
-      else if (!stop)
-      {
+    } else {
+      if( execmode == "rewind" )
+	which = start;
+
+      else if( execmode == "fforward" )
+	which = end;
+    
+      send_selection(nrrd_handle, which, time_axis, cache);
+    
+      if (playmode_.get() == "inc_w_exec") {
 	which = increment(which, lower, upper);
       }
-    } while (!stop);
-  }
-  else
-  {
-    int which = current_.get();
-    
-    send_selection(nrrd_handle, which, time_axis, true);
-    
-    if (playmode_.get() == "inc_w_exec") {
-      which = increment(which, lower, upper);
-      current_.set(which);
     }
   }
-  if (!restart_) {
-    execmode_.set("init");
-  }
-  restart_ = false;
+
+  current_.set(which);
 }
 
 
@@ -349,17 +342,8 @@ NrrdSelectTime::tcl_command(GuiArgs& args, void* userdata)
   if (args.count() < 2) {
     args.error("NrrdSelectTime needs a minor command");
     return;
-  }
-  if (args[1] == "stop")
-  {
-    stop_ = true;
-  }
-  else if (args[1] == "restart") 
-  {
-    restart_ = true;
-  }
 
-  else Module::tcl_command(args, userdata);
+  } else Module::tcl_command(args, userdata);
 }
 
 
