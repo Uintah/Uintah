@@ -305,6 +305,48 @@ bool TempFileManager::delete_tempfifo(std::string fifoname)
  
 std::string TempFileManager::get_scirun_tmp_dir(std::string subdir)
 {
+    struct stat buf;
+
+    char *TMPDIR = getenv("SCIRUN_SERV_TMP_DIR");
+    if (TMPDIR != 0)
+    {
+        std::string dirname = std::string(TMPDIR);
+    
+        if (::lstat(dirname.c_str(),&buf) < 0)
+        {
+            std::cout << "could not locate the directory called '" << dirname << "', using default temp directory" << std::endl;
+        }
+        else
+        {
+            if (dirname[dirname.size()-1] != '/') dirname += '/';
+            
+            if (subdir.size() > 0)
+            {
+            
+                bool direxists = false;
+
+                std::string subdirname = dirname + subdir + std::string("/");
+            
+                if( ::lstat(dirname.c_str(),&buf) < 0)
+                {
+                    std::string cmd = std::string("mkdir ")+ subdirname;
+                    sci_system(cmd.c_str());
+                    direxists = true;
+                }
+                else
+                {
+                    direxists = true;
+                }
+            
+                if (!direxists) return(std::string(""));
+    
+                dirname = subdirname;
+            }
+
+            return(dirname);
+        }
+
+    }
 
     char *HOME = getenv("HOME");
     if (HOME == 0) 
@@ -313,7 +355,6 @@ std::string TempFileManager::get_scirun_tmp_dir(std::string subdir)
     }
 
     bool direxists = false;
-    struct stat buf;
     
     std::string dirname = HOME+std::string("/SCIRun");
     
