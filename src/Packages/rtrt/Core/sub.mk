@@ -99,7 +99,9 @@ SRCS += $(SRCDIR)/Worker.cc \
 	$(SRCDIR)/Token.cc  \
 	$(SRCDIR)/HierarchicalGrid.cc \
 	$(SRCDIR)/TexturedTri.cc \
-	$(SRCDIR)/TimeCycleMaterial.cc 
+	$(SRCDIR)/TimeCycleMaterial.cc \
+	$(SRCDIR)/pcube.c \
+	$(SRCDIR)/fpcube.c
 
 PSELIBS :=  \
 	Core/Thread Core/Exceptions Core/Geometry Packages/rtrt/visinfo 
@@ -107,7 +109,3 @@ PSELIBS :=  \
 LIBS := $(GL_LIBS) $(FASTM_LIBS) -lm $(THREAD_LIBS) $(PERFEX_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
-
-
-
-

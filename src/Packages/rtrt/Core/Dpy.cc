@@ -220,7 +220,8 @@ Dpy::Dpy(Scene* scene, char* criteria1, char* criteria2,
   // the stealth.  This will effect how fast the stealth moves.
   BBox bb;
   scene->get_object()->compute_bounds( bb, 1e-3 );
-  stealth = new Stealth( bb.diagonal().length() );
+//  stealth = new Stealth( bb.diagonal().length() );
+  stealth = new Stealth( 2 );
 
 }
 

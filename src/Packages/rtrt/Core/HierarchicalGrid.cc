@@ -9,6 +9,11 @@
 #include <Packages/rtrt/Core/HitInfo.h>
 #include <iostream>
 #include <stdlib.h>
+#include <Packages/rtrt/Core/Tri.h>
+
+extern "C" {
+#include <Packages/rtrt/Core/pcube.h>
+}
 
 using namespace rtrt;
 using SCIRun::Thread;
@@ -179,6 +184,12 @@ HierarchicalGrid::subpreprocess( double maxradius, int& pp_offset, int& scratchs
 
     double itime=time;
     int nynz=ny*nz;
+
+    real verts[3][3];
+    real polynormal[3];
+
+    Vector p0,p1,p2;
+
     for(int i=0;i<prims.size();i++){
 	double tnow=Time::currentSeconds();
 	if(tnow-itime > 5.0){
@@ -190,15 +201,66 @@ HierarchicalGrid::subpreprocess( double maxradius, int& pp_offset, int& scratchs
 	sub_calc_se( primsBBox[i], bbox, diag, nx, ny, nz, 
 		     primsGridData[i].sx, primsGridData[i].sy, primsGridData[i].sz,
 		     primsGridData[i].ex, primsGridData[i].ey, primsGridData[i].ez );
+
+	Tri *tri = dynamic_cast<Tri*>(prims[i]);
+
+	if (tri) {
+	    if (tri->isbad())
+		continue;
+
+//	    printf("Original vertices: %lf %lf %lf, %lf %lf %lf, %lf %lf %lf\n", tri->pt(0).x(),tri->pt(0).y(),tri->pt(0).z(),tri->pt(1).x(),tri->pt(1).y(),tri->pt(1).z(),tri->pt(2).x(),tri->pt(2).y(),tri->pt(2).z());
+
+	    p0 = (tri->pt(0) - bbox.min())*(Vector(nx,ny,nz)/diag);
+	    p1 = (tri->pt(1) - bbox.min())*(Vector(nx,ny,nz)/diag);
+	    p2 = (tri->pt(2) - bbox.min())*(Vector(nx,ny,nz)/diag);
+
+	    Vector n = Cross((p2-p0),(p1-p0));
+
+	    n.normalize();
+	
+	    polynormal[0] = n.x();
+	    polynormal[1] = n.y();
+	    polynormal[2] = n.z();
+	}
+
 	for(int x=primsGridData[i].sx;x<=primsGridData[i].ex;x++){
 	    for(int y=primsGridData[i].sy;y<=primsGridData[i].ey;y++){
 		int idx=x*nynz+y*nz+primsGridData[i].sz;
 		for(int z=primsGridData[i].sz;z<=primsGridData[i].ez;z++){
- 		    if( !objList[idx] ) 
+		  if (tri) {	
+			
+		    verts[0][0] = p0.x() - ((double)x+.5);
+		    verts[1][0] = p1.x() - ((double)x+.5);
+		    verts[2][0] = p2.x() - ((double)x+.5);
+		    
+		    verts[0][1] = p0.y() - ((double)y+.5);
+		    verts[1][1] = p1.y() - ((double)y+.5);
+		    verts[2][1] = p2.y() - ((double)y+.5);
+		    
+		    verts[0][2] = p0.z() - ((double)z+.5);
+		    verts[1][2] = p1.z() - ((double)z+.5);
+		    verts[2][2] = p2.z() - ((double)z+.5);
+		    
+//		    printf("Verts: %lf %lf %lf, %lf %lf %lf, %lf %lf %lf\n", verts[0][0], verts[0][1], verts[0][2], verts[1][0], verts[1][1], verts[1][2], verts[2][0], verts[2][1], verts[2][2]);
+		    
+		    if (fast_polygon_intersects_cube(3, verts, polynormal, 0, 0))
+		    {
+//		      printf("Added to Cell %d %d %d\n\n",x,y,z);
+		      if( !objList[idx] )	 	
 			objList[idx] = new Group();
+		      objList[idx]->add( prims[i] );
+		      counts[idx*2+1]++;
+		    }
+		    
+		    idx++;
+		    
+		  } else {  // Not TRI
+		    if( !objList[idx] )	 	
+		      objList[idx] = new Group();
 		    objList[idx]->add( prims[i] );
 		    counts[idx*2+1]++;
 		    idx++;
+		  }
 		}
 	    }
 	}
@@ -229,48 +291,26 @@ HierarchicalGrid::subpreprocess( double maxradius, int& pp_offset, int& scratchs
     Array1<int> whichCellPos( ngrid );
     current.initialize(0);
     whichCellPos.initialize(0);
-    for(int i=0;i<prims.size();i++){
-	double tnow=Time::currentSeconds();
-	if(tnow-itime > 5.0){
-	    cerr << i << "/" << prims.size() << '\n';
-	    itime=tnow;
-	}
-	//
-	// Array of objects that will be put in a grid at lower level
-	//
-	// Already computed and cached -- no need to do it again
-	//
-	// prims[i]->compute_bounds(obj_bbox, maxradius);
 
-	int sx = primsGridData[i].sx;
-	int sy = primsGridData[i].sy;
-	int sz = primsGridData[i].sz;
-	int ex = primsGridData[i].ex;
-	int ey = primsGridData[i].ey;
-	int ez = primsGridData[i].ez;
-	//
-	// Already computed and cached
-	//
-	// calc_se( primsBBox[i], bbox, diag, nx, ny, nz, sx, sy, sz, ex, ey, ez);
-	for(int x=sx;x<=ex;x++){
-	    for(int y=sy;y<=ey;y++){
-		int idx=x*nynz+y*nz+sz;
-		for(int z=sz;z<=ez;z++){
-		    int cur=current[idx];
-		    int pos=counts[idx*2]+cur;
-		    if( whichCell[idx] == 0 ){
-			grid[pos] = prims[i];
-			current[idx]++;
-		    } else {
-			// int pos = counts[idx*2];
-			grid[pos] = ( Object* ) 0;
-			whichCellPos[idx] = pos;
-			current[idx] = 0;
-		    }
-		    idx++;
-		}
-	    }
-	}
+    int pos = 0;
+
+    for (int idx=0; idx < objList.size(); idx++)
+    {
+      // Find grid position
+      
+      if (whichCell[idx] == 0)
+      {
+	if (objList[idx])
+	  for (int j=0; j<objList[idx]->numObjects(); j++)
+	  {
+	    grid[pos] = objList[idx]->objs[j];
+	    pos++;
+	  }
+      } else {
+	grid[pos] = (Object*) 0;
+	whichCellPos[idx] = pos;
+	pos++;
+      }
     }
 
     int i=0;
@@ -385,6 +425,12 @@ HierarchicalGrid::preprocess( double maxradius, int& pp_offset,
 
     double itime=time;
     int nynz=ny*nz;
+
+    real verts[3][3];
+    real polynormal[3];
+
+    Vector p0,p1,p2;
+
     for(int i=0;i<prims.size();i++){
 	double tnow=Time::currentSeconds();
 	if(tnow-itime > 5.0){
@@ -396,15 +442,71 @@ HierarchicalGrid::preprocess( double maxradius, int& pp_offset,
 	calc_se( primsBBox[i], bbox, diag, nx, ny, nz, 
 		 primsGridData[i].sx, primsGridData[i].sy, primsGridData[i].sz,
 		 primsGridData[i].ex, primsGridData[i].ey, primsGridData[i].ez );
+	Tri *tri = dynamic_cast<Tri*>(prims[i]);
+
+	if (tri) {
+	    if (tri->isbad())
+		continue;
+
+//	    printf("Original vertices: %lf %lf %lf, %lf %lf %lf, %lf %lf %lf\n", tri->pt(0).x(),tri->pt(0).y(),tri->pt(0).z(),tri->pt(1).x(),tri->pt(1).y(),tri->pt(1).z(),tri->pt(2).x(),tri->pt(2).y(),tri->pt(2).z());
+
+	    p0 = (tri->pt(0) - bbox.min())*(Vector(nx,ny,nz)/diag);
+	    p1 = (tri->pt(1) - bbox.min())*(Vector(nx,ny,nz)/diag);
+	    p2 = (tri->pt(2) - bbox.min())*(Vector(nx,ny,nz)/diag);
+
+	    Vector n = Cross((p2-p0),(p1-p0));
+
+	    n.normalize();
+	
+	    polynormal[0] = n.x();
+	    polynormal[1] = n.y();
+	    polynormal[2] = n.z();
+
+	}
+
 	for(int x=primsGridData[i].sx;x<=primsGridData[i].ex;x++){
 	    for(int y=primsGridData[i].sy;y<=primsGridData[i].ey;y++){
 		int idx=x*nynz+y*nz+primsGridData[i].sz;
 		for(int z=primsGridData[i].sz;z<=primsGridData[i].ez;z++){
- 		    if( !objList[idx] ) 
+// 		    if( !objList[idx] ) 
+//			objList[idx] = new Group();
+//		    objList[idx]->add( prims[i] );
+//		    counts[idx*2+1]++;
+//		    idx++;
+		  if (tri) {	
+		    
+		    verts[0][0] = p0.x() - ((double)x+.5);
+		    verts[1][0] = p1.x() - ((double)x+.5);
+		    verts[2][0] = p2.x() - ((double)x+.5);
+		    
+		    verts[0][1] = p0.y() - ((double)y+.5);
+		    verts[1][1] = p1.y() - ((double)y+.5);
+		    verts[2][1] = p2.y() - ((double)y+.5);
+		    
+		    verts[0][2] = p0.z() - ((double)z+.5);
+		    verts[1][2] = p1.z() - ((double)z+.5);
+		    verts[2][2] = p2.z() - ((double)z+.5);
+		    
+//		    printf("Verts: %lf %lf %lf, %lf %lf %lf, %lf %lf %lf\n", verts[0][0], verts[0][1], verts[0][2], verts[1][0], verts[1][1], verts[1][2], verts[2][0], verts[2][1], verts[2][2]);
+		    
+		    if (fast_polygon_intersects_cube(3, verts, polynormal, 0, 0))
+		    {
+//		      printf("Added to Cell %d %d %d\n\n",x,y,z);
+		      if( !objList[idx] )	 	
 			objList[idx] = new Group();
+		      objList[idx]->add( prims[i] );
+		      counts[idx*2+1]++;
+		    }
+		    
+		    idx++;
+		    
+		  } else {  // Not TRI
+		    if( !objList[idx] )	 	
+		      objList[idx] = new Group();
 		    objList[idx]->add( prims[i] );
 		    counts[idx*2+1]++;
 		    idx++;
+		  }
 		}
 	    }
 	}
@@ -435,12 +537,12 @@ HierarchicalGrid::preprocess( double maxradius, int& pp_offset,
     Array1<int> whichCellPos( ngrid );
     current.initialize(0);
     whichCellPos.initialize(0);
-    for(int i=0;i<prims.size();i++){
-	double tnow=Time::currentSeconds();
-	if(tnow-itime > 5.0){
-	    cerr << i << "/" << prims.size() << '\n';
-	    itime=tnow;
-	}
+//    for(int i=0;i<prims.size();i++){
+//	double tnow=Time::currentSeconds();
+//	if(tnow-itime > 5.0){
+//	    cerr << i << "/" << prims.size() << '\n';
+//	    itime=tnow;
+//	}
 	//
 	// Array of objects that will be put in a grid at lower level
 	//
@@ -448,37 +550,58 @@ HierarchicalGrid::preprocess( double maxradius, int& pp_offset,
 	//
 	// prims[i]->compute_bounds(obj_bbox, maxradius);
 
-	int sx = primsGridData[i].sx;
-	int sy = primsGridData[i].sy;
-	int sz = primsGridData[i].sz;
-	int ex = primsGridData[i].ex;
-	int ey = primsGridData[i].ey;
-	int ez = primsGridData[i].ez;
+//	int sx = primsGridData[i].sx;
+//	int sy = primsGridData[i].sy;
+//	int sz = primsGridData[i].sz;
+//	int ex = primsGridData[i].ex;
+//	int ey = primsGridData[i].ey;
+//	int ez = primsGridData[i].ez;
 	//
 	// Already computed and cached
 	//
 	// calc_se( primsBBox[i], bbox, diag, nx, ny, nz, sx, sy, sz, ex, ey, ez);
-	for(int x=sx;x<=ex;x++){
-	    for(int y=sy;y<=ey;y++){
-		int idx=x*nynz+y*nz+sz;
-		for(int z=sz;z<=ez;z++){
-		    int cur=current[idx];
-		    int pos=counts[idx*2]+cur;
-		    if( whichCell[idx] == 0 ){
-			grid[pos] = prims[i];
-			current[idx]++;
-		    } else {
+//	for(int x=sx;x<=ex;x++){
+//	    for(int y=sy;y<=ey;y++){
+//		int idx=x*nynz+y*nz+sz;
+//		for(int z=sz;z<=ez;z++){
+//		    int cur=current[idx];
+//		    int pos=counts[idx*2]+cur;
+//		    if( whichCell[idx] == 0 ){
+//			grid[pos] = prims[i];
+//			current[idx]++;
+//		    } else {
 			// int pos = counts[idx*2];
-			grid[pos] = ( Object* ) 0;
-			whichCellPos[idx] = pos;
-			current[idx] = 0;
-		    }
-		    idx++;
-		}
-	    }
-	}
-    }
+//			grid[pos] = ( Object* ) 0;
+//			whichCellPos[idx] = pos;
+//			current[idx] = 0;
+//		    }
+//		    idx++;
+//		}
+//	    }
+//	}
+//    }
 
+    int pos = 0;
+
+    for (int idx=0; idx < objList.size(); idx++)
+    {
+      // Find grid position
+      
+      if (whichCell[idx] == 0)
+      {
+	if (objList[idx])
+	  for (int j=0; j<objList[idx]->numObjects(); j++)
+	  {
+	    grid[pos] = objList[idx]->objs[j];
+	    pos++;
+	  }
+      } else {
+	grid[pos] = (Object*) 0;
+	whichCellPos[idx] = pos;
+	pos++;
+      }
+    }
+    
     int i=0;
     double dx=diag.x()/nx;
     double dy=diag.y()/ny;
