@@ -435,7 +435,8 @@ namespace Uintah {
     static TypeDescription* td = 0;
     if(!td){
       td = scinew TypeDescription(TypeDescription::Other,
-                                  "CompNeoHook::StateData", true, &makeMPI_CMData);
+                                  "CompNeoHook::StateData", 
+                                  true, &makeMPI_CMData);
     }
     return td;
   }
