@@ -84,10 +84,12 @@ public:
                                   const PatchSet*,
 				      const MaterialSet*);
 
+  /*
   void scheduleInterpolateVelIncFCToNC(SchedulerP&, 
                                       const PatchSet*,
 				          const MaterialSet*);
-
+  */
+  
   void scheduleInterpolateNCToCC(SchedulerP&, 
                                 const PatchSet*,
 				    const MaterialSet*);
@@ -145,12 +147,14 @@ public:
                            DataWarehouse* old_dw,
                            DataWarehouse* new_dw);
 
+  /*
   void interpolateVelIncFCToNC(const ProcessorGroup*,
                                const PatchSubset* patch,
 			       const MaterialSubset* matls,
                                DataWarehouse* old_dw,
                                DataWarehouse* new_dw);
-
+  */
+  
   void interpolateNCToCC(const ProcessorGroup*,
                          const PatchSubset* patch,
 			 const MaterialSubset* matls,
@@ -228,6 +232,8 @@ protected:
   SerialMPM*       d_mpm;
   ICE*             d_ice;
   bool             d_fracture;
+  Handle<MaterialSubset> d_prod_matls;
+
   double d_dbgTime; 
   double d_dbgStartTime;
   double d_dbgStopTime;
