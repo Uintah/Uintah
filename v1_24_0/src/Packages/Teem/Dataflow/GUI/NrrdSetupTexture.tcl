@@ -60,7 +60,7 @@ itcl_class Teem_NrrdData_NrrdSetupTexture {
 	set $this-useinputmax 1
 	set $this-realmin "unknown"
 	set $this-realmax "unknown"
-        set $this-valuesonly false
+        set $this-valuesonly 0
     }
 
     method ui {} {
