@@ -61,7 +61,7 @@ SingleProcessorScheduler::actuallyCompile()
   LoadBalancer* lb = dynamic_cast<LoadBalancer*>(lbp);
   dts_ = graph.createDetailedTasks(lb, useInternalDeps() );
 
-  lb->assignResources(*dts_, d_myworld);
+  lb->assignResources(*dts_);
 
   if (useInternalDeps()) {
     graph.createDetailedDependencies(dts_, lb);

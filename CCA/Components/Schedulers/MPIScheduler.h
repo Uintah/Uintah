@@ -103,7 +103,7 @@ WARNING
     // get the processor group executing with (only valid during execute())
     const ProcessorGroup* getProcessorGroup()
     { return d_myworld; }
-    virtual const MaterialSet* getMaterialSet(){return reloc_.getMaterialSet();}
+    virtual const MaterialSet* getMaterialSet() const {return reloc_.getMaterialSet();}
   protected:
     virtual void actuallyCompile();
     
@@ -129,6 +129,7 @@ WARNING
     mpi_timing_info_s     mpi_info_;
     CommRecMPI            sends_;
     SendState*            ss_;
+    SendState*            rs_;
     
     MPIRelocate      reloc_;
     const VarLabel * reloc_new_posLabel_;

@@ -36,6 +36,7 @@ static DebugStream dbg("TaskGraph", false);
 // multiple threads at the same time)  From sus.cc:
 extern Mutex cerrLock;
 extern DebugStream mixedDebug;
+extern DebugStream brydbg;
 
 #define DAV_DEBUG 0
 
@@ -559,7 +560,7 @@ TaskGraph::createDetailedTasks( LoadBalancer* lb, bool useInternalDeps )
   }
 
   ASSERT(grid != 0);
-  lb->createNeighborhood(grid, d_myworld, sc);
+  lb->createNeighborhood(grid);
 
   DetailedTasks* dt = scinew DetailedTasks(sc, d_myworld, this, useInternalDeps );
   for(int i=0;i<(int)sorted_tasks.size();i++){
@@ -572,7 +573,7 @@ TaskGraph::createDetailedTasks( LoadBalancer* lb, bool useInternalDeps )
 	for(int m=0;m<ms->size();m++){
 	  const MaterialSubset* mss = ms->getSubset(m);
 	  if(lb->inNeighborhood(pss, mss)) // can we move this comparison up
-          	                  //(does mss determines neighborhood)? - bryan
+          	                  //(does mss determines neighborhood)? - an
 
 	    createDetailedTask(dt, task, pss, mss);
 	}
@@ -987,7 +988,7 @@ int TaskGraph::findVariableLocation(LoadBalancer* lb,
 {
   // This needs to be improved, especially for re-distribution on
   // restart from checkpoint.
-  int proc = lb->getOldProcessorAssignment(req->var, patch, matl, d_myworld);
+  int proc = lb->getOldProcessorAssignment(req->var, patch, matl);
   return proc;
 }
 
