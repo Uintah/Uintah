@@ -478,15 +478,15 @@ TriWidget::translate( float x, float /*y*/ )
 
 //                      [------width-------]
 //
-//              ------> 0==================0                          ===
-//              |       |                  |                           |
+//              ------> 0==================0 <---(topRight->x,        ===
+//              |       |                  |       topRight->y)        |
 //              |       |                  |                           |
 //    (topLeft->x,      |        X         |                         height
 //      topLeft->y)     |        ^         |                           |
 //                      |        |         |                           |
 //                      |(focus_x,focus_y) |                           |
-//                      |                  |                           |
-//                      0------------------0 <---(bottomRight->x,     ===
+//  (bottomLeft->x,     |                  |                           |
+//    bottomLeft->y)--> 0------------------0 <---(bottomRight->x,     ===
 //                                                 bottomRight->y)
 
 
@@ -496,14 +496,15 @@ RectWidget::adjustFocus( float x, float y )
 {
   float dx = x - focus_x;
   float dy = y - focus_y;
-  if( focus_x + dx >= topLeft->x && focus_x + dx <= bottomRight->x ) {
-    focus_x += dx;
-    focusStar->translate( dx, 0 );
-  } // if
-  if( focus_y + dy >= bottomRight->y && focus_y + dy <= topLeft->y ) {
-    focus_y += dy;
-    focusStar->translate( 0, dy );
-  } // if
+  if( focus_x + dx > bottomRight->x ) dx = bottomRight->x - focus_x;
+  else if( focus_x + dx < bottomLeft->x ) dx = bottomLeft->x - focus_x;
+
+  if( focus_y + dy > topLeft->y ) dy = topLeft->y - focus_y;
+  else if( focus_y + dy < bottomLeft->y ) dy = bottomLeft->y - focus_y;
+  
+  focus_x += dx;
+  focus_y += dy;
+  focusStar->translate( dx, dy );
 }
 
 
@@ -520,9 +521,12 @@ RectWidget::adjustOpacity( float x )
 void
 RectWidget::changeColor( float r, float g, float b )
 {
-  resizeStar->red = 0.0;
-  resizeStar->green = 1.0;
-  resizeStar->blue = 0.0;
+  leftResizeStar->red = 0.0;
+  leftResizeStar->green = 1.0;
+  leftResizeStar->blue = 0.0;
+  rightResizeStar->red = 0.0;
+  rightResizeStar->green = 1.0;
+  rightResizeStar->blue = 0.0;
   translateStar->red = r;
   translateStar->green = g;
   translateStar->blue = b;
@@ -551,7 +555,8 @@ RectWidget::draw( void )
   translateStar->draw();
   translateBar->draw();
   barRounder->draw();
-  resizeStar->draw();
+  leftResizeStar->draw();
+  rightResizeStar->draw();
   focusStar->draw();
   opacityStar->draw();
 }
@@ -584,8 +589,10 @@ RectWidget::manipulate( float x, float y )
     adjustOpacity( x );
   else if( drawFlag == Focus )
     adjustFocus( x, y );
-  else if( drawFlag == Resize )
-    resize( x, y );
+  else if( drawFlag == ResizeL )
+    resizeLeft( x, y );
+  else if( drawFlag == ResizeR )
+    resizeRight( x, y );
   else if( drawFlag == Translate )
     translate( x, y );
 
@@ -605,12 +612,18 @@ RectWidget::manipulate( float x, float y )
       drawFlag = Focus;
       adjustFocus( x, y );
     } // else if
-    // if mouse cursor near resizeStar
+    // if mouse cursor near rightResizeStar
     else if( x >= bottomRight->x - 5 && x <= bottomRight->x + 5 &&
 	     y >= bottomRight->y - 5 && y <= bottomRight->y + 5 ) {
-      drawFlag = Resize;
-      resize( x, y );
+      drawFlag = ResizeR;
+      resizeRight( x, y );
     } // else if
+    // if mouse cursor near leftResizeStar
+    else if( x >= bottomLeft->x - 5 && x <= bottomLeft->x + 5 &&
+	     y >= bottomLeft->y - 5 && y <= bottomLeft->y + 5 ) {
+      drawFlag = ResizeL;
+      resizeLeft( x, y );
+    }
     // if mouse cursor on translateBar
     else if( x >= topLeft->x - 5 && x <= bottomRight->x + 5 &&
 	     y >= topLeft->y - 5 && y <= topLeft->y + 5 ) {
@@ -644,8 +657,10 @@ RectWidget::reposition( float x, float y, float w, float h )
 			    width, color[0], color[1], color[2] );
   barRounder = new GLStar( bottomRight->x, topLeft->y, 
 			   5.0, color[0], color[1], color[2] );
-  resizeStar = new GLStar( bottomRight->x, bottomRight->y,
-			   8.0, color[0]+0.30, color[1], color[2] );
+  leftResizeStar = new GLStar( bottomLeft->x, bottomLeft->y,
+			       8.0, color[0]+0.30, color[1], color[2] );
+  rightResizeStar = new GLStar( bottomRight->x, bottomRight->y,
+				8.0, color[0]+0.30, color[1], color[2] );
   opacityStar = new GLStar( opac_x, topLeft->y, 6.5, 1-color[0],
 			    1-color[1], 1-color[2] );
   focusStar = new GLStar( focus_x, focus_y, 8, 1-transText->current_color[0],
@@ -655,7 +670,7 @@ RectWidget::reposition( float x, float y, float w, float h )
 
 
 void
-RectWidget::resize( float x, float y )
+RectWidget::resizeRight( float x, float y )
 {
   float dx = x - bottomRight->x;
   if( bottomRight->x+dx-3 < topLeft->x )
@@ -679,7 +694,8 @@ RectWidget::resize( float x, float y )
   opacityStar->translate( dx*frac_dist, 0 );
   width += dx;
   bottomRight->x += dx;
-  resizeStar->translate( dx, 0 );
+  topRight->x += dx;
+  rightResizeStar->translate( dx, 0 );
   translateBar->translate( dx/2, 0 );
   translateBar->resize( dx/2, 0.0f );
   barRounder->translate( dx, 0 );
@@ -688,9 +704,55 @@ RectWidget::resize( float x, float y )
   frac_dist = 1-((focus_y-bottomRight->y)/
 		 (topLeft->y-bottomRight->y));
   height -= dy;
+  bottomLeft->y += dy;
   bottomRight->y += dy;
-  resizeStar->top += dy;
-  focusStar->top += dy*frac_dist;
+  leftResizeStar->top += dy;
+  rightResizeStar->top += dy;
+  focusStar->translate( 0, dy*frac_dist );
+  focus_y += dy*frac_dist;
+}
+
+
+void
+RectWidget::resizeLeft( float x, float y )
+{
+  float dx = x - bottomLeft->x;
+  if( bottomLeft->x+dx+3 > bottomRight->x )
+    dx = bottomRight->x-3-bottomLeft->x;
+  else if( bottomLeft->x+dx < 5.0 )
+    dx = 5.0 - bottomLeft->x;
+  float dy = y - bottomRight->y;
+  if( bottomRight->y+dy+3 > topLeft->y )
+    dy = topLeft->y-3-bottomRight->y;
+  else if( bottomRight->y+dy < 85.0 )
+    dy = 85.0 - bottomRight->y;
+
+  // x resize
+  float frac_dist = ((bottomRight->x-focus_x)/
+		     (bottomRight->x-topLeft->x));
+  focusStar->translate( dx*frac_dist, 0 );
+  focus_x += dx*frac_dist;
+  frac_dist = ((topRight->x-opac_x)/
+	       (bottomRight->x-topLeft->x));
+  opac_x += dx*frac_dist;
+  opacityStar->translate( dx*frac_dist, 0 );
+  width -= dx;
+  bottomLeft->x += dx;
+  topLeft->x += dx;
+  leftResizeStar->translate( dx, 0 );
+  translateBar->translate( dx/2, 0 );
+  translateBar->resize( -dx/2, 0.0f );
+  translateStar->translate( dx, 0 );
+  
+  // y resize
+  frac_dist = 1-((focus_y-bottomRight->y)/
+		 (topLeft->y-bottomRight->y));
+  height -= dy;
+  bottomLeft->y += dy;
+  bottomRight->y += dy;
+  leftResizeStar->translate( 0, dy );
+  rightResizeStar->translate( 0, dy );
+  focusStar->translate( 0, dy*frac_dist );
   focus_y += dy*frac_dist;
 }
 
@@ -711,7 +773,8 @@ RectWidget::translate( float x, float y )
 
   translateStar->translate( dx, dy );
   barRounder->translate( dx, dy );
-  resizeStar->translate( dx, dy );
+  leftResizeStar->translate( dx, dy );
+  rightResizeStar->translate( dx, dy );
   focusStar->translate( dx, dy );
   focus_x += dx;
   focus_y += dy;
@@ -720,21 +783,24 @@ RectWidget::translate( float x, float y )
   translateBar->translate( dx, dy );
   topLeft->x += dx;
   topLeft->y += dy;
+  topRight->x += dx;
+  topRight->y += dy;
+  bottomLeft->x += dx;
+  bottomLeft->y += dy;
   bottomRight->x += dx;
   bottomRight->y += dy;
 }
 
 /***************************************/
-/*          TENT WIDGET CLASS          */
+/*           RECTWIDGET CLASS          */
 /***************************************/
 
-TentWidget::TentWidget( float x, float y, float w, float h, float c[3] )
+RectWidget::RectWidget( float x, float y, float w, float h, float c[3] )
 {
   topLeft = new Vertex;
   topRight = new Vertex;
   bottomLeft = new Vertex;
   bottomRight = new Vertex;
-  type = Tent;
   drawFlag = Probe;
   textureAlign = Vertical;
   focus_x = x;
@@ -755,7 +821,6 @@ TentWidget::TentWidget( float x, float y, float w, float h, float c[3] )
   bottomRight->y = y-h*0.5;
 
   transText = new Texture<GLfloat>( 67, 215 );
-  genTransFunc();
   
   translateStar = new GLStar( topLeft->x, topLeft->y, 
 			      5.0, c[0], c[1], c[2] );
@@ -763,14 +828,16 @@ TentWidget::TentWidget( float x, float y, float w, float h, float c[3] )
 			    width, c[0], c[1], c[2] );
   barRounder = new GLStar( bottomRight->x, topLeft->y, 
 			   5.0, c[0], c[1], c[2] );
-  resizeStar = new GLStar( bottomRight->x, bottomRight->y,
+  leftResizeStar = new GLStar( bottomLeft->x, bottomLeft->y,
+			       8.0, c[0], c[1], c[2] );
+  rightResizeStar = new GLStar( bottomRight->x, bottomRight->y,
 			   8.0, c[0], c[1], c[2] );
   opacityStar = new GLStar( opac_x, topLeft->y, 6.5, c[0], c[1], c[2] );
   focusStar = new GLStar( focus_x, focus_y, 8, c[0], c[1], c[2] );
 }
 
 
-TentWidget::TentWidget( Widget* old_wid )
+RectWidget::RectWidget( Widget* old_wid )
 {
   topLeft = new Vertex;
   topRight = new Vertex;
@@ -797,8 +864,10 @@ TentWidget::TentWidget( Widget* old_wid )
 			    width, focusR, focusG, focusB );
   barRounder = new GLStar( bottomRight->x, topLeft->y, 
 			   5.0, focusR, focusG, focusB );
-  resizeStar = new GLStar( bottomRight->x, bottomRight->y,
-			   8.0, 0, 1, 0 );
+  leftResizeStar = new GLStar( bottomLeft->x, bottomLeft->y,
+			       8.0, 0, 1, 0 );
+  rightResizeStar = new GLStar( bottomRight->x, bottomRight->y,
+				8.0, 0, 1, 0 );
   opac_x = old_wid->opac_x;
   opacityStar = new GLStar( opac_x, topLeft->y, 6.5, 1-color[0],
 			    1-color[1], 1-color[2] );
@@ -808,14 +877,12 @@ TentWidget::TentWidget( Widget* old_wid )
   focusStar = new GLStar( focus_x, focus_y, 8, 1-transText->current_color[0],
 			  1-transText->current_color[1],
 			  1-transText->current_color[2] );
-  type = Tent;
-  genTransFunc();
 }
 
 
-TentWidget::TentWidget( float x, float y, float w, float h, float o_x,
-			float foc_x, float foc_y, int cmap_x,
-			int cmap_y, TextureAlign tA )
+RectWidget::RectWidget( float x, float y, float w, float h, float o_x,
+			float foc_x, float foc_y, int cmap_x, int cmap_y,
+			TextureAlign tA )
 {
   color[0] = focusR;
   color[1] = focusG;
@@ -826,7 +893,6 @@ TentWidget::TentWidget( float x, float y, float w, float h, float o_x,
   bottomRight = new Vertex;
   textureAlign = tA;
   drawFlag = Null;
-  type = Tent;
   width = w;
   height = h;
   focus_x = foc_x;
@@ -846,16 +912,44 @@ TentWidget::TentWidget( float x, float y, float w, float h, float o_x,
 			    width, focusR, focusG, focusB );
   barRounder = new GLStar( bottomRight->x, topLeft->y, 5.0,
 			   focusR, focusG, focusB );
-  resizeStar = new GLStar( bottomRight->x, bottomRight->y,
-			   8.0, 0, 1, 0 );
+  leftResizeStar = new GLStar( bottomLeft->x, bottomLeft->y,
+			       8.0, 0, 1, 0 );
+  rightResizeStar = new GLStar( bottomRight->x, bottomRight->y,
+				8.0, 0, 1, 0 );
   opacityStar = new GLStar( opac_x, topLeft->y, 6.5,
 			    1-focusR, 1-focusG, 1-focusB );
   transText = new Texture<GLfloat>( cmap_x, cmap_y );
-  genTransFunc();
   focusStar = new GLStar( focus_x, focus_y, 8,
 			  1-transText->current_color[0],
 			  1-transText->current_color[1],
 			  1-transText->current_color[2] );
+}
+
+/***************************************/
+/*          TENT WIDGET CLASS          */
+/***************************************/
+
+TentWidget::TentWidget( float x, float y, float w, float h, float c[3] )
+  : RectWidget( x, y, w, h, c ) {
+  type = Tent;
+  genTransFunc();
+}
+
+
+TentWidget::TentWidget( Widget* old_wid ) : RectWidget( old_wid )
+{
+  type = Tent;
+  genTransFunc();
+}
+
+
+TentWidget::TentWidget( float x, float y, float w, float h, float o_x,
+			float foc_x, float foc_y, int cmap_x,
+			int cmap_y, TextureAlign tA ) :
+  RectWidget( x, y, w, h, o_x, foc_x, foc_y, cmap_x, cmap_y, tA )
+{
+  type = Tent;
+  genTransFunc();
 }
 
 
@@ -944,89 +1038,16 @@ TentWidget::genTransFunc( void )
 /*      ELLIPTICAL WIDGET CLASS       */
 /**************************************/
 
-EllipWidget::EllipWidget( float x, float y, float w, float h, float c[3] )
+EllipWidget::EllipWidget( float x, float y, float w, float h, float c[3] ) :
+  RectWidget( x, y, w, h, c )
 {
-  topLeft = new Vertex;
-  topRight = new Vertex;
-  bottomLeft = new Vertex;
-  bottomRight = new Vertex;
   type = Ellipse;
-  drawFlag = Probe;
-  textureAlign = Vertical;
-  focus_x = x;
-  focus_y = y;
-  height = h;
-  width = w;
-  color[0] = c[0];
-  color[1] = c[1];
-  color[2] = c[2];
-  opac_x = x;
-  topLeft->x = x-w*0.5;
-  topLeft->y = y+h*0.5;
-  topRight->x = x+w*0.5;
-  topRight->y = y+h*0.5;
-  bottomLeft->x = x-w*0.5;
-  bottomLeft->y = y-h*0.5;
-  bottomRight->x = x+w*0.5;
-  bottomRight->y = y-h*0.5;
-
-  transText = new Texture<GLfloat>( 67, 215 );
   genTransFunc();
-  
-  translateStar = new GLStar( topLeft->x, topLeft->y, 
-			      5.0, c[0], c[1], c[2] );
-  translateBar = new GLBar( topLeft->x+width/2, topLeft->y,
-			    width, color[0], color[1], color[2] );
-  barRounder = new GLStar( bottomRight->x, topLeft->y, 
-			   5.0, c[0], c[1], c[2] );
-  resizeStar = new GLStar( bottomRight->x, bottomRight->y,
-			   8.0, c[0]+0.30, c[1], c[2] );
-  opacityStar = new GLStar( opac_x, topLeft->y, 6.5, 1-color[0],
-			    1-color[1], 1-color[2] );
-  focusStar = new GLStar( focus_x, focus_y, 8, 1-transText->current_color[0],
-			  1-transText->current_color[1],
-			  1-transText->current_color[2] );
 }
 
 
-EllipWidget::EllipWidget( Widget* old_wid )
+EllipWidget::EllipWidget( Widget* old_wid ) : RectWidget( old_wid )
 {
-  topLeft = new Vertex;
-  topRight = new Vertex;
-  bottomLeft = new Vertex;
-  bottomRight = new Vertex;
-  textureAlign = old_wid->textureAlign;
-  drawFlag = Null;
-  width = old_wid->width;
-  height = (old_wid->getTextULBound())->y - (old_wid->getTextLRBound())->y;
-  topLeft->x = (old_wid->getTextULBound())->x;
-  topLeft->y = (old_wid->getTextULBound())->y;
-  topRight->x = (old_wid->getTextURBound())->x;
-  topRight->y = (old_wid->getTextURBound())->y;
-  bottomLeft->x = (old_wid->getTextULBound())->x;
-  bottomLeft->y = (old_wid->getTextLLBound())->y;
-  bottomRight->x = (old_wid->getTextLRBound())->x;
-  bottomRight->y = (old_wid->getTextLRBound())->y;
-  color[0] = focusR;
-  color[1] = focusG;
-  color[2] = focusB;
-  translateStar = new GLStar( topLeft->x, topLeft->y, 
-			      5.0, color[0], color[1], color[2] );
-  translateBar = new GLBar( topLeft->x+width*0.5, topLeft->y,
-			    width, color[0], color[1], color[2] );
-  barRounder = new GLStar( bottomRight->x, topLeft->y, 
-			   5.0, color[0], color[1], color[2] );
-  resizeStar = new GLStar( bottomRight->x, bottomRight->y,
-			   8.0, 0, 1, 0 );
-  opac_x = old_wid->opac_x;
-  opacityStar = new GLStar( opac_x, topLeft->y, 6.5, 1-color[0],
-			    1-color[1], 1-color[2] );
-  transText = old_wid->transText;
-  focus_x = bottomRight->x-width/2;
-  focus_y = bottomRight->y+height/2;
-  focusStar = new GLStar( focus_x, focus_y, 8, 1-transText->current_color[0],
-			  1-transText->current_color[1],
-			  1-transText->current_color[2] );
   type = Ellipse;
   genTransFunc();
 }
@@ -1034,47 +1055,11 @@ EllipWidget::EllipWidget( Widget* old_wid )
 
 EllipWidget::EllipWidget( float x, float y, float w, float h, float o_x,
 			  float foc_x, float foc_y, int cmap_x,
-			  int cmap_y, TextureAlign tA )
+			  int cmap_y, TextureAlign tA ) :
+  RectWidget( x, y, w, h, o_x, foc_x, foc_y, cmap_x, cmap_y, tA )
 {
-  topLeft = new Vertex;
-  topRight = new Vertex;
-  bottomLeft = new Vertex;
-  bottomRight = new Vertex;
-  textureAlign = tA;
-  drawFlag = Null;
   type = Ellipse;
-  width = w;
-  height = h;
-  focus_x = foc_x;
-  focus_y = foc_y;
-  opac_x = o_x;
-  topLeft->x = x;
-  topLeft->y = y;
-  topRight->x = x+w;
-  topRight->y = y;
-  bottomLeft->x = x;
-  bottomLeft->y = y-h;
-  bottomRight->x = x+w;
-  bottomRight->y = y-h;
-  color[0] = focusR;
-  color[1] = focusG;
-  color[2] = focusB;
-  translateStar = new GLStar(topLeft->x, topLeft->y, 5.0,
-			     focusR, focusG, focusB );
-  translateBar = new GLBar( topLeft->x+width/2, topLeft->y,
-			    width, focusR, focusG, focusB );
-  barRounder = new GLStar( bottomRight->x, topLeft->y, 5.0,
-			   focusR, focusG, focusB );
-  resizeStar = new GLStar( bottomRight->x, bottomRight->y,
-			   8.0, 0, 1, 0 );
-  opacityStar = new GLStar( opac_x, topLeft->y, 6.5,
-			    1-focusR, 1-focusG, 1-focusB );
-  transText = new Texture<GLfloat>( cmap_x, cmap_y );
   genTransFunc();
-  focusStar = new GLStar( focus_x, focus_y, 8,
-			  1-transText->current_color[0],
-			  1-transText->current_color[1],
-			  1-transText->current_color[2] );
 }
 
 
@@ -1147,89 +1132,16 @@ EllipWidget::genTransFunc( void )
 /*      RAINBOW WIDGET CLASS       */
 /***********************************/
 
-RBowWidget::RBowWidget( float x, float y, float w, float h, float c[3] )
+RBowWidget::RBowWidget( float x, float y, float w, float h, float c[3] ) :
+  RectWidget( x, y, w, h, c )
 {
-  topLeft = new Vertex;
-  topRight = new Vertex;
-  bottomLeft = new Vertex;
-  bottomRight = new Vertex;
   type = Rainbow;
-  drawFlag = Probe;
-  textureAlign = Vertical;
-  focus_x = x;
-  focus_y = y;
-  height = h;
-  width = w;
-  color[0] = c[0];
-  color[1] = c[1];
-  color[2] = c[2];
-  opac_x = x;
-  topLeft->x = x-w*0.5;
-  topLeft->y = y+h*0.5;
-  topRight->x = x+w*0.5;
-  topRight->y = y+h*0.5;
-  bottomLeft->x = x-w*0.5;
-  bottomLeft->y = y-h*0.5;
-  bottomRight->x = x+w*0.5;
-  bottomRight->y = y-h*0.5;
-
-  transText = new Texture<GLfloat>( 67, 215 );
   genTransFunc();
-  
-  translateStar = new GLStar( topLeft->x, topLeft->y, 
-			      5.0, c[0], c[1], c[2] );
-  translateBar = new GLBar( topLeft->x+width/2, topLeft->y,
-			    width, color[0], color[1], color[2] );
-  barRounder = new GLStar( bottomRight->x, topLeft->y, 
-			   5.0, c[0], c[1], c[2] );
-  resizeStar = new GLStar( bottomRight->x, bottomRight->y,
-			   8.0, 0, 1, 0 );
-  opacityStar = new GLStar( opac_x, topLeft->y, 6.5, 1-color[0],
-			    1-color[1], 1-color[2] );
-  focusStar = new GLStar( focus_x, focus_y, 8, 1-transText->current_color[0],
-			  1-transText->current_color[1],
-			  1-transText->current_color[2] );
 }
 
 
-RBowWidget::RBowWidget( Widget* old_wid )
+RBowWidget::RBowWidget( Widget* old_wid ) : RectWidget( old_wid )
 {
-  topLeft = new Vertex;
-  topRight = new Vertex;
-  bottomLeft = new Vertex;
-  bottomRight = new Vertex;
-  textureAlign = old_wid->textureAlign;
-  drawFlag = Null;
-  width = old_wid->width;
-  height = (old_wid->getTextULBound())->y - (old_wid->getTextLRBound())->y;
-  topLeft->x = (old_wid->getTextULBound())->x;
-  topLeft->y = (old_wid->getTextULBound())->y;
-  topRight->x = (old_wid->getTextURBound())->x;
-  topRight->y = (old_wid->getTextURBound())->y;
-  bottomLeft->x = (old_wid->getTextULBound())->x;
-  bottomLeft->y = (old_wid->getTextLLBound())->y;
-  bottomRight->x = (old_wid->getTextLRBound())->x;
-  bottomRight->y = (old_wid->getTextLRBound())->y;
-  color[0] = focusR;
-  color[1] = focusG;
-  color[2] = focusB;
-  translateStar = new GLStar( topLeft->x, topLeft->y, 
-			      5.0, color[0], color[1], color[2] );
-  translateBar = new GLBar( topLeft->x+width*0.5, topLeft->y,
-			    width, color[0], color[1], color[2] );
-  barRounder = new GLStar( bottomRight->x, topLeft->y, 
-			   5.0, color[0], color[1], color[2] );
-  resizeStar = new GLStar( bottomRight->x, bottomRight->y,
-			   8.0, 0, 1, 0 );
-  opac_x = old_wid->opac_x;
-  opacityStar = new GLStar( opac_x, topLeft->y, 6.5, 1-color[0],
-			    1-color[1], 1-color[2] );
-  transText = old_wid->transText;
-  focus_x = bottomRight->x-width/2;
-  focus_y = bottomRight->y+height/2;
-  focusStar = new GLStar( focus_x, focus_y, 8, 1-transText->current_color[0],
-			  1-transText->current_color[1],
-			  1-transText->current_color[2] );
   type = Rainbow;
   genTransFunc();
 }
@@ -1237,47 +1149,11 @@ RBowWidget::RBowWidget( Widget* old_wid )
 
 RBowWidget::RBowWidget( float x, float y, float w, float h, float o_x,
 			float foc_x, float foc_y, int cmap_x, int cmap_y,
-			TextureAlign tA )
+			TextureAlign tA ) :
+  RectWidget( x, y, w, h, o_x, foc_x, foc_y, cmap_x, cmap_y, tA )
 {
-  topLeft = new Vertex;
-  topRight = new Vertex;
-  bottomLeft = new Vertex;
-  bottomRight = new Vertex;
-  textureAlign = tA;
-  drawFlag = Null;
   type = Rainbow;
-  width = w;
-  height = h;
-  focus_x = foc_x;
-  focus_y = foc_y;
-  opac_x = o_x;
-  topLeft->x = x;
-  topLeft->y = y;
-  topRight->x = x+w;
-  topRight->y = y;
-  bottomLeft->x = x;
-  bottomLeft->y = y-h;
-  bottomRight->x = x+w;
-  bottomRight->y = y-h;
-  color[0] = focusR;
-  color[1] = focusG;
-  color[2] = focusB;
-  translateStar = new GLStar(topLeft->x, topLeft->y, 5.0,
-			     focusR, focusG, focusB );
-  translateBar = new GLBar( topLeft->x+width/2, topLeft->y,
-			    width, focusR, focusG, focusB );
-  barRounder = new GLStar( bottomRight->x, topLeft->y, 5.0,
-			   focusR, focusG, focusB );
-  resizeStar = new GLStar( bottomRight->x, bottomRight->y,
-			   8.0, 0, 1, 0 );
-  opacityStar = new GLStar( opac_x, topLeft->y, 6.5,
-			    1-focusR, 1-focusG, 1-focusB );
-  transText = new Texture<GLfloat>( cmap_x, cmap_y );
   genTransFunc();
-  focusStar = new GLStar( focus_x, focus_y, 8,
-			  1-transText->current_color[0],
-			  1-transText->current_color[1],
-			  1-transText->current_color[2] );
 }
 
 
