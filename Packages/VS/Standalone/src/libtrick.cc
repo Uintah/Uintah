@@ -56,7 +56,7 @@
 #include <sys/types.h>
 #include <sys/times.h>
 
-#include <libtrick.h>
+#include "libtrick.h"
 
 int greedy_clique(Dsatur *graph, bool *valid, int *clique)
 {

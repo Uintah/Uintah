@@ -9,7 +9,7 @@
 
 #include <stdio.h>
 #include <strings.h>
-#include "labelmaps.h"
+#include <Packages/VS/Dataflow/Modules/DataFlow/labelmaps.h>
 #include "libtrick.h"
 
 void

@@ -44,7 +44,7 @@ using namespace SCIRun;
 int
 main()
 {
-  int m,i,j,k,val;
+  int m,i,j,val;
   bool *valid;
   int *clique;
   int place;
@@ -187,11 +187,12 @@ main()
 
   for (i=0; i<ncolors; i++)
   {
-    Color clr(palette[graph->ColorClass[i]]);
+    cerr << "ColorClass[" << i << "](" << graph.ColorClass[i] << ")" << endl;
+    Color clr(palette[graph.ColorClass[i]]);
     rgb[i]=clr;
-    rgbT[i]=t;
-    alphas[i]=a;
-    alphaT[i]=t;
+    rgbT[i]=(float)i;
+    alphas[i]=1.0;
+    alphaT[i]=(float)i;
 
   } // end for (i=0; i<ncolors; i++)
 
