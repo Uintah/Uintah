@@ -32,9 +32,6 @@
 
 #include <Dataflow/Widgets/BoxWidget.h>
 #include <Dataflow/Widgets/FrameWidget.h>
-#include <Packages/Uintah/Core/Datatypes/LevelField.h>
-#include <Packages/Uintah/Core/Datatypes/LevelMesh.h>
-
 #include <Core/Datatypes/LatVolField.h>
 #include <Core/Datatypes/LatVolMesh.h>
 

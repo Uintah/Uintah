@@ -11,7 +11,6 @@ SRCS     += \
 	$(SRCDIR)/RescaleColorMapForParticles.cc \
 	$(SRCDIR)/ParticleColorMapKey.cc \
 	$(SRCDIR)/ParticleVis.cc \
-	$(SRCDIR)/RescaleColorMap.cc \
 	$(SRCDIR)/CuttingPlane.cc\
 	$(SRCDIR)/Hedgehog.cc\
 	$(SRCDIR)/AnimatedStreams.cc\
