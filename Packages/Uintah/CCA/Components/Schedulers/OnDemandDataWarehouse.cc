@@ -156,6 +156,14 @@ OnDemandDataWarehouse::sendMPI(SendState& ss, DependencyBatch* batch,
 			       OnDemandDataWarehouse* old_dw,
 			       const DetailedDep* dep)
 {
+  if (dep->isNonDataDependency()) {
+    // A non-data dependency -- send an empty message.
+    // This would be used, for example, when a task is to modify data that
+    // was previously required with ghost-cells.
+    buffer.add(0, 0, MPI_INT, false);
+    return;
+  }
+  
   const VarLabel* label = dep->req->var;
   const Patch* patch = dep->fromPatch;
   int matlIndex = dep->matl;
@@ -260,6 +268,14 @@ OnDemandDataWarehouse::recvMPI(BufferInfo& buffer,
 			       OnDemandDataWarehouse* old_dw,
 			       const DetailedDep* dep)
 {
+  if (dep->isNonDataDependency()) {
+    // A non-data dependency -- send an empty message.
+    // This would be used, for example, for dependencies between a modifying
+    // task and a task the requires the data before it is to be modified.
+    buffer.add(0, 0, MPI_INT, false);
+    return;
+  }
+  
   const VarLabel* label = dep->req->var;
   const Patch* patch = dep->fromPatch;
   int matlIndex = dep->matl;

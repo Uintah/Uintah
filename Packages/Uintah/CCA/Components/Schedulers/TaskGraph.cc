@@ -286,23 +286,11 @@ TaskGraph::setupTaskConnections()
   // Also do a type check
   for( iter=d_tasks.begin(); iter != d_tasks.end(); iter++ ) {
     Task* task = *iter;
+    addDependencyEdges(task, task->getRequires(), comps, false);
     addDependencyEdges(task, task->getModifies(), comps, true);
     // Used here just to warn if a modifies comes before its computes
     // in the order that tasks were added to the graph.
     task->visited = true;
-  }
-
-  for( iter=d_tasks.begin(); iter != d_tasks.end(); iter++ )
-    (*iter)->visited = false; // prepare for next loop
-  
-  // Connect the tasks together using the computes/requires info
-  // Also do a type check
-  for( iter=d_tasks.begin(); iter != d_tasks.end(); iter++ ) {
-    Task* task = *iter;
-    addDependencyEdges(task, task->getRequires(), comps, false);
-    // Used here just to warn if a requires comes before its computes
-    // or modifies in the order that tasks were added to the graph.
-    task->visited = true;    
   }
 
   // Initialize variables on the tasks
@@ -342,35 +330,53 @@ void TaskGraph::addDependencyEdges(Task* task, Task::Dependency* req,
 	    add=true;
 	}
 	if(add){
-	  Task::Edge* edge = scinew Task::Edge(compiter->second, req);
-	  edges.push_back(edge);
-	  req->addComp(edge);
-	  compiter->second->addReq(edge);
+	  Task::Dependency* comp = compiter->second;
 	  
 	  if (modifies) {
 	    // not just requires, but modifies, so the comps map must be
 	    // updated so future modifies or requires will link to this one.
-	    compiter->second = req; // ??? will this work?  let's see
-	    
+	    compiter->second = req;
+
+	    // Add dependency edges to each task that requires the data
+	    // before it is modified.
+	    for (Task::Edge* otherEdge = comp->req_head; otherEdge != 0;
+		 otherEdge = otherEdge->reqNext) {
+	      Task::Dependency* priorReq =
+		const_cast<Task::Dependency*>(otherEdge->req);
+	      Task::Edge* edge = scinew Task::Edge(priorReq, req);
+	      edges.push_back(edge);
+	      req->addComp(edge);
+	      priorReq->addReq(edge);
+	      if(dbg.active()){
+		dbg << "Creating edge from task: " << *priorReq->task << " to task: " << *req->task << '\n';
+		dbg << "Prior Req=" << *priorReq << '\n';
+		dbg << "Modify=" << *req << '\n';
+	      }
+      
+	    }
 	  }
+	  
+	  Task::Edge* edge = scinew Task::Edge(comp, req);
+	  edges.push_back(edge);
+	  req->addComp(edge);
+	  comp->addReq(edge);
+	  
 	  if (!edge->comp->task->visited &&
 	      !edge->comp->task->isReductionTask()) {
-	    cerr << "\nWarning: A task, '" << task->getName() << "', that ";
+	    cerr << "\nWARNING: A task, '" << task->getName() << "', that ";
 	    if (modifies)
 	      cerr << "modifies '";
 	    else
 	      cerr << "requires '";
-	    cerr << req->var->getName() << "' was added before its last computing";
-	    if (!modifies)
-	      cerr << "/modifying";
-	    cerr << " task, '" << edge->comp->task->getName() << "'"
+	    cerr << req->var->getName() << "' was added before computing task";
+	    cerr << ", '" << edge->comp->task->getName() << "'"
 		 << endl << endl;
 	  }
 	  count++;
 	  if(dbg.active()){
-	    dbg << "Creating edge from task: " << *compiter->second->task << " to task: " << *task << '\n';
+	    dbg << "Creating edge from task: " << *comp->task << " to task: " << *task << '\n';
 	    dbg << "Req=" << *req << '\n';
-	    dbg << "Comp=" << *compiter->second << '\n';
+	    dbg << "Comp=" << *comp << '\n';
 	  }
 	}
       }
@@ -602,6 +608,7 @@ class CompTable {
     const Patch* patch;
     int matl;
     unsigned int hash;
+    
     Data(DetailedTask* task, Task::Dependency* comp,
 	 const Patch* patch, int matl)
       : task(task), comp(comp), patch(patch), matl(matl)
@@ -814,28 +821,19 @@ TaskGraph::createDetailedDependencies(DetailedTasks* dt, LoadBalancer* lb,
     if(task->task->getType() == Task::Reduction)
       continue;
 
-    if(dbg.active())
+    if(dbg.active() && (task->task->getRequires() != 0))
+      dbg << "Looking at requires of detailed task: " << *task << '\n';
+
+    createDetailedDependencies(dt, lb, pg, task, task->task->getRequires(),
+			       ct, false);
+
+    if(dbg.active() && (task->task->getModifies() != 0))
       dbg << "Looking at modifies of detailed task: " << *task << '\n';
 
     createDetailedDependencies(dt, lb, pg, task, task->task->getModifies(),
 			       ct, true);
   }
     
-  // Go through the reqs and find the matching comp
-  for(int i=0;i<dt->numTasks();i++){
-    DetailedTask* task = dt->getTask(i);
-
-    // Explicit dependencies are currently not generated for reductions
-    if(task->task->getType() == Task::Reduction)
-      continue;
-
-    if(dbg.active())
-      dbg << "Looking at requires of detailed task: " << *task << '\n';
-
-    createDetailedDependencies(dt, lb, pg, task, task->task->getRequires(),
-			       ct, false);
-  }
-  
   if(dbg.active())
     dbg << "Done creating detailed tasks\n";
 
@@ -911,18 +909,34 @@ TaskGraph::createDetailedDependencies(DetailedTasks* dt, LoadBalancer* lb,
 		didFind = ct.findcomp(req, neighbor, matl, creator, comp);
 	      if(!didFind)
 		throw InternalError("Failed to find comp for dep!");
-	      /*
-		if (comp && comp->var)
-		cerr << comp->var->getName() << " on matl " << matl << endl;
-		else
-		cerr << "unknown on matl " << matl << endl;
-	      */
 	    }
 	    IntVector l = Max(neighbor->getNodeLowIndex(), low);
 	    IntVector h = Min(neighbor->getNodeHighIndex(), high);
 	    dt->possiblyCreateDependency(creator, comp, neighbor,
 					 task, req, patch,
 					 matl, l, h);
+	    if (modifies) {
+	      // Add links to the modifying task from anything requiring
+	      // the variable before it's modified so that it never gets
+	      // modified before it gets used.
+	      for (DependencyBatch* batch = creator->getComputes(); batch != 0;
+		   batch = batch->comp_next) {
+		for (DetailedDep* dep = batch->head; dep != 0; dep = dep->next)
+		  if (dep->req->var == req->var) {
+		    // dep requires what is to be modified before it is to be
+		    // modified so create a dependency between them so the
+		    // modifying won't conflist with the previous require.
+		    if (dbg.active()) {
+		      dbg << "Requires to modifies dependency from "
+			  << batch->toTask->getTask()->getName()
+			  << " to " << task->getTask()->getName() << endl;
+		    }
+		    dt->possiblyCreateDependency(batch->toTask, 0, 0,
+						 task, req, 0,
+						 matl, l, h);
+		}
+	      }
+	    }
 	  }
 	}
       }
