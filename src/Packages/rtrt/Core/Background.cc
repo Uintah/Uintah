@@ -152,9 +152,24 @@ EnvironmentMapBackground::color_in_direction( const Vector& DIR , Color& result)
     //double v = (DIR.x()+1)/2.;
     //double u = (DIR.z()+1)/2.;
     
-    int i=int( v*( _width - 1 ) );
-    int j=int( u*( _height - 1 ) );
-    result = _image( i, j ) * ambientScale_;
+    //int i=int( v*( _width - 1 ) );
+    //int j=int( u*( _height - 1 ) );
+    //result = _image( i, j ) * ambientScale_;
+
+    // image dimensions include interpolation slop
+    u *= (_image.dim1()-3);
+    v *= (_image.dim2()-3);
+    
+    int iu = (int)u;
+    int iv = (int)v;
+
+    double tu = u-iu;
+    double tv = v-iv;
+
+    result = _image(iu,iv)*(1-tu)*(1-tv)+
+      _image(iu+1,iv)*tu*(1-tv)+
+      _image(iu,iv+1)*(1-tu)*tv+
+      _image(iu+1,iv+1)*tu*tv;
 }
 
 const int BACKGROUND_VERSION = 1;
