@@ -115,41 +115,127 @@ main(int argc, char *argv[])
           for(ProblemSpecP child = geom_obj_ps->findBlock(); child != 0;
                            child = child->findNextBlock()){
             std::string go_type = child->getNodeName();
+
+            // Read in points from a file
             if (go_type == "file"){
               string f_name,of_name;
+              string var_name1="0",var_name2="0";
               child->require("name",f_name);
+              child->get("var1",var_name1);
+              child->get("var2",var_name2);
               ifstream source(f_name.c_str());
               vector<vector<Point> > points(level->numPatches());
               double x,y,z;
               Point min(1e30,1e30,1e30),max(-1e30,-1e30,-1e30);
-              while (source >> x >> y >> z) {
-                Point pp(x,y,z);
-                const Patch* currentpatch =
-                     level->selectPatchForCellIndex(level->getCellIndex(pp));
-                int pid = currentpatch->getID();
-                min = Min(pp,min);
-                max = Max(pp,max);
-                points[pid].push_back(pp);
-              }
-              source.close();
-              for(Level::const_patchIterator iter = level->patchesBegin();
-                                  iter != level->patchesEnd(); iter++){
-                 const Patch* patch = *iter;
-                 int pid = patch->getID();
+              // Points only
+              if(var_name1=="0" && var_name2 == "0"){
+                while (source >> x >> y >> z) {
+                  Point pp(x,y,z);
+                  const Patch* currentpatch =
+                       level->selectPatchForCellIndex(level->getCellIndex(pp));
+                  int pid = currentpatch->getID();
+                  min = Min(pp,min);
+                  max = Max(pp,max);
+                  points[pid].push_back(pp);
+                }
+                source.close();
+                for(Level::const_patchIterator iter = level->patchesBegin();
+                                    iter != level->patchesEnd(); iter++){
+                   const Patch* patch = *iter;
+                   int pid = patch->getID();
+  
+                   char fnum[5];
+                   sprintf(fnum,".%d",pid);
+                   of_name = f_name+fnum;
+                   ofstream dest(of_name.c_str());
+                   dest << min.x() << " " << min.y() << " " << min.z() << " " 
+                        << max.x() << " " << max.y() << " " << max.z() << endl;
+                   for (int I = 0; I < (int) points[pid].size(); I++) {
+                     dest << points[pid][I].x() << " " <<
+                             points[pid][I].y() << " " <<
+                             points[pid][I].z() << endl;
+                   }
+                   dest.close();
+                }
+              }  // if vn1==0 && vn2==0
 
-                 char fnum[5];
-                 sprintf(fnum,".%d",pid);
-                 of_name = f_name+fnum;
-                 ofstream dest(of_name.c_str());
-                 dest << min.x() << " " << min.y() << " " << min.z() << " " 
-                      << max.x() << " " << max.y() << " " << max.z() << endl;
-                 for (int I = 0; I < (int) points[pid].size(); I++) {
-                   dest << points[pid][I].x() << " " <<
-                           points[pid][I].y() << " " <<
-                           points[pid][I].z() << endl;
-                 }
-                 dest.close();
-              }
+              if(var_name1=="p.volume" && var_name2 == "0"){
+                vector<vector<Vector> > normals(level->numPatches());
+                double vol;
+                vector<vector<double> > volumes(level->numPatches());
+                while (source >> x >> y >> z >> vol) {
+                  Point pp(x,y,z);
+                  const Patch* currentpatch =
+                       level->selectPatchForCellIndex(level->getCellIndex(pp));
+                  int pid = currentpatch->getID();
+                  min = Min(pp,min);
+                  max = Max(pp,max);
+                  points[pid].push_back(pp);
+                  volumes[pid].push_back(vol);
+                }
+                source.close();
+                for(Level::const_patchIterator iter = level->patchesBegin();
+                                    iter != level->patchesEnd(); iter++){
+                   const Patch* patch = *iter;
+                   int pid = patch->getID();
+  
+                   char fnum[5];
+                   sprintf(fnum,".%d",pid);
+                   of_name = f_name+fnum;
+                   ofstream dest(of_name.c_str());
+                   dest << min.x() << " " << min.y() << " " << min.z() << " " 
+                        << max.x() << " " << max.y() << " " << max.z() << endl;
+                   for (int I = 0; I < (int) points[pid].size(); I++) {
+                     dest << points[pid][I].x() << " " <<
+                             points[pid][I].y() << " " <<
+                             points[pid][I].z() << " " << vol << endl;
+                   }
+                   dest.close();
+                }
+              }  // if vn1==pv && vn2==0
+
+              if(var_name1=="0" && var_name2 == "p.externalforce"){
+                vector<vector<Vector> > normals(level->numPatches());
+                double nx,ny,nz;
+                while (source >> x >> y >> z >> nx >> ny >> nz) {
+                  Point pp(x,y,z);
+                  Vector norm(nx,ny,nz);
+                  const Patch* currentpatch =
+                       level->selectPatchForCellIndex(level->getCellIndex(pp));
+                  int pid = currentpatch->getID();
+                  min = Min(pp,min);
+                  max = Max(pp,max);
+                  points[pid].push_back(pp);
+                  normals[pid].push_back(norm);
+                }
+                source.close();
+                for(Level::const_patchIterator iter = level->patchesBegin();
+                                    iter != level->patchesEnd(); iter++){
+                   const Patch* patch = *iter;
+                   int pid = patch->getID();
+  
+                   char fnum[5];
+                   sprintf(fnum,".%d",pid);
+                   of_name = f_name+fnum;
+                   ofstream dest(of_name.c_str());
+                   dest << min.x() << " " << min.y() << " " << min.z() << " " 
+                        << max.x() << " " << max.y() << " " << max.z() << endl;
+                   for (int I = 0; I < (int) points[pid].size(); I++) {
+                     dest << points[pid][I].x() << " " <<
+                             points[pid][I].y() << " " <<
+                             points[pid][I].z() << " ";
+                     dest << normals[pid][I].x() << " " <<
+                             normals[pid][I].y() << " " <<
+                             normals[pid][I].z() << endl;
+                   }
+                   dest.close();
+                }
+              }  // if vn1==0 && vn2==pef
+
+              if(var_name1=="p.volume" && var_name2 == "p.externalforce"){
+                 cout << "This option not yet supported" << endl;
+                 exit(1);
+              }  // if vn1==pv && vn2==pef
             }
           }
         }
