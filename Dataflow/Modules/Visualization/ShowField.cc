@@ -78,6 +78,7 @@ class ShowField : public Module
   bool                     faces_dirty_;
   //! holds options for how to visualize nodes.
   GuiString                node_display_type_;
+  GuiDouble                node_scale_;
   GuiInt                   showProgress_;
 
   //! Private Methods
@@ -128,6 +129,7 @@ ShowField::ShowField(const clString& id) :
   faces_on_(true),
   faces_dirty_(true),
   node_display_type_("node_display_type", id, this),
+  node_scale_("scale", id, this),
   showProgress_("show_progress", id, this)
  {
   // Create the input ports
@@ -151,7 +153,6 @@ ShowField::execute()
 
   // tell module downstream to delete everything we have sent it before.
   // This is typically viewer, it owns the scene graph memory we create here.
-  bool render_all = false;
   FieldHandle geom_handle;
   geom_->get(geom_handle);
   if(!geom_handle.get_rep()){
@@ -178,7 +179,6 @@ ShowField::execute()
       (colm_gen_ != color_handle->generation)) 
   {
     // input has changed, rerender everything.
-    render_all = true;
     nodes_dirty_ = true;
     edges_dirty_ = true;
     faces_dirty_ = true;
@@ -188,12 +188,7 @@ ShowField::execute()
   }
 
   // check to see if we have something to do.
-  if ((!nodes_dirty_) && (!edges_dirty_) && (!faces_dirty_))  
-  {
-    cout << "nothing to do" << endl;
-    return;
-  }
-  cout << "have to render" << endl;
+  if ((!nodes_dirty_) && (!edges_dirty_) && (!faces_dirty_))  { return; }
 
   bool error = false;
   string msg;
@@ -229,24 +224,26 @@ ShowField::execute()
   
   // cleanup...
   if (nodes_dirty_) {
-    if (node_id_) ogeom_->delObj(node_id_); 
+    if (node_id_) ogeom_->delObj(node_id_);
     node_id_ = 0;
     nodes_dirty_ = false;
+    if (nodes_on_) node_id_ = ogeom_->addObj(node_switch_, "Nodes");
   }
   if (edges_dirty_) {
     if (edge_id_) ogeom_->delObj(edge_id_); 
     edge_id_ = 0;
     edges_dirty_ = false;
+    if (edges_on_) edge_id_ = ogeom_->addObj(edge_switch_, "Edges");
+
   }
   if (faces_dirty_) {
     if (face_id_) ogeom_->delObj(face_id_); 
     face_id_ = 0;
     faces_dirty_ = false;
+    if (faces_on_) face_id_ = ogeom_->addObj(face_switch_, "Faces");
   }  
 
-  if (nodes_on_) node_id_ = ogeom_->addObj(node_switch_, "Nodes");
-  if (edges_on_) edge_id_ = ogeom_->addObj(edge_switch_, "Edges");
-  if (faces_on_) face_id_ = ogeom_->addObj(face_switch_, "Faces");
+  
   ogeom_->flushViews();
 }
 
@@ -273,10 +270,11 @@ ShowField::render(Field *geom, Field *c_index, ColorMapHandle cm)
       double val;
       if (! c_index->value(val, *niter)) { return false; }
 
+      node_scale_.reset();
       if (node_display_type_.get() == "Spheres") {
-	add_sphere(p, 0.03, nodes, cm->lookup(val));
+	add_sphere(p, node_scale_.get(), nodes, cm->lookup(val));
       } else if (node_display_type_.get() == "Axes") {
-	add_axis(p, 0.03, nodes, cm->lookup(val));
+	add_axis(p, node_scale_.get(), nodes, cm->lookup(val));
       } else {
 	add_point(p, pts, cm->lookup(val));
       }
@@ -393,24 +391,15 @@ ShowField::tcl_command(TCLArgs& args, void* userdata) {
     args.error("ShowField needs a minor command");
     return;
   }
-  dbg_ << "tcl_command: " << args[1] << endl;
 
-  if (args[1] == "node_display_type") {
-    // toggle spheresP
-    // Call reset so that we really get the value, not the cached one.
-    node_display_type_.reset();
-    if (node_display_type_.get() == "Spheres") {
-      dbg_ << "Render Spheres." << endl;
-    } else if (node_display_type_.get() == "Axes") {
-      dbg_ << "Render Axes." << endl;
-    } else {
-      dbg_ << "Render Points." << endl;
-    }
+  if (args[1] == "scale") {
+    if (node_display_type_.get() == "Points") { return; }
+    nodes_dirty_ = true;
+  } else if (args[1] == "node_display_type") {
     nodes_dirty_ = true;
     want_to_execute();
-
   } else if (args[1] == "toggle_display_nodes"){
-    // Toggle the GeomSwitch.
+    // Toggle the GeomSwitches.
     nodes_on_ = ! nodes_on_;
     if (node_switch_) node_switch_->set_state(nodes_on_);
 
