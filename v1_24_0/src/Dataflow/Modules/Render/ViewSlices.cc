@@ -867,7 +867,6 @@ void
 ViewSlices::draw_guide_lines(SliceWindow &window, float x, float y, float z) {
   if (!window.show_guidelines_()) return;
   if (!mouse_in_window(window)) return;
-
   Vector tmp = screen_to_world(window, 1, 0) - screen_to_world(window, 0, 0);
   tmp[window.axis_] = 0;
   const float one = Max(fabs(tmp[0]), fabs(tmp[1]), fabs(tmp[2]));
@@ -969,6 +968,7 @@ ViewSlices::draw_guide_lines(SliceWindow &window, float x, float y, float z) {
 void
 ViewSlices::draw_slice_lines(SliceWindow &window)
 {
+  //  if (max_slice_[window.axis_] <= 0) return;
   Vector tmp = screen_to_world(window, 1, 0) - screen_to_world(window, 0, 0);
   tmp[window.axis_] = 0;
   double screen_space_one = Max(fabs(tmp[0]), fabs(tmp[1]), fabs(tmp[2]));
@@ -1767,7 +1767,6 @@ ViewSlices::apply_colormap(NrrdSlice &slice, float *data)
 {
   const double min = clut_wl_ - clut_ww_/2.0;
   const double max = clut_wl_ + clut_ww_/2.0;
-
   void *slicedata = slice.nrrd_->nrrd->data;
   const int wid = slice.tex_wid_, hei = slice.tex_hei_;
   const double scale = 1.0/double(max-min);
@@ -2139,7 +2138,7 @@ int
 ViewSlices::extract_window_slices(SliceWindow &window) {
   for (unsigned int s = window.slices_.size(); s < volumes_.size(); ++s)
     window.slices_.push_back(scinew NrrdSlice(volumes_[s], &window));
-
+  for_each(&ViewSlices::update_slice_from_window);
   for_each(window, &ViewSlices::set_slice_nrrd_dirty);
   set_slice_nrrd_dirty(window.paint_);
 
@@ -2176,18 +2175,13 @@ ViewSlices::extract_slice(NrrdSlice &slice)
       min[i] = 0;
       max[i] = max_slice_[i];
     }
-    slab_width_[axis] = 0;
     if (slice.mode_ == slab_e) {
       min[axis] = slice.slab_min_;
       max[axis] = slice.slab_max_;
-      slab_width_[axis] = slice.slab_max_ - slice.slab_min_ + 1;
     }
-    cur_slice_[axis] = min[axis];    
     NRRD_EXEC(nrrdCrop(tmp2->nrrd, volume, min, max));
     NRRD_EXEC(nrrdProject(tmp1->nrrd, tmp2->nrrd, axis, 2, nrrdTypeDefault));
   } else {
-    cur_slice_[axis] = slice.slice_num_;
-    slab_width_[axis] = 1;
     NRRD_EXEC(nrrdSlice(tmp1->nrrd, volume, axis, slice.slice_num_));
   }
   
@@ -3021,9 +3015,20 @@ ViewSlices::update_slice_from_window(NrrdSlice &slice) {
   SliceWindow &window = *slice.window_;
   const int axis = window.axis_();
   slice.axis_ = axis;
-  slice.slice_num_ = Clamp(window.slice_num_(), 0, max_slice_[axis]);  
+  slice.slice_num_ = Clamp(window.slice_num_(), 0, max_slice_[axis]);
   slice.slab_min_ = Min(max_slice_[axis], Max(0, window.slab_min_()));
   slice.slab_max_ = Max(0, Min(window.slab_max_(), max_slice_[axis]));
+  slice.mode_ = window.mode_();
+  if (slice.mode_ == mip_e || slice.mode_ == slab_e) {
+    cur_slice_[slice.axis_] = slice.slab_min_;
+    if (slice.mode_ == mip_e)
+      slab_width_[slice.axis_] = 0;
+    if (slice.mode_ == slab_e)
+      slab_width_[slice.axis_] = slice.slab_max_ - slice.slab_min_ + 1;
+  } else {
+    cur_slice_[slice.axis_] = slice.slice_num_;
+    slab_width_[axis] = 1;
+  }
 
   const int xaxis = x_axis(window);
   const int yaxis = y_axis(window);
@@ -3037,7 +3042,7 @@ ViewSlices::update_slice_from_window(NrrdSlice &slice) {
   slice.tex_wid_ = Pow2(slice.wid_);
   slice.tex_hei_ = Pow2(slice.hei_);
   slice.opacity_ = slice.volume_->opacity_();
-  slice.mode_ = window.mode_();
+
   slice.do_unlock();
   return 1;
 }
