@@ -33,6 +33,7 @@ SRCS     += \
 	$(SRCDIR)/BuildInterpolant.cc\
 	$(SRCDIR)/CastMLVtoHV.cc\
 	$(SRCDIR)/CastTVtoMLV.cc\
+	$(SRCDIR)/Clip.cc\
 	$(SRCDIR)/ClippingPlane.cc\
 	$(SRCDIR)/DirectInterpolate.cc\
 	$(SRCDIR)/EditField.cc\
