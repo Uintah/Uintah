@@ -144,6 +144,8 @@ private:
   // 0 == no button down, 1 == button 1, 2 == button 2, etc;
   int   mouseDown_;
   bool  shiftDown_; // during mouse press
+  bool  altDown_;
+  bool  ctrlDown_;
 
   bool  rightButtonMenuActive_;
 
