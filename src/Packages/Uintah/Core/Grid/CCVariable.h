@@ -154,11 +154,14 @@ WARNING
 
     };
      
-    // Replace the values on the indicated face with value
-    // using a 1st order difference formula for a Neumann BC condition
+   // Replace the values on the indicated face with value
+   // using a 1st order difference formula for a Neumann BC condition
+   // The plus_minus_one variable allows for negative interior BC, which is
+   // simply the (-1)* interior value.
 
-    void fillFaceFlux(Patch::FaceType face, const T& value,const Vector& dx,
-		      IntVector offset = IntVector(0,0,0))
+   void fillFaceFlux(Patch::FaceType face, const T& value,const Vector& dx,
+                  const double& plus_minus_one=1.0,
+		    IntVector offset = IntVector(0,0,0)  )
     { 
       IntVector low,hi;
       low = getLowIndex() + offset;
@@ -166,57 +169,63 @@ WARNING
 
       switch (face) {
       case Patch::xplus:
-	for (int j = low.y(); j<hi.y(); j++) {
-	  for (int k = low.z(); k<hi.z(); k++) {
+	 for (int j = low.y(); j<hi.y(); j++) {
+	   for (int k = low.z(); k<hi.z(); k++) {
 	    (*this)[IntVector(hi.x()-1,j,k)] = 
-	      (*this)[IntVector(hi.x()-2,j,k)] - value*dx.x();
-	  }
-	}
-	break;
+	      ((*this)[IntVector(hi.x()-2,j,k)])*plus_minus_one - 
+             value*dx.x();
+	   }
+	 }
+	 break;
       case Patch::xminus:
-	for (int j = low.y(); j<hi.y(); j++) {
-	  for (int k = low.z(); k<hi.z(); k++) {
+	 for (int j = low.y(); j<hi.y(); j++) {
+	   for (int k = low.z(); k<hi.z(); k++) {
 	    (*this)[IntVector(low.x(),j,k)] = 
-	      (*this)[IntVector(low.x()+1,j,k)] - value * dx.x();
-	  }
-	}
-	break;
+	      ((*this)[IntVector(low.x()+1,j,k)])*plus_minus_one - 
+             value * dx.x();
+	   }
+	 }
+	 break;
       case Patch::yplus:
-	for (int i = low.x(); i<hi.x(); i++) {
-	  for (int k = low.z(); k<hi.z(); k++) {
+	 for (int i = low.x(); i<hi.x(); i++) {
+	   for (int k = low.z(); k<hi.z(); k++) {
 	    (*this)[IntVector(i,hi.y()-1,k)] = 
-	      (*this)[IntVector(i,hi.y()-2,k)] - value * dx.y();
-	  }
-	}
-	break;
+	      ((*this)[IntVector(i,hi.y()-2,k)])*plus_minus_one - 
+             value * dx.y();
+	   }
+	 }
+	 break;
       case Patch::yminus:
-	for (int i = low.x(); i<hi.x(); i++) {
-	  for (int k = low.z(); k<hi.z(); k++) {
+	 for (int i = low.x(); i<hi.x(); i++) {
+	   for (int k = low.z(); k<hi.z(); k++) {
 	    (*this)[IntVector(i,low.y(),k)] = 
-	      (*this)[IntVector(i,low.y()+1,k)] - value * dx.y();
-	  }
-	}
-	break;
+	      ((*this)[IntVector(i,low.y()+1,k)])*plus_minus_one - 
+             value * dx.y();
+	   }
+	 }
+	 break;
       case Patch::zplus:
-	for (int i = low.x(); i<hi.x(); i++) {
-	  for (int j = low.y(); j<hi.y(); j++) {
+	 for (int i = low.x(); i<hi.x(); i++) {
+	   for (int j = low.y(); j<hi.y(); j++) {
 	    (*this)[IntVector(i,j,hi.z()-1)] = 
-	      (*this)[IntVector(i,j,hi.z()-2)] - value * dx.z();
-	  }
-	}
-	break;
+	      ((*this)[IntVector(i,j,hi.z()-2)])*plus_minus_one - 
+             value * dx.z();
+	   }
+	 }
+	 break;
       case Patch::zminus:
-	for (int i = low.x(); i<hi.x(); i++) {
-	  for (int j = low.y(); j<hi.y(); j++) {
+	 for (int i = low.x(); i<hi.x(); i++) {
+	   for (int j = low.y(); j<hi.y(); j++) {
 	    (*this)[IntVector(i,j,low.z())] =
-	      (*this)[IntVector(i,j,low.z()+1)] -  value * dx.z();
-	  }
-	}
-	break;
+	      ((*this)[IntVector(i,j,low.z()+1)])*plus_minus_one - 
+             value * dx.z();
+	   }
+	 }
+	 break;
       case Patch::numFaces:
-	break;
-      case Patch::invalidFace:
-	break;
+	 break;
+     case Patch::invalidFace:
+	 break;
       }
 
     };
@@ -292,6 +301,82 @@ WARNING
 	break;
       }
     };
+    //______________________________________________________________________
+    // Update pressure boundary conditions due to hydrostatic pressure
+    // Note (*this) = pressure
+    void setHydrostaticPressureBC(Patch::FaceType face, Vector& gravity,
+                                CCVariable<double>& rho,
+                                const Vector& dx,
+			           IntVector offset = IntVector(0,0,0))
+     { 
+	IntVector low,hi;
+	low = getLowIndex() + offset;
+	hi = getHighIndex() - offset;
+
+      // cout<< "CCVARIABLE LO" << low <<endl;
+      // cout<< "CCVARIABLE HI" << hi <<endl;
+
+	switch (face) {
+	case Patch::xplus:
+	  for (int j = low.y(); j<hi.y(); j++) {
+	    for (int k = low.z(); k<hi.z(); k++) {
+	     (*this)[IntVector(hi.x()-1,j,k)] = 
+		(*this)[IntVector(hi.x()-2,j,k)] + 
+              gravity.x() * rho[IntVector(hi.x()-2,j,k)] * dx.x();
+	    }
+	  }
+	  break;
+	case Patch::xminus:
+	  for (int j = low.y(); j<hi.y(); j++) {
+	    for (int k = low.z(); k<hi.z(); k++) {
+	     (*this)[IntVector(low.x(),j,k)] = 
+		(*this)[IntVector(low.x()+1,j,k)] - 
+              gravity.x() * rho[IntVector(low.x()+1,j,k)] * dx.x();;
+	    }
+	  }
+	  break;
+	case Patch::yplus:
+	  for (int i = low.x(); i<hi.x(); i++) {
+	    for (int k = low.z(); k<hi.z(); k++) {
+	     (*this)[IntVector(i,hi.y()-1,k)] = 
+		(*this)[IntVector(i,hi.y()-2,k)] + 
+              gravity.y() * rho[IntVector(i,hi.y()-2,k)] * dx.y();
+	    }
+	  }
+	  break;
+	case Patch::yminus:
+	  for (int i = low.x(); i<hi.x(); i++) {
+	    for (int k = low.z(); k<hi.z(); k++) {
+	     (*this)[IntVector(i,low.y(),k)] = 
+		(*this)[IntVector(i,low.y()+1,k)] - 
+              gravity.y() * rho[IntVector(i,low.y()+1,k)] * dx.y();
+	    }
+	  }
+	  break;
+	case Patch::zplus:
+	  for (int i = low.x(); i<hi.x(); i++) {
+	    for (int j = low.y(); j<hi.y(); j++) {
+	     (*this)[IntVector(i,j,hi.z()-1)] = 
+		(*this)[IntVector(i,j,hi.z()-2)] +
+              gravity.z() * rho[IntVector(i,j,hi.z()-2)] * dx.z();
+	    }
+	  }
+	  break;
+	case Patch::zminus:
+	  for (int i = low.x(); i<hi.x(); i++) {
+	    for (int j = low.y(); j<hi.y(); j++) {
+	     (*this)[IntVector(i,j,low.z())] =
+		(*this)[IntVector(i,j,low.z()+1)] -  
+              gravity.z() * rho[IntVector(i,j,low.z()+1)] * dx.z();
+	    }
+	  }
+	  break;
+	case Patch::numFaces:
+	  break;
+      case Patch::invalidFace:
+	  break;
+	}
+     };
      
     virtual void emitNormal(ostream& out, DOM_Element /*varnode*/)
     {
