@@ -15,11 +15,12 @@
 #include <Packages/Uintah/Core/Grid/Level.h>
 #include <Packages/Uintah/Core/Grid/NodeIterator.h>
 #include <Packages/Uintah/Core/Grid/CellIterator.h>
-#include <Packages/Uintah/CCA/Components/MPM/Util/Matrix3.h>
+#include <Packages/Uintah/Core/Math/Matrix3.h>
 #include <Packages/Uintah/Core/Grid/ShareAssignParticleVariable.h>
+#include <Core/Thread/Mutex.h>
 #include <Core/Math/MinMax.h>
 #include <Core/Geometry/Point.h>
-#include <Packages/Uintah/Core/Grid/TypeDescription.h>
+#include <Packages/Uintah/Core/Disclosure/TypeDescription.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/OS/Dir.h>
 #include <Dataflow/XMLUtil/XMLUtil.h>
@@ -33,6 +34,8 @@
 using namespace SCIRun;
 using namespace std;
 using namespace Uintah;
+
+Mutex cerrLock( "cerrLock" );
 
 typedef struct{
   vector<ShareAssignParticleVariable<double> > pv_double_list;
