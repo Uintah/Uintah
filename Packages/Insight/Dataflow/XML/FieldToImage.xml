@@ -2,7 +2,6 @@
 <!DOCTYPE component SYSTEM "../../../../../doc/Utilities/XML/component.dtd">
 <?xml-stylesheet href="../../../../../doc/Utilities/XML/package-component.xsl" type="text/xsl"?>
 <?cocoon-process type="xslt"?>
-
 <!--
   The contents of this file are subject to the University of Utah Public
   License (the "License"); you may not use this file except in compliance
@@ -20,7 +19,7 @@
   University of Utah. All Rights Reserved.
 -->
 
-<component name="UShort2DToUChar2D" category="Converters">
+<component name="FieldToImage" category="Converters">
   <overview>
     <authors>
     </authors>
@@ -30,8 +29,8 @@
   <io>
     <inputs lastportdynamic="no">
       <port>
-        <name>InputImage</name>
-        <datatype>Insight::ITKDatatype</datatype>
+        <name>InputField</name>
+        <datatype>SCIRun::Field</datatype>
       </port>
     </inputs>
     <outputs>
