@@ -36,6 +36,7 @@
 #include <algorithm>
 #include <sgi_stl_warnings_on.h>
 #include <math.h>
+#include <vector>
 #include <iostream>
 #include <Core/CCA/SSIDL/array.h>
 #include <Core/CCA/PIDL/Reference.h>
@@ -84,6 +85,7 @@ namespace SCIRun {
     // array, an array of Index (size of the number of dimensions), 
     // and an optional Object reference if the object that associated
     // with this representation is not this object.
+    // dimarr will NOT be freed. 
     MxNArrayRep(int dimno, Index* dimarr[], Reference* remote_ref = NULL);
 
     ////////////////
@@ -177,7 +179,7 @@ namespace SCIRun {
 
     ///////////
     // Array of Index representing first, last and stride for each dimension
-    Index** mydimarr;
+    std::vector<Index>mydimarr;
 
     //////////
     // Number of dimensions
