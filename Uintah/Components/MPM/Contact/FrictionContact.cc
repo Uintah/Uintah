@@ -489,15 +489,13 @@ void FrictionContact::addComputesAndRequiresInterpolated( Task* t,
                                              DataWarehouseP& old_dw,
                                              DataWarehouseP& new_dw) const
 {
-
   int idx = matl->getDWIndex();
-  t->requires( old_dw, lb->gNormTractionLabel,idx , patch, Ghost::None, 0);
-  t->requires( old_dw, lb->gSurfNormLabel,idx , patch, Ghost::None, 0);
-  t->requires( new_dw, lb->gMassLabel, idx, patch, Ghost::None);
-  t->requires( new_dw, lb->gVelocityLabel, idx, patch, Ghost::None);
+  t->requires( old_dw, lb->gNormTractionLabel,idx, patch, Ghost::None, 0);
+  t->requires( old_dw, lb->gSurfNormLabel,    idx, patch, Ghost::None, 0);
+  t->requires( new_dw, lb->gMassLabel,        idx, patch, Ghost::None);
+  t->requires( new_dw, lb->gVelocityLabel,    idx, patch, Ghost::None);
 
   t->computes( new_dw, lb->gMomExedVelocityLabel, idx, patch );
-
 }
 
 void FrictionContact::addComputesAndRequiresIntegrated( Task* t,
@@ -506,23 +504,24 @@ void FrictionContact::addComputesAndRequiresIntegrated( Task* t,
                                              DataWarehouseP& old_dw,
                                              DataWarehouseP& new_dw) const
 {
-
   int idx = matl->getDWIndex();
   t->requires( new_dw, lb->pStressLabel_preReloc, idx, patch,
-                         Ghost::AroundNodes, 1);
-  t->requires(new_dw, lb->gMassLabel, idx, patch, Ghost::None);
-  t->requires(new_dw, lb->gVelocityStarLabel, idx, patch, Ghost::None);
-  t->requires(new_dw, lb->gAccelerationLabel, idx, patch, Ghost::None);
+                        			   Ghost::AroundNodes, 1);
+  t->requires(new_dw,  lb->gMassLabel,         idx, patch, Ghost::None);
+  t->requires(new_dw,  lb->gVelocityStarLabel, idx, patch, Ghost::None);
+  t->requires(new_dw,  lb->gAccelerationLabel, idx, patch, Ghost::None);
 
-  t->computes( new_dw, lb->gNormTractionLabel,idx , patch);
-  t->computes( new_dw, lb->gSurfNormLabel,idx , patch);
+  t->computes( new_dw, lb->gNormTractionLabel,        idx, patch);
+  t->computes( new_dw, lb->gSurfNormLabel,            idx, patch);
   t->computes( new_dw, lb->gMomExedVelocityStarLabel, idx, patch);
   t->computes( new_dw, lb->gMomExedAccelerationLabel, idx, patch);
-  t->computes( new_dw, lb->gStressLabel, idx, patch);
-
+  t->computes( new_dw, lb->gStressLabel,              idx, patch);
 }
 
 // $Log$
+// Revision 1.36  2000/11/15 18:51:29  guilkey
+// Reduced warnings.
+//
 // Revision 1.35  2000/11/15 01:39:49  guilkey
 // Made the way in which materials were looped over more consistent.
 // Got rid of references to VFIndex, use only DWIndex now.

@@ -1216,8 +1216,6 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
 	    gvelocity.fillFace(face,bc->getValue());
 	  }
 	  if (bcs_type == "Symmetric") {
-	    SymmetryBoundCond* bc =
-	      dynamic_cast<SymmetryBoundCond*>(bcs[i]);
 	     gvelocity.fillFaceNormal(face);
 	  }
 	  if (bcs_type == "Temperature") {
@@ -1759,8 +1757,6 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 	     gacceleration.fillFace(face,Vector(0.0,0.0,0.0));
 	  }
 	  if (bcs_type == "Symmetric") {
-	    SymmetryBoundCond* bc =
-	      dynamic_cast<SymmetryBoundCond*>(bcs[i]);
 	     gvelocity_star.fillFaceNormal(face);
 	     gacceleration.fillFaceNormal(face);
 	  }
@@ -1911,6 +1907,9 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 
 
 // $Log$
+// Revision 1.162  2000/11/15 18:51:50  guilkey
+// Reduced warnings.
+//
 // Revision 1.161  2000/11/15 01:39:42  guilkey
 // Made the way in which materials were looped over more consistent.
 // Got rid of references to VFIndex, use only DWIndex now.
