@@ -66,8 +66,7 @@ public:
   virtual NrrdDataHandle execute(vector< NrrdDataHandle >& nHandles,
 				 vector< int >& mesh,
 				 vector< int >& data,
-				 vector< int >& modes,
-				 int idim, int jdim, int kdim) = 0;
+				 vector< int >& modes) = 0;
 };
 
 template< class NTYPE >
@@ -78,8 +77,7 @@ public:
   virtual NrrdDataHandle execute(vector< NrrdDataHandle >& nHandles,
 				 vector< int >& mesh,
 				 vector< int >& data,
-				 vector< int >& modes,
-				 int idim, int jdim, int kdim);
+				 vector< int >& modes);
 };
 
 
@@ -88,11 +86,14 @@ NrrdDataHandle
 NIMRODMeshConverterAlgoT< NTYPE >::execute(vector< NrrdDataHandle >& nHandles,
 					   vector< int >& mesh,
 					   vector< int >& data,
-					   vector< int >& modes,
-					   int idim, int jdim, int kdim)
+					   vector< int >& modes)
 {
   int rank = 3;
   int ndims = 3;
+
+  int idim = nHandles[mesh[R  ]]->nrrd->axis[0].size; // Radial
+  int jdim = nHandles[mesh[Z  ]]->nrrd->axis[1].size; // Theta
+  int kdim = nHandles[mesh[PHI]]->nrrd->axis[0].size; // Phi
 
   NrrdData *nout = scinew NrrdData(true);
 
@@ -105,14 +106,14 @@ NIMRODMeshConverterAlgoT< NTYPE >::execute(vector< NrrdDataHandle >& nHandles,
   NTYPE *ptrPhi = (NTYPE *)(nHandles[mesh[PHI]]->nrrd->data);
     
   if( modes[0] ) {
-    for( i=0; i<idim; i++ ) {
-      for( k=0; k<kdim; k++ ) {
+    for( k=0; k<kdim; k++ ) {
+      for( i=0; i<idim; i++ ) {
 	for( j=0; j<jdim; j++ ) {
       
-	  int iRZ = k * jdim + j;
+	  int iRZ = i * jdim + j;
       
 	  // Mesh
-	  ndata[cc*3  ] = ptrPhi[i];
+	  ndata[cc*3  ] = ptrPhi[k];
 	  ndata[cc*3+1] = ptrR[iRZ];
 	  ndata[cc*3+2] = ptrZ[iRZ];
 	
@@ -121,14 +122,14 @@ NIMRODMeshConverterAlgoT< NTYPE >::execute(vector< NrrdDataHandle >& nHandles,
       }
     }
   } else {
-    for( i=0; i<idim; i++ ) {
-      double cosPhi = cos( ptrPhi[i] );
-      double sinPhi = sin( ptrPhi[i] );
-      
-      for( k=0; k<kdim; k++ ) {
+    for( k=0; k<kdim; k++ ) {      
+      double cosPhi = cos( ptrPhi[k] );
+      double sinPhi = sin( ptrPhi[k] );
+
+      for( i=0; i<idim; i++ ) {
 	for( j=0; j<jdim; j++ ) {
-      
-	  int iRZ = k * jdim + j;
+	  
+	  int iRZ = i * jdim + j;
       
 	  // Mesh
 	  ndata[cc*3  ] =  ptrR[iRZ] * cosPhi;
@@ -147,7 +148,7 @@ NIMRODMeshConverterAlgoT< NTYPE >::execute(vector< NrrdDataHandle >& nHandles,
 
   if( source == string("MDSPlus") )
     nrrdWrap(nout->nrrd, ndata, nHandles[mesh[PHI]]->nrrd->type,
-	     ndims+1, rank, idim, kdim, jdim );
+	     ndims+1, rank, idim, jdim, kdim );
   else if( source == string("HDF5") )
     nrrdWrap(nout->nrrd, ndata, nHandles[mesh[PHI]]->nrrd->type,
 	     ndims+1, rank, idim, jdim, kdim);
@@ -166,9 +167,9 @@ NIMRODMeshConverterAlgoT< NTYPE >::execute(vector< NrrdDataHandle >& nHandles,
 
   nout->nrrd->axis[0].kind  = nrrdKind3Vector;
   nout->nrrd->axis[0].label = strdup("Mesh Points");
-  nout->nrrd->axis[1].label = strdup("Phi");
+  nout->nrrd->axis[1].label = strdup("Radial");
   nout->nrrd->axis[2].label = strdup("Theta");
-  nout->nrrd->axis[3].label = strdup("Radial");
+  nout->nrrd->axis[3].label = strdup("Phi");
 
 
   *((PropertyManager *)nout) =
@@ -189,21 +190,22 @@ public:
   virtual NrrdDataHandle execute(vector< NrrdDataHandle >& nHandles,
 				 vector< int >& mesh,
 				 vector< int >& data,
-				 vector< int >& modes,
-				 int idim, int jdim, int kdim);
+				 vector< int >& modes);
 };
 
 
 template< class NTYPE >
 NrrdDataHandle
-NIMRODScalarConverterAlgoT< NTYPE >::
-execute(vector< NrrdDataHandle >& nHandles,
-	vector< int >& mesh,
-	vector< int >& data,
-	vector< int >& modes,
-	int idim, int jdim, int kdim)
+NIMRODScalarConverterAlgoT< NTYPE >::execute(vector< NrrdDataHandle >& nHandles,
+					     vector< int >& mesh,
+					     vector< int >& data,
+					     vector< int >& modes)
 {
   int ndims = 3;
+
+  int idim = nHandles[data[0]]->nrrd->axis[0].size; // Radial
+  int jdim = nHandles[data[0]]->nrrd->axis[1].size; // Theta
+  int kdim = nHandles[data[0]]->nrrd->axis[2].size; // Phi
 
   NrrdData *nout = scinew NrrdData(true);
 
@@ -213,12 +215,12 @@ execute(vector< NrrdDataHandle >& nHandles,
 
   NTYPE *ptr = (NTYPE *)(nHandles[data[0]]->nrrd->data);
     
-  for( i=0; i<idim; i++ ) {
+  for( k=0; k<kdim; k++ ) {
     for( j=0; j<jdim; j++ ) {
-      for( k=0; k<kdim; k++ ) {
+      for( i=0; i<idim; i++ ) {
 
-	unsigned int index = (i * jdim + j) * kdim + k;
-	
+	unsigned int index = (k * jdim + j) * idim + i;
+
 	ndata[cc] =  ptr[index];
 	++cc;
       }
@@ -229,11 +231,9 @@ execute(vector< NrrdDataHandle >& nHandles,
 
   nHandles[data[0]]->get_property( string("Source"), source);
 
-  cerr << source << idim << jdim << kdim << endl;
-
   if( source == string("MDSPlus") )
     nrrdWrap(nout->nrrd, ndata, nHandles[data[0]]->nrrd->type,
-	     ndims, kdim, jdim, idim);
+	     ndims, idim, jdim, kdim);
   else if( source == string("HDF5") )
     nrrdWrap(nout->nrrd, ndata, nHandles[data[0]]->nrrd->type,
 	     ndims, idim, jdim, kdim);
@@ -245,9 +245,9 @@ execute(vector< NrrdDataHandle >& nHandles,
   nHandles[data[0]]->get_property( "Name", nrrdName );
 
   nout->nrrd->axis[0].kind  = nrrdKindDomain;
-  nout->nrrd->axis[0].label = strdup("Phi");
+  nout->nrrd->axis[0].label = strdup("Radial");
   nout->nrrd->axis[1].label = strdup("Theta");
-  nout->nrrd->axis[2].label = strdup("Radial");
+  nout->nrrd->axis[2].label = strdup("Phi");
 
   *((PropertyManager *)nout) =
     *((PropertyManager *)(nHandles[data[0]].get_rep()));
@@ -267,22 +267,23 @@ public:
   virtual NrrdDataHandle execute(vector< NrrdDataHandle >& nHandles,
 				 vector< int >& mesh,
 				 vector< int >& data,
-				 vector< int >& modes,
-				 int idim, int jdim, int kdim);
+				 vector< int >& modes);
 };
 
 
 template< class NTYPE >
 NrrdDataHandle
-NIMRODRealSpaceConverterAlgoT< NTYPE >::
-execute(vector< NrrdDataHandle >& nHandles,
-	vector< int >& mesh,
-	vector< int >& data,
-	vector< int >& modes,
-	int idim, int jdim, int kdim)
+NIMRODRealSpaceConverterAlgoT< NTYPE >::execute(vector< NrrdDataHandle >& nHandles,
+						vector< int >& mesh,
+						vector< int >& data,
+						vector< int >& modes)
 {
   int rank = 3;
   int ndims = 3;
+
+  int idim = nHandles[data[0]]->nrrd->axis[1].size; // Radial
+  int jdim = nHandles[data[0]]->nrrd->axis[2].size; // Theta
+  int kdim = nHandles[data[0]]->nrrd->axis[3].size; // Phi
 
   NrrdData *nout = scinew NrrdData(true);
 
@@ -297,14 +298,14 @@ execute(vector< NrrdDataHandle >& nHandles,
   
     NTYPE *ptrMeshPhi = (NTYPE *)(nHandles[mesh[PHI]]->nrrd->data);
 
-    for( i=0; i<idim; i++ ) {
-      double cosPhi = cos( ptrMeshPhi[i] );
-      double sinPhi = sin( ptrMeshPhi[i] );
+    for( k=0; k<kdim; k++ ) {
+      double cosPhi = cos( ptrMeshPhi[k] );
+      double sinPhi = sin( ptrMeshPhi[k] );
 
       for( j=0; j<jdim; j++ ) {
-	for( k=0; k<kdim; k++ ) {
-      
-	  unsigned int index = (i * jdim + j) * kdim + k;
+	for( i=0; i<idim; i++ ) {
+
+	  unsigned int index = (k * jdim + j) * idim + i;
 
 	  // Value
 	  ndata[cc*3  ] =  ptrR[index] * cosPhi - ptrPhi[index] * sinPhi;
@@ -320,14 +321,15 @@ execute(vector< NrrdDataHandle >& nHandles,
     NTYPE *ptr        = (NTYPE *)(nHandles[data[0  ]]->nrrd->data);  
     NTYPE *ptrMeshPhi = (NTYPE *)(nHandles[mesh[PHI]]->nrrd->data);
 
-    for( i=0; i<idim; i++ ) {
-      double cosPhi = cos( ptrMeshPhi[i] );
-      double sinPhi = sin( ptrMeshPhi[i] );
+
+    for( k=0; k<kdim; k++ ) {
+      double cosPhi = cos( ptrMeshPhi[k] );
+      double sinPhi = sin( ptrMeshPhi[k] );
 
       for( j=0; j<jdim; j++ ) {
-	for( k=0; k<kdim; k++ ) {
-      
-	  unsigned int index = (i * jdim + j) * kdim + k;
+	for( i=0; i<idim; i++ ) {
+	  
+	  unsigned int index = (k * jdim + j) * idim + i;
 
 	  // Value
 	  ndata[cc*3  ] =  ptr[index*3+1] * cosPhi - ptr[index*3] * sinPhi;
@@ -346,7 +348,7 @@ execute(vector< NrrdDataHandle >& nHandles,
 
   if( source == string("MDSPlus") )
     nrrdWrap(nout->nrrd, ndata, nHandles[data[0]]->nrrd->type,
-	     ndims+1, rank, kdim, jdim, idim);
+	     ndims+1, rank, idim, jdim, kdim);
   else if( source == string("HDF5") )
     nrrdWrap(nout->nrrd, ndata, nHandles[data[0]]->nrrd->type,
 	     ndims+1, rank, idim, jdim, kdim);
@@ -366,12 +368,16 @@ execute(vector< NrrdDataHandle >& nHandles,
   if( pos != string::npos )
     nrrdName.replace( pos, 14, "XYZ:Vector" );
 
+  pos = nrrdName.find( "R-Z-PHI:Vector" );
+  if( pos != string::npos )
+    nrrdName.replace( pos, 14, "XYZ:Vector" );
+
   nout->nrrd->axis[0].kind = nrrdKind3Vector;
 
   nout->nrrd->axis[0].label = strdup("Vector Data");
-  nout->nrrd->axis[1].label = strdup("Phi");
+  nout->nrrd->axis[1].label = strdup("Radial");
   nout->nrrd->axis[2].label = strdup("Theta");
-  nout->nrrd->axis[3].label = strdup("Radial");
+  nout->nrrd->axis[3].label = strdup("Phi");
 
   *((PropertyManager *)nout) =
     *((PropertyManager *)(nHandles[data[0]].get_rep()));
@@ -390,21 +396,22 @@ public:
   virtual NrrdDataHandle execute(vector< NrrdDataHandle >& nHandles,
 				 vector< int >& mesh,
 				 vector< int >& data,
-				 vector< int >& modes,
-				 int idim, int jdim, int kdim);
+				 vector< int >& modes);
 };
 
 
 template< class NTYPE >
 NrrdDataHandle
-NIMRODPerturbedConverterAlgoT< NTYPE >::
-execute(vector< NrrdDataHandle >& nHandles,
-	vector< int >& mesh,
-	vector< int >& data,
-	vector< int >& modes,
-	int idim, int jdim, int kdim)
+NIMRODPerturbedConverterAlgoT< NTYPE >::execute(vector< NrrdDataHandle >& nHandles,
+						vector< int >& mesh,
+						vector< int >& data,
+						vector< int >& modes)
 {
   unsigned int ndims = 3;
+
+  int idim = nHandles[data[0]]->nrrd->axis[0].size; // Radial
+  int jdim = nHandles[data[0]]->nrrd->axis[1].size; // Theta
+  int kdim = nHandles[data[0]]->nrrd->axis[2].size; // Phi
 
   NrrdData *nout = scinew NrrdData(true);
 
@@ -424,16 +431,16 @@ execute(vector< NrrdDataHandle >& nHandles,
 
   NTYPE* ndata = scinew NTYPE[idim*jdim*kdim*rank];
 
-  for( i=0; i<idim; i++ ) {
-
-    double phi = ptrMeshPhi[i];
+  for( k=0; k<kdim; k++ ) {
+    
+    double phi = ptrMeshPhi[k];
 
     for( j=0; j<jdim; j++ ) {
-      for( k=0; k<kdim; k++ ) {
+      for( i=0; i<idim; i++ ) {	
       	for( m=0; m<nmodes; m++ ) {  // Mode loop.
 
 	  if( modes[m] || modes[nmodes] ) {
-	    unsigned int index = (m * jdim + j) * kdim + k;
+	    unsigned int index = (m * jdim + j) * idim + i;
 	
 	    double angle = ptrMeshK[m] * phi; // Mode * phi slice.
 
@@ -458,7 +465,7 @@ execute(vector< NrrdDataHandle >& nHandles,
   if( rank == 1 ) {
     if( source == string("MDSPlus") )
       nrrdWrap(nout->nrrd, ndata, nHandles[data[0]]->nrrd->type,
-	       ndims, kdim, jdim, idim);
+	       ndims, idim, jdim, kdim);
     else if( source == string("HDF5") )
       nrrdWrap(nout->nrrd, ndata, nHandles[data[0]]->nrrd->type,
 	       ndims, idim, jdim, kdim);
@@ -468,7 +475,7 @@ execute(vector< NrrdDataHandle >& nHandles,
   } else {
     if( source == string("MDSPlus") )
       nrrdWrap(nout->nrrd, ndata, nHandles[data[0]]->nrrd->type,
-	       ndims+1, rank, kdim, jdim, idim);
+	       ndims+1, rank, kdim, idim, jdim);
     else if( source == string("HDF5") )
       nrrdWrap(nout->nrrd, ndata, nHandles[data[0]]->nrrd->type,
 	       ndims+1, rank, idim, jdim, kdim);
@@ -496,15 +503,15 @@ execute(vector< NrrdDataHandle >& nHandles,
 
   if( rank == 1 ) {
     nout->nrrd->axis[0].kind  = nrrdKindDomain;
-    nout->nrrd->axis[0].label = strdup("Phi");
+    nout->nrrd->axis[0].label = strdup("Radial");
     nout->nrrd->axis[1].label = strdup("Theta");
-    nout->nrrd->axis[2].label = strdup("Radial");
+    nout->nrrd->axis[2].label = strdup("Phi");
   } else {
     nout->nrrd->axis[0].kind  = nrrdKind3Vector; 
     nout->nrrd->axis[0].label = strdup("Vector Data");
-    nout->nrrd->axis[1].label = strdup("Phi");
+    nout->nrrd->axis[1].label = strdup("Radial");
     nout->nrrd->axis[2].label = strdup("Theta");
-    nout->nrrd->axis[3].label = strdup("Radial");
+    nout->nrrd->axis[3].label = strdup("Phi");
   }
 
   *((PropertyManager *)nout) =

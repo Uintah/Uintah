@@ -127,16 +127,19 @@ HDF5DataReader::is_mergeable(NrrdDataHandle h1, NrrdDataHandle h2) const
   grp2 = nrrdName2;
 
   pos = grp1.find_last_of("-");
-  grp1.erase( pos, grp1.length()-pos );
+  if( pos != std::string::npos )
+    grp1.erase( pos, grp1.length()-pos );
+
   pos = grp2.find_last_of("-");
-  grp2.erase( pos, grp2.length()-pos );
+  if( pos != std::string::npos )
+    grp2.erase( pos, grp2.length()-pos );
 
   if( grp1 != grp2 )
     return false;
 
-  if( mergedata_ != 2 ) {
+  if( mergedata_ != MERGE_TIME ) {
     // The names are the only properties that are allowed to be different
-    // when merging so remove before testing.
+    // when merging so remove them before testing the rest of the properties.
     h1->remove_property( "Name" );
     h2->remove_property( "Name" );
 
@@ -447,10 +450,10 @@ void HDF5DataReader::ReadandSendData( string& filename,
 	  groupName.erase( pos, groupName.length()-pos );
 
 	n->get_property( "Name", dataName );
-	pos = dataName.find_last_of("-");
+	pos = dataName.find_last_of("-"); // Erase the Kind
 	if( pos != std::string::npos )
 	  dataName.erase( 0, pos );
-	pos = dataName.find_last_of(":");
+	pos = dataName.find_last_of(":"); // Erase the group
 	if( pos != std::string::npos )
 	  dataName.erase( pos, dataName.length()-pos );
 
@@ -462,10 +465,10 @@ void HDF5DataReader::ReadandSendData( string& filename,
 	  join_me.push_back(n->nrrd);
 
 	  n->get_property( "Name", dataName );
-	  pos = dataName.find_last_of("-");
+	  pos = dataName.find_last_of("-"); // Erase the Kind
 	  if( pos != std::string::npos )
 	    dataName.erase( 0, pos );
-	  pos = dataName.find_last_of(":");
+	  pos = dataName.find_last_of(":"); // Erase the group
 	  if( pos != std::string::npos )
 	    dataName.erase( pos, dataName.length()-pos );
 
@@ -489,7 +492,7 @@ void HDF5DataReader::ReadandSendData( string& filename,
 	    }
 	    if (same_size)
 	      incr = 1; // tuple case.
-	  } else if (mergedata_ == 2) {
+	  } else if (mergedata_ == MERGE_TIME) {
 	    axis = join_me[0]->dim; // time
 	    incr = 1;               // time
 	  }
@@ -518,7 +521,6 @@ void HDF5DataReader::ReadandSendData( string& filename,
 	  for(int i=1; i<onrrd->nrrd->dim; i++) 
 	    onrrd->nrrd->axis[i].kind = nrrdKindDomain;
 	  
-	  
 	  if (mergedata_ == MERGE_TIME) {
 	    onrrd->nrrd->axis[axis].label = "Time";
 	    // remove all numbers from name
@@ -527,9 +529,7 @@ void HDF5DataReader::ReadandSendData( string& filename,
 	    
 	    const string nums("0123456789");
 	    
-	    //cout << "checking in_name " << s << endl;
-	    // test against valid char set.
-	    
+	    // test against valid char set.	    
 	    for(string::size_type i = 0; i < s.size(); i++) {
 	      bool in_set = false;
 	      for (unsigned int c = 0; c < nums.size(); c++) {
@@ -1317,12 +1317,18 @@ NrrdDataHandle HDF5DataReader::readDataset( string filename,
   int sz_last_dim = 1;
   if (assumesvt_)
     sz_last_dim = dims[ndims-1];
-	
+
+  // The nrrd ordering is opposite of HDF5 ordering so swap the dimensions
+  for(int i=0; i<ndims/2; i++ ) {
+    int swap = count[i];
+    count[i] = count[ndims-1-i];
+    count[ndims-1-i] = swap;
+  }
 
   switch(ndims) {
   case 1: 
     nrrdWrap(nout->nrrd, data,
-	     nrrd_type, ndims, (unsigned int) dims[0]);
+	     nrrd_type, ndims, (unsigned int) count[0]);
     nrrdAxisInfoSet(nout->nrrd, nrrdAxisInfoCenter, nrrdCenterNode);
     break;
       
@@ -1331,17 +1337,17 @@ NrrdDataHandle HDF5DataReader::readDataset( string filename,
       switch (sz_last_dim) {
       case 3: // Vector data
 	nrrdWrap(nout->nrrd, data, nrrd_type, ndims+1, 3, 
-		 (unsigned int) dims[0], (unsigned int) dims[1]);
+		 (unsigned int) count[0], (unsigned int) count[1], 3);
 	break;
 	  
       case 6: // Tensor data
 	nrrdWrap(nout->nrrd, data, nrrd_type, ndims+1, 6, 
-		 (unsigned int) dims[0], (unsigned int) dims[1]);
+		 (unsigned int) count[0], (unsigned int) count[1]);
 	break;
 	  
       default: // treat the rest as Scalar data
 	nrrdWrap(nout->nrrd, data, nrrd_type, ndims, 
-		 (unsigned int) dims[0], (unsigned int) dims[1]);
+		 (unsigned int) count[0], (unsigned int) count[1]);
 	break;
       };
 
@@ -1355,20 +1361,20 @@ NrrdDataHandle HDF5DataReader::readDataset( string filename,
       switch (sz_last_dim) {
       case 3: // Vector data
 	nrrdWrap(nout->nrrd, data, nrrd_type, ndims+1, 3, 
-		 (unsigned int) dims[0], (unsigned int) dims[1], 
-		 (unsigned int) dims[2]);
+		 (unsigned int) count[0], (unsigned int) count[1], 
+		 (unsigned int) count[2]);
 	break;
 	  
       case 6: // Tensor data
 	nrrdWrap(nout->nrrd, data, nrrd_type, ndims+1, 6, 
-		 (unsigned int) dims[0], (unsigned int) dims[1], 
-		 (unsigned int) dims[2]);
+		 (unsigned int) count[0], (unsigned int) count[1], 
+		 (unsigned int) count[2]);
 	break;
 	  
       default: // treat the rest as Scalar data
 	nrrdWrap(nout->nrrd, data, nrrd_type, ndims,  
-		 (unsigned int) dims[0], (unsigned int) dims[1], 
-		 (unsigned int) dims[2]);
+		 (unsigned int) count[0], (unsigned int) count[1], 
+		 (unsigned int) count[2]);
 	break;
       };
 
@@ -1383,20 +1389,20 @@ NrrdDataHandle HDF5DataReader::readDataset( string filename,
       switch (sz_last_dim) {
       case 3: // Vector data
 	nrrdWrap(nout->nrrd, data, nrrd_type, ndims+1, 3, 
-		 (unsigned int) dims[0], (unsigned int) dims[1], 
-		 (unsigned int) dims[2], (unsigned int) dims[3]);
+		 (unsigned int) count[0], (unsigned int) count[1], 
+		 (unsigned int) count[2], (unsigned int) count[3]);
 	break;
 	
       case 6: // Tensor data
 	nrrdWrap(nout->nrrd, data, nrrd_type, ndims+1, 6, 
-		 (unsigned int) dims[0], (unsigned int) dims[1], 
-		 (unsigned int) dims[2], (unsigned int) dims[3]);
+		 (unsigned int) count[0], (unsigned int) count[1], 
+		 (unsigned int) count[2], (unsigned int) count[3]);
 	break;
 	  
       default: // treat the rest as Scalar data
 	nrrdWrap(nout->nrrd, data, nrrd_type, ndims,  
-		 (unsigned int) dims[0], (unsigned int) dims[1], 
-		 (unsigned int) dims[2], (unsigned int) dims[3]);
+		 (unsigned int) count[0], (unsigned int) count[1], 
+		 (unsigned int) count[2], (unsigned int) count[3]);
 	break;
       };
 
@@ -1411,23 +1417,23 @@ NrrdDataHandle HDF5DataReader::readDataset( string filename,
       switch (sz_last_dim) {
       case 3: // Vector data
 	nrrdWrap(nout->nrrd, data, nrrd_type, ndims+1, 3, 
-		 (unsigned int) dims[0], (unsigned int) dims[1], 
-		 (unsigned int) dims[2], (unsigned int) dims[3], 
-		 (unsigned int) dims[4]);
+		 (unsigned int) count[0], (unsigned int) count[1], 
+		 (unsigned int) count[2], (unsigned int) count[3], 
+		 (unsigned int) count[4]);
 	break;
 	  
       case 6: // Tensor data
 	nrrdWrap(nout->nrrd, data, nrrd_type, ndims+1, 6, 
-		 (unsigned int) dims[0], (unsigned int) dims[1], 
-		 (unsigned int) dims[2], (unsigned int) dims[3], 
-		 (unsigned int) dims[4]);
+		 (unsigned int) count[0], (unsigned int) count[1], 
+		 (unsigned int) count[2], (unsigned int) count[3], 
+		 (unsigned int) count[4]);
 	break;
 	  
       default: // treat the rest as Scalar data
 	nrrdWrap(nout->nrrd, data, nrrd_type, ndims,  
-		 (unsigned int) dims[0], (unsigned int) dims[1], 
-		 (unsigned int) dims[2], (unsigned int) dims[3], 
-		 (unsigned int) dims[4]);
+		 (unsigned int) count[0], (unsigned int) count[1], 
+		 (unsigned int) count[2], (unsigned int) count[3], 
+		 (unsigned int) count[4]);
 	break;
       };
 
@@ -1443,23 +1449,23 @@ NrrdDataHandle HDF5DataReader::readDataset( string filename,
       switch (sz_last_dim) {
       case 3: // Vector data
 	nrrdWrap(nout->nrrd, data, nrrd_type, ndims+1, 3, 
-		 (unsigned int) dims[0], (unsigned int) dims[1], 
-		 (unsigned int) dims[2], (unsigned int) dims[3], 
-		 (unsigned int) dims[4], dims[5]);
+		 (unsigned int) count[0], (unsigned int) count[1], 
+		 (unsigned int) count[2], (unsigned int) count[3], 
+		 (unsigned int) count[4], count[5]);
 	break;
 	  
       case 6: // Tensor data
 	nrrdWrap(nout->nrrd, data, nrrd_type, ndims+1, 6, 
-		 (unsigned int) dims[0], (unsigned int) dims[1], 
-		 (unsigned int) dims[2], (unsigned int) dims[3], 
-		 (unsigned int) dims[4], dims[5]);
+		 (unsigned int) count[0], (unsigned int) count[1], 
+		 (unsigned int) count[2], (unsigned int) count[3], 
+		 (unsigned int) count[4], count[5]);
 	break;
 	  
       default: // treat the rest as Scalar data
 	nrrdWrap(nout->nrrd, data, nrrd_type, ndims, 
-		 (unsigned int) dims[0], (unsigned int) dims[1], 
-		 (unsigned int) dims[2], (unsigned int) dims[3], 
-		 (unsigned int) dims[4], dims[5]);
+		 (unsigned int) count[0], (unsigned int) count[1], 
+		 (unsigned int) count[2], (unsigned int) count[3], 
+		 (unsigned int) count[4], count[5]);
 	break;
       };
 

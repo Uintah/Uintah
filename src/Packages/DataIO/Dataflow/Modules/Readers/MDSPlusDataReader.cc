@@ -45,8 +45,12 @@ using namespace SCIRun;
 using namespace SCITeem;
 
 #define MAX_PORTS 8
+#define MAX_DIMS 6
 
 class DataIOSHARE MDSPlusDataReader : public Module {
+protected:
+  enum { MERGE_NONE=0,   MERGE_LIKE=1,   MERGE_TIME=2 };
+
 public:
   MDSPlusDataReader(GuiContext *context);
 
@@ -148,17 +152,26 @@ MDSPlusDataReader::is_mergeable(NrrdDataHandle h1, NrrdDataHandle h2) const
   grp1 = nrrdName1;
   grp2 = nrrdName2;
 
-  pos = grp1.find_last_of("-");
-  grp1.erase( pos, grp1.length()-pos );
-  pos = grp2.find_last_of("-");
-  grp2.erase( pos, grp2.length()-pos );
+  pos = grp1.find_last_of(":");
+  if( pos != std::string::npos )
+    grp1.erase( pos, grp1.length()-pos ); // Erase the kind
+  pos = grp1.find_last_of(":");
+  if( pos != std::string::npos )
+    grp1.erase( pos, grp1.length()-pos ); // Erase the data name
+
+  pos = grp2.find_last_of(":");
+  if( pos != std::string::npos )
+    grp2.erase( pos, grp2.length()-pos ); // Erase the kind
+  pos = grp2.find_last_of(":");
+  if( pos != std::string::npos )
+    grp2.erase( pos, grp2.length()-pos ); // Erase the data name
 
   if( grp1 != grp2 )
     return false;
 
-  if( mergedata_ != 2 ) {
+  if( mergedata_ != MERGE_TIME ) {
     // The names are the only properties that are allowed to be different
-    // when merging so remove before testing.
+    // when merging so remove them before testing the rest of the properties.
     h1->remove_property( "Name" );
     h2->remove_property( "Name" );
 
@@ -375,20 +388,26 @@ void MDSPlusDataReader::execute(){
 	  join_me.push_back(n->nrrd);
 
 	  string nrrdName, groupName, dataName;
+	  std::string::size_type pos;
 
 	  n->get_property( "Name", groupName );
-	  std::string::size_type pos = groupName.find_last_of("-");
+	  pos = groupName.find_last_of(":"); // Erase the Kind
 	  if( pos != std::string::npos )
 	    groupName.erase( pos, groupName.length()-pos );
 
-	  n->get_property( "Name", dataName );
-	  pos = dataName.find_last_of("-");
+	  pos = groupName.find_last_of(":"); // Erase the data name
 	  if( pos != std::string::npos )
-	    dataName.erase( 0, pos );
-	  pos = dataName.find_last_of(":");
+	    groupName.erase( pos, groupName.length()-pos );
+
+
+	  n->get_property( "Name", dataName );
+	  pos = dataName.find_last_of(":"); // Erase the Kind
 	  if( pos != std::string::npos )
 	    dataName.erase( pos, dataName.length()-pos );
-
+	  pos = dataName.find_last_of(":"); // Erase the group
+	  if( pos != std::string::npos )
+	    dataName.erase( 0, pos );
+	  
 	  nrrdName = groupName + dataName;
 
 	  while (niter != vec.end()) {
@@ -397,12 +416,12 @@ void MDSPlusDataReader::execute(){
 	    join_me.push_back(n->nrrd);
 
 	    n->get_property( "Name", dataName );
-	    pos = dataName.find_last_of("-");
-	    if( pos != std::string::npos )
-	      dataName.erase( 0, pos );
-	    pos = dataName.find_last_of(":");
+	    pos = dataName.find_last_of(":"); // Erase the Kind
 	    if( pos != std::string::npos )
 	      dataName.erase( pos, dataName.length()-pos );
+	    pos = dataName.find_last_of(":"); // Erase the group
+	    if( pos != std::string::npos )
+	      dataName.replace( 0, pos, "-" );
 
 	    nrrdName += dataName;
 	  }	  
@@ -412,9 +431,10 @@ void MDSPlusDataReader::execute(){
 
 	    int axis = 0,  incr = 0;
 	    
-	    if (mergedata_ == 1) {
+	    if (mergedata_ == MERGE_LIKE) {
 	      axis = 0; // tuple
 	      incr = 0; // tuple case.
+
 	      // if all scalars being merged, need to increment axis
 	      bool same_size = true;
 	      for (int n=0; n<(int)join_me.size()-1; n++) {
@@ -423,7 +443,7 @@ void MDSPlusDataReader::execute(){
 	      }
 	      if (same_size)
 		incr = 1; // tuple case.
-	    } else if (mergedata_ == 2) {
+	    } else if (mergedata_ == MERGE_TIME) {
 	      axis = join_me[0]->dim; // time
 	      incr = 1;               // time
 	    }
@@ -437,17 +457,22 @@ void MDSPlusDataReader::execute(){
 	      return;
 	    }
 	    
-	    if (join_me.size() == 3)
+	    // set new kinds for joined nrrds
+	    if (join_me.size() == 3) {
 	      onrrd->nrrd->axis[0].kind = nrrdKind3Vector;
-	    else if (join_me.size() == 6)
+	      nrrdName += string(":Vector");
+	    } else if (join_me.size() == 6) {
 	      onrrd->nrrd->axis[0].kind = nrrdKind3DSymTensor;
-	    else 
+	      nrrdName += string(":Tensor");
+	    } else {
 	      onrrd->nrrd->axis[0].kind = nrrdKindDomain;
+	      nrrdName += string(":Scalar");
+	    }
+
 	    for(int i=1; i<onrrd->nrrd->dim; i++) 
 	      onrrd->nrrd->axis[i].kind = nrrdKindDomain;
-	    
 
-	    if (mergedata_ == 2) {
+	    if (mergedata_ == MERGE_TIME) {
 	      onrrd->nrrd->axis[axis].label = "Time";
 	      // remove all numbers from name
 	      string s(join_me[0]->axis[0].label);
@@ -455,9 +480,7 @@ void MDSPlusDataReader::execute(){
 	      
 	      const string nums("0123456789");
 	      
-	      //cout << "checking in_name " << s << endl;
-	      // test against valid char set.
-	      
+	      // test against valid char set.	      
 	      for(string::size_type i = 0; i < s.size(); i++) {
 		bool in_set = false;
 		for (unsigned int c = 0; c < nums.size(); c++) {
@@ -468,12 +491,10 @@ void MDSPlusDataReader::execute(){
 		}
 		
 		if (in_set) { nrrdName.push_back('X' ); }
-		else        { nrrdName.push_back(s[i]); }
-		
+		else        { nrrdName.push_back(s[i]); }		
 	      }
 	    }
 	    
-	    // Take care of tuple axis label.
 	    // Copy the properties.
 	    NrrdDataHandle handle = NrrdDataHandle(onrrd);
 	  
@@ -837,28 +858,27 @@ NrrdDataHandle MDSPlusDataReader::readDataset( string& server,
     nrrdName.clear();
 
     // Remove the MDS characters that are illegal in Nrrds.
-    /*
-    std::string::size_type pos;
-    while( (pos = nrrdName.find("/")) != string::npos )
-    nrrdName.replace( pos, 1, "-" );
-    */
-
     const string nums("\"\\:.()");
 	      
-    // test against valid char set.
     for(string::size_type i = 0; i < signal.size(); i++) {
       bool in_set = false;
-      for (unsigned int c = 0; c < nums.size(); c++) {
+/*      for (unsigned int c = 0; c < nums.size(); c++) {
 	if (signal[i] == nums[c]) {
 	  in_set = true;
 	  break;
 	}
       }
+*/
       
       if (in_set) { nrrdName.push_back('_' ); }
       else        { nrrdName.push_back(signal[i]); }
       
     }
+
+    // Remove all of the tcl special characters.
+    std::string::size_type pos;
+    while( (pos = nrrdName.find("/")) != string::npos )
+      nrrdName.replace( pos, 1, "-" );
 
     switch (sz_last_dim) {
     case 3: // Vector data

@@ -285,7 +285,8 @@ NIMRODConverter::execute(){
 		     nHandle->nrrd->dim == 3 ) {
 	    conversion_ = SCALAR;
 	    data_[0] = ic;
-	  } else if( nrrdName.find( "PHI-R-Z:Vector" ) != string::npos && 
+	  } else if( (nrrdName.find( "R-Z-PHI:Vector" ) != string::npos || 
+		      nrrdName.find( "PHI-R-Z:Vector" ) != string::npos ) && 
 		     nHandle->nrrd->dim == 4 ) {
 	    conversion_ = REALSPACE;
 	    data_.resize(1);
@@ -478,74 +479,65 @@ NIMRODConverter::execute(){
     
     error_ = false;
 
-    int idim=0, jdim=0, kdim=0;
-
     string convertStr;
     unsigned int ntype;
-
+    
     if( conversion_ & MESH ) {
       ntype = nHandles[mesh_[PHI]]->nrrd->type;
 
       nHandles[mesh_[PHI]]->get_property( "Coordinate System", property );
-
-      if( property.find("Cylindrical - NIMROD") != string::npos ) {
-	if( nHandles[mesh_[R]]->nrrd->axis[0].size != 
-	    nHandles[mesh_[Z]]->nrrd->axis[0].size ||
-	    nHandles[mesh_[R]]->nrrd->axis[1].size != 
-	    nHandles[mesh_[Z]]->nrrd->axis[1].size ) {
-	  error( "Mesh dimension mismatch." );
-	  error_ = true;
-	  return;
-	}
-
-	idim = nHandles[mesh_[PHI]]->nrrd->axis[0].size; // Phi
-	jdim = nHandles[mesh_[R  ]]->nrrd->axis[0].size; // Radial
-	kdim = nHandles[mesh_[Z  ]]->nrrd->axis[1].size; // Theta
-
-	modes_.resize(1);
-	modes_[0] = unrolling_;
+      
+      if( nHandles[mesh_[R]]->nrrd->axis[0].size != 
+	  nHandles[mesh_[Z]]->nrrd->axis[0].size ||
+	  nHandles[mesh_[R]]->nrrd->axis[1].size != 
+	  nHandles[mesh_[Z]]->nrrd->axis[1].size ) {
+	error( "Mesh dimension mismatch." );
+	error_ = true;
+	return;
       }
+      
+      modes_.resize(1);
+      modes_[0] = unrolling_;
 
       convertStr = "Mesh";
-
+      
     } else if( conversion_ & SCALAR ) {
       ntype = nHandles[data_[0]]->nrrd->type;
 
-      idim = nHandles[data_[0]]->nrrd->axis[0].size; // Phi
-      jdim = nHandles[data_[0]]->nrrd->axis[1].size; // Radial
-      kdim = nHandles[data_[0]]->nrrd->axis[2].size; // Theta
-
       convertStr = "Scalar";
-
-     } else if( conversion_ & REALSPACE ) {
+      
+    } else if( conversion_ & REALSPACE ) {
       ntype = nHandles[mesh_[PHI]]->nrrd->type;
-
+      
       nHandles[mesh_[PHI]]->get_property( "Coordinate System", property );
 
       if( property.find("Cylindrical - NIMROD") != string::npos ) {
 	if(  data_.size() == 1 ) {
-	  idim = nHandles[data_[0]]->nrrd->axis[1].size; // Phi
-	  jdim = nHandles[data_[0]]->nrrd->axis[2].size; // Radial
-	  kdim = nHandles[data_[0]]->nrrd->axis[3].size; // Theta
-
-	  if( nHandles[mesh_[PHI]]->nrrd->axis[0].size != idim ) {
+	  if( nHandles[mesh_[PHI]]->nrrd->axis[0].size !=
+	      nHandles[data_[  0]]->nrrd->axis[3].size ) {
 	    error( "Mesh dimension mismatch." );
 	    error_ = true;
 	    return;
 	  }
 
 	} else if( data_.size() == 3 ) {
-	  idim = nHandles[mesh_[PHI]]->nrrd->axis[0].size; // Phi
-	  jdim = nHandles[data_[0  ]]->nrrd->axis[1].size; // Radial
-	  kdim = nHandles[data_[0  ]]->nrrd->axis[2].size; // Theta
-
-	  for( unsigned int ic=0; ic<data_.size(); ic++ ) {
-	    if( nHandles[data_[ic]]->nrrd->axis[0].size != idim ||
-		nHandles[data_[ic]]->nrrd->axis[1].size != jdim ||
-		nHandles[data_[ic]]->nrrd->axis[2].size != kdim ) {
-	      error( "Data dimension mismatch." );
+	  if( property.find("Cylindrical - NIMROD") != string::npos ) {
+	    if( nHandles[mesh_[PHI]]->nrrd->axis[0].size !=
+		nHandles[data_[  0]]->nrrd->axis[3].size ) {
+	      error( "Mesh dimension mismatch." );
 	      error_ = true;
 	      return;
+	    }
+
+	    for( unsigned int ic=1; ic<data_.size(); ic++ ) {
+	      for( int jc=1; jc<nHandles[data_[0]]->nrrd->dim; jc++ ) {
+		if( nHandles[data_[ 0]]->nrrd->axis[jc].size !=
+		    nHandles[data_[ic]]->nrrd->axis[jc].size ) {
+		  error( "Data dimension mismatch." );
+		  error_ = true;
+		  return;
+		}
+	      }
 	    }
 	  }
 	}
@@ -559,18 +551,22 @@ NIMRODConverter::execute(){
       nHandles[mesh_[PHI]]->get_property( "Coordinate System", property );
 
       if( property.find("Cylindrical - NIMROD") != string::npos ) {
-	nmodes = nHandles[mesh_[K  ]]->nrrd->axis[0].size; // Modes
-	idim   = nHandles[mesh_[PHI]]->nrrd->axis[0].size; // Phi
-	jdim   = nHandles[data_[0  ]]->nrrd->axis[1].size; // Radial
-	kdim   = nHandles[data_[0  ]]->nrrd->axis[2].size; // Theta
+	if( nHandles[mesh_[PHI]]->nrrd->axis[0].size !=
+	    nHandles[data_[  0]]->nrrd->axis[3].size ) {
+	  error( "Mesh dimension mismatch." );
+	  error_ = true;
+	  return;
+	}
 
-	for( unsigned int ic=0; ic<data_.size(); ic++ ) {
-	  if( nHandles[data_[ic]]->nrrd->axis[0].size != nmodes ||
-	      nHandles[data_[ic]]->nrrd->axis[1].size != jdim ||
-	      nHandles[data_[ic]]->nrrd->axis[2].size != kdim ) {
-	    error( "Data dimension mismatch." );
-	    error_ = true;
-	    return;
+	for( unsigned int ic=1; ic<data_.size(); ic++ ) {
+	  for( int jc=0; jc<nHandles[data_[0]]->nrrd->dim; jc++ ) {
+	    
+	    if( nHandles[data_[ 0]]->nrrd->axis[jc].size !=
+		nHandles[data_[ic]]->nrrd->axis[jc].size ) {
+	      error( "Data dimension mismatch." );
+	      error_ = true;
+	      return;
+	    }
 	  }
 	}
       }
@@ -592,8 +588,7 @@ NIMRODConverter::execute(){
 	return;
       }
 
-      nHandle_ = algo_mesh->execute( nHandles, mesh_, data_, modes_,
-				     idim, jdim, kdim );
+      nHandle_ = algo_mesh->execute( nHandles, mesh_, data_, modes_ );
     } else {
       error( "Nothing to convert." );
       error_ = true;
