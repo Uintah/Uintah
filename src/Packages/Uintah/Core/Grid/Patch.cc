@@ -991,10 +991,11 @@ Patch::getSFCIterator(const int dir, const int offset) const
     return getSFCXIterator(offset);
   } else if (dir == 1) {
     return getSFCYIterator(offset);
-  } else {
+  } else if (dir == 2) {
     return getSFCZIterator(offset);
-  } 
-  throw InternalError("Patch::getSFCIterator: dir must be 0, 1, or 2");
+  } else {
+    throw InternalError("Patch::getSFCIterator: dir must be 0, 1, or 2");
+  }
 } 
 
 CellIterator    
