@@ -21,21 +21,14 @@
    <DataArchiver>
         <filebase>methaneplumeexplicit.uda</filebase>
 	<outputInterval>0.02</outputInterval>
-	<save label="void_frac_CC"/>
 	<save label="mmgasVolFrac"/>
-	<save label="solid_fraction"/>
 	<save label = "KineticEnergy"/>
 	<save label = "TotalMass"/>
-	<save label = "StrainEnergy"/>
 	<save label = "CenterOfMassPosition"/>
 	<save label = "CenterOfMassVelocity"/>
 	<save label = "p.particleID"/>
 	<save label = "p.x"/>
-	<save label = "p.volume"/>
-	<save label = "p.mass"/>
 	<save label = "p.temperature"/>
-	<save label = "g.mass"/>
-	<save label = "g.stressFS"/>
 
 	<save label="uvwout"/>
 	<save label="totalflowIN"/>
@@ -45,8 +38,6 @@
         <save label="newCCVVelocity"/>	
         <save label="newCCWVelocity"/>	
         <save label="newCCVelocity"/>
-	<save label="pressureSPBC"/>
-	<save label="presNonLinSrcPBLM"/>
 	<save label="scalarSP"/>
 	<save label="densityCP"/>
 	<save label="viscosityCTS"/>
@@ -55,28 +46,13 @@
 	<save label="tempIN"/>
         <save label="co2IN"/>
         <save label="enthalpyRXN"/>
-        <save label="enthalpySP"/>
-        <save label="absorpIN"/>
-        <save label="sootFVIN"/>
-
-	<save label="heaTranSolid_CC"/>
-	<save label="heaTranSolid_tmp_CC"/>
-	<save label="heaTranSolid_FCX"/>
-	<save label="heaTranSolid_FCY"/>
-	<save label="heaTranSolid_FCZ"/>
-	<save label="heaTranSolid_FCX_Rad"/>
-	<save label="heaTranSolid_FCY_Rad"/>
-	<save label="heaTranSolid_FCZ_Rad"/>
 
 	<save label="htfluxConvX"/>
 	<save label="htfluxRadX"/>
-	<save label="htfluxX"/>
 	<save label="htfluxConvY"/>
 	<save label="htfluxRadY"/>
-	<save label="htfluxY"/>
 	<save label="htfluxConvZ"/>
 	<save label="htfluxRadZ"/>
-	<save label="htfluxZ"/>
 	<save label="htfluxConvCC"/>
 	<save label="totHtFluxX"/>
 	<save label="totHtFluxY"/>
