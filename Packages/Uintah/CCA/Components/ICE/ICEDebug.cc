@@ -455,10 +455,10 @@ void ICE::printConservedQuantities(const ProcessorGroup*,
     CCVariable<Vector> vel_CC;
     CCVariable<double> rho_CC;
     CCVariable<double> Temp_CC;
-    CCVariable<double> delPress_CC;
+    CCVariable<double> delP_Dilatate;
     Vector dx       = patch->dCell();
     double cell_vol = dx.x()*dx.y()*dx.z();
-    new_dw->get(delPress_CC,lb->delPress_CCLabel, 0, patch,Ghost::None, 0);
+    new_dw->get(delP_Dilatate,lb->delP_DilatateLabel, 0, patch,Ghost::None, 0);
     
     //__________________________________
     // Loop over all the ICE matls
@@ -488,12 +488,12 @@ void ICE::printConservedQuantities(const ProcessorGroup*,
       // near a ghost cell is > 0  
       IntVector low, hi;
       
-      low = delPress_CC.getLowIndex();
-      hi  = delPress_CC.getHighIndex();
+      low = delP_Dilatate.getLowIndex();
+      hi  = delP_Dilatate.getHighIndex();
       // x_plus
       for (int j = low.y(); j<hi.y(); j++) {
 	for (int k = low.z(); k<hi.z(); k++) {
-	  if( fabs(delPress_CC[IntVector(hi.x()-2,j,k)]) > 0.0 )  {
+	  if( fabs(delP_Dilatate[IntVector(hi.x()-2,j,k)]) > 0.0 )  {
 	    flag = 1;
 	  }
 	}
@@ -501,7 +501,7 @@ void ICE::printConservedQuantities(const ProcessorGroup*,
       // x_minus
       for (int j = low.y(); j<hi.y(); j++) {
 	for (int k = low.z(); k<hi.z(); k++) {
-	  if( fabs(delPress_CC[IntVector(low.x()+1,j,k)]) > 0.0 )  {
+	  if( fabs(delP_Dilatate[IntVector(low.x()+1,j,k)]) > 0.0 )  {
 	    flag = 1;
 	  }
 	}
@@ -509,7 +509,7 @@ void ICE::printConservedQuantities(const ProcessorGroup*,
       // y_plus
       for (int i = low.x(); i<hi.x(); i++) {
 	for (int k = low.z(); k<hi.z(); k++) {
-	  if( fabs(delPress_CC[IntVector(i,hi.y()-2,k)]) > 0.0 )  {
+	  if( fabs(delP_Dilatate[IntVector(i,hi.y()-2,k)]) > 0.0 )  {
 	    flag = 1;
 	  }
 	}
@@ -517,7 +517,7 @@ void ICE::printConservedQuantities(const ProcessorGroup*,
       // y_minus
       for (int i = low.x(); i<hi.x(); i++) {
 	for (int k = low.z(); k<hi.z(); k++) {
-	  if( fabs(delPress_CC[IntVector(i,low.y()+1,k)]) > 0.0 )  {
+	  if( fabs(delP_Dilatate[IntVector(i,low.y()+1,k)]) > 0.0 )  {
 	    flag = 1;
 	  }
 	}
@@ -525,7 +525,7 @@ void ICE::printConservedQuantities(const ProcessorGroup*,
       // z_plus
       for (int i = low.x(); i<hi.x(); i++) {
 	for (int j = low.y(); j<hi.y(); j++) {
-	  if( fabs(delPress_CC[IntVector(i,j,hi.z()-2)]) > 0.0 )   {
+	  if( fabs(delP_Dilatate[IntVector(i,j,hi.z()-2)]) > 0.0 )   {
 	    flag = 1;
 	  }
 	}
@@ -533,7 +533,7 @@ void ICE::printConservedQuantities(const ProcessorGroup*,
       // z_minus
       for (int i = low.x(); i<hi.x(); i++) {
 	for (int j = low.y(); j<hi.y(); j++) {
-	  if( fabs(delPress_CC[IntVector(i,j,low.z()+1)]) > 0.0 )   {
+	  if( fabs(delP_Dilatate[IntVector(i,j,low.z()+1)]) > 0.0 )   {
 	    flag = 1;
 	  }
 	}
