@@ -1188,18 +1188,18 @@ if test -z "$BLAS_LIB_DIR"; then
   if test "$is_64bit" = "yes" ; then
     if test -e "/usr/lib64/libblas.a" ||
        test -e "/usr/lib64/libblas.so"; then
-      BLAS_LIB_DIR="/usr/lib64"
+      BLAS_LIB_DIR="standard"
     elif test -e "/lib64/libblas.a" ||
        test -e "/lib64/libblas.so"; then
-      BLAS_LIB_DIR="/lib64"
+      BLAS_LIB_DIR="standard"
     fi
   else
     if test -e "/usr/lib/libblas.a" ||
        test -e "/usr/lib/libblas.so"; then
-       BLAS_LIB_DIR="/usr/lib"
+       BLAS_LIB_DIR="standard"
     elif test -e "/lib/libblas.a" ||
          test -e "/lib/libblas.so"; then
-      BLAS_LIB_DIR="/lib"
+      BLAS_LIB_DIR="standard"
     fi
   fi
 fi
