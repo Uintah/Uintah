@@ -1,5 +1,5 @@
 
-itcl_class PSECommon_Fields_ShowGeometry {
+itcl_class Dataflow_Fields_ShowGeometry {
     inherit Module
     constructor {config} {
 	set name ShowGeometry

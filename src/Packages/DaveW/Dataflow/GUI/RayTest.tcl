@@ -1,18 +1,14 @@
-#
 #  RayTest.tcl
-#
 #  Written by:
 #   David Weinstein
 #   Department of Computer Science
 #   University of Utah
 #   April 1997
-#
 #  Copyright (C) 1997 SCI Group
-#
 
-catch {rename DaveW_CS684_RayTest ""}
+catch {rename Packages/DaveW_CS684_RayTest ""}
 
-itcl_class DaveW_CS684_RayTest {
+itcl_class Packages/DaveW_CS684_RayTest {
     inherit Module
     constructor {config} {
 	set name RayTest

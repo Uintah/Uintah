@@ -1,7 +1,6 @@
-#include <PSECore/Dataflow/StrX.h>
+#include <Dataflow/Network/StrX.h>
 
-namespace PSECore {
-namespace Dataflow {
+namespace SCIRun {
 
 std::ostream& operator<<(std::ostream& target, const StrX& toDump)
 {
@@ -9,7 +8,6 @@ std::ostream& operator<<(std::ostream& target, const StrX& toDump)
   return target;
 }
 
-} // Dataflow
-} // PSECore
+} // End namespace SCIRun
 
 

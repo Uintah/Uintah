@@ -10,14 +10,13 @@
  *  Copyright (C) 2000 SCI Group
  */
 
-#ifndef SCICore_Exceptions_ErrnoException_h
-#define SCICore_Exceptions_ErrnoException_h
+#ifndef Core_Exceptions_ErrnoException_h
+#define Core_Exceptions_ErrnoException_h
 
-#include <SCICore/Exceptions/Exception.h>
+#include <Core/Exceptions/Exception.h>
 #include <string>
 
-namespace SCICore {
-namespace Exceptions {
+namespace SCIRun {
 
 class ErrnoException : public Exception {
 public:
@@ -36,7 +35,6 @@ private:
   ErrnoException& operator=(const ErrnoException&);
 };
 
-}
-}
+} // End namespace SCIRun
 
 #endif

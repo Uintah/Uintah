@@ -1,7 +1,7 @@
 
 catch {rename VectorFieldReader ""}
 
-itcl_class PSECommon_Readers_VectorFieldReader {
+itcl_class Dataflow_Readers_VectorFieldReader {
     inherit Module
     constructor {config} {
 	set name VectorFieldReader

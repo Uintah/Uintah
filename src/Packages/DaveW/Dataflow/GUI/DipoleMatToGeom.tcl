@@ -1,21 +1,17 @@
 ##
  #  DipoleMatToGeom.tcl: Set theta and phi for the dipole
- #
  #  Written by:
  #   David Weinstein
  #   Department of Computer Science
  #   University of Utah
  #   June 1999
- #
  #  Copyright (C) 1999 SCI Group
- # 
  #  Log Information:
- #
  ##
 
-catch {rename DaveW_FEM_DipoleMatToGeom ""}
+catch {rename Packages/DaveW_FEM_DipoleMatToGeom ""}
 
-itcl_class DaveW_FEM_DipoleMatToGeom {
+itcl_class Packages/DaveW_FEM_DipoleMatToGeom {
     inherit Module
     constructor {config} {
         set name DipoleMatToGeom

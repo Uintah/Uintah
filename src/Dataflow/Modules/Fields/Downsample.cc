@@ -10,29 +10,20 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <PSECore/Dataflow/Module.h>
-#include <PSECore/Datatypes/ScalarFieldPort.h>
-#include <PSECore/Datatypes/SurfacePort.h>
-#include <SCICore/Datatypes/ScalarFieldRG.h>
-#include <SCICore/Geometry/Point.h>
-#include <SCICore/TclInterface/TCLvar.h>
-#include <SCICore/Math/Expon.h>
-#include <SCICore/Math/MinMax.h>
-#include <SCICore/Thread/Parallel.h>
-#include <SCICore/Thread/Thread.h>
+#include <Dataflow/Network/Module.h>
+#include <Dataflow/Ports/ScalarFieldPort.h>
+#include <Dataflow/Ports/SurfacePort.h>
+#include <Core/Datatypes/ScalarFieldRG.h>
+#include <Core/Geometry/Point.h>
+#include <Core/TclInterface/TCLvar.h>
+#include <Core/Math/Expon.h>
+#include <Core/Math/MinMax.h>
+#include <Core/Thread/Parallel.h>
+#include <Core/Thread/Thread.h>
 #include <values.h>
 
-namespace PSECommon {
-namespace Modules {
+namespace SCIRun {
 
-using namespace PSECore::Dataflow;
-using namespace PSECore::Datatypes;
-using namespace SCICore::TclInterface;
-using namespace SCICore::GeomSpace;
-using namespace SCICore::Containers;
-using namespace SCICore::Geometry;
-using namespace SCICore::Math;
-using namespace SCICore::Thread;
 
 class Downsample : public Module {
     ScalarFieldIPort* infield;
@@ -134,6 +125,5 @@ void Downsample::execute()
   outfield->send(ofield);
 }
 
-} // End namespace Modules
-} // End namespace PSECommon
+} // End namespace SCIRun
 

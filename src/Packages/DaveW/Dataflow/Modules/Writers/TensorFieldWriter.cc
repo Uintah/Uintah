@@ -1,4 +1,3 @@
-//static char *id="@(#) $Id$";
 
 /*
  *  TensorFieldWriter.cc: TensorField Writer class
@@ -12,21 +11,16 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <DaveW/Datatypes/General/TensorField.h>
-#include <DaveW/Datatypes/General/TensorFieldPort.h>
-#include <PSECore/Dataflow/Module.h>
-#include <SCICore/Persistent/Pstreams.h>
-#include <SCICore/Malloc/Allocator.h>
-#include <SCICore/TclInterface/TCLvar.h>
+#include <Packages/DaveW/Core/Datatypes/General/TensorField.h>
+#include <Packages/DaveW/Core/Datatypes/General/TensorFieldPort.h>
+#include <Dataflow/Network/Module.h>
+#include <Core/Persistent/Pstreams.h>
+#include <Core/Malloc/Allocator.h>
+#include <Core/TclInterface/TCLvar.h>
 
 namespace DaveW {
-namespace Modules {
-
 using namespace DaveW::Datatypes;
-using namespace PSECore::Dataflow;
-using namespace PSECore::Datatypes;
-using namespace SCICore::TclInterface;
-using namespace SCICore::PersistentSpace;
+using namespace SCIRun;
 
 class TensorFieldWriter : public Module {
     TensorFieldIPort* inport;
@@ -65,7 +59,6 @@ static void watcher(double pd, void* cbdata)
 
 void TensorFieldWriter::execute()
 {
-    using SCICore::Containers::Pio;
 
     TensorFieldHandle handle;
     if(!inport->get(handle))
@@ -85,18 +78,6 @@ void TensorFieldWriter::execute()
     Pio(*stream, handle);
     delete stream;
 }
-
-} // End namespace Modules
 } // End namespace DaveW
 
-//
-// $Log$
-// Revision 1.2  2000/03/17 09:26:06  sparker
-// New makefile scheme: sub.mk instead of Makefile.in
-// Use XML-based files for module repository
-// Plus many other changes to make these two things work
-//
-// Revision 1.1  1999/09/01 07:21:01  dmw
-// new DaveW modules
-//
-//
+

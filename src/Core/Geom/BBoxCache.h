@@ -14,12 +14,11 @@
 #ifndef SCI_Geom_BBoxCache_h 
 #define SCI_Geom_BBoxCache_h 1
 
-#include <SCICore/Geom/GeomObj.h>
-#include <SCICore/Containers/String.h>
-#include <SCICore/Geometry/BBox.h>
+#include <Core/Geom/GeomObj.h>
+#include <Core/Containers/String.h>
+#include <Core/Geometry/BBox.h>
 
-namespace SCICore {
-namespace GeomSpace {
+namespace SCIRun {
 
 class SCICORESHARE GeomBBoxCache: public GeomObj {
     GeomObj* child;
@@ -45,7 +44,6 @@ public:
     virtual bool saveobj(std::ostream&, const clString& format, GeomSave*);
 };
 
-} // End namespace GeomSpace
-} // End namespace SCICore
+} // End namespace SCIRun
 
 #endif

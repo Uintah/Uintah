@@ -14,17 +14,14 @@
 #ifndef SCI_project_DenseMatrix_h
 #define SCI_project_DenseMatrix_h 1
 
-#include <SCICore/share/share.h>
+#include <Core/share/share.h>
 
-#include <SCICore/Datatypes/Matrix.h>
-#include <SCICore/Math/MiscMath.h>
+#include <Core/Datatypes/Matrix.h>
+#include <Core/Math/MiscMath.h>
 #include <vector>
 
-namespace SCICore {
-namespace Datatypes {
+namespace SCIRun {
 
-using SCICore::Math::Abs;
-using namespace SCICore::Datatypes;
 using std::vector;
 
 class SCICORESHARE DenseMatrix : public Matrix {
@@ -76,7 +73,6 @@ public:
 
 };
 
-} // End namespace Datatypes
-} // End namespace SCICore
+} // End namespace SCIRun
 
 #endif

@@ -1,5 +1,5 @@
-This is the overall README for the "Phil" package.
-by: Philip Sutton (psutton@cs.utah.edu)
+This is the overall README for the "Packages/Phil" package.
+by: Packages/Philip Sutton (psutton@cs.utah.edu)
 Last Modified: 27 January 2000
 
 ----------
@@ -10,7 +10,7 @@ The concentration is on octree-based isosurface extraction, done in
 several different ways.  For more information on the branch-on-need
 octree, see Wilhelms & van Gelder's 1992 paper in ACM ToG.
 
-The "Phil" package contains the standard GUI/ and Modules/ directories.
+The "Packages/Phil" package contains the standard GUI/ and Modules/ directories.
 The modules contained in this package are:
 
 Isosurface extraction modules:
@@ -45,5 +45,5 @@ ElapsedTime	A useful little module - displays a running clock of elapsed
 		time.
 
 More information for each module can be found in the HTML documentation
-(Phil/Modules/Tbon/doc/index.html).
+(Packages/Phil/Dataflow/Modules/Tbon/doc/index.html).
 

@@ -15,24 +15,18 @@
  *   7.1.95 -- DWM -- Added aligned member and methods (copied from  BoxWidget)
  */
 
-#include <PSECore/Widgets/ScaledBoxWidget.h>
-#include <PSECore/Constraints/DistanceConstraint.h>
-#include <PSECore/Constraints/PythagorasConstraint.h>
-#include <PSECore/Constraints/RatioConstraint.h>
-#include <SCICore/Geom/GeomCylinder.h>
-#include <SCICore/Geom/GeomSphere.h>
-#include <SCICore/Malloc/Allocator.h>
-#include <PSECore/Dataflow/Module.h>
+#include <Dataflow/Widgets/ScaledBoxWidget.h>
+#include <Dataflow/Constraints/DistanceConstraint.h>
+#include <Dataflow/Constraints/PythagorasConstraint.h>
+#include <Dataflow/Constraints/RatioConstraint.h>
+#include <Core/Geom/GeomCylinder.h>
+#include <Core/Geom/GeomSphere.h>
+#include <Core/Malloc/Allocator.h>
+#include <Dataflow/Network/Module.h>
 
-namespace PSECore {
-namespace Widgets {
+namespace SCIRun {
 
-using SCICore::GeomSpace::GeomGroup;
-using SCICore::GeomSpace::GeomSphere;
-using SCICore::GeomSpace::GeomCylinder;
-using SCICore::GeomSpace::GeomCappedCylinder;
 
-using namespace PSECore::Constraints;
 
 const Index NumCons = 12;
 const Index NumVars = 16;
@@ -757,5 +751,4 @@ ScaledBoxWidget::AxisAligned( const Index yesno )
    execute(0);
 }
 
-} // End namespace Widgets
-} // End namespace PSECore
+} // End namespace SCIRun

@@ -1,30 +1,22 @@
 // DebugStream.cc - An ostream used for debug messages
-//
 // Written by:
 // Eric Kuehne
 // Department of Computer Science
 // University of Utah
 // Feb. 2000
-//
 // Copyright (C) 2000 SCI Group
-//
 // DebugStream is an ostream that is useful for outputing debug messages.
 // When an instance is created, it is given a name.  An environment variable,
 // SCI_DEBUG, is inspected to see if a particular instance should be
 // active, and if so where to send the output.  The syntax for the
 // environment variable is:
-//
 // SCI_DEBUG = ([name]:[-|+|+FILENAME])(,[name]:[-|+|+FILENAME])*
-//
 // The + or - specifies whether the named object is on or off.  If a file is 
 // specified it is opened in ios::out mode.  If no file is specified,
 // the stream is directed to cerr.  The : and , characters are
 // restricted to deliminators.
-//
 // Example:
-//
 // SCI_DEBUG = modules.meshgen.warning:+meshgen.out,util.debugstream.error:-
-//
 // Future Additions:
 // o Possible additions to constructor:
 //   - Default file to output to
@@ -35,8 +27,7 @@
 
 #include "DebugStream.h"
 
-namespace SCICore {
-namespace Util {
+namespace SCIRun {
 
 static const char *ENV_VAR = "SCI_DEBUG";
 
@@ -138,5 +129,4 @@ void DebugStream::checkenv(string iname)
   }
 }
 
-} // end namespace SCICore
-} // end namespace Util
+} // End namespace SCIRun

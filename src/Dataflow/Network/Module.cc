@@ -14,23 +14,22 @@
 #pragma warning(disable:4355)
 #endif
 
-#include <PSECore/Dataflow/Module.h>
+#include <Dataflow/Network/Module.h>
 
-#include <SCICore/Util/NotFinished.h>
-#include <PSECore/Dataflow/Connection.h>
-#include <PSECore/Dataflow/ModuleHelper.h>
-#include <PSECore/Dataflow/Network.h>
-#include <PSECore/Dataflow/NetworkEditor.h>
-#include <PSECore/Dataflow/Port.h>
-#include <PSECore/Dataflow/PackageDB.h>
-#include <SCICore/Geom/GeomPick.h>
-#include <SCICore/Geom/GeomObj.h>
-#include <SCICore/Malloc/Allocator.h>
-#include <SCICore/TclInterface/TCL.h>
-#include <SCICore/Thread/Thread.h>
-#include <SCICore/Util/soloader.h>
+#include <Core/Util/NotFinished.h>
+#include <Dataflow/Network/Connection.h>
+#include <Dataflow/Network/ModuleHelper.h>
+#include <Dataflow/Network/Network.h>
+#include <Dataflow/Network/NetworkEditor.h>
+#include <Dataflow/Network/Port.h>
+#include <Dataflow/Network/PackageDB.h>
+#include <Core/Geom/GeomPick.h>
+#include <Core/Geom/GeomObj.h>
+#include <Core/Malloc/Allocator.h>
+#include <Core/TclInterface/TCL.h>
+#include <Core/Thread/Thread.h>
+#include <Core/Util/soloader.h>
 
-using SCICore::Thread::Thread;
 
 #include <iostream>
 using std::cerr;
@@ -38,10 +37,8 @@ using std::endl;
 #include <stdlib.h>
 #include <stdio.h>
 
-namespace PSECore {
-namespace Dataflow {
+namespace SCIRun {
 
-using SCICore::Containers::to_string;
 
 bool global_remote = false;
 
@@ -226,7 +223,6 @@ Module::~Module()
 int Module::clone(int)
 {
     ASSERTFAIL("Module::clone should not get called!\n");
-    return 0;
 }
 
 void Module::update_state(State st)
@@ -653,5 +649,4 @@ void Module::multisend(OPort* p1, OPort* p2)
     netedit->mailbox.send(new Module_Scheduler_Message(p1, p2));
 }
 
-} // End namespace Dataflow
-} // End namespace PSECore
+} // End namespace SCIRun

@@ -9,17 +9,13 @@
  *  Copyright (C) 1999 SCI Group
  */
 
-#include <PSECore/Dataflow/Module.h>
-#include <PSECore/Datatypes/ColumnMatrixPort.h>
-#include <SCICore/Malloc/Allocator.h>
-#include <SCICore/TclInterface/TCLvar.h>
+#include <Dataflow/Network/Module.h>
+#include <Dataflow/Ports/ColumnMatrixPort.h>
+#include <Core/Malloc/Allocator.h>
+#include <Core/TclInterface/TCLvar.h>
 
 namespace DaveW {
-namespace Modules {
-
-using namespace PSECore::Dataflow;
-using namespace PSECore::Datatypes;
-using namespace SCICore::TclInterface;
+using namespace SCIRun;
 
 class RemapVector : public Module {
     ColumnMatrixIPort* irhsP;
@@ -85,22 +81,7 @@ void RemapVector::execute()
      }
      orhsH=orhs;
      orhsP->send(orhsH);
-}
-} // End namespace Modules
 } // End namespace DaveW
+}
 
 
-//
-// $Log$
-// Revision 1.3  2000/03/17 09:25:44  sparker
-// New makefile scheme: sub.mk instead of Makefile.in
-// Use XML-based files for module repository
-// Plus many other changes to make these two things work
-//
-// Revision 1.2  1999/09/22 18:43:26  dmw
-// added new GUI
-//
-// Revision 1.1  1999/09/02 04:49:25  dmw
-// more of Dave's modules
-//
-//

@@ -1,8 +1,7 @@
-#include <SCICore/Datatypes/GLPlanes.h>
+#include <Core/Datatypes/GLPlanes.h>
 #include <GL/gl.h>
 
-namespace SCICore {
-namespace GeomSpace  {
+namespace SCIRun {
 
 
 GLPlanes::GLPlanes(const GLVolumeRenderer* glvr) :
@@ -22,5 +21,4 @@ void GLPlanes::postDraw()
   glDisable(GL_ALPHA_TEST);
 }
 
-} // end namespace Datatypes
-} // end namespace SCICore
+} // End namespace SCIRun

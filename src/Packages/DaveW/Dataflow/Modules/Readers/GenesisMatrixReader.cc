@@ -7,28 +7,25 @@
  *
  */
 
-#include <PSECore/Dataflow/Module.h>
-#include <PSECore/Datatypes/MatrixPort.h>
-#include <SCICore/Malloc/Allocator.h>
-#include <SCICore/Datatypes/DenseMatrix.h>
-#include <PSECommon/share/share.h>
+#include <Dataflow/Network/Module.h>
+#include <Dataflow/Ports/MatrixPort.h>
+#include <Core/Malloc/Allocator.h>
+#include <Core/Datatypes/DenseMatrix.h>
+#include <Dataflow/share/share.h>
 #include <fstream>
 #include <string>
 
-namespace PSECommon {
-namespace Modules {
-
+namespace DaveW {
 // These should come from a gui...
 static char * vectorFile = "/home/cs/mcole/cbutson/vector";
 static char * dipoleFile = "/home/cs/mcole/cbutson/dipoles";
 
-using namespace PSECore::Datatypes;
-using namespace PSECore::Dataflow;
+using namespace SCIRun;
 using namespace std;
 
 
 
-class PSECommonSHARE GenesisMatrixReader : public Module {
+class PSECORESHARE GenesisMatrixReader : public Module {
 
   MatrixOPort* d_outport;
   MatrixHandle d_handle;
@@ -151,11 +148,10 @@ public:
   }
 };
 
-extern "C" PSECommonSHARE Module* make_GenesisMatrixReader(const clString& id) {
+extern "C" PSECORESHARE Module* make_GenesisMatrixReader(const clString& id) {
   return new GenesisMatrixReader(id);
 }
+} // End namespace DaveW
 
-} // End namespace Modules
-} // End namespace PSECommon
 
 

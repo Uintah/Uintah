@@ -8,7 +8,7 @@
  *   University of Utah
  *   March 1994
  *
- *  Distributed SCIRun changes:
+ *  Distributed Dataflow changes:
  *   Michelle Miller
  *   Nov. 1997
  *
@@ -18,19 +18,16 @@
 #ifndef SCI_project_Network_h
 #define SCI_project_Network_h 1
 
-#include <PSECore/share/share.h>
+#include <Dataflow/share/share.h>
 
-#include <SCICore/Containers/Array1.h>
-#include <SCICore/Containers/String.h>
-#include <SCICore/Thread/Mutex.h>
+#include <Core/Containers/Array1.h>
+#include <Core/Containers/String.h>
+#include <Core/Thread/Mutex.h>
 
 #include <map.h>
 
-namespace PSECore {
-namespace Dataflow {
+namespace SCIRun {
 
-using SCICore::Containers::clString;
-using SCICore::Containers::Array1;
 
 class Connection;
 
@@ -46,7 +43,7 @@ public:
     typedef map<int, Module*>		MapIntModule;
     
 private:
-    SCICore::Thread::Mutex the_lock;
+    Mutex the_lock;
     int read_file(const clString&);
 
     MapClStringConnection conn_ids;
@@ -96,38 +93,7 @@ public:
 
 };
 
-} // End namespace Dataflow
-} // End namespace PSECore
+} // End namespace SCIRun
 
-//
-// $Log$
-// Revision 1.6  2000/03/17 18:47:28  dahart
-// Included STL map header files where I forgot them, and removed less<>
-// parameter from map declarations
-//
-// Revision 1.5  2000/03/11 00:40:55  dahart
-// Replaced all instances of HashTable<class X, class Y> with the
-// Standard Template Library's std::map<class X, class Y, less<class X>>
-//
-// Revision 1.4  1999/08/28 17:54:29  sparker
-// Integrated new Thread library
-//
-// Revision 1.3  1999/08/26 23:59:07  moulding
-// changed SCICORESHARE to PSECORESHARE
-//
-// Revision 1.2  1999/08/17 06:38:23  sparker
-// Merged in modifications from PSECore to make this the new "blessed"
-// version of SCIRun/Uintah.
-//
-// Revision 1.1  1999/07/27 16:55:58  mcq
-// Initial commit
-//
-// Revision 1.3  1999/05/06 22:02:44  dav
-// added back .h files
-//
-// Revision 1.1.1.1  1999/04/24 23:12:29  dav
-// Import sources
-//
-//
 
 #endif

@@ -1,4 +1,3 @@
-//static char *id="@(#) $Id$";
 
 /*
  *  PathWriter.cc: Path Writer class
@@ -12,22 +11,16 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <SCICore/Datatypes/Path.h>
-#include <PSECore/Datatypes/PathPort.h>
-#include <PSECore/Dataflow/Module.h>
-#include <SCICore/Persistent/Pstreams.h>
-#include <SCICore/Malloc/Allocator.h>
-#include <SCICore/TclInterface/TCLvar.h>
+#include <Core/Datatypes/Path.h>
+#include <Dataflow/Ports/PathPort.h>
+#include <Dataflow/Network/Module.h>
+#include <Core/Persistent/Pstreams.h>
+#include <Core/Malloc/Allocator.h>
+#include <Core/TclInterface/TCLvar.h>
 
 
-namespace PSECommon {
-namespace Modules {
+namespace SCIRun {
 
-using namespace SCICore::Datatypes;
-using namespace PSECore::Dataflow;
-using namespace PSECore::Datatypes;
-using namespace SCICore::TclInterface;
-using namespace SCICore::PersistentSpace;
 
 class PathWriter : public Module {
     PathIPort* inport;
@@ -66,7 +59,6 @@ static void watcher(double pd, void* cbdata)
 
 void PathWriter::execute()
 {
-    using SCICore::Containers::Pio;
 
     PathHandle handle;
     if(!inport->get(handle))
@@ -90,29 +82,5 @@ void PathWriter::execute()
     delete stream;
 }
 
-} // End namespace Modules
-} // End namespace PSECommon
+} // End namespace SCIRun
 
-//
-// $Log$
-// Revision 1.3  2000/12/15 06:26:49  mcole
-// merge branch back into trunk
-//
-// Revision 1.2.2.1  2000/09/28 03:15:34  mcole
-// merge trunk into FIELD_REDESIGN branch
-//
-// Revision 1.2  2000/07/19 19:30:20  samsonov
-// Moving from DaveW
-//
-// Revision 1.1  2000/07/18 23:14:12  samsonov
-// PathWriter module is transfered from DaveW package
-//
-// Revision 1.2  2000/03/17 09:26:06  sparker
-// New makefile scheme: sub.mk instead of Makefile.in
-// Use XML-based files for module repository
-// Plus many other changes to make these two things work
-//
-// Revision 1.1  1999/12/02 22:06:50  dmw
-// added reader/writer modules for camera path
-//
-//

@@ -16,16 +16,16 @@
 
 #include <sci_config.h>
 
-#include <SCICore/Exceptions/AssertionFailed.h>
-#include <SCICore/Exceptions/ArrayIndexOutOfBounds.h>
+#include <Core/Exceptions/AssertionFailed.h>
+#include <Core/Exceptions/ArrayIndexOutOfBounds.h>
 
 #define ASSERTFAIL(string) \
-   SCI_THROW(SCICore::Exceptions::AssertionFailed(string, __FILE__, __LINE__));
+   SCI_THROW(SCIRun::AssertionFailed(string, __FILE__, __LINE__));
 
 #if SCI_ASSERTION_LEVEL >= 1
 #define ASSERTL1(condition) \
    if(!(condition)){ \
-      SCI_THROW(SCICore::Exceptions::AssertionFailed(#condition, __FILE__, __LINE__)); \
+      SCI_THROW(SCIRun::AssertionFailed(#condition, __FILE__, __LINE__)); \
    }
 #else
 #define ASSERTL1(condition)
@@ -34,7 +34,7 @@
 #if SCI_ASSERTION_LEVEL >= 2
 #define ASSERTL2(condition) \
    if(!(condition)){ \
-      SCI_THROW(SCICore::Exceptions::AssertionFailed(#condition, __FILE__, __LINE__)); \
+      SCI_THROW(SCIRun::AssertionFailed(#condition, __FILE__, __LINE__)); \
    }
 #else
 #define ASSERTL2(condition)
@@ -43,11 +43,11 @@
 #if SCI_ASSERTION_LEVEL >= 3
 #define ASSERTL3(condition) \
    if(!(condition)){ \
-      SCI_THROW(SCICore::Exceptions::AssertionFailed(#condition, __FILE__, __LINE__)); \
+      SCI_THROW(SCIRun::AssertionFailed(#condition, __FILE__, __LINE__)); \
    }
 #define CHECKARRAYBOUNDS(value, lower, upper) \
    if(value < lower || value >= upper){ \
-      SCI_THROW(SCICore::Exceptions::ArrayIndexOutOfBounds(value, lower, upper)); \
+      SCI_THROW(SCIRun::ArrayIndexOutOfBounds(value, lower, upper)); \
    }
 #else
 #define ASSERTL3(condition)

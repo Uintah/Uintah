@@ -1,34 +1,15 @@
-#
-# Makefile fragment for this subdirectory
-# $Id$
-#
+#Makefile fragment for the Packages/McQ directory
 
-include $(SRCTOP)/scripts/so_prologue.mk
+include $(OBJTOP_ABS)/scripts/largeso_prologue.mk
 
-SRCDIR := McQ
-SUBDIRS := $(SRCDIR)/Euler $(SRCDIR)/GUI
+SRCDIR := Packages/McQ
+SUBDIRS := \
+	$(SRCDIR)/Core \
+	$(SRCDIR)/Dataflow \
 
-include $(SRCTOP)/scripts/recurse.mk
+include $(OBJTOP_ABS)/scripts/recurse.mk
 
-ifeq ($(LARGESOS),yes)
-PSELIBS := PSECore SCICore
-else
-PSELIBS := PSECore/Dataflow PSECore/Datatypes SCICore/Containers \
-	SCICore/Geom SCICore/Datatypes SCICore/Thread \
-	SCICore/Persistent SCICore/Exceptions SCICore/TclInterface
-endif
-LIBS :=
+PSELIBS := 
+LIBS := $(TK_LIBRARY) $(GL_LIBS) -lm
 
-include $(SRCTOP)/scripts/so_epilogue.mk
-
-#
-# $Log$
-# Revision 1.2  2000/03/20 19:36:43  sparker
-# Added VPATH support
-#
-# Revision 1.1  2000/03/17 09:26:37  sparker
-# New makefile scheme: sub.mk instead of Makefile.in
-# Use XML-based files for module repository
-# Plus many other changes to make these two things work
-#
-#
+include $(OBJTOP_ABS)/scripts/largeso_epilogue.mk

@@ -1,23 +1,19 @@
 //////////////////////////////////////////////////////////////////////
 // Object.h - Represent a single begin/end pair.
-//
 // Copyright David K. McAllister July 1999.
-//
 //////////////////////////////////////////////////////////////////////
 
 #ifndef _object_h
 #define _object_h
 
-#include <Remote/Tools/Image/Image.h>
-#include <Remote/Tools/Math/BBox.h>
-#include <Remote/Tools/Math/Matrix44.h>
-#include <Remote/Tools/Math/Vector.h>
+#include <Packages/Remote/Tools/Image/Image.h>
+#include <Packages/Remote/Tools/Math/BBox.h>
+#include <Packages/Remote/Tools/Math/Matrix44.h>
+#include <Packages/Remote/Tools/Math/Vector.h>
 
 #include <vector>
 
 namespace Remote {
-namespace Tools {
-
 using namespace std;
 
 // Ripped directly from <GL/gl.h>
@@ -75,8 +71,7 @@ struct Object
   
 };
 
+} // End namespace Remote
 
-} // namespace Tools
-} // namespace Remote
 
 #endif

@@ -1,18 +1,15 @@
-#include <SCICore/Datatypes/GLVolRenState.h>
-#include <SCICore/Datatypes/GLVolumeRenderer.h>
-#include <SCICore/Datatypes/GLTexture3D.h>
-#include <SCICore/Datatypes/Brick.h>
-#include <SCICore/Datatypes/Polygon.h>
+#include <Core/Datatypes/GLVolRenState.h>
+#include <Core/Datatypes/GLVolumeRenderer.h>
+#include <Core/Datatypes/GLTexture3D.h>
+#include <Core/Datatypes/Brick.h>
+#include <Core/Datatypes/Polygon.h>
 #include <GL/gl.h>
 #include <vector>
 #include <stdlib.h>
 #include <iostream>
 
-namespace SCICore {
-namespace GeomSpace  {
+namespace SCIRun {
 
-using SCICore::Geometry::Polygon;
-using namespace SCICore::Datatypes;
 using std::vector;
 using std::cerr;
 using std::endl;
@@ -288,7 +285,6 @@ GLVolRenState::drawWireFrame(const Brick& brick)
 
 }
 
-}  // namespace GeomSpace
-} // namespace SCICore
+} // End namespace SCIRun
 
 

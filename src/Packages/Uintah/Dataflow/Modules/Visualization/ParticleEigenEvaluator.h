@@ -1,18 +1,14 @@
 #ifndef __VISUALIZATION_PARTICLEEIGENEVALUATOR_H__
 #define __VISUALIZATION_PARTICLEEIGENEVALUATOR_H__
 
-#include <PSECore/Dataflow/Module.h>
-#include <SCICore/Containers/String.h>
-#include <Uintah/Datatypes/TensorParticlesPort.h>
-#include <Uintah/Datatypes/ScalarParticlesPort.h>
-#include <Uintah/Datatypes/VectorParticlesPort.h>
+#include <Dataflow/Network/Module.h>
+#include <Core/Containers/String.h>
+#include <Packages/Uintah/Core/Datatypes/TensorParticlesPort.h>
+#include <Packages/Uintah/Core/Datatypes/ScalarParticlesPort.h>
+#include <Packages/Uintah/Core/Datatypes/VectorParticlesPort.h>
 
 namespace Uintah {
-namespace Modules {
-  using namespace SCICore::Containers;
-  using namespace PSECore::Dataflow;
-  using namespace SCICore::Datatypes;
-  using namespace PSECore::Datatypes;
+using namespace SCIRun;
 
   class ParticleEigenEvaluator: public Module {
   public:
@@ -28,9 +24,8 @@ namespace Modules {
 
     ScalarParticlesOPort *spout; // for eigen values
     VectorParticlesOPort *vpout; // for eigen vectors
+} // End namespace Uintah
   };
-}
-}
 #endif // __VISUALIZATION_EIGENEVALUATOR_H__
 
 

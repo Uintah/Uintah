@@ -39,26 +39,26 @@ POSSIBLE REVISIONS
 ----------------------------------------------------------------------*/
 
 
-#include <PSECore/Datatypes/GeometryPort.h>
-#include <PSECore/Datatypes/PathPort.h>
-#include <PSECore/Datatypes/CameraViewPort.h>
-#include <PSECore/Widgets/CrosshairWidget.h>
+#include <Dataflow/Ports/GeometryPort.h>
+#include <Dataflow/Ports/PathPort.h>
+#include <Dataflow/Ports/CameraViewPort.h>
+#include <Dataflow/Widgets/CrosshairWidget.h>
 
-#include <SCICore/Geom/View.h>
-#include <SCICore/Malloc/Allocator.h>
-#include <SCICore/Containers/HashTable.h>
-#include <SCICore/TclInterface/TCLvar.h>
-#include <SCICore/TclInterface/TCLTask.h>
-#include <SCICore/Datatypes/Path.h>
+#include <Core/Geom/View.h>
+#include <Core/Malloc/Allocator.h>
+#include <Core/Containers/HashTable.h>
+#include <Core/TclInterface/TCLvar.h>
+#include <Core/TclInterface/TCLTask.h>
+#include <Core/Datatypes/Path.h>
 
-#include <SCICore/Util/Timer.h>
-#include <SCICore/Thread/Time.h>
-#include <SCICore/Thread/CrowdMonitor.h>
-#include <SCICore/Thread/Semaphore.h>
-#include <SCICore/Thread/Mutex.h>
+#include <Core/Util/Timer.h>
+#include <Core/Thread/Time.h>
+#include <Core/Thread/CrowdMonitor.h>
+#include <Core/Thread/Semaphore.h>
+#include <Core/Thread/Mutex.h>
 
-#include <SCICore/Geometry/Quaternion.h>
-#include <SCICore/Geometry/Transform.h>
+#include <Core/Geometry/Quaternion.h>
+#include <Core/Geometry/Transform.h>
 #include <math.h>
 
 #include <iostream>
@@ -66,21 +66,9 @@ using std::cout;
 using namespace std;
 
 
-namespace PSECommon {
-namespace Modules {
+namespace SCIRun {
 
-using namespace PSECore::Dataflow;
-using namespace PSECore::Datatypes;
-using namespace SCICore::Containers;
-using namespace SCICore::GeomSpace;
-using namespace SCICore::Geometry;
-using namespace SCICore::TclInterface;
-using namespace SCICore::Datatypes;
 
-using PSECore::Widgets::CrosshairWidget;
-using SCICore::Thread::Semaphore;
-using SCICore::Thread::Mutex;
-using SCICore::Thread::Time;
   
   class EditPath : public Module {
   
@@ -761,6 +749,5 @@ bool EditPath::Msg_Box(const clString& title, const clString& message){
   }
 }
 
-} // End namespace Modules
-} // End namespace PSECommon
+} // End namespace SCIRun
 

@@ -13,15 +13,13 @@
 #ifndef SCI_Geom_Transform_h
 #define SCI_Geom_Transform_h 1
 
-#include <SCICore/Persistent/Persistent.h>
-#include <SCICore/Containers/LockingHandle.h>
-#include <SCICore/Geom/GeomContainer.h>
-#include <SCICore/Geometry/Transform.h>
+#include <Core/Persistent/Persistent.h>
+#include <Core/Containers/LockingHandle.h>
+#include <Core/Geom/GeomContainer.h>
+#include <Core/Geometry/Transform.h>
 
-namespace SCICore {
-namespace GeomSpace {
+namespace SCIRun {
 
-using SCICore::Geometry::Transform;
 
 class SCICORESHARE GeomTransform : public GeomContainer {
     Transform trans;
@@ -50,7 +48,6 @@ public:
     virtual bool saveobj(std::ostream&, const clString& format, GeomSave*);
 };
 
-} // End namespace SCICore
-} // End namespace GeomSpace
+} // End namespace SCIRun
 
 #endif

@@ -1,5 +1,5 @@
 #include "ROI.h"
-#include <SCICore/Geometry/Ray.h>
+#include <Core/Geometry/Ray.h>
 #include "ROIIterator.h"
 #include "Brick.h"
 #include "Polygon.h"
@@ -7,10 +7,8 @@
 #include "GLVolumeRenderer.h"
 #include "VolumeUtils.h"
 
-namespace SCICore {
-namespace GeomSpace  {
-
-using SCICore::Geometry::Ray;
+namespace Kurt {
+using namespace SCIRun;
 
 ROI::ROI(const GLVolumeRenderer* glvr ) :
   GLVolRenState( glvr )
@@ -98,6 +96,5 @@ ROI::drawWireFrame()
     GLVolRenState::drawWireFrame( *brick );
   }
 }
+} // End namespace Kurt
 
-}  // namespace GeomSpace
-} // namespace SCICore

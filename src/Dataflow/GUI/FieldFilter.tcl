@@ -1,4 +1,4 @@
-itcl_class PSECommon_Fields_FieldFilter {
+itcl_class Dataflow_Fields_FieldFilter {
     inherit Module
     constructor {config} {
 	set name FieldFilter

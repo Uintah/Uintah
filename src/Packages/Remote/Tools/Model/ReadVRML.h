@@ -1,7 +1,7 @@
 #ifndef _READVRML_H_
 #define _READVRML_H_
 
-#include <Remote/Tools/Model/Object.h>
+#include <Packages/Remote/Tools/Model/Object.h>
 
 #include <stdlib.h>
 
@@ -12,8 +12,6 @@
 #define OVERALL 5
 
 namespace Remote {
-namespace Tools {
-
 // "Configuration" definitions for compiler
 #define VRML_ATOF(a) (atof(a))
 #define VRML_ATOI(a) (atoi(a))
@@ -70,8 +68,7 @@ extern void s_Separator_end();
 
 extern void yyerror(char *s);
 
+} // End namespace Remote
 
-} // namespace Tools
-} // namespace Remote
 
 #endif

@@ -17,29 +17,25 @@
 #include <stdio.h>
 
 
-#include <SCICore/Containers/String.h>
-#include <SCICore/Thread/Time.h>
-#include <PSECore/Dataflow/Module.h> 
-#include <SCICore/Datatypes/ScalarFieldUG.h> 
+#include <Core/Containers/String.h>
+#include <Core/Thread/Time.h>
+#include <Dataflow/Network/Module.h> 
+#include <Core/Datatypes/ScalarFieldUG.h> 
 
-#include <SCICore/Geom/GeomTriangles.h>
-#include <SCICore/Geom/GeomGroup.h>
-#include <SCICore/Geom/GeomObj.h>
-#include <SCICore/Geom/GeomTri.h>
-#include <SCICore/Geom/Pt.h>
-#include <SCICore/Geometry/Point.h>
-#include <SCICore/Malloc/Allocator.h>
-#include <SCICore/Math/Trig.h>
+#include <Core/Geom/GeomTriangles.h>
+#include <Core/Geom/GeomGroup.h>
+#include <Core/Geom/GeomObj.h>
+#include <Core/Geom/GeomTri.h>
+#include <Core/Geom/Pt.h>
+#include <Core/Geometry/Point.h>
+#include <Core/Malloc/Allocator.h>
+#include <Core/Math/Trig.h>
 
-#include <PSECommon/Algorithms/Visualization/mcube_scan.h>
+#include <Core/Algorithms/Visualization/mcube_scan.h>
 
 
-namespace PSECommon {
-  namespace Algorithms {
+namespace SCIRun {
     
-    using namespace SCICore::Datatypes;
-    using namespace SCICore::GeomSpace;
-    using namespace SCICore::Geometry;
 
     class MCUG 
       {
@@ -132,7 +128,6 @@ namespace PSECommon {
       }
 
      
-  }  // namespace Algorithms
-}  // namespace PSECommon
+} // End namespace SCIRun
 
 #endif

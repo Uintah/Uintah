@@ -1,4 +1,3 @@
-//static char *id="@(#) $Id$";
 
 /*
  *  RescaleSurface.cc:  Rescale a surface
@@ -26,23 +25,9 @@
 #include <stdio.h>
 #include <Malloc/Allocator.h>
 
-namespace PSECommon {
-namespace Modules {
+namespace SCIRun {
 
-using PSECommon::Dataflow::Module;
-using PSECommon::Datatypes::SurfTree;
-using PSECommon::Datatypes::SurfaceIPort;
-using PSECommon::Datatypes::SurfaceOPort;
-using PSECommon::Datatypes::SurfaceHandle;
-using PSECommon::Datatypes::ScalarTriSurface;
-using PSECommon::Datatypes::PointsSurface;
-using PSECommon::Datatypes::TriSurface;
-using PSECommon::Datatypes::NodeHandle;
 
-using namespace SCICore::TclInterface;
-using SCICore::Containers::Array1;
-using SCICore::Geometry::Point;
-using SCICore::Geometry::BBox;
 
 class RescaleSurface : public Module {
     SurfaceIPort* isurface;
@@ -168,34 +153,5 @@ void RescaleSurface::execute()
     return;
 }
 
-} // End namespace Modules
-} // End namespace PSECommon
+} // End namespace SCIRun
 
-//
-// $Log$
-// Revision 1.4  2000/03/17 09:27:21  sparker
-// New makefile scheme: sub.mk instead of Makefile.in
-// Use XML-based files for module repository
-// Plus many other changes to make these two things work
-//
-// Revision 1.3  1999/08/25 03:48:00  sparker
-// Changed SCICore/CoreDatatypes to SCICore/Datatypes
-// Changed PSECore/CommonDatatypes to PSECore/Datatypes
-// Other Misc. directory tree updates
-//
-// Revision 1.2  1999/08/18 20:19:56  sparker
-// Eliminated copy constructor and clone in all modules
-// Added a private copy ctor and a private clone method to Module so
-//  that future modules will not compile until they remvoe the copy ctor
-//  and clone method
-// Added an ASSERTFAIL macro to eliminate the "controlling expression is
-//  constant" warnings.
-// Eliminated other miscellaneous warnings
-//
-// Revision 1.1  1999/07/27 16:57:57  mcq
-// Initial commit
-//
-// Revision 1.1.1.1  1999/04/24 23:12:31  dav
-// Import sources
-//
-//

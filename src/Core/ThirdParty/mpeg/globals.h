@@ -153,10 +153,10 @@ int Width;
 };
 
 FRAME {
-int NumberComponents;
-char ComponentFilePrefix[MAXIMUM_SOURCES][200];
-char ComponentFileSuffix[MAXIMUM_SOURCES][200];
-char ComponentFileName[MAXIMUM_SOURCES][200];
+int NumberCore/CCA/Components;
+char Core/CCA/ComponentFilePrefix[MAXIMUM_SOURCES][200];
+char Core/CCA/ComponentFileSuffix[MAXIMUM_SOURCES][200];
+char Core/CCA/ComponentFileName[MAXIMUM_SOURCES][200];
 int PHeight[MAXIMUM_SOURCES];
 int PWidth[MAXIMUM_SOURCES];
 int Height[MAXIMUM_SOURCES];
@@ -166,7 +166,7 @@ int vf[MAXIMUM_SOURCES];
 };
 
 FSTORE {
-int NumberComponents;
+int NumberCore/CCA/Components;
 IOBUF *Iob[MAXIMUM_SOURCES];
 };
 

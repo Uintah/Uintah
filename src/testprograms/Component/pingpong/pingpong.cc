@@ -1,7 +1,6 @@
 
 /*
  *  pingpong.cc
- *  $Id$
  *
  *  Written by:
  *   Steven G. Parker
@@ -13,13 +12,15 @@
  */
 
 #include <iostream>
-#include <Component/PIDL/PIDL.h>
+#include <Core/CCA/Component/PIDL/PIDL.h>
 #include "PingPong_impl.h"
 #include "PingPong_sidl.h"
-#include <SCICore/Thread/Time.h>
+#include <Core/Thread/Time.h>
 
 using std::cerr;
 using std::cout;
+
+using namespace SCIRun;
 
 void usage(char* progname)
 {
@@ -39,7 +40,6 @@ int main(int argc, char* argv[])
     using Component::PIDL::PIDL;
     using PingPong::PingPong_impl;
     using PingPong::PingPong;
-    using SCICore::Thread::Time;
 
     try {
 	PIDL::initialize(argc, argv);
@@ -97,7 +97,7 @@ int main(int argc, char* argv[])
 	    cerr << us << " us/rep\n";
 	}
 	PIDL::serveObjects();
-    } catch(const SCICore::Exceptions::Exception& e) {
+    } catch(const Exception& e) {
 	cerr << "Caught exception:\n";
 	cerr << e.message() << '\n';
 	abort();
@@ -108,25 +108,3 @@ int main(int argc, char* argv[])
     return 0;
 }
 
-//
-// $Log$
-// Revision 1.4  1999/09/26 06:13:00  sparker
-// Added (distributed) reference counting to PIDL objects.
-// Began campaign against memory leaks.  There seem to be no more
-//   per-message memory leaks.
-// Added a test program to flush out memory leaks
-// Fixed other Component testprograms so that they work with ref counting
-// Added a getPointer method to PIDL handles
-//
-// Revision 1.3  1999/09/21 06:08:14  sparker
-// Removed extraneous using statement
-//
-// Revision 1.2  1999/09/17 05:08:45  sparker
-// Updates to work with automatic sidl code generation
-//
-// Revision 1.1  1999/09/07 07:35:38  sparker
-// Now builds some of the test programs, including a pingpong test
-// program for the new component model
-//
-//
-//

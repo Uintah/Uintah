@@ -10,16 +10,12 @@
  *  Copyright (C) 1999 SCI Group
  */
 
-#include <DaveW/Datatypes/General/VectorFieldMI.h>
-#include <SCICore/Geometry/Vector.h>
-#include <SCICore/Malloc/Allocator.h>
+#include <Packages/DaveW/Core/Datatypes/General/VectorFieldMI.h>
+#include <Core/Geometry/Vector.h>
+#include <Core/Malloc/Allocator.h>
 
 namespace DaveW {
-namespace Datatypes {
-
-using SCICore::Containers::Array1;
-using SCICore::Geometry::Cross;
-using namespace SCICore::Datatypes;
+using namespace SCIRun;
 
 static Persistent* make_VectorFieldMI()
 {
@@ -130,8 +126,6 @@ int VectorFieldMI::interpolate(const Point& p, Vector& value)
 
 void VectorFieldMI::io(Piostream& stream)
 {
-  using SCICore::PersistentSpace::Pio;
-  using SCICore::Containers::Pio;    
   using DaveW::Datatypes::Pio;
 
   VectorFieldRG* rg = dynamic_cast<VectorFieldRG*> (field);
@@ -220,15 +214,6 @@ MeshHandle VectorFieldMI::getMesh()  {
     return(((VectorFieldUG*)(field))->mesh);
    }
    return(NULL);
-}
-} // End namespace Datatypes
 } // End namespace DaveW
+}
 
-//
-// $Log$
-// Revision 1.2  1999/09/08 02:26:18  sparker
-// Various #include cleanups
-//
-// Revision 1.1  1999/09/02 04:45:51  dmw
-// magnetic field
-//

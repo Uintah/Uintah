@@ -1,5 +1,5 @@
 /*
- *  GuiServer.cc: Server running on Master SCIRun to service remote GUI
+ *  GuiServer.cc: Server running on Master Dataflow to service remote GUI
  *   requests
  *
  *  Sets up a listening socket for incoming client requests.
@@ -17,10 +17,10 @@
  */
 
 #ifndef _WIN32
-#include <SCICore/TclInterface/GuiServer.h>
+#include <Core/TclInterface/GuiServer.h>
 
-#include <SCICore/Containers/Array1.h>
-#include <SCICore/TclInterface/TCLTask.h>
+#include <Core/Containers/Array1.h>
+#include <Core/TclInterface/TCLTask.h>
 #include <unistd.h>
 #include <string>
 #include <sys/types.h>
@@ -32,8 +32,7 @@ using namespace std;
 #define DEBUG 0
 extern "C" Tcl_Interp* the_interp;
 
-namespace SCICore {
-namespace TclInterface {
+namespace SCIRun {
 
 GuiServer::GuiServer()
     : gui_socket(0)
@@ -194,6 +193,5 @@ cerr << "GuiServer::getValue(): string = " << msg->un.tstring << endl;
     } 
 }
 
-} // End namespace TclInterface
-} // End namespace SCICore
+} // End namespace SCIRun
 #endif // win32

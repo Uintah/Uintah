@@ -24,5 +24,5 @@ const char* TypeMismatchException::message() const
 
 const char* TypeMismatchException::type() const
 {
-    return "Uintah::Exceptions::TypeMismatchException";
+    return "Packages/Uintah::Exceptions::TypeMismatchException";
 }

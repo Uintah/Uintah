@@ -10,19 +10,15 @@
  *  Copyright (C) 1997 SCI Group
  */
 
-#ifndef SCI_DaveW_Datatypes_Sample2D_h
-#define SCI_DaveW_Datatypes_Sample2D_h 1
+#ifndef SCI_Packages/DaveW_Datatypes_Sample2D_h
+#define SCI_Packages/DaveW_Datatypes_Sample2D_h 1
 
-#include <SCICore/Containers/Array1.h>
-#include <SCICore/Containers/String.h>
-#include <SCICore/Math/MusilRNG.h>
+#include <Core/Containers/Array1.h>
+#include <Core/Containers/String.h>
+#include <Core/Math/MusilRNG.h>
 
 namespace DaveW {
-namespace Datatypes {
-
-using SCICore::Containers::Array1;
-using SCICore::Containers::clString;
-using SCICore::PersistentSpace::Piostream;
+using namespace SCIRun;
 
 class Sample2D {
     void genSamplesJittered(Array1<double>&x, Array1<double>&y, 
@@ -59,16 +55,6 @@ public:
     void genSamples(Array1<double>& x, Array1<double>& y, Array1<double>& w,
 		    int ns);
 };
-
-} // End namespace Datatypes
 } // End namespace DaveW
-//
-// $Log$
-// Revision 1.1  1999/08/23 02:52:58  dmw
-// Dave's Datatypes
-//
-// Revision 1.2  1999/05/03 04:52:03  dmw
-// Added and updated DaveW Datatypes/Modules
-//
-//
+
 #endif

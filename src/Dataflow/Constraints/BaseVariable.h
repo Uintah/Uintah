@@ -15,17 +15,14 @@
 #ifndef SCI_project_Base_Variable_h
 #define SCI_project_Base_Variable_h 1
 
-#include <PSECore/share/share.h>
+#include <Dataflow/share/share.h>
 
-#include <PSECore/Constraints/VarCore.h>
-#include <SCICore/Containers/Array1.h>
-#include <SCICore/Containers/String.h>
+#include <Dataflow/Constraints/VarCore.h>
+#include <Core/Containers/Array1.h>
+#include <Core/Containers/String.h>
 
-namespace PSECore {
-namespace Constraints {
+namespace SCIRun {
 
-using SCICore::Containers::clString;
-using SCICore::Containers::Array1;
 
 /* Priority levels */
 // P_constant is for a variable in reference to a constraint.
@@ -144,33 +141,7 @@ operator<<( std::ostream& os, BaseVariable& v )
    return os;
 }
 
-} // End namespace Constraints
-} // End namespace PSECore
+} // End namespace SCIRun
 
-//
-// $Log$
-// Revision 1.5  1999/10/07 02:07:15  sparker
-// use standard iostreams and complex type
-//
-// Revision 1.4  1999/09/08 02:26:37  sparker
-// Various #include cleanups
-//
-// Revision 1.3  1999/08/26 23:57:01  moulding
-// changed SCICORESHARE to PSECORESHARE
-//
-// Revision 1.2  1999/08/17 06:38:16  sparker
-// Merged in modifications from PSECore to make this the new "blessed"
-// version of SCIRun/Uintah.
-//
-// Revision 1.1  1999/07/27 16:55:53  mcq
-// Initial commit
-//
-// Revision 1.3  1999/05/06 20:17:05  dav
-// added back PSECore .h files
-//
-// Revision 1.1.1.1  1999/04/24 23:12:52  dav
-// Import sources
-//
-//
 
 #endif

@@ -2,7 +2,7 @@
  *  ParticleColorMapKey.cc: create a key for colormap
  *
  *  Written by:
- *   Kurt Zimmerman
+ *   Packages/Kurt Zimmerman
  *   Department of Computer Science
  *   University of Utah
  *   June 2000
@@ -10,21 +10,13 @@
  *  Copyright (C) 2000 SCI Group
  */
 
-#include <PSECore/Dataflow/Module.h>
-#include <PSECore/Datatypes/ColorMapPort.h>
-#include <PSECore/Datatypes/GeometryPort.h>
-#include <Kurt/Datatypes/VisParticleSetPort.h>
+#include <Dataflow/Network/Module.h>
+#include <Dataflow/Ports/ColorMapPort.h>
+#include <Dataflow/Ports/GeometryPort.h>
+#include <Packages/Kurt/Core/Datatypes/VisParticleSetPort.h>
 
-namespace PSECommon {
 namespace Kurt {
-
-using namespace PSECore::Dataflow;
-using namespace PSECore::Datatypes;
-using namespace SCICore::TclInterface;
-using PSECore::Datatypes::VisParticleSetIPort;
-using PSECore::Datatypes::ColorMapOPort;
-using PSECore::Datatypes::ColorMapIPort;
-using PSECore::Datatypes::GeometryOPort;
+using namespace SCIRun;
 
 class ParticleColorMapKey : public Module {
   ColorMapIPort *imap;
@@ -37,6 +29,5 @@ public:
   virtual ~ParticleColorMapKey();
   virtual void execute();
 };
-
-} // End namespace Modules
 } // End namespace Kurt
+

@@ -1,16 +1,13 @@
 ##
  #  EditPath.tcl
- #
  #  Written by:
  #   David Weinstein & Alexei Samsonov
  #   Department of Computer Science
  #   University of Utah
  #   February 1999, July 2000
- #
  #  Copyright (C) 1999, 2000  SCI Group
- #
  ##
-itcl_class PSECommon_Salmon_EditPath {
+itcl_class Dataflow_Salmon_EditPath {
     inherit Module
    
     constructor {config} {
@@ -51,7 +48,6 @@ itcl_class PSECommon_Salmon_EditPath {
 	
 	#**************************************************************
 	# editor frame
-	#
 
 	frame $ef.fsb
 	frame $ef.btn
@@ -100,7 +96,6 @@ itcl_class PSECommon_Salmon_EditPath {
 
 	#***************************************************************
 	# driver frame
-	#
 	frame $df.ftest
 	frame $df.info -relief sunken
 	frame $df.modes

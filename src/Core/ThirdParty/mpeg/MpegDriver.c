@@ -12,7 +12,7 @@
 /* link against mpeg.c */
 
 extern int StartMpegEncoder(int, char**);
-extern void SCIRunEncode(int lasttime, unsigned char* imageY,
+extern void DataflowEncode(int lasttime, unsigned char* imageY,
 			 unsigned char* imageU, unsigned char* imageV);
 
 int main() {
@@ -122,13 +122,13 @@ int main() {
       }
      	
     
-    /* call SCIRunEncode(0) after each image is generated. */
-    printf("Calling SCIRunEncode()...\n");
-    SCIRunEncode(0, imageY, imageU, imageV);
+    /* call DataflowEncode(0) after each image is generated. */
+    printf("Calling DataflowEncode()...\n");
+    DataflowEncode(0, imageY, imageU, imageV);
   }
 
-  /* call SCIRunEncode(1) to encode remaining images and dump file. */
-  SCIRunEncode(1, imageY, imageU, imageV);
+  /* call DataflowEncode(1) to encode remaining images and dump file. */
+  DataflowEncode(1, imageY, imageU, imageV);
 
   return 0;
 

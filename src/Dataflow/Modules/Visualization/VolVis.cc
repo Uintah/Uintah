@@ -1,4 +1,3 @@
-//static char *id="@(#) $Id$";
 
 /*
  *  VolVis.cc:  Volume visualization module on structured grids.
@@ -13,46 +12,46 @@
  */
 
 
-#include <PSECore/Dataflow/Module.h>
-#include <SCICore/Datatypes/ScalarFieldRG.h>
-#include <PSECore/Datatypes/ScalarFieldPort.h>
-#include <PSECore/Datatypes/GeometryPort.h>
-#include <PSECore/Datatypes/ColorMapPort.h>
+#include <Dataflow/Network/Module.h>
+#include <Core/Datatypes/ScalarFieldRG.h>
+#include <Dataflow/Ports/ScalarFieldPort.h>
+#include <Dataflow/Ports/GeometryPort.h>
+#include <Dataflow/Ports/ColorMapPort.h>
 
-#include <SCICore/Geometry/BBox.h>
-#include <SCICore/Geom/View.h>
-#include <SCICore/Geom/TCLView.h>
-#include <SCICore/Geom/TCLGeom.h>
-#include <SCICore/Geometry/Point.h>
-#include <SCICore/Geometry/Vector.h>
-#include <SCICore/Thread/Parallel.h>
-#include <SCICore/Thread/Thread.h>
+#include <Core/Geometry/BBox.h>
+#include <Core/Geom/View.h>
+#include <Core/Geom/TCLView.h>
+#include <Core/Geom/TCLGeom.h>
+#include <Core/Geometry/Point.h>
+#include <Core/Geometry/Vector.h>
+#include <Core/Thread/Parallel.h>
+#include <Core/Thread/Thread.h>
 
-#include <SCICore/Geom/GeomOpenGL.h>
+#include <Core/Geom/GeomOpenGL.h>
 #include <GL/gl.h>
 #include <GL/glu.h>
 #include <GL/glx.h>
 
 
-#include <SCICore/Malloc/Allocator.h>
-#include <SCICore/TclInterface/TCLTask.h>
-#include <SCICore/TclInterface/TCL.h>
+#include <Core/Malloc/Allocator.h>
+#include <Core/TclInterface/TCLTask.h>
+#include <Core/TclInterface/TCL.h>
 
 #include <tcl.h>
 #include <tk.h>
 
-#include <SCICore/Containers/Array2.h>
-#include <SCICore/Containers/String.h>
+#include <Core/Containers/Array2.h>
+#include <Core/Containers/String.h>
 #include <iostream>
 using std::cerr;
 using std::endl;
 #include <stdlib.h>
 #include <string.h>
-#include <SCICore/Util/Timer.h>
+#include <Core/Util/Timer.h>
 
-#include <SCICore/Math/Trig.h>
+#include <Core/Math/Trig.h>
 
-#include <PSECommon/Modules/Visualization/FastRender.h>
+#include <Dataflow/Modules/Visualization/FastRender.h>
 #include "kuswik.h"
 
 
@@ -80,15 +79,8 @@ extern Tcl_Interp* the_interp;
 
 extern "C" GLXContext OpenGLGetContext(Tcl_Interp*, char*);
 
-namespace PSECommon {
-namespace Modules {
+namespace SCIRun {
 
-using namespace PSECore::Dataflow;
-using namespace PSECore::Datatypes;
-using namespace SCICore::TclInterface;
-using namespace SCICore::GeomSpace;
-using namespace SCICore::Containers;
-using namespace SCICore::Thread;
 
 typedef void (*FR) ( double, double, double, double, double, double, double,
 		    double *, double *, double *, double *, double, double,
@@ -228,11 +220,7 @@ class VolVis : public Module {
   // allow the user to specify the step size for Levoy's algorithm
   TCLint stepSize;
   
-  //
-  //
-  //
   // initialize an OpenGL window
-  //
   
   int makeCurrent();
 
@@ -1707,59 +1695,5 @@ VolVis::CalculateRayIncrements ()
   imagelock.unlock();
 }
 
-} // End namespace Modules
-} // End namespace PSECommon
+} // End namespace SCIRun
 
-//
-// $Log$
-// Revision 1.9  2000/03/20 21:47:42  yarden
-// Linux port: convert int to GLenum
-//
-// Revision 1.8  2000/03/17 09:27:36  sparker
-// New makefile scheme: sub.mk instead of Makefile.in
-// Use XML-based files for module repository
-// Plus many other changes to make these two things work
-//
-// Revision 1.7  1999/10/07 02:07:09  sparker
-// use standard iostreams and complex type
-//
-// Revision 1.6  1999/08/29 00:46:49  sparker
-// Integrated new thread library
-// using statement tweaks to compile with both MipsPRO and g++
-// Thread library bug fixes
-//
-// Revision 1.5  1999/08/25 03:48:12  sparker
-// Changed SCICore/CoreDatatypes to SCICore/Datatypes
-// Changed PSECore/CommonDatatypes to PSECore/Datatypes
-// Other Misc. directory tree updates
-//
-// Revision 1.4  1999/08/19 23:17:59  sparker
-// Removed a bunch of #include <SCICore/Util/NotFinished.h> statements
-// from files that did not need them.
-//
-// Revision 1.3  1999/08/18 20:20:13  sparker
-// Eliminated copy constructor and clone in all modules
-// Added a private copy ctor and a private clone method to Module so
-//  that future modules will not compile until they remvoe the copy ctor
-//  and clone method
-// Added an ASSERTFAIL macro to eliminate the "controlling expression is
-//  constant" warnings.
-// Eliminated other miscellaneous warnings
-//
-// Revision 1.2  1999/08/17 06:37:55  sparker
-// Merged in modifications from PSECore to make this the new "blessed"
-// version of SCIRun/Uintah.
-//
-// Revision 1.1  1999/07/27 16:58:17  mcq
-// Initial commit
-//
-// Revision 1.3  1999/07/07 21:10:30  dav
-// added beginnings of support for g++ compilation
-//
-// Revision 1.2  1999/04/27 22:58:03  dav
-// updates in Modules for Datatypes
-//
-// Revision 1.1.1.1  1999/04/24 23:12:34  dav
-// Import sources
-//
-//

@@ -14,17 +14,17 @@
 #pragma warning(disable:4291) // quiet the visual C++ compiler
 #endif
 
-#include <SCICore/Datatypes/TriSurface.h>
+#include <Core/Datatypes/TriSurface.h>
 
-#include <SCICore/Util/Assert.h>
-#include <SCICore/Util/NotFinished.h>
-#include <SCICore/Containers/TrivialAllocator.h>
-#include <SCICore/Containers/Queue.h>
-#include <SCICore/Datatypes/SurfTree.h>
-#include <SCICore/Geometry/BBox.h>
-#include <SCICore/Geometry/Grid.h>
-#include <SCICore/Math/MiscMath.h>
-#include <SCICore/Malloc/Allocator.h>
+#include <Core/Util/Assert.h>
+#include <Core/Util/NotFinished.h>
+#include <Core/Containers/TrivialAllocator.h>
+#include <Core/Containers/Queue.h>
+#include <Core/Datatypes/SurfTree.h>
+#include <Core/Geometry/BBox.h>
+#include <Core/Geometry/Grid.h>
+#include <Core/Math/MiscMath.h>
+#include <Core/Malloc/Allocator.h>
 
 #include <iostream>
 using std::cerr;
@@ -34,20 +34,8 @@ using std::cerr;
 #define drand48() rand()
 #endif
 
-namespace SCICore {
-namespace Datatypes {
+namespace SCIRun {
 
-using SCICore::Containers::TrivialAllocator;
-using SCICore::Containers::Queue;
-using SCICore::Geometry::Cross;
-using SCICore::Math::Round;
-using SCICore::Math::Max;
-using SCICore::Math::Min;
-using SCICore::Math::Abs;
-using SCICore::Math::Sign;
-using SCICore::Math::RoundUp;
-using SCICore::Geometry::Dot;
-using SCICore::Geometry::AffineCombination;
 
 static TrivialAllocator TSElement_alloc(sizeof(TSElement));
 
@@ -974,8 +962,6 @@ void TriSurface::remove_triangle(int i) {
 
 void TriSurface::io(Piostream& stream) {
 
-    using SCICore::PersistentSpace::Pio;
-    using SCICore::Containers::Pio;
 
     remove_empty_index();
     int version=stream.begin_class("TriSurface", TRISURFACE_VERSION);
@@ -1147,8 +1133,6 @@ void TriSurface::distribute_samples()
 
 void Pio(Piostream& stream, TSElement*& data)
 {
-    using SCICore::PersistentSpace::Pio;
-    using SCICore::Containers::Pio;
 
     if(stream.reading())
 	data=new TSElement(0,0,0);
@@ -1161,7 +1145,6 @@ void Pio(Piostream& stream, TSElement*& data)
 
 void Pio(Piostream& stream, TSEdge*& data)
 {
-    using SCICore::PersistentSpace::Pio;
 
     if(stream.reading())
 	data=new TSEdge(0,0);
@@ -1171,5 +1154,4 @@ void Pio(Piostream& stream, TSEdge*& data)
     stream.end_cheap_delim();
 }
 
-} // End namespace Datatypes
-} // End namespace SCICore
+} // End namespace SCIRun

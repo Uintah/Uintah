@@ -1,26 +1,19 @@
 #ifndef VISPARTICLESET_H
 #define VISPARTICLESET_H
 
-#include <SCICore/Datatypes/Datatype.h>
-#include <SCICore/Containers/LockingHandle.h>
-#include <Uintah/Interface/DataArchive.h>
-#include <Uintah/Grid/ParticleVariable.h>
-#include <SCICore/Persistent/Persistent.h>
-#include <SCICore/Geometry/Point.h>
-#include <SCICore/Geometry/Vector.h>
+#include <Core/Datatypes/Datatype.h>
+#include <Core/Containers/LockingHandle.h>
+#include <Packages/Uintah/Interface/DataArchive.h>
+#include <Packages/Uintah/Grid/ParticleVariable.h>
+#include <Core/Persistent/Persistent.h>
+#include <Core/Geometry/Point.h>
+#include <Core/Geometry/Vector.h>
 #include <iostream>
 
 namespace Kurt {
-namespace Datatypes {
-
 using Uintah::DataArchive;
 using Uintah::ParticleVariable;
-using SCICore::Datatypes::Datatype;
-using SCICore::Containers::LockingHandle;
-using SCICore::PersistentSpace::Piostream;
-using SCICore::PersistentSpace::PersistentTypeID;
-using SCICore::Geometry::Point;
-using SCICore::Geometry::Vector;
+using namespace SCIRun;
 
 /**************************************
 
@@ -33,7 +26,7 @@ GENERAL INFORMATION
 
    VisParticleSet.h
 
-   Kurt Zimmerman
+   Packages/Kurt Zimmerman
    Department of Computer Science
    University of Utah
 
@@ -113,7 +106,6 @@ private:
   ParticleVariable<double> scalars;
   ParticleVariable<Vector> vectors;
 };
+} // End namespace Kurt
 
-} // end namespace Datatypes
-} // end namespace Kurt
 #endif

@@ -1,9 +1,11 @@
-// SCICoreDLLEntry.cc written by Chris Moulding 7/99
+// CoreDLLEntry.cc written by Chris Moulding 7/99
 
 #ifdef _WIN32
 
 #include <afxwin.h>
 #include <stdio.h>
+
+using namespace SCIRun;
 
 BOOL APIENTRY DllMain(HANDLE hModule, 
                       DWORD  ul_reason_for_call, 
@@ -11,7 +13,7 @@ BOOL APIENTRY DllMain(HANDLE hModule,
 {
 #ifdef DEBUG
 	char reason[100]="\0";
-	printf("\n*** SCICored.dll is initializing {%s,%d} ***\n",__FILE__,__LINE__);
+	printf("\n*** Cored.dll is initializing {%s,%d} ***\n",__FILE__,__LINE__);
 	printf("*** hModule = %d ***\n",hModule);
 	switch (ul_reason_for_call){
 	  case DLL_PROCESS_ATTACH:sprintf(reason,"DLL_PROCESS_ATTACH"); break;

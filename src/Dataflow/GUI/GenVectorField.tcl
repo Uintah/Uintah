@@ -1,5 +1,5 @@
 
-itcl_class PSECommon_Fields_GenVectorField {
+itcl_class Dataflow_Fields_GenVectorField {
 
     inherit Module
 

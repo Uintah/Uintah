@@ -24,7 +24,7 @@ DESCRIPTION
     3) Number of arguments supplied to evaluation functions should be more
     or equal to dom_dims value; otherwise DimensionMismatch(int, int) is
     thrown.
-    4) Fast evaluation is not quaranteed (see SCICore::Math:Function documen-
+    4) Fast evaluation is not quaranteed (see Core::Math:Function documen-
     tation). Also, setting fast evaluation mode required several second of time
     overhead per component and could take significant time sometimes. So there is
     tradeoff between fast and slow kinds of evaluation.
@@ -34,7 +34,7 @@ PATTERNS
 WARNING    
     1) No methods provided for redefinition of domain dimensions.In order
     to redefine it one needs to create new object
-    2) Components are zero-numbered (i.e. for vector 0, 1, 2)
+    2) Core/CCA/Components are zero-numbered (i.e. for vector 0, 1, 2)
 
 POSSIBLE REVISIONS
     Adding errors handling in case of bad args supplied 
@@ -43,29 +43,22 @@ POSSIBLE REVISIONS
 #ifndef SCI_project_GenFunction_h
 #define SCI_project_GenFunction_h 1
 
-#include <SCICore/share/share.h>
-#include <SCICore/Datatypes/Datatype.h>
-#include <SCICore/Containers/LockingHandle.h>
-#include <SCICore/Math/function.h>
-#include <SCICore/Geometry/Vector.h>
-#include <SCICore/Geometry/Point.h>
-#include <SCICore/Util/Assert.h>
-#include <SCICore/Util/NotFinished.h>
-#include <SCICore/Exceptions/DimensionMismatch.h>
-#include <SCICore/Exceptions/InternalError.h>
+#include <Core/share/share.h>
+#include <Core/Datatypes/Datatype.h>
+#include <Core/Containers/LockingHandle.h>
+#include <Core/Math/function.h>
+#include <Core/Geometry/Vector.h>
+#include <Core/Geometry/Point.h>
+#include <Core/Util/Assert.h>
+#include <Core/Util/NotFinished.h>
+#include <Core/Exceptions/DimensionMismatch.h>
+#include <Core/Exceptions/InternalError.h>
 #include <string>
 #include <vector>
 
-namespace SCICore{
-namespace Datatypes{
+namespace SCIRun {
   
-  using SCICore::Geometry::Vector;
-  using SCICore::PersistentSpace::Piostream;
-  using SCICore::PersistentSpace::PersistentTypeID;
-  using SCICore::Containers::LockingHandle;
 
-  using namespace SCICore::Math;
-  using namespace SCICore::Exceptions;
 
   using std::string;
   
@@ -97,7 +90,7 @@ namespace Datatypes{
     //////////
     // If needed, reset pointers of fast-evaluation
     // /could be long process, for it involves compilation
-    // of some source files - see SCICore::Math::Function.h 
+    // of some source files - see Function.h 
     // for details/
     void    refresh_fast_eval();
  
@@ -174,7 +167,6 @@ namespace Datatypes{
     return (is_fast && fevals[nc])?(fevals[nc](vrs)):(fns[nc]->eval(vrs));
   }
 
-} // Datatypes
-} // SCICore
+} // End namespace SCIRun
 
 #endif

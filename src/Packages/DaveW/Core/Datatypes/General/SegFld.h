@@ -11,28 +11,21 @@
  *  Copyright (C) 1996 SCI Group
  */
 
-#ifndef SCI_DaveW_Datatypes_SegFld_h
-#define SCI_DaveW_Datatypes_SegFld_h 1
+#ifndef SCI_Packages/DaveW_Datatypes_SegFld_h
+#define SCI_Packages/DaveW_Datatypes_SegFld_h 1
 
-#include <SCICore/Containers/Array1.h>
-#include <SCICore/Containers/Array2.h>
-#include <SCICore/Containers/Array3.h>
-#include <SCICore/Containers/String.h>
-#include <SCICore/Containers/Queue.h>
-#include <SCICore/Datatypes/ScalarFieldRGchar.h>
-#include <SCICore/Datatypes/ScalarFieldRGint.h>
-#include <SCICore/Persistent/Pstreams.h>
+#include <Core/Containers/Array1.h>
+#include <Core/Containers/Array2.h>
+#include <Core/Containers/Array3.h>
+#include <Core/Containers/String.h>
+#include <Core/Containers/Queue.h>
+#include <Core/Datatypes/ScalarFieldRGchar.h>
+#include <Core/Datatypes/ScalarFieldRGint.h>
+#include <Core/Persistent/Pstreams.h>
 
 namespace DaveW {
-namespace Datatypes {
+using namespace SCIRun;
 
-using SCICore::Containers::LockingHandle;
-using SCICore::Containers::Array1;
-using SCICore::Containers::clString;
-using SCICore::PersistentSpace::Piostream;
-using SCICore::PersistentSpace::PersistentTypeID;
-
-using namespace SCICore::Datatypes;
 
 class tripleInt {
 public:
@@ -61,7 +54,7 @@ public:
     inline int get_index(int type, int size) {return ((type<<28)+size);}
 
     void audit();
-    void printComponents();
+    void printCore/CCA/Components();
     void compress();
 
     ScalarFieldRGchar* getTypeFld();
@@ -70,34 +63,16 @@ public:
     void bldFromCharOld(ScalarFieldRGchar*);
 //    void setCompsFromGrid();
 //    void setGridFromComps();
-    void annexComponent(int old_comp, int new_comp);
-    void killSmallComponents(int min);
+    void annexCore/CCA/Component(int old_comp, int new_comp);
+    void killSmallCore/CCA/Components(int min);
     virtual void io(Piostream&);
     static PersistentTypeID type_id;
 };
 typedef LockingHandle<SegFld> SegFldHandle;
 
 void Pio( Piostream &, tripleInt & );
-
-} // End namespace Datatypes
 } // End namespace DaveW
 
-//
-// $Log$
-// Revision 1.3  2000/03/04 00:16:32  dmw
-// update some DaveW stuff
-//
-// Revision 1.2  1999/08/25 03:47:34  sparker
-// Changed SCICore/CoreDatatypes to SCICore/Datatypes
-// Changed PSECore/CommonDatatypes to PSECore/Datatypes
-// Other Misc. directory tree updates
-//
-// Revision 1.1  1999/08/23 02:53:00  dmw
-// Dave's Datatypes
-//
-// Revision 1.1  1999/05/03 04:52:05  dmw
-// Added and updated DaveW Datatypes/Modules
-//
-//
+
 
 #endif

@@ -2,9 +2,9 @@
 #ifndef UINTAH_HOMEBREW_ChemistryInterface_H
 #define UINTAH_HOMEBREW_ChemistryInterface_H
 
-#include <Uintah/Interface/ChemistryInterfaceP.h>
-#include <Uintah/Grid/Handle.h>
-#include <Uintah/Grid/RefCounted.h>
+#include <Packages/Uintah/Interface/ChemistryInterfaceP.h>
+#include <Packages/Uintah/Grid/Handle.h>
+#include <Packages/Uintah/Grid/RefCounted.h>
 
 class ChemistryInterface : public RefCounted {
 public:

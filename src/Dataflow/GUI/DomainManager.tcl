@@ -1,4 +1,4 @@
-itcl_class PSECommon_Domain_DomainManager {
+itcl_class Dataflow_Domain_DomainManager {
     inherit Module
 
     constructor {config} {

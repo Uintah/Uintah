@@ -16,14 +16,16 @@
  *  
  */
 
-#include <SCICore/Util/NotFinished.h>
-#include <PSECommon/Dataflow/Connection.h>
+#include <Core/Util/NotFinished.h>
+#include <Dataflow/Dataflow/Connection.h>
 #include <Dataflow/Module.h>
-#include <PSECommon/Datatypes/TYPEPort.h>
-#include <PSECommon/Datatypes/TYPE.h>
-#include <PSECommon/Datatypes/BooleanPort.h>
-#include <PSECommon/Datatypes/Boolean.h>
-#include <SCICore/Malloc/Allocator.h>
+#include <Dataflow/Datatypes/TYPEPort.h>
+#include <Dataflow/Datatypes/TYPE.h>
+#include <Dataflow/Datatypes/BooleanPort.h>
+#include <Dataflow/Datatypes/Boolean.h>
+#include <Core/Malloc/Allocator.h>
+
+using namespace SCIRun;
 
 class TYPEIterator : public Module {
     TYPEIPort* initial_iport;

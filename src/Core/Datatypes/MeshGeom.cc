@@ -1,17 +1,14 @@
 //  MeshGeom.cc - A group of Tets in 3 space
-//
 //  Written by:
 //   Eric Kuehne
 //   Department of Computer Science
 //   University of Utah
 //   April 2000
-//
 //  Copyright (C) 2000 SCI Institute
 
-#include <SCICore/Datatypes/MeshGeom.h>
+#include <Core/Datatypes/MeshGeom.h>
 
-namespace SCICore {
-namespace Datatypes {
+namespace SCIRun {
 
 PersistentTypeID MeshGeom::type_id("MeshGeom", "Datatype", 0);
 
@@ -35,5 +32,4 @@ MeshGeom::io(Piostream&)
 }
 
 
-} // end Datatypes
-} // end SCICore
+} // End namespace SCIRun

@@ -7,10 +7,8 @@
 #include <vector>
 #include <stdlib.h>
 #include <iostream>
-namespace SCICore {
-namespace GeomSpace  {
-
-using SCICore::Geometry::Polygon;
+namespace Kurt {
+using namespace SCIRun;
 using namespace Kurt::Datatypes;
 using std::vector;
 using std::cerr;
@@ -355,8 +353,7 @@ GLVolRenState::drawWirePolys( const vector<Polygon *>& polys )
   glPopMatrix();
   glDisable(GL_DEPTH_TEST);
 }
+} // End namespace Kurt
 
-}  // namespace GeomSpace
-} // namespace SCICore
 
 

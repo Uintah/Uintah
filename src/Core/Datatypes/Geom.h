@@ -1,40 +1,30 @@
 //  Geom.h - Describes an entity in space -- abstract base class
-//
 //  Written by:
 //   Eric Kuehne
 //   Department of Computer Science
 //   University of Utah
 //   April 2000
-//
 //  Copyright (C) 2000 SCI Institute
 
 
 #ifndef SCI_project_Geom_h
 #define SCI_project_Geom_h 1
 
-#include <SCICore/Datatypes/Datatype.h>
-#include <SCICore/Containers/LockingHandle.h>
-#include <SCICore/Datatypes/Attrib.h>
-#include <SCICore/Geometry/Vector.h>
-#include <SCICore/Geometry/Point.h>
-#include <SCICore/Geometry/BBox.h>
+#include <Core/Datatypes/Datatype.h>
+#include <Core/Containers/LockingHandle.h>
+#include <Core/Datatypes/Attrib.h>
+#include <Core/Geometry/Vector.h>
+#include <Core/Geometry/Point.h>
+#include <Core/Geometry/BBox.h>
 
 #include <vector>
 #include <string>
 
 
-namespace SCICore {
-namespace Datatypes {
+namespace SCIRun {
 
-using SCICore::Containers::LockingHandle;
-using SCICore::Geometry::Vector;
-using SCICore::Geometry::Point;
-using SCICore::Geometry::BBox;
 using std::vector;
 using std::string;
-using SCICore::PersistentSpace::Piostream;
-using SCICore::PersistentSpace::PersistentTypeID;
-using SCICore::Math::Max;
 
 class Geom;
 typedef LockingHandle<Geom> GeomHandle;
@@ -86,8 +76,7 @@ protected:
   string d_name;
 };
 
-} // end namespace Datatypes
-} // end namespace SCICore
+} // End namespace SCIRun
   
 
 #endif

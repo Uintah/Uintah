@@ -1,10 +1,9 @@
 #include "GeomEllipsoid.h"
-#include <SCICore/Geometry/BBox.h>
-//#include <SCICore/Geometry/BSphere.h>
-#include <SCICore/Malloc/Allocator.h>
+#include <Core/Geometry/BBox.h>
+//#include <Core/Geometry/BSphere.h>
+#include <Core/Malloc/Allocator.h>
 
-namespace SCICore {
-namespace GeomSpace {
+namespace SCIRun {
 
 
 Persistent* make_GeomEllipsoid()
@@ -23,5 +22,4 @@ void GeomEllipsoid::get_bounds(BBox& bb)
 // {
 //     bs.extend(cen, mev*1.000001);
 // }
-} // End namespace GeomSpace
-} // End namespace SCICore
+} // End namespace SCIRun

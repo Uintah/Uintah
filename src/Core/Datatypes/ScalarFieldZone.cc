@@ -1,4 +1,3 @@
-//static char *id="@(#) $Id$";
 
 /*
  *  ScalarFieldZone.h: A compound scalar field type
@@ -12,16 +11,13 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <SCICore/Datatypes/ScalarFieldZone.h>
-#include <SCICore/Util/NotFinished.h>
-#include <SCICore/Containers/String.h>
-#include <SCICore/Malloc/Allocator.h>
+#include <Core/Datatypes/ScalarFieldZone.h>
+#include <Core/Util/NotFinished.h>
+#include <Core/Containers/String.h>
+#include <Core/Malloc/Allocator.h>
 
-namespace SCICore {
-namespace Datatypes {
+namespace SCIRun {
 
-using SCICore::Math::Min;
-using SCICore::Math::Max;
 
 static Persistent* maker()
 {
@@ -47,8 +43,6 @@ ScalarField* ScalarFieldZone::clone()
 
 void ScalarFieldZone::compute_bounds()
 {
-    using SCICore::Geometry::Min;
-    using SCICore::Geometry::Max;
 
     if(zones.size()==0)
 	return;
@@ -105,8 +99,6 @@ int ScalarFieldZone::interpolate(const Point& p, double& v, int& cache,
 void ScalarFieldZone::io(Piostream& stream)
 {
 #ifndef _WIN32
-    using SCICore::PersistentSpace::Pio;
-    using SCICore::Containers::Pio;
 
     /* int version=*/stream.begin_class("ScalarFieldZone", SCALARFIELDZONE_VERSION);
     Pio(stream, zones);
@@ -120,38 +112,5 @@ void ScalarFieldZone::get_boundary_lines(Array1<Point>& lines)
 	zones[i]->get_boundary_lines(lines);
 }
 
-} // End namespace Datatypes
-} // End namespace SCICore
+} // End namespace SCIRun
 
-//
-// $Log$
-// Revision 1.4  1999/09/23 01:07:07  moulding
-// #ifndef'ed out the io functions, in win32, for these datatypes.  They are
-// causing problems with Pio and namespaces in VC++.  Sooner or later these have
-// to actually get fixed
-//
-// Revision 1.3  1999/08/25 03:48:41  sparker
-// Changed SCICore/CoreDatatypes to SCICore/Datatypes
-// Changed PSECore/CommonDatatypes to PSECore/Datatypes
-// Other Misc. directory tree updates
-//
-// Revision 1.2  1999/08/17 06:38:54  sparker
-// Merged in modifications from PSECore to make this the new "blessed"
-// version of SCIRun/Uintah.
-//
-// Revision 1.1  1999/07/27 16:56:28  mcq
-// Initial commit
-//
-// Revision 1.3  1999/07/07 21:10:44  dav
-// added beginnings of support for g++ compilation
-//
-// Revision 1.2  1999/05/06 19:55:55  dav
-// added back .h files
-//
-// Revision 1.1  1999/04/25 04:07:17  dav
-// Moved files into Datatypes
-//
-// Revision 1.1.1.1  1999/04/24 23:12:48  dav
-// Import sources
-//
-//

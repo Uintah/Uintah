@@ -1,26 +1,22 @@
 #ifndef GLANIMATEDSTREAMS_H
 #define GLANIMATEDSTREAMS_H
 
-#include <SCICore/Thread/Mutex.h>
-#include <SCICore/Geometry/Point.h>
-#include <SCICore/Geometry/Ray.h>
-#include <SCICore/Geometry/Vector.h>
-#include <SCICore/Geometry/BBox.h>
-#include <SCICore/Geometry/Transform.h>
-#include <SCICore/Datatypes/VectorField.h>
-#include <SCICore/Datatypes/ColorMap.h>
-#include <SCICore/Geom/GeomObj.h>
+#include <Core/Thread/Mutex.h>
+#include <Core/Geometry/Point.h>
+#include <Core/Geometry/Ray.h>
+#include <Core/Geometry/Vector.h>
+#include <Core/Geometry/BBox.h>
+#include <Core/Geometry/Transform.h>
+#include <Core/Datatypes/VectorField.h>
+#include <Core/Datatypes/ColorMap.h>
+#include <Core/Geom/GeomObj.h>
 #include <GL/gl.h>
 #include <GL/glu.h>
 
-namespace SCICore {
-namespace GeomSpace  {
+namespace Kurt {
 
-
-using namespace SCICore::Geometry;
-using namespace SCICore::Datatypes;
-//using namespace Kurt::Datatypes;
-using SCICore::Thread::Mutex;
+using namespace SCIRun;
+//using namespace Packages/Kurt::Datatypes;
 
 struct streamerNode {
 				// to keep track of length
@@ -119,9 +115,8 @@ private:
 };
 
 
+} // End namespace Kurt
  
-}  // namespace GeomSpace
-} // namespace SCICore
 
 
 #endif

@@ -1,8 +1,5 @@
-//
-// ** SCIRun version of vtkMarchingCubesCases.hh -- added nbr info to cases **
-//
+// ** Dataflow version of vtkMarchingCubesCases.hh -- added nbr info to cases **
 // marching cubes case table for generating isosurfaces
-//
 typedef int EDGE_LIST;
 typedef struct {
        EDGE_LIST edges[16];
@@ -13,10 +10,8 @@ static int edge_table[12][2] = {{0,1}, {1,2}, {3,2}, {0,3},
 				{4,5}, {5,6}, {7,6}, {4,7},
 				{0,4}, {1,5}, {3,7}, {2,6}};
 
-//
 // Edges to intersect. Three at a time form a triangle. Comments at end of line
 // indicate case number (0->255) and base case number (0->15).
-//
 static TRIANGLE_CASES triCases[] = {
 {{-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},  0},
 {{ 0,  3,  8, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1}, 25},

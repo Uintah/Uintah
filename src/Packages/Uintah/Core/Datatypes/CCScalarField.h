@@ -1,21 +1,19 @@
 #ifndef SCI_project_CCScalarField_h
 #define SCI_project_CCScalarField_h 1
 
-//#include "UintahScalarField.h"
-#include <SCICore/Datatypes/ScalarFieldRGBase.h>
-#include <Uintah/Grid/CCVariable.h>
-#include <Uintah/Grid/GridP.h>
-#include <Uintah/Grid/LevelP.h>
-#include <Uintah/Grid/CellIterator.h>
-#include <SCICore/Geometry/IntVector.h>
-#include <SCICore/Geometry/Point.h>
+//#include "Packages/UintahScalarField.h"
+#include <Core/Datatypes/ScalarFieldRGBase.h>
+#include <Packages/Uintah/Grid/CCVariable.h>
+#include <Packages/Uintah/Grid/GridP.h>
+#include <Packages/Uintah/Grid/LevelP.h>
+#include <Packages/Uintah/Grid/CellIterator.h>
+#include <Core/Geometry/IntVector.h>
+#include <Core/Geometry/Point.h>
 #include <values.h>
 #include <vector>
 
-namespace SCICore {
-  namespace Datatypes {
-
-using namespace SCICore::Geometry;
+namespace Uintah {
+using namespace SCIRun;
 using namespace Uintah;
 using std::vector;
 
@@ -44,7 +42,7 @@ public:
   T grid(int i, int j, int k);
   virtual double get_value( int i, int j, int k);
   void computeHighLowIndices();
-//   virtual UintahScalarField::Rep getType(){ return UintahScalarField::CC;}
+//   virtual Packages/UintahScalarField::Rep getType(){ return Packages/UintahScalarField::CC;}
 
   void SetGrid( GridP g ){ _grid = g; }
   void SetLevel( LevelP l){ _level = l; }
@@ -75,7 +73,7 @@ CCScalarField<T>::CCScalarField()
 
 template <class T>
 CCScalarField<T>::CCScalarField(const CCScalarField<T>& copy)
-//   : UintahScalarField( copy )
+//   : Packages/UintahScalarField( copy )
   :ScalarFieldRGBase( copy ), _grid(copy._grid), _level(copy._level),
     _varname(copy._varname), _matIndex(copy._matIndex), 
    high(-MAXINT,-MAXINT,-MAXINT),
@@ -94,7 +92,7 @@ template <class T>
 CCScalarField<T>::CCScalarField(GridP grid, LevelP level,
 				string var, int mat,
 				const vector< CCVariable<T> >& vars)
-//   : UintahScalarField( grid, level, var, mat )
+//   : Packages/UintahScalarField( grid, level, var, mat )
   : ScalarFieldRGBase(), _grid(grid), _level(level),
     _varname(var), _matIndex(mat),
    high(-MAXINT,-MAXINT,-MAXINT),
@@ -114,8 +112,8 @@ void CCScalarField<T>::computeHighLowIndices()
 {
   for(Level::const_patchIterator r = _level->patchesBegin();
       r != _level->patchesEnd(); r++){
-    low = SCICore::Geometry::Min( low, (*r)->getCellLowIndex());
-    high = SCICore::Geometry::Max( high, (*r)->getCellHighIndex());
+    low = Min( low, (*r)->getCellLowIndex());
+    high = Max( high, (*r)->getCellHighIndex());
   }
 }
 
@@ -153,8 +151,8 @@ template <class T>
 void CCScalarField<T>::AddVar( const CCVariable<T>& v, const Patch* p)
 {
   _vars.push_back( v );
-  low = SCICore::Geometry::Min( low, p->getCellLowIndex());
-  high = SCICore::Geometry::Max( high, p->getCellHighIndex());
+  low = Min( low, p->getCellLowIndex());
+  high = Max( high, p->getCellHighIndex());
   nx = high.x() - low.x();
   ny = high.y() - low.y();
   nz = high.z() - low.z();
@@ -177,8 +175,8 @@ void CCScalarField<T>::compute_minmax()
   for(Level::const_patchIterator r = _level->patchesBegin();
 	      r != _level->patchesEnd(); r++, i++ ){
     for(CellIterator n = (*r)->getCellIterator(); !n.done(); n++){
-      min = SCICore::Math::Min( min, _vars[i][*n]);
-      max = SCICore::Math::Max( max, _vars[i][*n]);
+      min = Min( min, _vars[i][*n]);
+      max = Max( max, _vars[i][*n]);
     }
   }
   if (min == max){
@@ -200,8 +198,8 @@ void CCScalarField<T>::compute_bounds()
  
   for(Level::const_patchIterator r = _level->patchesBegin();
       r != _level->patchesEnd(); r++){
-    min = SCICore::Geometry::Min( min, (*r)->getBox().lower());
-    max = SCICore::Geometry::Max( max, (*r)->getBox().upper());
+    min = Min( min, (*r)->getBox().lower());
+    max = Max( max, (*r)->getBox().upper());
   }
 
   bmin = min;
@@ -246,7 +244,6 @@ template <class T>
 int CCScalarField<T>::interpolate(const Point& p, double& value, double,
                                    double)
 {
-  using SCICore::Math::Interpolate;
 
   int i;
 
@@ -271,8 +268,7 @@ int CCScalarField<T>::interpolate(const Point& p, double& value, double,
 template <class T>
 Vector CCScalarField<T>::gradient(const Point& p)
 {
-  using SCICore::Math::Interpolate;
-  Uintah::Box b;
+  Packages/Uintah::Box b;
   int i;
   Level::const_patchIterator r;
   for(i = 0, r = _level->patchesBegin();
@@ -346,8 +342,7 @@ Vector CCScalarField<T>::gradient(const Point& p)
 
 }  
 
+} // End namespace Uintah
 
-} // End namespace Datatypes
-} // End namespace SCICore
 
 #endif

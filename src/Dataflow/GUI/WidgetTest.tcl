@@ -1,16 +1,12 @@
-#
 #  WidgetTest.tcl
-#
 #  Written by:
 #   James Purciful
 #   Department of Computer Science
 #   University of Utah
 #   Jan. 1995
-#
 #  Copyright (C) 1995 SCI Group
-#
 
-itcl_class PSECommon_Visualization_WidgetTest {
+itcl_class Dataflow_Visualization_WidgetTest {
     inherit Module
     constructor {config} {
 	set name WidgetTest

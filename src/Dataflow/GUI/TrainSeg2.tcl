@@ -1,17 +1,13 @@
 
-#
 #  TrainSeg2.tcl
-#
 #  Written by:
 #   David Weinstein
 #   Department of Computer Science
 #   University of Utah
 #   December 1995
-#
 #  Copyright (C) 1995 SCI Group
-#
 
-itcl_class PSECommon_Fields_TrainSeg2 {
+itcl_class Dataflow_Fields_TrainSeg2 {
     inherit Module
     constructor {config} {
 	set name TrainSeg2

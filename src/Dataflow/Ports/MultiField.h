@@ -14,12 +14,12 @@
 #ifndef SCI_project_ScalarField_h
 #define SCI_project_ScalarField_h 1
 
-#include <PSECore/share/share.h>
+#include <Dataflow/share/share.h>
 
-#include <PSECore/Datatypes/Datatype.h>
-#include <SCICore/Containers/LockingHandle.h>
-#include <SCICore/Geometry/Vector.h>
-#include <SCICore/Geometry/Point.h>
+#include <Dataflow/Ports/Datatype.h>
+#include <Core/Containers/LockingHandle.h>
+#include <Core/Geometry/Vector.h>
+#include <Core/Geometry/Point.h>
 
 class ScalarFieldRG;
 class ScalarFieldUG;

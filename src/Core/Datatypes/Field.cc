@@ -1,17 +1,14 @@
 // Field.cc - This is the base class from which all other fields are derived.
-//
 //  Written by:
 //   Eric Kuehne
 //   Department of Computer Science
 //   University of Utah
 //   April 2000
-//
 //  Copyright (C) 2000 SCI Institute
 
-#include  <SCICore/Datatypes/Field.h>
+#include  <Core/Datatypes/Field.h>
 
-namespace SCICore{
-namespace Datatypes{
+namespace SCIRun {
   
 PersistentTypeID Field::type_id("Field", "Datatype", 0);
 
@@ -37,5 +34,4 @@ void Field::io(Piostream&){
 
 
 
-}
-}
+} // End namespace SCIRun

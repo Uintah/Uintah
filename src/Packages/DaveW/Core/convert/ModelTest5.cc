@@ -23,15 +23,14 @@
 #include "TFace.h"
 #include "TRegion.h"
 
-#define Element		SCICore::Datatypes::Element
-#define Mesh		SCICore::Datatypes::Mesh
-#define MeshHandle	SCICore::Datatypes::MeshHandle
-#define Node		SCICore::Datatypes::Node
-#define NodeHandle	SCICore::Datatypes::NodeHandle
-#define Point		SCICore::Geometry::Point
+#define Element		Element
+#define Mesh		Mesh
+#define MeshHandle	MeshHandle
+#define Node		Node
+#define NodeHandle	NodeHandle
+#define Point		Point
 
-using namespace SCICore::PersistentSpace;
-using namespace SCICore::Datatypes;
+using namespace SCIRun;
 
 main(int argc, char **argv) {
     Array1<Point> p(8);

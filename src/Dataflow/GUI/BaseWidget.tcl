@@ -1,14 +1,10 @@
-#
 #  BaseWidget.tcl
-#
 #  Written by:
 #   James Purciful
 #   Department of Computer Science
 #   University of Utah
 #   Mar. 1995
-#
 #  Copyright (C) 1995 SCI Group
-#
 
 
 if {[info commands BaseWidget] != ""} {
@@ -118,8 +114,8 @@ itcl_class BaseWidget {
 
     method help {} {
 # There's not actually any help extant right now, so make this work some day
-# when there is.  Put it in $PSECoreTCL/help maybe?
-#	global PSECoreTCL
+# when there is.  Put it in $DataflowTCL/help maybe?
+#	global DataflowTCL
 #	helpPage $pse_root/help/$name.html
     }
 

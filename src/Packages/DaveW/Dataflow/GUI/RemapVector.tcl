@@ -1,6 +1,6 @@
-catch {rename DaveW_FEM_RemapVector ""}
+catch {rename Packages/DaveW_FEM_RemapVector ""}
 
-itcl_class DaveW_FEM_RemapVector {
+itcl_class Packages/DaveW_FEM_RemapVector {
     inherit Module
 
     constructor {config} {

@@ -6,7 +6,7 @@
 #include <string>
 #include <strstream>
 
-namespace std {
+namespace SCIRun {
 class ostringstream : public ostrstream {
 public:
    ostringstream() {}
@@ -21,6 +21,6 @@ public:
    istringstream(const char * s) : istrstream(s){}
 };
 
-}
+} // End namespace SCIRun
 
 #endif

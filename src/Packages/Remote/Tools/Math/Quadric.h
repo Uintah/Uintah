@@ -1,13 +1,12 @@
 // Quadric.h - Classes for dealing with 3D Quadrics.
-//
 // Peter-Pike Sloan
 // Hacked by Dave McAllister, August 1999.
 
 #ifndef _quadric_h
 #define _quadric_h
 
-#include <Remote/Tools/Math/Matrix44.h>
-#include <Remote/Tools/Math/Vector.h>
+#include <Packages/Remote/Tools/Math/Matrix44.h>
+#include <Packages/Remote/Tools/Math/Vector.h>
 
 // 3-Ddimensional quadrics (x,y,z generally).
 // The matrix looks like this (w/respect to indices).
@@ -37,8 +36,6 @@ Z -> 9
 */
 
 namespace Remote {
-namespace Tools {
-
 struct Quadric3
 {
   double vals[10];
@@ -138,8 +135,7 @@ struct Quadric3
   }
 };
 
+} // End namespace Remote
 
-} // namespace Tools
-} // namespace Remote
 
 #endif

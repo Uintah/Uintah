@@ -1,4 +1,3 @@
-//static char *id="@(#) $Id$";
 
 /*
  *  SigmaSet.h: Set of sigmas (e.g. conductivies) for finite-elements
@@ -12,12 +11,10 @@
  *  Copyright (C) 1996 SCI Group
  */
 
-#include <DaveW/Datatypes/General/SigmaSet.h>
-#include <SCICore/Malloc/Allocator.h>
+#include <Packages/DaveW/Core/Datatypes/General/SigmaSet.h>
+#include <Core/Malloc/Allocator.h>
 
 namespace DaveW {
-namespace Datatypes {
-
 static Persistent* make_SigmaSet()
 {
     return scinew SigmaSet;
@@ -52,26 +49,13 @@ SigmaSet* SigmaSet::clone()
 
 void SigmaSet::io(Piostream& stream)
 {
-    using SCICore::Containers::Pio;
+using namespace SCIRun;
 
     stream.begin_class("SigmaSet", SIGMASET_VERSION);
     Pio(stream, names);
     Pio(stream, vals);
     stream.end_class();
 }
-
-} // End namespace Datatypes
 } // End namespace DaveW
 
-//
-// $Log$
-// Revision 1.2  1999/09/08 02:26:18  sparker
-// Various #include cleanups
-//
-// Revision 1.1  1999/08/23 02:53:01  dmw
-// Dave's Datatypes
-//
-// Revision 1.1  1999/05/03 04:52:06  dmw
-// Added and updated DaveW Datatypes/Modules
-//
-//
+

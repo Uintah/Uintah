@@ -1,6 +1,6 @@
-catch {rename DaveW_Writers_TensorFieldWriter ""}
+catch {rename Packages/DaveW_Writers_TensorFieldWriter ""}
 
-itcl_class DaveW_Writers_TensorFieldWriter {
+itcl_class Packages/DaveW_Writers_TensorFieldWriter {
     inherit Module
     constructor {config} {
 	set name TensorFieldWriter

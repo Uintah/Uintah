@@ -11,14 +11,12 @@
  */
 
 
-#include <SCICore/Math/PiecewiseInterp.h>
-#include <SCICore/Containers/Array1.h>
-#include <SCICore/share/share.h>
+#include <Core/Math/PiecewiseInterp.h>
+#include <Core/Containers/Array1.h>
+#include <Core/share/share.h>
 
-namespace SCICore{
-namespace Math{
+namespace SCIRun {
 
-using namespace SCICore::Containers;
 
 // PiecewiseInterp::PiecewiseInterp()
 // : data_valid(false), 
@@ -28,5 +26,4 @@ using namespace SCICore::Containers;
 // {
 // }
 
-} // Math
-} // SCICore
+} // End namespace SCIRun

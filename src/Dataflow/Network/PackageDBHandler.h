@@ -1,5 +1,5 @@
-#ifndef PSECore_Dataflow_PackageDBHandler_h
-#define PSECore_Dataflow_PackageDBHandler_h 1
+#ifndef Dataflow_Dataflow_PackageDBHandler_h
+#define Dataflow_Dataflow_PackageDBHandler_h 1
 
 #ifdef __sgi
 #define IRIX
@@ -15,8 +15,7 @@
 #pragma reset woff 1375
 #endif
 
-namespace PSECore {
-namespace Dataflow {
+namespace SCIRun {
 
 class PackageDBHandler : public ErrorHandler
 {
@@ -36,8 +35,7 @@ private :
   void operator=(const PackageDBHandler&);
 };
 
-} // Dataflow
-} // PSECore
+} // End namespace SCIRun
 
 #endif
 

@@ -1,16 +1,12 @@
-#
 #  Hedgehog.tcl
-#
 #  Written by:
 #   Colette Mullenhoff
 #   Department of Computer Science
 #   University of Utah
 #   May. 1995
-#
 #  Copyright (C) 1995 SCI Group
-#
 
-itcl_class PSECommon_Visualization_HedgehogLitLines {
+itcl_class Dataflow_Visualization_HedgehogLitLines {
     inherit Module
     protected l_s ""
     constructor {config} {

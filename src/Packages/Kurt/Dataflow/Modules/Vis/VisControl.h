@@ -17,7 +17,7 @@ KEYWORDS
     ParticleGridReader, Material/Particle Method
 
 AUTHOR
-    Kurt Zimmerman
+    Packages/Kurt Zimmerman
     Department of Computer Science
     University of Utah
     January 1999
@@ -31,37 +31,26 @@ LOG
 #define VISCONTROL_H 1
 
 
-#include <Uintah/Datatypes/Archive.h>
-#include <Uintah/Datatypes/ArchivePort.h>
-#include <Kurt/DataArchive/VisParticleSetPort.h>
-#include <PSECore/Datatypes/ScalarFieldPort.h>
-#include <PSECore/Datatypes/VectorFieldPort.h>
-#include <PSECore/Dataflow/Module.h> 
-#include <SCICore/TclInterface/TCLvar.h> 
+#include <Packages/Uintah/Core/Datatypes/Archive.h>
+#include <Packages/Uintah/Core/Datatypes/ArchivePort.h>
+#include <Packages/Kurt/DataArchive/VisParticleSetPort.h>
+#include <Dataflow/Ports/ScalarFieldPort.h>
+#include <Dataflow/Ports/VectorFieldPort.h>
+#include <Dataflow/Network/Module.h> 
+#include <Core/TclInterface/TCLvar.h> 
 #include <string>
 #include <vector>
 
 
-namespace SCICore {
-  namespace Datatypes {
+namespace SCIRun {
   class ScalarFieldRGdouble;
   class VectorFieldRG;
-  }
 }
 
 namespace Kurt {
-  namespace Datatypes {
-  class VisParticleSet;
-  }
-namespace Modules {
-using Kurt::Datatypes::VisParticleSet;
-using SCICore::Datatypes::ScalarFieldRGdouble;
-using SCICore::Datatypes::VectorFieldRG;
+using namespace SCIRun;
 using Uintah::DataArchive;
 using namespace Uintah::Datatypes;
-using namespace PSECore::Dataflow;
-using namespace PSECore::Datatypes;
-using namespace SCICore::TclInterface;
 
 class VisControl : public Module { 
   
@@ -127,11 +116,9 @@ private:
 		 VectorFieldRG*& vf, VisParticleSet*& vps);
 
 
+} // End namespace Kurt
   //  void graph(clString, clString);
-}; //class 
 
-} // end namespace Modules
-} // end namespace Kurt
 
 
 #endif

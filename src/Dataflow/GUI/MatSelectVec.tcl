@@ -1,21 +1,17 @@
 ##
  #  MatSelectVec.tcl: Select a row or column from a matrix
- #
  #  Written by:
  #   David Weinstein
  #   Department of Computer Science
  #   University of Utah
  #   June 1999
- #
  #  Copyright (C) 1999 SCI Group
- # 
  #  Log Information:
- #
  ##
 
 catch {rename MatSelectVec ""}
 
-itcl_class PSECommon_Matrix_MatSelectVec {
+itcl_class Dataflow_Matrix_MatSelectVec {
     inherit Module
     constructor {config} {
         set name MatSelectVec

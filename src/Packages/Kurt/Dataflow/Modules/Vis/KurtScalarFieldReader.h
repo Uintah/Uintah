@@ -1,20 +1,15 @@
-#include <PSECore/Dataflow/Module.h>
-#include <PSECore/Datatypes/ScalarFieldPort.h>
-#include <SCICore/Datatypes/ScalarField.h>
-#include <SCICore/Malloc/Allocator.h>
-#include <SCICore/TclInterface/TCLTask.h>
-#include <SCICore/TclInterface/TCLvar.h>
+#include <Dataflow/Network/Module.h>
+#include <Dataflow/Ports/ScalarFieldPort.h>
+#include <Core/Datatypes/ScalarField.h>
+#include <Core/Malloc/Allocator.h>
+#include <Core/TclInterface/TCLTask.h>
+#include <Core/TclInterface/TCLvar.h>
 
 namespace Kurt {
-namespace Modules {
-
-using namespace PSECore::Dataflow;
-using namespace PSECore::Datatypes;
-using namespace SCICore::TclInterface;
-using namespace SCICore::PersistentSpace;
+using namespace SCIRun;
 
 
-class KurtScalarFieldReader : public Module {
+class Packages/KurtScalarFieldReader : public Module {
   ScalarFieldOPort* outport;
   ScalarFieldHandle handle;
   clString old_filebase;
@@ -30,10 +25,9 @@ class KurtScalarFieldReader : public Module {
   bool doAnimation();
 
 public:
-  KurtScalarFieldReader(const clString& id);
-  virtual ~KurtScalarFieldReader();
+  Packages/KurtScalarFieldReader(const clString& id);
+  virtual ~Packages/KurtScalarFieldReader();
   virtual void execute();
 };
+} // End namespace Kurt
 
-}
-}

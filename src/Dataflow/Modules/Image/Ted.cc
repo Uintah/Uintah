@@ -1,4 +1,3 @@
-//static char *id="@(#) $Id$"
 
 /*
  *  Ted.cc:  2D OpenGL Viewer
@@ -10,29 +9,29 @@
  *  Copyright (C) 1997 SCI Group
  */
 
-#include <SCICore/Containers/Array1.h>
-#include <PSECore/Dataflow/Module.h>
-#include <PSECore/Datatypes/GeometryPort.h>
-#include <PSECore/Datatypes/ScalarFieldPort.h>
-#include <SCICore/Datatypes/ScalarFieldRG.h>
-#include <SCICore/Datatypes/ScalarFieldRGint.h>
-#include <SCICore/Datatypes/ScalarFieldRGshort.h>
-#include <SCICore/Datatypes/ScalarFieldRGfloat.h>
-#include <SCICore/Datatypes/ScalarFieldRGBase.h>
-#include <SCICore/Geometry/Point.h>
-#include <SCICore/Math/MinMax.h>
-#include <SCICore/Malloc/Allocator.h>
-#include <SCICore/TclInterface/TCLvar.h>
-#include <SCICore/TclInterface/TCLTask.h>
-#include <SCICore/Thread/Parallel.h>
-#include <SCICore/Thread/Thread.h>
+#include <Core/Containers/Array1.h>
+#include <Dataflow/Network/Module.h>
+#include <Dataflow/Ports/GeometryPort.h>
+#include <Dataflow/Ports/ScalarFieldPort.h>
+#include <Core/Datatypes/ScalarFieldRG.h>
+#include <Core/Datatypes/ScalarFieldRGint.h>
+#include <Core/Datatypes/ScalarFieldRGshort.h>
+#include <Core/Datatypes/ScalarFieldRGfloat.h>
+#include <Core/Datatypes/ScalarFieldRGBase.h>
+#include <Core/Geometry/Point.h>
+#include <Core/Math/MinMax.h>
+#include <Core/Malloc/Allocator.h>
+#include <Core/TclInterface/TCLvar.h>
+#include <Core/TclInterface/TCLTask.h>
+#include <Core/Thread/Parallel.h>
+#include <Core/Thread/Thread.h>
 #include <iostream>
 using std::cerr;
 
 #include <GL/gl.h>
 #include <GL/glu.h>
 
-#include <SCICore/Geom/GeomOpenGL.h>
+#include <Core/Geom/GeomOpenGL.h>
 #include <GL/gl.h>
 #include <GL/glu.h>
 #include <GL/glx.h>
@@ -49,13 +48,7 @@ extern Tcl_Interp* the_interp;
 extern "C" GLXContext OpenGLGetContext(Tcl_Interp*, char*);
 
 namespace SCIRun {
-namespace Modules {
 
-using namespace PSECore::Dataflow;
-using namespace PSECore::Datatypes;
-using namespace SCICore::TclInterface;
-using namespace SCICore::GeomSpace;
-using namespace SCICore::Thread;
 
 class Ted : public Module {
   ScalarFieldIPort *inscalarfield;
@@ -676,47 +669,5 @@ int Ted::makeCurrent(void)
   
 }
 
-} // End namespace Modules
 } // End namespace SCIRun
 
-//
-// $Log$
-// Revision 1.7  2000/03/17 09:29:06  sparker
-// New makefile scheme: sub.mk instead of Makefile.in
-// Use XML-based files for module repository
-// Plus many other changes to make these two things work
-//
-// Revision 1.6  1999/10/07 02:08:16  sparker
-// use standard iostreams and complex type
-//
-// Revision 1.5  1999/09/08 02:27:02  sparker
-// Various #include cleanups
-//
-// Revision 1.4  1999/08/31 08:55:35  sparker
-// Bring SCIRun modules up to speed
-//
-// Revision 1.3  1999/08/25 03:48:58  sparker
-// Changed SCICore/CoreDatatypes to SCICore/Datatypes
-// Changed PSECore/CommonDatatypes to PSECore/Datatypes
-// Other Misc. directory tree updates
-//
-// Revision 1.2  1999/08/17 06:40:02  sparker
-// Merged in modifications from PSECore to make this the new "blessed"
-// version of SCIRun/Uintah.
-//
-// Revision 1.1  1999/07/27 16:58:55  mcq
-// Initial commit
-//
-// Revision 1.2  1999/05/03 21:01:16  dav
-// updates
-//
-// Revision 1.1  1999/04/30 01:24:37  dav
-// adding in files
-//
-// Revision 1.1  1999/04/30 00:46:07  dav
-// put in ted
-//
-// Revision 1.1  1999/04/29 22:47:44  dav
-// added Makefile
-//
-//

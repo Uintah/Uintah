@@ -1,35 +1,29 @@
-//static char *id="@(#) $Id$";
 
 /* ViewMesh.cc
    Display grid points for unstructured meshes
 
-   Philip Sutton
+   Packages/Philip Sutton
    July 1999
 
   Copyright (C) 2000 SCI Group, University of Utah
 */
 
-#include <SCICore/Util/NotFinished.h>
-#include <SCICore/TclInterface/TCLvar.h>
-#include <SCICore/Geom/Pt.h>
-#include <SCICore/Geom/GeomLine.h>
-#include <SCICore/Geom/GeomCylinder.h>
-#include <SCICore/Geom/GeomGroup.h>
-#include <SCICore/Geom/Material.h>
+#include <Core/Util/NotFinished.h>
+#include <Core/TclInterface/TCLvar.h>
+#include <Core/Geom/Pt.h>
+#include <Core/Geom/GeomLine.h>
+#include <Core/Geom/GeomCylinder.h>
+#include <Core/Geom/GeomGroup.h>
+#include <Core/Geom/Material.h>
 
-#include <PSECore/Dataflow/Module.h>
-#include <PSECore/Datatypes/GeometryPort.h>
+#include <Dataflow/Network/Module.h>
+#include <Dataflow/Ports/GeometryPort.h>
 
 #include <strings.h>
 #include <iostream>
 
 namespace Phil {
-namespace Modules {
-
-using namespace PSECore::Dataflow;
-using namespace PSECore::Datatypes;
-using namespace SCICore::TclInterface;
-using namespace SCICore::GeomSpace;
+using namespace SCIRun;
 using namespace std;
 
 struct UGpoint {
@@ -242,21 +236,6 @@ ViewMesh::update() {
   geomout->flush();
 }
 
-
-} // End namespace Modules
 } // End namespace Phil
 
-//
-// $Log$
-// Revision 1.3  2000/03/17 09:28:12  sparker
-// New makefile scheme: sub.mk instead of Makefile.in
-// Use XML-based files for module repository
-// Plus many other changes to make these two things work
-//
-// Revision 1.2  2000/02/04 22:16:48  psutton
-// fixed ID problem
-//
-// Revision 1.1  2000/02/04 21:16:47  psutton
-// initial revision
-//
-//
+

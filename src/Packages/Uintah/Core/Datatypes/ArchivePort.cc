@@ -1,11 +1,9 @@
 
-#include <Uintah/Datatypes/ArchivePort.h>
-#include <Uintah/share/share.h>
-#include <SCICore/Malloc/Allocator.h>
+#include <Packages/Uintah/Core/Datatypes/ArchivePort.h>
+#include <Packages/Uintah/share/share.h>
+#include <Core/Malloc/Allocator.h>
 
-namespace PSECore {
-namespace Datatypes {
-
+namespace Uintah {
 using namespace Uintah::Datatypes;
 
 
@@ -21,7 +19,6 @@ UINTAHSHARE OPort* make_ArchiveOPort(Module* module, const clString& name) {
 template<> clString SimpleIPort<ArchiveHandle>::port_type("Archive");
 template<> clString SimpleIPort<ArchiveHandle>::port_color("lightsteelblue4");
 
+} // End namespace Uintah
 
-} // End namespace Datatypes
-} // End namespace PSECore
 

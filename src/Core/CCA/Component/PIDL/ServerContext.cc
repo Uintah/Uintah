@@ -2,7 +2,6 @@
 /*
  *  ServerContext.cc: Local class for PIDL that holds the context
  *                   for server objects
- *  $Id$
  *
  *  Written by:
  *   Steven G. Parker
@@ -13,11 +12,11 @@
  *  Copyright (C) 1999 SCI Group
  */
 
-#include <Component/PIDL/ServerContext.h>
-#include <Component/PIDL/GlobusError.h>
-#include <Component/PIDL/TypeInfo.h>
-#include <Component/PIDL/TypeInfo_internal.h>
-#include <SCICore/Util/NotFinished.h>
+#include <Core/CCA/Component/PIDL/ServerContext.h>
+#include <Core/CCA/Component/PIDL/GlobusError.h>
+#include <Core/CCA/Component/PIDL/TypeInfo.h>
+#include <Core/CCA/Component/PIDL/TypeInfo_internal.h>
+#include <Core/Util/NotFinished.h>
 #include <iostream>
 using std::cerr;
 
@@ -54,31 +53,3 @@ ServerContext::activateEndpoint()
     d_endpoint_active=true;
 }
 
-//
-// $Log$
-// Revision 1.3  1999/10/02 07:05:44  sparker
-// Removed print statement
-// Use iostream instead of iostream.h
-//
-// Revision 1.2  1999/09/26 06:12:56  sparker
-// Added (distributed) reference counting to PIDL objects.
-// Began campaign against memory leaks.  There seem to be no more
-//   per-message memory leaks.
-// Added a test program to flush out memory leaks
-// Fixed other Component testprograms so that they work with ref counting
-// Added a getPointer method to PIDL handles
-//
-// Revision 1.1  1999/09/24 06:26:25  sparker
-// Further implementation of new Component model and IDL parser, including:
-//  - fixed bugs in multiple inheritance
-//  - added test for multiple inheritance
-//  - fixed bugs in object reference send/receive
-//  - added test for sending objects
-//  - beginnings of support for separate compilation of sidl files
-//  - beginnings of CIA spec implementation
-//  - beginnings of cocoon docs in PIDL
-//  - cleaned up initalization sequence of server objects
-//  - use globus_nexus_startpoint_eventually_destroy (contained in
-// 	the globus-1.1-utah.patch)
-//
-//

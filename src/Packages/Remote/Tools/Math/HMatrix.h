@@ -1,12 +1,11 @@
 /////////////////////////////////////////////////////////////
 // Matrix.h -  Stuff for working with matrices large and small.
-//
 // by David K. McAllister, 1998.
 
 #ifndef _matrix_h
 #define _matrix_h
 
-#include <Remote/Tools/Util/Assert.h>
+#include <Packages/Remote/Tools/Util/Assert.h>
 
 #include <string.h>
 #include <string>
@@ -14,8 +13,6 @@ using namespace std;
 
 
 namespace Remote {
-namespace Tools {
-
 class HVector;
 
 class Matrix
@@ -147,8 +144,7 @@ public:
 // Defined in HVector.cpp
 ostream& operator<<(ostream& os, const Matrix& m);
 
+} // End namespace Remote
 
-} // namespace Tools
-} // namespace Remote
 
 #endif

@@ -10,13 +10,11 @@
  *  Copyright (C) 1999 SCI Group
  */
 
-#include <PSECore/Datatypes/PathPort.h>
-#include <SCICore/Malloc/Allocator.h>
+#include <Dataflow/Ports/PathPort.h>
+#include <Core/Malloc/Allocator.h>
 
-namespace PSECore {
-namespace Datatypes {
+namespace SCIRun {
 
-using namespace SCICore::Containers;
 
 extern "C" {
 PSECORESHARE IPort* make_PathIPort(Module* module, const clString& name) {
@@ -30,5 +28,4 @@ PSECORESHARE OPort* make_PathOPort(Module* module, const clString& name) {
 template<> clString SimpleIPort<PathHandle>::port_type("Path");
 template<> clString SimpleIPort<PathHandle>::port_color("chocolate4");
 
-} // End namespace Datatypes
-} // End namespace PSECore
+} // End namespace SCIRun

@@ -1,9 +1,7 @@
-#include <SCICore/Datatypes/VolumeUtils.h>
+#include <Core/Datatypes/VolumeUtils.h>
 
-namespace SCICore {
-namespace Datatypes {
+namespace SCIRun {
 
-using namespace SCICore::Geometry;
 
 bool
 isPowerOf2( int range)
@@ -91,6 +89,5 @@ sortParameters( double *t, int len_t )
   }
 }
 
-} // end namespace Datatypes
-} // end namespace SCICore
+} // End namespace SCIRun
 

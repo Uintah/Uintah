@@ -1,21 +1,17 @@
 ##
  #  MatMat.tcl: Matrix - Matrix operations
- #
  #  Written by:
  #   David Weinstein
  #   Department of Computer Science
  #   University of Utah
  #   July 1999
- #
  #  Copyright (C) 1999 SCI Group
- # 
  #  Log Information:
- #
  ##
 
 catch {rename MatMat ""}
 
-itcl_class PSECommon_Matrix_MatMat {
+itcl_class Dataflow_Matrix_MatMat {
     inherit Module
     constructor {config} {
         set name MatMat

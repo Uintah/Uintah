@@ -1,4 +1,3 @@
-//static char *id="@(#) $Id$";
 
 /*
  *  TeD.cc:  2D OpenGL Viewer
@@ -10,28 +9,28 @@
  *  Copyright (C) 1997 SCI Group
  */
 
-#include <SCICore/Containers/Array1.h>
-#include <SCICore/Util/NotFinished.h>
-#include <PSECommon/Dataflow/Module.h>
-#include <PSECommon/Datatypes/GeometryPort.h>
-#include <PSECommon/Datatypes/ScalarFieldPort.h>
-#include <SCICore/Datatypes/ScalarFieldRG.h>
-#include <SCICore/Datatypes/ScalarFieldRGint.h>
-#include <SCICore/Datatypes/ScalarFieldRGshort.h>
-#include <SCICore/Datatypes/ScalarFieldRGfloat.h>
-#include <SCICore/Datatypes/ScalarFieldRGBase.h>
-#include <SCICore/Geometry/Point.h>
-#include <SCICore/Math/MinMax.h>
-#include <SCICore/Malloc/Allocator.h>
-#include <SCICore/Multitask/Task.h>
-#include <SCICore/Multitask/ITC.h>
-#include <SCICore/TclInterface/TCLvar.h>
-#include <SCICore/TclInterface/TCLTask.h>
+#include <Core/Containers/Array1.h>
+#include <Core/Util/NotFinished.h>
+#include <Dataflow/Dataflow/Module.h>
+#include <Dataflow/Datatypes/GeometryPort.h>
+#include <Dataflow/Datatypes/ScalarFieldPort.h>
+#include <Core/Datatypes/ScalarFieldRG.h>
+#include <Core/Datatypes/ScalarFieldRGint.h>
+#include <Core/Datatypes/ScalarFieldRGshort.h>
+#include <Core/Datatypes/ScalarFieldRGfloat.h>
+#include <Core/Datatypes/ScalarFieldRGBase.h>
+#include <Core/Geometry/Point.h>
+#include <Core/Math/MinMax.h>
+#include <Core/Malloc/Allocator.h>
+#include <Core/Multitask/Task.h>
+#include <Core/Multitask/ITC.h>
+#include <Core/TclInterface/TCLvar.h>
+#include <Core/TclInterface/TCLTask.h>
 
 #include <GL/gl.h>
 #include <GL/glu.h>
 
-#include <SCICore/Geom/GeomOpenGL.h>
+#include <Core/Geom/GeomOpenGL.h>
 #include <GL/gl.h>
 #include <GL/glu.h>
 #include <GL/glx.h>
@@ -47,14 +46,8 @@ extern Tcl_Interp* the_interp;
 
 extern "C" GLXContext OpenGLGetContext(Tcl_Interp*, char*);
 
-namespace PSECommon {
-namespace Modules {
+namespace SCIRun {
 
-using namespace PSECommon::Dataflow;
-using namespace PSECommon::Datatypes;
-using namespace SCICore::TclInterface;
-using namespace SCICore::GeomSpace;
-using namespace SCICore::Multitask;
 
 class Ted : public Module {
   ScalarFieldIPort *inscalarfield;
@@ -694,41 +687,5 @@ int Ted::makeCurrent(void)
   
 }
 
-} // End namespace Modules
-} // End namespace PSECommon
+} // End namespace SCIRun
 
-//
-// $Log$
-// Revision 1.5  2000/03/17 09:27:36  sparker
-// New makefile scheme: sub.mk instead of Makefile.in
-// Use XML-based files for module repository
-// Plus many other changes to make these two things work
-//
-// Revision 1.4  1999/08/25 03:48:11  sparker
-// Changed SCICore/CoreDatatypes to SCICore/Datatypes
-// Changed PSECore/CommonDatatypes to PSECore/Datatypes
-// Other Misc. directory tree updates
-//
-// Revision 1.3  1999/08/18 20:20:11  sparker
-// Eliminated copy constructor and clone in all modules
-// Added a private copy ctor and a private clone method to Module so
-//  that future modules will not compile until they remvoe the copy ctor
-//  and clone method
-// Added an ASSERTFAIL macro to eliminate the "controlling expression is
-//  constant" warnings.
-// Eliminated other miscellaneous warnings
-//
-// Revision 1.2  1999/08/17 06:37:54  sparker
-// Merged in modifications from PSECore to make this the new "blessed"
-// version of SCIRun/Uintah.
-//
-// Revision 1.1  1999/07/27 16:58:17  mcq
-// Initial commit
-//
-// Revision 1.2  1999/04/27 22:58:02  dav
-// updates in Modules for Datatypes
-//
-// Revision 1.1.1.1  1999/04/24 23:12:33  dav
-// Import sources
-//
-//

@@ -1,4 +1,3 @@
-//static char *id="@(#) $Id$";
 
 /*
  *  Image.cc: The ImageXYZ and ImageRM datatypes - used in the Raytracer
@@ -14,24 +13,20 @@
  *  Copyright (C) 1999 SCI Group
  */
 
-#include <DaveW/Datatypes/CS684/ImageR.h>
-#include <DaveW/Datatypes/CS684/xyz.h>
-#include <SCICore/Containers/String.h>
-#include <SCICore/Malloc/Allocator.h>
-#include <SCICore/Math/MinMax.h>
-#include <SCICore/Util/NotFinished.h>
+#include <Packages/DaveW/Core/Datatypes/CS684/ImageR.h>
+#include <Packages/DaveW/Core/Datatypes/CS684/xyz.h>
+#include <Core/Containers/String.h>
+#include <Core/Malloc/Allocator.h>
+#include <Core/Math/MinMax.h>
+#include <Core/Util/NotFinished.h>
 
 #include <iostream>
 using std::cerr;
 #include <stdlib.h>
 
 namespace DaveW {
-namespace Datatypes {
+using namespace SCIRun;
 
-using SCICore::Math::Min;
-using SCICore::Math::Max;
-
-using namespace SCICore::Datatypes;
 
 static Persistent* make_ImageXYZ()
 {
@@ -331,8 +326,6 @@ VoidStar* ImageRM::clone()
 
 #define ImageXYZ_VERSION 1
 void ImageXYZ::io(Piostream& stream) {
-    using SCICore::PersistentSpace::Pio;
-    using SCICore::Containers::Pio;
 
     /* int version=*/stream.begin_class("ImageXYZ", ImageXYZ_VERSION);
     VoidStar::io(stream);
@@ -342,8 +335,6 @@ void ImageXYZ::io(Piostream& stream) {
 
 #define ImageRM_VERSION 1
 void ImageRM::io(Piostream& stream) {
-    using SCICore::PersistentSpace::Pio;
-    using SCICore::Containers::Pio;    
     using DaveW::Datatypes::Pio;
 
     /* int version=*/stream.begin_class("ImageRM", ImageRM_VERSION);
@@ -361,32 +352,6 @@ void ImageRM::io(Piostream& stream) {
     Pio(stream, num);
     Pio(stream, spacing);
     stream.end_class();
-}
-} // End namespace Datatypes
 } // End namespace DaveW
+}
 
-//
-// $Log$
-// Revision 1.6  1999/10/07 02:06:18  sparker
-// use standard iostreams and complex type
-//
-// Revision 1.5  1999/09/04 06:01:38  sparker
-// Updates to .h files, to minimize #includes
-// removed .icc files (yeah!)
-//
-// Revision 1.4  1999/08/25 03:35:47  sparker
-// *** empty log message ***
-//
-// Revision 1.3  1999/08/24 06:22:54  dmw
-// Added in everything for the DaveW branch
-//
-// Revision 1.2  1999/08/23 05:48:00  dmw
-// Put back the NOT_FINISHED messages I accidentally removed.
-//
-// Revision 1.1  1999/08/23 02:52:56  dmw
-// Dave's Datatypes
-//
-// Revision 1.2  1999/05/03 04:52:00  dmw
-// Added and updated DaveW Datatypes/Modules
-//
-//

@@ -1,9 +1,9 @@
 THISDIR = CoreDatatypes
-SECTION = SCICore
+SECTION = Core
 
 include $(TOP)/make.defaults
 
-C_DIR = $(TOP)/src/SCICore/$(THISDIR)
+C_DIR = $(TOP)/src/Core/$(THISDIR)
 O_DIR = $(ARCHDIR)/$(THISDIR)
 
 # VPATH is used by /usr/local/gnu/bin/make
@@ -13,7 +13,7 @@ VPATH = $(C_DIR)
 .SUFFIXES : .cc
 .PATH : $(C_DIR)
 
-INCLUDES = -I$(C_DIR)/.. -I$(C_DIR)/../../SCICore \
+INCLUDES = -I$(C_DIR)/.. -I$(C_DIR)/../../Core \
 	-I$(C_DIR)/../../3rdParty
 
 LIB      = $(ARCHDIR)/lib/lib$(THISDIR).so
@@ -33,7 +33,7 @@ OBJS = ContourSet.o TriSurface.o BasicSurfaces.o Boolean.o ColorMap.o ColumnMatr
 	cSMatrix.o cVector.o SurfTree.o TopoSurfTree.o
 
 
-LIBS = -L$(ARCHDIR)/lib -L$(TOP)/$(ARCH)/SCICore/lib \
+LIBS = -L$(ARCHDIR)/lib -L$(TOP)/$(ARCH)/Core/lib \
 	-L$(TOP)/$(ARCH)/3rdParty/lib \
 	-lGeometry -lGeom \
 	-lTclInterface -lContainers \

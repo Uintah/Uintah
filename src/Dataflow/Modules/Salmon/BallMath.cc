@@ -3,6 +3,7 @@
 #include "BallMath.h"
 #include "BallAux.h"
 
+
 /* Convert window coordinates to sphere coordinates. */
 HVect MouseOnSphere(HVect mouse, HVect ballCenter, double ballRadius)
 {

@@ -14,10 +14,9 @@
 #ifndef SCI_Geom_Triangles_h
 #define SCI_Geom_Triangles_h 1
 
-#include <SCICore/Geom/GeomVertexPrim.h>
+#include <Core/Geom/GeomVertexPrim.h>
 
-namespace SCICore {
-namespace GeomSpace {
+namespace SCIRun {
 
 class Color;
 
@@ -227,8 +226,7 @@ public:
     virtual bool saveobj(std::ostream&, const clString& format, GeomSave*);
 };
 
-} // End namespace GeomSpace
-} // End namespace SCICore
+} // End namespace SCIRun
 
 
 #endif /* SCI_Geom_Triangles_h */

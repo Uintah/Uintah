@@ -1,5 +1,4 @@
 
-// $Id$
 
 /*
  *  AssertionFailed.h: Exception for a failed assertion.  Note - this
@@ -16,39 +15,28 @@
  *  Copyright (C) 1999 SCI Group
  */
 
-#ifndef SCICore_Exceptions_AssertionFailed_h
-#define SCICore_Exceptions_AssertionFailed_h
+#ifndef Core_Exceptions_AssertionFailed_h
+#define Core_Exceptions_AssertionFailed_h
 
-#include <SCICore/Exceptions/Exception.h>
+#include <Core/Exceptions/Exception.h>
 
-namespace SCICore {
-    namespace Exceptions {
-	class AssertionFailed : public Exception {
-	public:
-	    AssertionFailed(const char* msg,
-			    const char* file,
-			    int line);
-	    AssertionFailed(const AssertionFailed&);
-	    virtual ~AssertionFailed();
-	    virtual const char* message() const;
-	    virtual const char* type() const;
-	protected:
-	private:
-	    char* d_message;
-	    AssertionFailed& operator=(const AssertionFailed&);
-	};
-    }
-}
+namespace SCIRun {
+class AssertionFailed : public Exception {
+public:
+  AssertionFailed(const char* msg,
+		  const char* file,
+		  int line);
+  AssertionFailed(const AssertionFailed&);
+  virtual ~AssertionFailed();
+  virtual const char* message() const;
+  virtual const char* type() const;
+protected:
+private:
+  char* d_message;
+  AssertionFailed& operator=(const AssertionFailed&);
+};
+} // End namespace SCIRun
 
 #endif
 
-//
-// $Log$
-// Revision 1.2  2000/03/23 20:43:10  sparker
-// Added copy ctor to all exception classes (for Linux/g++)
-//
-// Revision 1.1  2000/03/23 10:25:40  sparker
-// New exception facility - retired old "Exception.h" classes
-//
-//
 

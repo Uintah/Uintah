@@ -15,20 +15,16 @@
 #ifndef SCI_project_Arrow_Widget_h
 #define SCI_project_Arrow_Widget_h 1
 
-#include <PSECore/Widgets/BaseWidget.h>
+#include <Dataflow/Widgets/BaseWidget.h>
 
-namespace SCICore {
-  namespace GeomSpace {
-    class GeomPick;
-  }
+namespace SCIRun {
+  class GeomPick;
 }
 
-namespace PSECore {
-namespace Widgets {
+namespace SCIRun {
 
-  //using SCICore::GeomSpace::GeomPick;
+  //using GeomPick;
 
-using PSECore::Dataflow::Module;
 
 #if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
 // Turn off warnings about partially overridden virtual functions
@@ -72,8 +68,7 @@ private:
    double length;
 };
 
-} // End namespace Widgets
-} // End namespace PSECore
+} // End namespace SCIRun
 
 #if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
 #pragma reset woff 1682

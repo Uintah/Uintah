@@ -1,4 +1,3 @@
-//static char *id="@(#) $Id:
 
 /*
  *  Current.cc:  Compute the currents - I = del Phi * Sigma
@@ -12,33 +11,28 @@
  *  Copyright (C) 2000 SCI Group
  */
 
-#include <PSECore/Dataflow/Module.h>
-#include <PSECore/Datatypes/MeshPort.h>
-#include <PSECore/Datatypes/ScalarFieldPort.h>
-#include <PSECore/Datatypes/SurfacePort.h>
-#include <SCICore/Datatypes/ScalarFieldUG.h>
-#include <SCICore/Datatypes/ScalarFieldRGdouble.h>
-#include <SCICore/Datatypes/ScalarFieldRGfloat.h>
-#include <SCICore/Datatypes/ScalarFieldRGint.h>
-#include <SCICore/Datatypes/ScalarFieldRGshort.h>
-#include <SCICore/Datatypes/ScalarFieldRGchar.h>
-// #include <SCICore/Datatypes/ScalarFieldRGuchar.h>
-#include <PSECore/Datatypes/VectorFieldPort.h>
-#include <SCICore/Datatypes/VectorFieldRG.h>
-#include <SCICore/Datatypes/VectorFieldUG.h>
-#include <SCICore/Geometry/Point.h>
-#include <SCICore/TclInterface/TCLvar.h>
+#include <Dataflow/Network/Module.h>
+#include <Dataflow/Ports/MeshPort.h>
+#include <Dataflow/Ports/ScalarFieldPort.h>
+#include <Dataflow/Ports/SurfacePort.h>
+#include <Core/Datatypes/ScalarFieldUG.h>
+#include <Core/Datatypes/ScalarFieldRGdouble.h>
+#include <Core/Datatypes/ScalarFieldRGfloat.h>
+#include <Core/Datatypes/ScalarFieldRGint.h>
+#include <Core/Datatypes/ScalarFieldRGshort.h>
+#include <Core/Datatypes/ScalarFieldRGchar.h>
+// #include <Core/Datatypes/ScalarFieldRGuchar.h>
+#include <Dataflow/Ports/VectorFieldPort.h>
+#include <Core/Datatypes/VectorFieldRG.h>
+#include <Core/Datatypes/VectorFieldUG.h>
+#include <Core/Geometry/Point.h>
+#include <Core/TclInterface/TCLvar.h>
 #include <iostream>
 
 using std::cerr;
 
-namespace PSECommon {
-namespace Modules {
+namespace SCIRun {
 
-using namespace PSECore::Dataflow;
-using namespace PSECore::Datatypes;
-using namespace SCICore::TclInterface;
-using namespace SCICore::GeomSpace;
 
 class Current : public Module {
     ScalarFieldIPort* infield;
@@ -206,27 +200,5 @@ void Current::execute()
     outfield->send(vf);
 }
 
-} // End namespace Modules
-} // End namespace PSECommon
+} // End namespace SCIRun
 
-//
-// $Log$
-// Revision 1.2  2000/12/15 06:24:18  mcole
-// merge branch back into trunk
-//
-// Revision 1.1.2.1  2000/10/31 02:22:41  dmw
-// Merging PSECommon changes from HEAD to FIELD_REDESIGN branch
-//
-// Revision 1.1  2000/10/29 04:34:51  dmw
-// BuildFEMatrix -- ground an arbitrary node
-// SolveMatrix -- when preconditioning, be careful with 0's on diagonal
-// MeshReader -- build the grid when reading
-// SurfToGeom -- support node normals
-// IsoSurface -- fixed tet mesh bug
-// MatrixWriter -- support split file (header + raw data)
-//
-// LookupSplitSurface -- split a surface across a place and lookup values
-// LookupSurface -- find surface nodes in a sfug and copy values
-// Current -- compute the current of a potential field (- grad sigma phi)
-// LocalMinMax -- look find local min max points in a scalar field
-//

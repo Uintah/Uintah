@@ -1,14 +1,9 @@
 #ifndef TEXPLANES_H
 #define TEXPLANES_H
 
-#include <SCICore/Datatypes/GLVolRenState.h>
+#include <Core/Datatypes/GLVolRenState.h>
 
-namespace SCICore {
-  namespace Geometry {
-    class Polygon;
-  }
-namespace GeomSpace  {
-  using SCICore::Geometry::Polygon;
+namespace SCIRun {
 
 /**************************************
 
@@ -65,6 +60,6 @@ protected:
 
 };
 
-}  // namespace GeomSpace
-} // namespace SCICore
+} // End namespace SCIRun
+
 #endif

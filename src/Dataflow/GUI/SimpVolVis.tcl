@@ -1,7 +1,7 @@
 
 catch {rename SimpVolVis ""}
 
-itcl_class PSECommon_Visualization_SimpVolVis {
+itcl_class Dataflow_Visualization_SimpVolVis {
     inherit Module
     constructor {config} {
 	set name SimpVolVis

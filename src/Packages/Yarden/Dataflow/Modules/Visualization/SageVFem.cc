@@ -2,7 +2,7 @@
  *  SageVFem.cc    View Depended Iso Surface Extraction
  *             for Structures Grids (Bricks)
  *  Written by:
- *   Yarden Livnat
+ *   Packages/Yarden Livnat
  *   Department of Computer Science
  *   University of Utah
  *   Dec 1996
@@ -284,9 +284,7 @@ SageVFemStack::push( SageVFemNode *node, int i, int j, int k, int dx,
   if ( pos > depth ) depth = pos;
 }
 
-//
 // SageVFemTree
-//
 
 struct SageVFemNode {
   SageVFemNode *child;
@@ -525,9 +523,7 @@ struct VFem {
   SageVFemTree tree;
 };
 
-//
 // SageVFem
-//
 
 class SageVFem : public Module 
 {

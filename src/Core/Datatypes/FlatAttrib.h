@@ -1,11 +1,9 @@
 //  FlatAttrib.h - scalar attribute stored as a flat array
-//
 //  Written by:
 //   Eric Kuehne
 //   Department of Computer Science
 //   University of Utah
 //   April 2000
-//
 //  Copyright (C) 2000 SCI Institute
 
 #ifndef SCI_project_FlatAttrib_h
@@ -13,32 +11,21 @@
 
 #include <vector>
 
-#include <SCICore/Datatypes/Datatype.h>
-#include <SCICore/Datatypes/DiscreteAttrib.h>
-#include <SCICore/Containers/LockingHandle.h>
-#include <SCICore/Exceptions/ArrayIndexOutOfBounds.h>
-#include <SCICore/Exceptions/DimensionMismatch.h>
-#include <SCICore/Geometry/Vector.h>
-#include <SCICore/Geometry/Point.h>
-#include <SCICore/Util/DebugStream.h>
+#include <Core/Datatypes/Datatype.h>
+#include <Core/Datatypes/DiscreteAttrib.h>
+#include <Core/Containers/LockingHandle.h>
+#include <Core/Exceptions/ArrayIndexOutOfBounds.h>
+#include <Core/Exceptions/DimensionMismatch.h>
+#include <Core/Geometry/Vector.h>
+#include <Core/Geometry/Point.h>
+#include <Core/Util/DebugStream.h>
 #include <sstream>
 
 
-namespace SCICore {
-namespace Datatypes {
+namespace SCIRun {
 
 using std::vector;
-using SCICore::Containers::LockingHandle;
-using SCICore::Geometry::Vector;
-using SCICore::Geometry::Point;
-using SCICore::PersistentSpace::Piostream;
-using SCICore::PersistentSpace::PersistentTypeID;
-using SCICore::Exceptions::ArrayIndexOutOfBounds;
-using SCICore::Exceptions::DimensionMismatch;
-using SCICore::Math::Min;
-using SCICore::Math::Max;
 using std::ostringstream;
-using SCICore::Util::DebugStream;
 
 template <class T> class FlatAttrib : public DiscreteAttrib<T> 
 {
@@ -365,8 +352,7 @@ FlatAttrib<T>::io(Piostream &stream)
   stream.end_class();
 }
 
-}  // end Datatypes
-}  // end SCICore
+} // End namespace SCIRun
 
 
 

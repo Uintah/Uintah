@@ -1,16 +1,12 @@
-#
 #  BoxClipSField.tcl
-#
 #  Written by:
 #   David Weinstein
 #   Department of Computer Science
 #   University of Utah
 #   July 1995
-#
 #  Copyright (C) 1995 SCI Group
-#
 
-itcl_class PSECommon_Visualization_BoxClipSField {
+itcl_class Dataflow_Visualization_BoxClipSField {
     inherit Module
     constructor {config} {
 	set name BoxClipSField

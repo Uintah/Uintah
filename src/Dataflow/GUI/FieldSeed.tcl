@@ -18,7 +18,7 @@ proc MMakeFrame2 {base sd an} {
         pack $base  -side $sd -anchor $an
 }
 
-itcl_class PSECommon_Fields_FieldSeed {
+itcl_class Dataflow_Fields_FieldSeed {
     inherit Module
     constructor {config} {
         set name FieldSeed

@@ -13,22 +13,15 @@
  *  Copyright (C) 1999 SCI Group
  */
 
-#ifndef SCI_DaveW_Datatypes_ImageR_h
-#define SCI_DaveW_Datatypes_ImageR_h 1
+#ifndef SCI_Packages/DaveW_Datatypes_ImageR_h
+#define SCI_Packages/DaveW_Datatypes_ImageR_h 1
 
-#include <DaveW/Datatypes/CS684/Pixel.h>
-#include <DaveW/Datatypes/CS684/Spectrum.h>
-#include <SCICore/Datatypes/VoidStar.h>
+#include <Packages/DaveW/Core/Datatypes/CS684/Pixel.h>
+#include <Packages/DaveW/Core/Datatypes/CS684/Spectrum.h>
+#include <Core/Datatypes/VoidStar.h>
 
 namespace DaveW {
-namespace Datatypes {
-
-using SCICore::Containers::Array2;
-using SCICore::Containers::clString;
-using SCICore::Datatypes::DenseMatrix;
-using SCICore::Datatypes::VoidStar;
-using SCICore::PersistentSpace::Piostream;
-using SCICore::PersistentSpace::PersistentTypeID;
+using namespace SCIRun;
 
 class ImageXYZ : public VoidStar {
 public:
@@ -78,19 +71,6 @@ public:
     virtual void io(Piostream&);
     static PersistentTypeID type_id;
 };
-
-} // End namespace Datatypes
 } // End namespace DaveW
-//
-// $Log$
-// Revision 1.2  1999/08/25 03:35:47  sparker
-// *** empty log message ***
-//
-// Revision 1.1  1999/08/23 02:52:56  dmw
-// Dave's Datatypes
-//
-// Revision 1.2  1999/05/03 04:52:00  dmw
-// Added and updated DaveW Datatypes/Modules
-//
-//
+
 #endif

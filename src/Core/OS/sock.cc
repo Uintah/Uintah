@@ -2,7 +2,6 @@
 //=======================
 // sock.cpp
 // David Hart
-//
 // Copyright 2000
 // Scientific Computing and Imaging
 // University of Utah,
@@ -18,7 +17,7 @@ using namespace std;
 #include <strings.h>
 #endif
 
-#include <SCICore/OS/sock.h>
+#include <Core/OS/sock.h>
 
 #ifdef _WIN32
 				// make sure socketinitializer
@@ -42,8 +41,7 @@ int errno;
 static void prError(int err);
 #endif
 
-namespace SCICore {
-namespace OS {
+namespace SCIRun {
   
 // MAX -----------------------------------------------------------------
 template <class T>
@@ -774,5 +772,4 @@ static void prError(int err) {
 }
 #endif // _WIN32
 
-} // namespace OS
-} // namespace SCICore
+} // End namespace SCIRun

@@ -22,9 +22,7 @@
 /*                                                                           */
 /*+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
-//
 //          Basic vector class (double precision)
-//
 
 
                                  
@@ -59,7 +57,6 @@ MV_Vector_double::MV_Vector_double(unsigned int n, const double& v) :
 }
 
 // operators and member functions
-//
 
 
 MV_Vector_double& MV_Vector_double::operator=(const double & m) 
@@ -232,7 +229,6 @@ MV_Vector_double MV_Vector_double::operator()(const MV_VecIndex &I)
     else
     {
     // check that index is not out of bounds
-    //
         if ( I.end() >= dim_)
         {
             cerr << "MV_VecIndex: (" << I.start() << ":" << I.end() << 
@@ -248,7 +244,6 @@ MV_Vector_double MV_Vector_double::operator()(const MV_VecIndex &I)
 const MV_Vector_double MV_Vector_double::operator()(const MV_VecIndex &I) const
 {
     // check that index is not out of bounds
-    //
     if (I.all())
         return MV_Vector_double(p_, dim_, MV_Vector_::ref);
     else

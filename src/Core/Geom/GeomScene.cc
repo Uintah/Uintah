@@ -1,4 +1,3 @@
-//static char *id="@(#) $Id$";
 
 /*
  *  GeomScene.cc: ?
@@ -12,15 +11,15 @@
  *  Copyright (C) 199? SCI Group
  */
 
-#include <SCICore/Geom/GeomScene.h>
+#include <Core/Geom/GeomScene.h>
 
-#include <SCICore/Containers/String.h>
-#include <SCICore/Geom/Lighting.h>
-#include <SCICore/Geom/GeomObj.h>
-#include <SCICore/Geom/GeomSave.h>
-#include <SCICore/Geometry/Vector.h>
-#include <SCICore/Geometry/Point.h>
-#include <SCICore/Math/Trig.h>
+#include <Core/Containers/String.h>
+#include <Core/Geom/Lighting.h>
+#include <Core/Geom/GeomObj.h>
+#include <Core/Geom/GeomSave.h>
+#include <Core/Geometry/Vector.h>
+#include <Core/Geometry/Point.h>
+#include <Core/Math/Trig.h>
 
 #include <iostream>
 using std::cerr;
@@ -29,11 +28,8 @@ using std::ostream;
 #include <fstream>
 using std::ofstream;
 
-namespace SCICore {
-namespace GeomSpace {
+namespace SCIRun {
 
-using SCICore::Geometry::Cross;
-using SCICore::Geometry::Dot;
 
 GeomScene::GeomScene()
 {
@@ -50,9 +46,6 @@ GeomScene::GeomScene(const Color& bgcolor, const View& view,
 
 void GeomScene::io(Piostream& stream)
 {
-    using SCICore::PersistentSpace::Pio;
-    using SCICore::Geometry::Pio;
-    using SCICore::GeomSpace::Pio;
 
     stream.begin_class("GeomScene", GEOMSCENE_VERSION);
     Pio(stream, bgcolor);
@@ -295,7 +288,7 @@ void GeomSave::rotateup(ostream& out, const Vector& up, const Vector& /*new_up*/
 	indent(out);
 	out << "rotation " << axis.x() << " " << axis.y() << " " << axis.z() << " " << -angle << "\n";
 	end_node(out);
-    } else if(Geometry::Dot(up, Vector(0,1,0)) > 0){
+    } else if(Dot(up, Vector(0,1,0)) > 0){
 	double angle=Pi;
 	start_node(out, "Rotation");
 	indent(out);
@@ -353,33 +346,5 @@ void GeomSave::rib_orient(ostream& out, const Point& center, const Vector& up,
     }      
 }
 
-} // End namespace GeomSpace
-} // End namespace SCICore
+} // End namespace SCIRun
 
-//
-// $Log$
-// Revision 1.5  1999/10/07 02:07:44  sparker
-// use standard iostreams and complex type
-//
-// Revision 1.4  1999/08/19 23:18:06  sparker
-// Removed a bunch of #include <SCICore/Util/NotFinished.h> statements
-// from files that did not need them.
-//
-// Revision 1.3  1999/08/17 23:50:25  sparker
-// Removed all traces of the old Raytracer and X11 renderers.
-// Also removed a .o and .d file
-//
-// Revision 1.2  1999/08/17 06:39:12  sparker
-// Merged in modifications from PSECore to make this the new "blessed"
-// version of SCIRun/Uintah.
-//
-// Revision 1.1  1999/07/27 16:56:43  mcq
-// Initial commit
-//
-// Revision 1.2  1999/07/07 21:10:52  dav
-// added beginnings of support for g++ compilation
-//
-// Revision 1.1.1.1  1999/04/24 23:12:18  dav
-// Import sources
-//
-//

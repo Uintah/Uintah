@@ -1,5 +1,5 @@
 
-#include <Uintah/Parallel/ProcessorGroup.h>
+#include <Packages/Uintah/Parallel/ProcessorGroup.h>
 
 using namespace Uintah;
 
@@ -11,17 +11,4 @@ ProcessorGroup::ProcessorGroup(const ProcessorGroup* parent,
 {
 }
 
-//
-// $Log$
-// Revision 1.3  2000/09/25 20:40:23  sparker
-// Quiet g++ compiler warnings
-//
-// Revision 1.2  2000/07/27 22:39:54  sparker
-// Implemented MPIScheduler
-// Added associated support
-//
-// Revision 1.1  2000/06/17 07:06:49  sparker
-// Changed ProcessorContext to ProcessorGroup
-//
-//
 

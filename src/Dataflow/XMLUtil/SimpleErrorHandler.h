@@ -21,8 +21,7 @@
 #include <sax/SAXException.hpp>
 #include <sax/SAXParseException.hpp>
 
-namespace PSECore {
-   namespace XMLUtil {
+namespace SCIRun {
    
    /**************************************
      
@@ -69,15 +68,8 @@ public:
    SimpleErrorHandler(const SimpleErrorHandler&);
    void operator=(const SimpleErrorHandler&);
 };
-   } // end namespace XMLUtil
-} // end namespace Uintah
+} // End namespace SCIRun
 
-//
-// $Log$
-// Revision 1.1  2000/05/20 08:04:28  sparker
-// Added XML helper library
-//
-//
 
 #endif
 

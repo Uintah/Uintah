@@ -10,21 +10,20 @@
  *  Copyright (C) 199? SCI Group
  */
 
-#include <SCICore/Datatypes/SparseRowMatrix.h>
-#include <SCICore/Math/ssmult.h>
-#include <SCICore/Math/MiscMath.h>
-#include <SCICore/Math/MinMax.h>
-#include <SCICore/Util/Assert.h>
-#include <SCICore/Containers/String.h>
-#include <SCICore/Datatypes/ColumnMatrix.h>
-#include <SCICore/Malloc/Allocator.h>
+#include <Core/Datatypes/SparseRowMatrix.h>
+#include <Core/Math/ssmult.h>
+#include <Core/Math/MiscMath.h>
+#include <Core/Math/MinMax.h>
+#include <Core/Util/Assert.h>
+#include <Core/Containers/String.h>
+#include <Core/Datatypes/ColumnMatrix.h>
+#include <Core/Malloc/Allocator.h>
 #include <iostream>
 using std::cerr;
 using std::endl;
 #include <stdio.h>
 
-namespace SCICore {
-namespace Datatypes {
+namespace SCIRun {
 
 static Persistent* maker()
 {
@@ -342,5 +341,4 @@ void SparseRowMatrix::io(Piostream& stream)
     stream.end_class();
 }
 
-} // End namespace Datatypes
-} // End namespace SCICore
+} // End namespace SCIRun

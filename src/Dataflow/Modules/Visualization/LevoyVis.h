@@ -14,24 +14,24 @@
 #ifndef SCI_project_LevoyVol_h
 #define SCI_project_LevoyVol_h 1
 
-#include <SCICore/Containers/Array2.h>
-#include <SCICore/Containers/String.h>
+#include <Core/Containers/Array2.h>
+#include <Core/Containers/String.h>
 
-#include <SCICore/Datatypes/ScalarFieldRG.h>
-#include <PSECommon/Datatypes/ScalarFieldPort.h>
-#include <PSECommon/Datatypes/ColorMapPort.h>
-#include <SCICore/Datatypes/Image.h>
-#include <PSECommon/Datatypes/GeometryPort.h>
+#include <Core/Datatypes/ScalarFieldRG.h>
+#include <Dataflow/Datatypes/ScalarFieldPort.h>
+#include <Dataflow/Datatypes/ColorMapPort.h>
+#include <Core/Datatypes/Image.h>
+#include <Dataflow/Datatypes/GeometryPort.h>
 
-#include <SCICore/Geom/Color.h>
-#include <SCICore/Geom/View.h>
-#include <SCICore/Geometry/Point.h>
-#include <SCICore/Geometry/Vector.h>
-#include <SCICore/Geometry/Plane.h>
-#include <SCICore/Geometry/BBox.h>
+#include <Core/Geom/Color.h>
+#include <Core/Geom/View.h>
+#include <Core/Geometry/Point.h>
+#include <Core/Geometry/Vector.h>
+#include <Core/Geometry/Plane.h>
+#include <Core/Geometry/BBox.h>
 
-#include <SCICore/Math/Trig.h>
-#include <SCICore/Malloc/Allocator.h>
+#include <Core/Math/Trig.h>
+#include <Core/Malloc/Allocator.h>
 
 
 #define VIEW_PORT_SIZE 600

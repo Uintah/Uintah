@@ -1,6 +1,6 @@
 1. How is my program organized?
 
-My module is organized like any standard SCIRun module.  It contains
+My module is organized like any standard Dataflow module.  It contains
 several functions common to all modules such as a constructor,
 destructor, execute, and tcl_command.  In order to work as expected,
 through its input ports, the BB module must be connected to a
@@ -83,13 +83,13 @@ percentages to scalar values).
 the info about VolPack can be found at:
 http://www-graphics.stanford.edu/papers/lacroute_thesis/
 
-the VolPack code is placed in SCIRun/VolPack
-the VolPack examples are placed in SCIRun/VolPack/examples
+the VolPack code is placed in Dataflow/VolPack
+the VolPack examples are placed in Dataflow/VolPack/examples
 the VolPack compiled library (libvolpack.a) has a symbolic link
-from the SCIRun/lib directory.
+from the Dataflow/lib directory.
 
 README files are available in the directory and the subdirectories
-of SCIRun/VolPack directory.
+of Dataflow/VolPack directory.
 
 3. things that are still to be done:
 - use all 4 (rgb and opacity) transfer map lines in the volume rendering

@@ -22,12 +22,8 @@
 /*                                                                           */
 /*+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
-//
 //      mvmtp.h  : basic templated numerical matrix class, storage
 //                  by columns (Fortran oriented.)
-//
-//
-//
 
 
 #ifndef _MV_MATRIX_double_H_
@@ -70,13 +66,10 @@ class MV_ColMat_double
 
     // usual copy by value
     // (can't use default parameter lda=m, because m is not a constant...)
-    //
     MV_ColMat_double(double*, unsigned int m, unsigned int n);
     MV_ColMat_double(double*, unsigned int m, unsigned int n, unsigned int lda);
 
     // the "reference" versions
-    //
-    //
     MV_ColMat_double(MV_ColMat_double &A, MV_Matrix_::ref_type i);
     MV_ColMat_double(double*, unsigned int m, unsigned int n, MV_Matrix_::ref_type i);
     MV_ColMat_double(double*, unsigned int m, unsigned int n, unsigned int lda,

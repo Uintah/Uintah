@@ -1,8 +1,7 @@
-#include <SCICore/Datatypes/GLTexRenState.h>
+#include <Core/Datatypes/GLTexRenState.h>
 
 
-namespace SCICore {
-namespace GeomSpace  {
+namespace SCIRun {
 
 GLTexRenState::GLTexRenState(const GLVolumeRenderer* glvr)
     : volren( glvr )
@@ -11,6 +10,5 @@ GLTexRenState::GLTexRenState(const GLVolumeRenderer* glvr)
   // computation.
 }
 
-} // end namespace Datatypes
-} // end namespace SCICore
+} // End namespace SCIRun
 

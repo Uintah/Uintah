@@ -1,4 +1,3 @@
-//static char *id="@(#) $Id$";
 
 /*
  *  BldEEGMesh: Generate points, send points in head to be meshed,
@@ -17,27 +16,27 @@
  *  Copyright (C) 1997 SCI Group
  */
 
-#include <DaveW/Datatypes/General/SegFldPort.h>
-#include <DaveW/Datatypes/General/SegFld.h>
-#include <PSECore/Dataflow/Module.h>
-#include <PSECore/Datatypes/ColumnMatrixPort.h>
-#include <PSECore/Datatypes/MeshPort.h>
-#include <PSECore/Datatypes/SurfacePort.h>
-#include <SCICore/Containers/String.h>
-#include <SCICore/Containers/Queue.h>
-#include <SCICore/Containers/Array1.h>
-#include <SCICore/Containers/Array2.h>
-#include <SCICore/Containers/Array3.h>
-#include <SCICore/Datatypes/ColumnMatrix.h>
-#include <SCICore/Datatypes/Mesh.h>
-#include <SCICore/Datatypes/SurfTree.h>
-#include <SCICore/Datatypes/TriSurface.h>
-#include <SCICore/Geometry/BBox.h>
-#include <SCICore/Geometry/Point.h>
-#include <SCICore/Malloc/Allocator.h>
-#include <SCICore/Math/MusilRNG.h>
-#include <SCICore/TclInterface/TCLvar.h>
-#include <SCICore/Tester/RigorousTest.h>
+#include <Packages/DaveW/Core/Datatypes/General/SegFldPort.h>
+#include <Packages/DaveW/Core/Datatypes/General/SegFld.h>
+#include <Dataflow/Network/Module.h>
+#include <Dataflow/Ports/ColumnMatrixPort.h>
+#include <Dataflow/Ports/MeshPort.h>
+#include <Dataflow/Ports/SurfacePort.h>
+#include <Core/Containers/String.h>
+#include <Core/Containers/Queue.h>
+#include <Core/Containers/Array1.h>
+#include <Core/Containers/Array2.h>
+#include <Core/Containers/Array3.h>
+#include <Core/Datatypes/ColumnMatrix.h>
+#include <Core/Datatypes/Mesh.h>
+#include <Core/Datatypes/SurfTree.h>
+#include <Core/Datatypes/TriSurface.h>
+#include <Core/Geometry/BBox.h>
+#include <Core/Geometry/Point.h>
+#include <Core/Malloc/Allocator.h>
+#include <Core/Math/MusilRNG.h>
+#include <Core/TclInterface/TCLvar.h>
+#include <Core/Tester/RigorousTest.h>
 
 #include <iostream>
 using std::cerr;
@@ -45,15 +44,8 @@ using std::endl;
 #include <stdio.h>
 
 namespace DaveW {
-namespace Modules {
-
 using namespace DaveW::Datatypes;
-using namespace PSECore::Dataflow;
-using namespace PSECore::Datatypes;
-using namespace SCICore::TclInterface;
-using namespace SCICore::Containers;
-using namespace SCICore::Datatypes;
-using namespace SCICore::Geometry;
+using namespace SCIRun;
 
 int airCtr=0;
 int othrCtr=0;
@@ -190,7 +182,7 @@ void BldEEGMesh::genPtsAndTets(SegFldHandle sf, SurfTree *st, int num,
     double density = num_in/((maxaa-minaa+1)*(maxbb-minbb+1)*(maxcc-mincc+1));
     mesh->nodes.resize(0);
     sf->audit();
-    sf->printComponents();
+    sf->printCore/CCA/Components();
     Array1<Point> pts;
     Vector v(max-min);
     min = min+v*.001;
@@ -793,37 +785,7 @@ void BldEEGMesh::execute()
     omesh->send(m);
     ostree->send(st);
 }
-
-} // End namespace Modules
 } // End namespace DaveW
 
 
-//
-// $Log$
-// Revision 1.6  2000/03/17 18:44:20  dahart
-// Replaced all instances of HashTable<class X, class Y> with the STL
-// map<class X, class Y>.  Removed all includes of HashTable.h
-//
-// Revision 1.5  2000/03/17 09:25:33  sparker
-// New makefile scheme: sub.mk instead of Makefile.in
-// Use XML-based files for module repository
-// Plus many other changes to make these two things work
-//
-// Revision 1.4  1999/10/07 02:06:27  sparker
-// use standard iostreams and complex type
-//
-// Revision 1.3  1999/09/08 02:26:21  sparker
-// Various #include cleanups
-//
-// Revision 1.2  1999/08/25 03:47:38  sparker
-// Changed SCICore/CoreDatatypes to SCICore/Datatypes
-// Changed PSECore/CommonDatatypes to PSECore/Datatypes
-// Other Misc. directory tree updates
-//
-// Revision 1.1  1999/08/24 06:23:01  dmw
-// Added in everything for the DaveW branch
-//
-// Revision 1.2  1999/05/03 04:52:12  dmw
-// Added and updated DaveW Datatypes/Modules
-//
-//
+

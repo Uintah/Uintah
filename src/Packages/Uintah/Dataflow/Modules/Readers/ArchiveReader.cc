@@ -1,18 +1,14 @@
 #include "ArchiveReader.h"
-#include <Uintah/Interface/DataArchive.h>
-#include <SCICore/Exceptions/InternalError.h>
+#include <Packages/Uintah/Interface/DataArchive.h>
+#include <Core/Exceptions/InternalError.h>
 #include <iostream> 
 using std::endl;
 using std::cerr;
 
 namespace Uintah {
-namespace Modules {
+using namespace SCIRun;
 
-using SCICore::Containers::clString;
-using PSECore::Datatypes::ArchiveIPort;
-using PSECore::Datatypes::ArchiveOPort;
-
-extern "C" PSECore::Dataflow::Module* make_ArchiveReader( const clString& id ) { 
+extern "C" Dataflow::Dataflow::Module* make_ArchiveReader( const clString& id ) { 
   return scinew ArchiveReader( id );
 }
 
@@ -51,7 +47,7 @@ void ArchiveReader::execute()
    if( string(filebase.get()()) != aName ){
      try {
        reader = scinew DataArchive( string(filebase.get()()) );
-     } catch ( const SCICore::Exceptions::InternalError& ex) {
+     } catch ( const InternalError& ex) {
        cerr<<"Caught and exception\n";
        return;
      }
@@ -66,7 +62,6 @@ void ArchiveReader::execute()
   
 //--------------------------------------------------------------- 
   
-
-} // End namespace Modules
 } // End namespace Uintah
+
 

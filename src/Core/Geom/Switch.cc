@@ -1,4 +1,3 @@
-//static char *id="@(#) $Id$";
 
 /*
  *  Switch.cc:  Turn Geometry on and off
@@ -11,16 +10,15 @@
  *
  *  Copyright (C) 1995 SCI Group
  */
-#include <SCICore/Geom/Switch.h>
-#include <SCICore/Util/NotFinished.h>
-#include <SCICore/Containers/String.h>
-#include <SCICore/Malloc/Allocator.h>
+#include <Core/Geom/Switch.h>
+#include <Core/Util/NotFinished.h>
+#include <Core/Containers/String.h>
+#include <Core/Malloc/Allocator.h>
 #include <iostream>
 using std::cerr;
 using std::ostream;
 
-namespace SCICore {
-namespace GeomSpace {
+namespace SCIRun {
 
 Persistent* make_GeomSwitch()
 {
@@ -93,7 +91,7 @@ void GeomSwitch::io(Piostream& stream)
 {
     stream.begin_class("GeomSwitch", GEOMSWITCH_VERSION);
     GeomContainer::io(stream);
-    PersistentSpace::Pio(stream, state);
+    Pio(stream, state);
     stream.end_class();
 }
 
@@ -122,8 +120,8 @@ void GeomTimeSwitch::io(Piostream& stream)
 {
     stream.begin_class("GeomSwitch", GEOMTIMESWITCH_VERSION);
     GeomContainer::io(stream);
-    PersistentSpace::Pio(stream, tbeg);
-    PersistentSpace::Pio(stream, tend);
+    Pio(stream, tbeg);
+    Pio(stream, tend);
     stream.end_class();
 }
 
@@ -133,26 +131,5 @@ bool GeomTimeSwitch::saveobj(ostream&, const clString&, GeomSave*)
     return false;
 }
 
-} // End namespace GeomSpace
-} // End namespace SCICore
+} // End namespace SCIRun
 
-//
-// $Log$
-// Revision 1.4  1999/10/07 02:07:50  sparker
-// use standard iostreams and complex type
-//
-// Revision 1.3  1999/08/17 23:50:33  sparker
-// Removed all traces of the old Raytracer and X11 renderers.
-// Also removed a .o and .d file
-//
-// Revision 1.2  1999/08/17 06:39:23  sparker
-// Merged in modifications from PSECore to make this the new "blessed"
-// version of SCIRun/Uintah.
-//
-// Revision 1.1  1999/07/27 16:56:52  mcq
-// Initial commit
-//
-// Revision 1.1.1.1  1999/04/24 23:12:20  dav
-// Import sources
-//
-//

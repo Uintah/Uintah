@@ -11,10 +11,11 @@
  *  Copyright (C) 1999 SCI Group
  */
 
-#include <SCICore/Exceptions/ErrnoException.h>
+#include <Core/Exceptions/ErrnoException.h>
 #include <sstream>
 
-using SCICore::Exceptions::ErrnoException;
+namespace SCIRun {
+
 using namespace std;
 
 ErrnoException::ErrnoException(const std::string& message, int err)
@@ -44,7 +45,7 @@ const char* ErrnoException::message() const
 
 const char* ErrnoException::type() const
 {
-   return "SCICore::Exceptions::ErrnoException";
+   return "ErrnoException";
 }
 
 int ErrnoException::getErrno() const
@@ -52,3 +53,4 @@ int ErrnoException::getErrno() const
    return d_errno;
 }
 
+} // End namespace SCIRun

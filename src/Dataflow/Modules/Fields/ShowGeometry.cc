@@ -10,21 +10,21 @@
  *  Copyright (C) 2000 SCI Group
  */
 
-#include <PSECore/Dataflow/Module.h>
-#include <PSECore/Datatypes/ColorMapPort.h>
-#include <PSECore/Datatypes/GeometryPort.h>
-#include <SCICore/Datatypes/Mesh.h>
-#include <SCICore/Datatypes/LatticeGeom.h>
-#include <SCICore/Datatypes/TriSurfGeom.h>
-#include <SCICore/Datatypes/SField.h>
-#include <PSECore/Datatypes/FieldPort.h>
-#include <SCICore/Geom/GeomGroup.h>
-#include <SCICore/Geom/Material.h>
-#include <SCICore/Geom/Switch.h>
-#include <SCICore/Geom/GeomSphere.h>
-#include <SCICore/Geom/GeomLine.h>
-#include <SCICore/TclInterface/TCLvar.h>
-#include <SCICore/Util/DebugStream.h>
+#include <Dataflow/Network/Module.h>
+#include <Dataflow/Ports/ColorMapPort.h>
+#include <Dataflow/Ports/GeometryPort.h>
+#include <Core/Datatypes/Mesh.h>
+#include <Core/Datatypes/LatticeGeom.h>
+#include <Core/Datatypes/TriSurfGeom.h>
+#include <Core/Datatypes/SField.h>
+#include <Dataflow/Ports/FieldPort.h>
+#include <Core/Geom/GeomGroup.h>
+#include <Core/Geom/Material.h>
+#include <Core/Geom/Switch.h>
+#include <Core/Geom/GeomSphere.h>
+#include <Core/Geom/GeomLine.h>
+#include <Core/TclInterface/TCLvar.h>
+#include <Core/Util/DebugStream.h>
 
 #include <map.h>
 #include <iostream>
@@ -34,20 +34,14 @@ using std::endl;
 #include <sstream>
 using std::ostringstream;
 
-namespace PSECommon {
-namespace Modules {
+namespace SCIRun {
 
-using namespace PSECore::Datatypes;
-using namespace SCICore::Geometry;
-using namespace SCICore::TclInterface;
-using namespace SCICore::GeomSpace;
 
 class ShowGeometry : public Module 
 {
   
   // GROUP: Private Data
   ///////////////////////////
-  // 
   // all private data
   
 
@@ -85,12 +79,10 @@ class ShowGeometry : public Module
   
   // GROUP: Private Methods
   ///////////////////////////
-  // 
   // all private methods
 
   //////////
   // displayNode
-  // 
   inline void displayNode(bool val) { 
     if (d_nodeSwitch) {
       d_nodeSwitch->set_state(val);
@@ -99,7 +91,6 @@ class ShowGeometry : public Module
 
   //////////
   // displayConnections
-  // 
   inline void displayConnections(bool val) { 
     if (d_conSwitch) {
       d_conSwitch->set_state(val);
@@ -108,7 +99,6 @@ class ShowGeometry : public Module
 
   //////////
   // reloadNodeColor
-  // 
   inline void reloadConColor() {
     d_conMat->diffuse = Color(d_conChanR.get(), d_conChanG.get(), 
 			      d_conChanB.get());
@@ -123,12 +113,10 @@ public:
   // GROUP:  Constructors:
   ///////////////////////////
   // Constructs an instance of class ShowGeometry
-  //
 
 
   //////////
   // ShowGeometry
-  // 
   ShowGeometry(const clString& id) : 
     Module("ShowGeometry", id, Filter), 
     d_showProgress("show_progress", id, this), 
@@ -175,7 +163,6 @@ public:
 
   //////////
   // execute
-  // 
   virtual void execute()
   {
     // Check for generation number. FIX_ME
@@ -311,7 +298,6 @@ public:
 
   //////////
   // addConnections
-  // 
   inline void addConnections(int i, int j, int k, 
 			     bool lastI, bool lastJ, bool lastK,
 			     LatticeGeom *grid, GeomGroup *g) {
@@ -334,7 +320,6 @@ public:
 
   //////////
   // addSphere
-  // 
   inline void addSphere(int i, int j, int k, LatticeGeom *grid, 
 			GeomGroup *g, double size) {
 
@@ -344,7 +329,6 @@ public:
 
   //////////
   // addAxis
-  // 
   inline void addAxis(int i, int j, int k,
 		      Vector &x, Vector &y, Vector &z, 
 		      LatticeGeom *grid, GeomGroup *g) {
@@ -369,7 +353,6 @@ public:
 
   //////////
   // tcl_command
-  // 
   virtual void tcl_command(TCLArgs& args, void* userdata) {
     if(args.count() < 2){
       args.error("ShowGeometry needs a minor command");
@@ -426,7 +409,6 @@ public:
 
   //////////
   // setUpDirs
-  // 
   void setUpDirs(Vector &x, Vector &y, Vector &z, 
 		 double &sx, double &sy,  double &sz, 
 		 LatticeGeom *grid, BBox &bbox) {
@@ -490,6 +472,5 @@ extern "C" Module* make_ShowGeometry(const clString& id) {
   return new ShowGeometry(id);
 }
 
-} // End namespace Modules
-} // End namespace PSECommon
+} // End namespace SCIRun
 

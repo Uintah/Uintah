@@ -13,36 +13,26 @@
 #ifndef SCI_project_Noise_h
 #define SCI_project_Noise_h 
 
-#include <PSECore/Dataflow/Module.h>
-#include <PSECore/Datatypes/ColorMapPort.h>      
-#include <PSECore/Datatypes/GeometryPort.h>
-#include <SCICore/Datatypes/Mesh.h>
-#include <SCICore/Datatypes/ScalarField.h>
-#include <SCICore/Datatypes/ScalarFieldRGdouble.h>
-#include <SCICore/Datatypes/ScalarFieldRGfloat.h>
-#include <SCICore/Datatypes/ScalarFieldUG.h>
-#include <PSECore/Datatypes/ScalarFieldPort.h>
-#include <PSECore/Datatypes/SpanPort.h>
-#include <PSECore/Datatypes/SpanTree.h>
-#include <SCICore/Thread/Parallel.h>
-#include <SCICore/Thread/Thread.h>
-#include <SCICore/TclInterface/TCLvar.h>
+#include <Dataflow/Network/Module.h>
+#include <Dataflow/Ports/ColorMapPort.h>      
+#include <Dataflow/Ports/GeometryPort.h>
+#include <Core/Datatypes/Mesh.h>
+#include <Core/Datatypes/ScalarField.h>
+#include <Core/Datatypes/ScalarFieldRGdouble.h>
+#include <Core/Datatypes/ScalarFieldRGfloat.h>
+#include <Core/Datatypes/ScalarFieldUG.h>
+#include <Dataflow/Ports/ScalarFieldPort.h>
+#include <Dataflow/Ports/SpanPort.h>
+#include <Dataflow/Ports/SpanTree.h>
+#include <Core/Thread/Parallel.h>
+#include <Core/Thread/Thread.h>
+#include <Core/TclInterface/TCLvar.h>
 
-#include <SCICore/Geom/Material.h>
+#include <Core/Geom/Material.h>
 
-namespace PSECommon {
-namespace Modules {
+namespace SCIRun {
 
-using namespace PSECore::Dataflow;
-using namespace PSECore::Datatypes;
-using namespace SCICore::Datatypes;
-using namespace SCICore::TclInterface;
-using namespace SCICore::GeomSpace;
-using namespace SCICore::Geometry;
-using namespace SCICore::Math;
-using namespace SCICore::Containers;
 
-using namespace SCICore::Thread;
 
 
 class Noise : public Module {
@@ -120,7 +110,6 @@ private:
   void _count_collect( int, int & );
 };
 
-}
-}
+} // End namespace SCIRun
 
 #endif

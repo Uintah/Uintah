@@ -1,8 +1,6 @@
 //////////////////////////////////////////////////////////////////////
 // Mesh.h - Represent a model as a mesh.
-//
 // David K. McAllister, August 1999.
-//
 // This represents arbitrary non-manifold meshes of triangles, edges,
 // and faces. It can import and export a Model. This mesh includes
 // things used only for simplifying meshes. Using it for other
@@ -12,12 +10,10 @@
 #ifndef mesh_h
 #define mesh_h
 
-#include <Remote/Tools/Model/Model.h>
-#include <Remote/Tools/Math/Quadric.h>
+#include <Packages/Remote/Tools/Model/Model.h>
+#include <Packages/Remote/Tools/Math/Quadric.h>
 
 namespace Remote {
-namespace Tools {
-
 #define DIST_FACTOR 0.000
 
 // Returns true if the points are within D of eachother.
@@ -146,13 +142,11 @@ struct Face
 };
 
 } // namespace Tools
-} // namespace Remote
+} // namespace Packages/Remote
 
-#include <Remote/Tools/Model/VertexTree.h>
+#include <Packages/Remote/Tools/Model/VertexTree.h>
 
 namespace Remote {
-namespace Tools {
-
 //----------------------------------------------------------------------
 struct Mesh
 {
@@ -297,8 +291,7 @@ struct Mesh
   
 };
 
+} // End namespace Remote
 
-} // namespace Tools
-} // namespace Remote
 
 #endif

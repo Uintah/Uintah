@@ -6,44 +6,29 @@
  * Simple interface to volume rendering stuff
  */
 
-#include <PSECore/Dataflow/Module.h>
-#include <PSECore/Datatypes/ScalarFieldPort.h>
-#include <SCICore/TclInterface/TCLvar.h>
-#include <SCICore/Geometry/Point.h>
-#include <SCICore/Geometry/Vector.h>
-#include <SCICore/Datatypes/GLTexture3D.h>
-#include <PSECore/Datatypes/GLTexture3DPort.h>
-#include <SCICore/Datatypes/ScalarField.h>
+#include <Dataflow/Network/Module.h>
+#include <Dataflow/Ports/ScalarFieldPort.h>
+#include <Core/TclInterface/TCLvar.h>
+#include <Core/Geometry/Point.h>
+#include <Core/Geometry/Vector.h>
+#include <Core/Datatypes/GLTexture3D.h>
+#include <Dataflow/Ports/GLTexture3DPort.h>
+#include <Core/Datatypes/ScalarField.h>
 #include <GL/glx.h>
 
 
 
-namespace SCICore{
-  namespace Datatypes{
-   class ScalarFieldRGuchar;
-  }
+namespace SCIRun{
+  class ScalarFieldRGuchar;
 }
 
-namespace SCICore {
-  namespace Datatypes {
+namespace SCIRun {
   class GLTexture3D;
-  }
 }
 
-namespace PSECommon {
-namespace Modules {
+namespace SCIRun {
 
-using namespace SCICore::TclInterface;
-using SCICore::Geometry::Point;
-using SCICore::Geometry::Vector;
-using SCICore::Datatypes::ScalarFieldRGuchar;
 
-using PSECore::Datatypes::GLTexture3DOPort;
-using PSECore::Datatypes::ScalarFieldIPort;
-using PSECore::Datatypes::ScalarFieldHandle;
-using PSECore::Dataflow::Module;
-using SCICore::Datatypes::GLTexture3D;
-using SCICore::Datatypes::GLTexture3DHandle;
 
 class GLTextureBuilder : public Module {
 
@@ -73,7 +58,6 @@ private:
 
 };
 
-} // namespace Modules
-} // namespace PSECommon
+} // End namespace SCIRun
 
 #endif

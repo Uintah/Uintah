@@ -1,4 +1,3 @@
-//static char *id="@(#) $Id$";
 
 /*
  *  ScalarField.cc: ?
@@ -12,14 +11,13 @@
  *  Copyright (C) 199? SCI Group
  */
 
-#include <SCICore/Datatypes/ScalarField.h>
-#include <SCICore/Datatypes/ScalarFieldRGBase.h>
-#include <SCICore/Containers/String.h>
+#include <Core/Datatypes/ScalarField.h>
+#include <Core/Datatypes/ScalarFieldRGBase.h>
+#include <Core/Containers/String.h>
 #include <iostream>
 using std::cerr;
 
-namespace SCICore {
-namespace Datatypes {
+namespace SCIRun {
 
 PersistentTypeID ScalarField::type_id("ScalarField", "Datatype", 0);
 
@@ -87,7 +85,6 @@ void ScalarField::get_minmax(double& min, double& max)
 
 double ScalarField::longest_dimension()
 {
-    using SCICore::Math::Max;
 
     if(!have_bounds){
 	compute_bounds();
@@ -279,47 +276,5 @@ void ScalarField::io(Piostream& stream)
     stream.end_class();
 }
 
-} // End namespace Datatypes
-} // End namespace SCICore
+} // End namespace SCIRun
 
-//
-// $Log$
-// Revision 1.6  2000/02/04 00:19:32  yarden
-// enable to store the grid part of a ScalarField in a seperate file.
-// a flag (sererate_raw) signal if this ScalarField was read from a split
-// input file or should be writen as two. raw_filename specify the secondary
-// file name. if no filename is given during writing, the output routines
-// will try to extract the name from the output stream and attach a '.raw'
-// extension to the binary portion.
-//
-// replaced ScalarFieldRGxxx with ScalarFieldRGTYPE. it also replaces
-// the ScalarFieldRG files (i.e. the old RG with no type specification
-// which defaults to 'double'
-//
-// Revision 1.5  1999/10/07 02:07:32  sparker
-// use standard iostreams and complex type
-//
-// Revision 1.4  1999/08/29 00:46:52  sparker
-// Integrated new thread library
-// using statement tweaks to compile with both MipsPRO and g++
-// Thread library bug fixes
-//
-// Revision 1.3  1999/08/25 03:48:35  sparker
-// Changed SCICore/CoreDatatypes to SCICore/Datatypes
-// Changed PSECore/CommonDatatypes to PSECore/Datatypes
-// Other Misc. directory tree updates
-//
-// Revision 1.2  1999/08/17 06:38:48  sparker
-// Merged in modifications from PSECore to make this the new "blessed"
-// version of SCIRun/Uintah.
-//
-// Revision 1.1  1999/07/27 16:56:23  mcq
-// Initial commit
-//
-// Revision 1.1  1999/04/25 04:07:10  dav
-// Moved files into Datatypes
-//
-// Revision 1.1.1.1  1999/04/24 23:12:50  dav
-// Import sources
-//
-//

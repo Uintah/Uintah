@@ -1,7 +1,7 @@
 
 catch {rename ErrorInterval ""}
 
-itcl_class PSECommon_FEM_ErrorInterval {
+itcl_class Dataflow_FEM_ErrorInterval {
     inherit Module
     constructor {config} {
 	set name ErrorInterval

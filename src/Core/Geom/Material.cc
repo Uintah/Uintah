@@ -11,20 +11,18 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <SCICore/Geom/Material.h>
-#include <SCICore/Util/NotFinished.h>
-#include <SCICore/Containers/String.h>
-#include <SCICore/Geom/GeomSave.h>
-#include <SCICore/Malloc/Allocator.h>
+#include <Core/Geom/Material.h>
+#include <Core/Util/NotFinished.h>
+#include <Core/Containers/String.h>
+#include <Core/Geom/GeomSave.h>
+#include <Core/Malloc/Allocator.h>
 #include <iostream>
 using std::cerr;
 using std::ostream;
-//#include <SCICore/Containers/LockingHandle.h>
+//#include <Core/Containers/LockingHandle.h>
 
-namespace SCICore {
-namespace GeomSpace {
+namespace SCIRun {
 
-using SCICore::PersistentSpace::Persistent;
 
 static Persistent* make_Material()
 {
@@ -100,9 +98,6 @@ Material* Material::clone()
 
 void Material::io(Piostream& stream)
 {
-    using SCICore::PersistentSpace::Pio;
-    using SCICore::GeomSpace::Pio;
-    using SCICore::Containers::Pio;
 
     /* int version= */stream.begin_class("Material", MATERIAL_VERSION);
     Pio(stream, ambient);
@@ -148,8 +143,6 @@ GeomObj* GeomMaterial::clone()
 
 void GeomMaterial::io(Piostream& stream)
 {
-    using SCICore::PersistentSpace::Pio;
-    using SCICore::Containers::Pio;
 
     stream.begin_class("GeomMaterial", GEOMMATERIAL_VERSION);
     GeomContainer::io(stream);
@@ -214,10 +207,7 @@ bool GeomMaterial::saveobj(ostream& out, const clString& format,
     }
 }
 
-} // End namespace GeomSpace
-} // End namespace SCICore
+} // End namespace SCIRun
 
-//
 // $Log
-//
 

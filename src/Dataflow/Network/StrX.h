@@ -1,4 +1,4 @@
-#ifndef PSECore_Dataflow_StrX_h
+#ifndef Dataflow_Dataflow_StrX_h
 #define PSECORE_Dataflow_StrX_h 1
 
 #ifdef __sgi
@@ -17,8 +17,7 @@
 
 #include <iostream>
 
-namespace PSECore {
-namespace Dataflow {
+namespace SCIRun {
 
 
 // ---------------------------------------------------------------------------
@@ -60,7 +59,6 @@ public :
 private :
   // -----------------------------------------------------------------------
   //  Private data members
-  //
   //  fLocalForm
   //      This is the local code page form of the string.
   // -----------------------------------------------------------------------
@@ -69,7 +67,6 @@ private :
 
 std::ostream& operator<<(std::ostream& target, const StrX& toDump);
 
-} // Dataflow
-} // PSECore
+} // End namespace SCIRun
 
 #endif

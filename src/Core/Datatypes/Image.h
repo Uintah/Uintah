@@ -15,19 +15,13 @@
 #ifndef SCI_DATATYPES_IMAGE_H
 #define SCI_DATATYPES_IMAGE_H 1
 
-#include <SCICore/Datatypes/Datatype.h>
-#include <SCICore/Containers/LockingHandle.h>
-#include <SCICore/Containers/Array2.h>
-#include <SCICore/Geom/Color.h>
+#include <Core/Datatypes/Datatype.h>
+#include <Core/Containers/LockingHandle.h>
+#include <Core/Containers/Array2.h>
+#include <Core/Geom/Color.h>
 
-namespace SCICore {
-namespace Datatypes {
+namespace SCIRun {
 
-using SCICore::Containers::LockingHandle;
-using SCICore::Containers::Array2;
-using SCICore::PersistentSpace::Piostream;
-using SCICore::PersistentSpace::PersistentTypeID;
-using SCICore::GeomSpace::Color;
 
 class Image;
 typedef LockingHandle<Image> ImageHandle;
@@ -89,35 +83,7 @@ public:
     int yres() const;
 };
 
-} // End namespace Datatypes
-} // End namespace SCICore
+} // End namespace SCIRun
 
-//
-// $Log$
-// Revision 1.3  1999/08/25 03:48:34  sparker
-// Changed SCICore/CoreDatatypes to SCICore/Datatypes
-// Changed PSECore/CommonDatatypes to PSECore/Datatypes
-// Other Misc. directory tree updates
-//
-// Revision 1.2  1999/08/17 06:38:46  sparker
-// Merged in modifications from PSECore to make this the new "blessed"
-// version of SCIRun/Uintah.
-//
-// Revision 1.1  1999/07/27 16:56:22  mcq
-// Initial commit
-//
-// Revision 1.3  1999/05/06 19:55:47  dav
-// added back .h files
-//
-// Revision 1.1  1999/05/05 21:04:38  dav
-// added SCICore .h files to /include directories
-//
-// Revision 1.1  1999/04/25 04:07:07  dav
-// Moved files into Datatypes
-//
-// Revision 1.1.1.1  1999/04/24 23:12:47  dav
-// Import sources
-//
-//
 
 #endif

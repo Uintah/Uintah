@@ -10,15 +10,15 @@
  *  Copyright (C) 2000 SCI Group
  */
 
-#include <PSECore/Dataflow/Module.h>
-#include <PSECore/Datatypes/ScalarFieldPort.h>
-#include <SCICore/Containers/Array3.h>
-#include <SCICore/Datatypes/ScalarField.h>
-#include <SCICore/Datatypes/ScalarFieldRGBase.h>
-#include <SCICore/Datatypes/ScalarFieldUG.h>
-#include <SCICore/Malloc/Allocator.h>
-#include <SCICore/TclInterface/TCLvar.h>
-#include <SCICore/Tester/RigorousTest.h>
+#include <Dataflow/Network/Module.h>
+#include <Dataflow/Ports/ScalarFieldPort.h>
+#include <Core/Containers/Array3.h>
+#include <Core/Datatypes/ScalarField.h>
+#include <Core/Datatypes/ScalarFieldRGBase.h>
+#include <Core/Datatypes/ScalarFieldUG.h>
+#include <Core/Malloc/Allocator.h>
+#include <Core/TclInterface/TCLvar.h>
+#include <Core/Tester/RigorousTest.h>
 
 #include <iostream>
 using std::cerr;
@@ -26,14 +26,7 @@ using std::endl;
 #include <stdio.h>
 
 namespace DaveW {
-namespace Modules {
-
-using namespace PSECore::Dataflow;
-using namespace PSECore::Datatypes;
-using namespace SCICore::TclInterface;
-using namespace SCICore::Containers;
-using namespace SCICore::Datatypes;
-using namespace SCICore::Geometry;
+using namespace SCIRun;
 
 /*
  * The values from Peters and DeMunck's 1991 papers:
@@ -232,9 +225,7 @@ void SFRGtoSFUG::execute()
     m->compute_neighbors();
     ofld->send(ScalarFieldHandle(sfug));
 }
-
-} // End namespace Modules
 } // End namespace DaveW
 
 
-// $Log:
+

@@ -14,46 +14,18 @@
 #ifndef SCI_project_GeometryPort_h
 #define SCI_project_GeometryPort_h 1
 
-#include <PSECore/share/share.h>
-#include <PSECore/Dataflow/Port.h>
+#include <Dataflow/share/share.h>
+#include <Dataflow/Network/Port.h>
+#include <Core/Thread/Mailbox.h>
+namespace SCIRun {
 
-namespace SCICore {
-  namespace Containers {
-    class clString;
-  }
-  namespace GeomSpace {
-    class GeomObj;
-    class View;
-  }
-  namespace Thread {
-      class CrowdMonitor;
-      class Mutex;
-      template<class T> class Mailbox;
-  }
-  namespace Datatypes {
-    class ColorImage;
-    class DepthImage;
-  }
-}
-
-namespace PSECore {
-namespace Datatypes {
-
-using PSECore::Dataflow::IPort;
-using PSECore::Dataflow::OPort;
-using PSECore::Dataflow::Module;
-using PSECore::Dataflow::Connection;
-using PSECore::Comm::MessageBase;
-
-using SCICore::Containers::clString;
-using SCICore::Thread::Mutex;
-using SCICore::Thread::Mailbox;
-using SCICore::Thread::CrowdMonitor;
-using SCICore::GeomSpace::GeomObj;
-using SCICore::GeomSpace::View;
-using SCICore::Datatypes::ColorImage;
-using SCICore::Datatypes::DepthImage;
-
+class clString;
+class GeomObj;
+class View;
+class CrowdMonitor;
+class Mutex;
+class ColorImage;
+class DepthImage;
 class GeometryComm;
 
 typedef int GeomID;
@@ -132,8 +104,7 @@ public:
     void setView(int which_roe, View view);
 };
 
-} // End namespace Datatypes
-} // End namespace PSECore
+} // End namespace SCIRun
 
 
 #endif /* SCI_project_GeometryPort_h */

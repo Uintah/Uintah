@@ -1,7 +1,6 @@
 
 /*
  *  TypeInfo_internal.h: internal representation for a type.
- *  $Id$
  *
  *  Written by:
  *   Steven G. Parker
@@ -12,18 +11,16 @@
  *  Copyright (C) 1999 SCI Group
  */
 
-#ifndef Component_PIDL_TypeInfo_internal_h
-#define Component_PIDL_TypeInfo_internal_h
+#ifndef Core/CCA/Component_PIDL_TypeInfo_internal_h
+#define Core/CCA/Component_PIDL_TypeInfo_internal_h
 
-#include <Component/PIDL/Object.h>
+#include <Core/CCA/Component/PIDL/Object.h>
 #include <globus_nexus.h>
 #include <map>
 #include <string>
 #include <vector>
 
-namespace Component {
-    namespace PIDL {
-	class TypeInfo;
+namespace SCIRun {
 /**************************************
  
 CLASS
@@ -43,7 +40,7 @@ DESCRIPTION
 	    // Create a new TypeInfo_internal. There should be only
 	    // one of these per distinct type.  Fullclassname is the
 	    // fully qualified C++ class name for the associated
-	    // class (i.e. ::Component::PIDL::TypeInfo_internal).
+	    // class (i.e. ::Core/CCA/Component::PIDL::TypeInfo_internal).
 	    // uuid is a unique identifier for this class.  table and
 	    // tableSize are used to create endpoints for objects
 	    // of this type.  The create_proxy function will create
@@ -120,29 +117,7 @@ DESCRIPTION
 	    void add_castables(TypeInfo_internal* ti, int offset);
 
 	};
-    }
-}
+} // End namespace SCIRun
 
 #endif
 
-//
-// $Log$
-// Revision 1.2  1999/09/24 20:03:38  sparker
-// Added cocoon documentation
-//
-// Revision 1.1  1999/09/17 05:08:11  sparker
-// Implemented component model to work with sidl code generator
-//
-// Revision 1.1  1999/08/30 17:39:49  sparker
-// Updates to configure script:
-//  rebuild configure if configure.in changes (Bug #35)
-//  Fixed rule for rebuilding Makefile from Makefile.in (Bug #36)
-//  Rerun configure if configure changes (Bug #37)
-//  Don't build Makefiles for modules that aren't --enabled (Bug #49)
-//  Updated Makfiles to build sidl and Component if --enable-parallel
-// Updates to sidl code to compile on linux
-// Imported PIDL code
-// Created top-level Component directory
-// Added ProcessManager class - a simpler interface to fork/exec (not finished)
-//
-//

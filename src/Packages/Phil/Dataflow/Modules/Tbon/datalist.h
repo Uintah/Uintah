@@ -1,11 +1,10 @@
-//static char *id="@(#) $Id$";
 
 /*
   datalist.h
 
   Dynamic data structure containing data bricks for out-of-core algorithms
 
-  Philip Sutton
+  Packages/Philip Sutton
 
   Copyright (C) 2000 SCI Group, University of Utah
 */
@@ -17,8 +16,6 @@
 #include <strings.h>
 
 namespace Phil {
-namespace Modules {
-
 template <class T>
 class DataList {
 public:
@@ -152,18 +149,8 @@ DataList<T>::getValue( int x, int y, int z ) {
   return list[i][offset];
 } // getValue
 
+} // End namespace Phil
 
-} // end namespace Modules
-} // end namespace Phil
 
 #endif
 
-//
-// $Log$
-// Revision 1.2  2000/02/04 22:15:10  psutton
-// fixed ID problem
-//
-// Revision 1.1  2000/02/04 21:12:00  psutton
-// initial revision
-//
-//

@@ -10,12 +10,10 @@
  *  Copyright (C) 1995 SCI Group
  */
 
-#include <PSECore/Datatypes/SpanTree.h>
+#include <Dataflow/Ports/SpanTree.h>
 
-namespace PSECore {
-namespace Datatypes {
+namespace SCIRun {
 
-using namespace SCICore::Datatypes;
 
 PersistentTypeID SpanForest::type_id("SpanTree", "Datatype", 0);
 
@@ -37,5 +35,4 @@ void SpanForest::io(Piostream& stream) {
 */
 
 
-}
-}
+} // End namespace SCIRun

@@ -1,4 +1,3 @@
-//static char *id="@(#) $Id$";
 
 /*
  *  tester.cc: ?
@@ -12,19 +11,20 @@
  *  Copyright (C) 199? SCI Group
  */
 
-#include <SCICore/Tester/PerfTest.h>
-#include <SCICore/Tester/RigorousTest.h>
-#include <SCICore/Tester/TestTable.h>
+#include <Core/Tester/PerfTest.h>
+#include <Core/Tester/RigorousTest.h>
+#include <Core/Tester/TestTable.h>
 #include <dlfcn.h>
 #include <iostream>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-using namespace SCICore;
 using namespace Tester;
 
 static bool passed=true;
+
+using namespace SCIRun;
 
 static void testrigorous(char* libname, char* classname)
 {
@@ -165,19 +165,3 @@ int main(int argc, char* argv[])
     return 0;
 }
 
-//
-// $Log$
-// Revision 1.3  1999/10/07 02:08:05  sparker
-// use standard iostreams and complex type
-//
-// Revision 1.2  1999/08/17 06:39:48  sparker
-// Merged in modifications from PSECore to make this the new "blessed"
-// version of SCIRun/Uintah.
-//
-// Revision 1.1  1999/07/27 16:57:20  mcq
-// Initial commit
-//
-// Revision 1.1.1.1  1999/04/24 23:12:25  dav
-// Import sources
-//
-//

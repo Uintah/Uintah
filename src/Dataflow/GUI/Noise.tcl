@@ -1,7 +1,7 @@
 
 catch {rename Noise ""}
 
-itcl_class PSECommon_Visualization_Noise {
+itcl_class Dataflow_Visualization_Noise {
     inherit Module
     constructor {config} {
 	set name Noise

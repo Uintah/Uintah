@@ -1,16 +1,13 @@
-//
 // Load and display a VRML model.
-//
 // Copyright 1999 by David K. McAllister
-//
 
-#include <Remote/remoteViewer/ArcBall.h>
+#include <Packages/Remote/remoteViewer/ArcBall.h>
 
-#include <Remote/Tools/Image/Image.h>
-#include <Remote/Tools/Math/Vector.h>
-#include <Remote/Tools/Model/Model.h>
-#include <SCICore/Util/Timer.h>
-#include <Remote/Tools/Image/ZImage.h>
+#include <Packages/Remote/Tools/Image/Image.h>
+#include <Packages/Remote/Tools/Math/Vector.h>
+#include <Packages/Remote/Tools/Model/Model.h>
+#include <Core/Util/Timer.h>
+#include <Packages/Remote/Tools/Image/ZImage.h>
 
 #include <GL/glut.h>
 
@@ -21,32 +18,30 @@ using namespace std;
 
 #include <math.h>
 
-#include <SCICore/Thread/Thread.h>
-#include <SCICore/Thread/ThreadGroup.h>
-#include <SCICore/Thread/Mutex.h>
-#include <SCICore/Thread/Runnable.h>
-#include <SCICore/Thread/Time.h>
+#include <Core/Thread/Thread.h>
+#include <Core/Thread/ThreadGroup.h>
+#include <Core/Thread/Mutex.h>
+#include <Core/Thread/Runnable.h>
+#include <Core/Thread/Time.h>
 
-#include <Remote/Tools/macros.h>
-#include <SCICore/OS/sock.h>
-#include <Remote/Modules/remoteSalmon/message.h>
+#include <Packages/Remote/Tools/macros.h>
+#include <Core/OS/sock.h>
+#include <Packages/Remote/Dataflow/Modules/remoteSalmon/message.h>
 
 //#include "imageio.h"
 
 //#include "depthimage.h"
 //using blender::Socket;
 
-#include <Remote/Modules/remoteSalmon/RenderModel.h>
-#include <Remote/Modules/remoteSalmon/SimpMesh.h>
-#include <Remote/Modules/remoteSalmon/HeightSimp.h>
+#include <Packages/Remote/Dataflow/Modules/remoteSalmon/RenderModel.h>
+#include <Packages/Remote/Dataflow/Modules/remoteSalmon/SimpMesh.h>
+#include <Packages/Remote/Dataflow/Modules/remoteSalmon/HeightSimp.h>
 
-using namespace SCICore::Thread;
-//using namespace Remote::Modules;
+using namespace SCIRun;
+//using namespace Packages/Remote::Modules;
 using namespace Remote::Tools;
 
 namespace Remote {
-namespace Modules {
-
 char machine[80];
 int port = VR_PORT;
 
@@ -1172,7 +1167,6 @@ void SendZBuffer() {
 
 				//------------------------------
 				// simplify and send zbuffer as a mesh
-				// 
 
     cout << "simplifying zbuffer" << endl;
     
@@ -1505,7 +1499,6 @@ void SaveZBuffer()
   
 				//------------------------------
 				// simplify and send zbuffer as a mesh
-				// 
   
   HeightSimp* HFSimplifier = new HeightSimp(ZBuf, 0x01000000, 0x01000000);
   
@@ -2153,7 +2146,7 @@ void drawThread::run() {
   glutInitDisplayMode(GLUT_RGB | GLUT_DEPTH |
     GLUT_DOUBLE | (DoMultiSample?GLUT_MULTISAMPLE:0));
   glutInitWindowSize(isizex, isizey);
-  wid = glutCreateWindow("Remote Viewer");
+  wid = glutCreateWindow("Packages/Remote Viewer");
 	
   glutDisplayFunc(Draw);
   glutIdleFunc(Idle);
@@ -2619,7 +2612,7 @@ void commThread::run() {
 }
 
 } // namespace Modules
-} // namespace Remote
+} // namespace Packages/Remote
 
 using namespace Remote::Modules;
 
@@ -2692,8 +2685,8 @@ int main(int argc, char **argv)
       }
     }
     Models[i]->RebuildBBox();
+} // End namespace Remote
     LookAt += Models[i]->Box.Center();
-  }
   if (Models.size() > 0) LookAt /= double(Models.size());
 
   rebuildBBox();
@@ -2711,5 +2704,4 @@ int main(int argc, char **argv)
   group->join();
 
   return 0;
-}
 

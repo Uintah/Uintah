@@ -1,18 +1,14 @@
 
-#
 #  Radiosity.tcl
-#
 #  Written by:
 #   David Weinstein
 #   Department of Computer Science
 #   University of Utah
 #   March 1997
-#
 #  Copyright (C) 1997 SCI Group
-#
 
-catch {rename DaveW_CS684_Radiosity}
-itcl_class DaveW_CS684_Radiosity {
+catch {rename Packages/DaveW_CS684_Radiosity}
+itcl_class Packages/DaveW_CS684_Radiosity {
     inherit Module
     constructor {config} {
 	set name Radiosity

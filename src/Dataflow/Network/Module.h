@@ -18,61 +18,36 @@
 #pragma warning(disable:4355 4786)
 #endif
 
-#include <PSECore/share/share.h>
-#include <SCICore/Containers/Array1.h>
-#include <SCICore/Containers/String.h>
-#include <SCICore/Util/Timer.h>
-#include <SCICore/TclInterface/TCL.h>
-#include <SCICore/TclInterface/TCLvar.h>
-#include <SCICore/Thread/Mailbox.h>
-#include <SCICore/Geom/Pickable.h>
+#include <Dataflow/share/share.h>
+#include <Core/Containers/Array1.h>
+#include <Core/Containers/String.h>
+#include <Core/Util/Timer.h>
+#include <Core/TclInterface/TCL.h>
+#include <Core/TclInterface/TCLvar.h>
+#include <Core/Thread/Mailbox.h>
+#include <Core/Geom/Pickable.h>
 #include <map>
 
-namespace SCICore {
-  namespace Geometry {
-    class Vector;
-  }
-  namespace GeomSpace {
-    class GeomPick;
-    class GeomObj;
-  }
+namespace SCIRun {
+  class Vector;
+  class GeomPick;
+  class GeomObj;
 }
 
-namespace PSECore {
-  namespace Comm {
-    class MessageBase;
-  }
+namespace SCIRun {
+  class MessageBase;
 }
-namespace PSECommon {
-  namespace Modules {
-    class Roe;
-  }
+namespace SCIRun {
+  class Roe;
 }
 
-namespace PSECommon {
-  namespace AInterface {
-    class AI;
-  }
+namespace SCIRun {
+  class AI;
 }
 
-namespace PSECore {
-namespace Dataflow {
+namespace SCIRun {
 
-using SCICore::TclInterface::TCL;
-using SCICore::TclInterface::TCLArgs;
-using SCICore::TclInterface::TCLint;
-using SCICore::TclInterface::TCLstring;
-using SCICore::GeomSpace::GeomPick;
-using SCICore::GeomSpace::GeomObj;
-using SCICore::GeomSpace::BState;
-using SCICore::GeomSpace::Pickable;
-using SCICore::Geometry::Vector;
-using SCICore::Containers::clString;
-using SCICore::Containers::Array1;
 
-using PSECore::Comm::MessageBase;
-using PSECommon::Modules::Roe;
-using PSECommon::AInterface::AI;
 
 class Connection;
 class Network;
@@ -148,7 +123,7 @@ public:
      */
     virtual int clone(int deep);
 
-    SCICore::Thread::Mailbox<MessageBase*> mailbox;
+    Mailbox<MessageBase*> mailbox;
 
     inline State get_state(){ return state;}
     inline double get_progress(){ return progress;}
@@ -229,7 +204,6 @@ public:
 
 typedef Module* (*ModuleMaker)(const clString& id);
 
-} // End namespace Dataflow
-} // End namespace PSECore
+} // End namespace SCIRun
 
 #endif /* SCI_project_Module_h */

@@ -1,19 +1,16 @@
 //////////////////////////////////////////////////////////////////////
 // HVector.h - interface for the HVector class.
-//
 // by David McAllister, 1998.
 
 #ifndef _hvector_h
 #define _hvector_h
 
-#include <Remote/Tools/Util/Assert.h>
+#include <Packages/Remote/Tools/Util/Assert.h>
 
-#include <Remote/Tools/Math/HMatrix.h>
-#include <Remote/Tools/Math/MiscMath.h>
+#include <Packages/Remote/Tools/Math/HMatrix.h>
+#include <Packages/Remote/Tools/Math/MiscMath.h>
 
 namespace Remote {
-namespace Tools {
-
 class HVector
 {
 	double *data;
@@ -310,8 +307,7 @@ public:
 ostream& operator<<(ostream& os, const HVector& p);
 istream& operator>>(istream& os, HVector& p);
 
+} // End namespace Remote
 
-} // namespace Tools
-} // namespace Remote
 
 #endif

@@ -5,11 +5,7 @@
 
 #define NOT_IN_HEAP -47
 
-//
-//
 // This file extracted from Terra
-//
-//
 
 class Heapable
 {
@@ -40,7 +36,6 @@ public:
 
 class Heap : public array<heap_node> {
 
-    //
     // The actual size of the heap.  array::length()
     // simply returns the amount of allocated space
     int size;

@@ -19,24 +19,21 @@ POSSIBLE REVISIONS
     Adding additional interpolation modes (subject to experiment)
 ----------------------------------------------------------------------*/
 
-#include <SCICore/Datatypes/Path.h>
-#include <SCICore/Malloc/Allocator.h>
-#include <SCICore/Geometry/Point.h>
-#include <SCICore/Geometry/Vector.h>
-#include <SCICore/Geometry/Quaternion.h>
-#include <SCICore/Util/Assert.h>
-#include <SCICore/Math/MiscMath.h>
+#include <Core/Datatypes/Path.h>
+#include <Core/Malloc/Allocator.h>
+#include <Core/Geometry/Point.h>
+#include <Core/Geometry/Vector.h>
+#include <Core/Geometry/Quaternion.h>
+#include <Core/Util/Assert.h>
+#include <Core/Math/MiscMath.h>
 #include <math.h>
 #include <iostream>
 
-namespace SCICore {
-namespace Datatypes {
+namespace SCIRun {
 
 #define PI 3.14159265358979323846
 #define MSG(m) std::cout << m << std::endl; 
 
-using namespace SCICore::Geometry;
-using namespace SCICore::GeomSpace;
 
 static Persistent* make_Path()
 {
@@ -102,10 +99,6 @@ Path* Path::clone()
 
 void Path::io(Piostream& stream)
 {
-    using SCICore::PersistentSpace::Pio;
-    using SCICore::Containers::Pio;
-    using SCICore::Geometry::Pio;
-    using SCICore::GeomSpace::Pio;
     
     int oldpath=path_t;
 
@@ -605,6 +598,5 @@ bool Path::get_nextPP(View& v, int& curr_view, double& curr_speed, double& curr_
   }
 }
 
-} // End namespace Datatypes
-} // End namespace SCICore
+} // End namespace SCIRun
 

@@ -1,7 +1,7 @@
 
 package require Iwidgets 3.0
 
-proc ComponentWizard {} {
+proc Core/CCA/ComponentWizard {} {
     set w .componentWizard
     if {[winfo exists $w]} {
 	destroy $w
@@ -19,7 +19,7 @@ proc ComponentWizard {} {
     global time_font
     
     toplevel $w -width [concat $MAIN_WIDTH i] -height [concat $MAIN_HEIGHT i]
-    wm title $w "Component Wizard"
+    wm title $w "Core/CCA/Component Wizard"
 
     iwidgets::tabnotebook $w.tabs -width [concat $WIDTH i]\
 	                  -height [concat $HEIGHT i]
@@ -86,23 +86,17 @@ proc make_icon {canvas modx mody} {
     global modname_font
     global time_font
     
-    #
     # Make the title
-    #
     entry $p.title -relief flat -justify center -width 16 \
          -font $modname_font 
     pack $p.title -side top -padx 2 -anchor w 
     
-    #
     # Make the time label
-    #
     label $p.time -text "00.00" \
          -font $time_font
     pack $p.time -side left -padx 2
     
-    #
     # Make the progress graph
-    #
     frame $p.inset -relief sunken -height 4 -borderwidth 2 \
 	    -width .5i
     pack $p.inset -side left -fill y -padx 2 -pady 2
@@ -111,9 +105,7 @@ proc make_icon {canvas modx mody} {
     # Don't pack it in yet - the width is zero... 
     pack $p.inset.graph -fill y -expand yes -anchor nw
 
-    #
     # Stick it in the canvas
-    #
     
     $canvas create window $modx $mody -window $modframe \
 	    -tags FakeModule -anchor center

@@ -15,20 +15,18 @@
 #define SCI_Containers_FLPQueue_h 1
 
 #include <sci_config.h>
-#include <SCICore/Persistent/Persistent.h>
-#include <SCICore/Malloc/Allocator.h>
+#include <Core/Persistent/Persistent.h>
+#include <Core/Malloc/Allocator.h>
 
-namespace SCICore {
-namespace Containers {
+namespace SCIRun {
 
-using namespace SCICore::PersistentSpace;
 
 template<class T> class FLPQueue;
 template<class T> class FLPQueueNode;
 template<class T>
-void Pio(Piostream& stream, Containers::FLPQueueNode<T>& n);
+void Pio(Piostream& stream, FLPQueueNode<T>& n);
 template<class T>
-void Pio(Piostream& stream, Containers::FLPQueue<T>& n);
+void Pio(Piostream& stream, FLPQueue<T>& n);
 
 template<class T> class FLPQueueNode {
   T item;
@@ -219,7 +217,7 @@ template<class T> void FLPQueue<T>::sanity_check() {
 #define FLPQUEUE_VERSION 1
 
 template<class T>
-void Pio(Piostream& stream, Containers::FLPQueue<T>& q)
+void Pio(Piostream& stream, FLPQueue<T>& q)
 {
     if (stream.reading()) return;
     /* int version= */stream.begin_class("FLPQueue", FLPQUEUE_VERSION);
@@ -234,7 +232,7 @@ void Pio(Piostream& stream, Containers::FLPQueue<T>& q)
 #define FLPQUEUENODE_VERSION 1
 
 template<class T>
-void Pio(Piostream& stream, Containers::FLPQueueNode<T>& n)
+void Pio(Piostream& stream, FLPQueueNode<T>& n)
 {
     if (stream.reading()) return;
     /* int version= */stream.begin_class("FLPQueueNode", FLPQUEUENODE_VERSION);
@@ -249,58 +247,7 @@ void Pio(Piostream& stream, Containers::FLPQueueNode<T>& n)
     stream.end_class();
 }
 
-} // End namespace Containers
-} // End namespace SCICore
+} // End namespace SCIRun
 
-//
-// $Log$
-// Revision 1.6  1999/09/08 02:26:45  sparker
-// Various #include cleanups
-//
-// Revision 1.5  1999/08/30 20:19:26  sparker
-// Updates to compile with -LANG:std on SGI
-// Other linux/irix porting oscillations
-//
-// Revision 1.4  1999/08/19 05:30:54  sparker
-// Configuration updates:
-//  - renamed config.h to sci_config.h
-//  - also uses sci_defs.h, since I couldn't get it to substitute vars in
-//    sci_config.h
-//  - Added flags for --enable-scirun, --enable-uintah, and
-//    --enable-davew, to build the specific package set.  More than one
-//    can be specified, and at least one must be present.
-//  - Added a --enable-parallel, to build the new parallel version.
-//    Doesn't do much yet.
-//  - Made construction of config.h a little bit more general
-//
-// Revision 1.3  1999/08/18 20:20:19  sparker
-// Eliminated copy constructor and clone in all modules
-// Added a private copy ctor and a private clone method to Module so
-//  that future modules will not compile until they remvoe the copy ctor
-//  and clone method
-// Added an ASSERTFAIL macro to eliminate the "controlling expression is
-//  constant" warnings.
-// Eliminated other miscellaneous warnings
-//
-// Revision 1.2  1999/08/17 06:38:35  sparker
-// Merged in modifications from PSECore to make this the new "blessed"
-// version of SCIRun/Uintah.
-//
-// Revision 1.1  1999/07/27 16:56:12  mcq
-// Initial commit
-//
-// Revision 1.4  1999/07/07 21:10:35  dav
-// added beginnings of support for g++ compilation
-//
-// Revision 1.3  1999/05/06 19:55:42  dav
-// added back .h files
-//
-// Revision 1.1  1999/05/05 21:04:30  dav
-// added SCICore .h files to /include directories
-//
-// Revision 1.1.1.1  1999/04/24 23:12:25  dav
-// Import sources
-//
-//
 
 #endif

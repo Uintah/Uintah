@@ -1,7 +1,6 @@
 
 /*
  *  SimpleReducer: A barrier with reduction operations
- *  $Id$
  *
  *  Written by:
  *   Author: Steve Parker
@@ -12,16 +11,14 @@
  *  Copyright (C) 1997 SCI Group
  */
 
-#ifndef SCICore_Thread_SimpleReducer_h
-#define SCICore_Thread_SimpleReducer_h
+#ifndef Core_Thread_SimpleReducer_h
+#define Core_Thread_SimpleReducer_h
 
-#include <SCICore/share/share.h>
+#include <Core/share/share.h>
 
-#include <SCICore/Thread/Barrier.h>
+#include <Core/Thread/Barrier.h>
 
-namespace SCICore {
-    namespace Thread {
-	class ThreadGroup;
+namespace SCIRun {
 
 /**************************************
  
@@ -92,49 +89,8 @@ DESCRIPTION
 	    SimpleReducer(const SimpleReducer&);
 	    SimpleReducer& operator=(const SimpleReducer&);
 	};
-    }
-}
+} // End namespace SCIRun
 
 #endif
 
-//
-// $Log$
-// Revision 1.5  2000/02/15 00:23:49  sparker
-// Added:
-//  - new Thread::parallel method using member template syntax
-//  - Parallel2 and Parallel3 helper classes for above
-//  - min() reduction to SimpleReducer
-//  - ThreadPool class to help manage a set of threads
-//  - unmap page0 so that programs will crash when they deref 0x0.  This
-//    breaks OpenGL programs, so any OpenGL program linked with this
-//    library must call Thread::allow_sgi_OpenGL_page0_sillyness()
-//    before calling any glX functions.
-//  - Do not trap signals if running within CVD (if DEBUGGER_SHELL env var set)
-//  - Added "volatile" to fetchop barrier implementation to workaround
-//    SGI optimizer bug
-//
-// Revision 1.4  1999/09/24 18:55:07  moulding
-// added SCICORESHARE, for win32, to class declarations
-//
-// Revision 1.3  1999/09/02 16:52:44  sparker
-// Updates to cocoon documentation
-//
-// Revision 1.2  1999/08/29 00:47:01  sparker
-// Integrated new thread library
-// using statement tweaks to compile with both MipsPRO and g++
-// Thread library bug fixes
-//
-// Revision 1.1  1999/08/28 03:46:50  sparker
-// Final updates before integration with PSE
-//
-// Revision 1.5  1999/08/25 19:00:50  sparker
-// More updates to bring it up to spec
-// Factored out common pieces in Thread_irix and Thread_pthreads
-// Factored out other "default" implementations of various primitives
-//
-// Revision 1.4  1999/08/25 02:37:59  sparker
-// Added namespaces
-// General cleanups to prepare for integration with SCIRun
-//
-//
 

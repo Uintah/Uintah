@@ -14,16 +14,14 @@
 #ifndef SCI_Geom_Arrows_h
 #define SCI_Geom_Arrows_h 1
 
-#include <SCICore/Geom/GeomObj.h>
-#include <SCICore/Geom/Material.h>
-#include <SCICore/Containers/Array1.h>
-#include <SCICore/Geometry/Point.h>
-#include <SCICore/Geometry/Vector.h>
+#include <Core/Geom/GeomObj.h>
+#include <Core/Geom/Material.h>
+#include <Core/Containers/Array1.h>
+#include <Core/Geometry/Point.h>
+#include <Core/Geometry/Vector.h>
 
-namespace SCICore {
-namespace GeomSpace {
+namespace SCIRun {
 
-using SCICore::PersistentSpace::Piostream;
 
 class SCICORESHARE GeomArrows : public GeomObj {
     double headwidth;
@@ -62,11 +60,8 @@ public:
     virtual bool saveobj(std::ostream&, const clString& format, GeomSave*);
 };
 
-} // End namespace GeomSpace
-} // End namespace SCICore
+} // End namespace SCIRun
 
-//
 // $Log
-//
 
 #endif /* SCI_Geom_Arrows_h */

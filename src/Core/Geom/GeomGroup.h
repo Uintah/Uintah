@@ -14,13 +14,12 @@
 #ifndef SCI_Geom_Group_h
 #define SCI_Geom_Group_h 1
 
-#include <SCICore/share/share.h>
+#include <Core/share/share.h>
 
-#include <SCICore/Geom/GeomObj.h>
-#include <SCICore/Geometry/BBox.h>
+#include <Core/Geom/GeomObj.h>
+#include <Core/Geometry/BBox.h>
 
-namespace SCICore {
-namespace GeomSpace {
+namespace SCIRun {
 
 class SCICORESHARE GeomGroup : public GeomObj {
     Array1<GeomObj*> objs;
@@ -49,7 +48,6 @@ public:
     virtual bool saveobj(std::ostream&, const clString& format, GeomSave*);
 };
 
-} // End namespace GeomSpace
-} // End namespace SCICore
+} // End namespace SCIRun
 
 #endif /* SCI_Geom_Group_h */

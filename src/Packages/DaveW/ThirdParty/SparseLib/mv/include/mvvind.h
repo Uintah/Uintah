@@ -22,7 +22,6 @@
 /*                                                                           */
 /*+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
-//
 //      mvvind.h        MV_Vector Index class
 
 #ifndef _MV_VEC_INDEX_H_
@@ -30,15 +29,11 @@
 
 // A MV_VecIndex is an ordered pair (start,end) denoting a subvector
 //  region, similar to a Fortran 90 or Matlab colon notation.  For example, 
-//
 //  MV_Vector_double A(10), B(20);
 //  MV_VecIndex I(2,4);
-//
 //  A(I) = B(MV_VecIndex(0,2); 
-//
 //  sets the thrid through fifth elements of A to the first two elements
 //  of B.  There is no stride argument, only contiguous regions are allowed.
-//
 
 #include <assert.h>
 

@@ -1,4 +1,3 @@
-//static char *id="@(#) $Id$";
 
 /*
  *  ModuleHelper.cc:  Thread to execute modules..
@@ -12,14 +11,14 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <PSECore/Dataflow/ModuleHelper.h>
+#include <Dataflow/Network/ModuleHelper.h>
 
-#include <PSECore/Comm/MessageBase.h>
-#include <PSECore/Comm/MessageTypes.h>
-#include <PSECore/Dataflow/Connection.h>
-#include <PSECore/Dataflow/Module.h>
-#include <PSECore/Dataflow/NetworkEditor.h>
-#include <PSECore/Dataflow/Port.h>
+#include <Dataflow/Comm/MessageBase.h>
+#include <Dataflow/Comm/MessageTypes.h>
+#include <Dataflow/Network/Connection.h>
+#include <Dataflow/Network/Module.h>
+#include <Dataflow/Network/NetworkEditor.h>
+#include <Dataflow/Network/Port.h>
 
 #include <iostream>
 using std::cerr;
@@ -27,8 +26,7 @@ using std::endl;
 
 #define DEFAULT_MODULE_PRIORITY 90
 
-namespace PSECore {
-namespace Dataflow {
+namespace SCIRun {
 
 ModuleHelper::ModuleHelper(Module* module)
 : module(module)
@@ -41,7 +39,6 @@ ModuleHelper::~ModuleHelper()
 
 void ModuleHelper::run()
 {
-  using PSECore::Comm::MessageTypes;
 
     if(module->have_own_dispatch){
 	module->do_execute();
@@ -81,25 +78,5 @@ void ModuleHelper::run()
     }
 }
 
-} // End namespace Dataflow
-} // End namespace PSECore
+} // End namespace SCIRun
 
-//
-// $Log$
-// Revision 1.4  1999/10/07 02:07:19  sparker
-// use standard iostreams and complex type
-//
-// Revision 1.3  1999/08/28 17:54:29  sparker
-// Integrated new Thread library
-//
-// Revision 1.2  1999/08/17 06:38:23  sparker
-// Merged in modifications from PSECore to make this the new "blessed"
-// version of SCIRun/Uintah.
-//
-// Revision 1.1  1999/07/27 16:55:58  mcq
-// Initial commit
-//
-// Revision 1.1.1.1  1999/04/24 23:12:29  dav
-// Import sources
-//
-//

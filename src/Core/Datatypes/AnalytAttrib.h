@@ -28,31 +28,25 @@ POSSIBLE REVISIONS
     set_function(const GenFunctionHandle&)
 ----------------------------------------------------------------------*/
 
-#include <SCICore/Datatypes/Attrib.h>
-#include <SCICore/Datatypes/DiscreteAttrib.h>
-#include <SCICore/Datatypes/GenFunction.h>
-#include <SCICore/Datatypes/Geom.h>
-#include <SCICore/Geometry/Vector.h>
-#include <SCICore/Geometry/Point.h>
+#include <Core/Datatypes/Attrib.h>
+#include <Core/Datatypes/DiscreteAttrib.h>
+#include <Core/Datatypes/GenFunction.h>
+#include <Core/Datatypes/Geom.h>
+#include <Core/Geometry/Vector.h>
+#include <Core/Geometry/Point.h>
 
-#include <SCICore/Malloc/Allocator.h>
-#include <SCICore/Util/NotFinished.h>
-#include <SCICore/Exceptions/DimensionMismatch.h>
-#include <SCICore/Exceptions/InternalError.h>
+#include <Core/Malloc/Allocator.h>
+#include <Core/Util/NotFinished.h>
+#include <Core/Exceptions/DimensionMismatch.h>
+#include <Core/Exceptions/InternalError.h>
 #include <string>
 #include <vector>
 #include <sstream>
 
-namespace SCICore{
-namespace Datatypes{
+namespace SCIRun {
 
   using std::string;
-  using SCICore::PersistentSpace::Piostream;
-  using SCICore::PersistentSpace::PersistentTypeID;
-  using SCICore::Geometry::Vector;
-  using SCICore::Geometry::Point;
   using namespace std;
-  using namespace SCICore::Exceptions;
 
   typedef vector<string>      StrV;
   typedef vector<double>      RealV;
@@ -305,8 +299,7 @@ namespace Datatypes{
   }
 
 
-} // end Datatypes
-} // end SCICore
+} // End namespace SCIRun
 
 
 

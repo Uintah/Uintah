@@ -10,39 +10,35 @@
  *  Copyright (C) 1997 SCI Group
  */
 
-#include <SCICore/Containers/Array2.h>
-#include <SCICore/Datatypes/ScalarField.h>
-#include <SCICore/Datatypes/ScalarFieldRGBase.h>
-#include <SCICore/Datatypes/ScalarFieldRG.h>
-#include <SCICore/Datatypes/ScalarFieldRGdouble.h>
-#include <SCICore/Datatypes/ScalarFieldRGfloat.h>
-#include <SCICore/Datatypes/ScalarFieldRGint.h>
-#include <SCICore/Datatypes/ScalarFieldRGshort.h>
-#include <SCICore/Datatypes/ScalarFieldRGuchar.h>
-#include <SCICore/Datatypes/ScalarFieldRGchar.h>
-#include <SCICore/Geometry/BBox.h>
-#include <SCICore/Geometry/Point.h>
-#include <SCICore/Geometry/Vector.h>
-#include <SCICore/Math/MinMax.h>
-#include <SCICore/Persistent/Pstreams.h>
+#include <Core/Containers/Array2.h>
+#include <Core/Datatypes/ScalarField.h>
+#include <Core/Datatypes/ScalarFieldRGBase.h>
+#include <Core/Datatypes/ScalarFieldRG.h>
+#include <Core/Datatypes/ScalarFieldRGdouble.h>
+#include <Core/Datatypes/ScalarFieldRGfloat.h>
+#include <Core/Datatypes/ScalarFieldRGint.h>
+#include <Core/Datatypes/ScalarFieldRGshort.h>
+#include <Core/Datatypes/ScalarFieldRGuchar.h>
+#include <Core/Datatypes/ScalarFieldRGchar.h>
+#include <Core/Geometry/BBox.h>
+#include <Core/Geometry/Point.h>
+#include <Core/Geometry/Vector.h>
+#include <Core/Math/MinMax.h>
+#include <Core/Persistent/Pstreams.h>
 #include <fstream>
 #include <iostream>
 #include <math.h>
 #include <stdio.h>
 
 extern "C" {
-#include <DaveW/ThirdParty/Nrrd/include/nrrd.h>
+#include <Packages/DaveW/Core/ThirdParty/Nrrd/include/nrrd.h>
 }
 
 typedef enum {DOUBLE, FLOAT, INT, SHORT, UCHAR, CHAR} VTYPE; // voxel type
 typedef enum {SCI, PCGV, NRRD, RAW} FTYPE; // file type
 typedef enum {BIN, ASCII} BTYPE; // binary / ascii type (for SCI)
 
-using namespace SCICore::Containers;
-using namespace SCICore::Datatypes;
-using namespace SCICore::Geometry;
-using namespace SCICore::Math;
-using namespace SCICore::PersistentSpace;
+using namespace SCIRun;
 using namespace std;
 
 VTYPE inVoxel;
@@ -541,7 +537,7 @@ void readOther() {
 	    maxOut=maxIn=Point((nx-1)*dx,(ny-1)*dy,(nz-1)*dz);
 	}
     }
-    // SCIRun is stored z fastest, not .vol files...
+    // Dataflow is stored z fastest, not .vol files...
 
     int j,k;
     double val;

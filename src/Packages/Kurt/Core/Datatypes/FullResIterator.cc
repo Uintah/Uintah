@@ -1,13 +1,11 @@
 
-//#include <SCICore/Utils/NotFinished.h>
+//#include <Core/Utils/NotFinished.h>
 #include "FullResIterator.h"
-#include <SCICore/Malloc/Allocator.h>
+#include <Core/Malloc/Allocator.h>
 #include <iostream>
 
 namespace Kurt {
-namespace Datatypes {
-
-using SCICore::Geometry::Point;
+using namespace SCIRun;
 
 
 
@@ -17,7 +15,7 @@ FullResIterator::FullResIterator(const GLTexture3D* tex, Ray view,
 {
 
   const Octree< Brick* >* node = (tex->bontree);
-  // SCICore::Malloc::AuditAllocator(SCICore::Malloc::default_allocator);
+  // AuditAllocator(default_allocator);
   if ( tex->depth() == 0 ){
     next = (*node)();
   } else {
@@ -86,7 +84,6 @@ FullResIterator::SetNext()
   }
   next = (*node)();
 }
+} // End namespace Kurt
 
-} //Datatypes
-} //Kurt
 

@@ -1,39 +1,24 @@
 
-#
 #  VolVis.tcl
-#
 #  Written by:
 #   Aleksandra Kuswik
 #   Department of Computer Science
 #   University of Utah
 #   April 1996
-#
 #  Copyright (C) 1996 SCI Group
-#
 
-#
-#
-#
 ################################################################
-#
-#
-#
 ################################################################
 
 
-itcl_class PSECommon_Visualization_VolVis {
+itcl_class Dataflow_Visualization_VolVis {
     
     inherit Module
 
 
-    #
-    #
-    #
     ################################################################
-    #
     # constructs the VolVis class.  called when VolVis is
     # instantiated.
-    #
     ################################################################
     
     constructor {config} {
@@ -43,13 +28,8 @@ itcl_class PSECommon_Visualization_VolVis {
     }
     
     
-    #
-    #
-    #
     ################################################################
-    #
     # initialize variables.
-    #
     ################################################################
     
     method set_defaults {} {
@@ -70,16 +50,13 @@ itcl_class PSECommon_Visualization_VolVis {
 	#    * not use any of the data provided by Salmon
 	#    * use just the view information
 	#    * use all the information: view, z,and rgb values
-	#
 	global $this-salmon
 
 	# allows the user to select the method
-	#
 	global $this-method
 
 	# allows the user to specify the step size for Levoy's
 	# method
-	#
 	global $this-stepsize
 
 	global Selected
@@ -136,13 +113,8 @@ itcl_class PSECommon_Visualization_VolVis {
 	set $this-atten      1
     }
     
-    #
-    #
-    #
     ################################################################
-    #
     # raise the GL window or create it if not yet created.
-    #
     ################################################################
 
     method raiseGL {} {
@@ -176,15 +148,10 @@ itcl_class PSECommon_Visualization_VolVis {
     }
     
     
-    #
-    #
-    #
     ################################################################
-    #
     # this method defines what happens when the UI button is
     # clicked on the module.  if already existant, it is raised,
     # otherwise, it is created.
-    #
     ################################################################
 
     method ui {} {
@@ -259,9 +226,7 @@ itcl_class PSECommon_Visualization_VolVis {
 #		-fg blue
 
 	# place the buttons in a window
-#
 # UNCOMMENT when orthogonal projections are introduced
-#
 #	pack $w.f.proj.per $w.f.proj.ort -side left -fill x
 
         pack $w.f.pete.pyes $w.f.pete.pnot -side left -fill x
@@ -308,17 +273,12 @@ itcl_class PSECommon_Visualization_VolVis {
     
 
 
-    #
-    #
-    #
     ################################################################
-    #
     # Binds certain X events to perform appropriate functions.
     # Motion on the canvas causes sliders to move along with the mouse.
     # When a mouse enters or leaves a node, its color changes.
     # When the left button is pressed while the mouse cursor is on
     # the node, one can move the node around the canvas.
-    #
     ################################################################
 
     method CreateBindings { w } {
@@ -395,13 +355,8 @@ itcl_class PSECommon_Visualization_VolVis {
     }
 
 
-    #
-    #
-    #
     ################################################################
-    #
     # allows the user to alter the view.
-    #
     ################################################################
 
     method makeViewPopup {} {
@@ -418,8 +373,6 @@ itcl_class PSECommon_Visualization_VolVis {
 	    wm title $w "View"
 	    wm iconname $w view
 	    wm minsize $w 100 100
-	    #
-	    #
 	    # EXP!
 	    #set view $this-View
 	    set view $this-eview
@@ -451,13 +404,8 @@ itcl_class PSECommon_Visualization_VolVis {
 	}
     }
 
-    #
-    #
-    #
     ################################################################
-    #
     # allows the user to adjust the step size
-    #
     ################################################################
 
     method adjustStepSize {} {
@@ -487,13 +435,8 @@ itcl_class PSECommon_Visualization_VolVis {
     }
     
 
-    #
-    #
-    #
     ################################################################
-    #
     # allows the user to adjust the raster size.
-    #
     ################################################################
 
     method adjustRasterSize {} {
@@ -539,21 +482,14 @@ itcl_class PSECommon_Visualization_VolVis {
 	}
     }
 
-    #
-    #
-    #
     ################################################################
-    #
     # allows the user to change the background color
-    #
     ################################################################
 
     method changeBackground {} {
 	
 	set w .changeBackground[modname]
 
-	#
-	#
 	# EXP!!!
 
 	if {[winfo exists $w]} {
@@ -596,14 +532,9 @@ itcl_class PSECommon_Visualization_VolVis {
 
 
 
-    #
-    #
-    #
     ################################################################
-    #
     # Transfer function allows the user to specify the map between
     # the scalar value and opacity.
-    #
     ################################################################
 
     method transferFunction {} {
@@ -625,13 +556,7 @@ itcl_class PSECommon_Visualization_VolVis {
 
 
     
-    #
-    #
-    #
     ################################################################
-    #
-    #
-    #
     ################################################################
 
     method get_data { } {
@@ -657,14 +582,9 @@ itcl_class PSECommon_Visualization_VolVis {
 
     
 
-    #
-    #
-    #
     ################################################################
-    #
     # Allows for interactive display of mouse cursor position by
     # moving sliders around.
-    #
     ################################################################
 
     method UpdateSliders { w x y } {
@@ -731,13 +651,8 @@ itcl_class PSECommon_Visualization_VolVis {
     
 
 
-    #
-    #
-    #
     ################################################################
-    #
     # unsets the flag, calls a redraw
-    #
     ################################################################
 
     method redraw {} {
@@ -746,14 +661,9 @@ itcl_class PSECommon_Visualization_VolVis {
     }
 
 
-    #
-    #
-    #
     ################################################################
-    #
     # if a few redraws have been queued, and one has just taken
     # place, do not redraw a second time.
-    #
     ################################################################
 
     method redraw_when_idle {} {
@@ -765,13 +675,8 @@ itcl_class PSECommon_Visualization_VolVis {
     }
 
 
-    #
-    #
-    #
     ################################################################
-    #
     # the node becomes black.
-    #
     ################################################################
 
     method fillBlack { w } {
@@ -779,13 +684,8 @@ itcl_class PSECommon_Visualization_VolVis {
     }
 
 
-    #
-    #
-    #
     ################################################################
-    #
     # the node becomes white.
-    #
     ################################################################
 
     method fillWhite { w } {
@@ -794,13 +694,8 @@ itcl_class PSECommon_Visualization_VolVis {
 
 
     
-    #
-    #
-    #
     ################################################################
-    #
     # creates a gridded canvas for placement of nodes
-    #
     ################################################################
 
     method GCanvas { where width height hGrid vGrid } {
@@ -827,13 +722,8 @@ itcl_class PSECommon_Visualization_VolVis {
 
 
 
-    #
-    #
-    #
     ################################################################
-    #
     # Initial positioning of the nodes.
-    #
     ################################################################
 
     method MakeSomeNodes { where } {
@@ -866,14 +756,9 @@ itcl_class PSECommon_Visualization_VolVis {
     }
 
 
-    #
-    #
-    #
     ################################################################
-    #
     # Draws the transfer function canvas, rulers, and the fillin
     # square.
-    #
     ################################################################
 
     method DrawWidget { w } {
@@ -992,14 +877,9 @@ itcl_class PSECommon_Visualization_VolVis {
 #	puts "X = $xpos, Y = $ypos"
     }
 
-    #
-    #
-    #
     ################################################################
-    #
     # Creates the entire bottom ruler which consists of the
     # name, ruler, and slider areas.
-    #
     ################################################################
 
     method BottomRuler { where width height hgrid } {
@@ -1043,13 +923,8 @@ itcl_class PSECommon_Visualization_VolVis {
     }
 
     
-    #
-    #
-    #
     ################################################################
-    #
     # creates the name of the bottom ruler
-    #
     ################################################################
 
     method NameBottomRuler { where width } {
@@ -1064,7 +939,6 @@ itcl_class PSECommon_Visualization_VolVis {
 #	 label $where.a.txt -font 6x12 -text "SCALAR VALUE"      -bg white
 #	 label $where.b.min -font 6x12 -textvariable $this-minSV -bg white
 #	 label $where.c.max -font 6x12 -textvariable $this-maxSV -bg white
-#
 
 	# create labels
 	
@@ -1082,13 +956,8 @@ itcl_class PSECommon_Visualization_VolVis {
     }
 
 
-    #
-    #
-    #
     ################################################################
-    #
     # creates the bottom ruler (line with tickmarks)
-    #
     ################################################################
 
     method DrawBottomRuler { where width height tickinterv } {
@@ -1102,13 +971,8 @@ itcl_class PSECommon_Visualization_VolVis {
 
 
 
-    #
-    #
-    #
     ################################################################
-    #
     # alligns the slider at minimum scalar value
-    #
     ################################################################
 
     method PrepareBottomSlider { where width height } {
@@ -1120,14 +984,9 @@ itcl_class PSECommon_Visualization_VolVis {
 
 
     
-    #
-    #
-    #
     ################################################################
-    #
     # creates the "OPACITY" tag and some description for the
     # ruler part
-    #
     ################################################################
 
     method NameSideRuler { where height } {
@@ -1160,13 +1019,8 @@ itcl_class PSECommon_Visualization_VolVis {
 
 
 
-    #
-    #
-    #
     ################################################################
-    #
     # draws the ruler (line with tickmarks)
-    #
     ################################################################
 
     method DrawSideRuler { where width height tickinterv } {
@@ -1182,13 +1036,8 @@ itcl_class PSECommon_Visualization_VolVis {
 
 
 
-    #
-    #
-    #
     ################################################################
-    #
     # alligns the slider at position 0 (opacity = 0)
-    #
     ################################################################
 
     method PrepareSideSlider { where width height } {
@@ -1199,14 +1048,9 @@ itcl_class PSECommon_Visualization_VolVis {
     }
 
 
-    #
-    #
-    #
     ################################################################
-    #
     # creates the entire side ruler which consists of the
     # name, ruler, and slider areas.
-    #
     ################################################################
 
     method SideRuler { where width height tickinterv } {
@@ -1257,14 +1101,9 @@ itcl_class PSECommon_Visualization_VolVis {
     #################################################################
 
 
-    #
-    #
-    #
     ################################################################
-    #
     # draws a node on the screen, and adds appropriate data to
     # the AllNodeIndexes, Xvalues, and Yvalues lists.
-    #
     ################################################################
 
     method makeNode { joyous x y line } {
@@ -1302,13 +1141,8 @@ itcl_class PSECommon_Visualization_VolVis {
     }
 
 
-    #
-    #
-    #
     ################################################################
-    #
     # draws an edge between two given nodes.
-    #
     ################################################################
 
     method makeEdge { joyous one two line } {
@@ -1335,13 +1169,8 @@ itcl_class PSECommon_Visualization_VolVis {
 
 
 
-    #
-    #
-    #
     ################################################################
-    #
     # Interactively moves the node.
-    #
     ################################################################
 
     method moveNode { joyous x y } {
@@ -1451,13 +1280,7 @@ itcl_class PSECommon_Visualization_VolVis {
     }
 
 
-    #
-    #
-    #
     ################################################################
-    #
-    #
-    #
     ################################################################
 
     method deleteNode { where } {
@@ -1512,16 +1335,11 @@ itcl_class PSECommon_Visualization_VolVis {
 
 
 
-    #
-    #
-    #
     ################################################################
-    #
     # arrange the lists in order such that the xvalues are in
     # ascending order
     # the x value to be inserted will not equal any of the other
     # members of Xvalues.
-    #
     ################################################################
 
     method placeInLists { node x y line } {
@@ -1564,16 +1382,11 @@ itcl_class PSECommon_Visualization_VolVis {
 
 
 
-    #
-    #
-    #
     ################################################################
-    #
     # arrange the lists in order such that the xvalues are in
     # ascending order
     # the x value to be inserted will not equal any of the other
     # members of Xvalues.
-    #
     ################################################################
 
     method introduceNode { where x y line } {

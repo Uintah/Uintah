@@ -1,40 +1,35 @@
 #ifndef GLVOLUMERENDERER_H
 #define GLVOLUMERENDERER_H
 
-#include <SCICore/Thread/Mutex.h>
-#include <SCICore/Geometry/Point.h>
-#include <SCICore/Geometry/Ray.h>
-#include <SCICore/Geometry/Vector.h>
-#include <SCICore/Geometry/Transform.h>
-#include <SCICore/Datatypes/ScalarFieldRGuchar.h>
-#include <SCICore/Datatypes/ColorMap.h>
-#include <SCICore/Geom/GeomObj.h>
+#include <Core/Thread/Mutex.h>
+#include <Core/Geometry/Point.h>
+#include <Core/Geometry/Ray.h>
+#include <Core/Geometry/Vector.h>
+#include <Core/Geometry/Transform.h>
+#include <Core/Datatypes/ScalarFieldRGuchar.h>
+#include <Core/Datatypes/ColorMap.h>
+#include <Core/Geom/GeomObj.h>
 #include <GL/gl.h>
 #include <GL/glu.h>
 
-#include <SCICore/Datatypes/Brick.h>
-#include <SCICore/Datatypes/Octree.h>
+#include <Core/Datatypes/Brick.h>
+#include <Core/Datatypes/Octree.h>
 
-#include <SCICore/Datatypes/GLTexRenState.h>
-#include <SCICore/Datatypes/GLVolRenState.h>
-#include <SCICore/Datatypes/FullRes.h>
-#include <SCICore/Datatypes/ROI.h>
-#include <SCICore/Datatypes/LOS.h>
-#include <SCICore/Datatypes/GLPlanes.h>
-#include <SCICore/Datatypes/TexPlanes.h>
-#include <SCICore/Datatypes/GLMIP.h>
-#include <SCICore/Datatypes/GLAttenuate.h>
-#include <SCICore/Datatypes/GLOverOp.h>
-#include <SCICore/Datatypes/GLTexture3D.h>
+#include <Core/Datatypes/GLTexRenState.h>
+#include <Core/Datatypes/GLVolRenState.h>
+#include <Core/Datatypes/FullRes.h>
+#include <Core/Datatypes/ROI.h>
+#include <Core/Datatypes/LOS.h>
+#include <Core/Datatypes/GLPlanes.h>
+#include <Core/Datatypes/TexPlanes.h>
+#include <Core/Datatypes/GLMIP.h>
+#include <Core/Datatypes/GLAttenuate.h>
+#include <Core/Datatypes/GLOverOp.h>
+#include <Core/Datatypes/GLTexture3D.h>
 
-namespace SCICore {
-namespace GeomSpace  {
+namespace SCIRun {
 
 
-using namespace SCICore::Geometry;
-using namespace SCICore::Datatypes;
-using namespace SCICore::Datatypes;
-using SCICore::Thread::Mutex;
 
 class GLVolumeRenderer : public GeomObj
 {
@@ -172,8 +167,7 @@ T* GLVolumeRenderer::state( T* st, int l)
   return st;
 }
  
-}  // namespace GeomSpace
-} // namespace SCICore
+} // End namespace SCIRun
 
 
 #endif

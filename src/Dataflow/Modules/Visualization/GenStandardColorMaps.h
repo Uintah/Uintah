@@ -1,26 +1,19 @@
 #ifndef GENSTANDARDCOLORMAPS_H
 #define GENSTANDARDCOLORMAPS_H 1
 
-#include <SCICore/TclInterface/TCLvar.h> 
-#include <SCICore/Geom/Color.h>
-#include <PSECore/Dataflow/Module.h> 
-#include <PSECore/Datatypes/ColorMapPort.h>
-// Note that the inclusion of PSECore/Datatypes/ColorMapPort.h breaks
+#include <Core/TclInterface/TCLvar.h> 
+#include <Core/Geom/Color.h>
+#include <Dataflow/Network/Module.h> 
+#include <Dataflow/Ports/ColorMapPort.h>
+// Note that the inclusion of Dataflow/Ports/ColorMapPort.h breaks
 // the coding convention. Normally, since we only have a ColorMapPort*,
 // we would not include the header but have instead a class Prototype 
 // "class ColorMapOPort". But ColorMapOPort is a typedef not a class.  
 // We would have to re-create the prototype here, which is uglier than 
 // just including the header file.
 
-namespace PSECommon {
-namespace Modules {
+namespace SCIRun {
 
-using PSECore::Datatypes::ColorMapOPort;
-using SCICore::Datatypes::ColorMapHandle;
-using SCICore::GeomSpace::Color;
-using namespace PSECore::Dataflow;
-using namespace SCICore::TclInterface;
-using namespace SCICore::Containers;
 
 /**************************************
 CLASS
@@ -44,7 +37,7 @@ KEYWORDS
 
 DESCRIPTION
      This module is used to create some
-     "standard" non-editable colormaps in SCIRun/Uintah.
+     "standard" non-editable colormaps in Dataflow/Uintah.
      Non-editable simply means that the colors cannot be
      interactively manipulated.  The Module does, allow
      for the the resolution of the colormaps to be changed.
@@ -96,6 +89,5 @@ private:
 
 }; //class GenStandardColorMaps
 
-} // end namespace PSECommon
-} // end namespace Modules
+} // End namespace SCIRun
 #endif

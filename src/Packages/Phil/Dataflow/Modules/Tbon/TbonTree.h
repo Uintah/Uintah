@@ -1,9 +1,8 @@
-//static char *id="@(#) $Id$";
 
 /* TbonTree.h
    class declarations and code for the T-BON tree
 
-   Philip Sutton
+   Packages/Philip Sutton
    April 1999
 
   Copyright (C) 2000 SCI Group, University of Utah
@@ -19,9 +18,7 @@
 #include <strings.h>
 
 namespace Phil {
-namespace Modules {
-
-using namespace SCICore::GeomSpace;
+using namespace SCIRun;
 
 template <class T>
 struct Data {
@@ -1152,19 +1149,9 @@ TbonTree<T>::searchSecondPass( int myindex, int d, double iso,
 } // searchSecondPass
 
 
+} // End namespace Phil
 
-} // end namespace Modules 
-} // end namespace Phil
 
 #endif
 
 
-//
-// $Log$
-// Revision 1.2  2000/02/04 22:13:02  psutton
-// fixed ID problem
-//
-// Revision 1.1  2000/02/04 21:01:04  psutton
-// initial revision
-//
-//

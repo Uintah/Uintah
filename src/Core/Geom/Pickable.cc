@@ -11,11 +11,10 @@
  *  Copyright (C) 1999 University of Utah
  */
 
-#include <SCICore/Geom/Pickable.h>
-#include <SCICore/Util/NotFinished.h>
+#include <Core/Geom/Pickable.h>
+#include <Core/Util/NotFinished.h>
 
-namespace SCICore {
-namespace GeomSpace {
+namespace SCIRun {
 
 Pickable::~Pickable()
 {
@@ -84,23 +83,6 @@ Pickable::geom_moved(GeomPick*,int,double,const Vector&,const BState&, int)
 }
 #endif
 
-} // End namespace GeomSpace
-} // End namespace SCICore
+} // End namespace SCIRun
 
-//
-// $Log$
-// Revision 1.2  1999/08/17 06:39:20  sparker
-// Merged in modifications from PSECore to make this the new "blessed"
-// version of SCIRun/Uintah.
-//
-// Revision 1.1  1999/07/27 16:56:50  mcq
-// Initial commit
-//
-// Revision 1.2  1999/05/13 18:14:04  dav
-// updated Pickable to use pure virtual functions
-//
-// Revision 1.1.1.1  1999/04/24 23:12:19  dav
-// Import sources
-//
-//
 

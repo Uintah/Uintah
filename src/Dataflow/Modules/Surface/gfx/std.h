@@ -8,7 +8,6 @@
   Standard base include file for all gfx-based programs.  This defines
   various common stuff that is used elsewhere.
 
-  $Id$
 
  ************************************************************************/
 
@@ -18,9 +17,7 @@
 #include <math.h>
 #include <iostream.h>
 
-//
 // Define the real (ie. default floating point) type
-//
 #ifdef GFX_REAL_FLOAT
 typedef float real;
 #else
@@ -28,9 +25,7 @@ typedef float real;
 typedef double real;
 #endif
 
-//
 // Define the boolean type and true/false constants.
-// 
 
 #define GFX_NO_BOOL
 #ifndef GFX_NO_BOOL
@@ -52,11 +47,9 @@ const int true  = 1;
 #define M_PI 3.14159265358979323846
 #endif
 
-//
 // Define min/max.
 // These are defined as inlined template functions because that's a more
 // C++ish thing to do.
-//
 #ifndef GFX_NO_MINMAX
 #  ifndef min
 template<class T>
@@ -67,9 +60,7 @@ inline T max(T a, T b) { return (a > b)?a:b; }
 #  endif
 #endif
 
-//
 // For the old school, we also have MIN/MAX defined as macros.
-//
 #ifndef MIN
 #define MIN(a,b) (((a)>(b))?(b):(a))
 #define MAX(a,b) (((a)>(b))?(a):(b))
@@ -113,9 +104,7 @@ enum Axis {X=0, Y=1, Z=2, W=3};
 #  define AssertBound(t)
 #endif
 
-//
 // Define the report_error and assert_failed functions.
-//
 inline void report_error(char *msg,char *file,int line)
 {
     cerr << msg << " ("<<file<<":"<<line<<")"<<endl;

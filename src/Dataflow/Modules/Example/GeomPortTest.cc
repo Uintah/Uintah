@@ -1,6 +1,5 @@
 /*
  *  GeomPortTest.cc:  Testing advanced Geometry port operations
- *  $Id$
  *
  *  Written by:
  *   Steven G. Parker
@@ -11,24 +10,18 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <PSECore/Dataflow/Module.h>
-#include <SCICore/Geom/GeomSphere.h>
-#include <SCICore/Geom/GeomGroup.h>
-#include <PSECore/Datatypes/GeometryPort.h>
-#include <PSECore/Datatypes/GeometryComm.h>
-#include <SCICore/Malloc/Allocator.h>
+#include <Dataflow/Network/Module.h>
+#include <Core/Geom/GeomSphere.h>
+#include <Core/Geom/GeomGroup.h>
+#include <Dataflow/Ports/GeometryPort.h>
+#include <Dataflow/Ports/GeometryComm.h>
+#include <Core/Malloc/Allocator.h>
 #include <iostream>
 using std::cerr;
 using std::endl;
 
-namespace PSECommon {
-namespace Modules {
+namespace SCIRun {
 
-using namespace PSECore::Dataflow;
-using namespace PSECore::Datatypes;
-using namespace SCICore::Geometry;
-using namespace SCICore::TclInterface;
-using namespace SCICore::GeomSpace;
 
 class GeomPortTest : public Module {
     virtual void do_execute();
@@ -119,14 +112,5 @@ void GeomPortTest::execute()
     // Never gets called...
 }
 
-} // End namespace Modules
-} // End namespace PSECommon
+} // End namespace SCIRun
 
-//
-// $Log$
-// Revision 1.6  2000/03/17 09:26:48  sparker
-// New makefile scheme: sub.mk instead of Makefile.in
-// Use XML-based files for module repository
-// Plus many other changes to make these two things work
-//
-//

@@ -22,13 +22,12 @@
 #include <GL/glu.h>
 #include <GL/glx.h>
 
-#include <PSECommon/Modules/Salmon/BaWGL.h>
+#include <Dataflow/Modules/Salmon/BaWGL.h>
 
 #include <iostream>
 using namespace std;
 
-namespace PSECommon {
-namespace Modules {
+namespace SCIRun {
 
 //------------------------------------ PROTECTED ------------------------------------
 
@@ -1030,4 +1029,4 @@ void BaWGL::setVirtualViewScaleLimits( GLfloat min, GLfloat max )
   virtualViewScaleMax = max;
 }
 
-}}
+} // End namespace SCIRun

@@ -1,4 +1,3 @@
-//static char *id="@(#) $Id$";
 
 /*
  *  TrivialAllocator.cc:  Template class for allocating small objects
@@ -12,12 +11,11 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <SCICore/Containers/TrivialAllocator.h>
-#include <SCICore/Malloc/Allocator.h>
+#include <Core/Containers/TrivialAllocator.h>
+#include <Core/Malloc/Allocator.h>
 #include <stdlib.h>
 
-namespace SCICore {
-namespace Containers {
+namespace SCIRun {
 
 const int PAGESIZE = 64*1024-64;  // Leave some room for malloc's overhead
 
@@ -43,29 +41,5 @@ TrivialAllocator::~TrivialAllocator()
     }
 }
 
-} // End namespace Containers
-} // End namespace SCICore
+} // End namespace SCIRun
 
-//
-// $Log$
-// Revision 1.4  2000/02/02 22:07:07  dmw
-// Handle - added detach and Pio
-// TrivialAllocator - fixed mis-allignment problem in alloc()
-// Mesh - changed Nodes from LockingHandle to Handle so we won't run out
-// 	of locks for semaphores when building big meshes
-// Surface - just had to change the forward declaration of node
-//
-// Revision 1.3  1999/08/28 17:54:35  sparker
-// Integrated new Thread library
-//
-// Revision 1.2  1999/08/17 06:38:39  sparker
-// Merged in modifications from PSECore to make this the new "blessed"
-// version of SCIRun/Uintah.
-//
-// Revision 1.1  1999/07/27 16:56:15  mcq
-// Initial commit
-//
-// Revision 1.1.1.1  1999/04/24 23:12:26  dav
-// Import sources
-//
-//

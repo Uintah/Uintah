@@ -1,7 +1,7 @@
 
 catch {rename ImageReader ""}
 
-itcl_class PSECommon_Readers_ImageReader {
+itcl_class Dataflow_Readers_ImageReader {
     inherit Module
     constructor {config} {
 	set name ImageReader

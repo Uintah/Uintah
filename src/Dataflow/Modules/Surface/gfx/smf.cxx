@@ -12,7 +12,6 @@ inline int streq(const char *a,const char *b) { return strcmp(a,b)==0; }
 
 float SMF_version = 1.0;
 char *SMF_version_string = "1.0";
-char *SMF_source_revision = "$Id$";
 
 
 
@@ -277,14 +276,12 @@ void SMF_Reader::parse_line(char *line)
     // Ignore comments
     if( line[0]=='#' && line[1]!='$' ) return;
 
-    //
     // First, split the line into tokens
     cmd = strtok(line, " \t\n");
 
     while( (s=strtok(NULL, " \t\n")) )
 	argv.add(s);
 
-    //
     // Figure out what command it is and execute it
     if( cmd[0]=='#' && cmd[1]=='$' )
 	annotation(cmd,argv);

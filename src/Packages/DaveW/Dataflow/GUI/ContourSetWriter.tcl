@@ -1,6 +1,6 @@
-catch {rename DaveW_Writers_ContourSetWriter ""}
+catch {rename Packages/DaveW_Writers_ContourSetWriter ""}
 
-itcl_class DaveW_Writers_ContourSetWriter {
+itcl_class Packages/DaveW_Writers_ContourSetWriter {
     inherit Module
     constructor {config} {
 	set name ContourSetWriter

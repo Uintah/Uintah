@@ -1,5 +1,5 @@
-#include <SCICore/Geometry/Ray.h>
-#include <SCICore/Util/NotFinished.h>
+#include <Core/Geometry/Ray.h>
+#include <Core/Util/NotFinished.h>
 #include "VolumeUtils.h"
 //#include "stdlib.h"
 #include <iostream>
@@ -11,9 +11,7 @@ using std::endl;
 using std::string;
 
 namespace Kurt {
-namespace Datatypes {
-
-using namespace SCICore::Geometry;
+using namespace SCIRun;
 
 
 SliceTable::SliceTable( const Point& min,  const Point& max,  const Ray& view,
@@ -81,6 +79,5 @@ void SliceTable::getParameters(const Brick& brick, double& tmin,
 }
 
 #define SLICETABLE_VERSION 1
+} // End namespace Kurt
   
-} // namespace Datatypes
-} // namespace Kurt

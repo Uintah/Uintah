@@ -1,6 +1,6 @@
 catch {rename SolveMatrix ""}
 
-itcl_class PSECommon_Matrix_SolveMatrix {
+itcl_class Dataflow_Matrix_SolveMatrix {
     inherit Module
     constructor {config} {
 	set name SolveMatrix
@@ -86,9 +86,9 @@ itcl_class PSECommon_Matrix_SolveMatrix {
 		{"Quasi Minimal Residual Iteration" quasi_minimal_res}\
 		{"Generalized Minimum Residual Iteration" gen_min_res_iter}\
 		{"Richardson Iterations" richardson_iter}\
-		{"Conjugate Gradient & Precond. (SCIRun)" conjugate_gradient_sci}\
-		{"BiConjugate Gradient & Precond. (SCIRun)" bi_conjugate_gradient_sci}\
-		{"Jacoby & Precond. (SCIRun)" jacoby_sci}}
+		{"Conjugate Gradient & Precond. (Dataflow)" conjugate_gradient_sci}\
+		{"BiConjugate Gradient & Precond. (Dataflow)" bi_conjugate_gradient_sci}\
+		{"Jacoby & Precond. (Dataflow)" jacoby_sci}}
 	
 	
 	

@@ -1,13 +1,11 @@
-#include <Kurt/Datatypes/Polygon.h>
-#include <SCICore/Containers/String.h>
+#include <Packages/Kurt/Core/Datatypes/Polygon.h>
+#include <Core/Containers/String.h>
 #include <iostream>
 using std::cerr;
 using std::ostream;
 
-namespace SCICore {
-namespace Geometry {
-
-  using SCICore::Containers::clString;
+namespace Kurt {
+using namespace SCIRun;
 
 
 Polygon::Polygon(const Polygon& p)
@@ -110,6 +108,5 @@ std::ostream& operator<<(std::ostream& os, const Polygon& p)
 }
 
 
+} // End namespace Kurt
 
-} //Geometry
-} //SCICore

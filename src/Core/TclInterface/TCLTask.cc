@@ -1,4 +1,3 @@
-//static char *id="@(#) $Id$";
  
 /*
  *  TCLTask.cc:  Handle TCL
@@ -12,10 +11,10 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <SCICore/TclInterface/TCLTask.h>
-#include <SCICore/TclInterface/TCL.h>
-#include <SCICore/Thread/Mutex.h>
-#include <SCICore/Thread/Thread.h>
+#include <Core/TclInterface/TCLTask.h>
+#include <Core/TclInterface/TCL.h>
+#include <Core/Thread/Mutex.h>
+#include <Core/Thread/Thread.h>
 
 #include <iostream>
 using std::cerr;
@@ -51,11 +50,8 @@ extern "C" void Tcl_SetLock(Tcl_LockProc*, Tcl_LockProc*);
 
 extern "C" Tcl_Interp* the_interp;
 
-namespace SCICore {
-namespace TclInterface {
+namespace SCIRun {
 
-    using SCICore::Thread::Mutex;
-    using SCICore::Thread::Thread;
 
 static Mutex tlock("TCL task lock");
 static Thread* owner;
@@ -206,40 +202,5 @@ Thread* TCLTask::get_owner()
     return owner;
 }
 
-} // End namespace TclInterface
-} // End namespace SCICore
+} // End namespace SCIRun
 
-//
-// $Log$
-// Revision 1.8  2000/11/12 20:53:33  yarden
-// add support for itcltk-8.3
-// remove reference to Tcl_SetIsTclThread
-//
-// Revision 1.7  2000/03/23 10:29:25  sparker
-// Use new exceptions/ASSERT macros
-// Fixed compiler warnings
-//
-// Revision 1.6  1999/10/07 02:08:03  sparker
-// use standard iostreams and complex type
-//
-// Revision 1.5  1999/09/08 02:26:55  sparker
-// Various #include cleanups
-//
-// Revision 1.4  1999/09/04 06:01:55  sparker
-// Updates to .h files, to minimize #includes
-// removed .icc files (yeah!)
-//
-// Revision 1.3  1999/08/28 17:54:52  sparker
-// Integrated new Thread library
-//
-// Revision 1.2  1999/08/17 06:39:45  sparker
-// Merged in modifications from PSECore to make this the new "blessed"
-// version of SCIRun/Uintah.
-//
-// Revision 1.1  1999/07/27 16:57:16  mcq
-// Initial commit
-//
-// Revision 1.1.1.1  1999/04/24 23:12:25  dav
-// Import sources
-//
-//

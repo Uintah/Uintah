@@ -1,17 +1,17 @@
 // PackageDB.cc - Interface to module-finding and loading mechanisms
 
-#include <SCICore/Util/soloader.h>
+#include <Core/Util/soloader.h>
 #ifdef ASSERT
 #undef ASSERT
 #endif
-#include <SCICore/Containers/String.h>
-#include <PSECore/Dataflow/PackageDB.h>
-#include <PSECore/Dataflow/FileUtils.h>
-#include <PSECore/Dataflow/ComponentNode.h>
-#include <PSECore/Dataflow/PackageDBHandler.h>
-#include <PSECore/Dataflow/StrX.h>
-#include <PSECore/Dataflow/NetworkEditor.h>
-#include <PSECore/XMLUtil/XMLUtil.h>
+#include <Core/Containers/String.h>
+#include <Dataflow/Network/PackageDB.h>
+#include <Dataflow/Network/FileUtils.h>
+#include <Dataflow/Network/ComponentNode.h>
+#include <Dataflow/Network/PackageDBHandler.h>
+#include <Dataflow/Network/StrX.h>
+#include <Dataflow/Network/NetworkEditor.h>
+#include <Dataflow/XMLUtil/XMLUtil.h>
 #include <stdio.h>
 #include <iostream>
 #include <ctype.h>
@@ -40,11 +40,8 @@ typedef std::map<int,char*>::iterator char_iter;
 typedef std::map<int,inport_node*>::iterator inport_iter;
 typedef std::map<int,outport_node*>::iterator outport_iter;
 
-namespace PSECore {
-namespace Dataflow {
+namespace SCIRun {
 
-using namespace SCICore::Containers;
-using namespace PSECore::XMLUtil;
 
 PackageDB packageDB;
 
@@ -73,11 +70,11 @@ void PackageDB::loadPackage(const clString& packPath)
   bool loading = false;
 
   postMessage("Loading packages, please wait...\n", false);
-
+  postMessage(clString("DEBUG: package path is: '")+packagePath, false);
   while(packagePath!="") {
     // Strip off the first element, leave the rest in the path for the next
     // iteration.
-    
+    postMessage(packagePath, false);
     clString packageElt;
     int firstComma=packagePath.index(',');
     if(firstComma!=-1) {
@@ -93,10 +90,10 @@ void PackageDB::loadPackage(const clString& packPath)
     TCL::eval("update idletasks",result);
 
     // The GUI path is hard-wired to be "PACKAGENAME/GUI""
-    TCL::execute(clString("lappend auto_path ")+packageElt+"/GUI");
+    TCL::execute(clString("lappend auto_path ")+packageElt+"/Dataflow/GUI");
 
     // get *.xml in the PACKAGENAME/XML directory.
-    clString xmldir = packageElt+"/XML";
+    clString xmldir = packageElt+"/Dataflow/XML";
     std::map<int,char*>* files = 
       GetFilenamesEndingWith((char*)xmldir(),".xml");
 
@@ -115,12 +112,19 @@ void PackageDB::loadPackage(const clString& packPath)
 	 i++) {
       if (node) DestroyComponentNode(node);
       node = CreateComponentNode(3);
-      ReadComponentNodeFromFile(node,(packageElt+"/XML/"+(*i).second)());
+      ReadComponentNodeFromFile(node,(packageElt+"/Dataflow/XML/"+(*i).second)());
       
       // find the .so for this component
       LIBRARY_HANDLE so;
       ModuleMaker makeaddr = 0;
-      clString libname(clString("lib")+basename(packageElt)+"_Modules_"+
+      
+      clString bname = basename(packageElt);
+
+      if(bname == "src") {
+	bname = "";
+      }
+
+      clString libname(clString("lib")+bname+"Dataflow_Modules_"+
 		       node->category+".so");
       so = GetLibraryHandle(libname());
       if (!so) {
@@ -285,11 +289,9 @@ Module* PackageDB::instantiateModule(const clString& packageName,
   // that pointed to a TCL file to source before instantiating a module
   // of some particular class for the frist time -- sortof a TCL-end class
   // constructor for the module's class.
-  //
   // Steve understandably doesn't like new, fragile mechanisms where
   // perfectly good old, traditional ones already exist, so he if0'd this
   // away and added the "lappend auto_path" at package-load-time, above.
-  //
   // This code is still here 'cause Some Day it might be nice to allow the
   // source of the TCL files to be stored in the .so (as strings) and eval'd
   // here.  This was the "faraway vision" that drove me to do things this way
@@ -299,10 +301,8 @@ Module* PackageDB::instantiateModule(const clString& packageName,
   // auto_path is useful if you write global f'ns and want to use them in lots
   // of your modules -- auto_path nicely handles this whereas the code below
   // doesn't handle it at all.
-  //
   // Some day it might be nice to actually achieve the "package is one .so
   // and that's all" vision, but not today.  :)
-  //
   //                                                      -mcq 99/10/6
   
   if(moduleInfo->uiFile!="") {
@@ -397,5 +397,4 @@ PackageDB::moduleNames(const clString& packageName,
  return result;
 }
 
-} // Dataflow namespace
-} // PSECore namespace
+} // End namespace SCIRun

@@ -10,14 +10,14 @@
  *  Copyright (C) 1995 SCI Group
  */
 
-#include <SCICore/Containers/String.h>
-#include <PSECore/Dataflow/Module.h>
-#include <SCICore/Datatypes/DenseMatrix.h>
-#include <PSECore/Datatypes/MatrixPort.h>
-#include <SCICore/Datatypes/Mesh.h>
-#include <PSECore/Datatypes/MeshPort.h>
-#include <SCICore/Geometry/Transform.h>
-#include <SCICore/Malloc/Allocator.h>
+#include <Core/Containers/String.h>
+#include <Dataflow/Network/Module.h>
+#include <Core/Datatypes/DenseMatrix.h>
+#include <Dataflow/Ports/MatrixPort.h>
+#include <Core/Datatypes/Mesh.h>
+#include <Dataflow/Ports/MeshPort.h>
+#include <Core/Geometry/Transform.h>
+#include <Core/Malloc/Allocator.h>
 #include <iostream>
 using std::cerr;
 #include <string.h>
@@ -25,14 +25,7 @@ using std::cerr;
 #include <stdio.h>
 
 namespace SCIRun {
-namespace Modules {
 
-using namespace PSECore::Dataflow;
-using namespace PSECore::Datatypes;
-using namespace SCICore::GeomSpace;
-using namespace SCICore::Math;
-using namespace SCICore::Containers;
-using SCICore::Geometry::Transform;
 
 class TransformMesh : public Module {
     MeshIPort *iport;
@@ -94,5 +87,4 @@ void TransformMesh::execute()
     oport->send(meshIH);
 }
 
-} // End namespace Modules
 } // End namespace SCIRun

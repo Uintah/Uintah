@@ -1,15 +1,12 @@
 #include "ParticleEigenEvaluator.h"
 #include <math.h>
-#include <SCICore/Malloc/Allocator.h>
-#include <Uintah/Datatypes/TensorParticles.h>
-#include <Uintah/Datatypes/ScalarParticles.h>
-#include <Uintah/Datatypes/VectorParticles.h>
+#include <Core/Malloc/Allocator.h>
+#include <Packages/Uintah/Core/Datatypes/TensorParticles.h>
+#include <Packages/Uintah/Core/Datatypes/ScalarParticles.h>
+#include <Packages/Uintah/Core/Datatypes/VectorParticles.h>
 
 namespace Uintah {
-namespace Modules {
- 
-using namespace SCICore::Containers;
-using namespace PSECore::Dataflow;
+using namespace SCIRun;
 
 
 extern "C" Module* make_ParticleEigenEvaluator( const clString& id ) { 
@@ -87,9 +84,8 @@ void ParticleEigenEvaluator::execute(void) {
   spout->send(eValues);
   vpout->send(eVectors);  
 }
+} // End namespace Uintah
 
-}
-}
 
 
 

@@ -1,4 +1,3 @@
-//static char *id="@(#) $Id$";
 
 /*
  *  sciBoolean.cc: All this for true and false...
@@ -12,12 +11,11 @@
  *  Copyright (C) 1996 SCI Group
  */
 
-#include <SCICore/Datatypes/Boolean.h>
-#include <SCICore/Containers/String.h>
-#include <SCICore/Malloc/Allocator.h>
+#include <Core/Datatypes/Boolean.h>
+#include <Core/Containers/String.h>
+#include <Core/Malloc/Allocator.h>
 
-namespace SCICore {
-namespace Datatypes {
+namespace SCIRun {
 
 static Persistent* maker()
 {
@@ -54,30 +52,5 @@ void sciBoolean::io(Piostream& stream)
     stream.end_class();
 }
 
-} // End namespace Datatypes
-} // End namespace SCICore
+} // End namespace SCIRun
 
-//
-// $Log$
-// Revision 1.4  1999/09/08 02:26:47  sparker
-// Various #include cleanups
-//
-// Revision 1.3  1999/08/25 03:48:30  sparker
-// Changed SCICore/CoreDatatypes to SCICore/Datatypes
-// Changed PSECore/CommonDatatypes to PSECore/Datatypes
-// Other Misc. directory tree updates
-//
-// Revision 1.2  1999/08/17 06:38:43  sparker
-// Merged in modifications from PSECore to make this the new "blessed"
-// version of SCIRun/Uintah.
-//
-// Revision 1.1  1999/07/27 16:56:19  mcq
-// Initial commit
-//
-// Revision 1.1  1999/04/25 04:07:02  dav
-// Moved files into Datatypes
-//
-// Revision 1.1.1.1  1999/04/24 23:12:49  dav
-// Import sources
-//
-//

@@ -1,19 +1,15 @@
 //////////////////////////////////////////////////////////////////////
 // SaveVRML.cpp - Write a vector<Object> as a VRML 1.0 file.
-//
 // Copyright David K. McAllister July 1999.
-//
 //////////////////////////////////////////////////////////////////////
 
 #include <stdio.h>
 #include <string.h>
 
-#include <Remote/Tools/Model/Model.h>
-#include <Remote/Tools/Model/SaveVRML.h>
+#include <Packages/Remote/Tools/Model/Model.h>
+#include <Packages/Remote/Tools/Model/SaveVRML.h>
 
 namespace Remote {
-namespace Tools {
-
 // Define this static dude.
 TextureDB Model::TexDB;
 
@@ -380,7 +376,6 @@ bool Model::SaveVRML(const char *fname)
 
   return false;
 }
+} // End namespace Remote
 
-} // namespace Tools
-} // namespace Remote
 

@@ -1,5 +1,5 @@
-#include <SCICore/Util/NotFinished.h>
-#include <SCICore/Malloc/Allocator.h>
+#include <Core/Util/NotFinished.h>
+#include <Core/Malloc/Allocator.h>
 #include "VolumeUtils.h"
 #include "Brick.h"
 #include "Polygon.h"
@@ -13,10 +13,7 @@ using std::cin;
 using std::vector;
 
 namespace Kurt {
-namespace Datatypes {
-
-using namespace SCICore::Geometry;
-using namespace SCICore::Malloc;
+using namespace SCIRun;
 
 Brick::Brick() :
   padx(0), pady(0), padz(0), lev(0),
@@ -312,6 +309,5 @@ Brick::OrderIntersects(Point *p, Point *t, Ray *r, Ray *te,
 }
 #define BRICK_VERSION 1
 
+} // End namespace Kurt
   
-} // namespace Datatypes
-} // namespace Kurt

@@ -1,11 +1,8 @@
-#
 # Makefile fragment for this subdirectory
-# $Id$
-#
 
 include $(SRCTOP)/scripts/smallso_prologue.mk
 
-SRCDIR   := SCICore/Math
+SRCDIR   := Core/Math
 
 FNSRCDIR	:= $(SRCTOP)/$(SRCDIR)
 
@@ -23,35 +20,8 @@ SRCS     += $(SRCDIR)/Mat.c $(SRCDIR)/MusilRNG.cc $(SRCDIR)/TrigTable.cc \
 	$(SRCDIR)/function.cc $(SRCDIR)/fnscanner.cc $(SRCDIR)/fnparser.cc
 
 
-PSELIBS := SCICore/Exceptions SCICore/Containers
+PSELIBS := Core/Exceptions Core/Containers
 LIBS := -lm
 
 include $(SRCTOP)/scripts/smallso_epilogue.mk
 
-#
-# $Log$
-# Revision 1.7  2000/08/09 07:58:39  samsonov
-# minor fix
-#
-# Revision 1.6  2000/08/09 07:08:45  samsonov
-# Added CubicPWI.cc path
-#
-# Revision 1.5  2000/07/26 22:16:49  jehall
-# - Removed hardcoded LEX and YACC declarations; these get set portably
-#   by the top-level configure script
-#
-# Revision 1.4  2000/07/23 18:25:47  dahart
-# Initial commit of class & support for symbolic functions
-#
-# Revision 1.3  2000/07/14 23:27:43  samsonov
-# Added interpolation classes source files paths
-#
-# Revision 1.2  2000/03/20 19:37:44  sparker
-# Added VPATH support
-#
-# Revision 1.1  2000/03/17 09:28:31  sparker
-# New makefile scheme: sub.mk instead of Makefile.in
-# Use XML-based files for module repository
-# Plus many other changes to make these two things work
-#
-#

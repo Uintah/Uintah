@@ -1,5 +1,4 @@
 
-// $Id$
 
 /*
  *  InvalidValue.h: 
@@ -13,14 +12,13 @@
  *  Copyright (C) 2000 SCI Group
  */
 
-#ifndef Uintah_Exceptions_InvalidValue_h
-#define Uintah_Exceptions_InvalidValue_h
+#ifndef Packages/Uintah_Exceptions_InvalidValue_h
+#define Packages/Uintah_Exceptions_InvalidValue_h
 
-#include <Uintah/Exceptions/ProblemSetupException.h>
+#include <Packages/Uintah/Exceptions/ProblemSetupException.h>
 #include <string>
 
 namespace Uintah {
-   class InvalidValue : public ProblemSetupException {
    public:
       InvalidValue(const std::string&);
       InvalidValue(const InvalidValue&);
@@ -29,19 +27,9 @@ namespace Uintah {
    protected:
    private:
       InvalidValue& operator=(const InvalidValue&);
+} // End namespace Uintah
    };
-}
 
 #endif
 
-//
-// $Log$
-// Revision 1.5  2000/04/26 06:48:39  sparker
-// Streamlined namespaces
-//
-// Revision 1.4  2000/04/11 07:10:44  sparker
-// Completing initialization and problem setup
-// Finishing Exception modifications
-//
-//
 

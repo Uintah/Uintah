@@ -1,14 +1,13 @@
 #ifndef GLVOLRENSTATE_H
 #define GLVOLRENSTATE_H
 
-#include <SCICore/Datatypes/Polygon.h>
-#include <SCICore/Datatypes/Brick.h>
+#include <Core/Datatypes/Polygon.h>
+#include <Core/Datatypes/Brick.h>
 #include <vector>
 
 class GLVolumeRenderer;
 
-namespace SCICore {
-namespace Datatypes {
+namespace SCIRun {
 
   using std::vector;
 /**************************************
@@ -71,6 +70,5 @@ protected:
   const GLVolumeRenderer*  volren;
 };
 
-} // end namespace Datatypes
-} // end namespace SCICore
+} // End namespace SCIRun
 #endif

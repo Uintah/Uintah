@@ -15,48 +15,48 @@
 #include <stdio.h>
 #include <unistd.h>
 
-#include <SCICore/Thread/Time.h>
-#include <SCICore/Containers/String.h>
+#include <Core/Thread/Time.h>
+#include <Core/Containers/String.h>
 
-#include <SCICore/Datatypes/ScalarFieldRGdouble.h>
-#include <SCICore/Datatypes/ScalarFieldRGfloat.h>
-#include <SCICore/Datatypes/ScalarFieldRGshort.h>
+#include <Core/Datatypes/ScalarFieldRGdouble.h>
+#include <Core/Datatypes/ScalarFieldRGfloat.h>
+#include <Core/Datatypes/ScalarFieldRGshort.h>
 
-#include <SCICore/Thread/Thread.h>
+#include <Core/Thread/Thread.h>
 
-#include <SCICore/Geom/Color.h>
-#include <SCICore/Geom/Material.h>
-#include <SCICore/Geom/GeomTriangles.h>
-#include <SCICore/Geom/View.h>
-#include <SCICore/Geom/GeomGroup.h>
-#include <SCICore/Geom/GeomObj.h>
-#include <SCICore/Geom/GeomTri.h>
-#include <SCICore/Geom/GeomLine.h>
-#include <SCICore/Geom/GeomBox.h>
-#include <SCICore/Geom/Pt.h>
-#include <SCICore/Geom/GeomTransform.h>
-#include <SCICore/Geometry/Point.h>
-#include <SCICore/Geometry/Transform.h>
-#include <SCICore/Geom/BBoxCache.h>
-#include <SCICore/Geom/GeomDL.h>
+#include <Core/Geom/Color.h>
+#include <Core/Geom/Material.h>
+#include <Core/Geom/GeomTriangles.h>
+#include <Core/Geom/View.h>
+#include <Core/Geom/GeomGroup.h>
+#include <Core/Geom/GeomObj.h>
+#include <Core/Geom/GeomTri.h>
+#include <Core/Geom/GeomLine.h>
+#include <Core/Geom/GeomBox.h>
+#include <Core/Geom/Pt.h>
+#include <Core/Geom/GeomTransform.h>
+#include <Core/Geometry/Point.h>
+#include <Core/Geometry/Transform.h>
+#include <Core/Geom/BBoxCache.h>
+#include <Core/Geom/GeomDL.h>
 
-#include <SCICore/Geometry/Vector.h>
-#include <SCICore/Malloc/Allocator.h>
-#include <SCICore/Math/Trig.h>
+#include <Core/Geometry/Vector.h>
+#include <Core/Malloc/Allocator.h>
+#include <Core/Math/Trig.h>
 
-#include <SCICore/TclInterface/TCLTask.h>
-#include <SCICore/TclInterface/TCLvar.h>
-#include <SCICore/TclInterface/TCL.h>
+#include <Core/TclInterface/TCLTask.h>
+#include <Core/TclInterface/TCLvar.h>
+#include <Core/TclInterface/TCL.h>
 
-#include <PSECore/Dataflow/Module.h>
-#include <PSECore/Datatypes/ScalarFieldPort.h>
-#include <PSECore/Datatypes/ColorMapPort.h>
-#include <PSECore/Datatypes/GeometryPort.h>
-#include <PSECore/Datatypes/GeometryComm.h>
-#include <PSECore/Datatypes/SurfacePort.h>
-#include <PSECore/Datatypes/CameraViewPort.h>
+#include <Dataflow/Network/Module.h>
+#include <Dataflow/Ports/ScalarFieldPort.h>
+#include <Dataflow/Ports/ColorMapPort.h>
+#include <Dataflow/Ports/GeometryPort.h>
+#include <Dataflow/Ports/GeometryComm.h>
+#include <Dataflow/Ports/SurfacePort.h>
+#include <Dataflow/Ports/CameraViewPort.h>
 
-#include <PSECommon/Algorithms/Visualization/Sage.h>
+#include <Core/Algorithms/Visualization/Sage.h>
 
 #include <tcl.h>
 #include <tk.h>
@@ -67,18 +67,8 @@
 
 
 
-namespace PSECommon {
-  namespace Modules {
+namespace SCIRun {
     
-    using namespace PSECore::Dataflow;
-    using namespace PSECore::Datatypes;
-    using namespace SCICore::Containers;
-    using namespace SCICore::GeomSpace;
-    using namespace SCICore::Geometry;
-    using namespace SCICore::Math;
-    using namespace SCICore::TclInterface;
-    using namespace SCICore::Thread;
-    using namespace PSECommon::Algorithms;
     
     
     SysTime::SysClock extract_timer, vis_timer;
@@ -91,9 +81,7 @@ namespace PSECommon {
 
     GeometryData *gd;
 
-    //
     // IsoSurfaceSAGE
-    //
 
     class IsoSurfaceSAGE : public Module 
     {
@@ -485,5 +473,4 @@ IsoSurfaceSAGE::set_view( const View &view )
 }
 
 
-  } // namespace Modules
-} //  namespace PSECommon
+} // End namespace SCIRun

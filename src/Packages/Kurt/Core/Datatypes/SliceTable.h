@@ -2,17 +2,14 @@
 #define SLICETABLE_H
 
 
-#include <SCICore/Geometry/Point.h>
-#include <SCICore/Geometry/Ray.h>
-#include <SCICore/Geometry/Vector.h>
+#include <Core/Geometry/Point.h>
+#include <Core/Geometry/Ray.h>
+#include <Core/Geometry/Vector.h>
 #include "Brick.h"
 
 namespace Kurt {
-namespace Datatypes  {
 
-
-using namespace SCICore::Geometry;
-using namespace SCICore::Containers;
+using namespace SCIRun;
 /**************************************
 
 CLASS
@@ -24,7 +21,7 @@ GENERAL INFORMATION
 
    SliceTable.h
 
-   Kurt Zimmerman
+   Packages/Kurt Zimmerman
    Department of Computer Science
    University of Utah
 
@@ -65,7 +62,6 @@ public:
 
   // GROUP: Computation
   //////////
-  // 
   void getParameters(const Brick&,double& tmin,
 		     double& tmax, double& dt) const;
 
@@ -77,7 +73,6 @@ private:
   double minT, maxT, DT;
 };
 
+} // End namespace Kurt
 
-}  // namespace Datatypes
-} // namespace Kurt
 #endif

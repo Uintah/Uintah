@@ -1,9 +1,9 @@
 
 /*
- *  NektarScalarField.h: The Nektar Scalar Field Data type
+ *  Packages/NektarScalarField.h: The Packages/Nektar Scalar Field Data type
  *
  *  Written by:
- *   Yarden
+ *   Packages/Yarden
  *   Department of Computer Science
  *   University of Utah
  *   August 2000
@@ -11,26 +11,24 @@
  *  Copyright (C) 2000 SCI Group
  */
 
-#ifndef NektarScalarField_h
-#define NektarScalarField_h
+#ifndef Packages/NektarScalarField_h
+#define Packages/NektarScalarField_h
 
-#include <SCICore/Datatypes/ScalarField.h>
-#include <SCICore/Containers/Array1.h>
+#include <Core/Datatypes/ScalarField.h>
+#include <Core/Containers/Array1.h>
 
 namespace Nektar {
-  namespace Datatypes {
-    
-    using namespace SCICore::Datatypes;
+using namespace SCIRun;
 
-    class NektarScalarField;
-    typedef LockingHandle<NektarScalarField> NektarScalarFieldHandle;
+    class Packages/NektarScalarField;
+    typedef LockingHandle<Packages/NektarScalarField> Packages/NektarScalarFieldHandle;
     
-    class SCICORESHARE NektarScalarField : public ScalarField {
+    class SCICORESHARE Packages/NektarScalarField : public ScalarField {
     public:
       
-      NektarScalarField();
-      virtual ~NektarScalarField();
-      virtual NektarScalarField* clone();
+      Packages/NektarScalarField();
+      virtual ~Packages/NektarScalarField();
+      virtual Packages/NektarScalarField* clone();
 
       virtual void compute_bounds();
       virtual void compute_minmax();
@@ -44,8 +42,7 @@ namespace Nektar {
       static PersistentTypeID type_id;
     };
     
-    
-  } // End namespace Datatypes
 } // End namespace Nektar
+    
 
 #endif

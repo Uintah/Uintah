@@ -10,17 +10,17 @@
  *  Copyright (C) 2000 U of U
  */
 
-#include <Uintah/Interface/DataArchive.h>
-#include <Uintah/Grid/Grid.h>
-#include <Uintah/Grid/Level.h>
-#include <Uintah/Grid/NodeIterator.h>
-#include <Uintah/Grid/CellIterator.h>
-#include <Uintah/Components/MPM/Util/Matrix3.h>
-#include <SCICore/Math/MinMax.h>
-#include <SCICore/Geometry/Point.h>
-#include <SCICore/Geometry/Vector.h>
-#include <SCICore/OS/Dir.h>
-#include <PSECore/XMLUtil/XMLUtil.h>
+#include <Packages/Uintah/Interface/DataArchive.h>
+#include <Packages/Uintah/Grid/Grid.h>
+#include <Packages/Uintah/Grid/Level.h>
+#include <Packages/Uintah/Grid/NodeIterator.h>
+#include <Packages/Uintah/Grid/CellIterator.h>
+#include <Uintah/Core/CCA/Components/MPM/Util/Matrix3.h>
+#include <Core/Math/MinMax.h>
+#include <Core/Geometry/Point.h>
+#include <Core/Geometry/Vector.h>
+#include <Core/OS/Dir.h>
+#include <Dataflow/XMLUtil/XMLUtil.h>
 #include <iostream>
 #include <string>
 #include <vector>
@@ -28,13 +28,9 @@
 #include <iomanip>
 
 
-using SCICore::Exceptions::Exception;
-using namespace SCICore::Geometry;
-using namespace SCICore::Math;
-using namespace SCICore::OS;
+using namespace SCIRun;
 using namespace std;
 using namespace Uintah;
-using namespace PSECore::XMLUtil;
 
 typedef struct{
   vector<ParticleVariable<double> > pv_double_list;
@@ -57,7 +53,6 @@ string replaceChar(string s, char old, char newch) {
 
 // use this function to open a pair of files for outputing
 // data to the reat-time raytracer.
-//
 // in: pointers to the pointer to the files data and header
 //     the file names
 // out: inialized files for writing
@@ -1378,59 +1373,3 @@ int main(int argc, char** argv)
   }
 }
 
-//
-// $Log$
-// Revision 1.15  2000/10/18 03:53:36  jas
-// Get rid of g++ warnings.
-//
-// Revision 1.14  2000/09/26 18:44:27  bigler
-// Increased the pricision to 17 digits of data writen to the rtdata headerfiles.
-//
-// Revision 1.13  2000/08/16 15:49:54  bigler
-// Changed timesteplow/timestephigh variables to be of type unsigned long.
-// Did this for compatability issues with the data archive.
-//
-// Revision 1.12  2000/08/11 20:41:41  bigler
-// Fixed a bug that was failing to compute the min/max for Matrix3d properly.
-// This was for rtrt particle data output.
-//
-// Revision 1.11  2000/08/09 03:17:55  jas
-// Changed new to scinew and added deletes to some of the destructors.
-//
-// Revision 1.10  2000/08/04 20:36:43  campbell
-// added -asci option to puda.cc for printing particle variables in asci format.
-//
-// Revision 1.9  2000/07/11 20:00:11  kuzimmer
-// Modified so that CCVariables and Matrix3 are recognized
-//
-// Revision 1.8  2000/06/22 20:31:04  bigler
-// Removed a line of debugging code that inadvertently got looked over.
-//
-// Revision 1.7  2000/06/21 21:05:55  bigler
-// Made it so that when writing particle data it puts all the files for one timestep in a single subdirectory.
-// Also added command line options to output data on a range of timesteps.  This is good for all output formats.
-//
-// Revision 1.6  2000/06/15 12:58:51  bigler
-// Added functionality to output particle variable data for the real-time raytracer
-//
-// Revision 1.5  2000/06/08 20:58:42  bigler
-// Added support to ouput data for the reat-time raytracer.
-//
-// Revision 1.4  2000/05/30 20:18:39  sparker
-// Changed new to scinew to help track down memory leaks
-// Changed region to patch
-//
-// Revision 1.3  2000/05/21 08:19:04  sparker
-// Implement NCVariable read
-// Do not fail if variable type is not known
-// Added misc stuff to makefiles to remove warnings
-//
-// Revision 1.2  2000/05/20 19:54:52  dav
-// browsing puda, added a couple of things to usage, etc.
-//
-// Revision 1.1  2000/05/20 08:09:01  sparker
-// Improved TypeDescription
-// Finished I/O
-// Use new XML utility libraries
-//
-//

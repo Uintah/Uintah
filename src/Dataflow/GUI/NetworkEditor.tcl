@@ -1,7 +1,7 @@
 #puts "NetworkEditor.tcl start"
 
-source $PSECoreTCL/defaults.tcl
-source $PSECoreTCL/devices.tcl
+source $DataflowTCL/defaults.tcl
+source $DataflowTCL/devices.tcl
 
 set modname_font "-Adobe-Helvetica-Bold-R-Normal-*-12-120-75-*"
 set ui_font "-Adobe-Helvetica-Medium-R-Normal-*-12-120-75-*"
@@ -488,7 +488,7 @@ proc itemDrag {c x y} {
 proc popupSaveMenu {} {
     set types {
 	{{Uintah Scripts Files} {.uin} }
-	{{SCIRun Script} {.sr} }
+	{{Dataflow Script} {.sr} }
 	{{Other} { * } }
     } 
     set netedit_savefile [ tk_getSaveFile -defaultextension {.uin} \
@@ -504,7 +504,7 @@ proc popupLoadMenu {} {
     global netedit
     set types {
 	{{Uintah Scripts Files} {.uin} }
-	{{SCIRun Script} {.sr} }
+	{{Dataflow Script} {.sr} }
 	{{Other} { * } }
     } 
     
@@ -543,7 +543,7 @@ proc GetPathAndPackage { compaddr compname catname } {
     pack $w.row1 $w.row12 -padx 5 -side top
     pack $w.row2 $w.row3 $w.row4 -pady 5 -padx 5 -side top
 
-    label $w.row1.compname_label -text "Component name: "
+    label $w.row1.compname_label -text "Core/CCA/Component name: "
     label $w.row12.catname_label -text "Category name: "
     label $w.row1.compname -text $compname -foreground darkred
     label $w.row12.catname -text $catname -foreground darkred

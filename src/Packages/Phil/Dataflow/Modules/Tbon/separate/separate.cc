@@ -1,7 +1,7 @@
 /* separate.cc
  * reorder HTVolumeBrick data for use in the unstructured T-BON
  *
- * Philip Sutton
+ * Packages/Philip Sutton
  * May 1999
  */
 

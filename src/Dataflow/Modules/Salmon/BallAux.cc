@@ -9,6 +9,7 @@ Quat qOne(0, 0, 0, 1);
  * vnew = mat vold.  Works correctly for right-handed coordinate system
  * and right-handed rotations. */
 
+
 void Quat::ToMatrix(HMatrix& out)
 {
     double Nq = x*x + y*y + z*z + w*w;

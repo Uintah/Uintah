@@ -1,4 +1,4 @@
-itcl_class PSECommon_Surface_SurfGen {
+itcl_class Dataflow_Surface_SurfGen {
     inherit Module
     constructor {config} {
         set name SurfGen

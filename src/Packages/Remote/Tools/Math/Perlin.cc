@@ -1,12 +1,10 @@
-#include <Remote/Tools/Math/Perlin.h>
+#include <Packages/Remote/Tools/Math/Perlin.h>
 
-#include <Remote/Tools/Util/Utils.h>
+#include <Packages/Remote/Tools/Util/Utils.h>
 
 #include <math.h>
 
 namespace Remote {
-namespace Tools {
-
 int Perlin::Pr[4][MAX_OCTAVES];
 double Perlin::Ampl[MAX_OCTAVES];
 bool Perlin::RandFilled = false;
@@ -221,7 +219,6 @@ double Perlin::Noise(double x, double y, double z)
   // BuckIt(sum);
   return sum;
 }
+} // End namespace Remote
 
-} // namespace Tools
-} // namespace Remote
 

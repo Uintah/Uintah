@@ -11,28 +11,21 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <PSECore/Datatypes/GeometryPort.h>
-#include <PSECore/Datatypes/MeshPort.h>
-#include <SCICore/Geom/Color.h>
-#include <SCICore/Geom/GeomGroup.h>
-#include <SCICore/Geom/Pt.h>
-#include <SCICore/Geom/GeomTri.h>
-#include <SCICore/Geom/GeomTriangles.h>
-#include <SCICore/Geom/Material.h>
-#include <SCICore/Malloc/Allocator.h>
-#include <SCICore/TclInterface/TCLvar.h>
+#include <Dataflow/Ports/GeometryPort.h>
+#include <Dataflow/Ports/MeshPort.h>
+#include <Core/Geom/Color.h>
+#include <Core/Geom/GeomGroup.h>
+#include <Core/Geom/Pt.h>
+#include <Core/Geom/GeomTri.h>
+#include <Core/Geom/GeomTriangles.h>
+#include <Core/Geom/Material.h>
+#include <Core/Malloc/Allocator.h>
+#include <Core/TclInterface/TCLvar.h>
 #include <iostream>
 using std::cerr;
 
 namespace SCIRun {
-namespace Modules {
 
-using namespace PSECore::Dataflow;
-using namespace PSECore::Datatypes;
-using namespace SCICore::Containers;
-using namespace SCICore::GeomSpace;
-using namespace SCICore::Geometry;
-using namespace SCICore::TclInterface;
 
 #define MAX_CLASS 30
 class MeshToGeom : public Module {
@@ -196,5 +189,4 @@ void MeshToGeom::execute()
 
 }
 
-} // End namespace Modules
 } // End namespace SCIRun

@@ -1,4 +1,4 @@
-itcl_class PSECommon_Visualization_RescaleColorMap { 
+itcl_class Dataflow_Visualization_RescaleColorMap { 
     inherit Module 
 
     protected  bVar

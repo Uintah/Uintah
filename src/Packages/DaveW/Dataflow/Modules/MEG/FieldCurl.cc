@@ -10,18 +10,14 @@
  *  Copyright (C) 1999 SCI Group
  */
 
-#include <PSECore/Dataflow/Module.h>
-#include <PSECore/Datatypes/VectorFieldPort.h>
-#include <SCICore/Datatypes/VectorFieldRG.h>
-#include <SCICore/Datatypes/VectorFieldUG.h>
-#include <SCICore/TclInterface/TCLvar.h>
+#include <Dataflow/Network/Module.h>
+#include <Dataflow/Ports/VectorFieldPort.h>
+#include <Core/Datatypes/VectorFieldRG.h>
+#include <Core/Datatypes/VectorFieldUG.h>
+#include <Core/TclInterface/TCLvar.h>
 
 namespace DaveW {
-namespace Modules {
-
-using namespace PSECore::Dataflow;
-using namespace PSECore::Datatypes;
-using namespace SCICore::TclInterface;
+using namespace SCIRun;
 
 class FieldCurl : public Module {
   TCLint interpolate;
@@ -284,18 +280,6 @@ Vector FieldCurl::get_curl(Element* elem, Vector& v1, Vector& v2, Vector& v3, Ve
     Vector curl(Bx, By, Bz);
     return(curl);
 
-}
-} // End namespace Modules
 } // End namespace DaveW
+}
 
-//
-// $Log$
-// Revision 1.2  2000/03/17 09:25:50  sparker
-// New makefile scheme: sub.mk instead of Makefile.in
-// Use XML-based files for module repository
-// Plus many other changes to make these two things work
-//
-// Revision 1.1  1999/09/02 04:27:08  dmw
-// Rob V's modules
-//
-//

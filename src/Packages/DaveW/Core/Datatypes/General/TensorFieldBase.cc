@@ -8,13 +8,11 @@
  
    */
 
-#include <DaveW/Datatypes/General/TensorFieldBase.h>
-#include <SCICore/Containers/String.h>
-#include <SCICore/Util/NotFinished.h>
+#include <Packages/DaveW/Core/Datatypes/General/TensorFieldBase.h>
+#include <Core/Containers/String.h>
+#include <Core/Util/NotFinished.h>
 
 namespace DaveW {
-namespace Datatypes {
-
 PersistentTypeID TensorFieldBase::type_id("TensorFieldBase", "Datatype", 0);
 
 
@@ -35,9 +33,7 @@ TensorFieldBase::~TensorFieldBase()
 
 void TensorFieldBase::io(Piostream& stream)
 {
-    using SCICore::PersistentSpace::Pio;
-    using SCICore::Containers::Pio;
-    using SCICore::Geometry::Pio;
+using namespace SCIRun;
 
     stream.begin_class("TensorFieldBase", TENSORFIELDBASE_VERSION);
     Pio(stream, m_type);
@@ -88,16 +84,6 @@ void TensorFieldBase::set_bounds(const Point& min, const Point& max) {
 	for (int i=0; i<EVECTOR_ELEMENTS; i++) 
 	    m_e_values[i].set_bounds(min, max);
 }
-
-} // End namespace Datatypes
 } // End namespace DaveW
 
-//
-// $Log$
-// Revision 1.2  1999/09/08 02:26:18  sparker
-// Various #include cleanups
-//
-// Revision 1.1  1999/09/01 05:27:37  dmw
-// more DaveW datatypes...
-//
-//
+

@@ -18,60 +18,60 @@
 #include <stdlib.h>
 #define GL_INTENSITY_EXT GL_INTENSITY
 #endif
-#include <SCICore/Util/NotFinished.h>
+#include <Core/Util/NotFinished.h>
 
-#include <SCICore/Geom/GeomOpenGL.h>
-#include <SCICore/Geom/GeomArrows.h>
-#include <SCICore/Geom/BBoxCache.h>
-#include <SCICore/Geom/GeomBillboard.h>
-#include <SCICore/Geom/GeomBox.h>
-#include <SCICore/Geom/GeomCone.h>
-#include <SCICore/Geom/GeomCylinder.h>
-#include <SCICore/Geom/GeomDisc.h>
-#include <SCICore/Geom/GeomObj.h>
-#include <SCICore/Geom/GeomColormapInterface.h>
-#include <SCICore/Geom/GeomGrid.h>
-#include <SCICore/Geom/GeomQMesh.h>
-#include <SCICore/Geom/tGrid.h>
-#include <SCICore/Geom/TimeGrid.h>
-#include <SCICore/Geom/GeomGroup.h>
-#include <SCICore/Geom/GeomTimeGroup.h>
-#include <SCICore/Geom/HeadLight.h>
-#include <SCICore/Geom/IndexedGroup.h>
-#include <SCICore/Geom/Light.h>
-#include <SCICore/Geom/GeomLine.h>
-#include <SCICore/Geom/Material.h>
-#include <SCICore/Geom/GeomPick.h>
-#include <SCICore/Geom/PointLight.h>
-#include <SCICore/Geom/GeomPolyline.h>
-#include <SCICore/Geom/Pt.h>
-#include <SCICore/Geom/RenderMode.h>
-#include <SCICore/Geom/GeomSphere.h>
-#include <SCICore/Geom/GeomEllipsoid.h>
-#include <SCICore/Geom/GeomDL.h>
+#include <Core/Geom/GeomOpenGL.h>
+#include <Core/Geom/GeomArrows.h>
+#include <Core/Geom/BBoxCache.h>
+#include <Core/Geom/GeomBillboard.h>
+#include <Core/Geom/GeomBox.h>
+#include <Core/Geom/GeomCone.h>
+#include <Core/Geom/GeomCylinder.h>
+#include <Core/Geom/GeomDisc.h>
+#include <Core/Geom/GeomObj.h>
+#include <Core/Geom/GeomColormapInterface.h>
+#include <Core/Geom/GeomGrid.h>
+#include <Core/Geom/GeomQMesh.h>
+#include <Core/Geom/tGrid.h>
+#include <Core/Geom/TimeGrid.h>
+#include <Core/Geom/GeomGroup.h>
+#include <Core/Geom/GeomTimeGroup.h>
+#include <Core/Geom/HeadLight.h>
+#include <Core/Geom/IndexedGroup.h>
+#include <Core/Geom/Light.h>
+#include <Core/Geom/GeomLine.h>
+#include <Core/Geom/Material.h>
+#include <Core/Geom/GeomPick.h>
+#include <Core/Geom/PointLight.h>
+#include <Core/Geom/GeomPolyline.h>
+#include <Core/Geom/Pt.h>
+#include <Core/Geom/RenderMode.h>
+#include <Core/Geom/GeomSphere.h>
+#include <Core/Geom/GeomEllipsoid.h>
+#include <Core/Geom/GeomDL.h>
 #if 0
-#include <SCICore/Geom/Squares.h>
+#include <Core/Geom/Squares.h>
 #endif
-#include <SCICore/Geom/Switch.h>
-#include <SCICore/Geom/GeomTetra.h>
-#include <SCICore/Geom/GeomTexSlices.h>
-#include <SCICore/Geom/TexSquare.h>
-#include <SCICore/Geom/ColorMapTex.h>
-#include <SCICore/Geom/GeomText.h>
-#include <SCICore/Geom/GeomTorus.h>
-#include <SCICore/Geom/GeomTransform.h>
-#include <SCICore/Geom/GeomTri.h>
-#include <SCICore/Geom/GeomTriangles.h>
-#include <SCICore/Geom/GeomTube.h>
-#include <SCICore/Geom/GeomTriStrip.h>
-#include <SCICore/Geom/View.h>
-#include <SCICore/Geom/Sticky.h>
-#include <SCICore/Geom/Color.h>
-#include <SCICore/Math/MinMax.h>
-#include <SCICore/Math/MiscMath.h>
-#include <SCICore/Math/Trig.h>
-#include <SCICore/Math/TrigTable.h>
-#include <SCICore/Geometry/Plane.h>
+#include <Core/Geom/Switch.h>
+#include <Core/Geom/GeomTetra.h>
+#include <Core/Geom/GeomTexSlices.h>
+#include <Core/Geom/TexSquare.h>
+#include <Core/Geom/ColorMapTex.h>
+#include <Core/Geom/GeomText.h>
+#include <Core/Geom/GeomTorus.h>
+#include <Core/Geom/GeomTransform.h>
+#include <Core/Geom/GeomTri.h>
+#include <Core/Geom/GeomTriangles.h>
+#include <Core/Geom/GeomTube.h>
+#include <Core/Geom/GeomTriStrip.h>
+#include <Core/Geom/View.h>
+#include <Core/Geom/Sticky.h>
+#include <Core/Geom/Color.h>
+#include <Core/Math/MinMax.h>
+#include <Core/Math/MiscMath.h>
+#include <Core/Math/Trig.h>
+#include <Core/Math/TrigTable.h>
+#include <Core/Geometry/Plane.h>
 #include <iostream>
 using std::cerr;
 using std::endl;
@@ -86,14 +86,12 @@ using std::endl;
 #include <X11/X.h>
 #include <X11/Xlib.h>
 
-using namespace SCICore::Math;
 
 #include <stdio.h>
 
 #define MAX_MATL_STACK 100
 
-namespace SCICore {
-namespace GeomSpace {
+namespace SCIRun {
 
 int GeomObj::pre_draw(DrawInfoOpenGL* di, Material* matl, int lit)
 {
@@ -366,8 +364,6 @@ void DrawInfoOpenGL::init_view(double /*znear*/, double /*zfar*/,
 
 void GeomArrows::draw(DrawInfoOpenGL* di, Material* matl, double)
 {
-  using SCICore::Math::Abs;
-  using namespace SCICore::Geometry;
 
     int n=positions.size();
     di->polycount+=6*n;
@@ -718,7 +714,6 @@ void GeomDL::draw(DrawInfoOpenGL* di, Material *m, double time)
 
 void GeomBillboard::draw(DrawInfoOpenGL* di, Material* m, double time)
 {
-  using namespace SCICore::Geometry;
 
 //   MaterialHandle red = new Material(Color(.8,.0,0), Color(.2,0,0),
 // 				       Color(.5,.5,.5), 20);
@@ -2121,7 +2116,6 @@ void GeomPolyline::draw(DrawInfoOpenGL* di, Material* matl, double currenttime)
 
 void GeomPolylineTC::draw(DrawInfoOpenGL* di, Material* matl, double currenttime)
 {
-  using SCICore::Math::Max;
 
   if(data.size() == 0)
     return;
@@ -2552,7 +2546,6 @@ void GeomSwitch::draw(DrawInfoOpenGL* di, Material* matl, double time)
 
 void GeomTetra::draw(DrawInfoOpenGL* di, Material* matl, double)
 {
-  using SCICore::Geometry::Plane;
 
     if(!pre_draw(di, matl, 1)) return;
     di->polycount+=4;
@@ -4280,5 +4273,4 @@ void GeomSticky::draw(DrawInfoOpenGL* di, Material* matl, double t) {
   glPopMatrix();
 }  
 
-} // End namespace GeomSpace
-} // End namespace SCICore
+} // End namespace SCIRun

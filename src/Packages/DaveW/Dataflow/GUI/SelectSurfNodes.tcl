@@ -1,18 +1,15 @@
 ##
  #  SelectSurfNodes.tcl: The UI
- #
  #  Written by:
  #   David Weinstein
  #   Department of Computer Science
  #   University of Utah
  #   July 1998
- #
  #  Copyright (C) 1998 SCI Group
- #
  ##
 
-catch {rename DaveW_EEG_SelectSurfNodes ""}
-itcl_class DaveW_EEG_SelectSurfNodes {
+catch {rename Packages/DaveW_EEG_SelectSurfNodes ""}
+itcl_class Packages/DaveW_EEG_SelectSurfNodes {
     inherit Module
     constructor {config} {
         set name SelectSurfNodes

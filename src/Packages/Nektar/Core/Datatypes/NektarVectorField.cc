@@ -1,8 +1,8 @@
 /*
- *  NektarVectorField.cc: Nektar Vector Fields defined on an unstructured grid
+ *  Packages/NektarVectorField.cc: Packages/Nektar Vector Fields defined on an unstructured grid
  *
  *  Written by:
- *   Yarden Livnat
+ *   Packages/Yarden Livnat
  *   Department of Computer Science
  *   University of Utah
  *   August 2000
@@ -10,39 +10,37 @@
  *  Copyright (C) 2000 SCI Group
  */
 
-#include <Nektar/Datatypes/NektarVectorField.h>
-#include <SCICore/Util/NotFinished.h>
-#include <SCICore/Containers/String.h>
-#include <SCICore/Malloc/Allocator.h>
+#include <Packages/Nektar/Core/Datatypes/NektarVectorField.h>
+#include <Core/Util/NotFinished.h>
+#include <Core/Containers/String.h>
+#include <Core/Malloc/Allocator.h>
 
 namespace Nektar {
-  namespace Datatypes {
-    
     static Persistent* maker()
     {
-      return scinew NektarVectorField();
+      return scinew Packages/NektarVectorField();
     }
 
-    PersistentTypeID NektarVectorField::type_id("NektarVectorField", 
+    PersistentTypeID Packages/NektarVectorField::type_id("Packages/NektarVectorField", 
 						"VectorField", 
 						maker);
 
-    NektarVectorField::NektarVectorField()
+    Packages/NektarVectorField::Packages/NektarVectorField()
       : VectorField(UnstructuredGrid)
     {
     }
     
-    NektarVectorField::~NektarVectorField()
+    Packages/NektarVectorField::~Packages/NektarVectorField()
     {
     }
     
-    NektarVectorField* NektarVectorField::clone()
+    Packages/NektarVectorField* Packages/NektarVectorField::clone()
     {
-      NOT_FINISHED("NektarVectorField::clone()");
+      NOT_FINISHED("Packages/NektarVectorField::clone()");
       return 0;
     }
     
-    void NektarVectorField::compute_bounds()
+    void Packages/NektarVectorField::compute_bounds()
     {
 //       if(have_bounds || mesh->nodes.size() == 0)
 // 	return;
@@ -50,29 +48,27 @@ namespace Nektar {
 //       have_bounds=1;
     }
 
-    int NektarVectorField::interpolate(const Point&, Vector&)
+    int Packages/NektarVectorField::interpolate(const Point&, Vector&)
     {
       return 0;
     }
     
-    int NektarVectorField::interpolate(const Point&, Vector&, int&, int)
+    int Packages/NektarVectorField::interpolate(const Point&, Vector&, int&, int)
     {
       return 0;
     }
     
 #define VECTORFIELD_NEKTAR_VERSION 1
 
-    void NektarVectorField::io(Piostream&)
+    void Packages/NektarVectorField::io(Piostream&)
     {
-      using SCICore::PersistentSpace::Pio;
-      using SCICore::Containers::Pio;
+using namespace SCIRun;
       
     }
 
-    void NektarVectorField::get_boundary_lines(Array1<Point>&)
+    void Packages/NektarVectorField::get_boundary_lines(Array1<Point>&)
     {
     }
-
-  } // End namespace Datatypes
 } // End namespace Nektar
+
 

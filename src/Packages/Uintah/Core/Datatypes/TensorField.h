@@ -1,17 +1,14 @@
 #ifndef SCI_project_TensorField_h
 #define SCI_project_TensorField_h 1
 
-#include <SCICore/Datatypes/Datatype.h>
-#include <SCICore/Datatypes/ScalarField.h>
-#include <SCICore/Containers/LockingHandle.h>
-#include <SCICore/Geometry/Point.h>
+#include <Core/Datatypes/Datatype.h>
+#include <Core/Datatypes/ScalarField.h>
+#include <Core/Containers/LockingHandle.h>
+#include <Core/Geometry/Point.h>
 
-namespace SCICore {
-  namespace Datatypes {
+namespace Uintah {
 
-
-using SCICore::Containers::LockingHandle;
-using SCICore::Geometry::Point;
+using namespace SCIRun;
 
 class TensorField;
 
@@ -38,8 +35,7 @@ protected:
     Vector diagonal;
 
 };
+} // End namespace Uintah
 
-} // End namespace Datatypes
-} // End namespace SCICore
 
 #endif

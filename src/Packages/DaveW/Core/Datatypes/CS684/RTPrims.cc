@@ -1,4 +1,3 @@
-//static char *id="@(#) $Id$";
 
 /*
  *  RTPrims.cc:  Ray-tracing primitives -- Ray, Sphere, ...
@@ -12,17 +11,17 @@
  *  Copyright (C) 1997 SCI Group
  */
 
-#include <DaveW/Datatypes/CS684/RTPrims.h>
-#include <DaveW/Datatypes/CS684/RadPrims.h>
-#include <DaveW/Datatypes/CS684/Spectrum.h>
-#include <SCICore/Containers/String.h>
-#include <SCICore/Geom/Color.h>
-#include <SCICore/Geom/Material.h>
-#include <SCICore/Geometry/Point.h>
-#include <SCICore/Geometry/Vector.h>
-#include <SCICore/Malloc/Allocator.h>
-#include <SCICore/Math/MinMax.h>
-#include <SCICore/Math/MiscMath.h>
+#include <Packages/DaveW/Core/Datatypes/CS684/RTPrims.h>
+#include <Packages/DaveW/Core/Datatypes/CS684/RadPrims.h>
+#include <Packages/DaveW/Core/Datatypes/CS684/Spectrum.h>
+#include <Core/Containers/String.h>
+#include <Core/Geom/Color.h>
+#include <Core/Geom/Material.h>
+#include <Core/Geometry/Point.h>
+#include <Core/Geometry/Vector.h>
+#include <Core/Malloc/Allocator.h>
+#include <Core/Math/MinMax.h>
+#include <Core/Math/MiscMath.h>
 
 #include <iostream>
 using std::cerr;
@@ -30,13 +29,8 @@ using std::cerr;
 #include <stdio.h>
 
 namespace DaveW {
-namespace Datatypes {
+using namespace SCIRun;
 
-using SCICore::Math::Abs;
-using SCICore::Datatypes::TSElement;
-
-using namespace SCICore::PersistentSpace;
-using namespace SCICore::GeomSpace;
 
 PersistentTypeID BRDF::type_id("BRDF", "Datatype", 0);
 
@@ -55,7 +49,6 @@ BRDF::~BRDF() {
 
 #define BRDF_VERSION 1
 void BRDF::io(Piostream& stream) {
-    using SCICore::PersistentSpace::Pio;
     
     /*int version=*/stream.begin_class("BRDF", BRDF_VERSION);
     int* repp=(int*)&rep;
@@ -126,7 +119,6 @@ RTCamera* RTCamera::clone() {
 //    Upp.normalize();
 //    Vector v(Upp);
 //    Vector u=Cross(n,v);
-//
 //    camera.u=-u;
 //    camera.v=v;
 //    camera.w=n;
@@ -152,9 +144,6 @@ static Persistent* make_RTCamera() {
 
 #define RTCamera_VERSION 1
 void RTCamera::io(Piostream& stream) {
-    using SCICore::PersistentSpace::Pio;
-    using SCICore::Containers::Pio;
-    using SCICore::GeomSpace::Pio;
     using DaveW::Datatypes::Pio;
 
     /* int version=*/stream.begin_class("RTCamera", RTCamera_VERSION);
@@ -224,8 +213,6 @@ PersistentTypeID RTMaterial::type_id("RTMaterial", "Persistent", make_RTMaterial
 
 #define RTMaterial_VERSION 2
 void RTMaterial::io(Piostream& stream) {
-    using SCICore::PersistentSpace::Pio;
-    using SCICore::Containers::Pio;
     using DaveW::Datatypes::Pio;
 
     /*int version=*/stream.begin_class("RTMaterial", RTMaterial_VERSION);
@@ -427,8 +414,6 @@ RTPlane* RTObject::getPlane() {
 
 #define RTObject_VERSION 1
 void RTObject::io(Piostream& stream) {
-    using SCICore::PersistentSpace::Pio;
-    using SCICore::Containers::Pio;
     using DaveW::Datatypes::Pio;
 
     /*int version=*/stream.begin_class("RTObject", RTObject_VERSION);
@@ -450,8 +435,6 @@ static Persistent* make_RTSphere()
 
 #define RTSphere_VERSION 1
 void RTSphere::io(Piostream& stream) {
-    using SCICore::PersistentSpace::Pio;
-    using SCICore::Geometry::Pio;
 
     /* int version=*/stream.begin_class("RTSphere", RTSphere_VERSION);
     RTObject::io(stream);
@@ -549,8 +532,6 @@ int RTPlane::intersect(const RTRay& ray, RTHit &hit) {
 
 #define RTPlane_VERSION 1
 void RTPlane::io(Piostream& stream) {
-    using SCICore::PersistentSpace::Pio;
-    using SCICore::Geometry::Pio;
 
     /* int version=*/stream.begin_class("RTPlane", RTPlane_VERSION);
     RTObject::io(stream);
@@ -695,8 +676,6 @@ int RTBox::intersect(const RTRay& ray, RTHit &hit) {
 
 #define RTBox_VERSION 1
 void RTBox::io(Piostream& stream) {
-    using SCICore::PersistentSpace::Pio;
-    using SCICore::Geometry::Pio;
 
     /* int version=*/stream.begin_class("RTBox", RTBox_VERSION);
     RTObject::io(stream);
@@ -712,8 +691,6 @@ static Persistent* make_RTRect()
 
 #define RTRect_VERSION 1
 void RTRect::io(Piostream& stream) {
-    using SCICore::PersistentSpace::Pio;
-    using SCICore::Geometry::Pio;
 
     /* int version=*/stream.begin_class("RTRect", RTRect_VERSION);
     RTObject::io(stream);
@@ -847,9 +824,6 @@ static Persistent* make_RTTris()
 
 #define RTTris_VERSION 1
 void RTTris::io(Piostream& stream) {
-    using SCICore::PersistentSpace::Pio;
-    using SCICore::Geometry::Pio;
-    using SCICore::Containers::Pio;
 
     /* int version=*/stream.begin_class("RTTris", RTTris_VERSION);
     RTObject::io(stream);    
@@ -977,12 +951,11 @@ static Persistent* make_RTTrin()
 
 #define RTTrin_VERSION 1
 void RTTrin::io(Piostream& stream) {
-    using SCICore::Datatypes::Pio;
 
     /* int version=*/stream.begin_class("RTTrin", RTTrin_VERSION);
     RTObject::io(stream);    
-    SCICore::Containers::Pio(stream, surf);		     
-    SCICore::Geometry::Pio(stream, bb);		     
+    Pio(stream, surf);		     
+    Pio(stream, bb);		     
     stream.end_class();
 }
 
@@ -1174,9 +1147,6 @@ double Fres(const RTRay& I, Vector N, double nu_trans) {
 
 void Pio(Piostream& stream, RTLight& l)
 {
-    using SCICore::PersistentSpace::Pio;
-    using SCICore::GeomSpace::Pio;
-    using SCICore::Geometry::Pio;
 
     stream.begin_cheap_delim();
     Pio(stream, l.pos);
@@ -1184,25 +1154,6 @@ void Pio(Piostream& stream, RTLight& l)
     Pio(stream, l.visible);
     stream.end_cheap_delim();
 }
-
-} // End namespace Datatypes
 } // End namespace DaveW
 
-//
-// $Log$
-// Revision 1.4  2000/03/17 08:20:56  sparker
-// Fixed Pio namespaces
-//
-// Revision 1.3  1999/10/07 02:06:18  sparker
-// use standard iostreams and complex type
-//
-// Revision 1.2  1999/08/25 03:35:47  sparker
-// *** empty log message ***
-//
-// Revision 1.1  1999/08/23 02:52:57  dmw
-// Dave's Datatypes
-//
-// Revision 1.2  1999/05/03 04:52:02  dmw
-// Added and updated DaveW Datatypes/Modules
-//
-//
+

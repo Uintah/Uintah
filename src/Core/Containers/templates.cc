@@ -11,14 +11,15 @@
 find . -name "*.ii" -print | xargs cat | sort | uniq -c | sort -nr | more
  */
 
-#include <SCICore/Containers/Array1.h>
-#include <SCICore/Containers/Array2.h>
+#include <Core/Containers/Array1.h>
+#include <Core/Containers/Array2.h>
 
 #ifdef __sgi
 #pragma set woff 1468
 #endif
 
-using namespace SCICore::Containers;
+using namespace SCIRun;
+
 template class Array1<int>;
 template class Array1<double>;
 

@@ -1,23 +1,18 @@
 #ifndef PARTICLE_VIS_H
 #define PARTICLE_VIS_H
 
-#include <SCICore/TclInterface/TCLvar.h>
-#include <Kurt/DataArchive/VisParticleSetPort.h>
+#include <Core/TclInterface/TCLvar.h>
+#include <Packages/Kurt/DataArchive/VisParticleSetPort.h>
 
-#include <PSECore/Dataflow/Module.h>
-#include <PSECore/Datatypes/GeometryPort.h>
-#include <PSECore/Datatypes/ColorMapPort.h>
+#include <Dataflow/Network/Module.h>
+#include <Dataflow/Ports/GeometryPort.h>
+#include <Dataflow/Ports/ColorMapPort.h>
 #include <iostream>
 using std::cerr;
 using std::endl;
 
 namespace Kurt {
-namespace Modules {
-
-using namespace PSECore::Dataflow;
-using namespace PSECore::Datatypes;
-using namespace SCICore::TclInterface;
-using namespace SCICore::Containers;
+using namespace SCIRun;
 
 class ParticleVis : public Module {
     VisParticleSetIPort* iPort;
@@ -53,9 +48,8 @@ class ParticleVis : public Module {
 
     virtual void execute();
 };
+} // End namespace Kurt
 
-} // Modules
-} // Kurt
 
 #endif
 

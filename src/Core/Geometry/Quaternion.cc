@@ -10,21 +10,20 @@
  *  Copyright (C) 2000 SCI Group
  */
 
-#include <SCICore/Geometry/Quaternion.h>
-#include <SCICore/share/share.h>
+#include <Core/Geometry/Quaternion.h>
+#include <Core/share/share.h>
 
-#include <SCICore/Geometry/Transform.h>
-#include <SCICore/Geometry/Point.h>
-#include <SCICore/Geometry/Vector.h>
-#include <SCICore/Persistent/Persistent.h>
-#include <SCICore/Util/Assert.h>
+#include <Core/Geometry/Transform.h>
+#include <Core/Geometry/Point.h>
+#include <Core/Geometry/Vector.h>
+#include <Core/Persistent/Persistent.h>
+#include <Core/Util/Assert.h>
 
 #include <iostream>
 using std::cout;
 using std::endl;
 
-namespace SCICore {
-namespace Geometry {
+namespace SCIRun {
 
 #define Abs(x) ((x>0)?x:-x)
 #define MSG(m) cout << m << endl;
@@ -163,8 +162,6 @@ bool Quaternion::operator==(const Quaternion& q){
 
   /* To be implemented
 void Pio(Piostream& stream, Quaternion& q){
-  using SCICore::PersistentSpace::Pio;
-  using SCICore::Geometry::Pio;
   
   stream.begin_class("Quaternion", VIEW_VERSION);
   Pio(stream, q.a);
@@ -349,8 +346,7 @@ void test_quat(){
   }
 }
 
-} // Geometry
-} // SCICore
+} // End namespace SCIRun
 
 
 

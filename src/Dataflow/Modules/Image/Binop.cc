@@ -8,39 +8,31 @@
  *    November 1997
  */
 
-#include <SCICore/Containers/Array1.h>
-#include <PSECore/Dataflow/Module.h>
-#include <PSECore/Datatypes/GeometryPort.h>
-#include <PSECore/Datatypes/ScalarFieldPort.h>
-#include <SCICore/Datatypes/ScalarFieldRG.h>
-#include <PSECore/Datatypes/ColorMapPort.h>
-#include <SCICore/Geom/GeomGrid.h>
-#include <SCICore/Geom/GeomGroup.h>
-#include <SCICore/Geom/GeomLine.h>
-#include <SCICore/Geom/Material.h>
-#include <SCICore/Geometry/Point.h>
-#include <SCICore/Math/MinMax.h>
-#include <SCICore/Malloc/Allocator.h>
-#include <SCICore/TclInterface/TCLvar.h>
-#include <SCICore/Thread/Parallel.h>
-#include <SCICore/Thread/Thread.h>
+#include <Core/Containers/Array1.h>
+#include <Dataflow/Network/Module.h>
+#include <Dataflow/Ports/GeometryPort.h>
+#include <Dataflow/Ports/ScalarFieldPort.h>
+#include <Core/Datatypes/ScalarFieldRG.h>
+#include <Dataflow/Ports/ColorMapPort.h>
+#include <Core/Geom/GeomGrid.h>
+#include <Core/Geom/GeomGroup.h>
+#include <Core/Geom/GeomLine.h>
+#include <Core/Geom/Material.h>
+#include <Core/Geometry/Point.h>
+#include <Core/Math/MinMax.h>
+#include <Core/Malloc/Allocator.h>
+#include <Core/TclInterface/TCLvar.h>
+#include <Core/Thread/Parallel.h>
+#include <Core/Thread/Thread.h>
 #include <iostream>
 using std::cerr;
 using std::cout;
 #include <math.h>
 
-using namespace SCICore::Thread;
 
 namespace SCIRun {
-namespace Modules {
 
-using namespace PSECore::Dataflow;
-using namespace PSECore::Datatypes;
 
-using namespace SCICore::TclInterface;
-using namespace SCICore::Containers;
-using namespace SCICore::GeomSpace;
-using namespace SCICore::Math;
 
 class Binop : public Module {
   ScalarFieldIPort *inscalarfield;
@@ -201,39 +193,6 @@ void Binop::tcl_command(TCLArgs& args, void* userdata)
   Module::tcl_command(args, userdata);
 }
 
-} // End namespace Modules
 } // End namespace SCIRun
 
-//
-// $Log$
-// Revision 1.7  2000/03/17 09:29:01  sparker
-// New makefile scheme: sub.mk instead of Makefile.in
-// Use XML-based files for module repository
-// Plus many other changes to make these two things work
-//
-// Revision 1.6  1999/10/07 02:08:13  sparker
-// use standard iostreams and complex type
-//
-// Revision 1.5  1999/09/08 02:26:57  sparker
-// Various #include cleanups
-//
-// Revision 1.4  1999/08/31 08:55:31  sparker
-// Bring SCIRun modules up to speed
-//
-// Revision 1.3  1999/08/25 03:48:54  sparker
-// Changed SCICore/CoreDatatypes to SCICore/Datatypes
-// Changed PSECore/CommonDatatypes to PSECore/Datatypes
-// Other Misc. directory tree updates
-//
-// Revision 1.2  1999/08/17 06:39:57  sparker
-// Merged in modifications from PSECore to make this the new "blessed"
-// version of SCIRun/Uintah.
-//
-// Revision 1.1  1999/07/27 16:58:51  mcq
-// Initial commit
-//
-// Revision 1.1  1999/04/29 22:26:30  dav
-// Added image files to SCIRun
-//
-//
 

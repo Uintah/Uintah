@@ -5,7 +5,6 @@
 
   Common code for modeling primitives.  These are the interfaces that
   most modeling primitives are expected to inherit.
-  $Id$
 
  ************************************************************************/
 

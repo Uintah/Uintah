@@ -1,4 +1,3 @@
-//static char *id="@(#) $Id$";
 
 /*
  *  SiReCrunch.cc:  Crunch the SiRe data -- from k-space to image space
@@ -12,12 +11,12 @@
  *  Copyright (C) 1998 SCI Group
  */
 
-#include <DaveW/Datatypes/SiRe/SiRe.h>
-#include <PSECore/Dataflow/Module.h>
-#include <PSECore/Datatypes/VoidStarPort.h>
-#include <SCICore/Datatypes/VoidStar.h>
-#include <SCICore/Malloc/Allocator.h>
-#include <SCICore/Tester/RigorousTest.h>
+#include <Packages/DaveW/Core/Datatypes/SiRe/SiRe.h>
+#include <Dataflow/Network/Module.h>
+#include <Dataflow/Ports/VoidStarPort.h>
+#include <Core/Datatypes/VoidStar.h>
+#include <Core/Malloc/Allocator.h>
+#include <Core/Tester/RigorousTest.h>
 
 #include <iostream>
 using std::cerr;
@@ -62,13 +61,8 @@ void sire_wrtsireinp(char [], SIRE_FLAGS, char [], SIRE_DIRINFO,
 }
 
 namespace DaveW {
-namespace Modules {
-
 using namespace DaveW::Datatypes;
-using namespace PSECore::Dataflow;
-using namespace PSECore::Datatypes;
-using namespace SCICore::Containers;
-using namespace SCICore::Datatypes;
+using namespace SCIRun;
 
 class SiReCrunch : public Module {
     VoidStarIPort* iport;
@@ -376,35 +370,6 @@ void SiReCrunch::execute()
 	   } /* end stepping through ZFI */
    oport->send(vsh);
    s->lockstepSem.down();
-}
-} // End namespace Modules
 } // End namespace DaveW
+}
 
-//
-// $Log$
-// Revision 1.5  2000/03/17 09:26:00  sparker
-// New makefile scheme: sub.mk instead of Makefile.in
-// Use XML-based files for module repository
-// Plus many other changes to make these two things work
-//
-// Revision 1.4  1999/10/07 02:06:40  sparker
-// use standard iostreams and complex type
-//
-// Revision 1.3  1999/09/08 02:26:30  sparker
-// Various #include cleanups
-//
-// Revision 1.2  1999/08/25 03:47:41  sparker
-// Changed SCICore/CoreDatatypes to SCICore/Datatypes
-// Changed PSECore/CommonDatatypes to PSECore/Datatypes
-// Other Misc. directory tree updates
-//
-// Revision 1.1  1999/08/24 06:23:06  dmw
-// Added in everything for the DaveW branch
-//
-// Revision 1.2  1999/05/03 04:52:17  dmw
-// Added and updated DaveW Datatypes/Modules
-//
-// Revision 1.1.1.1  1999/04/24 23:12:17  dav
-// Import sources
-//
-//

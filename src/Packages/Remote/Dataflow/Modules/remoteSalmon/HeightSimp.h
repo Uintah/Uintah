@@ -1,20 +1,17 @@
 //////////////////////////////////////////////////////////////////////
 // HeightSimp.cpp - Simplify a height field into a mesh.
-//
 // David K. McAllister, September 1999.
 
 #ifndef _heightsimp_h
 #define _heightsimp_h
 
-#include <Remote/Modules/remoteSalmon/SimpMesh.h>
+#include <Packages/Remote/Dataflow/Modules/remoteSalmon/SimpMesh.h>
 
-#include <Remote/Tools/macros.h>
-#include <Remote/Tools/Image/ZImage.h>
+#include <Packages/Remote/Tools/macros.h>
+#include <Packages/Remote/Tools/Image/ZImage.h>
 using namespace Remote::Tools;
 
 namespace Remote {
-namespace Modules {
-
 // C has the following bits:
 // 0 - Top vert edge exists.
 // 1 - Left horiz edge exists.
@@ -180,8 +177,7 @@ public:
 
   SimpMesh *HFSimp();
 };
+} // End namespace Remote
 
-} // namespace Modules {
-} // namespace Remote {
 
 #endif // _heightsimp_h

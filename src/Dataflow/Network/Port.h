@@ -14,16 +14,13 @@
 #ifndef SCI_project_Port_h
 #define SCI_project_Port_h 1
 
-#include <PSECore/share/share.h>
-#include <SCICore/Containers/Array1.h>
-#include <SCICore/Containers/String.h>
-#include <PSECore/Comm/MessageBase.h>
+#include <Dataflow/share/share.h>
+#include <Core/Containers/Array1.h>
+#include <Core/Containers/String.h>
+#include <Dataflow/Comm/MessageBase.h>
 
-namespace PSECore {
-namespace Dataflow {
+namespace SCIRun {
 
-using SCICore::Containers::clString;
-using SCICore::Containers::Array1;
 
 class Connection;
 class Module;
@@ -90,27 +87,7 @@ public:
     virtual void resend(Connection*)=0;
 };
 
-} // End namespace Dataflow
-} // End namespace PSECore
+} // End namespace SCIRun
 
-//
-// $Log$
-// Revision 1.3  1999/08/26 23:59:08  moulding
-// changed SCICORESHARE to PSECORESHARE
-//
-// Revision 1.2  1999/08/17 06:38:25  sparker
-// Merged in modifications from PSECore to make this the new "blessed"
-// version of SCIRun/Uintah.
-//
-// Revision 1.1  1999/07/27 16:56:00  mcq
-// Initial commit
-//
-// Revision 1.3  1999/05/06 22:02:44  dav
-// added back .h files
-//
-// Revision 1.1.1.1  1999/04/24 23:12:29  dav
-// Import sources
-//
-//
 
 #endif /* SCI_project_Port_h */

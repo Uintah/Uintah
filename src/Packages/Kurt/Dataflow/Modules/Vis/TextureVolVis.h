@@ -6,30 +6,23 @@
  * Simple interface to volume rendering stuff
  */
 
-#include <SCICore/Containers/Array1.h>
-#include <PSECore/Dataflow/Module.h>
-#include <SCICore/Datatypes/ColorMap.h>
-#include <PSECore/Datatypes/ColorMapPort.h>
-#include <PSECore/Datatypes/GeometryPort.h>
-#include <SCICore/Malloc/Allocator.h>
-#include <SCICore/TclInterface/TCLvar.h>
-#include <SCICore/Thread/CrowdMonitor.h>
-#include <PSECore/Widgets/PointWidget.h>
+#include <Core/Containers/Array1.h>
+#include <Dataflow/Network/Module.h>
+#include <Core/Datatypes/ColorMap.h>
+#include <Dataflow/Ports/ColorMapPort.h>
+#include <Dataflow/Ports/GeometryPort.h>
+#include <Core/Malloc/Allocator.h>
+#include <Core/TclInterface/TCLvar.h>
+#include <Core/Thread/CrowdMonitor.h>
+#include <Dataflow/Widgets/PointWidget.h>
 
-#include <Kurt/Datatypes/GLVolumeRenderer.h>
-#include <Kurt/Datatypes/GLTexture3DPort.h>
-#include <Kurt/Datatypes/GLTexture3D.h>
+#include <Packages/Kurt/Core/Datatypes/GLVolumeRenderer.h>
+#include <Packages/Kurt/Core/Datatypes/GLTexture3DPort.h>
+#include <Packages/Kurt/Core/Datatypes/GLTexture3D.h>
 
 namespace Kurt {
-namespace Modules {
-
-using namespace PSECore::Dataflow;
-using namespace PSECore::Datatypes;
-using namespace PSECore::Widgets;
-using namespace SCICore::TclInterface;
-using namespace SCICore::GeomSpace;
-using namespace SCICore::Geometry;
-class SCICore::GeomSpace::GeomObj;
+using namespace SCIRun;
+class GeomObj;
 
 
 class TextureVolVis : public Module {
@@ -69,8 +62,7 @@ private:
 
   void SwapXZ( ScalarFieldHandle sfh );
 };
+} // End namespace Kurt
 
-} // namespace Modules
-} // namespace Uintah
 
 #endif

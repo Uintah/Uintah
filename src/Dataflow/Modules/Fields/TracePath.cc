@@ -1,4 +1,3 @@
-//static char *id="@(#) $Id$";
 
 /*
  * TracePath.cc
@@ -12,24 +11,24 @@
  *  Copyright (C) 1998 SCI Group
  */
 
-#include <SCICore/Containers/Array1.h>
-#include <SCICore/Containers/FLPQueue.h>
-#include <PSECore/Dataflow/Module.h>
-#include <PSECore/Datatypes/GeometryPort.h>
-#include <PSECore/Datatypes/ScalarFieldPort.h>
-#include <SCICore/Datatypes/ScalarFieldRG.h>
-#include <SCICore/Datatypes/ScalarFieldRGuchar.h>
-#include <SCICore/Geom/GeomGroup.h>
-#include <SCICore/Geom/GeomLine.h>
-#include <SCICore/Geom/Material.h>
-#include <SCICore/Geom/GeomPick.h>
-#include <SCICore/Geom/Pt.h>
-#include <SCICore/Malloc/Allocator.h>
-#include <SCICore/Math/MinMax.h>
-#include <SCICore/Math/MiscMath.h>
-#include <SCICore/TclInterface/TCLvar.h>
-#include <SCICore/Thread/CrowdMonitor.h>
-#include <PSECore/Widgets/PointWidget.h>
+#include <Core/Containers/Array1.h>
+#include <Core/Containers/FLPQueue.h>
+#include <Dataflow/Network/Module.h>
+#include <Dataflow/Ports/GeometryPort.h>
+#include <Dataflow/Ports/ScalarFieldPort.h>
+#include <Core/Datatypes/ScalarFieldRG.h>
+#include <Core/Datatypes/ScalarFieldRGuchar.h>
+#include <Core/Geom/GeomGroup.h>
+#include <Core/Geom/GeomLine.h>
+#include <Core/Geom/Material.h>
+#include <Core/Geom/GeomPick.h>
+#include <Core/Geom/Pt.h>
+#include <Core/Malloc/Allocator.h>
+#include <Core/Math/MinMax.h>
+#include <Core/Math/MiscMath.h>
+#include <Core/TclInterface/TCLvar.h>
+#include <Core/Thread/CrowdMonitor.h>
+#include <Dataflow/Widgets/PointWidget.h>
 #include <iostream>
 using std::cerr;
 #include <string.h>
@@ -42,17 +41,8 @@ using std::cerr;
 
 #define SWAPMACROXZ(p) if(SWAPXZ) { double dmy=p.z(); p.z(p.x()); p.x(dmy); }
 
-namespace PSECommon {
-namespace Modules {
+namespace SCIRun {
 
-using namespace PSECore::Dataflow;
-using namespace PSECore::Datatypes;
-using namespace PSECore::Widgets;
-using namespace SCICore::TclInterface;
-using namespace SCICore::GeomSpace;
-using namespace SCICore::Containers;
-using namespace SCICore::Math;
-using namespace SCICore::Geometry;
 
 class TracePath : public Module {
     ScalarFieldIPort *inscalarfield;
@@ -817,61 +807,5 @@ void TracePath::tcl_command(TCLArgs& args, void* userdata) {
     }
 }
 
-} // End namespace Modules
-} // End namespace PSECommon
+} // End namespace SCIRun
 
-//
-// $Log$
-// Revision 1.10  2000/03/17 09:27:00  sparker
-// New makefile scheme: sub.mk instead of Makefile.in
-// Use XML-based files for module repository
-// Plus many other changes to make these two things work
-//
-// Revision 1.9  1999/10/07 02:06:48  sparker
-// use standard iostreams and complex type
-//
-// Revision 1.8  1999/09/08 02:26:34  sparker
-// Various #include cleanups
-//
-// Revision 1.7  1999/08/29 00:46:40  sparker
-// Integrated new thread library
-// using statement tweaks to compile with both MipsPRO and g++
-// Thread library bug fixes
-//
-// Revision 1.6  1999/08/25 03:47:48  sparker
-// Changed SCICore/CoreDatatypes to SCICore/Datatypes
-// Changed PSECore/CommonDatatypes to PSECore/Datatypes
-// Other Misc. directory tree updates
-//
-// Revision 1.5  1999/08/23 06:30:31  sparker
-// Linux port
-// Added X11 configuration options
-// Removed many warnings
-//
-// Revision 1.4  1999/08/19 23:17:46  sparker
-// Removed a bunch of #include <SCICore/Util/NotFinished.h> statements
-// from files that did not need them.
-//
-// Revision 1.3  1999/08/18 20:19:42  sparker
-// Eliminated copy constructor and clone in all modules
-// Added a private copy ctor and a private clone method to Module so
-//  that future modules will not compile until they remvoe the copy ctor
-//  and clone method
-// Added an ASSERTFAIL macro to eliminate the "controlling expression is
-//  constant" warnings.
-// Eliminated other miscellaneous warnings
-//
-// Revision 1.2  1999/08/17 06:37:29  sparker
-// Merged in modifications from PSECore to make this the new "blessed"
-// version of SCIRun/Uintah.
-//
-// Revision 1.1  1999/07/27 16:57:43  mcq
-// Initial commit
-//
-// Revision 1.2  1999/04/28 20:51:12  dav
-// deleted some files that are dependent on DaveW files
-//
-// Revision 1.1.1.1  1999/04/24 23:12:32  dav
-// Import sources
-//
-//

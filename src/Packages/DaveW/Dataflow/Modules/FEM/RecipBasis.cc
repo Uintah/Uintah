@@ -9,11 +9,11 @@
  *  Copyright (C) 1999 SCI Group
  */
 
-#include <PSECore/Dataflow/Module.h>
-#include <PSECore/Datatypes/ColumnMatrixPort.h>
-#include <PSECore/Datatypes/MatrixPort.h>
-#include <PSECore/Datatypes/MeshPort.h>
-#include <SCICore/Datatypes/DenseMatrix.h>
+#include <Dataflow/Network/Module.h>
+#include <Dataflow/Ports/ColumnMatrixPort.h>
+#include <Dataflow/Ports/MatrixPort.h>
+#include <Dataflow/Ports/MeshPort.h>
+#include <Core/Datatypes/DenseMatrix.h>
 
 #include <iostream>
 using std::cerr;
@@ -22,11 +22,7 @@ using std::endl;
 #include <math.h>
 
 namespace DaveW {
-namespace Modules {
-
-using namespace PSECore::Dataflow;
-using namespace PSECore::Datatypes;
-using namespace SCICore::Containers;
+using namespace SCIRun;
 
 class RecipBasis : public Module {    
     MeshIPort* mesh_iport;
@@ -119,39 +115,6 @@ void RecipBasis::execute() {
     basis_oport->send(bmat);
     basis2_oport->send(bmat2);
     cerr << "Done with the Module!"<<endl;
-}
-} // End namespace Modules
 } // End namespace DaveW
+}
 
-//
-// $Log$
-// Revision 1.9  2000/08/01 18:03:04  dmw
-// fixed errors
-//
-// Revision 1.8  2000/03/17 09:25:44  sparker
-// New makefile scheme: sub.mk instead of Makefile.in
-// Use XML-based files for module repository
-// Plus many other changes to make these two things work
-//
-// Revision 1.7  1999/12/09 00:05:25  dmw
-// new modules
-//
-// Revision 1.6  1999/12/02 21:57:32  dmw
-// new camera path datatypes and modules
-//
-// Revision 1.5  1999/10/07 02:06:35  sparker
-// use standard iostreams and complex type
-//
-// Revision 1.4  1999/09/22 18:43:25  dmw
-// added new GUI
-//
-// Revision 1.3  1999/09/16 00:36:55  dmw
-// added new Module that Chris Butson will work on (DipoleInSphere) and fixed SRCDIR references in DaveW makefiles
-//
-// Revision 1.2  1999/09/05 23:16:19  dmw
-// build scalar field of error values from Basis Matrix
-//
-// Revision 1.1  1999/09/05 01:14:02  dmw
-// new module for source localization
-//
-//

@@ -1,7 +1,6 @@
-//static char *id="$Id$";
 
 /*
- *  sus.cc: Standalone Uintah Simulation - a bare-bones uintah simulation
+ *  sus.cc: Standalone Packages/Uintah Simulation - a bare-bones uintah simulation
  *          for development
  *
  *  Written by:
@@ -13,27 +12,27 @@
  *  Copyright (C) 2000 U of U
  */
 
-#include <Uintah/Parallel/Parallel.h>
-#include <Uintah/Components/ProblemSpecification/ProblemSpecReader.h>
-#include <Uintah/Components/SimulationController/SimulationController.h>
-#include <Uintah/Components/MPM/SerialMPM.h>
-#include <Uintah/Components/Arches/Arches.h>
-#include <Uintah/Components/ICE/ICE.h>
-#include <Uintah/Components/MPMICE/MPMICE.h>
-#include <Uintah/Components/Schedulers/SingleProcessorScheduler.h>
-#include <Uintah/Components/Schedulers/MPIScheduler.h>
-#include <Uintah/Components/Schedulers/MixedScheduler.h>
-#include <Uintah/Components/Schedulers/NullScheduler.h>
-#include <Uintah/Components/Schedulers/SingleProcessorLoadBalancer.h>
-#include <Uintah/Components/Schedulers/RoundRobinLoadBalancer.h>
-#include <Uintah/Components/Schedulers/SimpleLoadBalancer.h>
-#include <Uintah/Components/DataArchiver/DataArchiver.h>
-#include <Uintah/Interface/DataWarehouse.h>
-#include <Uintah/Parallel/ProcessorGroup.h>
-#include <SCICore/Exceptions/Exception.h>
+#include <Packages/Uintah/Parallel/Parallel.h>
+#include <Uintah/Core/CCA/Components/ProblemSpecification/ProblemSpecReader.h>
+#include <Uintah/Core/CCA/Components/SimulationController/SimulationController.h>
+#include <Uintah/Core/CCA/Components/MPM/SerialMPM.h>
+#include <Uintah/Core/CCA/Components/Arches/Arches.h>
+#include <Uintah/Core/CCA/Components/ICE/ICE.h>
+#include <Uintah/Core/CCA/Components/MPMICE/MPMICE.h>
+#include <Uintah/Core/CCA/Components/Schedulers/SingleProcessorScheduler.h>
+#include <Uintah/Core/CCA/Components/Schedulers/MPIScheduler.h>
+#include <Uintah/Core/CCA/Components/Schedulers/MixedScheduler.h>
+#include <Uintah/Core/CCA/Components/Schedulers/NullScheduler.h>
+#include <Uintah/Core/CCA/Components/Schedulers/SingleProcessorLoadBalancer.h>
+#include <Uintah/Core/CCA/Components/Schedulers/RoundRobinLoadBalancer.h>
+#include <Uintah/Core/CCA/Components/Schedulers/SimpleLoadBalancer.h>
+#include <Uintah/Core/CCA/Components/DataArchiver/DataArchiver.h>
+#include <Packages/Uintah/Interface/DataWarehouse.h>
+#include <Packages/Uintah/Parallel/ProcessorGroup.h>
+#include <Core/Exceptions/Exception.h>
 
 #ifdef USE_VAMPIR
-#include <Uintah/Parallel/Vampir.h>
+#include <Packages/Uintah/Parallel/Vampir.h>
 #endif
 
 #if HAVE_FPSETMASK
@@ -44,7 +43,7 @@
 #include <string>
 #include <vector>
 
-using SCICore::Exceptions::Exception;
+using namespace SCIRun;
 using namespace std;
 using namespace Uintah;
 
@@ -309,139 +308,3 @@ int main(int argc, char** argv)
     Parallel::finalizeManager();
 }
 
-//
-// $Log$
-// Revision 1.32  2000/12/10 09:05:59  sparker
-// Merge from csafe_risky1
-//
-// Revision 1.31  2000/12/01 22:59:16  guilkey
-// Adding code to allow MPM to work with a CFD code, specifics are directed
-// towards ICE, but most work is generic for either ICE or Arches.
-//
-// Revision 1.25.2.4  2000/10/19 05:17:25  sparker
-// Merge changes from main branch into csafe_risky1
-//
-// Revision 1.25.2.3  2000/10/17 19:44:05  dav
-// mixed scheduler updates
-//
-// Revision 1.25.2.2  2000/10/10 05:28:01  sparker
-// Added support for NullScheduler (used for profiling taskgraph overhead)
-//
-// Revision 1.25.2.1  2000/10/06 23:59:41  witzel
-// Added VTsetup call for vampir trace initialization.
-//
-// Revision 1.30  2000/10/04 20:21:18  jas
-// Changed ICE() to ICE(world).
-//
-// Revision 1.29  2000/10/02 17:54:45  dav
-// Changed the semantics of numThreads.  By specifying "-nthreads", you
-// are no longer asking for the threaded version of components.  You ARE
-// asking for a threaded scheduler to use threads for separate patches.
-// In the future, we will need, for example, another flag (-mpmthreaded)
-// to specify the explicitly threaded version of mpm.
-//
-// Revision 1.28  2000/09/29 20:41:45  dav
-// Added hack to allow -nthreads to be set
-//
-// Revision 1.27  2000/09/29 19:57:51  dav
-// Changed numThreads from bool to int
-//
-// Revision 1.26  2000/09/29 19:54:22  dav
-// Uncommented the commented out sections that called
-// Parallel::finlaizeManager().  They were commented out because the abort
-// was causing print statements to be lost.  Hopefully with the cerr/cout
-// flush in Parallel.cc and a sleep, this should be fixed...
-//
-// Revision 1.25  2000/09/29 05:32:06  sparker
-// Quiet warning from g++
-//
-// Revision 1.24  2000/09/28 23:55:52  dav
-// fix to turn off threads if not using threads
-//
-// Revision 1.23  2000/09/26 21:49:00  dav
-// Added the ability to specify the MixedScheduler on the command line.
-// Added the ability to set an environment var to allow time for debuggers
-// to attach to the program before it starts running.
-//
-// Revision 1.22  2000/09/25 18:05:27  sparker
-// Deal with mpich arguments
-// Started FP_SETMASK configuration
-//
-// Revision 1.21  2000/09/20 16:04:07  sparker
-// Fixed code to set LoadBalancer
-//
-// Revision 1.20  2000/09/12 15:10:34  sparker
-// Catch stray std exceptions
-//
-// Revision 1.19  2000/08/09 03:17:55  jas
-// Changed new to scinew and added deletes to some of the destructors.
-//
-// Revision 1.18  2000/08/08 21:36:52  dav
-// fixed 'usage' fix
-//
-// Revision 1.17  2000/08/08 21:23:20  dav
-// Changes so that 'usage' under MPI works correctly.
-//
-// Revision 1.16  2000/07/27 22:39:40  sparker
-// Implemented MPIScheduler
-// Added associated support
-//
-// Revision 1.15  2000/07/26 20:14:14  jehall
-// Moved taskgraph/dependency output files to UDA directory
-// - Added output port parameter to schedulers
-// - Added getOutputLocation() to Uintah::Output interface
-// - Renamed output files to taskgraph[.xml]
-//
-// Revision 1.14  2000/06/17 07:06:21  sparker
-// Changed ProcessorContext to ProcessorGroup
-//
-// Revision 1.13  2000/06/15 23:14:04  sparker
-// Cleaned up scheduler code
-// Renamed BrainDamagedScheduler to SingleProcessorScheduler
-// Created MPIScheduler to (eventually) do the MPI work
-//
-// Revision 1.12  2000/06/15 21:56:56  sparker
-// Added multi-patch support (bugzilla #107)
-// Changed interface to datawarehouse for particle data
-// Particles now move from patch to patch
-//
-// Revision 1.11  2000/05/30 20:18:40  sparker
-// Changed new to scinew to help track down memory leaks
-// Changed region to patch
-//
-// Revision 1.10  2000/05/15 19:39:29  sparker
-// Implemented initial version of DataArchive (output only so far)
-// Other misc. cleanups
-//
-// Revision 1.9  2000/05/09 22:58:34  sparker
-// Changed namespace names
-//
-// Revision 1.8  2000/04/26 06:47:56  sparker
-// Streamlined namespaces
-//
-// Revision 1.7  2000/04/19 22:43:51  dav
-// more mpi stuff
-//
-// Revision 1.6  2000/04/19 21:19:59  dav
-// more MPI stuff
-//
-// Revision 1.5  2000/04/13 06:50:49  sparker
-// More implementation to get this to work
-//
-// Revision 1.4  2000/04/11 07:10:29  sparker
-// Completing initialization and problem setup
-// Finishing Exception modifications
-//
-// Revision 1.3  2000/03/20 17:17:03  sparker
-// Made it compile.  There are now several #idef WONT_COMPILE_YET statements.
-//
-// Revision 1.2  2000/03/17 21:01:02  dav
-// namespace mods
-//
-// Revision 1.1  2000/02/27 07:48:34  sparker
-// Homebrew code all compiles now
-// First step toward PSE integration
-// Added a "Standalone Uintah Simulation" (sus) executable
-// MPM does NOT run yet
-//
-//

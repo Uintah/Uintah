@@ -10,12 +10,10 @@
  *  Copyright (C) 1997 David McAllister
  */
 
-#include <Remote/Tools/Math/HermiteSpline.h>
-#include <Remote/Tools/Util/Assert.h>
+#include <Packages/Remote/Tools/Math/HermiteSpline.h>
+#include <Packages/Remote/Tools/Util/Assert.h>
 
 namespace Remote {
-namespace Tools {
-
 #if 0
 template<class T>
 HermiteSpline<T>::HermiteSpline()
@@ -228,7 +226,6 @@ void HermiteSpline<T>::CompleteSpline(bool GenEndTangents)
     prev = p[i] = (b[i] - prev * c[i]) / D[i];
 }
 #endif
+} // End namespace Remote
 
-} // namespace Tools
-} // namespace Remote
 

@@ -1,4 +1,3 @@
-//static char *id="@(#) $Id$";
 
 /*
  *  ColorMap.h: ColorMap definitions
@@ -12,18 +11,15 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <SCICore/Datatypes/ColorMap.h>
-#include <SCICore/Containers/String.h>
-#include <SCICore/Malloc/Allocator.h>
+#include <Core/Datatypes/ColorMap.h>
+#include <Core/Containers/String.h>
+#include <Core/Malloc/Allocator.h>
 #include <iostream>
 using std::cerr;
 using std::endl;
 
-namespace SCICore {
-namespace Datatypes {
+namespace SCIRun {
 
-using SCICore::GeomSpace::Material;
-using SCICore::GeomSpace::HSVColor;
 
 static Persistent* make_ColorMap()
 {
@@ -219,8 +215,6 @@ void ColorMap::build_default() {
 
 void ColorMap::io(Piostream& stream)
 {
-    using SCICore::PersistentSpace::Pio;
-    using SCICore::Containers::Pio;
 
     int version= stream.begin_class("ColorMap", COLORMAP_VERSION);
     Pio(stream, colors);
@@ -269,39 +263,6 @@ double ColorMap::getMax()
     return max;
 }
 
-} // End namespace Datatypes
-} // End namespace SCICore
+} // End namespace SCIRun
 
-//
-// $Log$
-// Revision 1.5  1999/10/07 02:07:30  sparker
-// use standard iostreams and complex type
-//
-// Revision 1.4  1999/08/25 03:48:31  sparker
-// Changed SCICore/CoreDatatypes to SCICore/Datatypes
-// Changed PSECore/CommonDatatypes to PSECore/Datatypes
-// Other Misc. directory tree updates
-//
-// Revision 1.3  1999/08/23 06:30:34  sparker
-// Linux port
-// Added X11 configuration options
-// Removed many warnings
-//
-// Revision 1.2  1999/08/17 06:38:43  sparker
-// Merged in modifications from PSECore to make this the new "blessed"
-// version of SCIRun/Uintah.
-//
-// Revision 1.1  1999/07/27 16:56:19  mcq
-// Initial commit
-//
-// Revision 1.2  1999/07/07 21:10:37  dav
-// added beginnings of support for g++ compilation
-//
-// Revision 1.1  1999/04/25 04:07:04  dav
-// Moved files into Datatypes
-//
-// Revision 1.1.1.1  1999/04/24 23:12:51  dav
-// Import sources
-//
-//
 

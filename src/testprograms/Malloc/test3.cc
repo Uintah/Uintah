@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+
 main()
 {
     fprintf(stderr, "This should fail - wrote before object\n\n\n");

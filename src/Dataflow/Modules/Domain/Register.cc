@@ -1,45 +1,34 @@
 // Register.cc - Registers a field, attribute, or geometry with a domain.
- //
  //  Written by:
  //   Eric Kuehne
  //   Department of Computer Science
  //   University of Utah
  //   April 2000
- //
  //  Copyright (C) 2000 SCI Group
- //
  //  Module Register
- //
  //  Description: This module takes a field, attribute, or geometry as
  //  input and sends a FieldWrapper to output.  Duties include:
  //     - Create a fill in the FieldWrapper object appropriatly
  //     according to user input
  //  Input ports: 
  //  Output ports:
- //
 // TODO: Add support for geom and attrib inports
 #include <stdio.h>
 
-#include <SCICore/TclInterface/TCLvar.h>
+#include <Core/TclInterface/TCLvar.h>
 
-#include <SCICore/Malloc/Allocator.h>
-#include <PSECore/Dataflow/Module.h>
-#include <PSECore/Datatypes/FieldWrapperPort.h>
-#include <PSECore/Datatypes/FieldPort.h>
-#include <SCICore/Datatypes/Domain.h>
-#include <SCICore/Datatypes/FieldWrapper.h>
-#include <PSECommon/Modules/Domain/DomainManager.h>
-#include <SCICore/Util/DebugStream.h>
-#include <SCICore/Containers/String.h>
+#include <Core/Malloc/Allocator.h>
+#include <Dataflow/Network/Module.h>
+#include <Dataflow/Ports/FieldWrapperPort.h>
+#include <Dataflow/Ports/FieldPort.h>
+#include <Core/Datatypes/Domain.h>
+#include <Core/Datatypes/FieldWrapper.h>
+#include <Dataflow/Modules/Domain/DomainManager.h>
+#include <Core/Util/DebugStream.h>
+#include <Core/Containers/String.h>
 
-namespace PSECommon {
-namespace Modules {
+namespace SCIRun {
 
-using namespace PSECore::Dataflow;
-using namespace PSECore::Datatypes;
-using namespace SCICore::TclInterface;
-using namespace SCICore::GeomSpace;
-using namespace SCICore::Util;
 
 class Register : public Module {
 private:
@@ -127,7 +116,6 @@ void Register::connection(ConnectionMode mode, int, int is_oport){
   if(mode != Disconnected){ 
     dbg << "oport = " << oport->get_which_port() << ", ifield = " << ifield->get_which_port() << endl;
     if(is_oport){
-      //
       // A new outbound connection!  Set the domain that this module is
       // associated with.
       Module *mod = oport->connection(oport->nconnections()-1)->iport->get_module();
@@ -144,8 +132,7 @@ void Register::connection(ConnectionMode mode, int, int is_oport){
 
 }
 
-} // End namespace Modules
-} // End namespace PSECommon
+} // End namespace SCIRun
 
 
 // "We shall not cease from exploration, and the end of our

@@ -1,5 +1,4 @@
 # The top makefile for PSE using Visual C++
-#
 # written by Chris Moulding 11/99
 
 !include "$(TOP)\src\scripts\Makefile.vc.config"
@@ -10,8 +9,8 @@ APPENDIX = d
 
 ########################## EDIT HERE #################################
 
-LIBS = SCICore\SCICore$(APPENDIX).dll\
-       PSECore\PSECore$(APPENDIX).dll
+LIBS = Core\Core$(APPENDIX).dll\
+       Dataflow\Dataflow$(APPENDIX).dll
 
 ######################################################################
 
@@ -25,19 +24,19 @@ pse.exe : main\pse.exe
 main\pse.exe : $(LIBS)
 	cd main && $(MAKE) -fMakefile.vc
 
-SCICore\SCICore$(APPENDIX).dll:
-	cd SCICore && $(MAKE) -fMakefile.vc
+Core\Core$(APPENDIX).dll:
+	cd Core && $(MAKE) -fMakefile.vc
 	
-PSECore\PSECore$(APPENDIX).dll: SCICore\SCICore$(APPENDIX).dll
-	cd PSECore && $(MAKE) -fMakefile.vc
+PSECore\PSECore$(APPENDIX).dll: Core\Core$(APPENDIX).dll
+	cd Dataflow && $(MAKE) -fMakefile.vc
 
-PSECommon\PSECommon$(APPENDIX).dll: SCICore\SCICore$(APPENDIX).dll PSECore\PSECore$(APPENDIX).dll
-	-cd PSECommon && $(MAKE) -fMakefile.vc
+Dataflow\Dataflow$(APPENDIX).dll: SCICore\SCICore$(APPENDIX).dll PSECore\PSECore$(APPENDIX).dll
+	-cd Dataflow && $(MAKE) -fMakefile.vc
 
-SCIRun\SCIRun$(APPENDIX).dll: SCICore\SCICore$(APPENDIX).dll PSECore\PSECore$(APPENDIX).dll
-	-cd SCIRun && $(MAKE) -fMakefile.vc
+SCIRun\SCIRun$(APPENDIX).dll: Core\Core$(APPENDIX).dll PSECore\PSECore$(APPENDIX).dll
+	-cd Dataflow && $(MAKE) -fMakefile.vc
 
-Uintah\Uintah$(APPENDIX).dll: SCICore\SCICore$(APPENDIX).dll PSECore\PSECore$(APPENDIX).dll
+Uintah\Uintah$(APPENDIX).dll: Core\Core$(APPENDIX).dll PSECore\PSECore$(APPENDIX).dll
 	-cd Uintah && $(MAKE) -fMakefile.vc
 	
 clean: 

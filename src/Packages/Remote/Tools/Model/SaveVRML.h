@@ -1,20 +1,16 @@
 //////////////////////////////////////////////////////////////////////
 // SaveVRML.h - Write a vector<Object> as a VRML 1.0 file.
-//
 // Copyright David K. McAllister July 1999.
-//
 //////////////////////////////////////////////////////////////////////
 
 #ifndef _wrobject_h
 #define _wrobject_h
 
-#include <Remote/Tools/Model/Model.h>
+#include <Packages/Remote/Tools/Model/Model.h>
 
 #include <stdio.h>
 
 namespace Remote {
-namespace Tools {
-
 class WrObject : public Object
 {
   FILE *out;
@@ -53,8 +49,7 @@ public:
   void Write(FILE *, int indlevel);
 };
 
+} // End namespace Remote
 
-} // namespace Tools
-} // namespace Remote
 
 #endif

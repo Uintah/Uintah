@@ -17,7 +17,7 @@ KEYWORDS
     ParticleGridReader, Material/Particle Method
 
 AUTHOR
-    Kurt Zimmerman
+    Packages/Kurt Zimmerman
     Department of Computer Science
     University of Utah
     January 1999
@@ -29,23 +29,23 @@ LOG
 ****************************************/
 #include "ParticleFieldExtractor.h"
 
-#include <SCICore/Util/NotFinished.h>
-#include <Uintah/Interface/DataArchive.h>
-#include <Uintah/Grid/TypeDescription.h>
-#include <Uintah/Datatypes/ScalarParticles.h>
-#include <Uintah/Datatypes/ScalarParticlesPort.h>
-#include <Uintah/Datatypes/VectorParticles.h>
-#include <Uintah/Datatypes/VectorParticlesPort.h>
-#include <Uintah/Datatypes/TensorParticles.h>
-#include <Uintah/Datatypes/TensorParticlesPort.h>
-#include <SCICore/Containers/String.h>
-#include <SCICore/Malloc/Allocator.h>
-#include <SCICore/Geometry/IntVector.h>
-#include <Uintah/Grid/Grid.h>
-#include <Uintah/Grid/GridP.h>
-#include <Uintah/Grid/Level.h>
-#include <Uintah/Grid/Patch.h>
-#include <Uintah/Grid/NodeIterator.h>
+#include <Core/Util/NotFinished.h>
+#include <Packages/Uintah/Interface/DataArchive.h>
+#include <Packages/Uintah/Grid/TypeDescription.h>
+#include <Packages/Uintah/Core/Datatypes/ScalarParticles.h>
+#include <Packages/Uintah/Core/Datatypes/ScalarParticlesPort.h>
+#include <Packages/Uintah/Core/Datatypes/VectorParticles.h>
+#include <Packages/Uintah/Core/Datatypes/VectorParticlesPort.h>
+#include <Packages/Uintah/Core/Datatypes/TensorParticles.h>
+#include <Packages/Uintah/Core/Datatypes/TensorParticlesPort.h>
+#include <Core/Containers/String.h>
+#include <Core/Malloc/Allocator.h>
+#include <Core/Geometry/IntVector.h>
+#include <Packages/Uintah/Grid/Grid.h>
+#include <Packages/Uintah/Grid/GridP.h>
+#include <Packages/Uintah/Grid/Level.h>
+#include <Packages/Uintah/Grid/Patch.h>
+#include <Packages/Uintah/Grid/NodeIterator.h>
 #include <iostream> 
 #include <sstream>
 #include <string>
@@ -56,17 +56,8 @@ using std::vector;
 using std::string;
 
 namespace Uintah {
-namespace Modules {
-
-using SCICore::Containers::to_string;
-using namespace SCICore::TclInterface;
+using namespace SCIRun;
 using namespace Uintah::Datatypes;
-using PSECore::Datatypes::ScalarParticlesIPort;
-using PSECore::Datatypes::ScalarParticlesOPort;
-using PSECore::Datatypes::VectorParticlesIPort;
-using PSECore::Datatypes::VectorParticlesOPort;
-using PSECore::Datatypes::TensorParticlesIPort;
-using PSECore::Datatypes::TensorParticlesOPort;
 
 extern "C" Module* make_ParticleFieldExtractor( const clString& id ) {
   return scinew ParticleFieldExtractor( id ); 
@@ -722,9 +713,8 @@ void ParticleFieldExtractor::cache_value(string where, vector<Matrix3>& values)
   material_data_list[where+" Norm"] = data;
 }
 
+} // End namespace Uintah
 //--------------------------------------------------------------- 
-} // end namespace Modules
-} // end namespace Kurt
   
 
 

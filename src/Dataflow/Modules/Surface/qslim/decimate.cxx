@@ -1,4 +1,3 @@
-// $Id$
 
 #include "qslim.h"
 #include "decimate.h"
@@ -43,9 +42,7 @@ static real proximity_limit;    // distance threshold squared
 
 
 ////////////////////////////////////////////////////////////////////////
-//
 // Low-level routines for manipulating pairs
-//
 
 static inline
 vert_info& vertex_info(Vertex *v)
@@ -98,13 +95,10 @@ void delete_pair(pair_info *pair)
 
 
 ////////////////////////////////////////////////////////////////////////
-//
 // The actual guts of the algorithm:
-//
 //     - pair_is_valid
 //     - compute_pair_info
 //     - do_contract
-//
 
 static
 bool pair_is_valid(Vertex *u, Vertex *v)
@@ -153,7 +147,6 @@ real pair_mesh_penalty(Model& M, Vertex *v1, Vertex *v2, Vec3& vnew)
 
 	int nmapped = predict_face(F, v1, v2, vnew, f1, f2, f3);
 
-	//
 	// Only consider non-degenerate faces
 	if( nmapped < 2 )
 	{
@@ -192,10 +185,8 @@ void compute_pair_info(pair_info *pair)
 	pair->cost += pair_mesh_penalty(M0, v0, v1, pair->candidate);
 
 
-    //
     // NOTICE:  In the heap we use the negative cost.  That's because
     //          the heap is implemented as a MAX heap.
-    //
     if( pair->isInHeap() )
     {
 	heap->update(pair, (float)-pair->cost);
@@ -215,30 +206,25 @@ void do_contract(Model* m, pair_info *pair)
     Vec3 vnew = pair->candidate;
     int i;
 
-    //
     // Make v0 be the new vertex
     v0_info.Q += v1_info.Q;
     v0_info.norm += v1_info.norm;
 
-    //
     // Perform the actual contraction
     static face_buffer changed;
     changed.reset();
     m->contract(v0, v1, vnew, changed);
 
 #ifdef SUPPORT_VCOLOR
-    //
     // If the vertices are colored, color the new vertex
     // using the average of the old colors.
     v0->props->color += v1->props->color;
     v0->props->color /= 2;
 #endif
 
-    //
     // Remove the pair that we just contracted
     delete_pair(pair);
 
-    //
     // Recalculate pairs associated with v0
     for(i=0; i<v0_info.pairs.length(); i++)
     {
@@ -246,7 +232,6 @@ void do_contract(Model* m, pair_info *pair)
 	compute_pair_info(p);
     }
 
-    //
     // Process pairs associated with now dead vertex
 
     static pair_buffer condemned(6); // collect condemned pairs for execution
@@ -283,9 +268,7 @@ void do_contract(Model* m, pair_info *pair)
 
 
 ////////////////////////////////////////////////////////////////////////
-//
 // External interface: setup and single step iteration
-//
 
 bool decimate_quadric(Vertex *v, Mat4& Q)
 {
@@ -310,7 +293,6 @@ void decimate_contract(Model* m)
 	if( !top ) return;
 	pair = (pair_info *)top->obj;
 
-	//
 	// This may or may not be necessary.  I'm just not quite
 	// willing to assume that all the junk has been removed from the
 	// heap.

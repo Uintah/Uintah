@@ -10,25 +10,25 @@
  *  Copyright (C) 1995 SCI Group
  */
 
-#include <SCICore/Containers/Array1.h>
-#include <PSECore/Dataflow/Module.h>
-#include <PSECore/Datatypes/GeometryPort.h>
-#include <SCICore/Datatypes/Mesh.h>
-#include <PSECore/Datatypes/ScalarFieldPort.h>
-#include <SCICore/Datatypes/ScalarFieldRGBase.h>
-#include <SCICore/Datatypes/ScalarFieldUG.h>
-#include <PSECore/Datatypes/ColorMapPort.h>
-#include <SCICore/Geom/GeomGrid.h>
-#include <SCICore/Geom/GeomGroup.h>
-#include <SCICore/Geom/GeomLine.h>
-#include <SCICore/Geom/Material.h>
-#include <SCICore/Geometry/Point.h>
-#include <SCICore/Math/MinMax.h>
-#include <SCICore/Math/MiscMath.h>
-#include <SCICore/Malloc/Allocator.h>
-#include <SCICore/TclInterface/TCLvar.h>
+#include <Core/Containers/Array1.h>
+#include <Dataflow/Network/Module.h>
+#include <Dataflow/Ports/GeometryPort.h>
+#include <Core/Datatypes/Mesh.h>
+#include <Dataflow/Ports/ScalarFieldPort.h>
+#include <Core/Datatypes/ScalarFieldRGBase.h>
+#include <Core/Datatypes/ScalarFieldUG.h>
+#include <Dataflow/Ports/ColorMapPort.h>
+#include <Core/Geom/GeomGrid.h>
+#include <Core/Geom/GeomGroup.h>
+#include <Core/Geom/GeomLine.h>
+#include <Core/Geom/Material.h>
+#include <Core/Geometry/Point.h>
+#include <Core/Math/MinMax.h>
+#include <Core/Math/MiscMath.h>
+#include <Core/Malloc/Allocator.h>
+#include <Core/TclInterface/TCLvar.h>
 
-#include <PSECore/Widgets/ScaledFrameWidget.h>
+#include <Dataflow/Widgets/ScaledFrameWidget.h>
 #include <iostream>
 using std::cerr;
 using std::endl;
@@ -37,16 +37,8 @@ using std::endl;
 #define CP_SURFACE 1
 #define CP_CONTOUR 2
 
-namespace PSECommon {
-namespace Modules {
+namespace SCIRun {
 
-using namespace PSECore::Dataflow;
-using namespace PSECore::Datatypes;
-using namespace PSECore::Widgets;
-using namespace SCICore::TclInterface;
-using namespace SCICore::GeomSpace;
-using namespace SCICore::Geometry;
-using namespace SCICore::Math;
 
 #define EPS 1.e-6
 
@@ -111,12 +103,9 @@ public:
  
         // GROUP:  Constructors:
         ///////////////////////////
-        //
         // Constructs an instance of class CuttingPlane
-        //
         // Constructor taking
         //    [in] id as an identifier
-        //
    CuttingPlane(const clString& id);
 
         // GROUP:  Destructor:
@@ -126,13 +115,11 @@ public:
 
         // GROUP:  Access functions:
         ///////////////////////////
-        //
         // execute() - execution scheduled by scheduler
    virtual void execute();
 
 
         //////////////////////////
-        //
         // tcl_commands - overides tcl_command in base class Module, takes:
         //                                  findxy, findyz, findxz, 
         //                                  plusx, minusx, plusy, minusy, plusz, minusz,
@@ -660,6 +647,5 @@ void CuttingPlane::tcl_command(TCLArgs& args, void* userdata)
     }
 }
 
-} // End namespace Modules
-} // End namespace PSECommon
+} // End namespace SCIRun
 

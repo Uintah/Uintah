@@ -1,7 +1,7 @@
 
 catch {rename MeshWriter ""}
 
-itcl_class PSECommon_Writers_MeshWriter {
+itcl_class Dataflow_Writers_MeshWriter {
     inherit Module
     constructor {config} {
 	set name MeshWriter

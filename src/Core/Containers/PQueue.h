@@ -2,15 +2,11 @@
 #ifndef SCI_Containers_PQueue_h
 #define SCI_Containers_PQueue_h 1
 
-#include <SCICore/share/share.h>
+#include <Core/share/share.h>
 
-namespace SCICore {
-    namespace Tester {
-	class RigorousTest;
-    }
-namespace Containers {
+namespace SCIRun {
 
-using SCICore::Tester::RigorousTest;
+class RigorousTest;
 
 /* Provides a priority queue of a fixed maximum size N that holds integers
    in the range 1..N (inclusive) that are weighted with positive integers. */
@@ -77,31 +73,6 @@ private:
   void  downheap ( int k );
 };
 
-} // End namespace Containers
-} // End namespace SCICore
-
-//
-// $Log$
-// Revision 1.3  1999/09/04 06:01:42  sparker
-// Updates to .h files, to minimize #includes
-// removed .icc files (yeah!)
-//
-// Revision 1.2  1999/08/17 06:38:37  sparker
-// Merged in modifications from PSECore to make this the new "blessed"
-// version of SCIRun/Uintah.
-//
-// Revision 1.1  1999/07/27 16:56:13  mcq
-// Initial commit
-//
-// Revision 1.3  1999/05/06 19:55:43  dav
-// added back .h files
-//
-// Revision 1.1  1999/05/05 21:04:32  dav
-// added SCICore .h files to /include directories
-//
-// Revision 1.1.1.1  1999/04/24 23:12:26  dav
-// Import sources
-//
-//
+} // End namespace SCIRun
 
 #endif

@@ -1,12 +1,9 @@
 // HVector.cpp: implementation of the HVector class.
-//
 //////////////////////////////////////////////////////////////////////
 
-#include <Remote/Tools/Math/HVector.h>
+#include <Packages/Remote/Tools/Math/HVector.h>
 
 namespace Remote {
-namespace Tools {
-
 //////////////////////////////////////////////////////////////////////
 // Construction/Destruction
 //////////////////////////////////////////////////////////////////////
@@ -130,7 +127,6 @@ Matrix Covariance(const HVector *VA, const int count)
 
 	return Cov;
 }
+} // End namespace Remote
 
-} // namespace Tools
-} // namespace Remote
 

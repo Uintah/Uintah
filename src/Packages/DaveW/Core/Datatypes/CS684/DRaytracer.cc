@@ -1,4 +1,3 @@
-//static char *id="@(#) $Id$";
 
 /*
  *  DRaytracer.cc:  Project parallel rays at a sphere and see where they go
@@ -12,22 +11,19 @@
  *  Copyright (C) 1997 SCI Group
  */
 
-#include <DaveW/Datatypes/CS684/DRaytracer.h>
-#include <DaveW/Datatypes/CS684/xyz.h>
-#include <SCICore/Malloc/Allocator.h>
-#include <SCICore/Math/MinMax.h>
-#include <SCICore/Thread/Thread.h>
+#include <Packages/DaveW/Core/Datatypes/CS684/DRaytracer.h>
+#include <Packages/DaveW/Core/Datatypes/CS684/xyz.h>
+#include <Core/Malloc/Allocator.h>
+#include <Core/Math/MinMax.h>
+#include <Core/Thread/Thread.h>
 #include <iostream>
 using std::cerr;
 
 namespace DaveW {
-namespace Datatypes {
-
-using SCICore::Math::Min;
-using SCICore::Math::Max;
+using namespace SCIRun;
 
 int global_numbounces;
-SCICore::Thread::Mutex global_bounces_mutex("global_bounces_mutex");
+Mutex global_bounces_mutex("global_bounces_mutex");
 
 static Persistent* make_DRaytracer()
 {
@@ -335,7 +331,6 @@ void DRaytracer::lensPixelSamples(Sample2D &s, Array1<double>& pixX,
 
 #define DRaytracer_VERSION 2
 void DRaytracer::io(Piostream& stream) {
-    using SCICore::PersistentSpace::Pio;
     using DaveW::Datatypes::Pio;
 
     /*int version=*/stream.begin_class("DRaytracer", DRaytracer_VERSION);
@@ -359,31 +354,6 @@ void DRaytracer::io(Piostream& stream) {
 	Pio(stream, specNum);
     }
     stream.end_class();
-}
-} // End namespace Datatypes
 } // End namespace DaveW
+}
 
-//
-// $Log$
-// Revision 1.5  1999/10/07 02:06:18  sparker
-// use standard iostreams and complex type
-//
-// Revision 1.4  1999/08/30 20:19:20  sparker
-// Updates to compile with -LANG:std on SGI
-// Other linux/irix porting oscillations
-//
-// Revision 1.3  1999/08/29 00:46:34  sparker
-// Integrated new thread library
-// using statement tweaks to compile with both MipsPRO and g++
-// Thread library bug fixes
-//
-// Revision 1.2  1999/08/24 06:22:54  dmw
-// Added in everything for the DaveW branch
-//
-// Revision 1.1  1999/08/23 02:52:55  dmw
-// Dave's Datatypes
-//
-// Revision 1.2  1999/05/03 04:52:00  dmw
-// Added and updated DaveW Datatypes/Modules
-//
-//

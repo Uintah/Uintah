@@ -1,30 +1,22 @@
 // DebugStream.h - An ostream used for debug messages
-//
 // Written by:
 // Eric Kuehne
 // Department of Computer Science
 // University of Utah
 // Feb. 2000
-//
 // Copyright (C) 2000 SCI Group
-//
 // DebugStream is an ostream that is useful for outputing debug messages.
 // When an instance is created, it is given a name.  An environment variable,
 // SCI_DEBUG, is inspected to see if a particular instance should be
 // active(identified by its name), and if so where to send the output.
 // The syntax for the environment variable is:
-//
 // SCI_DEBUG = ([name]:[-|+|+FILENAME])(,[name]:[-|+|+FILENAME])*
-//
 // The + or - specifies wheather the named object is on or off.  If a file is 
 // specified it is opened in ios::out mode.  If no file is specified,
 // the stream is directed to cerr.  The : and , characters are
 // restricted to deliminators.
-//
 // Example:
-//
 // SCI_DEBUG = modules.meshgen.warning:+meshgen.out,util.debugstream.error:-
-//
 // Future Additions:
 // o Possible additions to constructor:
 //   - Default file to output to
@@ -32,7 +24,6 @@
 // o Allow DEFAULT specification in the env variable which would override
 //   all default settings. (usefulness??)
 // o Time stamp option
-//
 // Annoyances:
 // o Because the list of environment variables, "environ", is built at
 // run time, and getenv queries that list, I have not been able to
@@ -42,7 +33,7 @@
 #ifndef SCI_project_DebugStream_h
 #define SCI_project_DebugStream_h 1
 
-#include <SCICore/share/share.h>
+#include <Core/share/share.h>
 
 #include <string>
 #include <stdlib.h> // for getenv()
@@ -50,8 +41,7 @@
 #include <fstream>
 
 
-namespace SCICore{
-  namespace Util{
+namespace SCIRun {
 
     using std::streambuf;
     using std::ostream;
@@ -106,8 +96,7 @@ namespace SCICore{
       ostream *outstream;
     };
     
-  } // End namespace Util
-} // End namespace SCICore
+} // End namespace SCIRun
 
 
   

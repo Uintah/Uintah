@@ -1,7 +1,6 @@
 
 /*
  *  WorkQueue: Manage assignments of work
- *  $Id$
  *
  *  Written by:
  *   Author: Steve Parker
@@ -12,16 +11,15 @@
  *  Copyright (C) 1997 SCI Group
  */
 
-#ifndef SCICore_Thread_WorkQueue_h
-#define SCICore_Thread_WorkQueue_h
+#ifndef Core_Thread_WorkQueue_h
+#define Core_Thread_WorkQueue_h
 
-#include <SCICore/share/share.h>
+#include <Core/share/share.h>
 
-#include <SCICore/Thread/AtomicCounter.h>
+#include <Core/Thread/AtomicCounter.h>
 #include <vector>
 
-namespace SCICore {
-    namespace Thread {
+namespace SCIRun {
 	struct WorkQueue_private;
 	
 /**************************************
@@ -88,29 +86,7 @@ DESCRIPTION
 	    WorkQueue(const WorkQueue& copy);
 	    WorkQueue& operator=(const WorkQueue&);
 	};
-    }
-}
+} // End namespace SCIRun
 
 #endif
 
-//
-// $Log$
-// Revision 1.8  1999/09/24 18:55:08  moulding
-// added SCICORESHARE, for win32, to class declarations
-//
-// Revision 1.7  1999/09/02 16:52:45  sparker
-// Updates to cocoon documentation
-//
-// Revision 1.6  1999/08/28 03:46:53  sparker
-// Final updates before integration with PSE
-//
-// Revision 1.5  1999/08/25 19:00:53  sparker
-// More updates to bring it up to spec
-// Factored out common pieces in Thread_irix and Thread_pthreads
-// Factored out other "default" implementations of various primitives
-//
-// Revision 1.4  1999/08/25 02:38:03  sparker
-// Added namespaces
-// General cleanups to prepare for integration with SCIRun
-//
-//

@@ -1,4 +1,3 @@
-//static char *id="@(#) $Id$";
 
 /*
  *  ContourSet.cc: The ContourSet Data type
@@ -12,12 +11,12 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <DaveW/Datatypes/General/ContourSet.h>
+#include <Packages/DaveW/Core/Datatypes/General/ContourSet.h>
 
-#include <SCICore/Containers/String.h>
-#include <SCICore/Datatypes/Surface.h>
-#include <SCICore/Geometry/Transform.h>
-#include <SCICore/Malloc/Allocator.h>
+#include <Core/Containers/String.h>
+#include <Core/Datatypes/Surface.h>
+#include <Core/Geometry/Transform.h>
+#include <Core/Malloc/Allocator.h>
 
 #include <iostream>
 using std::cerr;
@@ -26,8 +25,6 @@ using std::endl;
 #define Sqr(x) ((x)*(x))
 
 namespace DaveW {
-namespace Datatypes {
-
 static Persistent* make_ContourSet(){
     return scinew ContourSet;
 }
@@ -115,9 +112,7 @@ void ContourSet::rotate(const Vector &rot) {
 
 void ContourSet::io(Piostream& stream) 
 {
-    using SCICore::PersistentSpace::Pio;
-    using SCICore::Containers::Pio;
-    using SCICore::Geometry::Pio;
+using namespace SCIRun;
 
     int version=stream.begin_class("ContourSet", CONTOUR_SET_VERSION);
     Pio(stream, levels);
@@ -143,42 +138,8 @@ void ContourSet::io(Piostream& stream)
 ContourSet* ContourSet::clone()
 {
     return scinew ContourSet(*this);
-}
-} // End namespace Datatypes
 } // End namespace DaveW
+}
 
-//
-// $Log$
-// Revision 1.2  1999/10/07 02:06:20  sparker
-// use standard iostreams and complex type
-//
-// Revision 1.1  1999/09/01 05:27:35  dmw
-// more DaveW datatypes...
-//
-// Revision 1.3  1999/08/25 03:48:32  sparker
-// Changed SCICore/CoreDatatypes to SCICore/Datatypes
-// Changed PSECore/CommonDatatypes to PSECore/Datatypes
-// Other Misc. directory tree updates
-//
-// Revision 1.2  1999/08/17 06:38:44  sparker
-// Merged in modifications from PSECore to make this the new "blessed"
-// version of SCIRun/Uintah.
-//
-// Revision 1.1  1999/07/27 16:56:20  mcq
-// Initial commit
-//
-// Revision 1.2  1999/07/07 21:10:37  dav
-// added beginnings of support for g++ compilation
-//
-// Revision 1.1  1999/04/27 21:14:26  dav
-// working on Datatypes
-//
-// Revision 1.2  1999/04/25 04:14:34  dav
-// oopps...?
-//
-// Revision 1.1.1.1  1999/04/24 23:12:48  dav
-// Import sources
-//
-//
 
 

@@ -11,26 +11,19 @@
  *  Copyright (C) 1995 SCI Group
  */
 
-#include <PSECore/Datatypes/GeometryPort.h>
-#include <PSECore/Datatypes/MeshPort.h>
-#include <SCICore/Geom/Color.h>
-#include <SCICore/Geom/GeomCylinder.h>
-#include <SCICore/Geom/GeomGroup.h>
-#include <SCICore/Geom/Material.h>
-#include <SCICore/Geom/GeomSphere.h>
-#include <SCICore/TclInterface/TCLvar.h>
+#include <Dataflow/Ports/GeometryPort.h>
+#include <Dataflow/Ports/MeshPort.h>
+#include <Core/Geom/Color.h>
+#include <Core/Geom/GeomCylinder.h>
+#include <Core/Geom/GeomGroup.h>
+#include <Core/Geom/Material.h>
+#include <Core/Geom/GeomSphere.h>
+#include <Core/TclInterface/TCLvar.h>
 
 #include <map.h>
 
 namespace SCIRun {
-namespace Modules {
 
-using namespace PSECore::Dataflow;
-using namespace PSECore::Datatypes;
-using namespace SCICore::Containers;
-using namespace SCICore::GeomSpace;
-using namespace SCICore::Geometry;
-using namespace SCICore::TclInterface;
 
 class MeshRender : public Module {
 public:
@@ -132,28 +125,6 @@ void MeshRender::execute()
     ogeom->addObj(matl, "Mesh1");
 }
 
-} // End namespace Modules
 } // End namespace SCIRun
 
 
-//
-// $Log$
-// Revision 1.5  2000/03/17 18:48:08  dahart
-// Included STL map header files where I forgot them, and removed less<>
-// parameter from map declarations
-//
-// Revision 1.4  2000/03/17 09:29:13  sparker
-// New makefile scheme: sub.mk instead of Makefile.in
-// Use XML-based files for module repository
-// Plus many other changes to make these two things work
-//
-// Revision 1.3  2000/03/11 00:41:55  dahart
-// Replaced all instances of HashTable<class X, class Y> with the
-// Standard Template Library's std::map<class X, class Y, less<class X>>
-//
-// Revision 1.2  1999/09/08 02:27:06  sparker
-// Various #include cleanups
-//
-// Revision 1.1  1999/09/05 05:32:29  dmw
-// updated and added Modules from old tree to new
-//

@@ -7,18 +7,18 @@
 
 #include "AnimatedStreams.h"
 
-#include <SCICore/Containers/Array1.h>
-#include <PSECore/Dataflow/Module.h>
-#include <SCICore/Datatypes/ColorMap.h>
-#include <PSECore/Datatypes/ColorMapPort.h>
-#include <PSECore/Datatypes/GeometryPort.h>
-#include <PSECore/Datatypes/VectorFieldPort.h>
-#include <SCICore/Datatypes/VectorField.h>
+#include <Core/Containers/Array1.h>
+#include <Dataflow/Network/Module.h>
+#include <Core/Datatypes/ColorMap.h>
+#include <Dataflow/Ports/ColorMapPort.h>
+#include <Dataflow/Ports/GeometryPort.h>
+#include <Dataflow/Ports/VectorFieldPort.h>
+#include <Core/Datatypes/VectorField.h>
 
-#include <SCICore/Geom/GeomTriangles.h>
+#include <Core/Geom/GeomTriangles.h>
 
-#include <SCICore/Malloc/Allocator.h>
-#include <SCICore/TclInterface/TCLvar.h>
+#include <Core/Malloc/Allocator.h>
+#include <Core/TclInterface/TCLvar.h>
 
 #include <iostream>
 #include <ios>
@@ -30,12 +30,8 @@ using std::hex;
 using std::dec;
 
 namespace Kurt {
-namespace Modules {
 
-
-using namespace PSECore::Dataflow;
-using namespace PSECore::Datatypes;
-using namespace SCICore::TclInterface;
+using namespace SCIRun;
 
 			 
 extern "C" Module* make_AnimatedStreams( const clString& id) {
@@ -128,8 +124,7 @@ void AnimatedStreams::execute(void)
   
   mutex.unlock();
 }
+} // End namespace Kurt
 
-} // End namespace Modules
-} // End namespace Uintah
 
 

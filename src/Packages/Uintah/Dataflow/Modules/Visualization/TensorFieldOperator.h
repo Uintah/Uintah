@@ -1,20 +1,15 @@
 #ifndef __VISUALIZATION_TENSORFIELDOPERATOR_H__
 #define __VISUALIZATION_TENSORFIELDOPERATOR_H__
 
-#include <SCICore/TclInterface/TCLvar.h>
-#include <PSECore/Dataflow/Module.h>
-#include <SCICore/Containers/String.h>
-#include <Uintah/Datatypes/TensorFieldPort.h>
-#include <PSECore/Datatypes/ScalarFieldPort.h>
-#include <PSECore/Datatypes/VectorFieldPort.h>
+#include <Core/TclInterface/TCLvar.h>
+#include <Dataflow/Network/Module.h>
+#include <Core/Containers/String.h>
+#include <Packages/Uintah/Core/Datatypes/TensorFieldPort.h>
+#include <Dataflow/Ports/ScalarFieldPort.h>
+#include <Dataflow/Ports/VectorFieldPort.h>
 
 namespace Uintah {
-namespace Modules {
-  using namespace SCICore::Containers;
-  using namespace PSECore::Dataflow;
-  using namespace SCICore::Datatypes;
-  using namespace PSECore::Datatypes;
-  using namespace SCICore::TclInterface;
+using namespace SCIRun;
 
   class TensorFieldOperator: public Module {
   public:
@@ -46,8 +41,7 @@ namespace Modules {
 
     ScalarFieldOPort *sfout;
     //VectorFieldOPort *vfout;
+} // End namespace Uintah
   };
-}
-}
 #endif // __VISUALIZATION_TENSORFIELDOPERATOR_H__
 

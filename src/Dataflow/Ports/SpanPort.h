@@ -13,18 +13,15 @@
 #ifndef SCI_project_SpanPort_h
 #define SCI_project_SpanPort_h 1
 
-#include <PSECore/Datatypes/SimplePort.h>
-#include <PSECore/Datatypes/SpanSpace.h>
+#include <Dataflow/Ports/SimplePort.h>
+#include <Dataflow/Ports/SpanSpace.h>
 
-namespace PSECore {
-  namespace Datatypes {
+namespace SCIRun {
     
-    using namespace SCICore::Datatypes;
     
     typedef SimpleIPort<SpanUniverseHandle> SpanUniverseIPort;
     typedef SimpleOPort<SpanUniverseHandle> SpanUniverseOPort;
     
-  } // End namespace Datatypes
-} // End namespace PSECore
+} // End namespace SCIRun
 
 #endif

@@ -43,7 +43,6 @@ istream *pipe_input_stream(char *cmd, ...)
 }
 #else
 
-//
 // Yes, this is bogus.  But right now, I don't want to take the time
 // to actually hook the stream up to a real pipe.  Why can't C++ have
 // a simple analog of popen?

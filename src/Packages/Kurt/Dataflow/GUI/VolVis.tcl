@@ -1,7 +1,7 @@
 
 catch {rename VolVis ""}
 
-itcl_class Kurt_Vis_VolVis {
+itcl_class Packages/Kurt_Vis_VolVis {
     inherit Module
     constructor {config} {
 	set name VolVis

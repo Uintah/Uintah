@@ -1,28 +1,19 @@
 #ifndef GLTEXTURE3D_H
 #define GLTEXTURE3D_H
 
-#include <SCICore/Datatypes/Datatype.h>
-#include <SCICore/Containers/LockingHandle.h>
-#include <SCICore/Containers/Array3.h>
-#include <SCICore/Datatypes/ScalarFieldRGBase.h>
-#include <SCICore/Geometry/Point.h>
-#include <SCICore/Geometry/BBox.h>
-#include <SCICore/Datatypes/Octree.h>
+#include <Core/Datatypes/Datatype.h>
+#include <Core/Containers/LockingHandle.h>
+#include <Core/Containers/Array3.h>
+#include <Core/Datatypes/ScalarFieldRGBase.h>
+#include <Core/Geometry/Point.h>
+#include <Core/Geometry/BBox.h>
+#include <Core/Datatypes/Octree.h>
 #include <iostream>
 #include <deque>
 using std::deque;
 
-namespace SCICore {
-namespace Datatypes {
+namespace SCIRun {
 
-using SCICore::Datatypes::ScalarFieldRGBase;
-using SCICore::Datatypes::Datatype;
-using SCICore::Containers::LockingHandle;
-using SCICore::Containers::Array3;
-using SCICore::Geometry::Point;
-using SCICore::Geometry::BBox;
-using SCICore::PersistentSpace::Piostream;
-using SCICore::PersistentSpace::PersistentTypeID;
 
 
 class Brick;
@@ -163,6 +154,5 @@ private:
   
 };
 
-} // end namespace Datatypes
-} // end namespace SCICore
+} // End namespace SCIRun
 #endif

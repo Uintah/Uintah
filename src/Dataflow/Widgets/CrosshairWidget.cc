@@ -1,4 +1,3 @@
-//static char *id="@(#) $Id$";
 
 /*
  *  CrosshairWidget.cc
@@ -13,21 +12,15 @@
  */
 
 
-#include <PSECore/Widgets/CrosshairWidget.h>
-#include <SCICore/Geom/GeomCylinder.h>
-#include <SCICore/Geom/GeomSphere.h>
-#include <SCICore/Malloc/Allocator.h>
-#include <PSECore/Dataflow/Module.h>
+#include <Dataflow/Widgets/CrosshairWidget.h>
+#include <Core/Geom/GeomCylinder.h>
+#include <Core/Geom/GeomSphere.h>
+#include <Core/Malloc/Allocator.h>
+#include <Dataflow/Network/Module.h>
 
-namespace PSECore {
-namespace Widgets {
+namespace SCIRun {
 
-using SCICore::GeomSpace::GeomGroup;
-using SCICore::GeomSpace::GeomSphere;
-using SCICore::GeomSpace::GeomCylinder;
-using SCICore::GeomSpace::GeomCappedCylinder;
 
-using namespace PSECore::Constraints;
 
 const Index NumCons = 0;
 const Index NumVars = 1;
@@ -274,19 +267,5 @@ CrosshairWidget::widget_tcl( TCLArgs& args )
    }
 }
 
-} // End namespace Widgets
-} // End namespace PSECore
+} // End namespace SCIRun
 
-//
-// $Log$
-// Revision 1.2  1999/08/17 06:38:29  sparker
-// Merged in modifications from PSECore to make this the new "blessed"
-// version of SCIRun/Uintah.
-//
-// Revision 1.1  1999/07/27 16:56:06  mcq
-// Initial commit
-//
-// Revision 1.1.1.1  1999/04/24 23:12:29  dav
-// Import sources
-//
-//

@@ -2,31 +2,25 @@
 #define xyz_h
 
 namespace DaveW {
-namespace Datatypes {
-
 // data from Paul Bourke - http://www.mhri.edu.au/~pdb/colour/conversion.html
 //                  x       y
 //        Red     0.628   0.346           call these xr and yr
 //        Green   0.268   0.588            "     "   xg and yg
 //        Blue    0.150   0.070            "     "   xb and yb
 //        White   0.313   0.329            "     "   xw and yw
-//
 /* REFERENCED */
 static float NTSC_rgb[3][3] = {
     {2.739, -1.145, -0.424},  // R
     {-1.119, 2.029, 0.033},   // G
     {0.138, -0.333, 1.105}};  // B
-//
 
 
 
 
 // data from Steve and Glassner (102)
-//
 //    toRGB[0][0]=1.73; toRGB[0][1]=-0.4823; toRGB[0][2]=-0.2611;
 //    toRGB[1][0]=-0.8135; toRGB[1][1]=1.652; toRGB[1][2]=-.02339;
 //    toRGB[2][0]=0.08344; toRGB[2][1]=-0.1694; toRGB[2][2]=1.2845;
-//
 //                  x       y
 //        Red     0.670   0.330
 //        Green   0.210   0.710
@@ -532,22 +526,9 @@ static float zAmplitudes[52] = {
 0.0000
 
 };
-
-} // End namespace Datatypes
 } // End namespace DaveW
 
-//
-// $Log$
-// Revision 1.2  1999/10/07 02:06:19  sparker
-// use standard iostreams and complex type
-//
-// Revision 1.1  1999/08/23 02:52:59  dmw
-// Dave's Datatypes
-//
-// Revision 1.2  1999/05/03 04:52:08  dmw
-// Added and updated DaveW Datatypes/Modules
-//
-//
+
 
 #endif
 

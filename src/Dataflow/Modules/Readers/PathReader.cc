@@ -1,4 +1,3 @@
-//static char *id="@(#) $Id$";
 
 /*
  *  PathReader.cc: Path Reader class
@@ -12,21 +11,15 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <PSECore/Datatypes/PathPort.h>
-#include <SCICore/Datatypes/Path.h>
-#include <PSECore/Dataflow/Module.h>
-#include <SCICore/Malloc/Allocator.h>
-#include <SCICore/TclInterface/TCLTask.h>
-#include <SCICore/TclInterface/TCLvar.h>
+#include <Dataflow/Ports/PathPort.h>
+#include <Core/Datatypes/Path.h>
+#include <Dataflow/Network/Module.h>
+#include <Core/Malloc/Allocator.h>
+#include <Core/TclInterface/TCLTask.h>
+#include <Core/TclInterface/TCLvar.h>
 
-namespace PSECommon {
-namespace Modules {
+namespace SCIRun {
 
-using namespace SCICore::Datatypes;
-using namespace PSECore::Dataflow;
-using namespace PSECore::Datatypes;
-using namespace SCICore::TclInterface;
-using namespace SCICore::PersistentSpace;
 
 class PathReader : public Module {
     PathOPort* outport;
@@ -75,7 +68,6 @@ static void watcher(double pd, void* cbdata)
 
 void PathReader::execute()
 {
-    using SCICore::Containers::Pio;
 
     clString fn(filename.get());
     if(!handle.get_rep() || fn != old_filename){
@@ -98,32 +90,5 @@ void PathReader::execute()
     outport->send(handle);
 }
 
-} // End namespace Modules
-} // End namespace PSECommon
+} // End namespace SCIRun
 
-//
-// $Log$
-// Revision 1.3  2000/12/15 06:25:17  mcole
-// merge branch back into trunk
-//
-// Revision 1.2.2.3  2000/11/01 23:02:57  mcole
-// Fix for previous merge from trunk
-//
-// Revision 1.2.2.1  2000/09/28 03:16:04  mcole
-// merge trunk into FIELD_REDESIGN branch
-//
-// Revision 1.2  2000/07/19 19:29:35  samsonov
-// Moving from DaveW
-//
-// Revision 1.1  2000/07/18 23:12:56  samsonov
-// Added PathReader module
-//
-// Revision 1.2  2000/03/17 09:25:57  sparker
-// New makefile scheme: sub.mk instead of Makefile.in
-// Use XML-based files for module repository
-// Plus many other changes to make these two things work
-//
-// Revision 1.1  1999/12/02 22:06:46  dmw
-// added reader/writer modules for camera path
-//
-//

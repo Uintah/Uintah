@@ -1,22 +1,15 @@
-#
-# Makefile fragment for this subdirectory
-# $Id$
-#
+#Makefile fragment for the Packages/Yarden directory
 
-include $(SRCTOP)/scripts/largeso_prologue.mk
+include $(OBJTOP_ABS)/scripts/largeso_prologue.mk
 
-SRCDIR := Yarden
-
+SRCDIR := Packages/Yarden
 SUBDIRS := \
-	$(SRCDIR)/Datatypes \
-	$(SRCDIR)/Modules \
-	$(SRCDIR)/GUI \
-	$(SRCDIR)/convert 
+	$(SRCDIR)/Core \
+	$(SRCDIR)/Dataflow \
 
-include $(SRCTOP)/scripts/recurse.mk
+include $(OBJTOP_ABS)/scripts/recurse.mk
 
-PSELIBS := PSECore SCICore
+PSELIBS := 
 LIBS := $(TK_LIBRARY) $(GL_LIBS) -lm
 
-include $(SRCTOP)/scripts/largeso_epilogue.mk
-
+include $(OBJTOP_ABS)/scripts/largeso_epilogue.mk

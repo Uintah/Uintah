@@ -12,8 +12,8 @@
  */
 
 
-#include <SCICore/Util/Timer.h>
-#include <SCICore/Util/NotFinished.h>
+#include <Core/Util/Timer.h>
+#include <Core/Util/NotFinished.h>
 #include <sys/types.h>
 #ifndef _WIN32
 #include <sys/times.h>
@@ -25,6 +25,7 @@
 #include <iostream>
 using std::cerr;
 using std::endl;
+
 
 #include <time.h>
 #ifdef _WIN32

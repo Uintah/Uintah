@@ -16,8 +16,8 @@
 
 #ifndef _WIN32
 
-#include <SCICore/TclInterface/GuiManager.h>
-#include <SCICore/Containers/Array1.h>
+#include <Core/TclInterface/GuiManager.h>
+#include <Core/Containers/Array1.h>
 
 #include <string.h>
 #include <stdio.h>
@@ -27,8 +27,7 @@
 #include <stdlib.h>	// needed for atoi
 #include <iostream>
 using namespace std;
-namespace SCICore {
-namespace TclInterface {
+namespace SCIRun {
 
 GuiManager::GuiManager (char* hostname, char* portname) 
     : access("GUI manager access lock")
@@ -99,7 +98,6 @@ GuiManager::putConnection (int sock)
     access.unlock();
 }
 
-} // End namespace TclInterface
-} // End namespace SCICore
+} // End namespace SCIRun
 
 #endif

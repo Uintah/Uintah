@@ -2,7 +2,6 @@
 
 /*
 //=======================
-//
 // scanner.l
 // David Hart
 // Copyright 1998
@@ -11,7 +10,6 @@
 // July 2000
 // SCI group, University of Utah
 // All rights reserved
-//
 //=======================
 */
 
@@ -27,9 +25,9 @@
 #include <vector>
 using namespace std;
 
-#include <SCICore/Math/function.h>
-using namespace SCICore::Math;
-#include <SCICore/Math/fnparser.h>
+#include <Core/Math/function.h>
+using namespace SCIRun;
+#include <Core/Math/fnparser.h>
 
 /* for some reason yywrap gets broken by the fn prefix
    this seems to solve the problem */
@@ -38,8 +36,7 @@ using namespace SCICore::Math;
 int yywrap() { return 1;}
 #define YY_SKIP_YYWRAP
 
-namespace SCICore {
-namespace Math {
+namespace SCIRun {
 
 int linenumber = 1;
 int waserror = 0;
@@ -50,8 +47,7 @@ char*	getId(int lowerit);	// Helping function to obtain string
 int	getNumber();		// Helping function to obtain number
 				// lexemes.
 
-} //namespace Math {
-} //namespace SCICore {
+} //namespace SCIRun
 
 extern int fnparse(void* param);
 
@@ -171,8 +167,7 @@ string		{alpha}{alnum}+
 
 %%
 
-namespace SCICore {
-namespace Math {
+namespace SCIRun {
 
 //----------------------------------------------------------------------
 				// This procedure returns a pointer to
@@ -216,5 +211,4 @@ void fnparsestdin(Function** param) {
   fnparse((void*)param);
 }
 
-} //namespace Math {
-} //namespace SCICore {
+} // End namespace SCIRun

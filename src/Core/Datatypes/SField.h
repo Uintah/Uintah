@@ -1,11 +1,9 @@
 //  SField.h - Scalar Field
-//
 //  Written by:
 //   Eric Kuehne
 //   Department of Computer Science
 //   University of Utah
 //   April 2000
-//
 //  Copyright (C) 2000 SCI Institute
 
 
@@ -13,18 +11,14 @@
 #define SCI_project_SField_h 1
 
 
-#include <SCICore/Datatypes/Datatype.h>
-#include <SCICore/Containers/LockingHandle.h>
-#include <SCICore/Datatypes/Field.h>
-#include <SCICore/Datatypes/FieldInterface.h>
-#include <SCICore/Datatypes/FlatAttrib.h>
+#include <Core/Datatypes/Datatype.h>
+#include <Core/Containers/LockingHandle.h>
+#include <Core/Datatypes/Field.h>
+#include <Core/Datatypes/FieldInterface.h>
+#include <Core/Datatypes/FlatAttrib.h>
 
-namespace SCICore{
-namespace Datatypes{
+namespace SCIRun {
 
-using SCICore::Containers::LockingHandle;
-using SCICore::PersistentSpace::Piostream;
-using SCICore::PersistentSpace::PersistentTypeID;
 
   //class SField;
   //typedef LockingHandle<SField> SFieldHandle;
@@ -54,7 +48,6 @@ private:
   bool has_minmax;
 };
 
-} // end SCICore
-} // end Datatypes
+} // End namespace SCIRun
 
 #endif

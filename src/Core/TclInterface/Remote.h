@@ -28,8 +28,7 @@
 #define bcopy(src, dst, len)    memcpy(dst, src, len)
 #define bzero(src, len)         memset(src, 0, len)
 
-namespace SCICore {
-namespace TclInterface {
+namespace SCIRun {
 
 typedef struct {                // msgBody = 4+80+84 = 168
         char name[80];
@@ -128,23 +127,7 @@ int requestConnect (int port, char* host);
 int sendRequest (TCLMessage* msg, int skt);
 int receiveReply (TCLMessage* msg, int skt);
 
-} // End namespace TclInterface
-} // End namespace SCICore
+} // End namespace SCIRun
 
-//
-// $Log$
-// Revision 1.1  1999/07/27 16:57:15  mcq
-// Initial commit
-//
-// Revision 1.3  1999/05/06 19:56:24  dav
-// added back .h files
-//
-// Revision 1.1  1999/05/05 21:05:33  dav
-// added SCICore .h files to /include directories
-//
-// Revision 1.1.1.1  1999/04/24 23:12:25  dav
-// Import sources
-//
-//
 
 #endif

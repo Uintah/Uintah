@@ -1,6 +1,5 @@
 //////////////////////////////////////////////////////////////////////
 // Timer.h - A wall clock timer.
-//
 // By Dave McAllister, 1998.
 
 // Simulates my dad's old stop watch. It had a stop / start switch and a
@@ -9,7 +8,6 @@
 // while it's going, and you can Start() and Stop() it multiple times
 // without Reset()ing it, and the time will accumulate. Also, you can
 // Reset() it while it is going and it will reset to 0 and go from there.
-//
 // Note that although the time is stored as a double, the clock is not very
 // accurate. It has maybe 1 ms granularity or worse.
 
@@ -17,8 +15,6 @@
 #define _timer_h
 
 namespace Remote {
-namespace Tools {
-
 class Timer
 {
 	double StartTime;   // The time the clock was most-recently started.
@@ -49,8 +45,7 @@ public:
 	friend double GetCurTime();
 };
 
+} // End namespace Remote
 
-} // namespace Tools
-} // namespace Remote
 
 #endif

@@ -41,35 +41,25 @@
 
 
 
-#include <PSECore/Dataflow/Module.h>
-#include <PSECore/Datatypes/ColumnMatrixPort.h>
-#include <SCICore/Datatypes/SparseRowMatrix.h>
-#include <PSECore/Datatypes/MatrixPort.h>
-#include <PSECore/Datatypes/SurfacePort.h>
-#include <SCICore/Geometry/Point.h>
-#include <SCICore/Malloc/Allocator.h>
-#include <SCICore/Math/MiscMath.h>
-#include <SCICore/TclInterface/TCLvar.h>
-#include <SCICore/Thread/Parallel.h>
-#include <SCICore/Thread/SimpleReducer.h>
-#include <SCICore/Thread/Thread.h>
+#include <Dataflow/Network/Module.h>
+#include <Dataflow/Ports/ColumnMatrixPort.h>
+#include <Core/Datatypes/SparseRowMatrix.h>
+#include <Dataflow/Ports/MatrixPort.h>
+#include <Dataflow/Ports/SurfacePort.h>
+#include <Core/Geometry/Point.h>
+#include <Core/Malloc/Allocator.h>
+#include <Core/Math/MiscMath.h>
+#include <Core/TclInterface/TCLvar.h>
+#include <Core/Thread/Parallel.h>
+#include <Core/Thread/SimpleReducer.h>
+#include <Core/Thread/Thread.h>
 #include <iostream>
 using std::cerr;
 using std::endl;
 #include <sstream>
 
-namespace PSECommon {
-namespace Modules {
+namespace SCIRun {
 
-using namespace PSECore::Dataflow;
-using namespace PSECore::Datatypes;
-using namespace SCICore::TclInterface;
-using namespace SCICore::GeomSpace;
-using SCICore::Containers::to_string;
-using SCICore::Thread::Parallel;
-using SCICore::Thread::SimpleReducer;
-using SCICore::Thread::Thread;
-using SCICore::Math::Abs;
 
 struct PStats {
     int flop;
@@ -98,7 +88,6 @@ struct CGData {
   ColumnMatrix* R1;
   ColumnMatrix* P1;
   Matrix *trans;
-  //
   double max_error;
   SimpleReducer reducer;
   int np;
@@ -1287,7 +1276,6 @@ void SolveMatrix::parallel_bi_conjugate_gradient(int processor)
     data.R1=new ColumnMatrix(size);
     ColumnMatrix& R1=*data.R1;
     Copy(R1, R, stats->flop, stats->memref, 0, size);
-    //
     
     data.Z=new ColumnMatrix(size);
     //         ColumnMatrix& Z=*data.Z;
@@ -1297,7 +1285,6 @@ void SolveMatrix::parallel_bi_conjugate_gradient(int processor)
     data.Z1=new ColumnMatrix(size);
     //         ColumnMatrix& Z1=*data.Z1;
     //         matrix->mult(R, Z, stats->flop, stats->memref);
-	//
 
     data.P=new ColumnMatrix(size);
     //         ColumnMatrix& P=*data.P;
@@ -1305,7 +1292,6 @@ void SolveMatrix::parallel_bi_conjugate_gradient(int processor)
     // BiCG
     data.P1=new ColumnMatrix(size);
     //         ColumnMatrix& P1=*data.P1;
-    //
     
     data.err=R.vector_norm(stats->flop, stats->memref)/data.bnorm;
     if(data.err == 0){
@@ -1359,7 +1345,6 @@ void SolveMatrix::parallel_bi_conjugate_gradient(int processor)
     // BiCG
     ColumnMatrix& Z1=*data.Z1;
     ColumnMatrix& P1=*data.P1;
-    //
     
     if(processor==0){
       double new_error;
@@ -1401,19 +1386,16 @@ void SolveMatrix::parallel_bi_conjugate_gradient(int processor)
       printf("BiCG[%d]: bknum == 0\n", processor);
       break;
     }
-    //
     
     if(data.niter==1){
       Copy(P, Z, stats->flop, stats->memref, beg, end);
       // BiCG
       Copy(P1, Z1, stats->flop, stats->memref, beg, end);
-      //
     } else {
       double bk=bknum/bkden;
       ScMult_Add(P, bk, P, Z, stats->flop, stats->memref, beg, end);
       // BiCG
       ScMult_Add(P1, bk, P1, Z1, stats->flop, stats->memref, beg, end);
-      //
     }
 
     data.reducer.wait(data.np);
@@ -1428,7 +1410,6 @@ void SolveMatrix::parallel_bi_conjugate_gradient(int processor)
 
     // BiCG = change P -> P1
     double my_akden=Dot(Z, P1, stats->flop, stats->memref, beg, end);
-    //
     double akden=data.reducer.sum(processor, data.np, my_akden);
 
     double ak=bknum/akden;
@@ -1438,7 +1419,6 @@ void SolveMatrix::parallel_bi_conjugate_gradient(int processor)
     ScMult_Add(R, -ak, Z, R, stats->flop, stats->memref, beg, end);
     // BiCG
     ScMult_Add(R1, -ak, Z1, R1, stats->flop, stats->memref, beg, end);
-    //
     
     double my_err=R.vector_norm(stats->flop, stats->memref, beg, end)/data.bnorm;
     err=data.reducer.sum(processor, data.np, my_err);
@@ -1506,5 +1486,4 @@ void SolveMatrix::parallel_bi_conjugate_gradient(int processor)
   }
 }
 
-} // End namespace Modules
-} // End namespace PSECommon
+} // End namespace SCIRun

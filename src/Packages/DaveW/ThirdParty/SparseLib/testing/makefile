@@ -1,6 +1,4 @@
-# 
 # Makefile for sparselb testing
-#
 
 SPARSELIB_DIR = ..
 include $(SPARSELIB_DIR)/makefile.def

@@ -1,5 +1,5 @@
 /****************************************************************
- * Protozoa module (improved simplex search)for the SCIRun      *
+ * Protozoa module (improved simplex search)for the Dataflow      *
  *                                                              *
  *  Written by:                                                 *
  *   Kris Zyp                                                   *
@@ -13,11 +13,11 @@
  ****************************************************************/
 #include <math.h>
 #include <iostream>
-#include <SCICore/Containers/Array1.h>
-#include <SCICore/Containers/Array2.h>
+#include <Core/Containers/Array1.h>
+#include <Core/Containers/Array2.h>
 #define NRANSI
 using namespace std;
-using namespace SCICore::Containers;
+using namespace SCIRun;
 #define GET_PSUM \
 for (j=1;j<=ndim;j++) {\
    for (sum=0.0,k=1;k<=mpts;k++) sum += guesses(j,k);\

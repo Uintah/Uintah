@@ -1,13 +1,11 @@
 #ifndef _perlin_h
 #define _perlin_h
 
-#include <Remote/Tools/Math/Vector.h>
+#include <Packages/Remote/Tools/Math/Vector.h>
 
 #define MAX_OCTAVES 16
 
 namespace Remote {
-namespace Tools {
-
 class Perlin
 {
   int NOct;
@@ -93,8 +91,7 @@ public:
   void SetPersistance(double persist); // 0 < persist < 1. 0.5 is good.
 };
 
+} // End namespace Remote
 
-} // namespace Tools
-} // namespace Remote
 
 #endif

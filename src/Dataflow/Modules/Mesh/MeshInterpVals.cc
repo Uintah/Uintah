@@ -11,25 +11,20 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <PSECore/Datatypes/ColumnMatrixPort.h>
-#include <PSECore/Datatypes/MatrixPort.h>
-#include <PSECore/Datatypes/MeshPort.h>
-#include <PSECore/Datatypes/SurfacePort.h>
-#include <SCICore/Datatypes/SparseRowMatrix.h>
-#include <SCICore/Datatypes/TriSurface.h>
-#include <SCICore/Malloc/Allocator.h>
-#include <SCICore/TclInterface/TCLvar.h>
+#include <Dataflow/Ports/ColumnMatrixPort.h>
+#include <Dataflow/Ports/MatrixPort.h>
+#include <Dataflow/Ports/MeshPort.h>
+#include <Dataflow/Ports/SurfacePort.h>
+#include <Core/Datatypes/SparseRowMatrix.h>
+#include <Core/Datatypes/TriSurface.h>
+#include <Core/Malloc/Allocator.h>
+#include <Core/TclInterface/TCLvar.h>
 #include <iostream>
 using std::cerr;
 #include <stdio.h>
 
 namespace SCIRun {
-namespace Modules {
 
-using namespace PSECore::Dataflow;
-using namespace PSECore::Datatypes;
-using namespace SCICore::Geometry;
-using namespace SCICore::TclInterface;
 
 class MeshInterpVals : public Module {
     MeshIPort* imesh1;
@@ -208,6 +203,5 @@ void MeshInterpVals::execute()
     osurf->send(osurfH);
 }
 
-} // End namespace Modules
 } // End namespace SCIRun
 

@@ -1,4 +1,3 @@
-//static char *id="@(#) $Id$";
 
 /*
  *  TCLGeom.cc: Interface to TCL variables for Geom stuff
@@ -12,16 +11,15 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <SCICore/Geom/TCLGeom.h>
-#include <SCICore/TclInterface/TCL.h>
-#include <SCICore/TclInterface/TCLTask.h>
-#include <SCICore/Geom/Color.h>
-#include <SCICore/Geom/Material.h>
+#include <Core/Geom/TCLGeom.h>
+#include <Core/TclInterface/TCL.h>
+#include <Core/TclInterface/TCLTask.h>
+#include <Core/Geom/Color.h>
+#include <Core/Geom/Material.h>
 #include <iostream>
 using std::ostream;
 
-namespace SCICore {
-namespace GeomSpace {
+namespace SCIRun {
 
 TCLColor::TCLColor(const clString& name, const clString& id, TCL* tcl)
 : TCLvar(name, id, tcl), r("r", str(), tcl), g("g", str(), tcl),
@@ -100,22 +98,5 @@ void TCLMaterial::emit(ostream& out)
     refraction_index.emit(out);
 }
 
-} // End namespace GeomSpace
-} // End namespace SCICore
+} // End namespace SCIRun
 
-//
-// $Log$
-// Revision 1.3  1999/10/07 02:07:50  sparker
-// use standard iostreams and complex type
-//
-// Revision 1.2  1999/08/17 06:39:23  sparker
-// Merged in modifications from PSECore to make this the new "blessed"
-// version of SCIRun/Uintah.
-//
-// Revision 1.1  1999/07/27 16:56:52  mcq
-// Initial commit
-//
-// Revision 1.1.1.1  1999/04/24 23:12:22  dav
-// Import sources
-//
-//

@@ -17,11 +17,9 @@
 #define SCI_Math_MiscMath_h 1
 
 #include <math.h>
-#include <Remote/Tools/Util/Utils.h>
+#include <Packages/Remote/Tools/Util/Utils.h>
 
 namespace Remote {
-namespace Tools {
-
 #ifndef M_PI
 #define M_PI 3.1415926535897932384626433
 #endif
@@ -320,8 +318,7 @@ inline int Tile(int tile, int tf)
 	}
 }
 
+} // End namespace Remote
 
-} // namespace Tools
-} // namespace Remote
 
 #endif /* SCI_Math_MiscMath_h */

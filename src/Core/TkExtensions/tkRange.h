@@ -24,7 +24,7 @@
 
 #endif
 
-#include <SCICore/share/share.h>
+#include <Core/share/share.h>
 
 #if defined BUILD_tk || defined BUILD_SCICORE
 # undef TCL_STORAGE_CLASS
@@ -247,7 +247,7 @@ EXTERN int		TkpValueToPixel _ANSI_ARGS_((TkRange *rangePtr,
 # define TCL_STORAGE_CLASS  DLLIMPORT
 
 #ifdef _WIN32
-/* these need to be imported from tk, but exported to SCIRun */
+/* these need to be imported from tk, but exported to Dataflow */
 EXTERN Tk_Uid tkDisabledUid;
 EXTERN Tk_Uid tkActiveUid;
 EXTERN Tk_Uid tkNormalUid;

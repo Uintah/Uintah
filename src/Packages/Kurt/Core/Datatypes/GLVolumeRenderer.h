@@ -1,14 +1,14 @@
 #ifndef GLVOLUMERENDERER_H
 #define GLVOLUMERENDERER_H
 
-#include <SCICore/Thread/Mutex.h>
-#include <SCICore/Geometry/Point.h>
-#include <SCICore/Geometry/Ray.h>
-#include <SCICore/Geometry/Vector.h>
-#include <SCICore/Geometry/Transform.h>
-#include <SCICore/Datatypes/ScalarFieldRGuchar.h>
-#include <SCICore/Datatypes/ColorMap.h>
-#include <SCICore/Geom/GeomObj.h>
+#include <Core/Thread/Mutex.h>
+#include <Core/Geometry/Point.h>
+#include <Core/Geometry/Ray.h>
+#include <Core/Geometry/Vector.h>
+#include <Core/Geometry/Transform.h>
+#include <Core/Datatypes/ScalarFieldRGuchar.h>
+#include <Core/Datatypes/ColorMap.h>
+#include <Core/Geom/GeomObj.h>
 #include <GL/gl.h>
 #include <GL/glu.h>
 
@@ -27,14 +27,10 @@
 #include "GLOverOp.h"
 #include "GLTexture3D.h"
 
-namespace SCICore {
-namespace GeomSpace  {
+namespace Kurt {
 
-
-using namespace SCICore::Geometry;
-using namespace SCICore::Datatypes;
+using namespace SCIRun;
 using namespace Kurt::Datatypes;
-using SCICore::Thread::Mutex;
 
 class GLVolumeRenderer : public GeomObj
 {
@@ -164,9 +160,8 @@ private:
 };
 
 
+} // End namespace Kurt
  
-}  // namespace GeomSpace
-} // namespace SCICore
 
 
 #endif

@@ -9,27 +9,21 @@
  *   Copyright (C) 2000 SCI Group
  */
 
-#include <PSECore/Dataflow/Module.h>
-#include <PSECore/Datatypes/ScalarFieldPort.h>
-#include <SCICore/Datatypes/ScalarField.h>
-#include <SCICore/Datatypes/ScalarFieldRGdouble.h>
-#include <SCICore/Malloc/Allocator.h>
-#include <SCICore/TclInterface/TCLTask.h>
-#include <SCICore/TclInterface/TCLvar.h>
-#include <SCICore/Math/Expon.h>
-#include <SCICore/Math/MiscMath.h>
-#include <SCICore/Math/function.h>
+#include <Dataflow/Network/Module.h>
+#include <Dataflow/Ports/ScalarFieldPort.h>
+#include <Core/Datatypes/ScalarField.h>
+#include <Core/Datatypes/ScalarFieldRGdouble.h>
+#include <Core/Malloc/Allocator.h>
+#include <Core/TclInterface/TCLTask.h>
+#include <Core/TclInterface/TCLvar.h>
+#include <Core/Math/Expon.h>
+#include <Core/Math/MiscMath.h>
+#include <Core/Math/function.h>
 
 //#include <iostream.h>
 
-namespace PSECommon {
-namespace Modules {
+namespace SCIRun {
 
-using namespace PSECore::Dataflow;
-using namespace PSECore::Datatypes;
-using namespace SCICore::TclInterface;
-using namespace SCICore::PersistentSpace;
-using namespace SCICore::Math;
 
 //----------------------------------------------------------------------
 class GenScalarField : public Module {
@@ -185,9 +179,6 @@ void GenScalarField::tcl_command(TCLArgs& args, void* userdata)
 }
 
 
-} // End namespace Modules
-} // End namespace PSECommon
+} // End namespace SCIRun
 
 //----------------------------------------------------------------------
-//
-//

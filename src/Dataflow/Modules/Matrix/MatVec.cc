@@ -11,21 +11,17 @@
  *  Copyright (C) 1999 SCI Group
  */
 
-#include <PSECore/Datatypes/ColumnMatrixPort.h>
-#include <PSECore/Datatypes/MatrixPort.h>
-#include <SCICore/Datatypes/DenseMatrix.h>
-#include <SCICore/Datatypes/SymSparseRowMatrix.h>
-#include <SCICore/Malloc/Allocator.h>
-#include <SCICore/TclInterface/TCLvar.h>
+#include <Dataflow/Ports/ColumnMatrixPort.h>
+#include <Dataflow/Ports/MatrixPort.h>
+#include <Core/Datatypes/DenseMatrix.h>
+#include <Core/Datatypes/SymSparseRowMatrix.h>
+#include <Core/Malloc/Allocator.h>
+#include <Core/TclInterface/TCLvar.h>
 #include <iostream>
 using std::cerr;
 
-namespace PSECommon {
-namespace Modules {
+namespace SCIRun {
 
-using namespace PSECore::Dataflow;
-using namespace PSECore::Datatypes;
-using namespace SCICore::TclInterface;
 
 class MatVec : public Module {
     ColumnMatrixIPort* icol;
@@ -123,5 +119,4 @@ void MatVec::execute() {
 	cerr << "MatVec: unknown operation "<<opS<<"\n";
     }
 }    
-} // End namespace Modules
-} // End namespace PSECommon
+} // End namespace SCIRun

@@ -14,17 +14,14 @@
 #ifndef SCI_LINEARPWI_H__
 #define SCI_LINEARPWI_H__
 
-#include <SCICore/Math/PiecewiseInterp.h>
+#include <Core/Math/PiecewiseInterp.h>
 
-#include <SCICore/share/share.h>
-#include <SCICore/Containers/Array1.h>
-#include <SCICore/Geometry/Point.h>
+#include <Core/share/share.h>
+#include <Core/Containers/Array1.h>
+#include <Core/Geometry/Point.h>
 
-namespace SCICore {
-namespace Math {
+namespace SCIRun {
 
-using namespace SCICore::Containers;
-using SCICore::Geometry::Point;
 
 typedef struct Pair{
   double a;
@@ -113,8 +110,7 @@ template <class T> bool Linear3DPWI<T>::set_data(const Array1<double>& pts, cons
   }
 }
 
-} // Math 
-} // SCICore
+} // End namespace SCIRun
 
 #endif //SCI_LINEARPWI_H__
 

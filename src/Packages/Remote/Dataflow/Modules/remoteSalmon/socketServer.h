@@ -15,24 +15,21 @@
 #ifndef SCI_project_module_socketServer_h
 #define SCI_project_module_socketServer_h
 
-#include <SCICore/OS/sock.h>
+#include <Core/OS/sock.h>
 
-#include <PSECommon/Modules/Salmon/OpenGL.h>
+#include <Dataflow/Modules/Salmon/OpenGL.h>
 
-#include <Remote/Tools/macros.h>
-#include <Remote/Tools/Image/ZImage.h>
+#include <Packages/Remote/Tools/macros.h>
+#include <Packages/Remote/Tools/Image/ZImage.h>
 
-#include <Remote/Modules/remoteSalmon/message.h>
-#include <Remote/Modules/remoteSalmon/OpenGLServer.h>
-#include <Remote/Modules/remoteSalmon/HeightSimp.h>
-#include <Remote/Modules/remoteSalmon/RenderModel.h>
+#include <Packages/Remote/Dataflow/Modules/remoteSalmon/message.h>
+#include <Packages/Remote/Dataflow/Modules/remoteSalmon/OpenGLServer.h>
+#include <Packages/Remote/Dataflow/Modules/remoteSalmon/HeightSimp.h>
+#include <Packages/Remote/Dataflow/Modules/remoteSalmon/RenderModel.h>
 
 namespace Remote {
-namespace Modules {
-
 using namespace Remote::Tools;
-using namespace SCICore::Thread;
-using namespace SCICore::OS;
+using namespace SCIRun;
 
 class OpenGLServer;
 
@@ -62,8 +59,7 @@ public:
   virtual void run();
   
 };
+} // End namespace Remote
 
-} // namespace Modules
-} // namespace Remote
 
 #endif // SCI_project_module_socketServer_h

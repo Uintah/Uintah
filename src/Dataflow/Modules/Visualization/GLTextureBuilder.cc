@@ -9,39 +9,25 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-#include <SCICore/Containers/Array1.h>
-#include <SCICore/Containers/String.h>
-#include <SCICore/Datatypes/ScalarFieldRGBase.h>
-#include <SCICore/Datatypes/ScalarField.h>
-#include <SCICore/Malloc/Allocator.h>
-#include <SCICore/TclInterface/TCLvar.h>
-#include <SCICore/TclInterface/TCL.h>
-#include <SCICore/TclInterface/TCLTask.h>
-#include <SCICore/Datatypes/VolumeUtils.h>
-#include <SCICore/Datatypes/GLTexture3D.h>
-#include <PSECore/Dataflow/Module.h>
+#include <Core/Containers/Array1.h>
+#include <Core/Containers/String.h>
+#include <Core/Datatypes/ScalarFieldRGBase.h>
+#include <Core/Datatypes/ScalarField.h>
+#include <Core/Malloc/Allocator.h>
+#include <Core/TclInterface/TCLvar.h>
+#include <Core/TclInterface/TCL.h>
+#include <Core/TclInterface/TCLTask.h>
+#include <Core/Datatypes/VolumeUtils.h>
+#include <Core/Datatypes/GLTexture3D.h>
+#include <Dataflow/Network/Module.h>
 
 #include <iostream>
 using std::cerr;
 using std::endl;
 
-namespace PSECommon {
-namespace Modules {
+namespace SCIRun {
 
-using namespace SCICore::TclInterface;
-using namespace SCICore::Math;
 
-using namespace SCICore::Containers;
-using namespace SCICore::TclInterface;
-using namespace SCICore::Malloc;
-using namespace PSECore::Datatypes;
-using namespace PSECore::Dataflow;
-using SCICore::Geometry::Point;
-using SCICore::Geometry::Vector;
-using SCICore::Datatypes::ScalarFieldHandle;
-using SCICore::Datatypes::ScalarFieldRGBase;
-using SCICore::Datatypes::GLTexture3D;
-using SCICore::Datatypes::GLTexture3DHandle;
 
 static clString widget_name("GLTextureBuilderLocatorWidget");
 static clString res_name("Resolution Widget");
@@ -174,7 +160,6 @@ void GLTextureBuilder::execute(void)
   }
 }
 
-} // End namespace Modules
-} // End namespace Uintah
+} // End namespace SCIRun
 
 

@@ -11,12 +11,11 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <SCICore/Datatypes/VectorFieldRGCC.h>
-#include <SCICore/Containers/String.h>
-#include <SCICore/Malloc/Allocator.h>
+#include <Core/Datatypes/VectorFieldRGCC.h>
+#include <Core/Containers/String.h>
+#include <Core/Malloc/Allocator.h>
 
-namespace SCICore {
-namespace Datatypes {
+namespace SCIRun {
 
 static Persistent* maker()
 {
@@ -55,9 +54,6 @@ void VectorFieldRGCC::locate(const Point& p, int& ix, int& iy, int& iz)
 
 void VectorFieldRGCC::io(Piostream& stream)
 {
-    using SCICore::PersistentSpace::Pio;
-    using SCICore::Containers::Pio;
-    using SCICore::Geometry::Pio;
 
     /*int version=*/
     stream.begin_class("VectorFieldRGCC", VectorFIELDRGCC_VERSION);
@@ -105,8 +101,7 @@ VectorField* VectorFieldRGCC::clone()
     return scinew VectorFieldRGCC(*this);
 }
 
-} // End namespace Datatypes
-} // End namespace SCICore
+} // End namespace SCIRun
 
 
 

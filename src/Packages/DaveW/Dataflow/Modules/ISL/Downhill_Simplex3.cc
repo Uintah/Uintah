@@ -1,5 +1,5 @@
 /****************************************************************
- *  Simple "Downhill_Simplex3 module" for SCIRun                *
+ *  Simple "Downhill_Simplex3 module" for Dataflow                *
  *                                                              *
  *  Written by:                                                 *
  *   Leonid Zhukov                                              *
@@ -12,23 +12,23 @@
  *                                                              *
  ****************************************************************/
 
-#include <DaveW/ThirdParty/NumRec/amoeba.h>
-#include <DaveW/ThirdParty/NumRec/protozoa.h>
-#include <DaveW/ThirdParty/NumRec/nrutil.h>
-#include <PSECore/Dataflow/Module.h>
-#include <PSECore/Datatypes/ColumnMatrixPort.h>
-#include <PSECore/Datatypes/MatrixPort.h>
-#include <PSECore/Datatypes/MeshPort.h>
-#include <SCICore/Containers/String.h>
-#include <SCICore/Datatypes/DenseMatrix.h>
-#include <SCICore/Datatypes/SparseRowMatrix.h>
-#include <SCICore/Datatypes/SymSparseRowMatrix.h>
-#include <SCICore/Math/MusilRNG.h>
-#include <SCICore/TclInterface/TCLvar.h>
-#include <SCICore/Thread/Mutex.h>
-#include <SCICore/Thread/Parallel.h>
-#include <SCICore/Thread/Semaphore.h>
-#include <SCICore/Thread/Thread.h>
+#include <Packages/DaveW/Core/ThirdParty/NumRec/amoeba.h>
+#include <Packages/DaveW/Core/ThirdParty/NumRec/protozoa.h>
+#include <Packages/DaveW/Core/ThirdParty/NumRec/nrutil.h>
+#include <Dataflow/Network/Module.h>
+#include <Dataflow/Ports/ColumnMatrixPort.h>
+#include <Dataflow/Ports/MatrixPort.h>
+#include <Dataflow/Ports/MeshPort.h>
+#include <Core/Containers/String.h>
+#include <Core/Datatypes/DenseMatrix.h>
+#include <Core/Datatypes/SparseRowMatrix.h>
+#include <Core/Datatypes/SymSparseRowMatrix.h>
+#include <Core/Math/MusilRNG.h>
+#include <Core/TclInterface/TCLvar.h>
+#include <Core/Thread/Mutex.h>
+#include <Core/Thread/Parallel.h>
+#include <Core/Thread/Semaphore.h>
+#include <Core/Thread/Thread.h>
 #include <iostream>
 using std::cerr;
 using std::endl;
@@ -36,18 +36,8 @@ using std::endl;
 #include <math.h>
 
 namespace DaveW {
-namespace Modules {
+using namespace SCIRun;
 
-using namespace PSECore::Dataflow;
-using namespace PSECore::Datatypes;
-using namespace SCICore::Containers;
-using namespace SCICore::Geometry;
-using namespace SCICore::TclInterface;
-
-using SCICore::Thread::Mutex;
-using SCICore::Thread::Parallel;
-using SCICore::Thread::Semaphore;
-using SCICore::Thread::Thread;
 
 // these static variables are necessary b/c NumRec needs a pointer
 // to a static function (error_eval) in Amoeba.  the variables
@@ -1046,15 +1036,7 @@ void Downhill_Simplex3::tcl_command(TCLArgs& args, void* userdata) {
         Module::tcl_command(args, userdata);
     }
 }
-//---------------------------------------------------------------
-} // End namespace Modules
 } // End namespace DaveW
+//---------------------------------------------------------------
 
 
-//
-// $Log$
-// Revision 1.1  2000/10/29 04:02:47  dmw
-// cleaning up DaveW tree
-//
-//
-//

@@ -22,9 +22,7 @@
 /*                                                                           */
 /*+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
-//
 //          Basic vector class (int precision)
-//
 
 
                                  
@@ -59,7 +57,6 @@ MV_Vector_int::MV_Vector_int(unsigned int n, const int& v) :
 }
 
 // operators and member functions
-//
 
 
 MV_Vector_int& MV_Vector_int::operator=(const int & m) 
@@ -232,7 +229,6 @@ MV_Vector_int MV_Vector_int::operator()(const MV_VecIndex &I)
     else
     {
     // check that index is not out of bounds
-    //
         if ( I.end() >= dim_)
         {
             cerr << "MV_VecIndex: (" << I.start() << ":" << I.end() << 
@@ -248,7 +244,6 @@ MV_Vector_int MV_Vector_int::operator()(const MV_VecIndex &I)
 const MV_Vector_int MV_Vector_int::operator()(const MV_VecIndex &I) const
 {
     // check that index is not out of bounds
-    //
     if (I.all())
         return MV_Vector_int(p_, dim_, MV_Vector_::ref);
     else

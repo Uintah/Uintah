@@ -1,7 +1,4 @@
-#
 # Makefile fragment for this subdirectory
-# $Id$
-#
 
 SRCDIR   := tools/sidl
 SIDL_SRCDIR := $(SRCDIR)
@@ -37,19 +34,9 @@ $(SRCDIR)/parser.h: $(SRCDIR)/parser.y
 # parser.cc and parser.h at the same time
 $(SRCDIR)/parser.cc: $(SRCDIR)/parser.h
 
-SIDL_BUILTINS := $(SRCTOP_ABS)/Component/CIA/
+SIDL_BUILTINS := $(SRCTOP_ABS)/Core/CCA/Component/CIA/
 CFLAGS_SIDLMAIN   := $(CFLAGS) -DSIDL_BUILTINS=\"$(SIDL_BUILTINS)\"
 
 $(SRCDIR)/main.o:	$(SRCDIR)/main.cc
 	$(CXX) $(CFLAGS_SIDLMAIN) $(INCLUDES) $(CC_DEPEND_REGEN) -c $< -o $@
 
-#
-# $Log$
-# Revision 1.2  2000/03/20 19:39:42  sparker
-# Added VPATH support
-#
-# Revision 1.1  2000/03/17 09:31:20  sparker
-# New makefile scheme: sub.mk instead of Makefile.in
-# Use XML-based files for module repository
-# Plus many other changes to make these two things work
-#

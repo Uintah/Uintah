@@ -1,6 +1,4 @@
-#
 # Makefile for sparselb src
-#
 
 SHELL = /bin/sh
 

@@ -1,4 +1,3 @@
-//static char *id="@(#) $Id$";
 
 /*
  *  Pixel.cc: Generate Pixel points in a domain
@@ -12,11 +11,9 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <DaveW/Datatypes/CS684/Pixel.h>
+#include <Packages/DaveW/Core/Datatypes/CS684/Pixel.h>
 
 namespace DaveW {
-namespace Datatypes {
-
 Pixel::Pixel()
 {
 }
@@ -40,10 +37,7 @@ Pixel::~Pixel() {
 
 void Pio(Piostream& stream, Pixel& p)
 {
-    using SCICore::PersistentSpace::Pio;
-    using SCICore::Containers::Pio;
-    using SCICore::GeomSpace::Pio;
-    using SCICore::Geometry::Pio;
+using namespace SCIRun;
     using DaveW::Datatypes::Pio;
 
     stream.begin_cheap_delim();
@@ -57,19 +51,6 @@ void Pio(Piostream& stream, Pixel& p)
     Pio(stream, p.c);
     stream.end_cheap_delim();
 }
-
-} // End namespace Datatypes
 } // End namespace DaveW
 
-//
-// $Log$
-// Revision 1.2  1999/09/08 02:26:17  sparker
-// Various #include cleanups
-//
-// Revision 1.1  1999/08/23 02:52:56  dmw
-// Dave's Datatypes
-//
-// Revision 1.2  1999/05/03 04:52:01  dmw
-// Added and updated DaveW Datatypes/Modules
-//
-//
+

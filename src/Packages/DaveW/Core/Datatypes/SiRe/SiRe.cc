@@ -1,4 +1,3 @@
-//static char *id="@(#) $Id$";
 
 /*
  *  SiRe.cc: The SiRe classes - derived from VoidStar
@@ -12,10 +11,10 @@
  *  Copyright (C) 1997 SCI Group
  */
 
-#include <DaveW/Datatypes/SiRe/SiRe.h>
-#include <SCICore/Containers/String.h>
-#include <SCICore/Malloc/Allocator.h>
-#include <SCICore/Math/MinMax.h>
+#include <Packages/DaveW/Core/Datatypes/SiRe/SiRe.h>
+#include <Core/Containers/String.h>
+#include <Core/Malloc/Allocator.h>
+#include <Core/Math/MinMax.h>
 
 #include <iostream>
 using std::cerr;
@@ -23,9 +22,7 @@ using std::cerr;
 // Here's the code for the SiReData
 
 namespace DaveW {
-namespace Datatypes {
-
-using namespace SCICore::PersistentSpace;
+using namespace SCIRun;
 
 static Persistent* make_SiReData()
 {
@@ -115,7 +112,6 @@ void SiReData::io(Piostream& stream) {
 }
 
 void Pio(Piostream& stream, SIRE_DIRINFO& d) {
-    using SCICore::PersistentSpace::Pio;
 
     stream.begin_cheap_delim();
     Pio(stream, d.Read);	
@@ -125,7 +121,6 @@ void Pio(Piostream& stream, SIRE_DIRINFO& d) {
 }
 
 void Pio(Piostream& stream, SIRE_FLAGS& f) {
-    using SCICore::PersistentSpace::Pio;
     using DaveW::Datatypes::Pio;
 
     stream.begin_cheap_delim();
@@ -163,7 +158,6 @@ void Pio(Piostream& stream, SIRE_FLAGS& f) {
 }
     
 void Pio(Piostream& stream, SIRE_IMGINFO& i) {
-    using SCICore::PersistentSpace::Pio;
 
     stream.begin_cheap_delim();
     Pio(stream, i.RawImgDC);
@@ -175,7 +169,6 @@ void Pio(Piostream& stream, SIRE_IMGINFO& i) {
 }
 
 void Pio(Piostream& stream, SIRE_FILTERINFO& f) {
-    using SCICore::PersistentSpace::Pio;
     using DaveW::Datatypes::Pio;
 
     stream.begin_cheap_delim();
@@ -185,7 +178,6 @@ void Pio(Piostream& stream, SIRE_FILTERINFO& f) {
 }
 
 void Pio(Piostream& stream, SIRE_SIGNA_IMGINFO& s) {
-    using SCICore::PersistentSpace::Pio;
     using DaveW::Datatypes::Pio;
 
     stream.begin_cheap_delim();
@@ -208,9 +200,8 @@ void Pio(Piostream& stream, SIRE_SIGNA_IMGINFO& s) {
     stream.end_cheap_delim();
 }
 
-void Pio(Piostream& stream, DaveW::Datatypes::SiReDataS& s)
+void Pio(Piostream& stream, Packages/DaveW::Datatypes::SiReDataS& s)
 {
-    using SCICore::PersistentSpace::Pio;
     using DaveW::Datatypes::Pio;
 
     stream.begin_cheap_delim();
@@ -268,24 +259,6 @@ void Pio(Piostream& stream, DaveW::Datatypes::SiReDataS& s)
 //    Pio(stream, s.Filter);
     stream.end_cheap_delim();
 }
-
-} // End namespace Datatypes
 } // End namespace DaveW
 
-//
-// $Log$
-// Revision 1.3  1999/10/07 02:06:22  sparker
-// use standard iostreams and complex type
-//
-// Revision 1.2  1999/08/29 00:46:35  sparker
-// Integrated new thread library
-// using statement tweaks to compile with both MipsPRO and g++
-// Thread library bug fixes
-//
-// Revision 1.1  1999/08/23 02:53:02  dmw
-// Dave's Datatypes
-//
-// Revision 1.2  1999/05/03 04:52:06  dmw
-// Added and updated DaveW Datatypes/Modules
-//
-//
+

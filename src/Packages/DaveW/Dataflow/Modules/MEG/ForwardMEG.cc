@@ -12,37 +12,32 @@
 
 
 
-#include <DaveW/Datatypes/General/VectorFieldMI.h>
-#include <SCICore/Math/Trig.h>
-#include <SCICore/Geometry/Point.h>
-#include <SCICore/Containers/Array1.h>
-#include <PSECore/Dataflow/Module.h>
-#include <PSECore/Datatypes/VectorFieldPort.h>
-#include <PSECore/Datatypes/ScalarFieldPort.h>
-#include <PSECore/Datatypes/MeshPort.h>
-#include <SCICore/Datatypes/Mesh.h>
-#include <SCICore/Datatypes/VectorFieldRG.h>
-#include <SCICore/Datatypes/VectorFieldUG.h>
-#include <SCICore/Datatypes/ScalarField.h>
-#include <SCICore/Datatypes/ScalarFieldUG.h>
-#include <PSECore/Datatypes/MatrixPort.h>
-#include <SCICore/Datatypes/DenseMatrix.h>
-#include <SCICore/Datatypes/ColumnMatrix.h>
-#include <SCICore/Datatypes/Matrix.h>
-#include <PSECore/Datatypes/ColumnMatrixPort.h>
-#include <SCICore/Thread/Parallel.h>
-#include <SCICore/Thread/Thread.h>
-#include <SCICore/Thread/Mutex.h>
+#include <Packages/DaveW/Core/Datatypes/General/VectorFieldMI.h>
+#include <Core/Math/Trig.h>
+#include <Core/Geometry/Point.h>
+#include <Core/Containers/Array1.h>
+#include <Dataflow/Network/Module.h>
+#include <Dataflow/Ports/VectorFieldPort.h>
+#include <Dataflow/Ports/ScalarFieldPort.h>
+#include <Dataflow/Ports/MeshPort.h>
+#include <Core/Datatypes/Mesh.h>
+#include <Core/Datatypes/VectorFieldRG.h>
+#include <Core/Datatypes/VectorFieldUG.h>
+#include <Core/Datatypes/ScalarField.h>
+#include <Core/Datatypes/ScalarFieldUG.h>
+#include <Dataflow/Ports/MatrixPort.h>
+#include <Core/Datatypes/DenseMatrix.h>
+#include <Core/Datatypes/ColumnMatrix.h>
+#include <Core/Datatypes/Matrix.h>
+#include <Dataflow/Ports/ColumnMatrixPort.h>
+#include <Core/Thread/Parallel.h>
+#include <Core/Thread/Thread.h>
+#include <Core/Thread/Mutex.h>
 
 namespace DaveW {
-namespace Modules {
 
-
-using namespace PSECore::Dataflow;
-using namespace PSECore::Datatypes;
-using namespace SCICore::Geometry;
+using namespace SCIRun;
 using namespace DaveW::Datatypes;
-using namespace SCICore::Thread;
 
 class ForwardMEG : public Module {
   VectorFieldIPort* electricFieldP;
@@ -308,6 +303,5 @@ Vector ForwardMEG::mult(Array1<double> matrix, Vector elemField) {
   return(Vector(matrix[0]*elemField.x()+matrix[1]*elemField.y()+matrix[2]*elemField.z(),matrix[1]*elemField.x()+matrix[3]*elemField.y()+matrix[4]*elemField.z(),matrix[2]*elemField.x()+matrix[4]*elemField.y()+matrix[5]*elemField.z()));
 
 }
- 
-} // End namespace Modules
 } // End namespace DaveW
+ 

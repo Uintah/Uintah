@@ -1,10 +1,8 @@
-#
 # Makefile fragment for this subdirectory
-#
 
 include $(SRCTOP)/scripts/smallso_prologue.mk
 
-SRCDIR   := PSECore/Datatypes
+SRCDIR   := Dataflow/Ports
 
 SRCS     += $(SRCDIR)/AttribPort.cc               \
             $(SRCDIR)/BooleanPort.cc              \
@@ -37,9 +35,9 @@ SRCS     += $(SRCDIR)/AttribPort.cc               \
             $(SRCDIR)/templates.cc
 
 
-PSELIBS := PSECore/Dataflow PSECore/Comm SCICore/Containers \
-	SCICore/Thread SCICore/Geom SCICore/Geometry SCICore/Exceptions \
-	SCICore/Persistent SCICore/Datatypes
+PSELIBS := Dataflow/Network Dataflow/Comm Core/Containers \
+	Core/Thread Core/Geom Core/Geometry Core/Exceptions \
+	Core/Persistent Core/Datatypes
 LIBS := 
 
 include $(SRCTOP)/scripts/smallso_epilogue.mk

@@ -26,21 +26,15 @@
 #include <GL/glx.h>
 
 #include <sci_config.h>
-#include <SCICore/Geometry/Vector.h>
-#include <SCICore/Geometry/Point.h>
+#include <Core/Geometry/Vector.h>
+#include <Core/Geometry/Point.h>
 
-namespace PSECommon {
-  namespace Modules {
-    class Roe;
-  }
+namespace SCIRun {
+  class Roe;
 }
 
-namespace SCICore {
-namespace GeomSpace {
+namespace SCIRun {
 
-using PSECommon::Modules::Roe;
-using SCICore::Geometry::Vector;
-using SCICore::Geometry::Point;
 
 class Material;
 
@@ -113,8 +107,7 @@ public:
     void reset();
 };
 
-} // End namespace GeomSpace
-} // End namespace SCICore
+} // End namespace SCIRun
 
 
 #endif /* SCI_Geom_GeomOpenGL_h */

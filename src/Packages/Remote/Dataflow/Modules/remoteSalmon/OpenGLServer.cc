@@ -10,12 +10,10 @@
  *  Copyright (C) 2000 SCI Group
  */
 
-#include <Remote/Modules/remoteSalmon/OpenGLServer.h>
+#include <Packages/Remote/Dataflow/Modules/remoteSalmon/OpenGLServer.h>
 
 namespace Remote {
-namespace Modules {
-
-using SCICore::Containers::Array1;
+using namespace SCIRun;
 using Remote::Tools::DtoR;
 using Remote::Tools::RtoD;
 
@@ -307,6 +305,5 @@ void OpenGLServer::getGLState(int which) {
   
   TCLTask::unlock();
 }
+} // End namespace Remote
 
-} // namespace Modules
-} // namespace Remote

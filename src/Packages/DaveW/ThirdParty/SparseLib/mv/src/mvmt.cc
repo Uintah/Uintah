@@ -22,9 +22,7 @@
 /*                                                                           */
 /*+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
-//
 //          Basic matrix class ($TYPE precision)
-//
 
 #include "$INCLUDE"
 
@@ -76,7 +74,6 @@ MV_ColMat_$TYPE& MV_ColMat_$TYPE::operator=(const $TYPE & s)
     {
     // this should run much faster than the just accessing each (i,j)
     // element individually 
-    //
 
         MV_VecIndex I(0,M-1);
         for (int j=0; j<N; j++)
@@ -202,7 +199,6 @@ MV_ColMat_$TYPE::MV_ColMat_$TYPE($TYPE* d, unsigned int m, unsigned int n,
 MV_ColMat_$TYPE MV_ColMat_$TYPE::operator()(const MV_VecIndex &I, const MV_VecIndex &J)
 {
     // check that index is not out of bounds
-    //
     if (I.end() >= dim0_  || J.end() >= dim1_)
     {
         cerr << "Matrix index: (" << I.start() << ":" << I.end()  
@@ -213,7 +209,6 @@ MV_ColMat_$TYPE MV_ColMat_$TYPE::operator()(const MV_VecIndex &I, const MV_VecIn
     }
 
     // this automatically returns a reference
-    // 
     return MV_ColMat_$TYPE(&v_[J.start()*lda_ + I.start()], 
             I.end() - I.start() + 1, 
             J.end() - J.start() + 1, lda_, MV_Matrix_::ref);
@@ -226,7 +221,6 @@ const MV_ColMat_$TYPE MV_ColMat_$TYPE::operator()(const MV_VecIndex &I,
     cerr << "Const operator()(MV_VecIndex, MV_VecIndex) called " << endl;
 
     // check that index is not out of bounds
-    //
     if (I.end() >= dim0_  || J.end() >= dim1_)
     {
         cerr << "Matrix index: (" << I.start() << ":" << I.end()  
@@ -239,7 +233,6 @@ const MV_ColMat_$TYPE MV_ColMat_$TYPE::operator()(const MV_VecIndex &I,
     // this automatically returns a reference.  we need to 
     // "cast away" constness here, so the &v_[] arg will
     // not cause a compiler error.
-    //
     MV_ColMat_$TYPE *t =  (MV_ColMat_$TYPE*) this;
     return MV_ColMat_$TYPE(&(t->v_[J.start()*lda_ + I.start()]), 
             I.end() - I.start() + 1, 

@@ -1,4 +1,3 @@
-//static char *id="@(#) $Id$";
 
 /*
  *  Image.cc
@@ -14,12 +13,11 @@
  */
 
 
-#include <SCICore/Datatypes/Image.h>
-#include <SCICore/Persistent/Persistent.h>
-#include <SCICore/Containers/String.h>
+#include <Core/Datatypes/Image.h>
+#include <Core/Persistent/Persistent.h>
+#include <Core/Containers/String.h>
 
-namespace SCICore {
-namespace Datatypes {
+namespace SCIRun {
 
 PersistentTypeID Image::type_id("Image", "Datatype", 0);
 
@@ -136,27 +134,5 @@ float Image::max_abs()
     return max;
 }
 
-} // End namespace Datatypes
-} // End namespace SCICore
+} // End namespace SCIRun
 
-//
-// $Log$
-// Revision 1.3  1999/08/25 03:48:33  sparker
-// Changed SCICore/CoreDatatypes to SCICore/Datatypes
-// Changed PSECore/CommonDatatypes to PSECore/Datatypes
-// Other Misc. directory tree updates
-//
-// Revision 1.2  1999/08/17 06:38:46  sparker
-// Merged in modifications from PSECore to make this the new "blessed"
-// version of SCIRun/Uintah.
-//
-// Revision 1.1  1999/07/27 16:56:21  mcq
-// Initial commit
-//
-// Revision 1.1  1999/04/25 04:07:07  dav
-// Moved files into Datatypes
-//
-// Revision 1.1.1.1  1999/04/24 23:12:49  dav
-// Import sources
-//
-//

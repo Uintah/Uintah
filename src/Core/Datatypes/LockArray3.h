@@ -14,22 +14,14 @@
 #ifndef SCI_Datatypes_Array3_h
 #define SCI_Datatypes_Array3_h 1
 
-#include <SCICore/Util/Assert.h>
-#include <SCICore/Datatypes/Datatype.h>
+#include <Core/Util/Assert.h>
+#include <Core/Datatypes/Datatype.h>
 #include <iostream>
 
-namespace SCICore {
-namespace Datatypes {
+namespace SCIRun {
 
-using SCICore::PersistentSpace::Piostream;
-using SCICore::PersistentSpace::PersistentTypeID;
-
-template<class T>
-class LockArray3;
-template<class T>
-void Pio(Piostream& stream, SCICore::Datatypes::LockArray3<T>& data);
-template<class T>
-void Pio(Piostream& stream, SCICore::Datatypes::LockArray3<T>*& data);
+template<class T> class LockArray3;
+template<class T> void Pio(Piostream& stream, LockArray3<T>& data);
 
 template<class T>
 class LockArray3:public Datatype {
@@ -70,24 +62,18 @@ public:
     static PersistentTypeID type_id;
 };
 
-} // End namespace Datatypes
-} // End namespace SCICore
+} // End namespace SCIRun
 
 ////////////////////////////////////////////////////////////
-//
 // Start of included LockArray3.cc
-//
 
-#include <SCICore/Datatypes/LockArray3.h>
-#include <SCICore/Containers/String.h>
-#include <SCICore/Malloc/Allocator.h>
+#include <Core/Datatypes/LockArray3.h>
+#include <Core/Containers/String.h>
+#include <Core/Malloc/Allocator.h>
 
-#include <SCICore/Geometry/Point.h>
+#include <Core/Geometry/Point.h>
 
-namespace SCICore {
-namespace Datatypes {
-
-using SCICore::Geometry::Point;
+namespace SCIRun {
 
 template<class T>
 LockArray3<T>::LockArray3()
@@ -200,7 +186,7 @@ void LockArray3<T>::io(Piostream&)
 #define LockArray3_VERSION 1
 
 template<class T>
-void Pio(Piostream& stream, SCICore::Datatypes::LockArray3<T>& data)
+void Pio(Piostream& stream, LockArray3<T>& data)
 {
     /*int version=*/stream.begin_class("LockArray3", LockArray3_VERSION);
     if(stream.reading()){
@@ -226,56 +212,14 @@ void Pio(Piostream& stream, SCICore::Datatypes::LockArray3<T>& data)
 }
 
 template<class T>
-void Pio(Piostream& stream, SCICore::Datatypes::LockArray3<T>*& data) {
+void Pio(Piostream& stream, LockArray3<T>*& data) {
     if (stream.reading()) {
 	data=scinew LockArray3<T>;
     }
     Pio(stream, *data);
 }
 
-} // End namespace Datatypes
-} // End namespace SCICore
+} // End namespace SCIRun
 
-//
-// $Log$
-// Revision 1.6  1999/10/07 02:07:32  sparker
-// use standard iostreams and complex type
-//
-// Revision 1.5  1999/08/30 20:19:27  sparker
-// Updates to compile with -LANG:std on SGI
-// Other linux/irix porting oscillations
-//
-// Revision 1.4  1999/08/25 03:48:34  sparker
-// Changed SCICore/CoreDatatypes to SCICore/Datatypes
-// Changed PSECore/CommonDatatypes to PSECore/Datatypes
-// Other Misc. directory tree updates
-//
-// Revision 1.3  1999/08/19 23:18:04  sparker
-// Removed a bunch of #include <SCICore/Util/NotFinished.h> statements
-// from files that did not need them.
-//
-// Revision 1.2  1999/08/17 06:38:47  sparker
-// Merged in modifications from PSECore to make this the new "blessed"
-// version of SCIRun/Uintah.
-//
-// Revision 1.1  1999/07/27 16:56:22  mcq
-// Initial commit
-//
-// Revision 1.4  1999/07/07 21:10:38  dav
-// added beginnings of support for g++ compilation
-//
-// Revision 1.3  1999/05/06 19:55:48  dav
-// added back .h files
-//
-// Revision 1.1  1999/05/05 21:04:40  dav
-// added SCICore .h files to /include directories
-//
-// Revision 1.1  1999/04/25 04:07:08  dav
-// Moved files into Datatypes
-//
-// Revision 1.1.1.1  1999/04/24 23:12:51  dav
-// Import sources
-//
-//
 
 #endif

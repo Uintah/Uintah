@@ -1,17 +1,15 @@
 #ifndef _Z_image_h
 #define _Z_image_h
 
-#include <Remote/Tools/Image/Image.h>
-#include <Remote/Tools/Util/Utils.h>
-#include <Remote/Tools/Math/MiscMath.h>
+#include <Packages/Remote/Tools/Image/Image.h>
+#include <Packages/Remote/Tools/Util/Utils.h>
+#include <Packages/Remote/Tools/Math/MiscMath.h>
 
 #include <iostream>
 #include <fstream>
 using namespace std;
 
 namespace Remote {
-namespace Tools {
-
 class ZImage : public Image
 {
 public:
@@ -161,8 +159,7 @@ public:
 #endif
 };
 
+} // End namespace Remote
 
-} // namespace Tools
-} // namespace Remote
 
 #endif

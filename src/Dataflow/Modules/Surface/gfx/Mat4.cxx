@@ -105,10 +105,8 @@ real Mat4::cramerInverse(Mat4& inv) const
 // Matrix inversion code for 4x4 matrices.
 // Originally ripped off and degeneralized from Paul's matrix library
 // for the view synthesis (Chen) software.
-//
 // Returns determinant of a, and b=a inverse.
 // If matrix is singular, returns 0 and leaves trash in b.
-//
 // Uses Gaussian elimination with partial pivoting.
 
 #define SWAP(a, b, t)   {t = a; a = b; b = t;}

@@ -1,4 +1,3 @@
-//static char *id="@(#) $Id$";
 
 /*
  * Billboard.cc: Pts objects
@@ -12,14 +11,13 @@
  *  Copyright (C) 1997 SCI Group
  */
 
-#include <SCICore/Geom/GeomBillboard.h>
-#include <SCICore/Malloc/Allocator.h>
+#include <Core/Geom/GeomBillboard.h>
+#include <Core/Malloc/Allocator.h>
 #include <iostream>
 using std::cerr;
 using std::ostream;
 
-namespace SCICore {
-namespace GeomSpace {
+namespace SCIRun {
 
 Persistent* make_GeomBillboard()
 {
@@ -65,10 +63,9 @@ void GeomBillboard::get_bounds(BBox& box)
 
 void GeomBillboard::io(Piostream& stream)
 {
-    using SCICore::PersistentSpace::Pio;
 
     stream.begin_class("GeomBillboard", GEOMBBOXCACHE_VERSION);
-    GeomSpace::Pio(stream, child);
+    Pio(stream, child);
     stream.end_class();
 }
 
@@ -78,27 +75,6 @@ bool GeomBillboard::saveobj(ostream& out, const clString& format,
     return child->saveobj(out, format, saveinfo);
 }
 
-} // End namespace GeomSpace
-} // End namespace SCICore
+} // End namespace SCIRun
 
-//
-// $Log$
-// Revision 1.4  1999/10/07 02:07:40  sparker
-// use standard iostreams and complex type
-//
-// Revision 1.3  1999/08/17 23:50:18  sparker
-// Removed all traces of the old Raytracer and X11 renderers.
-// Also removed a .o and .d file
-//
-// Revision 1.2  1999/08/17 06:39:05  sparker
-// Merged in modifications from PSECore to make this the new "blessed"
-// version of SCIRun/Uintah.
-//
-// Revision 1.1  1999/07/27 16:56:37  mcq
-// Initial commit
-//
-// Revision 1.1.1.1  1999/04/24 23:12:19  dav
-// Import sources
-//
-//
 

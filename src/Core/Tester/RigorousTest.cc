@@ -1,4 +1,3 @@
-//static char *id="@(#) $Id$";
 
 /*
  *  RigorousTest.cc: ?
@@ -12,12 +11,11 @@
  *  Copyright (C) 199? SCI Group
  */
 
-#include <SCICore/Tester/RigorousTest.h>
+#include <Core/Tester/RigorousTest.h>
 #include <iostream>
 using std::cout;
 
-namespace SCICore {
-namespace Tester {
+namespace SCIRun {
 
 RigorousTest::RigorousTest(char* symname)
     : symname(symname)
@@ -74,22 +72,5 @@ int RigorousTest::get_ntests()
     return ntests;
 }
 
-} // End namespace Tester
-} // End namespace SCICore
+} // End namespace SCIRun
 
-//
-// $Log$
-// Revision 1.3  1999/10/07 02:08:05  sparker
-// use standard iostreams and complex type
-//
-// Revision 1.2  1999/08/17 06:39:47  sparker
-// Merged in modifications from PSECore to make this the new "blessed"
-// version of SCIRun/Uintah.
-//
-// Revision 1.1  1999/07/27 16:57:20  mcq
-// Initial commit
-//
-// Revision 1.1.1.1  1999/04/24 23:12:25  dav
-// Import sources
-//
-//

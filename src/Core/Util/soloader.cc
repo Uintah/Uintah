@@ -3,7 +3,7 @@
 #include <iostream>
 using std::cerr;
 using std::endl;
-#include <SCICore/Util/soloader.h>
+#include <Core/Util/soloader.h>
 
 LIBRARY_HANDLE explicitlyopenedhandles[3000];
 int numberofopenedhandles = 0;

@@ -1,14 +1,11 @@
 //////////////////////////////////////////////////////////////////////
 // Mesh.cpp - Represent a model as a mesh.
-//
 // David K. McAllister, August 1999.
 
 #include <stdio.h>
-#include <Remote/Tools/Model/Mesh.h>
+#include <Packages/Remote/Tools/Model/Mesh.h>
 
 namespace Remote {
-namespace Tools {
-
 //----------------------------------------------------------------------
 // Returns the index of this vertex. Creates it if necessary.
 Vertex *Mesh::FindVertex(const Vector &V, bool &AddedVert, const Vector *Color, const Vector *TexCoord)
@@ -474,7 +471,6 @@ void Mesh::FixFacing()
   for(F = Faces; F; F = F->next)
     FlipMe(F, F->v0, F->v1, F->v2);
 }
+} // End namespace Remote
 
-} // namespace Tools
-} // namespace Remote
 

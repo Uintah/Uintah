@@ -1,45 +1,29 @@
 #ifndef GLTEXTURE3D_H
 #define GLTEXTURE3D_H
 
-#include <SCICore/Datatypes/Datatype.h>
-#include <SCICore/Containers/LockingHandle.h>
-#include <SCICore/Containers/Array3.h>
-#include <SCICore/Datatypes/ScalarFieldRGBase.h>
-#include <SCICore/Geometry/Point.h>
-#include <SCICore/Geometry/BBox.h>
-#include <SCICore/Thread/Runnable.h>
+#include <Core/Datatypes/Datatype.h>
+#include <Core/Containers/LockingHandle.h>
+#include <Core/Containers/Array3.h>
+#include <Core/Datatypes/ScalarFieldRGBase.h>
+#include <Core/Geometry/Point.h>
+#include <Core/Geometry/BBox.h>
+#include <Core/Thread/Runnable.h>
 #include "Octree.h"
 #include <iostream>
 #include <deque>
 using std::deque;
 
-namespace SCICore{
-namespace GeomSpace{
-    class GLVolRenState;
-    class FullRes;
-    class ROI;
-    class LOS;
-  }
-namespace Thread{
+namespace SCIRun{
+  class GLVolRenState;
+  class FullRes;
+  class ROI;
+  class LOS;
   class Semaphore;
   class ThreadGroup;
-  }
 }
 
 namespace Kurt {
-namespace Datatypes {
-
-using SCICore::Datatypes::ScalarFieldRGBase;
-using SCICore::Datatypes::Datatype;
-using SCICore::Containers::LockingHandle;
-using SCICore::Containers::Array3;
-using SCICore::Geometry::Point;
-using SCICore::Geometry::BBox;
-using SCICore::PersistentSpace::Piostream;
-using SCICore::PersistentSpace::PersistentTypeID;
-using SCICore::Thread::Semaphore;
-using SCICore::Thread::Runnable;
-using SCICore::Thread::ThreadGroup;
+using namespace SCIRun;
 
 
 class Brick;
@@ -55,7 +39,7 @@ GENERAL INFORMATION
 
    GLTexture3D.h
 
-   Kurt Zimmerman
+   Packages/Kurt Zimmerman
    Department of Computer Science
    University of Utah
 
@@ -80,13 +64,13 @@ typedef LockingHandle<GLTexture3D> GLTexture3DHandle;
 
 class GLTexture3D : public Datatype {
   friend class GLTextureIterator;
-  friend class SCICore::GeomSpace::GLVolRenState;
+  friend class GLVolRenState;
   friend class FullResIterator;
-  friend class SCICore::GeomSpace::FullRes;
+  friend class FullRes;
   friend class LOSIterator;
-  friend class SCICore::GeomSpace::LOS;
+  friend class LOS;
   friend class ROIIterator;
-  friend class SCICore::GeomSpace::ROI;
+  friend class ROI;
 
 public:
   // GROUP: Constructors:
@@ -237,7 +221,6 @@ private:
 
   
 };
+} // End namespace Kurt
 
-} // end namespace Datatypes
-} // end namespace Kurt
 #endif

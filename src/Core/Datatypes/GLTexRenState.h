@@ -1,8 +1,7 @@
 #ifndef GLTEXRENSTATE_H
 #define GLTEXRENSTATE_H
 
-namespace SCICore {
-namespace GeomSpace  {
+namespace SCIRun {
 
 
 /**************************************
@@ -55,16 +54,13 @@ public:
   // postdrawing functions
   virtual void postDraw() = 0;
   //////////
-  // 
   //////////
-  // 
   //////////
-  // 
 protected:
 
   const GLVolumeRenderer* volren;
 };
 
-} // end namespace Datatypes
-} // end namespace SCICore
+} // End namespace SCIRun
+
 #endif

@@ -13,21 +13,22 @@
 #ifndef SCI_project_module_Roe_h
 #define SCI_project_module_Roe_h
 
-#include <SCICore/Containers/Array1.h>
-#include <PSECore/Comm/MessageBase.h>
-#include <SCICore/Geom/Color.h>
-#include <SCICore/Geom/GeomGroup.h>
-#include <SCICore/Geom/TCLGeom.h>
-#include <SCICore/Geom/TCLView.h>
-#include <SCICore/Geom/View.h>
-#include <SCICore/Geometry/BBox.h>
-#include <SCICore/Geometry/Transform.h>
-#include <SCICore/TclInterface/TCL.h>
-#include <SCICore/TclInterface/TCLvar.h>
-#include <PSECommon/Modules/Salmon/BallAux.h>
+#include <Core/Containers/Array1.h>
+#include <Core/Thread/FutureValue.h>
+#include <Dataflow/Comm/MessageBase.h>
+#include <Core/Geom/Color.h>
+#include <Core/Geom/GeomGroup.h>
+#include <Core/Geom/TCLGeom.h>
+#include <Core/Geom/TCLView.h>
+#include <Core/Geom/View.h>
+#include <Core/Geometry/BBox.h>
+#include <Core/Geometry/Transform.h>
+#include <Core/TclInterface/TCL.h>
+#include <Core/TclInterface/TCLvar.h>
+#include <Dataflow/Modules/Salmon/BallAux.h>
 
 // --  BAWGL -- 
-#include <PSECommon/Modules/Salmon/SCIBaWGL.h>
+#include <Dataflow/Modules/Salmon/SCIBaWGL.h>
 // --  BAWGL -- 
 
 #include <map.h>
@@ -55,51 +56,15 @@ inline Type clamp(const Type a,const Type b,const Type c) { return a > b ? (a <
 c ? a : c) : b ; }
 inline int  Sign (double a)             { return a > 0 ? 1 : a < 0 ? -1 : 0; }
 
-namespace SCICore {
-namespace GeomSpace {
+namespace SCIRun {
 class GeomObj;
 class GeomPick;
 class GeomSphere;
 struct DrawInfoOpenGL;
 class Light;
-}
-namespace Geometry {
 class Vector;
 class Transform;
-}
-namespace Thread {
-template<class T> class FutureValue;
-}
-}
-
-namespace PSECore {
-namespace Datatypes {
 struct GeometryData;
-}
-}
-
-namespace PSECommon {
-namespace Modules {
-
-using PSECore::Comm::MessageBase;
-using PSECore::Datatypes::GeometryData;
-
-using SCICore::GeomSpace::TCLColor;
-using SCICore::GeomSpace::TCLView;
-using SCICore::GeomSpace::View;
-using SCICore::GeomSpace::GeomGroup; 
-using SCICore::GeomSpace::GeomObj;
-using SCICore::GeomSpace::GeomPick;
-using SCICore::GeomSpace::GeomSphere;
-using SCICore::GeomSpace::DrawInfoOpenGL;
-using SCICore::Geometry::Vector;
-using SCICore::Geometry::Point;
-using SCICore::Geometry::BBox;
-using SCICore::Geometry::Transform;
-using SCICore::Containers::Array1;
-using SCICore::Thread::FutureValue;
-
-using namespace SCICore::TclInterface;
 
 class DBContext;
 class Renderer;
@@ -367,8 +332,7 @@ public:
   virtual ~RoeMouseMessage();
 };
 
-} // End namespace Modules
-} // End namespace PSECommon
+} // End namespace SCIRun
 
 
 

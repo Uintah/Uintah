@@ -1,23 +1,18 @@
 # Makefile.vc.master
-#
 # written by Chris Moulding 7/99
 
 
 
 
 ########################################################################################
-#
 # you shouldn't need to edit, or add anything to, this file
-#
 ########################################################################################
 
 
 
 
 ########################################################################################
-#
 # try to guess the architecture
-#
 
 !if !defined(PROCESSOR_ARCHITECTURE)||(("$(PROCESSOR_ARCHITECTURE)"!="x86")&&("$(PROCESSOR_ARCHITECTURE)"=="ALPHA"))
 !message ***
@@ -33,9 +28,7 @@
 
 
 ########################################################################################
-#
 # include the user specified build configuration
-#
 
 !include <$(TOP)\src\scripts\Makefile.vc.config>
 
@@ -43,9 +36,7 @@
 
 
 ########################################################################################
-#
 # set the command macros (with or without echo suppression)
-#
 
 !if ($(SILENT_ECHO))
 CC   = @cl
@@ -63,9 +54,7 @@ RM   = del
 
 
 ########################################################################################
-#
 # Set processor architecture specific flags
-#
 
 !if ("$(PROCESSOR_ARCHITECTURE)"=="x86")
 ARCHFLAGS        = -D_X86_
@@ -81,9 +70,7 @@ MACHINE          = -MACHINE:ALPHA
   
 
 ########################################################################################
-#
 # Set version (debug or release) specific flags
-#
 
 !if ("$(VERSION)"=="Debug")
 VERSION_CFLAGS   = -Zi -Od -GZ -MDd -DDEBUG
@@ -99,9 +86,7 @@ APPENDIX         =
 
 
 ########################################################################################
-#
 # Set SCI and 3rdParty specific flags
-#
 
 SCI_FLAGS        = -DTEMPLATE_TAG="" -DTEMPLATE_BOX="" -DSCI_NOMMAP_IO
 3RDPARTYFLAGS    = -DUSE_TCLALLOC=0 -DUSE_NATIVEMALLOC
@@ -110,9 +95,7 @@ SCI_FLAGS        = -DTEMPLATE_TAG="" -DTEMPLATE_BOX="" -DSCI_NOMMAP_IO
 
 
 ########################################################################################
-#
 # Concatenate all current flags with flags that will build .exe binaries
-#
 
 EXE_CFLAGS       = -c -nologo -D_MT -D_WIN32 -GX $(WARNING) $(ARCHFLAGS) $(VERSION_CFLAGS) $(SCI_FLAGS) $(3RDPARTYFLAGS)
 EXE_LFLAGS       = -nologo $(MACHINE) $(VERSION_LFLAGS)  
@@ -121,9 +104,7 @@ EXE_LFLAGS       = -nologo $(MACHINE) $(VERSION_LFLAGS)
 
 
 ########################################################################################
-#
 # Concatenate all current flags with flags that will build .dll binaries
-#
 
 DLL_CFLAGS       = $(EXE_CFLAGS) -D_DLL
 DLL_LFLAGS       = $(EXE_LFLAGS) -entry:_DllMainCRTStartup$(DLLENTRY) -DLL
@@ -132,10 +113,8 @@ DLL_LFLAGS       = $(EXE_LFLAGS) -entry:_DllMainCRTStartup$(DLLENTRY) -DLL
 
 
 ########################################################################################
-#
 # A dll's fullname is it's name (from the including Makefile.vc) plus a 'd' at the
 # end if it's a debug version
-#
 
 FULLDLLNAME = $(DLLNAME)$(APPENDIX)
 
@@ -143,10 +122,8 @@ FULLDLLNAME = $(DLLNAME)$(APPENDIX)
 
 
 ########################################################################################
-#
 # Make a target macro for either, or both, a .dll and .exe if the including Makefile.vc has
 # names for a .dll and/or a .exe
-#
 
 !if ("$(DLLNAME)"!="")
 ALLDLL = $(FULLDLLNAME).dll
@@ -166,24 +143,20 @@ ALL = $(ALLDLL) $(ALLEXE)
 
 
 ########################################################################################
-#
 # Set the library path to be the SCI defaults plus the 3rdParty paths indicated in Makefile.vc.config
-#
 
-SCILIBPATH = -LIBPATH:$(TOP)\src\SCICore\
-		     -LIBPATH:$(TOP)\src\PSECore\
-             -LIBPATH:$(TOP)\src\PSECommon\
-		     -LIBPATH:$(TOP)\src\SCIRun\
+SCILIBPATH = -LIBPATH:$(TOP)\src\Core\
+		     -LIBPATH:$(TOP)\src\Dataflow\
+             -LIBPATH:$(TOP)\src\Dataflow\
+		     -LIBPATH:$(TOP)\src\Dataflow\
 			 $(LIBPATH)
 
 
 
 
 ########################################################################################
-#
 # Set the libraries to be linked against to the SCI defaults plus those indicated
 # in the including Makefile.vc
-#
 
 SCILIBS    = OpenGL32.lib Glu32.lib\
              oncrpc.lib\
@@ -195,23 +168,19 @@ SCILIBS    = OpenGL32.lib Glu32.lib\
 
 
 ########################################################################################
-#
 # Set the include path to be the SCI defaults plus the paths indicated in Makefile.vc.config
-#
 
 SCIINCPATH = -I.\
              -I..\
 			 -I$(TOP)\src\
-			 -I$(TOP)\src\SCICore\Winfix\include\
+			 -I$(TOP)\src\Core\Winfix\include\
 			 $(INCPATH)
 
 
 
 
 ########################################################################################
-#
 # And finally, the description blocks
-#
 
 all: $(ALL)
 

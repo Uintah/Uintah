@@ -1,13 +1,10 @@
 //////////////////////////////////////////////////////////////////////
 // DownSimplex.cpp - Optimize the vector using Downhill Simplex.
-// 
 // Code is based on Numerical Recipes, ch. 10.
-//
 // Modifications Copyright 1999 by David K. McAllister.
-//
 //////////////////////////////////////////////////////////////////////
 
-#include <Remote/Tools/Math/DownSimplex.h>
+#include <Packages/Remote/Tools/Math/DownSimplex.h>
 
 #include <iostream>
 using namespace std;
@@ -18,8 +15,6 @@ using namespace std;
 #define NMAX 1000
 
 namespace Remote {
-namespace Tools {
-
 // Sum each dimension's coordinates.
 static inline HVector ComputePSum(HVector *p, int ndim)
 {
@@ -129,7 +124,6 @@ double DownSimplex(HVector *p, HVector &y, int ndim, double ftol,
 	
 	return ytry;
 }
+} // End namespace Remote
 
-} // namespace Tools
-} // namespace Remote
 

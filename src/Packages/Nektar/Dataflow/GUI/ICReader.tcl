@@ -1,10 +1,10 @@
 
-catch {rename ICNektarReader ""}
+catch {rename ICPackages/NektarReader ""}
 
-itcl_class Nektar_Readers_ICNektarReader {
+itcl_class Packages/Nektar_Readers_ICPackages/NektarReader {
     inherit Module
     constructor {config} {
-	set name ICNektarReader
+	set name ICPackages/NektarReader
 	set_defaults
     }
     method set_defaults {} {

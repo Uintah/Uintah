@@ -1,7 +1,6 @@
 
 /*
  *  array.h: CIA array classes
- *  $Id$
  *
  *  Written by:
  *   Steven G. Parker
@@ -12,12 +11,12 @@
  *  Copyright (C) 1999 SCI Group
  */
 
-#ifndef Component_CIA_array_h
-#define Component_CIA_array_h
+#ifndef Core/CCA/Component_CIA_array_h
+#define Core/CCA/Component_CIA_array_h
 
 #include <vector>
 
-namespace CIA {
+namespace SCIRun {
     template<class T> class array1 : public std::vector<T> {
     public:
 	array1() : std::vector<T>(0) {}
@@ -100,21 +99,7 @@ namespace CIA {
 	    }
 	}
     };
-}
+} // End namespace SCIRun
 
 #endif
 
-//
-// $Log$
-// Revision 1.3  2000/12/10 08:29:24  sparker
-// return *this in operator=
-//
-// Revision 1.2  1999/10/02 07:04:47  sparker
-// Implemented 2D arrays (still need work)
-//
-// Revision 1.1  1999/09/28 08:19:48  sparker
-// Implemented start of array class (only 1d currently)
-// Implement string class (typedef to std::string)
-// Updates to spec now that sidl support strings
-//
-//

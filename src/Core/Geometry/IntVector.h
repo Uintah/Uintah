@@ -15,11 +15,10 @@
 #define Geometry_IntVector_h
 
 #include <iosfwd>
-#include <SCICore/Math/MinMax.h>
-#include <SCICore/Geometry/Vector.h>
+#include <Core/Math/MinMax.h>
+#include <Core/Geometry/Vector.h>
 
-namespace SCICore {
-namespace Geometry {
+namespace SCIRun {
 
 class IntVector {
 public:
@@ -140,18 +139,15 @@ inline Vector operator/(const Vector& a, const IntVector& b) {
   return Vector(a.x()/b.x(), a.y()/b.y(), a.z()/b.z());
 }
 inline IntVector Min(const IntVector& a, const IntVector& b) {
-  using SCICore::Math::Min;
   return IntVector(Min(a.x(), b.x()), Min(a.y(), b.y()), Min(a.z(), b.z()));
 }
 inline IntVector Max(const IntVector& a, const IntVector& b) {
-  using SCICore::Math::Max;
   return IntVector(Max(a.x(), b.x()), Max(a.y(), b.y()), Max(a.z(), b.z()));
 }
 
-} // End namespace Geometry
-} // End namespace SCICore
+} // End namespace SCIRun
 
-std::ostream& operator<<(std::ostream&, const SCICore::Geometry::IntVector&);
+std::ostream& operator<<(std::ostream&, const SCIRun::IntVector&);
 
 
 #endif

@@ -14,24 +14,20 @@
 #ifndef SCI_CUBICPWI_H__
 #define SCI_CUBICPWI_H__
 
-#include <SCICore/Math/PiecewiseInterp.h>
+#include <Core/Math/PiecewiseInterp.h>
 
 
-#include <SCICore/share/share.h>
-#include <SCICore/Containers/Array1.h>
-#include <SCICore/Geometry/Point.h>
-#include <SCICore/Geometry/Vector.h>
+#include <Core/share/share.h>
+#include <Core/Containers/Array1.h>
+#include <Core/Geometry/Point.h>
+#include <Core/Geometry/Vector.h>
 
 #include <iostream>
 
-namespace SCICore {
-namespace Math {
+namespace SCIRun {
 
 enum EndCondition {natural_ends, clamped_ends, bessel_ends, quadratic_ends};
 
-using SCICore::Containers::Array1;
-using SCICore::Geometry::Point;
-using SCICore::Geometry::Vector;
 
 using std::cout;
 using std::endl;
@@ -227,8 +223,7 @@ Cubic3DPWI<T>::set_data(const Array1<double>& pts, const Array1<T>& vals,
   return data_valid;
 }
 
-} // Math 
-} // SCICore
+} // End namespace SCIRun
 
 #endif //SCI_CUBICPWI_H__
 

@@ -1,13 +1,13 @@
 /* share.h */
 
-#undef YardenSHARE
+#undef Packages/YardenSHARE
 
 #ifdef _WIN32
-  #if defined(BUILD_Yarden)
-    #define YardenSHARE __declspec(dllexport)
+  #if defined(BUILD_Packages/Yarden)
+    #define Packages/YardenSHARE __declspec(dllexport)
   #else
-    #define YardenSHARE __declspec(dllimport)
+    #define Packages/YardenSHARE __declspec(dllimport)
   #endif 
 #else 
-  #define YardenSHARE 
+  #define Packages/YardenSHARE 
 #endif 

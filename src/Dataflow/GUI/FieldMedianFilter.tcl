@@ -1,4 +1,4 @@
-itcl_class PSECommon_Fields_FieldMedianFilter {
+itcl_class Dataflow_Fields_FieldMedianFilter {
     inherit Module
     constructor {config} {
 	set name FieldMedianFilter

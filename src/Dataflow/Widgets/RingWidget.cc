@@ -1,4 +1,3 @@
-//static char *id="@(#) $Id$";
 
 /*
  *  RingWidget.cc
@@ -12,32 +11,23 @@
  *  Copyright (C) 1995 SCI Group
  */
 
-#include <PSECore/Widgets/RingWidget.h>
-#include <PSECore/Constraints/AngleConstraint.h>
-#include <PSECore/Constraints/DistanceConstraint.h>
-#include <PSECore/Constraints/RatioConstraint.h>
-#include <SCICore/Geom/GeomCylinder.h>
-#include <SCICore/Geom/GeomSphere.h>
-#include <SCICore/Geom/GeomGroup.h>
-#include <SCICore/Geom/GeomTorus.h>
-#include <SCICore/Geometry/Plane.h>
-#include <SCICore/Malloc/Allocator.h>
-#include <SCICore/Math/Expon.h>
-#include <SCICore/Math/Trig.h>
-#include <PSECore/Dataflow/Module.h>
+#include <Dataflow/Widgets/RingWidget.h>
+#include <Dataflow/Constraints/AngleConstraint.h>
+#include <Dataflow/Constraints/DistanceConstraint.h>
+#include <Dataflow/Constraints/RatioConstraint.h>
+#include <Core/Geom/GeomCylinder.h>
+#include <Core/Geom/GeomSphere.h>
+#include <Core/Geom/GeomGroup.h>
+#include <Core/Geom/GeomTorus.h>
+#include <Core/Geometry/Plane.h>
+#include <Core/Malloc/Allocator.h>
+#include <Core/Math/Expon.h>
+#include <Core/Math/Trig.h>
+#include <Dataflow/Network/Module.h>
 
-namespace PSECore {
-namespace Widgets {
+namespace SCIRun {
 
-using SCICore::GeomSpace::GeomGroup;
-using SCICore::GeomSpace::GeomSphere;
-using SCICore::GeomSpace::GeomTorus;
-using SCICore::GeomSpace::GeomCylinder;
-using SCICore::GeomSpace::GeomCappedCylinder;
-using SCICore::Geometry::Cross;
-using SCICore::Geometry::Plane;
 
-using namespace PSECore::Constraints;
 
 const Index NumCons = 6;
 const Index NumVars = 8;
@@ -536,20 +526,6 @@ RingWidget::GetMaterialName( const Index mindex ) const
    }
 }
 
-} // End namespace Widgets
-} // End namespace PSECore
+} // End namespace SCIRun
 
-//
-// $Log$
-// Revision 1.2  1999/08/17 06:38:31  sparker
-// Merged in modifications from PSECore to make this the new "blessed"
-// version of SCIRun/Uintah.
-//
-// Revision 1.1  1999/07/27 16:56:08  mcq
-// Initial commit
-//
-// Revision 1.1.1.1  1999/04/24 23:12:29  dav
-// Import sources
-//
-//
 

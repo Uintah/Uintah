@@ -19,10 +19,9 @@
 #pragma interface
 #endif
 
-#include <SCICore/Containers/Array1.h>
+#include <Core/Containers/Array1.h>
 
-namespace SCICore {
-namespace Containers {
+namespace SCIRun {
 
 template<class T> class Ring {
     Array1<T> data;
@@ -41,17 +40,6 @@ public:
     inline void swap(T item) {int i=(_tail-1)%_size; T tmp=data[i]; data[i]=item; data[_tail]=tmp; _tail=(_tail+1)%_size;}
 };
 
-} // End namespace Containers
-} // End namespace SCICore
-
-////////////////////////////////////////////////////////////
-//
-// Start of included Ring.cc
-//
-
-namespace SCICore {
-namespace Containers {
-
 template<class T> Ring<T>::Ring(int s)
 : _head(0), _tail(0), _size(s)
 {
@@ -62,27 +50,7 @@ template<class T> Ring<T>::~Ring()
 {
 }
 
-} // End namespace Containers
-} // End namespace SCICore
+} // End namespace SCIRun
 
-//
-// $Log$
-// Revision 1.2  1999/08/17 06:38:37  sparker
-// Merged in modifications from PSECore to make this the new "blessed"
-// version of SCIRun/Uintah.
-//
-// Revision 1.1  1999/07/27 16:56:14  mcq
-// Initial commit
-//
-// Revision 1.3  1999/05/06 19:55:44  dav
-// added back .h files
-//
-// Revision 1.1  1999/05/05 21:04:33  dav
-// added SCICore .h files to /include directories
-//
-// Revision 1.1.1.1  1999/04/24 23:12:26  dav
-// Import sources
-//
-//
 
 #endif

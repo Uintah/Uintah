@@ -1,21 +1,19 @@
 // Domain.h - Manages sets of Attributes and Geometries
-//
 //  Written by:
 //   Eric Kuehne
 //   Department of Computer Science
 //   University of Utah
 //   April 2000
-//
 //  Copyright (C) 2000 SCI Institute
 
 #ifndef SCI_project_Domain_h
 #define SCI_project_Domain_h 1
 
-#include <SCICore/Datatypes/Field.h>
-#include <SCICore/Datatypes/Datatype.h>
-#include <SCICore/Containers/LockingHandle.h>
-#include <SCICore/Datatypes/Geom.h>
-#include <SCICore/Datatypes/Attrib.h>
+#include <Core/Datatypes/Field.h>
+#include <Core/Datatypes/Datatype.h>
+#include <Core/Containers/LockingHandle.h>
+#include <Core/Datatypes/Geom.h>
+#include <Core/Datatypes/Attrib.h>
 
 
 
@@ -23,14 +21,10 @@
 #include <map>
 #include <string>
 
-namespace SCICore{
-namespace Datatypes{
+namespace SCIRun {
 
-using SCICore::Containers::LockingHandle;
 using std::vector;
 using std::string;
-using SCICore::PersistentSpace::Piostream;
-using SCICore::PersistentSpace::PersistentTypeID;
 
 class Domain;
 typedef LockingHandle<Domain> DomainHandle;
@@ -73,6 +67,5 @@ public:
   static PersistentTypeID type_id;
 };
 
-} // end namespace datatype
-} // end namespace scicore
+} // End namespace SCIRun
 #endif

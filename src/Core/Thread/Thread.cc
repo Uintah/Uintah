@@ -11,12 +11,12 @@
  *  Copyright (C) 1997 SCI Group
  */
 
-#include <SCICore/Thread/Thread.h>
-#include <SCICore/Exceptions/Exception.h>
-#include <SCICore/Thread/Parallel.h>
-#include <SCICore/Thread/Runnable.h>
-#include <SCICore/Thread/ThreadError.h>
-#include <SCICore/Thread/ThreadGroup.h>
+#include <Core/Thread/Thread.h>
+#include <Core/Exceptions/Exception.h>
+#include <Core/Thread/Parallel.h>
+#include <Core/Thread/Runnable.h>
+#include <Core/Thread/ThreadError.h>
+#include <Core/Thread/ThreadGroup.h>
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -33,13 +33,8 @@
 
 #define THREAD_DEFAULT_STACKSIZE 64*1024*2
 
-using SCICore::Thread::ParallelBase;
-using SCICore::Thread::Runnable;
-using SCICore::Thread::Thread;
-using SCICore::Thread::ThreadGroup;
 
-namespace SCICore {
-namespace Thread {
+namespace SCIRun {
 
 class ParallelHelper : public Runnable {
   const ParallelBase* helper;
@@ -53,11 +48,6 @@ public:
     cheat->run(proc);
   }
 };
-
-}
-}
-
-using SCICore::Thread::ParallelHelper;
 
 Thread::~Thread()
 {
@@ -89,7 +79,7 @@ Thread::run_body()
 	fprintf(stderr, "Caught unhandled Thread error:\n%s\n",
 		e.message());
 	Thread::niceAbort();
-    } catch(const SCICore::Exceptions::Exception& e){
+    } catch(const Exception& e){
 	fprintf(stderr, "Caught unhandled exception:\n%s\n",
 		e.message());
 	Thread::niceAbort();
@@ -367,3 +357,5 @@ Thread::getStateString(ThreadState state)
     return "UNKNOWN";
   }
 }
+
+} // End namespace SCIRun

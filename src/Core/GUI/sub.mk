@@ -1,8 +1,6 @@
-#
 # Makefile fragment for this subdirectory
-#
 
-SRCDIR := SCICore/GUI
+SRCDIR := Core/GUI
 
 ALLTARGETS := $(ALLTARGETS) $(SRCDIR)/tclIndex
 
@@ -17,7 +15,7 @@ $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/ThreadStats.tcl $(SRCDIR)/Util.tcl \
 	$(SRCDIR)/VTRDial.tcl\
 #[INSERT NEW TCL FILE HERE]
-	$(SRCTOP)/scripts/createTclIndex $(SRCTOP)/SCICore/GUI
+	$(SRCTOP)/scripts/createTclIndex $(SRCTOP)/Core/GUI
 
 CLEANPROGS := $(CLEANPROGS) $(SRCDIR)/tclIndex
 

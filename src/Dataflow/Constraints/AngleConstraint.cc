@@ -1,4 +1,3 @@
-//static char *id="@(#) $Id$";
 
 /*
  *  AngleConstraint.cc
@@ -12,23 +11,20 @@
  *  Copyright (C) 1995 SCI Group
  */
 
-#include <PSECore/Constraints/AngleConstraint.h>
-#include <SCICore/Geometry/Plane.h>
-#include <SCICore/Geometry/Vector.h>
-#include <SCICore/Math/MiscMath.h>
-#include <SCICore/Util/Debug.h>
-#include <SCICore/Util/NotFinished.h>
+#include <Dataflow/Constraints/AngleConstraint.h>
+#include <Core/Geometry/Plane.h>
+#include <Core/Geometry/Vector.h>
+#include <Core/Math/MiscMath.h>
+#include <Core/Util/Debug.h>
+#include <Core/Util/NotFinished.h>
 #include <iostream>
 using std::cerr;
 using std::cout;
 using std::endl;
 #include <math.h>
 
-namespace PSECore {
-namespace Constraints {
+namespace SCIRun {
 
-using SCICore::Util::DebugSwitch;
-using namespace SCICore::Geometry;
 
 static DebugSwitch ac_debug("Constraints", "Angle");
 
@@ -133,7 +129,6 @@ AngleConstraint::Satisfy( const Index index, const Scheme scheme, const Real Eps
 	    
 	    Real x(Dot(v1, v)), y(Dot(v2, v));
 
-	    using namespace SCICore::Math;
 	    if ((Abs(x) > Epsilon) || (Abs(y) > Epsilon)) {
 	       var = vars[4];
 	       c = atan2(y,x);
@@ -149,29 +144,5 @@ AngleConstraint::Satisfy( const Index index, const Scheme scheme, const Real Eps
    return 0;
 }
 
-} // End namespace Constraints
-} // End namespace PSECore
+} // End namespace SCIRun
 
-//
-// $Log$
-// Revision 1.5  1999/10/07 02:07:14  sparker
-// use standard iostreams and complex type
-//
-// Revision 1.4  1999/09/08 02:26:37  sparker
-// Various #include cleanups
-//
-// Revision 1.3  1999/08/19 23:18:03  sparker
-// Removed a bunch of #include <SCICore/Util/NotFinished.h> statements
-// from files that did not need them.
-//
-// Revision 1.2  1999/08/17 06:38:15  sparker
-// Merged in modifications from PSECore to make this the new "blessed"
-// version of SCIRun/Uintah.
-//
-// Revision 1.1  1999/07/27 16:55:52  mcq
-// Initial commit
-//
-// Revision 1.1.1.1  1999/04/24 23:12:52  dav
-// Import sources
-//
-//

@@ -1,22 +1,19 @@
 
-#include <SCICore/Thread/Thread.h>
-#include <SCICore/Thread/Barrier.h>
-#include <SCICore/Thread/Runnable.h>
-#include <SCICore/Thread/ThreadGroup.h>
-#include <SCICore/Thread/Mutex.h>
-#include <SCICore/Thread/Time.h>
+#include <Core/Thread/Thread.h>
+#include <Core/Thread/Barrier.h>
+#include <Core/Thread/Runnable.h>
+#include <Core/Thread/ThreadGroup.h>
+#include <Core/Thread/Mutex.h>
+#include <Core/Thread/Time.h>
 #include <iostream>
 using std::cerr;
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
 
-using SCICore::Thread::Thread;
-using SCICore::Thread::Barrier;
-using SCICore::Thread::Runnable;
-using SCICore::Thread::ThreadGroup;
-using SCICore::Thread::Mutex;
-using SCICore::Thread::Time;
+
+
+using namespace SCIRun;
 
 Mutex io("io lock");
 

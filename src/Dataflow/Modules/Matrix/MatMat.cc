@@ -11,29 +11,22 @@
  *  Copyright (C) 1999 SCI Group
  */
 
-#include <PSECore/Datatypes/MatrixPort.h>
-#include <SCICore/Datatypes/ColumnMatrix.h>
-#include <SCICore/Datatypes/DenseMatrix.h>
-#include <SCICore/Datatypes/SymSparseRowMatrix.h>
-#include <SCICore/Malloc/Allocator.h>
-#include <SCICore/TclInterface/TCLvar.h>
-#include <SCICore/Thread/Parallel.h>
-#include <SCICore/Thread/SimpleReducer.h>
-#include <SCICore/Thread/Thread.h>
+#include <Dataflow/Ports/MatrixPort.h>
+#include <Core/Datatypes/ColumnMatrix.h>
+#include <Core/Datatypes/DenseMatrix.h>
+#include <Core/Datatypes/SymSparseRowMatrix.h>
+#include <Core/Malloc/Allocator.h>
+#include <Core/TclInterface/TCLvar.h>
+#include <Core/Thread/Parallel.h>
+#include <Core/Thread/SimpleReducer.h>
+#include <Core/Thread/Thread.h>
 #include <iostream>
 using std::cerr;
 using std::endl;
 #include <math.h>
 
-namespace PSECommon {
-namespace Modules {
+namespace SCIRun {
 
-using namespace PSECore::Dataflow;
-using namespace PSECore::Datatypes;
-using namespace SCICore::TclInterface;
-using SCICore::Thread::Parallel;
-using SCICore::Thread::SimpleReducer;
-using SCICore::Thread::Thread;
 
 struct Result {
     double r;
@@ -450,22 +443,5 @@ void MatMat::parallel_conjugate_gradient(int processor)
 #endif    
   }
 }
-} // End namespace Modules
-} // End namespace PSECommon
+} // End namespace SCIRun
 
-//
-// $Log$
-// Revision 1.4  2000/03/17 09:27:06  sparker
-// New makefile scheme: sub.mk instead of Makefile.in
-// Use XML-based files for module repository
-// Plus many other changes to make these two things work
-//
-// Revision 1.3  1999/10/07 02:06:52  sparker
-// use standard iostreams and complex type
-//
-// Revision 1.2  1999/09/10 04:09:02  jmk
-// Added & so it will compile on Linux
-//
-// Revision 1.1  1999/09/07 04:02:23  dmw
-// more modules that were left behind...
-//

@@ -1,7 +1,5 @@
-#
-#
 
-itcl_class SCIRun_Image_Radon {
+itcl_class Dataflow_Image_Radon {
     inherit Module
     constructor {config} {
 	set name Radon

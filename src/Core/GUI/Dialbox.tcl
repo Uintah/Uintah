@@ -1,14 +1,10 @@
-#
 #  Dialbox.tcl
-#
 #  Written by:
 #   James Purciful
 #   Department of Computer Science
 #   University of Utah
 #   May 1995
-#
 #  Copyright (C) 1995 SCI Group
-#
 
 catch {rename Dialbox ""}
 

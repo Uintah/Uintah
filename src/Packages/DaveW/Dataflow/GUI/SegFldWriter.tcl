@@ -1,6 +1,6 @@
-catch {rename DaveW_Writers_SegFldWriter ""}
+catch {rename Packages/DaveW_Writers_SegFldWriter ""}
 
-itcl_class DaveW_Writers_SegFldWriter {
+itcl_class Packages/DaveW_Writers_SegFldWriter {
     inherit Module
     constructor {config} {
 	set name SegFldWriter

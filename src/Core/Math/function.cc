@@ -1,15 +1,13 @@
 
 //=======================
-//
 // function.cc
 // David Hart
 // July 2000
 // SCI group
 // University of Utah
-//
 //=======================
 
-#include <SCICore/Math/function.h>
+#include <Core/Math/function.h>
 
 #include <stdio.h>
 #include <math.h>
@@ -23,8 +21,7 @@
 #include <iostream>
 using namespace std;
 
-namespace SCICore {
-namespace Math {
+namespace SCIRun {
 
 //----------------------------------------------------------------------
 FunctionSoLoader Function::soloader;
@@ -149,7 +146,7 @@ double Function::eval(double* x) const {
   case power:		return pow(arg1->eval(x), arg2->eval(x));
     
   default:
-    cerr << "SCICore::Math::Function::eval() error: "
+    cerr << "Function::eval() error: "
 	 << "bad function type "
 	 << type << endl;
   }
@@ -264,7 +261,7 @@ Function* Function::diff(int n) {
     
 				//=======================
   default:
-    cerr << "SCICore::Math::Function::diff() errror: "
+    cerr << "Function::diff() errror: "
 	 << "bad function type "
 	 << type << endl;
   }
@@ -390,7 +387,7 @@ bool stepsimplify(Function** f) {
 	case product:    FINISH(new Function(0.0));
 	case power:      FINISH(new Function(1.0));
 	case quotient:
-	  cerr << "SCICore::Math::Function::simplify() warning: "
+	  cerr << "Function::simplify() warning: "
 	       << "division by zero\n";
 	  return false;
 	}
@@ -591,7 +588,7 @@ bool stepsimplify(Function** f) {
     break;
       
   default:
-    cerr << "SCICore::Math::Function::simplify() error: "
+    cerr << "Function::simplify() error: "
 	 << "bad function type " << ((*f)->type) << endl;
     return false;
   }
@@ -646,7 +643,7 @@ ostream& operator<<(ostream& os, const Function* f) {
     break;
             
   default:
-    cerr << "SCICore::Math::Function::operator<<() error: "
+    cerr << "Function::operator<<() error: "
 	 << "bad function type " << f->type << endl;
     break;
   }
@@ -767,7 +764,7 @@ void Function::tex(ostream& texfile) {
     break;
       
   default:
-    cerr << "SCICore::Math::Function::tex() error: "
+    cerr << "Function::tex() error: "
 	 << "bad function type " << type << endl;
     break;
   }
@@ -785,7 +782,7 @@ FuncEvalPtr Function::getFastEval() {
   sprintf(filename, fname, (rand()+getpid()) % 9999);
   ofstream ofile(filename, ios::out);
   if (!ofile) {
-    cerr << "SCICore::Math::Function::getFastEval() error: "
+    cerr << "Function::getFastEval() error: "
 	 << "couldn't write temp file\n";
     return NULL;
   }
@@ -816,7 +813,7 @@ FuncEvalPtr Function::getFastEval() {
   char command[1024];
   sprintf(command, "CC -O -shared %s -o %s.so", filename, filename);
   if (system(command) != 0) {
-    cerr << "SCICore::Math::Function::getFastEval() error: "
+    cerr << "Function::getFastEval() error: "
 	 << "system call failed:\n" << command << endl;
     return NULL;
   }
@@ -836,7 +833,7 @@ FuncEvalPtr Function::getFastEval() {
 				// return the function pointer
   FuncEvalPtr f = (FuncEvalPtr)dlsym(handle, "func_getfasteval");
   if (f == NULL) {
-    cerr << "SCICore::Math::Function::getFastEval() error: "
+    cerr << "Function::getFastEval() error: "
 	 << "dlsym failed" << endl;
     return NULL;
   }
@@ -865,7 +862,7 @@ FunctionSoLoader::getHandle(Function* f, char* soFileName) {
   }
   h = dlopen(soFileName, RTLD_NOW);
   if (h == NULL) {
-    cerr << "SCICore::Math::SoLoader::getHandle() error:"
+    cerr << "SoLoader::getHandle() error:"
 	 << " dlopen failed" << endl;
   }
   else {
@@ -899,5 +896,4 @@ FunctionSoLoader::deleteHandle(handleIter it) {
   handles.erase(it);
 }
 
-} // namespace Math {
-} // namespace SCICore {
+} // End namespace SCIRun

@@ -1,8 +1,6 @@
-#
 # Makefile fragment for this subdirectory
-#
 
-SRCDIR := SCIRun/GUI
+SRCDIR := Dataflow/GUI
 
 ALLTARGETS := $(ALLTARGETS) $(SRCDIR)/tclIndex
 
@@ -18,6 +16,6 @@ $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/Threshold.tcl $(SRCDIR)/TiffReader.tcl \
 	$(SRCDIR)/TiffWriter.tcl $(SRCDIR)/Transforms.tcl $(SRCDIR)/Unop.tcl\
 #[INSERT NEW TCL FILE HERE]
-	$(SRCTOP)/scripts/createTclIndex $(SRCTOP)/SCIRun/GUI
+	$(SRCTOP)/scripts/createTclIndex $(SRCTOP)/Dataflow/GUI
 
 CLEANPROGS := $(CLEANPROGS) $(SRCDIR)/tclIndex

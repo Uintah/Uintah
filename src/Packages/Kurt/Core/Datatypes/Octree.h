@@ -2,8 +2,6 @@
 #define OCTREE_H
 
 namespace Kurt {
-namespace Datatypes {
-
 /**************************************
 
 CLASS
@@ -15,7 +13,7 @@ GENERAL INFORMATION
 
    Octree.h
 
-   Kurt Zimmerman
+   Packages/Kurt Zimmerman
    Department of Computer Science
    University of Utah
 
@@ -71,7 +69,6 @@ private:
   Octree <T> **children;
   const Octree <T> *Parent;
 };
+} // End namespace Kurt
 
-} // end namespace Datatypes
-} // end namespace Kurt
 #endif

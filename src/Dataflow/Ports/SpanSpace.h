@@ -14,24 +14,18 @@
 #ifndef SpanSpace_h
 #define SpanSpace_h 
 
-#include <SCICore/Datatypes/Datatype.h>
-#include <SCICore/Containers/Array3.h>
-#include <SCICore/Datatypes/Mesh.h>
-#include <SCICore/Datatypes/ScalarField.h>
-#include <SCICore/Datatypes/ScalarFieldUG.h>
-#include <SCICore/Containers/LockingHandle.h>
+#include <Core/Datatypes/Datatype.h>
+#include <Core/Containers/Array3.h>
+#include <Core/Datatypes/Mesh.h>
+#include <Core/Datatypes/ScalarField.h>
+#include <Core/Datatypes/ScalarFieldUG.h>
+#include <Core/Containers/LockingHandle.h>
 
 
-namespace PSECore {
-  namespace Datatypes {
+namespace SCIRun {
     
-    using namespace SCICore::Datatypes;
-    using namespace SCICore::Containers;
-    using namespace SCICore::Geometry;
     
-    //
     // HEADERS
-    //
 
     // SpanPoint
 
@@ -99,9 +93,7 @@ namespace PSECore {
 	b = t;
       }
 
-    //
     // FUNCTIONS
-    //
 
     template <class T>
       void SpanSpace<T>::select_min( SpanPoint<T> p[], int n )
@@ -251,8 +243,7 @@ namespace PSECore {
     
     typedef LockingHandle<SpanUniverse> SpanUniverseHandle; 
   
-  } // End namespace Datatypes
-} // End namespace PSECore}
+} // End namespace SCIRun
 
 
 #endif 

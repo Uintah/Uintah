@@ -1,18 +1,14 @@
-#
 #  RescaleSegFld.tcl
-#
 #  Written by:
 #   David Weinstein
 #   Department of Computer Science
 #   University of Utah
 #   July 1995
-#
 #  Copyright (C) 1995 SCI Group
-#
 
-catch {rename DaveW_EEG_RescaleSegFld ""}
+catch {rename Packages/DaveW_EEG_RescaleSegFld ""}
 
-itcl_class DaveW_EEG_RescaleSegFld {
+itcl_class Packages/DaveW_EEG_RescaleSegFld {
     inherit Module
     constructor {config} {
 	set name RescaleSegFld

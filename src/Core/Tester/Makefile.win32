@@ -1,5 +1,4 @@
 # Makefile for win32 VisualC++
-#
 # written by Chris Moulding 6/99
 
 !include <$(TOP)\make.defaults>
@@ -7,7 +6,7 @@
 ###############################  EDIT HERE  ######################################
 
 THISDIR = Tester
-SECTION = SCICore
+SECTION = Core
 
 CF = 
 LF = 

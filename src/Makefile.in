@@ -1,21 +1,13 @@
-#
 # If you change this file, you must re-run configure before the changes
 # will be effective
-#
-#
 # This makefile was inspired by:
 # http://www.canb.auug.org.au/~millerp/rmch/recu-make-cons-harm.html
-# 
 
-#
 # Default target
-#
 default: all
 
-#
 # Blow away a bunch of makes internal rules to improve the performance
 # of make
-#
 .SUFFIXES:
 % :: RCS/%,v
 % :: RCS/%
@@ -26,18 +18,14 @@ default: all
 %.c :: %
 %.tex :: %
 
-#
 # If a sidl-generated file uses templates, it's possible that the MIPSPro
 # CC will decide to recompile the .cc file at link time to get the template
 # instantiation. If make has already removed the _sidl.cc file since it's an
 # intermediate file, the compilation will fail. This prevents make from 
 # deleting these files.
-#
 .PRECIOUS: %_sidl.h %_sidl.cc
 
-#
 # Directory variables
-#
 SRCTOP  := @top_srcdir@
 SRCDIR  := @srcdir@
 OBJTOP  := .
@@ -52,15 +40,13 @@ LIBDIR_ABS    := $(shell mkdir -p $(LIBDIR); cd $(LIBDIR) ; pwd)
 
 VPATH := $(SRCTOP)
 
-#
 # Optional pieces
-#
 
 PACKAGE_DIRS := @PACKAGE_DIRS@
 PACKAGE_PATH := @PACKAGE_PATH@
 BUILD_PARALLEL := @BUILD_PARALLEL@
 ifeq ($(BUILD_PARALLEL),yes)
-COMPONENT_DIRS := tools/sidl Component
+COMPONENT_DIRS := Core/CCA/tools/sidl Core/CCA/Component
 endif
 
 # These cannot be :=
@@ -68,15 +54,11 @@ THREAD_IMPL = $(SRCDIR)/@THREAD_IMPL@
 TIME_IMPL = $(SRCDIR)/@TIME_IMPL@
 LOCK_IMPL = $(SRCDIR)/@LOCK_IMPL@
 
-#
 # Subdirectories
-# 
-SUBDIRS := SCICore PSECore $(COMPONENT_DIRS) main PSECommon \
+SUBDIRS := Core Dataflow $(COMPONENT_DIRS) main \
 	testprograms $(PACKAGE_DIRS)
 
-#
 # Libraries and other flags
-#
 
 TCL_LIB_DIR    := @TCL_LIB_DIR@
 TCL_LIB_FLAG   := @TCL_LIB_FLAG@
@@ -135,14 +117,12 @@ NBITS := @NBITS@
 LARGESOS := @LARGESOS@
 
 ifeq ($(LARGESOS),yes)
-MALLOCLIB := SCICore
+MALLOCLIB := Core
 else
-MALLOCLIB := SCICore/Malloc
+MALLOCLIB := Core/Malloc
 endif
 
-#
 # Convenience variables - compounded from above definitions
-#
 BLT_LIBRARY := $(LDRUN_PREFIX)$(BLT_LIB_DIR) -L$(BLT_LIB_DIR) $(BLT_LIB_FLAG)
 TCL_LIBRARY := $(LDRUN_PREFIX)$(TCL_LIB_DIR) -L$(TCL_LIB_DIR) $(TCL_LIB_FLAG)
 TK_LIBRARY := $(LDRUN_PREFIX)$(TK_LIB_DIR) $(TK_LIB_SPEC)
@@ -177,15 +157,7 @@ PETSC_LIBDIR := $(PETSC_DIR)/lib/$(PETSC_SUB)/$(PETSC_ARCH)
 PETSC_LIBS := $(LDRUN_PREFIX)$(PETSC_LIBDIR) -L$(PETSC_LIBDIR)
 endif
 
-VAMPIR_DIR := @VAMPIR_DIR@
-ifneq ($(VAMPIR_DIR),)
-VAMPIR_INCLUDE := -I$(VAMPIR_DIR)/include 
-VAMPIR_LIBDIR := $(VAMPIR_DIR)/lib64
-VAMPIR_LIBFLAG := -lVT -lmpi
-VAMPIR_LIBRARY := $(LDRUN_PREFIX)$(VAMPIR_LIBDIR) -L$(VAMPIR_LIBDIR) $(VAMPIR_LIBFLAG)
-endif
-
-INCLUDES += -I$(SRCTOP)/include -I$(SRCTOP) -I$(OBJTOP) -I@TCL_INCLUDE_DIR@ -I@TK_INCLUDE_DIR@ -I@ITCL_INCLUDE_DIR@ -I@BLT_INCLUDE_DIR@ @GLOBUS_INCLUDE@ $(XML_INCLUDE) -I@GL_INCLUDE_DIR@ $(PETSC_INCLUDES) $(VAMPIR_INCLUDE)
+INCLUDES += -I$(SRCTOP)/include -I$(SRCTOP) -I$(OBJTOP) -I@TCL_INCLUDE_DIR@ -I@TK_INCLUDE_DIR@ -I@ITCL_INCLUDE_DIR@ -I@BLT_INCLUDE_DIR@ @GLOBUS_INCLUDE@ $(XML_INCLUDE) -I@GL_INCLUDE_DIR@ $(PETSC_INCLUDES)
 
 SSTREAM_COMPAT := @SSTREAM_COMPAT@
 ifeq ($(SSTREAM_COMPAT),yes)
@@ -193,9 +165,7 @@ INCLUDES := $(INCLUDES) -I$(SRCTOP)/include/compat
 endif
 INCLUDES := $(sort $(INCLUDES))
 
-#
 # Rules for autoconf
-# 
 ${SRCTOP}/configure: ${SRCTOP}/configure.in ${SRCDIR}/scripts/aclocal.m4
 	cd ${SRCTOP} && autoconf
 
@@ -258,9 +228,7 @@ endif
 .s.o: $<
 	$(AS) $(ASFLAGS) -o $@ $< -o $@
 
-#
 # Actually include the module makefile fragments
-#
 ALLSUBDIRS := . 
 include $(SRCTOP)/scripts/recurse.mk
 MAKEFILEDIRS := $(wordlist 2,$(words $(ALLSUBDIRS)),$(ALLSUBDIRS))
@@ -268,9 +236,7 @@ MAKEFILEDIRS := $(subst $(SRCTOP),$(OBJTOP_ABS),$(MAKEFILEDIRS))
 SUBMAKEFILES := $(patsubst %,%/Makefile,$(MAKEFILEDIRS))
 CREATETCLINDEX := $(SRCTOP)/scripts/createTclIndex
 
-#
 # etags generation
-#
 TCL_FILES := $(patsubst %,%/*.tcl, $(ALLSUBDIRS))
 C_FILES := $(patsubst %,%/*.c, $(ALLSUBDIRS))
 CPP_FILES := $(patsubst %,%/*.cc, $(ALLSUBDIRS))
@@ -299,9 +265,7 @@ $(LIBDIR):
 
 $(ALLOBJS): $(ALLGEN)
 
-#
 # This rule must be after the includes, so that it will find $(SIDL_EXE)
-# 
 %_sidl.o: %_sidl.cc %_sidl.h
 
 %_sidl.cc: %.sidl $(SIDL_EXE)
@@ -310,17 +274,13 @@ $(ALLOBJS): $(ALLGEN)
 %_sidl.h: %.sidl $(SIDL_EXE)
 	$(SIDL_EXE) -h -o $@ $<
 
-#
 # Make emacs etags file
-#
 sciTAGS:  $(ETAGS_FILES) $(TCL_ETAGS_FILES)
 	$(ETAGS) -o sciTAGS $(ETAGS_FILES)
 	$(ETAGS) -o sciTAGS -a -l none --regex='/itcl_class[ \t]+\([^ \t]+\)/\1/' --regex='/[ \t]+method[ \t]+\([^ \t]+\)/\1/' $(TCL_ETAGS_FILES)
 
-#
 # The sophsticated looking $(...) mess below is just to convert a
 # subdirectory of the form a/b/c into ../../..
-#
 ifeq ($(LARGESOS),yes)
   HERE = $(LIBDIR)lib$(firstword $(subst /," ",$(subst $(OBJTOP_ABS)/,,$@))).so
 else
@@ -387,11 +347,9 @@ cleanrest::
 objs: $(CLEANOBJS)
 
 ifeq (,$(findstring objs,$(MAKECMDGOALS)))
-#
 # This includes all of the dependencies.  We prepend the absolute path
 # to the obj dir to prevent make from wasting time searching for them
 # in other directories
-#
 
   ifeq ($(CC_DEPEND_REGEN),-MD)
     -include $(patsubst %.o,$(OBJTOP_ABS)/%.d, $(CLEANOBJS))
@@ -401,9 +359,8 @@ ifeq (,$(findstring objs,$(MAKECMDGOALS)))
 
 else
 
-#
 # If we are making the special target "objs", we skip the dependencies.
 # This is a hack for a "quick" compile.
-#
 
 endif
+

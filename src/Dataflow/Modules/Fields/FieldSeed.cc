@@ -1,4 +1,3 @@
-//static char *id="@(#) $Id$";
 
 /*
  *  FieldSeed.cc: ?
@@ -17,45 +16,37 @@
  *  it also spits out geometry for you...
  */
 
-#include <SCICore/Util/Timer.h>
-#include <SCICore/Containers/BitArray1.h>
-#include <PSECore/Dataflow/Module.h>
-#include <PSECore/Datatypes/GeometryPort.h>
-#include <SCICore/Geom/Color.h>
-#include <SCICore/Geom/GeomObj.h>
-#include <SCICore/Geom/GeomGroup.h>
-#include <SCICore/Geom/GeomLine.h>
-#include <SCICore/Geom/Pt.h>
-#include <SCICore/Geom/Material.h>
-#include <SCICore/Geom/GeomTri.h>
-#include <SCICore/Geom/GeomTriangles.h>
-#include <PSECore/Datatypes/MeshPort.h>
-#include <SCICore/Datatypes/Mesh.h>
-#include <PSECore/Datatypes/ScalarFieldPort.h>
-#include <SCICore/Datatypes/ScalarFieldRG.h>
-#include <SCICore/Datatypes/ScalarFieldUG.h>
-#include <SCICore/Datatypes/VectorField.h>
-#include <SCICore/Datatypes/VectorFieldUG.h>
-#include <SCICore/Datatypes/VectorFieldRG.h>
-#include <PSECore/Datatypes/VectorFieldPort.h>
-#include <SCICore/Malloc/Allocator.h>
-#include <SCICore/TclInterface/TCLvar.h>
-#include <PSECore/Widgets/ScaledBoxWidget.h>
+#include <Core/Util/Timer.h>
+#include <Core/Containers/BitArray1.h>
+#include <Dataflow/Network/Module.h>
+#include <Dataflow/Ports/GeometryPort.h>
+#include <Core/Geom/Color.h>
+#include <Core/Geom/GeomObj.h>
+#include <Core/Geom/GeomGroup.h>
+#include <Core/Geom/GeomLine.h>
+#include <Core/Geom/Pt.h>
+#include <Core/Geom/Material.h>
+#include <Core/Geom/GeomTri.h>
+#include <Core/Geom/GeomTriangles.h>
+#include <Dataflow/Ports/MeshPort.h>
+#include <Core/Datatypes/Mesh.h>
+#include <Dataflow/Ports/ScalarFieldPort.h>
+#include <Core/Datatypes/ScalarFieldRG.h>
+#include <Core/Datatypes/ScalarFieldUG.h>
+#include <Core/Datatypes/VectorField.h>
+#include <Core/Datatypes/VectorFieldUG.h>
+#include <Core/Datatypes/VectorFieldRG.h>
+#include <Dataflow/Ports/VectorFieldPort.h>
+#include <Core/Malloc/Allocator.h>
+#include <Core/TclInterface/TCLvar.h>
+#include <Dataflow/Widgets/ScaledBoxWidget.h>
 #include <iostream>
 using std::cerr;
 
 #include <stdlib.h>
 
-namespace PSECommon {
-namespace Modules {
+namespace SCIRun {
 
-using namespace PSECore::Dataflow;
-using namespace PSECore::Datatypes;
-using namespace PSECore::Widgets;
-using namespace SCICore::TclInterface;
-using namespace SCICore::GeomSpace;
-using namespace SCICore::Geometry;
-using namespace SCICore::Containers;
 
 class FieldSeed : public Module {
   ScalarFieldIPort *ifield;
@@ -585,53 +576,5 @@ void FieldSeed::Visualize(int which, int onoff)
   }
 }
 
-} // End namespace Modules
-} // End namespace PSECommon
+} // End namespace SCIRun
 
-//
-// $Log$
-// Revision 1.8  2000/03/17 09:26:58  sparker
-// New makefile scheme: sub.mk instead of Makefile.in
-// Use XML-based files for module repository
-// Plus many other changes to make these two things work
-//
-// Revision 1.7  1999/10/07 02:06:47  sparker
-// use standard iostreams and complex type
-//
-// Revision 1.6  1999/08/29 00:46:39  sparker
-// Integrated new thread library
-// using statement tweaks to compile with both MipsPRO and g++
-// Thread library bug fixes
-//
-// Revision 1.5  1999/08/25 03:47:47  sparker
-// Changed SCICore/CoreDatatypes to SCICore/Datatypes
-// Changed PSECore/CommonDatatypes to PSECore/Datatypes
-// Other Misc. directory tree updates
-//
-// Revision 1.4  1999/08/19 23:17:44  sparker
-// Removed a bunch of #include <SCICore/Util/NotFinished.h> statements
-// from files that did not need them.
-//
-// Revision 1.3  1999/08/18 20:19:40  sparker
-// Eliminated copy constructor and clone in all modules
-// Added a private copy ctor and a private clone method to Module so
-//  that future modules will not compile until they remvoe the copy ctor
-//  and clone method
-// Added an ASSERTFAIL macro to eliminate the "controlling expression is
-//  constant" warnings.
-// Eliminated other miscellaneous warnings
-//
-// Revision 1.2  1999/08/17 06:37:27  sparker
-// Merged in modifications from PSECore to make this the new "blessed"
-// version of SCIRun/Uintah.
-//
-// Revision 1.1  1999/07/27 16:57:42  mcq
-// Initial commit
-//
-// Revision 1.2  1999/04/28 20:51:10  dav
-// deleted some files that are dependent on DaveW files
-//
-// Revision 1.1.1.1  1999/04/24 23:12:32  dav
-// Import sources
-//
-//

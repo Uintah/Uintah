@@ -20,14 +20,14 @@
  *
  */
 
-#include <SCICore/config.h>
+#include <Core/config.h>
 #undef SCI_ASSERTION_LEVEL_3
 #define SCI_ASSERTION_LEVEL_2
 
 #include "kuswik.h"
-#include <SCICore/Util/Timer.h>
-#include <PSECommon/Modules/Visualization/LevoyVis.h>
-#include <SCICore/Math/MiscMath.h>
+#include <Core/Util/Timer.h>
+#include <Dataflow/Modules/Visualization/LevoyVis.h>
+#include <Core/Math/MiscMath.h>
 #include "FastRender.h"
 
 
@@ -43,6 +43,8 @@ double  EpsilonContribution = 0.01;
 double  EpsilonAlpha = log( 0.01 );
 
 
+
+using namespace SCIRun;
 
 inline double
 Levoy::AssociateValueO ( double scalarValue )

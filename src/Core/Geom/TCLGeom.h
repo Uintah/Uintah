@@ -14,14 +14,11 @@
 #ifndef SCI_Geom_TCLGeom_h
 #define SCI_Geom_TCLGeom_h 1
 
-#include <SCICore/TclInterface/TCLvar.h>
-#include <SCICore/Containers/String.h>
+#include <Core/TclInterface/TCLvar.h>
+#include <Core/Containers/String.h>
 
-namespace SCICore {
-namespace GeomSpace {
+namespace SCIRun {
 
-using SCICore::Containers::clString;
-using namespace SCICore::TclInterface;
 
 class Color;
 
@@ -57,30 +54,7 @@ class SCICORESHARE TCLMaterial : public TCLvar {
     virtual void emit(std::ostream& out);
 };
 
-} // End namespace GeomSpace
-} // End namespace SCICore
+} // End namespace SCIRun
 
-//
-// $Log$
-// Revision 1.3  1999/10/07 02:07:50  sparker
-// use standard iostreams and complex type
-//
-// Revision 1.2  1999/08/17 06:39:23  sparker
-// Merged in modifications from PSECore to make this the new "blessed"
-// version of SCIRun/Uintah.
-//
-// Revision 1.1  1999/07/27 16:56:52  mcq
-// Initial commit
-//
-// Revision 1.3  1999/05/06 19:56:14  dav
-// added back .h files
-//
-// Revision 1.1  1999/05/05 21:05:13  dav
-// added SCICore .h files to /include directories
-//
-// Revision 1.1.1.1  1999/04/24 23:12:18  dav
-// Import sources
-//
-//
 
 #endif // ifndef SCI_Geom_TCLGeom_h

@@ -1,12 +1,13 @@
 
-#include <PSECore/XMLUtil/SimpleErrorHandler.h>
-#include <PSECore/XMLUtil/XMLUtil.h>
+#include <Dataflow/XMLUtil/SimpleErrorHandler.h>
+#include <Dataflow/XMLUtil/XMLUtil.h>
 #include <iostream>
 #ifndef __sgi
 #include <stdio.h>
 #endif
 using namespace std;
-using PSECore::XMLUtil::SimpleErrorHandler;
+
+namespace SCIRun {
 
 SimpleErrorHandler::SimpleErrorHandler()
 {
@@ -17,7 +18,7 @@ SimpleErrorHandler::~SimpleErrorHandler()
 {
 }
 
-static string to_string(int i)
+static string sehToString(int i)
 {
     char buf[20];
     sprintf(buf, "%d", i);
@@ -42,19 +43,28 @@ void SimpleErrorHandler::fatalError(const SAXParseException& e)
 {
     foundError=true;
     postMessage(string("Fatal Error at (file ")+toString(e.getSystemId())
-		+", line "+to_string((int)e.getLineNumber())
-		+", char "+to_string((int)e.getColumnNumber())
+		+", line "+sehToString((int)e.getLineNumber())
+		+", char "+sehToString((int)e.getColumnNumber())
 		+"): "+toString(e.getMessage()));
 }
 
 void SimpleErrorHandler::warning(const SAXParseException& e)
 {
     postMessage(string("Warning at (file ")+toString(e.getSystemId())
-		+", line "+to_string((int)e.getLineNumber())
-		+", char "+to_string((int)e.getColumnNumber())
+		+", line "+sehToString((int)e.getLineNumber())
+		+", char "+sehToString((int)e.getColumnNumber())
 		+"): "+toString(e.getMessage()));
 }
 
 void SimpleErrorHandler::resetErrors()
 {
 }
+
+} // End namespace SCIRun
+
+
+
+
+
+
+

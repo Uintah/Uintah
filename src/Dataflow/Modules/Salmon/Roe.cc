@@ -11,37 +11,37 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <PSECommon/Modules/Salmon/Salmon.h>
-#include <PSECommon/Modules/Salmon/Roe.h>
-#include <PSECommon/Modules/Salmon/Renderer.h>
-#include <PSECommon/Modules/Salmon/Ball.h>
-#include <PSECommon/Modules/Salmon/BallMath.h>
-#include <SCICore/Util/Debug.h>
-#include <SCICore/Util/NotFinished.h>
-#include <SCICore/Util/Timer.h>
-#include <SCICore/Math/Expon.h>
-#include <SCICore/Math/MiscMath.h>
-#include <SCICore/Persistent/Pstreams.h>
-#include <SCICore/Geometry/BBox.h>
-#include <SCICore/Geometry/Transform.h>
-#include <SCICore/Geometry/Vector.h>
-#include <SCICore/Geom/GeomObj.h>
-#include <SCICore/Geom/Material.h>
-#include <SCICore/Geom/GeomOpenGL.h>
-#include <SCICore/Geom/GeomPick.h>
-#include <SCICore/Geom/PointLight.h>
-#include <SCICore/Geom/GeomScene.h>
-#include <SCICore/Geom/GeomSphere.h>
-#include <SCICore/Geom/GeomCone.h>      
-#include <SCICore/Geom/GeomCylinder.h>  
-#include <SCICore/Geom/GeomGroup.h>     
-#include <SCICore/Geom/Material.h>
-#include <SCICore/Malloc/Allocator.h>
-#include <SCICore/Math/Trig.h>
-#include <SCICore/TclInterface/TCLTask.h>
-#include <SCICore/TclInterface/TCLvar.h>
-#include <SCICore/Thread/CrowdMonitor.h>
-#include <SCICore/Thread/FutureValue.h>
+#include <Dataflow/Modules/Salmon/Salmon.h>
+#include <Dataflow/Modules/Salmon/Roe.h>
+#include <Dataflow/Modules/Salmon/Renderer.h>
+#include <Dataflow/Modules/Salmon/Ball.h>
+#include <Dataflow/Modules/Salmon/BallMath.h>
+#include <Core/Util/Debug.h>
+#include <Core/Util/NotFinished.h>
+#include <Core/Util/Timer.h>
+#include <Core/Math/Expon.h>
+#include <Core/Math/MiscMath.h>
+#include <Core/Persistent/Pstreams.h>
+#include <Core/Geometry/BBox.h>
+#include <Core/Geometry/Transform.h>
+#include <Core/Geometry/Vector.h>
+#include <Core/Geom/GeomObj.h>
+#include <Core/Geom/Material.h>
+#include <Core/Geom/GeomOpenGL.h>
+#include <Core/Geom/GeomPick.h>
+#include <Core/Geom/PointLight.h>
+#include <Core/Geom/GeomScene.h>
+#include <Core/Geom/GeomSphere.h>
+#include <Core/Geom/GeomCone.h>      
+#include <Core/Geom/GeomCylinder.h>  
+#include <Core/Geom/GeomGroup.h>     
+#include <Core/Geom/Material.h>
+#include <Core/Malloc/Allocator.h>
+#include <Core/Math/Trig.h>
+#include <Core/TclInterface/TCLTask.h>
+#include <Core/TclInterface/TCLvar.h>
+#include <Core/Thread/CrowdMonitor.h>
+#include <Core/Thread/FutureValue.h>
 #include <iostream>
 using std::cerr;
 using std::endl;
@@ -54,18 +54,8 @@ using std::ostringstream;
 #define MouseEnd 1
 #define MouseMove 2
 
-namespace PSECommon {
-namespace Modules {
+namespace SCIRun {
 
-using namespace SCICore::GeomSpace;  
-using SCICore::Math::Abs;
-using SCICore::Geometry::Cross;
-using SCICore::Geometry::Dot;
-using SCICore::Containers::to_string;
-using SCICore::GeomSpace::BState;
-using SCICore::GeomSpace::GeomScene;
-using SCICore::PersistentSpace::BinaryPiostream;
-using SCICore::PersistentSpace::TextPiostream;
 
 //static DebugSwitch autoview_sw("Roe", "autoview");
 static Roe::MapClStringObjTag::iterator viter;
@@ -125,9 +115,8 @@ Roe::Roe(Salmon* s, const clString& id)
   // header file, you need to also have the declaration:
   //       using <class name>
   // In the case of GeomMaterial, it would look like:
-  //       #include <SCICore/Geom/Material.h>
-  //       using SCICore::GeomSpace::GeomMaterial;
-  // 
+  //       #include <Core/Geom/Material.h>
+  //       using GeomMaterial;
   focus_sphere      = scinew GeomSphere;
   is_dot            = 0;
 
@@ -450,7 +439,7 @@ void Roe::MyTranslateCamera(Vector offset)
   need_redraw=1;
 }
 
-// surprised this wasn't definied somewhere in SCICore?
+// surprised this wasn't definied somewhere in Core?
 Point operator*(Transform &t, const Point &d)
 {
   float result[4], tmp[4];
@@ -2008,7 +1997,7 @@ void Roe::dump_objects(const clString& filename, const clString& format)
     manager->geomlock.readLock();
     GeomScene scene(bgcolor.get(), view.get(), &manager->lighting,
 		    &manager->ports);
-    SCICore::PersistentSpace::Pio(*stream, scene);
+    Pio(*stream, scene);
     if(stream->error()){
       cerr << "Error writing geom file: " << filename << endl;
     } else {
@@ -2083,5 +2072,4 @@ GeomGroup* Roe::createGenAxes() {
   return all;
 }
 
-} // End namespace Modules
-} // End namespace PSECommon
+} // End namespace SCIRun

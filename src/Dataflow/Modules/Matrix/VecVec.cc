@@ -11,21 +11,17 @@
  *  Copyright (C) 2000 SCI Group
  */
 
-#include <PSECore/Datatypes/ColumnMatrixPort.h>
-#include <PSECore/Datatypes/MatrixPort.h>
-#include <SCICore/Datatypes/DenseMatrix.h>
-#include <SCICore/Datatypes/SymSparseRowMatrix.h>
-#include <SCICore/Malloc/Allocator.h>
-#include <SCICore/TclInterface/TCLvar.h>
+#include <Dataflow/Ports/ColumnMatrixPort.h>
+#include <Dataflow/Ports/MatrixPort.h>
+#include <Core/Datatypes/DenseMatrix.h>
+#include <Core/Datatypes/SymSparseRowMatrix.h>
+#include <Core/Malloc/Allocator.h>
+#include <Core/TclInterface/TCLvar.h>
 #include <iostream>
 using std::cerr;
 
-namespace PSECommon {
-namespace Modules {
+namespace SCIRun {
 
-using namespace PSECore::Dataflow;
-using namespace PSECore::Datatypes;
-using namespace SCICore::TclInterface;
 
 class VecVec : public Module {
   ColumnMatrixIPort* icol1;
@@ -120,14 +116,5 @@ void VecVec::execute() {
     cerr << "VecVec: unknown operation "<<opS<<"\n";
   }
 }    
-} // End namespace Modules
-} // End namespace PSECommon
+} // End namespace SCIRun
 
-//
-// $Log$
-// Revision 1.2  2000/12/13 21:03:18  dmw
-// Added concatination of vectors
-//
-// Revision 1.1  2000/11/02 21:43:32  dmw
-// added VecVec module
-//

@@ -12,7 +12,7 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <SCICore/Math/Mat.h>
+#include <Core/Math/Mat.h>
 
 #define Abs(x) ((x)<0?-(x):(x))
 #define Max(x,y) ((x)<(y)?(y):(x))

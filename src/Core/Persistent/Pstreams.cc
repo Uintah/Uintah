@@ -14,9 +14,9 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <SCICore/Persistent/Pstreams.h>
-#include <SCICore/Containers/String.h>
-#include <SCICore/Malloc/Allocator.h>
+#include <Core/Persistent/Pstreams.h>
+#include <Core/Containers/String.h>
+#include <Core/Malloc/Allocator.h>
 #include <fstream>
 using std::ifstream;
 using std::ofstream;
@@ -37,8 +37,7 @@ using std::ostream;
 
 #define PERSISTENT_VERSION 1
 
-namespace SCICore {
-namespace PersistentSpace {
+namespace SCIRun {
 
 TextPiostream::TextPiostream(const clString& filename, Direction dir)
 : Piostream(dir, -1, filename)
@@ -1330,9 +1329,6 @@ void GunzipPiostream::emit_pointer(int& have_data, int& pointer_id)
     io(pointer_id);
 }
 
-} // End namespace PersistentSpace
-} // End namespace SCICore
+} // End namespace SCIRun
 
-//
 // $log$
-//

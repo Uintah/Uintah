@@ -7,38 +7,28 @@
 
 #include "TexCuttingPlanes.h"
 
-#include <SCICore/Containers/Array1.h>
-#include <PSECore/Dataflow/Module.h>
-#include <SCICore/Datatypes/ColorMap.h>
-#include <PSECore/Datatypes/ColorMapPort.h>
-#include <PSECore/Datatypes/GeometryPort.h>
-#include <SCICore/Datatypes/ScalarFieldRGBase.h>
+#include <Core/Containers/Array1.h>
+#include <Dataflow/Network/Module.h>
+#include <Core/Datatypes/ColorMap.h>
+#include <Dataflow/Ports/ColorMapPort.h>
+#include <Dataflow/Ports/GeometryPort.h>
+#include <Core/Datatypes/ScalarFieldRGBase.h>
 
-#include <SCICore/Geom/GeomTriangles.h>
-#include <SCICore/Geom/View.h>
-#include <SCICore/Malloc/Allocator.h>
-#include <SCICore/TclInterface/TCLvar.h>
-#include <SCICore/Thread/CrowdMonitor.h>
+#include <Core/Geom/GeomTriangles.h>
+#include <Core/Geom/View.h>
+#include <Core/Malloc/Allocator.h>
+#include <Core/TclInterface/TCLvar.h>
+#include <Core/Thread/CrowdMonitor.h>
 
-#include <PSECore/Widgets/PointWidget.h>
+#include <Dataflow/Widgets/PointWidget.h>
 #include <iostream>
 #include <algorithm>
-#include <SCICore/Datatypes/VolumeUtils.h>
+#include <Core/Datatypes/VolumeUtils.h>
 
 
 
-namespace PSECommon {
-namespace Modules {
+namespace SCIRun {
 
-using namespace SCICore::Datatypes;
-using namespace PSECore::Dataflow;
-using namespace PSECore::Datatypes;
-using namespace PSECore::Widgets;
-using namespace SCICore::TclInterface;
-using namespace SCICore::GeomSpace;
-using namespace SCICore::Geometry;
-using namespace SCICore::Math;
-using SCICore::Datatypes::ScalarFieldRGBase;
 using std::cerr;
 
 
@@ -127,7 +117,7 @@ void TexCuttingPlanes::widget_moved(int)
 
 void TexCuttingPlanes::execute(void)
 {
-  //SCICore::Malloc::AuditAllocator(SCICore::Malloc::default_allocator);
+  //AuditAllocator(default_allocator);
   static GLTexture3DHandle oldtex = 0;
   if (!intexture->get(tex)) {
     return;
@@ -159,7 +149,7 @@ void TexCuttingPlanes::execute(void)
   }
 
 
-  //SCICore::Malloc::AuditAllocator(SCICore::Malloc::default_allocator);
+  //AuditAllocator(default_allocator);
   if( !volren ){
     volren = scinew GLVolumeRenderer(0x12345676,
 				  tex,
@@ -191,7 +181,7 @@ void TexCuttingPlanes::execute(void)
     volren->SetColorMap( cmap.get_rep() );
   }
  
-  //SCICore::Malloc::AuditAllocator(SCICore::Malloc::default_allocator);
+  //AuditAllocator(default_allocator);
   if(drawX.get() || drawY.get() || drawZ.get()){
     if( control_id == -1 ){
       cerr<<"setting widget"<<endl;
@@ -211,13 +201,12 @@ void TexCuttingPlanes::execute(void)
   volren->SetY(drawY.get());
   volren->SetZ(drawZ.get());
   volren->SetView(drawView.get());
-  //SCICore::Malloc::AuditAllocator(SCICore::Malloc::default_allocator);
+  //AuditAllocator(default_allocator);
 
   ogeom->flushViews();				  
-  //SCICore::Malloc::AuditAllocator(SCICore::Malloc::default_allocator);
+  //AuditAllocator(default_allocator);
 }
 
-} // End namespace Modules
-} // End namespace Uintah
+} // End namespace SCIRun
 
 

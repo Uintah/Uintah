@@ -1,7 +1,7 @@
 
 catch {rename TiffReader ""}
 
-itcl_class SCIRun_Image_TiffReader {
+itcl_class Dataflow_Image_TiffReader {
     inherit Module
     constructor {config} {
 	set name TiffReader

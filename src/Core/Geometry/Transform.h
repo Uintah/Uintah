@@ -14,12 +14,11 @@
 #ifndef Geometry_Transform_h
 #define Geometry_Transform_h 1
 
-#include <SCICore/share/share.h>
-#include <SCICore/Geometry/Plane.h>
-#include <SCICore/Geometry/Point.h>
-#include <SCICore/Geometry/Vector.h>
-namespace SCICore {
-namespace Geometry {
+#include <Core/share/share.h>
+#include <Core/Geometry/Plane.h>
+#include <Core/Geometry/Point.h>
+#include <Core/Geometry/Vector.h>
+namespace SCIRun {
 
 class Vector;
 class Point;
@@ -86,8 +85,7 @@ public:
   void invert();
 };
 
-} // End namespace SCICore
-} // End namespace GeomSpace
+} // End namespace SCIRun
 
 #endif
 

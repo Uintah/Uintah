@@ -1,7 +1,6 @@
 
 /*
  *  Thread: The thread class
- *  $Id$
  *
  *  Written by:
  *   Author: Steve Parker
@@ -12,17 +11,16 @@
  *  Copyright (C) 1997 SCI Group
  */
 
-#ifndef SCICore_Thread_Thread_h
-#define SCICore_Thread_Thread_h
+#ifndef Core_Thread_Thread_h
+#define Core_Thread_Thread_h
 
-#include <SCICore/Thread/Parallel.h>
-#include <SCICore/Thread/Parallel1.h>
-#include <SCICore/Thread/Parallel2.h>
-#include <SCICore/Thread/Parallel3.h>
-#include <SCICore/share/share.h>
+#include <Core/Thread/Parallel.h>
+#include <Core/Thread/Parallel1.h>
+#include <Core/Thread/Parallel2.h>
+#include <Core/Thread/Parallel3.h>
+#include <Core/share/share.h>
 
-namespace SCICore {
-    namespace Thread {
+namespace SCIRun {
 	struct Thread_private;
 	class ParallelBase;
 	class Runnable;
@@ -287,90 +285,8 @@ DESCRIPTION
 	    Thread(const Thread&);
 	    Thread& operator=(const Thread&);
 	};	
-    }
-}
+} // End namespace SCIRun
 
 #endif
 
-//
-// $Log$
-// Revision 1.20  2000/03/17 08:28:46  sparker
-// Added implementation of single argument parallel function
-//
-// Revision 1.19  2000/02/15 00:23:50  sparker
-// Added:
-//  - new Thread::parallel method using member template syntax
-//  - Parallel2 and Parallel3 helper classes for above
-//  - min() reduction to SimpleReducer
-//  - ThreadPool class to help manage a set of threads
-//  - unmap page0 so that programs will crash when they deref 0x0.  This
-//    breaks OpenGL programs, so any OpenGL program linked with this
-//    library must call Thread::allow_sgi_OpenGL_page0_sillyness()
-//    before calling any glX functions.
-//  - Do not trap signals if running within CVD (if DEBUGGER_SHELL env var set)
-//  - Added "volatile" to fetchop barrier implementation to workaround
-//    SGI optimizer bug
-//
-// Revision 1.18  1999/11/10 19:44:52  moulding
-// moved some data members and member functions from private: to public:
-// so that the many global functions that require it, have access.
-//
-// Revision 1.17  1999/11/10 19:41:16  moulding
-// modified the comment for yield
-//
-// Revision 1.16  1999/11/03 01:23:03  moulding
-// fixed a typo in the description (comment) for Thread::isDetached()
-//
-// Revision 1.15  1999/11/01 22:50:01  moulding
-// fixed a typo in the (comment) description for Thread::couldBlock
-//
-// Revision 1.14  1999/10/15 20:56:51  ikits
-// Fixed conflict w/ get_tid in /usr/include/task.h. Replaced by get_thread_id.
-//
-// Revision 1.13  1999/09/24 18:55:08  moulding
-// added SCICORESHARE, for win32, to class declarations
-//
-// Revision 1.12  1999/09/22 19:10:28  sparker
-// Implemented timedWait method for ConditionVariable.  A default
-// implementation of CV is no longer possible, so the code is moved
-// to Thread_irix.cc.  The timedWait method for irix uses uspollsema
-// and select.
-//
-// Revision 1.11  1999/09/03 19:51:16  sparker
-// Fixed bug where if Thread::parallel was called with block=false, the
-//   helper object could get destroyed before it was used.
-// Removed include of SCICore/Thread/ParallelBase and
-//  SCICore/Thread/Runnable from Thread.h to minimize dependencies
-// Fixed naming of parallel helper threads.
-//
-// Revision 1.10  1999/09/02 16:52:44  sparker
-// Updates to cocoon documentation
-//
-// Revision 1.9  1999/08/31 08:59:05  sparker
-// Configuration and other updates for globus
-// First import of beginnings of new component library
-// Added yield to Thread_irix.cc
-// Added getRunnable to Thread.{h,cc}
-//
-// Revision 1.8  1999/08/29 00:47:02  sparker
-// Integrated new thread library
-// using statement tweaks to compile with both MipsPRO and g++
-// Thread library bug fixes
-//
-// Revision 1.7  1999/08/28 03:46:51  sparker
-// Final updates before integration with PSE
-//
-// Revision 1.6  1999/08/25 22:36:01  sparker
-// More thread library updates - now compiles
-//
-// Revision 1.5  1999/08/25 19:00:51  sparker
-// More updates to bring it up to spec
-// Factored out common pieces in Thread_irix and Thread_pthreads
-// Factored out other "default" implementations of various primitives
-//
-// Revision 1.4  1999/08/25 02:38:00  sparker
-// Added namespaces
-// General cleanups to prepare for integration with SCIRun
-//
-//
 

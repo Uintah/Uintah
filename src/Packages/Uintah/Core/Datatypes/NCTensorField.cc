@@ -1,8 +1,8 @@
-#include <SCICore/Geometry/Vector.h>
-#include <SCICore/Math/MinMax.h>
-#include <Uintah/Grid/Level.h>
-#include <Uintah/Grid/LevelP.h>
-#include <Uintah/Grid/Grid.h>
+#include <Core/Geometry/Vector.h>
+#include <Core/Math/MinMax.h>
+#include <Packages/Uintah/Grid/Level.h>
+#include <Packages/Uintah/Grid/LevelP.h>
+#include <Packages/Uintah/Grid/Grid.h>
 #include "NCTensorField.h"
 #include <values.h>
 #include <iostream>
@@ -13,9 +13,7 @@ using std::endl;
 
 
 
-namespace SCICore{
-  namespace Datatypes{
-
+namespace Uintah {
 
 NCTensorField::NCTensorField()
   :TensorField()
@@ -24,7 +22,7 @@ NCTensorField::NCTensorField()
 
 
 NCTensorField::NCTensorField(const NCTensorField& copy)
-  //  : UintahScalarField( copy )
+  //  : Packages/UintahScalarField( copy )
   :TensorField( copy ), _grid(copy._grid), _level(copy._level),
     _varname(copy._varname), _matIndex(copy._matIndex),
    high(copy.high), low(copy.low), nx(copy.nx),
@@ -40,7 +38,7 @@ NCTensorField::NCTensorField(const NCTensorField& copy)
 NCTensorField::NCTensorField(GridP grid, LevelP level,
 				string var, int mat,
 				const vector< NCVariable<Matrix3> >& vars)
-  //  : UintahScalarField( grid, level, var, mat )
+  //  : Packages/UintahScalarField( grid, level, var, mat )
   : TensorField(), _grid(grid), _level(level),
     _varname(var), _matIndex(mat),
    high(-MAXINT,-MAXINT,-MAXINT),
@@ -60,8 +58,8 @@ void NCTensorField::computeHighLowIndices()
 {
   for(Level::const_patchIterator r = _level->patchesBegin();
       r != _level->patchesEnd(); r++){
-    low = SCICore::Geometry::Min( low, (*r)->getNodeLowIndex());
-    high = SCICore::Geometry::Max( high, (*r)->getNodeHighIndex());
+    low = Min( low, (*r)->getNodeLowIndex());
+    high = Max( high, (*r)->getNodeHighIndex());
   }
 }
 
@@ -102,8 +100,8 @@ void NCTensorField::compute_bounds()
  
   for(Level::const_patchIterator r = _level->patchesBegin();
       r != _level->patchesEnd(); r++){
-    min = SCICore::Geometry::Min( min, (*r)->getBox().lower());
-    max = SCICore::Geometry::Max( max, (*r)->getBox().upper());
+    min = Min( min, (*r)->getBox().lower());
+    max = Max( max, (*r)->getBox().upper());
   }
 
   bmin = min;
@@ -137,6 +135,5 @@ void NCTensorField::get_boundary_lines(Array1<Point>& lines)
     }
 
 }
+} // End namespace Uintah
   
-} // Datatypes
-} // SCICore

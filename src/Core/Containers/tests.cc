@@ -1,4 +1,3 @@
-//static char *id="@(#) $Id$";
 
 #include <Tester/TestTable.h>
 #include <Containers/String.h>
@@ -11,10 +10,8 @@
 #include <Containers/BitArray1.h>
 #include <Containers/PQueue.h>
 
-namespace SCICore {
-namespace Containers {
+namespace SCIRun {
 
-using SCICore::Tester::TestTable;
 
 TestTable test_table[] = {
     {"clString", &clString::test_rigorous, &clString::test_performance},
@@ -30,16 +27,6 @@ TestTable test_table[] = {
 
 };
 
-} // End namespace Containers
-} // End namespace SCICore
+} // End namespace SCIRun
 
-//
-// $Log$
-// Revision 1.1  1999/07/27 16:56:15  mcq
-// Initial commit
-//
-// Revision 1.1.1.1  1999/04/24 23:12:26  dav
-// Import sources
-//
-//
 

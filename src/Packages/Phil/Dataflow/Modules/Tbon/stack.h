@@ -1,10 +1,9 @@
-//static char *id="@(#) $Id$";
 
 /*
   stack.h
   Templated stack implementation
 
-  Philip Sutton
+  Packages/Philip Sutton
 
 
   Copyright (C) 2000 SCI Group, University of Utah
@@ -16,8 +15,6 @@
 #include <iostream>
 
 namespace Phil {
-namespace Modules {
-
 template <class T>
 class Stack {
 public:
@@ -76,18 +73,8 @@ Stack<T>::pop() {
   return objs[--top];
 } // pop
 
+} // End namespace Phil
 
-} // end namespace Modules
-} // end namespace Phil
 
 #endif
 
-//
-// $Log$
-// Revision 1.2  2000/02/04 22:15:09  psutton
-// fixed ID problem
-//
-// Revision 1.1  2000/02/04 21:11:59  psutton
-// initial revision
-//
-//

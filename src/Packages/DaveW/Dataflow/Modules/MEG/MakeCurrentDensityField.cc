@@ -10,26 +10,22 @@
  *  Copyright (C) 1999 SCI Group
  */
 
-#include <DaveW/Datatypes/General/VectorFieldMI.h>
-#include <PSECore/Dataflow/Module.h>
-#include <PSECore/Datatypes/MatrixPort.h>
-#include <PSECore/Datatypes/MeshPort.h>
-#include <PSECore/Datatypes/VectorFieldPort.h>
-#include <SCICore/Containers/Array1.h>
-#include <SCICore/Datatypes/DenseMatrix.h>
-#include <SCICore/Datatypes/Mesh.h>
-#include <SCICore/Datatypes/VectorFieldRG.h>
-#include <SCICore/Datatypes/VectorFieldUG.h>
-#include <SCICore/Geometry/Point.h>
-#include <SCICore/Math/Trig.h>
-#include <SCICore/TclInterface/TCLvar.h>
+#include <Packages/DaveW/Core/Datatypes/General/VectorFieldMI.h>
+#include <Dataflow/Network/Module.h>
+#include <Dataflow/Ports/MatrixPort.h>
+#include <Dataflow/Ports/MeshPort.h>
+#include <Dataflow/Ports/VectorFieldPort.h>
+#include <Core/Containers/Array1.h>
+#include <Core/Datatypes/DenseMatrix.h>
+#include <Core/Datatypes/Mesh.h>
+#include <Core/Datatypes/VectorFieldRG.h>
+#include <Core/Datatypes/VectorFieldUG.h>
+#include <Core/Geometry/Point.h>
+#include <Core/Math/Trig.h>
+#include <Core/TclInterface/TCLvar.h>
 
 namespace DaveW {
-namespace Modules {
-
-using namespace PSECore::Dataflow;
-using namespace PSECore::Datatypes;
-using namespace SCICore::TclInterface;
+using namespace SCIRun;
 using DaveW::Datatypes::VectorFieldMI;
 
 class MakeCurrentDensityField : public Module {
@@ -136,22 +132,7 @@ Vector MakeCurrentDensityField::mult(Array1<double> matrix, Vector elemField) {
 
   return(Vector(matrix[0]*elemField.x()+matrix[1]*elemField.y()+matrix[2]*elemField.z(),matrix[1]*elemField.x()+matrix[3]*elemField.y()+matrix[4]*elemField.z(),matrix[2]*elemField.x()+matrix[4]*elemField.y()+matrix[5]*elemField.z()));
 
-}
-} // End namespace Modules
 } // End namespace DaveW
+}
 
 
-//
-// $Log$
-// Revision 1.3  2000/03/17 09:25:51  sparker
-// New makefile scheme: sub.mk instead of Makefile.in
-// Use XML-based files for module repository
-// Plus many other changes to make these two things work
-//
-// Revision 1.2  1999/09/08 02:26:29  sparker
-// Various #include cleanups
-//
-// Revision 1.1  1999/09/02 04:27:09  dmw
-// Rob V's modules
-//
-//

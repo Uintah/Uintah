@@ -14,16 +14,14 @@
 #ifndef SCI_Geom_Lighting_h
 #define SCI_Geom_Lighting_h 1
 
-#include <SCICore/share/share.h>
+#include <Core/share/share.h>
 
-#include <SCICore/Geom/Light.h>
-#include <SCICore/Containers/Array1.h>
-#include <SCICore/Geom/Color.h>
+#include <Core/Geom/Light.h>
+#include <Core/Containers/Array1.h>
+#include <Core/Geom/Color.h>
 
-namespace SCICore {
-namespace GeomSpace {
+namespace SCIRun {
 
-using SCICore::Containers::Array1;
 
 class SCICORESHARE Lighting {
 public:
@@ -39,28 +37,8 @@ public:
     friend SCICORESHARE void Pio( Piostream&, Lighting& );
 };
 
-} // End namespace GeomSpace
-} // End namespace SCICore
+} // End namespace SCIRun
 
-//
-// $Log$
-// Revision 1.2  1999/08/17 06:39:20  sparker
-// Merged in modifications from PSECore to make this the new "blessed"
-// version of SCIRun/Uintah.
-//
-// Revision 1.1  1999/07/27 16:56:49  mcq
-// Initial commit
-//
-// Revision 1.3  1999/05/06 19:56:11  dav
-// added back .h files
-//
-// Revision 1.1  1999/05/05 21:05:09  dav
-// added SCICore .h files to /include directories
-//
-// Revision 1.1.1.1  1999/04/24 23:12:22  dav
-// Import sources
-//
-//
 
 #endif /* SCI_Geom_Lighting_h */
 

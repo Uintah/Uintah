@@ -14,10 +14,9 @@
 #ifndef SCI_Geom_Container_h
 #define SCI_Geom_Container_h 1
 
-#include <SCICore/Geom/GeomObj.h>
+#include <Core/Geom/GeomObj.h>
 
-namespace SCICore {
-namespace GeomSpace {
+namespace SCIRun {
 
 class SCICORESHARE GeomContainer : public GeomObj {
 protected:
@@ -37,8 +36,7 @@ public:
     static PersistentTypeID type_id;
 };    
 
-} // End namespace GeomSpace
-} // End namespace SCICore
+} // End namespace SCIRun
 
 
 #endif

@@ -10,15 +10,15 @@
  *  Copyright (C) 199? SCI Group
  */
 
-#include <PSECommon/Modules/Salmon/Tex.h>
+#include <Dataflow/Modules/Salmon/Tex.h>
 
-#include <SCICore/Malloc/Allocator.h>
+#include <Core/Malloc/Allocator.h>
 #include <strings.h>
 
-#include <SCICore/Geometry/BBox.h>
-#include <SCICore/Math/MiscMath.h>
-#include <SCICore/TclInterface/TCLTask.h>
-#include <SCICore/Util/NotFinished.h>
+#include <Core/Geometry/BBox.h>
+#include <Core/Math/MiscMath.h>
+#include <Core/TclInterface/TCLTask.h>
+#include <Core/Util/NotFinished.h>
 #include <iostream>
 using std::cerr;
 using std::ostream;
@@ -26,12 +26,8 @@ using std::ostream;
 
 #define USELUMIALPH 1
 
-namespace PSECommon {
-namespace Modules {
+namespace SCIRun {
 
-using SCICore::Geometry::Dot;
-using SCICore::PersistentSpace::Persistent;
-using SCICore::Math::Abs;
 
 // these are some functions for the cube primitive...
 
@@ -613,5 +609,4 @@ void GeomTexVolRender::Clear()
   map2d = vol3d;
 }
 
-} // End namespace Modules
-} // End namespace PSECommon
+} // End namespace SCIRun

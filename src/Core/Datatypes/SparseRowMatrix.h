@@ -15,13 +15,11 @@
 #ifndef SCI_project_SparseRowMatrix_h
 #define SCI_project_SparseRowMatrix_h 1
 
-#include <SCICore/Datatypes/Matrix.h>
-#include <SCICore/Containers/Array1.h>
+#include <Core/Datatypes/Matrix.h>
+#include <Core/Containers/Array1.h>
 
-namespace SCICore {
-namespace Datatypes {
+namespace SCIRun {
 
-using SCICore::Containers::Array1;
 
 class AddMatrices;
 class SCICORESHARE SparseRowMatrix : public Matrix {
@@ -75,7 +73,6 @@ public:
     static PersistentTypeID type_id;
 };
 
-} // End namespace Datatypes
-} // End namespace SCICore
+} // End namespace SCIRun
 
 #endif

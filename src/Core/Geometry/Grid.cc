@@ -1,4 +1,3 @@
-//static char *id="@(#) $Id$";
 
 /*
  *  Grid.cc: Uniform grid containing triangular elements
@@ -12,21 +11,18 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <SCICore/Geometry/Grid.h>
-#include <SCICore/Containers/Array1.h>
-#include <SCICore/Containers/Array3.h>
-#include <SCICore/Containers/String.h>
-#include <SCICore/Geometry/Point.h>
-#include <SCICore/Geometry/Vector.h>
-#include <SCICore/Malloc/Allocator.h>
-#include <SCICore/Math/MinMax.h>
-#include <SCICore/Math/MiscMath.h>
+#include <Core/Geometry/Grid.h>
+#include <Core/Containers/Array1.h>
+#include <Core/Containers/Array3.h>
+#include <Core/Containers/String.h>
+#include <Core/Geometry/Point.h>
+#include <Core/Geometry/Vector.h>
+#include <Core/Malloc/Allocator.h>
+#include <Core/Math/MinMax.h>
+#include <Core/Math/MiscMath.h>
 
-namespace SCICore {
-namespace Geometry {
+namespace SCIRun {
 
-using SCICore::Math::Max;
-using SCICore::Math::Min;
 
 Grid::Grid(int x, int y, int z, const Point &m, double sp) 
 : spacing(sp), min(m) {
@@ -56,7 +52,6 @@ void Grid::get_element(const Point &p, int *i, int *j, int *k) {
 
 void Grid::get_element(const Point &p, int *i, int *j, int *k, double *dist) {
 
-  using SCICore::Math::Abs;
 
     Vector loc((p-min)/spacing);
     *i = (int) loc.x();
@@ -356,20 +351,6 @@ int Grid::element_triangle_intersect(int i, int j, int k, const Point &p1,
     return (next->size());
 }
 
-} // End namespace Geometry
-} // End namespace SCICore
+} // End namespace SCIRun
 
-//
-// $Log$
-// Revision 1.2  1999/08/17 06:39:27  sparker
-// Merged in modifications from PSECore to make this the new "blessed"
-// version of SCIRun/Uintah.
-//
-// Revision 1.1  1999/07/27 16:56:55  mcq
-// Initial commit
-//
-// Revision 1.1.1.1  1999/04/24 23:12:27  dav
-// Import sources
-//
-//
 

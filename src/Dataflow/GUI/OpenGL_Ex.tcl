@@ -1,15 +1,11 @@
 
-#
 #  OpenGL_Ex.tcl
-#
 #  Written by:
 #   David Weinstein
 #   Department of Computer Science
 #   University of Utah
 #   April 1996
-#
 #  Copyright (C) 1996 SCI Group
-#
 
 itcl_class OpenGL_Ex {
     inherit Module

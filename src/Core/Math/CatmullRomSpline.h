@@ -14,16 +14,11 @@
 #ifndef SCI_Math_CatmullRomSpline_h
 #define SCI_Math_CatmullRomSpline_h
 
-#include <SCICore/share/share.h>
+#include <Core/share/share.h>
+#include <Core/Containers/Array1.h>
 
-#include <SCICore/share/share.h>
+namespace SCIRun {
 
-#include <SCICore/Containers/Array1.h>
-
-namespace SCICore {
-namespace Math {
-
-using SCICore::Containers::Array1;
 
 template<class T>
 class SCICORESHARE CatmullRomSpline {
@@ -47,18 +42,14 @@ public:
    T& operator[]( const int );
 };
 
-} // End namespace Math
-} // End namespace SCICore
+} // End namespace SCIRun
 
 ////////////////////////////////////////////////////////////
-//
 // Start of included CatmullRomSpline.cc
-//
 
-#include <SCICore/Util/Assert.h>
+#include <Core/Util/Assert.h>
 
-namespace SCICore {
-namespace Math {
+namespace SCIRun {
 
 template<class T>
 CatmullRomSpline<T>::CatmullRomSpline()
@@ -145,30 +136,7 @@ T& CatmullRomSpline<T>::operator[]( const int idx )
    return d[idx];
 }
 
-} // End namespace Math
-} // End namespace SCICore
+} // End namespace SCIRun
 
-//
-// $Log$
-// Revision 1.2  1999/08/17 06:39:32  sparker
-// Merged in modifications from PSECore to make this the new "blessed"
-// version of SCIRun/Uintah.
-//
-// Revision 1.1  1999/07/27 16:57:02  mcq
-// Initial commit
-//
-// Revision 1.4  1999/07/01 16:44:22  moulding
-// added SHARE to enable win32 shared libraries (dll's)
-//
-// Revision 1.3  1999/05/06 19:56:17  dav
-// added back .h files
-//
-// Revision 1.1  1999/05/05 21:05:21  dav
-// added SCICore .h files to /include directories
-//
-// Revision 1.1.1.1  1999/04/24 23:12:23  dav
-// Import sources
-//
-//
 
 #endif /* SCI_Math_CatmullRomSpline_h */

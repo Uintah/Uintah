@@ -1,7 +1,7 @@
 
-catch {rename Yarden_Visulaization_Hase ""}
+catch {rename Packages/Yarden_Visulaization_Hase ""}
 
-itcl_class Yarden_Visualization_Hase {
+itcl_class Packages/Yarden_Visualization_Hase {
     inherit Module
 
     constructor {config} {

@@ -1,4 +1,3 @@
-//static char *id="@(#) $Id$";
 
 /*
  *  Coregister.cc:  Coregister a set of points to a surface
@@ -15,50 +14,41 @@
  *				     simulated annealing for convergence (??)
  */
 
-#include <DaveW/Datatypes/General/ManhattanDist.h>
-#include <DaveW/Datatypes/General/ScalarTriSurface.h>
-#include <DaveW/ThirdParty/Quaternions/BallAux.h>
-#include <DaveW/ThirdParty/NumRec/dsvdcmp.h>
-#include <PSECore/Dataflow/Module.h>
-#include <PSECore/Datatypes/GeometryPort.h>
-#include <PSECore/Datatypes/ScalarFieldPort.h>
-#include <PSECore/Datatypes/SurfacePort.h>
-#include <PSECore/Widgets/ScaledBoxWidget.h>
-#include <SCICore/Datatypes/BasicSurfaces.h>
-#include <SCICore/Datatypes/ScalarField.h>
-#include <SCICore/Datatypes/ScalarFieldRG.h>
-#include <SCICore/Datatypes/SurfTree.h>
-#include <SCICore/Datatypes/TriSurface.h>
-#include <SCICore/Geom/Pt.h>
-#include <SCICore/Geom/Material.h>
-#include <SCICore/Geom/GeomSphere.h>
-#include <SCICore/Geometry/Point.h>
-#include <SCICore/Geometry/Vector.h>
-#include <SCICore/Malloc/Allocator.h>
-#include <SCICore/Math/Expon.h>
-#include <SCICore/Math/Mat.h>
-#include <SCICore/Math/MinMax.h>
-#include <SCICore/Math/Trig.h>
-#include <SCICore/TclInterface/TCLvar.h>
+#include <Packages/DaveW/Core/Datatypes/General/ManhattanDist.h>
+#include <Packages/DaveW/Core/Datatypes/General/ScalarTriSurface.h>
+#include <Packages/DaveW/Core/ThirdParty/Quaternions/BallAux.h>
+#include <Packages/DaveW/Core/ThirdParty/NumRec/dsvdcmp.h>
+#include <Dataflow/Network/Module.h>
+#include <Dataflow/Ports/GeometryPort.h>
+#include <Dataflow/Ports/ScalarFieldPort.h>
+#include <Dataflow/Ports/SurfacePort.h>
+#include <Dataflow/Widgets/ScaledBoxWidget.h>
+#include <Core/Datatypes/BasicSurfaces.h>
+#include <Core/Datatypes/ScalarField.h>
+#include <Core/Datatypes/ScalarFieldRG.h>
+#include <Core/Datatypes/SurfTree.h>
+#include <Core/Datatypes/TriSurface.h>
+#include <Core/Geom/Pt.h>
+#include <Core/Geom/Material.h>
+#include <Core/Geom/GeomSphere.h>
+#include <Core/Geometry/Point.h>
+#include <Core/Geometry/Vector.h>
+#include <Core/Malloc/Allocator.h>
+#include <Core/Math/Expon.h>
+#include <Core/Math/Mat.h>
+#include <Core/Math/MinMax.h>
+#include <Core/Math/Trig.h>
+#include <Core/TclInterface/TCLvar.h>
 
 #include <iostream>
 using std::cerr;
 
 namespace DaveW {
-namespace Modules {
-
 using DaveW::Datatypes::ManhattanDist;
 using DaveW::Datatypes::ScalarTriSurface;
 
-using namespace PSECore::Dataflow;
-using namespace PSECore::Datatypes;
-using namespace PSECore::Widgets;
+using namespace SCIRun;
 
-using namespace SCICore::TclInterface;
-using namespace SCICore::Containers;
-using namespace SCICore::Geometry;
-using namespace SCICore::GeomSpace;
-using namespace SCICore::Math;
 
 double FiducialFit(double ax[], double ay[], double az[], double px[], 
 		   double py[], double pz[], double TT[4][4], int useLSF,
@@ -1324,38 +1314,7 @@ void Coregister::tcl_command(TCLArgs& args, void* userdata)
             Module::tcl_command(args, userdata);
         }
 }
-
-} // End namespace Modules
 } // End namespace DaveW
 
 
-//
-// $Log$
-// Revision 1.6  2000/03/17 09:25:33  sparker
-// New makefile scheme: sub.mk instead of Makefile.in
-// Use XML-based files for module repository
-// Plus many other changes to make these two things work
-//
-// Revision 1.5  1999/10/07 02:06:27  sparker
-// use standard iostreams and complex type
-//
-// Revision 1.4  1999/09/08 02:26:22  sparker
-// Various #include cleanups
-//
-// Revision 1.3  1999/08/29 00:46:36  sparker
-// Integrated new thread library
-// using statement tweaks to compile with both MipsPRO and g++
-// Thread library bug fixes
-//
-// Revision 1.2  1999/08/25 03:47:38  sparker
-// Changed SCICore/CoreDatatypes to SCICore/Datatypes
-// Changed PSECore/CommonDatatypes to PSECore/Datatypes
-// Other Misc. directory tree updates
-//
-// Revision 1.1  1999/08/24 06:23:01  dmw
-// Added in everything for the DaveW branch
-//
-// Revision 1.2  1999/05/03 04:52:12  dmw
-// Added and updated DaveW Datatypes/Modules
-//
-//
+

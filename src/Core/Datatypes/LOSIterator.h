@@ -1,16 +1,13 @@
 #ifndef LOSITERATOR_H
 #define LOSITERATOR_H
 
-#include <SCICore/Geometry/Point.h>
-#include <SCICore/Geometry/Ray.h>
-#include <SCICore/Datatypes/GLTextureIterator.h>
-#include <SCICore/Datatypes/GLTexture3D.h>
+#include <Core/Geometry/Point.h>
+#include <Core/Geometry/Ray.h>
+#include <Core/Datatypes/GLTextureIterator.h>
+#include <Core/Datatypes/GLTexture3D.h>
 
-namespace SCICore {
-namespace Datatypes {
+namespace SCIRun {
 
-using SCICore::Geometry::Point;
-using SCICore::Geometry::Ray;
 
 /**************************************
 
@@ -75,6 +72,5 @@ private:
 
 };
 
-} // end namespace Datatypes
-} // end namespace SCICore
+} // End namespace SCIRun
 #endif

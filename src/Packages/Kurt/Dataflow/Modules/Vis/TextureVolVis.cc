@@ -7,26 +7,26 @@
 
 #include "TextureVolVis.h"
 
-#include <SCICore/Containers/Array1.h>
-#include <PSECore/Dataflow/Module.h>
-#include <SCICore/Datatypes/ColorMap.h>
-#include <PSECore/Datatypes/ColorMapPort.h>
-#include <PSECore/Datatypes/GeometryPort.h>
-#include <PSECore/Datatypes/ScalarFieldPort.h>
-#include <SCICore/Datatypes/ScalarFieldRGuchar.h>
-#include <SCICore/Datatypes/ScalarFieldRGBase.h>
+#include <Core/Containers/Array1.h>
+#include <Dataflow/Network/Module.h>
+#include <Core/Datatypes/ColorMap.h>
+#include <Dataflow/Ports/ColorMapPort.h>
+#include <Dataflow/Ports/GeometryPort.h>
+#include <Dataflow/Ports/ScalarFieldPort.h>
+#include <Core/Datatypes/ScalarFieldRGuchar.h>
+#include <Core/Datatypes/ScalarFieldRGBase.h>
 
-#include <SCICore/Geom/GeomTriangles.h>
+#include <Core/Geom/GeomTriangles.h>
 
-#include <SCICore/Malloc/Allocator.h>
-#include <SCICore/TclInterface/TCLvar.h>
-#include <SCICore/Thread/CrowdMonitor.h>
+#include <Core/Malloc/Allocator.h>
+#include <Core/TclInterface/TCLvar.h>
+#include <Core/Thread/CrowdMonitor.h>
 
-#include <PSECore/Widgets/PointWidget.h>
+#include <Dataflow/Widgets/PointWidget.h>
 #include <iostream>
 #include <ios>
 #include <algorithm>
-#include <Kurt/Datatypes/VolumeUtils.h>
+#include <Packages/Kurt/Core/Datatypes/VolumeUtils.h>
 
 using std::cerr;
 using std::endl;
@@ -34,16 +34,8 @@ using std::hex;
 using std::dec;
 
 namespace Kurt {
-namespace Modules {
-
 using namespace Kurt::Datatypes;
-using namespace PSECore::Dataflow;
-using namespace PSECore::Datatypes;
-using namespace PSECore::Widgets;
-using namespace SCICore::TclInterface;
-using namespace SCICore::GeomSpace;
-using namespace SCICore::Geometry;
-using namespace SCICore::Math;
+using namespace SCIRun;
 
 static clString control_name("Control Widget");
 			 
@@ -143,7 +135,7 @@ void TextureVolVis::execute(void)
     control_widget->SetScale(max/80.0);
   }
 
-  //SCICore::Malloc::AuditAllocator(SCICore::Malloc::default_allocator);
+  //AuditAllocator(default_allocator);
   if( !volren ){
     volren = new GLVolumeRenderer(0x12345676,
 				  tex,
@@ -159,9 +151,9 @@ void TextureVolVis::execute(void)
     volren->SetColorMap( cmap );
   }
  
-  //SCICore::Malloc::AuditAllocator(SCICore::Malloc::default_allocator);
+  //AuditAllocator(default_allocator);
   volren->SetInterp( bool(interp_mode.get()));
-  //SCICore::Malloc::AuditAllocator(SCICore::Malloc::default_allocator);
+  //AuditAllocator(default_allocator);
 
   switch( render_style.get() ) {
   case 0:
@@ -197,16 +189,15 @@ void TextureVolVis::execute(void)
    }
   }
 
-  //SCICore::Malloc::AuditAllocator(SCICore::Malloc::default_allocator);
+  //AuditAllocator(default_allocator);
   volren->SetNSlices( num_slices.get() );
   volren->SetSliceAlpha( alpha_scale.get() );
   volren->BuildTransferFunctions();
-  //SCICore::Malloc::AuditAllocator(SCICore::Malloc::default_allocator);
+  //AuditAllocator(default_allocator);
   ogeom->flushViews();				  
-  //SCICore::Malloc::AuditAllocator(SCICore::Malloc::default_allocator);
+  //AuditAllocator(default_allocator);
 }
+} // End namespace Kurt
 
-} // End namespace Modules
-} // End namespace Uintah
 
 

@@ -1,7 +1,6 @@
 
 /*
  *  TypeInfo.cc: internal representation for a type.
- *  $Id$
  *
  *  Written by:
  *   Steven G. Parker
@@ -12,19 +11,18 @@
  *  Copyright (C) 1999 SCI Group
  */
 
-#include <Component/PIDL/TypeInfo.h>
-#include <Component/PIDL/GlobusError.h>
-#include <Component/PIDL/Object.h>
-#include <Component/PIDL/ProxyBase.h>
-#include <Component/PIDL/ReplyEP.h>
-#include <Component/PIDL/TypeInfo_internal.h>
-#include <SCICore/Exceptions/InternalError.h>
+#include <Core/CCA/Component/PIDL/TypeInfo.h>
+#include <Core/CCA/Component/PIDL/GlobusError.h>
+#include <Core/CCA/Component/PIDL/Object.h>
+#include <Core/CCA/Component/PIDL/ProxyBase.h>
+#include <Core/CCA/Component/PIDL/ReplyEP.h>
+#include <Core/CCA/Component/PIDL/TypeInfo_internal.h>
+#include <Core/Exceptions/InternalError.h>
 #include <iostream>
 using std::cerr;
 using Component::PIDL::GlobusError;
 using Component::PIDL::Object_interface;
 using Component::PIDL::TypeInfo;
-using SCICore::Exceptions::InternalError;
 
 TypeInfo::TypeInfo(TypeInfo_internal* priv)
     : d_priv(priv)
@@ -50,7 +48,7 @@ int TypeInfo::computeVtableOffset(const TypeInfo* ti) const
 Object_interface* TypeInfo::pidl_cast(Object_interface* obj) const
 {
     // If we aren't a proxy, we don't know what to do...
-    Component::PIDL::ProxyBase* p=dynamic_cast<Component::PIDL::ProxyBase*>(obj);
+    Core/CCA/Component::PIDL::ProxyBase* p=dynamic_cast<Core/CCA/Component::PIDL::ProxyBase*>(obj);
     if(!p)
 	return 0;
 
@@ -129,17 +127,3 @@ int TypeInfo::isa(const std::string& classname, const std::string& uuid) const
     return classname_iter->second.second;
 }
 
-//
-// $Log$
-// Revision 1.2  1999/09/26 06:12:57  sparker
-// Added (distributed) reference counting to PIDL objects.
-// Began campaign against memory leaks.  There seem to be no more
-//   per-message memory leaks.
-// Added a test program to flush out memory leaks
-// Fixed other Component testprograms so that they work with ref counting
-// Added a getPointer method to PIDL handles
-//
-// Revision 1.1  1999/09/17 05:08:10  sparker
-// Implemented component model to work with sidl code generator
-//
-//

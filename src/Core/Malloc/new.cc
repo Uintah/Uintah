@@ -10,12 +10,12 @@
  *  Copyright (C) 199? SCI Group
  */
 
-#include <SCICore/Malloc/Allocator.h>
-#include <SCICore/Malloc/AllocPriv.h>
+#include <Core/Malloc/Allocator.h>
+#include <Core/Malloc/AllocPriv.h>
 #include <new>
 #include <sci_defs.h>
 
-using namespace SCICore::Malloc;
+using namespace SCIRun;
 
 #ifndef DISABLE_SCI_MALLOC
 
@@ -24,7 +24,6 @@ using namespace SCICore::Malloc;
 // This is ugly, but necessary, since --LANG:std remaps the mangling
 // of the global operator new.  This provides the "old" operator new,
 // since the compiler insists on generating both.
-//
 extern "C" {
     void* __nw__GUi(size_t size)
     {

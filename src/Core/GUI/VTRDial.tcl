@@ -1,14 +1,10 @@
-#
 #  VTRDial.tcl
-#
 #  Written by:
 #   James Purciful and Dave Weinstein
 #   Department of Computer Science
 #   University of Utah
 #   May 1995
-#
 #  Copyright (C) 1995 SCI Group
-#
 
 
 itcl_class VTRDialW {

@@ -1,31 +1,22 @@
 //  IndexAttrib.h
-//
 //  Written by:
 //   Michael Callahan
 //   Department of Computer Science
 //   University of Utah
 //   August 2000
-//
 //  Copyright (C) 2000 SCI Institute
-//
 //  Attribute containing a finite number of Index values.
-//
 
 #ifndef SCI_project_IndexAttrib_h
 #define SCI_project_IndexAttrib_h 1
 
 #include <vector>
 
-#include <SCICore/Datatypes/AccelAttrib.h>
+#include <Core/Datatypes/AccelAttrib.h>
 
 
-namespace SCICore{
-namespace Datatypes{
+namespace SCIRun {
 
-using SCICore::Containers::LockingHandle;
-using SCICore::Geometry::Point;
-using SCICore::PersistentSpace::Piostream;
-using SCICore::PersistentSpace::PersistentTypeID;
 
 template <class T, class I, class A=AccelAttrib<I> > class IndexAttrib : public DiscreteAttrib<T>
 {
@@ -344,8 +335,7 @@ IndexAttrib<T, I, A>::io(Piostream&)
 }
 
 
-}  // end Datatypes
-}  // end SCICore
+} // End namespace SCIRun
 
 #endif
 

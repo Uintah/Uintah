@@ -2,17 +2,13 @@
 
 
 
-#include <SCICore/Datatypes/CameraView.h>
-#include <SCICore/Geometry/Point.h>
-#include <SCICore/Geometry/Vector.h>
-#include <SCICore/Malloc/Allocator.h>
+#include <Core/Datatypes/CameraView.h>
+#include <Core/Geometry/Point.h>
+#include <Core/Geometry/Vector.h>
+#include <Core/Malloc/Allocator.h>
 
-namespace SCICore {
-  namespace Datatypes {
+namespace SCIRun {
 
-    using SCICore::Geometry::Point;
-    using SCICore::Geometry::Vector;
-    using SCICore::GeomSpace::Pio;
 
     static Persistent* make_CameraView()
     {
@@ -44,5 +40,4 @@ namespace SCICore {
       Pio(stream, theView);
       stream.end_class();
     }
-  } // end Datatypes
-}   // end SCICore
+} // End namespace SCIRun

@@ -10,16 +10,15 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <SCICore/Util/Debug.h>
-#include <SCICore/Malloc/Allocator.h>
+#include <Core/Util/Debug.h>
+#include <Core/Malloc/Allocator.h>
 #include <iostream>
 using std::cerr;
 using std::ostream;
 #include <stdlib.h>
 #include <string.h>
 
-namespace SCICore {
-namespace Util {
+namespace SCIRun {
 
 static Debug* debugs=0;
 static int initialized=0;
@@ -92,26 +91,5 @@ ostream& operator<<(ostream& str, DebugSwitch& db)
     return str;
 }
 
-} // End namespace Util
-} // End namespace SCICore
+} // End namespace SCIRun
 
-//
-// $Log$
-// Revision 1.4  1999/10/07 02:08:10  sparker
-// use standard iostreams and complex type
-//
-// Revision 1.3  1999/09/04 06:01:56  sparker
-// Updates to .h files, to minimize #includes
-// removed .icc files (yeah!)
-//
-// Revision 1.2  1999/08/17 06:39:55  sparker
-// Merged in modifications from PSECore to make this the new "blessed"
-// version of SCIRun/Uintah.
-//
-// Revision 1.1  1999/07/27 16:57:35  mcq
-// Initial commit
-//
-// Revision 1.1.1.1  1999/04/24 23:12:23  dav
-// Import sources
-//
-//

@@ -7,7 +7,7 @@
 
 #include <sci_config.h>
 
-#include <SCICore/share/share.h>
+#include <Core/share/share.h>
 
 #include <stdio.h>
 #include <tkPort.h>

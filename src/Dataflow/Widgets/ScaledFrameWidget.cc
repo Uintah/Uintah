@@ -11,25 +11,18 @@
  */
 
 
-#include <PSECore/Widgets/ScaledFrameWidget.h>
-#include <PSECore/Constraints/DistanceConstraint.h>
-#include <PSECore/Constraints/PythagorasConstraint.h>
-#include <PSECore/Constraints/RatioConstraint.h>
-#include <SCICore/Geom/GeomCylinder.h>
-#include <SCICore/Geom/GeomSphere.h>
-#include <SCICore/Malloc/Allocator.h>
-#include <PSECore/Dataflow/Module.h>
+#include <Dataflow/Widgets/ScaledFrameWidget.h>
+#include <Dataflow/Constraints/DistanceConstraint.h>
+#include <Dataflow/Constraints/PythagorasConstraint.h>
+#include <Dataflow/Constraints/RatioConstraint.h>
+#include <Core/Geom/GeomCylinder.h>
+#include <Core/Geom/GeomSphere.h>
+#include <Core/Malloc/Allocator.h>
+#include <Dataflow/Network/Module.h>
 
-namespace PSECore {
-namespace Widgets {
+namespace SCIRun {
 
-using SCICore::GeomSpace::GeomGroup;
-using SCICore::GeomSpace::GeomSphere;
-using SCICore::GeomSpace::GeomCylinder;
-using SCICore::GeomSpace::GeomCappedCylinder;
-using SCICore::Geometry::Cross;
 
-using namespace PSECore::Constraints;
 
 const Index NumCons = 6;
 const Index NumVars = 10;
@@ -593,5 +586,4 @@ ScaledFrameWidget::GetMaterialName( const Index mindex ) const
    }
 }
 
-} // End namespace Widgets
-} // End namespace PSECore
+} // End namespace SCIRun

@@ -14,28 +14,17 @@
 #ifndef Geometry_Point_h
 #define Geometry_Point_h 1
 
-#include <SCICore/share/share.h>
-#include <SCICore/Math/MinMax.h>
+#include <Core/share/share.h>
+#include <Core/Math/MinMax.h>
 
 #include <iosfwd>
 
-namespace SCICore {
-namespace Containers {
-class clString;
-}
-namespace PersistentSpace {
-class Piostream;
-}
-namespace Tester {
-class RigorousTest;
-}
     
-namespace Geometry {
+namespace SCIRun {
 
-using SCICore::Containers::clString;
-using SCICore::PersistentSpace::Piostream;
-using SCICore::Tester::RigorousTest;
-
+class RigorousTest;
+class Piostream;
+class clString;
 class Vector;
 
 class SCICORESHARE Point {
@@ -105,14 +94,12 @@ public:
 SCICORESHARE std::ostream& operator<<(std::ostream& os, const Point& p);
 SCICORESHARE std::istream& operator>>(std::istream& os, Point& p);
 
-} // End namespace Geometry
-} // End namespace SCICore
+} // End namespace SCIRun
 
 // This cannot be above due to circular dependencies
-#include <SCICore/Geometry/Vector.h>
+#include <Core/Geometry/Vector.h>
 
-namespace SCICore {
-namespace Geometry {
+namespace SCIRun {
 
 inline Point::Point(const Vector& v)
     : _x(v._x), _y(v._y), _z(v._z)
@@ -250,7 +237,6 @@ inline Vector Point::asVector() const
 
 inline Point Min(const Point& p1, const Point& p2)
 {
-  using SCICore::Math::Min;
 
   double x=Min(p1._x, p2._x);
   double y=Min(p1._y, p2._y);
@@ -260,7 +246,6 @@ inline Point Min(const Point& p1, const Point& p2)
 
 inline Point Max(const Point& p1, const Point& p2)
 {
-  using SCICore::Math::Max;
 
   double x=Max(p1._x, p2._x);
   double y=Max(p1._y, p2._y);
@@ -278,8 +263,7 @@ inline double Dot(const Point& p1, const Point& p2)
   return p1._x*p2._x+p1._y*p2._y+p1._z*p2._z;
 }
 
-} // End namespace Geometry
-} // End namespace SCICore
+} // End namespace SCIRun
 
 
 #endif //ifndef Geometry_Point_h

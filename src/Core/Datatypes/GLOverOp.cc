@@ -1,8 +1,7 @@
-#include <SCICore/Datatypes/GLOverOp.h>
+#include <Core/Datatypes/GLOverOp.h>
 #include <GL/gl.h>
 
-namespace SCICore {
-namespace GeomSpace  {
+namespace SCIRun {
 
 
 GLOverOp::GLOverOp(const GLVolumeRenderer* glvr) :
@@ -25,5 +24,4 @@ void GLOverOp::postDraw()
 }
 
 
-} // end namespace Datatypes
-} // end namespace SCICore
+} // End namespace SCIRun

@@ -10,14 +10,13 @@
  *  Copyright (C) 2000 SCI Group
  */
 
-#include <SCICore/Geom/GeomDL.h>
-#include <SCICore/Malloc/Allocator.h>
+#include <Core/Geom/GeomDL.h>
+#include <Core/Malloc/Allocator.h>
 #include <iostream>
 using std::cerr;
 using std::ostream;
 
-namespace SCICore {
-namespace GeomSpace {
+namespace SCIRun {
 
 Persistent* make_GeomDL()
 {
@@ -63,10 +62,9 @@ void GeomDL::get_bounds(BBox& box)
 
 void GeomDL::io(Piostream& stream)
 {
-    using SCICore::PersistentSpace::Pio;
 
     /*int version=*/ stream.begin_class("GeomDL", GEOMDL_VERSION);
-    SCICore::GeomSpace::Pio(stream, child);
+    Pio(stream, child);
     stream.end_class();
 }
 
@@ -79,7 +77,6 @@ bool GeomDL::saveobj(ostream& out, const clString& format,
     return true;
 }
 
-} // End namespace GeomSpace
-} // End namespace SCICore
+} // End namespace SCIRun
 
 

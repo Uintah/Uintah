@@ -1,4 +1,4 @@
-itcl_class PSECommon_Visualization_VectorSeg {
+itcl_class Dataflow_Visualization_VectorSeg {
     inherit Module
     constructor {config} {
 	set name VectorSeg

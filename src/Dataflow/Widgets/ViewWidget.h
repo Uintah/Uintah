@@ -15,13 +15,11 @@
 #ifndef SCI_project_View_Widget_h
 #define SCI_project_View_Widget_h 1
 
-#include <PSECore/Widgets/BaseWidget.h>
-#include <SCICore/Geom/View.h>
+#include <Dataflow/Widgets/BaseWidget.h>
+#include <Core/Geom/View.h>
 
-namespace PSECore {
-namespace Widgets {
+namespace SCIRun {
 
-using SCICore::GeomSpace::View;
 
 #if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
 // Turn off warnings about partially overridden virtual functions
@@ -80,27 +78,7 @@ private:
 #pragma reset woff 1682
 #endif
 
-} // End namespace Widgets
-} // End namespace PSECore
+} // End namespace SCIRun
 
-//
-// $Log$
-// Revision 1.3  1999/10/07 02:07:26  sparker
-// use standard iostreams and complex type
-//
-// Revision 1.2  1999/08/17 06:38:33  sparker
-// Merged in modifications from PSECore to make this the new "blessed"
-// version of SCIRun/Uintah.
-//
-// Revision 1.1  1999/07/27 16:56:10  mcq
-// Initial commit
-//
-// Revision 1.3  1999/05/06 20:17:26  dav
-// added back PSECore .h files
-//
-// Revision 1.1.1.1  1999/04/24 23:12:29  dav
-// Import sources
-//
-//
 
 #endif

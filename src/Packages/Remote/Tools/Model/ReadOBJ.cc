@@ -1,16 +1,13 @@
 // Simple, Stupid OBJ parser
-//
 // Dave McAllister, Aug. 1999.
 // based in part on code from Peter-Pike Sloan.
 
-#include <Remote/Tools/Model/Model.h>
+#include <Packages/Remote/Tools/Model/Model.h>
 
 #include <stdio.h>
 #include <string.h>
 
 namespace Remote {
-namespace Tools {
-
 struct MatInfo
 {
   const char *Name;
@@ -447,7 +444,6 @@ bool Model::ReadOBJ(const char *fname)
 
   return false;
 }
+} // End namespace Remote
 
-} // namespace Tools
-} // namespace Remote
 

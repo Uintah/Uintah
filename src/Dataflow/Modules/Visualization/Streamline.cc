@@ -1,4 +1,3 @@
-//static char *id="@(#) $Id$";
 
 /*
   TODO:
@@ -29,40 +28,40 @@ hook up user interface buttons
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <SCICore/Tester/RigorousTest.h>
-#include <SCICore/Math/Trig.h>
-#include <PSECore/Dataflow/Module.h>
-#include <PSECore/Datatypes/ColorMapPort.h>
-#include <PSECore/Datatypes/GeometryPort.h>
-#include <SCICore/Datatypes/ScalarField.h>
-#include <SCICore/Datatypes/ScalarFieldRG.h>
-#include <SCICore/Datatypes/ScalarFieldUG.h>
-#include <PSECore/Datatypes/ScalarFieldPort.h>
-#include <SCICore/Datatypes/VectorField.h>
-#include <SCICore/Datatypes/VectorFieldUG.h>
-#include <PSECore/Datatypes/VectorFieldPort.h>
-#include <SCICore/Geom/GeomCylinder.h>
-#include <SCICore/Geom/GeomDisc.h>
-#include <SCICore/Geom/GeomObj.h>
-#include <SCICore/Geom/Material.h>
-#include <SCICore/Geom/GeomTriStrip.h>
-#include <SCICore/Geom/GeomGroup.h>
-#include <SCICore/Geom/GeomPick.h>
-#include <SCICore/Geom/GeomPolyline.h>
-#include <SCICore/Geom/GeomSphere.h>
-#include <SCICore/Geom/Switch.h>
-#include <SCICore/Geom/GeomTube.h>
-#include <SCICore/Geom/GeomLine.h>
-#include <SCICore/Geometry/Point.h>
-#include <SCICore/Malloc/Allocator.h>
-#include <SCICore/Math/MinMax.h>
-#include <SCICore/Math/MiscMath.h>
-#include <SCICore/Thread/Parallel.h>
-#include <SCICore/Thread/Thread.h>
-#include <PSECore/Widgets/GaugeWidget.h>
-#include <PSECore/Widgets/PointWidget.h>
-#include <PSECore/Widgets/RingWidget.h>
-#include <PSECore/Widgets/ScaledFrameWidget.h>
+#include <Core/Tester/RigorousTest.h>
+#include <Core/Math/Trig.h>
+#include <Dataflow/Network/Module.h>
+#include <Dataflow/Ports/ColorMapPort.h>
+#include <Dataflow/Ports/GeometryPort.h>
+#include <Core/Datatypes/ScalarField.h>
+#include <Core/Datatypes/ScalarFieldRG.h>
+#include <Core/Datatypes/ScalarFieldUG.h>
+#include <Dataflow/Ports/ScalarFieldPort.h>
+#include <Core/Datatypes/VectorField.h>
+#include <Core/Datatypes/VectorFieldUG.h>
+#include <Dataflow/Ports/VectorFieldPort.h>
+#include <Core/Geom/GeomCylinder.h>
+#include <Core/Geom/GeomDisc.h>
+#include <Core/Geom/GeomObj.h>
+#include <Core/Geom/Material.h>
+#include <Core/Geom/GeomTriStrip.h>
+#include <Core/Geom/GeomGroup.h>
+#include <Core/Geom/GeomPick.h>
+#include <Core/Geom/GeomPolyline.h>
+#include <Core/Geom/GeomSphere.h>
+#include <Core/Geom/Switch.h>
+#include <Core/Geom/GeomTube.h>
+#include <Core/Geom/GeomLine.h>
+#include <Core/Geometry/Point.h>
+#include <Core/Malloc/Allocator.h>
+#include <Core/Math/MinMax.h>
+#include <Core/Math/MiscMath.h>
+#include <Core/Thread/Parallel.h>
+#include <Core/Thread/Thread.h>
+#include <Dataflow/Widgets/GaugeWidget.h>
+#include <Dataflow/Widgets/PointWidget.h>
+#include <Dataflow/Widgets/RingWidget.h>
+#include <Dataflow/Widgets/ScaledFrameWidget.h>
 
 #include <map.h>
 #include <iostream>
@@ -73,18 +72,8 @@ using std::endl;
 using std::istringstream;
 using std::ostringstream;
 
-namespace PSECommon {
-namespace Modules {
+namespace SCIRun {
 
-using namespace PSECore::Dataflow;
-using namespace PSECore::Datatypes;
-using namespace PSECore::Widgets;
-using namespace SCICore::TclInterface;
-using namespace SCICore::GeomSpace;
-using namespace SCICore::Containers;
-using namespace SCICore::Math;
-using namespace SCICore::Geometry;
-using namespace SCICore::Thread;
 
 class Streamline;
 
@@ -586,10 +575,8 @@ void Streamline::make_tracers(SLSource* source, Array1<SLTracer*>& tracers,
     }
 }
 
-//
 // Considering the current animation mode and parameters, return
 // the appropriate object group for time t
-//
 GeomGroup* SLSourceInfo::get_group(double t)
 {
     int n=int(anim_groups.size()*(t-anim_begin)/(anim_end-anim_begin));
@@ -2049,65 +2036,5 @@ void SLSourceInfo::pick_source(const clString& sname,
     }
 }
 
-} // End namespace Modules
-} // End namespace PSECommon
+} // End namespace SCIRun
 
-//
-// $Log$
-// Revision 1.11  2000/03/17 18:47:06  dahart
-// Included STL map header files where I forgot them, and removed less<>
-// parameter from map declarations
-//
-// Revision 1.10  2000/03/17 09:27:35  sparker
-// New makefile scheme: sub.mk instead of Makefile.in
-// Use XML-based files for module repository
-// Plus many other changes to make these two things work
-//
-// Revision 1.9  2000/03/11 00:39:56  dahart
-// Replaced all instances of HashTable<class X, class Y> with the
-// Standard Template Library's std::map<class X, class Y, less<class X>>
-//
-// Revision 1.8  1999/10/07 02:07:08  sparker
-// use standard iostreams and complex type
-//
-// Revision 1.7  1999/09/04 06:01:40  sparker
-// Updates to .h files, to minimize #includes
-// removed .icc files (yeah!)
-//
-// Revision 1.6  1999/08/29 00:46:48  sparker
-// Integrated new thread library
-// using statement tweaks to compile with both MipsPRO and g++
-// Thread library bug fixes
-//
-// Revision 1.5  1999/08/25 03:48:10  sparker
-// Changed SCICore/CoreDatatypes to SCICore/Datatypes
-// Changed PSECore/CommonDatatypes to PSECore/Datatypes
-// Other Misc. directory tree updates
-//
-// Revision 1.4  1999/08/19 23:17:59  sparker
-// Removed a bunch of #include <SCICore/Util/NotFinished.h> statements
-// from files that did not need them.
-//
-// Revision 1.3  1999/08/18 20:20:11  sparker
-// Eliminated copy constructor and clone in all modules
-// Added a private copy ctor and a private clone method to Module so
-//  that future modules will not compile until they remvoe the copy ctor
-//  and clone method
-// Added an ASSERTFAIL macro to eliminate the "controlling expression is
-//  constant" warnings.
-// Eliminated other miscellaneous warnings
-//
-// Revision 1.2  1999/08/17 06:37:54  sparker
-// Merged in modifications from PSECore to make this the new "blessed"
-// version of SCIRun/Uintah.
-//
-// Revision 1.1  1999/07/27 16:58:17  mcq
-// Initial commit
-//
-// Revision 1.2  1999/04/27 22:58:01  dav
-// updates in Modules for Datatypes
-//
-// Revision 1.1.1.1  1999/04/24 23:12:33  dav
-// Import sources
-//
-//

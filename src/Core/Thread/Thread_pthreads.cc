@@ -16,19 +16,19 @@
 #include <pthread.h>
 #define private public
 #define protected public
-#include <SCICore/Thread/Thread.h>
-#include <SCICore/Thread/Mutex.h> // So ConditionVariable can get to Mutex::d_priv
+#include <Core/Thread/Thread.h>
+#include <Core/Thread/Mutex.h> // So ConditionVariable can get to Mutex::d_priv
 #undef private
 #undef protected
-#include <SCICore/Thread/Thread.h>
-#include <SCICore/Thread/AtomicCounter.h>
-#include <SCICore/Thread/Barrier.h>
-#include <SCICore/Thread/ConditionVariable.h>
-#include <SCICore/Thread/RecursiveMutex.h>
-#include <SCICore/Thread/Semaphore.h>
-#include <SCICore/Thread/ThreadError.h>
-#include <SCICore/Thread/ThreadGroup.h>
-#include <SCICore/Thread/WorkQueue.h>
+#include <Core/Thread/Thread.h>
+#include <Core/Thread/AtomicCounter.h>
+#include <Core/Thread/Barrier.h>
+#include <Core/Thread/ConditionVariable.h>
+#include <Core/Thread/RecursiveMutex.h>
+#include <Core/Thread/Semaphore.h>
+#include <Core/Thread/ThreadError.h>
+#include <Core/Thread/ThreadGroup.h>
+#include <Core/Thread/WorkQueue.h>
 #include "Thread_unix.h"
 #include <errno.h>
 extern "C" {
@@ -53,20 +53,12 @@ typedef void (*SIG_HANDLER_T)(int);
 #include "Barrier_default.cc"
 #include "CrowdMonitor_default.cc"
 
-using SCICore::Thread::ConditionVariable;
-using SCICore::Thread::Mutex;
-using SCICore::Thread::RecursiveMutex;
-using SCICore::Thread::Semaphore;
-using SCICore::Thread::Thread;
-using SCICore::Thread::ThreadError;
-using SCICore::Thread::ThreadGroup;
 bool exiting=false;
 
 #define MAXBSTACK 10
 #define MAXTHREADS 4000
 
-namespace SCICore {
-   namespace Thread {
+namespace SCIRun {
       struct Thread_private {
 	 Thread* thread;
 	 pthread_t threadid;
@@ -80,7 +72,6 @@ namespace SCICore {
    }
 }
 
-using SCICore::Thread::Thread_private;
 
 static Thread_private* active[MAXTHREADS];
 static int numActive;
@@ -363,7 +354,7 @@ handle_abort_signals(int sig, struct sigcontext ctx)
 #else
     void* addr=(void*)ctx.cr2;
 #endif
-    char* signam=SCICore_Thread_signal_name(sig, addr);
+    char* signam=Core_Thread_signal_name(sig, addr);
     fprintf(stderr, "%c%c%cThread \"%s\"(pid %d) caught signal %s\n", 7,7,7,tname, getpid(), signam);
     Thread::niceAbort();
 
@@ -429,7 +420,7 @@ handle_quit(int sig, struct sigcontext ctx)
     const char* tname=self?self->getThreadName():"main?";
 
     // Kill all of the threads...
-    char* signam=SCICore_Thread_signal_name(sig, 0);
+    char* signam=Core_Thread_signal_name(sig, 0);
     int pid=getpid();
     fprintf(stderr, "Thread \"%s\"(pid %d) caught signal %s\n", tname, pid, signam);
     Thread::niceAbort(); // Enter the monitor
@@ -570,8 +561,7 @@ Thread::migrate(int proc)
     // Nothing for now...
 }
 
-namespace SCICore {
-    namespace Thread {
+namespace SCIRun {
 	struct Mutex_private {
 	    pthread_mutex_t mutex;
 	};
@@ -650,8 +640,7 @@ Mutex::tryLock()
     return true;
 }
 
-namespace SCICore {
-    namespace Thread {
+namespace SCIRun {
 	struct RecursiveMutex_private {
 	    pthread_mutex_t mutex;
 	};
@@ -707,8 +696,7 @@ RecursiveMutex::lock()
     Thread::pop_bstack(p, oldstate);
 }
 
-namespace SCICore {
-    namespace Thread {
+namespace SCIRun {
 	struct Semaphore_private {
 	    sem_t sem;
 	};
@@ -776,8 +764,7 @@ Semaphore::tryDown()
     return true;
 }
 
-namespace SCICore {
-    namespace Thread {
+namespace SCIRun {
 	struct ConditionVariable_private {
 	    pthread_cond_t cond;
 	};
@@ -848,11 +835,10 @@ ConditionVariable::conditionSignal()
     if(pthread_cond_signal(&d_priv->cond) != 0)
 	throw ThreadError(std::string("pthread_cond_signal: ")
 			  +strerror(errno));
-}
+} // End namespace SCIRun
 void
 ConditionVariable::conditionBroadcast()
 {
     if(pthread_cond_broadcast(&d_priv->cond) != 0)
 	throw ThreadError(std::string("pthread_cond_broadcast: ")
 			  +strerror(errno));
-}

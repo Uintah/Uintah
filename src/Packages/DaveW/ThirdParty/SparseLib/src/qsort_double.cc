@@ -44,7 +44,6 @@
 #define CMP(A,B) ((A) < (B))
 
 // swap two items
-//
 static inline void SWAP_double(double &A, double &B)
 {
     double tmp = A; A = B; B = tmp;

@@ -1,17 +1,15 @@
-#
-# Makefile fragment for this subdirectory
-#
+#Makefile fragment for the Packages/Nektar directory
 
-include $(SRCTOP)/scripts/largeso_prologue.mk
+include $(OBJTOP_ABS)/scripts/largeso_prologue.mk
 
-SRCDIR := Nektar
+SRCDIR := Packages/Nektar
+SUBDIRS := \
+	$(SRCDIR)/Core \
+	$(SRCDIR)/Dataflow \
 
-SUBDIRS := $(SRCDIR)/GUI $(SRCDIR)/Datatypes $(SRCDIR)/Modules  
+include $(OBJTOP_ABS)/scripts/recurse.mk
 
-include $(SRCTOP)/scripts/recurse.mk
-
-PSELIBS := PSECommon PSECore SCICore
+PSELIBS := 
 LIBS := $(TK_LIBRARY) $(GL_LIBS) -lm
 
-include $(SRCTOP)/scripts/largeso_epilogue.mk
-
+include $(OBJTOP_ABS)/scripts/largeso_epilogue.mk

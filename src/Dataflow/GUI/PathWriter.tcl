@@ -1,12 +1,11 @@
 # example of Writer
 # by Samsonov Alexei
 # October 2000 
-#
 # NOTE: if file to be splitted, uncomment corresponding lines in the file
 
-catch {rename PSECommon_Writers_PathWriter ""}
+catch {rename Dataflow_Writers_PathWriter ""}
 
-itcl_class PSECommon_Writers_PathWriter {
+itcl_class Dataflow_Writers_PathWriter {
     inherit Module
     constructor {config} {
 	set name PathWriter
@@ -59,7 +58,6 @@ itcl_class PSECommon_Writers_PathWriter {
 	    {{All Files}       {.*}   }
 	}
 	
-	#
 	######################################################
 	
 	makeSaveFilebox \

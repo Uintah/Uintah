@@ -1,17 +1,14 @@
  //  SField.cc - Scalar Field
-//
 //  Written by:
 //   Eric Kuehne
 //   Department of Computer Science
 //   University of Utah
 //   April 2000
-//
 //  Copyright (C) 2000 SCI Institute
 
-#include <SCICore/Datatypes/SField.h>
+#include <Core/Datatypes/SField.h>
 
-namespace SCICore{
-namespace Datatypes{
+namespace SCIRun {
 
 PersistentTypeID SField::type_id("SField", "Datatype", 0);
   
@@ -30,5 +27,4 @@ SField::io(Piostream&)
 {
 }
 
-} // end Datatypes
-} // end SCICore
+} // End namespace SCIRun

@@ -13,46 +13,28 @@
  *  Copyright (C) 199? SCI Group
  */
 
-#include <SCICore/Geom/IndexedGroup.h>
-#include <SCICore/Geom/GeomObj.h>
-#include <SCICore/Geom/GeomOpenGL.h>
-#include <SCICore/Geom/Material.h>
-#include <SCICore/Geom/GeomSave.h>
-#include <SCICore/Geometry/BBox.h>
-#include <SCICore/Containers/String.h>
-#include <SCICore/Containers/Array1.h>
-#include <SCICore/Persistent/Persistent.h>
-#include <PSECore/Dataflow/Module.h>
+#include <Core/Geom/IndexedGroup.h>
+#include <Core/Geom/GeomObj.h>
+#include <Core/Geom/GeomOpenGL.h>
+#include <Core/Geom/Material.h>
+#include <Core/Geom/GeomSave.h>
+#include <Core/Geometry/BBox.h>
+#include <Core/Containers/String.h>
+#include <Core/Containers/Array1.h>
+#include <Core/Persistent/Persistent.h>
+#include <Dataflow/Network/Module.h>
 
-namespace SCICore {
-  namespace Thread {
-    class CrowdMonitor;
-  }
+namespace SCIRun {
+  class CrowdMonitor;
 }
 
-namespace PSECore {
-  namespace Datatypes {
-    class GeometryComm;
-  }
+namespace SCIRun {
+  class GeometryComm;
 }
 
-namespace PSECommon {
-namespace Modules {
+namespace SCIRun {
 
-using PSECore::Dataflow::Module;
-using PSECore::Datatypes::GeometryComm;
 
-using SCICore::GeomSpace::GeomIndexedGroup;
-using SCICore::GeomSpace::GeomObj;
-using SCICore::GeomSpace::DrawInfoOpenGL;
-using SCICore::GeomSpace::Material;
-using SCICore::GeomSpace::GeomSave;
-using SCICore::GeomSpace::Hit;
-using SCICore::Geometry::BBox;
-using SCICore::Containers::clString;
-using SCICore::Containers::Array1;
-using SCICore::PersistentSpace::Piostream;
-using SCICore::PersistentSpace::PersistentTypeID;
 
 /* this is basicaly a indexed group that also has some simple message
  * stuff
@@ -80,12 +62,12 @@ public:
 class GeomSalmonItem: public GeomObj {
   GeomObj *child;
   clString name;
-  SCICore::Thread::CrowdMonitor* lock;
+  CrowdMonitor* lock;
 
 public:
   friend class Roe;
   GeomSalmonItem();
-  GeomSalmonItem(GeomObj*,const clString&, SCICore::Thread::CrowdMonitor* lock);
+  GeomSalmonItem(GeomObj*,const clString&, CrowdMonitor* lock);
   virtual ~GeomSalmonItem();
 
   virtual GeomObj* clone();
@@ -104,8 +86,7 @@ public:
   clString& getString(void) { return name;}
 };
 
-} // End namespace Modules
-} // End namespace PSECommon
+} // End namespace SCIRun
 
 
 #endif

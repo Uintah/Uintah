@@ -1,7 +1,6 @@
-//static char *id="@(#) $Id$";
 
-#include <DaveW/Datatypes/CS684/Scene.h>
-#include <SCICore/Containers/String.h>
+#include <Packages/DaveW/Core/Datatypes/CS684/Scene.h>
+#include <Core/Containers/String.h>
 
 #include <fstream>
 #include <iostream>
@@ -11,12 +10,10 @@ using std::cerr;
 #include <string.h>
 
 namespace DaveW {
-namespace Datatypes {
-
-using namespace SCICore::PersistentSpace;
+using namespace SCIRun;
 
 extern int global_numbounces;
-extern SCICore::Thread::Mutex global_bounces_mutex;
+extern Mutex global_bounces_mutex;
 
 Scene::Scene() {
 }
@@ -26,8 +23,6 @@ Scene::~Scene() {
 
 #define Scene_VERSION 1
 void Scene::io(Piostream& stream) {
-    using SCICore::PersistentSpace::Pio;
-    using SCICore::Containers::Pio;
     using DaveW::Datatypes::Pio;
 
     int version=stream.begin_class("Scene", Scene_VERSION);
@@ -60,16 +55,12 @@ double rescaleReflection(double x, double R) {
 
 //void Scene::RT_shade(RTRay&R, const RTHit &hit, int bounce) {
 //    RTObject* obj=hit.obj;
-//
 //    Array1<double> reflect(R.spectrum.size());
-//
 //    double reflC=obj->matl->base->reflectivity;
-//
 //    if (bounce<numBounces && (reflC != 0)) {
 //	global_bounces_mutex.lock();
 //	global_numbounces++;
 //	global_bounces_mutex.unlock();
-//
 //	RTRay refl(R);		// copy everything, then fix direction
 //	refl.dir=obj->BRDF(hit.p, hit.side, R.dir, hit.face);
 //	refl.origin=hit.p;
@@ -82,7 +73,6 @@ double rescaleReflection(double x, double R) {
 
 //void Scene::RT_trace(RTRay& R, int bounce, int shadowFlag) {
 //    RTHit hit;
-//    
 //    if (findIntersect(R, hit, shadowFlag)) {
 //	if (shadowFlag) {
 //	    if (hit.t > (R.origin-light[shadowFlag-1].pos).length()) 
@@ -343,7 +333,7 @@ int Scene::findIntersect(RTRay& R, RTHit &hit, int shadowFlag) {
 #if 0
 #ifdef __sgi
 #if _MIPS_SZPTR == 64
-#include <SCICore/Containers/Array1.cc>
+#include <Core/Containers/Array1.cc>
 
 static void _dummy_(Piostream& p1, Array1<RTObject*>& p2)
 {
@@ -353,26 +343,5 @@ static void _dummy_(Piostream& p1, Array1<RTObject*>& p2)
 #endif
 #endif
 #endif
-
-} // End namespace Datatypes
 } // End namespace DaveW
-//
-// $Log$
-// Revision 1.4  2000/02/02 21:44:25  dmw
-// new modules
-//
-// Revision 1.3  1999/10/07 02:06:19  sparker
-// use standard iostreams and complex type
-//
-// Revision 1.2  1999/08/29 00:46:35  sparker
-// Integrated new thread library
-// using statement tweaks to compile with both MipsPRO and g++
-// Thread library bug fixes
-//
-// Revision 1.1  1999/08/23 02:52:58  dmw
-// Dave's Datatypes
-//
-// Revision 1.2  1999/05/03 04:52:04  dmw
-// Added and updated DaveW Datatypes/Modules
-//
-//
+

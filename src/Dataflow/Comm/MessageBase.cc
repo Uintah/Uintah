@@ -1,4 +1,3 @@
-//static char *id="@(#) $Id$";
 
 /*
  *  MessageBase.cc: Base class for messages
@@ -12,10 +11,9 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <PSECore/Comm/MessageBase.h>
+#include <Dataflow/Comm/MessageBase.h>
 
-namespace PSECore {
-namespace Comm {
+namespace SCIRun {
 
 MessageBase::MessageBase(MessageTypes::MessageType type)
 : type(type)
@@ -26,19 +24,5 @@ MessageBase::~MessageBase()
 {
 }
 
-} // End namespace Comm
-} // End namespace PSECore
+} // End namespace SCIRun
 
-//
-// $Log$
-// Revision 1.2  1999/08/17 06:38:05  sparker
-// Merged in modifications from PSECore to make this the new "blessed"
-// version of SCIRun/Uintah.
-//
-// Revision 1.1  1999/07/27 16:55:44  mcq
-// Initial commit
-//
-// Revision 1.1.1.1  1999/04/24 23:12:28  dav
-// Import sources
-//
-//

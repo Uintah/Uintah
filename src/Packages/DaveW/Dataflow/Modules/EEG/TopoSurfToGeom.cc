@@ -10,32 +10,24 @@
  *  Copyright (C) 1999 SCI Group
  */
 
-#include <DaveW/Datatypes/General/TopoSurfTree.h>
-#include <PSECore/Datatypes/GeometryPort.h>
-#include <PSECore/Datatypes/SurfacePort.h>
-#include <SCICore/Geom/Color.h>
-#include <SCICore/Geom/GeomGroup.h>
-#include <SCICore/Geom/GeomLine.h>
-#include <SCICore/Geom/GeomSphere.h>
-#include <SCICore/Geom/GeomTriangles.h>
-#include <SCICore/Geom/Material.h>
-#include <SCICore/Geom/Pt.h>
-#include <SCICore/Malloc/Allocator.h>
-#include <SCICore/TclInterface/TCLvar.h>
+#include <Packages/DaveW/Core/Datatypes/General/TopoSurfTree.h>
+#include <Dataflow/Ports/GeometryPort.h>
+#include <Dataflow/Ports/SurfacePort.h>
+#include <Core/Geom/Color.h>
+#include <Core/Geom/GeomGroup.h>
+#include <Core/Geom/GeomLine.h>
+#include <Core/Geom/GeomSphere.h>
+#include <Core/Geom/GeomTriangles.h>
+#include <Core/Geom/Material.h>
+#include <Core/Geom/Pt.h>
+#include <Core/Malloc/Allocator.h>
+#include <Core/TclInterface/TCLvar.h>
 #include <iostream>
 using std::cerr;
 
 namespace DaveW {
-namespace Modules {
-
 using namespace DaveW::Datatypes;
-using namespace PSECore::Dataflow;
-using namespace PSECore::Datatypes;
-using namespace SCICore::Containers;
-using namespace SCICore::GeomSpace;
-using namespace SCICore::Geometry;
-using namespace SCICore::Math;
-using namespace SCICore::TclInterface;
+using namespace SCIRun;
 
 class TopoSurfToGeom : public Module {
     SurfaceIPort* isurface;
@@ -260,20 +252,6 @@ void TopoSurfToGeom::execute()
     }
 #endif
 }
-
-} // End namespace Modules
 } // End namespace DaveW
 
-//
-// $Log$
-// Revision 1.3  2000/03/17 09:25:36  sparker
-// New makefile scheme: sub.mk instead of Makefile.in
-// Use XML-based files for module repository
-// Plus many other changes to make these two things work
-//
-// Revision 1.2  1999/10/07 02:06:30  sparker
-// use standard iostreams and complex type
-//
-// Revision 1.1  1999/09/05 05:32:24  dmw
-// updated and added Modules from old tree to new
-//
+

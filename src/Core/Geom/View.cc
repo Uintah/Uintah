@@ -1,4 +1,3 @@
-//static char *id="@(#) $Id$";
 
 /*
  *  View.cc:  The camera
@@ -13,15 +12,13 @@
  */
 
 #include <stdio.h>
-#include <SCICore/Geom/View.h>
-#include <SCICore/Persistent/Persistent.h>
-#include <SCICore/Containers/String.h>
-#include <SCICore/Math/Trig.h>
+#include <Core/Geom/View.h>
+#include <Core/Persistent/Persistent.h>
+#include <Core/Containers/String.h>
+#include <Core/Math/Trig.h>
 
-namespace SCICore {
-namespace GeomSpace {
+namespace SCIRun {
 
-using namespace Geometry;
 
 View::View()
 {
@@ -290,10 +287,8 @@ ExtendedView::Print( )
 
 #define VIEW_VERSION 1
 
-void Pio(Piostream& stream, GeomSpace::View& v)
+void Pio(Piostream& stream, View& v)
 {
-    using SCICore::PersistentSpace::Pio;
-    using SCICore::Geometry::Pio;
   
     stream.begin_class("View", VIEW_VERSION);
     Pio(stream, v.eyep_);
@@ -303,11 +298,8 @@ void Pio(Piostream& stream, GeomSpace::View& v)
     stream.end_class();
 }
 
-void Pio(Piostream& stream, GeomSpace::ExtendedView& v)
+void Pio(Piostream& stream, ExtendedView& v)
 {
-    using SCICore::PersistentSpace::Pio;
-    using SCICore::Geometry::Pio;
-    using SCICore::GeomSpace::Pio;
 
     stream.begin_class("ExtendedView", VIEW_VERSION);
     Pio(stream, v.eyep_);
@@ -320,23 +312,6 @@ void Pio(Piostream& stream, GeomSpace::ExtendedView& v)
     stream.end_class();
 }
 
-} // End namespace GeomSpace
-} // End namespace SCICore
+} // End namespace SCIRun
 
 
-//
-// $Log$
-// Revision 1.2  1999/08/17 06:39:25  sparker
-// Merged in modifications from PSECore to make this the new "blessed"
-// version of SCIRun/Uintah.
-//
-// Revision 1.1  1999/07/27 16:56:54  mcq
-// Initial commit
-//
-// Revision 1.2  1999/07/07 21:10:57  dav
-// added beginnings of support for g++ compilation
-//
-// Revision 1.1.1.1  1999/04/24 23:12:19  dav
-// Import sources
-//
-//

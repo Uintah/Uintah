@@ -10,30 +10,23 @@
  *  Copyright (C) 1995 SCI Group
  */
 
-#include <SCICore/Containers/String.h>
-#include <PSECore/Dataflow/Module.h>
-#include <SCICore/Datatypes/DenseMatrix.h>
-#include <PSECore/Datatypes/MatrixPort.h>
-#include <SCICore/Datatypes/Mesh.h>
-#include <SCICore/Datatypes/Surface.h>
-#include <PSECore/Datatypes/SurfacePort.h>
-#include <SCICore/Geometry/Transform.h>
-#include <SCICore/Malloc/Allocator.h>
+#include <Core/Containers/String.h>
+#include <Dataflow/Network/Module.h>
+#include <Core/Datatypes/DenseMatrix.h>
+#include <Dataflow/Ports/MatrixPort.h>
+#include <Core/Datatypes/Mesh.h>
+#include <Core/Datatypes/Surface.h>
+#include <Dataflow/Ports/SurfacePort.h>
+#include <Core/Geometry/Transform.h>
+#include <Core/Malloc/Allocator.h>
 #include <iostream>
 using std::cerr;
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
 
-namespace PSECommon {
-namespace Modules {
+namespace SCIRun {
 
-using namespace PSECore::Dataflow;
-using namespace PSECore::Datatypes;
-using namespace SCICore::GeomSpace;
-using namespace SCICore::Math;
-using namespace SCICore::Containers;
-using SCICore::Geometry::Transform;
 
 class TransformSurface : public Module {
     SurfaceIPort *iport;
@@ -102,5 +95,4 @@ void TransformSurface::execute()
     oport->send(sIH);
 }
 
-} // End namespace Modules
-} // End namespace PSECommon
+} // End namespace SCIRun

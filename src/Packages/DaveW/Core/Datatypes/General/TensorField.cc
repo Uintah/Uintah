@@ -7,15 +7,13 @@
  *  
  */
 
-#include <DaveW/Datatypes/General/TensorField.h>
-#include <SCICore/Containers/String.h>
-#include <SCICore/Malloc/Allocator.h>
-#include <SCICore/Math/MiscMath.h>
-#include <SCICore/Util/NotFinished.h>
+#include <Packages/DaveW/Core/Datatypes/General/TensorField.h>
+#include <Core/Containers/String.h>
+#include <Core/Malloc/Allocator.h>
+#include <Core/Math/MiscMath.h>
+#include <Core/Util/NotFinished.h>
 
 namespace DaveW {
-namespace Datatypes {
-    using namespace SCICore::Math;
 
 static Persistent* make_TensorField() {
     return scinew TensorField<double>(0,0,0);
@@ -174,7 +172,7 @@ int TensorField<DATA>::AddSlice(int in_slice, int in_tensor_component, FILE* in_
     for (int xx = 0; xx < m_width; xx++)
     if (fread(&(m_tensor_field[in_tensor_component](in_slice,yy,xx)), sizeof(DATA), 1, in_file) != 1) 
 	{	
-	printf("TensorComponent file wasn't big enough");
+	printf("TensorCore/CCA/Component file wasn't big enough");
 	return 0;
 	}*/
   return 1;
@@ -219,26 +217,10 @@ void TensorField<DATA>::io(Piostream& stream)
     stream.begin_class("TensorField", TENSORFIELD_VERSION);
     TensorFieldBase::io(stream);
     if (m_tensorsGood) {
-	SCICore::Containers::Pio(stream, m_tensor_field);
+	Pio(stream, m_tensor_field);
     }
     stream.end_class();
 }
-
-} // End namespace Datatypes
 } // End namespace DaveW
 
-//
-// $Log$
-// Revision 1.4  2000/03/10 07:42:27  dmw
-// added a just_tensors flag to the constructor so evecs and evals dont have to be provided
-//
-// Revision 1.3  1999/09/08 02:26:18  sparker
-// Various #include cleanups
-//
-// Revision 1.2  1999/09/01 16:45:50  sparker
-// namespace updates to get tensorfield to compile/link
-//
-// Revision 1.1  1999/09/01 05:27:36  dmw
-// more DaveW datatypes...
-//
-//
+

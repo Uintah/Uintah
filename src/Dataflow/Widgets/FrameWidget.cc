@@ -1,4 +1,3 @@
-//static char *id="@(#) $Id$";
 
 /*
  *  FrameWidget.cc
@@ -13,24 +12,17 @@
  */
 
 
-#include <PSECore/Widgets/FrameWidget.h>
-#include <PSECore/Constraints/DistanceConstraint.h>
-#include <PSECore/Constraints/PythagorasConstraint.h>
-#include <SCICore/Geom/GeomCylinder.h>
-#include <SCICore/Geom/GeomSphere.h>
-#include <SCICore/Malloc/Allocator.h>
-#include <PSECore/Dataflow/Module.h>
+#include <Dataflow/Widgets/FrameWidget.h>
+#include <Dataflow/Constraints/DistanceConstraint.h>
+#include <Dataflow/Constraints/PythagorasConstraint.h>
+#include <Core/Geom/GeomCylinder.h>
+#include <Core/Geom/GeomSphere.h>
+#include <Core/Malloc/Allocator.h>
+#include <Dataflow/Network/Module.h>
 
-namespace PSECore {
-namespace Widgets {
+namespace SCIRun {
 
-using SCICore::GeomSpace::GeomGroup;
-using SCICore::GeomSpace::GeomSphere;
-using SCICore::GeomSpace::GeomCylinder;
-using SCICore::GeomSpace::GeomCappedCylinder;
-using SCICore::Geometry::Cross;
 
-using namespace PSECore::Constraints;
 
 const Index NumCons = 4;
 const Index NumVars = 6;
@@ -463,19 +455,5 @@ FrameWidget::GetMaterialName( const Index mindex ) const
 }
 
 
-} // End namespace Widgets
-} // End namespace PSECore
+} // End namespace SCIRun
 
-//
-// $Log$
-// Revision 1.2  1999/08/17 06:38:29  sparker
-// Merged in modifications from PSECore to make this the new "blessed"
-// version of SCIRun/Uintah.
-//
-// Revision 1.1  1999/07/27 16:56:06  mcq
-// Initial commit
-//
-// Revision 1.1.1.1  1999/04/24 23:12:30  dav
-// Import sources
-//
-//

@@ -14,8 +14,6 @@
 #define VR_NUMPORTS 5
 
 namespace Remote {
-namespace Modules {
-
 enum vrMessage {
   
 
@@ -46,7 +44,6 @@ enum vrMessage {
   
 				// format: m 1 2 3 4 5
 				// 1,2: float - width, height
-				// 
   VR_SETSCENE,
 
   //----------------------------------------------------------------------
@@ -97,8 +94,7 @@ enum vrMessage {
   
 };
 
+} // End namespace Remote
 
-} // namespace Modules {
-} // namespace Remote {
 
 #endif // __MESSAGE_H__

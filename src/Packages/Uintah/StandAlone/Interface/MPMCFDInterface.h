@@ -1,17 +1,16 @@
 #ifndef UINTAH_HOMEBREW_MPMCFDInterface_H
 #define UINTAH_HOMEBREW_MPMCFDInterface_H
 
-#include <Uintah/Parallel/UintahParallelPort.h>
-#include <Uintah/Interface/DataWarehouseP.h>
-#include <Uintah/Grid/GridP.h>
-#include <Uintah/Grid/Handle.h>
-#include <Uintah/Grid/LevelP.h>
-#include <Uintah/Grid/SimulationStateP.h>
-#include <Uintah/Interface/ProblemSpecP.h>
-#include <Uintah/Interface/SchedulerP.h>
+#include <Packages/Uintah/Parallel/Packages/UintahParallelPort.h>
+#include <Packages/Uintah/Interface/DataWarehouseP.h>
+#include <Packages/Uintah/Grid/GridP.h>
+#include <Packages/Uintah/Grid/Handle.h>
+#include <Packages/Uintah/Grid/LevelP.h>
+#include <Packages/Uintah/Grid/SimulationStateP.h>
+#include <Packages/Uintah/Interface/ProblemSpecP.h>
+#include <Packages/Uintah/Interface/SchedulerP.h>
 
 namespace Uintah {
-
 /**************************************
 
 CLASS
@@ -41,7 +40,7 @@ WARNING
   
 ****************************************/
 
-   class MPMCFDInterface : public UintahParallelPort {
+   class MPMCFDInterface : public Packages/UintahParallelPort {
    public:
       MPMCFDInterface();
       virtual ~MPMCFDInterface();
@@ -73,13 +72,8 @@ WARNING
       MPMCFDInterface(const MPMCFDInterface&);
       MPMCFDInterface& operator=(const MPMCFDInterface&);
    };
+} // End namespace Uintah
    
-} // end namespace Uintah
 
-//
-// $Log$
-// Revision 1.1  2000/12/01 23:02:37  guilkey
-// Adding stuff for coupled MPM and CFD.
-//
 
 #endif

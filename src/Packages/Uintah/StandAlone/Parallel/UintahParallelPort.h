@@ -1,20 +1,19 @@
 #ifndef UINTAH_PARALLEL_UINTAHPARALLELPORT_H
 #define UINTAH_PARALLEL_UINTAHPARALLELPORT_H
 
-#include <Uintah/Grid/RefCounted.h>
+#include <Packages/Uintah/Grid/RefCounted.h>
 
 namespace Uintah {
-
 /**************************************
 
 CLASS
-   UintahParallelPort
+   Packages/UintahParallelPort
    
    Short description...
 
 GENERAL INFORMATION
 
-   UintahParallelPort.h
+   Packages/UintahParallelPort.h
 
    Steven G. Parker
    Department of Computer Science
@@ -25,7 +24,7 @@ GENERAL INFORMATION
    Copyright (C) 2000 SCI Group
 
 KEYWORDS
-   Uintah_Parallel_Port
+   Packages/Uintah_Parallel_Port
 
 DESCRIPTION
    Long description...
@@ -34,22 +33,13 @@ WARNING
   
 ****************************************/
 
-   class UintahParallelPort : public RefCounted {
+   class Packages/UintahParallelPort : public RefCounted {
    public:
-      UintahParallelPort();
-      virtual ~UintahParallelPort();
+      Packages/UintahParallelPort();
+      virtual ~Packages/UintahParallelPort();
    };
+} // End namespace Uintah
 
-} // end namespace Uintah
 
-//
-// $Log$
-// Revision 1.3  2000/04/26 06:49:16  sparker
-// Streamlined namespaces
-//
-// Revision 1.2  2000/03/16 22:08:39  dav
-// Added the beginnings of cocoon docs.  Added namespaces.  Did a few other coding standards updates too
-//
-//
 
 #endif

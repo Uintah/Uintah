@@ -1,4 +1,3 @@
-//static char *id="@(#) $Id$";
 
 /*
  *  SoundPort.cc: Handle to the Sound Data type
@@ -12,21 +11,20 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <PSECore/Datatypes/SoundPort.h>
-#include <SCICore/Malloc/Allocator.h>
+#include <Dataflow/Ports/SoundPort.h>
+#include <Core/Malloc/Allocator.h>
 
-#include <SCICore/Util/Assert.h>
-#include <SCICore/Containers/String.h>
-#include <PSECore/Dataflow/Connection.h>
-#include <PSECore/Dataflow/Port.h>
-#include <PSECore/Dataflow/Module.h>
-#include <SCICore/Malloc/Allocator.h>
+#include <Core/Util/Assert.h>
+#include <Core/Containers/String.h>
+#include <Dataflow/Network/Connection.h>
+#include <Dataflow/Network/Port.h>
+#include <Dataflow/Network/Module.h>
+#include <Core/Malloc/Allocator.h>
 
 #include <iostream>
 using std::cerr;
 
-namespace PSECore {
-namespace Datatypes {
+namespace SCIRun {
 
 static clString sound_type("Sound");
 static clString sound_color("aquamarine4");
@@ -245,52 +243,6 @@ void SoundOPort::resend(Connection*)
     cerr << "SoundOPort can't resend and shouldn't be asked to!\n";
 }
 
-} // End namespace Datatypes
-} // End namespace PSECore
+} // End namespace SCIRun
 
-//
-// $Log$
-// Revision 1.11  2000/11/29 09:49:37  moulding
-// changed all instances of "new" to "scinew"
-//
-// Revision 1.10  1999/12/07 02:53:35  dmw
-// made show_status variable persistent with network maps
-//
-// Revision 1.9  1999/11/12 01:38:31  ikits
-// Added ANL AVTC site visit modifications to make the demos work.
-// Fixed bugs in PSECore/Datatypes/SoundPort.[h,cc] and PSECore/Dataflow/NetworkEditor.cc
-// Put in temporary scale_changed fix into PSECore/Widgets/BaseWidget.cc
-//
-// Revision 1.8  1999/11/12 00:57:33  dmw
-// had to include Module.h
-//
-// Revision 1.7  1999/11/11 19:56:37  dmw
-// added show_status check for GeometryPort and SoundPort
-//
-// Revision 1.6  1999/10/07 02:07:21  sparker
-// use standard iostreams and complex type
-//
-// Revision 1.5  1999/08/28 17:54:32  sparker
-// Integrated new Thread library
-//
-// Revision 1.4  1999/08/25 03:48:23  sparker
-// Changed SCICore/CoreDatatypes to SCICore/Datatypes
-// Changed PSECore/CommonDatatypes to PSECore/Datatypes
-// Other Misc. directory tree updates
-//
-// Revision 1.3  1999/08/19 23:18:03  sparker
-// Removed a bunch of #include <SCICore/Util/NotFinished.h> statements
-// from files that did not need them.
-//
-// Revision 1.2  1999/08/17 06:38:12  sparker
-// Merged in modifications from PSECore to make this the new "blessed"
-// version of SCIRun/Uintah.
-//
-// Revision 1.1  1999/07/27 16:55:50  mcq
-// Initial commit
-//
-// Revision 1.1.1.1  1999/04/24 23:12:50  dav
-// Import sources
-//
-//
 

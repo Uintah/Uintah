@@ -2,7 +2,7 @@
  *  ViewTensors.cc 
  *      View ViewTensors Tensor
  *  Written by:
- *   Yarden Livnat
+ *   Packages/Yarden Livnat
  *   Department of Computer Science
  *   University of Utah
  *   Oct 2000
@@ -14,28 +14,28 @@
 #include <stdio.h>
 #include <unistd.h>
 
-#include <SCICore/Thread/Time.h>
-#include <SCICore/Containers/String.h>
+#include <Core/Thread/Time.h>
+#include <Core/Containers/String.h>
 
-#include <SCICore/Datatypes/ScalarFieldRGdouble.h>
-#include <SCICore/Datatypes/ScalarFieldRGfloat.h>
-#include <SCICore/Datatypes/ScalarFieldRGshort.h>
+#include <Core/Datatypes/ScalarFieldRGdouble.h>
+#include <Core/Datatypes/ScalarFieldRGfloat.h>
+#include <Core/Datatypes/ScalarFieldRGshort.h>
 
-#include <SCICore/Thread/Thread.h>
+#include <Core/Thread/Thread.h>
 
-#include <SCICore/Geometry/Vector.h>
-#include <SCICore/Malloc/Allocator.h>
-#include <SCICore/Math/Trig.h>
+#include <Core/Geometry/Vector.h>
+#include <Core/Malloc/Allocator.h>
+#include <Core/Math/Trig.h>
 
-#include <SCICore/TclInterface/TCLTask.h>
-#include <SCICore/TclInterface/TCLvar.h>
-#include <SCICore/TclInterface/TCL.h>
+#include <Core/TclInterface/TCLTask.h>
+#include <Core/TclInterface/TCLvar.h>
+#include <Core/TclInterface/TCL.h>
 
-#include <PSECore/Dataflow/Module.h>
-#include <PSECore/Datatypes/ScalarFieldPort.h>
-#include <PSECore/Datatypes/ColorMapPort.h>
+#include <Dataflow/Network/Module.h>
+#include <Dataflow/Ports/ScalarFieldPort.h>
+#include <Dataflow/Ports/ColorMapPort.h>
 
-#include <Yarden/Datatypes/TensorFieldPort.h>
+#include <Packages/Yarden/Core/Datatypes/TensorFieldPort.h>
 
 #include <tcl.h>
 #include <tk.h>
@@ -52,23 +52,12 @@ extern "C" GLXContext OpenGLGetContext(Tcl_Interp*, char*);
 extern Tcl_Interp* the_interp;
 
 
-namespace PSECommon {
-  namespace Modules {
-    
-    using namespace PSECore::Dataflow;
-    using namespace PSECore::Datatypes;
-    using namespace SCICore::Containers;
-    using namespace SCICore::GeomSpace;
-    using namespace SCICore::Geometry;
-    using namespace SCICore::Math;
-    using namespace SCICore::TclInterface;
-    using namespace SCICore::Thread;
+namespace Yarden {
+using namespace SCIRun;
     using namespace DaveW::Datatypes;
     
     
-    //
     // ViewTensors
-    //
 
     class ViewTensors : public Module 
     {
@@ -463,6 +452,5 @@ namespace PSECommon {
 	cerr << "post error: "<< (char*)gluErrorString(errcode)<< endl;
       TCLTask::unlock();
     }
+} // End namespace Yarden
 
-  } // namespace Modules
-} //  namespace PSECommon

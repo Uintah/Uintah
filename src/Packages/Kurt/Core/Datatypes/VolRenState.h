@@ -8,8 +8,6 @@
 class GLVolumeRenderer;
 
 namespace Kurt {
-namespace Datatypes {
-
   using std::vector;
 /**************************************
 
@@ -22,7 +20,7 @@ GENERAL INFORMATION
 
    GLVolRenState.h
 
-   Kurt Zimmerman
+   Packages/Kurt Zimmerman
    Department of Computer Science
    University of Utah
 
@@ -70,7 +68,6 @@ protected:
   void drawWireFrame(const Brick& brick);
   const GLVolumeRenderer*  volren;
 };
+} // End namespace Kurt
 
-} // end namespace Datatypes
-} // end namespace Kurt
 #endif

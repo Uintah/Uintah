@@ -11,32 +11,23 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <DaveW/Datatypes/General/ContourSet.h>
-#include <DaveW/Datatypes/General/ContourSetPort.h>
-#include <PSECore/Dataflow/Module.h>
-#include <PSECore/Datatypes/GeometryPort.h>
-#include <SCICore/Geom/Color.h>
-#include <SCICore/Geom/GeomGroup.h>
-#include <SCICore/Geom/GeomObj.h>
-#include <SCICore/Geom/GeomPolyline.h>
-#include <SCICore/Geom/Material.h>
-#include <SCICore/Geom/Pt.h>
-#include <SCICore/Malloc/Allocator.h>
-#include <SCICore/TclInterface/TCLvar.h>
+#include <Packages/DaveW/Core/Datatypes/General/ContourSet.h>
+#include <Packages/DaveW/Core/Datatypes/General/ContourSetPort.h>
+#include <Dataflow/Network/Module.h>
+#include <Dataflow/Ports/GeometryPort.h>
+#include <Core/Geom/Color.h>
+#include <Core/Geom/GeomGroup.h>
+#include <Core/Geom/GeomObj.h>
+#include <Core/Geom/GeomPolyline.h>
+#include <Core/Geom/Material.h>
+#include <Core/Geom/Pt.h>
+#include <Core/Malloc/Allocator.h>
+#include <Core/TclInterface/TCLvar.h>
 #include <iostream>
 
 namespace DaveW {
-namespace Modules {
-
 using namespace DaveW::Datatypes;
-using namespace PSECore::Dataflow;
-using namespace PSECore::Datatypes;
-using namespace SCICore::TclInterface;
-using namespace SCICore::GeomSpace;
-using namespace SCICore::Containers;
-using namespace SCICore::Geometry;
-using namespace SCICore::Math;
-using namespace SCICore::Thread;
+using namespace SCIRun;
 using std::cerr;
 
 class CStoGeom : public Module {
@@ -149,6 +140,5 @@ void CStoGeom::execute()
 	    delete lmatl[i];
     }
 }
-
-} // End namespace Modules
 } // End namespace DaveW
+

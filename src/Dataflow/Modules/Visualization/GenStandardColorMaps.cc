@@ -20,7 +20,7 @@ KEYWORDS
 
 DESCRIPTION 
      This module is used to create some   
-     "standard" non-editable colormaps in SCIRun/Uintah.      
+     "standard" non-editable colormaps in Dataflow/Uintah.      
      Non-editable simply means that the colors cannot be      
      interactively manipulated.  The Module does, allow       
      for the the resolution of the colormaps to be changed.
@@ -30,10 +30,10 @@ DESCRIPTION
 
 ****************************************/   
 
-#include <PSECommon/Modules/Visualization/GenStandardColorMaps.h> 
-#include <PSECore/Datatypes/ColorMapPort.h>
-#include <SCICore/Geom/Material.h>
-#include <SCICore/Malloc/Allocator.h>
+#include <Dataflow/Modules/Visualization/GenStandardColorMaps.h> 
+#include <Dataflow/Ports/ColorMapPort.h>
+#include <Core/Geom/Material.h>
+#include <Core/Malloc/Allocator.h>
 
 #include <math.h>
 #include <iostream>
@@ -45,11 +45,8 @@ using std::istringstream;
 using std::setw;
 #include <stdio.h>
 
-namespace PSECommon {
-namespace Modules {
+namespace SCIRun {
 
-using SCICore::Datatypes::ColorMap;
-using PSECore::Datatypes::ColorMapIPort;
 
 // ---------------------------------------------------------------------- // 
 bool
@@ -133,5 +130,4 @@ void GenStandardColorMaps::execute()
      outport->send(cmap);
 } 
 //--------------------------------------------------------------- 
-} // end namespace Modules
-} // end namespace PSECommon
+} // End namespace SCIRun

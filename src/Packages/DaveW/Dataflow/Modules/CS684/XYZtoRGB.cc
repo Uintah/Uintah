@@ -10,27 +10,27 @@
  *  Copyright (C) 1997 SCI Group
  */
 
-#include <DaveW/Datatypes/CS684/ImageR.h>
-#include <SCICore/Containers/Array1.h>
-#include <SCICore/Containers/Array2.h>
-#include <SCICore/Containers/String.h>
-#include <PSECore/Datatypes/VoidStarPort.h>
-#include <SCICore/Datatypes/VoidStar.h>
+#include <Packages/DaveW/Core/Datatypes/CS684/ImageR.h>
+#include <Core/Containers/Array1.h>
+#include <Core/Containers/Array2.h>
+#include <Core/Containers/String.h>
+#include <Dataflow/Ports/VoidStarPort.h>
+#include <Core/Datatypes/VoidStar.h>
 #define Colormap XColormap
 #include <GL/gl.h>
 #include <GL/glu.h>
 #include <GL/glx.h>
-#include <SCICore/Geom/GeomOpenGL.h>
+#include <Core/Geom/GeomOpenGL.h>
 #include <tcl.h>
 #include <tk.h>
 #undef Colormap
-#include <PSECore/Dataflow/Module.h>
-#include <SCICore/Geom/Color.h>
-#include <SCICore/Malloc/Allocator.h>
-#include <SCICore/Persistent/Pstreams.h>
-#include <SCICore/TclInterface/TCLTask.h>
-#include <SCICore/TclInterface/TCLvar.h>
-#include <SCICore/TclInterface/TCL.h>
+#include <Dataflow/Network/Module.h>
+#include <Core/Geom/Color.h>
+#include <Core/Malloc/Allocator.h>
+#include <Core/Persistent/Pstreams.h>
+#include <Core/TclInterface/TCLTask.h>
+#include <Core/TclInterface/TCLvar.h>
+#include <Core/TclInterface/TCL.h>
 
 #include <iostream>
 using std::cerr;
@@ -45,16 +45,8 @@ extern Tcl_Interp* the_interp;
 extern "C" GLXContext OpenGLGetContext(Tcl_Interp*, char*);
 
 namespace DaveW {
-namespace Modules {
-
 using namespace DaveW::Datatypes;
-using namespace PSECore::Datatypes;
-using namespace PSECore::Dataflow;
-using namespace SCICore::Containers;
-using namespace SCICore::Datatypes;
-using namespace SCICore::GeomSpace;
-using namespace SCICore::Math;
-using namespace SCICore::TclInterface;
+using namespace SCIRun;
 
 class XYZtoRGB : public Module {
     VoidStarIPort *iXYZ;
@@ -299,11 +291,7 @@ int XYZtoRGB::makeCurrent() {
     glLoadIdentity();
     glRasterPos2d(256-NX/2, 256-NY/2);
     return 1;
-}
 } // End namespace DaveW
-} // End namespace Uintah
+}
 
-//
 // $Log
-//
-//

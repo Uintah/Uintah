@@ -4,7 +4,6 @@
 /************************************************************************
 
   Primitive entities for adjacency models (AdjModel).
-  $Id$
 
   Adapted from:
      mlab: (Id: primitives.h,v 1.7 1997/02/06 16:30:14 garland Exp)
@@ -42,9 +41,7 @@ extern int classifyEdge(Edge *);
 extern int classifyVertex(Vertex *);
 
 ////////////////////////////////////////////////////////////////////////
-//
 // The actual class definitions
-//
 
 class VProp
 {
@@ -72,15 +69,11 @@ public:
 	props = NULL;
 #endif
     }
-    //
     // Standard methods for all objects
-    //
     void kill();
     edge_buffer& edgeUses() { return edge_uses; }
 
-    //
     // Basic primitives for manipulating model topology
-    //
     void linkEdge(Edge *);
     void unlinkEdge(Edge *);
     void remapTo(Vertex *v);
@@ -102,22 +95,16 @@ public:
     Edge(Vertex *, Vertex *);
     ~Edge();
 
-    //
     // Fundamental Edge accessors
-    //
     Vertex *org()  { return v1;       }
     Vertex *dest() { return twin->v1; }
     Edge *sym()    { return twin;     }
 
-    //
     // Standard methods for all objects
-    //
     void kill();
     face_buffer& faceUses() { return *face_uses; }
 
-    //
     // Basic primitives for manipulating model topology
-    //
     void linkFace(Face *);
     void unlinkFace(Face *);
     void remapEndpoint(Vertex *from, Vertex *to);
@@ -136,9 +123,7 @@ public:
 
     Face(Edge *, Edge *, Edge *);
 
-    //
     // Basic Face accessors
-    //
     const Vec3& vertexPos(int i) const { return *edges[i]->org(); }
     void vertexPos(int, const Vec3&) {
 	fatal_error("Face: can't directly set vertex position.");
@@ -149,25 +134,11 @@ public:
     Edge *edge(int i)               { return edges[i];        }
 
 
-    //
     // Standard methods for all objects
-    //
     void kill();
 
     void remapEdge(Edge *from, Edge *to);
 };
 
-//
-// $Log$
-// Revision 1.1  1999/07/27 16:58:07  mcq
-// Initial commit
-//
-// Revision 1.3  1999/05/06 20:17:18  dav
-// added back PSECommon .h files
-//
-// Revision 1.1.1.1  1999/04/24 23:12:32  dav
-// Import sources
-//
-//
 
 #endif // NAUTILUS_ADJPRIMS_INCLUDED

@@ -1,4 +1,3 @@
-//static char *id="@(#) $Id$";
 
 /*
  *  ColorMapTex.cc: ?
@@ -13,14 +12,13 @@
  */
 
 #include "ColorMapTex.h"
-#include <SCICore/Util/NotFinished.h>
-#include <SCICore/Containers/String.h>
-#include <SCICore/Malloc/Allocator.h>
-#include <SCICore/Geometry/BBox.h>
+#include <Core/Util/NotFinished.h>
+#include <Core/Containers/String.h>
+#include <Core/Malloc/Allocator.h>
+#include <Core/Geometry/BBox.h>
 using std::ostream;
 
-namespace SCICore {
-namespace GeomSpace {
+namespace SCIRun {
 
 Persistent *make_ColorMapTex() {
   return scinew ColorMapTex( Point(0,0,0), Point(0,1,0), Point(1,1,0),
@@ -58,14 +56,13 @@ void ColorMapTex::get_bounds( BBox& bb ) {
 #define COLORMAPTEX_VERSION 1
 
 void ColorMapTex::io(Piostream& stream) {
-  using SCICore::PersistentSpace::Pio;
 
   stream.begin_class("ColorMapTex", COLORMAPTEX_VERSION);
   GeomObj::io(stream);
-  SCICore::Geometry::Pio(stream, a);
-  SCICore::Geometry::Pio(stream, b);
-  SCICore::Geometry::Pio(stream, c);
-  SCICore::Geometry::Pio(stream, d);
+  Pio(stream, a);
+  Pio(stream, b);
+  Pio(stream, c);
+  Pio(stream, d);
   stream.end_class();
 }
 
@@ -74,7 +71,5 @@ bool ColorMapTex::saveobj(ostream&, const clString&, GeomSave*) {
   return false;
 }
 
-} // End namespace GeomSpace
-} // End namespace SCICore
+} // End namespace SCIRun
 
-//

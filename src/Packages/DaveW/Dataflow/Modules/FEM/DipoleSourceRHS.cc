@@ -9,25 +9,19 @@
  *  Copyright (C) 1999 SCI Group
  */
 
-#include <PSECore/Dataflow/Module.h>
-#include <PSECore/Datatypes/ColumnMatrixPort.h>
-#include <PSECore/Datatypes/MatrixPort.h>
-#include <PSECore/Datatypes/MeshPort.h>
-#include <PSECore/Datatypes/SurfacePort.h>
-#include <SCICore/Malloc/Allocator.h>
-#include <SCICore/Math/Trig.h>
-#include <SCICore/TclInterface/TCLvar.h>
+#include <Dataflow/Network/Module.h>
+#include <Dataflow/Ports/ColumnMatrixPort.h>
+#include <Dataflow/Ports/MatrixPort.h>
+#include <Dataflow/Ports/MeshPort.h>
+#include <Dataflow/Ports/SurfacePort.h>
+#include <Core/Malloc/Allocator.h>
+#include <Core/Math/Trig.h>
+#include <Core/TclInterface/TCLvar.h>
 #include <iostream>
 using std::cerr;
 
 namespace DaveW {
-namespace Modules {
-
-using namespace PSECore::Dataflow;
-using namespace PSECore::Datatypes;
-using namespace SCICore::Containers;
-using namespace SCICore::TclInterface;
-using namespace SCICore::Geometry;
+using namespace SCIRun;
 
 class DipoleSourceRHS : public Module {
   MeshIPort* inmesh;
@@ -226,35 +220,7 @@ void DipoleSourceRHS::execute()
     oidx->send(ColumnMatrixHandle(idxvec));
   }
 }
-
-} // End namespace Modules
 } // End namespace DaveW
 
 
-//
-// $Log$
-// Revision 1.9  2000/11/17 06:42:04  dmw
-// added new port
-//
-// Revision 1.8  2000/10/31 00:43:37  dmw
-// fixed matrix-of-dipoles bug
-//
-// Revision 1.7  2000/10/17 15:38:37  dmw
-// Can now take a matrix of dipoles
-//
-// Revision 1.5  2000/03/17 09:25:43  sparker
-// New makefile scheme: sub.mk instead of Makefile.in
-// Use XML-based files for module repository
-// Plus many other changes to make these two things work
-//
-// Revision 1.4  1999/10/07 02:06:34  sparker
-// use standard iostreams and complex type
-//
-// Revision 1.3  1999/09/16 00:36:55  dmw
-// added new Module that Chris Butson will work on (DipoleInSphere) and fixed SRCDIR references in DaveW makefiles
-//
-// Revision 1.2  1999/09/08 02:26:27  sparker
-// Various #include cleanups
-//
-// Revision 1.1  1999/09/02 04:49:24  dmw
-// more of Dave's modules
+

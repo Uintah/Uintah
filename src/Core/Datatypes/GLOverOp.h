@@ -1,9 +1,8 @@
 #ifndef GLOVEROP_H
 #define GLOVEROP_H
-#include <SCICore/Datatypes/GLTexRenState.h>
+#include <Core/Datatypes/GLTexRenState.h>
 
-namespace SCICore {
-namespace GeomSpace  {
+namespace SCIRun {
 
 /**************************************
 
@@ -54,12 +53,10 @@ public:
   // postdrawing functions
   virtual void postDraw();
   //////////
-  // 
 
 private:
 
 };
 
-} // end namespace Datatypes
-} // end namespace SCICore
+} // End namespace SCIRun
 #endif

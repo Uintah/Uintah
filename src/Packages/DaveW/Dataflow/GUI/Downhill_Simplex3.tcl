@@ -1,6 +1,6 @@
-catch {rename DaveW_ISL_Downhill_Simplex3 ""}
+catch {rename Packages/DaveW_ISL_Downhill_Simplex3 ""}
 
-itcl_class DaveW_ISL_Downhill_Simplex3 {
+itcl_class Packages/DaveW_ISL_Downhill_Simplex3 {
     inherit Module
 
     constructor {config} {

@@ -1,4 +1,3 @@
-//static char *id="@(#) $Id$";
 
 /*
  *  RayTest.cc:  Project parallel rays at a sphere and see where they go
@@ -12,22 +11,22 @@
  *  Copyright (C) 1997 SCI Group
  */
 
-#include <DaveW/Datatypes/CS684/RTPrims.h>
-#include <PSECore/Datatypes/GeometryPort.h>
-#include <PSECore/Dataflow/Module.h>
-#include <SCICore/Containers/Array1.h>
-#include <SCICore/Containers/String.h>
-#include <SCICore/Geom/GeomArrows.h>
-#include <SCICore/Geom/Color.h>
-#include <SCICore/Geom/GeomGroup.h>
-#include <SCICore/Geom/Material.h>
-#include <SCICore/Geom/GeomSphere.h>
-#include <SCICore/Math/Expon.h>
-#include <SCICore/Math/MinMax.h>
-#include <SCICore/Math/Trig.h>
-#include <SCICore/TclInterface/TCLTask.h>
-#include <SCICore/TclInterface/TCLvar.h>
-#include <SCICore/TclInterface/TCL.h>
+#include <Packages/DaveW/Core/Datatypes/CS684/RTPrims.h>
+#include <Dataflow/Ports/GeometryPort.h>
+#include <Dataflow/Network/Module.h>
+#include <Core/Containers/Array1.h>
+#include <Core/Containers/String.h>
+#include <Core/Geom/GeomArrows.h>
+#include <Core/Geom/Color.h>
+#include <Core/Geom/GeomGroup.h>
+#include <Core/Geom/Material.h>
+#include <Core/Geom/GeomSphere.h>
+#include <Core/Math/Expon.h>
+#include <Core/Math/MinMax.h>
+#include <Core/Math/Trig.h>
+#include <Core/TclInterface/TCLTask.h>
+#include <Core/TclInterface/TCLvar.h>
+#include <Core/TclInterface/TCL.h>
 #include <iostream>
 using std::cerr;
 #define Colormap XColormap
@@ -36,15 +35,8 @@ using std::cerr;
 #undef Colormap
 
 namespace DaveW {
-namespace Modules {
-
 using namespace DaveW::Datatypes;
-using namespace PSECore::Dataflow;
-using namespace PSECore::Datatypes;
-using namespace SCICore::Containers;
-using namespace SCICore::Datatypes;
-using namespace SCICore::GeomSpace;
-using namespace SCICore::TclInterface;
+using namespace SCIRun;
 
 class RayTest : public Module {
     GeometryOPort* ogeom;
@@ -213,37 +205,5 @@ void RayTest::execute()
     }
 
     ogeom->flushViews();
-}
-} // End namespace Modules
 } // End namespace DaveW
-//
-// $Log$
-// Revision 1.7  2000/03/17 09:25:30  sparker
-// New makefile scheme: sub.mk instead of Makefile.in
-// Use XML-based files for module repository
-// Plus many other changes to make these two things work
-//
-// Revision 1.6  1999/10/07 02:06:25  sparker
-// use standard iostreams and complex type
-//
-// Revision 1.5  1999/09/22 19:00:34  dmw
-// using Makefile variable to specify itcl includes
-//
-// Revision 1.4  1999/09/22 18:43:24  dmw
-// added new GUI
-//
-// Revision 1.3  1999/09/08 02:26:20  sparker
-// Various #include cleanups
-//
-// Revision 1.2  1999/08/25 03:47:37  sparker
-// Changed SCICore/CoreDatatypes to SCICore/Datatypes
-// Changed PSECore/CommonDatatypes to PSECore/Datatypes
-// Other Misc. directory tree updates
-//
-// Revision 1.1  1999/08/24 06:23:00  dmw
-// Added in everything for the DaveW branch
-//
-// Revision 1.2  1999/05/03 04:52:12  dmw
-// Added and updated DaveW Datatypes/Modules
-//
-//
+}

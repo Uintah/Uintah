@@ -1,10 +1,9 @@
-//static char *id="@(#) $Id$";
 
 /* TbonTreeOOC1.h
    class declarations and code for the T-BON tree
    Out-of-Core algorithm #1
 
-   Philip Sutton
+   Packages/Philip Sutton
    April 1999
 
   Copyright (C) 2000 SCI Group, University of Utah
@@ -23,9 +22,7 @@
 #include <strings.h>
 
 namespace Phil {
-namespace Modules {
-
-using namespace SCICore::GeomSpace;
+using namespace SCIRun;
 using namespace std;
 
 template <class T>
@@ -903,19 +900,9 @@ TbonTreeOOC1<T>::readBricks( int x, int y, int z, int branching ) {
   }
   datalist->addBricks( bricks, currdata );
 } // readBricks
+} // End namespace Phil
 
-} // end namespace Modules 
-} // end namespace Phil
 
 #endif
 
 
-//
-// $Log$
-// Revision 1.2  2000/02/04 22:15:09  psutton
-// fixed ID problem
-//
-// Revision 1.1  2000/02/04 21:11:58  psutton
-// initial revision
-//
-//

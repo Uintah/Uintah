@@ -22,11 +22,8 @@
 /*                                                                           */
 /*+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
-//
 //      mvv.h   
-//
 //                  MV vector classes for double, float, int, and complex
-//
 
 #ifndef _MV_VECTOR_ALL_H_
 #define _MV_VECTOR_ALL_H_    

@@ -1,14 +1,12 @@
 //  SharedNodes.h - A collection of nodes, potentially shared by other collections 
-//
 //  Written by:
 //   Eric Kuehne
 //   Department of Computer Science
 //   University of Utah
 //   April 2000
-//
 //  Copyright (C) 2000 SCI Institute
 
-#include <SCICore/Datatypes/Nodes.h>
+#include <Core/Datatypes/Nodes.h>
 
 
 class SharedNodes:public Nodes

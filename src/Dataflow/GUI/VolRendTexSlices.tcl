@@ -1,17 +1,14 @@
 ##
  #  VolRendTexSlices.tcl: The volume rendering by slices UI
- #
  #  Written by:
  #   David Weinstein
  #   Department of Computer Science
  #   University of Utah
  #   Aug 1997
- #
  #  Copyright (C) 1997 SCI Group
- #
  ##
 
-itcl_class PSECommon_Visualization_VolRendTexSlices {
+itcl_class Dataflow_Visualization_VolRendTexSlices {
     inherit Module
     constructor {config} {
         set name VolRendTexSlices

@@ -1,7 +1,6 @@
 
 /*
  *  ThreadGroup: A set of threads
- *  $Id$
  *
  *  Written by:
  *   Author: Steve Parker
@@ -12,8 +11,8 @@
  *  Copyright (C) 1997 SCI Group
  */
 
-#include <SCICore/Thread/ThreadGroup.h>
-#include <SCICore/Thread/Thread.h>
+#include <Core/Thread/ThreadGroup.h>
+#include <Core/Thread/Thread.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -21,8 +20,7 @@
 #define for if(0);else for
 #endif
 
-using SCICore::Thread::ThreadGroup;
-using SCICore::Thread::Thread;
+namespace SCIRun {
 
 ThreadGroup* ThreadGroup::s_default_group;
 //using std::vector;
@@ -136,33 +134,5 @@ ThreadGroup::addme(Thread* t)
     d_lock.unlock();
 }
 
-//
-// $Log$
-// Revision 1.6  1999/10/04 16:49:19  moulding
-// changed
-// using std::vector;
-// to
-// using namespace std;
-// to help VC compiler
-//
-// added
-// #define for if(0);else for
-// for win32
-//
-// added
-// using SCICore::Thread::Thread
-// to help VC compiler
-//
-// Revision 1.5  1999/08/28 03:46:51  sparker
-// Final updates before integration with PSE
-//
-// Revision 1.4  1999/08/25 19:00:52  sparker
-// More updates to bring it up to spec
-// Factored out common pieces in Thread_irix and Thread_pthreads
-// Factored out other "default" implementations of various primitives
-//
-// Revision 1.3  1999/08/25 02:38:01  sparker
-// Added namespaces
-// General cleanups to prepare for integration with SCIRun
-//
-//
+
+} // End namespace SCIRun

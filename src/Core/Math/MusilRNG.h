@@ -15,7 +15,7 @@
 #ifndef sci_Math_MusilRNG_h
 #define sci_Math_MusilRNG_h 1
 
-#include <SCICore/share/share.h>
+#include <Core/share/share.h>
 
 class SCICORESHARE MusilRNG {
 	int d[16], n[16];

@@ -1,9 +1,9 @@
 
 /*
- *  NektarVectorField.h: The Nektar Vector Field Data type
+ *  Packages/NektarVectorField.h: The Packages/Nektar Vector Field Data type
  *
  *  Written by:
- *   Yarden Livnat
+ *   Packages/Yarden Livnat
  *   Department of Computer Science
  *   University of Utah
  *   August 2000
@@ -11,22 +11,19 @@
  *  Copyright (C) 2000 SCI Group
  */
 
-#ifndef NektarVectorFieldPort_h
-#define NektarVectorFieldPort_h 
+#ifndef Packages/NektarVectorFieldPort_h
+#define Packages/NektarVectorFieldPort_h 
 
-#include <PSECore/Datatypes/SimplePort.h>
-#include <Nektar/Datatypes/NektarVectorField.h>
+#include <Dataflow/Ports/SimplePort.h>
+#include <Packages/Nektar/Core/Datatypes/NektarVectorField.h>
 
 namespace Nektar {
-  namespace Datatypes {
+using namespace SCIRun;
     
-    using namespace PSECore::Datatypes;
-    
-    typedef SimpleIPort<NektarVectorFieldHandle> NektarVectorFieldIPort;
-    typedef SimpleOPort<NektarVectorFieldHandle> NektarVectorFieldOPort;
-    
-  } // End namespace Datatypes
+    typedef SimpleIPort<Packages/NektarVectorFieldHandle> Packages/NektarVectorFieldIPort;
+    typedef SimpleOPort<Packages/NektarVectorFieldHandle> Packages/NektarVectorFieldOPort;
 } // End namespace Nektar
+    
 
 #endif
 

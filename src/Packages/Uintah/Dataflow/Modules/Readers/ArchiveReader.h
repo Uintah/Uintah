@@ -19,7 +19,7 @@ KEYWORDS
     ParticleGridSelector
 
 AUTHOR
-    Kurt Zimmerman
+    Packages/Kurt Zimmerman
     Department of Computer Science
     University of Utah
     January 1999
@@ -30,18 +30,14 @@ LOG
     Created January 5, 1999
 ----------------------------------------------------------------------*/
     
-#include <Uintah/Datatypes/ArchivePort.h>
-#include <SCICore/Util/NotFinished.h> 
-#include <PSECore/Dataflow/Module.h> 
-#include <SCICore/TclInterface/TCLvar.h> 
+#include <Packages/Uintah/Core/Datatypes/ArchivePort.h>
+#include <Core/Util/NotFinished.h> 
+#include <Dataflow/Network/Module.h> 
+#include <Core/TclInterface/TCLvar.h> 
 
 namespace Uintah {
-namespace Modules {
 
-
-using namespace PSECore::Dataflow;
-using namespace PSECore::Datatypes;
-using namespace SCICore::TclInterface;
+using namespace SCIRun;
 
 class ArchiveReader : public Module { 
   
@@ -60,8 +56,7 @@ private:
   DataArchive *reader;
   
 }; //class ParticleGrid
-
-} // End namespace Modules
 } // End namespace Uintah
+
 
 #endif

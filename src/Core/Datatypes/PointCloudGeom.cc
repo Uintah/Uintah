@@ -1,17 +1,14 @@
 //  PointCloudGeom.cc - A group of Nodes in 3 space
-//
 //  Written by:
 //   Eric Kuehne
 //   Department of Computer Science
 //   University of Utah
 //   April 2000
-//
 //  Copyright (C) 2000 SCI Institute
 
-#include <SCICore/Datatypes/PointCloudGeom.h>
+#include <Core/Datatypes/PointCloudGeom.h>
 
-namespace SCICore {
-namespace Datatypes {
+namespace SCIRun {
 
 PersistentTypeID PointCloudGeom::type_id("PointCloudGeom", "Datatype", 0);
 
@@ -80,5 +77,4 @@ PointCloudGeom::io(Piostream&)
 }
 
 
-} // end Datatypes
-} // end SCICore
+} // End namespace SCIRun

@@ -1,11 +1,9 @@
 
-#include <Uintah/Datatypes/TensorParticlesPort.h>
-#include <Uintah/share/share.h>
-#include <SCICore/Malloc/Allocator.h>
+#include <Packages/Uintah/Core/Datatypes/TensorParticlesPort.h>
+#include <Packages/Uintah/share/share.h>
+#include <Core/Malloc/Allocator.h>
 
-namespace PSECore {
-namespace Datatypes {
-
+namespace Uintah {
 using namespace Uintah::Datatypes;
 
 
@@ -23,7 +21,6 @@ UINTAHSHARE OPort* make_TensorParticlesOPort(Module* module,
 template<> clString SimpleIPort<TensorParticlesHandle>::port_type("TensorParticles");
 template<> clString SimpleIPort<TensorParticlesHandle>::port_color("chartreuse4");
 
+} // End namespace Uintah
 
-} // End namespace Datatypes
-} // End namespace PSECore
 

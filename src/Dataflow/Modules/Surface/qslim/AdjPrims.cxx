@@ -1,7 +1,6 @@
 /************************************************************************
 
   Primitive entities for adjacency models (AdjModel).
-  $Id$
 
   Adapted from:
      mlab: (Id: primitives.cc,v 1.7 1997/02/06 16:32:45 garland Exp)
@@ -149,7 +148,6 @@ void Edge::remapEndpoint(Vertex *from, Vertex *to)
 	cerr << "WARNING remapEndpoint: Illegal endpoint." << endl;
     }
 
-    //
     // The cached Plane equations for the faces attached to us may
     // no longer be valid (in general, chances are pretty slim that they're OK)
     for(int i=0; i<face_uses->length(); i++)

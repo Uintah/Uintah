@@ -1,7 +1,8 @@
 #ifndef _KUSWIK_H_
 #define _KUSWIK_H_
 
-#include <SCICore/Geom/Color.h>
+#include <Core/Geom/Color.h>
+using namespace SCIRun;
 
 #define at() cerr << "@ " << __FILE__ << ":" << __LINE__ << endl
 
@@ -10,7 +11,7 @@
   #define FALSE 0
 #endif
 
-const SCICore::GeomSpace::Color BLACK( 0., 0., 0. );
-const SCICore::GeomSpace::Color WHITE( 1., 1., 1. );
+const Color BLACK( 0., 0., 0. );
+const Color WHITE( 1., 1., 1. );
 
 #endif /* _KUSWIK_H_ */

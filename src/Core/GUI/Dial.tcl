@@ -1,14 +1,10 @@
-#
 #  Dial.tcl
-#
 #  Written by:
 #   James Purciful and Dave Weinstein
 #   Department of Computer Science
 #   University of Utah
 #   May 1995
-#
 #  Copyright (C) 1995 SCI Group
-#
 
 # The legal dialtypes are:
 # (Use (dialtype)_dial to create a dial.)

@@ -1,4 +1,3 @@
-//static char *id="@(#) $Id$";
 
 /*
  *  ?.cc: ?
@@ -16,7 +15,7 @@
 #include <qslim/AdjModel.h>
 #include <qslim/decimate.h>
 
-//#include <PSECommon/Dataflow/Module.h>
+//#include <Dataflow/Dataflow/Module.h>
 
 #include "GHAbstraction.h"
 
@@ -45,8 +44,7 @@ extern int placement_policy;
 extern real pair_selection_tolerance;
 //#include <qslim/AdjModel.h>
 
-namespace PSECommon {
-namespace Modules {
+namespace SCIRun {
 
 void GHAbstraction::InitAdd()
 {
@@ -168,22 +166,5 @@ void GHAbstraction::RDumpSurface()
     }
 }
 
-} // End namespace Modules
-} // End namespace PSECommon
+} // End namespace SCIRun
 
-//
-// $Log$
-// Revision 1.2  1999/08/17 06:37:43  sparker
-// Merged in modifications from PSECore to make this the new "blessed"
-// version of SCIRun/Uintah.
-//
-// Revision 1.1  1999/07/27 16:57:58  mcq
-// Initial commit
-//
-// Revision 1.2  1999/04/29 03:19:28  dav
-// updates
-//
-// Revision 1.1.1.1  1999/04/24 23:12:31  dav
-// Import sources
-//
-//

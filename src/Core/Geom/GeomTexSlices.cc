@@ -1,4 +1,3 @@
-//static char *id="@(#) $Id$";
 
 /*
  *  GeomTexSlices.cc
@@ -12,10 +11,10 @@
  *  Copyright (C) 1995 SCI Group
  */
 
-#include <SCICore/Geom/GeomTexSlices.h>
-#include <SCICore/Containers/String.h>
-#include <SCICore/Geometry/BBox.h>
-#include <SCICore/Malloc/Allocator.h>
+#include <Core/Geom/GeomTexSlices.h>
+#include <Core/Containers/String.h>
+#include <Core/Geometry/BBox.h>
+#include <Core/Malloc/Allocator.h>
 #ifdef _WIN32
 #include <string.h>
 #else
@@ -24,8 +23,7 @@
 #include <iostream>
 using std::ostream;
 
-namespace SCICore {
-namespace GeomSpace {
+namespace SCIRun {
 
 Persistent* make_GeomTexSlices()
 {
@@ -80,30 +78,5 @@ bool GeomTexSlices::saveobj(ostream&, const clString& /*format*/, GeomSave*)
   return 0;
 }
 
-} // End namespace GeomSpace
-} // End namespace SCICore
+} // End namespace SCIRun
 
-//
-// $Log$
-// Revision 1.5  1999/10/07 02:07:45  sparker
-// use standard iostreams and complex type
-//
-// Revision 1.4  1999/08/19 23:18:06  sparker
-// Removed a bunch of #include <SCICore/Util/NotFinished.h> statements
-// from files that did not need them.
-//
-// Revision 1.3  1999/08/17 23:50:26  sparker
-// Removed all traces of the old Raytracer and X11 renderers.
-// Also removed a .o and .d file
-//
-// Revision 1.2  1999/08/17 06:39:14  sparker
-// Merged in modifications from PSECore to make this the new "blessed"
-// version of SCIRun/Uintah.
-//
-// Revision 1.1  1999/07/27 16:56:44  mcq
-// Initial commit
-//
-// Revision 1.1.1.1  1999/04/24 23:12:20  dav
-// Import sources
-//
-//

@@ -1,14 +1,10 @@
-#
 #  MaterialEditor.tcl
-#
 #  Written by:
 #   James Purciful
 #   Department of Computer Science
 #   University of Utah
 #   Mar. 1995
-#
 #  Copyright (C) 1995 SCI Group
-#
 
 #  These are the components of a Material property:
 #    Color  ambient;

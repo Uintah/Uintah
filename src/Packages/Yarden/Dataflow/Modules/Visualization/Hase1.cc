@@ -2,7 +2,7 @@
  *  Hase.cc    View Depended Iso Surface Extraction
  *             for Structures Grids (Bricks)
  *  Written by:
- *   Yarden Livnat
+ *   Packages/Yarden Livnat
  *   Department of Computer Science
  *   University of Utah
  *   Dec 1996
@@ -14,66 +14,58 @@
 
 #include <stdio.h>
 
-#include <SCICore/Containers/String.h>
-#include <SCICore/Util/Timer.h>
-#include <PSECore/Dataflow/Module.h>
-#include <SCICore/Datatypes/ScalarFieldRGdouble.h>
-#include <SCICore/Datatypes/ScalarFieldRGfloat.h>
-#include <SCICore/Datatypes/ScalarFieldRGshort.h>
-#include <PSECore/Datatypes/ScalarFieldPort.h>
-#include <PSECore/Datatypes/ColorMapPort.h>
-#include <PSECore/Datatypes/GeometryPort.h>
-#include <PSECore/Datatypes/SurfacePort.h>
+#include <Core/Containers/String.h>
+#include <Core/Util/Timer.h>
+#include <Dataflow/Network/Module.h>
+#include <Core/Datatypes/ScalarFieldRGdouble.h>
+#include <Core/Datatypes/ScalarFieldRGfloat.h>
+#include <Core/Datatypes/ScalarFieldRGshort.h>
+#include <Dataflow/Ports/ScalarFieldPort.h>
+#include <Dataflow/Ports/ColorMapPort.h>
+#include <Dataflow/Ports/GeometryPort.h>
+#include <Dataflow/Ports/SurfacePort.h>
 
 #include <GL/gl.h>
 #include <GL/glu.h>
 #include <GL/glx.h>
-#include <SCICore/Geom/Color.h>
-#include <SCICore/Geom/GeomOpenGL.h>
+#include <Core/Geom/Color.h>
+#include <Core/Geom/GeomOpenGL.h>
 
-#include <SCICore/TclInterface/TCLTask.h>
-#include <SCICore/TclInterface/TCLvar.h>
-#include <SCICore/TclInterface/TCL.h>
+#include <Core/TclInterface/TCLTask.h>
+#include <Core/TclInterface/TCLvar.h>
+#include <Core/TclInterface/TCL.h>
 #include <tcl.h>
 #include <tk.h>
 
-#include <SCICore/Geom/Material.h>
-#include <SCICore/Geom/GeomTriangles.h>
-#include <SCICore/Geom/View.h>
-#include <SCICore/Geom/GeomGroup.h>
-#include <SCICore/Geom/GeomObj.h>
-#include <SCICore/Geom/GeomTri.h>
-#include <SCICore/Geom/GeomLine.h>
-#include <SCICore/Geom/GeomBox.h>
-#include <SCICore/Geom/Pt.h>
-#include <SCICore/Geom/GeomTransform.h>
-#include <SCICore/Geometry/Point.h>
-#include <SCICore/Geometry/Transform.h>
-#include <SCICore/Geom/BBoxCache.h>
-#include <SCICore/Malloc/Allocator.h>
-#include <SCICore/Geometry/Vector.h>
-#include <SCICore/Math/Trig.h>
+#include <Core/Geom/Material.h>
+#include <Core/Geom/GeomTriangles.h>
+#include <Core/Geom/View.h>
+#include <Core/Geom/GeomGroup.h>
+#include <Core/Geom/GeomObj.h>
+#include <Core/Geom/GeomTri.h>
+#include <Core/Geom/GeomLine.h>
+#include <Core/Geom/GeomBox.h>
+#include <Core/Geom/Pt.h>
+#include <Core/Geom/GeomTransform.h>
+#include <Core/Geometry/Point.h>
+#include <Core/Geometry/Transform.h>
+#include <Core/Geom/BBoxCache.h>
+#include <Core/Malloc/Allocator.h>
+#include <Core/Geometry/Vector.h>
+#include <Core/Math/Trig.h>
 
 #include <math.h>
 #include <iostream>
 #include <sstream>
 #include <values.h>
 
-#include <Yarden/Modules/Visualization/Screen.h>
-#include <Yarden/Datatypes/General/Clock.h>
-#include <Yarden/Modules/Visualization/mcube_scan.h>
-#include <Yarden/Modules/Visualization/BonTree.h>
+#include <Packages/Yarden/Dataflow/Modules/Visualization/Screen.h>
+#include <Packages/Yarden/Core/Datatypes/General/Clock.h>
+#include <Packages/Yarden/Dataflow/Modules/Visualization/mcube_scan.h>
+#include <Packages/Yarden/Dataflow/Modules/Visualization/BonTree.h>
 
 namespace Yarden {
-namespace Modules {
-  
-using namespace PSECore::Dataflow;
-using namespace PSECore::Datatypes;
-using namespace SCICore::Containers;
-using namespace SCICore::GeomSpace;
-using namespace SCICore::Geometry;
-using namespace SCICore::Math;
-using namespace SCICore::TclInterface;
+using namespace SCIRun;
 using namespace Yarden::Datatypes;
 using namespace Yarden::Modules;
 
@@ -326,9 +318,7 @@ struct Warp {
   double y;
 };
 
-//
 // Hase
-//
 
 class Hase : public Module 
 {
@@ -2084,9 +2074,8 @@ Hase::test()
   //   fclose(file);
   cerr << "done" << endl;
 }
+} // End namespace Yarden
 
-}  // namespace Modules
-}  // namespace Yarden
 
 
 

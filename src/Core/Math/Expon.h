@@ -14,7 +14,7 @@
 #ifndef SCI_Math_Expon_h
 #define SCI_Math_Expon_h 1
 
-#include <SCICore/share/share.h>
+#include <Core/share/share.h>
 #include <math.h>
 
 inline SCICORESHARE double Pow(double d, double p)

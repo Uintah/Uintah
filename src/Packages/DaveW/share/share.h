@@ -1,13 +1,13 @@
-/* share.h written by Chris Moulding 11/98 */
+/* share.h written by Chris Packages/Moulding 11/98 */
 
-#undef DaveWSHARE
+#undef Packages/DaveWSHARE
 
 #ifdef _WIN32
   #if defined(BUILD_DAVEW)
-    #define DaveWSHARE __declspec(dllexport)
+    #define Packages/DaveWSHARE __declspec(dllexport)
   #else
-    #define DaveWSHARE __declspec(dllimport)
+    #define Packages/DaveWSHARE __declspec(dllimport)
   #endif 
 #else 
-  #define DaveWSHARE 
+  #define Packages/DaveWSHARE 
 #endif 

@@ -10,20 +10,19 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <SCICore/Datatypes/SymSparseRowMatrix.h>
-#include <SCICore/Math/ssmult.h>
-#include <SCICore/Math/MiscMath.h>
-#include <SCICore/Math/MinMax.h>
-#include <SCICore/Util/Assert.h>
-#include <SCICore/Containers/String.h>
-#include <SCICore/Datatypes/ColumnMatrix.h>
-#include <SCICore/Malloc/Allocator.h>
+#include <Core/Datatypes/SymSparseRowMatrix.h>
+#include <Core/Math/ssmult.h>
+#include <Core/Math/MiscMath.h>
+#include <Core/Math/MinMax.h>
+#include <Core/Util/Assert.h>
+#include <Core/Containers/String.h>
+#include <Core/Datatypes/ColumnMatrix.h>
+#include <Core/Malloc/Allocator.h>
 #include <iostream>
 using std::cerr;
 using std::endl;
 
-namespace SCICore {
-namespace Datatypes {
+namespace SCIRun {
 
 static Persistent* maker()
 {
@@ -335,6 +334,5 @@ void SymSparseRowMatrix::compute_upper()
     upper_rows[nnrows]=idx;
 }
 
-} // End namespace Datatypes
-} // End namespace SCICore
+} // End namespace SCIRun
 

@@ -14,18 +14,16 @@
 #ifndef SCI_PIECEWISEINTERP_H__
 #define SCI_PIECEWISEINTERP_H__
 
-#include <SCICore/Math/MiscMath.h>
-#include <SCICore/Containers/Array1.h>
-#include <SCICore/Containers/Sort.h>
-#include <SCICore/share/share.h>
+#include <Core/Math/MiscMath.h>
+#include <Core/Containers/Array1.h>
+#include <Core/Containers/Sort.h>
+#include <Core/share/share.h>
 #include <iostream>
 
 #define msg(m) std::cout << m << std::endl;
 
-namespace SCICore{
-namespace Math{
+namespace SCIRun {
 
-using namespace SCICore::Containers;
 
 template <class T> class SCICORESHARE PiecewiseInterp {
 protected:
@@ -105,8 +103,7 @@ template<class T> inline bool PiecewiseInterp<T>::fill_data(const Array1<double>
   return true;
 }
 
-} // Math
-} // SCICore
+} // End namespace SCIRun
 
 #endif //SCI_INTERPOLATION_H__
 

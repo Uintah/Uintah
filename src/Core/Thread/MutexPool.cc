@@ -1,7 +1,6 @@
 
 /*
  *  MutexPool: A set of mutex objects
- *  $Id$
  *
  *  Written by:
  *   Author: Steve Parker
@@ -12,10 +11,9 @@
  *  Copyright (C) 1999 SCI Group
  */
 
-#include <SCICore/Thread/MutexPool.h>
+#include <Core/Thread/MutexPool.h>
+namespace SCIRun {
 
-using SCICore::Thread::MutexPool;
-using SCICore::Thread::Mutex;
 
 MutexPool::MutexPool(const char* name, int size)
     :  d_nextID("MutexPool ID lock"), d_size(size)
@@ -61,11 +59,5 @@ void MutexPool::unlockMutex(int idx)
     d_pool[idx]->unlock();
 }
 
-//
-// $Log$
-// Revision 1.1  1999/09/25 08:29:29  sparker
-// Added MutexPool class - a utility for sharing Mutexes among a large
-//  number of objects
-// Fixed comments in Guard
-//
-//
+
+} // End namespace SCIRun

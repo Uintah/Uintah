@@ -5,22 +5,18 @@
  * Simple interface to volume rendering stuff
  */
 
-#include <PSECore/Dataflow/Module.h>
-#include <PSECore/Datatypes/ScalarFieldPort.h>
-#include <SCICore/Datatypes/ScalarFieldRGdouble.h>
-#include <SCICore/Malloc/Allocator.h>
-#include <SCICore/TclInterface/TCLvar.h>
+#include <Dataflow/Network/Module.h>
+#include <Dataflow/Ports/ScalarFieldPort.h>
+#include <Core/Datatypes/ScalarFieldRGdouble.h>
+#include <Core/Malloc/Allocator.h>
+#include <Core/TclInterface/TCLvar.h>
 #include <iostream>
 #include "PadField.h"
 
 
 
 namespace Kurt {
-namespace Modules {
-
-using namespace PSECore::Dataflow;
-using namespace PSECore::Datatypes;
-using namespace SCICore::TclInterface;
+using namespace SCIRun;
 using std::cerr;
 
 
@@ -117,8 +113,7 @@ void PadField::execute(void)
   outscalarfield->send(ScalarFieldHandle(rg));
 
 }
+} // End namespace Kurt
 
-} // End namespace Modules
-} // End namespace Uintah
 
 

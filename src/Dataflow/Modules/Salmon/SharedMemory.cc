@@ -18,8 +18,7 @@ using std::endl;
 
 #include "SharedMemory.h"
 
-namespace PSECommon {
-namespace Modules {
+namespace SCIRun {
 
 /* 
  * Create shared memory region based on arena file given.
@@ -175,4 +174,4 @@ void SharedMemory :: unlock( void )
 #endif
 }
 
-}}
+} // End namespace SCIRun

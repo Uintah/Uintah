@@ -1,19 +1,16 @@
 ##
  #  SiReOutput.tcl: Output the SiRe image space data
- #
  #  Written by:
  #   David Weinstein
  #   Department of Computer Science
  #   University of Utah
  #   Aug 1996
- #
  #  Copyright (C) 1996 SCI Group
- #
  ##
 
-catch {rename DaveW_SiRe_SiReOutput ""}
+catch {rename Packages/DaveW_SiRe_SiReOutput ""}
 
-itcl_class DaveW_SiRe_SiReOutput {
+itcl_class Packages/DaveW_SiRe_SiReOutput {
     inherit Module
     constructor {config} {
         set name SiReOutput

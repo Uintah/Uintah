@@ -1,4 +1,4 @@
-itcl_class PSECommon_Fields_SFRGfile {
+itcl_class Dataflow_Fields_SFRGfile {
     inherit Module
     constructor {config} {
 	set name SFRGfile

@@ -10,22 +10,19 @@
  *  Copyright (C) 1995 SCI Group
  */
 
-#include <SCICore/Geom/GeomTriangles.h>
-#include <SCICore/Util/NotFinished.h>
-#include <SCICore/Containers/String.h>
-#include <SCICore/Geom/GeomSave.h>
-#include <SCICore/Geom/GeomTri.h>
-#include <SCICore/Geometry/BBox.h>
-#include <SCICore/Malloc/Allocator.h>
+#include <Core/Geom/GeomTriangles.h>
+#include <Core/Util/NotFinished.h>
+#include <Core/Containers/String.h>
+#include <Core/Geom/GeomSave.h>
+#include <Core/Geom/GeomTri.h>
+#include <Core/Geometry/BBox.h>
+#include <Core/Malloc/Allocator.h>
 #include <iostream>
 using std::cerr;
 using std::ostream;
 #include <stdio.h>
 
-namespace SCICore {
-namespace GeomSpace {
-
-using namespace Geometry;
+namespace SCIRun {
 
 Persistent* make_GeomTriangles()
 {
@@ -209,11 +206,10 @@ GeomObj* GeomTriangles::clone()
 
 void GeomTriangles::io(Piostream& stream)
 {
-    using SCICore::PersistentSpace::Pio;
 
     stream.begin_class("GeomTriangles", GEOMTRIANGLES_VERSION);
     GeomVertexPrim::io(stream);
-    SCICore::Containers::Pio(stream, normals);
+    Pio(stream, normals);
     stream.end_class();
 }
 
@@ -249,11 +245,10 @@ int GeomTrianglesPT1d::add(const Point& p1,const Point& p2,const Point& p3,
 
 void GeomTrianglesPT1d::io(Piostream& stream)
 {
-    using SCICore::PersistentSpace::Pio;
 
     stream.begin_class("GeomTrianglesPT1d", GeomTrianglesPT1d_VERSION);
     GeomTrianglesP::io(stream);
-    SCICore::Containers::Pio(stream, scalars); // just save scalar values
+    Pio(stream, scalars); // just save scalar values
     stream.end_class();
 }
 
@@ -616,7 +611,6 @@ void GeomTranspTrianglesP::MergeStuff(GeomTranspTrianglesP* other)
 
 void GeomTranspTrianglesP::io(Piostream& stream)
 {
-    using SCICore::PersistentSpace::Pio;
 
     stream.begin_class("GeomTranspTrianglesP", GeomTranspTrianglesP_VERSION);
     GeomTrianglesP::io(stream);
@@ -742,12 +736,11 @@ void GeomTrianglesP::get_bounds(BBox& box)
 
 void GeomTrianglesP::io(Piostream& stream)
 {
-    using SCICore::PersistentSpace::Pio;
 
     stream.begin_class("GeomTrianglesP", GEOMTRIANGLESP_VERSION);
     GeomObj::io(stream);
-    SCICore::Containers::Pio(stream, points);
-    SCICore::Containers::Pio(stream, normals);
+    Pio(stream, points);
+    Pio(stream, normals);
     stream.end_class();
 }
 
@@ -793,11 +786,10 @@ int GeomTrianglesPC::add(const Point& p1, const Color& c1,
 
 void GeomTrianglesPC::io(Piostream& stream)
 {
-    using SCICore::PersistentSpace::Pio;
 
     stream.begin_class("GeomTrianglesPC", GEOMTRIANGLESPC_VERSION);
     GeomTrianglesP::io(stream);
-    SCICore::Containers::Pio(stream, colors);
+    Pio(stream, colors);
     stream.end_class();
 }
 
@@ -945,12 +937,11 @@ void GeomTrianglesVP::get_bounds(BBox& box)
 
 void GeomTrianglesVP::io(Piostream& stream)
 {
-    using SCICore::PersistentSpace::Pio;
 
     stream.begin_class("GeomTrianglesVP", GEOMTRIANGLESVP_VERSION);
     GeomObj::io(stream);
-    SCICore::Containers::Pio(stream, points);
-    SCICore::Containers::Pio(stream, normals);
+    Pio(stream, points);
+    Pio(stream, normals);
     stream.end_class();
 }
 
@@ -998,11 +989,10 @@ int GeomTrianglesVPC::add(const Point& p1, const Vector &v1, const Color& c1,
 
 void GeomTrianglesVPC::io(Piostream& stream)
 {
-    using SCICore::PersistentSpace::Pio;
 
     stream.begin_class("GeomTrianglesVPC", GEOMTRIANGLESVPC_VERSION);
     GeomTrianglesVP::io(stream);
-    SCICore::Containers::Pio(stream, colors);
+    Pio(stream, colors);
     stream.end_class();
 }
 
@@ -1075,6 +1065,5 @@ bool GeomTrianglesVPC::saveobj(ostream& out, const clString& format,
     }
 }
 
-} // End namespace GeomSpace
-} // End namespace SCICore
+} // End namespace SCIRun
 

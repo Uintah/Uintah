@@ -1,9 +1,7 @@
 #include "GLOverOp.h"
 #include <GL/gl.h>
 
-namespace SCICore {
-namespace GeomSpace  {
-
+namespace Kurt {
 
 GLOverOp::GLOverOp(const GLVolumeRenderer* glvr) :
   GLTexRenState( glvr )
@@ -22,6 +20,5 @@ void GLOverOp::postDraw()
   glDisable(GL_BLEND);
 }
 
+} // End namespace Kurt
 
-} // end namespace Datatypes
-} // end namespace Kurt

@@ -11,12 +11,12 @@
  *  Copyright (C) 1999 SCI Group
  */
 
-#include <SCICore/Thread/Mutex.h>
-#include <SCICore/Thread/Semaphore.h>
-#include <SCICore/Thread/Thread.h>
-#include <SCICore/Thread/ThreadGroup.h>
-#include <SCICore/Malloc/Allocator.h>
-#include <SCICore/Thread/ThreadError.h>
+#include <Core/Thread/Mutex.h>
+#include <Core/Thread/Semaphore.h>
+#include <Core/Thread/Thread.h>
+#include <Core/Thread/ThreadGroup.h>
+#include <Core/Malloc/Allocator.h>
+#include <Core/Thread/ThreadError.h>
 #include <afxwin.h>
 #include <string.h>
 #include <stdio.h>
@@ -28,18 +28,11 @@ using std::endl;
 #define MAX(x,y) ((x>y)?x:y)
 #define MIN(x,y) ((x<y)?x:y)
 
-using SCICore::Thread::Mutex;
-using SCICore::Thread::Semaphore;
-using SCICore::Thread::Thread;
-using SCICore::Thread::ThreadGroup;
-using SCICore::Thread::ThreadError;
-using SCICore::Thread::Thread_private;
 
 #define MAXBSTACK 10
 #define MAXTHREADS 4000
 
-namespace SCICore {
-    namespace Thread {
+namespace SCIRun {
 	struct Thread_private {
 		public:
 		HANDLE t;                       // native thread
@@ -465,15 +458,14 @@ int Thread::push_bstack(Thread_private* p, Thread::ThreadState state,
     return oldstate;
 }
 
-void Thread::pop_bstack(SCICore::Thread::Thread_private* p, int oldstate)
+void Thread::pop_bstack(Thread_private* p, int oldstate)
 {
     p->bstacksize--;
     p->state=(ThreadState)oldstate;
-}
+} // End namespace SCIRun
 
 void ThreadGroup::gangSchedule()
 {
-}
 
 
 

@@ -4,13 +4,12 @@
 #include <stdlib.h>
 #include <string.h>
 #include <dirent.h>
-#include <PSECore/Dataflow/FileUtils.h>
+#include <Dataflow/Network/FileUtils.h>
 
-namespace PSECore {
-namespace Dataflow {
+namespace SCIRun {
 
 /* Normally, I would just use sed via system() to edit a file,
-   but for some reason system() calls never work from SCIRun 
+   but for some reason system() calls never work from Dataflow 
    processes in linux.  Oh well, sed isn't natively available
    under windows, so I'd have to do something like this anyhow
    - Chris Moulding */ 
@@ -128,6 +127,5 @@ std::map<int,char*>* GetFilenamesEndingWith(char* d, char* ext)
   return newmap;
 }
 
-} // Dataflow
-} // PSECore
+} // End namespace SCIRun
 

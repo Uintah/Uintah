@@ -14,7 +14,7 @@
 #ifndef SCI_Containers_Timer_h
 #define SCI_Containers_Timer_h 1
 
-#include <SCICore/share/share.h>
+#include <Core/share/share.h>
 
 class SCICORESHARE Timer {
     double total_time;

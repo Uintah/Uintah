@@ -1,38 +1,32 @@
 
 //=======================
-//
 // RenderModel.cc
 // OpenGL draw and Socket send/receive
 // functions for the Model class
 // Copyright 2000
 // Scientific Computing and Imaging,
 // University of Utah
-//
 //=======================
 
 #include <GL/glu.h>
 
-#include <SCICore/OS/sock.h>
+#include <Core/OS/sock.h>
 
-#include <Remote/Tools/macros.h>
-#include <Remote/Tools/Model/Model.h>
-#include <Remote/Tools/Util/Assert.h>
+#include <Packages/Remote/Tools/macros.h>
+#include <Packages/Remote/Tools/Model/Model.h>
+#include <Packages/Remote/Tools/Util/Assert.h>
 
-#include <Remote/Modules/remoteSalmon/RenderModel.h>
+#include <Packages/Remote/Dataflow/Modules/remoteSalmon/RenderModel.h>
 
-using namespace SCICore::OS;
+using namespace SCIRun;
 using namespace Remote::Tools;
 
 //----------------------------------------------------------------------
 namespace Remote {
-  namespace Tools {
-    TextureDB Model::TexDB;
   }
 }
 
 namespace Remote {
-namespace Modules {
-
 //----------------------------------------------------------------------
 struct GLObject : public Object
 {
@@ -283,7 +277,6 @@ Model* receiveModel(Socket* sock) {
   //M->GenNormals();
   return M;
 }
+} // End namespace Remote
 
-} // namespace Modules {
-} // namespace Remote {
 

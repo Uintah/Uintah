@@ -15,72 +15,38 @@
 #ifndef SCI_project_Base_Widget_h
 #define SCI_project_Base_Widget_h 1
 
-#include <PSECore/Constraints/BaseVariable.h>
-#include <SCICore/Geometry/Point.h>
-#include <SCICore/Geometry/Vector.h>
-#include <SCICore/Geom/GeomObj.h>
-#include <SCICore/Geom/GeomGroup.h>
-#include <SCICore/Geom/Material.h>
-#include <SCICore/Geom/Pickable.h>
-#include <SCICore/Geom/GeomPick.h>
-#include <SCICore/Geom/Switch.h>
-#include <SCICore/Geom/TCLGeom.h>
-#include <SCICore/TclInterface/TCL.h>
-#include <SCICore/TclInterface/TCLvar.h>
+#include <Dataflow/Constraints/BaseVariable.h>
+#include <Core/Geometry/Point.h>
+#include <Core/Geometry/Vector.h>
+#include <Core/Geom/GeomObj.h>
+#include <Core/Geom/GeomGroup.h>
+#include <Core/Geom/Material.h>
+#include <Core/Geom/Pickable.h>
+#include <Core/Geom/GeomPick.h>
+#include <Core/Geom/Switch.h>
+#include <Core/Geom/TCLGeom.h>
+#include <Core/TclInterface/TCL.h>
+#include <Core/TclInterface/TCLvar.h>
 
-namespace SCICore {
-  namespace Thread {
-    class CrowdMonitor;
-  }
+namespace SCIRun {
+  class CrowdMonitor;
 }
 
-namespace PSECore {
-  namespace Dataflow {
-    class Module;
-  }
-  namespace Datatypes {
-    class GeometryOPort;
-  }
-  namespace Constraints {
-    class ConstraintSolver;
-    class BaseVariable;
-    class BaseConstraint;
-  }
+namespace SCIRun {
+  class Module;
+  class GeometryOPort;
+  class ConstraintSolver;
+  class BaseVariable;
+  class BaseConstraint;
 }
-namespace PSECommon {
-  namespace Modules {
-    class Roe;
-  }
+namespace SCIRun {
+  class Roe;
 }
 
 
-namespace PSECore {
-namespace Widgets {
+namespace SCIRun {
 
-using SCICore::TclInterface::TCL;
-using SCICore::TclInterface::TCLArgs;
-using SCICore::Thread::CrowdMonitor;
-using SCICore::Containers::clString;
-using SCICore::Containers::Array1;
-using SCICore::GeomSpace::GeomSwitch;
-using SCICore::GeomSpace::GeomPick;
-using SCICore::GeomSpace::Pickable;
-using SCICore::GeomSpace::GeomObj;
-using SCICore::GeomSpace::GeomMaterial;
-using SCICore::GeomSpace::BState;
-using SCICore::GeomSpace::MaterialHandle;
-using SCICore::GeomSpace::TCLMaterial;
-using SCICore::Geometry::Vector;
-using SCICore::Geometry::Point;
 
-using PSECore::Datatypes::GeometryOPort;
-using PSECore::Dataflow::Module;
-using PSECore::Constraints::ConstraintSolver;
-using PSECore::Constraints::BaseVariable;
-using PSECore::Constraints::BaseConstraint;
-using PSECore::Constraints::Index;
-using PSECore::Constraints::Real;
-using PSECommon::Modules::Roe;
 
 class BaseWidget : public TCL, public Pickable {
 public:
@@ -228,7 +194,6 @@ protected:
 
 std::ostream& operator<<( std::ostream& os, BaseWidget& w );
 
-} // End namespace Widgets
-} // End namespace PSECore
+} // End namespace SCIRun
 
 #endif

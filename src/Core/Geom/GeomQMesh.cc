@@ -1,4 +1,3 @@
-//static char *id="@(#) $Id$";
 
 /*
  *  GeomQMesh.cc: ?
@@ -12,16 +11,15 @@
  *  Copyright (C) 199? SCI Group
  */
 
-#include <SCICore/Geom/GeomQMesh.h>
+#include <Core/Geom/GeomQMesh.h>
 
-#include <SCICore/Geometry/BBox.h>
-#include <SCICore/Malloc/Allocator.h>
-#include <SCICore/Util/NotFinished.h>
+#include <Core/Geometry/BBox.h>
+#include <Core/Malloc/Allocator.h>
+#include <Core/Util/NotFinished.h>
 #include <iostream>
 using std::ostream;
 
-namespace SCICore {
-namespace GeomSpace {
+namespace SCIRun {
 
 Persistent* make_GeomQMesh()
 {
@@ -89,27 +87,6 @@ bool GeomQMesh::saveobj(ostream&, const clString&, GeomSave*)
     return false;
 }
 
-} // End namespace GeomSpace
-} // End namespace SCICore
+} // End namespace SCIRun
 
-//
-// $Log$
-// Revision 1.4  1999/10/07 02:07:44  sparker
-// use standard iostreams and complex type
-//
-// Revision 1.3  1999/08/17 23:50:24  sparker
-// Removed all traces of the old Raytracer and X11 renderers.
-// Also removed a .o and .d file
-//
-// Revision 1.2  1999/08/17 06:39:11  sparker
-// Merged in modifications from PSECore to make this the new "blessed"
-// version of SCIRun/Uintah.
-//
-// Revision 1.1  1999/07/27 16:56:42  mcq
-// Initial commit
-//
-// Revision 1.1.1.1  1999/04/24 23:12:22  dav
-// Import sources
-//
-//
 

@@ -1,17 +1,14 @@
 //  Geom.cc - Describes an entity in space -- abstract base class
-//
 //  Written by:
 //   Eric Kuehne
 //   Department of Computer Science
 //   University of Utah
 //   April 2000
-//
 //  Copyright (C) 2000 SCI Institute
-#include <SCICore/Datatypes/Geom.h>
+#include <Core/Datatypes/Geom.h>
 
 
-namespace SCICore {
-namespace Datatypes {
+namespace SCIRun {
 
 Geom::Geom()
 {
@@ -57,5 +54,4 @@ Geom::getDiagonal(Vector& ovec)
 }
 
 
-}  // end datatypes
-} // end scicore
+} // End namespace SCIRun

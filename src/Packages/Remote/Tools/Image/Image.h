@@ -1,8 +1,6 @@
 //////////////////////////////////////////////////////////////////////
 // Image.h - Generic image class suitable for graphics and stuff.
-//
 // Copyright 1997 by David K. McAllister
-//
 //////////////////////////////////////////////////////////////////////
 
 #ifndef _image_h
@@ -16,8 +14,6 @@
 // A 4 channel image is RGBA.
 
 namespace Remote {
-namespace Tools {
-
 //----------------------------------------------------------------------
 				// This is a not very useful struct
 				// for RGB pixels.
@@ -444,8 +440,7 @@ void Image::fill(const unsigned char p)
   memset(Pix, p, dsize);
 }
 
+} // End namespace Remote
 
-} // namespace Tools
-} // namespace Remote
 
 #endif

@@ -1,4 +1,3 @@
-//static char *id="@(#) $Id$";
 
 /*
  *  TexSquare.cc: ?
@@ -13,14 +12,13 @@
  */
 
 #include "TexSquare.h"
-#include <SCICore/Util/NotFinished.h>
-#include <SCICore/Containers/String.h>
-#include <SCICore/Malloc/Allocator.h>
-#include <SCICore/Geometry/BBox.h>
+#include <Core/Util/NotFinished.h>
+#include <Core/Containers/String.h>
+#include <Core/Malloc/Allocator.h>
+#include <Core/Geometry/BBox.h>
 using std::ostream;
 
-namespace SCICore {
-namespace GeomSpace {
+namespace SCIRun {
 
 Persistent *make_TexSquare() {
   return scinew TexSquare( Point(0,0,0), Point(0,1,0), Point(1,1,0),
@@ -67,14 +65,13 @@ void TexSquare::get_bounds( BBox& bb ) {
 #define TEXSQUARE_VERSION 1
 
 void TexSquare::io(Piostream& stream) {
-  using SCICore::PersistentSpace::Pio;
 
   stream.begin_class("TexSquare", TEXSQUARE_VERSION);
   GeomObj::io(stream);
-  SCICore::Geometry::Pio(stream, a);
-  SCICore::Geometry::Pio(stream, b);
-  SCICore::Geometry::Pio(stream, c);
-  SCICore::Geometry::Pio(stream, d);
+  Pio(stream, a);
+  Pio(stream, b);
+  Pio(stream, c);
+  Pio(stream, d);
   stream.end_class();
 }
 
@@ -83,37 +80,5 @@ bool TexSquare::saveobj(ostream&, const clString&, GeomSave*) {
   return false;
 }
 
-} // End namespace GeomSpace
-} // End namespace SCICore
+} // End namespace SCIRun
 
-//
-// $Log$
-// Revision 1.6  1999/10/07 02:07:50  sparker
-// use standard iostreams and complex type
-//
-// Revision 1.5  1999/08/29 00:46:58  sparker
-// Integrated new thread library
-// using statement tweaks to compile with both MipsPRO and g++
-// Thread library bug fixes
-//
-// Revision 1.4  1999/08/28 17:54:45  sparker
-// Integrated new Thread library
-//
-// Revision 1.3  1999/08/17 23:50:34  sparker
-// Removed all traces of the old Raytracer and X11 renderers.
-// Also removed a .o and .d file
-//
-// Revision 1.2  1999/08/17 06:39:24  sparker
-// Merged in modifications from PSECore to make this the new "blessed"
-// version of SCIRun/Uintah.
-//
-// Revision 1.1  1999/07/27 16:56:53  mcq
-// Initial commit
-//
-// Revision 1.2  1999/07/07 21:10:57  dav
-// added beginnings of support for g++ compilation
-//
-// Revision 1.1.1.1  1999/04/24 23:12:20  dav
-// Import sources
-//
-//

@@ -1,7 +1,7 @@
 
 catch {rename IsoSurfaceDW ""}
 
-itcl_class PSECommon_Visualization_IsoSurfaceDW {
+itcl_class Dataflow_Visualization_IsoSurfaceDW {
     inherit Module
     constructor {config} {
 	set name IsoSurfaceDW

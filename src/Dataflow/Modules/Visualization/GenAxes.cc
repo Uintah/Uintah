@@ -10,24 +10,19 @@
  *  Copyright (C) 1995 SCI Group
  */
 
-#include <PSECore/Dataflow/Module.h>
-#include <PSECore/Datatypes/GeometryPort.h>
-#include <SCICore/Geom/GeomCylinder.h>
-#include <SCICore/Geom/GeomCone.h>
-#include <SCICore/Geom/GeomGroup.h>
-#include <SCICore/Geom/Material.h>
-#include <SCICore/Malloc/Allocator.h>
-#include <SCICore/TclInterface/TCLvar.h>
+#include <Dataflow/Network/Module.h>
+#include <Dataflow/Ports/GeometryPort.h>
+#include <Core/Geom/GeomCylinder.h>
+#include <Core/Geom/GeomCone.h>
+#include <Core/Geom/GeomGroup.h>
+#include <Core/Geom/Material.h>
+#include <Core/Malloc/Allocator.h>
+#include <Core/TclInterface/TCLvar.h>
 
-#include <PSECommon/share/share.h>
+#include <Dataflow/share/share.h>
 
-namespace PSECommon {
-namespace Modules {
+namespace SCIRun {
 
-using namespace PSECore::Dataflow;
-using namespace PSECore::Datatypes;
-using namespace SCICore::TclInterface;
-using namespace SCICore::GeomSpace;
 
 /**************************************
 CLASS
@@ -61,7 +56,7 @@ WARNING
 
 ****************************************/
 
-class PSECommonSHARE GenAxes : public Module {
+class PSECORESHARE GenAxes : public Module {
     TCLdouble size;
     int size_changed;
     GeometryOPort* ogeom;
@@ -75,12 +70,9 @@ public:
 
         // GROUP:  Constructors:
         ///////////////////////////
-        //
         // Constructs an instance of class GenAxes
-        //
         // Constructor taking
         //    [in] id as an identifier
-        //
     GenAxes(const clString& id);
 
         // GROUP:  Destructor:
@@ -91,19 +83,17 @@ public:
 
         // GROUP:  Access functions:
         ///////////////////////////
-        //
         // execute() - execution scheduled by scheduler
     virtual void execute();
 
 
         //////////////////////////
-        //
         // tcl_commands - overides tcl_command in base class Module, takes:
         //                          size_changed
     virtual void tcl_command(TCLArgs&, void*);
 };
 
-extern "C" PSECommonSHARE Module* make_GenAxes(const clString& id) {
+extern "C" PSECORESHARE Module* make_GenAxes(const clString& id) {
   return new GenAxes(id);
 }
 
@@ -183,5 +173,4 @@ void GenAxes::tcl_command(TCLArgs& args, void* userdata)
     }
 }
 
-} // End namespace Modules
-} // End namespace PSECommon
+} // End namespace SCIRun

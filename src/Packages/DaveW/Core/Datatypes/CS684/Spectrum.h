@@ -11,21 +11,16 @@
  *  Copyright (C) 1997 SCI Group
  */
 
-#ifndef SCI_DaveW_Datatypes_Spectrum_h
-#define SCI_DaveW_Datatypes_Spectrum_h 1
+#ifndef SCI_Packages/DaveW_Datatypes_Spectrum_h
+#define SCI_Packages/DaveW_Datatypes_Spectrum_h 1
 
-#include <SCICore/Containers/Array1.h>
-#include <SCICore/Geom/Color.h>
-#include <SCICore/Geometry/Point.h>
-#include <SCICore/Persistent/Persistent.h>
+#include <Core/Containers/Array1.h>
+#include <Core/Geom/Color.h>
+#include <Core/Geometry/Point.h>
+#include <Core/Persistent/Persistent.h>
 
 namespace DaveW {
-namespace Datatypes {
-
-using SCICore::Containers::Array1;
-using SCICore::GeomSpace::Color;
-using SCICore::Geometry::Point;
-using SCICore::PersistentSpace::Piostream;
+using namespace SCIRun;
 
 class Spectrum {
 public:
@@ -66,18 +61,8 @@ double vectorDotProd(const Array1<double> &a, const Array1<double> &b);
 double vectorDotProd(double *a, double *b, int num);
 
 void Pio(Piostream&, LiteSpectrum&);
-void Pio(Piostream&, Spectrum&);
-} // End namespace Datatypes
 } // End namespace DaveW
+void Pio(Piostream&, Spectrum&);
 
-//
-// $Log$
-// Revision 1.1  1999/08/23 02:52:58  dmw
-// Dave's Datatypes
-//
-// Revision 1.2  1999/05/03 04:52:08  dmw
-// Added and updated DaveW Datatypes/Modules
-//
-//
 
 #endif

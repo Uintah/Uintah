@@ -11,19 +11,16 @@
  */
 
 
-#include <PSECore/Constraints/ProjectConstraint.h>
-#include <SCICore/Geometry/Vector.h>
-#include <SCICore/Util/Debug.h>
+#include <Dataflow/Constraints/ProjectConstraint.h>
+#include <Core/Geometry/Vector.h>
+#include <Core/Util/Debug.h>
 #include <iostream>
 using std::cerr;
 using std::cout;
 using std::endl;
 
-namespace PSECore {
-namespace Constraints {
+namespace SCIRun {
 
-using SCICore::Util::DebugSwitch;
-using namespace SCICore::Geometry;
 
 static DebugSwitch pc_debug("Constraints", "Project");
 
@@ -119,5 +116,4 @@ ProjectConstraint::Satisfy( const Index index, const Scheme scheme, const Real E
    return 0;
 }
 
-} // End namespace Constraints
-} // End namespace PSECore
+} // End namespace SCIRun

@@ -1,4 +1,3 @@
-//static char *id="@(#) $Id$";
 
 /*
  *  RadPrims.cc:  Radiosity primitives -- Mesh, ...
@@ -12,19 +11,19 @@
  *  Copyright (C) 1997 SCI Group
  */
 
-#include <DaveW/Datatypes/CS684/DRaytracer.h>
-#include <DaveW/Datatypes/CS684/RTPrims.h>
-#include <DaveW/Datatypes/CS684/RadPrims.h>
-#include <DaveW/Datatypes/CS684/Spectrum.h>
-#include <SCICore/Containers/String.h>
-#include <SCICore/Geom/Color.h>
-#include <SCICore/Geom/Material.h>
-#include <SCICore/Geometry/Point.h>
-#include <SCICore/Geometry/Plane.h>
-#include <SCICore/Geometry/Vector.h>
-#include <SCICore/Malloc/Allocator.h>
-#include <SCICore/Math/MinMax.h>
-#include <SCICore/Math/MiscMath.h>
+#include <Packages/DaveW/Core/Datatypes/CS684/DRaytracer.h>
+#include <Packages/DaveW/Core/Datatypes/CS684/RTPrims.h>
+#include <Packages/DaveW/Core/Datatypes/CS684/RadPrims.h>
+#include <Packages/DaveW/Core/Datatypes/CS684/Spectrum.h>
+#include <Core/Containers/String.h>
+#include <Core/Geom/Color.h>
+#include <Core/Geom/Material.h>
+#include <Core/Geometry/Point.h>
+#include <Core/Geometry/Plane.h>
+#include <Core/Geometry/Vector.h>
+#include <Core/Malloc/Allocator.h>
+#include <Core/Math/MinMax.h>
+#include <Core/Math/MiscMath.h>
 
 #include <iostream>
 using std::cerr;
@@ -32,11 +31,7 @@ using std::cerr;
 #include <stdio.h>
 
 namespace DaveW {
-namespace Datatypes {
-
-using namespace SCICore::PersistentSpace;
-using namespace SCICore::Geometry;
-using namespace SCICore::Math;
+using namespace SCIRun;
 
 RadObj::RadObj()
 {	
@@ -354,8 +349,6 @@ int RadObj::ancestorOf(RadObj *ro) {
 
 #define RadObj_VERSION 1
 void RadObj::io(Piostream& stream) {
-    using SCICore::PersistentSpace::Pio;
-    using SCICore::GeomSpace::Pio;
 
     /* int version=*/stream.begin_class("RadObj", RadObj_VERSION);
     Pio(stream, i1);
@@ -406,7 +399,6 @@ int RadLink::oracle2(RadObj* rcv, double radEpsilon) {
 
 #define RadLink_VERSION 1
 void RadLink::io(Piostream& stream) {
-    using SCICore::PersistentSpace::Pio;
 
     /* int version=*/stream.begin_class("RadLink", RadLink_VERSION);
     Pio(stream, FF);
@@ -518,11 +510,6 @@ RadMesh* RadMesh::clone()
 
 #define RadMesh_VERSION 1
 void RadMesh::io(Piostream& stream) {
-    using SCICore::PersistentSpace::Pio;
-    using SCICore::Datatypes::Pio;
-    using SCICore::Containers::Pio;
-    using SCICore::Geometry::Pio;
-    using SCICore::GeomSpace::Pio;
     using DaveW::Datatypes::Pio;
 
     /* int version=*/stream.begin_class("RadMesh", RadMesh_VERSION);
@@ -545,28 +532,5 @@ static Persistent* make_RadMesh()
 }
 
 PersistentTypeID RadMesh::type_id("RadMesh", "Datatype", make_RadMesh);
-
-} // End namespace Datatypes
 } // End namespace DaveW
-//
-// $Log$
-// Revision 1.4  1999/10/07 02:06:18  sparker
-// use standard iostreams and complex type
-//
-// Revision 1.3  1999/08/29 00:46:35  sparker
-// Integrated new thread library
-// using statement tweaks to compile with both MipsPRO and g++
-// Thread library bug fixes
-//
-// Revision 1.2  1999/08/25 03:47:33  sparker
-// Changed SCICore/CoreDatatypes to SCICore/Datatypes
-// Changed PSECore/CommonDatatypes to PSECore/Datatypes
-// Other Misc. directory tree updates
-//
-// Revision 1.1  1999/08/23 02:52:57  dmw
-// Dave's Datatypes
-//
-// Revision 1.2  1999/05/03 04:52:02  dmw
-// Added and updated DaveW Datatypes/Modules
-//
-//
+

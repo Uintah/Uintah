@@ -1,5 +1,5 @@
 /*
- *  KurtScalarFieldReader.cc: ScalarField Reader class
+ *  Packages/KurtScalarFieldReader.cc: ScalarField Reader class
  *
  *  Written by:
  *   Steven G. Parker
@@ -10,15 +10,15 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include "KurtScalarFieldReader.h"
-#include <PSECore/Dataflow/Module.h>
-#include <PSECore/Datatypes/ScalarFieldPort.h>
-#include <SCICore/Datatypes/ScalarField.h>
-#include <SCICore/Malloc/Allocator.h>
-#include <SCICore/TclInterface/TCLTask.h>
-#include <SCICore/TclInterface/TCLvar.h>
-#include <SCICore/Persistent/Pstreams.h>
-#include <SCICore/Containers/String.h>
+#include "Packages/KurtScalarFieldReader.h"
+#include <Dataflow/Network/Module.h>
+#include <Dataflow/Ports/ScalarFieldPort.h>
+#include <Core/Datatypes/ScalarField.h>
+#include <Core/Malloc/Allocator.h>
+#include <Core/TclInterface/TCLTask.h>
+#include <Core/TclInterface/TCLvar.h>
+#include <Core/Persistent/Pstreams.h>
+#include <Core/Containers/String.h>
 #include <fstream>
 #include <iostream> 
 using std::cerr;
@@ -31,21 +31,15 @@ using std::ostringstream;
 #include <unistd.h>
 
 namespace Kurt {
-namespace Modules {
-
-using namespace PSECore::Dataflow;
-using namespace PSECore::Datatypes;
-using namespace SCICore::TclInterface;
-using namespace SCICore::PersistentSpace;
-using namespace SCICore::Containers;
+using namespace SCIRun;
 
 
-extern "C" Module* make_KurtScalarFieldReader(const clString& id) {
-  return new KurtScalarFieldReader(id);
+extern "C" Module* make_Packages/KurtScalarFieldReader(const clString& id) {
+  return new Packages/KurtScalarFieldReader(id);
 }
 
-KurtScalarFieldReader::KurtScalarFieldReader(const clString& id)
-: Module("KurtScalarFieldReader", id, Source), 
+Packages/KurtScalarFieldReader::Packages/KurtScalarFieldReader(const clString& id)
+: Module("Packages/KurtScalarFieldReader", id, Source), 
     filebase("filebase", id, this), animate("animate", id, this),
     startFrame("startFrame", id, this), endFrame("endFrame", id, this),
     increment("increment", id, this),
@@ -63,14 +57,14 @@ KurtScalarFieldReader::KurtScalarFieldReader(const clString& id)
 
 }
 
-KurtScalarFieldReader::~KurtScalarFieldReader()
+Packages/KurtScalarFieldReader::~Packages/KurtScalarFieldReader()
 {
 }
 
 #ifdef BROKEN
 static void watcher(double pd, void* cbdata)
 {
-    KurtScalarFieldReader* reader=(KurtScalarFieldReader*)cbdata;
+    Packages/KurtScalarFieldReader* reader=(Packages/KurtScalarFieldReader*)cbdata;
     if(TCLTask::try_lock()){
 	// Try the malloc lock once before we call update_progress
 	// If we can't get it, then back off, since our caller might
@@ -85,9 +79,8 @@ static void watcher(double pd, void* cbdata)
 }
 #endif
 
-void KurtScalarFieldReader::execute()
+void Packages/KurtScalarFieldReader::execute()
 {
-    using SCICore::Containers::Pio;
 
     tcl_status.set("Executing"); 
     // might have multiple filenames later for animations
@@ -112,7 +105,7 @@ void KurtScalarFieldReader::execute()
 }
 
 bool
-KurtScalarFieldReader::read( const clString& fn)
+Packages/KurtScalarFieldReader::read( const clString& fn)
 {
     if(!handle.get_rep() || fn != old_filebase){
 	old_filebase=fn;
@@ -135,7 +128,7 @@ KurtScalarFieldReader::read( const clString& fn)
 }
 
 bool 
-KurtScalarFieldReader::doAnimation()
+Packages/KurtScalarFieldReader::doAnimation()
 {
   int i;
   int filesRead = 0;
@@ -171,7 +164,6 @@ KurtScalarFieldReader::doAnimation()
     return 0;
 }
 
+} // End namespace Kurt
 
-} // End namespace Modules
-} // End namespace PSECommon
 

@@ -1,4 +1,4 @@
-itcl_class McQ_SAMRAI_Euler {
+itcl_class Packages/McQ_SAMRAI_Euler {
   inherit Module
 
   constructor {config} {

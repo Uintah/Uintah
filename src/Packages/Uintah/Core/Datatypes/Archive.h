@@ -1,19 +1,14 @@
 #ifndef ARCHIVE_H
 #define ARCHIVE_H
 
-#include <SCICore/Datatypes/Datatype.h>
-#include <SCICore/Containers/LockingHandle.h>
-#include <Uintah/Interface/DataArchive.h>
-#include <SCICore/Persistent/Persistent.h>
+#include <Core/Datatypes/Datatype.h>
+#include <Core/Containers/LockingHandle.h>
+#include <Packages/Uintah/Interface/DataArchive.h>
+#include <Core/Persistent/Persistent.h>
 #include <iostream>
 
 namespace Uintah {
-namespace Datatypes {
-
-using SCICore::Datatypes::Datatype;
-using SCICore::Containers::LockingHandle;
-using SCICore::PersistentSpace::Piostream;
-using SCICore::PersistentSpace::PersistentTypeID;
+using namespace SCIRun;
 
 
 
@@ -28,7 +23,7 @@ GENERAL INFORMATION
 
    Archive.h
 
-   Kurt Zimmerman
+   Packages/Kurt Zimmerman
    Department of Computer Science
    University of Utah
 
@@ -85,7 +80,6 @@ private:
   DataArchive *archive;
   int _timestep;
 };
+} // End namespace Uintah
 
-} // end namespace Datatypes
-} // end namespace Uintah
 #endif

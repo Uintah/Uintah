@@ -1,4 +1,3 @@
-//static char *id="@(#) $Id$";
 
 /*
  *  Vector.cc: ?
@@ -12,20 +11,19 @@
  *  Copyright (C) 199? SCI Group
  */
 
-#include <SCICore/Geometry/Vector.h>
-#include <SCICore/Geometry/Point.h>
-#include <SCICore/Util/Assert.h>
-#include <SCICore/Persistent/Persistent.h>
-#include <SCICore/Containers/String.h>
-#include <SCICore/Math/Expon.h>
-#include <SCICore/Math/MiscMath.h>
+#include <Core/Geometry/Vector.h>
+#include <Core/Geometry/Point.h>
+#include <Core/Util/Assert.h>
+#include <Core/Persistent/Persistent.h>
+#include <Core/Containers/String.h>
+#include <Core/Math/Expon.h>
+#include <Core/Math/MiscMath.h>
 #include <iostream>
 using std::istream;
 using std::ostream;
 #include <stdio.h>
 
-namespace SCICore {
-namespace Geometry {
+namespace SCIRun {
 
 clString
 Vector::string() const
@@ -86,7 +84,6 @@ Vector::operator== ( const Vector& v ) const
 void
 Pio(Piostream& stream, Vector& p)
 {
-    using SCICore::PersistentSpace::Pio;
 
     stream.begin_cheap_delim();
     Pio(stream, p._x);
@@ -127,33 +124,6 @@ void Vector::rotz90(const int c)
 }
 
 
-} // End namespace Geometry
-} // End namespace SCICore
+} // End namespace SCIRun
 
-//
-// $Log$
-// Revision 1.5  1999/10/07 02:07:57  sparker
-// use standard iostreams and complex type
-//
-// Revision 1.4  1999/09/08 02:26:53  sparker
-// Various #include cleanups
-//
-// Revision 1.3  1999/09/04 06:01:53  sparker
-// Updates to .h files, to minimize #includes
-// removed .icc files (yeah!)
-//
-// Revision 1.2  1999/08/17 06:39:29  sparker
-// Merged in modifications from PSECore to make this the new "blessed"
-// version of SCIRun/Uintah.
-//
-// Revision 1.1  1999/07/27 16:56:57  mcq
-// Initial commit
-//
-// Revision 1.2  1999/07/07 21:11:00  dav
-// added beginnings of support for g++ compilation
-//
-// Revision 1.1.1.1  1999/04/24 23:12:27  dav
-// Import sources
-//
-//
 

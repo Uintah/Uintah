@@ -10,15 +10,13 @@
  *  Copyright (C) 2000 SCI Group
  */
 
-#include <SCICore/Math/LinearPWI.h>
-#include <SCICore/share/share.h>
-#include <SCICore/Containers/Sort.h>
-#include <SCICore/Containers/Array1.h>
+#include <Core/Math/LinearPWI.h>
+#include <Core/share/share.h>
+#include <Core/Containers/Sort.h>
+#include <Core/Containers/Array1.h>
 
-namespace SCICore{
-namespace Math{
+namespace SCIRun {
 
-using namespace SCICore::Containers;
 
 LinearPWI::LinearPWI()
 {
@@ -45,5 +43,4 @@ bool LinearPWI::set_data(const Array1<double>& pts, const Array1<double>& vals){
     }
 }
 
-} //Math
-} //SCICore
+} // End namespace SCIRun

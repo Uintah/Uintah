@@ -12,13 +12,12 @@
 
 #include <stdio.h>
 #include <string.h>
-#include <PSECore/Constraints/BaseConstraint.h>
+#include <Dataflow/Constraints/BaseConstraint.h>
 #include <iostream>
 using std::endl;
 using std::ostream;
 
-namespace PSECore {
-namespace Constraints {
+namespace SCIRun {
 
 /***************************************************************************
  * The constructor initializes the constraint's variables.
@@ -184,5 +183,4 @@ BaseConstraint::Register()
       var_indexs[index] = vars[index]->Register(this, index);
 }
 
-} // End namespace Constraints
-} // End namespace PSECore
+} // End namespace SCIRun

@@ -2,7 +2,7 @@
 #ifndef Math_Trig_h
 #define Math_Trig_h 1
 
-#include <SCICore/share/share.h>
+#include <Core/share/share.h>
 
 #include <math.h>
 

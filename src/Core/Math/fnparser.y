@@ -1,13 +1,11 @@
 
 /*
 //=======================
-//
 // fnparser.y
 // David Hart
 // July 2000
 // SCI group
 // University of Utah
-//
 //=======================
 */
 
@@ -21,16 +19,14 @@
 #include <vector>
 using namespace std;
 
-#include <SCICore/Math/function.h>
-using namespace SCICore::Math;
-
+#include <Core/Math/function.h>
+using namespace SCIRun;
 
 #define YYPARSE_PARAM param
 
 int yylex();			// Defined in the scanner
 
-namespace SCICore {
-namespace Math {
+namespace SCIRun {
   
 void yyerror(char *s);		// Defined below and called automatically when
 				// bison detects a parse error
@@ -51,8 +47,7 @@ int last_err = 0;		// set to the line number of the last
 int errline;
 extern char *yytext;
 
-} //namespace Math {
-} //namespace SCICore {
+} //namespace SCIRun
 
 %}
 
@@ -165,8 +160,7 @@ function : TCONST {
 
 %%
 
-namespace SCICore {
-namespace Math {
+namespace SCIRun {
 
 //----------------------------------------------------------------------
 void fnerror (char *s) {
@@ -180,5 +174,4 @@ void fnerror (char *s) {
   }
 }
 
-} //namespace Math {
-} //namespace SCICore {
+} // End namespace SCIRun

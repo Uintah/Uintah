@@ -17,20 +17,13 @@
 #include <map.h>
 #include <iosfwd>
 
-#include <SCICore/Containers/String.h>
-#include <SCICore/share/share.h>
+#include <Core/Containers/String.h>
+#include <Core/share/share.h>
 
-namespace SCICore {
-  namespace Containers {
-    class clString;
-  }
-}
 
-namespace SCICore {
-namespace PersistentSpace {
+namespace SCIRun {
 
-using SCICore::Containers::clString;
-
+class clString;
 class Persistent;
 
 //----------------------------------------------------------------------
@@ -128,26 +121,7 @@ SCICORESHARE void
   Pio(Piostream& stream, map<Key, Data>& data );
 
 
-} // End namespace PersistentSpace
-} // End namespace SCICore
-
-namespace SCICore {
-  namespace Containers {
-    
-    //typedef Persistent* PersistentPointer;
-    
-/*
-//const??
-//----------------------------------------------------------------------
-inline SCICORESHARE int Hash(PersistentSpace::Persistent * k, int hash_size)
-{
-  return int( (unsigned long) ((long)k ^ (3 * hash_size + 1)) %
-              (unsigned long) hash_size );
-}
-*/
-
-  }
-}
+} // End namespace SCIRun
 
 
 #endif

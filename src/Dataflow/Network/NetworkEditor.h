@@ -14,20 +14,15 @@
 #ifndef SCI_project_NetworkEditor_h
 #define SCI_project_NetworkEditor_h 1
 
-#include <PSECore/share/share.h>
-#include <PSECore/Comm/MessageBase.h>
-#include <SCICore/TclInterface/TCL.h>
-#include <SCICore/Thread/Mailbox.h>
-#include <SCICore/Thread/Runnable.h>
+#include <Dataflow/share/share.h>
+#include <Dataflow/Comm/MessageBase.h>
+#include <Core/TclInterface/TCL.h>
+#include <Core/Thread/Mailbox.h>
+#include <Core/Thread/Runnable.h>
 
-namespace PSECore {
-namespace Dataflow {
+namespace SCIRun {
 
-using SCICore::TclInterface::TCL;
-using SCICore::TclInterface::TCLArgs;
-using SCICore::Containers::clString;
 
-using PSECore::Comm::MessageBase;
 
 class Connection;
 class Datatype;
@@ -36,7 +31,7 @@ class Module;
 class Network;
 class OPort;
 
-class PSECORESHARE NetworkEditor : public SCICore::Thread::Runnable, public TCL {
+class PSECORESHARE NetworkEditor : public Runnable, public TCL {
     Network* net;
     void multisend(OPort*);
     void do_scheduling(Module*);
@@ -44,7 +39,7 @@ class PSECORESHARE NetworkEditor : public SCICore::Thread::Runnable, public TCL 
     int schedule;
     void save_network(const clString&);
 public:
-    SCICore::Thread::Mailbox<MessageBase*> mailbox;
+    Mailbox<MessageBase*> mailbox;
 
     NetworkEditor(Network*);
     ~NetworkEditor();
@@ -77,8 +72,7 @@ public:
 void postMessage(const clString& errmsg, bool err=true);
 void postMessageNoCRLF(const clString& errmsg, bool err=true);
 
-} // End namespace Dataflow
-} // End namespace PSECore
+} // End namespace SCIRun
 
 #endif
 

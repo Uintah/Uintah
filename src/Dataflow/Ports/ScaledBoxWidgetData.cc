@@ -1,4 +1,3 @@
-//static char *id="@(#) $Id$";
 
 /*
  *  ScaledBoxWidgetData.cc: gotta get the data there somehow...
@@ -12,15 +11,13 @@
  *  Copyright (C) 1996 SCI Group
  */
 
-#include <PSECore/Datatypes/ScaledBoxWidgetData.h>
-#include <SCICore/Containers/String.h>
-#include <SCICore/Geometry/Point.h>
-#include <SCICore/Malloc/Allocator.h>
+#include <Dataflow/Ports/ScaledBoxWidgetData.h>
+#include <Core/Containers/String.h>
+#include <Core/Geometry/Point.h>
+#include <Core/Malloc/Allocator.h>
 
-namespace PSECore {
-namespace Datatypes {
+namespace SCIRun {
 
-using namespace SCICore::PersistentSpace;
 
 static Persistent* maker()
 {
@@ -78,8 +75,6 @@ ScaledBoxWidgetData* ScaledBoxWidgetData::clone() const
 
 void ScaledBoxWidgetData::io(Piostream& stream)
 {
-    using SCICore::PersistentSpace::Pio;
-    using SCICore::Geometry::Pio;
 
     stream.begin_class("Boolean", SCALEDBOXWIDGETDATA_VERSION);
     Pio(stream,Center);
@@ -92,30 +87,5 @@ void ScaledBoxWidgetData::io(Piostream& stream)
     stream.end_class();
 }
 
-} // End namespace Datatypes
-} // End namespace PSECore
+} // End namespace SCIRun
 
-//
-// $Log$
-// Revision 1.4  1999/09/08 02:26:42  sparker
-// Various #include cleanups
-//
-// Revision 1.3  1999/08/25 03:48:22  sparker
-// Changed SCICore/CoreDatatypes to SCICore/Datatypes
-// Changed PSECore/CommonDatatypes to PSECore/Datatypes
-// Other Misc. directory tree updates
-//
-// Revision 1.2  1999/08/17 06:38:11  sparker
-// Merged in modifications from PSECore to make this the new "blessed"
-// version of SCIRun/Uintah.
-//
-// Revision 1.1  1999/07/27 16:55:49  mcq
-// Initial commit
-//
-// Revision 1.2  1999/07/07 21:10:19  dav
-// added beginnings of support for g++ compilation
-//
-// Revision 1.1.1.1  1999/04/24 23:12:48  dav
-// Import sources
-//
-//

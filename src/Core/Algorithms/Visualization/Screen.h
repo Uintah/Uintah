@@ -1,8 +1,7 @@
 #ifndef SCREEN_H
 #define SCEREN_H
 
-namespace PSECommon {
-  namespace Algorithms {
+namespace SCIRun {
 
     typedef unsigned long long Word;
     typedef unsigned char Byte;
@@ -76,7 +75,6 @@ namespace PSECommon {
       
     };
     
-  } // namespace Algorithms
-} // namespace PSECommon
+} // End namespace SCIRun
 
 #endif

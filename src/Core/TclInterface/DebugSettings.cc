@@ -1,4 +1,3 @@
-//static char *id="@(#) $Id$";
 
 /*
  *  DebugSettings.cc: Interface to debug settings...
@@ -12,19 +11,14 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <SCICore/TclInterface/DebugSettings.h>
+#include <Core/TclInterface/DebugSettings.h>
 
-#include <SCICore/Util/Debug.h>
-#include <SCICore/Malloc/Allocator.h>
-#include <SCICore/TclInterface/TCLvar.h>
+#include <Core/Util/Debug.h>
+#include <Core/Malloc/Allocator.h>
+#include <Core/TclInterface/TCLvar.h>
 
-namespace SCICore {
-namespace TclInterface {
+namespace SCIRun {
 
-using SCICore::Util::Debug;
-using SCICore::Util::DebugSwitch;
-using SCICore::Util::DebugIter;
-using SCICore::Util::DebugVars;
 
 DebugSettings::DebugSettings()
 {
@@ -83,22 +77,5 @@ void DebugSettings::tcl_command(TCLArgs& args, void*)
     args.result(args.make_list(debuglist));
 }
 
-} // End namespace TclInterface
-} // End namespace SCICore
+} // End namespace SCIRun
 
-//
-// $Log$
-// Revision 1.3  1999/09/08 02:26:54  sparker
-// Various #include cleanups
-//
-// Revision 1.2  1999/08/17 06:39:41  sparker
-// Merged in modifications from PSECore to make this the new "blessed"
-// version of SCIRun/Uintah.
-//
-// Revision 1.1  1999/07/27 16:57:13  mcq
-// Initial commit
-//
-// Revision 1.1.1.1  1999/04/24 23:12:25  dav
-// Import sources
-//
-//

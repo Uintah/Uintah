@@ -11,10 +11,10 @@
  *  Copyright (C) 1999 SCI Group
  */
 
-#include <SCICore/Containers/String.h>
-#include <SCICore/Containers/Array1.h>
-#include <SCICore/Persistent/Pstreams.h>
-#include <SCICore/Datatypes/ScalarFieldUG.h>
+#include <Core/Containers/String.h>
+#include <Core/Containers/Array1.h>
+#include <Core/Persistent/Pstreams.h>
+#include <Core/Datatypes/ScalarFieldUG.h>
 #include <iostream>
 #include <fstream>
 #include <stdlib.h>
@@ -24,10 +24,7 @@ using std::cerr;
 using std::ifstream;
 using std::endl;
 
-using namespace SCICore::Containers;
-using namespace SCICore::PersistentSpace;
-using namespace SCICore::Datatypes;
-using namespace SCICore::Geometry;
+using namespace SCIRun;
 
 main(int argc, char **argv) {
 

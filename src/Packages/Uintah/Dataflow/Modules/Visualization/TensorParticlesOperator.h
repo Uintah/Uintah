@@ -1,19 +1,14 @@
 #ifndef __VISUALIZATION_TENSORPARTICLESOPERATOR_H__
 #define __VISUALIZATION_TENSORPARTICLESOPERATOR_H__
 
-#include <SCICore/TclInterface/TCLvar.h>
-#include <PSECore/Dataflow/Module.h>
-#include <SCICore/Containers/String.h>
-#include <Uintah/Datatypes/TensorParticlesPort.h>
-#include <Uintah/Datatypes/ScalarParticlesPort.h>
+#include <Core/TclInterface/TCLvar.h>
+#include <Dataflow/Network/Module.h>
+#include <Core/Containers/String.h>
+#include <Packages/Uintah/Core/Datatypes/TensorParticlesPort.h>
+#include <Packages/Uintah/Core/Datatypes/ScalarParticlesPort.h>
 
 namespace Uintah {
-namespace Modules {
-  using namespace SCICore::Containers;
-  using namespace PSECore::Dataflow;
-  using namespace SCICore::Datatypes;
-  using namespace PSECore::Datatypes;
-  using namespace SCICore::TclInterface;
+using namespace SCIRun;
 
   class TensorParticlesOperator: public Module {
   public:
@@ -41,8 +36,7 @@ namespace Modules {
     TensorParticlesIPort *in;
 
     ScalarParticlesOPort *spout;
+} // End namespace Uintah
   };
-}
-}
 #endif // __VISUALIZATION_TENSORPARTICLESOPERATOR_H__
 

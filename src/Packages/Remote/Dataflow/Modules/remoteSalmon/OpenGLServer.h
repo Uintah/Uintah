@@ -13,19 +13,14 @@
 #ifndef SCI_project_module_OpenGLServer_h
 #define SCI_project_module_OpenGLServer_h
 
-#include <SCICore/Thread/Thread.h>
-#include <PSECommon/Modules/Salmon/OpenGL.h>
-#include <Remote/Modules/remoteSalmon/socketServer.h>
+#include <Core/Thread/Thread.h>
+#include <Dataflow/Modules/Salmon/OpenGL.h>
+#include <Packages/Remote/Dataflow/Modules/remoteSalmon/socketServer.h>
 
 #define DO_GETGLSTATE 6
 
 namespace Remote {
-namespace Modules {
-
-using namespace SCICore::Thread;
-using namespace SCICore::GeomSpace;
-using PSECore::Datatypes::GeometryData;
-using namespace PSECommon::Modules;
+using namespace SCIRun;
 
 
 class socketServer;
@@ -44,8 +39,7 @@ public:
   virtual void redraw_loop();
   virtual void getGLState(int which);
 };
+} // End namespace Remote
 
-} // namespace Modules
-} // namespace Remote
 
 #endif // SCI_project_module_OpenGLServer_h

@@ -11,11 +11,11 @@
  */
 
 #include <stdio.h>
-#include <SCICore/Datatypes/DenseMatrix.h>
-#include <SCICore/Util/Assert.h>
-#include <SCICore/Datatypes/ColumnMatrix.h>
-#include <SCICore/Malloc/Allocator.h>
-#include <SCICore/Math/MiscMath.h>
+#include <Core/Datatypes/DenseMatrix.h>
+#include <Core/Util/Assert.h>
+#include <Core/Datatypes/ColumnMatrix.h>
+#include <Core/Malloc/Allocator.h>
+#include <Core/Math/MiscMath.h>
 #include <iostream>
 #include <vector>
 using std::cerr;
@@ -23,8 +23,7 @@ using std::cout;
 using std::endl;
 using std::vector;
 
-namespace SCICore {
-namespace Datatypes {
+namespace SCIRun {
 
 static Persistent* maker()
 {
@@ -425,7 +424,6 @@ MatrixRow DenseMatrix::operator[](int row)
 
 void DenseMatrix::io(Piostream& stream)
 {
-    using SCICore::PersistentSpace::Pio;
 
     int version=stream.begin_class("DenseMatrix", DENSEMATRIX_VERSION);
     // Do the base class first...
@@ -659,5 +657,4 @@ void DenseMatrix::mult(double s)
     }
 }
 
-} // End namespace Datatypes
-} // End namespace SCICore
+} // End namespace SCIRun

@@ -10,9 +10,9 @@
  *  Copyright (C) 1999 SCI Group
  */
 
-#include <SCICore/Exceptions/FileNotFound.h>
+#include <Core/Exceptions/FileNotFound.h>
 
-using SCICore::Exceptions::FileNotFound;
+namespace SCIRun {
 
 FileNotFound::FileNotFound(const std::string& message)
     : d_message(message)
@@ -35,5 +35,7 @@ const char* FileNotFound::message() const
 
 const char* FileNotFound::type() const
 {
-    return "SCICore::Exceptions::FileNotFound";
+    return "FileNotFound";
 }
+
+} // End namespace SCIRun

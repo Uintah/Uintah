@@ -1,8 +1,8 @@
-#include <SCICore/Util/NotFinished.h>
-#include <SCICore/Malloc/Allocator.h>
-#include <SCICore/Datatypes/VolumeUtils.h>
-#include <SCICore/Datatypes/Brick.h>
-#include <SCICore/Datatypes/Polygon.h>
+#include <Core/Util/NotFinished.h>
+#include <Core/Malloc/Allocator.h>
+#include <Core/Datatypes/VolumeUtils.h>
+#include <Core/Datatypes/Brick.h>
+#include <Core/Datatypes/Polygon.h>
 #include <stdlib.h>
 #include <iostream>
 #include <string>
@@ -12,11 +12,8 @@ using std::string;
 using std::cin;
 using std::vector;
 
-namespace SCICore {
-namespace Datatypes {
+namespace SCIRun {
 
-using namespace SCICore::Geometry;
-using namespace SCICore::Malloc;
 
 Brick::Brick() :
   padx(0), pady(0), padz(0), lev(0),
@@ -313,5 +310,4 @@ Brick::OrderIntersects(Point *p, Point *t, Ray *r, Ray *te,
 #define BRICK_VERSION 1
 
   
-} // namespace Datatypes
-} // namespace SCICore
+} // End namespace SCIRun

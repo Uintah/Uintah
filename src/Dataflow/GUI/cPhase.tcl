@@ -1,4 +1,4 @@
-itcl_class PSECommon_Matrix_cPhase {
+itcl_class Dataflow_Matrix_cPhase {
     inherit Module
     constructor {config} {
 	set name cPhase

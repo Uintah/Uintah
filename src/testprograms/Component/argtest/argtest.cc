@@ -1,7 +1,6 @@
 
 /*
  *  argtest.cc
- *  $Id$
  *
  *  Written by:
  *   Steven G. Parker
@@ -13,9 +12,9 @@
  */
 
 #include <iostream>
-#include <Component/PIDL/PIDL.h>
+#include <Core/CCA/Component/PIDL/PIDL.h>
 #include "argtest_sidl.h"
-#include <SCICore/Thread/Time.h>
+#include <Core/Thread/Time.h>
 #include <vector>
 #include <sstream>
 using std::cerr;
@@ -27,6 +26,8 @@ using std::string;
 using CIA::array1;
 using std::istringstream;
 using std::ostringstream;
+
+using namespace SCIRun;
 
 static void init(array1<int>& a, int s)
 {
@@ -433,7 +434,6 @@ int main(int argc, char* argv[])
     using Component::PIDL::Object;
     using Component::PIDL::PIDLException;
     using Component::PIDL::PIDL;
-    using SCICore::Thread::Time;
 
     try {
 	PIDL::initialize(argc, argv);
@@ -602,7 +602,7 @@ int main(int argc, char* argv[])
 	}
 	PIDL::serveObjects();
 	cerr << "Argtest successful\n";
-    } catch(const SCICore::Exceptions::Exception& e) {
+    } catch(const Exception& e) {
 	cerr << "Caught exception:\n";
 	cerr << e.message() << '\n';
 	abort();
@@ -613,16 +613,3 @@ int main(int argc, char* argv[])
     return 0;
 }
 
-//
-// $Log$
-// Revision 1.3  1999/10/07 02:08:36  sparker
-// use standard iostreams and complex type
-//
-// Revision 1.2  1999/09/29 07:34:29  sparker
-// Test more parameter passing modes - arrays of strings, arrays of
-//    bools, arrays of references and arrays of arrays
-//
-// Revision 1.1  1999/09/28 08:21:04  sparker
-// new program to test various parameter passing modes
-//
-//

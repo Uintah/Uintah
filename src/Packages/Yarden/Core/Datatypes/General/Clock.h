@@ -3,8 +3,6 @@
 #define FAST_CLOCK_H
 
 namespace Yarden {
-  namespace Datatypes {
-
 
 extern unsigned int cycleval;
 
@@ -59,7 +57,6 @@ inline iotimer_t read_time(void) {
 }
 
 #endif
+} // End namespace Yarden
 
-  }
-}
 #endif

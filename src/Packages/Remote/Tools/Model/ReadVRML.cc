@@ -1,19 +1,17 @@
 //////////////////////////////////////////////////////////////////////
 // ReadVRML.cpp - Parse most of VRML 1.0 and return it as a
 // vector<Object>.
-//
 // Originally by Bill Mark, June 1998.
 // Hacked by David K. McAllister July 1999.
-//
 //////////////////////////////////////////////////////////////////////
 
 #include <stdio.h>
 #include <string.h>
 
-#include <Remote/Tools/Math/Vector.h>
-#include <Remote/Tools/Model/ReadVRML.h>
-#include <Remote/Tools/Model/Model.h>
-//#include <Remote/Tools/Model/BisonMe.h>
+#include <Packages/Remote/Tools/Math/Vector.h>
+#include <Packages/Remote/Tools/Model/ReadVRML.h>
+#include <Packages/Remote/Tools/Model/Model.h>
+//#include <Packages/Remote/Tools/Model/BisonMe.h>
 
 using namespace Remote::Tools;
 
@@ -21,8 +19,6 @@ extern int yyparse(void); // The function that bison makes.
 extern int yynerrs; // Number of errors so far, maintained by bison.
 
 namespace Remote {
-namespace Tools {
-
 //////////////////////////////////////////////////////////////////////
 // Prototypes
 
@@ -493,7 +489,6 @@ bool Model::ReadVRML(const char *fname)
 
   return false;
 }
+} // End namespace Remote
 
-} // namespace Tools
-} // namespace Remote
 

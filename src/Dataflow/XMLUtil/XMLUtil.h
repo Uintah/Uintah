@@ -1,15 +1,13 @@
-#ifndef PSECore_XMLUtil_XMLUtil_H
-#define PSECore_XMLUtil_XMLUtil_H
+#ifndef Dataflow_XMLUtil_XMLUtil_H
+#define Dataflow_XMLUtil_XMLUtil_H
 
-namespace SCICore {
-   namespace Geometry {
-      class Point;
-      class Vector;
-      class IntVector;
-   }
+namespace SCIRun {
+  class Point;
+  class Vector;
+  class IntVector;
 }
 
-#include <SCICore/Containers/String.h>
+#include <Core/Containers/String.h>
 
 #ifdef __sgi
 #define IRIX
@@ -34,12 +32,7 @@ namespace SCICore {
 
 #define NOT_SET ((char*)_NOTSET_)
 
-namespace PSECore {
-   namespace XMLUtil {
-     using SCICore::Geometry::Point;
-     using SCICore::Geometry::Vector;
-     using SCICore::Geometry::IntVector;
-     using SCICore::Containers::clString;
+namespace SCIRun {
      
       DOM_Node findNode(const std::string &name,DOM_Node node);
       DOM_Node findNextNode(const std::string& name, DOM_Node node);
@@ -54,11 +47,11 @@ namespace PSECore {
       void appendElement(DOM_Element& root, const DOMString& name,
 			 int value);
       void appendElement(DOM_Element& root, const DOMString& name,
-			 const SCICore::Geometry::IntVector& value);
+			 const IntVector& value);
       void appendElement(DOM_Element& root, const DOMString& name,
-			 const SCICore::Geometry::Point& value);
+			 const Point& value);
       void appendElement(DOM_Element& root, const DOMString& name,
-			 const SCICore::Geometry::Vector& value);
+			 const Vector& value);
       void appendElement(DOM_Element& root, const DOMString& name,
 			 long value);
       void appendElement(DOM_Element& root, const DOMString& name,
@@ -85,37 +78,28 @@ namespace PSECore {
       extern const char _NOTSET_[];      
       
       //////////////////////////////
-      //
       // getSerializedAttributes()
-      //
       // returns a string that has an XML format
       // which represents the attributes of "node" 
-      // 
       
       char* getSerializedAttributes(DOM_Node& node);
       
       
       //////////////////////////////
-      //
       // getSerializedChildren()
-      //
       // returns a string in XML format that
       // represents the children of the node
       // named "node".
-      //
       
       char* getSerializedChildren(DOM_Node& node);
       
       
       //////////////////////////////
-      //
       // removeWhiteSpace()
-      //
       // removes all leading and trailing
       // white space from "string".
       // Returns "string" (after it has
       // been modified).
-      //
       
       char* removeWhiteSpace(char* string);
 
@@ -126,7 +110,6 @@ namespace PSECore {
       DOMString findText(DOM_Node& node);
 	
 
-   } // end namespace XMLUtil
-} // end namespace PSECore
+} // End namespace SCIRun
 
 #endif

@@ -5,16 +5,14 @@
  *
  */
 
-#include <SCICore/Containers/String.h>
-#include <SCICore/Persistent/Pstreams.h>
-#include <DaveW/Datatypes/General/SegFld.h>
+#include <Core/Containers/String.h>
+#include <Core/Persistent/Pstreams.h>
+#include <Packages/DaveW/Core/Datatypes/General/SegFld.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <iostream.h>
 
-using namespace SCICore::Containers;
-using namespace SCICore::PersistentSpace;
-using namespace SCICore::Datatypes;
+using namespace SCIRun;
 
 int nx, ny, nz;
 

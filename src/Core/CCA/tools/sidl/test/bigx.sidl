@@ -95,7 +95,7 @@ package XXX {
 	final string xxgetName();
 	final CIA.Class xxgetSuperclass();
 	final array<CIA.Class,1> xxgetInterfaces();
-	final CIA.Class xxgetComponentType();
+	final CIA.Class xxgetCore/CCA/ComponentType();
 	final array<Method,1> xxgetMethods();
 	final CIA.Method xxgetMethod() throws CIA.NoSuchMethodException;
 	// and so on - see the Java spec for more information

@@ -24,5 +24,5 @@ const char* InvalidGrid::message() const
 
 const char* InvalidGrid::type() const
 {
-    return "Uintah::Exceptions::InvalidGrid";
+    return "Packages/Uintah::Exceptions::InvalidGrid";
 }

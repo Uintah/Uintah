@@ -2,6 +2,7 @@
 #include <sstream>
 #include <errno.h>
 
+namespace SCIRun {
 using namespace std;
 
 const ConsecutiveRangeSet ConsecutiveRangeSet::empty;
@@ -270,3 +271,4 @@ ostream& operator<<(ostream& out, const ConsecutiveRangeSet& set)
   }
   return out;
 }
+} // End namespace SCIRun

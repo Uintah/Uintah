@@ -1,14 +1,12 @@
 #include "TexPlanes.h"
-#include <SCICore/Geometry/Ray.h>
+#include <Core/Geometry/Ray.h>
 #include "FullResIterator.h"
 #include "Brick.h"
 #include "GLVolumeRenderer.h"
 #include "VolumeUtils.h"
 #include <iostream>
-namespace SCICore {
-namespace GeomSpace {
-
-using SCICore::Geometry::Ray;
+namespace Kurt {
+using namespace SCIRun;
 
 TexPlanes::TexPlanes(const GLVolumeRenderer* glvr ) :
   GLVolRenState( glvr )
@@ -198,7 +196,6 @@ TexPlanes::drawWireFrame()
 //   }
 }
 
+} // End namespace Kurt
 
-} // end namespace Datatypes
-} // end namespace Kurt
 

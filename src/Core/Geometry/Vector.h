@@ -14,26 +14,17 @@
 #ifndef Geometry_Vector_h
 #define Geometry_Vector_h 1
 
-#include <SCICore/share/share.h>
+#include <Core/share/share.h>
 
-#include <SCICore/Util/Assert.h>
-#include <SCICore/Math/Expon.h>
+#include <Core/Util/Assert.h>
+#include <Core/Math/Expon.h>
 
 #include <iosfwd>
 
-namespace SCICore {
-namespace Containers {
-class clString;
-}
-namespace PersistentSpace {
+namespace SCIRun {
+
 class Piostream;
-}
-
-namespace Geometry {
-
-using SCICore::Containers::clString;
-using SCICore::PersistentSpace::Piostream;
-
+class clString;
 class Point;
 
 class SCICORESHARE Vector {
@@ -108,7 +99,7 @@ public:
   friend SCICORESHARE void Pio( Piostream&, Vector& );
 
   inline Point asPoint() const;
-  inline double minComponent() const {
+  inline double minCoreComponent() const {
     if(_x<_y){
       if(_x<_z)
 	return _x;
@@ -121,7 +112,7 @@ public:
 	return _z;
     }
   }
-  inline double maxComponent() const {
+  inline double maxCoreComponent() const {
     if(_x>_y){
       if(_x>_z)
 	return _x;
@@ -139,14 +130,12 @@ public:
 SCICORESHARE std::ostream& operator<<(std::ostream& os, const Vector& p);
 SCICORESHARE std::istream& operator>>(std::istream& os, Vector& p);
 
-} // End namespace Geometry
-} // End namespace SCICore
+} // End namespace SCIRun
 
 // This cannot be above due to circular dependencies
-#include <SCICore/Geometry/Point.h>
+#include <Core/Geometry/Point.h>
 
-namespace SCICore {
-namespace Geometry {
+namespace SCIRun {
 
 inline Vector::Vector(const Point& p)
     : _x(p._x), _y(p._y), _z(p._z)
@@ -368,8 +357,7 @@ inline Point Vector::asPoint() const {
     return Point(_x,_y,_z);
 }
 
-} // End namespace Geometry
-} // End namespace SCICore
+} // End namespace SCIRun
 
 
 #endif

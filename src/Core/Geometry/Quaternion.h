@@ -39,10 +39,10 @@ POSSIBLE REVISIONS
 #ifndef Geometry_Quaternion_h
 #define Geometry_Quaternion_h 1
 
-#include <SCICore/share/share.h>
-#include <SCICore/Geometry/Vector.h>
-#include <SCICore/Geometry/Transform.h>
-#include <SCICore/Geometry/Point.h>
+#include <Core/share/share.h>
+#include <Core/Geometry/Vector.h>
+#include <Core/Geometry/Transform.h>
+#include <Core/Geometry/Point.h>
 #include <math.h>
 
 /*
@@ -51,8 +51,7 @@ using std::cout;
 using std::endl;
 */
 
-namespace SCICore {
-namespace Geometry {
+namespace SCIRun {
 
 #define NUM_ZERO 10e-9
 
@@ -168,7 +167,6 @@ inline Quaternion Quaternion::log(){
      return Quaternion();
 }
 
-//
 //**********************************************************************************
 
 inline Vector Quaternion::rotate(const Vector& V) const{
@@ -195,8 +193,7 @@ inline Quaternion operator+(const Quaternion& first, const Quaternion& second){
   return Quaternion(first.a+second.a, first.v+second.v);
 }
 
-} // Geometry
-} // SCICore
+} // End namespace SCIRun
 
 #endif  //Geometry_Quaternion_h
 

@@ -1,7 +1,6 @@
 
 /*
  *  Reducer: A barrier with reduction operations
- *  $Id$
  *
  *  Written by:
  *   Author: Steve Parker
@@ -12,14 +11,12 @@
  *  Copyright (C) 1997 SCI Group
  */
 
-#ifndef SCICore_Thread_Reducer_h
-#define SCICore_Thread_Reducer_h
+#ifndef Core_Thread_Reducer_h
+#define Core_Thread_Reducer_h
 
-#include <SCICore/Thread/Barrier.h>
+#include <Core/Thread/Barrier.h>
 
-namespace SCICore {
-    namespace Thread {
-	class ThreadGroup;
+namespace SCIRun {
 
 /**************************************
  
@@ -91,7 +88,7 @@ DESCRIPTION
 }
 
 template<class T>
-SCICore::Thread::Reducer<T>::Reducer(const char* name, ReductionOp op)
+Reducer<T>::Reducer(const char* name, ReductionOp op)
     : Barrier(name), f_op(op)
 {
     d_array_size=-1;
@@ -100,7 +97,7 @@ SCICore::Thread::Reducer<T>::Reducer(const char* name, ReductionOp op)
 
 template<class T>
 void
-SCICore::Thread::Reducer<T>::allocate(int n)
+Reducer<T>::allocate(int n)
 {
     d_join[0]=new DataArray[2*numThreads+2]-1;
     d_join[1]=d_join[0]+numThreads;
@@ -111,7 +108,7 @@ SCICore::Thread::Reducer<T>::allocate(int n)
 }
 
 template<class T>
-SCICore::Thread::Reducer<T>::~Reducer()
+Reducer<T>::~Reducer()
 {
     if(d_p){
 	delete[] (void*)(d_join[0]-1);
@@ -121,7 +118,7 @@ SCICore::Thread::Reducer<T>::~Reducer()
 
 template<class T>
 void
-SCICore::Thread::Reducer<T>::collectiveResize(int proc, int n)
+Reducer<T>::collectiveResize(int proc, int n)
 {
     // Extra barrier here to change the array size...
 
@@ -139,11 +136,11 @@ SCICore::Thread::Reducer<T>::collectiveResize(int proc, int n)
 
 template<class T>
 T
-SCICore::Thread::Reducer<T>::reduce(int proc, int n, const T& myresult)
+Reducer<T>::reduce(int proc, int n, const T& myresult)
 {
     if(n != d_array_size){
         collectiveResize(proc, n);
-    }
+} // End namespace SCIRun
     if(n<=1)
 	return myresult;
 
@@ -157,34 +154,7 @@ SCICore::Thread::Reducer<T>::reduce(int proc, int n, const T& myresult)
     for(int i=1;i<n;i++)
         red=(*f_op)(red, j[i].d_data);
     return red;
-}
 
 #endif
 
-//
-// $Log$
-// Revision 1.9  2000/12/13 23:21:53  moulding
-// Add caste to void* for arguments to delete[].
-//
-// Revision 1.8  1999/09/02 16:52:43  sparker
-// Updates to cocoon documentation
-//
-// Revision 1.7  1999/08/29 00:47:01  sparker
-// Integrated new thread library
-// using statement tweaks to compile with both MipsPRO and g++
-// Thread library bug fixes
-//
-// Revision 1.6  1999/08/28 03:46:49  sparker
-// Final updates before integration with PSE
-//
-// Revision 1.5  1999/08/25 19:00:50  sparker
-// More updates to bring it up to spec
-// Factored out common pieces in Thread_irix and Thread_pthreads
-// Factored out other "default" implementations of various primitives
-//
-// Revision 1.4  1999/08/25 02:37:59  sparker
-// Added namespaces
-// General cleanups to prepare for integration with SCIRun
-//
-//
 

@@ -1,17 +1,14 @@
 ##
  #  BuildFEMatrix.tcl
- #
  #  Written by:
  #   David Weinstein
  #   Department of Computer Science
  #   University of Utah
  #   Aug 1996
- #
  #  Copyright (C) 1996 SCI Group
- #
  ##
 
-itcl_class PSECommon_FEM_BuildFEMatrix {
+itcl_class Dataflow_FEM_BuildFEMatrix {
     inherit Module
     constructor {config} {
         set name BuildFEMatrix

@@ -1,4 +1,3 @@
-//static char *id="@(#) $Id$";
 
 /*
  *  BBox.cc: ?
@@ -12,16 +11,15 @@
  *  Copyright (C) 199? SCI Group
  */
 
-#include <SCICore/Geometry/BBox.h>
-#include <SCICore/Geometry/Vector.h>
-#include <SCICore/Util/Assert.h>
-#include <SCICore/Math/MinMax.h>
-#include <SCICore/Math/MiscMath.h>
-#include <SCICore/Persistent/Persistent.h>
+#include <Core/Geometry/BBox.h>
+#include <Core/Geometry/Vector.h>
+#include <Core/Util/Assert.h>
+#include <Core/Math/MinMax.h>
+#include <Core/Math/MiscMath.h>
+#include <Core/Persistent/Persistent.h>
 #include <stdlib.h>
 
-namespace SCICore {
-namespace Geometry {
+namespace SCIRun {
 
 BBox::BBox()
 {
@@ -113,7 +111,6 @@ void BBox::scale(double s, const Vector&o) {
 
 double BBox::longest_edge()
 {
-  using SCICore::Math::Max;
 
     ASSERT(have_some);
     Vector diagonal(cmax-cmin);
@@ -141,7 +138,6 @@ Vector BBox::diagonal() const
 void
 BBox::PrepareIntersect( const Point& eye )
 {
-  using SCICore::Math::Abs;
 
   double d1 = Abs( eye.x() - cmin.x() );
   double d2 = Abs( eye.x() - cmax.x() );
@@ -534,8 +530,6 @@ BBox::Overlaps( const BBox & bb)
 
 void Pio(Piostream & stream, BBox & box) {
 
-    using SCICore::PersistentSpace::Pio;
-    using SCICore::Geometry::Pio;
 
     stream.begin_cheap_delim();
     Pio(stream, box.have_some);
@@ -546,39 +540,5 @@ void Pio(Piostream & stream, BBox & box) {
     stream.end_cheap_delim();
 }
 
-} // End namespace Geometry
-} // End namespace SCICore
+} // End namespace SCIRun
 
-//
-// $Log$
-// Revision 1.7  2000/12/04 23:57:30  dmw
-// don't crash if extending a bounding cylinder by a zero-length vector
-//
-// Revision 1.6  2000/05/08 19:15:47  kuzimmer
-// Added a new constructor to BBox
-//
-// Revision 1.5  2000/04/11 19:06:08  kuzimmer
-// Includes an Overlap function to test to see if two BBoxes overlap
-//
-// Revision 1.4  2000/03/23 10:29:21  sparker
-// Use new exceptions/ASSERT macros
-// Fixed compiler warnings
-//
-// Revision 1.3  1999/09/04 06:01:52  sparker
-// Updates to .h files, to minimize #includes
-// removed .icc files (yeah!)
-//
-// Revision 1.2  1999/08/17 06:39:26  sparker
-// Merged in modifications from PSECore to make this the new "blessed"
-// version of SCIRun/Uintah.
-//
-// Revision 1.1  1999/07/27 16:56:54  mcq
-// Initial commit
-//
-// Revision 1.2  1999/07/07 21:10:58  dav
-// added beginnings of support for g++ compilation
-//
-// Revision 1.1.1.1  1999/04/24 23:12:27  dav
-// Import sources
-//
-//

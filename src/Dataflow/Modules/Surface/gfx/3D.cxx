@@ -42,9 +42,7 @@ real triangleCompactness(const Vec3& v1, const Vec3& v2, const Vec3& v3)
 
 
 ////////////////////////////////////////////////////////////////////////.
-//
 // class: Bounds
-//
 
 void Bounds::reset()
 {
@@ -86,9 +84,7 @@ void Bounds::complete()
 
 
 ////////////////////////////////////////////////////////////////////////
-//
 // class: Plane
-//
 
 void Plane::calcFrom(const Vec3& p1, const Vec3& p2, const Vec3& p3)
 {
@@ -130,9 +126,7 @@ void Plane::calcFrom(const array<Vec3>& verts)
 
 
 ////////////////////////////////////////////////////////////////////////
-//
 // class: Face3
-//
 
 real Face3::area()
 {
@@ -140,9 +134,7 @@ real Face3::area()
 }
 
 
-//
 // Use Anoop's distance code
-//
 
 extern real __gfx_hoppe_dist(const Face3& f, const Vec3& v);
 

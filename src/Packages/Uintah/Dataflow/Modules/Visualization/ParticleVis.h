@@ -1,21 +1,16 @@
 #ifndef PARTICLEVIS_H
 #define PARTICLEVIS_H
 
-#include <Uintah/Datatypes/ScalarParticlesPort.h>
-#include <Uintah/Datatypes/VectorParticlesPort.h>
-#include <Uintah/Datatypes/TensorParticlesPort.h>
-#include <PSECore/Datatypes/GeometryPort.h>
-#include <PSECore/Datatypes/ColorMapPort.h>
-#include <SCICore/TclInterface/TCLvar.h>
-#include <PSECore/Dataflow/Module.h>
+#include <Packages/Uintah/Core/Datatypes/ScalarParticlesPort.h>
+#include <Packages/Uintah/Core/Datatypes/VectorParticlesPort.h>
+#include <Packages/Uintah/Core/Datatypes/TensorParticlesPort.h>
+#include <Dataflow/Ports/GeometryPort.h>
+#include <Dataflow/Ports/ColorMapPort.h>
+#include <Core/TclInterface/TCLvar.h>
+#include <Dataflow/Network/Module.h>
 
 namespace Uintah {
-namespace Modules {
-
-using namespace PSECore::Dataflow;
-using namespace PSECore::Datatypes;
-using namespace SCICore::TclInterface;
-using namespace SCICore::Containers;
+using namespace SCIRun;
 
 class ParticleVis : public Module {
     ScalarParticlesIPort* spin0;
@@ -53,8 +48,7 @@ class ParticleVis : public Module {
     virtual void geom_pick(GeomPick*, void*, GeomObj*);
     virtual void execute();
 };
+} // End namespace Uintah
 
-} // Modules
-} // Kurt
 
 #endif

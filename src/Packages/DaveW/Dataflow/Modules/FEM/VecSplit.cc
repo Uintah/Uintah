@@ -9,18 +9,15 @@
  *  Copyright (C) 1999 SCI Group
  */
 
-#include <PSECore/Dataflow/Module.h>
-#include <PSECore/Datatypes/ColumnMatrixPort.h>
-#include <PSECore/Datatypes/MatrixPort.h>
-#include <SCICore/Malloc/Allocator.h>
+#include <Dataflow/Network/Module.h>
+#include <Dataflow/Ports/ColumnMatrixPort.h>
+#include <Dataflow/Ports/MatrixPort.h>
+#include <Core/Malloc/Allocator.h>
 #include <iostream>
 using std::cerr;
 
 namespace DaveW {
-namespace Modules {
-
-using namespace PSECore::Dataflow;
-using namespace PSECore::Datatypes;
+using namespace SCIRun;
 
 class VecSplit : public Module {
     MatrixIPort* imatP;
@@ -83,25 +80,7 @@ void VecSplit::execute()
      ovec1P->send(ov1H);
      ovec2P->send(ov2H);
      ovec3P->send(ov3H);
-}
-} // End namespace Modules
 } // End namespace DaveW
+}
 
 
-//
-// $Log$
-// Revision 1.4  2000/03/17 09:25:44  sparker
-// New makefile scheme: sub.mk instead of Makefile.in
-// Use XML-based files for module repository
-// Plus many other changes to make these two things work
-//
-// Revision 1.3  1999/10/07 02:06:35  sparker
-// use standard iostreams and complex type
-//
-// Revision 1.2  1999/09/05 23:16:19  dmw
-// build scalar field of error values from Basis Matrix
-//
-// Revision 1.1  1999/09/02 04:49:25  dmw
-// more of Dave's modules
-//
-//

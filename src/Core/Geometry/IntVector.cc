@@ -1,8 +1,9 @@
 
-#include <SCICore/Geometry/IntVector.h>
+#include <Core/Geometry/IntVector.h>
 #include <iostream>
 using std::ostream;
-using SCICore::Geometry::IntVector;
+
+using namespace SCIRun;
 
 ostream& operator<<(ostream& out, const IntVector& v)
 {

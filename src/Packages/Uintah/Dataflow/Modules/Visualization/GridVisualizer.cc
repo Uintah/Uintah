@@ -24,43 +24,36 @@
  *  Copyright (C) 2000 SCI Group
  */
 
-#include <PSECore/Dataflow/Module.h>
-#include <PSECore/Datatypes/GeometryPort.h>
-#include <PSECore/Widgets/FrameWidget.h>
-#include <SCICore/Geom/GeomLine.h>
-#include <SCICore/Geom/GeomPick.h>
-#include <SCICore/Geom/GeomSphere.h>
-#include <SCICore/Geom/Pt.h>
-#include <SCICore/Geom/Material.h>
-#include <SCICore/Geometry/BBox.h>
-#include <SCICore/Malloc/Allocator.h>
-#include <SCICore/TclInterface/TCLvar.h>
-#include <SCICore/Thread/CrowdMonitor.h>
-#include <Uintah/Components/MPM/Util/Matrix3.h>
-#include <Uintah/Datatypes/ArchivePort.h>
-#include <Uintah/Datatypes/Archive.h>
-#include <Uintah/Grid/GridP.h>
-#include <Uintah/Grid/Grid.h>
-#include <Uintah/Grid/Level.h>
-#include <Uintah/Grid/Patch.h>
-#include <Uintah/Grid/NodeIterator.h> // Must be included after Patch.h
-#include <Uintah/Grid/CellIterator.h> // Must be included after Patch.h
-//#include <Uintah/Grid/FaceIterator.h> // Must be included after Patch.h
-#include <Uintah/Grid/TypeDescription.h>
+#include <Dataflow/Network/Module.h>
+#include <Dataflow/Ports/GeometryPort.h>
+#include <Dataflow/Widgets/FrameWidget.h>
+#include <Core/Geom/GeomLine.h>
+#include <Core/Geom/GeomPick.h>
+#include <Core/Geom/GeomSphere.h>
+#include <Core/Geom/Pt.h>
+#include <Core/Geom/Material.h>
+#include <Core/Geometry/BBox.h>
+#include <Core/Malloc/Allocator.h>
+#include <Core/TclInterface/TCLvar.h>
+#include <Core/Thread/CrowdMonitor.h>
+#include <Uintah/Core/CCA/Components/MPM/Util/Matrix3.h>
+#include <Packages/Uintah/Core/Datatypes/ArchivePort.h>
+#include <Packages/Uintah/Core/Datatypes/Archive.h>
+#include <Packages/Uintah/Grid/GridP.h>
+#include <Packages/Uintah/Grid/Grid.h>
+#include <Packages/Uintah/Grid/Level.h>
+#include <Packages/Uintah/Grid/Patch.h>
+#include <Packages/Uintah/Grid/NodeIterator.h> // Must be included after Patch.h
+#include <Packages/Uintah/Grid/CellIterator.h> // Must be included after Patch.h
+//#include <Packages/Uintah/Grid/FaceIterator.h> // Must be included after Patch.h
+#include <Packages/Uintah/Grid/TypeDescription.h>
 #include <vector>
 #include <sstream>
 #include <iostream>
 //#include <string>
 
-namespace PSECommon {
-namespace Modules {
-
-using namespace PSECore::Dataflow;
-using namespace PSECore::Datatypes;
-using namespace PSECore::Widgets;
-using namespace SCICore::GeomSpace;
-using namespace SCICore::Geometry;
-using namespace SCICore::TclInterface;
+namespace Uintah {
+using namespace SCIRun;
 using namespace Uintah;
 using namespace Uintah::Datatypes;
 using namespace std;
@@ -965,49 +958,8 @@ void GridVisualizer::geom_pick(GeomPick* pick, void* userdata, GeomObj* picked) 
   else
     cerr<<"Not getting the correct data\n";
 }
+} // End namespace Uintah
 
-} // End namespace Modules
-} // End namespace PSECommon
 
-//
-// $Log$
-// Revision 1.8  2000/11/28 04:13:31  jas
-// Got rid of compiler warnings and added X,Y,Z FCVariables.
-//
-// Revision 1.7  2000/11/09 00:01:40  bigler
-// Fixed a bug with caching values
-//
-// Revision 1.6  2000/10/20 19:38:37  bigler
-// Fixed a bug that was preventing Matrix3 data from being graphed.
-//
-// Revision 1.5  2000/09/22 22:17:41  bigler
-// Added support to graph multiple materials in one graph.
-// Currently only one graph per variable, but that could change.
-// The code is kind of rough looking, but I will fix it up once I
-// complete all of my enhancements.
-//
-// Revision 1.4  2000/08/22 19:14:47  bigler
-// Added graphing of NCvar and CCvar variables accross time for selected node.
-// Can now also visualize cell centers.
-//
-// Revision 1.3  2000/08/14 17:29:04  bigler
-// Added node selectability
-//
-// Revision 1.2  2000/08/09 03:18:09  jas
-// Changed new to scinew and added deletes to some of the destructors.
-//
-// Revision 1.1  2000/06/20 17:57:19  kuzimmer
-// Moved GridVisualizer to Uintah
-//
-// Revision 1.2  2000/06/06 18:31:56  bigler
-// Added support for displaying nodes as well as support for more
-// than 6 levels (it uses the last color for levels beyond 6).
-//
-// Revision 1.1  2000/06/05 21:10:30  bigler
-// Added new module to visualize UINTAH grid
-//
-// Revision 1.0  2000/06/02 09:27:30  bigler
-// Created initial version
-//
 
 

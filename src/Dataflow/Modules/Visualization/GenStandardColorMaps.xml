@@ -8,7 +8,7 @@
       <summary>A module that generates fixed Colormaps for visualation purposes.</summary>
       <info-builder>
 	<para>     This module is used to create some
-     "standard" non-editable colormaps in SCIRun/Uintah.
+     "standard" non-editable colormaps in Dataflow/Uintah.
      Non-editable simply means that the colors cannot be
      interactively manipulated.  The Module does, allow
      for the the resolution of the colormaps to be changed.
@@ -46,7 +46,7 @@
 	</in>
 	<out>
 	  <port>ColorMap</port>
-	  <datatype>SCICore::Datatypes::ColorMap</datatype>
+	  <datatype>Core::Datatypes::ColorMap</datatype>
 	  <usage>
 	    <para>Used for coloring data in visualization</para>
 	  </usage>

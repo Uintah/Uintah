@@ -1,4 +1,3 @@
-//static char *id="@(#) $Id$";
 
 /*
  *  GeomTube.cc: Tube object
@@ -12,18 +11,17 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <SCICore/Geom/GeomTube.h>
-#include <SCICore/Containers/String.h>
-#include <SCICore/Geometry/BBox.h>
-#include <SCICore/Geom/GeomLine.h>
-#include <SCICore/Util/NotFinished.h>
-#include <SCICore/Malloc/Allocator.h>
-#include <SCICore/Math/TrigTable.h>
+#include <Core/Geom/GeomTube.h>
+#include <Core/Containers/String.h>
+#include <Core/Geometry/BBox.h>
+#include <Core/Geom/GeomLine.h>
+#include <Core/Util/NotFinished.h>
+#include <Core/Malloc/Allocator.h>
+#include <Core/Math/TrigTable.h>
 #include <iostream>
 using std::ostream;
 
-namespace SCICore {
-namespace GeomSpace {
+namespace SCIRun {
 
 Persistent* make_GeomTube()
 {
@@ -111,13 +109,12 @@ void GeomTube::make_circle(int which, Array1<Point>& circle_pts,
 
 void GeomTube::io(Piostream& stream)
 {
-    using SCICore::PersistentSpace::Pio;
 
     stream.begin_class("GeomTube", GEOMTUBE_VERSION);
     GeomVertexPrim::io(stream);
     Pio(stream, nu);
-    SCICore::Containers::Pio(stream, directions);
-    SCICore::Containers::Pio(stream, radii);
+    Pio(stream, directions);
+    Pio(stream, radii);
     stream.end_class();
 }
 
@@ -127,38 +124,6 @@ bool GeomTube::saveobj(ostream&, const clString&, GeomSave*)
     return false;
 }
 
-} // End namespace GeomSpace
-} // End namespace SCICore
+} // End namespace SCIRun
 
-//
-// $Log$
-// Revision 1.6  1999/10/07 02:07:48  sparker
-// use standard iostreams and complex type
-//
-// Revision 1.5  1999/08/29 00:46:57  sparker
-// Integrated new thread library
-// using statement tweaks to compile with both MipsPRO and g++
-// Thread library bug fixes
-//
-// Revision 1.4  1999/08/28 17:54:43  sparker
-// Integrated new Thread library
-//
-// Revision 1.3  1999/08/17 23:50:29  sparker
-// Removed all traces of the old Raytracer and X11 renderers.
-// Also removed a .o and .d file
-//
-// Revision 1.2  1999/08/17 06:39:17  sparker
-// Merged in modifications from PSECore to make this the new "blessed"
-// version of SCIRun/Uintah.
-//
-// Revision 1.1  1999/07/27 16:56:47  mcq
-// Initial commit
-//
-// Revision 1.2  1999/07/07 21:10:54  dav
-// added beginnings of support for g++ compilation
-//
-// Revision 1.1.1.1  1999/04/24 23:12:22  dav
-// Import sources
-//
-//
 

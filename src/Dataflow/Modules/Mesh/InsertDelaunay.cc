@@ -10,14 +10,14 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <PSECore/Datatypes/MeshPort.h>
-#include <PSECore/Datatypes/SurfacePort.h>
-#include <SCICore/Datatypes/TriSurface.h>
-#include <SCICore/Geometry/BBox.h>
-#include <SCICore/Geometry/Point.h>
-#include <SCICore/Malloc/Allocator.h>
-#include <SCICore/Math/MusilRNG.h>
-#include <SCICore/TclInterface/TCLvar.h>
+#include <Dataflow/Ports/MeshPort.h>
+#include <Dataflow/Ports/SurfacePort.h>
+#include <Core/Datatypes/TriSurface.h>
+#include <Core/Geometry/BBox.h>
+#include <Core/Geometry/Point.h>
+#include <Core/Malloc/Allocator.h>
+#include <Core/Math/MusilRNG.h>
+#include <Core/TclInterface/TCLvar.h>
 #include <iostream>
 using std::cerr;
 using std::endl;
@@ -28,12 +28,7 @@ using std::endl;
 #include <sys/wait.h>
 
 namespace SCIRun {
-namespace Modules {
 
-using namespace PSECore::Dataflow;
-using namespace PSECore::Datatypes;
-using namespace SCICore::Geometry;
-using namespace SCICore::TclInterface;
 
 class InsertDelaunay : public Module {
     MeshIPort* iport;
@@ -231,24 +226,6 @@ void InsertDelaunay::connection(ConnectionMode mode, int which_port, int)
     }
 }
 
-} // End namespace Modules
 } // End namespace SCIRun
 
 
-//
-// $Log$
-// Revision 1.4  2000/03/17 09:29:12  sparker
-// New makefile scheme: sub.mk instead of Makefile.in
-// Use XML-based files for module repository
-// Plus many other changes to make these two things work
-//
-// Revision 1.3  2000/03/11 00:41:55  dahart
-// Replaced all instances of HashTable<class X, class Y> with the
-// Standard Template Library's std::map<class X, class Y, less<class X>>
-//
-// Revision 1.2  1999/10/07 02:08:19  sparker
-// use standard iostreams and complex type
-//
-// Revision 1.1  1999/09/05 01:15:27  dmw
-// added all of the old SCIRun mesh modules
-//

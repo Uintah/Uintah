@@ -1,11 +1,9 @@
 #include <stdio.h>
 #include <unistd.h>
-#include <Yarden/Datatypes/General/Clock.h>
+#include <Packages/Yarden/Core/Datatypes/General/Clock.h>
 #include <values.h>
 
 namespace Yarden {
-  namespace Datatypes {
-
 unsigned int cycleval;
 
 #ifdef __sgi
@@ -60,6 +58,5 @@ void init_clock()
 }
 
 #endif
+} // End namespace Yarden
 
-} // Datatype namespace
-} // Yarden namespace

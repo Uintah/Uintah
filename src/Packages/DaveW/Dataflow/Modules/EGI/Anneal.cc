@@ -1,4 +1,3 @@
-//static char *id="@(#) $Id$";
 
 /*
  *  Anneal.cc:  
@@ -12,9 +11,9 @@
  *  Copyright (C) 1995 SCI Group
  */
 
-#include <PSECore/Dataflow/Module.h>
-#include <SCICore/Malloc/Allocator.h>
-#include <SCICore/Tester/RigorousTest.h>
+#include <Dataflow/Network/Module.h>
+#include <Core/Malloc/Allocator.h>
+#include <Core/Tester/RigorousTest.h>
 
 #include <stdio.h>
 #include <math.h>
@@ -24,10 +23,7 @@
 #include <unistd.h>
 
 namespace DaveW {
-namespace Modules {
-
-using namespace PSECore::Dataflow;
-using namespace SCICore::Containers;
+using namespace SCIRun;
 
 /* constants */
 
@@ -681,28 +677,7 @@ for(j=0;j<=n;j++)pn[j]=p[j];
   
 return;
 
+} // End namespace DaveW
 }
-} // End namespace Modules
-} // End namespace Uintah
 
 
-//
-// $Log$
-// Revision 1.3  2000/03/17 09:25:38  sparker
-// New makefile scheme: sub.mk instead of Makefile.in
-// Use XML-based files for module repository
-// Plus many other changes to make these two things work
-//
-// Revision 1.2  1999/09/08 02:26:26  sparker
-// Various #include cleanups
-//
-// Revision 1.1  1999/08/24 06:23:04  dmw
-// Added in everything for the DaveW branch
-//
-// Revision 1.2  1999/05/03 04:52:15  dmw
-// Added and updated DaveW Datatypes/Modules
-//
-// Revision 1.1.1.1  1999/04/24 23:12:16  dav
-// Import sources
-//
-//

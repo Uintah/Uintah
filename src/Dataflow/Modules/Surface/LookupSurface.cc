@@ -1,4 +1,3 @@
-//static char *id="@(#) $Id$";
 
 /*
  *  LookupSurface.cc:  Lookup data values for a surface in a scalarfield
@@ -12,32 +11,24 @@
  *  Copyright (C) 2000 SCI Group
  */
 
-#include <SCICore/Containers/String.h>
-#include <PSECore/Dataflow/Module.h>
-#include <SCICore/Datatypes/ScalarField.h>
-#include <PSECore/Datatypes/ScalarFieldPort.h>
-#include <SCICore/Datatypes/Surface.h>
-#include <PSECore/Datatypes/SurfacePort.h>
-#include <SCICore/Datatypes/TriSurface.h>
-#include <SCICore/Geometry/Point.h>
-#include <SCICore/Malloc/Allocator.h>
-#include <SCICore/TclInterface/TCLvar.h>
+#include <Core/Containers/String.h>
+#include <Dataflow/Network/Module.h>
+#include <Core/Datatypes/ScalarField.h>
+#include <Dataflow/Ports/ScalarFieldPort.h>
+#include <Core/Datatypes/Surface.h>
+#include <Dataflow/Ports/SurfacePort.h>
+#include <Core/Datatypes/TriSurface.h>
+#include <Core/Geometry/Point.h>
+#include <Core/Malloc/Allocator.h>
+#include <Core/TclInterface/TCLvar.h>
 #include <iostream>
 using std::cerr;
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
 
-namespace PSECommon {
-namespace Modules {
+namespace SCIRun {
 
-using namespace PSECore::Dataflow;
-using namespace PSECore::Datatypes;
-using namespace SCICore::GeomSpace;
-using namespace SCICore::Math;
-using namespace SCICore::Containers;
-using namespace SCICore::TclInterface;
-using SCICore::Geometry::AffineCombination;
 
 class LookupSurface : public Module {
   SurfaceIPort *iport;
@@ -122,27 +113,5 @@ void LookupSurface::execute()
   oport->send(sIH);
 }
 
-} // End namespace Modules
-} // End namespace PSECommon
+} // End namespace SCIRun
 
-//
-// $Log$
-// Revision 1.2  2000/12/15 06:26:02  mcole
-// merge branch back into trunk
-//
-// Revision 1.1.2.1  2000/10/31 02:24:34  dmw
-// Merging PSECommon changes from HEAD to FIELD_REDESIGN branch
-//
-// Revision 1.1  2000/10/29 04:34:56  dmw
-// BuildFEMatrix -- ground an arbitrary node
-// SolveMatrix -- when preconditioning, be careful with 0's on diagonal
-// MeshReader -- build the grid when reading
-// SurfToGeom -- support node normals
-// IsoSurface -- fixed tet mesh bug
-// MatrixWriter -- support split file (header + raw data)
-//
-// LookupSplitSurface -- split a surface across a place and lookup values
-// LookupSurface -- find surface nodes in a sfug and copy values
-// Current -- compute the current of a potential field (- grad sigma phi)
-// LocalMinMax -- look find local min max points in a scalar field
-//

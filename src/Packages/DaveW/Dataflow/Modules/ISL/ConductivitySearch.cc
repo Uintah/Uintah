@@ -1,4 +1,3 @@
-//static char *id="@(#) $Id$";
 
 /*
  *  ConductivitySearch.cc:  Solve for the optimal conductivities for a mesh
@@ -13,22 +12,22 @@
  *
  */
 
-#include <DaveW/ThirdParty/NumRec/amoeba.h>
-#include <DaveW/ThirdParty/NumRec/nrutil.h>
-#include <PSECore/Dataflow/Module.h>
-#include <PSECore/Datatypes/ColumnMatrixPort.h>
-#include <PSECore/Datatypes/MatrixPort.h>
-#include <PSECore/Datatypes/MeshPort.h>
-#include <SCICore/Containers/String.h>
-#include <SCICore/Datatypes/DenseMatrix.h>
-#include <SCICore/Datatypes/SparseRowMatrix.h>
-#include <SCICore/Datatypes/SparseRowMatrix.h>
-#include <SCICore/Math/MusilRNG.h>
-#include <SCICore/TclInterface/TCLvar.h>
-#include <SCICore/Thread/Mutex.h>
-#include <SCICore/Thread/Parallel.h>
-#include <SCICore/Thread/Semaphore.h>
-#include <SCICore/Thread/Thread.h>
+#include <Packages/DaveW/Core/ThirdParty/NumRec/amoeba.h>
+#include <Packages/DaveW/Core/ThirdParty/NumRec/nrutil.h>
+#include <Dataflow/Network/Module.h>
+#include <Dataflow/Ports/ColumnMatrixPort.h>
+#include <Dataflow/Ports/MatrixPort.h>
+#include <Dataflow/Ports/MeshPort.h>
+#include <Core/Containers/String.h>
+#include <Core/Datatypes/DenseMatrix.h>
+#include <Core/Datatypes/SparseRowMatrix.h>
+#include <Core/Datatypes/SparseRowMatrix.h>
+#include <Core/Math/MusilRNG.h>
+#include <Core/TclInterface/TCLvar.h>
+#include <Core/Thread/Mutex.h>
+#include <Core/Thread/Parallel.h>
+#include <Core/Thread/Semaphore.h>
+#include <Core/Thread/Thread.h>
 #include <iostream>
 using std::cerr;
 using std::endl;
@@ -36,18 +35,8 @@ using std::endl;
 #include <math.h>
 
 namespace DaveW {
-namespace Modules {
+using namespace SCIRun;
 
-using namespace PSECore::Dataflow;
-using namespace PSECore::Datatypes;
-using namespace SCICore::Containers;
-using namespace SCICore::Geometry;
-using namespace SCICore::TclInterface;
-
-using SCICore::Thread::Mutex;
-using SCICore::Thread::Parallel;
-using SCICore::Thread::Semaphore;
-using SCICore::Thread::Thread;
 
 // these static variables are necessary b/c NumRec needs a pointer
 // to a static function (error_eval) in Amoeba.  the variables
@@ -605,24 +594,7 @@ void ConductivitySearch::tcl_command(TCLArgs& args, void* userdata) {
     Module::tcl_command(args, userdata);
   }
 }
-//---------------------------------------------------------------
-} // End namespace Modules
 } // End namespace DaveW
+//---------------------------------------------------------------
 
 
-//
-// $Log$
-// Revision 1.4  2000/12/13 20:55:12  dmw
-// Fixed seed variable bug
-//
-// Revision 1.3  2000/11/16 07:33:57  dmw
-// Added random seeding
-//
-// Revision 1.2  2000/10/29 05:03:20  dmw
-// fixed argument mismatch
-//
-// Revision 1.1  2000/10/29 04:02:47  dmw
-// cleaning up DaveW tree
-//
-//
-//

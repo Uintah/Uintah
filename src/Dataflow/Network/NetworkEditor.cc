@@ -7,7 +7,7 @@
  *   University of Utah
  *   March 1994
  *
- *  Distributed SCIRun changes:
+ *  Distributed Dataflow changes:
  *   Michelle Miller
  *   Nov. 1997
  *
@@ -18,24 +18,24 @@
 #pragma warning(disable:4786)
 #endif
 
-#include <PSECore/Dataflow/NetworkEditor.h>
+#include <Dataflow/Network/NetworkEditor.h>
   
-#include <SCICore/Containers/Queue.h>
-#include <PSECore/Comm/MessageBase.h>
-#include <PSECore/Dataflow/Connection.h>
-#include <PSECore/Dataflow/Module.h>
-#include <PSECore/Dataflow/Network.h>
-#include <PSECore/Dataflow/PackageDB.h>
-#include <PSECore/Dataflow/Port.h>
-#include <PSECore/Dataflow/ComponentNode.h>
-#include <PSECore/Dataflow/GenFiles.h>
-#include <PSECore/XMLUtil/XMLUtil.h>
-#include <SCICore/Malloc/Allocator.h>
-#include <SCICore/Math/MiscMath.h>
-#include <SCICore/TclInterface/Remote.h>
-#include <SCICore/TclInterface/TCL.h>
-#include <SCICore/TclInterface/TCLTask.h>
-#include <SCICore/Thread/Thread.h>
+#include <Core/Containers/Queue.h>
+#include <Dataflow/Comm/MessageBase.h>
+#include <Dataflow/Network/Connection.h>
+#include <Dataflow/Network/Module.h>
+#include <Dataflow/Network/Network.h>
+#include <Dataflow/Network/PackageDB.h>
+#include <Dataflow/Network/Port.h>
+#include <Dataflow/Network/ComponentNode.h>
+#include <Dataflow/Network/GenFiles.h>
+#include <Dataflow/XMLUtil/XMLUtil.h>
+#include <Core/Malloc/Allocator.h>
+#include <Core/Math/MiscMath.h>
+#include <Core/TclInterface/Remote.h>
+#include <Core/TclInterface/TCL.h>
+#include <Core/TclInterface/TCLTask.h>
+#include <Core/Thread/Thread.h>
 #include <time.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -53,7 +53,6 @@ using std::ofstream;
 using std::cerr;
 using std::endl;
   
-using SCICore::Thread::Thread;
 
 //#define DEBUG 1
 #include <tcl.h>
@@ -64,12 +63,8 @@ extern "C" __declspec(dllimport) Tcl_Interp* the_interp;
 extern "C" Tcl_Interp* the_interp;
 #endif
   
-namespace PSECore {
-namespace Dataflow {
+namespace SCIRun {
 
-using SCICore::TclInterface::Message;
-using PSECore::Comm::MessageTypes;
-using namespace PSECore::XMLUtil;
 
 // This function was added by Mohamed Dekhil for CSAFE
 void init_notes ()
@@ -116,7 +111,7 @@ NetworkEditor::NetworkEditor(Network* net)
 {
     // Create User interface...
     TCL::add_command("netedit", this, 0);
-    TCL::source_once("$PSECoreTCL/NetworkEditor.tcl");
+    TCL::source_once("$DataflowTCL/NetworkEditor.tcl");
     TCL::execute("makeNetworkEditor");
 
     // Initialize the network
@@ -186,7 +181,6 @@ void NetworkEditor::multisend(OPort* oport)
 
 void NetworkEditor::do_scheduling(Module* exclude)
 {
-  using SCICore::Containers::Queue;
 
     Message msg;
 
@@ -364,7 +358,6 @@ void NetworkEditor::add_text(const clString& str)
 
 void NetworkEditor::save_network(const clString& filename)
 {
-    using SCICore::TclInterface::TCLTask;
 
     char *myvalue ;
 
@@ -474,8 +467,6 @@ cerr << "Emit vars for " << module->name << endl;
 
 void NetworkEditor::tcl_command(TCLArgs& args, void*)
 {
-    using SCICore::Containers::to_string;
-    using namespace PSECore::Dataflow;
 
     if(args.count() < 2){
 	args.error("netedit needs a minor command");
@@ -772,5 +763,4 @@ void postMessageNoCRLF(const clString& errmsg, bool err)
   TCL::execute(".top.errorFrame.text see end");
 }
 
-} // End namespace Dataflow
-} // End namespace PSECore
+} // End namespace SCIRun

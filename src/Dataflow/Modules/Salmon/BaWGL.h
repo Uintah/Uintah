@@ -20,14 +20,14 @@
 #include <fstream>
 using namespace std;
 
-#include <PSECommon/Modules/Salmon/SharedMemory.h>
-#include <PSECommon/Modules/Salmon/Tracker.h>
-#include <PSECommon/Modules/Salmon/Controller.h>
+#include <Dataflow/Modules/Salmon/SharedMemory.h>
+#include <Dataflow/Modules/Salmon/Tracker.h>
+#include <Dataflow/Modules/Salmon/Controller.h>
 
-#include <PSECommon/Modules/Salmon/fastrak.h>
-#include <PSECommon/Modules/Salmon/fob.h>
-#include <PSECommon/Modules/Salmon/pinch.h>
-#include <PSECommon/Modules/Salmon/glMath.h>
+#include <Dataflow/Modules/Salmon/fastrak.h>
+#include <Dataflow/Modules/Salmon/fob.h>
+#include <Dataflow/Modules/Salmon/pinch.h>
+#include <Dataflow/Modules/Salmon/glMath.h>
 
 #define BAWGL_STYLUS CONTROLLER_STYLUS
 #define BAWGL_PINCH CONTROLLER_PINCH
@@ -100,8 +100,7 @@ using namespace std;
 #define NUM_CONTROLLERS 3
 #define CMDLEN 256
 
-namespace PSECommon {
-namespace Modules {
+namespace SCIRun {
 
 class BaWGL {
 
@@ -245,6 +244,6 @@ public:
   void setVirtualViewScaleLimits( GLfloat min, GLfloat max );
 };
 
-}}
+} // End namespace SCIRun
 
 #endif /* BAWGL_H_ */

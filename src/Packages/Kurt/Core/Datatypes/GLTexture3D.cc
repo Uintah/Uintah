@@ -1,23 +1,23 @@
 #include "GLTexture3D.h"
 #include "Brick.h"
 #include "VolumeUtils.h"
-#include <SCICore/Util/NotFinished.h>
-#include <SCICore/Math/MiscMath.h>
-#include <SCICore/Malloc/Allocator.h>
-#include <SCICore/Persistent/Persistent.h>
-#include <SCICore/Containers/String.h>
-#include <SCICore/Datatypes/ScalarFieldRGint.h>
-#include <SCICore/Datatypes/ScalarFieldRGshort.h>
-#include <SCICore/Datatypes/ScalarFieldRGfloat.h>
-#include <SCICore/Datatypes/ScalarFieldRGdouble.h>
-#include <SCICore/Datatypes/ScalarFieldRGuchar.h>
-#include <SCICore/Datatypes/ScalarFieldRGchar.h>
-#include <SCICore/Math/MinMax.h>
-#include <SCICore/Thread/Thread.h>
-#include <SCICore/Thread/Semaphore.h>
-#include <SCICore/Thread/ThreadGroup.h>
-#include <Uintah/Datatypes/NCScalarField.h>
-#include <Uintah/Datatypes/CCScalarField.h>
+#include <Core/Util/NotFinished.h>
+#include <Core/Math/MiscMath.h>
+#include <Core/Malloc/Allocator.h>
+#include <Core/Persistent/Persistent.h>
+#include <Core/Containers/String.h>
+#include <Core/Datatypes/ScalarFieldRGint.h>
+#include <Core/Datatypes/ScalarFieldRGshort.h>
+#include <Core/Datatypes/ScalarFieldRGfloat.h>
+#include <Core/Datatypes/ScalarFieldRGdouble.h>
+#include <Core/Datatypes/ScalarFieldRGuchar.h>
+#include <Core/Datatypes/ScalarFieldRGchar.h>
+#include <Core/Math/MinMax.h>
+#include <Core/Thread/Thread.h>
+#include <Core/Thread/Semaphore.h>
+#include <Core/Thread/ThreadGroup.h>
+#include <Packages/Uintah/Core/Datatypes/NCScalarField.h>
+#include <Packages/Uintah/Core/Datatypes/CCScalarField.h>
 
 
 #include <GL/gl.h>
@@ -32,12 +32,7 @@ using std::deque;
 
 
 namespace Kurt {
-namespace Datatypes {
-
-using namespace SCICore::Datatypes;
-using namespace SCICore::Thread;
-using SCICore::Containers::clString;
-using SCICore::Math::Max;
+using namespace SCIRun;
 
 void glPrintError(const string& word){
   GLenum errCode;
@@ -59,9 +54,6 @@ PersistentTypeID GLTexture3D::type_id("GLTexture3D", "Datatype"
 #define GLTexture3D_VERSION 3
 void GLTexture3D::io(Piostream&)
 {
-    using SCICore::PersistentSpace::Pio;
-    using SCICore::Containers::Pio;
-    using SCICore::Geometry::Pio;
     NOT_FINISHED("GLTexture3D::io(Piostream&)");
 }
 
@@ -655,7 +647,6 @@ template <class T>
 void
 GLTexture3D::run_makeLowResBrickData<T>::run() 
 {
-  using SCICore::Math::Interpolate;
 
   double  i,j,k;
   int ii,jj,kk;
@@ -735,6 +726,5 @@ GLTexture3D::run_makeLowResBrickData<T>::run()
   total_threads->up();
 }
 
+} // End namespace Kurt
 
-} // end namespace Datatypes
-} // end namespace Kurt

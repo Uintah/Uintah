@@ -1,4 +1,3 @@
-// $Id$
 
 #include "qslim.h"
 #include "quadrics.h"
@@ -6,15 +5,11 @@
 
 
 ////////////////////////////////////////////////////////////////////////
-//
 // Primitive quadric construction and evaluation routines
-//
 
-//
 // Construct a quadric to evaluate the squared distance of any point
 // to the given point v.  Naturally, the iso-surfaces are just spheres
 // centered at v.
-//
 Mat4 quadrix_vertex_constraint(const Vec3& v)
 {
     Mat4 L(Mat4::identity);
@@ -31,11 +26,9 @@ Mat4 quadrix_vertex_constraint(const Vec3& v)
     return L;
 }
 
-//
 // Construct a quadric to evaluate the squared distance of any point
 // to the given plane [ax+by+cz+d = 0].  This is the "fundamental error
 // quadric" discussed in the paper.
-//
 Mat4 quadrix_plane_constraint(real a, real b, real c, real d)
 {
     Mat4 K(Mat4::zero);
@@ -48,9 +41,7 @@ Mat4 quadrix_plane_constraint(real a, real b, real c, real d)
     return K;
 }
 
-//
 // Define some other convenient ways for constructing these plane quadrics.
-//
 Mat4 quadrix_plane_constraint(const Vec3& n, real d)
 {
     return quadrix_plane_constraint(n[X], n[Y], n[Z], d);
@@ -79,18 +70,14 @@ real quadrix_evaluate_vertex(const Vec3& v, const Mat4& K)
     real x=v[X], y=v[Y], z=v[Z];
 
 #ifndef VECTOR_COST_EVALUATION
-    //
     // This is the fast way of computing (v^T Q v).
-    // 
     return x*x*K(0,0) + 2*x*y*K(0,1) + 2*x*z*K(0,2) + 2*x*K(0,3)
 	              + y*y*K(1,1)   + 2*y*z*K(1,2) + 2*y*K(1,3)
 	                             + z*z*K(2,2)   + 2*z*K(2,3)
 	                                            + K(3,3);
 #else
-    //
     // The equivalent thing using matrix/vector operations.
     // It's a lot clearer, but it's also slower.
-    //
     Vec4 v2(x,y,z,1);
     return v2*(K*v2);
 #endif
@@ -99,9 +86,7 @@ real quadrix_evaluate_vertex(const Vec3& v, const Mat4& K)
 
 
 ////////////////////////////////////////////////////////////////////////
-//
 // Routines for computing discontinuity constraints
-//
 
 static
 bool is_border(Edge *e )
@@ -143,9 +128,7 @@ Mat4 quadrix_discontinuity_constraint(Edge *edge)
 
 
 ////////////////////////////////////////////////////////////////////////
-//
 // Routines for computing contraction target
-//
 
 bool quadrix_find_local_fit(const Mat4& K,
 			    const Vec3& v1, const Vec3& v2,
@@ -216,10 +199,8 @@ bool quadrix_find_best_fit(const Mat4& Q, Vec3& candidate)
 
 
 #ifdef SAFETY
-    //
     // The homogeneous division SHOULDN'T be necessary.
     // But, when we're being SAFE, we do it anyway just in case.
-    //
     candidate[X] = M(0,3)/M(3,3);
     candidate[Y] = M(1,3)/M(3,3);
     candidate[Z] = M(2,3)/M(3,3);
@@ -239,11 +220,9 @@ real quadrix_pair_target(const Mat4& Q,
 {
     int policy = placement_policy;
 
-    //
     // This analytic boundary preservation isn't really necessary.  The
     // boundary constraint quadrics are quite effective.  But, I've left it
     // in anyway.
-    //
     if( will_preserve_boundaries )
     {
 	int c1 = classifyVertex(v1);

@@ -23,12 +23,12 @@ EXTERN_C_BEGIN
 
 typedef struct timespec      globus_abstime_t;
 
-typedef struct SCICore_Thread_Mutex*		globus_mutex_t;
-typedef struct SCICore_Thread_ConditionVariable*        	globus_cond_t;
+typedef struct Core_Thread_Mutex*		globus_mutex_t;
+typedef struct Core_Thread_ConditionVariable*        	globus_cond_t;
 typedef int  	globus_thread_key_t;
 typedef int           	globus_mutexattr_t;
 typedef int           	globus_condattr_t;
-typedef struct SCICore_Thread_Thread*	globus_thread_t;
+typedef struct Core_Thread_Thread*	globus_thread_t;
 
 typedef struct globus_i_threadattr_s
 {

@@ -1,7 +1,6 @@
 
 /*
  *  Thread_unix.cc: Utilities for all unix implementations of the
- *  $Id$
  * 		    the thread library
  *
  *  Written by:
@@ -13,13 +12,14 @@
  *  Copyright (C) 1997 SCI Group
  */
 
-#include <SCICore/Thread/Thread_unix.h>
+#include <Core/Thread/Thread_unix.h>
 #include <stdio.h>
 #include <sys/errno.h>
 #include <sys/signal.h>
 
+
 char*
-SCICore_Thread_signal_name(int sig, void* addr)
+Core_Thread_signal_name(int sig, void* addr)
 {
     static char buf[1000];
     switch(sig){

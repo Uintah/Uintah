@@ -1,17 +1,14 @@
 //////////////////////////////////////////////////////////////////////
 // HeightSimp.cpp - Simplify a height field into a mesh.
-//
 // David K. McAllister, September 1999.
 
-#include <Remote/Tools/Util/Assert.h>
-#include <Remote/Modules/remoteSalmon/HeightSimp.h>
+#include <Packages/Remote/Tools/Util/Assert.h>
+#include <Packages/Remote/Dataflow/Modules/remoteSalmon/HeightSimp.h>
 //int TCnt = 0;
 
 using namespace Remote::Tools;
 
 namespace Remote {
-namespace Modules {
-
 //----------------------------------------------------------------------
 Image *HeightSimp::SimplifyLevel(Image &Prev) {
 				// Create a level by simplifying the
@@ -457,7 +454,6 @@ SimpMesh *HeightSimp::HFSimp()
   cerr << ", zbuf.size:" << ZBuf.size << endl;
   return Me;
 }
+} // End namespace Remote
 
-} // namespace Remote {
-} // namespace Tools {
 

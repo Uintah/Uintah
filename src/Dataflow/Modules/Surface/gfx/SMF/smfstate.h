@@ -6,7 +6,6 @@ class SMF_State
 private:
     SMF_State *next;
 
-    //
     // Standard state variables
     int first_vertex;
     int vertex_correction;

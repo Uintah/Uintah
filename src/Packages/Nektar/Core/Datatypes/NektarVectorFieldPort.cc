@@ -1,9 +1,9 @@
 
 /*
- *  NektarVectorField.cc: The Vector Field Data type
+ *  Packages/NektarVectorField.cc: The Vector Field Data type
  *
  *  Written by:
- *   Yarden Livnat
+ *   Packages/Yarden Livnat
  *   Department of Computer Science
  *   University of Utah
  *   August 2000
@@ -11,30 +11,30 @@
  *  Copyright (C) 2000 SCI Group
  */
 
-#include <Nektar/Datatypes/NektarVectorFieldPort.h>
-#include <Nektar/share/share.h>
-#include <SCICore/Malloc/Allocator.h>
+#include <Packages/Nektar/Core/Datatypes/NektarVectorFieldPort.h>
+#include <Packages/Nektar/share/share.h>
+#include <Core/Malloc/Allocator.h>
 
-//namespace Nektar {
+//namespace Packages/Nektar {
 //namespace Datatypes {
     
-using namespace SCICore::Containers;
+using namespace SCIRun;
 using namespace Nektar::Datatypes;
 
 extern "C" {
-  NektarSHARE IPort* make_NektarVectorFieldIPort(Module* module,
+  Packages/NektarSHARE IPort* make_Packages/NektarVectorFieldIPort(Module* module,
 						 const clString& name) {
-    return scinew SimpleIPort<NektarVectorFieldHandle>(module,name);
+    return scinew SimpleIPort<Packages/NektarVectorFieldHandle>(module,name);
   }
-  NektarSHARE OPort* make_NektarVectorFieldOPort(Module* module, const 
+  Packages/NektarSHARE OPort* make_Packages/NektarVectorFieldOPort(Module* module, const 
 						 clString& name) {
-    return scinew SimpleOPort<NektarVectorFieldHandle>(module,name);
+    return scinew SimpleOPort<Packages/NektarVectorFieldHandle>(module,name);
   }
 }
 
-template<> clString SimpleIPort<NektarVectorFieldHandle>::port_type("NektarVectorField");
-template<> clString SimpleIPort<NektarVectorFieldHandle>::port_color("LightBlue");
+template<> clString SimpleIPort<Packages/NektarVectorFieldHandle>::port_type("Packages/NektarVectorField");
+template<> clString SimpleIPort<Packages/NektarVectorFieldHandle>::port_color("LightBlue");
 
 //  } // End namespace Datatypes
-//} // End namespace Nektar
+//} // End namespace Packages/Nektar
 

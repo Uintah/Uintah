@@ -10,36 +10,28 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <PSECore/Dataflow/Module.h>
-#include <PSECore/Datatypes/ColumnMatrixPort.h>
-#include <PSECore/Datatypes/MatrixPort.h>
-#include <SCICore/Datatypes/Matrix.h>
-#include <SCICore/Datatypes/SparseRowMatrix.h>
-#include <PSECore/Datatypes/MeshPort.h>
-#include <SCICore/Datatypes/Mesh.h>
-#include <PSECore/Datatypes/SurfacePort.h>
-#include <SCICore/Geometry/Point.h>
-#include <SCICore/Malloc/Allocator.h>
-#include <SCICore/TclInterface/TCLvar.h>
-#include <SCICore/Thread/Barrier.h>
-#include <SCICore/Thread/Parallel.h>
-#include <SCICore/Thread/Thread.h>
+#include <Dataflow/Network/Module.h>
+#include <Dataflow/Ports/ColumnMatrixPort.h>
+#include <Dataflow/Ports/MatrixPort.h>
+#include <Core/Datatypes/Matrix.h>
+#include <Core/Datatypes/SparseRowMatrix.h>
+#include <Dataflow/Ports/MeshPort.h>
+#include <Core/Datatypes/Mesh.h>
+#include <Dataflow/Ports/SurfacePort.h>
+#include <Core/Geometry/Point.h>
+#include <Core/Malloc/Allocator.h>
+#include <Core/TclInterface/TCLvar.h>
+#include <Core/Thread/Barrier.h>
+#include <Core/Thread/Parallel.h>
+#include <Core/Thread/Thread.h>
 #include <iostream>
 using std::cerr;
 using std::endl;
 
 #define PINVAL 0
 
-namespace PSECommon {
-namespace Modules {
+namespace SCIRun {
 
-using namespace PSECore::Dataflow;
-using namespace PSECore::Datatypes;
-using namespace SCICore::TclInterface;
-using namespace SCICore::GeomSpace;
-using SCICore::Thread::Barrier;
-using SCICore::Thread::Parallel;
-using SCICore::Thread::Thread;
 
 class BuildFEMatrix : public Module {
   MeshIPort* inmesh;
@@ -435,6 +427,5 @@ void BuildFEMatrix::add_lcl_gbl(Matrix& gbl_a, double lcl_a[4][4],
   }
 }
 
-} // End namespace Modules
-} // End namespace PSECommon
+} // End namespace SCIRun
 

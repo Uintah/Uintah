@@ -1,17 +1,16 @@
-//static char *id="@(#) $Id$";
 
 /* ElapsedTime.cc
    Display elapsed wall clock time
 
-   Philip Sutton
+   Packages/Philip Sutton
    October 1999
 
   Copyright (C) 2000 SCI Group, University of Utah
 */
 
-#include <SCICore/Util/NotFinished.h>
-#include <SCICore/TclInterface/TCLvar.h>
-#include <PSECore/Dataflow/Module.h>
+#include <Core/Util/NotFinished.h>
+#include <Core/TclInterface/TCLvar.h>
+#include <Dataflow/Network/Module.h>
 
 #include <unistd.h>
 #include <limits.h>
@@ -20,10 +19,7 @@
 #include "Clock.h"
 
 namespace Phil {
-namespace Modules {
-
-using namespace PSECore::Dataflow;
-using namespace SCICore::TclInterface;
+using namespace SCIRun;
 
 class ElapsedTime : public Module {
 public:
@@ -138,21 +134,6 @@ ElapsedTime::tcl_command(TCLArgs& args, void* userdata) {
     Module::tcl_command( args, userdata );
   }
 }
+} // End namespace Phil
 
-} // end namespace Modules
-} // end namespace Phil
 
-//
-// $Log$
-// Revision 1.3  2000/03/17 09:28:10  sparker
-// New makefile scheme: sub.mk instead of Makefile.in
-// Use XML-based files for module repository
-// Plus many other changes to make these two things work
-//
-// Revision 1.2  2000/02/04 22:16:48  psutton
-// fixed ID problem
-//
-// Revision 1.1  2000/02/04 21:16:47  psutton
-// initial revision
-//
-//

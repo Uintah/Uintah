@@ -16,14 +16,14 @@
 
 #include "PingPong_sidl.h"
 
-namespace PingPong {
+namespace SCIRun {
     class PingPong_impl : public PingPong_interface {
     public:
 	PingPong_impl();
 	virtual ~PingPong_impl();
 	virtual int pingpong(int);
     };
-}
+} // End namespace SCIRun
 
 #endif
 

@@ -1,10 +1,8 @@
-#include <SCICore/Datatypes/GLVolumeRenderer.h>
+#include <Core/Datatypes/GLVolumeRenderer.h>
 #include <GL/gl.h>
 
-namespace SCICore {
-namespace GeomSpace  {
+namespace SCIRun {
 
-using namespace SCICore::Datatypes;
 
 
 GLAttenuate::GLAttenuate(const GLVolumeRenderer* glvr) :
@@ -25,5 +23,4 @@ void GLAttenuate::postDraw()
   glDisable(GL_BLEND);
 }
 
-} // end namespace Datatypes
-} // end namespace SCICore
+} // End namespace SCIRun

@@ -16,8 +16,7 @@
 
 #include <stdlib.h>
 
-namespace SCICore {
-namespace Malloc {
+namespace SCIRun {
 
 struct OSHunk {
     static OSHunk* alloc(size_t size, bool returnable);
@@ -33,7 +32,6 @@ struct OSHunk {
     double align;
 };
 
-} // End namespace Malloc
-} // End namespace SCICore
+} // End namespace SCIRun
 
 #endif
