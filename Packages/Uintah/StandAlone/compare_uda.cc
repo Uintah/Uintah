@@ -347,7 +347,7 @@ void MaterialParticleData::sort()
   // should have made this check earlier -- particleIDs not output
   ASSERT(particleIDs_->getParticleVars().size() != 0);
 
-  vector< pair<long64, int> > idIndices;
+  vector< ID_Index > idIndices;
   int base = 0;
   
   for (unsigned int i = 0; i < particleIDs_->getParticleVars().size(); i++) {
@@ -363,7 +363,7 @@ void MaterialParticleData::sort()
 	 iter != subset->end(); iter++) {
       idIndices.push_back(ID_Index(*(pID++), base + *iter));
     }
-    base = idIndices.size();
+    base = (int)idIndices.size();
   }
 
   // sort by particle id and find out what happens to the particle indices.
@@ -484,9 +484,9 @@ compare(MaterialParticleVarData& data2, ParticleVariable<T>* value1,
 	ASSERT(getParticleID(i) == data2.getParticleID(i));
       }
       cerr << "DIFFERENCE on particle id= " << getParticleID(i) << endl;
-      IntVector origin((getParticleID(i) >> 16) & 0xffff,
-		       (getParticleID(i) >> 32) & 0xffff,
-		       (getParticleID(i) >> 48) & 0xffff);
+      IntVector origin((int)(getParticleID(i) >> 16) & 0xffff,
+		       (int)(getParticleID(i) >> 32) & 0xffff,
+		       (int)(getParticleID(i) >> 48) & 0xffff);
       cerr << "(Originating from " << origin << ")\n";
       const Patch* patch1 = getPatch(i);
       const Patch* patch2 = data2.getPatch(i);
@@ -595,6 +595,10 @@ void addParticleData(MaterialParticleDataMap& matlParticleDataMap,
   }
 }
 
+#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
+#pragma set woff 1424 // template parameter not used in declaring arguments
+#endif  
+
 template <class T>
 void compareParticles(DataArchive* da1, DataArchive* da2, const string& var,
 		      int matl, const Patch* patch1, const Patch* patch2,
@@ -633,6 +637,10 @@ void compareParticles(DataArchive* da1, DataArchive* da2, const string& var,
   // this should be true if both sets are the same size
   ASSERT(iter1 == pset1->end() && iter2 == pset2->end());
 }
+
+#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
+#pragma reset woff 1424
+#endif  
 
 /*
 template <class Field, class Iterator>
