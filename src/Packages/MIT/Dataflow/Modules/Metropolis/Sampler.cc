@@ -93,7 +93,8 @@ Sampler::go()
   module->want_to_execute();
 }
 
-void Sampler::execute() 
+void 
+Sampler::execute() 
 {
   update_state(NeedData);
 
@@ -148,8 +149,11 @@ Sampler::reset()
 
     srand48(0);
     nparms = m;
+
   }
 
+  if ( graph_ )
+    graph_->set_num_lines(nparms);
   likelihood_->measurements( measurements_ );
 }
 
