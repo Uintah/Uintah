@@ -4,7 +4,7 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
 SRCDIR   := Packages/Uintah/CCA/Components/PatchCombiner
 
-SRCS     += $(SRCDIR)/PatchCombiner.cc
+SRCS     += $(SRCDIR)/PatchCombiner.cc $(SRCDIR)/UdaReducer.cc
 
 PSELIBS := \
 	Packages/Uintah/CCA/Ports \
