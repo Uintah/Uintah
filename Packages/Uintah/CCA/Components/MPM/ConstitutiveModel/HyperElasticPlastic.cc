@@ -32,6 +32,8 @@ HyperElasticPlastic::HyperElasticPlastic(ProblemSpecP& ps, MPMLabel* Mlb, int n8
 
   ps->require("bulk_modulus",d_initialData.Bulk);
   ps->require("shear_modulus",d_initialData.Shear);
+  d_useMPMICEModifiedEOS = false;
+  ps->get("useModifiedEOS",d_useMPMICEModifiedEOS); 
   
   d_plasticity = PlasticityModelFactory::create(ps);
   if(!d_plasticity){
@@ -469,101 +471,58 @@ HyperElasticPlastic::addComputesAndRequires(Task* task,
   d_plasticity->addComputesAndRequires(task, matl, patch);
 }
 
+// Needed by MPMICE
 double 
 HyperElasticPlastic::computeRhoMicroCM(double pressure,
                                        const double p_ref,
 				       const MPMMaterial* matl)
 {
-  double rho_orig = matl->getInitialDensity();
   double bulk = d_initialData.Bulk;
-  
+  double rho_orig = matl->getInitialDensity();
   double p_gauge = pressure - p_ref;
-  double rho_cur = rho_orig*(p_gauge/bulk + sqrt((p_gauge/bulk)*(p_gauge/bulk) +1));
+
+  double rho_cur;
+  if(d_useMPMICEModifiedEOS && p_gauge < 0.0) {
+    double A = p_ref;           // MODIFIED EOS
+    double n = p_ref/bulk;
+    rho_cur = rho_orig*pow(pressure/A,n);
+  } else {                      // STANDARD EOS
+    rho_cur = rho_orig*(p_gauge/bulk + sqrt((p_gauge/bulk)*(p_gauge/bulk) +1));
+  }
   return rho_cur;
 }
 
+// Needed by MPMICE
 void 
 HyperElasticPlastic::computePressEOSCM(double rho_cur,double& pressure,
 				       double p_ref,  
-				       double& dp_drho, double& C_0sq,
+				       double& dp_drho, double& C0_sq,
 				       const MPMMaterial* matl)
 {
-  double bulk = d_initialData.Bulk;
   double rho_orig = matl->getInitialDensity();
+  double bulk = d_initialData.Bulk;
 
-  double p_g = .5*bulk*(rho_cur/rho_orig - rho_orig/rho_cur);
-  pressure = p_ref + p_g;
-  dp_drho = .5*bulk*(rho_orig/(rho_cur*rho_cur) + 1./rho_orig);
-  C_0sq = bulk/rho_cur;  // speed of sound squared
+  if(d_useMPMICEModifiedEOS && rho_cur < rho_orig){
+    double A = p_ref;           // MODIFIED EOS
+    double n = bulk/p_ref;
+    pressure = A*pow(rho_cur/rho_orig,n);
+    dp_drho  = (bulk/rho_orig)*pow(rho_cur/rho_orig,n-1);
+    C0_sq    = dp_drho;         // speed of sound squared
+  } else {                      // STANDARD EOS            
+    double p_g = .5*bulk*(rho_cur/rho_orig - rho_orig/rho_cur);
+    pressure   = p_ref + p_g;
+    dp_drho    = .5*bulk*(rho_orig/(rho_cur*rho_cur) + 1./rho_orig);
+    C0_sq      = bulk/rho_cur;  // speed of sound squared
+  }
 }
 
+// Needed by MPMICE
 double 
 HyperElasticPlastic::getCompressibility()
 {
   return 1.0/d_initialData.Bulk;
 }
 
-/*
-Matrix3
-HyperElasticPlastic::computeVelocityGradient(const Patch* patch,
-					   const double* oodx, 
-					   const Point& px, 
-					   const Vector& psize, 
-					   constNCVariable<Vector>& gVelocity) 
-{
-  // Initialize
-  Matrix3 velGrad(0.0);
-
-  // Get the node indices that surround the cell
-  IntVector ni[MAX_BASIS];
-  Vector d_S[MAX_BASIS];
-
-  patch->findCellAndShapeDerivatives27(px, ni, d_S, psize);
-
-  //cout << "ni = " << ni << endl;
-  for(int k = 0; k < d_8or27; k++) {
-    //if(patch->containsNode(ni[k])) {
-    const Vector& gvel = gVelocity[ni[k]];
-    //cout << "GridVel = " << gvel << endl;
-    for (int j = 0; j<3; j++){
-      for (int i = 0; i<3; i++) {
-	velGrad(i+1,j+1) += gvel[i] * d_S[k][j] * oodx[j];
-      }
-    }
-    //}
-  }
-  //cout << "VelGrad = " << velGrad << endl;
-  return velGrad;
-}
-
-Matrix3
-HyperElasticPlastic::computeVelocityGradient(const Patch* patch,
-					   const double* oodx, 
-					   const Point& px, 
-					   constNCVariable<Vector>& gVelocity) 
-{
-  // Initialize
-  Matrix3 velGrad(0.0);
-
-  // Get the node indices that surround the cell
-  IntVector ni[MAX_BASIS];
-  Vector d_S[MAX_BASIS];
-
-  patch->findCellAndShapeDerivatives(px, ni, d_S);
-
-  for(int k = 0; k < d_8or27; k++) {
-    const Vector& gvel = gVelocity[ni[k]];
-    //cout << "GridVel = " << gvel << endl;
-    for (int j = 0; j<3; j++){
-      for (int i = 0; i<3; i++) {
-	velGrad(i+1,j+1) += gvel[i] * d_S[k][j] * oodx[j];
-      }
-    }
-  }
-  //cout << "VelGrad = " << velGrad << endl;
-  return velGrad;
-}
-*/
 
 #if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
 #pragma set woff 1209

@@ -74,6 +74,7 @@ WARNING
 
     CMData d_initialData;
 	 
+    bool d_useMPMICEModifiedEOS;
     double d_tol;
     PlasticityModel* d_plasticity;
     DamageModel* d_damage;

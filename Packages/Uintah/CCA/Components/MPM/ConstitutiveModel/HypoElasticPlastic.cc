@@ -324,8 +324,8 @@ HypoElasticPlastic::computeStressTensor(const PatchSubset* patches,
       tensorW = (tensorL - tensorL.Transpose())*0.5;
       for (int ii = 1; ii < 4; ++ii) {
         for (int jj = 1; jj < 4; ++jj) {
-          if (fabs(tensorD(ii,jj)) < d_tol) tensorD(ii,jj) = 0.0;
-          if (fabs(tensorW(ii,jj)) < d_tol) tensorW(ii,jj) = 0.0;
+	  tensorD(ii,jj) = (fabs(tensorD(ii,jj)) < d_tol) ? 0.0 : tensorD(ii,jj);
+	  tensorW(ii,jj) = (fabs(tensorW(ii,jj)) < d_tol) ? 0.0 : tensorW(ii,jj);
         }
       }
 
@@ -598,17 +598,19 @@ HypoElasticPlastic::computeUpdatedVR(const double& delT,
   RR = (oneMinusOmegaInv*onePlusOmega)*RR;
 
   // Check the ortogonality of R
-  if (!RR.Orthogonal()) {
+  //if (!RR.Orthogonal()) {
     // Do something here that restores orthogonality
-  }
+  //}
 
   // Update the left Cauchy-Green stretch tensor (V)
   VV = VV + ((DD+WW)*VV - VV*Omega)*delT;
 
   for (int ii = 1; ii < 4; ++ii) {
     for (int jj = 1; jj < 4; ++jj) {
-      if (fabs(VV(ii,jj)) < d_tol) VV(ii,jj) = 0.0;
-      if (fabs(RR(ii,jj)) < d_tol) RR(ii,jj) = 0.0;
+      VV(ii,jj) = (fabs(VV(ii,jj)) < d_tol) ? 0.0 : VV(ii,jj);
+      RR(ii,jj) = (fabs(RR(ii,jj)) < d_tol) ? 0.0 : RR(ii,jj);
+      //if (fabs(VV(ii,jj)) < d_tol) VV(ii,jj) = 0.0;
+      //if (fabs(RR(ii,jj)) < d_tol) RR(ii,jj) = 0.0;
     }
   }
 }
@@ -674,12 +676,8 @@ double HypoElasticPlastic::computeRhoMicroCM(double pressure,
 {
   double rho_orig = matl->getInitialDensity();
   double bulk = d_initialData.Bulk;
-  
   double p_gauge = pressure - p_ref;
-  double rho_cur;
-
-  rho_cur = rho_orig*(p_gauge/bulk + sqrt((p_gauge/bulk)*(p_gauge/bulk) +1));
-  return rho_cur;
+  return (rho_orig/(1.0-p_gauge/bulk));
 }
 
 void HypoElasticPlastic::computePressEOSCM(double rho_cur,double& pressure,
@@ -687,81 +685,18 @@ void HypoElasticPlastic::computePressEOSCM(double rho_cur,double& pressure,
 					   double& dp_drho, double& tmp,
 					   const MPMMaterial* matl)
 {
-  double bulk = d_initialData.Bulk;
   double rho_orig = matl->getInitialDensity();
-
-  double p_g = .5*bulk*(rho_cur/rho_orig - rho_orig/rho_cur);
-  pressure   = p_ref + p_g;
-  dp_drho    = .5*bulk*(rho_orig/(rho_cur*rho_cur) + 1./rho_orig);
-  tmp        = bulk/rho_cur;  // speed of sound squared
+  double bulk = d_initialData.Bulk;
+  double p_g = bulk*(1.0 - rho_orig/rho_cur);
+  pressure = p_ref + p_g;
+  dp_drho  = bulk*rho_orig/(rho_cur*rho_cur);
+  tmp = bulk/rho_cur;  // speed of sound squared
 }
 
 double HypoElasticPlastic::getCompressibility()
 {
   return 1.0/d_initialData.Bulk;
 }
-
-/*
-Matrix3
-HypoElasticPlastic::computeVelocityGradient(const Patch* patch,
-					   const double* oodx, 
-					   const Point& px, 
-					   const Vector& psize, 
-					   constNCVariable<Vector>& gVelocity) 
-{
-  // Initialize
-  Matrix3 velGrad(0.0);
-
-  // Get the node indices that surround the cell
-  IntVector ni[MAX_BASIS];
-  Vector d_S[MAX_BASIS];
-
-  patch->findCellAndShapeDerivatives27(px, ni, d_S, psize);
-
-  //cout << "ni = " << ni << endl;
-  for(int k = 0; k < d_8or27; k++) {
-    //if(patch->containsNode(ni[k])) {
-    const Vector& gvel = gVelocity[ni[k]];
-    //cout << "GridVel = " << gvel << endl;
-    for (int j = 0; j<3; j++){
-      for (int i = 0; i<3; i++) {
-	velGrad(i+1,j+1) += gvel[i] * d_S[k][j] * oodx[j];
-      }
-    }
-    //}
-  }
-  //cout << "VelGrad = " << velGrad << endl;
-  return velGrad;
-}
-
-Matrix3
-HypoElasticPlastic::computeVelocityGradient(const Patch* patch,
-					   const double* oodx, 
-					   const Point& px, 
-					   constNCVariable<Vector>& gVelocity) 
-{
-  // Initialize
-  Matrix3 velGrad(0.0);
-
-  // Get the node indices that surround the cell
-  IntVector ni[MAX_BASIS];
-  Vector d_S[MAX_BASIS];
-
-  patch->findCellAndShapeDerivatives(px, ni, d_S);
-
-  for(int k = 0; k < d_8or27; k++) {
-    const Vector& gvel = gVelocity[ni[k]];
-    //cout << "GridVel = " << gvel << endl;
-    for (int j = 0; j<3; j++){
-      for (int i = 0; i<3; i++) {
-	velGrad(i+1,j+1) += gvel[i] * d_S[k][j] * oodx[j];
-      }
-    }
-  }
-  //cout << "VelGrad = " << velGrad << endl;
-  return velGrad;
-}
-*/
 
 #if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
 #pragma set woff 1209
