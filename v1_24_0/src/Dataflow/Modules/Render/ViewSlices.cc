@@ -328,6 +328,10 @@ class ViewSlices : public Module
   UIdouble		background_threshold_;
 
   PaintCM2Widget *	paint_widget_;
+  float			paint_r_;
+  float			paint_g_;
+  float			paint_b_;
+  float			paint_a_;
 
   float *		temp_tex_data_;
 
@@ -421,6 +425,7 @@ class ViewSlices : public Module
   void			send_slice_geometry(NrrdSlice &slice);
 
   void			add_paint_widget();
+  void			undo_paint_stroke();
   void			fill_paint_slices(SliceWindow &window);
   void			fill_all_paint_slices();
   void			rasterize_colormap2();
@@ -428,7 +433,6 @@ class ViewSlices : public Module
   void			line(float *data, int width, 
 			     int x0, int y0, int x1, int y1,
 			     float r, float g, float b, float a);
-  void			apply_paint(SliceWindow &);
   void			update_background_threshold();
   double		get_value(Nrrd *, int, int, int);
 public:
@@ -3076,6 +3080,15 @@ ViewSlices::handle_gui_button(GuiArgs &args) {
 
       if (painting_) { 
 	last_cursor_ = cursor_;
+	if (paint_widget_) {
+	  paint_widget_->add_stroke();
+	  paint_r_ = paint_widget_->color().r();
+	  paint_g_ = paint_widget_->color().g();
+	  paint_b_ = paint_widget_->color().b();
+	  paint_a_ = paint_widget_->alpha();
+	} else {
+	  paint_r_ = paint_g_ = paint_b_ = paint_a_ = 1.0;
+	}
 	do_paint(window); 
 	continue;
       }
@@ -3193,7 +3206,6 @@ ViewSlices::handle_gui_keypress(GuiArgs &args) {
     } else if (args[4] == "i") {
       window.invert_ = window.invert_?0:1;
       redraw_window(window);
-    } else if (args[4] == "p") {
     } else if (args[4] == "m") {
       window.mode_ = (window.mode_+1)%num_display_modes_e;
       extract_window_slices(window);
@@ -3235,7 +3247,8 @@ ViewSlices::tcl_command(GuiArgs& args, void* userdata) {
   else if (args[1] == "enter")    handle_gui_enter(args);
   else if (args[1] == "leave")    handle_gui_leave(args);
   else if (args[1] == "background_thresh") update_background_threshold();
-  else if(args[1] == "add_paint_widget") add_paint_widget();
+  else if (args[1] == "add_paint_widget") add_paint_widget();
+  else if (args[1] == "undo") undo_paint_stroke();
   else if(args[1] == "setgl") {
     int visualid = 0;
     if (args.count() == 5 && !string_to_int(args[4], visualid))
@@ -3562,65 +3575,24 @@ ViewSlices::do_paint(SliceWindow &window) {
 
   TCLTask::lock();
 
+  if (paint_widget_) {
+    const double offset = double(window.clut_wl_) - int(window.clut_ww_)/2;
+    const double scale = 1.0 / double(window.clut_ww_);
+    const double gradient = 
+      get_value(gradient_->nrrd, xyz[0], xyz[1], xyz[2]) / 255.0;  
+    const double value = 
+      scale*(get_value(volumes_[0]->nrrd_->nrrd,xyz[0],xyz[1],xyz[2])-offset);
+    paint_widget_->add_coordinate(make_pair(value, gradient));
+  }
+
   NrrdSlice &ps = *window.paint_slices_[window.axis_];
   ps.tex_dirty_ = true;
-  Nrrd *gradient_nrrd = gradient_->nrrd;
-  Nrrd *data_nrrd = volumes_[0]->nrrd_->nrrd;
-  const double offset = double(window.clut_wl_) - int(window.clut_ww_)/2;
-  const double scale = 1 / double(window.clut_ww_);
-
-  //  double offset = min_;
-  //double scale = 1.0/(max_ - min_);
-  float *paintdata = (float *)ps.nrrd_->nrrd->data;
-  int x = xyz[x_axis(window)];
-  int y = xyz[y_axis(window)];
-  int lx = lxyz[x_axis(window)];
-  int ly = lxyz[y_axis(window)];
-
-  const double gradient = 
-    get_value(gradient_nrrd, xyz[0], xyz[1], xyz[2]) / 255.0;  
-  const double value = 
-    scale*(get_value(data_nrrd, xyz[0], xyz[1], xyz[2]) - offset);
-
-  const double ogradient = 
-    get_value(gradient_nrrd, lxyz[0], lxyz[1], lxyz[2]) / 255.0;  
-  const double ovalue = 
-    scale*(get_value(data_nrrd, lxyz[0], lxyz[1], lxyz[2]) - offset);
-
-
-  float r = 1.0, g = 1.0, b = 1.0, a = 1.0;
-  if (paint_widget_) {
-    paint_widget_->get_segments().push_back
-      (make_pair(make_pair(value, gradient),
-		 make_pair(ovalue, ogradient)));
-    r = paint_widget_->color().r();
-    g = paint_widget_->color().g();
-    b = paint_widget_->color().b();
-    a = paint_widget_->alpha();
-    paint_widget_->set_dirty(true);
-  } 
-
-  line(paintdata, ps.tex_wid_, x, y, lx, ly, r, g, b, a);
+  line((float *)ps.nrrd_->nrrd->data, ps.tex_wid_, 
+       xyz[x_axis(window)], xyz[y_axis(window)],
+       lxyz[x_axis(window)], lxyz[y_axis(window)],
+       paint_r_, paint_g_, paint_b_, paint_a_);
 
   TCLTask::unlock();
-}
-
-
-void
-ViewSlices::apply_paint(SliceWindow &window) {
-#if 0
-  TCLTask::lock();
-  for (y = 0; y < ps->tex_hei_; ++y)  
-    for (x = 0; x < ps->tex_hei_; ++x)
-    {
-      
-      
-
-  
-  fill_paint_slices(window);
-  TCLTask::unlock();
-
-#endif 
 }
 
 
@@ -3648,5 +3620,15 @@ ViewSlices::update_background_threshold() {
   
   if (geom_oport_) geom_oport_->flushViews();
 }
+
+void
+ViewSlices::undo_paint_stroke() {
+  if (!paint_widget_) return;
+  if (paint_widget_->pop_stroke()) {
+    painting_ = 2;
+    want_to_execute();
+  }
+}
+  
 
 } // End namespace SCIRun
