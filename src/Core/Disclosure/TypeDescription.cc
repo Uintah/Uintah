@@ -257,7 +257,7 @@ const TypeDescription* get_type_description(unsigned char*)
 {
   static TypeDescription* td = 0;
   if(!td){
-    td = scinew TypeDescription("unsigned_char", "builtin", "builtin");
+    td = scinew TypeDescription("unsigned char", "builtin", "builtin");
   }
   return td;
 }
