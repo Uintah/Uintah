@@ -755,7 +755,8 @@ public:
 
     CellIter &operator++()
     {
-      do next(); while (!mesh_->check_valid(i_,j_,k_));
+      do next(); while (!mesh_->check_valid(i_,j_,k_) && 
+			k_ < mesh_->min_k_ + mesh_->nk_ - 1);
       return *this;
     }
 

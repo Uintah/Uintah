@@ -105,7 +105,7 @@ void
 MaskedLatVolMesh::end(MaskedLatVolMesh::Cell::iterator &itr) const
 {
   itr = Cell::iterator(this, min_i_, min_j_, min_k_ + nk_-1);
-  if (!check_valid(itr)) { --itr; itr.next(); }
+  //  if (!check_valid(itr)) { --itr; itr.next(); }
 }
 
 void
