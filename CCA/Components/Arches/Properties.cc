@@ -457,19 +457,22 @@ Properties::reComputeProps(const ProcessorGroup*,
 	    // taken from radcoef.f
 	    //	double bc = d_mixingModel->getCarbonAtomNumber(inStream)*local_den;
 	    if (temperature[currCell] > 1000) {
-	      double bc = inStream.d_mixVars[0]*(12.0/16.0)*local_den;
+	      double bc = inStream.d_mixVars[0]*(84.0/100.0)*local_den;
 	      double c3 = 0.1;
 	      double rhosoot = 1950.0;
 	      double cmw = 12.0;
 	      double opl = 3.0;
 	      double factor = 0.01;
-	      sootFV[currCell] = c3*bc*cmw/rhosoot*factor;
-	      absorption[currCell] = Min(25.0,(4.0/opl)*log(1.0+350.0*
+	      if (inStream.d_mixVars[0] > 0.06)
+		sootFV[currCell] = c3*bc*cmw/rhosoot*factor;
+	      else
+		sootFV[currCell] = 0.0;
+	      absorption[currCell] = Min(0.5,(4.0/opl)*log(1.0+350.0*
 		     sootFV[currCell]*temperature[currCell]*opl));
 	      //	      absorption[currCell] = 0.01;
 	    }
 	    else {
-	      absorption[currCell] = 0.001;
+	      absorption[currCell] = 0.0;
 	    }
 	  }
 	  if (d_MAlab) {
