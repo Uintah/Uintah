@@ -291,7 +291,6 @@ RenderField<Fld>::render_edges(const Fld *sfld,
   }
 }
 
-
 template <class Fld>
 void 
 RenderField<Fld>::render_faces(const Fld *sfld,
@@ -313,41 +312,51 @@ RenderField<Fld>::render_faces(const Fld *sfld,
     mesh->get_nodes(nodes, *fiter); 
     ++fiter;     
  
-    Point p1, p2, p3;
-    mesh->get_point(p1, nodes[0]);
-    mesh->get_point(p2, nodes[1]);
-    mesh->get_point(p3, nodes[2]);
-    Vector n1, n2, n3;
-
-    if (with_normals) {
-      mesh->get_normal(n1, nodes[0]);
-      mesh->get_normal(n2, nodes[1]);
-      mesh->get_normal(n3, nodes[2]);
+    unsigned int i;
+    vector<Point> points(nodes.size());
+    vector<Vector> normals(nodes.size());
+    vector<double> vals(nodes.size(), 0.0);
+    for (i = 0; i < nodes.size(); i++)
+    {
+      mesh->get_point(points[i], nodes[i]);
     }
 
-    double val1 = 0.L;
-    double val2 = 0.L;
-    double val3 = 0.L;
+    if (with_normals) {
+      for (i = 0; i < nodes.size(); i++)
+      {
+	mesh->get_normal(normals[i], nodes[i]);
+      }
+    }
 
     switch (sfld->data_at()) {
     case Field::NODE:
       {
-	typename Fld::value_type tmp1;
-	typename Fld::value_type tmp2;
-	typename Fld::value_type tmp3;
-	if (! (sfld->value(tmp1, nodes[0]) && to_double(tmp1, val1) &&
-	       sfld->value(tmp2, nodes[1]) && to_double(tmp2, val2) &&
-	       sfld->value(tmp3, nodes[2]) && to_double(tmp3, val3))) { 
-	  def_color = true; 
+	typename Fld::value_type tmp;
+	for (i=0; i < nodes.size(); i++)
+	{
+	  if (! (sfld->value(tmp, nodes[i]) && to_double(tmp, vals[i])))
+	  {
+	    def_color = true;
+	    break;
+	  }
 	}
       }
       break;
+
     case Field::FACE: 
       {
 	typename Fld::value_type tmp;
-	if (! (sfld->value(tmp, *fiter) && to_double(tmp, val1) && 
-	       to_double(tmp, val2) && to_double(tmp, val3))) {
-	  def_color = true; 
+	if (! sfld->value(tmp, *fiter))
+	{
+	  def_color = true;
+	}
+	for (i = 0; i < nodes.size(); i++)
+	{
+	  if (! to_double(tmp, vals[i]))
+	  {
+	    def_color = true;
+	    break;
+	  }
 	}
       }
       break;
@@ -358,18 +367,24 @@ RenderField<Fld>::render_faces(const Fld *sfld,
       def_color = true;
       break;
     }
-    if (with_normals) {
-      add_face(p1, p2, p3, n1, n2, n3, 
-	       choose_mat(def_color, val1), 
-	       choose_mat(def_color, val2), 
-	       choose_mat(def_color, val3), 
+
+    for (i=2; i<nodes.size(); i++)
+    {
+      if (with_normals) {
+	
+      add_face(points[0], points[i-1], points[i],
+	       normals[0], normals[i-1], normals[i], 
+	       choose_mat(def_color, vals[0]), 
+	       choose_mat(def_color, vals[i-1]), 
+	       choose_mat(def_color, vals[i]), 
 	       faces);
-    } else {
-      add_face(p1, p2, p3, 
-	       choose_mat(def_color, val1), 
-	       choose_mat(def_color, val2), 
-	       choose_mat(def_color, val3), 
-	       faces);
+      } else {
+	add_face(points[0], points[i-1], points[i], 
+		 choose_mat(def_color, vals[0]), 
+		 choose_mat(def_color, vals[i-1]), 
+		 choose_mat(def_color, vals[i]), 
+		 faces);
+      }
     }
   }
 }
