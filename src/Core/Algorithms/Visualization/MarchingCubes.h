@@ -170,7 +170,7 @@ MarchingCubes<Tesselator>::parallel_search( int proc,
   unsigned int i;
   for ( i=0; i<(proc*(n/np_)); i++) { ++from; }
   
-  for ( int last = (proc < np_-1) ? (proc+1)*(n/np_) : n; i<last; i++)
+  for ( unsigned int last = (proc < np_-1) ? (proc+1)*(n/np_) : n; i<last; i++)
   {
     tess_[proc]->extract( *from, iso );
     ++from;
