@@ -4627,14 +4627,43 @@ class BioTensorApp {
 	set $mods(SamplePlane-Z)-pos $result_z
 	
 	# configure ClipByFunction string
+	configure_ClipByFunction            
+    }
+
+    method configure_ClipByFunction {} {
+	global mods
 	global $mods(ClipByFunction-Seeds)-clipfunction
 	global $mods(Isosurface)-isoval
+	global plane_x plane_y plane_z
+
 	set span_x [expr [expr $plane_x*$spacing_x]+$min_x]
 	set span_y [expr [expr $plane_y*$spacing_y]+$min_y]
 	set span_z [expr [expr $plane_z*$spacing_z]+$min_z]
 
-	set $mods(ClipByFunction-Seeds)-clipfunction "(v > [set $mods(Isosurface)-isoval]) && (x $clip_x $span_x) && (y $clip_y $span_y) && (z $clip_z $span_z)"
-        
+	# Only include axis information for planes that are turned on
+	global $mods(ShowField-X)-faces-on
+	global $mods(ShowField-Y)-faces-on
+	global $mods(ShowField-Z)-faces-on
+
+	set function "(v > [set $mods(Isosurface)-isoval]) &&"
+	if {[set $mods(ShowField-X)-faces-on]} {
+	    set index [string last "&&" $function]
+	    set function [string replace $function $index end "&& (x $clip_x $span_x) &&"]
+	}
+	if {[set $mods(ShowField-Y)-faces-on]} {
+	    set index [string last "&&" $function]
+	    set function [string replace $function $index end "&& (y $clip_y $span_y) &&"]
+	}
+	if {[set $mods(ShowField-Z)-faces-on]} {
+	    set index [string last "&&" $function]
+	    set function [string replace $function $index end "&& (z $clip_z $span_z) &&"]
+	}
+	set index [string last "&&" $function]
+	set function [string replace $function $index end ""]
+
+	set $mods(ClipByFunction-Seeds)-clipfunction $function
+
+	#set $mods(ClipByFunction-Seeds)-clipfunction "(v > [set $mods(Isosurface)-isoval]) && (x $clip_x $span_x) && (y $clip_y $span_y) && (z $clip_z $span_z)"
 	
     }
 
@@ -5470,16 +5499,10 @@ class BioTensorApp {
            } else {
              set clip_x "<"
            }
-           global $mods(ClipByFunction-Seeds)-clipfunction
-           global $mods(Isosurface)-isoval
-	    set span_x [expr [expr $plane_x*$spacing_x]+$min_x]
-	    set span_y [expr [expr $plane_y*$spacing_y]+$min_y]
-	    set span_z [expr [expr $plane_z*$spacing_z]+$min_z]
+
+	    configure_ClipByFunction
 	    
-	    set $mods(ClipByFunction-Seeds)-clipfunction "(v > [set $mods(Isosurface)-isoval]) && (x $clip_x $span_x) && (y $clip_y $span_y) && (z $clip_z $span_z)"
-	    
-	    
-           $mods(Viewer)-ViewWindow_0-c redraw
+	    $mods(Viewer)-ViewWindow_0-c redraw
         }
     }
 
@@ -5519,16 +5542,10 @@ class BioTensorApp {
            } else {
              set clip_y "<"
            }
-           global $mods(ClipByFunction-Seeds)-clipfunction
-           global $mods(Isosurface)-isoval
-	    set span_x [expr [expr $plane_x*$spacing_x]+$min_x]
-	    set span_y [expr [expr $plane_y*$spacing_y]+$min_y]
-	    set span_z [expr [expr $plane_z*$spacing_z]+$min_z]
 	    
-	    set $mods(ClipByFunction-Seeds)-clipfunction "(v > [set $mods(Isosurface)-isoval]) && (x $clip_x $span_x) && (y $clip_y $span_y) && (z $clip_z $span_z)"
-	    
+	    configure_ClipByFunction
 
-           $mods(Viewer)-ViewWindow_0-c redraw
+	    $mods(Viewer)-ViewWindow_0-c redraw
         }
     }
 
@@ -5568,16 +5585,10 @@ class BioTensorApp {
            } else {
              set clip_z "<"
            }
-           global $mods(ClipByFunction-Seeds)-clipfunction
-           global $mods(Isosurface)-isoval
-	    set span_x [expr [expr $plane_x*$spacing_x]+$min_x]
-	    set span_y [expr [expr $plane_y*$spacing_y]+$min_y]
-	    set span_z [expr [expr $plane_z*$spacing_z]+$min_z]
-	    
-	    set $mods(ClipByFunction-Seeds)-clipfunction "(v > [set $mods(Isosurface)-isoval]) && (x $clip_x $span_x) && (y $clip_y $span_y) && (z $clip_z $span_z)"
 
+	    configure_ClipByFunction
 
-           $mods(Viewer)-ViewWindow_0-c redraw
+	    $mods(Viewer)-ViewWindow_0-c redraw
         }
     }
 
@@ -5627,11 +5638,7 @@ class BioTensorApp {
 	    set $clip-normal-d-2 [expr $span_x  + $plane_inc]
 	    
 	    # configure ClipByFunction
-	    global $mods(ClipByFunction-Seeds)-clipfunction
-	    global $mods(Isosurface)-isoval
-	    
-	    set $mods(ClipByFunction-Seeds)-clipfunction "(v > [set $mods(Isosurface)-isoval]) && (x $clip_x $span_x) && (y $clip_y $span_y) && (z $clip_z $span_z)"
-	    
+	    configure_ClipByFunction
 	    
 	    $mods(ClipByFunction-Seeds)-c needexecute
 	    
@@ -5661,10 +5668,7 @@ class BioTensorApp {
 	    set $clip-normal-d-4 [expr $span_y  + $plane_inc]
 	    
 	    # configure ClipByFunction
-	    global $mods(Isosurface)-isoval
-	    global $mods(ClipByFunction-Seeds)-clipfunction
-	    
-	    set $mods(ClipByFunction-Seeds)-clipfunction "(v > [set $mods(Isosurface)-isoval]) && (x $clip_x $span_x) && (y $clip_y $span_y) && (z $clip_z $span_z)"
+	    configure_ClipByFunction
 	    
 	    $mods(ClipByFunction-Seeds)-c needexecute
 	    
@@ -5694,11 +5698,8 @@ class BioTensorApp {
 	    set $clip-normal-d-6 [expr $span_z  + $plane_inc]
 	    
 	    # configure ClipByFunction
-	    global $mods(Isosurface)-isoval
-	    global $mods(ClipByFunction-Seeds)-clipfunction
-	    
-	    set $mods(ClipByFunction-Seeds)-clipfunction "(v > [set $mods(Isosurface)-isoval]) && (x $clip_x $span_x) && (y $clip_y $span_y) && (z $clip_z $span_z)"
-	    
+	    configure_ClipByFunction
+
 	    $mods(ClipByFunction-Seeds)-c needexecute
 	    
 	    $mods(SamplePlane-Z)-c needexecute
@@ -5712,6 +5713,8 @@ class BioTensorApp {
 	global $mods(ShowField-X)-faces-on
 	global $mods(ShowField-Y)-faces-on
 	global $mods(ShowField-Z)-faces-on
+        global $mods(ChooseField-GlyphSeeds)-port-index
+        global $mods(ChooseField-FiberSeeds)-port-index
 	global $mods(Viewer)-ViewWindow_0-clip
 	set clip $mods(Viewer)-ViewWindow_0-clip
 	
@@ -5721,7 +5724,7 @@ class BioTensorApp {
 	if {$which == "X"} {
 	    global $clip-visible-$last_x
 	    if {$show_plane_x == 0} {
-		# turn off 
+		# turn off plane face and global clipping plane
 		set $mods(ShowField-X)-faces-on 0
 		set $clip-visible-$last_x 0
 		
@@ -5733,6 +5736,15 @@ class BioTensorApp {
 		# enable connection
 		unblock_connection $mods(ChooseField-X) 0 $mods(GatherPoints) 0
 	    }  
+
+	    configure_ClipByFunction
+
+	    # only take the time to rexecute of glyphs or fibers are
+	    # being seeded in the grid
+	    if {[set $mods(ChooseField-GlyphSeeds)-port-index] == 3 || [set $mods(ChooseField-FiberSeeds)-port-index] == 3} {
+		$mods(ClipByFunction-Seeds)-c needexecute
+	    }
+
 	    $mods(GatherPoints)-c needexecute
 	    
 	    $mods(ShowField-X)-c toggle_display_faces  
@@ -5748,6 +5760,14 @@ class BioTensorApp {
 		set $clip-visible-$last_y 1
 		unblock_connection $mods(ChooseField-Y) 0 $mods(GatherPoints) 1
 	    }   
+	    configure_ClipByFunction
+
+	    # only take the time to rexecute of glyphs or fibers are
+	    # being seeded in the grid
+	    if {[set $mods(ChooseField-GlyphSeeds)-port-index] == 3 || [set $mods(ChooseField-FiberSeeds)-port-index] == 3} {
+		$mods(ClipByFunction-Seeds)-c needexecute
+	    }
+
 	    $mods(GatherPoints)-c needexecute
 	    
 	    $mods(ShowField-Y)-c toggle_display_faces
@@ -5764,6 +5784,13 @@ class BioTensorApp {
 		set $clip-visible-$last_z 1            
 		unblock_connection $mods(ChooseField-Z) 0 $mods(GatherPoints) 2
 	    }   
+	    configure_ClipByFunction
+
+	    # only take the time to rexecute of glyphs or fibers are
+	    # being seeded in the grid
+	    if {[set $mods(ChooseField-GlyphSeeds)-port-index] == 3 || [set $mods(ChooseField-FiberSeeds)-port-index] == 3} {
+		$mods(ClipByFunction-Seeds)-c needexecute
+	    }
 	    
 	    $mods(GatherPoints)-c needexecute
 	    
@@ -6993,6 +7020,7 @@ class BioTensorApp {
         global $mods(ChooseField-GlyphSeeds)-port-index
 
         if {[set $mods(ChooseField-GlyphSeeds)-port-index] == 0} {
+	    # Point
             uplevel \#0 set "\{$mods(Viewer)-ViewWindow_0-Probe Selection Widget (8)\}" 1
             uplevel \#0 set "\{$mods(Viewer)-ViewWindow_0-StreamLines rake (7)\}" 0
 	    $glyphs_tab1.seed.childsite.a.pointf.w configure -state normal
@@ -7001,6 +7029,7 @@ class BioTensorApp {
 	    $glyphs_tab1.seed.childsite.a.rakef.w configure -state disabled
 	    $glyphs_tab2.seed.childsite.a.rakef.w configure -state disabled
         } elseif {[set $mods(ChooseField-GlyphSeeds)-port-index] == 1} {
+	    # Rake
             uplevel \#0 set "\{$mods(Viewer)-ViewWindow_0-Probe Selection Widget (8)\}" 0
             uplevel \#0 set "\{$mods(Viewer)-ViewWindow_0-StreamLines rake (7)\}" 1
 	    $glyphs_tab1.seed.childsite.a.pointf.w configure -state disabled
@@ -7009,6 +7038,7 @@ class BioTensorApp {
 	    $glyphs_tab1.seed.childsite.a.rakef.w configure -state normal
 	    $glyphs_tab2.seed.childsite.a.rakef.w configure -state normal
         } else {
+	    # Grid or Planes
             uplevel \#0 set "\{$mods(Viewer)-ViewWindow_0-Probe Selection Widget (8)\}" 0
             uplevel \#0 set "\{$mods(Viewer)-ViewWindow_0-StreamLines rake (7)\}" 0
 	    $glyphs_tab1.seed.childsite.a.pointf.w configure -state disabled
@@ -7841,6 +7871,7 @@ class BioTensorApp {
         global $mods(ChooseField-FiberSeeds)-port-index
 
         if {[set $mods(ChooseField-FiberSeeds)-port-index] == 0} {
+	    # Point
             uplevel \#0 set "\{$mods(Viewer)-ViewWindow_0-Probe Selection Widget (11)\}" 1
             uplevel \#0 set "\{$mods(Viewer)-ViewWindow_0-StreamLines rake (12)\}" 0
 	    $fibers_tab1.seed.childsite.a.pointf.w configure -state normal
@@ -7849,6 +7880,7 @@ class BioTensorApp {
 	    $fibers_tab1.seed.childsite.a.rakef.w configure -state disabled
 	    $fibers_tab2.seed.childsite.a.rakef.w configure -state disabled
         } elseif {[set $mods(ChooseField-FiberSeeds)-port-index] == 1} {
+	    # Rake
             uplevel \#0 set "\{$mods(Viewer)-ViewWindow_0-Probe Selection Widget (11)\}" 0
             uplevel \#0 set "\{$mods(Viewer)-ViewWindow_0-StreamLines rake (12)\}" 1
 	    $fibers_tab1.seed.childsite.a.pointf.w configure -state disabled
@@ -7857,6 +7889,7 @@ class BioTensorApp {
 	    $fibers_tab1.seed.childsite.a.rakef.w configure -state normal
 	    $fibers_tab2.seed.childsite.a.rakef.w configure -state normal
         } else {
+	    # Grid or Planes
             uplevel \#0 set "\{$mods(Viewer)-ViewWindow_0-Probe Selection Widget (11)\}" 0
             uplevel \#0 set "\{$mods(Viewer)-ViewWindow_0-StreamLines rake (12)\}" 0
 	    $fibers_tab1.seed.childsite.a.pointf.w configure -state disabled
