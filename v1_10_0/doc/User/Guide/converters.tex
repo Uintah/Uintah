@@ -319,14 +319,12 @@ zero-based unless  option \option{-oneBasedIndexing} is passed to
 \subsection{Structured Meshes}
 
 Structured meshes are imported/exported by the converters as node
-location (pts) files.  The location of  nodes is specified
-explicitly and  connectivities are implied by the order of the
-nodes.  The node locations are stored in \dfn{scanline} order.
+location (pts) files.  Node locations are specified explicitly in a
+pts file. Connectivities are implicit because node locations are
+stored in \dfn{scanline} order.
 
 For example, in a structured hexahedral mesh, the list of nodes comprising
-element $e_{i,j,k}$ is $\{n_{i,j,k}, n_{i,j,k+1}, n_{i,j+1,k+1},
-n_{i,j+1,k}, n_{i+1,j,k}, n_{i+1,j,k+1}, n_{i+1,j+1,k+1},
-n_{i+1,j+1,k\}$ 
+element \(e_{i,j,k}\) is \(\{n_{i,j,k}, n_{i,j,k+1}, n_{i,j+1,k+1}, n_{i,j+1,k}, n_{i+1,j,k}, n_{i+1,j,k+1}, n_{i+1,j+1,k+1}, n_{i+1,j+1,k}\}\)
 
 \subsection{Matrix File Format}
 \label{sec:matrix_fmt}
@@ -434,7 +432,7 @@ blue, and alpha.  All entries range from 0.0 to 1.0 and specify
 evenly spaced entries in the color map table.
 
 
-\subsection{Field Converters Synopses}
+\subsection{Field Converter Synopses}
 
 In the synopses that follow, \ptext{field} is the name of a \sr{}
 field file, \ptext{pts} is the name of a node location (pts) file,
@@ -445,55 +443,40 @@ field file, \ptext{pts} is the name of a node location (pts) file,
 CurveFieldToText field pts edges [-noPtsCount] [-noEdgesCount] [-oneBasedIndexing]
 
 TextToCurveField pts edges field [-noPtsCount] [-noEdgesCount] [-oneBasedIndexing]
-\end{verbatim}
 
-\begin{verbatim}
 HexVolFieldToText field pts hexes [-noPtsCount] [-noHexesCount] [-oneBasedIndexing]
 
 TextToHexVolField pts hexes field [-noPtsCount] [-noHexesCount] [-oneBasedIndexing] [-binOutput]
-\end{verbatim}
 
-\begin{verbatim}
 PointCloudFieldToText field pts [-noPtsCount]
 
 TextToPointCloudField pts field [-noPtsCount]
-\end{verbatim}
 
-\begin{verbatim}
 QuadSurfFieldToText field pts quads [-noPtsCount] [-noQuadsCount] [-oneBasedIndexing]
 
 TextToQuadSurfField pts quads field [-noPtsCount] [-noQuadsCount] [-oneBasedIndexing]
-\end{verbatim}
 
-\begin{verbatim}
 StructCurveFieldToText field pts [-noHeader]
 
 TextToStructCurveField pts edges field [-noPtsCount] [-noEdgesCount] [-oneBasedIndexing]
-\end{verbatim}
 
-\begin{verbatim}
 StructHexVolFieldToText field pts [-noHeader]
 
 TextToStructHexVolField pts field [-noHeader ni nj nk]
-\end{verbatim}
 
-\begin{verbatim}
 StructQuadSurfFieldToText field pts [-noHeader]
 
 TextToStructQuadSurfField pts field [-noHeader ni nj]
-\end{verbatim}
 
-\begin{verbatim}
 TetVolFieldToText field pts tets [-noPtsCount] [-noTetsCount] [-oneBasedIndexing]
 TextToTetVolField pts tets field [-noPtsCount] [-noTetsCount] [-oneBasedIndexing]
-\end{verbatim}
-\begin{verbatim}
+
 TriSurfFieldToText field pts tris [-noPtsCount] [-noTrisCount] [-oneBasedIndexing]
 TextToTriSurfField pts tris field [-noPtsCount] [-noTrisCount] [-oneBasedIndexing]
 \end{verbatim}
 
 
-\subsection{Matrix Converters Synopses}
+\subsection{Matrix Converter Synopses}
 
 In the synopses that follow, \ptext{matrix-in} and \ptext{matrix-out}
 are the name of either \sr{} matrix files or the names of matrix text
@@ -513,13 +496,14 @@ SparseRowMatrixToText matrix-in matrix-out [-noHeader]
 TextToSparseRowMatrix matrix-in matrix-out [-noHeader nrows ncols nnz]
 \end{verbatim}
 
-\subsection{ColorMap Converters  Synopses}
+\subsection{ColorMap Converter Synopses}
 
 \begin{verbatim}
 In the synopses that follow, \ptext{matrix-in} is either the name of a \sr{}
 matrix file or the name of a matrix text file, depending on context.
 
 ColorMapToText  colormap-in colormap-out [-noHeader]
+
 TextToColorMap  colormap-in colormap-out [-noHeader]
 \end{verbatim}
 
