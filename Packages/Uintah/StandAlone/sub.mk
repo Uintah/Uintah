@@ -3,7 +3,8 @@
 SRCDIR := Packages/Uintah/StandAlone
 
 SUBDIRS := \
-	$(SRCDIR)/tools
+	$(SRCDIR)/tools \
+	$(SRCDIR)/Benchmarks
 
 include $(SCIRUN_SCRIPTS)/recurse.mk
 
