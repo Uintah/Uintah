@@ -92,14 +92,14 @@ LatVolMesh::get_random_point(Point &p, const Elem::index_type &ei,
 BBox
 LatVolMesh::get_bounding_box() const
 {
-  Point p0(0.0,   0.0,   0.0);
-  Point p1(nx_-1, 0.0,   0.0);
-  Point p2(nx_-1, ny_-1, 0.0);
-  Point p3(0.0,   ny_-1, 0.0);
-  Point p4(0.0,   0.0,   nz_-1);
-  Point p5(nx_-1, 0.0,   nz_-1);
-  Point p6(nx_-1, ny_-1, nz_-1);
-  Point p7(0.0,   ny_-1, nz_-1);
+  Point p0(min_x_,         min_y_,         min_z_);
+  Point p1(min_x_ + nx_-1, min_y_,         min_z_);
+  Point p2(min_x_ + nx_-1, min_y_ + ny_-1, min_z_);
+  Point p3(min_x_,         min_y_ + ny_-1, min_z_);
+  Point p4(min_x_,         min_y_,         min_z_ + nz_-1);
+  Point p5(min_x_ + nx_-1, min_y_,         min_z_ + nz_-1);
+  Point p6(min_x_ + nx_-1, min_y_ + ny_-1, min_z_ + nz_-1);
+  Point p7(min_x_,         min_y_ + ny_-1, min_z_ + nz_-1);
   
   BBox result;
   result.extend(transform_.project(p0));

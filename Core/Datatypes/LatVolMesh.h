@@ -423,6 +423,9 @@ public:
   void size(Cell::size_type &) const;
 
   //! get the mesh statistics
+  unsigned get_min_x() const { return min_x_; }
+  unsigned get_min_y() const { return min_y_; }
+  unsigned get_min_z() const { return min_z_; }
   unsigned get_nx() const { return nx_; }
   unsigned get_ny() const { return ny_; }
   unsigned get_nz() const { return nz_; }
