@@ -34,6 +34,7 @@
 #include <Core/Geom/GeomBox.h>
 #include <Core/Geom/GeomText.h>
 #include <Core/Geom/GeomDL.h>
+#include <Core/Geom/GeomColorMap.h>
 #include <Core/Geom/GeomPoint.h>
 #include <Core/Datatypes/Field.h>
 #include <Core/Geom/ColorMap.h>
@@ -542,14 +543,16 @@ RenderField<Fld, Loc>::render_nodes(const Fld *sfld,
 
     // val is double because the color index field must be scalar.
     Vector vec(0,0,0);
-
+    double val;
     switch (sfld->data_at())
     {
     case Field::NODE:
       {
 	typename Fld::value_type tmp;
-	// color was selected in the render_materials pass.
-	if (mode == 3 && sfld->value(tmp, *niter) && (to_vector(tmp, vec))) {}
+	sfld->value(tmp, *niter);
+	
+	to_vector(tmp, vec);
+	to_double(tmp, val);
       }
       break;
 
@@ -570,7 +573,8 @@ RenderField<Fld, Loc>::render_nodes(const Fld *sfld,
       }
       else
       {
-	points->add(p, choose_mat(def_color, *niter));
+	//points->add(p, choose_mat(def_color, *niter));
+	points->add(p, val);
       }
       break;
 
@@ -613,7 +617,8 @@ RenderField<Fld, Loc>::render_nodes(const Fld *sfld,
     ++niter;
   }
   if (mode == 0) { // Points
-    nodes->add(scinew GeomMaterial(points, def_mat_handle_));
+    nodes->add(scinew GeomColorMap(scinew GeomMaterial(points, def_mat_handle_),
+				   color_handle_));
   }
   else if (mode == 2) { // Axes
     nodes->add(scinew GeomMaterial(lines, def_mat_handle_));
@@ -1708,7 +1713,8 @@ RenderScalarField<SFld, CFld, Loc>::render_data(FieldHandle sfld_handle,
     {
       points = scinew GeomPoints();
     }
-    data_switch = scinew GeomSwitch(scinew GeomMaterial(points, def_mat));
+    data_switch =
+      scinew GeomSwitch(scinew GeomColorMap(scinew GeomMaterial(points, def_mat), cmap));
   }
   else
   {
@@ -1743,7 +1749,7 @@ RenderScalarField<SFld, CFld, Loc>::render_data(FieldHandle sfld_handle,
 
 	  double ctmpd;
 	  to_double(ctmp, ctmpd);
-	  points->add(p, cmap->lookup(ctmpd));
+	  points->add(p, ctmpd);
 	}
 	else
 	{
