@@ -2453,22 +2453,18 @@ OpenGL::compute_depth(ViewWindow* viewwindow, const View& view,
     if (dirlen2 < 1.0e-6 || dirlen2 != dirlen2)
       return false;
     dir.normalize();
-    double d=-Dot(eyep, dir);
-    for(int ix=0;ix<2;ix++)
+    const double d = -Dot(eyep, dir);
+    for (int i=0;i<7;i++)
     {
-      for(int iy=0;iy<2;iy++)
-      {
-	for(int iz=0;iz<2;iz++)
-	{
-	  Point p(ix?max.x():min.x(),
-		  iy?max.y():min.y(),
-		  iz?max.z():min.z());
-	  double dist=Dot(p, dir)+d;
-	  znear=Min(znear, dist);
-	  zfar=Max(zfar, dist);
-	}
-      }
+      Point p((i&1)?max.x():min.x(),
+	      (i&2)?max.y():min.y(),
+	      (i&4)?max.z():min.z());
+      double dist=Dot(p, dir)+d;
+      znear=Min(znear, dist);
+      zfar=Max(zfar, dist);
     }
+    znear -= d * 0.01;
+    zfar  += d * 0.01;
     if(znear <= 0)
     {
       if(zfar <= 0)
