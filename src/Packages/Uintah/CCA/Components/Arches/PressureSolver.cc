@@ -1120,9 +1120,13 @@ PressureSolver::sched_buildLinearMatrixPred(SchedulerP& sched,
 #ifdef correctorstep
     tsk->requires(Task::NewDW, d_lab->d_densityPredLabel, 
 		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
+    tsk->requires(Task::NewDW, d_lab->d_denRefArrayPredLabel,
+    		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
 #else
     tsk->requires(Task::NewDW, d_lab->d_densityCPLabel, 
 		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
+    tsk->requires(Task::NewDW, d_lab->d_denRefArrayLabel,
+    		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
 #endif
     tsk->requires(Task::NewDW, d_lab->d_viscosityINLabel,
 		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
@@ -1140,8 +1144,6 @@ PressureSolver::sched_buildLinearMatrixPred(SchedulerP& sched,
     tsk->requires(Task::OldDW, d_lab->d_wVelocitySPBCLabel,
 		  Ghost::None, Arches::ZEROGHOSTCELLS);
 #endif
-    tsk->requires(Task::NewDW, d_lab->d_denRefArrayLabel,
-    		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
     // required for computing div constraint
 #ifdef divergenceconstraint
 #ifdef correctorstep
@@ -1327,16 +1329,18 @@ PressureSolver::buildLinearMatrixPred(const ProcessorGroup* pc,
 #ifdef correctorstep
     new_dw->getCopy(pressureVars.new_density, d_lab->d_densityPredLabel, 
 		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
+    new_dw->getCopy(pressureVars.denRefArray, d_lab->d_denRefArrayPredLabel,
+    		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
 #else
     new_dw->getCopy(pressureVars.new_density, d_lab->d_densityCPLabel, 
 		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
+    new_dw->getCopy(pressureVars.denRefArray, d_lab->d_denRefArrayLabel,
+    		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
 #endif
     new_dw->getCopy(pressureVars.viscosity, d_lab->d_viscosityINLabel, 
 		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
     new_dw->getCopy(pressureVars.pressure, d_lab->d_pressurePSLabel, 
 		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
-    new_dw->getCopy(pressureVars.denRefArray, d_lab->d_denRefArrayLabel,
-    		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
 
 #ifdef divergenceconstraint
 #ifdef correctorstep

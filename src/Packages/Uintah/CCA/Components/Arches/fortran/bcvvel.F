@@ -92,52 +92,24 @@ C$DIR SCALAR
             DO 110 J = jst, jend
 C$DIR SCALAR
                I = ist - 1
+               XP = X(I+1) - XU(I+1)
+               TMULT = VISCOS/XP
+
                IF (PCELL(I,J,K).EQ.WALL) THEN
-                  VV(I,J,K) = 0.0
+                  if (.not.(yminus.and.j.eq.jst)) then
+                     VV(I,J,K) = 0.0
 C--------------------------------------------------------------------
 C             SOUTHEAST FACE OF INTRUSION\WALL
 C--------------------------------------------------------------------
-                  IF (PCELL(I+1,J,K).NE.WALL.AND.
-     &                 PCELL(I+1,J-1,K).NE.WALL.AND.
-     $                 .NOT.(yminus.and.j.eq.jst))THEN
-                     XP = X(I+1) - XU(I+1)
-                     TMULT = VISCOS/XP
                      SP(I+1,J,K) =SP(I+1,J,K)-TMULT*SNSV(J)*STB(K)
                      AW(I+1,J,K) = 0.0
                      cwsav(i+1,j,k) = 0.0
-                  END IF
-C--------------------------------------------------------------------
-C             NORTHEAST FACE OF INTRUSION/WALL
-C--------------------------------------------------------------------
-                  IF (J.NE.JEND) THEN
-                     IF (PCELL(I,J+1,K).NE.WALL) THEN
-                        IF (PCELL(I+1,J+1,K).NE.WALL.AND.
-     &                       PCELL(I+1,J,K).NE.WALL) THEN
-                           XP = X(I+1)-XU(I+1)
-                           TMULT = VISCOS/XP
-                           SP(I+1,J+1,K) = SP(I+1,J+1,K)-TMULT*
-     $                          SNSV(J+1)*STB(K)
-                           AW(I+1,J+1,K) = 0.0
-                           cwsav(i+1,j+1,k) = 0.0
-                        END IF
-                     END IF
                   endif
-C--------------------------------------------------------------------
-C             SOUTHEAST FACE OF INTRUSION/WALL, only if next to south patch
-C--------------------------------------------------------------------
-                  IF ((J.EQ.JST+1).AND.(.NOT.yminus)) THEN
-                     IF (PCELL(I,J-1,K).NE.WALL) THEN
-                        IF (PCELL(I+1,J-1,K).NE.WALL.AND.
-     &                       PCELL(I+1,J,K).NE.WALL) THEN
-                           XP = X(I+1)-XU(I+1)
-                           TMULT = VISCOS/XP
-                           SP(I+1,J-1,K) = SP(I+1,J-1,K)-TMULT*
-     $                          SNSV(J-1)*STB(K)
-                           AW(I+1,J-1,K) = 0.0
-                           cwsav(i+1,j-1,k) = 0.0
-                        END IF
-                     END IF
-                  endif
+               else if ((pcell(i,j-1,k).eq.wall).and.
+     $                 (pcell(i,j,k).ne.wall)) then
+                  SP(I+1,J,K) =SP(I+1,J,K)-TMULT*SNSV(J)*STB(K)
+                  AW(I+1,J,K) = 0.0
+                  cwsav(i+1,j,k) = 0.0
                endif
  110        CONTINUE
  120     CONTINUE
@@ -186,13 +158,13 @@ C     TOP AND/OR BOTTOM WALL OUTLET
 C--------------------------------------------------------------------
       DO 410 J = jst,jend
          DO 400 I = ist,iend
-            IF (PCELL(I,J,kEndGhost).EQ.PBCFLD
-     &           .AND.WW(I,J,kEndGhost+1).GT.0.0) THEN
+            IF (PCELL(I,J,kEndGhost).EQ.PBCFLD) then
+c     &           .AND.WW(I,J,kEndGhost+1).GT.0.0) THEN
                VV(I,J,kEndGhost) = VV(I,J,kend)
                AT(I,J,kend) = 2.0*TINY
             END IF
-            IF (PCELL(I,J,kBegGhost).EQ.PBCFLD
-     &           .AND.WW(I,J,kBegGhost).LT.0.0) THEN
+            IF (PCELL(I,J,kBegGhost).EQ.PBCFLD) then
+c     &           .AND.WW(I,J,kBegGhost).LT.0.0) THEN
                VV(I,J,kBegGhost) = VV(I,J,kst)
                AB(I,J,kst) = 2.0*TINY
             END IF
@@ -200,40 +172,3 @@ C--------------------------------------------------------------------
  410  CONTINUE
       RETURN
       END
-
-c*********************************************************************
-c
-c Revision 1.9  2000/10/09 17:06:30  rawat
-c modified momentum solver for multi-patch
-c
-c Revision 1.8  2000/10/08 18:56:41  rawat
-c fixed the solver for multi
-c
-c Revision 1.7  2000/10/07 23:53:03  rawat
-c modified bc subroutines
-c
-c Revision 1.6  2000/10/06 23:07:53  rawat
-c fixed some more bc routines for mulit-patch
-c
-c Revision 1.5  2000/09/26 04:35:34  rawat
-c added some more multi-patch support
-c
-c Revision 1.4  2000/09/07 23:07:21  rawat
-c fixed some bugs in bc and added pressure solver using petsc
-c
-c Revision 1.3  2000/08/23 06:20:53  bbanerje
-c 1) Results now correct for pressure solve.
-c 2) Modified BCU, BCV, BCW to add stuff for pressure BC.
-c 3) Removed some bugs in BCU, V, W.
-c 4) Coefficients for MOM Solve not computed correctly yet.
-c
-c Revision 1.2  2000/08/17 20:32:02  rawat
-c Fixed some bugs
-c
-c Revision 1.1  2000/07/14 03:58:43  bbanerje
-c Added missed files.
-c
-c Revision 1.1  2000/07/12 23:59:23  rawat
-c added wall bc for u-velocity
-c
-c*********************************************************************

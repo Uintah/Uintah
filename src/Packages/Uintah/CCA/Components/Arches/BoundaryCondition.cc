@@ -2304,7 +2304,7 @@ BoundaryCondition::newrecomputePressureBC(const ProcessorGroup* /*pc*/,
     constCCVariable<int> cellType(vars->cellType);
     fort_hatvelcalpbc(vars->uVelRhoHat, vars->vVelRhoHat, vars->wVelRhoHat, 
 		      idxLo, idxHi,
-		      vars->pressure, density, viscosity, cellType,
+		      vars->pressure, density, cellType,
 		      d_pressureBdry->d_cellTypeID,
 		      d_pressureBdry->refPressure,
 		      cellinfo->dxepu, cellinfo->dynpv, cellinfo->dztpw,
@@ -3103,4 +3103,111 @@ BoundaryCondition::calculateVelocityPred_mm(const ProcessorGroup* ,
 
 }
 
+
+
+//****************************************************************************
+// Schedule the compute of Pressure BC
+//****************************************************************************
+void 
+BoundaryCondition::sched_lastcomputePressureBC(SchedulerP& sched, 
+					       const PatchSet* patches,
+					       const MaterialSet* matls)
+{
+  Task* tsk = scinew Task("BoundaryCondition::lastcomputePressureBC",
+			  this,
+			  &BoundaryCondition::lastcomputePressureBC);
+
+  tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel, 
+		Ghost::None, Arches::ZEROGHOSTCELLS);
+      // This task requires celltype, new density, pressure and velocity
+  tsk->requires(Task::NewDW, d_lab->d_densityCPLabel, Ghost::None,
+		Arches::ZEROGHOSTCELLS);
+  // changes to make it work for the task graph
+  tsk->modifies(d_lab->d_pressureSPBCLabel);
+  tsk->modifies(d_lab->d_uVelocitySPBCLabel);
+  tsk->modifies(d_lab->d_vVelocitySPBCLabel);
+  tsk->modifies(d_lab->d_wVelocitySPBCLabel);
+  sched->addTask(tsk, patches, matls);
+}
+
+
+void 
+BoundaryCondition::lastcomputePressureBC(const ProcessorGroup* ,
+				       const PatchSubset* patches,
+				       const MaterialSubset*,
+				       DataWarehouse*,
+				       DataWarehouse* new_dw) 
+{
+  for (int p = 0; p < patches->size(); p++) {
+    const Patch* patch = patches->get(p);
+    int archIndex = 0; // only one arches material
+    int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+    constCCVariable<int> cellType;
+    constCCVariable<double> density;
+    CCVariable<double> pressure;
+    SFCXVariable<double> uVelocity;
+    SFCYVariable<double> vVelocity;
+    SFCZVariable<double> wVelocity;
+    new_dw->getModifiable(uVelocity, d_lab->d_uVelocitySPBCLabel,
+			  matlIndex, patch);
+    new_dw->getModifiable(vVelocity, d_lab->d_vVelocitySPBCLabel,
+			  matlIndex, patch);
+    new_dw->getModifiable(wVelocity, d_lab->d_wVelocitySPBCLabel,
+			  matlIndex, patch);
+
+    new_dw->getModifiable(pressure, d_lab->d_pressureSPBCLabel,
+			  matlIndex, patch);
+    
+    // get cellType, pressure and velocity
+    new_dw->get(cellType, d_lab->d_cellTypeLabel, matlIndex, patch, Ghost::None,
+		Arches::ZEROGHOSTCELLS);
+    new_dw->get(density, d_lab->d_densityCPLabel, matlIndex, patch, 
+		Ghost::None,
+		Arches::ZEROGHOSTCELLS);
+    PerPatch<CellInformationP> cellInfoP;
+
+    if (new_dw->exists(d_lab->d_cellInfoLabel, matlIndex, patch)) 
+
+      new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
+
+    else {
+
+      cellInfoP.setData(scinew CellInformation(patch));
+      new_dw->put(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
+
+    }
+
+    CellInformation* cellinfo = cellInfoP.get().get_rep();
+
+  // Get the low and high index for the patch and the variables
+    IntVector idxLo = patch->getCellFORTLowIndex();
+    IntVector idxHi = patch->getCellFORTHighIndex();
+#ifdef ARCHES_BC_DEBUG
+    cerr << "idxLo" << idxLo << " idxHi" << idxHi << endl;
+    cerr << "domLo" << domLoScalar << " domHi" << domHiScalar << endl;
+    cerr << "domLoU" << domLoU << " domHiU" << domHiU << endl;
+    cerr << "domLoV" << domLoV << " domHiV" << domHiV << endl;
+    cerr << "domLoW" << domLoW << " domHiW" << domHiW << endl;
+    cerr << "pressID" << d_pressureBdry->d_cellTypeID << endl;
+    for(CellIterator iter = patch->getCellIterator();
+	!iter.done(); iter++){
+      cerr.width(10);
+      cerr << "PPP"<<*iter << ": " << pressure[*iter] << "\n" ; 
+    }
+#endif
+    bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
+    bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
+    bool yminus = patch->getBCType(Patch::yminus) != Patch::Neighbor;
+    bool yplus =  patch->getBCType(Patch::yplus) != Patch::Neighbor;
+    bool zminus = patch->getBCType(Patch::zminus) != Patch::Neighbor;
+    bool zplus =  patch->getBCType(Patch::zplus) != Patch::Neighbor;
+    fort_hatvelcalpbc(uVelocity, vVelocity, wVelocity, idxLo, idxHi,
+		pressure, density, cellType, 
+		d_pressureBdry->d_cellTypeID,
+		d_pressureBdry->refPressure,
+		cellinfo->dxepu, cellinfo->dynpv, cellinfo->dztpw,
+		xminus, xplus, yminus, yplus, zminus, zplus);
+    // set values of the scalars on the scalar boundary
+  }
+}
 
