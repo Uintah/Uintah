@@ -4,18 +4,42 @@
 
 <package name="Yarden">
   <guiPath>GUI</guiPath>
+  <scirun-library category="Readers">
+  <soNames>
+    <soName>libYarden_Modules_Readers.so</soName>
+    <soName>libYarden.so</soName>
+  </soNames>
+
+  <dataflow-component name="TensorFieldReader">
+    <meta>
+      <authors>
+        <author>Yarden Livant</author>
+      </authors>
+      <version-date>Oct 2000</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_TensorFieldReader</creationFunction>
+    </implementation>
+  </dataflow-component>
+  </scirun-library>
+
   <scirun-library category="Visualization">
   <soNames>
     <soName>libYarden_Modules_Visualization.so</soName>
     <soName>libYarden.so</soName>
   </soNames>
 
-  <dataflow-component name="Screen">
+  <dataflow-component name="ViewTensors">
     <meta>
       <authors>
-        <author>Unknown</author>
+        <author>Yarden Livant</author>
       </authors>
-      <version-date>unknown</version-date>
+      <version-date>Oct 2000</version-date>
       <version>1.0</version>
       <description>No description available</description>
     </meta>
@@ -23,15 +47,23 @@
     <outputs></outputs>
     <parameters></parameters>
     <implementation>
-      <creationFunction>make_Screen</creationFunction>
+      <creationFunction>make_ViewTensors</creationFunction>
     </implementation>
   </dataflow-component>
-  <dataflow-component name="Phase">
+  </scirun-library>
+
+  <scirun-library category="Writers">
+  <soNames>
+    <soName>libYarden_Modules_Writers.so</soName>
+    <soName>libYarden.so</soName>
+  </soNames>
+
+  <dataflow-component name="TensorFieldWriter">
     <meta>
       <authors>
-        <author>Yarden Livnat</author>
+        <author>Yarden Livant</author>
       </authors>
-      <version-date>Oct 1999</version-date>
+      <version-date>Oct 2000</version-date>
       <version>1.0</version>
       <description>No description available</description>
     </meta>
@@ -39,71 +71,7 @@
     <outputs></outputs>
     <parameters></parameters>
     <implementation>
-      <creationFunction>make_Phase</creationFunction>
-    </implementation>
-  </dataflow-component>
-  <dataflow-component name="Hase">
-    <meta>
-      <authors>
-        <author>Yarden Livnat</author>
-      </authors>
-      <version-date>Dec 1996</version-date>
-      <version>1.0</version>
-      <description>No description available</description>
-    </meta>
-    <inputs></inputs>
-    <outputs></outputs>
-    <parameters></parameters>
-    <implementation>
-      <creationFunction>make_Hase</creationFunction>
-    </implementation>
-  </dataflow-component>
-  <dataflow-component name="Hase1">
-    <meta>
-      <authors>
-        <author>Yarden Livnat</author>
-      </authors>
-      <version-date>Dec 1996</version-date>
-      <version>1.0</version>
-      <description>No description available</description>
-    </meta>
-    <inputs></inputs>
-    <outputs></outputs>
-    <parameters></parameters>
-    <implementation>
-      <creationFunction>make_Hase1</creationFunction>
-    </implementation>
-  </dataflow-component>
-  <dataflow-component name="Sage">
-    <meta>
-      <authors>
-        <author>Yarden Livnat</author>
-      </authors>
-      <version-date>Dec 1996</version-date>
-      <version>1.0</version>
-      <description>No description available</description>
-    </meta>
-    <inputs></inputs>
-    <outputs></outputs>
-    <parameters></parameters>
-    <implementation>
-      <creationFunction>make_Sage</creationFunction>
-    </implementation>
-  </dataflow-component>
-  <dataflow-component name="SageVFem">
-    <meta>
-      <authors>
-        <author>Yarden Livnat</author>
-      </authors>
-      <version-date>Dec 1996</version-date>
-      <version>1.0</version>
-      <description>No description available</description>
-    </meta>
-    <inputs></inputs>
-    <outputs></outputs>
-    <parameters></parameters>
-    <implementation>
-      <creationFunction>make_SageVFem</creationFunction>
+      <creationFunction>make_TensorFieldWriter</creationFunction>
     </implementation>
   </dataflow-component>
   </scirun-library>
