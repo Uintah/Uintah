@@ -84,7 +84,7 @@ void MPMArches::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
 
    ProblemSpecP db = prob_spec->findBlock("Multimaterial");
    db->require("heatExchange", d_calcEnergyExchange);
-   db->require("heatTransferCoeff", d_htcoeff);
+   db->require("fluidThermalConductivity", d_tcond);
 
    d_mpm->setMPMLabel(Mlb);
    d_mpm->setWithArches();
@@ -420,6 +420,20 @@ void MPMArches::scheduleComputeTotalHT(SchedulerP& sched,
   Task* t=scinew Task("MPMArches::getTotalHeatFlux",
 		      this, &MPMArches::computeTotalHT);
 
+  // Purposes: 1. To calculate the TOTAL heat transfer to 
+  // a cell, adding face energy transfers from all directions 
+  // and from all adjacent partial cells
+  // 
+  // 2. To calculate the directional heat rates incident on 
+  // any faces, essentially SFCXhtrate(i,j,k) = SFCXhtrate(i,j,k)
+  // + partialcellhtrate(i+1,j,k) + partialcellhtrate(i-1,j,k)
+  // and similarly for the other two directions
+  //
+  // 3. To calculate the directional heat fluxes incident on 
+  // any faces, essentially SFCXflux(i,j,k) = SFCXflux(i,j,k)
+  // + partialcellflux(i+1,j,k) + partialcellflux(i-1,j,k)
+  // and similarly for the other two directions
+
   int zeroGhostCells = 0;
   int numGhostCells = 1;
 
@@ -432,10 +446,23 @@ void MPMArches::scheduleComputeTotalHT(SchedulerP& sched,
   t->requires(Task::NewDW, d_MAlb->integHTS_FCZLabel,
 	      arches_matls->getUnion(), Ghost::AroundFaces, numGhostCells);
 
+  t->requires(Task::NewDW, d_MAlb->htfluxXLabel,
+	      arches_matls->getUnion(), Ghost::AroundFaces, numGhostCells);
+  t->requires(Task::NewDW, d_MAlb->htfluxYLabel,
+	      arches_matls->getUnion(), Ghost::AroundFaces, numGhostCells);
+  t->requires(Task::NewDW, d_MAlb->htfluxZLabel,
+	      arches_matls->getUnion(), Ghost::AroundFaces, numGhostCells);
+  t->requires(Task::NewDW, d_MAlb->htfluxConvCCLabel,
+	      arches_matls->getUnion(), Ghost::AroundCells, numGhostCells);
+
   t->computes(d_MAlb->totHT_CCLabel, arches_matls->getUnion());
   t->computes(d_MAlb->totHT_FCXLabel, arches_matls->getUnion());
   t->computes(d_MAlb->totHT_FCYLabel, arches_matls->getUnion());
   t->computes(d_MAlb->totHT_FCZLabel, arches_matls->getUnion());
+
+  t->computes(d_MAlb->totHtFluxXLabel, arches_matls->getUnion());
+  t->computes(d_MAlb->totHtFluxYLabel, arches_matls->getUnion());
+  t->computes(d_MAlb->totHtFluxZLabel, arches_matls->getUnion());
 
   sched->addTask(t, patches, arches_matls);
 }
@@ -460,6 +487,11 @@ void MPMArches::computeTotalHT(const ProcessorGroup*,
     constSFCYVariable<double> integHTS_FCY;
     constSFCZVariable<double> integHTS_FCZ;
 
+    constSFCXVariable<double> htfluxX;
+    constSFCYVariable<double> htfluxY;
+    constSFCZVariable<double> htfluxZ;
+    constCCVariable<double> htfluxCC;
+
     int numGhostCells = 1;
 
   // get and allocate
@@ -472,6 +504,15 @@ void MPMArches::computeTotalHT(const ProcessorGroup*,
 		matlindex, patch, Ghost::AroundFaces, numGhostCells);
     new_dw->get(integHTS_FCZ, d_MAlb->integHTS_FCZLabel,
 		matlindex, patch, Ghost::AroundFaces, numGhostCells);
+
+    new_dw->get(htfluxX, d_MAlb->htfluxXLabel,
+		matlindex, patch, Ghost::AroundFaces, numGhostCells);
+    new_dw->get(htfluxY, d_MAlb->htfluxYLabel,
+		matlindex, patch, Ghost::AroundFaces, numGhostCells);
+    new_dw->get(htfluxZ, d_MAlb->htfluxZLabel,
+		matlindex, patch, Ghost::AroundFaces, numGhostCells);
+    new_dw->get(htfluxCC, d_MAlb->htfluxConvCCLabel,
+		matlindex, patch, Ghost::AroundCells, numGhostCells);
 
     CCVariable<double> totalHT;
     new_dw->allocateAndPut(totalHT, d_MAlb->totHT_CCLabel,
@@ -486,12 +527,25 @@ void MPMArches::computeTotalHT(const ProcessorGroup*,
     new_dw->allocateAndPut(totalHT_FCZ, d_MAlb->totHT_FCZLabel,
 			   matlindex, patch); 
 
+    SFCXVariable<double> totHtFluxX;
+    new_dw->allocateAndPut(totHtFluxX, d_MAlb->totHtFluxXLabel,
+			   matlindex, patch); 
+    SFCYVariable<double> totHtFluxY;
+    new_dw->allocateAndPut(totHtFluxY, d_MAlb->totHtFluxYLabel,
+			   matlindex, patch); 
+    SFCZVariable<double> totHtFluxZ;
+    new_dw->allocateAndPut(totHtFluxZ, d_MAlb->totHtFluxZLabel,
+			   matlindex, patch); 
+
     // actual computation
 
     totalHT.initialize(0.0);
     totalHT_FCX.initialize(0.0);
     totalHT_FCY.initialize(0.0);
     totalHT_FCZ.initialize(0.0);
+    totHtFluxX.initialize(0.0);
+    totHtFluxY.initialize(0.0);
+    totHtFluxZ.initialize(0.0);
 
     for (CellIterator iter = patch->getCellIterator();!iter.done();iter++) {
 
@@ -518,19 +572,20 @@ void MPMArches::computeTotalHT(const ProcessorGroup*,
       totalHT[curcell] = totalHT[curcell] + integHTS_CC[topcell];
 
       totalHT_FCX[curcell] = totalHT_FCX[curcell] + integHTS_FCX[curcell];
-      totalHT_FCX[curcell] = totalHT_FCX[curcell] + integHTS_FCX[eastcell];
       totalHT_FCX[curcell] = totalHT_FCX[curcell] + integHTS_CC[westcell];
-      totalHT_FCX[curcell] = totalHT_FCX[curcell] + integHTS_CC[eastcell];
+      totalHT_FCX[curcell] = totalHT_FCX[curcell] + integHTS_CC[curcell];
 
       totalHT_FCY[curcell] = totalHT_FCY[curcell] + integHTS_FCY[curcell];
-      totalHT_FCY[curcell] = totalHT_FCY[curcell] + integHTS_FCY[northcell];
       totalHT_FCY[curcell] = totalHT_FCY[curcell] + integHTS_CC[southcell];
-      totalHT_FCY[curcell] = totalHT_FCY[curcell] + integHTS_CC[northcell];
+      totalHT_FCY[curcell] = totalHT_FCY[curcell] + integHTS_CC[curcell];
 
       totalHT_FCZ[curcell] = totalHT_FCZ[curcell] + integHTS_FCZ[curcell];
-      totalHT_FCZ[curcell] = totalHT_FCZ[curcell] + integHTS_FCZ[topcell];
       totalHT_FCZ[curcell] = totalHT_FCZ[curcell] + integHTS_CC[botcell];
-      totalHT_FCZ[curcell] = totalHT_FCZ[curcell] + integHTS_CC[topcell];
+      totalHT_FCZ[curcell] = totalHT_FCZ[curcell] + integHTS_CC[curcell];
+
+      totHtFluxX[curcell] = totHtFluxX[curcell] + htfluxX[curcell] + htfluxCC[curcell] + htfluxCC[westcell];
+      totHtFluxY[curcell] = totHtFluxY[curcell] + htfluxY[curcell] + htfluxCC[curcell] + htfluxCC[southcell];
+      totHtFluxZ[curcell] = totHtFluxZ[curcell] + htfluxZ[curcell] + htfluxCC[curcell] + htfluxCC[botcell];
 
     }
   }
@@ -897,6 +952,20 @@ void MPMArches::scheduleEnergyExchange(SchedulerP& sched,
   t->computes(d_MAlb->d_enth_mmNonLinSrc_FCXLabel,     arches_matls->getUnion());
   t->computes(d_MAlb->d_enth_mmNonLinSrc_FCYLabel,     arches_matls->getUnion());
   t->computes(d_MAlb->d_enth_mmNonLinSrc_FCZLabel,     arches_matls->getUnion());
+
+  // computes heat fluxes at face centers for all three 
+  // directions and convective heat flux at cell centers
+
+  t->computes(d_MAlb->htfluxConvXLabel, arches_matls->getUnion());
+  t->computes(d_MAlb->htfluxRadXLabel,  arches_matls->getUnion());
+  t->computes(d_MAlb->htfluxXLabel,     arches_matls->getUnion());
+  t->computes(d_MAlb->htfluxConvYLabel, arches_matls->getUnion());
+  t->computes(d_MAlb->htfluxRadYLabel,  arches_matls->getUnion());
+  t->computes(d_MAlb->htfluxYLabel,     arches_matls->getUnion());
+  t->computes(d_MAlb->htfluxConvZLabel, arches_matls->getUnion());
+  t->computes(d_MAlb->htfluxRadZLabel,  arches_matls->getUnion());
+  t->computes(d_MAlb->htfluxZLabel,     arches_matls->getUnion());
+  t->computes(d_MAlb->htfluxConvCCLabel,arches_matls->getUnion());
   	      
   sched->addTask(t, patches, all_matls);
 
@@ -2815,6 +2884,19 @@ void MPMArches::doEnergyExchange(const ProcessorGroup*,
     SFCXVariable<double> sp_enth_fcx;
     SFCYVariable<double> sp_enth_fcy;
     SFCZVariable<double> sp_enth_fcz;
+
+    // heat fluxes
+
+    SFCXVariable<double> htfluxConvX;
+    SFCXVariable<double> htfluxRadX;
+    SFCXVariable<double> htfluxX;
+    SFCYVariable<double> htfluxConvY;
+    SFCYVariable<double> htfluxRadY;
+    SFCYVariable<double> htfluxY;
+    SFCZVariable<double> htfluxConvZ;
+    SFCZVariable<double> htfluxRadZ;
+    SFCZVariable<double> htfluxZ;
+    CCVariable<double> htfluxConvCC;
     
     int numGhostCells = 1;
     
@@ -2941,36 +3023,72 @@ void MPMArches::doEnergyExchange(const ProcessorGroup*,
     // allocates
 
     new_dw->allocateAndPut(sp_enth_cc, d_MAlb->d_enth_mmLinSrc_tmp_CCLabel,
-		     matlIndex, patch);
+			   matlIndex, patch);
     sp_enth_cc.initialize(0.);
 
     new_dw->allocateAndPut(sp_enth_fcx, d_MAlb->d_enth_mmLinSrc_FCXLabel,
-		     matlIndex, patch);
+			   matlIndex, patch);
     sp_enth_fcx.initialize(0.);
 
     new_dw->allocateAndPut(sp_enth_fcy, d_MAlb->d_enth_mmLinSrc_FCYLabel,
-		     matlIndex, patch);
+			   matlIndex, patch);
     sp_enth_fcy.initialize(0.);
 
     new_dw->allocateAndPut(sp_enth_fcz, d_MAlb->d_enth_mmLinSrc_FCZLabel,
-		     matlIndex, patch);
+			   matlIndex, patch);
     sp_enth_fcz.initialize(0.);
 
     new_dw->allocateAndPut(su_enth_cc, d_MAlb->d_enth_mmNonLinSrc_tmp_CCLabel,
-		     matlIndex, patch);
+			   matlIndex, patch);
     su_enth_cc.initialize(0.);
 
     new_dw->allocateAndPut(su_enth_fcx, d_MAlb->d_enth_mmNonLinSrc_FCXLabel,
-		     matlIndex, patch);
+			   matlIndex, patch);
     su_enth_fcx.initialize(0.);
 
     new_dw->allocateAndPut(su_enth_fcy, d_MAlb->d_enth_mmNonLinSrc_FCYLabel,
-		     matlIndex, patch);
+			   matlIndex, patch);
     su_enth_fcy.initialize(0.);
 
     new_dw->allocateAndPut(su_enth_fcz, d_MAlb->d_enth_mmNonLinSrc_FCZLabel,
-		     matlIndex, patch);
+			   matlIndex, patch);
     su_enth_fcz.initialize(0.);
+
+    new_dw->allocateAndPut(htfluxConvX, d_MAlb->htfluxConvXLabel,
+			   matlIndex, patch);
+    htfluxConvX.initialize(0.);
+    new_dw->allocateAndPut(htfluxRadX, d_MAlb->htfluxRadXLabel,
+			   matlIndex, patch);
+    htfluxRadX.initialize(0.);
+    new_dw->allocateAndPut(htfluxX, d_MAlb->htfluxXLabel,
+			   matlIndex, patch);
+    htfluxX.initialize(0.);
+
+    new_dw->allocateAndPut(htfluxConvY, d_MAlb->htfluxConvYLabel,
+			   matlIndex, patch);
+    htfluxConvY.initialize(0.);
+    new_dw->allocateAndPut(htfluxRadY, d_MAlb->htfluxRadYLabel,
+			   matlIndex, patch);
+    htfluxRadY.initialize(0.);
+    new_dw->allocateAndPut(htfluxY, d_MAlb->htfluxYLabel,
+			   matlIndex, patch);
+    htfluxY.initialize(0.);
+
+    new_dw->allocateAndPut(htfluxConvZ, d_MAlb->htfluxConvZLabel,
+			   matlIndex, patch);
+    htfluxConvZ.initialize(0.);
+
+    new_dw->allocateAndPut(htfluxRadZ, d_MAlb->htfluxRadZLabel,
+			   matlIndex, patch);
+    htfluxRadZ.initialize(0.);
+
+    new_dw->allocateAndPut(htfluxZ, d_MAlb->htfluxZLabel,
+			   matlIndex, patch);
+    htfluxZ.initialize(0.);
+
+    new_dw->allocateAndPut(htfluxConvCC, d_MAlb->htfluxConvCCLabel,
+			   matlIndex, patch);
+    htfluxConvCC.initialize(0.);
 
     // Begin loop to calculate gas-solid exchange terms for each
     // solid material with the gas phase
@@ -2980,8 +3098,6 @@ void MPMArches::doEnergyExchange(const ProcessorGroup*,
     
     IntVector valid_lo = patch->getCellFORTLowIndex();
     IntVector valid_hi = patch->getCellFORTHighIndex();
-
-    //    cout << "JUST BEFORE energy exchange call" << endl;
 
     for (int m = 0; m < numMPMMatls; m++) {
 
@@ -2993,6 +3109,16 @@ void MPMArches::doEnergyExchange(const ProcessorGroup*,
 			      heaTranSolid_fcy_rad[m],
 			      heaTranSolid_fcz_rad[m],
 			      heaTranSolid_cc[m],
+			      htfluxConvX,
+			      htfluxRadX,
+			      htfluxX,
+			      htfluxConvY,
+			      htfluxRadY,
+			      htfluxY,
+			      htfluxConvZ,
+			      htfluxRadZ,
+			      htfluxZ,
+			      htfluxConvCC,
 			      su_enth_cc, 
 			      sp_enth_cc,
 			      su_enth_fcx, 
@@ -3014,8 +3140,16 @@ void MPMArches::doEnergyExchange(const ProcessorGroup*,
 			      radfluxB,
 			      gas_fraction_cc, 
 			      solid_fraction_cc[m],
-			      cellinfo->sew,  cellinfo->sns, cellinfo->stb,
-			      d_htcoeff,
+			      cellinfo->sew,  
+			      cellinfo->sns, 
+			      cellinfo->stb,
+			      cellinfo->xx,
+			      cellinfo->xu,
+			      cellinfo->yy,
+			      cellinfo->yv,
+			      cellinfo->zz,
+			      cellinfo->zw,
+			      d_tcond,
 			      valid_lo, valid_hi,
 			      cellType, mmwallid, ffieldid);
 

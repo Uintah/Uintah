@@ -89,6 +89,23 @@ using std::vector;
       const VarLabel* totHT_FCYLabel;
       const VarLabel* totHT_FCZLabel;
 
+      // Heat Flux Labels
+
+      const VarLabel* htfluxConvXLabel;
+      const VarLabel* htfluxRadXLabel;
+      const VarLabel* htfluxXLabel;
+      const VarLabel* htfluxConvYLabel;
+      const VarLabel* htfluxRadYLabel;
+      const VarLabel* htfluxYLabel;
+      const VarLabel* htfluxConvZLabel;
+      const VarLabel* htfluxRadZLabel;
+      const VarLabel* htfluxZLabel;
+      const VarLabel* htfluxConvCCLabel;
+
+      const VarLabel* totHtFluxXLabel;
+      const VarLabel* totHtFluxYLabel;
+      const VarLabel* totHtFluxZLabel;
+
       // reqd by Arches
 
       const VarLabel* void_frac_CCLabel;

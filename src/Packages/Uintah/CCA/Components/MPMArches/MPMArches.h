@@ -250,7 +250,7 @@ public:
   SerialMPM*       d_mpm;
   Arches*          d_arches;
 
-  double d_htcoeff;
+  double d_tcond;
   bool d_calcEnergyExchange;
   bool d_DORad;
   int nofTimeSteps;
