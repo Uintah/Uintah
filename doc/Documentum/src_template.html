@@ -20,7 +20,7 @@ University of Utah. All Rights Reserved.
 -->
 
 <!-- 
-Template for SCIRun pages written in html that live in the 'doc' tree.
+Template for SCIRun pages written in html that live in the 'src' tree.
 Simply add content where noted below.
 
 *Note*: This document is trying to be an XHTML document (but for practical
@@ -37,21 +37,28 @@ location of this document) - See the bottom of this file.
 <script type="text/javascript">
 var treetop="";
 var path = location.pathname;
-var base = path.substr(path.lastIndexOf("/")+1)
-var roottag = "src"
+if (path.charAt(path.length-1) == "/") {
+  path += "bogus.html"
+}
+var base = path.substr(path.lastIndexOf("/")+1);
+var roottag = "src";
 while (base != roottag && base != "") {
   treetop += "../";
   path = path.substr(0, path.lastIndexOf("/"));
-  base = path.substr(path.lastIndexOf("/")+1)
+  base = path.substr(path.lastIndexOf("/")+1);
 }
-var inDocTree = base == roottag
+var inDocTree = base == roottag;
 if (inDocTree) {
-  document.write("<link href='",treetop,"doc/Utilities/HTML/doc_styles.css' rel='stylesheet' type='text/css'/>")
+document.write("<link href='",treetop,"doc/Utilities/HTML/doc_styles.css' rel='stylesheet' type='text/css'/>")
 }
 </script>
+
 <title></title>
+
 </head>
+
 <body>
+
 <script type="text/javascript">
 if (inDocTree) {
   document.write('<script type="text/javascript" src="',treetop,'doc/Utilities/HTML/banner_top.js"><\/script>');
@@ -70,6 +77,7 @@ if (inDocTree) {
 </script>
 
 </body>
+
 </html>
 
 <!-- Keep this comment at the end of the file
