@@ -266,7 +266,19 @@ class BioImageApp {
 		global mods
 
 		# force initial draw in correct modes
+		global $mods(ViewImage)-axial-viewport0-axis
+		global $mods(ViewImage)-sagittal-viewport0-axis
+		global $mods(ViewImage)-coronal-viewport0-axis
 
+		set $mods(ViewImage)-axial-viewport0-axis 2
+		set $mods(ViewImage)-sagittal-viewport0-axis 0
+		set $mods(ViewImage)-coronal-viewport0-axis 1
+
+		global $mods(ViewImage)-nrrd1-flip_y
+		set $mods(ViewImage)-nrrd1-flip_y 1
+
+		global $mods(ViewImage)-nrrd1-flip_z
+		set $mods(ViewImage)-nrrd1-flip_z 1
 		
                 $mods(ViewImage)-c rebind .standalone.viewers.topbot.pane0.childsite.lr.pane1.childsite.axial
                 $mods(ViewImage)-c rebind .standalone.viewers.topbot.pane1.childsite.lr.pane0.childsite.sagittal
@@ -275,29 +287,30 @@ class BioImageApp {
 
                 set 2D_fixed 1
 	    }
-	} elseif {[string first "FieldInfo" $which] != -1 && $state == "Completed"} {
+	} elseif {[string first "Teem_NrrdData_NrrdInfo_1" $which] != -1 && $state == "Completed"} {
 	    # update slice sliders
-	    global $which-sizex $which-sizey $which-sizez
-	    set sizex [set $which-sizex]
-	    set sizey [set $which-sizey]
-	    set sizez [set $which-sizez]
+	    global $which-size0 $which-size1 $which-size2
+
+	    set sizex [expr [set $which-size0] - 1]
+	    set sizey [expr [set $which-size1] - 1]
+	    set sizez [expr [set $which-size2] - 1]
 
   	    .standalone.viewers.topbot.pane0.childsite.lr.pane1.childsite.modes.slice.s configure -from 0 -to $sizez
-  	    .standalone.viewers.topbot.pane1.childsite.lr.pane0.childsite.modes.slice.s configure -from 0 -to $sizey
- 	    .standalone.viewers.topbot.pane1.childsite.lr.pane1.childsite.modes.slice.s configure -from 0 -to $sizex
+  	    .standalone.viewers.topbot.pane1.childsite.lr.pane0.childsite.modes.slice.s configure -from 0 -to $sizex
+ 	    .standalone.viewers.topbot.pane1.childsite.lr.pane1.childsite.modes.slice.s configure -from 0 -to $sizey
 
-	    # set slice to be middle slice
-	    global $mods(ViewImage)-axial-viewport0-slice
-	    global $mods(ViewImage)-sagittal-viewport0-slice
-	    global $mods(ViewImage)-coronal-viewport0-slice
+ 	    # set slice to be middle slice
+ 	    global $mods(ViewImage)-axial-viewport0-slice
+ 	    global $mods(ViewImage)-sagittal-viewport0-slice
+ 	    global $mods(ViewImage)-coronal-viewport0-slice
 
-	    set $mods(ViewImage)-axial-viewport0-slice [expr $sizez/2]
-	    set $mods(ViewImage)-sagittal-viewport0-slice [expr $sizey/2]
-	    set $mods(ViewImage)-coronal-viewport0-slice [expr $sizex/2]
-	} elseif {[string first "NrrdInfo" $which] != -1 && $state == "JustStarted"} {
+ 	    set $mods(ViewImage)-axial-viewport0-slice [expr $sizez/2]
+ 	    set $mods(ViewImage)-sagittal-viewport0-slice [expr $sizex/2]
+ 	    set $mods(ViewImage)-coronal-viewport0-slice [expr $sizey/2]
+	} elseif {[string first "Teem_NrrdData_NrrdInfo_0" $which] != -1 && $state == "JustStarted"} {
 	    change_indicate_val 1
 	    change_indicator_labels "Loading Volume..."
-	} elseif {[string first "NrrdInfo" $which] != -1 && $state == "Completed"} {
+	} elseif {[string first "Teem_NrrdData_NrrdInfo_0" $which] != -1 && $state == "Completed"} {
 	    change_indicate_val 2
 	    set NrrdInfo [lindex [lindex $filters(0) $modules] $load_info]
  	    global $NrrdInfo-dimension
@@ -581,7 +594,7 @@ class BioImageApp {
  	scale $topr.modes.slice.s \
  	    -from 0 -to 20 \
  	    -orient horizontal -showvalue false \
- 	    -length 120 \
+ 	    -length 110 \
 	    -variable $mods(ViewImage)-axial-viewport0-slice
 
 	label $topr.modes.slice.l -textvariable $mods(ViewImage)-axial-viewport0-slice
@@ -612,7 +625,7 @@ class BioImageApp {
  	scale $botl.modes.slice.s \
  	    -from 0 -to 254 \
  	    -orient horizontal -showvalue false \
- 	    -length 120 \
+ 	    -length 110 \
 	    -variable $mods(ViewImage)-sagittal-viewport0-slice
 	label $botl.modes.slice.l -textvariable $mods(ViewImage)-sagittal-viewport0-slice
  	pack $botl.modes.slice.s $botl.modes.slice.l -side left -anchor n -padx 0
@@ -642,7 +655,7 @@ class BioImageApp {
  	scale $botr.modes.slice.s \
  	    -from 0 -to 254 \
  	    -orient horizontal -showvalue false \
- 	    -length 120 \
+ 	    -length 110 \
 	    -variable $mods(ViewImage)-coronal-viewport0-slice
 	label $botr.modes.slice.l -textvariable $mods(ViewImage)-coronal-viewport0-slice
  	pack $botr.modes.slice.s $botr.modes.slice.l -side left -anchor n -padx 0
@@ -858,7 +871,7 @@ class BioImageApp {
 	    set m27 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 741 1977]
             set m28 [addModuleAtPosition "SCIRun" "Visualization" "Isosurface" 472 2052]
             set m29 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 490 1973]
-	    set m30 [addModuleAtPosition "SCIRun" "FieldsOther" "FieldInfo" 369 1889]
+	    set m30 [addModuleAtPosition "Teem" "NrrdData" "NrrdInfo" 369 1889]
 
 	    set mods(EditTransferFunc) $m14
 	    
@@ -885,7 +898,7 @@ class BioImageApp {
 	    set c26 [addConnection $m16 0 $m28 0]
 	    set c27 [addConnection $m29 0 $m28 1]
 	    set c28 [addConnection $m28 1 $mods(Viewer) 1]
-	    set c29 [addConnection $m16 0 $m30 0]
+	    set c29 [addConnection $m7 0 $m30 0]
 
             global Disabled
 	    set Disabled($c28) 0
@@ -902,8 +915,8 @@ class BioImageApp {
 
 	    # set some ui parameters
 	    global $m1-filename
-	    #set $m1-filename $data_dir/volume/CThead.nhdr
-	    set $m1-filename "/home/darbyb/work/data/TR0600-TE020.nhdr"
+	    set $m1-filename $data_dir/volume/CThead.nhdr
+	    #set $m1-filename "/home/darbyb/work/data/TR0600-TE020.nhdr"
 
 	    global $m8-nbits
 	    set $m8-nbits {8}
