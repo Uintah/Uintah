@@ -103,7 +103,7 @@ itcl_class SCIRun_FieldsGeometry_ChangeFieldBounds {
 
 	makeSciButtonPanel $w $w $this \
 	    "\"Reset Widget\" \"$this reset\" \"\"" \
-	    "\"In to Out\" \"$this reset\" \"Copy input to output.\" "
+	    "\"In to Out\" \"$this copy_attributes\" \"Copies the Input Field Attribute values\nto the Output Field Attribute text fields.\n(This is just for user convenience.)\" "
 	moveToCursor $w	
     }
 
