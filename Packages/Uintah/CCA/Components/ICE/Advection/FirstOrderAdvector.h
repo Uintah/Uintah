@@ -63,7 +63,6 @@ namespace Uintah {
 namespace SCIRun {
 void swapbytes( Uintah::FirstOrderAdvector::fflux& );
 } // namespace SCIRun
-
 #endif
 
 

@@ -8,7 +8,6 @@
 #include <Packages/Uintah/Core/Grid/CellIterator.h>
 #include <Packages/Uintah/Core/Grid/SimulationState.h>
 #include <Packages/Uintah/Core/Grid/VarTypes.h>
-#include <Packages/Uintah/Core/Exceptions/UnknownVariable.h>
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <iostream>
 #include <fstream>
@@ -660,7 +659,7 @@ void    ICE::readData(const Patch* patch, int include_EC,
   
   ifstream fp(filename.c_str());
   if (!fp)
-    throw UnknownVariable("Couldn't open the file with hardwired variables","");
+    throw ProblemSetupException("Couldn't open the file with hardwired variables");
         
   //  fscanf(fp,"______________________________________________\n");
   fp >> text;  // scan over the "______"
@@ -668,7 +667,7 @@ void    ICE::readData(const Patch* patch, int include_EC,
   fp >> text;
   
   if (var_name != text)
-    throw UnknownVariable("You're trying to read in apples and orangs " + var_name + " " +  text,"");
+    throw ProblemSetupException("You're trying to read in apples and orangs " + var_name + " " +  text);
   
   if (include_EC == 1)  { 
     lowIndex = patch->getCellLowIndex();
@@ -700,7 +699,7 @@ void    ICE::readData(const Patch* patch, int include_EC,
        
        fp >> number;
        if (!fp.good())       
-        throw UnknownVariable("Having problem reading " + var_name,"");
+        throw ProblemSetupException("Having problem reading " + var_name);
               
       // cerr << number;
        q_CC[idx] = number;
