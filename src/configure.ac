@@ -73,7 +73,7 @@ AC_INIT([SCIRun],[1.22],[scirun-users@sci.utah.edu])
 
 ##  require autoconf version 2.59 
 ##  type "autoconf --version" to find out what version you have.
-AC_PREREQ(2.59)
+AC_PREREQ(2.57)
 
 AC_COPYRIGHT(
 ##
@@ -1687,6 +1687,25 @@ AC_SUBST(GL_LIB_FLAG)
 AC_SUBST(GL_LIB_DIR_FLAG)
 AC_SUBST(INC_GL_H)
 
+
+# Test for advanced volume rendering capability
+
+SCI_COMPILE_LINK_TEST(AVR, Advanced Volume OpenGL support,
+[
+  #define GL_GLEXT_PROTOTYPES
+  #include <GL/gl.h>
+],
+$_sci_inc, GL, $_sci_lib,,
+[
+  glActiveTexture(0);
+],optional)
+
+
+if test "$HAVE_AVR" = "yes"; then
+  COMPILE_AVR=1
+fi
+
+AC_SUBST(COMPILE_AVR)
 
 ##  --  search for dlopen  -----------------------------------------------
 SCI_TRY_LINK(DL,dlopen in libc,dlfcn.h,,c,,,[

@@ -185,8 +185,17 @@ bool PackageDB::findMaker(ModuleInfo* moduleInfo)
     moduleInfo->maker = 
       (ModuleMaker)GetHandleSymbolAddress(package_so,makename.c_str());
   if (!moduleInfo->maker) {
-    printMessage("Unable to load module '" + moduleInfo->moduleName +
-		 "' :\n - can't find symbol '" + makename + "'\n");
+    // the messages happen elsewere...
+    #if 0 
+    if (moduleInfo->optional == "true") {
+      printMessage("Optional module '" + moduleInfo->moduleName +
+		   "' is not available in this build. \n");
+    } else {
+      
+      printMessage("Unable to load module '" + moduleInfo->moduleName +
+		   "' :\n - can't find symbol '" + makename + "'\n");
+    }
+    #endif
     return false;
   }
   return true;
@@ -330,6 +339,7 @@ void PackageDB::loadPackage(bool resolve)
 	new_module = new ModuleInfo;
 	new_module->moduleName = node->name;
 	new_module->categoryName = node->category;
+	new_module->optional = node->optional;
 	new_module->packageName = packageElt;
 	new_module->help_description = node->overview->description;
 	new_module->maker = 0;
@@ -393,8 +403,13 @@ void PackageDB::loadPackage(bool resolve)
 	    numreg++;
 	  } else {
 	    string mname = (*mi).second->moduleName;
-	    printMessage("Unable to load module '" + mname +
-			 "' :\n - can't find symbol 'make_" + mname + "'\n");
+	    if (((*mi).second)->optional == "true") {
+	      printMessage("Optional module '" + mname +
+			   "' is not available in this build.");
+	    } else {
+	      printMessage("Unable to load module '" + mname +
+			   "' :\n - can't find symbol 'make_" + mname + "'");
+	    }
 	  }
 	} else {
 	  numreg++;

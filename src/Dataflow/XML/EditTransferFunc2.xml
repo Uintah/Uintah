@@ -33,7 +33,7 @@
 
 
 
-<component name="EditTransferFunc2" category="Visualization">
+<component name="EditTransferFunc2" category="Visualization" optional="true">
   <overview>
     <authors>
       <author>Milan Ikits</author>

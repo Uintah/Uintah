@@ -57,6 +57,7 @@ namespace SCIRun {
       string packageName;
       string categoryName;
       string moduleName;
+      string optional;
       string help_description;
       ModuleMaker maker;
       string uiFile;

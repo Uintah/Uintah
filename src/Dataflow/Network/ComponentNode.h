@@ -135,6 +135,7 @@ typedef struct {
 typedef struct {
   char* name;
   char* category;
+  char* optional;
   overview_node* overview;
   implementation_node* implementation;
   io_node* io;

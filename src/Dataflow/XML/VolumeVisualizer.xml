@@ -31,7 +31,7 @@
 
 
 
-<component name="VolumeVisualizer" category="Visualization">
+<component name="VolumeVisualizer" category="Visualization" optional="true">
   <overview>
     <authors>
       <author>Kurt Zimmerman</author>

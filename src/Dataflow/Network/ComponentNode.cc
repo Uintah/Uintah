@@ -86,6 +86,7 @@ component_node* CreateComponentNode(int type)
   case 1: /* everything */
     n->name = NOT_SET;
     n->category = NOT_SET;
+    n->optional = NOT_SET;
     n->overview = new overview_node;
     n->overview->authors = new map<int,char*>;
     n->overview->summary = NOT_SET;
@@ -112,6 +113,7 @@ component_node* CreateComponentNode(int type)
   case 2: /* name and category only */
     n->name = NOT_SET;
     n->category = NOT_SET;
+    n->optional = NOT_SET;
     n->overview = NULL;
     n->implementation = NULL;
     n->io = NULL;
@@ -121,6 +123,7 @@ component_node* CreateComponentNode(int type)
   case 3: /* name, category and ports */
     n->name = NOT_SET;
     n->category = NOT_SET;
+    n->optional = NOT_SET;
     n->overview = NULL;
     n->implementation = NULL;
     n->io = new io_node;
@@ -312,6 +315,7 @@ void DestroyComponentNode(component_node* n)
 {
   if (n->name && n->name!=NOT_SET) delete[] n->name;
   if (n->category && n->category!=NOT_SET) delete[] n->category;
+  if (n->optional && n->optional!=NOT_SET) delete[] n->optional;
   if (n->overview) DestroyOverviewNode(n->overview);
   if (n->implementation) DestroyImplementationNode(n->implementation);
   if (n->io) DestroyIoNode(n->io);
@@ -759,6 +763,15 @@ void ProcessComponentNode(const DOMNode& d, component_node* n)
       cout << "ERROR: Component has no category." << endl;
     else {
       n->category = strdup(to_char_ptr(name->getNodeValue()));
+    }
+  }
+
+  if (n->optional==NOT_SET) {
+    DOMNode *name = d.getAttributes()->getNamedItem(to_xml_ch_ptr("optional"));
+    if (name == 0)
+      cout << "ERROR: Component has no optional." << endl;
+    else {
+      n->optional = strdup(to_char_ptr(name->getNodeValue()));
     }
   }
 
