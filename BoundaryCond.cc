@@ -255,9 +255,12 @@ void setBC(CCVariable<double>& press_CC,
           vector<IntVector>::const_iterator iter;
           
           for (iter=bound.begin();iter != bound.end(); iter++) { 
-            IntVector adjCell = *iter - oneCell;
-            press_CC[*iter] = press_CC[adjCell] 
-                            + grav * dx * rho_micro[surroundingMatl_indx][adjCell];
+            IntVector L = *iter - oneCell;
+            IntVector R = *iter;
+            double rho_R = rho_micro[surroundingMatl_indx][R];
+            double rho_L = rho_micro[surroundingMatl_indx][L];
+            double rho_micro_brack = 2.*(rho_L * rho_R)/(rho_L + rho_R);
+            press_CC[R] = press_CC[L] + grav * dx * rho_micro_brack; 
           }
           IveSetBC = true;
         }  // with gravity 
