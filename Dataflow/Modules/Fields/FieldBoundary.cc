@@ -76,7 +76,7 @@ FieldBoundary::execute()
     return;
   }
     
-  MeshBaseHandle mesh = input->get_mesh();
+  MeshBaseHandle mesh = input->mesh();
   GeomTrianglesP *tris= scinew GeomTrianglesP;  
   //FIX_ME TriSurf *ts = new TriSurf();
 
