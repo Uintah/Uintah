@@ -54,7 +54,9 @@ ifeq ($(LARGESOS),yes)
 else
     PSELIBS := Dataflow/Network Core/Containers Core/GuiInterface \
                Core/Thread Core/Exceptions Core/Util Core/TkExtensions Core/Comm \
-               Core/Malloc Core/Services Dataflow/XMLUtil Core/SystemCall Packages/Ptolemy/Dataflow/Modules/Converters
+               Core/Malloc Core/Services Dataflow/XMLUtil Core/SystemCall \
+			   Packages/Ptolemy/Dataflow/Modules/Converters \
+			   Dataflow/Modules/Render
   ifeq ($(OS_NAME),Darwin)
       PSELIBS += Core/Datatypes Core/ImportExport
   endif
