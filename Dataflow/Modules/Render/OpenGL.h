@@ -54,7 +54,6 @@
 #include <vector>
 
 #include <Core/Malloc/Allocator.h>
-#include <Dataflow/Modules/Render/PBuffer.h> // #defines HAVE_PBUFFER
 #include <Dataflow/Modules/Render/ViewWindow.h>
 #include <Dataflow/Modules/Render/Viewer.h>
 #include <Dataflow/Modules/Render/Ball.h>
@@ -93,6 +92,7 @@ using std::vector;
 
 class OpenGLHelper;
 class GuiArgs;
+class PBuffer;
 
 struct GetReq {
   int datamask;
@@ -238,9 +238,7 @@ private:
   MPEGe_options		mpeg_options_;
 #endif // HAVE_MPEG
 
-#if defined(HAVE_PBUFFER)
-  PBuffer		pbuffer;
-#endif
+  PBuffer		*pbuffer_;
 };
 
 } // End namespace SCIRun
