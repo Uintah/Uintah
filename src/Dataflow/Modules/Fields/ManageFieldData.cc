@@ -39,6 +39,7 @@
 #include <Core/Datatypes/TriSurf.h>
 #include <Core/Datatypes/ImageField.h>
 #include <Core/Datatypes/ScanlineField.h>
+#include <Dataflow/Modules/Fields/ManageFieldData.h>
 #include <Core/Datatypes/ColumnMatrix.h>
 #include <Core/Datatypes/DenseMatrix.h>
 #include <Core/GuiInterface/GuiVar.h>
@@ -600,7 +601,23 @@ ManageFieldData::execute()
       return;
     }
 
-    dispatch_scalar1(ifieldhandle, callback_scalar);
+    CompileInfo *ci =
+      ManageFieldDataAlgoField::get_compile_info(ifieldhandle->get_type_description(),
+						 ifieldhandle->data_at_type_description(), 0);
+    DynamicAlgoHandle algo_handle;
+    if (! DynamicLoader::scirun_loader().get(*ci, algo_handle))
+    {
+      error("Could not compile algorithm.");
+      return;
+    }
+    ManageFieldDataAlgoField *algo =
+      dynamic_cast<ManageFieldDataAlgoField *>(algo_handle.get_rep());
+    if (algo == 0)
+    {
+      error("Could not get algorithm.");
+      return;
+    }
+    algo->execute(ifieldhandle);
   }
   else if (ifieldhandle->query_vector_interface())
   {
@@ -676,12 +693,59 @@ ManageFieldData::execute()
       error("Cannot dispatch on mesh type '" + geom_name + "'.");
       return;
     }
+
+    callback_tensor1(dynamic_cast<TetVol<Tensor> *>(ifieldhandle.get_rep()),
+		     (TetVolMesh::Node *)0);
   }
   else
   {
     error("Unable to classify size.");
   }
 }
+
+
+CompileInfo *
+ManageFieldDataAlgoField::get_compile_info(const TypeDescription *fsrc,
+					   const TypeDescription *lsrc,
+					   int svt_flag)
+{
+  // Use cc_to_h if this is in the .cc file, otherwise just __FILE__
+  static const string include_path(TypeDescription::cc_to_h(__FILE__));
+  static const string base_class_name("ManageFieldDataAlgoField");
+
+  string extension;
+  switch (svt_flag)
+  {
+  case 2:
+    extension = "Tensor";
+    break;
+
+  case 1:
+    extension = "Vector";
+    break;
+
+  default:
+    extension = "Scalar";
+    break;
+  }
+
+  CompileInfo *rval = 
+    scinew CompileInfo(base_class_name + extension + "." +
+		       to_filename(fsrc->get_name()) + "." +
+		       to_filename(lsrc->get_name()) + ".",
+                       base_class_name, 
+                       base_class_name + extension, 
+                       fsrc->get_name() + ", " + lsrc->get_name());
+
+  // Add in the include path to compile this obj
+  rval->add_include(include_path);
+  fsrc->fill_compile_info(rval);
+  return rval;
+}
+
+
+
+
 
 
 } // End namespace SCIRun
