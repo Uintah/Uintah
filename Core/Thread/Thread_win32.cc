@@ -40,6 +40,7 @@
  *  Copyright (C) 1999 SCI Group
  */
 
+#include <Core/Thread/CleanupManager.h>
 #include <Core/Thread/Mutex.h>
 #include <Core/Thread/Semaphore.h>
 #include <Core/Thread/Thread.h>
@@ -380,6 +381,7 @@ Thread* Thread::self()
 
 void Thread::exitAll(int code)
 {
+    CleanupManager::call_callbacks();
     exiting=true;
     ::exit(code);
 }

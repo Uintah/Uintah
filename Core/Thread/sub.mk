@@ -33,11 +33,18 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
 SRCDIR   := Core/Thread
 
-SRCS     += $(SRCDIR)/Guard.cc $(SRCDIR)/MutexPool.cc \
-	$(SRCDIR)/ParallelBase.cc $(SRCDIR)/Runnable.cc \
-	$(SRCDIR)/Thread.cc $(SRCDIR)/ThreadError.cc \
-	$(SRCDIR)/SimpleReducer.cc $(SRCDIR)/ThreadGroup.cc \
-	$(SRCDIR)/Thread_unix.cc $(SRCDIR)/ThreadPool.cc \
+SRCS     += \
+	$(SRCDIR)/CleanupManager.cc \
+	$(SRCDIR)/Guard.cc \
+	$(SRCDIR)/MutexPool.cc \
+	$(SRCDIR)/ParallelBase.cc \
+	$(SRCDIR)/Runnable.cc \
+	$(SRCDIR)/Thread.cc \
+	$(SRCDIR)/ThreadError.cc \
+	$(SRCDIR)/SimpleReducer.cc \
+	$(SRCDIR)/ThreadGroup.cc \
+	$(SRCDIR)/Thread_unix.cc \
+	$(SRCDIR)/ThreadPool.cc \
 	$(SRCDIR)/WorkQueue.cc 
 
 SRCS += $(TIME_IMPL) $(THREAD_IMPL)
