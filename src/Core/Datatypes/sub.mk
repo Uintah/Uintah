@@ -37,6 +37,7 @@ SRCS += $(SRCDIR)/Brick.cc		    \
         $(SRCDIR)/Matrix.cc		    \
         $(SRCDIR)/MeshBase.cc		    \
         $(SRCDIR)/Path.cc		    \
+	$(SRCDIR)/PointCloudMesh.cc         \
         $(SRCDIR)/PropertyManager.cc	    \
         $(SRCDIR)/SparseRowMatrix.cc	    \
         $(SRCDIR)/SymSparseRowMatrix.cc	    \

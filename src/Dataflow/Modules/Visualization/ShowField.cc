@@ -33,6 +33,7 @@
 #include <Core/Datatypes/TriSurf.h>
 #include <Core/Datatypes/LatticeVol.h>
 #include <Core/Datatypes/ContourField.h>
+#include <Core/Datatypes/PointCloud.h>
 #include <Core/Datatypes/FieldAlgo.h>
 #include <Core/Datatypes/DispatchScalar1.h>
 #include <Core/Datatypes/DispatchMesh1.h>

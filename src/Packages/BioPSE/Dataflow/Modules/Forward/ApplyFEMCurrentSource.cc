@@ -31,6 +31,7 @@
 #include <Dataflow/Network/Module.h>
 #include <Core/Datatypes/ColumnMatrix.h>
 #include <Core/Datatypes/TetVol.h>
+#include <Core/Datatypes/PointCloud.h>
 #include <Dataflow/Ports/MatrixPort.h>
 #include <Dataflow/Ports/FieldPort.h>
 #include <Core/Malloc/Allocator.h>
@@ -122,14 +123,14 @@ void ApplyFEMCurrentSource::execute()
     return;
   }
   
-  LockingHandle<TetVol<Vector> > hDipField;
+  LockingHandle<PointCloud<Vector> > hDipField;
   
-  if (hSource->get_type_name(0)!="TetVol" || hSource->get_type_name(1)!="Vector"){
-    msgStream_ << "Supplied field is not of type TetVol<Vector>. Returning..." << endl;
+  if (hSource->get_type_name(0)!="PointCloud" || hSource->get_type_name(1)!="Vector"){
+    msgStream_ << "Supplied field is not of type PointCloud<Vector>. Returning..." << endl;
     return;
   }
   else {
-    hDipField = dynamic_cast<TetVol<Vector>*> (hSource.get_rep());
+    hDipField = dynamic_cast<PointCloud<Vector>*> (hSource.get_rep());
   }
   
   MatrixHandle  hRhsIn;
@@ -151,7 +152,7 @@ void ApplyFEMCurrentSource::execute()
   
 
   //! Computing contributions of dipoles to RHS
-  TetVolMesh::node_iterator ii;
+  PointCloudMesh::node_iterator ii;
   
   for (ii=hDipField->get_typed_mesh()->node_begin(); ii!=hDipField->get_typed_mesh()->node_end(); ++ii) {
     

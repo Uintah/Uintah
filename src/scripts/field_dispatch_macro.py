@@ -25,9 +25,11 @@
 import os
 from sys import argv
 
-fields = ("TetVol", "LatticeVol", "ContourField", "TriSurf")
-data_types = ("double", "int", "char", "unsigned char", "unsigned short",
-              "short", "bool", "Vector", "Tensor")
+fields = ("TetVol", "LatticeVol", "ContourField", "TriSurf", "PointCloud")
+data_types = ()
+scalar = ("double", "float", "int", "unsigned int", "char", "unsigned char",
+          "short", "unsigned short", "bool")
+non = ("Vector", "Tensor")
 
 #fields = ("TetVol", "LatticeVol")
 #data_types = ("double", "int")
@@ -44,7 +46,7 @@ def recurse_macro(n, orig_num, ind, out) :
   
   for f in fields :
     last = len(out) - 1
-    out[last] = out[last] + 'if (name == "%s") {\\\n' % (f)
+    out[last] = out[last] + 'if (disp_name == "%s") {\\\n' % (f)
     ind = ind + 1
     out.append(indent(ind))
     for d in data_types :
@@ -79,8 +81,8 @@ def recurse_macro(n, orig_num, ind, out) :
       out.append(indent(ind) + '} else {\\\n')
       ind = ind + 1
       out.append(indent(ind) +
-                 'error = true; ' +
-                 'msg = "%s<%s>::get_type_name is broken";\\\n' % (f, d))
+                 'disp_error = true; ' +
+                 'disp_msg = "%s<%s>::get_type_name is broken";\\\n' % (f, d))
       ind = ind - 1
       out.append(indent(ind) +'}\\\n')
       ind = ind - 1
@@ -91,31 +93,34 @@ def recurse_macro(n, orig_num, ind, out) :
 
     ind = ind - 1
     if f == fields[len(fields) -1] : 
-      out.append(indent(ind) + '} else if (error) {\\\n')
+      out.append(indent(ind) + '} else if (disp_error) {\\\n')
       ind = ind + 1
-      out.append(indent(ind) + 'cerr << "Error: " << msg << endl;\\\n')
+      out.append(indent(ind) + 'cerr << "Error: " << disp_msg << endl;\\\n')
       ind = ind - 1
       out.append(indent(ind) + '}\\\n')
     else :
       out.append(indent(ind) + '} else ')
 
-def write_macro(n, out) :
+def write_macro(n, out, name) :
   i = 1
-  s = "#define dispatch%d(" % n
+  s = "#define %s%d(" % (name, n)
   while i <= n :
     s = s + "field%d, " % i;
     i = i + 1
   s = s + "callback)\\\n"
   ind = 1
   out.append(s)
-  out.append(indent(ind) + "bool error = false;\\\n")
-  out.append(indent(ind) + "string msg;\\\n")
+  out.append(indent(ind) + "bool disp_error = false;\\\n")
+  out.append(indent(ind) + "string disp_msg;\\\n")
   out.append(indent(ind) +
-             "string name = field%d->get_type_name(0);\\\n" % n)
+             "string disp_name = field%d->get_type_name(0);\\\n" % n)
   out.append(indent(ind))
   recurse_macro(n, n, ind, out)
 
 if __name__ == '__main__' :
+  global data_types
+  data_types = scalar + non
+  
   num = int(argv[1])  
   print "num recursions requested %d" % num
   out = []
@@ -128,7 +133,7 @@ if __name__ == '__main__' :
     out.append("#define Datatypes_Dispatch%d_h\n" % i)
     out.append("\n")
     out.append("// dispatch%d macro follows\n" % i)
-    write_macro(i, out)
+    write_macro(i, out, "dispatch")
     out.append("\n")
     out.append("#endif //Datatypes_Dispatch%d_h\n" % i)
     fp.writelines(out);
@@ -136,3 +141,38 @@ if __name__ == '__main__' :
     i = i + 1
     fp.close()
 
+  i = 1
+  data_types = scalar
+  while i <= num :
+    fp = open("DispatchScalar%d.h" % i, "w")
+    out.append("//  This is a generated file, DO NOT EDIT!!\n")
+    out.append("\n")
+    out.append("#if !defined(Datatypes_Dispatch%d_h)\n" % i)
+    out.append("#define Datatypes_Dispatch%d_h\n" % i)
+    out.append("\n")
+    out.append("// dispatch_scalar%d macro follows\n" % i)
+    write_macro(i, out, "dispatch_scalar")
+    out.append("\n")
+    out.append("#endif //Datatypes_Dispatch%d_h\n" % i)
+    fp.writelines(out);
+    out = []
+    i = i + 1
+    fp.close()
+
+  i = 1
+  data_types = non
+  while i <= num :
+    fp = open("DispatchNonScalar%d.h" % i, "w")
+    out.append("//  This is a generated file, DO NOT EDIT!!\n")
+    out.append("\n")
+    out.append("#if !defined(Datatypes_Dispatch%d_h)\n" % i)
+    out.append("#define Datatypes_Dispatch%d_h\n" % i)
+    out.append("\n")
+    out.append("// dispatch_non_scalar%d macro follows\n" % i)
+    write_macro(i, out, "dispatch_non_scalar")
+    out.append("\n")
+    out.append("#endif //Datatypes_Dispatch%d_h\n" % i)
+    fp.writelines(out);
+    out = []
+    i = i + 1
+    fp.close()

@@ -35,6 +35,7 @@
 #include <Core/Containers/String.h>
 #include <Core/Datatypes/ColumnMatrix.h>
 #include <Core/Datatypes/TetVol.h>
+#include <Core/Datatypes/PointCloud.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <Core/Thread/Mutex.h>
 #include <iostream>
@@ -173,12 +174,12 @@ DipoleSearch::~DipoleSearch(){}
 
 void DipoleSearch::initialize_search() {
   // cast the mesh based class up to a tetvolmesh
-  TetVolMesh *seeds_mesh =
-    (TetVolMesh*)dynamic_cast<TetVolMesh*>(seedsH_->mesh().get_rep());
+  PointCloudMesh *seeds_mesh =
+    (PointCloudMesh*)dynamic_cast<PointCloudMesh*>(seedsH_->mesh().get_rep());
 
   // iterate through the nodes and copy the positions into our 
   //  simplex search matrix (`dipoles')
-  TetVolMesh::node_iterator ni = seeds_mesh->node_begin();
+  PointCloudMesh::node_iterator ni = seeds_mesh->node_begin();
   misfit_.resize(NDIPOLES_);
   dipoles_.newsize(NDIPOLES_, NDIM_+3);
   for (int nc=0; ni != seeds_mesh->node_end(); ++ni, nc++) {
@@ -222,25 +223,25 @@ void DipoleSearch::send_and_get_data(int which_dipole,
   (*x_out)[3] = (*y_out)[4] = (*z_out)[5] = 1;
   (*x_out)[6] = (*y_out)[6] = (*z_out)[6] = (double)ci;
   
-  TetVolMeshHandle tvm = scinew TetVolMesh;
+  PointCloudMeshHandle pcm = scinew PointCloudMesh;
   for (j=0; j<NSEEDS_; j++)
-    tvm->add_point(Point(dipoles_(j,0), dipoles_(j,1), dipoles_(j,2)));
-  TetVol<Vector> *tvv = scinew TetVol<Vector>(tvm, Field::NODE);
+    pcm->add_point(Point(dipoles_(j,0), dipoles_(j,1), dipoles_(j,2)));
+  PointCloud<Vector> *pcv = scinew PointCloud<Vector>(pcm, Field::NODE);
   for (j=0; j<NSEEDS_; j++)
-    tvv->fdata()[j] = Vector(dipoles_(j,3), dipoles_(j,4), dipoles_(j,5));
+    pcv->fdata()[j] = Vector(dipoles_(j,3), dipoles_(j,4), dipoles_(j,5));
 
-  tvm = scinew TetVolMesh;
-  tvm->add_point(Point(dipoles_(which_dipole, 0), dipoles_(which_dipole, 1),
+  pcm = scinew PointCloudMesh;
+  pcm->add_point(Point(dipoles_(which_dipole, 0), dipoles_(which_dipole, 1),
 		       dipoles_(which_dipole, 2)));
-  TetVol<double> *tvd = scinew TetVol<double>(tvm, Field::NODE);
+  PointCloud<double> *pcd = scinew PointCloud<double>(pcm, Field::NODE);
   
   // send out data
   x_oport_->send_intermediate(x_out);
   y_oport_->send_intermediate(y_out);
   z_oport_->send_intermediate(z_out);
-  simplexH_ = tvv;
+  simplexH_ = pcv;
   simplex_oport_->send_intermediate(simplexH_);
-  dipole_oport_->send_intermediate(tvd);
+  dipole_oport_->send_intermediate(pcd);
   last_intermediate_=1;
 
   // read back data, and set the caches and search matrix
@@ -447,10 +448,10 @@ void DipoleSearch::read_field_ports(int &valid_data, int &new_data) {
   }
   
   FieldHandle seeds;    
-  TetVol<double> *d;
+  PointCloud<double> *d;
   if (seeds_iport_->get(seeds) && seeds.get_rep() &&
-      (seedsH_->get_type_name(0) == "TetVol") &&
-      (d=dynamic_cast<TetVol<double> *>(seedsH_.get_rep())) &&
+      (seedsH_->get_type_name(0) == "PointCloud") &&
+      (d=dynamic_cast<PointCloud<double> *>(seedsH_.get_rep())) &&
       (d->get_typed_mesh()->nodes_size() == NSEEDS_)) {
     if (!seedsH_.get_rep() || (seedsH_->generation != seeds->generation)) {
       new_data = 1;

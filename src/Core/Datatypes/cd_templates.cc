@@ -45,6 +45,7 @@ using namespace SCIRun;
 #include <Core/Datatypes/LatticeVol.h>
 #include <Core/Datatypes/TriSurf.h>
 #include <Core/Datatypes/ContourField.h>
+#include <Core/Datatypes/PointCloud.h>
 #include <Core/Datatypes/GenericField.h>
 #include <Core/Persistent/PersistentSTL.h>
 #include <Core/Datatypes/PropertyManager.h>
@@ -127,6 +128,29 @@ template class GenericField<TriSurfMesh, vector<bool> >;
 
 template class ContourField<double>;
 template class GenericField<ContourMesh, vector<double> >;
+
+template class PointCloud<Tensor>;
+template class PointCloud<Vector>;
+template class PointCloud<double>;
+template class PointCloud<float>;
+template class PointCloud<int>;
+template class PointCloud<unsigned int>;
+template class PointCloud<short>;
+template class PointCloud<unsigned short>;
+template class PointCloud<char>;
+template class PointCloud<unsigned char>;
+template class PointCloud<bool>;
+template class GenericField<PointCloudMesh, vector<Tensor> >;
+template class GenericField<PointCloudMesh, vector<Vector> >;
+template class GenericField<PointCloudMesh, vector<double> >;
+template class GenericField<PointCloudMesh, vector<float> >;
+template class GenericField<PointCloudMesh, vector<int> >;
+template class GenericField<PointCloudMesh, vector<unsigned int> >;
+template class GenericField<PointCloudMesh, vector<short> >;
+template class GenericField<PointCloudMesh, vector<unsigned short> >;
+template class GenericField<PointCloudMesh, vector<char> >;
+template class GenericField<PointCloudMesh, vector<unsigned char> >;
+template class GenericField<PointCloudMesh, vector<bool> >;
 
 template class Property<string>;
 template class Property<Array1<double> >;

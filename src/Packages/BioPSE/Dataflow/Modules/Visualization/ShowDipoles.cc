@@ -13,7 +13,7 @@
 #include <Dataflow/Ports/GeometryPort.h>
 #include <Dataflow/Ports/FieldPort.h>
 #include <Dataflow/Widgets/ArrowWidget.h>
-#include <Core/Datatypes/TetVol.h>
+#include <Core/Datatypes/PointCloud.h>
 #include <Core/Geom/GeomLine.h>
 #include <Core/Geom/Switch.h>
 #include <Core/Geometry/Point.h>
@@ -93,13 +93,13 @@ ShowDipoles::~ShowDipoles(){
 
 void ShowDipoles::execute(){
   FieldHandle fieldH;
-  TetVol<Vector> *field_tvv;
+  PointCloud<Vector> *field_pcv;
   if (!ifield_->get(fieldH) || 
-      !(field_tvv=dynamic_cast<TetVol<Vector>*>(fieldH.get_rep()))) {
+      !(field_pcv=dynamic_cast<PointCloud<Vector>*>(fieldH.get_rep()))) {
     cerr << "No vald input in ShowDipoles Field port.\n";
     return;
   }
-  TetVolMeshHandle field_mesh = field_tvv->get_typed_mesh();
+  PointCloudMeshHandle field_mesh = field_pcv->get_typed_mesh();
   
   double widgetSize;
   if (!widgetSizeGui_.get().get_double(widgetSize)) {
@@ -108,9 +108,9 @@ void ShowDipoles::execute(){
   }
      
   if (fieldH->generation != gen_ || lastSize_ != widgetSize) {// load this data in
-    if (field_tvv->fdata().size() != nDips_) {
+    if (field_pcv->fdata().size() != nDips_) {
 	     
-      cerr << "NEW SIZE FOR DIPOLEMATTOGEOM_  field_tvv->data().size()="<<field_tvv->fdata().size()<<" nDips_="<<nDips_<<"\n";
+      cerr << "NEW SIZE FOR DIPOLEMATTOGEOM_  field_pcv->data().size()="<<field_pcv->fdata().size()<<" nDips_="<<nDips_<<"\n";
 	     
       // nDips_ always just says how many switches we have set to true
       // need to fix switch setting first and then do allocations if
@@ -120,22 +120,22 @@ void ShowDipoles::execute(){
 	widget_[nDips_-1]->SetCurrentMode(0);
 	widget_[nDips_-1]->SetMaterial(0, deflMatl_);
       }
-      if (field_tvv->fdata().size()<nDips_) {
-	for (int i=field_tvv->fdata().size(); i<nDips_; i++)
+      if (field_pcv->fdata().size()<nDips_) {
+	for (int i=field_pcv->fdata().size(); i<nDips_; i++)
 	  widget_switch_[i]->set_state(0);
-	nDips_=field_tvv->fdata().size();
+	nDips_=field_pcv->fdata().size();
       } else {
 	int i;
 	for (i=nDips_; i<widget_switch_.size(); i++)
 	  widget_switch_[i]->set_state(1);
-	for (; i<field_tvv->fdata().size(); i++) {
+	for (; i<field_pcv->fdata().size(); i++) {
 	  widget_.add(scinew ArrowWidget(this, &widget_lock_, widgetSize));
 	  deflMatl_=widget_[0]->GetMaterial(0);
 	  widget_switch_.add(widget_[i]->GetWidget());
 	  widget_switch_[i]->set_state(1);
 	  widget_id_.add(ogeom_->addObj(widget_switch_[i], clString(clString("Dipole")+to_string(i)), &widget_lock_));
 	}
-	nDips_=field_tvv->fdata().size();
+	nDips_=field_pcv->fdata().size();
       }
       if (showLastVecGui_.get()) {
 	widget_[nDips_-1]->SetCurrentMode(0);
@@ -149,18 +149,18 @@ void ShowDipoles::execute(){
     int i;
     clString scaleMode=scaleModeGui_.get();
     double max;
-    for (i=0; i<field_tvv->fdata().size(); i++) {
-      double dv=field_tvv->fdata()[i].length();
+    for (i=0; i<field_pcv->fdata().size(); i++) {
+      double dv=field_pcv->fdata()[i].length();
       if (dv<0.00000001) dv=1;
       if (i==0 || dv<max) max=dv;
     }
 
-    for (i=0; i<field_tvv->fdata().size(); i++) {
+    for (i=0; i<field_pcv->fdata().size(); i++) {
       Point p;
       field_mesh->get_point(p,i);
       pts.add(p);
       widget_[i]->SetPosition(p);
-      Vector v(field_tvv->fdata()[i]);
+      Vector v(field_pcv->fdata()[i]);
       //	     cerr << "widget_["<<i<<"] is at position "<<p<<" and dir "<<v<<"\n";
       double str=v.length();
       if (str<0.0000001) v.z(1);
@@ -205,7 +205,7 @@ void ShowDipoles::execute(){
       cerr << "mag="<<mag<<"  widgetSize="<<widgetSize<<"\n";
       d=d*(mag/widgetSize);
       field_mesh->set_point(p, i);
-      field_tvv->fdata()[i] = d;
+      field_pcv->fdata()[i] = d;
     }
     ogeom_->delObj(gidx_);
     if (showLinesGui_.get()) {

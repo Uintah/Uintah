@@ -36,7 +36,7 @@
 #include <Core/GuiInterface/GuiVar.h>
 #include <Core/Thread/CrowdMonitor.h>
 #include <Dataflow/Widgets/GaugeWidget.h>
-#include <Core/Datatypes/ContourField.h>
+#include <Core/Datatypes/PointCloud.h>
 #include <math.h>
 
 #include <iostream>
@@ -144,14 +144,17 @@ void SeedField::execute()
   int num_seeds = (int)(rake_.GetRatio()*15);
   cerr << "num_seeds = " << num_seeds << endl;
   dir*=1./(num_seeds-1);
-  ContourField<double> *seeds = scinew ContourField<double>(Field::NODE);
-  ContourMesh *mesh = 
-    dynamic_cast<ContourMesh*>(seeds->get_typed_mesh().get_rep());
-  ContourField<double>::fdata_type &fdata = seeds->fdata();
-  fdata.resize(2);
 
-  for (int loop=0;loop<num_seeds;++loop) {
+  PointCloudMeshHandle mesh = scinew PointCloudMesh;
+  int loop;
+  for (loop=0;loop<num_seeds;++loop) {
     mesh->add_node(min+dir*loop);
+  }
+
+  PointCloud<double> *seeds = scinew PointCloud<double>(mesh, Field::NODE);
+  PointCloud<double>::fdata_type &fdata = seeds->fdata();
+
+  for (loop=0;loop<num_seeds;++loop) {
     fdata[loop]=1;
   }
   

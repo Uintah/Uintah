@@ -25,7 +25,7 @@
 import os
 from sys import argv
 
-meshes = ("TetVolMesh", "LatVolMesh", "ContourMesh", "TriSurfMesh")
+meshes = ("TetVolMesh", "LatVolMesh", "TriSurfMesh", "ContourMesh", "PointCloudMesh")
 
 def indent(n) :
   s = ""

@@ -33,6 +33,7 @@
 #include <Core/Datatypes/LatVolMesh.h>
 #include <Core/Datatypes/TriSurfMesh.h>
 #include <Core/Datatypes/ContourMesh.h>
+#include <Core/Datatypes/PointCloudMesh.h>
 #include <Core/Datatypes/TriSurf.h>
 #include <Core/Geom/GeomTriangles.h>
 #include <Core/Malloc/Allocator.h>
@@ -129,8 +130,12 @@ FieldBoundary::add_ordered_tri(const Point &p1, const Point &p2,
   }
 }
 
-template <> void FieldBoundary::boundary(const ContourMesh *mesh) {
+template <> void FieldBoundary::boundary(const ContourMesh *) {
   error("FieldBoundary::boundary can't extract a surface from a ContourMesh");
+}
+
+template <> void FieldBoundary::boundary(const PointCloudMesh *) {
+  error("FieldBoundary::boundary can't extract a surface from a PointCloudMesh");
 }
 
 template <> void FieldBoundary::boundary(const TriSurfMesh *mesh) {

@@ -34,6 +34,8 @@
 #include <Core/Datatypes/LatticeVol.h>
 #include <Core/Datatypes/TriSurf.h>
 #include <Core/Datatypes/ContourField.h>
+#include <Core/Datatypes/PointCloud.h>
+#include <Core/Datatypes/DispatchScalar1.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <Dataflow/Modules/Visualization/RescaleColorMap.h>
@@ -97,155 +99,9 @@ RescaleColorMap::~RescaleColorMap()
 {
 }
 
-bool RescaleColorMap::get_minmax(Field* field, pair<double,double>& pair) {
-  if (TetVol<double> *f = 
-      dynamic_cast<TetVol<double> *>(field)) {
-    return field_minmax(*f, pair);
-  } else if (TetVol<float> *f = 
-	     dynamic_cast<TetVol<float> *>(field)) {
-    return field_minmax(*f, pair);
-  } else if (TetVol<unsigned int> *f = 
-	     dynamic_cast<TetVol<unsigned int> *>(field)) {
-    return field_minmax(*f, pair);
-  } else if (TetVol<int> *f = 
-	     dynamic_cast<TetVol<int> *>(field)) {
-    return field_minmax(*f, pair);
-  } else if (TetVol<unsigned short> *f = 
-	     dynamic_cast<TetVol<unsigned short> *>(field)) {
-    return field_minmax(*f, pair);
-  } else if (TetVol<short> *f = 
-	     dynamic_cast<TetVol<short> *>(field)) {
-    return field_minmax(*f, pair);
-  } else if (TetVol<unsigned char> *f = 
-	     dynamic_cast<TetVol<unsigned char> *>(field)) {
-    return field_minmax(*f, pair);
-  } else if (TetVol<char> *f = 
-	     dynamic_cast<TetVol<char> *>(field)) {
-    return field_minmax(*f, pair);
-  } else if (TetVol<double> *f = 
-      dynamic_cast<TetVol<double> *>(field)) {
-    return field_minmax(*f, pair);
-  } else if (TetVol<float> *f = 
-	     dynamic_cast<TetVol<float> *>(field)) {
-    return field_minmax(*f, pair);
-  } else if (TetVol<unsigned int> *f = 
-	     dynamic_cast<TetVol<unsigned int> *>(field)) {
-    return field_minmax(*f, pair);
-  } else if (TetVol<int> *f = 
-	     dynamic_cast<TetVol<int> *>(field)) {
-    return field_minmax(*f, pair);
-  } else if (TetVol<unsigned short> *f = 
-	     dynamic_cast<TetVol<unsigned short> *>(field)) {
-    return field_minmax(*f, pair);
-  } else if (TetVol<short> *f = 
-	     dynamic_cast<TetVol<short> *>(field)) {
-    return field_minmax(*f, pair);
-  } else if (TetVol<unsigned char> *f = 
-	     dynamic_cast<TetVol<unsigned char> *>(field)) {
-    return field_minmax(*f, pair);
-  } else if (TetVol<char> *f = 
-	     dynamic_cast<TetVol<char> *>(field)) {
-    return field_minmax(*f, pair);
-  } else if (LatticeVol<double> *f = 
-      dynamic_cast<LatticeVol<double> *>(field)) {
-    return field_minmax(*f, pair);
-  } else if (LatticeVol<float> *f = 
-	     dynamic_cast<LatticeVol<float> *>(field)) {
-    return field_minmax(*f, pair);
-  } else if (LatticeVol<unsigned int> *f = 
-	     dynamic_cast<LatticeVol<unsigned int> *>(field)) {
-    return field_minmax(*f, pair);
-  } else if (LatticeVol<int> *f = 
-	     dynamic_cast<LatticeVol<int> *>(field)) {
-    return field_minmax(*f, pair);
-  } else if (LatticeVol<unsigned short> *f = 
-	     dynamic_cast<LatticeVol<unsigned short> *>(field)) {
-    return field_minmax(*f, pair);
-  } else if (LatticeVol<short> *f = 
-	     dynamic_cast<LatticeVol<short> *>(field)) {
-    return field_minmax(*f, pair);
-  } else if (LatticeVol<unsigned char> *f = 
-	     dynamic_cast<LatticeVol<unsigned char> *>(field)) {
-    return field_minmax(*f, pair);
-  } else if (LatticeVol<char> *f = 
-	     dynamic_cast<LatticeVol<char> *>(field)) {
-    return field_minmax(*f, pair);
-  } else if (TriSurf<double> *f = 
-      dynamic_cast<TriSurf<double> *>(field)) {
-    return field_minmax(*f, pair);
-  } else if (TriSurf<float> *f = 
-	     dynamic_cast<TriSurf<float> *>(field)) {
-    return field_minmax(*f, pair);
-  } else if (TriSurf<unsigned int> *f = 
-	     dynamic_cast<TriSurf<unsigned int> *>(field)) {
-    return field_minmax(*f, pair);
-  } else if (TriSurf<int> *f = 
-	     dynamic_cast<TriSurf<int> *>(field)) {
-    return field_minmax(*f, pair);
-  } else if (TriSurf<unsigned short> *f = 
-	     dynamic_cast<TriSurf<unsigned short> *>(field)) {
-    return field_minmax(*f, pair);
-  } else if (TriSurf<short> *f = 
-	     dynamic_cast<TriSurf<short> *>(field)) {
-    return field_minmax(*f, pair);
-  } else if (TriSurf<unsigned char> *f = 
-	     dynamic_cast<TriSurf<unsigned char> *>(field)) {
-    return field_minmax(*f, pair);
-  } else if (TriSurf<char> *f = 
-	     dynamic_cast<TriSurf<char> *>(field)) {
-    return field_minmax(*f, pair);
-  } else if (ContourField<double> *f = 
-      dynamic_cast<ContourField<double> *>(field)) {
-    return field_minmax(*f, pair);
-  } else if (ContourField<float> *f = 
-	     dynamic_cast<ContourField<float> *>(field)) {
-    return field_minmax(*f, pair);
-  } else if (ContourField<unsigned int> *f = 
-	     dynamic_cast<ContourField<unsigned int> *>(field)) {
-    return field_minmax(*f, pair);
-  } else if (ContourField<int> *f = 
-	     dynamic_cast<ContourField<int> *>(field)) {
-    return field_minmax(*f, pair);
-  } else if (ContourField<unsigned short> *f = 
-	     dynamic_cast<ContourField<unsigned short> *>(field)) {
-    return field_minmax(*f, pair);
-  } else if (ContourField<short> *f = 
-	     dynamic_cast<ContourField<short> *>(field)) {
-    return field_minmax(*f, pair);
-  } else if (ContourField<unsigned char> *f = 
-	     dynamic_cast<ContourField<unsigned char> *>(field)) {
-    return field_minmax(*f, pair);
-  } else if (ContourField<char> *f = 
-	     dynamic_cast<ContourField<char> *>(field)) {
-    return field_minmax(*f, pair);
-  } else if (ContourField<double> *f = 
-      dynamic_cast<ContourField<double> *>(field)) {
-    return field_minmax(*f, pair);
-  } else if (ContourField<float> *f = 
-	     dynamic_cast<ContourField<float> *>(field)) {
-    return field_minmax(*f, pair);
-  } else if (ContourField<unsigned int> *f = 
-	     dynamic_cast<ContourField<unsigned int> *>(field)) {
-    return field_minmax(*f, pair);
-  } else if (ContourField<int> *f = 
-	     dynamic_cast<ContourField<int> *>(field)) {
-    return field_minmax(*f, pair);
-  } else if (ContourField<unsigned short> *f = 
-	     dynamic_cast<ContourField<unsigned short> *>(field)) {
-    return field_minmax(*f, pair);
-  } else if (ContourField<short> *f = 
-	     dynamic_cast<ContourField<short> *>(field)) {
-    return field_minmax(*f, pair);
-  } else if (ContourField<unsigned char> *f = 
-	     dynamic_cast<ContourField<unsigned char> *>(field)) {
-    return field_minmax(*f, pair);
-  } else if (ContourField<char> *f = 
-	     dynamic_cast<ContourField<char> *>(field)) {
-    return field_minmax(*f, pair);
-  } else {
-    cerr << "Unknown type: " << field->get_type_name() << endl;
-    return 0;
-  }
+template<class F>
+void RescaleColorMap::dispatch_minmax(F *f) {
+  success_ = field_minmax(*f, minmax_);
 }
 
 void
@@ -270,15 +126,16 @@ RescaleColorMap::execute()
 	  return;
 	}
 
-	pair<double, double> minmax;
-	if (!get_minmax(field.get_rep(), minmax)) {
+	dispatch_scalar1(field, dispatch_minmax);
+
+	if (!success_) {
 	  cerr << "rescale colormap: can not compute minmax for field\n";
 	  return;
 	}
 
-	cmap->Scale( minmax.first, minmax.second);
-	min.set( minmax.first );
-	max.set( minmax.second );
+	cmap->Scale( minmax_.first, minmax_.second);
+	min.set( minmax_.first );
+	max.set( minmax_.second );
       }
     }
   }
