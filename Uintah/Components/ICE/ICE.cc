@@ -48,6 +48,7 @@ using namespace Uintah::ICESpace;
 using SCICore::Datatypes::DenseMatrix;
 
 static int iterNum = 0;
+static bool computeDt = false;
 
 #undef todd_debug
 
@@ -187,25 +188,28 @@ void ICE::scheduleInitialize(const LevelP& level, SchedulerP& sched,
 void ICE::scheduleComputeStableTimestep(const LevelP& level,SchedulerP& sched,
 					DataWarehouseP& dw)
 {
-#if 0
-  // Compute the stable timestep
-  int numMatls = d_sharedState->getNumICEMatls();
-
-  for (Level::const_patchIterator iter = level->patchesBegin();
-       iter != level->patchesEnd(); iter++)  {
-    const Patch* patch = *iter;
+    // Compute the stable timestep
+    int numMatls = d_sharedState->getNumICEMatls();
     
-    Task* task = scinew Task("ICE::actuallyComputeStableTimestep",patch, dw,
-			     dw,this, &ICE::actuallyComputeStableTimestep);
-    
-    for (int m = 0; m < numMatls; m++) {
-      ICEMaterial* matl = d_sharedState->getICEMaterial(m);
-      int dwindex = matl->getDWIndex();
-      task->requires(dw, lb->vel_CCLabel,    dwindex,    patch,  Ghost::None);
+    for (Level::const_patchIterator iter = level->patchesBegin();
+	 iter != level->patchesEnd(); iter++)  {
+      const Patch* patch = *iter;
+      
+      Task* task = scinew Task("ICE::actuallyComputeStableTimestep",patch, dw,
+			       dw,this, &ICE::actuallyComputeStableTimestep);
+      if(computeDt) {      
+	for (int m = 0; m < numMatls; m++) {
+	  ICEMaterial* matl = d_sharedState->getICEMaterial(m);
+	  int dwindex = matl->getDWIndex();
+	  task->requires(dw,lb->vel_CCLabel, dwindex,  patch,  Ghost::None);
+	  task->requires(dw,lb->speedSound_CCLabel, dwindex,patch,Ghost::None);
+	}
+      }
+      task->computes(dw, d_sharedState->get_delt_label());
+      sched->addTask(task);
     }
-    sched->addTask(task);
-  }
-#endif
+  
+
 }
 
 void ICE::scheduleTimeAdvance(double t, double dt,const LevelP& level,
@@ -562,7 +566,6 @@ void ICE::scheduleStep6and7(const Patch* patch, SchedulerP& sched,
     task->computes(new_dw, lb->cv_CCLabel,        dwindex,patch);
     task->computes(new_dw, lb->vel_CCLabel,      dwindex,patch);
   }
-  task->computes(new_dw, d_sharedState->get_delt_label());
   sched->addTask(task);
 }
 
@@ -581,55 +584,57 @@ void ICE::actuallyComputeStableTimestep(
     DataWarehouseP& new_dw)
 {
   cout << "Doing actually Compute Stable Timestep " << endl;
-#if 0
-  Vector dx = patch->dCell();
-  double delt_CFL = 100000,delt_stability = 1000000,fudge_factor = 1.;
-  CCVariable<double> speedSound;
-  CCVariable<Vector> vel;
-  double CFL,N_ITERATIONS_TO_STABILIZE = 2;
- 
-  ::iterNum++;
-  if (iterNum < N_ITERATIONS_TO_STABILIZE) {
-    CFL = d_CFL * (double)(::iterNum) *(1./(double)N_ITERATIONS_TO_STABILIZE);
-  } else {
-    CFL = d_CFL;
-  }
+  double dT = d_initialDt;
 
-  for (int m = 0; m < d_sharedState->getNumICEMatls(); m++) {
-    ICEMaterial* ice_matl = d_sharedState->getICEMaterial(m);
-    int dwindex = ice_matl->getDWIndex();
-
-    new_dw->get(speedSound, lb->speedSound_equiv_CCLabel,
-		dwindex,patch,Ghost::None, 0);
-    new_dw->get(vel, lb->vel_CCLabel, dwindex,patch,Ghost::None, 0);
-        
-    for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){   
-      double A = fudge_factor*CFL*dx.x()/(speedSound[*iter] + 
-					  fabs(vel[*iter].x()) + d_SMALL_NUM);
-      double B = fudge_factor*CFL*dx.y()/(speedSound[*iter] + 
-					  fabs(vel[*iter].y()) + d_SMALL_NUM);
-      double C = fudge_factor*CFL*dx.z()/(speedSound[*iter] + 
-					  fabs(vel[*iter].z()) + d_SMALL_NUM);
-      
-      delt_CFL = std::min(A, delt_CFL);
-      delt_CFL = std::min(B, delt_CFL);
-      delt_CFL = std::min(C, delt_CFL);
-
-      A = fudge_factor * 0.5 * (dx.x()*dx.x())/fabs(vel[*iter].x());
-      B = fudge_factor * 0.5 * (dx.y()*dx.y())/fabs(vel[*iter].y());
-      C = fudge_factor * 0.5 * (dx.z()*dx.z())/fabs(vel[*iter].z());
-
-      delt_stability = std::min(A, delt_stability);
-      delt_stability = std::min(B, delt_stability);
-      delt_stability = std::min(C, delt_stability);
+  if (computeDt) {
+    Vector dx = patch->dCell();
+    double delt_CFL = 100000,delt_stability = 1000000,fudge_factor = 1.;
+    CCVariable<double> speedSound;
+    CCVariable<Vector> vel;
+    double CFL,N_ITERATIONS_TO_STABILIZE = 2;
+    
+    ::iterNum++;
+    if (iterNum < N_ITERATIONS_TO_STABILIZE) {
+      CFL = d_CFL * (double)(::iterNum)*(1./(double)N_ITERATIONS_TO_STABILIZE);
+    } else {
+      CFL = d_CFL;
     }
+    
+    for (int m = 0; m < d_sharedState->getNumICEMatls(); m++) {
+      ICEMaterial* ice_matl = d_sharedState->getICEMaterial(m);
+      int dwindex = ice_matl->getDWIndex();
+      
+      new_dw->get(speedSound, lb->speedSound_equiv_CCLabel,
+		  dwindex,patch,Ghost::None, 0);
+      new_dw->get(vel, lb->vel_CCLabel, dwindex,patch,Ghost::None, 0);
+      
+      for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){   
+	double A = fudge_factor*CFL*dx.x()/(speedSound[*iter] + 
+					    fabs(vel[*iter].x())+ d_SMALL_NUM);
+	double B = fudge_factor*CFL*dx.y()/(speedSound[*iter] + 
+					    fabs(vel[*iter].y())+ d_SMALL_NUM);
+	double C = fudge_factor*CFL*dx.z()/(speedSound[*iter] + 
+					    fabs(vel[*iter].z())+ d_SMALL_NUM);
+	
+	delt_CFL = std::min(A, delt_CFL);
+	delt_CFL = std::min(B, delt_CFL);
+	delt_CFL = std::min(C, delt_CFL);
+	
+	A = fudge_factor * 0.5 * (dx.x()*dx.x())/fabs(vel[*iter].x());
+	B = fudge_factor * 0.5 * (dx.y()*dx.y())/fabs(vel[*iter].y());
+	C = fudge_factor * 0.5 * (dx.z()*dx.z())/fabs(vel[*iter].z());
+	
+	delt_stability = std::min(A, delt_stability);
+	delt_stability = std::min(B, delt_stability);
+	delt_stability = std::min(C, delt_stability);
+      }
+    }
+    dT = std::min(delt_stability, delt_CFL);
   }
-  
-  double dT = std::min(delt_stability, delt_CFL);
   cout << "new dT = " << dT << endl;
   new_dw->put(delt_vartype(dT), lb->delTLabel);
+  computeDt = true;
 
-#endif
 }
 
 /* --------------------------------------------------------------------- 
@@ -640,9 +645,6 @@ void ICE::actuallyInitialize(const ProcessorGroup*, const Patch* patch,
 			     DataWarehouseP& old_dw, DataWarehouseP& new_dw)
 {
   cout << "Doing actually Initialize" << endl;
-  double dT = d_initialDt;
-
-  new_dw->put(delt_vartype(dT), lb->delTLabel);
 
   CCVariable<double>    press;  
   new_dw->allocate(press,lb->press_CCLabel, 0,patch);
@@ -2109,23 +2111,14 @@ void ICE::actuallyStep6and7(const ProcessorGroup*, const Patch* patch,
 {
 
   cout << "Doing actually step6 and 7" << endl;
+
   delt_vartype delT;
   old_dw->get(delT, d_sharedState->get_delt_label());
 
-  double delt_CFL = 100000,delt_stability = 1000000,fudge_factor = 1.;
   Vector dx = patch->dCell();
   double vol = dx.x()*dx.y()*dx.z(),mass;
   double invvol = 1.0/vol;
 
-  double CFL,N_ITERATIONS_TO_STABILIZE = 2;
-  iterNum++;
-  if (iterNum < N_ITERATIONS_TO_STABILIZE)  {
-    CFL = d_CFL * (double)iterNum *(1./(double)N_ITERATIONS_TO_STABILIZE);
-  } else 
-    {
-      CFL = d_CFL;
-    }
-  
   CCVariable<double> int_eng_L_ME, mass_L;
   CCVariable<Vector> mom_L_ME;
   CCVariable<double> speedSound,cv_old;
@@ -2272,29 +2265,6 @@ void ICE::actuallyStep6and7(const ProcessorGroup*, const Patch* patch,
 #endif
     /*==========DEBUG============`*/
     
-    // Compute new delT
-    
-    for(CellIterator iter=patch->getExtraCellIterator(); !iter.done(); iter++){
-      double A = fudge_factor*CFL*dx.x()/(speedSound[*iter] + 
-					  fabs(vel_CC[*iter].x())+d_SMALL_NUM);
-      double B = fudge_factor*CFL*dx.y()/(speedSound[*iter] + 
-					  fabs(vel_CC[*iter].y())+d_SMALL_NUM);
-      double C = fudge_factor*CFL*dx.z()/(speedSound[*iter] + 
-					  fabs(vel_CC[*iter].z())+d_SMALL_NUM);
-      
-      delt_CFL = std::min(A, delt_CFL);
-      delt_CFL = std::min(B, delt_CFL);
-      delt_CFL = std::min(C, delt_CFL);
-      
-      A = fudge_factor * 0.5 * (dx.x()*dx.x())/fabs(vel_CC[*iter].x());
-      B = fudge_factor * 0.5 * (dx.y()*dx.y())/fabs(vel_CC[*iter].y());
-      C = fudge_factor * 0.5 * (dx.z()*dx.z())/fabs(vel_CC[*iter].z());
-      
-      delt_stability = std::min(A, delt_stability);
-      delt_stability = std::min(B, delt_stability);
-      delt_stability = std::min(C, delt_stability);
-    }
-    
     new_dw->put(rho_CC, lb->rho_CCLabel,  dwindex,patch);
     new_dw->put(vel_CC,lb->vel_CCLabel, dwindex,patch);
     new_dw->put(temp,   lb->temp_CCLabel, dwindex,patch);
@@ -2303,8 +2273,6 @@ void ICE::actuallyStep6and7(const ProcessorGroup*, const Patch* patch,
     new_dw->put(visc_CC,lb->viscosity_CCLabel,dwindex,patch);
     new_dw->put(cv,     lb->cv_CCLabel,       dwindex,patch);
   }
-  double dT = std::min(delt_stability, delt_CFL);
-  new_dw->put(delt_vartype(dT), lb->delTLabel);
   
 }
 
@@ -3510,6 +3478,11 @@ ______________________________________________________________________*/
 
 //
 // $Log$
+// Revision 1.82  2001/01/09 21:18:04  jas
+// Moved all computations of delT to actuallyComputeStableTimestep.  This
+// includes specification of the initialDt and the one based on velocity
+// and speed of sound.
+//
 // Revision 1.81  2001/01/08 22:01:55  jas
 // Removed #if 0  #endif pairs surrounding unused code related to momentum
 // variables that are now combined into CCVariables<Vector>.  This includes
