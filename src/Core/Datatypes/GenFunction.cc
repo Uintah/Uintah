@@ -200,8 +200,9 @@ void GenFunction::refresh_fast_eval(){
   }
 }
   
-string GenFunction::get_str_f(unsigned int n) const{
-  if (n<d_fstr.size() && n>=0)
+string GenFunction::get_str_f(unsigned int n) const
+{
+  if (n < d_fstr.size())
     return d_fstr[n];
   else
     return "0";

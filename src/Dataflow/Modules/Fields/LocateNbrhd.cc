@@ -157,7 +157,7 @@ void MeshInterpVals::execute()
 	    cerr << "Skipping zero'th mesh node.\n";
 	    firstNode=1;
 	}
-	int firstIdx;
+	//int firstIdx;
 	if (m == "project") {
 	    if (p.size() > meshH->nodesize()) {
 		cerr << "Too many points to project ("<<p.size()<<" to "<<meshH->nodesize()<<")\n";

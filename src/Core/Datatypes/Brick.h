@@ -80,7 +80,7 @@ public:
   Array3<unsigned char>* texture(){ return tex; }
   //////////
   // obtain the bounding box of the Brick
-  BBox&  bbox()const;
+  BBox bbox() const;
 
   int level() const { return lev; }
   // GROUP: Computation

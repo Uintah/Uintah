@@ -240,7 +240,7 @@ void ViewWindow::get_bounds(BBox& bbox)
 
   // XXX - START - ASF ADDED FOR UNICAM
   //   cerr << "viewwindow_objs.size() = " << viewwindow_objs.size() << endl;
-  int objs_size = viewwindow_objs.size();
+  //int objs_size = viewwindow_objs.size();
   int draw_size = viewwindow_objs_draw.size();
   for(int i=0;i<viewwindow_objs.size();i++) {
     
@@ -584,7 +584,7 @@ void ViewWindow::choose(int X, int Y)
   if (getenv("FLIP_CAM_MANIP")) {
     int tmp = xa;
     xa = ya;
-    ya = xa;
+    ya = tmp;
   }
      
   float len = sqrt(sdelt[0] * sdelt[0] + sdelt[1] * sdelt[1]);
@@ -662,17 +662,17 @@ void ViewWindow::rot   (int x, int y)
 
 
     // 2nd part of rotation
-    View tmpview(view.get());
+    //      View tmpview(view.get());
 
     //       Wvec   dvec  = data->from() - data->center();
-    Point  from = tmpview.eyep();
-    Vector dvec = (from - center);
      
     double rdist = te[1]-tp[1];
+    //      Point  from = tmpview.eyep();
+    //      Vector dvec = (from - center);
     //      double tdist = acos(Wvec::Y * dvec.normalize());
     Vector Yvec(0,1,0);
 
-    double tdist = acos(clamp(Dot(Yvec, dvec.normal()), -1., 1.));
+    //    double tdist = acos(clamp(Dot(Yvec, dvec.normal()), -1., 1.));
 
     //       CAMdataptr   dd = new CAMdata(*data);
     //       Wline raxe(data->center(),data->right_v());
@@ -681,7 +681,7 @@ void ViewWindow::rot   (int x, int y)
 
     MyRotateCamera(center, right_v, rdist);
 
-    tmpview = view.get(); // update tmpview params given last rotation
+    View tmpview = view.get(); // update tmpview params given last rotation
     tmpview.up(Vector(0,1,0));
     view.set(tmpview);
 
@@ -723,7 +723,7 @@ void ViewWindow::zoom  (int X, int Y)
   double depth = Dot(movec, at_v);
 
   Vector right_v = film_pt(1, 0, depth) - film_pt(-1, 0,depth);
-  Vector up_v    = film_pt(0, 1, depth) - film_pt( 0,-1,depth);
+  //Vector up_v    = film_pt(0, 1, depth) - film_pt( 0,-1,depth);
 
   Vector trans2  = right_v * (-delta[0]/2);
 
@@ -1143,7 +1143,7 @@ void ViewWindow::mouse_rotate(int action, int x, int y, int, int, int time)
 }
 
 // -- BAWGL -- 
-static int prevPrinc;
+//static int prevPrinc;
 void ViewWindow::bawgl_pick(int action, int iv[3], GLfloat fv[3])
 {
   BState bs;
@@ -1184,7 +1184,7 @@ void ViewWindow::bawgl_pick(int action, int iv[3], GLfloat fv[3])
 	}
       }
       if(prin_dir != -1){
-	prevPrinc= prin_dir;
+	//prevPrinc= prin_dir;
 	double dist=dir.length();
 	Vector mtn(pick_pick->principal(prin_dir)*dist);
 	total_x+=mtn.x();

@@ -47,7 +47,7 @@ ROI::draw()
   Point vertex;
   double tmin, tmax, dt;
   double ts[8];
-  int i,j, k;
+  int i;
   for( brick = it.Start(); !it.isDone(); brick = it.Next()){
     polys.clear();
     Brick& b = *brick;
