@@ -110,7 +110,7 @@ python $RPM_BUILD_DIR/Thirdparty_install.%{thirdpartyversion}.%{thirdpartydotver
 rm -rf /usr/local/SCIRun/bin
 mkdir -p /usr/local/SCIRun/bin
 cd /usr/local/SCIRun/bin
-/usr/local/SCIRun/src/configure --with-thirdparty="/usr/local/SCIRun/Thirdparty/%{defver}/Linux/gcc-%{gccver}-32bit/" --with-hdf5="/usr/local/hdf5/1.6.1" --with-mdsplus="/usr/local/mdsplus"
+/usr/local/SCIRun/src/configure --with-thirdparty="/usr/local/SCIRun/Thirdparty/%{defver}/Linux/gcc-%{gccver}-32bit/" --with-hdf5="/usr/local/hdf5/1.6.1" --with-mdsplus="/usr/local/mdsplus" --enable-package="Fusion DataIO Teem"
 cd /usr/local/SCIRun/bin/
 gmake
 
