@@ -32,7 +32,9 @@
 SRCDIR   := SCIRun/Internal
 
 SRCS     += $(SRCDIR)/BuilderService.cc \
+	$(SRCDIR)/ComponentEvent.cc \
 	$(SRCDIR)/ComponentEventService.cc \
+	$(SRCDIR)/ConnectionEvent.cc \
 	$(SRCDIR)/ConnectionEventService.cc \
 	$(SRCDIR)/ComponentRegistry.cc \
 	$(SRCDIR)/InternalComponentDescription.cc \
@@ -41,7 +43,9 @@ SRCS     += $(SRCDIR)/BuilderService.cc \
 	$(SRCDIR)/FrameworkProperties.cc
 
 $(SRCDIR)/ComponentRegistry.o: Core/CCA/spec/cca_sidl.h
+$(SRCDIR)/ComponentEvent.o: Core/CCA/spec/cca_sidl.h
 $(SRCDIR)/ComponentEventService.o: Core/CCA/spec/cca_sidl.h
+$(SRCDIR)/ConnectionEvent.o: Core/CCA/spec/cca_sidl.h
 $(SRCDIR)/ConnectionEventService.o: Core/CCA/spec/cca_sidl.h
 $(SRCDIR)/BuilderService.o: Core/CCA/spec/cca_sidl.h
 $(SRCDIR)/InternalComponentDescription.o: Core/CCA/spec/cca_sidl.h
