@@ -51,8 +51,6 @@ endif
 LIBS :=
 PROGRAM := sr
 
-$(SRCDIR)/newmain.o: Core/CCA/spec/cca_sidl.h
-
 include $(SCIRUN_SCRIPTS)/program.mk
 
 endif
