@@ -67,15 +67,19 @@ public:
 
   typedef NodeIndex<index_type>       node_index;
   typedef NodeIterator<index_type>    node_iterator;
+  typedef NodeIndex<index_type>       node_size_type;
  
   typedef EdgeIndex<index_type>       edge_index;
   typedef EdgeIterator<index_type>    edge_iterator;
+  typedef EdgeIndex<index_type>       edge_size_type;
  
-  typedef unsigned                    face_index;
-  typedef unsigned                    face_iterator;
+  typedef FaceIndex<index_type>       face_index;
+  typedef FaceIterator<index_type>    face_iterator;
+  typedef FaceIndex<index_type>       face_size_type;
  
-  typedef int                         cell_index;
-  typedef int                         cell_iterator;
+  typedef CellIndex<index_type>       cell_index;
+  typedef CellIterator<index_type>    cell_iterator;
+  typedef CellIndex<index_type>       cell_size_type;
 
   // storage types for get_* functions
   typedef vector<node_index>  node_array;
@@ -99,15 +103,15 @@ public:
   cell_iterator cell_end() const { return 0; }
 
   //! get the mesh statistics
-  unsigned nodes_size() const { return (unsigned)nodes_.size(); }
-  unsigned edges_size() const { return (unsigned)edges_.size(); }
-  unsigned faces_size() const { return 0; }
-  unsigned cells_size() const { return 0; }
+  node_size_type nodes_size() const { return (unsigned)nodes_.size(); }
+  edge_size_type edges_size() const { return (unsigned)edges_.size(); }
+  face_size_type faces_size() const { return 0; }
+  cell_size_type cells_size() const { return 0; }
   virtual BBox get_bounding_box() const;
 
   //! set the mesh statistics
-  void resize_nodes(unsigned n) { nodes_.resize(n); }
-  void resize_edges(unsigned n) { edges_.resize(n); }
+  void resize_nodes(node_size_type n) { nodes_.resize(n); }
+  void resize_edges(edge_size_type n) { edges_.resize(n); }
 
   //! get the child elements of the given index
   void get_nodes(node_array &a, edge_index i) const
