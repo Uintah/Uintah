@@ -26,7 +26,7 @@ KEYWORDS
 
 DESCRIPTION
     The StanjanEquilibriumReactionModel class is derived from the ReactionModel 
-    base class. The input required is a set of mixing variables and a normalized 
+    base class. The input required is a set of mixing variables and a linearized 
     heat loss.
   
     This class then computes chemical equilibrium for the given system based on  
@@ -34,6 +34,19 @@ DESCRIPTION
     state space variables at chemical equilibrium.  These state space values 
     including temperature, pressure, density, mixture molecular weight, heat 
     capacity,and species mole fractions.
+ 
+    The local (absolute) enthalpy is linearized using the adiabatic and sensible 
+    enthalpies (J/kg).  The sensible enthalpy is chosen as an arbitrary enthalpy 
+    whereas the adiabatic enthalpy is chosen for the standardized constant 
+    enthalpy. The linearization can be written as:
+         absH = adH + gamma*sensH 
+    where adH is the adiabatic enthalpy and sensH is the sensible enthalpy. 
+    Gamma is the normalized residual enthalpy (resH) and is one of the 
+    independent variables (mixRxnVar). It is defined as:
+        resH = absH - adH
+        gamma = resH/sensH
+    This formulation will not work when adH = 0 (e.g. mixtures containing 
+    only O2 and/or N2).
 
 PATTERNS
     None
@@ -50,25 +63,30 @@ POSSIBLE REVISIONS:
   ***************************************************************************/
 
 #include <Packages/Uintah/CCA/Components/Arches/Mixing/ReactionModel.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
-#include <Packages/Uintah/Core/Exceptions/InvalidValue.h>
+#include <Packages/Uintah/CCA/Components/Arches/Mixing/DynamicTable.h>
+
 #include <vector>
+#include <iostream>
 
 using namespace std;
 namespace Uintah {
   class KD_Tree;
-  class InputState;
   class ChemkinInterface;
   class Stream;
+  class MixingModel;
+  class MixRxnTableInfo;
   // Reference temperature defined to be the lower limit of integration in the
   // determination of the system sensible enthalpy
   const double TREF = 200.0;
   const double TLOW = 100.00;
   const double THIGH = 4000.0;
   const int MAXITER = 1000;
+  // includes all the vars except vectors...
+  // increase the value if want to increase number of variables
+  //static const int NUM_DEP_VARS = 7;
+  const int NUM_DEP_VARS = 7;
 
-
-  class StanjanEquilibriumReactionModel: public ReactionModel {
+  class StanjanEquilibriumReactionModel: public ReactionModel, public DynamicTable{
   public:
     // GROUP: Constructors:
     /////////////////////////////////////////////////////////////////////////
@@ -87,7 +105,6 @@ namespace Uintah {
     //
     // Constructor taking
     //   [in] adiabatic If =1, system is adiabatic; otherwise, its nonadiabatic.
-
     StanjanEquilibriumReactionModel(bool adiabatic);
 
     // GROUP: Destructor:
@@ -103,50 +120,45 @@ namespace Uintah {
     // problemSetup performs functions required to run the reaction model that
     // don't explicitly involve assigning memory
     //
-    virtual void problemSetup(const ProblemSpecP& params);
+    virtual void problemSetup(const ProblemSpecP& params, 
+			      MixingModel* mixModel);
 
     // GROUP: Access function
     //////////////////////////////////////////////////////////////////////
     // returns the pointer to chemkin interface class
-    virtual ChemkinInterface* getChemkinInterface() {
+    inline ChemkinInterface* getChemkinInterface() const{
       return d_reactionData;
     }
+    inline bool getSootBool() const{
+      return d_lsoot;
+    }
+    inline int getTotalDepVars() const{
+      return d_depStateSpaceVars;
+    }
 
-  
     // GROUP: Actual Action Methods :
-    /////////////////////////////////////////////////////////////////////////
-    //
-    //computeEnthalpy returns the enthalpies (J/kg) used in the linearization 
-    // of the local enthalpy(absH), given values for the mixing variables. The 
-    // linearization can be written as:
-    //     absH = adH + gamma*sensH 
-    // where adH is the adiabatic enthalpy and sensH is the sensible enthalpy. 
-    // Gamma is the normalized residual enthalpy (resH) and is one of the 
-    // independent variables (mixRxnVar). It is defined as:
-    //     resH = absH - adH
-    //     gamma = resH/sensH
-    // This formulation will not work when adH = 0 (e.g. mixtures containing 
-    // only O2 and/or N2).
-    // This routine computes the adiabatic enthalpy and adiabatic flame 
-    // temperature (AFT)using stanjan.  It calculates the sensible enthalpy
-    // based on the AFT using the Chemkin routine ckhbms.
-    //
-    virtual Stream computeEnthalpy(Stream& unreactedMixture,
-				   const vector<double>& mixRxnVar);
-
     ///////////////////////////////////////////////////////////////////////
     //
-    // Computes the state space (dependent) variables given the unreacted
-    // stream information and values for the reaction variables
+    // Gets the state space (dependent) variables by  interpolation from a 
+    // table using the values of the independent variables
     //
-    virtual Stream computeRxnStateSpace(Stream& unreactedMixture, 
-					const vector<double>& mixRxnVar,
-					bool adiabatic);
+    virtual void getRxnStateSpace(Stream& unreactedMixture, 
+				    vector<double>& varsHFPi, 
+				    Stream& reactedStream);
 
 
   private:
+    // Computes the state space (dependent) variables using the Stanjan
+    // equilibrium code given the unreacted stream information and values 
+    // for the reaction variables
+    void computeRxnStateSpace(Stream& unreactedMixture, vector<double>& mixRxnVar, 
+			      Stream& equilStateSpace);
+    // Looks for needed entry in KDTree and returns that entry. If entry 
+    // does not exist, calls integrator to compute entry before returning it.
+    Stream tableLookUp(int* tableKeyIndex);
+    void convertIndextoValues(int* tableKeyIndex);
     void computeEquilibrium(double initTemp, double initPress,
-			    const vector<double>& initMassFract, 
+			    const vector<double> initMassFract, 
 			    Stream& equilSoln);
     double computeTemperature(const double absEnthalpy, 
 			      const vector<double>& massFract, double initTemp);   
@@ -154,15 +166,20 @@ namespace Uintah {
     // Class object that stores all the information about the reaction
     // mechanism read in through Chemkin including species, elements, reaction
     // rates, and thermodynamic information.
-    ChemkinInterface* d_reactionData; 
-
+    ChemkinInterface* d_reactionData;
+    MixingModel* d_mixModel;
+    int d_numMixVars;
+    int d_numRxnVars;
     bool d_adiabatic;
-    // If true, enthalpies needed to linearize the absolute enthalpy will be computed
-    bool d_normalizeEnthalpy;
-
-    // Optical path length (m?)- a characteristic length used to estimate radiation
-    // gas absorption coefficients
-    // double d_opl;
+    int d_rxnTableDimension;
+    int d_depStateSpaceVars;
+    bool d_lsoot;
+    std::vector<double> d_indepVars;
+    MixRxnTableInfo* d_rxnTableInfo;
+    // Data structure class that stores the table entries for state-space
+    // variables as a function of independent variables.
+    // This could be implemented either as a k-d or a binary tree data structure.
+    KD_Tree* d_rxnTable;
  
   }; // End Class StanjanEquilibriumReactionModel
 

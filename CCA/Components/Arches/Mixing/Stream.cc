@@ -1,3 +1,4 @@
+//----- Stream.cc --------------------------------------------------
 
 #include <Packages/Uintah/CCA/Components/Arches/Mixing/Stream.h>
 #include <Packages/Uintah/CCA/Components/Arches/Mixing/ChemkinInterface.h>
@@ -5,15 +6,17 @@
 #include <Packages/Uintah/Core/Exceptions/InvalidValue.h>
 #include <string>
 #include <iostream>
+#include <math.h>
 
 using namespace Uintah;
 using namespace std;
 const int Stream::NUM_DEP_VARS;
+
 Stream::Stream()
 {
 }
 
-Stream::Stream(const int numSpecies)
+Stream::Stream(const int numSpecies,  int numElements)
 {
   d_speciesConcn = vector<double>(numSpecies, 0.0); // initialize with 0
   d_pressure = 0.0;
@@ -26,18 +29,18 @@ Stream::Stream(const int numSpecies)
   d_mole = false;
   d_numMixVars = 0;
   d_numRxnVars = 0;
-  d_rxnVarRates = vector<double>(d_numRxnVars, 0.0); // initial with 0
+  d_lsoot = false;
+  //d_atomNumbers = vector<double>(numElements, 0.0); // initialize with 0
   // NUM_DEP_VARS corresponds to pressure, density, temp, enthalpy, sensh, 
   // cp, molwt; total number of dependent state space variables also 
-  // includes number of species and source terms (rxn rates) for each
-  // rxn variable
-  d_depStateSpaceVars = NUM_DEP_VARS + numSpecies + d_numRxnVars;
-  // ***Add in enthalpy stuff***
+  // includes mass fraction of each species
+  d_depStateSpaceVars = NUM_DEP_VARS + numSpecies;
 }
 
 
-Stream::Stream(const int numSpecies, const int numMixVars, const int numRxnVars): 
-  d_numMixVars(numMixVars), d_numRxnVars(numRxnVars)
+Stream::Stream(const int numSpecies, const int numElements, 
+	       const int numMixVars, const int numRxnVars, bool lsoot): 
+  d_numMixVars(numMixVars), d_numRxnVars(numRxnVars), d_lsoot(lsoot)
 {
   d_speciesConcn = vector<double>(numSpecies, 0.0); // initialize with 0
   d_pressure = 0.0;
@@ -48,12 +51,25 @@ Stream::Stream(const int numSpecies, const int numMixVars, const int numRxnVars)
   d_moleWeight = 0.0;
   d_cp = 0.0;
   d_mole = false;
-  d_rxnVarRates = vector<double>(d_numRxnVars, 0.0); // initial with 0
+  //d_atomNumbers = vector<double>(numElements, 0.0); // initialize with 0
+  if (d_numRxnVars > 0) {
+    d_rxnVarRates = vector<double>(d_numRxnVars, 0.0); // initialize with 0
+    d_rxnVarNorm = vector<double>(2*d_numRxnVars, 0.0); // min & max values
+                                         // for normalizing rxn parameter
+
+  }
+  int sootTrue = 0;
+  if (d_lsoot) {
+    d_sootData = vector<double>(2, 0.0);
+    sootTrue = 1;
+  }
   // NUM_DEP_VARS corresponds to pressure, density, temp, enthalpy, sensh, 
   // cp, molwt; total number of dependent state space variables also 
-  // includes number of species and source terms (rxn rates) for each
-  // rxn variable
-  d_depStateSpaceVars = NUM_DEP_VARS + numSpecies + d_numRxnVars;
+  // includes mass fraction of each species, soot volume fraction and 
+  // diameter, source terms (rxn rates) for each rxn variable, and min/max 
+  // values of each rxn variable for normalization
+  d_depStateSpaceVars = NUM_DEP_VARS + numSpecies + 2*sootTrue + 
+    3*d_numRxnVars;
 }
 
 
@@ -71,7 +87,15 @@ Stream::Stream(const Stream& strm) // copy constructor
   d_mole = strm.d_mole;
   d_numMixVars = strm.d_numMixVars;
   d_numRxnVars = strm.d_numRxnVars;
-  d_rxnVarRates = strm.d_rxnVarRates;
+  d_lsoot = strm.d_lsoot;
+  //d_atomNumbers = strm.d_atomNumbers;
+  if (strm.d_numRxnVars > 0) {
+    d_rxnVarRates = strm.d_rxnVarRates;
+    d_rxnVarNorm = strm.d_rxnVarNorm;
+  }
+  if (strm.d_lsoot)
+    d_sootData = strm.d_sootData;
+
 }
 
 Stream&
@@ -92,7 +116,14 @@ Stream::operator=(const Stream &rhs)
       d_mole = rhs.d_mole;
       d_numMixVars = rhs.d_numMixVars;
       d_numRxnVars = rhs.d_numRxnVars;
-      d_rxnVarRates = rhs.d_rxnVarRates;
+      d_lsoot = rhs.d_lsoot;
+      //d_atomNumbers = rhs.d_atomNumbers;
+      if (rhs.d_numRxnVars > 0) {
+	d_rxnVarRates = rhs.d_rxnVarRates;
+	d_rxnVarNorm = rhs.d_rxnVarNorm;
+      }
+      if (rhs.d_lsoot)
+	d_sootData = rhs.d_sootData;
     }
   return *this;
   }
@@ -124,10 +155,32 @@ Stream::addStream(const Stream& strm, ChemkinInterface* chemInterf,
   d_density += factor*strm.d_density;
   d_temperature += factor*strm.d_temperature;
   d_enthalpy += factor*strm.d_enthalpy;
+  //Newton iteration to get mixture temperature
+  double adH, Cp, del;
+  do {
+    //get enthalpy of mixture
+    adH = chemInterf->getMixEnthalpy(d_temperature, d_speciesConcn);
+    //cout << "InputState::h using mixTemp = " << adH << endl;
+    //get heat capacity of mixture
+    Cp = chemInterf->getMixSpecificHeat(d_temperature, d_speciesConcn);
+    if (Cp < 1e-10) {
+      del = 1e-10;  //***Use CONST here***
+      cout<<"WARNING in Stream.cc."<<endl
+	  <<"The mixture heat capacity is "<< Cp <<endl;     
+    }
+    else {
+      del = (adH-d_enthalpy)/Cp;
+      d_temperature -= del;
+    }
+  } while(fabs(del) > 0.0001);
   d_sensibleEnthalpy += factor*strm.d_sensibleEnthalpy; //Does this even make sense??
   d_moleWeight += factor*strm.d_moleWeight;
   d_cp += factor*strm.d_cp;
   d_mole = false;
+  //if (d_lsoot) {
+  //for (int i = 0; i < strm.d_sootData.size(); i++)
+  //  d_sootData[i] += factor*strm.d_sootData[i];
+  //}
 }
 
 
@@ -148,11 +201,24 @@ double
 Stream::getValue(int count, bool lfavre) 
 {
   int sumVars = NUM_DEP_VARS + d_speciesConcn.size();
-  if ((count >= sumVars) && (count < sumVars + d_numRxnVars))
-      return d_rxnVarRates[count-NUM_DEP_VARS-d_speciesConcn.size()];
-  else
-    if ((count >= NUM_DEP_VARS)&&(count < sumVars))
-      return d_speciesConcn[count-NUM_DEP_VARS];
+  //Need to work on how to handle soot here ****
+  if ((d_numRxnVars > 0)&&(count >= sumVars))
+    {
+      if (count < (sumVars + d_numRxnVars))
+	return d_rxnVarRates[count-NUM_DEP_VARS-d_speciesConcn.size()];
+      else if (count < (sumVars + 3*d_numRxnVars))
+	return d_rxnVarNorm[count-NUM_DEP_VARS-d_speciesConcn.size()-
+			   d_numRxnVars];
+      else if (count < d_depStateSpaceVars)
+	return d_sootData[count-NUM_DEP_VARS-d_speciesConcn.size()-
+			 3*d_numRxnVars];
+      else {
+	cerr << "Invalid count value" << '/n';
+	return 0;
+      }
+    }	
+  if ((count >= NUM_DEP_VARS)&&(count < sumVars))
+    return d_speciesConcn[count-NUM_DEP_VARS];
   else
     {
       switch (count) {
@@ -196,10 +262,9 @@ Stream::normalizeStream() {
 	
 void
 Stream::convertVecToStream(const vector<double>& vec_stateSpace, const bool lfavre,
-                           const int numMixVars, const int numRxnVars) {
-  //cout<<"Stream::convertVecToStream"<<endl;
+                           const int numMixVars, const int numRxnVars,
+			   const bool lsoot) {
   d_depStateSpaceVars = vec_stateSpace.size();
-  //cout<<"Stream::depStateSpace= "<<d_depStateSpaceVars<<endl;
   d_pressure = vec_stateSpace[0];
   d_density = vec_stateSpace[1];
   if (lfavre) 
@@ -210,21 +275,49 @@ Stream::convertVecToStream(const vector<double>& vec_stateSpace, const bool lfav
   d_sensibleEnthalpy = vec_stateSpace[4];
   d_moleWeight = vec_stateSpace[5];
   d_cp = vec_stateSpace[6];
-  // d_rxnVarRates = vector<double>(d_numRxnVars, 0.0);  
-  //if (d_numRxnVars > 0) {
-  // d_rxnVarRates =  vector<double> (vec_stateSpace.end()-d_numRxnVars, 
-  //				  vec_stateSpace.end());
-  //int sumVars = NUM_DEP_VARS + numSpecies;
   d_numMixVars = numMixVars;
   d_numRxnVars = numRxnVars;
+  d_lsoot = lsoot;
+  d_mole = false; //???Is this true???
+  int incSoot = 0;
+  if (lsoot)
+    incSoot = 2;
   d_speciesConcn = vector<double> (vec_stateSpace.begin()+NUM_DEP_VARS,
-				   vec_stateSpace.end()-d_numRxnVars);
-  d_rxnVarRates = vector<double> (vec_stateSpace.end()-d_numRxnVars, 
-				  vec_stateSpace.end());
-}      
+				   vec_stateSpace.end()-3*d_numRxnVars-incSoot);
+  if (d_numRxnVars > 0) {
+    d_rxnVarRates = vector<double> (vec_stateSpace.end()-3*d_numRxnVars-incSoot, 
+				    vec_stateSpace.end()-2*d_numRxnVars-incSoot);
+    d_rxnVarNorm = vector<double> (vec_stateSpace.end()-2*d_numRxnVars-incSoot, 
+				   vec_stateSpace.end()-incSoot);
+    //cerr << "Stream::rate = " << d_rxnVarRates[0] << endl;
+    //cerr << "Stream::norm = " << d_rxnVarNorm[0] << " " << d_rxnVarNorm[1] << endl;
+  } 
+  if (lsoot) {
+    d_sootData = vector<double> (vec_stateSpace.end()-2, 
+				 vec_stateSpace.end());
+  }
+#if 0
+  cout << "Density: "<< d_density << endl;
+  cout << "Pressure: "<< d_pressure << endl;
+  cout << "Temperature: "<< d_temperature << endl;
+  cout << "Enthalpy: "<< d_enthalpy << endl;
+  cout << "Sensible Enthalpy: "<< d_sensibleEnthalpy << endl;
+  cout << "Molecular Weight: "<< d_moleWeight << endl;
+  cout << "CP: "<< d_cp << endl;
+  cout << "Species concentration in mass fraction: " << endl;
+  for (int ii = 0; ii < d_speciesConcn.size(); ii++) {
+    cout.width(10);
+    cout << d_speciesConcn[ii] << " " ; 
+    if (!(ii % 10)) cout << endl; 
+    cout << endl;
+  }
+   cout << d_numMixVars << " " << d_numRxnVars << " " << d_lsoot << " " << d_mole << " " << d_depStateSpaceVars << endl; 
+#endif
+}     
 
-std::vector<double>
-Stream::convertStreamToVec(const bool)
+vector<double>
+//Stream::convertStreamToVec(const bool lsoot)
+Stream::convertStreamToVec()
 {
   vector<double> vec_stateSpace;
   vec_stateSpace.push_back(d_pressure);
@@ -235,12 +328,27 @@ Stream::convertStreamToVec(const bool)
   vec_stateSpace.push_back(d_moleWeight);
   vec_stateSpace.push_back(d_cp);
   // copy d_speciesConcn to rest of the vector
+  //int jj = 0;
   for (vector<double>::iterator iter = d_speciesConcn.begin(); 
-       iter != d_speciesConcn.end(); ++iter)
-   vec_stateSpace.push_back(*iter);
-  for (vector<double>::iterator iter = d_rxnVarRates.begin(); 
-       iter != d_rxnVarRates.end(); ++iter)
-   vec_stateSpace.push_back(*iter);
+       iter != d_speciesConcn.end(); ++iter) {
+    vec_stateSpace.push_back(*iter);
+    //cout << d_speciesConcn[jj++] <<  endl;
+  }
+  if (d_numRxnVars > 0) {
+    for (vector<double>::iterator iter = d_rxnVarRates.begin(); 
+	 iter != d_rxnVarRates.end(); ++iter)
+      vec_stateSpace.push_back(*iter);
+    for (vector<double>::iterator iter = d_rxnVarNorm.begin(); 
+	 iter != d_rxnVarNorm.end(); ++iter)
+      vec_stateSpace.push_back(*iter);
+  }
+  if (d_lsoot) {
+    for (vector<double>::iterator iter = d_sootData.begin(); 
+       iter != d_sootData.end(); ++iter)
+    vec_stateSpace.push_back(*iter);
+    //cout << "Stream::streamToVec::sootData = " << d_sootData[0] << " " 
+    // << d_sootData[1] << endl;
+  }
   return vec_stateSpace;
 }
 
@@ -258,9 +366,20 @@ Stream& Stream::linInterpolate(double upfactor, double lowfactor,
   for (int i = 0; i < d_speciesConcn.size(); i++)
     d_speciesConcn[i] = upfactor*d_speciesConcn[i] +
                    lowfactor*rightvalue.d_speciesConcn[i];
-  for (int i = 0; i < d_rxnVarRates.size(); i++)
-    d_rxnVarRates[i] = upfactor*d_rxnVarRates[i] +
-                   lowfactor*rightvalue.d_rxnVarRates[i];
+  if (d_numRxnVars > 0) {
+    for (int i = 0; i < d_rxnVarRates.size(); i++)
+      d_rxnVarRates[i] = upfactor*d_rxnVarRates[i] +
+	lowfactor*rightvalue.d_rxnVarRates[i];
+    for (int i = 0; i < d_rxnVarNorm.size(); i++)
+      d_rxnVarNorm[i] = upfactor*d_rxnVarNorm[i] +
+	lowfactor*rightvalue.d_rxnVarNorm[i];
+  }
+  if (d_lsoot) {
+    for (int i = 0; i < d_sootData.size(); i++)
+      d_sootData[i] = upfactor*d_sootData[i] +
+	lowfactor*rightvalue.d_sootData[i];
+  }
+
   return *this;
 }
 
@@ -275,12 +394,21 @@ Stream::print(std::ostream& out) const {
   out << "Molecular Weight: "<< d_moleWeight << endl;
   out << "CP: "<< d_cp << endl;
   out << "Species concentration in mass fraction: " << endl;
-    for (int ii = 0; ii < d_speciesConcn.size(); ii++) {
+  for (int ii = 0; ii < d_speciesConcn.size(); ii++) {
+    out.width(10);
+    out << d_speciesConcn[ii] << " " ; 
+    if (!(ii % 10)) out << endl; 
+    out << endl;
+  }
+  if (d_lsoot) {
+    out << "Soot Data: " << endl;
+    for (int ii = 0; ii < d_sootData.size(); ii++) {
       out.width(10);
-      out << d_speciesConcn[ii] << " " ; 
+      out << d_sootData[ii] << " " ; 
       if (!(ii % 10)) out << endl; 
     }
-    out << endl;
+  }
+  out << endl;
 }
 
 void
@@ -295,22 +423,36 @@ Stream::print(std::ostream& out, ChemkinInterface* chemInterf) {
   out << "CP: "<< d_cp << endl;
   int numSpecies = chemInterf->getNumSpecies();
   double* specMW = new double[numSpecies];
-  chemInterf->getMoleWeight(specMW);
+ chemInterf->getMoleWeight(specMW);
   out << "Species concentration in mole fraction: " << endl;
-    for (int ii = 0; ii < d_speciesConcn.size(); ii++) {
+  for (int ii = 0; ii < d_speciesConcn.size(); ii++) {
+    out.width(10);
+    out << d_speciesConcn[ii]/specMW[ii] << " " ; 
+    if (!(ii % 10)) out << endl; 
+  }
+  if (d_lsoot) {
+    for (int ii = 0; ii < d_sootData.size(); ii++) {
       out.width(10);
-      out << d_speciesConcn[ii]/specMW[ii]*d_moleWeight << " " ; 
+      out << d_sootData[ii] << " " ; 
       if (!(ii % 10)) out << endl; 
     }
-    out << endl;
+  }
+  out << endl;
 }
 
 
 //
 // $Log$
-// Revision 1.8  2001/10/11 18:48:59  divyar
-// Made changes to Mixing
+// Revision 1.9  2001/11/08 19:13:44  spinti
+// 1. Corrected minor problems in ILDMReactionModel.cc
+// 2. Added tabulation capability to StanjanEquilibriumReactionModel.cc. Now,
+//    a reaction table is created dynamically. The limits and spacing in the
+//    table are specified in the *.ups file.
+// 3. Corrected the mixture temperature computation in Stream::addStream. It
+//    now is computed using a Newton search.
+// 4. Made other minor corrections to various reaction model files.
 //
+
 // Revision 1.6  2001/08/25 07:32:45  skumar
 // Incorporated Jennifer's beta-PDF mixing model code with some
 // corrections to the equilibrium code.
@@ -330,5 +472,8 @@ Stream::print(std::ostream& out, ChemkinInterface* chemInterf) {
 //
 // Revision 1.1  2001/01/15 23:38:21  rawat
 // added some more classes for implementing mixing model
+//
+// Revision 1.1 2001/07/16 spinti
+// added classes for implement reaction model
 //
 //

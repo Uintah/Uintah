@@ -34,6 +34,8 @@ POSSIBLE REVISIONS
 ***************************************************************************/
 
 #include <Packages/Uintah/CCA/Components/Arches/Mixing/MixingModel.h>
+#include <Packages/Uintah/CCA/Components/Arches/Mixing/ReactionModel.h>
+#include <Packages/Uintah/CCA/Components/Arches/Mixing/Integrator.h>
 
 #include <vector>
 
@@ -92,6 +94,18 @@ public:
       inline int getNumRxnVars() const{
 	return 0;
       }
+      inline int getTableDimension() const{
+	return 0;
+      }
+      //***warning** compute totalvars from number of species and dependent vars
+      inline int getTotalVars() const {
+	return 0;
+      }
+      inline ReactionModel* getRxnModel() const {
+      }
+      inline Integrator* getIntegrator() const {
+      }
+
 
 
 protected :
@@ -129,8 +143,14 @@ private:
 
 //
 // $Log$
-// Revision 1.4  2001/10/11 18:48:58  divyar
-// Made changes to Mixing
+// Revision 1.5  2001/11/08 19:13:44  spinti
+// 1. Corrected minor problems in ILDMReactionModel.cc
+// 2. Added tabulation capability to StanjanEquilibriumReactionModel.cc. Now,
+//    a reaction table is created dynamically. The limits and spacing in the
+//    table are specified in the *.ups file.
+// 3. Corrected the mixture temperature computation in Stream::addStream. It
+//    now is computed using a Newton search.
+// 4. Made other minor corrections to various reaction model files.
 //
 // Revision 1.2  2001/08/25 07:32:45  skumar
 // Incorporated Jennifer's beta-PDF mixing model code with some

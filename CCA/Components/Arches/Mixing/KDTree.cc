@@ -94,6 +94,11 @@ KD_Tree::TreeInsert(KD_Node*& x, int key[], vector<double> phi,
     for(i=0; i<d_dim && key[i]==x->keys[i]; i++);
     if(i== d_dim) {
       cout << "the node already exist" << endl;
+      for (int ii = 0; ii < d_dim; ii++) {
+	cout.width(10);
+	cout << key[ii] << " " ; 
+	if (!(ii % 10)) cout << endl; 
+      }
       x->Phi = phi;
     }
     else if (key[lev] > x->keys[lev]){
@@ -178,8 +183,14 @@ KD_Tree::DestroyTree(KD_Node *x){
 
 //
 // $Log$
-// Revision 1.5  2001/10/11 18:48:58  divyar
-// Made changes to Mixing
+// Revision 1.6  2001/11/08 19:13:44  spinti
+// 1. Corrected minor problems in ILDMReactionModel.cc
+// 2. Added tabulation capability to StanjanEquilibriumReactionModel.cc. Now,
+//    a reaction table is created dynamically. The limits and spacing in the
+//    table are specified in the *.ups file.
+// 3. Corrected the mixture temperature computation in Stream::addStream. It
+//    now is computed using a Newton search.
+// 4. Made other minor corrections to various reaction model files.
 //
 // Revision 1.3  2001/07/16 21:15:38  rawat
 // added enthalpy solver and Jennifer's changes in Mixing and Reaction model required for ILDM and non-adiabatic cases

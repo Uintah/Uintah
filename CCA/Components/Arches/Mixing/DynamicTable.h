@@ -95,10 +95,13 @@ class DynamicTable {
 
 //
 // $Log$
-// Revision 1.3  2001/10/11 18:48:58  divyar
-// Made changes to Mixing
-//
-// Revision 1.1  2001/07/16 21:15:38  rawat
-// added enthalpy solver and Jennifer's changes in Mixing and Reaction model required for ILDM and non-adiabatic cases
+// Revision 1.4  2001/11/08 19:13:44  spinti
+// 1. Corrected minor problems in ILDMReactionModel.cc
+// 2. Added tabulation capability to StanjanEquilibriumReactionModel.cc. Now,
+//    a reaction table is created dynamically. The limits and spacing in the
+//    table are specified in the *.ups file.
+// 3. Corrected the mixture temperature computation in Stream::addStream. It
+//    now is computed using a Newton search.
+// 4. Made other minor corrections to various reaction model files.
 //
 //

@@ -1,6 +1,5 @@
 
 #include <Packages/Uintah/CCA/Components/Arches/Mixing/Common.h>
-#include <stdlib.h>
 #include <iostream>
 
 using namespace std;

@@ -13,8 +13,10 @@ GENERAL INFORMATION
    Stream.h - declaration of the class
    
    Author: Rajesh Rawat (rawat@crsim.utah.edu)
+   Revised by: Jennifer Spinti (spinti@crsim.utah.edu)
    
    Creation Date:   July 20, 2000
+   Last Revised:   July 16, 2001
    
    C-SAFE 
    
@@ -35,14 +37,16 @@ namespace Uintah {
     class Stream {
     public:
       Stream();
-      Stream(const int numSpecies);
-      Stream(const int numSpecies, const int numMixVars, const int numRxnVars);
+      Stream(const int numSpecies, const int numElements);
+      Stream(const int numSpecies, const int numElements,
+	     const int numMixVars, const int numRxnVars, const bool lsoot);
       ///////////////////////////////////////////////////////////////////////
       //
       // Copy Constructor
       //         
       //
       Stream(const Stream& strm); // copy constructor
+
       // GROUP: Operators:
       ///////////////////////////////////////////////////////////////////////
       //
@@ -60,10 +64,11 @@ namespace Uintah {
       int speciesIndex(const ChemkinInterface* chemInterf, const char* name);
       void print(std::ostream& out) const;
       void print(std::ostream& out, ChemkinInterface* chemInterf);
-      std::vector<double> convertStreamToVec(const bool flag);
+      //std::vector<double> convertStreamToVec(const bool lsoot);
+      std::vector<double> convertStreamToVec();
       void convertVecToStream(const std::vector<double>& vec_stateSpace, 
 			      const bool flag, const int numMixVars, 
-                              const int numRxnVars);
+                              const int numRxnVars, const bool lsoot);
       double getValue(int count, bool flag);
       void normalizeStream();
       inline double getDensity() const {
@@ -76,12 +81,17 @@ namespace Uintah {
       inline double getEnthalpy() const {
 	return d_enthalpy;
       }
-
       inline double getTemperature() const {
 	return d_temperature;
       }
       inline double getCO2() const {
 	return d_speciesConcn[3];
+      }
+      inline double getSootFV() const {
+	return d_sootData[1];
+      }
+      inline double getRxnSource() const {
+	return d_rxnVarRates[0];
       }
 
     public:
@@ -94,12 +104,18 @@ namespace Uintah {
       double d_cp; // J/Kg
       bool d_mole;
       int d_depStateSpaceVars;
-      std::vector<double> d_speciesConcn;
-      std::vector<double> d_rxnVarRates;
+      std::vector<double> d_speciesConcn; // Mass or mole fraction in
+      // constructor; converted to mass fraction in addStream
+      std::vector<double> d_atomNumbers; // kg-atoms element I/kg mixture
+      std::vector<double> d_rxnVarRates; // mass fraction/s
+      std::vector<double> d_rxnVarNorm; // min/max values of rxn parameter
+      std::vector<double> d_sootData; // soot volume fraction and average diameter
       int d_numMixVars;
       int d_numRxnVars;
+      bool d_lsoot;
+
     private:
-      // includes all the vars except species except species_conc...
+      // includes all the vars except vectors...
       // increase the value if want to increase number of variables
       //
       static const int NUM_DEP_VARS = 7;
