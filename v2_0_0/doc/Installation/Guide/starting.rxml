@@ -23,7 +23,9 @@
 
 <para>
 If installed from its rpm, &sr;'s installation can be tested by
-typing <command>/usr/local/&sr;/bin/scirun</command>.
+changing the working directory (<command>cd</command>ing) to
+<filename>/usr/local/&sr;/bin/</filename> and typing:
+<command>./scirun</command>.
 </para>
 
 <para>
