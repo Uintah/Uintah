@@ -492,7 +492,7 @@ OnDemandDataWarehouse::reduceMPI(const VarLabel* label,
                                  const ProcessorGroup* world)
 {
   const MaterialSubset* matls;
-  if(!matls){
+  if(!inmatls){
     MaterialSubset* tmpmatls = scinew MaterialSubset();
     tmpmatls->add(-1);
     matls = tmpmatls;
