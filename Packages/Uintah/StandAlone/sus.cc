@@ -177,6 +177,11 @@ main(int argc, char** argv)
     IntVector layout(1,1,1);
 
     /*
+     * Initialize MPI
+     */
+    Uintah::Parallel::initializeManager( argc, argv, scheduler );
+
+    /*
      * Parse arguments
      */
     for(int i=1;i<argc;i++){
@@ -219,6 +224,13 @@ main(int argc, char** argv)
 	   }
 	   loadbalancer = argv[i];
 	} else if(s.substr(0,3) == "-p4") {
+	  // This should never happen anymore as the MPI_Init strips
+	  // the "-p4" and other args off of the command line before
+	  // we get to this point.  This use to be necessary as we did
+	  // not call MPI_Init() before parsing args.  It is necessary
+	  // to do so because mpich doesn't send the args through
+	  // correctly if you don't.  Dd.
+
 	   // mpich - skip the rest
 	   break;
 	} else if (s == "-emit_taskgraphs") {
@@ -263,10 +275,6 @@ main(int argc, char** argv)
        filename = filename + "/input.xml";
     }
 
-    /*
-     * Initialize MPI
-     */
-    Uintah::Parallel::initializeManager( argc, argv, scheduler );
     #ifdef USE_VAMPIR
     VTsetup();
     #endif
