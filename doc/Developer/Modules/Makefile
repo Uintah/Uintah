@@ -21,8 +21,11 @@
 #
 # Generated html is stored either in an appropriate XML or TeX directory.
 #
-# The variable SRGROUP is expected to be set to one of biopse, scirun, or
-#  unitah. If its not set or is empty then biopse is assumed.
+# The env variable CLASSPATH must point to the location of saxon.jar.
+#
+# The env variable SRGROUP is expected to be set to one of biopse, scirun, or
+#  unitah. If its not set or is empty then biopse is assumed.  Note that
+#  uintah is not really supported yet.
 #
 
 # ########## Macros (Used with ${call ...} function)
@@ -32,12 +35,10 @@
 # Use saxon 6.5 or higher to process the xml files.
 # The environment variable CLASSPATH must point to saxon.jar.
 #
+
+# Convert the xml file given by $< to the html file given by $@
 define xmltohtml
-@echo $@
-@-sed "s#\".*component.dtd#\"${treetop}/doc/Utilities/XML/component.dtd#" $< >${notdir $<}
-@-java com.icl.saxon.StyleSheet -w2 ${notdir $<} ${stylesheet} \
-treetop=${1} > $@
-@-rm ${notdir $<}
+-java com.icl.saxon.StyleSheet -w2 $< ${stylesheet} treetop=${1} > $@
 endef
 
 # Convert tex file given by ${1} to html
@@ -80,37 +81,44 @@ treetop:=../../..
 # Location of stylesheet relative to this directory.
 stylesheet:=${treetop}/doc/Utilities/XML/component.xsl
 
-# List of packages
-packages:=SCIRun BioPSE Teem VDT MatlabInterface Fusion
-
 # Top of tree relative to SCIRun XML dir
 xmlsrtreetop:=../../../
 
 # Top of tree relative to Package XML dirs
 xmlpkgtreetop:= ../../../../../
 
-# ########## Top level targets
-
 # Phony targets.
-.PHONY: default scirun biopse uintah clean veryclean
+.PHONY: default SCIRun BioPSE Teem Fusion VDT MatlabInterface clean veryclean
 
-# Default target
+# Check SRGROUP variable...
 ifndef SRGROUP
 SRGROUP := biopse
 endif
 ifeq (${strip ${SRGROUP}},)
 SRGROUP := biopse
 endif
-default: ${SRGROUP}
 
-# Other possibilities
-scirun : SCIRun
+# ...and set list of packages appropriately.
+ifeq (${SRGROUP},scirun)
+packages := SCIRun
+endif
 
-# BioPSE group of packages
-biopse : SCIRun BioPSE Teem VDT MatlabInterface Fusion
+ifeq (${SRGROUP},biopse)
+packages := SCIRun BioPSE Teem VDT MatlabInterface Fusion
+endif
 
-# Uintah group of packages (This isn't really supported yet).
-uintah : SCIRun Unitah
+ifeq (${SRGROUP},uintah)
+packages := SCIRun Uintah
+endif
+
+ifndef SRGROUP
+packages :=
+endif
+ifeq (${strip ${SRGROUP}},)
+packages :=
+endif
+
+default: ${packages}
 
 # ########## SCIRun
 SCIRun_xml_dir:=${call xmldir}
@@ -123,8 +131,8 @@ SCIRun : SCIRun.html
 SCIRun.html : ${SCIRun_xml_html_files} ${SCIRun_tex_html_dirs}
 	${call makepkgindex,SCIRun,${SCIRun_xml_dir},${SCIRun_tex_dir}}
 
-${SCIRun_xml_html_files}: ${SCIRun_xml_dir}/%.html: ${SCIRun_xml_dir}/%.xml
-	${call xmltohtml,${xmlpkgtreetop}}
+${SCIRun_xml_html_files}: %.html: %.xml
+	${call xmltohtml,${xmlsrtreetop}}
 
 ${SCIRun_tex_html_dirs}: %: %.tex
 	${call textohtml,${dir $@}}
@@ -147,7 +155,7 @@ BioPSE : BioPSE.html
 BioPSE.html : ${BioPSE_xml_html_files} ${BioPSE_tex_html_dirs}
 	${call makepkgindex,BioPSE,${BioPSE_xml_dir},${BioPSE_tex_dir}}
 
-${BioPSE_xml_html_files}: ${BioPSE_xml_dir}/%.html: ${BioPSE_xml_dir}/%.xml
+${BioPSE_xml_html_files}: %.html: %.xml
 	${call xmltohtml,${xmlpkgtreetop}}
 
 ${BioPSE_tex_html_dirs}: %: %.tex
@@ -171,7 +179,7 @@ Teem : Teem.html
 Teem.html : ${Teem_xml_html_files} ${Teem_tex_html_dirs}
 	${call makepkgindex,Teem,${Teem_xml_dir},${Teem_tex_dir}}
 
-${Teem_xml_html_files}: ${Teem_xml_dir}/%.html: ${Teem_xml_dir}/%.xml
+${Teem_xml_html_files}: %.html: %.xml
 	${call xmltohtml,${xmlpkgtreetop}}
 
 ${Teem_tex_html_dirs}: %: %.tex
@@ -195,7 +203,7 @@ VDT : VDT.html
 VDT.html : ${VDT_xml_html_files} ${VDT_tex_html_dirs}
 	${call makepkgindex,VDT,${VDT_xml_dir},${VDT_tex_dir}}
 
-${VDT_xml_html_files}: ${VDT_xml_dir}/%.html: ${VDT_xml_dir}/%.xml
+${VDT_xml_html_files}: %.html: %.xml
 	${call xmltohtml,${xmlpkgtreetop}}
 
 ${VDT_tex_html_dirs}: %: %.tex
@@ -219,7 +227,7 @@ MatlabInterface : MatlabInterface.html
 MatlabInterface.html : ${MatlabInterface_xml_html_files} ${MatlabInterface_tex_html_dirs}
 	${call makepkgindex,MatlabInterface,${MatlabInterface_xml_dir},${MatlabInterface_tex_dir}}
 
-${MatlabInterface_xml_html_files}: ${MatlabInterface_xml_dir}/%.html: ${MatlabInterface_xml_dir}/%.xml
+${MatlabInterface_xml_html_files}: %.html: %.xml
 	${call xmltohtml,${xmlpkgtreetop}}
 
 ${MatlabInterface_tex_html_dirs}: %: %.tex
@@ -243,7 +251,7 @@ Fusion : Fusion.html
 Fusion.html : ${Fusion_xml_html_files} ${Fusion_tex_html_dirs}
 	${call makepkgindex,Fusion,${Fusion_xml_dir},${Fusion_tex_dir}}
 
-${Fusion_xml_html_files}: ${Fusion_xml_dir}/%.html: ${Fusion_xml_dir}/%.xml
+${Fusion_xml_html_files}: %.html: %.xml
 	${call xmltohtml,${xmlpkgtreetop}}
 
 ${Fusion_tex_html_dirs}: %: %.tex
