@@ -69,7 +69,9 @@ template<class T>
 class SimpleOPort : public OPort {
     int sent_something;
     T handle;
+#ifdef DEBUG
     WallClockTimer timer1;
+#endif
 public:
     SimpleOPort(Module*, const clString& name, int protocol=SimpleIPort<T>::Atomic);
     virtual ~SimpleOPort();
@@ -175,11 +177,11 @@ template<class T>
 void SimpleOPort<T>::finish()
 {
     // get timestamp here to measure communication time, print to screen
-    timer1.stop();
 #ifdef DEBUG
+    timer1.stop();
     double time = 
-#endif
                   timer1.time();
+#endif
 
 #ifdef DEBUG
     cerr << "Done in " << time << " seconds\n"; 
@@ -234,8 +236,10 @@ void SimpleOPort<T>::send(const T& data)
 	if (connections[i]->isRemote()) {
 
 	    // start timer here
+#ifdef DEBUG
 	    timer1.clear();
 	    timer1.start();
+#endif
 
 	    // send data - must only be binary files, text truncates and causes
 	    // problems when diffing outputs 
@@ -447,6 +451,10 @@ SimplePortComm<T>::SimplePortComm(const T& data)
 
 //
 // $Log$
+// Revision 1.6  1999/08/29 00:58:48  sparker
+// Moved timer1 into ifdef DEBUG to avoid extraneous messages
+// about time stopped while already stopped
+//
 // Revision 1.5  1999/08/29 00:46:50  sparker
 // Integrated new thread library
 // using statement tweaks to compile with both MipsPRO and g++
