@@ -3,8 +3,10 @@
 
 #include <Core/Thread/Runnable.h>
 
+#if !defined( linux )
 #include <dmedia/audiofile.h>
 #include <dmedia/audio.h>
+#endif
 
 #include <vector>
 
@@ -30,8 +32,10 @@ public:
   void playSound( Sound * sound );
 
 private:
+#if !defined(linux)
   ALconfig        config_;
   ALport          audioPort_;
+#endif
   double          samplingRate_;
 
   vector<Sound*>  soundQueue_;

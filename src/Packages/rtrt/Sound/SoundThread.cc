@@ -1,3 +1,4 @@
+#if !defined(linux)
 #include <Packages/rtrt/Sound/SoundThread.h>
 
 #include <Packages/rtrt/Sound/Sound.h>
@@ -185,3 +186,4 @@ SoundThread::playSound( Sound * sound )
 {
   soundQueue_.push_back( sound );
 }
+#endif

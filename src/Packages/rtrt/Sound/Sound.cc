@@ -95,6 +95,7 @@ Sound::volume( const Point & location )
 void
 Sound::activate()
 {
+#if !defined(linux)
   if( loaded_ ) return;
   loaded_ = true;
 
@@ -167,4 +168,18 @@ Sound::activate()
        << numFrames_ << " frames\n";
 
   afCloseFile( file );
+#endif
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
