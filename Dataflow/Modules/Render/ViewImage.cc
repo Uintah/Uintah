@@ -104,6 +104,13 @@ class ViewImage : public Module
     BUTTON_3_E  = 1024
   } Tk_Button_State_e;
 
+  enum DisplayMode_e {
+    normal_e,
+    mip_e,
+    num_display_modes_e
+  };
+  
+
   struct NrrdVolume { 
     NrrdVolume		(GuiContext*ctx);
     void		reset();
@@ -234,6 +241,8 @@ class ViewImage : public Module
 
   UIdouble		min_;
   UIdouble		max_;
+
+  DisplayMode_e		display_mode_;
 
   //! output port
   GeometryOPort *	ogeom_;
@@ -389,6 +398,7 @@ ViewImage::ViewImage(GuiContext* ctx) :
   window_level_(0),
   min_(ctx->subVar("min"), -1),
   max_(ctx->subVar("max"), -1),
+  display_mode_(normal_e),
   ogeom_(0),
   freetype_lib_(0),
   fonts_(),
@@ -414,6 +424,7 @@ ViewImage::ViewImage(GuiContext* ctx) :
       fonts_["default"] = freetype_lib_->load_face(sdir+"/scirun.ttf");
       fonts_["anatomical"] = fonts_["default"];
       fonts_["patientname"] = fonts_["default"];
+      fonts_["view"] = fonts_["default"];
       fonts_["position"] = fonts_["default"];
       
     } catch (...) {
@@ -422,6 +433,7 @@ ViewImage::ViewImage(GuiContext* ctx) :
       fonts_["anatomical"] = fonts_["default"];
       fonts_["patientname"] = fonts_["default"];
       fonts_["position"] = fonts_["default"];
+      fonts_["view"] = fonts_["default"];
       
       error("Error loading fonts.\n"
 	    "Please set SCIRUN_FONT_PATH to a directory with scirun.ttf\n");
@@ -1123,6 +1135,23 @@ ViewImage::draw_slice(SliceWindow &window, NrrdSlice &slice)
 	       FreeTypeText::ne, font);
   }
 
+  font = fonts_["view"];
+  if (font) {
+    font->set_points(20.0);
+    string text;
+    switch (slice.axis_) {
+    case 0: text = "Sagittal"; break;
+    case 1: text = "Coronal"; break;
+    default:
+    case 2: text = "Axial"; break;
+    }
+    if (display_mode_ == mip_e) text = "MIP - "+text;
+    draw_label(window, text, window.viewport_->width() - 2, 0, 
+	       FreeTypeText::se, font);
+  }
+
+
+
   glFlush();
 
   glMatrixMode(GL_PROJECTION);
@@ -1257,10 +1286,18 @@ ViewImage::extract_slice(NrrdVolume &volume,
 
   NrrdDataHandle temp2 = scinew NrrdData;
   
-  if (nrrdSlice(temp1->nrrd, volume.nrrd_->nrrd, axis, slice_num)) {
-    char *err = biffGetDone(NRRD);
-    error(string("Error Slicing nrrd: ") + err);
-    free(err);
+  if (display_mode_ == mip_e) {
+    if (nrrdProject(temp1->nrrd, volume.nrrd_->nrrd, axis, 2, nrrdTypeDefault)) {
+      char *err = biffGetDone(NRRD);
+      error(string("Error Projecting nrrd: ") + err);
+      free(err);
+    }
+  } else {
+    if (nrrdSlice(temp1->nrrd, volume.nrrd_->nrrd, axis, slice_num)) {
+      char *err = biffGetDone(NRRD);
+      error(string("Error Slicing nrrd: ") + err);
+      free(err);
+    }
   }
 
   slice.axis_ = axis;
@@ -1326,6 +1363,7 @@ ViewImage::set_axis(SliceWindow &window, unsigned int axis) {
 void
 ViewImage::prev_slice(SliceWindow &window)
 {
+  if (display_mode_ == mip_e) return;
   if (window.slice_[window.axis_] == 0) 
     return;
   if (window.slice_[window.axis_] < 1)
@@ -1340,6 +1378,7 @@ ViewImage::prev_slice(SliceWindow &window)
 void
 ViewImage::next_slice(SliceWindow &window)
 {
+  if (display_mode_ == mip_e) return;
   if (*window.slice_[window.axis_] == max_slice_[window.axis_]) 
     return;
   if (window.slice_[window.axis_] > max_slice_[window.axis_])
@@ -1539,6 +1578,7 @@ ViewImage::handle_gui_motion(GuiArgs &args) {
   if (window_level_) {
     SliceWindow &window = *window_level_;
     window.clut_ww_ = window_level_ww_ + (X - window_level_x_)*2;
+    if (window.clut_ww_ < 1) window.clut_ww_ = 1;
     window.clut_wl_ = window_level_wl_ + (window_level_y_ - Y)*2;
     window.clut_dirty_ = true;
   }
@@ -1808,6 +1848,16 @@ ViewImage::handle_gui_keypress(GuiArgs &args) {
     } else if (args[4] == "w") {
       //window.scale_ += 0.1;
       redraw_window(window);
+    } else if (args[4] == "m") {
+      //window.scale_ += 0.1;
+      display_mode_ = DisplayMode_e((display_mode_+1)%num_display_modes_e);
+      WindowLayouts::iterator liter = layouts_.begin();
+      while (liter != layouts_.end()) {
+	for (unsigned int j = 0; j < (*liter).second->windows_.size(); ++j)
+	  extract_window_slices(*(*liter).second->windows_[j]);
+	++liter;
+      }
+      redraw_all();
     } else if (args[4] == "Left") {
       window.x_ -= 1.0;
       redraw_window(window);
