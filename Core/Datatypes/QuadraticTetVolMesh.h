@@ -24,6 +24,8 @@
 
 namespace SCIRun {
 
+  typedef vector<bool> bit_vector;
+
 class SCICORESHARE QuadraticTetVolMesh : public TetVolMesh
 {
 public:
