@@ -22,10 +22,6 @@
 This section describes how to create, save, load, execute, and edit
 networks.
 
-When started with no arguments, the \command{scirun} command creates a
-main window with a blank NetEdit frame. The user can create and
-connect modules to form a network.
-
 The following conventions are used when describing mouse and keyboard
 actions performed by the user:
 
@@ -324,6 +320,18 @@ See also \secref{Disabling/Enabling Connections}{sec:disableconnect}.
 \section{Creating a Sub-Network}
 \label{sec:crsubnet}
 
+%begin{latexonly}
+\newcommand{\subnetgraphicfig}{%
+  \includegraphics[0,0][174,65]{Figures/subnetgraphic.eps.gz}
+}
+%end{latexonly}
+\begin{htmlonly}
+  \newcommand{\subnetgraphicfig}{%
+    \htmladdimg[alt="Graphic of a Sub-network"]{../Figures/subnetgraphic.gif}
+  }
+\end{htmlonly}
+
+
 A sub-network is a group of modules that are treated as a single
 module.  In a network, you may use a sub-network as you would a
 module.
@@ -337,8 +345,14 @@ sub-networks.  The next section (\secref{Editing a
 editor.
 
 A \guibutton{Sub-Network} button replaces the CPU time and Progress
-Bar in the sub-network graphic.
-% Need a figure here showing the sub-network graphic.
+Bar in the sub-network graphic.  See Figure~\ref{fig:subnetgraphic}
+
+\begin{figure}[htb]
+  \centering
+  \begin{makeimage} \end{makeimage}
+  \subnetgraphicfig
+  \caption{\label{fig:subnetgraphic} A Sub-Network in the NetEdit frame}
+\end{figure}
 
 A sub-network's editor is activated by pressing the
 \guibutton{Sub-Network} button.
@@ -369,11 +383,30 @@ from the sub-network's pop-up menu.
 \section{Editing a Sub-Network}
 \label{sec:editsubnet}
 
+%begin{latexonly}
+\newcommand{\subneteditorfig}{%
+  \includegraphics[0,0][405,357]{Figures/subneteditor.eps.gz}
+}
+%end{latexonly}
+\begin{htmlonly}
+  \newcommand{\subneteditorfig}{%
+    \htmladdimg[alt="Sub-net editor"]{../Figures/subneteditor.gif}
+  }
+\end{htmlonly}
+
 The sub-network editor is activated by pressing a sub-network's
 \guibutton{Sub-Network} button.  The sub-network editor works similarly
 to the NetEdit window.  All network editing features of the NetEdit
 window are available in the sub-network editor---modules can be
-created, connections can be made, \etc{}
+created, connections can be made, \etc{}  See
+Figure~\ref{fig:subneteditor}.
+
+\begin{figure}[htb]
+  \centering
+  \begin{makeimage} \end{makeimage}
+  \subneteditorfig
+  \caption{\label{fig:subneteditor} Sub-network editor.}
+\end{figure}
 
 Sub-networks have input and/or output ports.  These are created in the
 sub-network editor.  Sub-network input ports are created by making a
