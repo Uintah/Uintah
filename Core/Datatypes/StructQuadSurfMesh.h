@@ -103,11 +103,10 @@ public:
   void get_weights(const Point &p, Cell::array_type &l, vector<double> &w)
   {ASSERTFAIL("StructQuadSurfMesh::get_weights for cells isn't supported");}
 
-  void get_point(Point &point, Node::index_type index) const
+  void get_point(Point &point, const Node::index_type &index) const
   { get_center(point, index); }
   void set_point(const Node::index_type &index, const Point &point);
-
-  void get_normal(Vector &vector, Node::index_type index) const
+  void get_normal(Vector &vector, const Node::index_type &index) const
   { ASSERTFAIL("not implemented") }
 
   void get_random_point(Point &p, const Elem::index_type &ei, int seed=0) const
