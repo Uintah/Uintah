@@ -36,6 +36,10 @@ PROGRAM := $(SRCDIR)/test-ppm
 SRCS := $(SRCDIR)/test-ppm.cc
 include $(SCIRUN_SCRIPTS)/program.mk
 
+PROGRAM := $(SRCDIR)/vq
+SRCS := $(SRCDIR)/vq.cc
+include $(SCIRUN_SCRIPTS)/program.mk
+
 PSELIBS := Core/Exceptions Core/Thread
 LIBS := $(TEEM_LIBRARY) $(FASTM_LIBRARY) $(M_LIBRARY) $(THREAD_LIBRARY) $(PERFEX_LIBRARY)
 
