@@ -87,8 +87,10 @@ endef
 
 # Produce list of tex source files found in package given by ${1} or in the
 # SCIRun pseudo package if ${1} is undefined or empty.
+# define texfiles
+# ${wildcard ${treetop}/src/${if ${1},Packages/${1}/}Dataflow/TeX/*/*.tex}
+# endef
 define texfiles
-${wildcard ${treetop}/src/${if ${1},Packages/${1}/}Dataflow/TeX/*/*.tex}
 endef
 
 # Convert xml file given by $< to tex equivalent and save tex file as $@.
@@ -205,12 +207,14 @@ endif
 
 # ########## Primary targets
 
-.PHONY: all dvi pdf
+.PHONY: all no-pdf dvi pdf
 .PHONY: SCIRun BioPSE Teem Insight Fusion DataIO MatlabInterface clean veryclean
 
 .DELETE_ON_ERROR:
 
 all: index.html ${packages} dvi pdf
+
+no-pdf: index.html ${packages}
 
 index.html : index.rhtml ${edition} 
 	eruby --delimiters html $< > $@
