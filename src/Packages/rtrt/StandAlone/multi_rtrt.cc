@@ -73,6 +73,7 @@ static void usage(char* progname)
     cerr << " -logframes       - save all frames and a time log\n";
     cerr << " -worker_gltest   - calls run_gl_test from worker threads\n";
     cerr << " -display_gltest  - calls run_gl_test from display thread\n";
+    cerr << " -displayless     - do not display and write a frame to displayless\n";
 
     exit(1);
 }
@@ -122,6 +123,7 @@ int main(int argc, char* argv[])
   
   bool do_frameless=false;
   bool logframes=false;
+  bool display_frames=true;
   
   Camera usercamera(Point(1,0,0), Point(0,0,0), Vector(0,0,1), 60);
   bool use_usercamera;
@@ -212,6 +214,8 @@ int main(int argc, char* argv[])
     } else if (strcmp(argv[i],"-udp")==0){
       i++;
       rtrt_engine->updatePercent = atof(argv[i]);
+    } else if (strcmp(argv[i],"-displayless")==0) {
+      display_frames = false;
     } else if (strcmp(argv[i],"-frameless")==0) {
       do_frameless=true;
       i++;
@@ -367,7 +371,8 @@ int main(int argc, char* argv[])
 
     // Start up display thread...
     Dpy* dpy=new Dpy(scene, criteria1, criteria2, rtrt_engine->nworkers, bench,
-		     ncounters, c0, c1,1.0,1.0,do_frameless==true);
+		     ncounters, c0, c1, 1.0, 1.0, display_frames,
+		     do_frameless==true);
     /* <<<< bigler >>>> */
     char buf1[100];
     sprintf(buf1, "Display thread %d", nr);

@@ -149,6 +149,7 @@ void RTRTViewer::start_rtrt() {
   
   bool do_frameless=false;
   bool logframes=false;
+  bool display_frames=true;
   
   Camera usercamera(Point(1,0,0), Point(0,0,0), Vector(0,0,1), 60);
   bool use_usercamera = false;
@@ -231,6 +232,8 @@ void RTRTViewer::start_rtrt() {
   } else if (strcmp(argv[i],"-udp")==0){
     i++;
     rtrt_engine->updatePercent = atof(argv[i]);
+  } else if (strcmp(argv[i],"-displayless")==0) {
+    display_frames = false;
   } else if (strcmp(argv[i],"-frameless")==0) {
     do_frameless=true;
     i++;
@@ -354,8 +357,9 @@ void RTRTViewer::start_rtrt() {
   current_scene->logframes=logframes;
   
   // Start up display thread...
-  Dpy* dpy=new Dpy(current_scene, criteria1, criteria2, rtrt_engine->nworkers, bench,
-		   ncounters, c0, c1,1.0,1.0,do_frameless==true);
+  Dpy* dpy=new Dpy(current_scene, criteria1, criteria2, rtrt_engine->nworkers,
+		   bench, ncounters, c0, c1, 1.0, 1.0, display_frames,
+		   do_frameless==true);
   /* <<<< bigler >>>> */
   Thread* t = new Thread(dpy, "Display thread");
   
