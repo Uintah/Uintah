@@ -14,6 +14,7 @@
   Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
   University of Utah. All Rights Reserved.
 */
+#include <sci_defs.h>
 
 #include <Core/GLVolumeRenderer/FullRes.h>
 #include <Core/Geometry/Ray.h>
@@ -27,7 +28,13 @@
 
 namespace SCIRun {
 
+#if defined(HAVE_GLEW)
+#include <GL/glew.h>
+#else
+#include <GL/gl.h>
 #include <sci_glu.h>
+#endif
+
 //  GLenum errCode;
 //  const GLubyte *errString;
 
@@ -90,15 +97,23 @@ FullRes::draw()
 
     b.ComputePolys( viewRay,  tmin, tmax, dt, ts, polys);
 
-    loadColorMap( b );
     loadTexture( b );
-    makeTextureMatrix( b );
-    enableTexCoords();
+    loadColorMap( b );
     enableBlend();
-    //setAlpha( b );
+
+#if defined( GL_ARB_fragment_program)
+    if( !VolShader->created() ){
+      cerr<<"creating Volume Shader\n";
+      VolShader->create();
+    }
+    VolShader->bind();
+#endif
     drawPolys( polys );
+#if defined( GL_ARB_fragment_program)
+     VolShader->release();
+#endif
+
     disableBlend();
-    disableTexCoords();
     
   }
 }

@@ -19,6 +19,8 @@
 #include <Core/Malloc/Allocator.h>
 #include <Core/GLVolumeRenderer/VolumeUtils.h>
 #include <Core/GLVolumeRenderer/Brick.h>
+#include <Core/GLVolumeRenderer/GLVolRenState.h>
+
 #include <stdlib.h>
 #include <iostream>
 #include <string>

@@ -25,8 +25,12 @@
 #include <Core/Geometry/Transform.h>
 #include <Core/Geom/ColorMap.h>
 #include <Core/Geom/GeomObj.h>
-#include <GL/gl.h>
-#include <sci_glu.h>
+// #if defined( HAVE_GLEW )
+// #include <GL/glew.h>
+// #else
+// #include <GL/gl.h>
+// #include <sci_glu.h>
+// #endif
 
 #include <Core/Containers/Octree.h>
 
@@ -65,6 +69,7 @@ public:
     mutex_.lock(); tex_ = tex; state_->NewBricks(); mutex_.unlock();}
   void SetColorMap( ColorMapHandle cmap){
     mutex_.lock(); cmap_ = cmap; BuildTransferFunctions();
+    state_->NewColorMap();
     cmap_has_changed_ = true; mutex_.unlock(); }
   void SetControlPoint( const Point& point){ control_point_ = point; }
 

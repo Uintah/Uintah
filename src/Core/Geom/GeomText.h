@@ -39,7 +39,7 @@
 #define CALLBACK APIENTRY
 #endif
 
-#include <GL/gl.h>
+
 #include <Core/Datatypes/Color.h>
 
 

@@ -15,6 +15,13 @@
   University of Utah. All Rights Reserved.
 */
 
+#include <sci_defs.h>
+#if defined(HAVE_GLEW)
+#include <GL/glew.h>
+#else
+#include <GL/gl.h>
+#endif
+
 #include <Packages/Kurt/Core/Geom/SCIRexRenderer.h>
 #include <Packages/Kurt/Core/Geom/OGLXVisual.h>
 #include <Packages/Kurt/Core/Geom/SCIRexCompositer.h>
@@ -31,7 +38,7 @@
 #include <Core/Datatypes/Color.h>
 #include <Core/Containers/Array1.h>
 #include <Core/Thread/Thread.h>
-#include <GL/gl.h>
+
 #ifdef __sgi
 #include <slist>
 #else

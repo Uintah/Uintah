@@ -31,16 +31,25 @@
 #ifndef SCI_Geom_GeomOpenGL_h
 #define SCI_Geom_GeomOpenGL_h 1
 
+
 #ifdef _WIN32
 #define WINGDIAPI __declspec(dllimport)
 #define APIENTRY __stdcall
 #define CALLBACK APIENTRY
 #endif
 
-#include <stddef.h>
-#include <stdlib.h>
+#if defined( HAVE_GLEW )
+#include <GL/glew.h>
+#include <GL/glxew.h>
+#else
+#include <GL/gl.h>
 #include <sci_glu.h>
 #include <GL/glx.h>
+#endif
+
+#include <stddef.h>
+#include <stdlib.h>
+
 
 #include <sci_config.h>
 #include <Core/Geometry/Vector.h>

@@ -30,7 +30,12 @@
 #ifndef GLTexture3DBuilder_h
 #define GLTexture3DBuilder_h
 
-#include <GL/gl.h>
+// #if defined( HAVE_GLEW )
+// #include <GL/glew.h>
+// #else
+// #include <GL/gl.h>
+// #endif
+
 #include <Core/Datatypes/Datatype.h>
 #include <Core/GLVolumeRenderer/Brick.h>
 #include <Core/GLVolumeRenderer/VolumeUtils.h>
@@ -476,7 +481,7 @@ GLTexture3DBuilder<TexField>::build(Point min, Point max,
   Brick* brick;
   Array3<unsigned char> *brickData;
   // Check to make sure that we can accommodate the requested texture
-  GLint xtex =0 , ytex = 0 , ztex = 0;
+  int xtex =0 , ytex = 0 , ztex = 0;
 
   if ( xsize <= caller_->xmax_ ) xtex = 1;
   if ( ysize <= caller_->ymax_ ) ytex = 1;

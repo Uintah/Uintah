@@ -12,6 +12,7 @@
 
 #define DEF_CLOCK
 
+#include <sci_defs.h>
 #include <stdio.h>
 
 //#include <Classlib/NotFinished.h>
@@ -24,9 +25,14 @@
 #include <Dataflow/Ports/GeometryPort.h>
 #include <Dataflow/Ports/SurfacePort.h>
 
+#if defined(HAVE_GLEW)
+#include <GL/glew.h>
+#include <GL/glxew.h>
+#else
 #include <GL/gl.h>
 #include <GL/glu.h>
 #include <GL/glx.h>
+#endif
 #include <Core/Datatypes/Color.h>
 #include <Core/Geom/GeomOpenGL.h>
 

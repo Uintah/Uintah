@@ -34,9 +34,16 @@
 
 #include <tcl.h>
 #include <tk.h>
+
+#if defined(HAVE_GLEW)
+#include <GL/glew.h>
+#include <GL/glxew.h>
+#else
 #include <GL/gl.h>
 #include <sci_glu.h>
 #include <GL/glx.h>
+#endif
+
 #include <iostream>
 #include <sstream>
 #include <fstream>

@@ -15,6 +15,7 @@
   University of Utah. All Rights Reserved.
 */
 
+#include <sci_defs.h>
 #include <Packages/Kurt/Core/Geom/VolumeRenderer.h>
 #include <Core/Util/NotFinished.h>
 #include <Core/Geom/GeomOpenGL.h>
@@ -22,7 +23,13 @@
 #include <Core/Malloc/Allocator.h>
 #include <Core/Datatypes/Color.h>
 #include <Core/Containers/Array1.h>
+
+#if defined(HAVE_GLEW)
+#include <GL/glew.h>
+#else
 #include <GL/gl.h>
+#endif
+
 #include <iostream>
 using std::cerr;
 

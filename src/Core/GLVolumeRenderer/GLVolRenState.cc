@@ -1,5 +1,5 @@
 /*
-  The contents of this file are subject to the University of Utah Public
+  Thevx contents of this file are subject to the University of Utah Public
   License (the "License"); you may not use this file except in compliance
   with the License.
   
@@ -17,7 +17,12 @@
 
 #include <sci_defs.h>
 
+#if defined(HAVE_GLEW)
+#include <GL/glew.h>
+#else
 #include <GL/gl.h>
+#endif
+
 #include <Core/GLVolumeRenderer/GLVolRenState.h>
 #include <Core/GLVolumeRenderer/GLVolumeRenderer.h>
 #include <Core/GLVolumeRenderer/GLTexture3D.h>
@@ -27,6 +32,18 @@
 #include <stdlib.h>
 #include <iostream>
 using namespace std;
+
+
+static const char* ShaderString =
+"!!ARBfp1.0 \n\
+TEMP c0, c; \n\
+ATTRIB tf = fragment.texcoord[0]; \n\
+TEX c0, tf, texture[0], 3D; \n\
+TEX c, c0, texture[1], 1D; \n\
+MOV_SAT result.color, c; \n\
+END";
+
+
 
 #if ! defined(__sgi)
 //PFNGLCOLORTABLEEXTPROC glColorTableEXT;
@@ -57,10 +74,15 @@ using std::endl;
 
 
 GLVolRenState::GLVolRenState(const GLVolumeRenderer* glvr)
-  : volren( glvr ), texName(0), reload((unsigned char *)1), newbricks_(false)
+  : volren( glvr ), texName(0), reload((unsigned char *)1), 
+  newbricks_(false), newcmap_(true)
 {
   // Base Class, holds pointer to VolumeRenderer and 
   // common computation
+#if defined(GL_ARB_fragment_program)
+  VolShader = new FragmentProgramARB( ShaderString, false );
+#endif
+
 }
 
 
@@ -133,37 +155,45 @@ GLVolRenState::drawPolys( vector<Polygon *> polys )
   glPushMatrix();
   glMultMatrixd(mvmat);
 
-  unsigned int i;
+  Point p0, t0;
+
+  unsigned int i,k;
   volren->di()->polycount += polys.size();
   for (i = 0; i < polys.size(); i++) {
     switch (polys[i]->size() ) {
     case 1:
+      t0 = polys[i]->getTexCoord(0);
+      p0 = polys[i]->getVertex(0);
       glBegin(GL_POINTS);
-      glVertex3f((*(polys[i]))[0].x(),(*(polys[i]))[0].y(),
-		 (*(polys[i]))[0].z());
+      glMultiTexCoord3f(GL_TEXTURE0_ARB, t0.x(), t0.y(), t0.z());
+      glVertex3f(p0.x(), p0.y(), p0.z());
       glEnd();
       break;
     case 2:
-      glBegin(GL_LINES);
-      glVertex3f((*(polys[i]))[0].x(),(*(polys[i]))[0].y(),
-		 (*(polys[i]))[0].z());
-      glVertex3f((*(polys[i]))[1].x(), (*(polys[i]))[1].y(),
-		 (*(polys[i]))[1].z());
+            glBegin(GL_LINES);
+      for(k =0; k < polys[i]->size(); k++)
+      {
+        t0 = polys[i]->getTexCoord(k);
+        p0 = polys[i]->getVertex(k);
+        glMultiTexCoord3f(GL_TEXTURE0_ARB, t0.x(), t0.y(), t0.z());
+        glVertex3f(p0.x(), p0.y(), p0.z());
+      }
       glEnd();
       break;
     case 3:
       {
-	glBegin(GL_TRIANGLES);
-	Vector n = Cross(Vector((*(polys[i]))[0] - (*polys[i])[1]),
-			 Vector((*(polys[i]))[0] - (*polys[i])[2]));
-	n.normalize();
-	glNormal3f(n.x(), n.y(), n.z());
-	glVertex3f((*(polys[i]))[0].x(),(*(polys[i]))[0].y(),
-		   (*(polys[i]))[0].z());
-	glVertex3f((*(polys[i]))[1].x(), (*(polys[i]))[1].y(),
-		   (*(polys[i]))[1].z());
-	glVertex3f((*(polys[i]))[2].x(),(*(polys[i]))[2].y(),
-		   (*(polys[i]))[2].z());
+        Vector n = Cross(Vector((*(polys[i]))[0] - (*polys[i])[1]),
+                         Vector((*(polys[i]))[0] - (*polys[i])[2]));
+        n.normalize();
+        glBegin(GL_TRIANGLES);
+        glNormal3f(n.x(), n.y(), n.z());
+        for(k =0; k < polys[i]->size(); k++)
+        {
+          t0 = polys[i]->getTexCoord(k);
+          p0 = polys[i]->getVertex(k);
+          glMultiTexCoord3f(GL_TEXTURE0_ARB, t0.x(), t0.y(), t0.z());
+          glVertex3f(p0.x(), p0.y(), p0.z());
+        }
 	glEnd();
       }
       break;
@@ -179,15 +209,20 @@ GLVolRenState::drawPolys( vector<Polygon *> polys )
 	glNormal3f(n.x(), n.y(), n.z());
 	for(k =0; k < polys[i]->size(); k++)
 	{
-	  glVertex3f((*(polys[i]))[k].x(),(*(polys[i]))[k].y(),
-		     (*(polys[i]))[k].z());
+	  t0 = polys[i]->getTexCoord(k);
+	  p0 = polys[i]->getVertex(k);
+	  glMultiTexCoord3f(GL_TEXTURE0_ARB, t0.x(), t0.y(), t0.z());
+	  glVertex3f(p0.x(), p0.y(), p0.z());
+	  //            sprintf(s, "3D texture coordinates are ( %f, %f, %f, )\n", t0.x(), t0.y(), t0.z() );
+	  // 	cerr<<s;
+	  //            sprintf(s, "2D texture coordinates are ( %f, %f )\n", t1_0, t1_1);
+	  //            cerr<<s;
 	}
 	glEnd();
+	break;
       }
-      break;
     }
   }
-
   glMatrixMode(GL_MODELVIEW);
   glPopMatrix();
 }
@@ -196,7 +231,33 @@ void
 GLVolRenState::loadColorMap(Brick& brick)
 {
   const unsigned char *arr = volren->transfer_functions(brick.level());
-#ifdef GL_TEXTURE_COLOR_TABLE_SGI
+#if defined(GL_ARB_multitexture)
+  static GLuint cmap = 0;
+  glActiveTextureARB(GL_TEXTURE1_ARB);
+  {
+    glEnable(GL_TEXTURE_1D);
+    glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+
+    if( cmap == 0 || newcmap_ ){
+      glDeleteTextures(1, &cmap);
+      glGenTextures(1, &cmap);
+      glBindTexture(GL_TEXTURE_1D, cmap);
+      glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+      glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+      glTexImage1D(GL_TEXTURE_1D, 0,
+		   GL_RGBA,
+		   256, 0,
+		   GL_RGBA, GL_UNSIGNED_BYTE,
+		   arr);
+      newcmap_ = false;
+    } else {
+      glBindTexture(GL_TEXTURE_1D, cmap);
+    }
+    glActiveTexture(GL_TEXTURE0_ARB);
+  }
+#elif defined( GL_TEXTURE_COLOR_TABLE_SGI )
+  cerr<<"GL_TEXTURE_COLOR_TABLE_SGI defined\n";
   glColorTable(GL_TEXTURE_COLOR_TABLE_SGI,
                GL_RGBA,
                256, // try larger sizes?
@@ -204,7 +265,7 @@ GLVolRenState::loadColorMap(Brick& brick)
                GL_UNSIGNED_BYTE, // try shorts...
                arr);
 #elif defined( GL_SHARED_TEXTURE_PALETTE_EXT )
-
+  cerr<<"GL_SHARED_TEXTURE_PALETTE_EXT  defined \n"
 #ifndef HAVE_CHROMIUM
   ASSERT(glColorTableEXT != NULL );
   glColorTableEXT(GL_SHARED_TEXTURE_PALETTE_EXT,
@@ -221,6 +282,11 @@ GLVolRenState::loadColorMap(Brick& brick)
 void 
 GLVolRenState::loadTexture(Brick& brick)
 {
+#if defined( GL_ARB_multitexture)
+  glActiveTexture(GL_TEXTURE0_ARB);
+  glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+  glEnable(GL_TEXTURE_3D);
+#endif
   if( !brick.texName() || reload ) {
     if( !brick.texName() ){
       glGenTextures(1, brick.texNameP());
@@ -240,6 +306,15 @@ GLVolRenState::loadTexture(Brick& brick)
 //        glCheckForError("glTexParameteri GL_NEAREST");
     }
 
+#if defined( GL_ARB_multitexture )
+    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_CLAMP);
+    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_CLAMP);
+    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_CLAMP);
+//     {
+//       int border_color[4] = {0, 0, 0, 0};
+//       glTexParameteriv(GL_TEXTURE_3D, GL_TEXTURE_BORDER_COLOR, border_color);
+//     }
+#else
     glTexParameteri(GL_TEXTURE_3D_EXT, GL_TEXTURE_WRAP_S,
 		    GL_CLAMP);
 //      glCheckForError("glTexParameteri GL_TEXTURE_WRAP_S GL_CLAMP");
@@ -249,10 +324,20 @@ GLVolRenState::loadTexture(Brick& brick)
     glTexParameteri(GL_TEXTURE_3D_EXT, GL_TEXTURE_WRAP_R_EXT,
 		    GL_CLAMP);
 //      glCheckForError("glTexParameteri GL_TEXTURE_WRAP_R GL_CLAMP");
+#endif
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 //      glCheckForError("After glPixelStorei(GL_UNPACK_ALIGNMENT, 1)");
     
-#ifdef GL_TEXTURE_COLOR_TABLE_SGI 
+#if defined( GL_ARB_multitexture )
+    glTexImage3D(GL_TEXTURE_3D, 0,
+		 GL_INTENSITY,
+		 (brick.texture())->dim1(), 
+		 (brick.texture())->dim2(), 
+		 (brick.texture())->dim3(),
+		 0,
+		 GL_LUMINANCE, GL_UNSIGNED_BYTE,
+		 &(*(brick.texture()))(0,0,0));
+#elif defined( GL_TEXTURE_COLOR_TABLE_SGI ) 
     // set up the texture
     //glTexImage3DEXT(GL_TEXTURE_3D_EXT, 0,
     glTexImage3D(GL_TEXTURE_3D, 0,
@@ -362,12 +447,16 @@ GLVolRenState::disableTexCoords()
 void 
 GLVolRenState::enableBlend()
 {
+// #if !defined(GL_ARB_multitexture)
   glEnable(GL_BLEND);
+// #endif
 }
 void 
 GLVolRenState::disableBlend()
 {
+// #if !defined(GL_ARB_multitexture)
   glDisable(GL_BLEND);
+// #endif
 }
 
 void
@@ -421,6 +510,113 @@ GLVolRenState::drawWireFrame(const Brick& brick)
   glMatrixMode(GL_MODELVIEW);
   glPopMatrix();
 }
+
+
+#if defined(GL_ARB_fragment_program)
+FragmentProgramARB::FragmentProgramARB (const char* str, bool isFileName)
+  : mId(0), mBuffer(0), mLength(0), mFile(0)
+{
+  init( str, isFileName);
+}
+
+void
+FragmentProgramARB::init( const char* str, bool isFileName )
+{
+  if( isFileName ) {
+    if(mFile) delete mFile;
+    mFile = new char[strlen(str)];
+    strcpy(mFile, str);
+    
+    FILE *fp;
+
+    if (!(fp = fopen(str,"rb")))
+    {
+      cerr << "FragProgARB::constructor error: " << str << " could not be read " << endl;
+      return;
+    }
+    
+    fseek(fp, 0, SEEK_END);
+    mLength = ftell(fp);
+    fseek(fp, 0, SEEK_SET);
+    
+    if(mBuffer) delete mBuffer;
+    mBuffer = new unsigned char[mLength+1];
+    
+    fread( mBuffer, 1, mLength, fp);
+    mBuffer[mLength] = '\0'; // make it a regular C string
+    fclose(fp);
+  } else {
+    mLength = strlen(str);
+    mBuffer = new unsigned char[mLength+2];
+    strcpy((char*)mBuffer, str);
+  }
+  
+}
+
+FragmentProgramARB::~FragmentProgramARB ()
+{
+  delete [] mBuffer;
+}
+
+bool
+FragmentProgramARB::created() {return bool(mId);}
+
+void
+FragmentProgramARB::create ()
+{
+  glGenProgramsARB(1, &mId);
+  glBindProgramARB(GL_FRAGMENT_PROGRAM_ARB, mId);
+  glProgramStringARB(GL_FRAGMENT_PROGRAM_ARB, GL_PROGRAM_FORMAT_ASCII_ARB,
+		     mLength, mBuffer);
+#if 1
+  if (glGetError() != GL_NO_ERROR)
+  {
+	cerr << "Fragment program error" << endl;
+	return;
+  }
+#endif
+}
+
+void
+FragmentProgramARB::destroy ()
+{
+  glDeleteProgramsARB(1, &mId);
+  mId = 0;
+}
+
+void
+FragmentProgramARB::bind ()
+{
+  glEnable(GL_FRAGMENT_PROGRAM_ARB);
+  glBindProgramARB(GL_FRAGMENT_PROGRAM_ARB, mId);
+}
+
+void
+FragmentProgramARB::release ()
+{
+  glBindProgramARB(GL_FRAGMENT_PROGRAM_ARB, 0);
+  glDisable(GL_FRAGMENT_PROGRAM_ARB);
+}
+
+void
+FragmentProgramARB::enable ()
+{
+  glEnable(GL_FRAGMENT_PROGRAM_ARB);
+}
+
+void
+FragmentProgramARB::disable ()
+{
+  glDisable(GL_FRAGMENT_PROGRAM_ARB);
+}
+
+void
+FragmentProgramARB::makeCurrent ()
+{
+  glBindProgramARB(GL_FRAGMENT_PROGRAM_ARB, mId);
+}
+
+#endif
 
 } // End namespace SCIRun
 

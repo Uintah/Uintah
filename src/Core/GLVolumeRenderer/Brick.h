@@ -31,7 +31,6 @@
 #include <vector>
 #include <sgi_stl_warnings_on.h>
 
-#include <Core/GLVolumeRenderer/GLVolRenState.h>
 
 namespace SCIRun {
 
@@ -71,6 +70,7 @@ DESCRIPTION
 WARNING
   
 ****************************************/
+class GLVolRenState;
 
 class Brick 
  {

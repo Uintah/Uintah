@@ -11,6 +11,7 @@
  */
 
 
+#include <sci_defs.h>
 #include <stdio.h>
 #include <unistd.h>
 
@@ -42,9 +43,15 @@
 #include <sstream>
 #include <values.h>
 
+#if defined(HAVE_GLEW)
+#include <GL/glew.h>
+#include <GL/glxew.h>
+#else
 #include <GL/gl.h>
 #include <GL/glu.h>
 #include <GL/glx.h>
+#endif
+
 
 extern "C" GLXContext OpenGLGetContext(Tcl_Interp*, char*);
 extern Tcl_Interp* the_interp;

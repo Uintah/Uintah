@@ -18,12 +18,19 @@
 #ifndef GLVOLRENSTATE_H
 #define GLVOLRENSTATE_H
 
+#if defined(HAVE_GLEW)
+#include <GL/glew.h>
+#else
+#include <GL/gl.h>
+#endif
+
+
 #include <Core/Geometry/Ray.h>
 #include <Core/Geometry/BBox.h>
 #include <sgi_stl_warnings_off.h>
 #include <vector>
 #include <sgi_stl_warnings_on.h>
-#include <sci_glu.h>
+
 
 namespace SCIRun {
 
@@ -61,6 +68,9 @@ WARNING
   
 ****************************************/
 class GLVolumeRenderer;
+#if defined(GL_ARB_fragment_program)
+class FragmentProgramARB;
+#endif
 
 class GLVolRenState {
 public:
@@ -82,6 +92,7 @@ public:
   
   void Reload(){reload = (unsigned char *)1;}
   void NewBricks(){ newbricks_ = true; }
+  void NewColorMap(){ newcmap_ = true; }
 
   void set_bounding_box(BBox &bb) { bounding_box_ = bb; }
 protected:
@@ -103,9 +114,44 @@ protected:
   vector<GLuint> textureNames;
   unsigned char* reload;
   bool newbricks_;
+  bool newcmap_;
 
   BBox bounding_box_;
+
+#if defined(GL_ARB_fragment_program)
+  FragmentProgramARB *VolShader;
+#endif
+
 };
+
+
+#if defined(GL_ARB_fragment_program)
+class FragmentProgramARB
+{
+public:
+  FragmentProgramARB (const char* str, bool isFileName = false);
+  ~FragmentProgramARB ();
+  void init( const char* str, bool isFileName );
+
+  
+  bool created();
+  void create ();
+  void update ();
+  void destroy ();
+
+  void bind ();
+  void release ();
+  void enable ();
+  void disable ();
+  void makeCurrent ();
+  
+protected:
+  unsigned int mId;
+  unsigned char* mBuffer;
+  unsigned int mLength;
+  char* mFile;
+};
+#endif
 
 } // End namespace SCIRun
 

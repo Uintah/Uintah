@@ -21,7 +21,6 @@
 
 #define use_alg
 
-#include <GL/gl.h>
 #include <Core/Datatypes/Datatype.h>
 #include <Core/GLVolumeRenderer/Brick.h>
 #include <Core/GLVolumeRenderer/VolumeUtils.h>
@@ -216,7 +215,7 @@ private:
 
   Transform transform_;
 
-  bool set_max_brick_size(int maxBrick);
+//   bool set_max_brick_size(int maxBrick);
 #ifndef use_alg
   template <class T>
     void build_child(int i, Point min, Point mid, Point max,
@@ -554,7 +553,7 @@ GLTexture3D::build_bon_tree(Point min, Point max,
   Brick* brick;
   Array3<unsigned char> *brickData;
   // Check to make sure that we can accommodate the requested texture
-  GLint xtex =0 , ytex = 0 , ztex = 0;
+  int xtex =0 , ytex = 0 , ztex = 0;
 
   if ( xsize <= xmax_ ) xtex = 1;
   if ( ysize <= ymax_ ) ytex = 1;

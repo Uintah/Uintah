@@ -26,6 +26,8 @@
  *  Copyright (C) 1999 SCI Group
  */
 
+#include <sci_defs.h>
+
 #include <Core/Malloc/Allocator.h>
 #include <Dataflow/Modules/Render/SCIBaWGL.h>
 #include <Dataflow/Modules/Render/ViewWindow.h>
@@ -34,8 +36,13 @@
 #include <unistd.h>
 #include <math.h>
 
+#if defined( HAVE_GLEW )
+#include <GL/glew.h>
+#else
 #include <GL/gl.h>
 #include <sci_glu.h>
+#endif
+
 #include <string.h>
 
 #include <iostream>

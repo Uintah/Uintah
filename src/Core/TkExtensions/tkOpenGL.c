@@ -22,7 +22,7 @@
  *
  */
 
-#include <sci_config.h>
+#include <sci_defs.h>
 
 #include <Core/share/share.h>
 
@@ -34,9 +34,14 @@
 #include <tkWinPort.h>
 #endif
 
+#if defined( HAVE_GLEW )
+#include <GL/glew.h>
+#include <GL/glxew.h>
+#else
 #include <GL/gl.h>
 #include <sci_glu.h>
 #include <GL/glx.h>
+#endif
 
 #ifdef _WIN32
 #include <X11\XUtil.h>

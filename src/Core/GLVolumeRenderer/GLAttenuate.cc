@@ -16,7 +16,12 @@
 */
 
 #include <Core/GLVolumeRenderer/GLVolumeRenderer.h>
+#if defined( HAVE_GLEW )
+#include <GL/glew.h>
+#else
 #include <GL/gl.h>
+#endif
+
 
 namespace SCIRun {
 
@@ -29,15 +34,20 @@ GLAttenuate::GLAttenuate(const GLVolumeRenderer* glvr) :
 
 void GLAttenuate::preDraw()
 {
-  glEnable(GL_BLEND);
+  // comment out blending, done in render algorithm
+//   glEnable(GL_BLEND);
+
+  // default blend equation, but make sure.
   glBlendEquation(GL_FUNC_ADD_EXT);
+
   glBlendFunc(GL_CONSTANT_ALPHA_EXT, GL_ONE);
   glBlendColor(1.f, 1.f, 1.f, 1.f/volren->slices());
 }
 
 void GLAttenuate::postDraw()
 {
-  glDisable(GL_BLEND);
+  // comment out blending, done in render algorithm
+//   glDisable(GL_BLEND);
 }
 
 } // End namespace SCIRun

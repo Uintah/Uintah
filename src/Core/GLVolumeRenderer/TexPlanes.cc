@@ -15,6 +15,14 @@
   University of Utah. All Rights Reserved.
 */
 
+#include <sci_defs.h>
+#if defined(HAVE_GLEW)
+#include <GL/glew.h>
+#else
+#include <GL/gl.h>
+#include <sci_glu.h>
+#endif
+
 #include <Core/GLVolumeRenderer/TexPlanes.h>
 #include <Core/Geometry/Ray.h>
 #include <Core/GLVolumeRenderer/GLVolumeRenderer.h>

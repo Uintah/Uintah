@@ -32,7 +32,12 @@
 #ifndef RECEIVER_H_
 #define RECEIVER_H_
 
+#if defined( HAVE_GLEW )
+#include <GL/glew.h>
+#else
 #include <GL/gl.h>
+#endif
+
 
 /* The orientation and position of the receiver are stored
    in a 4x4 homogeneous transformation matrix according to
