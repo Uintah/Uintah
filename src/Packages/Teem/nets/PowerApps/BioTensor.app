@@ -3470,6 +3470,58 @@ class BioTensorApp {
 	    }
 
 	    source $saveFile
+	    
+
+	    if {$c_data_tab == "Analyze"} {
+		# This is a hack for the AnalyzeToNrrd module.
+		# The problem is that the filenames$i variables
+		# are created as data is selected and loaded.  For
+		# some reason when loading the setting for an app
+		# the filenames$i variables aren't seen.  This
+		# needs to be looked into more for 1.20.2
+		global mods
+		global data_mode
+		if {$data_mode == "DWIknownB0"} {
+		    # Check AnalyzeToNrrd-T2
+		    global $mods(AnalyzeToNrrd-T2)-num-files
+		    global $mods(AnalyzeToNrrd-T2)-file
+		    set num [set $mods(AnalyzeToNrrd-T2)-num-files]
+		    for {set i 0} {$i < $num} {incr i} {
+			if {[info exists $mods(AnalyzeToNrrd-T2)-filenames$i]} {
+			    set temp [set $mods(AnalyzeToNrrd-T2)-filenames$i]
+			    unset $mods(AnalyzeToNrrd-T2)-filenames$i
+			    set $mods(AnalyzeToNrrd-T2)-file $temp
+			    
+			    global $mods(AnalyzeToNrrd-T2)-filenames$i
+			    set $mods(AnalyzeToNrrd-T2)-filenames$i [set $mods(AnalyzeToNrrd-T2)-file]
+			    
+			    # Call the c++ function that adds this data to its data 
+			    # structure.
+			    $mods(AnalyzeToNrrd-T2)-c add_data [set $mods(AnalyzeToNrrd-T2)-file]
+			}
+		    }
+		}
+		# Check AnalyzeToNrrd1
+		global $mods(AnalyzeToNrrd1)-num-files
+		global $mods(AnalyzeToNrrd1)-file
+		set num [set $mods(AnalyzeToNrrd1)-num-files]
+		for {set i 0} {$i < $num} {incr i} {
+		    if {[info exists $mods(AnalyzeToNrrd1)-filenames$i]} {
+			set temp [set $mods(AnalyzeToNrrd1)-filenames$i]
+			unset $mods(AnalyzeToNrrd1)-filenames$i
+			set $mods(AnalyzeToNrrd1)-file $temp
+			
+			global $mods(AnalyzeToNrrd1)-filenames$i
+			set $mods(AnalyzeToNrrd1)-filenames$i [set $mods(AnalyzeToNrrd1)-file]
+			
+			# Call the c++ function that adds this data to its data 
+			# structure.
+			$mods(AnalyzeToNrrd1)-c add_data [set $mods(AnalyzeToNrrd1)-file]
+		    }
+		}
+	    }
+
+
 
 	    # set a few variables that need to be reset
 	    set indicate 0
@@ -3565,7 +3617,7 @@ class BioTensorApp {
      method indicate_dynamic_compile { which mode } {
  	if {$mode == "start"} {
  	    change_indicate_val 1
- 	    change_indicator_labels "Dynamically Compiling Code..."
+ 	    change_indicator_labels "Dynamically Compiling [$which name]..."
          } else {
  	    change_indicate_val 2
 
@@ -3730,7 +3782,7 @@ class BioTensorApp {
 		    
 		}
 	    } else {
-		puts "DATA IS NOT LOADED PROPERLY"
+		puts "DATA DID NOT LOAD PROPERLY"
 	    }
  	} elseif {$which == $mods(ShowField-X) && $state == "JustStarted"} {
 	    change_indicate_val 1
@@ -3893,8 +3945,19 @@ class BioTensorApp {
 
 	    } elseif {[set $mods(ChooseNrrd1)-port-index] == 2} {
 		# Analyze
-		global $mods(AnalyzeToNrrd1)-file
-		global $mods(AnalyzeToNrrd-T2)-file
+		global $mods(AnalyzeToNrrd1)-num-files
+		global $mods(AnalyzeToNrrd-T2)-num-files
+
+		if {[set $mods(AnalyzeToNrrd1)-num-files] == 0} {
+		    set answer [tk_messageBox -message \
+				    "Please specify an existing analyze files\nof a DWI Volumes image before\nexecuting." -type ok -icon info -parent .standalone] 
+		    return
+		}
+		if {[set $mods(AnalyzeToNrrd-T2)-num-files] == 0} {
+		    set answer [tk_messageBox -message \
+				    "Please specify an existing analyze files\nof a T2 reference image before\nexecuting." -type ok -icon info -parent .standalone] 
+		    return
+		}
 	    } else {
 		# shouldn't get here
 		return
@@ -3932,10 +3995,11 @@ class BioTensorApp {
 
 	    } elseif {[set $mods(ChooseNrrd1)-port-index] == 2} {
 		# Analyze
-		global $mods(AnalyzeToNrrd1)-file
-		if {[set $mods(AnalyzeToNrrd1)-file] == ""} {
+		global $mods(AnalyzeToNrrd1)-num-files
+
+		if {[set $mods(AnalyzeToNrrd1)-num-files] == 0} {
 		    set answer [tk_messageBox -message \
-				    "Please specify valid Analyze files\nwith tensors before executing." -type ok -icon info -parent .standalone] 
+				    "Please specify an existing analyze files\nof a DWI Volumes image before\nexecuting." -type ok -icon info -parent .standalone] 
 		    return
 		}
 	    } else {
@@ -4902,6 +4966,8 @@ class BioTensorApp {
 	$variance_tab1.slice configure -from 0 -to [expr $size_z - 1]
 	$variance_tab2.slice configure -from 0 -to [expr $size_z - 1]
 
+	set $mods(UnuSlice1)-position [expr $size_z / 2]
+	set $mods(UnuSlice2)-position [expr $size_z / 2]
 	# give initial value in middle
 
 	update_variance_slice
