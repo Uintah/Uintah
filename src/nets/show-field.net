@@ -105,10 +105,9 @@ set $m1-ViewWindow_0-view-fov ${view-fov}
 set $m2-notes {}
 set $m2-show_status 1
 set $m2-nodes-on 1
-set $m2-edges-on 1
-set $m2-faces-on 1
+set $m2-edges-on 0
+set $m2-faces-on 0
 set $m2-vectors-on 0
-set $m2-normalize-vectors -2147483647
 set $m2-has_vec_data 0
 set $m2-def-color-r 0.5
 set $m2-def-color-g 0.5
@@ -116,9 +115,8 @@ set $m2-def-color-b 0.5
 set $m2-node_display_type {Spheres}
 set $m2-edge_display_type {Lines}
 set $m2-active_tab {Nodes}
-set $m2-node_scale 0.01
+set $m2-node_scale [expr 0.01 * ${global-scale}]
 set $m2-edge_scale 1
-set $m2-vectors_scale 0.03
 set $m2-show_progress 0
 set $m2-resolution 4
 set $m3-notes {}
@@ -159,7 +157,6 @@ set $m7-nodes-on 1
 set $m7-edges-on 1
 set $m7-faces-on 0
 set $m7-vectors-on 0
-set $m7-normalize-vectors -2147483647
 set $m7-has_vec_data 0
 set $m7-def-color-r 0.5
 set $m7-def-color-g 0.5
@@ -167,14 +164,11 @@ set $m7-def-color-b 0.5
 set $m7-node_display_type {Spheres}
 set $m7-edge_display_type {Cylinders}
 set $m7-active_tab {Nodes}
-set $m7-node_scale 0.007
-set $m7-edge_scale 0.007
-set $m7-vectors_scale 0.03
-set $m7-show_progress -2147483647
+set $m7-node_scale [expr 0.007 * ${global-scale}]
+set $m7-edge_scale [expr 0.007 * ${global-scale}]
 set $m7-resolution 6
 set $m8-notes {}
 set $m8-show_status 1
-set $m8-interpolate -2147483647
 set $m9-notes {}
 set $m9-show_status 1
 set $m9-interp_op_gui {}
