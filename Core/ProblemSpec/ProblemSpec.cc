@@ -562,7 +562,7 @@ ProblemSpecP ProblemSpec::get(const std::string& name, vector<IntVector>& value)
         // then pass that into parseIntVector, and repeat.
 	while (!in.eof()) {
           in >> c;
-          if (c == ',' || c == ' ')
+          if (c == ' ' || (c == ',' && !inner_bracket))
             continue;
           if (c == '[') {
             if (!first_bracket) {
@@ -571,20 +571,25 @@ ProblemSpecP ProblemSpec::get(const std::string& name, vector<IntVector>& value)
             }
             else {
               inner_bracket = true;
-              result += c;
             }
           }
           else if (c == ']') {
             if (inner_bracket) {
               // parse the string for an IntVector
               IntVector val;
+              result += c;
+              // it should be [num,num,num] by now
               parseIntVector(result, val);
               value.push_back(val);
               result.erase();
+              inner_bracket = false;
+              continue;
             }
             else
               break; // end parsing on outer ]
           }
+          // add the char to the string
+          result += c;
         }  // end while (!in.eof())
       } // end if (child->getNodeType() == DOMNode::TEXT_NODE)
     }
@@ -1070,6 +1075,17 @@ void ProblemSpec::require(const std::string& name,
 
 void ProblemSpec::require(const std::string& name, 
                        vector<int>& value)
+{
+
+  // Check if the prob_spec is NULL
+
+ if (! this->get(name,value))
+      throw ParameterNotFound(name);
+
+} 
+
+void ProblemSpec::require(const std::string& name, 
+                       vector<IntVector>& value)
 {
 
   // Check if the prob_spec is NULL
