@@ -131,8 +131,8 @@ ifneq (@UNIPETSC_DIR@,)
   UNI_PETSC_LIB_DIR := @LIBUNIPETSC@
 endif
 
-BLAS_LIB_DIR      := @LIBBLAS@
-BLAS_LIBS         := -lblas
+BLAS_LIB_DIR      := @BLAS_LIBRARY@
+BLAS_LIBS         := @BLAS_LIB@
 
 LAPACK_LIB_DIR    := @LIBLAPACK@
 LAPACK_LIBS       := @LAPACK@
