@@ -61,7 +61,6 @@ PSELIBS := Core/Persistent Core/Containers Core/Util \
         Core/TkExtensions Dataflow/Network Dataflow/Ports \
 	Dataflow/XMLUtil \
 	Packages/MatlabInterface/Core/Datatypes \
-        Packages/MatlabInterface/Core/Util \
 	Core/Services Core/ICom Core/SystemCall
 
 LIBS := $(TEEM_LIBRARY) $(Z_LIBRARY) $(TK_LIBRARY) $(GL_LIBS) $(M_LIBRARY) $(XML_LIBRARY)
