@@ -240,21 +240,6 @@ void DataArchiver::finalizeTimestep(double time, double delt,
    dbg << "Created " << n << " output tasks\n";
 }
 
-static bool get(const DOM_Node& node, int &value)
-{
-   for (DOM_Node child = node.getFirstChild(); child != 0;
-	child = child.getNextSibling()) {
-      if (child.getNodeType() == DOM_Node::TEXT_NODE) {
-	 DOMString val = child.getNodeValue();
-	 char* s = val.transcode();
-	 value = atoi(s);
-	 delete[] s;
-	 return true;
-      }
-   }
-   return false;
-}
-
 void DataArchiver::outputReduction(const ProcessorGroup*,
 				   DataWarehouseP& /*old_dw*/,
 				   DataWarehouseP& new_dw,
@@ -557,6 +542,9 @@ static Dir makeVersionedDir(const std::string nameBase)
 
 //
 // $Log$
+// Revision 1.14  2000/06/27 17:08:32  bigler
+// Steve moved some functions around for me.
+//
 // Revision 1.13  2000/06/17 07:06:30  sparker
 // Changed ProcessorContext to ProcessorGroup
 //

@@ -24,6 +24,10 @@ namespace SCICore {
 
 namespace PSECore {
    namespace XMLUtil {
+     using SCICore::Geometry::Point;
+     using SCICore::Geometry::Vector;
+     using SCICore::Geometry::IntVector;
+     
       DOM_Node findNode(const std::string &name,DOM_Node node);
       DOM_Node findNextNode(const std::string& name, DOM_Node node);
       DOM_Node findTextNode(DOM_Node node);
@@ -46,11 +50,32 @@ namespace PSECore {
 			 long value);
       void appendElement(DOM_Element& root, const DOMString& name,
 			 double value);
+      bool get(const DOM_Node& node, int &value);
+      bool get(const DOM_Node& node,
+	       const std::string& name, int &value);
+      bool get(const DOM_Node& node, long &value);
+      bool get(const DOM_Node& node,
+	       const std::string& name, long &value);
+      bool get(const DOM_Node& node,
+	       const std::string& name, double &value);
+      bool get(const DOM_Node& node,
+	       const std::string& name, std::string &value);
+      bool get(const DOM_Node& node,
+	       const std::string& name, Vector& value);
+      bool get(const DOM_Node& node,
+	       const std::string& name, Point& value);
+      bool get(const DOM_Node& node,
+	       const std::string& name, IntVector &value);
+      bool get(const DOM_Node& node,
+	       const std::string& name, bool &value);
    } // end namespace XMLUtil
 } // end namespace Uintah
 
 //
 // $Log$
+// Revision 1.3  2000/06/27 17:08:24  bigler
+// Steve moved some functions around for me.
+//
 // Revision 1.2  2000/06/15 19:51:58  sparker
 // Added appendElement for Vector
 //
