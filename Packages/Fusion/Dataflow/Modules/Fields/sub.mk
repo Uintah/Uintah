@@ -16,7 +16,6 @@ SRCS     += \
 	$(SRCDIR)/EditFusionField.cc\
 	$(SRCDIR)/FusionSlicer.cc\
 	$(SRCDIR)/RadialGridDifferent.cc\
-	$(SRCDIR)/TestStruct.cc\
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS := Core/Datatypes Dataflow/Network Dataflow/Ports \
