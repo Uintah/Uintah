@@ -31,6 +31,7 @@ itcl_class SCIRun_Math_MatrixSelectVector {
 	global $this-playmode
 	global $this-current
 	global $this-execmode
+	global $this-delay
 
         set_defaults
     }
@@ -45,7 +46,8 @@ itcl_class SCIRun_Math_MatrixSelectVector {
         set $this-range_max          0
 	set $this-playmode           once
 	set $this-current            0
-	set $this-execmode           "step"
+	set $this-execmode           "init"
+	set $this-delay              0
     }
 
     method run_update {} {
@@ -92,7 +94,7 @@ itcl_class SCIRun_Math_MatrixSelectVector {
 		-showvalue true -orient horizontal -relief groove -length 200
 
 	frame $w.location.cur
-	label $w.location.cur.label -text "Next Value" -width 10 -just left
+	label $w.location.cur.label -text "Current Value" -width 10 -just left
 	entry $w.location.cur.entry -width 10 -textvariable $this-current
 	pack $w.location.cur.label $w.location.cur.entry \
 		-side left -anchor n -expand yes -fill x
@@ -106,12 +108,21 @@ itcl_class SCIRun_Math_MatrixSelectVector {
 		-variable $this-playmode -value once
 	radiobutton $w.playmode.loop -text "Loop" \
 		-variable $this-playmode -value loop
-	radiobutton $w.playmode.bounce -text "Bounce" \
-		-variable $this-playmode -value bounce
+	radiobutton $w.playmode.bounce1 -text "Bounce1" \
+		-variable $this-playmode -value bounce1
+	radiobutton $w.playmode.bounce2 -text "Bounce2" \
+		-variable $this-playmode -value bounce2
+
+	frame $w.playmode.delay
+	label $w.playmode.delay.label -text "Delay (ms)" \
+		-width 10 -just left
+	entry $w.playmode.delay.entry -width 10 -textvariable $this-delay
+	pack $w.playmode.delay.label $w.playmode.delay.entry \
+		-side left -anchor n -expand yes -fill x
 
 	pack $w.playmode.label -side top -expand yes -fill both
-	# Disabled bounce for now.
 	pack $w.playmode.once $w.playmode.loop \
+		$w.playmode.bounce1 $w.playmode.bounce2 $w.playmode.delay \
 		-side top -anchor w
 
 
