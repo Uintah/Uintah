@@ -59,8 +59,6 @@ public:
 
   virtual void tcl_command(GuiArgs&, void*);
 
-  void load_gui();
-
   // Run function will dynamically cast data to determine which
   // instantiation we are working with. The last template type
   // refers to the last template type of the filter intstantiation.
@@ -74,6 +72,7 @@ private:
   vector<GuiInt*> maxs_;
   vector<GuiInt*> absmaxs_;
   GuiInt          num_dims_;
+  GuiInt          uis_;
   vector<int>     lastmin_;
   vector<int>     lastmax_;
   int             last_generation_;
@@ -85,41 +84,39 @@ private:
 DECLARE_MAKER(ExtractImageFilter)
 ExtractImageFilter::ExtractImageFilter(GuiContext* ctx)
   : Module("ExtractImageFilter", ctx, Source, "Filters", "Insight"),
-  num_dims_(ctx->subVar("num-dims")),
+  num_dims_(ctx->subVar("num-dims")), uis_(ctx->subVar("uis")),
   last_generation_(-1), 
   last_imgH_(0)
 {
   // this will get overwritten when tcl side initializes, but 
   // until then make sure it is initialized.
   num_dims_.set(0); 
-  load_gui();
+  lastmin_.resize(4,-1);
+  lastmax_.resize(4,-1);
+
+  for (int a = 0; a < 4; a++) {
+    ostringstream str;
+    str << "minDim" << a;
+    mins_.push_back(new GuiInt(ctx->subVar(str.str())));
+    ostringstream str1;
+    str1 << "maxDim" << a;
+    maxs_.push_back(new GuiInt(ctx->subVar(str1.str())));
+    ostringstream str2;
+    str2 << "absmaxDim" << a;
+    absmaxs_.push_back(new GuiInt(ctx->subVar(str2.str())));
+  }
+  //load_gui();
 }
 
 ExtractImageFilter::~ExtractImageFilter(){
+    mins_.clear();
+    maxs_.clear();
+    absmaxs_.clear();
+    
+    lastmin_.clear();
+    lastmax_.clear();
 }
 
-void ExtractImageFilter::load_gui() {
-  num_dims_.reset();
-  if (num_dims_.get() == 0) { return; }
-
- 
-  lastmin_.resize(num_dims_.get(), -1);
-  lastmax_.resize(num_dims_.get(), -1);  
-
-  if ((int)mins_.size() != num_dims_.get()) {
-    for (int a = 0; a < num_dims_.get(); a++) {
-      ostringstream str;
-      str << "minDim" << a;
-      mins_.push_back(new GuiInt(ctx->subVar(str.str())));
-      ostringstream str1;
-      str1 << "maxDim" << a;
-      maxs_.push_back(new GuiInt(ctx->subVar(str1.str())));
-      ostringstream str2;
-      str2 << "absmaxDim" << a;
-      absmaxs_.push_back(new GuiInt(ctx->subVar(str2.str())));
-    }
-  }
-}
 
 void ExtractImageFilter::execute(){
   
@@ -173,81 +170,176 @@ void ExtractImageFilter::execute(){
 template<class InputImageType, class OutputImageType>
 bool ExtractImageFilter::run( itk::Object *obj_InputImage) 
 {
-  InputImageType *n = dynamic_cast<  InputImageType * >(obj_InputImage);
-  
-  if( !n ) {
+  InputImageType *img = dynamic_cast<  InputImageType * >(obj_InputImage);
+  if( !img ) {
     return false;
   }
-  
-  num_dims_.reset();
-  
-  if (last_generation_ != imgH->generation) {
-    ostringstream str;
-    
-    load_gui();
-    
-    bool do_clear = false;
-    // if the dim and sizes are the same don't clear.
-    if ((num_dims_.get() == (int)n->GetImageDimension())) {
-      for (int a = 0; a < num_dims_.get(); a++) {
-	int size = (n->GetLargestPossibleRegion()).GetSize()[a];
-	if (absmaxs_[a]->get() != (size-1)) {
-	  do_clear = true;
-	  break;
+
+  // Copy the input image so that upstream modules aren't affected
+  typename InputImageType::Pointer n = InputImageType::New();
+  typename InputImageType::SizeType si;
+  typename InputImageType::IndexType in;
+
+  for(int a=0; a<(int)img->GetImageDimension(); a++) {
+    si[a] = (img->GetRequestedRegion()).GetSize()[a];
+    in[a] = 0;
+  }
+
+  typename InputImageType::RegionType reg;
+  reg.SetSize(si);
+  reg.SetIndex(in);
+  n->SetRegions(reg);
+  n->Allocate();
+
+  if ((int)img->GetImageDimension() == 3) {
+    typename InputImageType::IndexType pixel;
+    for(int x=0; x<(int)si[0];x++)
+      for(int y=0; y<(int)si[1];y++)
+	for(int z=0; z<(int)si[2];z++) {
+	  pixel[0] = x;
+	  pixel[1] = y;
+	  pixel[2] = z;
+	  typename InputImageType::PixelType val = img->GetPixel(pixel);
+	  n->SetPixel(pixel,val);
 	}
-      }
-    } else {
-      do_clear = true;
-    }
-    
-    
-    if (do_clear) {
-      
-      lastmin_.clear();
-      lastmax_.clear();
-      vector<GuiInt*>::iterator iter = mins_.begin();
-      while(iter != mins_.end()) {
-	delete *iter;
-	++iter;
-      }
-      mins_.clear();
-      iter = maxs_.begin();
-      while(iter != maxs_.end()) {
-	delete *iter;
-	++iter;
-      }
-      maxs_.clear();
-      iter = absmaxs_.begin();
-      while(iter != absmaxs_.end()) {
-	delete *iter;
-	++iter;
-      }
-      absmaxs_.clear();
-      gui->execute(id.c_str() + string(" clear_dims"));
-      
-      
-      num_dims_.set((int)n->GetImageDimension());
-      num_dims_.reset();
-      load_gui();
-      gui->execute(id.c_str() + string(" init_dims"));
-      
-      for (int a = 0; a < num_dims_.get(); a++) {
-	maxs_[a]->reset();
-      }
-      for (int a = 0; a < num_dims_.get(); a++) {
-	int size = (n->GetLargestPossibleRegion()).GetSize()[a];
-	mins_[a]->set(0);
-	absmaxs_[a]->set(size-1);
-	maxs_[a]->reset();
-	absmaxs_[a]->reset();
-      }
-      
-      str << id.c_str() << " set_max_vals" << endl; 
-      gui->execute(str.str());
-      
+  } else if ((int)img->GetImageDimension() == 2) {
+    typename InputImageType::IndexType pixel;
+    for(int x=0; x<(int)si[0];x++)
+      for(int y=0; y<(int)si[1];y++) {
+	pixel[0] = x;
+	pixel[1] = y;
+	typename InputImageType::PixelType val = img->GetPixel(pixel);
+	n->SetPixel(pixel,val);
+      }  
+  } else {
+    error("ExtractImageFilter only works on 2 and 3D data\n");
+    return false;
+  }
+
+  num_dims_.reset();
+
+  bool new_dataset = (last_generation_ != imgH->generation);
+  bool first_time = (last_generation_ == -1);
+
+  // create any axes that might have been saved
+  if (first_time) {
+    uis_.reset();
+    for(int i=4; i<uis_.get(); i++) {
+      ostringstream str, str2, str3, str4;
+      str << "minDim" << i;
+      str2 << "maxDim" << i;
+      str3 << "absmaxDim" << i;
+      str4 << i;
+      mins_.push_back(new GuiInt(ctx->subVar(str.str())));
+      maxs_.push_back(new GuiInt(ctx->subVar(str2.str())));
+      absmaxs_.push_back(new GuiInt(ctx->subVar(str3.str())));
+
+      mins_[i]->reset();
+      maxs_[i]->reset();
+      lastmin_.push_back(mins_[i]->get());
+      lastmax_.push_back(maxs_[i]->get());  
+
+      gui->execute(id.c_str() + string(" make_min_max " + str4.str()));
     }
   }
-  
+
+  last_generation_ = imgH->generation;
+  num_dims_.set((int)n->GetImageDimension());
+  num_dims_.reset();
+
+  // remove any unused uis or add any needes uis
+  if (uis_.get() > (int)n->GetImageDimension()) {
+    // remove them
+    for(int i=uis_.get()-1; i>=(int)n->GetImageDimension(); i--) {
+      ostringstream str;
+      str << i;
+      vector<GuiInt*>::iterator iter = mins_.end();
+      vector<GuiInt*>::iterator iter2 = maxs_.end();
+      vector<GuiInt*>::iterator iter3 = absmaxs_.end();
+      vector<int>::iterator iter4 = lastmin_.end();
+      vector<int>::iterator iter5 = lastmax_.end();
+      mins_.erase(iter, iter);
+      maxs_.erase(iter2, iter2);
+      absmaxs_.erase(iter3, iter3);
+
+      lastmin_.erase(iter4, iter4);
+      lastmax_.erase(iter5, iter5);
+
+      gui->execute(id.c_str() + string(" clear_axis " + str.str()));
+    }
+    uis_.set((int)n->GetImageDimension());
+  } else if (uis_.get() < (int)n->GetImageDimension()) {
+    for (int i=uis_.get(); i < num_dims_.get(); i++) {
+      ostringstream str, str2, str3, str4;
+      str << "minDim" << i;
+      str2 << "maxDim" << i;
+      str3 << "absmaxDim" << i;
+      str4 << i;
+      mins_.push_back(new GuiInt(ctx->subVar(str.str())));
+      maxs_.push_back(new GuiInt(ctx->subVar(str2.str())));
+      maxs_[i]->set((n->GetLargestPossibleRegion()).GetSize()[i]-1);
+      absmaxs_.push_back(new GuiInt(ctx->subVar(str3.str())));
+      absmaxs_[i]->set((n->GetLargestPossibleRegion()).GetSize()[i]-1);
+      
+      lastmin_.push_back(0);
+      lastmax_.push_back((n->GetLargestPossibleRegion()).GetSize()[i]-1); 
+      
+      gui->execute(id.c_str() + string(" make_min_max " + str4.str()));
+    }
+    uis_.set((int)n->GetImageDimension());
+  }
+ 
+  if (new_dataset) {
+    for (int a=0; a<num_dims_.get(); a++) {
+      int max = (n->GetLargestPossibleRegion()).GetSize()[a];
+      maxs_[a]->reset();
+      absmaxs_[a]->set(n->GetLargestPossibleRegion().GetSize()[a]-1);
+      absmaxs_[a]->reset();
+      if (maxs_[a]->get() > max) {
+	warning("Out of bounds, resetting axis min/max");
+	mins_[a]->set(0);
+	mins_[a]->reset();
+	maxs_[a]->set(max);
+	maxs_[a]->reset();
+	lastmin_[a] = 0;
+	lastmax_[a] = max;
+      }
+    }
+
+    gui->execute(id.c_str() + string (" update_sizes "));    
+  }
+
+//   if (new_dataset && !first_time) {
+//     ostringstream str;
+//     str << id.c_str() << " reset_vals" << endl; 
+//     gui->execute(str.str());  
+//   }
+
+  for (int a=0; a<num_dims_.get(); a++) {
+    mins_[a]->reset();
+    maxs_[a]->reset();
+    absmaxs_[a]->reset();
+  }
+
+
+  // See if any of the sizes have changed.
+  bool update = new_dataset;
+
+  for (int i=0; i<num_dims_.get(); i++) {
+      mins_[i]->reset();
+
+    int min = mins_[i]->get();
+    if (lastmin_[i] != min) {
+      update = true;
+      lastmin_[i] = min;
+    }
+    maxs_[i]->reset();
+    int max = maxs_[i]->get();
+    if (lastmax_[i] != max) {
+      update = true;
+    }
+  }
+
   if (num_dims_.get() == 0) { return true; }
   
   for (int a = 0; a < num_dims_.get(); a++) {
@@ -281,7 +373,7 @@ bool ExtractImageFilter::run( itk::Object *obj_InputImage)
   typedef itk::ExtractImageFilter<InputImageType, OutputImageType> FilterType;
   
   typename FilterType::Pointer filter = FilterType::New();
-  
+
   filter->SetInput(n);
   
   // define a region
@@ -295,7 +387,7 @@ bool ExtractImageFilter::run( itk::Object *obj_InputImage)
     
     input_start[i] = (n->GetLargestPossibleRegion()).GetIndex()[i];
   }
-  
+
   typename InputImageType::RegionType region;
   region.SetSize( size );
   region.SetIndex( start );
@@ -316,7 +408,6 @@ bool ExtractImageFilter::run( itk::Object *obj_InputImage)
   //region.SetIndex( input_start );
   //filter->GetOutput()->SetRegions( region );
   
-  
   ITKDatatype *nrrd = scinew ITKDatatype;
   nrrd->data_ = filter->GetOutput();
   last_imgH_ = nrrd;
@@ -326,7 +417,56 @@ bool ExtractImageFilter::run( itk::Object *obj_InputImage)
 
 void ExtractImageFilter::tcl_command(GuiArgs& args, void* userdata)
 {
-  Module::tcl_command(args, userdata);
+  if(args.count() < 2){
+    args.error("ExtractImageFilter needs a minor command");
+    return;
+  }
+
+  if( args[1] == "add_axis" ) 
+  {
+      uis_.reset();
+      int i = uis_.get();
+      ostringstream str, str2, str3, str4;
+      str << "minDim" << i;
+      str2 << "maxDim" << i;
+      str3 << "absmaxDim" << i;
+      str4 << i;
+      mins_.push_back(new GuiInt(ctx->subVar(str.str())));
+      maxs_.push_back(new GuiInt(ctx->subVar(str2.str())));
+      absmaxs_.push_back(new GuiInt(ctx->subVar(str3.str())));
+
+      lastmin_.push_back(0);
+      lastmax_.push_back(0); 
+
+      gui->execute(id.c_str() + string(" make_min_max " + str4.str()));
+
+      uis_.set(uis_.get() + 1);
+  }
+  else if( args[1] == "remove_axis" ) 
+  {
+    uis_.reset();
+    int i = uis_.get()-1;
+    ostringstream str;
+    str << i;
+    vector<GuiInt*>::iterator iter = mins_.end();
+    vector<GuiInt*>::iterator iter2 = maxs_.end();
+    vector<GuiInt*>::iterator iter3 = absmaxs_.end();
+    vector<int>::iterator iter4 = lastmin_.end();
+    vector<int>::iterator iter5 = lastmax_.end();
+    mins_.erase(iter, iter);
+    maxs_.erase(iter2, iter2);
+    absmaxs_.erase(iter3, iter3);
+    
+    lastmin_.erase(iter4, iter4);
+    lastmax_.erase(iter5, iter5);
+    
+    gui->execute(id.c_str() + string(" clear_axis " + str.str()));
+    uis_.set(uis_.get() - 1);
+  }
+  else 
+  {
+    Module::tcl_command(args, userdata);
+  }
 }
 
 } // End namespace Insight
