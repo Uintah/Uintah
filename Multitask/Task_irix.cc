@@ -63,6 +63,14 @@ struct TaskArgs {
     Task* t;
 };
 
+class MainTask : public Task {
+public:
+    MainTask();
+    virtual ~MainTask();
+    int body(int);
+};
+
+
 #define MAXTASKS 1000
 static int ntasks=0;
 static Task* tasks[MAXTASKS];
@@ -426,6 +434,7 @@ void Task::initialize(char* pn)
     progname=strdup(pn);
     tick=CLK_TCK;
     pagesize=getpagesize();
+    devzero_fd=open("/dev/zero", O_RDWR);
     if(devzero_fd == -1){
 	perror("open");
 	exit(-1);
@@ -443,28 +452,26 @@ void Task::initialize(char* pn)
     }
     
     // Set up the task local memory...
-    int fd=open("/dev/zero", O_RDWR);
-    if(fd==-1){
-	cerr << "Error opening /dev/zero!\n";
-	exit(-1);
-    }
 #if 1
     task_local=(TaskLocalMemory*)mmap(0, sizeof(TaskLocalMemory),
 				      PROT_READ|PROT_WRITE,
 				      MAP_PRIVATE|MAP_LOCAL,
-				      fd, 0);
+				      devzero_fd, 0);
 #endif
 #if 0
     task_local=(TaskLocalMemory*)mmap((void*)0x50000000, sizeof(TaskLocalMemory),
 				      PROT_READ|PROT_WRITE,
 				      MAP_PRIVATE|MAP_LOCAL|MAP_FIXED,
-				      fd, 0);
+				      devzero_fd, 0);
 #endif
     if(!task_local){
 	cerr << "Error mapping /dev/zero!\n";
 	exit(-1);
     }
-    close(fd);
+
+    task_local->current_task=scinew MainTask;
+    task_local->current_task->activated=1;
+    task_local->current_task->priv=scinew TaskPrivate;
 
     // Set up the signal stack so that we will be able to 
     // Catch the SEGV's that need to grow the stacks...
@@ -855,3 +862,20 @@ void Barrier::wait(int n)
 {
     barrier(priv->barrier, n);
 }
+
+MainTask::MainTask()
+: Task("main()", 1)
+{
+}
+
+MainTask::~MainTask()
+{
+}
+
+int MainTask::body(int)
+{
+    cerr << "Error - main's body called!\n";
+    exit(-1);
+    return 0;
+}
+
