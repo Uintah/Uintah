@@ -3,15 +3,15 @@
 "../docbookx.dtd" 
 [
 <!ENTITY chapter1 SYSTEM "../../src/Core/Exceptions/doc/dirspec.xml">
-<!ENTITY chapter2 SYSTEM "../../src/Core/Disclosure/doc/dirspec.xml.xml">
-<!ENTITY chapter3 SYSTEM "../../src/Core/GuiInterface/doc/dirspec.xml.xml">
-<!ENTITY chapter4 SYSTEM "../../src/Core/Malloc/doc/dirspec.xml.xml">
-<!ENTITY chapter5 SYSTEM "../../src/Core/Persistent/doc/dirspec.xml.xml">
-<!ENTITY chapter6 SYSTEM "../../src/Core/TkExtensions/doc/dirspec.xml.xml">
-<!ENTITY chapter7 SYSTEM "../../src/Core/Util/doc/dirspec.xml.xml">
-<!ENTITY chapter8 SYSTEM "../../src/Dataflow/Constraints/doc/dirspec.xml.xml">
-<!ENTITY chapter9 SYSTEM "../../src/Dataflow/Network/doc/dirspec.xml.xml">
-<!ENTITY chapter10 SYSTEM "../../src/Dataflow/Widgets/doc/dirspec.xml.xml">
+<!ENTITY chapter2 SYSTEM "../../src/Core/Disclosure/doc/dirspec.xml">
+<!ENTITY chapter3 SYSTEM "../../src/Core/GuiInterface/doc/dirspec.xml">
+<!ENTITY chapter4 SYSTEM "../../src/Core/Malloc/doc/dirspec.xml">
+<!ENTITY chapter5 SYSTEM "../../src/Core/Persistent/doc/dirspec.xml">
+<!ENTITY chapter6 SYSTEM "../../src/Core/TkExtensions/doc/dirspec.xml">
+<!ENTITY chapter7 SYSTEM "../../src/Core/Util/doc/dirspec.xml">
+<!ENTITY chapter8 SYSTEM "../../src/Dataflow/Constraints/doc/dirspec.xml">
+<!ENTITY chapter9 SYSTEM "../../src/Dataflow/Network/doc/dirspec.xml">
+<!ENTITY chapter10 SYSTEM "../../src/Dataflow/Widgets/doc/dirspec.xml">
 
 ]>
 
