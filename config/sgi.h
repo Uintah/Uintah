@@ -48,7 +48,7 @@
 #endif
 
 #define SCI_DeltaOtherCFlags -xansi -fullwarn SCI_BinFlags
-#define SCI_DeltaCppCompiler CC
+#define SCI_DeltaCppCompiler CC -Dbool=int -Dtrue=1 -Dfalse=0
 #define SCI_DeltaOptimizeCppFlags SCI_DeltaOptimizeCFlags
 #define SCI_DeltaDebugCppFlags SCI_DeltaDebugCFlags
 #define SCI_DeltaOtherCppFlags SCI_BinFlags
