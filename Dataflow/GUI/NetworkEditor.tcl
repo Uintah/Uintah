@@ -545,7 +545,7 @@ proc addModuleAtMouse { pack cat mod subnet_id } {
 
 
 proc findMovedModulePath { packvar catvar modvar } {
-    set xlat "{Fusion Fields NrrdFieldConverter} {Teem DataIO NrrdToField}"
+    set xlat "{Fusion Fields NrrdFieldConverter} {Teem DataIO NrrdToField} {SCIRun FieldsCreate GatherPoints} {SCIRun FieldsCreate GatherFields}"
     upvar 1 $packvar package $catvar category $modvar module
     set newpath [string map $xlat "$package $category $module"]
     set package  [lindex $newpath 0]
