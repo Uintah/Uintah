@@ -87,8 +87,7 @@ void    ICE::printData( int matl,
       string filename = path + "/" + message2;
       fp = fopen(filename.c_str(), "w");
       double x, dx;
-      find_gnuplot_origin_And_dx(patch, low, high, &dx, &x);
-      
+      find_gnuplot_origin_And_dx(patch, low, high, &dx, &x);     
       for(int k = low.z(); k < high.z(); k++)  {
         for(int j = low.y(); j < high.y(); j++) {
           for(int i = low.x(); i < high.x(); i++) {
@@ -631,11 +630,13 @@ void  ICE::adjust_dbg_indices(  const int include_EC,
     low   = patch->getInteriorCellLowIndex();
     high  = patch->getInteriorCellHighIndex();
   }
- 
+
+#if 0 
   if (d_dbgGnuPlot){                  // ignore extra cell specification
     low  = d_dbgBeginIndx;
     high = d_dbgEndIndx;
   }
+#endif
 
   //__________________________________                            
   // for multipatch problems you need                             
