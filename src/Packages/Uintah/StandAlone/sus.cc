@@ -99,8 +99,11 @@ usage( const std::string & message,
   char **argv;
   argv = 0;
 
-  /* Initialize MPI so that "usage" is only printed by proc 0. */
+#ifndef HAVE_MPICH
+  // Initialize MPI so that "usage" is only printed by proc 0.
+  // (If we are using MPICH, then MPI_Init() has already been called.)
   Uintah::Parallel::initializeManager( argc, argv, "" );
+#endif
 
   if( Uintah::Parallel::getMPIRank() == 0 )
     {
@@ -135,7 +138,7 @@ int
 main(int argc, char** argv)
 {
 //   int pid;
-//   cout << "Input pid:  "<<getpid() <<endl;
+//   cout << "MPI Process PID:  " << getpid() << endl;
 //   cin >> pid;
 
 #ifdef USE_TAU_PROFILING
@@ -176,11 +179,22 @@ main(int argc, char** argv)
     string loadbalancer;
     IntVector layout(1,1,1);
 
+#ifdef HAVE_MPICH
     /*
      * Initialize MPI
      */
+    //
+    // If we are using MPICH, then we must call MPI_Init() before
+    // parsing args... this is supposed to be fixed at some point in
+    // MPICH-2.  (InitializeManager() calls MPI_Init().)
+    //
+    // The main problem with calling initializeManager() before
+    // parsing the args is that we don't know which "scheduler" to
+    // use... the MPI or Mixed.  However, MPICH does not support
+    // Thread safety, so we will just dis-allow that.
+    //
     Uintah::Parallel::initializeManager( argc, argv, scheduler );
-
+#endif
     /*
      * Parse arguments
      */
@@ -223,7 +237,7 @@ main(int argc, char** argv)
 		    s, argv[0]);
 	   }
 	   loadbalancer = argv[i];
-	} else if(s.substr(0,3) == "-p4") {
+      //} else if(s.substr(0,3) == "-p4") {
 	  // This should never happen anymore as the MPI_Init strips
 	  // the "-p4" and other args off of the command line before
 	  // we get to this point.  This use to be necessary as we did
@@ -232,7 +246,7 @@ main(int argc, char** argv)
 	  // correctly if you don't.  Dd.
 
 	   // mpich - skip the rest
-	   break;
+	   // break;
 	} else if (s == "-emit_taskgraphs") {
 	   emit_graphs = true;
 	} else if(s == "-restart") {
@@ -265,6 +279,11 @@ main(int argc, char** argv)
 		filename = argv[i];
 	}
     }
+
+#ifndef HAVE_MPICH
+    // If regular MPI, then initialize after parsing the args...
+    Uintah::Parallel::initializeManager( argc, argv, scheduler );
+#endif
 
     if(filename == ""){
       usage("No input file specified", "", argv[0]);
@@ -308,8 +327,6 @@ main(int argc, char** argv)
 
     bool thrownException = false;
     
-    cerr << "Main mpi process: pid: " << getpid() << "\n";
-
     /*
      * Create the components
      */
@@ -391,6 +408,10 @@ main(int argc, char** argv)
 	   sched->attachPort("load balancer", bal);
 	   sch=sched;
 	} else if(scheduler == "MixedScheduler"){
+#ifdef HAVE_MPICH
+	  cerr << "MPICH does not support the MixedScheduler.  Exiting\n";
+	  Thread::exitAll(1);	  
+#endif
 	  if( numThreads > 0 ){
 	    if( Uintah::Parallel::getMaxThreads() == 1 ){
 	      Uintah::Parallel::setMaxThreads( numThreads );
@@ -430,6 +451,7 @@ main(int argc, char** argv)
 	  ctl->doRestart(restartFromDir, restartTimestep,
 			 restartFromScratch, restartRemoveOldDir);
 	}
+
 	ctl->run();
 
 	delete sim;
