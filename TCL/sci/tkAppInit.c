@@ -105,7 +105,6 @@ Tcl_AppInit(interp)
 		      (void (*)()) NULL);
     Tcl_CreateCommand(interp, "bevel", BevelCmd, (ClientData) main,
 		      (void (*)()) NULL);
-    fprintf(stderr, "Added opengl\n");
 
     /*
      * Specify a user-specific startup file to invoke if the application

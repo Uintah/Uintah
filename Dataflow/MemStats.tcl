@@ -17,7 +17,7 @@ proc showMemStats {} {
 	set lineheight [winfo pixels .msw.canvas 8p]
 	set gleft [winfo pixels .msw.canvas 8.5c]
 	set gwidth [winfo pixels .msw.canvas 2c]
-	set font -Adobe-courier-medium-r-*-80-*
+	set font -Adobe-courier-medium-r-*-80-75-*
 	set bins [memstats nbins]
 	for {set i 0} {$i<$bins} {incr i} {
 	    set top [expr ($i+7)*$lineheight]

@@ -6,9 +6,9 @@ if {![info exists sci_root]} {
 
 source $sci_root/defaults.tcl
 
-set modname_font "-Adobe-Helvetica-bold-R-Normal-*-120-*"
-set ui_font "-Adobe-Helvetica-medium-R-Normal-*-120-*"
-set time_font "-Adobe-Courier-Medium-R-Normal-*-100-*"
+set modname_font "-Adobe-Helvetica-bold-R-Normal-*-120-75-*"
+set ui_font "-Adobe-Helvetica-medium-R-Normal-*-120-75-*"
+set time_font "-Adobe-Courier-Medium-R-Normal-*-100-75-*"
 
 proc makeNetworkEditor {} {
 
