@@ -41,9 +41,9 @@
  *
  */
 
-#include <include/sci_defs/config_defs.h> /* for HAVE_LIMITS etc, for tcl files */
+#include <sci_defs/config_defs.h> /* for HAVE_LIMITS etc, for tcl files */
 
-#include <include/sci_defs/ogl_defs.h>
+#include <sci_defs/ogl_defs.h>
 
 #define BUILD_tcl
 #include <tk.h>

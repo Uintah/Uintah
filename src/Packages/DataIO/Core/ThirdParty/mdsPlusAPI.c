@@ -47,7 +47,7 @@
    the functions are.
 */
 
-#include <include/sci_defs/mdsplus_defs.h>
+#include <sci_defs/mdsplus_defs.h>
 
 #ifdef HAVE_MDSPLUS
 
