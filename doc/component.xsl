@@ -25,77 +25,6 @@
 </xsl:attribute>
 </link>
 
-<!-- *************************************************************** -->
-<!-- ******************* BEGIN HEIRMENU SCRIPT ********************* -->
-<!-- ****************** (Place in document HEAD) ******************* -->
-<!-- *************************************************************** -->
-<SCRIPT LANGUAGE="JavaScript" TYPE="text/javascript">
-       <!--
- 
-       if(window.event + "" == "undefined") event = null;
-       function HM_f_PopUp(){return false};
-       function HM_f_PopDown(){return false};
-       popUp = HM_f_PopUp;
-       popDown = HM_f_PopDown;
- 
-       //-->
-       </SCRIPT>
-
-       <SCRIPT LANGUAGE="JavaScript1.2" TYPE="text/javascript">
-       <!--
- 
-       HM_PG_MenuWidth = 150;
-       HM_PG_FontFamily = "Arial, helvetica, sans-serif";
-       HM_PG_FontSize = 10;
-       HM_PG_FontBold = 1;
-       HM_PG_FontItalic = 0;
-       HM_PG_FontColor = "#000000";
-       HM_PG_FontColorOver = "#FFFFFF";
-       HM_PG_BGColor = "#CCCCCC";
-       HM_PG_BGColorOver = "#999999";
-       HM_PG_ItemPadding = 3; 
- 
-       HM_PG_BorderWidth = 2;
-       HM_PG_BorderColor = "#000000";
-       HM_PG_BorderStyle = "solid";
-       HM_PG_SeparatorSize = 2;
-       HM_PG_SeparatorColor = "#000000";
-       HM_PG_ImageSrc = "tri.gif";
-       HM_PG_ImageSrcLeft = "triL.gif";
- 
-       HM_PG_ImageSize = 12;
-       HM_PG_ImageHorizSpace = 0;
-       HM_PG_ImageVertSpace = 2;
-                                                                                      HM_PG_KeepHilite = true;
-       HM_PG_ClickStart = 0;
-       HM_PG_ClickKill = false;
-       HM_PG_ChildOverlap = 20;
-       HM_PG_ChildOffset = 10;
-       HM_PG_ChildPerCentOver = null;
-       HM_PG_TopSecondsVisible = .3;
-       HM_PG_StatusDisplayBuild =1;
-       HM_PG_StatusDisplayLink = 1;
-       HM_PG_UponDisplay = null;
-       HM_PG_UponHide = null;
-       HM_PG_RightToLeft = false;
- 
-       //HM_PG_CreateTopOnly = 1;
-       HM_PG_ShowLinkCursor = 1;
- 
-       //HM_a_TreesToBuild = [1,2];
- 
-       //-->
-       </SCRIPT>                                                   
-         
-<SCRIPT LANGUAGE="JavaScript1.2" TYPE='text/javascript'>
-<xsl:attribute name="src">
-<xsl:value-of select="concat($swidk,'/doc/HM_Loader.js')" />
-</xsl:attribute>
-</SCRIPT>
-<!-- *************************************************************** -->
-<!-- ******************** END HEIRMENU SCRIPT ********************** -->
-<!-- *************************************************************** -->       
-
 </head>
 <body>
 
@@ -114,26 +43,26 @@
         <area shape="rect" coords="491,15,567,32" href="http://www.sci.utah.edu/research/research.html"/>
         <area shape="rect" coords="31,9,95,36" href="http://www.sci.utah.edu"/>
  
-        <area coords="0,45,150,70" shape="rect" onMouseOver="HM_f_PopUp('elMenu1',event)" onMouseOut="HM_f_PopDown('elMenu1')">
+        <area coords="0,45,150,70" shape="rect" >
         <xsl:attribute name="href">
         <xsl:value-of select="concat($swidk,'/doc/InstallGuide/installguide.html')" />
         </xsl:attribute>
         </area>
 
  
-        <area coords="150,45,300,70" shape="rect" onMouseOver="HM_f_PopUp('elMenu2',event)" onMouseOut="HM_f_PopDown('elMenu2')"> 
+        <area coords="150,45,300,70" shape="rect"> 
         <xsl:attribute name="href">
         <xsl:value-of select="concat($swidk,'/doc/UserGuide/userguide.html')" />
         </xsl:attribute>
         </area>
 
-        <area coords="300,45,450,70" shape="rect" onMouseOver="HM_f_PopUp('elMenu3',event)" onMouseOut="HM_f_PopDown('elMenu3')">
+        <area coords="300,45,450,70" shape="rect">
         <xsl:attribute name="href">
         <xsl:value-of select="concat($swidk,'/doc/DeveloperGuide/devguide.html')" />
         </xsl:attribute>
         </area>
  
-        <area coords="450,45,600,70" shape="rect" onMouseOver="HM_f_PopUp('elMenu4',event)" onMouseOut="HM_f_PopDown('elMenu4')">  
+        <area coords="450,45,600,70" shape="rect">  
         <xsl:attribute name="href">
         <xsl:value-of select="concat($swidk,'/doc/ReferenceGuide/refguide.html')" />
         </xsl:attribute>
