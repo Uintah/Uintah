@@ -108,7 +108,6 @@ namespace Uintah {
 
     ParticleVariable<int> pLoadCurveID;
 
-    int d_8or27;
     bool d_useLoadCurves;
     bool d_with_color;
     bool d_fracture;

@@ -755,6 +755,7 @@ void SerialMPM::scheduleAddNewParticles(SchedulerP& sched,
                                         const PatchSet* patches,
                                         const MaterialSet* matls)
 {
+
   if (!flags->d_addNewMaterial || flags->d_createNewParticles) return;
 
   /*
@@ -837,9 +838,7 @@ void SerialMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   t->requires(Task::OldDW, lb->pSp_volLabel,           Ghost::None); 
   t->requires(Task::OldDW, lb->pVelocityLabel,         Ghost::None);
   t->requires(Task::OldDW, lb->pDispLabel,             Ghost::None);
-  if(flags->d_8or27==27){
-    t->requires(Task::OldDW, lb->pSizeLabel,            Ghost::None);
-  }
+  t->requires(Task::OldDW, lb->pSizeLabel,            Ghost::None);
   t->requires(Task::NewDW, lb->pVolumeDeformedLabel,   Ghost::None);
   t->requires(Task::NewDW, lb->pErosionLabel_preReloc, Ghost::None);
 
@@ -866,9 +865,7 @@ void SerialMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   t->computes(lb->pSp_volLabel_preReloc);
   t->computes(lb->pMassLabel_preReloc);
   t->computes(lb->pVolumeLabel_preReloc);
-  if(flags->d_8or27==27){
-    t->computes(lb->pSizeLabel_preReloc);
-  }
+  t->computes(lb->pSizeLabel_preReloc);
   t->computes(lb->pXXLabel);
 
   t->computes(lb->KineticEnergyLabel);
@@ -2290,6 +2287,7 @@ void SerialMPM::addNewParticles(const ProcessorGroup*,
     int null_dwi = -1;
     for (int void_matl = 0; void_matl < numMPMMatls; void_matl++) {
       null_dwi = d_sharedState->getMPMMaterial(void_matl)->nullGeomObject();
+      cout_dbg << "Null DWI = " << null_dwi << endl;
       if (null_dwi != -1) {
         null_matl = d_sharedState->getMPMMaterial(void_matl);
         null_dwi = void_matl;
@@ -2326,7 +2324,7 @@ void SerialMPM::addNewParticles(const ProcessorGroup*,
       for (ParticleSubset::iterator iter = pset->begin(); iter != pset->end();
            iter++) {
         if (damage[*iter]) {
-          //cout << "damage[" << *iter << "]=" << damage[*iter] << endl;
+          cout_dbg << "damage[" << *iter << "]=" << damage[*iter] << endl;
           delset->addParticle(*iter);
         }
       }
@@ -2337,6 +2335,7 @@ void SerialMPM::addNewParticles(const ProcessorGroup*,
       
       
       int numparticles = delset->numParticles();
+      cout_dbg << "Num Failed Particles = " << numparticles << endl;
       if (numparticles != 0) {
         cout_dbg << "Deleted " << numparticles << " particles" << endl;
         ParticleCreator* particle_creator = null_matl->getParticleCreator();
@@ -2602,11 +2601,9 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
                                                      false,dwi,patch, 0);
 
       pids_new.copyData(pids);
-      if(flags->d_8or27==27){
-        old_dw->get(psize,               lb->pSizeLabel,                 pset);
-        new_dw->allocateAndPut(psizeNew, lb->pSizeLabel_preReloc,        pset);
-        psizeNew.copyData(psize);
-      }
+      old_dw->get(psize,               lb->pSizeLabel,                 pset);
+      new_dw->allocateAndPut(psizeNew, lb->pSizeLabel_preReloc,        pset);
+      psizeNew.copyData(psize);
 
       Ghost::GhostType  gac = Ghost::AroundCells;
       new_dw->get(gvelocity_star,  lb->gVelocityStarLabel,   dwi,patch,gac,NGP);
