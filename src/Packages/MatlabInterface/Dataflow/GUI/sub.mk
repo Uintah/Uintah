@@ -32,6 +32,7 @@ ALLTARGETS := $(ALLTARGETS) $(SRCDIR)/tclIndex
 $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/MatrixSend.tcl\
 	$(SRCDIR)/MatrixReceive.tcl\
+	$(SRCDIR)/Matlab.tcl\
 
 #[INSERT NEW TCL FILE HERE]
 	$(OBJTOP)/createTclIndex $(SRCTOP)/Packages/MatlabInterface/Dataflow/GUI
