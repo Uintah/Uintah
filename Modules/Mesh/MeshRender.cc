@@ -23,10 +23,14 @@
 #include <Geom/Sphere.h>
 #include <Datatypes/MeshPort.h>
 #include <Datatypes/Mesh.h>
+#include <TCL/TCLvar.h>
 
 class MeshRender : public Module {
     MeshIPort* imesh;
     GeometryOPort* ogeom;
+
+    TCLint from;
+    TCLint to;
 
     void mesh_to_geom(const MeshHandle&, GeomGroup*);
 public:
@@ -45,7 +49,7 @@ Module* make_MeshRender(const clString& id)
 };
 
 MeshRender::MeshRender(const clString& id)
-: Module("MeshRender", id, Filter)
+: Module("MeshRender", id, Filter), to("to", id, this), from("from", id, this)
 {
     // Create the input port
     imesh=new MeshIPort(this, "Mesh", MeshIPort::Atomic);
@@ -55,7 +59,7 @@ MeshRender::MeshRender(const clString& id)
 }
 
 MeshRender::MeshRender(const MeshRender&copy, int deep)
-: Module(copy, deep)
+: Module(copy, deep), to("to", id, this), from("from", id, this)
 {
     NOT_FINISHED("MeshRender::MeshRender");
 }
@@ -83,8 +87,15 @@ void MeshRender::execute()
     double radius = dist * 0.01;
     
     HashTable<Edge, int> edge_table;
-    
-    for (int i=0; i<mesh->elems.size(); i++) 
+
+    int n=to.get();
+    if(n==0){
+	n=mesh->elems.size();
+    } else if(n>mesh->elems.size()){
+	n=mesh->elems.size();
+    }
+    int i=from.get();
+    for (; i<n; i++) 
     {
 	Element* elm=mesh->elems[i];
 	Edge e1(elm->n[0], elm->n[1]);

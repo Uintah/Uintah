@@ -78,10 +78,10 @@ void MakeScalarField::execute()
     ColumnMatrix& rhs=*rhshandle.get_rep();
     sf->data.resize(rhs.nrows());
     for(int i=0;i<rhs.nrows();i++){
-	if(mesh->nodes[i]->ndof>0)
-	    sf->data[i]=rhs[i];
+	if(mesh->nodes[i]->bc)
+	    sf->data[i]=mesh->nodes[i]->bc->value;
 	else
-	    sf->data[i]=mesh->nodes[i]->value;
+	    sf->data[i]=rhs[i];
     }
     ofield->send(ScalarFieldHandle(sf));
 }
