@@ -45,6 +45,8 @@ public:
   typedef vector<edge_index> edge_array;
   typedef vector<face_index> face_array;
 
+  typedef vector container_type;
+
   MeshTet();
   MeshTet(const MeshTet &copy);
   //MeshTet(const MeshRG &lattice);
