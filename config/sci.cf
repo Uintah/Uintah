@@ -10,6 +10,10 @@
 
 #include <config/imake.h>
 
+#define TCL_LIB -ltcl
+#define TK_LIB -ltk
+#define ITCL_LIB -litcl
+
 ABSTOP = `pwd`/$(TOP)
 SCILIBDIR = $(ABSTOP)/lib
 INCLUDES = -I$(TOP) $(LOCALINCLUDES)

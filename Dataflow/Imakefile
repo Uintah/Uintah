@@ -16,7 +16,7 @@ LIBNAME = Dataflow
 
 SCI_CLIBS = SCI_CCLibs
 SO_LIBS =
-SO_LDFLAGS = -L$(TOP)/lib -lComm -lTCL -lscitk -ltcl -lClasslib -lMultitask \
+SO_LDFLAGS = -L$(TOP)/lib -lComm -lTCL -lscitk TCL_LIB -lClasslib -lMultitask \
 	-lMalloc $(DLLIB) -lm
 
 SCIDependTarget($(SRCS))

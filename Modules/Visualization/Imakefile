@@ -40,7 +40,7 @@ LOCALINCLUDES = $(OPENGLINCS)
 
 SO_LIBS =
 SO_LDFLAGS = -L$(TOP)/lib -lWidgets -lDatatypes -lDataflow -lGeom -lGeometry \
-	-lTCL -lscitk -ltk -ltcl -lClasslib -lMultitask  $(OPENGLLIBS) \
+	-lTCL -lscitk TK_LIB TCL_LIB -lClasslib -lMultitask  $(OPENGLLIBS) \
 	-lMalloc -lm -lC -lc
 
 SCIDependTarget($(SRCS))

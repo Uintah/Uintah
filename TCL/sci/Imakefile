@@ -37,7 +37,7 @@ LOCALINCLUDES = -I../tcl -I../tk -I../itcl/src $(OPENGL_INCLUDES) $(XINCLUDE)
 
 SCI_CLIBS= -lc
 SO_LIBS =
-SO_LDFLAGS = -L$(SCILIBDIR) $(XLIBDIR) -lBLT -ltkTable -ltk -litcl -ltcl $(OPENGL_LIBS) -lX11 -lm
+SO_LDFLAGS = -L$(SCILIBDIR) $(XLIBDIR) -lBLT -ltkTable TK_LIB ITCL_LIB TCL_LIB $(OPENGL_LIBS) -lX11 -lm
 
 LIBNAME = scitk
 
