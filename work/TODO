@@ -2,7 +2,7 @@
 DONE Rework Geometry
 Fix Salmon
    DONE Fix interaction
-   Picking
+   Picking (1)
    Children windows...
    lighting
    Bounding box interactions
@@ -14,7 +14,7 @@ Fix Salmon
    Fix camera editor popup - use thumbwheels???
    Orthographic projections
    Material Editor
-   Fix graph on widget
+   Fix bargraph on networkeditor icon
    Before reporting that a renderer is available, make sure that it is supported (OpenGL) 
    Renderer properties popup
    Hookup dials - more control
@@ -34,13 +34,14 @@ TCL/TK:
    DONE Implement Quit button
    Color Editor *
    DONE Import SCI_WORK so that we can run from other directories
+   Right titles on windows
 Ports:
    RS/6000 Port
    DEC port
    Freedom board port
 Bugs:
-   sluggish on Reality engine....
-   Salmon deadlocks on ONYX
+   sluggish on Reality engine.... (3)
+   Salmon deadlocks on ONYX - make unbounded mailboxes (2)
    Finish fixing MeshView
    Annoying flashing on startup.
 Optimizations:
@@ -49,3 +50,5 @@ Optimizations:
 Progress:
    Remote modules
    Save/Load Networks
+   Scheduler visualization?
+   Manual scheduling
