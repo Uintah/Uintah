@@ -44,3 +44,7 @@ include $(SRCTOP)/scripts/program.mk
 PROGRAM := $(SRCDIR)/NewTriSurfToOldSurface
 SRCS := $(SRCDIR)/NewTriSurfToOldSurface.cc
 include $(SRCTOP)/scripts/program.mk
+
+PROGRAM := $(SRCDIR)/PropTest
+SRCS := $(SRCDIR)/PropTest.cc
+include $(SRCTOP)/scripts/program.mk

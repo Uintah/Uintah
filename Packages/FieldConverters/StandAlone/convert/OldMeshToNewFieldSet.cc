@@ -63,6 +63,7 @@ main(int argc, char **argv) {
   TetVolMeshHandle tvm=0;
   if (mesh->cond_tensors.size()) {
     TetVol<Tensor> *field = new TetVol<Tensor>(Field::CELL);
+    field->set_string("name", "conductivity");
     tvm = field->get_typed_mesh();
     load_mesh(mesh, tvm);
     field->resize_fdata();
@@ -74,6 +75,7 @@ main(int argc, char **argv) {
     }
     FieldHandle fH(field);
     fs->add(fH);
+    cerr << "Added `conductivity' field (tensors at cells) to fieldset\n";
   }
   
   Array1<int> dirichlet;
@@ -88,15 +90,30 @@ main(int argc, char **argv) {
       tvm = field->get_typed_mesh();
       load_mesh(mesh, tvm);
       field->resize_fdata();
+      field->initialize_mask(0);
     } else {
       field = new MaskedTetVol<double>(tvm, Field::NODE);
+      field->initialize_mask(0);
     }
 
-    // initialize the mask to 0's or 1's in the constructor
-    // set the mask and add the dirichlet values where appropriate
+    field->set_string("name", "dirichlet");
+    int node_counter=0;
+    TetVolMesh::node_iterator ni;
+    for (ni = tvm->node_begin(); ni != tvm->node_end(); ++ni, node_counter++) {
+      if (mesh->nodes[node_counter]->bc) {
+	field->fdata()[*ni]=mesh->nodes[node_counter]->bc->value;
+	field->mask()[*ni]=1;
+      }
+    }
 
     FieldHandle fH(field);
     fs->add(fH);
+    cerr << "Added `dirichlet' maskedfield (doubles at nodes) to fieldset\n";
+  }
+
+  if (fs->field_begin() == fs->field_end()) {
+    cerr << "Error - mesh didn't have any conductivity information or Dirichlet nodes... use OldMeshToNewTetVol instead.\n";
+    return 0;
   }
 
   TextPiostream outstream(argv[2], Piostream::Write);
