@@ -1,6 +1,8 @@
 
 #include <config/sci.cf>
 
+#ifdef SCI_DIR_Modules_Salmon
+
 #ifdef SCI_MACHINE_SGI
 SOBJS = SoundInput.o  SoundOutput.o  SoundReader.o
 SSRCS = SoundInput.cc SoundOutput.cc SoundReader.cc
@@ -18,3 +20,8 @@ LIBNAME = Sound
 
 SCIDependTarget($(SRCS))
 SCIObjLibraryTarget($(LIBNAME),$(OBJS))
+
+#else
+all:
+depend:
+#endif

@@ -1,6 +1,8 @@
 
 #include <config/sci.cf>
 
+#ifdef SCI_DIR_Datatypes
+
 OBJS = BasicSurfaces.o  Colormap.o  ColormapPort.o  ColumnMatrix.o  \
 	ColumnMatrixPort.o  ContourSet.o  ContourSetPort.o  \
 	Datatype.o  DenseMatrix.o  \
@@ -27,3 +29,8 @@ LIBNAME = Datatypes
 SCIDependTarget($(SRCS))
 SCIObjLibraryTarget($(LIBNAME),$(OBJS))
 SCINormalLibraryTarget($(LIBNAME),$(OBJS))
+
+#else
+all:
+depend:
+#endif

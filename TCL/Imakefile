@@ -2,13 +2,30 @@
 #include <config/sci.cf>
 
 SUBDIRS = sci
-TCLSUBDIRS = tcl tk itcl
+#ifdef SCI_DIR_tcl_tcl
+TCL = tcl
+#else
+TCL =
+#endif
+#ifdef SCI_DIR_tcl_itcl
+ITCL = itcl
+#else
+ITCL =
+#endif
+#ifdef SCI_DIR_tcl_tk
+TK = tk
+#else
+TK =
+#endif
+TCLSUBDIRS = $(TCL) $(TK) $(ITCL)
 
 SCISubdirs($(SUBDIRS))
-SCISubdirs3($(TCLSUBDIRS))
 
+#if defined(SCI_DIR_tcl_tcl) || defined(SCI_DIR_tcl_itcl) || defined(SCI_DIR_tcl_tk)
+SCISubdirs3($(TCLSUBDIRS))
 Makefiles::
 	@for i in $(TCLSUBDIRS) ; do \
 	(cd $$i ; echo "configuring in $(CURRENT_DIR)/$$i..."; \
-	./configure ); \
+	 ./configure ); \
 	done
+#endif

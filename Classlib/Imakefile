@@ -1,6 +1,8 @@
 
 #include <config/sci.cf>
 
+#ifdef SCI_DIR_Classlib
+
 OBJS = Args.o  ArgProcessor.o  BitArray1.o  Debug.o  \
 	Exceptions.o  Persistent.o  Pstreams.o  \
 	String.o  Timer.o  TrivialAllocator.o
@@ -12,3 +14,9 @@ LIBNAME = Classlib
 
 SCIDependTarget($(SRCS))
 SCINormalLibraryTarget($(LIBNAME),$(OBJS))
+
+#else
+all:
+depend:
+#endif
+

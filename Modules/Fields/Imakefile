@@ -1,6 +1,8 @@
 
 #include <config/sci.cf>
 
+#ifdef SCI_DIR_Modules_Gradient
+
 OBJS = Gradient.o
 SRCS = Gradient.cc
 
@@ -8,3 +10,8 @@ LIBNAME = Fields
 
 SCIDependTarget($(SRCS))
 SCIObjLibraryTarget($(LIBNAME),$(OBJS))
+
+#else
+all:
+depend:
+#endif

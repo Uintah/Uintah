@@ -1,6 +1,8 @@
 
 #include <config/sci.cf>
 
+#ifdef SCI_DIR_Geom
+
 #ifdef SCI_OPENGL
 OPENGLOBJS = GeomOpenGL.o
 OPENGLSRCS = GeomOpenGL.cc
@@ -31,3 +33,8 @@ LIBNAME = Geom
 
 SCIDependTarget($(SRCS))
 SCINormalLibraryTarget($(LIBNAME),$(OBJS))
+
+#else
+all:
+depend:
+#endif

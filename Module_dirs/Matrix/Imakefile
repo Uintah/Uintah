@@ -1,6 +1,8 @@
 
 #include <config/sci.cf>
 
+#ifdef SCI_DIR_Modules_Matrix
+
 OBJS = SolveMatrix.o
 SRCS = SolveMatrix.cc
 
@@ -8,3 +10,8 @@ LIBNAME = Matrix
 
 SCIDependTarget($(SRCS))
 SCIObjLibraryTarget($(LIBNAME),$(OBJS))
+
+#else
+all:
+depend:
+#endif

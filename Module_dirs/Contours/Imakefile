@@ -1,6 +1,8 @@
 
 #include <config/sci.cf>
 
+#ifdef SCI_DIR_Modules_Contours
+
 OBJS = LaceContours.o  LaceContoursTemp.o  TransformCS.o
 SRCS = LaceContours.cc LaceContoursTemp.cc TransformCS.cc
 
@@ -8,3 +10,8 @@ LIBNAME = Contours
 
 SCIDependTarget($(SRCS))
 SCIObjLibraryTarget($(LIBNAME),$(OBJS))
+
+#else
+all:
+depend:
+#endif

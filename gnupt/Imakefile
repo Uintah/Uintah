@@ -1,6 +1,8 @@
 
 #include <config/sci.cf>
 
+#ifdef SCI_DIR_gnupt
+
 OBJS = AVLTree_String.o  \
 	Array1_all.o  Array2_all.o  Array3_all.o  \
 	DBCallback_all.o Handle_all.o  HashTable_all.o  \
@@ -20,3 +22,8 @@ all:: libgnupt.o
 
 libgnupt.o: $(OBJS)
 	ld -r -o libgnupt.o $(OBJS)
+
+#else
+all:
+depend:
+#endif

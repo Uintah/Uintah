@@ -1,6 +1,8 @@
 
 #include <config/sci.cf>
 
+#ifdef SCI_DIR_Modules_Readers
+
 OBJS = ContourSetReader.o   MeshReader.o   ScalarFieldReader.o   \
 	SurfaceReader.o   VectorFieldReader.o
 SRCS = ContourSetReader.cc  MeshReader.cc  ScalarFieldReader.cc  \
@@ -49,3 +51,7 @@ VectorFieldReader.cc: Reader.cc
 VectorFieldReader.tcl: Reader.tcl
 	sed 's/TYPE/VectorField/g' < Reader.tcl > VectorFieldReader.tcl
 
+#else
+all:
+depend:
+#endif
