@@ -107,7 +107,8 @@ private:
   GuiString nodeList;
   GuiInt width;
   GuiInt height;
-  GuiInt mapType;
+  GuiString mapName;
+  GuiInt reverse;
   GuiInt minRes;
   GuiInt resolution;
   GuiInt realres;
