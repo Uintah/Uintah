@@ -563,7 +563,7 @@ NrrdFieldConverter::execute(){
 		return;
 	      }
 
-	      for( jc=0, kc=0; jc<nrrdDim; jc++ )
+	      for( jc=0, kc=0; jc<nrrdDim; jc++ ) {
 		unsigned int size = dHandle->nrrd->axis[jc].size;
 
 		if( size > 1 && mdims[kc++] != size ) {
@@ -572,6 +572,7 @@ NrrdFieldConverter::execute(){
 		  error_ = true;
 		  return;
 		}
+	      }
 	    }
 	  }
 	} else {
