@@ -2,6 +2,7 @@
 #include <Packages/Uintah/CCA/Components/Examples/ExamplesLabel.h>
 #include <Packages/Uintah/CCA/Components/Regridder/PerPatchVars.h>
 #include <Packages/Uintah/CCA/Ports/Scheduler.h>
+#include <Packages/Uintah/CCA/Ports/LoadBalancer.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
 #include <Packages/Uintah/Core/Grid/Task.h>
 #include <Packages/Uintah/Core/Grid/Grid.h>
@@ -29,10 +30,11 @@ namespace Uintah
 {
   RegridderTest::RegridderTest ( const ProcessorGroup* myworld ): UintahParallelComponent( myworld )
   {
-    d_examplesLabel = scinew ExamplesLabel();
+    //d_examplesLabel = scinew ExamplesLabel();
     d_oldDensityLabel = VarLabel::create("old_density",
-                                    CCVariable<double>::getTypeDescription(),
-                                    IntVector(1,1,1));
+                                         CCVariable<double>::getTypeDescription());
+    d_densityLabel = VarLabel::create("density",
+                                      CCVariable<double>::getTypeDescription());
 
     d_currentAngleLabel = VarLabel::create( "currentAngle", max_vartype::getTypeDescription() );
   }
@@ -43,31 +45,39 @@ namespace Uintah
   }
 
   // Interface inherited from Simulation Interface
-  void RegridderTest::problemSetup ( const ProblemSpecP& /*params*/, GridP& grid, SimulationStateP& state )
+  void RegridderTest::problemSetup ( const ProblemSpecP& params, GridP& grid, SimulationStateP& state )
   {
     d_sharedState = state;
     d_material = new SimpleMaterial();
     d_sharedState->registerSimpleMaterial( d_material );
 
+    ProblemSpecP spec = params->findBlock("RegridderTest");
+    
     BBox gridBoundingBox;
     grid->getSpatialRange( gridBoundingBox );
     d_gridMax = gridBoundingBox.max().asVector();
     d_gridMin = gridBoundingBox.min().asVector();
-
     d_centerOfDomain   = (( d_gridMax - d_gridMin ) / 2.0 ) + d_gridMin;
+
+    //defaults
     d_radiusOfBall     = 0.10 * d_gridMax.x();
     d_radiusOfOrbit    = 0.25 * d_gridMax.x();
-    d_angularVelocity  = 30;
+    d_angularVelocity  = 10;
 
     d_radiusGrowth = false;
     d_radiusGrowthDir = true; // true is to expand, false to shrink
+
+    spec->get("ballRadius", d_radiusOfBall);
+    spec->get("orbitRadius", d_radiusOfOrbit);
+    spec->get("angularVelocity", d_angularVelocity);
+    spec->get("changingRadius", d_radiusGrowth);
 
   }
 
   void RegridderTest::scheduleInitialize ( const LevelP& level, SchedulerP& scheduler )
   {
     Task* task = scinew Task( "initialize", this, &RegridderTest::initialize );
-    task->computes( d_examplesLabel->density );
+    task->computes( d_densityLabel );
     task->computes( d_currentAngleLabel, (Level*)0 );
     scheduler->addTask( task, level->eachPatch(), d_sharedState->allMaterials() );
   }
@@ -82,9 +92,9 @@ namespace Uintah
   void RegridderTest::scheduleTimeAdvance ( const LevelP& level, SchedulerP& scheduler, int /*step*/, int /*nsteps*/ )
   {
     Task* task = scinew Task( "timeAdvance", this, &RegridderTest::timeAdvance );
-    task->requires( Task::OldDW, d_examplesLabel->density, Ghost::AroundCells, 1 );
+    task->requires( Task::OldDW, d_densityLabel, Ghost::AroundCells, 1 );
     task->computes( d_oldDensityLabel );
-    task->computes( d_examplesLabel->density );
+    task->computes( d_densityLabel );
     scheduler->addTask( task, level->eachPatch(), d_sharedState->allMaterials() );
   }
 
@@ -92,19 +102,19 @@ namespace Uintah
   {
     Task* task = scinew Task( "errorEstimate", this, &RegridderTest::errorEstimate, false );
     task->requires( Task::OldDW, d_currentAngleLabel, (Level*) 0);
-    task->requires( Task::NewDW, d_examplesLabel->density, Ghost::AroundCells, 1 );
+    task->requires( Task::NewDW, d_densityLabel, Ghost::AroundCells, 1 );
     task->requires( Task::NewDW, d_oldDensityLabel, Ghost::AroundCells, 1 );
     task->modifies( d_sharedState->get_refineFlag_label(), d_sharedState->refineFlagMaterials() );
     task->modifies( d_sharedState->get_oldRefineFlag_label(), d_sharedState->refineFlagMaterials() );
     task->modifies( d_sharedState->get_refinePatchFlag_label(), d_sharedState->refineFlagMaterials() );
     task->computes( d_currentAngleLabel, (Level*) 0);
-    scheduler->addTask( task, level->eachPatch(), d_sharedState->allMaterials() );
+    scheduler->addTask( task, scheduler->getLoadBalancer()->createPerProcessorPatchSet(level), d_sharedState->allMaterials() );
   }
 
   void RegridderTest::scheduleInitialErrorEstimate ( const LevelP& level, SchedulerP& scheduler )
   {
     Task* task = scinew Task( "initialErrorEstimate", this, &RegridderTest::errorEstimate, true );
-    task->requires( Task::NewDW, d_examplesLabel->density, Ghost::AroundCells, 1 );
+    task->requires( Task::NewDW, d_densityLabel, Ghost::AroundCells, 1 );
     task->modifies( d_sharedState->get_refineFlag_label(), d_sharedState->refineFlagMaterials() );
     task->modifies( d_sharedState->get_oldRefineFlag_label(), d_sharedState->refineFlagMaterials() );
     task->modifies( d_sharedState->get_refinePatchFlag_label(), d_sharedState->refineFlagMaterials() );
@@ -114,20 +124,20 @@ namespace Uintah
   void RegridderTest::scheduleCoarsen ( const LevelP& coarseLevel, SchedulerP& scheduler )
   {
     Task* task = scinew Task( "coarsen", this, &RegridderTest::coarsen );
-    task->requires(Task::NewDW, d_examplesLabel->density,
+    task->requires(Task::NewDW, d_densityLabel,
                    0, Task::FineLevel, 0, Task::NormalDomain, Ghost::None, 0);
-    task->modifies(d_examplesLabel->density);
+    task->modifies(d_densityLabel);
     scheduler->addTask( task, coarseLevel->eachPatch(), d_sharedState->allMaterials() );
   }
 
-  void RegridderTest::scheduleRefine ( const LevelP& level, SchedulerP& scheduler )
+  void RegridderTest::scheduleRefine ( const PatchSet* patches, SchedulerP& scheduler )
   {
     Task* task = scinew Task( "refine", this, &RegridderTest::refine );
-    task->requires(Task::NewDW, d_examplesLabel->density, 0, Task::CoarseLevel, 0,
+    task->requires(Task::NewDW, d_densityLabel, 0, Task::CoarseLevel, 0,
 		   Task::NormalDomain, Ghost::None, 0);
     //    task->requires(Task::NewDW, d_oldDensityLabel, 0, Task::CoarseLevel, 0,
     //		   Task::NormalDomain, Ghost::None, 0);
-    scheduler->addTask( task, level->eachPatch(), d_sharedState->allMaterials() );
+    scheduler->addTask( task, patches, d_sharedState->allMaterials() );
   }
 
   void RegridderTest::scheduleRefineInterface ( const LevelP& /*level*/, SchedulerP& /*scheduler*/, 
@@ -151,7 +161,7 @@ namespace Uintah
       for(int m = 0;m<matls->size();m++){
 	int matl = matls->get(m);
 	CCVariable<double> density;
-	new_dw->allocateAndPut(density, d_examplesLabel->density, matl, patch);
+	new_dw->allocateAndPut(density, d_densityLabel, matl, patch);
 	for ( CellIterator iter(patch->getCellIterator()); !iter.done(); iter++) {
 	  IntVector idx(*iter);
 	  Vector whereThisCellIs( patch->cellPosition( idx ) );
@@ -192,12 +202,12 @@ namespace Uintah
       for(int m = 0;m<matls->size();m++){
 	int matl = matls->get(m);
 	CCVariable<double> density;
-	new_dw->allocateAndPut(density, d_examplesLabel->density, matl, patch);
+	new_dw->allocateAndPut(density, d_densityLabel, matl, patch);
 
         // an exercise to get from the old and put in the new (via mpi amr)...
 	constCCVariable<double> oldDWDensity;
         CCVariable<double> oldDensity;
-	old_dw->get( oldDWDensity, d_examplesLabel->density, matl, patch, Ghost::AroundCells, 1 );
+	old_dw->get( oldDWDensity, d_densityLabel, matl, patch, Ghost::AroundCells, 1 );
         new_dw->allocateAndPut(oldDensity, d_oldDensityLabel, matl, patch);
 
 
@@ -217,6 +227,7 @@ namespace Uintah
 				      const MaterialSubset* matls,
 				      DataWarehouse* old_dw, DataWarehouse* new_dw, bool initial )
   {
+    
     double pi = 3.141592653589;
     if ( getLevel(patches)->getIndex() == getLevel(patches)->getGrid()->numLevels()-1 ) {
       max_vartype angle;
@@ -227,8 +238,7 @@ namespace Uintah
         new_dw->put(max_vartype(currentAngle), d_currentAngleLabel);
       }
       else {
-        new_dw->get(angle, d_currentAngleLabel);
-        currentAngle = angle + d_angularVelocity;
+        currentAngle = angle;
       }
         
       d_oldCenterOfBall = d_centerOfBall;
@@ -273,7 +283,7 @@ namespace Uintah
 	int matl = matls->get(m);
 	constCCVariable<double> density;
 	constCCVariable<double> oldDensity;
-	new_dw->get( density, d_examplesLabel->density, matl, patch, Ghost::AroundCells, 1 );
+	new_dw->get( density, d_densityLabel, matl, patch, Ghost::AroundCells, 1 );
         if (!initial)
           new_dw->get( oldDensity, d_oldDensityLabel, matl, patch, Ghost::AroundCells, 1 );
 
@@ -325,13 +335,13 @@ namespace Uintah
         //__________________________________
         //   D E N S I T Y
         CCVariable<double> density;
-        new_dw->getModifiable(density, d_examplesLabel->density, matl, coarsePatch);
+        new_dw->getModifiable(density, d_densityLabel, matl, coarsePatch);
         //print(density, "before coarsen density");
         
         for(int i=0;i<finePatches.size();i++){
           const Patch* finePatch = finePatches[i];
           constCCVariable<double> fine_den;
-          new_dw->get(fine_den, d_examplesLabel->density, matl, finePatch,
+          new_dw->get(fine_den, d_densityLabel, matl, finePatch,
                       Ghost::None, 0);
           
           IntVector fl(finePatch->getCellLowIndex());
@@ -369,7 +379,7 @@ namespace Uintah
       for(int m = 0;m<matls->size();m++){
 	int matl = matls->get(m);
 	CCVariable<double> density;
-	new_dw->allocateAndPut(density, d_examplesLabel->density, matl, patch);
+	new_dw->allocateAndPut(density, d_densityLabel, matl, patch);
 	for ( CellIterator iter(patch->getCellIterator()); !iter.done(); iter++) {
 	  IntVector idx(*iter);
 	  Vector whereThisCellIs( patch->cellPosition( idx ) );
