@@ -63,7 +63,7 @@ resourceReference::~resourceReference()
 
 sci::cca::Loader::pointer resourceReference::getPtrToAll()
 {
-  std::cerr<<"calling resourceReference::getPtrToAll()...";
+  std::cerr<<"calling resourceReference::getPtrToAll()... size="<<URLs.size()<<" ";
   Object::pointer obj=PIDL::objectFrom(URLs,1,0);
   std::cerr<<"Done" << std::endl;;
   std::cerr<<"calling pidl_cast...";
@@ -132,9 +132,10 @@ sci::cca::Component::pointer resourceReference::createInstance(const std::string
   SSIDL::array1<int> nodeSet;
   nodeSet.push_back(0);
   nodeSet.push_back(2);  //use nodes 0-2
-  sci::cca::TypeMap::pointer properties(new TypeMap);
-  properties->putIntArray("nodes", nodeSet);
-  ploader->createPInstance(name, type, properties, comURLs1);
+  //  sci::cca::TypeMap::pointer properties(new TypeMap);
+  //properties->putIntArray("nodes", nodeSet);
+  //  ploader->createPInstance(name, type, properties, comURLs1);
+  ploader->createPInstance(name, type, sci::cca::TypeMap::pointer(0), comURLs1);
 //=======
 //  std::cerr<<"comURLs1.size before create Instance="<<comURLs1.size()<<std::endl;
 //  std::cerr<<"ploader->createPInstance(name, type, comURLs1)...";
