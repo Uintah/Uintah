@@ -83,9 +83,12 @@ protected:
   void setup_widget();
   void update_widget();
   Box get_widget_boundary();
+  // Using the bounding box of the grid, creates a default radius
+  // size.  Only sets it if it is different.
+  void update_default_radius();
   // Gets a physical point for the location of currentNode
   int get_current_node_position(Point &location);
-  int update_selected_node();
+  int update_selected_node(bool flush_position=false);
 
 
   GeometryOPort* ogeom;
@@ -106,6 +109,8 @@ protected:
   GuiString level6_node_color;
   GuiInt plane_on; // the selection plane
   GuiInt node_select_on; // the nodes
+  GuiInt use_default_radius;
+  GuiDouble default_radius;
   GuiDouble radius;
   GuiInt polygons;
 
@@ -148,11 +153,13 @@ GridVisualizer::GridVisualizer(GuiContext* ctx):
   level6_node_color(ctx->subVar("level6_node_color")),
   plane_on(ctx->subVar("plane_on")),
   node_select_on(ctx->subVar("node_select_on")),
+  use_default_radius(ctx->subVar("use_default_radius")),
+  default_radius(ctx->subVar("default_radius")),
   radius(ctx->subVar("radius")),
   polygons(ctx->subVar("polygons")),
   widget_lock("GridVusualizer widget lock"),
-  need_2d(1),
   init(1),
+  need_2d(1),
   selected_sphere_geom_id(0),
   show_selected_node(ctx->subVar("show_selected_node"))
 {
@@ -173,7 +180,7 @@ void GridVisualizer::initialize_ports() {
 
 void GridVisualizer::setup_widget() {
   // setup widget
-  cerr << "\t\tStarting widget stuff\n";
+  remark("Starting widget stuff");
   if (init == 1) {
     init = 0;
     GeomHandle w2d = widget2d->GetWidget();
@@ -190,7 +197,7 @@ void GridVisualizer::setup_widget() {
 }
 
 void GridVisualizer::update_widget() {
-  cerr << "\t\tStarting locator\n";
+  remark("Starting locator");
   widget_on = plane_on.get() != 0;
   widget2d->SetState(widget_on);
 
@@ -231,6 +238,15 @@ void GridVisualizer::update_widget() {
     widget2d->SetScale( max_scale/30. );
     need_2d = 0;
   }
+}
+
+void GridVisualizer::update_default_radius() {
+  LevelP level = grid->getLevel(0);
+  Vector dCell = level->dCell();
+
+  double new_default_radius = Max(dCell.x(), dCell.y(), dCell.z());
+  if (new_default_radius != default_radius.get())
+    default_radius.set(new_default_radius);
 }
 
 Box GridVisualizer::get_widget_boundary() {
@@ -294,7 +310,7 @@ int GridVisualizer::get_current_node_position(Point &location) {
   return 0;
 }
 
-int GridVisualizer::update_selected_node() {
+int GridVisualizer::update_selected_node(bool flush_position) {
   // Since this function could be called from anywhere we need to make sure
   // that our ports are valid and that we have a grid.
   //  initialize_ports();
@@ -320,7 +336,10 @@ int GridVisualizer::update_selected_node() {
     Point location;
 
     GeomSphere::getnunv(polygons.get(), nu, nv);
-    rad = radius.get();
+    if (use_default_radius.get() == 1)
+      rad = default_radius.get();
+    else
+      rad = radius.get();
 
     if (!get_current_node_position(location)) {
       // add the sphere to the data
@@ -334,13 +353,16 @@ int GridVisualizer::update_selected_node() {
       error("Can't add selected node.");
     }
   }
-//    ogeom->flush();
+
+  if (flush_position)
+    ogeom->flush();
+  
   return 0;
 }
   
 void GridVisualizer::execute()
 {
-  cerr << "GridVisualizer::execute:start\n";
+  remark("GridVisualizer::execute:start");
 
   initialize_ports();
   
@@ -355,18 +377,22 @@ void GridVisualizer::execute()
   
   setup_widget();
   update_widget();
+  update_default_radius();
   
-  cerr << "GridVisualizer::execute:Finished the widget stuff\n";
+  remark("GridVisualizer::execute:Finished the widget stuff");
 
   GeomGroup* pick_nodes = scinew GeomGroup;
   int nu,nv;
-  double rad;
+  double rad = 1;
   bool node_on = node_select_on.get() != 0;
   Box widget_box;
 
   if (node_on) {
     GeomSphere::getnunv(polygons.get(), nu, nv);
-    rad = radius.get();
+    if (use_default_radius.get() == 1)
+      rad = default_radius.get();
+    else
+      rad = radius.get();
     widget_box = get_widget_boundary();
   }
 
@@ -463,7 +489,7 @@ void GridVisualizer::execute()
 
   update_selected_node();
   
-  cerr << "GridVisualizer::execute:end\n";
+  remark("GridVisualizer::execute:end");
 }
 
 void GridVisualizer::widget_moved(bool last)
@@ -494,7 +520,7 @@ void GridVisualizer::tcl_command(GuiArgs& args, void* userdata)
   }
   else if(args[1] == "update_sn") {
     // we need to update the location of the selected node
-    update_selected_node();
+    update_selected_node(true);
   }
   else {
     VariablePlotter::tcl_command(args, userdata);
@@ -504,25 +530,31 @@ void GridVisualizer::tcl_command(GuiArgs& args, void* userdata)
 // if a pick event was received extract the id from the picked
 void GridVisualizer::geom_pick(GeomPickHandle /*pick*/, void* /*userdata*/,
 			       GeomHandle picked) {
+  ostringstream str;
 #if DEBUG
-  cerr << "Caught pick event in GridVisualizer!\n";
-  cerr << "this = " << this << ", pick = " << pick << endl;
-  cerr << "User data = " << userdata << endl;
+  str << "Caught pick event in GridVisualizer!\n";
+  str << "this = " << this << ", pick = " << pick << "\n";
+  str << "User data = " << userdata;
+  remark( str.str() );
 #endif
   IntVector id;
   int level;
   if ( picked->getId( id ) && picked->getId(level)) {
-    cerr<<"Id = "<< id << " Level = " << level << endl;
+
+    str.clear();
+    str << "Id = " << id << " Level = " << level << endl;
+    remark( str.str() );
+    
     currentNode.id = id;
     index_l.set(level);
     index_x.set(currentNode.id.x());
     index_y.set(currentNode.id.y());
     index_z.set(currentNode.id.z());
 
-    update_selected_node();
+    update_selected_node(true);
   }
   else
-    cerr<<"Not getting the correct data\n";
+    error("GridVisualizer::geom_pick:Not getting the correct data");
 }
 
 // adds the lines to edges that make up the box defined by box 
@@ -598,553 +630,3 @@ MaterialHandle GridVisualizer::getColor(string color, int type) {
     return scinew Material(Color(0,0,0), Color(i,i,i),
 			   Color(.5,.5,.5), 20);
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-#if 0 // old code
-
-//#include <string>
-
-using namespace SCIRun;
-using namespace std;
-
-
-namespace Uintah {
-
-
-struct ID {
-  IntVector id;
-  int level;
-};
-  
-class GridVisualizer : public Module {
-public:
-  GridVisualizer(const string& id);
-  virtual ~GridVisualizer();
-  void pick();
-  
-private:
-  bool getGrid();
-  void setupColors();
-  MaterialHandle getColor(string color, int type);
-  void add_type(string &type_list,const TypeDescription *subtype);
-  void setVars(GridP grid);
-  void getnunv(int* nu, int* nv);
-  void extract_data(string display_mode, string varname,
-		    vector<string> mat_list, vector<string> type_list,
-		    string index);
-  bool is_cached(string name, string& data);
-  void cache_value(string where, vector<double>& values, string &data);
-  void cache_value(string where, vector<float>& values, string &data);
-  void cache_value(string where, vector<Vector>& values);
-  void cache_value(string where, vector<Matrix3>& values);
-  string vector_to_string(vector< int > data);
-  string vector_to_string(vector< string > data);
-  string vector_to_string(vector< double > data);
-  string vector_to_string(vector< float > data);
-  string vector_to_string(vector< Vector > data, string type);
-  string vector_to_string(vector< Matrix3 > data, string type);
-  string currentNode_str();
-  
-  ArchiveIPort* in;
-  GuiInt var_orientation; // whether node center or cell centered
-  GuiInt nl;
-  GuiInt index_x;
-  GuiInt index_y;
-  GuiInt index_z;
-  GuiInt index_l;
-  GuiString curr_var;
-  
-  CrowdMonitor widget_lock;
-  FrameWidget *widget2d;
-  int init;
-  int widget_id;
-  bool widget_on;
-  bool nodes_on;
-  int need_2d;
-  vector<int> old_id_list;
-  vector<int> id_list;
-  GeomSphere* selected_sphere;
-  bool node_selected;
-  
-  ID currentNode;
-  vector< string > names;
-  vector< double > times;
-  vector< const TypeDescription *> types;
-  double time;
-  DataArchive* archive;
-  int old_generation;
-  int old_timestep;
-  GridP grid;
-  map< string, string > material_data_list;
-  // call material_data_list.clear() to erase all entries
-};
-
-static string widget_name("GridVisualizer Widget");
- 
-extern "C" Module* make_GridVisualizer(const string& id) {
-  return scinew GridVisualizer(id);
-}
-
-GridVisualizer::GridVisualizer(const string& id)
-: Module("GridVisualizer", id, Filter, "Visualization", "Uintah"),
-  level1_grid_color("level1_grid_color",id, this),
-  level2_grid_color("level2_grid_color",id, this),
-  level3_grid_color("level3_grid_color",id, this),
-  level4_grid_color("level4_grid_color",id, this),
-  level5_grid_color("level5_grid_color",id, this),
-  level6_grid_color("level6_grid_color",id, this),
-  level1_node_color("level1_node_color",id, this),
-  level2_node_color("level2_node_color",id, this),
-  level3_node_color("level3_node_color",id, this),
-  level4_node_color("level4_node_color",id, this),
-  level5_node_color("level5_node_color",id, this),
-  level6_node_color("level6_node_color",id, this),
-  plane_on("plane_on",id,this),
-  node_select_on("node_select_on",id,this),
-  var_orientation("var_orientation",id,this),
-  radius("radius",id,this),
-  polygons("polygons",id,this),
-  nl("nl",id,this),
-  index_x("index_x",id,this),
-  index_y("index_y",id,this),
-  index_z("index_z",id,this),
-  index_l("index_l",id,this),
-  curr_var("curr_var",id,this),
-  widget_lock("GridVusualizer widget lock"),
-  init(1), need_2d(1), node_selected(false),
-  old_generation(-1), old_timestep(0), grid(NULL)
-{
-
-  float INIT(0.1);
-  widget2d = scinew FrameWidget(this, &widget_lock, INIT);
-}
-
-GridVisualizer::~GridVisualizer()
-{
-}
-
-// assigns a grid based on the archive and the timestep to grid
-// return true if there was a new grid, false otherwise
-bool GridVisualizer::getGrid()
-{
-  ArchiveHandle handle;
-  if(!in->get(handle)){
-    std::cerr<<"GridVisualizer::getGrid() Didn't get a handle\n";
-    grid = NULL;
-    return false;
-  }
-
-  // access the grid through the handle and dataArchive
-  archive = (*(handle.get_rep()))();
-  int new_generation = (*(handle.get_rep())).generation;
-  bool archive_dirty =  new_generation != old_generation;
-  int timestep = (*(handle.get_rep())).timestep();
-  if (archive_dirty) {
-    old_generation = new_generation;
-    vector< int > indices;
-    times.clear();
-    archive->queryTimesteps( indices, times );
-    TCL::execute(id + " set_time " + vector_to_string(indices).c_str());
-    // set old_timestep to something that will cause a new grid
-    // to be queried.
-    old_timestep = -1;
-    // clean out the cached information if the grid has changed
-    material_data_list.clear();
-  }
-  if (timestep != old_timestep) {
-    time = times[timestep];
-    grid = archive->queryGrid(time);
-    old_timestep = timestep;
-    return true;
-  }
-  return false;
-}
-
-#if 0
-// returns a pointer to the grid
-GridP GridVisualizer::getGrid()
-{
-  ArchiveHandle handle;
-  if(!in->get(handle)){
-    std::cerr<<"Didn't get a handle\n";
-    return 0;
-  }
-
-  // access the grid through the handle and dataArchive
-  archive = (*(handle.get_rep()))();
-  vector< int > indices;
-  times.clear();
-  archive->queryTimesteps( indices, times );
-  TCL::execute(id + " set_time " + vector_to_string(indices).c_str());
-  int timestep = (*(handle.get_rep())).timestep();
-  time = times[timestep];
-  GridP grid = archive->queryGrid(time);
-
-  return grid;
-}
-#endif
-
-void GridVisualizer::add_type(string &type_list,const TypeDescription *subtype)
-{
-  switch ( subtype->getType() ) {
-  case TypeDescription::double_type:
-    type_list += " scaler";
-    break;
-  case TypeDescription::float_type:
-    type_list += " scaler";
-    break;
-  case TypeDescription::Vector:
-    type_list += " vector";
-    break;
-  case TypeDescription::Matrix3:
-    type_list += " matrix3";
-    break;
-  default:
-    cerr<<"Error in GridVisualizer::setVars(): Vartype not implemented.  Aborting process.\n";
-    abort();
-  }
-}  
-
-void GridVisualizer::setVars(GridP grid) {
-  string varNames("");
-  string type_list("");
-  const Patch* patch = *(grid->getLevel(0)->patchesBegin());
-
-  cerr << "Calling clearMat_list\n";
-  TCL::execute(id + " clearMat_list ");
-  
-  for(int i = 0; i< (int)names.size(); i++) {
-    switch (types[i]->getType()) {
-    case TypeDescription::NCVariable:
-      if (var_orientation.get() == NC_VAR) {
-	varNames += " ";
-	varNames += names[i];
-	cerr << "Calling appendMat_list\n";
-	TCL::execute(id + " appendMat_list " + archive->queryMaterials(names[i], patch, time).expandedString().c_str());
-	add_type(type_list,types[i]->getSubType());
-      }
-      break;
-    case TypeDescription::CCVariable:
-      if (var_orientation.get() == CC_VAR) {
-	varNames += " ";
-	varNames += names[i];
-	cerr << "Calling appendMat_list\n";
-	TCL::execute(id + " appendMat_list " + archive->queryMaterials(names[i], patch, time).expandedString().c_str());
-	add_type(type_list,types[i]->getSubType());
-      }
-      break;
-    default:
-      cerr << "GridVisualizer::setVars: Warning!  Ignoring unknown type.\n";
-      break;
-    }
-
-    
-  }
-
-  cerr << "varNames = " << varNames << endl;
-  TCL::execute(id + " setVar_list " + varNames.c_str());
-  TCL::execute(id + " setType_list " + type_list.c_str());  
-}
-
-
-bool GridVisualizer::is_cached(string name, string& data) {
-  map< string, string >::iterator iter;
-  iter = material_data_list.find(name);
-  if (iter == material_data_list.end()) {
-    return false;
-  }
-  else {
-    data = iter->second;
-    return true;
-  }
-}
-
-void GridVisualizer::cache_value(string where, vector<double>& values,
-				 string &data) {
-  data = vector_to_string(values);
-  material_data_list[where] = data;
-}
-
-void GridVisualizer::cache_value(string where, vector<float>& values,
-				 string &data) {
-  data = vector_to_string(values);
-  material_data_list[where] = data;
-}
-
-void GridVisualizer::cache_value(string where, vector<Vector>& values) {
-  string data = vector_to_string(values,"length");
-  material_data_list[where+" length"] = data;
-  data = vector_to_string(values,"length2");
-  material_data_list[where+" length2"] = data;
-  data = vector_to_string(values,"x");
-  material_data_list[where+" x"] = data;
-  data = vector_to_string(values,"y");
-  material_data_list[where+" y"] = data;
-  data = vector_to_string(values,"z");
-  material_data_list[where+" z"] = data;
-}
-
-void GridVisualizer::cache_value(string where, vector<Matrix3>& values) {
-  string data = vector_to_string(values,"Determinant");
-  material_data_list[where+" Determinant"] = data;
-  data = vector_to_string(values,"Trace");
-  material_data_list[where+" Trace"] = data;
-  data = vector_to_string(values,"Norm");
-  material_data_list[where+" Norm"] = data;
-}
-
-string GridVisualizer::vector_to_string(vector< int > data) {
-  ostringstream ostr;
-  for(int i = 0; i < (int)data.size(); i++) {
-      ostr << data[i]  << " ";
-    }
-  return ostr.str();
-}
-
-string GridVisualizer::vector_to_string(vector< string > data) {
-  string result;
-  for(int i = 0; i < (int)data.size(); i++) {
-      result+= (data[i] + " ");
-    }
-  return result;
-}
-
-string GridVisualizer::vector_to_string(vector< double > data) {
-  ostringstream ostr;
-  for(int i = 0; i < (int)data.size(); i++) {
-      ostr << data[i]  << " ";
-    }
-  return ostr.str();
-}
-
-string GridVisualizer::vector_to_string(vector< float > data) {
-  ostringstream ostr;
-  for(int i = 0; i < (int)data.size(); i++) {
-      ostr << data[i]  << " ";
-    }
-  return ostr.str();
-}
-string GridVisualizer::vector_to_string(vector< Vector > data, string type) {
-  ostringstream ostr;
-  if (type == "length") {
-    for(int i = 0; i < (int)data.size(); i++) {
-      ostr << data[i].length() << " ";
-    }
-  } else if (type == "length2") {
-    for(int i = 0; i < (int)data.size(); i++) {
-      ostr << data[i].length2() << " ";
-    }
-  } else if (type == "x") {
-    for(int i = 0; i < (int)data.size(); i++) {
-      ostr << data[i].x() << " ";
-    }
-  } else if (type == "y") {
-    for(int i = 0; i < (int)data.size(); i++) {
-      ostr << data[i].y() << " ";
-    }
-  } else if (type == "z") {
-    for(int i = 0; i < (int)data.size(); i++) {
-      ostr << data[i].z() << " ";
-    }
-  }
-
-  return ostr.str();
-}
-
-string GridVisualizer::vector_to_string(vector< Matrix3 > data, string type) {
-  ostringstream ostr;
-  if (type == "Determinant") {
-    for(int i = 0; i < (int)data.size(); i++) {
-      ostr << data[i].Determinant() << " ";
-    }
-  } else if (type == "Trace") {
-    for(int i = 0; i < (int)data.size(); i++) {
-      ostr << data[i].Trace() << " ";
-    }
-  } else if (type == "Norm") {
-    for(int i = 0; i < (int)data.size(); i++) {
-      ostr << data[i].Norm() << " ";
-    } 
- }
-
-  return ostr.str();
-}
-
-string GridVisualizer::currentNode_str() {
-  ostringstream ostr;
-  ostr << "Level-" << currentNode.level << "-(";
-  ostr << currentNode.id.x()  << ",";
-  ostr << currentNode.id.y()  << ",";
-  ostr << currentNode.id.z() << ")";
-  return ostr.str();
-}
-
-void GridVisualizer::extract_data(string display_mode, string varname,
-				  vector <string> mat_list,
-				  vector <string> type_list, string index) {
-
-  pick();
-  
-  /*
-    template<class T>
-    void query(std::vector<T>& values, const std::string& name, int matlIndex,
-               IntVector loc, double startTime, double endTime);
-  */
-
-  // clear the current contents of the ticles's material data list
-  TCL::execute(id + " reset_var_val");
-
-  // determine type
-  const TypeDescription *td;
-  for(int i = 0; i < (int)names.size() ; i++)
-    if (names[i] == varname)
-      td = types[i];
-  
-  string name_list("");
-  const TypeDescription* subtype = td->getSubType();
-  switch ( subtype->getType() ) {
-  case TypeDescription::double_type:
-    cerr << "Graphing a variable of type double\n";
-    // loop over all the materials in the mat_list
-    for(int i = 0; i < (int)mat_list.size(); i++) {
-      string data;
-      if (!is_cached(currentNode_str()+" "+varname+" "+mat_list[i],data)) {
-	// query the value and then cache it
-	vector< double > values;
-	int matl = atoi(mat_list[i].c_str());
-	try {
-	  archive->query(values, varname, matl, currentNode.id, times[0], times[times.size()-1]);
-	} catch (const VariableNotFoundInGrid& exception) {
-	  cerr << "Caught VariableNotFoundInGrid Exception: " << exception.message() << endl;
-	  return;
-	} 
-	cerr << "Received data.  Size of data = " << values.size() << endl;
-	cache_value(currentNode_str()+" "+varname+" "+mat_list[i],values,data);
-      } else {
-	cerr << "Cache hit\n";
-      }
-      TCL::execute(id+" set_var_val "+data.c_str());
-      name_list = name_list + mat_list[i] + " " + type_list[i] + " ";
-    }
-    break;
-  case TypeDescription::float_type:
-    cerr << "Graphing a variable of type float\n";
-    // loop over all the materials in the mat_list
-    for(int i = 0; i < (int)mat_list.size(); i++) {
-      string data;
-      if (!is_cached(currentNode_str()+" "+varname+" "+mat_list[i],data)) {
-	// query the value and then cache it
-	vector< float > values;
-	int matl = atoi(mat_list[i].c_str());
-	try {
-	  archive->query(values, varname, matl, currentNode.id, times[0], times[times.size()-1]);
-	} catch (const VariableNotFoundInGrid& exception) {
-	  cerr << "Caught VariableNotFoundInGrid Exception: " << exception.message() << endl;
-	  return;
-	} 
-	cerr << "Received data.  Size of data = " << values.size() << endl;
-	cache_value(currentNode_str()+" "+varname+" "+mat_list[i],values,data);
-      } else {
-	cerr << "Cache hit\n";
-      }
-      TCL::execute(id+" set_var_val "+data.c_str());
-      name_list = name_list + mat_list[i] + " " + type_list[i] + " ";
-    }
-    break;
-  case TypeDescription::Vector:
-    cerr << "Graphing a variable of type Vector\n";
-    // loop over all the materials in the mat_list
-    for(int i = 0; i < (int)mat_list.size(); i++) {
-      string data;
-      if (!is_cached(currentNode_str()+" "+varname+" "+mat_list[i]+" "
-		     +type_list[i],data)) {
-	// query the value and then cache it
-	vector< Vector > values;
-	int matl = atoi(mat_list[i].c_str());
-	try {
-	  archive->query(values, varname, matl, currentNode.id, times[0], times[times.size()-1]);
-	} catch (const VariableNotFoundInGrid& exception) {
-	  cerr << "Caught VariableNotFoundInGrid Exception: " << exception.message() << endl;
-	  return;
-	} 
-	cerr << "Received data.  Size of data = " << values.size() << endl;
-	// could integrate this in with the cache_value somehow
-	data = vector_to_string(values,type_list[i]);
-	cache_value(currentNode_str()+" "+varname+" "+mat_list[i],values);
-      } else {
-	cerr << "Cache hit\n";
-      }
-      TCL::execute(id+" set_var_val "+data.c_str());
-      name_list = name_list + mat_list[i] + " " + type_list[i] + " ";
-    }
-    break;
-  case TypeDescription::Matrix3:
-    cerr << "Graphing a variable of type Matrix3\n";
-    // loop over all the materials in the mat_list
-    for(int i = 0; i < (int)mat_list.size(); i++) {
-      string data;
-      if (!is_cached(currentNode_str()+" "+varname+" "+mat_list[i]+" "
-		     +type_list[i],data)) {
-	// query the value and then cache it
-	vector< Matrix3 > values;
-	int matl = atoi(mat_list[i].c_str());
-	try {
-	  archive->query(values, varname, matl, currentNode.id, times[0], times[times.size()-1]);
-	} catch (const VariableNotFoundInGrid& exception) {
-	  cerr << "Caught VariableNotFoundInGrid Exception: " << exception.message() << endl;
-	  return;
-	} 
-	cerr << "Received data.  Size of data = " << values.size() << endl;
-	// could integrate this in with the cache_value somehow
-	data = vector_to_string(values,type_list[i]);
-	cache_value(currentNode_str()+" "+varname+" "+mat_list[i],values);
-      }
-      else {
-	// use cached value that was put into data by is_cached
-	cerr << "Cache hit\n";
-      }
-      TCL::execute(id+" set_var_val "+data.c_str());
-      name_list = name_list + mat_list[i] + " " + type_list[i] + " ";
-    }
-    break;
-  case TypeDescription::Point:
-    cerr << "Error trying to graph a Point.  No valid representation for Points for 2d graph.\n";
-    break;
-  default:
-    cerr<<"Unknown var type\n";
-    }// else { Tensor,Other}
-  TCL::execute(id+" "+display_mode.c_str()+"_data "+index.c_str()+" "
-	       +varname.c_str()+" "+currentNode_str().c_str()+" "
-	       +name_list.c_str());
-  
-}
-
-
-
-
-// if a pick event was received extract the id from the picked
-void GridVisualizer::pick() {
-  reset_vars();
-  currentNode.id.x(index_x.get());
-  currentNode.id.y(index_y.get());
-  currentNode.id.z(index_z.get());
-  currentNode.level = index_l.get();
-  cerr << "Extracting values for " << currentNode.id << ", level " << currentNode.level << endl;
-}
-
-#endif
