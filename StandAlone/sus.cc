@@ -122,6 +122,9 @@ int main(int argc, char** argv)
 	    do_arches=true;
 	} else if(s == "-ice"){
 	    do_ice=true;
+	} else if(s == "-mpmice"){
+	    do_ice=true;
+	    do_mpm=true;
 	} else if(s == "-nthreads"){
 	  cerr << "reading number of threads\n";
 	    if(++i == argc){
