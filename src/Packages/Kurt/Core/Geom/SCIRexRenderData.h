@@ -45,6 +45,9 @@ struct SCIRexRenderData {
   double time_;
   int *comp_order_;
   int comp_count_;
+  bool dump_;
+  bool use_depth_;
+  int curFrame_;
 };
   
 } // end namspace Kurt

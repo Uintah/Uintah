@@ -10,6 +10,11 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include <iostream>
+#include <strstream>
+#include <fstream>
+using std::ifstream;
+using std::ostrstream;
+
 using std::cerr;
 using std::endl;
 
@@ -309,28 +314,53 @@ SCIRexWindow::draw(){
     glLoadMatrixd( rd->mvmat_ );
 
 
-  glClear(GL_DEPTH_BUFFER_BIT);
-  glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-  glEnable(GL_DEPTH_TEST);  
-  glDrawPixels(rd->viewport_x_,
-		rd->viewport_y_,
-	       GL_DEPTH_COMPONENT,
-	       GL_UNSIGNED_BYTE, rd->depth_buffer_);
-
-  glClearColor(0,0,0,0.0);
-  glClear(GL_COLOR_BUFFER_BIT);
-
-
-
-  vector<GeomObj *>::iterator i;
-  glDepthMask(GL_FALSE);
-  for( i = geom_objs.begin(); i != geom_objs.end(); i++){
-    (*i)->draw( rd->di_, rd->mat_, rd->time_);
-  }
-  glDepthMask(GL_TRUE);
-  glDisable(GL_DEPTH_TEST);  //glPopMatrix();
+  if(rd->use_depth_){
+    cerr<<"Using depth\n";
+    glClear(GL_DEPTH_BUFFER_BIT);
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+    glEnable(GL_DEPTH_TEST);  
+    glDrawPixels(rd->viewport_x_,
+		 rd->viewport_y_,
+		 GL_DEPTH_COMPONENT,
+		 GL_UNSIGNED_BYTE, rd->depth_buffer_);
+    
+    glClearColor(0,0,0,0.0);
+    glClear(GL_COLOR_BUFFER_BIT);
+    
+    
+    
+    glDepthMask(GL_FALSE);
+    vector<GeomObj *>::iterator i;
+    for( i = geom_objs.begin(); i != geom_objs.end(); i++){
+      (*i)->draw( rd->di_, rd->mat_, rd->time_);
+    }
+    glDepthMask(GL_TRUE);
+    glDisable(GL_DEPTH_TEST);  //glPopMatrix();
+  } else {
+    cerr<<"Not using depth\n";
+    glClearColor(0,0,0,0.0);
+    glClear(GL_COLOR_BUFFER_BIT);
+    vector<GeomObj *>::iterator i;
+    for( i = geom_objs.begin(); i != geom_objs.end(); i++){
+      (*i)->draw( rd->di_, rd->mat_, rd->time_);
+    }
+  }    
   readFB(pbuffer, 0,0,_width, _height);
-
+  
+  if(rd->dump_){
+    ostrstream convert;
+    convert.width(4);
+    convert.fill('0');
+    convert << rd->curFrame_;
+    char number[10];
+    sprintf(number, "%04d\0",  rd->curFrame_);
+    cerr<<"current frame is "<<rd->curFrame_<<endl;
+    string n(name);
+    n = n+number+".raw";
+    int size = 3*_width*_height;
+    ofstream dumpfile(n.c_str());
+    dumpfile.write((const char *)pbuffer,size);
+  }
 }
 
 

@@ -77,6 +77,8 @@ SCIRex::SCIRex(GuiContext* ctx)
     render_style_(ctx->subVar("render_style")),
     alpha_scale_(ctx->subVar("alpha_scale")),
     interp_mode_(ctx->subVar("interp_mode")),
+    dump_frames_(ctx->subVar("dump_frames")),
+    use_depth_(ctx->subVar("use_depth")),
     displays_(ctx->subVar("displays")),
     compositers_(ctx->subVar("compositers"))
 {
@@ -226,6 +228,8 @@ void SCIRex::execute(void)
   //AuditAllocator(default_allocator);
   volren_->SetInterp( bool(interp_mode_.get()));
   //AuditAllocator(default_allocator);
+  volren_->DumpFrames( bool(dump_frames_.get()));
+  volren_->UseDepth( bool(use_depth_.get()));
 
   switch( render_style_.get() ) {
   case 0:
