@@ -7,12 +7,16 @@ include $(SRCTOP)/scripts/smallso_prologue.mk
 
 SRCDIR   := Kurt/Modules/Vis
 
-SRCS     += $(SRCDIR)/GLTextureBuilder.cc  $(SRCDIR)/PadField.cc \
-		$(SRCDIR)/TextureVolVis.cc \
-		$(SRCDIR)/TexCuttingPlanes.cc \
-		$(SRCDIR)/ParticleColorMapKey.cc \
-		$(SRCDIR)/RescaleColorMapForParticles.cc \
-		$(SRCDIR)/AnimatedStreams.cc 
+SRCS     += \
+	$(SRCDIR)/GLTextureBuilder.cc\
+	$(SRCDIR)/PadField.cc \
+	$(SRCDIR)/TextureVolVis.cc \
+	$(SRCDIR)/TexCuttingPlanes.cc \
+	$(SRCDIR)/ParticleColorMapKey.cc \
+	$(SRCDIR)/RescaleColorMapForParticles.cc \
+	$(SRCDIR)/AnimatedStreams.cc \
+#[INSERT NEW CODE FILE HERE]
+
 #		$(SRCDIR)/VolVis.cc \
 #		$(SRCDIR)/KurtScalarFieldReader.cc \
 #		$(SRCDIR)/VisControl.cc \
@@ -34,6 +38,12 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.15  2000/10/24 05:57:22  moulding
+# new module maker Phase 2: new module maker goes online
+#
+# These changes clean out the last remnants of the old module maker and
+# bring the new module maker online.
+#
 # Revision 1.14  2000/09/27 16:24:08  kuzimmer
 # changes made to reflect the moved VisParticleSet files
 #

@@ -30,7 +30,7 @@ SRCS     += \
 	$(SRCDIR)/Thermal.cc\
 	$(SRCDIR)/TopoSurfToGeom.cc\
 	$(SRCDIR)/SliceMaker.cc\
-#[INSERT NEW MODULE HERE]
+#[INSERT NEW CODE FILE HERE]
 
 PSELIBS := DaveW/Datatypes/General PSECore/Datatypes PSECore/Widgets \
 	PSECore/Dataflow SCICore/Persistent SCICore/Exceptions \
@@ -42,6 +42,12 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.6  2000/10/24 05:57:10  moulding
+# new module maker Phase 2: new module maker goes online
+#
+# These changes clean out the last remnants of the old module maker and
+# bring the new module maker online.
+#
 # Revision 1.5  2000/09/07 20:40:16  zyp
 # Added the SliceMaker module (it creates a disc for a demo)
 #
