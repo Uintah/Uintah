@@ -1,8 +1,14 @@
 # Makefile fragment for this subdirectory
+#
+
+SRCDIR	:= Packages/Uintah/CCA/Components/MPM
+SUBDIRS	:= $(SRCDIR)/ConstitutiveModel
+include $(SCIRUN_SCRIPTS)/recurse.mk
+
 
 include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
-SRCDIR   := Packages/Uintah/CCA/Components/MPM
+SRCDIR	:= Packages/Uintah/CCA/Components/MPM
 
 SRCS     += $(SRCDIR)/SerialMPM.cc \
 	$(SRCDIR)/RigidMPM.cc \
@@ -18,7 +24,8 @@ SRCS     += $(SRCDIR)/SerialMPM.cc \
 #	$(SRCDIR)/Implicit.cc \
 #	$(SRCDIR)/Explicit.cc 
 
-SUBDIRS := $(SRCDIR)/ConstitutiveModel $(SRCDIR)/Contact \
+SUBDIRS := \
+	$(SRCDIR)/Contact \
 	$(SRCDIR)/ThermalContact \
 	$(SRCDIR)/GeometrySpecification \
 	$(SRCDIR)/PhysicalBC \
@@ -28,6 +35,7 @@ SUBDIRS := $(SRCDIR)/ConstitutiveModel $(SRCDIR)/Contact \
 include $(SCIRUN_SCRIPTS)/recurse.mk
 
 PSELIBS := \
+	Packages/Uintah/CCA/Components/MPM/ConstitutiveModel \
 	Packages/Uintah/CCA/Ports        \
 	Packages/Uintah/Core/Grid        \
 	Packages/Uintah/Core/Disclosure  \
