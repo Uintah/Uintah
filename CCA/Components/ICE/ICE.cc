@@ -419,6 +419,7 @@ void ICE::scheduleComputeStableTimestep(const LevelP& level,
                                       SchedulerP& sched)
 {
   Task* t;
+  t = t;   // quite the compiler
   if (d_EqForm) {             // EQ 
     cout_doing << "ICE::scheduleComputeStableTimestep " << endl;
     t = scinew Task("ICE::actuallyComputeStableTimestep",
@@ -428,6 +429,7 @@ void ICE::scheduleComputeStableTimestep(const LevelP& level,
     t = scinew Task("ICE::actuallyComputeStableTimestepRF",
                       this, &ICE::actuallyComputeStableTimestepRF);
   }
+
   Ghost::GhostType  gac = Ghost::AroundCells;
   Ghost::GhostType  gn = Ghost::None;
   const MaterialSet* all_matls = d_sharedState->allMaterials(); 
@@ -551,6 +553,7 @@ void ICE::scheduleComputePressure(SchedulerP& sched,
                                           const MaterialSet* ice_matls)
 {
   Task* t;
+  t = t;   // quite the compiler
   if (d_RateForm) {     //RATE FORM
     cout_doing << "ICE::scheduleComputeRateFormPressure" << endl;
     t = scinew Task("ICE::computeRateFormPressure",
@@ -561,7 +564,6 @@ void ICE::scheduleComputePressure(SchedulerP& sched,
     t = scinew Task("ICE::computeEquilibrationPressure",
                      this, &ICE::computeEquilibrationPressure);
   }         
-
                         // EQ & RATE FORM
   t->requires(Task::OldDW,lb->press_CCLabel, press_matl, Ghost::None);
   t->requires(Task::OldDW,lb->rho_CCLabel,               Ghost::None);
@@ -617,6 +619,7 @@ void ICE::scheduleComputeVel_FC(SchedulerP& sched,
                                 bool recursion)
 { 
   Task* t;
+  t = t;   // quite the compiler
   if (d_RateForm) {     //RATE FORM
     cout_doing << "ICE::scheduleComputeFaceCenteredVelocitiesRF" << endl;
     t = scinew Task("ICE::computeFaceCenteredVelocitiesRF",
@@ -924,6 +927,7 @@ void ICE::scheduleAddExchangeToMomentumAndEnergy(SchedulerP& sched,
                                const MaterialSet* all_matls)
 {
   Task* t;
+  t = t;   // quite the compiler
   if (d_RateForm) {     //RATE FORM
     cout_doing << "ICE::scheduleAddExchangeToMomentumAndEnergy_RF" << endl;
     t=scinew Task("ICE::addExchangeToMomentumAndEnergyRF",
@@ -934,6 +938,7 @@ void ICE::scheduleAddExchangeToMomentumAndEnergy(SchedulerP& sched,
     t=scinew Task("ICE::addExchangeToMomentumAndEnergy",
                   this, &ICE::addExchangeToMomentumAndEnergy);
   }
+
   Ghost::GhostType  gn  = Ghost::None; 
   t->requires(Task::OldDW, d_sharedState->get_delt_label());
  
