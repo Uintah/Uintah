@@ -1535,7 +1535,7 @@ proc biopseFDialog_CancelCmd {w} {
     global biopsePriv
 
     # AS: setting file variable to "" and executing cancel command
-    set data(-filevar) ""
+    # set data(-filevar) ""
     eval $data(-cancel)
     #set biopsePriv(selectFilePath) ""
 }
