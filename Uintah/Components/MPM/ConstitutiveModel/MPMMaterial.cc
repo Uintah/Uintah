@@ -24,29 +24,33 @@ using namespace SCICore::Geometry;
 MPMMaterial::MPMMaterial(ProblemSpecP& ps)
 {
    // Constructor
-   pDeformationMeasureLabel = 
-               scinew VarLabel("p.deformationMeasure",
+   pDeformationMeasureLabel = scinew VarLabel("p.deformationMeasure",
 			    ParticleVariable<Matrix3>::getTypeDescription());
-   pStressLabel = 
-               scinew VarLabel( "p.stress",
+
+   pStressLabel = scinew VarLabel( "p.stress",
 			     ParticleVariable<Matrix3>::getTypeDescription() );
 
-   pVolumeLabel = 
-               scinew VarLabel( "p.volume",
+   pVolumeLabel = scinew VarLabel( "p.volume",
 			     ParticleVariable<double>::getTypeDescription());
+
    pMassLabel = scinew VarLabel( "p.mass",
 			      ParticleVariable<double>::getTypeDescription() );
-   pVelocityLabel =
-               scinew VarLabel( "p.velocity", 
+
+   pVelocityLabel = scinew VarLabel( "p.velocity", 
 			     ParticleVariable<Vector>::getTypeDescription() );
-   pExternalForceLabel =
-               scinew VarLabel( "p.externalforce",
+
+   pExternalForceLabel = scinew VarLabel( "p.externalforce",
 			     ParticleVariable<Vector>::getTypeDescription() );
+
    pXLabel =   scinew VarLabel( "p.x",
 			     ParticleVariable<Point>::getTypeDescription(),
 			     VarLabel::PositionVariable);
+
    pSurfLabel = scinew VarLabel( "p.issurf",
 			      ParticleVariable<int>::getTypeDescription() );
+
+  pTemperatureLabel = new VarLabel( "p.temperature",
+                              ParticleVariable<double>::getTypeDescription() );
 
   // Follow the layout of the input file
   // Steps:
@@ -72,7 +76,6 @@ MPMMaterial::MPMMaterial(ProblemSpecP& ps)
    ps->require("toughness",d_toughness);
    ps->require("thermal_conductivity",d_thermal_cond);
    ps->require("specific_heat",d_spec_heat);
-   ps->require("temperature",d_temp);
 
    // Step 3 -- Loop through all of the pieces in this geometry object
 
@@ -104,11 +107,8 @@ MPMMaterial::MPMMaterial(ProblemSpecP& ps)
       int vf;
       ps->require("velocity_field",vf);
       setVFIndex(vf);
-      
-	
-            
-   }
 
+   }
 
 }
 
@@ -150,12 +150,14 @@ void MPMMaterial::createParticles(particleIndex numParticles,
    new_dw->allocate(pvolume, pVolumeLabel, getDWIndex(), patch);
    ParticleVariable<int> pissurf;
    new_dw->allocate(pissurf, pSurfLabel, getDWIndex(), patch);
+   ParticleVariable<double> ptemperature;
+   new_dw->allocate(ptemperature, pTemperatureLabel, getDWIndex(), patch);
 
    particleIndex start = 0;
    for(int i=0; i<d_geom_objs.size(); i++)
       start += createParticles(d_geom_objs[i], start, position,
 			       pvelocity,pexternalforce,pmass,pvolume,
-							pissurf,patch);
+					pissurf,ptemperature,patch);
 
    new_dw->put(position, pXLabel, getDWIndex(), patch);
    new_dw->put(pvelocity, pVelocityLabel, getDWIndex(), patch);
@@ -163,6 +165,7 @@ void MPMMaterial::createParticles(particleIndex numParticles,
    new_dw->put(pmass, pMassLabel, getDWIndex(), patch);
    new_dw->put(pvolume, pVolumeLabel, getDWIndex(), patch);
    new_dw->put(pissurf, pSurfLabel, getDWIndex(), patch);
+   new_dw->put(ptemperature, pTemperatureLabel, getDWIndex(), patch);
 }
 
 particleIndex MPMMaterial::countParticles(GeometryObject* obj,
@@ -206,6 +209,7 @@ particleIndex MPMMaterial::createParticles(GeometryObject* obj,
 				   ParticleVariable<double>& mass,
 				   ParticleVariable<double>& volume,
 				   ParticleVariable<int>& pissurf,
+				   ParticleVariable<double>& temperature,
 				   const Patch* patch)
 {
    GeometryPiece* piece = obj->getPiece();
@@ -231,6 +235,7 @@ particleIndex MPMMaterial::createParticles(GeometryObject* obj,
 		  position[start+count]=p;
 		  volume[start+count]=dxpp.x()*dxpp.y()*dxpp.z();
 		  velocity[start+count]=obj->getInitialVelocity();
+		  temperature[start+count]=obj->getInitialTemperature();
 		  mass[start+count]=d_density * volume[start+count];
 		  // Determine if particle is on the surface
 		  pissurf[start+count]=checkForSurface(piece,p,dxpp);
@@ -293,6 +298,10 @@ double  MPMMaterial::getSpecificHeat() const
 }
 
 // $Log$
+// Revision 1.22  2000/05/31 16:35:07  guilkey
+// Added code to initialize particle temperatures.  Moved the specification
+// of the temperature from the Material level to the GeometryObject level.
+//
 // Revision 1.21  2000/05/30 20:19:04  sparker
 // Changed new to scinew to help track down memory leaks
 // Changed region to patch
