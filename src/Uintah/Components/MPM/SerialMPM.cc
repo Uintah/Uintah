@@ -933,6 +933,13 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
 	    }
 	 }
       }
+      for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){
+	 if(gmass[*iter] >= 1.e-10){
+	    gvelocity[*iter] *= 1./gmass[*iter];
+            gTemperature[*iter] /= gmass[*iter];
+	 }
+      }
+
 
       // Apply grid boundary conditions to the velocity
       // before storing the data
@@ -971,14 +978,6 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       }
 
       new_dw->put(sum_vartype(totalmass), lb->TotalMassLabel);
-      for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){
-//	 if(gmass[*iter] != 0.0){
-	 if(gmass[*iter] >= 1.e-10){
-	    gvelocity[*iter] *= 1./gmass[*iter];
-            gTemperature[*iter] /= gmass[*iter];
-	 }
-      }
-
       new_dw->put(gmass,         lb->gMassLabel, vfindex, patch);
       new_dw->put(gvelocity,     lb->gVelocityLabel, vfindex, patch);
       new_dw->put(gexternalforce, lb->gExternalForceLabel, vfindex, patch);
@@ -1651,6 +1650,10 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 }
 
 // $Log$
+// Revision 1.120  2000/08/29 21:46:25  guilkey
+// Moved the divide by mass stuff in interpolateParticlesToGrid to before
+// the BCs are applied.
+//
 // Revision 1.119  2000/08/24 00:17:09  guilkey
 // Put saving and zeroing of integrated quantities in the correct places.
 //
