@@ -89,13 +89,12 @@ string makeFileName(string raydatadir, string variable_file, string time_file,
   string raydatafile;
   if (raydatadir != "")
     raydatafile+= raydatadir + string("/");
+  raydatafile+= string("TS_") + time_file + string("/");
   if (variable_file != "")
     raydatafile+= string("VAR_") + variable_file + string(".");
   if (materialType_file != "")
     raydatafile+= string("MT_") + materialType_file + string(".");
-  if (patchID_file != "")
-    raydatafile+= string("PI_") + patchID_file + string(".");
-  raydatafile+= string("TS_") + time_file;
+  raydatafile+= string("PI_") + patchID_file;
   return raydatafile;
 }
 
@@ -113,10 +112,16 @@ void usage(const std::string& badarg, const std::string& progname)
     cerr << "  -rtdata [output directory]\n";
     cerr << "  -PTvar\n";
     cerr << "  -ptonly (prints out only the point location\n";
+    cerr << "  -patch (outputs patch id with data)\n";
+    cerr << "  -material (outputs material number with data)\n";
     cerr << "  -NCvar [double or point or vector]\n";
-    cerr << "*NOTE* to use -PTvar or -NVvar -rtdata must be used\n\n";
-
-    cerr << "*NOTE* currently only -NCvar double is implemented\n";
+    cerr << "  -verbose (prints status of output)\n";
+    cerr << "  -timesteplow [int] (only outputs timestep from int)\n";
+    cerr << "  -timestephigh [int] (only outputs timesteps upto int)\n";
+    cerr << "*NOTE* to use -PTvar or -NVvar -rtdata must be used\n";
+    cerr << "*NOTE* ptonly, patch, material, timesteplow, timestephigh \
+are used in conjuntion with -PTvar.\n\n";
+    
     cerr << "USAGE IS NOT FINISHED\n\n";
     exit(1);
 }
@@ -136,6 +141,11 @@ int main(int argc, char** argv)
   bool do_NCvar_vector = false;
   bool do_PTvar = false;
   bool do_PTvar_all = true;
+  bool do_patch = false;
+  bool do_material = false;
+  bool do_verbose = false;
+  int time_step_lower = -1;
+  int time_step_upper = -1;
   string filebase;
   string raydatadir;
   /*
@@ -175,8 +185,18 @@ int main(int argc, char** argv)
 	usage("-NCvar", argv[0]);
     } else if(s == "-PTvar") {
       do_PTvar = true;
-    }else if (s == "-ptonly") {
+    } else if (s == "-ptonly") {
       do_PTvar_all = false;
+    } else if (s == "-patch") {
+      do_patch = true;
+    } else if (s == "-material") {
+      do_material = true;
+    } else if (s == "-verbose") {
+      do_verbose = true;
+    } else if (s == "-timesteplow") {
+      time_step_lower = atoi(argv[++i]);
+    } else if (s == "-timestephigh") {
+      time_step_upper = atoi(argv[++i]);
     } else if( (s == "-help") || (s == "-h") ) {
       usage( "", argv[0] );
     } else {
@@ -247,7 +267,20 @@ int main(int argc, char** argv)
       ASSERTEQ(index.size(), times.size());
       cout << "There are " << index.size() << " timesteps:\n";
       
-      for(int t=0;t<times.size();t++){
+      if (time_step_lower <= -1)
+	time_step_lower =0;
+      else if (time_step_lower >= times.size()) {
+	cerr << "timesteplow must be between 0 and " << times.size()-1 << endl;
+	abort();
+      }
+      if (time_step_upper <= -1)
+	time_step_upper = times.size()-1;
+      else if (time_step_upper >= times.size()) {
+	cerr << "timesteplow must be between 0 and " << times.size()-1 << endl;
+	abort();
+      }
+      
+      for(int t=time_step_lower;t<=time_step_upper;t++){
 	double time = times[t];
 	cout << "time = " << time << "\n";
 	GridP grid = da->queryGrid(time);
@@ -444,15 +477,40 @@ int main(int argc, char** argv)
       std::string patchID_file;
       std::string materialType_file;
       
+      if (time_step_lower <= -1)
+	time_step_lower =0;
+      else if (time_step_lower >= times.size()) {
+	cerr << "timesteplow must be between 0 and " << times.size()-1 << endl;
+	abort();
+      }
+      if (time_step_upper <= -1)
+	time_step_upper = times.size()-1;
+      else if (time_step_upper >= times.size()) {
+	cerr << "timesteplow must be between 0 and " << times.size()-1 << endl;
+	abort();
+      }
+      
       // for all timesteps
-      for(int t=0;t<times.size();t++){
+      for(int t=time_step_lower;t<=time_step_upper;t++){
 	double time = times[t];
 	ostringstream tempstr_time;
 	tempstr_time << setprecision(17) << time;
 	time_file = replaceChar(string(tempstr_time.str()),'.','_');
 	GridP grid = da->queryGrid(time);
 	fprintf(filelist,"<TIMESTEP>\n");
-	
+	if(do_verbose)
+	  cout << "time = " << time << "\n";
+	// Create a directory if it's not already there.
+	// The exception occurs when the directory is already there
+	// and the Dir.create fails.  This exception is ignored. 
+	Dir rayDir;
+	try {
+	  rayDir.create(raydatadir + string("/TS_") + time_file);
+	}
+	catch (Exception& e) {
+	  cerr << "Caught directory making exception: " << e.message() << '\n';
+	}
+	if (t==4) break;
 	// for each level in the grid
 	for(int l=0;l<grid->numLevels();l++){
 	  LevelP level = grid->getLevel(l);
@@ -600,15 +658,8 @@ int main(int argc, char** argv)
 	    } // end vars
 	    // after all the variable data has been collected write it out
 	    if (do_PTvar) {
-	      // setup output files
-	      string raydatafile = makeFileName(raydatadir,string(""),time_file,patchID_file,string(""));
 	      FILE* datafile;
 	      FILE* headerfile;
-	      if (!setupOutFiles(&datafile,&headerfile,raydatafile,string("meta")))
-		abort();
-	      // addfile to filelist
-	      fprintf(filelist,"%s\n",raydatafile.c_str());
-
 	      //--------------------------------------------------
 	      // set up the first min/max
 	      Point min, max;
@@ -646,6 +697,13 @@ int main(int argc, char** argv)
 		  }
 		  // initialized mins/maxes
 		  data_found = true;
+		  // setup output files
+		  string raydatafile = makeFileName(raydatadir,string(""),time_file,patchID_file,string(""));
+		  if (!setupOutFiles(&datafile,&headerfile,raydatafile,string("meta")))
+		    abort();
+		  // addfile to filelist
+		  fprintf(filelist,"%s\n",raydatafile.c_str());
+		  
 		  break;
 		}
 		
@@ -654,7 +712,8 @@ int main(int argc, char** argv)
 	      //--------------------------------------------------
 	      // extract data and write it to a file MaterialData at a time
 
-	      cerr << "-------Extracting data and writing it out\n";
+	      if (do_verbose)
+		cerr << "---Extracting data and writing it out  ";
 	      for(int m = 0; m < material_data_list.size(); m++) {
 		MaterialData md = material_data_list[m];
 		ParticleSubset* pset = md.p_x.getParticleSubset();
@@ -696,6 +755,14 @@ int main(int argc, char** argv)
 			temp_value = (float)value;
 			fwrite(&temp_value, sizeof(float), 1, datafile);
 		      }
+		      if (do_patch) {
+			temp_value = (float)patch->getID();
+			fwrite(&temp_value, sizeof(float), 1, datafile);
+		      }
+		      if (do_material) {
+			temp_value = (float)m;
+			fwrite(&temp_value, sizeof(float), 1, datafile);
+		      }
 		    }
 		  }
 		}
@@ -704,7 +771,8 @@ int main(int argc, char** argv)
 	      //--------------------------------------------------
 	      // write the header file
 
-	      cerr << "-------Writing header file\n";
+	      if (do_verbose)
+		cerr << "---Writing header file\n";
 	      if (data_found) {
 		fprintf(headerfile,"%d\n",total_particles);
 		fprintf(headerfile,"%g\n",(max.x()-min.x())/total_particles);
@@ -717,6 +785,12 @@ int main(int argc, char** argv)
 		  }
 		  for(int i = 0; i < v_min.size(); i++) {
 		    fprintf(headerfile,"%g %g\n",v_min[i],v_max[i]);
+		  }
+		  if (do_patch) {
+		    fprintf(headerfile,"%g %g\n",(float)patch->getID(),(float)patch->getID());
+		  }
+		  if (do_material) {
+		    fprintf(headerfile,"%g %g\n",0.0,(float)material_data_list.size());
 		  }
 		}
 	      }
@@ -741,6 +815,10 @@ int main(int argc, char** argv)
 
 //
 // $Log$
+// Revision 1.7  2000/06/21 21:05:55  bigler
+// Made it so that when writing particle data it puts all the files for one timestep in a single subdirectory.
+// Also added command line options to output data on a range of timesteps.  This is good for all output formats.
+//
 // Revision 1.6  2000/06/15 12:58:51  bigler
 // Added functionality to output particle variable data for the real-time raytracer
 //
