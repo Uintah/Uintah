@@ -38,7 +38,6 @@ void SimpleFracture::computeNodeVisibility(
 		  DataWarehouseP& old_dw, 
 		  DataWarehouseP& new_dw)
 {
-  //cout<<"start: SimpleFracture::computeNodeVisibility"<<endl;
   // Create arrays for the particle data
   ParticleVariable<Point>  pX_patchAndGhost;
   ParticleVariable<double> pVolume;
@@ -112,7 +111,15 @@ void SimpleFracture::computeNodeVisibility(
   
   new_dw->put(pVisibility, lb->pVisibilityLabel);
 
-  //cout<<"end: SimpleFracture::computeNodeVisibility"<<endl;
+#if 0
+  for(ParticleSubset::iterator iter = pset_patchAndGhost->begin();
+          iter != pset_patchAndGhost->end(); iter++)
+  {
+    particleIndex pIdx = *iter;
+    if(!pIsBroken[idx]) continue;
+  }
+#endif
+
 }
 
 void
