@@ -34,13 +34,23 @@ namespace SCIRun {
 
 ServiceClient::ServiceClient() :
   lock("service client lock"),
-  ref_cnt(0)
+  ref_cnt(0),
+  need_send_end_stream_(false)
 {
 }
 
 ServiceClient::~ServiceClient()
 {
   // Make sure we close the socket
+  if (need_send_end_stream_)
+  {  
+    IComPacketHandle packet = scinew IComPacket();
+    packet->settag(TAG_END_STREAM);
+    packet->setid(0);
+    socket_.send(packet);
+    need_send_end_stream_ = false;
+  }
+
   socket_.close();
 }
 
@@ -202,6 +212,7 @@ bool ServiceClient::open(IComAddress address, std::string servicename, int sessi
   }
   
   version_ = packet->getstring();
+  need_send_end_stream_ = true;
   
   clearerror();
   return(true);
@@ -209,10 +220,15 @@ bool ServiceClient::open(IComAddress address, std::string servicename, int sessi
 
 bool ServiceClient::close()
 {
-  IComPacketHandle packet = scinew IComPacket();
-  packet->settag(TAG_END_);
-  packet->setid(0);
-  socket_.send(packet);
+
+  if (need_send_end_stream_)
+  {  
+    IComPacketHandle packet = scinew IComPacket();
+    packet->settag(TAG_END_STREAM);
+    packet->setid(0);
+    socket_.send(packet);
+    need_send_end_stream_ = false;
+  }
   socket_.close();
   clearerror();
   return(true);

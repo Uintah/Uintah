@@ -55,6 +55,7 @@ class ServiceInfo {
                                  // defined in the XML file
   std::string    classname;      // name of the class used for the
                                  // service, defined in XML file
+  std::string    classpackagename; // Name of the package where the class is defined
   std::string    version;        // version number of this class,
                                  // defined in XML file
   bool      activated;      // boolean indicating whether service is

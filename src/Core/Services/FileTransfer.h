@@ -26,57 +26,26 @@
    DEALINGS IN THE SOFTWARE.
 */
 
+#ifndef CORE_SERVICES_FILETRANSFER_H
+#define CORE_SERVICES_FILETRANSFER_H 1
 
-// Service.cc
-
-#include <Core/Services/Service.h>
 
 namespace SCIRun {
 
 
-Service::Service(ServiceContext &ctx) :
-	ctx_(ctx),
-	lock("Service Lock"),
-	ref_cnt(0)
-{
-}
-
-Service::~Service()
-{
-	// Close the socket if it was not closed yet
-	// This function should be thread-safe
-
-	ctx_.socket.close();
-
-}
-
-
-void Service::run()
-{
-	try
-    {
-        execute();	
-    }
-    catch (...)
-    {
-        ctx_.socket.close();
-        throw;
-    }
-	ctx_.socket.close();
-}
-
-void Service::execute()
-{
-}
-
-void Service::errormsg(std::string error)
-{
-	ctx_.log->putmsg(std::string("Service (" + ctx_.servicename + std::string(") : error = ") + error));
-}
-
-void Service::warningmsg(std::string warning)
-{
-	ctx_.log->putmsg(std::string("Service (" + ctx_.servicename + std::string(") : warning = ") + warning));
-}
+enum {
+		TAG_FTERROR  = 1000,		// FILE TRANSFER ERROR
+        TAG_FTSUCCESS,              // SUCCESSFULLY LAUNCHED THE FILETRANSFER SERVICE
+        TAG_FPUT,                   // WRITE A FILE
+        TAG_FGET,                   // READ A FILE
+        TAG_FNEXTDATA,              // REQUEST NEXT DATA SEGMENT
+        TAG_FDATA,                  // DATA SEGMENT
+        TAG_FEND,                   // END DATA TRANSFER
+        TAG_TDIR,                   // MAKE TEMPDIR
+        TAG_FRESET                  // RESET THE FILETRANSFER SERVICE
+        
+	};
 
 } // end namespace
+
+#endif

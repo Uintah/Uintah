@@ -82,7 +82,7 @@ inline void SimpleServiceOutputInfo::signal_exit()
 {
 	lock.lock();
 	exit_ = true;
-	wait_.conditionSignal();
+	wait_.conditionBroadcast();
 	lock.unlock();
 }
 
@@ -108,7 +108,7 @@ class SimpleServiceOutputThread : public Runnable, public ServiceBase
   public:
 
 	SimpleServiceOutputThread(SimpleServiceOutputInfoHandle handle);
-	~SimpleServiceOutputThread();
+	virtual ~SimpleServiceOutputThread();
 
 	// Entry point for runnable
 	void run();
@@ -127,7 +127,7 @@ class SimpleServiceOutputHandler : public SystemCallHandler {
 
   public:
 	SimpleServiceOutputHandler(SimpleServiceOutputInfoHandle handle, int tag);
-	~SimpleServiceOutputHandler();
+	virtual ~SimpleServiceOutputHandler();
 
 	virtual	void start(std::list<std::string> &buffer);
 	virtual bool execute(std::string line);
@@ -148,7 +148,7 @@ class SimpleService : public Service {
 
   public:
 	SimpleService(ServiceContext &ctx);
-	~SimpleService();
+	virtual ~SimpleService();
   
 	void			execute();						// Main loop
     void            create_service_info();
@@ -164,7 +164,6 @@ class SimpleService : public Service {
 	
 	
 	void			handle_input();
-	void			handle_stdpacket(IComPacketHandle& packet);
 	void			send_packet(IComPacketHandle& packet);
 
 	void			forward_stdout(SystemCallHandle syscall);
@@ -184,17 +183,16 @@ class SimpleService : public Service {
 	SystemCallHandle					exit_syscall_;
 	SimpleServiceOutputHandlerHandle	exit_handler_;
 
-
-    Thread*                            output_thread_;
+    Thread*                         output_thread_;
 	// Output thread data
 	SimpleServiceOutputInfoHandle   info_handle_;	
 	// File forwarding functions	
+    
 };
 
 
 inline void SimpleService::send_packet(IComPacketHandle& packet)
 {
-	putmsg("SimpleService:putting message on queue");
 	info_handle_->add_packet(packet);
 }
 
