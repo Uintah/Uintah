@@ -42,12 +42,12 @@ void GeometryObjectFactory::create(const ProblemSpecP& ps,
       else if (go_type == "difference")
 	 objs.push_back(new DifferenceGeometryObject(child));
 
-      else if (go_type == "instersection")
+      else if (go_type == "intersection")
 	 objs.push_back(new IntersectionGeometryObject(child));
       
       else {
 	cerr << "Unknown Geometry Object Type " << go_type << endl;
-	exit(1);
+	//	exit(1);
       }
    }
 }
