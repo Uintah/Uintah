@@ -21,6 +21,7 @@ SRCS += $(SRCDIR)/Worker.cc \
 	$(SRCDIR)/Phong.cc \
 	$(SRCDIR)/ASEReader.cc \
 	$(SRCDIR)/ObjReader.cc \
+	$(SRCDIR)/PLYReader.cc \
 	$(SRCDIR)/InvisibleMaterial.cc \
 	$(SRCDIR)/CycleMaterial.cc \
 	$(SRCDIR)/MetalMaterial.cc \
@@ -49,6 +50,8 @@ SRCS += $(SRCDIR)/Worker.cc \
 	$(SRCDIR)/FastNoise.cc \
 	$(SRCDIR)/FastTurbulence.cc \
 	$(SRCDIR)/Tri.cc \
+	$(SRCDIR)/SmallTri.cc \
+	$(SRCDIR)/MeshedTri.cc \
 	$(SRCDIR)/Color.cc \
 	$(SRCDIR)/BouncingSphere.cc \
 	$(SRCDIR)/BV1.cc \

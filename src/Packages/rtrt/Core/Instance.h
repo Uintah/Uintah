@@ -11,13 +11,6 @@
 #include <Packages/rtrt/Core/InstanceWrapperObject.h>
 
 #include <Core/Geometry/Vector.h>
-
-// Known problems:
-// Scales may not work because ray parameter isn't transformed --
-// the direction vector scale is adjusted instead.
-// Why are all the virtual functions in this file?  We should make it's
-//  very own .cc file
-
 #include <iostream>
 
 namespace rtrt {
@@ -136,11 +129,12 @@ public:
   virtual void shade(Color& result, const Ray& ray,
 		     const HitInfo& hit, int depth,
 		     double atten, const Color& accumcolor,
-		     Context* cx) {
-    InstanceHit* i = (InstanceHit*)(hit.scratchpad);
-    Material *mat = i->obj->get_matl();
-    mat->shade(result, ray, hit, depth, atten, accumcolor, cx);
-  }
+		     Context* cx) 
+    {
+      InstanceHit* i = (InstanceHit*)(hit.scratchpad);
+      Material *mat = i->obj->get_matl();
+      mat->shade(result, ray, hit, depth, atten, accumcolor, cx);
+    }
 
   virtual void animate(double time, bool& changed) {
     o->animate(time, changed);

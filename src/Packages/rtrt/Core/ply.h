@@ -133,6 +133,9 @@ extern char *my_alloc();
 
 /*** delcaration of routines ***/
 
+extern PlyElement *find_element(PlyFile *, char *);
+extern PlyProperty *find_property(PlyElement *, char *, int *);
+
 extern PlyFile *ply_write(FILE *, int, char **, int);
 extern PlyFile *ply_open_for_writing(char *, int, char **, int, float *);
 extern void ply_describe_element(PlyFile *, char *, int, int, PlyProperty *);

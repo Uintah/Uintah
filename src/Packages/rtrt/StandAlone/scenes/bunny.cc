@@ -5,6 +5,7 @@
 #include <Core/Geometry/Vector.h>
 #include <Core/Geometry/Transform.h>
 #include <Packages/rtrt/Core/Group.h>
+#include <Packages/rtrt/Core/HierarchicalGrid.h>
 #include <Packages/rtrt/Core/Sphere.h>
 #include <Packages/rtrt/Core/Rect.h>
 #include <Packages/rtrt/Core/Phong.h>
@@ -98,7 +99,7 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   Color cdown(0.03, 0.05, 0.35);
   
   rtrt::Plane groundplane ( Point(1000, 0, 0), Vector(0, 2, 1) );
-  Scene *scene = new Scene(g, cam, bgcolor, cdown, cup, groundplane,
+  Scene *scene = new Scene(new HierarchicalGrid(g,8,16,16,16,1024,4), cam, bgcolor, cdown, cup, groundplane,
 			   ambient_scale, Arc_Ambient);
   scene->set_background_ptr( new LinearBackground(
 						  Color(1.0, 1.0, 1.0),
