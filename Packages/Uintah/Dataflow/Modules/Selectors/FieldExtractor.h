@@ -73,6 +73,9 @@ protected:
   void update_GUI(const string& var,
 		 const string& varnames);
   double field_update();
+  bool is_periodic_bcs(IntVector cellir, IntVector ir);
+  void get_periodic_bcs_range(IntVector cellir, IntVector ir,
+			      IntVector range, IntVector& newir);
   template <class T, class Var>
     void build_field(DataArchive& archive,
 		      const LevelP& level,
