@@ -34,12 +34,13 @@
 
 #include <Dataflow/Widgets/BaseWidget.h>
 
-namespace SCIRun {
 
 #if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
 // Turn off warnings about partially overridden virtual functions
 #pragma set woff 1682
 #endif
+
+namespace SCIRun {
 
 class GaugeWidget : public BaseWidget {
 public:
@@ -74,11 +75,11 @@ private:
    Vector oldaxis;
 };
 
+
 } // End namespace SCIRun
 
 #if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
 #pragma reset woff 1682
 #endif
-
 
 #endif

@@ -34,55 +34,55 @@
 
 #include <Dataflow/Widgets/BaseWidget.h>
 
-namespace SCIRun {
-
-
-class PathPoint;
-
 #if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
 // Turn off warnings about partially overridden virtual functions
 #pragma set woff 1682
 #endif
 
+
+namespace SCIRun {
+
+class PathPoint;
+
 class PathWidget : public BaseWidget {
-   friend class PathPoint;
+  friend class PathPoint;
 public:
-   PathWidget( Module* module, CrowdMonitor* lock, double widget_scale,
-	       Index num_points=10 );
-   PathWidget( const PathWidget& );
-   virtual ~PathWidget();
+  PathWidget( Module* module, CrowdMonitor* lock, double widget_scale,
+	      Index num_points=10 );
+  PathWidget( const PathWidget& );
+  virtual ~PathWidget();
 
-   virtual void redraw();
-   virtual void geom_moved(GeomPick*, int, double, const Vector&, int, const BState&);
+  virtual void redraw();
+  virtual void geom_moved(GeomPick*, int, double, const Vector&, int, const BState&);
 
-   virtual void MoveDelta( const Vector& delta );
-   virtual Point ReferencePoint() const;
+  virtual void MoveDelta( const Vector& delta );
+  virtual Point ReferencePoint() const;
 
-   Index GetNumPoints() const;
+  Index GetNumPoints() const;
    
 protected:
-   virtual string GetMaterialName( const Index mindex ) const;   
+  virtual string GetMaterialName( const Index mindex ) const;   
    
 private:
-   RealVariable* dist;
-   RealVariable* hypo;
+  RealVariable* dist;
+  RealVariable* hypo;
    
-   GeomGroup* pointgroup;
-   GeomGroup* tangentgroup;
-   GeomGroup* orientgroup;
-   GeomGroup* upgroup;
-   GeomGroup* splinegroup;
+  GeomGroup* pointgroup;
+  GeomGroup* tangentgroup;
+  GeomGroup* orientgroup;
+  GeomGroup* upgroup;
+  GeomGroup* splinegroup;
 
-   vector<PathPoint*> points;
+  vector<PathPoint*> points;
 
-   void GenerateSpline();
+  void GenerateSpline();
 };
+
 
 } // End namespace SCIRun
 
 #if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
 #pragma reset woff 1682
 #endif
-
 
 #endif
