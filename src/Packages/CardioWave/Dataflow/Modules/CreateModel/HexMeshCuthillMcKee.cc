@@ -36,7 +36,7 @@
 #include <vector>
 #include <algorithm>
 #include <deque>
-#include <stl_queue.h>
+#include <queue>
 
 namespace CardioWave {
 
