@@ -919,10 +919,10 @@ void Method::emit_handler(EmitState& e, CI* emit_class) const
 	int reply_handler_id=0; // Always 0
 	e.out << leader2 << "  message->sendMessage(" << reply_handler_id << ");\n";
 	e.out << leader2 << "  message->destroyMessage();\n";
-	e.out << leader2 << "  return;\n";	
+	//e.out << leader2 << "  return;\n";	
       } else { 
 	e.out << leader2 << "  message->destroyMessage();\n";
-	e.out << leader2 << "  return;\n";
+	//e.out << leader2 << "  return;\n";
       }
       e.out << leader2 << "}\n";
       e.out << leader2 << "else { /*CALLONLY*/ \n";
@@ -935,7 +935,7 @@ void Method::emit_handler(EmitState& e, CI* emit_class) const
     e.out << leader2 << "message->sendMessage(" << reply_handler_id << ");\n";
   }
   e.out << leader2 << "message->destroyMessage();\n";  
-  e.out << leader2 << "return;\n";
+  //e.out << leader2 << "return;\n";
 
   if (isCollective) {
     e.out.pop_leader(a_leader);
