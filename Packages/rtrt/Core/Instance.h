@@ -6,6 +6,8 @@
 #include <Packages/rtrt/Core/Material.h>
 #include <Packages/rtrt/Core/PerProcessorContext.h>
 #include <Packages/rtrt/Core/HitInfo.h>
+#include <Packages/rtrt/Core/UVMapping.h>
+#include <Packages/rtrt/Core/UV.h>
 #include <Packages/rtrt/Core/InstanceWrapperObject.h>
 
 #include <Core/Geometry/Vector.h>
@@ -15,6 +17,8 @@
 // the direction vector scale is adjusted instead.
 // Why are all the virtual functions in this file?  We should make it's
 //  very own .cc file
+
+#include <iostream>
 
 namespace rtrt {
   class Instance;
@@ -26,12 +30,13 @@ namespace SCIRun {
 
 namespace rtrt {
 
-class Instance: public Object, public Material
+class Instance: public Object, public Material, public UVMapping
 {
 public:
   struct InstanceHit {
-    Vector normal;
-    Object* obj;
+    Vector   normal;
+    UV       uv;
+    Object * obj;
   };
 
   InstanceWrapperObject * o;
@@ -39,7 +44,7 @@ public:
   BBox                    bbox;
 
   Instance(InstanceWrapperObject* o, Transform* trans) 
-    : Object(this), o(o)
+    : Object(this,this), o(o)
   {
     currentTransform = new Transform();
     *currentTransform = *trans;
@@ -97,10 +102,18 @@ public:
 	  Point p = tray.origin() + thit.min_t*tray.direction();	  
 	  i->normal = thit.hit_obj->normal(p,thit);
 	  i->obj = thit.hit_obj;
+	  UVMapping * theUV = thit.hit_obj->get_uvmapping();
+	  theUV->uv(i->uv, p, thit );
 	}
       }	      
   }
     
+  virtual void uv(UV& uv, const Point&, const HitInfo& hit)
+  {
+    InstanceHit* i = (InstanceHit*)(hit.scratchpad);
+    uv = i->uv;
+  }
+
   virtual Vector normal(const Point&, const HitInfo& hit)
   {
     InstanceHit* i = (InstanceHit*)(hit.scratchpad);
