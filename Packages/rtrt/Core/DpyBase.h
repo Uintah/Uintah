@@ -46,14 +46,24 @@ protected:
   // These functions need to be called by the derived class.  They return 0
   // if it was successful.
 
+  // This is set to true once open_display is called.  Set back to
+  // false once it is closed.
+  bool opened;
+  
   // This opens the window.
   int open_display(Window parent = 0, bool needevents = true);
   // Closes the display
-  int close_display();
+  int close_display(bool remove_from_cleanup_manager=true);
+  // This is for global cleanups
+  static void close_display_aux(void* ptr) {
+    ((DpyBase*)ptr)->close_display(false);
+  }
 
   // Flag letting the control loop know to stop executing and
   // close the display.  Setting this to true will kill the thread.
   bool on_death_row;
+  // This will test a few things and let the thread know it should stop.
+  bool should_close();
   
   ////////////////////////////////////////////////////////////////////////
   // These event functions do a whole lot of nothing.  If you want them to
@@ -78,9 +88,13 @@ protected:
   virtual void button_motion(MouseButton button, const int x, const int y);
 
   // If this flag is true, then the display() will be called at the
-  // next available opportunity.  Note: more than one event may be handled
-  // before display is called.
+  // next available opportunity.  Note: more than one event may be
+  // handled before display is called.  To get the window to actually
+  // redraw, you need to call post_redraw.
   bool redraw;
+
+  // Call this function if you want to redraw the window
+  void post_redraw();
 
   // State variables indicating if the control or shift buttons are
   // currently being pressed.

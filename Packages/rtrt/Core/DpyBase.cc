@@ -7,6 +7,7 @@
 #include <Core/Thread/Thread.h>
 #include <Core/Thread/Mutex.h>
 #include <Core/Thread/Time.h>
+#include <Core/Thread/CleanupManager.h>
 
 #include <sgi_stl_warnings_off.h>
 #include <fstream>
@@ -14,6 +15,7 @@
 #include <fstream>
 #include <iomanip>
 #include <algorithm>
+#include <vector>
 #include <sgi_stl_warnings_on.h>
 
 #include <stdlib.h>
@@ -31,16 +33,21 @@ namespace rtrt {
 } // end namespace rtrt
 
 DpyBase::DpyBase(const char *name, const int window_mode):
-  xres(300), yres(300), on_death_row(false),
+  xres(300), yres(300), opened(false), on_death_row(false),
   redraw(true), control_pressed(false), shift_pressed(false),
   window_mode(window_mode), scene(0)
 {
   window_name = name;
   cwindow_name = (char*)malloc(256*sizeof(char));
   sprintf(cwindow_name, "%.255s", window_name.c_str());
+
+  // Register the call back function to close the window when
+  // Thread::exitAll(0) is called.
+  SCIRun::CleanupManager::add_callback(this->close_display_aux, this);
 }
 
 DpyBase::~DpyBase() {
+  close_display();
 }
 
 static int DPY_NX=0;
@@ -145,6 +152,7 @@ int DpyBase::open_display(Window parent, bool needevents) {
   glXUseXFont(id, first, last-first+1, fontbase+first);
   xlock.unlock();
 
+  opened = true;
   // Assume success at this point
   return 0;
 }
@@ -179,10 +187,26 @@ void DpyBase::Show() {
   XFlush(dpy);
 }
 
-int DpyBase::close_display() {
+int DpyBase::close_display(bool remove_from_cleanup_manager) {
+  if (!opened) return 1;
+  else opened = false;
+  
   xlock.lock();
+  cerr << "Closing dpy:"<<window_name<<"\n";
   XCloseDisplay(dpy);
+  cerr << "Closed dpy:"<<window_name<<"\n";
+
+  if (remove_from_cleanup_manager) {
+    cerr << "Trying to remove the call back\n";
+    // Remove this from the cleanup manager, so we don't close the
+    // display twice.
+    SCIRun::CleanupManager::remove_callback(this->close_display_aux, this);
+    cerr << "Removed the call back\n";
+  }
+  
   xlock.unlock();
+  cerr << "lock unlocked\n";
+  
   return 0;
 }
 
@@ -231,6 +255,18 @@ void DpyBase::set_resolution(const int xres_in, const int yres_in) {
   yres = yres_in;
 }
 
+bool DpyBase::should_close() {
+  return on_death_row ||
+    (scene
+     && scene->get_rtrt_engine()
+     && scene->get_rtrt_engine()->stop_execution());
+}
+
+void DpyBase::post_redraw() {
+  redraw = true;
+  XSendEvent(dpy, win, false, 0, 0);
+}
+
 extern bool pin;
 void DpyBase::run() {
 
@@ -252,8 +288,7 @@ void DpyBase::run() {
 
   for(;;){
     // Now we need to test to see if we should die
-    //if (scene->get_rtrt_engine()->stop_execution() || on_death_row) {
-    if (on_death_row) {
+    if (should_close()) {
       close_display();
       return;
     }
@@ -262,17 +297,29 @@ void DpyBase::run() {
       display();
       redraw=false;
     }
-    // We should try to consume all the queued events before we redraw.
-    // That way we don't waste time redrawing after each event
+
+    if (!opened)
+      // Most likely going to be stopped soon
+      return;
+    
+    XEvent e;
+    // Block on this call until there is an event.  Peek blocks, but
+    // doesn't remove the event from the stack.  This way we can grab
+    // it later in the while loop.
+    XPeekEvent(dpy, &e);
+
+    // By this time, there should be some kind of an event.  We should
+    // try to consume all the queued events before we redraw.  That
+    // way we don't waste time redrawing after each event.
     while (XEventsQueued(dpy, QueuedAfterReading)) {
       // Now we need to test to see if we should die
-      //if (scene->get_rtrt_engine()->stop_execution() || on_death_row) {
-      if (on_death_row) {
+      if (should_close()) {
 	close_display();
 	return;
       }
-    
-      XEvent e;
+
+      // Get the next event.  We know there should be one, otherwise
+      // we wouldn't have gotten passed the while conditional.
       XNextEvent(dpy, &e);	
       switch(e.type){
       case Expose:
