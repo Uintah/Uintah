@@ -93,6 +93,7 @@ private:
   void split_string( string src, vector<string> &container );
 
   //! GUI variables
+  GuiInt have_insight_;
   GuiString dir_;
   GuiString series_uid_;
   GuiString series_files_;
@@ -127,6 +128,7 @@ DECLARE_MAKER(DicomToNrrd)
 //
 DicomToNrrd::DicomToNrrd(GuiContext* ctx)
   : Module("DicomToNrrd", ctx, Source, "DataIO", "Teem"),
+    have_insight_(ctx->subVar("have-insight", false)),
     dir_(ctx->subVar("dir")),
     series_uid_(ctx->subVar("series-uid")),    
     series_files_(ctx->subVar("series-files")),    
@@ -135,6 +137,11 @@ DicomToNrrd::DicomToNrrd(GuiContext* ctx)
     series_del_(ctx->subVar("series-del")),
     num_entries_(ctx->subVar("num-entries"))
 {
+#ifdef HAVE_INSIGHT
+  have_insight_.set(1);
+#else
+  have_insight_.set(0);
+#endif
 }
 
 /*===========================================================================*/
