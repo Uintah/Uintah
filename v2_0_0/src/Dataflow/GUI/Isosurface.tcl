@@ -100,8 +100,9 @@ itcl_class SCIRun_Visualization_Isosurface {
 	 global $color
 	 set window .ui[modname]
 	 if {[winfo exists $window.color]} {
+	     wm deiconify $window.color
 	     raise $window.color
-	     return;
+	     return
 	 } else {
 	     toplevel $window.color
 	     makeColorPicker $window.color $color \
@@ -161,8 +162,9 @@ itcl_class SCIRun_Visualization_Isosurface {
     method ui {} {
 	set w .ui[modname]
 	if {[winfo exists $w]} {
+	    wm deiconify $w
 	    raise $w
-	    return;
+	    return
 	}
 	
 	toplevel $w
@@ -296,9 +298,8 @@ itcl_class SCIRun_Visualization_Isosurface {
 
 	pack $w.f.meth -side top -fill x -expand 1
 
-	button $w.execute -text Execute -command "$this-c needexecute"
-	button $w.close   -text Close   -command "destroy $w"
-	pack $w.execute $w.close -fill x -expand yes -padx 10 -pady 5 -side left
+	makeSciButtonPanel $w $w $this
+	moveToCursor $w
     }
 
     method set-isoval {} {
