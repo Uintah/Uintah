@@ -108,7 +108,6 @@ namespace Uintah {
       const VarLabel* gWeightLabel; //for who knows what?
       
       const VarLabel* cBurnedMassLabel; //for burn models
-      const VarLabel* mom_L_ME_CCLabel;
 
       const VarLabel* fVelocityLabel; //for interaction with ICE
       const VarLabel* fMassLabel; //for interaction with ICE
@@ -130,6 +129,9 @@ namespace Uintah {
 
 
 // $Log$
+// Revision 1.43  2001/01/15 23:24:10  guilkey
+// Removed mom_L_MECCLabel.  This is all in the MPMICELabel now.
+//
 // Revision 1.42  2001/01/15 22:44:38  tan
 // Fixed parallel version of fracture code.
 //

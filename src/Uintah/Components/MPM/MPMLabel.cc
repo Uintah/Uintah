@@ -260,11 +260,6 @@ MPMLabel::MPMLabel()
 			CCVariable<double>::getTypeDescription() );
 
   // Reduction variables
-
-  mom_L_ME_CCLabel =
-     scinew VarLabel("mom_L_ME_CC",CCVariable<Vector>::getTypeDescription());
-
-  // Reduction variables
   delTLabel = scinew VarLabel( "delT", delt_vartype::getTypeDescription() );
 
   StrainEnergyLabel = scinew VarLabel( "StrainEnergy",
@@ -407,6 +402,9 @@ void MPMLabel::registerPermanentParticleState(int i,
 }
 
 // $Log$
+// Revision 1.49  2001/01/15 23:24:10  guilkey
+// Removed mom_L_MECCLabel.  This is all in the MPMICELabel now.
+//
 // Revision 1.48  2001/01/15 22:44:38  tan
 // Fixed parallel version of fracture code.
 //
