@@ -27,9 +27,9 @@ ifeq ($(LARGESOS),yes)
   endif
 else
   PSELIBS := UI/tcltk/GuiInterface UI/tcltk/TkExtensions \
-	Dataflow/Framework Dataflow/Network \
+	Dataflow/Framework Dataflow/Network Dataflow/Resources \
 	Core/Framework Core/Containers Core/GuiInterface \
-	Core/Thread Core/Exceptions Core/Util
+	Core/Thread Core/Exceptions Core/Util Core/Parts
   ifeq ($(BUILD_PARALLEL),yes)
    PSELIBS := $(PSELIBS) Core/CCA/Component/PIDL Core/globus_threads
   endif
