@@ -94,6 +94,13 @@ public:
 				  ArchesVariables* vars); 
 
       ////////////////////////////////////////////////////////////////////////
+      // Modify stencil weights (Pressure) to account for voidage due
+      // to multiple materials
+      void mmModifyPressureCoeffs(const ProcessorGroup*,
+				      const Patch* patch,
+				      ArchesVariables* vars);
+
+      ////////////////////////////////////////////////////////////////////////
       // Set stencil weights. (Scalars)
       // It uses second order hybrid differencing for computing
       // coefficients

@@ -466,6 +466,43 @@ Discretization::calculatePressureCoeff(const ProcessorGroup*,
   coeff_vars->pressCoeff[Arches::AB].print(cerr);
 #endif
 }
+
+//****************************************************************************
+// Modify Pressure Stencil for Multimaterial
+//****************************************************************************
+
+void
+Discretization::mmModifyPressureCoeffs(const ProcessorGroup*,
+				      const Patch* patch,
+				      ArchesVariables* coeff_vars)
+
+{
+
+  // Get the domain size and the patch indices
+
+  IntVector valid_lo = patch->getCellFORTLowIndex();
+  IntVector valid_hi = patch->getCellFORTHighIndex();
+
+  // Get dimensions of variables
+
+  IntVector dim_lo = coeff_vars->voidFraction.getFortLowIndex();
+  IntVector dim_hi = coeff_vars->voidFraction.getFortHighIndex();
+
+  IntVector dim_lo_coef = coeff_vars->pressCoeff[Arches::AE].getFortLowIndex();
+  IntVector dim_hi_coef = coeff_vars->pressCoeff[Arches::AE].getFortHighIndex();
+
+  FORT_MM_MODIFY_PRESCOEF(
+			  dim_lo.get_pointer(), dim_hi.get_pointer(),
+			  dim_lo_coef.get_pointer(), dim_hi_coef.get_pointer(),
+			  coeff_vars->pressCoeff[Arches::AE].getPointer(),
+			  coeff_vars->pressCoeff[Arches::AW].getPointer(),
+			  coeff_vars->pressCoeff[Arches::AN].getPointer(),
+			  coeff_vars->pressCoeff[Arches::AS].getPointer(),
+			  coeff_vars->pressCoeff[Arches::AT].getPointer(),
+			  coeff_vars->pressCoeff[Arches::AB].getPointer(),
+			  coeff_vars->voidFraction.getPointer(),
+			  valid_lo.get_pointer(), valid_hi.get_pointer());
+}
   
 //****************************************************************************
 // Scalar stencil weights
