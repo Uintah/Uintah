@@ -86,7 +86,7 @@ void GenPackage(char* packname, char* psepath)
 
   sprintf(string,"%s/src/%s/GUI/sub.mk",psepath,packname);
   file = fopen(string,"w");
-  fprintf(file,gui_submk_skeleton,packname);
+  fprintf(file,gui_submk_skeleton,packname,packname);
   fclose(file);
 
   delete[] string;
@@ -164,7 +164,7 @@ void GenComponent(component_node* n, char* packname, char* psepath)
   sprintf(filename,"%s/src/%s/GUI/%s.tcl",psepath,
 	  packname,n->name);
   file = fopen(filename,"w");
-  fprintf(file,gui_skeleton,packname,n->category,n->name,n->name);
+  fprintf(file,gui_skeleton,packname,n->category,n->name,n->name,filename);
   fclose(file);
   delete[] filename;
 
