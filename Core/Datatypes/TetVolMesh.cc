@@ -528,10 +528,10 @@ TetVolMesh::locate(cell_index &cell, const Point &p) const
   if (grid_.get_rep() == 0) {
     ASSERTFAIL("Call compute_grid before calling locate!");
   }
-  bool found_p = false;
   LatVolMeshHandle mesh = grid_->get_typed_mesh();
   LatVolMesh::cell_index ci;
-  mesh->locate(ci, p);
+  if (!mesh->locate(ci, p)) { return false; }
+  bool found_p = false;
   vector<cell_index> v = grid_->value(ci);
   vector<cell_index>::iterator iter = v.begin();
   while (iter != v.end()) {
@@ -560,6 +560,7 @@ TetVolMesh::compute_grid()
   // cubed root of number of cells to get a subdivision ballpark
   const double one_third = 1.L/3.L;
   int s = (int)ceil(pow((double)cells_size() , one_third));
+  const double cell_epsilon = bb.diagonal().length() * 0.1 / s;
   
   LatVolMeshHandle mesh(scinew LatVolMesh(s, s, s, bb.min(), bb.max()));
   grid_ = scinew LatticeVol<vector<cell_index> >(mesh, Field::CELL);
@@ -570,12 +571,21 @@ TetVolMesh::compute_grid()
   node_array nodes;  
   cell_iterator ci = cell_begin();
   while(ci != cell_end()) {
-    box.reset();
     get_nodes(nodes, *ci);
+
+    box.reset();
     box.extend(points_[nodes[0]]);
     box.extend(points_[nodes[1]]);
     box.extend(points_[nodes[2]]);
     box.extend(points_[nodes[3]]);
+    const Point padmin(box.min().x() - cell_epsilon,
+		       box.min().y() - cell_epsilon,
+		       box.min().z() - cell_epsilon);
+    const Point padmax(box.max().x() + cell_epsilon,
+		       box.max().y() + cell_epsilon,
+		       box.max().z() + cell_epsilon);
+    box.extend(padmin);
+    box.extend(padmax);
 
     // add this cell index to all overlapping cells in grid_
     LatVolMesh::cell_array carr;
