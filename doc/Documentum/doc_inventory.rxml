@@ -1,0 +1,468 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!--
+The contents of this file are subject to the University of Utah Public
+License (the "License"); you may not use this file except in compliance
+with the License.
+
+Software distributed under the License is distributed on an "AS IS"
+basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+License for the specific language governing rights and limitations under
+the License.
+
+The Original Source Code is SCIRun, released March 12, 2001.
+
+The Original Source Code was developed by the University of Utah.
+Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+University of Utah. All Rights Reserved.
+-->
+
+<!--% require("../Utilities/Publish/srdoc.rb") %-->
+<!--% doc = Doc.create(Doc::DocBook) %-->
+<!--% doc.insertDocType("article", {"sr"=>"SCIRun"}) %-->
+
+<article class="techreport">
+  <title>&sr; Documentation Inventory (v. <!--%= doc.edition %-->)</title>
+
+  <para>This document inventories &sr; documentation.  This document's
+  purpose is to list tasks associated with existing and proposed
+  documents.</para>
+
+  <para>Each document is given its own section.  Each section is
+  organized as follows:</para>
+  <orderedlist>
+    <listitem><para>A paragraph summarizing the purpose of the
+    document.</para></listitem>
+    <listitem><para>A table listing tasks associated with the
+    document.  Each row of the table describes a task.  The task table
+    contains five columns:</para>
+    <variablelist>
+      <varlistentry>
+	<term>Task</term>
+	<listitem>
+	  <para>A description of a task.  The description may be fine
+	  grained or the size of a bolder depending on various
+	  factors.</para>
+	</listitem>
+      </varlistentry>
+      <varlistentry>
+	<term>Priority</term>
+	<listitem>
+	  <para>This is one of <quote>Low</quote>,
+	  <quote>Normal</quote>, or <quote>High</quote></para>
+	</listitem>
+      </varlistentry>
+      <varlistentry>
+	<term>Status</term>
+	<listitem>
+	  <para>Percent compeleted.  Notes may accompany the percentage figure.</para>
+	</listitem>
+      </varlistentry>
+      <varlistentry>
+	<term>Assigned</term>
+	<listitem>
+	  <para>Task assignee</para>
+	</listitem>
+      </varlistentry>
+      <varlistentry>
+	<term>Comp Date</term>
+	<listitem>
+	  <para>Task completion date</para>
+	</listitem>
+      </varlistentry>
+    </variablelist>
+    </listitem>
+  </orderedlist>
+
+  <section>
+    <title>Developer Guide</title>
+    <para>A developer's guide to:</para>
+    <itemizedlist>
+      <listitem><para>SCIRun source code organization</para></listitem>
+      <listitem><para>Coding standards</para></listitem>
+      <listitem><para>SCIRun internals (memory management etc.)</para></listitem>
+      <listitem><para>Datatypes and datatype development</para></listitem>
+      <listitem><para>Module development</para></listitem>
+    </itemizedlist>
+    <table>
+      <title>Developer Guide Tasks</title>
+      <tgroup cols="5">
+	<colspec colname="task" colwidth="4*"/>
+	<colspec colname="pri" colwidth="1*"/>
+	<colspec colname="status" colwidth="3*"/>
+	<colspec colname="assigned" colwidth="1*"/>
+	<colspec colname="comp" colwidth="1*"/>
+	<thead>
+	  <row>
+	    <entry colname="task">Task</entry>
+	    <entry colname="pri">Priority</entry>
+	    <entry colname="status">Status</entry>
+	    <entry colname="assigned">Assigned</entry>
+	    <entry colname="comp">Comp Date</entry>
+	  </row>
+	</thead>
+	<tbody>
+	  <row>
+	    <entry colname="task"></entry>
+	    <entry colname="pri"></entry>
+	    <entry colname="status"></entry>
+	    <entry colname="assigned"></entry>
+	    <entry colname="comp"></entry>
+	  </row>
+	</tbody>
+      </tgroup>
+    </table>
+  </section>
+
+  <section>
+    <title>User Guide</title> <para>A user's guide to the purpose and
+    use of the &sr; problem solving environment.  For users who are
+    building and executing &sr; networks</para>
+    <table>
+      <title></title>
+      <tgroup cols="5">
+	<thead>
+	  <row>
+	    <entry>Task</entry>
+	    <entry>Priority</entry>
+	    <entry>Status</entry>
+	    <entry>Assigned</entry>
+	    <entry>Comp Date</entry>
+	  </row>
+	</thead>
+	<tbody>
+	  <row>
+	    <entry></entry>
+	    <entry></entry>
+	    <entry></entry>
+	    <entry></entry>
+	    <entry></entry>
+	  </row>
+	</tbody>
+      </tgroup>
+    </table>
+  </section>
+
+  <section>
+    <title>Installation Guide</title> 
+    <para>The Installation Guide
+    provides instructions for installing &sr;, its third party library
+    distribution, other third party libraries (e.g. ITK), sample data
+    sets, and documentation.</para>
+     <table>
+      <title></title>
+      <tgroup cols="5">
+	<colspec colname="task" colwidth="4*"/>
+	<colspec colname="pri" colwidth="1*"/>
+	<colspec colname="status" colwidth="3*"/>
+	<colspec colname="assigned" colwidth="1*"/>
+	<colspec colname="comp" colwidth="1*"/>
+	<thead>
+	  <row>
+	    <entry colname="task">Task</entry>
+	    <entry colname="pri">Priority</entry>
+	    <entry colname="status">Status</entry>
+	    <entry colname="assigned">Assigned</entry>
+	    <entry colname="comp">Comp Date</entry>
+	  </row>
+	</thead>
+	<tbody>
+	  <row>
+	    <entry colname="task">Update system compatibility info. Dav has mostly
+	    gathered this info.  Now needs to be inserted into
+	    Guide. </entry>
+	    <entry colname="pri">Normal</entry>
+	    <entry colname="status">0%</entry>
+	    <entry colname="assigned">Ted</entry>
+	    <entry colname="comp">May 1, 2004</entry>
+	  </row>
+	</tbody>
+      </tgroup>
+    </table>
+ </section>
+
+  <section>
+    <title>Module Reference Guide</title>
+    <para>Documentation for each distributed &sr; module.</para>
+    <table>
+      <title></title>
+      <tgroup cols="5">
+	<colspec colwidth="2in"/>
+	<colspec colwidth="0.5in"/>
+	<colspec colwidth="2in"/>
+	<colspec colwidth="1in"/>
+	<colspec colwidth="0.5in"/>
+	<thead>
+	  <row>
+	    <entry>Task</entry>
+	    <entry>Priority</entry>
+	    <entry>%</entry>
+	    <entry>Assigned</entry>
+	    <entry>Comp Date</entry>
+	  </row>
+	</thead>
+	<tbody>
+	  <row>
+	    <entry>Provide <emphasis>complete</emphasis> documentation
+	    for each module.  No module is adequately documented and this should
+	    be an ongoing process.</entry>
+	    <entry>Low</entry>
+	    <entry>50%&#x2014;This number reflects past work completed</entry>
+	    <entry>Module Developers</entry>
+	    <entry>None</entry>
+	  </row>
+	</tbody>
+      </tgroup>
+    </table>
+  </section>
+
+  <section>
+    <title>Module Specification Guide</title>
+    <para>A guide to writing module documentation.</para>
+    <table>
+      <title></title>
+      <tgroup cols="5">
+	<colspec colwidth="2in"/>
+	<colspec colwidth="0.5in"/>
+	<colspec colwidth="2in"/>
+	<colspec colwidth="1in"/>
+	<colspec colwidth="0.5in"/>
+	<thead>
+	  <row>
+	    <entry>Task</entry>
+	    <entry>Priority</entry>
+	    <entry>%</entry>
+	    <entry>Assigned</entry>
+	    <entry>Comp Date</entry>
+	  </row>
+	</thead>
+	<tbody>
+	  <row>
+	    <entry>Complete the MSG.  Incomplete draft is finished.
+	    See subsequent entries for specific tasks.</entry>
+	    <entry>Low</entry>
+	    <entry>0%</entry>
+	    <entry>Ted</entry>
+	    <entry>8/1/04</entry>
+	  </row>
+	  <row>
+	    <entry>Complete element references.  Element references
+	    exist for 80% of all elements.  These are mostly
+	    incomplete.  Remainder of element reference entries need
+	    to be completed.</entry>
+	    <entry>Low</entry>
+	    <entry>0%</entry>
+	    <entry>Ted</entry>
+	    <entry>8/1/04</entry>
+	  </row>
+	  <row>
+	    <entry>Expand <citetitle>Content Models</citetitle>
+	    section.  A Terse paragraph exists.</entry>
+	    <entry>Low</entry>
+	    <entry>0%</entry>
+	    <entry>Ted</entry>
+	    <entry>8/1/04</entry>
+	  </row>
+	</tbody>
+      </tgroup>
+    </table>
+  </section>
+
+  <section>
+    <title>Developer FAQ</title>
+    <para>Common questions ask by developers.</para>
+    <table>
+      <title></title>
+      <tgroup cols="5">
+	<thead>
+	  <row>
+	    <entry>Task</entry>
+	    <entry>Priority</entry>
+	    <entry>Status</entry>
+	    <entry>Assigned</entry>
+	    <entry>Comp Date</entry>
+	  </row>
+	</thead>
+	<tbody>
+	  <row>
+	    <entry>Review new FAQ entries and commit them to repository.</entry>
+	    <entry>High</entry>
+	    <entry>0%</entry>
+	    <entry>Ted</entry>
+	    <entry>May 1, 2004</entry>
+	  </row>
+	</tbody>
+      </tgroup>
+    </table>
+  </section>
+
+  <section>
+    <title>User FAQ</title>
+    <para>Common questions asked by users.</para>
+    <table>
+      <title></title>
+      <tgroup cols="5">
+	<thead>
+	  <row>
+	    <entry>Task</entry>
+	    <entry>Priority</entry>
+	    <entry>Status</entry>
+	    <entry>Assigned</entry>
+	    <entry>Comp Date</entry>
+	  </row>
+	</thead>
+	<tbody>
+	  <row>
+	    <entry>Review new FAQ entries and commit them to repository.</entry>
+	    <entry>High</entry>
+	    <entry>0%</entry>
+	    <entry>Ted</entry>
+	    <entry>May 1, 2004</entry>
+	  </row>
+	</tbody>
+      </tgroup>
+    </table>
+  </section>
+
+  <section>
+    <title>Installation FAQ</title>
+    <para>Common installation questions.</para>
+    <table>
+      <title></title>
+      <tgroup cols="5">
+	<thead>
+	  <row>
+	    <entry>Task</entry>
+	    <entry>Priority</entry>
+	    <entry>Status</entry>
+	    <entry>Assigned</entry>
+	    <entry>Comp Date</entry>
+	  </row>
+	</thead>
+	<tbody>
+	  <row>
+	    <entry>Review new FAQ entries and commit them to repository.</entry>
+	    <entry>High</entry>
+	    <entry>0%</entry>
+	    <entry>Ted</entry>
+	    <entry>May 1, 2004</entry>
+	  </row>
+	</tbody>
+      </tgroup>
+    </table>
+  </section>
+
+  <section>
+    <title>SCIRun Tutorial</title>
+    <para>An interactive tutorial demonstrating the use of &sr;</para>
+    <table>
+      <title></title>
+      <tgroup cols="5">
+	<thead>
+	  <row>
+	    <entry>Task</entry>
+	    <entry>Priority</entry>
+	    <entry>Status</entry>
+	    <entry>Assigned</entry>
+	    <entry>Comp Date</entry>
+	  </row>
+	</thead>
+	<tbody>
+	  <row>
+	    <entry>None known</entry>
+	    <entry>Normal</entry>
+	    <entry>Complete</entry>
+	    <entry>Unknown</entry>
+	    <entry>Unknown</entry>
+	  </row>
+	</tbody>
+      </tgroup>
+    </table>
+  </section>
+  
+  <section>
+    <title>BioFEM Tutorial</title>
+    <para>An interactive tutorial demonstrating the use of the BioFEM PowerApp</para>
+    <table>
+      <title></title>
+      <tgroup cols="5">
+	<thead>
+	  <row>
+	    <entry>Task</entry>
+	    <entry>Priority</entry>
+	    <entry>Status</entry>
+	    <entry>Assigned</entry>
+	    <entry>Comp Date</entry>
+	  </row>
+	</thead>
+	<tbody>
+	  <row>
+	    <entry>None</entry>
+	    <entry>Normal</entry>
+	    <entry>Complete</entry>
+	    <entry>None</entry>
+	    <entry>None</entry>
+	  </row>
+	</tbody>
+      </tgroup>
+    </table>
+  </section>
+
+  <section>
+    <title>BioTensor Tutorial</title>
+    <para>An interactive tutorial demonstrating the use of the BioTensor PowerApp</para>
+    <table>
+      <title></title>
+      <tgroup cols="5">
+	<thead>
+	  <row>
+	    <entry>Task</entry>
+	    <entry>Priority</entry>
+	    <entry>Status</entry>
+	    <entry>Assigned</entry>
+	    <entry>Comp Date</entry>
+	  </row>
+	</thead>
+	<tbody>
+	  <row>
+	    <entry>Review and updates.  Latter third of document needs
+	    to be made more tutorial-like.  Procedures for replicating
+	    tutorial images need to be developed.</entry>
+	    <entry>Low</entry>
+	    <entry>0%</entry>
+	    <entry></entry>
+	    <entry></entry>
+	  </row>
+	</tbody>
+      </tgroup>
+    </table>
+  </section>
+
+  <section>
+    <title>Documentum</title>
+    <para>A guide to &sr; documentation and its production.</para>
+    <table>
+      <title></title>
+      <tgroup cols="5">
+	<thead>
+	  <row>
+	    <entry>Task</entry>
+	    <entry>Priority</entry>
+	    <entry>Status</entry>
+	    <entry>Assigned</entry>
+	    <entry>Comp Date</entry>
+	  </row>
+	</thead>
+	<tbody>
+	  <row>
+	    <entry>Needs to be brought up to date.</entry>
+	    <entry>Normal</entry>
+	    <entry>0%</entry>
+	    <entry>None</entry>
+	    <entry>None</entry>
+	  </row>
+	</tbody>
+      </tgroup>
+    </table>
+  </section>
+</article>
