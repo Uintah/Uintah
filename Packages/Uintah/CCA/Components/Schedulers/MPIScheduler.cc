@@ -431,6 +431,7 @@ MPIScheduler::recvMPIData( const ProcessorGroup * pg,
 #endif
       int from = batch->fromTask->getAssignedResourceIndex();
       MPI_Request requestid;
+      dbg << "Posting receive for message number " << batch->messageTag << " from " << from << "\n";      
       MPI_Irecv(buf, count, datatype, from, batch->messageTag,
 		pg->getComm(), &requestid);
       recvs.add(requestid, 
