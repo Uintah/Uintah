@@ -974,8 +974,10 @@ void SerialMPM::interpolateParticlesForSaving(const ProcessorGroup*,
 
 		 // Add each particles contribution
 		 for(int k = 0; k < 8; k++) {
+		    if(patch->containsNode(ni[k])){
 		       gdata[ni[k]]  += pdata[idx] * weighting[idx] *S[k];
 		       gweight[ni[k]]+= weighting[idx] *S[k];
+		    }
 		 }
 	      }
 	      for(NodeIterator iter = patch->getNodeIterator();
@@ -1006,8 +1008,10 @@ void SerialMPM::interpolateParticlesForSaving(const ProcessorGroup*,
 
 		 // Add each particles contribution
 		 for(int k = 0; k < 8; k++) {
+		    if(patch->containsNode(ni[k])){
 		       gdata[ni[k]]   += pdata[idx] * weighting[idx]*S[k];
 		       gweight[ni[k]] += weighting[idx] * S[k];
+		    }
 		 }
 	      }
 	      for(NodeIterator iter = patch->getNodeIterator();
@@ -1039,8 +1043,10 @@ void SerialMPM::interpolateParticlesForSaving(const ProcessorGroup*,
 
 		 // Add each particles contribution
 		 for(int k = 0; k < 8; k++) {
+		    if(patch->containsNode(ni[k])){
 		       gdata[ni[k]]   += pdata[idx] * weighting[idx]*S[k];
 		       gweight[ni[k]] += weighting[idx] * S[k];
+		    }
 		 }
 	      }
 	      for(NodeIterator iter = patch->getNodeIterator();
@@ -1212,7 +1218,7 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
 	 // Add each particles contribution to the local mass & velocity 
 	 // Must use the node indices
 	 for(int k = 0; k < 8; k++) {
-	    if(vis.visible(k) ) {
+	    if(patch->containsNode(ni[k]) && vis.visible(k) ) {
 	       gmass[ni[k]] += pmass[idx] * S[k];
 	       gvelocity[ni[k]] += pvelocity[idx] * pmass[idx] * S[k];
 	       
@@ -1241,12 +1247,14 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
 	 // Add each particles contribution to the local mass & velocity 
 	 // Must use the node indices
 	 for(int k = 0; k < 8; k++) {
+	    if(patch->containsNode(ni[k])) {
 	       gmass[ni[k]] += pmass[idx] * S[k];
 	       gvelocity[ni[k]] += pvelocity[idx] * pmass[idx] * S[k];
 	       gexternalforce[ni[k]] += pexternalforce[idx] * S[k];
                gTemperature[ni[k]] += pTemperature[idx]*pmass[idx] * S[k];
 
 	       totalmass += pmass[idx] * S[k];
+	    }
 	 }
       }
     }
@@ -1462,7 +1470,7 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
          vis.modifyShapeDerivatives(d_S);
 
          for (int k = 0; k < 8; k++){
-	   if(vis.visible(k)){
+	   if(patch->containsNode(ni[k]) && vis.visible(k)){
 	     Vector div(d_S[k].x()*oodx[0],d_S[k].y()*oodx[1],
 						d_S[k].z()*oodx[2]);
 	     internalforce[ni[k]] -= (div * pstress[idx] * pvol[idx]);
@@ -1488,10 +1496,12 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
            continue;
 
          for (int k = 0; k < 8; k++){
+	   if(patch->containsNode(ni[k])){
 	     Vector div(d_S[k].x()*oodx[0],d_S[k].y()*oodx[1],
 						d_S[k].z()*oodx[2]);
 	     internalforce[ni[k]] -= (div * pstress[idx] * pvol[idx]);
              gstress[ni[k]] += pstress[idx] * pmass[idx] * S[k];
+	   }
          }
       }
     }
@@ -1564,11 +1574,13 @@ void SerialMPM::computeInternalHeatRate(const ProcessorGroup*,
          }
 
          for (int k = 0; k < 8; k++){
+	   if(patch->containsNode(ni[k]) && vis.visible(k)){
              Vector div(d_S[k].x()*oodx[0],d_S[k].y()*oodx[1],
 						d_S[k].z()*oodx[2]);
 	     internalHeatRate[ni[k]] -= Dot( div,
 				 pTemperatureGradient[idx] ) * 
 	                                pvol[idx] * thermalConductivity;
+	   }
          }
       }
       new_dw->put(internalHeatRate, lb->gInternalHeatRateLabel,
@@ -2050,6 +2062,10 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 
 
 // $Log$
+// Revision 1.166  2000/11/29 18:50:22  guilkey
+// Fixed the problems that caused the regression test to fail.  Had
+// to add "containsNode" stuff back in.
+//
 // Revision 1.165  2000/11/28 23:01:23  guilkey
 // Rearranged computeInternalForce, interpolateParticlesToGrid and
 // interpolateToParticlesAndUpdate so that the "if doing fracture"
