@@ -158,79 +158,11 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
   //__________________________________
   //  Read LODI user inputs
   d_usingLODI = read_LODI_BC_inputs(prob_spec,d_Lodi_user_inputs);
-  
-  //__________________________________
-  // Find the switches
-  ProblemSpecP debug_ps = prob_spec->findBlock("Debug");
-  if (debug_ps) {
-    IntVector orig(0,0,0);
-    debug_ps->getWithDefault("dbg_GnuPlot",       d_dbgGnuPlot, false);
-    debug_ps->getWithDefault("dbg_var1",          d_dbgVar1, 0);   
-    debug_ps->getWithDefault("dbg_var2",          d_dbgVar2, 0);  
-    debug_ps->getWithDefault("dbg_timeStart",     d_dbgStartTime,0);
-    debug_ps->getWithDefault("dbg_timeStop",      d_dbgStopTime, 1);
-    debug_ps->getWithDefault("dbg_outputInterval",d_dbgOutputInterval,0.0);
-    debug_ps->getWithDefault("dbg_BeginIndex",    d_dbgBeginIndx,orig);
-    debug_ps->getWithDefault("dbg_EndIndex",      d_dbgEndIndx,  orig);
-    debug_ps->getWithDefault("dbg_SigFigs",       d_dbgSigFigs, 5 );
-    debug_ps->getWithDefault("dbg_Level",         d_dbgLevel,   0);
-    debug_ps->get("dbg_Matls",                    d_dbgMatls);
-    
-    d_dbgOldTime      = -d_dbgOutputInterval;
-    d_dbgNextDumpTime = 0.0;
 
-    for (ProblemSpecP child = debug_ps->findBlock("debug"); child != 0;
-        child = child->findNextBlock("debug")) {
-      map<string,string> debug_attr;
-      child->getAttributes(debug_attr);
-      if (debug_attr["label"]      == "switchDebugInitialize")
-       switchDebugInitialize            = true;
-      else if (debug_attr["label"] == "switchDebug_EQ_RF_press")
-       switchDebug_EQ_RF_press          = true;
-      else if (debug_attr["label"] == "switchDebug_PressDiffRF")
-       switchDebug_PressDiffRF          = true;
-      else if (debug_attr["label"] == "switchDebug_vel_FC")
-       switchDebug_vel_FC               = true;
-      else if (debug_attr["label"] == "switchDebug_Temp_FC")
-       switchDebug_Temp_FC               = true;
-      else if (debug_attr["label"] == "switchDebug_Exchange_FC")
-       switchDebug_Exchange_FC          = true;
-      else if (debug_attr["label"] == "switchDebug_explicit_press")
-       switchDebug_explicit_press       = true;
-      else if (debug_attr["label"] == "switchDebug_setupMatrix")
-       switchDebug_setupMatrix          = true;
-      else if (debug_attr["label"] == "switchDebug_setupRHS")
-       switchDebug_setupRHS             = true;
-      else if (debug_attr["label"] == "switchDebug_updatePressure")
-       switchDebug_updatePressure       = true;
-      else if (debug_attr["label"] == "switchDebug_computeDelP")
-       switchDebug_computeDelP          = true;
-      else if (debug_attr["label"] == "switchDebug_PressFC")
-       switchDebug_PressFC              = true;
-      else if (debug_attr["label"] == "switchDebugLagrangianValues")
-       switchDebugLagrangianValues      = true;
-      else if (debug_attr["label"] == "switchDebugLagrangianSpecificVol")
-       switchDebugLagrangianSpecificVol = true;
-      else if (debug_attr["label"] == "switchDebugMomentumExchange_CC")
-       switchDebugMomentumExchange_CC   = true;
-      else if (debug_attr["label"] == "switchDebugSource_Sink")
-       switchDebugSource_Sink           = true;
-      else if (debug_attr["label"] == "switchDebug_advance_advect")
-       switchDebug_advance_advect       = true;
-      else if (debug_attr["label"] == "switchTestConservation")
-        switchTestConservation           = true;
-    }
-  }
-  cout_norm << "Pulled out the debugging switches from input file" << endl;
-  cout_norm<< "  debugging starting time "  <<d_dbgStartTime<<endl;
-  cout_norm<< "  debugging stopping time "  <<d_dbgStopTime<<endl;
-  cout_norm<< "  debugging output interval "<<d_dbgOutputInterval<<endl;
-  cout_norm<< "  debugging variable 1 "     <<d_dbgVar1<<endl;
-  cout_norm<< "  debugging variable 2 "     <<d_dbgVar2<<endl; 
-  for (int i = 0; i<(int) d_dbgMatls.size(); i++) {
-    cout_norm << "  d_dbg_matls = " << d_dbgMatls[i] << endl;
-  } 
-  
+  //__________________________________
+  // read in all the printData switches
+  printData_problemSetup( prob_spec);
+
   //__________________________________
   // Pull out from CFD-ICE section
   ProblemSpecP cfd_ps = prob_spec->findBlock("CFD");
@@ -1476,8 +1408,18 @@ void ICE::actuallyComputeStableTimestep(const ProcessorGroup*,
     }
     new_dw->put(delt_vartype(delt), lb->delTLabel);
   }  // patch loop
-  //  update when you should dump debugging data. 
-  d_dbgNextDumpTime = d_dbgOldTime + d_dbgOutputInterval;
+  
+  //__________________________________
+  // Is it time to dump printData
+  d_dbgTime_to_printData = false;
+  
+  double time= dataArchiver->getCurrentTime();
+  if (time >= d_dbgStartTime && 
+      time <= d_dbgStopTime  &&
+      time >= d_dbgNextDumpTime) {
+    d_dbgTime_to_printData  = true;
+    d_dbgNextDumpTime = d_dbgOutputInterval * ceil(time/d_dbgOutputInterval); 
+  }
 }
 
 /* --------------------------------------------------------------------- 
@@ -1621,12 +1563,13 @@ void ICE::actuallyInitialize(const ProcessorGroup*,
     }   // numMatls
 
     if (switchDebugInitialize){     
-      ostringstream desc, desc1;
+      ostringstream desc1;
       desc1 << "Initialization_patch_"<< patch->getID();
       printData(0, patch, 1, desc1.str(), "press_CC", press_CC);         
       for (int m = 0; m < numMatls; m++ ) { 
         ICEMaterial* ice_matl = d_sharedState->getICEMaterial(m);
-        int indx = ice_matl->getDWIndex();      
+        int indx = ice_matl->getDWIndex();
+        ostringstream desc;      
         desc << "Initialization_Mat_" << indx << "_patch_"<< patch->getID();
         printData(indx, patch,   1, desc.str(), "rho_CC",      rho_CC[m]);
         printData(indx, patch,   1, desc.str(), "rho_micro_CC",rho_micro[m]);
