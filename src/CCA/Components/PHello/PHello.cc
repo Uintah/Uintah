@@ -58,20 +58,32 @@ void PHello::setServices(const sci::cca::Services::pointer& svc){
   cprops->putInt("size", mpi_size);
 
 
+  /*******************************************
+  if we pass cprops to both addProvidesPorts(), it crashed sometimes.
+  adding a MPI_Barrier between two addProvidesPort does not solve this
+  problem.
+  **********************************************/
+  sci::cca::TypeMap::pointer cprops0= svc->createTypeMap();
+  cprops0->putInt("rank", mpi_rank);
+  cprops0->putInt("size", mpi_size);
+
+
   //add UI Port
   myUIPort::pointer uip=myUIPort::pointer(new myUIPort);
-  svc->addProvidesPort(uip,"ui","sci.cca.ports.UIPort", cprops);
+  svc->addProvidesPort(uip,"ui","sci.cca.ports.UIPort", cprops0);
 
 
   //add Go Port
   myGoPort::pointer gop=myGoPort::pointer(new myGoPort(svc));
+  cerr<<"svc->addProvidesPort"<<endl;
   svc->addProvidesPort(gop,"go","sci.cca.ports.GoPort", cprops);
-
+  cerr<<"svc->addProvidesPort done"<<endl;
   //register StringPort
   if(mpi_rank==0){
     sci::cca::TypeMap::pointer props(0); 
     svc->registerUsesPort("stringport","sci.cca.ports.StringPort", props);
   }
+  MPI_Barrier(MPI_COMM_WORLD);
 }
 
 int myUIPort::ui(){
@@ -79,6 +91,7 @@ int myUIPort::ui(){
   MPI_Comm_size(MPI_COMM_WORLD,&mpi_size);
   MPI_Comm_rank(MPI_COMM_WORLD,&mpi_rank);
   cout<<"UI button is clicked at rank="<<mpi_rank<<"!\n";
+  MPI_Barrier(MPI_COMM_WORLD);
   return 0;
 }
 
