@@ -1061,7 +1061,6 @@ HypoElasticPlastic::computeStressTensor(const PatchSubset* patches,
           */
 
           // Find if the particle has localized
-          pLocalized_new[idx] = pLocalized[idx];
           bool isLocalized = false;
 
           // Check 1: Look at the temperature
@@ -1121,6 +1120,8 @@ HypoElasticPlastic::computeStressTensor(const PatchSubset* patches,
             d_plastic->updateElastic(idx);
 
           } else {
+
+            pLocalized_new[idx] = 0;
 
             // Rotate the stress back to the laboratory coordinates
             tensorSig = (tensorR*tensorSig)*(tensorR.Transpose());
