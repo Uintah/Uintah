@@ -28,7 +28,7 @@
 
 #include <Core/Containers/Array1.h>
 #include <Core/Containers/String.h>
-#include <Core/Datatypes/Field.h>
+#include <Core/Datatypes/LatticeVol.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <Core/GuiInterface/TCL.h>
@@ -57,9 +57,9 @@ GLTextureBuilder::GLTextureBuilder(const clString& id)
   : Module("GLTextureBuilder", id, Filter, "Visualization", "SCIRun"), 
     tex(0),
     max_brick_dim("max_brick_dim", id, this),
+//    isFixed("isFixed", id, this),
     min("min", id, this),
-    max("max", id, this),
-    isFixed("isFixed", id, this)
+    max("max", id, this)
 {
   // Create the input ports
   infield = scinew FieldIPort( this, " Field",
@@ -122,7 +122,6 @@ GLTextureBuilder::DestroyContext(Display *dpy, GLXContext& cx)
 */
 void GLTextureBuilder::execute(void)
 {
-#if 0
   //  Display *dpy;
   // GLXContext cx;
   //static bool init = false;
@@ -130,52 +129,32 @@ void GLTextureBuilder::execute(void)
   static int oldBrickSize = 0;
   if (!infield->get(sfield)) {
     return;
-  }
-  else if (!sfield.get_rep()) {
+  } else if (sfield->get_type_name(0) != "LatticeVol") {
     return;
   }
-  
-  if( isFixed.get() ){
-    double min;
-    double max;
-    sfield->get_minmax(min, max);
-    if (min != this->min.get() || max != this->max.get())
-      sfrg = 0;
-    sfield->set_minmax(this->min.get(), this->max.get());
-  } else {
-      double min;
-      double max;
-      sfield->get_minmax(min, max);
-      this->min.set( min );
-      this->max.set( max );
-    }
 
-  if( FieldRGBase *rg =
-      dynamic_cast<FieldRGBase *> (sfield.get_rep()) ){
-    
-    if( sfield.get_rep() != sfrg.get_rep()  && !tex.get_rep() ){
-      sfrg = sfield;
-      tex = scinew GLTexture3D( rg);
-      TCL::execute(id + " SetDims " + to_string( tex->getBrickSize()));
-      max_brick_dim.set( tex->getBrickSize() );
-      oldBrickSize = tex->getBrickSize();
-    } else if( sfield.get_rep() != sfrg.get_rep()){
-      sfrg = sfield;
-      tex = scinew GLTexture3D( rg);
-      tex->SetBrickSize( max_brick_dim.get() );
-    } else if (oldBrickSize != max_brick_dim.get()){
-      tex->SetBrickSize( max_brick_dim.get() );
-      oldBrickSize = max_brick_dim.get();
-    }
-
-    if( tex.get_rep() )
-      otexture->send( tex );
-    
-  } else {
-    cerr << "Not an rg field!\n";
-    otexture->send( 0 );
+  double minV, maxV;
+  if( sfield.get_rep() != sfrg.get_rep()  && !tex.get_rep() ){
+    sfrg = sfield;
+    tex = scinew GLTexture3D(sfield);
+    TCL::execute(id + " SetDims " + to_string( tex->get_brick_size()));
+    max_brick_dim.set( tex->get_brick_size() );
+    oldBrickSize = tex->get_brick_size();
+    tex->getminmax(minV, maxV);
+    min.set(minV); max.set(maxV);
+  } else if( sfield.get_rep() != sfrg.get_rep()){
+    sfrg = sfield;
+    tex = scinew GLTexture3D(sfield);
+    tex->set_brick_size( max_brick_dim.get() );
+    tex->getminmax(minV, maxV);
+    min.set(minV); max.set(maxV);
+  } else if (oldBrickSize != max_brick_dim.get()){
+    tex->set_brick_size( max_brick_dim.get() );
+    oldBrickSize = max_brick_dim.get();
   }
-#endif
+  
+  if( tex.get_rep() )
+    otexture->send( tex );
 }
 
 } // End namespace SCIRun

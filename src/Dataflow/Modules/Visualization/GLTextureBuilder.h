@@ -64,7 +64,7 @@ private:
 
   GuiInt max_brick_dim;
   GuiDouble min, max;
-  GuiInt isFixed;
+//  GuiInt isFixed;
 //  bool MakeContext(Display *dpy, GLXContext& cx);
   // void DestroyContext(Display *dpy, GLXContext& cx);
 

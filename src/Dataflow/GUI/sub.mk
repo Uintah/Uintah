@@ -53,6 +53,7 @@ $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/ManipFields.tcl \
         $(SRCDIR)/ManipMatrix.tcl \
 	$(SRCDIR)/MatrixReader.tcl \
+	$(SRCDIR)/MatrixSelectVector.tcl \
 	$(SRCDIR)/MatrixWriter.tcl \
 	$(SRCDIR)/Module.tcl \
 	$(SRCDIR)/NetworkEditor.tcl \
