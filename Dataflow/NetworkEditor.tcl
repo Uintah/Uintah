@@ -237,4 +237,8 @@ source $sci_root/Dataflow/DebugSettings.tcl
 source $sci_root/Dataflow/ThreadStats.tcl
 source $sci_root/Dataflow/Module.tcl
 
+foreach t [glob $sci_root/Widgets/*.tcl] {
+        source $t
+}
+
 resource

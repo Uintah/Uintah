@@ -3,7 +3,7 @@
  *  DebugSettings.cc: Interface to debug settings...
  *
  *  Written by:
- *   Steven G. Parker
+ *   James T. Purciful
  *   Department of Computer Science
  *   University of Utah
  *   Oct. 1994
