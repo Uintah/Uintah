@@ -136,7 +136,8 @@ Node::Node(const Node& copy)
 }
 
 int Mesh::unify(Element* not,
-				const Array1<int>& n1, const Array1<int>& n2, const Array1<int>& n3)
+		const Array1<int>& n1, const Array1<int>& n2,
+		const Array1<int>& n3)
 {
     int s1=n1.size();
     int s2=n2.size();
@@ -206,9 +207,9 @@ void Element::get_sphere2(Point& cen, double& rad2)
     Vector v2(p2-p0);
     Vector v3(p3-p0);
     double c0=(p0-Point(0,0,0)).length2();
-    double c1=(p1-p0).length2();
-    double c2=(p2-p0).length2();
-    double c3=(p3-p0).length2();
+    double c1=(p1-Point(0,0,0)).length2();
+    double c2=(p2-Point(0,0,0)).length2();
+    double c3=(p3-Point(0,0,0)).length2();
     DenseMatrix mat(3,3);
     mat[0][0]=v1.x();
     mat[0][1]=v1.y();
@@ -220,9 +221,9 @@ void Element::get_sphere2(Point& cen, double& rad2)
     mat[2][1]=v3.y();
     mat[2][2]=v3.z();
     ColumnMatrix rhs(3);
-    rhs[0]=c1-c0;
-    rhs[1]=c2-c0;
-    rhs[2]=c3-c0;
+    rhs[0]=(c1-c0)*0.5;
+    rhs[1]=(c2-c0)*0.5;
+    rhs[2]=(c3-c0)*0.5;
     mat.solve(rhs);
     cen=Point(rhs[0], rhs[1], rhs[2]);
     rad2=(p0-cen).length2();
@@ -315,28 +316,28 @@ int Mesh::inside(const Point& p, Element* elem)
     double c1=+(x3*z4-x4*z3)+(x4*z2-x2*z4)+(x2*z3-x3*z2);
     double d1=-(x3*y4-x4*y3)-(x4*y2-x2*y4)-(x2*y3-x3*y2);
     double s1=iV6*(a1+b1*p.x()+c1*p.y()+d1*p.z());
-    if(s1<0)
+    if(s1<-1.e-6)
 	return 0;
 
     double b2=+(y4*z1-y1*z4)+(y1*z3-y3*z1)+(y3*z4-y4*z3);
     double c2=-(x4*z1-x1*z4)-(x1*z3-x3*z1)-(x3*z4-x4*z3);
     double d2=+(x4*y1-x1*y4)+(x1*y3-x3*y1)+(x3*y4-x4*y3);
     double s2=iV6*(a2+b2*p.x()+c2*p.y()+d2*p.z());
-    if(s2<0)
+    if(s2<-1.e-6)
 	return 0;
 
     double b3=-(y1*z2-y2*z1)-(y2*z4-y4*z2)-(y4*z1-y1*z4);
     double c3=+(x1*z2-x2*z1)+(x2*z4-x4*z2)+(x4*z1-x1*z4);
     double d3=-(x1*y2-x2*y1)-(x2*y4-x4*y2)-(x4*y1-x1*y4);
     double s3=iV6*(a3+b3*p.x()+c3*p.y()+d3*p.z());
-    if(s3<0)
+    if(s3<-1.e-6)
 	return 0;
 
     double b4=+(y2*z3-y3*z2)+(y3*z1-y1*z3)+(y1*z2-y2*z1);
     double c4=-(x2*z3-x3*z2)-(x3*z1-x1*z3)-(x1*z2-x2*z1);
     double d4=+(x2*y3-x3*y2)+(x3*y1-x1*y3)+(x1*y2-x2*y1);
     double s4=iV6*(a4+b4*p.x()+c4*p.y()+d4*p.z());
-    if(s4<0)
+    if(s4<-1.e-6)
 	return 0;
     return 1;
 }
@@ -518,6 +519,15 @@ Face::Face(int n0, int n1, int n2)
     n[0]=n0;
     n[1]=n1;
     n[2]=n2;
+    if(n[0] < n[1]){
+	int tmp=n[0]; n[0]=n[1]; n[1]=tmp;
+    }
+    if(n[0] < n[2]){
+	int tmp=n[0]; n[0]=n[2]; n[2]=tmp;
+    }
+    if(n[1] < n[2]){
+	int tmp=n[1]; n[1]=n[2]; n[2]=tmp;
+    }
 }
 
 int Face::hash(int hash_size) const
