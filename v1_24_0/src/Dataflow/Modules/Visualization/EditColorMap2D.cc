@@ -109,7 +109,7 @@ private:
   void				release(int x, int y);
   void				mouse_pick(int x, int y, int b);
   void				set_window_cursor(int x, int y);
-  void				select_widget(int, int);
+  bool				select_widget(int w=-1, int o=-1);
   void				screen_val(int &x, int &y);
   pair<double, double>		rescaled_val(int x, int y);
   //! functions for panning.
@@ -373,8 +373,9 @@ EditColorMap2D::tcl_command(GuiArgs& args, void* userdata)
   else if (args[1] == "deletewidget") delete_selected_widget();
   else if (args[1] == "undowidget") undo();
   else if (args[1] == "unpickle") tcl_unpickle();
-  else if (args[1] == "resend_selection") {
+  else if (args[1] == "select_widget") {
     just_resend_selection_ = true;
+    select_widget();
     want_to_execute();
   } else if (args[1] == "mouse") {
     int X, Y; // X, Y are unscaled/untranslated coordinates
@@ -403,14 +404,6 @@ EditColorMap2D::tcl_command(GuiArgs& args, void* userdata)
       redraw();
     }
   } else if (args[1] == "redraw") {
-    if (args.count() > 2)
-    {
-      gui_selected_widget_.reset();
-      gui_selected_object_.reset();
-      select_widget(gui_selected_widget_.get(), 
-		    gui_selected_object_.get());
-      cmap_dirty_ = true;
-    }
     if (gui_histo_.changed()) histo_dirty_ = true;
     redraw();
   } else if (args[1] == "destroygl") {
@@ -683,7 +676,6 @@ EditColorMap2D::presave()
 void
 EditColorMap2D::undo()
 {
-  bool gui_update = false;
   if (!undo_stack_.empty())
   {
     const UndoItem &item = undo_stack_.top();
@@ -692,21 +684,23 @@ EditColorMap2D::undo()
     {
     case UndoItem::UNDO_CHANGE:
       widgets_[item.selected_] = item.widget_;
-      gui_update = true;
+      select_widget(item.selected_, 1);
       break;
 
     case UndoItem::UNDO_ADD:
       widgets_.erase(widgets_.begin() + item.selected_);
-      gui_update = true;
+      resize_gui();
       break;
    
     case UndoItem::UNDO_DELETE:
       widgets_.insert(widgets_.begin() + item.selected_, item.widget_);
-      gui_update = true;
+      select_widget(item.selected_, 1);
       break;
     }
     undo_stack_.pop();
-    cmap_dirty_ = true;
+    select_widget();
+    redraw(true);
+    update_to_gui();
     force_execute();
   }
 }
@@ -841,16 +835,22 @@ EditColorMap2D::tcl_unpickle()
 }
 
 
-void
+bool
 EditColorMap2D::select_widget(int widget, int object) {
-  for (int i = 0; i < (int)widgets_.size(); i++)
-  {
-    widgets_[i]->unselect_all();
+  int changed = false;
+  if (widget == -1 && object == -1) {
+    changed = gui_selected_widget_.changed() || gui_selected_object_.changed();
+    widget = gui_selected_widget_.get();
+    object = gui_selected_object_.get();
+  } else {
+    changed = gui_selected_widget_.get() != widget;
+    gui_selected_widget_.set(widget);
+    gui_selected_object_.set(object);
   }
-  gui_selected_widget_.set(widget);
-  gui_selected_object_.set(object);
-  if (widget >= 0 && widget < (int)widgets_.size())
-    widgets_[widget]->select(object);
+
+  for (int i = 0; i < (int)widgets_.size(); i++)
+    widgets_[i]->select(i == widget ? object : 0);
+  return changed;
 }
   
 
@@ -1263,12 +1263,14 @@ void
 EditColorMap2D::redraw(bool force_cmap_dirty)
 {
   gui->lock();
-  if (force_cmap_dirty) cmap_dirty_ = true;
+
   if(!ctx_ || ctx_->width()<3 || ctx_->height()<3 || !ctx_->make_current()) {
     gui->unlock(); 
     return; 
   }
-  
+  if (force_cmap_dirty) cmap_dirty_ = true;
+  if (select_widget()) cmap_dirty_ = true;
+
   init_shader_factory();
 
   glDrawBuffer(GL_BACK);
