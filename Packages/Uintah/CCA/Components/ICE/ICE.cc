@@ -329,7 +329,7 @@ void ICE::scheduleTimeAdvance(double t, double dt,const LevelP& level,
 
   scheduleAdvectAndAdvanceInTime(sched, patches, all_matls);
 
-  schedulePrintConservedQuantities(sched, patches, press_matl,all_matls); 
+//  schedulePrintConservedQuantities(sched, patches, press_matl,all_matls); 
   
 }
 
@@ -3205,14 +3205,13 @@ void ICE::influxOutfluxVolume(const SFCXVariable<double>&     uvel_FC,
 
 {
   Vector dx = patch->dCell();
+  double vol = dx.x()*dx.y()*dx.z();
   double delY_top, delY_bottom,delX_right, delX_left, delZ_front, delZ_back;
   double delX_tmp, delY_tmp,   delZ_tmp;
 
   // Compute outfluxes 
   const IntVector gc(1,1,1);
-  //  for(CellIterator iter = patch->getExtraCellIterator(); !iter.done();
-  for(CellIterator iter = patch->getCellIterator(gc); !iter.done();
-      iter++){
+  for(CellIterator iter = patch->getCellIterator(gc); !iter.done(); iter++){
 
     delY_top    = std::max(0.0, (vvel_FC[*iter+IntVector(0,1,0)] * delT));
     delY_bottom = std::max(0.0,-(vvel_FC[*iter+IntVector(0,0,0)] * delT));
@@ -3262,6 +3261,21 @@ void ICE::influxOutfluxVolume(const SFCXVariable<double>&     uvel_FC,
     OFC[*iter].d_cflux[BOT_R_FR]  = delY_bottom   * delX_right * delZ_front;
     OFC[*iter].d_cflux[BOT_L_BK]  = delY_bottom   * delX_left  * delZ_back;
     OFC[*iter].d_cflux[BOT_L_FR]  = delY_bottom   * delX_left  * delZ_front;
+
+    //__________________________________
+    //  Bullet proofing
+    double total_fluxout = 0.0;
+    for(int face = TOP; face <= BACK; face++ )  {
+      total_fluxout  += OFS[*iter].d_fflux[face];
+    }
+    for(int edge = TOP_R; edge <= LEFT_BK; edge++ )  {
+      total_fluxout  += OFE[*iter].d_eflux[edge];
+    }
+    for(int corner = TOP_R_BK; corner <= BOT_L_FR; corner++ )  {
+      total_fluxout  += OFC[*iter].d_cflux[corner];
+    }
+
+    ASSERT(total_fluxout < vol);
   }
 }
   
@@ -3289,9 +3303,7 @@ void ICE::advectQFirst(const CCVariable<double>&   q_CC,const Patch* patch,
 {
   double  sum_q_outflux, sum_q_outflux_EF, sum_q_outflux_CF, sum_q_influx;
   double sum_q_influx_EF, sum_q_influx_CF;
-  double  total_fluxout;
   Vector dx = patch->dCell();
-  double vol = dx.x() * dx.y() * dx.z();
   
   IntVector adjcell;
   
@@ -3324,20 +3336,6 @@ void ICE::advectQFirst(const CCVariable<double>&   q_CC,const Patch* patch,
       sum_q_outflux_CF +=  q_CC[*iter] * OFC[*iter].d_cflux[corner];
     } 
 
-    //__________________________________
-    //  Bullet proofing
-    total_fluxout = 0.0;
-    for(int face = TOP; face <= BACK; face++ )  {
-      total_fluxout  += OFS[*iter].d_fflux[face];
-    }
-    for(int edge = TOP_R; edge <= LEFT_BK; edge++ )  {
-      total_fluxout  += OFE[*iter].d_eflux[edge];
-    }
-    for(int corner = TOP_R_BK; corner <= BOT_L_FR; corner++ )  {
-      total_fluxout  += OFC[*iter].d_cflux[corner];
-    }
-
-    ASSERT(total_fluxout < vol);
     //__________________________________
     //  INFLUX: SLABS
     adjcell = IntVector(i, j+1, k);	// TOP
