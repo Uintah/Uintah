@@ -184,22 +184,22 @@ using namespace SCIRun;
                                     DataWarehouse*);
             
       void setBC(CCVariable<double>& variable,const std::string& type, 
-		 const Patch* p);
+		 const Patch* p, const int mat_id);
                
       void setBC(CCVariable<double>& press_CC, CCVariable<double>& rho,
-               const std::string& type, const Patch* p);
+               const std::string& type, const Patch* p, const int mat_id);
                
       void setBC(CCVariable<Vector>& variable,const std::string& type,
-		 const Patch* p);
+		 const Patch* p, const int mat_id);
                
       void setBC(SFCXVariable<double>& variable,const std::string& type,
-		 const std::string& comp, const Patch* p);
+		 const std::string& comp, const Patch* p, const int mat_id);
                
       void setBC(SFCYVariable<double>& variable,const std::string& type,
-		 const std::string& comp, const Patch* p);
+		 const std::string& comp, const Patch* p, const int mat_id);
                
       void setBC(SFCZVariable<double>& variable,const std::string& type,
-		 const std::string& comp, const Patch* p);      
+		 const std::string& comp, const Patch* p, const int mat_id);   
 
       void printData(const  Patch* patch,int include_GC,char message1[],
 		     char message2[], const  CCVariable<int>& q_CC);

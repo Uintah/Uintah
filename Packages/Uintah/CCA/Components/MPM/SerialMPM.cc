@@ -1015,30 +1015,30 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       // cout << "offset = " << offset << endl;
       for(Patch::FaceType face = Patch::startFace;
 	face <= Patch::endFace; face=Patch::nextFace(face)){
-	vector<BoundCondBase* > bcs;
-	bcs = patch->getBCValues(face);
+	BoundCondBase* vel_bcs = patch->getBCValues(matlindex,"Velocity",face);
+	BoundCondBase* temp_bcs = 
+	  patch->getBCValues(matlindex,"Temperature",face);
+	BoundCondBase* sym_bcs = 
+	  patch->getBCValues(matlindex,"Symmetric",face);
 
-	for (int i = 0; i<(int)bcs.size(); i++ ) {
-	  string bcs_type = bcs[i]->getType();
-	  if (bcs_type == "Velocity") {
-	    VelocityBoundCond* bc = 
-	      dynamic_cast<VelocityBoundCond*>(bcs[i]);
+	if (vel_bcs != 0) {
+	    VelocityBoundCond* bc = dynamic_cast<VelocityBoundCond*>(vel_bcs);
 	    if (bc->getKind() == "Dirichlet") {
 	      //cout << "Velocity bc value = " << bc->getValue() << endl;
 	      gvelocity.fillFace(face,bc->getValue(),offset);
 	    }
 	  }
-	  if (bcs_type == "Symmetric") {
+	  if (sym_bcs != 0) {
 	     gvelocity.fillFaceNormal(face,offset);
 	  }
-	  if (bcs_type == "Temperature") {
+	  if (temp_bcs != 0) {
             TemperatureBoundCond* bc =
-              dynamic_cast<TemperatureBoundCond*>(bcs[i]);
+	      dynamic_cast<TemperatureBoundCond*>(temp_bcs);
             if (bc->getKind() == "Dirichlet") {
               gTemperature.fillFace(face,bc->getValue(),offset);
 	    }
 	  }
-	}
+	
       }
 
       new_dw->put(sum_vartype(totalmass), lb->TotalMassLabel);
@@ -1508,13 +1508,11 @@ void SerialMPM::solveHeatEquations(const ProcessorGroup*,
       Vector dx = patch->dCell();
       for(Patch::FaceType face = Patch::startFace;
         face <= Patch::endFace; face=Patch::nextFace(face)){
-        vector<BoundCondBase* > bcs;
-        bcs = patch->getBCValues(face);
-        for (int i = 0; i<(int)bcs.size(); i++ ) {
-          string bcs_type = bcs[i]->getType();
-          if (bcs_type == "Temperature") {
+       BoundCondBase* temp_bcs = 
+	 patch->getBCValues(dwindex,"Temperature",face);
+       if (temp_bcs != 0) {
             TemperatureBoundCond* bc =
-                       dynamic_cast<TemperatureBoundCond*>(bcs[i]);
+                       dynamic_cast<TemperatureBoundCond*>(temp_bcs);
             if (bc->getKind() == "Neumann"){
 	      double value = bc->getValue();
 	      IntVector offset = 
@@ -1557,7 +1555,7 @@ void SerialMPM::solveHeatEquations(const ProcessorGroup*,
               }
             }
           }
-        }
+        
       }
 
       // Create variables for the results
@@ -1743,29 +1741,28 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 	patch->getInteriorCellLowIndex() - patch->getCellLowIndex();
       for(Patch::FaceType face = Patch::startFace;
 	face <= Patch::endFace; face=Patch::nextFace(face)){
-	vector<BoundCondBase* > bcs;
-	bcs = patch->getBCValues(face);
-	//cout << "number of bcs on face " << face << " = " 
-	//     << bcs.size() << endl;
+	BoundCondBase* vel_bcs = patch->getBCValues(dwindex,"Velocity",face);
+	BoundCondBase* temp_bcs = 
+	  patch->getBCValues(dwindex,"Temperature",face);
+	BoundCondBase* sym_bcs = 
+	  patch->getBCValues(dwindex,"Symmetric",face);
 
-	for (int i = 0; i<(int)bcs.size(); i++ ) {
-	  string bcs_type = bcs[i]->getType();
-	  if (bcs_type == "Velocity") {
+	if (vel_bcs != 0) {
 	    VelocityBoundCond* bc = 
-	      dynamic_cast<VelocityBoundCond*>(bcs[i]);
+	      dynamic_cast<VelocityBoundCond*>(vel_bcs);
 	    //cout << "Velocity bc value = " << bc->getValue() << endl;
 	    if (bc->getKind() == "Dirichlet") {
 	      gvelocity_star.fillFace(face,bc->getValue(),offset);
 	      gacceleration.fillFace(face,Vector(0.0,0.0,0.0),offset);
 	    }
 	  }
-	  if (bcs_type == "Symmetric") {
+	  if (sym_bcs != 0) {
 	     gvelocity_star.fillFaceNormal(face,offset);
 	     gacceleration.fillFaceNormal(face,offset);
 	  }
-	  if (bcs_type == "Temperature") {
+	  if (temp_bcs != 0) {
 	    TemperatureBoundCond* bc = 
-	      dynamic_cast<TemperatureBoundCond*>(bcs[i]);
+	      dynamic_cast<TemperatureBoundCond*>(temp_bcs);
 	    if (bc->getKind() == "Dirichlet") {
 	      //cout << "Temperature bc value = " << bc->getValue() << endl;
 	      IntVector low = gTemperature.getLowIndex() + offset;
@@ -1809,7 +1806,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 	      //cout << "bc value = " << bc->getValue() << endl;
 	    }
 	  }
-	}
+	
       }
 
       IntVector ni[8];
