@@ -50,6 +50,7 @@ SRCS := \
 	$(SRCDIR)/TendExpand.tcl\
 	$(SRCDIR)/TendFiber.tcl\
 	$(SRCDIR)/TendNorm.tcl\
+	$(SRCDIR)/TendPoint.tcl\
 	$(SRCDIR)/TendSatin.tcl\
 	$(SRCDIR)/Unu1op.tcl\
 	$(SRCDIR)/Unu2op.tcl\
