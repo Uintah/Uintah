@@ -846,6 +846,7 @@ proc biopseFDialog_Config {w type argList} {
 proc biopseFDialog_Create {w} {
 
     set dataName [lindex [split $w .] end]
+
     upvar #0 $dataName data
     upvar #0 $w data
     global tk_library command
@@ -857,7 +858,8 @@ proc biopseFDialog_Create {w} {
     set f1 [frame $w.f1]
     label $f1.lab -text "Directory:" -under 0
     set data(dirMenuBtn) $f1.menu
-    set data(dirMenu) [tk_optionMenu $f1.menu [format %s(selectPath) $dataName] ""]
+    set data(dirMenu) [tk_optionMenu $f1.menu [format .%s(selectPath) $dataName] ""]
+
     set data(upBtn) [button $f1.up]
     if {![info exists biopsePriv(updirImage)]} {
 	set biopsePriv(updirImage) [image create bitmap -data {
