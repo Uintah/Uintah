@@ -47,13 +47,14 @@ int main(int argc, char** argv)
     double greatest_rel_error = 0;
     char buf0[500];
     char buf1[500];
-    char* prev_bufloc[2];
     char* bufloc[2];
     double time[2];
 
     while (!datfile[0].eof() && !datfile[1].eof()) {
       datfile[0].getline(buf0, 500);
       datfile[1].getline(buf1, 500);
+      if (datfile[0].fail()) break;
+      if (datfile[1].fail()) break;
       bufloc[0] = buf0; bufloc[1] = buf1;
       bool firstnumber = true;
       while (getNextNumber(bufloc[0], d[0]) && getNextNumber(bufloc[1], d[1])){
