@@ -36,7 +36,7 @@
 #include <unistd.h>
 #include <iostream>
 #include <iomanip>
-#ifdef __sgi
+#ifdef HAVE_EXC
 #include <libexc.h>
 #include <sstream>
 #include <string.h>
@@ -48,7 +48,7 @@ using namespace std;
 
 Exception::Exception()
 {
-#ifdef __sgi
+#ifdef HAVE_EXC
   ostringstream stacktrace;
   // Use -lexc to print out a stack trace
   static const int MAXSTACK = 100;
@@ -159,7 +159,7 @@ void Exception::sci_throw(const Exception& exc)
       if(getenv("SCI_DBXCOMMAND")){
 	sprintf(command, getenv("SCI_DBXCOMMAND"), getpid());
       } else {
-#ifdef __sgi
+#ifdef HAVE_EXC
 	sprintf(command, "winterm -c dbx -p %d &", getpid());
 #else
 	sprintf(command, "xterm -e gdb %d&", getpid());
