@@ -38,7 +38,9 @@ public:
   virtual void execute();
 
 private:
-  NrrdIPort*      indwi_;
+  NrrdIPort*      inconfidence_;
+  NrrdIPort*      inevals_;
+  NrrdIPort*      inevecs_;
   NrrdOPort*      onrrd_;
 
 };
@@ -56,51 +58,51 @@ TendMake::~TendMake() {
 void 
 TendMake::execute()
 {
-  NrrdDataHandle dwi_handle;
-//   NrrdDataHandle eval_handle;
-//   NrrdDataHandle evec_handle;
+  NrrdDataHandle conf_handle;
+  NrrdDataHandle eval_handle;
+  NrrdDataHandle evec_handle;
   update_state(NeedData);
-  indwi_ = (NrrdIPort *)get_iport("DWI");
-  //  inevals_ = (NrrdIPort *)get_iport("Evals");
-  //inevecs_ = (NrrdIPort *)get_iport("Evecs");
+  inconfidence_ = (NrrdIPort *)get_iport("Confidence");
+  inevals_ = (NrrdIPort *)get_iport("Evals");
+  inevecs_ = (NrrdIPort *)get_iport("Evecs");
 
   onrrd_ = (NrrdOPort *)get_oport("nout");
 
-  if (!indwi_) {
-    error("Unable to initialize iport 'DWI'.");
+  if (!inconfidence_) {
+    error("Unable to initialize iport 'Confidence'.");
     return;
   }
-//   if (!inevals_) {
-//     error("Unable to initialize iport 'Evals'.");
-//     return;
-//   }
-//   if (!inevecs_) {
-//     error("Unable to initialize iport 'Evecs'.");
-//     return;
-//   }
+  if (!inevals_) {
+    error("Unable to initialize iport 'Evals'.");
+    return;
+  }
+  if (!inevecs_) {
+    error("Unable to initialize iport 'Evecs'.");
+    return;
+  }
   if (!onrrd_) {
     error("Unable to initialize oport 'Nrrd'.");
     return;
   }
-  if (!indwi_->get(dwi_handle))
+  if (!inconfidence_->get(conf_handle))
     return;
-//   if (!inevals_->get(eval_handle))
-//     return;
-//   if (!inevecs_->get(evec_handle))
-//     return;
+  if (!inevals_->get(eval_handle))
+    return;
+  if (!inevecs_->get(evec_handle))
+    return;
 
-  if (!dwi_handle.get_rep()) {
-    error("Empty input DWI Nrrd.");
+  if (!conf_handle.get_rep()) {
+    error("Empty input Confidence Nrrd.");
     return;
   }
-//   if (!eval_handle.get_rep()) {
-//     error("Empty input Evals Nrrd.");
-//     return;
-//   }
-//   if (!evec_handle.get_rep()) {
-//     error("Empty input Evecs Nrrd.");
-//     return;
-//   }
+  if (!eval_handle.get_rep()) {
+    error("Empty input Evals Nrrd.");
+    return;
+  }
+  if (!evec_handle.get_rep()) {
+    error("Empty input Evecs Nrrd.");
+    return;
+  }
 
   //  Nrrd *nin = nrrd_handle->nrrd;
 

@@ -32,7 +32,15 @@
   <io>
     <inputs lastportdynamic="no">
       <port>
-        <name>DWI</name>
+        <name>Confidence</name>
+	<datatype>Teem::Nrrd</datatype>
+      </port>
+      <port>
+        <name>Evals</name>
+	<datatype>Teem::Nrrd</datatype>
+      </port>
+      <port>
+        <name>Evecs</name>
 	<datatype>Teem::Nrrd</datatype>
       </port>
     </inputs>
