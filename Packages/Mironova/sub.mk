@@ -27,14 +27,14 @@
 #
 
 
-#Makefile fragment for the Packages/BioPSE directory
+#Makefile fragment for the Packages/Mironova directory
 
 SRCDIR := Packages/Mironova
 SUBDIRS := \
-	$(SRCDIR)/Core \
 	$(SRCDIR)/Dataflow \
-	$(SRCDIR)/StandAlone \
 
+#	$(SRCDIR)/StandAlone \
+#	$(SRCDIR)/Core \
 
 include $(SCIRUN_SCRIPTS)/recurse.mk
 
