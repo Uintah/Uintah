@@ -17,11 +17,11 @@
 
 HypotenousConstraint::HypotenousConstraint( const clString& name,
 					    const Index numSchemes,
-					    Variable* HypoInX, Variable* distInX )
+					    Variable* distInX, Variable* hypoInX )
 :BaseConstraint(name, numSchemes, 2)
 {
-   vars[0] = HypoInX;
-   vars[1] = distInX;
+   vars[0] = distInX;
+   vars[1] = hypoInX;
    whichMethod = 0;
 
    // Tell the variables about ourself.
@@ -42,18 +42,18 @@ HypotenousConstraint::Satisfy( const Index index )
    ChooseChange(index);
    print();
    
-   /* 2A^2 = C^2 */
+   /* 2 * dist^2 = hypo^2 */
    switch (ChooseChange(index)) {
    case 0:
-      temp.x(sqrt(2.0 * v1.Get().x() * v1.Get().x()));
+      temp.x(sqrt(v0.Get().x() * v0.Get().x() / 2.0));
       v0.Assign(temp);
       break;
    case 1:
-      temp.x(sqrt(v0.Get().x() * v0.Get().x() / 2.0));
+      temp.x(sqrt(2.0 * v1.Get().x() * v1.Get().x()));
       v1.Assign(temp);
       break;
    default:
-      cerr << "Unknown variable in Hypotenous!" << endl;
+      cerr << "Unknown variable in Hypotenous Constraint!" << endl;
       break;
    }
 }

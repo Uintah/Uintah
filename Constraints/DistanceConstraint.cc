@@ -63,7 +63,7 @@ DistanceConstraint::Satisfy( const Index index )
       v2.Assign(temp);
       break;
    default:
-      cerr << "Unknown variable in distance!" << endl;
+      cerr << "Unknown variable in Distance Constraint!" << endl;
       break;
    }
 }
