@@ -28,7 +28,7 @@ using SCIRun::Runnable;
   enum {
     BufferModeMask = 0x00000001
   };
-  
+
 class DpyBase : public Runnable {
 protected:
   // The width and height of the window.
@@ -37,9 +37,15 @@ protected:
   // These functions need to be called by the derived class.  They return 0
   // if it was successful.
 
-  int open_window();
-  int destroy_window();
+  // This opens the window.
+  int open_display();
+  // Closes the display
+  int close_display();
 
+  // Flag letting the control loop know to stop executing and
+  // close the display.  Setting this to true will kill the thread.
+  bool on_death_row;
+  
   ////////////////////////////////////////////////////////////////////////
   // These event functions do a whole lot of nothing.  If you want them to
   // something else, then redefine them.
@@ -99,6 +105,9 @@ public:
   // I don't think this function is needed right now.
   //  virtual void animate(double t, bool& changed);
 
+  // This causes the thread to end at the first opportunity closing the window.
+  void stop();
+  
   void set_scene(Scene *new_scene) { scene = new_scene; }
 };
 
