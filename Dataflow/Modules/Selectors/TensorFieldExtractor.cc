@@ -134,8 +134,6 @@ void TensorFieldExtractor::execute()
 
    archiveH = handle;
    DataArchive& archive = *((*(archiveH.get_rep()))());
-   string endianness( archive.queryEndianness() );
-   bool need_byte_swap( endianness != SCIRun::endianness() );
   // get time, set timestep, set generation, update grid and update gui
   double time = update(); // yeah it does all that
 
@@ -165,8 +163,7 @@ void TensorFieldExtractor::execute()
 		  LatVolField<Matrix3> *tfd =
 	    scinew LatVolField<Matrix3>( mesh_handle_, Field::NODE );
 	  // set the generation and timestep in the field
-	  build_field( archive, level, low, var, mat, time, gridVar,
-			tfd, need_byte_swap);
+	  build_field( archive, level, low, var, mat, time, gridVar, tfd );
 	  // send the field out to the port
 	  tfout->send(tfd);
 	  // 	DumpAllocator(default_allocator, "TensorDump.allocator");
@@ -184,8 +181,7 @@ void TensorFieldExtractor::execute()
 	  LatVolField<Matrix3> *tfd =
 	    scinew LatVolField<Matrix3>( mesh_handle_, Field::CELL );
 	  // set the generation and timestep in the field
-	  build_field( archive, level, low, var, mat, time, gridVar,
-			tfd, need_byte_swap);
+	  build_field( archive, level, low, var, mat, time, gridVar, tfd );
 	  // send the field out to the port
 	  tfout->send(tfd);
 	  // 	DumpAllocator(default_allocator, "TensorDump.allocator");

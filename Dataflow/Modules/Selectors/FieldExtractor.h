@@ -78,8 +78,7 @@ protected:
 		      int mat,
 		      double time,
 		      Var& v,
-		      LatVolField<T>*& sfd,
-		      bool swapbytes = false);
+		      LatVolField<T>*& sfd);
   vector< double > times;
   int generation;
   int timestep;
@@ -98,8 +97,7 @@ void FieldExtractor::build_field(DataArchive& archive,
                                   int mat,
                                   double time,
 				 Var& /*var*/,
-                                  LatVolField<T>*& sfd,
-                                  bool swapbytes)
+                                  LatVolField<T>*& sfd)
 {
   int max_workers = Min(Thread::numProcessors(), 8);
   Semaphore* thread_sema = scinew Semaphore( "extractor semahpore",
@@ -148,11 +146,11 @@ void FieldExtractor::build_field(DataArchive& archive,
       thread_sema->down();
 /*        PatchToFieldThread<Var, T> *ptft = */
 /*  	scinew PatchToFieldThread<Var, T>(sfd, v, lo, low, hi,//min_i, max_i, */
-/*  					  thread_sema, lock, swapbytes); */
+/*  					  thread_sema, lock); */
 /*        ptft->run(); */
       Thread *thrd = scinew Thread(
 	 (scinew PatchToFieldThread<Var, T>(sfd, v, lo, min_i, max_i,
-					       thread_sema, lock, swapbytes)),
+					       thread_sema, lock)),
 	    "patch_to_field_worker");
       thrd->detach();
     }

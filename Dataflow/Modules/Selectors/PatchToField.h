@@ -7,16 +7,11 @@
 #include <Core/Thread/Runnable.h>
 #include <Core/Datatypes/LatVolField.h>
 #include <Core/Datatypes/LatVolMesh.h>
-#include <Core/Util/Endian.h>
 #include <Packages/Uintah/Core/Grid/Variable.h>
 #include <Packages/Uintah/Core/Grid/Array3.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Packages/Uintah/CCA/Ports/DataArchive.h>
 #include <Core/Util/Timer.h>
-
-namespace SCIRun {
-  void swapbytes( Uintah::Matrix3& m);
-} //end namespace SCIRun
 
 #include <string>
 #include <iostream>
@@ -42,15 +37,13 @@ public:
                      IntVector min_i,
                      IntVector max_i,
                      Semaphore* sema,
-                     Mutex& lock,
-                     bool swapbytes = false):
+                     Mutex& lock):
     fld_(fld),
     offset_(offset),
     min_(min_i),
     max_(max_i),
     sema_(sema),
-    lock_(lock),
-    swapbytes_(swapbytes)
+    lock_(lock)
   {
     var_.copyPointer(patchData);
   }
@@ -71,18 +64,10 @@ public:
 	
 	IntVector fi(it.i_, it.j_, it.k_);
 	IntVector ai(vit.getIndex());
-        if(swapbytes_){
-          for(;it != it_end; ++it){
-            fld_->fdata()[*it] = *vit;
-            ++vit;
-            swapbytes( fld_->fdata()[*it]);
-          }
-        } else {
-          for(;it != it_end; ++it){
-            fld_->fdata()[*it] = *vit;
-            ++vit;
-          }
-        }
+	for(;it != it_end; ++it){
+	  fld_->fdata()[*it] = *vit;
+	  ++vit;
+	}
       } else {
 
         IntVector lo(min_ - offset_);
@@ -94,18 +79,10 @@ public:
         LatVolMesh::Node::iterator it_end; it.end(it_end);
         typename Array3<Data>::iterator vit(&var_, min_);
 
-        if(swapbytes_){
-          for(;it != it_end; ++it){
-            swapbytes( fld_->fdata()[*it]);
-            fld_->fdata()[*it] = *vit;
-            ++vit;
-          }
-        } else {
-          for(;it != it_end; ++it){
-            fld_->fdata()[*it] = *vit;
-            ++vit;
-          }
-        }
+	for(;it != it_end; ++it){
+	  fld_->fdata()[*it] = *vit;
+	  ++vit;
+	}
       }
       sema_->up();
     }
@@ -119,7 +96,6 @@ private:
   IntVector max_;
   Semaphore* sema_;
   Mutex& lock_;
-  bool swapbytes_;
 };
 
 

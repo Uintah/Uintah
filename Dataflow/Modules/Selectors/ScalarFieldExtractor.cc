@@ -35,7 +35,6 @@ LOG
 #include <Core/Malloc/Allocator.h>
 #include <Core/Geometry/IntVector.h>
 #include <Core/Geometry/BBox.h>
-#include <Core/Util/Endian.h>
 #include <Core/Util/Timer.h>
 #include <Packages/Uintah/Core/Math/Matrix3.h>
 #include <Packages/Uintah/CCA/Ports/DataArchive.h>
@@ -143,8 +142,6 @@ void ScalarFieldExtractor::execute()
   
   archiveH = handle;
   DataArchive& archive = *((*(archiveH.get_rep()))());
-  string endianness( archive.queryEndianness() );
-  bool need_byte_swap( endianness != SCIRun::endianness() );
 
   // get time, set timestep, set generation, update grid and update gui
   double time = update(); // yeah it does all that
@@ -176,8 +173,7 @@ void ScalarFieldExtractor::execute()
 	    scinew LatVolField<double>( mesh_handle_, Field::NODE );
 	  sfd->set_property( "variable", string(var), true );
 	  sfd->set_property( "time", double( time ), true);
-	  build_field( archive, level, low, var, mat, time, gridVar,
-			sfd, need_byte_swap);
+	  build_field( archive, level, low, var, mat, time, gridVar, sfd );
 	  sfout->send(sfd);
 	  return;
 	}
@@ -188,8 +184,7 @@ void ScalarFieldExtractor::execute()
 	    scinew LatVolField<int>( mesh_handle_, Field::NODE );
 	  sfd->set_property( "variable", string(var), true );
 	  sfd->set_property( "time", double( time ), true);
-	  build_field( archive, level, low, var, mat, time, gridVar,
-			sfd, need_byte_swap);
+	  build_field( archive, level, low, var, mat, time, gridVar, sfd );
 	  sfout->send(sfd);
 	  return;
 	}
@@ -200,8 +195,7 @@ void ScalarFieldExtractor::execute()
 	    scinew LatVolField<long64>( mesh_handle_, Field::NODE );
 	  sfd->set_property( "variable", string(var), true );
 	  sfd->set_property( "time", double( time ), true);
-	  build_field( archive, level, low, var, mat, time, gridVar,
-			sfd, need_byte_swap);
+	  build_field( archive, level, low, var, mat, time, gridVar, sfd );
 	  sfout->send(sfd);
 	  return;
 	}
@@ -219,8 +213,7 @@ void ScalarFieldExtractor::execute()
 	  
 	  sfd->set_property( "variable", string(var), true );
 	  sfd->set_property( "time", double( time ), true);
-	  build_field( archive, level, low, var, mat, time, gridVar,
-			sfd, need_byte_swap);
+	  build_field( archive, level, low, var, mat, time, gridVar, sfd );
 	  sfout->send(sfd);
 	  return;
 	}
@@ -231,8 +224,7 @@ void ScalarFieldExtractor::execute()
 	    scinew LatVolField<int>( mesh_handle_, Field::CELL );
 	  sfd->set_property( "variable", string(var), true );
 	  sfd->set_property( "time", double( time ), true);
-	  build_field( archive, level, low, var, mat, time, gridVar,
-			sfd, need_byte_swap);
+	  build_field( archive, level, low, var, mat, time, gridVar, sfd );
 	  sfout->send(sfd);
 	  return;
 	}
@@ -244,8 +236,7 @@ void ScalarFieldExtractor::execute()
 	    scinew LatVolField<long64>( mesh_handle_, Field::CELL );
 	  sfd->set_property( "variable", string(var), true );
 	  sfd->set_property( "time", double( time ), true);
-	  build_field( archive, level, low, var, mat, time, gridVar,
-			sfd, need_byte_swap);
+	  build_field( archive, level, low, var, mat, time, gridVar, sfd );
 	  sfout->send(sfd);
 	  return;
 	}
