@@ -246,6 +246,7 @@ private:
       bool d_radiationCalc;
       bool d_DORadiationCalc;
       bool d_flamelet;
+      bool d_steadyflamelet;
       bool d_filter_drhodt;
       int d_numMixingVars;
       int d_numMixStatVars;
