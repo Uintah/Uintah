@@ -15,20 +15,12 @@ SRCS := $(SRCDIR)/sus.cc
 
 ifeq ($(CC),newmpxlc)
   AIX_LIBRARY := \
-        Core/Datatypes    \
-        Dataflow/Comm     \
         Dataflow/XMLUtil  \
-        Dataflow/Network  \
-        Dataflow/Ports    \
-        Core/GuiInterface \
         Core/Malloc       \
         Core/Math         \
-        Core/OS           \
-        Core/Persistent   \
-        Core/Geom         \
-        Core/GeomInterface\
         Core/Containers   \
-        Core/TkExtensions \
+	Core/Persistent   \
+	Core/OS		  \
         Packages/Uintah/CCA/Components/HETransformation \
         Packages/Uintah/CCA/Components/Arches/Mixing \
         Packages/Uintah/CCA/Components/Arches/fortran \
@@ -73,10 +65,8 @@ endif
 
 ifeq ($(CC),newmpxlc)
   LIBS := \
-        $(TCL_LIBRARY) $(TK_LIBRARY) $(ITCL_LIBRARY) $(ITK_LIBRARY) \
-	$(BLT_LIBRARY) \
         $(XML_LIBRARY) \
-        $(GL_LIBRARY) $(Z_LIBRARY) \
+	$(Z_LIBRARY) \
         $(THREAD_LIBRARY) \
         $(F_LIBRARY) \
         $(PETSC_LIBRARY) \
@@ -84,6 +74,7 @@ ifeq ($(CC),newmpxlc)
         $(BLAS_LIBRARY) \
         $(LAPACK_LIBRARY) \
         $(MPI_LIBRARY) \
+	$(X_LIBRARY) \
         -lld $(M_LIBRARY)
 else
   LIBS := $(XML_LIBRARY) $(F_LIBRARY) $(HYPRE_LIBRARY) \
