@@ -170,7 +170,9 @@ Module Enhancements
   scaled and summed.  This feature is enabled via a check-button on
   the UI, and only works for isostropic conductivities.
 
-- ChangeFieldDataType: new more sane module.
+- ChangeFieldDataType: GUI rewritten to be more user friendly.  The
+  data type is now specified independently of the field type, and can
+  be saved with networks.
 
 - Centroids: module now works on (dynamically compiles) all mesh types.
 
@@ -292,8 +294,7 @@ Developer
   Mesh concept is described at: http://software.sci.utah.edu/doc/Developer/CodeViews/html/classSCIRun_1_1MeshConcept.html
 
 
-- Nicer quit function.  Clear so that module destructors are called
-  (Matlab), asks for permission before killing scirun off.
+- Nicer quit function.  Ask for permission before exiting SCIRun.
 
 - Expanded support for isosurfacing cell centered data.
 
