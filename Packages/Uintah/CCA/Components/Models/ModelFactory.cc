@@ -2,6 +2,7 @@
 #include <Packages/Uintah/CCA/Components/Models/ModelFactory.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
+#include <Packages/Uintah/Core/Grid/SimulationState.h>
 #include <Packages/Uintah/CCA/Ports/ModelInterface.h>
 #include <Packages/Uintah/CCA/Components/Models/test/SimpleRxn.h>
 #include <Packages/Uintah/CCA/Components/Models/test/TestModel.h>
