@@ -78,7 +78,7 @@ public:
     virtual void execute();
 };
 
-Module* make_VectorSeg(const clString& id) {
+extern "C" Module* make_VectorSeg(const clString& id) {
   return new VectorSeg(id);
 }
 
@@ -283,6 +283,11 @@ void VectorSeg::vector_seg_rg(const Array1<ScalarFieldHandle> &,
 
 //
 // $Log$
+// Revision 1.9  2000/03/17 09:27:36  sparker
+// New makefile scheme: sub.mk instead of Makefile.in
+// Use XML-based files for module repository
+// Plus many other changes to make these two things work
+//
 // Revision 1.8  2000/02/02 05:51:58  dmw
 // added new module to index.cc and fixed bugs
 //

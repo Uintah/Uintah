@@ -47,7 +47,7 @@ public:
     virtual void execute();
 };
 
-Module* make_SurfNewVals(const clString& id) {
+extern "C" Module* make_SurfNewVals(const clString& id) {
   return new SurfNewVals(id);
 }
 
@@ -126,6 +126,11 @@ void SurfNewVals::execute() {
 
 //
 // $Log$
+// Revision 1.9  2000/03/17 09:27:22  sparker
+// New makefile scheme: sub.mk instead of Makefile.in
+// Use XML-based files for module repository
+// Plus many other changes to make these two things work
+//
 // Revision 1.8  1999/10/07 02:07:00  sparker
 // use standard iostreams and complex type
 //

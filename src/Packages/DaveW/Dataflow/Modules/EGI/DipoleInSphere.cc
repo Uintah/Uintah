@@ -54,7 +54,7 @@ public:
     virtual void execute();
 };
 
-Module* make_DipoleInSphere(const clString& id)
+extern "C" Module* make_DipoleInSphere(const clString& id)
 {
     return new DipoleInSphere(id);
 }
@@ -173,6 +173,11 @@ void DipoleInSphere::execute() {
 
 //
 // $Log$
+// Revision 1.3  2000/03/17 09:25:38  sparker
+// New makefile scheme: sub.mk instead of Makefile.in
+// Use XML-based files for module repository
+// Plus many other changes to make these two things work
+//
 // Revision 1.2  1999/10/07 02:06:31  sparker
 // use standard iostreams and complex type
 //

@@ -78,7 +78,7 @@ public:
 }; //class
 
 
-Module* make_Downhill_Simplex(const clString& id) {
+extern "C" Module* make_Downhill_Simplex(const clString& id) {
     return new Downhill_Simplex(id);
 }
 
@@ -365,6 +365,11 @@ void Downhill_Simplex::tcl_command(TCLArgs& args, void* userdata) {
 
 //
 // $Log$
+// Revision 1.4  2000/03/17 09:25:47  sparker
+// New makefile scheme: sub.mk instead of Makefile.in
+// Use XML-based files for module repository
+// Plus many other changes to make these two things work
+//
 // Revision 1.3  1999/10/07 02:06:37  sparker
 // use standard iostreams and complex type
 //

@@ -327,7 +327,7 @@ public:
     virtual void tcl_command(TCLArgs& args, void* userdata);
 };
 
-Module* make_Streamline(const clString& id) {
+extern "C" Module* make_Streamline(const clString& id) {
   return new Streamline(id);
 }
 
@@ -2054,6 +2054,11 @@ void SLSourceInfo::pick_source(const clString& sname,
 
 //
 // $Log$
+// Revision 1.10  2000/03/17 09:27:35  sparker
+// New makefile scheme: sub.mk instead of Makefile.in
+// Use XML-based files for module repository
+// Plus many other changes to make these two things work
+//
 // Revision 1.9  2000/03/11 00:39:56  dahart
 // Replaced all instances of HashTable<class X, class Y> with the
 // Standard Template Library's std::map<class X, class Y, less<class X>>

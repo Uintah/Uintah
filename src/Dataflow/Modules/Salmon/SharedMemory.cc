@@ -4,7 +4,9 @@
 #include <fcntl.h>
 
 #include <sys/types.h>
+#ifdef __sgi
 #include <sys/prctl.h>
+#endif
 #include <sys/time.h>
 #include <sys/stat.h>
 

@@ -46,7 +46,7 @@ public:
     virtual void execute();
 };
 
-Module* make_STreeExtractSurf(const clString& id)
+extern "C" Module* make_STreeExtractSurf(const clString& id)
 {
     return new STreeExtractSurf(id);
 }
@@ -132,6 +132,11 @@ void STreeExtractSurf::execute() {
 
 //
 // $Log$
+// Revision 1.6  2000/03/17 09:25:34  sparker
+// New makefile scheme: sub.mk instead of Makefile.in
+// Use XML-based files for module repository
+// Plus many other changes to make these two things work
+//
 // Revision 1.5  1999/11/17 00:32:00  dmw
 // fixed a bug in Taubin (nrows has to equal ncols) and added a flag to STreeExtractSurf so the node numbers dont change
 //

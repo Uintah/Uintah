@@ -1,7 +1,0 @@
-SRCTOP  = @top_srcdir@
-SRCDIR  = @srcdir@
-OBJTOP  = ../..
-
-SUBDIRS = argtest memstress mitest objects pingpong
-
-include $(OBJTOP)/scripts/recurse.mk

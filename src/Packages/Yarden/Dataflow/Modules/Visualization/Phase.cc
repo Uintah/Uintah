@@ -55,8 +55,8 @@
 #include <SCICore/Math/Trig.h>
 
 #include <math.h>
-#include <iostream.h>
-#include <strstream.h>
+#include <iostream>
+#include <sstream>
 #include <values.h>
 
 #include <Yarden/Modules/Visualization/Screen.h>

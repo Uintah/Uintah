@@ -43,7 +43,7 @@ public:
     virtual void execute();
 };
 
-Module* make_MergeTensor(const clString& id) {
+extern "C" Module* make_MergeTensor(const clString& id) {
   return new MergeTensor(id);
 }
 
@@ -151,6 +151,11 @@ void MergeTensor::execute()
 
 //
 // $Log$
+// Revision 1.6  2000/03/17 09:26:59  sparker
+// New makefile scheme: sub.mk instead of Makefile.in
+// Use XML-based files for module repository
+// Plus many other changes to make these two things work
+//
 // Revision 1.5  1999/08/25 03:47:48  sparker
 // Changed SCICore/CoreDatatypes to SCICore/Datatypes
 // Changed PSECore/CommonDatatypes to PSECore/Datatypes

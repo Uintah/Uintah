@@ -99,7 +99,7 @@ public:
     virtual void execute();
 };
 
-Module* make_MatMat(const clString& id)
+extern "C" Module* make_MatMat(const clString& id)
 {
     return new MatMat(id);
 }
@@ -455,6 +455,11 @@ void MatMat::parallel_conjugate_gradient(int processor)
 
 //
 // $Log$
+// Revision 1.4  2000/03/17 09:27:06  sparker
+// New makefile scheme: sub.mk instead of Makefile.in
+// Use XML-based files for module repository
+// Plus many other changes to make these two things work
+//
 // Revision 1.3  1999/10/07 02:06:52  sparker
 // use standard iostreams and complex type
 //

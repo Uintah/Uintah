@@ -124,7 +124,7 @@ public:
     CGData* data;
 };
 
-Module* make_SolveMatrix(const clString& id) {
+extern "C" Module* make_SolveMatrix(const clString& id) {
   return new SolveMatrix(id);
 }
 
@@ -1512,6 +1512,11 @@ void SolveMatrix::parallel_bi_conjugate_gradient(int processor)
 
 //
 // $Log$
+// Revision 1.2  2000/03/17 09:30:52  sparker
+// New makefile scheme: sub.mk instead of Makefile.in
+// Use XML-based files for module repository
+// Plus many other changes to make these two things work
+//
 // Revision 1.1  2000/01/21 16:26:54  moulding
 // initial import of netsolve stuff
 //

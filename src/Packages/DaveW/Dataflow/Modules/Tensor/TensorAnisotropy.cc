@@ -53,7 +53,7 @@ private:
     DATA get_value(Array1<Array3<DATA> > *in_data, short x, short y, short slice, short tensor);
 };
 
-Module* make_TensorAnisotropy(const clString& id) { 
+extern "C" Module* make_TensorAnisotropy(const clString& id) { 
     return new TensorAnisotropy(id); 
 } 
   
@@ -244,6 +244,11 @@ void TensorAnisotropy::do_it(TensorField<DATA> *tensor_base)
 
 //
 // $Log$
+// Revision 1.3  2000/03/17 09:26:03  sparker
+// New makefile scheme: sub.mk instead of Makefile.in
+// Use XML-based files for module repository
+// Plus many other changes to make these two things work
+//
 // Revision 1.2  1999/09/08 02:26:32  sparker
 // Various #include cleanups
 //

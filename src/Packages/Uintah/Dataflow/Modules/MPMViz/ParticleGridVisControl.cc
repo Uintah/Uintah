@@ -33,7 +33,7 @@ LOG
 #include <Uintah/Datatypes/Particles/MPMaterial.h>
 #include <Uintah/Datatypes/Particles/MPVizParticleSet.h>
 #include "ParticleGridVisControl.h"
-#include "TecplotReader.h"
+#include <Uintah/Datatypes/Particles/TecplotReader.h>
 
 #include <SCICore/Util/NotFinished.h>
 #include <SCICore/TclInterface/Histogram.h>
@@ -51,7 +51,7 @@ namespace Modules {
 
 using namespace SCICore::Containers;
 
-PSECore::Dataflow::Module* make_ParticleGridVisControl( const clString& id ) {
+extern "C" PSECore::Dataflow::Module* make_ParticleGridVisControl( const clString& id ) {
   return new ParticleGridVisControl( id ); 
 }
 

@@ -50,7 +50,7 @@ public:
     virtual void execute();
 };
 
-Module* make_MeshInterpVals(const clString& id)
+extern "C" Module* make_MeshInterpVals(const clString& id)
 {
     return new MeshInterpVals(id);
 }
@@ -206,6 +206,11 @@ void MeshInterpVals::execute()
 
 //
 // $Log$
+// Revision 1.5  2000/03/17 09:29:13  sparker
+// New makefile scheme: sub.mk instead of Makefile.in
+// Use XML-based files for module repository
+// Plus many other changes to make these two things work
+//
 // Revision 1.4  1999/12/11 05:48:55  dmw
 // fixed code for generating the R matrix for RAinverse basis
 //

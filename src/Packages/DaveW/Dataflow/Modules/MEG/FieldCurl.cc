@@ -37,7 +37,7 @@ private:
 		  Vector& v0, Vector& v1, Vector& v2, Vector& v3);
 };
 
-Module* make_FieldCurl(const clString& id)
+extern "C" Module* make_FieldCurl(const clString& id)
 {
     return new FieldCurl(id);
 }
@@ -290,6 +290,11 @@ Vector FieldCurl::get_curl(Element* elem, Vector& v1, Vector& v2, Vector& v3, Ve
 
 //
 // $Log$
+// Revision 1.2  2000/03/17 09:25:50  sparker
+// New makefile scheme: sub.mk instead of Makefile.in
+// Use XML-based files for module repository
+// Plus many other changes to make these two things work
+//
 // Revision 1.1  1999/09/02 04:27:08  dmw
 // Rob V's modules
 //

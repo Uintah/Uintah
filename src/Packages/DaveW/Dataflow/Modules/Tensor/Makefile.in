@@ -1,9 +1,0 @@
-SRCTOP   = @top_srcdir@
-SRCDIR   = @srcdir@
-OBJTOP   = ../../..
-
-SRCS     = Bundles.cc Flood.cc TensorAccessFields.cc TensorAnisotropy.cc
-
-INCLUDES = -I$(SRCTOP) -I$(OBJTOP)
-
-include $(SRCTOP)/scripts/objs.mk

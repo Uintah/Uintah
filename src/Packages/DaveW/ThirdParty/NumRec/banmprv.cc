@@ -1,10 +1,10 @@
 #define NRANSI
 #include "nrutil.h"
 #include "banbks.h"
-#include "vector.h"
+#include "../OldLinAlg/vector.h"
 #include <stdlib.h>
 #include <iostream>
-#include "matrix.h"
+#include "../OldLinAlg/matrix.h"
 
 using namespace std;
 

@@ -25,7 +25,7 @@ namespace Modules {
 
 using namespace SCICore::Containers;
 
-PSECore::Dataflow::Module* make_MPReaderMultiFile( const clString& id ) { 
+extern "C" PSECore::Dataflow::Module* make_MPReaderMultiFile( const clString& id ) { 
   return new MPReaderMultiFile( id );
 }
 

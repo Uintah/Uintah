@@ -1,3 +1,2 @@
-Makefile Makefile.bak
-.~*
-ii_files
+depend.mk
+Makefile

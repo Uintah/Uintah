@@ -140,7 +140,7 @@ public:
 			  const Vector &, const Point &);
 };
 
-Module* make_Coregister(const clString& id)
+extern "C" Module* make_Coregister(const clString& id)
 {
     return new Coregister(id);
 }
@@ -1331,6 +1331,11 @@ void Coregister::tcl_command(TCLArgs& args, void* userdata)
 
 //
 // $Log$
+// Revision 1.6  2000/03/17 09:25:33  sparker
+// New makefile scheme: sub.mk instead of Makefile.in
+// Use XML-based files for module repository
+// Plus many other changes to make these two things work
+//
 // Revision 1.5  1999/10/07 02:06:27  sparker
 // use standard iostreams and complex type
 //

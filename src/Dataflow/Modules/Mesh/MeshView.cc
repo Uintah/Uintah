@@ -167,7 +167,7 @@ public:
     int findNode(const MeshHandle& mesh);
 };
 
-Module* make_MeshView(const clString& id)
+extern "C" Module* make_MeshView(const clString& id)
 {
     return new MeshView(id);
 }
@@ -1641,6 +1641,11 @@ void MeshView::geom_moved(GeomPick*, int, double, const Vector&, void*)
 
 //
 // $Log$
+// Revision 1.5  2000/03/17 09:29:13  sparker
+// New makefile scheme: sub.mk instead of Makefile.in
+// Use XML-based files for module repository
+// Plus many other changes to make these two things work
+//
 // Revision 1.4  2000/03/11 00:41:55  dahart
 // Replaced all instances of HashTable<class X, class Y> with the
 // Standard Template Library's std::map<class X, class Y, less<class X>>

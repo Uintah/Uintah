@@ -1,9 +1,0 @@
-SRCTOP   = @top_srcdir@
-SRCDIR   = @srcdir@
-OBJTOP   = ../../..
-
-SRCS     = dsvd.cc tsvd.cc
-
-INCLUDES = -I$(SRCDIR)/../SparseLib/Leonid
-
-include $(SRCTOP)/scripts/objs.mk

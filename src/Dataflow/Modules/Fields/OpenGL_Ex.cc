@@ -87,7 +87,7 @@ public:
     int makeCurrent();
 };
 
-Module* make_OpenGL_Ex(const clString& id) {
+extern "C" Module* make_OpenGL_Ex(const clString& id) {
   return new OpenGL_Ex(id);
 }
 
@@ -235,6 +235,11 @@ int OpenGL_Ex::makeCurrent() {
 
 //
 // $Log$
+// Revision 1.8  2000/03/17 09:26:59  sparker
+// New makefile scheme: sub.mk instead of Makefile.in
+// Use XML-based files for module repository
+// Plus many other changes to make these two things work
+//
 // Revision 1.7  1999/11/16 00:02:46  yarden
 // replace init errcode  with GLenum errcode (needed by the egcs compiler)
 //

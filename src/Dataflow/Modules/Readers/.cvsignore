@@ -1,6 +1,3 @@
-Makefile Makefile.bak
-.~*
-ii_files
 ColumnMatrixReader.cc ColumnMatrixReader.tcl
 ContourSetReader.cc ContourSetReader.tcl
 GeomReader.tcl
@@ -13,3 +10,5 @@ VectorFieldReader.cc VectorFieldReader.tcl
 ColorMapReader.cc ColorMapReader.tcl
 VoidStarReader.cc VoidStarReader.tcl
 ParticleSetReader.cc ParticleSetReader.tcl
+depend.mk
+Makefile

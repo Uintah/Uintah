@@ -47,7 +47,7 @@ using namespace SCICore::Containers;
 using namespace SCICore::Malloc; 
 
 
-Module* make_TriangleReader(const clString& id)
+extern "C" Module* make_TriangleReader(const clString& id)
 {
     return scinew Uintah::Modules::TriangleReader(id);
 }
@@ -245,6 +245,11 @@ void TriangleReader::doAnimation( ColorMapHandle cmh )
 
 //
 // $Log$
+// Revision 1.9  2000/03/17 09:30:16  sparker
+// New makefile scheme: sub.mk instead of Makefile.in
+// Use XML-based files for module repository
+// Plus many other changes to make these two things work
+//
 // Revision 1.8  1999/12/09 22:03:31  kuzimmer
 // hardcoded colormap scaling for now.
 //

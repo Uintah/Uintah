@@ -274,7 +274,7 @@ void cfdGridLines::execute()
   ogeom->addObj(all, "Grid Lines");
 }
 
-PSECore::Dataflow::Module*
+extern "C" PSECore::Dataflow::Module*
     make_cfdGridLines( const SCICore::Containers::clString& id ) {
   return new Uintah::Modules::cfdGridLines( id );
 }
@@ -284,6 +284,11 @@ PSECore::Dataflow::Module*
 
 //
 // $Log$
+// Revision 1.9  2000/03/17 09:30:13  sparker
+// New makefile scheme: sub.mk instead of Makefile.in
+// Use XML-based files for module repository
+// Plus many other changes to make these two things work
+//
 // Revision 1.8  1999/09/21 16:12:26  kuzimmer
 // changes made to support binary/ASCII file IO
 //

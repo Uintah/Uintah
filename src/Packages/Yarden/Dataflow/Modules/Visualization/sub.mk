@@ -1,0 +1,28 @@
+#
+# Makefile fragment for this subdirectory
+# $Id$
+#
+
+include $(OBJTOP_ABS)/scripts/smallso_prologue.mk
+
+SRCDIR   := Yarden/Modules/Visualization
+
+SRCS     += $(SRCDIR)/Sage.cc $(SRCDIR)/Screen.cc $(SRCDIR)/Hase.cc
+
+PSELIBS := Yarden/Datatypes/General PSECore/Datatypes PSECore/Dataflow \
+	SCICore/Persistent SCICore/Containers SCICore/Util \
+	SCICore/Exceptions SCICore/Thread SCICore/TclInterface \
+	SCICore/Geom SCICore/Datatypes SCICore/Geometry \
+	SCICore/TkExtensions
+LIBS := $(TK_LIBRARY) $(GL_LIBS) -lm
+
+include $(OBJTOP_ABS)/scripts/smallso_epilogue.mk
+
+#
+# $Log$
+# Revision 1.1  2000/03/17 09:30:37  sparker
+# New makefile scheme: sub.mk instead of Makefile.in
+# Use XML-based files for module repository
+# Plus many other changes to make these two things work
+#
+#

@@ -79,7 +79,7 @@ public:
 
 
 
-Module* make_SimpVolVis( const clString& id) {
+extern "C" Module* make_SimpVolVis( const clString& id) {
   return new SimpVolVis(id);
 }
 
@@ -417,6 +417,11 @@ void SimpVolVis::widget_moved(int /*last*/)
 
 //
 // $Log$
+// Revision 1.9  2000/03/17 09:27:35  sparker
+// New makefile scheme: sub.mk instead of Makefile.in
+// Use XML-based files for module repository
+// Plus many other changes to make these two things work
+//
 // Revision 1.8  1999/11/09 08:33:00  dmw
 // added SurfInterpVals to index
 //
