@@ -15,19 +15,18 @@
   University of Utah. All Rights Reserved.
 */
 
-#include <stdlib.h>
-#include <string.h>
+#include <Core/CCA/Component/Comm/SocketMessage.h>
+#include <Core/CCA/Component/Comm/CommError.h>
+#include <Core/CCA/Component/Comm/SocketEpChannel.h>
+#include <Core/CCA/Component/Comm/SocketSpChannel.h>
+
+#include <string>
+
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <errno.h>
-//#include <stdio.h>
 
 #include <iostream>
-#include <Core/CCA/Component/Comm/CommError.h>
-#include <Core/CCA/Component/Comm/SocketMessage.h>
-#include <Core/CCA/Component/Comm/SocketEpChannel.h>
-#include <Core/CCA/Component/Comm/SocketSpChannel.h>
-#include <Core/CCA/Component/PIDL/URL.h>
 
 using namespace std;
 using namespace SCIRun;
