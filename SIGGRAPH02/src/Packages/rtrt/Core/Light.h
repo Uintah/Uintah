@@ -25,9 +25,13 @@ public:
   std::string name_;
   double      radius;
 
+  // Mood lights turn on when all other lights turn off 
+  // and turn off when all other lights turn on.
+  Light( const Point&, const Color&, double radius, 
+	 double intensity = 1.0, bool moodLight = false );
+
   // default constructor for Pio only.
   Light() {}
-  Light(const Point&, const Color&, double radius, double intensity = 1.0 );
 
   //! Persistent I/O.
   static  SCIRun::PersistentTypeID type_id;
@@ -39,7 +43,9 @@ public:
   inline       float  get_intensity() const { return intensity_; }
   inline Array1<Vector>& get_beamdirs() { return beamdirs; }
 
-  void updateIntensity( double intensity );
+  void modifyCurrentIntensity( double scale );
+
+  void updateIntensity( double toIntensity );
   inline const Color& getOrigColor() const { return origColor_; }
 
   void setIndex(int index) { this->index=index; }
@@ -48,6 +54,10 @@ public:
   inline bool isOn() { return isOn_; }
   inline void turnOn() { isOn_ = true; }
   inline void turnOff() { isOn_ = false; }
+
+  inline bool isMoodLight() { return moodLight_; }
+
+  inline void reset() { updateIntensity( origIntensity_ ); }
 
   void updatePosition( const Point & newPos );
 
@@ -59,8 +69,11 @@ protected:
 
   // Parameters for changing light value:
   float intensity_;
+  float origIntensity_;
   Color currentColor_; // Original Color * intensity
   Color origColor_;
+
+  bool  moodLight_;
 
   Point pos;
   Color color;
