@@ -73,7 +73,7 @@ itcl_class Fusion_DataIO_MDSPlusDataReader {
         toplevel $w
 
 
-	iwidgets::scrolledframe $w.signals -hscrollmode none
+	iwidgets::scrolledframe $w.entries -hscrollmode none
 
 	frame $w.title
 	label $w.title.check  -text ""       -width  3 -relief groove
@@ -91,7 +91,7 @@ itcl_class Fusion_DataIO_MDSPlusDataReader {
 	    -side left 
 
 	pack $w.title  -fill x
-	pack $w.signals -side top -fill both -expand yes
+	pack $w.entries -side top -fill both -expand yes
 
 	create_entries
 
@@ -182,21 +182,11 @@ itcl_class Fusion_DataIO_MDSPlusDataReader {
 	pack $w.misc -pady 10
     }
 
-    method labelEntry { win text1 text2 } {
-	frame $win 
-	pack $win -side top -padx 5 -pady 5
-	label $win.l -text $text1  -width 6 -anchor w -just left
-	label $win.c  -text ":" -width 1 -anchor w -just left 
-	entry $win.e -text $text2 -width 20 -just left -fore darkred
-	pack $win.l $win.c -side left
-	pack $win.e -padx 5 -side left
-    }
-
     method create_entries {} {
 	set w .ui[modname]
 	if {[winfo exists $w]} {
 
-	    set signals [$w.signals childsite]
+	    set entries [$w.entries childsite]
 
 	    # Create the new variables and entries if needed.
 	    for {set i 0} {$i < [set $this-num-entries]} {incr i} {
@@ -223,37 +213,37 @@ itcl_class Fusion_DataIO_MDSPlusDataReader {
 		    set $this-port-$i [set $this-port]
 		}
 
-		if {![winfo exists $signals.e-$i]} {
-		    frame $signals.e-$i
-		    checkbutton $signals.e-$i.check -variable $this-check-$i
-		    entry $signals.e-$i.server \
+		if {![winfo exists $entries.e-$i]} {
+		    frame $entries.e-$i
+		    checkbutton $entries.e-$i.check -variable $this-check-$i
+		    entry $entries.e-$i.server \
 			-textvariable $this-server-$i -width 24
-		    entry $signals.e-$i.tree \
+		    entry $entries.e-$i.tree \
 			-textvariable $this-tree-$i   -width 12
-		    entry $signals.e-$i.shot \
+		    entry $entries.e-$i.shot \
 			-textvariable $this-shot-$i   -width  8
-		    entry $signals.e-$i.signal \
+		    entry $entries.e-$i.signal \
 			-textvariable $this-signal-$i -width 32
-		    entry $signals.e-$i.status -state disabled \
+		    entry $entries.e-$i.status -state disabled \
 			-textvariable $this-status-$i -width  8
-		    entry $signals.e-$i.port -state disabled \
+		    entry $entries.e-$i.port -state disabled \
 			-textvariable $this-port-$i   -width  8
 
-		    pack $signals.e-$i.check \
-			$signals.e-$i.server \
-			$signals.e-$i.tree \
-			$signals.e-$i.shot \
-			$signals.e-$i.signal \
-			$signals.e-$i.status \
-			$signals.e-$i.port \
+		    pack $entries.e-$i.check \
+			$entries.e-$i.server \
+			$entries.e-$i.tree \
+			$entries.e-$i.shot \
+			$entries.e-$i.signal \
+			$entries.e-$i.status \
+			$entries.e-$i.port \
 			-side left
-		    pack $signals.e-$i 
+		    pack $entries.e-$i 
 		}
 	    }
 
 	    # Destroy all the left over entries from prior runs.
-	    while {[winfo exists $signals.e-$i]} {
-		destroy $signals.e-$i
+	    while {[winfo exists $entries.e-$i]} {
+		destroy $entries.e-$i
 		incr i
 	    }
 	}
@@ -292,7 +282,7 @@ itcl_class Fusion_DataIO_MDSPlusDataReader {
 	set w .ui[modname]
 	if {[winfo exists $w]} {
 
-	    set signals [$w.signals childsite]
+	    set entries [$w.entries childsite]
 
 	    global $this-num-entries
 
@@ -315,8 +305,6 @@ itcl_class Fusion_DataIO_MDSPlusDataReader {
 
 	    set $this-num-entries $j
 
-	    puts stderr [set $this-num-entries]
-	    
 	    create_entries
 	    
 	    if { [set $this-num-entries] == 0 } {
@@ -325,7 +313,7 @@ itcl_class Fusion_DataIO_MDSPlusDataReader {
 	}
     }
 
-    method addSignal { signal } {
+    method setEntry { signal } {
 	set i [set $this-num-entries]
 
 	set $this-check-$i 0
