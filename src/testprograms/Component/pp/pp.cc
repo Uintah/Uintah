@@ -30,6 +30,7 @@
 
 #include <iostream>
 #include <vector>
+#include <unistd.h>
 #include <string>
 #include <Core/CCA/Component/PIDL/PIDL.h>
 
@@ -72,7 +73,7 @@ int main(int argc, char* argv[])
       bool stop=false;
       bool test=false;
       string url;
-      int reps=1;
+      int reps=1000;
       
       for(int i=1;i<argc;i++){
 	string arg(argv[i]);
@@ -110,16 +111,21 @@ int main(int argc, char* argv[])
 	  abort();
 	}
 
-	int i=1999;
 	cerr << "Calling pingpong....\n";
-	int j=pp->pingpong(i);
-	if(i!=j){
-	  cerr << "BAD data: " << i << " vs. " << j << '\n';
+	bool good=true;
+	for(int i=0; i<reps; i++){
+	  //cerr<<"call pingpong("<<i<<")\n";
+	  int j=pp->pingpong(i);
+	  if(i!=j){
+	    cerr << "BAD data: " << i << " vs. " << j << '\n';
+	    good=false;
+	    break;
+	  }
+	  //cerr<<"done pingpong("<<i<<")\n";
 	}
-	else{
+	if(good){
 	  cerr << "Successful\n";
 	}
-
       }
       else if(stop){
 	ifstream f("pp.url");
