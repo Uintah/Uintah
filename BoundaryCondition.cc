@@ -372,18 +372,22 @@ BoundaryCondition::cellTypeInit(const ProcessorGroup*,
 //****************************************************************************
 void 
 BoundaryCondition::sched_mmWallCellTypeInit(SchedulerP& sched, const PatchSet* patches,
-					    const MaterialSet* matls)
+					    const MaterialSet* matls, bool fixCellType)
 {
   // cell type initialization
   Task* tsk = scinew Task("BoundaryCondition::mmWallCellTypeInit",
 			  this,
-			  &BoundaryCondition::mmWallCellTypeInit);
+			  &BoundaryCondition::mmWallCellTypeInit,
+			  fixCellType);
   
   int numGhostcells = 0;
   tsk->requires(Task::NewDW, d_MAlab->void_frac_CCLabel, 
 		Ghost::None, numGhostcells);
   tsk->requires(Task::OldDW, d_lab->d_cellTypeLabel, 
 		Ghost::None, numGhostcells);
+  tsk->requires(Task::OldDW, d_lab->d_mmgasVolFracLabel,
+		Ghost::None, numGhostcells);
+
   tsk->computes(d_lab->d_mmcellTypeLabel);
   tsk->computes(d_lab->d_mmgasVolFracLabel);
   
@@ -398,40 +402,54 @@ BoundaryCondition::mmWallCellTypeInit(const ProcessorGroup*,
 				      const PatchSubset* patches,
 				      const MaterialSubset*,
 				      DataWarehouse* old_dw,
-				      DataWarehouse* new_dw)		
+				      DataWarehouse* new_dw,
+				      bool fixCellType)
 {
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
     int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
     int numGhostcells = 0;
+
+    double time = d_lab->d_sharedState->getElapsedTime();
+    bool recalculateCellType = false;
+    if (time < 1.0e-10 || !fixCellType) recalculateCellType = true;
+
     constCCVariable<int> cellType;
     old_dw->get(cellType, d_lab->d_cellTypeLabel, matlIndex, patch,
 		Ghost::None, numGhostcells);
+
     constCCVariable<double> voidFrac;
     new_dw->get(voidFrac, d_MAlab->void_frac_CCLabel, matlIndex, patch,
 		Ghost::None, numGhostcells);
+
+    constCCVariable<double> oldGasVolFrac;
+    old_dw->get(oldGasVolFrac, d_lab->d_mmgasVolFracLabel, matlIndex, patch,
+		Ghost::None, numGhostcells);
+
     CCVariable<int> mmcellType;
     new_dw->allocateAndPut(mmcellType, d_lab->d_mmcellTypeLabel, matlIndex, patch);
     mmcellType.copyData(cellType);
+
     CCVariable<double> mmvoidFrac;
     new_dw->allocateAndPut(mmvoidFrac, d_lab->d_mmgasVolFracLabel, matlIndex, patch);
-    mmvoidFrac.copyData(voidFrac);
+
+    if (recalculateCellType) 
+      mmvoidFrac.copyData(voidFrac);
+    else
+      mmvoidFrac.copyData(oldGasVolFrac);
 
     IntVector domLo = mmcellType.getFortLowIndex();
     IntVector domHi = mmcellType.getFortHighIndex();
     IntVector idxLo = domLo;
     IntVector idxHi = domHi;
+
+    if (recalculateCellType) {
     // resets old mmwall type back to flow field and sets cells with void fraction
     // of less than .01 to mmWall
-    fort_mmcelltypeinit(idxLo, idxHi, mmvoidFrac, mmcellType, d_mmWallID,
-			d_flowfieldCellTypeVal, MM_CUTOFF_VOID_FRAC);
-    
-    // allocateAndPut instead:
-    /* new_dw->put(mmcellType, d_lab->d_mmcellTypeLabel, matlIndex, patch); */;
-    // save in arches label
-    // allocateAndPut instead:
-    /* new_dw->put(mmvoidFrac, d_lab->d_mmgasVolFracLabel, matlIndex, patch); */;
+      fort_mmcelltypeinit(idxLo, idxHi, mmvoidFrac, mmcellType, d_mmWallID,
+			  d_flowfieldCellTypeVal, MM_CUTOFF_VOID_FRAC);  
+    }
   }  
 }
 
