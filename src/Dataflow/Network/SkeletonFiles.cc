@@ -41,21 +41,19 @@ char component_skeleton[] = \
 "class %sSHARE %s : public Module {\n" /* package name, component name */
 "" 
 "public:\n"
-"  %s(const string& id);\n" /* component name */
+"  %s(GuiContext*);\n" /* component name */
 "\n"
 "  virtual ~%s();\n" /* component name */
 "\n"
 "  virtual void execute();\n"
 "\n"
-"  virtual void tcl_command(TCLArgs&, void*);\n"
+"  virtual void tcl_command(GuiArgs&, void*);\n"
 "};\n"
 "\n"
-"extern \"C\" %sSHARE Module* make_%s(const string& id) {\n" /* package name, component name */
-"  return scinew %s(id);\n" /* component name */
-"}\n"
 "\n"
-"%s::%s(const string& id)\n" /* component name, component name */
-"  : Module(\"%s\", id, Source, \"%s\", \"%s\")\n" /* comp, cat, pack */
+"DECLARE_MAKER(%s)\n" /* component name */
+"%s::%s(GuiContext* ctx)\n" /* component name, component name */
+"  : Module(\"%s\", ctx, Source, \"%s\", \"%s\")\n" /* comp, cat, pack */
 "{\n"
 "}\n"
 "\n"
@@ -63,11 +61,11 @@ char component_skeleton[] = \
 "{\n"
 "}\n"
 "\n"
-"void %s::execute()" /* component name */
+"void\n %s::execute()" /* component name */
 "{\n"
 "}\n"
 "\n"
-"void %s::tcl_command(TCLArgs& args, void* userdata)\n" /* component name */
+"void\n %s::tcl_command(GuiArgs& args, void* userdata)\n" /* component name */
 "{\n"
 "  Module::tcl_command(args, userdata);\n"
 "}\n"
