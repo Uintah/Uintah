@@ -14,6 +14,9 @@
 using namespace Uintah;
 using namespace std;
 
+#define INSIDE_NEW
+//#undef INSIDE_NEW
+
 TriGeometryPiece::TriGeometryPiece(ProblemSpecP &ps)
 {
   setName("tri");
@@ -26,10 +29,34 @@ TriGeometryPiece::TriGeometryPiece(ProblemSpecP &ps)
   makePlanes();
   makeTriBoxes();
 
+  ProblemSpecP top = ps->getRootNode();
+  ProblemSpecP grid_ps = top->findBlock("Grid");
+  ProblemSpecP level_ps = grid_ps->findBlock("Level");
+  Vector spacing;
+  level_ps->require("spacing",spacing);
+  ProblemSpecP box_ps = level_ps->findBlock("Box");
+  Point lower,upper;
+  box_ps->require("lower",lower);
+  box_ps->require("upper",upper);
+  Point new_lower,new_upper;
+  new_lower = Point(lower.asVector() - spacing);
+  new_upper = Point(upper.asVector() + spacing);
+  Box grid_box(new_lower,new_upper);
+  
+  cout << "Grid box = " << grid_box << endl;
+  list<Tri> tri_list;
+  Tri tri;
+
+  tri_list = tri.makeTriList(d_tri,d_points);
+  d_grid = scinew UniformGrid(grid_box);
+  d_grid->buildUniformGrid(tri_list);
+			      
+
 }
 
 TriGeometryPiece::~TriGeometryPiece()
 {
+  delete d_grid;
 }
 
 TriGeometryPiece* TriGeometryPiece::clone()
@@ -37,7 +64,8 @@ TriGeometryPiece* TriGeometryPiece::clone()
   return scinew TriGeometryPiece(*this);
 }
 
-bool TriGeometryPiece::inside(const Point &p) const
+
+bool TriGeometryPiece::insideNew(const Point &p,int& cross) const
 {
   // Count the number of times a ray from the point p
   // intersects the triangular surface.  If the number
@@ -47,8 +75,39 @@ bool TriGeometryPiece::inside(const Point &p) const
   // Check if Point p is outside the bounding box
   if (!(p == Max(p,d_box.lower()) && p == Min(p,d_box.upper())))
     return false;
+
+  d_grid->countIntersections(p,cross);
+  //  cout << "Point " << p << " has " << cross << " crossings " << endl;
+  if (cross % 2)
+    return true;
+  else
+    return false;
+}
+
+
+bool TriGeometryPiece::inside(const Point &p) const
+{
+  // Count the number of times a ray from the point p
+  // intersects the triangular surface.  If the number
+  // of crossings is odd, the point is inside, else it 
+  // is outside.
+#if 0
+  Point test_point = Point(.0025,0.0475, 0.0025);
+  if (!test_point.InInterval(p,1e-10))
+    return false;
+#endif
+
+  // Check if Point p is outside the bounding box
+  if (!(p == Max(p,d_box.lower()) && p == Min(p,d_box.upper())))
+    return false;
+#if 1
+  int cross_new = 0;
+  bool inside_new = insideNew(p,cross_new);
+
+  return inside_new;
+#endif
       
-  Vector infinity = Vector(-1e10,0.,0.) - p.asVector();
+  Vector infinity = Vector(1e10,0.,0.) - p.asVector();
   //cerr << "Testing point " << p << endl;
   int crossings = 0, NES = 0;
   for (int i = 0; i < (int) d_planes.size(); i++) {
@@ -73,19 +132,37 @@ bool TriGeometryPiece::inside(const Point &p) const
 
       insideTriangle(hit,i,NCS,NES);
       // cerr << "in = " << endl;
-      if (NCS % 2 != 0)
+      if (NCS % 2 != 0) {
 	crossings++;
+#if 0
+	cout << "Inside_old hit = " << hit << " vertices: " << 
+	  d_points[d_tri[i].x()] << " " << d_points[d_tri[i].y()] <<
+	  " " << d_points[d_tri[i].z()] << endl;
+#endif
+      }
       if (NES != 0)
 	crossings -= NES/2;
     } else
       continue;
   }
 
+  bool crossing_test;
   if (crossings%2 == 0)
-    return false;
-  else 
-    return true;
+    crossing_test = false;
+  else
+    crossing_test = true;
+#if 0
+  if (inside_new != crossing_test) {
+    cout << "Point " << p << " have different inside test results" << endl;
+    cout << "inside_new = " << inside_new << " crossing_test = " 
+	 << crossing_test << endl;
+    cout << "cross_new = " << cross_new << " crossings = " << crossings 
+	 << endl;
+  }
+#endif
+  return crossing_test;
 }
+
 
 Box TriGeometryPiece::getBoundingBox() const
 {
@@ -118,6 +195,7 @@ void TriGeometryPiece::readPoints(const string& file)
   min = min - fudge;
   max = max + fudge;
   d_box = Box(min,max);
+  cout << "d_box = " << d_box << endl;
 }
 
 
@@ -171,9 +249,10 @@ void TriGeometryPiece::makeTriBoxes()
 
 }
 
-void TriGeometryPiece::insideTriangle(const Point& q,int num,int& NCS,
+void TriGeometryPiece::insideTriangle(Point& q,int num,int& NCS,
 				      int& NES) const
 {
+
 #if 0
   // Check if the point is inside the bounding box of the triangle.
   if (!(q == Max(q,d_boxes[num].lower()) && q == Min(q,d_boxes[num].upper()))){
@@ -208,6 +287,10 @@ void TriGeometryPiece::insideTriangle(const Point& q,int num,int& NCS,
   p[0] = d_points[d_tri[num].x()];
   p[1] = d_points[d_tri[num].y()];
   p[2] = d_points[d_tri[num].z()];
+
+  Tri tri(p[0],p[1],p[2]);
+  bool inside = tri.inside(q);
+  //  cout << "inside = " << inside << endl;
 
   // Now translate the points that make up the vertices of the triangle.
   Point trans_pt(0.,0.,0.), trans_vt[3];
