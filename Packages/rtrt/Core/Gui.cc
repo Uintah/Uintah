@@ -228,11 +228,10 @@ Gui::quit()
 {
   cerr << "Quitting rtrt.\n";
   // Stop threads...
-  activeGui->dpy_->scene->rtrt_engine->exit_clean(1);
-  activeGui->dpy_->numThreadsRequested_ = 0;
+  activeGui->dpy_->scene->rtrt_engine->stop_engine();
   // Stop Glut mainloop.
-  usleep(1000);
-  //  Thread::exitAll( 0 );
+  usleep(5000);
+  //Thread::exitAll( 0 );
   Thread::exit();
 }
 
