@@ -10,7 +10,8 @@
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Ports/MatrixPort.h>
 
-#include <sci_defs.h> // for SCIRUN_OBJDIR 
+#include <sci_defs.h>              // for SCIRUN_OBJDIR 
+#include <Core/Util/sci_system.h> // for sci_system call
 
 #include <Packages/MatlabInterface/Core/Util/transport.h>
 
@@ -227,8 +228,8 @@ Matlab::execute()
       strcat(cl,hport); 
       strcat(cl,"'\\'');'|matlab -nosplash &");
 
-      if(wordy>1) fprintf(stderr,"line for system call: \n %s\n",cl); 
-      system(cl);
+      if(wordy>1) fprintf(stderr,"line for ystem call: \n %s\n",cl); 
+      sci_system(cl);
       engine_running = true;
     }
   }
