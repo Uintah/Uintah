@@ -629,7 +629,7 @@ itcl_class ViewWindow {
 	pack $m.objlist.scroll -fill y -side right -padx 2 -pady 2
 	
         checkbutton $m.caxes -text "Show Axes" -variable $this-caxes -onvalue 1 -offvalue 0 -command "$this-c centerGenAxes; $this-c redraw"
-        checkbutton $m.raxes -text "Rotation" -variable $this-raxes -onvalue 1 -offvalue 0 -command "$this-c rotateGenAxes; $this-c redraw"
+        checkbutton $m.raxes -text "Orientation" -variable $this-raxes -onvalue 1 -offvalue 0 -command "$this-c rotateGenAxes; $this-c redraw"
 	# checkbutton $m.iaxes -text "Icon Axes" -variable $this-iaxes -onvalue 1 -offvalue 0 -command "$this-c iconGenAxes; $this-c redraw"
 	# pack $m.caxes $m.iaxes -side top
 	pack $m.caxes -side top
