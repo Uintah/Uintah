@@ -27,13 +27,21 @@ InternalError::~InternalError()
 {
 }
 
-std::string InternalError::message() const
+const char* InternalError::message() const
 {
-    return d_message;
+    return d_message.c_str();
+}
+
+const char* InternalError::type() const
+{
+    return "SCICore::Exceptions::InternalError";
 }
 
 //
 // $Log$
+// Revision 1.3  2000/03/23 10:25:41  sparker
+// New exception facility - retired old "Exception.h" classes
+//
 // Revision 1.2  1999/08/31 08:59:04  sparker
 // Configuration and other updates for globus
 // First import of beginnings of new component library
