@@ -32,6 +32,7 @@
 #include <Core/CCA/spec/cca_sidl.h>
 #include <CCA/Components/Builder/NetworkCanvasView.h>
 #include <CCA/Components/Builder/Module.h>
+#include <SCIRun/TypeMap.h>
 #include <Core/Thread/Thread.h>
 #include <Core/Containers/StringUtil.h>
 #include <qaction.h>
@@ -98,6 +99,18 @@ BuilderWindow::BuilderWindow(const sci::cca::Services::pointer& services)
   QToolBar* fileTools = new QToolBar(this, "file operations");
   fileTools->setLabel("File Operations");
 
+  // addCluster
+  QAction* addClusterAction = new QAction("Add Cluster", "&Add Cluster", CTRL+Key_A, this, "Add Cluster");
+  connect(addClusterAction, SIGNAL(activated()), this, SLOT(addCluster()));
+
+  // rmCluster
+  QAction* rmClusterAction = new QAction("Remove Cluster", "&Remove Cluster", CTRL+Key_R, this, "Remove Cluster");
+  connect(rmClusterAction, SIGNAL(activated()), this, SLOT(rmCluster()));
+
+  // refresh
+  QAction* refreshAction = new QAction("Refresh", "Rfresh Menu", CTRL+Key_R, this, "refresh");
+  connect(refreshAction, SIGNAL(activated()), this, SLOT(refresh()));
+
 #include "load.xpm"
 #include "save.xpm"
 #include "insert.xpm"
@@ -124,6 +137,15 @@ BuilderWindow::BuilderWindow(const sci::cca::Services::pointer& services)
   quitAction->addTo(file);
   exitAction->addTo(file);
 
+
+  QPopupMenu* clusters = new QPopupMenu(this);
+  menuBar()->insertItem("&Clusters", clusters);
+  clusters->insertTearOffHandle();
+  addClusterAction->addTo(clusters);
+  rmClusterAction->addTo(clusters);
+  refreshAction->addTo(clusters);
+/*
+
   QPopupMenu* cluster = new QPopupMenu(this);
   menuBar()->insertItem("&Clusters", cluster );
   cluster->insertItem( "&Add a cluster", this, SLOT( cluster_add() ), Key_F1 );
@@ -137,19 +159,19 @@ BuilderWindow::BuilderWindow(const sci::cca::Services::pointer& services)
   menuBar()->insertItem( "&Performance", performance );
   performance->insertItem( "&Performance Manager", this, SLOT( performance_mngr() ), Key_F1 );
   performance->insertItem( "&Add Tau component", this, SLOT( performance_tau_add() ), Key_F2 );
-
+*/
   buildPackageMenus();
-  menuBar()->insertSeparator();
-  QPopupMenu * help = new QPopupMenu( this );
 
-  help->insertTearOffHandle();
+  insertHelpMenu();
+/*  
+help->insertTearOffHandle();
   menuBar()->insertItem( "&Help", help );
   help->insertItem( "&Demos", this, SLOT( demos() ), Key_F1 );
   help->insertItem( "What's &This", this, SLOT(whatsThis()),
 		    SHIFT+Key_F2 );
   help->insertSeparator();
   help->insertItem( "&About", this, SLOT(about()), Key_F3 );
-
+*/
   QColor bgcolor(0, 51, 102);
   QSplitter* vsplit = new QSplitter(Qt::Vertical, this);
   QSplitter* hsplit = new QSplitter(Qt::Horizontal, vsplit);
@@ -179,7 +201,7 @@ BuilderWindow::BuilderWindow(const sci::cca::Services::pointer& services)
   }
   displayMsg("Framework URL: ");
   //displayMsg(builder->getFramework()->getURL().getString().c_str());
-  displayMsg("Framework URL should be displayed here");
+  displayMsg("Framework URL should be displaied here");
   displayMsg("\n"); 
   services->releasePort("cca.BuilderService");
 
@@ -232,6 +254,11 @@ MenuTree::MenuTree(BuilderWindow* builder, const std::string &url)
   :  builder(builder)
 {
   this->url=url;
+}
+
+void MenuTree::clear()
+{
+  child.clear();
 }
 
 MenuTree::~MenuTree()
@@ -296,8 +323,7 @@ void MenuTree::populateMenu(QPopupMenu* menu)
 
 void MenuTree::instantiateComponent()
 {
-  cerr << "MenuTree::instantiate...URL="<<url<<endl;
-  builder->instantiateComponent(cd, url);
+  builder->instantiateComponent(cd);
 }
 
 void BuilderWindow::buildRemotePackageMenus(const  sci::cca::ports::ComponentRepository::pointer &reg,
@@ -337,6 +363,11 @@ void BuilderWindow::buildRemotePackageMenus(const  sci::cca::ports::ComponentRep
 
 void BuilderWindow::buildPackageMenus()
 {
+  //remove outdated package menu first
+  for(int i=0; i<packageMenuIDs.size(); i++){
+    menuBar()->removeItem(packageMenuIDs[i]);
+  }
+
   sci::cca::ports::ComponentRepository::pointer reg = pidl_cast<sci::cca::ports::ComponentRepository::pointer>(services->getPort("cca.ComponentRepository"));
   if(reg.isNull()){
     cerr << "Cannot get component registry, not building component menus\n";
@@ -349,10 +380,13 @@ void BuilderWindow::buildPackageMenus()
     iter != list.end(); iter++){
     //model name could be obtained somehow locally.
     //and we can assume that the remote component model is always "CCA"
-    string model = "CCA"; //(*iter)->getModelName();
+    string model = (*iter)->getComponentModelName();
+    string loaderName = (*iter)->getLoaderName();
     if(menus.find(model) == menus.end())
       menus[model]=new MenuTree(this,"");
     string name = (*iter)->getComponentClassName();
+
+    if(loaderName!="") name+="\t@"+loaderName;
     vector<string> splitname = split_string(name, '.');
     menus[model]->add(splitname, 0, *iter, name);
   }
@@ -364,9 +398,12 @@ void BuilderWindow::buildPackageMenus()
       iter != menus.end(); iter++){
     QPopupMenu* menu = new QPopupMenu(this);
     iter->second->populateMenu(menu);
-    menuBar()->insertItem(iter->first.c_str(), menu);
+    int menuID= menuBar()->insertItem(iter->first.c_str(), menu);
+    packageMenuIDs.push_back(menuID);
   }
   services->releasePort("cca.ComponentRepository");
+
+  insertHelpMenu();
 }
 
 void BuilderWindow::save()
@@ -553,7 +590,7 @@ void BuilderWindow::about()
   (new QMessageBox())->about(this, "About", "CCA Builder (SCIRun Implementation)");
 }
 
-void BuilderWindow::instantiateComponent(const sci::cca::ComponentClassDescription::pointer& cd, const std::string &url)
+void BuilderWindow::instantiateComponent(const sci::cca::ComponentClassDescription::pointer& cd)
 {
   cerr << "Should wait for component to be committed...\n";
   sci::cca::ports::BuilderService::pointer builder = pidl_cast<sci::cca::ports::BuilderService::pointer>(services->getPort("cca.BuilderService"));
@@ -563,7 +600,9 @@ void BuilderWindow::instantiateComponent(const sci::cca::ComponentClassDescripti
   }
   cerr << "Should put properties on component before creating\n";
 
-  sci::cca::ComponentID::pointer cid=builder->createInstance(cd->getComponentClassName(), cd->getComponentClassName(), sci::cca::TypeMap::pointer(0)) ;//,url);
+  TypeMap *tm=new TypeMap;
+  tm->putString("LOADER NAME", cd->getLoaderName());
+  sci::cca::ComponentID::pointer cid=builder->createInstance(cd->getComponentClassName(), cd->getComponentClassName(), sci::cca::TypeMap::pointer(tm));
   if(cid.isNull()){
     cerr << "instantiateFailed...\n";
     return;
@@ -635,10 +674,88 @@ void BuilderWindow::updateMiniView()
 }
 
 
+void BuilderWindow::addCluster()
+{
+
+  sci::cca::ports::BuilderService::pointer builder = pidl_cast<sci::cca::ports::BuilderService::pointer>(services->getPort("cca.BuilderService"));
+  if(builder.isNull()){
+    cerr << "Fatal Error: Cannot find builder service\n";
+  }
+
+  ////////////////////////
+  //Assume a QT Diaglog will return
+  string loaderName="qwerty";
+  string domainName="qwerty.sci.utah.edu";
+  string login="kzhang";
+  string loaderPath="mpirun -np 1 /home/sci/kzhang/SCIRun/debug/ploader";
+  string password="****"; //not used;
 
 
+  builder->addLoader(loaderName, login, domainName, loaderPath);
 
 
+  services->releasePort("cca.BuilderService");
+  
+  //buildPackageMenus(loaderName);
 
+  /*
+  slaveServer_impl* ss=new slaveServer_impl;
+  cerr << "Waiting for slave connections...\n";
+  cerr << ss->getURL().getString() << '\n';
+  
+  //Wait until we have some slave available
+  ss->d_slave_sema.down();
+  
+  slaveClient::pointer sc = ss->rr->getPtrToAll();
+  
+  //Set up server's requirement of the distribution array
+  Index** dr = new Index* [1];
+  dr[0] = new Index(0,ss->rr->getSize(),1);
+  MxNArrayRep* arrr = new MxNArrayRep(1,dr);
+  sc->setCallerDistribution("dURL",arrr);
+  */  
+  /******** Simulate invocations:*/
+  /*
+    string arg1 = "bb";
+  SSIDL::array1<std::string> urls;
+  sc->instantiate("aa",arg1,urls);
+  for(unsigned int i=0; i<urls.size(); i++)
+    cout << "URL = " << urls[i] << "\n";
+  */
+}
 
+void BuilderWindow::rmCluster()
+{
+  sci::cca::ports::BuilderService::pointer builder = pidl_cast<sci::cca::ports::BuilderService::pointer>(services->getPort("cca.BuilderService"));
+  if(builder.isNull()){
+    cerr << "Fatal Error: Cannot find builder service\n";
+  }
+  builder->removeLoader("buzz");
+  services->releasePort("cca.BuilderService");
+    
+}
+
+void BuilderWindow::refresh(){
+  buildPackageMenus();
+}
+
+void BuilderWindow::insertHelpMenu()
+{
+  static bool firstTime=true;
+  static int id;
+  if(firstTime){
+    firstTime=false;
+  }
+  else{
+    menuBar()->removeItem(id);
+  }
+  //menuBar()->insertSeparator();
+  QPopupMenu * help = new QPopupMenu( this );
+  help->insertTearOffHandle();
+  id=menuBar()->insertItem( "&Help", help );
+  help->insertItem( "&About", this, SLOT(about()), Key_F1 );
+  help->insertSeparator();
+  help->insertItem( "What's &This", this, SLOT(whatsThis()),
+		    SHIFT+Key_F1 );
+}
 

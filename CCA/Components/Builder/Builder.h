@@ -29,6 +29,8 @@
 #ifndef SCIRun_Framework_Builder_h
 #define SCIRun_Framework_Builder_h
 
+using namespace std;
+
 #include <Core/CCA/spec/cca_sidl.h>
 
 #include <string>

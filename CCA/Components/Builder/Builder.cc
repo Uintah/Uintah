@@ -31,7 +31,6 @@
 #include <CCA/Components/Builder/QtUtils.h>
 #include <Core/CCA/spec/cca_sidl.h>
 #include <iostream>
-
 using namespace std;
 using namespace SCIRun;
 
@@ -97,9 +96,8 @@ void myBuilderPort::setServices(const sci::cca::Services::pointer& svc)
 #endif
 }
 
-void 
-myBuilderPort::buildRemotePackageMenus(const  sci::cca::ports::ComponentRepository::pointer &reg,
-				       const string &frameworkURL)
+void myBuilderPort::buildRemotePackageMenus(const  sci::cca::ports::ComponentRepository::pointer &reg,
+				    const std::string &frameworkURL)
 {
   builder->buildRemotePackageMenus(reg, frameworkURL);
 }
