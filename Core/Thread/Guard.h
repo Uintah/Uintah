@@ -43,8 +43,6 @@
 #ifndef Core_Thread_Guard_h
 #define Core_Thread_Guard_h
 
-#include <Core/share/share.h>
-
 namespace SCIRun {
 
 class Mutex;
@@ -72,7 +70,7 @@ class CrowdMonitor;
   </pre></blockquote>
    
 ****************************************/
-class SCICORESHARE Guard {
+class Guard {
 public:
   //////////
   // Attach the <b>Guard</b> object to the <i>mutex</i>, and

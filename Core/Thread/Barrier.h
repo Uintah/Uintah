@@ -43,8 +43,6 @@
 #ifndef Core_Thread_Barrier_h
 #define Core_Thread_Barrier_h
 
-#include <Core/share/share.h>
-
 namespace SCIRun {
 
 class Barrier_private;
@@ -70,7 +68,7 @@ class Barrier_private;
    
 ****************************************/
 
-class SCICORESHARE Barrier {
+class Barrier {
 public:
   //////////
   // Create a barrier which will be used by a variable number

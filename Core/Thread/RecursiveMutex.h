@@ -43,8 +43,6 @@
 #ifndef Core_Thread_RecursiveMutex_h
 #define Core_Thread_RecursiveMutex_h
 
-#include <Core/share/share.h>
-
 #include <Core/Thread/Mutex.h>
 
 namespace SCIRun {
@@ -67,7 +65,7 @@ class RecursiveMutex_private;
  be used unless the recursive lock feature is really required.
  
 ****************************************/
-class SCICORESHARE RecursiveMutex {
+class RecursiveMutex {
 public:
   //////////
   // Create the Mutex.  The Mutex is allocated in the unlocked
