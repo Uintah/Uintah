@@ -133,11 +133,17 @@ sem_t* SEM_INIT( const std::string name, int shared, unsigned int val )
 
 #  define sem_type sem_t
 #  define SEM_UNLOCK(sem)            sem_post((sem))
-#  define SEM_LOCK(sem)              sem_wait((sem))
 #  define SEM_TRYLOCK(sem)           sem_trywait((sem))
 #  define SEM_INIT(sem, shared, val) sem_init( (sem), (shared), (val) )
 #  define SEM_INIT_SUCCESS(val)      (((val)== 0)?true:false)
 #  define SEM_DESTROY(sem)           sem_destroy((sem))
+
+static int SEM_LOCK(sem_type* sem)
+{
+  int returnValue = 0;
+  while ( (returnValue = sem_wait(sem)) == -1 && (errno == EINTR) );
+  return returnValue;
+}
 
 #endif
 
@@ -893,6 +899,19 @@ Mutex::lock()
     p=t->priv_;
     oldstate=Thread::push_bstack(p, Thread::BLOCK_MUTEX, name_);
   }
+
+#ifdef __APPLE__
+  // Temporary hack:
+  // On OSX this call may come before the constructor (for static vars) for some reason.
+  // To solve this problem we allocate priv_ and init it if the constructor was not called yet.
+  if ( !priv_ ) {
+    //fprintf(stderr, "Mutex:lock() - priv_ does not exits. reallocating\n");
+    priv_=new Mutex_private;
+    if(pthread_mutex_init(&priv_->mutex, NULL) != 0)
+      throw ThreadError(std::string("pthread_mutex_init: ")
+			+strerror(errno));		
+  }
+#endif
   int status = pthread_mutex_lock(&priv_->mutex);
   if(status != 0){
     fprintf(stderr, "lock failed, status=%d (%s)\n", status, strerror(status));
