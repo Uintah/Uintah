@@ -536,6 +536,9 @@ proc addModule2 {package category module modid} {
 	}
 	Module $modid -name "$module"
     }
+
+    $modid make_icon 10 10 0
+
     return $modid
 }
 
