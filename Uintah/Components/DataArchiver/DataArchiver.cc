@@ -483,15 +483,20 @@ void DataArchiver::output(const ProcessorContext*,
 static Dir makeVersionedDir(const std::string nameBase)
 {
    Dir dir;
-   string dirName = nameBase;
+   string dirName;
    unsigned int dirMin = 0;
    unsigned int dirNum = 0;
    unsigned int dirMax = 0;
 
    bool dirCreated = false;
    while (!dirCreated) {
+      ostringstream name;
+      name << nameBase << "." << setw(3) << setfill('0') << dirNum;
+      dirName = name.str();
+      
 	   try {
          dir = Dir::create(dirName);
+            // throws an exception if dir exists
 
          dirMax = dirNum;
          if (dirMax == dirMin)
@@ -515,18 +520,34 @@ static Dir makeVersionedDir(const std::string nameBase)
          } else {
             dirNum = dirMin + ((dirMax - dirMin) / 2);
          }
-	
-         ostringstream name;
-         name << nameBase << "." << setw(3) << setfill('0') << dirNum;
-         dirName = name.str();
       }
    }
 
+   // Move the symbolic link to point to the new version. We need to be careful
+   // not to destroy data, so we only create the link if no file/dir by that
+   // name existed or if it's already a link.
+   bool make_link = false;
+   struct stat sb;
+   int rc = lstat(nameBase.c_str(), &sb);
+   if ((rc != 0) && (errno == ENOENT))
+      make_link = true;
+   else if ((rc == 0) && (S_ISLNK(sb.st_mode))) {
+      unlink(nameBase.c_str());
+      make_link = true;
+   }
+   if (make_link)
+      symlink(dir.getName().c_str(), nameBase.c_str());
+   
    return Dir(dir.getName());
 }
 
 //
 // $Log$
+// Revision 1.9  2000/06/05 20:46:32  jehall
+// - Removed special case for first output dir -- it is now <base>.000
+// - Added symlink generation from <base> to latest output dir, e.g.
+//   disks.uda -> disks.uda.002
+//
 // Revision 1.8  2000/06/05 19:51:26  guilkey
 // Removed gratuitous screen output.
 //
