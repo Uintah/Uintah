@@ -517,15 +517,15 @@ static string
 clean_fieldname(string fname)
 {
   string result;
-  int counter;
+  int counter = 0;
 
   for (unsigned int i = 0; i < fname.size(); i++)
   {
     if (fname[i] == ':')
     {
-      if (counter) ;  // do nothing
-      else
-      {
+      if (counter) {
+        // do nothing 
+      } else {
 	result += fname[i];
 	counter = 1;
       }
