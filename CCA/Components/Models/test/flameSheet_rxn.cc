@@ -15,6 +15,7 @@
 #include <Packages/Uintah/Core/Exceptions/ParameterNotFound.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
 #include <Packages/Uintah/CCA/Components/ICE/ICEMaterial.h>
+#include <Packages/Uintah/Core/Exceptions/InvalidValue.h>
 #include <Core/Containers/StaticArray.h>
 #include <Core/Math/MiscMath.h>
 #include <iostream>
@@ -309,19 +310,26 @@ void flameSheet_rxn::react(const ProcessorGroup*,
 	 double mass = rho_CC[c]*volume;
 	 double f = f_old[c];
 	 double oldTemp  = Temp_CC[c];
-
+        double fuzz = 1e-10;
+        bool didSomething = false;
         //__________________________________
         // compute the energy source
-        if (d_f_stoic < f && f <= 1.0 ){                // Inside the flame eqs
-          Y_fuel     = (f - d_f_stoic)/(1.0 - d_f_stoic); // 9.43a,b,c & 9.51a
-          Y_products = (1 - f)/(1-d_f_stoic);
+        //__________________________________
+        //  Inside the flame    
+        double fuzzyOne = 1.0 + fuzz;
+        if (d_f_stoic < f && f <= fuzzyOne ){  
+          didSomething = true;         
+          Y_fuel     = (f - d_f_stoic)/(1.0 - d_f_stoic); 
+          Y_products = (1 - f)/(1-d_f_stoic);         // eqs 9.43a,b,c & 9.51a
           
           double tmp = d_f_stoic * del_h_comb/((1.0 - d_f_stoic) * d_cp);
           double A   = f * ( (d_T_fuel_init - d_T_oxidizer_inf) - tmp ); 
           newTemp    =  A + d_T_oxidizer_inf + tmp;
         }
-                
-        if (d_f_stoic == f ){                          // At the flame surface
+        //__________________________________
+        //  At the flame surface        
+        if (d_f_stoic == f ){ 
+          didSomething = true;                         
           Y_fuel     = 0.0;                            // eqs 9.45a,b,c & 9.51a
           Y_products = 1.0;
           
@@ -329,20 +337,34 @@ void flameSheet_rxn::react(const ProcessorGroup*,
                                   - d_T_oxidizer_inf);
           newTemp = A + d_T_oxidizer_inf;
         }
-      
-        if (0 <= f && f < d_f_stoic ){                 //outside the flame
+        //__________________________________
+        //  outside the flame
+        double fuzzyZero = 0.0 - fuzz;
+        if (fuzzyZero <= f && f < d_f_stoic ){ 
+          didSomething = true;     
           Y_fuel     = 0.0;                            // eqs 9.46a,b,c & 9.51c
           Y_products = f/d_f_stoic;
           
           double A = f *( (del_h_comb/d_cp) + d_T_fuel_init - d_T_oxidizer_inf);
           newTemp  = A + d_T_oxidizer_inf;
-        }       
-        new_f =Y_fuel + Y_products/(1.0 + nu);        // eqs 7.54
+        }  
+        
+        new_f =Y_fuel + Y_products/(1.0 + nu);        // eqs 7.54 
                 
 	 double energyx =( newTemp - oldTemp) * d_cp * mass;
         energySource[c] += energyx;
+        f_src[c] += new_f - f;
         
-	 f_src[c] += new_f - f; 
+        //__________________________________
+        //  bulletproofing
+        if (!didSomething) {
+          ostringstream warn;
+          warn.setf(ios::scientific,ios::floatfield);
+          warn.precision(15);  
+          warn << "ERROR: flameSheet_rxn Model: invalid value for f "
+               << c << " f=" << f <<" must be between 0 and 1.0 \n";
+          throw InvalidValue(warn.str());
+        }   
       }  //iter
       
       //__________________________________
@@ -368,7 +390,7 @@ void flameSheet_rxn::react(const ProcessorGroup*,
           top    = c + IntVector(0,1,0);    bottom = c ;
           front  = c + IntVector(0,0,1);    back   = c ;
 
-          f_src[c] -=((f_flux_X_FC[right] - f_flux_X_FC[left])  *areaX + 
+          f_src[c] +=((f_flux_X_FC[right] - f_flux_X_FC[left])  *areaX + 
                       (f_flux_Y_FC[top]   - f_flux_Y_FC[bottom])*areaY +
                       (f_flux_Z_FC[front] - f_flux_Z_FC[back])  *areaZ )*delT;
         }
