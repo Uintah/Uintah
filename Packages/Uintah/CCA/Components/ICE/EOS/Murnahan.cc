@@ -25,10 +25,16 @@ double Murnahan::computeRhoMicro(double press, double,
                                  double , double )
 {
   // Pointwise computation of microscopic density
-  double rhoM = rho0*pow((n*K*(press-P0)+1.),1./n);
-
+  double rhoM;
+  if(press>=P0){
+    rhoM = rho0*pow((n*K*(press-P0)+1.),1./n);
+  }
+  else{
+    rhoM = rho0*pow((press/P0),K*P0);
+  }
   return rhoM;
 }
+
 //__________________________________
 // Return (1/v)*(dv/dT)  (constant pressure thermal expansivity)
 double Murnahan::getAlpha(double, double, double, double)
@@ -69,8 +75,14 @@ void Murnahan::computePressEOS(double rhoM, double, double, double,
                           double& press, double& dp_drho, double& dp_de)
 {
   // Pointwise computation of thermodynamic quantities
-  press   = P0 + (1./(n*K))*(pow(rhoM/rho0,n)-1.);
-  dp_drho = (1./(K*rho0))*pow((rhoM/rho0),n-1.);
+  if(rhoM>=rho0){
+    press   = P0 + (1./(n*K))*(pow(rhoM/rho0,n)-1.);
+    dp_drho = (1./(K*rho0))*pow((rhoM/rho0),n-1.);
+  }
+  else{
+    press   = P0*pow(rhoM/rho0,(1./(K*P0)));
+    dp_drho = (1./(K*rho0))*pow(rhoM/rho0,(1./(K*P0)-1.));
+  }
   dp_de   = 0.0;
 }
 
