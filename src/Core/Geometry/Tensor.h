@@ -82,6 +82,13 @@ public:
   void get_eigenvalues(double &l1, double &l2, double &l3);
   void set_eigens(const Vector &e1, const Vector &e2, const Vector &e3);
 
+  // This directly sets the eigenvectors and values in the tensor.  It
+  // is meant to be used in conjunction with custom eigenvector/value
+  // computation, such as that found in the TEEM package.
+  void set_outside_eigens(const Vector &e1, const Vector &e2,
+			  const Vector &e3,
+			  double v1, double v2, double v3);
+
   //! support dynamic compilation
   static const string& get_h_file_path();
 
