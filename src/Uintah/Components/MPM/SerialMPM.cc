@@ -568,7 +568,7 @@ void SerialMPM::actuallyInitialize(const ProcessorContext*,
        d_contactModel->initializeContact(region,vfindex,new_dw);
        
        if(d_fractureModel)
-       d_fractureModel->initializeFracture(region,vfindex,new_dw);
+       d_fractureModel->initializeFracture(region,new_dw);
     }
   }
 }
@@ -1053,6 +1053,9 @@ void SerialMPM::crackGrow(const ProcessorContext*,
 }
 
 // $Log$
+// Revision 1.55  2000/05/15 19:02:44  tan
+// A little change on initializedFracture Interface.
+//
 // Revision 1.54  2000/05/15 18:59:46  tan
 // Initialized NCVariables and CCVaribles for Fracture.
 //
