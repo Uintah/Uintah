@@ -4489,26 +4489,32 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup* pg,
             new_dw->allocateAndPut(q_CC, tvar->var, indx, patch);
             //__________________________________
             //  compute Lagrangian values for tvars
-            // - q_L_CC must be computed in the extra cells
-            // - q_src must be 0.0 in the extra cells 
+            // - nothing is used from the extra cells
             if(tvar->src){
-              for(CellIterator iter = patch->getCellIterator(); 
+              for(CellIterator iter = patch->getExtraCellIterator(); 
                                       !iter.done(); iter++) {
                 IntVector c = *iter;                            
-                q_L_CC[c]  = (q_old[c] + q_src[c])*mass_L[c];   // with source
+                q_L_CC[c]  = q_old[c] + q_src[c];     // with source
               }
-            } else {       
-              for(CellIterator iter = patch->getCellIterator(); 
+            } else {
+              for(CellIterator iter = patch->getExtraCellIterator(); 
                                       !iter.done(); iter++) {
                 IntVector c = *iter;                            
-                q_L_CC[c]  = q_old[c]*mass_L[c];                // no source
+                q_L_CC[c]  = q_old[c];                // no source
               }
             }
 
             // Set boundary conditions on lagrangian values
             string Labelname = tvar->var->getName();
             setBC(q_L_CC, Labelname,  patch, d_sharedState, indx, new_dw);
-            
+
+            // multiply by mass so advection is conserved
+            for(CellIterator iter = patch->getExtraCellIterator(); 
+                                      !iter.done(); iter++) {
+              IntVector c = *iter;                            
+              q_L_CC[c] * = mass_L[c];
+            }
+
             // now advect
             advector->advectQ(q_L_CC,patch,q_advected, new_dw);
 
