@@ -219,7 +219,7 @@ void PatchCombiner::readAndSetDelT(const ProcessorGroup*,
   dw_=scinew OnDemandDataWarehouse(0, 0, generation, oldGrid_);
   //cerr << "deleted and recreated dw\n";
   double delt;
-  dataArchive_->restartInitialize(timestep, oldGrid_, dw_, &time, &delt);
+  dataArchive_->restartInitialize(timestep, oldGrid_, dw_, NULL, &time, &delt);
   //cerr << "restartInitialize done\n";
   
   // don't use that delt -- jump to the next output timestep
