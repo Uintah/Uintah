@@ -47,6 +47,8 @@
 #include <Core/GuiInterface/GuiContext.h>
 #include <Core/Containers/StringUtil.h>
 #include <Core/Malloc/Allocator.h>
+#include <Core/Util/Assert.h>
+#include <Core/Util/Environment.h>
 #include <tcl.h>
 #include <tk.h>
 #include <iostream>
@@ -66,6 +68,16 @@ TCLInterface::TCLInterface()
 {
   MemStats* memstats=scinew MemStats;
   memstats->init_tcl(this);
+  
+  const char *srcdir = sci_getenv("SCIRUN_SRCDIR");
+  const char *itcl_dir = sci_getenv("SCIRUN_ITCL_WIDGETS");
+  ASSERT(srcdir);
+  ASSERT(itcl_dir);
+  const std::string src(srcdir);
+  const std::string itcl(itcl_dir);
+
+  eval("set scirun2 0");
+  eval("lappend auto_path "+src+"/Core/GUI "+src+"/Dataflow/GUI "+itcl);
 }
 
 TCLInterface::~TCLInterface()
