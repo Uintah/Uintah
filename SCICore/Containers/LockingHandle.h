@@ -61,7 +61,6 @@ public:
 //
 
 #include <SCICore/Persistent/Persistent.h>
-#include <iostream.h>
 
 namespace SCICore {
 namespace Containers {
@@ -191,6 +190,10 @@ void Pio(Piostream& stream, LockingHandle<T>& data)
 
 //
 // $Log$
+// Revision 1.4  1999/08/19 23:52:58  sparker
+// Removed extraneous includes of iostream.h  Fixed a few NotFinished.h
+// problems.  May have broken KCC support.
+//
 // Revision 1.3  1999/08/19 05:30:55  sparker
 // Configuration updates:
 //  - renamed config.h to sci_config.h

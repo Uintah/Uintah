@@ -56,7 +56,7 @@
 #include <Malloc/Allocator.h>
 #include <TclInterface/TCLTask.h>
 #include <TclInterface/TCLvar.h>
-#include <iostream.h>
+class istream;
 
 namespace Uintah {
 namespace Modules {
@@ -88,6 +88,10 @@ private:
 
 //
 // $Log$
+// Revision 1.3  1999/08/19 23:53:00  sparker
+// Removed extraneous includes of iostream.h  Fixed a few NotFinished.h
+// problems.  May have broken KCC support.
+//
 // Revision 1.2  1999/08/19 23:18:09  sparker
 // Removed a bunch of #include <SCICore/Util/NotFinished.h> statements
 // from files that did not need them.

@@ -32,8 +32,6 @@
 
 #include <SCICore/Math/Trig.h>
 #include <SCICore/Malloc/Allocator.h>
-#include <iostream.h>
-#include <stdlib.h>
 
 
 #define VIEW_PORT_SIZE 600
