@@ -30,7 +30,7 @@ else
     error=$?
 fi
 
-if [ $retval == "0" ]; then
+if [ $error != "0" ]; then
     echo "Memory leak test failed for $TEST."
     if [ "$ERRORS_TO" != "" ]; then
 	cat > $TMPDIR/error.msg <<EOF
