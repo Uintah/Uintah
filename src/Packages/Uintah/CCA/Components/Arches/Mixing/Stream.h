@@ -106,10 +106,16 @@ namespace Uintah {
         return d_cp;
       }
       inline double getCO2() const {
-	return d_speciesConcn[d_CO2index];
+        if(d_speciesConcn.size()==0)
+                return d_co2;
+        else
+                return d_speciesConcn[d_CO2index];
       }
       inline double getH2O() const {
-	return d_speciesConcn[d_H2Oindex];;
+        if(d_speciesConcn.size()==0)
+                return d_h2o;
+        else
+                d_speciesConcn[d_H2Oindex];
       }
       inline bool getSootBool() const {
 	return d_lsoot;
