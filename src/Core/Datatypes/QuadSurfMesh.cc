@@ -333,7 +333,6 @@ bool
 QuadSurfMesh::locate(Node::index_type &loc, const Point &p) const
 { 
   Node::iterator bi, ei;
-  Point center;
   begin(bi);
   end(ei);
   loc = 0;
@@ -342,7 +341,7 @@ QuadSurfMesh::locate(Node::index_type &loc, const Point &p) const
   double mindist = 0.0;
   while (bi != ei) 
   {
-    get_center(center, *bi);
+    const Point &center = point(*bi);
     const double dist = (p - center).length2();
     if (!found || dist < mindist) 
     {      
@@ -470,11 +469,10 @@ QuadSurfMesh::get_weights(const Point &p,
   if (locate(idx, p))
   {
     get_nodes(l, idx);
-    Point p0, p1, p2, p3;
-    get_center(p0, l[0]);
-    get_center(p1, l[1]);
-    get_center(p2, l[2]);
-    get_center(p3, l[3]);
+    const Point &p0 = point(l[0]);
+    const Point &p1 = point(l[1]);
+    const Point &p2 = point(l[2]);
+    const Point &p3 = point(l[3]);
 
     w.resize(4);
     w[0] = tri_area(p0, p1, p2) / (tri_area(p, p0, p1) * tri_area(p, p0, p3));
@@ -496,11 +494,9 @@ QuadSurfMesh::get_center(Point &result, Edge::index_type idx) const
 {
   Node::array_type arr;
   get_nodes(arr, idx);
-  Point p1;
-  get_center(result, arr[0]);
-  get_center(p1, arr[1]);
+  result = point(arr[0]);
+  result.asVector() += point(arr[1]).asVector();
 
-  result.asVector() += p1.asVector();
   result.asVector() *= 0.5;
 }
 
@@ -512,12 +508,11 @@ QuadSurfMesh::get_center(Point &p, Face::index_type idx) const
   get_nodes(nodes, idx);
   ASSERT(nodes.size() == 4);
   Node::array_type::iterator nai = nodes.begin();
-  get_point(p, *nai);
+  get_center(p, *nai);
   ++nai;
-  Point pp;
   while (nai != nodes.end())
   {
-    get_point(pp, *nai);
+    const Point &pp = point(*nai);
     p.asVector() += pp.asVector();
     ++nai;
   }

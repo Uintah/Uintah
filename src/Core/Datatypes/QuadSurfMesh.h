@@ -133,20 +133,16 @@ public:
   {
     Node::array_type arr;
     get_nodes(arr, idx);
-    Point p0, p1;
-    get_center(p0, arr[0]);
-    get_center(p1, arr[1]);
-    return (p1.asVector() - p0.asVector()).length();
+    return (point(arr[0]).asVector() - point(arr[1]).asVector()).length();
   }
   double get_size(Face::index_type idx) const
   {
     Node::array_type ra;
     get_nodes(ra,idx);
-    Point p0,p1,p2,p3;
-    get_point(p0,ra[0]);
-    get_point(p1,ra[1]);
-    get_point(p2,ra[2]);
-    get_point(p3,ra[3]);
+    const Point &p0 = point(ra[0]);
+    const Point &p1 = point(ra[1]);
+    const Point &p2 = point(ra[2]);
+    const Point &p3 = point(ra[3]);
     return ((Cross(p0-p1,p2-p1)).length()+(Cross(p2-p3,p0-p3)).length()+
 	    (Cross(p3-p0,p1-p0)).length()+(Cross(p1-p2,p3-p2)).length())*0.25;
   }
@@ -195,10 +191,11 @@ public:
   virtual int dimensionality() const { return 2; }
   Node::index_type add_point(const Point &p);
 
-  const Point &point(Node::index_type i) { return points_[i]; }
   virtual bool		synchronize(unsigned int);
 
 private:
+
+  const Point &point(Node::index_type i) const { return points_[i]; }
 
   void                  compute_edges();
   void			compute_normals();
