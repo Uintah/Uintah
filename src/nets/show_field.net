@@ -26,6 +26,8 @@ addConnection $m0 0 $m2 0
 addConnection $m0 0 $m2 1
 addConnection $m2 0 $m1 0
 addConnection $m0 0 $m4 0
+addConnection $m0 0 $m4 1
+addConnection $m3 0 $m4 2
 addConnection $m4 0 $m1 1
 addConnection $m7 0 $m1 2
 addConnection $m0 0 $m7 1
