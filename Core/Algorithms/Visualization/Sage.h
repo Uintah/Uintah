@@ -35,7 +35,6 @@
 #include <iostream>
 #include <string>
 
-#include <Core/Containers/String.h>
 #include <Core/Thread/Time.h>
 #include <Dataflow/Network/Module.h> 
 #include <Core/Datatypes/Field.h> 
@@ -714,8 +713,8 @@ void Sage<AI,Field>::extract( double iso, int x, int y, int z )
   }
       
   v = 0;
-  int scan_edges[10];
-  int double_edges[10];
+  //int scan_edges[10];
+  //int double_edges[10];
       
   GeomTrianglesP *tmp = scinew GeomTrianglesP;
       
@@ -726,15 +725,15 @@ void Sage<AI,Field>::extract( double iso, int x, int y, int z )
     int v2 = vertex[v++];
     int e=2;
 	
-    scan_edges[0] = v0;
-    scan_edges[1] = v1;
-    double_edges[0] = double_edges[1] = 1;
+    //scan_edges[0] = v0;
+    //scan_edges[1] = v1;
+    //double_edges[0] = double_edges[1] = 1;
 	
     for (; v2 != -1; v1=v2,v2=vertex[v++]) {
-      double l= (p[v1].x-p[v0].x)*(p[v2].y-p[v0].y) 
-	- (p[v1].y-p[v0].y)*(p[v2].x-p[v0].x);
-      double_edges[e] = l > 0 ? 1 : -1;
-      scan_edges[e] = v2;
+      //double l= (p[v1].x-p[v0].x)*(p[v2].y-p[v0].y) 
+      //  - (p[v1].y-p[v0].y)*(p[v2].x-p[v0].x);
+      //double_edges[e] = l > 0 ? 1 : -1;
+      //scan_edges[e] = v2;
       e++;
       tmp->add(q[v0], q[v1], q[v2]);
     }

@@ -39,7 +39,7 @@
 namespace SCIRun {
 
 template<class T>
-struct Cell : pair<T,T> {
+struct Cell : public pair<T,T> {
   typedef T value_type;
 
   Cell() {}
