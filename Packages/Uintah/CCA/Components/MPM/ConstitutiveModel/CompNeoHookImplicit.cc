@@ -75,7 +75,7 @@ void CompNeoHookImplicit::initializeCMData(const Patch* patch,
    ParticleVariable<Matrix3> deformationGradient, pstress, bElBar;
 
    new_dw->allocateAndPut(deformationGradient,lb->pDeformationMeasureLabel,
-			  pset);
+                          pset);
    new_dw->allocateAndPut(pstress,lb->pStressLabel,pset);
    new_dw->allocateAndPut(bElBar,lb->bElBarLabel,pset);
 
@@ -83,15 +83,15 @@ void CompNeoHookImplicit::initializeCMData(const Patch* patch,
           iter != pset->end(); iter++) {
           deformationGradient[*iter] = Identity;
           pstress[*iter] = zero;
-	  bElBar[*iter] = Identity;
+          bElBar[*iter] = Identity;
    }
 
 }
 
 void CompNeoHookImplicit::allocateCMDataAddRequires(Task* task,
-						    const MPMMaterial* matl,
-						    const PatchSet* ,
-						    MPMLabel* lb) const
+                                                    const MPMMaterial* matl,
+                                                    const PatchSet* ,
+                                                    MPMLabel* lb) const
 {
 
   const MaterialSubset* matlset = matl->thisMaterial();
@@ -105,10 +105,10 @@ void CompNeoHookImplicit::allocateCMDataAddRequires(Task* task,
 
 
 void CompNeoHookImplicit::allocateCMDataAdd(DataWarehouse* new_dw,
-					    ParticleSubset* addset,
-					    map<const VarLabel*, ParticleVariableBase*>* newState,
-					    ParticleSubset* delset,
-					    DataWarehouse* )
+                                            ParticleSubset* addset,
+                                            map<const VarLabel*, ParticleVariableBase*>* newState,
+                                            ParticleSubset* delset,
+                                            DataWarehouse* )
 {
   // Put stuff in here to initialize each particle's
   // constitutive model parameters and deformationMeasure
@@ -137,7 +137,7 @@ void CompNeoHookImplicit::allocateCMDataAdd(DataWarehouse* new_dw,
 }
 
 void CompNeoHookImplicit::addParticleState(std::vector<const VarLabel*>& from,
-				   std::vector<const VarLabel*>& to)
+                                   std::vector<const VarLabel*>& to)
 {
    from.push_back(lb->pDeformationMeasureLabel);
    from.push_back(lb->pStressLabel);
@@ -157,21 +157,21 @@ void CompNeoHookImplicit::computeStableTimestep(const Patch*,
 
 void 
 CompNeoHookImplicit::computeStressTensor(const PatchSubset* patches,
-					 const MPMMaterial* matl,
-					 DataWarehouse* old_dw,
-					 DataWarehouse* new_dw,
+                                         const MPMMaterial* matl,
+                                         DataWarehouse* old_dw,
+                                         DataWarehouse* new_dw,
 #ifdef HAVE_PETSC
-					 MPMPetscSolver* solver,
+                                         MPMPetscSolver* solver,
 #else
-					 SimpleSolver* solver,
+                                         SimpleSolver* solver,
 #endif
-					 const bool )
+                                         const bool )
 
 {
   for(int pp=0;pp<patches->size();pp++){
     const Patch* patch = patches->get(pp);
 //    cerr <<"Doing computeStressTensor on " << patch->getID()
-//	 <<"\t\t\t\t IMPM"<< "\n" << "\n";
+//       <<"\t\t\t\t IMPM"<< "\n" << "\n";
 
     IntVector lowIndex = patch->getNodeLowIndex();
     IntVector highIndex = patch->getNodeHighIndex()+IntVector(1,1,1);
@@ -259,8 +259,8 @@ CompNeoHookImplicit::computeStressTensor(const PatchSubset* patches,
           dof[3*k+2]=l2g_node_num+2;
 
           const Vector& disp = dispNew[ni[k]];
-	
-       	  for (int j = 0; j<3; j++){
+        
+          for (int j = 0; j<3; j++){
             for (int i = 0; i<3; i++) {
               dispGrad(i,j) += disp[i] * d_S[k][j]* oodx[j];
             }
@@ -297,7 +297,6 @@ CompNeoHookImplicit::computeStressTensor(const PatchSubset* patches,
           Bnl[1][3*k+2] = 0.;
           Bnl[2][3*k+2] = d_S[k][2]*oodx[2];
         }
-      
         // Find the stressTensor using the displacement gradient
       
         // Compute the deformation gradient increment using the dispGrad
@@ -325,6 +324,7 @@ CompNeoHookImplicit::computeStressTensor(const PatchSubset* patches,
 
         // compute the total stress (volumetric + deviatoric)
         pstress[idx] = Identity*p + shrTrl/J;
+        //cout << "p = " << p << " J = " << J << " tdev = " << shrTrl << endl;
 
         double coef1 = bulk;
         double coef2 = 2.*bulk*log(J);
@@ -365,6 +365,46 @@ CompNeoHookImplicit::computeStressTensor(const PatchSubset* patches,
         double kgeo[24][24];
         BnltDBnl(Bnl,sig,kgeo);
 
+        // Print out stuff
+        /*
+        cout.setf(ios::scientific,ios::floatfield);
+        cout.precision(10);
+        cout << "B = " << endl;
+        for(int kk = 0; kk < 24; kk++) {
+          for (int ll = 0; ll < 6; ++ll) {
+            cout << B[ll][kk] << " " ;
+          }
+          cout << endl;
+        }
+        cout << "Bnl = " << endl;
+        for(int kk = 0; kk < 24; kk++) {
+          for (int ll = 0; ll < 3; ++ll) {
+            cout << Bnl[ll][kk] << " " ;
+          }
+          cout << endl;
+        }
+        cout << "D = " << endl;
+        for(int kk = 0; kk < 6; kk++) {
+          for (int ll = 0; ll < 6; ++ll) {
+            cout << D[ll][kk] << " " ;
+          }
+          cout << endl;
+        }
+        cout << "Kmat = " << endl;
+        for(int kk = 0; kk < 24; kk++) {
+          for (int ll = 0; ll < 24; ++ll) {
+            cout << kmat[ll][kk] << " " ;
+          }
+          cout << endl;
+        }
+        cout << "Kgeo = " << endl;
+        for(int kk = 0; kk < 24; kk++) {
+          for (int ll = 0; ll < 24; ++ll) {
+            cout << kgeo[ll][kk] << " " ;
+          }
+          cout << endl;
+        }
+        */
         double volold = pvolumeold[idx];
         double volnew = pvolumeold[idx]*J;
 
@@ -377,11 +417,11 @@ CompNeoHookImplicit::computeStressTensor(const PatchSubset* patches,
           }
         }
 
-	for (int I = 0; I < 24;I++){
-	  for (int J = 0; J < 24; J++){
-	    v[24*I+J] = kmat[I][J] + kgeo[I][J];
-	  }
-	}
+        for (int I = 0; I < 24;I++){
+          for (int J = 0; J < 24; J++){
+            v[24*I+J] = kmat[I][J] + kgeo[I][J];
+          }
+        }
         solver->fillMatrix(24,dof,24,dof,v);
 
       }  // end of loop over particles
@@ -393,9 +433,9 @@ CompNeoHookImplicit::computeStressTensor(const PatchSubset* patches,
 
 void 
 CompNeoHookImplicit::computeStressTensor(const PatchSubset* patches,
-					 const MPMMaterial* matl,
-					 DataWarehouse* old_dw,
-					 DataWarehouse* new_dw)
+                                         const MPMMaterial* matl,
+                                         DataWarehouse* old_dw,
+                                         DataWarehouse* new_dw)
 
 
 {
@@ -433,7 +473,7 @@ CompNeoHookImplicit::computeStressTensor(const PatchSubset* patches,
      old_dw->get(deformationGradient,        lb->pDeformationMeasureLabel,pset);
      old_dw->get(bElBar_old,                 lb->bElBarLabel,             pset);
      new_dw->allocateAndPut(deformationGradient_new,
-			    lb->pDeformationMeasureLabel_preReloc, pset);
+                            lb->pDeformationMeasureLabel_preReloc, pset);
      new_dw->allocateAndPut(bElBar_new,lb->bElBarLabel_preReloc,   pset);
 
      double shear = d_initialData.Shear;
@@ -452,25 +492,25 @@ CompNeoHookImplicit::computeStressTensor(const PatchSubset* patches,
     else{
      for(ParticleSubset::iterator iter = pset->begin();
                                   iter != pset->end(); iter++){
-	particleIndex idx = *iter;
+        particleIndex idx = *iter;
 
-	dispGrad.set(0.0);
-	// Get the node indices that surround the cell
-	IntVector ni[8];
-	Vector d_S[8];
+        dispGrad.set(0.0);
+        // Get the node indices that surround the cell
+        IntVector ni[8];
+        Vector d_S[8];
 
-	patch->findCellAndShapeDerivatives(px[idx], ni, d_S);
+        patch->findCellAndShapeDerivatives(px[idx], ni, d_S);
 
-	for(int k = 0; k < 8; k++) {
-	  const Vector& disp = dispNew[ni[k]];
-	  for (int j = 0; j<3; j++){
-	    for (int i = 0; i<3; i++) {
-	      dispGrad(i,j) += disp[i] * d_S[k][j]* oodx[j];
-	    }
-	  }
-	}
+        for(int k = 0; k < 8; k++) {
+          const Vector& disp = dispNew[ni[k]];
+          for (int j = 0; j<3; j++){
+            for (int i = 0; i<3; i++) {
+              dispGrad(i,j) += disp[i] * d_S[k][j]* oodx[j];
+            }
+          }
+        }
 
-	// Find the stressTensor using the displacement gradient
+        // Find the stressTensor using the displacement gradient
 
         // Compute the deformation gradient increment using the dispGrad
 
@@ -485,7 +525,7 @@ CompNeoHookImplicit::computeStressTensor(const PatchSubset* patches,
         double J = deformationGradient_new[idx].Determinant();
 
         fbar = deformationGradientInc * 
-	 pow(deformationGradientInc.Determinant(),-1./3.);
+         pow(deformationGradientInc.Determinant(),-1./3.);
 
         bElBar_new[idx] = fbar*bElBar_old[idx]*fbar.Transpose();
 
@@ -498,6 +538,7 @@ CompNeoHookImplicit::computeStressTensor(const PatchSubset* patches,
 
         // compute the total stress (volumetric + deviatoric)
         pstress[idx] = Identity*p + shrTrl/J;
+        //cout << "Last:p = " << p << " J = " << J << " tdev = " << shrTrl << endl;
 
         pvolume_deformed[idx] = pvolumeold[idx]*J;
       }
@@ -506,9 +547,9 @@ CompNeoHookImplicit::computeStressTensor(const PatchSubset* patches,
 }
 
 void CompNeoHookImplicit::addComputesAndRequires(Task* task,
-						 const MPMMaterial* matl,
-						 const PatchSet* ,
-						 const bool ) const
+                                                 const MPMMaterial* matl,
+                                                 const PatchSet* ,
+                                                 const bool ) const
 {
   const MaterialSubset* matlset = matl->thisMaterial();
 
@@ -528,8 +569,8 @@ void CompNeoHookImplicit::addComputesAndRequires(Task* task,
 }
 
 void CompNeoHookImplicit::addComputesAndRequires(Task* task,
-						 const MPMMaterial* matl,
-						 const PatchSet*) const
+                                                 const MPMMaterial* matl,
+                                                 const PatchSet*) const
 {
   const MaterialSubset* matlset = matl->thisMaterial();
   task->requires(Task::OldDW, lb->pXLabel,                 matlset,Ghost::None);
@@ -567,9 +608,9 @@ double CompNeoHookImplicit::computeRhoMicroCM(double pressure,
 }
 
 void CompNeoHookImplicit::computePressEOSCM(const double rho_cur,double& pressure, 
-				    const double p_ref,
-				    double& dp_drho, double& tmp,
-				    const MPMMaterial* matl)
+                                    const double p_ref,
+                                    double& dp_drho, double& tmp,
+                                    const MPMMaterial* matl)
 {
   double bulk = d_initialData.Bulk;
   double rho_orig = matl->getInitialDensity();
@@ -614,8 +655,8 @@ namespace Uintah {
     static TypeDescription* td = 0;
     if(!td){
       td = scinew TypeDescription(TypeDescription::Other,
-				  "CompNeoHookImplicit::StateData", true, 
-				  &makeMPI_CMData);
+                                  "CompNeoHookImplicit::StateData", true, 
+                                  &makeMPI_CMData);
     }
     return td;
   }
