@@ -1,0 +1,166 @@
+# SCI Network 1.0
+
+global userName
+set userName "kuzimmer"
+
+global runDate
+set runDate " Wed  Jan 20 1999"
+
+global runTime
+set runTime " 12:41:21"
+
+set m0 [addModuleAtPosition TecplotFileSelector 198 26]
+set m1 [addModuleAtPosition ParticleGridVisControl 161 187]
+set m2 [addModuleAtPosition GenStandardColorMaps 220 110]
+set m3 [addModuleAtPosition PartToGeom 198 448]
+set m4 [addModuleAtPosition Salmon 28 679]
+set m5 [addModuleAtPosition GenStandardColorMaps 9 112]
+set m6 [addModuleAtPosition RescaleColorMap 8 222]
+set m7 [addModuleAtPosition CuttingPlane 5 569]
+set m8 [addModuleAtPosition Hedgehog 64 329]
+set m9 [addModuleAtPosition RescaleParticleColorMap 197 273]
+set m10 [addModuleAtPosition cfdGridLines 39 415]
+
+addConnection $m0 0 $m1 0
+addConnection $m3 0 $m4 0
+addConnection $m1 0 $m6 1
+addConnection $m5 0 $m6 0
+addConnection $m6 0 $m7 1
+addConnection $m7 0 $m4 1
+addConnection $m1 1 $m8 0
+addConnection $m8 0 $m4 2
+addConnection $m1 0 $m7 0
+addConnection $m9 0 $m3 0
+addConnection $m9 1 $m3 1
+addConnection $m9 2 $m3 2
+addConnection $m1 2 $m9 0
+addConnection $m1 3 $m9 1
+addConnection $m2 0 $m9 2
+addConnection $m1 0 $m8 1
+addConnection $m10 0 $m4 3
+addConnection $m1 0 $m10 0
+
+set TecplotFileSelector_0-notes {}
+set TecplotFileSelector_0-tcl_status {Calling TecplotFileSelector!}
+set TecplotFileSelector_0-filebase {/home/sci/data19/kuzimmer/data/tecplot/3D/billet/partout0000}
+set TecplotFileSelector_0-animate 0
+set TecplotFileSelector_0-startFrame 0
+set TecplotFileSelector_0-endFrame 0
+set TecplotFileSelector_0-increment 0
+set ParticleGridVisControl_0-notes {}
+set ParticleGridVisControl_0-tcl_status {Calling ParticleGridVisControl!}
+set ParticleGridVisControl_0-sVar {eXX}
+set ParticleGridVisControl_0-vVar {UVW}
+set ParticleGridVisControl_0-psVar {eXX}
+set ParticleGridVisControl_0-pvVar {UVW}
+set ParticleGridVisControl_0-sFluid 1
+set ParticleGridVisControl_0-vFluid 1
+set ParticleGridVisControl_0-pFluid 1
+set GenStandardColorMaps_0-notes {}
+set GenStandardColorMaps_0-tcl_status {Calling GenStandardColorMaps!}
+set GenStandardColorMaps_0-mapType 4
+set GenStandardColorMaps_0-minRes 13
+set GenStandardColorMaps_0-resolution 120
+set PartToGeom_0-notes {}
+set PartToGeom_0-current_time 0
+set PartToGeom_0-radius 0.069498
+set PartToGeom_0-drawcylinders 0
+set PartToGeom_0-length_scale 0.30888
+set PartToGeom_0-head_length 0.197
+set PartToGeom_0-width_scale 0.039
+set PartToGeom_0-shaft_rad 0.1
+set PartToGeom_0-drawVectors 0
+set PartToGeom_0-drawspheres 1
+set PartToGeom_0-polygons 67
+set Salmon_0-notes {}
+Salmon_0 ui Salmon_0-Roe_0
+set Salmon_0-Roe_0-tracker_state 0
+set Salmon_0-Roe_0-view-eyep-x 8.63953
+set Salmon_0-Roe_0-view-eyep-y 2.9942
+set Salmon_0-Roe_0-view-eyep-z 24.3055
+set Salmon_0-Roe_0-view-lookat-x 7.88001
+set Salmon_0-Roe_0-view-lookat-y 5.68642
+set Salmon_0-Roe_0-view-lookat-z -3.15948
+set Salmon_0-Roe_0-view-up-x -0.0118007
+set Salmon_0-Roe_0-view-up-y 0.995129
+set Salmon_0-Roe_0-view-up-z 0.0978716
+set Salmon_0-Roe_0-view-fov 20
+set Salmon_0-Roe_0-view-eyep-x 8.63953
+set Salmon_0-Roe_0-view-eyep-y 2.9942
+set Salmon_0-Roe_0-view-eyep-z 24.3055
+set Salmon_0-Roe_0-view-eyep-x 8.63953
+set Salmon_0-Roe_0-view-eyep-y 2.9942
+set Salmon_0-Roe_0-view-eyep-z 24.3055
+set Salmon_0-Roe_0-view-lookat-x 7.88001
+set Salmon_0-Roe_0-view-lookat-y 5.68642
+set Salmon_0-Roe_0-view-lookat-z -3.15948
+set Salmon_0-Roe_0-view-lookat-x 7.88001
+set Salmon_0-Roe_0-view-lookat-y 5.68642
+set Salmon_0-Roe_0-view-lookat-z -3.15948
+set Salmon_0-Roe_0-view-up-x -0.0118007
+set Salmon_0-Roe_0-view-up-y 0.995129
+set Salmon_0-Roe_0-view-up-z 0.0978716
+set Salmon_0-Roe_0-view-up-x -0.0118007
+set Salmon_0-Roe_0-view-up-y 0.995129
+set Salmon_0-Roe_0-view-up-z 0.0978716
+set Salmon_0-Roe_0-view-fov 20
+set Salmon_0-Roe_0-view-eyep_offset-x -1.79769e+308
+set Salmon_0-Roe_0-view-eyep_offset-y -1.79769e+308
+set Salmon_0-Roe_0-view-eyep_offset-z -1.79769e+308
+set Salmon_0-Roe_0-view-eyep_offset-x -1.79769e+308
+set Salmon_0-Roe_0-view-eyep_offset-y -1.79769e+308
+set Salmon_0-Roe_0-view-eyep_offset-z -1.79769e+308
+set Salmon_0-Roe_0-bgcolor-r 0
+set Salmon_0-Roe_0-bgcolor-g 0
+set Salmon_0-Roe_0-bgcolor-b 0
+set Salmon_0-Roe_0-bgcolor-r 0
+set Salmon_0-Roe_0-bgcolor-g 0
+set Salmon_0-Roe_0-bgcolor-b 0
+set Salmon_0-Roe_0-shading {}
+set Salmon_0-Roe_0-do_stereo 0
+set Salmon_0-Roe_0-drawimg -2147483647
+set Salmon_0-Roe_0-saveprefix {}
+set {Salmon_0-Roe_0-Hedgehog Widget (3)} 0
+set {Salmon_0-Roe_0-CuttingPlane Widget (2)} 0
+set {Salmon_0-Roe_0-Hedgehog (3)} 0
+set {Salmon_0-Roe_0-Particles (1)} 1
+set {Salmon_0-Roe_0-Grid Lines (4)} 1
+set {Salmon_0-Roe_0-Cutting Plane (2)} 0
+set GenStandardColorMaps_1-notes {}
+set GenStandardColorMaps_1-tcl_status {Calling GenStandardColorMaps!}
+set GenStandardColorMaps_1-mapType 2
+set GenStandardColorMaps_1-minRes 12
+set GenStandardColorMaps_1-resolution 176
+set RescaleColorMap_0-notes {}
+set CuttingPlane_0-notes {}
+set CuttingPlane_0-cutting_plane_type 0
+set CuttingPlane_0-num_contours 20
+set CuttingPlane_0-offset 0.000553
+set CuttingPlane_0-scale 1
+set CuttingPlane_0-where 0.51
+set CuttingPlane_0-need_find 1
+set CuttingPlane_0-localMinMaxTCL 0
+set CuttingPlane_0-fullRezTCL 0
+set CuttingPlane_0-exhaustiveTCL 0
+set Hedgehog_0-notes {}
+set Hedgehog_0-length_scale 0.145985
+set Hedgehog_0-width_scale 0.079
+set Hedgehog_0-head_length 0.237
+set Hedgehog_0-type {2D}
+set Hedgehog_0-exhaustive_flag 0
+set Hedgehog_0-drawcylinders 0
+set Hedgehog_0-shaft_rad 0
+set RescaleParticleColorMap_0-notes {}
+set RescaleParticleColorMap_0-minVal 0.999999
+set RescaleParticleColorMap_0-maxVal 1
+set RescaleParticleColorMap_0-scaleMode {auto}
+set cfdGridLines_0-notes {}
+set cfdGridLines_0-rad 0.0386
+set cfdGridLines_0-scalex 1
+set cfdGridLines_0-scaley 1
+set cfdGridLines_0-expy 0
+set cfdGridLines_0-expx 0
+set cfdGridLines_0-mode 1
+$m0 ui
+$m2 ui
+

@@ -1,0 +1,9 @@
+EXPORTS
+	PersistentTypeID
+	Piostream 
+	Persistent
+	Hash
+	BinaryPiostream
+	TextPiostream
+	GzipPiostream
+	GunzipPiostream
