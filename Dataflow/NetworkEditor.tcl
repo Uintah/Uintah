@@ -26,6 +26,11 @@ proc makeNetworkEditor {} {
     menu .main_menu.file.menu
     .main_menu.file.menu add command -label "Save..." -underline 0 \
 	-command "popupSaveMenu"
+
+# This was added by Mohamed Dekhil to add some infor to the net
+    .main_menu.file.menu add command -label "Add Info..." -underline 0 \
+	-command "popupInfoMenu"
+
     .main_menu.file.menu add command -label "Quit" -underline 0 \
 	    -command "netedit quit"
     
@@ -237,6 +242,116 @@ proc popupSaveMenu {} {
     makeFilebox $w netedit_savefile {netedit savenetwork $netedit_savefile} \
 	"destroy $w"
 }
+
+# This proc was added by Mohamed Dekhil to save some info about the net
+
+proc popupInfoMenu {} {
+
+    global userName
+    global runDate
+    global runTime
+    global notes
+
+    global oldUserName
+    global oldRunDate
+    global oldRunTime
+    global oldNotes
+
+    set oldUserName ""
+    set oldRunDate ""
+    set oldRunTime ""
+    set oldNotes ""
+
+    if [info exists userName] {set oldUserName $userName}
+    if [info exists runDate] {set oldRunDate $runDate}
+    if [info exists runTime] {set oldRunTime $runTime}
+    if [info exists notes] {set oldNotes $notes}    
+
+    set w .netedit_info
+    if {[winfo exists $w]} {
+	raise $w
+	return;
+    }
+    toplevel $w
+
+    frame $w.fname
+    label $w.fname.lname -text "User: " -padx 3 -pady 3
+    entry $w.fname.ename -width 50 -relief sunken -bd 2 -textvariable userName
+
+
+    frame $w.fdt
+    label $w.fdt.ldate -text "Date: " -padx 3 -pady 3 
+    entry $w.fdt.edate -width 20 -relief sunken -bd 2 -textvariable runDate
+#    label $w.fdt.edate -text [exec date] -padx 3 -pady 3 -relief sunken
+
+    label $w.fdt.ltime -text "Time: " -padx 5 -pady 3 
+    entry $w.fdt.etime -width 10 -relief sunken -bd 2 -textvariable runTime
+
+    frame $w.fnotes
+    label $w.fnotes.lnotes -text "Notes " -padx 2 -pady 5 
+    text $w.fnotes.tnotes -relief sunken -bd 2 -yscrollcommand "$w.fnotes.scroll set"
+    scrollbar $w.fnotes.scroll -command "$w.fnotes.tnotes yview"
+    if [info exists notes] {$w.fnotes.tnotes insert 1.0 $notes}
+
+    
+    frame $w.fbuttons 
+    button $w.fbuttons.ok -text "Done" -command "infoOk $w"
+    button $w.fbuttons.clear -text "Clear All" -command "infoClear $w"
+    button $w.fbuttons.cancel -text "Cancel" -command "infoCancel $w"
+
+    pack $w.fname $w.fdt $w.fnotes $w.fbuttons -side top -padx 1 -pady 1 -ipadx 2 -ipady 2 -fill x
+
+    pack $w.fname.lname $w.fname.ename -side left
+
+    pack $w.fdt.ldate $w.fdt.edate $w.fdt.ltime $w.fdt.etime -side left 
+
+    pack $w.fnotes.lnotes $w.fnotes.tnotes -side left
+    pack $w.fnotes.scroll -side right -fill y
+
+    pack $w.fbuttons.ok $w.fbuttons.clear $w.fbuttons.cancel -side right -padx 5 -pady 5 -ipadx 3 -ipady 3
+}
+
+proc infoClear {w} {
+    global userName
+    global runDate
+    global runTime
+    global notes
+
+    set userName ""
+    set runDate ""
+    set runTime ""
+    set notes ""
+
+    $w.fnotes.tnotes delete 1.0 end
+#    destroy $w
+}
+
+proc infoOk {w} {
+    global notes
+
+    set notes [$w.fnotes.tnotes get 1.0 end]
+    destroy $w
+}
+
+proc infoCancel {w} {
+    global userName
+    global runDate
+    global runTime
+    global notes
+
+    global oldUserName
+    global oldRunDate
+    global oldRunTime
+    global oldNotes
+
+    set userName $oldUserName
+    set runDate $oldRunDate
+    set runTime $oldRunTime
+    set notes $oldNotes
+
+    destroy $w
+} 
+
 
 
 source $sci_root/TCL/MemStats.tcl

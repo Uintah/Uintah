@@ -19,6 +19,8 @@
 #include <Classlib/Timer.h>
 #include <Multitask/ITC.h>
 #include <TCL/TCL.h>
+#include <TCL/TCLvar.h>
+
 class Connection;
 class IPort;
 class MessageBase;
@@ -29,6 +31,8 @@ class Vector;
 class GeomPick;
 
 class Module : public TCL {
+    // Added by Mohamed Dekhil for the CSAFE project
+  TCLstring notes ;
 public:
     enum State {
 	NeedData,
@@ -121,6 +125,7 @@ public:
 
     clString id;
     void tcl_command(TCLArgs&, void*);
+
 };
 
 #endif /* SCI_project_Module_h */

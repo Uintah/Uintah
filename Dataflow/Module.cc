@@ -29,14 +29,16 @@ Module::Module(const clString& name, const clString& id,
 	       SchedClass sched_class)
 : state(NeedData), helper(0), have_own_dispatch(0), mailbox(100),
   name(name), abort_flag(0), need_execute(0),
-  sched_class(sched_class), id(id), progress(0)
+  sched_class(sched_class), id(id), progress(0) ,
+  notes("notes", id, this)
 {
 }
 
 Module::Module(const Module& copy, int)
 : state(NeedData), helper(0), have_own_dispatch(0), mailbox(100),
   name(copy.name), abort_flag(0), need_execute(0),
-  sched_class(copy.sched_class), id(copy.id)
+  sched_class(copy.sched_class), id(copy.id),
+  notes("notes", id, this)
 {
     NOT_FINISHED("Module copy CTOR");
 }

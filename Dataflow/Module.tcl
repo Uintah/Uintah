@@ -4,9 +4,14 @@ set port_width 13
 set port_height 7
 
 itcl_class Module {
-    constructor {config} {
+    constructor {config} {	
+       global $this-notes
+	if [info exists $this-notes] {
+	    set dum 0
+	} else {set $this-notes ""}
     }
-    method config {config} {}
+    method config {config} {
+    }
     public name
     protected canvases ""
     protected make_progress_graph 1
@@ -124,6 +129,10 @@ itcl_class Module {
 	menu $p.menu
 	$p.menu add command -label "Execute" -command "$this-c needexecute"
 	$p.menu add command -label "Help" -command "moduleHelp $name"
+
+# This menu item was added by Mohamed Dekhil for the CSAFE project
+	$p.menu add command -label "Notes" -command "moduleNotes $name $this"
+
 	$p.menu add command -label "Destroy" -command "moduleDestroy $canvas $this"
 
 	bind $canvas <1> "$canvas raise current"
@@ -612,6 +621,32 @@ proc moduleHelp {name} {
     global sci_root
     helpPage [glob $sci_root/Modules/*/help/$name.html]
 }
+
+# By Mohamed Dekhil
+
+proc moduleNotes {name mclass} {
+    
+    global $mclass-notes
+    set w .module_notes
+    toplevel $w
+    text $w.tnotes -relief sunken -bd 2 
+    frame $w.fbuttons 
+    button $w.fbuttons.ok -text "Done" -command "okNotes $w $mclass"
+    button $w.fbuttons.cancel -text "Cancel" -command "destroy $w"
+    
+    pack $w.tnotes $w.fbuttons -side top -padx 5 -pady 5
+    pack $w.fbuttons.ok -side right -padx 5 -pady 5 -ipadx 3 -ipady 3
+    if [info exists $mclass-notes] {$w.tnotes insert 1.0 [set $mclass-notes]}
+}
+
+# By Mohamed Dekhil
+
+proc okNotes {w mclass} {
+    global $mclass-notes
+    set  $mclass-notes [$w.tnotes get 1.0 end]
+    destroy $w
+}
+
 
 proc moduleDestroy {c modid} {
     set modList [netedit getconnected $modid]

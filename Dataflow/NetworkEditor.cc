@@ -24,13 +24,59 @@
 #include <Malloc/Allocator.h>
 #include <Math/MiscMath.h>
 #include <TCL/TCL.h>
+#include <TCL/TCLTask.h>
+#include <time.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <sys/types.h>
+#include <unistd.h>
 
 #include <fstream.h>
+#include <tcl/tcl/tcl.h>
+
+extern Tcl_Interp* the_interp;
+
+// This function was added by Mohamed Dekhil for CSAFE
+void init_notes ()
+{
+    // uid_t userID ;
+    char d[40] ;
+    char t[20] ;
+    char n[80] ;
+    time_t t1 ;
+    struct tm *t2 ;
+    char *myvalue ;
+    char *days[7] = {"Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"};
+    char *months[12] = {"Jan", "Feb", "Mar", "Apr", "May", "Jun", 
+			"Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
+    
+    
+    // Construct date, time and user name strings here and pass then to TCL.
+
+    //userID = getuid () ;
+    //strcpy (n, getlogin()) ;
+    strcpy (n, cuserid(NULL)) ;
+    printf ("User Name: %s\n", n) ;
+
+    t1 = time(NULL) ;
+    t2 = localtime (&t1) ;
+    sprintf (d, " %s  %s %0d 19%0d", days[t2->tm_wday], months[t2->tm_mon], 
+	     t2->tm_mday, t2->tm_year) ;
+    sprintf (t, " %0d:%0d:%0d", t2->tm_hour, t2->tm_min, t2->tm_sec) ;
+
+    myvalue = Tcl_SetVar (the_interp, "userName", n, TCL_GLOBAL_ONLY) ;
+    myvalue = Tcl_SetVar (the_interp, "runDate", d, TCL_GLOBAL_ONLY) ;
+    myvalue = Tcl_SetVar (the_interp, "runTime", t, TCL_GLOBAL_ONLY) ;
+    
+
+}
+
 
 NetworkEditor::NetworkEditor(Network* net)
 : Task("Network Editor", 1), net(net),
   first_schedule(1), mailbox(100), schedule(1)
 {
+
     // Create User interface...
     TCL::add_command("netedit", this, 0);
     TCL::source_once("Dataflow/NetworkEditor.tcl");
@@ -39,6 +85,8 @@ NetworkEditor::NetworkEditor(Network* net)
     // Initialize the network
     net->initialize(this);
 
+    // This part was added by Mohamed Dekhil for CSAFE
+    init_notes () ;
 }
 
 NetworkEditor::~NetworkEditor()
@@ -231,6 +279,8 @@ void NetworkEditor::add_text(const clString& str)
 
 void NetworkEditor::save_network(const clString& filename)
 {
+    char *myvalue ;
+
     ofstream out(filename());
     if(!out)
       return;
@@ -239,6 +289,37 @@ void NetworkEditor::save_network(const clString& filename)
     out << "netedit dontschedule\n";
     out << "\n";
     net->read_lock();
+
+    // Added by Mohamed Dekhil for saving extra information
+
+    TCLTask::lock();
+
+    myvalue = Tcl_GetVar (the_interp, "userName", TCL_GLOBAL_ONLY) ;
+    if (myvalue != NULL) {
+      out << "global userName\nset userName \"" << myvalue << "\"\n" ;
+      out << "\n" ;
+    }
+    myvalue = Tcl_GetVar (the_interp, "runDate", TCL_GLOBAL_ONLY) ;
+    if (myvalue != NULL) {
+      out << "global runDate\nset runDate \"" << myvalue << "\"\n" ;
+      out << "\n" ;
+    }
+    myvalue = Tcl_GetVar (the_interp, "runTime", TCL_GLOBAL_ONLY) ;
+    if (myvalue != NULL) {
+      out << "global runTime\nset runTime \"" << myvalue << "\"\n" ;
+      out << "\n" ;
+    }
+    myvalue = Tcl_GetVar (the_interp, "notes", TCL_GLOBAL_ONLY) ;
+    if (myvalue != NULL) {
+      out << "global notes\nset notes \"" << myvalue << "\"\n" ;
+      out << "\n" ;
+    }
+
+    TCLTask::unlock();
+
+
+    // --------------------------------------------------------------------
+
     for(int i=0;i<net->nmodules();i++){
         Module* module=net->module(i);
 	int x, y;
