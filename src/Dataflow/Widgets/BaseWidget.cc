@@ -42,7 +42,6 @@
 #include <Core/Thread/Mutex.h>
 #include <Core/Util/NotFinished.h>
 #include <iostream>
-using std::cerr;
 using std::cout;
 using std::endl;
 using std::ostream;
@@ -610,9 +609,6 @@ void
 BaseWidget::geom_pick( GeomPick* pick, ViewWindow* /*roe*/,
 		       int /* cbdata */, const BState& state )
 {
-  cerr << "btn=" << state.btn << endl;
-  cerr << "alt=" << state.alt << endl;
-  cerr << "ctl=" << state.control << endl;
   if (state.btn == 3 && !state.alt && !state.control)
   {
     ui();
