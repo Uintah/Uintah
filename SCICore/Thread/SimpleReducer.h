@@ -15,6 +15,12 @@
 #ifndef SCICore_Thread_SimpleReducer_h
 #define SCICore_Thread_SimpleReducer_h
 
+#include <SCICore/Thread/Barrier.h>
+
+namespace SCICore {
+    namespace Thread {
+	class ThreadGroup;
+
 /**************************************
  
 CLASS
@@ -28,21 +34,8 @@ DESCRIPTION
    operations include things like global sums, global min/max, etc.
    In these operations, a local sum (operation) is performed on each
    thread, and these sums are added together.
- 
- 
-PATTERNS
-
-
-WARNING
    
 ****************************************/
-
-#include <SCICore/Thread/Barrier.h>
-
-namespace SCICore {
-    namespace Thread {
-	class ThreadGroup;
-
 	class SimpleReducer : public Barrier {
 	public:
 	    //////////
@@ -98,6 +91,9 @@ namespace SCICore {
 
 //
 // $Log$
+// Revision 1.3  1999/09/02 16:52:44  sparker
+// Updates to cocoon documentation
+//
 // Revision 1.2  1999/08/29 00:47:01  sparker
 // Integrated new thread library
 // using statement tweaks to compile with both MipsPRO and g++

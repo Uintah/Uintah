@@ -15,6 +15,8 @@
 #ifndef SCICore_Thread_Time_h
 #define SCICore_Thread_Time_h
 
+namespace SCICore {
+    namespace Thread {
 /**************************************
  
 CLASS
@@ -24,16 +26,11 @@ KEYWORDS
    Thread, Time
    
 DESCRIPTION
- 
-PATTERNS
+   Utility class to manage Time.  This class is implemented using
+   high precision counters on the SGI, and standard unix system calls
+   on other machines.
 
-
-WARNING
-   
 ****************************************/
-
-namespace SCICore {
-    namespace Thread {
 	class Time {
 	public:
 	    typedef unsigned long long SysClock;
@@ -84,6 +81,9 @@ namespace SCICore {
 
 //
 // $Log$
+// Revision 1.5  1999/09/02 16:52:44  sparker
+// Updates to cocoon documentation
+//
 // Revision 1.4  1999/08/28 03:46:52  sparker
 // Final updates before integration with PSE
 //

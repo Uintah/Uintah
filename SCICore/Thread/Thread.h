@@ -15,7 +15,14 @@
 #ifndef SCICore_Thread_Thread_h
 #define SCICore_Thread_Thread_h
 
+#include <SCICore/Thread/ParallelBase.h>
+#include <SCICore/Thread/Runnable.h>
 
+namespace SCICore {
+    namespace Thread {
+	struct Thread_private;
+	class ThreadGroup;
+	
 /**************************************
  
 CLASS
@@ -29,22 +36,8 @@ DESCRIPTION
    The Thread class provides a new context in which to run.  A single
    Runnable class is attached to a single Thread class, which are
    executed in another thread.
- 
-PATTERNS
-
-
-WARNING
    
 ****************************************/
-
-#include <SCICore/Thread/ParallelBase.h>
-#include <SCICore/Thread/Runnable.h>
-
-namespace SCICore {
-    namespace Thread {
-	struct Thread_private;
-	class ThreadGroup;
-	
 	class Thread {
 	public:
 	    //////////
@@ -251,6 +244,9 @@ namespace SCICore {
 
 //
 // $Log$
+// Revision 1.10  1999/09/02 16:52:44  sparker
+// Updates to cocoon documentation
+//
 // Revision 1.9  1999/08/31 08:59:05  sparker
 // Configuration and other updates for globus
 // First import of beginnings of new component library

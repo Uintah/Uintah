@@ -15,7 +15,10 @@
 #ifndef SCICore_Thread_ConditionVariable_h
 #define SCICore_Thread_ConditionVariable_h
 
-
+namespace SCICore {
+    namespace Thread {
+	class ConditionVariable_private;
+	class Mutex;
 /**************************************
  
 CLASS
@@ -35,17 +38,8 @@ DESCRIPTION
    The thread waits for that condition, until it is unblocked by another
    thread that caused the condition to exist (<i>i.e.</i> freed the
    resource).
-PATTERNS
-
-
-WARNING
    
 ****************************************/
-
-namespace SCICore {
-    namespace Thread {
-	class ConditionVariable_private;
-	class Mutex;
 
 	class ConditionVariable {
 	public:
@@ -94,6 +88,9 @@ namespace SCICore {
 
 //
 // $Log$
+// Revision 1.7  1999/09/02 16:52:41  sparker
+// Updates to cocoon documentation
+//
 // Revision 1.6  1999/08/28 03:46:47  sparker
 // Final updates before integration with PSE
 //

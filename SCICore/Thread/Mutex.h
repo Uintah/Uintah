@@ -15,6 +15,10 @@
 #ifndef SCICore_Thread_Mutex_h
 #define SCICore_Thread_Mutex_h
 
+namespace SCICore {
+    namespace Thread {
+	class Mutex_private;
+
 /**************************************
  
 CLASS
@@ -28,17 +32,8 @@ DESCRIPTION
    <b>lock()</b> and <b>unlock()</b> will lock and unlock the mutex.
    This is not a recursive Mutex (See <b>RecursiveMutex</b>), and calling
    lock() in a nested call will result in an error or deadlock.
-PATTERNS
 
-
-WARNING
-   
 ****************************************/
-
-namespace SCICore {
-    namespace Thread {
-	class Mutex_private;
-
 	class Mutex {
 	public:
 	    //////////
@@ -81,6 +76,9 @@ namespace SCICore {
 
 //
 // $Log$
+// Revision 1.7  1999/09/02 16:52:42  sparker
+// Updates to cocoon documentation
+//
 // Revision 1.6  1999/08/28 03:46:48  sparker
 // Final updates before integration with PSE
 //

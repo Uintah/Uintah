@@ -15,6 +15,11 @@
 #ifndef SCICore_Thread_CrowdMonitor_h
 #define SCICore_Thread_CrowdMonitor_h
 
+#include <SCICore/Thread/Mutex.h>
+
+namespace SCICore {
+    namespace Thread {
+	class CrowdMonitor_private;
 /**************************************
  
 CLASS
@@ -36,9 +41,6 @@ DESCRIPTION
    multiple writers accessing a data, and against a thread writing
    to the data while other threads are reading it.
 
-PATTERNS
-
-
 WARNING
    <p> Calling <i>readLock</i> within a <i>writeLock/write_unlock</i>
    section may result in a deadlock.  Likewise, calling <i>writeLock</i>
@@ -47,12 +49,6 @@ WARNING
    not held is not legal and may result in undefined behavior.
    
 ****************************************/
-
-#include <SCICore/Thread/Mutex.h>
-
-namespace SCICore {
-    namespace Thread {
-	class CrowdMonitor_private;
 
 	class CrowdMonitor {
 	public:
@@ -108,6 +104,9 @@ namespace SCICore {
 
 //
 // $Log$
+// Revision 1.7  1999/09/02 16:52:42  sparker
+// Updates to cocoon documentation
+//
 // Revision 1.6  1999/08/28 03:46:47  sparker
 // Final updates before integration with PSE
 //

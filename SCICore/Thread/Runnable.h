@@ -15,6 +15,10 @@
 #ifndef SCICore_Thread_Runnable_h
 #define SCICore_Thread_Runnable_h
 
+namespace SCICore {
+    namespace Thread {
+	class Thread;
+
 /**************************************
  
 CLASS
@@ -37,19 +41,8 @@ DESCRIPTION
    deleted by the <b>Thread</b> to which it is attached, when the
    thread terminates.  The destructor will be executed in the context
    of this same thread.
-  
- 
-PATTERNS
-
-
-WARNING
    
 ****************************************/
-
-namespace SCICore {
-    namespace Thread {
-	class Thread;
-
 	class Runnable {
 	protected:
 	    friend class Thread;
@@ -85,6 +78,9 @@ namespace SCICore {
 
 //
 // $Log$
+// Revision 1.7  1999/09/02 16:52:43  sparker
+// Updates to cocoon documentation
+//
 // Revision 1.6  1999/08/28 03:46:50  sparker
 // Final updates before integration with PSE
 //
