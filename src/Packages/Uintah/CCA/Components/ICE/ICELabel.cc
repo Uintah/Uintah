@@ -96,6 +96,13 @@ ICELabel::ICELabel()
     VarLabel::create("sp_volY_FC",  SFCYVariable<double>::getTypeDescription() );
   sp_volZ_FCLabel  = 
     VarLabel::create("sp_volZ_FC",  SFCZVariable<double>::getTypeDescription() );
+  vol_fracX_FCLabel  = 
+    VarLabel::create("vol_fracX_FC",SFCXVariable<double>::getTypeDescription() );  
+  vol_fracY_FCLabel  = 
+    VarLabel::create("vol_fracY_FC",SFCYVariable<double>::getTypeDescription() );  
+  vol_fracZ_FCLabel  = 
+    VarLabel::create("vol_fracZ_FC",SFCZVariable<double>::getTypeDescription() );  
+    
   
   // Face centered variables
   uvel_FCLabel       = 
@@ -207,7 +214,10 @@ ICELabel::~ICELabel()
     VarLabel::destroy(imp_delPLabel);  
     VarLabel::destroy(sp_volX_FCLabel); 
     VarLabel::destroy(sp_volY_FCLabel);
-    VarLabel::destroy(sp_volZ_FCLabel); 
+    VarLabel::destroy(sp_volZ_FCLabel);
+    VarLabel::destroy(vol_fracX_FCLabel); 
+    VarLabel::destroy(vol_fracY_FCLabel);
+    VarLabel::destroy(vol_fracZ_FCLabel); 
     
     // Face centered variables
     VarLabel::destroy(uvel_FCLabel);

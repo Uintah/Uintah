@@ -57,6 +57,9 @@ namespace Uintah {
     const VarLabel* sp_volX_FCLabel;
     const VarLabel* sp_volY_FCLabel;    
     const VarLabel* sp_volZ_FCLabel;
+    const VarLabel* vol_fracX_FCLabel;
+    const VarLabel* vol_fracY_FCLabel;    
+    const VarLabel* vol_fracZ_FCLabel;
     
     // Face centered variables
     const VarLabel* uvel_FCLabel;
