@@ -180,6 +180,8 @@ int PicardNonlinearSolver::nonlinearSolve(const LevelP& level,
   // to a cell centered vector for used by the viz tools
   sched_interpolateFromFCToCC(level, sched, old_dw, new_dw);
 
+  /* Do 'save's in the DataArchiver section of the problem specification now
+
   // Save the old data (previous time step)
 #if 0
   new_dw->pleaseSave(d_lab->d_pressureINLabel, 1);
@@ -205,6 +207,8 @@ int PicardNonlinearSolver::nonlinearSolve(const LevelP& level,
 
   // Save the new velocity as a CC<Vector> Variable
   new_dw->pleaseSave(d_lab->d_newCCVelocityLabel, 1);
+  */
+  
   return(0);
 }
 
@@ -524,6 +528,9 @@ PicardNonlinearSolver::computeResidual(const LevelP& /*level*/,
 
 //
 // $Log$
+// Revision 1.54  2000/12/07 01:25:53  witzel
+// Commented out pleaseSave stuff (now done via the problem specification).
+//
 // Revision 1.53  2000/10/16 16:48:28  sparker
 // Ghost cells required for interpolate FC to CC
 //

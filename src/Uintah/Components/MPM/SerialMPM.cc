@@ -254,6 +254,8 @@ void SerialMPM::scheduleTimeAdvance(double t, double dt,
 				     lb->pXLabel, lb->d_particleState,
 				     numMatls);
 
+   /* Do 'save's in the DataArchiver section of the problem specification now
+
    new_dw->pleaseSave(lb->pXLabel, numMatls);
 //   new_dw->pleaseSave(lb->pVelocityLabel, numMatls);
    new_dw->pleaseSave(lb->pVolumeLabel, numMatls);
@@ -284,6 +286,7 @@ void SerialMPM::scheduleTimeAdvance(double t, double dt,
    new_dw->pleaseSaveIntegrated(lb->TotalMassLabel);
    new_dw->pleaseSaveIntegrated(lb->CenterOfMassPositionLabel);
    new_dw->pleaseSaveIntegrated(lb->CenterOfMassVelocityLabel);
+   */
 }
 
 void SerialMPM::scheduleComputeNodeVisibility(const Patch* patch,
@@ -2071,6 +2074,9 @@ void SerialMPM::interpolateParticlesForSaving(const ProcessorGroup*,
 
 
 // $Log$
+// Revision 1.172  2000/12/07 01:23:59  witzel
+// Commented out pleaseSave stuff (now done via the problem specification).
+//
 // Revision 1.171  2000/12/06 19:38:19  guilkey
 // Tidied up the scheduleInterpolateToParticlesAndUpdate function.  Should
 // still work with MPI.  Fixed a couple of warnings.
