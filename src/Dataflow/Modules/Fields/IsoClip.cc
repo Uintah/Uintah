@@ -185,8 +185,10 @@ IsoClip::execute()
     return;
   }
 
+  MatrixHandle interp(0);
   FieldHandle ofield = algo->execute(this, ifieldhandle,
-				     isoval, gui_lte_.get());
+				     isoval, gui_lte_.get(),
+				     interp);
   
   FieldOPort *ofield_port = (FieldOPort *)get_oport("Output Field");
   if (!ofield_port)
@@ -196,6 +198,15 @@ IsoClip::execute()
   }
 
   ofield_port->send(ofield);
+
+  MatrixOPort *omatrix_port = (MatrixOPort *)get_oport("Interpolant");
+  if (!omatrix_port)
+  {
+    error("Unable to initialize oport 'Interpolant'.");
+    return;
+  }
+
+  omatrix_port->send(interp);
 }
 
 

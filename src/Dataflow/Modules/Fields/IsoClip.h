@@ -25,6 +25,7 @@
 #include <Core/Util/TypeDescription.h>
 #include <Core/Util/DynamicLoader.h>
 #include <Core/Util/ProgressReporter.h>
+#include <Core/Datatypes/SparseRowMatrix.h>
 #include <sci_hash_map.h>
 #include <algorithm>
 
@@ -38,7 +39,8 @@ class IsoClipAlgo : public DynamicAlgoBase
 public:
 
   virtual FieldHandle execute(ProgressReporter *reporter, FieldHandle fieldh,
-			      double isoval, bool lte) = 0;
+			      double isoval, bool lte,
+			      MatrixHandle &interpolant) = 0;
 
   //! support the dynamically compiled algorithm concept
   static CompileInfoHandle get_compile_info(const TypeDescription *fsrc,
@@ -56,7 +58,8 @@ class IsoClipAlgoTet : public IsoClipAlgo
 public:
   //! virtual interface. 
   virtual FieldHandle execute(ProgressReporter *reporter, FieldHandle fieldh,
-			      double isoval, bool lte);
+			      double isoval, bool lte,
+			      MatrixHandle &interpolant);
 private:
 
   struct upairhash
@@ -84,7 +87,7 @@ private:
 
   struct utrippleequal
   {
-    unsigned int operator()(const utripple &a, const utripple &b) const
+    bool operator()(const utripple &a, const utripple &b) const
     {
       return a.first == b.first && a.second == b.second && a.third == b.third;
     }
@@ -213,7 +216,7 @@ IsoClipAlgoTet<FIELD>::face_lookup(unsigned int u0, unsigned int u1,
 template <class FIELD>
 FieldHandle
 IsoClipAlgoTet<FIELD>::execute(ProgressReporter *mod, FieldHandle fieldh,
-			       double isoval, bool lte)
+			       double isoval, bool lte, MatrixHandle &interp)
 {
   FIELD *field = dynamic_cast<FIELD*>(fieldh.get_rep());
   typename FIELD::mesh_type *mesh =
@@ -561,40 +564,54 @@ class IsoClipAlgoTri : public IsoClipAlgo
 public:
   //! virtual interface. 
   virtual FieldHandle execute(ProgressReporter *reporter, FieldHandle fieldh,
-			      double isoval, bool lte);
+			      double isoval, bool lte, MatrixHandle &interp);
 private:
 
-  struct upairhash
+  struct edgepair_t
   {
-    unsigned int operator()(const pair<unsigned int, unsigned int> &a) const
+    unsigned int first;
+    unsigned int second;
+    double dfirst;
+  };
+
+  struct edgepairequal
+  {
+    bool operator()(const edgepair_t &a, const edgepair_t &b) const
+    {
+      return a.first == b.first && a.second == b.second;
+    }
+  };
+
+#ifdef HAVE_HASH_MAP
+  struct edgepairhash
+  {
+    unsigned int operator()(const edgepair_t &a) const
     {
       hash<unsigned int> h;
       return h(a.first ^ a.second);
     }
   };
 
-#ifdef HAVE_HASH_MAP
   typedef hash_map<unsigned int,
 		   typename FIELD::mesh_type::Node::index_type,
 		   hash<unsigned int>,
 		   equal_to<unsigned int> > node_hash_type;
 
-  typedef hash_map<pair<unsigned int, unsigned int>,
+  typedef hash_map<edgepair_t,
 		   typename FIELD::mesh_type::Node::index_type,
-		   upairhash,
-		   equal_to<pair<unsigned int, unsigned int> > > edge_hash_type;
+		   edgepairhash, edgepairequal> edge_hash_type;
 #else
   typedef map<unsigned int,
 	      typename FIELD::mesh_type::Node::index_type,
 	      equal_to<unsigned int> > node_hash_type;
 
-  typedef map<pair<unsigned int, unsigned int>,
+  typedef map<edgepair_t,
 	      typename FIELD::mesh_type::Node::index_type,
-	      equal_to<pair<unsigned int, unsigned int> > > edge_hash_type;
+	      edgepairequal> edge_hash_type;
 #endif
 
   typename FIELD::mesh_type::Node::index_type
-  edge_lookup(unsigned int u0, unsigned int u1,
+  edge_lookup(unsigned int u0, unsigned int u1, double d0,
 	      const Point &p, edge_hash_type &edgemap,
 	      typename FIELD::mesh_type *clipped) const;
 };
@@ -604,12 +621,13 @@ private:
 template <class FIELD>
 typename FIELD::mesh_type::Node::index_type
 IsoClipAlgoTri<FIELD>::edge_lookup(unsigned int u0, unsigned int u1,
-				   const Point &p, edge_hash_type &edgemap,
+				   double d0, const Point &p,
+				   edge_hash_type &edgemap,
 				   typename FIELD::mesh_type *clipped) const
 {
-  pair<unsigned int, unsigned int> np;
-  if (u0 < u1)  { np.first = u0; np.second = u1; }
-  else { np.first = u1; np.second = u0; }
+  edgepair_t np;
+  if (u0 < u1)  { np.first = u0; np.second = u1; np.dfirst = d0; }
+  else { np.first = u1; np.second = u0; np.dfirst = 1.0 - d0; }
   if (edgemap.find(np) == edgemap.end())
   {
     const typename FIELD::mesh_type::Node::index_type nodeindex =
@@ -628,7 +646,7 @@ IsoClipAlgoTri<FIELD>::edge_lookup(unsigned int u0, unsigned int u1,
 template <class FIELD>
 FieldHandle
 IsoClipAlgoTri<FIELD>::execute(ProgressReporter *mod, FieldHandle fieldh,
-			       double isoval, bool lte)
+			       double isoval, bool lte, MatrixHandle &interp)
 {
   FIELD *field = dynamic_cast<FIELD*>(fieldh.get_rep());
   typename FIELD::mesh_type *mesh =
@@ -709,18 +727,20 @@ IsoClipAlgoTri<FIELD>::execute(ProgressReporter *mod, FieldHandle fieldh,
       }
 
       const double imv = isoval - v[perm[0]];
-      const Point l1 = Interpolate(p[perm[0]], p[perm[1]],
-				   imv / (v[perm[1]] - v[perm[0]]));
-      const Point l2 = Interpolate(p[perm[0]], p[perm[2]],
-				   imv / (v[perm[2]] - v[perm[0]]));
+      
+      const double dl1 = imv / (v[perm[1]] - v[perm[0]]);
+      const Point l1 = Interpolate(p[perm[0]], p[perm[1]], dl1);
+      const double dl2 = imv / (v[perm[2]] - v[perm[0]]);
+      const Point l2 = Interpolate(p[perm[0]], p[perm[2]], dl2);
+
 
       nnodes[1] = edge_lookup((unsigned int)onodes[perm[0]],
 			      (unsigned int)onodes[perm[1]],
-			      l1, edgemap, clipped);
+			      dl1, l1, edgemap, clipped);
 
       nnodes[2] = edge_lookup((unsigned int)onodes[perm[0]],
 			      (unsigned int)onodes[perm[2]],
-			      l2, edgemap, clipped);
+			      dl2, l2, edgemap, clipped);
 
       clipped->add_elem(nnodes);
     }
@@ -756,18 +776,18 @@ IsoClipAlgoTri<FIELD>::execute(ProgressReporter *mod, FieldHandle fieldh,
       }
 
       const double imv = isoval - v[perm[0]];
-      const Point l1 = Interpolate(p[perm[0]], p[perm[1]],
-				   imv / (v[perm[1]] - v[perm[0]]));
-      const Point l2 = Interpolate(p[perm[0]], p[perm[2]],
-				   imv / (v[perm[2]] - v[perm[0]]));
+      const double dl1 = imv / (v[perm[1]] - v[perm[0]]);
+      const Point l1 = Interpolate(p[perm[0]], p[perm[1]], dl1);
+      const double dl2 = imv / (v[perm[2]] - v[perm[0]]);
+      const Point l2 = Interpolate(p[perm[0]], p[perm[2]], dl2);
 
       inodes[2] = edge_lookup((unsigned int)onodes[perm[0]],
 			      (unsigned int)onodes[perm[1]],
-			      l1, edgemap, clipped);
+			      dl1, l1, edgemap, clipped);
 
       inodes[3] = edge_lookup((unsigned int)onodes[perm[0]],
 			      (unsigned int)onodes[perm[2]],
-			      l2, edgemap, clipped);
+			      dl2, l2, edgemap, clipped);
 
       typename FIELD::mesh_type::Node::array_type nnodes(onodes.size());
 
@@ -808,6 +828,67 @@ IsoClipAlgoTri<FIELD>::execute(ProgressReporter *mod, FieldHandle fieldh,
 
     ++emitr;
   }
+
+  // Create the interpolant matrix.
+  typename FIELD::mesh_type::Node::size_type nodesize;
+  clipped->size(nodesize);
+  const int nrows = nodesize;
+  mesh->size(nodesize);
+  const int ncols = nodesize;
+  int *rr = scinew int[nrows+1];
+  int *cctmp = scinew int[nrows*2];
+  double *dtmp = scinew double[nrows*2];
+
+  for (int i = 0; i < nrows * 2; i++)
+  {
+    cctmp[i] = -1;
+  }
+
+  int nnz = 0;
+
+  // Add the data values from the old field to the new field.
+  nmitr = nodemap.begin();
+  while (nmitr != nodemap.end())
+  {
+    cctmp[(*nmitr).second * 2] = (*nmitr).first;
+    dtmp[(*nmitr).second * 2 + 0] = 1.0;
+    nnz++;
+    ++nmitr;
+  }
+
+  // Insert the double hits into cc.
+  // Put the isovalue at the edge break points.
+  emitr = edgemap.begin();
+  while (emitr != edgemap.end())
+  {
+    cctmp[(*emitr).second * 2 + 0] = (*emitr).first.first;
+    cctmp[(*emitr).second * 2 + 1] = (*emitr).first.second;
+    dtmp[(*emitr).second * 2 + 0] = 1.0 - (*emitr).first.dfirst;
+    dtmp[(*emitr).second * 2 + 1] = (*emitr).first.dfirst;
+    nnz+=2;
+    ++emitr;
+  }
+
+  int *cc = scinew int[nnz];
+  double *d = scinew double[nnz];
+  
+  int j;
+  int counter = 0;
+  rr[0] = 0;
+  for (j = 0; j < nrows*2; j++)
+  {
+    if (j%2 == 0) { rr[j/2 + 1] = rr[j/2]; }
+    if (cctmp[j] != -1)
+    {
+      cc[counter] = cctmp[j];
+      d[counter] = dtmp[j];
+      rr[j/2 + 1]++;
+      counter++;
+    }
+  }
+  delete [] cctmp;
+  delete [] dtmp;
+  interp = scinew SparseRowMatrix(nrows, ncols, rr, cc, nnz, d);
 
   return ofield;
 }

@@ -63,6 +63,10 @@
 	<name>Output Field</name>
 	<datatype>SCIRun::Field</datatype>
       </port>
+      <port>
+	<name>Interpolant</name>
+	<datatype>SCIRun::Matrix</datatype>
+      </port>
     </outputs>
   </io>
   <testing>
