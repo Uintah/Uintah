@@ -73,14 +73,14 @@ void Patch::findCellsFromNode( const IntVector& nodeIndex,
    int iy = nodeIndex.y();
    int iz = nodeIndex.z();
 
-   cellIndex[0] = IntVector(ix, iy, iz)+d_lowIndex;
-   cellIndex[1] = IntVector(ix, iy, iz-1)+d_lowIndex;
-   cellIndex[2] = IntVector(ix, iy-1, iz)+d_lowIndex;
-   cellIndex[3] = IntVector(ix, iy-1, iz-1)+d_lowIndex;
-   cellIndex[4] = IntVector(ix-1, iy, iz)+d_lowIndex;
-   cellIndex[5] = IntVector(ix-1, iy, iz-1)+d_lowIndex;
-   cellIndex[6] = IntVector(ix-1, iy-1, iz)+d_lowIndex;
-   cellIndex[7] = IntVector(ix-1, iy-1, iz-1)+d_lowIndex;
+   cellIndex[0] = IntVector(ix, iy, iz);
+   cellIndex[1] = IntVector(ix, iy, iz-1);
+   cellIndex[2] = IntVector(ix, iy-1, iz);
+   cellIndex[3] = IntVector(ix, iy-1, iz-1);
+   cellIndex[4] = IntVector(ix-1, iy, iz);
+   cellIndex[5] = IntVector(ix-1, iy, iz-1);
+   cellIndex[6] = IntVector(ix-1, iy-1, iz);
+   cellIndex[7] = IntVector(ix-1, iy-1, iz-1);
 }
 
 bool Patch::findCellAndWeights(const Point& pos,
@@ -383,6 +383,9 @@ Patch::determineGhostPatches( int numGhostCells )
 
 //
 // $Log$
+// Revision 1.4  2000/06/02 20:44:56  tan
+// Corrected a mistake in function findCellsFromNode().
+//
 // Revision 1.3  2000/06/02 19:58:01  tan
 // Added function findCellsFromNode() to find the 8 neighboring cell
 // indexes according to a given node index.
