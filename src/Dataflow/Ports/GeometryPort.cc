@@ -432,11 +432,9 @@ GeometryOPort::attach(Connection* c)
   Module* mod = c->iport->get_module();
   outbox_.push_back(&mod->mailbox);
   // Send the registration message.
-  
-  Mailbox<GeomReply> *tmp = 
-    new Mailbox<GeomReply> ("Temporary GeometryOPort mailbox", 1);
-  outbox_[which]->send(scinew GeometryComm(tmp));
-  GeomReply reply = tmp->receive();
+  Mailbox<GeomReply> tmp("Temporary GeometryOPort mailbox", 0);
+  outbox_[which]->send(scinew GeometryComm(&tmp));
+  GeomReply reply = tmp.receive();
   portid_.push_back(reply.portid);
   if (module->showStats()) turn_off();
 
@@ -521,7 +519,7 @@ GeometryOPort::getNViewWindows(int viewer)
 GeometryData *
 GeometryOPort::getData(int which_viewer, int which_viewwindow, int datamask)
 {
-  if (which_viewer >= outbox_.size() || which_viewer < 0) return 0;
+  if (which_viewer >= (int)outbox_.size() || which_viewer < 0) return 0;
 
   FutureValue<GeometryData*> reply("Geometry getData reply");
   GeometryComm *msg = scinew GeometryComm(MessageTypes::GeometryGetData,
@@ -536,7 +534,7 @@ GeometryOPort::getData(int which_viewer, int which_viewwindow, int datamask)
 void
 GeometryOPort::setView(int which_viewer, int which_viewwindow, View view)
 {
-  if (which_viewer >= outbox_.size() || which_viewer < 0) return;
+  if (which_viewer >= (int)outbox_.size() || which_viewer < 0) return;
 
   GeometryComm* msg = scinew GeometryComm(MessageTypes::GeometrySetView,
 					  portid_[which_viewer],
@@ -545,9 +543,8 @@ GeometryOPort::setView(int which_viewer, int which_viewwindow, View view)
   outbox_[which_viewer]->send(msg);
 }
 
-
-//! GeometryComm now owns (and deletes) the reply memory.
-GeometryComm::GeometryComm(Mailbox<GeomReply>* reply)
+//! The memory for reply is not owned by this.
+GeometryComm::GeometryComm(Mailbox<GeomReply> *reply)
   : MessageBase(MessageTypes::GeometryInit),
     reply(reply)
 {
