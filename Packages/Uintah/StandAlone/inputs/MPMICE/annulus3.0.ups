@@ -173,7 +173,7 @@
 	<save label = "p.x"/>
 	<save label = "p.volume"/>
 	<save label = "p.mass"/>
-	<save label = "p.stress_afterStrainRate"/>
+	<save label = "p.stress"/>
 	<save label = "p.pressure"/>
 	<save label = "p.strainEnergy"/>
 	<save label = "p.isBroken"/>
