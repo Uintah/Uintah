@@ -1842,7 +1842,7 @@ getGridVar(VariableBase& var, DWDatabase& db,
       SCI_THROW(InternalError("Ghost cells specified with type: None!\n"));
     // if this assertion fails, then it is having problems getting the
     // correct window of the data.
-    bool no_realloc = var.rewindow(low, high);
+    USE_IF_ASSERTS_ON(bool no_realloc =) var.rewindow(low, high);
     ASSERT(no_realloc);
   }
   else {
@@ -2237,7 +2237,7 @@ putGridVar(VariableBase& var, DWDatabase& db,
      msg_str << "put: Variable's window (" << var.getLow() << " - " << var.getHigh() << ") must encompass patches extent (" << low << " - " << high;
      SCI_THROW(InternalError(msg_str.str()));
    }
-   bool no_realloc = var.rewindow(low, high);
+   USE_IF_ASSERTS_ON(bool no_realloc =) var.rewindow(low, high);
    // error would have been thrown above if the any reallocation would be
    // needed
    ASSERT(no_realloc);
@@ -2692,3 +2692,19 @@ namespace Uintah {
   }
 }
 
+// The following is for support of regriding
+void OnDemandDataWarehouse::getVarLabelMatlPatchTriples( vector<VarLabelMatlPatch>& vars ) const
+{
+  d_ncDB.getVarLabelMatlPatchTriples(vars);
+  d_ccDB.getVarLabelMatlPatchTriples(vars);
+  d_sfcxDB.getVarLabelMatlPatchTriples(vars);
+  d_sfcyDB.getVarLabelMatlPatchTriples(vars);
+  d_sfczDB.getVarLabelMatlPatchTriples(vars);
+  d_particleDB.getVarLabelMatlPatchTriples(vars);
+  //  d_perpatchDB.getVarLabelMatlPatchTriples(vars);
+}
+
+void OnDemandDataWarehouse::getVarLabelMatlLevelTriples( vector<VarLabelMatlLevel>& vars ) const
+{
+  d_reductionDB.getVarLabelMatlLevelTriples(vars);
+}

@@ -18,7 +18,8 @@ using namespace Uintah;
 RegridderCommon::RegridderCommon(const ProcessorGroup* pg) : Regridder(), UintahParallelComponent(pg)
 {
   d_filterType = FILTER_STAR;
-
+  d_lastRegridTimestep = 0;
+  /*
   cout << "I am contructing a RegridderCommon." << endl;
 
   CCVariable<int> flaggedCells;
@@ -30,6 +31,7 @@ RegridderCommon::RegridderCommon(const ProcessorGroup* pg) : Regridder(), Uintah
   dilatedFlaggedCells.rewindow(IntVector(0,0,0), flaggedCells.size());
 
   Dilate( flaggedCells, dilatedFlaggedCells, FILTER_STAR, IntVector(1,1,1) );
+  */
 }
 
 RegridderCommon::~RegridderCommon()
@@ -50,6 +52,14 @@ bool RegridderCommon::needRecompile(double time, double delt, const GridP& grid)
   bool retval = d_newGrid;
   d_newGrid = false;
   return retval;
+}
+
+
+bool RegridderCommon::needsToReGrid()
+{
+  // TODO - do some logic with last timestep and dilation layers
+  cout << "IS ADAPTIVE: " << d_isAdaptive << endl;
+  return d_isAdaptive;
 }
 
 void RegridderCommon::problemSetup(const ProblemSpecP& params, 
@@ -137,6 +147,7 @@ void RegridderCommon::problemSetup(const ProblemSpecP& params,
   d_cellNum[0] = high-low;
   const Patch* patch = level0->selectPatchForCellIndex(IntVector(0,0,0));
   d_patchSize[0] = patch->getHighIndex() - patch->getLowIndex();
+  cout << "CELLNUM: " << d_cellNum[0] << " PATCHSIZE " << d_patchSize[0] << endl;
   d_patchNum[0] = calculateNumberOfPatches(d_cellNum[0], d_patchSize[0]);
   d_patchActive[0] = new CCVariable<int>;
   d_patchCreated[0] = new CCVariable<int>;
@@ -151,10 +162,11 @@ void RegridderCommon::problemSetup(const ProblemSpecP& params,
     throw InternalError("Regridder: patch size is not divisible by lattice ratio on level 0!");
   }
 
-  for (int k = 0; k < d_maxLevels; k++) {
+  for (int k = 1; k < d_maxLevels; k++) {
     d_cellNum[k] = d_cellNum[k-1] * d_cellRefinementRatio[k-1];
     d_patchSize[k] = d_patchSize[k-1] * d_cellRefinementRatio[k-1] /
       d_latticeRefinementRatio[k-1];
+    cout << "CELLNUM: " << d_cellNum[k] << " PATCHSIZE " << d_patchSize[k] << endl;
     d_patchNum[k] = calculateNumberOfPatches(d_cellNum[k], d_patchSize[k]);
     d_patchActive[k] = new CCVariable<int>;
     d_patchCreated[k] = new CCVariable<int>;
@@ -177,20 +189,28 @@ void RegridderCommon::problemSetup(const ProblemSpecP& params,
 
 bool RegridderCommon::flaggedCellsExist(CCVariable<int>& flaggedCells, IntVector low, IntVector high)
 {
+  cout << "RegridderCommon::flaggedCellsExist() BGN" << endl;
+
   if (low > high) {
     throw InternalError("Regridder has given flagCellsExist incorrect parameters!");
   }
 
   for(CellIterator iter(low, high); !iter.done(); iter++) {
     IntVector idx(*iter);
-    if (flaggedCells[idx])
+    if (flaggedCells[idx]) {
+      cout << "RegridderCommon::flaggedCellsExist() END" << endl;
       return true;
+    }
   }
+
+  cout << "RegridderCommon::flaggedCellsExist() END" << endl;
   return false;
 }
 
 IntVector RegridderCommon::calculateNumberOfPatches(IntVector& cellNum, IntVector& patchSize)
 {
+  cout << "RegridderCommon::calculateNumberOfPatches() BGN" << endl;
+
   IntVector patchNum = Ceil(Vector(cellNum.x(), cellNum.y(), cellNum.z()) / patchSize);
   IntVector remainder = Mod(cellNum, patchSize);
   IntVector small = And(Less(remainder, patchSize / IntVector(2,2,2)), Greater(remainder,IntVector(0,0,0)));
@@ -200,6 +220,7 @@ IntVector RegridderCommon::calculateNumberOfPatches(IntVector& cellNum, IntVecto
       patchNum[small[i]]--;
   }
 
+  cout << "RegridderCommon::calculateNumberOfPatches() END" << endl;
   return patchNum;
 }
 
@@ -231,12 +252,16 @@ IntVector RegridderCommon::Ceil    (const Vector& a)
 
 void RegridderCommon::GetFlaggedCells ( const GridP& oldGrid, int levelIdx, DataWarehouse* dw )
 {
+  cout << "RegridderCommon::GetFlaggedCells() BGN" << endl;
+
   // This needs to be fixed for Parallel cases.
 
   LevelP level = oldGrid->getLevel(levelIdx);
 
   IntVector minIdx = (*(level->patchesBegin()))->getCellLowIndex();
   IntVector maxIdx = (*(level->patchesBegin()))->getCellHighIndex();
+
+  cout << "RegridderCommon::GetFlaggedCells() HERE 1" << endl;
 
   // This could be a problem because of extra cells.
   
@@ -245,6 +270,8 @@ void RegridderCommon::GetFlaggedCells ( const GridP& oldGrid, int levelIdx, Data
     minIdx = Min( minIdx, patch->getCellLowIndex() );
     maxIdx = Max( maxIdx, patch->getCellHighIndex() );
   }
+
+  cout << "RegridderCommon::GetFlaggedCells() HERE 2" << endl;
   
   d_flaggedCells[levelIdx] = new CCVariable<int>;
   d_dilatedCellsCreated[levelIdx] = new CCVariable<int>;
@@ -254,27 +281,48 @@ void RegridderCommon::GetFlaggedCells ( const GridP& oldGrid, int levelIdx, Data
   d_dilatedCellsCreated[levelIdx]->rewindow( minIdx, maxIdx );
   d_dilatedCellsDeleted[levelIdx]->rewindow( minIdx, maxIdx );
 
+  cout << "Min = " << minIdx << endl;
+  cout << "Max = " << maxIdx << endl;
+
+  cout << "RegridderCommon::GetFlaggedCells() HERE 3" << endl;
+
   // This is only a first step, getting the dilation cells in serial.
   // This is a HUGE memory waste.
 
   for ( Level::patchIterator patchIter = level->patchesBegin(); patchIter != level->patchesEnd(); patchIter++ ) {
+    
+    cout << "RegridderCommon::GetFlaggedCells() FOR BGN" << endl;
+
     const Patch* patch = *patchIter;
     IntVector l(patch->getCellLowIndex());
     IntVector h(patch->getCellHighIndex());
+
+    cout << "RegridderCommon::GetFlaggedCells() FOR 1" << endl;
     
     constCCVariable<int> refineFlag;
+
+    cout << "DW = " << dw << endl;
+
     dw->get(refineFlag, d_sharedState->get_refineFlag_label(), 0, patch, Ghost::None, 0);
+
+    cout << "RegridderCommon::GetFlaggedCells() FOR 2" << endl;
     
     for(CellIterator iter(l, h); !iter.done(); iter++){
       IntVector idx(*iter);
       if (refineFlag[idx])
 	(*d_flaggedCells[levelIdx])[idx] = true;
     }
+
+    cout << "RegridderCommon::GetFlaggedCells() FOR END" << endl;
   }
+
+  cout << "RegridderCommon::GetFlaggedCells() END" << endl;
 }
 
 void RegridderCommon::Dilate( CCVariable<int>& flaggedCells, CCVariable<int>& dilatedFlaggedCells, int filterType, IntVector depth )
 {
+  cout << "RegridderCommon::Dilate() BGN" << endl;
+
   if ((depth.x() < 0) || (depth.y() < 0) || (depth.z() < 0))  throw InternalError("Regridder given a bad dilation depth!");
 
   // we'll find a better way to do this
@@ -335,7 +383,7 @@ void RegridderCommon::Dilate( CCVariable<int>& flaggedCells, CCVariable<int>& di
   for (int x = 0; x < arraySize.x(); x++) {
     for (int y = 0; y < arraySize.y(); y++) {
       for (int z = 0; z < arraySize.z(); z++) {
-	cout << "Dilating (" << x << "," << y << "," << z << ")" << endl;
+	//	cout << "Dilating (" << x << "," << y << "," << z << ")" << endl;
 	low = Max( IntVector(0,0,0), IntVector(x, y, z) - depth );
 	high = Min( arraySize - IntVector(1,1,1), IntVector(x, y, z) + depth );
 	int temp = 0;
@@ -344,15 +392,15 @@ void RegridderCommon::Dilate( CCVariable<int>& flaggedCells, CCVariable<int>& di
 	    for (int local_z = low.z(); local_z <= high.z(); local_z++) {
 	      //cout << "Filter (" << local_x << "," << local_y << "," << local_z << ")" << endl;
 	      temp += flaggedCells[IntVector(local_x, local_y, local_z)]*filter[IntVector(local_x-x+depth.x(),local_y-y+depth.y(),local_z-z+depth.z())];
-	      fprintf(stderr,"temp += flaggedCells[%d][%d][%d] * filter[%d][%d][%d] = %d x %d;  temp=%d\n",
-		      local_x,local_y,local_z,local_x-x+depth.x(),local_y-y+depth.y(),local_z-z+depth.z(),
-		      flaggedCells[IntVector(local_x, local_y, local_z)],filter[IntVector(local_x-x+depth.x(),local_y-y+depth.y(),local_z-z+depth.z())],
-		      temp);
+	      //	      fprintf(stderr,"temp += flaggedCells[%d][%d][%d] * filter[%d][%d][%d] = %d x %d;  temp=%d\n",
+	      //		      local_x,local_y,local_z,local_x-x+depth.x(),local_y-y+depth.y(),local_z-z+depth.z(),
+	      //		      flaggedCells[IntVector(local_x, local_y, local_z)],filter[IntVector(local_x-x+depth.x(),local_y-y+depth.y(),local_z-z+depth.z())],
+	      //		      temp);
 	    }
 	  }
 	}
 	dilatedFlaggedCells[IntVector(x,y,z)] = static_cast<int>(temp > 0);
-	fprintf(stderr,"temp = %d  dilatedFlaggedCells(%d,%d,%d) = %d\n\n",temp,x,y,z,dilatedFlaggedCells[IntVector(x,y,z)]);
+	//	fprintf(stderr,"temp = %d  dilatedFlaggedCells(%d,%d,%d) = %d\n\n",temp,x,y,z,dilatedFlaggedCells[IntVector(x,y,z)]);
       }
     }
   }
@@ -382,4 +430,6 @@ void RegridderCommon::Dilate( CCVariable<int>& flaggedCells, CCVariable<int>& di
     }
     cout << endl;
   }
+
+  cout << "RegridderCommon::Dilate() END" << endl;
 }

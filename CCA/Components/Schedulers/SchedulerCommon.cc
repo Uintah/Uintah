@@ -414,3 +414,223 @@ SchedulerCommon::finalizeTimestep()
   for(unsigned int i=numOldDWs;i<dws.size();i++)
     dws[i]->finalize();
 }
+
+void
+SchedulerCommon::copyDataToNewGrid(const ProcessorGroup*, const PatchSubset* patches,
+		  const MaterialSubset* matls, DataWarehouse* old_dw, DataWarehouse* new_dw)
+{
+  OnDemandDataWarehouse* oldDataWarehouse = dynamic_cast<OnDemandDataWarehouse*>(old_dw);
+  OnDemandDataWarehouse* newDataWarehouse = dynamic_cast<OnDemandDataWarehouse*>(new_dw);
+
+  // For each patch in the patch subset which contains patches in the new grid
+
+  cerr << getpid() << ": RANDY: SchedulerCommon::copyDataToNewGrid() BGN" << endl;
+
+  for ( int idx = 0; idx < patches->size(); idx++ ) {
+    cerr << "Patches[ " << idx << " ] = " << patches->get(idx)->getID() << endl;
+  }
+
+  for ( int idx = 0; idx < matls->size(); idx++ ) {
+    cerr << "Matls[ " << idx << " ] = " << matls->get(idx) << endl;
+  }
+
+  vector<VarLabelMatlPatch> variableInfo;
+  oldDataWarehouse->getVarLabelMatlPatchTriples(variableInfo);
+
+  cerr << getpid() << ": RANDY: SchedulerCommon::copyDataToNewGrid() AAA" << endl;
+
+  for ( unsigned int i = 0; i < variableInfo.size(); i++ ) {
+
+    cerr << getpid() << ": RANDY: SchedulerCommon::copyDataToNewGrid() FOR VAR BGN" << endl;
+
+    VarLabelMatlPatch currentVar = variableInfo[i];
+
+    if (!matls->contains(currentVar.matlIndex_)) {
+      cout << "We are skipping material " << currentVar.matlIndex_ << endl;
+      continue;
+    }
+
+    cout << "  Label(" << setw(15) << currentVar.label_->getName() << "): Patch(" << currentVar.patch_->getID() << "): Material(" << currentVar.matlIndex_ << ")" << endl; 
+    const Level* oldLevel = currentVar.patch_->getLevel();
+    const Level* newLevel = (newDataWarehouse->getGrid()->getLevel( oldLevel->getIndex() )).get_rep();
+    const Patch* oldPatch = currentVar.patch_;
+
+    IntVector lowIndex, highIndex;
+    oldPatch->computeVariableExtents(Patch::CellBased, IntVector(0,0,0), Ghost::AroundCells, 0, lowIndex, highIndex);
+    cout << "  oldPatch(" << oldPatch->getID() << ") = " << lowIndex << " to " << highIndex << endl;
+    Patch::selectType neighbors;
+    newLevel->selectPatches(lowIndex, highIndex, neighbors);
+
+    for ( int newPatchIndex = 0; newPatchIndex < neighbors.size(); newPatchIndex++) {
+
+      const Patch* newPatch = neighbors[newPatchIndex];
+
+      if (!patches->contains(newPatch)) {
+	cout << "We are skipping patch " << newPatch->getID() << endl;
+	continue;
+      }
+
+      cerr << getpid() << ": RANDY: SchedulerCommon::copyDataToNewGrid() FOR NEW PATCH BGN" << endl;
+
+      IntVector newLowIndex = newPatch->getLowIndex();
+      IntVector newHighIndex = newPatch->getHighIndex();
+      cout << "  newPatch(" << newPatch->getID() << ") = " << newLowIndex << " to " << newHighIndex << endl;
+      IntVector copyLowIndex = Max(newLowIndex, lowIndex);
+      IntVector copyHighIndex = Min(newHighIndex, highIndex);
+      cout << "  copPatch(" << newPatch->getID() << ") = " << newLowIndex << " to " << newHighIndex << endl;
+
+      //      newDataWarehouse->checkPutAccess(currentVar.label_, currentVar.matlIndex_, currentVar.patch_, false);      
+      switch(currentVar.label_->typeDescription()->getType()){
+      case TypeDescription::NCVariable:
+	{
+	  cerr << getpid() << ": RANDY: SchedulerCommon::copyDataToNewGrid() FOR NEW PATCH NCVARIABLE BGN" << endl;
+	  if(!oldDataWarehouse->d_ncDB.exists(currentVar.label_, currentVar.matlIndex_, currentVar.patch_))
+	    SCI_THROW(UnknownVariable(currentVar.label_->getName(), oldDataWarehouse->getID(), currentVar.patch_, currentVar.matlIndex_,
+				      "in copyDataTo NCVariable"));
+	  NCVariableBase* v = oldDataWarehouse->d_ncDB.get(currentVar.label_, currentVar.matlIndex_, currentVar.patch_);
+	  if ( !newDataWarehouse->d_ncDB.exists(currentVar.label_, currentVar.matlIndex_, newPatch) ) {
+	    NCVariableBase* newVariable = v->cloneType();
+	    newVariable->rewindow( newLowIndex, newHighIndex );
+	    newVariable->copyPatch( v, copyLowIndex, copyHighIndex );
+	    newDataWarehouse->d_ncDB.put(currentVar.label_, currentVar.matlIndex_, newPatch, newVariable, false);
+	  } else {
+	    NCVariableBase* newVariable = newDataWarehouse->d_ncDB.get(currentVar.label_, currentVar.matlIndex_, newPatch );
+	    newVariable->copyPatch( v, copyLowIndex, copyHighIndex );
+	  }
+	  cerr << getpid() << ": RANDY: SchedulerCommon::copyDataToNewGrid() FOR NEW PATCH NCVARIABLE END" << endl;
+	}
+	break;
+      case TypeDescription::CCVariable:
+	{
+	  cerr << getpid() << ": RANDY: SchedulerCommon::copyDataToNewGrid() FOR NEW PATCH CCVARIABLE BGN" << endl;
+	  if(!oldDataWarehouse->d_ccDB.exists(currentVar.label_, currentVar.matlIndex_, currentVar.patch_))
+	    SCI_THROW(UnknownVariable(currentVar.label_->getName(), oldDataWarehouse->getID(), currentVar.patch_, currentVar.matlIndex_,
+				      "in copyDataTo CCVariable"));
+
+	  cerr << getpid() << ": RANDY: SchedulerCommon::copyDataToNewGrid() FOR NEW PATCH CCVARIABLE AAA" << endl;
+
+	  CCVariableBase* v = oldDataWarehouse->d_ccDB.get(currentVar.label_, currentVar.matlIndex_, currentVar.patch_);
+	  if ( !newDataWarehouse->d_ccDB.exists(currentVar.label_, currentVar.matlIndex_, newPatch) ) {
+	    cerr << getpid() << ": RANDY: SchedulerCommon::copyDataToNewGrid() FOR NEW PATCH CCVARIABLE BBB" << endl;
+	    CCVariableBase* newVariable = v->cloneType();
+	    newVariable->rewindow( newLowIndex, newHighIndex );
+	    newVariable->copyPatch( v, copyLowIndex, copyHighIndex );
+	    newDataWarehouse->d_ccDB.put(currentVar.label_, currentVar.matlIndex_, newPatch, newVariable, false);
+	  } else {
+	    cerr << getpid() << ": RANDY: SchedulerCommon::copyDataToNewGrid() FOR NEW PATCH CCVARIABLE CCC" << endl;
+	    CCVariableBase* newVariable = newDataWarehouse->d_ccDB.get(currentVar.label_, currentVar.matlIndex_, newPatch );
+ 	    newVariable->copyPatch( v, copyLowIndex, copyHighIndex );
+	  }
+	  cerr << getpid() << ": RANDY: SchedulerCommon::copyDataToNewGrid() FOR NEW PATCH CCVARIABLE END" << endl;
+	}
+	break;
+      case TypeDescription::SFCXVariable:
+	{
+	  cerr << getpid() << ": RANDY: SchedulerCommon::copyDataToNewGrid() FOR NEW PATCH SFCXVARIABLE BGN" << endl;
+	  if(!oldDataWarehouse->d_sfcxDB.exists(currentVar.label_, currentVar.matlIndex_, currentVar.patch_))
+	    SCI_THROW(UnknownVariable(currentVar.label_->getName(), oldDataWarehouse->getID(), currentVar.patch_, currentVar.matlIndex_,
+				      "in copyDataTo SFCXVariable"));
+	  SFCXVariableBase* v = oldDataWarehouse->d_sfcxDB.get(currentVar.label_, currentVar.matlIndex_, currentVar.patch_);
+	  if ( !newDataWarehouse->d_sfcxDB.exists(currentVar.label_, currentVar.matlIndex_, newPatch) ) {
+	    SFCXVariableBase* newVariable = v->cloneType();
+	    newVariable->rewindow( newLowIndex, newHighIndex );
+	    newVariable->copyPatch( v, copyLowIndex, copyHighIndex );
+	    newDataWarehouse->d_sfcxDB.put(currentVar.label_, currentVar.matlIndex_, newPatch, newVariable, false);
+	  } else {
+	    SFCXVariableBase* newVariable = newDataWarehouse->d_sfcxDB.get(currentVar.label_, currentVar.matlIndex_, newPatch );
+	    newVariable->copyPatch( v, copyLowIndex, copyHighIndex );
+	  }
+	  cerr << getpid() << ": RANDY: SchedulerCommon::copyDataToNewGrid() FOR NEW PATCH SFCXVARIABLE END" << endl;
+	}
+	break;
+      case TypeDescription::SFCYVariable:
+	{
+	  cerr << getpid() << ": RANDY: SchedulerCommon::copyDataToNewGrid() FOR NEW PATCH SFCYVARIABLE BGN " << endl;
+	  if(!oldDataWarehouse->d_sfcyDB.exists(currentVar.label_, currentVar.matlIndex_, currentVar.patch_))
+	    SCI_THROW(UnknownVariable(currentVar.label_->getName(), oldDataWarehouse->getID(), currentVar.patch_, currentVar.matlIndex_,
+				      "in copyDataTo SFCYVariable"));
+	  SFCYVariableBase* v = oldDataWarehouse->d_sfcyDB.get(currentVar.label_, currentVar.matlIndex_, currentVar.patch_);
+	  if ( !newDataWarehouse->d_sfcyDB.exists(currentVar.label_, currentVar.matlIndex_, newPatch) ) {
+	    SFCYVariableBase* newVariable = v->cloneType();
+	    newVariable->rewindow( newLowIndex, newHighIndex );
+	    newVariable->copyPatch( v, copyLowIndex, copyHighIndex );
+	    newDataWarehouse->d_sfcyDB.put(currentVar.label_, currentVar.matlIndex_, newPatch, newVariable, false);
+	  } else {
+	    SFCYVariableBase* newVariable = newDataWarehouse->d_sfcyDB.get(currentVar.label_, currentVar.matlIndex_, newPatch );
+	    newVariable->copyPatch( v, copyLowIndex, copyHighIndex );
+	  }
+	  cerr << getpid() << ": RANDY: SchedulerCommon::copyDataToNewGrid() FOR NEW PATCH SFCYVARIABLE END " << endl;
+	}
+	break;
+      case TypeDescription::SFCZVariable:
+	{
+	  cerr << getpid() << ": RANDY: SchedulerCommon::copyDataToNewGrid() FOR NEW PATCH SFCZVARIABLE BGN" << endl;
+	  if(!oldDataWarehouse->d_sfczDB.exists(currentVar.label_, currentVar.matlIndex_, currentVar.patch_))
+	    SCI_THROW(UnknownVariable(currentVar.label_->getName(), oldDataWarehouse->getID(), currentVar.patch_, currentVar.matlIndex_,
+				      "in copyDataTo SFCZVariable"));
+	  SFCZVariableBase* v = oldDataWarehouse->d_sfczDB.get(currentVar.label_, currentVar.matlIndex_, currentVar.patch_);
+	  if ( !newDataWarehouse->d_sfczDB.exists(currentVar.label_, currentVar.matlIndex_, newPatch) ) {
+	    SFCZVariableBase* newVariable = v->cloneType();
+	    newVariable->rewindow( newLowIndex, newHighIndex );
+	    newVariable->copyPatch( v, copyLowIndex, copyHighIndex );
+	    newDataWarehouse->d_sfczDB.put(currentVar.label_, currentVar.matlIndex_, newPatch, newVariable, false);
+	  } else {
+	    SFCZVariableBase* newVariable = newDataWarehouse->d_sfczDB.get(currentVar.label_, currentVar.matlIndex_, newPatch );
+	    newVariable->copyPatch( v, copyLowIndex, copyHighIndex );
+	  }
+	  cerr << getpid() << ": RANDY: SchedulerCommon::copyDataToNewGrid() FOR NEW PATCH SFCZVARIABLE END" << endl;
+	}
+	break;
+      case TypeDescription::ParticleVariable:
+	{
+	  cerr << getpid() << ": RANDY: SchedulerCommon::copyDataToNewGrid() FOR NEW PATCH PARTICLEVARIABLE BGN" << endl;
+//  	  if(!oldDataWarehouse->d_particleDB.exists(currentVar.label_, currentVar.matlIndex_, currentVar.patch_))
+//  	    SCI_THROW(UnknownVariable(currentVar.label_->getName(), oldDataWarehouse->getID(), currentVar.patch_, currentVar.matlIndex_,
+//  				      "in copyDataTo ParticleVariable"));
+//  	  ParticleVariableBase* v = oldDataWarehouse->d_particleDB.get(currentVar.label_, currentVar.matlIndex_, currentVar.patch_);
+//  	  if ( !newDataWarehouse->d_particleDB.exists(currentVar.label_, currentVar.matlIndex_, newPatch) ) {
+//  	    ParticleVariableBase* newVariable = v->cloneType();
+//   	    newVariable->rewindow( newLowIndex, newHighIndex );
+//  	    newVariable->copyPatch( v, copyLowIndex, copyHighIndex );
+//  	    newDataWarehouse->d_particleDB.put(currentVar.label_, currentVar.matlIndex_, newPatch, newVariable, false);
+//  	  } else {
+//  	    ParticleVariableBase* newVariable = newDataWarehouse->d_particleDB.get(currentVar.label_, currentVar.matlIndex_, newPatch );
+//  	    newVariable->copyPatch( v, copyLowIndex, copyHighIndex );
+//  	  }
+	  cerr << getpid() << ": RANDY: SchedulerCommon::copyDataToNewGrid() FOR NEW PATCH PARTICLEVARIABLE END" << endl;
+	}
+	break;
+      case TypeDescription::PerPatch:
+	{
+	  cerr << getpid() << ": RANDY: SchedulerCommon::copyDataToNewGrid() FOR NEW PATCH PERPATCHVARIABLE BGN" << endl;
+//  	  if(!oldDataWarehouse->d_perpatchDB.exists(currentVar.label_, currentVar.matlIndex_, currentVar.patch_))
+//  	    SCI_THROW(UnknownVariable(currentVar.label_->getName(), oldDataWarehouse->getID(), currentVar.patch_, currentVar.matlIndex_,
+//  				      "in copyDataTo PerPatch"));
+//  	  PerPatchBase* v = oldDataWarehouse->d_perpatchDB.get(currentVar.label_, currentVar.matlIndex_, currentVar.patch_);
+//  	  if ( !newDataWarehouse->d_perpatchDB.exists(currentVar.label_, currentVar.matlIndex_, newPatch) ) {
+//  	    PerPatchBase* newVariable = v->cloneType();
+//  	    newVariable->rewindow( newLowIndex, newHighIndex );
+//  	    newVariable->copyPatch( v, copyLowIndex, copyHighIndex );
+//  	    newDataWarehouse->d_perpatchDB.put(currentVar.label_, currentVar.matlIndex_, newPatch, newVariable, false);
+//  	  } else {
+//  	    PerPatchBase* newVariable = newDataWarehouse->d_perpatchDB.get(currentVar.label_, currentVar.matlIndex_, newPatch );
+//  	    newVariable->copyPatch( v, copyLowIndex, copyHighIndex );
+//  	  }
+	  cerr << getpid() << ": RANDY: SchedulerCommon::copyDataToNewGrid() FOR NEW PATCH PERPATCHVARIABLE END" << endl;
+	}
+	break;
+      default:
+	SCI_THROW(InternalError("Unknown variable type in transferFrom: "+currentVar.label_->getName()));
+      }
+
+      cerr << getpid() << ": RANDY: SchedulerCommon::copyDataToNewGrid() FOR NEW PATCH END" << endl;
+
+    } // for ( int newPatchIndex = 0; newPatchIndex < neighbors.size(); newPatchIndex++) {
+
+    cerr << getpid() << ": RANDY: SchedulerCommon::copyDataToNewGrid() FOR VAR END" << endl;
+
+  } // for ( unsigned int i = 0; i < variableInfo.size(); i++ ) {
+
+  cerr << getpid() << ": RANDY: SchedulerCommon::copyDataToNewGrid() END" << endl;
+  // d_lock.writeUnlock(); Do we need this?
+}
