@@ -17,6 +17,8 @@ $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/DistributionReader.tcl\
 	$(SRCDIR)/ItPDSimPartGui.tcl\
 	$(SRCDIR)/RtPDSimPartGui.tcl\
+	$(SRCDIR)/RUPDSimPartGui.tcl\
+	$(SRCDIR)/IUniformPDSimPartGui.tcl\
 	$(SRCDIR)/IGaussianPDSimPartGui.tcl\
 	$(SRCDIR)/MeasurementsReader.tcl\
 	$(SRCDIR)/Metropolis.tcl\
