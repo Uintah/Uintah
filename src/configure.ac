@@ -394,7 +394,7 @@ fi
 # Take care of package dependencies
 if test "$pkg_Fusion" == "yes"; then
   # Fusion depends upon Teem Package.  
-  if test -z $pkg_Teem; then
+  if test -z "$pkg_Teem"; then
     AC_MSG_ERROR([The Fusion Package depends on the Teem Package. Please 
                   make sure you have the Teem Package and configure 
                   with it enabled.])
