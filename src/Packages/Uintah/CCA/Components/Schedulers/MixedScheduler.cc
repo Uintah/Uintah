@@ -35,7 +35,7 @@ MixedScheduler::MixedScheduler(const ProcessorGroup* myworld, Output* oport)
    : MPIScheduler(myworld, oport), log(myworld, oport)
 {
   int num_threads = Parallel::getMaxThreads();
-  d_threadPool = scinew ThreadPool( num_threads, num_threads );
+  d_threadPool = scinew ThreadPool( this, num_threads, num_threads );
 }
 
 MixedScheduler::~MixedScheduler()
@@ -67,16 +67,15 @@ MixedScheduler::wait_till_all_done()
 }
 
 void
-MixedScheduler::initiateTask( const ProcessorGroup  * pg,
-			      DetailedTask          * task,
-			      mpi_timing_info_s     & mpi_info,
-			      SendRecord            & sends,
-			      SendState             & ss,
-			      OnDemandDataWarehouseP  dws[2],
-			      const VarLabel        * reloc_label )
+MixedScheduler::initiateTask( DetailedTask          * task )
 {
-  d_threadPool->assignThread( pg, task, mpi_info, sends, 
-			      ss, dws, reloc_label );
+  d_threadPool->addTask( task );
+}
+
+void
+MixedScheduler::initiateReduction( DetailedTask          * task )
+{
+  d_threadPool->addReductionTask( task );
 }
 
 void
