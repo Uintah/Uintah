@@ -735,6 +735,8 @@ void HDF5DataReader::parseDatasets( string new_datasets,
       // Remove the dataset name from the path.
       path.erase( pos, path.length()-pos);
 
+      // Just incase the dataset is at the root.
+      if( path.length() == 0 ) path = string( "/" );
       
       paths.push_back( path );
       datasets.push_back( dataset );
