@@ -92,7 +92,9 @@ public:
 	ModuleGeneric3,
 	ModuleGeneric4,
 
-        SchedulerInternalExecuteDone
+        SchedulerInternalExecuteDone,
+        GeometrySynchronize,
+        SynchronizeModule
     };
 };
 

@@ -142,6 +142,17 @@ GeometryOPort::finish()
 }
 
 
+void
+GeometryOPort::synchronize()
+{
+  for (unsigned int i=0; i<outbox_.size(); i++)
+  {
+    GeometryComm* msg =
+      scinew GeometryComm(MessageTypes::GeometrySynchronize, portid_[i]);
+    outbox_[i]->send(msg);
+  }
+}
+
 
 GeomID
 GeometryOPort::addObj(GeomHandle obj, const string& name, CrowdMonitor* lock)

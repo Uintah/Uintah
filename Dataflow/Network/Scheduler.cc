@@ -269,21 +269,30 @@ Scheduler::do_scheduling_real(Module* exclude)
     serial_base = serial_id;
     serial_id += nmodules;
     serial_set.push_back(SerialSet(serial_base, nmodules));
+#if 0
+    cout << "EXECUTION START " << serial_base << "\n";
+    cout.flush();
+#endif
   }
 
   // Execute all the modules.
   for(i=0;i<nmodules;i++)
   {
-    Module* module=net->module(i);
-    if (module->need_execute)
+    Module* module = net->module(i);
+    if (module == exclude)
+    {
+      report_execution_finished_real(serial_base + i);
+    }
+    else if (module->need_execute)
     {
       module->mailbox.send(scinew Scheduler_Module_Message(serial_base + i));
       module->need_execute = false;
     }
     else
     {
-      // Already done, report it.
-      report_execution_finished_real(serial_base + i);
+      // Already done, just synchronize.
+      module->mailbox.send(scinew Scheduler_Module_Message(serial_base + i,
+                                                           false));
     }
   }
 }
@@ -292,32 +301,90 @@ Scheduler::do_scheduling_real(Module* exclude)
 void
 Scheduler::report_execution_finished(const MessageBase *msg)
 {
-  ASSERT(msg->type == MessageTypes::ExecuteModule);
+  ASSERT(msg->type == MessageTypes::ExecuteModule ||
+         msg->type == MessageTypes::SynchronizeModule);
   Scheduler_Module_Message *sm_msg = (Scheduler_Module_Message *)msg;
   mailbox.send(scinew Module_Scheduler_Message(sm_msg->serial));
 }
 
 
 void
+Scheduler::report_execution_finished(unsigned int serial)
+{
+  mailbox.send(scinew Module_Scheduler_Message(serial));
+}
+
+
+void
 Scheduler::report_execution_finished_real(unsigned int serial)
 {
+  int found = 0;
   list<SerialSet>::iterator itr = serial_set.begin();
   while (itr != serial_set.end())
   {
     if (serial >= itr->base && serial < itr->base + itr->size)
     {
+#if 0
+      cout << "  recieved " << serial << "  -  ";
+      cout << net->module(serial - itr->base)->id << "\n";
+      cout.flush();
+#endif
+      
+      found++;
+
       itr->callback_count++;
       if (itr->callback_count == itr->size)
       {
-        //cout << "EXECUTION DONE\n";
+#if 0
+        cout << "EXECUTION DONE " << itr->base << "\n";
+        cout.flush();
+#endif
         serial_set.erase(itr);
         break;
       }
     }
     ++itr;
   }
+  ASSERT(found==1);
+
+  if (serial_set.size() == 0)
+  {
+#if 0
+    cout << "CALLING SCHEDULER CALLBACKS\n";
+    cout.flush();
+#endif
+    // All execution done.
+    for (unsigned int i = 0; i < callbacks_.size(); i++)
+    {
+      callbacks_[i].first(callbacks_[i].second);
+    }
+  }
 }
 
+
+typedef std::pair<SchedulerCallback, void *> SCPair;
+
+
+void
+Scheduler::add_callback(SchedulerCallback cb, void *data)
+{
+  callbacks_.push_back(SCPair(cb, data));
+}
+
+
+void
+Scheduler::remove_callback(SchedulerCallback cb, void *data)
+{
+  callbacks_.erase(std::remove(callbacks_.begin(), callbacks_.end(),
+                               SCPair(cb, data)),
+                    callbacks_.end());
+}
+
+
+Scheduler_Module_Message::Scheduler_Module_Message(unsigned int s, bool)
+  : MessageBase(MessageTypes::SynchronizeModule), conn(NULL), serial(s)
+{
+}
 
 Scheduler_Module_Message::Scheduler_Module_Message(unsigned int s)
   : MessageBase(MessageTypes::ExecuteModule), conn(NULL), serial(s)
