@@ -21,6 +21,17 @@
 <xsl:variable name="category">
   <xsl:value-of select="/filter/filter-sci/category"/>
 </xsl:variable>
+<!-- Variable has_defined_objects indicates whethter this filter
+     has defined objects using the datatype tag.  If this is the
+     case, we need to add a dimension variable and set a window
+     in size. 
+-->
+<xsl:variable name="has_defined_objects"><xsl:value-of select="/filter/filter-itk/datatypes"/></xsl:variable>
+
+
+
+
+
 
 
 
@@ -114,6 +125,7 @@ public:
   </xsl:text>
 <xsl:call-template name="declare_guivars"/>
 <xsl:text>  
+
   // Declare Ports
   </xsl:text>
 <xsl:call-template name="declare_ports_and_handles" />
@@ -165,6 +177,22 @@ public:
 <xsl:template name="declare_guivars">
 <xsl:for-each select="/filter[@name=$root-name]/filter-itk[@name=$itk-name]/parameters/param">
 <xsl:variable name="type"><xsl:value-of select="type"/></xsl:variable>
+<xsl:variable name="defined_object"><xsl:value-of select="@defined"/></xsl:variable>
+<xsl:choose>
+<xsl:when test="$defined_object = 'yes'">
+<xsl:variable name="data_type"><xsl:value-of select="type"/></xsl:variable>
+<xsl:variable name="type2"><xsl:value-of select="/filter/filter-itk/datatypes/datatype[@name=$data_type]/field/type"/></xsl:variable>
+
+<xsl:choose>
+<xsl:when test="$type2 = 'double'">vector&lt; GuiDouble* &gt; </xsl:when>
+<xsl:when test="$type2 = 'float'">vector&lt; GuiDouble* &gt; </xsl:when>
+<xsl:when test="$type2 = 'int'">vector&lt; GuiInt* &gt; </xsl:when>
+<xsl:when test="$type2 = 'bool'">vector&lt; GuiInt* &gt; </xsl:when>
+<xsl:otherwise>
+vector&lt; GuiDouble* &gt; </xsl:otherwise>
+</xsl:choose>
+</xsl:when>
+<xsl:otherwise>
 <xsl:choose>
 <xsl:when test="$type = 'double'">GuiDouble </xsl:when>
 <xsl:when test="$type = 'float'">GuiDouble </xsl:when>
@@ -173,10 +201,14 @@ public:
 <xsl:otherwise>
 GuiDouble </xsl:otherwise>
 </xsl:choose>
+</xsl:otherwise>
+</xsl:choose>
 <xsl:text> gui_</xsl:text><xsl:value-of select="name"/>
 <xsl:text>_;
   </xsl:text>
 </xsl:for-each>
+<xsl:if test="$has_defined_objects != ''">
+  GuiInt gui_dimension_;</xsl:if>
 </xsl:template>
 
 
@@ -298,27 +330,83 @@ bool </xsl:text><xsl:value-of select="$sci-name"/><xsl:text>::run( </xsl:text>
 </xsl:otherwise>
 </xsl:choose>
 </xsl:for-each>
-  // create a new filter
-  typename <xsl:value-of select="$itk-name"/>&lt; <xsl:for-each select="/filter/filter-itk/templated/template"><xsl:value-of select="."/>
+
+  typedef typename <xsl:value-of select="$itk-name"/>&lt; <xsl:for-each select="/filter/filter-itk/templated/template"><xsl:value-of select="."/>
   <xsl:if test="position() &lt; last()">   
   <xsl:text>, </xsl:text>
   </xsl:if>
- </xsl:for-each> &gt;::Pointer filter = <xsl:value-of select="$itk-name"/>&lt; <xsl:for-each select="/filter/filter-itk/templated/template"><xsl:value-of select="."/>
-  <xsl:if test="position() &lt; last()">
-  <xsl:text>, </xsl:text>
-  </xsl:if></xsl:for-each> &gt;::New();
+ </xsl:for-each> &gt; FilterType;
+
+  // create a new filter
+  typename FilterType::Pointer filter = FilterType::New();
 
   // set filter 
+ <xsl:if test="$has_defined_objects != ''">
+         int dim = 0;</xsl:if>
   <xsl:for-each select="/filter/filter-itk/parameters/param">
   <xsl:variable name="type"><xsl:value-of select="type"/></xsl:variable>
   <xsl:variable name="name"><xsl:value-of select="name"/></xsl:variable>
+<xsl:variable name="defined_object"><xsl:value-of select="@defined"/></xsl:variable>
+
+  <xsl:choose>
+  <xsl:when test="$defined_object = 'yes'">
+  <xsl:variable name="call"><xsl:value-of select="/filter/filter-itk/datatypes/datatype[@name=$type]/field/variable-call"/></xsl:variable>
+  <xsl:variable name="type2"><xsl:value-of select="/filter/filter-itk/datatypes/datatype[@name=$type]/field/type"/></xsl:variable>
+
+  <xsl:value-of select="type"/><xsl:text> </xsl:text><xsl:value-of select="name"/>;
+  if(<xsl:value-of select="name"/>.<xsl:value-of select="$call"/>() != gui_dimension_.get()) {
+	gui-&gt;execute(id.c_str() + string(&quot; clear_gui&quot;));
+        gui_dimension_.set(<xsl:value-of select="name"/>.<xsl:value-of select="$call"/>());
+	gui-&gt;execute(id.c_str() + string(&quot; init_<xsl:value-of select="name"/>_dimensions&quot;));
+	gui-&gt;execute(id.c_str() + string(&quot; set_default_<xsl:value-of select="name"/>_vals&quot;));
+  }
+  
+  // register GuiVars
+  // avoid pushing onto vector each time if not needed
+  int start = 0;
+  if(gui_<xsl:value-of select="name"/>_.size() &gt; 0) {
+    start = gui_<xsl:value-of select="name"/>_.size();
+  }
+
+  for(int i=start; i&lt;<xsl:value-of select="name"/>.<xsl:value-of select="$call"/>(); i++) {
+    ostringstream str;
+    str &lt;&lt; &quot;<xsl:value-of select="name"/>&quot; &lt;&lt; i;
+<xsl:text>    </xsl:text>
+<xsl:choose>
+<xsl:when test="$type2='double'">
+    gui_<xsl:value-of select="name"/>_.push_back(new GuiDouble(ctx-&gt;subVar(str.str())));
+</xsl:when>
+<xsl:when test="$type2='float'">
+    gui_<xsl:value-of select="name"/>_.push_back(new GuiDouble(ctx-&gt;subVar(str.str())));
+</xsl:when>
+<xsl:when test="$type2='int'">
+    gui_<xsl:value-of select="name"/>_.push_back(new GuiInt(ctx-&gt;subVar(str.str())));
+</xsl:when>
+<xsl:when test="$type2='bool'">
+    gui_<xsl:value-of select="name"/>_.push_back(new GuiInt(ctx-&gt;subVar(str.str())));
+</xsl:when>
+<xsl:otherwise>
+    gui_<xsl:value-of select="name"/>_.push_back(new GuiDouble(ctx-&gt;subVar(str.str())));
+</xsl:otherwise>
+</xsl:choose>
+  }
+
+  // set radius values
+  for(int i=0; i&lt;<xsl:value-of select="name"/>.<xsl:value-of select="$call"/>(); i++) {
+    <xsl:value-of select="name"/>[i] = gui_<xsl:value-of select="name"/>_[i]-&gt;get();
+  }
+
+  filter-&gt;<xsl:value-of select="call"/>( <xsl:value-of select="name"/> );
+
+  </xsl:when>
+  <xsl:otherwise>
   <xsl:choose>
   <xsl:when test="$type='bool'">
   <!-- HANDLE BOOL PARAM (toggle) -->
   <!-- Determine if 1 or 2 call tags -->
   <xsl:choose>
   <xsl:when test="count(call) = 2">
-  if( gui_<xsl:value-of select="name"/>_.get() ) {
+  if( gui_<xsl:value-of select="name"/>_-&gt;get() ) {
     filter-><xsl:value-of select="call[@value='on']"/>( );   
   } 
   else { 
@@ -326,13 +414,15 @@ bool </xsl:text><xsl:value-of select="$sci-name"/><xsl:text>::run( </xsl:text>
   }  
   </xsl:when>
   <xsl:otherwise>
-  filter-><xsl:value-of select="call"/>( gui_<xsl:value-of select="name"/>_.get() ); 
+  filter-><xsl:value-of select="call"/>( gui_<xsl:value-of select="name"/>_-&gt;get() ); 
   </xsl:otherwise>
   </xsl:choose>
 
   </xsl:when>
   <xsl:otherwise>
-  filter-><xsl:value-of select="call"/>( gui_<xsl:value-of select="name"/>_.get() ); 
+  filter-><xsl:value-of select="call"/>( gui_<xsl:value-of select="name"/>_&gt;get() ); 
+  </xsl:otherwise>
+  </xsl:choose>
   </xsl:otherwise>
   </xsl:choose>
   </xsl:for-each>
@@ -399,12 +489,16 @@ bool </xsl:text><xsl:value-of select="$sci-name"/><xsl:text>::run( </xsl:text>
 <xsl:value-of select="$category"/><xsl:text>&quot;, &quot;</xsl:text>
 <xsl:value-of select="$package"/><xsl:text>&quot;)</xsl:text>
 <xsl:for-each select="/filter/filter-itk/parameters/param">
+<xsl:variable name="defined_object"><xsl:value-of select="@defined"/></xsl:variable>
+<xsl:if test="$defined_object = ''">
 <xsl:text>,
      gui_</xsl:text><xsl:value-of select="name"/>
 <xsl:text disable-output-escaping="yes">_(ctx->subVar(&quot;</xsl:text>
 <xsl:value-of select="name"/>
-<xsl:text disable-output-escaping="yes">&quot;))</xsl:text>
+<xsl:text disable-output-escaping="yes">&quot;))</xsl:text></xsl:if>
 </xsl:for-each>
+<xsl:if test="$has_defined_objects != ''">,
+    gui_dimension_(ctx-&gt;subVar(&quot;dimension&quot;))</xsl:if>
 <xsl:text>
 {
 </xsl:text>
@@ -415,6 +509,8 @@ bool </xsl:text><xsl:value-of select="$sci-name"/><xsl:text>::run( </xsl:text>
   <xsl:otherwise>
 </xsl:otherwise>
 </xsl:choose></xsl:for-each>
+<xsl:if test="$has_defined_objects != ''">
+  gui_dimension_.set(0);</xsl:if>
 <xsl:text>
 }
 
