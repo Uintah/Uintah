@@ -22,6 +22,7 @@ PSELIBS := \
 	Packages/Uintah/Core/Exceptions    \
 	Dataflow/Network  \
 	Dataflow/Ports    \
+	Dataflow/XMLUtil  \
 	Core/Containers   \
 	Core/Persistent   \
 	Core/Exceptions   \
