@@ -113,6 +113,30 @@ public:
     d_subregionCapable = false;
   }
 
+  template<class T, class Arg1>
+  Task(const string&         taskName,
+       const Region*         region,
+       const DataWarehouseP& fromDW,
+       DataWarehouseP&       toDW,
+       T*                     ptr,
+       void (T::*pmf)(const ProcessorContext*,
+		      const Region*,
+		      const DataWarehouseP&,
+			    DataWarehouseP&,
+		      Arg1),
+       Arg1)
+    : d_taskName( taskName ), 
+      d_region( region ),
+      //d_action( new Action<T>(ptr, pmf) ),
+      d_fromDW( fromDW ),
+      d_toDW( toDW )
+  {
+    d_completed = false;
+    d_usesThreads = false;
+    d_usesMPI = false;
+    d_subregionCapable = false;
+  }
+
   ~Task();
 
   void usesMPI(bool state=true);
@@ -232,6 +256,12 @@ private:
 
 //
 // $Log$
+// Revision 1.6  2000/03/22 00:32:13  sparker
+// Added Face-centered variable class
+// Added Per-region data class
+// Added new task constructor for procedures with arguments
+// Use Array3Index more often
+//
 // Revision 1.5  2000/03/17 18:45:42  dav
 // fixed a few more namespace problems
 //

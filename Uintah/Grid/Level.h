@@ -4,6 +4,7 @@
 #include <Uintah/Grid/RefCounted.h>
 #include <Uintah/Interface/DataWarehouseP.h>
 #include <Uintah/Grid/LevelP.h>
+#include <Uintah/Grid/Handle.h>
 #include <SCICore/Geometry/Point.h>
 #include <string>
 #include <vector>
@@ -71,6 +72,12 @@ private:
 
 //
 // $Log$
+// Revision 1.6  2000/03/22 00:32:12  sparker
+// Added Face-centered variable class
+// Added Per-region data class
+// Added new task constructor for procedures with arguments
+// Use Array3Index more often
+//
 // Revision 1.5  2000/03/21 01:29:42  dav
 // working to make MPM stuff compile successfully
 //
