@@ -25,29 +25,29 @@
 									<div align="left">
                 <p><b>Chapter Overview</b><br>
 
-		<p>In Chapters 1-4 we learned about deataflow
+		<p>In Chapters 1-4, we learned about deataflow
                 programming, and constructed visualization networks
                 for exploring datasets.  But where did the Field
                 voltage datavalues come from?  In this chapter we will
                 construct a simulation network that computes simulated
                 voltages for a realistic volume conductor problem.
 
-		<p>In the preceeding chapters, we were using modules from
+		<p>In the preceeding chapters, we used modules from
                 the central SCIRun package.  Those modules have been
-                general purpose tools that are not targeted towards
-                any specific application.  In contrast, in this
-                chapter we will begin using modules from the BioPSE
+                general purpose tools--not targeted towards
+                any specific application.  By contrast, in this
+                chapter we begin using modules from the BioPSE
                 package, a set of tools that have been specifically
                 written for the modeling, simulation, and
                 visualization of bioelectric field problems.
 
-		<p>Packages (<b>Figure 5.1</b>) are typically logically grouped sets of modulues
+		<p>Packages (<b>Figure 5.1</b>) are typically logically grouped                sets of modulues
 		and supporting code for those modules. They can be created by
 	        anyone, and compiled into SCIRun. Packages can be wholly
 		dependent upon SCIRun code, or can depend upon any additional
 		third party code, in fact can simply be a wrapper around third
-		party code, such that SCIRun can use the functionality in a
-		Dataflow sense. Packages are a major mechanism to bridging in
+		party code, such that SCIRun can use Dataflow
+		functionality. Packages are a major mechanism to bridging in
 		SCIRun. Bridging is the concept that SCIRun can be used in
 	        conjunction with other useful software such as Matlab or Teem.
 
@@ -64,15 +64,14 @@
 		<p>Given a volume conductor model and an equivalent
 		dipole source, we would like to compute the potentials
 		and electric field that the source induces through the
-		domain. For some very specific geometric models
-		(e.g. analytic cylinders or spheres) there exists an
-		analytic solution to this problem.  However, for most
-		real-world problems, the solution can only be obtained
-		through discretization.  For this application, we will
-		discretize our domain into tetrahedral finite
-		elements, where each element contains a conductivity
-		tensor defining how electricity travels through its
-		region of the domain.  Within each element, we will
+		domain. An analytic solution exists for problems of some
+		very specific geometric models (e.g., analytic cylinders or
+		spheres). However, for most real-world problems, we can
+		only obtain the solution through discretization.  For
+		this application, we will discretize our domain into
+		tetrahedral finite elements, where each element contains a
+		conductivity tensor defining how electricity travels
+		through its region of the domain.  Within each element, we 
 		assume a piece-wise linear potential field (piece-wise
 		constant electric field).
 
@@ -87,7 +86,7 @@
 		domain, and <img height="19" width="36" src="images/i.gif"
 		align="texttop"> is a source term indicating where
 		there are current sources within our domain. In
-		English, this says: the divergence (<img height="16"
+		plain language, this means: the divergence (<img height="16"
 		width="25" src="images/del_dot.gif" align="absbottom">) of
 		the electric field (<img height="16" width="15"
 		src="images/del.gif" align="absbottom"><img height="16"
@@ -245,3 +244,14 @@
 	</body>
 
 </html>
+
+
+
+
+
+
+
+
+
+
+
