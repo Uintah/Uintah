@@ -22,11 +22,14 @@ namespace Uintah {
 
       const VarLabel* delTLabel;
       
+      //non PermanentParticleState
       const VarLabel* pDeformationMeasureLabel;
       const VarLabel* pDilationalWaveSpeedLabel;
       const VarLabel* pRotationRateLabel;
       const VarLabel* pVisibilityLabel;
+      const VarLabel* pCrackSurfaceContactForceLabel;
       
+      //PermanentParticleState
       const VarLabel* pStressLabel;
       const VarLabel* pVolumeLabel;
       const VarLabel* pVolumeDeformedLabel;
@@ -112,6 +115,9 @@ namespace Uintah {
 
 
 // $Log$
+// Revision 1.33  2000/09/11 18:56:18  tan
+// Crack surface contact force is now considered in the simulation.
+//
 // Revision 1.32  2000/09/11 03:12:20  tan
 // Added energy release rate computations for fracture.
 //

@@ -96,7 +96,8 @@ protected:
 
   //////////
   // Insert Documentation Here:
-  void computerNodesVisibility(const ProcessorGroup*,
+  void computerNodesVisibilityAndCrackSurfaceContactForce(
+                               const ProcessorGroup*,
 			       const Patch* patch,
 			       DataWarehouseP& old_dw,
 			       DataWarehouseP& new_dw);
@@ -218,6 +219,9 @@ protected:
    
 //
 // $Log$
+// Revision 1.58  2000/09/11 18:55:17  tan
+// Crack surface contact force is now considered in the simulation.
+//
 // Revision 1.57  2000/09/09 19:34:11  tan
 // Added MPMLabel::pVisibilityLabel and SerialMPM::computerNodesVisibility().
 //
