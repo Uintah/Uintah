@@ -43,8 +43,9 @@ WARNING
 
 // Choices for time advance methods
 
+
 //#define correctorstep
-//#define FILTER_DRHODT
+
 //#define Runge_Kutta_2nd
 #ifdef Runge_Kutta_2nd
   #define correctorstep
@@ -86,6 +87,9 @@ WARNING
 
 #ifdef HAVE_PETSC
   #define PetscFilter
+#ifdef PetscFilter
+#define FILTER_DRHODT
+#endif
 #endif
 namespace Uintah {
 

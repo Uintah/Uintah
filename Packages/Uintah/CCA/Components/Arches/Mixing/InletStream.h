@@ -40,6 +40,7 @@ namespace Uintah {
       std::vector<double> d_mixVarVariance;
       double d_enthalpy;
       std::vector<double> d_rxnVars;
+      int d_axialLoc;
 
     }; // End class InletStream
 

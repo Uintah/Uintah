@@ -15,7 +15,7 @@ c*********************************************************************
       integer ISTW, JSTW, KSTW, IENDW, JENDW, KENDW
       integer i, j, k
 
-      logical*1 L2UP, LSMPT, LCEND, LCENTRAL, filtcend
+      logical*1 L2UP, LSMPT, LCENTRAL, filtcend
 
       double precision AREAN, AREAS, AREAEW, AREATB, VOL
       double precision GE, GEB, GW, GWB, GN, GNB, GS, GSB, GT, GPB, GB
@@ -43,13 +43,14 @@ c*********************************************************************
 c*********************************************************************
 c     Set all flags except one to false (** WARNING ** need to change)
 c*********************************************************************
-      L2UP = .FALSE.
       LSMPT = .FALSE.
-c      LCEND = .TRUE.
-      LCEND = .FALSE.
       LCENTRAL = .FALSE.
-c      filtcend = .true.
       filtcend = .false.
+      if (lcend) then
+         L2UP = .FALSE.
+      else
+         L2UP = .TRUE.
+      endif
 
 c*********************************************************************
 c     Go thru all the cells

@@ -100,16 +100,26 @@ namespace Uintah {
 	return d_mole;
       }
       inline double getCO2() const {
-	return d_speciesConcn[d_CO2index];
+	if (d_CO2index)
+	  return d_speciesConcn[d_CO2index];
+	else
+	  return d_co2;
       }
       inline double getH2O() const {
-	return d_speciesConcn[d_H2Oindex];
+	if (d_H2Oindex)
+	  return d_speciesConcn[d_H2Oindex];
+	else
+	  return d_h2o;
       }
       inline bool getSootBool() const {
         return d_lsoot;
       }
       inline double getSootFV() const {
-	return d_sootData[1];
+	//	return d_sootData[1];
+	return d_sootFV;
+      }
+      inline double getfvtfive() const {
+	return d_fvtfive;
       }
       inline double getRxnSource() const {
 	return d_rxnVarRates[0];
@@ -142,6 +152,11 @@ namespace Uintah {
       int d_numMixVars;
       int d_numRxnVars;
       bool d_lsoot;
+      double d_sootFV;
+      double d_co2;
+      double d_h2o;
+      double d_fvtfive;
+
       int d_CO2index; //Set to 0 in constructor.
                       //Value changed in ***MixingModel::computeProps
       int d_H2Oindex; //Set to 0 in constructor.
