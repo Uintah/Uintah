@@ -261,13 +261,18 @@ TextureBuilder::new_gfield(FieldHandle gfield)
   ei = gfld->fdata().end();
   double gminval = std::numeric_limits<double>::max();
   double gmaxval = -gminval;
+  // Moved sqrt out of loop, do after.
   while (bi != ei)
   {
-    Vector v = *bi;
-    double g = v.length();
+    const double g = (*bi).length2();
     if (g < gminval) gminval = g;
     if (g > gmaxval) gmaxval = g;
     ++bi;
+  }
+  if (gmaxval >= 0)
+  {
+    gminval = sqrt(gminval);
+    gmaxval = sqrt(gmaxval);
   }
   if (!gui_fixed_.get())
   {
