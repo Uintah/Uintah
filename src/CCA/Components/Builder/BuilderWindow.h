@@ -95,9 +95,6 @@ namespace SCIRun {
     void displayMsg(const char *); 
     void buildRemotePackageMenus(const  gov::cca::ports::ComponentRepository::pointer &reg,
 				 const std::string &frameworkURL);
-
-    std::vector<Module*> updateMiniView_modules;
-
   private:
     gov::cca::Services::pointer services;
     void buildPackageMenus();
@@ -108,10 +105,6 @@ namespace SCIRun {
 
     QCanvas* miniCanvas;
     QCanvas* big_canvas;
-    QCanvasItemList tempQCL;
-
-    std::vector<QCanvasRectangle*> miniRect;
-
   };
 }
 

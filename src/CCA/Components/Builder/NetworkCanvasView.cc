@@ -252,6 +252,7 @@ void NetworkCanvasView::removeModule(Module * module)
   }
   module->hide();
   delete module;
+  p2BuilderWindow->updateMiniView();
 }
 
 void NetworkCanvasView::addConnection(Module *m1,const std::string &portname1,  Module *m2, const std::string &portname2)

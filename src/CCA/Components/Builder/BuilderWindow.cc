@@ -109,10 +109,6 @@ BuilderWindow::BuilderWindow(const gov::cca::Services::pointer& services)
                            this, SLOT(insert()), fileTools, "insert" );
   new QToolButton( QIconSet( QPixmap(info)  ), "Add Info", QString::null,
                            this, SLOT(addInfo()), fileTools, "addInfo" );
-  //saveAction->addTo(fileTools);
-  //loadAction->addTo(fileTools);
-  //insertAction->addTo(fileTools);
-  //addInfoAction->addTo(fileTools);
 
   QPopupMenu* file = new QPopupMenu(this);
   menuBar()->insertItem("&File", file);
@@ -141,19 +137,21 @@ BuilderWindow::BuilderWindow(const gov::cca::Services::pointer& services)
   QColor bgcolor(0, 51, 102);
   QSplitter* vsplit = new QSplitter(Qt::Vertical, this);
   QSplitter* hsplit = new QSplitter(Qt::Horizontal, vsplit);
-  miniCanvas = new QCanvas(200,200);
+  miniCanvas = new QCanvas();
   miniCanvas->setBackgroundColor(bgcolor);
   QCanvasView* miniview = new QCanvasView(miniCanvas, hsplit);
   miniview->setFixedHeight(204);
   miniview->setFixedWidth(204);
-  //  minirect = new QCanvasRectangle( 10,10,10,10,miniCanvas );
-  //QCanvasPolygonalItem minirect = new QCanvasPolygonalItem( minicanvas );
-  //  minirect->show();
+  int miniW=miniview->contentsRect().width();
+  int miniH=miniview->contentsRect().height();
+  miniCanvas->resize(miniW, miniH);
 
-  /*QCanvasView* miniview = new QCanvasView(minicanvas, hsplit);*/
+
+
   QVBox* layout3 = new QVBox(hsplit);
   QHBox* layout4 = new QHBox(layout3);
-  /*QLabel* message_label = */new QLabel(" Messages: ", layout4);
+  //QLabel* message_label = 
+  new QLabel(" Messages: ", layout4);
   QMimeSourceFactory::defaultFactory()->setPixmap("SCIRun logo", QPixmap(SCIRun_logo));
   QLabel* logo_image = new QLabel("SCIRun logo", layout4);
   logo_image->setPixmap( QPixmap(SCIRun_logo));
@@ -193,6 +191,7 @@ BuilderWindow::BuilderWindow(const gov::cca::Services::pointer& services)
 				   listener, true);
     services->releasePort("cca.ComponentEventService");
   }
+  updateMiniView();
 }
  
 
@@ -441,35 +440,40 @@ void BuilderWindow::displayMsg(const char *msg)
 
 void BuilderWindow::updateMiniView()
 {
-  QScrollBar* p2big_canvas_view_horizontalScrollBar = big_canvas_view->horizontalScrollBar();
-  QScrollBar* p2big_canvas_view_verticalScrollBar = big_canvas_view->verticalScrollBar();
-  
-  QCanvasRectangle* viewableRect = new QCanvasRectangle( 10, 10, 10, 10, miniCanvas );
-  viewableRect->show();
-  miniCanvas->update();
-  
   // assign the temporary list
   // needed for coordinates of each module
   QCanvasItemList tempQCL = miniCanvas->allItems();
 
-  for(int i=0;i<tempQCL.size();i++){
+  for(unsigned int i=0;i<tempQCL.size();i++){
     delete tempQCL[i];
   }
   
   // assign modules to local variable
-  updateMiniView_modules = big_canvas_view->getModules();
+  std::vector<Module*> modules = big_canvas_view->getModules();
 
-  for( int i = 0; i < updateMiniView_modules.size(); i++ ) 
-  {
-  QCanvasRectangle* viewableRect = new QCanvasRectangle( ( int )p2big_canvas_view_horizontalScrollBar->value() / 10,( int )p2big_canvas_view_verticalScrollBar->value() / 10,( int )(big_canvas_view->visibleWidth() / 10 ), ( int )(big_canvas_view->visibleHeight() / 10 ), miniCanvas );
+  double scaleH=double(big_canvas->width())/miniCanvas->width();
+  double scaleV=double(big_canvas->height())/miniCanvas->height();
+
+  QCanvasRectangle* viewableRect = new QCanvasRectangle( //int(hSBar->value()/scaleH),int(vSBar->value()/scaleV), 
+							   int(big_canvas_view->contentsX()/scaleH), 
+							   int(big_canvas_view->contentsY()/scaleV),
+							   int(big_canvas_view->visibleWidth()/scaleH), 
+							   int(big_canvas_view->visibleHeight()/scaleV), miniCanvas );
+							   
   viewableRect->show();
 
-    QCanvasRectangle *rect=new QCanvasRectangle( ( int )updateMiniView_modules[i]->x() / 10 , ( int )updateMiniView_modules[i]->y() / 10, 6, 4, miniCanvas );
+  for(unsigned int i = 0; i < modules.size(); i++ ) 
+  {
+     
+    QPoint pm=modules[i]->posInCanvas();
+
+    QCanvasRectangle *rect=new QCanvasRectangle( int(pm.x()/scaleH), int(pm.y()/scaleV), 
+						 int(modules[i]->width()/scaleH), int(modules[i]->height()/scaleV),
+						 miniCanvas );
     rect->setBrush( Qt::white );
-    //miniRect.push_back(rect );
     rect->show();
-    miniCanvas->update();
   }
+  miniCanvas->update();
 }
 
 
