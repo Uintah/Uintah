@@ -355,8 +355,7 @@ public:
   void set_point(const Point &point, Node::index_type index)
   { points_[index] = point; }
 
-  void get_random_point(Point &p, const Cell::index_type &ei, 
-			int seed=0) const;
+  void get_random_point(Point &p, Cell::index_type ei, int seed=0) const;
 
   //! the double return val is the volume of the tet.
   double get_gradient_basis(Cell::index_type ci, Vector& g0, Vector& g1,

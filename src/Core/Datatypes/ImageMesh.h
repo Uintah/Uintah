@@ -294,7 +294,7 @@ public:
   void get_faces(Face::array_type &arr, const BBox &box);
 
   //! Get the size of an elemnt (length, area, volume)
-  double get_size(Node::index_type idx) const { return 0.0; }
+  double get_size(const Node::index_type &idx) const { return 0.0; }
   double get_size(Edge::index_type idx) const 
   {
     Node::array_type arr;
@@ -304,7 +304,7 @@ public:
     get_center(p1, arr[1]);
     return (p1.asVector() - p0.asVector()).length();
   }
-  double get_size(Face::index_type idx) const
+  double get_size(const Face::index_type &idx) const
   {
     Node::array_type ra;
     get_nodes(ra,idx);
@@ -319,13 +319,13 @@ public:
   double get_area(Face::index_type idx) const { return get_size(idx); };
   double get_volume(Cell::index_type idx) const { return get_size(idx); };
 
-  int get_valence(Node::index_type idx) const
+  int get_valence(const Node::index_type &idx) const
   {
     return ((idx.i_ == 0 || idx.i_ == ni_ - 1 ? 1 : 2) +
 	    (idx.j_ == 0 || idx.j_ == nj_ - 1 ? 1 : 2));
   }   
   int get_valence(Edge::index_type idx) const;
-  int get_valence(Face::index_type idx) const { return 0; }
+  int get_valence(const Face::index_type &idx) const { return 0; }
   int get_valence(Cell::index_type idx) const { return 0; }
 
 
@@ -354,7 +354,7 @@ public:
   void get_weights(const Point &p, Face::array_type &l, vector<double> &w);
   void get_weights(const Point &, Cell::array_type &, vector<double> &) {ASSERTFAIL("ImageMesh::get_weights for cells isn't supported");}
 
-  void get_point(Point &p, Node::index_type i) const
+  void get_point(Point &p, const Node::index_type &i) const
   { get_center(p, i); }
 
   void get_random_point(Point &, const Face::index_type &, int seed=0) const;

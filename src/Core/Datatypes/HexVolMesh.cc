@@ -114,7 +114,7 @@ HexVolMesh::~HexVolMesh()
 /* To generate a random point inside of a hexrahedron, we generate random
    barrycentric coordinates (independent random variables between 0 and
    1 that sum to 1) for the point. */
-void HexVolMesh::get_random_point(Point &/*p*/, const Cell::index_type &/*ei*/,
+void HexVolMesh::get_random_point(Point &/*p*/, Cell::index_type /*ei*/,
 				  int /*seed*/) const
 {
   ASSERTFAIL("don't know how to pick a random point in a hex");

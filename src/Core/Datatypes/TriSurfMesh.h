@@ -191,7 +191,7 @@ public:
     { points_[index] = point; }
 
 
-  void get_random_point(Point &, const Face::index_type &, int seed=0) const;
+  void get_random_point(Point &, Face::index_type, int seed=0) const;
 
   //! the double return val is the area of the triangle.
   double get_gradient_basis(Face::index_type fi, Vector& g0, Vector& g1,
@@ -229,7 +229,7 @@ public:
 
   //! Subdivision Methods
   bool			insert_node(const Point &p);
-  void			insert_node(const Face::index_type face, const Point &p);
+  void			insert_node(Face::index_type face, const Point &p);
   void			bisect_element(const Face::index_type);
 
 

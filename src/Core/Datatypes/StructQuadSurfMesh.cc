@@ -129,7 +129,8 @@ StructQuadSurfMesh::get_nodes(Node::array_type &array, Edge::index_type idx) con
 }
 
 void
-StructQuadSurfMesh::get_nodes(Node::array_type &array, Face::index_type idx) const
+StructQuadSurfMesh::get_nodes(Node::array_type &array, 
+			      const Face::index_type &idx) const
 {
   const int arr_size = 4;
   array.resize(arr_size);
@@ -144,7 +145,8 @@ StructQuadSurfMesh::get_nodes(Node::array_type &array, Face::index_type idx) con
 }
 
 void
-StructQuadSurfMesh::get_edges(Edge::array_type &array, Face::index_type idx) const
+StructQuadSurfMesh::get_edges(Edge::array_type &array,
+			      const Face::index_type &idx) const
 {
   array.clear();
   array.push_back(idx * 4 + 0);

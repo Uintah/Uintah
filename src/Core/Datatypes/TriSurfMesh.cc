@@ -77,8 +77,7 @@ TriSurfMesh::~TriSurfMesh()
    barrycentric coordinates (independent random variables between 0 and
    1 that sum to 1) for the point. */
 void
-TriSurfMesh::get_random_point(Point &p, const Face::index_type &ei,
-			      int seed) const
+TriSurfMesh::get_random_point(Point &p, Face::index_type ei, int seed) const
 {
   static MusilRNG rng;
 
@@ -720,7 +719,7 @@ TriSurfMesh::compute_normals()
 
 
 void
-TriSurfMesh::insert_node(const Face::index_type face, const Point &p)
+TriSurfMesh::insert_node(Face::index_type face, const Point &p)
 {
   const bool do_neighbors = synchronized_ & EDGE_NEIGHBORS_E;
   const bool do_normals = false; // synchronized_ & NORMALS_E;
