@@ -420,9 +420,9 @@ ScalarSolver::sched_buildLinearMatrixPred(SchedulerP& sched,
   tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel,
 		Ghost::AroundCells, Arches::ONEGHOSTCELL);
   tsk->requires(Task::NewDW, d_lab->d_scalarOUTBCLabel,
-		Ghost::AroundCells, Arches::ONEGHOSTCELL);
+		Ghost::AroundCells, Arches::TWOGHOSTCELLS);
   tsk->requires(Task::NewDW, d_lab->d_densityINLabel, 
-		Ghost::AroundCells, Arches::ONEGHOSTCELL);
+		Ghost::AroundCells, Arches::TWOGHOSTCELLS);
   tsk->requires(Task::NewDW, d_lab->d_viscosityINLabel,
 		Ghost::AroundCells, Arches::ONEGHOSTCELL);
   tsk->requires(Task::NewDW, d_lab->d_uVelocityOUTBCLabel,
@@ -431,6 +431,12 @@ ScalarSolver::sched_buildLinearMatrixPred(SchedulerP& sched,
 		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
   tsk->requires(Task::NewDW, d_lab->d_wVelocityOUTBCLabel,
 		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
+
+#ifdef Scalar_ENO
+    tsk->requires(Task::OldDW, d_lab->d_maxAbsU_label);
+    tsk->requires(Task::OldDW, d_lab->d_maxAbsV_label);
+    tsk->requires(Task::OldDW, d_lab->d_maxAbsW_label);
+#endif
 
       // added one more argument of index to specify scalar component
   tsk->computes(d_lab->d_scalCoefPredLabel, d_lab->d_stencilMatl,
@@ -471,6 +477,18 @@ void ScalarSolver::buildLinearMatrixPred(const ProcessorGroup* pc,
 #endif
 #endif
 
+#ifdef Scalar_ENO
+    max_vartype mxAbsU;
+    max_vartype mxAbsV;
+    max_vartype mxAbsW;
+    old_dw->get(mxAbsU, d_lab->d_maxAbsU_label);
+    old_dw->get(mxAbsV, d_lab->d_maxAbsV_label);
+    old_dw->get(mxAbsW, d_lab->d_maxAbsW_label);
+    double maxAbsU = mxAbsU;
+    double maxAbsV = mxAbsW;
+    double maxAbsW = mxAbsW;
+#endif
+
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
@@ -503,11 +521,11 @@ void ScalarSolver::buildLinearMatrixPred(const ProcessorGroup* pc,
 
     // from new_dw get DEN, VIS, F(index), U, V, W
     new_dw->getCopy(scalarVars.density, d_lab->d_densityINLabel, 
-		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
+		matlIndex, patch, Ghost::AroundCells, Arches::TWOGHOSTCELLS);
     new_dw->getCopy(scalarVars.viscosity, d_lab->d_viscosityINLabel, 
 		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
     new_dw->getCopy(scalarVars.scalar, d_lab->d_scalarOUTBCLabel, 
-		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+		matlIndex, patch, Ghost::AroundCells, Arches::TWOGHOSTCELLS);
     // for explicit get old values
     new_dw->getCopy(scalarVars.uVelocity, d_lab->d_uVelocityOUTBCLabel, 
 		matlIndex, patch, Ghost::AroundFaces, Arches::ONEGHOSTCELL);
@@ -565,6 +583,18 @@ void ScalarSolver::buildLinearMatrixPred(const ProcessorGroup* pc,
     // inputs : scalCoefSBLM, scalLinSrcSBLM
     // outputs: scalCoefSBLM
     d_discretize->calculateScalarDiagonal(pc, patch, index, &scalarVars);
+
+#ifdef Scalar_ENO
+#ifdef Scalar_WENO
+    d_discretize->calculateScalarWENOscheme(pc, patch,  index, cellinfo,
+					   maxAbsU, maxAbsV, maxAbsW, 
+				  	   &scalarVars);
+#else
+    d_discretize->calculateScalarENOscheme(pc, patch,  index, cellinfo,
+					   maxAbsU, maxAbsV, maxAbsW, 
+				  	   &scalarVars);
+#endif
+#endif
     for (int ii = 0; ii < d_lab->d_stencilMatl->size(); ii++) {
       new_dw->put(scalarVars.scalarCoeff[ii], 
 		  d_lab->d_scalCoefPredLabel, ii, patch);
@@ -795,9 +825,9 @@ ScalarSolver::sched_buildLinearMatrixCorr(SchedulerP& sched,
 //  tsk->requires(Task::NewDW, d_lab->d_densityPredLabel, 
 //		Ghost::None, Arches::ZEROGHOSTCELLS);
   tsk->requires(Task::NewDW, d_lab->d_scalarIntermLabel,
-		Ghost::AroundCells, Arches::ONEGHOSTCELL);
+		Ghost::AroundCells, Arches::TWOGHOSTCELLS);
   tsk->requires(Task::NewDW, d_lab->d_densityIntermLabel, 
-		Ghost::AroundCells, Arches::ONEGHOSTCELL);
+		Ghost::AroundCells, Arches::TWOGHOSTCELLS);
   tsk->requires(Task::NewDW, d_lab->d_viscosityIntermLabel,
 		Ghost::AroundCells, Arches::ONEGHOSTCELL);
   tsk->requires(Task::NewDW, d_lab->d_uVelocityIntermLabel,
@@ -816,9 +846,9 @@ ScalarSolver::sched_buildLinearMatrixCorr(SchedulerP& sched,
 		Ghost::None, Arches::ZEROGHOSTCELLS);
   #endif
   tsk->requires(Task::NewDW, d_lab->d_scalarPredLabel,
-		Ghost::AroundCells, Arches::ONEGHOSTCELL);
+		Ghost::AroundCells, Arches::TWOGHOSTCELLS);
   tsk->requires(Task::NewDW, d_lab->d_densityPredLabel, 
-		Ghost::AroundCells, Arches::ONEGHOSTCELL);
+		Ghost::AroundCells, Arches::TWOGHOSTCELLS);
   tsk->requires(Task::NewDW, d_lab->d_viscosityPredLabel,
 		Ghost::AroundCells, Arches::ONEGHOSTCELL);
   tsk->requires(Task::NewDW, d_lab->d_uVelocityPredLabel,
@@ -828,6 +858,18 @@ ScalarSolver::sched_buildLinearMatrixCorr(SchedulerP& sched,
   tsk->requires(Task::NewDW, d_lab->d_wVelocityPredLabel,
 		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
   #endif
+
+#ifdef Scalar_ENO
+  #ifdef Runge_Kutta_3d
+    tsk->requires(Task::NewDW, d_lab->d_maxAbsUInterm_label);
+    tsk->requires(Task::NewDW, d_lab->d_maxAbsVInterm_label);
+    tsk->requires(Task::NewDW, d_lab->d_maxAbsWInterm_label);
+  #else
+    tsk->requires(Task::NewDW, d_lab->d_maxAbsUPred_label);
+    tsk->requires(Task::NewDW, d_lab->d_maxAbsVPred_label);
+    tsk->requires(Task::NewDW, d_lab->d_maxAbsWPred_label);
+  #endif
+#endif
 
       // added one more argument of index to specify scalar component
   tsk->computes(d_lab->d_scalCoefCorrLabel, d_lab->d_stencilMatl,
@@ -860,6 +902,24 @@ void ScalarSolver::buildLinearMatrixCorr(const ProcessorGroup* pc,
 #ifdef Runge_Kutta_3d_ssp
   delta_t /= gamma_3;
 #endif
+#endif
+
+#ifdef Scalar_ENO
+    max_vartype mxAbsU;
+    max_vartype mxAbsV;
+    max_vartype mxAbsW;
+#ifdef Runge_Kutta_3d
+    new_dw->get(mxAbsU, d_lab->d_maxAbsUInterm_label);
+    new_dw->get(mxAbsV, d_lab->d_maxAbsVInterm_label);
+    new_dw->get(mxAbsW, d_lab->d_maxAbsWInterm_label);
+#else
+    new_dw->get(mxAbsU, d_lab->d_maxAbsUPred_label);
+    new_dw->get(mxAbsV, d_lab->d_maxAbsVPred_label);
+    new_dw->get(mxAbsW, d_lab->d_maxAbsWPred_label);
+#endif
+    double maxAbsU = mxAbsU;
+    double maxAbsV = mxAbsW;
+    double maxAbsW = mxAbsW;
 #endif
 
   
@@ -896,11 +956,11 @@ void ScalarSolver::buildLinearMatrixCorr(const ProcessorGroup* pc,
     new_dw->getCopy(scalarVars.old_scalar, d_lab->d_scalarIntermLabel, 
 		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
     new_dw->getCopy(scalarVars.density, d_lab->d_densityIntermLabel, 
-		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
+		matlIndex, patch, Ghost::AroundCells, Arches::TWOGHOSTCELLS);
     new_dw->getCopy(scalarVars.viscosity, d_lab->d_viscosityIntermLabel, 
 		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
     new_dw->getCopy(scalarVars.scalar, d_lab->d_scalarIntermLabel, 
-		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+		matlIndex, patch, Ghost::AroundCells, Arches::TWOGHOSTCELLS);
   #else
   #ifdef Runge_Kutta_2nd
     new_dw->getCopy(scalarVars.old_density, d_lab->d_densityPredLabel, 
@@ -915,11 +975,11 @@ void ScalarSolver::buildLinearMatrixCorr(const ProcessorGroup* pc,
 		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
   #endif
     new_dw->getCopy(scalarVars.density, d_lab->d_densityPredLabel, 
-		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
+		matlIndex, patch, Ghost::AroundCells, Arches::TWOGHOSTCELLS);
     new_dw->getCopy(scalarVars.viscosity, d_lab->d_viscosityPredLabel, 
 		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
     new_dw->getCopy(scalarVars.scalar, d_lab->d_scalarPredLabel, 
-		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+		matlIndex, patch, Ghost::AroundCells, Arches::TWOGHOSTCELLS);
   #endif
     // for explicit get old values
   #ifdef Runge_Kutta_3d
@@ -986,6 +1046,18 @@ void ScalarSolver::buildLinearMatrixCorr(const ProcessorGroup* pc,
     // inputs : scalCoefSBLM, scalLinSrcSBLM
     // outputs: scalCoefSBLM
     d_discretize->calculateScalarDiagonal(pc, patch, index, &scalarVars);
+
+#ifdef Scalar_ENO
+#ifdef Scalar_WENO
+    d_discretize->calculateScalarWENOscheme(pc, patch,  index, cellinfo, 
+					   maxAbsU, maxAbsV, maxAbsW, 
+				  	   &scalarVars);
+#else
+    d_discretize->calculateScalarENOscheme(pc, patch,  index, cellinfo, 
+					   maxAbsU, maxAbsV, maxAbsW, 
+				  	   &scalarVars);
+#endif
+#endif
     for (int ii = 0; ii < d_lab->d_stencilMatl->size(); ii++) {
       new_dw->put(scalarVars.scalarCoeff[ii], 
 		  d_lab->d_scalCoefCorrLabel, ii, patch);
@@ -1283,9 +1355,9 @@ ScalarSolver::sched_buildLinearMatrixInterm(SchedulerP& sched,
 //  tsk->requires(Task::NewDW, d_lab->d_densityINLabel, 
 //		Ghost::None, Arches::ZEROGHOSTCELLS);
   tsk->requires(Task::NewDW, d_lab->d_scalarPredLabel,
-		Ghost::AroundCells, Arches::ONEGHOSTCELL);
+		Ghost::AroundCells, Arches::TWOGHOSTCELLS);
   tsk->requires(Task::NewDW, d_lab->d_densityPredLabel, 
-		Ghost::AroundCells, Arches::ONEGHOSTCELL);
+		Ghost::AroundCells, Arches::TWOGHOSTCELLS);
   tsk->requires(Task::NewDW, d_lab->d_viscosityPredLabel,
 		Ghost::AroundCells, Arches::ONEGHOSTCELL);
   tsk->requires(Task::NewDW, d_lab->d_uVelocityPredLabel,
@@ -1294,6 +1366,12 @@ ScalarSolver::sched_buildLinearMatrixInterm(SchedulerP& sched,
 		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
   tsk->requires(Task::NewDW, d_lab->d_wVelocityPredLabel,
 		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
+
+#ifdef Scalar_ENO
+    tsk->requires(Task::NewDW, d_lab->d_maxAbsUPred_label);
+    tsk->requires(Task::NewDW, d_lab->d_maxAbsVPred_label);
+    tsk->requires(Task::NewDW, d_lab->d_maxAbsWPred_label);
+#endif
 
       // added one more argument of index to specify scalar component
   tsk->computes(d_lab->d_scalCoefIntermLabel, d_lab->d_stencilMatl,
@@ -1324,6 +1402,18 @@ void ScalarSolver::buildLinearMatrixInterm(const ProcessorGroup* pc,
   #ifdef Runge_Kutta_3d_ssp
   delta_t /= gamma_2; 
   #endif
+
+#ifdef Scalar_ENO
+    max_vartype mxAbsU;
+    max_vartype mxAbsV;
+    max_vartype mxAbsW;
+    new_dw->get(mxAbsU, d_lab->d_maxAbsUPred_label);
+    new_dw->get(mxAbsV, d_lab->d_maxAbsVPred_label);
+    new_dw->get(mxAbsW, d_lab->d_maxAbsWPred_label);
+    double maxAbsU = mxAbsU;
+    double maxAbsV = mxAbsW;
+    double maxAbsW = mxAbsW;
+#endif
   
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
@@ -1356,11 +1446,11 @@ void ScalarSolver::buildLinearMatrixInterm(const ProcessorGroup* pc,
 
     // from new_dw get DEN, VIS, F(index), U, V, W
     new_dw->getCopy(scalarVars.density, d_lab->d_densityPredLabel, 
-		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
+		matlIndex, patch, Ghost::AroundCells, Arches::TWOGHOSTCELLS);
     new_dw->getCopy(scalarVars.viscosity, d_lab->d_viscosityPredLabel, 
 		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
     new_dw->getCopy(scalarVars.scalar, d_lab->d_scalarPredLabel, 
-		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+		matlIndex, patch, Ghost::AroundCells, Arches::TWOGHOSTCELLS);
     // for explicit get old values
     new_dw->getCopy(scalarVars.uVelocity, d_lab->d_uVelocityPredLabel, 
 		matlIndex, patch, Ghost::AroundFaces, Arches::ONEGHOSTCELL);
@@ -1416,6 +1506,18 @@ void ScalarSolver::buildLinearMatrixInterm(const ProcessorGroup* pc,
     // inputs : scalCoefSBLM, scalLinSrcSBLM
     // outputs: scalCoefSBLM
     d_discretize->calculateScalarDiagonal(pc, patch, index, &scalarVars);
+
+#ifdef Scalar_ENO
+#ifdef Scalar_WENO
+    d_discretize->calculateScalarWENOscheme(pc, patch,  index, cellinfo, 
+					   maxAbsU, maxAbsV, maxAbsW, 
+				  	   &scalarVars);
+#else
+    d_discretize->calculateScalarENOscheme(pc, patch,  index, cellinfo, 
+					   maxAbsU, maxAbsV, maxAbsW, 
+				  	   &scalarVars);
+#endif
+#endif
     for (int ii = 0; ii < d_lab->d_stencilMatl->size(); ii++) {
       new_dw->put(scalarVars.scalarCoeff[ii], 
 		  d_lab->d_scalCoefIntermLabel, ii, patch);

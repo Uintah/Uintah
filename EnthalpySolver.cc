@@ -440,9 +440,9 @@ EnthalpySolver::sched_buildLinearMatrixPred(SchedulerP& sched,
   tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel,
 		Ghost::AroundCells, Arches::ONEGHOSTCELL);
   tsk->requires(Task::NewDW, d_lab->d_enthalpyOUTBCLabel,
-		Ghost::AroundCells, Arches::ONEGHOSTCELL);
+		Ghost::AroundCells, Arches::TWOGHOSTCELLS);
   tsk->requires(Task::NewDW, d_lab->d_densityINLabel, 
-		Ghost::AroundCells, Arches::ONEGHOSTCELL);
+		Ghost::AroundCells, Arches::TWOGHOSTCELLS);
   tsk->requires(Task::NewDW, d_lab->d_viscosityINLabel,
 		Ghost::AroundCells, Arches::ONEGHOSTCELL);
   tsk->requires(Task::NewDW, d_lab->d_uVelocityOUTBCLabel,
@@ -465,6 +465,12 @@ EnthalpySolver::sched_buildLinearMatrixPred(SchedulerP& sched,
     tsk->requires(Task::NewDW, d_MAlab->d_enth_mmNonLinSrc_CCLabel,
 		  Ghost::None, Arches::ZEROGHOSTCELLS);
   }
+
+#ifdef Scalar_ENO
+    tsk->requires(Task::OldDW, d_lab->d_maxAbsU_label);
+    tsk->requires(Task::OldDW, d_lab->d_maxAbsV_label);
+    tsk->requires(Task::OldDW, d_lab->d_maxAbsW_label);
+#endif
 
   tsk->computes(d_lab->d_enthCoefPredLabel, d_lab->d_stencilMatl,
 		Task::OutOfDomain);
@@ -502,6 +508,19 @@ void EnthalpySolver::buildLinearMatrixPred(const ProcessorGroup* pc,
   delta_t /= gamma_1; 
 #endif
 #endif
+
+#ifdef Scalar_ENO
+    max_vartype mxAbsU;
+    max_vartype mxAbsV;
+    max_vartype mxAbsW;
+    old_dw->get(mxAbsU, d_lab->d_maxAbsU_label);
+    old_dw->get(mxAbsV, d_lab->d_maxAbsV_label);
+    old_dw->get(mxAbsW, d_lab->d_maxAbsW_label);
+    double maxAbsU = mxAbsU;
+    double maxAbsV = mxAbsW;
+    double maxAbsW = mxAbsW;
+#endif
+
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
@@ -534,7 +553,7 @@ void EnthalpySolver::buildLinearMatrixPred(const ProcessorGroup* pc,
 
     // from new_dw get DEN, VIS, F(index), U, V, W
     new_dw->getCopy(enthalpyVars.density, d_lab->d_densityINLabel, 
-		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
+		matlIndex, patch, Ghost::AroundCells, Arches::TWOGHOSTCELLS);
     new_dw->getCopy(enthalpyVars.viscosity, d_lab->d_viscosityINLabel, 
 		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
     new_dw->getCopy(enthalpyVars.enthalpy, d_lab->d_enthalpyOUTBCLabel, 
@@ -662,6 +681,20 @@ void EnthalpySolver::buildLinearMatrixPred(const ProcessorGroup* pc,
     // inputs : scalCoefSBLM, scalLinSrcSBLM
     // outputs: scalCoefSBLM
     d_discretize->calculateScalarDiagonal(pc, patch, index, &enthalpyVars);
+
+#ifdef Scalar_ENO
+    new_dw->getCopy(enthalpyVars.scalar, d_lab->d_enthalpyOUTBCLabel, 
+		matlIndex, patch, Ghost::AroundCells, Arches::TWOGHOSTCELLS);
+#ifdef Scalar_WENO
+    d_discretize->calculateScalarWENOscheme(pc, patch,  index, cellinfo, 
+					   maxAbsU, maxAbsV, maxAbsW, 
+				  	   &enthalpyVars);
+#else
+    d_discretize->calculateScalarENOscheme(pc, patch,  index, cellinfo, 
+					   maxAbsU, maxAbsV, maxAbsW, 
+				  	   &enthalpyVars);
+#endif
+#endif
     for (int ii = 0; ii < d_lab->d_stencilMatl->size(); ii++) {
       new_dw->put(enthalpyVars.scalarCoeff[ii], 
 		  d_lab->d_enthCoefPredLabel, ii, patch);
@@ -884,11 +917,11 @@ EnthalpySolver::sched_buildLinearMatrixCorr(SchedulerP& sched,
 //  tsk->requires(Task::NewDW, d_lab->d_densityPredLabel, 
 //		Ghost::None, Arches::ZEROGHOSTCELLS);
   tsk->requires(Task::NewDW, d_lab->d_densityIntermLabel, 
-		Ghost::AroundCells, Arches::ONEGHOSTCELL);
+		Ghost::AroundCells, Arches::TWOGHOSTCELLS);
   tsk->requires(Task::NewDW, d_lab->d_viscosityIntermLabel,
 		Ghost::AroundCells, Arches::ONEGHOSTCELL);
   tsk->requires(Task::NewDW, d_lab->d_enthalpyIntermLabel,
-		Ghost::AroundCells, Arches::ONEGHOSTCELL);
+		Ghost::AroundCells, Arches::TWOGHOSTCELLS);
   tsk->requires(Task::NewDW, d_lab->d_uVelocityIntermLabel,
 		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
   tsk->requires(Task::NewDW, d_lab->d_vVelocityIntermLabel,
@@ -903,11 +936,11 @@ EnthalpySolver::sched_buildLinearMatrixCorr(SchedulerP& sched,
 		Ghost::None, Arches::ZEROGHOSTCELLS);
   #endif
   tsk->requires(Task::NewDW, d_lab->d_densityPredLabel, 
-		Ghost::AroundCells, Arches::ONEGHOSTCELL);
+		Ghost::AroundCells, Arches::TWOGHOSTCELLS);
   tsk->requires(Task::NewDW, d_lab->d_viscosityPredLabel,
 		Ghost::AroundCells, Arches::ONEGHOSTCELL);
   tsk->requires(Task::NewDW, d_lab->d_enthalpyPredLabel,
-		Ghost::AroundCells, Arches::ONEGHOSTCELL);
+		Ghost::AroundCells, Arches::TWOGHOSTCELLS);
   tsk->requires(Task::NewDW, d_lab->d_uVelocityPredLabel,
 		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
   tsk->requires(Task::NewDW, d_lab->d_vVelocityPredLabel,
@@ -929,6 +962,19 @@ EnthalpySolver::sched_buildLinearMatrixCorr(SchedulerP& sched,
 		  Ghost::None, Arches::ZEROGHOSTCELLS);
   #endif
   }      // added one more argument of index to specify enthalpy component
+
+#ifdef Scalar_ENO
+  #ifdef Runge_Kutta_3d
+    tsk->requires(Task::NewDW, d_lab->d_maxAbsUInterm_label);
+    tsk->requires(Task::NewDW, d_lab->d_maxAbsVInterm_label);
+    tsk->requires(Task::NewDW, d_lab->d_maxAbsWInterm_label);
+  #else
+    tsk->requires(Task::NewDW, d_lab->d_maxAbsUPred_label);
+    tsk->requires(Task::NewDW, d_lab->d_maxAbsVPred_label);
+    tsk->requires(Task::NewDW, d_lab->d_maxAbsWPred_label);
+  #endif
+#endif
+
       // added one more argument of index to specify enthalpy component
   tsk->computes(d_lab->d_enthCoefCorrLabel, d_lab->d_stencilMatl,
 		Task::OutOfDomain);
@@ -961,6 +1007,24 @@ void EnthalpySolver::buildLinearMatrixCorr(const ProcessorGroup* pc,
 #endif
 #endif
   
+#ifdef Scalar_ENO
+    max_vartype mxAbsU;
+    max_vartype mxAbsV;
+    max_vartype mxAbsW;
+#ifdef Runge_Kutta_3d
+    new_dw->get(mxAbsU, d_lab->d_maxAbsUInterm_label);
+    new_dw->get(mxAbsV, d_lab->d_maxAbsVInterm_label);
+    new_dw->get(mxAbsW, d_lab->d_maxAbsWInterm_label);
+#else
+    new_dw->get(mxAbsU, d_lab->d_maxAbsUPred_label);
+    new_dw->get(mxAbsV, d_lab->d_maxAbsVPred_label);
+    new_dw->get(mxAbsW, d_lab->d_maxAbsWPred_label);
+#endif
+    double maxAbsU = mxAbsU;
+    double maxAbsV = mxAbsW;
+    double maxAbsW = mxAbsW;
+#endif
+
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
@@ -994,7 +1058,7 @@ void EnthalpySolver::buildLinearMatrixCorr(const ProcessorGroup* pc,
     new_dw->getCopy(enthalpyVars.old_enthalpy, d_lab->d_enthalpyIntermLabel, 
 		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
     new_dw->getCopy(enthalpyVars.density, d_lab->d_densityIntermLabel, 
-		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
+		matlIndex, patch, Ghost::AroundCells, Arches::TWOGHOSTCELLS);
     new_dw->getCopy(enthalpyVars.viscosity, d_lab->d_viscosityIntermLabel, 
 		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
     new_dw->getCopy(enthalpyVars.enthalpy, d_lab->d_enthalpyIntermLabel, 
@@ -1014,7 +1078,7 @@ void EnthalpySolver::buildLinearMatrixCorr(const ProcessorGroup* pc,
   #endif
 
     new_dw->getCopy(enthalpyVars.density, d_lab->d_densityPredLabel, 
-		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
+		matlIndex, patch, Ghost::AroundCells, Arches::TWOGHOSTCELLS);
     new_dw->getCopy(enthalpyVars.viscosity, d_lab->d_viscosityPredLabel, 
 		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
     new_dw->getCopy(enthalpyVars.enthalpy, d_lab->d_enthalpyPredLabel, 
@@ -1126,6 +1190,25 @@ void EnthalpySolver::buildLinearMatrixCorr(const ProcessorGroup* pc,
     // inputs : scalCoefSBLM, scalLinSrcSBLM
     // outputs: scalCoefSBLM
     d_discretize->calculateScalarDiagonal(pc, patch, index, &enthalpyVars);
+
+#ifdef Scalar_ENO
+  #ifdef Runge_Kutta_3d
+    new_dw->getCopy(enthalpyVars.scalar, d_lab->d_enthalpyIntermLabel, 
+		matlIndex, patch, Ghost::AroundCells, Arches::TWOGHOSTCELLS);
+  #else
+    new_dw->getCopy(enthalpyVars.scalar, d_lab->d_enthalpyPredLabel, 
+		matlIndex, patch, Ghost::AroundCells, Arches::TWOGHOSTCELLS);
+  #endif
+#ifdef Scalar_WENO
+    d_discretize->calculateScalarWENOscheme(pc, patch,  index, cellinfo, 
+					   maxAbsU, maxAbsV, maxAbsW, 
+				  	   &enthalpyVars);
+#else
+    d_discretize->calculateScalarENOscheme(pc, patch,  index, cellinfo, 
+					   maxAbsU, maxAbsV, maxAbsW, 
+				  	   &enthalpyVars);
+#endif
+#endif
     for (int ii = 0; ii < d_lab->d_stencilMatl->size(); ii++) {
       new_dw->put(enthalpyVars.scalarCoeff[ii], 
 		  d_lab->d_enthCoefCorrLabel, ii, patch);
@@ -1408,11 +1491,11 @@ EnthalpySolver::sched_buildLinearMatrixInterm(SchedulerP& sched,
 //  tsk->requires(Task::NewDW, d_lab->d_densityINLabel, 
 //		Ghost::None, Arches::ZEROGHOSTCELLS);
   tsk->requires(Task::NewDW, d_lab->d_densityPredLabel, 
-		Ghost::AroundCells, Arches::ONEGHOSTCELL);
+		Ghost::AroundCells, Arches::TWOGHOSTCELLS);
   tsk->requires(Task::NewDW, d_lab->d_viscosityPredLabel,
 		Ghost::AroundCells, Arches::ONEGHOSTCELL);
   tsk->requires(Task::NewDW, d_lab->d_enthalpyPredLabel,
-		Ghost::AroundCells, Arches::ONEGHOSTCELL);
+		Ghost::AroundCells, Arches::TWOGHOSTCELLS);
   tsk->requires(Task::NewDW, d_lab->d_uVelocityPredLabel,
 		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
   tsk->requires(Task::NewDW, d_lab->d_vVelocityPredLabel,
@@ -1426,6 +1509,13 @@ EnthalpySolver::sched_buildLinearMatrixInterm(SchedulerP& sched,
     tsk->requires(Task::NewDW, d_lab->d_absorpINPredLabel,
 		  Ghost::None, Arches::ZEROGHOSTCELLS);
   }      // added one more argument of index to specify enthalpy component
+
+#ifdef Scalar_ENO
+    tsk->requires(Task::NewDW, d_lab->d_maxAbsUPred_label);
+    tsk->requires(Task::NewDW, d_lab->d_maxAbsVPred_label);
+    tsk->requires(Task::NewDW, d_lab->d_maxAbsWPred_label);
+#endif
+
       // added one more argument of index to specify enthalpy component
   tsk->computes(d_lab->d_enthCoefIntermLabel, d_lab->d_stencilMatl,
 		Task::OutOfDomain);
@@ -1454,6 +1544,18 @@ void EnthalpySolver::buildLinearMatrixInterm(const ProcessorGroup* pc,
   #ifdef Runge_Kutta_3d_ssp
   delta_t /= gamma_2; 
   #endif
+
+#ifdef Scalar_ENO
+    max_vartype mxAbsU;
+    max_vartype mxAbsV;
+    max_vartype mxAbsW;
+    new_dw->get(mxAbsU, d_lab->d_maxAbsUPred_label);
+    new_dw->get(mxAbsV, d_lab->d_maxAbsVPred_label);
+    new_dw->get(mxAbsW, d_lab->d_maxAbsWPred_label);
+    double maxAbsU = mxAbsU;
+    double maxAbsV = mxAbsW;
+    double maxAbsW = mxAbsW;
+#endif
   
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
@@ -1486,7 +1588,7 @@ void EnthalpySolver::buildLinearMatrixInterm(const ProcessorGroup* pc,
 
     // from new_dw get DEN, VIS, F(index), U, V, W
     new_dw->getCopy(enthalpyVars.density, d_lab->d_densityPredLabel, 
-		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
+		matlIndex, patch, Ghost::AroundCells, Arches::TWOGHOSTCELLS);
     new_dw->getCopy(enthalpyVars.viscosity, d_lab->d_viscosityPredLabel, 
 		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
     new_dw->getCopy(enthalpyVars.enthalpy, d_lab->d_enthalpyPredLabel, 
@@ -1580,6 +1682,20 @@ void EnthalpySolver::buildLinearMatrixInterm(const ProcessorGroup* pc,
     // inputs : scalCoefSBLM, scalLinSrcSBLM
     // outputs: scalCoefSBLM
     d_discretize->calculateScalarDiagonal(pc, patch, index, &enthalpyVars);
+
+#ifdef Scalar_ENO
+    new_dw->getCopy(enthalpyVars.scalar, d_lab->d_enthalpyPredLabel, 
+		matlIndex, patch, Ghost::AroundCells, Arches::TWOGHOSTCELLS);
+#ifdef Scalar_WENO
+    d_discretize->calculateScalarWENOscheme(pc, patch,  index, cellinfo, 
+					   maxAbsU, maxAbsV, maxAbsW, 
+				  	   &enthalpyVars);
+#else
+    d_discretize->calculateScalarENOscheme(pc, patch,  index, cellinfo, 
+					   maxAbsU, maxAbsV, maxAbsW, 
+				  	   &enthalpyVars);
+#endif
+#endif
     for (int ii = 0; ii < d_lab->d_stencilMatl->size(); ii++) {
       new_dw->put(enthalpyVars.scalarCoeff[ii], 
 		  d_lab->d_enthCoefIntermLabel, ii, patch);
