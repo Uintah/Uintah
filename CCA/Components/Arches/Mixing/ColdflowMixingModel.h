@@ -75,6 +75,7 @@ public:
       virtual void computeProps(const InletStream& inStream,
 				Stream& outStream);
       inline Stream speciesStateSpace(const std::vector<double>& mixVar) {
+	return 0;
       }
 
       // GROUP: Get Methods :
@@ -143,6 +144,9 @@ private:
 
 //
 // $Log$
+// Revision 1.6  2001/11/27 23:29:01  spinti
+// Added "return 0" to function speciesStateSpace.
+//
 // Revision 1.5  2001/11/08 19:13:44  spinti
 // 1. Corrected minor problems in ILDMReactionModel.cc
 // 2. Added tabulation capability to StanjanEquilibriumReactionModel.cc. Now,
