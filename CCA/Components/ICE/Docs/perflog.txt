@@ -108,3 +108,41 @@ peformanceTest.ups[SecondOrderCE]
 2.38269 s - reduce [c] operators in SecondOrderCE:inFluxOutFluxVolume
 1.81267 s - d_OAFS from StaticArray to facedata
 1.7854  s - reduce further [c] operators in SecondOrderCE:inFluxOutFluxVolume
+
+
+
+-------------------------------------------------------------------------------
+BUILD - 12/17/2003 - LINUX TESTS (EXTRA INLINE FLAG DOESN'T HELP)
+
+performanceTest[SecondOrderCE]
+
+FASTEST    MEAN4RUNS  OPTION
+-----------------------------------------
+1.82382 s  1.82882 s  OFAST W/CHANGES AS OF 12/17/2003
+2.04459 s  2.07559 s  OFAST
+2.04224	s  2.06849 s  O3
+2.04180 s  2.04264 s  OFAST_INLINE2000
+2.02428 s  2.05045 s  OFAST_INLINE1000
+4.90501 s  4.91520 s  OFAST_INLINE100
+5.77771 s  5.81380 s  OFAST_INLINE0
+
+
+performanceTest[SecondOrder]
+
+FASTEST    MEAN4RUNS  OPTION
+-----------------------------------------
+0.48879 s  0.48935 s  OFAST W/CHANGES AS OF 12/17/2003
+0.57505 s  0.57665 s  OFAST
+0.59217	s  0.59256 s  O3
+0.59546 s  0.59668 s  OFAST_INLINE2000
+0.57636 s  0.59367 s  OFAST_INLINE1000
+1.68763 s  1.68819 s  OFAST_INLINE100
+2.24340 s  2.25085 s  OFAST_INLINE0
+
+
+OFAST_INLINE1000    = '-O3 -march=pentium4 -msse -msse2 -finline-limit=2000'
+OFAST_INLINE1000    = '-O3 -march=pentium4 -msse -msse2 -finline-limit=1000'
+OFAST_INLINE100     = '-O3 -march=pentium4 -msse -msse2 -finline-limit=100'
+OFAST_INLINE0       = '-O3 -march=pentium4 -msse -msse2 -finline-limit=0'
+OFAST               = '-O3 -march=pentium4 -msse -msse2'
+O3                  = '-O3'
