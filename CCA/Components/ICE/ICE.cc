@@ -35,6 +35,10 @@ using std::istringstream;
  
 using namespace SCIRun;
 using namespace Uintah;
+
+#undef  CONVECT
+//#define CONVECT
+
 //__________________________________
 //  To turn on normal output
 //  setenv SCI_DEBUG "ICE_NORMAL_COUT:+,ICE_DOING_COUT:+"
@@ -537,22 +541,11 @@ void ICE::scheduleComputePressure(SchedulerP& sched,
                      this, &ICE::computeEquilibrationPressure);
   }         
 
-  if (d_EqForm) {       // EQ FORM
-    t->requires(Task::OldDW,lb->press_CCLabel, press_matl, Ghost::None);
-    t->requires(Task::OldDW,lb->rho_CCLabel,               Ghost::None);
-    t->requires(Task::OldDW,lb->temp_CCLabel,              Ghost::None); 
-    t->requires(Task::OldDW,lb->vel_CCLabel,               Ghost::None);
-    t->requires(Task::OldDW,lb->sp_vol_CCLabel,            Ghost::None); 
-  }         
-  else if (d_RateForm) {     // RATE FORM
-    t->requires(Task::OldDW,lb->press_CCLabel, press_matl, Ghost::None);
-    t->requires(Task::OldDW,lb->rho_CCLabel,               Ghost::None);
-    t->requires(Task::OldDW,lb->temp_CCLabel,              Ghost::None); 
-    t->requires(Task::OldDW,lb->sp_vol_CCLabel,            Ghost::None);
-    t->computes(lb->matl_press_CCLabel);
-    t->computes(lb->f_theta_CCLabel);
-  }
                         // EQ & RATE FORM
+  t->requires(Task::OldDW,lb->press_CCLabel, press_matl, Ghost::None);
+  t->requires(Task::OldDW,lb->rho_CCLabel,               Ghost::None);
+  t->requires(Task::OldDW,lb->temp_CCLabel,              Ghost::None); 
+  t->requires(Task::OldDW,lb->sp_vol_CCLabel,            Ghost::None); 
   t->computes(lb->f_theta_CCLabel); 
   t->computes(lb->speedSound_CCLabel);
   t->computes(lb->vol_frac_CCLabel);
@@ -560,6 +553,10 @@ void ICE::scheduleComputePressure(SchedulerP& sched,
   t->computes(lb->rho_CCLabel);
   t->computes(lb->press_equil_CCLabel, press_matl);
   t->computes(lb->press_CCLabel,       press_matl);  // needed by implicit
+
+  if (d_RateForm) {     // RATE FORM
+    t->computes(lb->matl_press_CCLabel);
+  }
     
   sched->addTask(t, patches, ice_matls);
 }
@@ -578,9 +575,9 @@ void ICE::scheduleComputeTempFC(SchedulerP& sched,
   t = scinew Task("ICE::computeTempFC", this, &ICE::computeTempFC);
   
   Ghost::GhostType  gac = Ghost::AroundCells;
-  t->requires(Task::NewDW,lb->rho_CCLabel,     /*all_matls*/ gac,1);                      
-  t->requires(Task::OldDW,lb->temp_CCLabel,      ice_matls,  gac,1);    
-  t->requires(Task::NewDW,lb->temp_CCLabel,      mpm_matls,  gac,1);    
+  t->requires(Task::NewDW,lb->rho_CCLabel,     /*all_matls*/ gac,1);
+  t->requires(Task::OldDW,lb->temp_CCLabel,      ice_matls,  gac,1);
+  t->requires(Task::NewDW,lb->temp_CCLabel,      mpm_matls,  gac,1);
   
   t->computes(lb->TempX_FCLabel);
   t->computes(lb->TempY_FCLabel);
@@ -922,6 +919,12 @@ void ICE::scheduleAddExchangeToMomentumAndEnergy(SchedulerP& sched,
   t->requires(Task::OldDW,  lb->temp_CCLabel,  ice_matls, gn);
                                 // M P M 
   t->requires(Task::NewDW,  lb->temp_CCLabel,  mpm_matls, gn);      
+
+#ifdef CONVECT
+  Ghost::GhostType  gac  = Ghost::AroundCells; 
+  t->requires(Task::NewDW,MIlb->gMassLabel,    mpm_matls,     gac, 1);      
+  t->requires(Task::OldDW,MIlb->NC_CCweightLabel, press_matl, gac, 1);
+#endif
                                 // A L L  M A T L S
   t->requires(Task::NewDW,  lb->mass_L_CCLabel,           gn);      
   t->requires(Task::NewDW,  lb->mom_L_CCLabel,            gn);      
@@ -936,11 +939,19 @@ void ICE::scheduleAddExchangeToMomentumAndEnergy(SchedulerP& sched,
     t->requires(Task::NewDW, lb->press_CCLabel,     press_matl, gn);
     t->requires(Task::OldDW, lb->vel_CCLabel,       ice_matls,  gn);   
     t->requires(Task::NewDW, lb->vel_CCLabel,       mpm_matls,  gn);   
-
   }
+
   t->computes(lb->Tdot_CCLabel);
   t->computes(lb->mom_L_ME_CCLabel);      
   t->computes(lb->eng_L_ME_CCLabel); 
+
+  t->modifies(lb->temp_CCLabel, mpm_matls);
+  t->modifies(lb->vel_CCLabel,  mpm_matls);
+  /*`==========TESTING==========*/
+//  t->computes(MIlb->scratch1Label); 
+//  t->computes(MIlb->scratch2Label); 
+//  t->computes(MIlb->scratchVecLabel); 
+  /*`==========TESTING==========*/
   sched->addTask(t, patches, all_matls);
 } 
 
@@ -965,15 +976,11 @@ void ICE::scheduleAdvectAndAdvanceInTime(SchedulerP& sched,
   task->requires(Task::NewDW, lb->eng_L_ME_CCLabel,    Ghost::AroundCells,2);
   task->requires(Task::NewDW, lb->spec_vol_L_CCLabel,  Ghost::AroundCells,2);
  
-  task->modifies(lb->rho_CCLabel);
-  task->modifies(lb->sp_vol_CCLabel);
-  task->computes(lb->temp_CCLabel, ice_matls);
-  task->computes(lb->vel_CCLabel,  ice_matls);
+  task->modifies(lb->rho_CCLabel,   ice_matls);
+  task->modifies(lb->sp_vol_CCLabel,ice_matls);
+  task->computes(lb->temp_CCLabel,  ice_matls);
+  task->computes(lb->vel_CCLabel,   ice_matls);
   
-  if (mpm_matls->size() > 0){                             
-    task->modifies(lb->temp_CCLabel, mpm_matls);
-    task->modifies(lb->vel_CCLabel,  mpm_matls);
-  } 
   sched->addTask(task, patches, matls);
 }
 /* ---------------------------------------------------------------------
@@ -1342,7 +1349,6 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
     StaticArray<constCCVariable<double> > Temp(numMatls);
     StaticArray<constCCVariable<double> > rho_CC(numMatls);
     StaticArray<constCCVariable<double> > sp_vol_CC(numMatls); 
-    StaticArray<constCCVariable<Vector> > vel_CC(numMatls);
    
     CCVariable<int> n_iters_equil_press;
     constCCVariable<double> press;
@@ -1361,7 +1367,6 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
       int indx = matl->getDWIndex();
       old_dw->get(Temp[m],      lb->temp_CCLabel,  indx,patch, gn,0);
       old_dw->get(rho_CC[m],    lb->rho_CCLabel,   indx,patch, gn,0);
-      old_dw->get(vel_CC[m],    lb->vel_CCLabel,   indx,patch, gn,0);
       old_dw->get(sp_vol_CC[m], lb->sp_vol_CCLabel,indx,patch, gn,0);
       
       new_dw->allocateTemporary(rho_micro[m],  patch);
@@ -3104,6 +3109,13 @@ void ICE::addExchangeToMomentumAndEnergy(const ProcessorGroup*,
     StaticArray<constCCVariable<Vector> > mom_L(numALLMatls);
     StaticArray<constCCVariable<double> > int_eng_L(numALLMatls);
 
+    // Scratch Variables
+  /*`==========TESTING==========*/
+//    StaticArray<CCVariable<double> > scratch1(numALLMatls);  
+//    StaticArray<CCVariable<double> > scratch2(numALLMatls);  
+//    StaticArray<CCVariable<Vector> > scratchVec(numALLMatls);  
+  /*`==========TESTING==========*/
+
     // Create variables for the results
     StaticArray<CCVariable<Vector> > mom_L_ME(numALLMatls);
     StaticArray<CCVariable<Vector> > vel_CC(numALLMatls);
@@ -3148,14 +3160,23 @@ void ICE::addExchangeToMomentumAndEnergy(const ProcessorGroup*,
         cv[m] = ice_matl->getSpecificHeat();
       }                             // A L L  M A T L S
 
-      new_dw->get(mass_L[m],        lb->mass_L_CCLabel,   indx, patch,gn, 0); 
+      new_dw->get(mass_L[m],        lb->mass_L_CCLabel,   indx, patch,gn, 0);
       new_dw->get(sp_vol_CC[m],     lb->sp_vol_CCLabel,   indx, patch,gn, 0);
-      new_dw->get(mom_L[m],         lb->mom_L_CCLabel,    indx, patch,gn, 0); 
-      new_dw->get(int_eng_L[m],     lb->int_eng_L_CCLabel,indx, patch,gn, 0); 
-      new_dw->get(vol_frac_CC[m],   lb->vol_frac_CCLabel, indx, patch,gn, 0); 
-      new_dw->allocateAndPut(Tdot[m],        lb->Tdot_CCLabel,    indx,patch);          
-      new_dw->allocateAndPut(mom_L_ME[m],    lb->mom_L_ME_CCLabel,indx,patch);         
-      new_dw->allocateAndPut(int_eng_L_ME[m],lb->eng_L_ME_CCLabel,indx,patch);       
+      new_dw->get(mom_L[m],         lb->mom_L_CCLabel,    indx, patch,gn, 0);
+      new_dw->get(int_eng_L[m],     lb->int_eng_L_CCLabel,indx, patch,gn, 0);
+      new_dw->get(vol_frac_CC[m],   lb->vol_frac_CCLabel, indx, patch,gn, 0);
+      new_dw->allocateAndPut(Tdot[m],        lb->Tdot_CCLabel,    indx,patch);
+      new_dw->allocateAndPut(mom_L_ME[m],    lb->mom_L_ME_CCLabel,indx,patch);
+      new_dw->allocateAndPut(int_eng_L_ME[m],lb->eng_L_ME_CCLabel,indx,patch);
+
+  /*`==========TESTING==========*/
+//      new_dw->allocateAndPut(scratch1[m],  MIlb->scratch1Label,   indx,patch);
+//      new_dw->allocateAndPut(scratch2[m],  MIlb->scratch2Label,   indx,patch);
+//      new_dw->allocateAndPut(scratchVec[m],MIlb->scratchVecLabel, indx,patch);
+//      scratchVec[m].initialize(Vector(0.,0.,0.));
+//      scratch1[m].initialize(0.);
+//      scratch2[m].initialize(0.);
+  /*`==========TESTING==========*/
     }
 
     // Convert momenta to velocities and internal energy to Temp
@@ -3167,8 +3188,7 @@ void ICE::addExchangeToMomentumAndEnergy(const ProcessorGroup*,
       }
     }
     //---- P R I N T   D A T A ------ 
-    if (switchDebugMomentumExchange_CC ) 
-    {
+    if (switchDebugMomentumExchange_CC ) {
       for (int m = 0; m < numALLMatls; m++) {
         Material* matl = d_sharedState->getMaterial( m );
         int indx = matl->getDWIndex();
@@ -3181,7 +3201,7 @@ void ICE::addExchangeToMomentumAndEnergy(const ProcessorGroup*,
         printVector( indx, patch,1, desc.str(),"vel_CC", 0,  vel_CC[m]);            
       }
     }
- 
+
     for(CellIterator iter = patch->getCellIterator(); !iter.done();iter++){
       IntVector c = *iter;
       //---------- M O M E N T U M   E X C H A N G E
@@ -3246,6 +3266,125 @@ void ICE::addExchangeToMomentumAndEnergy(const ProcessorGroup*,
         Temp_CC[m][c] = Temp_CC[m][c] + X[m];
       }
     }  //end CellIterator loop
+
+#ifdef CONVECT 
+    //  Loop over matls
+    //  if (mpm_matl)
+    //  Loop over cells
+    //  find surface and surface normals
+    //  choose adjacent cell
+    //  find mass weighted average temp in adjacent cell (T_ave)
+    //  compute a heat transfer to the container h(T-T_ave)
+    //  compute Temp_CC = Temp_CC + h_trans/(mass*cv)
+    //  end loop over cells
+    //  endif (mpm_matl)
+    //  endloop over matls
+
+    Ghost::GhostType  gac = Ghost::AroundCells;
+    constNCVariable<double> NC_CCweight, NCsolidMass;
+    old_dw->get(NC_CCweight,     MIlb->NC_CCweightLabel,  0,   patch,gac,1);
+    Vector dx = patch->dCell();
+    double dxlen = dx.length();
+    const Level* level=patch->getLevel();
+
+    for (int m = 0; m < numALLMatls; m++)  {
+      Material* matl = d_sharedState->getMaterial( m );
+      MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
+      int dwindex = matl->getDWIndex();
+      if(mpm_matl){
+        new_dw->get(NCsolidMass,     MIlb->gMassLabel,   dwindex,patch,gac,1);
+        for(CellIterator iter = patch->getCellIterator(); !iter.done();iter++){
+          IntVector c = *iter;
+          IntVector nodeIdx[8];
+          patch->findNodesFromCell(*iter,nodeIdx);
+          double MaxMass = d_SMALL_NUM;
+          double MinMass = 1.0/d_SMALL_NUM;
+          for (int nN=0; nN<8; nN++) {
+            MaxMass = std::max(MaxMass,NC_CCweight[nodeIdx[nN]]*
+                                       NCsolidMass[nodeIdx[nN]]);
+            MinMass = std::min(MinMass,NC_CCweight[nodeIdx[nN]]*
+                                       NCsolidMass[nodeIdx[nN]]);
+          }
+          if ((MaxMass-MinMass)/MaxMass == 1.0 && (MaxMass > d_SMALL_NUM)){
+            double gradRhoX = 0.25 *
+                   ((NCsolidMass[nodeIdx[0]]*NC_CCweight[nodeIdx[0]]+
+                     NCsolidMass[nodeIdx[1]]*NC_CCweight[nodeIdx[1]]+
+                     NCsolidMass[nodeIdx[2]]*NC_CCweight[nodeIdx[2]]+
+                     NCsolidMass[nodeIdx[3]]*NC_CCweight[nodeIdx[3]])
+                   -
+                   ( NCsolidMass[nodeIdx[4]]*NC_CCweight[nodeIdx[4]]+
+                     NCsolidMass[nodeIdx[5]]*NC_CCweight[nodeIdx[5]]+
+                     NCsolidMass[nodeIdx[6]]*NC_CCweight[nodeIdx[6]]+
+                     NCsolidMass[nodeIdx[7]]*NC_CCweight[nodeIdx[7]])) / dx.x();
+            double gradRhoY = 0.25 *
+                   ((NCsolidMass[nodeIdx[0]]*NC_CCweight[nodeIdx[0]]+
+                     NCsolidMass[nodeIdx[1]]*NC_CCweight[nodeIdx[1]]+
+                     NCsolidMass[nodeIdx[4]]*NC_CCweight[nodeIdx[4]]+
+                     NCsolidMass[nodeIdx[5]]*NC_CCweight[nodeIdx[5]])
+                   - 
+                   ( NCsolidMass[nodeIdx[2]]*NC_CCweight[nodeIdx[2]]+
+                     NCsolidMass[nodeIdx[3]]*NC_CCweight[nodeIdx[3]]+
+                     NCsolidMass[nodeIdx[6]]*NC_CCweight[nodeIdx[6]]+
+                     NCsolidMass[nodeIdx[7]]*NC_CCweight[nodeIdx[7]])) / dx.y();
+            double gradRhoZ = 0.25 *                          
+                   ((NCsolidMass[nodeIdx[1]]*NC_CCweight[nodeIdx[1]]+
+                     NCsolidMass[nodeIdx[3]]*NC_CCweight[nodeIdx[3]]+
+                     NCsolidMass[nodeIdx[5]]*NC_CCweight[nodeIdx[5]]+
+                     NCsolidMass[nodeIdx[7]]*NC_CCweight[nodeIdx[7]])
+		    -
+                   ( NCsolidMass[nodeIdx[0]]*NC_CCweight[nodeIdx[0]]+
+                     NCsolidMass[nodeIdx[2]]*NC_CCweight[nodeIdx[2]]+
+                     NCsolidMass[nodeIdx[4]]*NC_CCweight[nodeIdx[4]]+
+                     NCsolidMass[nodeIdx[6]]*NC_CCweight[nodeIdx[6]])) / dx.z();
+
+            double absGradRho = sqrt(gradRhoX*gradRhoX +
+                                      gradRhoY*gradRhoY +
+                                      gradRhoZ*gradRhoZ );
+
+            Vector surNorm(gradRhoX/absGradRho,
+                           gradRhoY/absGradRho,
+                           gradRhoZ/absGradRho);
+
+
+            Point this_cell_pos = level->getCellPosition(c);
+            Point adja_cell_pos = this_cell_pos + .6*dxlen*surNorm; 
+
+            IntVector q;
+            if(patch->findCell(adja_cell_pos, q)){
+              q = c - IntVector(1,0,0);
+//              scratchVec[m][c] = Vector(q.x(), q.y(), q.z());
+              beta(0,0) = delT*vol_frac_CC[0][c]*H(0,0)*sp_vol_CC[0][c]/cv[0];
+              beta(0,1) = delT*vol_frac_CC[1][q]*H(0,1)*sp_vol_CC[0][c]/cv[0];
+              beta(1,0) = delT*vol_frac_CC[0][c]*H(1,0)*sp_vol_CC[1][q]/cv[1];
+              beta(1,1) = delT*vol_frac_CC[1][q]*H(1,1)*sp_vol_CC[1][q]/cv[1];
+              //   Form matrix (a) diagonal terms
+              for(int m = 0; m < numALLMatls; m++) {
+                a(m,m) = 1.;
+                for(int n = 0; n < numALLMatls; n++)   {
+                  a(m,m) +=  beta(m,n);
+                }
+              }
+//              scratch1[0][c] = Temp_CC[0][c];
+//              scratch1[1][c] = Temp_CC[1][q];
+              b[0] = beta(0,0)*(Temp_CC[0][c] - Temp_CC[0][c])
+                   + beta(0,1)*(Temp_CC[1][q] - Temp_CC[0][c]);
+              b[1] = beta(1,0)*(Temp_CC[0][c] - Temp_CC[1][q])
+                   + beta(1,1)*(Temp_CC[1][q] - Temp_CC[1][q]);
+              a.destructiveSolve(b,X);
+              Temp_CC[0][c] += X[0];
+//              Temp_CC[1][q] += X[1];
+//              scratch2[0][c] = Temp_CC[0][c];
+//              scratch2[1][c] = Temp_CC[1][q];
+//              double Tinf = Temp_CC[1][a];
+//              double HX = 0.*(Tinf - Temp_CC[m][c]);
+//              Temp_CC[m][c] += HX/cv[m]*mass_L[m][c];
+            }
+          }  // if a surface cell
+        }    // cellIterator
+      }      // if mpm_matl
+    }        // for ALL matls
+#endif
+ 
 
     //__________________________________
     //  Set the Boundary conditions 
@@ -3328,15 +3467,17 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup*,
     int numALLMatls = d_sharedState->getNumMatls();
 
     for (int m = 0; m < numALLMatls; m++ ) {
-      Material* matl = d_sharedState->getMaterial( m );
-      ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
-      MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
+     Material* matl = d_sharedState->getMaterial( m );
+     ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
+     if(ice_matl){
       int indx = matl->getDWIndex(); 
 
       CCVariable<double> rho_CC, temp, sp_vol_CC;
       CCVariable<Vector> vel_CC;
       constCCVariable<double> int_eng_L_ME, mass_L,spec_vol_L;
       constCCVariable<Vector> mom_L_ME;
+      new_dw->get(mom_L_ME,    lb->mom_L_ME_CCLabel,      indx,patch,gac,2);
+      new_dw->get(int_eng_L_ME,lb->eng_L_ME_CCLabel,      indx,patch,gac,2);
      
       constSFCXVariable<double > uvel_FC;
       constSFCYVariable<double > vvel_FC;
@@ -3352,21 +3493,13 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup*,
       new_dw->get(int_eng_L_ME,lb->eng_L_ME_CCLabel,      indx,patch,gac,2);
       new_dw->getModifiable(sp_vol_CC, lb->sp_vol_CCLabel,indx,patch);
       new_dw->getModifiable(rho_CC,    lb->rho_CCLabel,   indx,patch);
-      if(ice_matl){
-        cv = ice_matl->getSpecificHeat();
-        new_dw->allocateAndPut(temp,   lb->temp_CCLabel,  indx,patch);          
-        new_dw->allocateAndPut(vel_CC, lb->vel_CCLabel,   indx,patch);          
-      }
-      if(mpm_matl){
-        cv = mpm_matl->getSpecificHeat();
-        new_dw->getModifiable(temp,    lb->temp_CCLabel,  indx,patch);
-        new_dw->getModifiable(vel_CC,  lb->vel_CCLabel,   indx,patch);
-      }
- 
+      cv = ice_matl->getSpecificHeat();
+      new_dw->allocateAndPut(temp,   lb->temp_CCLabel,  indx,patch);          
+      new_dw->allocateAndPut(vel_CC, lb->vel_CCLabel,   indx,patch);          
       rho_CC.initialize(0.0);
       temp.initialize(0.0);
-      q_advected.initialize(0.0); 
       vel_CC.initialize(Vector(0.0,0.0,0.0));
+      q_advected.initialize(0.0); 
       qV_advected.initialize(Vector(0.0,0.0,0.0));
 
       //__________________________________
@@ -3403,7 +3536,6 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup*,
       
       //__________________________________
       // Advect  momentum and backout vel_CC
-    if(ice_matl){
       for(CellIterator iter=iterPlusGhost; !iter.done(); iter++){
         IntVector c = *iter;
         qV_CC[c] = mom_L_ME[c] * invvol;
@@ -3417,7 +3549,6 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup*,
       }
       
       setBC(vel_CC, "Velocity", patch,indx);
-    }
 
       //__________________________________
       // Advect internal energy and backout Temp_CC
@@ -3438,7 +3569,7 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup*,
       if (d_RateForm){      // RATE FORM
         for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
           IntVector c = *iter;
-          double KE = 0.5 * mass_new[c] * vel_CC[c].length() * vel_CC[c].length();
+          double KE = 0.5 * mass_new[c] * vel_CC[c].length()*vel_CC[c].length();
           temp[c] = (int_eng_L_ME[c] + q_advected[c] - KE)/(mass_new[c] * cv);
         }
       } 
@@ -3490,7 +3621,8 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup*,
              << neg_cell << " negative sp_vol_CC\n ";        
        throw InvalidValue(warn.str());
       } 
-    }
+    } // if ice_matl
+   }  // for all matls
 
     delete advector;
   }  // patch loop 
