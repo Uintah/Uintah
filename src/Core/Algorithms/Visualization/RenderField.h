@@ -446,7 +446,7 @@ RenderField<Fld>::render_data(const Fld *sfld,
 			      const string &display_type,
 			      double scale, bool normalize)
 {
-  cerr << "rendering data" << endl;
+  //cerr << "rendering data" << endl;
   typename Fld::mesh_handle_type mesh = sfld->get_typed_mesh();
 
   // pass: over the data
