@@ -621,8 +621,7 @@ struct Mutex_private {
 Mutex::Mutex(const char* name)
     : name_(name)
 {
-  if(!Thread::isInitialized())
-    Thread::initialize();
+  // DO NOT CALL INITIALIZE in this CTOR!
   if(this == 0){
     fprintf(stderr, "WARNING: creation of null mutex\n");
   }
