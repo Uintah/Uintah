@@ -12,6 +12,7 @@ itcl_class PSECommon_Visualization_GenStandardColorMaps {
         set name GenStandardColorMaps 
         set_defaults 
 	buildColorMaps
+	SetColorMap
 	$this-c setColors [join $colorMap]
     } 
     
@@ -134,11 +135,13 @@ itcl_class PSECommon_Visualization_GenStandardColorMaps {
 	button $w.f.b -text "close" -command "$this close"
 	pack $w.f.b -side left -expand yes -fill y
 	
-	frame $w.f.f1 -relief sunken -height 40 -borderwidth 2 
+	frame $w.f.f1 -relief sunken -height 40  -borderwidth 2 
 	pack $w.f.f1 -side right -padx 2 -pady 2 -expand yes -fill x
-	
-	canvas $w.f.f1.canvas -bg "#ffffff" -height 40
+
+
+	canvas $w.f.f1.canvas -bg "#ffffff" -height 40 -width 360
 	pack $w.f.f1.canvas -anchor w -expand yes -fill x
+
 
 	label $w.l0 -text "Left click to adjust alpha."
 	label $w.l1 -text "Right click to remove node."
@@ -177,6 +180,9 @@ itcl_class PSECommon_Visualization_GenStandardColorMaps {
 	bind $w.f.f1.canvas <Button-3> "$this deleteNode %x %y"
 	bind $w.f.f1.canvas <ButtonRelease> "$this update; $this-c needexecute"
 	$this update
+	
+	set cw [winfo width $w.f.f1.canvas]
+
     }
     
     method change {} {
@@ -414,11 +420,18 @@ itcl_class PSECommon_Visualization_GenStandardColorMaps {
     method getAlpha { index } {
 	global nodeList
 	global $this-positionList
+
+	set cw 360
+	set ch 40
+
 	set w .ui[modname]
+	if {[winfo exists $w]} { 
+	    set canvas $w.f.f1.canvas
+	    set cw [winfo width $canvas]
+	    set ch [winfo height $canvas]
+	} 
+
 	set m [llength [set $this-nodeList]]
-	set canvas $w.f.f1.canvas
-	set cw [winfo width $canvas]
-	set ch [winfo height $canvas]
 	set dx [expr $cw/double([set $this-resolution])] 
 	set xpos [expr int($index*$dx) + 0.5 * $dx]
 	set x 0.0
