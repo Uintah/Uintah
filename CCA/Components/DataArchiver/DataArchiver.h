@@ -106,7 +106,8 @@ using std::pair;
 		  DataWarehouse* old_dw,
 		  DataWarehouse* new_dw,
 		  Dir* p_dir,
-		  const VarLabel*);
+		  const VarLabel*,
+		  bool isThisCheckpoint);
 
       // Method to output reduction variables to a single file
       void outputReduction(const ProcessorGroup*,
@@ -182,7 +183,8 @@ using std::pair;
 			  bool hasGlobals = false);
 
       void scheduleOutputTimestep(Dir& dir, vector<SaveItem>& saveLabels,
-				  const GridP& grid, SchedulerP& sched);
+				  const GridP& grid, SchedulerP& sched,
+				  bool isThisCheckpoint);
       void beginOutputTimestep(double time, double delt,
 			       const GridP& grid);
 
@@ -257,6 +259,39 @@ using std::pair;
       int d_nextCheckpointTimestep; // used when d_checkpointTimestepInterval != 0
       int d_nextCheckpointWalltime; // used when d_checkpointWalltimeInterval != 0
       Mutex d_outputLock;
+
+      //--------------------------------------------
+      // RNJ - 
+      //
+      // In order to avoid having to open and close
+      // index.xml, p<xxxxx>.xml, and p<xxxxx>.data
+      // when we want to update each variable, we
+      // will keep track of some XML docs and file
+      // handles and only open and close them once
+      // per timestep if they are needed.
+      //--------------------------------------------
+
+      // We need to have two separate XML Index Docs
+      // because it is possible to do an output
+      // and a checkpoint at the same time.
+
+      ProblemSpecP d_XMLIndexDoc;
+      ProblemSpecP d_CheckpointXMLIndexDoc;
+
+      // Each level needs it's own data file handle 
+      // and if we are outputting and checkpointing
+      // at the same time we need two different sets.
+
+      map< int, int > d_DataFileHandles;
+      map< int, int > d_CheckpointDataFileHandles;
+
+      // Each level needs it's own XML Data Doc
+      // and if we are outputting and checkpointing
+      // at the same time we need two different sets.
+
+      map< int, ProblemSpecP > d_XMLDataDocs;
+      map< int, ProblemSpecP > d_CheckpointXMLDataDocs;
+
 
       DataArchiver(const DataArchiver&);
       DataArchiver& operator=(const DataArchiver&);
