@@ -493,7 +493,6 @@ case $host in
     ;;
   *-darwin*)
     NUM_CPUS=2
-    HAVE_OSX="yes"
     ;;
   *-aix*)
     NUM_CPUS=4
@@ -505,8 +504,6 @@ case $host in
     NUM_CPUS="1"
     ;;
 esac
-
-AC_SUBST(HAVE_OSX)
 
 AC_MSG_CHECKING(physical processor count)
 if test -z "$NUM_CPUS"; then
@@ -597,7 +594,15 @@ TEMPLATE_BOX="<>"
 case $host in
      *-darwin*)
 	SO_OR_ARCHIVE_EXTENSION=dylib
+	if test "$enable_sci_malloc" = "yes"; then
+	   AC_MSG_WARN(sci_malloc does not work under mac osx. use -enable-sci-malloc=force)
+	   AC_MSG_WARN(sci-malloc disabled)
+	   enable_sci_malloc="no"
+        elif test "$enable_sci_malloc" = "force"; then
+	   enable_sci_malloc="yes"
+        fi
 	;;
+	
      *-aix*)
         # On AIX, don't automatically generate .so's.  Make .a's and then
         # later we will make .so's from them.
