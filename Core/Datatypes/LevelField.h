@@ -63,10 +63,13 @@ public:
   typedef vector<Array3<Data> > parent;
 
 
-
-  LevelData():vector<Array3<Data> >(){}
+  LevelData():
+    vector<Array3<Data> >(), begin_initialized(false), end_initialized(false),
+    begin_(this, IntVector(0,0,0)), end_(this, IntVector(0,0,0)){}
   LevelData(const LevelData& data) :
-vector<Array3<Data> >(data) {} 
+    vector<Array3<Data> >(data), 
+    begin_initialized(false),   end_initialized(false),
+    begin_(this, IntVector(0,0,0)), end_(this, IntVector(0,0,0)) {} 
   virtual ~LevelData(){ }
   
   const value_type &operator[](typename LevelMesh::cell_index idx) const 
@@ -117,7 +120,7 @@ void resize(const LevelMesh::cell_size_type &) {}
 	      index.y() < high.y() && index.z() < high.z())
 	  {
 	    it_ = Array3<Data>::iterator( &(*vit_), index);
-	    break;
+	    return;
 	  }
 	}
       }
@@ -150,16 +153,30 @@ void resize(const LevelMesh::cell_size_type &) {}
     typename vector<Array3<Data> >::const_iterator vitend_;
   };
   
-iterator begin() { 
-  const Array3<Data>& a = parent::operator[](0);
-  return iterator(this, a.getLowIndex());
+inline iterator begin() { 
+  if( begin_initialized ) return begin_;
+  else {
+    const Array3<Data>& a = parent::operator[](0);
+    begin_ =  iterator(this, a.getLowIndex());
+    begin_initialized = true;
+    return begin_;
+  }
 }
-iterator end() {
-  const Array3<Data>& a = parent::operator[](size()-1);
-  iterator it(this, a.getHighIndex() - IntVector(1,1,1));
-  return ++it;
+inline iterator end()  {
+  if( end_initialized ) return end_;
+  else {
+    const Array3<Data>& a = parent::operator[](size()-1);
+    iterator it(this, a.getHighIndex() - IntVector(1,1,1));
+    end_ = ++it;
+    end_initialized = true;
+    return end_;
+  }
 }
-  
+private:
+iterator begin_;
+bool begin_initialized;
+iterator end_;
+bool end_initialized;
 };
 
     
@@ -222,6 +239,7 @@ public:
   static PersistentTypeID type_id;
   virtual void io(Piostream &stream);
   bool get_gradient(Vector &, Point &);
+  bool interpolate(Data&, Point&);
 private:
   static Persistent* maker();
 };
@@ -341,6 +359,55 @@ bool LevelField<Data>::get_gradient(Vector &g, Point &p) {
   double z1=Interpolate(x10, x11, fz);
   double dy=(z1-z0)*(ny-1)/diagy;
   g = Vector(dx, dy, dz);
+  return true;
+}
+
+template <class Data>
+bool LevelField<Data>::interpolate(Data &g, Point &p) {
+  // for now we only know how to do this for fields with scalars at the nodes
+  mesh_handle_type mesh = get_typed_mesh();
+  if(data_at() == Field::NODE) {
+    Vector pn=p-mesh->get_min();
+    Vector diagonal = mesh->diagonal();
+    int nx=mesh->get_nx();
+    int ny=mesh->get_ny();
+    int nz=mesh->get_nz();
+    double diagx=diagonal.x();
+    double diagy=diagonal.y();
+    double diagz=diagonal.z();
+    double x=pn.x()*(nx-1)/diagx;
+    double y=pn.y()*(ny-1)/diagy;
+    double z=pn.z()*(nz-1)/diagz;
+    int ix0=(int)x;
+    int iy0=(int)y;
+    int iz0=(int)z;
+    int ix1=ix0+1;
+    int iy1=iy0+1;
+    int iz1=iz0+1;
+    if(ix0<0 || ix1>=nx)return false;
+    if(iy0<0 || iy1>=ny)return false;
+    if(iz0<0 || iz1>=nz)return false;
+    double fx=x-ix0;
+    double fy=y-iy0;
+    double fz=z-iz0;
+    Data x00=Interpolate(value(mesh->node(ix0,iy0,iz0)),
+			 value(mesh->node(ix1,iy0,iz0)), fx);
+    Data x01=Interpolate(value(mesh->node(ix0,iy0,iz1)),
+			 value(mesh->node(ix1,iy0,iz1)), fx);
+    Data x10=Interpolate(value(mesh->node(ix0,iy1,iz0)),
+			 value(mesh->node(ix1,iy1,iz1)), fx);
+    Data x11=Interpolate(value(mesh->node(ix0,iy1,iz1)),
+			 value(mesh->node(ix1,iy1,iz1)), fx);
+    Data y0=Interpolate(x00, x10, fy);
+    Data y1=Interpolate(x01, x11, fy);
+    g=Interpolate(y0, y1, fz);
+  } else if( data_at() == Field::CELL){
+    mesh_type::cell_index ci;
+    mesh->locate(ci, p);
+    g = value( ci );
+  } else {
+    return false;
+  }
   return true;
 }
 

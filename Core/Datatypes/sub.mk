@@ -14,7 +14,8 @@ SRCS     += \
 	$(SRCDIR)/TensorParticles.cc \
 	$(SRCDIR)/TensorParticlesPort.cc \
 	$(SRCDIR)/PSet.cc \
-	$(SRCDIR)/LevelMesh.cc
+	$(SRCDIR)/LevelMesh.cc \
+	$(SRCDIR)/GLTexture3D.cc
 
 #	$(SRCDIR)/NCTensorField.cc \
 #	$(SRCDIR)/CCTensorField.cc \
