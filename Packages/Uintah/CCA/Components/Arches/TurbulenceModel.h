@@ -79,13 +79,13 @@ public:
       Filter* getFilter() const{
 	return d_filter;
       }
-      virtual void set3dPeriodic(bool periodic) = 0;
 
       void sched_initFilterMatrix(const LevelP&, 
 			      SchedulerP&, const PatchSet* patches,
 			      const MaterialSet* matls);
 
 #endif
+      virtual void set3dPeriodic(bool periodic) = 0;
       // GROUP: Schedule Action :
       ///////////////////////////////////////////////////////////////////////
       // Interface for Schedule the computation of Turbulence Model data
