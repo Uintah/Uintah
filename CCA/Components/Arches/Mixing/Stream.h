@@ -117,7 +117,7 @@ namespace Uintah {
         if(d_speciesConcn.size()==0)
                 return d_h2o;
         else
-                d_speciesConcn[d_H2Oindex];
+                return d_speciesConcn[d_H2Oindex];
       }
       inline double getC2H2() const {
                 return d_c2h2;
