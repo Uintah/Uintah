@@ -591,6 +591,7 @@ using namespace SCIRun;
       double d_pressure;
       double d_initialDt;
       double d_CFL;
+      double d_delT_knob;
       double d_dbgTime; 
       double d_dbgStartTime;
       double d_dbgStopTime;
@@ -605,6 +606,7 @@ using namespace SCIRun;
       
       Advector* d_advector;
       std::string d_advect_type;
+      std::string d_delT_scheme;
       
      // exchange coefficients -- off diagonal terms
       vector<double> d_K_mom, d_K_heat;
