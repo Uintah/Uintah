@@ -283,7 +283,7 @@ public:
   double prturb;
   double cpfluid;
 
-  enum CENTROID {CENX, CENY, CENZ};    
+  enum CENTROID {CENX=1, CENY, CENZ};    
   enum SURFNORM {NORMX=4, NORMY, NORMZ};
   enum AREAFRN {AREAE=7, AREAW, AREAN, AREAS, AREAT, AREAB};
 

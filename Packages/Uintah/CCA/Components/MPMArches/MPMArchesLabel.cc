@@ -1,5 +1,7 @@
 #include <Packages/Uintah/CCA/Components/MPMArches/MPMArches.h>
 #include <Packages/Uintah/CCA/Components/MPMArches/MPMArchesLabel.h>
+#include <Packages/Uintah/CCA/Components/MPMArches/CutCellInfoP.h>
+#include <Packages/Uintah/CCA/Components/MPMArches/CutCellInfo.h>
 #include <Packages/Uintah/Core/Grid/CCVariable.h>
 #include <Packages/Uintah/Core/Grid/NCVariable.h>
 #include <Packages/Uintah/Core/Grid/SFCXVariable.h>
@@ -376,6 +378,8 @@ MPMArchesLabel::MPMArchesLabel()
 
   cutCellLabel = VarLabel::create("cutCell",
   				  CCVariable<cutcell>::getTypeDescription());
+  d_cutCellInfoLabel = VarLabel::create("cutCellInfo", 
+					PerPatch<CutCellInfoP>::getTypeDescription());
 
 } 
 
@@ -520,4 +524,6 @@ MPMArchesLabel::~MPMArchesLabel()
   VarLabel::destroy( d_enth_mmNonLinSrc_CCLabel);
 
   VarLabel::destroy( cutCellLabel);
+  VarLabel::destroy(d_cutCellInfoLabel);
+
 }

@@ -4,9 +4,9 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
 SRCDIR   := Packages/Uintah/CCA/Components/MPMArches
 
-SRCS     += \
-	$(SRCDIR)/MPMArches.cc \
-	$(SRCDIR)/MPMArchesLabel.cc
+SRCS     += $(SRCDIR)/MPMArches.cc \
+	$(SRCDIR)/MPMArchesLabel.cc \
+	$(SRCDIR)/CutCellInfo.cc
 
 SUBDIRS := $(SRCDIR)/fortran 
 include $(SCIRUN_SCRIPTS)/recurse.mk
