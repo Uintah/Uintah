@@ -38,6 +38,7 @@ DIR=dbg
 
 #Set up MPI 
 MPI=''
+MPI_RUN="yes"
 
 #Set the default inputs directory
 INPUTS=../../../../src/Packages/Uintah/StandAlone/inputs
@@ -79,6 +80,7 @@ usage () {
     echo "  -im            run the implicit mpm tests"
     echo "  -dbg           use the dbg TestData"
     echo "  -opt           use the opt TestData"
+    echo "  -nompi         do not use mpi"
     echo "  -clean         remove the *.out *.compare and uda directories"
     echo "  -h[elp]        display this help and exit"
     echo;
@@ -132,6 +134,9 @@ for arg in $*; do
 	-opt)
 	    echo; echo "Using the opt TestData . . ."
 	    DIR=opt;;
+        -nompi)
+            echo; echo "Not using mpi . . ."
+            MPI_RUN="no";;
         *)
 	    usage ;;
     esac
@@ -204,11 +209,16 @@ run_test () {
    
     num_proc
    
-    if test $numproc -gt 1;
-	then
-	MPI="mpirun -np $numproc"
+    if test $MPI_RUN != "no";
+        then 
+        if test $numproc -gt 1;
+            then
+            MPI="mpirun -np $numproc"
+        else
+            MPI=""
+        fi
     else
-	MPI=""
+        MPI=""
     fi
 
     echo; echo "Running $MPI sus $opts $input_file"
