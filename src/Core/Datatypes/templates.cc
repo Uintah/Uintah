@@ -15,8 +15,8 @@ find . -name "*.ii" -print | xargs cat | sort | uniq -c | sort -nr | more
 #include <SCICore/Datatypes/GenSField.h>
 #include <SCICore/Datatypes/FlatAttrib.h>
 #include <SCICore/Datatypes/Lattice3Geom.h>
-#include <SCICore/Datatypes/Lattice2Geom.h>
-#include <SCICore/Datatypes/Lattice1Geom.h>
+//#include <SCICore/Datatypes/Lattice2Geom.h>
+//#include <SCICore/Datatypes/Lattice1Geom.h>
 #include <SCICore/Datatypes/AccelAttrib.h>
 #include <SCICore/Datatypes/BrickAttrib.h>
 #include <SCICore/Datatypes/IndexAttrib.h>

@@ -17,54 +17,68 @@ PersistentTypeID ContourGeom::type_id("ContourGeom", "Datatype", 0);
 
 DebugStream ContourGeom::dbg("ContourGeom", true);
 
-ContourGeom::ContourGeom(const vector<NodeSimp>& inodes, const vector<EdgeSimp>& iedges):
-  has_bbox(0), has_neighbors(0)
+ContourGeom::ContourGeom(const vector<NodeSimp>& inodes,
+			 const vector<EdgeSimp>& iedges)
+  : has_neighbors(0)
 {
   nodes = inodes;
   edges = iedges;
 }
 
-ContourGeom::~ContourGeom(){
+ContourGeom::~ContourGeom()
+{
 }
 
-string ContourGeom::get_info(){
+string
+ContourGeom::get_info()
+{
   ostringstream retval;
   retval << "name = " << name << endl;
   return retval.str();
 }
 
-bool ContourGeom::compute_bbox(){
+bool
+ContourGeom::compute_bbox()
+{
   //compute diagnal and bbox
   dbg << "calling Contourgeom::compute_bbox()" << endl;
   
-  if(nodes.empty()){
-    return false;
-  }
-  has_bbox = true;
+  if (nodes.empty())
+    {
+      return false;
+    }
+
   Point min, max;
   min = max = nodes[0].p;
-  for(int i = 1; i < nodes.size(); i ++){
-    min = Min(min, nodes[i].p);
-    max = Max(max, nodes[i].p);
-  }
+  for (int i = 1; i < nodes.size(); i ++)
+    {
+      min = Min(min, nodes[i].p);
+      max = Max(max, nodes[i].p);
+    }
+
   bbox.reset();
   bbox.extend(min);
   bbox.extend(max);
-  diagonal = bbox.max()-bbox.min();
+
   return true;
 }
   
-void ContourGeom::set_nodes(const vector<NodeSimp>& inodes){
+void
+ContourGeom::set_nodes(const vector<NodeSimp>& inodes)
+{
   nodes.clear();
   nodes = inodes;
 }
 
-void ContourGeom::set_edges(const vector<EdgeSimp>& iedges){
+void
+ContourGeom::set_edges(const vector<EdgeSimp>& iedges)
+{
   edges.clear();
   edges = iedges;
 }
 
-void ContourGeom::io(Piostream&){
+void ContourGeom::io(Piostream&)
+{
 }
 
 

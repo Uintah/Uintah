@@ -17,48 +17,59 @@ PersistentTypeID PointCloudGeom::type_id("PointCloudGeom", "Datatype", 0);
 
 DebugStream PointCloudGeom::dbg("PointCloudGeom", true);
 
-PointCloudGeom::PointCloudGeom(const vector<NodeSimp>& inodes):
-  has_bbox(0)
+PointCloudGeom::PointCloudGeom(const vector<NodeSimp>& inodes)
 {
   nodes = inodes;
 }
 
-PointCloudGeom::~PointCloudGeom(){
+
+PointCloudGeom::~PointCloudGeom()
+{
 }
 
-string PointCloudGeom::get_info(){
+string
+PointCloudGeom::get_info()
+{
   ostringstream retval;
   retval << "name = " << name << endl;
   return retval.str();
 }
 
-bool PointCloudGeom::compute_bbox(){
+bool
+PointCloudGeom::compute_bbox()
+{
   //compute diagnal and bbox
   dbg << "calling PointCloudgeom::compute_bbox()" << endl;
   
-  if(nodes.empty()){
-    return false;
-  }
-  has_bbox = true;
+  if (nodes.empty())
+    {
+      return false;
+    }
+
   Point min, max;
   min = max = nodes[0].p;
-  for(int i = 1; i < nodes.size(); i ++){
-    min = Min(min, nodes[i].p);
-    max = Max(max, nodes[i].p);
-  }
+  for (int i = 1; i < nodes.size(); i ++)
+    {
+      min = Min(min, nodes[i].p);
+      max = Max(max, nodes[i].p);
+    }
+
   bbox.reset();
   bbox.extend(min);
   bbox.extend(max);
-  diagonal = bbox.max()-bbox.min();
+
   return true;
 }
   
-void PointCloudGeom::set_nodes(const vector<NodeSimp>& inodes){
+void
+PointCloudGeom::set_nodes(const vector<NodeSimp>& inodes)
+{
   nodes.clear();
   nodes = inodes;
 }
 
-void PointCloudGeom::io(Piostream&){
+void PointCloudGeom::io(Piostream&)
+{
 }
 
 

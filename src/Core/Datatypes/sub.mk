@@ -37,7 +37,6 @@ SRCS += $(GENSRCS) $(SRCDIR)/TriSurface.cc $(SRCDIR)/BasicSurfaces.cc \
 	$(SRCDIR)/FieldWrapper.cc $(SRCDIR)/Domain.cc \
 	$(SRCDIR)/SField.cc $(SRCDIR)/VField.cc \
 	$(SRCDIR)/TField.cc $(SRCDIR)/Lattice3Geom.cc \
-	$(SRCDIR)/Lattice2Geom.cc $(SRCDIR)/Lattice1Geom.cc \
 	$(SRCDIR)/StructuredGeom.cc $(SRCDIR)/UnstructuredGeom.cc \
 	$(SRCDIR)/MeshGeom.cc $(SRCDIR)/PointCloudGeom.cc \
 	$(SRCDIR)/ContourGeom.cc $(SRCDIR)/TetMeshGeom.cc \
@@ -101,6 +100,9 @@ clean::
 
 #
 # $Log$
+# Revision 1.3.2.8  2000/09/22 17:31:23  michaelc
+# Cleanup data members, rearrange LatticeGeom
+#
 # Revision 1.3.2.7  2000/09/11 16:11:57  kuehne
 # updates to field redesign
 #
