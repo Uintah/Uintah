@@ -34,6 +34,7 @@
       install, maintain and develop SCIRun
     </para> 
   </description>
+
   <entry>  
     <keywords>SGI, runtime, pthreads and SIGABRT</keywords> 
     <question> 
@@ -92,6 +93,35 @@ Occured for thread:
 	configure arguments for the thirdparty software.  Note that when the
 	automatic install script is used, all the software is automatically
         configured and built correctly.
+      </para>
+    </answer>
+  </entry>
+
+  <entry>
+    <keywords>SGI, thirdparty, compile</keywords>
+    <question>
+      <para>
+        When building SCIRun on an SGI target machine, I get an error
+        message regarding the SGI Image Format Library (IFL).
+      </para>
+      <para>
+        The error text looks similar to this:
+      </para>
+      <pre>
+ld64: FATAL   9  : I/O error (-lifl): No such file or directory
+      </pre>
+    </question>
+    <answer>
+      <para>
+        The problem is a bug within the SCIRun build system that requires
+        the SGI Image Format Library (IFL) in order to make SCIRun.  The long
+        term solution will be to make the IFL optional instead of required.
+      </para>
+      <para>
+        For now, however, you can work around the problem by having your
+        system administrator install the IFL onto your target install machine.
+        Be sure to install the type (32 or 64 bit) needed for your SCIRun
+        configuration(s).
       </para>
     </answer>
   </entry>
