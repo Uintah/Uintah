@@ -68,11 +68,11 @@ SRCS := $(SRCDIR)/RawToContourField.cc
 include $(SCIRUN_SCRIPTS)/program.mk
 
 PROGRAM := $(SRCDIR)/RawToColumnMatrix
-SRCS := $(SRCDIR)/DataToColumnMatrix.cc
+SRCS := $(SRCDIR)/RawToColumnMatrix.cc
 include $(SCIRUN_SCRIPTS)/program.mk
 
 PROGRAM := $(SRCDIR)/RawToDenseMatrix
-SRCS := $(SRCDIR)/DataToDenseMatrix.cc
+SRCS := $(SRCDIR)/RawToDenseMatrix.cc
 include $(SCIRUN_SCRIPTS)/program.mk
 
 PROGRAM := $(SRCDIR)/RawToLatticeVol
