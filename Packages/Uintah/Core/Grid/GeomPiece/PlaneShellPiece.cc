@@ -44,7 +44,7 @@ PlaneShellPiece::~PlaneShellPiece()
 }
 
 //////////
-// Find if a point is inside the cylinder
+/*! Find if a point is inside the cylinder */
 bool 
 PlaneShellPiece::inside(const Point& p) const
 {
@@ -65,7 +65,7 @@ PlaneShellPiece::inside(const Point& p) const
 }
 
 //////////
-// Find the bounding box for the cylinder
+/*! Find the bounding box for the cylinder */
 Box 
 PlaneShellPiece::getBoundingBox() const
 {
@@ -81,10 +81,10 @@ PlaneShellPiece::getBoundingBox() const
 }
 
 //////////
-// Find the particle count on the circular plane surface
-// Create the particles on a circle on the x-y plane and then
-// rotate them to the correct position and find if they are still
-// in the patch. First particle is located at the center.
+/*! Find the particle count on the circular plane surface
+   Create the particles on a circle on the x-y plane and then
+   rotate them to the correct position and find if they are still
+   in the patch. First particle is located at the center.*/
 int 
 PlaneShellPiece::returnParticleCount(const Patch* patch)
 {
@@ -134,10 +134,10 @@ PlaneShellPiece::returnParticleCount(const Patch* patch)
 }
 
 //////////
-// Create particles : uses the same algorithm as count particles.
-// Create the particles on a circle on the x-y plane and then
-// rotate them to the correct position and find if they are still
-// in the patch. First particle is located at the center.
+/*! Create particles : uses the same algorithm as count particles.
+   Create the particles on a circle on the x-y plane and then
+   rotate them to the correct position and find if they are still
+   in the patch. First particle is located at the center. */
 int 
 PlaneShellPiece::createParticles(const Patch* patch,
 				 ParticleVariable<Point>&  pos,

@@ -13,54 +13,41 @@
 
 namespace Uintah {
 
-/**************************************
+/////////////////////////////////////////////////////////////////////////////
+/*! 
+  \class PlaneShellPiece
 	
-CLASS
-
-   PlaneShellPiece
+  \brief Creates a plane shell from the xml input file description.
 	
-   Creates a plane shell from the xml input file description.
+  \author  Biswajit Banerjee \n
+   C-SAFE and Department of Mechanical Engineering \n
+   University of Utah \n
 	
-GENERAL INFORMATION
-	
-   PlaneShellPiece.h
-	
-   Biswajit Banerjee
-   Department of Mechanical Engineering
-   University of Utah
-	
-   Center for the Simulation of Accidental Fires and Explosions (C-SAFE)
-	
-KEYWORDS
-
-   PlaneShellPiece  BoundingBox 
-	
-DESCRIPTION
-
    Creates a plane circle from the xml input file description.
    The input form looks like this:
-       <plane>
-         <center>[0.,0.,0.]</center>
-         <normal>[0.,0.,1.]</normal>
-	 <radius>2.0</radius>
-	 <thickness>0.1</thickness>
-	 <num_radial>20</num_radial>
-       </plane>
+   \verbatim
+     <plane>
+       <center>[0.,0.,0.]</center>
+       <normal>[0.,0.,1.]</normal>
+       <radius>2.0</radius>
+       <thickness>0.1</thickness>
+       <num_radial>20</num_radial>
+     </plane>
+   \endverbatim
 	
-WARNING
-
-   Needs to be converted into the base class for classes such as
+   \warning Needs to be converted into the base class for classes such as
    TriShellPiece, QuadShellPiece, HexagonShellPiece etc.  Currently
    provides implementation for Rectangular Shell Piece.
-	
-****************************************/
 
+*/
+/////////////////////////////////////////////////////////////////////////////
+	
   class PlaneShellPiece : public ShellGeometryPiece {
 	 
   public:
     //////////
     //  Constructor that takes a ProblemSpecP argument.   It reads the xml 
-    // input specification and builds a sphere.
+    // input specification and builds a plane.
     PlaneShellPiece(ProblemSpecP &);
 	 
     //////////
@@ -68,7 +55,7 @@ WARNING
     virtual ~PlaneShellPiece();
 	 
     //////////
-    // Determines whether a point is inside the sphere. 
+    // Determines whether a point is inside the plane. 
     virtual bool inside(const Point &p) const;
 	 
     //////////

@@ -8,6 +8,7 @@ SRCS     += \
 	$(SRCDIR)/SphereMembraneGeometryPiece.cc \
 	$(SRCDIR)/BoxGeometryPiece.cc \
 	$(SRCDIR)/CylinderGeometryPiece.cc \
+	$(SRCDIR)/SmoothCylGeomPiece.cc \
 	$(SRCDIR)/ConeGeometryPiece.cc \
 	$(SRCDIR)/TriGeometryPiece.cc \
 	$(SRCDIR)/UnionGeometryPiece.cc \
