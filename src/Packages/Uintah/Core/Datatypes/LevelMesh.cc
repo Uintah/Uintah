@@ -231,6 +231,8 @@ LevelMesh::io(Piostream& stream)
   stream.end_class();
 }
 
+
+
 const string 
 LevelMesh::type_name(int n)
 {
@@ -240,74 +242,78 @@ LevelMesh::type_name(int n)
 }
 
 
-const TypeDescription*
+const SCIRun::TypeDescription*
 LevelMesh::get_type_description() const
 {
   return SCIRun::get_type_description((LevelMesh *)0);
 }
 
+}
+
+namespace SCIRun {
+
 
 const TypeDescription*
-get_type_description(LevelMesh *)
+get_type_description(Uintah::LevelMesh *)
 {
   static TypeDescription *td = 0;
   if (!td)
   {
     td = scinew TypeDescription("LevelMesh",
 				TypeDescription::cc_to_h(__FILE__),
-				"SCIRun");
+					"Uintah");
   }
   return td;
 }
 
 const TypeDescription*
-get_type_description(LevelMesh::Node *)
+get_type_description(Uintah::LevelMesh::Node *)
 {
   static TypeDescription *td = 0;
   if (!td)
   {
     td = scinew TypeDescription("LevelMesh::Node",
 				TypeDescription::cc_to_h(__FILE__),
-				"SCIRun");
+				"Uintah");
   }
   return td;
 }
 
 const TypeDescription*
-get_type_description(LevelMesh::Edge *)
+get_type_description(Uintah::LevelMesh::Edge *)
 {
   static TypeDescription *td = 0;
   if (!td)
   {
     td = scinew TypeDescription("LevelMesh::Edge",
 				TypeDescription::cc_to_h(__FILE__),
-				"SCIRun");
+				"Uintah");
   }
   return td;
 }
 
 const TypeDescription*
-get_type_description(LevelMesh::Face *)
+get_type_description(Uintah::LevelMesh::Face *)
 {
   static TypeDescription *td = 0;
   if (!td)
   {
     td = scinew TypeDescription("LevelMesh::Face",
 				TypeDescription::cc_to_h(__FILE__),
-				"SCIRun");
+				"Uintah");
   }
   return td;
 }
 
 const TypeDescription*
-get_type_description(LevelMesh::Cell *)
+get_type_description(Uintah::LevelMesh::Cell *)
 {
   static TypeDescription *td = 0;
   if (!td)
   {
     td = scinew TypeDescription("LevelMesh::Cell",
 				TypeDescription::cc_to_h(__FILE__),
-				"SCIRun");
+				"Uintah");
   }
   return td;
 }
