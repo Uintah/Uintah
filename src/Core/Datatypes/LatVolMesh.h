@@ -18,10 +18,53 @@
 #include <Core/Geometry/Point.h>
 #include <Core/Containers/LockingHandle.h>
 #include <Core/Containers/MeshBase.h>
-#include <Core/Datatypes/Octree.h>
 
 
 namespace SCIRun {
+
+  /*!
+
+    The 1 dimensional parameterization (indexing) of a lattice mesh's
+    cells and nodes looks like this:
+
+                                 Y
+                                 #
+                              7  #
+                                ###
+                             ###   ###
+                         ####         ####       (hidden corner = 5)
+                      ###                 ###
+             3    ####                       ####    6
+               ###                               ###
+               #  ####                       ####  #
+               #      ###                 ###      #
+               #         ####         ####         #
+               #             ###   ###             #
+               #                ###                #
+      X        #              2  #                 #        Z
+        ###    #                 #                 #    ###
+           ##  #                 #                 #  ##  
+             ###                 #                 ###
+               ###               #               ###
+             1    ####           #           ####    4
+                      ###        #        ###
+                         ####    #    ####
+                             ### # ###
+                                ###
+
+                                 0
+
+    In other words the indexing is X major and Z minor with origin at 0.
+    
+    Note that the 3D index [1,6,2] is the same as the 1D index [65] when
+    nx = 4, ny = 5, and nz = 8 (z*ny*nx + y*nx + x = 2*(5*4) + 6*(4) + 1 = 65).
+
+    *** NOTE *** 
+
+    This will change to the typical 3D parameterization soon...
+
+  */
+
 
 class SCICORESHARE LatVolMesh : public MeshBase
 {
@@ -45,10 +88,10 @@ public:
   //! Storage types for the arguments passed to the 
   //  get_*() functions.  For rg meshes, these all have
   //  known maximum sizes, so we use them.
-  typedef node_index      node_array[8];
-  typedef edge_index      edge_array[12];
-  typedef face_index      face_array[6];
-  typedef cell_index      cell_array[8];
+  typedef node_index  node_array[8];
+  typedef edge_index  edge_array[12];
+  typedef face_index  face_array[6];
+  typedef cell_index  cell_array[8];
 
   LatVolMesh(int x, int y, int z, Point &min, Point &max);
   LatVolMesh(const LatVolMesh &);
@@ -64,11 +107,11 @@ public:
   cell_iterator cell_end() const;
 
   //! get the mesh statistics
-  int get_nx() { return nx_; }
-  int get_ny() { return ny_; }
-  int get_nz() { return nz_; }
-  Point get_min() { return min_; }
-  Point get_max() { return max_; }
+  int get_nx() const { return nx_; }
+  int get_ny() const { return ny_; }
+  int get_nz() const { return nz_; }
+  Point get_min() const { return min_; }
+  Point get_max() const { return max_; }
 
   virtual BBox get_bounding_box() const;
 

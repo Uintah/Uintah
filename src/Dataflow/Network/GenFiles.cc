@@ -11,9 +11,12 @@
 
 namespace SCIRun {
 
+  /*! these functions all assume that the files and/or directories
+      about to be generated, do not already exist */ 
+
 int GenPackage(char* packname, char* psepath)
 {
-  int check,checkall;
+  int check=0,checkall=0;
   char* string = 0;
   FILE* file = 0;
 
@@ -117,6 +120,8 @@ int GenPackage(char* packname, char* psepath)
   fclose(file);
 
   delete[] string;
+
+  return 1;
 }
 
 int GenCategory(char* catname, char* packname, char* psepath)
@@ -153,6 +158,8 @@ int GenCategory(char* catname, char* packname, char* psepath)
 	  psepath,packname);
   InsertStringInFile(string,"#[INSERT NEW CATEGORY DIR HERE]",modname);
   delete[] string;
+
+  return 1;
 }
 
 int GenComponent(component_node* n, char* packname, char* psepath)
@@ -220,6 +227,8 @@ int GenComponent(component_node* n, char* packname, char* psepath)
     InsertStringInFile(string,"#[INSERT NEW TCL FILE HERE]",modname);
     delete[] string;
   }
+
+  return 1;
 }
 
 } // End namespace SCIRun
