@@ -172,30 +172,33 @@ void computeDi(StaticArray<CCVariable<Vector> >& d,
   
  
 /* --------------------------------------------------------------------- 
- Function~  getIterator_BCValue_BCKind--
+ Function~  getIteratorBCValueBCKind--
  Purpose~   does the actual work
  ---------------------------------------------------------------------  */
+ 
 template <class T>
-void getIterator_BCValue_BCKind( const Patch* patch, 
-                                 const Patch::FaceType face,
-                                 const int child,
-                                 const string& desc,
-                                 const int mat_id,
-                                 T& bc_value,
-                                 vector<IntVector>& bound,
-                                 string& bc_kind)
+void getIteratorBCValueBCKind( const Patch* patch, 
+			       const Patch::FaceType face,
+			       const int child,
+			       const string& desc,
+			       const int mat_id,
+			       T& bc_value,
+			       vector<IntVector>& bound,
+			       string& bc_kind)
 { 
   //__________________________________
   //  find the iterator, BC value and BC kind
-  vector<IntVector> na;  // na = not applicable
+  vector<IntVector> nbound,sfx,sfy,sfz;
   const BoundCondBase* bc = patch->getArrayBCValues(face,mat_id,
-						   desc, bound, na, na,child);
-  const BoundCondBase* sym_bc = patch->getArrayBCValues(face,mat_id,
-						       "Symmetric", bound, na, na,
-                                                 child);
+						    desc, bound,nbound,
+						    sfx,sfy,sfz,child);
 
-  const BoundCond<T> *new_bcs = 
-    dynamic_cast<const BoundCond<T> *>(bc);       
+  const BoundCondBase* sym_bc = patch->getArrayBCValues(face,mat_id,
+						       "Symmetric", bound, 
+							nbound,sfx,sfy,
+							sfz,child);
+
+  const BoundCond<T> *new_bcs =  dynamic_cast<const BoundCond<T> *>(bc);       
 
   bc_value=T(-9);
   bc_kind="NotSet";
@@ -203,9 +206,9 @@ void getIterator_BCValue_BCKind( const Patch* patch,
     bc_value = new_bcs->getValue();
     bc_kind = new_bcs->getKind();
   }        
-  if (sym_bc != 0) {       // symmetric
+  if (sym_bc != 0)        
     bc_kind = "symmetric";
-  }
+  
   delete bc;
   delete sym_bc;
 }
@@ -372,8 +375,8 @@ void setBC(T& vel_FC,
       string bc_kind = "NotSet";
       vector<IntVector> bound;
 
-      getIterator_BCValue_BCKind<Vector>( patch, face, child, desc, mat_id,
-                                          bc_value, bound, bc_kind); 
+      getIteratorBCValueBCKind<Vector>( patch, face, child, desc, mat_id,
+					bc_value, bound,bc_kind); 
 
 
       //__________________________________
