@@ -28,6 +28,7 @@ SRCS     += $(SRCDIR)/Sort.cc \
             $(SRCDIR)/ConsecutiveRangeSet.cc
 
 PSELIBS := Core/Exceptions Core/Tester Core/Thread
+LIBS :=
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
