@@ -34,6 +34,7 @@ SRCS += $(GENSRCS) $(SRCDIR)/TriSurface.cc $(SRCDIR)/BasicSurfaces.cc \
 	$(SRCDIR)/VectorFieldRGCC.cc $(SRCDIR)/templates.cc \
      	$(SRCDIR)/Path.cc
 
+
 $(SRCDIR)/ScalarFieldRG.h: $(SRCDIR)/ScalarFieldRGTYPE.h
 	sed -e 's/RGTYPE/RG/g' -e 's/TYPE/double/g' < $< > $@
 
@@ -98,6 +99,9 @@ clean::
 
 #
 # $Log$
+# Revision 1.8  2000/08/09 07:15:55  samsonov
+# final version and Cocoon comments
+#
 # Revision 1.7  2000/07/19 06:39:38  samsonov
 # Path datatype moved form DaveW
 #
