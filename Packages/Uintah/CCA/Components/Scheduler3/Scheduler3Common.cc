@@ -544,7 +544,8 @@ Scheduler3Common::scheduleAndDoDataCopy(const GridP& grid, SimulationStateP& sta
         
       } // for patchIterator
 
-      sim->scheduleRefine(refineSet, sched);
+      if (refineSet->size() > 0)
+        sim->scheduleRefine(refineSet, sched);
     }
     
     dataTasks.push_back(scinew Task("Scheduler3Common::copyDataToNewGrid", this,                          
@@ -560,9 +561,15 @@ Scheduler3Common::scheduleAndDoDataCopy(const GridP& grid, SimulationStateP& sta
     }
   }
 
+  // set so the load balancer will make an adequate neighborhood, as the default
+  // neighborhood isn't good enough for the copy data timestep
+  state->setCopyDataTimestep(true);
+
   this->compile(); 
   this->execute();
   
+  state->setCopyDataTimestep(false);
+
   vector<VarLabelMatl<Level> > levelVariableInfo;
   oldDataWarehouse->getVarLabelMatlLevelTriples(levelVariableInfo);
   
