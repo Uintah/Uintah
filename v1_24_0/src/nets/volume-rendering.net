@@ -118,8 +118,8 @@ set $m4-width {471}
 set $m4-height {40}
 set $m4-mapType {0}
 set $m4-minRes {2}
-set $m4-resolution {12}
-set $m4-realres {12}
+set $m4-resolution {256}
+set $m4-realres {256}
 set $m4-gamma {0}
 set $m5-notes {}
 set $m5-show_status {1}
