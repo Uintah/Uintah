@@ -60,7 +60,6 @@ private:
   mesh_handle_type mesh_;
   GeomFastTriangles *triangles_;
   TriSurfMeshHandle trisurf_;
-  //map<long int, TriSurfMesh::Node::index_type> vertex_map_;
   int nnodes_;
 
   struct edgepair_t
