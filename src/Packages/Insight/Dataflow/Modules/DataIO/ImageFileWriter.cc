@@ -1,4 +1,4 @@
-/*
+/* 
    For more information, please see: http://software.sci.utah.edu
 
    The MIT License
@@ -45,6 +45,7 @@
 #include "itkImageFileWriter.h"
 
 #include "itkRGBPixel.h"
+#include "itkVector.h"
 
 
 namespace Insight {
@@ -131,6 +132,8 @@ void ImageFileWriter::execute(){
   if(0) { }
   else if(run<itk::Image<float,2> >( data )) { } 
   else if(run<itk::Image<float,3> >( data )) { } 
+  else if(run<itk::Image<double,2> >( data )) { } 
+  else if(run<itk::Image<double,3> >( data )) { } 
   else if(run<itk::Image<unsigned char,2> >( data )) { } 
   else if(run<itk::Image<unsigned char,3> >( data )) { } 
   else if(run<itk::Image<unsigned short,2> >( data )) {  }
@@ -139,6 +142,14 @@ void ImageFileWriter::execute(){
   else if(run<itk::Image<unsigned long,3> >( data )) { } 
   else if(run<itk::Image<itk::RGBPixel<unsigned char>,2> >( data )) { } 
   else if(run<itk::Image<itk::RGBPixel<unsigned char>,3> >( data )) { } 
+  else if(run<itk::Image<itk::Vector<float>,2> >( data )) { } 
+  else if(run<itk::Image<itk::Vector<float>,3> >( data )) { } 
+  else if(run<itk::Image<itk::Vector<double>,2> >( data )) { } 
+  else if(run<itk::Image<itk::Vector<double>,3> >( data )) { } 
+  else if(run<itk::Image<itk::Vector<unsigned char>,2> >( data )) { } 
+  else if(run<itk::Image<itk::Vector<unsigned char>,2> >( data )) { } 
+  else if(run<itk::Image<itk::Vector<unsigned short>,2> >( data )) { }
+  else if(run<itk::Image<itk::Vector<unsigned short>,3> >( data )) { } 
   else {
     // error 
     error("Unknown type");

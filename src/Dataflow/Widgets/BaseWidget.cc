@@ -395,7 +395,7 @@ BaseWidget::tcl_command(GuiArgs& args, void*)
   }
   else if(args[1] == "dialdone")
   {
-    module_->widget_moved(true);
+    module_->widget_moved(true, this);
   }
   else
   {
@@ -642,7 +642,7 @@ BaseWidget::execute(int always_callback)
 {
   if (always_callback || solve->VariablesChanged())
   {
-    module_->widget_moved(false);
+    module_->widget_moved(false,this);
     solve->ResetChanged();
   }
 
@@ -681,7 +681,7 @@ void
 BaseWidget::geom_release( GeomPickHandle, int /* cbdata */, const BState& )
 {
 
-  module_->widget_moved(true);
+  module_->widget_moved(true,this);
 }
 
 
@@ -689,7 +689,7 @@ void
 BaseWidget::geom_moved(GeomPickHandle, int, double, const Vector&,
 		       int, const BState&, const Vector &/*pick_offset*/ )
 {
-  module_->widget_moved(false);
+  module_->widget_moved(false,this);
 }
 
 

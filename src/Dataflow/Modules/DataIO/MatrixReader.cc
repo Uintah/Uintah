@@ -63,7 +63,7 @@ public:
 DECLARE_MAKER(MatrixReader)
 MatrixReader::MatrixReader(GuiContext* ctx)
   : GenericReader<MatrixHandle>("MatrixReader", ctx, "DataIO", "SCIRun"),
-    gui_types_(ctx->subVar("types")),
+    gui_types_(ctx->subVar("types", false)),
     gui_filetype_(ctx->subVar("filetype"))
 {
   MatrixIEPluginManager mgr;
@@ -71,15 +71,15 @@ MatrixReader::MatrixReader(GuiContext* ctx)
   mgr.get_importer_list(importers);
   
   string importtypes = "{";
-  importtypes += "{{SCIRun Matrix File} {.fld} } ";
+  importtypes += "{{SCIRun Matrix File} {.mat} } ";
   importtypes += "{{SCIRun Matrix Any} {.*} } ";
 
   for (unsigned int i = 0; i < importers.size(); i++)
   {
     MatrixIEPlugin *pl = mgr.get_plugin(importers[i]);
-    if (pl->fileextension != "")
+    if (pl->fileExtension_ != "")
     {
-      importtypes += "{{" + importers[i] + "} {" + pl->fileextension + "} } ";
+      importtypes += "{{" + importers[i] + "} {" + pl->fileExtension_ + "} } ";
     }
     else
     {
@@ -104,7 +104,7 @@ MatrixReader::call_importer(const string &filename)
   MatrixIEPlugin *pl = mgr.get_plugin(ft);
   if (pl)
   {
-    handle_ = pl->filereader(this, filename.c_str());
+    handle_ = pl->fileReader_(this, filename.c_str());
     return handle_.get_rep();
   }
   return false;

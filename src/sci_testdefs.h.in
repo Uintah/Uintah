@@ -36,7 +36,7 @@
 #define TEMPLATE_TAG @TEMPLATE_TAG@
 #define TEMPLATE_BOX @TEMPLATE_BOX@
 #define SCI_@NBITS@BITS
-@DEF_SCIRUN2@
+
 @DEF_HASHMAP@
 @DEF_THREAD@
 @DEF_MALLOC@
@@ -45,7 +45,7 @@
 @DEF_CBLAS@
 @DEF_LAPACK@
 @DEF_MPI@
-@DEF_MPIUNI@
+@DEF_MPI_UNI@
 @DEF_SSL@
 @DEF_GLOBUS@
 @DEF_QT@
@@ -71,7 +71,8 @@
 @DEF_IEEEFP@
 @DEF_FTGL@
 @DEF_CHROMIUM@
-@DEF_NEED_ATI_CARD_FIX@
+@DEF_SCISOCK@
+
 @DEF_NO_DYNAMIC_CAST@
 @DEF_NEED_OSX_HACK@
 
@@ -81,8 +82,8 @@
    it from  being included.  We don't use it anyway. */
 #define MPIPP_H
 
-#define SCIRUN_SRCDIR "@abs_srcdir@"
-#define SCIRUN_OBJDIR "@abs_conftop_dir@"
+#define SCIRUN_SRCDIR "@scirun_src_dir@"
+#define SCIRUN_OBJDIR "@scirun_obj_dir@"
 #define LOAD_PACKAGE "@LOAD_PACKAGE@"
 #define ITCL_WIDGETS "@LIB_DIR_ITCL@/iwidgets/scripts"
 

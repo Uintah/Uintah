@@ -35,14 +35,17 @@
 \index{packages}
 
 Packages are collections of modules organized by category. \sr{}'s 
-packages and their categories are listed below. 
+packages and their categories are listed below.   
 
-\section{\sr{}}
+\section{\sr{} Core}
 \label{sec:srpackage}
 \index{SCIRun@\sr{}!package}
 
-The \sr{} package provides a base set of datatypes and algorithms.  It
-is divided into the following categories:
+Because \sr{} core is required, it is not technically a package.
+Like a package, \sr{} core provides a set of datatypes, algorithms,
+and modules.  Unlike packages, \sr{} core is required and \sr{} would
+not function without it. Its modules are divided into the
+following categories:
 
 \begin{itemize}
   \item DataIO
@@ -59,9 +62,19 @@ is divided into the following categories:
 \label{sec:biopsepackage}
 \index{SCIRun@\BIOPSE{}!package}
 
+The \BIOPSE{} package supplies a set of modules for interactively
+constructing bioelectric field simulations.
 
-The BioPSE package provides modules to solve bioelectric field
-problems.  It is divided into the following categories:
+\BIOPSE{} modules comprise a set of modeling tools for building finite element,
+finite difference, and boundary element models and allow for solving
+both forward and inverse bioelectric problems.  Visualization tools
+are provided for interactively investigating scalar and vector field
+data.  \BIOPSE{} allows for rapidly prototyping new modeling, simulation,
+and visualization components and well as providing a flexible method for using
+external packages.  \BIOPSE{} provides support for source localization,
+focusing inversion, and electrical impedance imaging of neural and
+cardiac simulations.
+
 
 \begin{itemize}
 \item DataIO
@@ -74,6 +87,7 @@ problems.  It is divided into the following categories:
 
 \section{Teem}
 \label{sec:teempackage}
+\index{Teem}
 
 \scidoclink{Modules}{Developer/Modules/Teem\_bycat.html} of the Teem
 package provide functionality of the \htmladdnormallinkfoot{Teem}
@@ -113,16 +127,26 @@ See \scidoclink{Teem module
   documentation}{Developer/Modules/Teem\_bycat.html} for more
 information.
 
-\section{Matlabinterface}
+\section{MatlabInterface}
 \label{sec:matlabpackage}
+\index{Matlab}
 
 Modules of the Matlabinterface package allow \sr{} to use the
 facilities of Matlab via interactive commands and Matlab scripts.
 
-Matlabinterface modules can be used simply, for example, to convert
-data files between \sr{} and Matlab formats. Or, Matlabinterface
+Matlabinterface modules can be used to convert
+data files between \sr{} and Matlab formats.  Matlabinterface
 modules can be part of \sr{} networks that invoke Matlab scripts to
 perform complex calculations.
+
+Via a sockets interface \sr{} passes scripts and matrix data to
+Matlab, which executes  scripts and returns matrix data to \sr{}.
+Matrix data returned from Matlab can be sent to other modules for
+further processing and visualization.
+
+The Matlab process can run on the same computer as does \sr{} or it
+can run on a separate computer, helping to distribute the load and
+resolving potential licensing conflicts with Matlab.
 
 See Matlabinterface \scidoclink{module
   documentation}{Developer/Modules/MatlabInterface.html} for more
@@ -130,10 +154,16 @@ information.
 
 \section{Insight (ITK)}
 \label{sec:insightpackage}
+\index{Insight Toolkit}
 
 The \scidoclink{Insight}{Developer/Modules/Insight\_bycat.html}
-package provides modules encapsulating \htmladdnormallinkfoot{ITK
-  toolkit}{http://www.itk.org} filters.
+package provides an interface to the \htmladdnormallinkfoot{National
+  Library of Medicine Insight Segmentation and Registration Toolkit
+  (ITK)}{http://www.itk.org} .  SCI has developed a method of wrapping
+ITK filters into SCIRun modules.  This gives \sr{} users access to
+ITK filters, which provide image-processing capabilities ranging from
+fundamental algorithms to advanced segmentation and registration
+tools.
 
 \begin{itemize}
 \item Converters

@@ -49,6 +49,7 @@
 #include <Core/GuiInterface/TCLInterface.h>
 #include <Core/Util/Environment.h>
 #include <Core/Util/sci_system.h>
+#include <Core/Comm/StringSocket.h>
 #include <Core/Thread/Thread.h>
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -82,21 +83,22 @@ using namespace SCIRun;
 #error You must set ITCL_WIDGETS to the iwidgets/scripts path
 #endif
 
-static bool execute_flag = false;
 
 void
 usage()
 {
   cout << "Usage: scirun [args] [net_file] [session_file]\n";
-  cout << "       [-]-r[egression] : regression test a network\n";
-  cout << "       [-]-e[xecute]    : executes the given network on startup\n";
-  cout << "       [-]-v[ersion]    : prints out version information\n";
-  cout << "       [-]-h[elp]       : prints usage information\n";
-  cout << "       [--nosplash]     : disable the splash screen\n";
-  cout << "       net_file         : SCIRun Network Input File\n";
-  cout << "       session_file     : PowerApp Session File\n";
+  cout << "    [-]-r[egression]    : regression test a network\n";
+  cout << "    [-]-s[erver] [PORT] : start a TCL server on port number PORT\n";
+  cout << "    [-]-e[xecute]       : executes the given network on startup\n";
+  cout << "    [-]-v[ersion]       : prints out version information\n";
+  cout << "    [-]-h[elp]          : prints usage information\n";
+  cout << "    [--nosplash]        : disable the splash screen\n";
+  cout << "    net_file            : SCIRun Network Input File\n";
+  cout << "    session_file        : PowerApp Session File\n";
   exit( 0 );
 }
+
 
 // Parse the supported command-line arugments.
 // Returns the argument # of the .net file
@@ -105,7 +107,8 @@ parse_args( int argc, char *argv[] )
 {
   int found = 0;
   bool powerapp = false;
-  for( int cnt = 1; cnt < argc; cnt++ )
+  int cnt = 1;
+  while (cnt < argc)
   {
     string arg( argv[ cnt ] );
     if( ( arg == "--version" ) || ( arg == "-version" )
@@ -122,7 +125,7 @@ parse_args( int argc, char *argv[] )
     else if ( ( arg == "--execute" ) || ( arg == "-execute" ) ||
 	      ( arg == "-e" ) ||  ( arg == "--e" ) )
     {
-      execute_flag = true;
+      sci_putenv("SCIRUN_EXECUTE_ON_STARTUP","1");
     }
     else if ( ( arg == "--regression" ) || ( arg == "-regression" ) ||
 	      ( arg == "-r" ) ||  ( arg == "--r" ) )
@@ -133,6 +136,21 @@ parse_args( int argc, char *argv[] )
     {
       sci_putenv("SCIRUN_NOSPLASH", "1");
     }
+    else if ( ( arg == "--server" ) || ( arg == "-server" ) ||
+	      ( arg == "-s" ) ||  ( arg == "--s" ) )
+    {
+      int port;
+      if ((cnt+1 < argc) && string_to_int(argv[cnt+1], port)) {
+	if (port < 1024 || port > 65535) {
+	  cerr << "Server port must be in range 1024-65535\n";
+	  exit(0);
+	}
+	cnt++;
+      } else {
+	port = 0;
+      }
+      sci_putenv("SCIRUN_SERVER_PORT",to_string(port));
+    }    
     else
     {
       struct stat buf;
@@ -157,6 +175,7 @@ parse_args( int argc, char *argv[] )
 	found = cnt;
       }
     }
+    cnt++;
   }
   return found;
 }
@@ -208,6 +227,31 @@ show_license_and_copy_scirunrc(GuiInterface *gui) {
 }
 
 
+class TCLSocketRunner : public Runnable
+{
+private:
+  TCLInterface *gui_;
+  StringSocket *transmitter_;
+public:
+  TCLSocketRunner(TCLInterface *gui, StringSocket *dt) : 
+    gui_(gui), transmitter_(dt) {}
+  void run()
+  {
+    string buffer;
+    while (1) {
+      buffer.append(transmitter_->getMessage());
+      if (gui_->complete_command(buffer)) {
+	buffer = gui_->eval(buffer);
+	if (!buffer.empty()) buffer.append("\n");
+	transmitter_->putMessage(buffer+"scirun> ");
+	buffer.clear();
+      } else {
+	transmitter_->putMessage("scirun>> ");
+      }
+    }
+  }
+};
+
 
 int
 main(int argc, char *argv[], char **environment) {
@@ -222,7 +266,6 @@ main(int argc, char *argv[], char **environment) {
   macImportExportForceLoad(); // Attempting to force load (and thus
                               // instantiation of static constructors) 
   macForceLoad();             // of Core/Datatypes and Core/ImportExport.
-	          
 #endif
 
   // Start up TCL...
@@ -239,11 +282,22 @@ main(int argc, char *argv[], char **environment) {
   tcl_task->mainloop_waitstart();
 
   // Create user interface link
-  GuiInterface* gui = new TCLInterface();
+  TCLInterface *gui = new TCLInterface();
   // setup TCL auto_path to find core components
   gui->eval("lappend auto_path "SCIRUN_SRCDIR"/Core/GUI "
 	    SCIRUN_SRCDIR"/Dataflow/GUI "ITCL_WIDGETS);
   gui->eval("set scirun2 0");
+
+  // TCL Socket
+  int port;
+  const char *port_str = sci_getenv("SCIRUN_SERVER_PORT");
+  if (port_str && string_to_int(port_str, port)) {
+    StringSocket *transmitter = scinew StringSocket(port);
+    cerr << "URL: " << transmitter->getUrl() << std::endl;
+    transmitter->run();
+    TCLSocketRunner *socket_runner = scinew TCLSocketRunner(gui, transmitter);
+    (new Thread(socket_runner, "TCL Socket"))->detach();
+  }
 
   // Create initial network
   packageDB = new PackageDB(gui);
@@ -301,7 +355,7 @@ main(int argc, char *argv[], char **environment) {
   // Load the Network file specified from the command line
   if (startnetno) {
     gui->eval("loadnet {"+string(argv[startnetno])+"}");
-    if (execute_flag || doing_regressions) {
+    if (sci_getenv_p("SCIRUN_EXECUTE_ON_STARTUP") || doing_regressions) {
       gui->eval("netedit scheduleall");
     }
   }

@@ -66,4 +66,21 @@
   </io>
   <testing>
   </testing>
+<nets>
+<net id="InterpolantToTransferMatrix">
+<title>InterpolantToTransferMatrix Regression Test</title>
+
+<p>Extract an interpolant field from an input field onto a sample lattice
+for example purposes.  Then that interpolant is applied to the input
+field using two different techniques:  First it is applied with the
+ApplyInterpolant module.  Second it is converted into a matrix using
+the InterpolantToTransferMatrix module, and then that matrix is
+multiplied with the data from the original field to compute the
+interpolation.  The results of both methods are then compared using
+the ErrorMetric module to verify that they are equivalent.</p>
+
+<p>This network can be found at src/nets/Modules/FieldsOther/InterpolantToTransferMatrix.net.</p>
+
+</net>
+</nets>
 </component>

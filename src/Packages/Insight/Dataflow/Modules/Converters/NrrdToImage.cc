@@ -1,4 +1,4 @@
-/*
+/* 
    For more information, please see: http://software.sci.utah.edu
 
    The MIT License
@@ -81,8 +81,11 @@ public:
   // stored in inrrd_handle_
   template<class type, unsigned int dim>
   void create_image();
+  template<class type, unsigned int dim>
+  void create_image2();
+
 private:
-  bool remove_tuple_;
+  bool vector_data_;
 };
 
 
@@ -90,7 +93,6 @@ DECLARE_MAKER(NrrdToImage)
 NrrdToImage::NrrdToImage(GuiContext* ctx)
   : Module("NrrdToImage", ctx, Source, "Converters", "Insight")
 {
-  remove_tuple_ = false;
 }
 
 NrrdToImage::~NrrdToImage(){
@@ -117,39 +119,37 @@ void NrrdToImage::execute(){
   Nrrd *n = inrrd_handle_->nrrd;
   int dim = n->dim;
 
-  // if first axis has a spacing of nan, then
-  // it is a tuple axis and we should not include it 
-  // in our conversion
-  remove_tuple_ = false;
-  if ( !AIR_EXISTS(n->axis[0].spacing)) {
-    remove_tuple_ = true;
-  } 
-
+  vector_data_ = false;
+  if (nrrdKindSize(n->axis[0].kind) == 3) {
+    remark("Vector data");
+    vector_data_ = true;
+  }
   
+
   switch(dim) {
   case 1:
-    if (remove_tuple_) 
-      error("Cannot convert nrrd with only a tuple axis");
+    if (vector_data_) 
+      error("Cannot convert nrrd with only vector data");
     else
       determine_nrrd_type<1>();
     break;
   case 2:
-    if (remove_tuple_)
+    if (vector_data_)
       determine_nrrd_type<1>();
     else
       determine_nrrd_type<2>();
     break;
   case 3:
-    if (remove_tuple_)
+    if (vector_data_)
     determine_nrrd_type<2>();
     else
       determine_nrrd_type<3>();
     break;
   case 4:
-    if (remove_tuple_)
+    if (vector_data_)
       determine_nrrd_type<3>();
     else
-      error("Cannot convert nrrd with 4 dimension and tuple axis");
+      error("Cannot convert nrrd with 4 dimension and vector data");
     break;
   default:
     error("Cannot convert > 3 dimensional data to an ITK Image");
@@ -172,28 +172,52 @@ void NrrdToImage::determine_nrrd_type() {
   // determine pixel type
   switch(n->type) {
   case nrrdTypeChar:
-    create_image<char,dim>();
+    if (vector_data_)
+      create_image2<char,dim>();
+    else
+      create_image<char,dim>();
     break;
   case nrrdTypeUChar:
-    create_image<unsigned char,dim>();
+    if (vector_data_)
+      create_image2<unsigned char,dim>();
+    else 
+      create_image<unsigned char,dim>();
     break;
   case nrrdTypeShort:
-    create_image<short,dim>();
+    if (vector_data_)
+      create_image2<short,dim>();
+    else
+      create_image<short,dim>();
     break;
   case nrrdTypeUShort:
-    create_image<unsigned short,dim>();
+    if (vector_data_)
+      create_image2<unsigned short,dim>();
+    else
+      create_image<unsigned short,dim>();
     break;
   case nrrdTypeInt:
-    create_image<int,dim>();
+    if (vector_data_)
+      create_image2<int,dim>();
+    else
+      create_image<int,dim>();
     break;
   case nrrdTypeUInt:
-    create_image<unsigned int,dim>();
+    if (vector_data_)
+      create_image2<unsigned int,dim>();
+    else
+      create_image<unsigned int,dim>();
     break;
   case nrrdTypeFloat:
-    create_image<float,dim>();
+    if (vector_data_)
+      create_image2<float,dim>();
+    else
+      create_image<float,dim>();
     break;
   case nrrdTypeDouble:
-    create_image<double,dim>();
+    if (vector_data_)
+      create_image2<double,dim>();
+    else
+      create_image<double,dim>();
     break;
   }
 #endif
@@ -218,10 +242,77 @@ void NrrdToImage::create_image() {
   double origin[dim];
   double spacing[dim];
 
-  // If tuple axis is being removed, we need to offset indexing
+  for(int i=0; i<(int)dim; i++) {
+    fixedSize[i] = n->axis[i].size;
+
+    start[i] = 0;
+
+    if (!AIR_EXISTS(n->axis[i].min))
+      origin[i] = 0;
+    else
+    origin[i] = n->axis[i].min;
+
+    if (!AIR_EXISTS(n->axis[i].spacing))
+      spacing[i] = 1.0;
+    else
+      spacing[i] = n->axis[i].spacing;
+  }
+  region.SetSize( fixedSize );
+  region.SetIndex( start );
+  
+  img->SetRegions( region );
+  img->Allocate();
+
+  img->SetOrigin( origin );
+  img->SetSpacing( spacing );
+
+  // copy the data
+  IteratorType img_iter(img, img->GetRequestedRegion());
+  void* p = n->data;
+
+  img_iter.GoToBegin();
+  while(!img_iter.IsAtEnd()) {
+    type *&i = (type*&)p;
+    type v = *i;
+    img_iter.Set(v);
+    
+    // increment pointers
+    img_iter.operator++();
+    ++i;
+  }
+
+  ITKDatatype* result = scinew ITKDatatype;
+  result->data_ = img;
+  oimg_handle_ = result;
+
+#endif
+}
+
+
+template<class type, unsigned int dim>
+void NrrdToImage::create_image2() {
+#ifdef HAVE_TEEM
+  cerr << "Creating vector image\n";
+
+  Nrrd* n = inrrd_handle_->nrrd;
+  typedef typename itk::Image<itk::Vector<type>,dim> ImageType;
+  typedef typename itk::ImageRegionIterator< ImageType > IteratorType;
+
+  // create new itk image
+  typename ImageType::Pointer img = ImageType::New();
+
+  typename ImageType::RegionType region;
+
+  // set size, origin and spacing
+  typename ImageType::SizeType fixedSize;
+  typename ImageType::IndexType start;
+  double origin[dim];
+  double spacing[dim];
+
+  // If vector data, we need to offset indexing
   // into the nrrd by 1.
   int offset = 0;
-  if (remove_tuple_)
+  if (vector_data_)
     offset = 1;
 
   for(int i=0; i<(int)dim; i++) {
@@ -252,26 +343,24 @@ void NrrdToImage::create_image() {
   IteratorType img_iter(img, img->GetRequestedRegion());
   void* p = n->data;
 
-  // If remove_tuple_ is true, then the dimension of the nrrd
-  // is really dim+1.  When iterating over the nrrd to copy it
-  // we need to skip the initial tuple axis.
-  if (remove_tuple_) {
-    for(int j=0; j<n->axis[0].size; j++) {
-      type *&i = (type*&)p;
-      // increment pointer
-      ++i;
-    }
-  }
-  
   img_iter.GoToBegin();
   while(!img_iter.IsAtEnd()) {
     type *&i = (type*&)p;
-    type v = *i;
-    img_iter.Set(v);
+    type x = *i;
+    ++i;
+    type y = *i;
+    ++i;
+    type z = *i;  
+    ++i;
+
+    itk::Vector<type> temp;
+    temp[0] = x;
+    temp[1] = y;
+    temp[2] = z;
+    img_iter.Set(temp);
     
     // increment pointers
     img_iter.operator++();
-    ++i;
   }
 
   ITKDatatype* result = scinew ITKDatatype;

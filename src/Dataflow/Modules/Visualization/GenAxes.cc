@@ -49,6 +49,7 @@
 #include <Core/Geom/GeomDL.h>
 #include <Core/Geom/GeomGrid.h>
 #include <Core/Geom/GeomGroup.h>
+#include <Core/Geom/GeomPoint.h>
 #include <Core/Geom/GeomLine.h>
 #include <Core/Geom/GeomQuads.h>
 #include <Core/Geom/GeomSticky.h>
@@ -63,7 +64,6 @@
 #include <Core/GuiInterface/GuiVar.h>
 #include <iostream>
 #include <map>
-
 namespace SCIRun {
 
 class PSECORESHARE GenAxes : public Module {
@@ -102,6 +102,8 @@ private:
   const int		        get_GuiInt(const string &str);
   const bool		        get_GuiBool(const string &str);
 
+  void				check_for_changed_fonts();
+  
 public:
   GenAxes(GuiContext* ctx);
   virtual ~GenAxes();
@@ -110,20 +112,21 @@ public:
 };
 
 DECLARE_MAKER(GenAxes)
+  
+
 
 GenAxes::GenAxes(GuiContext* ctx)
   : Module("GenAxes", ctx, Filter, "Visualization", "SCIRun"),
+#ifdef HAVE_FTGL
+    label_font_(0),
+    value_font_(0),
+#endif
     bbox_(Point(-1.,-1.,-1.),Point(1.,1.,1.)),
     white_(scinew Material(Color(0,0,0), Color(1,1,1), Color(1,1,1), 20)),
     red_(scinew Material(Color(0,0,0), Color(1,0.4,0.4), Color(1,0.4,0.4), 20)),
     green_(scinew Material(Color(0,0,0), Color(0.4,1.,0.4), Color(0.4,1.,0.4), 20)),
     vars_()
 {
-#ifdef HAVE_FTGL
-  label_font_ = scinew GeomFTGLFontRenderer(SCIRUN_SRCDIR+string("/Fonts/scirun.ttf"));
-  value_font_ = scinew GeomFTGLFontRenderer(SCIRUN_SRCDIR+string("/Fonts/scirun.ttf"));
-# endif
-  
   add_GuiString("title");
   add_GuiString("font");
   add_GuiInt("precision");
@@ -280,26 +283,10 @@ GenAxes::generateLines(const Point  start,
 
 void 
 GenAxes::tcl_command(GuiArgs& args, void* userdata) {
+  check_for_changed_fonts();
   if(args.count() < 2){
     args.error("ShowField needs a minor command");
     return;
-  }
-  if (args[1] == "labelFontChanged") {
-#ifdef HAVE_FTGL
-    //    double scale = bbox_.diagonal().maxComponent();    
-    //label_font_ = 0;
-    label_font_ = scinew GeomFTGLFontRenderer(get_GuiString("labelfont"),
-					      get_GuiInt("labelrez")+1,72);
-#endif
-    want_to_execute();
-  } else 
-  if (args[1] == "valueFontChanged") {
-#ifdef HAVE_FTGL
-    //value_font_ = 0;
-    value_font_ = scinew GeomFTGLFontRenderer(get_GuiString("valuefont"),
-					      get_GuiInt("valuerez")+1,72);
-#endif
-    want_to_execute();
   } else {
     Module::tcl_command(args, userdata);
   }
@@ -371,19 +358,26 @@ GenAxes::generateAxisLines(int prim, int sec, int ter)
     Vector nnormal = normal;
     nnormal *= -1.0;
 
+    const int num = Round(get_GuiDouble(base+"divisions"));
+
     Vector delta = primary;
     delta.normalize();
-    delta *= get_GuiDouble(base+"absolute");
+    GuiDouble *absolute_var = dynamic_cast<GuiDouble *>(vars_[base+"absolute"]);
+    if (absolute_var->valid()) 
+      delta *= absolute_var->get();
+    else 
+      delta = primary/num;
 
     Vector nsecondary = -secondary;
     
     GeomHandle obj;
     
     GeomLines *lines = scinew GeomLines();
-    const double line_width = get_GuiDouble(base+"width");
+    double line_width = get_GuiDouble(base+"width");
+    if (line_width < 0.05) line_width = 0.05;
     lines->setLineWidth(line_width);
 
-    const int num = Round(get_GuiDouble(base+"divisions"));
+
     for (int i = 0; i <= num; i++) {
       const Point pos = origin + delta*i;    
       lines->add(pos, pos + secondary);
@@ -442,18 +436,20 @@ GenAxes::generateAxisLines(int prim, int sec, int ter)
       ticks->add(ttick);
       
 #ifdef HAVE_FTGL
-      ostringstream ostr;
-      ostr.precision(precision);
-      ostr << (origin+delta*i).asVector()[axisleft];
-      //      value_font_->set_resolution(textup.length()*5,72);
-      GeomTextTexture *value_text = scinew GeomTextTexture
-	(value_font_, ostr.str(), Zero, textup, primary);
-      value_text->set_anchor(GeomTextTexture::c);
-      if (axisleft == 1 && axisup == 0) value_text->up_hack_ = true;
-      GeomTransform *value = scinew GeomTransform(value_text);
-      value->scale(squash);
-      value->translate(delta*i+tick_vec+textup*0.55);
-      values->add(value);      
+      if (value_font_.get_rep()) {
+	ostringstream ostr;
+	ostr.precision(precision);
+	ostr << (origin+delta*i).asVector()[axisleft];
+	//      value_font_->set_resolution(textup.length()*5,72);
+	GeomTextTexture *value_text = scinew GeomTextTexture
+	  (value_font_, ostr.str(), Zero, textup, primary);
+	value_text->set_anchor(GeomTextTexture::c);
+	if (axisleft == 1 && axisup == 0) value_text->up_hack_ = true;
+	GeomTransform *value = scinew GeomTransform(value_text);
+	value->scale(squash);
+	value->translate(delta*i+tick_vec+textup*0.55);
+	values->add(value);
+      }
 #endif
     }
     
@@ -468,10 +464,14 @@ GenAxes::generateAxisLines(int prim, int sec, int ter)
     show = get_GuiInt(base+"maxticks");
     obj = scinew GeomSwitch(scinew GeomCull(obj, show<2?0:&secondary),show>0);
     grid->add(scinew GeomSwitch(scinew GeomCull(obj, show<2?0:&normal),show>0));
-    obj = scinew GeomTransform(values,trans);
-    show = get_GuiInt(base+"maxvalue");
-    obj = scinew GeomSwitch(scinew GeomCull(obj,show<2?0:&secondary),show>0);
-    grid->add(scinew GeomSwitch(scinew GeomCull(obj,show<2?0:&normal),show>0));
+#ifdef HAVE_FTGL
+    if (value_font_.get_rep()) {
+      obj = scinew GeomTransform(values,trans);
+      show = get_GuiInt(base+"maxvalue");
+      obj = scinew GeomSwitch(scinew GeomCull(obj,show<2?0:&secondary),show>0);
+      grid->add(scinew GeomSwitch(scinew GeomCull(obj,show<2?0:&normal),show>0));
+    }
+#endif
 
 
     
@@ -509,17 +509,19 @@ GenAxes::generateAxisLines(int prim, int sec, int ter)
       ticks->add(ttick);
       
 #ifdef HAVE_FTGL
-      ostringstream ostr;
-      ostr.precision(3);
-      ostr << (origin+delta*i).asVector()[axisleft];
-      GeomTextTexture *value_text = scinew GeomTextTexture
-	(value_font_, ostr.str(), Zero, textup, primary);
-      value_text->set_anchor(GeomTextTexture::c);
-      if (axisleft == 1 && axisup == 0) value_text->up_hack_ = true;
-      GeomTransform *value = scinew GeomTransform(value_text);
-      value->scale(squash);
-      value->translate(delta*i+tick_vec-textup*0.55);
-      values->add(value);      
+      if (value_font_.get_rep()) {
+	ostringstream ostr;
+	ostr.precision(3);
+	ostr << (origin+delta*i).asVector()[axisleft];
+	GeomTextTexture *value_text = scinew GeomTextTexture
+	  (value_font_, ostr.str(), Zero, textup, primary);
+	value_text->set_anchor(GeomTextTexture::c);
+	if (axisleft == 1 && axisup == 0) value_text->up_hack_ = true;
+	GeomTransform *value = scinew GeomTransform(value_text);
+	value->scale(squash);
+	value->translate(delta*i+tick_vec-textup*0.55);
+	values->add(value);
+      }
 #endif
     }
 
@@ -532,11 +534,14 @@ GenAxes::generateAxisLines(int prim, int sec, int ter)
     show = get_GuiInt(base+"minticks");
     obj = scinew GeomSwitch(scinew GeomCull(obj, show<2?0:&nsecondary),show>0);
     grid->add(scinew GeomSwitch(scinew GeomCull(obj, show<2?0:&normal),show>0));
-
-    obj = scinew GeomTransform(values, trans);
-    show = get_GuiInt(base+"minvalue");
-    obj = scinew GeomSwitch(scinew GeomCull(obj,show<2?0:&nsecondary),show>0);
-    grid->add(scinew GeomSwitch(scinew GeomCull(obj,show<2?0:&normal),show>0));
+#ifdef HAVE_FTGL
+    if (value_font_.get_rep()) {
+      obj = scinew GeomTransform(values, trans);
+      show = get_GuiInt(base+"minvalue");
+      obj = scinew GeomSwitch(scinew GeomCull(obj,show<2?0:&nsecondary),show>0);
+      grid->add(scinew GeomSwitch(scinew GeomCull(obj,show<2?0:&normal),show>0));
+    }
+#endif
 
 
 #if 0
@@ -554,35 +559,37 @@ GenAxes::generateAxisLines(int prim, int sec, int ter)
 #endif
 
 #ifdef HAVE_FTGL
-    // Create Label
-    trans.load_identity();
-    trans.pre_rotate(radians*get_GuiDouble(base+"labelangle"),left);
-    trans.project(up,textup);
-    textup.normalize();
-    textup *= scale*get_GuiDouble(base+"labelheight") / 100.00;
-    
-    GeomTextTexture *label;
-    
-    //    const string text = get_GuiString(base+"text"); 
-    const string text(get_GuiString(base+"text"));//J^A^3^A^L   <<");
-    //    label_font_->set_resolution(textup.length()*10,72);
-    label = scinew GeomTextTexture
-      (label_font_, text, origin+secondary+textup/2.+primary/2+max_offset, 
-       textup, primary);
-    if (axisleft == 1 && axisup == 0) label->up_hack_ = true;
-    label->set_anchor(GeomTextTexture::c);
-    
-    show = get_GuiInt(base+"maxlabel");
-    obj = scinew GeomSwitch(scinew GeomCull(label,(show<2?0:&secondary)),show>0);    
-    grid->add(scinew GeomSwitch(scinew GeomCull(obj,show<2?0:&normal),show>0));
-    label = scinew GeomTextTexture
-      (label_font_, text, origin-textup/2+primary/2+min_offset, textup, primary);
-    if (axisleft == 1 && axisup == 0) label->up_hack_ = true;
-    label->set_anchor(GeomTextTexture::c);
-
-    show = get_GuiInt(base+"minlabel");
-    obj = scinew GeomSwitch(scinew GeomCull(label,show<2?0:&nsecondary),show>0);
-    grid->add(scinew GeomSwitch(scinew GeomCull(obj,show<2?0:&normal),show>0));
+    if (label_font_.get_rep()) {
+      // Create Label
+      trans.load_identity();
+      trans.pre_rotate(radians*get_GuiDouble(base+"labelangle"),left);
+      trans.project(up,textup);
+      textup.normalize();
+      textup *= scale*get_GuiDouble(base+"labelheight") / 100.00;
+      
+      GeomTextTexture *label;
+      
+      //    const string text = get_GuiString(base+"text"); 
+      const string text(get_GuiString(base+"text"));//J^A^3^A^L   <<");
+      //    label_font_->set_resolution(textup.length()*10,72);
+      label = scinew GeomTextTexture
+	(label_font_, text, origin+secondary+textup/2.+primary/2+max_offset, 
+	 textup, primary);
+      if (axisleft == 1 && axisup == 0) label->up_hack_ = true;
+      label->set_anchor(GeomTextTexture::c);
+      
+      show = get_GuiInt(base+"maxlabel");
+      obj = scinew GeomSwitch(scinew GeomCull(label,(show<2?0:&secondary)),show>0);    
+      grid->add(scinew GeomSwitch(scinew GeomCull(obj,show<2?0:&normal),show>0));
+      label = scinew GeomTextTexture
+	(label_font_, text, origin-textup/2+primary/2+min_offset, textup, primary);
+      if (axisleft == 1 && axisup == 0) label->up_hack_ = true;
+      label->set_anchor(GeomTextTexture::c);
+      
+      show = get_GuiInt(base+"minlabel");
+      obj = scinew GeomSwitch(scinew GeomCull(label,show<2?0:&nsecondary),show>0);
+      grid->add(scinew GeomSwitch(scinew GeomCull(obj,show<2?0:&normal),show>0));
+    }
 #endif
 
     obj = grid;
@@ -602,10 +609,13 @@ GenAxes::generateAxisLines(int prim, int sec, int ter)
     //group->add(obj);
     
     //    grid->add(scinew GeomSwitch(scinew GeomCull(obj, show<2?0:&normal),show>0));
-
     group->add(grid);
     group->add(mirror);
   }
+
+  GeomPoints *points = scinew GeomPoints();
+  points->add(bbox_.min());
+  group->add(points);
 
   return group;
 }
@@ -642,12 +652,50 @@ GenAxes::execute()
   
   //str << "Plane-" << prim << sec << "-" << ter << "-Axis-";
   //ogeom->addObj(generateAxisLines(prim,sec,ter),str.str());
-
+  //  check_for_changed_fonts();
   ogeom->addObj(generateAxisLines(0,1,2),string("XY Plane"));
   ogeom->addObj(generateAxisLines(1,2,0),string("XZ Plane"));
   ogeom->addObj(generateAxisLines(0,2,1),string("YZ Plane"));
 
   ogeom->flushViews();
+}
+
+
+void GenAxes::check_for_changed_fonts() {
+#ifdef HAVE_FTGL
+  string filename = get_GuiString("labelfont");
+  if (label_font_.get_rep()) {
+    if (label_font_->filename() != filename && 
+	gui->eval("validFile "+filename) == "1") {
+      label_font_ = 0;
+    } else if (label_font_->get_ptRez() != get_GuiInt("labelrez")+1) {
+      label_font_ = 0;
+    }
+  }
+    
+  if (!label_font_.get_rep() && gui->eval("validFile "+filename) == "1") {
+    std::cerr << "loading " << filename;
+    label_font_ = scinew GeomFTGLFontRenderer(filename,
+					      get_GuiInt("labelrez")+1,72);
+  }
+  
+  filename = get_GuiString("valuefont");
+  if (value_font_.get_rep()) {
+    if (value_font_->filename() != filename && 
+	gui->eval("validFile "+filename) == "1") {
+      value_font_ = 0;
+    } else if (value_font_->get_ptRez() != get_GuiInt("valuerez")+1) {
+      value_font_ = 0;
+    }
+  }
+
+  
+  if (!value_font_.get_rep() && gui->eval("validFile "+filename) == "1") {
+    std::cerr << "loading " << filename << "rez of " << get_GuiInt("valuerez") << std::endl;
+    value_font_ = scinew GeomFTGLFontRenderer(filename, 
+					      get_GuiInt("valuerez")+1,72);
+  }
+#endif
 }
 
 } // End namespace SCIRun

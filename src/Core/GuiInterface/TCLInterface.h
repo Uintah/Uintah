@@ -66,6 +66,7 @@ namespace SCIRun {
     virtual void postMessage(const string& errmsg, bool err = false);
     virtual bool get(const std::string& name, std::string& value);
     virtual void set(const std::string& name, const std::string& value);
+    bool complete_command(const string&);
   };
 }
 

@@ -80,4 +80,16 @@ are needed. </p>
   </io>
   <testing>
   </testing>
+<nets>
+<net id="SampleLattice">
+<title>SampleLattice Regression Test</title>
+
+<p>Create and draw a LatVolField using the SampleLattice module.  The
+lattice is not fitted to any input field nor is it transformed so the
+output is a box ranging from [-1, -1, -1] to [1, 1, 1].</p>
+
+<p>This network can be found at src/nets/Modules/FieldsCreate/SampleLattice.net.</p>
+
+</net>
+</nets>
 </component>

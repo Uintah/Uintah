@@ -199,7 +199,7 @@ HexVolField<T>::get_type_description(int n) const
 template <class T>
 bool HexVolField<T>::get_gradient(Vector &g, Point &p) {
   HexVolMesh::Cell::index_type ci;
-  if (get_typed_mesh()->locate(ci, p)) {
+  if (mesh_->locate(ci, p)) {
     g = cell_gradient(ci);
     return true;
   } else {
@@ -222,9 +222,9 @@ Vector HexVolField<T>::cell_gradient(HexVolMesh::Cell::index_type ci)
 
   // load up the indices of the nodes for this cell
   HexVolMesh::Node::array_type nodes;
-  get_typed_mesh()->get_nodes(nodes, ci);
+  mesh_->get_nodes(nodes, ci);
   Vector gb0, gb1, gb2, gb3, gb4, gb5, gb6, gb7;
-  get_typed_mesh()->get_gradient_basis(ci, gb0, gb1, gb2, gb3, gb4, gb5, gb6, gb7);
+  mesh_->get_gradient_basis(ci, gb0, gb1, gb2, gb3, gb4, gb5, gb6, gb7);
 
   // we really want this for all scalars... 
   //  but for now, we'll just make doubles work

@@ -54,8 +54,8 @@ using namespace SCITeem;
 
 
 class ImageExporter : public Module {
-  GuiString filename_;
-  GuiString filetype_;
+  GuiFilename filename_;
+  GuiString   filetype_;
 public:
   ImageExporter(GuiContext *ctx);
   virtual ~ImageExporter();

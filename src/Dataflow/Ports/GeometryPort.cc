@@ -708,6 +708,10 @@ GeometryData::GeometryData()
   depthbuffer=0;
 }
 
+GeometryData::~GeometryData()
+{
+}
+
 
 void
 GeometryData::Print()

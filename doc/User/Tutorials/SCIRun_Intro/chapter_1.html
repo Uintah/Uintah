@@ -122,8 +122,8 @@
     HREF="../../Guide/usersguide/srug4_4.html#sec:scirundata"><i>User's
     Guide</i> 4.4, "SCIRUN_DATA"</a>.)
 
-    <p> The following three environment variables need to be set
-        in the shell.
+    <p> The following environment variables need to be set
+        in the shell.  Note: another method of setting these variables is to run SCIRun once so that it will create a .scirunrc file in your home directory.  Then edit this file and uncomment the above variables and point them to your data.  This only needs to be done once.  Environment variables set in the shell will override the .scirunrc values.</p>
 
     <ul><li value="1.">SCIRUN_DATA: points to the location of the
       SCIRunData directory on the system.  Note: it is assumed the
@@ -134,16 +134,9 @@
       (Note: example networks built in this tutorial can run
       with a variety of data inputs: <i>e.g.</i>, sphere, brain-EG,
       and utahtorso-lowres.)
-      <P>
-      <li>SCIRUN_ON_THE_FLY_LIBS_DIR: In order for multiple users to
-      use the same installation of SCIRun without conflict, each user
-      must specify a directory to store dynamically compiled code. To
-      do this, set the SCIRUN_ON_THE_FLY_LIBS_DIR to the specified
-      directory (on-the-fly-libs will be discussed in more detail
-      later in this tutorial).
     </ul>
 
-    <p> Set these environment variable to the following values (See
+    <p> Set these environment variables to the following values (See
         Figures 1.0 (csh/tcsh) and 1.1 (bask,ksh,sh)):
     <ol>
          <li value="1.">Set the SCIRUN_DATA variable to point to
@@ -154,11 +147,7 @@
           <P>
           <li value="2.">Set the SCIRUN_DATASET variable to
              &quot;utahtorso-lowres&quot;.
-          <P>
-          <li value="3.">Set the SCIRUN_ON_THE_FLY_LIBS_DIR variable
-             to ~/SCIRun/on-the-fly-libs.
     </ol>
-  
   <center>
   <p><img height="200" width="516" src="images/figures/1_2.gif"><br>
   <b>Figure 1.0: Set environment variables using C-style shell (csh, tcsh).</b></p>
@@ -191,6 +180,10 @@
     <p><img width="400" height="440" src="images/figures/BlankSCIRun.gif"><br>
     <b>Figure 1.2: SCIRun initial NetworkEditor window.</b></p>
     </center>
+
+  <p>For more information about the NetworkEditor consult the <a
+    HREF="../../Guide/usersguide/srug4_2.html"><i>User's
+    Guide</i> 4.2, "Anatomy of the Main Window"</a>.</p>
 
    <B>SCIRun Network Building Blocks: Modules and Connections</B>
 
@@ -259,7 +252,7 @@
     set user interface parameters for this module, by 
     pressing the <B><I>UI</I></B> button on the module.  This brings
     up a standard file selection dialog (<b><A
-    HREF="#figure-1.6">Figure 1.6</A></b>).  Select the
+    HREF="#figure-1.6">Figure 1.6</A></b>).  Select the 
     <B>utahtorso-lowres/utahtorso-lowres-voltage.tvd.fld</B> input
     file. (Note: This file can be found in the SCIRunData directory.
     This directory should have been downloaded and installed when
@@ -404,7 +397,7 @@
              Set the Node Scale to 2.  Make sure the Node Display Type
              is set to Spheres.
 	<BR><P>
-        <LI> Set the <I>Sphere and Disk Resolution</I> to 5.
+        <LI> Set the <I>Sphere, Box and Disk Resolution</I> to 5.
 	<BR><P>
         <LI> Go to the Edges tab and turn off the display of edges by
              deselecting the <I>Show Edges</I> check box.
@@ -576,7 +569,7 @@
     </p>
     
 <p><ol><li>Click the Save button. The network is saved, and the dialog
-      disappears.</p> <p><li>Exit SCIRun.</p></ol> <p>Loading a SCIRun
+      disappears.</p> <p><li>Exit SCIRun by selecting File-&gt;Quit from the NetworkEditor menu or pressing Ctrl-Q.</p></ol> <p>Loading a SCIRun
       network:</p> <p><ol><li>Start SCIRun.</p> <p><li>From the File
       drop-down menu, select the the Load... option.</p> <li>Select
       SCIRun/src/nets/show-torso-mesh.net.  </p></ol>
@@ -613,7 +606,7 @@
     <H2><A name="appendix-1"><U>Appendix 1</U>: Overview of Field types</A></H2>
     
     <p>
-    SCIRun has eight geometric meshes available for Fields:
+    SCIRun has nine geometric meshes available for Fields:
     <p>
     <img height="100" width="100" src="images/figures/pointcloud.gif" align="left" valign="top">
     <b>PointCloudMesh:</b> unconnected points<br clear="all">
@@ -642,8 +635,8 @@
     <img height="84" width="100" src="images/figures/hexvol.gif" align="left" valign="top">
     <b>HexVolMesh:</b> subdivision of space into hexagonal elements<br clear="all"><br>
     <p>
-    NOTE: <b>ImageMesh</b> is not used for image processing, since
-    SCIRun does not directly support that function.
+    <img height="84" width="101" src="images/figures/prismvol.gif" align="left" valign="top">
+    <b>PrismVolMesh:</b> five faces, two triangular faces connected together by three quadrilateral faces. <br clear="all"><br>
     <P>
     The following data types can be stored in a Field:<BR>
     <UL>

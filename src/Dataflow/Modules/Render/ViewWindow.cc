@@ -92,46 +92,16 @@ using std::ostringstream;
 
 namespace SCIRun {
   
-class KillRenderer :public Runnable {
-public:
-  KillRenderer(OpenGL *cr, Viewer* m, ViewWindow *vw) :
-    cur_renderer_(cr),
-    manager_(m),
-    vw_(vw)
-  {}
-  
-  void run() {
-    cur_renderer_->kill_helper();
-    manager_->delete_viewwindow(vw_);
-  }
-private:
-  OpenGL     *cur_renderer_;
-  Viewer     *manager_;
-  ViewWindow *vw_;
-};
-
-static ViewWindow::MapStringObjTag::iterator viter;
-
-#if 0
-static void
-add_pt( ViewWindow *viewwindow, Point p, double s=.2 )
-{
-  GeomSphere *obj = scinew GeomSphere(p, s);
-  viewwindow->viewwindow_objs.push_back(obj);
-  viewwindow->viewwindow_objs_draw.push_back(true);
-  viewwindow->need_redraw = 1;
-}
-#endif
 
 ViewWindow::ViewWindow(Viewer* s, GuiInterface* gui, GuiContext* ctx)
   : gui(gui), ctx(ctx), manager(s),
     pos(ctx->subVar("pos")),
     caxes(ctx->subVar("caxes")),
     raxes(ctx->subVar("raxes")),
-    iaxes(ctx->subVar("iaxes")),
     // CollabVis code begin
     HaveCollabVis_(ctx->subVar("have_collab_vis")),
     // CollabVis code end
+    doingImage(false),
     doingMovie(false),
     makeMPEG(false),
     curFrame(0),
@@ -150,6 +120,7 @@ ViewWindow::ViewWindow(Viewer* s, GuiInterface* gui, GuiContext* ctx)
     need_redraw( false ),
     view(ctx->subVar("view")),
     homeview(Point(2.1, 1.6, 11.5), Point(.0, .0, .0), Vector(0,1,0), 20),
+    track_view_window_0_(ctx->subVar("trackViewWindow0")),
     light0(ctx->subVar("global-light0")),
     light1(ctx->subVar("global-light1")),
     light2(ctx->subVar("global-light2")),
@@ -187,7 +158,8 @@ ViewWindow::ViewWindow(Viewer* s, GuiInterface* gui, GuiContext* ctx)
     gui_global_dl_(ctx->subVar("global-dl")),
     gui_global_type_(ctx->subVar("global-type")),
     gui_ortho_view_(ctx->subVar("ortho-view")),
-    gui_current_time_(ctx->subVar("current_time",false))
+    gui_current_time_(ctx->subVar("current_time",false)),
+    gui_currentvisual_(ctx->subVar("currentvisual"))
 {
   inertia_mode=0;
   bgcolor.set(Color(0,0,0));
@@ -267,26 +239,17 @@ string ViewWindow::set_id(const string& new_id)
 
 void ViewWindow::itemAdded(GeomViewerItem* si)
 {
-  ObjTag* vis;
-
   // Invalidate the bounding box
   bb.reset();
-    
-  viter = visible.find(si->name_);
-  if(viter==visible.end()){
-    // Make one...
-    vis=scinew ObjTag;
-    vis->visible=scinew GuiInt(ctx->subVar(si->name_), 1);
-    vis->tagid=maxtag++;
-    visible[si->name_] = vis;
-    ostringstream str;
-    str << id << " addObject " << vis->tagid << " \"" << si->name_ << "\"";
-    gui->execute(str.str());
+  const string &name = si->name_;
+  map<string,GuiInt*>::iterator gui_iter = visible.find(name);
+  if(gui_iter==visible.end()){
+    visible[name] = scinew GuiInt(ctx->subVar(name), 1);
+    const int num = maxtag++;
+    obj_tag[name] = num;
+    gui->eval(id+" addObject "+to_string(num)+" {"+name+"}");
   } else {
-    vis = (*viter).second;
-    ostringstream str;
-    str << id << " addObject2 " << vis->tagid;
-    gui->execute(str.str());
+    gui->eval(id+" addObject2 "+to_string(obj_tag[name]));
   }
 
   need_redraw = true;
@@ -294,17 +257,12 @@ void ViewWindow::itemAdded(GeomViewerItem* si)
 
 void ViewWindow::itemDeleted(GeomViewerItem *si)
 {
-  ObjTag* vis;
-    
-  viter = visible.find(si->name_);
-  if (viter == visible.end()) { // if not found
-    cerr << "Where did that object go???" << "\n";
-  }
-  else {
-    vis = (*viter).second;
-    ostringstream str;
-    str << id << " removeObject " << vis->tagid;
-    gui->execute(str.str());
+  const string &name = si->name_;
+  map<string,GuiInt*>::iterator gui_iter = visible.find(name);
+  if (gui_iter == visible.end()) { // if not found
+    cerr << name << " has dissappeared from the viewer\n";
+  } else {
+    gui->eval(id+" removeObject "+to_string(obj_tag[name]));
   }
 				// invalidate the bounding box
   bb.reset();
@@ -313,75 +271,22 @@ void ViewWindow::itemDeleted(GeomViewerItem *si)
 
 void ViewWindow::itemRenamed(GeomViewerItem *si, string newname)
 {
-  // Remove old
-  {
-    ObjTag *vis;
-    viter = visible.find(si->name_);
-    if (viter == visible.end()) { // if not found
-      cerr << "Where did that object go???" << "\n";
-    }
-    else {
-      vis = (*viter).second;
-      ostringstream str;
-      str << id << " removeObject " << vis->tagid;
-      gui->execute(str.str());
-    }
-  }
-
-  // Rename.
+  const BBox bbox_cache = bb;
+  const int need_redraw_cache = need_redraw;
+  itemDeleted(si);
   si->name_ = newname;
-
-  // Reinsert.
-  {
-    ObjTag* vis;
-    
-    viter = visible.find(si->name_);
-    if(viter==visible.end()){
-      // Make one...
-      vis=scinew ObjTag;
-      vis->visible=scinew GuiInt(ctx->subVar(si->name_), 1);
-      vis->tagid=maxtag++;
-      visible[si->name_] = vis;
-      ostringstream str;
-      str << id << " addObject " << vis->tagid << " \"" << si->name_ << "\"";
-      gui->execute(str.str());
-    } else {
-      vis = (*viter).second;
-      ostringstream str;
-      str << id << " addObject2 " << vis->tagid;
-      gui->execute(str.str());
-    }
-  }
+  itemAdded(si);
+  bb = bbox_cache;
+  need_redraw = need_redraw_cache;
 }
 
-
-// need to fill this in!   
-#ifdef OLDUI
-void ViewWindow::itemCB(CallbackData*, void *gI) {
-  GeomItem *g = (GeomItem *)gI;
-  g->vis = !g->vis;
-  need_redraw=true;
-}
-
-void ViewWindow::spawnChCB(CallbackData*, void*)
-{
-  double mat[16];
-  glGetDoublev(GL_MODELVIEW_MATRIX, mat);
-
-  kids.add(scinew ViewWindow(manager, mat, mtnScl));
-  kids[kids.size()-1]->SetParent(this);
-  for (int i=0; i<geomItemA.size(); i++)
-    kids[kids.size()-1]->itemAdded(geomItemA[i]->geom, geomItemA[i]->name);
-}
-#endif
 
 ViewWindow::~ViewWindow()
 {
   delete current_renderer;
   delete ball;
   delete bawgl;
-
-  gui->delete_command( id+"-c" );
+  gui->delete_command( id+"-c" ); 
 }
 
 void ViewWindow::get_bounds(BBox& bbox)
@@ -402,13 +307,9 @@ void ViewWindow::get_bounds(BBox& bbox)
 	    
 				// Look up the name to see if it
 				// should be drawn...
-      ObjTag* vis;
-	    
-      viter = visible.find(si->name_);
-	    
-      if (viter != visible.end()) { // if found
-	vis = (*viter).second;
-	if (vis->visible->get()) {
+      map<string,GuiInt*>::iterator gui_iter = visible.find(si->name_);
+      if (gui_iter != visible.end()) { // if found
+	if ((*gui_iter).second->get()) {
 	  if(si->crowd_lock_) si->crowd_lock_->readLock();
 	  si->get_bounds(bbox);
 	  if(si->crowd_lock_) si->crowd_lock_->readUnlock();
@@ -1104,18 +1005,18 @@ void ViewWindow::MyRotateCamera( Point  center,
   need_redraw=true;
 }
 
-void ViewWindow::NormalizeMouseXY( int X, int Y, float *NX, float *NY )
+void
+ViewWindow::NormalizeMouseXY( int X, int Y, float *NX, float *NY )
 {
-  double w = current_renderer->xres;
-  double h = current_renderer->yres;
+  *NX = -1.0 + 2.0 * double(X) / double(current_renderer->xres);
+  *NY =  1.0 - 2.0 * double(Y) / double(current_renderer->yres);
+}
 
-  *NX = double(X) / w;
-  *NY = double(Y) / h;
-
-  *NY = 1.0 - *NY;
-
-  *NX = -1.0 + 2.0 * (*NX);
-  *NY = -1.0 + 2.0 * (*NY);
+void
+ViewWindow::UnNormalizeMouseXY(float NX, float NY, int *X, int *Y )
+{
+  *X = Round((NX + 1.0) * double(current_renderer->xres) / 2.0);
+  *Y = Round((1.0 - NY) * double(current_renderer->yres) / 2.0);
 }
 
 Vector ViewWindow::CameraToWorld(Vector v)
@@ -1251,9 +1152,9 @@ void ViewWindow::unicam_rot(int x, int y)
 
   if (fabs(dot) > 0.0001) {
     //       data->rotate(Wline(data->center(), Wvec::Y),
-    //                    -2*acos(clamp(dot,-1.,1.)) * Sign(te[0]-tp[0]));
+    //                    -2*acos(Clamp(dot,-1.,1.)) * Sign(te[0]-tp[0]));
 
-    double angle = -2*acos(clamp(dot,-1.,1.)) * Sign(te[0]-tp[0]);
+    double angle = -2*acos(Clamp(dot,-1.,1.)) * Sign(te[0]-tp[0]);
     MyRotateCamera(center, Vector(0,1,0), angle);
 
 
@@ -1268,7 +1169,7 @@ void ViewWindow::unicam_rot(int x, int y)
     //      double tdist = acos(Wvec::Y * dvec.normalize());
     //Vector Yvec(0,1,0);
 
-    //    double tdist = acos(clamp(Dot(Yvec, dvec.normal()), -1., 1.));
+    //    double tdist = acos(Clamp(Dot(Yvec, dvec.normal()), -1., 1.));
 
     //       CAMdataptr   dd = new CAMdata(*data);
     //       Wline raxe(data->center(),data->right_v());
@@ -2291,81 +2192,43 @@ void ViewWindow::tcl_command(GuiArgs& args, void*)
     // the negative x axis) and then which axis is up
     // represented the same way
     string position = pos.get();
-    const Vector lookdir(df.eyep()-df.lookat()); 
-    double distance = lookdir.length();
-    if(position == "x1_y1") {
-      df.eyep(df.lookat() + Vector(distance, 0.0, 0.0));
-      df.up(Vector(0.0, 1.0, 0.0));
-    } else if(position == "x1_y0") {
-      df.eyep(df.lookat() + Vector(distance, 0.0, 0.0));
-      df.up(Vector(0.0, -1.0, 0.0));
-    } else if(position == "x1_z1") {
-      df.eyep(df.lookat() + Vector(distance, 0.0, 0.0));
-      df.up(Vector(0.0, 0.0, 1.0));
-    } else if(position == "x1_z0") {
-      df.eyep(df.lookat() + Vector(distance, 0.0, 0.0));
-      df.up(Vector(0.0, 0.0, -1.0));
-    } else if(position == "x0_y1") {
-      df.eyep(df.lookat() - Vector(distance, 0.0, 0.0));
-      df.up(Vector(0.0, 1.0, 0.0));
-    } else if(position == "x0_y0") {
-      df.eyep(df.lookat() - Vector(distance, 0.0, 0.0));
-      df.up(Vector(0.0, -1.0, 0.0));
-    } else if(position == "x0_z1") {
-      df.eyep(df.lookat() - Vector(distance, 0.0, 0.0));
-      df.up(Vector(0.0, 0.0, 1.0));
-    } else if(position == "x0_z0") {
-      df.eyep(df.lookat() - Vector(distance, 0.0, 0.0));
-      df.up(Vector(0.0, 0.0, -1.0));
-    } else if(position == "y1_x1") {
-      df.eyep(df.lookat() + Vector(0.0, distance, 0.0));
-      df.up(Vector(1.0, 0.0, 0.0));
-    } else if(position == "y1_x0") {
-      df.eyep(df.lookat() + Vector(0.0, distance, 0.0));
-      df.up(Vector(-1.0, 0.0, 0.0));
-    } else if(position == "y1_z1") {
-      df.eyep(df.lookat() + Vector(0.0, distance, 0.0));
-      df.up(Vector(0.0, 0.0, 1.0));
-    } else if(position == "y1_z0") {
-      df.eyep(df.lookat() + Vector(0.0, distance, 0.0));
-      df.up(Vector(0.0, 0.0, -1.0));
-    } else if(position == "y0_x1") {
-      df.eyep(df.lookat() - Vector(0.0, distance, 0.0));
-      df.up(Vector(1.0, 0.0, 0.0));
-    } else if(position == "y0_x0") {
-      df.eyep(df.lookat() - Vector(0.0, distance, 0.0));
-      df.up(Vector(-1.0, 0.0, 0.0));
-    } else if(position == "y0_z1") {
-      df.eyep(df.lookat() - Vector(0.0, distance, 0.0));
-      df.up(Vector(0.0, 0.0, 1.0));
-    } else if(position == "y0_z0") {
-      df.eyep(df.lookat() - Vector(0.0, distance, 0.0));
-      df.up(Vector(0.0, 0.0, -1.0));
-    } else if(position == "z1_x1") {
-      df.eyep(df.lookat() + Vector(0.0, 0.0, distance));
-      df.up(Vector(1.0, 0.0, 0.0));
-    } else if(position == "z1_x0") {
-      df.eyep(df.lookat() + Vector(0.0, 0.0, distance));
-      df.up(Vector(-1.0, 0.0, 0.0));
-    } else if(position == "z1_y1") {
-      df.eyep(df.lookat() + Vector(0.0, 0.0, distance));
-      df.up(Vector(0.0, 1.0, 0.0));
-    } else if(position == "z1_y0") {
-      df.eyep(df.lookat() + Vector(0.0, 0.0, distance));
-      df.up(Vector(0.0, -1.0, 0.0));
-    } else if(position == "z0_x1") {
-      df.eyep(df.lookat() - Vector(0.0, 0.0, distance));
-      df.up(Vector(1.0, 0.0, 0.0));
-    } else if(position == "z0_x0") {
-      df.eyep(df.lookat() - Vector(0.0, 0.0, distance));
-      df.up(Vector(-1.0, 0.0, 0.0));
-    } else if(position == "z0_y1") {
-      df.eyep(df.lookat() - Vector(0.0, 0.0, distance));
-      df.up(Vector(0.0, 1.0, 0.0));
-    } else if(position == "z0_y0") {
-      df.eyep(df.lookat() - Vector(0.0, 0.0, distance));
-      df.up(Vector(0.0, -1.0, 0.0));
+    const string prefix("ViewWindow");
+    if (position.find(prefix) == 0) {
+      int vw;
+      const string str(position, prefix.size(), position.size()-prefix.size());
+      if (string_to_int(str,vw)) {
+	FutureValue<GeometryData*> reply("Geometry getData reply");
+	manager->mailbox.send(scinew GeometryComm(MessageTypes::GeometryGetData, 0, &reply, vw, GEOM_VIEW));
+	GeometryData *data = reply.receive();
+	df = *(data->view);
+      }
+    } else {
+      // position tells first which axis to look down 
+      // (with x1 being the positive x axis and x0 being
+      // the negative x axis) and then which axis is up
+      // represented the same way      
+      double distance = (df.eyep()-df.lookat()).length();
+      if (position[1] == '0') {
+	distance = -distance;
+      }    
+      if (position[0] == 'x') {
+	df.eyep(df.lookat() + Vector(distance, 0.0, 0.0));
+      } else if (position[0] == 'y') {
+	df.eyep(df.lookat() + Vector(0.0,distance, 0.0));
+      } else if (position[0] == 'z') {
+	df.eyep(df.lookat() + Vector(0.0,0.0,distance));
+      } 
+      
+      const double up = (position[4] == '1') ? 1.0 : -1.0;
+      if (position[3] == 'x') {
+	df.up(Vector(up,0.0,0.0));
+      } else if (position[3] == 'y') {
+	df.up(Vector(0.0,up,0.0));
+      } else if (position[3] == 'z') {
+	df.up(Vector(0.0,0.0,up));
+      } 
     }
+
     animate_to_view(df, 2.0);
   } else if (args[1] == "edit_light" ){
     if (args.count() != 6) {
@@ -2391,16 +2254,6 @@ void ViewWindow::tcl_command(GuiArgs& args, void*)
       mailbox.send(scinew ViewerMessage(MessageTypes::ViewWindowEditLight,
 					id, lightNo, on, Vector(x,y,z),
 					Color(r,g,b)));
-
-  } else if (args[1] == "killwindow") {
-    
-    inertia_mode=0;
-    KillRenderer *kr = scinew KillRenderer(current_renderer, manager, 
-					   (ViewWindow*)this);
-    string tname(id + "VW kill current renderer thread");
-    Thread *ren_deleter = scinew Thread(kr, tname.c_str());
-    ren_deleter->detach();
-    return;
 
   } else if(args[1] == "saveobj") {
     if(args.count() != 6){
@@ -2464,12 +2317,7 @@ void ViewWindow::tcl_command(GuiArgs& args, void*)
     // have to do this here, as well as in redraw() so the axes can be
     // turned on/off even while spinning with inertia
     show_rotation_axis = raxes.get();
-  } else if(args[1] == "iconGenAxes") {    
-    if(iaxes.get() == 1) {
-    } else {    
-    }
-    // CollabVis code begin
-#ifdef HAVE_COLLAB_VIS
+#ifdef HAVE_COLLAB_VIS     // CollabVis code begin
     //cerr << "[HAVE_COLLAB_VIS] (tcl_command) 0\n";
   } else if (args[1] == "doServer") {
     //cerr << "GET: " << view_server.get() << endl;
@@ -2675,13 +2523,9 @@ void ViewWindow::do_for_visible(OpenGL* r, ViewWindowVisPMF pmf)
 	  (GeomViewerItem*)((*serIter.first).second.get_rep());
       
 	// Look up the name to see if it should be drawn...
-	ObjTag* vis;
-      
-	viter = visible.find(si->name_);
-	if (viter != visible.end()) // if found
-	{
-	  vis = (*viter).second;
-	  if (vis->visible->get())
+	map<string,GuiInt*>::iterator gui_iter = visible.find(si->name_);
+	if (gui_iter != visible.end()) { // if found
+	  if ((*gui_iter).second->get())
 	  {
 	    const bool transparent =
 	      strstr(si->name_.c_str(), "TransParent") ||
@@ -2803,11 +2647,5 @@ GeomHandle ViewWindow::createGenAxes() {
   return all;
 }
 
-void ViewWindow::emit_vars(std::ostream& out,
-			   const std::string& midx,
-			   const std::string& prefix)
-{
-  ctx->emit(out, midx, prefix);
-}
 
 } // End namespace SCIRun

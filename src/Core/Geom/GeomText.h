@@ -147,6 +147,7 @@ class GeomFTGLFontRenderer : public GeomObj{
 private:
   FTGLTextureFont *font_;
   int ptRez_,screenRez_;
+  string filename_;
 public:
   GeomFTGLFontRenderer(const string &filename, int ptRez=72, int screenRez=72);
   GeomFTGLFontRenderer(const GeomFTGLFontRenderer &);
@@ -157,8 +158,11 @@ public:
   virtual void get_bounds(BBox&);
   virtual void get_bounds(BBox&,const string &);
   virtual void draw(DrawInfoOpenGL*, Material*, double time){}
+  const string filename() { return filename_; }
   void render(const string &text);
   void set_resolution(int ptRez=72, int screenRez=72);
+  int get_ptRez() { return ptRez_; }
+  int get_screenRez() { return screenRez_; }
 };
   
 typedef LockingHandle<GeomFTGLFontRenderer> GeomFTGLFontRendererHandle;

@@ -69,4 +69,26 @@
   </io>
   <testing>
   </testing>
+<nets>
+<net id="MoveElemToNode-img">
+<title>MoveElemToNode-img Regression Test</title>
+
+<p>Test the MoveElemToNode module by moving the data in an ImageField
+from the faces onto the nodes while retaining the same data locations.
+The ImageField is transformed first so that the positions are better tested.</p>
+
+<p>This network can be found at src/nets/Modules/FieldsData/MoveElemToNode-img.net.</p>
+
+</net>
+<net id="MoveElemToNode-lat">
+<title>MoveElemToNode-lat Regression Test</title>
+
+<p>Test the MoveElemToNode module by moving the data in a LatVolField
+from the cells onto the nodes while retaining the same data locations.
+The LatVolField is transformed first so that the positions are better tested.</p>
+
+<p>This network can be found at src/nets/Modules/FieldsData/MoveElemToNode-lat.net.</p>
+
+</net>
+</nets>
 </component>

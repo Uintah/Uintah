@@ -82,7 +82,7 @@
 
 // HAVE_PBUFFER now comes from PBuffer.h
 #include <Dataflow/Modules/Render/PBuffer.h>
- 
+
 #include <Dataflow/Modules/Render/ViewWindow.h>
 #include <Dataflow/Modules/Render/Viewer.h>
 #include <Core/Thread/FutureValue.h>
@@ -186,7 +186,7 @@ public:
   // CollabVis code end
 
   void kill_helper();
-  
+
 protected:
   int xres, yres;
 
@@ -209,7 +209,6 @@ protected:
 
   void getData(int datamask, FutureValue<GeometryData*>* result);
   
-  
 private:
 
   GuiInterface* gui;
@@ -218,6 +217,7 @@ private:
   Window win;
   Display* dpy;
   GLXContext cx;
+  bool have_pbuffer_;
 #if defined(HAVE_PBUFFER)
   PBuffer pbuffer;
 #endif
@@ -255,7 +255,7 @@ private:
   bool doZTexTransform;
 #endif
   // CollabVis code end
-  
+
   // MPEG SUPPORT
   void StartMpeg(const string& fname);
   void AddMpegFrame();
@@ -291,7 +291,7 @@ private:
   Mailbox<int> recv_mb;
   Mailbox<GetReq> get_mb;
   Mailbox<ImgReq> img_mb;
-    
+
   Frustum frustum;
   HiRes hi_res;
 
@@ -317,7 +317,7 @@ private:
   GeomHandle stylusTriangle[4];
   GeomHandle pinchSphere;
   Material* stylusMaterial[16], *pinchMaterial;
-    
+
   GeomHandle pinchText[2];
   GeomHandle pinchCylinder[4];
 

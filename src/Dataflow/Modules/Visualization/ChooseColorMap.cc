@@ -51,6 +51,7 @@ namespace SCIRun {
 class PSECORESHARE ChooseColorMap : public Module {
 private:
   GuiInt port_index_;
+  GuiInt usefirstvalid_;
 public:
   ChooseColorMap(GuiContext* ctx);
   virtual ~ChooseColorMap();
@@ -60,7 +61,8 @@ public:
 DECLARE_MAKER(ChooseColorMap)
 ChooseColorMap::ChooseColorMap(GuiContext* ctx)
   : Module("ChooseColorMap", ctx, Filter, "Visualization", "SCIRun"),
-    port_index_(ctx->subVar("port-index"))
+    port_index_(ctx->subVar("port-index")),
+    usefirstvalid_(ctx->subVar("usefirstvalid"))
 {
 }
 
@@ -82,22 +84,49 @@ ChooseColorMap::execute()
     return;
 
   port_map_type::iterator pi = range.first;
-  int idx=port_index_.get();
-  if (idx<0) { error("Can't choose a negative port"); return; }
-  while (pi != range.second && idx != 0) { ++pi ; idx--; }
-  int port_number=pi->second;
-  if (pi == range.second || ++pi == range.second) { 
-    error("An input pipe is not plugged into the specified port."); return; 
+
+  int usefirstvalid = usefirstvalid_.get();
+
+  ColorMapIPort *icolormap = 0;
+  ColorMapHandle colormap;
+  
+  if (usefirstvalid) {
+    // iterate over the connections and use the
+    // first valid colormap
+    int idx = 0;
+    bool found_valid = false;
+    while (pi != range.second) {
+      icolormap = (ColorMapIPort *)get_iport(idx);
+      if (icolormap->get(colormap) && colormap != 0) {
+	found_valid = true;
+	break;
+      }
+      ++idx;
+      ++pi;
+    }
+    if (!found_valid) {
+      error("Didn't find any valid colormaps\n");
+      return;
+    }
+  } else {
+    // use the index specified
+    int idx=port_index_.get();
+    if (idx<0) { error("Can't choose a negative port"); return; }
+    while (pi != range.second && idx != 0) { ++pi ; idx--; }
+    int port_number=pi->second;
+    if (pi == range.second || ++pi == range.second) { 
+      error("Selected port index out of range"); return; 
+    }
+
+    icolormap = (ColorMapIPort *)get_iport(port_number);
+    if (!icolormap) {
+      error("Unable to initialize iport '" + to_string(port_number) + "'.");
+      return;
+    }
+    icolormap->get(colormap);
   }
   
-  ColorMapIPort *ifield = (ColorMapIPort *)get_iport(port_number);
-  if (!ifield) {
-    error("Unable to initialize iport '" + to_string(port_number) + "'.");
-    return;
-  }
-  ColorMapHandle field;
-  ifield->get(field);
-  ofld->send(field);
+  ofld->send(colormap);
 }
 
 } // End namespace SCIRun

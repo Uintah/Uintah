@@ -41,7 +41,7 @@ changing the working directory (<command>cd</command>ing) to
 </para>
 
 <para>
-If built from its source code tarballs, &sr;'s installation can be
+If built from source code, &sr;'s installation can be
 tested by changing the working directory (<command>cd</command>ing) to
 &sr;'s build directory and typing <command>./scirun</command>.
 </para>
@@ -53,17 +53,17 @@ After starting &sr;, its network editor window and
 
 <para>
 If the window does not appear, note any displayed errors and see <xref
-endterm="title.help" linkend="sec.help"/>.
+linkend="sec.help"/>.
 </para>
 
 <para>
 See &sr;'s <ulink 
-url="(%= doc.treeUrl(%Q{doc/User/Tutorial/index.html}) %)" ><citetitle>
-tutorial</citetitle></ulink> for an introduction to the use of &sr;.
+url="(%= doc.treeUrl(%Q{doc/User/Tutorial/index.html}) %)" >
+tutorial</ulink> for an introduction to the use of &sr;.
 The tutorial uses the previously downloaded sample data sets.
 </para>
 
 <para>See the <ulink
-url="(%= doc.treeUrl(%Q{doc/User/Guide/usersguide/index.html}) %)"><citetitle>&sr; Users
-Guide</citetitle></ulink> for particulars on the use of &sr;.</para>
+url="(%= doc.treeUrl(%Q{doc/User/Guide/usersguide/index.html}) %)">&sr; Users
+Guide</ulink> for particulars on the use of &sr;.</para>
 </section>

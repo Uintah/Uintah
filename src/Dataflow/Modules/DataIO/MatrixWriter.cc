@@ -66,7 +66,7 @@ DECLARE_MAKER(MatrixWriter)
 
 MatrixWriter::MatrixWriter(GuiContext* ctx)
   : GenericWriter<MatrixHandle>("MatrixWriter", ctx, "DataIO", "SCIRun"),
-    gui_types_(ctx->subVar("types")),
+    gui_types_(ctx->subVar("types", false)),
     gui_exporttype_(ctx->subVar("exporttype")),
     split_(ctx->subVar("split"))
 {
@@ -75,15 +75,15 @@ MatrixWriter::MatrixWriter(GuiContext* ctx)
   mgr.get_exporter_list(exporters);
   
   string exporttypes = "{";
-  exporttypes += "{{SCIRun Matrix File} {.fld} } ";
-  exporttypes += "{{SCIRun Matrix Any} {.*} } ";
+  exporttypes += "{{SCIRun Matrix Binary} {.mat} } ";
+  exporttypes += "{{SCIRun Matrix ASCII} {.mat} } ";
 
   for (unsigned int i = 0; i < exporters.size(); i++)
   {
     MatrixIEPlugin *pl = mgr.get_plugin(exporters[i]);
-    if (pl->fileextension != "")
+    if (pl->fileExtension_ != "")
     {
-      exporttypes += "{{" + exporters[i] + "} {" + pl->fileextension + "} } ";
+      exporttypes += "{{" + exporters[i] + "} {" + pl->fileExtension_ + "} } ";
     }
     else
     {
@@ -108,7 +108,7 @@ MatrixWriter::call_exporter(const string &filename)
   MatrixIEPlugin *pl = mgr.get_plugin(ft);
   if (pl)
   {
-    return pl->filewriter(this, handle_, filename.c_str());
+    return pl->fileWriter_(this, handle_, filename.c_str());
   }
   return false;
 }
@@ -122,8 +122,13 @@ MatrixWriter::execute()
   const string ft = ftpre.substr(0, loc);
 
   exporting_ = !(ft == "" ||
-		 ft == "SCIRun Matrix File" ||
-		 ft == "SCIRun Matrix Any");
+		 ft == "SCIRun Matrix Binary" ||
+		 ft == "SCIRun Matrix ASCII");
+
+  // Determine if we're ASCII or Binary
+  string ab = "Binary";
+  if (ft == "SCIRun Matrix ASCII") ab = "ASCII";
+  filetype_.set(ab);
 
   // Read data from the input port
   SimpleIPort<MatrixHandle> *inport = 

@@ -78,6 +78,7 @@ namespace SCIRun {
 using namespace std;
 class IPort;
 class OPort;
+class BaseWidget;
 class GuiContext;
 class GuiInterface;
 class MessageBase;
@@ -222,7 +223,7 @@ public:
 
   // Callbacks
   virtual void connection(Port::ConnectionState, int, bool);
-  virtual void widget_moved(bool last);
+  virtual void widget_moved(bool last, BaseWidget *widget);
 
   void getPosition(int& x, int& y){ get_position(x, y); }
   string getID() const { return id; }
@@ -285,12 +286,10 @@ protected:
   void update_msg_state(MsgState);  
   CPUTimer timer;
 public:
+  virtual void presave() {};
   SciTCLstrbuff msgStream_;
 protected:
   void get_position(int& x, int& y);
-  virtual void emit_vars(std::ostream& out,
-			 const std::string& midx,
-			 const std::string& prefix="");
   void setStackSize(unsigned long stackSize);
   void reset_vars();
 

@@ -29,23 +29,13 @@
 
 # SCI Network 1.0
 
+# Ask SCIRun to tell us where the data is
+init_DATADIR_and_DATASET
+
 # Because this net only works for the 'radial' dataset, we can't use
 # the generic "sourceSettingsFile" call...  So we just print out the
 # error message.  This will need to be fixed at some point.
 
-global SCIRUN_DATA
-if {$SCIRUN_DATA == ""} {
-
-   displayErrorWarningOrInfo "" error
-   displayErrorWarningOrInfo "*** Error: This net depends on the SCIRUN_DATA enviroment variable." error
-   displayErrorWarningOrInfo "*** Please exit, set it in your shell, and rerun." error
-   displayErrorWarningOrInfo "*** (e.g. setenv SCIRUN_DATA /usr/sci/data/SCIRunData/1.20.0)" error
-   displayErrorWarningOrInfo "" error
-   ::netedit scheduleok
-   return
-}
-
-set DATADIR $SCIRUN_DATA
 
 if {![file isfile $DATADIR/radial/radial.settings]} {
    displayErrorWarningOrInfo "" error
@@ -56,8 +46,6 @@ if {![file isfile $DATADIR/radial/radial.settings]} {
    ::netedit scheduleok
    return
 }
-
-displayErrorWarningOrInfo "*** Using SCIRun data directory: $DATADIR" info
 
 ::netedit dontschedule
 

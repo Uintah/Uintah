@@ -513,6 +513,34 @@ ShowField::determine_dirty(FieldHandle fld_handle, FieldHandle vfld_handle)
 }
 
 
+static string
+clean_fieldname(string fname)
+{
+  string result;
+  int counter;
+
+  for (unsigned int i = 0; i < fname.size(); i++)
+  {
+    if (fname[i] == ':')
+    {
+      if (counter) ;  // do nothing
+      else
+      {
+	result += fname[i];
+	counter = 1;
+      }
+    }
+    else
+    {
+      result += fname[i];
+      counter = 0;
+    }
+  }
+
+  return result;
+}
+
+
 void 
 ShowField::execute()
 {
@@ -690,9 +718,9 @@ ShowField::execute()
     render_state_[TEXT] = text_on_.get();
   }  
   
-  string fname = gui_field_name_.get();
+  string fname = clean_fieldname(gui_field_name_.get());
   if (fname != "" && fname[fname.size()-1] != ' ') { fname = fname + " "; }
-
+  
   normalize_vectors_.reset();
   if (renderer_.get_rep())
   {

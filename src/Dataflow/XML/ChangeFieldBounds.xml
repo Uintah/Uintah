@@ -139,5 +139,20 @@
   </gui>
   <testing>
   </testing>
+<nets>
+<net id="ChangeFieldBounds">
+<title>ChangeFieldBounds Regression Test</title>
+
+<p>Input a field, and then use the widget from ChangeFieldBounds to
+transform the field to a new position.  Both the original and
+transformed fields are displayed, with the original being a wireframe
+and the transformed field being solid.  In addition to simply moving
+the input field we also do an asymetric scale on it such that it
+becomes flattened.</p>
+
+<p>This network can be found at src/nets/Modules/FieldsGeometry/ChangeFieldBounds.net.</p>
+
+</net>
+</nets>
 </component>
 

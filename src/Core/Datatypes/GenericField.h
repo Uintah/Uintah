@@ -100,7 +100,7 @@ public:
   fdata_type& fdata();
   const fdata_type& fdata() const;
 
-  mesh_handle_type get_typed_mesh() const;
+  const mesh_handle_type &get_typed_mesh() const;
 
   //! Persistent I/O.
   virtual void io(Piostream &stream);
@@ -111,9 +111,12 @@ public:
   // -- mutability --
   virtual void freeze();
   virtual void thaw();
+
 private:
 
   static Persistent *maker();
+
+protected:
 
   //! A (generic) mesh.
   mesh_handle_type             mesh_;
@@ -146,29 +149,29 @@ GenericField<Mesh, FData>::resize_fdata()
   if (data_at() == NODE)
   {
     typename mesh_type::Node::size_type ssize;
-    get_typed_mesh()->synchronize(Mesh::NODES_E);
-    get_typed_mesh()->size(ssize);
+    mesh_->synchronize(Mesh::NODES_E);
+    mesh_->size(ssize);
     fdata().resize(ssize);
   }
   else if (data_at() == EDGE)
   {
     typename mesh_type::Edge::size_type ssize;
-    get_typed_mesh()->synchronize(Mesh::EDGES_E);
-    get_typed_mesh()->size(ssize);
+    mesh_->synchronize(Mesh::EDGES_E);
+    mesh_->size(ssize);
     fdata().resize(ssize);
   }
   else if (data_at() == FACE)
   {
     typename mesh_type::Face::size_type ssize;
-    get_typed_mesh()->synchronize(Mesh::FACES_E);
-    get_typed_mesh()->size(ssize);
+    mesh_->synchronize(Mesh::FACES_E);
+    mesh_->size(ssize);
     fdata().resize(ssize);
   }
   else if (data_at() == CELL)
   {
     typename mesh_type::Cell::size_type ssize;
-    get_typed_mesh()->synchronize(Mesh::CELLS_E);
-    get_typed_mesh()->size(ssize);
+    mesh_->synchronize(Mesh::CELLS_E);
+    mesh_->size(ssize);
     fdata().resize(ssize);
   }
   else if (data_at() == NONE)
@@ -413,7 +416,7 @@ GenericField<Mesh, FData>::fdata() const
 }
 
 template <class Mesh, class FData>
-typename GenericField<Mesh, FData>::mesh_handle_type
+const typename GenericField<Mesh, FData>::mesh_handle_type &
 GenericField<Mesh, FData>::get_typed_mesh() const
 {
   return mesh_;

@@ -47,15 +47,15 @@
 #include <Dataflow/Modules/Render/logo.h>
 #include <Core/Containers/StringUtil.h>
 #ifdef __APPLE__
-#include <float.h>
-#define MAXDOUBLE DBL_MAX
+#  include <float.h>
+#  define MAXDOUBLE DBL_MAX
 #else
-#include <values.h>
+#  include <values.h>
 #endif
 
 // CollabVis code begin
 #ifdef HAVE_COLLAB_VIS
-#include <Core/Datatypes/Image.h>
+#  include <Core/Datatypes/Image.h>
 #endif
 // CollabVis code end
 
@@ -81,9 +81,6 @@ namespace SCIRun {
 #define PICK_DONE 5
 #define DO_IMAGE 6
 #define IMAGE_DONE 7
-
-
-static map<string, ObjTag*>::iterator viter;
 
 
 int CAPTURE_Z_DATA_HACK = 0;
@@ -113,6 +110,7 @@ OpenGL::OpenGL(GuiInterface* gui) :
   gui(gui),
   helper(0),
   tkwin(0),
+  have_pbuffer_(false),
   do_hi_res(false),
   encoding_mpeg_(false),
 
@@ -179,13 +177,14 @@ OpenGL::~OpenGL()
     encoding_mpeg_ = false;
     EndMpeg();
   }
+  kill_helper();
 
   int r;
   while (send_mb.tryReceive(r)) ;
   while (recv_mb.tryReceive(r)) ;
 
   fpstimer.stop();
-  
+
   delete drawinfo; drawinfo = 0;
 }
 
@@ -551,7 +550,9 @@ OpenGL::render_and_save_image(int x, int y,
     for (hi_res.col = 0; hi_res.col < ncols; hi_res.col++)
     {
       // render the col and row in the hi_res struct
+      viewwindow->doingImage = true; // forces pbuffer if available
       redraw_frame();
+      viewwindow->doingImage = false;
       gui->lock();
 	
       // Tell OpenGL where to put the data in our pixel buffer
@@ -569,7 +570,6 @@ OpenGL::render_and_save_image(int x, int y,
 		   (num_channels == 3) ? GL_RGB : GL_BGRA,
 		   (channel_bytes == 1) ? GL_UNSIGNED_BYTE : GL_UNSIGNED_SHORT,
 		   pixels);
-
       gui->unlock();
     }
     // OpenGL renders upside-down to image_file writing
@@ -657,6 +657,10 @@ OpenGL::redraw_frame()
 {
   if (dead_) return;
   gui->lock();
+  if (dead_) { // ViewWindow was deleted from gui
+    gui->unlock(); 
+    return;
+  }
   Tk_Window new_tkwin=Tk_NameToWindow(the_interp, ccast_unsafe(myname_),
 				      Tk_MainWindow(the_interp));
   if(!new_tkwin)
@@ -730,7 +734,6 @@ OpenGL::redraw_frame()
     glXMakeCurrent(dpy, win, cx);
     gui->unlock();
   }
-
   // Set up a pbuffer associated with dpy
   // Get a lock on the geometry database...
   // Do this now to prevent a hold and wait condition with TCLTask
@@ -744,14 +747,15 @@ OpenGL::redraw_frame()
     pbuffer.destroy();
     if( !pbuffer.create( dpy, screen, xres, yres, 8, 8 ) ) {
       //      printf( "Pbuffer create failed.  PBuffering will not be used.\n" );
+    } else {
+      have_pbuffer_ = true;
     }
   }
 
-  if(viewwindow->doingMovie && pbuffer.is_valid()){
+  if((viewwindow->doingMovie || viewwindow->doingImage) && pbuffer.is_valid()){
     pbuffer.makeCurrent();
     glDrawBuffer( GL_FRONT );
-
-  } else if( pbuffer.is_current() ) {
+  } else if( have_pbuffer_ && pbuffer.is_current() ) {
     glXMakeCurrent(dpy, win, cx);
   }
 #endif
@@ -781,7 +785,7 @@ OpenGL::redraw_frame()
   drawinfo->point_size_=viewwindow->point_size.get();
   drawinfo->polygon_offset_factor_=viewwindow->polygon_offset_factor.get();
   drawinfo->polygon_offset_units_=viewwindow->polygon_offset_units.get();
-  
+
 #ifdef __sgi
   //  --  BAWGL  --
   int do_bawgl = viewwindow->do_bawgl.get();
@@ -791,7 +795,6 @@ OpenGL::redraw_frame()
     bawgl->shutdown_ok();
   //  --  BAWGL  --
 #endif
-  // Compute znear and zfar...
 
   if(compute_depth(viewwindow, view, znear, zfar))
   {
@@ -815,7 +818,8 @@ OpenGL::redraw_frame()
     }
 
 #if defined(HAVE_PBUFFER)
-    if( pbuffer.is_current() && !viewwindow->doingMovie ){
+    if( pbuffer.is_current() &&
+	(!viewwindow->doingMovie && !viewwindow->doingImage) ){
       glXMakeCurrent(dpy, win, cx);
     }
 #endif
@@ -880,15 +884,18 @@ OpenGL::redraw_frame()
 	else
 	{
 #if defined(HAVE_PBUFFER)
-	  if(!viewwindow->doingMovie){
-	    if( pbuffer.is_current() )
-	      cerr<<"pbuffer is current while not doing Movie\n";
+	  if(have_pbuffer_){
+	    if(!viewwindow->doingMovie && !viewwindow->doingImage){
+	      if( pbuffer.is_current() )
+                cerr<<"pbuffer is current while not doing Movie\n";
 #endif
 	    glDrawBuffer(GL_BACK);
 #if defined(HAVE_PBUFFER)
-	  }
-	  else{
+	    } else {
 	    glDrawBuffer(GL_FRONT);
+	    }
+	  } else {
+	    glDrawBuffer(GL_BACK);
 	  }
 #endif	
 	}
@@ -1177,13 +1184,16 @@ OpenGL::redraw_frame()
       //gui->unlock();
       double realtime=t*frametime;
       if(nframes>1)
+      {
 	throttle.wait_for_time(realtime);
+      }
       //gui->lock();
       gui->execute("update idletasks");
 
       // Show the pretty picture
 #if defined(HAVE_PBUFFER)
-      if( !viewwindow->doingMovie )
+      if( !have_pbuffer_ ||
+	  (!viewwindow->doingMovie && !viewwindow->doingImage) )
 #endif
       glXSwapBuffers(dpy, win);
 
@@ -1219,7 +1229,7 @@ OpenGL::redraw_frame()
           }
         }
         cerr << "**************************NUM COLORED PIXELS = " << numColoredPixels << endl;
- 
+
         // test code
         glRasterPos2i( 0, 0 );
         glDrawPixels( _x, _y, GL_RGB, GL_UNSIGNED_BYTE, image);
@@ -1229,7 +1239,7 @@ OpenGL::redraw_frame()
       }
 #endif
       // CollabVis code end
-      
+
       //  #ifdef __sgi
       //  	  if(saveprefix != ""){
       //  	    // Save out the image...
@@ -1303,7 +1313,8 @@ OpenGL::redraw_frame()
 #endif
     }
 #if defined(HAVE_PBUFFER)
-      if( !viewwindow->doingMovie )
+      if( !have_pbuffer_ ||
+	  (!viewwindow->doingMovie && !viewwindow->doingImage ) )
 #endif
     glXSwapBuffers(dpy, win);
   }
@@ -1363,15 +1374,23 @@ OpenGL::redraw_frame()
 	AddMpegFrame();
       } else {
 
-	string fname = viewwindow->curName + string(".mpg");
+	string fname = viewwindow->curName;
 
+	// only add extension if not allready there
+	if(!(fname.find(".mpg") != std::string::npos ||
+	     fname.find(".MPG") != std::string::npos ||
+	     fname.find(".mpeg") != std::string::npos ||
+	     fname.find(".MPEG") != std::string::npos)) {
+	  fname = fname + string(".mpg");
+	}
+	
 	// Dump the mpeg in the local dir ... ignoring any path since mpeg
 	// can not handle it.
 	std::string::size_type pos = fname.find_last_of("/");
-	if( pos != std::string::npos ) {
-	  cerr << "Removing the mpeg path." << std::endl;
-	  fname = fname.erase(0, pos+1);
-	}
+	//if( pos != std::string::npos ) {
+        //cerr << "Removing the mpeg path." << std::endl;
+        //fname = fname.erase(0, pos+1);
+        //}
 
 	if( fname.find("%") != std::string::npos ) {
 	  cerr << "Remove the C Style format for the frames." << std::endl;
@@ -1648,7 +1667,7 @@ OpenGL::dump_image(const string& name, const string& /* type */)
 
 
 #if defined(HAVE_PBUFFER)
-  if( pbuffer.is_valid() && pbuffer.is_current() ){
+  if( have_pbuffer_ && pbuffer.is_valid() && pbuffer.is_current() ){
     glXMakeCurrent( dpy, win, cx ); 
     glMatrixMode(GL_PROJECTION);
     glPushMatrix();
@@ -1689,7 +1708,7 @@ OpenGL::dump_image(const string& name, const string& /* type */)
   }
   // now dump the file
   dumpfile.write((const char *)pxl,n);
-  
+
   delete [] pxl;
   delete [] tmp_row;
 }
@@ -1857,13 +1876,9 @@ ViewWindow::setState(DrawInfoOpenGL* drawinfo, const string& tclID)
 void
 ViewWindow::setDI(DrawInfoOpenGL* drawinfo,string name)
 {
-  ObjTag* vis;
-
-  viter = visible.find(name);
-  if (viter != visible.end())
-  { // if found
-    vis = (*viter).second;
-    setState(drawinfo,to_string(vis->tagid));
+  map<string,int>::iterator tag_iter = obj_tag.find(name);      
+  if (tag_iter != obj_tag.end()) { // if found
+    setState(drawinfo,to_string((*tag_iter).second));
   }
 }
 
@@ -2154,6 +2169,12 @@ OpenGL::listvisuals(GuiArgs& args)
 void
 OpenGL::setvisual(const string& wname, int which, int width, int height)
 {
+  if (which >= visuals.size())
+  {
+    cerr << "Invalid OpenGL visual, using default.\n";
+    which = 0;
+  }
+
   tkwin=0;
   current_drawer=0;
 
@@ -2309,7 +2330,7 @@ OpenGL::real_getData(int datamask, FutureValue<GeometryData*>* result)
     glGetDoublev(GL_PROJECTION_MATRIX, res->projection);
     glGetIntegerv(GL_VIEWPORT, res->viewport);
   }
-  
+
 #endif
 // CollabVis code end
 
@@ -2334,7 +2355,7 @@ OpenGL::real_getData(int datamask, FutureValue<GeometryData*>* result)
   }
   // CollabVis code end
 #endif
-  
+
   result->send(res);
 }
 
@@ -2414,7 +2435,7 @@ OpenGL::AddMpegFrame()
   glReadPixels(0,0,width,height,GL_RGB,GL_UNSIGNED_BYTE,ptr);
 
 #if defined(HAVE_PBUFFER)
-  if( pbuffer.is_valid() && pbuffer.is_current() ){
+  if( have_pbuffer_ && pbuffer.is_valid() && pbuffer.is_current() ){
     glXMakeCurrent( dpy, win, cx ); 
     glMatrixMode(GL_PROJECTION);
     glPushMatrix();
@@ -2625,7 +2646,7 @@ createGenAxes()
   all->add(scinew GeomMaterial(xn, dk_red));
   all->add(scinew GeomMaterial(yn, dk_green));
   all->add(scinew GeomMaterial(zn, dk_blue));
-  
+
   return all;
 }
 
@@ -2724,7 +2745,7 @@ OpenGL::render_rotation_axis(const View &view,
   }
 
   drawinfo->viewwindow = viewwindow;
-  
+
   // Use depthrange to force the icon to move forward.
   // Ideally the rest of the scene should be drawn at 0.05 1.0,
   // so there was no overlap at all, but that would require

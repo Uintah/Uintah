@@ -88,5 +88,20 @@ often the data will be sample between start and end nodes. </p>
   </gui>
   <testing>
   </testing>
+<nets>
+<net id="FieldSubSample">
+<title>FieldSubSample Regression Test</title>
+
+<p>Read in the utah torso model and display it's boundary for reference.
+Then resample the model using the SampleLattice module to fit it to a
+regular grid which is then visualized as a point cloud.  Finally the
+FieldSubSample module is used to select a sublattice from the sampled
+lattice.  This sublattice is then drawn using larger dots and compared
+with the underlying mesh to determine that it was selected correctly.</p>
+
+<p>This network can be found at src/nets/Modules/FieldsCreate/FieldSubSample.net.</p>
+
+</net>
+</nets>
 </component>
 

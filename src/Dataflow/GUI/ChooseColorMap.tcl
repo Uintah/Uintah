@@ -33,12 +33,14 @@ itcl_class SCIRun_Visualization_ChooseColorMap {
         set name ChooseColorMap
 
 	global $this-port-index
+	global $this-usefirstvalid
 
         set_defaults
     }
 
     method set_defaults {} {
 	set $this-port-index 0
+	set $this-usefirstvalid 0
     }
 
     method ui {} {
@@ -56,6 +58,16 @@ itcl_class SCIRun_Visualization_ChooseColorMap {
 	bind $w.c.e <Return> "$this-c needexecute"
 	pack $w.c.l $w.c.e -side left
 
+	checkbutton $w.valid -text "Use first valid colormap" \
+	    -variable $this-usefirstvalid \
+	    -command "$this toggle_usefirstvalid"
+	pack $w.valid -side top -anchor nw -padx 3 -pady 3
+
+	toggle_usefirstvalid
+
+	Tooltip $w.valid "Module will iterate over ports\nand use the first one with a valid handle."
+
+
 	TooltipMultiline $w.c.l \
             "Specify the input port that should be routed to the output port.\n" \
             "Index is 0 based (ie: the first port is index 0, the second port 1, etc.)"
@@ -66,6 +78,20 @@ itcl_class SCIRun_Visualization_ChooseColorMap {
 	makeSciButtonPanel $w $w $this
 
 	moveToCursor $w
+    }
+
+    method toggle_usefirstvalid {} {
+	set w .ui[modname]
+	if {[winfo exists $w]} {
+	    # grey out port stuff if checked
+	    if {[set $this-usefirstvalid]} {
+		$w.c.l configure -foreground grey64
+		$w.c.e configure -foreground grey64
+	    } else {
+		$w.c.l configure -foreground black
+		$w.c.e configure -foreground black
+	    }
+	}
     }
 }
 

@@ -224,7 +224,7 @@ void InsertVoltageSource::execute() {
 //    dirichlet.push_back(pair<int, double>(bc_tet_nodes[i],
 //					  closest[bc_tet_nodes[i]].second));
 //    }
-    dirichlet.push_back(pair<int, double>(bc_tet_nodes[i], val));
+    dirichlet.push_back(pair<int, double>((int)bc_tet_nodes[i], val));
   }
   imeshH->set_property("dirichlet", dirichlet, false);
   imeshH->set_property("conductivity_table", conds, false);

@@ -228,7 +228,6 @@ class Configuration < ConfHash
     self[DB_DTD] = "/usr/local/share/sgml/dtd/docbook/4.1/docbook.dtd" if missing?(DB_DTD)
     self[SendMailOnError] = false if missing?(SendMailOnError)
     
-    $log = Log.new(self[LogFile])
     validate()
 
     if self[PwdOnly] == false
@@ -320,7 +319,7 @@ class Configuration < ConfHash
     end
     @groupsDB["BioPSE"] = @groupsDB["SCIRun"] + [ "src/Packages/BioPSE",
       "src/Packages/Teem", "src/Packages/MatlabInterface",
-      "src/Packages/VDT", "src/Packages/Fusion" ]
+      "src/Packages/DataIO", "src/Packages/Fusion" ]
     @groupsDB["Uintah"] = @groupsDB["SCIRun"] + [ "src/Packages/Uintah" ]
   end
 
@@ -336,26 +335,50 @@ class Docs
     when 1
       file = ARGV[0]
     else
-      $stderr.print(%Q{Usage: #{File.basename($0)} [config-file]}, "\n")
-      exit(1)
+      raise("Usage: #{File.basename($0)} [config-file]")
     end
-    @conf = Configuration.new(file)
-#    exit(0)
+    begin
+      @conf = Configuration.new(file)
+    rescue => oops
+      raise("Error reading configuration file: #{$!}\n")
+    end
     @treeRoot = @conf[Configuration::BuildDir] + '/' + @conf[Configuration::Tree]
     @redirect = "2>&1"
   end
 
   def publish()
-    begin
-      tbeg = Time.now
-      build() if @conf[Configuration::Build] == true
-      deliver() if @conf[Configuration::Deliver] == true
-      tend = Time.now
-      $log.write("Elapsed time: ", tend - tbeg, "\n")
-    rescue
-      $log.write($!, "\n")
-      sendMail($!) if @conf[Configuration::SendMailOnError] == true
+    trys = 0
+    doclock = File.new("#{@conf[Configuration::BuildDir]}/.doclock", "w+")
+    callcc {|$tryAgain|}
+    trys += 1
+    if doclock.flock(File::LOCK_EX|File::LOCK_NB) == 0
+      begin
+	$log = Log.new(@conf[Configuration::LogFile])
+      rescue
+	doclock.flock(File::LOCK_UN)
+	doclock.close
+	raise
+      end
+      begin
+	tbeg = Time.now
+	build() if @conf[Configuration::Build] == true
+	deliver() if @conf[Configuration::Deliver] == true
+	tend = Time.now
+	$log.write("Elapsed time: ", tend - tbeg, "\n")
+      rescue
+	$log.write($!, "\n")
+	sendMail($!) if @conf[Configuration::SendMailOnError] == true
+      ensure
+	doclock.flock(File::LOCK_UN)
+      end
+    elsif @conf[Configuration::Wait]
+      $stderr.print( (trys > 1 ? "." : "Someone else is updating the docs.  Waiting...") )
+      sleep(10)
+      $tryAgain.call
+    else
+      $stderr.print("Someone else is updating the docs.  Quitting\n")
     end
+    doclock.close
   end
 
   def build()
@@ -370,40 +393,25 @@ class Docs
     ENV["DB_DTD"] = @conf[Configuration::DB_DTD]
 
     pwd = Dir.pwd
-    trys = 0
-    doclock = File.new("#{@conf[Configuration::BuildDir]}/.doclock", "w+")
-    callcc {|$tryAgain|}
-    trys += 1
-    if doclock.flock(File::LOCK_EX|File::LOCK_NB) == 0
-      if @conf[Configuration::Clean] == true
-	if @conf[Configuration::PwdOnly] == true
-	  clean(Dir.pwd())
-	else
-	  clean("#{@treeRoot}/doc/")
-	end
-      end
-      if @conf[Configuration::Update] == true
-	if @conf[Configuration::PwdOnly] == true
-	  updateOne(Dir.pwd())
-	else
-	  update()
-	end
-      end
+    if @conf[Configuration::Clean] == true
       if @conf[Configuration::PwdOnly] == true
-	make(Dir.pwd())
+	clean(Dir.pwd())
       else
-	make("#{@treeRoot}/doc/")
+	clean("#{@treeRoot}/doc/")
       end
-      doclock.flock(File::LOCK_UN)
-    elsif @conf[Configuration::Wait]
-      $log.write( (trys > 1 ? "." : "Someone else is updating the \
-docs.  Waiting...") )
-      sleep(10)
-      $tryAgain.call
-    else
-      $log.write("Someone else is updating the docs.  Quiting\n")
     end
-    doclock.close
+    if @conf[Configuration::Update] == true
+      if @conf[Configuration::PwdOnly] == true
+	updateOne(Dir.pwd())
+      else
+	update()
+      end
+    end
+    if @conf[Configuration::PwdOnly] == true
+      make(Dir.pwd())
+    else
+      make("#{@treeRoot}/doc/")
+    end
     Dir.chdir(pwd)
   end
 
@@ -417,17 +425,18 @@ docs.  Waiting...") )
   end
 
   def deliver()
+    tarball = @treeRoot + "/doc/" + @conf[Configuration::Tree] + ".tar.gz"
     raise "No tarball to deliver" if !FileTest::exists?(tarball)
     pwd = Dir.pwd
     Dir.chdir(@conf[Configuration::BuildDir])
     @conf[Configuration::Dests].each do |d|
-      deliverOne(d)
+      deliverOne(tarball, d)
     end
     Dir.chdir(pwd)
   end
 
   # FIXME: Need some file locking on the destination side!
-  def deliverOne(dest)
+  def deliverOne(tarball, dest)
     installScript = <<INSTALL_SCRIPT
 (cd #{dest[Dest::Dir]}
 if #{dest[Dest::Tar]} zxf #{@conf[Configuration::Tree]}.tar.gz;
@@ -472,7 +481,6 @@ fi
 INSTALL_SCRIPT
 
     $log.write("Delivering to ", dest[Dest::Mach], "\n")
-    tarball = @treeRoot + "/doc/" + @conf[Configuration::Tree] + ".tar.gz"
     $log.write("Transfering #{tarball}...\n")
     if dest[Dest::Mach] == "."
       $log.write(`cp #{tarball} #{dest[Dest::Dir]} #{@redirect}`)
@@ -543,8 +551,12 @@ INSTALL_SCRIPT
 end
 
 def main
-  docs = Docs.new
-  docs.publish
+  begin
+    docs = Docs.new
+    docs.publish
+  rescue => oops
+    $stderr.print(oops.message, "\n")
+  end
 end
 
 main

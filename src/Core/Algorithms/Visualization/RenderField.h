@@ -65,6 +65,13 @@ namespace SCIRun {
 class GeomEllipsoid;
 class GeomArrows;
 
+
+inline void
+sciVectorToColor(Color &c, const Vector &v)
+{
+  c = Color(fabs(v.x()), fabs(v.y()), fabs(v.z()));
+}
+
 //! RenderFieldBase supports the dynamically loadable algorithm concept.
 //! when dynamically loaded the user will dynamically cast to a 
 //! RenderFieldBase from the DynamicAlgoBase they will have a pointer to.
@@ -414,7 +421,7 @@ RenderField<Fld, Loc>::render_nodes(Fld *sfld,
 	
 	to_vector(tmp, vec);
 	to_double(tmp, val);
-	if (vec_color) { vcol->diffuse = Color(vec.x(), vec.y(), vec.z()); }
+	if (vec_color) { sciVectorToColor(vcol->diffuse, vec); }
       }
       break;
 
@@ -616,8 +623,8 @@ RenderField<Fld, Loc>::render_edges(Fld *sfld,
 	  Vector v0(0, 0, 0), v1(0, 0, 0);
 	  to_vector(val0, v0);
 	  to_vector(val1, v1);
-	  vcol0->diffuse = Color(v0.x(), v0.y(), v0.z());
-	  vcol1->diffuse = Color(v1.x(), v1.y(), v1.z());
+	  sciVectorToColor(vcol0->diffuse, v0);
+	  sciVectorToColor(vcol1->diffuse, v1);
 	  if (cyl)
 	  {
 	    cylinders->add(p1, vcol0, p2, vcol1);
@@ -662,7 +669,7 @@ RenderField<Fld, Loc>::render_edges(Fld *sfld,
 	{
 	  Vector v(0, 0, 0);
 	  to_vector(val, v);
-	  vcol0->diffuse = Color(v.x(), v.y(), v.z());
+	  sciVectorToColor(vcol0->diffuse, v);
 	  if (cyl)
 	  {
 	    cylinders->add(p1, vcol0, p2, vcol0);
@@ -800,7 +807,7 @@ RenderField<Fld, Loc>::render_faces(Fld *sfld,
 	for (i = 0; i < nodes.size(); i++)
 	{
 	  to_vector(vals[i], vvals[i]);
-	  vcol[i]->diffuse = Color(vvals[i].x(), vvals[i].y(), vvals[i].z());
+	  sciVectorToColor(vcol[i]->diffuse, vvals[i]);
 	}
 	if (nodes.size() == 4)
 	{
@@ -889,7 +896,7 @@ RenderField<Fld, Loc>::render_faces(Fld *sfld,
       {
 	Vector vval;
 	to_vector(val, vval);
-	vcol[0]->diffuse = Color(vval.x(), vval.y(), vval.z());
+	sciVectorToColor(vcol[0]->diffuse, vval);
 	if (nodes.size() == 4)
 	{
 	  if (with_normals)
@@ -1825,7 +1832,7 @@ RenderVectorField<VFld, CFld, Loc>::render_data(FieldHandle vfld_handle,
 	    cfld->value(ctmp, *iter);
 	    Vector vtmp;
 	    to_vector(ctmp, vtmp);
-	    vcol->diffuse = Color(vtmp.x(), vtmp.y(), vtmp.z());
+	    sciVectorToColor(vcol->diffuse, vtmp);
 	    if (normalize)
 	    {
 	      disks->add(p+tmp, vcol, p-tmp, vcol);
@@ -1863,7 +1870,7 @@ RenderVectorField<VFld, CFld, Loc>::render_data(FieldHandle vfld_handle,
 	    cfld->value(ctmp, *iter);
 	    Vector vtmp;
 	    to_vector(ctmp, vtmp);
-	    vcol->diffuse = Color(vtmp.x(), vtmp.y(), vtmp.z());
+	    sciVectorToColor(vcol->diffuse, vtmp);
 	    spheres->add(p, vcol);
 	  }
 	  else
@@ -1909,7 +1916,7 @@ RenderVectorField<VFld, CFld, Loc>::render_data(FieldHandle vfld_handle,
 	    cfld->value(ctmp, *iter);
 	    Vector vtmp;
 	    to_vector(ctmp, vtmp);
-	    vcol->diffuse = Color(vtmp.x(), vtmp.y(), vtmp.z());
+	    sciVectorToColor(vcol->diffuse, vtmp);
 	    if (normalize)
 	    {
 	      cones->add(p, p+tmp, vcol);
@@ -1965,7 +1972,7 @@ RenderVectorField<VFld, CFld, Loc>::render_data(FieldHandle vfld_handle,
 	    cfld->value(ctmp, *iter);
 	    Vector vtmp;
 	    to_vector(ctmp, vtmp);
-	    vcol->diffuse = Color(vtmp.x(), vtmp.y(), vtmp.z());
+	    sciVectorToColor(vcol->diffuse, vtmp);
 	    spheres->add(p, vcol);
 	  }
 	  else
@@ -2012,7 +2019,7 @@ RenderVectorField<VFld, CFld, Loc>::render_data(FieldHandle vfld_handle,
 	    cfld->value(ctmp, *iter);
 	    Vector vtmp;
 	    to_vector(ctmp, vtmp);
-	    vcol->diffuse = Color(vtmp.x(), vtmp.y(), vtmp.z());
+	    sciVectorToColor(vcol->diffuse, vtmp);
 	    if (normalize)
 	    {
 	      cones->add(p+ltmp, p+tmp, vcol);
@@ -2068,7 +2075,7 @@ RenderVectorField<VFld, CFld, Loc>::render_data(FieldHandle vfld_handle,
 	      cfld->value(ctmp, *iter);
 	      Vector vtmp;
 	      to_vector(ctmp, vtmp);
-	      vcol->diffuse = Color(vtmp.x(), vtmp.y(), vtmp.z());
+	      sciVectorToColor(vcol->diffuse, vtmp);
 	      lines->add(p - ltmp, vcol, p + ltmp, vcol);
 	    }
 	    else
@@ -2092,7 +2099,7 @@ RenderVectorField<VFld, CFld, Loc>::render_data(FieldHandle vfld_handle,
 	      cfld->value(ctmp, *iter);
 	      Vector vtmp;
 	      to_vector(ctmp, vtmp);
-	      vcol->diffuse = Color(vtmp.x(), vtmp.y(), vtmp.z());
+	      sciVectorToColor(vcol->diffuse, vtmp);
 	      lines->add(p, vcol, p + ltmp, vcol);
 	    }
 	    else
@@ -2117,7 +2124,7 @@ RenderVectorField<VFld, CFld, Loc>::render_data(FieldHandle vfld_handle,
 	    cfld->value(ctmp, *iter);
 	    Vector vtmp;
 	    to_vector(ctmp, vtmp);
-	    vcol->diffuse = Color(vtmp.x(), vtmp.y(), vtmp.z());
+	    sciVectorToColor(vcol->diffuse, vtmp);
 	    spheres->add(p, vcol);
 	  }
 	  else
@@ -2147,7 +2154,7 @@ RenderVectorField<VFld, CFld, Loc>::render_data(FieldHandle vfld_handle,
 	    cfld->value(ctmp, *iter);
 	    Vector vtmp;
 	    to_vector(ctmp, vtmp);
-	    vcol->diffuse = Color(vtmp.x(), vtmp.y(), vtmp.z());
+	    sciVectorToColor(vcol->diffuse, vtmp);
 	    lines->add(p - tmp, vcol, p + tmp, vcol);
 	  }
 	  else
@@ -2171,7 +2178,7 @@ RenderVectorField<VFld, CFld, Loc>::render_data(FieldHandle vfld_handle,
 	    cfld->value(ctmp, *iter);
 	    Vector vtmp;
 	    to_vector(ctmp, vtmp);
-	    vcol->diffuse = Color(vtmp.x(), vtmp.y(), vtmp.z());
+	    sciVectorToColor(vcol->diffuse, vtmp);
 	    lines->add(p, vcol, p + tmp, vcol);
 	  }
 	  else
@@ -2203,7 +2210,7 @@ RenderVectorField<VFld, CFld, Loc>::render_data(FieldHandle vfld_handle,
 	  cfld->value(ctmp, *iter);
 	  Vector vtmp;
 	  to_vector(ctmp, vtmp);
-	  vcol->diffuse = Color(vtmp.x(), vtmp.y(), vtmp.z());
+	  sciVectorToColor(vcol->diffuse, vtmp);
 	  transparent->diffuse = vcol->diffuse;
 	  
 	  lines->add(p, vcol, p + tmp, transparent);
@@ -2412,7 +2419,7 @@ RenderTensorField<VFld, CFld, Loc>::render_data(FieldHandle vfld_handle,
 	to_vector(ctmp, ctmpv);
 
 	MaterialHandle vcol = scinew Material();
-	vcol->diffuse = Color(ctmpv.x(), ctmpv.y(), ctmpv.z());
+	sciVectorToColor(vcol->diffuse, ctmpv);
 	if (squad_p)
 	{
 	  add_super_quadric(objs, vcol, p, tmp, scale, resolution, false, emph);
@@ -2575,7 +2582,7 @@ RenderScalarField<SFld, CFld, Loc>::render_data(FieldHandle sfld_handle,
 
 	  Vector vtmp;
 	  to_vector(ctmp, vtmp);
-	  vcol->diffuse = Color(vtmp.x(), vtmp.y(), vtmp.z());
+	  sciVectorToColor(vcol->diffuse, vtmp);
 	  points->add(p, vcol);
 	}
 	else
@@ -2612,7 +2619,7 @@ RenderScalarField<SFld, CFld, Loc>::render_data(FieldHandle sfld_handle,
 
 	  Vector ctmpv;
 	  to_vector(ctmp, ctmpv);
-	  vcol->diffuse = Color(ctmpv.x(), ctmpv.y(), ctmpv.z());
+	  sciVectorToColor(vcol->diffuse, ctmpv);
 	  if (sized_p)
 	  {
 	    const double dtmp = fabs((double)tmp * scale);

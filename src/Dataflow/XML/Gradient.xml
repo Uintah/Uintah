@@ -73,4 +73,16 @@
   </io>
   <testing>
   </testing>
+<nets>
+<net id="Gradient">
+<title>Gradient Regression Test</title>
+
+<p>Compute the gradient of a scalar field, then display the gradient
+using uniformly sized cones colored by the data values from the
+original field.  See also <modref package="SCIRun" name="ChangeFieldDataAt"/>, <modref package="SCIRun" name="DirectInterpolate"/>.</p>
+
+<p>This network can be found at src/nets/Modules/FieldsData/Gradient.net.</p>
+
+</net>
+</nets>
 </component>

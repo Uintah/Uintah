@@ -194,6 +194,21 @@ template <> bool LatVolField<Tensor>::get_gradient(Vector &, const Point &/*p*/)
   return false;
 }
 
+template <>
+Vector LatVolField<Vector>::cell_gradient(const LatVolMesh::Cell::index_type &/*ci*/) const
+{
+  ASSERT(type_name(1) != "Vector");  // redundant, useful error message
+  return Vector(0, 0, 0);
+}
+
+template <>
+Vector LatVolField<Tensor>::cell_gradient(const LatVolMesh::Cell::index_type &/*ci*/) const
+{
+  ASSERT(type_name(1) != "Tensor");  // redundant, useful error message
+  return Vector(0, 0, 0);
+}
+
+
 #if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
 #pragma reset woff 1468
 #endif

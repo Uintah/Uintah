@@ -74,7 +74,7 @@ EOS
         <listitem>
           <para>A description of a task.  The description may be
           fine-grained or the size of a bolder depending on the state
-          of the document.  factors.</para>
+          of the document and other factors.</para>
         </listitem>
       </varlistentry>
       <varlistentry>
@@ -124,11 +124,11 @@ EOS
         <!--%= thead %-->
         <tbody>
           <row>
-            <entry></entry>
-            <entry></entry>
-            <entry></entry>
-            <entry></entry>
-            <entry></entry>
+            <entry>Update</entry>
+            <entry>High</entry>
+            <entry>0</entry>
+            <entry>Unknown</entry>
+            <entry>September, 2004</entry>
           </row>
         </tbody>
       </tgroup>
@@ -146,11 +146,16 @@ EOS
         <!--%= thead %-->
         <tbody>
           <row>
-            <entry>Documentation of new DataIO architecture</entry>
+            <entry>
+	      <para>Documentation of new DataIO stuff.  This is in the
+	      Import/Export section of the User's Guide.</para>
+	      <para>Import/Export section needs review after
+	      completion.  Send to Michael.</para>
+	    </entry>
             <entry>High</entry>
-            <entry>0</entry>
+            <entry>75</entry>
             <entry>Ted</entry>
-            <entry>Unknown</entry>
+            <entry>June 22, 2004</entry>
           </row>
           <row>
             <entry>Add Jenny's DICOM docs.  This info should
@@ -158,8 +163,22 @@ EOS
             <entry>High</entry>
             <entry>0</entry>
             <entry>Ted</entry>
-            <entry>May 1, 2004</entry>
+            <entry>Unknown</entry>
           </row>
+	  <row>
+	    <entry>Concepts section needs review.</entry>
+            <entry>Normal</entry>
+            <entry>0</entry>
+            <entry>Dav</entry>
+            <entry>Unknown</entry>
+	  </row>
+	  <row>
+	    <entry>Viewer section needs review.</entry>
+            <entry>Normal</entry>
+            <entry>0</entry>
+            <entry>Mckay</entry>
+            <entry>Unknown</entry>
+	  </row>
         </tbody>
       </tgroup>
     </table>
@@ -185,8 +204,32 @@ EOS
             <entry>Normal</entry>
             <entry>0</entry>
             <entry>Ted</entry>
-            <entry>May 1, 2004</entry>
+            <entry>June 22, 2004</entry>
           </row>
+	  <row>
+	    <entry>Update petc, itk library compatibility info.</entry>
+            <entry>High</entry>
+            <entry>0</entry>
+            <entry>Ted</entry>
+            <entry>June 22, 2004</entry>
+	  </row>
+	  <row>
+	    <entry>Document patch needed for Matlab 13 on OSX.</entry>
+            <entry>High</entry>
+            <entry>0</entry>
+            <entry>Ted</entry>
+            <entry>June 22, 2004</entry>
+	  </row>
+	  <row>
+	    <entry>
+	      <para>Add Atlas library use info.</para>
+	      <para>McKay has provided this info.</para>
+	    </entry>
+            <entry>High</entry>
+            <entry>0</entry>
+            <entry>Ted</entry>
+            <entry>June 22, 2004</entry>
+	  </row>
         </tbody>
       </tgroup>
     </table>
@@ -201,6 +244,38 @@ EOS
         <!--%= colspec %-->
         <!--%= thead %-->
         <tbody>
+	  <row>
+	    <entry>Update Reader/Writer modules specifications.</entry>
+	    <entry>Medium</entry>
+	    <entry>0</entry>
+	    <entry>Ted</entry>
+	    <entry>Unknown</entry>
+	  </row>
+	  <row>
+	    <entry>Update Matlab module description based on
+	    corresponding latex document.  Retire latex
+	    document.</entry>
+	    <entry>Medium</entry>
+	    <entry>75</entry>
+	    <entry>Ted</entry>
+	    <entry>June 22, 2004</entry>
+	  </row>
+	  <row>
+	    <entry>Edit SetupBEMatrix module description sent to us by
+	    Dana's group.</entry>
+	    <entry>Medium</entry>
+	    <entry>5</entry>
+	    <entry>Ted</entry>
+	    <entry>June 22, 2004</entry>
+	  </row>
+	  <row>
+	    <entry>Add indexing command to module-spec so that modules
+	    can be located by keywords and concepts.</entry>
+	    <entry>Low</entry>
+	    <entry>0</entry>
+	    <entry>Ted</entry>
+	    <entry>None</entry>
+	  </row>
           <row>
             <entry>Provide <emphasis>complete</emphasis> documentation
             for each module.  No module is adequately documented and
@@ -220,7 +295,7 @@ EOS
     <title>Network Examples</title>
     <para></para>
     <table>
-      <title>Tasks for Network Examples</title>
+      <title>Tasks for (Major) Network Examples</title>
       <tgroup cols="5">
         <!--%= colspec %-->
         <!--%= thead %-->

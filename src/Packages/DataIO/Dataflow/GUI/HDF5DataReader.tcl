@@ -183,25 +183,23 @@ itcl_class DataIO_Readers_HDF5DataReader {
     }
 
     method ui {} {
-	global $this-mergeData
-	global $this-assumeSVT
-	global $this-animate
-	global $this-animate-style
-	global $this-animate-frame
-	global $this-animate-frame2
-	global $this-animate-nframes
+  	global $this-mergeData
+  	global $this-assumeSVT
+  	global $this-animate
+  	global $this-animate-style
+  	global $this-animate-frame
+  	global $this-animate-frame2
+  	global $this-animate-nframes
 
-	global $this-filename
-	global $this-datasets
-	global $this-dumpname
-	global $this-selectionString
-	global $this-regexp
+  	global $this-filename
+  	global $this-datasets
+  	global $this-dumpname
+  	global $this-selectionString
+  	global $this-regexp
 
-	global $this-ports
-	global $this-ndims
-	global max_dims
-
-	set w .ui[modname]
+  	global $this-ports
+  	global $this-ndims
+  	global max_dims
 
         set w .ui[modname]
         if {[winfo exists $w]} {
@@ -210,8 +208,8 @@ itcl_class DataIO_Readers_HDF5DataReader {
 
 	# Before building the tree save the current selections since
 	# they erased when the tree is built.
-	set datasets [set $this-datasets]
 
+	set datasets [set $this-datasets]
 
 	toplevel $w
 
@@ -299,8 +297,6 @@ itcl_class DataIO_Readers_HDF5DataReader {
 
 	pack $search.name -side left -fill x -expand yes
 	pack $w.search -fill x -expand yes -side top
-
-
 
 	iwidgets::labeledframe $w.sd -labeltext "Selected Data"
 	set sd [$w.sd childsite]
@@ -1183,10 +1179,18 @@ itcl_class DataIO_Readers_HDF5DataReader {
 
     method Scrolled_Treeview { f args } {
 	frame $f
-	eval {blt::treeview $f.tree \
-		  -xscrollcommand [list $f.xscroll set] \
-		  -yscrollcommand [list $f.yscroll set]}
-	eval {$f.tree configure} $args
+
+	if { [string match "IRIX*" $::tcl_platform(os)] } {
+	    eval {blt::treeview $f.tree \
+		      -xscrollcommand [list $f.xscroll set] \
+		      -yscrollcommand [list $f.yscroll set]} $args
+	} else {
+	    eval {blt::treeview $f.tree \
+		      -xscrollcommand [list $f.xscroll set] \
+		      -yscrollcommand [list $f.yscroll set]}
+	    eval { $f.tree configure } $args
+	}
+
 	scrollbar $f.xscroll -orient horizontal \
 	    -command [list $f.tree xview]
 	scrollbar $f.yscroll -orient vertical \

@@ -100,20 +100,20 @@ AC_DEFUN([BASE_LIB_PATH], [
 
 AC_DEFUN([SCI_TRY_LINK], [
 ##
-## SCI_TRY_LINK ($1):
+## SCI_TRY_LINK ($1):  $2
 ##
 ## arguments mean:
 ## arg 1 : variable base name (e.g., MATH)
 ## arg 2 : checking message
 ## arg 3 : includes that arg 8 needs to compile (e.g., math.h)
 ##           If the first arg is "extern_C", then extern "C" is added around includes.
-## arg 4 : include path(s). -I is appened to each path (unless it already has a -I).
-##           Any other -? args are removed.
+## arg 4 : include path(s). -I is appended to each path (unless it already has a -I).
+##           Any other -? args are removed.  (-faltivec is ok on mac)
 ##           (Only one may be given if "Specific" (arg9) is chosen.)
 ## arg 5 : list of libs to link against
 ##           If the libraries do not have a '-l' on them, it is appeneded.
 ##           If the arg has any prefix besides '-l' (eg: -L or -D), then the arg
-##           is removed completely.
+##           is removed completely.  (-framework is also allowed for Mac support.)
 ##           All the libs specified in arg 5 will be part of the <VAR>_LIB_FLAG
 ##           if the link is successful.
 ## arg 6 : lib paths
@@ -181,19 +181,23 @@ for inc in $4; do
 
   # Make sure it doesn't have any thing but -I
   #   The following "sed" replaces anything that starts with a '-' with nothing (blank). 
+  has_minus_faltivec=no
   has_minus=`echo $inc | sed 's/-.*//'`
   if test -z "$has_minus"; then
      has_minus_i=`echo $inc | sed 's/-I.*//'`
-     if test -n "$has_minus_i"; then
+     has_minus_faltivec=`echo $inc | sed 's/-faltivec//'`
+     if test -n "$has_minus_i" && test -n "$has_minus_faltivec"; then
         # Has some other -?.
-        echo
-        AC_MSG_WARN(Only -I options are allowed in arg 4 ($4) of $1 check.  Skipping $inc.)
+        if test "$debugging" = "yes"; then
+          echo
+          AC_MSG_WARN(Only -I options are allowed in arg 4 ($4) of $1 check.  Skipping $inc.)
+        fi
         continue
      fi
   fi
 
   the_inc=`echo $inc | grep "\-I"`
-  if test -z "$the_inc"; then
+  if test -z "$the_inc" && test "$has_minus_faltivec" = "no"; then
      # If the include arg does not already have -I on it.
      if test -d $inc; then
         # If the directory exists
@@ -210,6 +214,7 @@ done
 
 if test -n "$5"; then
 
+   found_framework=no
    for lib in "" $5; do
 
       if test -z "$lib"; then
@@ -217,19 +222,37 @@ if test -n "$5"; then
          continue
       fi
 
+      if test "$found_framework" = "one"; then
+         found_framework=two
+      else
+         found_framework=no
+      fi
+
       # Make sure it doesn't have any thing but -l
       has_minus=`echo $lib | sed 's/-.*//'`
       if test -z "$has_minus"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
-         if test -n "$has_minus_l"; then
+         has_minus_framework=`echo $lib | sed 's/-framework.*//'`
+
+         if test -n "$has_minus_framework"; then
+            # Two rounds for this loop with respect to frameworks.
+            # First round is to skip adding -l to the beginning of -framework.
+            # Second round is to not add -l to the framework lib.
+            found_framework=one
+         fi
+
+         if test -n "$has_minus_l" && test -n "$has_minus_framework"; then
             # Has some other -?.
-            AC_MSG_WARN(Only -l options are allowed in arg 5 of $1 check (disregarding $lib).)
+            if test "$debugging" = "yes"; then
+              echo
+              AC_MSG_WARN(Only -l options are allowed in arg 5 of $1 check (disregarding $lib).)
+            fi
             continue
          fi
       fi
    
       the_lib=`echo $lib | grep "\-l"`
-      if test -z "$the_lib"; then
+      if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
          final_lib=-l$lib
       else
@@ -257,7 +280,10 @@ if test -n "$6"; then
          has_minus_L=`echo $path | sed 's/-L.*//'`
          if test -n "$has_minus_L"; then
             # Has some other -?.
-            AC_MSG_WARN(Only -L options are allowed in arg 6 of $1 check (disregarding $path).)
+            if test "$debugging" = "yes"; then
+              echo
+              AC_MSG_WARN(Only -L options are allowed in arg 6 of $1 check (disregarding $path).)
+            fi
             continue
          fi
       fi
@@ -267,6 +293,7 @@ if test -n "$6"; then
       if test -d "$the_path"; then
          _sci_lib_path="$_sci_lib_path $LDRUN_PREFIX$the_path -L$the_path"
       else
+         echo
          AC_MSG_WARN(The path given $the_path is not a valid directory... ignoring.)
       fi
    done
@@ -360,7 +387,7 @@ done
 
 # Remove the thirdparty rpath stuff (if it exists) (and /usr/lib rpath)
 _final_dirs=`echo "$_final_dirs" | sed "s%$LDRUN_PREFIX$SCI_THIRDPARTY_LIB_DIR%%g"`
-_final_dirs=`echo "$_final_dirs" | sed "s%$LDRUN_PREFIX/usr/lib%%g"`
+_final_dirs=`echo "$_final_dirs" | sed "s%$LDRUN_PREFIX/usr/lib %%g"`
 
 # Remove leading spaces
 _final_dirs=`echo "$_final_dirs" | sed "s/^ *//"`
@@ -440,6 +467,10 @@ LIBS=$_sci_savelibs
 _sci_lib_path=''
 _sci_libs=''
 _sci_includes=''
+
+##
+## END of SCI_TRY_LINK ($1):  $2
+##
 
 ])
 

@@ -51,7 +51,7 @@
 #include <iostream>
 
 #ifdef HAVE_FTGL
-#include <FTGLTextureFont.h>
+#include <FTGL/FTGLTextureFont.h>
 #endif
 
 
@@ -381,6 +381,8 @@ void GeomTextTexture::get_bounds(BBox& in_bb)
   transform_.project(bbox.max(),ur);
   in_bb.extend(ll);
   in_bb.extend(ur);
+#else
+  in_bb.extend(origin_);
 #endif
 }
 
@@ -411,141 +413,68 @@ GeomTextTexture::build_transform(Transform &modelview) {
   ury = bbox.max().y();
   urz = bbox.max().z();
 
-
-  Vector xlat;
-  switch (anchor_) {
-  case n:  xlat[0] = -(llx+urx)/2; xlat[1] = -ury; xlat[2] = -llz; break;
-  case e:  xlat[0] = -urx; xlat[1] = -(lly+ury)/2; xlat[2] = -llz; break;
-  case s:  xlat[0] = -(llx+urx)/2; xlat[1] = -lly; xlat[2] = -llz; break;
-  case w:  xlat[0] = -llx; xlat[1] = -(lly+ury)/2; xlat[2] = -llz; break;
-  case ne: xlat[0] = -urx; xlat[1] = -ury; xlat[2] = -llz; break;
-  case se: xlat[0] = -urx; xlat[1] = -lly; xlat[2] = -llz; break;
-  case sw: xlat[0] = -llx; xlat[1] = -lly; xlat[2] = -llz; break;
-  default:
-  case nw: xlat[0] = -llx; xlat[1] = -ury; xlat[2] = -llz; break;
+  Vector tempup, templeft;
+  modelview.project_normal(up_, tempup);
+  if (tempup.y() < 0.0) {
+    up_ *= -1.;
   }
 
-  Vector Up = up_;
-  Vector Left = left_;
-  Vector scale (1.,1.,1.);
-
-  Vector tempup, templeft;
-
-  //  Transform temp;
-  //temp.rotate(Vector(0.,1.,0.), Up);
-  //temp.project_inplace(templeft);
-  //modelview.project(Left,templeft);
-  //modelview.project(Vector(1.,0.,0.), templeft);
-  modelview.project_normal(Left, templeft);
-  double leftdir = 1.0;
+  modelview.project_normal(left_, templeft);
   if (templeft.x() < 0.0) {
-    //left_ *= -1.;
-    //Left *= -1.; 
-    scale.x(-1.0);
-    leftdir = -1.0;
+    left_ *= -1.;
   }
 
   Vector transnormal(Cross(left_,up_));
-  transnormal *= leftdir;
   modelview.project_inplace(transnormal);
-  //  if (Dot(transnormal,Vector(0.,0.,-1.)) < 0) {
-  //  modelview.project(Up+Left,tempup);
-  //  modelview.project(Up, tempup);
-  //  if (tempup.y() < 0.0) {   
-  //  modelview.project(Vector(0.,0.,-1.), View);
-  //  if (Dot(tnormal,View) < 0) {
   if (transnormal.z() < 0.0) {
-    //up_ *= -1.; 
-    //std::cerr << "Up:   " <<text_<<std::endl; 
-    //Up *= -1.; 
-    scale.y(-1.0);
+    left_ *= -1.;
   }
-  if(up_hack_) scale.y(scale.y()*-1.0);
-  /*
-  std::cerr << text_ << "n: " << transnormal.asPoint() 
-	    << "up: " << up_ 
-	    << "left: " << left_
-	    << "scale: "<< scale << std::endl;
-  */
-
-
 
   Transform xform_to_origin;
   Vector xlat2(-(llx+urx)/2., -(lly+ury)/2., -(llz+urz)/2.);
   xform_to_origin.post_translate(xlat2);
 
-  Transform xform_scale;
-  //  Vector scale (1.,1.,1.);
-  scale /= ury-lly;
-  scale *= Up.length();
-  xform_scale.post_scale(scale);
-
   Transform xform_rotate;
-  xform_rotate.rotate(Vector(0.,1.,0.), Up);
-  Vector sleft(1.,0.,0.),dleft=Left,up=Up;
-  xform_rotate.project_inplace(up);
-  xform_rotate.project_inplace(sleft);
-  xform_rotate.project_inplace(dleft);  
-  sleft.normalize(); dleft.normalize();
-  double sinth = Cross(sleft,dleft).length();
-  double costh = Dot(sleft,dleft);
-  xform_rotate.pre_rotate(atan2(sinth,costh),up);
-  xform_rotate.load_identity();
-  Vector axis = Cross(Left,Up), z(0.,0.,1.);
-  xform_rotate.rotate(Vector(0.,1.,0.),Up);
-  xform_rotate.project_inplace(z);
-  xform_rotate.rotate(z,axis);
+  Vector normal = Cross(left_,up_).normal(), left = left_.normal(), up = up_.normal();
+  Vector x(1.,0.,0), y(0.,1.,0.), z(0.,0.,1.);
+  double dx, dy, dz;
+  bool done = false;
+  while (!done) {
+    done = true;
+    dx = fabs(Dot(left, x.normal())), dy = fabs(Dot(up,y.normal())), dz = fabs(Dot(normal, z.normal()));
+    if (dx < 0.999 && dx <= dy && dx <= dz) {
+      xform_rotate.rotate(x, left);
+      done = false;
+    } else if (dy < 0.999 && dy <= dx && dy <= dz) {
+      xform_rotate.rotate(y, up);
+      done = false;
+    } else if (dz < 0.999) {
+      xform_rotate.rotate(z, normal);
+      done = false;
+    }
+    xform_rotate.project(Vector(1.,0.,0.),x);
+    xform_rotate.project(Vector(0.,1.,0.),y);
+    xform_rotate.project(Vector(0.,0.,1.),z);
+  }
 
+
+  //std::cerr << text_ << ": origin: " << origin_ << "  left: " << left_ << "  up: " << up_ << " normal: " << normal << " x: " << x << " y: " << y << " z: " << z << " dx: " << dx << " dy: " << dy << " dz: " << dz << std::endl;
+  Transform xform_scale;
+  Vector scales (Dot(left, x.normal()), Dot(up,y.normal()), Dot(normal, z.normal()));
+  scales /= ury-lly;
+  scales *= up_.length();
+  xform_scale.post_scale(scales);
+  
   Transform xform_to_position;
   Vector delta = origin_.asVector();
-  //  xform_rotate.project_inplace(delta);
   xform_to_position.post_translate(delta);
-
-  
-  Transform xform_to_anchor;
-  xlat *= 0.0;
-  Vector center = bbox.diagonal()/2;
-  switch (anchor_) {
-  case n:  xlat.y(center.y());  break;
-  case e:  xlat.x(center.x());  break;
-  case s:  xlat.y(-center.y()); break;
-  case w:  xlat.x(-center.x()); break;
-  case ne: xlat.y(center.y()); xlat.x(center.x()); break;
-  case se: xlat.y(-center.y()); xlat.x(center.x()); break;
-  case sw: xlat.y(-center.y()); xlat.x(-center.x()); break;
-  case nw: xlat.y(center.y()); xlat.x(-center.x()); break;
-  default:
-  case c: break;
-  }
-  xform_scale.project_inplace(xlat);
-  xform_rotate.project_inplace(xlat);
-  xform_to_anchor.pre_translate(-xlat);
-
 
   transform_.load_identity();
   transform_.pre_trans(xform_to_origin);
   transform_.pre_trans(xform_scale);
   transform_.pre_trans(xform_rotate);  
-  //transform_.pre_trans(xform_to_anchor);
-
   transform_.pre_trans(xform_to_position);
-
-  //  transform_.load_identity();
-
-  /*
-  Vector left = left_;
-  left.normalize();
-  left *= up_.length();
-  Vector z = Cross (left,up_);
-  z.normalize();
-  z *= up_.length();
-  transform_.load_basis(origin_,
-			left_,
-			up_,
-			z);
-  */
 #endif
-
 }
     
 void
@@ -569,7 +498,8 @@ PersistentTypeID GeomFTGLFontRenderer::type_id("GeomFTGLFontRenderer", "GeomObj"
 
 GeomFTGLFontRenderer::GeomFTGLFontRenderer(const string &fontfile, 
 					   int ptRez,
-					   int screenRez)
+					   int screenRez) :
+  filename_(fontfile)
 {
   font_ = scinew FTGLTextureFont(fontfile.c_str());
   font_->CharMap(ft_encoding_unicode);

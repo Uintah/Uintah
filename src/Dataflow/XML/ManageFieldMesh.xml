@@ -86,4 +86,30 @@
   </io>
   <testing>
   </testing>
+<nets>
+<net id="ManageFieldMesh-extract">
+<title>ManageFieldMesh-extract Regression Test</title>
+
+<p>Use the ManageFieldMesh module to extract the XYZ positions of the
+mesh nodes from the input mesh into an Nx3 matrix.  Then we glue those
+positions back onto the input mesh as Vector data (but not as a
+position change) using the <modref package="SCIRun" name="ManageFieldData"/> module.  The vector field
+is then displayed as a cube with all of the vectors pointing away from
+the center.</p>
+
+<p>This network can be found at src/nets/Modules/FieldsGeometry/ManageFieldMesh-extract.net.</p>
+
+</net>
+<net id="ManageFieldMesh-insert">
+<title>ManageFieldMesh-insert Regression Test</title>
+
+<p>Here we use ManageFieldMesh to extract the XYZ positions of the nodes
+from an input mesh.  Then those positions are transformed with the
+<modref package="SCIRun" name="LinAlgUnary"/> module.  The transformed positions are put back into the
+original mesh and the before/after of the two meshes is displayed.</p>
+
+<p>This network can be found at src/nets/Modules/FieldsGeometry/ManageFieldMesh-insert.net.</p>
+
+</net>
+</nets>
 </component>

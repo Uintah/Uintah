@@ -86,4 +86,19 @@
   </io>
   <testing>
   </testing>
+<nets>
+<net id="SampleStructHex-cylinder">
+<title>SampleStructHex-cylinder Regression Test</title>
+
+<p>Create and draw a StructHexVolField using the SampleStructHex module.
+The default StructHexVolField created by the module is visually
+indistinguishable from the lattice created by <modref package="SCIRun" name="SampleLattice"/>, so this network
+shows off the capabilities of the StructHexVolField by using the
+<modref package="SCIRun" name="ManageFieldMesh"/> module to transform the points into a low-distortion
+cylinder.</p>
+
+<p>This network can be found at src/nets/Modules/FieldsCreate/SampleStructHex-cylinder.net.</p>
+
+</net>
+</nets>
 </component>

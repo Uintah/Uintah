@@ -54,9 +54,9 @@ namespace SCITeem {
 using namespace SCIRun;
 
 class NrrdWriter : public Module {
-    NrrdIPort* inport_;
-    GuiString filename_;
-    GuiString filetype_;
+    NrrdIPort*  inport_;
+    GuiFilename filename_;
+    GuiString   filetype_;
 public:
     NrrdWriter(GuiContext *ctx);
     virtual ~NrrdWriter();

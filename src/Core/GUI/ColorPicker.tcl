@@ -144,7 +144,7 @@ proc makeColorPicker {w var command cancel} {
              -command "cpcommitcolor $var $rgb.s1 $rgb.s2 $rgb.s3 $rgb.s4 \"$command\""
     button $w.c.opts.ok -text "OK" \
 	     -command "cpcommitcolor $var $rgb.s1 $rgb.s2 $rgb.s3 $rgb.s4 \"$command\"; $cancel"
-    button $w.c.opts.cancel -text "Close" -command $cancel
+    button $w.c.opts.cancel -text "Cancel" -command $cancel
     radiobutton $w.c.opts.rgb -text RGB -variable $w-rgbhsv -value rgb \
 	    -command "cptogrgbhsv $w $picks $rgb $hsv"
     radiobutton $w.c.opts.hsv -text HSV -variable $w-rgbhsv -value hsv \

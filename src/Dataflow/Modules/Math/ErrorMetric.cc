@@ -218,12 +218,13 @@ void ErrorMetric::execute()
 
      if (haveUI_.get()) {
 	 ostringstream str;
-	 str << id << " append_graph " << ccInv << " " << rmsRel << " \"";
+	 str << id << " append_graph " << MakeReal(ccInv) << " " 
+	     << MakeReal(rmsRel) << " \"";
 	 for (iterate=0; iterate<ne; iterate++)
-	     str << iterate << " " << (*ivec1)[iterate] << " ";
+	     str << iterate << " " << MakeReal((*ivec1)[iterate]) << " ";
 	 str << "\" \"";
 	 for (iterate=0; iterate<ne; iterate++)
-	     str << iterate << " " << (*ivec2)[iterate] << " ";
+	     str << iterate << " " << MakeReal((*ivec2)[iterate]) << " ";
 	 str << "\" ; update idletasks";
 	 gui->execute(str.str().c_str());
      }

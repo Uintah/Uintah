@@ -27,8 +27,6 @@
 #
 
 
-#catch {rename Viewer ""} 
-
 itcl_class SCIRun_Render_Viewer {
     inherit Module
 
@@ -42,17 +40,10 @@ itcl_class SCIRun_Render_Viewer {
 	set name Viewer
 	set_defaults
     }
-    destructor {
-	foreach window [winfo children .] {
-	    if ![string first .ui[modname] $window] {
-		destroy $window
-	    }
-	}
-	    
-	foreach rid $openViewersList {
-	    destroy .ui[$rid modname]
 
-	    $rid delete
+    destructor {
+	foreach rid $openViewersList {
+	    deleteViewWindow $rid
 	}
     }
 
@@ -77,6 +68,54 @@ itcl_class SCIRun_Render_Viewer {
 	set rid [makeViewWindowID]
 	ViewWindow $rid -viewer $this 
 	lappend openViewersList $rid
+    }
+
+    method deleteViewWindow { rid } {
+	$this-c deleteviewwindow $rid
+	listFindAndRemove openViewersList $rid
+	destroy .ui[$rid modname]
+	$rid delete
+    }
+
+    method duplicateViewer {old_vw} {
+	# Button "New Viewer" was pressed.
+	# Create a new viewer with the same eyep, lookat, up and fov.
+	set rid $this-ViewWindow_$nextrid
+
+	$this addViewer
+
+	# Use position of previous viewer if not the first one
+	set new_id [lindex [split $rid _] end]
+	set old_id [lindex [split $old_vw _] end]
+
+	set new_win $this-ViewWindow_$new_id
+	set old_win $this-ViewWindow_$old_id
+
+	setGlobal $new_win-view-eyep-x \
+	    [set $old_win-view-eyep-x]
+	setGlobal $new_win-view-eyep-y \
+	    [set $old_win-view-eyep-y]
+	setGlobal $new_win-view-eyep-z \
+	    [set $old_win-view-eyep-z]
+
+	setGlobal $new_win-view-lookat-x \
+	    [set $old_win-view-lookat-x]
+	setGlobal $new_win-view-lookat-y \
+	    [set $old_win-view-lookat-y]
+	setGlobal $new_win-view-lookat-z \
+	    [set $old_win-view-lookat-z]
+
+	setGlobal $new_win-view-up-x \
+	    [set $old_win-view-up-x]
+	setGlobal $new_win-view-up-y \
+	    [set $old_win-view-up-y]
+	setGlobal $new_win-view-up-z \
+	    [set $old_win-view-up-z]
+
+	setGlobal $new_win-view-fov \
+	    [set $old_win-view-fov]
+
+	$new_win-c redraw
     }
     
     method ui {{rid -1}} {
@@ -144,11 +183,12 @@ itcl_class ViewWindow {
     protected attachedFr
 
     method modname {} {
-	set n $this
-	if {[string first "::" "$n"] == 0} {
-	    set n "[string range $n 2 end]"
-	}
-	return $n
+	return [string trimleft $this :]
+    }
+
+    method number {} {
+	set parts [split $this _]
+	return [lindex $parts end]
     }
 
     method set_defaults {} {
@@ -220,6 +260,10 @@ itcl_class ViewWindow {
 	if {![info exists $this-global-light2]} { set $this-global-light2 0 }
 	global $this-global-light3 
 	if {![info exists $this-global-light3]} { set $this-global-light3 0 }
+	trace variable $this-global-light0 w "$this traceLight 0"
+	trace variable $this-global-light1 w "$this traceLight 1"
+	trace variable $this-global-light2 w "$this traceLight 2"
+	trace variable $this-global-light3 w "$this traceLight 3"
 # 	global $this-global-light4 
 # 	if {![info exists $this-global-light4]} { set $this-global-light4 0 }
 # 	global $this-global-light5 
@@ -265,24 +309,38 @@ itcl_class ViewWindow {
 
 	global $this-ortho-view
 	if {![info exists $this-ortho-view]} { set $this-ortho-view 0 }
+	
+	global $this-currentvisual
+	if {![info exists $this-currentvisual]} { set $this-currentvisual 0 }
 
-	setGlobal $this-geometry [wm geometry .ui[modname]]
+	initGlobal $this-trackViewWindow0 1
+
+	initGlobal $this-geometry [wm geometry .ui[modname]]
 	trace variable $this-geometry w "resizeWindow .ui[modname] $this-geometry"
     }
 
     destructor {
+	set w .ui[modname]
+	$w.dialbox delete
+	$w.dialbox2 delete
+	destroy $w
     }
 
     constructor {config} {
+
+	set width 640
+	set height 512
+
 	$viewer-c addviewwindow $this
 	set w .ui[modname]
-	toplevel $w
 
-#	wm protocol $w WM_DELETE_WINDOW "wm withdraw $w"
+	# create the window (immediately withdraw it so that on the Mac it will size correctly.)
+	toplevel $w; wm withdraw $w
 
-	bind $w <Destroy> "$this killWindow %W" 
-	wm title $w "ViewWindow"
-	wm iconname $w "ViewWindow"
+	wm protocol $w WM_DELETE_WINDOW "$viewer deleteViewWindow $this"
+#	bind $w <Destroy> "$this killWindow %W" 
+	wm title $w "View Window [number]"
+	wm iconname $w "View Window [number]"
 	wm minsize $w 100 100
 	set_defaults 
 
@@ -304,9 +362,6 @@ itcl_class ViewWindow {
 	
 	frame $w.wframe -borderwidth 3 -relief sunken
 	pack $w.wframe -side bottom -expand yes -fill both -padx 4 -pady 4
-
-	set width 640
-	set height 512
 
 	menubutton $w.menu.edit -text "Edit" -underline 0 \
 		-menu $w.menu.edit.menu
@@ -348,19 +403,16 @@ itcl_class ViewWindow {
 	menu $w.menu.visual.menu
 	set i 0
 	global $this-currentvisual
-	set $this-currentvisual 0
+
 	foreach t [$this-c listvisuals $w] {
 	    $w.menu.visual.menu add radiobutton -value $i -label $t \
 		-variable $this-currentvisual \
-		-font "-Adobe-Helvetica-bold-R-Normal-*-12-75-*" \
-		-command "$this switchvisual $i"
-#        -command { puts "switchvisual doesn't work on NT" }
-#puts "$i: $t"
+		-font "-Adobe-Helvetica-bold-R-Normal-*-12-75-*"
 	    incr i
 	}
 
 	button $w.menu.newviewer -text "NewViewer" \
-	    -command "$viewer addViewer" -borderwidth 0
+	    -command "$viewer duplicateViewer [modname]" -borderwidth 0
 	
 	pack $w.menu.file -side left
 	pack $w.menu.edit -side left
@@ -400,11 +452,11 @@ itcl_class ViewWindow {
 
 	frame $bsframe.pf
 	pack $bsframe.pf -side left -anchor n
-	label $bsframe.pf.perf1 -width 32 -text "100000 polygons in 12.33 seconds"
+	label $bsframe.pf.perf1 -width 32 -text "? polygons in ? seconds"
 	pack $bsframe.pf.perf1 -side top -anchor n
-	label $bsframe.pf.perf2 -width 32 -text "Hello"
+	label $bsframe.pf.perf2 -width 32 -text "? polygons/second"
 	pack $bsframe.pf.perf2 -side top -anchor n
-	label $bsframe.pf.perf3 -width 32 -text "Hello"
+	label $bsframe.pf.perf3 -width 32 -text "? frames/sec"
 	pack $bsframe.pf.perf3 -side top -anchor n
 
 	canvas $bsframe.mousemode -width 175 -height 60 \
@@ -435,82 +487,8 @@ itcl_class ViewWindow {
 	    "Allows the user to easily specify that the viewer align the axes\n" \
 	    "such that they are perpendicular and/or horizontal to the viewer."
 
-	menu $bsframe.v1.views.def.m
-	$bsframe.v1.views.def.m add cascade -label "Look down +X Axis" \
-		-menu $bsframe.v1.views.def.m.posx
-	$bsframe.v1.views.def.m add cascade -label "Look down +Y Axis" \
-		-menu $bsframe.v1.views.def.m.posy
-        $bsframe.v1.views.def.m add cascade -label "Look down +Z Axis" \
-		-menu $bsframe.v1.views.def.m.posz
-	$bsframe.v1.views.def.m add separator
-	$bsframe.v1.views.def.m add cascade -label "Look down -X Axis" \
-		-menu $bsframe.v1.views.def.m.negx
-	$bsframe.v1.views.def.m add cascade -label "Look down -Y Axis" \
-		-menu $bsframe.v1.views.def.m.negy
-        $bsframe.v1.views.def.m add cascade -label "Look down -Z Axis" \
-		-menu $bsframe.v1.views.def.m.negz
-
+	create_view_menu $bsframe.v1.views.def.m
 	pack $bsframe.v1.views.def -side left -pady 2 -padx 2 -fill x
-
-	menu $bsframe.v1.views.def.m.posx
-	$bsframe.v1.views.def.m.posx add radiobutton -label "Up vector +Y" \
-		-variable $this-pos -value x1_y1 -command "$this-c Views"
-	$bsframe.v1.views.def.m.posx add radiobutton -label "Up vector -Y" \
-		-variable $this-pos -value x1_y0 -command "$this-c Views"
-	$bsframe.v1.views.def.m.posx add radiobutton -label "Up vector +Z" \
-		-variable $this-pos -value x1_z1 -command "$this-c Views"
-	$bsframe.v1.views.def.m.posx add radiobutton -label "Up vector -Z" \
-		-variable $this-pos -value x1_z0 -command "$this-c Views"
-
-	menu $bsframe.v1.views.def.m.posy
-	$bsframe.v1.views.def.m.posy add radiobutton -label "Up vector +X" \
-		-variable $this-pos -value y1_x1 -command "$this-c Views" 
-	$bsframe.v1.views.def.m.posy add radiobutton -label "Up vector -X" \
-		-variable $this-pos -value y1_x0 -command "$this-c Views"
-	$bsframe.v1.views.def.m.posy add radiobutton -label "Up vector +Z" \
-		-variable $this-pos -value y1_z1 -command "$this-c Views"
-	$bsframe.v1.views.def.m.posy add radiobutton -label "Up vector -Z" \
-		-variable $this-pos -value y1_z0 -command "$this-c Views"
-
-	menu $bsframe.v1.views.def.m.posz
-	$bsframe.v1.views.def.m.posz add radiobutton -label "Up vector +X" \
-		-variable $this-pos -value z1_x1 -command "$this-c Views" 
-	$bsframe.v1.views.def.m.posz add radiobutton -label "Up vector -X" \
-		-variable $this-pos -value z1_x0 -command "$this-c Views"
-	$bsframe.v1.views.def.m.posz add radiobutton -label "Up vector +Y" \
-		-variable $this-pos -value z1_y1 -command "$this-c Views"
-	$bsframe.v1.views.def.m.posz add radiobutton -label "Up vector -Y" \
-		-variable $this-pos -value z1_y0 -command "$this-c Views"
-
-	menu $bsframe.v1.views.def.m.negx
-	$bsframe.v1.views.def.m.negx add radiobutton -label "Up vector +Y" \
-		-variable $this-pos -value x0_y1 -command "$this-c Views"
-	$bsframe.v1.views.def.m.negx add radiobutton -label "Up vector -Y" \
-		-variable $this-pos -value x0_y0 -command "$this-c Views"
-	$bsframe.v1.views.def.m.negx add radiobutton -label "Up vector +Z" \
-		-variable $this-pos -value x0_z1 -command "$this-c Views"
-	$bsframe.v1.views.def.m.negx add radiobutton -label "Up vector -Z" \
-		-variable $this-pos -value x0_z0 -command "$this-c Views"
-
-	menu $bsframe.v1.views.def.m.negy
-	$bsframe.v1.views.def.m.negy add radiobutton -label "Up vector +X" \
-		-variable $this-pos -value y0_x1 -command "$this-c Views" 
-	$bsframe.v1.views.def.m.negy add radiobutton -label "Up vector -X" \
-		-variable $this-pos -value y0_x0 -command "$this-c Views"
-	$bsframe.v1.views.def.m.negy add radiobutton -label "Up vector +Z" \
-		-variable $this-pos -value y0_z1 -command "$this-c Views"
-	$bsframe.v1.views.def.m.negy add radiobutton -label "Up vector -Z" \
-		-variable $this-pos -value y0_z0 -command "$this-c Views"
-
-	menu $bsframe.v1.views.def.m.negz
-	$bsframe.v1.views.def.m.negz add radiobutton -label "Up vector +X" \
-		-variable $this-pos -value z0_x1 -command "$this-c Views" 
-	$bsframe.v1.views.def.m.negz add radiobutton -label "Up vector -X" \
-		-variable $this-pos -value z0_x0 -command "$this-c Views"
-	$bsframe.v1.views.def.m.negz add radiobutton -label "Up vector +Y" \
-		-variable $this-pos -value z0_y1 -command "$this-c Views"
-	$bsframe.v1.views.def.m.negz add radiobutton -label "Up vector -Y" \
-		-variable $this-pos -value z0_y0 -command "$this-c Views"
 
 	frame $bsframe.v2 -relief groove -borderwidth 2
 	pack $bsframe.v2 -side left -padx 2 -pady 2
@@ -570,12 +548,28 @@ itcl_class ViewWindow {
 
 # AS: end initialization of attachment
 
-	switchvisual 0
+	switchvisual [set $this-currentvisual]
+	trace variable $this-currentvisual w "$this currentvisualtrace"
+
 	$this-c startup
 	
 #	puts [pack slaves $w]
 	pack slaves $w
+
+        # To avoid Mac bizarro behavior of not sizing the window correctly
+        # this hack is necessary when loading from a script.
+	if [string length [info script]] {
+           # The added benefit of this is that I can make the Viewer Window
+           # appear after all the other windows and thus on systems without
+           # pbuffers, we don't get the drawing window obscured.  Three seconds
+           # seems to be enough time.
+           after 3000 "SciRaise $w"
+        } else {
+           SciRaise $w
+        }
     }
+    # end constructor()
+
     method bindEvents {w} {
 	bind $w <Expose> "$this-c redraw"
 	bind $w <Configure> "$this-c redraw"
@@ -620,12 +614,71 @@ itcl_class ViewWindow {
 	bind $w <Lock-ButtonRelease-3> "$this-c mpick end %x %y %s %b"
     }
 
-    method killWindow { vw } {
-        set w .ui[modname]
-	if {"$vw"=="$w"} {
-	    $this-c killwindow
+    method create_other_viewers_view_menu { m } {
+	if { [winfo exists $m] } {
+	    destroy $m
+	}
+	menu $m
+	set myparts [split [modname] -]
+	set myviewer .ui[lindex $myparts 0]
+	set mywindow [lindex $myparts 1]
+	set actual 0
+	foreach w [winfo children .] {
+	    set parts [split $w -]
+	    set viewer [lindex $parts 0]
+	    set window [lindex $parts 1]
+	    if { [string equal $myviewer $viewer] } {
+		if { ![string equal $mywindow $window] } {
+		    set num [lindex [split $window _] end]
+		    $m add command -label "Get View from Viewer $num" \
+			-command "set $this-pos ViewWindow$actual; $this-c Views"
+		}
+		incr actual
+	    }
 	}
     }
+		    
+
+    method create_view_menu { m } {
+	menu $m -postcommand "$this create_other_viewers_view_menu $m.otherviewers"
+	$m add checkbutton -label "Track View Window 0" \
+	    -variable $this-trackViewWindow0
+	$m add cascade -menu $m.otherviewers -label "Other Viewers"
+#	    -command "create_other_viewers_view_menu $m.otherviewers"
+
+	foreach sign1 {1 0} {
+	    foreach dir1 {x y z} {
+		set pn1 [expr $sign1?"+":"-"]
+		set posneg1 [expr $sign1?"+":"-"]
+		set sub $m.$posneg1$dir1
+		$m add cascade -menu $sub \
+		    -label "Look down $pn1[string toupper $dir1] Axis"
+		menu $sub
+		foreach dir2 { x y z } {
+		    if { ![string equal $dir1 $dir2] } {
+			foreach sign2 { 1 0 } {
+			    set pn2 [expr $sign2?"+":"-"]
+			    if { 1 } {
+				$sub add command -label \
+				    "Up vector $pn2[string toupper $dir2]" \
+				    -command "setGlobal $this-pos ${dir1}${sign1}_${dir2}${sign2};
+                                              $this-c Views" 
+			    } else {
+				$sub add radiobutton -label \
+				    "Up vector $pn2[string toupper $dir2]" \
+				    -variable $this-pos \
+				    -value ${dir1}${sign1}_${dir2}${sign2} \
+				    -command "$this-c Views"
+			    }
+			}
+		    }
+		}
+	    }
+	    $m add separator
+	}
+    }
+
+
 
     method removeMFrame {w} {
 
@@ -678,6 +731,8 @@ itcl_class ViewWindow {
 	global $this-sr
 	global $this-do_bawgl
 	global $this-tracker_state
+	global $this-currentvisual
+	global $this-currentvisualhelper
 	
 	set "$this-global-light" 1
 	set "$this-global-fog" 0
@@ -694,7 +749,9 @@ itcl_class ViewWindow {
 	set "$this-y-resize" 512
 	set $this-do_bawgl 0
 	set $this-tracker_state 0
-	
+	set $this-currentvisual 0
+	global $this-currentvisualhelper 0
+
 	set r "$this-c redraw"
 	bind $m <Double-ButtonPress-1> "$this switch_frames"
 
@@ -799,8 +856,6 @@ itcl_class ViewWindow {
         checkbutton $m.caxes -text "Show Axes" -variable $this-caxes -onvalue 1 -offvalue 0 -command "$this-c centerGenAxes; $this-c redraw"
         checkbutton $m.raxes -text "Orientation" -variable $this-raxes -onvalue 1 -offvalue 0 -command "$this-c rotateGenAxes; $this-c redraw"
 	checkbutton $m.ortho -text "Ortho View" -variable $this-ortho-view -onvalue 1 -offvalue 0 -command "$this-c redraw"
-	# checkbutton $m.iaxes -text "Icon Axes" -variable $this-iaxes -onvalue 1 -offvalue 0 -command "$this-c iconGenAxes; $this-c redraw"
-	# pack $m.caxes $m.iaxes -side top
 	pack $m.caxes -side top -anchor w
 	pack $m.raxes -side top -anchor w
 	pack $m.ortho -side top -anchor w
@@ -938,6 +993,13 @@ itcl_class ViewWindow {
 	$bsframe.pf.perf3 configure -text $p3
     }
 
+    method currentvisualtrace {a b c} {
+	global $this-currentvisual
+	if {[set $this-currentvisual] != [set $this-currentvisualhelper]} {
+	    switchvisual [set $this-currentvisual]
+	}
+    }
+
     method switchvisual {idx} {
 	set w .ui[modname]
 	if {[winfo exists $w.wframe.draw]} {
@@ -948,6 +1010,7 @@ itcl_class ViewWindow {
 	    bindEvents $w.wframe.draw
 	    pack $w.wframe.draw -expand yes -fill both
 	}
+	set $this-currentvisualhelper [set $this-currentvisual]
     }	
 
     method bench {bench} {
@@ -988,6 +1051,12 @@ itcl_class ViewWindow {
 
     method makeViewPopup {} {
 	set w .view[modname]
+
+	if {[winfo exists $w]} {
+	    SciRaise $w
+	    return
+	}
+
 	toplevel $w
 	wm title $w "View"
 	wm iconname $w view
@@ -1016,6 +1085,12 @@ itcl_class ViewWindow {
 
     method makeSceneMaterialsPopup {} {
 	set w .scenematerials[modname]
+
+	if {[winfo exists $w]} {
+	    SciRaise $w
+	    return
+	}
+
 	toplevel $w
 	wm title $w "Scene Materials"
 	wm iconname $w materials
@@ -1670,6 +1745,7 @@ itcl_class ViewWindow {
 	pack $w.l $w.o $w.breset $w.bclose -side top -expand yes -fill x
 
 	moveToCursor $w "leave_up"
+	wm deiconify $w
     }
 	
     method makeLightControl { w i } {
@@ -1818,7 +1894,14 @@ itcl_class ViewWindow {
 	    [lindex [set $this-lightVectors] $i] \
 	    [lindex [set $this-lightColors] $i]
     }
-	
+
+    method traceLight {which name1 name2 op } {
+	set w .ui[modname]-lightSources
+	if {![winfo exists $w]} {
+	    $this lightSwitch $which
+	}
+    }
+
     method makeSaveImagePopup {} {
 	global $this-saveFile
 	global $this-saveType
@@ -1891,6 +1974,12 @@ itcl_class ViewWindow {
     }
     method makeSaveMoviePopup {} {
 	set w .ui[modname]-saveMovie
+
+	# check license env var
+	if {![envBool SCIRUN_MPEG_LICENSE_ACCEPT]} {
+	    tk_messageBox -message "License information describing the mpeg_encode software can be found in SCIRun's Thirdparty directory, in the mpeg_encode/README file.\n\nThe MPEG software is freely distributed and may be used for any non-commercial purpose.  However, patents are held by several companies on various aspects of the MPEG video standard. Companies or individuals who want to develop commercial products that include this code must acquire licenses from these companies. For information on licensing, see Appendix F in the standard. For more information, please see the mpeg_encode README file.\n\nIf you are allowed to use the MPEG functionality based on the above license, you may enable MPEG movie recording in SCIRun (accessible via the SCIRun Viewer's \"File->Record Movie\" menu) by setting the value of SCIRUN_MPEG_LICENSE_ACCEPT to \"true\". This can be done by uncommenting the reference to the SCIRUN_MPEG_LICENSE_ACCEPT variable in your scirunrc and changing the value from false to true." -type ok -icon info -parent .ui[modname] -title "MPEG License"
+	    return
+	}
 
 	if {[winfo exists $w]} {
 	   SciRaise $w
@@ -2153,13 +2242,6 @@ itcl_class EmbeddedViewWindow {
 	bind $w <Lock-ButtonRelease-1> "$this-c mpick end %x %y %s %b"
 	bind $w <Lock-ButtonRelease-2> "$this-c mpick end %x %y %s %b"
 	bind $w <Lock-ButtonRelease-3> "$this-c mpick end %x %y %s %b"
-    }
-
-    method killWindow { vw } {
-        set w .ui[modname]
-	if {"$vw"=="$w"} {
-	    $this-c killwindow
-	}
     }
 
     method removeMFrame {w} {

@@ -443,13 +443,6 @@ proc biopseIconList_Select {w rTag {callBrowse 1}} {
     set text   [lindex $itemList($rTag) 2]
     set serial [lindex $itemList($rTag) 3]
 
-puts "w:    $w"
-puts "rtag: $rTag"
-puts "text: $text"
-puts "Ttag: $tTag"
-puts "Itag: $iTag"
-puts "seri: $serial"
-
     if {![info exists data(rect)]} {
         set data(rect) [$data(canvas) create rect 0 0 0 0 \
 	    -fill #a0a0ff -outline #a0a0ff]
@@ -1024,6 +1017,11 @@ static char updir_bits[] = {
         set formats $data(-formats)
         if {[llength $formats] == 0} {
 	    set formats {ASCII Binary}
+        }
+        if {[lindex $formats 0] == "None"} {
+	    set formats {ASCII Binary}
+	    $data(formatMenuLab) configure -state disabled
+            $data(formatMenuBtn) configure -state disabled
         }
         foreach f $formats {
 	    $data(formatMenu) add command -label $f \

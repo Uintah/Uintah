@@ -37,6 +37,9 @@
  * Copyright (C) 2003 SCI Group
 */
     
+#include <sci_defs.h>
+#ifdef HAVE_SCISOCK
+
 // SCIRun includes
 //#include <Core/Util/Comm/NetInterface.h>
 #include "NetInterface.h"
@@ -224,7 +227,7 @@ NetConnection NetInterface::connect( string host_name, int port )
 int NetInterface::disconnect( NetConnection * conn )
 {
   struct NetConnectionC * real_conn = conn->get_connection();
-  net_interface_disconnect( &interface_, real_conn );  
+  return net_interface_disconnect( &interface_, real_conn );  
 }
 
 /*===========================================================================*/
@@ -640,3 +643,5 @@ void read_callback_converter( struct NetConnectionC * conn,
 } 
 
 } // End namespace SCIRun
+
+#endif

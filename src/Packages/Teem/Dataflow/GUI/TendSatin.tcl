@@ -75,7 +75,7 @@ itcl_class Teem_Tend_TendSatin {
 	checkbutton $w.f.options.torus \
 	    -text "Generate Torus Dataset" \
 	    -variable $this-torus
-	pack $w.f.options.torus -side top -expand yes -fill x
+	pack $w.f.options.torus -side top -anchor nw -padx 3 -pady 3
 
 	iwidgets::entryfield $w.f.options.anisotropy \
 	    -labeltext "Anisotropy Parameter:" \

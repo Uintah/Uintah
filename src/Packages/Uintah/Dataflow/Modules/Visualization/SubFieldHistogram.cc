@@ -94,7 +94,7 @@ SubFieldHistogram::~SubFieldHistogram()
 
 }
 
-void SubFieldHistogram::widget_moved(bool last)
+void SubFieldHistogram::widget_moved(bool last,BaseWidget*)
 {
     if(last && !abort_flag)
     {

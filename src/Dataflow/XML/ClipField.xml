@@ -91,4 +91,27 @@
   </io>
   <testing>
   </testing>
+<nets>
+<net id="ClipField-mesh">
+<title>ClipField-mesh Regression Test</title>
+
+<p>The ClipField module is used to extract a spherical input mesh from
+it's bounding <modref package="SCIRun" name="SampleLattice"/>.  The
+remaining cubes are the elements that the bounding box covers but that
+do not actually fall inside of the input field.</p>
+
+<p>This network can be found at src/nets/Modules/FieldsCreate/ClipField-mesh.net.</p>
+
+</net>
+<net id="ClipField-widget">
+<title>ClipField-widget Regression Test</title>
+
+<p>In this network the ClipField module widget is used to select a chunk
+of the input field for extraction.  Further editing could be done by
+hand.</p>
+
+<p>This network can be found at src/nets/Modules/FieldsCreate/ClipField-widget.net.</p>
+
+</net>
+</nets>
 </component>

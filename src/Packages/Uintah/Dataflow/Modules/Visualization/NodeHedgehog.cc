@@ -106,7 +106,7 @@ class NodeHedgehog : public Module {
   // GROUP:  Widgets:
   //////////////////////
   // widget_moved -  
-  virtual void widget_moved(bool last);
+  virtual void widget_moved(bool last, BaseWidget*);
 
   // GROUP: Private Function:
 
@@ -747,7 +747,7 @@ void NodeHedgehog::execute()
   if (node_debug) cerr << "NodeHedgehog::execute: end"<<endl;
 }
 
-void NodeHedgehog::widget_moved(bool last)
+void NodeHedgehog::widget_moved(bool last, BaseWidget*)
 {
   if(last && !abort_flag) {
     abort_flag=1;

@@ -306,7 +306,6 @@ proc canvasScroll { canvas { dx 0.0 } { dy 0.0 } } {
 proc activate_file_submenus { } {
     global maincanvas minicanvas    
     loadSubnetScriptsFromDisk
-    createModulesMenu $maincanvas.modulesMenu 0
     
     .main_menu.file.menu entryconfig  0 -state active
     .main_menu.file.menu entryconfig  1 -state active
@@ -356,9 +355,6 @@ proc modulesMenu { subnet x y } {
     set mouseY $y
     set canvas $Subnet(Subnet${subnet}_canvas)
     createModulesMenu $canvas.modulesMenu $subnet
-    if { $subnet } {
-	createModulesMenu .subnet${subnet}.main_menu.packages.menu $subnet
-    }
     tk_popup $canvas.modulesMenu [expr $x + [winfo rootx $canvas]] \
 	[expr $y + [winfo rooty $canvas]]
 }
@@ -449,7 +445,6 @@ proc createPackageMenu {index} {
 	}
     }
     global maincanvas
-    createModulesMenu $maincanvas.modulesMenu 0
     update idletasks
 }
 
@@ -462,11 +457,15 @@ proc createModulesMenu { menu subnet } {
     # return if there is no information to put in menu
     if ![info exists ModuleMenu] return
     # destroy the old menu
-    if [winfo exists $menu] {	
-	destroy $menu
-    }
+#    if [winfo exists $menu] {	
+#	destroy $menu
+#    }
     # create a new menu
-    menu $menu -tearoff false -disabledforeground black
+    if { ![winfo exists $menu] } {	
+	menu $menu
+    }
+    $menu delete 0 end
+    $menu configure -tearoff false -disabledforeground black
 
     foreach pack $ModuleMenu(packages) {
 	# Add a menu separator if this package isn't the first one
@@ -478,7 +477,10 @@ proc createModulesMenu { menu subnet } {
 	foreach cat $ModuleMenu(${pack}_categories) {
 	    # Add the category to the right-button menu
 	    $menu add cascade -label "  $ModuleMenu($cat)" -menu $menu.$cat
-	    menu $menu.$cat -tearoff false
+	    if { ![winfo exists $menu.$cat] } {	
+		menu $menu.$cat -tearoff false
+	    }
+	    $menu.$cat delete 0 end
 
 	    foreach mod $ModuleMenu(${pack}_${cat}_modules) {
 		$menu.$cat add command -label "$ModuleMenu($mod)" \
@@ -489,7 +491,9 @@ proc createModulesMenu { menu subnet } {
     
     $menu add separator
     $menu add cascade -label "Sub-Networks" -menu $menu.subnet
-    menu $menu.subnet -tearoff false
+    if { ![winfo exists $menu.subnet] } {	
+	menu $menu.subnet -tearoff false
+    }
 
     createSubnetMenu $menu $subnet
 	
@@ -1092,13 +1096,14 @@ proc loadnet { netedit_loadfile } {
 }
 
 proc SCIRunNew_source { args } {
-    if { [file exists $args] } {    
-	return [uplevel 1 SCIRunBackup_source \{$args\}]
+    set filename [lindex $args 0]
+    if { [file exists $filename] } {    
+	return [uplevel 1 SCIRunBackup_source \{$filename\}]
     }
 
-    set lastSettings [string last .settings $args]
+    set lastSettings [string last .settings $filename]
     if { ($lastSettings != -1) && \
-	     ([expr [string length $args] - $lastSettings] == 9) } {
+	     ([expr [string length $filename] - $lastSettings] == 9) } {
 	set file "[netedit getenv SCIRUN_SRCDIR]/nets/default.settings"
 	global recentlyWarnedAboutDefaultSettings
 	if { ![info exists recentlyWarnedAboutDefaultSettings] } {
@@ -1108,7 +1113,7 @@ proc SCIRunNew_source { args } {
 	}
 	return [uplevel 1 SCIRunBackup_source \{$file\}]
     }
-    puts "SCIRun TCL cannot source \'$args\': File does not exist."
+    puts "SCIRun TCL cannot source \'$filename\': File does not exist."
 }
 
 proc renameSourceCommand {} {
@@ -1192,6 +1197,10 @@ proc sourceSettingsFile {} {
 
 	displayErrorWarningOrInfo "*** Using SCIRUN_DATA=$DATADIR" info
 	displayErrorWarningOrInfo "*** Using SCIRUN_DATASET=$DATASET" info
+	
+	netedit setenv SCIRUN_DATA "$DATADIR"
+	netedit setenv SCIRUN_DATASET "$DATASET"
+
 	setGlobal recentlyCalledSourceSettingsFile 1
 	after 10000 uplevel \#0 unset recentlyCalledSourceSettingsFile
 
@@ -1233,7 +1242,7 @@ proc displayErrorWarningOrInfo { msg status } {
 #centers window w1 over window w2
 proc centerWindow { w1 w2 } {
     update
-    wm overrideredirect $w1 1
+#    wm overrideredirect $w1 1
     wm geometry $w1 ""
     update idletasks
     set w [winfo width $w2]
@@ -1561,6 +1570,11 @@ proc licenseAccept { } {
     }
 }
 
+proc validFile { args } {
+    set name [lindex $args 0]
+    return [expr [file isfile $name] && [file readable $name]]
+}
+
 proc validDir { name } {
     return [expr [file isdirectory $name] && \
 		 [file writable $name] && [file readable $name]]
@@ -1575,9 +1589,12 @@ proc getOnTheFlyLibsDir {} {
     if { $dir != "" } {
 	catch "file mkdir $dir"
 	if { [validDir $dir] && ![llength [glob -nocomplain -directory $dir *]] } {
+	    displayErrorWarningOrInfo "\nCopying the contents of $binOTF\nto $dir..." info
+	    update idletasks
 	    foreach name [glob -nocomplain -directory $binOTF *.cc *.d *.o *.so] {
 		file copy $name $dir
 	    }
+	    displayErrorWarningOrInfo "Done copying on-the-fly-libs.\n" info
 	}
     }
 
@@ -1590,9 +1607,12 @@ proc getOnTheFlyLibsDir {} {
 	set dir [file join $home SCIRun on-the-fly-libs $tcl_platform(os)]
 	catch "file mkdir $dir"
 	if { [validDir $dir] && ![llength [glob -nocomplain -directory $dir *]] } {
+	    displayErrorWarningOrInfo "\nCopying the contents of $binOTF\nto $dir..." info
+	    update idletasks
 	    foreach name [glob -nocomplain -directory $binOTF *.cc *.d *.o *.so] {
 		file copy $name $dir
 	    }
+	    displayErrorWarningOrInfo "Done copying on-the-fly-libs.\n" info
 	}
     }
     if { ![validDir $dir] } {
@@ -1736,11 +1756,11 @@ proc maybeWrite_init_DATADIR_and_DATASET { out } {
     if { ![envBool SCIRUN_NET_SUBSTITUTE_DATADIR] } return
     foreach module [array names ModuleSubstitutedVars] {
 	foreach var $ModuleSubstitutedVars($module) {
-	    upvar $module-$var val
+	    upvar \#0 $module-$var val
 	    if { [info exists val] && \
-		![string equal $val [subDATADIRandDATASET $module $var]] } {
-		puts $out "# Ask SCIRun to tell us where the data is"
-		puts $out "init_DATADIR_and_DATASET\n"
+		     ![string equal $val [subDATADIRandDATASET $val]] } {
+		puts $out "\n# Ask SCIRun to tell us where the data is"
+		puts $out "init_DATADIR_and_DATASET"
 		return
 	    }
 	}
