@@ -270,6 +270,19 @@ TriSurfMesh::locate(Cell::index_type &loc, const Point &) const
 
 
 void
+TriSurfMesh::get_weights(const Point &p,
+			 Face::array_type &l, vector<double> &w)
+{
+  Face::index_type idx;
+  if (locate(idx, p))
+  {
+    l.push_back(idx);
+    w.push_back(1.0);
+  }
+}
+
+
+void
 TriSurfMesh::get_center(Point &p, Edge::index_type i) const
 {
   Node::array_type nodes;

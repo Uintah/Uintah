@@ -626,6 +626,19 @@ TetVolMesh::locate(Cell::index_type &cell, const Point &p) const
 
 
 void
+TetVolMesh::get_weights(const Point &p,
+			Cell::array_type &l, vector<double> &w)
+{
+  Cell::index_type idx;
+  if (locate(idx, p))
+  {
+    l.push_back(idx);
+    w.push_back(1.0);
+  }
+}
+
+
+void
 TetVolMesh::compute_grid()
 {
   if (grid_.get_rep() != 0) return; // only create once.

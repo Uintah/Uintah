@@ -57,113 +57,21 @@ template <class F>
 class SFInterface : public ScalarFieldInterface {
 public:
   SFInterface(const F *fld) :
-    fld_(fld),
-    interp_(this)
+    fld_(fld)
   {}
   
   virtual bool compute_min_max(double &minout, double &maxout) const;
   virtual bool interpolate(double &result, const Point &p) const;
 
-  virtual void compute_weights(const vector<double> &w, const Point &p,
-			       vector<Point> &pp) const {}
-  virtual bool interp(double &result, const Point &p) const;
-
 private:
-  friend class linear_interp;
-
-  class linear_interp {
-  public:
-    typedef typename F::mesh_type Mesh;
-    const SFInterface *par_;
-
-    linear_interp(const SFInterface *par) :
-      par_(par)
-    {}
-
-    
-    //! do linear interp at data location.
-    bool operator()(double &result, const Point &p) const {
-      typename Mesh::Cell::index_type ci;
-      const typename F::mesh_handle_type &mesh = par_->fld_->get_typed_mesh();
-
-      switch (par_->fld_->data_at()) {
-      case F::NODE :
-	{
-	  if (! mesh->locate(ci, p)) return false;	  
-
-	  typename Mesh::Node::array_type nodes;
-	  mesh->get_nodes(nodes, ci);
-
-	  typename F::value_type tmp;
-	  int i = 0;
-	  Point center;
-	  typename Mesh::Node::array_type::iterator iter = nodes.begin();
-	  while (iter != nodes.end()) {
-	    if (par_->fld_->value(tmp, *iter)) { 
-	      mesh->get_point(center, *iter);
-	      const double w = (p - center).length();
-	      result += w * (double)tmp;
-	    }
-	    ++iter; ++i;
-	  }
-	}
-      break;
-      case F::EDGE:
-	{
-	  ASSERTFAIL("Edge Data not yet supported");
-	}
-	break;
-      case F::FACE:
-	{  
-	 ASSERTFAIL("Face Data not yet supported");
-	}
-	break;
-      case F::CELL:
-	{
-	  if (! mesh->locate(ci, p)) return false;
-	  
-	  typename Mesh::Cell::array_type cells;
-	  mesh->get_neighbors(cells, ci);
-	  
-	  typename F::value_type tmp;
-	  int i = 0;
-	  typename Mesh::Cell::array_type::iterator iter = cells.begin();
-	  Point center;
-	  while (iter != cells.end()) {
-	    if (par_->fld_->value(tmp, *iter)) { 
-	      mesh->get_center(center, *iter);
-	      const double w = (p - center).length();
-	      result += w * (double)tmp;
-	    } else {
-	      return false;
-	    }
-	    ++iter; ++i;
-	  }
-	}
-	break;
-      case F::NONE:
-	cerr << "Error: Field data at location NONE!!" << endl;
-	return false;
-      } 
-      return false;
-    }    
-  };
 
   const F        *fld_;
-  linear_interp   interp_;
 };
 
 
-template <class Fld>
-bool
-SFInterface<Fld>::interpolate(double &result, const Point &p) const
-{
-  return interp_(result, p);
-}
-
 template <class F>
 bool
-SFInterface<F>::interp(double &result, const Point &p) const
+SFInterface<F>::interpolate(double &result, const Point &p) const
 {
   typename F::mesh_handle_type mesh = fld_->get_typed_mesh();
   switch(fld_->data_at())
