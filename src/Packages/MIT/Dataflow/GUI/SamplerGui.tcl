@@ -22,38 +22,83 @@ class SamplerGui {
 
     variable w
     variable n
+    variable mode 
 
     constructor {} {
+	global $this-interations
+	set mode "stop"
     }
 
     method ui { window } {
 
 	set w $window
+	
+        iwidgets::entryfield $w.iteration -labeltext "Iterations:" \
+	    -validate numeric \
+	    -textvariable $this-iterations \
+	    -command "$this-c iteration \[$w.iteration get\]" 
 
-        iwidgets::entryfield $w.burning -labeltext "Burning:" \
-	    -validate numeric -command "$this-c burning \[$w.burning get\]" 
+#        iwidgets::entryfield $w.monitor -labeltext "Monitor:" \
+\#	    -validate numeric -command "$this-c monitor \[$w.monitor get\]" 
 
-        iwidgets::entryfield $w.monitor -labeltext "Monitor:" \
-	    -validate numeric -command "$this-c monitor \[$w.monitor get\]" 
-
-        iwidgets::entryfield $w.thin -labeltext "Thin:" \
-	    -validate numeric -command "$this-c thin  \[$w.thin get\]" 
+#        iwidgets::entryfield $w.thin -labeltext "Thin:" \
+\#	    -validate numeric -command "$this-c thin  \[$w.thin get\]" 
 
         iwidgets::entryfield $w.kappa -labeltext "Kappa:" \
 	    -validate numeric -command "$this-c kappa \[$w.kappa get\]" 
 
-	button $w.exec -text "Execute" -command "$this-c exec"
+	frame $w.ctrl
+	button $w.ctrl.stop -text "Stop" -command "$this stop" -state disable
+	button $w.ctrl.run -text "  Run   " -command "$this run "
+	label  $w.ctrl.current -text ""
+	pack $w.ctrl.stop $w.ctrl.run $w.ctrl.current -side left -anchor w
 
 	frame $w.children
 
-
-	pack $w.burning $w.monitor $w.thin  -anchor w
-	pack $w.exec -anchor w
-	pack $w.children
+	pack $w.iteration -anchor w
+	pack $w.ctrl -anchor w
+	pack $w.children 
 
 	set n 0
 	#iwidgets::Labeledframe $w.graph -labeltext "Progress"
 	#pack $w.graph -expand yes -fill both
+    }
+
+    method run {} {
+	if { $mode == "stop" } {
+	    $w.ctrl.run configure -text " Pause "
+	    $w.ctrl.stop configure -state normal
+	    set mode "run"
+	    $this-c run
+	} elseif { $mode == "run" } {
+	    $w.ctrl.run configure -text "Continue"
+	    set mode "pause"
+	    $this-c pause
+	} else {
+	    $w.ctrl.run configure -text " Pause  "
+	    set mode "run"
+	    $this-c run
+	}
+    }
+	
+    method stop {} {
+	$w.ctrl.run configure -text "Run"
+	$w.ctrl.stop configure -state disable
+	set mode "stop"
+	$this-c stop
+    }
+
+
+    method done {} {
+	if { $mode == "run" } {
+	    $w.ctrl.run configure -text "Run"
+	    $w.ctrl.stop configure -state disable
+	    set mode "stop"
+	}
+    }
+	
+    method set-iter { n } {
+	$w.ctrl.current configure -text $n
     }
 
     method new-child-window { name } {
@@ -67,5 +112,7 @@ class SamplerGui {
 	return [$child childsite]
     }
 }
+
+
 
 
