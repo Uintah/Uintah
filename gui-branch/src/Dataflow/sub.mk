@@ -32,6 +32,7 @@ SUBDIRS := \
 	$(SRCDIR)/Widgets \
 	$(SRCDIR)/XMLUtil \
 	$(SRCDIR)/Resources \
+	$(SRCDIR)/Framework \
 
 include $(SCIRUN_SCRIPTS)/recurse.mk
 
