@@ -26,6 +26,66 @@
     </para> 
   </description>
 
+<entry>
+<keywords>Xerces, Thirdparty</keywords>
+<question>
+<para>
+I have a problem with installing the thirdparty software on an SGI Octane.
+I ran the install script that was provided in the tar ball from the SCIRun
+website and go the error message below. It seems to be trying to copy a
+xerces file that doesn't exist.  What's wrong?
+</para>
+<pre>
+cc-32bit/src/xerces-c-src1_5_2/src/validators/schema'
+gmake[1]: Leaving directory
+`/u/wk/ccheung/scirun/SCIRun_Thirdparty/1.4.2/IRIX/gcc-32bit/src/xerces-c-src1_5_2/src/validators'
+
+cd
+/u/wk/ccheung/scirun/SCIRun_Thirdparty/1.4.2/IRIX/gcc-32bit/src/xerces-c-src1_5_2/obj
+&amp;&amp; /usr/local/bin/gmake install &amp;&amp; cd ..
+gmake[1]: Entering directory
+`/u/wk/ccheung/scirun/SCIRun_Thirdparty/1.4.2/IRIX/gcc-32bit/src/xerces-c-src1_5_2/obj'
+
+mkdir -p /u/wk/ccheung/scirun/SCIRun_Thirdparty/1.4.2/IRIX/gcc-32bit/lib
+
+cp -fp
+/u/wk/ccheung/scirun/SCIRun_Thirdparty/1.4.2/IRIX/gcc-32bit/src/xerces-c-src1_5_2/lib/libxerces-c1_5_2.so
+/u/wk/ccheung/scirun/SCIRun_Thirdparty/1.4.2/IRIX/gcc-32bit/lib
+/u/wk/ccheung/scirun/SCIRun_Thirdparty/1.4.2/IRIX/gcc-32bit/src/xerces-c-src1_5_2/lib/libxerces-c1_5_2.so
+- No such file or directory
+gmake[1]: [install] Error 2 (ignored)
+gmake[1]: Leaving directory
+`/u/wk/ccheung/scirun/SCIRun_Thirdparty/1.4.2/IRIX/gcc-32bit/src/xerces-c-src1_5_2/obj'
+
+-------------------------------------------------------
+-- FATAL ERROR :
+--
+-- The build or installation of the required software:
+--
+--   Xerces-C++
+--
+-- failed.  Check the above output
+-- for errors and clues as to how to solve the problem.
+
+-------------------------------------------------------
+</pre>
+</question>
+<answer>
+<para>
+Xerces creates very long commands for a shell.  It could be that the value
+of your system's 'ncargs' variable is too small.
+</para> 
+
+<para>
+Run the
+command 'systune ncargs'.  It will report  ncargs' value. Use the systune
+command to set ncargs to a large value:  systune ncargs
+262144.  You need root privilages to do this.  Try the thirdparty install again.
+</para>
+
+</answer>
+</entry>
+
   <entry>  
     <keywords>SGI, runtime, pthreads and SIGABRT</keywords> 
     <question> 
