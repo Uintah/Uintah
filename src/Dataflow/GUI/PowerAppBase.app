@@ -1522,3 +1522,14 @@ class PowerAppBase {
     # should be used when Save Session is selected.
     variable saveFile    
 }
+
+# bind show/hide of network editor
+bind all <Control-n> {
+    if {[winfo exists .]} {
+	if {[winfo ismapped .]} {
+	    wm withdraw .
+	} else {
+	    wm deiconify  .
+	}
+    }
+}
