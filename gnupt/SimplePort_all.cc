@@ -2,6 +2,7 @@
 #pragma implementation "SimplePort.h"
 
 #include <Datatypes/SimplePort.cc>
+#include <Datatypes/Colormap.h>
 #include <Datatypes/ContourSet.h>
 #include <Datatypes/Matrix.h>
 #include <Datatypes/Mesh.h>
@@ -21,3 +22,5 @@ typedef SimpleIPort<MeshHandle> _dummy9_;
 typedef SimpleOPort<MeshHandle> _dummy10_;
 typedef SimpleIPort<MatrixHandle> _dummy11_;
 typedef SimpleOPort<MatrixHandle> _dummy12_;
+typedef SimpleIPort<ColormapHandle> _dummy13_;
+typedef SimpleOPort<ColormapHandle> _dummy14_;
