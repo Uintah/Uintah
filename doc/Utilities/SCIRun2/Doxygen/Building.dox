@@ -201,6 +201,12 @@ SCIRun2 will \em not build correctly with MPICH.
 
 Estimated time to build: 2-3 hours
 
+\subsection building5_8 uuid.h
+<!-- uuid dependency should disappear soon -->
+SCIRun2's PIDL compiler uses universally unique identifiers (UUID).
+You will need sys/uuid.h or uuid/uuid.h installed in your compiler's header
+file search path.
+
 \section building6 Nightly build
 
 SCIRun2 software is built from the current CVS repository each night.
