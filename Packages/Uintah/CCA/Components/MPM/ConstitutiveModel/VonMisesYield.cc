@@ -21,7 +21,7 @@ VonMisesYield::evalYieldCondition(const double sigEqv,
                                   double& sig)
 {
   sig = sigFlow;
-  return (sigEqv-sigFlow);
+  return (sigEqv*sigEqv-sigFlow*sigFlow);
 }
 
 void 
@@ -33,7 +33,17 @@ VonMisesYield::evalDerivOfYieldFunction(const Matrix3& sig,
   Matrix3 I; I.Identity();
   double trSig = sig.Trace();
   Matrix3 sigDev = sig - I*(trSig/3.0);
-  double sigEqv = sqrt(1.5*sigDev.NormSquared());
-  derivative = sigDev*(1.5/sigEqv);
+  derivative = sigDev*3.0;
 }
 
+void 
+VonMisesYield::evalDevDerivOfYieldFunction(const Matrix3& sig,
+					   const double ,
+					   const double ,
+					   Matrix3& derivative)
+{
+  Matrix3 I; I.Identity();
+  double trSig = sig.Trace();
+  Matrix3 sigDev = sig - I*(trSig/3.0);
+  derivative = sigDev*3.0;
+}

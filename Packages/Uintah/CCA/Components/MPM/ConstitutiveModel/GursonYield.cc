@@ -63,3 +63,15 @@ GursonYield::evalDerivOfYieldFunction(const Matrix3& sig,
   derivative = sigDev*3.0 + 
                I*((q1*q2*fStar*sigFlow)*sinh(0.5*q2*trSig/sigFlow));
 }
+
+void 
+GursonYield::evalDevDerivOfYieldFunction(const Matrix3& sig,
+					 const double ,
+					 const double ,
+					 Matrix3& derivative)
+{
+  Matrix3 I; I.Identity();
+  double trSig = sig.Trace();
+  Matrix3 sigDev = sig - I*(trSig/3.0);
+  derivative = sigDev*3.0;
+}

@@ -475,7 +475,7 @@ HypoElasticPlastic::computeStressTensor(const PatchSubset* patches,
                                                porosity, sig);
       //cout << "Equivalent stress = " << equivStress 
       //     << " Flow stress = " << flowStress << endl;
-      if (Phi <= 0.0) {
+      if (Phi <= 0.0 || flowStress < 0.00001) {
 
 	// Calculate the deformed volume
 	double rho_cur = rho_0/J;
@@ -525,7 +525,8 @@ HypoElasticPlastic::computeStressTensor(const PatchSubset* patches,
           // Calculate the derivative of the yield function (using the 
           // previous time step (n) values)
           Matrix3 q(0.0);
-          d_yield->evalDerivOfYieldFunction(tensorSig, flowStress, porosity, q);
+          d_yield->evalDevDerivOfYieldFunction(tensorSig, flowStress, 
+                                               porosity, q);
 
 	  // Calculate the tensor u (at start of time interval)
           double sqrtqs = sqrt(q.Contract(tensorS));
@@ -635,6 +636,12 @@ HypoElasticPlastic::computeStressTensor(const PatchSubset* patches,
         // Calculate rate of temperature increase due to plastic strain
         double taylorQuinney = 0.9;
         double C_p = matl->getSpecificHeat();
+
+        // ** WARNING ** Special for steel (remove for other materials)
+        double T = pPlasticTemperature[idx];
+        C_p = 0.09278 + 7.454e-4*T + 12404.0/(T*T);
+
+        // Calculate Tdot
         double Tdot = tensorSig.Contract(tensorD)*(taylorQuinney/(rho_cur*C_p));
 
         // Update the temperature
