@@ -588,7 +588,8 @@ void ICE::scheduleComputeDelPressAndUpdatePressCC(SchedulerP& sched,
   task->computes(lb->delP_DilatateLabel,   press_matl);
   task->computes(lb->delP_MassXLabel,      press_matl);
   task->computes(lb->term2Label,           press_matl);
-  task->computes(lb->term3Label,           press_matl);  
+  task->computes(lb->term3Label,           press_matl);
+  task->computes(lb->sum_rho_CCLabel,      press_matl);  // only one mat subset     
   
   sched->addTask(task, patches, matls);
 }
@@ -604,11 +605,11 @@ void ICE::scheduleComputePressFC(SchedulerP& sched,
   cout_doing << "ICE::scheduleComputePressFC" << endl;                   
   Task* task = scinew Task("ICE::computePressFC",
                      this, &ICE::computePressFC);
+                     
+  Ghost::GhostType  gac = Ghost::AroundCells;
+  task->requires(Task::NewDW,lb->press_CCLabel,   press_matl,gac,1);
+  task->requires(Task::NewDW,lb->sum_rho_CCLabel, press_matl,gac,1);
 
-  task->requires(Task::NewDW,lb->press_CCLabel,
-                                     press_matl,Ghost::AroundCells,1);
-  task->requires(Task::NewDW,lb->rho_CCLabel,   Ghost::AroundCells,1);
-  
   task->computes(lb->pressX_FCLabel, press_matl);
   task->computes(lb->pressY_FCLabel, press_matl);
   task->computes(lb->pressZ_FCLabel, press_matl);
@@ -1798,6 +1799,7 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
     CCVariable<double> q_CC, q_advected;
     CCVariable<double> delP_Dilatate;
     CCVariable<double> delP_MassX;
+    CCVariable<double> sum_rho_CC;
     CCVariable<double> press_CC;
     CCVariable<double> term1, term2, term3;
     constCCVariable<double> burnedMass;
@@ -1812,6 +1814,8 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
     new_dw->allocateAndPut(press_CC,     lb->press_CCLabel,     0, patch);
     new_dw->allocateAndPut(term2,        lb->term2Label,        0, patch);
     new_dw->allocateAndPut(term3,        lb->term3Label,        0, patch);
+    new_dw->allocateAndPut(sum_rho_CC,   lb->sum_rho_CCLabel,   0, patch); 
+
     new_dw->allocateTemporary(q_advected, patch);
     new_dw->allocateTemporary(term1,      patch);
     new_dw->allocateTemporary(q_CC,       patch, gac,1);
@@ -1820,6 +1824,7 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
     term1.initialize(0.);
     term2.initialize(0.);
     term3.initialize(0.);
+    sum_rho_CC.initialize(0.0); 
     delP_Dilatate.initialize(0.0);
     delP_MassX.initialize(0.0);
 
@@ -1876,7 +1881,7 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
         term1[c] += burnedMass[c] * (sp_vol_CC[m][c]/vol);
 
         //   Divergence of velocity * face area 
-          term2[c] -= volFrac_advected[c]; 
+        term2[c] -= volFrac_advected[c]; 
 
 //        term3[c] += vol_frac[c] * sp_vol_CC[m][c]/
 //                            (speedSound[c]*speedSound[c]);
@@ -1884,6 +1889,13 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
         term3[c] += (vol_frac[c] + created_vol[c]/vol)*sp_vol_CC[m][c]/
                                              (speedSound[c]*speedSound[c]);
       }  //iter loop 
+      
+      //__________________________________
+      //  compute sum_rho_CC used by press_FC
+      for(CellIterator iter=patch->getExtraCellIterator(); !iter.done();iter++) {
+        IntVector c = *iter;
+        sum_rho_CC[c] += rho_CC[c];
+      } 
     }  //matl loop
     delete advector;
     press_CC.initialize(0.);
@@ -1944,24 +1956,19 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
 template <class T> void ICE::computePressFace(int& numMatls,
                               CellIterator iter, 
                               IntVector adj_offset,
-                              StaticArray<constCCVariable<double> >& rho_CC,
+                              constCCVariable<double>& sum_rho,
                               constCCVariable<double>& press_CC,
                               T& press_FC)
 {
   for(;!iter.done(); iter++){
     IntVector R = *iter;
     IntVector L = R + adj_offset; 
-    double sum_rho_R = 0.0;
-    double sum_rho_L = 0.0;
-    for(int m = 0; m < numMatls; m++) {
-      sum_rho_R  += rho_CC[m][R];    
-      sum_rho_L  += rho_CC[m][L];    
-    }
-    press_FC[R] = (press_CC[R] * sum_rho_L + press_CC[L] * sum_rho_R)/
-      (sum_rho_R + sum_rho_L);
+
+    press_FC[R] = (press_CC[R] * sum_rho[L] + press_CC[L] * sum_rho[R])/
+      (sum_rho[R] + sum_rho[L]);
   }
 }
-
+ 
 //______________________________________________________________________
 //
 void ICE::computePressFC(const ProcessorGroup*,   
@@ -1977,45 +1984,38 @@ void ICE::computePressFC(const ProcessorGroup*,
          << "\t\t\t\t ICE" << endl;
 
     int numMatls = d_sharedState->getNumMatls();
-
-    StaticArray<constCCVariable<double> > rho_CC(numMatls);
+    Ghost::GhostType  gac = Ghost::AroundCells;
+    
     constCCVariable<double> press_CC;
-    new_dw->get(press_CC,lb->press_CCLabel, 0, patch, 
-               Ghost::AroundCells, 1);
-
+    constCCVariable<double> sum_rho_CC;
+    new_dw->get(press_CC,  lb->press_CCLabel,   0, patch, gac, 1);
+    new_dw->get(sum_rho_CC,lb->sum_rho_CCLabel, 0, patch, gac, 1);
+    
     SFCXVariable<double> pressX_FC;
     SFCYVariable<double> pressY_FC;
     SFCZVariable<double> pressZ_FC;
-
     new_dw->allocateAndPut(pressX_FC, lb->pressX_FCLabel, 0, patch);
     new_dw->allocateAndPut(pressY_FC, lb->pressY_FCLabel, 0, patch);
     new_dw->allocateAndPut(pressZ_FC, lb->pressZ_FCLabel, 0, patch);
-
+    
     vector<IntVector> adj_offset(3);
     adj_offset[0] = IntVector(-1, 0, 0);    // X faces
     adj_offset[1] = IntVector(0, -1, 0);    // Y faces
-    adj_offset[2] = IntVector(0,  0, -1);   // Z faces     
-
-    for(int m = 0; m < numMatls; m++)  {
-      Material* matl = d_sharedState->getMaterial( m );
-      int indx = matl->getDWIndex();
-      new_dw->get(rho_CC[m],lb->rho_CCLabel,indx,patch,Ghost::AroundCells,1);
-    }
+    adj_offset[2] = IntVector(0,  0, -1);   // Z faces
+         
     //__________________________________
     //  For each face compute the pressure
-
     computePressFace<SFCXVariable<double> >(numMatls,patch->getSFCXIterator(),
-                                       adj_offset[0],rho_CC,press_CC,
+                                       adj_offset[0], sum_rho_CC, press_CC,
                                        pressX_FC);
 
     computePressFace<SFCYVariable<double> >(numMatls,patch->getSFCYIterator(),
-                                       adj_offset[1],rho_CC,press_CC,
+                                       adj_offset[1], sum_rho_CC, press_CC,
                                        pressY_FC);
 
     computePressFace<SFCZVariable<double> >(numMatls,patch->getSFCZIterator(),
-                                       adj_offset[2],rho_CC,press_CC,
-                                       pressZ_FC);
-
+                                       adj_offset[2], sum_rho_CC, press_CC,
+                                       pressZ_FC); 
    //---- P R I N T   D A T A ------ 
     if (switchDebug_PressFC) {
       ostringstream desc;
