@@ -78,20 +78,18 @@ itcl_class Kurt_Vis_VisControl {
 	#       set n "$this-c needexecute" 
  	frame $w.f -relief flat
  	pack $w.f -side top -expand yes -fill both
-	
 
-	scale $w.f.time -orient horizontal -from 0 -to 1.0 \
-	    -resolution 0.01 -bd 2
-	
+	scale $w.time -orient horizontal -from 0 -to 1.0 \
+	    -resolution 0.01 -bd 2 -label "Time" \
+	    -tickinterval 0.5
 	button $w.b -text "Close" -command "wm withdraw $w"
-	pack $w.f.time $w.b -side top -fill x -padx 2 -pady 2
-
+	pack $w.time $w.b -side top -fill x -padx 2 -pady 2
 	makeFrames $w.f
 	
     }
 
 
-    method Visible {} {
+    method isVisible {} {
 	if {[winfo exists .ui[modname]]} {
 	    return 1
 	} else {
@@ -118,7 +116,6 @@ itcl_class Kurt_Vis_VisControl {
 	global $this-psVar;
 	global $this-pvVar;
 	set Labels [list ""  "Grid Vars" "Particle Vars"]
-	
 	for { set i 1 } { $i < [llength $Labels] } { incr i } {
 	    frame $parent.f$i -relief groove -borderwidth 2 
 	    label $parent.f$i.label -text [lindex $Labels $i] 
@@ -130,29 +127,11 @@ itcl_class Kurt_Vis_VisControl {
 
 	    frame $parent.f$i.1 -relief flat -borderwidth 2
 	    pack $parent.f$i.1 -side top -expand yes -fill both -padx 2
-
 	    buildControlFrame $parent.f$i.1
 	    
 
 	}
 
-
-	set w .ui[modname] 
-	if { [winfo exists $w.b] } {
-	    destroy $w.b
-	}
-	if { [winfo exists $w.time] } {
-	    destroy $w.time
-	}
-	
-	scale $w.time -orient horizontal -from 0 -to 1.0 \
-	    -variable $this-time -resolution 0.01 -bd 2 -command "$this-c needexecute"
-	#-text "Time"
-	
-	button $w.b -text "Close" -command "wm withdraw $w"
-	pack $w.time $w.b -side top -fill x -padx 2 -pady 2
-
-	
 	set gf $parent.f1
 	set pf $parent.f2
     }
@@ -166,7 +145,6 @@ itcl_class Kurt_Vis_VisControl {
 	if { [winfo exists $name.2] } {
 	    destroy $name.2
 	}
-
 	frame $name.1 -relief flat -borderwidth 2
 	label $name.1.s -text "Scalars"
 	pack $name.1 -side left  -expand yes -fill both -padx 2
@@ -182,9 +160,6 @@ itcl_class Kurt_Vis_VisControl {
 
 	destroy $gf
 	destroy $pf
-	if { [winfo exists $w.b] } {
-	    destroy $w.b
-	}
 	set gNameList ""
 	set pNameList ""
 	set psVarList ""
@@ -193,9 +168,6 @@ itcl_class Kurt_Vis_VisControl {
 	set gvVarList ""
 	set gf ""
 	set pf ""
-#	button $w.b -text "Make Frames" -command "$this makeFrames $w.f"
-#	pack $w.b -side top -fill x -padx 2 -pady 2
-
     }
 
     method SetTimeRange { min max timesteps } {
@@ -270,6 +242,7 @@ itcl_class Kurt_Vis_VisControl {
 	    }
 	} else {
 
+	    puts "... buildControlFrame $gf.1"
 	    buildControlFrame $gf.1
 	    #set varlist [split $gsVarList]
 	    for {set i 0} { $i < [llength $gsVarList] } { incr i } {
