@@ -3,6 +3,7 @@
 #include "SingleVelContact.h"
 #include "FrictionContact.h"
 #include <SCICore/Malloc/Allocator.h>
+#include <Uintah/Interface/ProblemSpec.h>
 #include <string>
 using std::cerr;
 
@@ -39,6 +40,10 @@ Contact* ContactFactory::create(const ProblemSpecP& ps, SimulationStateP &ss)
 }
 
 // $Log$
+// Revision 1.5  2000/07/11 19:18:23  tan
+// Added #include <Uintah/Interface/ProblemSpec.h> into the .cc file.
+// Some compiling patterns need it.
+//
 // Revision 1.4  2000/05/30 20:19:08  sparker
 // Changed new to scinew to help track down memory leaks
 // Changed region to patch
