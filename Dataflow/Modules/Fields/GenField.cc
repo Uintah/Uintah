@@ -22,8 +22,7 @@
 #include <stdio.h>
 
 #include <Core/Datatypes/Field.h>
-#include <Core/Datatypes/GenSField.h>
-#include <Core/Datatypes/GenVField.h>
+#include <Core/Datatypes/GeneralField.h>
 #include <Core/Datatypes/LatticeGeom.h>
 #include <Core/Datatypes/IrregLatticeGeom.h> // Test
 #include <Core/Datatypes/MeshGeom.h>
@@ -125,18 +124,18 @@ GenField::fill(DiscreteAttrib<T> *attrib, LatticeGeom *geom,
   const int z = geom->getSizeZ();
 
   for (int k=0; k < z; k++)
+  {
+    for (int j=0; j < y; j++)
     {
-      for (int j=0; j < y; j++)
-	{
-	  for (int i=0; i < x; i++)
-	    {
-	      Point p(i, j, k);
-	      Point r;
-	      geom->transform(p, r);	
-	      attrib->set3(i, j, k, analyt->eval(r.x(), r.y(), r.z()));
-	    }
-	}
+      for (int i=0; i < x; i++)
+      {
+	Point p(i, j, k);
+	Point r;
+	geom->transform(p, r);	
+	attrib->set3(i, j, k, analyt->eval(r.x(), r.y(), r.z()));
+      }
     }
+  }
 }
 
 
@@ -151,22 +150,22 @@ GenField::indicize(I *iatt, A *datt,
   const double iscale = 255.0 / (maxval - minval);
 
   for (int i=0; i < 256; i++)
-    {
-      iatt->tset(i, minval + i / iscale);
-    }
+  {
+    iatt->tset(i, minval + i / iscale);
+  }
 
   for (int k=0; k < z; k++)
+  {
+    for (int j=0; j < y; j++)
     {
-      for (int j=0; j < y; j++)
-	{
-	  for (int i=0; i < x; i++)
-	    {
-	      const int val =
-		(int)((datt->get3(i, j, k) - minval) * iscale + 0.5);
-	      iatt->iset3(i, j, k, val);
-	    }
-	}
+      for (int i=0; i < x; i++)
+      {
+	const int val =
+	  (int)((datt->get3(i, j, k) - minval) * iscale + 0.5);
+	iatt->iset3(i, j, k, val);
+      }
     }
+  }
 }
 
 
@@ -181,18 +180,18 @@ collect_points(LatticeGeom *geom)
   vector<NodeSimp> nodes;
 
   for (int k=0; k < z; k++)
+  {
+    for (int j=0; j < y; j++)
     {
-      for (int j=0; j < y; j++)
-	{
-	  for (int i=0; i < x; i++)
-	    {
-	      Point p(i, j, k);
-	      NodeSimp r;
-	      geom->transform(p, r.p);	
-	      nodes.push_back(r);
-	    }
-	}
+      for (int i=0; i < x; i++)
+      {
+	Point p(i, j, k);
+	NodeSimp r;
+	geom->transform(p, r.p);	
+	nodes.push_back(r);
+      }
     }
+  }
 }  
 
 
@@ -202,19 +201,19 @@ collect_edges(LatticeGeom *geom)
   vector<EdgeSimp> edges;
 
   for (int k=0; k < z; k++)
+  {
+    for (int j=0; j < y; j++)
     {
-      for (int j=0; j < y; j++)
-	{
-	  for (int i=0; i < x; i++)
-	    {
-	      // TODO: Unmap these from 3d->1d
-	      // TODO: compute average values also.
-	      if (i+1 < x) { i, j, k  i+1, j, k; }
-	      if (j+1 < y) { i, j, k, i, j+1, k; }
-	      if (k+1 < z) { i, j, k, i, j, k+1; }
-	    }
-	}
+      for (int i=0; i < x; i++)
+      {
+	// TODO: Unmap these from 3d->1d
+	// TODO: compute average values also.
+	if (i+1 < x) { i, j, k  i+1, j, k; }
+	if (j+1 < y) { i, j, k, i, j+1, k; }
+	if (k+1 < z) { i, j, k, i, j, k+1; }
+      }
     }
+  }
 }    
 
 
@@ -223,16 +222,16 @@ static void
 collect_faces(LatticeGeom *geom)
 {
   for (int k=0; k < z; k++)
+  {
+    for (int j=0; j < y; j++)
     {
-      for (int j=0; j < y; j++)
-	{
-	  for (int i=0; i < x; i++)
-	    {
-	      x 0 y+1, x+1, y+
+      for (int i=0; i < x; i++)
+      {
+	x 0 y+1, x+1, y+
  		
-	    }
-	}
+	  }
     }
+  }
 }
 #endif
 
@@ -246,10 +245,10 @@ GenField::send_scalar_field()
   // Get functions.
   vector<string> functs;
   for (int i = 0; i < nfuncts; i++)
-    {
-      string s = fval1.get()();
-      functs.push_back(s);
-    }
+  {
+    string s = fval1.get()();
+    functs.push_back(s);
+  }
 
   // Create analytic attrib.
   // TODO: error checking here?
@@ -265,80 +264,156 @@ GenField::send_scalar_field()
   const Point start(tcl_sx.get(), tcl_sy.get(), tcl_sz.get());
   const Point end(tcl_ex.get(), tcl_ey.get(), tcl_ez.get());
   
-  LatticeGeom *geom;
-
-  if (geomtype.get() == 2) {
-    geom = new IrregLatticeGeom(x, y, z, start, end);
-  } else {
-    geom = new LatticeGeom(x, y, z, start, end);
-  }
-
   // Create attrib.
   const int mattribtype = attribtype.get();
-  DiscreteAttrib<double> *attrib;
+  LatticeGeom *lgeom;
+  DiscreteAttrib<double> *dattrib;
+  Field *osf;
+  double minval, maxval;
   switch (mattribtype)
+  {
+  case 4:
     {
-    case 4:
-      attrib = new DiscreteAttrib<double>(x, y, z);
-      break;
-      
-    case 3:
-      attrib = new BrickAttrib<double>(x, y, z);
-      break;
-
-    case 2:
-      attrib = new AccelAttrib<double>(x, y, z);
-      break;
-      
-    default:
-      attrib = new FlatAttrib<double>(x, y, z);
+      DiscreteAttrib<double> *attrib = scinew DiscreteAttrib<double>(x, y, z);
+      dattrib = attrib;
+      if (geomtype.get() == 2)
+      {
+	IrregLatticeGeom *geom = scinew IrregLatticeGeom(x, y, z, start, end);
+	lgeom = geom;
+	fill(attrib, geom, analyt);
+	GeneralField<IrregLatticeGeom, DiscreteAttrib<double> > *fld = scinew
+	  GeneralField<IrregLatticeGeom, DiscreteAttrib<double> >(geom, attrib);
+	fld->get_minmax(minval, maxval);
+	osf = fld;
+      }
+      else
+      {
+	LatticeGeom *geom = scinew IrregLatticeGeom(x, y, z, start, end);
+	lgeom = geom;
+	fill(attrib, geom, analyt);
+	GeneralField<LatticeGeom, DiscreteAttrib<double> > *fld = scinew
+	  GeneralField<LatticeGeom, DiscreteAttrib<double> >(geom, attrib);
+	fld->get_minmax(minval, maxval);
+	osf = fld;
+      }
     }
+    break;
+      
+  case 3:
+    {
+      BrickAttrib<double> *attrib = scinew BrickAttrib<double>(x, y, z);
+      dattrib = attrib;
+      if (geomtype.get() == 2)
+      {
+	IrregLatticeGeom *geom = scinew IrregLatticeGeom(x, y, z, start, end);
+	lgeom = geom;
+	fill(attrib, geom, analyt);
+	GeneralField<IrregLatticeGeom, BrickAttrib<double> > *fld = scinew
+	  GeneralField<IrregLatticeGeom, BrickAttrib<double> >(geom, attrib);
+	fld->get_minmax(minval, maxval);
+	osf = fld;
+      }
+      else
+      {
+	LatticeGeom *geom = scinew IrregLatticeGeom(x, y, z, start, end);
+	lgeom = geom;
+	fill(attrib, geom, analyt);
+	GeneralField<LatticeGeom, BrickAttrib<double> > *fld = scinew
+	  GeneralField<LatticeGeom, BrickAttrib<double> >(geom, attrib);
+	fld->get_minmax(minval, maxval);
+	osf = fld;
+      }
+    }
+    break;
+
+  case 2:
+    {
+      AccelAttrib<double> *attrib = scinew AccelAttrib<double>(x, y, z);
+      dattrib = attrib;
+      if (geomtype.get() == 2)
+      {
+	IrregLatticeGeom *geom = scinew IrregLatticeGeom(x, y, z, start, end);
+	lgeom = geom;
+	fill(attrib, geom, analyt);
+	GeneralField<IrregLatticeGeom, AccelAttrib<double> > *fld = scinew
+	  GeneralField<IrregLatticeGeom, AccelAttrib<double> >(geom, attrib);
+	fld->get_minmax(minval, maxval);
+	osf = fld;
+      }
+      else
+      {
+	LatticeGeom *geom = scinew IrregLatticeGeom(x, y, z, start, end);
+	lgeom = geom;
+	fill(attrib, geom, analyt);
+	GeneralField<LatticeGeom, AccelAttrib<double> > *fld = scinew
+	  GeneralField<LatticeGeom, AccelAttrib<double> >(geom, attrib);
+	fld->get_minmax(minval, maxval);
+	osf = fld;
+      }
+    }
+    break;
+      
+  default:
+    {
+      FlatAttrib<double> *attrib = scinew FlatAttrib<double>(x, y, z);
+      dattrib = attrib;
+      if (geomtype.get() == 2)
+      {
+	IrregLatticeGeom *geom = scinew IrregLatticeGeom(x, y, z, start, end);
+	lgeom = geom;
+	fill(attrib, geom, analyt);
+	GeneralField<IrregLatticeGeom, FlatAttrib<double> > *fld = scinew
+	  GeneralField<IrregLatticeGeom, FlatAttrib<double> >(geom, attrib);
+	fld->get_minmax(minval, maxval);
+	osf = fld;
+      }
+      else
+      {
+	LatticeGeom *geom = scinew IrregLatticeGeom(x, y, z, start, end);
+	lgeom = geom;
+	fill(attrib, geom, analyt);
+	GeneralField<LatticeGeom, FlatAttrib<double> > *fld = scinew
+	  GeneralField<LatticeGeom, FlatAttrib<double> >(geom, attrib);
+	fld->get_minmax(minval, maxval);
+	osf = fld;
+      }
+    }
+  }
 
   // Populate attrib, with analytic attrib and geometry.
-  fill(attrib, geom, analyt);
 
-  dbg << "Attrib in Genfield:\n" << attrib->getInfo() << endl;
+  dbg << "Attrib in Genfield:\n" << dattrib->getInfo() << endl;
 
-  dbg << "Geometry in in Genfield:\n" << geom->getInfo() << endl;
-  geom->getUnscaledTransform().print();
-  geom->getUnscaledTransform().printi();
-  ((Transform &)(geom->getTransform())).print();
-  ((Transform &)(geom->getTransform())).printi();
-
-
-  // Create index mapping.
-  GenSField<double, LatticeGeom> *isf =
-    new GenSField<double, LatticeGeom>(geom, attrib);
-  double minval, maxval;
-  isf->get_minmax(minval, maxval);
+  dbg << "Geometry in in Genfield:\n" << lgeom->getInfo() << endl;
+  lgeom->getUnscaledTransform().print();
+  lgeom->getUnscaledTransform().printi();
+  ((Transform &)(lgeom->getTransform())).print();
+  ((Transform &)(lgeom->getTransform())).printi();
 
   if (indexed.get())
-    {
-      // Convert attrib -> indexed attrib.
-      IndexAttrib<double, unsigned char, AccelAttrib<double> > *iatt =
-	new IndexAttrib<double, unsigned char, AccelAttrib<double> >(x, y, z);
+  {
+    // Convert attrib -> indexed attrib.
+    IndexAttrib<double, unsigned char, AccelAttrib<double> > *iatt =
+      scinew IndexAttrib<double, unsigned char, AccelAttrib<double> >(x, y, z);
 
-      indicize(iatt, attrib, minval, maxval, x, y, z);
+    indicize(iatt, dattrib, minval, maxval, x, y, z);
 
-      dbg << "Indexed Attrib in Genfield:\n" << iatt->getInfo() << endl;
+    dbg << "Indexed Attrib in Genfield:\n" << iatt->getInfo() << endl;
 
-      // Create Field, send it.
-      GenSField<double, LatticeGeom> *osf =
-	new GenSField<double, LatticeGeom>(geom, iatt);
+    // Create Field, send it.
+    delete osf;
+    osf = 
+      scinew GeneralField<LatticeGeom, IndexAttrib<double, unsigned char, AccelAttrib<double> > >(lgeom, iatt);
 
-      FieldHandle hndl(osf);
-      ofield->send(hndl);
-    }
+    FieldHandle hndl(osf);
+    ofield->send(hndl);
+  }
   else
-    {
-      // Create Field, send it.
-      GenSField<double, LatticeGeom> *osf =
-	new GenSField<double, LatticeGeom>(geom, attrib);
-
-      FieldHandle hndl(osf);
+  {
+    FieldHandle hndl(osf);
      
-      ofield->send(hndl);
-    }
+    ofield->send(hndl);
+  }
 }
 
 
@@ -377,33 +452,50 @@ GenField::send_vector_field()
 
   // Create attrib.
   const int mattribtype = attribtype.get();
-  DiscreteAttrib<Vector> *attrib;
+  DiscreteAttrib<Vector> *dattrib;
+  Field *osf;
   switch (mattribtype)
+  {
+  case 4:
     {
-    case 4:
-      attrib = new DiscreteAttrib<Vector>(x, y, z);
-      break;
+      DiscreteAttrib<Vector> *attrib = scinew DiscreteAttrib<Vector>(x, y, z);
+      dattrib = attrib;
+      osf = scinew GeneralField<LatticeGeom,
+	DiscreteAttrib<Vector> >(geom, attrib);
+    break;
+    }
       
-    case 3:
-      attrib = new BrickAttrib<Vector>(x, y, z);
+  case 3:
+    {
+      BrickAttrib<Vector> *attrib = scinew BrickAttrib<Vector>(x, y, z);
+      dattrib = attrib;
+      osf = scinew GeneralField<LatticeGeom,
+	BrickAttrib<Vector> >(geom, attrib);
       break;
-
-    case 2:
-      attrib = new AccelAttrib<Vector>(x, y, z);
-      break;
-      
-    default:
-      attrib = new FlatAttrib<Vector>(x, y, z);
     }
 
+  case 2:
+    {
+      AccelAttrib<Vector> *attrib = new AccelAttrib<Vector>(x, y, z);
+      dattrib = attrib;
+      osf = scinew GeneralField<LatticeGeom,
+	AccelAttrib<Vector> >(geom, attrib);
+    }
+    break;
+      
+  default:
+    {
+      FlatAttrib<Vector> *attrib = new FlatAttrib<Vector>(x, y, z);
+      dattrib = attrib;
+      osf = scinew GeneralField<LatticeGeom,
+	FlatAttrib<Vector> >(geom, attrib);
+    }
+  }
+
   // Populate attrib, with analytic attrib and geometry.
-  fill(attrib, geom, analyt);
+  fill(dattrib, geom, analyt);
 
-  dbg << "Attrib in Genfield:\n" << attrib->getInfo() << endl;
-
-  // Create Field, send it.
-  GenVField<Vector, LatticeGeom> *osf =
-    new GenVField<Vector, LatticeGeom>(geom, attrib);
+  dbg << "Attrib in Genfield:\n" << dattrib->getInfo() << endl;
 
   FieldHandle hndl(osf);
   ofield->send(hndl);
@@ -453,34 +545,39 @@ GenField::send_tensor_field()
   // Create attrib.
   const int mattribtype = attribtype.get();
   DiscreteAttrib<Tensor> *attrib;
+  Field *osf;
   switch (mattribtype)
-    {
-    case 4:
-      attrib = new DiscreteAttrib<Tensor>(x, y, z);
-      break;
+  {
+  case 4:
+    attrib = new DiscreteAttrib<Tensor>(x, y, z);
+    osf = scinew GeneralField<LatticeGeom,
+      DiscreteAttrib<Tensor> >(geom, attrib);
+    break;
       
-    case 3:
-      attrib = new BrickAttrib<Tensor>(x, y, z);
-      break;
+  case 3:
+    attrib = new BrickAttrib<Tensor>(x, y, z);
+    osf = scinew GeneralField<LatticeGeom,
+      DiscreteAttrib<Tensor> >(geom, attrib);
+    break;
 
-    case 2:
-      attrib = new AccelAttrib<Tensor>(x, y, z);
-      break;
+  case 2:
+    attrib = new AccelAttrib<Tensor>(x, y, z);
+    osf = scinew GeneralField<LatticeGeom,
+      DiscreteAttrib<Tensor> >(geom, attrib);
+    break;
       
-    default:
-      attrib = new FlatAttrib<Tensor>(x, y, z);
-    }
+  default:
+    attrib = new FlatAttrib<Tensor>(x, y, z);
+    osf = scinew GeneralField<LatticeGeom,
+      DiscreteAttrib<Tensor> >(geom, attrib);
+  }
 
   // Populate attrib, with analytic attrib and geometry.
   fill(attrib, geom, analyt);
 
   dbg << "Attrib in Genfield:\n" << attrib->getInfo() << endl;
 
-  // Create Field, send it.
-  GenVField<Tensor, LatticeGeom> *osf =
-    new GenVField<Tensor, LatticeGeom>(geom, attrib);
-
-  FieldHandle hndl(static_cast<Field*>(osf));
+  FieldHandle hndl(osf);
   
   ofield->send(hndl);
 #endif
@@ -496,17 +593,17 @@ GenField::execute()
   TCL::eval(".ui"+id+".f.r.functions view", tclRes);
 
   if (tclRes == "2")
-    {
-      send_tensor_field();
-    }
+  {
+    send_tensor_field();
+  }
   else if (tclRes == "1")
-    {
-      send_vector_field();
-    }
+  {
+    send_vector_field();
+  }
   else
-    {
-      send_scalar_field();
-    }
+  {
+    send_scalar_field();
+  }
 }
 
 

@@ -12,7 +12,7 @@ find . -name "*.ii" -print | xargs cat | sort | uniq -c | sort -nr | more
  */
 
 #include <Core/Containers/LockingHandle.h>
-#include <Core/Datatypes/GenSField.h>
+#include <Core/Datatypes/GeneralField.h>
 #include <Core/Datatypes/FlatAttrib.h>
 #include <Core/Datatypes/LatticeGeom.h>
 #include <Core/Datatypes/AccelAttrib.h>
@@ -48,9 +48,9 @@ template class BrickAttrib<double>;
 template class AccelAttrib<unsigned char>;
 template class IndexAttrib<double, unsigned char, AccelAttrib<unsigned char> >;
 
-template class GenSField<double, LatticeGeom>;
-template class GenSField<double, LatticeGeom, FlatAttrib<double> >;
-template class GenSField<double, LatticeGeom, AccelAttrib<double> >;
+template class GeneralField<LatticeGeom>;
+template class GeneralField<LatticeGeom, FlatAttrib<double> >;
+template class GeneralField<LatticeGeom, AccelAttrib<double> >;
 
 template class AttribFunctor<double>;
 template class AnalytAttrib<double>;

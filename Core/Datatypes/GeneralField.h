@@ -1,4 +1,4 @@
-//  GenSField.h - A general scalar field, comprised of one attribute and one geometry
+//  GeneralField.h - A general scalar field, comprised of one attribute and one geometry
 //  Written by:
 //   Eric Kuehne
 //   Department of Computer Science
@@ -11,8 +11,8 @@
 //  defaults to a DiscreteSAttrib unless otherwise specified at compile
 //  time.
 
-#ifndef SCI_project_GenSField_h
-#define SCI_project_GenSField_h 1
+#ifndef SCI_project_GeneralField_h
+#define SCI_project_GeneralField_h 1
 
 
 #include <Core/Datatypes/Datatype.h>
@@ -25,23 +25,23 @@ namespace SCIRun {
     
 
 
-template <class T, class G, class A=DiscreteAttrib<T> > 
-  class SCICORESHARE GenSField: public Field, public SLInterpolate
+template <class G, class A=DiscreteAttrib<double> >
+  class SCICORESHARE GeneralField : public Field
 {
   public:
-    
+
   /////////
   // Constructors
-  GenSField();
-  GenSField(G*, A*);
-  GenSField(const GenSField&);
+  GeneralField();
+  GeneralField(G*, A*);
+  GeneralField(const GeneralField&);
 
   /////////
   // Destructors
-  ~GenSField();
+  ~GeneralField();
 
-  virtual const T& grid(int, int, int) const;
-  virtual T& operator[](int);
+  virtual const typename A::value_type &grid(int, int, int) const;
+  virtual typename A::value_type &operator[](int);
 
   //////////
   // Resize the geom and return true if it is of type LatticeGeom,
@@ -79,7 +79,8 @@ template <class T, class G, class A=DiscreteAttrib<T> >
 
   //////////
   // return the min and max values
-  virtual bool get_minmax(double&, double&);
+  virtual bool get_minmax(typename A::value_type &min,
+			  typename A::value_type &max);
 
   //////////
   // Walk the field, applying op to each node
@@ -87,7 +88,9 @@ template <class T, class G, class A=DiscreteAttrib<T> >
   
   //////////
   // Interpolate at the point
-  virtual int slinterpolate(const Point& ipoint, double& outval, double eps=1.e-6);
+  virtual bool interpolate(const Point& ipoint,
+			   typename A::value_type &outval,
+			   double eps=1.e-6);
 
   /////////
   // Compute the gradient at the point
@@ -111,48 +114,48 @@ private:
 //////////
 // PIO support
 
-template <class T, class G, class A> Persistent*
-GenSField<T,G,A>::maker(){
-  return new GenSField<T,G,A>();
+template <class G, class A> Persistent*
+GeneralField<G,A>::maker() {
+  return new GeneralField<G,A>();
 }
 
-template <class T, class G, class A>
-string GenSField<T,G,A>::typeName(){
-  static string typeName = string("GenSField<") + findTypeName((T*)0) + "," + findTypeName((G*)0) +","+ findTypeName((A*)0) + ">";
+template <class G, class A>
+string GeneralField<G,A>::typeName() {
+  static string typeName = string("GeneralField<") + findTypeName((G*)0) +","+ findTypeName((A*)0) + ">";
   return typeName;
 }
 
-template <class T, class G, class A>
-PersistentTypeID GenSField<T,G,A>::type_id(GenSField<T,G,A>::typeName(), 
-					   "Field", 
-					   GenSField<T,G,A>::maker);
+template <class G, class A>
+PersistentTypeID GeneralField<G,A>::type_id(GeneralField<G,A>::typeName(), 
+					 "Field", 
+					 GeneralField<G,A>::maker);
 
-template <class T, class G, class A >
-GenSField<T,G,A>::GenSField():
+template <class G, class A >
+GeneralField<G,A>::GeneralField():
   Field()
 {
 }
 
-template <class T, class G, class A >
-GenSField<T,G,A>::~GenSField()
+template <class G, class A >
+GeneralField<G,A>::~GeneralField()
 {
 }
 
-template <class T, class G, class A >
-GenSField<T,G,A>::GenSField(G* igeom, A* iattrib):
+template <class G, class A >
+GeneralField<G,A>::GeneralField(G* igeom, A* iattrib):
   Field(), geom(igeom), attrib(iattrib)
 {
 }
 
-template <class T, class G, class A >
-GenSField<T,G,A>::GenSField(const GenSField&)
+template <class G, class A >
+GeneralField<G,A>::GeneralField(const GeneralField&)
 {
 }
 
 
-template <class T, class G, class A >
+template <class G, class A >
 bool
-GenSField<T, G, A>::resize(int x, int y, int z)
+GeneralField<G, A>::resize(int x, int y, int z)
 {
   A *typedattrib = attrib.get_rep();
   if (typedattrib) { typedattrib->resize(x, y, z); }
@@ -165,8 +168,9 @@ GenSField<T, G, A>::resize(int x, int y, int z)
 
 
 
-template <class T, class G, class A >
-const T& GenSField<T,G,A>::grid(int x, int y, int z) const
+template <class G, class A >
+const typename A::value_type &
+GeneralField<G,A>::grid(int x, int y, int z) const
 {
   A* typedattrib = attrib.get_rep();
   if (typedattrib) {
@@ -177,13 +181,14 @@ const T& GenSField<T,G,A>::grid(int x, int y, int z) const
   }
 }
 
-template <class T, class G, class A >
-T& GenSField<T,G,A>::operator[](int a)
+template <class G, class A >
+typename A::value_type &
+GeneralField<G,A>::operator[](int a)
 {
   A* typedattrib = attrib.get_rep();
   if (typedattrib)
     {
-      return (T &)(typedattrib->get1(a));
+      return typedattrib->get1(a);
     }
   else
     {
@@ -191,8 +196,8 @@ T& GenSField<T,G,A>::operator[](int a)
     }
 }
 
-template <class T, class G, class A >
-bool GenSField<T,G,A>::set_geom_name(string iname)
+template <class G, class A >
+bool GeneralField<G,A>::set_geom_name(string iname)
 {
   if (geom.get_rep())
     {
@@ -202,8 +207,8 @@ bool GenSField<T,G,A>::set_geom_name(string iname)
   return false;
 }
 
-template <class T, class G, class A >
-bool GenSField<T,G,A>::set_attrib_name(string iname){
+template <class G, class A >
+bool GeneralField<G,A>::set_attrib_name(string iname){
  if (attrib.get_rep())
    {
      attrib->setName(iname);
@@ -212,35 +217,35 @@ bool GenSField<T,G,A>::set_attrib_name(string iname){
   return false;
 }
 
-template <class T, class G, class A >
-const GeomHandle GenSField<T,G,A>::getGeom() const
+template <class G, class A >
+const GeomHandle GeneralField<G,A>::getGeom() const
 {
   return GeomHandle((Geom*)geom.get_rep());
 }
 
-template <class T, class G, class A >
-const AttribHandle GenSField<T,G,A>::getAttrib() const
+template <class G, class A >
+const AttribHandle GeneralField<G,A>::getAttrib() const
 {
   return AttribHandle((Attrib*)attrib.get_rep());
 }
 
-template <class T, class G, class A >
-bool GenSField<T,G,A>::get_bbox(BBox& bbox)
+template <class G, class A >
+bool GeneralField<G,A>::get_bbox(BBox& bbox)
 {
   if(geom.get_rep())
     {
       if(geom->getBoundingBox(bbox))
 	{
-	  return 1;
+	  return true;
 	}
       else
 	{
-	  return 0;
+	  return false;
 	}
     }
   else
     {
-      return 0;
+      return false;
     }
 }
 
@@ -249,8 +254,8 @@ template <class T> struct MinMaxFunctor : public AttribFunctor<T>
 public:
   virtual void operator () (T &val)
   {
-    if (val < min) { min = val; }
-    if (val > max) { max = val; }
+    min = Min(val, min);
+    max = Max(val, max);
   }
 
   T min;
@@ -259,13 +264,14 @@ public:
 
 
 // TODO: Implement this so it's always valid.
-template <class T, class G, class A >
-bool GenSField<T,G,A>::get_minmax(double &imin, double &imax)
+template <class G, class A >
+bool GeneralField<G,A>::get_minmax(typename A::value_type &imin,
+				   typename A::value_type &imax)
 {
   A* tattrib = attrib.get_rep();
   if (!tattrib) { return false; }
 
-  MinMaxFunctor < T > f;
+  MinMaxFunctor <typename A::value_type> f;
   switch (tattrib->dimension())
     {
     case 3:
@@ -283,14 +289,14 @@ bool GenSField<T,G,A>::get_minmax(double &imin, double &imax)
 
   tattrib->iterate(f);
   
-  imin = (double)f.min;
-  imax = (double)f.max;
+  imin = f.min;
+  imax = f.max;
   return true;
 }
 
 
-template <class T, class G, class A >
-bool GenSField<T,G,A>::longest_dimension(double &odouble)
+template <class G, class A >
+bool GeneralField<G,A>::longest_dimension(double &odouble)
 {
   if(geom.get_rep()) {
     return geom->longestDimension(odouble);
@@ -301,34 +307,34 @@ bool GenSField<T,G,A>::longest_dimension(double &odouble)
 }
 
 //template <class T, class G, class A >
-//BinaryFunction GenSField<T,G,A>::walk(const BBox& ibbox, BinaryFunction op){
+//BinaryFunction GeneralField<T,G,A>::walk(const BBox& ibbox, BinaryFunction op){
 //  // foreach node inside ibbox
 //  op(thisnode);
 //  // return the BinaryFunction
 //  return op;
 //}
 
-template <class T, class G, class A >
-int GenSField<T,G,A>::slinterpolate(const Point& p, double& outval, double)
+template <class G, class A >
+bool GeneralField<G,A>::interpolate(const Point& p,
+				    typename A::value_type &outval,
+				    double)
 {
-  T out;
-  geom->interp(attrib.get_rep(), p, out);
-  outval = out;
-  return 1;
+  geom->interp(attrib.get_rep(), p, outval);
+  return true;
 }
 
-template <class T, class G, class A >
-Vector GenSField<T,G,A>::gradient(const Point& /* ipoint */)
+template <class G, class A >
+Vector GeneralField<G,A>::gradient(const Point& /* ipoint */)
 {
   return Vector();
 }
 
-#define GENSFIELD_VERSION 1
+#define GeneralField_VERSION 1
 
-template <class T, class G, class A >
-void GenSField<T,G,A>::io(Piostream& stream){
+template <class G, class A >
+void GeneralField<G,A>::io(Piostream& stream){
 
-  stream.begin_class(typeName().c_str(), GENSFIELD_VERSION);
+  stream.begin_class(typeName().c_str(), GeneralField_VERSION);
   //  Field::io(stream);
   Pio(stream, geom);
   Pio(stream, attrib);
