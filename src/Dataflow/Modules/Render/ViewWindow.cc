@@ -33,7 +33,6 @@
 #include <Dataflow/Modules/Render/ViewWindow.h>
 #include <Dataflow/Modules/Render/Ball.h>
 #include <Dataflow/Modules/Render/BallMath.h>
-#include <Core/Util/Debug.h>
 #include <Core/Util/NotFinished.h>
 #include <Core/Util/Timer.h>
 #include <Core/Math/Expon.h>
@@ -98,7 +97,6 @@ private:
   ViewWindow *vw_;
 };
 
-//static DebugSwitch autoview_sw("ViewWindow", "autoview");
 static ViewWindow::MapStringObjTag::iterator viter;
 
 #if 0
