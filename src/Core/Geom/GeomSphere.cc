@@ -329,7 +329,8 @@ GeomObj* GeomSuperquadric::clone()
 
 void GeomSuperquadric::get_bounds(BBox& bb)
 {
-    bb.extend(Point(0.0, 0.0, 0.0), 1.0);
+    bb.extend(Point(1.0, 1.0, 1.0));
+    bb.extend(Point(-1.0, -1.0, -1.0));
 }
 
 
