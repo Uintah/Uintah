@@ -323,7 +323,7 @@ void TimeDataFile::getcolmatrix(SCIRun::MatrixHandle& mh,int colstart,int colend
     
   #else
       datafile_uni = ::open(datafilename.c_str(),O_RDONLY,0);
-      if (datafile_uni <0) 
+      if (datafile_uni < 0) 
       {
         throw TimeDataFileException("Could not find/open datafile");
       }
@@ -346,7 +346,7 @@ void TimeDataFile::getcolmatrix(SCIRun::MatrixHandle& mh,int colstart,int colend
     // Accoring to Gordon's definition
     if (byteskip >= 0)
     {
-      if (::lseek(datafile_uni,static_cast<off_t>(byteskip),SEEK_CUR)!=0)
+      if (::lseek(datafile_uni,static_cast<off_t>(byteskip),SEEK_CUR)<0)
       {
         ::close(datafile_uni);
         throw TimeDataFileException("Could not read datafile");
@@ -354,7 +354,7 @@ void TimeDataFile::getcolmatrix(SCIRun::MatrixHandle& mh,int colstart,int colend
     }
     else
     {
-      if (::lseek(datafile_uni,static_cast<off_t>(ncols)*static_cast<off_t>(nrows)*static_cast<off_t>(elemsize),SEEK_END)!=0)
+      if (::lseek(datafile_uni,static_cast<off_t>(ncols)*static_cast<off_t>(nrows)*static_cast<off_t>(elemsize),SEEK_END)<0)
       {
         ::close(datafile_uni);
         throw TimeDataFileException("Could not read datafile");
@@ -373,7 +373,7 @@ void TimeDataFile::getcolmatrix(SCIRun::MatrixHandle& mh,int colstart,int colend
 
     void* buffer = reinterpret_cast<void *>(mat->getData());
     
-    if (::lseek(datafile_uni,static_cast<off_t>(elemsize)*static_cast<off_t>(nrows)*static_cast<off_t>(colstart),SEEK_CUR)!=0)
+    if (::lseek(datafile_uni,static_cast<off_t>(elemsize)*static_cast<off_t>(nrows)*static_cast<off_t>(colstart),SEEK_CUR)<0)
     {
       ::close(datafile_uni);
       delete mat;
@@ -381,7 +381,7 @@ void TimeDataFile::getcolmatrix(SCIRun::MatrixHandle& mh,int colstart,int colend
     }    
 
 
-    if (elemsize*numcols*nrows != read(datafile_uni,buffer,static_cast<size_t>(elemsize*numcols*nrows)))
+    if (static_cast<size_t>(elemsize*numcols*nrows) != ::read(datafile_uni,buffer,static_cast<size_t>(elemsize*numcols*nrows)))
     {
       ::close(datafile_uni);
       delete mat;
@@ -416,93 +416,184 @@ void TimeDataFile::getcolnrrd(NrrdDataHandle& mh,int colstart,int colend)
     throw TimeDataFileException("Column start is bigger than column end");
   }
 
-  datafile = fopen(datafilename.c_str(),"rb");
-  if (datafile == 0) 
-  {
-    throw TimeDataFileException("Could not find/open datafile");
-  }
+  #ifndef HAVE_UNISTD_H
 
-  if (lineskip > 0)
-  {
-     char buffer;
-     int ln = lineskip;
-     while (ln)
-     {
-        if(fread(&buffer,1,1,datafile) != 1)
-        {
-          fclose(datafile);
-          throw TimeDataFileException("Could not read header of datafile"); 
-        }
-        if (buffer == '\n') ln--;
-     }
-  }
-  
-  // Accoring to Gordon's definition
-  if (byteskip >= 0)
-  {
-    if (fseek(datafile,byteskip,SEEK_CUR)!=0)
+    datafile = fopen(datafilename.c_str(),"rb");
+    if (datafile == 0) 
+    {
+      throw TimeDataFileException("Could not find/open datafile");
+    }
+
+    if (lineskip > 0)
+    {
+       char buffer;
+       int ln = lineskip;
+       while (ln)
+       {
+          if(fread(&buffer,1,1,datafile) != 1)
+          {
+            fclose(datafile);
+            throw TimeDataFileException("Could not read header of datafile"); 
+          }
+          if (buffer == '\n') ln--;
+       }
+    }
+    
+    // Accoring to Gordon's definition
+    if (byteskip >= 0)
+    {
+      if (fseek(datafile,byteskip,SEEK_CUR)!=0)
+      {
+        fclose(datafile);
+        throw TimeDataFileException("Could not read datafile");
+      }
+    }
+    else
+    {
+      if (fseek(datafile,ncols*nrows*elemsize,SEEK_END)!=0)
+      {
+        fclose(datafile);
+        throw TimeDataFileException("Could not read datafile");
+      }
+    }
+    
+    int numcols = colend-colstart + 1;
+    
+    SCIRun::NrrdData *nrrd = scinew SCIRun::NrrdData();
+    if (nrrd == 0)
+    {
+        fclose(datafile);
+        throw TimeDataFileException("Could not allocate nrrd object");
+    }  
+
+    nrrd->nrrd = nrrdNew();
+    if (nrrd->nrrd == 0)
+    {
+        fclose(datafile);
+        delete nrrd;
+        throw TimeDataFileException("Could not allocate nrrd");
+    }  
+
+    nrrdAlloc(nrrd->nrrd,ntype,2,nrows,numcols);
+    if (nrrd->nrrd->data == 0)
+    {
+        fclose(datafile);
+        delete nrrd;
+        throw TimeDataFileException("Could not allocate nrrd");
+    }  
+    nrrdAxisInfoSet(nrrd->nrrd,nrrdAxisInfoSpacing,1.0,1.0);
+    nrrdAxisInfoSet(nrrd->nrrd,nrrdAxisInfoMin,0.0,0.0);  
+    nrrdAxisInfoSet(nrrd->nrrd,nrrdAxisInfoMax,static_cast<double>(nrows),static_cast<double>(numcols));
+    
+
+    void* buffer = reinterpret_cast<void *>(nrrd->nrrd->data);
+    
+    if (fseek(datafile,elemsize*nrows*colstart,SEEK_CUR)!=0)
     {
       fclose(datafile);
-      throw TimeDataFileException("Could not read datafile");
-    }
-  }
-  else
-  {
-    if (fseek(datafile,ncols*nrows*elemsize,SEEK_END)!=0)
+      delete nrrd;
+      throw TimeDataFileException("Improper data file, check number of columns and rows in header file");
+    }    
+
+
+    if (numcols*nrows != fread(buffer,elemsize,numcols*nrows,datafile))
     {
       fclose(datafile);
-      throw TimeDataFileException("Could not read datafile");
+      delete nrrd;
+      throw TimeDataFileException("Improper data file, check number of columns and rows in header file");
     }
-  }
-  
-  int numcols = colend-colstart + 1;
-  
-  SCIRun::NrrdData *nrrd = scinew SCIRun::NrrdData();
-  if (nrrd == 0)
-  {
-      fclose(datafile);
-      throw TimeDataFileException("Could not allocate nrrd object");
-  }  
+    fclose(datafile); 
+  #else
+    datafile_uni = ::open(datafilename.c_str(),O_RDONLY,0);
+    if (datafile_uni < 0) 
+    {
+      throw TimeDataFileException("Could not find/open datafile");
+    }
 
-  nrrd->nrrd = nrrdNew();
-  if (nrrd->nrrd == 0)
-  {
-      fclose(datafile);
+    if (lineskip > 0)
+    {
+       char buffer;
+       int ln = lineskip;
+       while (ln)
+       {
+          if(::read(datafile_uni,&buffer,1) != 1)
+          {
+            ::close(datafile_uni);
+            throw TimeDataFileException("Could not read header of datafile"); 
+          }
+          if (buffer == '\n') ln--;
+       }
+    }
+    
+    // Accoring to Gordon's definition
+    if (byteskip >= 0)
+    {
+      if (::lseek(datafile_uni,static_cast<off_t>(byteskip),SEEK_CUR)<0)
+      {
+        ::close(datafile_uni);
+        throw TimeDataFileException("Could not read datafile");
+      }
+    }
+    else
+    {
+      if (::lseek(datafile_uni,static_cast<off_t>(ncols)*static_cast<off_t>(nrows)*static_cast<off_t>(elemsize),SEEK_END)<0)
+      {
+        ::close(datafile_uni);
+        throw TimeDataFileException("Could not read datafile");
+      }
+    }
+    
+    int numcols = colend-colstart + 1;
+    
+    SCIRun::NrrdData *nrrd = scinew SCIRun::NrrdData();
+    if (nrrd == 0)
+    {
+        ::close(datafile_uni);
+        throw TimeDataFileException("Could not allocate nrrd object");
+    }  
+
+    nrrd->nrrd = nrrdNew();
+    if (nrrd->nrrd == 0)
+    {
+        ::close(datafile_uni);
+        delete nrrd;
+        throw TimeDataFileException("Could not allocate nrrd");
+    }  
+
+    nrrdAlloc(nrrd->nrrd,ntype,2,nrows,numcols);
+    if (nrrd->nrrd->data == 0)
+    {
+        ::close(datafile_uni);
+        delete nrrd;
+        throw TimeDataFileException("Could not allocate nrrd");
+    }  
+    nrrdAxisInfoSet(nrrd->nrrd,nrrdAxisInfoSpacing,1.0,1.0);
+    nrrdAxisInfoSet(nrrd->nrrd,nrrdAxisInfoMin,0.0,0.0);  
+    nrrdAxisInfoSet(nrrd->nrrd,nrrdAxisInfoMax,static_cast<double>(nrows),static_cast<double>(numcols));
+    
+
+    void* buffer = reinterpret_cast<void *>(nrrd->nrrd->data);
+    
+    if (::lseek(datafile_uni,static_cast<off_t>(elemsize)*static_cast<off_t>(nrows)*static_cast<off_t>(colstart),SEEK_CUR)<0)
+    {
+      ::close(datafile_uni);
       delete nrrd;
-      throw TimeDataFileException("Could not allocate nrrd");
-  }  
+      throw TimeDataFileException("Improper data file, check number of columns and rows in header file");
+    }    
 
-  nrrdAlloc(nrrd->nrrd,ntype,2,nrows,numcols);
-  if (nrrd->nrrd->data == 0)
-  {
-      fclose(datafile);
+
+    if (static_cast<size_t>(numcols*nrows*elemsize) != ::read(datafile_uni,buffer,static_cast<size_t>(elemsize*numcols*nrows)))
+    {
+      ::close(datafile_uni);
       delete nrrd;
-      throw TimeDataFileException("Could not allocate nrrd");
-  }  
-  nrrdAxisInfoSet(nrrd->nrrd,nrrdAxisInfoSpacing,1.0,1.0);
-  nrrdAxisInfoSet(nrrd->nrrd,nrrdAxisInfoMin,0.0,0.0);  
-  nrrdAxisInfoSet(nrrd->nrrd,nrrdAxisInfoMax,static_cast<double>(nrows),static_cast<double>(numcols));
+      throw TimeDataFileException("Improper data file, check number of columns and rows in header file");
+    }
+    ::close(datafile_uni);
+  #endif
   
-
-  void* buffer = reinterpret_cast<void *>(nrrd->nrrd->data);
-  
-  if (fseek(datafile,elemsize*nrows*colstart,SEEK_CUR)!=0)
-  {
-    fclose(datafile);
-    delete nrrd;
-    throw TimeDataFileException("Improper data file, check number of columns and rows in header file");
-  }    
-
-
-  if (numcols*nrows != fread(buffer,elemsize,numcols*nrows,datafile))
-  {
-    fclose(datafile);
-    delete nrrd;
-    throw TimeDataFileException("Improper data file, check number of columns and rows in header file");
-  }
   if (swapbytes) doswapbytes(buffer,elemsize,numcols*nrows);
 
-  fclose(datafile);
+
   mh = nrrd;
 }
 
@@ -515,101 +606,199 @@ void TimeDataFile::getrownrrd(SCIRun::NrrdDataHandle& mh,int rowstart,int rowend
     throw TimeDataFileException("Column start is bigger than column end");
   }
 
-  datafile = fopen(datafilename.c_str(),"rb");
-  if (datafile == 0) 
-  {
-    throw TimeDataFileException("Could not find/open datafile");
-  }
+  #ifndef HAVE_UNISTD_H
 
-  if (lineskip > 0)
-  {
-     char buffer;
-     int ln = lineskip;
-     while (ln)
-     {
-        if(fread(&buffer,1,1,datafile) != 1)
-        {
-          fclose(datafile);
-          throw TimeDataFileException("Could not read header of datafile"); 
-        }
-        if (buffer == '\n') ln--;
-     }
-  }
-  
-  // Accoring to Gordon's definition
-  if (byteskip >= 0)
-  {
-    if (fseek(datafile,byteskip,SEEK_CUR)!=0)
+    datafile = fopen(datafilename.c_str(),"rb");
+    if (datafile == 0) 
     {
-      fclose(datafile);
-      throw TimeDataFileException("Could not read datafile");
+      throw TimeDataFileException("Could not find/open datafile");
     }
-  }
-  else
-  {
-    if (fseek(datafile,ncols*nrows*elemsize,SEEK_END)!=0)
+
+    if (lineskip > 0)
     {
-      fclose(datafile);
-      throw TimeDataFileException("Could not read datafile");
+       char buffer;
+       int ln = lineskip;
+       while (ln)
+       {
+          if(fread(&buffer,1,1,datafile) != 1)
+          {
+            fclose(datafile);
+            throw TimeDataFileException("Could not read header of datafile"); 
+          }
+          if (buffer == '\n') ln--;
+       }
     }
-  }
-  
-  int numrows = rowend-rowstart + 1;
-  
-  SCIRun::NrrdData *nrrd = scinew SCIRun::NrrdData();
-  if (nrrd == 0)
-  {
-      fclose(datafile);
-      throw TimeDataFileException("Could not allocate nrrd object");
-  }  
-
-  nrrd->nrrd = nrrdNew();
-  if (nrrd->nrrd == 0)
-  {
-      fclose(datafile);
-      delete nrrd;
-      throw TimeDataFileException("Could not allocate nrrd");
-  }  
-
-  nrrdAlloc(nrrd->nrrd,ntype,2,numrows,ncols);
-  if (nrrd->nrrd->data == 0)
-  {
-      fclose(datafile);
-      delete nrrd;
-      throw TimeDataFileException("Could not allocate nrrd");
-  }  
-  nrrdAxisInfoSet(nrrd->nrrd,nrrdAxisInfoSpacing,1.0,1.0);
-  nrrdAxisInfoSet(nrrd->nrrd,nrrdAxisInfoMin,0.0,0.0);  
-  nrrdAxisInfoSet(nrrd->nrrd,nrrdAxisInfoMax,static_cast<double>(numrows),static_cast<double>(ncols));
-  
-  char* buffer = reinterpret_cast<char *>(nrrd->nrrd->data);
-   
-  if (fseek(datafile,elemsize*rowstart,SEEK_CUR)!=0)
-  {
-    fclose(datafile);
-    delete nrrd;
-    throw TimeDataFileException("Improper data file, check number of columns and rows in header file");
-  }    
-
-  for (int i=0;i<ncols;i++)
-  {
-    if (numrows != fread(buffer+(elemsize*i*numrows),elemsize,numrows,datafile))
+    
+    // Accoring to Gordon's definition
+    if (byteskip >= 0)
     {
-      fclose(datafile);
-      delete nrrd;
-      throw TimeDataFileException("Improper data file, check number of columns and rows in header file");
+      if (fseek(datafile,byteskip,SEEK_CUR)!=0)
+      {
+        fclose(datafile);
+        throw TimeDataFileException("Could not read datafile");
+      }
     }
-    if (fseek(datafile,elemsize*(nrows-numrows),SEEK_CUR)!=0)
+    else
+    {
+      if (fseek(datafile,ncols*nrows*elemsize,SEEK_END)!=0)
+      {
+        fclose(datafile);
+        throw TimeDataFileException("Could not read datafile");
+      }
+    }
+    
+    int numrows = rowend-rowstart + 1;
+    
+    SCIRun::NrrdData *nrrd = scinew SCIRun::NrrdData();
+    if (nrrd == 0)
+    {
+        fclose(datafile);
+        throw TimeDataFileException("Could not allocate nrrd object");
+    }  
+
+    nrrd->nrrd = nrrdNew();
+    if (nrrd->nrrd == 0)
+    {
+        fclose(datafile);
+        delete nrrd;
+        throw TimeDataFileException("Could not allocate nrrd");
+    }  
+
+    nrrdAlloc(nrrd->nrrd,ntype,2,numrows,ncols);
+    if (nrrd->nrrd->data == 0)
+    {
+        fclose(datafile);
+        delete nrrd;
+        throw TimeDataFileException("Could not allocate nrrd");
+    }  
+    nrrdAxisInfoSet(nrrd->nrrd,nrrdAxisInfoSpacing,1.0,1.0);
+    nrrdAxisInfoSet(nrrd->nrrd,nrrdAxisInfoMin,0.0,0.0);  
+    nrrdAxisInfoSet(nrrd->nrrd,nrrdAxisInfoMax,static_cast<double>(numrows),static_cast<double>(ncols));
+    
+    char* buffer = reinterpret_cast<char *>(nrrd->nrrd->data);
+     
+    if (fseek(datafile,elemsize*rowstart,SEEK_CUR)!=0)
     {
       fclose(datafile);
       delete nrrd;
       throw TimeDataFileException("Improper data file, check number of columns and rows in header file");
     }    
-  }
-    
-  if (swapbytes) doswapbytes(buffer,elemsize,numrows*ncols);
 
-  fclose(datafile);
+    for (int i=0;i<ncols;i++)
+    {
+      if (numrows != fread(buffer+(elemsize*i*numrows),elemsize,numrows,datafile))
+      {
+        fclose(datafile);
+        delete nrrd;
+        throw TimeDataFileException("Improper data file, check number of columns and rows in header file");
+      }
+      if (fseek(datafile,elemsize*(nrows-numrows),SEEK_CUR)!=0)
+      {
+        fclose(datafile);
+        delete nrrd;
+        throw TimeDataFileException("Improper data file, check number of columns and rows in header file");
+      }    
+    }
+      
+    fclose(datafile);
+  #else
+ 
+    datafile_uni = ::open(datafilename.c_str(),O_RDONLY,0);
+    if (datafile_uni < 0) 
+    {
+      throw TimeDataFileException("Could not find/open datafile");
+    }
+
+    if (lineskip > 0)
+    {
+       char buffer;
+       int ln = lineskip;
+       while (ln)
+       {
+          if(::read(datafile_uni,&buffer,1) != 1)
+          {
+            ::close(datafile_uni);
+            throw TimeDataFileException("Could not read header of datafile"); 
+          }
+          if (buffer == '\n') ln--;
+       }
+    }
+    
+    // Accoring to Gordon's definition
+    if (byteskip >= 0)
+    {
+      if (::lseek(datafile_uni,static_cast<off_t>(byteskip),SEEK_CUR)<0)
+      {
+        ::close(datafile_uni);
+        throw TimeDataFileException("Could not read datafile");
+      }
+    }
+    else
+    {
+      if (::lseek(datafile_uni,static_cast<off_t>(ncols)*static_cast<off_t>(nrows)*static_cast<off_t>(elemsize),SEEK_END)<0)
+      {
+        ::close(datafile_uni);
+        throw TimeDataFileException("Could not read datafile");
+      }
+    }
+    
+    int numrows = rowend-rowstart + 1;
+    
+    SCIRun::NrrdData *nrrd = scinew SCIRun::NrrdData();
+    if (nrrd == 0)
+    {
+        ::close(datafile_uni);
+        throw TimeDataFileException("Could not allocate nrrd object");
+    }  
+
+    nrrd->nrrd = nrrdNew();
+    if (nrrd->nrrd == 0)
+    {
+        ::close(datafile_uni);
+        delete nrrd;
+        throw TimeDataFileException("Could not allocate nrrd");
+    }  
+
+    nrrdAlloc(nrrd->nrrd,ntype,2,numrows,ncols);
+    if (nrrd->nrrd->data == 0)
+    {
+        ::close(datafile_uni);
+        delete nrrd;
+        throw TimeDataFileException("Could not allocate nrrd");
+    }  
+    nrrdAxisInfoSet(nrrd->nrrd,nrrdAxisInfoSpacing,1.0,1.0);
+    nrrdAxisInfoSet(nrrd->nrrd,nrrdAxisInfoMin,0.0,0.0);  
+    nrrdAxisInfoSet(nrrd->nrrd,nrrdAxisInfoMax,static_cast<double>(numrows),static_cast<double>(ncols));
+    
+    char* buffer = reinterpret_cast<char *>(nrrd->nrrd->data);
+     
+    if (::lseek(datafile_uni,static_cast<off_t>(elemsize)*static_cast<off_t>(rowstart),SEEK_CUR)<0)
+    {
+      ::close(datafile_uni);
+      delete nrrd;
+      throw TimeDataFileException("Improper data file, check number of columns and rows in header file");
+    }    
+
+    for (int i=0;i<ncols;i++)
+    {
+      if (static_cast<size_t>(numrows*elemsize) != ::read(datafile_uni,buffer+(elemsize*i*numrows),static_cast<size_t>(elemsize)*static_cast<size_t>(numrows)))
+      {
+        ::close(datafile_uni);
+        delete nrrd;
+        throw TimeDataFileException("Improper data file, check number of columns and rows in header file");
+      }
+      if (::lseek(datafile_uni,static_cast<off_t>(elemsize)*static_cast<off_t>(nrows-numrows),SEEK_CUR)<0)
+      {
+        ::close(datafile_uni);
+        delete nrrd;
+        throw TimeDataFileException("Improper data file, check number of columns and rows in header file");
+      }    
+    }
+      
+  #endif
+  
+  
+  if (swapbytes) doswapbytes(buffer,elemsize,numrows*ncols);  
   mh = nrrd;
 }
 
@@ -623,79 +812,158 @@ void TimeDataFile::getrowmatrix(SCIRun::MatrixHandle& mh,int rowstart,int rowend
     throw TimeDataFileException("Column start is bigger than column end");
   }
 
-  datafile = fopen(datafilename.c_str(),"rb");
-  if (datafile == 0) 
-  {
-    throw TimeDataFileException("Could not find/open datafile");
-  }
-
-  if (lineskip > 0)
-  {
-     char buffer;
-     int ln = lineskip;
-     while (ln)
-     {
-        if(fread(&buffer,1,1,datafile) != 1)
-        {
-          fclose(datafile);
-          throw TimeDataFileException("Could not read header of datafile"); 
-        }
-        if (buffer == '\n') ln--;
-     }
-  }
-  
-  // Accoring to Gordon's definition
-  if (byteskip >= 0)
-  {
-    if (fseek(datafile,byteskip,SEEK_CUR)!=0)
+  #ifndef HAVE_UNISTD_H
+    datafile = fopen(datafilename.c_str(),"rb");
+    if (datafile == 0) 
     {
-      fclose(datafile);
-      throw TimeDataFileException("Could not read datafile");
+      throw TimeDataFileException("Could not find/open datafile");
     }
-  }
-  else
-  {
-    if (fseek(datafile,ncols*nrows*elemsize,SEEK_END)!=0)
-    {
-      fclose(datafile);
-      throw TimeDataFileException("Could not read datafile");
-    }
-  }
-  
-  int numrows =rowend-rowstart + 1;
-  
-  SCIRun::DenseMatrix *mat = scinew SCIRun::DenseMatrix(numrows,ncols);
-  
-  if (mat == 0)
-  {
-      fclose(datafile);
-      throw TimeDataFileException("Could not allocate matrix");
-  }  
 
-  char* buffer = reinterpret_cast<char *>(mat->getData());
-  
-  if (fseek(datafile,elemsize*rowstart,SEEK_CUR)!=0)
-  {
-    fclose(datafile);
-    delete mat;
-    throw TimeDataFileException("Improper data file, check number of columns and rows in header file");
-  }    
-
-  for (int i=0;i<ncols;i++)
-  {
-    if (numrows != fread(buffer+(elemsize*i*numrows),elemsize,numrows,datafile))
+    if (lineskip > 0)
     {
-      fclose(datafile);
-      delete mat;
-      throw TimeDataFileException("Improper data file, check number of columns and rows in header file");
+       char buffer;
+       int ln = lineskip;
+       while (ln)
+       {
+          if(fread(&buffer,1,1,datafile) != 1)
+          {
+            fclose(datafile);
+            throw TimeDataFileException("Could not read header of datafile"); 
+          }
+          if (buffer == '\n') ln--;
+       }
     }
-    if (fseek(datafile,elemsize*(nrows-numrows),SEEK_CUR)!=0)
+    
+    // Accoring to Gordon's definition
+    if (byteskip >= 0)
+    {
+      if (fseek(datafile,byteskip,SEEK_CUR)!=0)
+      {
+        fclose(datafile);
+        throw TimeDataFileException("Could not read datafile");
+      }
+    }
+    else
+    {
+      if (fseek(datafile,ncols*nrows*elemsize,SEEK_END)!=0)
+      {
+        fclose(datafile);
+        throw TimeDataFileException("Could not read datafile");
+      }
+    }
+    
+    int numrows =rowend-rowstart + 1;
+    
+    SCIRun::DenseMatrix *mat = scinew SCIRun::DenseMatrix(numrows,ncols);
+    
+    if (mat == 0)
+    {
+        fclose(datafile);
+        throw TimeDataFileException("Could not allocate matrix");
+    }  
+
+    char* buffer = reinterpret_cast<char *>(mat->getData());
+    
+    if (fseek(datafile,elemsize*rowstart,SEEK_CUR)!=0)
     {
       fclose(datafile);
       delete mat;
       throw TimeDataFileException("Improper data file, check number of columns and rows in header file");
     }    
-  }
+
+    for (int i=0;i<ncols;i++)
+    {
+      if (numrows != fread(buffer+(elemsize*i*numrows),elemsize,numrows,datafile))
+      {
+        fclose(datafile);
+        delete mat;
+        throw TimeDataFileException("Improper data file, check number of columns and rows in header file");
+      }
+      if (fseek(datafile,elemsize*(nrows-numrows),SEEK_CUR)!=0)
+      {
+        fclose(datafile);
+        delete mat;
+        throw TimeDataFileException("Improper data file, check number of columns and rows in header file");
+      }    
+    }
+    fclose(datafile);
+  #else
+    datafile_uni = ::open(datafilename.c_str(),O_RDONLY,0);
+    if (datafile_uni < 0) 
+    {
+      throw TimeDataFileException("Could not find/open datafile");
+    }
+
+    if (lineskip > 0)
+    {
+       char buffer;
+       int ln = lineskip;
+       while (ln)
+       {
+          if(::read(datafile_uni,&buffer,1) != 1)
+          {
+            ::close(datafile_uni);
+            throw TimeDataFileException("Could not read header of datafile"); 
+          }
+          if (buffer == '\n') ln--;
+       }
+    }
+    
+    // Accoring to Gordon's definition
+    if (byteskip >= 0)
+    {
+      if (::lseek(datafile_uni,static_cast<off_t>(byteskip),SEEK_CUR)<0)
+      {
+        ::close(datafile_uni);
+        throw TimeDataFileException("Could not read datafile");
+      }
+    }
+    else
+    {
+      if (::lseek(datafile_uni,static_cast<off_t>(ncols)*static_cast<off_t>(nrows)*static_cast<off_t>(elemsize),SEEK_END)<0)
+      {
+        ::close(datafile_uni);
+        throw TimeDataFileException("Could not read datafile");
+      }
+    }
+    
+    int numrows =rowend-rowstart + 1;
+    
+    SCIRun::DenseMatrix *mat = scinew SCIRun::DenseMatrix(numrows,ncols);
+    
+    if (mat == 0)
+    {
+        ::close(datafile_uni);
+        throw TimeDataFileException("Could not allocate matrix");
+    }  
+
+    char* buffer = reinterpret_cast<char *>(mat->getData());
+    
+    if (::lseek(datafile_uni,static_cast<off_t>(elemsize)*static_cast<off_t>(rowstart),SEEK_CUR)<0)
+    {
+      ::close(datafile_uni);
+      delete mat;
+      throw TimeDataFileException("Improper data file, check number of columns and rows in header file");
+    }    
+
+    for (int i=0;i<ncols;i++)
+    {
+      if (static_cast<size_t>(numrows*elemsize) != ::read(datafile_uni,buffer+(elemsize*i*numrows),static_cast<size_t>(elemsize*numrows)))
+      {
+        ::close(datafile_uni);
+        delete mat;
+        throw TimeDataFileException("Improper data file, check number of columns and rows in header file");
+      }
+      if (::lseek(datafile_uni,static_cast<off_t>(elemsize)*static_cast<off_t>(nrows-numrows),SEEK_CUR)<0)
+      {
+        ::close(datafile_uni);
+        delete mat;
+        throw TimeDataFileException("Improper data file, check number of columns and rows in header file");
+      }    
+    }
+    ::close(datafile_uni);  
+  #endif
+
   if (swapbytes) doswapbytes(buffer,elemsize,numrows*ncols);
 
   if (ntype == nrrdTypeChar) { char *fbuffer = reinterpret_cast<char *>(buffer); double *dbuffer = reinterpret_cast<double *>(buffer);  for (int j=(ncols*numrows-1);j>=0;j--) dbuffer[j] = static_cast<double>(fbuffer[j]); }
@@ -708,7 +976,7 @@ void TimeDataFile::getrowmatrix(SCIRun::MatrixHandle& mh,int rowstart,int rowend
   if (ntype == nrrdTypeLLong) { int64 *fbuffer = reinterpret_cast<int64 *>(buffer); double *dbuffer = reinterpret_cast<double *>(buffer);  for (int j=(ncols*numrows-1);j>=0;j--) dbuffer[j] = static_cast<double>(fbuffer[j]); }
   if (ntype == nrrdTypeULLong) { uint64 *fbuffer = reinterpret_cast<uint64 *>(buffer); double *dbuffer = reinterpret_cast<double *>(buffer);  for (int j=(ncols*numrows-1);j>=0;j--) dbuffer[j] = static_cast<double>(fbuffer[j]); }
   
-  fclose(datafile);
+
   mh = dynamic_cast<Matrix *>(mat->transpose());
   delete mat;
 }
