@@ -1326,13 +1326,15 @@ GeomCylinders::draw(DrawInfoOpenGL* di, Material* matl, double)
 
     const bool coloring = colors_.size() == points_.size() * 4;
 
-    float tabx[40];
-    float taby[40];
+    float tabx[41];
+    float taby[41];
     for (int j=0; j<nu_; j++)
     {
       tabx[j] = sin(2.0 * M_PI * j / nu_);
       taby[j] = cos(2.0 * M_PI * j / nu_);
     }
+    tabx[nu_] = tabx[0];
+    taby[nu_] = taby[0];
     
     for (unsigned int i=0; i < points_.size(); i+=2)
     {
@@ -1366,15 +1368,15 @@ GeomCylinders::draw(DrawInfoOpenGL* di, Material* matl, double)
       glBegin(GL_QUAD_STRIP);
       for (int k=0; k<nu_+1; k++)
       {
-	glNormal3f(tabx[k%nu_], taby[k%nu_], 0.0);
+	glNormal3f(tabx[k], taby[k], 0.0);
 
 	if (coloring) { glColor3ubv(&(colors_[i*4])); }
 	if (texturing) { glTexCoord1f(indices_[i]); }
-	glVertex3f(tabx[k%nu_], taby[k%nu_], 0.0);
+	glVertex3f(tabx[k], taby[k], 0.0);
 
 	if (coloring) { glColor3ubv(&(colors_[(i+1)*4])); }
 	if (texturing) { glTexCoord1f(indices_[i+1]); }
-	glVertex3f(tabx[k%nu_], taby[k%nu_], 1.0);
+	glVertex3f(tabx[k], taby[k], 1.0);
       }
       glEnd();
 
@@ -1409,13 +1411,15 @@ GeomCappedCylinders::draw(DrawInfoOpenGL* di, Material* matl, double)
     const bool coloring = colors_.size() == points_.size() * 4;
     const bool use_local_radii = radii_.size() == points_.size()/2;
 
-    float tabx[40];
-    float taby[40];
+    float tabx[41];
+    float taby[41];
     for (int j=0; j<nu_; j++)
     {
       tabx[j] = sin(2.0 * M_PI * j / nu_);
       taby[j] = cos(2.0 * M_PI * j / nu_);
     }
+    tabx[nu_] = tabx[0];
+    taby[nu_] = taby[0];
     
     for (unsigned int i=0; i < points_.size(); i+=2)
     {
@@ -1458,15 +1462,15 @@ GeomCappedCylinders::draw(DrawInfoOpenGL* di, Material* matl, double)
       glBegin(GL_QUAD_STRIP);
       for (k=0; k<nu_+1; k++)
       {
-	glNormal3f(tabx[k%nu_], taby[k%nu_], 0.0);
+	glNormal3f(tabx[k], taby[k], 0.0);
 
 	if (coloring) { glColor3ubv(&(colors_[i*4])); }
 	if (texturing) { glTexCoord1f(indices_[i]); }
-	glVertex3f(tabx[k%nu_], taby[k%nu_], 0.0);
+	glVertex3f(tabx[k], taby[k], 0.0);
 
 	if (coloring) { glColor3ubv(&(colors_[(i+1)*4])); }
 	if (texturing) { glTexCoord1f(indices_[i+1]); }
-	glVertex3f(tabx[k%nu_], taby[k%nu_], 1.0);
+	glVertex3f(tabx[k], taby[k], 1.0);
       }
       glEnd();
 
@@ -1478,7 +1482,7 @@ GeomCappedCylinders::draw(DrawInfoOpenGL* di, Material* matl, double)
       glVertex3f(0.0, 0.0, 0.0);
       for (k = 0; k < nu_+1; k++)
       {
-	glVertex3f(tabx[k%nu_], taby[k%nu_], 0.0);
+	glVertex3f(tabx[k], taby[k], 0.0);
       }
       glEnd();
 
@@ -1490,7 +1494,7 @@ GeomCappedCylinders::draw(DrawInfoOpenGL* di, Material* matl, double)
       glVertex3f(0.0, 0.0, 1.0);
       for (k = nu_; k >= 0; k--)
       {
-	glVertex3f(tabx[k%nu_], taby[k%nu_], 1.0);
+	glVertex3f(tabx[k], taby[k], 1.0);
       }
       glEnd();
 
