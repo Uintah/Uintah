@@ -27,6 +27,8 @@ class Gui;
 class Material;
 class ShadowBase;
 class Group;
+class SoundThread;
+class Sound;
 
 struct DepthStats;
 struct PerProcessorContext;
@@ -186,6 +188,11 @@ public:
   WorkQueue work;
   void refill_work(int which, int nworkers);
   void waitForEmpty(int which);
+
+  // Used mainly by make_scene to register sounds with the application.
+  void           addSound( Sound * sound ) { sounds_.push_back( sound ); }
+  vector<Sound*> getSounds() { return sounds_; }
+  int            soundVolume() const { return soundVolume_; }
   
   void preprocess(double maxradius, int& pp_offset, int& scratchsize);
   Array1<ShadowBase*> shadows;
@@ -207,9 +214,11 @@ public:
   FILE* frametime_fp;
   double lasttime;
 
-  bool doHotSpots() {
-    return hotspots;
-  }
+  inline bool doHotSpots() const { return hotspots; }
+
+  // Display image as a "transmission".  Ie: turn off every other scan line.
+  // (Net effect of this is to double the frame rate.)
+  inline bool doTransmissionMode() const { return transmissionMode_; }
 
   // Any object that the GUI should allow "direct" interaction with
   // or that needs to be animated should notify the scene of this
@@ -238,6 +247,11 @@ private:
 //  friend class LumiDpy;
   friend class Dpy;
   friend class Gui;
+
+  // This is just used as a pass through so the make_scene can get
+  // sounds to the sound thread;
+  vector<Sound*>   sounds_;
+  int              soundVolume_;
 
   // Points to either mainGroup_ or mainGroupWithLights_;
   Object * obj;
@@ -285,6 +299,8 @@ private:
   Color  origAmbientColor_;
 
   bool hotspots;
+  bool transmissionMode_;
+
   Array1<Material*> materials;
 
 }; // end class Scene
