@@ -10,6 +10,7 @@
 #include <Packages/Uintah/Core/Grid/VarTypes.h>
 #include <Packages/Uintah/Core/Exceptions/InvalidValue.h> 
 #include <Packages/Uintah/Core/Exceptions/MaxIteration.h>
+#include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
 #include <Core/Util/DebugStream.h>
 
 using namespace SCIRun;
@@ -684,7 +685,7 @@ void ICE::computeDel_P(const ProcessorGroup*,
 /* --------------------------------------------------------------------- 
  Function~  ICE::implicitPressureSolve-- 
 _____________________________________________________________________*/
-void ICE::implicitPressureSolve(const ProcessorGroup*,
+void ICE::implicitPressureSolve(const ProcessorGroup* pg,
 		                  const PatchSubset* patch_sub, 
 		                  const MaterialSubset*,       
 		                  DataWarehouse* ParentOldDW,    
@@ -782,7 +783,9 @@ void ICE::implicitPressureSolve(const ProcessorGroup*,
     subsched->execute(d_myworld);
     subNewDW->get(max_RHS,   lb->max_RHSLabel);
     counter ++;
-    cout << "Outer iteration " << counter<< " max_rhs "<< max_RHS<< endl;
+    if(pg->myrank() == 0) {
+      cout << "Outer iteration " << counter<< " max_rhs "<< max_RHS<< endl;
+    }
   }
   //__________________________________
   //  BULLET PROOFING
