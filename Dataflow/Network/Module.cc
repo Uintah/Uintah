@@ -589,6 +589,16 @@ void Module::error(const string& str)
     netedit->add_text(name + ": " + str);
 }
 
+void Module::warning(const string& str)
+{
+    netedit->add_text(name + ": " + str);
+}
+
+void Module::remark(const string& str)
+{
+    netedit->add_text(name + ": " + str);
+}
+
 
 #if 0
 int Module::should_execute()
