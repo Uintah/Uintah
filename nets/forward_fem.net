@@ -76,10 +76,10 @@ addConnection $m5 1 $m13 3
 
 set $m0-notes {}
 set $m0-show_status 1
-set $m0-filename $env(SCIRUN_DATA)/sphere1k.tvt.fld
+set $m0-filename $env(SCIRUN_DATA)/sphere.tvt.fld
 set $m1-notes {}
 set $m1-show_status 1
-set $m1-filename $env(SCIRUN_DATA)/sphere1k.dipole.fld
+set $m1-filename $env(SCIRUN_DATA)/sphere.dipole.fld
 set $m2-notes {}
 set $m2-show_status 1
 set $m2-UseCondTCL 1
