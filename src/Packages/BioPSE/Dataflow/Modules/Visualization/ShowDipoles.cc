@@ -58,10 +58,6 @@ private:
   MaterialHandle           greenMatl_;
   MaterialHandle           deflMatl_;
 
-  FieldIPort              *ifield_;
-  FieldOPort              *ofield_;
-  GeometryOPort           *ogeom_;
-
   FieldHandle              dipoleFldH_;
   GuiDouble                widgetSizeGui_;
   GuiString                scaleModeGui_;
@@ -115,19 +111,18 @@ ShowDipoles::~ShowDipoles(){
 void
 ShowDipoles::execute()
 {
-  ifield_ = (FieldIPort *)get_iport("dipoleFld");
-  ofield_ = (FieldOPort *)get_oport("dipoleFld");
-  ogeom_ = (GeometryOPort *)get_oport("Geometry");
-
-  if (!ifield_) {
+  FieldIPort *ifield = (FieldIPort *)get_iport("dipoleFld");
+  if (!ifield) {
     error("Unable to initialize iport 'dipoleFld'.");
     return;
   }
-  if (!ofield_) {
+  FieldOPort *ofield = (FieldOPort *)get_oport("dipoleFld");
+  if (!ofield) {
     error("Unable to initialize oport 'dipoleFld'.");
     return;
   }
-  if (!ogeom_) {
+  GeometryOPort *ogeom = (GeometryOPort *)get_oport("Geometry");
+  if (!ogeom) {
     error("Unable to initialize oport 'Geometry'.");
     return;
   }
@@ -140,7 +135,7 @@ ShowDipoles::execute()
   }
   FieldHandle fieldH;
   PointCloudField<Vector> *field_pcv;
-  if (!ifield_->get(fieldH) || 
+  if (!ifield->get(fieldH) || 
       !(field_pcv=dynamic_cast<PointCloudField<Vector>*>(fieldH.get_rep()))) {
     error("No vald input in ShowDipoles Field port.");
     return;
@@ -168,8 +163,8 @@ ShowDipoles::execute()
   last_as_vec();
   draw_lines();
   generate_output_field();
-  ogeom_->flushViews();
-  ofield_->send(dipoleFldH_);
+  ogeom->flushViews();
+  ofield->send(dipoleFldH_);
 }
 
 void 
@@ -201,15 +196,21 @@ ShowDipoles::load_gui()
 
     // it is possible that these were created already, dont do it twice.
     if (widget_id_.size() != num_dipoles_.get()) {
+      GeometryOPort *ogeom = (GeometryOPort *)get_oport("Geometry");
+      if (!ogeom) {
+	error("Unable to initialize oport 'Geometry'.");
+	return;
+      }
+
       ArrowWidget *a = scinew ArrowWidget(this, &widget_lock_, 
 					  widgetSizeGui_.get());
-      a->Connect(ogeom_);
+      a->Connect(ogeom);
       a->SetCurrentMode(1);
       widget_.add(a);
       deflMatl_ = widget_[0]->GetMaterial(0);
       widget_switch_.push_back(widget_[i]->GetWidget());
       ((GeomSwitch *)(widget_switch_[i].get_rep()))->set_state(1);
-      widget_id_.push_back(ogeom_->addObj(widget_switch_[i],
+      widget_id_.push_back(ogeom->addObj(widget_switch_[i],
 					  "Dipole" + to_string((int)i),
 					  &widget_lock_));
 
@@ -246,19 +247,25 @@ ShowDipoles::new_input_data(PointCloudField<Vector> *in)
     num_dipoles_.set(in->fdata().size());
     num_dipoles_.reset();
   } else {
+    GeometryOPort *ogeom = (GeometryOPort *)get_oport("Geometry");
+    if (!ogeom) {
+      error("Unable to initialize oport 'Geometry'.");
+      return;
+    }
+
     unsigned i;
     for (i = num_dipoles_.get(); i < widget_switch_.size(); i++)
       ((GeomSwitch *)(widget_switch_[i].get_rep()))->set_state(1);
     for (; i < in->fdata().size(); i++) {
       ArrowWidget *a = scinew ArrowWidget(this, &widget_lock_, 
 					  widgetSizeGui_.get());
-      a->Connect(ogeom_);
+      a->Connect(ogeom);
       a->SetCurrentMode(1);
       widget_.add(a);
       deflMatl_ = widget_[0]->GetMaterial(0);
       widget_switch_.push_back(widget_[i]->GetWidget());
       ((GeomSwitch *)(widget_switch_[i].get_rep()))->set_state(1);
-      widget_id_.push_back(ogeom_->addObj(widget_switch_[i],
+      widget_id_.push_back(ogeom->addObj(widget_switch_[i],
 					  "Dipole" + to_string((int)i),
 					  &widget_lock_));
 
@@ -324,7 +331,13 @@ ShowDipoles::last_as_vec()
     widget_[num_dipoles_.get() - 1]->SetMaterial(0, greenMatl_);
   }
 
-  if (ogeom_) ogeom_->flushViews();
+  GeometryOPort *ogeom = (GeometryOPort *)get_oport("Geometry");
+  if (!ogeom) {
+    error("Unable to initialize oport 'Geometry'.");
+    return;
+  }
+
+  ogeom->flushViews();
 }
 
 
@@ -359,7 +372,14 @@ ShowDipoles::scale_mode_changed()
   }
   last_scale_ = widgetSizeGui_.get();
   last_scale_mode_ = scaleMode;
-  if (ogeom_) ogeom_->flushViews();
+
+  GeometryOPort *ogeom = (GeometryOPort *)get_oport("Geometry");
+  if (!ogeom) {
+    error("Unable to initialize oport 'Geometry'.");
+    return;
+  }
+
+  ogeom->flushViews();
 }
 
 void
@@ -380,7 +400,13 @@ ShowDipoles::scale_changed()
     widget_[i]->SetLength(2*sc);
   }
   last_scale_ = widgetSizeGui_.get();
-  if (ogeom_) ogeom_->flushViews();
+
+  GeometryOPort *ogeom = (GeometryOPort *)get_oport("Geometry");
+  if (!ogeom) {
+    error("Unable to initialize oport 'Geometry'.");
+    return;
+  }
+  ogeom->flushViews();
 }
 
 
@@ -478,7 +504,13 @@ ShowDipoles::widget_moved(bool release)
     }
     last_scale_ = widgetSizeGui_.get();
     draw_lines();
-    if (ogeom_) ogeom_->flushViews();
+
+    GeometryOPort *ogeom = (GeometryOPort *)get_oport("Geometry");
+    if (!ogeom) {
+      error("Unable to initialize oport 'Geometry'.");
+      return;
+    }
+    ogeom->flushViews();
   }
   if (release) want_to_execute();
 }
@@ -486,21 +518,27 @@ ShowDipoles::widget_moved(bool release)
 void 
 ShowDipoles::draw_lines()
 {
+  GeometryOPort *ogeom = (GeometryOPort *)get_oport("Geometry");
+  if (!ogeom) {
+    error("Unable to initialize oport 'Geometry'.");
+    return;
+  }
+
   showLinesGui_.reset();
-  if (gidx_ && ogeom_) { 
-    ogeom_->delObj(gidx_); 
+  if (gidx_) { 
+    ogeom->delObj(gidx_); 
     gidx_=0; 
   }
-  if (showLinesGui_.get()) 
+  if (showLinesGui_.get() && new_positions_.size()) 
   {
     GeomLines *g = new GeomLines;
     for (unsigned i = 0; i < new_positions_.size() - 1; i++) 
       for (unsigned j = i+1; j < new_positions_.size(); j++) 
 	g->add(new_positions_[i]->get(), new_positions_[j]->get());
     GeomMaterial *gm = new GeomMaterial(g, new Material(Color(.8,.8,.2)));
-    gidx_ = ogeom_->addObj(gm, string("ShowDipole Lines"));
+    gidx_ = ogeom->addObj(gm, string("ShowDipole Lines"));
   }
-  if(ogeom_) ogeom_->flushViews();
+  ogeom->flushViews();
 }
 
 void 
