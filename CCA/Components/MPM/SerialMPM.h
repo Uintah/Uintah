@@ -124,6 +124,21 @@ private:
 			  DataWarehouse* old_dw,
 			  DataWarehouse* new_dw);
 
+  void scheduleInitializePressureBCs(const LevelP& level,
+				     SchedulerP&);
+	 
+  void countMaterialPointsPerLoadCurve(const ProcessorGroup*,
+				       const PatchSubset* patches,
+				       const MaterialSubset* matls,
+				       DataWarehouse* old_dw,
+				       DataWarehouse* new_dw);
+
+  void initializePressureBC(const ProcessorGroup*,
+			    const PatchSubset* patches,
+			    const MaterialSubset* matls,
+			    DataWarehouse* old_dw,
+			    DataWarehouse* new_dw);
+
   //////////
   // Insert Documentation Here:
   void actuallyComputeStableTimestep(const ProcessorGroup*,
@@ -148,12 +163,12 @@ private:
 			   DataWarehouse* new_dw);
 
   //////////
-  // Insert Documentation Here:
+  // Compute Accumulated Strain Energy
   void computeAccStrainEnergy(const ProcessorGroup*,
-                              const PatchSubset*,
-                              const MaterialSubset*,
-                              DataWarehouse* old_dw,
-                              DataWarehouse* new_dw);
+			      const PatchSubset*,
+			      const MaterialSubset*,
+			      DataWarehouse* old_dw,
+			      DataWarehouse* new_dw);
 
   //////////
   // Insert Documentation Here:
@@ -312,8 +327,6 @@ private:
   int              NGP;      // Number of ghost particles needed.
   int              NGN;      // Number of ghost nodes     needed.
 
-  const VarLabel*  d_dampingRateLabel; // Damping rate summed over particles
-  const VarLabel*  d_dampingCoeffLabel; // Calculated damping coefficient
   double           d_artificialDampCoeff; // Artificial damping coefficient
 
   vector<MPMPhysicalBC*> d_physicalBCs;

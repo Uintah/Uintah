@@ -8,6 +8,7 @@
 #include <Packages/Uintah/CCA/Components/MPM/ThermalContact/ThermalContactFactory.h>
 #include <Packages/Uintah/CCA/Components/MPM/PhysicalBC/MPMPhysicalBCFactory.h>
 #include <Packages/Uintah/CCA/Components/MPM/PhysicalBC/ForceBC.h>
+#include <Packages/Uintah/CCA/Components/MPM/PhysicalBC/PressureBC.h>
 #include <Packages/Uintah/Core/Math/Matrix3.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
 #include <Packages/Uintah/CCA/Ports/Scheduler.h>
@@ -75,11 +76,6 @@ SerialMPM::SerialMPM(const ProcessorGroup* myworld) :
   NGN     = 1;
 
   d_artificialDampCoeff = 0.0;
-  d_dampingRateLabel = 
-    VarLabel::create("dampingRate", sum_vartype::getTypeDescription() );
-  d_dampingCoeffLabel = 
-    VarLabel::create("dampingCoeff", max_vartype::getTypeDescription() );
-
 }
 
 SerialMPM::~SerialMPM()
@@ -88,8 +84,6 @@ SerialMPM::~SerialMPM()
   delete contactModel;
   delete thermalContactModel;
   MPMPhysicalBCFactory::clean();
-  VarLabel::destroy(d_dampingRateLabel);
-  VarLabel::destroy(d_dampingCoeffLabel);
 }
 
 void SerialMPM::problemSetup(const ProblemSpecP& prob_spec, GridP& /*grid*/,
@@ -151,7 +145,6 @@ void SerialMPM::problemSetup(const ProblemSpecP& prob_spec, GridP& /*grid*/,
      //register as an MPM material
      sharedState->registerMPMMaterial(mat);
    }
-
 }
 
 void SerialMPM::scheduleInitialize(const LevelP& level,
@@ -178,13 +171,18 @@ void SerialMPM::scheduleInitialize(const LevelP& level,
   t->computes(d_sharedState->get_delt_label());
   t->computes(lb->pCellNAPIDLabel,zeroth_matl);
 
-  // Compute the accumulated strain energy
+  // Computes the load curve ID associated with each particle
+  t->computes(lb->pLoadCurveIDLabel);
+
+  // Computes accumulated strain energy
   t->computes(lb->AccStrainEnergyLabel);
 
   // artificial damping coeff initialized to 0.0
+  cout_doing << "Artificial Damping Coeff = " << d_artificialDampCoeff 
+       << " 8 or 27 = " << d_8or27 << endl;
   if (d_artificialDampCoeff > 0.0) {
-     t->computes(d_dampingRateLabel); 
-     t->computes(d_dampingCoeffLabel); 
+     t->computes(lb->pDampingRateLabel); 
+     t->computes(lb->pDampingCoeffLabel); 
   }
 
   int numMPM = d_sharedState->getNumMPMMatls();
@@ -205,6 +203,41 @@ void SerialMPM::scheduleInitialize(const LevelP& level,
   // The task will have a reference to zeroth_matl
   if (zeroth_matl->removeReference())
     delete zeroth_matl; // shouln't happen, but...
+
+  // Schedule the initialization of pressure BCs per particle
+  scheduleInitializePressureBCs(level, sched);
+}
+
+void SerialMPM::scheduleInitializePressureBCs(const LevelP& level,
+				              SchedulerP& sched)
+{
+  MaterialSubset* loadCurveIndex = scinew MaterialSubset();
+  int nofPressureBCs = 0;
+  for (int ii = 0; ii<(int)MPMPhysicalBCFactory::mpmPhysicalBCs.size(); ii++){
+    string bcs_type = MPMPhysicalBCFactory::mpmPhysicalBCs[ii]->getType();
+    if (bcs_type == "Pressure") loadCurveIndex->add(nofPressureBCs++);
+  }
+  if (nofPressureBCs > 0) {
+
+    // Create a task that calculates the total number of particles
+    // associated with each load curve.  
+    Task* t = scinew Task("SerialMPM::countMaterialPointsPerLoadCurve",
+		  this, &SerialMPM::countMaterialPointsPerLoadCurve);
+    t->requires(Task::NewDW, lb->pLoadCurveIDLabel, Ghost::None);
+    t->computes(lb->materialPointsPerLoadCurveLabel, loadCurveIndex,
+	        Task::OutOfDomain);
+    sched->addTask(t, level->eachPatch(), d_sharedState->allMPMMaterials());
+
+    // Create a task that calculates the force to be associated with
+    // each particle based on the pressure BCs
+    t = scinew Task("SerialMPM::initializePressureBC",
+		  this, &SerialMPM::initializePressureBC);
+    t->requires(Task::NewDW, lb->pXLabel, Ghost::None);
+    t->requires(Task::NewDW, lb->pLoadCurveIDLabel, Ghost::None);
+    t->requires(Task::NewDW, lb->materialPointsPerLoadCurveLabel);
+    t->modifies(lb->pExternalForceLabel);
+    sched->addTask(t, level->eachPatch(), d_sharedState->allMPMMaterials());
+  }
 }
 
 void SerialMPM::scheduleComputeStableTimestep(const LevelP&,
@@ -599,15 +632,16 @@ void SerialMPM::scheduleApplyExternalLoads(SchedulerP& sched,
   Task* t=scinew Task("SerialMPM::applyExternalLoads",
 		    this, &SerialMPM::applyExternalLoads);
                   
-  // BB : 11/09/02 Unused variable
-  //const MaterialSubset* mss = matls->getUnion();
-  
+  t->requires(Task::OldDW, lb->pXLabel, Ghost::None);
   t->requires(Task::OldDW, lb->pExternalForceLabel,    Ghost::None);
   t->computes(             lb->pExtForceLabel_preReloc);
+  t->requires(Task::OldDW, lb->pLoadCurveIDLabel,    Ghost::None);
+  t->computes(             lb->pLoadCurveIDLabel_preReloc);
 
 //  t->computes(Task::OldDW, lb->pExternalHeatRateLabel_preReloc);
 
   sched->addTask(t, patches, matls);
+
 }
 
 void SerialMPM::scheduleCalculateDampingRate(SchedulerP& sched,
@@ -628,7 +662,7 @@ void SerialMPM::scheduleCalculateDampingRate(SchedulerP& sched,
     t->requires(Task::OldDW, lb->pXLabel, Ghost::None);
     if(d_8or27==27) t->requires(Task::OldDW, lb->pSizeLabel, Ghost::None);
 
-    t->computes(d_dampingRateLabel);
+    t->computes(lb->pDampingRateLabel);
     sched->addTask(t, patches, matls);
   }
 }
@@ -675,9 +709,9 @@ void SerialMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   // it is determined by the damping rate if the artificial damping
   // coefficient Q is greater than 0.0
   if (d_artificialDampCoeff > 0.0) {
-    t->requires(Task::OldDW, d_dampingCoeffLabel);
-    t->requires(Task::NewDW, d_dampingRateLabel);
-    t->computes(d_dampingCoeffLabel);
+    t->requires(Task::OldDW, lb->pDampingCoeffLabel);
+    t->requires(Task::NewDW, lb->pDampingRateLabel);
+    t->computes(lb->pDampingCoeffLabel);
   }
 
   if(d_with_ice){
@@ -722,23 +756,123 @@ void SerialMPM::printParticleCount(const ProcessorGroup* pg,
 }
 
 void SerialMPM::computeAccStrainEnergy(const ProcessorGroup*,
-				       const PatchSubset*,
-				       const MaterialSubset*,
-				       DataWarehouse* old_dw,
-				       DataWarehouse* new_dw)
+				    const PatchSubset*,
+				    const MaterialSubset*,
+				    DataWarehouse* old_dw,
+				    DataWarehouse* new_dw)
 {
-  // Get the totalStrainEnergy from the old datawarehouse
-  max_vartype accStrainEnergy;
-  old_dw->get(accStrainEnergy, lb->AccStrainEnergyLabel);
-	
-  // Get the incremental strain energy from the new datawarehouse
-  sum_vartype incStrainEnergy;
-  new_dw->get(incStrainEnergy, lb->StrainEnergyLabel);
-	                  
-  // Add the two a put into new dw
-  double totalStrainEnergy = 
-    (double) accStrainEnergy + (double) incStrainEnergy;
-  new_dw->put(max_vartype(totalStrainEnergy), lb->AccStrainEnergyLabel);
+   // Get the totalStrainEnergy from the old datawarehouse
+   max_vartype accStrainEnergy;
+   old_dw->get(accStrainEnergy, lb->AccStrainEnergyLabel);
+
+   // Get the incremental strain energy from the new datawarehouse
+   sum_vartype incStrainEnergy;
+   new_dw->get(incStrainEnergy, lb->StrainEnergyLabel);
+  
+   // Add the two a put into new dw
+   double totalStrainEnergy = 
+     (double) accStrainEnergy + (double) incStrainEnergy;
+   new_dw->put(max_vartype(totalStrainEnergy), lb->AccStrainEnergyLabel);
+}
+
+// Calculate the number of material points per load curve
+void SerialMPM::countMaterialPointsPerLoadCurve(const ProcessorGroup*,
+						const PatchSubset* patches,
+						const MaterialSubset*,
+						DataWarehouse* ,
+						DataWarehouse* new_dw)
+{
+  // Find the number of pressure BCs in the problem
+  int nofPressureBCs = 0;
+  for (int ii = 0; ii<(int)MPMPhysicalBCFactory::mpmPhysicalBCs.size(); ii++){
+    string bcs_type = MPMPhysicalBCFactory::mpmPhysicalBCs[ii]->getType();
+    if (bcs_type == "Pressure") {
+      nofPressureBCs++;
+
+      // Loop through the patches and count
+      for(int p=0;p<patches->size();p++){
+	const Patch* patch = patches->get(p);
+	int numMPMMatls=d_sharedState->getNumMPMMatls();
+	int numPts = 0;
+	for(int m = 0; m < numMPMMatls; m++){
+	  MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
+	  int dwi = mpm_matl->getDWIndex();
+
+	  ParticleSubset* pset = new_dw->getParticleSubset(dwi, patch);
+	  constParticleVariable<int> pLoadCurveID;
+	  new_dw->get(pLoadCurveID, lb->pLoadCurveIDLabel, pset);
+
+	  ParticleSubset::iterator iter = pset->begin();
+	  for(;iter != pset->end(); iter++){
+	    particleIndex idx = *iter;
+	    if (pLoadCurveID[idx] == (nofPressureBCs)) ++numPts;
+	  }
+	} // matl loop
+	new_dw->put(sumlong_vartype(numPts), 
+		    lb->materialPointsPerLoadCurveLabel, 0, nofPressureBCs-1);
+      }  // patch loop
+    }
+  }
+}
+
+// Calculate the number of material points per load curve
+void SerialMPM::initializePressureBC(const ProcessorGroup*,
+				const PatchSubset* patches,
+				const MaterialSubset*,
+				DataWarehouse* ,
+				DataWarehouse* new_dw)
+{
+  // Get the current time
+  double time = 0.0;
+  cout_doing << "Current Time (Initialize Pressure BC) = " << time << endl;
+
+  // Calculate the force vector at each particle
+  int nofPressureBCs = 0;
+  for (int ii = 0; ii<(int)MPMPhysicalBCFactory::mpmPhysicalBCs.size(); ii++) {
+    string bcs_type = MPMPhysicalBCFactory::mpmPhysicalBCs[ii]->getType();
+    if (bcs_type == "Pressure") {
+
+      // Get the material points per load curve
+      sumlong_vartype numPart = 0;
+      new_dw->get(numPart, lb->materialPointsPerLoadCurveLabel, 0, nofPressureBCs++); 
+
+      // Save the material points per load curve in the PressureBC object
+      PressureBC* pbc = dynamic_cast<PressureBC*>(MPMPhysicalBCFactory::mpmPhysicalBCs[ii]);
+      pbc->numMaterialPoints(numPart);
+      cout_doing << "    Load Curve = " << nofPressureBCs 
+	         << " Num Particles = " << numPart << endl;
+
+      // Calculate the force per particle at t = 0.0
+      double forcePerPart = pbc->forcePerParticle(time);
+
+      // Loop through the patches and calculate the force vector
+      // at each particle
+      for(int p=0;p<patches->size();p++){
+	const Patch* patch = patches->get(p);
+	int numMPMMatls=d_sharedState->getNumMPMMatls();
+	for(int m = 0; m < numMPMMatls; m++){
+	  MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
+	  int dwi = mpm_matl->getDWIndex();
+
+	  ParticleSubset* pset = new_dw->getParticleSubset(dwi, patch);
+          constParticleVariable<Point>  px;
+          new_dw->get(px, lb->pXLabel,             pset);
+	  constParticleVariable<int> pLoadCurveID;
+	  new_dw->get(pLoadCurveID, lb->pLoadCurveIDLabel, pset);
+	  ParticleVariable<Vector> pExternalForce;
+          new_dw->getModifiable(pExternalForce, lb->pExternalForceLabel, pset);
+
+	  ParticleSubset::iterator iter = pset->begin();
+	  for(;iter != pset->end(); iter++){
+	    particleIndex idx = *iter;
+	    if (pLoadCurveID[idx] == nofPressureBCs) {
+               pExternalForce[idx] = pbc->getForceVector(px[idx], forcePerPart);
+            }
+	  }
+	} // matl loop
+      }  // patch loop
+    }
+  }
 }
 
 void SerialMPM::actuallyInitialize(const ProcessorGroup*,
@@ -762,26 +896,26 @@ void SerialMPM::actuallyInitialize(const ProcessorGroup*,
       //cerrLock.lock();
       //NOT_FINISHED("not quite right - mapping of matls, use matls->get()");
       //cerrLock.unlock();
-       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
-       particleIndex numParticles = mpm_matl->countParticles(patch);
-       totalParticles+=numParticles;
+      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
+      particleIndex numParticles = mpm_matl->countParticles(patch);
+      totalParticles+=numParticles;
 
-       mpm_matl->createParticles(numParticles, cellNAPID, patch, new_dw);
+      mpm_matl->createParticles(numParticles, cellNAPID, patch, new_dw);
 
-       mpm_matl->getConstitutiveModel()->initializeCMData(patch,
-						mpm_matl, new_dw);
+      mpm_matl->getConstitutiveModel()->initializeCMData(patch,
+							 mpm_matl, new_dw);
     }
   }
 
   // Initialize the accumulated strain energy
   new_dw->put(max_vartype(0.0), lb->AccStrainEnergyLabel);
-  
+
   // Initialize the artificial damping ceofficient (alpha) to zero
   if (d_artificialDampCoeff > 0.0) {
     double alpha = 0.0;    
     double alphaDot = 0.0;    
-    new_dw->put(max_vartype(alpha), d_dampingCoeffLabel);
-    new_dw->put(sum_vartype(alphaDot), d_dampingRateLabel);
+    new_dw->put(max_vartype(alpha), lb->pDampingCoeffLabel);
+    new_dw->put(sum_vartype(alphaDot), lb->pDampingRateLabel);
   }
 
   new_dw->put(sumlong_vartype(totalParticles), lb->partCountLabel);
@@ -1750,12 +1884,33 @@ void SerialMPM::setGridBoundaryConditions(const ProcessorGroup*,
   }  // patch loop
 }
 
-void SerialMPM::applyExternalLoads(const ProcessorGroup*,
+void SerialMPM::applyExternalLoads(const ProcessorGroup* ,
                                    const PatchSubset* patches,
-                                   const MaterialSubset* ,
+                                   const MaterialSubset* ms,
                                    DataWarehouse* old_dw,
                                    DataWarehouse* new_dw)
 {
+  // Get the current time
+  double time = d_sharedState->getElapsedTime();
+  cout_doing << "Current Time (applyExternalLoads) = " << time << endl;
+
+  // Calculate the force vector at each particle for each pressure bc
+  vector<double> forcePerPart;
+  vector<PressureBC*> pbcP;
+  for (int ii = 0; ii<(int)MPMPhysicalBCFactory::mpmPhysicalBCs.size(); ii++) {
+    string bcs_type = MPMPhysicalBCFactory::mpmPhysicalBCs[ii]->getType();
+    if (bcs_type == "Pressure") {
+
+      // Get the material points per load curve
+      PressureBC* pbc = dynamic_cast<PressureBC*>(MPMPhysicalBCFactory::mpmPhysicalBCs[ii]);
+      pbcP.push_back(pbc);
+
+      // Calculate the force per particle at current time
+      forcePerPart.push_back(pbc->forcePerParticle(time));
+    } 
+  }
+
+  // Loop thru patches to update external force vector
   for(int p=0;p<patches->size();p++){
    const Patch* patch = patches->get(p);
 
@@ -1770,14 +1925,43 @@ void SerialMPM::applyExternalLoads(const ProcessorGroup*,
    for(int m = 0; m < numMPMMatls; m++){
      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
      int dwi = mpm_matl->getDWIndex();
-
-     constParticleVariable<Vector> pexternalForce;
-     ParticleVariable<Vector>      pextForceNew;
      ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
 
-     old_dw->get(pexternalForce,          lb->pExternalForceLabel,      pset);
-     new_dw->allocateAndPut(pextForceNew, lb->pExtForceLabel_preReloc,  pset);
-     pextForceNew.copyData(pexternalForce);
+     // Get the particle position data
+     constParticleVariable<Point>  px;
+     old_dw->get(px, lb->pXLabel, pset);
+
+     // Get the load curve data
+     constParticleVariable<int> pLoadCurveID;
+     old_dw->get(pLoadCurveID, lb->pLoadCurveIDLabel, pset);
+
+     // Get the external force data and allocate new space for
+     // external force
+     ParticleVariable<Vector> pExternalForce;
+     ParticleVariable<Vector> pExternalForce_new;
+     old_dw->getModifiable(pExternalForce, lb->pExternalForceLabel, pset);
+     new_dw->allocateAndPut(pExternalForce_new, 
+			    lb->pExtForceLabel_preReloc,  pset);
+
+     // Iterate over the particles
+     ParticleSubset::iterator iter = pset->begin();
+     for(;iter != pset->end(); iter++){
+       particleIndex idx = *iter;
+       int loadCurveID = pLoadCurveID[idx]-1;
+       if (loadCurveID < 0) {
+	 pExternalForce_new[idx] = pExternalForce[idx];
+       } else {
+         PressureBC* pbc = pbcP[loadCurveID];
+         double force = forcePerPart[loadCurveID];
+	 pExternalForce_new[idx] = pbc->getForceVector(px[idx], force);
+       }
+     }
+
+     // Recycle the loadCurveIDs
+     ParticleVariable<int> pLoadCurveID_new;
+     new_dw->allocateAndPut(pLoadCurveID_new, 
+             lb->pLoadCurveIDLabel_preReloc, pset);
+     pLoadCurveID_new.copyData(pLoadCurveID);
 
    } // matl loop
   }  // patch loop
@@ -1835,7 +2019,7 @@ void SerialMPM::calculateDampingRate(const ProcessorGroup*,
 	}
 	alphaDot /= d_artificialDampCoeff;
       } 
-      new_dw->put(sum_vartype(alphaDot), d_dampingRateLabel);
+      new_dw->put(sum_vartype(alphaDot), lb->pDampingRateLabel);
     }
   }
 }
@@ -1873,12 +2057,12 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
    if (d_artificialDampCoeff > 0.0) {
      max_vartype dampingCoeff; 
      sum_vartype dampingRate;
-     old_dw->get(dampingCoeff, d_dampingCoeffLabel);
-     new_dw->get(dampingRate, d_dampingRateLabel);
+     old_dw->get(dampingCoeff, lb->pDampingCoeffLabel);
+     new_dw->get(dampingRate, lb->pDampingRateLabel);
      alpha = (double) dampingCoeff;
      alphaDot = (double) dampingRate;
      alpha += alphaDot*delT; // Calculate damping coefficient from damping rate
-     new_dw->put(max_vartype(alpha), d_dampingCoeffLabel);
+     new_dw->put(max_vartype(alpha), lb->pDampingCoeffLabel);
    }
 
    for(int m = 0; m < numMPMMatls; m++){
