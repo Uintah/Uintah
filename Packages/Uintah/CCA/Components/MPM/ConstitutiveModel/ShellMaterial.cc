@@ -1,7 +1,7 @@
 
-#include "ConstitutiveModelFactory.h"
-#include "ShellMaterial.h"
-#include "MPMMaterial.h"
+#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ConstitutiveModelFactory.h>
+#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ShellMaterial.h>
+#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <Core/Malloc/Allocator.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>

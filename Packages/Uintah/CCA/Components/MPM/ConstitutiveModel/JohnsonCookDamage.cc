@@ -1,5 +1,5 @@
 
-#include "JohnsonCookDamage.h"	
+#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/JohnsonCookDamage.h>
 #include <math.h>
 
 using std::cerr;

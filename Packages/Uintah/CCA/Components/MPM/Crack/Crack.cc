@@ -1,4 +1,4 @@
-#include "Crack.h"
+#include <Packages/Uintah/CCA/Components/MPM/Crack/Crack.h>
 #include <Packages/Uintah/Core/Math/Matrix3.h>
 #include <Packages/Uintah/Core/Math/Short27.h> // for Fracture
 #include <Core/Geometry/Vector.h>
