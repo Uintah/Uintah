@@ -3,20 +3,21 @@
 // Symbol:        hello.GoPort-v1.0
 // Symbol Type:   class
 // Babel Version: 0.7.4
-// SIDL Created:  20030305 18:51:16 MST
-// Generated:     20030305 18:51:24 MST
+// SIDL Created:  20030227 01:34:02 MST
+// Generated:     20030227 01:34:08 MST
 // Description:   Server-side implementation for hello.GoPort
 // 
 // WARNING: Automatically generated; only changes within splicers preserved
 // 
 // babel-version = 0.7.4
 // source-line   = 7
-// source-url    = file:/home/sci/kzhang/SCIRun/src/CCA/Components/BabelTest/hello/hello.sidl
+// source-url    = file:/home/kzhang/SCIRun/src/Babel/Components/hello/hello.sidl
 // 
 #include "hello_GoPort_Impl.hh"
 
 // DO-NOT-DELETE splicer.begin(hello.GoPort._includes)
-#include "govcca.hh"
+#include "gov_cca_ports_GoPort.hh"
+#include "gov_cca_ports_IDPort.hh"
 #include <iostream.h>
 // DO-NOT-DELETE splicer.end(hello.GoPort._includes)
 
@@ -42,7 +43,7 @@ void hello::GoPort_impl::_dtor() {
  */
 void
 hello::GoPort_impl::setService (
-  /*in*/ ::govcca::Services svc ) 
+  /*in*/ ::gov::cca::Services svc ) 
 throw () 
 {
   // DO-NOT-DELETE splicer.begin(hello.GoPort.setService)
@@ -52,8 +53,9 @@ throw ()
 
 /**
  * Execute some encapsulated functionality on the component. 
- * @return 0 if ok, -1 if internal error but component may be used further,
- * -2 if error so severe that component cannot be further used safely.
+ * Return 0 if ok, -1 if internal error but component may be 
+ * used further, and -2 if error so severe that component cannot
+ * be further used safely.
  */
 int32_t
 hello::GoPort_impl::go () 
@@ -62,7 +64,7 @@ throw ()
 {
   // DO-NOT-DELETE splicer.begin(hello.GoPort.go)
   cerr<<"hello::GoPort::go() starts..."<<endl;
-  govcca::IDPort s=svc.getPort("idport");
+  gov::cca::ports::IDPort s=svc.getPort("idport");
   if(!s._is_nil())   cerr<<"Hello "<<s.getID()<<endl;
   else cerr<<"getPort() returns null"<<endl;
   // DO-NOT-DELETE splicer.end(hello.GoPort.go)

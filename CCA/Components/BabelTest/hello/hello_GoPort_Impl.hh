@@ -3,15 +3,15 @@
 // Symbol:        hello.GoPort-v1.0
 // Symbol Type:   class
 // Babel Version: 0.7.4
-// SIDL Created:  20030305 18:51:16 MST
-// Generated:     20030305 18:51:24 MST
+// SIDL Created:  20030227 01:34:02 MST
+// Generated:     20030227 01:34:08 MST
 // Description:   Server-side implementation for hello.GoPort
 // 
 // WARNING: Automatically generated; only changes within splicers preserved
 // 
 // babel-version = 0.7.4
 // source-line   = 7
-// source-url    = file:/home/sci/kzhang/SCIRun/src/CCA/Components/BabelTest/hello/hello.sidl
+// source-url    = file:/home/kzhang/SCIRun/src/Babel/Components/hello/hello.sidl
 // 
 
 #ifndef included_hello_GoPort_Impl_hh
@@ -29,8 +29,8 @@
 #ifndef included_SIDL_BaseInterface_hh
 #include "SIDL_BaseInterface.hh"
 #endif
-#ifndef included_govcca_Services_hh
-#include "govcca_Services.hh"
+#ifndef included_gov_cca_Services_hh
+#include "gov_cca_Services.hh"
 #endif
 #ifndef included_hello_GoPort_hh
 #include "hello_GoPort.hh"
@@ -58,7 +58,7 @@ namespace hello {
     GoPort self;
 
     // DO-NOT-DELETE splicer.begin(hello.GoPort._implementation)
-    govcca::Services svc;
+    gov::cca::Services svc;
     // DO-NOT-DELETE splicer.end(hello.GoPort._implementation)
 
   private:
@@ -87,7 +87,7 @@ namespace hello {
      */
     void
     setService (
-      /*in*/ ::govcca::Services svc
+      /*in*/ ::gov::cca::Services svc
     )
     throw () 
     ;
@@ -95,8 +95,9 @@ namespace hello {
 
     /**
      * Execute some encapsulated functionality on the component. 
-     * @return 0 if ok, -1 if internal error but component may be used further,
-     * -2 if error so severe that component cannot be further used safely.
+     * Return 0 if ok, -1 if internal error but component may be 
+     * used further, and -2 if error so severe that component cannot
+     * be further used safely.
      */
     int32_t
     go() throw () 

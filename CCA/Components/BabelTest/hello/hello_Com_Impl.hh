@@ -3,15 +3,15 @@
 // Symbol:        hello.Com-v1.0
 // Symbol Type:   class
 // Babel Version: 0.7.4
-// SIDL Created:  20030305 18:51:18 MST
-// Generated:     20030305 18:51:24 MST
+// SIDL Created:  20030227 01:34:06 MST
+// Generated:     20030227 01:34:08 MST
 // Description:   Server-side implementation for hello.Com
 // 
 // WARNING: Automatically generated; only changes within splicers preserved
 // 
 // babel-version = 0.7.4
-// source-line   = 10
-// source-url    = file:/home/sci/kzhang/SCIRun/src/CCA/Components/BabelTest/hello/hello.sidl
+// source-line   = 14
+// source-url    = file:/home/kzhang/SCIRun/src/Babel/Components/hello/hello.sidl
 // 
 
 #ifndef included_hello_Com_Impl_hh
@@ -29,8 +29,8 @@
 #ifndef included_SIDL_BaseInterface_hh
 #include "SIDL_BaseInterface.hh"
 #endif
-#ifndef included_govcca_Services_hh
-#include "govcca_Services.hh"
+#ifndef included_gov_cca_Services_hh
+#include "gov_cca_Services.hh"
 #endif
 #ifndef included_hello_Com_hh
 #include "hello_Com.hh"
@@ -58,7 +58,7 @@ namespace hello {
     Com self;
 
     // DO-NOT-DELETE splicer.begin(hello.Com._implementation)
-    govcca::Services svc;
+    gov::cca::Services svc;
     // DO-NOT-DELETE splicer.end(hello.Com._implementation)
 
   private:
@@ -84,12 +84,14 @@ namespace hello {
 
 
     /**
-     * Obtain Services handle, through which the component communicates with the
-     * framework. This is the one method that every CCA Component must implement. 
+     * Obtain Services handle, through which the 
+     * component communicates with the framework. 
+     * This is the one method that every CCA Component
+     * must implement. 
      */
     void
     setServices (
-      /*in*/ ::govcca::Services svc
+      /*in*/ ::gov::cca::Services services
     )
     throw () 
     ;
