@@ -96,9 +96,11 @@ private:
   GuiInt                        maxsteps_;
 
   //! interpolate using the generic linear interpolator
-  bool interpolate(const Point &p, Vector &v) {
-    bool b = vfinterface_->interpolate(v,p);
-    if ((b) && v.length2() > 0) {
+  bool interpolate(VectorFieldInterface *vfi, const Point &p, Vector &v)
+  {
+    const bool b = vfi->interpolate(v,p);
+    if (b && v.length2() > 0)
+    {
       v.normalize(); // try not to skip cells - needs help from stepsize
     }
     return b;
@@ -110,14 +112,12 @@ private:
 
   //! find the nodes that make up a single stream line.
   //! This particular implementation uses Runge-Kutta-Fehlberg
-  template <class VectorField>
   void FindStreamLineNodes(vector<Point>&, Point, float, float, int, 
-			   VectorField *);
+			   VectorFieldInterface *);
 
   //! compute the inner terms of the RKF formula
-  template <class VectorField>
-  int ComputeRKFTerms(vector<Vector>&,
-		      const Point&, float, VectorField *);
+  bool ComputeRKFTerms(vector<Vector> &, const Point&, float,
+		       VectorFieldInterface *);
 };
 
 extern "C" PSECORESHARE Module* make_StreamLines(const string& id) {
@@ -141,55 +141,62 @@ StreamLines::~StreamLines()
 {
 }
 
-template <class VectorField>
-int
-StreamLines::ComputeRKFTerms(vector<Vector> &v /* storage for terms */,
-			     const Point &p    /* previous point */,
-			     float s           /* current step size */,
-			     VectorField * /* vf */   /* the field */)
+
+bool
+StreamLines::ComputeRKFTerms(vector<Vector> &v, /* storage for terms */
+			     const Point &p,    /* previous point */
+			     float s,           /* current step size */
+			     VectorFieldInterface *vfi)
 {
-  //typedef typename VectorField::mesh_type   vf_mesh_type;
-  //typedef typename vf_mesh_type::Cell::index_type Cell::index_type;
-  int check = 0;
-  int c;
+  if (!interpolate(vfi, p, v[0]))
+  {
+    return false;
+  }
+  v[0] *= s;
+  
+  if (!interpolate(vfi, p + v[0]*d[1][0], v[1]))
+  {
+    return false;
+  }
+  v[1] *= s;
+  
+  if (!interpolate(vfi, p + v[0]*d[2][0] + v[1]*d[2][1], v[2]))
+  {
+    return false;
+  }
+  v[2] *= s;
+  
+  if (!interpolate(vfi, p + v[0]*d[3][0] + v[1]*d[3][1] + v[2]*d[3][2], v[3]))
+  {
+    return false;
+  }
+  v[3] *= s;
+  
+  if (!interpolate(vfi, p + v[0]*d[4][0] + v[1]*d[4][1] + v[2]*d[4][2] + 
+		   v[3]*d[4][3], v[4]))
+  {
+    return false;
+  }
+  v[4] *= s;
+  
+  if (!interpolate(vfi, p + v[0]*d[5][0] + v[1]*d[5][1] + v[2]*d[5][2] + 
+		   v[3]*d[5][3] + v[4]*d[5][4], v[5]))
+  {
+    return false;
+  }
+  v[5] *= s;
 
-  check |= c = interpolate(p,v[0]);
-  if (!c) return 0;
-  v[0]*=s;
-  
-  check |= c = interpolate(p+v[0]*d[1][0],v[1]);
-  if (!c) return 0;
-  v[1]*=s;
-  
-  check |= c = interpolate(p+v[0]*d[2][0]+v[1]*d[2][1],v[2]);
-  if (!c) return 0;
-  v[2]*=s;
-  
-  check |= c = interpolate(p+v[0]*d[3][0]+v[1]*d[3][1]+v[2]*d[3][2],v[3]);
-  if (!c) return 0;
-  v[3]*=s;
-  
-  check |= c = interpolate(p+v[0]*d[4][0]+v[1]*d[4][1]+v[2]*d[4][2]+
-			   v[3]*d[4][3],v[4]);
-  if (!c) return 0;
-  v[4]*=s;
-  
-  check |= c = interpolate(p+v[0]*d[5][0]+v[1]*d[5][1]+v[2]*d[5][2]+
-			   v[3]*d[5][3]+v[4]*d[5][4],v[5]);
-  if (!c) return 0;
-  v[5]*=s;
-
-  return check;
+  return true;
 }
+
   
-template <class VectorField>
 void
 StreamLines::FindStreamLineNodes(vector<Point> &v /* storage for points */,
 				 Point x          /* initial point */,
 				 float t          /* error tolerance */,
 				 float s          /* initial step size */,
 				 int n            /* max number of steps */,
-				 VectorField *vf  /* the field */)
+				 VectorFieldInterface *vfi  /* the field */)
 {
   int loop;
   vector <Vector> terms;
@@ -197,42 +204,54 @@ StreamLines::FindStreamLineNodes(vector<Point> &v /* storage for points */,
   double err;
   Vector xv;
 
-  terms.resize(6,0);
+  terms.resize(6, Vector(0.0, 0.0, 0.0));
 
-  // add the initial point to the list of points found.
+  // Add the initial point to the list of points found.
   v.push_back(x);
 
-  for (loop=0;loop<n;loop++) {
+  for (loop=0; loop<n; loop++)
+  {
 
-    // compute the next set of terms
-    if (!ComputeRKFTerms(terms,x,s,vf))
+    // Compute the next set of terms.
+    if (!ComputeRKFTerms(terms, x, s, vfi))
+    {
       break;
+    }
 
-    // compute the approximate local truncation error
-    error = terms[0]*ab[0]+terms[1]*ab[1]+terms[2]*ab[2]+
-            terms[3]*ab[3]+terms[4]*ab[4]+terms[5]*ab[5];
-    err = sqrt(error(0)*error(0)+error(1)*error(1)+error(2)*error(2));
+    // Compute the approximate local truncation error.
+    error = terms[0]*ab[0] + terms[1]*ab[1] + terms[2]*ab[2]
+      + terms[3]*ab[3] + terms[4]*ab[4] + terms[5]*ab[5];
+    err = sqrt(error(0)*error(0) + error(1)*error(1) + error(2)*error(2));
     
-    // is the error tolerable?  Adjust the step size accordingly.
-    if (err<t/128.0)
-      s*=2;
-    else if (err>t) {
-      s/=2;
-      //loop--;         // re-do this step.
+    // Is the error tolerable?  Adjust the step size accordingly.
+    if (err < t/128.0)
+    {
+      s *= 2;
+    }
+    else if (err > t)
+    {
+      s /= 2;
+      //loop--;         // Re-do this step.
       continue;
     }
 
-    // compute and add the point to the list of points found.
-    x = x + terms[0]*a[0]+terms[1]*a[1]+terms[2]*a[2]+
-            terms[3]*a[3]+terms[4]*a[4]+terms[5]*a[5];
+    // Compute and add the point to the list of points found.
+    x = x  +  terms[0]*a[0] + terms[1]*a[1] + terms[2]*a[2] + 
+      terms[3]*a[3] + terms[4]*a[4] + terms[5]*a[5];
 
-    // if the new point is inside the field, add it.  Otherwise stop.
-    if (interpolate(x,xv))
+    // If the new point is inside the field, add it.  Otherwise stop.
+    if (interpolate(vfi, x, xv))
+    {
       v.push_back(x);
+    }
     else
+    {
       break;
+    }
   }
 }
+
+
 
 template <class VectorField, class SeedField>
 void 
@@ -278,7 +297,7 @@ StreamLines::TemplatedExecute(VectorField *vf, SeedField *sf)
 
     // Is the seed point inside the field?
     if (vf->data_at() == Field::NODE) {
-      if (!interpolate(seed,test)) {
+      if (!interpolate(vfinterface_, seed, test)) {
 	postMessage("StreamLines: WARNING: seed point "
 		    "was not inside the field.");
 	++seed_iter;
@@ -292,7 +311,7 @@ StreamLines::TemplatedExecute(VectorField *vf, SeedField *sf)
 
     // find the positive streamlines
     nodes.clear();
-    FindStreamLineNodes(nodes,seed,tolerance,stepsize,maxsteps,vf);
+    FindStreamLineNodes(nodes,seed,tolerance,stepsize,maxsteps,vfinterface_);
 
     node_iter = nodes.begin();
     if (node_iter!=nodes.end())
@@ -308,7 +327,7 @@ StreamLines::TemplatedExecute(VectorField *vf, SeedField *sf)
 
     // find the negative streamlines
     nodes.clear();
-    FindStreamLineNodes(nodes,seed,tolerance,-stepsize,maxsteps,vf);
+    FindStreamLineNodes(nodes,seed,tolerance,-stepsize,maxsteps,vfinterface_);
 
     node_iter = nodes.begin();
     if (node_iter!=nodes.end())
