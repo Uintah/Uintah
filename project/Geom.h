@@ -24,6 +24,7 @@ class GeomObj {
 public:
     GeomObj();
     virtual ~GeomObj();
+    virtual void draw() = 0;
 };
 
 class ObjGroup : public GeomObj {
@@ -34,6 +35,7 @@ public:
 
     void add(GeomObj*);
     int size();
+    virtual void draw();
 };
 
 class Triangle : public GeomObj {
@@ -44,6 +46,15 @@ public:
 
     Triangle(const Point&, const Point&, const Point&);
     virtual ~Triangle();
+    virtual void draw();
 };
 
+class GeomPt : public GeomObj {
+public:
+    Point p1;
+
+    GeomPt(const Point&);
+    virtual ~GeomPt();
+    virtual void draw();
+};
 #endif
