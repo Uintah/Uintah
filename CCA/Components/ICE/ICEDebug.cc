@@ -54,7 +54,8 @@ void    ICE::printData( int matl,
     
     //__________________________________
     // spew to stderr
-    if ( !d_dbgGnuPlot) {       
+    if ( d_dbgGnuPlot== false && 
+        high.x() > low.x() && high.y() > low.y() && high.z() > low.z() ) {      
       cerr << "______________________________________________\n";
       cerr << "$" << message1 << "\n";
       cerr << "$" << message2 << "\n";
@@ -141,7 +142,8 @@ void    ICE::printData(int matl,
     
     //__________________________________
     // spew to stderr
-    if (!d_dbgGnuPlot) {   
+    if ( d_dbgGnuPlot== false && 
+        high.x() > low.x() && high.y() > low.y() && high.z() > low.z() ) {      
       cerr << "______________________________________________\n";
       cerr << "$" << message1 << "\n";
       cerr << "$" << message2 << "\n";
@@ -243,7 +245,9 @@ void    ICE::printVector(int matl,
       }
       //__________________________________
       // spew to stderr
-      if( !d_dbgGnuPlot) {
+      if ( d_dbgGnuPlot== false && 
+        high.x() > low.x() && high.y() > low.y() && high.z() > low.z() ) {  
+       
         cerr.setf(ios::scientific,ios::floatfield);
         cerr.precision(d_dbgSigFigs);
         cerr << "______________________________________________\n";
@@ -333,7 +337,9 @@ void    ICE::printData_FC(int matl,
 
     //__________________________________
     // spew to stderr
-    if( !d_dbgGnuPlot) {    
+    if ( d_dbgGnuPlot== false && 
+        high.x() > low.x() && high.y() > low.y() && high.z() > low.z() ) {  
+    
       cerr.setf(ios::scientific,ios::floatfield);
       cerr.precision(d_dbgSigFigs); 
       cerr << "______________________________________________\n";
@@ -418,7 +424,8 @@ void    ICE::printData_FC(int matl,
                         low, high);
     //__________________________________
     // spew to stderr
-    if( !d_dbgGnuPlot) {
+    if ( d_dbgGnuPlot== false && 
+        high.x() > low.x() && high.y() > low.y() && high.z() > low.z() ) {  
       cerr.setf(ios::scientific,ios::floatfield);
       cerr.precision(d_dbgSigFigs);
       cerr << "______________________________________________\n";
@@ -505,7 +512,8 @@ void    ICE::printData_FC(int matl,
                         low, high);
     //__________________________________
     // spew to stderr
-    if( !d_dbgGnuPlot) {
+    if ( d_dbgGnuPlot== false && 
+        high.x() > low.x() && high.y() > low.y() && high.z() > low.z() ) {   
       cerr.setf(ios::scientific,ios::floatfield);
       cerr.precision(d_dbgSigFigs);   
       cerr << "______________________________________________\n";
