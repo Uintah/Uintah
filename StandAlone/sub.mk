@@ -35,7 +35,9 @@ else
 	Core/Exceptions  \
 	Core/Thread      \
 	Core/Geometry    \
-	Core/Util
+	Core/Util	 \
+	Core/Datatypes	 \
+	Core/Persistent
 
 endif
 
