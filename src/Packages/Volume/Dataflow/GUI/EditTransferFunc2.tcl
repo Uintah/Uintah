@@ -148,16 +148,16 @@ itcl_class Volume_Visualization_EditTransferFunc2 {
 
 	frame $w.controls
 	button $w.controls.addtriangle -text "Add Triangle" \
-	    -command "$this-c addtriangle"
+	    -command "$this-c addtriangle" -width 14
 	button $w.controls.addrectangle -text "Add Rectangle" \
-	    -command "$this-c addrectangle"
+	    -command "$this-c addrectangle" -width 14
 	button $w.controls.delete -text "Delete" \
-	    -command "$this-c deletewidget"
+	    -command "$this-c deletewidget" -width 14
 	button $w.controls.undo -text "Undo" \
-	    -command "$this-c undowidget"
+	    -command "$this-c undowidget" -width 14
 	pack $w.controls.addtriangle $w.controls.addrectangle \
 	    $w.controls.delete $w.controls.undo \
-	    -padx 20 -pady 4 -fill x -expand yes -side left
+	    -padx 10 -pady 4 -fill x -expand yes -side left
 
 	pack $w.title  -fill x -padx 2 -pady 2
 	pack $w.widgets -side top -fill both -expand yes -padx 2
