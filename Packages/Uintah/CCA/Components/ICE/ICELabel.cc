@@ -148,6 +148,10 @@ ICELabel::ICELabel()
     VarLabel::create( "TotalMass",     sum_vartype::getTypeDescription() );  
   TotalIntEngLabel = 
     VarLabel::create( "TotalIntEng",   sum_vartype::getTypeDescription() );
+  mom_exch_errorLabel = 
+    VarLabel::create( "mom_exch_error",sum_vartype::getTypeDescription() );
+  eng_exch_errorLabel = 
+    VarLabel::create( "eng_exch_error",sum_vartype::getTypeDescription() );
   max_RHSLabel = 
     VarLabel::create( "max_RHS",       max_vartype::getTypeDescription() ); 
 } 
@@ -225,6 +229,8 @@ ICELabel::~ICELabel()
     VarLabel::destroy(KineticEnergyLabel);
     VarLabel::destroy(CenterOfMassVelocityLabel);
     VarLabel::destroy(TotalIntEngLabel); 
+    VarLabel::destroy(eng_exch_errorLabel);   
+    VarLabel::destroy(mom_exch_errorLabel);  
     VarLabel::destroy(max_RHSLabel);   
     VarLabel::destroy(doMechLabel);
 }
