@@ -1145,11 +1145,11 @@ class BioFEMApp {
 	    
 	    draw_colormap Blackbody $maps.blackbody.f.canvas
 	    
-	    # Red-to-Blue
+	    # Blue-to-Red
 	    frame $maps.bpseismic
 	    pack $maps.bpseismic -side top -anchor nw -padx 3 -pady 1 \
 		-fill x -expand 1
-	    radiobutton $maps.bpseismic.b -text "Red-to-Blue" \
+	    radiobutton $maps.bpseismic.b -text "Blue-to-Red" \
 		-variable $mods(GenStandardColorMaps)-mapType \
 		-value 17 \
 		-command "$mods(GenStandardColorMaps)-c needexecute"
