@@ -17,6 +17,7 @@
 #include <Geom/Light.h>
 #include <Geom/Line.h>
 #include <Geom/Tri.h>
+#include <Geom/VCTri.h>
 #include <Geometry/Transform.h>
 #include <iostream.h>
 
@@ -153,6 +154,36 @@ void GeomTri::get_hit(Vector& normal, Point& point)
 }
 
 void GeomTri::objdraw(DrawInfoX11* di)
+{
+    Point t1(di->transform->project(p1));
+    Point t2(di->transform->project(p2));
+    Point t3(di->transform->project(p3));
+    XPoint p[3];
+    p[0].x=Round(t1.x());
+    p[0].y=Round(t1.y());
+    p[1].x=Round(t2.x());
+    p[1].y=Round(t2.y());
+    p[2].x=Round(t3.x());
+    p[2].y=Round(t3.y());
+    XFillPolygon(di->dpy, di->win, di->gc, p, 3, Convex,
+		 CoordModeOrigin);
+}
+
+double GeomVCTri::depth(DrawInfoX11* di)
+{
+    double d1=di->transform->project(p1).z();
+    double d2=di->transform->project(p2).z();
+    double d3=di->transform->project(p3).z();
+    return Min(d1, d2, d3);
+}
+
+void GeomVCTri::get_hit(Vector& normal, Point& point)
+{
+    point=AffineCombination(p1, 1./3., p2, 1./3., p3, 1./3.);
+    normal=n;
+}
+
+void GeomVCTri::objdraw(DrawInfoX11* di)
 {
     Point t1(di->transform->project(p1));
     Point t2(di->transform->project(p2));

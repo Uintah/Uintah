@@ -30,6 +30,8 @@
 #include <Geom/Tube.h>
 #include <Geom/TriStrip.h>
 #include <Geom/View.h>
+#include <Geom/VCTri.h>
+#include <Geom/VCTriStrip.h>
 #include <Math/TrigTable.h>
 #include <Math/Trig.h>
 #include <Geometry/Plane.h>
@@ -399,6 +401,120 @@ void GeomTriStrip::objdraw(DrawInfoOpenGL* di) {
 	    }
 	    glEnd();
 	}
+	break;
+    }
+}
+
+void GeomVCTriStrip::objdraw(DrawInfoOpenGL* di) {
+    if(pts.size() <= 2)
+	return;
+    di->polycount+=pts.size()-2;
+    switch(di->get_drawtype()){
+    case DrawInfoOpenGL::WireFrame:
+	{
+	    glBegin(GL_LINES);
+	    Point p1(pts[0]);
+	    Point p2(pts[1]);
+	    glVertex3d(p1.x(), p1.y(), p1.z());
+	    glVertex3d(p2.x(), p2.y(), p2.z());
+	    for(int i=2;i<pts.size();i+=2){
+		Point p3(pts[i]);
+		Point p4(pts[i+1]);
+		glVertex3d(p3.x(), p3.y(), p3.z());
+		glVertex3d(p1.x(), p1.y(), p1.z());
+		glVertex3d(p3.x(), p3.y(), p3.z());
+		glVertex3d(p2.x(), p2.y(), p2.z());
+		glVertex3d(p4.x(), p4.y(), p4.z());
+		glVertex3d(p3.x(), p3.y(), p3.z());
+		glVertex3d(p4.x(), p4.y(), p4.z());
+		glVertex3d(p2.x(), p2.y(), p2.z());
+		p1=p3;
+		p2=p4;
+	    }
+	    glEnd();
+	}
+	break;
+    case DrawInfoOpenGL::Flat:
+	{
+	    glBegin(GL_TRIANGLE_STRIP);
+	    for(int i=0;i<pts.size();i++){
+		Point p(pts[i]);
+		glVertex3d(p.x(), p.y(), p.z());
+	    }
+	    glEnd();
+	}
+	break;
+    case DrawInfoOpenGL::Gouraud:
+	{
+	    glBegin(GL_TRIANGLE_STRIP);
+	    di->push_matl(mmatl[0].get_rep());
+	    for(int i=0;i<pts.size();i++){
+		Vector n(norms[i]);
+		glNormal3d(n.x(), n.y(), n.z());
+		Point p(pts[i]);
+		glVertex3d(p.x(), p.y(), p.z());
+	    }
+	    di->pop_matl();
+	    glEnd();
+	}
+	break;
+    case DrawInfoOpenGL::Phong:
+	{
+	    glBegin(GL_TRIANGLE_STRIP);
+	    for(int i=0;i<pts.size();i++){
+		Vector n(norms[i]);
+		glNormal3d(n.x(), n.y(), n.z());
+		Point p(pts[i]);
+		di->push_matl(mmatl[i].get_rep());
+		glVertex3d(p.x(), p.y(), p.z());
+		di->pop_matl();
+	    }
+	    glEnd();
+	}
+	break;
+    }
+}
+
+void GeomVCTri::objdraw(DrawInfoOpenGL* di) {
+    di->polycount++;
+    switch(di->get_drawtype()){
+    case DrawInfoOpenGL::WireFrame:
+	glBegin(GL_LINE_LOOP);
+	glVertex3d(p1.x(), p1.y(), p1.z());
+	glVertex3d(p2.x(), p2.y(), p2.z());
+	glVertex3d(p3.x(), p3.y(), p3.z());
+	glEnd();
+	break;
+    case DrawInfoOpenGL::Flat:
+	glBegin(GL_TRIANGLES);
+	glVertex3d(p1.x(), p1.y(), p1.z());
+	glVertex3d(p2.x(), p2.y(), p2.z());
+	glVertex3d(p3.x(), p3.y(), p3.z());
+	glEnd();
+	break;
+    case DrawInfoOpenGL::Gouraud:
+	glBegin(GL_TRIANGLES);
+	glNormal3d(-n.x(), -n.y(), -n.z());
+	di->push_matl(m1.get_rep());
+	glVertex3d(p1.x(), p1.y(), p1.z());
+	glVertex3d(p2.x(), p2.y(), p2.z());
+	glVertex3d(p3.x(), p3.y(), p3.z());
+	di->pop_matl();
+	glEnd();
+	break;
+    case DrawInfoOpenGL::Phong:
+	glBegin(GL_TRIANGLES);
+	glNormal3d(-n.x(), -n.y(), -n.z());
+	di->push_matl(m1.get_rep());
+	glVertex3d(p1.x(), p1.y(), p1.z());
+	di->pop_matl();
+	di->push_matl(m2.get_rep());
+	glVertex3d(p2.x(), p2.y(), p2.z());
+	di->pop_matl();
+	di->push_matl(m3.get_rep());
+	glVertex3d(p3.x(), p3.y(), p3.z());
+	di->pop_matl();
+	glEnd();
 	break;
     }
 }
