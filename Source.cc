@@ -8,9 +8,6 @@
 #include <Packages/Uintah/CCA/Components/Arches/PhysicalConstants.h>
 #include <Packages/Uintah/CCA/Components/Arches/StencilMatrix.h>
 #include <Packages/Uintah/CCA/Components/Arches/TurbulenceModel.h>
-#ifdef PetscFilter
-#include <Packages/Uintah/CCA/Components/Arches/Filter.h>
-#endif
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
 #include <Packages/Uintah/Core/Grid/CCVariable.h>
 #include <Packages/Uintah/Core/Grid/Level.h>
@@ -51,8 +48,6 @@ using namespace SCIRun;
 #include <Packages/Uintah/CCA/Components/Arches/fortran/enthalpyradsrc_fort.h>
 #include <Packages/Uintah/CCA/Components/Arches/fortran/enthalpyradthinsrc_fort.h>
 #include <Packages/Uintah/CCA/Components/Arches/fortran/computeVel_fort.h>
-#include <Packages/Uintah/CCA/Components/Arches/fortran/mascal_fort.h>
-#include <Packages/Uintah/CCA/Components/Arches/fortran/mascal_scalar_fort.h>
 #include <Packages/Uintah/CCA/Components/Arches/fortran/mmmomsrc_fort.h>
 #include <Packages/Uintah/CCA/Components/Arches/fortran/pressrc_fort.h>
 #include <Packages/Uintah/CCA/Components/Arches/fortran/pressrccorr_fort.h>
@@ -329,30 +324,6 @@ Source::calculatePressureSourcePred(const ProcessorGroup* pc,
   // Get the patch and variable indices
   IntVector idxLo = patch->getCellFORTLowIndex();
   IntVector idxHi = patch->getCellFORTHighIndex();
-  // compute drhodt and add a filtered value to the RHS of the pressure equation
-  vars->drhodt.resize(patch->getLowIndex(), patch->getHighIndex());
-  for (int kk = idxLo.z(); kk <= idxHi.z(); kk++) {
-    for (int jj = idxLo.y(); jj <= idxHi.y(); jj++) {
-      for (int ii = idxLo.x(); ii <= idxHi.x(); ii++) {
-	IntVector currcell(ii,jj,kk);
-	double vol = cellinfo->sns[jj]*cellinfo->stb[kk]*cellinfo->sew[ii];
-	vars->drhodt[currcell] = (vars->old_density[currcell] -
-				  vars->density[currcell])*vol/delta_t;
-      }
-    }
-  }
-
-#ifdef FILTER_DRHODT
-#ifdef PetscFilter
-  Filter* boxFilter = d_turbModel->getFilter();
-  vars->filterdrhodt.initialize(0.0);
-  boxFilter->applyFilter(pc, patch,vars->drhodt, vars->filterdrhodt);
-#endif
-#else
-  vars->filterdrhodt.copy(vars->drhodt,
-			  vars->drhodt.getLowIndex(),
-			  vars->drhodt.getHighIndex());
-#endif
 #ifdef divergenceconstraint
   fort_pressrcpred_var(idxLo, idxHi, vars->pressNonlinearSrc, vars->divergence,
 		       vars->uVelRhoHat,
@@ -367,7 +338,7 @@ Source::calculatePressureSourcePred(const ProcessorGroup* pc,
     for (int jj = idxLo.y(); jj <= idxHi.y(); jj++) {
       for (int ii = idxLo.x(); ii <= idxHi.x(); ii++) {
 	IntVector currcell(ii,jj,kk);
-	vars->pressNonlinearSrc[currcell] += vars->filterdrhodt[currcell];
+	vars->pressNonlinearSrc[currcell] -= vars->filterdrhodt[currcell];
       }
     }
   }
@@ -924,7 +895,8 @@ void
 Source::modifyScalarMassSource(const ProcessorGroup* ,
 			       const Patch* patch,
 			       double,
-			       int, ArchesVariables* vars)
+			       int, ArchesVariables* vars,
+			       int conv_scheme)
 {
   // Get the patch and variable indices
   // And call the fortran routine (MASCAL)
@@ -943,14 +915,16 @@ Source::modifyScalarMassSource(const ProcessorGroup* ,
 		    vars->scalarConvectCoeff[Arches::AN],
 		    vars->scalarConvectCoeff[Arches::AS],
 		    vars->scalarConvectCoeff[Arches::AT],
-		    vars->scalarConvectCoeff[Arches::AB]);
+		    vars->scalarConvectCoeff[Arches::AB],
+		    conv_scheme);
 }
 
 void 
 Source::modifyEnthalpyMassSource(const ProcessorGroup* ,
 			       const Patch* patch,
 			       double,
-			       ArchesVariables* vars)
+			       ArchesVariables* vars,
+			       int conv_scheme)
 {
   // Get the patch and variable indices
   // And call the fortran routine (MASCAL)
@@ -969,7 +943,8 @@ Source::modifyEnthalpyMassSource(const ProcessorGroup* ,
 		    vars->scalarConvectCoeff[Arches::AN],
 		    vars->scalarConvectCoeff[Arches::AS],
 		    vars->scalarConvectCoeff[Arches::AT],
-		    vars->scalarConvectCoeff[Arches::AB]);
+		    vars->scalarConvectCoeff[Arches::AB],
+		    conv_scheme);
 }
 
 //****************************************************************************

@@ -77,6 +77,16 @@ ScalarSolver::problemSetup(const ProblemSpecP& params)
     //throw InvalidValue("Finite Differencing scheme "
 	//	       "not supported: " + finite_diff, db);
   }
+  if (db->findBlock("convection_scheme")) {
+    string conv_scheme;
+    db->require("convection_scheme",conv_scheme);
+    if (conv_scheme == "l2up") d_conv_scheme = 0;
+    else if (conv_scheme == "eno") d_conv_scheme = 1;
+         else if (conv_scheme == "weno") d_conv_scheme = 2;
+	      else throw InvalidValue("Convection scheme "
+		       "not supported: " + conv_scheme);
+  } else
+    d_conv_scheme = 0;
   // make source and boundary_condition objects
   d_source = scinew Source(d_turbModel, d_physicalConsts);
   string linear_sol;
@@ -266,7 +276,7 @@ void ScalarSolver::buildLinearMatrix(const ProcessorGroup* pc,
   // outputs: scalCoefSBLM
     d_discretize->calculateScalarCoeff(pc, patch,
 				       delta_t, index, cellinfo, 
-				       &scalarVars);
+				       &scalarVars, d_conv_scheme);
 
     // Calculate scalar source terms
     // inputs : [u,v,w]VelocityMS, scalarSP, densityCP, viscosityCTS
@@ -288,7 +298,8 @@ void ScalarSolver::buildLinearMatrix(const ProcessorGroup* pc,
     // similar to mascal
     // inputs :
     // outputs:
-    d_source->modifyScalarMassSource(pc, patch, delta_t, index, &scalarVars);
+    d_source->modifyScalarMassSource(pc, patch, delta_t, index,
+				     &scalarVars, d_conv_scheme);
     
     // Calculate the scalar diagonal terms
     // inputs : scalCoefSBLM, scalLinSrcSBLM
@@ -453,11 +464,11 @@ ScalarSolver::sched_buildLinearMatrixPred(SchedulerP& sched,
 		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
 
 
-#ifdef Scalar_ENO
+  if (d_conv_scheme > 0) {
     tsk->requires(Task::OldDW, d_lab->d_maxAbsU_label);
     tsk->requires(Task::OldDW, d_lab->d_maxAbsV_label);
     tsk->requires(Task::OldDW, d_lab->d_maxAbsW_label);
-#endif
+  }
 
       // added one more argument of index to specify scalar component
   tsk->computes(d_lab->d_scalCoefPredLabel, d_lab->d_stencilMatl,
@@ -505,17 +516,20 @@ void ScalarSolver::buildLinearMatrixPred(const ProcessorGroup* pc,
 #endif
 #endif
 
-#ifdef Scalar_ENO
+  double maxAbsU;
+  double maxAbsV;
+  double maxAbsW;
+  if (d_conv_scheme > 0) {
     max_vartype mxAbsU;
     max_vartype mxAbsV;
     max_vartype mxAbsW;
     old_dw->get(mxAbsU, d_lab->d_maxAbsU_label);
     old_dw->get(mxAbsV, d_lab->d_maxAbsV_label);
     old_dw->get(mxAbsW, d_lab->d_maxAbsW_label);
-    double maxAbsU = mxAbsU;
-    double maxAbsV = mxAbsW;
-    double maxAbsW = mxAbsW;
-#endif
+    maxAbsU = mxAbsU;
+    maxAbsV = mxAbsW;
+    maxAbsW = mxAbsW;
+  }
 
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
@@ -579,7 +593,7 @@ void ScalarSolver::buildLinearMatrixPred(const ProcessorGroup* pc,
   // outputs: scalCoefSBLM
     d_discretize->calculateScalarCoeff(pc, patch,
 				       delta_t, index, cellinfo, 
-				       &scalarVars);
+				       &scalarVars, d_conv_scheme);
 
     // Calculate scalar source terms
     // inputs : [u,v,w]VelocityMS, scalarSP, densityCP, viscosityCTS
@@ -587,18 +601,17 @@ void ScalarSolver::buildLinearMatrixPred(const ProcessorGroup* pc,
     d_source->calculateScalarSource(pc, patch,
 				    delta_t, index, cellinfo, 
 				    &scalarVars );
-#ifdef Scalar_ENO
-    int wallID = d_boundaryCondition->wallCellType();
-#ifdef Scalar_WENO
-    d_discretize->calculateScalarWENOscheme(pc, patch,  index, cellinfo,
-					   maxAbsU, maxAbsV, maxAbsW, 
-				  	   &scalarVars, wallID);
-#else
-    d_discretize->calculateScalarENOscheme(pc, patch,  index, cellinfo,
-					   maxAbsU, maxAbsV, maxAbsW, 
-				  	   &scalarVars, wallID);
-#endif
-#endif
+    if (d_conv_scheme > 0) {
+      int wallID = d_boundaryCondition->wallCellType();
+      if (d_conv_scheme == 2)
+        d_discretize->calculateScalarWENOscheme(pc, patch,  index, cellinfo,
+					        maxAbsU, maxAbsV, maxAbsW, 
+				  	        &scalarVars, wallID);
+      else
+        d_discretize->calculateScalarENOscheme(pc, patch,  index, cellinfo,
+					       maxAbsU, maxAbsV, maxAbsW, 
+				  	       &scalarVars, wallID);
+    }
 
     // for scalesimilarity model add scalarflux to the source of scalar eqn.
     if (dynamic_cast<const ScaleSimilarityModel*>(d_turbModel)) {
@@ -664,7 +677,8 @@ void ScalarSolver::buildLinearMatrixPred(const ProcessorGroup* pc,
     // similar to mascal
     // inputs :
     // outputs:
-    d_source->modifyScalarMassSource(pc, patch, delta_t, index, &scalarVars);
+    d_source->modifyScalarMassSource(pc, patch, delta_t, index,
+				     &scalarVars, d_conv_scheme);
     
     // Calculate the scalar diagonal terms
     // inputs : scalCoefSBLM, scalLinSrcSBLM
@@ -715,6 +729,12 @@ ScalarSolver::sched_scalarLinearSolvePred(SchedulerP& sched,
 		Ghost::None, Arches::ZEROGHOSTCELLS);
   tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel,
 		Ghost::AroundCells, Arches::ONEGHOSTCELL);
+  tsk->requires(Task::NewDW, d_lab->d_uVelocityOUTBCLabel,
+		Ghost::None, Arches::ZEROGHOSTCELLS);
+  tsk->requires(Task::NewDW, d_lab->d_vVelocityOUTBCLabel,
+		Ghost::None, Arches::ZEROGHOSTCELLS);
+  tsk->requires(Task::NewDW, d_lab->d_wVelocityOUTBCLabel,
+		Ghost::None, Arches::ZEROGHOSTCELLS);
 
   if (d_MAlab) {
   //  tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel,
@@ -807,7 +827,7 @@ ScalarSolver::scalarLinearSolvePred(const ProcessorGroup* pc,
     scalarVars.old_scalar.allocate(scalarVars.scalar.getLowIndex(),
 				   scalarVars.scalar.getHighIndex());
     scalarVars.old_scalar.copy(scalarVars.scalar);
-    
+
     for (int ii = 0; ii < d_lab->d_stencilMatl->size(); ii++)
       new_dw->getCopy(scalarVars.scalarCoeff[ii], d_lab->d_scalCoefPredLabel, 
 		  ii, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
@@ -874,6 +894,17 @@ ScalarSolver::scalarLinearSolvePred(const ProcessorGroup* pc,
     /* new_dw->put(temp_scalar, d_lab->d_scalarTempLabel, matlIndex, patch); */;
 #endif
 #endif
+
+// Outlet bc is done here not to change old scalar
+    new_dw->getCopy(scalarVars.uVelocity, d_lab->d_uVelocityOUTBCLabel, 
+		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+    new_dw->getCopy(scalarVars.vVelocity, d_lab->d_vVelocityOUTBCLabel, 
+		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+    new_dw->getCopy(scalarVars.wVelocity, d_lab->d_wVelocityOUTBCLabel, 
+		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+    d_boundaryCondition->scalarOutletBC(pc, patch,  index, cellinfo, 
+				  &scalarVars, delta_t);
+    
     d_boundaryCondition->scalarPressureBC(pc, patch,  index, cellinfo, 
 				  &scalarVars);
 
@@ -978,7 +1009,7 @@ ScalarSolver::sched_buildLinearMatrixCorr(SchedulerP& sched,
 		  d_lab->d_scalarFluxMatl, Task::OutOfDomain,
 		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
 
-#ifdef Scalar_ENO
+  if (d_conv_scheme > 0) {
   #ifdef Runge_Kutta_3d
     tsk->requires(Task::NewDW, d_lab->d_maxAbsUInterm_label);
     tsk->requires(Task::NewDW, d_lab->d_maxAbsVInterm_label);
@@ -988,7 +1019,7 @@ ScalarSolver::sched_buildLinearMatrixCorr(SchedulerP& sched,
     tsk->requires(Task::NewDW, d_lab->d_maxAbsVPred_label);
     tsk->requires(Task::NewDW, d_lab->d_maxAbsWPred_label);
   #endif
-#endif
+  }
 
       // added one more argument of index to specify scalar component
   tsk->computes(d_lab->d_scalCoefCorrLabel, d_lab->d_stencilMatl,
@@ -1023,7 +1054,10 @@ void ScalarSolver::buildLinearMatrixCorr(const ProcessorGroup* pc,
 #endif
 #endif
 
-#ifdef Scalar_ENO
+  double maxAbsU;
+  double maxAbsV;
+  double maxAbsW;
+  if (d_conv_scheme > 0) {
     max_vartype mxAbsU;
     max_vartype mxAbsV;
     max_vartype mxAbsW;
@@ -1036,10 +1070,10 @@ void ScalarSolver::buildLinearMatrixCorr(const ProcessorGroup* pc,
     new_dw->get(mxAbsV, d_lab->d_maxAbsVPred_label);
     new_dw->get(mxAbsW, d_lab->d_maxAbsWPred_label);
 #endif
-    double maxAbsU = mxAbsU;
-    double maxAbsV = mxAbsW;
-    double maxAbsW = mxAbsW;
-#endif
+    maxAbsU = mxAbsU;
+    maxAbsV = mxAbsW;
+    maxAbsW = mxAbsW;
+  }
 
   
   for (int p = 0; p < patches->size(); p++) {
@@ -1132,7 +1166,7 @@ void ScalarSolver::buildLinearMatrixCorr(const ProcessorGroup* pc,
   // outputs: scalCoefSBLM
     d_discretize->calculateScalarCoeff(pc, patch,
 				       delta_t, index, cellinfo, 
-				       &scalarVars);
+				       &scalarVars, d_conv_scheme);
 
     // Calculate scalar source terms
     // inputs : [u,v,w]VelocityMS, scalarSP, densityCP, viscosityCTS
@@ -1140,18 +1174,17 @@ void ScalarSolver::buildLinearMatrixCorr(const ProcessorGroup* pc,
     d_source->calculateScalarSource(pc, patch,
 				    delta_t, index, cellinfo, 
 				    &scalarVars );
-#ifdef Scalar_ENO
-    int wallID = d_boundaryCondition->wallCellType();
-#ifdef Scalar_WENO
-    d_discretize->calculateScalarWENOscheme(pc, patch,  index, cellinfo,
-					   maxAbsU, maxAbsV, maxAbsW, 
-				  	   &scalarVars, wallID);
-#else
-    d_discretize->calculateScalarENOscheme(pc, patch,  index, cellinfo, 
-					   maxAbsU, maxAbsV, maxAbsW, 
-				  	   &scalarVars, wallID);
-#endif
-#endif
+    if (d_conv_scheme > 0) {
+      int wallID = d_boundaryCondition->wallCellType();
+      if (d_conv_scheme == 2)
+        d_discretize->calculateScalarWENOscheme(pc, patch,  index, cellinfo,
+					        maxAbsU, maxAbsV, maxAbsW, 
+				  	        &scalarVars, wallID);
+      else
+        d_discretize->calculateScalarENOscheme(pc, patch,  index, cellinfo,
+					       maxAbsU, maxAbsV, maxAbsW, 
+				  	       &scalarVars, wallID);
+    }
 
     // for scalesimilarity model add scalarflux to the source of scalar eqn.
     if (dynamic_cast<const ScaleSimilarityModel*>(d_turbModel)) {
@@ -1212,7 +1245,8 @@ void ScalarSolver::buildLinearMatrixCorr(const ProcessorGroup* pc,
     // similar to mascal
     // inputs :
     // outputs:
-    d_source->modifyScalarMassSource(pc, patch, delta_t, index, &scalarVars);
+    d_source->modifyScalarMassSource(pc, patch, delta_t, index,
+				     &scalarVars, d_conv_scheme);
     
     // Calculate the scalar diagonal terms
     // inputs : scalCoefSBLM, scalLinSrcSBLM
@@ -1259,6 +1293,12 @@ ScalarSolver::sched_scalarLinearSolveCorr(SchedulerP& sched,
 		Ghost::None, Arches::ZEROGHOSTCELLS);
   tsk->requires(Task::NewDW, d_lab->d_scalarIntermLabel, 
 		Ghost::AroundCells, Arches::ONEGHOSTCELL);
+  tsk->requires(Task::NewDW, d_lab->d_uVelocityIntermLabel,
+		Ghost::None, Arches::ZEROGHOSTCELLS);
+  tsk->requires(Task::NewDW, d_lab->d_vVelocityIntermLabel,
+		Ghost::None, Arches::ZEROGHOSTCELLS);
+  tsk->requires(Task::NewDW, d_lab->d_wVelocityIntermLabel,
+		Ghost::None, Arches::ZEROGHOSTCELLS);
   #ifndef Runge_Kutta_3d_ssp
   tsk->requires(Task::NewDW, d_lab->d_scalarTempLabel, 
 		Ghost::None, Arches::ZEROGHOSTCELLS);
@@ -1268,18 +1308,18 @@ ScalarSolver::sched_scalarLinearSolveCorr(SchedulerP& sched,
 		Ghost::None, Arches::ZEROGHOSTCELLS);
   tsk->requires(Task::NewDW, d_lab->d_scalarPredLabel, 
 		Ghost::AroundCells, Arches::ONEGHOSTCELL);
+  tsk->requires(Task::NewDW, d_lab->d_uVelocityPredLabel,
+		Ghost::None, Arches::ZEROGHOSTCELLS);
+  tsk->requires(Task::NewDW, d_lab->d_vVelocityPredLabel,
+		Ghost::None, Arches::ZEROGHOSTCELLS);
+  tsk->requires(Task::NewDW, d_lab->d_wVelocityPredLabel,
+		Ghost::None, Arches::ZEROGHOSTCELLS);
   #endif
   tsk->requires(Task::NewDW, d_lab->d_scalCoefCorrLabel, 
 		d_lab->d_stencilMatl, Task::OutOfDomain,
 		Ghost::None, Arches::ZEROGHOSTCELLS);
   tsk->requires(Task::NewDW, d_lab->d_scalNonLinSrcCorrLabel, 
 		Ghost::None, Arches::ZEROGHOSTCELLS);
-  #ifdef Runge_Kutta_3d_ssp
-  tsk->requires(Task::NewDW, d_lab->d_scalarOUTBCLabel,
-		Ghost::None, Arches::ZEROGHOSTCELLS);
-  tsk->requires(Task::NewDW, d_lab->d_densityINLabel, 
-		Ghost::None, Arches::ZEROGHOSTCELLS);
-  #endif
   tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel,
 		Ghost::AroundCells, Arches::ONEGHOSTCELL);
   tsk->computes(d_lab->d_scalarSPLabel);
@@ -1399,38 +1439,25 @@ ScalarSolver::scalarLinearSolveCorr(const ProcessorGroup* pc,
     }
   #endif
   #endif
-  #ifdef Runge_Kutta_3d_ssp
-    constCCVariable<double> old_scalar;
-    constCCVariable<double> old_density;
-    constCCVariable<double> new_density;
 
-    new_dw->get(old_scalar, d_lab->d_scalarOUTBCLabel, 
+// Outlet bc is done here not to change old scalar
+  #ifdef Runge_Kutta_3d
+    new_dw->getCopy(scalarVars.uVelocity, d_lab->d_uVelocityIntermLabel, 
 		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-    new_dw->get(old_density, d_lab->d_densityINLabel, 
+    new_dw->getCopy(scalarVars.vVelocity, d_lab->d_vVelocityIntermLabel, 
 		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-    new_dw->get(new_density, d_lab->d_densityIntermLabel, 
+    new_dw->getCopy(scalarVars.wVelocity, d_lab->d_wVelocityIntermLabel, 
 		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-    
-    IntVector indexLow = patch->getCellFORTLowIndex();
-    IntVector indexHigh = patch->getCellFORTHighIndex();
-    
-    for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
-      for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
-        for (int colX = indexLow.x(); colX <= indexHigh.x(); colX ++) {
-
-            IntVector currCell(colX, colY, colZ);
-
-            scalarVars.scalar[currCell] = (2.0*scalarVars.scalar[currCell]+
-            old_density[currCell]/new_density[currCell]*
-	    old_scalar[currCell])/3.0;
-            if (scalarVars.scalar[currCell] > 1.0) 
-		scalarVars.scalar[currCell] = 1.0;
-            else if (scalarVars.scalar[currCell] < 0.0)
-            	scalarVars.scalar[currCell] = 0.0;
-        }
-      }
-    }
+  #else
+    new_dw->getCopy(scalarVars.uVelocity, d_lab->d_uVelocityPredLabel, 
+		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+    new_dw->getCopy(scalarVars.vVelocity, d_lab->d_vVelocityPredLabel, 
+		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+    new_dw->getCopy(scalarVars.wVelocity, d_lab->d_wVelocityPredLabel, 
+		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
   #endif
+    d_boundaryCondition->scalarOutletBC(pc, patch,  index, cellinfo, 
+				  &scalarVars, delta_t);
 
     d_boundaryCondition->scalarPressureBC(pc, patch,  index, cellinfo, 
 				  &scalarVars);
@@ -1506,11 +1533,11 @@ ScalarSolver::sched_buildLinearMatrixInterm(SchedulerP& sched,
 		  d_lab->d_scalarFluxMatl, Task::OutOfDomain,
 		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
 
-#ifdef Scalar_ENO
+  if (d_conv_scheme > 0) {
     tsk->requires(Task::NewDW, d_lab->d_maxAbsUPred_label);
     tsk->requires(Task::NewDW, d_lab->d_maxAbsVPred_label);
     tsk->requires(Task::NewDW, d_lab->d_maxAbsWPred_label);
-#endif
+  }
 
       // added one more argument of index to specify scalar component
   tsk->computes(d_lab->d_scalCoefIntermLabel, d_lab->d_stencilMatl,
@@ -1542,17 +1569,20 @@ void ScalarSolver::buildLinearMatrixInterm(const ProcessorGroup* pc,
   delta_t *= gamma_2; 
 #endif
 
-#ifdef Scalar_ENO
+  double maxAbsU;
+  double maxAbsV;
+  double maxAbsW;
+  if (d_conv_scheme > 0) {
     max_vartype mxAbsU;
     max_vartype mxAbsV;
     max_vartype mxAbsW;
     new_dw->get(mxAbsU, d_lab->d_maxAbsUPred_label);
     new_dw->get(mxAbsV, d_lab->d_maxAbsVPred_label);
     new_dw->get(mxAbsW, d_lab->d_maxAbsWPred_label);
-    double maxAbsU = mxAbsU;
-    double maxAbsV = mxAbsW;
-    double maxAbsW = mxAbsW;
-#endif
+    maxAbsU = mxAbsU;
+    maxAbsV = mxAbsW;
+    maxAbsW = mxAbsW;
+  }
   
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
@@ -1612,7 +1642,7 @@ void ScalarSolver::buildLinearMatrixInterm(const ProcessorGroup* pc,
   // outputs: scalCoefSBLM
     d_discretize->calculateScalarCoeff(pc, patch,
 				       delta_t, index, cellinfo, 
-				       &scalarVars);
+				       &scalarVars, d_conv_scheme);
 
     // Calculate scalar source terms
     // inputs : [u,v,w]VelocityMS, scalarSP, densityCP, viscosityCTS
@@ -1620,18 +1650,17 @@ void ScalarSolver::buildLinearMatrixInterm(const ProcessorGroup* pc,
     d_source->calculateScalarSource(pc, patch,
 				    delta_t, index, cellinfo, 
 				    &scalarVars );
-#ifdef Scalar_ENO
-    int wallID = d_boundaryCondition->wallCellType();
-#ifdef Scalar_WENO
-    d_discretize->calculateScalarWENOscheme(pc, patch,  index, cellinfo,
-					   maxAbsU, maxAbsV, maxAbsW, 
-				  	   &scalarVars, wallID);
-#else
-    d_discretize->calculateScalarENOscheme(pc, patch,  index, cellinfo, 
-					   maxAbsU, maxAbsV, maxAbsW, 
-				  	   &scalarVars, wallID);
-#endif
-#endif
+    if (d_conv_scheme > 0) {
+      int wallID = d_boundaryCondition->wallCellType();
+      if (d_conv_scheme == 2)
+        d_discretize->calculateScalarWENOscheme(pc, patch,  index, cellinfo,
+					        maxAbsU, maxAbsV, maxAbsW, 
+				  	        &scalarVars, wallID);
+      else
+        d_discretize->calculateScalarENOscheme(pc, patch,  index, cellinfo,
+					       maxAbsU, maxAbsV, maxAbsW, 
+				  	       &scalarVars, wallID);
+    }
 
     // for scalesimilarity model add scalarflux to the source of scalar eqn.
     if (dynamic_cast<const ScaleSimilarityModel*>(d_turbModel)) {
@@ -1692,7 +1721,8 @@ void ScalarSolver::buildLinearMatrixInterm(const ProcessorGroup* pc,
     // similar to mascal
     // inputs :
     // outputs:
-    d_source->modifyScalarMassSource(pc, patch, delta_t, index, &scalarVars);
+    d_source->modifyScalarMassSource(pc, patch, delta_t, index,
+				     &scalarVars, d_conv_scheme);
     
     // Calculate the scalar diagonal terms
     // inputs : scalCoefSBLM, scalLinSrcSBLM
@@ -1742,14 +1772,14 @@ ScalarSolver::sched_scalarLinearSolveInterm(SchedulerP& sched,
 		Ghost::None, Arches::ZEROGHOSTCELLS);
   tsk->requires(Task::NewDW, d_lab->d_scalNonLinSrcIntermLabel, 
 		Ghost::None, Arches::ZEROGHOSTCELLS);
+  tsk->requires(Task::NewDW, d_lab->d_uVelocityPredLabel,
+		Ghost::None, Arches::ZEROGHOSTCELLS);
+  tsk->requires(Task::NewDW, d_lab->d_vVelocityPredLabel,
+		Ghost::None, Arches::ZEROGHOSTCELLS);
+  tsk->requires(Task::NewDW, d_lab->d_wVelocityPredLabel,
+		Ghost::None, Arches::ZEROGHOSTCELLS);
   #ifndef Runge_Kutta_3d_ssp
   tsk->modifies(d_lab->d_scalarTempLabel);
-  #endif
-  #ifdef Runge_Kutta_3d_ssp
-  tsk->requires(Task::NewDW, d_lab->d_scalarOUTBCLabel,
-		Ghost::None, Arches::ZEROGHOSTCELLS);
-  tsk->requires(Task::NewDW, d_lab->d_densityINLabel, 
-		Ghost::None, Arches::ZEROGHOSTCELLS);
   #endif
   tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel,
 		Ghost::AroundCells, Arches::ONEGHOSTCELL);
@@ -1862,38 +1892,17 @@ ScalarSolver::scalarLinearSolveInterm(const ProcessorGroup* pc,
     } 
 //    new_dw->put(temp_scalar, d_lab->d_scalarTempLabel, matlIndex, patch);
   #endif
-  #ifdef Runge_Kutta_3d_ssp
-    constCCVariable<double> old_scalar;
-    constCCVariable<double> old_density;
-    constCCVariable<double> new_density;
 
-    new_dw->get(old_scalar, d_lab->d_scalarOUTBCLabel, 
+// Outlet bc is done here not to change old scalar
+    new_dw->getCopy(scalarVars.uVelocity, d_lab->d_uVelocityPredLabel, 
 		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-    new_dw->get(old_density, d_lab->d_densityINLabel, 
+    new_dw->getCopy(scalarVars.vVelocity, d_lab->d_vVelocityPredLabel, 
 		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-    new_dw->get(new_density, d_lab->d_densityPredLabel, 
+    new_dw->getCopy(scalarVars.wVelocity, d_lab->d_wVelocityPredLabel, 
 		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-    
-    IntVector indexLow = patch->getCellFORTLowIndex();
-    IntVector indexHigh = patch->getCellFORTHighIndex();
-    
-    for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
-      for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
-        for (int colX = indexLow.x(); colX <= indexHigh.x(); colX ++) {
+    d_boundaryCondition->scalarOutletBC(pc, patch,  index, cellinfo, 
+				  &scalarVars, delta_t);
 
-            IntVector currCell(colX, colY, colZ);
-
-            scalarVars.scalar[currCell] = (scalarVars.scalar[currCell]+
-            old_density[currCell]/new_density[currCell]*
-	    3.0*old_scalar[currCell])/4.0;
-            if (scalarVars.scalar[currCell] > 1.0) 
-		scalarVars.scalar[currCell] = 1.0;
-            else if (scalarVars.scalar[currCell] < 0.0)
-            	scalarVars.scalar[currCell] = 0.0;
-        }
-      }
-    }
-  #endif
     d_boundaryCondition->scalarPressureBC(pc, patch,  index, cellinfo, 
 				  &scalarVars);
   

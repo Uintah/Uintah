@@ -145,9 +145,22 @@ public:
       // Schedule the build of the linearized eqn
       void sched_buildLinearMatrixVelHatCorr(SchedulerP&, const PatchSet* patches,
 					     const MaterialSet* matls);
+
+      void solveVelHatInterm(const LevelP& level,
+			   SchedulerP&,
+			   const int Runge_Kutta_current_step,
+			   const bool Runge_Kutta_last_step);
+   
+      ///////////////////////////////////////////////////////////////////////
+      // Schedule the build of the linearized eqn
+      void sched_buildLinearMatrixVelHatInterm(SchedulerP&, const PatchSet* patches,
+					     const MaterialSet* matls);
+ 
       void sched_averageRKHatVelocities(SchedulerP& sched,
 					 const PatchSet* patches,
-				 	 const MaterialSet* matls);
+				 	 const MaterialSet* matls,
+			   		 const int Runge_Kutta_current_step,
+			   		 const int Runge_Kutta_last_step);
 
 
 protected: 
@@ -210,12 +223,20 @@ private:
 				       DataWarehouse*,
 				       DataWarehouse*);
 
+      void buildLinearMatrixVelHatInterm(const ProcessorGroup* pc,
+				       const PatchSubset* patches,
+				       const MaterialSubset* matls,
+				       DataWarehouse*,
+				       DataWarehouse*);
+
 
       void averageRKHatVelocities(const ProcessorGroup*,
 			   const PatchSubset* patches,
 			   const MaterialSubset* matls,
 			   DataWarehouse* old_dw,
-			   DataWarehouse* new_dw);
+			   DataWarehouse* new_dw,
+			   const int Runge_Kutta_current_step,
+			   const int Runge_Kutta_last_step);
 
    
 private:

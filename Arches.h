@@ -71,26 +71,24 @@ WARNING
 //
 // #define ExactMPMArchesInitialize
 
-// Choices of scheme for convection of scalar
-
-//#define Scalar_ENO
-
-//#define Scalar_WENO
-#ifdef Scalar_WENO
-  #define Scalar_ENO
-#endif
-
 // Choices of scheme for convection of velocity
 // So far only central differencing is implemented for filtered convection terms
 
 //#define filter_convection_terms
 
+// What to do with negative velocity correction
+
+//#define discard_negative_velocity_correction
+
 #ifdef HAVE_PETSC
   #define PetscFilter
+#endif
+
+// Filtering of drhodt
 #ifdef PetscFilter
-#define FILTER_DRHODT
+//#define FILTER_DRHODT
 #endif
-#endif
+
 namespace Uintah {
 
   class VarLabel;

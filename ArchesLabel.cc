@@ -909,6 +909,30 @@ ArchesLabel::ArchesLabel()
 				       sum_vartype::getTypeDescription() );
   d_totalKineticEnergyIntermLabel = VarLabel::create("totalKineticEnergyInterm",
 				       sum_vartype::getTypeDescription() );
+// mass balance labels for RK
+  d_totalflowINPredLabel = VarLabel::create("totalflowINPred",
+    ReductionVariable<double, Reductions::Sum<double> >::getTypeDescription()); 
+  d_totalflowOUTPredLabel = VarLabel::create("totalflowOUTPred",
+    ReductionVariable<double, Reductions::Sum<double> >::getTypeDescription()); 
+  d_denAccumPredLabel = VarLabel::create("denAccumPred",
+    ReductionVariable<double, Reductions::Sum<double> >::getTypeDescription()); 
+  d_netflowOUTBCPredLabel = VarLabel::create("netflowOUTBCPred",
+    ReductionVariable<double, Reductions::Sum<double> >::getTypeDescription()); 
+  d_totalAreaOUTPredLabel = VarLabel::create("totalAreaOUTPred",
+    ReductionVariable<double, Reductions::Sum<double> >::getTypeDescription()); 
+  d_totalflowINIntermLabel = VarLabel::create("totalflowINInterm",
+    ReductionVariable<double, Reductions::Sum<double> >::getTypeDescription()); 
+  d_totalflowOUTIntermLabel = VarLabel::create("totalflowOUTInterm",
+    ReductionVariable<double, Reductions::Sum<double> >::getTypeDescription()); 
+  d_denAccumIntermLabel = VarLabel::create("denAccumInterm",
+    ReductionVariable<double, Reductions::Sum<double> >::getTypeDescription()); 
+  d_netflowOUTBCIntermLabel = VarLabel::create("netflowOUTBCInterm",
+    ReductionVariable<double, Reductions::Sum<double> >::getTypeDescription()); 
+  d_totalAreaOUTIntermLabel = VarLabel::create("totalAreaOUTInterm",
+    ReductionVariable<double, Reductions::Sum<double> >::getTypeDescription()); 
+
+  d_oldDeltaTLabel = VarLabel::create("oldDeltaT",
+				       delt_vartype::getTypeDescription() );
 }
 
 //****************************************************************************
@@ -1253,8 +1277,20 @@ ArchesLabel::~ArchesLabel()
   VarLabel::destroy(d_totalKineticEnergyLabel); 
   VarLabel::destroy(d_totalKineticEnergyPredLabel); 
   VarLabel::destroy(d_totalKineticEnergyIntermLabel); 
-			
-}
+// mass balance labels for RK
+  VarLabel::destroy(d_totalflowINPredLabel);
+  VarLabel::destroy(d_totalflowOUTPredLabel);
+  VarLabel::destroy(d_denAccumPredLabel);
+  VarLabel::destroy(d_netflowOUTBCPredLabel);
+  VarLabel::destroy(d_totalAreaOUTPredLabel);
+  VarLabel::destroy(d_totalflowINIntermLabel);
+  VarLabel::destroy(d_totalflowOUTIntermLabel);
+  VarLabel::destroy(d_denAccumIntermLabel);
+  VarLabel::destroy(d_netflowOUTBCIntermLabel);
+  VarLabel::destroy(d_totalAreaOUTIntermLabel);
+      	       
+  VarLabel::destroy(d_oldDeltaTLabel);
+}           
 
 void ArchesLabel::setSharedState(SimulationStateP& sharedState)
 {

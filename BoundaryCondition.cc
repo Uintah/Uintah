@@ -56,6 +56,7 @@ using namespace SCIRun;
 #include <Packages/Uintah/CCA/Components/Arches/fortran/inlbcs_fort.h>
 #include <Packages/Uintah/CCA/Components/Arches/fortran/denaccum_fort.h>
 #include <Packages/Uintah/CCA/Components/Arches/fortran/bcinout_fort.h>
+#include <Packages/Uintah/CCA/Components/Arches/fortran/inlpresbcinout_fort.h>
 #include <Packages/Uintah/CCA/Components/Arches/fortran/outarea_fort.h>
 #include <Packages/Uintah/CCA/Components/Arches/fortran/outletbc_fort.h>
 #include <Packages/Uintah/CCA/Components/Arches/fortran/outletbcenth_fort.h>
@@ -1551,11 +1552,10 @@ BoundaryCondition::sched_setProfile(SchedulerP& sched, const PatchSet* patches,
   tsk->computes(d_lab->d_vVelocitySPLabel);
   tsk->computes(d_lab->d_wVelocitySPLabel);
 
-#ifdef Scalar_ENO
+// This should only be done when ENO is used for scalar
     tsk->computes(d_lab->d_maxAbsU_label);
     tsk->computes(d_lab->d_maxAbsV_label);
     tsk->computes(d_lab->d_maxAbsW_label);
-#endif
 
   for (int ii = 0; ii < d_props->getNumMixVars(); ii++) 
     tsk->computes(d_lab->d_scalarSPLabel);
@@ -2070,8 +2070,8 @@ BoundaryCondition::setInletVelocityBC(const ProcessorGroup* ,
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
     int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
-    constCCVariable<int> cellType;
-    constCCVariable<double> density;
+    CCVariable<int> cellType;
+    CCVariable<double> density;
     constSFCXVariable<double> uVelocity_old;
     constSFCYVariable<double> vVelocity_old;
     constSFCZVariable<double> wVelocity_old;
@@ -2080,9 +2080,9 @@ BoundaryCondition::setInletVelocityBC(const ProcessorGroup* ,
     SFCZVariable<double> wVelocity;
 
     // get cellType, velocity and density
-    new_dw->get(cellType, d_lab->d_cellTypeLabel, matlIndex, patch, Ghost::None,
+    new_dw->getCopy(cellType, d_lab->d_cellTypeLabel, matlIndex, patch, Ghost::None,
 		Arches::ZEROGHOSTCELLS);
-    new_dw->get(density, d_lab->d_densityINLabel, matlIndex, patch, Ghost::None,
+    new_dw->getCopy(density, d_lab->d_densityINLabel, matlIndex, patch, Ghost::None,
 		Arches::ZEROGHOSTCELLS);
 
     new_dw->allocateAndPut(uVelocity, d_lab->d_uVelocitySIVBCLabel, matlIndex, patch);
@@ -2510,7 +2510,7 @@ BoundaryCondition::setFlatProfile(const ProcessorGroup* /*pc*/,
     }
     
 
-  #ifdef Scalar_ENO
+// This should only be done when ENO is used for scalar
     double maxAbsU = 0.0;
     double maxAbsV = 0.0;
     double maxAbsW = 0.0;
@@ -2565,8 +2565,6 @@ BoundaryCondition::setFlatProfile(const ProcessorGroup* /*pc*/,
         }
       }
       new_dw->put(max_vartype(maxAbsW), d_lab->d_maxAbsW_label); 
-
-  #endif
 
     // Put the calculated data into the new DW
     //new_dw->put(density, d_lab->d_densitySPLabel, matlIndex, patch);
@@ -4007,7 +4005,9 @@ BoundaryCondition::scalarPressureBC(const ProcessorGroup*,
         IntVector currCell(colX, colY, colZ);
         IntVector xminusCell(colX-1, colY, colZ);
         if (vars->cellType[xminusCell] == press_celltypeval)
+	  if (vars->uVelocity[currCell] < 0.0)
                         vars->scalar[xminusCell] = vars->scalar[currCell];
+	  else vars->scalar[xminusCell] = 0.0;
       }
     }
   }
@@ -4018,7 +4018,9 @@ BoundaryCondition::scalarPressureBC(const ProcessorGroup*,
         IntVector currCell(colX, colY, colZ);
         IntVector xplusCell(colX+1, colY, colZ);
         if (vars->cellType[xplusCell] == press_celltypeval)
+	  if (vars->uVelocity[xplusCell] > 0.0)
                         vars->scalar[xplusCell] = vars->scalar[currCell];
+	  else vars->scalar[xplusCell] = 0.0;
       }
     }
   }
@@ -4029,7 +4031,9 @@ BoundaryCondition::scalarPressureBC(const ProcessorGroup*,
         IntVector currCell(colX, colY, colZ);
         IntVector yminusCell(colX, colY-1, colZ);
         if (vars->cellType[yminusCell] == press_celltypeval)
+	  if (vars->vVelocity[currCell] < 0.0)
                         vars->scalar[yminusCell] = vars->scalar[currCell];
+	  else vars->scalar[yminusCell] = 0.0;
       }
     }
   }
@@ -4040,7 +4044,9 @@ BoundaryCondition::scalarPressureBC(const ProcessorGroup*,
         IntVector currCell(colX, colY, colZ);
         IntVector yplusCell(colX, colY+1, colZ);
         if (vars->cellType[yplusCell] == press_celltypeval)
+	  if (vars->vVelocity[yplusCell] > 0.0)
                         vars->scalar[yplusCell] = vars->scalar[currCell];
+	  else vars->scalar[yplusCell] = 0.0;
       }
     }
   }
@@ -4051,7 +4057,9 @@ BoundaryCondition::scalarPressureBC(const ProcessorGroup*,
         IntVector currCell(colX, colY, colZ);
         IntVector zminusCell(colX, colY, colZ-1);
         if (vars->cellType[zminusCell] == press_celltypeval)
+	  if (vars->wVelocity[currCell] < 0.0)
                         vars->scalar[zminusCell] = vars->scalar[currCell];
+	  else vars->scalar[zminusCell] = 0.0;
       }
     }
   }
@@ -4062,7 +4070,9 @@ BoundaryCondition::scalarPressureBC(const ProcessorGroup*,
         IntVector currCell(colX, colY, colZ);
         IntVector zplusCell(colX, colY, colZ+1);
         if (vars->cellType[zplusCell] == press_celltypeval)
+	  if (vars->wVelocity[zplusCell] > 0.0)
                         vars->scalar[zplusCell] = vars->scalar[currCell];
+	  else vars->scalar[zplusCell] = 0.0;
       }
     }
   }
@@ -4158,4 +4168,1920 @@ BoundaryCondition::enthalpyPressureBC(const ProcessorGroup*,
       }
     }
   }
+}
+//****************************************************************************
+// Schedule copy IN variables to OUTBC variables to go around all bc implementation
+//****************************************************************************
+void 
+BoundaryCondition::sched_copyINtoOUT(SchedulerP& sched, const PatchSet* patches,
+					    const MaterialSet* matls)
+{
+  Task* tsk = scinew Task("BoundaryCondition::copyINtoOUT",
+			  this,
+			  &BoundaryCondition::copyINtoOUT);
+  
+  tsk->requires(Task::NewDW, d_lab->d_uVelocityINLabel, Ghost::None,
+		Arches::ZEROGHOSTCELLS);
+  tsk->requires(Task::NewDW, d_lab->d_vVelocityINLabel, Ghost::None,
+		Arches::ZEROGHOSTCELLS);
+  tsk->requires(Task::NewDW, d_lab->d_wVelocityINLabel, Ghost::None,
+		Arches::ZEROGHOSTCELLS);
+  tsk->requires(Task::NewDW, d_lab->d_pressureINLabel, Ghost::None,
+		Arches::ZEROGHOSTCELLS);
+  for (int ii = 0; ii < d_nofScalars; ii++)
+    tsk->requires(Task::NewDW, d_lab->d_scalarINLabel, 
+		  Ghost::None, Arches::ZEROGHOSTCELLS);
+
+
+  if (d_enthalpySolve) {
+    tsk->requires(Task::NewDW, d_lab->d_enthalpyINLabel, 
+		  Ghost::None, Arches::ZEROGHOSTCELLS);
+    tsk->computes(d_lab->d_enthalpyOUTBCLabel);
+  }
+  
+  if (d_reactingScalarSolve) {
+    tsk->requires(Task::NewDW, d_lab->d_reactscalarINLabel, 
+		  Ghost::None, Arches::ZEROGHOSTCELLS);
+    tsk->computes(d_lab->d_reactscalarOUTBCLabel);
+  }
+  
+  tsk->computes(d_lab->d_uVelocityOUTBCLabel);
+  tsk->computes(d_lab->d_vVelocityOUTBCLabel);
+  tsk->computes(d_lab->d_wVelocityOUTBCLabel);
+  tsk->computes(d_lab->d_pressurePSLabel);
+  for (int ii = 0; ii < d_nofScalars; ii++)
+    tsk->computes(d_lab->d_scalarOUTBCLabel);
+  
+  sched->addTask(tsk, patches, matls);
+  
+}
+//****************************************************************************
+// Actual copy IN variables to OUTBC variables to go around all bc implementation
+//****************************************************************************
+void 
+BoundaryCondition::copyINtoOUT(const ProcessorGroup* ,
+				  const PatchSubset* patches,
+				  const MaterialSubset*,
+				  DataWarehouse*,
+				  DataWarehouse* new_dw) 
+{
+  for (int p = 0; p < patches->size(); p++) {
+    const Patch* patch = patches->get(p);
+    int archIndex = 0; // only one arches material
+    int matlIndex =
+	      d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+
+    SFCXVariable<double> uVelocity;
+    SFCYVariable<double> vVelocity;
+    SFCZVariable<double> wVelocity;
+    CCVariable<double> pressure;
+    CCVariable<double> enthalpy;
+    CCVariable<double> scalar;
+    CCVariable<double> reactscalar;
+
+    new_dw->allocateAndPut(uVelocity, d_lab->d_uVelocityOUTBCLabel,
+			   matlIndex, patch,
+			   Ghost::None, Arches::ZEROGHOSTCELLS);
+    new_dw->allocateAndPut(vVelocity, d_lab->d_vVelocityOUTBCLabel,
+			   matlIndex, patch,
+			   Ghost::None, Arches::ZEROGHOSTCELLS);
+    new_dw->allocateAndPut(wVelocity, d_lab->d_wVelocityOUTBCLabel,
+			   matlIndex, patch,
+			   Ghost::None, Arches::ZEROGHOSTCELLS);
+    new_dw->allocateAndPut(pressure, d_lab->d_pressurePSLabel,
+			   matlIndex, patch,
+			   Ghost::None, Arches::ZEROGHOSTCELLS);
+
+    new_dw->copyOut(uVelocity, d_lab->d_uVelocityINLabel, matlIndex, patch,
+		     Ghost::None, Arches::ZEROGHOSTCELLS);
+    new_dw->copyOut(vVelocity, d_lab->d_vVelocityINLabel, matlIndex, patch,
+		     Ghost::None, Arches::ZEROGHOSTCELLS);
+    new_dw->copyOut(wVelocity, d_lab->d_wVelocityINLabel, matlIndex, patch,
+		     Ghost::None, Arches::ZEROGHOSTCELLS);
+    new_dw->copyOut(pressure, d_lab->d_pressureINLabel, matlIndex, patch,
+		     Ghost::None, Arches::ZEROGHOSTCELLS);
+
+    for (int ii = 0; ii < d_nofScalars; ii++)
+    new_dw->allocateAndPut(scalar, d_lab->d_scalarOUTBCLabel,
+			   matlIndex, patch,
+			   Ghost::None, Arches::ZEROGHOSTCELLS);
+    new_dw->copyOut(scalar, d_lab->d_scalarINLabel, matlIndex, patch,
+		     Ghost::None, Arches::ZEROGHOSTCELLS);
+
+    if (d_enthalpySolve) {
+    new_dw->allocateAndPut(enthalpy, d_lab->d_enthalpyOUTBCLabel,
+			   matlIndex, patch,
+			   Ghost::None, Arches::ZEROGHOSTCELLS);
+    new_dw->copyOut(enthalpy, d_lab->d_enthalpyINLabel, matlIndex, patch,
+		     Ghost::None, Arches::ZEROGHOSTCELLS);
+    }
+  
+    if (d_reactingScalarSolve) {
+    new_dw->allocateAndPut(reactscalar, d_lab->d_reactscalarOUTBCLabel,
+			   matlIndex, patch,
+			   Ghost::None, Arches::ZEROGHOSTCELLS);
+    new_dw->copyOut(reactscalar, d_lab->d_reactscalarINLabel, matlIndex, patch,
+		     Ghost::None, Arches::ZEROGHOSTCELLS);
+    }
+  } 
+}
+//****************************************************************************
+// Set scalar at the outlet from 1d advection equation
+//****************************************************************************
+void 
+BoundaryCondition::scalarOutletBC(const ProcessorGroup*,
+			    const Patch* patch,
+			    int /*index*/,
+			    CellInformation* cellinfo,
+			    ArchesVariables* vars,
+			    const double delta_t)
+{
+  // Get the low and high index for the patch
+  IntVector idxLo = patch->getCellFORTLowIndex();
+  IntVector idxHi = patch->getCellFORTHighIndex();
+
+  int out_celltypeval = d_outletBC->d_cellTypeID;
+
+  bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
+  bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
+  bool yminus = patch->getBCType(Patch::yminus) != Patch::Neighbor;
+  bool yplus =  patch->getBCType(Patch::yplus) != Patch::Neighbor;
+  bool zminus = patch->getBCType(Patch::zminus) != Patch::Neighbor;
+  bool zplus =  patch->getBCType(Patch::zplus) != Patch::Neighbor;
+
+  if (xminus) {
+    int colX = idxLo.x();
+    for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
+      for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
+        IntVector currCell(colX, colY, colZ);
+        IntVector xminusCell(colX-1, colY, colZ);
+        IntVector xplusCell(colX+1, colY, colZ);
+        if (vars->cellType[xminusCell] == out_celltypeval) {
+	  if (vars->uVelocity[currCell] < 0.0) {
+           vars->scalar[xminusCell]= - delta_t * vars->uVelocity[xplusCell] *
+              (vars->old_density[currCell]*vars->old_scalar[currCell] -
+               vars->old_density[xminusCell]*vars->old_scalar[xminusCell]) /
+	      (cellinfo->dxep[colX-1]*vars->old_density[xminusCell]) +
+	      vars->old_scalar[xminusCell];
+           if (vars->scalar[xminusCell] > 1.0)
+               vars->scalar[xminusCell] = 1.0;
+           else if (vars->scalar[xminusCell] < 0.0)
+               vars->scalar[xminusCell] = 0.0;
+	   double prev_scalar = vars->scalar[currCell];
+	   if (vars->scalar[xminusCell] > prev_scalar)
+	       vars->scalar[xminusCell] = prev_scalar;
+	  }
+	  else vars->scalar[xminusCell] = 0.0;
+        } 
+      }
+    }
+  }
+  if (xplus) {
+    int colX = idxHi.x();
+    for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
+      for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
+        IntVector currCell(colX, colY, colZ);
+        IntVector xplusCell(colX+1, colY, colZ);
+        if (vars->cellType[xplusCell] == out_celltypeval) {
+	  if (vars->uVelocity[xplusCell] > 0.0) {
+           vars->scalar[xplusCell]= - delta_t * vars->uVelocity[currCell] *
+              (vars->old_density[xplusCell]*vars->old_scalar[xplusCell] -
+               vars->old_density[currCell]*vars->old_scalar[currCell]) /
+	      (cellinfo->dxpw[colX+1]*vars->old_density[xplusCell]) +
+	      vars->old_scalar[xplusCell];
+           if (vars->scalar[xplusCell] > 1.0)
+               vars->scalar[xplusCell] = 1.0;
+           else if (vars->scalar[xplusCell] < 0.0)
+               vars->scalar[xplusCell] = 0.0;
+	   double prev_scalar = vars->scalar[currCell];
+	   if (vars->scalar[xplusCell] > prev_scalar)
+	       vars->scalar[xplusCell] = prev_scalar;
+	  }
+	  else vars->scalar[xplusCell] = 0.0;
+        } 
+      }
+    }
+  }
+  if (yminus) {
+    int colY = idxLo.y();
+    for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
+      for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
+        IntVector currCell(colX, colY, colZ);
+        IntVector yminusCell(colX, colY-1, colZ);
+        IntVector yplusCell(colX, colY+1, colZ);
+        if (vars->cellType[yminusCell] == out_celltypeval) {
+	  if (vars->vVelocity[currCell] < 0.0) {
+           vars->scalar[yminusCell]= - delta_t * vars->vVelocity[yplusCell] *
+              (vars->old_density[currCell]*vars->old_scalar[currCell] -
+               vars->old_density[yminusCell]*vars->old_scalar[yminusCell]) /
+	      (cellinfo->dynp[colY-1]*vars->old_density[yminusCell]) +
+	      vars->old_scalar[yminusCell];
+           if (vars->scalar[yminusCell] > 1.0)
+               vars->scalar[yminusCell] = 1.0;
+           else if (vars->scalar[yminusCell] < 0.0)
+               vars->scalar[yminusCell] = 0.0;
+	   double prev_scalar = vars->scalar[currCell];
+	   if (vars->scalar[yminusCell] > prev_scalar)
+	       vars->scalar[yminusCell] = prev_scalar;
+	  }
+	  else vars->scalar[yminusCell] = 0.0;
+        } 
+      }
+    }
+  }
+  if (yplus) {
+    int colY = idxHi.y();
+    for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
+      for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
+        IntVector currCell(colX, colY, colZ);
+        IntVector yplusCell(colX, colY+1, colZ);
+        if (vars->cellType[yplusCell] == out_celltypeval) {
+	  if (vars->vVelocity[yplusCell] > 0.0) {
+           vars->scalar[yplusCell]= - delta_t * vars->vVelocity[currCell] *
+              (vars->old_density[yplusCell]*vars->old_scalar[yplusCell] -
+               vars->old_density[currCell]*vars->old_scalar[currCell]) /
+	      (cellinfo->dyps[colY+1]*vars->old_density[yplusCell]) +
+	      vars->old_scalar[yplusCell];
+           if (vars->scalar[yplusCell] > 1.0)
+               vars->scalar[yplusCell] = 1.0;
+           else if (vars->scalar[yplusCell] < 0.0)
+               vars->scalar[yplusCell] = 0.0;
+	   double prev_scalar = vars->scalar[currCell];
+	   if (vars->scalar[yplusCell] > prev_scalar)
+	       vars->scalar[yplusCell] = prev_scalar;
+	  }
+	  else vars->scalar[yplusCell] = 0.0;
+        } 
+      }
+    }
+  }
+  if (zminus) {
+    int colZ = idxLo.z();
+    for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
+      for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
+        IntVector currCell(colX, colY, colZ);
+        IntVector zminusCell(colX, colY, colZ-1);
+        IntVector zplusCell(colX, colY, colZ+1);
+        if (vars->cellType[zminusCell] == out_celltypeval) {
+	  if (vars->wVelocity[currCell] < 0.0) {
+           vars->scalar[zminusCell]= - delta_t * vars->wVelocity[zplusCell] *
+              (vars->old_density[currCell]*vars->old_scalar[currCell] -
+               vars->old_density[zminusCell]*vars->old_scalar[zminusCell]) /
+	      (cellinfo->dztp[colZ-1]*vars->old_density[zminusCell]) +
+	      vars->old_scalar[zminusCell];
+           if (vars->scalar[zminusCell] > 1.0)
+               vars->scalar[zminusCell] = 1.0;
+           else if (vars->scalar[zminusCell] < 0.0)
+               vars->scalar[zminusCell] = 0.0;
+	   double prev_scalar = vars->scalar[currCell];
+	   if (vars->scalar[zminusCell] > prev_scalar)
+	       vars->scalar[zminusCell] = prev_scalar;
+	  }
+	  else vars->scalar[zminusCell] = 0.0;
+        } 
+      }
+    }
+  }
+  if (zplus) {
+    int colZ = idxHi.z();
+    for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
+      for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
+        IntVector currCell(colX, colY, colZ);
+        IntVector zplusCell(colX, colY, colZ+1);
+        if (vars->cellType[zplusCell] == out_celltypeval) {
+	  if (vars->wVelocity[zplusCell] > 0.0) {
+           vars->scalar[zplusCell]= - delta_t * vars->wVelocity[currCell] *
+              (vars->old_density[zplusCell]*vars->old_scalar[zplusCell] -
+               vars->old_density[currCell]*vars->old_scalar[currCell]) /
+	      (cellinfo->dzpb[colZ+1]*vars->old_density[zplusCell]) +
+	      vars->old_scalar[zplusCell];
+           if (vars->scalar[zplusCell] > 1.0)
+               vars->scalar[zplusCell] = 1.0;
+           else if (vars->scalar[zplusCell] < 0.0)
+               vars->scalar[zplusCell] = 0.0;
+	   double prev_scalar = vars->scalar[currCell];
+	   if (vars->scalar[zplusCell] > prev_scalar)
+	       vars->scalar[zplusCell] = prev_scalar;
+	  }
+	  else vars->scalar[zplusCell] = 0.0;
+        } 
+      }
+    }
+  }
+}
+
+
+
+//****************************************************************************
+// Set enthalpy at the outlet from 1d advection equation
+//****************************************************************************
+void 
+BoundaryCondition::enthalpyOutletBC(const ProcessorGroup*,
+			    const Patch* patch,
+			    CellInformation* cellinfo,
+			    ArchesVariables* vars,
+			    const double delta_t)
+{
+  // Get the low and high index for the patch
+  IntVector idxLo = patch->getCellFORTLowIndex();
+  IntVector idxHi = patch->getCellFORTHighIndex();
+
+  int out_celltypeval = d_outletBC->d_cellTypeID;
+
+  bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
+  bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
+  bool yminus = patch->getBCType(Patch::yminus) != Patch::Neighbor;
+  bool yplus =  patch->getBCType(Patch::yplus) != Patch::Neighbor;
+  bool zminus = patch->getBCType(Patch::zminus) != Patch::Neighbor;
+  bool zplus =  patch->getBCType(Patch::zplus) != Patch::Neighbor;
+
+  if (xminus) {
+    int colX = idxLo.x();
+    for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
+      for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
+        IntVector currCell(colX, colY, colZ);
+        IntVector xminusCell(colX-1, colY, colZ);
+        IntVector xplusCell(colX+1, colY, colZ);
+        if (vars->cellType[xminusCell] == out_celltypeval)
+           vars->enthalpy[xminusCell]= - delta_t * vars->uVelocity[xplusCell] *
+              (vars->old_density[currCell]*vars->old_enthalpy[currCell] -
+               vars->old_density[xminusCell]*vars->old_enthalpy[xminusCell]) /
+	      (cellinfo->dxep[colX-1]*vars->old_density[xminusCell]) +
+	      vars->old_enthalpy[xminusCell];
+      }
+    }
+  }
+  if (xplus) {
+    int colX = idxHi.x();
+    for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
+      for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
+        IntVector currCell(colX, colY, colZ);
+        IntVector xplusCell(colX+1, colY, colZ);
+        if (vars->cellType[xplusCell] == out_celltypeval)
+           vars->enthalpy[xplusCell]= - delta_t * vars->uVelocity[currCell] *
+              (vars->old_density[xplusCell]*vars->old_enthalpy[xplusCell] -
+               vars->old_density[currCell]*vars->old_enthalpy[currCell]) /
+	      (cellinfo->dxpw[colX+1]*vars->old_density[xplusCell]) +
+	      vars->old_enthalpy[xplusCell];
+      }
+    }
+  }
+  if (yminus) {
+    int colY = idxLo.y();
+    for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
+      for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
+        IntVector currCell(colX, colY, colZ);
+        IntVector yminusCell(colX, colY-1, colZ);
+        IntVector yplusCell(colX, colY+1, colZ);
+        if (vars->cellType[yminusCell] == out_celltypeval)
+           vars->enthalpy[yminusCell]= - delta_t * vars->vVelocity[yplusCell] *
+              (vars->old_density[currCell]*vars->old_enthalpy[currCell] -
+               vars->old_density[yminusCell]*vars->old_enthalpy[yminusCell]) /
+	      (cellinfo->dynp[colY-1]*vars->old_density[yminusCell]) +
+	      vars->old_enthalpy[yminusCell];
+      }
+    }
+  }
+  if (yplus) {
+    int colY = idxHi.y();
+    for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
+      for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
+        IntVector currCell(colX, colY, colZ);
+        IntVector yplusCell(colX, colY+1, colZ);
+        if (vars->cellType[yplusCell] == out_celltypeval)
+           vars->enthalpy[yplusCell]= - delta_t * vars->vVelocity[currCell] *
+              (vars->old_density[yplusCell]*vars->old_enthalpy[yplusCell] -
+               vars->old_density[currCell]*vars->old_enthalpy[currCell]) /
+	      (cellinfo->dyps[colY+1]*vars->old_density[yplusCell]) +
+	      vars->old_enthalpy[yplusCell];
+      }
+    }
+  }
+  if (zminus) {
+    int colZ = idxLo.z();
+    for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
+      for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
+        IntVector currCell(colX, colY, colZ);
+        IntVector zminusCell(colX, colY, colZ-1);
+        IntVector zplusCell(colX, colY, colZ+1);
+        if (vars->cellType[zminusCell] == out_celltypeval)
+           vars->enthalpy[zminusCell]= - delta_t * vars->wVelocity[zplusCell] *
+              (vars->old_density[currCell]*vars->old_enthalpy[currCell] -
+               vars->old_density[zminusCell]*vars->old_enthalpy[zminusCell]) /
+	      (cellinfo->dztp[colZ-1]*vars->old_density[zminusCell]) +
+	      vars->old_enthalpy[zminusCell];
+      }
+    }
+  }
+  if (zplus) {
+    int colZ = idxHi.z();
+    for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
+      for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
+        IntVector currCell(colX, colY, colZ);
+        IntVector zplusCell(colX, colY, colZ+1);
+        if (vars->cellType[zplusCell] == out_celltypeval)
+           vars->enthalpy[zplusCell]= - delta_t * vars->wVelocity[currCell] *
+              (vars->old_density[zplusCell]*vars->old_enthalpy[zplusCell] -
+               vars->old_density[currCell]*vars->old_enthalpy[currCell]) /
+	      (cellinfo->dzpb[colZ+1]*vars->old_density[zplusCell]) +
+	      vars->old_enthalpy[zplusCell];
+      }
+    }
+  }
+}
+//****************************************************************************
+// Set the inlet rho hat velocity BC
+//****************************************************************************
+void 
+BoundaryCondition::velRhoHatInletBC(const ProcessorGroup* ,
+			    const Patch* patch,
+			    CellInformation*,
+			    ArchesVariables* vars)
+{
+  double time = d_lab->d_sharedState->getElapsedTime();
+  // Get the low and high index for the patch and the variables
+  IntVector idxLo = patch->getCellFORTLowIndex();
+  IntVector idxHi = patch->getCellFORTHighIndex();
+  // stores cell type info for the patch with the ghost cell type
+  for (int indx = 0; indx < d_numInlets; indx++) {
+    // Get a copy of the current flowinlet
+    FlowInlet fi = d_flowInlets[indx];
+    
+    // assign flowType the value that corresponds to flow
+    //CellTypeInfo flowType = FLOW;
+    bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
+    bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
+    bool yminus = patch->getBCType(Patch::yminus) != Patch::Neighbor;
+    bool yplus =  patch->getBCType(Patch::yplus) != Patch::Neighbor;
+    bool zminus = patch->getBCType(Patch::zminus) != Patch::Neighbor;
+    bool zplus =  patch->getBCType(Patch::zplus) != Patch::Neighbor;
+    fort_inlbcs(vars->uVelRhoHat, vars->vVelRhoHat, vars->wVelRhoHat,
+      	  idxLo, idxHi, vars->new_density, vars->cellType, 
+      	  fi.d_cellTypeID, time,
+      	  xminus, xplus, yminus, yplus, zminus, zplus);
+    
+  }
+}
+//****************************************************************************
+// Set zero gradient for rho hat velocity on pressure bc
+//****************************************************************************
+void 
+BoundaryCondition::velRhoHatPressureBC(const ProcessorGroup*,
+			    const Patch* patch,
+			    CellInformation*,
+			    ArchesVariables* vars)
+{
+  // Get the low and high index for the patch
+  IntVector idxLo = patch->getCellFORTLowIndex();
+  IntVector idxHi = patch->getCellFORTHighIndex();
+
+  int press_celltypeval = d_pressureBdry->d_cellTypeID;
+
+  bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
+  bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
+  bool yminus = patch->getBCType(Patch::yminus) != Patch::Neighbor;
+  bool yplus =  patch->getBCType(Patch::yplus) != Patch::Neighbor;
+  bool zminus = patch->getBCType(Patch::zminus) != Patch::Neighbor;
+  bool zplus =  patch->getBCType(Patch::zplus) != Patch::Neighbor;
+
+  if (xminus) {
+    int colX = idxLo.x();
+    for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
+      for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
+        IntVector currCell(colX, colY, colZ);
+        IntVector xminusCell(colX-1, colY, colZ);
+        IntVector xplusCell(colX+1, colY, colZ);
+        if (vars->cellType[xminusCell] == press_celltypeval) {
+           vars->uVelRhoHat[currCell] = vars->uVelRhoHat[xplusCell];
+           vars->uVelRhoHat[xminusCell] = vars->uVelRhoHat[currCell];
+        if (!(yminus && (colY == idxLo.y())))
+           vars->vVelRhoHat[xminusCell] = vars->vVelRhoHat[currCell];
+        if (!(zminus && (colZ == idxLo.z())))
+           vars->wVelRhoHat[xminusCell] = vars->wVelRhoHat[currCell];
+        }
+      }
+    }
+  }
+  if (xplus) {
+    int colX = idxHi.x();
+    for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
+      for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
+        IntVector currCell(colX, colY, colZ);
+        IntVector xplusCell(colX+1, colY, colZ);
+        IntVector xplusplusCell(colX+2, colY, colZ);
+        if (vars->cellType[xplusCell] == press_celltypeval) {
+           vars->uVelRhoHat[xplusCell] = vars->uVelRhoHat[currCell];
+           vars->uVelRhoHat[xplusplusCell] = vars->uVelRhoHat[xplusCell];
+        if (!(yminus && (colY == idxLo.y())))
+           vars->vVelRhoHat[xplusCell] = vars->vVelRhoHat[currCell];
+        if (!(zminus && (colZ == idxLo.z())))
+           vars->wVelRhoHat[xplusCell] = vars->wVelRhoHat[currCell];
+        }
+      }
+    }
+  }
+  if (yminus) {
+    int colY = idxLo.y();
+    for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
+      for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
+        IntVector currCell(colX, colY, colZ);
+        IntVector yminusCell(colX, colY-1, colZ);
+        IntVector yplusCell(colX, colY+1, colZ);
+        if (vars->cellType[yminusCell] == press_celltypeval) {
+        if (!(xminus && (colX == idxLo.x())))
+           vars->uVelRhoHat[yminusCell] = vars->uVelRhoHat[currCell];
+           vars->vVelRhoHat[currCell] = vars->vVelRhoHat[yplusCell];
+           vars->vVelRhoHat[yminusCell] = vars->vVelRhoHat[currCell];
+        if (!(zminus && (colZ == idxLo.z())))
+           vars->wVelRhoHat[yminusCell] = vars->wVelRhoHat[currCell];
+        }
+      }
+    }
+  }
+  if (yplus) {
+    int colY = idxHi.y();
+    for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
+      for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
+        IntVector currCell(colX, colY, colZ);
+        IntVector yplusCell(colX, colY+1, colZ);
+        IntVector yplusplusCell(colX, colY+2, colZ);
+        if (vars->cellType[yplusCell] == press_celltypeval) {
+        if (!(xminus && (colX == idxLo.x())))
+           vars->uVelRhoHat[yplusCell] = vars->uVelRhoHat[currCell];
+           vars->vVelRhoHat[yplusCell] = vars->vVelRhoHat[currCell];
+           vars->vVelRhoHat[yplusplusCell] = vars->vVelRhoHat[yplusCell];
+        if (!(zminus && (colZ == idxLo.z())))
+           vars->wVelRhoHat[yplusCell] = vars->wVelRhoHat[currCell];
+        }
+      }
+    }
+  }
+  if (zminus) {
+    int colZ = idxLo.z();
+    for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
+      for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
+        IntVector currCell(colX, colY, colZ);
+        IntVector zminusCell(colX, colY, colZ-1);
+        IntVector zplusCell(colX, colY, colZ+1);
+        if (vars->cellType[zminusCell] == press_celltypeval) {
+        if (!(xminus && (colX == idxLo.x())))
+           vars->uVelRhoHat[zminusCell] = vars->uVelRhoHat[currCell];
+        if (!(yminus && (colY == idxLo.y())))
+           vars->vVelRhoHat[zminusCell] = vars->vVelRhoHat[currCell];
+           vars->wVelRhoHat[currCell] = vars->wVelRhoHat[zplusCell];
+           vars->wVelRhoHat[zminusCell] = vars->wVelRhoHat[currCell];
+        }
+      }
+    }
+  }
+  if (zplus) {
+    int colZ = idxHi.z();
+    for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
+      for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
+        IntVector currCell(colX, colY, colZ);
+        IntVector zplusCell(colX, colY, colZ+1);
+        IntVector zplusplusCell(colX, colY, colZ+2);
+        if (vars->cellType[zplusCell] == press_celltypeval) {
+        if (!(xminus && (colX == idxLo.x())))
+           vars->uVelRhoHat[zplusCell] = vars->uVelRhoHat[currCell];
+        if (!(yminus && (colY == idxLo.y())))
+           vars->vVelRhoHat[zplusCell] = vars->vVelRhoHat[currCell];
+           vars->wVelRhoHat[zplusCell] = vars->wVelRhoHat[currCell];
+           vars->wVelRhoHat[zplusplusCell] = vars->wVelRhoHat[zplusCell];
+        }
+      }
+    }
+  }
+}
+//****************************************************************************
+// Set rho hat velocity at the outlet from 1d advection equation
+//****************************************************************************
+void 
+BoundaryCondition::velRhoHatOutletBC(const ProcessorGroup*,
+			    const Patch* patch,
+			    CellInformation* cellinfo,
+			    ArchesVariables* vars,
+			    const double delta_t)
+{
+  // Get the low and high index for the patch
+  IntVector idxLo = patch->getCellFORTLowIndex();
+  IntVector idxHi = patch->getCellFORTHighIndex();
+
+  int out_celltypeval = d_outletBC->d_cellTypeID;
+
+  bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
+  bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
+  bool yminus = patch->getBCType(Patch::yminus) != Patch::Neighbor;
+  bool yplus =  patch->getBCType(Patch::yplus) != Patch::Neighbor;
+  bool zminus = patch->getBCType(Patch::zminus) != Patch::Neighbor;
+  bool zplus =  patch->getBCType(Patch::zplus) != Patch::Neighbor;
+
+  if (xminus) {
+    int colX = idxLo.x();
+    for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
+      for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
+        IntVector currCell(colX, colY, colZ);
+        IntVector xminusCell(colX-1, colY, colZ);
+	IntVector yminusCell(colX, colY-1, colZ);
+	IntVector zminusCell(colX, colY, colZ-1);
+        IntVector xplusCell(colX+1, colY, colZ);
+        IntVector xplusyminusCell(colX+1, colY-1, colZ);
+        IntVector xpluszminusCell(colX+1, colY, colZ-1);
+        IntVector xminusyminusCell(colX-1, colY-1, colZ);
+        IntVector xminuszminusCell(colX-1, colY, colZ-1);
+        if (vars->cellType[xminusCell] == out_celltypeval) {
+           double avden = 0.5 * (vars->old_density[xplusCell] +
+			         vars->old_density[currCell]);
+           double avdenlow = 0.5 * (vars->old_density[currCell] +
+			            vars->old_density[xminusCell]);
+           double new_avdenlow = 0.5 * (vars->new_density[currCell] +
+			                vars->new_density[xminusCell]);
+	   double out_vel = vars->uVelocity[xplusCell];
+
+           vars->uVelRhoHat[currCell] = (- delta_t * out_vel *
+            (avden*vars->uVelocity[xplusCell] -
+             avdenlow*vars->uVelocity[currCell]) / cellinfo->dxepu[colX-1] +
+	    avdenlow*vars->uVelocity[currCell]) / new_avdenlow;
+
+           vars->uVelRhoHat[xminusCell] = vars->uVelRhoHat[currCell];
+
+        if (!(yminus && (colY == idxLo.y()))) {
+           avden = 0.5 * (vars->old_density[currCell] +
+	                  vars->old_density[yminusCell]);
+           avdenlow = 0.5 * (vars->old_density[xminusCell] +
+			     vars->old_density[xminusyminusCell]);
+           new_avdenlow = 0.5 * (vars->new_density[xminusCell] +
+			         vars->new_density[xminusyminusCell]);
+	   out_vel = 0.5 * (vars->uVelocity[xplusCell] +
+			    vars->uVelocity[xplusyminusCell]);
+
+           vars->vVelRhoHat[xminusCell] = (- delta_t * out_vel *
+            (avden*vars->vVelocity[currCell] - 
+	     avdenlow*vars->vVelocity[xminusCell]) / cellinfo->dxep[colX-1] +
+	    avdenlow*vars->vVelocity[xminusCell]) / new_avdenlow;
+
+//           vars->vVelRhoHat[xminusCell] = vars->vVelRhoHat[currCell];
+	}
+        if (!(zminus && (colZ == idxLo.z()))) {
+           avden = 0.5 * (vars->old_density[currCell] +
+	                  vars->old_density[zminusCell]);
+           avdenlow = 0.5 * (vars->old_density[xminusCell] +
+			     vars->old_density[xminuszminusCell]);
+           new_avdenlow = 0.5 * (vars->new_density[xminusCell] +
+			         vars->new_density[xminuszminusCell]);
+	   out_vel = 0.5 * (vars->uVelocity[xplusCell] +
+			    vars->uVelocity[xpluszminusCell]);
+
+           vars->wVelRhoHat[xminusCell] = (- delta_t * out_vel *
+            (avden*vars->wVelocity[currCell] - 
+	     avdenlow*vars->wVelocity[xminusCell]) / cellinfo->dxep[colX-1] +
+	    avdenlow*vars->wVelocity[xminusCell]) / new_avdenlow;
+
+//           vars->wVelRhoHat[xminusCell] = vars->wVelRhoHat[currCell];
+	}
+        }
+      }
+    }
+  }
+  if (xplus) {
+    int colX = idxHi.x();
+    for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
+      for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
+        IntVector currCell(colX, colY, colZ);
+	IntVector xminusCell(colX-1, colY, colZ);
+	IntVector yminusCell(colX, colY-1, colZ);
+	IntVector zminusCell(colX, colY, colZ-1);
+        IntVector xplusCell(colX+1, colY, colZ);
+        IntVector xplusyminusCell(colX+1, colY-1, colZ);
+        IntVector xpluszminusCell(colX+1, colY, colZ-1);
+        IntVector xplusplusCell(colX+2, colY, colZ);
+        if (vars->cellType[xplusCell] == out_celltypeval) {
+           double avden = 0.5 * (vars->old_density[xplusCell] +
+			         vars->old_density[currCell]);
+           double new_avden = 0.5 * (vars->new_density[xplusCell] +
+			             vars->new_density[currCell]);
+           double avdenlow = 0.5 * (vars->old_density[currCell] +
+			            vars->old_density[xminusCell]);
+	   double out_vel = vars->uVelocity[currCell];
+
+           vars->uVelRhoHat[xplusCell] = (- delta_t * out_vel *
+            (avden*vars->uVelocity[xplusCell] - 
+	     avdenlow*vars->uVelocity[currCell]) / cellinfo->dxpwu[colX+1] +
+	    avden*vars->uVelocity[xplusCell]) / new_avden;
+//	   if (vars->uVelRhoHat[xplusCell] < 0.0)
+//		vars->uVelRhoHat[xplusCell] = 0.0;
+
+           vars->uVelRhoHat[xplusplusCell] = vars->uVelRhoHat[xplusCell];
+
+        if (!(yminus && (colY == idxLo.y()))) {
+           avden = 0.5 * (vars->old_density[xplusCell] +
+	                  vars->old_density[xplusyminusCell]);
+           new_avden = 0.5 * (vars->new_density[xplusCell] +
+	                      vars->new_density[xplusyminusCell]);
+           avdenlow = 0.5 * (vars->old_density[currCell] +
+			     vars->old_density[yminusCell]);
+	   out_vel = 0.5 * (vars->uVelocity[currCell] +
+			    vars->uVelocity[yminusCell]);
+
+           vars->vVelRhoHat[xplusCell] = (- delta_t * out_vel *
+            (avden*vars->vVelocity[xplusCell] - 
+	     avdenlow*vars->vVelocity[currCell]) / cellinfo->dxpw[colX+1] +
+	    avden*vars->vVelocity[xplusCell]) / new_avden;
+
+//           vars->vVelRhoHat[xplusCell] = vars->vVelRhoHat[currCell];
+	}
+
+        if (!(zminus && (colZ == idxLo.z()))) {
+           avden = 0.5 * (vars->old_density[xplusCell] +
+	                  vars->old_density[xpluszminusCell]);
+           new_avden = 0.5 * (vars->new_density[xplusCell] +
+	                      vars->new_density[xpluszminusCell]);
+           avdenlow = 0.5 * (vars->old_density[currCell] +
+			     vars->old_density[zminusCell]);
+	   out_vel = 0.5 * (vars->uVelocity[currCell] +
+			    vars->uVelocity[zminusCell]);
+
+           vars->wVelRhoHat[xplusCell] = (- delta_t * out_vel *
+            (avden*vars->wVelocity[xplusCell] - 
+	     avdenlow*vars->wVelocity[currCell]) / cellinfo->dxpw[colX+1] +
+	    avden*vars->wVelocity[xplusCell]) / new_avden;
+
+//           vars->wVelRhoHat[xplusCell] = vars->wVelRhoHat[currCell];
+	}
+        }
+      }
+    }
+  }
+  if (yminus) {
+    int colY = idxLo.y();
+    for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
+      for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
+        IntVector currCell(colX, colY, colZ);
+        IntVector xminusCell(colX-1, colY, colZ);
+	IntVector yminusCell(colX, colY-1, colZ);
+	IntVector zminusCell(colX, colY, colZ-1);
+        IntVector yplusCell(colX, colY+1, colZ);
+        IntVector yplusxminusCell(colX-1, colY+1, colZ);
+        IntVector ypluszminusCell(colX, colY+1, colZ-1);
+        IntVector yminusxminusCell(colX-1, colY-1, colZ);
+        IntVector yminuszminusCell(colX, colY-1, colZ-1);
+        if (vars->cellType[yminusCell] == out_celltypeval) {
+           double avden = 0.5 * (vars->old_density[yplusCell] +
+			         vars->old_density[currCell]);
+           double avdenlow = 0.5 * (vars->old_density[currCell] +
+			            vars->old_density[yminusCell]);
+           double new_avdenlow = 0.5 * (vars->new_density[currCell] +
+			                vars->new_density[yminusCell]);
+	   double out_vel = vars->vVelocity[yplusCell];
+
+           vars->vVelRhoHat[currCell] = (- delta_t * out_vel *
+            (avden*vars->vVelocity[yplusCell] -
+             avdenlow*vars->vVelocity[currCell]) / cellinfo->dynpv[colY-1] +
+	    avdenlow*vars->vVelocity[currCell]) /new_avdenlow;
+
+           vars->vVelRhoHat[yminusCell] = vars->vVelRhoHat[currCell];
+
+        if (!(xminus && (colX == idxLo.x()))) {
+           avden = 0.5 * (vars->old_density[currCell] +
+	                  vars->old_density[xminusCell]);
+           avdenlow = 0.5 * (vars->old_density[yminusCell] +
+			     vars->old_density[yminusxminusCell]);
+           new_avdenlow = 0.5 * (vars->new_density[yminusCell] +
+			         vars->new_density[yminusxminusCell]);
+	   out_vel = 0.5 * (vars->vVelocity[yplusCell] +
+			    vars->vVelocity[yplusxminusCell]);
+
+           vars->uVelRhoHat[yminusCell] = (- delta_t * out_vel *
+            (avden*vars->uVelocity[currCell] - 
+	     avdenlow*vars->uVelocity[yminusCell]) / cellinfo->dynp[colY-1] +
+	    avdenlow*vars->uVelocity[yminusCell]) / new_avdenlow;
+
+//           vars->uVelRhoHat[yminusCell] = vars->uVelRhoHat[currCell];
+	}
+        if (!(zminus && (colZ == idxLo.z()))) {
+           avden = 0.5 * (vars->old_density[currCell] +
+	                  vars->old_density[zminusCell]);
+           avdenlow = 0.5 * (vars->old_density[yminusCell] +
+			     vars->old_density[yminuszminusCell]);
+           new_avdenlow = 0.5 * (vars->new_density[yminusCell] +
+			         vars->new_density[yminuszminusCell]);
+	   out_vel = 0.5 * (vars->vVelocity[yplusCell] +
+			    vars->vVelocity[ypluszminusCell]);
+
+           vars->wVelRhoHat[yminusCell] = (- delta_t * out_vel *
+            (avden*vars->wVelocity[currCell] - 
+	     avdenlow*vars->wVelocity[yminusCell]) / cellinfo->dynp[colY-1] +
+	    avdenlow*vars->wVelocity[yminusCell]) / new_avdenlow;
+
+//           vars->wVelRhoHat[yminusCell] = vars->wVelRhoHat[currCell];
+	}
+        }
+      }
+    }
+  }
+  if (yplus) {
+    int colY = idxHi.y();
+    for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
+      for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
+        IntVector currCell(colX, colY, colZ);
+	IntVector xminusCell(colX-1, colY, colZ);
+	IntVector yminusCell(colX, colY-1, colZ);
+	IntVector zminusCell(colX, colY, colZ-1);
+        IntVector yplusCell(colX, colY+1, colZ);
+        IntVector yplusxminusCell(colX-1, colY+1, colZ);
+        IntVector ypluszminusCell(colX, colY+1, colZ-1);
+        IntVector yplusplusCell(colX, colY+2, colZ);
+        if (vars->cellType[yplusCell] == out_celltypeval) {
+           double avden = 0.5 * (vars->old_density[yplusCell] +
+			         vars->old_density[currCell]);
+           double new_avden = 0.5 * (vars->new_density[yplusCell] +
+			             vars->new_density[currCell]);
+           double avdenlow = 0.5 * (vars->old_density[currCell] +
+			            vars->old_density[yminusCell]);
+	   double out_vel = vars->vVelocity[currCell];
+
+           vars->vVelRhoHat[yplusCell] = (- delta_t * out_vel *
+            (avden*vars->vVelocity[yplusCell] - 
+	     avdenlow*vars->vVelocity[currCell]) / cellinfo->dypsv[colY+1] +
+	    avden*vars->vVelocity[yplusCell]) / new_avden;
+
+           vars->vVelRhoHat[yplusplusCell] = vars->vVelRhoHat[yplusCell];
+
+        if (!(xminus && (colX == idxLo.x()))) {
+           avden = 0.5 * (vars->old_density[yplusCell] +
+	                  vars->old_density[yplusxminusCell]);
+           new_avden = 0.5 * (vars->new_density[yplusCell] +
+	                      vars->new_density[yplusxminusCell]);
+           avdenlow = 0.5 * (vars->old_density[currCell] +
+			     vars->old_density[xminusCell]);
+	   out_vel = 0.5 * (vars->vVelocity[currCell] +
+			    vars->vVelocity[xminusCell]);
+
+           vars->uVelRhoHat[yplusCell] = (- delta_t * out_vel *
+            (avden*vars->uVelocity[yplusCell] - 
+	     avdenlow*vars->uVelocity[currCell]) / cellinfo->dyps[colY+1] +
+	    avden*vars->uVelocity[yplusCell]) / new_avden;
+
+//           vars->uVelRhoHat[yplusCell] = vars->uVelRhoHat[currCell];
+	}
+
+        if (!(zminus && (colZ == idxLo.z()))) {
+           avden = 0.5 * (vars->old_density[yplusCell] +
+	                  vars->old_density[ypluszminusCell]);
+           new_avden = 0.5 * (vars->new_density[yplusCell] +
+	                      vars->new_density[ypluszminusCell]);
+           avdenlow = 0.5 * (vars->old_density[currCell] +
+			     vars->old_density[zminusCell]);
+	   out_vel = 0.5 * (vars->vVelocity[currCell] +
+			    vars->vVelocity[zminusCell]);
+
+           vars->wVelRhoHat[yplusCell] = (- delta_t * out_vel *
+            (avden*vars->wVelocity[yplusCell] - 
+	     avdenlow*vars->wVelocity[currCell]) / cellinfo->dyps[colY+1] +
+	    avden*vars->wVelocity[yplusCell]) / new_avden;
+
+//           vars->wVelRhoHat[yplusCell] = vars->wVelRhoHat[currCell];
+	}
+        }
+      }
+    }
+  }
+  if (zminus) {
+    int colZ = idxLo.z();
+    for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
+      for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
+        IntVector currCell(colX, colY, colZ);
+        IntVector xminusCell(colX-1, colY, colZ);
+	IntVector yminusCell(colX, colY-1, colZ);
+	IntVector zminusCell(colX, colY, colZ-1);
+        IntVector zplusCell(colX, colY, colZ+1);
+        IntVector zplusxminusCell(colX-1, colY, colZ+1);
+        IntVector zplusyminusCell(colX, colY-1, colZ+1);
+        IntVector zminusxminusCell(colX-1, colY, colZ-1);
+        IntVector zminusyminusCell(colX, colY-1, colZ-1);
+        if (vars->cellType[zminusCell] == out_celltypeval) {
+           double avden = 0.5 * (vars->old_density[zplusCell] +
+			         vars->old_density[currCell]);
+           double avdenlow = 0.5 * (vars->old_density[currCell] +
+			            vars->old_density[zminusCell]);
+           double new_avdenlow = 0.5 * (vars->new_density[currCell] +
+			                vars->new_density[zminusCell]);
+	   double out_vel = vars->wVelocity[zplusCell];
+
+           vars->wVelRhoHat[currCell] = (- delta_t * out_vel *
+            (avden*vars->wVelocity[zplusCell] -
+             avdenlow*vars->wVelocity[currCell]) / cellinfo->dztpw[colZ-1] +
+	    avdenlow*vars->wVelocity[currCell]) / new_avdenlow;
+
+           vars->wVelRhoHat[zminusCell] = vars->wVelRhoHat[currCell];
+
+        if (!(xminus && (colX == idxLo.x()))) {
+           avden = 0.5 * (vars->old_density[currCell] +
+	                  vars->old_density[xminusCell]);
+           avdenlow = 0.5 * (vars->old_density[zminusCell] +
+			     vars->old_density[zminusxminusCell]);
+           new_avdenlow = 0.5 * (vars->new_density[zminusCell] +
+			         vars->new_density[zminusxminusCell]);
+	   out_vel = 0.5 * (vars->wVelocity[zplusCell] +
+			    vars->wVelocity[zplusxminusCell]);
+
+           vars->uVelRhoHat[zminusCell] = (- delta_t * out_vel *
+            (avden*vars->uVelocity[currCell] - 
+	     avdenlow*vars->uVelocity[zminusCell]) / cellinfo->dztp[colZ-1] +
+	    avdenlow*vars->uVelocity[zminusCell]) / new_avdenlow;
+
+//           vars->uVelRhoHat[zminusCell] = vars->uVelRhoHat[currCell];
+	}
+        if (!(yminus && (colY == idxLo.y()))) {
+           avden = 0.5 * (vars->old_density[currCell] +
+	                  vars->old_density[yminusCell]);
+           avdenlow = 0.5 * (vars->old_density[zminusCell] +
+			     vars->old_density[zminusyminusCell]);
+           new_avdenlow = 0.5 * (vars->new_density[zminusCell] +
+			         vars->new_density[zminusyminusCell]);
+	   out_vel = 0.5 * (vars->wVelocity[zplusCell] +
+			    vars->wVelocity[zplusyminusCell]);
+
+           vars->vVelRhoHat[zminusCell] = (- delta_t * out_vel *
+            (avden*vars->vVelocity[currCell] - 
+	     avdenlow*vars->vVelocity[zminusCell]) / cellinfo->dztp[colZ-1] +
+	    avdenlow*vars->vVelocity[zminusCell]) / new_avdenlow;
+
+//           vars->vVelRhoHat[zminusCell] = vars->vVelRhoHat[currCell];
+	}
+        }
+      }
+    }
+  }
+  if (zplus) {
+    int colZ = idxHi.z();
+    for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
+      for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
+        IntVector currCell(colX, colY, colZ);
+	IntVector xminusCell(colX-1, colY, colZ);
+	IntVector yminusCell(colX, colY-1, colZ);
+	IntVector zminusCell(colX, colY, colZ-1);
+        IntVector zplusCell(colX, colY, colZ+1);
+        IntVector zplusxminusCell(colX-1, colY, colZ+1);
+        IntVector zplusyminusCell(colX, colY-1, colZ+1);
+        IntVector zplusplusCell(colX, colY, colZ+2);
+        if (vars->cellType[zplusCell] == out_celltypeval) {
+           double avden = 0.5 * (vars->old_density[zplusCell] +
+			         vars->old_density[currCell]);
+           double new_avden = 0.5 * (vars->new_density[zplusCell] +
+			             vars->new_density[currCell]);
+           double avdenlow = 0.5 * (vars->old_density[currCell] +
+			            vars->old_density[zminusCell]);
+	   double out_vel = vars->wVelocity[currCell];
+
+           vars->wVelRhoHat[zplusCell] = (- delta_t * out_vel *
+            (avden*vars->wVelocity[zplusCell] - 
+	     avdenlow*vars->wVelocity[currCell]) / cellinfo->dzpbw[colZ+1] +
+	    avden*vars->wVelocity[zplusCell]) / new_avden;
+
+           vars->wVelRhoHat[zplusplusCell] = vars->wVelRhoHat[zplusCell];
+
+        if (!(xminus && (colX == idxLo.x()))) {
+           avden = 0.5 * (vars->old_density[zplusCell] +
+	                  vars->old_density[zplusxminusCell]);
+           new_avden = 0.5 * (vars->new_density[zplusCell] +
+	                      vars->new_density[zplusxminusCell]);
+           avdenlow = 0.5 * (vars->old_density[currCell] +
+			     vars->old_density[xminusCell]);
+	   out_vel = 0.5 * (vars->wVelocity[currCell] +
+			    vars->wVelocity[xminusCell]);
+
+           vars->uVelRhoHat[zplusCell] = (- delta_t * out_vel *
+            (avden*vars->uVelocity[zplusCell] - 
+	     avdenlow*vars->uVelocity[currCell]) / cellinfo->dzpb[colZ+1] +
+	    avden*vars->uVelocity[zplusCell]) / new_avden;
+
+//           vars->uVelRhoHat[zplusCell] = vars->uVelRhoHat[currCell];
+	}
+
+        if (!(yminus && (colY == idxLo.y()))) {
+           avden = 0.5 * (vars->old_density[zplusCell] +
+	                  vars->old_density[zplusyminusCell]);
+           new_avden = 0.5 * (vars->new_density[zplusCell] +
+	                      vars->new_density[zplusyminusCell]);
+           avdenlow = 0.5 * (vars->old_density[currCell] +
+			     vars->old_density[yminusCell]);
+	   out_vel = 0.5 * (vars->wVelocity[currCell] +
+			    vars->wVelocity[yminusCell]);
+
+           vars->vVelRhoHat[zplusCell] = (- delta_t * out_vel *
+            (avden*vars->vVelocity[zplusCell] - 
+	     avdenlow*vars->vVelocity[currCell]) / cellinfo->dzpb[colZ+1] +
+	    avden*vars->vVelocity[zplusCell]) / new_avden;
+
+//           vars->vVelRhoHat[zplusCell] = vars->vVelRhoHat[currCell];
+	}
+        }
+      }
+    }
+  }
+}
+//****************************************************************************
+// Set zero gradient for velocity on pressure bc
+//****************************************************************************
+void 
+BoundaryCondition::velocityPressureBC(const ProcessorGroup*,
+			    const Patch* patch,
+			    const int index,
+			    CellInformation*,
+			    ArchesVariables* vars)
+{
+  // Get the low and high index for the patch
+  IntVector idxLo = patch->getCellFORTLowIndex();
+  IntVector idxHi = patch->getCellFORTHighIndex();
+
+  int press_celltypeval = d_pressureBdry->d_cellTypeID;
+
+  bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
+  bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
+  bool yminus = patch->getBCType(Patch::yminus) != Patch::Neighbor;
+  bool yplus =  patch->getBCType(Patch::yplus) != Patch::Neighbor;
+  bool zminus = patch->getBCType(Patch::zminus) != Patch::Neighbor;
+  bool zplus =  patch->getBCType(Patch::zplus) != Patch::Neighbor;
+
+  if (xminus) {
+    int colX = idxLo.x();
+    for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
+      for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
+        IntVector currCell(colX, colY, colZ);
+        IntVector xminusCell(colX-1, colY, colZ);
+        IntVector xplusCell(colX+1, colY, colZ);
+        if (vars->cellType[xminusCell] == press_celltypeval) {
+          switch (index) {
+           case Arches::XDIR:
+           vars->uVelRhoHat[currCell] = vars->uVelRhoHat[xplusCell];
+           vars->uVelRhoHat[xminusCell] = vars->uVelRhoHat[currCell];
+           break;
+           case Arches::YDIR:
+        if (!(yminus && (colY == idxLo.y())))
+           vars->vVelRhoHat[xminusCell] = vars->vVelRhoHat[currCell];
+           break;
+           case Arches::ZDIR:
+        if (!(zminus && (colZ == idxLo.z())))
+           vars->wVelRhoHat[xminusCell] = vars->wVelRhoHat[currCell];
+           break;
+           default:
+		throw InvalidValue("Invalid index in velocityPressureBC");
+          }
+        }
+      }
+    }
+  }
+  if (xplus) {
+    int colX = idxHi.x();
+    for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
+      for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
+        IntVector currCell(colX, colY, colZ);
+        IntVector xplusCell(colX+1, colY, colZ);
+        IntVector xplusplusCell(colX+2, colY, colZ);
+        if (vars->cellType[xplusCell] == press_celltypeval) {
+          switch (index) {
+           case Arches::XDIR:
+           vars->uVelRhoHat[xplusCell] = vars->uVelRhoHat[currCell];
+           vars->uVelRhoHat[xplusplusCell] = vars->uVelRhoHat[xplusCell];
+           break;
+           case Arches::YDIR:
+        if (!(yminus && (colY == idxLo.y())))
+           vars->vVelRhoHat[xplusCell] = vars->vVelRhoHat[currCell];
+           break;
+           case Arches::ZDIR:
+        if (!(zminus && (colZ == idxLo.z())))
+           vars->wVelRhoHat[xplusCell] = vars->wVelRhoHat[currCell];
+           break;
+           default:
+		throw InvalidValue("Invalid index in velocityPressureBC");
+          }
+        }
+      }
+    }
+  }
+  if (yminus) {
+    int colY = idxLo.y();
+    for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
+      for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
+        IntVector currCell(colX, colY, colZ);
+        IntVector yminusCell(colX, colY-1, colZ);
+        IntVector yplusCell(colX, colY+1, colZ);
+        if (vars->cellType[yminusCell] == press_celltypeval) {
+          switch (index) {
+           case Arches::XDIR:
+        if (!(xminus && (colX == idxLo.x())))
+           vars->uVelRhoHat[yminusCell] = vars->uVelRhoHat[currCell];
+           break;
+           case Arches::YDIR:
+           vars->vVelRhoHat[currCell] = vars->vVelRhoHat[yplusCell];
+//	if (vars->vVelRhoHat[currCell] < 0.0) vars->vVelRhoHat[currCell] = 0.0;
+           vars->vVelRhoHat[yminusCell] = vars->vVelRhoHat[currCell];
+           break;
+           case Arches::ZDIR:
+        if (!(zminus && (colZ == idxLo.z())))
+           vars->wVelRhoHat[yminusCell] = vars->wVelRhoHat[currCell];
+           break;
+           default:
+		throw InvalidValue("Invalid index in velocityPressureBC");
+          }
+        }
+      }
+    }
+  }
+  if (yplus) {
+    int colY = idxHi.y();
+    for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
+      for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
+        IntVector currCell(colX, colY, colZ);
+        IntVector yplusCell(colX, colY+1, colZ);
+        IntVector yplusplusCell(colX, colY+2, colZ);
+        if (vars->cellType[yplusCell] == press_celltypeval) {
+          switch (index) {
+           case Arches::XDIR:
+        if (!(xminus && (colX == idxLo.x())))
+           vars->uVelRhoHat[yplusCell] = vars->uVelRhoHat[currCell];
+           break;
+           case Arches::YDIR:
+           vars->vVelRhoHat[yplusCell] = vars->vVelRhoHat[currCell];
+//	if (vars->vVelRhoHat[yplusCell] > 0.0) vars->vVelRhoHat[yplusCell] = 0.0;
+           vars->vVelRhoHat[yplusplusCell] = vars->vVelRhoHat[yplusCell];
+           break;
+           case Arches::ZDIR:
+        if (!(zminus && (colZ == idxLo.z())))
+           vars->wVelRhoHat[yplusCell] = vars->wVelRhoHat[currCell];
+           break;
+           default:
+		throw InvalidValue("Invalid index in velocityPressureBC");
+          }
+        }
+      }
+    }
+  }
+  if (zminus) {
+    int colZ = idxLo.z();
+    for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
+      for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
+        IntVector currCell(colX, colY, colZ);
+        IntVector zminusCell(colX, colY, colZ-1);
+        IntVector zplusCell(colX, colY, colZ+1);
+        if (vars->cellType[zminusCell] == press_celltypeval) {
+          switch (index) {
+           case Arches::XDIR:
+        if (!(xminus && (colX == idxLo.x())))
+           vars->uVelRhoHat[zminusCell] = vars->uVelRhoHat[currCell];
+           break;
+           case Arches::YDIR:
+        if (!(yminus && (colY == idxLo.y())))
+           vars->vVelRhoHat[zminusCell] = vars->vVelRhoHat[currCell];
+           break;
+           case Arches::ZDIR:
+           vars->wVelRhoHat[currCell] = vars->wVelRhoHat[zplusCell];
+//	if (vars->wVelRhoHat[currCell] < 0.0) vars->wVelRhoHat[currCell] = 0.0;
+           vars->wVelRhoHat[zminusCell] = vars->wVelRhoHat[currCell];
+           break;
+           default:
+		throw InvalidValue("Invalid index in velocityPressureBC");
+          }
+        }
+      }
+    }
+  }
+  if (zplus) {
+    int colZ = idxHi.z();
+    for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
+      for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
+        IntVector currCell(colX, colY, colZ);
+        IntVector zplusCell(colX, colY, colZ+1);
+        IntVector zplusplusCell(colX, colY, colZ+2);
+        if (vars->cellType[zplusCell] == press_celltypeval) {
+          switch (index) {
+           case Arches::XDIR:
+        if (!(xminus && (colX == idxLo.x())))
+           vars->uVelRhoHat[zplusCell] = vars->uVelRhoHat[currCell];
+           break;
+           case Arches::YDIR:
+        if (!(yminus && (colY == idxLo.y())))
+           vars->vVelRhoHat[zplusCell] = vars->vVelRhoHat[currCell];
+           break;
+           case Arches::ZDIR:
+           vars->wVelRhoHat[zplusCell] = vars->wVelRhoHat[currCell];
+//	if (vars->wVelRhoHat[zplusCell] > 0.0) vars->wVelRhoHat[zplusCell] = 0.0;
+           vars->wVelRhoHat[zplusplusCell] = vars->wVelRhoHat[zplusCell];
+           break;
+           default:
+		throw InvalidValue("Invalid index in velocityPressureBC");
+          }
+        }
+      }
+    }
+  }
+}
+//****************************************************************************
+// Add pressure gradient to outlet velocity
+//****************************************************************************
+void 
+BoundaryCondition::addPresGradVelocityOutletBC(const ProcessorGroup*,
+			    const Patch* patch,
+			    const int index,
+			    CellInformation* cellinfo,
+			    ArchesVariables* vars,
+			    const double delta_t)
+{
+  // Get the low and high index for the patch
+  IntVector idxLo = patch->getCellFORTLowIndex();
+  IntVector idxHi = patch->getCellFORTHighIndex();
+
+  int out_celltypeval = d_outletBC->d_cellTypeID;
+
+  bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
+  bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
+  bool yminus = patch->getBCType(Patch::yminus) != Patch::Neighbor;
+  bool yplus =  patch->getBCType(Patch::yplus) != Patch::Neighbor;
+  bool zminus = patch->getBCType(Patch::zminus) != Patch::Neighbor;
+  bool zplus =  patch->getBCType(Patch::zplus) != Patch::Neighbor;
+
+  switch (index) {
+  case Arches::XDIR:
+  if (xminus) {
+    int colX = idxLo.x();
+    for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
+      for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
+        IntVector currCell(colX, colY, colZ);
+        IntVector xminusCell(colX-1, colY, colZ);
+        if (vars->cellType[xminusCell] == out_celltypeval) {
+           double avdenlow = 0.5 * (vars->density[currCell] +
+			            vars->density[xminusCell]);
+
+           vars->uVelRhoHat[currCell] -= 2.0*delta_t*vars->pressure[currCell]/
+				(cellinfo->sew[colX] * avdenlow);
+
+           vars->uVelRhoHat[xminusCell] = vars->uVelRhoHat[currCell];
+
+        }
+      }
+    }
+  }
+  if (xplus) {
+    int colX = idxHi.x();
+    for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
+      for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
+        IntVector currCell(colX, colY, colZ);
+        IntVector xplusCell(colX+1, colY, colZ);
+        IntVector xplusplusCell(colX+2, colY, colZ);
+        if (vars->cellType[xplusCell] == out_celltypeval) {
+           double avden = 0.5 * (vars->density[xplusCell] +
+			         vars->density[currCell]);
+
+           vars->uVelRhoHat[xplusCell] += 2.0*delta_t*vars->pressure[currCell]/
+				(cellinfo->sew[colX] * avden);
+//	   if (vars->uVelRhoHat[xplusCell] < 0.0)
+//		vars->uVelRhoHat[xplusCell] = 0.0;	
+
+           vars->uVelRhoHat[xplusplusCell] = vars->uVelRhoHat[xplusCell];
+        }
+      }
+    }
+  }
+  break;
+  case Arches::YDIR:
+  if (yminus) {
+    int colY = idxLo.y();
+    for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
+      for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
+        IntVector currCell(colX, colY, colZ);
+	IntVector yminusCell(colX, colY-1, colZ);
+        if (vars->cellType[yminusCell] == out_celltypeval) {
+           double avdenlow = 0.5 * (vars->density[currCell] +
+			            vars->density[yminusCell]);
+
+           vars->vVelRhoHat[currCell] -= 2.0*delta_t*vars->pressure[currCell]/
+				(cellinfo->sns[colY] * avdenlow);
+
+           vars->vVelRhoHat[yminusCell] = vars->vVelRhoHat[currCell];
+
+        }
+      }
+    }
+  }
+  if (yplus) {
+    int colY = idxHi.y();
+    for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
+      for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
+        IntVector currCell(colX, colY, colZ);
+        IntVector yplusCell(colX, colY+1, colZ);
+        IntVector yplusplusCell(colX, colY+2, colZ);
+        if (vars->cellType[yplusCell] == out_celltypeval) {
+           double avden = 0.5 * (vars->density[yplusCell] +
+			         vars->density[currCell]);
+
+           vars->vVelRhoHat[yplusCell] += 2.0*delta_t*vars->pressure[currCell]/
+				(cellinfo->sns[colY] * avden);
+
+           vars->vVelRhoHat[yplusplusCell] = vars->vVelRhoHat[yplusCell];
+
+        }
+      }
+    }
+  }
+  break;
+  case Arches::ZDIR:
+  if (zminus) {
+    int colZ = idxLo.z();
+    for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
+      for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
+        IntVector currCell(colX, colY, colZ);
+	IntVector zminusCell(colX, colY, colZ-1);
+        if (vars->cellType[zminusCell] == out_celltypeval) {
+           double avdenlow = 0.5 * (vars->density[currCell] +
+			            vars->density[zminusCell]);
+
+           vars->wVelRhoHat[currCell] -= 2.0*delta_t*vars->pressure[currCell]/
+				(cellinfo->stb[colZ] * avdenlow);
+
+           vars->wVelRhoHat[zminusCell] = vars->wVelRhoHat[currCell];
+
+        }
+      }
+    }
+  }
+  if (zplus) {
+    int colZ = idxHi.z();
+    for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
+      for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
+        IntVector currCell(colX, colY, colZ);
+        IntVector zplusCell(colX, colY, colZ+1);
+        IntVector zplusplusCell(colX, colY, colZ+2);
+        if (vars->cellType[zplusCell] == out_celltypeval) {
+           double avden = 0.5 * (vars->density[zplusCell] +
+			         vars->density[currCell]);
+
+           vars->wVelRhoHat[zplusCell] += 2.0*delta_t*vars->pressure[currCell]/
+				(cellinfo->stb[colZ] * avden);
+
+           vars->wVelRhoHat[zplusplusCell] = vars->wVelRhoHat[zplusCell];
+
+        }
+      }
+    }
+  }
+  break;
+  default:
+   throw InvalidValue("Invalid index in addPresGradVelocityOutletBC");
+  }
+}
+//****************************************************************************
+// Schedule computation of mass balance for the outlet velocity correction
+//****************************************************************************
+void
+BoundaryCondition::sched_getFlowINOUT(SchedulerP& sched,
+					  const PatchSet* patches,
+					  const MaterialSet* matls,
+  					  const int Runge_Kutta_current_step,
+					  const bool Runge_Kutta_last_step)
+{
+  Task* tsk = scinew Task("BoundaryCondition::getFlowINOUT",
+			  this,
+			  &BoundaryCondition::getFlowINOUT,
+			  Runge_Kutta_current_step,
+			  Runge_Kutta_last_step);
+  
+  tsk->requires(Task::NewDW, d_lab->d_filterdrhodtLabel,
+		Ghost::None, Arches::ZEROGHOSTCELLS);
+  tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel, Ghost::AroundCells,
+		Arches::ONEGHOSTCELL);
+
+  if (Runge_Kutta_last_step) {
+    tsk->requires(Task::NewDW, d_lab->d_densityCPLabel, Ghost::None,
+		  Arches::ZEROGHOSTCELLS);
+    tsk->requires(Task::NewDW, d_lab->d_uVelocitySPBCLabel,
+		  Ghost::None, Arches::ZEROGHOSTCELLS);
+    tsk->requires(Task::NewDW, d_lab->d_vVelocitySPBCLabel,
+		  Ghost::None, Arches::ZEROGHOSTCELLS);
+    tsk->requires(Task::NewDW, d_lab->d_wVelocitySPBCLabel,
+		  Ghost::None, Arches::ZEROGHOSTCELLS);
+    tsk->computes(d_lab->d_totalflowINLabel);
+    tsk->computes(d_lab->d_totalflowOUTLabel);
+    tsk->computes(d_lab->d_denAccumLabel);
+    tsk->computes(d_lab->d_netflowOUTBCLabel);
+    tsk->computes(d_lab->d_totalAreaOUTLabel);
+  }
+  else { 
+ 	switch (Runge_Kutta_current_step) {
+ 	case Arches::FIRST:
+    		tsk->requires(Task::NewDW, d_lab->d_densityPredLabel,
+			      Ghost::None, Arches::ZEROGHOSTCELLS);
+       		tsk->requires(Task::NewDW, d_lab->d_uVelocityPredLabel,
+			      Ghost::None, Arches::ZEROGHOSTCELLS);
+      		tsk->requires(Task::NewDW, d_lab->d_vVelocityPredLabel,
+		 	      Ghost::None, Arches::ZEROGHOSTCELLS);
+     		tsk->requires(Task::NewDW, d_lab->d_wVelocityPredLabel,
+			      Ghost::None, Arches::ZEROGHOSTCELLS);
+                tsk->computes(d_lab->d_totalflowINPredLabel);
+                tsk->computes(d_lab->d_totalflowOUTPredLabel);
+                tsk->computes(d_lab->d_denAccumPredLabel);
+                tsk->computes(d_lab->d_netflowOUTBCPredLabel);
+                tsk->computes(d_lab->d_totalAreaOUTPredLabel);
+	 break;
+
+	 case Arches::SECOND:
+    		tsk->requires(Task::NewDW, d_lab->d_densityIntermLabel,
+			      Ghost::None, Arches::ZEROGHOSTCELLS);
+       		tsk->requires(Task::NewDW, d_lab->d_uVelocityIntermLabel,
+			      Ghost::None, Arches::ZEROGHOSTCELLS);
+      		tsk->requires(Task::NewDW, d_lab->d_vVelocityIntermLabel,
+		 	      Ghost::None, Arches::ZEROGHOSTCELLS);
+     		tsk->requires(Task::NewDW, d_lab->d_wVelocityIntermLabel,
+			      Ghost::None, Arches::ZEROGHOSTCELLS);
+                tsk->computes(d_lab->d_totalflowINIntermLabel);
+                tsk->computes(d_lab->d_totalflowOUTIntermLabel);
+                tsk->computes(d_lab->d_denAccumIntermLabel);
+                tsk->computes(d_lab->d_netflowOUTBCIntermLabel);
+                tsk->computes(d_lab->d_totalAreaOUTIntermLabel);
+	 break;
+
+	 default:
+		throw InvalidValue("Invalid Runge-Kutta step in getFlowINOUT");
+	 }
+  }
+  sched->addTask(tsk, patches, matls);
+}
+
+//****************************************************************************
+// Get mass balance for the outlet velocity correction
+//****************************************************************************
+void 
+BoundaryCondition::getFlowINOUT(const ProcessorGroup*,
+				    const PatchSubset* patches,
+				    const MaterialSubset*,
+				    DataWarehouse*,
+				    DataWarehouse* new_dw,
+  				    const int Runge_Kutta_current_step,
+				    const bool Runge_Kutta_last_step)
+{
+  for (int p = 0; p < patches->size(); p++) {
+    const Patch* patch = patches->get(p);
+    int archIndex = 0; // only one arches material
+    int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+    constCCVariable<int> cellType;
+    constCCVariable<double> filterdrhodt;
+    constCCVariable<double> density;
+    constSFCXVariable<double> uVelocity;
+    constSFCYVariable<double> vVelocity;
+    constSFCZVariable<double> wVelocity;
+
+    new_dw->get(filterdrhodt, d_lab->d_filterdrhodtLabel,
+		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+    new_dw->get(cellType, d_lab->d_cellTypeLabel,
+		matlIndex, patch, Ghost::AroundCells,Arches::ONEGHOSTCELL);
+
+    PerPatch<CellInformationP> cellInfoP;
+    if (new_dw->exists(d_lab->d_cellInfoLabel, matlIndex, patch)) 
+      new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
+    else {
+      cellInfoP.setData(scinew CellInformation(patch));
+      new_dw->put(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
+    }
+    CellInformation* cellinfo = cellInfoP.get().get_rep();
+
+  if (Runge_Kutta_last_step) {
+    new_dw->get(density, d_lab->d_densityCPLabel, matlIndex, patch, 
+		Ghost::None, Arches::ZEROGHOSTCELLS);
+    new_dw->get(uVelocity, d_lab->d_uVelocitySPBCLabel, matlIndex,
+		patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+    new_dw->get(vVelocity, d_lab->d_vVelocitySPBCLabel, matlIndex,
+		patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+    new_dw->get(wVelocity, d_lab->d_wVelocitySPBCLabel, matlIndex,
+		patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+  }
+  else { 
+ 	switch (Runge_Kutta_current_step) {
+ 	case Arches::FIRST:
+    		new_dw->get(density, d_lab->d_densityPredLabel,
+			    matlIndex, patch, 
+			    Ghost::None, Arches::ZEROGHOSTCELLS);
+      		new_dw->get(uVelocity, d_lab->d_uVelocityPredLabel, matlIndex,
+			    patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+    		new_dw->get(vVelocity, d_lab->d_vVelocityPredLabel, matlIndex,
+		  	    patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+     		new_dw->get(wVelocity, d_lab->d_wVelocityPredLabel, matlIndex,
+		  	    patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+	 break;
+
+	 case Arches::SECOND:
+    		new_dw->get(density, d_lab->d_densityIntermLabel,
+			    matlIndex, patch, 
+			    Ghost::None, Arches::ZEROGHOSTCELLS);
+      		new_dw->get(uVelocity, d_lab->d_uVelocityIntermLabel, matlIndex,
+			    patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+    		new_dw->get(vVelocity, d_lab->d_vVelocityIntermLabel, matlIndex,
+		  	    patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+     		new_dw->get(wVelocity, d_lab->d_wVelocityIntermLabel, matlIndex,
+		  	    patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+	 break;
+
+	 default:
+		throw InvalidValue("Invalid Runge-Kutta step in getFlowINOUT");
+	 }
+  }
+   
+    // Get the low and high index for the patch and the variables
+    IntVector idxLo = patch->getCellFORTLowIndex();
+    IntVector idxHi = patch->getCellFORTHighIndex();
+
+    bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
+    bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
+    bool yminus = patch->getBCType(Patch::yminus) != Patch::Neighbor;
+    bool yplus =  patch->getBCType(Patch::yplus) != Patch::Neighbor;
+    bool zminus = patch->getBCType(Patch::zminus) != Patch::Neighbor;
+    bool zplus =  patch->getBCType(Patch::zplus) != Patch::Neighbor;
+    double flowIN = 0.0;
+    double flowOUT = 0.0;
+    double denAccum = 0.0;
+    double floutbc = 0.0;
+    double areaOUT = 0.0;
+
+    for (int kk = idxLo.z(); kk <= idxHi.z(); kk++) {
+      for (int jj = idxLo.y(); jj <= idxHi.y(); jj++) {
+        for (int ii = idxLo.x(); ii <= idxHi.x(); ii++) {
+	  IntVector currCell(ii,jj,kk);
+	  denAccum += filterdrhodt[currCell];
+        }
+      }
+    }
+
+    if (xminus||xplus||yminus||yplus||zminus||zplus) {
+
+      for (int indx = 0; indx < d_numInlets; indx++) {
+
+	// Get a copy of the current flowinlet
+	// assign flowType the value that corresponds to flow
+	//CellTypeInfo flowType = FLOW;
+	FlowInlet fi = d_flowInlets[indx];
+	double fout = 0.0;
+	fort_inlpresbcinout(uVelocity, vVelocity, wVelocity, idxLo, idxHi,
+			   density, cellType, fi.d_cellTypeID,
+			   flowIN, fout, cellinfo->sew, cellinfo->sns,
+			   cellinfo->stb, xminus, xplus, yminus, yplus,
+			   zminus, zplus);
+	if (fout > 0.0)
+		throw InvalidValue("Flow comming out of inlet");
+      } 
+
+      if (d_pressBoundary) {
+	int press_celltypeval = d_pressureBdry->d_cellTypeID;
+	fort_inlpresbcinout(uVelocity, vVelocity, wVelocity, idxLo, idxHi,
+			    density, cellType, press_celltypeval,
+			    flowIN, flowOUT, cellinfo->sew, cellinfo->sns,
+			    cellinfo->stb, xminus, xplus, yminus, yplus,
+			    zminus, zplus);
+      }
+      if (d_outletBoundary) {
+	int out_celltypeval = d_outletBC->d_cellTypeID;
+	if (xminus) {
+	  int colX = idxLo.x();
+  	  for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
+	    for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
+	      IntVector currCell(colX, colY, colZ);
+      	      IntVector xminusCell(colX-1, colY, colZ);
+
+	      if (cellType[xminusCell] == out_celltypeval) {
+                 double avdenlow = 0.5 * (density[currCell] +
+	      		            density[xminusCell]);
+     	    	 floutbc += avdenlow*uVelocity[currCell] *
+	          	     cellinfo->sns[colY] * cellinfo->stb[colZ];
+    	         areaOUT += avdenlow *
+	          	     cellinfo->sns[colY] * cellinfo->stb[colZ];
+              }
+	    }
+	  }
+ 	}
+	if (xplus) {
+	  int colX = idxHi.x();
+	  for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
+	    for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
+	      IntVector currCell(colX, colY, colZ);
+	      IntVector xplusCell(colX+1, colY, colZ);
+
+	      if (cellType[xplusCell] == out_celltypeval) {
+	         double avden = 0.5 * (density[xplusCell] +
+	      		         density[currCell]);
+	         floutbc += avden*uVelocity[xplusCell] *
+	       	     cellinfo->sns[colY] * cellinfo->stb[colZ];
+    	         areaOUT += avden *
+	       	     cellinfo->sns[colY] * cellinfo->stb[colZ];
+	      }
+	    }
+	  }
+	}
+ 	if (yminus) {
+ 	  int colY = idxLo.y();
+ 	  for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
+ 	    for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
+ 	      IntVector currCell(colX, colY, colZ);
+ 	      IntVector yminusCell(colX, colY-1, colZ);
+
+ 	      if (cellType[yminusCell] == out_celltypeval) {
+ 	         double avdenlow = 0.5 * (density[currCell] +
+ 	      		            density[yminusCell]);
+ 	         floutbc += avdenlow*vVelocity[currCell] *
+	                   cellinfo->sew[colX] * cellinfo->stb[colZ];
+    	         areaOUT += avdenlow *
+	                   cellinfo->sew[colX] * cellinfo->stb[colZ];
+ 	      }
+ 	    }
+ 	  }
+ 	}
+ 	if (yplus) {
+ 	  int colY = idxHi.y();
+ 	  for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
+ 	    for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
+ 	      IntVector currCell(colX, colY, colZ);
+ 	      IntVector yplusCell(colX, colY+1, colZ);
+
+ 	      if (cellType[yplusCell] == out_celltypeval) {
+ 	         double avden = 0.5 * (density[yplusCell] +
+ 	      		         density[currCell]);
+ 	         floutbc += avden*vVelocity[yplusCell] *
+ 	          	     cellinfo->sew[colX] * cellinfo->stb[colZ];
+    	         areaOUT += avden *
+ 	          	     cellinfo->sew[colX] * cellinfo->stb[colZ];
+ 	      }
+ 	    }
+ 	  }
+ 	}
+ 	if (zminus) {
+ 	  int colZ = idxLo.z();
+ 	  for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
+ 	    for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
+ 	      IntVector currCell(colX, colY, colZ);
+ 	      IntVector zminusCell(colX, colY, colZ-1);
+
+ 	      if (cellType[zminusCell] == out_celltypeval) {
+ 	         double avdenlow = 0.5 * (density[currCell] +
+ 	      		            density[zminusCell]);
+ 	         floutbc += avdenlow*wVelocity[currCell] *
+ 	          	     cellinfo->sew[colX] * cellinfo->sns[colY];
+    	         areaOUT += avdenlow *
+ 	          	     cellinfo->sew[colX] * cellinfo->sns[colY];
+ 	      }
+ 	    }
+ 	  }
+ 	}
+ 	if (zplus) {
+ 	  int colZ = idxHi.z();
+ 	  for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
+ 	    for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
+ 	      IntVector currCell(colX, colY, colZ);
+ 	      IntVector zplusCell(colX, colY, colZ+1);
+
+ 	      if (cellType[zplusCell] == out_celltypeval) {
+ 	         double avden = 0.5 * (density[zplusCell] +
+ 	      		         density[currCell]);
+ 	         floutbc += avden*wVelocity[zplusCell] *
+ 	          	     cellinfo->sew[colX] * cellinfo->sns[colY];
+    	         areaOUT += avden *
+ 	          	     cellinfo->sew[colX] * cellinfo->sns[colY];
+ 	      }
+ 	    }
+ 	  }
+  	}
+      }
+    }
+
+  if (Runge_Kutta_last_step) {
+   new_dw->put(sum_vartype(flowIN), d_lab->d_totalflowINLabel);
+   new_dw->put(sum_vartype(flowOUT), d_lab->d_totalflowOUTLabel);
+   new_dw->put(sum_vartype(denAccum), d_lab->d_denAccumLabel);
+   new_dw->put(sum_vartype(floutbc), d_lab->d_netflowOUTBCLabel);
+   new_dw->put(sum_vartype(areaOUT),d_lab->d_totalAreaOUTLabel);
+  }
+  else { 
+ 	switch (Runge_Kutta_current_step) {
+  	 case Arches::FIRST:
+    	  new_dw->put(sum_vartype(flowIN), d_lab->d_totalflowINPredLabel);
+   	  new_dw->put(sum_vartype(flowOUT), d_lab->d_totalflowOUTPredLabel);
+   	  new_dw->put(sum_vartype(denAccum), d_lab->d_denAccumPredLabel);
+  	  new_dw->put(sum_vartype(floutbc), d_lab->d_netflowOUTBCPredLabel);
+  	  new_dw->put(sum_vartype(areaOUT),d_lab->d_totalAreaOUTPredLabel);
+	 break;
+
+	 case Arches::SECOND:
+    	  new_dw->put(sum_vartype(flowIN), d_lab->d_totalflowINIntermLabel);
+   	  new_dw->put(sum_vartype(flowOUT), d_lab->d_totalflowOUTIntermLabel);
+   	  new_dw->put(sum_vartype(denAccum), d_lab->d_denAccumIntermLabel);
+  	  new_dw->put(sum_vartype(floutbc), d_lab->d_netflowOUTBCIntermLabel);
+  	  new_dw->put(sum_vartype(areaOUT),d_lab->d_totalAreaOUTIntermLabel);
+	 break;
+
+	 default:
+		throw InvalidValue("Invalid Runge-Kutta step in getFlowINOUT");
+	 }
+  }
+  }
+}
+
+//****************************************************************************
+// Schedule outlet velocity correction
+//****************************************************************************
+void BoundaryCondition::sched_correctVelocityOutletBC(SchedulerP& sched,
+					      const PatchSet* patches,
+					      const MaterialSet* matls,
+			  		     const int Runge_Kutta_current_step,
+			  		     const bool Runge_Kutta_last_step)
+{
+
+  Task* tsk = scinew Task("BoundaryCondition::correctVelocityOutletBC",
+			  this,
+			  &BoundaryCondition::correctVelocityOutletBC,
+			  Runge_Kutta_current_step,
+			  Runge_Kutta_last_step);
+  
+  if (Runge_Kutta_last_step) {
+    tsk->requires(Task::NewDW, d_lab->d_totalflowINLabel);
+    tsk->requires(Task::NewDW, d_lab->d_totalflowOUTLabel);
+    tsk->requires(Task::NewDW, d_lab->d_denAccumLabel);
+    tsk->requires(Task::NewDW, d_lab->d_netflowOUTBCLabel);
+    tsk->requires(Task::NewDW, d_lab->d_totalAreaOUTLabel);
+    tsk->modifies(d_lab->d_uVelocitySPBCLabel);
+    tsk->modifies(d_lab->d_vVelocitySPBCLabel);
+    tsk->modifies(d_lab->d_wVelocitySPBCLabel);
+    tsk->computes(d_lab->d_uvwoutLabel);
+  }
+  else { 
+ 	switch (Runge_Kutta_current_step) {
+ 	case Arches::FIRST:
+           tsk->requires(Task::NewDW, d_lab->d_totalflowINPredLabel);
+           tsk->requires(Task::NewDW, d_lab->d_totalflowOUTPredLabel);
+           tsk->requires(Task::NewDW, d_lab->d_denAccumPredLabel);
+           tsk->requires(Task::NewDW, d_lab->d_netflowOUTBCPredLabel);
+           tsk->requires(Task::NewDW, d_lab->d_totalAreaOUTPredLabel);
+	   tsk->modifies(d_lab->d_uVelocityPredLabel);
+	   tsk->modifies(d_lab->d_vVelocityPredLabel);
+	   tsk->modifies(d_lab->d_wVelocityPredLabel);
+	 break;
+
+	 case Arches::SECOND:
+           tsk->requires(Task::NewDW, d_lab->d_totalflowINIntermLabel);
+           tsk->requires(Task::NewDW, d_lab->d_totalflowOUTIntermLabel);
+           tsk->requires(Task::NewDW, d_lab->d_denAccumIntermLabel);
+           tsk->requires(Task::NewDW, d_lab->d_netflowOUTBCIntermLabel);
+           tsk->requires(Task::NewDW, d_lab->d_totalAreaOUTIntermLabel);
+	   tsk->modifies(d_lab->d_uVelocityIntermLabel);
+	   tsk->modifies(d_lab->d_vVelocityIntermLabel);
+	   tsk->modifies(d_lab->d_wVelocityIntermLabel);
+	 break;
+
+	 default:
+		throw InvalidValue("Invalid Runge-Kutta step in correctVelocityOutletBC");
+	 }
+  }
+  sched->addTask(tsk, patches, matls);
+}
+
+//****************************************************************************
+// Correct outlet velocity
+//****************************************************************************
+void 
+BoundaryCondition::correctVelocityOutletBC(const ProcessorGroup* pc,
+			      const PatchSubset* patches,
+			      const MaterialSubset*,
+			      DataWarehouse*,
+			      DataWarehouse* new_dw,
+			      const int Runge_Kutta_current_step,
+			      const bool Runge_Kutta_last_step)
+{
+    sum_vartype sum_totalFlowIN, sum_totalFlowOUT, sum_netflowOutbc,
+                sum_totalAreaOUT, sum_denAccum;
+    double totalFlowIN, totalFlowOUT, netFlowOUT_outbc, totalAreaOUT, denAccum;
+
+  if (Runge_Kutta_last_step) {
+    new_dw->get(sum_totalFlowIN, d_lab->d_totalflowINLabel);
+    new_dw->get(sum_totalFlowOUT, d_lab->d_totalflowOUTLabel);
+    new_dw->get(sum_denAccum, d_lab->d_denAccumLabel);
+    new_dw->get(sum_netflowOutbc, d_lab->d_netflowOUTBCLabel);
+    new_dw->get(sum_totalAreaOUT,d_lab->d_totalAreaOUTLabel);
+  }
+  else { 
+ 	switch (Runge_Kutta_current_step) {
+ 	 case Arches::FIRST:
+    	 new_dw->get(sum_totalFlowIN, d_lab->d_totalflowINPredLabel);
+   	 new_dw->get(sum_totalFlowOUT, d_lab->d_totalflowOUTPredLabel);
+   	 new_dw->get(sum_denAccum, d_lab->d_denAccumPredLabel);
+  	 new_dw->get(sum_netflowOutbc, d_lab->d_netflowOUTBCPredLabel);
+  	 new_dw->get(sum_totalAreaOUT,d_lab->d_totalAreaOUTPredLabel);
+	 break;
+
+	 case Arches::SECOND:
+    	 new_dw->get(sum_totalFlowIN, d_lab->d_totalflowINIntermLabel);
+   	 new_dw->get(sum_totalFlowOUT, d_lab->d_totalflowOUTIntermLabel);
+   	 new_dw->get(sum_denAccum, d_lab->d_denAccumIntermLabel);
+  	 new_dw->get(sum_netflowOutbc, d_lab->d_netflowOUTBCIntermLabel);
+  	 new_dw->get(sum_totalAreaOUT,d_lab->d_totalAreaOUTIntermLabel);
+	 break;
+
+	 default:
+		throw InvalidValue("Invalid Runge-Kutta step in correctVelocityOutletBC");
+	 }
+  }
+			  
+    totalFlowIN = sum_totalFlowIN;
+    totalFlowOUT = sum_totalFlowOUT;
+    netFlowOUT_outbc = sum_netflowOutbc;
+    totalAreaOUT = sum_totalAreaOUT;
+    denAccum = sum_denAccum;
+    double uvwcorr;
+
+    d_overallMB = fabs((totalFlowIN - denAccum - totalFlowOUT - 
+			 netFlowOUT_outbc)/totalFlowIN);
+
+    int me = pc->myrank();
+
+    if (d_outletBoundary) {
+     if (totalAreaOUT > 0.0) {
+	uvwcorr = (totalFlowIN - denAccum - totalFlowOUT - netFlowOUT_outbc)/
+	           totalAreaOUT;
+#ifdef discard_negative_velocity_correction
+	if (uvwcorr < 0.0) {
+         if (me == 0) {
+          cerr << "Negative velocity correction " << uvwcorr
+	       << " , discarding it" << endl;
+         }
+	 uvwcorr = 0.0;
+        }
+#endif
+      }
+    }
+    else
+      uvwcorr = 0.0;
+
+    if (me == 0) {
+      if (d_overallMB > 0.0)
+	cerr << "Overall Mass Balance " << log10(d_overallMB/1.e-7) << endl;
+      cerr << "Total flow in " << totalFlowIN << endl;
+      cerr << "Total flow out " << totalFlowOUT << endl;
+      cerr << "Total flow out BC: " << netFlowOUT_outbc << endl;
+      cerr << "Overall velocity correction " << uvwcorr << endl;
+      cerr << "Total Area out " << totalAreaOUT << endl;
+    }
+ 
+    for (int p = 0; p < patches->size(); p++) {
+      const Patch* patch = patches->get(p);
+      int archIndex = 0; // only one arches material
+      int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+      SFCXVariable<double> uVelocity;
+      SFCYVariable<double> vVelocity;
+      SFCZVariable<double> wVelocity;
+  if (Runge_Kutta_last_step) {
+    new_dw->getModifiable(uVelocity, d_lab->d_uVelocitySPBCLabel, matlIndex,
+		  patch);
+    new_dw->getModifiable(vVelocity, d_lab->d_vVelocitySPBCLabel, matlIndex,
+		  patch);
+    new_dw->getModifiable(wVelocity, d_lab->d_wVelocitySPBCLabel, matlIndex,
+		  patch);
+    new_dw->put(delt_vartype(uvwcorr), d_lab->d_uvwoutLabel);
+  }
+  else { 
+ 	switch (Runge_Kutta_current_step) {
+ 	case Arches::FIRST:
+      		new_dw->getModifiable(uVelocity, d_lab->d_uVelocityPredLabel,
+				      matlIndex, patch);
+    		new_dw->getModifiable(vVelocity, d_lab->d_vVelocityPredLabel,
+				      matlIndex, patch);
+     		new_dw->getModifiable(wVelocity, d_lab->d_wVelocityPredLabel,
+				      matlIndex, patch);
+	 break;
+
+	 case Arches::SECOND:
+      		new_dw->getModifiable(uVelocity, d_lab->d_uVelocityIntermLabel,
+				      matlIndex, patch);
+    		new_dw->getModifiable(vVelocity, d_lab->d_vVelocityIntermLabel,
+				      matlIndex, patch);
+     		new_dw->getModifiable(wVelocity, d_lab->d_wVelocityIntermLabel,
+				      matlIndex, patch);
+	 break;
+
+	 default:
+		throw InvalidValue("Invalid Runge-Kutta step in correctVelocityOutletBC");
+	 }
+  }
+
+// Assuming outlet is xplus
+      IntVector indexLow = patch->getCellFORTLowIndex();
+      IntVector indexHigh = patch->getCellFORTHighIndex();
+      bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
+      if (xplus) {
+        int colX = indexHigh.x()+1;
+	for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
+	  for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
+	    IntVector currCell(colX, colY, colZ);
+	    IntVector xplusCell(colX+1, colY, colZ);
+	    
+	    uVelocity[currCell] += uvwcorr;
+//	    if (uVelocity[currCell] < 0.0) uVelocity[currCell] = 0.0;
+	    uVelocity[xplusCell] = uVelocity[currCell];
+	  }
+	}
+      }
+    }
 }

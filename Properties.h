@@ -33,7 +33,11 @@ POSSIBLE REVISIONS
     None
 ***************************************************************************/
 
+#include <Packages/Uintah/CCA/Components/Arches/Arches.h>
 #include <Packages/Uintah/CCA/Components/Arches/BoundaryCondition.h>
+#ifdef PetscFilter
+#include <Packages/Uintah/CCA/Components/Arches/Filter.h>
+#endif
 #include <Packages/Uintah/Core/Parallel/UintahParallelComponent.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Packages/Uintah/Core/Grid/VarLabel.h>
@@ -113,9 +117,17 @@ public:
       void sched_computeDenRefArrayInterm(SchedulerP&, const PatchSet* patches,
 				    const MaterialSet* matls);
       void sched_averageRKProps(SchedulerP&, const PatchSet* patches,
-				const MaterialSet* matls);
+				const MaterialSet* matls,
+				const int Runge_Kutta_current_step,
+				const bool Runge_Kutta_last_step);
       void sched_reComputeRKProps(SchedulerP&, const PatchSet* patches,
-				const MaterialSet* matls);
+				const MaterialSet* matls,
+				const int Runge_Kutta_current_step,
+				const bool Runge_Kutta_last_step);
+      void sched_computeDrhodt(SchedulerP& sched, const PatchSet* patches,
+				const MaterialSet* matls,
+				const int Runge_Kutta_current_step,
+				const bool Runge_Kutta_last_step);
 
 
       // GROUP: Get Methods :
@@ -140,6 +152,12 @@ public:
       inline void setBC(const BoundaryCondition* bc) {
 	d_bc = bc;
       }
+
+#ifdef PetscFilter
+      inline void setFilter(Filter* filter) {
+	d_filter = filter;
+      }
+#endif
 
 protected :
 
@@ -211,13 +229,25 @@ private:
 			  const PatchSubset* patches,
 			  const MaterialSubset* matls,
 			  DataWarehouse* old_dw,
-			  DataWarehouse* new_dw);
+			  DataWarehouse* new_dw,
+			  const int runge_kutta_current_step,
+			  const bool runge_kutta_last_step);
 
       void reComputeRKProps(const ProcessorGroup*,
 			  const PatchSubset* patches,
 			  const MaterialSubset* matls,
 			  DataWarehouse* old_dw,
-			  DataWarehouse* new_dw);
+			  DataWarehouse* new_dw,
+			  const int runge_kutta_current_step,
+			  const bool runge_kutta_last_step);
+
+      void computeDrhodt(const ProcessorGroup*,
+			  const PatchSubset* patches,
+			  const MaterialSubset* matls,
+			  DataWarehouse* old_dw,
+			  DataWarehouse* new_dw,
+			  const int runge_kutta_current_step,
+			  const bool runge_kutta_last_step);
 
       // GROUP: Constructors Not Instantiated:
       ///////////////////////////////////////////////////////////////////////
@@ -251,6 +281,9 @@ private:
       IntVector d_denRef;
       MixingModel* d_mixingModel;
       const BoundaryCondition* d_bc;
+#ifdef PetscFilter
+      Filter* d_filter;
+#endif
 }; // end class Properties
 } // End namespace Uintah
 

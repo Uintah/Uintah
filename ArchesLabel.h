@@ -742,7 +742,19 @@ namespace Uintah {
       const VarLabel* d_totalKineticEnergyLabel;
       const VarLabel* d_totalKineticEnergyPredLabel;
       const VarLabel* d_totalKineticEnergyIntermLabel;
+// mass balance labels for RK
+      const VarLabel* d_totalflowINPredLabel;
+      const VarLabel* d_totalflowOUTPredLabel;
+      const VarLabel* d_denAccumPredLabel;
+      const VarLabel* d_netflowOUTBCPredLabel;
+      const VarLabel* d_totalAreaOUTPredLabel;
+      const VarLabel* d_totalflowINIntermLabel;
+      const VarLabel* d_totalflowOUTIntermLabel;
+      const VarLabel* d_denAccumIntermLabel;
+      const VarLabel* d_netflowOUTBCIntermLabel;
+      const VarLabel* d_totalAreaOUTIntermLabel;
  
+      const VarLabel* d_oldDeltaTLabel;
     }; // End class ArchesLabel
 } // End namespace Uintah
 
