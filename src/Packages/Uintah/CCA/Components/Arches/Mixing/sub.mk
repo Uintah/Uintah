@@ -28,7 +28,6 @@ PSELIBS := \
 	Packages/Uintah/Core/Math          \
 	Core/Exceptions \
 	Core/Thread     \
-	Core/Datatypes  \
 	Core/Geometry   \
 	Dataflow/XMLUtil
 
