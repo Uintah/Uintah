@@ -32,7 +32,6 @@
 #define Geometry_Transform_h 1
 
 #include <Core/share/share.h>
-#include <Core/Geometry/Plane.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Persistent/Persistent.h>
@@ -42,7 +41,8 @@ namespace SCIRun {
 class Vector;
 class Point;
 class Quaternion;
-
+class Plane;
+  
 void SCICORESHARE Pio(Piostream&, Transform&);
 
 class SCICORESHARE Transform {
@@ -89,6 +89,7 @@ public:
   void post_shear(const Vector&, const Plane&);
   void pre_rotate(double, const Vector& axis);
   void post_rotate(double, const Vector& axis);
+  void rotate(const Vector& from, const Vector& to);
   void pre_translate(const Vector&);
   void post_translate(const Vector&);
 
@@ -96,6 +97,7 @@ public:
   Vector unproject(const Vector& p);
   Point project(const Point& p) const;
   Vector project(const Vector& p) const;
+  Vector project_normal(const Vector&) const;
   void get(double*) const;
   void get_trans(double*) const;
   void set(double*);
