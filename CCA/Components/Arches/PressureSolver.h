@@ -127,6 +127,18 @@ public:
       void sched_addHydrostaticTermtoPressure(SchedulerP& sched,
 					      const PatchSet* patches,
 					      const MaterialSet* matls);
+      
+      void solveInterm(const LevelP& level,
+		     SchedulerP&);
+   
+      ///////////////////////////////////////////////////////////////////////
+      // Schedule the build of the linearized eqn
+      void sched_buildLinearMatrixInterm(SchedulerP&, const PatchSet* patches,
+				   const MaterialSet* matls);
+ 
+      void sched_pressureLinearSolveInterm(const LevelP& level,
+				     SchedulerP& sched);
+
 
 protected:
 
@@ -236,6 +248,32 @@ private:
       void updatePressure(const ProcessorGroup* pc,
 			  const Patch* patch,
 			  ArchesVariables* vars);
+
+      void buildLinearMatrixInterm(const ProcessorGroup* pc,
+				 const PatchSubset* patches,
+				 const MaterialSubset* matls,
+				 DataWarehouse* new_dw,
+				 DataWarehouse* matrix_dw);
+
+      void buildLinearMatrixPressInterm(const ProcessorGroup* pc,
+				  const PatchSubset* patches,
+				  const MaterialSubset* matls,
+				  DataWarehouse* new_dw,
+				      DataWarehouse* matrix_dw);
+
+      void pressureLinearSolveInterm_all(const ProcessorGroup* pc,
+				   const PatchSubset* patches,
+                                   const MaterialSubset* matls,
+				   DataWarehouse* new_dw,
+				   DataWarehouse* matrix_dw);
+
+      void pressureLinearSolveInterm(const ProcessorGroup* pc,
+			       const Patch* patch,
+			       const int matlIndex,
+			       DataWarehouse* new_dw,
+			       DataWarehouse* matrix_dw,
+			       ArchesVariables& pressureVars);
+
 
   
 

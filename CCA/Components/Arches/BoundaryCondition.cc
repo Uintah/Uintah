@@ -784,7 +784,7 @@ BoundaryCondition::sched_setInletVelocityBC(SchedulerP& sched, const PatchSet* p
 		numGhostCells);
   // changes to make it work for the task graph
   tsk->requires(Task::NewDW, d_lab->d_densityINLabel,  
-		Ghost::AroundCells, numGhostCells+2);
+		Ghost::None, numGhostCells);
   tsk->requires(Task::NewDW, d_lab->d_uVelocityINLabel, Ghost::None,
 		numGhostCells);
   tsk->requires(Task::NewDW, d_lab->d_vVelocityINLabel, Ghost::None,
@@ -1560,7 +1560,9 @@ BoundaryCondition::uVelocityBC(const Patch* patch,
 			       ArchesVariables* vars)
 {
   int wall_celltypeval = d_wallBdry->d_cellTypeID;
-  int flow_celltypeval = d_flowfieldCellTypeVal;
+  int outlet_celltypeval = -10;
+  if (d_outletBoundary)
+    outlet_celltypeval = d_outletBC->d_cellTypeID;
   int press_celltypeval = d_pressureBdry->d_cellTypeID;
   // Get the low and high index for the patch and the variables
   IntVector idxLo = patch->getCellFORTLowIndex();
@@ -1594,7 +1596,7 @@ BoundaryCondition::uVelocityBC(const Patch* patch,
 	      vars->uVelocityConvectCoeff[Arches::AT],
 	      vars->uVelocityConvectCoeff[Arches::AB],
 	      vars->vVelocity, vars->wVelocity, idxLo, idxHi, vars->cellType,
-	      wall_celltypeval, flow_celltypeval, press_celltypeval, VISCOS,
+	      wall_celltypeval, outlet_celltypeval, press_celltypeval, VISCOS,
 	      cellinfo->sewu, cellinfo->sns, cellinfo->stb,
 	      cellinfo->yy, cellinfo->yv, cellinfo->zz, cellinfo->zw,
 	      xminus, xplus, yminus, yplus, zminus, zplus);
@@ -1635,7 +1637,9 @@ BoundaryCondition::vVelocityBC(const Patch* patch,
 			       ArchesVariables* vars)
 {
   int wall_celltypeval = d_wallBdry->d_cellTypeID;
-  int flow_celltypeval = d_flowfieldCellTypeVal;
+  int outlet_celltypeval = -10;
+  if (d_outletBoundary)
+    outlet_celltypeval = d_outletBC->d_cellTypeID;
   int press_celltypeval = d_pressureBdry->d_cellTypeID;
   // Get the low and high index for the patch and the variables
   IntVector idxLo = patch->getCellFORTLowIndex();
@@ -1667,7 +1671,7 @@ BoundaryCondition::vVelocityBC(const Patch* patch,
 	      vars->vVelocityConvectCoeff[Arches::AT],
 	      vars->vVelocityConvectCoeff[Arches::AB],
 	      vars->uVelocity, vars->wVelocity, idxLo, idxHi, vars->cellType,
-	      wall_celltypeval, flow_celltypeval, press_celltypeval, VISCOS,
+	      wall_celltypeval, outlet_celltypeval, press_celltypeval, VISCOS,
 	      cellinfo->sew, cellinfo->snsv, cellinfo->stb,
 	      cellinfo->xx, cellinfo->xu, cellinfo->zz, cellinfo->zw,
 	      xminus, xplus, yminus, yplus, zminus, zplus);
@@ -1708,7 +1712,9 @@ BoundaryCondition::wVelocityBC(const Patch* patch,
 			       ArchesVariables* vars)
 {
   int wall_celltypeval = d_wallBdry->d_cellTypeID;
-  int flow_celltypeval = d_flowfieldCellTypeVal;
+  int outlet_celltypeval = -10;
+  if (d_outletBoundary)
+    outlet_celltypeval = d_outletBC->d_cellTypeID;
   int press_celltypeval = d_pressureBdry->d_cellTypeID;
   // Get the low and high index for the patch and the variables
   IntVector idxLo = patch->getCellFORTLowIndex();
@@ -1739,7 +1745,7 @@ BoundaryCondition::wVelocityBC(const Patch* patch,
 	      vars->wVelocityConvectCoeff[Arches::AT],
 	      vars->wVelocityConvectCoeff[Arches::AB],
 	      vars->uVelocity, vars->vVelocity, idxLo, idxHi, vars->cellType,
-	      wall_celltypeval, flow_celltypeval, press_celltypeval, VISCOS,
+	      wall_celltypeval, outlet_celltypeval, press_celltypeval, VISCOS,
 	      cellinfo->sew, cellinfo->sns, cellinfo->stbw,
 	      cellinfo->xx, cellinfo->xu, cellinfo->yy, cellinfo->yv,
 	      xminus, xplus, yminus, yplus, zminus, zplus);
@@ -1869,6 +1875,8 @@ BoundaryCondition::scalarBC(const ProcessorGroup*,
   int symmetry_celltypeval = -3;
   int sfield = -4;
   int outletfield = -5;
+  if (d_outletBoundary)
+    outletfield = d_outletBC->d_cellTypeID;
   int ffield = -1;
   double fmixin = 0.0;
   bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;

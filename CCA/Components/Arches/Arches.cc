@@ -37,6 +37,13 @@
 #include <Core/Math/MinMax.h>
 #include <Core/Math/MiscMath.h>
 
+#ifdef Runge_Kutta_3d
+#ifndef Runge_Kutta_3d_ssp
+#include <Core/Math/Expon.h>
+#include <Core/Math/Trig.h>
+#endif
+#endif
+
 #include <iostream>
 using std::cerr;
 using std::endl;
@@ -328,6 +335,12 @@ Arches::computeStableTimeStep(const ProcessorGroup* ,
 	                  Abs(vVelocity[currCell])/(cellinfo->sns[colY])+
 	                  Abs(wVelocity[currCell])/(cellinfo->stb[colZ])+
 	                  small_num;
+#ifdef Runge_Kutta_3d
+#ifndef Runge_Kutta_3d_ssp
+          tmp_time *= Pi;
+          tmp_time /= Sqrt(3.0);
+#endif
+#endif
 	  delta_t2=Min(1.0/tmp_time, delta_t2);
 #if 0								  
 	  delta_t2=Min(Abs(cellinfo->sew[colX]/

@@ -27,6 +27,7 @@
 #include <Packages/Uintah/Core/Grid/VarTypes.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 
+
 using namespace Uintah;
 using namespace std;
 
@@ -468,10 +469,22 @@ void ScalarSolver::buildLinearMatrixPred(const ProcessorGroup* pc,
 #ifdef correctorstep
   delta_t /= 2.0;
 #endif
+#ifdef Runge_Kutta_2nd
+  delta_t *= 2.0; 
+#endif
+#ifdef Runge_Kutta_3d
+  double gamma_1 = 8.0/15.0;
+  delta_t *= 2.0; // since correctorstep is also defined for Runge-Kutta
+  delta_t *= gamma_1; 
+#ifdef Runge_Kutta_3d_ssp
+  delta_t /= gamma_1; 
+#endif
+#endif
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
-    int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+    int matlIndex = d_lab->d_sharedState->
+                    getArchesMaterial(archIndex)->getDWIndex(); 
     ArchesVariables scalarVars;
     int numGhostCells = 1;
     int zeroGhostCells = 0;
@@ -594,7 +607,7 @@ ScalarSolver::sched_scalarLinearSolvePred(SchedulerP& sched,
 
   // coefficient for the variable for which solve is invoked
   tsk->requires(Task::OldDW, d_lab->d_densityINLabel, 
-		Ghost::None, zeroGhostCells);
+  		Ghost::None, zeroGhostCells);
   tsk->requires(Task::NewDW, d_lab->d_densityINLabel, 
 		Ghost::AroundCells, numGhostCells+1);
   tsk->requires(Task::NewDW, d_lab->d_scalarOUTBCLabel, 
@@ -609,6 +622,13 @@ ScalarSolver::sched_scalarLinearSolvePred(SchedulerP& sched,
 #else
   tsk->computes(d_lab->d_scalarSPLabel);
 #endif
+  
+#ifdef Runge_Kutta_3d
+#ifndef Runge_Kutta_3d_ssp
+  tsk->computes(d_lab->d_scalarTempLabel);
+#endif
+#endif
+  
   sched->addTask(tsk, patches, matls);
 }
 //****************************************************************************
@@ -627,6 +647,17 @@ ScalarSolver::scalarLinearSolvePred(const ProcessorGroup* pc,
   double delta_t = delT;
 #ifdef correctorstep
   delta_t /= 2.0;
+#endif
+#ifdef Runge_Kutta_2nd
+  delta_t *= 2.0; 
+#endif
+#ifdef Runge_Kutta_3d
+  double gamma_1 = 8.0/15.0;
+  delta_t *= 2.0; // since correctorstep is also defined for Runge-Kutta
+  delta_t *= gamma_1; 
+#ifdef Runge_Kutta_3d_ssp
+  delta_t /= gamma_1; 
+#endif
 #endif
   
   for (int p = 0; p < patches->size(); p++) {
@@ -691,6 +722,36 @@ ScalarSolver::scalarLinearSolvePred(const ProcessorGroup* pc,
     cerr << "print scalar solve after predict" << endl;
     scalarVars.scalar.print(cerr);
 #endif
+
+#ifdef Runge_Kutta_3d
+#ifndef Runge_Kutta_3d_ssp
+    CCVariable<double> temp_scalar;
+    constCCVariable<double> old_density;
+
+    new_dw->get(old_density, d_lab->d_densityINLabel, 
+		matlIndex, patch, Ghost::None, zeroGhostCells);
+    new_dw->allocate(temp_scalar, d_lab->d_scalarTempLabel, matlIndex, patch);
+    temp_scalar.initialize(0.0);
+    
+    IntVector indexLow = patch->getCellFORTLowIndex();
+    IntVector indexHigh = patch->getCellFORTHighIndex();
+    
+    for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
+      for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
+        for (int colX = indexLow.x(); colX <= indexHigh.x(); colX ++) {
+
+            IntVector currCell(colX, colY, colZ);
+
+            temp_scalar[currCell] = old_density[currCell]*
+	    (scalarVars.scalar[currCell]-
+            scalarVars.old_scalar[currCell])/gamma_1;
+        }
+      }
+    }
+    new_dw->put(temp_scalar, d_lab->d_scalarTempLabel, matlIndex, patch);
+#endif
+#endif
+
 #ifdef correctorstep
     new_dw->put(scalarVars.scalar, d_lab->d_scalarPredLabel, 
                 matlIndex, patch);
@@ -698,6 +759,7 @@ ScalarSolver::scalarLinearSolvePred(const ProcessorGroup* pc,
     new_dw->put(scalarVars.scalar, d_lab->d_scalarSPLabel, 
                 matlIndex, patch);
 #endif
+
   }
 }
 
@@ -746,12 +808,34 @@ ScalarSolver::sched_buildLinearMatrixCorr(SchedulerP& sched,
   //DataWarehouseP old_dw = new_dw->getTop();
   tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel,
 		Ghost::AroundCells, numGhostCells);
+  #ifdef Runge_Kutta_3d
+//  tsk->requires(Task::NewDW, d_lab->d_scalarPredLabel,
+//		Ghost::AroundCells, numGhostCells);
+//  tsk->requires(Task::NewDW, d_lab->d_densityPredLabel, 
+//		Ghost::None, zeroGhostCells);
+  tsk->requires(Task::NewDW, d_lab->d_scalarIntermLabel,
+		Ghost::AroundCells, numGhostCells);
+  tsk->requires(Task::NewDW, d_lab->d_densityIntermLabel, 
+		Ghost::AroundCells, numGhostCells+1);
+  tsk->requires(Task::NewDW, d_lab->d_viscosityIntermLabel,
+		Ghost::AroundCells, numGhostCells);
+  tsk->requires(Task::NewDW, d_lab->d_uVelocityIntermLabel,
+		Ghost::AroundFaces, numGhostCells);
+  tsk->requires(Task::NewDW, d_lab->d_vVelocityIntermLabel,
+		Ghost::AroundFaces, numGhostCells);
+  tsk->requires(Task::NewDW, d_lab->d_wVelocityIntermLabel,
+		Ghost::AroundFaces, numGhostCells);
+  #else
+  #ifndef Runge_Kutta_2nd
+  //tsk->requires(Task::NewDW, d_lab->d_scalarINLabel,
+  //		Ghost::None, zeroGhostCells);
   tsk->requires(Task::NewDW, d_lab->d_scalarOUTBCLabel,
 		Ghost::None, zeroGhostCells);
-  tsk->requires(Task::NewDW, d_lab->d_scalarPredLabel,
-		Ghost::AroundCells, numGhostCells);
   tsk->requires(Task::NewDW, d_lab->d_densityINLabel, 
 		Ghost::None, zeroGhostCells);
+  #endif
+  tsk->requires(Task::NewDW, d_lab->d_scalarPredLabel,
+		Ghost::AroundCells, numGhostCells);
   tsk->requires(Task::NewDW, d_lab->d_densityPredLabel, 
 		Ghost::AroundCells, numGhostCells+1);
   tsk->requires(Task::NewDW, d_lab->d_viscosityPredLabel,
@@ -762,6 +846,7 @@ ScalarSolver::sched_buildLinearMatrixCorr(SchedulerP& sched,
 		Ghost::AroundFaces, numGhostCells);
   tsk->requires(Task::NewDW, d_lab->d_wVelocityPredLabel,
 		Ghost::AroundFaces, numGhostCells);
+  #endif
 
       // added one more argument of index to specify scalar component
   tsk->computes(d_lab->d_scalCoefCorrLabel, d_lab->d_stencilMatl,
@@ -788,6 +873,14 @@ void ScalarSolver::buildLinearMatrixCorr(const ProcessorGroup* pc,
   delt_vartype delT;
   old_dw->get(delT, d_lab->d_sharedState->get_delt_label() );
   double delta_t = delT;
+#ifdef Runge_Kutta_3d
+  double gamma_3 = 3.0/4.0;
+  delta_t *= gamma_3;
+#ifdef Runge_Kutta_3d_ssp
+  delta_t /= gamma_3;
+#endif
+#endif
+
   
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
@@ -814,26 +907,57 @@ void ScalarSolver::buildLinearMatrixCorr(const ProcessorGroup* pc,
     // from old_dw get PCELL, DENO, FO(index)
     new_dw->getCopy(scalarVars.cellType, d_lab->d_cellTypeLabel, 
 		matlIndex, patch, Ghost::AroundCells, numGhostCells);
+
+    // from new_dw get DEN, VIS, F(index), U, V, W
+  #ifdef Runge_Kutta_3d
+    // old_density and old_scalar for Runge-Kutta are NOT from initial timestep
+    // but from previous (Interm) time step
+    new_dw->getCopy(scalarVars.old_density, d_lab->d_densityIntermLabel, 
+		matlIndex, patch, Ghost::None, zeroGhostCells);
+    new_dw->getCopy(scalarVars.old_scalar, d_lab->d_scalarIntermLabel, 
+		matlIndex, patch, Ghost::None, zeroGhostCells);
+    new_dw->getCopy(scalarVars.density, d_lab->d_densityIntermLabel, 
+		matlIndex, patch, Ghost::AroundCells, numGhostCells);
+    new_dw->getCopy(scalarVars.viscosity, d_lab->d_viscosityIntermLabel, 
+		matlIndex, patch, Ghost::AroundCells, numGhostCells);
+    new_dw->getCopy(scalarVars.scalar, d_lab->d_scalarIntermLabel, 
+		matlIndex, patch, Ghost::None, zeroGhostCells);
+  #else
+  #ifdef Runge_Kutta_2nd
+    new_dw->getCopy(scalarVars.old_density, d_lab->d_densityPredLabel, 
+		matlIndex, patch, Ghost::None, zeroGhostCells);
+    new_dw->getCopy(scalarVars.old_scalar, d_lab->d_scalarPredLabel, 
+		matlIndex, patch, Ghost::None, zeroGhostCells);
+  #else
     // ***warning* 21st July changed from IN to Pred
     new_dw->getCopy(scalarVars.old_density, d_lab->d_densityINLabel, 
 		matlIndex, patch, Ghost::None, zeroGhostCells);
     new_dw->getCopy(scalarVars.old_scalar, d_lab->d_scalarOUTBCLabel, 
 		matlIndex, patch, Ghost::None, zeroGhostCells);
-
-    // from new_dw get DEN, VIS, F(index), U, V, W
+  #endif
     new_dw->getCopy(scalarVars.density, d_lab->d_densityPredLabel, 
 		matlIndex, patch, Ghost::AroundCells, numGhostCells);
     new_dw->getCopy(scalarVars.viscosity, d_lab->d_viscosityPredLabel, 
 		matlIndex, patch, Ghost::AroundCells, numGhostCells);
     new_dw->getCopy(scalarVars.scalar, d_lab->d_scalarPredLabel, 
 		matlIndex, patch, Ghost::None, zeroGhostCells);
+  #endif
     // for explicit get old values
+  #ifdef Runge_Kutta_3d
+    new_dw->getCopy(scalarVars.uVelocity, d_lab->d_uVelocityIntermLabel, 
+		matlIndex, patch, Ghost::AroundFaces, numGhostCells);
+    new_dw->getCopy(scalarVars.vVelocity, d_lab->d_vVelocityIntermLabel, 
+		matlIndex, patch, Ghost::AroundFaces, numGhostCells);
+    new_dw->getCopy(scalarVars.wVelocity, d_lab->d_wVelocityIntermLabel, 
+		matlIndex, patch, Ghost::AroundFaces, numGhostCells);
+  #else
     new_dw->getCopy(scalarVars.uVelocity, d_lab->d_uVelocityPredLabel, 
 		matlIndex, patch, Ghost::AroundFaces, numGhostCells);
     new_dw->getCopy(scalarVars.vVelocity, d_lab->d_vVelocityPredLabel, 
 		matlIndex, patch, Ghost::AroundFaces, numGhostCells);
     new_dw->getCopy(scalarVars.wVelocity, d_lab->d_wVelocityPredLabel, 
 		matlIndex, patch, Ghost::AroundFaces, numGhostCells);
+  #endif
 
   // allocate matrix coeffs
     for (int ii = 0; ii < d_lab->d_stencilMatl->size(); ii++) {
@@ -917,15 +1041,38 @@ ScalarSolver::sched_scalarLinearSolveCorr(SchedulerP& sched,
 
   // coefficient for the variable for which solve is invoked
   //***warning changed in to pred  
+  #ifdef Runge_Kutta_3d
+  tsk->requires(Task::NewDW, d_lab->d_densityIntermLabel, 
+		Ghost::None, zeroGhostCells);
+  tsk->requires(Task::NewDW, d_lab->d_scalarIntermLabel, 
+		Ghost::AroundCells, numGhostCells);
+  #ifndef Runge_Kutta_3d_ssp
+  tsk->requires(Task::NewDW, d_lab->d_scalarTempLabel, 
+		Ghost::None, zeroGhostCells);
+  #endif
+  #else
   tsk->requires(Task::NewDW, d_lab->d_densityPredLabel, 
 		Ghost::None, zeroGhostCells);
   tsk->requires(Task::NewDW, d_lab->d_scalarPredLabel, 
 		Ghost::AroundCells, numGhostCells);
+  #endif
   tsk->requires(Task::NewDW, d_lab->d_scalCoefCorrLabel, 
 		d_lab->d_stencilMatl, Task::OutOfDomain,
 		Ghost::None, zeroGhostCells);
   tsk->requires(Task::NewDW, d_lab->d_scalNonLinSrcCorrLabel, 
 		Ghost::None, zeroGhostCells);
+  #ifdef Runge_Kutta_2nd
+  tsk->requires(Task::NewDW, d_lab->d_scalarOUTBCLabel,
+		Ghost::None, zeroGhostCells);
+  tsk->requires(Task::NewDW, d_lab->d_densityINLabel, 
+		Ghost::None, zeroGhostCells);
+  #endif
+  #ifdef Runge_Kutta_3d_ssp
+  tsk->requires(Task::NewDW, d_lab->d_scalarOUTBCLabel,
+		Ghost::None, zeroGhostCells);
+  tsk->requires(Task::NewDW, d_lab->d_densityINLabel, 
+		Ghost::None, zeroGhostCells);
+  #endif
   tsk->computes(d_lab->d_scalarSPLabel);
   
   sched->addTask(tsk, patches, matls);
@@ -944,6 +1091,435 @@ ScalarSolver::scalarLinearSolveCorr(const ProcessorGroup* pc,
   delt_vartype delT;
   old_dw->get(delT, d_lab->d_sharedState->get_delt_label() );
   double delta_t = delT;
+#ifdef Runge_Kutta_3d
+  double gamma_3 = 3.0/4.0;
+  double zeta_2 = -5.0/12.0;
+  delta_t *= gamma_3;
+#ifdef Runge_Kutta_3d_ssp
+  delta_t /= gamma_3;
+#endif
+#endif
+  
+  for (int p = 0; p < patches->size(); p++) {
+    const Patch* patch = patches->get(p);
+    int archIndex = 0; // only one arches material
+    int matlIndex = d_lab->d_sharedState->
+                    getArchesMaterial(archIndex)->getDWIndex(); 
+    ArchesVariables scalarVars;
+    int numGhostCells = 1;
+    int zeroGhostCells = 0;
+    // Get the PerPatch CellInformation data
+    PerPatch<CellInformationP> cellInfoP;
+    // get old_dw from getTop function
+    // checkpointing
+    //  old_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
+    //  new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
+    //  old_dw->get(cellInfoP, d_cellInfoLabel, matlIndex, patch);
+    if (new_dw->exists(d_lab->d_cellInfoLabel, matlIndex, patch)) 
+      new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
+    else {
+      cellInfoP.setData(scinew CellInformation(patch));
+      new_dw->put(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
+    }
+    CellInformation* cellinfo = cellInfoP.get().get_rep();
+    // ***warning* 21st July changed from IN to Pred
+  #ifdef Runge_Kutta_3d
+    new_dw->getCopy(scalarVars.old_density, d_lab->d_densityIntermLabel, 
+		matlIndex, patch, Ghost::None, zeroGhostCells);
+  #else
+    new_dw->getCopy(scalarVars.old_density, d_lab->d_densityPredLabel, 
+		matlIndex, patch, Ghost::None, zeroGhostCells);
+  #endif
+    // for explicit calculation
+    {
+    new_dw->allocate(scalarVars.scalar, d_lab->d_scalarSPLabel, 
+		matlIndex, patch, Ghost::AroundCells, numGhostCells);
+  #ifdef Runge_Kutta_3d
+    new_dw->copyOut(scalarVars.scalar, d_lab->d_scalarIntermLabel, 
+		matlIndex, patch, Ghost::AroundCells, numGhostCells);
+  #else
+    new_dw->copyOut(scalarVars.scalar, d_lab->d_scalarPredLabel, 
+		matlIndex, patch, Ghost::AroundCells, numGhostCells);
+  #endif
+    }
+    scalarVars.old_scalar.allocate(scalarVars.scalar.getLowIndex(),
+				   scalarVars.scalar.getHighIndex());
+    scalarVars.old_scalar.copy(scalarVars.scalar);
+    
+    for (int ii = 0; ii < d_lab->d_stencilMatl->size(); ii++)
+      new_dw->getCopy(scalarVars.scalarCoeff[ii], d_lab->d_scalCoefCorrLabel, 
+		  ii, patch, Ghost::None, zeroGhostCells);
+    new_dw->getCopy(scalarVars.scalarNonlinearSrc, d_lab->d_scalNonLinSrcCorrLabel,
+		matlIndex, patch, Ghost::None, zeroGhostCells);
+    new_dw->allocate(scalarVars.residualScalar, d_lab->d_scalarRes,
+		     matlIndex, patch);
+  // apply underelax to eqn
+    d_linearSolver->computeScalarUnderrelax(pc, patch, index, 
+					    &scalarVars);
+    // make it a separate task later
+    d_linearSolver->scalarLisolve(pc, patch, index, delta_t, 
+				  &scalarVars, cellinfo, d_lab);
+  #ifdef Runge_Kutta_3d
+  #ifndef Runge_Kutta_3d_ssp
+    constCCVariable<double> temp_scalar;
+    constCCVariable<double> old_density;
+
+    new_dw->get(old_density, d_lab->d_densityIntermLabel, 
+		matlIndex, patch, Ghost::None, zeroGhostCells);
+    new_dw->get(temp_scalar, d_lab->d_scalarTempLabel,
+		matlIndex, patch, Ghost::None, zeroGhostCells);
+    
+    IntVector indexLow = patch->getCellFORTLowIndex();
+    IntVector indexHigh = patch->getCellFORTHighIndex();
+    
+    for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
+      for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
+        for (int colX = indexLow.x(); colX <= indexHigh.x(); colX ++) {
+
+            IntVector currCell(colX, colY, colZ);
+
+            scalarVars.scalar[currCell] += zeta_2*temp_scalar[currCell]/
+            old_density[currCell];
+            if (scalarVars.scalar[currCell] > 1.0) 
+		scalarVars.scalar[currCell] = 1.0;
+            else if (scalarVars.scalar[currCell] < 0.0)
+            	scalarVars.scalar[currCell] = 0.0;
+        }
+      }
+    }
+  #endif
+  #endif
+  #ifdef Runge_Kutta_2nd
+    constCCVariable<double> old_scalar;
+    constCCVariable<double> old_density;
+    constCCVariable<double> new_density;
+
+    new_dw->get(old_scalar, d_lab->d_scalarOUTBCLabel, 
+		matlIndex, patch, Ghost::None, zeroGhostCells);
+    new_dw->get(old_density, d_lab->d_densityINLabel, 
+		matlIndex, patch, Ghost::None, zeroGhostCells);
+    new_dw->get(new_density, d_lab->d_densityPredLabel, 
+		matlIndex, patch, Ghost::None, zeroGhostCells);
+    
+    IntVector indexLow = patch->getCellFORTLowIndex();
+    IntVector indexHigh = patch->getCellFORTHighIndex();
+    
+    for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
+      for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
+        for (int colX = indexLow.x(); colX <= indexHigh.x(); colX ++) {
+
+            IntVector currCell(colX, colY, colZ);
+
+            scalarVars.scalar[currCell] = (scalarVars.scalar[currCell]+
+            old_density[currCell]/new_density[currCell]*
+	    old_scalar[currCell])/2.0;
+            if (scalarVars.scalar[currCell] > 1.0) 
+		scalarVars.scalar[currCell] = 1.0;
+            else if (scalarVars.scalar[currCell] < 0.0)
+            	scalarVars.scalar[currCell] = 0.0;
+        }
+      }
+    }
+  #endif
+  #ifdef Runge_Kutta_3d_ssp
+    constCCVariable<double> old_scalar;
+    constCCVariable<double> old_density;
+    constCCVariable<double> new_density;
+
+    new_dw->get(old_scalar, d_lab->d_scalarOUTBCLabel, 
+		matlIndex, patch, Ghost::None, zeroGhostCells);
+    new_dw->get(old_density, d_lab->d_densityINLabel, 
+		matlIndex, patch, Ghost::None, zeroGhostCells);
+    new_dw->get(new_density, d_lab->d_densityIntermLabel, 
+		matlIndex, patch, Ghost::None, zeroGhostCells);
+    
+    IntVector indexLow = patch->getCellFORTLowIndex();
+    IntVector indexHigh = patch->getCellFORTHighIndex();
+    
+    for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
+      for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
+        for (int colX = indexLow.x(); colX <= indexHigh.x(); colX ++) {
+
+            IntVector currCell(colX, colY, colZ);
+
+            scalarVars.scalar[currCell] = (2.0*scalarVars.scalar[currCell]+
+            old_density[currCell]/new_density[currCell]*
+	    old_scalar[currCell])/3.0;
+            if (scalarVars.scalar[currCell] > 1.0) 
+		scalarVars.scalar[currCell] = 1.0;
+            else if (scalarVars.scalar[currCell] < 0.0)
+            	scalarVars.scalar[currCell] = 0.0;
+        }
+      }
+    }
+  #endif
+
+  // put back the results
+    new_dw->put(scalarVars.scalar, d_lab->d_scalarSPLabel, 
+		matlIndex, patch);
+  }
+}
+
+//****************************************************************************
+// Schedule solve of linearized scalar equation, intermediate step
+//****************************************************************************
+void 
+ScalarSolver::solveInterm(SchedulerP& sched,
+			const PatchSet* patches,
+			const MaterialSet* matls,
+			int index)
+{
+  //computes stencil coefficients and source terms
+  // requires : scalarIN, [u,v,w]VelocitySPBC, densityIN, viscosityIN
+  // computes : scalCoefSBLM, scalLinSrcSBLM, scalNonLinSrcSBLM
+  sched_buildLinearMatrixInterm(sched, patches, matls, index);
+  
+  // Schedule the scalar solve
+  // require : scalarIN, scalCoefSBLM, scalNonLinSrcSBLM
+  // compute : scalResidualSS, scalCoefSS, scalNonLinSrcSS, scalarSP
+  //d_linearSolver->sched_scalarSolve(level, sched, new_dw, matrix_dw, index);
+  sched_scalarLinearSolveInterm(sched, patches, matls, index);
+}
+
+//****************************************************************************
+// Schedule build of linear matrix
+//****************************************************************************
+void 
+ScalarSolver::sched_buildLinearMatrixInterm(SchedulerP& sched,
+					  const PatchSet* patches,
+					  const MaterialSet* matls,
+					  int index)
+{
+  Task* tsk = scinew Task("ScalarSolver::BuildCoeffInterm",
+			  this,
+			  &ScalarSolver::buildLinearMatrixInterm,
+			  index);
+
+  int numGhostCells = 1;
+  int zeroGhostCells = 0;
+
+  tsk->requires(Task::OldDW, d_lab->d_sharedState->get_delt_label());
+  
+  // This task requires scalar and density from old time step for transient
+  // calculation
+  //DataWarehouseP old_dw = new_dw->getTop();
+  tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel,
+		Ghost::AroundCells, numGhostCells);
+//  tsk->requires(Task::NewDW, d_lab->d_scalarOUTBCLabel,
+//		Ghost::AroundCells, numGhostCells);
+//  tsk->requires(Task::NewDW, d_lab->d_densityINLabel, 
+//		Ghost::None, zeroGhostCells);
+  tsk->requires(Task::NewDW, d_lab->d_scalarPredLabel,
+		Ghost::AroundCells, numGhostCells);
+  tsk->requires(Task::NewDW, d_lab->d_densityPredLabel, 
+		Ghost::AroundCells, numGhostCells+1);
+  tsk->requires(Task::NewDW, d_lab->d_viscosityPredLabel,
+		Ghost::AroundCells, numGhostCells);
+  tsk->requires(Task::NewDW, d_lab->d_uVelocityPredLabel,
+		Ghost::AroundFaces, numGhostCells);
+  tsk->requires(Task::NewDW, d_lab->d_vVelocityPredLabel,
+		Ghost::AroundFaces, numGhostCells);
+  tsk->requires(Task::NewDW, d_lab->d_wVelocityPredLabel,
+		Ghost::AroundFaces, numGhostCells);
+
+      // added one more argument of index to specify scalar component
+  tsk->computes(d_lab->d_scalCoefIntermLabel, d_lab->d_stencilMatl,
+		Task::OutOfDomain);
+  tsk->computes(d_lab->d_scalDiffCoefIntermLabel, d_lab->d_stencilMatl,
+		Task::OutOfDomain);
+  tsk->computes(d_lab->d_scalNonLinSrcIntermLabel);
+
+  sched->addTask(tsk, patches, matls);
+}
+
+      
+//****************************************************************************
+// Actually build linear matrix
+//****************************************************************************
+void ScalarSolver::buildLinearMatrixInterm(const ProcessorGroup* pc,
+					 const PatchSubset* patches,
+					 const MaterialSubset*,
+					 DataWarehouse* old_dw,
+					 DataWarehouse* new_dw,
+					 int index)
+{
+  delt_vartype delT;
+  old_dw->get(delT, d_lab->d_sharedState->get_delt_label() );
+  double delta_t = delT;
+  double gamma_2 = 5.0/12.0;
+  delta_t *= gamma_2; 
+  #ifdef Runge_Kutta_3d_ssp
+  delta_t /= gamma_2; 
+  #endif
+  
+  for (int p = 0; p < patches->size(); p++) {
+    const Patch* patch = patches->get(p);
+    int archIndex = 0; // only one arches material
+    int matlIndex = d_lab->d_sharedState->
+                    getArchesMaterial(archIndex)->getDWIndex(); 
+    ArchesVariables scalarVars;
+    int numGhostCells = 1;
+    int zeroGhostCells = 0;
+    
+    // Get the PerPatch CellInformation data
+    PerPatch<CellInformationP> cellInfoP;
+    // checkpointing
+    //  old_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
+    // new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
+    if (new_dw->exists(d_lab->d_cellInfoLabel, matlIndex, patch)) 
+      new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
+    else {
+      cellInfoP.setData(scinew CellInformation(patch));
+      new_dw->put(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
+    }
+    CellInformation* cellinfo = cellInfoP.get().get_rep();
+
+    // from old_dw get PCELL, DENO, FO(index)
+    new_dw->getCopy(scalarVars.cellType, d_lab->d_cellTypeLabel, 
+		matlIndex, patch, Ghost::AroundCells, numGhostCells);
+    // ***warning* 21st July changed from IN to Pred
+    new_dw->getCopy(scalarVars.old_density, d_lab->d_densityPredLabel, 
+		matlIndex, patch, Ghost::None, zeroGhostCells);
+    new_dw->getCopy(scalarVars.old_scalar, d_lab->d_scalarPredLabel, 
+		matlIndex, patch, Ghost::None, zeroGhostCells);
+
+    // from new_dw get DEN, VIS, F(index), U, V, W
+    new_dw->getCopy(scalarVars.density, d_lab->d_densityPredLabel, 
+		matlIndex, patch, Ghost::AroundCells, numGhostCells);
+    new_dw->getCopy(scalarVars.viscosity, d_lab->d_viscosityPredLabel, 
+		matlIndex, patch, Ghost::AroundCells, numGhostCells);
+    new_dw->getCopy(scalarVars.scalar, d_lab->d_scalarPredLabel, 
+		matlIndex, patch, Ghost::None, zeroGhostCells);
+    // for explicit get old values
+    new_dw->getCopy(scalarVars.uVelocity, d_lab->d_uVelocityPredLabel, 
+		matlIndex, patch, Ghost::AroundFaces, numGhostCells);
+    new_dw->getCopy(scalarVars.vVelocity, d_lab->d_vVelocityPredLabel, 
+		matlIndex, patch, Ghost::AroundFaces, numGhostCells);
+    new_dw->getCopy(scalarVars.wVelocity, d_lab->d_wVelocityPredLabel, 
+		matlIndex, patch, Ghost::AroundFaces, numGhostCells);
+
+  // allocate matrix coeffs
+    for (int ii = 0; ii < d_lab->d_stencilMatl->size(); ii++) {
+      new_dw->allocate(scalarVars.scalarCoeff[ii], 
+		       d_lab->d_scalCoefIntermLabel, ii, patch);
+      new_dw->allocate(scalarVars.scalarConvectCoeff[ii],
+		       d_lab->d_scalConvCoefIntermLabel, ii, patch);
+      new_dw->allocate(scalarVars.scalarDiffusionCoeff[ii],
+		       d_lab->d_scalDiffCoefIntermLabel, ii, patch);
+    }
+    new_dw->allocate(scalarVars.scalarLinearSrc, 
+		     d_lab->d_scalLinSrcIntermLabel, matlIndex, patch);
+    new_dw->allocate(scalarVars.scalarNonlinearSrc, 
+		     d_lab->d_scalNonLinSrcIntermLabel, matlIndex, patch);
+ 
+  // compute ith component of scalar stencil coefficients
+  // inputs : scalarSP, [u,v,w]VelocityMS, densityCP, viscosityCTS
+  // outputs: scalCoefSBLM
+    d_discretize->calculateScalarCoeff(pc, patch,
+				       delta_t, index, cellinfo, 
+				       &scalarVars);
+
+    // Calculate scalar source terms
+    // inputs : [u,v,w]VelocityMS, scalarSP, densityCP, viscosityCTS
+    // outputs: scalLinSrcSBLM, scalNonLinSrcSBLM
+    d_source->calculateScalarSource(pc, patch,
+				    delta_t, index, cellinfo, 
+				    &scalarVars );
+
+    // Calculate the scalar boundary conditions
+    // inputs : scalarSP, scalCoefSBLM
+    // outputs: scalCoefSBLM
+    d_boundaryCondition->scalarBC(pc, patch,  index, cellinfo, 
+				  &scalarVars);
+  // apply multimaterial intrusion wallbc
+    if (d_MAlab)
+      d_boundaryCondition->mmscalarWallBC(pc, patch, cellinfo,
+					  &scalarVars);
+
+    // similar to mascal
+    // inputs :
+    // outputs:
+    d_source->modifyScalarMassSource(pc, patch, delta_t, index, &scalarVars);
+    
+    // Calculate the scalar diagonal terms
+    // inputs : scalCoefSBLM, scalLinSrcSBLM
+    // outputs: scalCoefSBLM
+    d_discretize->calculateScalarDiagonal(pc, patch, index, &scalarVars);
+    for (int ii = 0; ii < d_lab->d_stencilMatl->size(); ii++) {
+      new_dw->put(scalarVars.scalarCoeff[ii], 
+		  d_lab->d_scalCoefIntermLabel, ii, patch);
+      new_dw->put(scalarVars.scalarDiffusionCoeff[ii],
+		  d_lab->d_scalDiffCoefIntermLabel, ii, patch);
+    }
+    new_dw->put(scalarVars.scalarNonlinearSrc, 
+		d_lab->d_scalNonLinSrcIntermLabel, matlIndex, patch);
+
+  }
+}
+
+
+//****************************************************************************
+// Schedule linear solve of scalar
+//****************************************************************************
+void
+ScalarSolver::sched_scalarLinearSolveInterm(SchedulerP& sched,
+					  const PatchSet* patches,
+					  const MaterialSet* matls,
+					  int index)
+{
+  Task* tsk = scinew Task("ScalarSolver::scalarLinearSolveInterm",
+			  this,
+			  &ScalarSolver::scalarLinearSolveInterm,
+			  index);
+  int numGhostCells = 1;
+  int zeroGhostCells = 0;
+  
+  tsk->requires(Task::OldDW, d_lab->d_sharedState->get_delt_label());
+
+  // coefficient for the variable for which solve is invoked
+  //***warning changed in to pred  
+  tsk->requires(Task::NewDW, d_lab->d_densityPredLabel, 
+		Ghost::None, zeroGhostCells);
+  tsk->requires(Task::NewDW, d_lab->d_scalarPredLabel, 
+		Ghost::AroundCells, numGhostCells);
+  tsk->requires(Task::NewDW, d_lab->d_scalCoefIntermLabel, 
+		d_lab->d_stencilMatl, Task::OutOfDomain,
+		Ghost::None, zeroGhostCells);
+  tsk->requires(Task::NewDW, d_lab->d_scalNonLinSrcIntermLabel, 
+		Ghost::None, zeroGhostCells);
+  #ifndef Runge_Kutta_3d_ssp
+  tsk->modifies(d_lab->d_scalarTempLabel);
+  #endif
+  #ifdef Runge_Kutta_3d_ssp
+  tsk->requires(Task::NewDW, d_lab->d_scalarOUTBCLabel,
+		Ghost::None, zeroGhostCells);
+  tsk->requires(Task::NewDW, d_lab->d_densityINLabel, 
+		Ghost::None, zeroGhostCells);
+  #endif
+  tsk->computes(d_lab->d_scalarIntermLabel);
+  
+  sched->addTask(tsk, patches, matls);
+}
+//****************************************************************************
+// Actual scalar solve .. may be changed after recursive tasks are added
+//****************************************************************************
+void 
+ScalarSolver::scalarLinearSolveInterm(const ProcessorGroup* pc,
+				const PatchSubset* patches,
+				const MaterialSubset*,
+				DataWarehouse* old_dw,
+				DataWarehouse* new_dw,
+				int index)
+{
+  delt_vartype delT;
+  old_dw->get(delT, d_lab->d_sharedState->get_delt_label() );
+  double delta_t = delT;
+  double gamma_2 = 5.0/12.0;
+  double zeta_1 = -17.0/60.0;
+  delta_t *= gamma_2; 
+  #ifdef Runge_Kutta_3d_ssp
+  delta_t /= gamma_2; 
+  #endif
   
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
@@ -972,7 +1548,7 @@ ScalarSolver::scalarLinearSolveCorr(const ProcessorGroup* pc,
 		matlIndex, patch, Ghost::None, zeroGhostCells);
     // for explicit calculation
     {
-    new_dw->allocate(scalarVars.scalar, d_lab->d_scalarSPLabel, 
+    new_dw->allocate(scalarVars.scalar, d_lab->d_scalarIntermLabel, 
 		matlIndex, patch, Ghost::AroundCells, numGhostCells);
     new_dw->copyOut(scalarVars.scalar, d_lab->d_scalarPredLabel, 
 		matlIndex, patch, Ghost::AroundCells, numGhostCells);
@@ -982,12 +1558,13 @@ ScalarSolver::scalarLinearSolveCorr(const ProcessorGroup* pc,
     scalarVars.old_scalar.copy(scalarVars.scalar);
     
     for (int ii = 0; ii < d_lab->d_stencilMatl->size(); ii++)
-      new_dw->getCopy(scalarVars.scalarCoeff[ii], d_lab->d_scalCoefCorrLabel, 
+      new_dw->getCopy(scalarVars.scalarCoeff[ii], d_lab->d_scalCoefIntermLabel, 
 		  ii, patch, Ghost::None, zeroGhostCells);
-    new_dw->getCopy(scalarVars.scalarNonlinearSrc, d_lab->d_scalNonLinSrcCorrLabel,
+    new_dw->getCopy(scalarVars.scalarNonlinearSrc, d_lab->d_scalNonLinSrcIntermLabel,
 		matlIndex, patch, Ghost::None, zeroGhostCells);
     new_dw->allocate(scalarVars.residualScalar, d_lab->d_scalarRes,
 		     matlIndex, patch);
+
   // apply underelax to eqn
     d_linearSolver->computeScalarUnderrelax(pc, patch, index, 
 					    &scalarVars);
@@ -995,8 +1572,74 @@ ScalarSolver::scalarLinearSolveCorr(const ProcessorGroup* pc,
     d_linearSolver->scalarLisolve(pc, patch, index, delta_t, 
 				  &scalarVars, cellinfo, d_lab);
 
-  // put back the results
-    new_dw->put(scalarVars.scalar, d_lab->d_scalarSPLabel, 
+  #ifndef Runge_Kutta_3d_ssp
+    CCVariable<double> temp_scalar;
+    constCCVariable<double> old_density;
+
+    new_dw->get(old_density, d_lab->d_densityPredLabel, 
+		matlIndex, patch, Ghost::None, zeroGhostCells);
+    new_dw->getModifiable(temp_scalar, d_lab->d_scalarTempLabel,
+                matlIndex, patch);
+    
+    IntVector indexLow = patch->getCellFORTLowIndex();
+    IntVector indexHigh = patch->getCellFORTHighIndex();
+    
+    for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
+      for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
+        for (int colX = indexLow.x(); colX <= indexHigh.x(); colX ++) {
+
+            IntVector currCell(colX, colY, colZ);
+
+            scalarVars.scalar[currCell] += zeta_1*temp_scalar[currCell]/
+            old_density[currCell];
+            temp_scalar[currCell] = old_density[currCell]*
+	    (scalarVars.scalar[currCell]-
+            scalarVars.old_scalar[currCell])/
+            gamma_2-zeta_1*temp_scalar[currCell]/gamma_2;
+            if (scalarVars.scalar[currCell] > 1.0) 
+		scalarVars.scalar[currCell] = 1.0;
+            else if (scalarVars.scalar[currCell] < 0.0)
+            	scalarVars.scalar[currCell] = 0.0;
+        }
+      }
+    } 
+//    new_dw->put(temp_scalar, d_lab->d_scalarTempLabel, matlIndex, patch);
+  #endif
+  #ifdef Runge_Kutta_3d_ssp
+    constCCVariable<double> old_scalar;
+    constCCVariable<double> old_density;
+    constCCVariable<double> new_density;
+
+    new_dw->get(old_scalar, d_lab->d_scalarOUTBCLabel, 
+		matlIndex, patch, Ghost::None, zeroGhostCells);
+    new_dw->get(old_density, d_lab->d_densityINLabel, 
+		matlIndex, patch, Ghost::None, zeroGhostCells);
+    new_dw->get(new_density, d_lab->d_densityPredLabel, 
+		matlIndex, patch, Ghost::None, zeroGhostCells);
+    
+    IntVector indexLow = patch->getCellFORTLowIndex();
+    IntVector indexHigh = patch->getCellFORTHighIndex();
+    
+    for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
+      for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
+        for (int colX = indexLow.x(); colX <= indexHigh.x(); colX ++) {
+
+            IntVector currCell(colX, colY, colZ);
+
+            scalarVars.scalar[currCell] = (scalarVars.scalar[currCell]+
+            old_density[currCell]/new_density[currCell]*
+	    3.0*old_scalar[currCell])/4.0;
+            if (scalarVars.scalar[currCell] > 1.0) 
+		scalarVars.scalar[currCell] = 1.0;
+            else if (scalarVars.scalar[currCell] < 0.0)
+            	scalarVars.scalar[currCell] = 0.0;
+        }
+      }
+    }
+  #endif
+  
+    // put back the results
+    new_dw->put(scalarVars.scalar, d_lab->d_scalarIntermLabel, 
 		matlIndex, patch);
   }
 }
