@@ -15,13 +15,19 @@ namespace Uintah {
     Sendlist(Sendlist* next, RefCounted* obj)
       : next(next), obj(obj)
     {}
+
+    // Sendlist is to be an AfterCommuncationHandler object for the
+    // MPI_CommunicationRecord template in MPIScheduler.cc.  The only task
+    // it needs to do to handle finished send requests is simply get deleted.
+    void finishedCommunication(MPI_Comm) {}
+
     ~Sendlist();
   };
 
   class  BufferInfo {
   public:
     BufferInfo();
-    ~BufferInfo();
+    virtual ~BufferInfo();
     int count() const;
     void get_type(void*&, int&, MPI_Datatype&);
 
@@ -34,6 +40,7 @@ namespace Uintah {
     BufferInfo(const BufferInfo&);
     BufferInfo& operator=(const BufferInfo&);
 
+  protected:
     Sendlist* sendlist;
     vector<void*> startbufs;
     vector<int> counts;
