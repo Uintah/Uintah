@@ -28,20 +28,19 @@
     </authors>
     <summary>
       <p>
-        StreamLines is used to visualize vector fields by generating
-	curves that interpolate the flow represented by the vectors in
-	a field. 
+        The StreamLines module visualizes vector fields by generating curves that interpolate the
+ flow of vectors in a Field. 
       </p>
     </summary>
     <description>
-      <p>
-        StreamLines generates, as output, curves that interpolate the flow
-	represented by the vectors in a field.  StreamLines takes two
-	arguments as input: a generic field of vectors (Flow Field)
-	and a field of scalars (Seeds).  Flow field and Seeds are both
-	required.  StreamLines outputs a CurveField (Streamlines)
-	that represents a collection of stream lines that interpolate
-	the Flow field.
+      <p> The first input port, Flow Field is a vector field that performs path integration for a seed point. 
+	The second input port, Seeds, is a field of scalars. The module requires use of both field inputs in order to execute.</p> 
+<p>The StreamLines module has one output, Streamlines, a CurveMesh, representing a collection of stream lines that interpolate
+	the Flow field.</p>
+
+<p>The StreamLines GUI includes text fields for Error Tolerance, Step Size, and Maximum Steps. The Error Tolerance text field represents the margin of error when calculating the stream lines. This module uses a numeric integration method, the fifth order Runge Kutte method, which takes a step, (based upon the Step Size indicated) examines the derivative at that point, and determines if a correction is necessary. This determination is based upon the Error Tolerance value. Maximum Steps represents the maximum number of iterations.</p>
+
+<p>The user can send particles in a negative or positive direction, or both directions, by changing the Direction radio buttons. The Color Style options are Constant and Increment, both of which manage data for a RescaleColorMap module.  By selecting Constant, the RescaleColorMap range will be from 0 to the number of seed points so that every stream line has one color value. The Increment option changes the color for each step of the stream line so that the section closest to the node has a lower color value. The Filter Colinear Points check box allows the user to eliminate points that exist on the same line, thus, improving efficiency when running the module.
       </p>
     </description>
   </overview>
@@ -82,7 +81,7 @@
         <name>Streamlines</name>
         <description>
           <p>
-            Streamlines is a CurveField&lt;double&gt;
+            Streamlines is a CurveMesh&lt;double&gt;
           </p>
         </description>
         <datatype>SCIRun::Field</datatype>
@@ -157,4 +156,10 @@
     </plan>
   </testing>
 </component>
+
+
+
+
+
+
 
