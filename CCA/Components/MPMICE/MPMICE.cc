@@ -1492,12 +1492,26 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
   //______________________________________________________________________
   // Done with preliminary calcs, now loop over every cell
     int count, test_max_iter = 0;
+    int num_bad_cells = 0;
+    double root_search_derivative;
     for (CellIterator iter = patch->getExtraCellIterator();!iter.done();iter++){
       IntVector c = *iter;  
       int i = c.x(), j = c.y(), k = c.z();
       double delPress = 0.;
       bool converged  = false;
       count           = 0;
+      //-------- Oren, better convergence criterion   10-AUG-2004 BEGIN --------
+      double vol_frac_not_close_packed = 1.0;                    // 1.0 is replaced everywhere by this constant
+      double sensitivity_criterion     = 10 * DBL_EPSILON;       // Threshold of root-search sensitivity
+      sum = 0.0;                                                 // Compute sum of volume fractions
+      for (int m = 0; m < numALLMatls; m++)  {
+        sum += vol_frac[m][c];
+      }
+      if (fabs(sum-vol_frac_not_close_packed) < convergence_crit) // Check the convergence factor
+	converged = true;                                         // before the loop. If ok, don't even
+                                                                  // enter it. Eliminates some potential
+                                                                  // Round-off errors.
+      //-------- Oren, better convergence criterion   10-AUG-2004 END   --------
       while ( count < d_ice->d_max_iter_equilibration && converged == false) {
         count++;
         double A = 0.;
@@ -1533,8 +1547,8 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
          B   +=  Q[m]/(y[m] + d_SMALL_NUM);
          C   +=  1.0/(y[m]  + d_SMALL_NUM);
        } 
-       double vol_frac_not_close_packed = 1.;
        delPress = (A - vol_frac_not_close_packed - B)/C;
+       root_search_derivative = C;
 
        press_new[c] += delPress;
 
@@ -1591,16 +1605,25 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
        }
        //__________________________________
        // - Test for convergence 
-       //  If sum of vol_frac_CC ~= 1.0 then converged 
+       //  If sum of vol_frac_CC ~= vol_frac_not_close_packed then converged 
        sum = 0.0;
        for (int m = 0; m < numALLMatls; m++)  {
          sum += vol_frac[m][c];
        }
-       if (fabs(sum-1.0) < convergence_crit)
+       if (fabs(sum-vol_frac_not_close_packed) < convergence_crit)
          converged = true;
      }   // end of converged
 
       delPress_tmp[c] = delPress;
+
+      //-------- Oren, better convergence criterion   10-AUG-2004 BEGIN --------
+      if ((fabs(root_search_derivative) < sensitivity_criterion*fabs(press_new[c])) // If |f'|/|p| < threshold
+	  && (num_bad_cells < 10)) {
+	cout << "Warning: computeEquilibrationPressure() might give inaccurate " \
+	  "pressure result for cell = " << c << " ; |derivative|/|p| = " << fabs(root_search_derivative)/fabs(press_new[c]) << endl;
+	num_bad_cells++;
+      }
+      //-------- Oren, better convergence criterion   10-AUG-2004 END   --------
 
      //__________________________________
      // If the pressure solution has stalled out 
@@ -1650,6 +1673,12 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
     }     // end of cell interator
 
     cout_norm<<"max number of iterations in any cell \t"<<test_max_iter<<endl;
+    //-------- Oren, better convergence criterion   10-AUG-2004 BEGIN --------
+    if (num_bad_cells > 0) {
+      cout << "Warning: computeEquilibrationPressure() might give inaccurate " \
+	"pressure result for " << num_bad_cells << endl;
+    }
+    //-------- Oren, better convergence criterion   10-AUG-2004 END   --------
 
     //__________________________________
     // Now change how rho_CC is defined to 
@@ -1698,6 +1727,19 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
     if(d_ice -> switchDebug_EQ_RF_press)  { 
       ostringstream desc1;
       desc1<< "BOT_equilibration_patch_"<<patch->getID();
+#if 0
+      // BEGIN Debug Oren & Randy 2-Aug-04
+      double diff = 0.0;
+      int count = 0;
+      for (CellIterator iter=patch->getExtraCellIterator();!iter.done();iter++){
+	IntVector c = *iter;
+	double temp = press_new[c] - press[c];
+	diff += abs(temp);
+	count++;
+      }
+      fprintf(stderr,"|New-Old|_L1 = %le\n",diff/count);
+      // END   Debug Oren & Randy 2-Aug-04
+
       d_ice->printData( 0, patch, 1, desc1.str(),"Press_CC_equil",press_new);
       d_ice->printData( 0, patch, 1, desc1.str(),"delPress",      delPress_tmp);
       for (int m = 0; m < numALLMatls; m++)  {
@@ -1709,6 +1751,7 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
          d_ice->printData(indx,patch,1,desc.str(),"rho_micro_CC",rho_micro[m]);
          d_ice->printData(indx,patch,1,desc.str(),"vol_frac_CC", vol_frac[m]);
       }
+#endif
     }
   }  //patches
 }
