@@ -16,6 +16,7 @@
 #include <Packages/Uintah/CCA/Components/Arches/ReactiveScalarSolver.h>
 #include <Packages/Uintah/CCA/Components/Arches/TurbulenceModel.h>
 #include <Packages/Uintah/CCA/Components/Arches/ScaleSimilarityModel.h>
+#include <Packages/Uintah/CCA/Components/Arches/TimeIntegratorLabel.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
 #include <Packages/Uintah/CCA/Ports/Scheduler.h>
 #include <Packages/Uintah/Core/Exceptions/InvalidValue.h>
@@ -118,6 +119,8 @@ ExplicitSolver::problemSetup(const ProblemSpecP& params)
 					 d_turbModel, d_boundaryCondition,
 					 d_physicalConsts);
     d_scalarSolver->problemSetup(db);
+    d_conv_scheme = d_scalarSolver->getConvectionSchemeType();
+    d_momSolver->setConvectionSchemeType(d_conv_scheme);
   }
   if (d_reactingScalarSolve) {
     d_reactingScalarSolver = scinew ReactiveScalarSolver(d_lab, d_MAlab,
@@ -131,6 +134,35 @@ ExplicitSolver::problemSetup(const ProblemSpecP& params)
 					     d_physicalConsts, d_myworld);
     d_enthalpySolver->problemSetup(db);
   }
+    db->getWithDefault("timeIntegratorType",d_timeIntegratorType,"FE");
+    
+    if (d_timeIntegratorType == "FE") {
+      d_timeIntegratorLabels.push_back(scinew TimeIntegratorLabel(d_lab,
+					TimeIntegratorStepType::FE));
+    }
+    else if (d_timeIntegratorType == "RK2") {
+      d_timeIntegratorLabels.push_back(scinew TimeIntegratorLabel(d_lab,
+					TimeIntegratorStepType::OldPredictor));
+      d_timeIntegratorLabels.push_back(scinew TimeIntegratorLabel(d_lab,
+					TimeIntegratorStepType::OldCorrector));
+    }
+    else if (d_timeIntegratorType == "RK2SSP") {
+      d_timeIntegratorLabels.push_back(scinew TimeIntegratorLabel(d_lab,
+					TimeIntegratorStepType::Predictor));
+      d_timeIntegratorLabels.push_back(scinew TimeIntegratorLabel(d_lab,
+					TimeIntegratorStepType::Corrector));
+    }
+    else if (d_timeIntegratorType == "RK3SSP") {
+      d_timeIntegratorLabels.push_back(scinew TimeIntegratorLabel(d_lab,
+					TimeIntegratorStepType::Predictor));
+      d_timeIntegratorLabels.push_back(scinew TimeIntegratorLabel(d_lab,
+					TimeIntegratorStepType::Intermediate));
+      d_timeIntegratorLabels.push_back(scinew TimeIntegratorLabel(d_lab,
+					TimeIntegratorStepType::CorrectorRK3));
+    }
+    else {
+      throw ProblemSetupException("Integrator type is not defined"+d_timeIntegratorType);
+    }
 }
 
 // ****************************************************************************
@@ -169,31 +201,9 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
 //  d_boundaryCondition->sched_computeOMB(sched, patches, matls);
 //  d_boundaryCondition->sched_transOutletBC(sched, patches, matls);
 //  d_boundaryCondition->sched_correctOutletBC(sched, patches, matls);
-  // compute apo and drhodt, used in transport equations
-  // put a logical to call computetranscoeff 
-  // using a predictor corrector approach from Najm [1998]
-  // compute df/dt|n using old values of u,v,w
-  // use Adams-Bashforth time integration to compute predicted f*
-  // using f* from equation of state compute den* (predicted value)
-  // equation for scalars
-  // require : scalarIN, [u,v,w]VelocitySPBC, densityIN, viscosityIN (new_dw)
-  //           scalarSP, densityCP (old_dw)
-  // compute : scalarCoefSBLM, scalarLinSrcSBLM, scalarNonLinSrcSBLM
-  //           scalResidualSS, scalCoefSS, scalNonLinSrcSS, scalarSS
-  // compute drhophidt, compute dphidt and using both of them compute
-  // compute drhodt
 
-  int Runge_Kutta_current_step;
-  bool Runge_Kutta_last_step;
-
-  Runge_Kutta_current_step = Arches::FIRST;
-  #ifdef correctorstep
-    Runge_Kutta_last_step = false;
-  #else
-    Runge_Kutta_last_step = true;
-  #endif
-
-  // check if filter is defined...only required if using dynamic or scalesimilarity models
+  // check if filter is defined...only required if using dynamic
+  // or scalesimilarity models
 #ifdef PetscFilter
   if (d_turbModel->getFilter()) {
     // if the matrix is not initialized
@@ -205,296 +215,105 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
 #endif
   }
 #endif
-  for (int index = 0;index < nofScalars; index ++) {
-    // in this case we're only solving for one scalar...but
-    // the same subroutine can be used to solve multiple scalars
-    d_scalarSolver->solvePred(sched, patches, matls, index);
-  }
-  if (d_reactingScalarSolver) {
-    int index = 0;
-    // in this case we're only solving for one scalar...but
-    // the same subroutine can be used to solve multiple scalars
-    d_reactingScalarSolver->solvePred(sched, patches, matls, index);
-  }
 
-  if (nofScalarVars > 0) {
-    for (int index = 0;index < nofScalarVars; index ++) {
-      // in this case we're only solving for one scalarVar...but
-      // the same subroutine can be used to solve multiple scalarVars
-      d_turbModel->sched_computeScalarVariance(sched, patches, matls,
-			Runge_Kutta_current_step, Runge_Kutta_last_step);
+  int numTimeIntegratorLevels;
+  if (d_timeIntegratorType == "FE")
+    numTimeIntegratorLevels = 1;
+  else if ((d_timeIntegratorType == "RK2")||(d_timeIntegratorType == "RK2SSP"))
+    numTimeIntegratorLevels = 2;
+  else if (d_timeIntegratorType == "RK3SSP")
+    numTimeIntegratorLevels = 3;
+
+  for (int curr_level = 0; curr_level < numTimeIntegratorLevels; curr_level ++)
+  {
+
+    for (int index = 0;index < nofScalars; index ++) {
+    // in this case we're only solving for one scalar...but
+    // the same subroutine can be used to solve multiple scalars
+      d_scalarSolver->solve(sched, patches, matls, 
+			    d_timeIntegratorLabels[curr_level], index);
     }
+
+    if (d_reactingScalarSolver) {
+      int index = 0;
+      // in this case we're only solving for one scalar...but
+      // the same subroutine can be used to solve multiple scalars
+      d_reactingScalarSolver->solve(sched, patches, matls,
+				    d_timeIntegratorLabels[curr_level], index);
+    }
+
+    if (d_enthalpySolve)
+      d_enthalpySolver->solve(level, sched, patches, matls,
+			      d_timeIntegratorLabels[curr_level]);
+
+    if (nofScalarVars > 0) {
+      for (int index = 0;index < nofScalarVars; index ++) {
+        // in this case we're only solving for one scalarVar...but
+        // the same subroutine can be used to solve multiple scalarVars
+        d_turbModel->sched_computeScalarVariance(sched, patches, matls,
+					   d_timeIntegratorLabels[curr_level]);
+      }
     d_turbModel->sched_computeScalarDissipation(sched, patches, matls,
-			Runge_Kutta_current_step, Runge_Kutta_last_step);
-  }
-
-  if (d_enthalpySolve)
-    d_enthalpySolver->solvePred(level, sched, patches, matls);
-
-  #ifdef correctorstep
-    d_props->sched_computePropsPred(sched, patches, matls);
-    d_props->sched_computeDenRefArrayPred(sched, patches, matls);
-  #else
-    d_props->sched_reComputeProps(sched, patches, matls);
-    d_props->sched_computeDenRefArray(sched, patches, matls);
-  #endif
-
-  // linearizes and solves pressure eqn
-  // require : pressureIN, densityIN, viscosityIN,
-  //           [u,v,w]VelocitySIVBC (new_dw)
-  //           [u,v,w]VelocitySPBC, densityCP (old_dw)
-  // compute : [u,v,w]VelConvCoefPBLM, [u,v,w]VelCoefPBLM, 
-  //           [u,v,w]VelLinSrcPBLM, [u,v,w]VelNonLinSrcPBLM, (matrix_dw)
-  //           presResidualPS, presCoefPBLM, presNonLinSrcPBLM,(matrix_dw)
-  //           pressurePS (new_dw)
-  // first computes, hatted velocities and then computes the pressure poisson equation
-  d_momSolver->solveVelHatPred(level, sched,
-			       Runge_Kutta_current_step, Runge_Kutta_last_step);
-
-  d_props->sched_computeDrhodt(sched, patches, matls,
-			Runge_Kutta_current_step, Runge_Kutta_last_step);
-
-  d_pressSolver->solvePred(level, sched,
-			Runge_Kutta_current_step, Runge_Kutta_last_step);
-  // Momentum solver
-  // require : pressureSPBC, [u,v,w]VelocityCPBC, densityIN, 
-  // viscosityIN (new_dw)
-  //           [u,v,w]VelocitySPBC, densityCP (old_dw)
-  // compute : [u,v,w]VelCoefPBLM, [u,v,w]VelConvCoefPBLM
-  //           [u,v,w]VelLinSrcPBLM, [u,v,w]VelNonLinSrcPBLM
-  //           [u,v,w]VelResidualMS, [u,v,w]VelCoefMS, 
-  //           [u,v,w]VelNonLinSrcMS, [u,v,w]VelLinSrcMS,
-  //           [u,v,w]VelocitySPBC
-  
-  // project velocities using the projection step
-  for (int index = 1; index <= Arches::NDIM; ++index) {
-    d_momSolver->solvePred(sched, patches, matls, index);
-  }
-  d_boundaryCondition->sched_getFlowINOUT(sched, patches, matls,
-			Runge_Kutta_current_step, Runge_Kutta_last_step);
-  d_boundaryCondition->sched_correctVelocityOutletBC(sched, patches, matls,
-			Runge_Kutta_current_step, Runge_Kutta_last_step);
-  
-  #ifdef correctorstep
-//    d_boundaryCondition->sched_predcomputePressureBC(sched, patches, matls);
-  // Schedule an interpolation of the face centered velocity data 
-    sched_interpolateFromFCToCCPred(sched, patches, matls);
-  #else
-//    d_boundaryCondition->sched_lastcomputePressureBC(sched, patches, matls);
-  // Schedule an interpolation of the face centered velocity data 
-    sched_interpolateFromFCToCC(sched, patches, matls);
-  #endif
-    d_turbModel->sched_reComputeTurbSubmodel(sched, patches, matls,
-			Runge_Kutta_current_step, Runge_Kutta_last_step);
-
-    sched_printTotalKE(sched, patches, matls, Runge_Kutta_current_step,
-		       Runge_Kutta_last_step);
-
-  #ifdef Runge_Kutta_3d
-    // intermediate step for 3d order Runge-Kutta method
-    Runge_Kutta_current_step = Arches::SECOND;
-    Runge_Kutta_last_step = false;
-    for (int index = 0;index < nofScalars; index ++) {
-      // in this case we're only solving for one scalar...but
-      // the same subroutine can be used to solve multiple scalars
-      d_scalarSolver->solveInterm(sched, patches, matls, index);
+					   d_timeIntegratorLabels[curr_level]);
     }
-    if (d_reactingScalarSolver) {
-      int index = 0;
-      // in this case we're only solving for one scalar...but
-      // the same subroutine can be used to solve multiple scalars
-      d_reactingScalarSolver->solveInterm(sched, patches, matls, index);
-    }
-    if (nofScalarVars > 0) {
-      for (int index = 0;index < nofScalarVars; index ++) {
-      // in this case we're only solving for one scalarVar...but
-      // the same subroutine can be used to solve multiple scalarVars
-        d_turbModel->sched_computeScalarVariance(sched, patches, matls,
-			Runge_Kutta_current_step, Runge_Kutta_last_step);
-      }
-      d_turbModel->sched_computeScalarDissipation(sched, patches, matls,
-			Runge_Kutta_current_step, Runge_Kutta_last_step);
-    }
-    if (d_enthalpySolve)
-      d_enthalpySolver->solveInterm(level, sched, patches, matls);
-    // same as corrector
-    // Underrelaxation for density is done with initial density, not with
-    // density from the previous substep
-    d_props->sched_computePropsInterm(sched, patches, matls);
-    d_props->sched_computeDenRefArrayInterm(sched, patches, matls);
+
+    d_props->sched_reComputeProps(sched, patches, matls,
+				  d_timeIntegratorLabels[curr_level], false);
+    d_props->sched_computeDenRefArray(sched, patches, matls,
+				      d_timeIntegratorLabels[curr_level]);
 
     // linearizes and solves pressure eqn
-    // require : pressureIN, densityIN, viscosityIN,
-    //           [u,v,w]VelocitySIVBC (new_dw)
-    //           [u,v,w]VelocitySPBC, densityCP (old_dw)
-    // compute : [u,v,w]VelConvCoefPBLM, [u,v,w]VelCoefPBLM, 
-    //           [u,v,w]VelLinSrcPBLM, [u,v,w]VelNonLinSrcPBLM, (matrix_dw)
-    //           presResidualPS, presCoefPBLM, presNonLinSrcPBLM,(matrix_dw)
-    //           pressurePS (new_dw)
-    // first computes, hatted velocities and then computes the pressure 
-    // poisson equation
+    // first computes, hatted velocities and then computes
+    // the pressure poisson equation
+    d_momSolver->solveVelHat(level, sched, d_timeIntegratorLabels[curr_level]);
 
-    d_momSolver->solveVelHatInterm(level, sched,
-			   Runge_Kutta_current_step, Runge_Kutta_last_step);
-  #ifdef Runge_Kutta_3d_ssp
-    d_props->sched_averageRKProps(sched, patches, matls,
-			   Runge_Kutta_current_step, Runge_Kutta_last_step);
-    d_props->sched_reComputeRKProps(sched, patches, matls,
-			   Runge_Kutta_current_step, Runge_Kutta_last_step);
-    if (nofScalarVars > 0) {
-      for (int index = 0;index < nofScalarVars; index ++) {
-      // in this case we're only solving for one scalarVar...but
-      // the same subroutine can be used to solve multiple scalarVars
-        d_turbModel->sched_computeScalarVariance(sched, patches, matls,
-			Runge_Kutta_current_step, Runge_Kutta_last_step);
+    // averaging for RKSSP
+    if ((curr_level>0)&&(!(d_timeIntegratorType == "RK2"))) {
+      d_props->sched_averageRKProps(sched, patches, matls,
+			   	    d_timeIntegratorLabels[curr_level]);
+      d_props->sched_saveRho2Density(sched, patches, matls,
+			   	     d_timeIntegratorLabels[curr_level]);
+      d_props->sched_reComputeProps(sched, patches, matls,
+				    d_timeIntegratorLabels[curr_level], true);
+      if (nofScalarVars > 0) {
+        for (int index = 0;index < nofScalarVars; index ++) {
+        // in this case we're only solving for one scalarVar...but
+        // the same subroutine can be used to solve multiple scalarVars
+          d_turbModel->sched_computeScalarVariance(sched, patches, matls,
+					    d_timeIntegratorLabels[curr_level]);
+        }
+        d_turbModel->sched_computeScalarDissipation(sched, patches, matls,
+					    d_timeIntegratorLabels[curr_level]);
       }
-      d_turbModel->sched_computeScalarDissipation(sched, patches, matls,
-			Runge_Kutta_current_step, Runge_Kutta_last_step);
+      d_momSolver->sched_averageRKHatVelocities(sched, patches, matls,
+					    d_timeIntegratorLabels[curr_level]);
     }
-    d_momSolver->sched_averageRKHatVelocities(sched, patches, matls,
-			Runge_Kutta_current_step, Runge_Kutta_last_step);
-  #endif
 
     d_props->sched_computeDrhodt(sched, patches, matls,
-			Runge_Kutta_current_step, Runge_Kutta_last_step);
+				 d_timeIntegratorLabels[curr_level]);
 
-    d_pressSolver->solveInterm(level, sched,
-			Runge_Kutta_current_step, Runge_Kutta_last_step);
-    // Momentum solver
-    // require : pressureSPBC, [u,v,w]VelocityCPBC, densityIN, 
-    // viscosityIN (new_dw)
-    //           [u,v,w]VelocitySPBC, densityCP (old_dw)
-    // compute : [u,v,w]VelCoefPBLM, [u,v,w]VelConvCoefPBLM
-    //           [u,v,w]VelLinSrcPBLM, [u,v,w]VelNonLinSrcPBLM
-    //           [u,v,w]VelResidualMS, [u,v,w]VelCoefMS, 
-    //           [u,v,w]VelNonLinSrcMS, [u,v,w]VelLinSrcMS,
-    //           [u,v,w]VelocitySPBC
+    d_pressSolver->solve(level, sched, d_timeIntegratorLabels[curr_level]);
   
     // project velocities using the projection step
     for (int index = 1; index <= Arches::NDIM; ++index) {
-      d_momSolver->solveInterm(sched, patches, matls, index);
+      d_momSolver->solve(sched, patches, matls,
+			 d_timeIntegratorLabels[curr_level], index);
     }
+
     d_boundaryCondition->sched_getFlowINOUT(sched, patches, matls,
-			Runge_Kutta_current_step, Runge_Kutta_last_step);
+					    d_timeIntegratorLabels[curr_level]);
     d_boundaryCondition->sched_correctVelocityOutletBC(sched, patches, matls,
-			Runge_Kutta_current_step, Runge_Kutta_last_step);
+					    d_timeIntegratorLabels[curr_level]);
   
-//    d_boundaryCondition->sched_intermcomputePressureBC(sched, patches, matls);
-  // Schedule an interpolation of the face centered velocity data 
-    sched_interpolateFromFCToCCInterm(sched, patches, matls);
+    // Schedule an interpolation of the face centered velocity data 
+    sched_interpolateFromFCToCC(sched, patches, matls,
+				d_timeIntegratorLabels[curr_level]);
     d_turbModel->sched_reComputeTurbSubmodel(sched, patches, matls,
-			Runge_Kutta_current_step, Runge_Kutta_last_step);
+					    d_timeIntegratorLabels[curr_level]);
 
-    sched_printTotalKE(sched, patches, matls, Runge_Kutta_current_step,
-		       Runge_Kutta_last_step);
-  #endif
-
-  #ifdef correctorstep
-    // corrected step
-    #ifdef Runge_Kutta_3d
-       Runge_Kutta_current_step = Arches::THIRD;
-    #else
-       Runge_Kutta_current_step = Arches::SECOND;
-    #endif
-    Runge_Kutta_last_step = true;
-    for (int index = 0;index < nofScalars; index ++) {
-      // in this case we're only solving for one scalar...but
-      // the same subroutine can be used to solve multiple scalars
-      d_scalarSolver->solveCorr(sched, patches, matls, index);
-    }
-    if (d_reactingScalarSolver) {
-      int index = 0;
-      // in this case we're only solving for one scalar...but
-      // the same subroutine can be used to solve multiple scalars
-      d_reactingScalarSolver->solveCorr(sched, patches, matls, index);
-    }
-
-    if (nofScalarVars > 0) {
-      for (int index = 0;index < nofScalarVars; index ++) {
-      // in this case we're only solving for one scalarVar...but
-      // the same subroutine can be used to solve multiple scalarVars
-        d_turbModel->sched_computeScalarVariance(sched, patches, matls,
-			Runge_Kutta_current_step, Runge_Kutta_last_step);
-      }
-      d_turbModel->sched_computeScalarDissipation(sched, patches, matls,
-			Runge_Kutta_current_step, Runge_Kutta_last_step);
-    }
-    if (d_enthalpySolve)
-      d_enthalpySolver->solveCorr(level, sched, patches, matls);
-    // same as corrector
-    // Underrelaxation for density is done with initial density, not with
-    // density from the previous substep
-    d_props->sched_reComputeProps(sched, patches, matls);
-    d_props->sched_computeDenRefArray(sched, patches, matls);
-
-    // linearizes and solves pressure eqn
-    // require : pressureIN, densityIN, viscosityIN,
-    //           [u,v,w]VelocitySIVBC (new_dw)
-    //           [u,v,w]VelocitySPBC, densityCP (old_dw)
-    // compute : [u,v,w]VelConvCoefPBLM, [u,v,w]VelCoefPBLM, 
-    //           [u,v,w]VelLinSrcPBLM, [u,v,w]VelNonLinSrcPBLM, (matrix_dw)
-    //           presResidualPS, presCoefPBLM, presNonLinSrcPBLM,(matrix_dw)
-    //           pressurePS (new_dw)
-    // first computes, hatted velocities and then computes the pressure 
-    // poisson equation
-    d_momSolver->solveVelHatCorr(level, sched,
-			   Runge_Kutta_current_step, Runge_Kutta_last_step);
-  #ifdef Runge_Kutta_2nd
-    d_props->sched_averageRKProps(sched, patches, matls,
-			   Runge_Kutta_current_step, Runge_Kutta_last_step);
-    d_props->sched_reComputeRKProps(sched, patches, matls,
-			   Runge_Kutta_current_step, Runge_Kutta_last_step);
-    if (nofScalarVars > 0) {
-      for (int index = 0;index < nofScalarVars; index ++) {
-      // in this case we're only solving for one scalarVar...but
-      // the same subroutine can be used to solve multiple scalarVars
-        d_turbModel->sched_computeScalarVariance(sched, patches, matls,
-			Runge_Kutta_current_step, Runge_Kutta_last_step);
-      }
-      d_turbModel->sched_computeScalarDissipation(sched, patches, matls,
-			Runge_Kutta_current_step, Runge_Kutta_last_step);
-    }
-    d_momSolver->sched_averageRKHatVelocities(sched, patches, matls,
-			Runge_Kutta_current_step, Runge_Kutta_last_step);
-  #endif
-
-    d_props->sched_computeDrhodt(sched, patches, matls,
-			Runge_Kutta_current_step, Runge_Kutta_last_step);
-
-    d_pressSolver->solveCorr(level, sched,
-			Runge_Kutta_current_step, Runge_Kutta_last_step);
-    // Momentum solver
-    // require : pressureSPBC, [u,v,w]VelocityCPBC, densityIN, 
-    // viscosityIN (new_dw)
-    //           [u,v,w]VelocitySPBC, densityCP (old_dw)
-    // compute : [u,v,w]VelCoefPBLM, [u,v,w]VelConvCoefPBLM
-    //           [u,v,w]VelLinSrcPBLM, [u,v,w]VelNonLinSrcPBLM
-    //           [u,v,w]VelResidualMS, [u,v,w]VelCoefMS, 
-    //           [u,v,w]VelNonLinSrcMS, [u,v,w]VelLinSrcMS,
-    //           [u,v,w]VelocitySPBC
-  
-    // project velocities using the projection step
-    for (int index = 1; index <= Arches::NDIM; ++index) {
-      d_momSolver->solveCorr(sched, patches, matls, index);
-    }
-    d_boundaryCondition->sched_getFlowINOUT(sched, patches, matls,
-			Runge_Kutta_current_step, Runge_Kutta_last_step);
-    d_boundaryCondition->sched_correctVelocityOutletBC(sched, patches, matls,
-			Runge_Kutta_current_step, Runge_Kutta_last_step);
-    // if external boundary then recompute velocities using new pressure
-    // and puts them in nonlinear_dw
-    // require : densityCP, pressurePS, [u,v,w]VelocitySIVBC
-    // compute : [u,v,w]VelocityCPBC, pressureSPBC
-  
-//    d_boundaryCondition->sched_lastcomputePressureBC(sched, patches, matls);
-  // Schedule an interpolation of the face centered velocity data 
-    sched_interpolateFromFCToCC(sched, patches, matls);
-    d_turbModel->sched_reComputeTurbSubmodel(sched, patches, matls,
-			Runge_Kutta_current_step, Runge_Kutta_last_step);
-
-    sched_printTotalKE(sched, patches, matls, Runge_Kutta_current_step,
-		       Runge_Kutta_last_step);
-  #endif
+    sched_printTotalKE(sched, patches, matls,
+		       d_timeIntegratorLabels[curr_level]);
+  }
 
   // print information at probes provided in input file
   if (d_probe_data)
@@ -515,15 +334,9 @@ int ExplicitSolver::noSolve(const LevelP& level,
   const PatchSet* patches = level->eachPatch();
   const MaterialSet* matls = d_lab->d_sharedState->allArchesMaterials();
 
-  int Runge_Kutta_current_step;
-  bool Runge_Kutta_last_step;
-
-  Runge_Kutta_current_step = Arches::FIRST;
-  #ifdef correctorstep
-    Runge_Kutta_last_step = false;
-  #else
-    Runge_Kutta_last_step = true;
-  #endif
+  // use FE timelabels for nosolve
+  TimeIntegratorLabel* nosolve_timelabels = scinew TimeIntegratorLabel(d_lab,
+					    TimeIntegratorStepType::FE);
 
   //initializes and allocates vars for new_dw
   // set initial guess
@@ -539,15 +352,14 @@ int ExplicitSolver::noSolve(const LevelP& level,
   sched_dummySolve(sched, patches, matls);
 
   d_turbModel->sched_reComputeTurbSubmodel(sched, patches, matls,
-					   Runge_Kutta_current_step, 
-					   Runge_Kutta_last_step);
+					   nosolve_timelabels);
   
   d_pressSolver->sched_addHydrostaticTermtoPressure(sched, patches, matls);
  
   // Schedule an interpolation of the face centered velocity data 
   // to a cell centered vector for used by the viz tools
 
-  sched_interpolateFromFCToCC(sched, patches, matls);
+  sched_interpolateFromFCToCC(sched, patches, matls, nosolve_timelabels);
   
   // print information at probes provided in input file
 
@@ -722,47 +534,226 @@ ExplicitSolver::sched_dummySolve(SchedulerP& sched,
 void 
 ExplicitSolver::sched_interpolateFromFCToCC(SchedulerP& sched, 
 					    const PatchSet* patches,
-					    const MaterialSet* matls)
+					    const MaterialSet* matls,
+				         const TimeIntegratorLabel* timelabels)
 {
-  Task* tsk = scinew Task( "ExplicitSolver::interpFCToCC",
-			   this, &ExplicitSolver::interpolateFromFCToCC);
+  string taskname =  "ExplicitSolver::interpFCToCC" +
+		     timelabels->integrator_step_name;
+  Task* tsk = scinew Task(taskname, this, 
+			 &ExplicitSolver::interpolateFromFCToCC, timelabels);
 
+  if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
   tsk->requires(Task::NewDW, d_lab->d_uVelocityINLabel,
 		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
   tsk->requires(Task::NewDW, d_lab->d_vVelocityINLabel, 
                 Ghost::AroundFaces, Arches::ONEGHOSTCELL);
   tsk->requires(Task::NewDW, d_lab->d_wVelocityINLabel, 
 		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-  tsk->requires(Task::NewDW, d_lab->d_uVelocitySPBCLabel,
+// hat velocities are only interpolated for first substep, since they are
+// not really needed anyway
+  tsk->requires(Task::NewDW, timelabels->uvelhat_out,
                 Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-  tsk->requires(Task::NewDW, d_lab->d_vVelocitySPBCLabel,
-		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-  tsk->requires(Task::NewDW, d_lab->d_wVelocitySPBCLabel,
+  tsk->requires(Task::NewDW, timelabels->vvelhat_out,
                 Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-
-  tsk->requires(Task::NewDW, d_lab->d_uVelRhoHatLabel,
-                Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-  tsk->requires(Task::NewDW, d_lab->d_vVelRhoHatLabel,
-                Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-  tsk->requires(Task::NewDW, d_lab->d_wVelRhoHatLabel,
+  tsk->requires(Task::NewDW, timelabels->wvelhat_out,
                 Ghost::AroundFaces, Arches::ONEGHOSTCELL);
 
   tsk->computes(d_lab->d_oldCCVelocityLabel);
+  tsk->computes(d_lab->d_uVelRhoHat_CCLabel);
+  tsk->computes(d_lab->d_vVelRhoHat_CCLabel);
+  tsk->computes(d_lab->d_wVelRhoHat_CCLabel);
+  }
+
+
+  tsk->requires(Task::NewDW, timelabels->uvelocity_out,
+                Ghost::AroundFaces, Arches::ONEGHOSTCELL);
+  tsk->requires(Task::NewDW, timelabels->vvelocity_out,
+		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
+  tsk->requires(Task::NewDW, timelabels->wvelocity_out,
+                Ghost::AroundFaces, Arches::ONEGHOSTCELL);
+
+  if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
   tsk->computes(d_lab->d_newCCVelocityLabel);
   tsk->computes(d_lab->d_newCCUVelocityLabel);
   tsk->computes(d_lab->d_newCCVVelocityLabel);
   tsk->computes(d_lab->d_newCCWVelocityLabel);
-      
-  tsk->computes(d_lab->d_uVelRhoHat_CCLabel);
-  tsk->computes(d_lab->d_vVelRhoHat_CCLabel);
-  tsk->computes(d_lab->d_wVelRhoHat_CCLabel);
-
   tsk->computes(d_lab->d_kineticEnergyLabel);
-  tsk->computes(d_lab->d_totalKineticEnergyLabel);
+  }
+  else {
+  tsk->modifies(d_lab->d_newCCVelocityLabel);
+  tsk->modifies(d_lab->d_newCCUVelocityLabel);
+  tsk->modifies(d_lab->d_newCCVVelocityLabel);
+  tsk->modifies(d_lab->d_newCCWVelocityLabel);
+  tsk->modifies(d_lab->d_kineticEnergyLabel);
+  }
+  tsk->computes(timelabels->tke_out);
       
   sched->addTask(tsk, patches, matls);  
 }
+// ****************************************************************************
+// Actual interpolation from FC to CC Variable of type Vector 
+// ** WARNING ** For multiple patches we need ghost information for
+//               interpolation
+// ****************************************************************************
+void 
+ExplicitSolver::interpolateFromFCToCC(const ProcessorGroup* ,
+				      const PatchSubset* patches,
+				      const MaterialSubset*,
+				      DataWarehouse*,
+				      DataWarehouse* new_dw,
+				      const TimeIntegratorLabel* timelabels)
+{
+  for (int p = 0; p < patches->size(); p++) {
+    const Patch* patch = patches->get(p);
+    int archIndex = 0; // only one arches material
+    int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
 
+    constSFCXVariable<double> oldUVel;
+    constSFCYVariable<double> oldVVel;
+    constSFCZVariable<double> oldWVel;
+    constSFCXVariable<double> uHatVel_FCX;
+    constSFCYVariable<double> vHatVel_FCY;
+    constSFCZVariable<double> wHatVel_FCZ;
+    CCVariable<Vector> oldCCVel;
+    CCVariable<double> uHatVel_CC;
+    CCVariable<double> vHatVel_CC;
+    CCVariable<double> wHatVel_CC;
+
+    constSFCXVariable<double> newUVel;
+    constSFCYVariable<double> newVVel;
+    constSFCZVariable<double> newWVel;
+    CCVariable<Vector> newCCVel;
+    CCVariable<double> newCCUVel;
+    CCVariable<double> newCCVVel;
+    CCVariable<double> newCCWVel;
+    CCVariable<double> kineticEnergy;
+    
+    IntVector idxLo = patch->getCellLowIndex();
+    IntVector idxHi = patch->getCellHighIndex();
+
+    if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
+    new_dw->get(oldUVel, d_lab->d_uVelocityINLabel, matlIndex, patch, 
+		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
+    new_dw->get(oldVVel, d_lab->d_vVelocityINLabel, matlIndex, patch, 
+		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
+    new_dw->get(oldWVel, d_lab->d_wVelocityINLabel, matlIndex, patch, 
+		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
+    new_dw->get(uHatVel_FCX, d_lab->d_uVelRhoHatLabel, matlIndex, patch, 
+		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
+    new_dw->get(vHatVel_FCY, d_lab->d_vVelRhoHatLabel, matlIndex, patch, 
+		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
+    new_dw->get(wHatVel_FCZ, d_lab->d_wVelRhoHatLabel, matlIndex, patch, 
+		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
+    new_dw->allocateAndPut(oldCCVel, d_lab->d_oldCCVelocityLabel,
+			   matlIndex, patch);
+    new_dw->allocateAndPut(uHatVel_CC, d_lab->d_uVelRhoHat_CCLabel, 
+			   matlIndex, patch);
+    new_dw->allocateAndPut(vHatVel_CC, d_lab->d_vVelRhoHat_CCLabel,
+			   matlIndex, patch);
+    new_dw->allocateAndPut(wHatVel_CC, d_lab->d_wVelRhoHat_CCLabel,
+			   matlIndex, patch);
+    for (int kk = idxLo.z(); kk < idxHi.z(); ++kk) {
+      for (int jj = idxLo.y(); jj < idxHi.y(); ++jj) {
+	for (int ii = idxLo.x(); ii < idxHi.x(); ++ii) {
+	  
+	  IntVector idx(ii,jj,kk);
+	  IntVector idxU(ii+1,jj,kk);
+	  IntVector idxV(ii,jj+1,kk);
+	  IntVector idxW(ii,jj,kk+1);
+	  
+	  double old_u = 0.5*(oldUVel[idx] + 
+			      oldUVel[idxU]);
+	  double uhat = 0.5*(uHatVel_FCX[idx] +
+			     uHatVel_FCX[idxU]);
+	  double old_v = 0.5*(oldVVel[idx] +
+			      oldVVel[idxV]);
+	  double vhat = 0.5*(vHatVel_FCY[idx] +
+			     vHatVel_FCY[idxV]);
+	  double old_w = 0.5*(oldWVel[idx] +
+			      oldWVel[idxW]);
+	  double what = 0.5*(wHatVel_FCZ[idx] +
+			     wHatVel_FCZ[idxW]);
+	  
+	  oldCCVel[idx] = Vector(old_u,old_v,old_w);
+	  uHatVel_CC[idx] = uhat;
+	  vHatVel_CC[idx] = vhat;
+	  wHatVel_CC[idx] = what;
+	}
+      }
+    }
+    } 
+
+    new_dw->get(newUVel, timelabels->uvelocity_out, matlIndex, patch, 
+		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
+    new_dw->get(newVVel, timelabels->vvelocity_out, matlIndex, patch, 
+		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
+    new_dw->get(newWVel, timelabels->wvelocity_out, matlIndex, patch, 
+		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
+    
+    if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
+    new_dw->allocateAndPut(newCCVel, d_lab->d_newCCVelocityLabel,
+			   matlIndex, patch);
+    new_dw->allocateAndPut(newCCUVel, d_lab->d_newCCUVelocityLabel,
+			   matlIndex, patch);
+    new_dw->allocateAndPut(newCCVVel, d_lab->d_newCCVVelocityLabel,
+			   matlIndex, patch);
+    new_dw->allocateAndPut(newCCWVel, d_lab->d_newCCWVelocityLabel,
+			   matlIndex, patch);
+    new_dw->allocateAndPut(kineticEnergy, d_lab->d_kineticEnergyLabel,
+			   matlIndex, patch);
+    }
+    else {
+    new_dw->getModifiable(newCCVel, d_lab->d_newCCVelocityLabel,
+			   matlIndex, patch);
+    new_dw->getModifiable(newCCUVel, d_lab->d_newCCUVelocityLabel,
+			   matlIndex, patch);
+    new_dw->getModifiable(newCCVVel, d_lab->d_newCCVVelocityLabel,
+			   matlIndex, patch);
+    new_dw->getModifiable(newCCWVel, d_lab->d_newCCWVelocityLabel,
+			   matlIndex, patch);
+    new_dw->getModifiable(kineticEnergy, d_lab->d_kineticEnergyLabel,
+			   matlIndex, patch);
+    }
+    newCCUVel.initialize(0.0);
+    newCCVVel.initialize(0.0);
+    newCCWVel.initialize(0.0);
+    kineticEnergy.initialize(0.0);
+
+
+    double total_kin_energy = 0.0;
+
+    for (int kk = idxLo.z(); kk < idxHi.z(); ++kk) {
+      for (int jj = idxLo.y(); jj < idxHi.y(); ++jj) {
+	for (int ii = idxLo.x(); ii < idxHi.x(); ++ii) {
+	  
+	  IntVector idx(ii,jj,kk);
+	  IntVector idxU(ii+1,jj,kk);
+	  IntVector idxV(ii,jj+1,kk);
+	  IntVector idxW(ii,jj,kk+1);
+	  
+	  double new_u = 0.5*(newUVel[idx] +
+			      newUVel[idxU]);
+	  double new_v = 0.5*(newVVel[idx] +
+			      newVVel[idxV]);
+	  double new_w = 0.5*(newWVel[idx] +
+			      newWVel[idxW]);
+	  
+	  newCCVel[idx] = Vector(new_u,new_v,new_w);
+	  newCCUVel[idx] = new_u;
+	  newCCVVel[idx] = new_v;
+	  newCCWVel[idx] = new_w;
+          kineticEnergy[idx] = (new_u*new_u+new_v*new_v+new_w*new_w)/2.0;
+	  total_kin_energy += kineticEnergy[idx];
+	}
+      }
+    }
+    new_dw->put(sum_vartype(total_kin_energy), timelabels->tke_out); 
+  }
+}
+
+// ****************************************************************************
+// Schedule probe data
+// ****************************************************************************
 void 
 ExplicitSolver::sched_probeData(SchedulerP& sched, const PatchSet* patches,
 				       const MaterialSet* matls)
@@ -790,6 +781,8 @@ ExplicitSolver::sched_probeData(SchedulerP& sched, const PatchSet* patches,
 		Ghost::None, Arches::ZEROGHOSTCELLS);
   tsk->requires(Task::NewDW, d_lab->d_newCCWVelocityLabel,
 		Ghost::None, Arches::ZEROGHOSTCELLS);
+  tsk->requires(Task::NewDW, d_lab->d_kineticEnergyLabel,
+		Ghost::None, Arches::ZEROGHOSTCELLS);
 
   int nofScalarVars = d_props->getNumMixStatVars();
   if (nofScalarVars > 0) {
@@ -808,6 +801,104 @@ ExplicitSolver::sched_probeData(SchedulerP& sched, const PatchSet* patches,
   sched->addTask(tsk, patches, matls);
   
 }
+// ****************************************************************************
+// Actual probe data
+// ****************************************************************************
+
+void 
+ExplicitSolver::probeData(const ProcessorGroup* ,
+				 const PatchSubset* patches,
+				 const MaterialSubset*,
+				 DataWarehouse*,
+				 DataWarehouse* new_dw)
+{
+
+  for (int p = 0; p < patches->size(); p++) {
+    const Patch* patch = patches->get(p);
+    int archIndex = 0; // only one arches material
+    int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+
+  // Get the new velocity
+    constSFCXVariable<double> newUVel;
+    constSFCYVariable<double> newVVel;
+    constSFCZVariable<double> newWVel;
+    new_dw->get(newUVel, d_lab->d_uVelocitySPBCLabel, matlIndex, patch, 
+		Ghost::None, Arches::ZEROGHOSTCELLS);
+    new_dw->get(newVVel, d_lab->d_vVelocitySPBCLabel, matlIndex, patch, 
+		Ghost::None, Arches::ZEROGHOSTCELLS);
+    new_dw->get(newWVel, d_lab->d_wVelocitySPBCLabel, matlIndex, patch, 
+		Ghost::None, Arches::ZEROGHOSTCELLS);
+    constCCVariable<double> newintUVel;
+    constCCVariable<double> newintVVel;
+    constCCVariable<double> newintWVel;
+    new_dw->get(newintUVel, d_lab->d_newCCUVelocityLabel, matlIndex, patch, 
+		Ghost::None, Arches::ZEROGHOSTCELLS);
+    new_dw->get(newintVVel, d_lab->d_newCCVVelocityLabel, matlIndex, patch, 
+		Ghost::None, Arches::ZEROGHOSTCELLS);
+    new_dw->get(newintWVel, d_lab->d_newCCWVelocityLabel, matlIndex, patch, 
+		Ghost::None, Arches::ZEROGHOSTCELLS);
+    constCCVariable<double> density;
+    constCCVariable<double> viscosity;
+    constCCVariable<double> pressure;
+    constCCVariable<double> mixtureFraction;
+    new_dw->get(density, d_lab->d_densityCPLabel, matlIndex, patch, 
+		Ghost::None, Arches::ZEROGHOSTCELLS);
+    new_dw->get(viscosity, d_lab->d_viscosityCTSLabel, matlIndex, patch, 
+		Ghost::None, Arches::ZEROGHOSTCELLS);
+    new_dw->get(pressure, d_lab->d_pressureSPBCLabel, matlIndex, patch, 
+		Ghost::None, Arches::ZEROGHOSTCELLS);
+    new_dw->get(mixtureFraction, d_lab->d_scalarSPLabel, matlIndex, patch, 
+		Ghost::None, Arches::ZEROGHOSTCELLS);
+    constCCVariable<double> kineticEnergy;
+    new_dw->get(kineticEnergy, d_lab->d_kineticEnergyLabel, matlIndex, patch,
+		Ghost::None, Arches::ZEROGHOSTCELLS);
+    
+    constCCVariable<double> mixFracVariance;
+    if (d_props->getNumMixStatVars() > 0) {
+      new_dw->get(mixFracVariance, d_lab->d_scalarVarSPLabel, matlIndex, patch, 
+		  Ghost::None, Arches::ZEROGHOSTCELLS);
+    }
+    
+    constCCVariable<double> gasfraction;
+    if (d_MAlab)
+      new_dw->get(gasfraction, d_lab->d_mmgasVolFracLabel, matlIndex, patch, 
+		  Ghost::None, Arches::ZEROGHOSTCELLS);
+
+    constCCVariable<double> temperature;
+    if (d_enthalpySolve) 
+      new_dw->get(temperature, d_lab->d_tempINLabel, matlIndex, patch, 
+		  Ghost::None, Arches::ZEROGHOSTCELLS);
+
+    for (vector<IntVector>::const_iterator iter = d_probePoints.begin();
+	 iter != d_probePoints.end(); iter++) {
+
+      if (patch->containsCell(*iter)) {
+	cerr.precision(10);
+	cerr << "for Intvector: " << *iter << endl;
+	cerr << "Density: " << density[*iter] << endl;
+	cerr << "Viscosity: " << viscosity[*iter] << endl;
+	cerr << "Pressure: " << pressure[*iter] << endl;
+	cerr << "MixtureFraction: " << mixtureFraction[*iter] << endl;
+	if (d_enthalpySolve)
+	  cerr<<"Gas Temperature: " << temperature[*iter] << endl;
+	cerr << "UVelocity: " << newUVel[*iter] << endl;
+	cerr << "VVelocity: " << newVVel[*iter] << endl;
+	cerr << "WVelocity: " << newWVel[*iter] << endl;
+	cerr << "CCUVelocity: " << newintUVel[*iter] << endl;
+	cerr << "CCVVelocity: " << newintVVel[*iter] << endl;
+	cerr << "CCWVelocity: " << newintWVel[*iter] << endl;
+	cerr << "KineticEnergy: " << kineticEnergy[*iter] << endl;
+	if (d_props->getNumMixStatVars() > 0) {
+	  cerr << "MixFracVariance: " << mixFracVariance[*iter] << endl;
+	}
+	if (d_MAlab)
+	  cerr << "gas vol fraction: " << gasfraction[*iter] << endl;
+
+      }
+    }
+  }
+}
+
 // ****************************************************************************
 // Actual initialize 
 // ****************************************************************************
@@ -1187,248 +1278,6 @@ ExplicitSolver::dummySolve(const ProcessorGroup* ,
 }
 
 // ****************************************************************************
-// Actual interpolation from FC to CC Variable of type Vector 
-// ** WARNING ** For multiple patches we need ghost information for
-//               interpolation
-// ****************************************************************************
-void 
-ExplicitSolver::interpolateFromFCToCC(const ProcessorGroup* ,
-					     const PatchSubset* patches,
-					     const MaterialSubset*,
-					     DataWarehouse*,
-					     DataWarehouse* new_dw)
-{
-  for (int p = 0; p < patches->size(); p++) {
-    const Patch* patch = patches->get(p);
-    int archIndex = 0; // only one arches material
-    int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
-
-    // Get the old velocity
-    constSFCXVariable<double> oldUVel;
-    constSFCYVariable<double> oldVVel;
-    constSFCZVariable<double> oldWVel;
-    new_dw->get(oldUVel, d_lab->d_uVelocityINLabel, matlIndex, patch, 
-		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-    new_dw->get(oldVVel, d_lab->d_vVelocityINLabel, matlIndex, patch, 
-		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-    new_dw->get(oldWVel, d_lab->d_wVelocityINLabel, matlIndex, patch, 
-		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-
-    // Get the new velocity
-    constSFCXVariable<double> newUVel;
-    constSFCYVariable<double> newVVel;
-    constSFCZVariable<double> newWVel;
-    new_dw->get(newUVel, d_lab->d_uVelocitySPBCLabel, matlIndex, patch, 
-		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-    new_dw->get(newVVel, d_lab->d_vVelocitySPBCLabel, matlIndex, patch, 
-		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-    new_dw->get(newWVel, d_lab->d_wVelocitySPBCLabel, matlIndex, patch, 
-		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-    
-    constSFCXVariable<double> uHatVel_FCX;
-    constSFCYVariable<double> vHatVel_FCY;
-    constSFCZVariable<double> wHatVel_FCZ;      
-
-    new_dw->get(uHatVel_FCX, d_lab->d_uVelRhoHatLabel, matlIndex, patch, 
-		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-    new_dw->get(vHatVel_FCY, d_lab->d_vVelRhoHatLabel, matlIndex, patch, 
-		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-    new_dw->get(wHatVel_FCZ, d_lab->d_wVelRhoHatLabel, matlIndex, patch, 
-		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-    
-    // Get the low and high index for the Cell Centered Variables
-    IntVector idxLo = patch->getCellLowIndex();
-    IntVector idxHi = patch->getCellHighIndex();
-
-    // Allocate the interpolated velocities
-    CCVariable<Vector> oldCCVel;
-    CCVariable<Vector> newCCVel;
-    CCVariable<double> newCCUVel;
-    CCVariable<double> newCCVVel;
-    CCVariable<double> newCCWVel;
-    CCVariable<double> kineticEnergy;
-    new_dw->allocateAndPut(oldCCVel, d_lab->d_oldCCVelocityLabel, matlIndex, patch);
-    new_dw->allocateAndPut(newCCVel, d_lab->d_newCCVelocityLabel, matlIndex, patch);
-    new_dw->allocateAndPut(newCCUVel, d_lab->d_newCCUVelocityLabel, matlIndex, patch);
-    new_dw->allocateAndPut(newCCVVel, d_lab->d_newCCVVelocityLabel, matlIndex, patch);
-    new_dw->allocateAndPut(newCCWVel, d_lab->d_newCCWVelocityLabel, matlIndex, patch);
-    new_dw->allocateAndPut(kineticEnergy, d_lab->d_kineticEnergyLabel, matlIndex, patch);
-
-    CCVariable<double> uHatVel_CC;
-    CCVariable<double> vHatVel_CC;
-    CCVariable<double> wHatVel_CC;
-
-    new_dw->allocateAndPut(uHatVel_CC, d_lab->d_uVelRhoHat_CCLabel, matlIndex, patch);
-    new_dw->allocateAndPut(vHatVel_CC, d_lab->d_vVelRhoHat_CCLabel, matlIndex, patch);
-    new_dw->allocateAndPut(wHatVel_CC, d_lab->d_wVelRhoHat_CCLabel, matlIndex, patch);
-
-    double total_kin_energy = 0.0;
-    // Interpolate the FC velocity to the CC
-    for (int kk = idxLo.z(); kk < idxHi.z(); ++kk) {
-      for (int jj = idxLo.y(); jj < idxHi.y(); ++jj) {
-	for (int ii = idxLo.x(); ii < idxHi.x(); ++ii) {
-	  
-	  IntVector idx(ii,jj,kk);
-	  IntVector idxU(ii+1,jj,kk);
-	  IntVector idxV(ii,jj+1,kk);
-	  IntVector idxW(ii,jj,kk+1);
-	  
-	  // old U velocity (linear interpolation)
-	  double old_u = 0.5*(oldUVel[idx] + 
-			      oldUVel[idxU]);
-	  // new U velocity (linear interpolation)
-	  double new_u = 0.5*(newUVel[idx] +
-			      newUVel[idxU]);
-	  
-	  // uhat 
-	  double uhat = 0.5*(uHatVel_FCX[idx] +
-			     uHatVel_FCX[idxU]);
-	  
-	  // old V velocity (linear interpolation)
-	  double old_v = 0.5*(oldVVel[idx] +
-			      oldVVel[idxV]);
-	  // new V velocity (linear interpolation)
-	  double new_v = 0.5*(newVVel[idx] +
-			      newVVel[idxV]);
-	  
-	  //vhat
-	  double vhat = 0.5*(vHatVel_FCY[idx] +
-			     vHatVel_FCY[idxV]);
-	  
-	  // old W velocity (linear interpolation)
-	  double old_w = 0.5*(oldWVel[idx] +
-			      oldWVel[idxW]);
-	  // new W velocity (linear interpolation)
-	  double new_w = 0.5*(newWVel[idx] +
-			      newWVel[idxW]);
-	  
-	  //what
-	  double what = 0.5*(wHatVel_FCZ[idx] +
-			     wHatVel_FCZ[idxW]);
-	  
-	  // Add the data to the CC Velocity Variables
-	  oldCCVel[idx] = Vector(old_u,old_v,old_w);
-	  newCCVel[idx] = Vector(new_u,new_v,new_w);
-	  newCCUVel[idx] = new_u;
-	  newCCVVel[idx] = new_v;
-	  newCCWVel[idx] = new_w;
-          kineticEnergy[idx] = (new_u*new_u+new_v*new_v+new_w*new_w)/2.0;
-	  total_kin_energy += kineticEnergy[idx];
-
-	  uHatVel_CC[idx] = uhat;
-	  vHatVel_CC[idx] = vhat;
-	  wHatVel_CC[idx] = what;
-	  
-	}
-      }
-    }
-    new_dw->put(sum_vartype(total_kin_energy), d_lab->d_totalKineticEnergyLabel); 
-
-  // Put the calculated stuff into the new_dw
-    // allocateAndPut instead:
-    /* new_dw->put(oldCCVel, d_lab->d_oldCCVelocityLabel, matlIndex, patch); */;
-    // allocateAndPut instead:
-    /* new_dw->put(newCCVel, d_lab->d_newCCVelocityLabel, matlIndex, patch); */;
-    // allocateAndPut instead:
-    /* new_dw->put(newCCUVel, d_lab->d_newCCUVelocityLabel, matlIndex, patch); */;
-    // allocateAndPut instead:
-    /* new_dw->put(newCCVVel, d_lab->d_newCCVVelocityLabel, matlIndex, patch); */;
-    // allocateAndPut instead:
-    /* new_dw->put(newCCWVel, d_lab->d_newCCWVelocityLabel, matlIndex, patch); */;
-  }
-}
-
-void 
-ExplicitSolver::probeData(const ProcessorGroup* ,
-				 const PatchSubset* patches,
-				 const MaterialSubset*,
-				 DataWarehouse*,
-				 DataWarehouse* new_dw)
-{
-
-  for (int p = 0; p < patches->size(); p++) {
-    const Patch* patch = patches->get(p);
-    int archIndex = 0; // only one arches material
-    int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
-
-  // Get the new velocity
-    constSFCXVariable<double> newUVel;
-    constSFCYVariable<double> newVVel;
-    constSFCZVariable<double> newWVel;
-    new_dw->get(newUVel, d_lab->d_uVelocitySPBCLabel, matlIndex, patch, 
-		Ghost::None, Arches::ZEROGHOSTCELLS);
-    new_dw->get(newVVel, d_lab->d_vVelocitySPBCLabel, matlIndex, patch, 
-		Ghost::None, Arches::ZEROGHOSTCELLS);
-    new_dw->get(newWVel, d_lab->d_wVelocitySPBCLabel, matlIndex, patch, 
-		Ghost::None, Arches::ZEROGHOSTCELLS);
-    constCCVariable<double> newintUVel;
-    constCCVariable<double> newintVVel;
-    constCCVariable<double> newintWVel;
-    new_dw->get(newintUVel, d_lab->d_newCCUVelocityLabel, matlIndex, patch, 
-		Ghost::None, Arches::ZEROGHOSTCELLS);
-    new_dw->get(newintVVel, d_lab->d_newCCVVelocityLabel, matlIndex, patch, 
-		Ghost::None, Arches::ZEROGHOSTCELLS);
-    new_dw->get(newintWVel, d_lab->d_newCCWVelocityLabel, matlIndex, patch, 
-		Ghost::None, Arches::ZEROGHOSTCELLS);
-    constCCVariable<double> density;
-    constCCVariable<double> viscosity;
-    constCCVariable<double> pressure;
-    constCCVariable<double> mixtureFraction;
-    new_dw->get(density, d_lab->d_densityCPLabel, matlIndex, patch, 
-		Ghost::None, Arches::ZEROGHOSTCELLS);
-    new_dw->get(viscosity, d_lab->d_viscosityCTSLabel, matlIndex, patch, 
-		Ghost::None, Arches::ZEROGHOSTCELLS);
-    new_dw->get(pressure, d_lab->d_pressureSPBCLabel, matlIndex, patch, 
-		Ghost::None, Arches::ZEROGHOSTCELLS);
-    new_dw->get(mixtureFraction, d_lab->d_scalarSPLabel, matlIndex, patch, 
-		Ghost::None, Arches::ZEROGHOSTCELLS);
-    
-    constCCVariable<double> mixFracVariance;
-    if (d_props->getNumMixStatVars() > 0) {
-      new_dw->get(mixFracVariance, d_lab->d_scalarVarSPLabel, matlIndex, patch, 
-		  Ghost::None, Arches::ZEROGHOSTCELLS);
-    }
-    
-    constCCVariable<double> gasfraction;
-    if (d_MAlab)
-      new_dw->get(gasfraction, d_lab->d_mmgasVolFracLabel, matlIndex, patch, 
-		  Ghost::None, Arches::ZEROGHOSTCELLS);
-
-    constCCVariable<double> temperature;
-    if (d_enthalpySolve) 
-      new_dw->get(temperature, d_lab->d_tempINLabel, matlIndex, patch, 
-		  Ghost::None, Arches::ZEROGHOSTCELLS);
-
-    for (vector<IntVector>::const_iterator iter = d_probePoints.begin();
-	 iter != d_probePoints.end(); iter++) {
-
-      if (patch->containsCell(*iter)) {
-	cerr.precision(10);
-	cerr << "for Intvector: " << *iter << endl;
-	cerr << "Density: " << density[*iter] << endl;
-	cerr << "Viscosity: " << viscosity[*iter] << endl;
-	cerr << "Pressure: " << pressure[*iter] << endl;
-	cerr << "MixtureFraction: " << mixtureFraction[*iter] << endl;
-	if (d_enthalpySolve)
-	  cerr<<"Gas Temperature: " << temperature[*iter] << endl;
-	cerr << "UVelocity: " << newUVel[*iter] << endl;
-	cerr << "VVelocity: " << newVVel[*iter] << endl;
-	cerr << "WVelocity: " << newWVel[*iter] << endl;
-	cerr << "CCUVelocity: " << newintUVel[*iter] << endl;
-	cerr << "CCVVelocity: " << newintVVel[*iter] << endl;
-	cerr << "CCWVelocity: " << newintWVel[*iter] << endl;
-	if (d_props->getNumMixStatVars() > 0) {
-	  cerr << "MixFracVariance: " << mixFracVariance[*iter] << endl;
-	}
-	if (d_MAlab)
-	  cerr << "gas vol fraction: " << gasfraction[*iter] << endl;
-
-      }
-    }
-  }
-}
-
-// ****************************************************************************
 // compute the residual
 // ****************************************************************************
 double 
@@ -1461,242 +1310,18 @@ ExplicitSolver::computeResidual(const LevelP&,
   return nlresidual;
 }
 
-// ****************************************************************************
-// Schedule Interpolate from SFCX, SFCY, SFCZ to CC<Vector>
-// ****************************************************************************
-void 
-ExplicitSolver::sched_interpolateFromFCToCCPred(SchedulerP& sched, 
-						   const PatchSet* patches,
-						   const MaterialSet* matls)
-{
-  Task* tsk = scinew Task( "ExplicitSolver::interpFCToCCPred",
-			   this, &ExplicitSolver::interpolateFromFCToCCPred);
-
-  tsk->requires(Task::NewDW, d_lab->d_uVelocityPredLabel,
-                Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-  tsk->requires(Task::NewDW, d_lab->d_vVelocityPredLabel,
-		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-  tsk->requires(Task::NewDW, d_lab->d_wVelocityPredLabel,
-                Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-
-  tsk->computes(d_lab->d_newCCUVelocityPredLabel);
-  tsk->computes(d_lab->d_newCCVVelocityPredLabel);
-  tsk->computes(d_lab->d_newCCWVelocityPredLabel);
-      
-  tsk->computes(d_lab->d_totalKineticEnergyPredLabel);
-
-  sched->addTask(tsk, patches, matls);
-
-  
-}
-// ****************************************************************************
-// Actual interpolation from FC to CC Variable of type Vector 
-// ** WARNING ** For multiple patches we need ghost information for
-//               interpolation
-// ****************************************************************************
-void 
-ExplicitSolver::interpolateFromFCToCCPred(const ProcessorGroup* ,
-					     const PatchSubset* patches,
-					     const MaterialSubset*,
-					     DataWarehouse*,
-					     DataWarehouse* new_dw)
-{
-  for (int p = 0; p < patches->size(); p++) {
-    const Patch* patch = patches->get(p);
-    int archIndex = 0; // only one arches material
-    int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
-
-    // Get the new velocity
-    constSFCXVariable<double> newUVel;
-    constSFCYVariable<double> newVVel;
-    constSFCZVariable<double> newWVel;
-    new_dw->get(newUVel, d_lab->d_uVelocityPredLabel, matlIndex, patch, 
-		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-    new_dw->get(newVVel, d_lab->d_vVelocityPredLabel, matlIndex, patch, 
-		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-    new_dw->get(newWVel, d_lab->d_wVelocityPredLabel, matlIndex, patch, 
-		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-    
-    // Get the low and high index for the Cell Centered Variables
-    IntVector idxLo = patch->getCellLowIndex();
-    IntVector idxHi = patch->getCellHighIndex();
-
-    // Allocate the interpolated velocities
-    CCVariable<double> newCCUVel;
-    CCVariable<double> newCCVVel;
-    CCVariable<double> newCCWVel;
-    new_dw->allocateAndPut(newCCUVel, d_lab->d_newCCUVelocityPredLabel,
-			   matlIndex, patch);
-    new_dw->allocateAndPut(newCCVVel, d_lab->d_newCCVVelocityPredLabel,
-			   matlIndex, patch);
-    new_dw->allocateAndPut(newCCWVel, d_lab->d_newCCWVelocityPredLabel,
-			   matlIndex, patch);
-
-    double total_kin_energy = 0.0;
-    // Interpolate the FC velocity to the CC
-    for (int kk = idxLo.z(); kk < idxHi.z(); ++kk) {
-      for (int jj = idxLo.y(); jj < idxHi.y(); ++jj) {
-	for (int ii = idxLo.x(); ii < idxHi.x(); ++ii) {
-	  
-	  IntVector idx(ii,jj,kk);
-	  IntVector idxU(ii+1,jj,kk);
-	  IntVector idxV(ii,jj+1,kk);
-	  IntVector idxW(ii,jj,kk+1);
-	  
-	  // new U velocity (linear interpolation)
-	  double new_u = 0.5*(newUVel[idx] +
-			      newUVel[idxU]);
-	  
-	  // new V velocity (linear interpolation)
-	  double new_v = 0.5*(newVVel[idx] +
-			      newVVel[idxV]);
-	  
-	  // new W velocity (linear interpolation)
-	  double new_w = 0.5*(newWVel[idx] +
-			      newWVel[idxW]);
-	  
-	  // Add the data to the CC Velocity Variables
-	  newCCUVel[idx] = new_u;
-	  newCCVVel[idx] = new_v;
-	  newCCWVel[idx] = new_w;
-	  total_kin_energy += (new_u*new_u+new_v*new_v+new_w*new_w)/2.0;
-	}
-      }
-    }
-    new_dw->put(sum_vartype(total_kin_energy), d_lab->d_totalKineticEnergyPredLabel); 
-  }
-}
-
-// ****************************************************************************
-// Schedule Interpolate from SFCX, SFCY, SFCZ to CC<Vector>
-// ****************************************************************************
-void 
-ExplicitSolver::sched_interpolateFromFCToCCInterm(SchedulerP& sched, 
-						   const PatchSet* patches,
-						   const MaterialSet* matls)
-{
-  Task* tsk = scinew Task( "ExplicitSolver::interpFCToCCInterm",
-			   this, &ExplicitSolver::interpolateFromFCToCCInterm);
-
-  tsk->requires(Task::NewDW, d_lab->d_uVelocityIntermLabel,
-                Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-  tsk->requires(Task::NewDW, d_lab->d_vVelocityIntermLabel,
-		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-  tsk->requires(Task::NewDW, d_lab->d_wVelocityIntermLabel,
-                Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-
-  tsk->computes(d_lab->d_newCCUVelocityIntermLabel);
-  tsk->computes(d_lab->d_newCCVVelocityIntermLabel);
-  tsk->computes(d_lab->d_newCCWVelocityIntermLabel);
-      
-  tsk->computes(d_lab->d_totalKineticEnergyIntermLabel);
-
-  sched->addTask(tsk, patches, matls);
-
-  
-}
-// ****************************************************************************
-// Actual interpolation from FC to CC Variable of type Vector 
-// ** WARNING ** For multiple patches we need ghost information for
-//               interpolation
-// ****************************************************************************
-void 
-ExplicitSolver::interpolateFromFCToCCInterm(const ProcessorGroup* ,
-					     const PatchSubset* patches,
-					     const MaterialSubset*,
-					     DataWarehouse*,
-					     DataWarehouse* new_dw)
-{
-  for (int p = 0; p < patches->size(); p++) {
-    const Patch* patch = patches->get(p);
-    int archIndex = 0; // only one arches material
-    int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
-
-    // Get the new velocity
-    constSFCXVariable<double> newUVel;
-    constSFCYVariable<double> newVVel;
-    constSFCZVariable<double> newWVel;
-    new_dw->get(newUVel, d_lab->d_uVelocityIntermLabel, matlIndex, patch, 
-		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-    new_dw->get(newVVel, d_lab->d_vVelocityIntermLabel, matlIndex, patch, 
-		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-    new_dw->get(newWVel, d_lab->d_wVelocityIntermLabel, matlIndex, patch, 
-		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-    
-    // Get the low and high index for the Cell Centered Variables
-    IntVector idxLo = patch->getCellLowIndex();
-    IntVector idxHi = patch->getCellHighIndex();
-
-    // Allocate the interpolated velocities
-    CCVariable<double> newCCUVel;
-    CCVariable<double> newCCVVel;
-    CCVariable<double> newCCWVel;
-    new_dw->allocateAndPut(newCCUVel, d_lab->d_newCCUVelocityIntermLabel,
-			   matlIndex, patch);
-    new_dw->allocateAndPut(newCCVVel, d_lab->d_newCCVVelocityIntermLabel,
-			   matlIndex, patch);
-    new_dw->allocateAndPut(newCCWVel, d_lab->d_newCCWVelocityIntermLabel,
-			   matlIndex, patch);
-
-    double total_kin_energy = 0.0;
-    // Interpolate the FC velocity to the CC
-    for (int kk = idxLo.z(); kk < idxHi.z(); ++kk) {
-      for (int jj = idxLo.y(); jj < idxHi.y(); ++jj) {
-	for (int ii = idxLo.x(); ii < idxHi.x(); ++ii) {
-	  
-	  IntVector idx(ii,jj,kk);
-	  IntVector idxU(ii+1,jj,kk);
-	  IntVector idxV(ii,jj+1,kk);
-	  IntVector idxW(ii,jj,kk+1);
-	  
-	  // new U velocity (linear interpolation)
-	  double new_u = 0.5*(newUVel[idx] +
-			      newUVel[idxU]);
-	  
-	  // new V velocity (linear interpolation)
-	  double new_v = 0.5*(newVVel[idx] +
-			      newVVel[idxV]);
-	  
-	  // new W velocity (linear interpolation)
-	  double new_w = 0.5*(newWVel[idx] +
-			      newWVel[idxW]);
-	  
-	  // Add the data to the CC Velocity Variables
-	  newCCUVel[idx] = new_u;
-	  newCCVVel[idx] = new_v;
-	  newCCWVel[idx] = new_w;
-	  total_kin_energy += (new_u*new_u+new_v*new_v+new_w*new_w)/2.0;
-	}
-      }
-    }
-    new_dw->put(sum_vartype(total_kin_energy), d_lab->d_totalKineticEnergyIntermLabel); 
-  }
-}
 void 
 ExplicitSolver::sched_printTotalKE(SchedulerP& sched, const PatchSet* patches,
 				   const MaterialSet* matls,
-				   const int Runge_Kutta_current_step,
-				   const bool Runge_Kutta_last_step)
+				   const TimeIntegratorLabel* timelabels)
 {
-  Task* tsk = scinew Task( "ExplicitSolver::printTotalKE",
-			  this, &ExplicitSolver::printTotalKE, Runge_Kutta_current_step, Runge_Kutta_last_step);
+  string taskname =  "ExplicitSolver::printTotalKE" +
+		     timelabels->integrator_step_name;
+  Task* tsk = scinew Task(taskname,
+			  this, &ExplicitSolver::printTotalKE,
+			  timelabels);
   
-  if (Runge_Kutta_last_step)
-  tsk->requires(Task::NewDW, d_lab->d_totalKineticEnergyLabel);
-  else { 
-	 switch (Runge_Kutta_current_step) {
-	 case Arches::FIRST:
-  tsk->requires(Task::NewDW, d_lab->d_totalKineticEnergyPredLabel);
-	 break;
-
-	 case Arches::SECOND:
-  tsk->requires(Task::NewDW, d_lab->d_totalKineticEnergyIntermLabel);
-	 break;
-
-	 default:
-  throw InvalidValue("Invalid Runge-Kutta step in printTKE");
-	 }
-  }
+  tsk->requires(Task::NewDW, timelabels->tke_out);
 
   sched->addTask(tsk, patches, matls);
   
@@ -1707,27 +1332,11 @@ ExplicitSolver::printTotalKE(const ProcessorGroup* ,
 			     const MaterialSubset*,
 			     DataWarehouse*,
 			     DataWarehouse* new_dw,
-			     const int Runge_Kutta_current_step,
-			     const bool Runge_Kutta_last_step)
+			     const TimeIntegratorLabel* timelabels)
 {
 
   sum_vartype tke;
-  if (Runge_Kutta_last_step)
-  new_dw->get(tke, d_lab->d_totalKineticEnergyLabel);
-  else { 
-	 switch (Runge_Kutta_current_step) {
-	 case Arches::FIRST:
-  new_dw->get(tke, d_lab->d_totalKineticEnergyPredLabel);
-	 break;
-
-	 case Arches::SECOND:
-  new_dw->get(tke, d_lab->d_totalKineticEnergyIntermLabel);
-	 break;
-
-	 default:
-  throw InvalidValue("Invalid Runge-Kutta step in printTKE");
-	 }
-  }
+  new_dw->get(tke, timelabels->tke_out);
   double total_kin_energy = tke;
   int me = d_myworld->myrank();
   if (me == 0)

@@ -43,27 +43,6 @@ WARNING
 #include <Packages/Uintah/Core/Grid/LevelP.h>
 #include <Packages/Uintah/Core/Grid/ComputeSet.h>
 
-// Choices for time advance methods
-
-
-//#define correctorstep
-
-//#define Runge_Kutta_2nd
-#ifdef Runge_Kutta_2nd
-  #define correctorstep
-#endif 
-
-//#define Runge_Kutta_3d  //Does NOT work
-#ifdef Runge_Kutta_3d
-  #define correctorstep
-#endif 
-
-//#define Runge_Kutta_3d_ssp
-#ifdef Runge_Kutta_3d_ssp
-  #define Runge_Kutta_3d
-  #define correctorstep
-#endif 
-
 // Divergence constraint instead of drhodt in pressure equation
 //#define divergenceconstraint
 
@@ -123,7 +102,6 @@ public:
       enum d_stencilName { AP, AE, AW, AN, AS, AT, AB };
       enum d_numGhostCells {ZEROGHOSTCELLS , ONEGHOSTCELL, TWOGHOSTCELLS,
 			    THREEGHOSTCELLS, FOURGHOSTCELLS, FIVEGHOSTCELLS };
-      enum d_Runge_Kutta_current_step {FIRST, SECOND, THIRD};
 
       // GROUP: Constructors:
       ////////////////////////////////////////////////////////////////////////
@@ -252,6 +230,9 @@ private:
 #ifdef multimaterialform
       MultiMaterialInterface* d_mmInterface;
 #endif
+
+    string d_timeIntegratorType;
+    int d_conv_scheme;
 
 }; // end class Arches
 

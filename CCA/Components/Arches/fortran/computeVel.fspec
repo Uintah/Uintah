@@ -1,4 +1,4 @@
 void computevel(IntVector idxLoU, IntVector idxHiU, Array3<double> uu,
 	constCCVariable<double> press, constCCVariable<double> den,
-	constCCVariable<double> old_den, double deltat, int ioff, int joff,
+	double deltat, int ioff, int joff,
 	int koff, OffsetArray1<double> dxpw);

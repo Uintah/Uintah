@@ -58,6 +58,7 @@ class InletStream;
   class MPMArchesLabel;
   class ProcessorGroup;
   class DataWarehouse;
+  class TimeIntegratorLabel;
 
 class BoundaryCondition {
 
@@ -147,6 +148,10 @@ public:
       inline bool getIfCalcEnergyExchange() const{
 	return d_calcEnergyExchange;
       }      
+
+      inline void setConvectionSchemeType(int conv_scheme) {
+	d_conv_scheme = conv_scheme;
+      }
 
       // GROUP:  Schedule tasks :
       ////////////////////////////////////////////////////////////////////////
@@ -402,16 +407,14 @@ public:
 			    double delta_t,
 			    ArchesVariables* vars,
 			    ArchesConstVariables* constvars,
-			    CellInformation* cellinfo,
-			    const ArchesLabel*);
+			    CellInformation* cellinfo);
 			
       void enthalpyLisolve_mm(const ProcessorGroup*,
 			      const Patch*,
 			      double delta_t,
 			      ArchesVariables* vars,
 			      ArchesConstVariables* constvars,
-			      CellInformation* cellinfo,
-			      const ArchesLabel*);
+			      CellInformation* cellinfo);
 // New boundary conditions
       void sched_copyINtoOUT(SchedulerP& sched, const PatchSet* patches,
 					    const MaterialSet* matls);
@@ -481,14 +484,12 @@ public:
       void sched_getFlowINOUT(SchedulerP& sched,
 			      const PatchSet* patches,
 			      const MaterialSet* matls,
-  			      const int Runge_Kutta_current_step,
-			      const bool Runge_Kutta_last_step);
+			      const TimeIntegratorLabel* timelabels);
 
       void sched_correctVelocityOutletBC(SchedulerP& sched,
 			   		 const PatchSet* patches,
 			   		 const MaterialSet* matls,
-			  		 const int Runge_Kutta_current_step,
-			  		 const bool Runge_Kutta_last_step);
+			                 const TimeIntegratorLabel* timelabels);
 private:
 
       // GROUP:  Actual Computations (Private)  :
@@ -654,20 +655,18 @@ private:
 				  DataWarehouse* new_dw); 
 
       void getFlowINOUT(const ProcessorGroup* pc,
-				    const PatchSubset* patches,
-				    const MaterialSubset* matls,
-				    DataWarehouse* old_dw,
-				    DataWarehouse* new_dw,
-  				    const int Runge_Kutta_current_step,
-				    const bool Runge_Kutta_last_step);
+			const PatchSubset* patches,
+			const MaterialSubset* matls,
+			DataWarehouse* old_dw,
+			DataWarehouse* new_dw,
+			const TimeIntegratorLabel* timelabels);
 
       void correctVelocityOutletBC(const ProcessorGroup* pc,
 			      const PatchSubset* patches,
 			      const MaterialSubset* matls,
 			      DataWarehouse* old_dw,
 			      DataWarehouse* new_dw,
-			      const int Runge_Kutta_current_step,
-			      const bool Runge_Kutta_last_step);
+			      const TimeIntegratorLabel* timelabels);
 private:
 
       // GROUP:  Local DataTypes :
@@ -782,6 +781,7 @@ private:
       bool d_intrusionBoundary;
       IntrusionBdry* d_intrusionBC;
       int d_flowfieldCellTypeVal;
+      int d_conv_scheme;
 
 }; // End of class BoundaryCondition
 } // End namespace Uintah

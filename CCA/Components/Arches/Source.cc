@@ -1393,7 +1393,7 @@ Source::calculateVelocityPred(const ProcessorGroup* ,
     // computes remaining diffusion term and also computes 
     // source due to gravity...need to pass ipref, jpref and kpref
     fort_computevel(idxLoU, idxHiU, vars->uVelRhoHat, constvars->pressure,
-		    constvars->density, constvars->old_density, delta_t,
+		    constvars->density, delta_t,
 		    ioff, joff, koff, cellinfo->dxpw);
 #if 0
     cerr << "print uvelRhoHat after solve: " << endl;
@@ -1422,7 +1422,7 @@ Source::calculateVelocityPred(const ProcessorGroup* ,
     // computes remaining diffusion term and also computes 
     // source due to gravity...need to pass ipref, jpref and kpref
     fort_computevel(idxLoU, idxHiU, vars->vVelRhoHat, constvars->pressure,
-		    constvars->density, constvars->old_density, delta_t,
+		    constvars->density, delta_t,
 		    ioff, joff, koff, cellinfo->dyps);
 
 #if 0
@@ -1445,7 +1445,7 @@ Source::calculateVelocityPred(const ProcessorGroup* ,
     // computes remaining diffusion term and also computes 
     // source due to gravity...need to pass ipref, jpref and kpref
     fort_computevel(idxLoU, idxHiU, vars->wVelRhoHat, constvars->pressure,
-		    constvars->density, constvars->old_density, delta_t,
+		    constvars->density, delta_t,
 		    ioff, joff, koff, cellinfo->dzpb);
 
     break;

@@ -1,7 +1,6 @@
 void mm_computevel(Array3<double> uu,
 	constCCVariable<double> press,
 	constCCVariable<double> den,
-	constCCVariable<double> old_den,
 	constCCVariable<double> epsg,
 	OffsetArray1<double> dxpw,
 	double deltat,

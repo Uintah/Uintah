@@ -38,7 +38,7 @@ WARNING
 ****************************************/
 
 namespace Uintah {
-
+class TimeIntegratorLabel;
 class NonlinearSolver {
 
 public:
@@ -60,7 +60,8 @@ public:
       virtual void problemSetup(const ProblemSpecP& db) = 0;
 
       virtual void sched_interpolateFromFCToCC(SchedulerP&, const PatchSet* patches,
-					       const MaterialSet* matls) = 0;
+					       const MaterialSet* matls,
+				 const TimeIntegratorLabel* timelabels) = 0;
       // GROUP: Schedule Action Computations :
       ///////////////////////////////////////////////////////////////////////
       // Interface for Solve the nonlinear system, return some error code.
@@ -75,9 +76,19 @@ public:
       // Interface for dummy Solve of the nonlinear System
       virtual int noSolve(const LevelP& level,
 			  SchedulerP& sched) = 0;
-  
+
+      const string& getTimeIntegratorType() const
+	{
+	  return d_timeIntegratorType;
+	}
+      const int& getConvectionSchemeType() const
+	{
+	  return d_conv_scheme;
+	}
 protected:
    const ProcessorGroup* d_myworld;
+   string d_timeIntegratorType;
+   int d_conv_scheme;
 private:
 
 }; // End class NonlinearSolver
