@@ -759,6 +759,10 @@ proc biopseFDialog {argstring} {
 
     catch {focus $oldFocus}
     grab release $w
+
+    # For now, return the window that this thing created so other
+    # parts of the code can deal with it... sigh.
+    return $w
 }
 
 # biopseFDialog_Config --
