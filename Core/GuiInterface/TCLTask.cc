@@ -29,7 +29,6 @@
  */
 
 #include <Core/GuiInterface/TCLTask.h>
-#include <Core/GuiInterface/TCL.h>
 #include <Core/Thread/Mutex.h>
 #include <Core/Thread/Thread.h>
 #include <Core/Util/Assert.h>
@@ -81,26 +80,26 @@ static void do_lock()
     ASSERT(Thread::self() != 0);
     if(owner == Thread::self()){
       lock_count++;
-//      cerr << "Recursively locked, count=" << lock_count << endl;
+      //cerr << "Recursively locked, count=" << lock_count << ", owner=" << owner << " (" << Thread::self()->getThreadName() << "), count=" << lock_count << endl;
 	return;
     }
     tlock.lock();
     lock_count=1;
     owner=Thread::self();
-//    cerr << "Locked: owner=" << owner << ", count=" << lock_count << endl;
+    //cerr << "Locked: owner=" << owner << " (" << Thread::self()->getThreadName() << "), count=" << lock_count << endl;
 }
 
 static void do_unlock()
 {
     ASSERT(lock_count>0);
-//    cerr << "Self=" << Task::self() << ", owner=" << owner << endl;
+    //cerr << "Self=" << Thread::self() << ", owner=" << owner << endl;
     ASSERT(Thread::self() == owner);
     if(--lock_count == 0){
 	owner=0;
-//	cerr << "Unlocked, count=" << lock_count << ", owner=" << owner << ", self=" << Task::self() << endl;
+	//cerr << "Unlocked, count=" << lock_count << ", owner=" << owner << ", self=" << Thread::self() << " (" << Thread::self()->getThreadName() << ")" << endl;
 	tlock.unlock();
     } else {
-//      cerr << "Recursively unlocked, count=" << lock_count << endl;
+      //cerr << "Recursively unlocked, count=" << lock_count << ", owner=" << owner << ", (" << owner->getThreadName() << ")" << endl;
     }
 }
 
@@ -122,9 +121,9 @@ static int x_error_handler(Display* dpy, XErrorEvent* error)
 
 static int exitproc(ClientData, Tcl_Interp*, int, char* [])
 {
-	printf("exitproc() {%s,%d}\n",__FILE__,__LINE__);
-    Thread::exitAll(0);
-    return TCL_OK; // not reached
+  //printf("exitproc() {%s,%d}\n",__FILE__,__LINE__);
+  Thread::exitAll(0);
+  return TCL_OK; // not reached
 }
 
 TCLTask::TCLTask(int argc, char* argv[])
@@ -175,17 +174,16 @@ void TCLTask::release_mainloop()
 
 void TCLTask::mainloop_wait()
 {
-    TCL::initialize();
-    Tcl_CreateCommand(the_interp, "exit", exitproc, 0, 0);
-    do_unlock();
+  Tcl_CreateCommand(the_interp, "exit", exitproc, 0, 0);
+  do_unlock();
 
-    // The main program will want to know that we are started...
-    start.up();
+  // The main program will want to know that we are started...
+  start.up();
 
-    // Wait for the main program to tell us that all initialization
-    // has occurred...
-    cont.down();
-    do_lock();
+  // Wait for the main program to tell us that all initialization
+  // has occurred...
+  cont.down();
+  do_lock();
 }
 
 void TCLTask::lock()

@@ -17,31 +17,34 @@
 
 
 /*
- *  TCLInit.cc: Initialize TCL stuff..
+ *  GuiInterface.cc:
  *
  *  Written by:
  *   Steven G. Parker
  *   Department of Computer Science
  *   University of Utah
- *   Jul 1994
+ *   April 2002
  *
- *  Copyright (C) 1994 SCI Group
+ *  Copyright (C) 2002 SCI Group
  */
 
-#include <Core/GuiInterface/MemStats.h>
-#include <Core/GuiInterface/ThreadStats.h>
-#include <Core/Malloc/Allocator.h>
-#include <Core/GuiInterface/TCL.h>
+#include <Core/GuiInterface/GuiInterface.h>
 
-namespace SCIRun {
+using namespace SCIRun;
 
-void TCL::initialize()
+GuiInterface* singleton;
+
+GuiInterface::GuiInterface()
 {
-    MemStats* memstats=scinew MemStats;
-    memstats->init_tcl();
-    ThreadStats* threadstats=scinew ThreadStats;
-    threadstats->init_tcl();
+  if(!singleton)
+    singleton=this;
 }
 
-} // End namespace SCIRun
+GuiInterface::~GuiInterface()
+{
+}
 
+GuiInterface* GuiInterface::getSingleton()
+{
+  return singleton;
+}

@@ -29,10 +29,8 @@
  */
 
 #include <Core/GuiInterface/TclObj.h>
-#include <Core/GuiInterface/TCLTask.h>
-#include <Core/GuiInterface/TCL.h>
-
 #include <Core/Malloc/Allocator.h>
+#include <Core/GuiInterface/GuiInterface.h>
 
 #include <stdio.h>
 #include <iostream>
@@ -46,13 +44,13 @@ using namespace std;
 namespace SCIRun {
 
 
-TclObj::TclObj( const string &script) 
-  : id_(""), window_(""), script_(script), has_window_(false)
+TclObj::TclObj(GuiInterface* gui, const string &script)
+  : id_(""), window_(""), script_(script), has_window_(false), gui(gui)
 {
 } 
 
-TclObj::TclObj( const string &script, const string &id ) 
-  : id_(""), window_(""), script_(script), has_window_(false)
+TclObj::TclObj(GuiInterface* gui, const string &script, const string &id ) 
+  : id_(""), window_(""), script_(script), has_window_(false), gui(gui)
 {
   set_id( id );
 } 
@@ -62,7 +60,7 @@ TclObj::~TclObj()
   if ( id_ != "" ) {
     ostringstream cmd;
     cmd << "delete object " << id_;
-    TCL::execute( cmd.str().c_str() );
+    gui->execute( cmd.str() );
   }
 }
 
@@ -71,8 +69,7 @@ TclObj::command( const string &s )
 {
   ostringstream cmd;
   cmd << id_ << " " << s;
-  //cerr << "TclObj::exec " << cmd.str() << endl;
-  TCL::execute( cmd.str().c_str() );
+  gui->execute( cmd.str() );
 }
 
 int
@@ -82,13 +79,13 @@ TclObj::tcl_eval( const string &s, string &result )
   cmd << id_ << " " << s;
   //cerr << "TclObj::eval " << cmd.str() << endl;
 
-  return TCL::eval( cmd.str(), result );
+  return gui->eval( cmd.str(), result );
 }
 
 void
 TclObj::tcl_exec()
 {
-  TCL::execute( tcl_.str().c_str() );
+  gui->execute( tcl_.str() );
   tcl_.str( " ");
   tcl_ << id_ << " ";
 }
@@ -101,12 +98,12 @@ TclObj::set_id( const string & id )
   else
     id_ = string("::")+id;
 
-  TCL::add_command( id_+"-c", this, 0 );
+  gui->add_command( id_+"-c", this, 0 );
   
   ostringstream cmd;
   cmd << script_ << " " << id_;
   //cerr << "TclObj::set_id  " << cmd.str() << endl;
-  TCL::execute( cmd.str().c_str() );
+  gui->execute( cmd.str() );
   
   tcl_ << id_ << " ";}
 
@@ -117,7 +114,7 @@ TclObj::set_window( const string & window, const string& args,  bool exec )
   if ( exec ) {
     ostringstream cmd;
     cmd << id_ << " ui " << window << " " << args;
-    TCL::execute( cmd.str().c_str() );
+    gui->execute( cmd.str() );
   }
   has_window_ = true;
 }

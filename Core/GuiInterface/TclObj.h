@@ -32,11 +32,11 @@
 #define SCI_TclObj_h 
 
 #include <sstream>
-#include <Core/GuiInterface/TCL.h>
+#include <Core/GuiInterface/GuiCallback.h>
 
 namespace SCIRun {
-  
-class SCICORESHARE TclObj : public TCL {
+  class GuiInterface;
+class SCICORESHARE TclObj : public GuiCallback {
 public:
   std::ostringstream tcl_;
 private:
@@ -45,10 +45,11 @@ private:
   string script_;
 
   bool has_window_;
-
+protected:
+  GuiInterface* gui;
 public:
-  TclObj( const string &script);
-  TclObj( const string &script, const string &id);
+  TclObj( GuiInterface* gui, const string &script);
+  TclObj( GuiInterface* gui, const string &script, const string &id);
   virtual ~TclObj();
 
   bool has_window() { return has_window_; }
@@ -62,7 +63,7 @@ public:
   virtual void set_id( const string &);
   virtual void set_window( const string&, const string &args, bool =true );
   virtual void set_window( const string&s ) { set_window(s,""); }
-  virtual void tcl_command( TCLArgs &, void *) {}
+  virtual void tcl_command( GuiArgs &, void *) {}
 };
 
 

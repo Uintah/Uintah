@@ -38,7 +38,6 @@
 namespace SCIRun {
 
 using namespace std;
-using std::endl;
 
 class SCICORESHARE TCLstrbuff : public GuiVar, public ostringstream{
   
@@ -55,7 +54,7 @@ public:
   // GROUP: Constructor/Destructor
   //////////
   // 
-  TCLstrbuff(const string& name, const string& id, TCL* tcl);
+  TCLstrbuff(GuiContext* ctx);
   virtual ~TCLstrbuff();
   
   // GROUP: public member functions
