@@ -76,8 +76,11 @@ void PCAGridSpheres::shade(Color& result, const Ray& ray,
   else
     tex_index = sphere_index;
 
-  if (tex_index >= nchannels) {
-    // bad index
+  if (tex_index==-1) {
+    // Solid black texture
+    result=Color(0, 0, 0);
+  } else if (tex_index >= nchannels) {
+    // Bad index
     result = Color(1,0,1);
     return;
   }
