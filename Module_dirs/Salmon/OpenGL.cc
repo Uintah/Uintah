@@ -42,6 +42,10 @@ class OpenGL : public Renderer {
     clString myname;
     char* strbuf;
     int maxlights;
+    DrawInfoOpenGL* drawinfo;
+
+    void redraw_obj(Salmon* salmon, Roe* roe, GeomObj* obj);
+    void pick_draw_obj(Salmon* salmon, Roe* roe, GeomObj* obj);
 public:
     OpenGL();
     virtual ~OpenGL();
@@ -83,6 +87,7 @@ OpenGL::OpenGL()
 : tkwin(0)
 {
     strbuf=new char[STRINGSIZE];
+    drawinfo=new DrawInfoOpenGL;
 }
 
 OpenGL::~OpenGL()
@@ -148,8 +153,7 @@ void OpenGL::redraw(Salmon* salmon, Roe* roe)
     double aspect=double(xres)/double(yres);
     double fovy=RtoD(2*Atan(aspect*Tan(DtoR(view.fov/2.))));
 
-    DrawInfoOpenGL drawinfo;
-    drawinfo.polycount=0;
+    drawinfo->reset();
 
     // Compute znear and zfar...
     double znear;
@@ -175,7 +179,7 @@ void OpenGL::redraw(Salmon* salmon, Roe* roe)
 	int idx=0;
 	for(int i=0;i<l.lights.size();i++){
 	    Light* light=l.lights[i];
-	    light->opengl_setup(view, &drawinfo, idx);
+	    light->opengl_setup(view, drawinfo, idx);
 	}
 	for(i=0;i<idx && i<maxlights;i++)
 	    glEnable(GL_LIGHT0+i);
@@ -190,47 +194,32 @@ void OpenGL::redraw(Salmon* salmon, Roe* roe)
 	clString shading(roe->shading.get());
 //	GeomRenderMode::DrawType dt;
 	if(shading == "wire"){
-	    drawinfo.set_drawtype(DrawInfoOpenGL::WireFrame);
-	    drawinfo.lighting=0;
+	    drawinfo->set_drawtype(DrawInfoOpenGL::WireFrame);
+	    drawinfo->lighting=0;
 	} else if(shading == "flat"){
-	    drawinfo.set_drawtype(DrawInfoOpenGL::Flat);
-	    drawinfo.lighting=0;
+	    drawinfo->set_drawtype(DrawInfoOpenGL::Flat);
+	    drawinfo->lighting=0;
 	} else if(shading == "gouraud"){
-	    drawinfo.set_drawtype(DrawInfoOpenGL::Gouraud);
-	    drawinfo.lighting=1;
+	    drawinfo->set_drawtype(DrawInfoOpenGL::Gouraud);
+	    drawinfo->lighting=1;
 	} else if(shading == "phong"){
-	    drawinfo.set_drawtype(DrawInfoOpenGL::Phong);
-	    drawinfo.lighting=1;
+	    drawinfo->set_drawtype(DrawInfoOpenGL::Phong);
+	    drawinfo->lighting=1;
 	} else {
-	    cerr << "Unknown shading(" << shading << "), defaulting to gouraud" << endl;
-	    drawinfo.set_drawtype(DrawInfoOpenGL::Gouraud);
-	    drawinfo.lighting=1;
+	    cerr << "Unknown shading(" << shading << "), defaulting to phong" << endl;
+	    drawinfo->set_drawtype(DrawInfoOpenGL::Phong);
+	    drawinfo->lighting=1;
 	}
-	drawinfo.currently_lit=drawinfo.lighting;
-	if(drawinfo.lighting)
+	drawinfo->currently_lit=drawinfo->lighting;
+	if(drawinfo->lighting)
 	    glEnable(GL_LIGHTING);
 	else
 	    glDisable(GL_LIGHTING);
-	drawinfo.pickmode=0;
+	drawinfo->pickmode=0;
 	glColorMaterial(GL_FRONT_AND_BACK, GL_DIFFUSE);
 
 	// Draw it all...
-	HashTableIter<int, PortInfo*> iter(&salmon->portHash);
-	for (iter.first(); iter.ok(); ++iter) {
-	    HashTable<int, SceneItem*>* serHash=iter.get_data()->objs;
-	    HashTableIter<int, SceneItem*> serIter(serHash);
-	    for (serIter.first(); serIter.ok(); ++serIter) {
-		SceneItem *si=serIter.get_data();
-
-		// Look up this object by name and see if it is supposed to be
-		// displayed...
-		ObjTag* vis;
-		if(roe->visible.lookup(si->name, vis)){
-		    if(vis->visible->get())
-			si->obj->draw(&drawinfo, salmon->default_matl.get_rep());
-		} 
- 	    }
-	}
+	roe->do_for_visible(this, (RoeVisPMF)&OpenGL::redraw_obj);
     }
 
     // Show the pretty picture
@@ -241,8 +230,8 @@ void OpenGL::redraw(Salmon* salmon, Roe* roe)
     timer.stop();
     ostrstream str(strbuf, STRINGSIZE);
     str << "updatePerf " << roe->id << " \"";
-    str << drawinfo.polycount << " polygons in " << timer.time()
-	<< " seconds\" \"" << drawinfo.polycount/timer.time()
+    str << drawinfo->polycount << " polygons in " << timer.time()
+	<< " seconds\" \"" << drawinfo->polycount/timer.time()
 	<< " polygons/second\"" << '\0';
     TCL::execute(str.str());
     TCLTask::unlock();
@@ -255,7 +244,7 @@ void OpenGL::hide()
 	current_drawer=0;
 }
 
-void OpenGL::get_pick(Salmon* salmon, Roe* roe, int x, int y,
+void OpenGL::get_pick(Salmon*, Roe* roe, int x, int y,
 		      GeomObj*& pick_obj, GeomPick*& pick_pick)
 {
     pick_obj=0;
@@ -272,8 +261,7 @@ void OpenGL::get_pick(Salmon* salmon, Roe* roe, int x, int y,
     double aspect=double(xres)/double(yres);
     double fovy=RtoD(2*Atan(aspect*Tan(DtoR(view.fov/2.))));
 
-    DrawInfoOpenGL drawinfo;
-    drawinfo.polycount=0;
+    drawinfo->reset();
 
     // Compute znear and zfar...
     double znear;
@@ -304,24 +292,13 @@ void OpenGL::get_pick(Salmon* salmon, Roe* roe, int x, int y,
 		  lookat.x(), lookat.y(), lookat.z(),
 		  up.x(), up.y(), up.z());
 
-	drawinfo.lighting=0;
-	drawinfo.set_drawtype(DrawInfoOpenGL::Flat);
-	drawinfo.pickmode=1;
+	drawinfo->lighting=0;
+	drawinfo->set_drawtype(DrawInfoOpenGL::Flat);
+	drawinfo->pickmode=1;
 
 	// Draw it all...
-	HashTableIter<int, PortInfo*> iter(&salmon->portHash);
-	for (iter.first(); iter.ok(); ++iter) {
-	    HashTable<int, SceneItem*>* serHash=iter.get_data()->objs;
-	    HashTableIter<int, SceneItem*> serIter(serHash);
-	    for (serIter.first(); serIter.ok(); ++serIter) {
-		SceneItem *si=serIter.get_data();
+	roe->do_for_visible(this, (RoeVisPMF)&OpenGL::pick_draw_obj);
 
-		// Look up this object by name and see if it is supposed to be
-		// displayed...
-		glLoadName((GLuint)si->obj);
-		si->obj->draw(&drawinfo, salmon->default_matl.get_rep());
-	    }
-	}
 	glFlush();
 	int hits=glRenderMode(GL_RENDER);
 	TCLTask::unlock();
@@ -395,3 +372,15 @@ void OpenGL::put_scanline(int y, int width, Color* scanline, int repeat)
     glPopMatrix();
     delete[] pixels;
 }
+
+void OpenGL::pick_draw_obj(Salmon* salmon, Roe*, GeomObj* obj)
+{
+    glLoadName((GLuint)obj);
+    obj->draw(drawinfo, salmon->default_matl.get_rep());
+}
+
+void OpenGL::redraw_obj(Salmon* salmon, Roe*, GeomObj* obj)
+{
+    obj->draw(drawinfo, salmon->default_matl.get_rep());
+}
+

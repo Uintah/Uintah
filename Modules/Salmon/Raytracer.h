@@ -18,6 +18,7 @@
 #include <Geom/Color.h>
 #include <Geom/Material.h>
 
+class GeomGroup;
 class Hit;
 class Ray;
 
@@ -26,7 +27,7 @@ class Raytracer : public Renderer {
     char* strbuf;
     Color bgcolor;
     int bg_firstonly;
-    GeomObj* topobj;
+    GeomGroup* topobj;
     Salmon* salmon;
     Roe* roe;
     int max_level;
@@ -39,6 +40,8 @@ class Raytracer : public Renderer {
     Color shade(const Ray& ray, const Hit&, int level, double weight,
 		double ior);
     void inside_out(int n, int a, int& b, int& r);
+
+    void add_to_group(GeomObj*);
 public:
     Raytracer();
     virtual ~Raytracer();

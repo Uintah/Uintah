@@ -1,4 +1,5 @@
 
+
 /*
  *  Roe.cc:  The Geometry Viewer Window
  *
@@ -225,8 +226,13 @@ void Roe::get_bounds(BBox& bbox)
 	    // Look up the name to see if it should be drawn...
 	    ObjTag* vis;
 	    if(visible.lookup(si->name, vis)){
-		if(vis->visible->get())
+		if(vis->visible->get()){
+		    if(si->lock)
+			si->lock->read_lock();
 		    si->obj->get_bounds(bbox);
+		    if(si->lock)
+			si->lock->read_unlock();
+		}
 	    } else {
 		cerr << "Warning: object " << si->name << " not in visibility database...\n";
 		si->obj->get_bounds(bbox);
@@ -428,8 +434,6 @@ void Roe::mouse_rotate(int action, int x, int y)
 	    rot_point=tmpview.eyespace_to_objspace(ep, aspect);
 	    rot_view=tmpview;
 	    rot_point_valid=1;
-	    
-	    cerr << "rot_point=" << rot_point << endl;
 	}
 	break;
     case MouseMove:
@@ -869,3 +873,34 @@ Renderer* Roe::get_renderer(const clString& name)
     }
     return r;
 }
+
+void Roe::force_redraw()
+{
+    need_redraw=1;
+}
+
+void Roe::do_for_visible(Renderer* r, RoeVisPMF pmf)
+{
+    HashTableIter<int, PortInfo*> iter(&manager->portHash);
+    for (iter.first(); iter.ok(); ++iter) {
+	HashTable<int, SceneItem*>* serHash=iter.get_data()->objs;
+	HashTableIter<int, SceneItem*> serIter(serHash);
+	for (serIter.first(); serIter.ok(); ++serIter) {
+	    SceneItem *si=serIter.get_data();
+	    // Look up the name to see if it should be drawn...
+	    ObjTag* vis;
+	    if(visible.lookup(si->name, vis)){
+		if(vis->visible->get()){
+		    if(si->lock)
+			si->lock->read_lock();
+		    (r->*pmf)(manager, this, si->obj);
+		    if(si->lock)
+			si->lock->read_unlock();
+		}
+	    } else {
+		cerr << "Warning: object " << si->name << " not in visibility database...\n";
+	    }
+	}
+    }
+}
+

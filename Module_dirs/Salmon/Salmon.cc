@@ -60,7 +60,7 @@ Salmon::Salmon(const clString& id)
     for(int i=0;i<lighting.lights.size();i++){
 	GeomObj* geom=lighting.lights[i]->geom();
 	if(geom)
-	    addObj(pi, i, geom, lighting.lights[i]->name);
+	    addObj(pi, i, geom, lighting.lights[i]->name, 0);
     }
 }
 
@@ -122,6 +122,9 @@ int Salmon::process_event(int block)
 		    break;
 		}
 	    }
+	    if(i==roe.size()){
+		cerr << "Warning: Roe not found for redraw! (id=" << rmsg->rid << "\n";
+	    }
 	}
 	break;
     case MessageTypes::RoeDump:
@@ -159,6 +162,10 @@ int Salmon::process_event(int block)
 	break;
     case MessageTypes::GeometryFlush:
 	flushPort(gmsg->portno);
+	break;
+    case MessageTypes::GeometryFlushViews:
+	flushPort(gmsg->portno);
+	flushViews();
 	break;
     default:
 	cerr << "Salmon: Illegal Message type: " << msg->type << endl;
@@ -201,16 +208,15 @@ void Salmon::initPort(Mailbox<GeomReply>* reply)
 
 void Salmon::flushViews()
 {
-    for (int i=0; i<topRoe.size(); i++) {
-	topRoe[i]->redraw();
-    }
+    for (int i=0; i<roe.size(); i++)
+	roe[i]->force_redraw();
 }
 
 void Salmon::addObj(PortInfo* port, int serial, GeomObj *obj,
-		    const clString& name)
+		    const clString& name, CrowdMonitor* lock)
 {
     clString pname(name+" ("+to_string(port->portno)+")");
-    SceneItem* si=new SceneItem(obj, pname);
+    SceneItem* si=new SceneItem(obj, pname, lock);
     port->objs->insert(serial, si);
     for (int i=0; i<roe.size(); i++)
 	roe[i]->itemAdded(si);
@@ -220,11 +226,9 @@ void Salmon::delObj(PortInfo* port, int serial)
 {
     SceneItem* si;
     if(port->objs->lookup(serial, si)){
-	cerr << "Removing object: " << si->name << endl;
 	port->objs->remove(serial);
 	for (int i=0; i<roe.size(); i++)
 	    roe[i]->itemDeleted(si);
-	cerr << "delete: " << si->obj << endl;
 	delete si->obj;
 	delete si;
     } else {
@@ -239,8 +243,6 @@ void Salmon::delAll(PortInfo* port)
 	SceneItem* si=iter.get_data();
 	for (int i=0; i<roe.size(); i++)
 	    roe[i]->itemDeleted(si);
-	cerr << "Removing object: " << si->name << endl;
-	cerr << "delete: " << si->obj << endl;
 	delete si->obj;
 	delete si;
     }
@@ -332,8 +334,8 @@ SalmonMessage::~SalmonMessage()
 {
 }
 
-SceneItem::SceneItem(GeomObj* obj, const clString& name)
-: obj(obj), name(name)
+SceneItem::SceneItem(GeomObj* obj, const clString& name, CrowdMonitor* lock)
+: obj(obj), name(name), lock(lock)
 {
 }
 
@@ -372,7 +374,7 @@ void Salmon::flushPort(int portid)
     while(gmsg){
 	switch(gmsg->type){
 	case MessageTypes::GeometryAddObj:
-	    addObj(pi, gmsg->serial, gmsg->obj, gmsg->name);
+	    addObj(pi, gmsg->serial, gmsg->obj, gmsg->name, gmsg->lock);
 	    break;
 	case MessageTypes::GeometryDelObj:
 	    delObj(pi, gmsg->serial);

@@ -76,22 +76,9 @@ void Raytracer::redraw(Salmon* _salmon, Roe* _roe)
     timer.start();
     // Find all toplevel objects
     GeomGroup group(0);
-    HashTableIter<int, PortInfo*> iter(&salmon->portHash);
-    for (iter.first(); iter.ok(); ++iter) {
-	HashTable<int, SceneItem*>* serHash=iter.get_data()->objs;
-	HashTableIter<int, SceneItem*> serIter(serHash);
-	for (serIter.first(); serIter.ok(); ++serIter) {
-	    SceneItem *si=serIter.get_data();
-	    
-	    // Look up this object by name and see if it is supposed to be
-	    // displayed...
-	    ObjTag* vis;
-	    if(roe->visible.lookup(si->name, vis)){
-		if(vis->visible->get())
-		    group.add(si->obj);
-	    } 
-	}
-    }
+    topobj=&group;
+    roe->do_for_visible(this, (RoeVisPMF)Raytracer::add_to_group);
+
     bgcolor=roe->bgcolor.get();
     bg_firstonly=1;
 
@@ -118,7 +105,6 @@ void Raytracer::redraw(Salmon* _salmon, Roe* _roe)
     Color* scanline=new Color[xres];
 
     // Preprocess the scene
-    topobj=&group;
     topobj->preprocess();
     for(int yc=0;yc<yres;yc++){
 	while(salmon->process_event(0)) { /* Nothing... */ }
@@ -268,4 +254,9 @@ double Raytracer::light_ray(const Point& from, const Point&,
 	return 0;
     else
 	return 1;
+}
+
+void Raytracer::add_to_group(GeomObj* obj)
+{
+    topobj->add(obj);
 }

@@ -52,6 +52,7 @@ public:
 
 class Roe;
 typedef void (Roe::*MouseHandler)(int, int x, int y);
+typedef void (Renderer::*RoeVisPMF)(Salmon*, Roe*, GeomObj*);
 
 class Roe : public TCL {
     Salmon* manager;
@@ -77,6 +78,7 @@ class Roe : public TCL {
     int maxtag;
 
     void animate_to_view(const View& v, double time);
+    void redraw();
 public:
     Renderer* current_renderer;
     Renderer* get_renderer(const clString&);
@@ -97,8 +99,8 @@ public:
     void deleteChild(Roe *r);
     void SetParent(Roe *r);
     void SetTop();
-    void redrawAll();
     void redraw_if_needed();
+    void force_redraw();
 
     void mouse_translate(int, int, int);
     void mouse_scale(int, int, int);
@@ -106,7 +108,6 @@ public:
     void mouse_pick(int, int, int);
 
     void tcl_command(TCLArgs&, void*);
-    void redraw();
     void get_bounds(BBox&);
 
     // Which of the objects do we draw?
@@ -124,6 +125,9 @@ public:
 
     // Shading parameters, etc.
     TCLstring shading;
+
+    // Object processing utility routines
+    void do_for_visible(Renderer*, RoeVisPMF);
 };
 
 class RoeMouseMessage : public MessageBase {

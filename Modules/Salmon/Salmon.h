@@ -25,13 +25,15 @@
 
 class GeometryComm;
 class GeomReply;
+class Renderer;
 class Roe;
 
 struct SceneItem {
     GeomObj* obj;
     clString name;
+    CrowdMonitor* lock;
 
-    SceneItem(GeomObj*, const clString&);
+    SceneItem(GeomObj*, const clString&, CrowdMonitor* lock);
     ~SceneItem();
 };
 
@@ -63,7 +65,7 @@ public:
     void initPort(Mailbox<GeomReply>*);
     void append_port_msg(GeometryComm*);
     void addObj(PortInfo* port, GeomID serial, GeomObj *obj,
-		const clString&);
+		const clString&, CrowdMonitor* lock);
     void delObj(PortInfo* port, GeomID serial);
     void delAll(PortInfo* port);
     void flushPort(int portid);
