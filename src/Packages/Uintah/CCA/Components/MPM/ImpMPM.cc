@@ -2068,7 +2068,7 @@ void ImpMPM::interpolateStressToGrid(const ProcessorGroup*,
     StaticArray<constNCVariable<double> >     gmass(numMatls);
     StaticArray<constNCVariable<Vector> >     gintforce(numMatls);
 
-    Vector dx = patch->dCell();
+    //Vector dx = patch->dCell();
     for(int m = 0; m < numMatls; m++){
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
       int dwi = mpm_matl->getDWIndex();
