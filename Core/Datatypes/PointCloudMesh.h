@@ -173,20 +173,11 @@ public:
 
   int get_weights(const Point &p, Node::array_type &l, double *w);
   int get_weights(const Point & , Edge::array_type & , double * )
-  {
-    ASSERTFAIL("PointCloudField::get_weights for edges isn't supported");
-    return 0;
-  }
+  { ASSERTFAIL("PointCloudField::get_weights for edges isn't supported"); }
   int get_weights(const Point & , Face::array_type & , double * )
-  {
-    ASSERTFAIL("PointCloudField::get_weights for faces isn't supported");
-    return 0;
-  }
+  { ASSERTFAIL("PointCloudField::get_weights for faces isn't supported"); }
   int get_weights(const Point & , Cell::array_type & , double * )
-  {
-    return 0;
-    ASSERTFAIL("PointCloudField::get_weights for cells isn't supported");
-  }
+  { ASSERTFAIL("PointCloudField::get_weights for cells isn't supported"); }
 
   void get_point(Point &p, Node::index_type i) const { get_center(p,i); }
   void set_point(const Point &p, Node::index_type i) { points_[i] = p; }

@@ -286,7 +286,7 @@ GenericField<Mesh, FData>::is_scalar() const
 
 // Turn off warning for CHECKARRAYBOUNDS
 #if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
-#pragma set woff 1183
+#pragma set woff 1183 1506
 #endif
 
 template <class Mesh, class FData>
@@ -394,7 +394,7 @@ GenericField<Mesh, FData>::value(typename mesh_type::Cell::index_type i) const
 
 // Reenable warning for CHECKARRAYBOUNDS
 #if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
-#pragma reset woff 1183
+#pragma reset woff 1183 1506
 #endif
 
 
