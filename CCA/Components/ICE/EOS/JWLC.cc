@@ -42,17 +42,21 @@ double JWLC::computeRhoMicro(double press, double,
   int count = 0;
 
   double one_plus_omega = 1.+om;
-  double rho_to_the_one_plus_om = pow(rho0,one_plus_omega);
 
   while(fabs(delta/rhoM)>epsilon){
-    double e_to_the_R1_rho0_over_rhoM=exp(-R1*rho0/rhoM);
-    double e_to_the_R2_rho0_over_rhoM=exp(-R2*rho0/rhoM);
-    f = (A*e_to_the_R1_rho0_over_rhoM + B*e_to_the_R2_rho0_over_rhoM
-                              + C*pow((rhoM/rho0),one_plus_omega)) - press;
-                                                                                
-    df_drho = A*(R1*rho0/(rhoM*rhoM))*e_to_the_R1_rho0_over_rhoM
-            + B*(R2*rho0/(rhoM*rhoM))*e_to_the_R2_rho0_over_rhoM
-            + C*(one_plus_omega/rho_to_the_one_plus_om)*pow(rhoM,om);
+    double inv_rho_rat=rho0/rhoM;
+    double rho_rat=rhoM/rho0;
+    double A_e_to_the_R1_rho0_over_rhoM=A*exp(-R1*inv_rho_rat);
+    double B_e_to_the_R2_rho0_over_rhoM=B*exp(-R2*inv_rho_rat);
+    double C_rho_rat_tothe_one_plus_omega=C*pow(rho_rat,one_plus_omega);
+
+    f = (A_e_to_the_R1_rho0_over_rhoM +
+         B_e_to_the_R2_rho0_over_rhoM + C_rho_rat_tothe_one_plus_omega) - press;
+
+    double rho0_rhoMsqrd = rho0/(rhoM*rhoM);
+    df_drho = R1*rho0_rhoMsqrd*A_e_to_the_R1_rho0_over_rhoM
+            + R2*rho0_rhoMsqrd*B_e_to_the_R2_rho0_over_rhoM
+            + (one_plus_omega/rhoM)*C_rho_rat_tothe_one_plus_omega;
 
     delta = -relfac*(f/df_drho);
     rhoM+=delta;
@@ -72,13 +76,21 @@ double JWLC::computeRhoMicro(double press, double,
       rhoM = 2.*rho0;
       cout <<  rhoM << endl;;
       while(fabs(delta/rhoM)>epsilon){
-        f = (A*exp(-R1*rho0/rhoM) + B*exp(-R2*rho0/rhoM)
-                                  + C*pow((rhoM/rho0),1+om)) - press;
+       double inv_rho_rat=rho0/rhoM;
+       double rho_rat=rhoM/rho0;
+       double A_e_to_the_R1_rho0_over_rhoM=A*exp(-R1*inv_rho_rat);
+       double B_e_to_the_R2_rho0_over_rhoM=B*exp(-R2*inv_rho_rat);
+       double C_rho_rat_tothe_one_plus_omega=C*pow(rho_rat,one_plus_omega);
 
-        df_drho = A*(R1*rho0/(rhoM*rhoM))*exp(-R1*rho0/rhoM)
-                + B*(R2*rho0/(rhoM*rhoM))*exp(-R2*rho0/rhoM)
-                + C*((1.+om)/pow(rho0,1.+om))*pow(rhoM,om);
+       f = (A_e_to_the_R1_rho0_over_rhoM +
+            B_e_to_the_R2_rho0_over_rhoM +
+            C_rho_rat_tothe_one_plus_omega) - press;
 
+       double rho0_rhoMsqrd = rho0/(rhoM*rhoM);
+       df_drho = R1*rho0_rhoMsqrd*A_e_to_the_R1_rho0_over_rhoM
+                + R2*rho0_rhoMsqrd*B_e_to_the_R2_rho0_over_rhoM
+                + (one_plus_omega/rhoM)*C_rho_rat_tothe_one_plus_omega;
+  
        delta = -relfac*(f/df_drho);
        rhoM+=delta;
        rhoM=fabs(rhoM);
@@ -137,13 +149,28 @@ void JWLC::computePressEOS(double rhoM, double, double, double,
                           double& press, double& dp_drho, double& dp_de)
 {
   // Pointwise computation of thermodynamic quantities
+  // This looked like the following before optimization
+//  double pressold   = A*exp(-R1*rho0/rhoM) +
+//            B*exp(-R2*rho0/rhoM) + C*pow((rhoM/rho0),1+om);
+  
+//  double dp_drhoold = (A*R1*rho0/(rhoM*rhoM))*(exp(-R1*rho0/rhoM))
+//          + (B*R2*rho0/(rhoM*rhoM))*(exp(-R2*rho0/rhoM))
+//          + C*((1.+om)/pow(rho0,1.+om))*pow(rhoM,om);
 
-  press   = A*exp(-R1*rho0/rhoM) +
-            B*exp(-R2*rho0/rhoM) + C*pow((rhoM/rho0),1+om);
+  double one_plus_omega = 1.+om;
+  double inv_rho_rat=rho0/rhoM;
+  double rho_rat=rhoM/rho0;
+  double A_e_to_the_R1_rho0_over_rhoM=A*exp(-R1*inv_rho_rat);
+  double B_e_to_the_R2_rho0_over_rhoM=B*exp(-R2*inv_rho_rat);
+  double C_rho_rat_tothe_one_plus_omega=C*pow(rho_rat,one_plus_omega);
 
-  dp_drho = (A*R1*rho0/(rhoM*rhoM))*(exp(-R1*rho0/rhoM))
-          + (B*R2*rho0/(rhoM*rhoM))*(exp(-R2*rho0/rhoM))
-          + C*((1.+om)/pow(rho0,1.+om))*pow(rhoM,om);
+  press   = A_e_to_the_R1_rho0_over_rhoM +
+            B_e_to_the_R2_rho0_over_rhoM + C_rho_rat_tothe_one_plus_omega;
+
+  double rho0_rhoMsqrd = rho0/(rhoM*rhoM);
+  dp_drho = R1*rho0_rhoMsqrd*A_e_to_the_R1_rho0_over_rhoM
+          + R2*rho0_rhoMsqrd*B_e_to_the_R2_rho0_over_rhoM
+          + (one_plus_omega/rhoM)*C_rho_rat_tothe_one_plus_omega;
 
   dp_de   = 0.0;
 }
