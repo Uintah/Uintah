@@ -62,10 +62,10 @@ ReferenceMgr::ReferenceMgr(const ReferenceMgr& copy)
 
 ReferenceMgr::~ReferenceMgr()
 {
-  //refList::iterator iter = d_ref.begin();
-  //  for(unsigned int i=0; i < d_ref.size(); i++, iter++) {
-  //  (*iter)->chan->closeConnection();
-  // }
+  refList::iterator iter = d_ref.begin();
+  for(unsigned int i=0; i < d_ref.size(); i++, iter++) {
+    delete (*iter);
+  }
 }
 
 Reference* ReferenceMgr::getIndependentReference() const
