@@ -84,8 +84,6 @@ const std::string BabelComponentModel::DEFAULT_PATH =
 BabelComponentModel::BabelComponentModel(SCIRunFramework* framework)
   : ComponentModel("babel"), framework(framework)
 {
-std::cerr << "BabelComponentModel::BabelComponentModel" << std::endl;
-  
   buildComponentList();
 }
 
@@ -119,40 +117,44 @@ std::cerr << "BabelComponentModel::buildComponentList" << std::endl;
 
   destroyComponentList();
 
-  // Append the SIDL_XML_PATH to the sidl::Loader search path.  This
-  // is the path that sidl::Loader will search for .scl files.  Babel .scl
-  // files are necessary for mapping component names with their DLLs.
-  std::string search_path = sidl::Loader::getSearchPath();
-  std::string component_path(this->getSidlXMLPath());
-
-  if (search_path.find(component_path) == std::string::npos) {
-    // SIDL_XML_PATH is not already in the sidl runtime search path
-    sidl::Loader::addSearchPath(component_path);     
-  }
-
-  while(component_path != "") {
-    unsigned int firstColon = component_path.find(';');
-    std::string dir;
-    if(firstColon < component_path.size()) {
-      dir=component_path.substr(0, firstColon);
-      component_path = component_path.substr(firstColon+1);
+   std::string search_path = sidl::Loader::getSearchPath();
+   SSIDL::array1<std::string> sArray;
+   sci::cca::TypeMap::pointer tm;
+   sci::cca::ports::FrameworkProperties::pointer fwkProperties =
+    pidl_cast<sci::cca::ports::FrameworkProperties::pointer>(
+        framework->getFrameworkService("cca.FrameworkProperties", "")
+    );
+    if (fwkProperties.isNull()) {
+        std::cerr << "Error: Cannot find framework properties" << std::cerr;
+        //return sci_getenv("SCIRUN_SRCDIR") + DEFAULT_PATH;
     } else {
-      dir = component_path;
-      component_path="";
+        tm = fwkProperties->getProperties();
+        sArray = tm->getStringArray("sidl_xml_path", sArray);
     }
-    Dir d(dir);
+    framework->releaseFrameworkService("cca.FrameworkProperties", "");
 
-    std::cerr << "BabelComponentModel: Looking at directory: " << dir << std::endl;
+    for (SSIDL::array1<std::string>::iterator it = sArray.begin(); it != sArray.end(); it++) {
+        if (search_path.find(*it) == std::string::npos) {
+            // SIDL_XML_PATH is not already in the sidl runtime search path
+            // sidl::Loader::addSearchPath(component_path);
+            // This is the path that sidl::Loader will search for .scl files.
+            // Babel .scl files are necessary for mapping component names
+            // with their DLLs.
+            sidl::Loader::addSearchPath(*it); // *it appended to ';' separated search path
+        }
+        Dir d(*it);
 
-    std::vector<std::string> files;
-    d.getFilenamesBySuffix(".cca", files);
-    for(std::vector<std::string>::iterator iter = files.begin();
-        iter != files.end(); iter++) {
-      std::string& file = *iter;
-      std::cerr << "BabelComponentModel: Parsing file " << file << std::endl;
-      readComponentDescription(dir+"/"+file);
+        std::cerr << "BabelComponentModel: Looking at directory: " << *it << std::endl;
+
+        std::vector<std::string> files;
+        d.getFilenamesBySuffix(".cca", files);
+        for(std::vector<std::string>::iterator iter = files.begin();
+                iter != files.end(); iter++) {
+            std::string& file = *iter;
+            std::cerr << "BabelComponentModel: Parsing file " << file << std::endl;
+            readComponentDescription(*it+"/"+file);
+        }
     }
-  }
 }
 
 void BabelComponentModel::readComponentDescription(const std::string& file)
@@ -212,7 +214,7 @@ void BabelComponentModel::readComponentDescription(const std::string& file)
     if(iter != components.end()) {
       std::cerr << "WARNING: Component multiply defined: " << cd->type << std::endl;
     } else {
-        std::cerr << "Added Babel component of type: " << cd->type << std::endl;
+        //std::cerr << "Added Babel component of type: " << cd->type << std::endl;
         components[cd->type]=cd;
     }
   }
@@ -228,10 +230,10 @@ BabelComponentModel::createServices(const std::string& instanceName,
   gov::cca::Services svc;
   cerr<<"need associate svc with ci in createServices!"<<endl;
   BabelComponentInstance* ci = new BabelComponentInstance(framework,
-							  instanceName, className,
-							  properties,
-							  nullCom,
-							  svc);
+                              instanceName, className,
+                              properties,
+                              nullCom,
+                              svc);
   framework->registerComponent(ci, instanceName);
 
   //ci->addReference();
@@ -251,7 +253,7 @@ bool BabelComponentModel::haveComponent(const std::string& type)
 }
 
 ComponentInstance* BabelComponentModel::createInstance(const std::string& name,
-						       const std::string& type)
+                               const std::string& type)
 {
   gov::cca::Component component;
   if (true) { //local component 
@@ -280,7 +282,7 @@ ComponentInstance* BabelComponentModel::createInstance(const std::string& name,
     std::string makername = "make_"+type;
     for(int i=0;i<(int)makername.size();i++)
       if(makername[i] == '.')
-	makername[i]='_';
+    makername[i]='_';
     
     cerr<<"looking for symbol:"<< makername<<std::endl;
     void* maker_v = GetHandleSymbolAddress(handle, makername.c_str());
@@ -319,8 +321,8 @@ ComponentInstance* BabelComponentModel::createInstance(const std::string& name,
     component = sidl_class;
     if ( component._not_nil() )
       { 
-      std::cerr << "babel component of type " << type << " is loaded!"
-                << std::endl;
+      //std::cerr << "babel component of type " << type << " is loaded!"
+      //          << std::endl;
       }
     else
       {
@@ -362,9 +364,9 @@ ComponentInstance* BabelComponentModel::createInstance(const std::string& name,
   gov::cca::Component nullMap;
 
   BabelComponentInstance* ci = new BabelComponentInstance(framework, name, type,
-							  nullMap, 
-							  component,
-							  svc);
+                              nullMap, 
+                              component,
+                              svc);
   std::cerr<<"comopnent instance ci is created!"<<std::endl;
   //ci->addReference();
   return ci;
@@ -384,7 +386,7 @@ std::string BabelComponentModel::getName() const
 }
 
 void BabelComponentModel::listAllComponentTypes(std::vector<ComponentDescription*>& list,
-					      bool /*listInternal*/)
+                          bool /*listInternal*/)
 {
   for(componentDB_type::iterator iter=components.begin();
       iter != components.end(); iter++){
@@ -395,8 +397,8 @@ void BabelComponentModel::listAllComponentTypes(std::vector<ComponentDescription
 
 
 std::string BabelComponentModel::createComponent(const std::string& name,
-						      const std::string& type)
-						     
+                              const std::string& type)
+                             
 {
   
   sci::cca::Component::pointer component;
@@ -436,26 +438,6 @@ std::string BabelComponentModel::createComponent(const std::string& name,
   */
 #endif
   return ""; 
-}
-
-std::string BabelComponentModel::getSidlXMLPath()
-{
-   sci::cca::ports::FrameworkProperties::pointer fwkProperties =
-	pidl_cast<sci::cca::ports::FrameworkProperties::pointer>(
-	    framework->getFrameworkService("cca.FrameworkProperties", "")
-	);
-    if (fwkProperties.isNull()) {
-	std::cerr << "Error: Cannot find framework properties" << std::cerr;
-	return sci_getenv("SCIRUN_SRCDIR") + DEFAULT_PATH;
-    }
-    sci::cca::TypeMap::pointer tm = fwkProperties->getProperties();
-    std::string s = tm->getString("sidl_xml_path", "");
-
-    if (s.empty()) {
-	s = sci_getenv("SCIRUN_SRCDIR") + DEFAULT_PATH;
-    }
-    framework->releaseFrameworkService("cca.FrameworkProperties", "");
-    return s;
 }
 
 } // end namespace SCIRun

@@ -73,7 +73,6 @@
 #include <qtextstream.h>
 #include <qwhatsthis.h>
 
-//using namespace sci::cca;
 
 namespace SCIRun {
 
@@ -201,7 +200,6 @@ BuilderWindow::BuilderWindow(const sci::cca::Services::pointer& services,
     vBox->setSpacing(2);
 
     msgLabel = new QLabel("Messages:", vBox);
-
     msgTextEdit = new QTextEdit(vBox, "messages");
     msgTextEdit->setTextFormat(Qt::PlainText);
     msgTextEdit->setWordWrap(QTextEdit::WidgetWidth);
@@ -1102,12 +1100,12 @@ void BuilderWindow::addSidlXmlPath()
         return;
     }
     sci::cca::TypeMap::pointer tm = fwkProperties->getProperties();
-    std::string path = tm->getString("sidl_xml_path", "");
-    path.append(";");
     std::string dir = pd->selectedDirectory();
-    path.append(dir);
-    tm->putString("sidl_xml_path", path);
+    SSIDL::array1<std::string> sArray = tm->getStringArray("sidl_xml_path", sArray);
+    sArray.push_back(dir);
+    tm->putStringArray("sidl_xml_path", sArray);
     fwkProperties->setProperties(tm);
+
     services->releasePort("cca.FrameworkProperties");
 
     sci::cca::ports::ComponentRepository::pointer reg =
