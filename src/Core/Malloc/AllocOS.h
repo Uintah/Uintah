@@ -30,6 +30,7 @@ struct OSHunk {
     void* curr;
     size_t len;
     bool returnable;
+    double align;
 };
 
 } // End namespace Malloc
@@ -37,6 +38,10 @@ struct OSHunk {
 
 //
 // $Log$
+// Revision 1.3  2000/08/01 00:00:24  sparker
+// Added a double to the AllocOS struct to ensure that the memory will
+// properly get aligned on a double-word boundary.
+//
 // Revision 1.2  2000/07/27 07:41:48  sparker
 // Distinguish between "returnable" chunks and non-returnable chucks of memory
 // Make malloc get along with SGI's MPI
