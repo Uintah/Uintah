@@ -3,4 +3,4 @@ void profv(SFCXVariable<double> uu, SFCYVariable<double> vv,
      constCCVariable<int> pcell,  double areapr, int pfield,
      double flowpr, double inletvel, double denpr, bool xminus, bool xplus,
      bool yminus, bool yplus, bool zminus, bool zplus, double time,
-     bool ramping);
+     bool ramping, double actual_flow_rate);

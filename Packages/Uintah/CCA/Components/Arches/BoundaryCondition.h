@@ -610,6 +610,7 @@ private:
 	// inputs
 	double flowRate;           
 	double inletVel;           
+	double fcr;
         InletStream streamMixturefraction; // array [numMixingVars-1]
 	double turb_lengthScale;
 	// calculated values
@@ -721,6 +722,7 @@ private:
       IntrusionBdry* d_intrusionBC;
 
       bool d_ramping_inlet_flowrate;
+      bool d_carbon_balance;
 
 }; // End of class BoundaryCondition
 } // End namespace Uintah
