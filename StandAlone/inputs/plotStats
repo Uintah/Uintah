@@ -3,17 +3,22 @@
 #  This script pulls out data from sus 
 #   output and plot it using gnuplot.
 #  Usage:
-#     plotStat <name of out file>
+#     plotStat <sus output file> <dump postScript File (y/Y), default is no>
 #__________________________________
 
 if( $#argv == 0 ) then
-  echo "You must input the name of the file that contains the simulation spew"
+  echo "plotStat <sus output file> <dump postScript File (y/Y), default is no>"
   exit(1)
 endif
 set out = $argv[1]
 if ( !(-e $out) ) then
     echo "Couldn't find your file $out"
   exit(1)
+endif
+
+set hardcopy = "n"
+if ( $#argv == 2 ) then
+  set hardcopy = $argv[2]
 endif 
 
 unalias rm
@@ -44,9 +49,23 @@ paste -d "  " .elapsedTime .meanTime .physicalTime .delT .memUse1 .memUse2 .memU
 
 rm -f .elapsedTime .meanTime .physicalTime .delT .memUse1 .memUse2 .memUse3  .memUse4 
 rm -f .plotStats_tmp
+echo "Done extracting data"
+
+
+#__________________________________
+# if making a hardcopy
+if( $hardcopy == "y" || $hardcopy == "Y" ) then 
+echo "Generating the postscript file plotStats.ps"
+cat > gp << fin
+set terminal x11 1
+set terminal postscript color solid "Times-Roman" 9
+set output "plotStat.ps"
+fin
+endif
+
 #__________________________________
 # generate the  plot script
-cat > gp << fin
+cat >> gp << fin
 set multiplot
 set size 1.0,0.33 # for three plots
 set origin 0.0,0.33
@@ -80,7 +99,7 @@ plot '.data' using 1:5 axes x1y2 t 'avg1' with lines, \
      '.data' using 1:7 axes x1y2 t 'max1' with lines, \
      '.data' using 1:8 axes x1y2 t 'max2' with lines
 set nomultiplot
-pause -1 "Hit return to kill plot"
+pause -1 "Hit return to exit"
 fin
 #__________________________________
 # plot it up
