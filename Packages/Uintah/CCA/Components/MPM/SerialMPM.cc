@@ -314,6 +314,7 @@ void SerialMPM::scheduleInterpolateParticlesToGrid(SchedulerP& sched,
 //						Ghost::AroundNodes,1);
 
   t->computes(lb->gMassLabel);
+  t->computes(lb->gMassLabel, d_sharedState->getAllInOneMatl());
   t->computes(lb->gVolumeLabel);
   t->computes(lb->gVelocityLabel);
   t->computes(lb->gExternalForceLabel);
@@ -333,7 +334,6 @@ void SerialMPM::scheduleInterpolateParticlesToGrid(SchedulerP& sched,
     t->computes(lb->gMassContactLabel);
   }
      
-  t->computes(lb->gMassLabel);
   t->computes(lb->TotalMassLabel);
   sched->addTask(t, patches, matls);
 }
@@ -404,7 +404,8 @@ void SerialMPM::scheduleComputeInternalForce(SchedulerP& sched,
   Task* t = scinew Task("SerialMPM::computeInternalForce",
 		    this, &SerialMPM::computeInternalForce);
 
-  t->requires(Task::NewDW,lb->gMassLabel,                  Ghost::None);
+  t->requires(Task::NewDW,lb->gMassLabel, Ghost::None);
+  t->requires(Task::NewDW,lb->gMassLabel, d_sharedState->getAllInOneMatl(), Ghost::None);
   t->requires(Task::NewDW,lb->pStressLabel_afterStrainRate,Ghost::AroundNodes,1);
   t->requires(Task::NewDW,lb->pVolumeDeformedLabel,       Ghost::AroundNodes,1);
   t->requires(Task::OldDW,lb->pMassLabel,                 Ghost::AroundNodes,1);
@@ -419,9 +420,9 @@ void SerialMPM::scheduleComputeInternalForce(SchedulerP& sched,
   }
 
   t->computes(lb->gInternalForceLabel);
-  t->computes(lb->gStressForSavingLabel);
   t->computes(lb->NTractionZMinusLabel);
   t->computes(lb->gStressForSavingLabel);
+  t->computes(lb->gStressForSavingLabel, d_sharedState->getAllInOneMatl());
 
   sched->addTask(t, patches, matls);
 }
@@ -823,11 +824,11 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
     const Patch* patch = patches->get(p);
 
     int numMatls = d_sharedState->getNumMPMMatls();
-    int numALLMatls = d_sharedState->getNumMatls();
 
-    NCVariable<double> totalgmass;
-    new_dw->allocate(totalgmass,lb->gMassLabel,numALLMatls, patch);
-    totalgmass.initialize(d_SMALL_NUM_MPM);
+    NCVariable<double> gmassglobal;
+    new_dw->allocate(gmassglobal,lb->gMassLabel, d_sharedState->getAllInOneMatl()->get(0), 
+		     patch);
+    gmassglobal.initialize(d_SMALL_NUM_MPM);
 
     for(int m = 0; m < numMatls; m++){
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
@@ -922,7 +923,7 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
 	    if( patch->containsNode(ni[k]) ) {
 	      if( conn[k] == Connectivity::connect || 
 	          conn[k] == Connectivity::contact) {
-	        totalgmass[ni[k]]   += pmass[idx]          * S_connect[k];
+	        gmassglobal[ni[k]]   += pmass[idx]          * S_connect[k];
 	        gmass[ni[k]]        += pmass[idx]          * S_connect[k];
 	        totalmass           += pmass[idx]          * S_connect[k];
 	        gmassContact[ni[k]] += pmass[idx]          * S_contact[k];
@@ -971,7 +972,7 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
 	  // Must use the node indices
 	  for(int k = 0; k < 8; k++) {
 	    if(patch->containsNode(ni[k])) {
-	       totalgmass[ni[k]]     += pmass[idx]          * S[k];
+	       gmassglobal[ni[k]]     += pmass[idx]          * S[k];
 	       gmass[ni[k]]          += pmass[idx]          * S[k];
 	       gvolume[ni[k]]        += pvolume[idx]        * S[k];
 	       gexternalforce[ni[k]] += pexternalforce[idx] * S[k];
@@ -1048,7 +1049,7 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
         new_dw->put(gmassContact, lb->gMassContactLabel,  matlindex, patch);
       }
     }  // End loop over materials
-    new_dw->put(totalgmass,       lb->gMassLabel,          numALLMatls, patch);
+    new_dw->put(gmassglobal, lb->gMassLabel, d_sharedState->getAllInOneMatl()->get(0), patch);
   }  // End loop over patches
 }
 
@@ -1113,15 +1114,16 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
     Id.Identity();
 
     int numMPMMatls = d_sharedState->getNumMPMMatls();
-    int numALLMatls = d_sharedState->getNumMatls();
 
     double integralTraction = 0.;
     double integralArea = 0.;
 
     NCVariable<Matrix3>       gstressglobal;
     NCVariable<double>        gmassglobal;
-    new_dw->get(gmassglobal,  lb->gMassLabel,numALLMatls,patch, Ghost::None, 0);
-    new_dw->allocate(gstressglobal,lb->gStressForSavingLabel,numALLMatls,patch);
+    new_dw->get(gmassglobal,  lb->gMassLabel, d_sharedState->getAllInOneMatl()->get(0), 
+		patch, Ghost::None, 0);
+    new_dw->allocate(gstressglobal,lb->gStressForSavingLabel, 
+		     d_sharedState->getAllInOneMatl()->get(0), patch);
 
     for(int m = 0; m < numMPMMatls; m++){
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
@@ -1298,7 +1300,8 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
   for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++) {
     gstressglobal[*iter] /= gmassglobal[*iter];
   }
-  new_dw->put(gstressglobal,  lb->gStressForSavingLabel, numALLMatls, patch);
+  new_dw->put(gstressglobal,  lb->gStressForSavingLabel, 
+	      d_sharedState->getAllInOneMatl()->get(0), patch);
   }
 }
 
