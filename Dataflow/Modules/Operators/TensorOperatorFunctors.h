@@ -13,6 +13,26 @@
 
 namespace Uintah {
 
+  /************************************
+   * Template
+
+     struct MyNewTensorOp
+     {
+       MyNewTensorOp(optional_parameters):
+         class_member_initialization(optional_parameters)
+       { // do initialization stuff if you want }
+
+       // This is the function which does the operation you want.
+       inline double operator()(Matrix3 M)
+       { return myoperation_on_M(M); }
+
+       // These are entirely optional
+       class_member_initialization;
+     };
+     
+  */
+
+  
 struct TensorElementExtractionOp
 {
   TensorElementExtractionOp(int row, int column)
@@ -74,6 +94,17 @@ struct EquivalentStressOp
     Matrix3 Mdev = M - one*(M.Trace()/3.0);
     return sqrt(Mdev.NormSquared()*1.5); 
   }
+};
+
+struct OctShearStressOp
+{
+  OctShearStressOp() {}
+  inline double operator()(Matrix3 M)
+  { return sqrt( (M(0,0)-M(1,1))*(M(0,0)-M(1,1))+
+		 (M(1,1)-M(2,2))*(M(1,1)-M(2,2))+
+		 (M(2,2)-M(0,0))*(M(2,2)-M(0,0))+
+		 6*(M(0,1)*M(0,1)+M(1,2)*M(1,2)+M(0,2)*M(0,2))
+		 )/3.0; }
 };
 
 /*

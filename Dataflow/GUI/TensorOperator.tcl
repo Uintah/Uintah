@@ -60,7 +60,10 @@ itcl_class Uintah_Operators_TensorOperator {
 	radiobutton $w.calc.eqivstress -text "Equivalent Stress" \
 		-variable $this-operation -value 3 \
 		-command "$this select_equivalent_stress"
-	pack $w.calc.l $w.calc.elem $w.calc.eigen2D $w.calc.pressure $w.calc.eqivstress -anchor w
+	radiobutton $w.calc.octshearstress -text "Octahedral Shear Stress" \
+		-variable $this-operation -value 4 \
+		-command "$this select_oct_shear_stress"
+	pack $w.calc.l $w.calc.elem $w.calc.eigen2D $w.calc.pressure $w.calc.eqivstress $w.calc.octshearstress -anchor w
 	pack $w.calc -side left -padx 2 -pady 2 -fill y
 
 	if { [set $this-operation] == 0} {
@@ -71,6 +74,8 @@ itcl_class Uintah_Operators_TensorOperator {
 	    select_pressure
 	} elseif { [set $this-operation] == 3} {
 	    select_equivalent_stress
+	} elseif { [set $this-operation] == 4} {
+	    select_oct_shear_stress
 	}
     }
 
@@ -111,6 +116,14 @@ itcl_class Uintah_Operators_TensorOperator {
 	destroy $w.opts
 	frame $w.opts -relief sunken -bd 1
 	equivalent_stress_ui $w.opts
+	pack $w.opts -padx 2 -pady 2 -fill y -expand yes
+	$this-c needexecute
+    }
+    method select_oct_shear_stress {} {
+	set w .ui[modname]
+	destroy $w.opts
+	frame $w.opts -relief sunken -bd 1
+	oct_shear_stress_ui $w.opts
 	pack $w.opts -padx 2 -pady 2 -fill y -expand yes
 	$this-c needexecute
     }
@@ -175,6 +188,20 @@ itcl_class Uintah_Operators_TensorOperator {
 	label $w.l1 -text "Stress Tensor Operation"
 	label $w.l2 -text "s_eq = sqrt(1.5*(sdev_ij*sdev_ij))"
 	pack $w.l1 
+	pack $w.l2 -anchor c -expand yes
+    }
+
+    method oct_shear_stress_ui {w} {
+	label $w.l1 -text "Octahedral Shear Stress Tensor Operation"
+	label $w.l2 -text \
+	"OSS = sqrt( (stress00-stress11)*(stress00-stress11)+
+(stress11-stress22)*(stress11-stress22)+
+(stress22-stress00)*(stress22-stress00)+
+6*(stress01*stress01+stress12*stress12+stress02*stress02))
+____________________________________________
+            3.0"
+
+        pack $w.l1 
 	pack $w.l2 -anchor c -expand yes
     }
 
