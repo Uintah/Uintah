@@ -121,10 +121,17 @@ usage( const std::string & message,
 int
 main(int argc, char** argv)
 {
-  TAU_PROFILE_INIT(argc,argv);
-  // Causes buserr for some reason:
-  //TAU_PROFILE("main()", "void (int, char **)", TAU_DEFAULT);
 
+#ifdef USE_TAU_PROFILING
+  cout << "about to call tau_profile... if it dies now, it is in "
+       << "sus.cc at the TAU_PROFILE() call.  This has only been "
+       << "happening in 32 bit tau use.";  
+#endif
+  // Causes buserr for some reason:
+  TAU_PROFILE("main()", "void (int, char **)", TAU_DEFAULT);
+
+  TAU_PROFILE_INIT(argc,argv);
+  
 #if HAVE_IEEEFP_H
     fpsetmask(FP_X_OFL|FP_X_DZ|FP_X_INV);
 #endif
