@@ -257,6 +257,10 @@ MPMICE::scheduleTimeAdvance(const LevelP& level, SchedulerP& sched, int , int )
   scheduleInterpolateNCToCC_0(                    sched, patches, one_matl,
                                                                   mpm_matls);
 
+  vector<PatchSubset*> maxMach_PSS(Patch::numFaces);                                                       
+  d_ice->scheduleMaxMach_on_Lodi_BC_Faces(        sched, level,   ice_matls, 
+                                                                  maxMach_PSS);
+                                                                  
   scheduleComputePressure(                        sched, patches, ice_matls_sub,
                                                                   mpm_matls_sub,
                                                                   press_matl,
@@ -359,13 +363,8 @@ MPMICE::scheduleTimeAdvance(const LevelP& level, SchedulerP& sched, int , int )
   d_mpm->scheduleInterpolateToParticlesAndUpdate( sched, patches, mpm_matls);
   //d_mpm->scheduleApplyExternalLoads(              sched, patches, mpm_matls);
   
-  
-  vector<PatchSubset*> maxMach_PSS(Patch::numFaces);                                                       
-  d_ice->scheduleMaxMach_on_Lodi_BC_Faces(        sched, level,   ice_matls, 
-                                                                  maxMach_PSS);
                                    
-  d_ice->scheduleAdvectAndAdvanceInTime(          sched, patches, maxMach_PSS,
-                                                                  ice_matls_sub,
+  d_ice->scheduleAdvectAndAdvanceInTime(          sched, patches, ice_matls_sub,
                                                                   mpm_matls_sub,
                                                                   press_matl,
                                                                   ice_matls);
