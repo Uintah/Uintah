@@ -430,7 +430,7 @@ OpenGL::render_and_save_image(int x, int y,
   // Don't need to raise if using pbuffer.
   // FIXME: this next line was apparently meant to raise the Viewer to the
   //        top... but it doesn't actually seem to work
-  Tk_RestackWindow(tk_gl_widget_->tkwin_,Above,NULL);
+  Tk_RestackWindow(tk_gl_context_->tkwin_,Above,NULL);
 #endif
 
   gui_->lock();
