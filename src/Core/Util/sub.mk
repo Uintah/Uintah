@@ -26,8 +26,9 @@ SRCS     += \
 	$(SRCDIR)/DebugStream.cc \
 	$(SRCDIR)/DynamicLoader.cc \
 	$(SRCDIR)/DynamicCompilation.cc \
-	$(SRCDIR)/ProgressReporter.cc \
 	$(SRCDIR)/Endian.cc \
+	$(SRCDIR)/Environment.cc \
+	$(SRCDIR)/ProgressReporter.cc \
 	$(SRCDIR)/SizeTypeConvert.cc \
 	$(SRCDIR)/RWS.cc \
 	$(SRCDIR)/sci_system.cc \

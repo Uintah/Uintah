@@ -34,9 +34,11 @@
 #include <Dataflow/Network/Scheduler.h>
 #include <Core/GuiInterface/TCLTask.h>
 #include <Core/GuiInterface/TCLInterface.h>
-#include <Core/GuiInterface/scirun_env.h>
+#include <Core/Util/Environment.h>
 #include <Core/Thread/Thread.h>
+#include <Core/Util/sci_system.h>
 #include <sys/stat.h>
+#include <fcntl.h>
 
 #if defined(__APPLE__)
 #  include <Core/Datatypes/MacForceLoad.h>
@@ -160,6 +162,35 @@ public:
 
 
 
+// show_licence_and_copy_sciunrc is not in Core/Util/Environment.h because it
+// depends on GuiInterface to present the user with the license dialog.
+void
+show_license_and_copy_scirunrc(GuiInterface *gui) {
+  string tclresult;
+  gui->eval(string("licenseDialog 1"), tclresult);
+
+  if (tclresult == "cancel")
+  {
+    Thread::exitAll(1);
+  }
+
+  // check to make sure home directory is there
+  char* HOME = getenv("HOME");
+  if (!HOME) return;
+
+  if (tclresult == "accept") {
+    string homerc = string(HOME)+"/.scirunrc";
+    string cmd = string("cp -f ")+SCIRUN_SRCDIR+string("/scirunrc ")+homerc;
+    if (sci_system(cmd.c_str())) {
+      std::cerr << "Error executing: " << cmd << std::endl;
+    } else {
+      parse_scirunrc(homerc);
+    }
+  }
+}
+
+
+
 
 int
 main(int argc, char *argv[] )
@@ -204,7 +235,8 @@ main(int argc, char *argv[] )
   t2->setDaemon(true);
   t2->detach();
 
-  parse_scirunrc(gui);
+  // If the user doesnt have a .scirunrc file, provide them with a default one
+  if (!find_and_parse_scirunrc()) show_license_and_copy_scirunrc(gui);
 
   // set splash to be main one unless later changed due to a standalone
   packageDB->setSplashPath("main/scisplash.ppm");

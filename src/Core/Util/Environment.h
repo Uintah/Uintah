@@ -13,20 +13,30 @@
   The Original Source Code was developed by the University of Utah.
   Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
   University of Utah. All Rights Reserved.
+
+  Environment.h: Interface to setting environemnt variables and parsing .rc files
+
+  Written by:
+    McKay Davis
+    Scientific Computing and Imaging Institute 
+    University of Utah
+    January 2004
+    Copyright (C) 2004 SCI Institute
+
 */
 
-#ifndef Core_GuiInterface_scirun_env_h
-#define Core_GuiInterface_scirun_env_h 1
+
+#ifndef Core_Util_Environemnt_h
+#define Core_Util_Environment_h 1
 
 #include <string>
 
 namespace SCIRun {
-class GuiInterface;
-void parse_scirunrc(GuiInterface *gui);
-void sci_putenv(const string &var,
-		const string &val,
-		GuiInterface *gui,
-		bool force=false);
+  using std::string;
+  bool find_and_parse_scirunrc();
+  bool parse_scirunrc(const string filename);
+  void sci_putenv(const string &key, const string &val, bool force=false);
+  bool sci_getenv_p(const string &key);
 }
 
-#endif
+#endif // #ifndef Core_Util_Environment_h
