@@ -2339,7 +2339,6 @@ void MPMICE::interpolateMassBurnFractionToNC(const ProcessorGroup*,
     delt_vartype delT;
     old_dw->get(delT, d_sharedState->get_delt_label());
     Ghost::GhostType  gac = Ghost::AroundCells;
-    Ghost::GhostType  gn = Ghost::AroundCells;
     
     for (int m = 0; m < numALLMatls; m++) {
       Material* matl = d_sharedState->getMaterial( m );

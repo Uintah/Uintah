@@ -29,8 +29,8 @@ TestModel::~TestModel()
     delete mymatls;
 }
 
-void TestModel::problemSetup(GridP& grid, SimulationStateP& sharedState,
-			     ModelSetup& setup)
+void TestModel::problemSetup(GridP&, SimulationStateP& sharedState,
+			     ModelSetup& )
 {
   matl0 = sharedState->parseAndLookupMaterial(params, "fromMaterial");
   matl1 = sharedState->parseAndLookupMaterial(params, "toMaterial");
@@ -64,7 +64,7 @@ void TestModel::scheduleInitialize(const LevelP&,
 }
       
 void TestModel::scheduleComputeStableTimestep(SchedulerP&,
-					      const LevelP& level,
+					      const LevelP&,
 					      const ModelInfo*)
 {
   // None necessary...
@@ -202,7 +202,7 @@ void TestModel::massExchange(const ProcessorGroup*,
 }
 
 void TestModel::scheduleMomentumAndEnergyExchange(SchedulerP&,
-						  const LevelP& level,
+						  const LevelP&,
 						  const ModelInfo*)
 {
   // None

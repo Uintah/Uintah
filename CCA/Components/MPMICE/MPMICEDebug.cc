@@ -82,7 +82,7 @@ void    MPMICE::printNCVector(int matl,
                               int include_EC,
                               const string&    message1,        
                               const string&    message2,              
-                              int     component, 
+                              int     /*component*/, 
                               const NCVariable<Vector>& q_NC)
 {
   //__________________________________

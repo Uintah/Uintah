@@ -856,7 +856,7 @@ void ICE::scheduleComputePressFC(SchedulerP& sched,
 _____________________________________________________________________*/
 void ICE::scheduleModelMomentumAndEnergyExchange(SchedulerP& sched,
 						 const LevelP& level,
-						 const MaterialSet* matls)
+						 const MaterialSet* /*matls*/)
 {
   if(d_models.size() != 0){
     for(vector<ModelInterface*>::iterator iter = d_models.begin();
@@ -1117,7 +1117,7 @@ _____________________________________________________________________*/
 void ICE::scheduleAdvectAndAdvanceInTime(SchedulerP& sched,
                                     const PatchSet* patches,
                                     const MaterialSubset* ice_matls,
-                                    const MaterialSubset* mpm_matls,
+                                    const MaterialSubset* /*mpm_matls*/,
                                     const MaterialSet* matls)
 {
   cout_doing << "ICE::scheduleAdvectAndAdvanceInTime" << endl;
@@ -2341,9 +2341,7 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
     old_dw->get(delT, d_sharedState->get_delt_label());
     Vector dx     = patch->dCell();
 
-    double vol    = dx.x()*dx.y()*dx.z();
-    double invvol = 1./vol;
-    
+    double vol    = dx.x()*dx.y()*dx.z();    
     Advector* advector = d_advector->clone(new_dw,patch);
     CCVariable<double> q_advected;
     CCVariable<double> delP_Dilatate;
@@ -3097,7 +3095,7 @@ void ICE::computeLagrangianValues(const ProcessorGroup*,
       double cv = ice_matl->getSpecificHeat();
       //__________________________________
       //  NO mass exchange
-      if(d_massExchange == false && d_models.size() == 0.0) {
+      if(d_massExchange == false && d_models.size() == 0) {
         for(CellIterator iter = patch->getExtraCellIterator(); !iter.done(); 
            iter++) {
          IntVector c = *iter;
