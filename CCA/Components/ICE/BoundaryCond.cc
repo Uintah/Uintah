@@ -425,16 +425,17 @@ void setBC(CCVariable<double>& press_CC,
           }
           IveSetBC = true;
         }  // with gravity 
+      
+        //__________________________________
+        //  debugging
+        if( BC_dbg.active() ) {
+          BC_dbg <<"Face: "<< face <<" I've set BC " << IveSetBC
+               <<"\t child " << child  <<" NumChildren "<<numChildren 
+               <<"\t BC kind "<< bc_kind <<" \tBC value "<< bc_value
+               <<"\t bound limits = "<< *bound.begin()<< " "<< *(bound.end()-1)
+	        << endl;
+        }
       }  // if bcKind != notSet
-      //__________________________________
-      //  debugging
-      if( BC_dbg.active() ) {
-        BC_dbg <<"Face: "<< face <<" I've set BC " << IveSetBC
-             <<"\t child " << child  <<" NumChildren "<<numChildren 
-             <<"\t BC kind "<< bc_kind <<" \tBC value "<< bc_value
-             <<"\t bound limits = "<< *bound.begin()<< " "<< *(bound.end()-1)
-	      << endl;
-      }
     }  // child loop
   }  // faces loop
 }
