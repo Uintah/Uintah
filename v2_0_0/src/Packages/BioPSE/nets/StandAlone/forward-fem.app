@@ -568,8 +568,6 @@ class ForwardFEMApp {
 
         set indicatorID 0
 
-        catch {initialize_blocks}
-	
 	### Define Tooltips
 	##########################
 	# General
@@ -603,56 +601,6 @@ class ForwardFEMApp {
     }
 
     
-    method initialize_blocks {} { 
-	global mods
-	
-        # Blocking Data Section (Analyze and Dicom modules)
-        disableModule $mods(DicomToNrrd1) 1
-        disableModule $mods(AnalyzeToNrrd1) 1
-	
-        disableModule $mods(DicomToNrrd-T2) 1
-        disableModule $mods(AnalyzeToNrrd-T2) 1
-
-	# Blocking Registration
-        disableModule $mods(TendEpireg) 1
-	disableModule $mods(UnuJoin) 1
-        disableModule $mods(ChooseNrrd-ToReg) 1
-        disableModule $mods(RescaleColorMap2) 1
-  
-        # Building Diffusion Tensors
-        disableModule $mods(NrrdReader-BMatrix) 1
-        disableModule $mods(TendEstim) 1
-	disableModule $mods(ChooseNrrd-DT) 1
-
-        # Planes
-        disableModule $mods(QuadToTri-X) 1
-        disableModule $mods(QuadToTri-Y) 1
-        disableModule $mods(QuadToTri-Z) 1
-        disableModule $mods(RescaleColorMap-ColorPlanes) 1
-
-        # Isosurface
-        disableModule $mods(DirectInterpolate-Isosurface) 1
-        disableModule $mods(RescaleColorMap-Isosurface) 1
-
-
-        # Glyphs
-        disableModule $mods(NrrdToField-GlyphSeeds) 1
-        disableModule $mods(Probe-GlyphSeeds) 1
-        disableModule $mods(SampleField-GlyphSeeds) 1
-        disableModule $mods(DirectInterpolate-GlyphSeeds) 1
- 	disableModule $mods(ChooseField-Glyphs) 1
-	disableModule $mods(RescaleColorMap-Glyphs) 1
-
-	# Fibers
-        disableModule $mods(Probe-FiberSeeds) 1
-        disableModule $mods(SampleField-FiberSeeds) 1
-        disableModule $mods(DirectInterpolate-FiberSeeds) 1
- 	disableModule $mods(ChooseField-Fibers) 1
-	disableModule $mods(RescaleColorMap-Fibers) 1
-	
-    }
-
-
     method build_app {} {
 	global mods
 	
