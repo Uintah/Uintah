@@ -339,7 +339,7 @@ ac_includes_default="\
 # include <unistd.h>
 #endif"
 
-ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS CC CFLAGS LDFLAGS CXX CPPFLAGS CXXFLAGS F77 FFLAGS CPP CXXCPP DEF_CHROMIUM DEF_NEED_ATI_CARD_FIX DEF_NO_DYNAMIC_CAST MATLAB_ENG DEF_COLLAB_VIS HAVE_COLLAB_VIS build build_cpu build_vendor build_os host host_cpu host_vendor host_os IS_OSX ac_ct_CC EXEEXT OBJEXT ac_ct_CXX ac_ct_F77 SO_OR_ARCHIVE_EXTENSION ASSERTION_LEVEL NOPRINTDIR DEF_MALLOC PACKAGE_DIRS LOAD_PACKAGE EXENAME LARGESOS TIME_IMPL AS LD NEED_OSX_HACK DEF_NEED_OSX_HACK CC_DEPEND_MODE CC_DEPEND_REGEN CC_DEPEND_EXT F77_DEPEND_MODE F77_DEPEND_REGEN F77_DEPEND_EXT GMAKE MAKE AWK YACC LEX LEXLIB LEX_OUTPUT_ROOT LEX_LIB_FLAG ETAGS PERL FORTRAN_UNDERSCORE G77 SOFLAGS ASFLAGS LDRUN_PREFIX extra_cflags MAKE_PARALLELISM NEED_SONAME REPOSITORY_FLAGS TEMPLATE_TAG TEMPLATE_BOX EGREP NBITS INC_SCI_THIRDPARTY_H SCI_THIRDPARTY_LIB_DIR SCI_THIRDPARTY_LIB_DIR_FLAG M_LIB_FLAG M_LIB_DIR_FLAG X_LIB_FLAG X_LIB_DIR_FLAG THREAD_IMPL THREAD_LIB_FLAG DEF_THREAD SEMAPHORE_LIB_FLAG GL_LIB_FLAG GL_LIB_DIR_FLAG INC_GL_H DL_LIB_FLAG DL_LIB_DIR_FLAG DEF_STAT64 DEF_IEEEFP DEF_HASHMAP LIB_DIR_TCL TCL_LIB_FLAG TCL_LIB_DIR_FLAG INC_TCL_H TK_LIB_FLAG TK_LIB_DIR_FLAG INC_TK_H LIB_DIR_ITCL ITCL_LIB_FLAG ITCL_LIB_DIR_FLAG INC_ITCL_H ITK_LIB_FLAG ITK_LIB_DIR_FLAG INC_ITK_H BLT_LIB_FLAG BLT_LIB_DIR_FLAG INC_BLT_H TCL_PREFIX TCL_VERSION TK_VERSION ITCL_WIDGETS XERCES_C_LIB_FLAG XERCES_C_LIB_DIR_FLAG INC_XERCESC_H SSTREAM_COMPAT EXC_LIB_FLAG EXC_LIB_DIR_FLAG DEF_EXC MPEGE_LIB_FLAG MPEGE_LIB_DIR_FLAG DEF_MPEG MAGICK_LIB_FLAG MAGICK_LIB_DIR_FLAG INC_MAGICK_H DEF_MAGICK Z_LIB_FLAG Z_LIB_DIR_FLAG INC_Z_H DEF_Z PNG_LIB_FLAG PNG_LIB_DIR_FLAG INC_PNG_H DEF_PNG F_LIB_FLAG HAVE_BLAS HAVE_CBLAS INC_BLAS_H BLAS_LIB_FLAG BLAS_LIB_DIR_FLAG DEF_BLAS DEF_CBLAS FTGL_LIB_FLAG FTGL_LIB_DIR_FLAG DEF_FTGL INC_FTGL_H HAVE_LAPACK DEF_LAPACK LAPACK_LIB_FLAG LAPACK_LIB_DIR_FLAG HAVE_LAPACKMP LAPACKMP_LIB_FLAG LAPACKMP_LIB_DIR_FLAG HAVE_MPI DEF_MPI INC_MPI_H MPI_LIB_FLAG MPI_LIB_DIR_FLAG DEF_MPIUNI INC_MPIUNI_H MPIUNI_LIB_FLAG MPIUNI_LIB_DIR_FLAG HAVE_PETSC PETSC_LIB_FLAG PETSC_LIB_DIR_FLAG DEF_PETSC INC_PETSC_H PETSC_UNI_LIB_FLAG PETSC_UNI_LIB_DIR_FLAG DEF_PETSC_UNI INC_PETSC_UNI_H HAVE_INSIGHT DEF_INSIGHT INC_INSIGHT_H INSIGHT_LIB_FLAG INSIGHT_LIB_DIR_FLAG XALAN_PATH TAU_MAKEFILE BABEL_BIN HAVE_BABEL DEF_BABEL INC_SIDL_H SIDL_LIB_FLAG SIDL_LIB_DIR_FLAG JPEG_LIB_FLAG JPEG_LIB_DIR_FLAG TIFF_LIB_FLAG TIFF_LIB_DIR_FLAG NETSOLVE_LIB_FLAG NETSOLVE_LIB_DIR_FLAG INC_GLUT_H GLUT_LIB_FLAG GLUT_LIB_DIR_FLAG INC_GLUI_H GLUI_LIB_FLAG GLUI_LIB_DIR_FLAG DEF_OOGL INC_OOGL_H OOGL_LIB_FLAG OOGL_LIB_DIR_FLAG DEF_GLEW INC_GLEW_H GLEW_LIB_FLAG GLEW_LIB_DIR_FLAG DEF_AUDIO HAVE_AUDIO AUDIO_LIB_FLAG AUDIO_LIB_DIR_FLAG HAVE_TEEM DEF_TEEM INC_TEEM_H TEEM_LIB_FLAG TEEM_LIB_DIR_FLAG DEF_MDSPLUS INC_MDSPLUS_H MDSPLUS_LIB_FLAG MDSPLUS_LIB_DIR_FLAG DEF_HDF5 INC_HDF5_H HDF5_LIB_FLAG HDF5_LIB_DIR_FLAG DEF_PERFEX PERFEX_LIB_FLAG PERFEX_LIB_DIR_FLAG CRYPTO_LIB_FLAG CRYPTO_LIB_DIR_FLAG DEF_CRYPTO SSL_LIB_FLAG SSL_LIB_DIR_FLAG DEF_SSL HAVE_GLOBUS DEF_GLOBUS INC_GLOBUS_H GLOBUS_LIB_FLAG GLOBUS_LIB_DIR_FLAG QT_MOC_BIN HAVE_QT DEF_QT INC_QT_MT_H QT_MT_LIB_FLAG QT_MT_LIB_DIR_FLAG HAVE_RUBY DEF_RUBY INC_RUBY_H RUBY_LIB_FLAG RUBY_LIB_DIR_FLAG HAVE_VTK DEF_VTK INC_VTK_H VTK_LIB_FLAG VTK_LIB_DIR_FLAG DEF_VDT INC_VDT_H VDT_LIB_FLAG VDT_LIB_DIR_FLAG HAVE_HYPRE DEF_HYPRE INC_HYPRE_H HYPRE_LIB_FLAG HYPRE_LIB_DIR_FLAG UUID_LIB_FLAG DEF_SCIRUN2 BUILD_SCIRUN2 abs_conftop_dir abs_srcdir LIBOBJS LTLIBOBJS'
+ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS CC CFLAGS LDFLAGS CXX CPPFLAGS CXXFLAGS F77 FFLAGS CPP CXXCPP build build_cpu build_vendor build_os host host_cpu host_vendor host_os DEF_CHROMIUM DEF_NEED_ATI_CARD_FIX DEF_NO_DYNAMIC_CAST MATLAB_ENG DEF_COLLAB_VIS HAVE_COLLAB_VIS IS_OSX ac_ct_CC EXEEXT OBJEXT ac_ct_CXX ac_ct_F77 SO_OR_ARCHIVE_EXTENSION ASSERTION_LEVEL NOPRINTDIR DEF_MALLOC PACKAGE_DIRS LOAD_PACKAGE EXENAME LARGESOS TIME_IMPL AS LD NEED_OSX_HACK DEF_NEED_OSX_HACK CC_DEPEND_MODE CC_DEPEND_REGEN CC_DEPEND_EXT F77_DEPEND_MODE F77_DEPEND_REGEN F77_DEPEND_EXT GMAKE MAKE AWK YACC LEX LEXLIB LEX_OUTPUT_ROOT LEX_LIB_FLAG ETAGS PERL FORTRAN_UNDERSCORE G77 SOFLAGS ASFLAGS LDRUN_PREFIX extra_cflags MAKE_PARALLELISM NEED_SONAME REPOSITORY_FLAGS TEMPLATE_TAG TEMPLATE_BOX EGREP NBITS INC_SCI_THIRDPARTY_H SCI_THIRDPARTY_LIB_DIR SCI_THIRDPARTY_LIB_DIR_FLAG M_LIB_FLAG M_LIB_DIR_FLAG X_LIB_FLAG X_LIB_DIR_FLAG THREAD_IMPL THREAD_LIB_FLAG DEF_THREAD SEMAPHORE_LIB_FLAG GL_LIB_FLAG GL_LIB_DIR_FLAG INC_GL_H DL_LIB_FLAG DL_LIB_DIR_FLAG DEF_STAT64 DEF_IEEEFP DEF_HASHMAP LIB_DIR_TCL TCL_LIB_FLAG TCL_LIB_DIR_FLAG INC_TCL_H TK_LIB_FLAG TK_LIB_DIR_FLAG INC_TK_H LIB_DIR_ITCL ITCL_LIB_FLAG ITCL_LIB_DIR_FLAG INC_ITCL_H ITK_LIB_FLAG ITK_LIB_DIR_FLAG INC_ITK_H BLT_LIB_FLAG BLT_LIB_DIR_FLAG INC_BLT_H TCL_PREFIX TCL_VERSION TK_VERSION ITCL_WIDGETS XERCES_C_LIB_FLAG XERCES_C_LIB_DIR_FLAG INC_XERCESC_H SSTREAM_COMPAT EXC_LIB_FLAG EXC_LIB_DIR_FLAG DEF_EXC MPEGE_LIB_FLAG MPEGE_LIB_DIR_FLAG DEF_MPEG MAGICK_LIB_FLAG MAGICK_LIB_DIR_FLAG INC_MAGICK_H DEF_MAGICK Z_LIB_FLAG Z_LIB_DIR_FLAG INC_Z_H DEF_Z PNG_LIB_FLAG PNG_LIB_DIR_FLAG INC_PNG_H DEF_PNG F_LIB_FLAG HAVE_BLAS HAVE_CBLAS INC_BLAS_H BLAS_LIB_FLAG BLAS_LIB_DIR_FLAG DEF_BLAS DEF_CBLAS FTGL_LIB_FLAG FTGL_LIB_DIR_FLAG DEF_FTGL INC_FTGL_H HAVE_LAPACK DEF_LAPACK LAPACK_LIB_FLAG LAPACK_LIB_DIR_FLAG HAVE_LAPACKMP LAPACKMP_LIB_FLAG LAPACKMP_LIB_DIR_FLAG HAVE_MPI DEF_MPI INC_MPI_H MPI_LIB_FLAG MPI_LIB_DIR_FLAG DEF_MPIUNI INC_MPIUNI_H MPIUNI_LIB_FLAG MPIUNI_LIB_DIR_FLAG HAVE_PETSC PETSC_LIB_FLAG PETSC_LIB_DIR_FLAG DEF_PETSC INC_PETSC_H PETSC_UNI_LIB_FLAG PETSC_UNI_LIB_DIR_FLAG DEF_PETSC_UNI INC_PETSC_UNI_H HAVE_INSIGHT DEF_INSIGHT INC_INSIGHT_H INSIGHT_LIB_FLAG INSIGHT_LIB_DIR_FLAG XALAN_PATH TAU_MAKEFILE BABEL_BIN HAVE_BABEL DEF_BABEL INC_SIDL_H SIDL_LIB_FLAG SIDL_LIB_DIR_FLAG JPEG_LIB_FLAG JPEG_LIB_DIR_FLAG TIFF_LIB_FLAG TIFF_LIB_DIR_FLAG NETSOLVE_LIB_FLAG NETSOLVE_LIB_DIR_FLAG INC_GLUT_H GLUT_LIB_FLAG GLUT_LIB_DIR_FLAG INC_GLUI_H GLUI_LIB_FLAG GLUI_LIB_DIR_FLAG DEF_OOGL INC_OOGL_H OOGL_LIB_FLAG OOGL_LIB_DIR_FLAG DEF_GLEW INC_GLEW_H GLEW_LIB_FLAG GLEW_LIB_DIR_FLAG DEF_AUDIO HAVE_AUDIO AUDIO_LIB_FLAG AUDIO_LIB_DIR_FLAG HAVE_TEEM DEF_TEEM INC_TEEM_H TEEM_LIB_FLAG TEEM_LIB_DIR_FLAG DEF_MDSPLUS INC_MDSPLUS_H MDSPLUS_LIB_FLAG MDSPLUS_LIB_DIR_FLAG DEF_HDF5 INC_HDF5_H HDF5_LIB_FLAG HDF5_LIB_DIR_FLAG DEF_PERFEX PERFEX_LIB_FLAG PERFEX_LIB_DIR_FLAG CRYPTO_LIB_FLAG CRYPTO_LIB_DIR_FLAG DEF_CRYPTO SSL_LIB_FLAG SSL_LIB_DIR_FLAG DEF_SSL HAVE_GLOBUS DEF_GLOBUS INC_GLOBUS_H GLOBUS_LIB_FLAG GLOBUS_LIB_DIR_FLAG QT_MOC_BIN HAVE_QT DEF_QT INC_QT_MT_H QT_MT_LIB_FLAG QT_MT_LIB_DIR_FLAG HAVE_RUBY DEF_RUBY INC_RUBY_H RUBY_LIB_FLAG RUBY_LIB_DIR_FLAG HAVE_VTK DEF_VTK INC_VTK_H VTK_LIB_FLAG VTK_LIB_DIR_FLAG DEF_VDT INC_VDT_H VDT_LIB_FLAG VDT_LIB_DIR_FLAG HAVE_HYPRE DEF_HYPRE INC_HYPRE_H HYPRE_LIB_FLAG HYPRE_LIB_DIR_FLAG UUID_LIB_FLAG DEF_SCIRUN2 BUILD_SCIRUN2 abs_conftop_dir abs_srcdir LIBOBJS LTLIBOBJS'
 ac_subst_files=''
 
 # Initialize some variables set by options.
@@ -1536,6 +1536,62 @@ fi
   sci_arg_var_list="$sci_arg_var_list CXXCPP"
 
 
+#Get the host now since it is needed for the Package Checks.
+# Make sure we can run config.sub.
+$ac_config_sub sun4 >/dev/null 2>&1 ||
+  { { echo "$as_me:$LINENO: error: cannot run $ac_config_sub" >&5
+echo "$as_me: error: cannot run $ac_config_sub" >&2;}
+   { (exit 1); exit 1; }; }
+
+echo "$as_me:$LINENO: checking build system type" >&5
+echo $ECHO_N "checking build system type... $ECHO_C" >&6
+if test "${ac_cv_build+set}" = set; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+  ac_cv_build_alias=$build_alias
+test -z "$ac_cv_build_alias" &&
+  ac_cv_build_alias=`$ac_config_guess`
+test -z "$ac_cv_build_alias" &&
+  { { echo "$as_me:$LINENO: error: cannot guess build type; you must specify one" >&5
+echo "$as_me: error: cannot guess build type; you must specify one" >&2;}
+   { (exit 1); exit 1; }; }
+ac_cv_build=`$ac_config_sub $ac_cv_build_alias` ||
+  { { echo "$as_me:$LINENO: error: $ac_config_sub $ac_cv_build_alias failed" >&5
+echo "$as_me: error: $ac_config_sub $ac_cv_build_alias failed" >&2;}
+   { (exit 1); exit 1; }; }
+
+fi
+echo "$as_me:$LINENO: result: $ac_cv_build" >&5
+echo "${ECHO_T}$ac_cv_build" >&6
+build=$ac_cv_build
+build_cpu=`echo $ac_cv_build | sed 's/^\([^-]*\)-\([^-]*\)-\(.*\)$/\1/'`
+build_vendor=`echo $ac_cv_build | sed 's/^\([^-]*\)-\([^-]*\)-\(.*\)$/\2/'`
+build_os=`echo $ac_cv_build | sed 's/^\([^-]*\)-\([^-]*\)-\(.*\)$/\3/'`
+
+
+echo "$as_me:$LINENO: checking host system type" >&5
+echo $ECHO_N "checking host system type... $ECHO_C" >&6
+if test "${ac_cv_host+set}" = set; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+  ac_cv_host_alias=$host_alias
+test -z "$ac_cv_host_alias" &&
+  ac_cv_host_alias=$ac_cv_build_alias
+ac_cv_host=`$ac_config_sub $ac_cv_host_alias` ||
+  { { echo "$as_me:$LINENO: error: $ac_config_sub $ac_cv_host_alias failed" >&5
+echo "$as_me: error: $ac_config_sub $ac_cv_host_alias failed" >&2;}
+   { (exit 1); exit 1; }; }
+
+fi
+echo "$as_me:$LINENO: result: $ac_cv_host" >&5
+echo "${ECHO_T}$ac_cv_host" >&6
+host=$ac_cv_host
+host_cpu=`echo $ac_cv_host | sed 's/^\([^-]*\)-\([^-]*\)-\(.*\)$/\1/'`
+host_vendor=`echo $ac_cv_host | sed 's/^\([^-]*\)-\([^-]*\)-\(.*\)$/\2/'`
+host_os=`echo $ac_cv_host | sed 's/^\([^-]*\)-\([^-]*\)-\(.*\)$/\3/'`
+
+
+
 # Initialize variables that control what optional checks to make
 ## all the optional tests we have... These get set in the macro
 # SCI_SET_PACKAGE_CHECKS found in aclocal.m4.  Each package sets the
@@ -1552,6 +1608,7 @@ fi
   sci_required_exc=no
   sci_required_fortran=no
   sci_required_hdf5=no
+  sci_required_glew=no
   sci_required_globus=no
   sci_required_glui=no
   sci_required_glut=no
@@ -2401,7 +2458,7 @@ case SCIRun2 in
     sci_required_xalan=yes
   ;;
   Volume)
-    case "$host" in
+    case $host in
      *-darwin*)
 	sci_required_glew=yes
 	;;
@@ -2571,7 +2628,7 @@ case $i in
     sci_required_xalan=yes
   ;;
   Volume)
-    case "$host" in
+    case $host in
      *-darwin*)
 	sci_required_glew=yes
 	;;
@@ -2651,7 +2708,7 @@ case Teem in
     sci_required_xalan=yes
   ;;
   Volume)
-    case "$host" in
+    case $host in
      *-darwin*)
 	sci_required_glew=yes
 	;;
@@ -2731,7 +2788,7 @@ case DataIO in
     sci_required_xalan=yes
   ;;
   Volume)
-    case "$host" in
+    case $host in
      *-darwin*)
 	sci_required_glew=yes
 	;;
@@ -2795,60 +2852,6 @@ fi
 ##  --------------------------------------------------------------------
 
 echo
-# Make sure we can run config.sub.
-$ac_config_sub sun4 >/dev/null 2>&1 ||
-  { { echo "$as_me:$LINENO: error: cannot run $ac_config_sub" >&5
-echo "$as_me: error: cannot run $ac_config_sub" >&2;}
-   { (exit 1); exit 1; }; }
-
-echo "$as_me:$LINENO: checking build system type" >&5
-echo $ECHO_N "checking build system type... $ECHO_C" >&6
-if test "${ac_cv_build+set}" = set; then
-  echo $ECHO_N "(cached) $ECHO_C" >&6
-else
-  ac_cv_build_alias=$build_alias
-test -z "$ac_cv_build_alias" &&
-  ac_cv_build_alias=`$ac_config_guess`
-test -z "$ac_cv_build_alias" &&
-  { { echo "$as_me:$LINENO: error: cannot guess build type; you must specify one" >&5
-echo "$as_me: error: cannot guess build type; you must specify one" >&2;}
-   { (exit 1); exit 1; }; }
-ac_cv_build=`$ac_config_sub $ac_cv_build_alias` ||
-  { { echo "$as_me:$LINENO: error: $ac_config_sub $ac_cv_build_alias failed" >&5
-echo "$as_me: error: $ac_config_sub $ac_cv_build_alias failed" >&2;}
-   { (exit 1); exit 1; }; }
-
-fi
-echo "$as_me:$LINENO: result: $ac_cv_build" >&5
-echo "${ECHO_T}$ac_cv_build" >&6
-build=$ac_cv_build
-build_cpu=`echo $ac_cv_build | sed 's/^\([^-]*\)-\([^-]*\)-\(.*\)$/\1/'`
-build_vendor=`echo $ac_cv_build | sed 's/^\([^-]*\)-\([^-]*\)-\(.*\)$/\2/'`
-build_os=`echo $ac_cv_build | sed 's/^\([^-]*\)-\([^-]*\)-\(.*\)$/\3/'`
-
-
-echo "$as_me:$LINENO: checking host system type" >&5
-echo $ECHO_N "checking host system type... $ECHO_C" >&6
-if test "${ac_cv_host+set}" = set; then
-  echo $ECHO_N "(cached) $ECHO_C" >&6
-else
-  ac_cv_host_alias=$host_alias
-test -z "$ac_cv_host_alias" &&
-  ac_cv_host_alias=$ac_cv_build_alias
-ac_cv_host=`$ac_config_sub $ac_cv_host_alias` ||
-  { { echo "$as_me:$LINENO: error: $ac_config_sub $ac_cv_host_alias failed" >&5
-echo "$as_me: error: $ac_config_sub $ac_cv_host_alias failed" >&2;}
-   { (exit 1); exit 1; }; }
-
-fi
-echo "$as_me:$LINENO: result: $ac_cv_host" >&5
-echo "${ECHO_T}$ac_cv_host" >&6
-host=$ac_cv_host
-host_cpu=`echo $ac_cv_host | sed 's/^\([^-]*\)-\([^-]*\)-\(.*\)$/\1/'`
-host_vendor=`echo $ac_cv_host | sed 's/^\([^-]*\)-\([^-]*\)-\(.*\)$/\2/'`
-host_os=`echo $ac_cv_host | sed 's/^\([^-]*\)-\([^-]*\)-\(.*\)$/\3/'`
-
-
 IS_OSX="no"
 unset NUM_CPUS
 case $host in
@@ -4377,7 +4380,7 @@ fi
 
 
 # Provide some information about the compiler.
-echo "$as_me:4380:" \
+echo "$as_me:4383:" \
      "checking for Fortran 77 compiler version" >&5
 ac_compiler=`set X $ac_compile; echo $2`
 { (eval echo "$as_me:$LINENO: \"$ac_compiler --version </dev/null >&5\"") >&5
@@ -41776,12 +41779,6 @@ s,@F77@,$F77,;t t
 s,@FFLAGS@,$FFLAGS,;t t
 s,@CPP@,$CPP,;t t
 s,@CXXCPP@,$CXXCPP,;t t
-s,@DEF_CHROMIUM@,$DEF_CHROMIUM,;t t
-s,@DEF_NEED_ATI_CARD_FIX@,$DEF_NEED_ATI_CARD_FIX,;t t
-s,@DEF_NO_DYNAMIC_CAST@,$DEF_NO_DYNAMIC_CAST,;t t
-s,@MATLAB_ENG@,$MATLAB_ENG,;t t
-s,@DEF_COLLAB_VIS@,$DEF_COLLAB_VIS,;t t
-s,@HAVE_COLLAB_VIS@,$HAVE_COLLAB_VIS,;t t
 s,@build@,$build,;t t
 s,@build_cpu@,$build_cpu,;t t
 s,@build_vendor@,$build_vendor,;t t
@@ -41790,6 +41787,12 @@ s,@host@,$host,;t t
 s,@host_cpu@,$host_cpu,;t t
 s,@host_vendor@,$host_vendor,;t t
 s,@host_os@,$host_os,;t t
+s,@DEF_CHROMIUM@,$DEF_CHROMIUM,;t t
+s,@DEF_NEED_ATI_CARD_FIX@,$DEF_NEED_ATI_CARD_FIX,;t t
+s,@DEF_NO_DYNAMIC_CAST@,$DEF_NO_DYNAMIC_CAST,;t t
+s,@MATLAB_ENG@,$MATLAB_ENG,;t t
+s,@DEF_COLLAB_VIS@,$DEF_COLLAB_VIS,;t t
+s,@HAVE_COLLAB_VIS@,$HAVE_COLLAB_VIS,;t t
 s,@IS_OSX@,$IS_OSX,;t t
 s,@ac_ct_CC@,$ac_ct_CC,;t t
 s,@EXEEXT@,$EXEEXT,;t t
