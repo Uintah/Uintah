@@ -372,6 +372,13 @@ class BioFEMApp {
 
         set initialized 1
 
+	global PowerAppSession
+	if {[info exists PowerAppSession] && [set PowerAppSession] != ""} { 
+	    set saveFile $PowerAppSession
+	    wm title .standalone "BioTensor - [getFileName $saveFile]"
+	    $this load_session
+	} 
+
     }
 
     method set_dataset { andexec } {
@@ -715,12 +722,7 @@ class BioFEMApp {
 	    set saveFile [ tk_getSaveFile -defaultextension {.ses} \
 			       -filetypes $types ]
 	}	
-	set types {
-	    {{App Settings} {.set} }
-	    {{Other} { * } }
-	} 
-	set saveFile [ tk_getSaveFile -defaultextension {.set} \
-			   -filetypes $types ]
+
 	if { $saveFile != "" } {
 	    # configure title
 	    wm title .standalone "BioFEM - [getFileName $saveFile]" 
@@ -760,11 +762,14 @@ class BioFEMApp {
     
     method load_session {} {	
 	set types {
-	    {{App Settings} {.set} }
+	    {{App Settings} {.ses} }
 	    {{Other} { * }}
 	}
 	
-	set saveFile [tk_getOpenFile -filetypes $types]
+	if {$saveFile == ""} {
+	    set saveFile [tk_getOpenFile -filetypes $types]
+	}
+	
 	if {$saveFile != ""} {
 	    
 	    # Reset application 
