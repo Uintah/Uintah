@@ -176,7 +176,9 @@ public:
   void restartInitialize(int& timestep, const GridP& grid, DataWarehouse* dw,
 			 double* pTime /* passed back */,
 			 double* pDelt /* passed back */);
-  
+
+  inline ProblemSpecP getRestartTimestepDoc() { return d_restartTimestepDoc; }
+  inline XMLURL getRestartTimestepURL() { return d_restartTimestepURL; }
   // GROUP:  Information Access
   //////////
   // However, we need a means of determining the names of existing
@@ -309,7 +311,9 @@ private:
   
   std::string d_filebase;  
   ProblemSpecP d_indexDoc;
+  ProblemSpecP d_restartTimestepDoc;
   XMLURL d_base;
+  XMLURL d_restartTimestepURL;
 
   bool d_swapBytes;
   int d_nBytes;

@@ -583,6 +583,8 @@ DataArchive::restartInitialize(int& timestep, const GridP& grid,
 
   *pTime = times[i];
   timestep = indices[i];
+  d_restartTimestepDoc = d_tstop[i];
+  d_restartTimestepURL = d_tsurl[i];
    
   ASSERTL3(indices.size() == d_tstop.size());
   ASSERTL3(d_tsurl.size() == d_tstop.size());
