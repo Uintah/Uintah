@@ -50,6 +50,7 @@ class SimulationInterface;
 
       virtual void doRestart(std::string restartFromDir, int timestep,
 		     bool fromScratch, bool removeOldDir);
+      virtual void doCombinePatches(std::string fromDir);
       virtual void run();
 
    private:
@@ -61,9 +62,13 @@ class SimulationInterface;
 
       /* for restarting */
       bool           d_restarting;
-      std::string d_restartFromDir;
+      std::string d_fromDir;
       int d_restartTimestep;
 
+      /* for patch combining mode */
+      bool d_combinePatches;
+      // also use d_fromDir
+        
       // If d_restartFromScratch is true then don't copy or move any of
       // the old timesteps or dat files from the old directory.  Run as
       // as if it were running from scratch but with initial conditions

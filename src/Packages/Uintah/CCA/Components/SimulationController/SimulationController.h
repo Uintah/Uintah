@@ -53,6 +53,9 @@ class SimulationInterface;
 		     bool fromScratch, bool removeOldDir) = 0;
       virtual void run() = 0;
 
+      // default just gives an error
+      virtual void doCombinePatches(std::string fromDir);
+     
       // for calculating memory usage when sci-malloc is disabled.
       static char* start_addr;
    private:
