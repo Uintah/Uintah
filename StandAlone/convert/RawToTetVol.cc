@@ -60,7 +60,7 @@ int parseArgs(int argc, char *argv[]) {
     if (!strcmp(argv[currArg],"-noPtsCount")) {
       ptsCountHeader=0;
       currArg++;
-    } else if (!strcmp(argv[currArg], "-noTetsCounr")) {
+    } else if (!strcmp(argv[currArg], "-noTetsCount")) {
       tetsCountHeader=0;
       currArg++;
     } else if (!strcmp(argv[currArg], "-oneBasedIndexing")) {

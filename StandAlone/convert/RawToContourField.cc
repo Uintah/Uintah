@@ -16,7 +16,7 @@
 */
 
 /*
- *  FlatToTriSurf.cc
+ *  RawToContourField.cc
  *
  *  Written by:
  *   David Weinstein
@@ -28,11 +28,8 @@
  */
 
 #include <Core/Datatypes/ContourField.h>
-#include <Core/Datatypes/PointCloud.h>
-#include <Core/Containers/Array1.h>
-#include <Core/Geometry/Point.h>
-#include <Core/Geometry/Vector.h>
 #include <Core/Persistent/Pstreams.h>
+#include <Core/Containers/HashTable.h>
 
 #include <iostream>
 #include <fstream>
@@ -44,63 +41,130 @@ using std::endl;
 
 using namespace SCIRun;
 
+int ptsCountHeader;
+int baseIndex;
+int edgesCountHeader;
+int binOutput;
+int debugOn;
+void setDefaults() {
+  ptsCountHeader=1;
+  baseIndex=0;
+  edgesCountHeader=1;
+  binOutput=0;
+  debugOn=0;
+}
+
+int parseArgs(int argc, char *argv[]) {
+  int currArg = 4;
+  while (currArg < argc) {
+    if (!strcmp(argv[currArg],"-noPtsCount")) {
+      ptsCountHeader=0;
+      currArg++;
+    } else if (!strcmp(argv[currArg], "-noEdgesCount")) {
+      edgesCountHeader=0;
+      currArg++;
+    } else if (!strcmp(argv[currArg], "-oneBasedIndexing")) {
+      baseIndex=1;
+      currArg++;
+    } else if (!strcmp(argv[currArg], "-binOutput")) {
+      binOutput=1;
+      currArg++;
+    } else if (!strcmp(argv[currArg], "-debug")) {
+      debugOn=1;
+      currArg++;
+    } else {
+      cerr << "Error - unrecognized argument: "<<argv[currArg]<<"\n";
+      return 0;
+    }
+  }
+  return 1;
+}
+
+int getNumNonEmptyLines(char *fname) {
+  // read through the file -- when you see a non-white-space set a flag to one.
+  // when you get to the end of the line (or EOF), see if the flag has
+  // been set.  if it has, increment the count and reset the flag to zero.
+
+  FILE *fin = fopen(fname, "rt");
+  int count=0;
+  int haveNonWhiteSpace=0;
+  int c;
+  while ((c=fgetc(fin)) != EOF) {
+    if (!isspace(c)) haveNonWhiteSpace=1;
+    else if (c=='\n' && haveNonWhiteSpace) {
+      count++;
+      haveNonWhiteSpace=0;
+    }
+  }
+  if (haveNonWhiteSpace) count++;
+  cerr << "number of nonempty lines was: "<<count<<"\n";
+  return count;
+}
+
 int
 main(int argc, char **argv) {
   ContourMesh *cm = new ContourMesh();
-  if (argc != 5) {
-    cerr << "Usage: "<<argv[0]<<" pts edges ContourField [PointCloud]\n";
+  if (argc < 4 || argc > 7) {
+    cerr << "Usage: "<<argv[0]<<" pts edges ContourMesh [-noPtsCount] [-noEdgesCount] [-oneBasedIndexing] [-binOutput] [-debug]\n";
     return 0;
   }
+  setDefaults();
 
-  PointCloudMesh *pm = new PointCloudMesh();
-
-  ifstream ptsstream(argv[1]);
-  ifstream edgesstream(argv[2]);
-  Array1<Point> pts;
-  Point p;
-  Array1<Vector> vecs;
-  Vector v;
-  char idx[100];
-  double x, y, z;
-  while (ptsstream) {
-    ptsstream >> idx >> x >> y;
-    if (!ptsstream) break;
-    ptsstream >> z;
-    p = Point(x,y,z);
-    pts.add(p);
-    cm->add_node(p);
-  }
+  char *ptsName = argv[1];
+  char *edgesName = argv[2];
+  char *fieldName = argv[3];
   
-  while (edgesstream) {
-    int n1, n2;
-    double rad;
-    edgesstream >> n1;
-    if (!edgesstream) break;
-    edgesstream >> n2 >> rad;
-    cm->add_edge(n1,n2);
-    v = pts[n2]-pts[n1];
-    pm->add_node(pts[n1]+v/2.);
-    v.normalize();
-    vecs.add(v);
-  }
+  if (!parseArgs(argc, argv)) return 0;
 
-  FieldHandle fh;
-  ContourField<Vector> *cf = scinew ContourField<Vector>(cm, Field::EDGE);
+  int npts;
+  if (!ptsCountHeader) npts = getNumNonEmptyLines(ptsName);
+  ifstream ptsstream(ptsName);
+  if (ptsCountHeader) ptsstream >> npts;
+  cerr << "number of points = "<< npts <<"\n";
   int i;
-  for (i=0; i<vecs.size(); i++)
-    cf->fdata()[i] = vecs[i];
-  TextPiostream out_stream(argv[3], Piostream::Write);
-  fh = cf;
-  Pio(out_stream, fh);
+  for (i=0; i<npts; i++) {
+    double x, y, z;
+    ptsstream >> x >> y >> z;
+    cm->add_node(Point(x,y,z));
+    if (debugOn) 
+      cerr << "Added point #"<<i<<": ("<<x<<", "<<y<<", "<<z<<")\n";
+  }
+  cerr << "done adding points.\n";
 
-  PointCloud<Vector> *pc = scinew PointCloud<Vector>(pm, Field::NODE);
-  for (i=0; i<vecs.size(); i++)
-    pc->fdata()[i] = vecs[i];
-  TextPiostream out_stream2(argv[4], Piostream::Write);
-  fh = pc;
+  int nedges;
+  if (!edgesCountHeader) nedges = getNumNonEmptyLines(edgesName);
+  ifstream edgesstream(edgesName);
+  if (edgesCountHeader) edgesstream >> nedges;
+  cerr << "number of edges = "<< nedges <<"\n";
+  for (i=0; i<nedges; i++) {
+    int n1, n2;
+    edgesstream >> n1 >> n2;
+    n1-=baseIndex; 
+    n2-=baseIndex; 
+    if (n1<0 || n1>=npts) { 
+      cerr << "Error -- n1 ("<<i<<") out of bounds: "<<n1<<"\n"; 
+      return 0; 
+    }
+    if (n2<0 || n2>=npts) { 
+      cerr << "Error -- n2 ("<<i<<") out of bounds: "<<n2<<"\n"; 
+      return 0; 
+    }
+    cm->add_edge(n1, n2);
+    if (debugOn) 
+      cerr << "Added edge #"<<i<<": ["<<n1<<" "<<n2<<"]\n";
+  }
+  cerr << "done adding elements.\n";
 
-  if (argc == 5) 
-    Pio(out_stream2, fh);
-  
+  cm->flush_changes();
+  ContourField<double> *cfd = scinew ContourField<double>(cm, Field::NODE);
+  FieldHandle cfdH(cfd);
+
+  if (binOutput) {
+    BinaryPiostream out_stream(fieldName, Piostream::Write);
+    Pio(out_stream, cfdH);
+  } else {
+    TextPiostream out_stream(fieldName, Piostream::Write);
+    Pio(out_stream, cfdH);
+  }
   return 0;  
 }    
