@@ -165,6 +165,7 @@ PBuffer::create(Display* dpy, int screen,
     return false;
   }
 
+  return true;
 } // end create()
 
 void
