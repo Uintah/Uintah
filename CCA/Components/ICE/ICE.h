@@ -223,7 +223,13 @@ using namespace SCIRun;
                                   DataWarehouse*);
                                   
 //__________________________________
-//   RF TASKS                             
+//   RF TASKS    
+      void actuallyComputeStableTimestepRF(const ProcessorGroup*, 
+                                        const PatchSubset* patch,  
+                                        const MaterialSubset* matls,
+                                        DataWarehouse*, 
+                                        DataWarehouse*);
+                                                                 
       void computeRateFormPressure(const ProcessorGroup*,
                                    const PatchSubset* patch,
                                    const MaterialSubset* matls,
