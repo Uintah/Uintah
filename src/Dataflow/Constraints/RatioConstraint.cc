@@ -30,16 +30,13 @@
 
 
 #include <Dataflow/Constraints/RatioConstraint.h>
-#include <Core/Util/Debug.h>
 #include <iostream>
+
 using std::cerr;
 using std::cout;
 using std::endl;
 
 namespace SCIRun {
-
-
-static DebugSwitch rc_debug("Constraints", "Ratio");
 
 /***************************************************************************
  * The constructor initializes the constraint's variables.
@@ -89,10 +86,6 @@ RatioConstraint::Satisfy( const Index index, const Scheme scheme,
    RealVariable& denom = *vars[1];
    RealVariable& ratio = *vars[2];
 
-   if (rc_debug) {
-      ChooseChange(index, scheme);
-      printc(cout, scheme);
-   }
    double temp;
    
    switch (ChooseChange(index, scheme)) {

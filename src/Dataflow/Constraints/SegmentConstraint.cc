@@ -31,16 +31,13 @@
 
 #include <Dataflow/Constraints/SegmentConstraint.h>
 #include <Core/Geometry/Vector.h>
-#include <Core/Util/Debug.h>
 #include <iostream>
+
 using std::cerr;
 using std::cout;
 using std::endl;
 
 namespace SCIRun {
-
-
-static DebugSwitch sc_debug("Constraints", "Segment");
 
 /***************************************************************************
  * The constructor initializes the constraint's variables.
@@ -91,11 +88,6 @@ SegmentConstraint::Satisfy( const Index index, const Scheme scheme,
    PointVariable& p = *vars[2];
    Vector v1, v2;
 
-   if (sc_debug) {
-      ChooseChange(index, scheme);
-      print(cout);
-   }
-   
    switch (ChooseChange(index, scheme)) {
    case 0:
       v1 = (Point)end2 - end1;

@@ -29,24 +29,21 @@
  */
 
 #include <Dataflow/Constraints/ConstraintSolver.h>
-#include <Core/Util/Debug.h>
+
+#include <stdio.h>
+#include <string.h>
+
 #include <iostream>
+#include <algorithm>
+#include <list>
+
 using std::cerr;
 using std::cout;
 using std::endl;
 using std::ostream;
-#include <stdio.h>
-#include <string.h>
-#include <algorithm>
-#include <list>
-
 using std::list;
 
 namespace SCIRun {
-
-
-static DebugSwitch cs_debug("ConstraintSolver", "Print");
-
 
 ostream& operator<<( ostream& os, const StackItem& i ) {
    os << i.var->GetName() << ":  ";

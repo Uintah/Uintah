@@ -29,16 +29,13 @@
 
 
 #include <Dataflow/Constraints/CenterConstraint.h>
-#include <Core/Util/Debug.h>
 #include <iostream>
+
 using std::cout;
 using std::cerr;
 using std::endl;
 
 namespace SCIRun {
-
-
-static DebugSwitch cc_debug("Constraints", "Center");
 
 /***************************************************************************
  * The constructor initializes the constraint's variables.
@@ -138,11 +135,6 @@ CenterConstraint::Satisfy( const Index index, const Scheme scheme,
    PointVariable& p1 = *vars[1];
    PointVariable& p2 = *vars[2];
 
-   if (cc_debug) {
-      ChooseChange(index, scheme);
-      print(cout);
-   }
-   
    switch (ChooseChange(index, scheme)) {
    case 0:
       switch(varCount) {

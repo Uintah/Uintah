@@ -31,16 +31,14 @@
 
 #include <Dataflow/Constraints/DistanceConstraint.h>
 #include <Core/Geometry/Vector.h>
-#include <Core/Util/Debug.h>
+
 #include <iostream>
+
 using std::cerr;
 using std::cout;
 using std::endl;
 
 namespace SCIRun {
-
-
-static DebugSwitch dc_debug("Constraints", "Distance");
 
 /***************************************************************************
  * The constructor initializes the constraint's variables.
@@ -93,11 +91,6 @@ DistanceConstraint::Satisfy( const Index index, const Scheme scheme,
    Vector v;
    double t;
 
-   if (dc_debug) {
-      ChooseChange(index, scheme);
-      printc(cout, scheme);
-   }
-   
    switch (ChooseChange(index, scheme)) {
    case 0:
       v = ((Point)p1 - p2);
