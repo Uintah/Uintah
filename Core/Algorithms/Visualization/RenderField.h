@@ -65,7 +65,8 @@ public:
 		      bool def_col, ColorMapHandle color_handle,
 		      const string &ndt, const string &edt, 
 		      double ns, double es, double vs, bool normalize, 
-		      int res, bool use_normals, bool use_transparency,
+		      int sphere_resolution, int cylinder_resolution,
+		      bool use_normals, bool use_transparency,
 		      bool bidirectional, bool arrow_heads) = 0;
 
   virtual GeomSwitch *render_text(FieldHandle fld,
@@ -88,7 +89,6 @@ protected:
   GeomArrows*              vec_node_;
   MaterialHandle           def_mat_handle_;
   ColorMapHandle           color_handle_;
-  int                      res_;
   ind_mat_t               *mats_;
 };
 
@@ -104,16 +104,19 @@ public:
 		      bool data_at, ColorMapHandle color_handle,
 		      const string &ndt, const string &edt, 
 		      double ns, double es, double vs, bool normalize, 
-		      int res, bool use_normals, bool use_transparency,
+		      int sphere_resolution, int cylinder_resolution,
+		      bool use_normals, bool use_transparency,
 		      bool bidirectional, bool arrow_heads);
 
 private:
   GeomSwitch *render_nodes(const Fld *fld, 
 			   const string &node_display_type,
-			   double node_scale);
+			   double node_scale,
+			   int node_resolution);
   GeomSwitch *render_edges(const Fld *fld,
 			   const string &edge_display_type,
-			   double edge_scale);
+			   double edge_scale,
+			   int cylinder_resolution);
   GeomSwitch *render_faces(const Fld *fld, 
 			   bool use_normals,
 			   bool use_transparency);
@@ -128,10 +131,11 @@ private:
 
   void render_materials(const Fld *fld, const string &data_display_type);
 
-  inline void add_sphere(const Point &p, double scale, GeomGroup *g, 
+  inline void add_sphere(const Point &p, double scale, 
+			 int resolution, GeomGroup *g, 
 			 MaterialHandle m0);
   inline void add_disk(const Point &p, const Vector& v, double scale, 
-		       GeomGroup *g, MaterialHandle m0);
+		       int resolution, GeomGroup *g, MaterialHandle m0);
   inline void add_axis(const Point &p, double scale, GeomGroup *g, 
 		       MaterialHandle m0);
 
@@ -204,10 +208,11 @@ add_data(const Point &, const Tensor &, GeomArrows *,
 
 template <class Fld, class Loc>
 void 
-RenderField<Fld, Loc>::add_sphere(const Point &p0, double scale, 
+RenderField<Fld, Loc>::add_sphere(const Point &p0, double scale,
+				  int resolution,
 				  GeomGroup *g, MaterialHandle mh)
 {
-  GeomSphere *s = scinew GeomSphere(p0, scale, res_, res_);
+  GeomSphere *s = scinew GeomSphere(p0, scale, resolution, resolution);
   g->add(scinew GeomMaterial(s, mh));
 }
 
@@ -216,7 +221,7 @@ RenderField<Fld, Loc>::add_sphere(const Point &p0, double scale,
 template <class Fld, class Loc>
 void 
 RenderField<Fld, Loc>::add_disk(const Point &p, const Vector &vin,
-				double scale, 
+				double scale, int resolution,
 				GeomGroup *g, MaterialHandle mh)
 {
   Vector v = vin;
@@ -225,12 +230,12 @@ RenderField<Fld, Loc>::add_disk(const Point &p, const Vector &vin,
     v.safe_normalize();
     v*=scale/6;
     GeomCappedCylinder *d = scinew GeomCappedCylinder(p + v, p - v, scale, 
-						      res_, 1, 1);
+						      resolution, 1, 1);
     g->add(scinew GeomMaterial(d, mh));
   }
   else
   {
-    GeomSphere *s = scinew GeomSphere(p, scale, res_, res_);
+    GeomSphere *s = scinew GeomSphere(p, scale, resolution, resolution);
     g->add(scinew GeomMaterial(s, mh));
   }
 }
@@ -273,18 +278,18 @@ RenderField<Fld, Loc>::render(FieldHandle fh,  bool nodes,
 			      bool def_col, ColorMapHandle color_handle,
 			      const string &ndt, const string &edt,
 			      double ns, double es, double vs, bool normalize, 
-			      int res, bool use_normals, bool use_transparency,
+			      int sphere_res, int cyl_res,
+			      bool use_normals, bool use_transparency,
 			      bool bidirectional, bool arrow_heads)
 {
   Fld *fld = dynamic_cast<Fld*>(fh.get_rep());
   ASSERT(fld != 0);
   def_mat_handle_ = def_mat;
   color_handle_ = color_handle;
-  res_ = res;
 
   if (def_col) { render_materials(fld, ndt); }
-  if (nodes)   { node_switch_ = render_nodes(fld, ndt, ns); }
-  if (edges)   { edge_switch_ = render_edges(fld, edt, es); }
+  if (nodes)   { node_switch_ = render_nodes(fld, ndt, ns, sphere_res); }
+  if (edges)   { edge_switch_ = render_edges(fld, edt, es, cyl_res); }
   if (faces)   { face_switch_ = render_faces(fld, use_normals,
 					     use_transparency); }
   if (data)
@@ -519,7 +524,8 @@ template <class Fld, class Loc>
 GeomSwitch *
 RenderField<Fld, Loc>::render_nodes(const Fld *sfld, 
 				    const string &node_display_type,
-				    double node_scale) 
+				    double node_scale,
+				    int node_resolution) 
 {
   //cerr << "rendering nodes" << endl;
   typename Fld::mesh_handle_type mesh = sfld->get_typed_mesh();
@@ -579,7 +585,8 @@ RenderField<Fld, Loc>::render_nodes(const Fld *sfld,
       break;
 
     case 1: // Spheres
-      add_sphere(p, node_scale, nodes, choose_mat(def_color, *niter));
+      add_sphere(p, node_scale, node_resolution,
+		 nodes, choose_mat(def_color, *niter));
       break;
 
     case 2: // Axes
@@ -588,7 +595,8 @@ RenderField<Fld, Loc>::render_nodes(const Fld *sfld,
 
     case 3: // Disks
     default:
-      add_disk(p, vec, node_scale, nodes, choose_mat(def_color, *niter));
+      add_disk(p, vec, node_scale, node_resolution,
+	       nodes, choose_mat(def_color, *niter));
       break;
     }
     ++niter;
@@ -606,7 +614,8 @@ template <class Fld, class Loc>
 GeomSwitch *
 RenderField<Fld, Loc>::render_edges(const Fld *sfld,
 				    const string &edge_display_type,
-				    double edge_scale) 
+				    double edge_scale,
+				    int cylinder_resolution) 
 {
   //cerr << "rendering edgess" << endl;
   typename Fld::mesh_handle_type mesh = sfld->get_typed_mesh();
@@ -620,7 +629,7 @@ RenderField<Fld, Loc>::render_edges(const Fld *sfld,
   {
     cylinders = scinew GeomColoredCylinders;
     cylinders->set_radius(edge_scale);
-    cylinders->set_nu_nv(2*res_, 1);
+    cylinders->set_nu_nv(cylinder_resolution, 1);
     GeomDL *display_list = scinew GeomDL(cylinders);
     edge_switch = scinew GeomSwitch(display_list);
   }

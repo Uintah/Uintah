@@ -134,8 +134,10 @@ class ShowField : public Module
   GuiString                interactive_mode_;
 
   //! Refinement resolution for cylinders and spheres
-  GuiInt                   resolution_;
-  int                      res_;
+  GuiInt                   gui_node_resolution_;
+  GuiInt                   gui_edge_resolution_;
+  int                      node_resolution_;
+  int                      edge_resolution_;
   LockingHandle<RenderFieldBase>  renderer_;
 
   enum toggle_type_e {
@@ -207,8 +209,10 @@ ShowField::ShowField(GuiContext* ctx) :
   vectors_scale_(ctx->subVar("vectors_scale")),
   showProgress_(ctx->subVar("show_progress")),
   interactive_mode_(ctx->subVar("interactive_mode")),
-  resolution_(ctx->subVar("resolution")),
-  res_(0),
+  gui_node_resolution_(ctx->subVar("node-resolution")),
+  gui_edge_resolution_(ctx->subVar("edge-resolution")),
+  node_resolution_(0),
+  edge_resolution_(0),
   renderer_(0),
   render_state_(5),
   bounding_vector_(0)
@@ -419,11 +423,15 @@ ShowField::execute()
     text_dirty_ = true;
   }
 
-  if (resolution_.get() != res_) {
+  if (gui_node_resolution_.get() != node_resolution_) {
     nodes_dirty_ = true;
+  }
+  node_resolution_ = gui_node_resolution_.get();
+
+  if (gui_edge_resolution_.get() != edge_resolution_) {
     edges_dirty_ = true;
   }
-  res_ = resolution_.get();
+  edge_resolution_ = gui_edge_resolution_.get();
 
   // check to see if we have something to do.
   if ((!nodes_dirty_) && (!edges_dirty_) && 
@@ -488,7 +496,8 @@ ShowField::execute()
     renderer_->render(fld_handle, 
 		      do_nodes, do_edges, do_faces, do_data,
 		      def_mat_handle_, data_at_dirty_, color_handle,
-		      ndt, edt, ns, es, vs, normalize_vectors_.get(), res_,
+		      ndt, edt, ns, es, vs, normalize_vectors_.get(),
+		      node_resolution_, edge_resolution_,
 		      faces_normals_.get(), faces_transparency_.get(),
 		      bidirectional_.get(), arrow_heads_on_.get());
   }
@@ -592,14 +601,15 @@ ShowField::tcl_command(GuiArgs& args, void* userdata) {
   } else if (args[1] == "data_scale") {
     data_dirty_ = true;
     maybe_execute(DATA);
-  } else if (args[1] == "resolution_scale") {
+  } else if (args[1] == "node_resolution_scale") {
     nodes_dirty_ = true;
-    edges_dirty_ = true;
     if (nodes_on_.get())
     {
       maybe_execute(NODE);
     }
-    else if (edges_on_.get())
+  } else if (args[1] == "edge_resolution_scale") {
+    edges_dirty_ = true;
+    if (edges_on_.get())
     {
       maybe_execute(EDGE);
     }
