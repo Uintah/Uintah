@@ -341,10 +341,7 @@ void HDF5DataReader::execute() {
 
       if( nframes-1 != selectable_max_.get() ) {
 	selectable_max_.set(nframes-1);
-
-	ostringstream str;
-	str << id << " update_range";
-	gui->execute(str.str().c_str());
+	selectable_max_.reset();
       }
 
       resend = animate_execute( filename, frame_paths, frame_datasets );
@@ -1725,10 +1722,7 @@ void HDF5DataReader::tcl_command(GuiArgs& args, void* userdata)
 
       if( nframes-1 != selectable_max_.get() ) {
 	selectable_max_.set(nframes-1);
-
-	ostringstream str;
-	str << id << " update_range";
-	gui->execute(str.str().c_str());
+	selectable_max_.reset();
       }
     }
 #else
@@ -1989,8 +1983,6 @@ HDF5DataReader::animate_execute( string new_filename,
 
     else if( execmode == "fforward" )
       which = end;
-
-    fprintf( stderr, "which is which %d %d %d\n", update_, which, which_ );
 
     if( update_ ||
 	which != which_ )
