@@ -2417,8 +2417,7 @@ ViewSlices::execute()
 
   if (painting_() == 2) {
     ASSERT(cm2_.get_rep());
-    cm2_=scinew ColorMap2(cm2_->widgets(), false, 
-			  cm2_->selected(), cm2_->value_range());
+    cm2_=scinew ColorMap2(*cm2_.get_rep());
     painting_ = 1;
   } 
   cmap2_oport_->send_intermediate(cm2_);
@@ -2464,13 +2463,11 @@ ViewSlices::execute()
   for (n = 0; n < nrrds.size(); ++n) {
     NrrdDataHandle nrrdH = nrrds[n];
 
-#if 1 // for some reason the next lines cause a hang when moving cm2
     nrrdRangeSet(range, nrrdH->nrrd, 1);
     if (range && (airIsNaN(min_value) || range->min < min_value))
       min_value = range->min;
     if (range && (airIsNaN(max_value) || range->max < max_value))
       max_value = range->max;      
-#endif
 
     for (a = 0; a < 3; ++a) {
       const double spacing = nrrdH->nrrd->axis[a].spacing;
