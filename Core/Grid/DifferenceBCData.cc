@@ -20,10 +20,6 @@ DifferenceBCData::DifferenceBCData(const DifferenceBCData& rhs)
 
   boundary=rhs.boundary;
   interior=rhs.interior;
-  sfcx=rhs.sfcx;
-  sfcy=rhs.sfcy;
-  sfcz=rhs.sfcz;
-
 }
 
 DifferenceBCData& DifferenceBCData::operator=(const DifferenceBCData& rhs)
@@ -42,10 +38,6 @@ DifferenceBCData& DifferenceBCData::operator=(const DifferenceBCData& rhs)
 
   boundary = rhs.boundary;
   interior = rhs.interior;
-  sfcx=rhs.sfcx;
-  sfcy=rhs.sfcy;
-  sfcz=rhs.sfcz;
- 
   return *this;
 }
 
