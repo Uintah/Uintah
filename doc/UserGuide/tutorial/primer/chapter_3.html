@@ -50,14 +50,14 @@
               <div align="left"> 
                 <p>&lt;subhead:Chapter overview&gt;<br>
 
-                <p>In Chapters 1 and 2 we constructed SCIRun networks
+                <p>In Chapters 1 and 2, we constructed SCIRun networks
                 to visualize the geometry and data values in a Field.
                 In this Chapter we will explore some more
                 visualization techniques, and will look at
-                &quot;filter&quot; modules that take in a Field and
+                &quot;filter&quot; modules that input a Field and
                 produce a new derived Field as output.  Rather than
                 building one net to introduce all of these new
-                modules, we will construct several nets, with each
+                modules, we will construct several nets, each
                 describing a single technique.  To keep things simple,
                 we will divide this chapter into three sections,
                 one for each method.
@@ -69,7 +69,7 @@
                 visualization manageable and to avoid visual clutter.
                 One example of this is to examine a cutting plane
                 inside of a three-dimensional dataset.  A similar
-                technique is to examine a cutting volume.
+                technique examines a cutting volume.
                   
 		<p>In SCIRun, the functionality described above is
                 split into two steps.  The first step is to generate a
@@ -85,13 +85,13 @@
                 input Field is only used to specify the geometric
                 bounds for the samples.  The SamplePlane module
                 generates a set of regularly spaced samples on a Plane
-                (an ImageField) that can be chosen to line up with the
+                (an ImageField) you can choose to line up with the
                 X, Y, or Z axis.  The user specifies the orientation,
                 as well as the number of samples via the module's UI.
                   
-                <p>An example of using this module is shown in Figure
-                xx.  We have created a FieldReader module and a
-                SamplePlane module, and have hooked them together.
+                <p>Figure xx shows an example of this module in use. 
+                xx.  In previous chapters, We have created a FieldReader
+                module and a SamplePlane module, and have hooked them together.
                 For this example, we will again use the
                 utahtorso-lowres-voltage.tvd.fld as our input file.
                 The output of SamplePlane is a Field that contains
@@ -111,10 +111,10 @@
                 from the interior of the fields elements, by clamping
                 the samples to nodes.  The &quot;uniform&quot;
                 distributions are a uniformly random function over the
-                spacial extents of the field (i.e. the elements are
+                spacial extents of the field (i.e., the elements are
                 weighted by their volume or area), whereas the
                 &quot;scattered&quot; distributions are a uniformly
-                random function over the elements only (i.e. all
+                random function over the elements only (i.e., all
                 elements have the same weight).  The &quot;importance
                 weighted&quot; distributions multiply the existing
                 weight of a sample by the interpolated data value
@@ -141,7 +141,7 @@
                 first input Field.
                   
                 <p>Having computed the values on the plane, we can now
-                visualize those datavluaes with color-mapped geometry.
+                visualize those datavalues with color-mapped geometry.
                 To do this, we hook up the modules just as shown in
                 Figure xx.  The resulting ViewWindow image should look
                 like the image in Figure xx.
@@ -185,10 +185,9 @@
                 Figure XXX.
 
 		<p>The Streamlines module works by integrating the
-		seed points through the vector Field.  The integration
-		method that we are using is a fifth order
-		Runge-Kutta-Fehlberg algorithm.  To run this
-		algorithm, we must set three parameters: Error
+		seed points through the vector Field.  We are using a fifth
+		order integration mthod: Runge-Kutta-Fehlberg algorithm.
+		To run this algorithm, we must set three parameters: Error
 		Tolerance, Step Size, and a Maximum Number of Steps.
 		These three parameters should be set to 0.01, 0.1, and
 		200, respectively, in the StreamLines UI (as shown in
@@ -197,10 +196,10 @@
                 <p>&lt;subhead:Network execution and data dependence&gt;<br>
 
 		<p>There are several ways to initiate execution of a
-		SCIRun network that has not yet "fired".  The first is
-		to click the right mouse button on the name of one of
-		the module icons, and to select the "Execute" option
-		from the dropdown menu.  The second is to press any of
+		SCIRun network that has not yet "fired." First, click the
+		right mouse button on the name of one module icon, and
+		select the "Execute" option
+		from the dropdown menu.  Second, press any of
 		the "Execute" buttons that appear on many of the
 		module User Interface.  Either of these actions will
 		initiate the execution of the selected module, as well
