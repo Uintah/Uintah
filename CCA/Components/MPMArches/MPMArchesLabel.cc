@@ -161,6 +161,36 @@ MPMArchesLabel::MPMArchesLabel()
   totHT_FCZLabel = VarLabel::create("totalHTSolid_FCZ",
 				   SFCZVariable<double>::getTypeDescription() );
 
+  // Heat Flux Labels
+
+  htfluxConvXLabel = VarLabel::create("htfluxConvX",
+				      SFCXVariable<double>::getTypeDescription() );
+  htfluxRadXLabel = VarLabel::create("htfluxRadX",
+				      SFCXVariable<double>::getTypeDescription() );
+  htfluxXLabel = VarLabel::create("htfluxX",
+				  SFCXVariable<double>::getTypeDescription() );
+  htfluxConvYLabel = VarLabel::create("htfluxConvY",
+				      SFCYVariable<double>::getTypeDescription() );
+  htfluxRadYLabel = VarLabel::create("htfluxRadY",
+				      SFCYVariable<double>::getTypeDescription() );
+  htfluxYLabel = VarLabel::create("htfluxY",
+				  SFCYVariable<double>::getTypeDescription() );
+  htfluxConvZLabel = VarLabel::create("htfluxConvZ",
+				      SFCZVariable<double>::getTypeDescription() );
+  htfluxRadZLabel = VarLabel::create("htfluxRadZ",
+				      SFCZVariable<double>::getTypeDescription() );
+  htfluxZLabel = VarLabel::create("htfluxZ",
+				  SFCZVariable<double>::getTypeDescription() );
+  htfluxConvCCLabel = VarLabel::create("htfluxConvCC",
+				       CCVariable<double>::getTypeDescription() );
+
+  totHtFluxXLabel = VarLabel::create("totHtFluxX",
+				     SFCXVariable<double>::getTypeDescription() );
+  totHtFluxYLabel = VarLabel::create("totHtFluxY",
+				     SFCYVariable<double>::getTypeDescription() );
+  totHtFluxZLabel = VarLabel::create("totHtFluxZ",
+				     SFCZVariable<double>::getTypeDescription() );
+
   // Labels for gas calculations
 
   // Gas void fraction
@@ -401,6 +431,21 @@ MPMArchesLabel::~MPMArchesLabel()
   VarLabel::destroy(totHT_FCXLabel);  
   VarLabel::destroy(totHT_FCYLabel);  
   VarLabel::destroy(totHT_FCZLabel);  
+
+  VarLabel::destroy(htfluxConvXLabel);  
+  VarLabel::destroy(htfluxRadXLabel);  
+  VarLabel::destroy(htfluxXLabel);  
+  VarLabel::destroy(htfluxConvYLabel);  
+  VarLabel::destroy(htfluxRadYLabel);  
+  VarLabel::destroy(htfluxYLabel);  
+  VarLabel::destroy(htfluxConvZLabel);  
+  VarLabel::destroy(htfluxRadZLabel);  
+  VarLabel::destroy(htfluxZLabel);  
+  VarLabel::destroy(htfluxConvCCLabel);  
+
+  VarLabel::destroy(totHtFluxXLabel);
+  VarLabel::destroy(totHtFluxYLabel);
+  VarLabel::destroy(totHtFluxZLabel);
 
   VarLabel::destroy(void_frac_CCLabel);
 

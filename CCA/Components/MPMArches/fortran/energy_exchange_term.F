@@ -50,7 +50,8 @@
      $     epsg, 
      $     epss,
      $     sew, sns, stb,
-     $     heat_trans_coeff, 
+c     $     heat_trans_coeff, 
+     $     tcond,
      $     valid_lo, valid_hi,
      $     pcell, wall, ffield)
 
@@ -302,6 +303,9 @@ C-----------------------------------------------------------------------
       double precision darea
       double precision area
       double precision factor
+      double precision drep
+      double precision dist
+      double precision qflux
 
 c--------------------------------------------------------------------
 *     executable statements
@@ -322,8 +326,12 @@ c--------------------------------------------------------------------
                   if (pcell(i-1,j,k) .eq. ffield) then
 
                      areayz = sns(j)*stb(k)
-                     qmult = heat_trans_coeff*areayz*
-     $                    epss(i,j,k)*epsg(i-1,j,k)
+c                     qmult = heat_trans_coeff*areayz*
+c     $                    epss(i,j,k)*epsg(i-1,j,k)
+                     qmult = tcond*
+     $                    epss(i,j,k)*epsg(i-1,j,k)/
+     $                    (xu(i)-xx(i-1))
+
 
 c     We multiply by epsg because we want to only include the
 c     area that is actually seen by the gas.  The assumption made
@@ -339,15 +347,19 @@ c     MPM material (relative to all solid and gas materials) as
 c     well as its relative fraction (relative to all MPM materials
 c     alone,) so we don't need to divide by (1-epsg).
 
-                     hts_fcx(i,j,k) = 
-     $                    hts_fcx(i,j,k) + qmult*
+                     qflux = qmult*
      $                    (tg(i-1,j,k) - 
      $                    ts_fcx(i,j,k))
 
+                     hts_fcx(i,j,k) = hts_fcx(i,j,k) + 
+     $                    qflux*areayz
+
                      sug_fcx(i,j,k) = sug_fcx(i,j,k) -
-     $                    qmult*
-     $                    (tg(i-1,j,k) - 
-     $                    ts_fcx(i,j,k))
+     $                    qflux*areayz
+
+                     htflux_convX(i,j,k) = 
+     $                    htflux_convX(i,j,k) + qflux
+                     htfluxX(i,j,k) = htfluxX(i,j,k) + qflux
 
 c#if 0
 c     radiative heat transfer to intrusions
@@ -358,15 +370,19 @@ c     cell not all the intrusion is seen by the gas?
 c     That would require a model for partial cells
 c     as well.
 
-                     hts_fcx(i,j,k) = 
-     $                    hts_fcx(i,j,k) + 
-     $                    rfluxE(i-1,j,k)*areayz*
+                     qflux = rfluxE(i-1,j,k)*
      $                    epss(i,j,k)
+
+                     hts_fcx(i,j,k) = hts_fcx(i,j,k) + 
+     $                    qflux*areayz
 
                      hts_fcx_rad(i,j,k) = 
      $                    hts_fcx_rad(i,j,k) + 
-     $                    rfluxE(i-1,j,k)*areayz*
-     $                    epss(i,j,k)
+     $                    qflux*areayz
+
+                     htflux_radX(i,j,k) =
+     $                    htflux_radX(i,j,k) + qflux
+                     htfluxX(i,j,k) = htfluxX(i,j,k) + qflux
 
 c#endif
 
@@ -395,18 +411,24 @@ c#endif
                   if (pcell(i+1,j,k).eq.ffield) then
 
                      areayz = sns(j)*stb(k)
-                     qmult = heat_trans_coeff*areayz*
-     $                    epss(i,j,k)*epsg(i+1,j,k)
+c                     qmult = heat_trans_coeff*areayz*
+c     $                    epss(i,j,k)*epsg(i+1,j,k)
+                     qmult = tcond*
+     $                    epss(i,j,k)*epsg(i+1,j,k)/
+     $                    (xx(i+1)-xu(i+1))
 
-                     hts_fcx(i+1,j,k) = 
-     $                    hts_fcx(i+1,j,k) + qmult*
-     $                    (tg(i+1,j,k) - 
-     $                    ts_fcx(i,j,k))
+                     qflux = qmult*(tg(i+1,j,k) - 
+     $                    ts_fcx(i+1,j,k))
+
+                     hts_fcx(i+1,j,k) = hts_fcx(i+1,j,k) +
+     $                    qflux*areayz
 
                      sug_fcx(i+1,j,k) = sug_fcx(i+1,j,k) -
-     $                    qmult*
-     $                    (tg(i+1,j,k) - 
-     $                    ts_fcx(i,j,k))
+     $                    qflux*areayz
+
+                     htflux_convX(i+1,j,k) =
+     $                    htflux_convX(i+1,j,k) + qflux
+                     htfluxX(i+1,j,k) = htfluxX(i+1,j,k) + qflux
 
 c#if 0
 c     radiative heat transfer to intrusions
@@ -417,21 +439,26 @@ c     cell not all the intrusion is seen by the gas?
 c     That would require a model for partial cells
 c     as well.
 
+                     qflux = rfluxW(i+1,j,k)*
+     $                    epss(i,j,k)
                      hts_fcx(i+1,j,k) = 
      $                    hts_fcx(i+1,j,k) + 
-     $                    rfluxW(i+1,j,k)*areayz*
-     $                    epss(i,j,k)
+     $                    qflux*areayz
 
                      hts_fcx_rad(i+1,j,k) = 
      $                    hts_fcx_rad(i+1,j,k) + 
-     $                    rfluxW(i+1,j,k)*areayz*
-     $                    epss(i,j,k)
+     $                    qflux*areayz
+
+                     htflux_radX(i+1,j,k) = 
+     $                    htflux_radX(i+1,j,k) + qflux
+                     htfluxX(i+1,j,k) = 
+     $                    htfluxX(i+1,j,k) + qflux
 
 c#endif
 
 #ifdef debugEnergyExchange
                      print*, i+1,j,k, hts_fcx(i+1,j,k),
-     $                    tg(i+1,j,k), ts_fcx(i,j,k),
+     $                    tg(i+1,j,k), ts_fcx(i+1,j,k),
      $                    epsg(i+1,j,k)
 #endif
 
@@ -454,18 +481,26 @@ c     south face of intrusion
                   if (pcell(i,j-1,k) .eq. ffield) then
 
                      areaxz = sew(i)*stb(k)
-                     qmult = heat_trans_coeff*areaxz*
-     $                    epsg(i,j-1,k)*epss(i,j,k)
+c                     qmult = heat_trans_coeff*areaxz*
+c     $                    epsg(i,j-1,k)*epss(i,j,k)
+
+                     qmult = tcond*
+     $                    epsg(i,j-1,k)*epss(i,j,k)/
+     $                    (yv(j)-yy(j-1))
+
+                     qflux = qmult*(tg(i,j-1,k) -
+     $                    ts_fcy(i,j,k))
 
                      hts_fcy(i,j,k) = 
-     $                    hts_fcy(i,j,k) + qmult*
-     $                    (tg(i,j-1,k) -
-     $                    ts_fcy(i,j,k))
+     $                    hts_fcy(i,j,k) + qflux*areaxz
+     $                    
 
                      sug_fcy(i,j,k) = sug_fcy(i,j,k) -
-     $                    qmult*
-     $                    (tg(i,j-1,k) -
-     $                    ts_fcy(i,j,k))
+     $                    qflux*areaxz
+
+                     htflux_convY(i,j,k) = 
+     $                    htflux_convY(i,j,k) + qflux
+                     htfluxY(i,j,k) = htfluxY(i,j,k) + qflux
 
 c#if 0
 c     radiative heat transfer to intrusions
@@ -476,15 +511,19 @@ c     cell not all the intrusion is seen by the gas?
 c     That would require a model for partial cells
 c     as well.
 
+                     qflux = rfluxN(i,j-1,k)*epss(i,j,k)
+
                      hts_fcy(i,j,k) = 
      $                    hts_fcy(i,j,k) +
-     $                    rfluxN(i,j-1,k)*areaxz*
-     $                    epss(i,j,k)
+     $                    areaxz*qflux
 
                      hts_fcy_rad(i,j,k) = 
      $                    hts_fcy_rad(i,j,k) +
-     $                    rfluxN(i,j-1,k)*areaxz*
-     $                    epss(i,j,k)
+     $                    areaxz*qflux
+
+                     htflux_radY(i,j,k) = 
+     $                    htflux_radY(i,j,k) + qflux
+                     htfluxY(i,j,k) = htfluxY(i,j,k) + qflux
 
 c#endif
 
@@ -513,18 +552,26 @@ c#endif
                   if (pcell(i,j+1,k).eq.ffield) then
 
                      areaxz = sew(i)*stb(k)
-                     qmult = heat_trans_coeff*areaxz*
-     $                    epsg(i,j+1,k)*epss(i,j,k)
+c                     qmult = heat_trans_coeff*areaxz*
+c     $                    epsg(i,j+1,k)*epss(i,j,k)
+
+                     qmult = tcond*
+     $                    epsg(i,j+1,k)*epss(i,j,k)/
+     $                    (yy(j+1)-yv(j+1))
+
+                     qflux = qmult*(tg(i,j+1,k) - 
+     $                    ts_fcy(i,j+1,k))
 
                      hts_fcy(i,j+1,k) = 
-     $                    hts_fcy(i,j+1,k) + qmult*
-     $                    (tg(i,j+1,k) - 
-     $                    ts_fcx(i,j,k))
+     $                    hts_fcy(i,j+1,k) + 
+     $                    qflux*areaxz
 
                      sug_fcy(i,j+1,k) = sug_fcy(i,j+1,k) -
-     $                    qmult*
-     $                    (tg(i,j+1,k) - 
-     $                    ts_fcx(i,j,k))
+     $                    qflux*areaxz
+
+                     htflux_convY(i,j+1,k) = 
+     $                    htflux_convY(i,j+1,k) + qflux
+                     htfluxY(i,j+1,k) = htfluxY(i,j+1,k) + qflux
 
 c#if 0
 c     radiative heat transfer to intrusions
@@ -535,21 +582,25 @@ c     cell not all the intrusion is seen by the gas?
 c     That would require a model for partial cells
 c     as well.
 
+                     qflux = rfluxS(i,j+1,k)*epss(i,j,k)
+
                      hts_fcy(i,j+1,k) = 
      $                    hts_fcy(i,j+1,k) +
-     $                    rfluxS(i,j+1,k)*areaxz*
-     $                    epss(i,j,k)
+     $                    areaxz*qflux
 
                      hts_fcy_rad(i,j+1,k) = 
      $                    hts_fcy_rad(i,j+1,k) +
-     $                    rfluxS(i,j+1,k)*areaxz*
-     $                    epss(i,j,k)
+     $                    areaxz*qflux
+
+                     htflux_radY(i,j+1,k) = 
+     $                    htflux_radY(i,j+1,k) + qflux
+                     htfluxY(i,j+1,k) = htfluxY(i,j+1,k) + qflux
 
 c#endif
 
 #ifdef debugEnergyExchange
                      print*, i,j+1,k, hts_fcy(i,j+1,k),
-     $                    tg(i,j+1,k), ts_fcx(i,j,k),
+     $                    tg(i,j+1,k), ts_fcy(i,j+1,k),
      $                    epsg(i,j+1,k)
 #endif
 
@@ -572,18 +623,25 @@ c#endif
                   if (pcell(i,j,k-1).eq.ffield) then
 
                      areaxy = sew(i)*sns(j)
-                     qmult = heat_trans_coeff*areaxy*
-     $                    epsg(i,j,k-1)*epss(i,j,k)
+c                     qmult = heat_trans_coeff*areaxy*
+c     $                    epsg(i,j,k-1)*epss(i,j,k)
+
+                     qmult = tcond*
+     $                    epsg(i,j,k-1)*epss(i,j,k)/
+     $                    (zw(k)-zz(k-1))
+
+                     qflux = qmult*(tg(i,j,k-1) - 
+     $                    ts_fcz(i,j,k))
 
                      hts_fcz(i,j,k) = 
-     $                    hts_fcz(i,j,k) + qmult*
-     $                    (tg(i,j,k-1) - 
-     $                    ts_fcz(i,j,k))
+     $                    hts_fcz(i,j,k) + qflux*areaxy                    
 
                      sug_fcz(i,j,k) = sug_fcz(i,j,k) -
-     $                    qmult*
-     $                    (tg(i,j,k-1) - 
-     $                    ts_fcz(i,j,k))
+     $                    qflux*areaxy
+
+                     htflux_convZ(i,j,k) = 
+     $                    htflux_convZ(i,j,k) + qflux
+                     htfluxZ(i,j,k) = htfluxZ(i,j,k) + qflux
 
 c#if 0
 c     radiative heat transfer to intrusions
@@ -594,15 +652,19 @@ c     cell not all the intrusion is seen by the gas?
 c     That would require a model for partial cells
 c     as well.
 
-                      hts_fcz(i,j,k) = 
-     $                    hts_fcz(i,j,k) +
-     $                    rfluxT(i,j,k-1)*areaxy*
-     $                    epss(i,j,k)
+                     qflux = rfluxT(i,j,k-1)*epss(i,j,k)
 
-                      hts_fcz_rad(i,j,k) = 
+                     hts_fcz(i,j,k) = 
+     $                    hts_fcz(i,j,k) +
+     $                    areaxy*qflux
+
+                     hts_fcz_rad(i,j,k) = 
      $                    hts_fcz_rad(i,j,k) +
-     $                    rfluxT(i,j,k-1)*areaxy*
-     $                    epss(i,j,k)
+     $                    areaxy*qflux
+
+                     htflux_radZ(i,j,k) = 
+     $                    htflux_radZ(i,j,k) + qflux
+                     htfluxZ(i,j,k) = htfluxZ(i,j,k) + qflux
 
 c#endif
 
@@ -631,18 +693,26 @@ c#endif
                   if (pcell(i,j,k+1).eq.ffield) then
 
                      areaxy = sew(i)*sns(j)
-                     qmult = heat_trans_coeff*areaxy*
-     $                    epsg(i,j,k+1)*epss(i,j,k)
+c                     qmult = heat_trans_coeff*areaxy*
+c     $                    epsg(i,j,k+1)*epss(i,j,k)
+
+                     qmult = tcond*
+     $                    epsg(i,j,k+1)*epss(i,j,k)/
+     $                    (zz(k+1)-zw(k+1))
+
+                     qflux = qmult*(tg(i,j,k+1) - 
+     $                    ts_fcz(i,j,k+1))
 
                      hts_fcz(i,j,k+1) = 
-     $                    hts_fcz(i,j,k+1) + qmult*
-     $                    (tg(i,j,k+1) - 
-     $                    ts_fcz(i,j,k))
+     $                    hts_fcz(i,j,k+1) + qflux*areaxy
 
                      sug_fcz(i,j,k+1) = sug_fcz(i,j,k+1) -
-     $                    qmult*
-     $                    (tg(i,j,k+1) - 
-     $                    ts_fcz(i,j,k))
+     $                    qflux*areaxy
+
+                     htflux_convZ(i,j,k+1) =
+     $                    htflux_convZ(i,j,k+1) + qflux
+                     htfluxZ(i,j,k+1) = htfluxZ(i,j,k+1) +
+     $                    qflux
 
 c#if 0
 c     radiative heat transfer to intrusions
@@ -653,15 +723,18 @@ c     cell not all the intrusion is seen by the gas?
 c     That would require a model for partial cells
 c     as well.
 
+                     qflux = rfluxB(i,j,k+1)*epss(i,j,k)
+
                      hts_fcz(i,j,k+1) =
-     $                    hts_fcz(i,j,k+1) + 
-     $                    rfluxB(i,j,k+1)*areaxy*
-     $                    epss(i,j,k)
+     $                    hts_fcz(i,j,k+1) + qflux*areaxy
 
                      hts_fcz_rad(i,j,k+1) =
-     $                    hts_fcz_rad(i,j,k+1) + 
-     $                    rfluxB(i,j,k+1)*areaxy*
-     $                    epss(i,j,k)
+     $                    hts_fcz_rad(i,j,k+1) + qflux*areaxy
+
+                     htflux_radZ(i,j,k+1) = 
+     $                    htflux_radZ(i,j,k+1) + qflux
+                     htfluxZ(i,j,k+1) = htfluxZ(i,j,k+1) +
+     $                    qflux
 
 c#endif
 
@@ -702,6 +775,11 @@ c     modif. for discrete fraction a la mom exch?
      $                 sew(i)*sns(j)*stb(k))**(1.0/3.0)
                   area = darea*darea
 
+                  drep = (eps_gas_cont*
+     $                 sew(i)*sns(j)*stb(k))**
+     $                 (1.0/3.0)
+                  dist = drep/two
+
 c     this is the area of solid actually exposed to the gas
 
                   factor = epss(i,j,k)/(one - epsg(i,j,k))
@@ -711,14 +789,19 @@ c     attributable to the current solid material whose epsg is
 c     being passed here.  If there is only one solid material,
 c     then factor = one.
 
-                  qmult = heat_trans_coeff*area*factor
-                  hts_cc(i,j,k) = 
-     $                 hts_cc(i,j,k) + qmult*
-     $                 (tg(i,j,k) - ts_cc(i,j,k))
+c                  qmult = heat_trans_coeff*area*factor
+                  qmult = tcond*factor/dist
 
-                  sug_cc(i,j,k) = sug_cc(i,j,k) +
-     $                 qmult*(ts_cc(i,j,k) -
-     $                 tg(i,j,k))
+                  qflux = qmult*(tg(i,j,k) - ts_cc(i,j,k))
+
+                  htflux_convCC(i,j,k) = htflux_convCC(i,j,k) +
+     $                 qflux
+
+                  hts_cc(i,j,k) = 
+     $                 hts_cc(i,j,k) + qflux*area
+
+                  sug_cc(i,j,k) = sug_cc(i,j,k) -
+     $                 qflux*area
 
 #ifdef debugEnergyExchange
                   print*, i,j,k, hts_cc(i,j,k),
