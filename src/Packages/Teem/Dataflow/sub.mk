@@ -28,6 +28,6 @@ SUBDIRS := \
 include $(SCIRUN_SCRIPTS)/recurse.mk
 
 PSELIBS := Packages/Teem/Core Dataflow Core
-LIBS := $(TEEM_LIBRARY) -lnrrd -lbiff -lair $(TK_LIBRARY) $(GL_LIBS) -lm
+LIBS := $(TEEM_LIBRARY) -lnrrd -lbiff -lair $(TK_LIBRARY) $(GL_LIBRARY) -lm
 
 include $(SCIRUN_SCRIPTS)/largeso_epilogue.mk

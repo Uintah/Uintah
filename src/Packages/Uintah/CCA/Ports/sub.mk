@@ -4,7 +4,7 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
 SRCDIR   := Packages/Uintah/CCA/Ports
 
-SRCS     += $(SRCDIR)/SimulationInterface.cc $(SRCDIR)/DataArchive.cc \
+SRCS += $(SRCDIR)/SimulationInterface.cc $(SRCDIR)/DataArchive.cc \
 	$(SRCDIR)/DataWarehouse.cc $(SRCDIR)/LoadBalancer.cc \
 	$(SRCDIR)/Output.cc \
 	$(SRCDIR)/ProblemSpecInterface.cc \

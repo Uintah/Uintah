@@ -9,7 +9,7 @@ SRCS += $(SRCDIR)/visinfo.c
 
 PSELIBS :=
 
-LIBS := $(GL_LIBS)
+LIBS := $(GL_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 

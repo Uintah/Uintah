@@ -24,11 +24,11 @@ SRCS     += \
 	$(SRCDIR)/ZList.cc \
 	$(SRCDIR)/ListForm.cc \
 	$(SRCDIR)/moc_ListForm.cc
-	
+
 PSELIBS := Core/CCA/Component/CIA Core/CCA/Component/PIDL Core/CCA/Component/Comm\
 	Core/CCA/spec Core/Thread Core/Containers Core/Exceptions
 QT_LIBDIR := /home/sparker/SCIRun/SCIRun_Thirdparty_32_linux/lib
-LIBS := $(QT_LIBS)
+LIBS := $(QT_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 

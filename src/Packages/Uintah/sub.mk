@@ -12,7 +12,7 @@ SUBDIRS := \
 include $(SCIRUN_SCRIPTS)/recurse.mk
 
 PSELIBS := Core Dataflow
-LIBS := $(XML_LIBRARY) $(TK_LIBRARY) $(GL_LIBS) $(FLIB) $(MPI_LIBRARY) -lm -lz
+LIBS := $(XML_LIBRARY) $(TK_LIBRARY) $(GL_LIBRARY) $(F_LIBRARY) $(MPI_LIBRARY) -lm -lz
 
 include $(SCIRUN_SCRIPTS)/largeso_epilogue.mk
 
