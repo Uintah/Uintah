@@ -41,4 +41,6 @@ public:
     friend void Pio(Piostream&, LockingHandle<T>& data);
 };
 
+template<class T> void Pio(Piostream&, LockingHandle<T>& data);
+
 #endif

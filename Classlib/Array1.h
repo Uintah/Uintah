@@ -69,4 +69,7 @@ public:
     friend void Pio(Piostream&, Array1<T>*&);
 };
 
+template<class T> void Pio(Piostream&, Array1<T>&);
+template<class T> void Pio(Piostream&, Array1<T>*&);
+
 #endif /* SCI_Classlib_Array1_h */
