@@ -275,12 +275,11 @@ void flameSheet_rxn::react(const ProcessorGroup*,
       double T_oxidizer_inf = 300.0;    // Oxidizer Temperature at infinity
       double T_fuel_i       = 300.0;    // initial Fuel Temperature
       double f_stoic        = 0.06207;
-          
+      double nu             = (1.0/f_stoic) - 1.0;    
       double MW             = 16.043;
       double del_h_comb     = 1000.0* 74831.0;    // Enthalpy of combustion J/kg
       double cp  = 716.0;               //Air @ J/kg-K  @ 300K
-      
-      del_h_comb = 2000 * cp/f_stoic;   //this is gross 
+      del_h_comb = 500.0 * cp/f_stoic;   //this is gross 
       
       //__________________________________   
       for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
@@ -318,8 +317,8 @@ void flameSheet_rxn::react(const ProcessorGroup*,
           double A = f *( del_h_comb/cp + T_fuel_i - T_oxidizer_inf);
           newTemp  = A + T_oxidizer_inf;
         }       
-        new_f = Y_products * f_stoic;
-        
+        new_f =Y_fuel + Y_products/(1.0 + nu);      // eqs 7.54
+                
 	 double energyx =( newTemp - oldTemp) * cp * mass;
         energySource[c] += energyx;
         
