@@ -499,10 +499,12 @@ void GeomTexVolRender::draw(DrawInfoOpenGL* di, Material *m, double time)
     glTexParameterf(GL_TEXTURE_3D_EXT, GL_TEXTURE_WRAP_R_EXT, GL_CLAMP);
     glTexParameterf(GL_TEXTURE_3D_EXT, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameterf(GL_TEXTURE_3D_EXT, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    
+
+#ifdef __sgi    
     glTexImage3DEXT(GL_TEXTURE_3D_EXT,0,GL_INTENSITY8_EXT,
 		    nx,ny,nz,0,
 		    GL_RED,GL_UNSIGNED_BYTE,vol3d);
+#endif
     
     
     map2d = 0; // clear it out...
@@ -586,8 +588,11 @@ void GeomTexVolRender::draw(DrawInfoOpenGL* di, Material *m, double time)
 #endif
   glDisable(GL_BLEND);
 
+#ifdef __sgi
   if (map1d && !quantnvol)
     glDisable(GL_TEXTURE_COLOR_TABLE_SGI);
+#endif
+
 }
 
 bool GeomTexVolRender::saveobj(ostream&, const clString& format, GeomSave*)

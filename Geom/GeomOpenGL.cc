@@ -64,7 +64,9 @@
 
 #include <X11/X.h>
 #include <X11/Xlib.h>
+#ifdef __sgi
 #include <GL/gls.h>
+#endif
 #include <Geom/Color.h>
 
 #include <Modules/Salmon/Salmon.h>
@@ -855,11 +857,11 @@ void TexGeomGrid::draw(DrawInfoOpenGL* di, Material* matl, double)
 				   GL_INTENSITY_EXT,
 				   conv_dim,conv_dim,
 				   GL_FLOAT,GL_RED,conv_data);
-#endif
 	  
 	  glTexImage2D(GL_TEXTURE_2D,0,GL_INTENSITY_EXT,
 		       tmap_size,tmap_size,
 		       0,GL_RED,GL_UNSIGNED_BYTE,tmapdata);
+#endif
 	  glEndList();
 	  // cerr << "Generated List " << tmap_dlist << endl;
 	}

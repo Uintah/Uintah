@@ -90,11 +90,11 @@ struct FakeRow {
 // you might want to just do 1 random point, and then move out
 // from there instead...
 
-struct SourceCoefs {
+struct SourceCoefs2 {
   // this structure represents the coeficients
   // for a given source...
 
-  SourceCoefs():generation(0) {};
+  SourceCoefs2():generation(0) {};
 
   Array1<double> coefs; // coeficients x,y,z,orientation - etc.
 
@@ -118,7 +118,7 @@ struct SourceCoefs {
 
 };
 
-void SourceCoefs::CreateDipole(Point &p0, Vector &v)
+void SourceCoefs2::CreateDipole(Point &p0, Vector &v)
 {
   double theta,phi;
 
@@ -150,11 +150,11 @@ inline double EvaluateDipole(Point &p, Point &d, Vector &v)
   return DIPOLE_POTENTIAL*(1/d0 - 1/d1);
 }
 
-struct AmoebaData {
+struct AmoebaData2 {
 
-  AmoebaData():generation(0),Cgen(0) { rhs = diag = R = Z = P = 0; }
+  AmoebaData2():generation(0),Cgen(0) { rhs = diag = R = Z = P = 0; }
 
-  Array1< SourceCoefs > samples; // N+1 points
+  Array1< SourceCoefs2 > samples; // N+1 points
   Array1< double > psum;         // prefix sum table for coefs size N
   
   inline void ComputePSUM(); // computes sum for every coef...
@@ -205,7 +205,7 @@ struct AmoebaData {
   Array1<int> mycols;
 };
 
-inline void AmoebaData::ComputePSUM()
+inline void AmoebaData2::ComputePSUM()
 {
   psum.resize(NUM_DOF);
   for(int i=0;i<NUM_DOF;i++) {
@@ -217,7 +217,7 @@ inline void AmoebaData::ComputePSUM()
 
 
 
-void AmoebaData::Contract()
+void AmoebaData2::Contract()
 {
   for(int i=0;i<samples.size();i++) {
     if (i != lowi) {
@@ -298,7 +298,7 @@ class SourceOptimize : public Module {
 
   double SolveStep(int proc, double fac);
 
-  Array1< AmoebaData > ambs; // per-proc stuff....
+  Array1< AmoebaData2 > ambs; // per-proc stuff....
 
   Mutex AmoebaInfo;          // lock for data that is sent
   int   do_execute;
@@ -349,16 +349,16 @@ class SourceOptimize : public Module {
   void SolveMatrix(); // this does the matrix solve 
                       // sources and svals must be set up.
 
-  void SolveMatrix(AmoebaData& amb, int idx,ColumnMatrix &lhs); 
+  void SolveMatrix(AmoebaData2& amb, int idx,ColumnMatrix &lhs); 
   // you have to compute all of the discrete stuff every time the above
   // function is called...
 
   inline void CleanupMMult(ColumnMatrix &x,
 			   ColumnMatrix &b,
-			   SourceCoefs &me);
+			   SourceCoefs2 &me);
 
   inline void PreMultFix(ColumnMatrix &x,
-			 SourceCoefs &me);
+			 SourceCoefs2 &me);
 
 public:
   SourceOptimize(const clString& id);
@@ -419,7 +419,7 @@ Module* SourceOptimize::clone(int deep)
 
 double SourceOptimize::SolveStep(int proc, double fac)
 {
-  AmoebaData &amb = ambs[proc];
+  AmoebaData2 &amb = ambs[proc];
 
   double fac1 = (1 - fac)/NUM_DOF;
   double fac2 = fac1 - fac;
@@ -461,7 +461,7 @@ double SourceOptimize::SolveStep(int proc, double fac)
 
 void SourceOptimize::ConfigureSample(int proc, int which)
 {
-  AmoebaData &amb = ambs[proc];
+  AmoebaData2 &amb = ambs[proc];
   
   // for now we are just doing point sources...
   
@@ -494,7 +494,7 @@ void SourceOptimize::ConfigureSample(int proc, int which)
 
 void SourceOptimize::ComputeSamples(int proc)
 {
-  AmoebaData &amb = ambs[proc];
+  AmoebaData2 &amb = ambs[proc];
   
   for(int i=0;i<amb.samples.size();i++) {
     if (!amb.samples[i].isValid) {
@@ -508,7 +508,7 @@ void SourceOptimize::ComputeSamples(int proc)
 
 void SourceOptimize::DoAmoeba(int proc)
 {
-  AmoebaData &amb = ambs[proc];
+  AmoebaData2 &amb = ambs[proc];
   //cerr << proc << " Doing Amoeba!\n";
 
   const int NMAX=110 + drand48()*50; // 100 function evaluations max...
@@ -543,7 +543,7 @@ void SourceOptimize::DoAmoeba(int proc)
     
     if (rtol < ftol) {
       cerr << rtol << "\n\ntolerance did it!\n";
-      SourceCoefs tmpC = amb.samples[amb.lowi];
+      SourceCoefs2 tmpC = amb.samples[amb.lowi];
       amb.samples[amb.lowi] = amb.samples[0];
       amb.samples[0] = tmpC; // save the best one...
       return;
@@ -551,7 +551,7 @@ void SourceOptimize::DoAmoeba(int proc)
 
     if (nfunk >= NMAX) {
       //cerr << rtol << " Done max number of function calls!\n";
-      SourceCoefs tmpC = amb.samples[amb.lowi];
+      SourceCoefs2 tmpC = amb.samples[amb.lowi];
       amb.samples[amb.lowi] = amb.samples[0];
       amb.samples[0] = tmpC; // save the best one...
       //cerr << amb.samples[0].err << endl;
@@ -601,7 +601,7 @@ void SourceOptimize::DoAmoeba(int proc)
 
 void SourceOptimize::ComputeSample(int proc, int which)
 {
-  AmoebaData &amb = ambs[proc];
+  AmoebaData2 &amb = ambs[proc];
 
   SolveMatrix(amb,which,(*(amb.lhs)));
 
@@ -654,7 +654,7 @@ void SourceOptimize::ComputeSample(int proc, int which)
 
 void SourceOptimize::InitAmoeba(int proc)
 {
-  AmoebaData &amb = ambs[proc];
+  AmoebaData2 &amb = ambs[proc];
 
   int csize = gbl_matrix->nrows();
  
@@ -733,7 +733,7 @@ double SourceOptimize::OptimizeInterp(int proc,
 				      Array1<double> &trial,double &mag)
 {
   
-  AmoebaData &amb = ambs[proc];
+  AmoebaData2 &amb = ambs[proc];
   
   // trial has been computed based on interp_pts/elems...
 
@@ -773,7 +773,7 @@ double SourceOptimize::OptimizeInterp(int proc,
 
 inline void SourceOptimize::CleanupMMult(ColumnMatrix &x,
 					 ColumnMatrix &b,
-					 SourceCoefs &me)
+					 SourceCoefs2 &me)
 {
   // assume that the values in x for these nodes
   // have been zeroed before the multiply - make
@@ -807,7 +807,7 @@ inline void SourceOptimize::CleanupMMult(ColumnMatrix &x,
 }
 
 inline void SourceOptimize::PreMultFix(ColumnMatrix &x,
-				       SourceCoefs &me)
+				       SourceCoefs2 &me)
 {
   // zero out appropriate parts of x,
   // copy x's values into "cval"
@@ -818,7 +818,7 @@ inline void SourceOptimize::PreMultFix(ColumnMatrix &x,
   }
 }
 
-void SourceOptimize::SolveMatrix(AmoebaData& amb, int idx, ColumnMatrix &lhs)
+void SourceOptimize::SolveMatrix(AmoebaData2& amb, int idx, ColumnMatrix &lhs)
 {
   Matrix *matrix = (Matrix*)gbl_matrix;
   ColumnMatrix &Rhs = (*(amb.rhs));
@@ -827,7 +827,7 @@ void SourceOptimize::SolveMatrix(AmoebaData& amb, int idx, ColumnMatrix &lhs)
   ColumnMatrix &Z = (*(amb.Z));
   ColumnMatrix &P = (*(amb.P));
 
-  SourceCoefs &me = amb.samples[idx];
+  SourceCoefs2 &me = amb.samples[idx];
 
   int i;
 
@@ -1759,8 +1759,8 @@ int SourceOptimize::build_local_mesh(Point &p1, Point &p2, // dipole
 
 void SourceOptimize::build_fake_rows(int proc, int which)
 {
-  AmoebaData &amb = ambs[proc];
-  SourceCoefs &me = amb.samples[which];
+  AmoebaData2 &amb = ambs[proc];
+  SourceCoefs2 &me = amb.samples[which];
 
   Mesh *msh = ambs[proc].local_mesh;
 

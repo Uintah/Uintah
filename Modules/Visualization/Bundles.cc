@@ -83,6 +83,7 @@ struct Fiber {
     int stagnate;
     int iDir;
 
+  inline Fiber() {};
     Fiber(const Point &p, int ns, double ss, const Vector &d, int idir)
 	: pos(p), nsteps(ns), stepsize(ss), dir(d),
           inside(1), stagnate(0), iDir(idir) {};
@@ -556,5 +557,5 @@ void Bundles::geom_release(GeomPick*, void*)
  * the classes are defined in this file.
  */
 #include <Classlib/Array1.cc>
-template class Array1<VertBatch>;
+template class Array1<Fiber>;
 #endif

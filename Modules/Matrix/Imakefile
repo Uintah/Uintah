@@ -70,10 +70,13 @@ SO_LDFLAGS = -L$(TOP)/lib -lDatatypes -lDataflow -lGeom -lMath \
 	-lTCL -lClasslib -lMultitask $(OPENGLLIBS) -lscitk -ltk \
 	-lMalloc $(IML_LDFLAGS) -lm SCI_CCLibs
 
+#ifdef SCI_SPARSELIB
 MATRIXDIRS = sp1_5c/src sp1_5c/spblas sp1_5c/mv/src
+#endif
 SCIDependTarget($(SRCS))
 SCIObjLibraryTarget($(LIBNAME),$(OBJS),$(SO_LIBS),$(SO_LDFLAGS))
 
+#ifdef SCI_SPARSELIB
 clean::
 	@	for flag in ${MAKEFLAGS} ''; do \
 	  case "$$flag" in *=*) ;; *[ik]*) set +e;; esac; done; \
@@ -91,3 +94,4 @@ all::
 		echo "making" all "in $(CURRENT_DIR)/$$i..."; \
 		(cd $$i &&  $(MAKE) $(MFLAGS)  all); \
 	done
+#endif

@@ -62,7 +62,9 @@ class Gauss : public Module {
 
   GLXContext		ctx;    // OpenGL Contexts
   Display		*dpy;
+#ifdef __sgi
   GLXPbufferSGIX        pbuf;
+#endif
   Window		win;
 
   int                   winX,winY; // size of window in pixels
@@ -129,8 +131,10 @@ Gauss::Gauss(const clString& id)
   add_oport( outscalarfield);
 
   outgrid = new ScalarFieldRG;
-  
+
+#ifdef __sgi  
   pbuf = 0;
+#endif
   ctx = 0; // null for now - no window is bound yet
   bdown = -1;
   drawn = 0;  // glDrawpixels hasn't been called yet
@@ -246,8 +250,9 @@ void Gauss::execute()
   if (usehardware) {
     if (!makeCurrent() )
       return; 
-
+#ifdef __sgi
     glXMakeCurrent(dpy,pbuf,ctx);
+#endif
     
     glDrawBuffer(GL_BACK);
     glClear(GL_COLOR_BUFFER_BIT);
@@ -286,8 +291,10 @@ void Gauss::execute()
     //  glPixelTransferf(GL_POST_CONVOLUTION_RED_BIAS_EXT,0.5);
     
     glDrawPixels(width,height,GL_LUMINANCE,GL_FLOAT,&dgrid->grid(0,0,0));
-    
+
+#ifdef __sgi    
     glDisable(GL_CONVOLUTION_2D_EXT);
+#endif
     
     //  glPixelTransferf(GL_RED_BIAS,-0.5);
     
@@ -443,6 +450,12 @@ int Gauss::makeCurrent(void)
 {
   Tk_Window tkwin;
 
+#ifndef __sgi
+    cerr << "This module is broken on non-sgi machines\n";
+    TCLTask::unlock();
+    return 0;
+#else
+
   // lock a mutex
   TCLTask::lock();
 
@@ -472,11 +485,6 @@ int Gauss::makeCurrent(void)
       TCLTask::unlock();
       return 0;
     }
-#ifdef linux
-    cerr << "This module is broken on linux\n";
-    TCLTask::unlock();
-    return 0;
-#else
     config1 = glXChooseFBConfigSGIX(dpy,Tk_ScreenNumber(tkwin),attributes,&num);
     cerr << "Got configs.." << num << "\n";
     pbuf = glXCreateGLXPbufferSGIX(dpy,*config1,width,height,pattr);
@@ -498,8 +506,8 @@ int Gauss::makeCurrent(void)
       TCLTask::unlock();
       return 0;
     }
-#endif
   } 
+#endif
 
   return 1;
   

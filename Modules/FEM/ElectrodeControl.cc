@@ -101,6 +101,7 @@ WakeMeUp::WakeMeUp(ElectrodeControl *o)
 
 int WakeMeUp::body(int)
 {
+#ifdef __sgi
   long sleep_ticks = 5*1000.0/CLK_TCK; // 30 seconds?
 
   // sleep for 20 seconds first time...
@@ -119,6 +120,7 @@ int WakeMeUp::body(int)
     owner->have_executed = 0; // clear it out...
     owner->DoneIt.unlock();
   }
+#endif
 }
 
 

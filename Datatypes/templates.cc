@@ -22,6 +22,7 @@
 #include <Datatypes/HexMesh.h>
 #include <Datatypes/Image.h>
 #include <Datatypes/Interval.h>
+#include <Datatypes/KludgeMessage.h>
 #include <Datatypes/LockArray3.cc>
 #include <Datatypes/MultiMesh.h>
 #include <Datatypes/Octree.h>
@@ -29,12 +30,14 @@
 #include <Datatypes/ParticleSet.h>
 #include <Datatypes/ParticleSetExtension.h>
 #include <Datatypes/ScalarField.h>
+#include <Datatypes/ScalarFieldRGdouble.h>
 #include <Datatypes/SegFld.h>
 #include <Datatypes/SigmaSet.h>
 #include <Datatypes/Surface.h>
 #include <Datatypes/SurfTree.h>
 #include <Datatypes/TensorFieldBase.h>
 #include <Datatypes/VectorField.h>
+#include <Datatypes/VectorFieldRG.h>
 #include <Datatypes/VoidStar.h>
 
 template class Array1<sci::NodeHandle>;
@@ -73,7 +76,11 @@ struct SrchLst;
 template class Array1<SrchLst*>;
 template class Array1<Array3<short> >;
 template class Array1<VectorFieldRG*>;
+template class Array1<VectorFieldRG>;
 template class Array1<ScalarFieldRGdouble*>;
+template class Array1<ScalarFieldRGdouble>;
+template class Array1<SourceRecord>;
+template class Array1<AmoebaRecord>;
 
 template class Array2<Color>;
 
@@ -87,6 +94,7 @@ template class Array3<Vector>;
 template void Pio(Piostream&, Array1<Color>&);
 template void Pio(Piostream&, Array1<Array1<Point> >&);
 template void Pio(Piostream&, Array3<Array1<int> >&);
+template void Pio(Piostream&, Array1<Array3<short> >&);
 template void Pio(Piostream&, Array1<sci::NodeVersion1>&);
 template void Pio(Piostream&, Array1<sci::NodeHandle>&);
 template void Pio(Piostream&, Array1<sci::ElementVersion1>&);
@@ -118,6 +126,11 @@ template void Pio(Piostream&, HashTable<int, HexNode*>&);
 template void Pio(Piostream&, HashTable<int, HexFace*>&);
 template void Pio(Piostream&, HashTable<int, Hexahedron*>&);
 template void Pio(Piostream&, Array1<Array1<Vector> >&);
+template void Pio(Piostream&, Array1<VectorFieldRG>&);
+template void Pio(Piostream&, Array1<ScalarFieldRGdouble>&);
+template void Pio(Piostream&, Array1<SourceRecord>&);
+template void Pio(Piostream&, Array1<AmoebaRecord>&);
+
 
 template class Mailbox<GeomReply>;
 struct SoundComm;
@@ -147,6 +160,7 @@ template class SimpleIPort<cMatrixHandle>;
 template class SimpleIPort<cVectorHandle>;
 template class SimpleIPort<sci::MeshHandle>;
 template class SimpleIPort<sciBooleanHandle>;
+template class SimpleIPort<AmoebaMessageHandle>;
 template class SimpleIPort<ColorMapHandle>;
 template class SimpleIPort<ColumnMatrixHandle>;
 template class SimpleIPort<ContourSetHandle>;
@@ -170,6 +184,7 @@ template class SimpleIPort<VoidStarHandle>;
 template class SimpleOPort<cVectorHandle>;
 template class SimpleOPort<sci::MeshHandle>;
 template class SimpleOPort<sciBooleanHandle>;
+template class SimpleOPort<AmoebaMessageHandle>;
 template class SimpleOPort<ColorMapHandle>;
 template class SimpleOPort<ColumnMatrixHandle>;
 template class SimpleOPort<ContourSetHandle>;
@@ -194,6 +209,7 @@ template class LockingHandle<cMatrix>;
 template class LockingHandle<sci::Mesh>;
 template class LockingHandle<sci::Node>;
 template class LockingHandle<sciBoolean>;
+template class LockingHandle<AmoebaMessage>;
 template class LockingHandle<ColorMap>;
 template class LockingHandle<ColumnMatrix>;
 template class LockingHandle<ContourSet>;
