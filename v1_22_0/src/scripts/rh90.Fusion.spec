@@ -121,7 +121,7 @@ mkdir -p /usr/local/SCIRun/bin
 cd /usr/local/SCIRun/bin
 /usr/local/SCIRun/src/configure --with-thirdparty="/usr/local/SCIRun/Thirdparty/%{defver}/Linux/gcc-%{gccver}-32bit/" --with-ftgl="/usr/local/%{ftgl}/FTGL" --with-hdf5="/usr/local/%{hdf5}" --with-mdsplus="/usr/local/mdsplus" --enable-package="Fusion DataIO Teem"
 cd /usr/local/SCIRun/bin/on-the-fly-libs
-tar -xvzf %{source7}
+tar -xvzf %{SOURCE7}
 cd /usr/local/SCIRun/bin/
 gmake
 
