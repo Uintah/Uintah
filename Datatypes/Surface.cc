@@ -30,7 +30,7 @@ Surface::~Surface()
 Surface::Surface(const Surface& copy)
 : closed(copy.closed), rep(copy.rep)
 {
-    NOT_FINISHED("Surface::Surface");
+//    NOT_FINISHED("Surface::Surface");
 }
 
 void Surface::destroy_grid()
@@ -66,6 +66,13 @@ void Surface::io(Piostream& stream) {
 	Pio(stream, bt);
     }
     stream.end_class();
+}
+
+SurfTree* Surface::getSurfTree() {
+    if (rep==STree)
+	return (SurfTree*) this;
+    else
+	return 0;
 }
 
 ScalarTriSurface* Surface::getScalarTriSurface()

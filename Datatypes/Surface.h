@@ -31,18 +31,21 @@ class ScalarTriSurface;
 class TriSurface;
 class PointsSurface;
 class Grid;
+class SurfTree;
 class Surface : public Datatype {
 protected:
     enum Representation {
 	TriSurf,
 	PointsSurf,
 	ScalarTriSurf,
+	STree,
 	Other,
     };
     Surface(Representation, int closed);
 private:
     Representation rep;
 public:
+    CrowdMonitor monitor;
     int hash_x;
     int hash_y;
     Point hash_min;
@@ -70,6 +73,7 @@ public:
     virtual void construct_grid()=0;
     virtual void destroy_grid();
     virtual void destroy_hash();
+    SurfTree* getSurfTree();
     ScalarTriSurface* getScalarTriSurface();
     TriSurface* getTriSurface();
     PointsSurface* getPointsSurface();
