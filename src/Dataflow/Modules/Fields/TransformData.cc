@@ -103,9 +103,11 @@ TransformData::execute()
   Handle<TransformDataAlgo> algo;
 
   // remove trailing white-space from the function string
-  string func=function_.get();
+  string func = function_.get();
   while (func.size() && isspace(func[func.size()-1]))
+  {
     func.resize(func.size()-1);
+  }
 
   while (1)
   {
@@ -176,7 +178,7 @@ TransformDataAlgo::get_compile_info(const TypeDescription *field_td,
     "  }\n" +
     "\n" +
     "  virtual string identify()\n" +
-    "  { return string(\"" + function + "\"); }\n" +
+    "  { return string(\"" + string_Cify(function) + "\"); }\n" +
     "};\n//";
 
   // Add in the include path to compile this obj
