@@ -59,7 +59,6 @@ void ScalarFieldAverage::execute(void) {
     aveField = new LatticeVol<double>(hTF->data_at());
     aveFieldH = aveField;
     varname = vname;
-    cerr<<vname<<endl;
     time = t;
     t0_.set( t );
     t1_.set( t );
@@ -67,7 +66,6 @@ void ScalarFieldAverage::execute(void) {
     reset_vars();
     fillField( hTF );
   } else if( vname != varname ){
-    cerr<<vname<<endl;
     varname = vname;
     time = t;
     t0_.set( t );
