@@ -166,6 +166,8 @@ MatrixIEPlugin::operator==(const MatrixIEPlugin &other) const
 void
 MatrixIEPluginManager::get_importer_list(vector<string> &results)
 {
+  if (matrix_plugin_table == NULL) return;
+
   matrixIEPluginMutex.lock();
   map<string, MatrixIEPlugin *>::const_iterator itr = matrix_plugin_table->begin();
   while (itr != matrix_plugin_table->end())
@@ -183,6 +185,8 @@ MatrixIEPluginManager::get_importer_list(vector<string> &results)
 void
 MatrixIEPluginManager::get_exporter_list(vector<string> &results)
 {
+  if (matrix_plugin_table == NULL) return;
+
   matrixIEPluginMutex.lock();
   map<string, MatrixIEPlugin *>::const_iterator itr = matrix_plugin_table->begin();
   while (itr != matrix_plugin_table->end())
@@ -200,6 +204,8 @@ MatrixIEPluginManager::get_exporter_list(vector<string> &results)
 MatrixIEPlugin *
 MatrixIEPluginManager::get_plugin(const string &name)
 {
+  if (matrix_plugin_table == NULL) return NULL;
+
   // Should check for invalid name.
   map<string, MatrixIEPlugin *>::iterator loc = matrix_plugin_table->find(name);
   if (loc == matrix_plugin_table->end())
