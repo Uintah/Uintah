@@ -61,7 +61,6 @@ void ICE::actuallyComputeStableTimestepRF(const ProcessorGroup*,
                                      
     constCCVariable<double> speedSound, sp_vol_CC, rho_CC;
     constCCVariable<Vector> vel_CC;
-    Ghost::GhostType  gn  = Ghost::None;
     Ghost::GhostType  gac = Ghost::AroundCells;    
     if (d_CFL > 0.5) {
       throw ProblemSetupException("CFL can't exceed 0.5 for RF problems");

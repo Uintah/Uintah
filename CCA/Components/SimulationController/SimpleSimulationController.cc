@@ -274,8 +274,7 @@ SimpleSimulationController::run()
 
    // vars used to calculate standard deviation
    int n = 0;
-   //list<double> wallTimes;
-   double prevWallTime;
+   double prevWallTime = Time::currentSeconds();
    double sum_of_walltime = 0; // sum of all walltimes
    double sum_of_walltime_squares = 0; // sum all squares of walltimes
    
