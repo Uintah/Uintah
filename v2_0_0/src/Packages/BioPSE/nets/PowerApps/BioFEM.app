@@ -502,7 +502,7 @@ class BioFEMApp {
 	frame $f.cond
 	label $f.cond.l -text "Conductivity:" -width 11 -anchor w
 	label $f.cond.e -textvar filenameconductivities -width 28 -anchor w
-	button $f.cond.b -text Browse -command "$mods(FieldReader-conductivities) ui"
+	button $f.cond.b -text Browse -command "$mods(FieldReader-conductivities) initialize_ui"
 	pack $f.cond.l $f.cond.e $f.cond.b -side left
 	pack $f.cond -padx 5 -anchor w
 
@@ -510,7 +510,7 @@ class BioFEMApp {
 	frame $f.elec
 	label $f.elec.l -text "Electrodes:" -width 11 -anchor w
 	label $f.elec.e -textvar filenameelectrodes -width 28 -anchor w
-	button $f.elec.b -text Browse -command "$mods(FieldReader-electrodes) ui"
+	button $f.elec.b -text Browse -command "$mods(FieldReader-electrodes) initialize_ui"
 	pack $f.elec.l $f.elec.e $f.elec.b -side left
 	pack $f.elec -padx 5 -anchor w
 
@@ -518,7 +518,7 @@ class BioFEMApp {
 	frame $f.probe
 	label $f.probe.l -text "Probe:" -width 11 -anchor w
 	label $f.probe.e -textvar filenameprobe -width 28 -anchor w
-	button $f.probe.b -text Browse -command "$mods(FieldReader-probe) ui"
+	button $f.probe.b -text Browse -command "$mods(FieldReader-probe) initialize_ui"
 	pack $f.probe.l $f.probe.e $f.probe.b -side left
 	pack $f.probe -padx 5 -anchor w
     }
