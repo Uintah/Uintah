@@ -44,7 +44,7 @@ Level* Grid::addLevel(const Point& anchor, const Vector& dcell, int id)
   IntVector ratio;
   if (d_levels.size() > 0) {
     Vector r = d_levels[d_levels.size()-1]->dCell() / dcell;
-    ratio = IntVector(r.x(), r.y(), r.z());
+    ratio = IntVector((int)r.x(), (int)r.y(), (int)r.z());
   }
   else
     ratio = IntVector(1,1,1);
@@ -253,7 +253,7 @@ Grid::problemSetup(const ProblemSpecP& params, const ProcessorGroup *pg, bool do
         throw ProblemSetupException("Box resolution is not specified");
 
       LevelP level = addLevel(anchor, spacing);
-      IntVector anchorCell(level->getCellIndex(levelAnchor));
+      IntVector anchorCell(level->getCellIndex(levelAnchor + Vector(1.e-6,1.e-6,1.e-6)));
       IntVector highPointCell(level->getCellIndex(levelHighPoint + Vector(1.e-6,1.e-6,1.e-6)));
 
       // second pass - set up patches and cells
@@ -318,6 +318,7 @@ Grid::problemSetup(const ProblemSpecP& params, const ProcessorGroup *pg, bool do
               endcell += IntVector(endcell.x() == highPointCell.x() ? extraCells.x():0,
                                    endcell.y() == highPointCell.y() ? extraCells.y():0,
                                    endcell.z() == highPointCell.z() ? extraCells.z():0);
+
               Patch* p = level->addPatch(startcell, endcell,
                                          inStartCell, inEndCell);
               p->setLayoutHint(IntVector(i,j,k));
