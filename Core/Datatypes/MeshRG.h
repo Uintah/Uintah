@@ -15,10 +15,11 @@
 #define SCI_project_MeshRG_h 1
 
 #include <Core/Datatypes/Datatype.h>
-#include <Datatypes/FieldIterator.h>
+#include <Core/Datatypes/FieldIterator.h>
 #include <Core/Geometry/BBox.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Containers/LockingHandle.h>
+#include <Core/Datatypes/Octree.h>
 
 
 namespace SCIRun {
@@ -42,10 +43,13 @@ public:
   typedef CellIndex<index_type>       cell_index;
   typedef CellIterator<index_type>    cell_iterator;
 
-  typedef vector<node_index> node_array;
-  typedef vector<edge_index> edge_array;
-  typedef vector<face_index> face_array;
-
+  //! Storage types for the arguments passed to the 
+  //  get_*() functions.  For rg meshes, these all have
+  //  known maximum sizes, so we use them.
+  typedef node_index[8]   rg_node_array;
+  typedef edge_index[12]  rg_edge_array;
+  typedef face_index[6]   rg_face_array;
+  typedef cell_index[8]   rg_cell_array;
 
   MeshRG(int x, int y, int z);
   MeshRG(const MeshRG &);
@@ -64,13 +68,27 @@ public:
   cell_iterator cell_begin() const;
   cell_iterator cell_end() const;
 
-  void get_nodes(node_array &array, edge_index idx) const;
-  void get_nodes(node_array &array, face_index idx) const;
-  void get_nodes(node_array &array, cell_index idx) const;
-  void get_edges(edge_array &array, face_index idx) const;
-  void get_edges(edge_array &array, cell_index idx) const;
-  void get_faces(face_array &array, cell_index idx) const;
+  //! get the child elements of the given index
+  void get_nodes(rg_node_array &array, edge_index idx) const;
+  void get_nodes(rg_node_array &array, face_index idx) const;
+  void get_nodes(rg_node_array &array, cell_index idx) const;
+  void get_edges(rg_edge_array &array, face_index idx) const;
+  void get_edges(rg_edge_array &array, cell_index idx) const;
+  void get_faces(rg_face_array &array, cell_index idx) const;
+
+  //! get the parent elements of the given index
+  int get_edges(rg_edge_array &array, node_index idx) const;
+  int get_faces(rg_face_array &array, node_index idx) const;
+  int get_faces(rg_face_array &array, edge_index idx) const;
+  int get_cells(rg_cell_array &array, node_index idx) const;
+  int get_cells(rg_cell_array &array, edge_index idx) const;
+  int get_cells(rg_cell_array &array, face_index idx) const;
+
+  //! similar to get_cells() with face_index argument, but
+  //  returns the "other" cell if it exists, not the one or two.
   void get_neighbor(cell_index &neighbor, face_index idx) const;
+
+  //! get the center point (in object space) of an element
   void get_center(Point &result, node_index idx) const;
   void get_center(Point &result, edge_index idx) const;
   void get_center(Point &result, face_index idx) const;
@@ -90,10 +108,15 @@ public:
   static PersistentTypeID type_id;
 
 private:
+
+  //! the object space extents of a MeshRG
+  Point min_, max_;
+
+  //! the cell_index extents of a MeshRG (min=0, max=n)
   int nx_, ny_, nz_;
 
   
-
+  // what is this?
   static Persistent *maker();
 };
 
