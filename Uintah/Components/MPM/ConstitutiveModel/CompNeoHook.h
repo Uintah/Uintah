@@ -34,7 +34,7 @@ namespace Uintah {
             double Shear;
          };
       private:
-         friend const TypeDescription* fun_getTypeDescription(CMData*);
+//         friend const TypeDescription* fun_getTypeDescription(StateData*);
 
          CMData d_initialData;
 
@@ -110,9 +110,7 @@ namespace Uintah {
          // class function to create a new object from parameters
          static ConstitutiveModel* create(double *p_array);
 
-         const VarLabel* p_cmdata_label;
          const VarLabel* bElBarLabel;
-         const VarLabel* p_cmdata_label_preReloc;
          const VarLabel* bElBarLabel_preReloc;
 
       };
@@ -124,6 +122,11 @@ namespace Uintah {
 #endif  // __NEOHOOK_CONSTITUTIVE_MODEL_H__ 
 
 // $Log$
+// Revision 1.15  2000/10/11 01:30:28  guilkey
+// Made CMData no longer a per particle variable for these models.
+// None of them currently have anything worthy of being called StateData,
+// so no such struct was created.
+//
 // Revision 1.14  2000/09/12 16:52:10  tan
 // Reorganized crack surface contact force algorithm.
 //
