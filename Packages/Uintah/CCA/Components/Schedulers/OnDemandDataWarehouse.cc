@@ -687,16 +687,6 @@ OnDemandDataWarehouse::put(const ReductionVariableBase& var,
   d_lock.writeUnlock();
 }
 
-void 
-OnDemandDataWarehouse::setDelT(double delt, const VarLabel* delt_label, const Level* level)
-{
-  for(int i=1;i<=level->getIndex();i++) {     // REFINE
-    delt *= level->getGrid()->getLevel(i)->timeRefinementRatio();
-  }
-  put(delt_vartype(delt), delt_label);
-}
-
-
 void
 OnDemandDataWarehouse::override(const ReductionVariableBase& var,
 				const VarLabel* label, const Level* level,

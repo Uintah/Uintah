@@ -209,10 +209,11 @@ void CompMooneyRivlin::computeStableTimestep(const Patch* patch,
     WaveSpeed = dx/WaveSpeed;
     double delT_new = WaveSpeed.minComponent();
     if(delT_new < 1.e-12)
-      // don't use setDelT here because of MAXDOUBLE
+      // don't use adjustDelt here because of MAXDOUBLE
       new_dw->put(delt_vartype(MAXDOUBLE), lb->delTLabel);
     else
-      new_dw->setDelT(delT_new, lb->delTLabel, patch->getLevel());
+      new_dw->put(delt_vartype(patch->getLevel()->adjustDelt(delT_new)), 
+                  lb->delTLabel);
 }
 
 void CompMooneyRivlin::computeStressTensor(const PatchSubset* patches,
@@ -398,7 +399,8 @@ void CompMooneyRivlin::computeStressTensor(const PatchSubset* patches,
     if(delT_new < 1.e-12)
       new_dw->put(delt_vartype(MAXDOUBLE), lb->delTLabel);
     else
-      new_dw->setDelT(delT_new, lb->delTLabel, patch->getLevel());
+      new_dw->put(delt_vartype(patch->getLevel()->adjustDelt(delT_new)), 
+                  lb->delTLabel);
     new_dw->put(sum_vartype(se),        lb->StrainEnergyLabel);
   }
 }
@@ -432,7 +434,8 @@ void CompMooneyRivlin::carryForward(const PatchSubset* patches,
       pstress_new[idx] = Matrix3(0.0);
       pvolume_deformed[idx]=(pmass[idx]/rho_orig);
     }
-    new_dw->setDelT(1.e10, lb->delTLabel, patch->getLevel());
+    new_dw->put(delt_vartype(patch->getLevel()->adjustDelt(1.e10)), 
+                lb->delTLabel);
     new_dw->put(sum_vartype(0.),     lb->StrainEnergyLabel);
   }
 }

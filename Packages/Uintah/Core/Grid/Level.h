@@ -189,6 +189,10 @@ WARNING
      inline void setRefinementRatio(const IntVector& ratio) {
        refinementRatio = ratio;
      }
+
+     //! Use this when you're done setting the delt, and this function
+     //! will compensate for whichever level you're on
+     double adjustDelt(double delt) const;
    private:
       Level(const Level&);
       Level& operator=(const Level&);
