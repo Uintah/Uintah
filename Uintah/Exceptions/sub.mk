@@ -7,7 +7,9 @@ include $(SRCTOP)/scripts/smallso_prologue.mk
 
 SRCDIR   := Uintah/Exceptions
 
-SRCS     += $(SRCDIR)/InvalidValue.cc $(SRCDIR)/ProblemSetupException.cc \
+SRCS     += $(SRCDIR)/InvalidGrid.cc $(SRCDIR)/InvalidValue.cc \
+	$(SRCDIR)/ParameterNotFound.cc \
+	$(SRCDIR)/ProblemSetupException.cc \
 	$(SRCDIR)/TypeMismatchException.cc $(SRCDIR)/UnknownVariable.cc
 
 PSELIBS := SCICore/Exceptions
@@ -17,6 +19,9 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.5  2000/04/12 22:57:47  sparker
+# Added new exception classes
+#
 # Revision 1.4  2000/04/11 07:10:47  sparker
 # Completing initialization and problem setup
 # Finishing Exception modifications
