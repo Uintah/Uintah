@@ -42,10 +42,6 @@ extern "C" Scene *make_scene(int argc, char** argv, int)
   Group *all = new Group;
   if (!readASEFile(argv[1], t, all, ase_matls, env_map)) return 0;
 
-  // polish the entrance marble floors
-  for (unsigned loop=56; loop<62; loop+=2)
-    ((ImageMaterial*)ase_matls[loop])->set_refl(.8);
-                  
   Camera cam(Point(1,0,0), Point(0,0,0),
              Vector(0,0,1), 40);
   
