@@ -385,12 +385,11 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorContext*,
       NCVariable<double> gmass;
       NCVariable<Vector> gvelocity;
       NCVariable<Vector> externalforce;
-#if WONT_COMPILE_YET
+#ifdef WONT_COMPILE_YET
       new_dw->allocate(gmass,         gMassLabel, vfindex, region, 0);
       new_dw->allocate(gvelocity,     gVelocityLabel, vfindex, region, 0);
       new_dw->allocate(externalforce, gExternalForceLabel, vfindex, region, 0);
-#endif
-#if WONT_COMPILE_YET
+
       ParticleSubset* pset = px.getParticleSubset(matlindex);
       ASSERT(pset == pmass.getParticleSubset(matlindex));
       ASSERT(pset == pvelocity.getParticleSubset(matlindex));
@@ -489,10 +488,9 @@ void SerialMPM::computeInternalForce(const ProcessorContext*,
       old_dw->get(px,      pXLabel, matlindex, region, 0);
       old_dw->get(pvol,    pVolumeLabel, matlindex, region, 0);
       old_dw->get(pstress, pStressLabel, matlindex, region, 0);
-#if WONT_COMPILE_YET
+#ifdef WONT_COMPILE_YET
       new_dw->allocate(internalforce, gInternalForceLabel, vfindex, region, 0);
   
-
       ParticleSubset* pset = px.getParticleSubset(matlindex);
       ASSERT(pset == px.getParticleSubset(matlindex));
       ASSERT(pset == pvol.getParticleSubset(matlindex));
@@ -549,11 +547,10 @@ void SerialMPM::solveEquationsMotion(const ProcessorContext*,
 
       // Create variables for the results
       NCVariable<Vector> acceleration;
-#if WONT_COMPILE_YET
+#ifdef WONT_COMPILE_YET
       new_dw->allocate(acceleration, gAccelerationLabel, vfindex, region, 0);
 
       // Do the computation of a = F/m for nodes where m!=0.0
-
       for(NodeIterator  iter  = region->begin();
 			iter != region->end(); iter++){
 	if(mass[*iter]>0.0){
@@ -595,13 +592,12 @@ void SerialMPM::integrateAcceleration(const ProcessorContext*,
       new_dw->get(velocity, gVelocityLabel, vfindex, region, 0);
 
       old_dw->get(delt, deltLabel);
-#if WONT_COMPILE_YET
+#ifdef WONT_COMPILE_YET
       // Create variables for the results
       NCVariable<Vector> velocity_star;
       new_dw->allocate(velocity_star, gVelocityStarLabel, vfindex, region, 0);
 
       // Do the computation
-
 
       for(NodeIterator  iter  = region->begin();
 			iter != region->end(); iter++) {
@@ -720,6 +716,9 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorContext*,
 } // end namespace Uintah
 
 // $Log$
+// Revision 1.25  2000/04/24 15:16:58  sparker
+// Fixed unresolved symbols
+//
 // Revision 1.24  2000/04/21 17:46:52  jas
 // Inserted & for function pointers needed by Task constructor (required by
 // gcc).  Moved around WONT_COMPILE_YET to get around allocate.

@@ -4,7 +4,6 @@
 #include <Uintah/Grid/Box.h>
 #include <SCICore/Geometry/Vector.h>
 
-
 using namespace Uintah::Components;
 using namespace SCICore::Geometry;
 
@@ -65,6 +64,9 @@ Box CylinderGeometryObject::getBoundingBox() const
 }
 
 // $Log$
+// Revision 1.8  2000/04/24 15:16:59  sparker
+// Fixed unresolved symbols
+//
 // Revision 1.7  2000/04/22 16:51:03  jas
 // Put in a skeleton framework for documentation (coccoon comment form).
 // Comments still need to be filled in.
