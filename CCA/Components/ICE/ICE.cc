@@ -34,14 +34,13 @@ using namespace SCIRun;
 using namespace Uintah;
 
 static int iterNum = 0;
-static bool computeDt = false;
 
 /*`==========TESTING==========  HACK: so we can get mass exchange off the ground*/
 #define HMX 1
  /*==========TESTING==========`*/
  
 //#define DOING
-//#undef DOING
+#undef DOING
 
 ICE::ICE(const ProcessorGroup* myworld) 
   : UintahParallelComponent(myworld)
@@ -259,6 +258,7 @@ void ICE::scheduleInitialize(const LevelP& level,
   t->computes(lb->vol_frac_CCLabel);
   t->computes(lb->vel_CCLabel);
   t->computes(lb->press_CCLabel);
+  t->computes(lb->speedSound_CCLabel);
 
   sched->addTask(t, level->eachPatch(), d_sharedState->allICEMaterials());
 }
@@ -271,17 +271,13 @@ void ICE::scheduleComputeStableTimestep(const LevelP& level,
 #ifdef DOING
   cout << "ICE::scheduleComputeStableTimestep " << endl;
 #endif
-  for (Level::const_patchIterator iter = level->patchesBegin();
-      iter != level->patchesEnd(); iter++)  {
     Task* task = scinew Task("ICE::actuallyComputeStableTimestep",
 			  this, &ICE::actuallyComputeStableTimestep);
-    if(computeDt) {      
-      task->requires(Task::NewDW,lb->vel_CCLabel,        Ghost::None);
-      task->requires(Task::NewDW,lb->speedSound_CCLabel, Ghost::None);
-    }
+
+    task->requires(Task::NewDW,lb->vel_CCLabel,        Ghost::None);
+    task->requires(Task::NewDW,lb->speedSound_CCLabel, Ghost::None);
     task->computes(d_sharedState->get_delt_label());
     sched->addTask(task,level->eachPatch(), d_sharedState->allICEMaterials());
-  }
 }
 /* ---------------------------------------------------------------------
  Function~  ICE::scheduleTimeAdvance--
@@ -686,9 +682,6 @@ void ICE::actuallyComputeStableTimestep(const ProcessorGroup*,
     cout << "Doing Compute Stable Timestep on patch " << patch->getID() 
          << "\t\t ICE" << endl;
   #endif
-    double dT = d_initialDt;
-
-    if (computeDt) {
       Vector dx = patch->dCell();
       double delt_CFL = 100000, fudge_factor = 1.;
       CCVariable<double> speedSound;
@@ -713,11 +706,11 @@ void ICE::actuallyComputeStableTimestep(const ProcessorGroup*,
 
         for(CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
 	  double A = fudge_factor*CFL*dx.x()/(speedSound[*iter] + 
-					      fabs(vel[*iter].x())+ d_SMALL_NUM);
+					     fabs(vel[*iter].x())+ d_SMALL_NUM);
 	  double B = fudge_factor*CFL*dx.y()/(speedSound[*iter] + 
-					      fabs(vel[*iter].y())+ d_SMALL_NUM);
+					     fabs(vel[*iter].y())+ d_SMALL_NUM);
 	  double C = fudge_factor*CFL*dx.z()/(speedSound[*iter] + 
-					      fabs(vel[*iter].z())+ d_SMALL_NUM);
+					     fabs(vel[*iter].z())+ d_SMALL_NUM);
 
 	  delt_CFL = std::min(A, delt_CFL);
 	  delt_CFL = std::min(B, delt_CFL);
@@ -725,10 +718,7 @@ void ICE::actuallyComputeStableTimestep(const ProcessorGroup*,
 
         }
       }
-      dT = delt_CFL;
-    }
-    new_dw->put(delt_vartype(dT), lb->delTLabel);
-    computeDt = true;
+    new_dw->put(delt_vartype(delt_CFL), lb->delTLabel);
   }  // patch loop
 }
 
@@ -2219,6 +2209,7 @@ void ICE::computeLagrangianValues(const ProcessorGroup*,
       // If it does then we'll get erroneous vel, and temps
       // after advection.  Thus there is always a mininum amount
       if(d_massExchange)  {
+        double massGain = 0.;
         for(CellIterator iter = patch->getExtraCellIterator(); !iter.done(); 
 	    iter++) {
            //  must have a minimum mass
@@ -2226,6 +2217,8 @@ void ICE::computeLagrangianValues(const ProcessorGroup*,
           double min_mass = d_SMALL_NUM * vol;
 
           mass_L[*iter] = std::max( (mass + burnedMass[*iter] ), min_mass);
+
+          massGain += burnedMass[*iter];
 
           //  must have a minimum momentum                            
           Vector min_mom_L = vel_CC[*iter] * min_mass;
@@ -2246,6 +2239,7 @@ void ICE::computeLagrangianValues(const ProcessorGroup*,
           int_eng_L[*iter] = std::max(int_eng_tmp, min_int_eng) + 
                              int_eng_source[*iter] + releasedHeat[*iter];     
          }
+	cout << "Mass gained by the gas this timestep = " << massGain << endl;
        }  // 
      }  // if (ice_matl)
       //---- P R I N T   D A T A ------ 
