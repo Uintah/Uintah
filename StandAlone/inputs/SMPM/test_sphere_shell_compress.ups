@@ -21,7 +21,7 @@
 
    <DataArchiver>
      <filebase>test_sphere_shell_compress.uda</filebase>
-     <outputTimestepInterval> 3 </outputTimestepInterval>
+     <outputTimestepInterval> 10 </outputTimestepInterval>
      <save label = "KineticEnergy"/>
      <save label = "TotalMass"/>
      <save label = "StrainEnergy"/>
@@ -56,7 +56,7 @@
      <save label = "g.externalforce"/>
      <save label = "g.internalforce"/>
      <save label = "g.normalRotRate"/>
-     <checkpoint cycle = "2" timestepInterval = "9"/>
+     <checkpoint cycle = "2" timestepInterval = "5"/>
    </DataArchiver>
 
    <MPM>
