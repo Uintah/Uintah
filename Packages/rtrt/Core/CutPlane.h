@@ -4,6 +4,7 @@
 
 #include <Packages/rtrt/Core/Object.h>
 #include <Core/Geometry/Point.h>
+#include <Packages/rtrt/Core/BBox.h>
 
 namespace rtrt {
 
@@ -15,6 +16,7 @@ class CutPlane : public Object {
     Vector n;
     double d;
     PlaneDpy* dpy;
+  BBox child_bbox;
 public:
     CutPlane(Object* child, const Point& cen, const Vector& n);
     CutPlane(Object* child, PlaneDpy* dpy);

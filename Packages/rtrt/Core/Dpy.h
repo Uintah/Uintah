@@ -46,6 +46,8 @@ class Dpy : public Runnable {
 
   friend class Gui;
 
+  bool       fullScreenMode_;
+
   // Begin Gui Interaction Flags:
   Image    * showImage_;
   bool       doAutoJitter_; // Jitter when not moving
@@ -61,6 +63,9 @@ class Dpy : public Runnable {
   Light    * turnOffLight_;
   Light    * turnOnLight_;
 
+  bool       toggleRenderWindowSize_;
+  int        renderWindowSize_; // 0 == full, 1 == med
+
   bool       turnOnTransmissionMode_;
 
   int        numThreadsRequested_;
@@ -73,6 +78,8 @@ class Dpy : public Runnable {
 
   DynamicInstance * attachedObject_;
   float             objectRotationMatrix_[4][4];
+
+  bool     holoToggle_;
 
   // End Gui Interaction Flags.
 
@@ -114,7 +121,7 @@ public:
   Dpy(Scene* scene, char* criteria1, char* criteria2,
       int nworkers, bool bench, int ncounters, int c0, int c1,
       float xScale,float yScale, bool display_frames, 
-      int pp_size, int scratchsize, int frameless=0);
+      int pp_size, int scratchsize, bool fullscreen, int frameless=0 );
   virtual ~Dpy();
 
   virtual void run();

@@ -24,10 +24,6 @@ class GLUI_Checkbox;
 
 namespace rtrt {
 
-// Because we have to use static functions, only one Gui object may be
-// active at a time.  (My guess is that there will only be one Gui
-// object at a time anyway...)
-
 class  Dpy;
 struct DpyPrivate;
 class  Stealth;
@@ -37,10 +33,16 @@ class  Worker;
 class  DepthStats;
 class  Stats;
 class  Light;
+class  PPMImage;
 class  SelectableGroup;
 class  SpinningInstance;
 class  CutGroup;
 class  Sound;
+class  Trigger;
+
+// Because we have to use static functions, only one Gui object may be
+// active at a time.  (My guess is that there will only be one Gui
+// object at a time anyway...)
 
 class Gui {
 
@@ -53,6 +55,8 @@ public:
   void setDpy( Dpy * dpy );
   void setStealth( Stealth * stealth );
 
+  void setBottomGraphic( Trigger * trig ) { bottomGraphicTrig_ = trig; }
+  void setLeftGraphic( Trigger * trig ) { leftGraphicTrig_ = trig; }
 
   void addLight( Light * light );
 
@@ -61,6 +65,7 @@ public:
   void update();
 
   // Used by GLUT
+  static void redrawBackgroundCB();
   static void handleWindowResizeCB( int width, int height );
   static void handleKeyPressCB( unsigned char key,
 			      int /*mouse_x*/, int /*mouse_y*/ );
@@ -106,8 +111,24 @@ private:
   Camera            * camera_;
   Stealth           * stealth_;
   Sound             * currentSound_;
-  
+
   int                 glutDisplayWindowId;
+
+  // Main Text Trigger (MTT)
+  Trigger * activeMTT_; // If queued, the activeMMT is told to deactivate
+  Trigger * queuedMTT_; // and the queuedMTT will kick in as soon as it's done.
+
+  Trigger * bottomGraphicTrig_;
+  Trigger * leftGraphicTrig_;
+
+  // Specific Triggers
+  Trigger * visWomanTrig_;
+  Trigger * csafeTrig_;
+  Trigger * geophysicsTrig_;
+
+  PPMImage * backgroundImage_;
+  int        recheckBackgroundCnt_; // Check to see if we have
+                                    // moved to another room every X cycles.
 
   // Gui Component Variables
 
@@ -115,6 +136,7 @@ private:
   int selectedRouteId_;
   int selectedObjectId_;
   int selectedSoundId_;
+  int selectedTriggerId_;
 
   char inputString_[ 1024 ];
 
@@ -124,6 +146,7 @@ private:
   GLUI         * lightsWindow;
   GLUI         * objectsWindow;
   GLUI         * soundsWindow;
+  GLUI         * triggersWindow_;
 
   GLUI_Button  * openSoundPanelBtn_;
 
@@ -133,6 +156,7 @@ private:
   bool lightsWindowVisible;
   bool objectsWindowVisible;
   bool soundsWindowVisible;
+  bool triggersWindowVisible;
   bool mainWindowVisible;
 
   bool enableSounds_;
@@ -183,6 +207,7 @@ private:
   GLUI_Button   * jitterButton_;
 
   GLUI_Spinner  * soundVolumeSpinner_;
+  GLUI_Spinner  * glyphThresholdSpinner_;
 
   GLUI_EditText * framesPerSecondTxt;
   GLUI_Spinner  * fovSpinner_;
@@ -199,6 +224,8 @@ private:
 
   GLUI_Panel   * lightsColorPanel_;
   GLUI_Panel   * lightsPositionPanel_;
+
+  GLUI_Button  * lightOnOffBtn_;
 
   GLUI_Spinner * r_color_spin;
   GLUI_Spinner * g_color_spin;
@@ -241,23 +268,6 @@ private:
   // objectWindow GLUI elements:
   //
 
-  GLUI_Listbox * objectList;
-  GLUI_Button  * attachKeypadBtn_;
-  int            keypadAttached_;
-
-
-  SelectableGroup * attachedSG_;
-  SpinningInstance * attachedSI_;
-  CutGroup * attachedCut_;
-
-  GLUI_Checkbox * SGAutoButton_;
-  GLUI_Button * SGCycleButton_;
-  GLUI_Checkbox * SIAutoButton_;
-  GLUI_Button * SIIncMagButton_;
-  GLUI_Button * SIDecMagButton_;
-  GLUI_Button * SIUpButton_;
-  GLUI_Button * SIDownButton_;
-  GLUI_Button * CutToggleButton_;
 
   ////////////////////////////////////////////////////////////////
   //
@@ -271,6 +281,13 @@ private:
   GLUI_EditText * soundOriginX_;
   GLUI_EditText * soundOriginY_;
   GLUI_EditText * soundOriginZ_;
+
+  ////////////////////////////////////////////////////////////////
+  //
+  // triggersWindow GLUI elements:
+  //
+
+  GLUI_Listbox  * triggerList_;
 
   ////////////////////////////////////////////////////////////////
 
@@ -311,6 +328,7 @@ private:
   void createLightWindow( GLUI * window );
   static void toggleLightsWindowCB( int id );
   static void toggleLightSwitchesCB( int id ); // turn all lights on/off
+  static void toggleLightOnOffCB( int id );    // turn off/on current light.
   static void toggleShowLightsCB( int id );    // display light positions
   //// Update the intensity of the currently selected light.
   static void updateIntensityCB( int id );
@@ -322,12 +340,15 @@ private:
   // Object Window Callbacks
   void createObjectWindow( GLUI * window );
   static void toggleObjectsWindowCB( int id );
-  static void updateObjectCB( int id );
-  static void attachKeypadCB( int id );
-  static void resetObjSelection();
-  static void SGChangeCB( int id );
-  static void SIChangeCB( int id );
-  static void CutToggleCB( int id );
+  static void SGAutoCycleCB( int id );
+  static void SGNextItemCB( int id );
+  static void SISpinCB( int id );
+  static void SIIncMagCB( int id );
+  static void SIDecMagCB( int id );
+  static void SISlideUpCB( int id );
+  static void SISlideDownCB( int id );
+  static void CGOnCB( int id );
+  static void CGSpinCB( int id );
 
   // Sounds Window Callbacks
   void createSoundsWindow( GLUI * window );
@@ -335,8 +356,10 @@ private:
   static void startSoundThreadCB( int id );
   static void toggleSoundWindowCB( int id );
 
-  void loadAllRoutes();
-
+  // Triggers Window Callbacks
+  void createTriggersWindow( GLUI * window );
+  static void activateTriggerCB( int id );
+  static void toggleTriggersWindowCB( int id );
 
   ////////////////////////////////////////////////////////////////
 
@@ -365,6 +388,12 @@ private:
   void quit();
   void setupFonts();
   void updateSoundPanel();
+  void loadAllRoutes();
+  void handleTriggers();
+  bool checkBackgroundWindow();
+  bool setBackgroundImage( int room );
+  void drawBackground();
+
 
   // Functions to draw text, etc on GL window.
   void displayText(GLuint fontbase, double x, double y,

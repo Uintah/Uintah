@@ -178,6 +178,16 @@ T* Array1<T>::get_objs()
 namespace SCIRun {
 
 #define ARRAY1_VERSION 1
+template<class T>
+void Pio(Piostream&, rtrt::Array1<T>&);
+
+template<>
+void Pio(Piostream& stream, rtrt::Array1<int>& array);
+template<>
+void Pio(Piostream& stream, rtrt::Array1<float>& array);
+template<>
+void Pio(Piostream& stream, rtrt::Array1<double>& array);
+
 
 template<class T>
 void Pio(Piostream& stream, rtrt::Array1<T>& array)
@@ -190,8 +200,9 @@ void Pio(Piostream& stream, rtrt::Array1<T>& array)
     array.grow(size);
   }
   T* obj_arr = array.get_objs();
-  for(int i=0;i<size;i++)
+  for(int i = 0; i < size; i++) {
     Pio(stream, obj_arr[i]);
+  }
   stream.end_class();
 }
 

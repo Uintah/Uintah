@@ -16,16 +16,16 @@ class PerlinBumpMaterial : public Material
 {
 public:
 
-    SolidNoise3 noise;
-    BubbleMap bubble;
-    Material* m;
+  SolidNoise3 noise;
+  BubbleMap bubble;
+  Material* m;
     
-    PerlinBumpMaterial(Material* m): m(m) {}
-    
-    virtual void shade(Color& result, const Ray& ray,
-                       const HitInfo& hit, int depth,
-                       double atten, const Color& accumcolor,
-                       Context* cx);
+  PerlinBumpMaterial(Material* m): m(m) {}
+  virtual void io(SCIRun::Piostream &stream) { ASSERTFAIL("not implemented"); }
+  virtual void shade(Color& result, const Ray& ray,
+		     const HitInfo& hit, int depth,
+		     double atten, const Color& accumcolor,
+		     Context* cx);
 };
 
 } // end namespace rtrt

@@ -34,10 +34,11 @@ class CutGroup : public Group, public Material {
   double d;
   CutPlaneDpy* dpy;
   bool on;
+  bool animdpy;
 public:
   Vector n;
   CutGroup(const Vector& n, const Point& cen);
-  CutGroup(CutPlaneDpy *dpy);
+  CutGroup(CutPlaneDpy *dpy, bool animdpy=false);
 
   virtual ~CutGroup();
 
@@ -66,6 +67,7 @@ public:
       dpy->redisplay();
     }
   };
+  virtual void toggleAnimate() { animdpy = !animdpy; };
 
   virtual bool interior_value(double& ret_val, const Ray &ref, const double t);
 

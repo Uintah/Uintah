@@ -104,19 +104,22 @@ void BumpMaterial::CreateNormalMap(char *bumpfile, char *filename, Vector nrml, 
   for( j = 0; j < dimension_y; j++)
     for( i = 0; i < dimension_x; i++)
       {
-	normal.x(nrml.x());normal.y(nrml.y());normal.z(nrml.z());
+	//normal.x(nrml.x());normal.y(nrml.y());normal.z(nrml.z());
+	normal = nrml;
+	
 	int id = i+1, jd = j+1, ic = i-1, jc = j -1;
 	if(id == dimension_x)	  id = 0;
 	if(jd == dimension_y)	  jd = 0;
 	if(ic == -1)              ic = dimension_x-1;
 	if(jc == -1)              jc = dimension_y-1;
 	fu = (bumpimage[j*dimension_x+id] - 
-	      bumpimage[j*dimension_x+ic])/255; // * dimension_x/2.f;
+	      bumpimage[j*dimension_x+ic])/255.0f; // * dimension_x/2.f;
 	fv = (bumpimage[jd*dimension_x+i] - 
-	      bumpimage[jc*dimension_x+i])/255; // *dimension_y/2.f;
+	      bumpimage[jc*dimension_x+i])/255.0f; // *dimension_y/2.f;
 	d = (fu*pu - fv*pv)*bump_scale;
 	normal += d;
 	normal.safe_normalize();
+	//printf("normal = %lf, %lf, %lf, \n",normal.x(),normal.y(),normal.z());
 	vlist[j*dimension_x+i] = normal;
       }
   writetoppm(filename,bumpfile,vlist);
@@ -298,17 +301,17 @@ void BumpMaterial::writetoppm(char *filename,char *bumpfile,Vector *v)
   printf("Begin Output to file %s\n",filename);
   fprintf(fout,"P3\n");
   fprintf(fout,"# Ramsey: Normal Map created from Bump File %s\n",bumpfile);
-  fprintf(fout,"\n%d %d 255\n",dimension_x, dimension_y);
+  fprintf(fout,"\n%d %d 256\n",dimension_x, dimension_y);
   for(int j = dimension_y-1; j >=0; j--)
     for(int i = 0; i < dimension_x; i++)
       {
 	Vector rgb = v[j*dimension_x+i];
-	int r = (rgb.x()+1)*128, 
-            g = (rgb.y()+1)*128, 
-            b = (rgb.z()+1)*128; 
-	if(r > 255 || r < 0) {printf("warning [%d,%d] r=%d\n",i,j,r); r = 255;}
-	if(g > 255 || g < 0) {printf("warning [%d,%d] g=%d\n",i,j,g); g = 255;}
-	if(b > 255 || b < 0) {printf("warning [%d,%d] b=%d\n",i,j,b); b = 255;}
+	int r = (rgb.x()+1)*128,
+	  g = (rgb.y()+1)*128,
+	  b = (rgb.z()+1)*128;
+	if(r > 256 || r < 0) {printf("warning [%d,%d] r=%d\n",i,j,r); r=256;}
+	if(g > 256 || g < 0) {printf("warning [%d,%d] g=%d\n",i,j,g); g=256;}
+	if(b > 256 || b < 0) {printf("warning [%d,%d] b=%d\n",i,j,b); b=256;}
 	fprintf(fout,"%d %d %d \n",
 		r,g,b); //else would output unsigned char
 

@@ -19,6 +19,9 @@
 namespace rtrt {
 template<class T> class Array2;
 template<class T> void Pio(SCIRun::Piostream& stream, rtrt::Array2<T>& data);
+template<> void Pio(SCIRun::Piostream&, rtrt::Array2<int>& data);
+template<> void Pio(SCIRun::Piostream&, rtrt::Array2<float>& data);
+template<> void Pio(SCIRun::Piostream&, rtrt::Array2<double>& data);
 template<class T> void Pio(SCIRun::Piostream& stream, rtrt::Array2<T>*& data);
 
 
@@ -53,6 +56,11 @@ public:
   void share(const Array2<T>& copy);
 
 
+  //friend template<int> void Pio(SCIRun::Piostream&, rtrt::Array2<int>& data);
+  //friend template<float> void Pio(SCIRun::Piostream&, 
+  //			  rtrt::Array2<float>& data);
+//friend template<double> void Pio(SCIRun::Piostream&, 
+  //			   rtrt::Array2<double>& data);
   friend void TEMPLATE_TAG Pio TEMPLATE_BOX (SCIRun::Piostream&, Array2<T>&);
   friend void TEMPLATE_TAG Pio TEMPLATE_BOX (SCIRun::Piostream&, Array2<T>*&);
 

@@ -1,3 +1,5 @@
+#define GROUP_IN_TIMEOBJ 1
+
 #include <Packages/rtrt/Core/Camera.h>
 #include <Packages/rtrt/Core/Cylinder.h>
 #include <Packages/rtrt/Core/Scene.h>
@@ -16,6 +18,9 @@
 #include <Packages/rtrt/Core/rtrt.h>
 #include <Packages/rtrt/Core/Phong.h>
 #include <Packages/rtrt/Core/VolumeDpy.h>
+#ifdef GROUP_IN_TIMEOBJ
+#include <Packages/rtrt/Core/TimeObj.h>
+#endif
 #include <Core/Thread/Thread.h>
 #include <iostream>
 #include <math.h>
@@ -37,6 +42,9 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
     bool yzslice=false;
     Array1<char*> files;
     bool cut=false;
+#ifdef GROUP_IN_TIMEOBJ
+    double rate=3;
+#endif
     for(int i=1;i<argc;i++){
 	if(strcmp(argv[i], "-depth")==0){
 	    i++;
@@ -56,6 +64,10 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
 	    cut=true;
 	} else if(argv[i][0] != '-'){
 	    files.add(argv[i]);
+#ifdef GROUP_IN_TIMEOBJ
+	} else if(strcmp(argv[i], "-rate")==0){
+	  rate = atof(argv[++i]);
+#endif
 	} else {
 	    cerr << "Unknown option: " << argv[i] << '\n';
 	    cerr << "Valid options for scene: " << argv[0] << '\n';
@@ -114,7 +126,11 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
 	obj=new HVolumeBrick16(matl0, dpy, files[0],
 			       depth, nworkers);
     } else {
+#ifdef GROUP_IN_TIMEOBJ
+	TimeObj* group = new TimeObj(rate);
+#else
 	Group* group=new Group();
+#endif
 	obj=group;
 	for(int i=0;i<files.size();i++){
 	    HVolumeBrick16* hvol=new HVolumeBrick16(matl0, dpy, files[i],
@@ -217,8 +233,9 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
 	obj=group;
     }
 
+    PlaneDpy *pd = 0;
     if(cut){
-	PlaneDpy* pd=new PlaneDpy(Vector(0,0,1), Point(0,0,100));
+	pd=new PlaneDpy(Vector(0,0,1), Point(0,0,100));
 	obj=new CutPlane(obj, pd);
 	(new Thread(pd, "Cutting plane display thread"))->detach();
     }
@@ -246,6 +263,9 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
 
     scene->select_shadow_mode( No_Shadows );
     scene->attach_display(dpy);
+    if (cut)
+      scene->attach_display(pd);
+    scene->addObjectOfInterest(obj, true);
     return scene;
 }
 

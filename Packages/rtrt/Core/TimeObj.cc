@@ -75,12 +75,15 @@ void TimeObj::animate(double t, bool& changed)
 {
     int n=(int)(t*rate);
     cur=n%objs.size();
+    //cerr << "TimeObj::animate: cur = "<<cur;
     changed=true;
     objs[cur]->animate(t, changed);
+    //cerr << " : objs[cur]->name_ = "<<objs[cur]->name_<<endl;
 }
 
 void TimeObj::collect_prims(Array1<Object*>& prims)
 {
+  //  cerr << "TimeObj::collect_prims: objs.size() = "<<objs.size()<<endl;
     for(int i=0;i<objs.size();i++){
 	objs[i]->collect_prims(prims);
     }

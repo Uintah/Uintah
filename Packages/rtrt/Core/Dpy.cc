@@ -76,6 +76,7 @@
 #include <Packages/rtrt/Core/Ball.h>
 #include <Packages/rtrt/Core/BallMath.h>
 #include <Packages/rtrt/Core/Object.h>
+#include <Packages/rtrt/Core/Grid2.h>
 #include <Packages/rtrt/Core/Stats.h>
 #include <Packages/rtrt/Core/Worker.h>
 #include <Packages/rtrt/Core/MusilRNG.h>
@@ -106,6 +107,8 @@ using namespace SCIRun;
 using std::endl;
 using std::cerr;
 
+extern bool pin;
+
 //Mutex rtrt::cameralock("Frameless Camera Synch lock");
 
 Mutex rtrt::xlock("X windows startup lock");
@@ -133,28 +136,30 @@ float Galpha=1.0; // doh!  global variable...  probably should be moved...
 */
 
 
-static double    eye_dist = 0;
-static double    prev_time[3]; // history for quaternions and time
-static HVect     prev_quat[3];
+//static double    eye_dist = 0;
+//static double    prev_time[3]; // history for quaternions and time
+//static HVect     prev_quat[3];
 static Transform prev_trans;
 
 static double   last_frame = SCIRun::Time::currentSeconds();
 static int      frame = 0;
 static int      rendering_scene = 0;
 static MusilRNG rng;
-static Object * obj;
+//static Object * obj;
 
 static double   lightoff_frame = -1.0;
+
+double _HOLO_STATE_=1;
 
 //static float float_identity[4][4] = { {1,0,0,0}, {0,1,0,0},
 //	 			        {0,0,1,0}, {0,0,0,1} };
 
 //////////////////////////////////////////////////////////////////
 
-Dpy::Dpy(Scene* scene, char* criteria1, char* criteria2,
-	 int nworkers, bool bench, int ncounters, int c0, int c1,
-	 float, float, bool display_frames, 
-	 int pp_size, int scratchsize, int frameless)
+Dpy::Dpy( Scene* scene, char* criteria1, char* criteria2,
+	  int nworkers, bool bench, int ncounters, int c0, int c1,
+	  float, float, bool display_frames, 
+	  int pp_size, int scratchsize, bool fullscreen, int frameless )
   : scene(scene), criteria1(criteria1), criteria2(criteria2),
     nworkers(nworkers), bench(bench), ncounters(ncounters),
     c0(c0), c1(c1), frameless(frameless),synch_frameless(0),
@@ -165,7 +170,9 @@ Dpy::Dpy(Scene* scene, char* criteria1, char* criteria2,
     turnOnLight_( false ), turnOffLight_( false ),
     attachedObject_(NULL), turnOnTransmissionMode_(false), 
     numThreadsRequested_(nworkers), changeNumThreads_(false),
-    pp_size_(pp_size), scratchsize_(scratchsize)
+    pp_size_(pp_size), scratchsize_(scratchsize),
+    toggleRenderWindowSize_(fullscreen), renderWindowSize_(1),
+    fullScreenMode_( fullscreen ), holoToggle_(false)
 {
   ppc = new PerProcessorContext( pp_size, scratchsize );
 
@@ -183,10 +190,16 @@ Dpy::Dpy(Scene* scene, char* criteria1, char* criteria2,
   drawstats[1]=new Stats(1000);
   priv = new DpyPrivate;
 
-  //priv->waitDisplay = new Mutex( "wait for display" );
-  //priv->waitDisplay->lock();
+  priv->waitDisplay = new Mutex( "wait for display" );
+  priv->waitDisplay->lock();
 
   priv->followPath = false;
+
+  shadowMode_ = scene->shadow_mode;
+  ambientMode_ = scene->ambient_mode;
+
+  //obj=scene->get_object();
+  priv->maxdepth=scene->maxdepth;
 
   workers_.resize( nworkers );
 
@@ -230,11 +243,8 @@ int Dpy::get_num_procs() {
 void
 Dpy::run()
 {
-  if( bench ) {
-    cerr << "Bench is currently not supported.\n";
-    Thread::exitAll(0);    
-  }
-
+  if(pin)
+    Thread::self()->migrate(0);
   io_lock_.lock();
   cerr << "display is pid " << getpid() << '\n';
   io_lock_.unlock();
@@ -254,13 +264,8 @@ Dpy::run()
 
   priv->last_time = 0;
 
-  shadowMode_ = scene->shadow_mode;
-  ambientMode_ = scene->ambient_mode;
-  obj=scene->get_object();
-
   priv->showing_scene=1;
   priv->animate=true;
-  priv->maxdepth=scene->maxdepth;
   priv->base_threshold=0.005;
   priv->full_threshold=0.01;
   priv->left=0;
@@ -269,16 +274,31 @@ Dpy::run()
   priv->exposed=true;
   priv->stereo=false;
 
+  double benchstart=0;
+  int frame=0;
   for(;;)
     {
       if (frameless) { renderFrameless(); }
       else           { renderFrame();     }
+
+      if(bench){
+	if(frame==10){
+	  cerr << "Warmup done, starting bench\n";
+	  benchstart=SCIRun::Time::currentSeconds();
+	} else if(frame == 110){
+	  double dt=SCIRun::Time::currentSeconds()-benchstart;
+	  cerr << "Benchmark completed in " <<  dt << " seconds ("
+	       << (frame-10)/dt << " frames/second)\n";
+	  Thread::exitAll(0);
+	}
+      }
 
       // Exit if you are supposed to.
       if (scene->get_rtrt_engine()->stop_execution()) {
 	cout << "Dpy going down\n";
 	Thread::exit();
       }
+      frame++;
     }
 } // end run()
 
@@ -307,12 +327,23 @@ Dpy::checkGuiFlags()
     lightsShowing_ = false;
   }
 
-  if( turnOffAllLights_ && (lightoff_frame < 0)){
-    lightoff_frame = SCIRun::Time::currentSeconds();
+  if ( _HOLO_STATE_<1 && !holoToggle_) {
+    _HOLO_STATE_ += SCIRun::Time::currentSeconds()*.0025;
+    if (_HOLO_STATE_>1) _HOLO_STATE_=1;
+  } else if ( _HOLO_STATE_>0 && holoToggle_ ) {
+    _HOLO_STATE_ -= SCIRun::Time::currentSeconds()*.00025;
+    if (_HOLO_STATE_<0) _HOLO_STATE_=0;
   }
 
   if( turnOffAllLights_ ){
-    double left = 1.0-(SCIRun::Time::currentSeconds()-lightoff_frame)*0.2;
+    double left;
+    if( lightoff_frame < 0 ) {
+      lightoff_frame = SCIRun::Time::currentSeconds();
+      left = 1.0;
+    } else {
+      left = 1.0 - (SCIRun::Time::currentSeconds()-lightoff_frame)*0.2;
+    }
+
     scene->turnOffAllLights(left);
     if (left <= 0.0) {
       lightoff_frame = -1.0;
@@ -320,25 +351,56 @@ Dpy::checkGuiFlags()
     }
   }
   if( turnOnAllLights_ ){
+    lightoff_frame = -1;
     scene->turnOnAllLights();
     turnOnAllLights_ = false;
   }
   if( turnOnLight_ ) {
-    scene->turnOnLight( turnOnLight_ );
+    turnOnLight_->turnOn();
     turnOnLight_ = NULL;
   }
   if( turnOffLight_ ) {
-    scene->turnOffLight( turnOffLight_ );
+    turnOffLight_->turnOff();
     turnOffLight_ = NULL;
+  }
+
+  if( toggleRenderWindowSize_ ){ 
+    toggleRenderWindowSize_ = false;
+    if( renderWindowSize_ == 0 ) { // was full, go to medium
+      priv->xres = 512;
+      priv->yres = 288;
+      renderWindowSize_ = 1;
+    } else {
+      priv->xres = 1024;
+      priv->yres = 600;
+      renderWindowSize_ = 0;
+    }
   }
 
   if( doJitter_ ) { scene->rtrt_engine->do_jitter = true; }
   else            { scene->rtrt_engine->do_jitter = false;  }
 
   if(animate && scene->animate) {
+    // Do all the regular animated objects.
     Array1<Object*> & objects = scene->animateObjects_;
-    for( int num = 0; num < objects.size(); num++ )
+    for( int num = 0; num < objects.size(); num++ ) {
       objects[num]->animate(SCIRun::Time::currentSeconds(), changed);
+    }
+    // Do the special objects that require bounding box mojo.
+    Array1<Object*> & dobjects = scene->dynamicBBoxObjects_;
+    BBox bbox1,bbox2;
+    for( int num = 0; num < dobjects.size(); num++ ) {
+      bbox1.reset();
+      dobjects[num]->compute_bounds(bbox1,1E-5);
+      dobjects[num]->animate(SCIRun::Time::currentSeconds(), changed);
+      Grid2 *anim_grid = dobjects[num]->get_anim_grid();
+      if (anim_grid) {
+        bbox2.reset();
+        dobjects[num]->compute_bounds(bbox2, 1E-5);
+        anim_grid->remove(dobjects[num],bbox1);
+        anim_grid->insert(dobjects[num],bbox2);
+      }
+    }
   }
 
   if( attachedObject_ ) {
@@ -498,7 +560,8 @@ Dpy::renderFrame() {
   //  cout << "Warning, gui has not displayed previous frame!\n";
   //}
 
-  showImage_ = displayedImage;
+  if(!bench)
+    showImage_ = displayedImage;
 
   // dump the frame and quit for now
   if (counter == 0) {
@@ -510,7 +573,7 @@ Dpy::renderFrame() {
   counter--;
 
   // Wait until the Gui (main) thread has displayed this image...
-  // priv->waitDisplay->lock();
+  //priv->waitDisplay->lock();
 
   if( displayedImage->get_xres() != priv->xres ||
       displayedImage->get_yres() != priv->yres ) {
@@ -553,17 +616,9 @@ Dpy::renderFrame() {
   //      st->add(SCIRun::Time::currentSeconds(), Color(0.4,0.2,1));
 
   if (display_frames) {
-    // color 
-    st->add(SCIRun::Time::currentSeconds(), Color(1,0.5,0));
-    // color light blue
-    st->add(SCIRun::Time::currentSeconds(), Color(0.5,0.5,1));
-    // color grey
-    st->add(SCIRun::Time::currentSeconds(), Color(0.5,0.5,0.5));
-    st->add(SCIRun::Time::currentSeconds(), Color(1,0,1));
-    st->add(SCIRun::Time::currentSeconds(), Color(1,0.5,0.3));
       
     double curtime=SCIRun::Time::currentSeconds();
-    double dt=curtime-scene->lasttime;
+    //double dt=curtime-scene->lasttime;
 
     scene->lasttime=curtime;
 
@@ -586,16 +641,16 @@ Dpy::renderFrame() {
 					   viewpoint );
     }
 
+    st->add(SCIRun::Time::currentSeconds(), Color(1,1,0));
     if (display_frames) {
       if( !priv->followPath ) {
 	guiCam_->updatePosition( *stealth_, scene, ppc );
       } else {
 	guiCam_->followPath( *stealth_ );
       }
-
     }
+    st->add(SCIRun::Time::currentSeconds(), Color(0,1,1));
 
-    st->add(SCIRun::Time::currentSeconds(), Color(1,0,0));
     rendering_scene=1-rendering_scene;
     showing_scene=1-showing_scene;
   }

@@ -23,6 +23,10 @@ public:
 
   SelectableGroup(float secs=1.0);
   virtual ~SelectableGroup();
+
+  virtual void io(SCIRun::Piostream &/*stream*/) 
+  { ASSERTFAIL("Pio not supported"); }
+
   virtual void intersect(Ray& ray, HitInfo& hit, DepthStats* st,
 			 PerProcessorContext*);
   virtual void softshadow_intersect(Light* light, Ray& ray, HitInfo& hit,
@@ -40,15 +44,29 @@ public:
   virtual void animate(double t, bool& changed);
 
 
-  inline void Child(int i) { if (i<objs.size()) child = i; /*neg means none*/ };
+  inline void Child(int i) { if (i<objs.size()) child = i;/*neg means none*/ };
   inline void nextChild() { 
     autoswitch = false; 
-    child = child + 1; 
-    child = child % objs.size();
+    child++;
+    if (child == objs.size())
+      child = 0;
   };
+
+  // Returns the currently active child object.
+  Object * getCurrentChild();
+
+
   inline void Autoswitch(bool b) {autoswitch = b;};
   inline int Autoswitch() {if (autoswitch) return 1; else return 0;};
   inline void toggleAutoswitch() {autoswitch = !autoswitch;};
+  virtual void preprocess(double maxradius, int& pp_offset, int& scratchsize) {
+    Group::preprocess(maxradius, pp_offset, scratchsize);
+    if (objs.size() == 0)
+      child = -1;
+  }
+  virtual bool interior_value( double& value, const Ray &ray, const double t)
+  { return objs[child]->interior_value(value,ray,t); }; 
+
 };
 
 } // end namespace rtrt

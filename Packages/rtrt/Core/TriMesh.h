@@ -23,8 +23,10 @@ class TriMesh
       {
 	for (int i=0; i<verts.size(); i++)
 	  T.project_inplace(verts[i]);
-	for (int i=0; i<norms.size(); i++)
+	for (int i=0; i<norms.size(); i++) {
 	  T.project_normal_inplace(norms[i]);
+	  norms[i].normalize();
+	}
       }
   };
 }

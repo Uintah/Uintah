@@ -98,7 +98,7 @@ int main() {
 
   new Thread(new Wait(num_waiters, barrier), "Wait_1");
   new Thread(new Wait(num_waiters, barrier, 1e9), "Wait_2");
-  new Thread(new Wait(num_waiters, barrier, 5e9), "Wait_3");
+  //  new Thread(new Wait(num_waiters, barrier, 5e9), "Wait_3");
   
   return 0;
 }

@@ -20,7 +20,7 @@ PersistentTypeID Ring::type_id("Ring", "Object", ring_maker);
 
 Ring::Ring(Material* matl, const Point& cen, const Vector& n,
 	   double radius, double thickness)
-  : Object(matl), cen(cen), n(n), radius(radius), thickness(thickness)
+  : Object(matl,this), cen(cen), n(n), radius(radius), thickness(thickness)
 {
     this->n.normalize();
     d=Dot(this->n, cen);
@@ -28,6 +28,11 @@ Ring::Ring(Material* matl, const Point& cen, const Vector& n,
 
 Ring::~Ring()
 {
+}
+
+void Ring::uv(UV& uv, const Point& hitpos, const HitInfo&)  
+{
+  uv.set(hitpos.x(),hitpos.y());
 }
 
 void Ring::intersect(Ray& ray, HitInfo& hit, DepthStats*,

@@ -112,16 +112,16 @@ void Pio(SCIRun::Piostream& stream, Array2<T>& data)
   if(stream.reading()){
     // Allocate the array...
     int d1, d2;
-    Pio(stream, d1);
-    Pio(stream, d2);
+    SCIRun::Pio(stream, d1);
+    SCIRun::Pio(stream, d2);
     data.resize(d1, d2);
   } else {
-    Pio(stream, data.dm1);
-    Pio(stream, data.dm2);
+    SCIRun::Pio(stream, data.dm1);
+    SCIRun::Pio(stream, data.dm2);
   }
   for(int i=0;i<data.dm1;i++){
     for(int j=0;j<data.dm2;j++){
-      Pio(stream, data.objs[i][j]);
+      SCIRun::Pio(stream, data.objs[i][j]);
     }
   }
   stream.end_class();

@@ -7,7 +7,9 @@ SRCDIR   := Packages/rtrt/Core
 
 SRCS += $(SRCDIR)/Worker.cc \
 	$(SRCDIR)/gl_test.cc \
+	$(SRCDIR)/Trigger.cc \
 	$(SRCDIR)/VolumeVis.cc \
+	$(SRCDIR)/GridTris.cc \
 	$(SRCDIR)/VolumeVisDpy.cc \
 	$(SRCDIR)/DpyBase.cc \
 	$(SRCDIR)/Dpy.cc \
@@ -41,10 +43,14 @@ SRCS += $(SRCDIR)/Worker.cc \
 	$(SRCDIR)/Light.cc \
 	$(SRCDIR)/Group.cc \
 	$(SRCDIR)/Gui.cc \
+	$(SRCDIR)/Glyph.cc \
 	$(SRCDIR)/Rect.cc \
 	$(SRCDIR)/Checker.cc \
 	$(SRCDIR)/BBox.cc \
 	$(SRCDIR)/Exceptions.cc \
+	$(SRCDIR)/EMBMaterial.cc \
+	$(SRCDIR)/PortalMaterial.cc \
+	$(SRCDIR)/Names.cc \
 	$(SRCDIR)/Stats.cc \
 	$(SRCDIR)/CrowMarble.cc \
 	$(SRCDIR)/Noise.cc \
@@ -70,6 +76,7 @@ SRCS += $(SRCDIR)/Worker.cc \
 	$(SRCDIR)/CubeRoot.cc \
 	$(SRCDIR)/VolumeBrick.cc \
 	$(SRCDIR)/GradientCell.cc \
+	$(SRCDIR)/HaloMaterial.cc \
 	$(SRCDIR)/HVolumeBrick.cc \
 	$(SRCDIR)/HVolumeBrick16.cc \
 	$(SRCDIR)/HVolumeBrickColor.cc \
@@ -141,16 +148,23 @@ SRCS += $(SRCDIR)/Worker.cc \
 	$(SRCDIR)/DynamicInstance.cc \
 	$(SRCDIR)/SpinningInstance.cc \
 	$(SRCDIR)/plyfile.c \
+	$(SRCDIR)/PhongColorMapMaterial.cc \
+	$(SRCDIR)/ColorMapDpy.cc \
 	$(SRCDIR)/DynamicInstance.cc \
+	$(SRCDIR)/CellGroup.cc \
 	$(SRCDIR)/SolidNoise3.cc \
 	$(SRCDIR)/PerlinBumpMaterial.cc \
 	$(SRCDIR)/Instance.cc \
 	$(SRCDIR)/InstanceWrapperObject.cc \
 	$(SRCDIR)/PPMImage.cc \
 	$(SRCDIR)/Satellite.cc \
+	$(SRCDIR)/Glyph.cc \
 	$(SRCDIR)/RingSatellite.cc \
 	$(SRCDIR)/Grid2.cc \
-
+	$(SRCDIR)/TimeVaryingInstance.cc \
+	$(SRCDIR)/TrisReader.cc \
+	$(SRCDIR)/Parallelogram2.cc \
+	$(SRCDIR)/MIPMaterial.cc
 #	$(SRCDIR)/LumiDpy.cc \
 #	$(SRCDIR)/LumiCamera.cc \
 

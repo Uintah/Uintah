@@ -458,6 +458,7 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
       // create a timeobj
       //      TimeObj *timeobj = new TimeObj(frame_rate);
       SelectableGroup *timeobj = new SelectableGroup(1.0/frame_rate);
+      timeobj->set_name("Volume Data");
       for(unsigned int i = 0; i < data_files.size(); i++) {
 	char *myfile = strdup(data_files[i].c_str());
 	Object *volume = (Object*)create_volume_from_nrrd

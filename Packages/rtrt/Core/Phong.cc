@@ -33,18 +33,6 @@ Phong::~Phong()
 {
 }
 
-inline double ipow(double x, int p)
-{
-  double result=1;
-  while(p){
-    if(p&1)
-      result*=x;
-    x*=x;
-    p>>=1;
-  }
-  return result;
-}
-
 void Phong::shade(Color& result, const Ray& ray,
 		  const HitInfo& hit, int depth, 
 		  double atten, const Color& accumcolor,
@@ -73,6 +61,9 @@ void Phong::shade(Color& result, const Ray& ray,
       light=cx->scene->light(i);
     else 
       light=my_lights[i-ngloblights];
+
+    if( !light->isOn() ) continue;
+
     Vector light_dir=light->get_pos()-hitpos;
     if (ray_objnormal_dot*Dot(normal,light_dir)>0) {
       cx->stats->ds[depth].inshadow++;
@@ -98,10 +89,8 @@ void Phong::shade(Color& result, const Ray& ray,
       cx->stats->ds[depth].inshadow++;
     }
   }
-    
-  const Color & ambient = cx->scene->getAmbientColor();
 
-  result=(ambient+difflight)*diffuse+specular*speclight;
+  result=(ambient(cx->scene, normal)+difflight)*diffuse+specular*speclight;
 
   if (depth < cx->scene->maxdepth && (refl>0 )){
     double thresh=cx->scene->base_threshold;

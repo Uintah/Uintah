@@ -4,8 +4,9 @@
 
 #include <Packages/rtrt/Core/Color.h>
 #include <Packages/rtrt/Core/Array2.h>
-
 #include <vector>
+#include <Core/Persistent/PersistentSTL.h>
+
 #include <string>
 #include <iostream>
 #include <fstream>
@@ -19,6 +20,8 @@ class PPMImage;
 
 namespace SCIRun {
 void Pio(Piostream&, rtrt::PPMImage&);
+template <>
+void Pio(Piostream& stream, std::vector<rtrt::Color>& data);
 }
 
 namespace rtrt {
@@ -46,9 +49,9 @@ class PPMImage
  public:
   PPMImage() {} // for Pio.
   PPMImage(const string& s, bool flip=false) 
-    : valid_(false), flipped_(flip) 
+    : flipped_(flip) 
   { 
-    read_image(s.c_str()); 
+    valid_ = read_image(s.c_str());
   }
   PPMImage(int nu, int nv, bool flip=false) 
     : u_(nu), v_(nv), valid_(false), flipped_(flip) 
@@ -135,71 +138,7 @@ class PPMImage
     return true;
   }
 
-  bool read_image(const char* filename)
-  {
-    ifstream indata(filename);
-    unsigned char color[3];
-    string token;
-    
-    if (!indata.is_open()) {
-      cerr << "PPMImage: ERROR: I/O fault: no such file: " 
-           << filename << "\n";
-      valid_ = false;
-      return false;
-    }
-    
-    indata >> token; // P6
-    if (token != "P6" && token != "P3") {
-      cerr << "PPMImage: WARNING: format error: file not a PPM: "
-           << filename << "\n";
-    }
-
-    cerr << "PPMImage: reading image: " << filename;
-    if (flipped_)
-      cerr << " (flipped!)";
-    cerr << endl;
-
-    eat_comments_and_whitespace(indata);
-    indata >> u_ >> v_;
-    eat_comments_and_whitespace(indata);
-    indata >> max_;
-    eat_comments_and_whitespace(indata);
-    image_.resize(u_*v_);
-    if (token == "P6") {
-      for(unsigned v=0;v<v_;++v){
-	for(unsigned u=0;u<u_;++u){
-	  indata.read((char*)color, 3);
-          if (flipped_) {
-            image_[(v_-v-1)*u_+u]=rtrt::Color(color[0]/(double)max_,
-                                              color[1]/(double)max_,
-                                              color[2]/(double)max_);
-          } else {
-            image_[v*u_+u]=rtrt::Color(color[0]/(double)max_,
-                                       color[1]/(double)max_,
-                                       color[2]/(double)max_);
-          }
-	}
-      }    
-    } else { // P3
-      int r, g, b;
-      for(unsigned v=0;v<v_;++v){
-	for(unsigned u=0;u<u_;++u){
-	  indata >> r >> g >> b;
-          if (flipped_) {
-            image_[(v_-v-1)*u_+u]=rtrt::Color(r/(double)max_,
-                                              g/(double)max_,
-                                              b/(double)max_);
-          } else {
-            image_[v*u_+u]=rtrt::Color(r/(double)max_,
-                                       g/(double)max_,
-                                       b/(double)max_);
-          }
-	}
-      }    
-    }
-    valid_ = true;
-    return true;
-  }
+  bool read_image(const char* filename);
 };
 
 } // end namespace

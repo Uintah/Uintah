@@ -3,6 +3,7 @@
 #define SATELLITE_H 1
 
 #include <Packages/rtrt/Core/UVSphere.h>
+#include <Packages/rtrt/Core/Names.h>
 #include <stdlib.h>
 
 namespace rtrt {
@@ -34,8 +35,9 @@ class Satellite : public UVSphere
     : UVSphere(mat, center, radius, up), parent_(parent), 
     rev_speed_(1), orb_radius_(orb_radius), orb_speed_(1)
   {
-    theta_ = drand48()*6.282;
-    name_ = name;
+    //theta_ = drand48()*6.282;
+    theta_ = 0;
+    Names::nameObject(name, this);
 
     if (orb_radius_ && parent_) {
       cen = parent->get_center();
@@ -69,19 +71,29 @@ class Satellite : public UVSphere
   Point &get_center() { return cen; }
   void set_center(const Point &p) { cen = p; }
 
-  string get_name() const { return name_; }
-  void set_name(const string &s) { name_ = s; }
-
   virtual void compute_bounds(BBox& bbox, double offset)
   {
+#if _USING_GRID2_
+    bbox.extend(cen,radius+offset);
+#else
     if (parent_) {
-      parent_->compute_bounds(bbox,offset);
-      bbox.extend(parent_->get_center(), 
-                  parent_->get_orb_radius()+parent_->get_radius()+
-                  orb_radius_+radius+offset);
+      Point center = parent_->get_center();
+      bbox.extend(center);
+      Point extent = 
+        Point(center.x()+parent_->get_orb_radius()+orb_radius_+radius+offset,
+              center.y()+parent_->get_orb_radius()+orb_radius_+radius+offset,
+              center.z()+radius+offset);
+      bbox.extend( extent );
+      extent = 
+        Point(center.x()-(parent_->get_orb_radius()+orb_radius_+radius+offset),
+              center.y()-(parent_->get_orb_radius()+orb_radius_+radius+offset),
+              center.z()-(radius+offset));
+      bbox.extend( extent );
+
     } else {
       bbox.extend(cen, orb_radius_+radius+offset);
     }
+#endif
   }
 
   virtual void animate(double t, bool& changed);

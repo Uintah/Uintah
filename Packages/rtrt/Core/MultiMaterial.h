@@ -3,7 +3,6 @@
 #define MULTIMATERIAL_H 1
 
 #include <Packages/rtrt/Core/Material.h>
-#include <Core/Thread/Time.h>
 #include <vector>
 
 using std::vector;
@@ -68,7 +67,6 @@ class MultiMaterial : public Material {
                      Context *cx)
   {
     // this can be really inefficient, should be improved
-    double time = SCIRun::Time::currentSeconds();
     unsigned loop,length;
     Color final,original=result;
     double percent;
@@ -76,8 +74,9 @@ class MultiMaterial : public Material {
     if (length>0) {
       material_stack_[0]->material->shade(result,ray,hit,depth,
                                          atten, accumcolor,cx);
-      //percent = material_stack_[0]->percent;
-      percent = sin(time/3.);
+      
+      percent = material_stack_[0]->percent;
+      if (percent<0) percent = 0;
       final = result*percent;
       for (loop=1; loop<length; ++loop) {
         result = original;

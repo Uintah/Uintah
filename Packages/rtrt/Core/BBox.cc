@@ -5,6 +5,13 @@
 using namespace rtrt;
 using namespace SCIRun;
 
+Persistent* bBox_maker() {
+  return new BBox();
+}
+
+// initialize the static member type_id
+PersistentTypeID BBox::type_id("BBox", "Object", bBox_maker);
+
 BBox::BBox(const BBox& copy)
     : cmin(copy.cmin), cmax(copy.cmax), have_some(copy.have_some)
 {
@@ -56,14 +63,28 @@ bool BBox::intersect_nontrivial(const Ray& ray, double &min_t) {
   return false;
 }
 
-namespace SCIRun {
+
+const int BBOX_VERSION = 1;
+
 void 
-Pio(SCIRun::Piostream &str, rtrt::BBox & b)
+BBox::io(SCIRun::Piostream &str)
 {
-  str.begin_cheap_delim();
-  Pio(str, b.cmin);
-  Pio(str, b.cmax);
-  Pio(str, b.have_some);
-  str.end_cheap_delim();
+  str.begin_class("BBox", BBOX_VERSION);
+  Pio(str, cmin);
+  Pio(str, cmax);
+  Pio(str, have_some);
+  str.end_class();
+}
+
+namespace SCIRun {
+void Pio(SCIRun::Piostream& stream, rtrt::BBox*& obj)
+{
+  SCIRun::Persistent* pobj=obj;
+  stream.io(pobj, rtrt::BBox::type_id);
+  if(stream.reading()) {
+    obj=dynamic_cast<rtrt::BBox*>(pobj);
+    //ASSERT(obj != 0)
+  }
 }
 } // end namespace SCIRun
+

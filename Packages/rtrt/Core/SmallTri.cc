@@ -34,14 +34,14 @@ SmallTri::SmallTri(Material* matl, const Point& p1, const Point& p2,
 {
     Vector v1(p2-p1);
     Vector v2(p3-p1);
-    Vector n=Cross(v1, v2);
+    Vector n=Cross(v2, v1);
 
     double l = n.length2();
     if (l > 1.e-16) {
       bad = false;
       n *= 1/sqrt(l);
     } else {
-	printf("BAD NORMAL!\n");
+      //	printf("BAD NORMAL!\n");
       bad = true;
       return;
     }
@@ -65,7 +65,7 @@ SmallTri::SmallTri(Material* matl, const Point& p1, const Point& p2,
       bad = false;
       n *= 1/sqrt(l);
     } else {
-	printf("BAD NORMAL!\n");
+      //	printf("BAD NORMAL!\n");
       bad = true;
       return;
     }

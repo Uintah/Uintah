@@ -19,23 +19,20 @@ class DielectricMaterial : public Material {
   double R0;            // reflectance at normal incidence
   double n_in;          // refractive index of media normal points away from
   double n_out;         // refractive index of media normal points to
-  double phong_exponent;
+  int phong_exponent;
   Color extinction_in;  // transmittance through one unit distance of material:
-  // newcolor = extinction * oldcolor
   Color extinction_out;
-  Color extinction_constant_in;  // what actually gets sent to the exp function
-  Color extinction_constant_out; // what actually gets sent to the exp function
   bool nothing_inside;	/* True if this object is empty - 
 			 * optimize the recursive hits...*/
   double extinction_scale;    // Allow for a scale of t
 
-  Color bg_out;
-  Color bg_in;
+  Color bg_out;         // exctinction_in to the infinite power
+  Color bg_in;          // exctinction_out to the infinite power
 
 public:
   DielectricMaterial(double n_in, double n_out, bool nothing_inside=false);
   DielectricMaterial(double n_in, double n_out, double R0, 
-		     double phong_exponent, const Color& extinction_in,  
+		     int phong_exponent, const Color& extinction_in,  
 		     const Color& extinction_out,
 		     bool nothing_inside=false, double extinction_scale=1);
   virtual ~DielectricMaterial();

@@ -27,37 +27,36 @@ struct BoundedObject;
  */
 
 class Grid2 : public Object {
-    Object* obj;
-    BBox bbox;                         // Grid bounding box
-    BBox logical_bbox;                 // Bounding box including objects that have moved outside grid
-    int nx, ny, nz;                    // Voxels in physical grid
-    int nynz;                          // = ny * nz
-    Array1<Object *>* grid;            // Grid is now 1D array of Array1<Object *> arrays
-    Array1<Object*> prims;
-    int nsides;
+  Object* obj;
+  BBox bbox;                         // Grid bounding box
+  BBox logical_bbox;                 // Bounding box including objects that have moved outside grid
+  int nx, ny, nz;                    // Voxels in physical grid
+  int nynz;                          // = ny * nz
+  Array1<Object *>* grid;            // Grid is now 1D array of Array1<Object *> arrays
+  Array1<Object*> prims;
+  int nsides;
 
 public:
-    Grid2(Object* obj, int nside);
-    virtual ~Grid2();
-    virtual void intersect(Ray& ray,
-			   HitInfo& hit, DepthStats* st,
-			   PerProcessorContext*);
-    virtual Vector normal(const Point&, const HitInfo& hit);
-    virtual void light_intersect(Light* light, Ray& ray,
-				 HitInfo& hit, double dist, Color& atten,
-				 DepthStats* st, PerProcessorContext*);
-    void add(Object* obj);
-    virtual void animate(double t, bool& changed);
-    virtual void preprocess(double maxradius, int& pp_offset, int& scratchsize);
-    virtual void compute_bounds(BBox&, double offset);
-    virtual void collect_prims(Array1<Object*>& prims);
-    virtual void remove (Object* obj, const BBox& obj_bbox);              // For dynamic updates
-    virtual void insert (Object* obj, const BBox& obj_bbox);              // Idem
-    virtual void rebuild ();
-    virtual void recompute_bbox ();
-    inline virtual double get_shape () {
-      return (logical_bbox.diagonal().length() / bbox.diagonal().length());
-    }
+  Grid2(Object* obj, int nside);
+  virtual ~Grid2();
+  virtual void io(SCIRun::Piostream &stream) 
+  { ASSERTFAIL("Pio not supported"); }
+  virtual void intersect(Ray& ray,
+			 HitInfo& hit, DepthStats* st,
+			 PerProcessorContext*);
+  virtual Vector normal(const Point&, const HitInfo& hit);
+  void add(Object* obj);
+  virtual void animate(double t, bool& changed);
+  virtual void preprocess(double maxradius, int& pp_offset, int& scratchsize);
+  virtual void compute_bounds(BBox&, double offset);
+  virtual void collect_prims(Array1<Object*>& prims);
+  virtual void remove (Object* obj, const BBox& obj_bbox);              // For dynamic updates
+  virtual void insert (Object* obj, const BBox& obj_bbox);              // Idem
+  virtual void rebuild ();
+  virtual void recompute_bbox ();
+  inline virtual double get_shape () {
+    return (logical_bbox.diagonal().length() / bbox.diagonal().length());
+  }
 };
 
 } // end namespace rtrt

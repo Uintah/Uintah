@@ -19,7 +19,7 @@ SCIRun::Persistent* uvca_maker() {
 }
 
 // initialize the static member type_id
-SCIRun::PersistentTypeID UVCylinderArc::type_id("UVCylinderArc", "UVMapping", 
+SCIRun::PersistentTypeID UVCylinderArc::type_id("UVCylinderArc", "Object", 
 						uvca_maker);
 
 UVCylinderArc::UVCylinderArc(Material* matl, const Point& bottom, 
@@ -138,7 +138,12 @@ void UVCylinderArc::print(ostream& out)
 void UVCylinderArc::uv(UV &uv, const Point &p, const HitInfo &hit)
 {
     Point xp = xform.project(p);
-    double theta = acos(xp.x());
+    double angle = xp.x();
+    if(angle<-1)
+      angle=-1;
+    else if(angle>1)
+      angle=1;
+    double theta = acos(angle);
     uv.set((theta/6.283185)/tex_scale.x(),
            xp.z()/tex_scale.y());
 }

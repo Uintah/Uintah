@@ -192,21 +192,21 @@ int NormalMapMaterial::readfromppm6(char *filename)
   fin = readcomments(fin);  
   fscanf(fin,"%d\n",&temp);
   unsigned char ra,ga,ba;
-  int r,g,b;
+  double r,g,b;
   double max = temp;
   normalmapimage = (Vector *)malloc(dimension_x*dimension_y*sizeof(Vector));
   printf("Converting from 0->%d (x3) to Vector 0->1 by division\n",temp);
   printf("Reading in File for a Normal Map=%s\n",filename);
   for(int j = dimension_y-1; j >= 0; j--)
     for(int i = 0; i < dimension_x; i++)
-    { //ramsey
-      fscanf(fin,"%c%c%c",&ra,&ga,&ba);
-      r = ((int)ra / (max/2))-1; 
-      g = ((int)ga / (max/2))-1; 
-      b = ((int)ba / (max/2))-1; 
-      normalmapimage[j*dimension_x+i] =  Vector(r,g,b);
-      normalmapimage[j*dimension_x+i].normalize(); // need normalized Vectors
-    }
+      { //ramsey
+	fscanf(fin,"%c%c%c",&ra,&ga,&ba);
+	r = ((double)ra / (max/2.0f))-1.0f; 
+	g = ((double)ga / (max/2.0f))-1.0f; 
+	b = ((double)ba / (max/2.0f))-1.0f; 
+        normalmapimage[j*dimension_x+i] =  Vector(r,g,b);
+        normalmapimage[j*dimension_x+i].normalize(); // need normalized Vectors
+      }
   printf("File read\n");
   fclose(fin);
   return 1;
@@ -242,16 +242,17 @@ int NormalMapMaterial::readfromppm(char *filename)
   fscanf(fin,"%d",&temp);
   double max = temp;
   int r,g,b;
+  double rv,gv,bv;
   normalmapimage = (Vector *)malloc(dimension_x*dimension_y*sizeof(Vector));
   printf("Reading in File for a Normal Map=%s\n",filename);
   for(int j = dimension_y-1; j >= 0; j--)
     for(int i = 0; i < dimension_x; i++)
     {
       fscanf(fin,"%d %d %d",&r,&g,&b);
-      r = (r / (max/2))-1; 
-      g = (g / (max/2))-1; 
-      b = (b / (max/2))-1; 
-      normalmapimage[j*dimension_x+i] =  Vector(r,g,b);
+      rv = (r / (max/2.0f))-1.0f; 
+      gv = (g / (max/2.0f))-1.0f; 
+      bv = (b / (max/2.0f))-1.0f; 
+      normalmapimage[j*dimension_x+i] =  Vector(rv,gv,bv);
       normalmapimage[j*dimension_x+i].normalize(); // need normalized Vectors
     }   
   printf("File read\n");

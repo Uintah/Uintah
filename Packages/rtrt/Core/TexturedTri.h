@@ -21,6 +21,7 @@ class Rect;
 
 class TexturedTri : public Object, public UVMapping {
 
+ protected:
   Vector ngu,ngv;   // the normalized 2D basis for this triangle's
   // object space
   Vector ngungv;    // ngu cross ngv
@@ -37,7 +38,7 @@ class TexturedTri : public Object, public UVMapping {
   Vector e1, e2, e3;
   double e1l, e2l, e3l;
   bool bad;
-public:
+ public:
   inline bool isbad() {
     return bad;
   }
@@ -76,11 +77,44 @@ public:
   virtual void compute_bounds(BBox&, double offset);
   virtual void uv(UV& uv, const Point&, const HitInfo& hit);
   virtual void set_texcoords(const Point&, const Point&, const Point&);
-
+  
   // returns a new rect that combines me and tri if we form a rect, else NULL
   Rect * pairMeUp( TexturedTri * tri );
+  inline TexturedTri copy_transform(Transform& T)
+    {
+      
+      Point tp1 = T.project(p1);
+      Point tp2 = T.project(p2);
+      Point tp3 = T.project(p3);
+      
+      Vector tvn1 = T.project_normal(vn1);
+      Vector tvn2 = T.project_normal(vn2);
+      Vector tvn3 = T.project_normal(vn3);
+      
+      if (!isbad()) {
+	tvn1.normalize();
+	tvn2.normalize();
+	tvn3.normalize();
+      }
+      
+      TexturedTri copy_tri(this->get_matl(),
+                           tp1,tp2,tp3,
+                           tvn1,tvn2,tvn3);
+
+      copy_tri.set_texcoords(t1,t2,t3);
+
+      return copy_tri;
+    }
+  
+  void transform(Transform& T)
+    {
+      *this = copy_transform(T);
+      this->set_uvmapping(this);
+    }
 };
 
 } // end namespace rtrt
 
 #endif
+
+

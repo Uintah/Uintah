@@ -28,15 +28,17 @@ class RingSatellite : public Ring
   RingSatellite(const string &name, Material *mat, const Point &center,
                 const Vector &up, double radius, double thickness,
                 Satellite *parent=0) 
-    : Ring(mat, center, up, radius, thickness)
+    : Ring(mat, center, up, radius, thickness), parent_(parent)
   {
-    name_ = name;
+    Names::nameObject(name, this);
 
     if (parent_) 
       cen = parent->get_center();
   }
   virtual ~RingSatellite() {}
   RingSatellite() : Ring() {} // for Pio.
+
+  virtual void uv(UV& uv, const Point&, const HitInfo& hit);
 
   //! Persistent I/O.
   static  SCIRun::PersistentTypeID type_id;
@@ -52,17 +54,30 @@ class RingSatellite : public Ring
   Point &get_center() { return cen; }
   void set_center(const Point &p) { cen = p; }
 
-  string get_name() const { return name_; }
-  void set_name(const string &s) { name_ = s; }
-
   virtual void compute_bounds(BBox& bbox, double offset)
   {
+#if _USING_GRID2_
+    bbox.extend(cen,radius+offset);
+#else
     if (parent_) {
-      parent_->compute_bounds(bbox,offset);
-      bbox.extend(parent_->get_center(), radius+offset);
+      Point center = parent_->get_center();
+      bbox.extend(center);
+      Point extent = 
+        Point(center.x()+parent_->get_orb_radius()+radius+thickness+offset,
+              center.y()+parent_->get_orb_radius()+radius+thickness+offset,
+              center.z()+radius+offset);
+      bbox.extend( extent );
+      extent = 
+        Point(center.x()-(parent_->get_orb_radius()+radius+thickness+offset),
+              center.y()-(parent_->get_orb_radius()+radius+thickness+offset),
+              center.z()-(radius+offset));
+      bbox.extend( extent );
+      bbox.extend( Point(0,0,0) );
+      bbox.extend( Point(50,50,50) );
     } else {
-      bbox.extend(cen, radius+offset);
+      bbox.extend(cen, radius+thickness+offset);
     }
+#endif
   }
 
   virtual void animate(double t, bool& changed);

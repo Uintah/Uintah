@@ -3,6 +3,7 @@
 #include <Packages/rtrt/Core/Array1.h>
 #include <Packages/rtrt/Core/TexturedTri.h>
 #include <Packages/rtrt/Core/Tri.h>
+#include <Packages/rtrt/Core/Names.h>
 #include <Core/Thread/Thread.h>
 #include <Core/Thread/Time.h>
 #include <Packages/rtrt/Core/Ray.h>
@@ -26,10 +27,13 @@ SCIRun::PersistentTypeID Grid::type_id("Grid", "Object", grid_maker);
 Grid::Grid(Object* obj, int nsides)
     : Object(0), obj(obj), nsides(nsides)
 {
-    grid=0;
-    counts=0;
+  if (obj == 0) 
+    ASSERTFAIL("Trying to preprocess a Grid with no objects");
 
-    set_matl(new LambertianMaterial(Color(1,0,0)));
+  grid=0;
+  counts=0;
+  
+  set_matl(new LambertianMaterial(Color(1,0,0)));
 
 }
 
@@ -37,25 +41,79 @@ Grid::~Grid()
 {
 }
 
+void Grid::calc_se(const BBox& obj_bbox, const BBox& bbox,
+			  const Vector& diag,
+			  int nx, int ny, int nz,
+			  int& sx, int& sy, int& sz,
+			  int& ex, int& ey, int& ez)
+{
+  //    cerr << "obbx min " << obj_bbox.min() << endl;
+  //    cerr << "obbx max " << obj_bbox.max() << endl;
+  //    cerr << "bbx min " << bbox.min() << endl;
+  //    cerr << "bbx max " << bbox.max() << endl;
+  //    cerr << "diag " << diag << endl;
+  //    cerr << "nx, ny, nz " << nx << ", " << ny << ", " << nz << endl;
+    
+  Vector s((obj_bbox.min()-bbox.min())/diag);
+  //    cerr << "s " << s << endl;
+  Vector e((obj_bbox.max()-bbox.min())/diag);
+  //    cerr << "s " << s << endl;
+  sx=(int)(s.x()*nx);
+  sy=(int)(s.y()*ny);
+  sz=(int)(s.z()*nz);
+  ex=(int)(e.x()*nx);
+  ey=(int)(e.y()*ny);
+  ez=(int)(e.z()*nz);
+  if(sx < 0 || ex >= nx){
+    cerr << "NX out of bounds!\n";
+    cerr << "sx=" << sx << ", ex=" << ex << '\n';
+    cerr << "e=" << e << '\n';
+    cerr << "obj_bbox=" << obj_bbox.min() << ", " << obj_bbox.max() << '\n';
+    cerr << "bbox=" << bbox.min() << ", " << bbox.max() << '\n';
+    cerr << "diag=" << diag << '\n';
+    exit(1);
+  }
+  if(sy < 0 || ey >= ny){
+    cerr << "NY out of bounds!\n";
+    cerr << "sy=" << sy << ", ey=" << ey << '\n';
+    exit(1);
+  }
+  if(sz < 0 || ez >= nz){
+    cerr << "NZ out of bounds!\n";
+    cerr << "sz=" << sz << ", ez=" << ez << '\n';
+    cerr << "e=" << e << '\n';
+    cerr << "nz=" << nz << '\n';
+    cerr << "obj_bbox=" << obj_bbox.min() << ", " << obj_bbox.max() << '\n';
+    cerr << "bbox=" << bbox.min() << ", " << bbox.max() << '\n';
+    cerr << "diag=" << diag << '\n';
+    exit(1);
+  }
+}
+
 void Grid::preprocess(double maxradius, int& pp_offset, int& scratchsize)
 {
   if (was_preprocessed) return;
   was_preprocessed=true;
+  
+  if (Names::hasName(this)) std::cerr << "\n\n"
+                             << "\n==========================================================\n"
+			     << "* Building Regular Grid for Object " << Names::getName(this)
+			     << "\n==========================================================\n";
 
-    cerr << "Building grid\n";
+  //    cerr << "Building grid\n";
     double time=Time::currentSeconds();
     obj->preprocess(maxradius, pp_offset, scratchsize);
-    cerr << "1/7 Preprocess took " << Time::currentSeconds()-time << " seconds\n";
+    //    cerr << "1/7 Preprocess took " << Time::currentSeconds()-time << " seconds\n";
     time=Time::currentSeconds();
 
     Array1<Object*> prims;
     obj->collect_prims(prims);
-    cerr << "2/7 Collect prims took " << Time::currentSeconds()-time << " seconds\n";
+    //    cerr << "2/7 Collect prims took " << Time::currentSeconds()-time << " seconds\n";
     time=Time::currentSeconds();
 
     bbox.reset();
     obj->compute_bounds(bbox, maxradius);
-    cerr << "3/7 Compute bounds took " << Time::currentSeconds()-time << " seconds\n";
+    //    cerr << "3/7 Compute bounds took " << Time::currentSeconds()-time << " seconds\n";
     time=Time::currentSeconds();
 
     int ncells=nsides*nsides*nsides;
@@ -112,7 +170,7 @@ void Grid::preprocess(double maxradius, int& pp_offset, int& scratchsize)
 	nz=2;
 
     int ngrid=nx*ny*nz;
-    cerr << "Computing " << nx << 'x' << ny << 'x' << nz << " grid for " << ngrid << " cells (wanted " << ncells << ")\n";
+    //    cerr << "Computing " << nx << 'x' << ny << 'x' << nz << " grid for " << ngrid << " cells (wanted " << ncells << ")\n";
 
 
     if(counts)
@@ -120,7 +178,7 @@ void Grid::preprocess(double maxradius, int& pp_offset, int& scratchsize)
     if(grid)
 	delete[] grid;
     counts=new int[2*ngrid];
-    cerr << "counts=" << counts << ":" << counts+2*ngrid << '\n';
+    //    cerr << "counts=" << counts << ":" << counts+2*ngrid << '\n';
     for(int i=0;i<ngrid*2;i++)
 	counts[i]=0;
 
@@ -134,7 +192,7 @@ void Grid::preprocess(double maxradius, int& pp_offset, int& scratchsize)
     for(int i=0;i<prims.size();i++){
 	double tnow=Time::currentSeconds();
 	if(tnow-itime > 5.0){
-	    cerr << i << "/" << prims.size() << '\n';
+	  //	    cerr << i << "/" << prims.size() << '\n';
 	    itime=tnow;
 	}
 	BBox obj_bbox;
@@ -204,7 +262,7 @@ void Grid::preprocess(double maxradius, int& pp_offset, int& scratchsize)
 	}
     }
 
-    cerr << "4/7 Counting cells took " << Time::currentSeconds()-time << " seconds\n";
+    //    cerr << "4/7 Counting cells took " << Time::currentSeconds()-time << " seconds\n";
     time=Time::currentSeconds();
     int total=0;
     for(int i=0;i<ngrid;i++){
@@ -212,13 +270,13 @@ void Grid::preprocess(double maxradius, int& pp_offset, int& scratchsize)
 	counts[i*2]=total;
 	total+=count;
     }
-    cerr << "Allocating " << total << " grid cells (" << double(total)/prims.size() << " per object, " << double(total)/ngrid << " per cell)\n";
+    //    cerr << "Allocating " << total << " grid cells (" << double(total)/prims.size() << " per object, " << double(total)/ngrid << " per cell)\n";
     grid=new Object*[total];
-    cerr << "grid=" << grid << ":" << grid+total << '\n';
+    //    cerr << "grid=" << grid << ":" << grid+total << '\n';
     for(int i=0;i<total;i++)
 	grid[i]=0;
-    cerr << "total=" << total << '\n';
-    cerr << "5/7 Calculating offsets took " << Time::currentSeconds()-time << " seconds\n";
+    //    cerr << "total=" << total << '\n';
+    //    cerr << "5/7 Calculating offsets took " << Time::currentSeconds()-time << " seconds\n";
     time=Time::currentSeconds();
     itime=time;
     Array1<int> current(ngrid);
@@ -303,7 +361,7 @@ void Grid::preprocess(double maxradius, int& pp_offset, int& scratchsize)
 	    }
 	}
     }
-    cerr << "6/7 Filling grid took " << Time::currentSeconds()-time << " seconds\n";
+    //    cerr << "6/7 Filling grid took " << Time::currentSeconds()-time << " seconds\n";
     time=Time::currentSeconds();
     for(int i=0;i<ngrid;i++){
 	if(current[i] != counts[i*2+1]){
@@ -319,8 +377,8 @@ void Grid::preprocess(double maxradius, int& pp_offset, int& scratchsize)
 	    exit(1);
 	}
     }
-    cerr << "7/7 Verifying grid took " << Time::currentSeconds()-time << " seconds\n";
-    cerr << "Done building grid\n";
+    //    cerr << "7/7 Verifying grid took " << Time::currentSeconds()-time << " seconds\n";
+    //    cerr << "Done building grid\n";
 }
 
 void Grid::intersect(Ray& ray, HitInfo& hit,

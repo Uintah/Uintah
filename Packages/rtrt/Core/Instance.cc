@@ -18,6 +18,7 @@ Instance::io(SCIRun::Piostream &str)
   str.begin_class("Instance", UVSPHERE_VERSION);
   Object::io(str);
   Material::io(str);
+  UVMapping::io(str);
   SCIRun::Pio(str, o);
   SCIRun::Pio(str, currentTransform);
   SCIRun::Pio(str, bbox);

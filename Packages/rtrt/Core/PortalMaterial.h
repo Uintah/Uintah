@@ -2,6 +2,10 @@
 #ifndef PORTALMATERIAL_H
 #define PORTALMATERIAL_H 1
 
+#include <Packages/rtrt/Core/UVMapping.h>
+#include <Packages/rtrt/Core/UV.h>
+#include <Packages/rtrt/Core/Object.h>
+#include <Packages/rtrt/Core/HitInfo.h>
 #include <Packages/rtrt/Core/Material.h>
 #include <Core/Geometry/Transform.h>
 #include <Packages/rtrt/Core/Worker.h>
@@ -9,6 +13,16 @@
 #include <Core/Thread/Thread.h>
 
 namespace rtrt {
+class PortalMaterial;
+}
+
+namespace SCIRun {
+void Pio(Piostream&, rtrt::PortalMaterial*&);
+}
+
+namespace rtrt {
+
+using SCIRun::Cross;
 
 class PortalMaterial : public Material
 {
@@ -35,6 +49,13 @@ class PortalMaterial : public Material
     : Material(), p_(p), u_(u), v_(v), attached_(false) 
     { portal_.load_basis(p_,u_,v_,Cross(u_,v_)); }
   virtual ~PortalMaterial() {}
+
+  PortalMaterial() : Material() {} // for Pio.
+
+  //! Persistent I/O.
+  static  SCIRun::PersistentTypeID type_id;
+  virtual void io(SCIRun::Piostream &stream);
+  friend void SCIRun::Pio(SCIRun::Piostream&, PortalMaterial*&);
 
   virtual void shade(Color& result, const Ray& ray,
 		     const HitInfo& hit, int depth, 

@@ -22,7 +22,7 @@ Persistent* uvs_maker() {
 }
 
 // initialize the static member type_id
-PersistentTypeID UVSphere::type_id("UVSphere", "UVMapping", uvs_maker);
+PersistentTypeID UVSphere::type_id("UVSphere", "Object", uvs_maker);
 
 
 UVSphere::UVSphere(Material *matl, Point c, double r, const Vector &up,
@@ -45,13 +45,11 @@ void UVSphere::preprocess(double, int&, int&)
     // Set up unit transformation
     xform.load_identity();
     xform.pre_translate(-cen.asVector());
-    xform.rotate(right, Vector(1,0,0));
-    xform.rotate(up, Vector(0,0,1));
+    xform.rotate(Vector(0,0,1),up);
     xform.pre_scale(Vector(1./radius, 1./radius, 1./radius));
     ixform.load_identity();
     ixform.pre_scale(Vector(radius, radius, radius));
-    ixform.rotate(Vector(0,0,1), up);
-    ixform.rotate(Vector(1,0,0), right);
+    ixform.rotate(up, Vector(0,0,1));
     ixform.pre_translate(cen.asVector());
 }
 
@@ -71,7 +69,7 @@ void UVSphere::intersect(Ray& ray, HitInfo& hit, DepthStats* st,
     double t2hc=rad2-l2oc+tca*tca;
     double thc=sqrt(t2hc);
     double t=tca+thc;
-    hit.hit(this, t);
+    hit.hit(this, t/dist_scale);
     st->sphere_hit++;
     return;
   } else {
@@ -93,7 +91,7 @@ void UVSphere::intersect(Ray& ray, HitInfo& hit, DepthStats* st,
     }
   }	
 }
-
+#if 1
 // Maybe this could be improved - steve
 void UVSphere::light_intersect(Ray& ray, HitInfo& hit, Color&,
                                DepthStats* st, PerProcessorContext*)
@@ -111,7 +109,7 @@ void UVSphere::light_intersect(Ray& ray, HitInfo& hit, Color&,
     double t2hc=rad2-l2oc+tca*tca;
     double thc=sqrt(t2hc);
     double t=tca+thc;
-    hit.shadowHit(this, t);
+    hit.shadowHit(this, t/dist_scale);
     st->sphere_light_hit++;
     return;
   } else {
@@ -125,14 +123,15 @@ void UVSphere::light_intersect(Ray& ray, HitInfo& hit, Color&,
 	return;
       } else {
 	double thc=sqrt(t2hc);
-	hit.shadowHit(this, tca-thc);
-	hit.shadowHit(this, tca+thc);
+	hit.shadowHit(this, (tca-thc)/dist_scale);
+	hit.shadowHit(this, (tca+thc)/dist_scale);
 	st->sphere_light_hit++;
 	return;
       }
     }
   }	
 }
+#endif
 
 Vector UVSphere::normal(const Point& hitpos, const HitInfo&)
 {
@@ -152,7 +151,12 @@ void UVSphere::uv(UV& uv, const Point& hitpos, const HitInfo&)
 {
   Vector m(xform.project(hitpos).asVector());
   double uu,vv,theta,phi;  
-  theta = acos(m.z());
+  double angle = m.z();
+  if(angle<-1)
+    angle=-1;
+  else if(angle>1)
+    angle=1;
+  theta = acos(angle);
   phi = atan2(m.y(), m.x());
   if(phi < 0) phi += 6.28318530718;
   uu = phi * .159154943092; // 1_pi

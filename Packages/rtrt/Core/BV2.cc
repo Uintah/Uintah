@@ -41,6 +41,7 @@ namespace rtrt {
 BV2Tree::BV2Tree(Object* obj, double maxradius)
     : left(0), right(0), obj(obj)
 {
+    if (obj == 0) ASSERTFAIL("Trying to create a BV1 with no objects");
     BBox bbox;
     obj->compute_bounds(bbox, maxradius);
     Point min(bbox.min());

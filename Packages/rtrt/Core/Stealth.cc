@@ -405,8 +405,15 @@ Stealth::loadPath( const string & filename )
   FILE * fp = fopen( filename.c_str(), "r" );
   if( fp == NULL )
     {
-      cout << "Error opening file " << filename << ".  Did not load path.\n";
-      return "";
+      string path = "/usr/sci/data/Geometry/paths/";
+      cout << "Looked for " << filename << " in local path... now looking "
+	   << "in " << path << "\n";
+      fp = fopen( (path+filename).c_str(), "r" );
+      if( fp == NULL )
+	{
+	  cout << "Did not find it... not loading path\n";
+	  return "";
+	}
     }
 
   unsigned long index = paths_.size();

@@ -4,6 +4,7 @@
 #include <Packages/rtrt/Core/Camera.h>
 #include <Packages/rtrt/Core/Image.h>
 #include <Packages/rtrt/Core/Light.h>
+#include <Packages/rtrt/Core/Names.h>
 #include <Packages/rtrt/Core/HitInfo.h>
 #include <Packages/rtrt/Core/Ray.h>
 #include <Packages/rtrt/Core/LambertianMaterial.h>
@@ -21,6 +22,7 @@
 #include <Core/Thread/Thread.h>
 #include <Core/Thread/Time.h>
 #include <Core/Math/MinMax.h>
+#include <Core/Malloc/Allocator.h>
 
 #include <iostream>
 #include <stdlib.h>
@@ -39,9 +41,30 @@ PersistentTypeID Scene::type_id("Scene", "Persistent", scene_maker);
 
 Scene::Scene() : 
   work("frame tiles"),
+  maxdepth(0),
+  base_threshold(0),
+  full_threshold(0),
+  xoffset(0),
+  yoffset(0),
+  xtilesize(0),
+  ytilesize(0),
+  no_aa(false),
+  shadowobj(0),
+  stereo(0),
+  animate(0),
   ref_cnt(0),
-  lock("rtrt::Scene lock")
-{}
+  lock("rtrt::Scene lock"),
+  obj(0),
+  mainGroup_(0),
+  mainGroupWithLights_(0),
+  lightsGroup_(0),
+  camera0(0),
+  camera1(0),
+  image0(0),
+  image1(0),
+  background(0),
+  ambient_environment_map(0)
+{ mainGroup_ = new Group(); }
 
 Scene::Scene(Object* ob, const Camera& cam, Image* image0, Image* image1,
 	     const Color& bgcolor,
@@ -51,13 +74,24 @@ Scene::Scene(Object* ob, const Camera& cam, Image* image0, Image* image1,
 	     double ambientscale,
 	     AmbientType ambient_mode) : 
   work("frame tiles"),
+  maxdepth(0),
+  base_threshold(0),
+  full_threshold(0),
+  xoffset(0),
+  yoffset(0),
+  xtilesize(0),
+  ytilesize(0),
+  no_aa(false),
+  shadowobj(0),
+  stereo(0),
+  animate(0),
   ambient_mode(ambient_mode),
   ambientScale_(ambientscale),
   ref_cnt(0),
   lock("rtrt::Scene lock"),
-  soundVolume_(100),
-  obj(ob), 
-  mainGroup_(ob), 
+  soundVolume_(50),
+  obj(0), 
+  mainGroup_(0), 
   camera0(camera0), 
   image0(image0), 
   image1(image1),
@@ -68,13 +102,19 @@ Scene::Scene(Object* ob, const Camera& cam, Image* image0, Image* image1,
   groundplane(groundplane),
   transmissionMode_(false)
 {
+  mainGroup_ = new Group();
+  mainGroup_->add( ob );
   init(cam, bgcolor);
 }
 
 void Scene::init(const Camera& cam, const Color& bgcolor)
 {
-  lightsGroup_ = new Group;
-  mainGroupWithLights_ = lightsGroup_;
+  lightsGroup_ = new Group();
+  permanentLightsGroup_ = new Group();
+  mainGroupWithLights_ = new Group();
+  mainGroup_->add( permanentLightsGroup_ );
+  mainGroupWithLights_->add( mainGroup_ );
+  mainGroupWithLights_->add( lightsGroup_ );
 
   work.refill(0,0,8);
   shadow_mode = Hard_Shadows;
@@ -86,7 +126,7 @@ void Scene::init(const Camera& cam, const Color& bgcolor)
   shadowobj=0;
   background = new ConstantBackground( bgcolor );
   animate=true;
-  hotspots=false;
+  hotSpotMode_ = 0;
   frameno=0;
   frametime_fp=0;
   lasttime=0;
@@ -101,17 +141,21 @@ void Scene::init(const Camera& cam, const Color& bgcolor)
 
   select_shadow_mode( Hard_Shadows );
 
-  origAmbientColor_ = Color(1,1,1);
-  ambientColor_     = origAmbientColor_;
-  setAmbientLevel( ambientScale_ );
   orig_ambientScale_ = ambientScale_;
+  origAmbientColor_  = Color(1,1,1);
+  ambientColor_      = origAmbientColor_;
+
+  setAmbientLevel( ambientScale_ );
 }
 
 void
 Scene::set_object(Object* new_obj) 
 {
   obj        = new_obj;
-  mainGroup_ = new_obj;
+  if (mainGroup_) delete mainGroup_;
+  mainGroup_ = new Group();
+  mainGroup_->add( permanentLightsGroup_ );
+  mainGroup_->add( new_obj );
   
   mainGroupWithLights_ = new Group;
   mainGroupWithLights_->add( new_obj );
@@ -138,13 +182,24 @@ Scene::Scene(Object* ob, const Camera& cam, const Color& bgcolor,
 	     double ambientscale,
 	     AmbientType ambient_mode) :     
   work("frame tiles"),
+  maxdepth(0),
+  base_threshold(0),
+  full_threshold(0),
+  xoffset(0),
+  yoffset(0),
+  xtilesize(0),
+  ytilesize(0),
+  no_aa(false),
+  shadowobj(0),
+  stereo(0),
+  animate(0),
   ambient_mode(ambient_mode),
   ambientScale_(ambientscale),
   ref_cnt(0),
   lock("rtrt::Scene lock"),
-  soundVolume_(100),
+  soundVolume_(50),
   obj(ob), 
-  mainGroup_(ob ),
+  mainGroup_(0),
   camera0(camera0), 
   image0(0), 
   image1(0),
@@ -155,14 +210,18 @@ Scene::Scene(Object* ob, const Camera& cam, const Color& bgcolor,
   groundplane(groundplane), 
   transmissionMode_(false)
 {
+  mainGroup_ = new Group();
+  mainGroup_->add( ob );
   init(cam, bgcolor);
 }
 
 Scene::~Scene()
 {
+  cerr << "Scene destroyed!\n";
     delete lightsGroup_;
     delete mainGroup_;
     delete mainGroupWithLights_;
+    delete permanentLightsGroup_;
     delete camera0;
     delete camera1;
     delete image0;
@@ -182,20 +241,26 @@ void Scene::refill_work(int which, int nworkers)
 
 void Scene::add_light(Light* light)
 {
-    lightsGroup_->add( light->getSphere() );
-    lights.add(light);
+  lightsGroup_->add( light->getSphere() );
+  lights.add(light);
 }
 
-void Scene::add_per_matl_light(Light* light)
+void Scene::add_permanent_light(Light* light)
 {
-    lightsGroup_->add( light->getSphere() );
-    per_matl_lights.add(light);
+  permanentLightsGroup_->add( light->getSphere() );
+  lights.add(light);
 }
-void Scene::add_per_matl_mood_light(Light* light)
+
+void Scene::add_per_matl_light( Light* light )
 {
-    lightsGroup_->add( light->getSphere() );
-    per_matl_mood_lights.add(light);
-    light->updateIntensity(0);
+  lightsGroup_->add( light->getSphere() );
+  per_matl_lights.add(light);
+}
+
+void Scene::add_perm_per_matl_light( Light* light )
+{
+  permanentLightsGroup_->add( light->getSphere() );
+  per_matl_lights.add(light);
 }
 
 void Scene::preprocess(double bvscale, int& pp_offset, int& scratchsize)
@@ -229,6 +294,9 @@ void Scene::preprocess(double bvscale, int& pp_offset, int& scratchsize)
   for(i=0;i<shadows.size();i++)
     shadows[i]->preprocess(this, pp_offset, scratchsize);
   cerr << "Preprocess took " << SCIRun::Time::currentSeconds()-time << " seconds\n";
+
+  // obj must not be a group until after preprocess
+  obj = mainGroup_;
 }
 
 void Scene::copy_camera(int which)
@@ -273,104 +341,69 @@ void Scene::show_auxiliary_displays() {
 }
 
 void
-Scene::turnOffAllLights( Light * exceptThisLight )
-{
-  int numLights = lights.size();
-
-  for( int cnt = numLights-1; cnt >= 0; cnt-- )
-    {
-      Light * light = lights[cnt];
-      if( light == exceptThisLight )
-	continue;
-      light->turnOff();
-      nonActiveLights_.add( light );
-      lights.remove( cnt );
-    }
-}
-void
 Scene::turnOffAllLights( double left )
 {
-  if (left == 1.0) orig_ambientScale_ = ambientScale_;
+  // Save the beginning ambient scale:
+  static double beginScale;
+  if (left == 1.0) beginScale = ambientScale_;
 
   int numLights = lights.size();
+  int numAllLights = numLights + per_matl_lights.size();
 
-  for( int cnt = numLights-1; cnt >= 0; cnt-- )
-    {
-      Light * light = lights[cnt];
+  for( int cnt = 0; cnt < numAllLights; cnt++ ) {
+    Light * light;
+    if( cnt < numLights )
+      light = lights[cnt];
+    else
+      light = per_matl_lights[cnt-numLights];
 
-      if (left>0.0) {
-	light->updateIntensity(left);
+    if (left>0.0) {
+
+      if( light->isMoodLight() ) {
+	float curI = light->get_intensity();
+
+	light->updateIntensity( Min(1.0*(1-left) + curI,1.0) );
+	light->turnOn();
       } else {
-	light->updateIntensity(1.0);
+	light->modifyCurrentIntensity( left );
+      }
+    } else {
+      if( light->isMoodLight() ){
+	light->updateIntensity( 1.0 );
+      } else {
 	light->turnOff();
-	nonActiveLights_.add( light );
-	lights.remove( cnt );
       }
     }
-
-  for(int i=0; i<per_matl_mood_lights.size(); i++){
-    Light* light = per_matl_mood_lights[i];    
-    light->updateIntensity(1-left);
   }
 
-  setAmbientLevel(orig_ambientScale_*(0.2*left+0.8));
+  // Scale down from current ambient level to minimum ambient of
+  // 1/2 of original ambient.
+  double value = (beginScale*left) + (1-left)*(orig_ambientScale_ / 2.0);
+  setAmbientLevel( value );
 }
 
 void
 Scene::turnOnAllLights()
 {
-  int numLights = nonActiveLights_.size();
+  int numLights = lights.size();
+  int numAllLights = numLights + per_matl_lights.size();
 
-  for( int cnt = numLights-1; cnt >= 0; cnt-- )
-    {
-      Light * light = nonActiveLights_[ cnt ];
-      lights.add( light );
+  for( int cnt = 0; cnt < numAllLights; cnt++ ) {
+    Light * light;
+    if( cnt < numLights )
+      light = lights[cnt];
+    else
+      light = per_matl_lights[cnt-numLights];
+
+    if( light->isMoodLight() ) {
+      light->reset(); 
+    } else {
+      light->reset(); 
       light->turnOn();
-      nonActiveLights_.remove( cnt );
     }
-
-  for(int i=0; i<per_matl_mood_lights.size(); i++){
-    Light* light = per_matl_mood_lights[i];    
-    light->updateIntensity(0);
   }
 
   setAmbientLevel(orig_ambientScale_);
-}
-
-void
-Scene::turnOffLight( Light * light )
-{
-  if( light->isOn() )
-    {
-      for( int cnt = 0; cnt < lights.size(); cnt++ )
-	{
-	  if( lights[cnt] == light )
-	    {
-	      lights.remove( cnt );
-	      light->turnOff();
-	      nonActiveLights_.add( light );
-	      return;
-	    }
-	}
-    }
-}
-
-void
-Scene::turnOnLight( Light * light )
-{
-  if( !light->isOn() )
-    {
-      for( int cnt = 0; cnt < nonActiveLights_.size(); cnt++ )
-	{
-	  if( nonActiveLights_[cnt] == light )
-	    {
-	      nonActiveLights_.remove( cnt );
-	      light->turnOn();
-	      lights.add( light );
-	      return;
-	    }
-	}
-    }
 }
 
 void
@@ -434,19 +467,28 @@ Scene::io(SCIRun::Piostream &stream) {
   //  SCIRun::Pio(stream, displays);
   SCIRun::Pio(stream, ambientColor_);
   SCIRun::Pio(stream, origAmbientColor_);
-  SCIRun::Pio(stream, hotspots);
+  SCIRun::Pio(stream, hotSpotMode_);
   SCIRun::Pio(stream, materials);
   stream.end_class();
 }
 
 // Animate will only be called on objects added through this function.
 void
-Scene::addObjectOfInterest( Object * obj, bool animate /* = false */ )
+Scene::addObjectOfInterest( Object * obj, bool animate, bool redobbox )
 {
-  if( animate )
+  if( animate && !redobbox)
     animateObjects_.add( obj );
-  if( obj->name_ != "" )
+  if( animate && redobbox)
+    dynamicBBoxObjects_.add( obj );
+  if( Names::hasName(obj) )
     objectsOfInterest_.add( obj );
+}
+
+void
+Scene::addObjectOfInterest( const string& name, Object * obj, bool animate, bool redobbox )
+{
+  Names::nameObject(name, obj);
+  addObjectOfInterest(obj, animate, redobbox);
 }
 
 // For adding single route names
@@ -457,3 +499,8 @@ Scene::addRouteName( const string & filename, const string & room )
   roomsForRoutes_.push_back( room );
 }
 
+void
+Scene::addTrigger( Trigger * trigger )
+{
+  triggers_.push_back( trigger );
+}
