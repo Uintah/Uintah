@@ -1,0 +1,77 @@
+% -*-latex-*-
+%<= "JSBET04nVCBFRElUIE1FLgolIEknbSBnZW5lcmF0ZWQgZnJvbSBzcnVnbWFj\ncm9zLnJ0ZXguICBFZGl0IGl0IGluc3RlYWQK\n".unpack("m") %>
+%
+%  The contents of this file are subject to the University of Utah Public
+%  License (the "License"); you may not use this file except in compliance
+%  with the License.
+%
+%  Software distributed under the License is distributed on an "AS IS"
+%  basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+%  License for the specific language governing rights and limitations under
+%  the License.
+%
+%  The Original Source Code is SCIRun, released March 12, 2001.
+%
+%  The Original Source Code was developed by the University of Utah.
+%  Portions created by UNIVERSITY are Copyright (C) 2001, 1994
+%  University of Utah. All Rights Reserved.
+%
+% Markup and style for SCIRun Users guide.
+%
+\textheight 9.5in
+\textwidth 7in
+\topmargin -.50in
+\oddsidemargin -.25in
+\sloppy
+
+% Fancy headings stuff
+\pagestyle{fancy}
+\headsep .08in
+\footskip 25pt
+\headheight 15pt
+\setlength{\footrulewidth}{.8pt}
+%\setlength{\headrulewidth}{.8pt}
+\rhead{{ \PSE{} Users' Manual}}
+\lhead{Version \version}
+\lfoot{}
+\cfoot{}
+\rfoot{{\small \sf Page: \hspace{1em}\thepage\hspace{1em}}}
+
+% Setting to control figure placement.
+% These determine the rules used to place floating objects like figures 
+% They are only guides, but read the manual to see the effect of each.
+\renewcommand{\topfraction}{.8}
+\renewcommand{\bottomfraction}{.8}
+\renewcommand{\textfraction}{.1}
+
+% Paragraph spacing
+% This sets the spacing between paragraphs
+\setlength{\parskip}{\smallskipamount} 
+
+% Common markup commands
+\input{../../Utilities/TeX/scirun-doc.tex}
+
+% Users Guide specific markup
+%<
+version = File.open("../../edition.xml") do |f|
+  /<edition>(.*)<\/edition>/.match(f.read())[1]
+end
+%>
+\newcommand{\version}{%<= version %>}
+\newcommand{\viewer}{\emph{Viewer}}
+\newcommand{\installguideurl}{../../../Installation/Guide/index.html}
+\newcommand{\modulemakerguideurl}{}
+
+% Markup used by latex module descriptions.
+\newcommand{\ModuleRef}[3]{\subsection{#1} #1 is in Category #2 of Package #3}
+\newcommand{\Package}[1]{#1}
+\newcommand{\Category}[1]{#1}
+\newcommand{\Module}[1]{#1}
+\newcommand{\ModuleRefSummary}{\subsubsection*{Summary}}
+\newcommand{\ModuleRefUse}{\subsubsection*{Use}}
+\newcommand{\ModuleRefDetails}{\subsubsection*{Details}}
+\newcommand{\ModuleRefNotes}{\subsubsection*{Notes}}
+\newcommand{\ModuleRefCredits}{\subsubsection*{Credits}}
+\newcommand{\ModuleRefSubSection}[1]{\paragraph*{#1}}
+\newcommand{\ModuleRefSubSubSection}[1]{\subparagraph*{#1}}
+\newcommand{\ModuleRefFigName}[1]{#1}
