@@ -62,8 +62,6 @@ itcl_class Module {
 	if {[info exists $this-msgStream]} {
 	    $msgLogStream registerVar $this-msgStream
 	}
-
-        set_defaults 
     }
     
     destructor {
