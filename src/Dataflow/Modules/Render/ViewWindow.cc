@@ -123,7 +123,7 @@ ViewWindow::ViewWindow(Viewer* s, GuiInterface* gui, GuiContext* ctx)
     doingMovie(false),
     makeMPEG(false),
     curFrame(0),
-    curName("movie"),
+    curName("./movie.%04d"),
     dolly_throttle(0),
     // CollabVis code begin
 #ifdef HAVE_COLLAB_VIS
