@@ -3,6 +3,7 @@
 //
 // David K. McAllister, August 1999.
 
+#include <stdio.h>
 #include <Remote/Tools/Model/Mesh.h>
 
 namespace Remote {
