@@ -14976,7 +14976,7 @@ _sci_includes=''
 
 
   if test "$HAVE_FTGL" = "yes"; then
-    DEF_BLAS="#define HAVE_FTGL 1"
+    DEF_FTGL="#define HAVE_FTGL 1"
   fi
 
   if test "$with_ftgl" && test ! "$DEF_FTGL"; then
