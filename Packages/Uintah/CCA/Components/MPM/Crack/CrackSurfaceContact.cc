@@ -43,13 +43,13 @@ void Crack::addComputesAndRequiresAdjustCrackContactInterpolated(
 {
   const MaterialSubset* mss = matls->getUnion();
 
-  // Data of primary velocity field
+  // Nodal solutions above crack
   t->requires(Task::NewDW, lb->gMassLabel,         Ghost::None);
   t->requires(Task::NewDW, lb->gVolumeLabel,       Ghost::None);
   t->requires(Task::NewDW, lb->gNumPatlsLabel,     Ghost::None);
   t->requires(Task::NewDW, lb->gDisplacementLabel, Ghost::None);
 
-  // Data of additional velocity field
+  // Nodal solutions below crack
   t->requires(Task::NewDW, lb->GMassLabel,         Ghost::None);
   t->requires(Task::NewDW, lb->GVolumeLabel,       Ghost::None);
   t->requires(Task::NewDW, lb->GNumPatlsLabel,     Ghost::None);
@@ -81,14 +81,14 @@ void Crack::AdjustCrackContactInterpolated(const ProcessorGroup*,
     Vector dx = patch->dCell();
     double vcell = dx.x()*dx.y()*dx.z();
 
-    // Need access to all velocity fields at once, primary field
+    // Nodal data above crack
     StaticArray<constNCVariable<int> >    gNumPatls(numMatls);
     StaticArray<constNCVariable<double> > gmass(numMatls);
     StaticArray<constNCVariable<double> > gvolume(numMatls);
     StaticArray<constNCVariable<Vector> > gdisplacement(numMatls);
     StaticArray<NCVariable<Vector> >      gvelocity(numMatls);
 
-    // Aceess to additional velocity field, for Farcture
+    // Nodal data below crack
     StaticArray<constNCVariable<int> >    GNumPatls(numMatls);
     StaticArray<constNCVariable<double> > Gmass(numMatls);
     StaticArray<constNCVariable<double> > Gvolume(numMatls);
@@ -101,7 +101,7 @@ void Crack::AdjustCrackContactInterpolated(const ProcessorGroup*,
 
     for(int m=0;m<matls->size();m++){
       int dwi = matls->get(m);
-      // Data of primary velocity field
+      // Get data above crack
       new_dw->get(gNumPatls[m], lb->gNumPatlsLabel, dwi, patch, gnone, 0);
       new_dw->get(gmass[m],     lb->gMassLabel,     dwi, patch, gnone, 0);
       new_dw->get(gvolume[m],   lb->gVolumeLabel,   dwi, patch, gnone, 0);
@@ -109,7 +109,7 @@ void Crack::AdjustCrackContactInterpolated(const ProcessorGroup*,
 
       new_dw->getModifiable(gvelocity[m],lb->gVelocityLabel,dwi,patch);
 
-      // Data of additional velocity field
+      // Get data below crack
       new_dw->get(GNumPatls[m],lb->GNumPatlsLabel,  dwi, patch, gnone, 0);
       new_dw->get(Gmass[m],     lb->GMassLabel,     dwi, patch, gnone, 0);
       new_dw->get(Gvolume[m],   lb->GVolumeLabel,   dwi, patch, gnone, 0);
@@ -139,7 +139,7 @@ void Crack::AdjustCrackContactInterpolated(const ProcessorGroup*,
         vc=(va*ma+vb*mb)/(ma+mb);
         short Contact=NO;
 
-        if(separateVol[m]<0. || contactVol[m] <0.) { // Use displacement criterion
+        if(separateVol[m]<0. || contactVol[m] <0.) { 
           //use displacement criterion
           Vector u1=gdisplacement[m][c];
           Vector u2=Gdisplacement[m][c];
@@ -310,15 +310,14 @@ void Crack::AdjustCrackContactIntegrated(const ProcessorGroup*,
     Vector dx = patch->dCell();
     double vcell = dx.x()*dx.y()*dx.z();
 
-    // Need access to all velocity fields at once
-    // Data of primary field
+    // Nodal data above crack
     StaticArray<constNCVariable<double> > gmass(numMatls);
     StaticArray<constNCVariable<double> > gvolume(numMatls);
     StaticArray<constNCVariable<int> >    gNumPatls(numMatls);
     StaticArray<constNCVariable<Vector> > gdisplacement(numMatls);
     StaticArray<NCVariable<Vector> >      gvelocity_star(numMatls);
     StaticArray<NCVariable<Vector> >      gacceleration(numMatls);
-    // Data of additional field
+    // Nodal data below crack
     StaticArray<constNCVariable<double> > Gmass(numMatls);
     StaticArray<constNCVariable<double> > Gvolume(numMatls);
     StaticArray<constNCVariable<int> >    GNumPatls(numMatls);
@@ -333,7 +332,7 @@ void Crack::AdjustCrackContactIntegrated(const ProcessorGroup*,
 
     for(int m=0;m<matls->size();m++){
       int dwi = matls->get(m);
-      // For primary field
+      // Get nodal data above crack
       new_dw->get(gmass[m],     lb->gMassLabel,     dwi, patch, gnone, 0);
       new_dw->get(gvolume[m],   lb->gVolumeLabel,   dwi, patch, gnone, 0);
       new_dw->get(gNumPatls[m], lb->gNumPatlsLabel, dwi, patch, gnone, 0);
@@ -343,7 +342,7 @@ void Crack::AdjustCrackContactIntegrated(const ProcessorGroup*,
                                                          dwi, patch);
       new_dw->getModifiable(gacceleration[m],lb->gAccelerationLabel,
                                                          dwi, patch);
-      // For additional field
+      // Get nodal data below crack
       new_dw->get(Gmass[m],     lb->GMassLabel,     dwi, patch, gnone, 0);
       new_dw->get(Gvolume[m],   lb->GVolumeLabel,   dwi, patch, gnone, 0);
       new_dw->get(GNumPatls[m], lb->GNumPatlsLabel, dwi, patch, gnone, 0);
@@ -379,7 +378,7 @@ void Crack::AdjustCrackContactIntegrated(const ProcessorGroup*,
         vc=(va*ma+vb*mb)/(ma+mb);
         short Contact=NO;
 
-        if(separateVol[m]<0. || contactVol[m] <0.) { // Use displacement criterion
+        if(separateVol[m]<0. || contactVol[m] <0.) {
           // Use displacement criterion
           Vector u1=gdisplacement[m][c];
           //+delT*gvelocity_star[m][c];
@@ -454,7 +453,7 @@ void Crack::AdjustCrackContactIntegrated(const ProcessorGroup*,
           }
 
           else if(crackType[m]=="frictional") { // Apply friction law
-            // For primary field
+            // for velocity field above crack
             Vector deltva(0.,0.,0.);
             dva=va-vc;
             na=norm;
@@ -478,7 +477,8 @@ void Crack::AdjustCrackContactIntegrated(const ProcessorGroup*,
                gacceleration[m][c]=aa+(vb-va)*mb/(ma+mb)/delT;
                frictionWork[m][c]+=0.0;
             }
-            // For additional field
+	    
+            // for velocity field below crack
             Vector deltvb(0.,0.,0.);
             dvb=vb-vc;
             nb=-norm;
