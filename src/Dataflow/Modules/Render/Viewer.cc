@@ -216,6 +216,9 @@ Viewer::process_event()
 	       (((lighting_.lights)[rmsg->lightNo]).get_rep())) {
 	      dl->move( rmsg->lightDir );
 	      dl->setColor( rmsg->lightColor );
+	    } else if( HeadLight *hl = dynamic_cast<HeadLight *>
+		       (((lighting_.lights)[rmsg->lightNo]).get_rep())) {
+	      hl->setColor( rmsg->lightColor );
 	    }
 	  }
 	  r->need_redraw = 1;

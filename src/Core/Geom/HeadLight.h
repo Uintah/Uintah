@@ -50,6 +50,7 @@ public:
 #ifdef SCI_OPENGL
     virtual void opengl_setup(const View& view, DrawInfoOpenGL*, int& idx);
 #endif
+  void setColor( const Color& newC) { c = newC; }
 };
 
 } // End namespace SCIRun
