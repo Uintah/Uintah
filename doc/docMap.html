@@ -1,8 +1,8 @@
  <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
  <HTML>
    <HEAD>
-     <TITLE>PSE Document Map (18-Jul-2000)</TITLE>
-     <!-- Changed by: TjD, 18-Jul-2000 -->
+     <TITLE>PSE Document Map (25-Jul-2000)</TITLE>
+     <!-- Changed by: TjD, 25-Jul-2000 -->
 
    </HEAD>  
 
@@ -22,7 +22,7 @@
        <DD>
 	 <P>
 	   These describe the concept of a PSE and the types of
-	   problems that the current set of PSE's solve.
+	   problems that the current set of PSEs solve.
 	 </P>
        </DD>
 
@@ -48,7 +48,7 @@
        <DD>
 	 <P>
 	   Documents for those who construct networks for their own use and
-	   for the use by others.
+	   for use by others.
 	 </P>
        </DD>
 
@@ -114,7 +114,7 @@
        
        <LI>
 	 <P>
-	   This <A HREF="ReferenceGuide/faq.html">FAQ</A> was compiled from
+	   An <A HREF="ReferenceGuide/faq.html">FAQ</A> list has been compiled from
 	   the scirun-develop mailing list.
 	 </P>
        </LI>
@@ -126,7 +126,13 @@
      <UL>
        <LI>Introduction</LI>
        
-       <LI>Installation</LI>
+       <LI>Installation
+	 <UL>
+	   <LI> <A HREF="ReferenceGuide/building.html">CS SGI machines</A> </LI>
+	   <LI> <A HREF="ReferenceGuide/nt.html">CS NT machines</A></LI>
+	   <LI> <A HREF="ReferenceGuide/pseInstall.html">Non-CS SGI/Linux machines</A> </LI>
+	 </UL>
+       </LI>
        
        <LI>Maintenance</LI>
      </UL>
@@ -140,10 +146,13 @@
 
      <A NAME="NetworkBuilder"/>
      <H1>Network Builder</H1>
+     <P>
+       A <EM>network builder</EM> works within the PSE environment to construct
+       networks for his own and other's use.  The following information
+       will be of interest to network builders.
+     </P>
 
      <UL>
-       <LI>Introduction</LI>
-       
        <LI>PSE Overview</LI>
        
        <LI>Starting PSE</LI>
@@ -156,26 +165,73 @@
 
        <LI>Importing Foreign Data</LI>
 
-       <LI> Module Reference Guides </LI>
+       <LI>Module Reference Guides </LI>
 
-       <LI> Data Type Reference Guides </LI>
+       <LI>Data Type Reference Guides </LI>
 
        <LI>Existing Data Sets</LI>
 
        <LI>Sample Networks</LI>
+
+       <LI> Documenting a Network </LI>
      </UL>
 
      <A NAME="Developer"/>
      <H1>Developer</H1>
 
+     <P>
+       A developer writes modules, data converters, or other code.  The
+       following information is needed by developers.
+     </P>
+
      <UL>
-       <LI> Introduction </LI>
+       <LI>
+	 <P>
+	   <A HREF="http://www.csafe.utah.edu/development_environment/coding_standards/index.html">
+	     Coding Standards</A> have been developed in order to provide a
+	   basis for consistent, easily reviewable, and maintainable code.
+	 </P>
+	 <P>
+	   Your source code must be commented (documented) according to the
+	   <A HREF="ReferenceGuide/cocoon.html">PSE standard</A>.
+	 </P>
+
+       </LI>
+       <LI>
+	 <P>
+	   PSE source code, documentation, and other files, are managed
+	   by the
+	   <A HREF="http://www.gnu.org/manual/cvs-1.9/html_chapter/cvs_toc.html">
+		    Concurrent Versions System
+	   </A>
+	   software.
+	   Developers must be familiar with its
+	   <A HREF="ReferenceGuide/cvs_info.html">use</A>
+	   in the PSE project.  Also
+	   see the
+	   <A HREF="http://www.csafe.utah.edu/development_environment/cvs/index.html">cvs information</A>
+	   prepared by the <A HREF="http://www.csafe.utah.edu">Uintah</A>
+	   project.
+	 </P>
+       </LI>
        
-       <LI> Coding Standards </LI>
-       
-       <LI> Cvs Info</LI>
-       
-       <LI> Creating a Module </LI>
+       <LI>
+	 <P>
+	   New modules are created with PSE's built in " <A
+							   HREF="ReferenceGuide/createANewModule.txt"> Module Maker </A>"
+	   software.
+	 </P>
+	 <P>
+	   Module writers must follow a <A
+					  HREF="ReferenceGuide/specProcedure.html">specification procedure</A>
+	   when writing new modules.  Modules which are not fully spec'ed
+	   will not be incorporated into "offical" PSE releases.
+	 </P>
+	 <P>
+	   Your module code must be commented (documented) according to the
+	   <A HREF="ReferenceGuide/cocoon.html">PSE standard</A>.
+	 </P>
+       </LI>
 
        <LI> Creating a Data Converter </LI>
 
@@ -186,6 +242,9 @@
        <LI> C++ References </LI>
 
        <LI> Tck/Tk References </LI>
+
+       <LI> Xml References </LI>
+       
      </UL>
 
      <A NAME="DesignDocuments"/>
