@@ -35,6 +35,10 @@ static Persistent* maker()
 
 PersistentTypeID DenseMatrix::type_id("DenseMatrix", "Matrix", maker);
 
+  DenseMatrix* DenseMatrix::clone(){
+    return scinew DenseMatrix(*this);
+  }
+  
 DenseMatrix::DenseMatrix()
 : Matrix(Matrix::non_symmetric, Matrix::dense), nr(0), nc(0)
 {
@@ -662,6 +666,9 @@ void DenseMatrix::mult(double s)
 
 //
 // $Log$
+// Revision 1.12  2000/12/11 23:08:20  oleg
+// Clone function implemented
+//
 // Revision 1.11  2000/10/18 17:26:14  guilkey
 // Added a version of solve which take a vector<double>.
 //
