@@ -6,36 +6,11 @@
 #include <Core/Util/NotFinished.h>
 #include <Core/Util/DebugStream.h>
 #include <Core/Util/FancyAssert.h>
-#if HAVE_EXT_ALGORITHM
-#include <ext/algorithm>
-using namespace __gnu_cxx;
-#endif
-using namespace std;
-
+#include <sci_algorithm.h>
 #include <Core/Thread/Mutex.h>
 
-#if defined(__digital__) || defined(_AIX)
-// AIX and DEC don't have this...
-namespace Uintah {
-  template <class Iter, class Compare>
-  bool is_sorted(Iter begin, Iter end, Compare compare)
-  {
-    if(begin == end)
-      return true;
-    Iter cur = begin;
-    Iter next = cur; next++;
-    while(next != end){
-      if (compare(*next, *cur))
-	return false;
-      cur = next;
-      next++;
-    }
-    return true;
-  }
-}
-#endif
-
 using namespace Uintah;
+using std::is_sorted;
 
 // Debug: Used to sync cerr so it is readable (when output by
 // multiple threads at the same time) 
