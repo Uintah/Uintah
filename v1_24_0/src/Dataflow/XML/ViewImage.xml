@@ -77,7 +77,7 @@
 	<componentname>GenStandardColorMap</componentname>
       </port>
       <port>
-	<name>ColorMap2</name>
+	<name>InputColorMap2</name>
 	<description>
 	  <p>
           </p>
