@@ -34,6 +34,7 @@ LOG
 
 #include <Uintah/Datatypes/Particles/ParticleGridReader.h>
 #include <Uintah/Datatypes/Particles/MPMaterial.h>
+#include <Uintah/Datatypes/Particles/VizGrid.h>
 
 namespace Uintah {
 namespace Datatypes {
@@ -45,7 +46,6 @@ public:
     TecplotReader(const TecplotReader&);
     TecplotReader(const clString& filename );
     TecplotReader(const clString& filename, int start, int end, int incr);
-    virtual ParticleGridReader* clone() const;
 
   //////////
   // SetFile expects a filename include full path
@@ -68,6 +68,22 @@ public:
 			      int materialId,
 			      bool isVector,
 			      Array1<float>& values);
+  virtual void GetParticleData(int particleId,
+                               clString varname,
+                               Array1<double>& values);
+  //////////
+  // Get Grid and Particle information
+  virtual int GetNGrids(){ return 0;}
+  virtual int GetNParticleSets(){ return 0;}
+  
+  virtual ParticleSetHandle GetParticleSet(clString)
+    { return materials[0]->getParticleSet();}
+  
+  virtual VizGridHandle  GetGrid(clString) { return grids[0]; }
+  virtual ParticleSetHandle GetParticleSet( int i)
+    { return materials[0]->getParticleSet();}
+  virtual VizGridHandle  GetGrid(int i){return grids[i];}
+
   //////////
   // If the filename is set and it hasn't been read, read it and put
   // it into SCIRun data structures.
@@ -96,6 +112,7 @@ private:
 
   // the number of materials in the dataset
   Array1< MPMaterial *> materials;
+  Array1< VizGridHandle > grids;
   
   void setMaterialNum( clString str, int& nMaterialss);
 
@@ -136,6 +153,9 @@ private:
 
 //
 // $Log$
+// Revision 1.4  1999/09/21 16:12:25  kuzimmer
+// changes made to support binary/ASCII file IO
+//
 // Revision 1.3  1999/08/25 03:49:04  sparker
 // Changed SCICore/CoreDatatypes to SCICore/Datatypes
 // Changed PSECore/CommonDatatypes to PSECore/Datatypes
