@@ -41,9 +41,34 @@ proc link_vars {v1 v2} {
 proc make_labeled_radio {root labeltext command packside variable list} {
     frame $root
     label $root.radiolabel -text $labeltext
-    pack $root.radiolabel -padx 2 -side $packside
+
+    # Splitting is set to true if "packside" is "split".  This will split the
+    # list of radio buttons into two columns.  Convenient for large sets of
+    # radio buttons.
+    set splitting "false"
+
+    if { $packside == "split" } {
+	set packside "top"
+	pack $root.radiolabel -padx 2 -side $packside
+	frame $root.col1
+	frame $root.col2
+	pack $root.col1 $root.col2 -side left -expand yes -fill both
+	set origRoot $root
+	set root $root.col1
+	set splitting "true"
+    } else {
+	pack $root.radiolabel -padx 2 -side $packside
+    }
+
+    set numItems [llength $list]
+
     set i 0
     foreach t $list {
+
+	if { $i == $numItems/2 && $splitting == "true" } {
+	    set root $origRoot.col2
+	}
+
 	set name [lindex $t 0]
 	set value $name
 	if {[llength $t] == 2} {
@@ -53,6 +78,7 @@ proc make_labeled_radio {root labeltext command packside variable list} {
 		-value $value -command $command
 	pack $root.$i -side $packside -anchor nw
 	incr i
+	
     }
 }
 
