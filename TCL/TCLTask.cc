@@ -91,10 +91,3 @@ void TCLTask::unlock()
     do_unlock();
 }
 
-void TCLTask::wait_start()
-{
-    extern int Tk_Started;
-    while(!Tk_Started){
-	Task::yield();
-    }
-}

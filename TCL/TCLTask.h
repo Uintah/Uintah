@@ -26,7 +26,6 @@ public:
     virtual ~TCLTask();
     static void lock();
     static void unlock();
-    void wait_start();
 };
 
 #endif
