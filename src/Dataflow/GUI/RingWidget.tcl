@@ -33,6 +33,6 @@ itcl_class RingWidget {
 	set name RingWidget
     }
 
-    method scale_changed {newscale} {
+    method scale_changed {newscale} }
     }
 }
