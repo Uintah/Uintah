@@ -109,10 +109,10 @@ fi
 
 # Set up the various test cases
 
-mpm_test_cases="disks2mat4patch heatcond2mat inclined_plane_sphere const_test_hypo const_test_nh const_test_cmr const_test_nhp const_test_vs"
+mpm_test_cases="disks2mat4patch heatcond2mat inclined_plane_sphere foam_crush const_test_hypo const_test_cmr const_test_nhp const_test_vs"
 ice_test_cases="advect hotBlob2mat hotBlob2mat_sym hotBlob2mat8patch"
-mpmice_test_cases="advect massX thermx thermx8patch"
-impm_test_cases="4disks_2d.1mat"
+mpmice_test_cases="advect thermx massX guni2dRT TRWnoz thermx8patch"
+impm_test_cases="4disks_2d.1mat billet.static"
 arches_test_cases="methane_explicit_table"
 mpmarches_test_cases="matest_heptwb_cyl"
 examples_test_cases="poisson1"
@@ -168,6 +168,11 @@ mpm_test () {
 	    then
 	    udadir=disks2mat4patch1proc
 	fi
+	if test "$n" = "foam_crush1P"; 
+	    then
+	    udadir=foam_crush
+	fi
+
 	echo "compare_uda $test_dir/$DIR/MPM/$udadir/$uda $uda &> $n.compare"
 	compare_uda $test_dir/$DIR/MPM/$udadir/$uda $uda &> $n.compare
 	compare=`grep "passed" $n.compare`
@@ -198,6 +203,10 @@ mpmice_test () {
 	udadir=$n
 	if test "$n" = "advect"; then
 	    udadir=advect_mpmice
+	fi
+	if test "$n" = "guni2dRT"; 
+	    then
+	    udadir=guni.orig
 	fi
 	echo "compare_uda $test_dir/$DIR/MPMICE/$udadir/$uda $uda &> $n.compare"
 	compare_uda $test_dir/$DIR/MPMICE/$udadir/$uda $uda &> $n.compare
