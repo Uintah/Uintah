@@ -812,6 +812,7 @@ void Point::test_rigorous(RigorousTest* __test)
 
 	  
 
+
 	  
 	}
       }
