@@ -75,12 +75,14 @@ class ConductivitySearch : public Module {
   int counter;
   clString state;
   double* y; //holds initial errors for p configuration
+  TCLint seedTCL;
 public:
   MeshHandle mesh;
-  MusilRNG mr;
+  MusilRNG* mr;
   MatrixHandle AmatH;   // hold the stiffness matrix - we want its shape
   SparseRowMatrix *AmatHp;
   int AHgen;
+  int seed;
   ColumnMatrixHandle conds;
 
   Array1<Array1<double> > dataC;
@@ -109,8 +111,9 @@ extern "C" Module* make_ConductivitySearch(const clString& id) {
 //---------------------------------------------------------------
 ConductivitySearch::ConductivitySearch(const clString& id)
   : Module("ConductivitySearch", id, Filter), 
-    mylock("pause lock for ConductivitySearch"),
-    pinzeroTCL("pinzeroTCL", id, this), refnodeTCL("refnodeTCL", id, this)
+  mylock("pause lock for ConductivitySearch"),
+  pinzeroTCL("pinzeroTCL", id, this), refnodeTCL("refnodeTCL", id, this),
+  seedTCL("seedTCL", id, this)
 {
   mesh_iport = new MeshIPort(this,"Mesh",
 			     MeshIPort::Atomic);
@@ -158,7 +161,7 @@ ConductivitySearch::~ConductivitySearch(){}
 
 double ConductivitySearch::gaussian(double sigma) {
   double x;
-  x = 2.0 * mr() - 1.0;
+  x = 2.0 * (*mr)() - 1.0;
   return x*sigma*sqrt((-2.0 * log(x*x)) / (x*x));
 }
 
@@ -306,12 +309,15 @@ void ConductivitySearch::execute() {
   pinzero = pinzeroTCL.get();
   cerr << "pinzero="<<pinzero<<"  refnode="<<refnode<<"\n";
   int i, j;
-  if (AH->generation != AHgen) {
+  if (AH->generation != AHgen || seed != seedTCL.get()) {
     SparseRowMatrix *AHp=dynamic_cast<SparseRowMatrix*>(AH.get_rep());
     if (!AHp) {
       cerr << "Error - A matrix wasn't a SparseRowMatrix!\n";
       return;
     }
+    seed=seedTCL.get();
+    mr = new MusilRNG(seed);
+    (*mr)();        // first number isn't random
     AHgen=AH->generation;
     // because the SparseRowMatrix copy constructor doesn't exist yet...
     Array1<int> rows(AHp->nrows()+1);
@@ -603,6 +609,9 @@ void ConductivitySearch::tcl_command(TCLArgs& args, void* userdata) {
 
 //
 // $Log$
+// Revision 1.3  2000/11/16 07:33:57  dmw
+// Added random seeding
+//
 // Revision 1.2  2000/10/29 05:03:20  dmw
 // fixed argument mismatch
 //
