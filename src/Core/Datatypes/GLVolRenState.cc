@@ -55,23 +55,29 @@ GLVolRenState::computeView(Ray& ray)
        1  5  9 13
        2  6 10 14
        3  7 11 15 */
+
+//   cerr<<mvmat[0]<<" "<<mvmat[4]<<" "<<mvmat[8]<<" "<<mvmat[12]<<endl;
+//   cerr<<mvmat[1]<<" "<<mvmat[5]<<" "<<mvmat[9]<<" "<<mvmat[13]<<endl;
+//   cerr<<mvmat[2]<<" "<<mvmat[6]<<" "<<mvmat[10]<<" "<<mvmat[14]<<endl;
+//   cerr<<mvmat[3]<<" "<<mvmat[7]<<" "<<mvmat[11]<<" "<<mvmat[15]<<endl;
  
-  view = Vector(mvmat[12], mvmat[13], mvmat[14]);
+  view = Vector(-mvmat[2], -mvmat[6], -mvmat[10]);
   view.normalize();
   viewPt = Point(-mvmat[12], -mvmat[13], -mvmat[14]);
     
   /* set the translation to zero */
-  mvmat[12] = mvmat[13] = mvmat[14] = 0;
+  //  mvmat[12] = mvmat[13] = mvmat[14] = 0;
   /* Because of the order of the glmatrix we are storing as a transpose.
        if there is not use of scale then the transpose is the  inverse */
-  mat.set( mvmat );
+  //  mat.set( mvmat );
     
   /* project view info into object space */
-  view = mat.project( view );
-  viewPt = mat.project( viewPt );
+  //   view = mat.project( view );
+  //   viewPt = mat.project( viewPt );
 
 
   ray =  Ray(viewPt, view);
+//   cerr<<"GLVolRenState::ComputeView: viewpt = "<<ray.origin()<<", viewdir = "<<ray.direction()<<endl;
 }
 
 void
