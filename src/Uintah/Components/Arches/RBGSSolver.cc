@@ -1014,8 +1014,8 @@ RBGSSolver::scalarLisolve(const ProcessorGroup* pc,
   IntVector domHi = vars->scalar.getFortHighIndex();
   IntVector idxLo = patch->getCellFORTLowIndex();
   IntVector idxHi = patch->getCellFORTHighIndex();
-  IntVector domLong = vars->scalar.getFortLowIndex();
-  IntVector domHing = vars->scalar.getFortHighIndex();
+  IntVector domLong = vars->scalarNonlinearSrc.getFortLowIndex();
+  IntVector domHing = vars->scalarNonlinearSrc.getFortHighIndex();
   // for explicit solver
   IntVector domLoDen = vars->old_density.getFortLowIndex();
   IntVector domHiDen = vars->old_density.getFortHighIndex();
@@ -1143,6 +1143,9 @@ RBGSSolver::setPressMatrix(const ProcessorGroup* ,
 
 //
 // $Log$
+// Revision 1.30  2000/10/11 21:14:03  rawat
+// fixed a bug in scalar solver
+//
 // Revision 1.29  2000/10/09 17:06:25  rawat
 // modified momentum solver for multi-patch
 //
