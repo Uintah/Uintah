@@ -1,20 +1,31 @@
 
 #include <config/sci.cf>
 
+<<<<<<< Imakefile
+SUBDIRS = ContoursToSurf CrossFader Hedgehog \
+	IsoSurface LaceContours MeshView Readers Salmon \
+	SoundInput SoundFilter SoundMixer SoundOutput SoundReader \
+	Streamline Streamsurf SurfToGeom VoiceRemover
+=======
 SUBDIRS = ApplyBC BuildFEMatrix CrossFader \
 	ExtractMeshSF GenerateMesh GenSurface Gradient Hedgehog \
 	IsoSurface LaceContours MakeScalarField MeshView Readers \
 	Salmon SolveMatrix SoundInput SoundFilter SoundMixer \
 	SoundOutput SoundReader Streamline Streamsurf SurfToGeom \
 	VoiceRemover
+>>>>>>> 1.21
 
 SCISubdirs($(SUBDIRS))
 
 all:: modules.o
 
 MODULES = \
+<<<<<<< Imakefile
+	ContoursToSurf/ContoursToSurf.o \
+=======
 	ApplyBC/ApplyBC.o \
 	BuildFEMatrix/BuildFEMatrix.o \
+>>>>>>> 1.21
 	CrossFader/CrossFader.o \
 	ExtractMeshSF/ExtractMeshSF.o \
 	GenerateMesh/GenerateMesh.o \
