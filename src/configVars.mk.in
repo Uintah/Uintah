@@ -72,7 +72,7 @@ THREAD_IMPL = $(SRCDIR)/@THREAD_IMPL@
 TIME_IMPL = $(SRCDIR)/@TIME_IMPL@
 
 # Subdirectories
-SUBDIRS := Core Dataflow StandAlone $(COMPONENT_DIRS) main \
+SUBDIRS := Core Dataflow UI StandAlone $(COMPONENT_DIRS) main \
 	testprograms $(PACKAGE_DIRS)
 
 # Libraries and other flags
@@ -165,7 +165,7 @@ BLAS_LIB_DIR      := @LIBBLAS@
 BLAS_LIBS         := -lblas
 
 LAPACK_LIB_DIR    := @LIBLAPACK@
-LAPACK_LIBS       := @LAPACK@
+LAPACK_LIBS       := -llapack
 
 LDRUN_PREFIX      := @LDRUN_PREFIX@
 

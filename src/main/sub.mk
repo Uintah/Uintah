@@ -21,12 +21,14 @@ SRCDIR   := main
 SRCS      := $(SRCDIR)/main.cc
 
 ifeq ($(LARGESOS),yes)
-  PSELIBS := Dataflow Core
+  PSELIBS := Dataflow Core UI
   ifeq ($(BUILD_PARALLEL),yes)
     PSELIBS := $(PSELIBS) Core/CCA/Component
   endif
 else
-  PSELIBS := Dataflow/Network Core/Containers Core/GuiInterface \
+  PSELIBS := UI/tcltk/GuiInterface UI/tcltk/TkExtensions \
+	Dataflow/Network \
+	Core/Containers Core/GuiInterface \
 	Core/Thread Core/Exceptions Core/Util
   ifeq ($(BUILD_PARALLEL),yes)
    PSELIBS := $(PSELIBS) Core/CCA/Component/PIDL Core/globus_threads
@@ -43,14 +45,8 @@ endif
 
 PROGRAM := $(PROGRAM_PSE)
 
-CFLAGS_MAIN   := $(CFLAGS) -DPSECORETCL=\"$(SRCTOP_ABS)/Dataflow/GUI\" \
-                      -DSCICORETCL=\"$(SRCTOP_ABS)/Core/GUI\" \
-                      -DITCL_WIDGETS=\"$(ITCL_WIDGETS)\" \
-                      -DDEF_LOAD_PACK=\"$(LOAD_PACKAGE)\" \
-	              -DSRCTOP=\"$(SRCTOP_ABS)\" -DOBJTOP=\"$(OBJTOP_ABS)\"
-
-$(SRCDIR)/main.o:	$(SRCDIR)/main.cc Makefile
-	$(CXX) $(CFLAGS_MAIN) $(INCLUDES) $(CC_DEPEND_REGEN) -c $< -o $@
+$(SRCDIR)/main.o: $(SRCDIR)/main.cc Makefile
+	$(CXX) $(CFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) -c $< -o $@
 
 include $(SCIRUN_SCRIPTS)/program.mk
 

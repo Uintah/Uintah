@@ -30,6 +30,7 @@
 
 #include <Dataflow/Network/Port.h>
 
+#include <Core/Parts/Part.h>
 #include <Dataflow/Network/Connection.h>
 #include <Dataflow/Network/Module.h>
 
@@ -131,7 +132,7 @@ void IPort::update_light()
     }
     char str[1000];
     sprintf(str,"%s lightIPort %d %s",module->id.c_str(),which_port,color);
-    TCL::execute(str);
+    Part::tcl_execute(str);
 }
 
 void OPort::update_light()
@@ -158,7 +159,7 @@ void OPort::update_light()
     }
     char str[1000];
     sprintf(str,"%s lightOPort %d %s",module->id.c_str(),which_port,color);
-    TCL::execute(str);
+    Part::tcl_execute(str);
 }
 
 void IPort::turn_on(PortState st)
