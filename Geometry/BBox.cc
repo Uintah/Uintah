@@ -694,7 +694,6 @@ void BBox::test_rigorous(RigorousTest* __test){
       TEST(mybox.center()==mybox1.max());
       d1=mybox.diagonal();
       d2=mybox1.diagonal();
-      //cout << "D1: " << mybox.min() << " D2: " << mybox.max() << endl;
       TEST(d1.length2()==d2.length2());
     }
 
@@ -711,8 +710,43 @@ void BBox::test_rigorous(RigorousTest* __test){
       TEST(mybox.center()==rv.point());
       
     }    
+    
   }
+
+  //extend_cyl() tests
+  
+  double rX=double(rnd()*100);
+  double rY=double(rnd()*100);
+  double rZ=double(rnd()*100);
+
+  for(i=0;i<=1000;i++){
+    rX=double(rnd()*100);
+    rY=double(rnd()*100);
+    rZ=double(rnd()*100);
+    BBox nbox;
+    BBox nbox2;
+    for(int c=1;c<=100;c++){
+      nbox.reset();
+      nbox2.reset();
+      	      
+      double r=double(rnd()*100);
+      
+      nbox.extend_cyl(Point(rX,rY,rZ),Vector(rZ,rX,rY),r);
+    
+      BBox nbox2;
+      nbox2.extend(Point(rX,rY,rZ),r);
+      nbox2.extend(Point((rX+rZ),(rY+rX),(rZ+rY),r));
+
+      TEST(nbox2.max().x()>=nbox.max().x());
+      TEST(nbox2.max().y()>=nbox.max().y());
+      TEST(nbox2.max().z()>=nbox.max().z());
+      
+      TEST(nbox2.min().x()<=nbox.min().x());
+      TEST(nbox2.min().y()<=nbox.min().y());
+      TEST(nbox2.min().z()<=nbox.min().z());  
+    }
+      
+    }
 }
 
 
-   
