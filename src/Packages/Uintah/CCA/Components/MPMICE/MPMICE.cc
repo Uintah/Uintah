@@ -55,6 +55,10 @@ MPMICE::MPMICE(const ProcessorGroup* myworld)
   d_mpm      = scinew SerialMPM(myworld);
   d_ice      = scinew ICE(myworld);
   d_SMALL_NUM = 1.e-100;
+  // Turn off all the debuging switches
+  switchDebug_InterpolateNCToCC   = false;
+  switchDebug_InterpolateNCToCC_0 = false;
+  switchDebug_InterpolateCCToNC   = false;
 }
 
 MPMICE::~MPMICE()
@@ -70,11 +74,14 @@ void MPMICE::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
 			  SimulationStateP& sharedState)
 {
   d_sharedState = sharedState;
-  
+  //__________________________________
+  //  M P M
   d_mpm->setMPMLabel(Mlb);
   d_mpm->setWithICE();
   d_mpm->problemSetup(prob_spec, grid, d_sharedState);
-
+  
+  //__________________________________
+  //  I C E
   dataArchiver = dynamic_cast<Output*>(getPort("output"));
   if(dataArchiver == 0){
     cout<<"dataArhiver in MPMICE is null now exiting; "<<endl;
@@ -83,7 +90,31 @@ void MPMICE::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
   d_ice->attachPort("output", dataArchiver);
   d_ice->setICELabel(Ilb);
   d_ice->problemSetup(prob_spec, grid, d_sharedState);
-  
+  //__________________________________
+  //  M P M I C E
+  ProblemSpecP debug_ps = prob_spec->findBlock("Debug");
+  if (debug_ps) {
+    d_dbgStartTime = 0.;
+    d_dbgStopTime = 1.;
+    d_dbgOutputInterval = 0.0;
+    debug_ps->get("dbg_timeStart",     d_dbgStartTime);
+    debug_ps->get("dbg_timeStop",      d_dbgStopTime);
+    debug_ps->get("dbg_outputInterval",d_dbgOutputInterval);
+    d_dbgOldTime = -d_dbgOutputInterval;
+    d_dbgNextDumpTime = 0.0;
+
+    for (ProblemSpecP child = debug_ps->findBlock("debug"); child != 0;
+	 child = child->findNextBlock("debug")) {
+      map<string,string> debug_attr;
+      child->getAttributes(debug_attr);
+      if (debug_attr["label"]      == "switchDebug_InterpolateNCToCC")
+        switchDebug_InterpolateNCToCC = true;
+      else if (debug_attr["label"] == "switchDebug_InterpolateNCToCC_0")
+        switchDebug_InterpolateNCToCC = true;
+      else if (debug_attr["label"] == "switchDebug_InterpolateCCToNC")
+        switchDebug_InterpolateCCToNC = true;       
+    }
+  }
   cout_norm << "Done with problemSetup \t\t\t MPMICE" <<endl;
   cout_norm << "--------------------------------\n"<<endl;
 }
@@ -605,7 +636,6 @@ void MPMICE::interpolatePAndGradP(const ProcessorGroup*,
 	  gradPAccNC[*iter]+=(mom_source[cIdx[in]]/(mass[cIdx[in]]*delT))*.125;
          }
       }
-
       new_dw->put(pPressure,   Mlb->pPressureLabel);
       new_dw->put(gradPAccNC,  Mlb->gradPAccNCLabel, dwindex, patch);
     }
@@ -744,6 +774,19 @@ void MPMICE::interpolateNCToCC_0(const ProcessorGroup*,
       new_dw->get(gtemperature, Mlb->gTemperatureLabel, matlindex, patch,
                 Ghost::AroundCells, 1);
       IntVector nodeIdx[8];
+      
+     //---- P R I N T   D A T A ------ 
+     if(switchDebug_InterpolateNCToCC_0) {
+        char description[50];
+        sprintf(description, "TOP_MPMICE::interpolateNCToCC_0_mat_%d_patch_%d ", 
+                    matlindex, patch->getID());
+        printData( patch, 1,description, "gmass",       gmass);
+        printData( patch, 1,description, "gvolume",     gvolume);
+        printData( patch, 1,description, "gtemperatue", gtemperature);
+        printNCVector( patch, 1,description, "gvelocity.X", 0, gvelocity);
+        printNCVector( patch, 1,description, "gvelocity.Y", 1, gvelocity);
+        printNCVector( patch, 1,description, "gvelocity.Z", 2, gvelocity);
+      }
 
       //__________________________________
       //  Compute Temp_CC
@@ -803,8 +846,20 @@ void MPMICE::interpolateNCToCC_0(const ProcessorGroup*,
       
       d_ice->setBC(vel_CC,  "Velocity",   patch, matlindex);
       d_ice->setBC(Temp_CC, "Temperature",patch, matlindex);
-
       
+     //---- P R I N T   D A T A ------
+     if(switchDebug_InterpolateNCToCC_0) {
+        char description[50];
+        sprintf(description, "BOT_MPMICE::interpolateNCToCC_0_Mat_%d_patch_%d ", 
+                    matlindex, patch->getID());
+        d_ice->printData(   patch, 1,description, "cmass",     cmass);
+        d_ice->printData(   patch, 1,description, "cvolume",   cvolume);
+        d_ice->printData(   patch, 1,description, "Temp_CC",   Temp_CC);
+        d_ice->printVector( patch, 1,description, "uvel_CC", 0,vel_CC);
+        d_ice->printVector( patch, 1,description, "uvel_CC", 1,vel_CC);
+        d_ice->printVector( patch, 1,description, "uvel_CC", 2,vel_CC);
+      } 
+     
       new_dw->put(cmass,    MIlb->cMassLabel,       matlindex, patch);
       new_dw->put(cvolume,  MIlb->cVolumeLabel,     matlindex, patch);
       new_dw->put(vel_CC,   MIlb->vel_CCLabel,      matlindex, patch);
@@ -858,6 +913,18 @@ void MPMICE::interpolateNCToCC(const ProcessorGroup*,
 
        IntVector nodeIdx[8];
 
+       //---- P R I N T   D A T A ------ 
+       if(switchDebug_InterpolateNCToCC) {
+          char description[50];
+          sprintf(description, "TOP_MPMICE::interpolateNCToCC_mat_%d_patch_%d ", 
+                      matlindex, patch->getID());
+          printData(     patch, 1,description, "gmass",    gmass);
+          printData(     patch, 1,description, "gtemStar", gtempstar);
+          printNCVector( patch, 1,description, "gvelocityStar.X", 0, gvelocity);
+          printNCVector( patch, 1,description, "gvelocityStar.Y", 1, gvelocity);
+          printNCVector( patch, 1,description, "gvelocityStar.Z", 2, gvelocity);
+        }
+
   #if 0
        Vector nodal_mom(0.,0.,0.);
        Vector cell_momnpg(0.,0.,0.);
@@ -876,8 +943,18 @@ void MPMICE::interpolateNCToCC(const ProcessorGroup*,
  	   cmomentum[*iter] +=gvelocity[nodeIdx[in]]*gmass[nodeIdx[in]]*.125;
  	   int_eng[*iter]   +=gtempstar[nodeIdx[in]]*gmass[nodeIdx[in]]*cv*.125;
          }
-       }
-
+       } 
+       //---- P R I N T   D A T A ------ 
+       if(switchDebug_InterpolateNCToCC) {
+          char description[50];
+          sprintf(description, "BOT_MPMICE::interpolateNCToCC_mat_%d_patch_%d ", 
+                      matlindex, patch->getID());
+          d_ice->printData(   patch, 1,description, "int_eng_L", int_eng);
+          d_ice->printVector( patch, 1,description, "xmom_L_CC", 0, cmomentum);
+          d_ice->printVector( patch, 1,description, "ymom_L_CC", 1, cmomentum);
+          d_ice->printVector( patch, 1,description, "zmom_L_CC", 2, cmomentum);
+        }
+        
        new_dw->put(cmomentum,     Ilb->mom_L_CCLabel,      matlindex, patch);
        new_dw->put(int_eng,       Ilb->int_eng_L_CCLabel,  matlindex, patch);
     }
@@ -1133,6 +1210,10 @@ void MPMICE::doCCMomExchange(const ProcessorGroup*,
         d_ice->printVector(patch,1, description, "ymom_L_ME", 1, mom_L_ME[m]);
         d_ice->printVector(patch,1, description, "zmom_L_ME", 2, mom_L_ME[m]);
         d_ice->printData(  patch,1, description,"int_eng_L_ME",int_eng_L_ME[m]);
+        d_ice->printData(  patch,1, description, "dTdt_CC",       dTdt_CC[m]);
+        d_ice->printVector(patch,1, description, "dVdt_CC.X",  0, dvdt_CC[m]);
+        d_ice->printVector(patch,1, description, "dVdt_CC.Y",  1, dvdt_CC[m]);
+        d_ice->printVector(patch,1, description, "dVdt_CC.Z",  2, dvdt_CC[m]);
       }
     }
 
@@ -1249,6 +1330,20 @@ void MPMICE::interpolateCCToNC(const ProcessorGroup*,
 	   gacceleration[*iter] += (dvdt_CC[cIdx[in]]/delT)*.125;
 	   dTdt_NC[*iter]       += (dTdt_CC[cIdx[in]]/delT)*.125;
         }
+      }
+  
+     //---- P R I N T   D A T A ------ 
+     if(switchDebug_InterpolateCCToNC) {
+        char description[50];
+        sprintf(description, "BOT_MPMICE::interpolateCCToNC_mat_%d_patch_%d ", 
+                    dwindex, patch->getID());
+        printData( patch, 1,description, "dTdt_NC",     dTdt_NC);
+        printNCVector( patch, 1,description,"gvelocity.X",    0,gvelocity);
+        printNCVector( patch, 1,description,"gvelocity.Y",    1,gvelocity);
+        printNCVector( patch, 1,description,"gvelocity.Z",    2,gvelocity);
+        printNCVector( patch, 1,description,"gacceleration.X",0,gacceleration);
+        printNCVector( patch, 1,description,"gacceleration.Y",1,gacceleration);
+        printNCVector( patch, 1,description,"gacceleration.Z",2,gacceleration);
       }
 
       new_dw->modify(gvelocity,      Mlb->gVelocityStarLabel, dwindex,patch);
@@ -1703,7 +1798,7 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
       }
     }     // end of cell interator
 
-    fprintf(stderr,"\tmax number of iterations in any cell %i\n",test_max_iter);
+    cout_norm<<"max number of iterations in any cell \t"<<test_max_iter<<endl;
 
     //__________________________________
     // Now change how rho_CC is defined to 
