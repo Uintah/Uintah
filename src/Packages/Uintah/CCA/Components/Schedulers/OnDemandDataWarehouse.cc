@@ -1,4 +1,3 @@
-
 #include <TauProfilerForSCIRun.h>
 
 #include <Core/Exceptions/InternalError.h>
@@ -152,6 +151,7 @@ OnDemandDataWarehouse::put(Variable* var, const VarLabel* label,
 {
    union {
       ReductionVariableBase* reduction;
+      SoleVariableBase* sole;
       ParticleVariableBase* particle;
       NCVariableBase* nc;
       CCVariableBase* cc;
@@ -163,6 +163,9 @@ OnDemandDataWarehouse::put(Variable* var, const VarLabel* label,
    if ((castVar.reduction = dynamic_cast<ReductionVariableBase*>(var))
        != NULL)
       put(*castVar.reduction, label, patch?patch->getLevel():0, matlIndex);
+   else if ((castVar.sole = dynamic_cast<SoleVariableBase*>(var))
+	    != NULL)
+      put(*castVar.sole, label,patch?patch->getLevel():0,matlIndex);
    else if ((castVar.particle = dynamic_cast<ParticleVariableBase*>(var))
 	    != NULL)
       put(*castVar.particle, label);
@@ -224,6 +227,24 @@ OnDemandDataWarehouse::get(ReductionVariableBase& var,
   d_lock.readUnlock();
 }
 
+void
+OnDemandDataWarehouse::get(SoleVariableBase& var,
+			   const VarLabel* label, const Level* level,
+			   int matlIndex /*= -1*/)
+{
+  d_lock.readLock();
+  
+  checkGetAccess(label, matlIndex, 0);
+
+  if(!d_soleDB.exists(label, matlIndex, level)) {
+    SCI_THROW(UnknownVariable(label->getName(), getID(), level, matlIndex,
+			      "on sole"));
+  }
+  d_soleDB.get(label, matlIndex, level, var);
+
+  d_lock.readUnlock();
+}
+
 bool
 OnDemandDataWarehouse::exists(const VarLabel* label, int matlIndex,
                               const Patch* patch) const
@@ -237,7 +258,9 @@ OnDemandDataWarehouse::exists(const VarLabel* label, int matlIndex,
        d_sfcxDB.exists(label,matlIndex,patch) ||
        d_sfcyDB.exists(label,matlIndex,patch) ||
        d_sfczDB.exists(label,matlIndex,patch) ||
+       d_soleDB.exists(label, matlIndex, patch->getLevel()) ||
        d_reductionDB.exists(label, matlIndex, patch->getLevel()) ) {
+
      d_lock.readUnlock();
      return true;
    } else {
@@ -739,6 +762,41 @@ OnDemandDataWarehouse::override(const ReductionVariableBase& var,
    
   d_lock.writeUnlock();
 }
+
+void
+OnDemandDataWarehouse::put(const SoleVariableBase& var,
+			   const VarLabel* label, const Level* level,
+			   int matlIndex /* = -1 */)
+{
+  ASSERT(!d_finalized);
+  d_lock.writeLock();
+
+  checkPutAccess(label, matlIndex, 0,
+		 false /* it actually may be replaced, but it doesn't need
+			  to explicitly modify with multiple soles in the
+			  task graph */);
+  // Put it in the database
+  if (!d_soleDB.exists(label, matlIndex, level))
+    d_soleDB.put(label, matlIndex, level, var.clone(), false);
+  
+  d_lock.writeUnlock();
+}
+
+void
+OnDemandDataWarehouse::override(const SoleVariableBase& var,
+				const VarLabel* label, const Level* level,
+				int matlIndex /*=-1*/)
+{
+  d_lock.writeLock();  
+
+  checkPutAccess(label, matlIndex, 0, true);
+
+  // Put it in the database, replace whatever may already be there
+  d_soleDB.put(label, matlIndex, level, var.clone(), true);
+   
+  d_lock.writeUnlock();
+}
+
 
 ParticleSubset*
 OnDemandDataWarehouse::createParticleSubset(particleIndex numParticles,
@@ -1660,6 +1718,8 @@ void OnDemandDataWarehouse::emit(OutputContext& oc, const VarLabel* label,
      const Level* level = patch?patch->getLevel():0;
      if(d_reductionDB.exists(label, matlIndex, level))
        var = d_reductionDB.get(label, matlIndex, level);
+     if(d_soleDB.exists(label, matlIndex, level))
+       var = d_soleDB.get(label, matlIndex, level);
    }
    IntVector l, h;
    if(patch)
@@ -1766,6 +1826,9 @@ OnDemandDataWarehouse::decrementScrubCount(const VarLabel* var, int matlIndex,
   case TypeDescription::PerPatch:
     d_perpatchDB.decrementScrubCount(var, matlIndex, patch);
     break;
+  case TypeDescription::SoleVariable:
+    d_soleDB.decrementScrubCount(var,matlIndex,patch->getLevel());
+    break;
   case TypeDescription::ReductionVariable:
     SCI_THROW(InternalError("decrementScrubCount called for reduction variable: "+var->getName()));
   default:
@@ -1809,6 +1872,9 @@ OnDemandDataWarehouse::setScrubCount(const VarLabel* var, int matlIndex,
   case TypeDescription::PerPatch:
     d_perpatchDB.setScrubCount(var, matlIndex, patch, count);
     break;
+  case TypeDescription::SoleVariable:
+    d_soleDB.setScrubCount(var, matlIndex, patch->getLevel(), count);
+    break;
   case TypeDescription::ReductionVariable:
     // Reductions are not scrubbed
     SCI_THROW(InternalError("setScrubCount called for reduction variable: "+var->getName()));
@@ -1845,6 +1911,9 @@ OnDemandDataWarehouse::scrub(const VarLabel* var, int matlIndex,
   case TypeDescription::PerPatch:
     d_perpatchDB.scrub(var, matlIndex, patch);
     break;
+  case TypeDescription::SoleVariable:
+    d_soleDB.scrub(var, matlIndex, patch->getLevel());
+    break;
   case TypeDescription::ReductionVariable:
     // Reductions are not scrubbed
     SCI_THROW(InternalError("scrub called for reduction variable: "+var->getName()));
@@ -1855,7 +1924,8 @@ OnDemandDataWarehouse::scrub(const VarLabel* var, int matlIndex,
 }
 
 void
-OnDemandDataWarehouse::initializeScrubs(int dwid, const map<VarLabelMatlPatchDW, int>& scrubcounts)
+OnDemandDataWarehouse::initializeScrubs(int dwid, 
+	const map<VarLabelMatlDW<Patch>, int>& scrubcounts)
 {
   d_lock.writeLock();
   d_ncDB.initializeScrubs(dwid, scrubcounts);
@@ -1865,6 +1935,15 @@ OnDemandDataWarehouse::initializeScrubs(int dwid, const map<VarLabelMatlPatchDW,
   d_sfczDB.initializeScrubs(dwid, scrubcounts);
   d_particleDB.initializeScrubs(dwid, scrubcounts);
   d_perpatchDB.initializeScrubs(dwid, scrubcounts);
+  d_lock.writeUnlock();
+}
+
+void
+OnDemandDataWarehouse::initializeScrubs(int dwid, 
+      const map<VarLabelMatlDW<Level>, int>& scrubcounts)
+{
+  d_lock.writeLock();
+  d_soleDB.initializeScrubs(dwid, scrubcounts);
   d_lock.writeUnlock();
 }
 
@@ -2283,6 +2362,10 @@ void OnDemandDataWarehouse::transferFrom(DataWarehouse* from,
 	break;
       case TypeDescription::ReductionVariable:
 	SCI_THROW(InternalError("transferFrom doesn't work for reduction variable: "+var->getName()));
+	break;
+      case TypeDescription::SoleVariable:
+	SCI_THROW(InternalError("transferFrom doesn't work for sole variable: "+var->getName()));
+	break;
       default:
 	SCI_THROW(InternalError("Unknown variable type in transferFrom: "+var->getName()));
       }
@@ -2381,9 +2464,9 @@ OnDemandDataWarehouse::checkGetAccess(const VarLabel* /*label*/,
       
       VarAccessMap& runningTaskAccesses = runningTaskInfo.d_accesses;
       
-      map<VarLabelMatlPatch, AccessInfo>::iterator findIter;
-      findIter = runningTaskAccesses.find(VarLabelMatlPatch(label, matlIndex,
-                                                           patch));
+      map<VarLabelMatl<Patch>, AccessInfo>::iterator findIter;
+      findIter = runningTaskAccesses.find(VarLabelMatl<Patch>(label, matlIndex,
+							      patch));
 
       if (!hasGetAccess(runningTask, label, matlIndex, patch, lowOffset,
 			highOffset)) {
@@ -2418,7 +2501,7 @@ OnDemandDataWarehouse::checkGetAccess(const VarLabel* /*label*/,
         // access granted
         if (findIter == runningTaskAccesses.end()) {
           AccessInfo& accessInfo =
-            runningTaskAccesses[VarLabelMatlPatch(label, matlIndex, patch)];
+            runningTaskAccesses[VarLabelMatl<Patch>(label, matlIndex, patch)];
           accessInfo.accessType = GetAccess;
           accessInfo.encompassOffsets(lowOffset, highOffset);
 
@@ -2475,7 +2558,7 @@ OnDemandDataWarehouse::checkPutAccess(const VarLabel* /*label*/, int /*matlIndex
 	}
       }
       else {
-        runningTaskAccesses[VarLabelMatlPatch(label, matlIndex, patch)].accessType = replace ? ModifyAccess : PutAccess;
+        runningTaskAccesses[VarLabelMatl<Patch>(label, matlIndex, patch)].accessType = replace ? ModifyAccess : PutAccess;
       }
     }
   }
@@ -2651,8 +2734,8 @@ OnDemandDataWarehouse::checkAccesses(RunningTaskInfo* currentTaskInfo,
       for (int p = 0; p < patches->size(); p++) {
         const Patch* patch = patches->get(p);
         
-        VarLabelMatlPatch key(label, matl, patch);
-        map<VarLabelMatlPatch, AccessInfo>::iterator find_iter;
+        VarLabelMatl<Patch> key(label, matl, patch);
+        map<VarLabelMatl<Patch>, AccessInfo>::iterator find_iter;
         find_iter = currentTaskAccesses.find(key);
         if (find_iter == currentTaskAccesses.end() ||
             (*find_iter).second.accessType != accessType) {
@@ -2777,20 +2860,23 @@ namespace Uintah {
 }
 
 // The following is for support of regriding
-void OnDemandDataWarehouse::getVarLabelMatlPatchTriples( vector<VarLabelMatlPatch>& vars ) const
+void OnDemandDataWarehouse::getVarLabelMatlPatchTriples(
+	vector<VarLabelMatl<Patch> >& vars ) const
 {
-  d_ncDB.getVarLabelMatlPatchTriples(vars);
-  d_ccDB.getVarLabelMatlPatchTriples(vars);
-  d_sfcxDB.getVarLabelMatlPatchTriples(vars);
-  d_sfcyDB.getVarLabelMatlPatchTriples(vars);
-  d_sfczDB.getVarLabelMatlPatchTriples(vars);
-  d_particleDB.getVarLabelMatlPatchTriples(vars);
+  d_ncDB.getVarLabelMatlTriples(vars);
+  d_ccDB.getVarLabelMatlTriples(vars);
+  d_sfcxDB.getVarLabelMatlTriples(vars);
+  d_sfcyDB.getVarLabelMatlTriples(vars);
+  d_sfczDB.getVarLabelMatlTriples(vars);
+  d_particleDB.getVarLabelMatlTriples(vars);
   //  d_perpatchDB.getVarLabelMatlPatchTriples(vars);
 }
 
-void OnDemandDataWarehouse::getVarLabelMatlLevelTriples( vector<VarLabelMatlLevel>& vars ) const
+void OnDemandDataWarehouse::getVarLabelMatlLevelTriples(
+	 vector<VarLabelMatl<Level> >& vars ) const
 {
-  d_reductionDB.getVarLabelMatlLevelTriples(vars);
+  d_reductionDB.getVarLabelMatlTriples(vars);
+  d_soleDB.getVarLabelMatlTriples(vars);
 }
 
 void OnDemandDataWarehouse::print()
@@ -2801,4 +2887,5 @@ void OnDemandDataWarehouse::print()
   d_sfcyDB.print(cout);
   d_sfczDB.print(cout);
   d_particleDB.print(cout);  
+  d_soleDB.print(cout);  
 }

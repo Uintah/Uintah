@@ -238,7 +238,8 @@ void DetailedTasks::initializeScrubs(vector<OnDemandDataWarehouseP>& dws)
   for(int i=0;i<(int)dws.size();i++){
     if(dws[i] != 0 && dws[i]->getScrubMode() == DataWarehouse::ScrubComplete){
       scrubout << "Initializing scrubs on dw: " << dws[i]->getID() << '\n';
-      dws[i]->initializeScrubs(i, scrubCountMap_);
+      dws[i]->initializeScrubs(i, scrubCountMapPatch_);
+      dws[i]->initializeScrubs(i, scrubCountMapLevel_);
     }
   }
   if(scrubout.active())
@@ -257,7 +258,9 @@ DetailedTask::scrub(vector<OnDemandDataWarehouseP>& dws)
   // Decrement the scrub count for each of the required variables
   for(const Task::Dependency* req = task->getRequires();
       req != 0; req=req->next){
-    if(req->var->typeDescription()->getType() != TypeDescription::ReductionVariable){
+    TypeDescription::Type type = req->var->typeDescription()->getType();
+    if(type != TypeDescription::ReductionVariable && 
+       type !=TypeDescription::SoleVariable){
       int dw = req->mapDataWarehouse();
       DataWarehouse::ScrubMode scrubmode = dws[dw]->getScrubMode();
       if(scrubmode == DataWarehouse::ScrubComplete ||
@@ -269,8 +272,7 @@ DetailedTask::scrub(vector<OnDemandDataWarehouseP>& dws)
 	  const Patch* patch = patches->get(i);
 	  Patch::selectType neighbors;
 	  IntVector low, high;
-	  patch->computeVariableExtents(req->var->typeDescription()->getType(),
-					req->var->getBoundaryLayer(),
+	  patch->computeVariableExtents(type, req->var->getBoundaryLayer(),
 					req->gtype, req->numGhostCells,
 					neighbors, low, high);
 	  for(int i=0;i<neighbors.size();i++){
@@ -285,6 +287,25 @@ DetailedTask::scrub(vector<OnDemandDataWarehouseP>& dws)
 	}
       }
     }
+    if(type == TypeDescription::SoleVariable){
+      int dw = req->mapDataWarehouse();
+      DataWarehouse::ScrubMode scrubmode = dws[dw]->getScrubMode();
+      if(scrubmode == DataWarehouse::ScrubComplete ||
+	 (scrubmode == DataWarehouse::ScrubNonPermanent &&
+	  initialRequires.find(req->var) == initialRequires.end())){
+	constHandle<PatchSubset> patches = req->getPatchesUnderDomain(getPatches());
+	constHandle<MaterialSubset> matls = req->getMaterialsUnderDomain(getMaterials());
+	for(int i=0;i<patches->size();i++){
+	  const Patch* patch = patches->get(i);
+          for (int m=0;m<matls->size();m++){
+            if(scrubout.active()){
+              scrubout << "  decrementing scrub count for requires of " << dws[dw]->getID() << "/" << patch->getID() << "/" << matls->get(m) << "/" << req->var->getName() << '\n';
+            }
+            dws[dw]->decrementScrubCount(req->var, matls->get(m), patch);
+          }
+        }
+      }
+    }
   }
 
   // Scrub modifies
@@ -296,7 +317,19 @@ DetailedTask::scrub(vector<OnDemandDataWarehouseP>& dws)
 	initialRequires.find(mod->var) == initialRequires.end())){
       constHandle<PatchSubset> patches = mod->getPatchesUnderDomain(getPatches());
       constHandle<MaterialSubset> matls = mod->getMaterialsUnderDomain(getMaterials());
-      if(mod->var->typeDescription()->getType() != TypeDescription::ReductionVariable){
+      TypeDescription::Type type = mod->var->typeDescription()->getType();
+      if(type != TypeDescription::ReductionVariable && 
+         type != TypeDescription::SoleVariable){
+	for(int i=0;i<patches->size();i++){
+	  const Patch* patch = patches->get(i);
+	  for (int m=0;m<matls->size();m++){
+	    if(scrubout.active())
+	      scrubout << "  decrementing scrub count for modifies of " << dws[dw]->getID() << "/" << patch->getID() << "/" << matls->get(m) << "/" << mod->var->getName() << '\n';
+	    dws[dw]->decrementScrubCount(mod->var, matls->get(m), patch);
+	  }
+	}
+      }
+      if(type == TypeDescription::SoleVariable){
 	for(int i=0;i<patches->size();i++){
 	  const Patch* patch = patches->get(i);
 	  for (int m=0;m<matls->size();m++){
@@ -312,7 +345,9 @@ DetailedTask::scrub(vector<OnDemandDataWarehouseP>& dws)
   // Set the scrub count for each of the computes variables
   for(const Task::Dependency* comp = task->getComputes();
       comp != 0; comp=comp->next){
-    if(comp->var->typeDescription()->getType() != TypeDescription::ReductionVariable){
+    TypeDescription::Type type = comp->var->typeDescription()->getType();
+    if(type != TypeDescription::ReductionVariable &&
+       type != TypeDescription::SoleVariable){
       int dw = comp->mapDataWarehouse();
       DataWarehouse::ScrubMode scrubmode = dws[dw]->getScrubMode();
       if(scrubmode == DataWarehouse::ScrubComplete ||
@@ -339,18 +374,58 @@ DetailedTask::scrub(vector<OnDemandDataWarehouseP>& dws)
 	}
       }
     }
+    if(type == TypeDescription::SoleVariable){
+      int dw = comp->mapDataWarehouse();
+      DataWarehouse::ScrubMode scrubmode = dws[dw]->getScrubMode();
+      if(scrubmode == DataWarehouse::ScrubComplete ||
+	 (scrubmode == DataWarehouse::ScrubNonPermanent &&
+	  initialRequires.find(comp->var) == initialRequires.end())){
+	constHandle<PatchSubset> patches = comp->getPatchesUnderDomain(getPatches());
+	constHandle<MaterialSubset> matls = comp->getMaterialsUnderDomain(getMaterials());
+	for(int i=0;i<patches->size();i++){
+	  const Patch* patch = patches->get(i);
+	  for (int m=0;m<matls->size();m++){
+	    int matl = matls->get(m);
+	    int count;
+	    if(taskGroup->getScrubCount(comp->var, matl, patch->getLevel(), 
+                                        dw, count)){
+	      if(scrubout.active())
+		scrubout << "  setting scrub count for computes of " << dws[dw]->getID() << "/" << patch->getLevel()->getID() << "/" << matls->get(m) << "/" << comp->var->getName() << " to " << count << '\n';
+	      dws[dw]->setScrubCount(comp->var, matl, patch,count);
+	    } else {
+	      // Not in the scrub map, must be never needed...
+	      if(scrubout.active())
+		scrubout << "  trashing variable immediately after compute: " << dws[dw]->getID() << "/" << patch->getLevel()->getID() << "/" << matls->get(m) << "/" << comp->var->getName() << '\n';
+	      dws[dw]->scrub(comp->var, matl, patch);
+	    }
+	  }
+	}
+      }
+    }
   }
 }
 
 void DetailedTasks::addScrubCount(const VarLabel* var, int matlindex,
-				  const Patch* patch, int dw)
+                                  const Patch* patch, int dw)
 {
   if(patch->isVirtual())
     patch = patch->getRealPatch();
-  VarLabelMatlPatchDW key(var, matlindex, patch, dw);
-  ScrubCountMap::iterator iter = scrubCountMap_.find(key);
-  if(iter == scrubCountMap_.end()){
-    scrubCountMap_.insert(make_pair(key, 1));
+  VarLabelMatlDW<Patch> key(var, matlindex, patch, dw);
+  ScrubCountMapPatch::iterator iter = scrubCountMapPatch_.find(key);
+  if(iter == scrubCountMapPatch_.end()){
+    scrubCountMapPatch_.insert(make_pair(key, 1));
+  } else {
+    iter->second++;
+  }
+}
+
+void DetailedTasks::addScrubCount(const VarLabel* var, int matlindex,
+                                  const Level* level, int dw)
+{
+  VarLabelMatlDW<Level> key(var, matlindex, level, dw);
+  ScrubCountMapLevel::iterator iter = scrubCountMapLevel_.find(key);
+  if(iter == scrubCountMapLevel_.end()){
+    scrubCountMapLevel_.insert(make_pair(key, 1));
   } else {
     iter->second++;
   }
@@ -381,10 +456,23 @@ bool DetailedTasks::getScrubCount(const VarLabel* label, int matlIndex,
 				  const Patch* patch, int dw, int& count)
 {
   ASSERT(!patch->isVirtual());
-  VarLabelMatlPatchDW key(label, matlIndex, patch, dw);
-  ScrubCountMap::iterator iter = scrubCountMap_.find(key);
+  VarLabelMatlDW<Patch> key(label, matlIndex, patch, dw);
+  ScrubCountMapPatch::iterator iter = scrubCountMapPatch_.find(key);
 
-  if(iter == scrubCountMap_.end())
+  if(iter == scrubCountMapPatch_.end())
+    return false;
+  count=iter->second;
+  return true;
+}
+
+
+bool DetailedTasks::getScrubCount(const VarLabel* label, int matlIndex,
+				  const Level* level, int dw, int& count)
+{
+  VarLabelMatlDW<Level> key(label, matlIndex, level, dw);
+  ScrubCountMapLevel::iterator iter = scrubCountMapLevel_.find(key);
+
+  if(iter == scrubCountMapLevel_.end())
     return false;
   count=iter->second;
   return true;
@@ -392,7 +480,8 @@ bool DetailedTasks::getScrubCount(const VarLabel* label, int matlIndex,
 
 void DetailedTasks::createScrubCounts()
 {
-  scrubCountMap_.clear();
+  scrubCountMapPatch_.clear();
+  scrubCountMapLevel_.clear();
   
   // Go through each of the tasks and determine which variables it will require
   for(int i=0;i<(int)localtasks_.size();i++){
@@ -402,13 +491,13 @@ void DetailedTasks::createScrubCounts()
       constHandle<PatchSubset> patches = req->getPatchesUnderDomain(dtask->getPatches());
       constHandle<MaterialSubset> matls = req->getMaterialsUnderDomain(dtask->getMaterials());
       int dw = req->mapDataWarehouse();
-      if(req->var->typeDescription()->getType() != TypeDescription::ReductionVariable){
+      TypeDescription::Type type = req->var->typeDescription()->getType();
+      if(type != TypeDescription::ReductionVariable){
 	for(int i=0;i<patches->size();i++){
 	  const Patch* patch = patches->get(i);
 	  Patch::selectType neighbors;
 	  IntVector low, high;
-	  patch->computeVariableExtents(req->var->typeDescription()->getType(),
-					req->var->getBoundaryLayer(),
+	  patch->computeVariableExtents(type,req->var->getBoundaryLayer(),
 					req->gtype, req->numGhostCells,
 					neighbors, low, high);
 	  for(int i=0;i<neighbors.size();i++){
@@ -418,16 +507,31 @@ void DetailedTasks::createScrubCounts()
 	  }
 	}
       }
+      if (type == TypeDescription::SoleVariable) {
+	for (int i = 0; i < patches->size(); i++) {
+	  const Patch* patch = patches->get(i);
+	  for (int m = 0; m< matls->size(); m++)
+	    addScrubCount(req->var,matls->get(m),patch->getLevel(),dw);
+	}
+      }
     }
     for(const Task::Dependency* req = task->getModifies(); req != 0; req=req->next){
       constHandle<PatchSubset> patches = req->getPatchesUnderDomain(dtask->getPatches());
       constHandle<MaterialSubset> matls = req->getMaterialsUnderDomain(dtask->getMaterials());
       int dw = req->mapDataWarehouse();
-      if(req->var->typeDescription()->getType() != TypeDescription::ReductionVariable){
+      TypeDescription::Type type = req->var->typeDescription()->getType();
+      if(type != TypeDescription::ReductionVariable){
 	for(int i=0;i<patches->size();i++){
 	  const Patch* patch = patches->get(i);
 	  for (int m=0;m<matls->size();m++)
 	    addScrubCount(req->var, matls->get(m), patch, dw);
+	}
+      }
+      if (type == TypeDescription::SoleVariable) {
+	for (int i = 0; i < patches->size(); i++) {
+	  const Patch* patch = patches->get(i);
+	  for (int m = 0; m < matls->size(); m++)
+	    addScrubCount(req->var, matls->get(m), patch->getLevel(), dw);
 	}
       }
     }
@@ -435,10 +539,10 @@ void DetailedTasks::createScrubCounts()
   if(scrubout.active()){
     scrubout << "scrub counts:\n";
     scrubout << "DW/Patch/Matl/Label\tCount\n";
-    for(ScrubCountMap::iterator iter = scrubCountMap_.begin();
-	iter != scrubCountMap_.end(); iter++){
-      const VarLabelMatlPatchDW& rec = iter->first;
-      scrubout << rec.dw_ << '/' << (rec.patch_?rec.patch_->getID():0) << '/'
+    for(ScrubCountMapPatch::iterator iter = scrubCountMapPatch_.begin();
+	iter != scrubCountMapPatch_.end(); iter++){
+      const VarLabelMatlDW<Patch>& rec = iter->first;
+      scrubout << rec.dw_ << '/' << (rec.domain_?rec.domain_->getID():0) << '/'
 	       << rec.matlIndex_ << '/' <<  rec.label_->getName()
 	       << "\t\t" << iter->second << '\n';
     }

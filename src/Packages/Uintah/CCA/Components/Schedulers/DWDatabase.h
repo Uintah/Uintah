@@ -4,9 +4,9 @@
 #include <Packages/Uintah/Core/Exceptions/UnknownVariable.h>
 #include <Packages/Uintah/Core/Variables/VarLabel.h>
 #include <Packages/Uintah/CCA/Components/Schedulers/MemoryLog.h>
-#include <Packages/Uintah/Core/Variables/VarLabelMatlPatchDW.h>
-#include <Packages/Uintah/Core/Variables/VarLabelMatlPatch.h>
-#include <Packages/Uintah/Core/Variables/VarLabelMatlLevel.h>
+#include <Packages/Uintah/Core/Variables/VarLabelMatlDW.h>
+#include <Packages/Uintah/Core/Variables/VarLabelMatl.h>
+#include <Packages/Uintah/Core/Variables/VarLabelMatl.h>
 
 #include <Packages/Uintah/Core/Parallel/Parallel.h>
 
@@ -80,13 +80,14 @@ using std::ostringstream;
    void setScrubCount(const VarLabel* label, int matlindex,
 		      const DomainType* dom, int count);
    void scrub(const VarLabel* label, int matlindex, const DomainType* dom);
-   void initializeScrubs(int dwid, const map<VarLabelMatlPatchDW, int>& scrubcounts);
+   void initializeScrubs(int dwid, const map<VarLabelMatlDW<DomainType>, 
+			 int>& scrubcounts);
 
    void logMemoryUse(ostream& out, unsigned long& total,
 		     const std::string& tag, int dwid);
 
-   void getVarLabelMatlPatchTriples( vector<VarLabelMatlPatch>& vars ) const;
-   void getVarLabelMatlLevelTriples( vector<VarLabelMatlLevel>& vars ) const;
+   void getVarLabelMatlTriples(vector<VarLabelMatl<DomainType> >& vars) const;
+
 
 private:
    struct DataItem {
@@ -258,7 +259,7 @@ DWDatabase<VarType, DomainType>::scrub(const VarLabel* var, int matlIndex,
 template<class VarType, class DomainType>
 void
 DWDatabase<VarType, DomainType>::initializeScrubs(int dwid,
-						  const map<VarLabelMatlPatchDW, int>& scrubcounts)
+		      const map<VarLabelMatlDW<DomainType>, int>& scrubcounts)
 {
   // loop over each variable, probing the scrubcount map. Set the
   // scrubcount appropriately.  if the variable has no entry in
@@ -272,8 +273,8 @@ DWDatabase<VarType, DomainType>::initializeScrubs(int dwid,
       for(int i=0;i<(int)rr->getVars().size();i++){
 	if(rr->getVars()[i].var){
 	  // See if it is in the scrubcounts map.  matls are offset by 1
-	  VarLabelMatlPatchDW key(nr->label, i-1, rr->getDomain(), dwid);
-	  map<VarLabelMatlPatchDW, int>::const_iterator iter = scrubcounts.find(key);
+	  VarLabelMatlDW<DomainType> key(nr->label, i-1, rr->getDomain(), dwid);
+	  typename map<VarLabelMatlDW<DomainType>, int>::const_iterator iter = scrubcounts.find(key);
 	  if(iter == scrubcounts.end()){
 	    // Delete this...
 	    rr->removeVar(i-1);
@@ -403,8 +404,9 @@ DWDatabase<VarType, DomainType>::DomainRecord::~DomainRecord()
 }
 
 template<class VarType, class DomainType>
-bool DWDatabase<VarType, DomainType>::exists(const VarLabel* label, int matlIndex,
-				 const DomainType* dom) const
+bool DWDatabase<VarType, DomainType>::exists(const VarLabel* label, 
+					     int matlIndex,
+					     const DomainType* dom) const
 {
   int domainid = getDB_ID(dom);
  
@@ -571,7 +573,7 @@ DWDatabase<VarType, DomainType>::logMemoryUse(ostream& out, unsigned long& total
 
 template<class VarType, class DomainType>
 void
-DWDatabase<VarType, DomainType>::getVarLabelMatlPatchTriples( vector<VarLabelMatlPatch>& vars ) const
+DWDatabase<VarType, DomainType>::getVarLabelMatlTriples( vector<VarLabelMatl<DomainType> >& vars ) const
 {
   for(typename nameDBtype::const_iterator nameiter = names.begin();
       nameiter != names.end(); nameiter++){
@@ -581,26 +583,7 @@ DWDatabase<VarType, DomainType>::getVarLabelMatlPatchTriples( vector<VarLabelMat
       DomainRecord* domainRecord = domainiter->second;
       for(int i=0;i<(int)(domainRecord->getVars().size());i++){
 	if(domainRecord->getVars()[i].var){
-	  vars.push_back(VarLabelMatlPatch(nameRecord->label, i-1, domainRecord->getDomain() ));
-	}
-      }
-    }
-  }
-}
-
-template<class VarType, class DomainType>
-void
-DWDatabase<VarType, DomainType>::getVarLabelMatlLevelTriples( vector<VarLabelMatlLevel>& vars ) const
-{
-  for(typename nameDBtype::const_iterator nameiter = names.begin();
-      nameiter != names.end(); nameiter++){
-    NameRecord* nameRecord = nameiter->second;
-    for(typename domainDBtype::const_iterator domainiter = nameRecord->domains.begin();
-	domainiter != nameRecord->domains.end();domainiter++){
-      DomainRecord* domainRecord = domainiter->second;
-      for(int i=0;i<(int)(domainRecord->getVars().size());i++){
-	if(domainRecord->getVars()[i].var){
-	  vars.push_back(VarLabelMatlLevel(nameRecord->label, i-1, domainRecord->getDomain() ));
+	  vars.push_back(VarLabelMatl<DomainType>(nameRecord->label, i-1, domainRecord->getDomain() ));
 	}
       }
     }
