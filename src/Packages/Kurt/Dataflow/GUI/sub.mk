@@ -13,14 +13,25 @@ $(SRCDIR)/tclIndex: $(SRCDIR)/VolVis.tcl $(SRCDIR)/PadField.tcl \
 	$(SRCDIR)/VisControl.tcl \
 	$(SRCDIR)/RescaleColorMapForParticles.tcl \
 	$(SRCDIR)/ParticleVis.tcl \
-	$(SRCDIR)/KurtScalarFieldReader.tcl \
-	$(SRCDIR)/ArchiveReader.tcl
+	$(SRCDIR)/AnimatedStreams.tcl 
 	$(SRCTOP)/scripts/createTclIndex $(SRCTOP)/Kurt/GUI
 
 CLEANPROGS := $(CLEANPROGS) $(SRCDIR)/tclIndex
 
 #
 # $Log$
+# Revision 1.7.2.1  2000/09/28 03:18:04  mcole
+# merge trunk into FIELD_REDESIGN branch
+#
+# Revision 1.10  2000/09/17 16:03:16  kuzimmer
+# updated to include GLAnimatedStreams.tcl
+#
+# Revision 1.9  2000/06/26 17:06:06  bigler
+# Fixed typo that was keeping tclIndex from building.
+#
+# Revision 1.8  2000/06/21 04:14:14  kuzimmer
+# removed unneeded dependencies on Kurt
+#
 # Revision 1.7  2000/05/24 00:26:37  kuzimmer
 # Jim wants these updates so he can run Kurts stuff out of Steves 64 bit PSE. WARNING, I (dav) do not know quite what I do.
 #
