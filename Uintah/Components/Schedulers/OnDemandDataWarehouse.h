@@ -196,9 +196,6 @@ public:
    void reduceMPI(const VarLabel* label, const ProcessorGroup* world);
 private:
 
-   void sendMpiDataRequest( const string & varName,
-			          Patch * patch,
-			          int      numGhostCells );
    struct dataLocation {
       const Patch   * patch;
             int        mpiNode;
@@ -235,9 +232,6 @@ private:
    bool                                   d_finalized;
    GridP                                  d_grid;
 
-   // Incremented for each MPI Data Request sent.
-   int d_responseTag; 
-   
    // Internal VarLabel for the position of this DataWarehouse
    // ??? with respect to what ???? 
    //const VarLabel * d_positionLabel;
@@ -254,6 +248,9 @@ private:
 
 //
 // $Log$
+// Revision 1.36  2000/08/24 21:04:33  dav
+// Removed DWMpiHandler Stuff
+//
 // Revision 1.35  2000/07/28 22:45:15  jas
 // particle relocation now uses separate var labels for each material.
 // Addd <iostream> for ReductionVariable.  Commented out protected: in
