@@ -191,8 +191,28 @@ DataTransmitter::runListeningThread(){
 			   &sin_size)) == -1) {
 	throw CommError("accept", errno);
       }
-      int yes=1;
-      if(setsockopt(new_fd,SOL_TCP, TCP_NODELAY ,&yes,sizeof(int)) == -1) {
+
+      static int protocol_id = -1;
+#if defined(__sgi)
+      // SGI does not have SOL_TCP defined.  To the best of my knowledge
+      // (ie: reading the man page) this is what you are supposed to do. (Dd)
+      if( protocol_id == -1 )
+	{
+	  struct protoent * p = getprotobyname("TCP");
+	  if( p == NULL )
+	    {
+	      cout << "DataTransmitter.cc: Error.  Lookup of protocol TCP failed!\n";
+	      exit();
+	      return;
+	    }
+	  protocol_id = p->p_proto;
+	}
+#else
+      protocol_id = SOL_TCP;
+#endif
+
+      int yes = 1;
+      if( setsockopt( new_fd, protocol_id, TCP_NODELAY, &yes, sizeof(int) ) == -1 ) {
 	perror("setsockopt");
       }
 
@@ -249,8 +269,27 @@ DataTransmitter::runSendingThread(){
 	throw CommError("socket", errno);
       }
 
+
+      static int protocol_id = -1;
+#if defined(__sgi)
+      // SGI does not have SOL_TCP defined.  To the best of my knowledge
+      // (ie: reading the man page) this is what you are supposed to do. (Dd)
+      if( protocol_id == -1 )
+	{
+	  struct protoent * p = getprotobyname("TCP");
+	  if( p == NULL )
+	    {
+	      cout << "DataTransmitter.cc: Error.  TCP protocol lookup failed!\n";
+	      exit();
+	      return;
+	    }
+	  protocol_id = p->p_proto;
+	}
+#else
+      protocol_id = SOL_TCP;
+#endif
       int yes=1;
-      if(setsockopt(new_fd,SOL_TCP, TCP_NODELAY ,&yes,sizeof(int)) == -1) {
+      if( setsockopt( new_fd, protocol_id, TCP_NODELAY, &yes, sizeof(int) ) == -1 ) {
 	perror("setsockopt");
       }
 
