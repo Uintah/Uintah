@@ -171,7 +171,9 @@ PetscSolver::matrixCreate(const LevelP& level, LoadBalancer* lb)
     numCells[proc] += nc;
     totalCells += nc;
   }
+#ifdef ARCHES_PETSC_DEBUG
   cerr << "totalCells = " << totalCells << '\n';
+#endif
   vector<int> startIndex(numProcessors);
   startIndex[0]=0;
   for(int i=1;i<numProcessors;i++)
@@ -226,11 +228,13 @@ PetscSolver::matrixCreate(const LevelP& level, LoadBalancer* lb)
 	   petscglobalIndex += start.z()*dcells.x()*dcells.y()
 	                      +start.y()*dcells.x()
 	                      +start.x();
+#ifdef ARCHES_PETSC_DEBUG
 	   cerr << "Looking at patch: " << neighbor->getID() << '\n';
 	   cerr << "low=" << low << '\n';
 	   cerr << "high=" << high << '\n';
 	   cerr << "start at: " << d_petscGlobalStart[neighbor] << '\n';
 	   cerr << "globalIndex = " << petscglobalIndex << '\n';
+#endif
 	   for (int colZ = low.z(); colZ < high.z(); colZ ++) {
 	      int idx_slab = petscglobalIndex;
 	      petscglobalIndex += dcells.x()*dcells.y();
@@ -247,6 +251,7 @@ PetscSolver::matrixCreate(const LevelP& level, LoadBalancer* lb)
 	   totalCells+=d.x()*d.y()*d.z();
 	}
 	d_petscLocalToGlobal[patch]=l2g;
+#ifdef ARCHES_PETSC_DEBUG
 	{	
 	   IntVector l = l2g.getWindow()->getLowIndex();
 	   IntVector h = l2g.getWindow()->getHighIndex();
@@ -259,6 +264,7 @@ PetscSolver::matrixCreate(const LevelP& level, LoadBalancer* lb)
 	      }
 	   }
 	}
+#endif
 #if 0
 	IntVector dn = highIndex-lowIndex;
 	long wantcells = dn.x()*dn.y()*dn.z();
@@ -272,7 +278,9 @@ PetscSolver::matrixCreate(const LevelP& level, LoadBalancer* lb)
   int globalcolumns = (int)totalCells;
   int d_nz = 7;
   int o_nz = 6;
+#ifdef ARCHES_PETSC_DEBUG
   cerr << "matrixCreate: local size: " << numlrows << ", " << numlcolumns << ", global size: " << globalrows << ", " << globalcolumns << "\n";
+#endif
   int ierr = MatCreateMPIAIJ(PETSC_COMM_WORLD, numlrows, numlcolumns, globalrows,
 			     globalcolumns, d_nz, PETSC_NULL, o_nz, PETSC_NULL, &A);
   CHKERRA(ierr);  
@@ -365,7 +373,9 @@ PetscSolver::setPressMatrix(const ProcessorGroup* ,
 			    ArchesVariables* vars,
 			    const ArchesLabel* lab)
 {
+#ifdef ARCHES_PETSC_DEBUG
    cerr << "in setPressMatrix on patch: " << patch->getID() << '\n';
+#endif
   // Get the patch bounds and the variable bounds
   IntVector domLo = vars->pressure.getFortLowIndex();
   IntVector domHi = vars->pressure.getFortHighIndex();
@@ -419,7 +429,9 @@ PetscSolver::setPressMatrix(const ProcessorGroup* ,
 	  col[4] = l2g[IntVector(colX+1, colY, colZ)]; // ae
 	  col[5] = l2g[IntVector(colX, colY+1, colZ)]; // an
 	  col[6] = l2g[IntVector(colX, colY, colZ+1)]; // at
+#ifdef ARCHES_PETSC_DEBUG
 	  cerr << "filling in row: " << col[3] << '\n';
+#endif
 	  value[0] = -vars->pressCoeff[Arches::AB][IntVector(colX,colY,colZ)];
 	  value[1] = -vars->pressCoeff[Arches::AS][IntVector(colX,colY,colZ)];
 	  value[2] = -vars->pressCoeff[Arches::AW][IntVector(colX,colY,colZ)];
@@ -427,11 +439,15 @@ PetscSolver::setPressMatrix(const ProcessorGroup* ,
 	  value[4] = -vars->pressCoeff[Arches::AE][IntVector(colX,colY,colZ)];
 	  value[5] = -vars->pressCoeff[Arches::AN][IntVector(colX,colY,colZ)];
 	  value[6] = -vars->pressCoeff[Arches::AT][IntVector(colX,colY,colZ)];
+#ifdef ARCHES_PETSC_DEBUG
 	  for(int i=0;i<7;i++)
 	     cerr << "A[" << col[3] << "][" << col[i] << "]=" << value[i] << '\n';
+#endif
 	  int row = col[3];
 	  ierr = MatSetValues(A,1,&row,7,col,value,INSERT_VALUES);   CHKERRA(ierr);
+#ifdef ARCHES_PETSC_DEBUG
 	  cerr << "ierr=" << ierr << '\n';
+#endif
 	}
       }
     }
@@ -586,7 +602,9 @@ PetscSolver::setPressMatrix(const ProcessorGroup* ,
 #endif
 
 
+#ifdef ARCHES_PETSC_DEBUG
   cerr << "assemblign rhs\n";
+#endif
   // assemble right hand side and solution vector
   double vecvalueb, vecvaluex;
     for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
@@ -600,7 +618,9 @@ PetscSolver::setPressMatrix(const ProcessorGroup* ,
 	}
       }
     }
+#ifdef ARCHES_PETSC_DEBUG
     cerr << " all done\n";
+#endif
 }
 
 
@@ -609,7 +629,9 @@ PetscSolver::pressLinearSolve()
 {
   KSP ksp;
   int ierr;
+#ifdef ARCHES_PETSC_DEBUG
   cerr << "Doing mat/vec assembly\n";
+#endif
   ierr = MatAssemblyBegin(A,MAT_FINAL_ASSEMBLY);CHKERRA(ierr);
   ierr = MatAssemblyEnd(A,MAT_FINAL_ASSEMBLY);CHKERRA(ierr);
   ierr = VecAssemblyBegin(d_b);CHKERRA(ierr);
@@ -617,8 +639,15 @@ PetscSolver::pressLinearSolve()
   ierr = VecAssemblyBegin(d_x);CHKERRA(ierr);
   ierr = VecAssemblyEnd(d_x);CHKERRA(ierr);
   /* debugging - steve */
-  ierr = ViewerSetFormat(VIEWER_STDOUT_WORLD, VIEWER_FORMAT_ASCII_DEFAULT, 0); CHKERRQ(ierr);
   double norm;
+  ierr = MatNorm(A,NORM_1,&norm);CHKERRQ(ierr);
+  ierr = PetscPrintf(PETSC_COMM_WORLD,"matrix A norm = %g\n",norm);CHKERRQ(ierr);
+  ierr = VecNorm(d_x,NORM_1,&norm);CHKERRQ(ierr);
+  ierr = PetscPrintf(PETSC_COMM_WORLD,"vector x norm = %g\n",norm);CHKERRQ(ierr);
+  ierr = VecNorm(d_b,NORM_1,&norm);CHKERRQ(ierr);
+  ierr = PetscPrintf(PETSC_COMM_WORLD,"vector b norm = %g\n",norm);CHKERRQ(ierr);
+#ifdef ARCHES_PETSC_DEBUG
+  ierr = ViewerSetFormat(VIEWER_STDOUT_WORLD, VIEWER_FORMAT_ASCII_DEFAULT, 0); CHKERRQ(ierr);
   ierr = MatNorm(A,NORM_1,&norm);CHKERRQ(ierr);
   ierr = PetscPrintf(PETSC_COMM_WORLD,"matrix A norm = %g\n",norm);CHKERRQ(ierr);
   ierr = MatView(A, VIEWER_STDOUT_WORLD); CHKERRQ(ierr);
@@ -628,7 +657,7 @@ PetscSolver::pressLinearSolve()
   ierr = VecNorm(d_b,NORM_1,&norm);CHKERRQ(ierr);
   ierr = PetscPrintf(PETSC_COMM_WORLD,"vector b norm = %g\n",norm);CHKERRQ(ierr);
   ierr = VecView(d_b, VIEWER_STDOUT_WORLD); CHKERRQ(ierr);
-
+#endif
   /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
                 Create the linear solver and set various options
      - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
@@ -647,7 +676,9 @@ PetscSolver::pressLinearSolve()
 
   ierr = VecNorm(d_x,NORM_1,&norm);CHKERRQ(ierr);
   ierr = PetscPrintf(PETSC_COMM_WORLD,"AFTER SOLVE vector x norm = %g\n",norm);CHKERRQ(ierr);
+#ifdef ARCHES_PETSC_DEBUG
   ierr = VecView(d_x, VIEWER_STDOUT_WORLD); CHKERRQ(ierr);
+#endif
 
   // check the error
   double neg_one = -1.0;
@@ -771,6 +802,7 @@ PetscSolver::pressLisolve(const ProcessorGroup* pc,
     value[5] = -vars->pressCoeff[Arches::AN][IntVector(ii,jj,kk)];
     value[6] = -vars->pressCoeff[Arches::AT][IntVector(ii,jj,kk)];
     ierr = MatSetValues(A,1,&row,7,col,value,INSERT_VALUES);
+#ifdef ARCHES_PETSC_DEBUG
     cerr << "set values: row=" << row << ", col=";
     for(int i=0;i<7;i++)
        cerr << col[i] << " ";
@@ -778,6 +810,7 @@ PetscSolver::pressLisolve(const ProcessorGroup* pc,
     for(int i=0;i<7;i++)
        cerr << value[i] << " ";
     cerr << '\n';
+#endif
     CHKERRA(ierr);
   }
   for (row = nnx; row < nny*nnx; row++) {
@@ -797,6 +830,7 @@ PetscSolver::pressLisolve(const ProcessorGroup* pc,
     value[4] = -vars->pressCoeff[Arches::AN][IntVector(ii,jj,kk)];
     value[5] = -vars->pressCoeff[Arches::AT][IntVector(ii,jj,kk)];
     ierr = MatSetValues(A,1,&row,6,col,value,INSERT_VALUES);
+#ifdef ARCHES_PETSC_DEBUG
     cerr << "2. set values: row=" << row << ", col=";
     for(int i=0;i<6;i++)
        cerr << col[i] << " ";
@@ -804,6 +838,7 @@ PetscSolver::pressLisolve(const ProcessorGroup* pc,
     for(int i=0;i<6;i++)
        cerr << value[i] << " ";
     cerr << '\n';
+#endif
     CHKERRA(ierr);
   }
   for (row = nnx*nny*(nnz-1); row < (nnz-1)*nnx*nny+nnx*(nny-1); row++){
@@ -823,6 +858,7 @@ PetscSolver::pressLisolve(const ProcessorGroup* pc,
     value[4] = -vars->pressCoeff[Arches::AE][IntVector(ii,jj,kk)];
     value[5] = -vars->pressCoeff[Arches::AN][IntVector(ii,jj,kk)];
     ierr = MatSetValues(A,1,&row,6,col,value,INSERT_VALUES);
+#ifdef ARCHES_PETSC_DEBUG
     cerr << "set values: row=" << row << ", col=";
     for(int i=0;i<6;i++)
        cerr << col[i] << " ";
@@ -830,6 +866,7 @@ PetscSolver::pressLisolve(const ProcessorGroup* pc,
     for(int i=0;i<6;i++)
        cerr << value[i] << " ";
     cerr << '\n';
+#endif
     CHKERRA(ierr);
   }
   for (row = 1; row < nnx; row++) {
@@ -847,6 +884,7 @@ PetscSolver::pressLisolve(const ProcessorGroup* pc,
     value[3] = -vars->pressCoeff[Arches::AN][IntVector(ii,jj,kk)];
     value[4] = -vars->pressCoeff[Arches::AT][IntVector(ii,jj,kk)];
     ierr = MatSetValues(A,1,&row,5,col,value,INSERT_VALUES);
+#ifdef ARCHES_PETSC_DEBUG
     cerr << "set values: row=" << row << ", col=";
     for(int i=0;i<5;i++)
        cerr << col[i] << " ";
@@ -854,6 +892,7 @@ PetscSolver::pressLisolve(const ProcessorGroup* pc,
     for(int i=0;i<5;i++)
        cerr << value[i] << " ";
     cerr << '\n';
+#endif
     CHKERRA(ierr);
   }
   for (row = nnx*nny*(nnz-1)+nnx*(nny-1); 
@@ -872,6 +911,7 @@ PetscSolver::pressLisolve(const ProcessorGroup* pc,
     value[3] = vars->pressCoeff[Arches::AP][IntVector(ii,jj,kk)];
     value[4] = -vars->pressCoeff[Arches::AE][IntVector(ii,jj,kk)];
     ierr = MatSetValues(A,1,&row,5,col,value,INSERT_VALUES);
+#ifdef ARCHES_PETSC_DEBUG
     cerr << "set values: row=" << row << ", col=";
     for(int i=0;i<5;i++)
        cerr << col[i] << " ";
@@ -879,6 +919,7 @@ PetscSolver::pressLisolve(const ProcessorGroup* pc,
     for(int i=0;i<5;i++)
        cerr << value[i] << " ";
     cerr << '\n';
+#endif
     CHKERRA(ierr);
   }
   row = 0;
@@ -928,7 +969,9 @@ PetscSolver::pressLisolve(const ProcessorGroup* pc,
     int jj = ((row - ii)%(nnx*nny))/nnx;
     int kk = (row-ii-nnx*jj)/(nnx*nny);
     vecvalueb = vars->pressNonlinearSrc[IntVector(ii,jj,kk)];
+#ifdef ARCHES_PETSC_DEBUG
     cerr << "vecvalueb=" << vecvalueb << '\n';
+#endif
     vecvaluex = vars->pressure[IntVector(ii,jj,kk)];
     VecSetValue(b, row, vecvalueb, INSERT_VALUES);
     VecSetValue(x, row, vecvaluex, INSERT_VALUES);
@@ -986,7 +1029,9 @@ PetscSolver::pressLisolve(const ProcessorGroup* pc,
     int jj = ((row - ii)%(nnx*nny))/nnx;
     int kk = (row-ii-nnx*jj)/(nnx*nny);
     vars->pressure[IntVector(ii,jj,kk)] = xvec[row];
+#ifdef ARCHES_PETSC_DEBUG
     cerr << "press" << IntVector(ii,jj,kk) << "=" << xvec[row] << '\n';
+#endif
   }
   ierr = VecRestoreArray(x, &xvec); CHKERRQ(ierr);
   
@@ -1459,8 +1504,10 @@ PetscSolver::velocityLisolve(const ProcessorGroup* pc,
       ++velIter;
     } while((velIter < d_maxSweeps)&&((velResid > d_residual*nlResid)||
 				      (velResid > trunc_conv)));
+#ifdef ARCHES_PETSC_DEBUG
     cerr << "After u Velocity solve " << velIter << " " << velResid << endl;
     cerr << "After u Velocity solve " << nlResid << " " << trunc_conv <<  endl;
+#endif
 #else
     FORT_EXPLICIT(domLo.get_pointer(), domHi.get_pointer(),
 		  idxLo.get_pointer(), idxHi.get_pointer(),
@@ -1853,6 +1900,10 @@ PetscSolver::scalarLisolve(const ProcessorGroup* pc,
 
 //
 // $Log$
+// Revision 1.17  2000/10/12 20:08:33  sparker
+// Made multipatch work for several timesteps
+// Cleaned up print statements
+//
 // Revision 1.16  2000/10/09 17:06:25  rawat
 // modified momentum solver for multi-patch
 //

@@ -307,7 +307,7 @@ PressureSolver::sched_pressureLinearSolve(const LevelP& level,
   vector<Task*> tasks(numProcessors, (Task*)0);
   LoadBalancer* lb = sched->getLoadBalancer();
 
-  cerr << "In sched_PressureLinearSolve\n";
+  //cerr << "In sched_PressureLinearSolve\n";
   for(Level::const_patchIterator iter=level->patchesBegin();
       iter != level->patchesEnd(); iter++){
     const Patch* patch=*iter;
@@ -339,14 +339,18 @@ PressureSolver::sched_pressureLinearSolve(const LevelP& level,
        //      tsk->computes(new_dw, d_lab->d_presResidPSLabel, matlIndex, patch);
        //      tsk->computes(new_dw, d_lab->d_presTruncPSLabel, matlIndex, patch);
        tsk->computes(new_dw, d_lab->d_pressurePSLabel, matlIndex, patch);
+#ifdef ARCHES_PRES_DEBUG
        cerr << "Adding computes on patch: " << patch->getID() << '\n';
+#endif
 
     }
   }
   for(int i=0;i<tasks.size();i++)
      if(tasks[i]){
 	sched->addTask(tasks[i]);
+#ifdef ARCHES_PRES_DEBUG
 	cerr << "Adding task: " << *tasks[i] << '\n';
+#endif
      }
   sched->releaseLoadBalancer();
 #endif
@@ -380,7 +384,7 @@ PressureSolver::buildLinearMatrix(const ProcessorGroup* pc,
   sum_vartype den_ref_var;
   old_dw->get(den_ref_var, d_lab->d_refDensity_label);
   pressureVars.den_Ref = den_ref_var;
-  cerr << "getdensity_ref " << pressureVars.den_Ref << endl;
+  //cerr << "getdensity_ref " << pressureVars.den_Ref << endl;
   // Get the PerPatch CellInformation data
   PerPatch<CellInformation*> cellInfoP;
   old_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
@@ -517,7 +521,9 @@ PressureSolver::buildLinearMatrix(const ProcessorGroup* pc,
     d_discretize->calculateVelDiagonal(pc, patch, old_dw, new_dw, 
 				       index,
 				       Arches::PRESSURE, &pressureVars);
+#ifdef ARCHES_PRES_DEBUG
     std::cerr << "Done building matrix for press coeff" << endl;
+#endif
 
   }
   // put required vars
@@ -541,7 +547,9 @@ PressureSolver::buildLinearMatrix(const ProcessorGroup* pc,
 		 d_lab->d_wVelNonLinSrcPBLMLabel, matlIndex, patch);
   new_dw->put(pressureVars.wVelLinearSrc, 
 		 d_lab->d_wVelLinSrcPBLMLabel, matlIndex, patch);
+#ifdef ARCHES_PRES_DEBUG
   std::cerr << "Done building matrix for vel coeff for pressure" << endl;
+#endif
 
 }
 
@@ -635,6 +643,7 @@ PressureSolver::buildLinearMatrixPress(const ProcessorGroup* pc,
   d_source->calculatePressureSource(pc, patch, old_dw, new_dw, delta_t,
 				    cellinfo, &pressureVars);
 
+
   // Calculate Pressure BC
   //  inputs : pressureIN, presCoefPBLM
   //  outputs: presCoefPBLM
@@ -654,7 +663,9 @@ PressureSolver::buildLinearMatrixPress(const ProcessorGroup* pc,
   }
   new_dw->put(pressureVars.pressNonlinearSrc, 
 		 d_lab->d_presNonLinSrcPBLMLabel, matlIndex, patch);
+#ifdef ARCHES_PRES_DEBUG
   std::cerr << "Done building matrix for press coeff" << endl;
+#endif
 
 }
 
@@ -672,7 +683,9 @@ PressureSolver::pressureLinearSolve_all (const ProcessorGroup* pg,
 
   // initializeMatrix...
   d_linearSolver->matrixCreate(level, lb);
+#ifdef ARCHES_PRES_DEBUG
   cerr << "Finished creating petsc matrix\n";
+#endif
 
   for(Level::const_patchIterator iter=level->patchesBegin();
       iter != level->patchesEnd(); iter++){
@@ -683,17 +696,25 @@ PressureSolver::pressureLinearSolve_all (const ProcessorGroup* pg,
 	  // Underrelax...
 
 	  // This calls fillRows on linear(petsc) solver
+#ifdef ARCHES_PRES_DEBUG
 	  cerr << "Calling pressureLinearSolve for patch: " << patch->getID() << '\n';
+#endif
 	  pressureLinearSolve(pg, patch, old_dw, new_dw, pressureVars);
+#ifdef ARCHES_PRES_DEBUG
 	  cerr << "Done with pressureLinearSolve for patch: " << patch->getID() << '\n';
+#endif
        }
     }
   }
   // MPI_Reduce();
   // solve
+#ifdef ARCHES_PRES_DEBUG
   cerr << "Calling pressLinearSolve\n";
+#endif
   d_linearSolver->pressLinearSolve();
+#ifdef ARCHES_PRES_DEBUG
   cerr << "Done with pressLinearSolve\n";
+#endif
   int pressRefProc = -1;
   for(Level::const_patchIterator iter=level->patchesBegin();
       iter != level->patchesEnd(); iter++){
@@ -704,14 +725,18 @@ PressureSolver::pressureLinearSolve_all (const ProcessorGroup* pg,
        if(proc == me){
 	 //	  unpack from linear solver.
 	 d_linearSolver->copyPressSoln(patch, &pressureVars);
+#ifdef ARCHES_PRES_DEBUG
 	 cerr << "Calling normPressure for patch: " << patch->getID() << '\n';
+#endif
        }
        if (patch->containsCell(d_pressRef)) {
 	  pressRefProc = proc;
 	  if(pressRefProc == me){
 	     pressureVars.press_ref = pressureVars.pressure[d_pressRef];
+#ifdef ARCHES_PRES_DEBUG
 	     cerr << "press_ref for norm" << pressureVars.press_ref << " " <<
 	       pressRefProc << endl;
+#endif
 	  }
        }
     }
@@ -724,18 +749,24 @@ PressureSolver::pressureLinearSolve_all (const ProcessorGroup* pg,
 	iter != level->patchesEnd(); iter++){
      const Patch* patch=*iter;
      {
+#ifdef ARCHES_PRES_DEBUG
 	 cerr << "After presssoln" << endl;
+#endif
        int proc = lb->getPatchwiseProcessorAssignment(patch, d_myworld);
        //int proc = find_processor_assignment(patch);
        if(proc == me){
+#ifdef ARCHES_PRES_DEBUG
 	 for(CellIterator iter = patch->getCellIterator();
 	     !iter.done(); iter++){
 	   cerr.width(10);
 	   cerr << "press"<<*iter << ": " << pressureVars.pressure[*iter] << "\n" ; 
 	 }
+#endif
        	 normPressure(pg, patch, &pressureVars);
+#ifdef ARCHES_PRES_DEBUG
 	 cerr << "Done with normPressure for patch: " 
 	      << patch->getID() << '\n';
+#endif
 	 // put back the results
 	 int matlIndex = 0;
 	 new_dw->put(pressureVars.pressure, d_lab->d_pressurePSLabel, 
@@ -795,6 +826,7 @@ PressureSolver::pressureLinearSolve (const ProcessorGroup* pc,
   new_dw->put(pressureVars.pressNonLinSrc, d_lab->d_presNonLinSrcPSLabel, 
 	      matlIndex, patch);
 #endif
+
   // for parallel code lisolve will become a recursive task and 
   // will make the following subroutine separate
   // get patch numer ***warning****
@@ -842,6 +874,10 @@ PressureSolver::normPressure(const ProcessorGroup*,
 
 //
 // $Log$
+// Revision 1.62  2000/10/12 20:08:33  sparker
+// Made multipatch work for several timesteps
+// Cleaned up print statements
+//
 // Revision 1.61  2000/10/10 19:30:57  rawat
 // added scalarsolver
 //

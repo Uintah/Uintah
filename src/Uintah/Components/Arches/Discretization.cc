@@ -71,6 +71,7 @@ Discretization::calculateVelocityCoeff(const ProcessorGroup* pc,
   // get domain size without ghost cells
   // using ng for no ghost cell
 
+#ifdef ARCHES_COEF_DEBUG
   cerr << "BEFORE VELCOEF" << endl;
   for (int ii = domLo.x(); ii <= domHi.x(); ii++) {
     cerr << "Density for ii = " << ii << endl;
@@ -84,7 +85,6 @@ Discretization::calculateVelocityCoeff(const ProcessorGroup* pc,
   }
   cerr << "BEFORE VELCOEF" << endl;
 
-#ifdef ARCHES_COEF_DEBUG
   cerr << "BEFORE VELCOEF" << endl;
   for (int ii = domLo.x(); ii <= domHi.x(); ii++) {
     cerr << "Density for ii = " << ii << endl;
@@ -140,7 +140,9 @@ Discretization::calculateVelocityCoeff(const ProcessorGroup* pc,
     // Get the patch indices
     IntVector idxLoU = patch->getSFCXFORTLowIndex();
     IntVector idxHiU = patch->getSFCXFORTHighIndex();
+#ifdef ARCHES_COEF_DEBUG
     cerr << "idxLou, idxHiU" << idxLoU << " " << idxHiU << endl;
+#endif
     // Calculate the coeffs
     FORT_UVELCOEF(domLoU.get_pointer(), domHiU.get_pointer(),
 		  domLoUng.get_pointer(), domHiUng.get_pointer(),
@@ -1289,13 +1291,13 @@ Discretization::calculateVelDiagonal(const ProcessorGroup*,
 		   coeff_vars->uVelocityCoeff[Arches::AB].getPointer(),
 		   coeff_vars->uVelLinearSrc.getPointer());
 
+#ifdef ARCHES_COEF_DEBUG
     cerr << "After UVELCOEF" << endl;
     for(CellIterator iter = patch->getCellIterator();
 	!iter.done(); iter++){
       cerr.width(10);
       cerr <<"AP"<< *iter << ": " << (coeff_vars->uVelocityCoeff[Arches::AP])[*iter] << "\n" ; 
     }
-#ifdef ARCHES_COEF_DEBUG
     cerr << "AFTER Calculate U Velocity Diagonal :" << endl;
     for (int ii = domLo.x(); ii <= domHi.x(); ii++) {
       cerr << "AP - U Vel Coeff for ii = " << ii << endl;
@@ -1533,6 +1535,10 @@ Discretization::calculateScalarDiagonal(const ProcessorGroup*,
 
 //
 // $Log$
+// Revision 1.50  2000/10/12 20:08:33  sparker
+// Made multipatch work for several timesteps
+// Cleaned up print statements
+//
 // Revision 1.49  2000/10/10 19:30:57  rawat
 // added scalarsolver
 //

@@ -56,7 +56,7 @@ CellInformation::CellInformation(const Patch* patch)
   }
   zz[Size.z()-1] = upperPos.z();
   //  zz[Size.z()-1] = (patch->getBox().upper()).z()-0.5*(patch->dCell()).z();
-#define ARCHES_GEOM_DEBUG 1
+  /* #define ARCHES_GEOM_DEBUG 1 */
 #ifdef ARCHES_GEOM_DEBUG
   cerr << "Lower x = " << patch->getBox().lower().x() << endl;
   cerr << "xx = [" ;

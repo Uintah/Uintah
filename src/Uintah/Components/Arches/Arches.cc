@@ -208,7 +208,9 @@ Arches::scheduleTimeAdvance(double time, double dt,
 			    DataWarehouseP& new_dw)
 {
 
+#ifdef ARCHES_MAIN_DEBUG
   cerr << "Begin: Arches::scheduleTimeAdvance\n";
+#endif
   // Schedule the non-linear solve
   // require : densityCP, viscosityCTS, [u,v,w]VelocitySP, 
   //           pressureIN. scalarIN
@@ -222,7 +224,9 @@ Arches::scheduleTimeAdvance(double time, double dt,
   //  else {
   //    cerr << "Nonlinear Solver didn't converge" << endl;
   //  }
+#ifdef ARCHES_MAIN_DEBUG
   cerr << "Done: Arches::scheduleTimeAdvance\n";
+#endif
 }
 
 
@@ -312,6 +316,10 @@ Arches::paramInit(const ProcessorGroup* ,
   
 //
 // $Log$
+// Revision 1.59  2000/10/12 20:08:32  sparker
+// Made multipatch work for several timesteps
+// Cleaned up print statements
+//
 // Revision 1.58  2000/10/07 05:35:45  sparker
 // Made comments mroe agreeable to emacs
 //

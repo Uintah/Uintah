@@ -384,7 +384,7 @@ BoundaryCondition::computeInletFlowArea(const ProcessorGroup*,
       double inlet_area;
       int cellid = d_flowInlets[ii].d_cellTypeID;
 
-#define ARCHES_GEOM_DEBUG
+      /*#define ARCHES_GEOM_DEBUG*/
 #ifdef ARCHES_GEOM_DEBUG
       cerr << "Domain Lo = [" << domLo.x() << "," <<domLo.y()<< "," <<domLo.z()
 	   << "] Domain hi = [" << domHi.x() << "," <<domHi.y()<< "," <<domHi.z() 
@@ -1804,6 +1804,8 @@ BoundaryCondition::setInletVelocityBC(const ProcessorGroup* ,
   new_dw->put(uVelocity, d_lab->d_uVelocitySIVBCLabel, matlIndex, patch);
   new_dw->put(vVelocity, d_lab->d_vVelocitySIVBCLabel, matlIndex, patch);
   new_dw->put(wVelocity, d_lab->d_wVelocitySIVBCLabel, matlIndex, patch);
+
+#ifdef ARCHES_BC_DEBUG
   cerr << "After presssoln" << endl;
   for(CellIterator iter = patch->getCellIterator();
       !iter.done(); iter++){
@@ -1811,7 +1813,6 @@ BoundaryCondition::setInletVelocityBC(const ProcessorGroup* ,
     cerr << "PCELL"<<*iter << ": " << cellType[*iter] << "\n" ; 
   }
 
-#ifdef ARCHES_BC_DEBUG
   cerr << " After INLBCS : " << endl;
   for (int ii = domLoU.x(); ii <= domHiU.x(); ii++) {
     cerr << "U velocity for ii = " << ii << endl;
@@ -1909,6 +1910,7 @@ BoundaryCondition::recomputePressureBC(const ProcessorGroup* ,
   IntVector domHiV = vVelocity.getFortHighIndex();
   IntVector domLoW = wVelocity.getFortLowIndex();
   IntVector domHiW = wVelocity.getFortHighIndex();
+#ifdef ARCHES_BC_DEBUG
   cerr << "idxLo" << idxLo << " idxHi" << idxHi << endl;
   cerr << "domLo" << domLoScalar << " domHi" << domHiScalar << endl;
   cerr << "domLoU" << domLoU << " domHiU" << domHiU << endl;
@@ -1920,7 +1922,8 @@ BoundaryCondition::recomputePressureBC(const ProcessorGroup* ,
     cerr.width(10);
     cerr << "PPP"<<*iter << ": " << pressure[*iter] << "\n" ; 
   }
-  rewindow(pressure, patch->getCellLowIndex(), patch->getCellHighIndex());
+#endif
+  //rewindow(pressure, patch->getCellLowIndex(), patch->getCellHighIndex());
 #if 0
   rewindow(pressure, patch->getCellLowIndex(), patch->getCellHighIndex());
   IntVector n1 (4,0,0);
@@ -1974,7 +1977,6 @@ BoundaryCondition::recomputePressureBC(const ProcessorGroup* ,
 		    &xminus, &xplus, &yminus, &yplus,
 		    &zminus, &zplus);
   }
-      
 #if 0
   if(patch->containsCell(n1))
      cerr << "4,0,0: " << pressure[n1] << '\n';
@@ -1982,6 +1984,7 @@ BoundaryCondition::recomputePressureBC(const ProcessorGroup* ,
      cerr << "4,0,1: " << pressure[n2] << '\n';
 #endif
 
+#ifdef ARCHES_BC_DEBUG
   cerr << "After recomputecalpbc" << endl;
   uVelocity.print(cerr);
   cerr << "print vvelocity" << endl;
@@ -2008,6 +2011,7 @@ BoundaryCondition::recomputePressureBC(const ProcessorGroup* ,
     cerr.width(10);
     cerr << "RHO"<<*iter << ": " << density[*iter] << "\n" ; 
   }
+#endif
 
   // Put the calculated data into the new DW
   new_dw->put(uVelocity, d_lab->d_uVelocityCPBCLabel, matlIndex, patch);
@@ -2087,7 +2091,8 @@ BoundaryCondition::setFlatProfile(const ProcessorGroup* /*pc*/,
     // Get a copy of the current flowinlet
     // check if given patch intersects with the inlet boundary of type index
     FlowInlet fi = d_flowInlets[indx];
-    std::cerr << " inlet area" << area << " flowrate" << fi.flowRate << endl;
+    //std::cerr << " inlet area" << area << " flowrate" << fi.flowRate << endl;
+    //cerr << "density=" << fi.density << '\n';
     FORT_PROFV(domLoU.get_pointer(), domHiU.get_pointer(),
 	       idxLoU.get_pointer(), idxHiU.get_pointer(),
 	       uVelocity.getPointer(), 
@@ -2412,6 +2417,10 @@ BoundaryCondition::FlowOutlet::problemSetup(ProblemSpecP& params)
 
 //
 // $Log$
+// Revision 1.68  2000/10/12 20:08:32  sparker
+// Made multipatch work for several timesteps
+// Cleaned up print statements
+//
 // Revision 1.67  2000/10/11 21:14:03  rawat
 // fixed a bug in scalar solver
 //

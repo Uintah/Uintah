@@ -157,7 +157,7 @@ Properties::computeProps(const ProcessorGroup*,
   std::vector<CCVariable<double> > scalar(d_numMixingVars);
   old_dw->get(density, d_lab->d_densitySPLabel, matlIndex, patch, Ghost::None,
 	      nofGhostCells);
-  cerr << "number of mixing vars" << d_numMixingVars << endl;
+  //cerr << "number of mixing vars" << d_numMixingVars << endl;
   for (int ii = 0; ii < d_numMixingVars; ii++)
     old_dw->get(scalar[ii], d_lab->d_scalarSPLabel, ii, patch, Ghost::None,
 		nofGhostCells);
@@ -215,7 +215,9 @@ Properties::computeProps(const ProcessorGroup*,
 #endif
   if (patch->containsCell(d_denRef)) {
     double den_ref = density[d_denRef];
+#ifdef ARCHES_DEBUG
     cerr << "density_ref " << den_ref << endl;
+#endif
     old_dw->put(sum_vartype(den_ref),d_lab->d_refDensity_label);
   }
   else
@@ -294,7 +296,9 @@ Properties::reComputeProps(const ProcessorGroup*,
 #endif
   if (patch->containsCell(d_denRef)) {
     double den_ref = density[d_denRef];
+#ifdef ARCHES_PRES_DEBUG
     cerr << "density_ref " << den_ref << endl;
+#endif
     new_dw->put(sum_vartype(den_ref),d_lab->d_refDensity_label);
   }
   else
@@ -322,6 +326,10 @@ Properties::Stream::problemSetup(ProblemSpecP& params)
 
 //
 // $Log$
+// Revision 1.32  2000/10/12 20:08:33  sparker
+// Made multipatch work for several timesteps
+// Cleaned up print statements
+//
 // Revision 1.31  2000/10/12 00:03:18  rawat
 // running for more than one timestep.
 //
