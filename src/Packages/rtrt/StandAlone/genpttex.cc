@@ -37,6 +37,11 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
+// #ifdef WRITE_SHPEREDATA
+// #  undef WRITE_SPHEREDATA
+// #endif
+// #define WRITE_SPHEREDATA 1
+
 using namespace rtrt;
 using namespace SCIRun;
 using namespace std;
@@ -82,7 +87,7 @@ Object *make_geometry( )
   // Now generate some geometry
   data = spheredata[0];
 
-#if 0
+#if WRITE_SPHEREDATA
   // Write out sphere data into a file
   FILE *out = fopen("spheredata", "wb");
   if (out) {
@@ -329,82 +334,6 @@ readSpheres(char* spherefile)
   spheredatasize.add(nspheres);
 }
 
-void make_cmap_fromfile(Array1<Color>& cmap, char *file) {
-  ifstream infile(file);
-  if (!infile) {
-    cerr << "Color map file, "<<file<<" cannot be opened for reading\n";
-    exit(0);
-  }
-  
-  cout<<"Creating a color map from "<<file<<endl;
-
-  Array1<Color> tmp;
-  float r = 0;
-  infile >> r;
-  float max = r;
-  // slurp up the colors
-  do {
-    float g = 0;
-    float b = 0;
-    infile >> g >> b;
-    if (r > max)
-      max = r;
-    if (g > max)
-      max = g;
-    if (b > max)
-      max = b;
-    tmp.add(Color(r,g,b));
-    infile >> r;
-  } while(infile);
-  
-  if (max > 1) {
-    cerr << "Renormalizing colors for range of 0 to 255\n";
-    float inv255 = 1.0f/255.0f;
-    for(int i = 0; i < tmp.size(); i++)
-      tmp[i] = tmp[i]*inv255;
-  }
-  
-  ScalarTransform1D<int, Color> transform(tmp);
-  int ncolors = 256;
-  
-  transform.scale(0, ncolors);
-  cmap.resize(ncolors);
-  for (int i=0;i<ncolors;i++)
-    cmap[i]=Color(transform.interpolate(i));
-}
-
-void make_cmap(Array1<Color>& cmap) {
-  CatmullRomSpline<Color> spline(0);
-
-  spline.add(Color(0,0,1));
-  spline.add(Color(0,0,1));
-  spline.add(Color(0,0.4,1));
-  spline.add(Color(0,0.8,1));
-  spline.add(Color(0,1,0.8));
-  spline.add(Color(0,1,0.4));
-  spline.add(Color(0,1,0));
-  spline.add(Color(0.4,1,0));
-  spline.add(Color(0.8,1,0));
-  spline.add(Color(1,0.9176,0));
-  spline.add(Color(1,0.8,0));
-  spline.add(Color(1,0.4,0));
-  spline.add(Color(1,0,0));
-  spline.add(Color(1,0,0));
-  //{ 0 0 255}   { 0 102 255}
-  //{ 0 204 255}  { 0 255 204}
-  //{ 0 255 102}  { 0 255 0}
-  //{ 102 255 0}  { 204 255 0}
-  //{ 255 234 0}  { 255 204 0}
-  //{ 255 102 0}  { 255 0 0} }}
-
-  int ncolors=256;
-  cmap.resize(ncolors);
-  for(int i=0;i<ncolors;i++){
-    float frac=float(i)/(ncolors-1);
-    cmap[i]=Color(spline(frac));
-  }
-}
-
 
 /**************************************************************************/
 
@@ -417,15 +346,14 @@ int main(int argc, char** argv)
   int depth=3;
   char *filename = 0;
   bool timevary=false;
-  char *bg="/home/sci/cgribble/research/datasets/mpm/misc/envmap.ppm";
+  char *bg="./envmap";
   char *outfile = 0;
   int nworkers = 1;
   bool dilate = true;
   int support = 2;
   int use_weighted_ave = 0;
   float threshold = 0.3;
-  char *val_filename=0;
-  char *cmap_filename=0;
+  float luminance=1.0;
   
   for(int i=1;i<argc;i++) {
     if(strcmp(argv[i], "-light_pos")==0) {
@@ -474,10 +402,8 @@ int main(int argc, char** argv)
       use_weighted_ave = 1;
     } else if (strcmp(argv[i],"-thresh")==0) {
       threshold = atof(argv[++i]);
-    } else if (strcmp(argv[i],"-val")==0) {
-      val_filename=argv[++i];
-    } else if (strcmp(argv[i],"-cmap")==0) {
-      cmap_filename=argv[++i];
+    } else if (strcmp(argv[i],"-lum")==0) {
+      luminance = atof(argv[++i]);
     } else {
       cerr<<"unrecognized option \""<<argv[i]<<"\""<<endl;
 
@@ -500,28 +426,27 @@ int main(int argc, char** argv)
       cerr<<"  -s <int>                    size of support kernel for dilation (2)\n";
       cerr<<"  -wa                         use weighted averaging during dilation (false)\n";
       cerr<<"  -t <float>                  threshold for contribution determination (0.3)\n";
-      cerr<<"  -val <filename>             load associated values (null)"<<endl;
-      cerr<<"  -cmap <filename>            use the specified colormap (null)"<<endl;
+      cerr<<"  -lum <float>                luminance value (1.0)"<<endl;
       exit(1);
     }
   }
 
   // Create the light
-  PathTraceLight ptlight(Point(lx, ly, lz), lr, intensity*Color(1,1,1));
-
+  PathTraceLight ptlight(Point(lx, ly, lz), lr, intensity);
+  
   // Create the geometry
   Object *geometry;
   if (filename)
     geometry = make_geometry_fromfile(filename, timevary);
   else
     geometry = make_geometry();
-
+  
   // Create the background
   EnvironmentMapBackground *emap=new EnvironmentMapBackground(bg, Vector(0,0,-1));
   if (emap->valid() != true) {
     // try a local copy
     delete emap;
-    emap = new EnvironmentMapBackground("./envmap.ppm", Vector(0,0,-1));
+    emap = new EnvironmentMapBackground("/home/sci/cgribble/research/datasets/mpm/misc/envmap.ppm", Vector(0,0,-1));
     if (emap->valid() != true) {
       return 0;
     }
@@ -529,37 +454,10 @@ int main(int argc, char** argv)
 
   // Create the context for rendering
   Semaphore sem("genpttex::Semaphore", nworkers);
-  PathTraceContext ptcontext(Color(0.1,0.7,0.2), ptlight, geometry, emap,
+  PathTraceContext ptcontext(luminance, ptlight, geometry, emap,
 			     num_samples, depth, dilate, support, use_weighted_ave,
 			     threshold, &sem);
 
-  // Read data values and create a color map
-  if (val_filename) {
-    Array1<unsigned char> value;
-    value.resize(total_num_spheres);
-
-    FILE *valfile=fopen(val_filename, "r");
-    if (!valfile) {
-      cerr<<"Could not open \""<<val_filename<<"\" for reading"<<endl;
-      return 0;
-    }
-    size_t num_read=fread(value.get_objs(), sizeof(unsigned char),
-			  total_num_spheres, valfile);
-    if (num_read!=total_num_spheres) {
-      cerr<<"Didn't read "<<total_num_spheres<<" number of values"<<endl;
-      return 0;
-    }
-    
-    Array1<Color> cmap;
-    if (cmap_filename)
-      make_cmap_fromfile(cmap, cmap_filename);
-    else
-      make_cmap(cmap);
-    
-    // Add the data values and color map to the rendering context
-    ptcontext.addColormap(value, cmap);
-  }
-  
   if (outfile == 0) {
     outfile = "sphere";
   }
@@ -597,5 +495,3 @@ int main(int argc, char** argv)
       
   return 0;
 }
-
-
