@@ -433,7 +433,9 @@ main( int argc, char** argv )
 	  exit(1);
 #endif
 	} else {
-	  cerr << "Unknown solver: " << solver << '\n';
+         cerr <<"\n\n__________________________________\n";
+         cerr << "sus command line error, unknown solver: " << solver << '\n';
+         cerr << "Valid Solvers: CGSolver, DirectSolve, hypre \n";
 	  exit(1);
 	}
 
