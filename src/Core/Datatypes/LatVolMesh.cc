@@ -171,7 +171,7 @@ LatVolMesh::get_cells(Cell::array_type &arr, const BBox &bbox)
 // box and the mesh.  Checking all cases would be tedious and probably
 // fraught with error.
 void
-LatVolMesh::get_cell_range(Cell::range_iter &iter, Cell::iterator &end,
+LatVolMesh::get_cell_range(Cell::range_iter &iter, Cell::iterator &end_iter,
 			   const BBox &box) {
   // get the min and max points of the bbox and make sure that they lie
   // inside the mesh boundaries.
@@ -189,30 +189,24 @@ LatVolMesh::get_cell_range(Cell::range_iter &iter, Cell::iterator &end,
   bool min_located = locate(min_index, min);
   bool max_located = locate(max_index, max);
   if (min_located || max_located) {
-    // This tests is designed for a slice in the xy plane.  If z (or k)
-    // is equal then you have this condition.  When this happens you
-    // need to increment k so that you will iterate over the xy values.
-    if (min_index.k_ != max_index.k_)
-      end = Cell::iterator(this, min_index.i_, min_index.j_, max_index.k_);
-    else
-      end = Cell::iterator(this, min_index.i_, min_index.j_, max_index.k_ + 1);
-
     // Initialize the range iterator
     iter = Cell::range_iter(this,
 			    min_index.i_, min_index.j_, min_index.k_,
 			    max_index.i_, max_index.j_, max_index.k_);
   } else {
     // If both of these are false then we are outside the boundary.
-    // Set both iterators to be the same thing and exit.  When they are the
-    // same any for loop using these iterators [for(;iter != end; iter++)]
-    // will never enter.
+    // Set the min and max extents of the range iterator to be the same thing.
+    // When they are the same end_iter will be set to the starting state of
+    // the range iterator, thereby causing any for loop using these
+    // iterators [for(;iter != end_iter; iter++)] to never enter.
     iter = Cell::range_iter(this, 0, 0, 0, 0, 0, 0);
-    end = Cell::iterator(this, 0, 0, 0);
   }
+  // initialize the end iterator
+  iter.end(end_iter);
 }
 
 void
-LatVolMesh::get_node_range(Node::range_iter &iter, Node::iterator &end,
+LatVolMesh::get_node_range(Node::range_iter &iter, Node::iterator &end_iter,
 			   const BBox &box) {
   // get the min and max points of the bbox and make sure that they lie
   // inside the mesh boundaries.
@@ -230,36 +224,41 @@ LatVolMesh::get_node_range(Node::range_iter &iter, Node::iterator &end,
   bool min_located = locate(min_index, min);
   bool max_located = locate(max_index, max);
   if (min_located || max_located) {
-    // This tests is designed for a slice in the xy plane.  If z (or k)
-    // is equal then you have this condition.  When this happens you
-    // need to increment k so that you will iterate over the xy values.
-    if (min_index.k_ != max_index.k_)
-      end = Node::iterator(this, min_index.i_, min_index.j_, max_index.k_);
-    else
-      end = Node::iterator(this, min_index.i_, min_index.j_, max_index.k_ + 1);
-
     // Initialize the range iterator
     iter = Node::range_iter(this,
 			    min_index.i_, min_index.j_, min_index.k_,
 			    max_index.i_, max_index.j_, max_index.k_);
   } else {
     // If both of these are false then we are outside the boundary.
-    // Set both iterators to be the same thing and exit.  When they are the
-    // same any for loop using these iterators [for(;iter != end; iter++)]
-    // will never enter.
+    // Set the min and max extents of the range iterator to be the same thing.
+    // When they are the same end_iter will be set to the starting state of
+    // the range iterator, thereby causing any for loop using these
+    // iterators [for(;iter != end_iter; iter++)] to never enter.
     iter = Node::range_iter(this, 0, 0, 0, 0, 0, 0);
-    end = Node::iterator(this, 0, 0, 0);
   }
+  // initialize the end iterator
+  iter.end(end_iter);
 }
-
 
 void
-LatVolMesh::get_center(Point &result, Node::index_type idx) const
-{
-  Point p(idx.i_, idx.j_, idx.k_);
-  result = transform_.project(p);
+LatVolMesh::get_cell_range(Cell::range_iter &begin, Cell::iterator &end,
+			   const Cell::index_type &begin_index,
+			   const Cell::index_type &end_index) {
+  begin = Cell::range_iter(this,
+			   begin_index.i_, begin_index.j_, begin_index.k_,
+			     end_index.i_,   end_index.j_,   end_index.k_);
+  begin.end(end);
 }
 
+void
+LatVolMesh::get_node_range(Node::range_iter &begin, Node::iterator &end,
+			   const Node::index_type &begin_index,
+			   const Node::index_type &end_index) {
+  begin = Node::range_iter(this,
+			   begin_index.i_, begin_index.j_, begin_index.k_,
+			     end_index.i_,   end_index.j_,   end_index.k_);
+  begin.end(end);
+}
 
 void
 LatVolMesh::get_center(Point &result, Edge::index_type idx) const
@@ -301,6 +300,13 @@ void
 LatVolMesh::get_center(Point &result, Cell::index_type idx) const
 {
   Point p(idx.i_ + 0.5, idx.j_ + 0.5, idx.k_ + 0.5);
+  result = transform_.project(p);
+}
+
+void
+LatVolMesh::get_center(Point &result, Node::index_type idx) const
+{
+  Point p(idx.i_, idx.j_, idx.k_);
   result = transform_.project(p);
 }
 
