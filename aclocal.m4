@@ -100,21 +100,45 @@ AC_DEFUN([BASE_LIB_PATH], [
 
 AC_DEFUN([SCI_TRY_LINK], [
 ##
-## SCI_TRY_LINK:
+## SCI_TRY_LINK ($1):
 ##
 ## arguments mean:
-## arg 1 : variable base name i.e. MATH
+## arg 1 : variable base name (e.g., MATH)
 ## arg 2 : checking message
-## arg 3 : includes that arg 6 needs to compile
-## arg 4 : include path -I (Only one may be given)
-## arg 5 : list of libs to link against (note, this script adds -l to each name.)
-## arg 6 : lib paths (note, this script adds -L to each name.)
+## arg 3 : includes that arg 6 needs to compile (e.g., math.h)
+## arg 4 : include path(s). -I is appened to each path (unless it already has a -I).
+##           Any other -? args are removed.
+##           (Only one may be given if "Specific" (arg9) is chosen.)
+## arg 5 : list of libs to link against
+##           If the libraries do not have a '-l' on them, it is appeneded.
+##           If the arg has any prefix besides '-l' (eg: -L or -D), then the arg
+##           is removed completely.
+##           All the libs specified in arg 5 will be part of the <VAR>_LIB_FLAG
+##           if the link is successful.
+## arg 6 : lib paths
+##           If the arg does not have -L on it, then -L will be added.  
+##           If it has any other -?, then the arg is removed.
+##           (only one may be givein if "Specific" (arg9) is chosen.)
 ## arg 7 : extra link flags 
-## arg 8 : body of code to compile. can be empty
+##           This is where to put anything else you need for the compilation
+##           line.  NOTE, none of these args propagate anywhere.
+## arg 8 : body of code to compile. May be EMPTY, in which case a dummy routine is tried.
 ## arg 9 : 'optional' or 'required' or 'specific' required argument
 ##             If specific, then SCI_TRY_LINK will take only one lib
 ##             path and one include path and will verify that the
 ##             libs/includes are in that path.
+##
+## Here are the specific values for this invocation:
+##
+## arg 1 : $1
+## arg 2 : $2
+## arg 3 : $3
+## arg 4 : $4
+## arg 5 : $5
+## arg 6 : $6
+## arg 7 : $7
+## arg 8 : <Can't expand it here as it may be multiple lines and cause sh problems.>
+## arg 9 : $9
 ## 
 ## after execution of macro, the following will be defined:
 ##      Variable            Value
@@ -129,7 +153,6 @@ AC_DEFUN([SCI_TRY_LINK], [
 if test $# != 9; then
      AC_MSG_ERROR(Wrong number of parameters ($#) for SCI-TRY-LINK for $2.  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu.)
 fi
-
 
 ifelse([$1],[],[AC_FATAL(must provide a test name in arg 1)],)dnl
 
@@ -147,21 +170,121 @@ fi
 
 # If $4 (the -I paths) is blank, do nothing, else do the for statement.
 ifelse([$4],[],,[
-for i in $4; do
-  if test "$i" = "/usr/include"; then
+for inc in $4; do
+
+  if test "$inc" = "/usr/include" || test "$inc" = "-I/usr/include"; then
      echo ""
-     AC_MSG_ERROR(Please do not specify /usr/include as the location for $2 include files.)
+     AC_MSG_ERROR(Please do not specify /usr/include as the location for $1 include files.)
   fi
-  # make sure it exists
-  if test -d $i; then
-    if test -z "$_sci_includes"; then
-      _sci_includes=-I$i
-    else
-      _sci_includes="$_sci_includes -I$i"
-    fi
+
+  # Make sure it doesn't have any thing but -I
+  #   The following "sed" replaces anything that starts with a '-' with nothing (blank). 
+  has_minus=`echo $inc | sed 's/-.*//'`
+  if test -z "$has_minus"; then
+     has_minus_i=`echo $inc | sed 's/-I.*//'`
+     if test -n "$has_minus_i"; then
+        # Has some other -?.
+        AC_MSG_WARN(Only -I options are allowed in arg 4 ($4) of $1 check.  Skipping $inc.)
+        continue
+     fi
+  fi
+
+  the_inc=`echo $inc | grep "\-I"`
+  if test -z "$the_inc"; then
+     # If the include arg does not already have -I on it.
+     if test -d $inc; then
+        # If the directory exists
+        if test -z "$_sci_includes"; then
+           _sci_includes=-I$inc
+        else
+           _sci_includes="$_sci_includes -I$inc"
+        fi
+     fi
+  else
+     # It already has -I so just add it directly.
+     if test -z "$_sci_includes"; then
+        _sci_includes=$inc
+     else
+        _sci_includes="$_sci_includes $inc"
+     fi
   fi
 done
 ])dnl
+
+### Take care of arg 5 (the list of libs)
+
+if test -n "$5"; then
+
+   for lib in "" $5; do
+
+      if test -z "$lib"; then
+         # SGI sh needs the "" in the for statement... so skip it here.
+         continue
+      fi
+
+      # Make sure it doesn't have any thing but -l
+      has_minus=`echo $lib | sed 's/-.*//'`
+      if test -z "$has_minus"; then
+         has_minus_l=`echo $lib | sed 's/-l.*//'`
+         if test -n "$has_minus_l"; then
+            # Has some other -?.
+            AC_MSG_WARN(Only -l options are allowed in arg 5 of $1 check (disregarding $lib).)
+            continue
+         fi
+      fi
+   
+      the_lib=`echo $lib | grep "\-l"`
+      if test -z "$the_lib"; then
+         # If the lib arg does not have -l on it, then add -l.
+         final_lib=-l$lib
+      else
+         # It already has -l so just add it directly.
+         final_lib=$lib
+      fi
+      if test -z "$_sci_libs"; then
+         _sci_libs=$final_lib
+      else
+         _sci_libs="$_sci_libs $final_lib"
+      fi
+   done
+fi
+   
+### Take care of arg 6 (the list of lib paths)
+
+if test -n "$6"; then
+
+   for path in "" $6; do
+
+      if test -z "$path"; then
+         # SGI sh needs the "" in the for statement... so skip it here.
+         continue
+      fi
+
+      # Make sure it doesn't have any thing but -L
+      has_minus=`echo $path | sed 's/-.*//'`
+      if test -z "$has_minus"; then
+         has_minus_L=`echo $path | sed 's/-L.*//'`
+         if test -n "$has_minus_L"; then
+            # Has some other -?.
+            AC_MSG_WARN(Only -L options are allowed in arg 6 of $1 check (disregarding $path).)
+            continue
+         fi
+      fi
+   
+      the_path=`echo $path | grep "\-L"`
+      if test -z "$the_path"; then
+         # If the path arg does not have -L on it, then add -L.
+         final_path="-L$path"
+      else
+         final_path="$path"
+      fi
+      if test -z "$_sci_libs"; then
+         _sci_lib_path=$final_path
+      else
+         _sci_lib_path="$_sci_lib_path $final_path"
+      fi
+   done
+fi
 
 if test "$9" = "specific"; then
   # If 'specific' then only one lib is allowed:
@@ -171,10 +294,6 @@ if test "$9" = "specific"; then
 
   # Must have the "" for the SGI sh.
   for value in "" $6; do
-    if test "$value" = "/usr/lib"; then
-       echo ""
-       AC_MSG_ERROR(Please do not specify /usr/lib as the location for libs $5.)
-    fi
     if test "$value" = ""; then
       continue
     fi
@@ -186,13 +305,13 @@ if test "$9" = "specific"; then
     fi
   done
   if test $__sci_pass != "true"; then
-       AC_MSG_ERROR(For specific SCI-TRY-LINK test for $2 only one library path may be specified (you had: $6).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu.)
+       AC_MSG_ERROR(For specific SCI-TRY-LINK test for $1 only one library path may be specified for arg 6 (you had: $6).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu.)
   fi
   # and only one include path:
   ### Determine if there is only one item in $4
   __sci_pass=false
   __sci_first_time=true
-  for value in ""$4; do
+  for value in "" $4; do
     if test "$value" = ""; then
       continue
     fi
@@ -204,33 +323,14 @@ if test "$9" = "specific"; then
     fi
   done
   if test $__sci_pass != "true"; then
-       AC_MSG_ERROR(For specific SCI-TRY-LINK test for $2 only one include path may be specified (you had: $4).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu.)
+       AC_MSG_ERROR(For specific SCI-TRY-LINK test for $1 only one include path may be specified for arg 4 (you had: $4).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu.)
   fi
 fi
-  
-ifelse([$5],[],_sci_libs=,[
-for i in $5; do
-  if test -z "$_sci_libs"; then
-    _sci_libs=-l$i
-  else
-    _sci_libs="$_sci_libs -l$i"
-  fi
-done
-])dnl
 
-_sci_lib_path=
-ifelse([$6],[],,[
-for i in $6; do
-  # make sure it exists
-  if test -d $i; then
-    if test -z "$_sci_lib_path"; then
-      _sci_lib_path="$LDRUN_PREFIX$i -L$i"
-    else
-      _sci_lib_path="$_sci_lib_path $LDRUN_PREFIX$i -L$i"
-    fi
-  fi
-done
-])dnl
+### Debug messages:
+#echo "sci_includes: $_sci_includes"
+#echo "sci_libs: $_sci_libs"
+#echo "sci_lib_path: $_sci_lib_path"
 
 CFLAGS="$_sci_includes $CFLAGS"
 CXXFLAGS="$_sci_includes $CXXFLAGS"
@@ -239,35 +339,50 @@ LIBS="$_sci_libs $7 $LIBS"
 
 # Build up a list of the #include <file> lines for use in compilation:
 __sci_pound_includes=
-for i in ""$3; do
+for inc in "" $3; do
     # Have to have the "" for the SGI sh. 
-    if test "$i" = ""; then
+    if test "$inc" = ""; then
       continue
     fi
     __sci_pound_includes="$__sci_pound_includes
-#include <$i>"
+#include <$inc>"
 done
 
 AC_TRY_LINK($__sci_pound_includes,[$8],[
 eval LIB_DIR_$1='"$6"'
 
-if test "$6" = "$SCI_THIRDPARTY_LIB_DIR"; then
-  eval $1_LIB_DIR_FLAG=''
-else
-  eval $1_LIB_DIR_FLAG='"$_sci_lib_path"'
-fi
+# Remove any bad (/usr/lib) lib paths and the thirdparty lib path
+_final_dirs=
+for _dir in "" $_sci_lib_path; do
+  if test -n "$_dir" && test "$_dir" != "-L/usr/lib" && test "$_dir" != "-L$SCI_THIRDPARTY_LIB_DIR"; then
+    _final_dirs="$_final_dirs $_dir"
+  fi
+done
 
-#eval $1_LIB_FLAG='"$LIBS"'
-eval $1_LIB_FLAG='"$_sci_libs"'
+eval $1_LIB_DIR_FLAG="'$_final_dirs'"
+
+# Remove any -L from the list of libs.  (-L's should only be in the dir path.)
+final_libs=
+for _lib in "" $LIBS; do
+  bad_arg=`echo "$_lib" | grep "\-L"`
+  if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_arg"; then
+    final_libs="$final_libs $_lib"
+  fi
+done
+
+eval $1_LIB_FLAG="'$final_libs'"
 eval HAVE_$1="yes"
 
-if test "$_sci_includes" = "$INC_SCI_THIRDPARTY_H"; then
-  eval INC_$1_H=''
-else
-  eval INC_$1_H='"$_sci_includes"'
-fi
+final_incs=
+for inc in "" $_sci_includes; do
+   if test "$inc" != "$INC_SCI_THIRDPARTY_H"; then
+      final_incs="$final_incs $inc"
+   fi
+done
 
+eval INC_$1_H="'$final_incs'"
 eval HAVE_$1_H="yes"
+
 AC_MSG_RESULT(yes)
 ], 
 [
@@ -289,17 +404,17 @@ fi
 if test "$9" = "specific"; then
 #echo specific
   # Make sure the exact includes were found
-  for i in ""$3; do
+  for i in "" $3; do
 #echo looking for $4/$i
     if test ! -e $4/$i; then
-     AC_MSG_ERROR(Specificly requested $2 include file '$4/$i' was not found)
+     AC_MSG_ERROR(Specificly requested $1 include file '$4/$i' was not found)
     fi
   done
   # Make sure the exact libraries were found
-  for i in ""$5; do
+  for i in "" $5; do
 #echo looking for $6/$i
-    if test ! -e $6/lib$i.so && test ! -e $6/lib$i.a; then
-     AC_MSG_ERROR(Specificly requested $2 library file '$6/$i' was not found)
+    if test -n "$i" && test ! -e $6/lib$i.so && test ! -e $6/lib$i.a; then
+     AC_MSG_ERROR(Specificly requested $1 library file '$6/$i' was not found)
     fi
   done
 fi
@@ -420,8 +535,9 @@ AC_DEFUN(SCI_REMOVE_MINUS_L,
      for libflag in $libs; do
 
        # If the entry starts with -L, then we ignore it... (All libs should be -l!)
-       has_minus_L=`echo $libflag | grep "\-L"`
+       has_minus_L=`echo $libflag | sed 's/-L.*//'`
        if test -n "$has_minus_L"; then
+          AC_MSG_WARN(Only -L options are allowed in arg 3 (disregarding $libflag).)
           continue
        fi
 
