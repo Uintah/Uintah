@@ -48,6 +48,7 @@ public:
 	    const VarType& var, bool replace);
    void get(const VarLabel* label, int matlindex, const Region* region,
 	    VarType& var) const;
+   void copyAll(const DWDatabase& from, const VarLabel*, const Region* region);
 private:
    typedef std::vector<VarType*> dataDBtype;
 
@@ -209,10 +210,35 @@ void DWDatabase<VarType>::get(const VarLabel* label, int matlIndex,
    var.copyPointer(*rr->vars[matlIndex]);
 }
 
+template<class VarType>
+void DWDatabase<VarType>::copyAll(const DWDatabase& from,
+				  const VarLabel* label,
+				  const Region* region)
+{
+   nameDBtype::const_iterator nameiter = from.names.find(label);
+   if(nameiter == from.names.end())
+      throw UnknownVariable(label->getName());
+
+   NameRecord* nr = nameiter->second;
+   regionDBtype::const_iterator regioniter = nr->regions.find(region);
+   if(regioniter == nr->regions.end())
+      throw UnknownVariable(label->getName());
+
+   RegionRecord* rr = regioniter->second;
+
+   for(int i=0;i<rr->vars.size();i++){
+      if(rr->vars[i])
+	 put(label, i, region, *rr->vars[i], false);
+   }
+}
+
 } // end namespace Uintah
 
 //
 // $Log$
+// Revision 1.5  2000/05/06 03:54:10  sparker
+// Fixed multi-material carryForward
+//
 // Revision 1.4  2000/05/02 06:07:16  sparker
 // Implemented more of DataWarehouse and SerialMPM
 //
