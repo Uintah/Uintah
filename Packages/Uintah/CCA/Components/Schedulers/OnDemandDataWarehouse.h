@@ -216,8 +216,9 @@ public:
    void logMemoryUse(ostream& out, unsigned long& total, const string& tag);
 
    // must be called by the thread that will run the test
-   virtual void setCurrentTask(const Task* task);
-  
+   virtual void pushRunningTask(const Task* task);
+   virtual void popRunningTask();  
+
    // does a final check to see if gets/puts/etc. consistent with
    // requires/computes/modifies for the current task.
    virtual void checkTasksAccesses(const PatchSubset* patches,
@@ -226,6 +227,52 @@ private:
    enum AccessType {
      NoAccess = 0, PutAccess, GetAccess, ModifyAccess
    };
+
+   struct SpecificVarLabel {
+     SpecificVarLabel(const VarLabel* label, int matlIndex, const Patch* patch)
+       : label_(label), matlIndex_(matlIndex), patch_(patch) {}
+     SpecificVarLabel(const SpecificVarLabel& copy)
+       : label_(copy.label_), matlIndex_(copy.matlIndex_), patch_(copy.patch_)
+     {}
+     SpecificVarLabel& operator=(const SpecificVarLabel& copy)
+     {
+       label_=copy.label_; matlIndex_=copy.matlIndex_; patch_=copy.patch_;
+       return *this;
+     }
+    
+     bool operator<(const SpecificVarLabel& other) const;
+     const VarLabel* label_;
+     int matlIndex_;
+     const Patch* patch_;    
+   };  
+
+   struct AccessInfo {
+     AccessInfo()
+       : accessType(NoAccess), lowOffset(0, 0, 0), highOffset(0, 0, 0) {}
+     AccessInfo(AccessType type)
+       : accessType(type), lowOffset(0, 0, 0), highOffset(0, 0, 0) {}
+     void encompassOffsets(IntVector low, IntVector high)
+     { lowOffset = Max(low, lowOffset); highOffset = Max(high, highOffset); }
+     
+     AccessType accessType;
+     IntVector lowOffset; // ghost cell access
+     IntVector highOffset;
+   };
+  
+   typedef map<SpecificVarLabel, AccessInfo> VarAccessMap;
+
+   struct RunningTaskInfo {
+     RunningTaskInfo()
+       : d_task(0) {}
+     RunningTaskInfo(const Task* task)
+       : d_task(task) {}
+     RunningTaskInfo(const RunningTaskInfo& copy)
+       : d_task(copy.d_task), d_accesses(copy.d_accesses) {}
+     RunningTaskInfo& operator=(const RunningTaskInfo& copy)
+     { d_task = copy.d_task; d_accesses = copy.d_accesses; return *this; }
+     const Task* d_task;
+     VarAccessMap d_accesses;
+   };  
   
    // Generic get function used by the get functions for grid-based
    // (node or cell) variables to avoid code duplication.
@@ -273,13 +320,14 @@ private:
   
   // These will return false if access is not allowed for
   // the current task.
-  inline bool hasGetAccess(const Task* currentTask, const VarLabel* label,
+  inline bool hasGetAccess(const Task* runningTask, const VarLabel* label,
 			   int matlIndex, const Patch* patch,
 			   IntVector lowOffset, IntVector highOffset);
-  inline bool hasPutAccess(const Task* currentTask, const VarLabel* label,
+  inline bool hasPutAccess(const Task* runningTask, const VarLabel* label,
 			   int matlIndex, const Patch* patch, bool replace);
 
-  void checkAccesses(const Task* currentTask, const Task::Dependency* dep,
+  void checkAccesses(RunningTaskInfo* runningTaskInfo,
+		     const Task::Dependency* dep,
 		     AccessType accessType, const PatchSubset* patches,
 		     const MaterialSubset* matls);
   
@@ -314,58 +362,12 @@ private:
 
    // Is this the first DW -- created by the initialization timestep?
    bool d_isInitializationDW;
-
-   struct SpecificVarLabel {
-     SpecificVarLabel(const VarLabel* label, int matlIndex, const Patch* patch)
-       : label_(label), matlIndex_(matlIndex), patch_(patch) {}
-     SpecificVarLabel(const SpecificVarLabel& copy)
-       : label_(copy.label_), matlIndex_(copy.matlIndex_), patch_(copy.patch_)
-     {}
-     SpecificVarLabel& operator=(const SpecificVarLabel& copy)
-     {
-       label_=copy.label_; matlIndex_=copy.matlIndex_; patch_=copy.patch_;
-       return *this;
-     }
-    
-     bool operator<(const SpecificVarLabel& other) const;
-     const VarLabel* label_;
-     int matlIndex_;
-     const Patch* patch_;    
-   };  
-
-   struct AccessInfo {
-     AccessInfo()
-       : accessType(NoAccess), lowOffset(0, 0, 0), highOffset(0, 0, 0) {}
-     AccessInfo(AccessType type)
-       : accessType(type), lowOffset(0, 0, 0), highOffset(0, 0, 0) {}
-     void encompassOffsets(IntVector low, IntVector high)
-     { lowOffset = Max(low, lowOffset); highOffset = Max(high, highOffset); }
-     
-     AccessType accessType;
-     IntVector lowOffset; // ghost cell access
-     IntVector highOffset;
-   };
   
-   typedef map<SpecificVarLabel, AccessInfo> VarAccessMap;
-
-   struct CurrentTaskInfo {
-     CurrentTaskInfo()
-       : d_task(0) {}
-     CurrentTaskInfo(const Task* task)
-       : d_task(task) {}
-     CurrentTaskInfo(const CurrentTaskInfo& copy)
-       : d_task(copy.d_task), d_accesses(copy.d_accesses) {}
-     CurrentTaskInfo& operator=(const CurrentTaskInfo& copy)
-     { d_task = copy.d_task; d_accesses = copy.d_accesses; return *this; }
-     const Task* d_task;
-     VarAccessMap d_accesses;
-   };
-  
-   inline CurrentTaskInfo* getCurrentTaskInfo();
-   inline const Task* getCurrentTask();
-   inline VarAccessMap& getCurrentTaskAccesses();
+   inline bool hasRunningTask();
+   inline list<RunningTaskInfo>* getRunningTasksInfo();
+   inline RunningTaskInfo* getCurrentTaskInfo();
     
-   map<Thread*, CurrentTaskInfo> d_runningTasks;
+   map<Thread*, list<RunningTaskInfo> > d_runningTasks;
   
    // Internal VarLabel for the position of this DataWarehouse
    // ??? with respect to what ???? 
