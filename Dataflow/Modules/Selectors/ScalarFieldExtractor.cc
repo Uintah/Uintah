@@ -101,9 +101,9 @@ void ScalarFieldExtractor::get_vars(vector< string >& names,
       // supported scalars double, int, long64, long long, short, bool
       if( subtype->getType() == TypeDescription::double_type ||
 	  subtype->getType() == TypeDescription::int_type ||
-  	  subtype->getType() == TypeDescription::long64_type) {
+  	  subtype->getType() == TypeDescription::long64_type ||
+  	  subtype->getType() == TypeDescription::bool_type) {
 //  	  subtype->getType() == TypeDescription::short_int_type ||
-//  	  subtype->getType() == TypeDescription::bool_type) {
 	if( sNames.size() != 0 )
 	  sNames += " ";
 	sNames += names[i];
@@ -238,6 +238,18 @@ void ScalarFieldExtractor::execute()
 	  CCVariable<int> gridVar;
 	  LatVolField<int> *sfd =
 	    scinew LatVolField<int>( mesh_handle_, Field::CELL );
+	  sfd->set_property( "variable", string(var), true );
+	  sfd->set_property( "time", double( time ), true);
+	  sfd->set_property( "vartype",int(TypeDescription::CCVariable),true);
+	  build_field( archive, level, low, var, mat, time, gridVar, sfd );
+	  sfout->send(sfd);
+	  return;
+	}
+      case TypeDescription::bool_type:
+	{
+	  CCVariable<unsigned char> gridVar;
+	  LatVolField<unsigned char> *sfd =
+	    scinew LatVolField<unsigned char>( mesh_handle_, Field::CELL );
 	  sfd->set_property( "variable", string(var), true );
 	  sfd->set_property( "time", double( time ), true);
 	  sfd->set_property( "vartype",int(TypeDescription::CCVariable),true);
