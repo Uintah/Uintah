@@ -1170,6 +1170,7 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       //      cout << "Patch id = " << patch->getID() << endl;
       IntVector offset = 
 	patch->getInteriorCellLowIndex() - patch->getCellLowIndex();
+      // cout << "offset = " << offset << endl;
       for(Patch::FaceType face = Patch::startFace;
 	face <= Patch::endFace; face=Patch::nextFace(face)){
 	vector<BoundCondBase* > bcs;
@@ -1182,8 +1183,10 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
 	  if (bcs_type == "Velocity") {
 	    VelocityBoundCond* bc = 
 	      dynamic_cast<VelocityBoundCond*>(bcs[i]);
-	    //	    cout << "bc value = " << bc->getValue() << endl;
-	    gvelocity.fillFace(face,bc->getValue(),offset);
+	    if (bc->getKind() == "Dirichlet") {
+	      //cout << "Velocity bc value = " << bc->getValue() << endl;
+	      gvelocity.fillFace(face,bc->getValue(),offset);
+	    }
 	  }
 	  if (bcs_type == "Symmetric") {
 	     gvelocity.fillFaceNormal(face,offset);
@@ -1444,9 +1447,10 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
             gstress[*iter] /= gmass[*iter];
          }
       }
-
-      IntVector low = gstress.getLowIndex();
-      IntVector hi  = gstress.getHighIndex();
+      IntVector offset = 
+	patch->getInteriorCellLowIndex() - patch->getCellLowIndex();
+      IntVector low = gstress.getLowIndex() + offset;
+      IntVector hi  = gstress.getHighIndex() - offset;
 
       for(Patch::FaceType face = Patch::startFace;
         face <= Patch::endFace; face=Patch::nextFace(face)){
@@ -1635,10 +1639,13 @@ void SerialMPM::solveHeatEquations(const ProcessorGroup*,
             TemperatureBoundCond* bc =
                        dynamic_cast<TemperatureBoundCond*>(bcs[i]);
             if (bc->getKind() == "Neumann"){
-              //cout << "bc value = " << bc->getValue() << endl;
+              cout << "bc value = " << bc->getValue() << endl;
 	      double value = bc->getValue();
-              IntVector low = internalHeatRate.getLowIndex();
-              IntVector hi = internalHeatRate.getHighIndex();
+	      IntVector offset = 
+		patch->getInteriorCellLowIndex() - patch->getCellLowIndex();
+              IntVector low = internalHeatRate.getLowIndex() + offset;
+              IntVector hi = internalHeatRate.getHighIndex() - offset;
+	     
               if(face==Patch::xplus || face==Patch::xminus){
                 int I=-1234;
                 if(face==Patch::xminus){ I=low.x(); }
@@ -1874,16 +1881,18 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 	vector<BoundCondBase* > bcs;
 	bcs = patch->getBCValues(face);
 	//cout << "number of bcs on face " << face << " = " 
-	//    << bcs.size() << endl;
+	//     << bcs.size() << endl;
 
 	for (int i = 0; i<(int)bcs.size(); i++ ) {
 	  string bcs_type = bcs[i]->getType();
 	  if (bcs_type == "Velocity") {
 	    VelocityBoundCond* bc = 
 	      dynamic_cast<VelocityBoundCond*>(bcs[i]);
-	    //  cout << "bc value = " << bc->getVelocity() << endl;
-	     gvelocity_star.fillFace(face,bc->getValue(),offset);
-	     gacceleration.fillFace(face,Vector(0.0,0.0,0.0),offset);
+	    //cout << "Velocity bc value = " << bc->getValue() << endl;
+	    if (bc->getKind() == "Dirichlet") {
+	      gvelocity_star.fillFace(face,bc->getValue(),offset);
+	      gacceleration.fillFace(face,Vector(0.0,0.0,0.0),offset);
+	    }
 	  }
 	  if (bcs_type == "Symmetric") {
 	     gvelocity_star.fillFaceNormal(face,offset);
@@ -1893,9 +1902,9 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 	    TemperatureBoundCond* bc = 
 	      dynamic_cast<TemperatureBoundCond*>(bcs[i]);
 	    if (bc->getKind() == "Dirichlet") {
-	      //cout << "bc value = " << bc->getTemp() << endl;
-	      IntVector low = gTemperature.getLowIndex();
-	      IntVector hi = gTemperature.getHighIndex();
+	      cout << "Temperature bc value = " << bc->getValue() << endl;
+	      IntVector low = gTemperature.getLowIndex() + offset;
+	      IntVector hi = gTemperature.getHighIndex() - offset;
 	      gTemperatureStar.fillFace(face,bc->getValue(),offset);
 	      if(face==Patch::xplus || face==Patch::xminus){
 		int I=-1234;
