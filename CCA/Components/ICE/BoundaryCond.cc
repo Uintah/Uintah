@@ -23,98 +23,8 @@
 static DebugStream BC_dbg(  "ICE_BC_DBG", false);
 static DebugStream BC_doing("ICE_BC_DOING", false);
 
-/*`==========TESTING==========*/
-//#define AMR
-#undef AMR 
-/*===========TESTING==========`*/
-
 using namespace Uintah;
 namespace Uintah {
-
-
-#ifdef AMR
-/* --------------------------------------------------------------------- 
- Function~  setBC-- (pressure)        HARDWIRED FOR AMR
- ---------------------------------------------------------------------  */
-void setBC(CCVariable<double>& press_CC,
-           StaticArray<CCVariable<double> >&,       //or placeHolder
-           StaticArray<constCCVariable<double> >&,  //or placeHolder
-           const int,
-           const string& which_Var,
-           const string& kind, 
-           const Patch* patch,
-           SimulationStateP& sharedState, 
-           const int mat_id,
-           DataWarehouse* new_dw,
-           customBC_var_basket*)
-{
-  BC_doing << "setBC (press_CC) "<< kind <<" " << which_Var
-           << " mat_id = " << mat_id << endl;
-  //__________________________________
-  // Iterate over the faces encompassing the domain
-  for(Patch::FaceType face = Patch::startFace;
-      face <= Patch::endFace; face=Patch::nextFace(face)){  
-    for(CellIterator iter=patch->getFaceCellIterator(face,"plusEdgeCells"); !iter.done();iter++) {
-       IntVector oneCell = patch->faceDirection(face);
-       IntVector adjCell = *iter - oneCell;
-       press_CC[*iter] = press_CC[adjCell];
-    }  // faces loop
-  }
-}
-/* --------------------------------------------------------------------- 
- Function~  setBC--         HARDWIRED FOR AMR
- Purpose~   Takes care any CC variable, except Pressure
- ---------------------------------------------------------------------  */
-void setBC(CCVariable<double>& var_CC,
-           const string& desc,
-           const CCVariable<double>&,
-           const CCVariable<double>&,
-           const Patch* patch,
-           SimulationStateP& sharedState, 
-           const int mat_id,
-           DataWarehouse*,
-           customBC_var_basket*)
-{
-  BC_doing << "setBC (double) "<< desc << " mat_id = " << mat_id << endl;
-  //__________________________________
-  // Iterate over the faces encompassing the domain
-  for(Patch::FaceType face = Patch::startFace;
-      face <= Patch::endFace; face=Patch::nextFace(face)){ 
-    for(CellIterator iter=patch->getFaceCellIterator(face,"plusEdgeCells"); !iter.done();iter++) {
-       IntVector oneCell = patch->faceDirection(face);
-       IntVector adjCell = *iter - oneCell;
-       var_CC[*iter] = var_CC[adjCell];
-    }  // faces loop
-  }
-}
-
-/* --------------------------------------------------------------------- 
- Function~  setBC--         HARDWIRED FOR AMR 
- Purpose~   Takes care vector boundary condition
- ---------------------------------------------------------------------  */
-void setBC(CCVariable<Vector>& var_CC,
-           const string& desc,
-           const Patch* patch,
-           SimulationStateP& sharedState, 
-           const int mat_id,
-           DataWarehouse*,
-           customBC_var_basket*)
-{
-  BC_doing <<"setBC (Vector_CC) "<< desc <<" mat_id = " <<mat_id<< endl;
-  
-  //__________________________________
-  // Iterate over the faces encompassing the domain
-  for(Patch::FaceType face = Patch::startFace;
-    face <= Patch::endFace; face=Patch::nextFace(face)){
-    for(CellIterator iter=patch->getFaceCellIterator(face,"plusEdgeCells"); !iter.done();iter++) {
-       IntVector oneCell = patch->faceDirection(face);
-       IntVector adjCell = *iter - oneCell;
-       var_CC[*iter] = var_CC[adjCell];
-    }  // faces loop
-  }
-}
-#endif
-
 
 /* --------------------------------------------------------------------- 
  Function~  ImplicitMatrixBC--      
@@ -309,7 +219,6 @@ void get_rho_micro(StaticArray<CCVariable<double> >& rho_micro,
   }  // face iter 
 }
 
-#ifndef AMR
 /* --------------------------------------------------------------------- 
  Function~  setBC-- (pressure)
  ---------------------------------------------------------------------  */
@@ -671,7 +580,6 @@ void setBC(CCVariable<Vector>& var_CC,
     }  // child loop
   }  // faces loop
 }
-#endif
 
 /* --------------------------------------------------------------------- 
  Function~  is_BC_specified--
