@@ -6275,6 +6275,7 @@ void TexSquare::draw(DrawInfoOpenGL* di, Material* matl, double)
   } else {
     cerr<<"Some sort of texturing error\n";
   }
+  glBindTexture(GL_TEXTURE_2D, 0);
   post_draw(di);
 }
 
