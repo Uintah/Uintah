@@ -69,9 +69,11 @@ void RunSimulation::execute()
 	if(!sobj){
 	    cerr << "Wrong object type!\n";
 	}
+#if 0
 	ostringstream cmd;
 	cmd << "mpirun -np 2 ~/PSE/test1 " << sobj->getURL().getString();
 	system(cmd.str().c_str());
+#endif
     }
 }
 
@@ -86,6 +88,9 @@ Module* make_RunSimulation( const clString& id )
 
 //
 // $Log$
+// Revision 1.2  1999/10/15 20:23:01  sparker
+// Mostly working
+//
 // Revision 1.1  1999/10/07 02:08:28  sparker
 // use standard iostreams and complex type
 //

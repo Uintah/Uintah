@@ -16,6 +16,7 @@
 #define Uintah_Modules_MPMViz_ParticleDatabase_h 1
 
 #include <Uintah/Datatypes/Particles/Particles_sidl.h>
+#include <PSECore/Dataflow/Module.h>
 #include <SCICore/Thread/ConditionVariable.h>
 #include <SCICore/Thread/CrowdMonitor.h>
 #include <SCICore/Thread/Mutex.h>
@@ -73,9 +74,9 @@ class ParticleDatabase : public Database_interface {
 
     SCICore::Thread::CrowdMonitor timestep_lock;
     std::vector<Timestep*> timesteps;
-
+    PSECore::Dataflow::Module* module;
 public:
-    ParticleDatabase();
+    ParticleDatabase(PSECore::Dataflow::Module* m);
     virtual ~ParticleDatabase();
 
     // Simulation interface...
@@ -102,6 +103,9 @@ public:
 
 //
 // $Log$
+// Revision 1.2  1999/10/15 20:23:01  sparker
+// Mostly working
+//
 // Revision 1.1  1999/10/07 02:08:27  sparker
 // use standard iostreams and complex type
 //
