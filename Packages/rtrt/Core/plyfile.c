@@ -57,6 +57,39 @@ int ply_type_size[] = {
 #define OTHER_PROP       0
 #define NAMED_PROP       1
 
+static inline void SWAP2(char* item)
+{
+  char tmp = item[0];
+  item[0] = item[1];
+  item[1] = tmp;
+}
+
+static inline void SWAP4(char* item)
+{
+  char tmp = item[0];
+  item[0] = item[3];
+  item[3] = tmp;
+  tmp = item[1];
+  item[1] = item[2];
+  item[2] = tmp;
+}
+
+static inline void SWAP8(char* item)
+{
+  char tmp = item[0];
+  item[0] = item[7];
+  item[7] = tmp;
+  tmp = item[1];
+  item[1] = item[6];
+  item[6] = tmp;
+  tmp = item[2];
+  item[2] = item[5];
+  item[5] = tmp;
+  tmp = item[3];
+  item[3] = item[4];
+  item[4] = tmp;
+}
+
 
 /* returns 1 if strings are equal, 0 if not */
 int equal_strings(char *, char *);
@@ -95,11 +128,11 @@ void store_item(char *, int, int, unsigned int, double);
 void get_stored_item( void *, int, int *, unsigned int *, double *);
 
 /* return the value stored in an item, given ptr to it and its type */
-double get_item_value(char *, int);
+double get_item_value(char *, int, int);
 
 /* get binary or ascii item and store it according to ptr and type */
 void get_ascii_item(char *, int, int *, unsigned int *, double *);
-void get_binary_item(FILE *, int, int *, unsigned int *, double *);
+void get_binary_item(FILE *, int, int, int *, unsigned int *, double *);
 
 /* get a bunch of elements from a file */
 void ascii_get_element(PlyFile *, char *);
@@ -107,6 +140,17 @@ void binary_get_element(PlyFile *, char *);
 
 /* memory allocation */
 char *my_alloc(int, int, char *);
+
+/* To test endianness */
+static int machineIsBigEndian()
+{
+  short i = 0x4321;
+  if((*(char *)&i) != 0x21 ){
+    return 1;
+  } else {
+    return 0;
+  }
+}
 
 
 /*************/
@@ -153,6 +197,19 @@ PlyFile *ply_write(
   plyfile->fp = fp;
   plyfile->other_elems = NULL;
 
+  /* Let's make sure if we are writing a binary format, that it
+     matches the endianness of the machine we are on. */
+  if (plyfile->filetype == PLY_BINARY_BE) {
+    if (!machineIsBigEndian) {
+      fprintf(stderr, "ply_write: Specified Big Endian binary format on a little endian machine.  Switching to little endian format.\n");
+      plyfile->filetype = PLY_BINARY_LE;
+    }
+  } else if (plyfile->filetype == PLY_BINARY_LE) {
+    if (machineIsBigEndian) {
+      fprintf(stderr, "ply_write: Specified Little Endian binary format on a big endian machine.  Switching to big endian format.\n");
+      plyfile->filetype = PLY_BINARY_BE;
+    }
+  }
   /* tuck aside the names of the elements */
 
   plyfile->elems = (PlyElement **) myalloc (sizeof (PlyElement *) * nelems);
@@ -711,6 +768,7 @@ PlyFile *ply_read(FILE *fp, int *nelems, char ***elem_names)
   plyfile->num_obj_info = 0;
   plyfile->fp = fp;
   plyfile->other_elems = NULL;
+  plyfile->swap_endian = 0; /* default this to false */
 
   /* read and parse the file's header */
 
@@ -727,11 +785,16 @@ PlyFile *ply_read(FILE *fp, int *nelems, char ***elem_names)
         return (NULL);
       if (equal_strings (words[1], "ascii"))
         plyfile->file_type = PLY_ASCII;
-      else if (equal_strings (words[1], "binary_big_endian"))
+      else if (equal_strings (words[1], "binary_big_endian")) {
         plyfile->file_type = PLY_BINARY_BE;
-      else if (equal_strings (words[1], "binary_little_endian"))
+        /* Do we need to swap byte order */
+        if (!machineIsBigEndian())
+          plyfile->swap_endian = 1;
+      } else if (equal_strings (words[1], "binary_little_endian")) {
         plyfile->file_type = PLY_BINARY_LE;
-      else
+        if (machineIsBigEndian())
+          plyfile->swap_endian = 1;
+      } else
         return (NULL);
       plyfile->version = atof (words[2]);
       found_format = 1;
@@ -784,7 +847,7 @@ Open a polygon file for reading.
 
 Entry:
   filename - name of file to read from
-
+  endianness - the endianness of the data
 Exit:
   nelems     - number of elements in object
   elem_names - list of element names
@@ -795,6 +858,7 @@ Exit:
 
 PlyFile *ply_open_for_reading(
   char *filename,
+  int endianness,
   int *nelems,
   char ***elem_names,
   int *file_type,
@@ -1633,7 +1697,7 @@ void binary_get_element(PlyFile *plyfile, char *elem_ptr)
     if (prop->is_list) {       /* a list */
 
       /* get and store the number of items in the list */
-      get_binary_item (fp, prop->count_external,
+      get_binary_item (fp, prop->count_external, plyfile->swap_endian,
                       &int_val, &uint_val, &double_val);
       if (store_it) {
         item = elem_data + prop->count_offset;
@@ -1663,7 +1727,7 @@ void binary_get_element(PlyFile *plyfile, char *elem_ptr)
 
         /* read items and store them into the array */
         for (k = 0; k < list_count; k++) {
-          get_binary_item (fp, prop->external_type,
+          get_binary_item (fp, prop->external_type, plyfile->swap_endian,
                           &int_val, &uint_val, &double_val);
           if (store_it) {
             store_item (item, prop->internal_type,
@@ -1675,7 +1739,7 @@ void binary_get_element(PlyFile *plyfile, char *elem_ptr)
 
     }
     else {                     /* not a list */
-      get_binary_item (fp, prop->external_type,
+      get_binary_item (fp, prop->external_type, plyfile->swap_endian,
                       &int_val, &uint_val, &double_val);
       if (store_it) {
         item = elem_data + prop->offset;
@@ -1808,12 +1872,13 @@ Return the value of an item, given a pointer to it and its type.
 Entry:
   item - pointer to item
   type - data type that "item" points to
+  swap_endian - swap the byte order of multibyte values
 
 Exit:
   returns a double-precision float that contains the value of the item
 ******************************************************************************/
 
-double get_item_value(char *item, int type)
+double get_item_value(char *item, int type, int swap_endian)
 {
   unsigned char *puchar;
   char *pchar;
@@ -1837,26 +1902,32 @@ double get_item_value(char *item, int type)
       int_value = *puchar;
       return ((double) int_value);
     case PLY_SHORT:
+      if (swap_endian) SWAP2(item);
       pshort = (short int *) item;
       int_value = *pshort;
       return ((double) int_value);
     case PLY_USHORT:
+      if (swap_endian) SWAP2(item);
       pushort = (unsigned short int *) item;
       int_value = *pushort;
       return ((double) int_value);
     case PLY_INT:
+      if (swap_endian) SWAP4(item);
       pint = (int *) item;
       int_value = *pint;
       return ((double) int_value);
     case PLY_UINT:
+      if (swap_endian) SWAP4(item);
       puint = (unsigned int *) item;
       uint_value = *puint;
       return ((double) uint_value);
     case PLY_FLOAT:
+      if (swap_endian) SWAP4(item);
       pfloat = (float *) item;
       double_value = *pfloat;
       return (double_value);
     case PLY_DOUBLE:
+      if (swap_endian) SWAP8(item);
       pdouble = (double *) item;
       double_value = *pdouble;
       return (double_value);
@@ -2066,6 +2137,7 @@ void get_stored_item(
   double *double_val
 )
 {
+  fprintf(stderr, "OOPS: get_stored_item called!!!!!!!\n");
   switch (type) {
     case PLY_CHAR:
       *int_val = *((char *) ptr);
@@ -2121,6 +2193,7 @@ into an integer, an unsigned integer and a double.
 Entry:
   fp   - file to get item from
   type - data type supposedly in the word
+  swap_endian - swap the byte order of multibyte values
 
 Exit:
   int_val    - integer value
@@ -2131,6 +2204,7 @@ Exit:
 void get_binary_item(
   FILE *fp,
   int type,
+  int swap_endian,
   int *int_val,
   unsigned int *uint_val,
   double *double_val
@@ -2156,36 +2230,42 @@ void get_binary_item(
       break;
     case PLY_SHORT:
       fread (ptr, 2, 1, fp);
+      if (swap_endian) SWAP2(ptr);
       *int_val = *((short int *) ptr);
       *uint_val = *int_val;
       *double_val = *int_val;
       break;
     case PLY_USHORT:
       fread (ptr, 2, 1, fp);
+      if (swap_endian) SWAP2(ptr);
       *uint_val = *((unsigned short int *) ptr);
       *int_val = *uint_val;
       *double_val = *uint_val;
       break;
     case PLY_INT:
       fread (ptr, 4, 1, fp);
+      if (swap_endian) SWAP4(ptr);
       *int_val = *((int *) ptr);
       *uint_val = *int_val;
       *double_val = *int_val;
       break;
     case PLY_UINT:
       fread (ptr, 4, 1, fp);
+      if (swap_endian) SWAP4(ptr);
       *uint_val = *((unsigned int *) ptr);
       *int_val = *uint_val;
       *double_val = *uint_val;
       break;
     case PLY_FLOAT:
       fread (ptr, 4, 1, fp);
+      if (swap_endian) SWAP4(ptr);
       *double_val = *((float *) ptr);
       *int_val = *double_val;
       *uint_val = *double_val;
       break;
     case PLY_DOUBLE:
       fread (ptr, 8, 1, fp);
+      if (swap_endian) SWAP8(ptr);
       *double_val = *((double *) ptr);
       *int_val = *double_val;
       *uint_val = *double_val;
