@@ -38,6 +38,12 @@ itcl_class Teem_DataIO_AnalyzeToNrrd {
     }
 
     method ui {} {
+	global $this-have-insight
+	if {![set $this-have-insight]} {
+	    tk_dialog .needinsight "Error: Need Insight" "Error: This module relies upon functionality from the Insight package to read Analyze data; however, you do not have the Insight package enabled.  You can enable the Insight package by installing ITK, re-running configure, and re-compiling.  Please see the SCIRun installation guide for more information." "" 0 "OK"
+	    return
+	}
+
         set w .ui[modname]
         if {[winfo exists $w]} {
             raise $w
