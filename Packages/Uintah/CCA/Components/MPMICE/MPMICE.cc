@@ -2033,16 +2033,18 @@ void MPMICE::addMaterial(const ProblemSpecP& prob_spec, GridP& grid,
   d_recompile = true;
   if(d_sharedState->needAddMaterial() > 0){
     d_ice->addMaterial(prob_spec, grid, d_sharedState);
+    cout << "Adding an ICE material" << endl;
   }
   if(d_sharedState->needAddMaterial() < 0){
     d_mpm->addMaterial(prob_spec, grid, d_sharedState);
     d_ice->updateExchangeCoefficients(prob_spec, grid, d_sharedState);
+    cout << "Adding an MPM material" << endl;
   }
 }
 void MPMICE::scheduleInitializeAddedMaterial(const LevelP& level,
                                              SchedulerP& sched)
 {
-  cout << "Entering MPMICE::scheduleInitializeAddedMaterial" << endl;
+  cout_doing << "Entering MPMICE::scheduleInitializeAddedMaterial" << endl;
 
   if(d_sharedState->needAddMaterial() > 0){
     d_ice->scheduleInitializeAddedMaterial(level,sched);
@@ -2070,7 +2072,7 @@ void MPMICE::scheduleInitializeAddedMaterial(const LevelP& level,
       delete add_matl; // shouln't happen, but...
   }
 
-  cout << "Leaving MPMICE::scheduleInitializeAddedMaterial" << endl;
+  cout_doing  << "Leaving MPMICE::scheduleInitializeAddedMaterial" << endl;
 
 }
 /*______________________________________________________________________
