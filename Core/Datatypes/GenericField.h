@@ -80,6 +80,7 @@ public:
   //! Persistent I/O.
   virtual void io(Piostream &stream);
   static  PersistentTypeID type_id;
+  static  const string type_name();
   static  const string type_name(int);
   virtual const string get_type_name(int n) const { return type_name(n); }
 
@@ -105,7 +106,6 @@ GenericField<Mesh, FData>::GInterp::interpolate(const Point& /*p*/,
 						double& /*value*/) const
 {
   cerr << "Error: NO interp defined!" << endl;
-  ASSERT(0);
   return false;
 }
 
@@ -121,18 +121,43 @@ GenericField<Mesh, FData>::query_interpolate_to_scalar() const
 const double GENERICFIELD_VERSION = 1.0;
 
 template <class Mesh, class FData>
-const string GenericField<Mesh, FData>::type_name(int)
+Persistent* make_GenericField()
 {
-  static string name = "GenericField<" + find_type_name((Mesh *)0) + ", "
+  return scinew GenericField<Mesh, FData>;
+}
+
+template <class Mesh, class FData>
+PersistentTypeID 
+GenericField<Mesh, FData>::type_id(type_name(), 
+				   "Field",
+				   &make_GenericField<Mesh, FData>);
+
+template <class Mesh, class FData>
+const string GenericField<Mesh, FData>::type_name()
+{
+  // Pstreams do not like spaces
+  static string name = "GenericField<" + find_type_name((Mesh *)0) + ","
     + find_type_name((FData *)0) + ">";
   return name;
+}
+
+template <class Mesh, class FData>
+const string GenericField<Mesh, FData>::type_name(int a)
+{
+  ASSERT((a <= 2) && a >= 0);
+  if (a == 0) {
+    return string("GenericField");
+  } else if (a == 1) {
+    return find_type_name((Mesh *)0);
+  }   
+  return find_type_name((FData *)0);
 }
 
 
 template <class Mesh, class FData>
 void GenericField<Mesh, FData>::io(Piostream& stream)
 {
-  stream.begin_class(type_name(0).c_str(), GENERICFIELD_VERSION);
+  stream.begin_class(type_name().c_str(), GENERICFIELD_VERSION);
   Field::io(stream);
   mesh_->io(stream);
   Pio(stream, fdata_);

@@ -79,8 +79,15 @@ void FieldReader::execute()
     
     // Read the file
     Pio(*stream, handle_);
-    if(!handle_.get_rep() || stream->error()){
-      error(clString("Error reading Field from file: ")+
+    if(stream->error()){
+      error(clString("Stream Error reading Field from file:")+
+	    filename_.get());
+      delete stream;
+      return;
+    }
+
+    if(! handle_.get_rep()){
+      error(clString("Error building Field from stream: ")+
 	    filename_.get());
       delete stream;
       return;

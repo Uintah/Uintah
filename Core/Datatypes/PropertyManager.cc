@@ -12,11 +12,17 @@
 //
 
 #include <Core/Datatypes/PropertyManager.h>
-
+#include <Core/Malloc/Allocator.h>
 
 namespace SCIRun {
 
-PersistentTypeID PropertyManager::type_id("PropertyManager", "Datatype", NULL);
+Persistent* make_PropertyManager()
+{
+  return scinew PropertyManager;
+}
+
+PersistentTypeID PropertyManager::type_id("PropertyManager", 
+					  "Datatype", make_PropertyManager);
 
 
 PropertyManager::PropertyManager()
