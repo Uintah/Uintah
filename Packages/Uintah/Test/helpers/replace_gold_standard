@@ -52,7 +52,7 @@ else
   fi
 fi
 
-if [ ! -f $gold_standard_dir/$testname/*malloc* ]; then
+if [ ! -f $gold_standard_dir/$testname/malloc_stats ]; then
   echo "No memory stats to replace"
 else
   
@@ -76,7 +76,7 @@ else
   fi
 fi
 
-if [ ! -f $gold_standard_dir/$testname/*timestamp* ]; then
+if [ ! -f $gold_standard_dir/$testname/timestamp ]; then
   echo "No performance stats to replace"
 else
 
