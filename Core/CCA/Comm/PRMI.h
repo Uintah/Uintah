@@ -54,6 +54,7 @@
 #include <Core/CCA/Comm/DT/DTAddress.h>
 #include <Core/CCA/Comm/DT/DTMessageTag.h>
 #include <Core/CCA/Comm/SocketEpChannel.h>
+#include <mpi.h>
 
 namespace SCIRun {
 
@@ -125,8 +126,15 @@ namespace SCIRun {
     };
 
     static void init();
-    static void lock();
-    static void unlock();
+    static inline void lock();
+    static inline void unlock();
+
+    static void internal_lock();
+    static void internal_unlock();
+
+    //duplicate MPI_COMM_WORLD
+    static int getComm(MPI_Comm *);
+
     static void order_service(DTMessage *dtmsg);
     static void lock_service(DTMessage *dtmsg);
     static void addStat(states *);
@@ -154,6 +162,9 @@ namespace SCIRun {
     //only root needs these
     static DTPoint** lockSvc_ep_list;
     static DTAddress  * lockSvc_addr_list;
+
+    static MPI_Comm MPI_COMM_WORLD_Dup;
+
   private:
 
 

@@ -124,11 +124,17 @@ PRMI:: lock_req_map;
 PRMI::states 
 PRMI::fwkstate;
 
+MPI_Comm
+PRMI::MPI_COMM_WORLD_Dup;
+
 void 
 PRMI::init(){
   //set size, rank
   MPI_Comm_size(MPI_COMM_WORLD, &mpi_size);
   MPI_Comm_rank(MPI_COMM_WORLD, &mpi_rank);
+
+  MPI_Comm_dup(MPI_COMM_WORLD, &MPI_COMM_WORLD_Dup);
+
 
   DTAddress dtAddr=PIDL::getDT()->getAddress();
   if(mpi_rank==0){
@@ -170,7 +176,7 @@ PRMI::init(){
 }
 
 void
-PRMI::lock(){
+PRMI::internal_lock(){
   //called by any threads in the same address space. 
   states* stat=getStat();
 
@@ -210,7 +216,7 @@ PRMI::lock(){
 }
 
 void
-PRMI::unlock(){
+PRMI::internal_unlock(){
   //called by any threads in the same address space. 
 
   //remove the head of the lock queue
@@ -238,6 +244,28 @@ PRMI::unlock(){
   }
 }
 
+void inline
+PRMI::lock(){
+#ifndef MPI_IS_THREADSAFE
+  internal_lock();
+#endif
+}
+
+void inline
+PRMI::unlock(){
+#ifndef MPI_IS_THREADSAFE
+  internal_unlock();
+#endif
+}
+
+int 
+PRMI::getComm(MPI_Comm *newComm){
+  int retval;
+  internal_lock();
+  retval=MPI_Comm_dup(MPI_COMM_WORLD_Dup, newComm);
+  internal_unlock();
+  return retval;
+}
 
 void
 PRMI::addStat(states *stat){
