@@ -32,11 +32,13 @@ namespace Uintah {
 
     virtual void advectQ(const CCVariable<double>& q_CC,
                       const Patch* patch,
-                      CCVariable<double>& q_advected) = 0;
+                      CCVariable<double>& q_advected,
+			 DataWarehouse* new_dw) = 0;
 
     virtual void advectQ(const CCVariable<Vector>& q_CC,
                       const Patch* patch,
-                      CCVariable<Vector>& q_advected) = 0;
+                      CCVariable<Vector>& q_advected,
+			 DataWarehouse* new_dw) = 0;
 
   };
 
