@@ -26,7 +26,6 @@ SUBDIRS := $(SRCDIR)/Builder $(SRCDIR)/TxtBuilder $(SRCDIR)/Hello  $(SRCDIR)/Lis
 	$(SRCDIR)/ZList $(SRCDIR)/Viewer $(SRCDIR)/LinSolver \
 	$(SRCDIR)/FileReader $(SRCDIR)/FEM $(SRCDIR)/Tri $(SRCDIR)/TableTennis \
 	$(SRCDIR)/TTClient
-include $(SCIRUN_SCRIPTS)/recurse.mk
 
 else
 SUBDIRS :=$(SRCDIR)/TxtBuilder $(SRCDIR)/Hello
