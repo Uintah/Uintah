@@ -1,0 +1,31 @@
+
+#include <config/sci.cf>
+
+SRCS = mpeg.c codec.c huffman.c io.c chendct.c lexer.c marker.c me.c mem.c stat.c stream.c transform.c
+
+OBJS = mpeg.o codec.o huffman.o io.o chendct.o lexer.o marker.o me.o mem.o stat.o stream.o transform.o
+
+#if defined(SCI_MACHINE_Solaris)
+XLIBDIR = -L/usr/openwin/lib
+XINCLUDE = -I/usr/openwin/include
+#endif
+
+#if defined(SCI_MACHINE_Linux)
+#XLIBDIR = -L/usr/X11R6/lib
+#endif
+
+#if defined(SCI_MACHINE_SGI) && defined(SCI_IRIX_BIN_o32)
+LOCALCFLAGS = -woff 835
+#endif
+#if defined(SCI_MACHINE_SGI) && defined(SCI_IRIX_BIN_n32_mips3) || defined(SCI_IRIX_BIN_n32_mips4) \
+        || defined(SCI_IRIX_BIN_64_mips3) || defined(SCI_IRIX_BIN_64_mips4)
+LOCALCFLAGS = -woff 1692,1498,1233,1209,1552
+#endif
+LOCALINCLUDES = -I../tcl -I../tk -I./Headers -DHAVE_STRTOK $(XINCLUDE)
+LIBNAME = mpeg
+
+SO_LIBS =
+SO_LDFLAGS = -L$(SCILIBDIR) $(XLIBDIR)
+
+SCIDependTarget($(SRCS))
+SCIObjLibraryTarget($(LIBNAME),$(OBJS),$(SO_LIBS),$(SO_LDFLAGS))
