@@ -116,7 +116,7 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
     float Kd=.8;
     float Ks=.8;
     float refl=0;
-    float specpow=40;
+    int specpow=40;
     for(int i=0;i<ncolors;i++){
       float frac=float(i)/(ncolors-1);
       Color c(spline(frac));
@@ -196,7 +196,7 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
       int num;
       temp_in >> num;
       Array1<float> data(num);
-      unsigned int datai;
+      int datai;
       for(datai = 0; datai < num; datai++)
 	temp_in >> data[datai];
 
@@ -217,7 +217,7 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
       if (data.size() != 0) {
 	float min, max;
 	min = max = data[0];
-	for(unsigned int i = 0; i < data.size(); i++) {
+	for(int i = 0; i < data.size(); i++) {
 	  //    cerr << "f1_to_f2[i="<<i<<"] = "<<(*f1_to_f2)[i]<<endl;
 	  min = Min(min, data[i]);
 	  max = Max(max, data[i]);
