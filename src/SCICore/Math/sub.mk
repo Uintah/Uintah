@@ -19,7 +19,6 @@ $(FNSRCDIR)/fnscanner.cc: $(FNSRCDIR)/fnscanner.l $(FNSRCDIR)/fnparser.cc;
 
 SRCS     += $(SRCDIR)/Mat.c $(SRCDIR)/MusilRNG.cc $(SRCDIR)/TrigTable.cc \
 	$(SRCDIR)/LinAlg.c $(SRCDIR)/fft.c $(SRCDIR)/hf.c $(SRCDIR)/ssmult.c \
-
 	$(SRCDIR)/PiecewiseInterp.cc $(SRCDIR)/LinearPWI.cc $(SRCDIR)/CubicPWI.cc \
 	$(SRCDIR)/function.cc $(SRCDIR)/fnscanner.cc $(SRCDIR)/fnparser.cc
 
@@ -31,6 +30,9 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.7  2000/08/09 07:58:39  samsonov
+# minor fix
+#
 # Revision 1.6  2000/08/09 07:08:45  samsonov
 # Added CubicPWI.cc path
 #
