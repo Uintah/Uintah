@@ -133,7 +133,7 @@ FASTEST    MEAN4RUNS  OPTION
 -----------------------------------------
 0.48879 s  0.48935 s  OFAST W/CHANGES AS OF 12/17/2003
 0.57505 s  0.57665 s  OFAST
-0.59217	s  0.59256 s  O3
+0.59217 s  0.59256 s  O3
 0.59546 s  0.59668 s  OFAST_INLINE2000
 0.57636 s  0.59367 s  OFAST_INLINE1000
 1.68763 s  1.68819 s  OFAST_INLINE100
@@ -146,3 +146,23 @@ OFAST_INLINE100     = '-O3 -march=pentium4 -msse -msse2 -finline-limit=100'
 OFAST_INLINE0       = '-O3 -march=pentium4 -msse -msse2 -finline-limit=0'
 OFAST               = '-O3 -march=pentium4 -msse -msse2'
 O3                  = '-O3'
+-------------------------------------------------------------------------------
+12/21/03   Todd
+../../src/configure --enable-64bit --enable-package=Uintah --enable-optimize=-O3 -INLINE:=ON:all -TARG:processor=r14k -OPT:Olimit=0:roundoff=3 --disable-sci-malloc --enable-assertion-level=0
+
+performanceTest[SecondOrderCE] Best of 3 on muse
+1.77649 s -initial
+
+1.64971 s - changed gradientLimiter(), q_CCMaxMin(), q_vertexMaxMin() and gradQ to
+            pointwise operations
+            
+1.58174 s - further elimination of [c] operators in SecondOrderCEAdvector::qAverageFlux(
+
+
+performanceTest[SecondOrder]
+0.626804 s - initial
+0.566595 s - changed gradientLimiter(), q_CCMaxMin(), q_vertexMaxMin() and gradQ to
+            pointwise operations
+
+0.564265  - changed r_out_(x,y,z) from CCVariable<fflux> to CCVariable<faceData<Vector> >
+            (not committed)
