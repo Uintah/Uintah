@@ -2207,6 +2207,7 @@ case $host in
          FOUND_ALL_MPI=yes
          if test "$HAVE_LIBMPICH"; then
            DEF_MPICH="#define HAVE_MPICH 1"
+           LIBMPI=$LIBMPICH
          else
            DEF_MPI="#define HAVE_MPI 1"
          fi
@@ -2935,7 +2936,7 @@ fi
 SCI_CHECK_LIB($dirs,petsc,main,\
     -lpetscsles -lpetscmat -lpetscvec \
     -lpetscdm -lpetsccontrib $LAPACK_LIBRARY -llapack \
-    $BLAS_LIBRARY -lblas $X_LIBRARY -lX11 \
+    $BLAS_LIBRARY $BLAS_LIB $X_LIBRARY -lX11 \
     -L$LIBPETSC/../../../$PETSC_SUB/$PETSC_ARCH -lmpiuni $FLIBS -lm,,optional)
 
 if test "$HAVE_LIBPETSC" = "yes"; then
@@ -2956,7 +2957,7 @@ if test "$HAVE_LIBPETSC" && test "$HAVE_PETSC_H" &&
     fi
     UNIPETSC_EXTRA_LIBS="-lpetscsles -lpetscmat -lpetscvec \
       -lpetscdm -lpetsccontrib $LAPACK_LIBRARY -llapack \
-      $BLAS_LIBRARY -lblas $X_LIBRARY -lX11 -lmpiuni $FLIBS -lm"
+      $BLAS_LIBRARY $BLAS_LIB $X_LIBRARY -lX11 -lmpiuni $FLIBS -lm"
     UNIPETSC_ARCH=`$LIBPETSC/../../../bin/petscarch`
     if test "$is_64bit" != "yes" -a "$UNIPETSC_ARCH" = "IRIX64"; then
       UNIPETSC_ARCH="IRIX"
