@@ -44,7 +44,7 @@ OBJS = Containers\Sort.odll Containers\String.odll Containers\PQueue.odll\
 	   Geom\GeomTimeGroup.odll Geom\HeadLight.odll Geom\PointLight.odll\
 	   Geometry\BBox.odll Geometry\Grid.odll Geometry\Point.odll Geometry\Transform.odll\
 	   Geometry\Plane.odll Geometry\Vector.odll\
-	   Math\Complex.odll Math\Mat.odll Math\MusilRNG.odll Math\TrigTable.odll\
+	   Math\Mat.odll Math\MusilRNG.odll Math\TrigTable.odll\
 	   Math\LinAlg.odll Math\fft.odll Math\hf.odll Math\ssmult.odll\
 	   Persistent\Persistent.odll Persistent\Pstreams.odll\
 	   TclInterface\DebugSettings.odll TclInterface\GuiManager.odll\
@@ -56,8 +56,11 @@ OBJS = Containers\Sort.odll Containers\String.odll Containers\PQueue.odll\
 	   Thread\Guard.odll Thread\ParallelBase.odll Thread\Runnable.odll\
 	   Thread\Thread.odll Thread\ThreadError.odll Thread\SimpleReducer.odll\
 	   Thread\ThreadGroup.odll Thread\WorkQueue.odll\
-#	   Thread\Thread_win32.odll Thread\Time_win32.odll\
-	   TkExtensions\tk3d2.odll TkExtensions\tkAppInit.odll TkExtensions\tkBevel.odll\
+	   Thread\ConditionVariable_default.odll Thread\CrowdMonitor_default.odll\
+       Thread\RecursiveMutex_default.odll Thread\AtomicCounter_default.odll\
+	   Thread\Barrier_default.odll Thread\Thread_win32.odll\
+#      Thread\Time_win32.odll\
+       TkExtensions\tk3d2.odll TkExtensions\tkAppInit.odll TkExtensions\tkBevel.odll\
 	   TkExtensions\tkCanvBLine.odll TkExtensions\tkOpenGL.odll\
 	   TkExtensions\tkRange.odll TkExtensions\tkCursor.odll\
 	   TkExtensions\tkUnixRange.odll\
