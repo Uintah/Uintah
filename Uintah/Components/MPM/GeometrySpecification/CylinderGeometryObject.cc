@@ -2,33 +2,25 @@
 #include "GeometryObjectFactory.h"
 #include <Uintah/Interface/ProblemSpec.h>
 #include <Uintah/Grid/Box.h>
+#include <SCICore/Geometry/Vector.h>
+
+using SCICore::Geometry::Vector;
 
 using namespace Uintah::Components;
 
 
 CylinderGeometryObject::CylinderGeometryObject(ProblemSpecP& ps) {
 
-  Point orig;
-  double len;
+  Point top,bottom;
   double rad;
-  CylinderGeometryObject::AXIS axis;
-  std::string axis_type;
-
-  ps->require("axis",axis_type);
-  ps->require("origin",orig);
-  ps->require("length",len);
+  
+  ps->require("bottom",bottom);
+  ps->require("top",top);
   ps->require("radius",rad);
   
-  if (axis_type == "X") axis = CylinderGeometryObject::X;
-  if (axis_type == "Y") axis = CylinderGeometryObject::Y;
-  if (axis_type == "Z") axis = CylinderGeometryObject::Z;
-
-  d_axis = axis;
-  d_origin = orig;
-  d_length = len;
+  d_bottom = bottom;
+  d_top = top;
   d_radius = rad;
-
-
 }
 
 
@@ -40,21 +32,43 @@ CylinderGeometryObject::~CylinderGeometryObject()
 bool CylinderGeometryObject::inside(const Point &p) const
 {
 
-  // Do the x axis
+  Vector axis = d_top-d_bottom;  
+  double height2 = axis.length2();
 
-  // Do the y axis 
+  Vector tobot = p-d_bottom;
 
-  // Do the z axis
+  // pt is the "test" point
+  double h = Dot(tobot, axis);
+  if(h < 0.0 || h > height2)
+    return false; // Above or below the cylinder
+
+  double area = Cross(axis, tobot).length2();
+  double d = area/height2;
+  if( d > d_radius*d_radius)
+    return false;
+  return true;
 
 }
 
 Box CylinderGeometryObject::getBoundingBox() const
 {
+  
+  Point lo(d_bottom.x() - d_radius, d_bottom.y() - d_radius,
+	   d_bottom.z() - d_radius);
 
+  Point hi(d_top.x() + d_radius, d_top.y() + d_radius,
+	   d_top.z() + d_radius);
+
+  return Box(lo,hi);
+  
 
 }
 
 // $Log$
+// Revision 1.6  2000/04/21 22:59:25  jas
+// Can create a generalized cylinder (removed the axis aligned constraint).
+// Methods for finding bounding box and the inside test are completed.
+//
 // Revision 1.5  2000/04/20 22:58:13  sparker
 // Resolved undefined symbols
 // Trying to make stuff work
