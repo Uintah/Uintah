@@ -98,13 +98,14 @@ ImageImporter::execute()
 #else
   time_t new_filemodification = buf.st_mtime;
 #endif
+
+#ifdef HAVE_MAGICK
   if (!handle_.get_rep() || 
       fn != old_filename_ || 
       new_filemodification != old_filemodification_)
   {
     old_filemodification_ = new_filemodification;
     old_filename_ = fn;
-    
     // Read in the imagemagic image.
     C_Magick::ImageInfo *image_info;
     C_Magick::Image *image;
@@ -190,5 +191,9 @@ ImageImporter::execute()
     return;
   }
   outport->send(handle_);
+#else
+  error("ImageMagick not found.  Please verify that you have the application development installation of ImageMagick.");
+  return;
+#endif
 }
 
