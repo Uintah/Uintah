@@ -1298,7 +1298,7 @@ PressureSolver::buildLinearMatrixPressPred(const ProcessorGroup* pc,
     new_dw->allocateAndPut(pressureVars.pressNonlinearSrc, d_lab->d_presNonLinSrcPBLMLabel, matlIndex, patch);
     pressureVars.pressNonlinearSrc.initialize(0.0);
     d_source->calculatePressureSourcePred(pc, patch, delta_t,
-    					  cellinfo, d_turbModel->getFilter(), &pressureVars);
+    					  cellinfo, &pressureVars);
 
     // Calculate Pressure BC
     //  inputs : pressureIN, presCoefPBLM
@@ -1770,7 +1770,7 @@ PressureSolver::buildLinearMatrixPressCorr(const ProcessorGroup* pc,
     pressureVars.pressLinearSrc.initialize(0.0);
     pressureVars.pressNonlinearSrc.initialize(0.0);
     d_source->calculatePressureSourcePred(pc, patch, delta_t,
-				      cellinfo, d_turbModel->getFilter(),&pressureVars);
+				      cellinfo,&pressureVars);
 
     // Calculate Pressure BC
     //  inputs : pressureIN, presCoefPBLM
@@ -2943,7 +2943,7 @@ PressureSolver::buildLinearMatrixPressInterm(const ProcessorGroup* pc,
     pressureVars.pressLinearSrc.initialize(0.0);
     pressureVars.pressNonlinearSrc.initialize(0.0);
     d_source->calculatePressureSourcePred(pc, patch, delta_t,
-				      cellinfo, d_turbModel->getFilter(),&pressureVars);
+				      cellinfo, &pressureVars);
 
     // Calculate Pressure BC
     //  inputs : pressureIN, presCoefPBLM

@@ -8,7 +8,9 @@
 #include <Packages/Uintah/CCA/Components/Arches/PhysicalConstants.h>
 #include <Packages/Uintah/CCA/Components/Arches/StencilMatrix.h>
 #include <Packages/Uintah/CCA/Components/Arches/TurbulenceModel.h>
+#ifdef PetscFilter
 #include <Packages/Uintah/CCA/Components/Arches/Filter.h>
+#endif
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
 #include <Packages/Uintah/Core/Grid/CCVariable.h>
 #include <Packages/Uintah/Core/Grid/Level.h>
@@ -321,7 +323,6 @@ Source::calculatePressureSourcePred(const ProcessorGroup* pc,
 				    const Patch* patch,
 				    double delta_t,
 				    CellInformation* cellinfo,
-				    Filter* boxFilter,
 				    ArchesVariables* vars)
 {
 
@@ -343,6 +344,7 @@ Source::calculatePressureSourcePred(const ProcessorGroup* pc,
 
 #ifdef FILTER_DRHODT
 #ifdef PetscFilter
+  Filter* boxFilter = d_turbModel->getFilter();
   vars->filterdrhodt.initialize(0.0);
   boxFilter->applyFilter(pc, patch,vars->drhodt, vars->filterdrhodt);
 #endif

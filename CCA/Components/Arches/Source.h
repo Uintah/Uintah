@@ -44,7 +44,6 @@ namespace Uintah {
   class ProcessorGroup;
 class PhysicalConstants;
 class TurbulenceModel;
-class Filter;
 using namespace SCIRun;
 
 class Source {
@@ -83,7 +82,6 @@ public:
 				       const Patch* patch,
 				       double delta_t,
 				       CellInformation* cellinfo,
-				       Filter* boxfilter,
 				       ArchesVariables* vars); 
 
       void calculatePressureSourceCorr(const ProcessorGroup* pc,
