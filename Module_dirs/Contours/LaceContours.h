@@ -17,15 +17,14 @@
 #include <Dataflow/Module.h>
 #include <Datatypes/ContourSet.h>
 #include <Datatypes/ContourSetPort.h>
-#include <Datatypes/Surface.h>
 #include <Datatypes/SurfacePort.h>
+class TriSurface;
 
 class LaceContours : public Module {
     ContourSetIPort* incontour;
     SurfaceOPort* osurface;
 
     void lace_contours(const ContourSetHandle&, TriSurface*);
-
 public:
     LaceContours(const clString& id);
     LaceContours(const LaceContours&, int deep);
