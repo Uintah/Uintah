@@ -31,6 +31,7 @@
 #include <sstream>
 #include <iomanip>
 #include <stdio.h>
+#include <algorithm>
 
 
 using namespace SCIRun;
@@ -364,6 +365,25 @@ int main(int argc, char** argv)
 		      }
 		    }
 		  break;
+		  case Uintah::TypeDescription::int_type:
+		    {
+		      ParticleVariable<int> value;
+		      da->query(value, var, matl, patch, time);
+		      ParticleSubset* pset = value.getParticleSubset();
+		      cout << "\t\t\t\t" << td->getName() << " over " << pset->numParticles() << " particles\n";
+		      if(pset->numParticles() > 0){
+			int min, max;
+			ParticleSubset::iterator iter = pset->begin();
+			min=max=value[*iter++];
+			for(;iter != pset->end(); iter++){
+			  min=Min(min, value[*iter]);
+			  max=Max(max, value[*iter]);
+			}
+			cout << "\t\t\t\tmin value: " << min << '\n';
+			cout << "\t\t\t\tmax value: " << max << '\n';
+		      }
+		    }
+		  break;
 		  case Uintah::TypeDescription::Point:
 		    {
 		      ParticleVariable<Point> value;
@@ -418,6 +438,25 @@ int main(int argc, char** argv)
 			}
 			cout << "\t\t\t\tmin Norm: " << min << '\n';
 			cout << "\t\t\t\tmax Norm: " << max << '\n';
+		      }
+		    }
+		  break;
+		  case Uintah::TypeDescription::long64_type:
+		    {
+		      ParticleVariable<long64> value;
+		      da->query(value, var, matl, patch, time);
+		      ParticleSubset* pset = value.getParticleSubset();
+		      cout << "\t\t\t\t" << td->getName() << " over " << pset->numParticles() << " particles\n";
+		      if(pset->numParticles() > 0){
+			long64 min, max;
+			ParticleSubset::iterator iter = pset->begin();
+			min=max=value[*iter++];
+			for(;iter != pset->end(); iter++){
+			  min=std::min(min, value[*iter]);
+			  max=std::max(max, value[*iter]);
+			}
+			cout << "\t\t\t\tmin : " << min << '\n';
+			cout << "\t\t\t\tmax : " << max << '\n';
 		      }
 		    }
 		  break;
@@ -942,7 +981,7 @@ int main(int argc, char** argv)
       }
       
       // obtain the desired timesteps
-      unsigned int t = 0, start_time, stop_time;
+      unsigned long t = 0, start_time, stop_time;
 
       cout << "Time Step       Value\n";
       
@@ -995,8 +1034,8 @@ int main(int argc, char** argv)
 		  // dumps header and variable info to file
 		  char fnum[5], matnum[5];
 		  string filename;
-		  int timestepnum=t+1;
-		  sprintf(fnum,"%04d",timestepnum);
+		  unsigned long timestepnum=t+1;
+		  sprintf(fnum,"%04lld",timestepnum);
 		  sprintf(matnum,"%04d",matl);
 		  string partroot("stress.t");
 		  string partext(".m");
