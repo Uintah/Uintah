@@ -13,6 +13,20 @@ VarLabel::VarLabel(const std::string& name, const TypeDescription* td,
 {
 }
 
+
+string
+VarLabel::getFullName(int matlIndex, const Patch* patch) const
+{
+   ostringstream out;
+        out << d_name << "(matl=" << matlIndex;
+   if(patch)
+        out << ", patch=" << patch->getID();
+   else
+        out << ", no patch";
+   out << ")";
+        return out.str();
+}                             
+
 ostream & 
 operator<<( ostream & out, const Uintah::VarLabel & vl )
 {
@@ -23,6 +37,9 @@ operator<<( ostream & out, const Uintah::VarLabel & vl )
 
 //
 // $Log$
+// Revision 1.10  2000/12/19 16:55:39  jas
+// Added implementation of getFullName.
+//
 // Revision 1.9  2000/12/10 09:06:18  sparker
 // Merge from csafe_risky1
 //
