@@ -1110,7 +1110,7 @@ Gui::handleMouseMotionCB( int mouse_x, int mouse_y )
 	  else if( fov > MAX_FOV )
 	    fov = MAX_FOV;
 	  activeGui->camera_->set_fov( fov );
-	  activeGui->fovSpinner_->set_float_val( fov );
+	  //	  activeGui->fovSpinner_->set_float_val( fov );
 	}
       activeGui->camera_->setup();
     }
