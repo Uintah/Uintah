@@ -15,10 +15,21 @@ itcl_class Uintah_Visualization_GridVisualizer {
 
     protected var_list ""
     protected mat_list ""
+    protected type_list ""
     protected var_val_list {}
     protected time_list {}
     protected num_materials 0
     protected num_colors 240
+
+    protected matrix_types {"Determinant" "Trace" "Norm"}
+    protected vector_types {"length" "length2" "x" "y" "z"}
+    protected num_m_type
+    protected num_v_type
+    # this represents the number of graphs made
+    # when a new graph is created then this number is incremented
+    # Thus repeatidly punching graph will continue to make new ones
+    # without replacing old ones.
+    protected graph_id 0
 
     constructor {config} {
 	set name GridVisualizer
@@ -82,6 +93,10 @@ itcl_class Uintah_Visualization_GridVisualizer {
 	#var graphing stuff
 	global $this-curr_var
 	set var_list ""
+
+	# selection stuff
+	set num_m_type [llength $matrix_types]
+	set num_v_type [llength $vector_types]
     }
     method make_color_menu {w v n} {
 	$w add radiobutton \
@@ -116,11 +131,13 @@ itcl_class Uintah_Visualization_GridVisualizer {
 		-value magenta
 
     }
+    # this is used for seting up the colors used for
+    # the levels and grid points
     method setup_color {w text nl n} {
 	for {set i 1} { $i <= $nl} {incr i} {
 	    set st "$w.l$i"
 	    append st "$text"
-	    puts $st
+#	    puts $st
 	    menubutton $st -text "Level [expr $i - 1] $text color" \
 		    -menu $st.list -relief groove
 	    pack $st -side top -anchor w -padx 2 -pady 2
@@ -162,59 +179,144 @@ itcl_class Uintah_Visualization_GridVisualizer {
     }
     method graph {name} {
     }
-    method mat_sel { var num_mat val} {
-	for {set j 0} { $j < $num_mat} {incr j} {
-	    set nvar $var
-	    append nvar $j
-	    set $this-matvar$nvar $val
+    # this sets all the variables, var_root_j, with val
+    method mat_sel_sub { var_root number val} {
+	for {set j 0} { $j < $number} {incr j} {
+	    set tail "_$j"
+	    set $var_root$tail $val
 	}
     }
-    method make_mat_menu {w mat i} {
-	set fname "$w.mat$mat"
+    # called when SelAll or SelNone is evoked from the top level
+    method mat_sel { var_root number val type} {
+	for {set j 0} { $j < $number} {incr j} {
+	    set tail "_$j"
+	    switch $type {
+		"matrix3" {
+		    mat_sel_sub $var_root$tail $num_m_type $val
+		}
+		"vector" {
+		    mat_sel_sub $var_root$tail $num_v_type $val
+		}
+		"scaler" {
+		    set $var_root$tail $val
+		}
+	    }
+	}
+    }	
+    # creates the material selection menu
+    # it generates sub menus for matrix3 and vector types
+    method make_mat_menu {w mat i type} {
+	set fname "$w.mat$i"
 	menubutton $fname -text "Material" \
 		-menu $fname.list -relief groove
 	pack $fname -side right -padx 2 -pady 2
 	
 	menu $fname.list
+	set var_o $i
+	append var_o "_o[set $this-var_orientation]"
 	$fname.list add command -label "Sel All" \
-		-command "$this mat_sel $i $mat 1"
+		-command "$this mat_sel $this-matvar_$var_o $mat 1 $type"
 	$fname.list add command -label "Sel None" \
-		-command "$this mat_sel $i $mat 0"
+		-command "$this mat_sel $this-matvar_$var_o $mat 0 $type"
 	for {set j 0} { $j < $mat} {incr j} {
-	    set var $i
-	    append var $j
-	    set $this-matvar$var 0
-	    $fname.list add checkbutton \
-		    -variable $this-matvar$var \
-		    -label "Mat $j"
-	}
-    }
-    method graphbutton {name var_index num_mat} {
-#	$this-c graph $name [set $this-vmat$i] $i
-	set val_list {}
-	set num_vals 0
-	for {set j 0} { $j < $num_mat} {incr j} {
-	    set nvar $var_index
-	    append nvar $j
-	    if {[set $this-matvar$nvar] != 0} {
-		lappend val_list $j
-		incr num_vals
+	    set var $var_o
+	    append var "_$j"
+#	    puts "***var = $var"
+	    if {$type == "matrix3"} {
+		$fname.list add cascade -label "Mat $j" \
+			-menu $fname.list.types$var
+		menu $fname.list.types$var
+		$fname.list.types$var add command -label "Sel All" \
+			-command "$this mat_sel_sub $this-matvar_$var \
+			$num_m_type 1"
+		$fname.list.types$var add command -label "Sel None" \
+			-command "$this mat_sel_sub $this-matvar_$var \
+			$num_m_type 0"
+		for {set k 0} { $k < $num_m_type} {incr k} {
+		    set var2 $var
+		    append var2 "_$k"
+		    $fname.list.types$var add checkbutton \
+			    -variable $this-matvar_$var2 \
+			    -label [lindex $matrix_types $k]
+		}
+	    } elseif {$type == "vector"} {
+		$fname.list add cascade -label "Mat $j" \
+			-menu $fname.list.types$var
+		menu $fname.list.types$var
+		$fname.list.types$var add command -label "Sel All" \
+			-command "$this mat_sel_sub $this-matvar_$var \
+			$num_v_type 1"
+		$fname.list.types$var add command -label "Sel None" \
+			-command "$this mat_sel_sub $this-matvar_$var \
+			$num_v_type 0"
+		for {set k 0} { $k < $num_v_type} {incr k} {
+		    set var2 $var
+		    append var2 "_$k"
+		    $fname.list.types$var add checkbutton \
+			    -variable $this-matvar_$var2 \
+			    -label [lindex $vector_types $k]
+		}
+	    } elseif {$type == "scaler"} {
+		$fname.list add checkbutton \
+			-variable $this-matvar_$var \
+			-label "Mat $j"
 	    }
 	}
-	puts "Calling $this-c graph"
-	puts "name      = $name"
-	puts "num_mat   = $num_mat"
-	puts "var_index = $var_index"
-	puts "num_vals  = $num_vals"
-	puts "val_list  = $val_list"
-	set call "$this-c graph $name $var_index $num_vals"
-	for {set i 0} { $i < [llength $val_list] } { incr i } {
-	    set insert [lindex $val_list $i]
-	    append call " $insert"
-	}
-	eval $call
     }
-    method addVar {w name mat i} {
+    method graphbutton {name var_index num_mat type} {
+	set val_list {}
+	set num_vals 0
+	set var_root $this-matvar_$var_index
+	append var_root "_o[set $this-var_orientation]"
+#	puts "var_root = $var_root"
+	# loop over all the materials	
+	for {set j 0} { $j < $num_mat} {incr j} {
+	    set mat_root $var_root
+	    append mat_root "_$j"
+	    switch $type {
+		"matrix3" {
+		    for {set k 0} { $k < $num_m_type} {incr k} {
+			set tail "_$k"	
+			if {[set $mat_root$tail] != 0} {
+			    lappend val_list "$j" [lindex $matrix_types $k]
+			    incr num_vals
+			}
+		    }
+		}
+		"vector" {
+		    for {set k 0} { $k < $num_v_type} {incr k} {
+			set tail "_$k"
+			if {[set $mat_root$tail] != 0} {
+			    lappend val_list "$j" [lindex $vector_types $k]
+			    incr num_vals
+			}
+		    }
+		}
+		"scaler" {
+		    if {[set $mat_root] != 0} {
+			lappend val_list "$j" "invalid"
+			incr num_vals
+		    }
+		}
+	    }
+	}
+#	puts "Calling $this-c graph"
+#	puts "name      = $name"
+#	puts "num_mat   = $num_mat"
+#	puts "var_index = $var_index"
+#	puts "num_vals  = $num_vals"
+#	puts "val_list  = $val_list"
+	if {[llength $val_list] > 0} {
+	    set call "$this-c graph $name $var_index $num_vals"
+	    for {set i 0} { $i < [llength $val_list] } { incr i } {
+		set insert [lindex $val_list $i]
+		append call " $insert"
+	    }
+#	    puts "call =  $call"
+	    eval $call
+	}
+    }
+    method addVar {w name mat type i} {
 	set fname "$w.var$i"
 	frame $fname
 	pack $fname -side top -fill x -padx 2 -pady 2
@@ -222,15 +324,15 @@ itcl_class Uintah_Visualization_GridVisualizer {
 	label $fname.label -text "$name"
 	pack $fname.label -side left -padx 2 -pady 2
 
-	button $fname.button -text "Graph" -command "$this graphbutton $name $i $mat"
+	button $fname.button -text "Graph" -command "$this graphbutton $name $i $mat $type"
 	pack $fname.button -side right -padx 2 -pady 2
 
 	if {$mat > $num_materials} {
 	    set num_materials $mat
-	    puts "num_materials is now $num_materials"
+#	    puts "num_materials is now $num_materials"
 	}
 
-	make_mat_menu $fname $mat $i
+	make_mat_menu $fname $mat $i $type
     }
     method setVar_list { args } {
 	set var_list $args
@@ -240,16 +342,21 @@ itcl_class Uintah_Visualization_GridVisualizer {
 	set mat_list $args
 	puts "mat_list is now $mat_list"
     }
+    method setType_list { args } {
+	set type_list $args
+	puts "type_list is now $type_list"
+    }
     method buildVarFrame {w} {
 	if {[llength $var_list] > 0} {
 	    frame $w.vars -borderwidth 3 -relief ridge
 	    pack $w.vars -side top -fill x -padx 2 -pady 2
 	    
-	    puts "var_list length [llength $var_list]"
+#	    puts "var_list length [llength $var_list]"
 	    for {set i 0} { $i < [llength $var_list] } { incr i } {
 		set newvar [lindex $var_list $i]
 		set newmat [lindex $mat_list $i]
-		addVar $w.vars $newvar $newmat $i
+		set newtype [lindex $type_list $i]
+		addVar $w.vars $newvar $newmat $newtype $i
 	    }
 	}
     }
@@ -362,8 +469,8 @@ itcl_class Uintah_Visualization_GridVisualizer {
 	# close button
 	button $w.close -text "Close" -command "wm withdraw $w"
 	pack $w.close -side bottom -expand yes -fill x
-	button $w.gtest -text "Graph test" -command "$this graph_test"
-	pack $w.gtest -side bottom -expand yes -fill x
+#	button $w.gtest -text "Graph test" -command "$this graph_test"
+#	pack $w.gtest -side bottom -expand yes -fill x
     }
     method reset_var_val {} {
 	set var_val_list {}
@@ -375,8 +482,8 @@ itcl_class Uintah_Visualization_GridVisualizer {
     method set_var_val { args } {
 	set val_list $args
 	lappend var_val_list $val_list
-	puts "Args were $args"
-	puts "New var_val_list: $var_val_list"
+	puts "Args to set_var_val were $args"
+#	puts "New var_val_list: $var_val_list"
     }
     method get_color { index } {
 	set color_scheme {
@@ -399,48 +506,60 @@ itcl_class Uintah_Visualization_GridVisualizer {
 	    lappend incr $incr_a
 	}
 	lappend incr {0 0 0}
-	puts "incr = $incr"
+#	puts "incr = $incr"
 	set step [expr $num_colors / [llength $color_scheme]]
 	set ind [expr $index % $num_colors] 
 	set i [expr $ind / $step]
 	set im [expr double($ind % $step)/$step]
-	puts "i = $i  im = $im"
+#	puts "i = $i  im = $im"
 	set curr_color [lindex $color_scheme $i]
 	set curr_incr [lindex $incr $i]
-	puts "curr_color = $curr_color, curr_incr = $curr_incr"
+#	puts "curr_color = $curr_color, curr_incr = $curr_incr"
 	set r [expr [lindex $curr_color 0]+round([lindex $curr_incr 0] * $im)] 
 	set g [expr [lindex $curr_color 1]+round([lindex $curr_incr 1] * $im)] 
 	set b [expr [lindex $curr_color 2]+round([lindex $curr_incr 2] * $im)] 
 	set c [format "#%02x%02x%02x" $r $g $b]
-	puts "r=$r, g=$g, b=$b, c=$c"
+#	puts "r=$r, g=$g, b=$b, c=$c"
 	return $c
     }
     method graph_data { id var args } {
-	set w .graph[modname]$id
+	set w .graph[modname]$graph_id
         if {[winfo exists $w]} { 
             destroy $w 
 	}
 	toplevel $w
+	incr graph_id
 #	wm minsize $w 300 300
 
-	puts "id = $id"
-	puts "var = $var"
-	puts "args = $args"
+#	puts "id = $id"
+#	puts "var = $var"
+#	puts "args = $args"
 
 	button $w.close -text "Close" -command "destroy $w"
 	pack $w.close -side bottom -anchor s -expand yes -fill x
 	
-	blt::graph $w.graph -title "Plot of $var with materials $args" \
+	blt::graph $w.graph -title "Plot of $var" \
 		-height 250 -plotbackground gray99
 
 	set max 1e-10
 	set min 1e+10
 
-	puts "length of var_val_list = [llength $var_val_list]"
-	puts "length of args         = $args"
-	for { set i 0 } { $i < [llength $args] } {incr i} {
-	    set mat_vals [lindex $var_val_list [lindex $args $i]]
-	    puts "mat_vals = $mat_vals"
+	#seperate the materials from the types
+	set args_mat {}
+	set args_type {}
+	for {set i 0} { $i < [llength $args] } {incr i} {
+	    lappend args_mat [lindex $args $i]
+	    incr i
+	    lappend args_type [lindex $args $i]
+	}
+#	puts "args_mat = $args_mat"
+#	puts "args_type = $args_type"
+	
+#	puts "length of var_val_list = [llength $var_val_list]"
+#	puts "length of args_mat     = $args_mat"
+	for { set i 0 } { $i < [llength $var_val_list] } {incr i} {
+	    set mat_vals [lindex $var_val_list $i]
+#	    puts "mat_vals = $mat_vals"
 	    for { set j 0 } { $j < [llength $mat_vals] } {incr j} {
 		set val [lindex $mat_vals $j]
 		if { $max < $val } { set max $val }
@@ -456,14 +575,28 @@ itcl_class Uintah_Visualization_GridVisualizer {
 	
 	$w.graph xaxis configure -title "Timestep" -loose true
 	
-	puts "length of var_val_list = [llength $var_val_list]"
-	for { set i 0 } { $i < [llength $args] } {incr i} {
-	    puts "adding line"
-	    set mat_index  [lindex $args $i]
-	    set mat_vals [lindex $var_val_list $mat_index]
-	    set color_ind [expr round(double($mat_index) / ($num_materials-1) * ($num_colors - 1))]
-	    $w.graph element create "Material $mat_index" -linewidth 2 \
-		    -pixels 3 -color [$this get_color $color_ind] -xdata $time_list -ydata $mat_vals
+	set vvlist_length [llength $var_val_list]
+#	puts "length of var_val_list = [llength $var_val_list]"
+	for { set i 0 } { $i < $vvlist_length } {incr i} {
+#	    puts "adding line"
+	    set mat_index  [lindex $args_mat $i]
+	    set mat_type [lindex $args_type $i]
+	    set mat_vals [lindex $var_val_list $i]
+	    if {$i == 0} {
+		set color_ind 0
+	    } else {
+		set color_ind [expr round(double($i) / \
+			($vvlist_length-1) * ($num_colors -1))]
+	    }
+	    #	    set mat_vals [lindex $var_val_list $mat_index]
+	    #	    set color_ind [expr round(double($mat_index) / ($num_materials-1) * ($num_colors - 1))]
+	    set line_name "Material_$mat_index"
+	    if {$mat_type != "invalid"} {
+		append line_name "_$mat_type"
+	    }
+	    $w.graph element create $line_name -linewidth 2 -pixels 3 \
+		    -color [$this get_color $color_ind] \
+		    -xdata $time_list -ydata $mat_vals
 	}
 	
 	pack $w.graph
