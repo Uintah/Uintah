@@ -324,8 +324,8 @@ void RigidMPM::scheduleExMomInterpolated(SchedulerP& sched,
 		    contactModel,
 		    &Contact::exMomInterpolated);
 
-//  contactModel->addComputesAndRequiresInterpolated(t, patches, matls);
-//  sched->addTask(t, patches, matls);
+  contactModel->addComputesAndRequiresInterpolated(t, patches, matls);
+  sched->addTask(t, patches, matls);
 }
 
 void RigidMPM::scheduleComputeStressTensor(SchedulerP& sched,
@@ -369,7 +369,6 @@ void RigidMPM::scheduleComputeInternalForce(SchedulerP& sched,
 					     const PatchSet* patches,
 					     const MaterialSet* matls)
 {
-
 }
 
 void RigidMPM::scheduleComputeInternalHeatRate(SchedulerP& sched,
@@ -506,8 +505,8 @@ void RigidMPM::scheduleExMomIntegrated(SchedulerP& sched,
 		   contactModel,
 		   &Contact::exMomIntegrated);
 
-//  contactModel->addComputesAndRequiresIntegrated(t, patches, matls);
-//  sched->addTask(t, patches, matls);
+  contactModel->addComputesAndRequiresIntegrated(t, patches, matls);
+  sched->addTask(t, patches, matls);
 }
 
 void RigidMPM::scheduleSetGridBoundaryConditions(SchedulerP& sched,
