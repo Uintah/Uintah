@@ -1820,6 +1820,10 @@ Gui::createMaterialsWindow( GLUI * window )
       
       window->add_statictext_to_panel( panel, name );
       
+      // Cool 2 warm
+      window->add_checkbox_to_panel( panel, "Use cool2warm coloring",
+				     &(sm->gui_use_cool2warm));
+
       // Show Silhouette
       window->add_checkbox_to_panel( panel, "Show Silhouettes",
 				     &(sm->gui_show_silhouettes));
