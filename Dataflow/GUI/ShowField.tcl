@@ -14,7 +14,6 @@ itcl_class SCIRun_Visualization_ShowField {
 	global $this-scale
 	set $this-node_display_type Spheres
 	set $this-scale 0.03
-	$this-c needexecute
     }
 
 #    method raiseColor {col colRoot colMsg} {
