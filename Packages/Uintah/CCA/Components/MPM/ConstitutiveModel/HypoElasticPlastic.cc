@@ -23,6 +23,7 @@
 #include <Packages/Uintah/Core/Math/Short27.h> //for Fracture
 #include <Packages/Uintah/Core/Grid/VarTypes.h>
 #include <Core/Malloc/Allocator.h>
+#include <Core/Util/DebugStream.h>
 #include <sgi_stl_warnings_off.h>
 #include <iostream>
 #include <sgi_stl_warnings_on.h>
@@ -34,6 +35,9 @@
 using std::cerr;
 using namespace Uintah;
 using namespace SCIRun;
+
+static DebugStream cout_CST("HEP",false);
+static DebugStream cout_CST1("HEP1",false);
 
 HypoElasticPlastic::HypoElasticPlastic(ProblemSpecP& ps, 
                                        MPMLabel* Mlb, 
@@ -50,6 +54,8 @@ HypoElasticPlastic::HypoElasticPlastic(ProblemSpecP& ps,
   ps->get("remove_particles",d_removeParticles);
   d_setStressToZero = false;
   ps->get("zero_stress_upon_failure",d_setStressToZero);
+  d_evolvePorosity = true;
+  ps->get("evolve_porosity",d_evolvePorosity);
   d_tol = 1.0e-10;
   ps->get("tolerance",d_tol);
   d_initialMaterialTemperature = 294.0;
@@ -177,6 +183,8 @@ HypoElasticPlastic::HypoElasticPlastic(const HypoElasticPlastic* cm)
   d_initialData.Shear = cm->d_initialData.Shear;
   d_useModifiedEOS = cm->d_useModifiedEOS;
   d_removeParticles = cm->d_removeParticles;
+  d_setStressToZero = cm->d_setStressToZero;
+  d_evolvePorosity = cm->d_evolvePorosity;
   d_tol = cm->d_tol ;
   d_initialMaterialTemperature = cm->d_initialMaterialTemperature ;
 
@@ -394,10 +402,12 @@ void HypoElasticPlastic::allocateCMDataAddRequires(Task* task,
                                                    const PatchSet* patch,
                                                    MPMLabel* lb) const
 {
-  task->requires(Task::NewDW,lb->pDeformationMeasureLabel_preReloc, Ghost::None);
-  task->requires(Task::NewDW,lb->pStressLabel_preReloc, Ghost::None);
 
   const MaterialSubset* matlset = matl->thisMaterial();
+  task->requires(Task::NewDW,lb->pDeformationMeasureLabel_preReloc, matlset,
+                 Ghost::None);
+  task->requires(Task::NewDW,lb->pStressLabel_preReloc, matlset,
+                 Ghost::None);
   task->requires(Task::NewDW,pLeftStretchLabel_preReloc, matlset, Ghost::None);
   task->requires(Task::NewDW,pRotationLabel_preReloc, matlset, Ghost::None);
   task->requires(Task::NewDW,pStrainRateLabel_preReloc, matlset, Ghost::None);
@@ -579,18 +589,22 @@ HypoElasticPlastic::computeStressTensor(const PatchSubset* patches,
                                         DataWarehouse* old_dw,
                                         DataWarehouse* new_dw)
 {
+  if ((patches->get(0))->getID() == 19)
+  cout_CST << "ComputeStressTensor: In : Matl = " << matl << " id = " 
+           << matl->getDWIndex() <<  " patch = " 
+           << (patches->get(0))->getID();
   // General stuff
   Matrix3 one; one.Identity(); Matrix3 zero(0.0);
-  Matrix3 tensorL; // Velocity gradient
-  Matrix3 tensorD; // Rate of deformation
-  Matrix3 tensorW; // Spin 
-  Matrix3 tensorF; // Deformation gradient
-  Matrix3 tensorV; // Left Cauchy-Green stretch
-  Matrix3 tensorR; // Rotation 
-  Matrix3 tensorSig; // The Cauchy stress
-  Matrix3 tensorEta; // Deviatoric part of tensor D
-  Matrix3 tensorS; // Devaitoric part of tensor Sig
-  Matrix3 tensorF_new; // Deformation gradient
+  Matrix3 tensorL(0.0); // Velocity gradient
+  Matrix3 tensorD(0.0); // Rate of deformation
+  Matrix3 tensorW(0.0); // Spin 
+  Matrix3 tensorF; tensorF.Identity(); // Deformation gradient
+  Matrix3 tensorV; tensorV.Identity(); // Left Cauchy-Green stretch
+  Matrix3 tensorR; tensorR.Identity(); // Rotation 
+  Matrix3 tensorSig(0.0); // The Cauchy stress
+  Matrix3 tensorEta(0.0); // Deviatoric part of tensor D
+  Matrix3 tensorS(0.0); // Devaitoric part of tensor Sig
+  Matrix3 tensorF_new; tensorF_new.Identity(); // Deformation gradient
 
   Vector WaveSpeed(1.e-12,1.e-12,1.e-12);
 
@@ -599,7 +613,6 @@ HypoElasticPlastic::computeStressTensor(const PatchSubset* patches,
   double rho_0 = matl->getInitialDensity();
   double Tm = matl->getMeltTemperature();
   double sqrtTwo = sqrt(2.0);
-  //double sqrtThree = sqrt(3.0);
   double totalStrainEnergy = 0.0;
 
   // Loop thru patches
@@ -724,13 +737,15 @@ HypoElasticPlastic::computeStressTensor(const PatchSubset* patches,
     for( ; iter != pset->end(); iter++){
       particleIndex idx = *iter;
 
+      if (patch->getID() == 19) cout_CST1 << " " << idx ;
+      /*
       if (d_setStressToZero) {
         // If the particle has localized, do nothing
         if (d_removeParticles && pLocalized[idx]) {
           pDeformGrad_new[idx] = pDeformGrad[idx];;
           pStress_new[idx] = pStress[idx];
           pVolume_deformed[idx] = pVolume[idx];
-  
+
           pLeftStretch_new[idx] = pLeftStretch[idx]; 
           pRotation_new[idx] = pRotation[idx]; 
           pStrainRate_new[idx] = pStrainRate[idx];
@@ -744,6 +759,7 @@ HypoElasticPlastic::computeStressTensor(const PatchSubset* patches,
           continue;
         }
       }
+      */
 
       // Calculate the velocity gradient (L) from the grid velocity
 #ifdef FRACTURE
@@ -788,6 +804,7 @@ HypoElasticPlastic::computeStressTensor(const PatchSubset* patches,
       // Update the deformation gradient tensor to its time n+1 value.
       Matrix3 tensorFinc = tensorL*delT + one;
       pDeformGrad_new[idx] = tensorFinc*pDeformGrad[idx];
+      tensorF_new = pDeformGrad_new[idx];
 
       // Update the kinematic variables
       pLeftStretch_new[idx] = tensorV;
@@ -797,6 +814,21 @@ HypoElasticPlastic::computeStressTensor(const PatchSubset* patches,
       double J = pDeformGrad_new[idx].Determinant();
       double rho_cur = rho_0/J;
       pVolume_deformed[idx]=pMass[idx]/rho_cur;
+
+      // If the particle is just sitting there, do nothing
+      double defRateSq = tensorD.NormSquared();
+      if (!(defRateSq > 0)) {
+        pStress_new[idx] = pStress[idx];
+        pStrainRate_new[idx] = 0.0;
+        pPlasticStrain_new[idx] = pPlasticStrain[idx];
+        pDamage_new[idx] = pDamage[idx];
+        pPorosity_new[idx] = pPorosity[idx];
+        pLocalized_new[idx] = pLocalized[idx];
+        pPlasticTemperature_new[idx] = pPlasticTemperature[idx];
+        pPlasticTempInc_new[idx] = 0.0;
+        d_plastic->updateElastic(idx);
+	continue;
+      }
 
       // Rotate the total rate of deformation tensor,
       // the plastic rate of deformation tensor, and the Cauchy stress
@@ -818,7 +850,7 @@ HypoElasticPlastic::computeStressTensor(const PatchSubset* patches,
 
       // Calculate the plastic strain rate and plastic strain
       double epdot = sqrt(tensorEta.NormSquared()/1.5);
-      epdot = max(epdot, d_tol);
+      //epdot = max(epdot, d_tol);
       double ep = pPlasticStrain[idx] + epdot*delT;
 
       // Set up the PlasticityState
@@ -849,6 +881,9 @@ HypoElasticPlastic::computeStressTensor(const PatchSubset* patches,
       // If the particle has localized use a different constitutive model
       if (d_removeParticles && temperature > Tm_cur) {
 
+        /* WARNING : This update is leading to very high compressive 
+                     stresses 
+
         // Calculate the updated hydrostatic stress
         double p = d_eos->computePressure(matl, state, tensorF_new, tensorD, 
                                           delT);
@@ -857,12 +892,14 @@ HypoElasticPlastic::computeStressTensor(const PatchSubset* patches,
         // Get the elastic stress
         tensorSig = tensorHy;
         tensorSig = (tensorR*tensorSig)*(tensorR.Transpose());
+        */
 
         // Save the updated data
-        pStress_new[idx] = tensorSig;
-        pPlasticStrain_new[idx] = pPlasticStrain[idx];
-        pDamage_new[idx] = pDamage[idx];
-        pPorosity_new[idx] = pPorosity[idx];
+        if (d_setStressToZero) pStress_new[idx] = zero;
+        else pStress_new[idx] = pStress[idx];
+        pPlasticStrain_new[idx] = 0.0;
+        pDamage_new[idx] = 0.0;
+        pPorosity_new[idx] = 0.0;
         pPlasticTemperature_new[idx] = pPlasticTemperature[idx];
         pPlasticTempInc_new[idx] = 0.0;
         pLocalized_new[idx] = 1;
@@ -896,13 +933,13 @@ HypoElasticPlastic::computeStressTensor(const PatchSubset* patches,
         double Phi = d_yield->evalYieldCondition(equivStress, flowStress,
                                                  traceOfTrialStress, 
                                                  porosity, sig);
-        //cout << "Phi = " << Phi << endl;
-        //cout << "Equivalent stress = " << equivStress 
-        //     << " Flow stress = " << flowStress << endl;
+        //if (patch->getID() == 19) {
+        //cout_CST1 << "Phi = " << Phi << endl;
+        //cout_CST1 << "Equivalent stress = " << equivStress 
+        //         << " Flow stress = " << flowStress << endl;
+        //}
      
-	// If the particle is just sitting there, do nothing
-        double defRateSq = tensorEta.NormSquared();
-        if (Phi <= 0.0 || !(defRateSq > 0.0)) {
+        if (Phi <= 0.0) {
 
           // Get the elastic stress
           tensorSig = trialS + tensorHy;
@@ -934,6 +971,10 @@ HypoElasticPlastic::computeStressTensor(const PatchSubset* patches,
           // and Engineering,  September 11-14, 2000.
           // Basic assumption is that all strain rate is plastic strain rate
           ASSERT(flowStress != 0);
+          if (flowStress == 0) {
+            cout << "HEP:flowstress = " << flowStress << endl;
+            throw ParameterNotFound("**ERROR**");
+          }
 
           Matrix3 Stilde(0.0);
           double delGamma = 0.0;
@@ -955,6 +996,11 @@ HypoElasticPlastic::computeStressTensor(const PatchSubset* patches,
             // Calculate the tensor u (at start of time interval)
             double sqrtqs = sqrt(q.Contract(tensorS));
             ASSERT(sqrtqs != 0);
+            if (sqrtqs == 0) {
+              cout << "HEP:sqrtqs = " << sqrtqs << " q = " << q
+                   << " S = " << tensorS << endl;
+              throw ParameterNotFound("**ERROR**");
+            }
             Matrix3 u = q/sqrtqs;
 
             // Calculate c and d at the beginning of time step
@@ -963,6 +1009,10 @@ HypoElasticPlastic::computeStressTensor(const PatchSubset* patches,
          
             // Calculate gamma_dot at the beginning of the time step
             ASSERT(cplus != 0);
+            if (cplus == 0) {
+              cout << "HEP:cplus = " << cplus << " u = " << u << endl;
+              throw ParameterNotFound("**ERROR**");
+            }
             double gammadotplus = dplus/cplus;
 
             // Set initial theta
@@ -970,20 +1020,19 @@ HypoElasticPlastic::computeStressTensor(const PatchSubset* patches,
 
             // Calculate u_q and u_eta
             double etaeta = sqrt(tensorEta.NormSquared());
-            if (etaeta == 0) {
-              cout << "L = " << endl << tensorL << endl;
-              cout << "D = " << endl << tensorD << endl;
-              cout << "Eta = " << endl << tensorEta << endl;
-              cout << "tensorSig = " << endl << tensorSig << endl;
-              cout << "tensorS = " << endl << tensorS << endl;
-              cout << "Phi = " << Phi << endl;
-              cout << "Equivalent stress = " << equivStress 
-                   << " Flow stress = " << flowStress << endl;
-            }
             ASSERT(etaeta != 0);
+            if (etaeta == 0) {
+              cout << "HEP:etaeta = " << etaeta << " L = " << tensorL
+                   << " D = " << tensorD  << " Eta = " << tensorEta << endl;
+              throw ParameterNotFound("**ERROR**");
+            }
             Matrix3 u_eta = tensorEta/etaeta;
             double qq = sqrt(q.NormSquared());
             ASSERT(qq != 0);
+            if (qq == 0) {
+              cout << "HEP:qq = " << qq << " q = " << q << endl;
+              throw ParameterNotFound("**ERROR**");
+            }
             Matrix3 u_q = q/qq;
 
             // Calculate new dstar
@@ -999,6 +1048,13 @@ HypoElasticPlastic::computeStressTensor(const PatchSubset* patches,
 
               // Update theta
               ASSERT(dStar != 0);
+              if (dStar == 0) {
+                cout << "HEP:dStar = " << dStar << " theta = " << theta
+                     << " u_eta = " << u_eta 
+                     << " Eta = " << tensorEta << " u_q = " << u_q
+                     << " cplus = " << cplus << endl;
+                throw ParameterNotFound("**ERROR**");
+              }
               theta = (dStar - cplus*gammadotplus)/dStar;
               ++count;
               //cout << "dStar = " << dStar << " dStarOld " << dStarOld 
@@ -1015,14 +1071,27 @@ HypoElasticPlastic::computeStressTensor(const PatchSubset* patches,
 
             // Calculate Stilde
             ASSERT(sig != 0);
+            if (sig == 0) {
+              cout << "HEP:sig = " << sig << endl;
+              throw ParameterNotFound("**ERROR**");
+            }
             double denom = 1.0 + (3.0*sqrtTwo*mu_cur*delGamma)/sig; 
             ASSERT(denom != 0);
+            if (denom == 0) {
+              cout << "HEP:denom = " << denom << " mu_cur = " << mu_cur
+                   << " delGamma = " << delGamma << " sig = " << sig << endl;
+              throw ParameterNotFound("**ERROR**");
+            }
             Stilde = trialS/denom;
           }
         
           // Do radial return adjustment
           double stst = sqrt(1.5*Stilde.NormSquared());
           ASSERT(stst != 0);
+          if (stst == 0) {
+            cout << "HEP:stst = " << stst << " Stilde = " << Stilde << endl;
+            throw ParameterNotFound("**ERROR**");
+          }
           tensorS = Stilde*(sig/stst);
           equivStress = sqrt((tensorS.NormSquared())*1.5);
 
@@ -1033,7 +1102,10 @@ HypoElasticPlastic::computeStressTensor(const PatchSubset* patches,
           pPlasticStrain_new[idx] = ep;
 
           // Update the porosity
-          pPorosity_new[idx] = updatePorosity(tensorD, delT, porosity, ep);
+          if (d_evolvePorosity) 
+            pPorosity_new[idx] = updatePorosity(tensorD, delT, porosity, ep);
+          else
+            pPorosity_new[idx] = pPorosity[idx];
 
           // Calculate the updated scalar damage parameter
           pDamage_new[idx] = d_damage->computeScalarDamage(epdot, tensorSig, 
@@ -1045,17 +1117,18 @@ HypoElasticPlastic::computeStressTensor(const PatchSubset* patches,
           double taylorQuinney = 0.9;
           double C_p = matl->getSpecificHeat();
 
+          // ** WARNING ** Special for steel (remove for other materials)
+          //double T = temperature;
+          //C_p = 1.0e3*(0.09278 + 7.454e-4*T + 12404.0/(T*T));
+
           // Alternative approach
           double dep = ep - pPlasticStrain[idx];
           double dT = flowStress*dep*taylorQuinney/(rho_cur*C_p);
           pPlasticTempInc_new[idx] = dT;
           pPlasticTemperature_new[idx] = pPlasticTemperature[idx] + dT; 
+          double temp_new = temperature + dT;
 
           /*
-          // ** WARNING ** Special for steel (remove for other materials)
-          double T = temperature;
-          C_p = 1.0e3*(0.09278 + 7.454e-4*T + 12404.0/(T*T));
-
           // Calculate Tdot (do not allow negative Tdot)
           double Tdot = 0.0;
           Tdot = tensorSig.Contract(tensorD)*(taylorQuinney/(rho_cur*C_p));
@@ -1068,13 +1141,13 @@ HypoElasticPlastic::computeStressTensor(const PatchSubset* patches,
           */
 
           // Find if the particle has localized
+          pLocalized_new[idx] = pLocalized[idx];
           bool isLocalized = false;
 
           // Check 1: Look at the temperature
           // Check 2: Look at Jacobian
           // Check 3: Modified Tepla rule
           // Check 4: Stability criterion
-          double temp_new = temperature + dT;
           double tepla = pPorosity_new[idx]/d_porosity.fc + pDamage_new[idx];
           if (temp_new > Tm_cur) isLocalized = true;
           else if (J < 0.0) isLocalized = true;
@@ -1097,8 +1170,7 @@ HypoElasticPlastic::computeStressTensor(const PatchSubset* patches,
 
             // Calculate the elastic-plastic tangent modulus
             TangentModulusTensor Cep;
-            d_yield->computeElasPlasTangentModulus(Ce, tensorSig, sigY, 
-                                                   dsigYdep,
+            d_yield->computeElasPlasTangentModulus(Ce, tensorSig, sigY, dsigYdep,
                                                    pPorosity_new[idx], A, Cep);
           
             // Initialize localization direction
@@ -1112,35 +1184,19 @@ HypoElasticPlastic::computeStressTensor(const PatchSubset* patches,
             // set the particle localization flag to true and set the 
             // stress to zero
             pLocalized_new[idx] = 1;
-            
-            if (d_setStressToZero) pStress_new[idx] = zero;
-            else {
-
-              // Rotate the stress back to the laboratory coordinates
-              tensorSig = (tensorR*tensorSig)*(tensorR.Transpose());
-
-              // Save the new data
-              pStress_new[idx] = tensorSig;
-            }
+            if (d_setStressToZero) tensorSig = zero;
             pDamage_new[idx] = 0.0;
             pPorosity_new[idx] = 0.0;
-        
-            // Update internal variables
-            d_plastic->updateElastic(idx);
-
-          } else {
-
-            pLocalized_new[idx] = pLocalized[idx];
-
-            // Rotate the stress back to the laboratory coordinates
-            tensorSig = (tensorR*tensorSig)*(tensorR.Transpose());
-
-            // Save the new data
-            pStress_new[idx] = tensorSig;
-        
-            // Update internal variables
-            d_plastic->updatePlastic(idx, delGamma);
           }
+
+          // Rotate the stress back to the laboratory coordinates
+          tensorSig = (tensorR*tensorSig)*(tensorR.Transpose());
+
+          // Save the new data
+          pStress_new[idx] = tensorSig;
+        
+          // Update internal variables
+          d_plastic->updatePlastic(idx, delGamma);
 
         }
       }
@@ -1174,6 +1230,8 @@ HypoElasticPlastic::computeStressTensor(const PatchSubset* patches,
     new_dw->put(delt_vartype(delT_new), lb->delTLabel);
     new_dw->put(sum_vartype(totalStrainEnergy), lb->StrainEnergyLabel);
   }
+  if ((patches->get(0))->getID() == 19)
+  cout_CST << "... Out" << endl;
 }
 
 void 

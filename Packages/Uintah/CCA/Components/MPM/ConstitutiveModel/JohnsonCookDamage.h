@@ -49,6 +49,7 @@ namespace Uintah {
       double D3;
       double D4;
       double D5;
+      double spallStress;
     };	 
 
   private:
@@ -92,13 +93,6 @@ namespace Uintah {
 				       const double& tolerance,
 				       const double& damage_old);
   
-  protected:
-
-    double calcStrainAtFracture(const Matrix3& sig, 
-				const double& epdot,
-				const double& T,
-				const MPMMaterial* matl,
-				const double& tolerance);
   };
 
 } // End namespace Uintah
