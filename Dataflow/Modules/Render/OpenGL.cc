@@ -644,11 +644,11 @@ OpenGL::redraw_frame()
       gui_->unlock();
       return;
     }
-    cerr << "The next line will crash!: " << (unsigned int)x11_dpy_ <<  ", " 
-	 << (unsigned int)x11_win_ << ", " << (unsigned int)x11_gl_context_ 
-	 << std::endl;
+    //cerr << "The next line will crash!: " << (unsigned int)x11_dpy_ <<  ", " 
+    //	 << (unsigned int)x11_win_ << ", " << (unsigned int)x11_gl_context_ 
+    //	 << std::endl;
     glXMakeCurrent(x11_dpy_, x11_win_, x11_gl_context_);
-    cerr << "See! it crashed";
+    //    cerr << "See! it crashed";
     glXWaitX();
 #if defined(HAVE_GLEW)
     sci_glew_init();
