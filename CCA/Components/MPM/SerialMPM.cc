@@ -203,6 +203,7 @@ void SerialMPM::scheduleInitialize(const LevelP& level,
   t->computes(lb->pDeformationMeasureLabel);
   t->computes(lb->pStressLabel);
   t->computes(lb->pSizeLabel);
+  t->computes(lb->pErosionLabel);
   t->computes(d_sharedState->get_delt_label());
   t->computes(lb->pCellNAPIDLabel,zeroth_matl);
 
@@ -226,21 +227,10 @@ void SerialMPM::scheduleInitialize(const LevelP& level,
 
   int numMPM = d_sharedState->getNumMPMMatls();
   const PatchSet* patches = level->eachPatch();
-  if (flags->d_doErosion) {
-    for(int m = 0; m < numMPM; m++){
-      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
-      ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
-      cm->addInitialComputesAndRequiresWithErosion(t, mpm_matl, patches,
-                                                   flags->d_erosionAlgorithm);
-      cm->setAdiabaticHeating(flags->d_adiabaticHeating);
-    }
-  } else {
-    for(int m = 0; m < numMPM; m++){
-      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
-      ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
-      cm->addInitialComputesAndRequires(t, mpm_matl, patches);
-      cm->setAdiabaticHeating(flags->d_adiabaticHeating);
-    }
+  for(int m = 0; m < numMPM; m++){
+    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
+    ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
+    cm->addInitialComputesAndRequires(t, mpm_matl, patches);
   }
 
   sched->addTask(t, level->eachPatch(), d_sharedState->allMPMMaterials());
@@ -383,15 +373,12 @@ void SerialMPM::scheduleInterpolateParticlesToGrid(SchedulerP& sched,
   t->requires(Task::NewDW, lb->pExtForceLabel_preReloc,gan,NGP);
   t->requires(Task::OldDW, lb->pTemperatureLabel,      gan,NGP);
   t->requires(Task::OldDW, lb->pSp_volLabel,           gan,NGP); 
+  t->requires(Task::OldDW, lb->pErosionLabel,          gan, NGP);
   
   if(flags->d_8or27==27){
     t->requires(Task::OldDW,lb->pSizeLabel,             gan,NGP);
   }
   //t->requires(Task::OldDW, lb->pExternalHeatRateLabel, gan,NGP);
-
-  if (flags->d_doErosion) {
-    t->requires(Task::OldDW, lb->pErosionLabel, gan, NGP);
-  }
 
   t->computes(lb->gMassLabel);
   t->computes(lb->gMassLabel,        d_sharedState->getAllInOneMatl(),
@@ -453,18 +440,10 @@ void SerialMPM::scheduleComputeStressTensor(SchedulerP& sched,
   int numMatls = d_sharedState->getNumMPMMatls();
   Task* t = scinew Task("MPM::computeStressTensor",
                         this, &SerialMPM::computeStressTensor);
-  if (flags->d_doErosion) {
-    for(int m = 0; m < numMatls; m++){
-      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
-      ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
-      cm->addComputesAndRequiresWithErosion(t, mpm_matl, patches);
-    }
-  } else {
-    for(int m = 0; m < numMatls; m++){
-      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
-      ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
-      cm->addComputesAndRequires(t, mpm_matl, patches);
-    }
+  for(int m = 0; m < numMatls; m++){
+    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
+    ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
+    cm->addComputesAndRequires(t, mpm_matl, patches);
   }
 
   t->computes(d_sharedState->get_delt_label());
@@ -472,12 +451,33 @@ void SerialMPM::scheduleComputeStressTensor(SchedulerP& sched,
 
   sched->addTask(t, patches, matls);
 
+  // Schedule update of the erosion parameter
+  scheduleUpdateErosionParameter(sched, patches, matls);
+
   if (flags->d_accStrainEnergy) 
     scheduleComputeAccStrainEnergy(sched, patches, matls);
 
   if(flags->d_artificial_viscosity){
     scheduleComputeArtificialViscosity(   sched, patches, matls);
   }
+}
+
+// Compute the accumulated strain energy
+void SerialMPM::scheduleUpdateErosionParameter(SchedulerP& sched,
+                                               const PatchSet* patches,
+                                               const MaterialSet* matls)
+{
+  Task* t = scinew Task("MPM::updateErosionParameter",
+                        this, &SerialMPM::updateErosionParameter);
+  t->requires(Task::OldDW, lb->pErosionLabel,          Ghost::None);
+  int numMatls = d_sharedState->getNumMPMMatls();
+  for(int m = 0; m < numMatls; m++){
+    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
+    ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
+    cm->addRequiresDamageParameter(t, mpm_matl, patches);
+  }
+  t->computes(lb->pErosionLabel_preReloc);
+  sched->addTask(t, patches, matls);
 }
 
 // Compute the accumulated strain energy
@@ -540,18 +540,15 @@ void SerialMPM::scheduleComputeInternalForce(SchedulerP& sched,
   t->requires(Task::OldDW,lb->pXLabel,                    gan,NGP);
   t->requires(Task::OldDW,lb->pMassLabel,                 gan,NGP);
   if(flags->d_8or27==27){
-    t->requires(Task::OldDW, lb->pSizeLabel,               gan,NGP);
+    t->requires(Task::OldDW, lb->pSizeLabel,              gan,NGP);
   }
+  t->requires(Task::NewDW, lb->pErosionLabel_preReloc,    gan, NGP);
 
   if(d_with_ice){
     t->requires(Task::NewDW, lb->pPressureLabel,          gan,NGP);
   }
   if(flags->d_artificial_viscosity){
     t->requires(Task::NewDW, lb->p_qLabel,                gan,NGP);
-  }
-
-  if (flags->d_doErosion) {
-    t->requires(Task::OldDW, lb->pErosionLabel, gan, NGP);
   }
 
   t->computes(lb->gInternalForceLabel);
@@ -581,9 +578,7 @@ void SerialMPM::scheduleComputeInternalHeatRate(SchedulerP& sched,
   t->requires(Task::NewDW, lb->pVolumeDeformedLabel, gan, NGP);
   t->requires(Task::NewDW, lb->gTemperatureLabel,    gac, 2*NGP);
 
-  if (flags->d_doErosion) {
-    t->requires(Task::OldDW, lb->pErosionLabel, gan, NGP);
-  }
+  t->requires(Task::NewDW, lb->pErosionLabel_preReloc, gan, NGP);
 
   t->computes(lb->gInternalHeatRateLabel);
   sched->addTask(t, patches, matls);
@@ -845,10 +840,7 @@ void SerialMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
     t->requires(Task::OldDW, lb->pSizeLabel,            Ghost::None);
   }
   t->requires(Task::NewDW, lb->pVolumeDeformedLabel,   Ghost::None);
-
-  if (flags->d_doErosion) {
-    t->requires(Task::OldDW, lb->pErosionLabel, Ghost::None);
-  }
+  t->requires(Task::NewDW, lb->pErosionLabel_preReloc, Ghost::None);
 
   // The dampingCoeff (alpha) is 0.0 for standard usage, otherwise
   // it is determined by the damping rate if the artificial damping
@@ -1055,12 +1047,6 @@ void SerialMPM::actuallyInitialize(const ProcessorGroup*,
       mpm_matl->getConstitutiveModel()->initializeCMData(patch,
                                                          mpm_matl,
                                                          new_dw);
-      if (flags->d_doErosion) {
-        int index = mpm_matl->getDWIndex();
-        ParticleSubset* pset = new_dw->getParticleSubset(index, patch);
-        ParticleVariable<double> pErosion;
-        setParticleDefault(pErosion, lb->pErosionLabel, pset, new_dw, 1.0);
-      }
     }
   }
 
@@ -1124,6 +1110,7 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       constParticleVariable<Point>  px;
       constParticleVariable<double> pmass, pvolume, pTemperature, pSp_vol;
       constParticleVariable<Vector> pvelocity, pexternalforce,psize;
+      constParticleVariable<double> pErosion;
 
       ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch,
                                                        gan, NGP, lb->pXLabel);
@@ -1138,6 +1125,7 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       if(flags->d_8or27==27){
         old_dw->get(psize,        lb->pSizeLabel,          pset);
       }
+      old_dw->get(pErosion,       lb->pErosionLabel,       pset);
 
       // Create arrays for the grid data
       NCVariable<double> gmass;
@@ -1173,14 +1161,6 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       gexternalheatrate.initialize(0);
       gnumnearparticles.initialize(0.);
       gSp_vol.initialize(0.);
-
-      // Get the particle erosion information
-      constParticleVariable<double> pErosion;
-      if (flags->d_doErosion) {
-        old_dw->get(pErosion, lb->pErosionLabel, pset);
-      } else {
-        setParticleDefaultWithTemp(pErosion, pset, new_dw, 1.0);
-      }
 
       // Interpolate particle data to Grid data.
       // This currently consists of the particle velocity and mass
@@ -1267,32 +1247,75 @@ void SerialMPM::computeStressTensor(const ProcessorGroup*,
                                     DataWarehouse* new_dw)
 {
 
-  cout_doing <<"Doing computeStressTensor:MPM: " ;
-
-  if (flags->d_doErosion) {
-    for(int m = 0; m < d_sharedState->getNumMPMMatls(); m++){
-      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
-      ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
-      cm->setWorld(d_myworld);
-      cm->setAdiabaticHeating(flags->d_adiabaticHeating);
-      cm->computeStressTensorWithErosion(patches, mpm_matl, old_dw, new_dw);
-    }
-  } else {
-    for(int m = 0; m < d_sharedState->getNumMPMMatls(); m++){
-      cout_doing << " Patch = " << (patches->get(0))->getID();
-      cout_doing << " Mat = " << m;
-      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
-      cout_doing << " MPM_Mat = " << mpm_matl;
-      ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
-      cout_doing << " CM = " << cm;
-      cm->setWorld(d_myworld);
-      cm->setAdiabaticHeating(flags->d_adiabaticHeating);
-      cout_doing << " Enter .." ;
-      cm->computeStressTensor(patches, mpm_matl, old_dw, new_dw);
-      cout_doing << " Exit .." ;
-    }
+  cout_doing <<"Doing computeStressTensor:MPM: \n" ;
+  for(int m = 0; m < d_sharedState->getNumMPMMatls(); m++){
+    cout_doing << " Patch = " << (patches->get(0))->getID();
+    cout_doing << " Mat = " << m;
+    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
+    cout_doing << " MPM_Mat = " << mpm_matl;
+    ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
+    cout_doing << " CM = " << cm;
+    cm->setWorld(d_myworld);
+    cm->computeStressTensor(patches, mpm_matl, old_dw, new_dw);
+    cout_doing << " Exit\n" ;
   }
-  cout_doing << "\n";
+}
+
+void SerialMPM::updateErosionParameter(const ProcessorGroup*,
+                                       const PatchSubset* patches,
+                                       const MaterialSubset* ,
+                                       DataWarehouse* old_dw,
+                                       DataWarehouse* new_dw)
+{
+  for (int p = 0; p<patches->size(); p++) {
+    const Patch* patch = patches->get(p);
+    cout_doing << getpid() << "Doing updateErosionParameter on patch " 
+               << patch->getID() << "\t MPM"<< endl;
+
+    int numMPMMatls=d_sharedState->getNumMPMMatls();
+    for(int m = 0; m < numMPMMatls; m++){
+
+      cout_doing << "updateErosionParameter:: material # = " << m << endl;
+
+      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
+      int dwi = mpm_matl->getDWIndex();
+      ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
+
+      cout_doing << "updateErosionParameter:: mpm_matl* = " << mpm_matl
+                 << " dwi = " << dwi << " pset* = " << pset << endl;
+
+      // Get the erosion data
+      constParticleVariable<double> pErosion;
+      ParticleVariable<double> pErosion_new;
+      old_dw->get(pErosion, lb->pErosionLabel, pset);
+      new_dw->allocateAndPut(pErosion_new, lb->pErosionLabel_preReloc, pset);
+      cout_doing << "updateErosionParameter:: Got Erosion data" << endl;
+
+      // Get the localization info
+      ParticleVariable<int> isLocalized;
+      new_dw->allocateTemporary(isLocalized, pset);
+      ParticleSubset::iterator iter = pset->begin(); 
+      for (; iter != pset->end(); iter++) isLocalized[*iter] = 0;
+      mpm_matl->getConstitutiveModel()->getDamageParameter(patch, isLocalized,
+                                                           dwi, old_dw,new_dw);
+      cout_doing << "updateErosionParameter:: Got Damage Parameter" << endl;
+
+      iter = pset->begin(); 
+      for (; iter != pset->end(); iter++) {
+        pErosion_new[*iter] = pErosion[*iter];
+        if (isLocalized[*iter]) {
+          if (flags->d_erosionAlgorithm == "RemoveMass") {
+            pErosion_new[*iter] = 0.1*pErosion[*iter];
+          } 
+        } 
+      }
+
+      cout_doing << "updateErosionParameter:: Updated Erosion " << endl;
+
+    }
+    cout_doing <<"Done updateErosionParamter on patch " 
+               << patch->getID() << "\t MPM"<< endl;
+  }
 }
 
 void SerialMPM::computeArtificialViscosity(const ProcessorGroup*,
@@ -1430,6 +1453,7 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
       constParticleVariable<double>  p_q;
       constParticleVariable<Matrix3> pstress;
       constParticleVariable<Vector>  psize;
+      constParticleVariable<double>  pErosion;
       NCVariable<Vector>             internalforce;
       NCVariable<Matrix3>            gstress;
       constNCVariable<double>        gmass;
@@ -1446,6 +1470,7 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
         old_dw->get(psize, lb->pSizeLabel,                   pset);
       }
       new_dw->get(gmass,   lb->gMassLabel, dwi, patch, Ghost::None, 0);
+      new_dw->get(pErosion,lb->pErosionLabel_preReloc,       pset);
 
       new_dw->allocateAndPut(gstress,      lb->gStressForSavingLabel,dwi,patch);
       new_dw->allocateAndPut(internalforce,lb->gInternalForceLabel,  dwi,patch);
@@ -1472,14 +1497,6 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
           p_q_create[*it]=0.0;
         }
         p_q = p_q_create; // reference created data
-      }
-
-      // Get the particle erosion information
-      constParticleVariable<double> pErosion;
-      if (flags->d_doErosion) {
-        old_dw->get(pErosion, lb->pErosionLabel, pset);
-      } else {
-        setParticleDefaultWithTemp(pErosion, pset, new_dw, 1.0);
       }
 
       internalforce.initialize(Vector(0,0,0));
@@ -1603,6 +1620,7 @@ void SerialMPM::computeInternalHeatRate(const ProcessorGroup*,
       constParticleVariable<Point>  px;
       constParticleVariable<double> pvol;
       constParticleVariable<Vector> psize;
+      constParticleVariable<double> pErosion;
       ParticleVariable<Vector>      pTemperatureGradient;
       constNCVariable<double>       gTemperature;
       NCVariable<double>            internalHeatRate;
@@ -1616,14 +1634,7 @@ void SerialMPM::computeInternalHeatRate(const ProcessorGroup*,
       if(flags->d_8or27==27){
         old_dw->get(psize,      lb->pSizeLabel,           pset);
       }
-
-      // Get the particle erosion information
-      constParticleVariable<double> pErosion;
-      if (flags->d_doErosion) {
-        old_dw->get(pErosion, lb->pErosionLabel, pset);
-      } else {
-        setParticleDefaultWithTemp(pErosion, pset, new_dw, 1.0);
-      }
+      new_dw->get(pErosion,     lb->pErosionLabel_preReloc, pset);
 
       new_dw->get(gTemperature, lb->gTemperatureLabel,   dwi, patch, gac,2*NGN);
       new_dw->allocateAndPut(internalHeatRate, lb->gInternalHeatRateLabel,
@@ -2467,6 +2478,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       ParticleVariable<long64> pids_new;
       constParticleVariable<Vector> pdisp;
       ParticleVariable<Vector> pdispnew;
+      constParticleVariable<double> pErosion;
 
       // Get the arrays of grid data on which the new part. values depend
       constNCVariable<Vector> gvelocity_star, gacceleration;
@@ -2484,6 +2496,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       new_dw->get(pvolume,               lb->pVolumeDeformedLabel,        pset);
       old_dw->get(pvelocity,             lb->pVelocityLabel,              pset);
       old_dw->get(pTemperature,          lb->pTemperatureLabel,           pset);
+      new_dw->get(pErosion,              lb->pErosionLabel_preReloc,      pset);
 
       new_dw->allocateAndPut(pvelocitynew, lb->pVelocityLabel_preReloc,   pset);
       new_dw->allocateAndPut(pxnew,        lb->pXLabel_preReloc,          pset);
@@ -2528,14 +2541,6 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
         dTdt = dTdt_create;                         // reference created data
         gSp_vol_src = gSp_vol_src_create;           // reference created data
         massBurnFrac = massBurnFrac_create;         // reference created data
-      }
-
-      // Get the particle erosion information
-      constParticleVariable<double> pErosion;
-      if (flags->d_doErosion) {
-        old_dw->get(pErosion, lb->pErosionLabel, pset);
-      } else {
-        setParticleDefaultWithTemp(pErosion, pset, new_dw, 1.0);
       }
 
       // Get the constitutive model (needed for plastic temperature
