@@ -24,7 +24,9 @@ namespace Uintah {
       
       const VarLabel* pDeformationMeasureLabel;
       const VarLabel* pDilationalWaveSpeedLabel;
+      const VarLabel* pRotationRateLabel;
       const VarLabel* pVisibilityLabel;
+      
       const VarLabel* pStressLabel;
       const VarLabel* pVolumeLabel;
       const VarLabel* pVolumeDeformedLabel;
@@ -104,6 +106,11 @@ namespace Uintah {
 
 
 // $Log$
+// Revision 1.29  2000/09/10 22:51:09  tan
+// Added particle rotationRate computation in computeStressTensor functions
+// in each constitutive model classes.  The particle rotationRate will be used
+// for fracture.
+//
 // Revision 1.28  2000/09/09 19:34:11  tan
 // Added MPMLabel::pVisibilityLabel and SerialMPM::computerNodesVisibility().
 //
