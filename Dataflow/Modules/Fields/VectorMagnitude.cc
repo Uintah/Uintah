@@ -87,9 +87,8 @@ VectorMagnitude::execute()
     fGeneration_ = fieldin->generation;
 
     const TypeDescription *ftd = fieldin->get_type_description(0);
-    const TypeDescription *ttd = fieldin->get_type_description(1);
 
-    CompileInfo *ci = VectorMagnitudeAlgo::get_compile_info(ftd, ttd);
+    CompileInfo *ci = VectorMagnitudeAlgo::get_compile_info(ftd);
     DynamicAlgoHandle algo_handle;
     if (! DynamicLoader::scirun_loader().get(*ci, algo_handle)) {
       error( "Could not compile algorithm." );
@@ -126,8 +125,7 @@ VectorMagnitude::execute()
 
 
 CompileInfo *
-VectorMagnitudeAlgo::get_compile_info(const TypeDescription *srctd,
-				      const TypeDescription *typetd)
+VectorMagnitudeAlgo::get_compile_info(const TypeDescription *ftd)
 {
   // use cc_to_h if this is in the .cc file, otherwise just __FILE__
   static const string include_path(TypeDescription::cc_to_h(__FILE__));
@@ -136,15 +134,14 @@ VectorMagnitudeAlgo::get_compile_info(const TypeDescription *srctd,
 
   CompileInfo *rval = 
     scinew CompileInfo(template_class_name + "." +
-		       srctd->get_filename() + ".",
+		       ftd->get_filename() + ".",
                        base_class_name, 
                        template_class_name, 
-                       srctd->get_name() + ", " +
-		       typetd->get_name());
+                       ftd->get_name());
   
   // Add in the include path to compile this obj
   rval->add_include(include_path);
-  srctd->fill_compile_info(rval);
+  ftd->fill_compile_info(rval);
   return rval;
 }
 

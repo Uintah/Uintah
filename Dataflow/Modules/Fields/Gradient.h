@@ -45,8 +45,8 @@ public:
   virtual FieldHandle execute(FieldHandle src) = 0;
 
   //! support the dynamically compiled algorithm concept
-  static CompileInfo *get_compile_info(const TypeDescription *fsrc,
-				       const TypeDescription *type);
+  static CompileInfo *get_compile_info(const TypeDescription *ftd,
+				       const TypeDescription *ttd);
 };
 
 
