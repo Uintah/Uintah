@@ -3,14 +3,19 @@
 # $Id$
 #
 
-include $(SRCTOP)/scripts/smallso_prologue.mk
-
 SRCDIR   := Uintah/Components/Arches
 
-SRCS     += $(SRCDIR)/Arches.cc \
+#SUBDIRS := $(SRCDIR)/fortran
+#include $(SRCTOP)/scripts/recurse.mk
+
+include $(SRCTOP)/scripts/smallso_prologue.mk
+
+SRCS     += $(SRCDIR)/Arches.cc $(SRCDIR)/BoundaryCondition.cc \
 	$(SRCDIR)/NonlinearSolver.cc $(SRCDIR)/PhysicalConstants.cc \
-	$(SRCDIR)/Properties.cc
-#$(SRCDIR)/Discretization.cc $(SRCDIR)/PicardNonlinearSolver.cc \
+	$(SRCDIR)/PicardNonlinearSolver.cc \
+	$(SRCDIR)/Properties.cc $(SRCDIR)/SmagorinskyModel.cc \
+	$(SRCDIR)/TurbulenceModel.cc
+#$(SRCDIR)/Discretization.cc 
 #	$(SRCDIR)/PressureSolver.cc
 PSELIBS := Uintah/Parallel Uintah/Interface Uintah/Grid Uintah/Exceptions
 LIBS := $(XML_LIBRARY)
@@ -19,6 +24,10 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.8  2000/04/13 20:05:52  sparker
+# Compile more of arches
+# Made SimulationController work somewhat
+#
 # Revision 1.7  2000/04/13 06:50:52  sparker
 # More implementation to get this to work
 #

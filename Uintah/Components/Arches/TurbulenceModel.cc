@@ -6,3 +6,7 @@ using Uintah::Components::TurbulenceModel;
 TurbulenceModel::TurbulenceModel()
 {
 }
+
+TurbulenceModel::~TurbulenceModel()
+{
+}

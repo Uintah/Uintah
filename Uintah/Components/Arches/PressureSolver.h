@@ -136,7 +136,9 @@ class PressureSolver
    // underrealaxation parameter, read from an input database
    double d_underrelax;
    //reference points for the solvers
+#if 0
    Array1 d_pressRef;
+#endif
 
 };
 

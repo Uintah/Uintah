@@ -11,6 +11,7 @@
 #include <Uintah/Grid/CCVariable.h>
 #include <Uintah/Grid/PerRegion.h>
 #include <Uintah/Grid/SoleVariable.h>
+#include <Uintah/Interface/ProblemSpec.h>
 #include <SCICore/Geometry/Vector.h>
 #include <Uintah/Exceptions/InvalidValue.h>
 #include <Uintah/Grid/Array3.h>
@@ -22,7 +23,7 @@ using namespace Uintah::Components;
 using namespace Uintah::Grid;
 using SCICore::Geometry::Vector;
 
-SmagorinskyModel::SmagorinskyModel(PhysicalConstants& phyConsts):
+SmagorinskyModel::SmagorinskyModel(PhysicalConstants* phyConsts):
 TurbulenceModel(), d_physicalConsts(phyConsts)
 {
 }
@@ -71,6 +72,7 @@ void SmagorinskyModel::computeTurbSubmodel(const ProcessorContext* pc,
 					   const DataWarehouseP& old_dw,
 					   DataWarehouseP& new_dw)
 {
+#if 0
   FCVariable<Vector> velocity;
   old_dw->get(velocity, "velocity", region, 1);
   CCVariable<double> density;
@@ -107,6 +109,7 @@ void SmagorinskyModel::computeTurbSubmodel(const ProcessorContext* pc,
 		 cellinfo->iwsdu, cellinfo->enfac, cellinfo->sfac,
 		 cellinfo->tfac, cellinfo->bfac);
   new_dw->put(new_viscosity, "viscosity", region);
+#endif
 }
 
 void SmagorinskyModel::calcVelocityWallBC(const ProcessorContext* pc,
@@ -115,6 +118,7 @@ void SmagorinskyModel::calcVelocityWallBC(const ProcessorContext* pc,
 					  DataWarehouseP& new_dw,
 					  int index)
 {
+#if 0
   FCVariable<Vector> velocity;
   old_dw->get(velocity, "velocity", region, 1);
   CCVariable<double> density;
@@ -188,6 +192,7 @@ void SmagorinskyModel::calcVelocityWallBC(const ProcessorContext* pc,
     else {
     cerr << "Invalid Index value" << endl;
   }
+#endif
 }
 
 
