@@ -131,6 +131,37 @@ IsoClipAlgoT<FIELD>::execute(ProgressReporter *mod, FieldHandle fieldh,
 
       clipped->add_elem(nnodes);
     }
+    else if (inside == 0x8 || inside == 0x4 || inside == 0x2 || inside == 0x1)
+    {
+      const int *perm = permute_table[inside];
+      // Add this element to the new mesh.
+      typename FIELD::mesh_type::Node::array_type nnodes(4);
+
+      if (nodemap.find((unsigned int)onodes[perm[0]]) == nodemap.end())
+      {
+	const typename FIELD::mesh_type::Node::index_type nodeindex =
+	  clipped->add_point(p[perm[0]]);
+	nodemap[(unsigned int)onodes[perm[0]]] = nodeindex;
+	nnodes[0] = nodeindex;
+      }
+      else
+      {
+	nnodes[0] = nodemap[(unsigned int)onodes[perm[0]]];
+      }
+
+      const double imv = isoval - v[perm[0]];
+      const Point l1 = Interpolate(p[perm[0]], p[perm[1]],
+				   imv / (v[perm[1]] - v[perm[0]]));
+      const Point l2 = Interpolate(p[perm[0]], p[perm[2]],
+				   imv / (v[perm[2]] - v[perm[0]]));
+      const Point l3 = Interpolate(p[perm[0]], p[perm[3]],
+				   imv / (v[perm[3]] - v[perm[0]]));
+
+      nnodes[1] = clipped->add_point(l1);
+      nnodes[2] = clipped->add_point(l2);
+      nnodes[3] = clipped->add_point(l3);
+      clipped->add_elem(nnodes);
+    }
     else if (inside == 0x7 || inside == 0xb || inside == 0xd || inside == 0xe)
     {
       const int *perm = permute_table[inside];
