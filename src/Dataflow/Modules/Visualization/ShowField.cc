@@ -52,6 +52,9 @@ class ShowField : public Module
   FieldIPort*              geom_;
   FieldIPort*              data_;
   ColorMapIPort*           color_;
+  int                      geom_gen_;
+  int                      data_gen_;
+  int                      colm_gen_;
   //! output port
   GeometryOPort           *ogeom_;  
 
@@ -64,13 +67,15 @@ class ShowField : public Module
   //! nodes.
   GeomSwitch*              node_switch_;
   bool                     nodes_on_;
+  bool                     nodes_dirty_;
   //! edges.
   GeomSwitch*              edge_switch_;
   bool                     edges_on_;
+  bool                     edges_dirty_;
   //! faces.
   GeomSwitch*              face_switch_;
   bool                     faces_on_;
-
+  bool                     faces_dirty_;
   //! holds options for how to visualize nodes.
   GuiString                node_display_type_;
   GuiInt                   showProgress_;
@@ -106,16 +111,22 @@ ShowField::ShowField(const clString& id) :
   geom_(0),
   data_(0),
   color_(0),
+  geom_gen_(0),
+  data_gen_(0),
+  colm_gen_(0),
   ogeom_(0),
   node_id_(0),
   edge_id_(0),
   face_id_(0),
   node_switch_(0),
   nodes_on_(true),
+  nodes_dirty_(true),
   edge_switch_(0),
   edges_on_(true),
+  edges_dirty_(true),
   face_switch_(0),
   faces_on_(true),
+  faces_dirty_(true),
   node_display_type_("node_display_type", id, this),
   showProgress_("show_progress", id, this)
  {
@@ -140,26 +151,49 @@ ShowField::execute()
 
   // tell module downstream to delete everything we have sent it before.
   // This is typically viewer, it owns the scene graph memory we create here.
-    
-  ogeom_->delAll(); 
+  bool render_all = false;
   FieldHandle geom_handle;
   geom_->get(geom_handle);
   if(!geom_handle.get_rep()){
     cerr << "No Geometry in port 1 field" << endl;
     return;
   }
+
   FieldHandle data_handle;
   data_->get(data_handle);
   if(!data_handle.get_rep()){
     cerr << "No Data in port 2 field" << endl;
     return;
   }
+
   ColorMapHandle color_handle;
   color_->get(color_handle);
   if(!color_handle.get_rep()){
     cerr << "No ColorMap in port 3 ColorMap" << endl;
     return;
   }
+  // See if any input is new.
+  if ((geom_gen_ != geom_handle->generation) || 
+      (data_gen_ != data_handle->generation) || 
+      (colm_gen_ != color_handle->generation)) 
+  {
+    // input has changed, rerender everything.
+    render_all = true;
+    nodes_dirty_ = true;
+    edges_dirty_ = true;
+    faces_dirty_ = true;
+    geom_gen_ = geom_handle->generation;    
+    data_gen_ = data_handle->generation;
+    colm_gen_ = color_handle->generation;
+  }
+
+  // check to see if we have something to do.
+  if ((!nodes_dirty_) && (!edges_dirty_) && (!faces_dirty_))  
+  {
+    cout << "nothing to do" << endl;
+    return;
+  }
+  cout << "have to render" << endl;
 
   bool error = false;
   string msg;
@@ -192,6 +226,23 @@ ShowField::execute()
     cerr << "ShowField Error: " << msg << endl;
     return;
   }
+  
+  // cleanup...
+  if (nodes_dirty_) {
+    if (node_id_) ogeom_->delObj(node_id_); 
+    node_id_ = 0;
+    nodes_dirty_ = false;
+  }
+  if (edges_dirty_) {
+    if (edge_id_) ogeom_->delObj(edge_id_); 
+    edge_id_ = 0;
+    edges_dirty_ = false;
+  }
+  if (faces_dirty_) {
+    if (face_id_) ogeom_->delObj(face_id_); 
+    face_id_ = 0;
+    faces_dirty_ = false;
+  }  
 
   if (nodes_on_) node_id_ = ogeom_->addObj(node_switch_, "Nodes");
   if (edges_on_) edge_id_ = ogeom_->addObj(edge_switch_, "Edges");
@@ -205,7 +256,7 @@ ShowField::render(Field *geom, Field *c_index, ColorMapHandle cm)
 {
   typename Field::mesh_handle_type mesh = geom->get_typed_mesh();
 
-  if ((nodes_on_)) { // && (node_id_ == 0)) {
+  if (nodes_dirty_) {
     GeomGroup* nodes = scinew GeomGroup;
     node_switch_ = scinew GeomSwitch(nodes);
     GeomPts *pts = 0;
@@ -213,7 +264,7 @@ ShowField::render(Field *geom, Field *c_index, ColorMapHandle cm)
     if (node_display_type_.get() == "Points") {
       pts = scinew GeomPts(mesh->nodes_size());
     }
-    // First pass over the nodes
+    // First pass: over the nodes
     typename Field::mesh_type::node_iterator niter = mesh->node_begin();  
     while (niter != mesh->node_end()) {
     
@@ -236,11 +287,10 @@ ShowField::render(Field *geom, Field *c_index, ColorMapHandle cm)
     }
   }
 
-  if ((edges_on_)) { // && (edge_id_ == 0)) {
+  if (edges_dirty_) { 
     GeomGroup* edges = scinew GeomGroup;
     edge_switch_ = scinew GeomSwitch(edges);
-    // Second pass over the edges
-    //mesh->compute_edges();
+    // Second pass: over the edges
     typename Field::mesh_type::edge_iterator eiter = mesh->edge_begin();  
     while (eiter != mesh->edge_end()) {        
       typename Field::mesh_type::node_array nodes;
@@ -258,11 +308,10 @@ ShowField::render(Field *geom, Field *c_index, ColorMapHandle cm)
     }
   }
 
-  if ((faces_on_)) {// && (face_id_ == 0)) {
+  if (faces_dirty_) {
     GeomGroup* faces = scinew GeomGroup;
     face_switch_ = scinew GeomSwitch(faces);
-    // Second pass over the faces
-    //mesh->compute_faces();
+    // Third pass: over the faces
     typename Field::mesh_type::face_iterator fiter = mesh->face_begin();  
     while (fiter != mesh->face_end()) {        
       typename Field::mesh_type::node_array nodes;
@@ -357,27 +406,42 @@ ShowField::tcl_command(TCLArgs& args, void* userdata) {
     } else {
       dbg_ << "Render Points." << endl;
     }
-    // Tell viewer to redraw itself.
-    ogeom_->flushViews();
+    nodes_dirty_ = true;
+    want_to_execute();
 
   } else if (args[1] == "toggle_display_nodes"){
     // Toggle the GeomSwitch.
     nodes_on_ = ! nodes_on_;
     if (node_switch_) node_switch_->set_state(nodes_on_);
-    // Tell viewer to redraw itself.
-    ogeom_->flushViews();
+
+    if ((nodes_on_) && (node_id_ == 0)) {
+      nodes_dirty_ = true;
+      want_to_execute();
+    } else {
+      ogeom_->flushViews();
+    }
   } else if (args[1] == "toggle_display_edges"){
     // Toggle the GeomSwitch.
     edges_on_ = ! edges_on_;
     if (edge_switch_) edge_switch_->set_state(edges_on_);
-    // Tell viewer to redraw itself.
-    ogeom_->flushViews();
+    
+    if ((edges_on_) && (edge_id_ == 0)) {
+      edges_dirty_ = true;
+      want_to_execute();
+    } else {
+      ogeom_->flushViews();
+    }
   } else if (args[1] == "toggle_display_faces"){
     // Toggle the GeomSwitch.
     faces_on_ = ! faces_on_;
     if (face_switch_) face_switch_->set_state(faces_on_);
-    // Tell viewer to redraw itself.
-    ogeom_->flushViews();
+
+    if ((faces_on_) && (face_id_ == 0)) {
+      faces_dirty_ = true;
+      want_to_execute();
+    } else {
+      ogeom_->flushViews();
+    }
   } else {
     Module::tcl_command(args, userdata);
   }
