@@ -131,7 +131,7 @@ SCIRUN_TMP_DIR = /tmp
 ### SCIRUN_NET_SUBSTITUTE_DATADIR = [boolean]
 #   If true, module filename variables will be automatically substitute
 #   SCIRUN_DATADIR and SCIRUN_DATASET in saved .net files.
-# SCIRUN_NET_SUBSTITUE_DATADIR = false
+# SCIRUN_NET_SUBSTITUTE_DATADIR = false
 
 
 ### SCI_NOSPLASH = [boolean]
