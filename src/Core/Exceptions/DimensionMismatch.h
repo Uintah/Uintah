@@ -36,6 +36,6 @@ namespace SCICore {
     }
 }
 
-#endif
+#endif  // SCICore_Exceptions_DimensionMismatch_h
 
 
