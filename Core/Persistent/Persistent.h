@@ -80,12 +80,18 @@ public:
     Read,
     Write
   };
+
+  enum Endian {
+    Big,
+    Little
+  };
   
 protected:
   Piostream(Direction, int, const string & =string(""));
   Direction dir;
   int version;
   int err;
+  int file_endian;
   
   MapPersistentInt* outpointers;
   MapIntPersistent* inpointers;
@@ -93,7 +99,7 @@ protected:
   int current_pointer_id;
   virtual void emit_pointer(int&, int&)=0;
   static bool readHeader(const string& filename, char* hdr,
-			 const char* type, int& version);
+			 const char* type, int& version, int& endian);
 public:
   string file_name;
 
@@ -131,6 +137,7 @@ public:
   virtual void block_io(void*, size_t, size_t) { ASSERTFAIL("unsupported"); }
 
   friend Piostream* auto_istream(const string& filename);
+  friend Piostream* auto_ostream(const string& filename, const string& type);
 };
 
 //----------------------------------------------------------------------

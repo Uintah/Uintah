@@ -59,25 +59,18 @@ using namespace std;
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <string.h>
+#include <teem/nrrd.h>
 #ifdef _WIN32
 #include <io.h>
 #else
 #include <sys/mman.h>
-#include <rpc/types.h>
-#include <rpc/xdr.h>
-#endif
-
-// According to (at least) one man page, xdr_hyper() is the same as
-// xdr_longlong_t().  AIX does not have xdr_longlong_t, hence...
-#if defined(_AIX) && defined(_LONG_LONG)
-#  define xdr_longlong_t xdr_hyper
 #endif
 
 #ifdef __digital__
 typedef longlong_t __int64_t;
 #endif
 
-#define PERSISTENT_VERSION 1
+#define PERSISTENT_VERSION 2
 
 namespace SCIRun {
 
@@ -107,7 +100,7 @@ TextPiostream::TextPiostream(const string& filename, Direction dir)
 	break;
       c++;
     }
-    if(!readHeader(filename, hdr, "ASC", version)){
+    if(!readHeader(filename, hdr, "ASC", version, file_endian)){
       cerr << "Error parsing header of file: " << filename << "\n";
       err=1;
       return;
@@ -146,7 +139,7 @@ TextPiostream::TextPiostream(istream *strm)
       break;
     c++;
   }
-  if(!readHeader("istream", hdr, "ASC", version)){
+  if(!readHeader("istream", hdr, "ASC", version, file_endian)){
     cerr << "Error parsing header of istream.\n";
     err=1;
     return;
@@ -784,7 +777,7 @@ FastPiostream::FastPiostream(const string& filename, Direction dir) :
   have_peekname_(0)
 {
   if(dir==Read){
-    fp_ = fopen (filename.c_str(), "r");
+    fp_ = fopen (filename.c_str(), "rb");
     if(!fp_){
       cerr << "Error opening file: " << filename << " for reading\n";
       err=1;
@@ -797,23 +790,38 @@ FastPiostream::FastPiostream(const string& filename, Direction dir) :
       err=1;
       return; 
     }
-    readHeader(filename, hdr, "FAS", version);
+    readHeader(filename, hdr, "FAS", version, file_endian);
   } else {
-    fp_=fopen(filename.c_str(), "w");
+    fp_=fopen(filename.c_str(), "wb");
     if(!fp_){
       cerr << "Error opening file: " << filename << " for writing\n";
       err=1;
       return;
     }
-    char hdr[12];
     version=PERSISTENT_VERSION;
-    sprintf(hdr, "SCI\nFAS\n%03d\n", version);
-    // write the header
-    size_t wrote = fwrite(hdr, sizeof(char), 12, fp_);
-    if (wrote != 12) {
-      cerr << "Error writing header to: " << filename << endl;
-      err=1;
-      return; 
+    if (version > 1) {
+      char hdr[16];
+      if (airMyEndian == airEndianLittle) 
+	sprintf(hdr, "SCI\nFAS\n%03d\nLIT\n", version);
+      else
+	sprintf(hdr, "SCI\nFAS\n%03d\nBIG\n", version);
+      // write the header
+      size_t wrote = fwrite(hdr, sizeof(char), 16, fp_);
+      if (wrote != 16) {
+	cerr << "Error writing header to: " << filename << endl;
+	err=1;
+	return; 
+      }
+    } else {
+      char hdr[12];
+      sprintf(hdr, "SCI\nFAS\n%03d\n", version);
+      // write the header
+      size_t wrote = fwrite(hdr, sizeof(char), 12, fp_);
+      if (wrote != 12) {
+	cerr << "Error writing header to: " << filename << endl;
+	err=1;
+	return; 
+      }
     }
   }
 }
@@ -824,7 +832,7 @@ FastPiostream::FastPiostream(int fd, Direction dir) :
   have_peekname_(0)
 {
   if(dir==Read){
-    fp_ = fdopen (fd, "r");
+    fp_ = fdopen (fd, "rb");
     if(!fp_){
       cerr << "Error opening socket: " << fd << " for reading\n";
       err=1;
@@ -837,23 +845,38 @@ FastPiostream::FastPiostream(int fd, Direction dir) :
       err=1;
       return; 
     }
-    readHeader("socket", hdr, "FAS", version);
+    readHeader("socket", hdr, "FAS", version, file_endian);
   } else {
-    fp_=fdopen(fd, "w");
+    fp_=fdopen(fd, "wb");
     if(!fp_){
       cerr << "Error opening socket: " << fd << " for writing\n";
       err=1;
       return;
     }
-    char hdr[12];
     version=PERSISTENT_VERSION;
-    sprintf(hdr, "SCI\nFAS\n%03d\n", version);
-    // write the header
-    size_t wrote = fwrite(hdr, sizeof(char), 12, fp_);
-    if (wrote != 12) {
-      cerr << "Error writing header to socket: " << fd << endl;
-      err=1;
-      return; 
+    if (version > 1) {
+      char hdr[16];
+      if (airMyEndian == airEndianLittle) 
+	sprintf(hdr, "SCI\nFAS\n%03d\nLIT\n", version);
+      else
+	sprintf(hdr, "SCI\nFAS\n%03d\nBIG\n", version);
+      // write the header
+      size_t wrote = fwrite(hdr, sizeof(char), 16, fp_);
+      if (wrote != 16) {
+	cerr << "Error writing header to: " << fd << endl;
+	err=1;
+	return; 
+      }
+    } else {
+      char hdr[12];
+      sprintf(hdr, "SCI\nFAS\n%03d\n", version);
+      // write the header
+      size_t wrote = fwrite(hdr, sizeof(char), 12, fp_);
+      if (wrote != 12) {
+	cerr << "Error writing header to socket: " << fd << endl;
+	err=1;
+	return; 
+      }
     }
   }
 }
@@ -1044,114 +1067,154 @@ void FastPiostream::emit_pointer(int& have_data, int& pointer_id)
 // BinaryPiostream -- portable
 BinaryPiostream::~BinaryPiostream()
 {
-#if defined(__APPLE__) && (__GNUC__ == 3) && (__GNUC_MINOR__  < 3)
-// On the Mac, x_destroy must be used if and only if you are running a
-// gcc versioned less than 3.3.  Note, we have run into a problem that
-// some gcc 3.3's needed to use x_destroy too.  However, when we
-// updated OSX (using the standard update utility) and we installed
-// the X developer kit, this strange behavior went away.  So, if you
-// are compiling on a Mac with 3.3 and you are getting an error in
-// this routine, please make sure that you update to the latest
-// patches for OSX and have the X developer kit installed.  If this is
-// the case, and you still have problems, please report them.
-  if (xdr)
-    if ((xdr)->x_ops)
-      if ((xdr)->x_ops->x_destroy)
-	(*(xdr)->x_ops->x_destroy)();
-  delete xdr;
-#elif !defined(_WIN32)
-  if(xdr){
-    xdr_destroy(xdr);
-    delete xdr;
-  }
-#endif
+  if (fp) fclose(fp);
 }
 
-BinaryPiostream::BinaryPiostream(const string& filename, Direction dir)
+BinaryPiostream::BinaryPiostream(const string& filename, Direction dir, const int& v)
   : Piostream(dir, -1, filename), have_peekname(0)
 {
-#ifndef _WIN32
   mmapped = false;
+  if (v == -1) // no version given so use PERSISTENT_VERSION
+    version = PERSISTENT_VERSION;
+  else
+    version = v;
+
   if(dir==Read){
-    fp = fopen (filename.c_str(), "r");
+    fp = fopen (filename.c_str(), "rb");
     if(!fp){
       cerr << "Error opening file: " << filename << " for reading\n";
       err=1;
-      xdr=0;
       return;
     }
-    xdr=scinew XDR;
-    xdrstdio_create (xdr, fp, XDR_DECODE);
 
-    char hdr[12];
-    if(!xdr_opaque(xdr, (caddr_t)hdr, 12)){
-      cerr << "xdr_opaque failed\n";
-      err=1;
-      return;
+    // old versions had headers of size 12
+    if (version == 1) {
+      char hdr[12]; 
+      
+      // read header
+      if (!fread(hdr, 1, 12, fp)) {
+	cerr << "header fread failed\n";
+	err=1;
+	return;
+      }
+    } else {
+      // versions > 1 have size of 16 to 
+      // account for endianness in header (LIT | BIG)
+      char hdr[16]; 
+      
+      // read header
+      if (!fread(hdr, 1, 16, fp)) {
+	cerr << "header fread failed\n";
+	err=1;
+	return;
+      }
     }
-    readHeader(filename, hdr, "BIN", version);
-  } else {
-    fp=fopen(filename.c_str(), "w");
+  }
+  else {
+    fp=fopen(filename.c_str(), "wb");
     if(!fp){
       cerr << "Error opening file: " << filename << " for writing\n";
       err=1;
       return;
     }
-    xdr=scinew XDR;
-    xdrstdio_create(xdr, fp, XDR_ENCODE);
-    char hdr[100];
+
+
     version=PERSISTENT_VERSION;
-    sprintf(hdr, "SCI\nBIN\n%03d\n", version);
-    if(!xdr_opaque(xdr, (caddr_t)hdr, 12)){
-      cerr << "xdr_opaque failed\n";
-      err=1;
-      return;
+    if (version > 1) {
+      char hdr[16];
+      if (airMyEndian == airEndianLittle) 
+	sprintf(hdr, "SCI\nBIN\n%03d\nLIT\n", version);
+      else
+	sprintf(hdr, "SCI\nBIN\n%03d\nBIG\n", version);
+
+      if (!fwrite(hdr,1,16,fp)) {
+	cerr << "header fwrite failed\n";
+	err=1;
+	return;
+      }
+    } else {
+      char hdr[12];
+      sprintf(hdr, "SCI\nBIN\n%03d\n", version);
+      if (!fwrite(hdr,1,12,fp)) {
+	cerr << "header fwrite failed\n";
+	err=1;
+	return;
+      }
     }
-  }
-#endif
+  }  
 }
 
-BinaryPiostream::BinaryPiostream(int fd, Direction dir)
+BinaryPiostream::BinaryPiostream(int fd, Direction dir, const int& v)
   : Piostream(dir, -1), have_peekname(0)
 {
-#ifndef _WIN32
   mmapped = false;
+  if (v == -1) // no version given so use PERSISTENT_VERSION
+    version = PERSISTENT_VERSION;
+  else
+    version = v;
+
   if(dir==Read){
-    fp = fdopen (fd, "r");
+    fp = fdopen (fd, "rb");
     if(!fp){
       cerr << "Error opening socket: " << fd << " for reading\n";
       err=1;
-      xdr=0;
       return;
     }
-    xdrstdio_create (xdr, fp, XDR_DECODE);
 
-    char hdr[12];
-    if(!xdr_opaque(xdr, (caddr_t)hdr, 12)){
-      cerr << "xdr_opaque failed\n";
-      err=1;
-      return;
+    // old versions had headers of size 12
+    if (version == 1) {
+      char hdr[12]; 
+      
+      // read header
+      if (!fread(hdr, 1, 12, fp)) {
+	cerr << "header fread failed\n";
+	err=1;
+	return;
+      }
+    } else {
+      // versions > 1 have size of 16 to 
+      // account for endianness in header (LIT | BIG)
+      char hdr[16]; 
+      
+      // read header
+      if (!fread(hdr, 1, 16, fp)) {
+	cerr << "header fread failed\n";
+	err=1;
+	return;
+      }
     }
-    version=1;
-  } else {
-    fp=fdopen(fd, "w");
+  }
+  else {
+    fp=fdopen(fd, "wb");
     if(!fp){
       cerr << "Error opening socket: " << fd << " for writing\n";
       err=1;
       return;
     }
-    xdr=scinew XDR;
-    xdrstdio_create(xdr, fp, XDR_ENCODE);
-    char hdr[100];
+
     version=PERSISTENT_VERSION;
-    sprintf(hdr, "SCI\nBIN\n%03d\n", version);
-    if(!xdr_opaque(xdr, (caddr_t)hdr, 12)){
-      cerr << "xdr_opaque failed\n";
-      err=1;
-      return;
+    if (version > 1) {
+      char hdr[16];
+      if (airMyEndian == airEndianLittle) 
+	sprintf(hdr, "SCI\nBIN\n%03d\nLIT\n", version);
+      else
+	sprintf(hdr, "SCI\nBIN\n%03d\nBIG\n", version);
+
+      if (!fwrite(hdr,1,16,fp)) {
+	cerr << "header fwrite failed\n";
+	err=1;
+	return;
+      }
+    } else {
+      char hdr[12];
+      sprintf(hdr, "SCI\nBIN\n%03d\n", version);
+      if (!fwrite(hdr,1,12,fp)) {
+	cerr << "header fwrite failed\n";
+	err=1;
+	return;
+      }
     }
-  }
-#endif
+  }  
 }
 
 string BinaryPiostream::peek_class()
@@ -1216,19 +1279,444 @@ void BinaryPiostream::io(bool& data)
 
 void BinaryPiostream::io(char& data)
 {
-#ifndef _WIN32
   if(err)return;
-  if(!xdr_char(xdr, &data)){
-    err=1;
-    cerr << "xdr_char failed\n";
+  if (dir==Read) {
+    if (!fread(&data, sizeof(char), 1, fp)) err = 1;
+  } else {
+    if (!fwrite(&data, sizeof(char), 1, fp)) err = 1;
   }
-#endif
 }
 
 void BinaryPiostream::io(signed char& data)
 {
   if(err)return;
-  short tmp = data;
+  if (dir==Read) {
+    if (!fread(&data, sizeof(signed char), 1, fp)) err = 1;
+  } else {
+    if (!fwrite(&data, sizeof(signed char), 1, fp)) err = 1;
+  }
+}
+
+void BinaryPiostream::io(unsigned char& data)
+{
+  if(err)return;
+  if (dir==Read) {
+    if (!fread(&data, sizeof(unsigned char), 1, fp)) err = 1;
+  } else {
+    if (!fwrite(&data, sizeof(unsigned char), 1, fp)) err = 1;
+  }
+}
+
+void BinaryPiostream::io(short& data)
+{
+  if(err)return;
+  if (dir==Read) {
+    if (!fread(&data, sizeof(short), 1, fp)) err = 1;
+  } else {
+    if (!fwrite(&data, sizeof(short), 1, fp)) err = 1;
+  }
+}
+
+void BinaryPiostream::io(unsigned short& data)
+{
+  if(err)return;
+  if (dir==Read) {
+    if (!fread(&data, sizeof(unsigned short), 1, fp)) err = 1;
+  } else {
+    if (!fwrite(&data, sizeof(unsigned short), 1, fp)) err = 1;
+  }
+}
+
+void BinaryPiostream::io(int& data)
+{
+  if(err)return;
+  if (dir==Read) {
+    if (!fread(&data, sizeof(int), 1, fp)) err = 1;
+  } else {
+    if (!fwrite(&data, sizeof(int), 1, fp)) err = 1;
+  }
+}
+
+void BinaryPiostream::io(unsigned int& data)
+{
+  if(err)return;
+  if (dir==Read) {
+    if (!fread(&data, sizeof(unsigned int), 1, fp)) err = 1;
+  } else {
+    if (!fwrite(&data, sizeof(unsigned int), 1, fp)) err = 1;
+  }
+}
+
+void BinaryPiostream::io(long& data)
+{
+  if(err)return;
+  if (dir==Read) {
+    if (!fread(&data, sizeof(long), 1, fp)) err = 1;
+  } else {
+    if (!fwrite(&data, sizeof(long), 1, fp)) err = 1;
+  }
+}
+
+void BinaryPiostream::io(unsigned long& data)
+{
+  if(err)return;
+  if (dir==Read) {
+    if (!fread(&data, sizeof(unsigned long), 1, fp)) err = 1;
+  } else {
+    if (!fwrite(&data, sizeof(unsigned long), 1, fp))  err = 1;
+  }
+}
+
+void BinaryPiostream::io(long long& data)
+{
+  // Not all architectures support type long long. For now, we 
+  // assume users are writing/reading on the same architecture
+  // so that the size of the long long is consistent.  If this
+  // is not the case, print out an error message regarding the
+  // support of this type.
+  if(err)return;
+  if (dir==Read) {
+    if (!fread(&data, sizeof(long long), 1, fp)) {
+      cerr << "Error reading type long long type which is not fully supported.\n";
+      err = 1;
+    }
+  } else {
+    if (!fwrite(&data, sizeof(long long), 1, fp)) {
+      cerr << "Error writing type long long type which is not fully supported.\n";
+      err = 1;
+    }
+  }
+}
+
+void BinaryPiostream::io(unsigned long long& data)
+
+{
+  // Not all architectures support type unsigned long long. For now, we 
+  // assume users are writing/reading on the same architecture
+  // so that the size of the long long is consistent.  If this
+  // is not the case, print out an error message regarding the
+  // support of this type.
+  if(err)return;
+  if (dir==Read) {
+    if (!fread(&data, sizeof(unsigned long long), 1, fp)) {
+      cerr << "Error reading type unsigned long long type which is not fully supported.\n";
+      err = 1;
+    }
+  } else {
+    if (!fwrite(&data, sizeof(unsigned long long), 1, fp)) {
+      cerr << "Error writing type unsigned long long type which is not fully supported.\n";
+      err = 1;
+    }
+  }
+}
+
+void BinaryPiostream::io(double& data)
+{
+  if(err) return;
+
+  if (dir==Read) {
+    if (!fread(&data, sizeof(double), 1, fp)) err = 1;
+  } else {
+    if (!fwrite(&data, sizeof(double), 1, fp)) err = 1;
+  }
+}
+
+void BinaryPiostream::io(float& data)
+{
+  if(err)return;
+  if (dir==Read) {
+    if (!fread(&data, sizeof(float), 1, fp)) err = 1;
+  } else {
+    if (!fwrite(&data, sizeof(float), 1, fp)) err = 1;
+  }
+}
+
+void BinaryPiostream::io(string& data)
+{
+  if(err)return;
+  unsigned int chars = 0;
+  if(dir==Write) {
+    const char* p=data.c_str();
+    chars = static_cast<int>(strlen(p)) + 1;
+    io(chars);
+    if (!fwrite(p, sizeof(char), chars, fp)) err = 1;
+  }
+  if(dir==Read){
+    // read in size
+    io(chars);
+    
+    if (version == 1) {
+
+      // Some of the property manager's objects write out
+      // strings of size 0 followed a character, followed
+      // by an unsigned short which is the size of the following
+      // string
+      if (chars == 0) {
+	char c;
+
+	// skip character
+	fread(&c, sizeof(char), 1, fp);
+
+	unsigned short s;
+	io(s);
+
+	// create buffer which is multiple of 4
+	int extra = 4-(s%4);
+	if (extra == 4) 
+	  extra = 0;
+	unsigned int buf_size = s+extra;
+	char* buf = new char[buf_size];
+	
+	// read in data plus padding
+	if (!fread(buf, sizeof(char), buf_size, fp)) {
+	  err = 1;
+	  delete [] buf;
+	  return;
+	}
+	
+	// only use actual size of string
+	data = "";
+	for(unsigned int i=0; i<s; i++)
+	  data += buf[i];
+	delete [] buf;
+      } else {
+	// used to create a buffer which is multiple of 4
+	int extra = 4-(chars%4);
+	if (extra == 4)
+	  extra = 0;
+	int buf_size = chars+extra;
+	char* buf = new char[buf_size];
+	
+	// read in data plus padding
+	if (!fread(buf, sizeof(char), buf_size, fp)) {
+	  err = 1;
+	}
+	
+	// only use actual size of string
+	data = "";
+	for(unsigned int i=0; i<chars; i++)
+	  data += buf[i];
+	
+	delete [] buf;
+      }
+    } else {
+      char* buf = new char[chars];
+      fread(buf, sizeof(char), chars, fp);
+      data=string(buf);
+      delete[] buf;
+    }
+  }
+}
+
+void BinaryPiostream::emit_pointer(int& have_data, int& pointer_id)
+{
+  io(have_data);
+  io(pointer_id);
+}
+
+////
+// BinarySwapPiostream -- portable
+// Piostream used when endianness of machine and file don't match
+BinarySwapPiostream::~BinarySwapPiostream()
+{
+  if (fp) fclose(fp);
+}
+
+BinarySwapPiostream::BinarySwapPiostream(const string& filename, Direction dir, const int&v)
+  : Piostream(dir, -1, filename), have_peekname(0)
+{
+  mmapped = false;
+  if (v == -1) // no version given so use PERSISTENT_VERSION
+    version = PERSISTENT_VERSION;
+  else
+    version = v;
+  if(dir==Read){
+    fp = fopen (filename.c_str(), "rb");
+    if(!fp){
+      cerr << "Error opening file: " << filename << " for reading\n";
+      err=1;
+      return;
+    }
+
+    if (version == 1) {
+      char hdr[12]; 
+      
+      // read header
+      if (!fread(hdr, 1, 12, fp)) {
+	cerr << "header fread failed\n";
+	err=1;
+	return;
+      }
+    } else {
+      // versions > 1 have size of 16 to 
+      // account for endianness in header (LIT | BIG)
+      char hdr[16]; 
+      
+      // read header
+      if (!fread(hdr, 1, 16, fp)) {
+	cerr << "header fread failed\n";
+	err=1;
+	return;
+      }
+    }
+  }
+  else {
+    fp=fopen(filename.c_str(), "wb");
+    if(!fp){
+      cerr << "Error opening file: " << filename << " for writing\n";
+      err=1;
+      return;
+    }
+
+    version=PERSISTENT_VERSION;
+    if (version > 1) {
+      char hdr[16];
+      if (airMyEndian == airEndianLittle) 
+	sprintf(hdr, "SCI\nBIN\n%03d\nLIT\n", version);
+      else
+	sprintf(hdr, "SCI\nBIN\n%03d\nBIG\n", version);
+
+      if (!fwrite(hdr,1,16,fp)) {
+	cerr << "header fwrite failed\n";
+	err=1;
+	return;
+      }
+    } else {
+      char hdr[12];
+      sprintf(hdr, "SCI\nBIN\n%03d\n", version);
+      if (!fwrite(hdr,1,12,fp)) {
+	cerr << "header fwrite failed\n";
+	err=1;
+	return;
+      }
+    }
+  }
+}
+
+
+BinarySwapPiostream::BinarySwapPiostream(int fd, Direction dir, const int& v)
+  : Piostream(dir, -1), have_peekname(0)
+{
+  mmapped = false;
+  if (v == -1) // no version given so use PERSISTENT_VERSION
+    version = PERSISTENT_VERSION;
+  else
+    version = v;
+  if(dir==Read){
+    fp = fdopen (fd, "rb");
+    if(!fp){
+      cerr << "Error opening socket: " << fd << " for reading\n";
+      err=1;
+      return;
+    }
+
+    // old versions had headers of size 12
+    if (version == 1) {
+      char hdr[12]; 
+      
+      // read header
+      if (!fread(hdr, 1, 12, fp)) {
+	cerr << "header fread failed\n";
+	err=1;
+	return;
+      }
+    } else {
+      // versions > 1 have size of 16 to 
+      // account for endianness in header (LIT | BIG)
+      char hdr[16]; 
+      
+      // read header
+      if (!fread(hdr, 1, 16, fp)) {
+	cerr << "header fread failed\n";
+	err=1;
+	return;
+      }
+    }
+  } else {
+    fp=fdopen(fd, "wb");
+    if(!fp){
+      cerr << "Error opening socket: " << fd << " for writing\n";
+      err=1;
+      return;
+    }
+
+    version=PERSISTENT_VERSION;
+    if (version > 1) {
+      char hdr[16];
+      if (airMyEndian == airEndianLittle)
+	sprintf(hdr, "SCI\nBIN\n%03d\nLIT\n", version);
+      else
+	sprintf(hdr, "SCI\nBIN\n%03d\nBIG\n", version);
+      if (!fwrite(hdr,1,16,fp)) {
+	cerr << "header fwrite failed\n";
+	err=1;
+	return;
+      }
+    } else {
+      char hdr[12];
+      sprintf(hdr, "SCI\nBIN\n%03d\n", version);
+      if (!fwrite(hdr,1,12,fp)) {
+	cerr << "header fwrite failed\n";
+	err=1;
+	return;
+      }
+    }
+  }
+}
+
+string BinarySwapPiostream::peek_class()
+{
+  have_peekname=1;
+  io(peekname);
+  return peekname;
+}
+
+int BinarySwapPiostream::begin_class(const string& classname,
+				 int current_version)
+{
+  if(err)return -1;
+  int version=current_version;
+  string gname;
+  if(dir==Write){
+    gname=classname;
+    io(gname);
+  } else if(dir==Read && have_peekname){
+    gname=peekname;
+  } else {
+    io(gname);
+  }
+  have_peekname=0;
+
+  if(dir==Read){
+    if(classname != gname){
+      err=1;
+      cerr << "Expecting class: " << classname << ", got class: " << gname << endl;
+      return 0;
+    } 
+  }
+  io(version);
+  return version;
+}
+
+void BinarySwapPiostream::end_class()
+{
+  // No-op
+}
+
+void BinarySwapPiostream::begin_cheap_delim()
+{
+  // No-op
+}
+
+void BinarySwapPiostream::end_cheap_delim()
+{
+  // No-op
+}
+
+void BinarySwapPiostream::io(bool& data)
+{
+  if (err) return;
+  unsigned char tmp = data;
   io(tmp);
   if (dir == Read)
   {
@@ -1236,180 +1724,374 @@ void BinaryPiostream::io(signed char& data)
   }
 }
 
-void BinaryPiostream::io(unsigned char& data)
+void BinarySwapPiostream::io(char& data)
 {
-#ifndef _WIN32
-  if(err)return;
-  if(!xdr_u_char(xdr, &data)){
-    err=1;
-    cerr << "xdr_u_char failed\n";
+  if (err) return;
+  if (dir==Read) {
+    // no need to swap a single byte
+    if (!fread(&data, sizeof(char), 1, fp)) {
+      err = 1;
+      return;
+    }
+  } else {
+    if (!fwrite(&data, sizeof(char), 1, fp)) err = 1;
   }
-#endif
 }
 
-void BinaryPiostream::io(short& data)
+
+void BinarySwapPiostream::io(signed char& data)
 {
-#ifndef _WIN32
-  if(err)return;
-  if(!xdr_short(xdr, &data)){
-    err=1;
-    cerr << "xdr_short failed\n";
+  if (err) return;
+  if (dir==Read) {
+    // no need to swap a single byte
+    if (!fread(&data, sizeof(signed char), 1, fp)) err = 1;
+  } else {
+    if (!fwrite(&data, sizeof(signed char), 1, fp)) err = 1;
   }
-#endif
+}
+void BinarySwapPiostream::io(unsigned char& data)
+{
+  if (err) return;
+  if (dir==Read) {
+    // no need to swap a single byte
+    if (!fread(&data, sizeof(unsigned char), 1, fp)) err = 1;
+  } else {
+    if (!fwrite(&data, sizeof(unsigned char), 1, fp)) err = 1;
+  }
 }
 
-void BinaryPiostream::io(unsigned short& data)
+void BinarySwapPiostream::io(short& data)
 {
-#ifndef _WIN32
-  if(err)return;
-  if(!xdr_u_short(xdr, &data)){
-    err=1;
-    cerr << "xdr_u_short failed\n";
+  if (err) return;
+  if (dir==Read) {
+    if (!fread(&data, sizeof(short), 1, fp)) {
+      err=1;
+      return;
+    }
+    // cast data to chars and using temp swap bytes
+    short temp = data;
+    // let ptr_data point to data
+    char* ptr_data = reinterpret_cast<char *>(&data); 
+    // let ptr_temp point to temp
+    char* ptr_temp = reinterpret_cast<char *>(&temp); 
+    int numOfByte = sizeof(short); 
+    for (int i=0; i<numOfByte; i++)
+      ptr_data[i] = ptr_temp[numOfByte-1-i];
+  } else {
+    if (!fwrite(&data, sizeof(short), 1, fp)) err = 1;
   }
-#endif
 }
 
-void BinaryPiostream::io(int& data)
+void BinarySwapPiostream::io(unsigned short& data)
 {
-#ifndef _WIN32
-  if(err)return;
-  if(!xdr_int(xdr, &data)){
-    err=1;
-    cerr << "xdr_int failed\n";
+  if (err) return;
+  if (dir==Read) {
+    if (!fread(&data, sizeof(unsigned short), 1, fp)) {
+      err=1;
+      return;
+    }
+
+    // cast data to chars and using temp swap bytes
+    unsigned short temp = data;
+    // let ptr_data point to data
+    char* ptr_data = reinterpret_cast<char *>(&data); 
+    // let ptr_temp point to temp
+    char* ptr_temp = reinterpret_cast<char *>(&temp); 
+    int numOfByte = sizeof(unsigned short); 
+    for (int i=0; i<numOfByte; i++)
+      ptr_data[i] = ptr_temp[numOfByte-1-i];
+  } else {
+    if (!fwrite(&data, sizeof(unsigned short), 1, fp)) err = 1;
   }
-#endif
 }
 
-void BinaryPiostream::io(unsigned int& data)
+void BinarySwapPiostream::io(int& data)
 {
-#ifndef _WIN32
-  if(err)return;
-  if(!xdr_u_int(xdr, &data)){
-    err=1;
-    cerr << "xdr_u_int failed\n";
+  if (err) return;
+  if (dir==Read) {
+    if (!fread(&data, sizeof(int), 1, fp)) {
+      err=1;
+      return;
+    }
+
+    // cast data to chars and using temp swap bytes
+    int temp = data;
+    // let ptr_data point to data
+    char* ptr_data = reinterpret_cast<char *>(&data); 
+    // let ptr_temp point to temp
+    char* ptr_temp = reinterpret_cast<char *>(&temp); 
+    int numOfByte = sizeof(int); 
+    for (int i=0; i<numOfByte; i++)
+      ptr_data[i] = ptr_temp[numOfByte-1-i];
+  } else {
+    if (!fwrite(&data, sizeof(int), 1, fp)) err = 1;
   }
-#endif
 }
 
-void BinaryPiostream::io(long& data)
+void BinarySwapPiostream::io(unsigned int& data)
 {
-#ifndef _WIN32
-  if(err)return;
-  if(!xdr_long(xdr, &data)){
-    err=1;
-    cerr << "xdr_long failed\n";
+  if (err) return;
+  if (dir==Read) {
+    if (!fread(&data, sizeof(unsigned int), 1, fp)) {
+      err=1;
+      return;
+    }
+
+    // cast data to chars and using temp swap bytes
+    unsigned int temp = data;
+    // let ptr_data point to data
+    char* ptr_data = reinterpret_cast<char *>(&data); 
+    // let ptr_temp point to temp
+    char* ptr_temp = reinterpret_cast<char *>(&temp); 
+    int numOfByte = sizeof(unsigned int); 
+    for (int i=0; i<numOfByte; i++)
+      ptr_data[i] = ptr_temp[numOfByte-1-i];
+  } else {
+    if (!fwrite(&data, sizeof(unsigned int), 1, fp)) err = 1;
   }
-#endif
 }
 
-void BinaryPiostream::io(unsigned long& data)
+void BinarySwapPiostream::io(long& data)
 {
-#ifndef _WIN32
-  if(err)return;
-  if(!xdr_u_long(xdr, &data)){
-    err=1;
-    cerr << "xdr_u_long failed\n";
+  if (err) return;
+  if (dir==Read) {
+    if (!fread(&data, sizeof(long), 1, fp)) {
+      err=1;
+      return;
+    }
+    
+    // cast data to chars and using temp swap bytes
+    long temp = data;
+    // let ptr_data point to data
+    char* ptr_data = reinterpret_cast<char *>(&data); 
+    // let ptr_temp point to temp
+    char* ptr_temp = reinterpret_cast<char *>(&temp); 
+    int numOfByte = sizeof(long); 
+    for (int i=0; i<numOfByte; i++)
+      ptr_data[i] = ptr_temp[numOfByte-1-i];
+  } else {
+    if (!fwrite(&data, sizeof(long), 1, fp)) err = 1;
   }
-#endif
 }
 
-void BinaryPiostream::io(long long& data)
+void BinarySwapPiostream::io(unsigned long& data)
 {
-  if(err)return;
-#if defined(__x86_64__)
-  if(!xdr_longlong_t(xdr, (quad_t*)(&data))){
-    err=1;
-    cerr << "xdr_longlong_t failed\n";
+  if (err) return;
+  if (dir==Read) {
+    if (!fread(&data, sizeof(unsigned long), 1, fp)) {
+      err=1;
+      return;
+    }
+
+    // cast data to chars and using temp swap bytes
+    unsigned long temp = data;
+    // let ptr_data point to data
+    char* ptr_data = reinterpret_cast<char *>(&data); 
+    // let ptr_temp point to temp
+    char* ptr_temp = reinterpret_cast<char *>(&temp); 
+    int numOfByte = sizeof(unsigned long); 
+    for (int i=0; i<numOfByte; i++)
+      ptr_data[i] = ptr_temp[numOfByte-1-i];
+  } else {
+    if (!fwrite(&data, sizeof(unsigned long), 1, fp)) err = 1;
   }
-#else
-#  if !defined(__APPLE__) && !defined(__osf__) && !defined(_WIN32)
-  if(!xdr_longlong_t(xdr, (int64_t*)(&data))){
-    err=1;
-    cerr << "xdr_longlong_t failed\n";
-  }
-#  elif !defined(_WIN32)
-  cerr << "xdr_longlong_t is not implemented on Apple\n";
-  err = 1;
-#  endif
-#endif
 }
 
-void BinaryPiostream::io(unsigned long long& data)
+void BinarySwapPiostream::io(long long& data)
 {
-  if(err)return;
-#if defined(__x86_64__)
-  if(!xdr_u_longlong_t(xdr, (u_quad_t*)(&data))){
-    err=1;
-    cerr << "xdr_u_longlong_t failed\n";
+  // Not all architectures support type long long. For now, we 
+  // assume users are writing/reading on the same architecture
+  // so that the size of the long long is consistent.  If this
+  // is not the case, print out an error message regarding the
+  // support of this type.
+  if (err) return;
+  if (dir==Read) {
+    if (!fread(&data, sizeof(long long), 1, fp)) {
+      cerr << "Error reading type long long type which is not fully supported.\n";
+      err=1;
+      return;
+    }
+
+    // cast data to chars and using temp swap bytes
+    long long temp = data;
+    // let ptr_data point to data
+    char* ptr_data = reinterpret_cast<char *>(&data); 
+    // let ptr_temp point to temp
+    char* ptr_temp = reinterpret_cast<char *>(&temp); 
+    int numOfByte = sizeof(long long); 
+    for (int i=0; i<numOfByte; i++)
+      ptr_data[i] = ptr_temp[numOfByte-1-i];
+  } else {
+    if (!fwrite(&data, sizeof(long long), 1, fp)) {
+      cerr << "Error writing type long long type which is not fully supported.\n"; 
+      err = 1;
+    }
   }
-#else
-#  if !defined(__APPLE__) && !defined(__osf__) && !defined( _AIX ) && !defined(_WIN32)
-  if(!xdr_u_longlong_t(xdr, (uint64_t*)(&data))){
-    err=1;
-    cerr << "xdr_u_longlong_t failed\n";
-  }
-#  elif !defined(_WIN32)
-  cerr << "xdr_longlong_t is not implemented on Apple or on AIX\n";
-  err = 1;
-#  endif
-#endif
 }
 
-void BinaryPiostream::io(double& data)
+void BinarySwapPiostream::io(unsigned long long& data)
 {
-#ifndef _WIN32
-  if(err)return;
-  if(!xdr_double(xdr, &data)){
-    err=1;
-    cerr << "xdr_double failed\n";
+  // Not all architectures support type unsigned long long. For now, we 
+  // assume users are writing/reading on the same architecture
+  // so that the size of the long long is consistent.  If this
+  // is not the case, print out an error message regarding the
+  // support of this type.
+  if (err) return;
+  if (dir==Read) {
+    if (!fread(&data, sizeof(unsigned long long), 1, fp)) {
+      cerr << "Error reading type unsigned long long type which is not fully supported.\n";
+      err=1;
+      return;
+    }
+    
+    // cast data to chars and using temp swap bytes
+    unsigned long long temp = data;
+    // let ptr_data point to data
+    char* ptr_data = reinterpret_cast<char *>(&data); 
+    // let ptr_temp point to temp
+    char* ptr_temp = reinterpret_cast<char *>(&temp); 
+    int numOfByte = sizeof(unsigned long long); 
+    for (int i=0; i<numOfByte; i++)
+      ptr_data[i] = ptr_temp[numOfByte-1-i];    
+  } else {
+    if (!fwrite(&data, sizeof(unsigned long long), 1, fp)) {
+      cerr << "Error writing type unsigned long long type which is not fully supported.\n"; 
+      err = 1;
+    }
   }
-#endif
+
+
 }
 
-void BinaryPiostream::io(float& data)
+void BinarySwapPiostream::io(double& data)
 {
-#ifndef _WIN32
-  if(err)return;
-  if(!xdr_float(xdr, &data)){
-    err=1;
-    cerr << "xdr_float failed\n";
+  if (err) return;
+
+  if (dir==Read) {
+    if (!fread(&data, sizeof(double), 1, fp)) {
+      err=1;
+      return;
+    }
+
+    // cast data to chars and using temp swap bytes
+    double temp = data;
+    // let ptr_data point to data
+    char* ptr_data = reinterpret_cast<char *>(&data); 
+    // let ptr_temp point to temp
+    char* ptr_temp = reinterpret_cast<char *>(&temp); 
+    int numOfByte = sizeof(double); 
+    for (int i=0; i<numOfByte; i++)
+      ptr_data[i] = ptr_temp[numOfByte-1-i];
+  } else {
+    if (!fwrite(&data, sizeof(double), 1, fp)) err = 1;
   }
-#endif
 }
 
-void BinaryPiostream::io(string& data)
+void BinarySwapPiostream::io(float& data)
 {
-#ifndef _WIN32
-  if(err)return;
-  char* p=0;
+  if (err) return;
+  if (dir==Read) {
+    if (!fread(&data, sizeof(float), 1, fp)) {
+      err=1;
+      return;
+    }    
+
+    // cast data to chars and using temp swap bytes
+    float temp = data;
+    // let ptr_data point to data
+    char* ptr_data = reinterpret_cast<char *>(&data); 
+    // let ptr_temp point to temp
+    char* ptr_temp = reinterpret_cast<char *>(&temp); 
+    int numOfByte = sizeof(float); 
+    for (int i=0; i<numOfByte; i++)
+      ptr_data[i] = ptr_temp[numOfByte-1-i];
+  } else {
+    if (!fwrite(&data, sizeof(float), 1, fp)) err = 1;
+  }
+}
+
+void BinarySwapPiostream::io(string& data)
+{
+  if(err) return;
+  unsigned int chars = 0;
   if(dir==Write) {
-    p = ccast_unsafe(data);
-  }
-  if(!xdr_wrapstring(xdr, &p)){
-    err=1;
-    cerr << "xdr_wrapstring failed\n";
+    const char* p=data.c_str();
+    chars = static_cast<int>(strlen(p)) + 1;
+    io(chars);
+    if (!fwrite(p, sizeof(char), chars, fp)) err = 1;
   }
   if(dir==Read){
-    data=string(p);
-    free(p);
+    // read in size
+    io(chars);
+
+    if (version == 1) {
+
+      // Some of the property manager's objects write out
+      // strings of size 0 followed a character, followed
+      // by an unsigned short which is the size of the following
+      // string
+      if (chars == 0) {
+	char c;
+
+	// skip character
+	fread(&c, sizeof(char), 1, fp);
+
+	unsigned short s;
+	io(s);
+
+	// create buffer which is multiple of 4
+	int extra = 4-(s%4);
+	if (extra == 4) 
+	  extra = 0;
+	unsigned int buf_size = s+extra;
+	char* buf = new char[buf_size];
+	
+	// read in data plus padding
+	if (!fread(buf, sizeof(char), buf_size, fp)) {
+	  err = 1;
+	  delete [] buf;
+	  return;
+	}
+	
+	// only use actual size of string
+	data = "";
+	for(unsigned int i=0; i<s; i++)
+	  data += buf[i];
+	delete [] buf;
+      } else {
+	// create buffer which is multiple of 4
+	int extra = 4-(chars%4);
+	if (extra == 4) 
+	  extra = 0;
+	unsigned int buf_size = chars+extra;
+	char* buf = new char[buf_size];
+	
+	// read in data plus padding
+	if (!fread(buf, sizeof(char), buf_size, fp)) {
+	  err = 1;
+	  delete [] buf;
+	  return;
+	}
+	
+	// only use actual size of string
+	data = "";
+	for(unsigned int i=0; i<chars; i++)
+	  data += buf[i];
+	delete [] buf;
+      }
+    } else {
+      char* buf = new char[chars];
+      fread(buf, sizeof(char), chars, fp);
+      data=string(buf);
+      delete[] buf;
+    }
   }
-#endif
 }
 
-void BinaryPiostream::emit_pointer(int& have_data, int& pointer_id)
+void BinarySwapPiostream::emit_pointer(int& have_data, int& pointer_id)
 {
-#ifndef _WIN32
-  if(!xdr_int(xdr, &have_data)){
-    err=1;
-    cerr << "xdr_int failed\n";
-    return;
-  }
-  if(!xdr_int(xdr, &pointer_id)){
-    err=1;
-    cerr << "xdr_int failed\n";
-    return;
-  }
-#endif
+  io(have_data);
+  io(pointer_id);
 }
 
 GzipPiostream::GzipPiostream(const string& filename, Direction dir)
@@ -1421,7 +2103,15 @@ GzipPiostream::GzipPiostream(const string& filename, Direction dir)
   } else {
     gzfile=gzopen(filename.c_str(), "w");
     char str[100];
-    sprintf(str, "SCI\nGZP\n001\n");
+    int version = PERSISTENT_VERSION;
+    if (version > 1) {
+      if (airMyEndian == airEndianLittle)
+	sprintf(str, "SCI\nGZP\n001\nLIT\n");
+      else
+	sprintf(str, "SCI\nGZP\n001\nBIG\n");
+    } else {
+      sprintf(str, "SCI\nGZP\n001\n");
+    }
     gzwrite(gzfile, str, static_cast<unsigned int>(strlen(str)));
     version=1;
   }

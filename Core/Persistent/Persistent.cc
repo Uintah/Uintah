@@ -49,6 +49,7 @@
 #include <iostream>
 #include <sstream>
 #include <sgi_stl_warnings_on.h>
+#include <teem/nrrd.h>
 
 using namespace std;
 
@@ -346,26 +347,46 @@ auto_istream(const string& filename)
     cerr << "file not found: " << filename << endl;
     return 0;
   }
-  char hdr[12];
-  in.read(hdr, 12);
+
+  // create a header of size 16 to account for new endianness
+  // flag in binary headers when the version > 1
+  char hdr[16]; 
+  in.read(hdr, 16);
   if (!in) {
     cerr << "Error reading header of file: " << filename << "\n";
     return 0;
   }
-  int version;
-  if (!Piostream::readHeader(filename, hdr, 0, version)) {
+
+  // determine endianness of file
+  int file_endian, version;
+
+  if (!Piostream::readHeader(filename, hdr, 0, version, file_endian)) {
     cerr << "Error parsing header of file: " << filename << "\n";
     return 0;
   }
-  if(version != 1){
-    cerr << "Unkown PIO version: " << version << ", found in file: " << filename << '\n';
-    return 0;
+
+  // put back 4 characters for older Pio versions since their
+  // header was of size 12
+  if (version == 1) {
+    for(int i=0; i<3; i++)
+      in.unget();
   }
+  
   char m1=hdr[4];
   char m2=hdr[5];
   char m3=hdr[6];
   if(m1 == 'B' && m2 == 'I' && m3 == 'N'){
-    return scinew BinaryPiostream(filename, Piostream::Read);
+    // old versions of Pio used XDR which always wrote big endian so if
+    // the version = 1, readHeader would return BIG, otherwise it will
+    // read it from the header
+    int machine_endian = Piostream::Big;
+    if (airMyEndian == airEndianLittle) 
+      machine_endian = Piostream::Little;
+
+    if (file_endian == machine_endian) 
+      return scinew BinaryPiostream(filename, Piostream::Read, version);
+    else 
+      return scinew BinarySwapPiostream(filename, Piostream::Read, version);
   } else if(m1 == 'A' && m2 == 'S' && m3 == 'C'){
     return scinew TextPiostream(filename, Piostream::Read);
   } else if(m1 == 'G' && m2 == 'Z' && m3 == 'P'){
@@ -377,14 +398,47 @@ auto_istream(const string& filename)
 }
 
 //----------------------------------------------------------------------
+Piostream*
+auto_ostream(const string& filename, const string& type)
+{
+  // Based on the type string do the following
+  //     Binary:  Return a BinaryPiostream 
+  //     Fast:    Return FastPiostream
+  //     Gzip:    Return GzipPiostream
+  //     Gunzip:  Return GunzipPiostream
+  //     Text:    Return a TextPiostream
+  //     Default: Return BinaryPiostream 
+  // NOTE: Binary will never return BinarySwap so we always write
+  //       out the endianness of the machine we are on
+  Piostream* stream;
+  if (type == "Binary") {
+    stream = scinew BinaryPiostream(filename, Piostream::Write);
+  } else if (type == "Text") {
+    stream = scinew TextPiostream(filename, Piostream::Write);
+  } else if (type == "Gzip") {
+    stream = scinew GzipPiostream(filename, Piostream::Write);
+  } else if (type == "Gunzip") {
+    stream = scinew GunzipPiostream(filename, Piostream::Write);
+  } else if (type == "Fast") {
+    stream = scinew FastPiostream(filename, Piostream::Write);
+  } else {
+    stream = scinew BinaryPiostream(filename, Piostream::Write);
+  }
+  return stream;
+}
+
+
+//----------------------------------------------------------------------
 bool
 Piostream::readHeader( const string & filename, char * hdr,
-		       const char   * filetype, int  & version )
+		       const char   * filetype, int  & version,
+		       int & endian)
 {
   char m1=hdr[0];
   char m2=hdr[1];
   char m3=hdr[2];
   char m4=hdr[3];
+
   if(m1 != 'S' || m2 != 'C' || m3 != 'I' || m4 != '\n') {
     cerr << filename << " is not a valid SCI file! (magic="
 	 << m1 << m2 << m3 << m4 << ")\n";
@@ -407,6 +461,25 @@ Piostream::readHeader( const string & filename, char * hdr,
       cerr << "Wrong filetype: " << filename << endl;
       return false;
     }
+  }
+  
+  bool is_binary = false;
+  if (hdr[4] == 'B' && hdr[5] == 'I' && hdr[6] == 'N' && hdr[7] == '\n')
+    is_binary = true;
+  if(version > 1 && is_binary) {
+    // can only be BIG or LIT
+    if (hdr[12] == 'B' && hdr[13] == 'I' && 
+	hdr[14] == 'G' && hdr[15] == '\n') {
+      endian = Big;
+    } else if (hdr[12] == 'L' && hdr[13] == 'I' && 
+	       hdr[14] == 'T' && hdr[15] == '\n') {
+      endian = Little;
+    } else {
+      cerr << "Unknown endianness: " << hdr[12] << hdr[13] << hdr[14] << endl;
+      return false;
+    }
+  } else {
+    endian = Big; // old system using XDR always read/wrote big endian
   }
   return true;
 }
