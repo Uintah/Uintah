@@ -30,7 +30,7 @@ itcl_class Teem_Unu_UnuJoin {
 	global $this-incr-dim
 
 	set $this-dim 0
-	set $this-join-axis sink
+	set $this-join-axis 0
 	set $this-incr-dim 0
     }
    
