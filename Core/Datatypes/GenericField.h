@@ -63,14 +63,12 @@ public:
 
   GenericField(data_location data_at) : 
     Field(data_at),
-    mesh_(mesh_handle_type(new mesh_type())),
-    fdata_(fdata_type())
+    mesh_(mesh_handle_type(new mesh_type())) 
   {}
 
   GenericField(mesh_handle_type mesh, data_location data_at) : 
     Field(data_at),
-    mesh_(mesh),
-    fdata_(fdata_type())
+    mesh_(mesh)
   { resize_fdata(); }
 
   virtual ~GenericField() {}
