@@ -124,6 +124,18 @@ int Salmon::process_event(int block)
 	    }
 	}
 	break;
+    case MessageTypes::RoeDump:
+	{
+	    SalmonMessage* rmsg=(SalmonMessage*)msg;
+	    for(int i=0;i<roe.size();i++){
+		Roe* r=roe[i];
+		if(r->id == rmsg->rid){
+		    r->current_renderer->dump_image(rmsg->filename);
+		    break;
+		}
+	    }
+	}
+	break;
     case MessageTypes::RoeMouse:
 	{
 	    RoeMouseMessage* rmsg=(RoeMouseMessage*)msg;
@@ -306,12 +318,17 @@ void Salmon::execute()
     // Never gets called...
 }
 
-RedrawMessage::RedrawMessage(const clString& rid)
+SalmonMessage::SalmonMessage(const clString& rid)
 : MessageBase(MessageTypes::RoeRedraw), rid(rid)
 {
 }
 
-RedrawMessage::~RedrawMessage()
+SalmonMessage::SalmonMessage(const clString& rid, const clString& filename)
+: MessageBase(MessageTypes::RoeDump), rid(rid), filename(filename)
+{
+}
+
+SalmonMessage::~SalmonMessage()
 {
 }
 

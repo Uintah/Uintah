@@ -30,6 +30,7 @@
 #include <GL/glu.h>
 #include <GL/glx.h>
 #include <strstream.h>
+#include <fstream.h>
 
 const int STRINGSIZE=200;
 
@@ -51,6 +52,7 @@ public:
     virtual void redraw(Salmon*, Roe*);
     virtual void get_pick(Salmon*, Roe*, int, int, GeomObj*&, GeomPick*&);
     virtual void hide();
+    virtual void dump_image(const clString&);
     virtual void put_scanline(int y, int width, Color* scanline, int repeat=1);
 };
 
@@ -210,6 +212,7 @@ void OpenGL::redraw(Salmon* salmon, Roe* roe)
 	else
 	    glDisable(GL_LIGHTING);
 	drawinfo.pickmode=0;
+	glColorMaterial(GL_FRONT_AND_BACK, GL_DIFFUSE);
 
 	// Draw it all...
 	HashTableIter<int, PortInfo*> iter(&salmon->portHash);
@@ -347,6 +350,18 @@ void OpenGL::get_pick(Salmon* salmon, Roe* roe, int x, int y,
 	pick_obj=(GeomObj*)hit_obj;
 	pick_pick=(GeomPick*)hit_pick;
     }
+}
+
+void OpenGL::dump_image(const clString& name) {
+    ofstream dumpfile(name());
+    int vp[4];
+    glGetIntegerv(GL_VIEWPORT,vp);
+    int n=3*vp[2]*vp[3];
+    unsigned char* pxl=new unsigned char[n];
+    glReadBuffer(GL_FRONT);
+    glReadPixels(0,0,vp[2],vp[3],GL_RGB,GL_UNSIGNED_BYTE,pxl);
+    dumpfile.write(pxl,n);
+    delete[] pxl;
 }
 
 void OpenGL::put_scanline(int y, int width, Color* scanline, int repeat)

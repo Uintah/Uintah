@@ -19,6 +19,7 @@
 #include <Geometry/BBox.h>
 #include <iostream.h>
 #include <values.h>
+#include <Classlib/NotFinished.h>
 
 static AVLTree<clString, RegisterRenderer*>* known_renderers=0;
 static int db_trimmed=0;
@@ -113,3 +114,6 @@ int Renderer::compute_depth(Roe* roe, const View& view,
     }
 }
 
+void Renderer::dump_image(const clString&) {
+    NOT_FINISHED("This is not implemented!");
+}
