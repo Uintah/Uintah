@@ -70,7 +70,7 @@ Coregister::execute()
   FieldIPort *mobile = (FieldIPort *) get_iport("Mobile PointCloud");
 
   FieldHandle fixedH, mobileH;
-  PointCloud<int> *fixedPC, *mobilePC;
+  PointCloud<double> *fixedPC, *mobilePC;
   PointCloudMeshHandle fixedM, mobileM;
   PointCloudMesh::Node::size_type nnodes;
   
@@ -84,13 +84,13 @@ Coregister::execute()
   }
 
   if (!fixed->get(fixedH)) return;
-  fixedPC = dynamic_cast<PointCloud<int> *>(fixedH.get_rep());
+  fixedPC = dynamic_cast<PointCloud<double> *>(fixedH.get_rep());
   if (!fixedPC) return;
 
   fixedM = fixedPC->get_typed_mesh();
 
   if (!mobile->get(mobileH)) return;
-  mobilePC = dynamic_cast<PointCloud<int> *>(mobileH.get_rep());
+  mobilePC = dynamic_cast<PointCloud<double> *>(mobileH.get_rep());
   if (!mobilePC) return;
 
   mobileM = mobilePC->get_typed_mesh();
