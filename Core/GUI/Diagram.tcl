@@ -28,9 +28,12 @@ package require Iwidgets 3.0
 class Diagram {
 
     variable w 
-    set val(0) 1
-
+    variable n
+    variable initialized
+    
     constructor { args } {
+	set initialized 0
+	set val(0) 1
     }
 
     destructor {
@@ -39,16 +42,67 @@ class Diagram {
 
     method ui { window name } {
 	set w $window
+	set n $name
 
-	iwidgets::labeledframe $w.diagram -labeltext $name  -labelpos nw
-	pack $w.diagram -side left 
     }
 
+    method init {} {
+	frame $w.b
+	iwidgets::labeledframe $w.b.all -labeltext $n -labelpos nw
+	iwidgets::labeledframe $w.b.one -labeltext $n -labelpos nw
+	pack $w.b.all 
+
+	frame $w.select 
+	label $w.select.label -text "Select:"
+	set $this-select 2
+	radiobutton $w.select.one -text "One" \
+	    -variable $this-select -value 1 \
+	    -command "$this select one"
+	radiobutton $w.select.many -text "Many" \
+	    -variable $this-select -value 2 \
+	    -command "$this select many"
+	pack $w.select.label $w.select.one $w.select.many -side left
+
+	frame $w.scale 
+	label $w.scale.label -text "Scale:"
+	set $this-scale 1
+	radiobutton $w.scale.all -text "All" -variable $this-scale -value 1 \
+	    -command "$this-c redraw" -anchor w
+	radiobutton $w.scale.each -text "Each" -variable $this-scale -value 2 \
+	    -command "$this-c redraw" -anchor w
+	pack $w.scale.label $w.scale.all $w.scale.each -side left 
+	
+	pack $w.b $w.select $w.scale -side top 
+
+	set initialized 1
+    }
+	
     method add { n name } {
-	set cs [$w.diagram childsite]
+	if { $initialized == 0 } {
+	    $this init
+	}
+	    
+	set cs [$w.b.all childsite]
 	checkbutton $cs.$name -text $name -variable val($name) \
 	    -command "$this-c select $n \$val($name)"
 	$cs.$name select
 	pack $cs.$name -side left
+
+	set cs [$w.b.one childsite]
+	radiobutton $cs.$name -text $name -variable select-one -value $n \
+	    -command "$this-c select-one $n"
+	pack $cs.$name -side left
+
+    }
+
+    method select {which} {
+	if { $which == "one" } {
+	    pack forget $w.b.all
+	    pack $w.b.one -side left
+	} else {
+	    pack forget $w.b.one 
+	    pack $w.b.all -side left
+	}
+	$this-c redraw
     }
 }
