@@ -295,6 +295,7 @@ void SerialMPM::scheduleInitializeAddedMaterial(const LevelP& level,
                   this, &SerialMPM::actuallyInitializeAddedMaterial);
                                                                                 
   int numALLMatls = d_sharedState->getNumMatls();
+  int numMPMMatls = d_sharedState->getNumMPMMatls();
   MaterialSubset* add_matl = scinew MaterialSubset();
   cout << "Added Material = " << numALLMatls-1 << endl;
   add_matl->add(numALLMatls-1);
@@ -322,7 +323,7 @@ void SerialMPM::scheduleInitializeAddedMaterial(const LevelP& level,
 
   const PatchSet* patches = level->eachPatch();
 
-  MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(numALLMatls-1);
+  MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(numMPMMatls-1);
   ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
   cm->addInitialComputesAndRequires(t, mpm_matl, patches);
 
@@ -488,6 +489,7 @@ void SerialMPM::scheduleInterpolateParticlesToGrid(SchedulerP& sched,
   t->computes(lb->gSp_volLabel);
   t->computes(lb->gVolumeLabel);
   t->computes(lb->gVelocityLabel);
+  t->computes(lb->gVelocityInterpLabel);
   t->computes(lb->gExternalForceLabel);
   t->computes(lb->gTemperatureLabel);
   t->computes(lb->gTemperatureNoBCLabel);
@@ -847,6 +849,8 @@ void SerialMPM::scheduleSetGridBoundaryConditions(SchedulerP& sched,
   
   t->modifies(             lb->gAccelerationLabel,     mss);
   t->modifies(             lb->gVelocityStarLabel,     mss);
+  t->requires(Task::NewDW, lb->gVelocityInterpLabel,   Ghost::None);
+
   sched->addTask(t, patches, matls);
 }
 
@@ -877,9 +881,12 @@ void SerialMPM::scheduleAddNewParticles(SchedulerP& sched,
                                         const PatchSet* patches,
                                         const MaterialSet* matls)
 {
-
+//if  manual_create_new_matl==false, DON't do this task OR
+//if  create_new_particles==true, DON'T do this task
   if (!flags->d_addNewMaterial || flags->d_createNewParticles) return;
 
+//if  manual_create_new_matl==true, DO this task OR
+//if  create_new_particles==false, DO this task
   Task* t=scinew Task("MPM::addNewParticles", this, 
                       &SerialMPM::addNewParticles);
 
@@ -902,8 +909,12 @@ void SerialMPM::scheduleConvertLocalizedParticles(SchedulerP& sched,
                                                   const PatchSet* patches,
                                                   const MaterialSet* matls)
 {
+//if  create_new_particles==false, DON't do this task OR
+//if  manual_create_new_matl==true, DON'T do this task
   if (!flags->d_createNewParticles || flags->d_addNewMaterial) return;
 
+//if  create_new_particles==true, DO this task OR
+//if  manual_create_new_matl==false, DO this task 
   Task* t=scinew Task("MPM::convertLocalizedParticles", this, 
                       &SerialMPM::convertLocalizedParticles);
 
@@ -1312,7 +1323,7 @@ void SerialMPM::actuallyInitializeAddedMaterial(const ProcessorGroup*,
 
 
     int numMPMMatls = d_sharedState->getNumMPMMatls();
-    cout << "num Matls = " << numMPMMatls << endl;
+    cout << "num MPM Matls = " << numMPMMatls << endl;
     CCVariable<short int> cellNAPID;
     int m=numMPMMatls-1;
     MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
@@ -1320,9 +1331,7 @@ void SerialMPM::actuallyInitializeAddedMaterial(const ProcessorGroup*,
 
     mpm_matl->createParticles(numParticles, cellNAPID, patch, new_dw);
 
-    mpm_matl->getConstitutiveModel()->initializeCMData(patch,
-                                                       mpm_matl,
-                                                       new_dw);
+    mpm_matl->getConstitutiveModel()->initializeCMData(patch, mpm_matl, new_dw);
   }
 }
 
@@ -1395,7 +1404,7 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       // Create arrays for the grid data
       NCVariable<double> gmass;
       NCVariable<double> gvolume;
-      NCVariable<Vector> gvelocity;
+      NCVariable<Vector> gvelocity,gvelocityInterp;
       NCVariable<Vector> gexternalforce;
       NCVariable<double> gexternalheatrate;
       NCVariable<double> gTemperature;
@@ -1407,6 +1416,8 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       new_dw->allocateAndPut(gSp_vol,          lb->gSp_volLabel,     dwi,patch);
       new_dw->allocateAndPut(gvolume,          lb->gVolumeLabel,     dwi,patch);
       new_dw->allocateAndPut(gvelocity,        lb->gVelocityLabel,   dwi,patch);
+      new_dw->allocateAndPut(gvelocityInterp,  lb->gVelocityInterpLabel,
+                                                                     dwi,patch);
       new_dw->allocateAndPut(gTemperature,     lb->gTemperatureLabel,dwi,patch);
       new_dw->allocateAndPut(gTemperatureNoBC, lb->gTemperatureNoBCLabel,
                              dwi,patch);
@@ -1476,14 +1487,16 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
         gTemperature[c] /= gmass[c];
         gTemperatureNoBC[c] = gTemperature[c];
         gSp_vol[c]      /= gmass[c];
+        gvelocityInterp[c]=gvelocity[c];
       }
 
       // Apply grid boundary conditions to the velocity before storing the data
 
       MPMBoundCond bc;
-      bc.setBoundaryCondition(patch,dwi,"Velocity",   gvelocity,    n8or27);
-      bc.setBoundaryCondition(patch,dwi,"Symmetric",  gvelocity,    n8or27);
-      bc.setBoundaryCondition(patch,dwi,"Temperature",gTemperature, n8or27);
+      bc.setBoundaryCondition(patch,dwi,"Velocity",   gvelocity,       n8or27);
+      bc.setBoundaryCondition(patch,dwi,"Symmetric",  gvelocity,       n8or27);
+      bc.setBoundaryCondition(patch,dwi,"Symmetric",  gvelocityInterp, n8or27);
+      bc.setBoundaryCondition(patch,dwi,"Temperature",gTemperature,    n8or27);
 
       new_dw->put(sum_vartype(totalmass), lb->TotalMassLabel);
 
@@ -2424,17 +2437,30 @@ void SerialMPM::setGridBoundaryConditions(const ProcessorGroup*,
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
       int dwi = mpm_matl->getDWIndex();
       NCVariable<Vector> gvelocity_star, gacceleration;
+      constNCVariable<Vector> gvelocityInterp;
       int n8or27=flags->d_8or27;
 
       new_dw->getModifiable(gacceleration, lb->gAccelerationLabel,  dwi,patch);
       new_dw->getModifiable(gvelocity_star,lb->gVelocityStarLabel,  dwi,patch);
+      new_dw->get(gvelocityInterp,         lb->gVelocityInterpLabel,dwi, patch,
+                                                                Ghost::None,0);
       // Apply grid boundary conditions to the velocity_star and
       // acceleration before interpolating back to the particles
 
       MPMBoundCond bc;
       bc.setBoundaryCondition(patch,dwi,"Velocity",     gvelocity_star, n8or27);
-      bc.setBoundaryCondition(patch,dwi,"Acceleration", gacceleration,  n8or27);
       bc.setBoundaryCondition(patch,dwi,"Symmetric",    gvelocity_star, n8or27);
+//    bc.setBoundaryCondition(patch,dwi,"Acceleration", gacceleration,  n8or27);
+
+      // Now recompute acceleration as the difference between the velocity
+      // interpolated to the grid (no bcs applied) and the new velocity_star
+      for(NodeIterator iter = patch->getNodeIterator(n8or27); !iter.done();
+                                                               iter++){
+        IntVector c = *iter;
+        gacceleration[c] = (gvelocity_star[c] - gvelocityInterp[c])/delT;
+      }
+
+      // Set symmetry BCs on acceleration if called for
       bc.setBoundaryCondition(patch,dwi,"Symmetric",    gacceleration,  n8or27);
 
     } // matl loop
@@ -3589,12 +3615,12 @@ void SerialMPM::setNeedAddMaterialFlag(const ProcessorGroup*,
     sum_vartype need_add_flag;
     new_dw->get(need_add_flag, lb->NeedAddMPMMaterialLabel);
 
-    if(need_add_flag>0.1){
-      d_sharedState->setNeedAddMaterial(true);
+    if(need_add_flag<0.1){
+      d_sharedState->setNeedAddMaterial(-1);
       flags->d_canAddMPMMaterial=false;
     }
     else{
-      d_sharedState->setNeedAddMaterial(false);
+      d_sharedState->setNeedAddMaterial(0);
     }
 }
 
