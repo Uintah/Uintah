@@ -22,7 +22,7 @@ OBJS = Comm\MessageBase.odll\
 	   Dataflow\Port.odll Dataflow\Module.odll Dataflow\NetworkEditor.odll\
 	   Dataflow\PackageDB.odll\
 	   Datatypes\BooleanPort.odll Datatypes\ColorMapPort.odll\
-	   Datatypes\ColumnMatrixPort.odll Datatypes\ContourSetPort.odll\
+	   Datatypes\ColumnMatrixPort.odll\
 	   Datatypes\GeometryPort.odll Datatypes\HexMeshPort.odll\
 	   Datatypes\IntervalPort.odll Datatypes\MatrixPort.odll\
 	   Datatypes\MeshPort.odll Datatypes\ScalarFieldPort.odll\
@@ -46,7 +46,7 @@ LF   =
 INCS = 
 
 ## add to the default list of libraries to link against
-LIBS = 
+LIBS = SCICore$(APPENDIX).lib
 
 ###################################################################
 
