@@ -703,7 +703,7 @@ Type* Type::opaquetype()
 {
   static Type* t;
   if(!t)
-    t=new BuiltinType("void*", "error");
+    t=new BuiltinType("void*", "opaque");
   return t;
 }
 
