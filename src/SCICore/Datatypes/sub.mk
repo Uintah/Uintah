@@ -15,24 +15,63 @@ GENSRCS := $(SRCDIR)/ScalarFieldRG.cc $(SRCDIR)/ScalarFieldRGchar.cc \
 
 GENHDRS := $(patsubst %.cc,%.h,$(GENSRCS))
 
-SRCS += $(GENSRCS) $(SRCDIR)/TriSurface.cc $(SRCDIR)/BasicSurfaces.cc \
-	$(SRCDIR)/Boolean.cc $(SRCDIR)/ColorMap.cc \
-	$(SRCDIR)/ColumnMatrix.cc $(SRCDIR)/Datatype.cc \
-	$(SRCDIR)/DenseMatrix.cc $(SRCDIR)/HexMesh.cc \
-	$(SRCDIR)/Image.cc $(SRCDIR)/Interval.cc $(SRCDIR)/Matrix.cc \
-	$(SRCDIR)/Mesh.cc $(SRCDIR)/ScalarField.cc \
-	$(SRCDIR)/ScalarFieldHUG.cc $(SRCDIR)/ScalarFieldRGBase.cc \
-	$(SRCDIR)/ScalarFieldUG.cc $(SRCDIR)/ScalarFieldZone.cc \
-	$(SRCDIR)/SparseRowMatrix.cc $(SRCDIR)/Surface.cc \
-	$(SRCDIR)/SymSparseRowMatrix.cc $(SRCDIR)/TriDiagonalMatrix.cc \
-	$(SRCDIR)/VectorField.cc $(SRCDIR)/VectorFieldHUG.cc \
-	$(SRCDIR)/VectorFieldOcean.cc $(SRCDIR)/VectorFieldRG.cc \
-	$(SRCDIR)/VectorFieldUG.cc $(SRCDIR)/VectorFieldZone.cc \
-	$(SRCDIR)/VoidStar.cc $(SRCDIR)/cDMatrix.cc \
-	$(SRCDIR)/cMatrix.cc $(SRCDIR)/cSMatrix.cc $(SRCDIR)/cVector.cc \
-	$(SRCDIR)/SurfTree.cc $(SRCDIR)/ScalarFieldRGCC.cc \
-	$(SRCDIR)/VectorFieldRGCC.cc  \
-     	$(SRCDIR)/Path.cc $(SRCDIR)/CameraView.cc $(SRCDIR)/templates.cc
+SRCS += $(GENSRCS) \
+        $(SRCDIR)/Attrib.cc                 \
+        $(SRCDIR)/BasicSurfaces.cc	    \
+        $(SRCDIR)/Boolean.cc		    \
+        $(SRCDIR)/CameraView.cc		    \
+        $(SRCDIR)/ColorMap.cc		    \
+        $(SRCDIR)/ColumnMatrix.cc	    \
+        $(SRCDIR)/ContourGeom.cc	    \
+        $(SRCDIR)/Datatype.cc		    \
+        $(SRCDIR)/DenseMatrix.cc	    \
+        $(SRCDIR)/Domain.cc		    \
+        $(SRCDIR)/Field.cc		    \
+        $(SRCDIR)/FieldWrapper.cc	    \
+        $(SRCDIR)/GenFunction.cc	    \
+        $(SRCDIR)/Geom.cc		    \
+        $(SRCDIR)/HexMesh.cc		    \
+        $(SRCDIR)/Image.cc		    \
+        $(SRCDIR)/Interval.cc		    \
+        $(SRCDIR)/Lattice3Geom.cc	    \
+        $(SRCDIR)/Matrix.cc		    \
+        $(SRCDIR)/Mesh.cc		    \
+        $(SRCDIR)/MeshGeom.cc		    \
+        $(SRCDIR)/Path.cc		    \
+        $(SRCDIR)/PointCloudGeom.cc	    \
+        $(SRCDIR)/SField.cc		    \
+        $(SRCDIR)/ScalarField.cc	    \
+        $(SRCDIR)/ScalarFieldHUG.cc	    \
+        $(SRCDIR)/ScalarFieldRGBase.cc      \
+        $(SRCDIR)/ScalarFieldRGCC.cc        \
+        $(SRCDIR)/ScalarFieldUG.cc	    \
+        $(SRCDIR)/ScalarFieldZone.cc	    \
+        $(SRCDIR)/SparseRowMatrix.cc	    \
+        $(SRCDIR)/StructuredGeom.cc	    \
+        $(SRCDIR)/SurfTree.cc		    \
+        $(SRCDIR)/Surface.cc		    \
+        $(SRCDIR)/SurfaceGeom.cc	    \
+        $(SRCDIR)/SymSparseRowMatrix.cc	    \
+        $(SRCDIR)/TField.cc		    \
+        $(SRCDIR)/TetMeshGeom.cc	    \
+        $(SRCDIR)/TriDiagonalMatrix.cc	    \
+        $(SRCDIR)/TriSurface.cc		    \
+        $(SRCDIR)/TriSurfaceGeom.cc	    \
+        $(SRCDIR)/UnstructuredGeom.cc	    \
+        $(SRCDIR)/VField.cc		    \
+        $(SRCDIR)/VectorField.cc	    \
+        $(SRCDIR)/VectorFieldHUG.cc	    \
+        $(SRCDIR)/VectorFieldOcean.cc	    \
+        $(SRCDIR)/VectorFieldRG.cc	    \
+        $(SRCDIR)/VectorFieldRGCC.cc	    \
+        $(SRCDIR)/VectorFieldUG.cc	    \
+        $(SRCDIR)/VectorFieldZone.cc	    \
+        $(SRCDIR)/VoidStar.cc		    \
+        $(SRCDIR)/cDMatrix.cc		    \
+        $(SRCDIR)/cMatrix.cc		    \
+        $(SRCDIR)/cSMatrix.cc		    \
+        $(SRCDIR)/cVector.cc		    \
+        $(SRCDIR)/templates.cc
 
 
 $(SRCDIR)/ScalarFieldRG.h: $(SRCDIR)/ScalarFieldRGTYPE.h
@@ -99,6 +138,9 @@ clean::
 
 #
 # $Log$
+# Revision 1.3.2.16  2000/10/31 20:28:47  michaelc
+# fix sub.mk
+#
 # Revision 1.3.2.15  2000/10/31 02:36:26  dmw
 # Merging SCICore changes in HEAD into FIELD_REDESIGN branch
 #
