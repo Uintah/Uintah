@@ -25,7 +25,7 @@
       <save label = "p.xx"/>
       <save label = "NTractionZMinus"/>
       <save label = "integralArea"/>
-      <save label = "p.temperature"/> 
+      <save label = "p.mass"/> 
       <save label = "p.stress"/> 
       <save label = "g.stressFS"/>
    </DataArchiver>
@@ -91,7 +91,7 @@
 	    </material>
 	    <material>
                 <burn type = "null" />
-                <density>1.0</density>
+                <density>1.02</density>
                 <thermal_conductivity>237.0</thermal_conductivity>
                 <specific_heat>903</specific_heat>
                 <heat_transfer_coefficient>111</heat_transfer_coefficient>
