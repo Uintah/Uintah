@@ -294,18 +294,19 @@ public:
   }
   double get_size(Cell::index_type idx) const
   {
-    Node::array_type ra(4);
+    Node::array_type ra;
     get_nodes(ra,idx);
     const Point &p0 = point(ra[0]);
     const Point &p1 = point(ra[1]);
     const Point &p2 = point(ra[2]);
     const Point &p3 = point(ra[3]);
-    return Dot(Cross(p1-p0,p2-p0),p3-p0)*0.1666666666666666;
+
+    return fabs(Dot(Cross(p1-p0,p2-p0),p3-p0)) / 6.0;
   } 
+
   double get_length(Edge::index_type idx) const { return get_size(idx); };
   double get_area(Face::index_type idx) const   { return get_size(idx); };
   double get_volume(Cell::index_type idx) const { return get_size(idx); };
-
 
 
   int get_valence(Node::index_type idx) const
@@ -438,8 +439,7 @@ protected:
   void			compute_grid();
 
   void			orient(Cell::index_type ci);
-  double		volume(TetVolMesh::Cell::index_type ci);
-  bool			inside4_p(int, const Point &p);
+  bool			inside(Cell::index_type idx, const Point &p);
   pair<Point,double>	circumsphere(const Cell::index_type);
 
   //! Used to recompute data for individual cells
