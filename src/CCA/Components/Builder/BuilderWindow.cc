@@ -870,38 +870,50 @@ void BuilderWindow::displayMsg(const QString &text)
 
 void BuilderWindow::updateMiniView()
 {
-  // assign the temporary list
-  // needed for coordinates of each module
-  QCanvasItemList tempQCL = miniCanvas->allItems();
+    // assign the temporary list
+    // needed for coordinates of each module
+    QCanvasItemList tempQCL = miniCanvas->allItems();
 
-  for (unsigned int i = 0; i < tempQCL.size(); i++) {
-    delete tempQCL[i];
-  }
+    for (unsigned int i = 0; i < tempQCL.size(); i++) {
+	delete tempQCL[i];
+    }
   
-  // assign modules to local variable
-  std::vector<Module*> modules = networkCanvasView->getModules();
+    // assign modules to local variable
+    std::vector<Module*> modules = networkCanvasView->getModules();
+    std::vector<Connection*> connections = networkCanvasView->getConnections();
 
-  double scaleH = double(networkCanvas->width())/miniCanvas->width();
-  double scaleV = double(networkCanvas->height())/miniCanvas->height();
+    double scaleH = double( networkCanvas->width() ) / miniCanvas->width();
+    double scaleV = double( networkCanvas->height() ) / miniCanvas->height();
 
-  QCanvasRectangle* viewableRect = new QCanvasRectangle( int(networkCanvasView->contentsX()/scaleH), 
-							 int(networkCanvasView->contentsY()/scaleV),
-							 int(networkCanvasView->visibleWidth()/scaleH), 
-							 int(networkCanvasView->visibleHeight()/scaleV),
-							 miniCanvas );
-  viewableRect->show();
+    QCanvasRectangle *viewableRect = new QCanvasRectangle(
+	int( networkCanvasView->contentsX() / scaleH ),
+	int( networkCanvasView->contentsY() / scaleV ),
+	int( networkCanvasView->visibleWidth() / scaleH ),
+	int( networkCanvasView->visibleHeight() / scaleV ),
+	miniCanvas
+    );
+    viewableRect->show();
 
-  for (unsigned int i = 0; i < modules.size(); i++) {
-    QPoint pm = modules[i]->posInCanvas();
-    QCanvasRectangle *rect = new QCanvasRectangle( int(pm.x()/scaleH),
-						 int(pm.y()/scaleV), 
-						 int(modules[i]->width()/scaleH),
-						 int(modules[i]->height()/scaleV),
-						 miniCanvas );
-    rect->setBrush( Qt::white );
-    rect->show();
-  }
-  miniCanvas->update();
+    for (unsigned int i = 0; i < modules.size(); i++) {
+	QPoint pm = modules[i]->posInCanvas();
+	QCanvasRectangle *rect = new QCanvasRectangle(
+	    int( pm.x() / scaleH ),
+	    int( pm.y() / scaleV ),
+	    int( modules[i]->width() / scaleH ),
+	    int( modules[i]->height() / scaleV ),
+	    miniCanvas
+	);
+	rect->setBrush( Qt::white );
+	rect->show();
+    }
+
+    for (unsigned int j = 0; j < connections.size(); j++) {
+	MiniConnection *mc =
+	    new MiniConnection(miniView, connections[j]->points(), scaleH, scaleV);
+	mc->show();
+    }
+
+    miniCanvas->update();
 }
 
 

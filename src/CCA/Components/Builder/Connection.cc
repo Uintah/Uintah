@@ -34,7 +34,7 @@ using namespace std;
 Connection::Connection(Module *pU, const std::string &portname1, Module *pP, 
 		       const std::string &portname2,
 		       const sci::cca::ConnectionID::pointer &connID,QCanvasView *cview)
-  :QCanvasPolygon(cview->canvas())
+  : QCanvasPolygon(cview->canvas())
 
 {
 	this->portname1=portname1;
@@ -49,7 +49,7 @@ Connection::Connection(Module *pU, const std::string &portname1, Module *pP,
 
 bool Connection::isConnectedTo(Module *who)
 {
-	return who==pUse || who==pProvide;
+    return who==pUse || who==pProvide;
 }
 
 
@@ -61,14 +61,14 @@ void Connection::resetPoints()
   QRect rProvide(cv->childX(pProvide),cv->childY(pProvide),pProvide->width(),pProvide->height() );
 
   int t=4;
-  int h=10; //may varie with different ports
+  int h=10; //may vary with different ports
   
   int mid;
   
-  if(P.x()+h<R.x()-h){
+  if (P.x()+h<R.x()-h) {
     mid=(P.y()+R.y())/2;		
     
-    QPointArray pa(12);
+    QPointArray pa(NUM_POINTS);
     int xm=(P.x()+R.x())/2;
 
     pa[0]=QPoint(P.x(),P.y()-t);
@@ -95,19 +95,16 @@ void Connection::resetPoints()
  
     setPoints(pa);
 
-  }
-  else{
-    if(rUse.top()>rProvide.bottom()+2*t){
+  } else{
+    if (rUse.top()>rProvide.bottom()+2*t) {
       mid=(rUse.top()+rProvide.bottom())/2;		
-    }	
-    else if(rProvide.top()>rUse.bottom()+2*t){
+    } else if (rProvide.top()>rUse.bottom()+2*t) {
       mid=(rUse.bottom()+rProvide.top())/2;		
-    }
-    else{
+    } else {
       mid=rUse.top()<rProvide.top()?rUse.top():rProvide.top();		
       mid-=2*t;
     }
-    QPointArray pa(12);
+    QPointArray pa(NUM_POINTS);
     
     pa[0]=QPoint(P.x(),P.y()-t);
     if(P.y()<mid) pa[1]=QPoint(P.x()+h+t,pa[0].y());
@@ -137,20 +134,19 @@ void Connection::resetPoints()
     pa[10]=QPoint(pa[9].x(),P.y()+t);
     
     pa[11]=QPoint(P.x(),pa[10].y());
-    
+
     setPoints(pa);
   }
 }
 
-void Connection::drawShape ( QPainter & p)
+void Connection::drawShape(QPainter& p)
 {
-	QPointArray par(6);
-	for(int i=0;i<6;i++)	par[i]=(points()[i]+points()[11-i])/2;
+    QPointArray par(NUM_DRAW_POINTS);
+    Connection::drawConnection(p, points(), par);
 
-	p.setPen(QPen(color,4));
-	p.setBrush(blue);
-	p.drawPolyline(par);
-	//p.drawPolygon(points());
+    p.setPen( QPen(color, 4) );
+    p.setBrush(Qt::blue);
+    p.drawPolyline(par);
 }
 
 sci::cca::ConnectionID::pointer Connection::getConnectionID()
@@ -193,5 +189,27 @@ std::string Connection::getConnectionType()
   return "Connection";
 }
 
+MiniConnection::MiniConnection(QCanvasView *cv, QPointArray pa,
+				double scaleX, double scaleY)
+  : QCanvasPolygon(cv->canvas())
+{
+    scalePoints(&pa, scaleX, scaleY);
+}
 
+void MiniConnection::scalePoints(QPointArray *pa, double scaleX, double scaleY)
+{
+    for (unsigned int i = 0; i < Connection::NUM_POINTS; i++) {
+	pa->setPoint(i, int( (*pa)[i].x() / scaleX ), int( (*pa)[i].y() / scaleY ));
+    }
+    this->setPoints(*pa);
+}
 
+void MiniConnection::drawShape(QPainter & p)
+{
+    QPointArray par(Connection::NUM_DRAW_POINTS);
+    Connection::drawConnection(p, points(), par);
+
+    p.setPen( QPen(Qt::yellow, 0) );
+    p.setBrush(Qt::black);
+    p.drawPolyline(par);
+}

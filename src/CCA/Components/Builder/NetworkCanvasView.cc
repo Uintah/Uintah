@@ -82,35 +82,6 @@ void NetworkCanvasView::contentsMousePressEvent(QMouseEvent* e)
 	if (lst.size() > 0) {
 	    removeConnection(lst[0]);
 	}
-// USE_MID_BUTTON never defined
-//#ifdef USE_MID_BUTTON
-//    } else if (e->button() == Qt::MidButton) {
-//	std::cerr << "Qt::MidButton: pos=" << e->pos().x() << " " << e->pos().y() << std::endl;
-//	for (std::vector<Module*>::iterator it = modules.begin();
-//		it != modules.end();
-//		it++) {
-//	    if ((QWidget*)(*it) == who) {
-//		QPoint localpos = e->pos()-QPoint(childX(who), childY(who));
-//		std::cerr << "local point=" << localpos.x() << " " << localpos.y() << std::endl;
-//		if ((*it)->clickedPort(localpos, porttype, portname)) {
-//		    connecting = *it;
-//		    showPossibleConnections(connecting, portname, porttype);
-//		    return;
-//		}
-//	    }
-//	}
-//    } else if (e->button() == Qt::LeftButton) {
-//	std::cerr << "Qt::LeftButton (using MidButton): pos=" << e->pos().x() << " " << e->pos().y() << std::endl;
-//	for (std::vector<Module*>::iterator it = modules.begin();
-//		it != modules.end();
-//		it++) {
-//	    if ((QWidget*)(*it) == who) {
-//		moving = *it;
-//		moving_start = p;
-//		return;
-//	    }
-//	}
-//#else
     } else if (e->button() == Qt::LeftButton) {
       //std::cerr << "Qt::LeftButton: pos=" << e->pos().x() << " " << e->pos().y() << std::endl;
       for (std::vector<Module*>::iterator it = modules.begin();
@@ -135,7 +106,6 @@ void NetworkCanvasView::contentsMousePressEvent(QMouseEvent* e)
 	  return;
 	}
       }
-      // #endif
     }
 }
 
@@ -172,83 +142,81 @@ void NetworkCanvasView::contentsMouseReleaseEvent(QMouseEvent* /*e*/)
 
 void NetworkCanvasView::contentsMouseMoveEvent(QMouseEvent* e)
 {
+    if (moving) {
+	int dx = 0;
+	int dy = 0;
+	QPoint p = contentsToViewport(e->pos());
+	//newX, newY are in canvas coordinates
+	int newX = childX(moving) + p.x() - moving_start.x();
+	int newY = childY(moving) + p.y() - moving_start.y();
+	QPoint pLeftTop = contentsToViewport( QPoint(newX, newY) );
 
-  if (moving) {
-		int dx = 0;
-		int dy = 0;
-		QPoint p = contentsToViewport(e->pos());
-		//newX, newY are in canvas coordinates
-		int newX = childX(moving) + p.x() - moving_start.x();
-		int newY = childY(moving) + p.y() - moving_start.y();
-		QPoint pLeftTop = contentsToViewport(QPoint(newX, newY));
+	QPoint mouse = e->globalPos();
+	if (pLeftTop.x() < 0) {
+	    newX -= pLeftTop.x();
+	    if (p.x() < 0) {
+		mouse.setX(mouse.x() - p.x());
+		p.setX(0);
+		QCursor::setPos(mouse);	
+	    }
+	    dx =- 1;
+	}
+	if (pLeftTop.y() < 0) {
+	    newY -= pLeftTop.y();
+	    if (p.y() < 0) {
+		mouse.setY(mouse.y() - p.y());
+		p.setY(0);
+		QCursor::setPos(mouse);	
+	    }
+	    dy =- 1;
+	}
+	int cw = contentsRect().width();
+	int mw = moving->frameSize().width();
+	if (pLeftTop.x() > cw - mw) {
+	    newX -= pLeftTop.x() - (cw-mw);
+	    if (p.x() > cw) {
+		mouse.setX(mouse.x() - (p.x() - cw));
+		p.setX(cw - mw);
+		QCursor::setPos(mouse);
+	    }
+	    dx = 1;
+	}
+	int ch = contentsRect().height();
+	int mh = moving->frameSize().height();
+	if (pLeftTop.y() > ch - mh) {
+	    newY -= pLeftTop.y() - (ch - mh);
+	    if (p.y() > ch) {
+		mouse.setY(mouse.y() - (p.y() - ch));
+		p.setY(ch);
+		QCursor::setPos(mouse);	
+	    }
+	    dy = 1;
+	}
+	//if (pLeftTop.x()<0 || pLeftTop.y()<0)
+	//if (! canvas()->rect().contains(QRect(pLeftTop, moving->frameSize()), true)) return;
+	moving_start = p;
+	moveChild(moving, newX, newY);
 
-		QPoint mouse = e->globalPos();
-		if (pLeftTop.x()<0){
-	 		newX-=pLeftTop.x();
-			if (p.x()<0){
-				mouse.setX(mouse.x()-p.x());
-				p.setX(0);
-			  QCursor::setPos(mouse);	
-			}
-			dx=-1;
-		}
-
-		if (pLeftTop.y()<0){
-	 		newY-=pLeftTop.y();		
-			if (p.y()<0){
-				mouse.setY(mouse.y()-p.y());
-				p.setY(0);
-			  QCursor::setPos(mouse);	
-			}
-			dy=-1;
-		}
-
-		int cw = contentsRect().width();
-		int mw = moving->frameSize().width();
-		if (pLeftTop.x()>cw-mw){
-	 		newX-=pLeftTop.x()-(cw-mw);
-			if (p.x()>cw){
-				mouse.setX(mouse.x()-(p.x()-cw));
-				p.setX(cw-mw);
-			  QCursor::setPos(mouse);	
-			}
-			dx = 1;
-		}
-
-		int ch = contentsRect().height();
-		int mh = moving->frameSize().height();
-		if (pLeftTop.y()>ch-mh){
-	 		newY-=pLeftTop.y()-(ch-mh);
-			if (p.y()>ch){
-				mouse.setY(mouse.y()-(p.y()-ch));
-				p.setY(ch);
-			  QCursor::setPos(mouse);	
-			}
-			dy = 1;
-		}
-
-		//if (pLeftTop.x()<0 || pLeftTop.y()<0)
-		//if (  ! canvas()->rect().contains(QRect(pLeftTop, moving->frameSize()), true)) return;
-
-		moving_start = p;
-		moveChild(moving, newX, newY);
-		p2BuilderWindow->updateMiniView();
-
-		if (dx || dy) scrollBy(dx*5,dy*5);
-
-
-
-		for (std::vector<Connection*>::iterator ct = connections.begin(); ct!=connections.end(); ct++) {
-    	if ((*ct)->isConnectedTo(moving)) 	(*ct)->resetPoints();						
-		}
-    canvas()->update();
-  }
-  if (connecting){
-
-          QCanvasItemList lst = canvas()->collisions(e->pos());
-          if (lst.size()>0) highlightConnection(lst[0]);
-	  else if (highlightedConnection!=0) highlightConnection(0);
-  }
+	if (dx || dy) {
+	    scrollBy(dx * 5,dy * 5);
+	}
+	for (std::vector<Connection*>::iterator ct = connections.begin();
+		ct != connections.end(); ct++) {
+	    if ((*ct)->isConnectedTo(moving)) {
+		(*ct)->resetPoints();
+	    }
+	}
+	canvas()->update();
+    }
+    if (connecting) {
+	QCanvasItemList lst = canvas()->collisions(e->pos());
+	if (lst.size()>0) {
+	    highlightConnection(lst[0]);
+	} else if (highlightedConnection!=0) {
+	    highlightConnection(0);
+	}
+    }
+    p2BuilderWindow->updateMiniView();
 }
 
 // TEK
@@ -351,10 +319,11 @@ void NetworkCanvasView::addConnection(Module *m1,const std::string &portname1,  
 
   //std::string instanceName = m1->cid->getInstanceName();
 
-  con->show();
   connections.push_back(con);
-  canvas()->update();
-
+  con->show();
+  //canvas()->update();
+  // have to updateMiniView() after added to canvas
+  p2BuilderWindow->updateMiniView();
 }
 
 void NetworkCanvasView::addBridgeConnection(Module *m1,const std::string &portname1,  Module *m2, const std::string &portname2)
@@ -417,6 +386,7 @@ void NetworkCanvasView::removeConnection(QCanvasItem *c)
 
            }			
 	}
+    p2BuilderWindow->updateMiniView();
 }
 
 void NetworkCanvasView::removeAllConnections(Module *module)
@@ -439,6 +409,7 @@ void NetworkCanvasView::removeAllConnections(Module *module)
   if (needUpdate) {
     canvas()->update();
   }
+  p2BuilderWindow->updateMiniView();
 }
 
 void NetworkCanvasView::setServices(const sci::cca::Services::pointer &services)
