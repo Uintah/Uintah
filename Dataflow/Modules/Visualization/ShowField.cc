@@ -136,6 +136,8 @@ class ShowField : public Module
   GuiDouble                scalars_scale_;
   GuiInt                   showProgress_;
   GuiString                interactive_mode_;
+  GuiString                gui_field_name_;
+  GuiInt                   gui_field_name_update_;
 
   //! Refinement resolution for cylinders and spheres
   GuiInt                   gui_node_resolution_;
@@ -240,6 +242,8 @@ ShowField::ShowField(GuiContext* ctx) :
   scalars_scale_(ctx->subVar("scalars_scale")),
   showProgress_(ctx->subVar("show_progress")),
   interactive_mode_(ctx->subVar("interactive_mode")),
+  gui_field_name_(ctx->subVar("field-name")),
+  gui_field_name_update_(ctx->subVar("field-name-update")),
   gui_node_resolution_(ctx->subVar("node-resolution")),
   gui_edge_resolution_(ctx->subVar("edge-resolution")),
   gui_data_resolution_(ctx->subVar("data-resolution")),
@@ -406,6 +410,15 @@ ShowField::determine_dirty(FieldHandle fld_handle, FieldHandle vfld_handle)
   bool field_new = fld_handle->generation != field_generation_;
   bool vector_new = 
     vfld_handle.get_rep() && vfld_handle->generation != vector_generation_;
+
+  if (field_new && gui_field_name_update_.get())
+  {
+    string fname;
+    if (fld_handle->get_property("name", fname))
+    {
+      gui_field_name_.set(fname);
+    }
+  }
 
   if (mesh_new) {
     // completely new, all dirty, or just new geometry, so data_at invalid too.
@@ -648,6 +661,9 @@ ShowField::execute()
     text_id_ = 0;
     render_state_[TEXT] = text_on_.get();
   }  
+  
+  string fname = gui_field_name_.get();
+  if (fname != "" && fname[fname.size()-1] != ' ') { fname = fname + " "; }
 
   normalize_vectors_.reset();
   if (renderer_.get_rep())
@@ -672,7 +688,7 @@ ShowField::execute()
     if (renderer_.get_rep() && nodes_on_.get()) {
       const char *name = nodes_transparency_.get()?"Transparent Nodes":"Nodes";
       if (node_id_) ogeom_->delObj(node_id_);
-      node_id_ = ogeom_->addObj(renderer_->node_switch_, name);
+      node_id_ = ogeom_->addObj(renderer_->node_switch_, fname + name);
     }
   }
   if (do_edges) {
@@ -680,7 +696,7 @@ ShowField::execute()
     if (renderer_.get_rep() && edges_on_.get()) {
       const char *name = edges_transparency_.get()?"Transparent Edges":"Edges";
       if (edge_id_) ogeom_->delObj(edge_id_);
-      edge_id_ = ogeom_->addObj(renderer_->edge_switch_, name);
+      edge_id_ = ogeom_->addObj(renderer_->edge_switch_, fname + name);
     }
   }
   if (do_faces) {
@@ -689,7 +705,7 @@ ShowField::execute()
     {
       const char *name = faces_transparency_.get()?"Transparent Faces":"Faces";
       if (face_id_) ogeom_->delObj(face_id_);
-      face_id_ = ogeom_->addObj(renderer_->face_switch_, name);
+      face_id_ = ogeom_->addObj(renderer_->face_switch_, fname +name);
     }
   }  
   if (do_data)
@@ -710,7 +726,7 @@ ShowField::execute()
 					   bidirectional_.get(),
 					   data_resolution_);
       const string vdname = (vdt=="Needles")?"Transparent Vectors":"Vectors";
-      data_id_ = ogeom_->addObj(data, vdname);
+      data_id_ = ogeom_->addObj(data, fname + vdname);
     }
     else if (vfld_handle.get_rep() &&
 	     data_tensor_renderer_.get_rep() &&
@@ -723,7 +739,7 @@ ShowField::execute()
 							   def_mat_handle_,
 							   tdt, tscale,
 							   data_resolution_);
-      data_id_ = ogeom_->addObj(data, "Tensors");
+      data_id_ = ogeom_->addObj(data, fname + "Tensors");
     }
     else if (vfld_handle.get_rep() &&
 	     data_scalar_renderer_.get_rep() &&
@@ -738,7 +754,7 @@ ShowField::execute()
 							   sdt, sscale,
 							   data_resolution_,
 							   transp);
-      data_id_ = ogeom_->addObj(data, transp?"Transparent Scalars":"Scalars");
+      data_id_ = ogeom_->addObj(data, fname + (transp?"Transparent Scalars":"Scalars"));
     }
   }
   if (do_text) {
@@ -764,7 +780,7 @@ ShowField::execute()
 
       const char *name =
 	text_backface_cull_.get()?"Culled Text Data":"Text Data";
-      text_id_ = ogeom_->addObj(text, name);
+      text_id_ = ogeom_->addObj(text, fname + name);
     }
   }
 

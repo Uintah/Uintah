@@ -75,6 +75,8 @@ itcl_class SCIRun_Visualization_ShowField {
 	global $this-text-show-edges
 	global $this-text-show-faces
 	global $this-text-show-cells
+	global $this-field-name
+	global $this-field-name-update
 	set $this-node_display_type Points
 	set $this-edge_display_type Lines
 	set $this-data_display_type Arrows
@@ -125,6 +127,8 @@ itcl_class SCIRun_Visualization_ShowField {
 	set $this-text-show-edges 0
 	set $this-text-show-faces 0
 	set $this-text-show-cells 0
+	set $this-field-name ""
+	set $this-field-name-update 1
 	trace variable $this-active_tab w "$this switch_to_active_tab"
 	trace variable $this-has_vector_data w "$this vector_tab_changed"
 	trace variable $this-has_tensor_data w "$this tensor_tab_changed"
@@ -627,6 +631,14 @@ itcl_class SCIRun_Visualization_ShowField {
 	button $window.def_col.calcdefs -text "Calculate Defaults" \
 		-command "$this-c calcdefs"
 	pack $window.def_col.calcdefs -padx 20
+
+	frame $window.fname -borderwidth 2
+	label $window.fname.label -text "Field Name"
+	entry $window.fname.entry -textvar $this-field-name
+
+	pack $window.fname.label $window.fname.entry -side left
+	pack $window.fname -anchor w -padx 10
+
 
 	## Cylinder and Sphere Resolution
 	#iwidgets::labeledframe $window.resolution \
