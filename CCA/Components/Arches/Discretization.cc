@@ -24,6 +24,7 @@
 #ifdef Scalar_ENO
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Math/Expon.h>
+#include <Core/Math/MiscMath.h>
 #endif
 
 #include <iostream>
@@ -1119,9 +1120,9 @@ Discretization::calculateScalarENOscheme(const ProcessorGroup*,
 		  	   idxHi+IntVector(0,y_domend-idxHi.y(),0));
   z_stencil_begin.resize(idxLo+IntVector(0,0,z_domstart-idxLo.z()),
 		  	   idxHi+IntVector(0,0,z_domend-idxHi.z()));
-  x_stencil_begin.initialize(0.0);
-  y_stencil_begin.initialize(0.0);
-  z_stencil_begin.initialize(0.0);
+  x_stencil_begin.initialize(0);
+  y_stencil_begin.initialize(0);
+  z_stencil_begin.initialize(0);
 
   for (int colZ = idxLo.z(); colZ < idxHi.z(); colZ ++) {
     for (int colY = idxLo.y(); colY < idxHi.y(); colY ++) {
@@ -1174,8 +1175,8 @@ Discretization::calculateScalarENOscheme(const ProcessorGroup*,
 
 	    x_stencil_begin[currCell] = colX;
 
-	    if (abs(x_undivided_difference[xminusCell]) <
-		abs(x_undivided_difference[currCell])) 
+	    if (Abs(x_undivided_difference[xminusCell]) <
+		Abs(x_undivided_difference[currCell])) 
 		   x_stencil_begin[currCell] --;
       }
     }
@@ -1190,8 +1191,8 @@ Discretization::calculateScalarENOscheme(const ProcessorGroup*,
 
 	    y_stencil_begin[currCell] = colY;
 
-	    if (abs(y_undivided_difference[yminusCell]) <
-		abs(y_undivided_difference[currCell])) 
+	    if (Abs(y_undivided_difference[yminusCell]) <
+		Abs(y_undivided_difference[currCell])) 
 		   y_stencil_begin[currCell] --;
       }
     }
@@ -1206,8 +1207,8 @@ Discretization::calculateScalarENOscheme(const ProcessorGroup*,
 
 	    z_stencil_begin[currCell] = colZ;
 
-	    if (abs(z_undivided_difference[zminusCell]) <
-		abs(z_undivided_difference[currCell])) 
+	    if (Abs(z_undivided_difference[zminusCell]) <
+		Abs(z_undivided_difference[currCell])) 
 		   z_stencil_begin[currCell] --;
       }
     }
