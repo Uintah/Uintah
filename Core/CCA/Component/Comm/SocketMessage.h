@@ -65,8 +65,8 @@ namespace SCIRun {
 
     void setLocalObject(void *obj);
 
-    inline static int sendall(int sockfd, void *buf, int len);
-    inline static int recvall(int sockfd, void *buf, int len);
+    static int sendall(int sockfd, void *buf, int len);
+    static int recvall(int sockfd, void *buf, int len);
 
   private:
     inline void marshalBuf(const void *buf, int fullsize);
