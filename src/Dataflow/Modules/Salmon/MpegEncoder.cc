@@ -128,7 +128,9 @@ void MpegEncoder::EncodeFrame(unsigned char* red, unsigned char* green,
   outfileV.close();
   
   // call SCIRunEncode...
+#ifdef BUSTED
   SCIRunEncode(0, imageY, imageU, imageV);
+#endif
 }
 
 void MpegEncoder::BeginMpegEncode(char *name, int sizex, int sizey) {
@@ -173,12 +175,16 @@ void MpegEncoder::BeginMpegEncode(char *name, int sizex, int sizey) {
   strcpy(s_argv[s_argc++], name);
     
   /* call StartMpegEncoder to begin */
+#ifdef BUSTED
   StartMpegEncoder(s_argc, s_argv);
+#endif
 }
 
 void MpegEncoder::DoneEncoding() {
   printf("Closing MPEG.\n");
+#ifdef BUSTED
   SCIRunEncode(1, imageY, imageU, imageV);
+#endif
   
   delete[] imageY;
   delete[] imageU;
