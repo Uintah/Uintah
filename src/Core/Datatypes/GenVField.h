@@ -17,7 +17,7 @@
 
 #include <Core/Datatypes/Datatype.h>
 #include <Core/Containers/LockingHandle.h>
-#include <Core/Datatypes/VField.h>
+#include <Core/Datatypes/Field.h>
 #include <Core/Datatypes/DiscreteAttrib.h>
 
 namespace SCIRun {
@@ -25,20 +25,20 @@ namespace SCIRun {
 
 
 template <class T, class G, class A=DiscreteAttrib<T> > 
-class SCICORESHARE GenVField: public VField, public SLInterpolate
-  {
-  public:
-    
+class SCICORESHARE GenVField: public Field, public SLInterpolate
+{
+public:
+  
   /////////
   // Constructors
   GenVField();
   GenVField(G*, A*);
   GenVField(const GenVField&);
-
+  
   /////////
   // Destructors
   ~GenVField();
-
+  
   virtual const T& grid(int, int, int) const;
   virtual T& operator[](int);
 
@@ -91,8 +91,10 @@ class SCICORESHARE GenVField: public VField, public SLInterpolate
   // Persistent representation...
   virtual void io(Piostream&);
   static PersistentTypeID type_id;
+  static string typeName();
+  static Persistent* maker();
 
-private:
+  private:
 
   /////////
   // The geometry and attribute associated with this field
@@ -101,12 +103,36 @@ private:
     
 };
 
+//////////
+// PIO support
 template <class T, class G, class A>
-PersistentTypeID GenVField<T,G,A>::type_id("GenVField", "Datatype", 0);
+Persistent* GenVField<T,G,A>::maker(){
+  return new GenVField<T,G,A>();
+}
+
+template <class T, class G, class A>
+string GenVField<T,G,A>::typeName(){
+  static string typeName = "GenVField<"+findTypeName((T*)0)+","+findTypeName((G*)0)+","+findTypeName((A*)0)+">";
+  return typeName;
+}
+
+template <class T, class G, class A>
+PersistentTypeID GenVField<T,G,A>::type_id(GenVField<T,G,A>::typeName(), 
+					   "Field",
+					   maker);
+
+#define GENVFIELD_VERSION 1
+template <class T, class G, class A >
+void GenVField<T,G,A>::io(Piostream& stream){
+  stream.begin_class(typeName().c_str(), GENVFIELD_VERSION);
+  Pio(stream, geom);
+  Pio(stream, attrib);
+  stream.end_class();
+}
 
 template <class T, class G, class A >
 GenVField<T,G,A>::GenVField():
-  VField()
+  Field()
 {
 }
 
@@ -117,7 +143,7 @@ GenVField<T,G,A>::~GenVField()
 
 template <class T, class G, class A >
 GenVField<T,G,A>::GenVField(G* igeom, A* iattrib):
-  VField(), geom(igeom), attrib(iattrib)
+  Field(), geom(igeom), attrib(iattrib)
 {
 }
 
@@ -256,11 +282,6 @@ template <class T, class G, class A >
 Vector GenVField<T,G,A>::gradient(const Point& /* ipoint */)
 {
   return Vector();
-}
-
-
-template <class T, class G, class A >
-void GenVField<T,G,A>::io(Piostream&){
 }
 
 } // End namespace SCIRun

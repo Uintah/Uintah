@@ -57,7 +57,7 @@ public:
   // Persistent representation...
   virtual void io(Piostream&);
   static PersistentTypeID type_id;
-
+  static string typeName();
 protected:
 
   vector<EdgeSimp> d_edge;

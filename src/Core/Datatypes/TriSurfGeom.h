@@ -53,6 +53,7 @@ public:
   // Persistent representation...
   virtual void io(Piostream&) {}
   static PersistentTypeID type_id;
+  static string typeName();
 
   int pointSize() { return d_points.size(); }
   int edgeSize() { return d_mesh.size(); }
@@ -83,6 +84,11 @@ protected:
   vector<TriSurfVertex> d_mesh;  // 3 * number of triangles.
 };
 
+
+string TriSurfGeom::typeName(){
+  static string typeName = "TriSurfGeom";
+  return typeName;
+}
 
 PersistentTypeID TriSurfGeom::type_id("TriSurfGeom", "Datatype", 0);
 

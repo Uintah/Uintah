@@ -16,6 +16,7 @@
 
 #include <vector>
 #include <string>
+#include <iostream>
 
 #include <Core/Datatypes/Datatype.h>
 #include <Core/Containers/LockingHandle.h>
@@ -24,6 +25,7 @@
 #include <Core/Geometry/Point.h>
 #include <Core/Util/FancyAssert.h>
 #include <Core/Datatypes/TypeName.h>
+#include <Core/Persistent/PersistentSTL.h>
 
 namespace SCIRun {
 
@@ -39,7 +41,7 @@ public:
   // GROUP:  Constructors/Destructor
   //////////
   //
-  Attrib() {};
+  Attrib(): d_unitName("OM"), d_authorName("Alex"), d_date("october 30"), d_orgName("U"), d_name("justName"){};
   virtual ~Attrib() { };
   
   // GROUP: Class interface functions
@@ -54,7 +56,7 @@ public:
     return LockingHandle<T>(rep);
   }
 
-  /////////
+  //////////
   // Get information about the attribute
   virtual string getInfo() = 0;
 

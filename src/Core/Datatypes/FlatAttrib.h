@@ -22,7 +22,9 @@
 #include <Core/Datatypes/TypeName.h>
 #include <Core/Persistent/PersistentSTL.h>
 
+#include <limits>
 #include <sstream>
+#include <memory.h>
 
 namespace SCIRun {
 
@@ -45,7 +47,6 @@ public:
   // Destructor
   virtual ~FlatAttrib();
   
-
   virtual void get1(T &result, int x);
   virtual void get2(T &result, int x, int y);
   virtual void get3(T &result, int x, int y, int z);
@@ -53,7 +54,6 @@ public:
   virtual T &get1(int x);
   virtual T &get2(int x, int y);
   virtual T &get3(int x, int y, int z);
-
 
   //////////
   // return the value at the given position
@@ -89,15 +89,28 @@ public:
   virtual void io(Piostream&);
   static PersistentTypeID type_id;
   static string typeName();
+  static Persistent* maker();
 
 protected:
-  vector<T> d_data;
-
+  
+  // GROUP: Private data
+  //////////
+  // 
+  vector<T>       d_data;
   static DebugStream dbg;
 };
 
 //////////
+// Class object maker
+
+
+//////////
 // PIO support
+template <class T> Persistent*
+FlatAttrib<T>::maker(){
+  return new FlatAttrib<T>();
+}
+
 template <class T>
 string FlatAttrib<T>::typeName(){
   static string typeName = string("FlatAttrib<") + findTypeName((T*)0)+">";
@@ -107,7 +120,7 @@ string FlatAttrib<T>::typeName(){
 template <class T> 
 PersistentTypeID FlatAttrib<T>::type_id(FlatAttrib<T>::typeName(), 
 					DiscreteAttrib<T>::typeName(), 
-					0);
+					FlatAttrib<T>::maker);
 
 #define FLATATTRIB_VERSION 1
 
@@ -155,12 +168,10 @@ FlatAttrib<T>::FlatAttrib(const FlatAttrib& copy) :
 {
 }
 
-
 template <class T>
 FlatAttrib<T>::~FlatAttrib()
 {
 }
-
 
 template <class T> T &
 FlatAttrib<T>::fget1(int ix)
@@ -189,7 +200,6 @@ FlatAttrib<T>::fget3(int ix, int iy, int iz)
   return d_data[iz*(d_nx*d_ny)+iy*(d_nx)+ix];  
 }
 
-
 // Copy wrappers, no allocation of result.
 template <class T> void
 FlatAttrib<T>::get1(T &result, int ix)
@@ -208,7 +218,6 @@ FlatAttrib<T>::get3(T &result, int ix, int iy, int iz)
 {
   result = fget3(ix, iy, iz);
 }
-
 
 // Virtual wrappers for inline functions.
 template <class T> T &
@@ -342,7 +351,6 @@ FlatAttrib<T>::iterate(AttribFunctor<T> &func)
     }
   return size();
 }
-
 
 template <class T> string
 FlatAttrib<T>::getInfo()

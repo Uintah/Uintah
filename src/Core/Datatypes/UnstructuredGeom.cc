@@ -10,6 +10,10 @@
 
 namespace SCIRun {
 
+string UnstructuredGeom::typeName(){
+  static string typeName = "UnstructuredGeom";
+  return typeName;
+}
 
 NodeSimp::NodeSimp(){
 }
@@ -99,6 +103,45 @@ bool TetSimp::draw(const vector<NodeSimp>& inodes, GeomTrianglesP* group){
   group->add(p1, p3, p4);
   group->add(p2, p3, p4);
   return true;
+}
+
+void SCICORESHARE Pio(Piostream& stream, NodeSimp& node){
+  Pio(stream, node.p);
+}
+
+void SCICORESHARE Pio(Piostream& stream, EdgeSimp& edge){
+  Pio(stream, edge.nodes[0]);
+  Pio(stream, edge.nodes[1]);
+}
+
+void SCICORESHARE Pio(Piostream& stream, FaceSimp& face){
+  int (&nd)[3] = face.nodes;
+  int (&nb)[3] = face.neighbors;
+  int i;
+
+  for (i=0; i<3; i++){
+    Pio(stream, nd[i]);
+  }
+
+  for (i=0; i<3; i++){
+    Pio(stream, nb[i]);
+  }
+  
+}
+
+void SCICORESHARE Pio(Piostream& stream, TetSimp& tet){
+  int (&nd)[4] = tet.nodes;
+  int (&nb)[4] = tet.neighbors;
+  int i;
+
+  for (i=0; i<4; i++){
+    Pio(stream, nd[i]);
+  }
+
+  for (i=0; i<4; i++){
+    Pio(stream, nb[i]);
+  }
+  
 }
 
 } // End namespace SCIRun

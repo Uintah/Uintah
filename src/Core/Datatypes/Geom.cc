@@ -12,10 +12,14 @@ namespace SCIRun {
 
 PersistentTypeID Geom::type_id("Geom", "Datatype", 0);
 
+using std::cout;
+using std::endl;
+
 #define GEOM_VERSION 1
 void Geom::io(Piostream& stream){
   
   stream.begin_class("Geom", GEOM_VERSION);
+  
   Pio(stream, d_name);
   Pio(stream, d_bbox);
   stream.end_class();

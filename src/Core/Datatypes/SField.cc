@@ -10,7 +10,7 @@
 
 namespace SCIRun {
 
-PersistentTypeID SField::type_id("SField", "Datatype", 0);
+PersistentTypeID SField::type_id("SField", "Field", 0);
   
 SField::SField() :
   Field()
