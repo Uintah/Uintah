@@ -50,7 +50,6 @@ SRCS     += \
 	$(SRCDIR)/OpenGL.cc\
 	$(SRCDIR)/Parser.cc\
 	$(SRCDIR)/PBuffer.cc \
-	$(SRCDIR)/SCIBaWGL.cc\
 	$(SRCDIR)/SharedMemory.cc\
 	$(SRCDIR)/SynchronizeGeometry.cc\
 	$(SRCDIR)/Tex.cc\
