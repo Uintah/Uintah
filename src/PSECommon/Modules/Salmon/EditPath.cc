@@ -91,19 +91,21 @@ using SCICore::Thread::Time;
 		   init_exist, test_path, save_path, get_to_view, 
 		   prev_view, next_view, set_step_size, mk_circle_path, w_show, 
 		   set_acc_mode, set_path_t};
-    
-    TCLint     tcl_num_views, tcl_is_looped, tcl_is_backed, tcl_auto_start;
+
+    enum { to_ogeom=0, to_oview };
+
+    TCLint     tcl_num_views, tcl_is_looped, tcl_is_backed;
     
     TCLint    tcl_curr_roe;   
     TCLdouble tcl_step_size, tcl_speed_val, tcl_acc_val, tcl_rate;
-    TCLint    UI_Init;
+    TCLint    UI_Init, tcl_send_dir;
     TCLvarint tcl_msg_box, tcl_intrp_type, tcl_acc_mode, tcl_widg_show, tcl_curr_view, tcl_is_new, tcl_stop;
     TCLstring tcl_info;
     
     double       acc_val, speed_val, rate;
     int          curr_view, acc_mode;
     int          curr_roe; 
-    bool         is_changed, is_new, is_init, is_auto;
+    bool         is_changed, is_new, is_init;
     ExecMsg      exec_msg;
     View         c_view;
     clString     message;
@@ -122,7 +124,7 @@ using SCICore::Thread::Time;
     PathHandle   ext_path_h, new_path_h, curr_path_h;
     CameraViewHandle cv_h;
     CameraView       camv;
-
+    
 public:
     EditPath(const clString& id);
     virtual ~EditPath();
@@ -133,6 +135,7 @@ public:
     void update_tcl_var();
     void init_tcl_update();
     bool Msg_Box(const clString&, const clString&);
+    void send_view();
 };
 
 extern "C" Module* make_EditPath(const clString& id)
@@ -154,16 +157,15 @@ EditPath::EditPath(const clString& id)
   tcl_is_backed("tcl_is_backed", id, this),
   tcl_step_size("tcl_step_size", id, this),
   tcl_curr_roe("tcl_curr_roe", id, this),
-  tcl_auto_start("tcl_auto_start", id, this),
   tcl_num_views("tcl_num_views", id, this),
   tcl_speed_val("tcl_speed_val", id, this), 
   tcl_acc_val("tcl_acc_val", id, this),
   tcl_info("tcl_info", id, this),
   UI_Init("UI_Init", id, this),
+  tcl_send_dir("tcl_send_dir", id, this),
   curr_view(0),
   acc_mode(0),
   is_changed(false),
-  is_auto(false),
   curr_roe(0),        // no Roe yet
   acc_val(0),
   speed_val(0),
@@ -223,18 +225,10 @@ void EditPath::execute()
     if (!is_init){
       is_init=true;
       cross_id=ogeom->addObj(cross_widget->GetWidget(), clString("Crosshair"), &widget_lock);
-      if (!ipath->get(p)){
+      if (ipath->get(p))
+	init_exist_path(p);
+      else 
 	init_new_path();
-      }
-      else {
-	if (init_exist_path(p) && (is_auto=tcl_auto_start.get())) {
-	  exec_msg=test_path;
-	  want_to_execute();
-	  // !!! no sem.up() here - no certain UI parts interference
-	  exec_lock.unlock();
-	  return;
-	}
-      }
     }
     else {
       // execute request from upstream module
@@ -334,8 +328,7 @@ void EditPath::execute()
 	  if (curr_path_h->add_keyF(c_view)){
 	    curr_view=(curr_path_h->get_num_views()-1);
 	    is_changed=true;
-	    cv_h->set_view(c_view);
-	    ocam_view->send(cv_h);
+	    send_view();
 	    message="Key frame added";
 	  }
 	  else {
@@ -360,9 +353,7 @@ void EditPath::execute()
 	      curr_view--;
 	    
 	    if (curr_path_h->get_keyF(curr_view, c_view)){
-	      ogeom->setView(0, c_view);
-	      cv_h->set_view(c_view);
-	      ocam_view->send(cv_h);
+	      send_view();
 	    }
 	      
 	    is_changed=true;
@@ -384,8 +375,7 @@ void EditPath::execute()
 	data=ogeom->getData(0, 1);
 	if (data && data->view){
 	  if (curr_path_h->ins_keyF(curr_view, *(data->view))){
-	    cv_h->set_view(*(data->view));
-            ocam_view->send(cv_h);
+	    send_view();
 	    is_changed=true;
 	    message="Key frame inserted";
 	  }
@@ -424,9 +414,7 @@ void EditPath::execute()
 	      }
 	    }
 	    curr_path_h->get_keyF(curr_view, c_view);
-	    ogeom->setView(0, c_view);
-	    cv_h->set_view(c_view);
-            ocam_view->send(cv_h);
+	    send_view();
 	    is_changed=true;
 	  }
 	  else{ 
@@ -460,9 +448,7 @@ void EditPath::execute()
 	if (!tcl_stop.get()){
 	  double olds=speed_val;
 	  is_next=curr_path_h->get_nextPP(c_view, cv, speed_val, acc_val);  
-	  ogeom->setView(0, c_view);
-	  cv_h->set_view(c_view);
-	  ocam_view->send(cv_h);
+	  send_view();
 
 	  speed_val/=(rate=tcl_rate.get());
 	  acc_val=is_next?((speed_val-olds)/rate):0;
@@ -495,7 +481,7 @@ void EditPath::execute()
       case get_to_view:
 	cv=tcl_curr_view.get();
 	if (curr_path_h->get_keyF(cv, c_view)){
-	  ogeom->setView(0, c_view);
+	  send_view();
 	  curr_view=cv;
 	  update_tcl_var();
 	}
@@ -506,15 +492,11 @@ void EditPath::execute()
 	cv=curr_view+1;
 	if (curr_path_h->get_keyF(cv, c_view)){
 	  curr_view=cv;
-	  ogeom->setView(0, c_view);
-	  cv_h->set_view(c_view);
-	  ocam_view->send(cv_h);
+	  send_view();
 	}
 	else {
 	  if (curr_path_h->get_keyF(curr_view, c_view)){
-	      ogeom->setView(0, c_view);
-	      cv_h->set_view(c_view);
-	      ocam_view->send(cv_h);
+	    send_view();
 	  }
 	}
 	update_tcl_var();
@@ -525,15 +507,11 @@ void EditPath::execute()
 	cv=curr_view-1;
 	if (curr_path_h->get_keyF(cv, c_view)){
 	  curr_view=cv;
-	  ogeom->setView(0, c_view);
-	  cv_h->set_view(c_view);
-	  ocam_view->send(cv_h);
+	  send_view();
 	}
 	else {
 	  if (curr_path_h->get_keyF(curr_view, c_view)){
-	      ogeom->setView(0, c_view);
-	      cv_h->set_view(c_view);
-	      ocam_view->send(cv_h);
+	    send_view();
 	  }
 	}
 	update_tcl_var();
@@ -570,6 +548,23 @@ void EditPath::execute()
   sem.up();
   exec_lock.unlock();  
 }
+
+void EditPath::send_view(){
+  
+  cv_h->set_view(c_view);
+
+  switch (tcl_send_dir.get()){
+  case to_ogeom:
+    ogeom->setView(0, c_view);
+    break;
+  case to_oview:
+    ocam_view->send(cv_h);
+    break;
+  default:
+    break;
+  }
+}
+
 
 void EditPath::tcl_command(TCLArgs& args, void* userdata)
 {   
@@ -719,9 +714,9 @@ void EditPath::init_tcl_update(){
   tcl_is_backed.set(curr_path_h->is_backed());
   tcl_step_size.set(curr_path_h->get_step());
   tcl_curr_roe.set(curr_roe);
-  tcl_auto_start.set(is_auto);
   tcl_rate.set(1);
   tcl_info.set(message);
+  tcl_send_dir.set(0);
 
   widget_lock.readLock();
   tcl_widg_show.set(cross_widget->GetState());
@@ -779,6 +774,9 @@ bool EditPath::Msg_Box(const clString& title, const clString& message){
 
 //
 // $Log$
+// Revision 1.6  2000/09/15 21:49:26  samsonov
+// added output switch and send_view() function
+//
 // Revision 1.5  2000/08/20 04:24:20  samsonov
 // added CameraView outport
 //
