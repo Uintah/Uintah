@@ -1,8 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE component SYSTEM "faq.dtd">
+<?xml-stylesheet href="faq.xsl" type="text/xsl"?>
+<?cocoon-process type="xslt"?>
+
 <!-- 
 
   each faq is a collection of entries.  Entries are a paired question and
   answer, along with a set of keywords.  Questions and answers are delimited
-  with <p> or <pre> tags.
+  with <p>, <pre> or <img> tags.
 
   <entry>
     <keywords>SGI, endian</keywords>
@@ -72,10 +77,99 @@
         The solution is to rebuild the offending libraries, configuring them
         to _not_ use threads.  Xerces is typically the offending library, 
         although Tcl and others may also be incorrectly configured to use
-        threads.  See the Thirdparty Software Installation and Build 
-        Information for recommended configure arguments for the thirdparty
-        software.  Note that when the automatic install script is used that
-        all the software is automatically correctly configured and built.
+        threads.  See the <a href="InstallGuide/ThirdpartyInfo.html">Thirdparty
+        Software Installation and Build Information</a> for recommended
+	configure arguments for the thirdparty software.  Note that when the
+	automatic install script is used that all the software is automatically
+        correctly configured and built.
+      </p>
+    </answer>
+  </entry>
+
+  <entry>
+    <keywords>Compile, Red Hat, Mandrake, GCC 2.96, GCC 2.97</keywords> 
+    <question>
+      <p>
+        I'm trying to SCIRun on Red Hat 7.0+ or Mandrake 8.0+ linux machine
+        but the compile fails.  What's wrong?
+      </p>
+    </question>
+    <answer>
+      <p>
+        Some linux distributions are shipped with a version of the GCC
+        compiler (e.g. 2.96, 2.97) that doesn't work for building SCIRun. 
+        For more information, please visit 
+        <a href="www.gnu.org/software/gcc/gcc-2.96.html">this GCC site</a> 
+	regarding this issue.
+      </p>
+      <p>
+        The solution to this problem is to update your compiler to version
+        2.95.2 or 2.95.3.
+      </p>
+    </answer>
+  </entry>
+
+  <entry>
+    <keywords>unable to load module, can't find symbol</keywords>
+    <question>
+      <p>
+        When I run SCIRun, one or more of the following messages appear
+        in the message window.  What is going on?
+      </p>
+      <pre>
+        Loading package 'SCIRun'
+        Unable to load module 'CastField' :
+         - can't find symbol 'make_CastField'
+
+        or
+
+        Unable to load all of package 'Teem' (category 'DataIO' failed) :
+        - libPackages_Teem_Dataflow.so: cannot open shared object file: No such file or directory
+        - libPackages_Teem_Dataflow_Modules_DataIO.so: cannot open shared object file: No such file or directory
+
+      </pre>
+    </question
+    <answer>
+      <p>
+        Each module for a given package has it's own .xml file that 
+        describes it.  When SCIRun starts, it parses all the .xml files
+        in the packages (under Dataflow/XML) and tries to find the 
+	matching code within the related .so files.  If the .so files cannot
+        be found the message "No such file or directory" is given.  If the .so
+        can be found, but the code for a particular module does not exist 
+        within the library, then the message "can't find symbol" is given.
+      </p>
+      <p>
+        The message may or may not indicate a problem.  For some modules, the
+        .xml file is listed but the code has not yet been completed (this may
+        be common for module developers).  For others it may mean that the
+        SCIRun installation is some how corrupt (files have been deleted,
+        moved, etc.)
+      </p>
+      <p>
+        The solution to this problem is to either a) build the libraries
+        that the .xml files need, or b) remove the offending .xml files.
+      </p>
+    </answer>
+  </entry>
+
+  <entry>
+    <keywords>SGI, LANG:std, MIPSpro</keywords>
+    <question>
+      <p>
+        When I compile SCIRun I get the following warning, and the build fails:
+      </p>
+      <pre>
+        Warning: Option 'std' not in group 'LANG' (LANG:std)
+      </pre>
+      <p>
+        What is wrong?
+      </p>
+    </question>
+    <answer>
+      <p>
+        The MIPSpro compiler on your target install machine is too old.
+        SCIRun requires version 7.3.1.1m at a minimum.
       </p>
     </answer>
   </entry>
