@@ -117,7 +117,7 @@
     </implementation>
   </dataflow-component>
 
-
+  <!-- INSERT NEW FEM COMPONENT HERE -->
   </scirun-library>
   <scirun-library category="Readers">
   <soNames>
@@ -376,7 +376,7 @@
     </implementation>
   </dataflow-component>
 
-
+  <!-- INSERT NEW Readers COMPONENT HERE -->
   </scirun-library>
   <scirun-library category="Salmon">
   <soNames>
@@ -401,7 +401,7 @@
     </implementation>
   </dataflow-component>
 
-
+  <!-- INSERT NEW Salmon COMPONENT HERE -->
   </scirun-library>
   <scirun-library category="Example">
   <soNames>
@@ -426,7 +426,7 @@
     </implementation>
   </dataflow-component>
 
-
+  <!-- INSERT NEW Example COMPONENT HERE -->
   </scirun-library>
   <scirun-library category="Matrix">
   <soNames>
@@ -613,7 +613,7 @@
     </implementation>
   </dataflow-component>
 
-
+  <!-- INSERT NEW Matrix COMPONENT HERE -->
   </scirun-library>
   <scirun-library category="Surface">
   <soNames>
@@ -962,7 +962,7 @@
     </implementation>
   </dataflow-component>
 
-
+  <!-- INSERT NEW Surface COMPONENT HERE -->
   </scirun-library>
   <scirun-library category="Iterators">
   <soNames>
@@ -987,7 +987,7 @@
     </implementation>
   </dataflow-component>
 
-
+  <!-- INSERT NEW Iterators COMPONENT HERE -->
   </scirun-library>
   <scirun-library category="Fields">
   <soNames>
@@ -1300,7 +1300,7 @@
     </implementation>
   </dataflow-component>
 
-
+  <!-- INSERT NEW Fields COMPONENT HERE -->
   </scirun-library>
   <scirun-library category="Writers">
   <soNames>
@@ -1505,7 +1505,7 @@
     </implementation>
   </dataflow-component>
 
-
+  <!-- INSERT NEW Writers COMPONENT HERE -->
   </scirun-library>
   <scirun-library category="Visualization">
   <soNames>
@@ -2124,6 +2124,7 @@
     </implementation>
   </dataflow-component>
 
-
+  <!-- INSERT NEW Visualization COMPONENT HERE -->
   </scirun-library>
+  <!-- INSERT NEW CATEGORY HERE -->
 </package>
