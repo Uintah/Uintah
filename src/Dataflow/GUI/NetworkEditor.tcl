@@ -866,7 +866,7 @@ proc loadfile {netedit_loadfile} {
 proc loadnet {netedit_loadfile} {
     global loading
     set loading 0
-    set group_info [sourcefile $netedit_loadfile]
+    set group_info [sourcenet $netedit_loadfile]
     set loading 1
 
     if { ! [string match $group_info ""] } {
@@ -874,6 +874,15 @@ proc loadnet {netedit_loadfile} {
     }
 }
 
+proc sourcenet {netedit_loadfile} {
+    # Check to see of the file exists; exit if it doesn't
+    if { ! [file exists $netedit_loadfile] } {
+	puts "$netedit_loadfile: no such file"
+	return
+    }
+    source $netedit_loadfile
+}
+    
 proc sourcefile {netedit_loadfile} {
     # set loading to 1
     global loading
