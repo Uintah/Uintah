@@ -10,9 +10,6 @@ using namespace SCIRun;
 
 using std::cerr;
 
-bool DataWarehouse::show_warnings = true;
-
-
 DataWarehouse::DataWarehouse(const ProcessorGroup* myworld,
 			     const Scheduler* scheduler,
 			     int generation)
