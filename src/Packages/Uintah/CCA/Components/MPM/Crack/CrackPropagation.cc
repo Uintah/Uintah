@@ -60,11 +60,13 @@ void Crack::PropagateCrackFrontPoints(const ProcessorGroup*,
   for(int p=0; p<patches->size(); p++){
     const Patch* patch = patches->get(p);
     Vector dx = patch->dCell();
-    double dx_max=Max(dx.x(),dx.y(),dx.z());
+    double dx_bar=(dx.x()+dx.y()+dx.z())/3.;
 
     int pid,patch_size;
     MPI_Comm_rank(mpi_crack_comm, &pid);
     MPI_Comm_size(mpi_crack_comm, &patch_size);
+    
+    MPI_Datatype MPI_POINT=fun_getTypeDescription((Point*)0)->getMPIType();
 
     int numMPMMatls=d_sharedState->getNumMPMMatls();
     for(int m=0; m<numMPMMatls; m++) {
@@ -116,7 +118,7 @@ void Crack::PropagateCrackFrontPoints(const ProcessorGroup*,
 
             // Propagate the node virtually
             double theta=cm->GetPropagationDirection(KI,KII);
-            double dl=rdadx*dx_max;
+            double dl=rdadx*dx_bar;
             Vector da_local=Vector(dl*cos(theta),dl*sin(theta),0.);
             da[i]=T*da_local;
           } // End of if(!operated)
@@ -126,9 +128,8 @@ void Crack::PropagateCrackFrontPoints(const ProcessorGroup*,
           }  // End of if(!operated) {} else {}
         } // End of loop over cfNodeSize
 
-        /* Step 2: Determine the propagation extent for each node
+        /* Step 2: Propagate crack-front nodes
         */
-        //int minIdx=0,maxIdx=-1;
         for(int i=0; i<cfNodeSize; i++) {
           int node=cfSegNodes[m][i];
           Point pt=cx[m][node];
@@ -136,10 +137,6 @@ void Crack::PropagateCrackFrontPoints(const ProcessorGroup*,
           // Maximum and minimum indexes of the sub-crack of the node
           int maxIdx=cfSegMaxIdx[m][i];
           int minIdx=cfSegMinIdx[m][i];
-
-          // segments connected by the node 
-          int segs[2];
-          FindSegsFromNode(m,node,segs);
 
           int preIdx=cfSegPreIdx[m][i];
           if(preIdx<0) { // Not operated
@@ -158,74 +155,6 @@ void Crack::PropagateCrackFrontPoints(const ProcessorGroup*,
             // New position of pt after virtual propagation
             double fraction=(double)np/(2*ns+1);
             Point new_pt=pt+fraction*da[i];
-
-            /* Step 2a: Deal with propagating edge nodes, extending 
-	       new_pt out to the boundary to make sure it is outside.  
-	       It is extended by a distance "dx_max/2" each time. 
-            */
-            if((segs[R]<0||segs[L]<0) &&  // Edge nodes
-               (new_pt-pt).length()/dx_max>0.01) {  // propagate
-              // Check if new_pt is inside of the material
-              Point tmp_pt=new_pt;
-              short newPtInMat=YES;
-	      int extTimes=0;
-	      
-	      while(newPtInMat) {
-		MPI_Status status;
-		int tag=node+extTimes;
-	        // See if new_pt is inside		    	  
-		if(patch->containsPoint(new_pt)) {
-                  IntVector ni[MAX_BASIS];
-                  double S[MAX_BASIS];
-                  if(d_8or27==8)
-                    patch->findCellAndWeights(new_pt, ni, S);
-                  else if(d_8or27==27)
-                    patch->findCellAndWeights27(new_pt, ni, S, psize[0]);
-		  
-                  for(int k = 0; k < d_8or27; k++) {
-                    double totalMass=gmass[ni[k]]+Gmass[ni[k]];
-                    if(totalMass<5*d_SMALL_NUM_MPM) {
-                      newPtInMat=NO;
-                      break;
-                    }
-                  }
-
-		  // Send newPtInMat to all other processors
-		  for(int k=0; k<patch_size; k++) {
-		    if(k!=pid) MPI_Send(&newPtInMat,1,MPI_SHORT,k,tag,mpi_crack_comm);
-		  }  
-		} 
-		else { // Processors which do not include new_pt, receive newPtInMat
-		  MPI_Recv(&newPtInMat,1,MPI_SHORT,MPI_ANY_SOURCE,tag,
-		            mpi_crack_comm, &status);
-		}  
-		
-		// If new_pt is inside, extend it out to the boundary
-                if(newPtInMat) { 
-                  int n1=-1,n2=-1;
-                  if(segs[R]<0) { // right edge nodes
-                    n1=cfSegNodes[m][2*segs[L]+1];
-                    n2=cfSegNodes[m][2*segs[L]];
-                  }
-                  else if(segs[L]<0) { // left edge nodes
-                    n1=cfSegNodes[m][2*segs[R]];
-                    n2=cfSegNodes[m][2*segs[R]+1];
-                  }
-
-                  Vector v=TwoPtsDirCos(cx[m][n1],cx[m][n2]);
-                  new_pt+=v*(dx_max/2.);
-		  extTimes++;
-		} // end of if(newPtInMat)
-              } // End of while(newPtInMat)
-		
-              if(pid==0 && extTimes>1)
-	        cout << "   ! Edge node " << node << ", has been extended "
-		     << extTimes << " times to the outside of the material." 
-	             << endl;	     
-              // Check if it beyond the global gird
-              FindIntersectionLineAndGridBoundary(tmp_pt,new_pt);
-            } // End of if this is a edge node
-	    
             cfSegPtsT[m].push_back(new_pt);
           } // End if(!operated)
           else {
@@ -233,16 +162,129 @@ void Crack::PropagateCrackFrontPoints(const ProcessorGroup*,
             cfSegPtsT[m].push_back(prePt);
           }
         } // End of loop cfSegNodes
-	 
+
         // Release dynamic arraies
-	delete [] cp;
-	delete [] da;
-	
-        /* Step 3: Correct crack-front points, moving the unreasonable points
+        delete [] cp;
+        delete [] da;
+
+        /* Step 3: Deal with propagating edge nodes which is prpagating,
+                   extendinga new_pt out to the boundary 
+        */
+        for(int i=0; i<cfNodeSize; i++) {
+          int node=cfSegNodes[m][i];
+          Point pt=cx[m][node];
+          Point new_pt=cfSegPtsT[m][i];
+
+          // segments connected by the node
+          int segs[2];
+          FindSegsFromNode(m,node,segs);
+
+          if((segs[R]<0||segs[L]<0) &&  // Edge nodes
+             (new_pt-pt).length()/dx_bar>0.01) {  // It propagates
+	     
+	    // Find the direction of the edge crack-front line segemnt 
+            Point ptp=cfSegPtsT[m][i];
+            Point pt2p;      
+	    if(segs[R]<0) { // right edge nodes
+   	      pt2p=cfSegPtsT[m][i+1];
+	    }
+	    else if(segs[L]<0) { // left edge nodes
+              pt2p=cfSegPtsT[m][i-1];
+	    }
+	    Vector v=TwoPtsDirCos(pt2p,ptp);
+				
+            IntVector ni[MAX_BASIS];
+	    
+            // Task 3a: Extend new_pt to the outside of the material
+            short newPtInMat=YES;
+            int extTimes=0;
+
+	    while(newPtInMat) {
+	      MPI_Status status;
+	      int tag=node+extTimes;
+	      // See if new_pt is inside		    	  
+	      if(patch->containsPoint(new_pt)) {
+                if(d_8or27==8)
+                  patch->findCellNodes(new_pt, ni);
+                else if(d_8or27==27)
+                  patch->findCellNodes27(new_pt, ni);
+		  
+                for(int k = 0; k < d_8or27; k++) {
+                  double totalMass=gmass[ni[k]]+Gmass[ni[k]];
+                  if(totalMass<5*d_SMALL_NUM_MPM) {
+                    newPtInMat=NO;
+                    break;
+                  }
+                }
+
+	        // Send newPtInMat to all other processors
+		for(int k=0; k<patch_size; k++) {
+		  if(k!=pid) MPI_Send(&newPtInMat,1,MPI_SHORT,k,tag,mpi_crack_comm);
+		}  
+	      } 
+	      else { // Processors which do not include new_pt, receive newPtInMat
+	        MPI_Recv(&newPtInMat,1,MPI_SHORT,MPI_ANY_SOURCE,tag,
+	                   mpi_crack_comm, &status);
+	      }  
+		
+	      // If new_pt is inside, extend it out by dx_bar/2
+              if(newPtInMat) { 
+                new_pt+=v*(dx_bar/2.);
+	        extTimes++;
+     	      } // end of if(newPtInMat)
+            } // End of while(newPtInMat)
+		
+            // If new_pt is outside the global grid, trim it
+            TrimCrackFrontWithGrid(pt2p,new_pt,GLP,GHP);
+
+            // Task 3b: If new_pt is outside, trim it back to the material boundary
+	    if(!newPtInMat) {
+	      short* newPtInPatch=new short[patch_size];
+	      for(int k=0; k<patch_size; k++) newPtInPatch[k]=NO;
+	      if(patch->containsPoint(new_pt)) newPtInPatch[pid]=YES;
+	      
+	      MPI_Barrier(mpi_crack_comm);	      
+             
+	      for(int k=0; k<patch_size;k++) {
+	        if(newPtInPatch[k]) {
+                  // Get cell nodes where new_pt is
+	          if(d_8or27==8)
+	            patch->findCellNodes(new_pt, ni);
+	          else if(d_8or27==27)
+                    patch->findCellNodes27(new_pt, ni);
+                  // Get the lowest and highest points of the cell
+	          Point LLP=Point( 9e99, 9e99, 9e99);
+	          Point LHP=Point(-9e99,-9e99,-9e99);		  
+	          for(int j=0; j<d_8or27; j++) {
+	            Point pj=patch->nodePosition(ni[j]);
+	            LLP=Min(LLP,pj);
+	            LHP=Max(LHP,pj);
+	          }
+
+                  // Trim ptp(or pt2p)->new_pt by the cell
+                  Point cross_pt=(new_pt!=ptp ? ptp:pt2p);
+		  if(TrimCrackFrontWithGrid(new_pt,cross_pt,LLP,LHP)) {
+		    // Extend cross_pt a little bit (dx_bar*10%) outside 
+		    new_pt=cross_pt+v*(dx_bar*0.1);
+		  }
+		} 
+		MPI_Bcast(&new_pt,1,MPI_POINT,k,mpi_crack_comm);
+	      } // End of loop over k         
+	      delete [] newPtInPatch;
+	    } // End of if(!newPtInMat)
+
+	    // Save the eventual position of the edge node after propagation
+            cfSegPtsT[m][i]=new_pt;
+          } // End of if this is a edge node
+        } // End of loop cfSegNodes
+	 
+        /* Step 4: Prune crack-front, moving the distorted points
+	   if the direction between the two line-segments connected by it
+	   is larger than 30 degree.   
 	*/
         PruneCrackFrontAfterPropagation(m);	
 	
-        /* Step 4: Apply symmetric BCs to new crack-front points
+        /* Step 5: Apply symmetric BCs to new crack-front points
         */
         for(int i=0; i<(int)cfSegNodes[m].size();i++) {
           Point pt=cx[m][cfSegNodes[m][i]];
@@ -270,7 +312,7 @@ void Crack::ConstructNewCrackFrontElems(const ProcessorGroup*,
   for(int p=0; p<patches->size(); p++) {
     const Patch* patch = patches->get(p);
     Vector dx = patch->dCell();
-    double dx_max=Max(dx.x(),dx.y(),dx.z());
+    double dx_bar=(dx.x()+dx.y()+dx.z())/3.;
     int numMPMMatls=d_sharedState->getNumMPMMatls();
 
     for(int m=0; m<numMPMMatls; m++) {
@@ -288,7 +330,7 @@ void Crack::ConstructNewCrackFrontElems(const ProcessorGroup*,
            Vector vp=TwoPtsDirCos(cx[m][node],cfSegPtsT[m][i]);
            // Crack propa angle(in degree) measured from crack plane
            double angle=90-acos(Dot(vp,v2))*180/3.141592654;
-           if(dis<0.1*(rdadx*dx_max) || fabs(angle)<5)
+           if(dis<0.1*(rdadx*dx_bar) || fabs(angle)<5)
              cx[m][node]=cfSegPtsT[m][i];
         }
 */
@@ -323,8 +365,8 @@ void Crack::ConstructNewCrackFrontElems(const ProcessorGroup*,
 
           // Step 2: Determine ten cases of propagation
           short sp=YES, ep=YES;
-          if((p1p-p1).length()/dx_max<0.01) sp=NO; // p1 no propagating
-          if((p2p-p2).length()/dx_max<0.01) ep=NO; // p2 no propagating
+          if((p1p-p1).length()/dx_bar<0.01) sp=NO; // p1 no propagating
+          if((p2p-p2).length()/dx_bar<0.01) ep=NO; // p2 no propagating
 
           short CASE=0;        // no propagation
           if(l12/cs0[m]<0.5) { // Adjust or combine the seg
