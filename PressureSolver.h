@@ -132,8 +132,7 @@ private:
 				   const PatchSubset* patches,
                                    const MaterialSubset* matls,
 				   DataWarehouse* new_dw,
-				   DataWarehouse* matrix_dw,
-				   LevelP level, SchedulerP sched);
+				   DataWarehouse* matrix_dw);
       void pressureLinearSolve(const ProcessorGroup* pc,
 			       const Patch* patch,
 			       const int matlIndex,
@@ -172,6 +171,9 @@ private:
       double d_underrelax;
       //reference points for the solvers
       IntVector d_pressRef;
+      const Patch* d_pressRefPatch;
+      int d_pressRefProc;
+      const PatchSet* d_perproc_patches;
 
       // const VarLabel* (required)
       const ArchesLabel* d_lab;
