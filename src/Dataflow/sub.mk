@@ -18,7 +18,8 @@ SUBDIRS := \
 include $(SRCTOP)/scripts/recurse.mk
 
 PSELIBS := Core
-LIBS := $(TCL_LIBRARY) $(XML_LIBRARY) -lm
+LIBS := $(TCL_LIBRARY) $(XML_LIBRARY) $(GL_LIBS) $(TK_LIBRARY) \
+        $(IMAGE_LIBS) -lm
 
 include $(SRCTOP)/scripts/largeso_epilogue.mk
 
