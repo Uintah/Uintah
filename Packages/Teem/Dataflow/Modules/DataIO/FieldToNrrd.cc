@@ -129,7 +129,14 @@ void FieldToNrrd::execute()
 
   if (!field_handle->mesh()->is_editable())
   {
-    remark("Not computing connections for non-editable mesh type.");
+    if (oconnect_->nconnections())
+    {
+      warning("Not computing connections for non-editable mesh type.");
+    }
+    else
+    {
+      remark("Not computing connections for non-editable mesh type.");
+    }
     compute_connects_p = false;
   }
   
@@ -137,8 +144,28 @@ void FieldToNrrd::execute()
     field_handle->get_type_description(0)->get_name().substr(0, 6);
   if (!(field_handle->mesh()->is_editable() || meshstr == "Struct"))
   {
-    remark("Not computing points for strict lattice.");
+    if (opoints_->nconnections())
+    {
+      warning("Not computing points for strict lattice.");
+    }
+    else
+    {
+      remark("Not computing points for strict lattice.");
+    }
     compute_points_p = false;
+  }
+  
+  if (field_handle->basis_order() == -1)
+  {
+    if (odata_->nconnections())
+    {
+      warning("No data in input field.");
+    }
+    else
+    {
+      remark("No data in input field.");
+    }
+    compute_data_p = false;
   }
 
   if (ifield_generation_ != field_handle->generation)
