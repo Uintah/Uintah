@@ -34,7 +34,10 @@
 #include <Core/Malloc/Allocator.h>
 #include <Core/Util/NotFinished.h>
 #include <Core/Persistent/PersistentSTL.h>
+
 #include <iostream>
+#include <algorithm>
+
 using std::cerr;
 using std::cout;
 using std::endl;

@@ -34,6 +34,7 @@
 #include <Core/Datatypes/ColumnMatrix.h>
 #include <Core/Datatypes/TriSurfField.h>
 
+#include <algorithm>
 #include <Core/Geometry/Vector.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/BBox.h>
