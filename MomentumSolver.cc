@@ -154,7 +154,7 @@ MomentumSolver::sched_buildLinearMatrix(SchedulerP& sched, const PatchSet* patch
 		Ghost::AroundCells, numGhostCells+1);
   tsk->requires(Task::NewDW, d_lab->d_wVelocitySIVBCLabel,
 		Ghost::AroundCells, numGhostCells+1);
-  tsk->requires(Task::OldDW, d_lab->d_cellTypeLabel, 
+  tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel, 
 		Ghost::AroundCells, numGhostCells);
 
   // from Task::NewDW
@@ -559,7 +559,7 @@ MomentumSolver::buildLinearMatrix(const ProcessorGroup* pc,
     new_dw->get(velocityVars.old_density, d_lab->d_densityINLabel, 
 		matlIndex, patch, Ghost::None, zeroGhostCells);
 
-    old_dw->get(velocityVars.cellType, d_lab->d_cellTypeLabel, 
+    new_dw->get(velocityVars.cellType, d_lab->d_cellTypeLabel, 
 		matlIndex, patch, Ghost::AroundCells, numGhostCells);
   // for explicit coeffs will be computed using the old u, v, and w
   // change it for implicit solve

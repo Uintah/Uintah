@@ -724,7 +724,7 @@ BoundaryCondition::sched_setInletVelocityBC(SchedulerP& sched, const PatchSet* p
   
   int numGhostCells = 0;
   // This task requires densityCP, [u,v,w]VelocitySP from new_dw
-  tsk->requires(Task::OldDW, d_lab->d_cellTypeLabel, Ghost::None,
+  tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel, Ghost::None,
 		numGhostCells);
   tsk->requires(Task::NewDW, d_lab->d_densityINLabel, Ghost::None,
 		numGhostCells);
@@ -795,7 +795,7 @@ BoundaryCondition::sched_recomputePressureBC(SchedulerP& sched,
 			  this,
 			  &BoundaryCondition::recomputePressureBC);
   int numGhostCells = 0;
-  tsk->requires(Task::OldDW, d_lab->d_cellTypeLabel, 
+  tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel, 
 		Ghost::None, numGhostCells);
       // This task requires celltype, new density, pressure and velocity
   tsk->requires(Task::NewDW, d_lab->d_densityINLabel, Ghost::AroundCells,
@@ -1528,7 +1528,7 @@ BoundaryCondition::setInletVelocityBC(const ProcessorGroup* ,
     int nofGhostCells = 0;
 
     // get cellType, velocity and density
-    old_dw->get(cellType, d_lab->d_cellTypeLabel, matlIndex, patch, Ghost::None,
+    new_dw->get(cellType, d_lab->d_cellTypeLabel, matlIndex, patch, Ghost::None,
 		nofGhostCells);
     new_dw->get(uVelocity, d_lab->d_uVelocityINLabel, matlIndex, patch, Ghost::None,
 		nofGhostCells);
@@ -1662,7 +1662,7 @@ BoundaryCondition::recomputePressureBC(const ProcessorGroup* ,
     int nofGhostCells = 0;
 
     // get cellType, pressure and velocity
-    old_dw->get(cellType, d_lab->d_cellTypeLabel, matlIndex, patch, Ghost::None,
+    new_dw->get(cellType, d_lab->d_cellTypeLabel, matlIndex, patch, Ghost::None,
 		nofGhostCells);
     new_dw->get(density, d_lab->d_densityINLabel, matlIndex, patch, Ghost::None,
 		nofGhostCells);

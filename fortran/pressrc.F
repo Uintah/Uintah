@@ -267,7 +267,10 @@ c-----calculate source terms--------------------------------------------
                ct = dent*areatb
                cb = denb*areatb
                apo = 0.0
-               if (ltim) apo = (old_den(i,j,k) - den(i,j,k))*vol/deltat
+               if (ltim) then
+                  if (pcell(i,j,k).eq.ffield) 
+     $                 apo = (old_den(i,j,k) - den(i,j,k))*vol/deltat
+               endif
                smp = cn*vn-cs*vs+ce*ue-cw*uw+ct*wt-cb*wb - apo
 c    $              -sign*spm(i,j,k)
 

@@ -318,7 +318,7 @@ Properties::reComputeProps(const ProcessorGroup*,
     //new_dw->allocate(new_density, d_densityCPLabel, matlIndex, patch);
     IntVector indexLow = patch->getCellLowIndex();
     IntVector indexHigh = patch->getCellHighIndex();
-    voidFraction.print(cerr);
+    //    voidFraction.print(cerr);
   // set density for the whole domain
     for (int colZ = indexLow.z(); colZ < indexHigh.z(); colZ ++) {
       for (int colY = indexLow.y(); colY < indexHigh.y(); colY ++) {
@@ -346,8 +346,10 @@ Properties::reComputeProps(const ProcessorGroup*,
 	  if (d_mmInterface) 
 	    local_den *= mmVars->voidFraction[currCell];
 #endif
-	  if (d_MAlab)
-	    local_den *= voidFraction[currCell];
+	  if (d_MAlab) {
+	    if (voidFraction[currCell] > 0.01)
+	      local_den *= voidFraction[currCell];
+	  }
 	  
 	  density[IntVector(colX, colY, colZ)] = d_denUnderrelax*local_den +
 	    (1.0-d_denUnderrelax)*density[IntVector(colX, colY, colZ)];
