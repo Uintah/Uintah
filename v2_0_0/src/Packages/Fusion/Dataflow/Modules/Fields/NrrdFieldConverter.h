@@ -77,7 +77,8 @@ public:
 
 
 template< class MESH, class PNTYPE, class CNTYPE >
-class StructuredNrrdFieldConverterMeshAlgoT : public StructuredNrrdFieldConverterMeshAlgo
+class StructuredNrrdFieldConverterMeshAlgoT : 
+  public StructuredNrrdFieldConverterMeshAlgo
 {
 public:
 
@@ -171,7 +172,8 @@ execute(MeshHandle mHandle,
   }
 }
 
-class UnstructuredNrrdFieldConverterMeshAlgo : public NrrdFieldConverterMeshAlgo
+class UnstructuredNrrdFieldConverterMeshAlgo : 
+  public NrrdFieldConverterMeshAlgo
 {
 public:
   virtual void execute(MeshHandle mHandle,
@@ -180,7 +182,8 @@ public:
 };
 
 template< class MESH, class PNTYPE, class CNTYPE >
-class UnstructuredNrrdFieldConverterMeshAlgoT : public UnstructuredNrrdFieldConverterMeshAlgo
+class UnstructuredNrrdFieldConverterMeshAlgoT : 
+  public UnstructuredNrrdFieldConverterMeshAlgo
 {
 public:
   virtual void execute(MeshHandle mHandle,
@@ -480,6 +483,7 @@ execute(MeshHandle mHandle,
 			 *inodeItr);	
       ++inodeItr;
    }
+  }
 
   return FieldHandle( ifield );
 }
