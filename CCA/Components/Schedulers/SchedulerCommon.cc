@@ -18,6 +18,7 @@
 #include <Core/Malloc/Allocator.h>
 #include <Core/Util/NotFinished.h>
 #include <Core/Util/DebugStream.h>
+#include <Core/Util/FancyAssert.h>
 
 #include <fstream>
 #include <iostream>
@@ -175,8 +176,26 @@ SchedulerCommon::addTask(Task* task, const PatchSet* patches,
 	dep = dep->next) {
      // Store the ghost cell information of each of the requires
      // so we can predict the total allocation needed for each variable.
-     m_ghostOffsetVarMap.includeOffsets(dep->var, dep->gtype,
-					dep->numGhostCells);
+     if (dep->numGhostCells > 0) {
+       const PatchSubset* dep_patches;
+       const MaterialSubset* dep_matls;
+       if (dep->patches_dom == Task::NormalDomain)
+	 dep_patches = patches->getUnion();
+       else if (dep->patches_dom == Task::OutOfDomain)
+	 dep_patches = dep->patches;
+       else {
+	 throw InternalError("Unhandled patches_dom with > 0 ghost cells");
+       }
+       if (dep->matls_dom == Task::NormalDomain)
+	 dep_matls = matls->getUnion();
+       else if (dep->matls_dom == Task::OutOfDomain)
+	 dep_matls = dep->matls;
+       else {
+	 throw InternalError("Unhandled patches_dom with > 0 ghost cells");
+       }
+       m_ghostOffsetVarMap.includeOffsets(dep->var, dep_matls, dep_patches,
+					  dep->gtype, dep->numGhostCells);
+     }
    }
 }
 
@@ -247,33 +266,49 @@ SchedulerCommon::get_new_dw()
 }
 
 const vector<const Patch*>* SchedulerCommon::
-getSuperPatchExtents(const VarLabel* label, const Patch* patch,
-		     Ghost::GhostType gtype, int numGhostCells,
-		     IntVector& lowIndex, IntVector& highIndex) const
+getSuperPatchExtents(const VarLabel* label, int matlIndex, const Patch* patch,
+		     Ghost::GhostType requestedGType, int requestedNumGCells,
+		     IntVector& requiredLow, IntVector& requiredHigh,
+		     IntVector& requestedLow, IntVector& requestedHigh) const
 {
   const SuperPatch* connectedPatchGroup =
     m_locallyComputedPatchVarMap.getConnectedPatchGroup(label, patch);
   if (connectedPatchGroup == 0)
     return 0;
   
-  SuperPatch::Region extents = connectedPatchGroup->getRegion();
-
+  SuperPatch::Region requestedExtents = connectedPatchGroup->getRegion();
+  SuperPatch::Region requiredExtents = connectedPatchGroup->getRegion();  
+  
   // expand to cover the entire connected patch group
   bool containsGivenPatch;
   for (unsigned int i = 0; i < connectedPatchGroup->getBoxes().size(); i++) {
     // get the minimum extents containing both the expected ghost cells
     // to be needed and the given ghost cells.
     const Patch* memberPatch = connectedPatchGroup->getBoxes()[i];
-    m_ghostOffsetVarMap.getExtents(label, memberPatch, gtype, numGhostCells,
-				   lowIndex, highIndex);
-    extents = extents.enclosingRegion(SuperPatch::Region(lowIndex, highIndex));
+    VarLabelMatlPatch vmp(label, matlIndex, memberPatch);
+    m_ghostOffsetVarMap.getExtents(vmp, requestedGType, requestedNumGCells,
+				   requiredLow, requiredHigh,
+				   requestedLow, requestedHigh);
+    SuperPatch::Region requiredRegion =
+      SuperPatch::Region(requiredLow, requiredHigh);
+    requiredExtents = requiredExtents.enclosingRegion(requiredRegion);
+    SuperPatch::Region requestedRegion =
+      SuperPatch::Region(requestedLow, requestedHigh);
+    requestedExtents = requestedExtents.enclosingRegion(requestedRegion);
     if (memberPatch == patch)
       containsGivenPatch = true;
   }
   ASSERT(containsGivenPatch);
   
-  lowIndex = extents.low_;
-  highIndex = extents.high_;
+  requiredLow = requiredExtents.low_;
+  requiredHigh = requiredExtents.high_;
+  requestedLow = requestedExtents.low_;
+  requestedHigh = requestedExtents.high_;
+
+  // requested extents must enclose the required extents at lesst.
+  ASSERTEQ(Min(requiredLow, requestedLow), requestedLow);
+  ASSERTEQ(Max(requiredHigh, requestedHigh), requestedHigh);
+  
   return &connectedPatchGroup->getBoxes();
 }
 
