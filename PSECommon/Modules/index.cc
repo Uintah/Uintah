@@ -88,8 +88,10 @@ MP(IsoMask)
 MP(IsoSurface)
 MP(IsoSurfaceDW)
 MP(IsoSurfaceMSRG)
+MP(Noise)
 MP(RescaleColorMap)
 MP(SimpVolVis)
+MP(Span)
 MP(Streamline)
 MP(VectorSeg)
 MP(VolRendTexSlices)
@@ -196,8 +198,10 @@ void initPackage(const clString& tcl) {
   RM("Visualization", "Iso Surface",             make_IsoSurface,           tcl+"/IsoSurface.tcl");
   RM("Visualization", "Iso Surface DW",          make_IsoSurfaceDW,         tcl+"/IsoSurfaceDW.tcl");
   RM("Visualization", "Iso Surface MSRG",        make_IsoSurfaceMSRG,       tcl+"/IsoSurfaceMSRG.tcl");
+  RM("Visualization", "Noise",                   make_Noise,                tcl+"/Noise.tcl");
   RM("Visualization", "Rescale Color Map",       make_RescaleColorMap,      tcl+"/RescaleColorMap.tcl");
   RM("Visualization", "Simp Vol Vis",            make_SimpVolVis,           tcl+"/SimpVolVis.tcl");
+  RM("Visualization", "Span",                    make_Span,                 tcl+"/Span.tcl");
   RM("Visualization", "Streamline",              make_Streamline,           tcl+"/Streamline.tcl");
   RM("Visualization", "Vector Seg",              make_VectorSeg,            tcl+"/VectorSeg.tcl");
   RM("Visualization", "Vol Rend Tex Slices",     make_VolRendTexSlices,     tcl+"/VolRendTexSlices.tcl");
