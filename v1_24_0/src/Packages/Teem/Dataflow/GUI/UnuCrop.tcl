@@ -54,6 +54,7 @@ itcl_class Teem_UnuAtoM_UnuCrop {
 	global $this-absmaxAxis2
 	global $this-absmaxAxis3
 	global $this-reset_data
+	global $this-digits_only
 
 
 	set $this-num-axes 0
@@ -72,6 +73,7 @@ itcl_class Teem_UnuAtoM_UnuCrop {
 	set $this-absmaxAxis2 0
 	set $this-absmaxAxis3 0
 	set $this-reset_data 1
+	set $this-digits_only 0
     }
 
     method reset_vals {} {
