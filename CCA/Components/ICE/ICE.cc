@@ -898,7 +898,7 @@ void ICE::scheduleComputeDelPressAndUpdatePressCC(SchedulerP& sched,
                                             const PatchSet* patches,
                                             const MaterialSubset* press_matl,
                                             const MaterialSubset* ice_matls,
-                                            const MaterialSubset* mpm_matls,
+					    const MaterialSubset* /*mpm_matls*/,
                                             const MaterialSet* matls)
 {
   cout_doing << "ICE::scheduleComputeDelPressAndUpdatePressCC" << endl;
@@ -2557,10 +2557,11 @@ template<class V, class T>
                              T& vel_FCME)        
                                        
 {
-  vector<double> b(numMatls), b_sp_vol(numMatls), X(numMatls);
-  FastMatrix beta(numMatls, numMatls), a(numMatls, numMatls);
+#define MAX_MATLS 8
+  double b[MAX_MATLS], b_sp_vol[MAX_MATLS];
+  double vel[MAX_MATLS], tmp[MAX_MATLS];
+  FastMatrix a(numMatls, numMatls);
   FastMatrix a_inverse(numMatls, numMatls);
-  double tmp, sp_vol_brack;
   
   for(;!iter.done(); iter++){
     IntVector c = *iter;
@@ -2571,49 +2572,40 @@ template<class V, class T>
     //   Matrix A, this includes b[m][m].
     //  You need to make sure that mom_exch_coeff[m][m] = 0
     
-    for(int m = 0; m < numMatls; m++)  {
-      for(int n = 0; n < numMatls; n++)  {
-        tmp = (vol_frac_CC[n][adj] + vol_frac_CC[n][c]) * K(n,m);
-
-        sp_vol_brack = 2.0 * (sp_vol_CC[m][adj] * sp_vol_CC[m][c])/
-                             (sp_vol_CC[m][adj] + sp_vol_CC[m][c]);
-
-        beta(m,n) = 0.5 * sp_vol_brack * delT * tmp;
-        a(m,n)    = -beta(m,n);
-        b_sp_vol[m] = sp_vol_brack;
-      }
-    }
-    //__________________________________
     // - Form diagonal terms of Matrix (A)
-    for(int m = 0; m < numMatls; m++) {
-      a(m,m) = 1.;
-      for(int n = 0; n < numMatls; n++) {
-        a(m,m) +=  beta(m,n);
-      }
-    }
-    //__________________________________
     //  - Form RHS (b) 
     for(int m = 0; m < numMatls; m++)  {
-      b[m] = 0.0;
-      for(int n = 0; n < numMatls; n++)  {
-        b[m] += beta(m,n) * (vel_FC[n][c] - vel_FC[m][c]);
-      }
+      b_sp_vol[m] = 2.0 * (sp_vol_CC[m][adj] * sp_vol_CC[m][c])/
+	(sp_vol_CC[m][adj] + sp_vol_CC[m][c]);
+      tmp[m] = -0.5 * delT * (vol_frac_CC[m][adj] + vol_frac_CC[m][c]);
+      vel[m] = vel_FC[m][c];
     }
+
+    for(int m = 0; m < numMatls; m++)  {
+      double betasum = 1;
+      double bsum = 0;
+      double bm = b_sp_vol[m];
+      double vm = vel[m];
+      for(int n = 0; n < numMatls; n++)  {
+        double b = bm * tmp[n] * K(n,m);
+        a(m,n)    = b;
+	betasum -= b;
+	bsum -= b * (vel[n] - vm);
+      }
+      a(m,m) = betasum;
+      b[m] = bsum;
+    }
+
     //__________________________________
     //  - solve and backout velocities
-    a_inverse.destructiveInvert(a);
-    a_inverse.multiply(b,X);
+    //a_inverse.destructiveInvert(a);
+    //a_inverse.multiply(b,X);
     
-//  a.destructiveSolve(b,X);               // old style
-    for(int m = 0; m < numMatls; m++) {
-      vel_FCME[m][c] = vel_FC[m][c] + X[m];
-    }
-    
-    //__________________________________
+    a.destructiveSolve(b, b_sp_vol);
     //  For implicit solve we need sp_vol_FC
-    a_inverse.multiply(b_sp_vol,X);
-    for(int m = 0; m < numMatls; m++) {    // only needed by implicit Pressure
-      sp_vol_FC[m][c] = X[m];
+    for(int m = 0; m < numMatls; m++) {
+      vel_FCME[m][c] = vel_FC[m][c] + b[m];
+      sp_vol_FC[m][c] = b_sp_vol[m];// only needed by implicit Pressure
     }
   }  // iterator
 }
@@ -4474,7 +4466,7 @@ void ICE::addExchangeToMomentumAndEnergy(const ProcessorGroup*,
  ---------------------------------------------------------------------  */
 void ICE::maxMach_on_Lodi_BC_Faces(const ProcessorGroup*,
                                    const PatchSubset* patches,
-                                   const MaterialSubset* matls,
+                                   const MaterialSubset* /*matls*/,
                                    DataWarehouse* old_dw,
                                    DataWarehouse* new_dw)
 {
@@ -4600,7 +4592,7 @@ void ICE::update_q_CC(const std::string& desc,
 
    Need to include kinetic energy 
  ---------------------------------------------------------------------  */
-void ICE::advectAndAdvanceInTime(const ProcessorGroup* pg,  
+void ICE::advectAndAdvanceInTime(const ProcessorGroup* /*pg*/,
                                  const PatchSubset* patches,
                                  const MaterialSubset* /*matls*/,
                                  DataWarehouse* old_dw,
