@@ -139,6 +139,7 @@ class NodeHedgehog : public Module {
   GuiDouble head_length;
   GuiString type;
   GuiInt drawcylinders;
+  GuiInt norm_head;
   GuiInt skip_node;
   GuiDouble shaft_rad;
   MaterialHandle outcolor;
@@ -206,7 +207,8 @@ public:
     arrows = scinew GeomArrows(hog->width_scale.get(),
 			       1.0 - hog->head_length.get(),
 			       hog->drawcylinders.get(),
-			       hog->shaft_rad.get() );
+			       hog->shaft_rad.get(),
+			       hog->norm_head.get());
   }
   
   void run() {
@@ -338,6 +340,7 @@ NodeHedgehog::NodeHedgehog(const string& id)
   head_length("head_length", id, this),
   type("type", id, this),
   drawcylinders("drawcylinders", id, this),
+  norm_head("norm_head", id, this),
   skip_node("skip_node", id, this),
   shaft_rad("shaft_rad", id, this),
   max_vector(0,0,0), max_length(0),
@@ -358,6 +361,7 @@ NodeHedgehog::NodeHedgehog(const string& id)
   need_find3d=1;
   
   drawcylinders.set(0);
+  norm_head.set(0);
   outcolor=scinew Material(Color(0,0,0), Color(0,0,0), Color(0,0,0), 0);
 }
 
@@ -574,7 +578,7 @@ void NodeHedgehog::execute()
 #ifdef USE_HOG_THREADS
   GeomGroup *arrows = scinew GeomGroup;
 #else
-  GeomArrows* arrows = scinew GeomArrows(width_scale.get(), 1.0-head_length.get(), drawcylinders.get(), shaft_rad.get() );
+  GeomArrows* arrows = scinew GeomArrows(width_scale.get(), 1.0-head_length.get(), drawcylinders.get(), shaft_rad.get(), norm_head.get() );
 #endif
   // loop over all the nodes in the graph taking the position
   // of the node and determining the vector value.
