@@ -644,7 +644,7 @@ void Crack::CalculateFractureParameters(const ProcessorGroup*,
                   // Task 11a: Find COD near crack tip (point(-d,0,0) in local coordinates)
                   double d;
                   if(d_doCrackPropagation!="false")  // For crack propagation
-                    d=rdadx*dx_max;
+                    d=(rdadx<1.? 1.:rdadx)*dx_max;
                   else  // For calculation of crack-tip parameters
                     d=d_rJ/2.;
 
@@ -676,6 +676,8 @@ void Crack::CalculateFractureParameters(const ProcessorGroup*,
                   double C=cfSegVel[m][idx];
 
                   // Convert J-integral into stress intensity factors
+		  // cfJ is the components of J-integral in the crack-axis coordinates,
+		  // and its first component is the total energy release rate. 
                   Vector SIF;
                   cm->ConvertJToK(mpm_matl,cfJ[l],C,D,SIF);
                   cfK[l]=SIF;
