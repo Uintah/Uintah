@@ -180,6 +180,7 @@ main(int argc, char *argv[] )
   gui->eval("global PSECoreTCL CoreTCL",result);
   gui->eval("set DataflowTCL "PSECORETCL,result);
   gui->eval("set CoreTCL "SCICORETCL,result);
+  gui->eval("set SCIRUN_SRCDIR "SCIRUN_SRCDIR,result);
   gui->eval("lappend auto_path "SCICORETCL,result);
   gui->eval("lappend auto_path "PSECORETCL,result);
   gui->eval("lappend auto_path "ITCL_WIDGETS,result);
@@ -261,7 +262,7 @@ main(int argc, char *argv[] )
   packageDB->loadPackage();
 
   // Activate "File" menu sub-menus once packages are all loaded.
-  gui->eval("activate_file_submenus",result);
+  gui->execute("activate_file_submenus");
 
   if (startnetno)
   {
@@ -270,7 +271,7 @@ main(int argc, char *argv[] )
 
     if (execute_flag || getenv("SCI_REGRESSION_TESTING"))
     {
-      gui->eval("ExecuteAll", result);
+      gui->eval("netedit scheduleall", result);
     }
   }
 
