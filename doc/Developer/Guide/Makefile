@@ -15,59 +15,51 @@
 #  University of Utah. All Rights Reserved.
 #
 
-params_common=
-parms_chunk=${params_common} chunk.section.depth=0 use.id.as.filename=1
-params_nochunk=${params_common} 
+parms_chunk=chunk.section.depth=0 use.id.as.filename=1
 stylesheet_chunk=${STYLESHEET_XSL_HTML}/srdocbook-chunk.xsl
 stylesheet_nochunk=${STYLESHEET_XSL_HTML}/srdocbook.xsl
 stylesheet_print=${STYLESHEET_DSSSL_PRINT}/docbook.dsl
-commonsrcs=intro.xml dev/*.xml src/*.xml
-htmlsrcs=main.html.xml ${commonsrcs}
-printsrcs=main.print.xml ${commonsrcs} ${patsubst %.gif,%.ps,${wildcard dev/Figures/*.gif}}
+rxmlsrcs := ${wildcard *.rxml} ${wildcard dev/*.rxml} ${wildcard src/*.rxml}
+psfigures := ${patsubst %.gif,%.ps,${wildcard dev/Figures/*.gif}}
+edition := ../../edition.xml
 
-.PHONY: default chunk nochunk pdf clean veryclean
+.PHONY: all html print clean veryclean
 
 .DELETE_ON_ERROR:
 
-bn := srdg
+all: html print
 
-default: chunk nochunk pdf
+# HTML versions
+html: srdg.html
 
-chunk: index.html
-
-main.html.xml: main.rxml ../../edition.xml
-	OUTPUT_MODE=html eruby --delimiters xml main.rxml > $@
-
-main.print.xml: main.rxml ../../edition.xml
-	OUTPUT_MODE=print eruby --delimiters xml main.rxml > $@
-
-index.html: ${htmlsrcs}
-	-java com.icl.saxon.StyleSheet -w2 \
-	main.html.xml ${stylesheet_chunk} ${parms_chunk}
-
-nochunk: ${bn}.html
-
-${bn}.html: ${htmlsrcs}
+srdg.html: ${rxmlsrcs} ${edition}
+	for f in ${rxmlsrcs}; \
+	do \
+	   OUTPUT_MODE=html eruby --delimiters xml $$f > $${f%.rxml}.hxml ; \
+	done
 	java com.icl.saxon.StyleSheet -w2 \
-	main.html.xml ${stylesheet_nochunk} ${params_nochunk} >$@
+          main.hxml ${stylesheet_nochunk} >$@
+	java com.icl.saxon.StyleSheet -w2 \
+          main.hxml ${stylesheet_chunk} ${parms_chunk}
 
-pdf: ${bn}.pdf
+# Print version
+print: srdg.pdf
 
-${bn}.pdf : ${bn}.dvi
-	dvipdfm -p letter ${bn}.dvi
-
-${bn}.dvi : ${bn}.tex
-	for i in 1 2 ; do jadetex ${bn}.tex ; done
-
-${bn}.tex : ${printsrcs}
-	openjade -t tex -V tex-backend -c ${CATALOG} -o ${bn}.tex \
--d ${stylesheet_print} ${XML_DCL} main.print.xml 
+srdg.pdf : ${rxmlsrcs} ${psfigures} ${edition}
+	for f in ${rxmlsrcs}; \
+	do \
+	   OUTPUT_MODE=print eruby --delimiters xml $$f > $${f%.rxml}.pxml ; \
+	done
+	openjade -t tex -V tex-backend -c ${CATALOG} -o srdg.tex \
+          -d ${stylesheet_print} ${params_print} ${XML_DCL} main.pxml
+	for i in 1 2 ; do jadetex srdg.tex ; done
+	dvipdfm -p letter srdg.dvi
 
 %.ps : %.gif
 	convert $< $@
 
 clean:
-	-rm -f ${bn}.aux ${bn}.log ${bn}.out ${bn}.dvi  dev/Figures/*.ps *~
+	-rm -f srdg.aux srdg.log srdg.out srdg.dvi  dev/Figures/*.ps *~
 
 veryclean: clean
-	-rm -f main.*.xml *.html ${bn}.tex ${bn}.pdf
+	-rm -f *.[ph]xml dev/*.[ph]xml src/*.[ph]xml *.html srdg.tex srdg.pdf
