@@ -102,7 +102,9 @@ class MaterialToken : public Token
  protected:
 
   string   name_;
+  string   class_;
   unsigned index_;
+  unsigned num_submtls_;
   double   ambient_[3];
   double   diffuse_[3];
   double   specular_[3];
@@ -115,9 +117,11 @@ class MaterialToken : public Token
 
  public:
 
-  MaterialToken() : Token("*MATERIAL") {
+  MaterialToken(const string &s="*MATERIAL") : Token(s) {
     nargs_ = 1;
+    num_submtls_ = 0;
     AddChildMoniker("*MATERIAL_NAME");
+    AddChildMoniker("*MATERIAL_CLASS");
     AddChildMoniker("*MATERIAL_AMBIENT");
     AddChildMoniker("*MATERIAL_DIFFUSE");
     AddChildMoniker("*MATERIAL_SPECULAR");
@@ -127,7 +131,8 @@ class MaterialToken : public Token
     AddChildMoniker("*MAP_BUMP");
     AddChildMoniker("*MAP_OPACITY");
     AddChildMoniker("*MAP_SELFILLUM");
-    //AddChildMoniker("*SUBMATERIAL");
+    AddChildMoniker("*SUBMATERIAL");
+    AddChildMoniker("*NUMSUBMTLS");
   }
   virtual ~MaterialToken() {}
 
@@ -136,6 +141,7 @@ class MaterialToken : public Token
     ParseChildren(str);
 
     cout << "Material " << index_ << ": " << name_ << endl
+         << num_submtls_ << endl
          << ambient_[0] << ", " << ambient_[1] << ", " << ambient_[2] << endl
          << diffuse_[0] << ", " << diffuse_[1] << ", " << diffuse_[2] << endl
          << specular_[0] << ", " << specular_[1] << ", " << specular_[2] 
@@ -162,6 +168,9 @@ class MaterialToken : public Token
   
   string GetName() { return name_; }
   void SetName(const string& s) { name_ = s; }
+  
+  string GetClass() { return class_; }
+  void SetClass(const string& s) { class_ = s; }
   
   void GetAmbient(double c[3]) { 
     c[0] = ambient_[0];
@@ -196,6 +205,9 @@ class MaterialToken : public Token
     specular_[2] = c[2];
   } 
 
+  double GetNumSubMtls() { return num_submtls_; } 
+  void SetNumSubMtls(double s) { num_submtls_ = s; } 
+
   double GetShine() { return shine_; } 
   void SetShine(double s) { shine_ = s; } 
 
@@ -219,13 +231,107 @@ class MaterialToken : public Token
 
 
 
+class SubMaterialToken : public MaterialToken
+{
+
+ public:
+
+  SubMaterialToken() : MaterialToken("*SUBMATERIAL") {
+    nargs_ = 1; 
+  }
+  virtual ~SubMaterialToken() {}
+
+  virtual bool Parse(ifstream &str) {
+    str >> index_;
+    ParseChildren(str);
+
+    cout << "SubMaterial " << index_ << ": " << name_ << endl
+         << num_submtls_ << endl
+         << ambient_[0] << ", " << ambient_[1] << ", " << ambient_[2] << endl
+         << diffuse_[0] << ", " << diffuse_[1] << ", " << diffuse_[2] << endl
+         << specular_[0] << ", " << specular_[1] << ", " << specular_[2] 
+         << endl
+         << shine_ << endl
+         << transparency_ << endl 
+         << tmap_filename_ << endl << endl;
+    return true;
+  }
+
+  virtual void Write(ofstream &str) {
+    Indent(str);
+    str << "*SUBMATERIAL " << index_ << " {" << endl;
+    ++indent_;
+    unsigned length = children_.size();
+    for (unsigned loop=0; loop<length; ++loop)
+      children_[loop]->Write(str);
+    --indent_;
+    Indent(str);
+    str << "}" << endl;
+  }
+
+  Token *MakeToken() { return new SubMaterialToken(); }
+};
+
+
+
+class NumSubMtlsToken : public Token
+{
+
+ public:
+  
+  NumSubMtlsToken() : Token("*NUMSUBMTLS") { nargs_ = 1; }
+  virtual ~NumSubMtlsToken() {}
+
+  virtual bool Parse(ifstream &str) {
+    unsigned num;
+    str >> num;
+    ((MaterialToken*)parent_)->SetNumSubMtls(num);
+    return true;
+  }
+
+  virtual void Write(ofstream &str) {
+    Indent(str);
+    str << "*NUMSUBMTLS " << ((MaterialToken*)parent_)->GetNumSubMtls() 
+        << endl;
+  }
+
+  Token *MakeToken() { return new NumSubMtlsToken(); }
+};
+
+
+
+class MaterialClassToken : public Token
+{
+
+ public:
+  
+  MaterialClassToken() : Token("*MATERIAL_CLASS") { nargs_ = 1; }
+  virtual ~MaterialClassToken() {}
+
+  virtual bool Parse(ifstream &str) {
+    ParseArgs(str);
+    ((MaterialToken*)parent_)->SetClass(args_[0]);
+    return true;
+  }
+
+  virtual void Write(ofstream &str) {
+    Indent(str);
+    str << "*MATERIAL_CLASS \"" << ((MaterialToken*)parent_)->GetClass() 
+        << "\"" << endl;
+  }
+
+  Token *MakeToken() { return new MaterialClassToken(); }
+};
+
+
+
 class MaterialNameToken : public Token
 {
 
  public:
   
   MaterialNameToken() : Token("*MATERIAL_NAME") { nargs_ = 1; }
-  ~MaterialNameToken() {}
+  virtual ~MaterialNameToken() {}
 
   virtual bool Parse(ifstream &str) {
     ParseArgs(str);
@@ -250,7 +356,7 @@ class MaterialAmbientToken : public Token
  public:
   
   MaterialAmbientToken() : Token("*MATERIAL_AMBIENT") {}
-  ~MaterialAmbientToken() {}
+  virtual ~MaterialAmbientToken() {}
 
   virtual bool Parse(ifstream &str) {
     double color[3];
@@ -280,8 +386,8 @@ class MaterialDiffuseToken : public Token
  public:
   
   MaterialDiffuseToken() : Token("*MATERIAL_DIFFUSE") {}
-  ~MaterialDiffuseToken() {}
-
+  virtual ~MaterialDiffuseToken() {}
+ 
   virtual bool Parse(ifstream &str) {
     double color[3];
     str >> color[0] >> color[1] >> color [2];
@@ -310,7 +416,7 @@ class MaterialSpecularToken : public Token
  public:
   
   MaterialSpecularToken() : Token("*MATERIAL_SPECULAR") {}
-  ~MaterialSpecularToken() {}
+  virtual ~MaterialSpecularToken() {}
 
   virtual bool Parse(ifstream &str) {
     double color[3];
@@ -340,7 +446,7 @@ class MaterialShineToken : public Token
  public:
   
   MaterialShineToken() : Token("*MATERIAL_SHINE") {}
-  ~MaterialShineToken() {}
+  virtual ~MaterialShineToken() {}
 
   virtual bool Parse(ifstream &str) {
     double shine;
@@ -365,7 +471,7 @@ class MaterialTransparencyToken : public Token
  public:
   
   MaterialTransparencyToken() : Token("*MATERIAL_TRANSPARENCY") {}
-  ~MaterialTransparencyToken() {}
+  virtual ~MaterialTransparencyToken() {}
 
   virtual bool Parse(ifstream &str) {
     double t;
@@ -393,7 +499,7 @@ class MapDiffuseToken : public Token
   MapDiffuseToken() : Token("*MAP_DIFFUSE") {
     AddChildMoniker("*BITMAP");
   }
-  ~MapDiffuseToken() {}
+  virtual ~MapDiffuseToken() {}
 
   virtual bool Parse(ifstream &str) {
     ParseChildren(str);
@@ -417,7 +523,7 @@ class MapBumpToken : public Token
   MapBumpToken() : Token("*MAP_BUMP") {
     AddChildMoniker("*BITMAP");
   }
-  ~MapBumpToken() {}
+  virtual ~MapBumpToken() {}
 
   virtual bool Parse(ifstream &str) {
     ParseChildren(str);
@@ -441,7 +547,7 @@ class MapOpacityToken : public Token
   MapOpacityToken() : Token("*MAP_OPACITY") { 
     AddChildMoniker("*BITMAP");
   }
-  ~MapOpacityToken() {}
+  virtual ~MapOpacityToken() {}
 
   virtual bool Parse(ifstream &str) {
     ParseChildren(str);
@@ -465,7 +571,7 @@ class MapSelfIllumToken : public Token
   MapSelfIllumToken() : Token("*MAP_SELFILLUM") { 
     AddChildMoniker("*BITMAP");
   }
-  ~MapSelfIllumToken() {}
+  virtual ~MapSelfIllumToken() {}
 
   virtual bool Parse(ifstream &str) {
     ParseChildren(str);
@@ -477,131 +583,6 @@ class MapSelfIllumToken : public Token
   }
 
   Token *MakeToken() { return new MapSelfIllumToken(); }
-};
-
-
-
-class SubMaterialToken : public Token
-{
-
- protected:
-
-  string   name_;
-  unsigned index_;
-  double   ambient_[3];
-  double   diffuse_[3];
-  double   specular_[3];
-  double   shine_;
-  double   transparency_;
-  string   tmap_filename_;
-  string   bmap_filename_;
-  string   omap_filename_;
-  string   imap_filename_;
-
- public:
-
-  SubMaterialToken() : Token("*MATERIAL") {
-    nargs_ = 1;
-    AddChildMoniker("*MATERIAL_NAME");
-    AddChildMoniker("*MATERIAL_AMBIENT");
-    AddChildMoniker("*MATERIAL_DIFFUSE");
-    AddChildMoniker("*MATERIAL_SPECULAR");
-    AddChildMoniker("*MATERIAL_SHINE");
-    AddChildMoniker("*MATERIAL_TRANSPARENCY");
-    AddChildMoniker("*MAP_DIFFUSE");
-    AddChildMoniker("*MAP_BUMP");
-    AddChildMoniker("*MAP_OPACITY");
-    AddChildMoniker("*MAP_SELFILLUM");
-  }
-  virtual ~SubMaterialToken() {}
-
-  virtual bool Parse(ifstream &str) {
-    str >> index_;
-    ParseChildren(str);
-
-    cout << "SubMaterial " << index_ << ": " << name_ << endl
-         << ambient_[0] << ", " << ambient_[1] << ", " << ambient_[2] << endl
-         << diffuse_[0] << ", " << diffuse_[1] << ", " << diffuse_[2] << endl
-         << specular_[0] << ", " << specular_[1] << ", " << specular_[2] 
-         << endl
-         << shine_ << endl
-         << transparency_ << endl 
-         << tmap_filename_ << endl 
-         << bmap_filename_ << endl 
-         << omap_filename_ << endl 
-         << imap_filename_ << endl << endl;
-    return true;
-  }
-
-  virtual void Write(ofstream &str) {
-    Indent(str);
-    str << "*SUBMATERIAL " << index_ << " {" << endl;
-    ++indent_;
-    unsigned length = children_.size();
-    for (unsigned loop=0; loop<length; ++loop)
-      children_[loop]->Write(str);
-    --indent_;
-    Indent(str);
-    str << "}" << endl;
-  }
-
-  unsigned GetIndex() { return index_; }
-
-  string GetName() { return name_; }
-  void SetName(const string& s) { name_ = s; }
-  
-  void GetAmbient(double c[3]) { 
-    c[0] = ambient_[0];
-    c[1] = ambient_[1];
-    c[2] = ambient_[2];
-  } 
-  void SetAmbient(double c[3]) { 
-    ambient_[0] = c[0];
-    ambient_[1] = c[1];
-    ambient_[2] = c[2];
-  } 
-
-  void GetDiffuse(double c[3]) { 
-    c[0] = diffuse_[0];
-    c[1] = diffuse_[1];
-    c[2] = diffuse_[2];
-  } 
-  void SetDiffuse(double c[3]) { 
-    diffuse_[0] = c[0];
-    diffuse_[1] = c[1];
-    diffuse_[2] = c[2];
-  } 
-
-  void GetSpecular(double c[3]) { 
-    c[0] = specular_[0];
-    c[1] = specular_[1];
-    c[2] = specular_[2];
-  } 
-  void SetSpecular(double c[3]) { 
-    specular_[0] = c[0];
-    specular_[1] = c[1];
-    specular_[2] = c[2];
-  } 
-
-  double GetShine() { return shine_; } 
-  void SetShine(double s) { shine_ = s; } 
-
-  double GetTransparency() { return transparency_; }
-  void SetTransparency(double s) { transparency_ = s; }
-
-  string GetTMapFilename() { return tmap_filename_; }
-  void SetTMapFilename(const string& s) { tmap_filename_ = s; }
-
-  string GetBMapFilename() { return bmap_filename_; }
-  void SetBMapFilename(const string& s) { bmap_filename_ = s; }
-
-  string GetOMapFilename() { return omap_filename_; }
-  void SetOMapFilename(const string& s) { omap_filename_ = s; }
-
-  string GetIMapFilename() { return imap_filename_; }
-  void SetIMapFilename(const string& s) { imap_filename_ = s; }
-
-  Token *MakeToken() { return new SubMaterialToken(); }
 };
 
 
@@ -1292,6 +1273,7 @@ class GroupToken : public Token
   GroupToken() : Token("*GROUP") {
     nargs_ = 1;
     AddChildMoniker("*GEOMOBJECT");
+    AddChildMoniker("*GROUP");
   }
   virtual ~GroupToken() {}
 
@@ -1315,7 +1297,7 @@ class ASEFile : public Token
 
  protected:
 
-  // initialize all possible tokens
+  // initialize all recognized ASE tokens
   SceneToken A;
   SceneEnvMapToken B;
   SceneAmbientStaticToken C;
@@ -1347,6 +1329,8 @@ class ASEFile : public Token
   MapBumpToken NN;
   MapOpacityToken OO;
   MapSelfIllumToken PP;
+  MaterialClassToken QQ;
+  NumSubMtlsToken RR;
 
   bool is_open_;
   ifstream str_;
