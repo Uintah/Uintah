@@ -550,6 +550,7 @@ ExplicitSolver::sched_dummySolve(SchedulerP& sched,
   tsk->requires(Task::OldDW, d_lab->d_maxAbsW_label);
 
   tsk->requires(Task::OldDW, d_lab->d_maxUxplus_label);
+  tsk->requires(Task::OldDW, d_lab->d_avUxplus_label);
 
   tsk->requires(Task::OldDW, d_lab->d_divConstraintLabel,
 		Ghost::None, Arches::ZEROGHOSTCELLS);
@@ -568,6 +569,7 @@ ExplicitSolver::sched_dummySolve(SchedulerP& sched,
   tsk->computes(d_lab->d_maxAbsW_label);
 
   tsk->computes(d_lab->d_maxUxplus_label);
+  tsk->computes(d_lab->d_avUxplus_label);
 
   sched->addTask(tsk, patches, matls);  
   
@@ -1624,15 +1626,18 @@ ExplicitSolver::dummySolve(const ProcessorGroup* ,
   max_vartype mxAbsV;
   max_vartype mxAbsW;
   max_vartype mxUxplus;
+  sum_vartype avUxplus;
   old_dw->get(mxAbsU, d_lab->d_maxAbsU_label);
   old_dw->get(mxAbsV, d_lab->d_maxAbsV_label);
   old_dw->get(mxAbsW, d_lab->d_maxAbsW_label);
   old_dw->get(mxUxplus, d_lab->d_maxUxplus_label);
+  old_dw->get(avUxplus, d_lab->d_avUxplus_label);
 
   new_dw->put(mxAbsU, d_lab->d_maxAbsU_label);
   new_dw->put(mxAbsV, d_lab->d_maxAbsV_label);
   new_dw->put(mxAbsW, d_lab->d_maxAbsW_label);
   new_dw->put(mxUxplus, d_lab->d_maxUxplus_label);
+  new_dw->put(avUxplus, d_lab->d_avUxplus_label);
 
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
@@ -2009,26 +2014,31 @@ ExplicitSolver::getDensityGuess(const ProcessorGroup*,
   double maxAbsV;
   double maxAbsW;
   double maxUxplus;
+  double avUxplus;
   max_vartype mxAbsU;
   max_vartype mxAbsV;
   max_vartype mxAbsW;
   max_vartype mxUxp;
+  sum_vartype avUxp;
   if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
     old_dw->get(mxAbsU, timelabels->maxabsu_in);
     old_dw->get(mxAbsV, timelabels->maxabsv_in);
     old_dw->get(mxAbsW, timelabels->maxabsw_in);
     old_dw->get(mxUxp, timelabels->maxuxplus_in);
+    old_dw->get(avUxp, timelabels->avuxplus_in);
   }
   else {
     new_dw->get(mxAbsU, timelabels->maxabsu_in);
     new_dw->get(mxAbsV, timelabels->maxabsv_in);
     new_dw->get(mxAbsW, timelabels->maxabsw_in);
     new_dw->get(mxUxp, timelabels->maxuxplus_in);
+    new_dw->get(avUxp, timelabels->avuxplus_in);
   }
   maxAbsU = mxAbsU;
   maxAbsV = mxAbsV;
   maxAbsW = mxAbsW;
   maxUxplus = mxUxp;
+  avUxplus = avUxp;
 
   for (int p = 0; p < patches->size(); p++) {
 
