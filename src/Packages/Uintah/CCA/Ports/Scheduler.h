@@ -2,36 +2,19 @@
 #ifndef UINTAH_HOMEBREW_SCHEDULER_H
 #define UINTAH_HOMEBREW_SCHEDULER_H
 
-#include <Packages/Uintah/Core/Grid/LevelP.h>
-#include <Packages/Uintah/Core/Grid/Task.h>
 #include <Packages/Uintah/Core/Parallel/UintahParallelPort.h>
-#include <Packages/Uintah/CCA/Ports/DataWarehouseP.h>
-#include <Packages/Uintah/CCA/Ports/Output.h>
-
-#include <string>
-#include <vector>
-#include <list>
+#include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
+#include <Packages/Uintah/Core/Grid/ComputeSet.h>
+#include <Packages/Uintah/Core/Grid/Task.h>
 #include <map>
-
-class DOM_Document;
-class DOM_Element;
+#include <list>
+#include <string>
 
 namespace Uintah {
-
-class VarLabel;
-class ProcessorGroup;
-
-using std::vector;
-using std::string;
-using std::list;
-using std::map;
-
-class LoadBalancer;
-class Task;
-class TaskGraph;
-class VarLabel;
-class ProcessorGroup;
-
+  using namespace std;
+  class LoadBalancer;
+  class ProcessorGroup;
+  class Task;
 /**************************************
 
 CLASS
@@ -63,74 +46,57 @@ WARNING
 
   class Scheduler : public UintahParallelPort {
   public:
-    Scheduler(Output* oport);
+    Scheduler();
     virtual ~Scheduler();
-
-    virtual void problemSetup(const ProblemSpecP& prob_spec);
-
-
-    void doEmitTaskGraphDocs()
-    { m_doEmitTaskGraphDocs = true; }
+    
+    virtual void problemSetup(const ProblemSpecP& prob_spec) = 0;
     
     //////////
     // Insert Documentation Here:
     virtual void initialize() = 0;
-       
-    //////////
-    // Insert Documentation Here:
-    virtual void execute(const ProcessorGroup * pc, 
-			 DataWarehouseP   & old_dwp,
-			 DataWarehouseP   & dwp ) = 0;
-       
-    //////////
-    // Insert Documentation Here:
-    virtual void addTask(Task* t) = 0;
 
+    virtual void doEmitTaskGraphDocs() = 0;
+    
+    //////////
+    // Insert Documentation Here:
+    virtual void compile(const ProcessorGroup * pc ) = 0;
+    virtual void execute(const ProcessorGroup * pc ) = 0;
+       
+    //////////
+    // Insert Documentation Here:
+    virtual void addTask(Task* t, const PatchSet*, const MaterialSet*) = 0;
+    
     virtual const vector<const Task::Dependency*>& getInitialRequires() = 0;
-
+    
     virtual LoadBalancer* getLoadBalancer() = 0;
     virtual void releaseLoadBalancer() = 0;
-       
+    
+    virtual DataWarehouse* get_old_dw() = 0;
+    virtual DataWarehouse* get_new_dw() = 0;
+      
     //////////
     // Insert Documentation Here:
-    virtual DataWarehouseP createDataWarehouse(DataWarehouseP& parent_dw) = 0;
+    virtual void advanceDataWarehouse(const GridP& grid) = 0;
     //    protected:
 
     //////////
     // Insert Documentation Here:
-    virtual void
-    scheduleParticleRelocation(const LevelP& level,
-			       DataWarehouseP& old_dw,
-			       DataWarehouseP& new_dw,
-			       const VarLabel* posLabel,
-			       const vector<vector<const VarLabel*> >& labels,
-			       const VarLabel* new_posLabel,
-			       const vector<vector<const VarLabel*> >& new_labels,
-			       int numMatls) = 0;
+    virtual void scheduleParticleRelocation(const LevelP& level,
+					    const VarLabel* posLabel,
+					    const vector<vector<const VarLabel*> >& labels,
+					    const VarLabel* new_posLabel,
+					    const vector<vector<const VarLabel*> >& new_labels,
+					    const MaterialSet* matls) = 0;
 
     // Makes and returns a map that maps strings to VarLabels of
     // that name and a list of material indices for which that
     // variable is valid (at least according to d_allcomps).
     typedef map< string, list<int> > VarLabelMaterialMap;
     virtual VarLabelMaterialMap* makeVarLabelMaterialMap() = 0;
-  protected:
-    void makeTaskGraphDoc(const vector<Task*>& tasks,
-			  bool emit_edges = true);
-    void emitNode(const Task* name, time_t start, double duration);
-    void finalizeNodes(int process=0);
-  
   private:
     Scheduler(const Scheduler&);
     Scheduler& operator=(const Scheduler&);
-
-    Output* m_outPort;
-    DOM_Document* m_graphDoc;
-    DOM_Element* m_nodes;
-
-    bool m_doEmitTaskGraphDocs;
-    //unsigned int m_executeCount;
   };
-
 } // End namespace Uintah
 
 #endif

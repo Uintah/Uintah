@@ -166,8 +166,7 @@ public:
   // Destructor
   virtual ~DataArchive();
   
-  void restartInitialize(int& timestep, GridP grid,
-			 DataWarehouseP dw,
+  void restartInitialize(int& timestep, const GridP& grid,
 			 double* pTime /* passed back */);
   
   // GROUP:  Information Access
@@ -280,7 +279,7 @@ private:
   
   // for restartInitialize
   void initVariable(const Patch* patch,
-		    DataWarehouseP& new_dw,
+		    DataWarehouse* new_dw,
 		    VarLabel* label, int matl,
 		    pair<DOM_Node, XMLURL> dataRef);   
   

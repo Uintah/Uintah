@@ -53,9 +53,7 @@ WARNING
 			SimulationStateP& state) = 0;
       
       virtual void performAnalyze(double t, double dt,
-				  const LevelP& level, SchedulerP&,
-				  DataWarehouseP& old_dw,
-				  DataWarehouseP& new_dw) = 0;
+				  const LevelP& level, SchedulerP&) = 0;
 
       virtual void showStepInformation() const = 0;
       
