@@ -56,7 +56,12 @@ class Satellite : public UVSphere
 
   virtual void compute_bounds(BBox& bbox, double offset)
   {
-    bbox.extend(Point(0,0,0), orb_radius_+radius+offset);
+    if (parent_)
+      bbox.extend(parent_->get_center(), 
+                  parent_->get_orb_radius()+parent_->get_radius()+
+                  orb_radius_+radius+offset);
+    else
+      bbox.extend(Point(0,0,0), orb_radius_+radius+offset);
   }
 
   virtual void animate(double t, bool& changed)
@@ -67,6 +72,8 @@ class Satellite : public UVSphere
     double x = orb_radius_*cos(theta_);
     double y = orb_radius_*sin(theta_);
     cen = Point(x,y,0);
+    if (parent_)
+      cen += (parent_->get_center().asVector());
 
     // revolution
     xform.load_identity();
