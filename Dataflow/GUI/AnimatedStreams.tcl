@@ -18,12 +18,10 @@ itcl_class Uintah_Visualization_AnimatedStreams {
 	set $this-lighting 0
 	global $this-normal_method
 	set $this-normal_method 1
-	global $this-iter_method
-	set $this-iter_method 0
+	global $this-use_deltat
+	set $this-use_deltat 0
 	global $this-stepsize
 	set $this-stepsize 0.1
-	global $this-iterations
-	set $this-iterations 1
 	global $this-linewidth
 	set $this-linewidth 2
     }
@@ -68,7 +66,6 @@ itcl_class Uintah_Visualization_AnimatedStreams {
 		-command $n \
 		-text Wire \
 		-value 0
-#	pack $w.lighting.curve -side top -anchor w -padx 2 -pady 2
 	
 	radiobutton $w.lighting.wire \
 		-variable $this-normal_method \
@@ -79,22 +76,11 @@ itcl_class Uintah_Visualization_AnimatedStreams {
 	pack $w.lighting.on $w.lighting.curve $w.lighting.wire \
 		-side top -anchor w -padx 2 -pady 2
 	
-	radiobutton $w.iter_method_step \
-		-variable $this-iter_method \
-		-command $n \
-		-text "Use Step Size" \
-		-value 0
-#	pack $w.lighting.curve -side top -anchor w -padx 2 -pady 2
-	
-	radiobutton $w.iter_method_iter \
-		-variable $this-iter_method \
-		-command $n \
-		-text "Use Iterations Per Sec" \
-		-value 1
+	checkbutton $w.use_dt -text "Use DeltaT" -relief flat \
+		-variable $this-use_deltat -onvalue 1 -offvalue 0 \
+		-anchor w -command $n
+	pack $w.use_dt -side top -fill x
 
-	pack $w.iter_method_step $w.iter_method_iter  \
-		-side top -anchor w -padx 2 -pady 2
-	
 	set r [expscale $w.stepsize \
 		-label "Step Size:" \
 		-orient horizontal \
@@ -110,13 +96,6 @@ itcl_class Uintah_Visualization_AnimatedStreams {
 #	pack $w.steps  -side top -fill x
 
 	bind $w.stepsize <ButtonRelease> $n
-	
-	set r2 [expscale $w.iterations \
-		-label "Iterations Per Second:" \
-		-orient horizontal \
-		-variable $this-iterations]
-	pack $w.iterations -side top -fill x
-	bind $w.iterations <ButtonRelease> $n
 	
 	global $this-linewidth
 	scale $w.linewidth -variable $this-linewidth \

@@ -55,10 +55,9 @@ private:
   GuiInt normals;
   GuiInt lighting;
   GuiInt normal_method;
-  GuiInt iter_method;
+  GuiInt use_deltat;
   GuiInt linewidth;
   GuiDouble stepsize;
-  GuiDouble iterations;
 
   GLAnimatedStreams  *anistreams;
 
