@@ -1351,19 +1351,18 @@ AC_SUBST(F77_DEPEND_REGEN)
 AC_SUBST(F77_DEPEND_EXT)
 
 # Other programs
-AC_PATH_PROG(GMAKE,gmake,NOT_FOUND,,)
-if test "$GMAKE" = "NOT_FOUND"; then
-  AC_PATH_PROG(MAKE,make,NOT_FOUND,,)
+if test "$IS_WIN" = "yes"; then
+  AC_CHECK_PROG(MAKE,make,make,NOT_FOUND,)
 else
-  MAKE=$GMAKE
+  AC_PATH_PROG(GMAKE,gmake,NOT_FOUND,,)
+  if test "$GMAKE" = "NOT_FOUND"; then
+    AC_PATH_PROG(MAKE,make,NOT_FOUND,,)
+  else
+    MAKE=$GMAKE
+  fi
 fi
 if test "$MAKE" = "NOT_FOUND"; then
   SCI_MSG_ERROR(GNU make not found.)
-fi
-if test "$IS_WIN" = "yes"; then
-  # change the unix-style dir to a windows-style dir for windows runtime prompt
-  # change from /c/dir/dir to c:\\dir\\dir
-  MAKE=`echo "$MAKE" | sed 's,/,,' | sed 's,/,:/,' | sed 's,/,\\\\,g'`
 fi
 
 AC_SUBST(MAKE)
