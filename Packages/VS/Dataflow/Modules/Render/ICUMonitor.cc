@@ -875,5 +875,3 @@ ICUMonitor::tcl_command(GuiArgs& args, void* userdata)
 
 
 } // End namespace VS
-
-
