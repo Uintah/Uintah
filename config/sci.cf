@@ -81,23 +81,36 @@ depend::							@@\
 		$(OTHERINCLUDES) $(LOCALINCLUDES) -- srcs
 
 
+/*
+ * CleanSubdirs - generate rules to recursively clean out garbage files.
+ */
+#ifndef SCINamedCleanSubdirs
+#define SCINamedCleanSubdirs(name,dirs) \
+NamedTargetSubdirs(name,dirs,"cleaning",NullParameter,clean)
+#endif /* NamedCleanSubdirs */
+
+#ifndef SCICleanSubdirs
+#define SCICleanSubdirs(dirs) \
+SCINamedCleanSubdirs(clean,dirs)
+#endif
+
 #define SCISubdirs(subdirs)					@@\
 MakeSubdirs(subdirs)						@@\
 MakefileSubdirs(subdirs)					@@\
 DependSubdirs(subdirs)						@@\
 InstallSubdirs(subdirs)						@@\
-CleanSubdirs(subdirs)
+SCICleanSubdirs(subdirs)
 
 #define SCISubdirs2(subdirs)					@@\
 MakefileSubdirs(subdirs)					@@\
 DependSubdirs(subdirs)						@@\
 InstallSubdirs(subdirs)						@@\
-CleanSubdirs(subdirs)
+SCICleanSubdirs(subdirs)
 
 #define SCISubdirs3(subdirs)					@@\
 MakeSubdirs(subdirs)						@@\
 InstallSubdirs(subdirs)						@@\
-CleanSubdirs(subdirs)
+SCICleanSubdirs(subdirs)
 
 #define SCILibraryTarget(objs, lib)				@@\
 AllTarget(lib)							@@\
