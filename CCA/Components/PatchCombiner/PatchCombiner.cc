@@ -320,3 +320,10 @@ void PatchCombiner::setParticleVars(const ProcessorGroup*,
   }
 }
 
+double PatchCombiner::getMaxTime()
+{
+  if (times_.size() <= 1)
+    return 0;
+  else
+    return times_[times_.size()-2]; // the last one is the hacked one, see problemSetup
+}

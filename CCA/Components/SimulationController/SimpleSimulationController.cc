@@ -24,6 +24,7 @@
 #include <Packages/Uintah/CCA/Ports/Scheduler.h>
 #include <Packages/Uintah/CCA/Ports/LoadBalancer.h>
 #include <Packages/Uintah/CCA/Components/Schedulers/SchedulerCommon.h>
+#include <Packages/Uintah/CCA/Components/PatchCombiner/PatchCombiner.h>
 #include <Packages/Uintah/Core/DataArchive/DataArchive.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
 #include <Packages/Uintah/Core/Grid/VarTypes.h>
@@ -201,6 +202,8 @@ SimpleSimulationController::run()
      // and should not use a delt factor.
      timeinfo.delt_factor = 1;
      timeinfo.delt_min = 0;
+     timeinfo.maxTime = static_cast<PatchCombiner*>(sim)->getMaxTime();
+     cout << " MaxTime: " << timeinfo.maxTime << endl;
      timeinfo.delt_max = timeinfo.maxTime;
    }   
    
