@@ -37,6 +37,10 @@ Image::Image(int xres, int yres, bool stereo)
 {
     image=0;
     resize_image();
+    if (stereo)
+      cerr << "Image created with res ("<<xres<<", "<<yres<<") in stereo\n";
+    else
+      cerr << "Image created with res ("<<xres<<", "<<yres<<") in mono\n";
 }
 
 Image::~Image()
@@ -143,7 +147,10 @@ void Image::save_ppm(char *filename)
   // We need to find a filename that isn't already taken
   FILE *input_test;
   char new_filename[1000];
-  sprintf(new_filename, "%s.ppm", filename);
+  if (!stereo)
+    sprintf(new_filename, "%s00.ppm", filename);
+  else
+    sprintf(new_filename, "%s00-L.ppm", filename);
   int count = 0;
   // I'm placing a max on how high count can get to prevent an
   // infinate loop when the path is just bad and no amount of testing
@@ -151,7 +158,10 @@ void Image::save_ppm(char *filename)
   while ((input_test = fopen(new_filename, "r")) != 0 && count < 500) {
     fclose(input_test);
     input_test = 0;
-    sprintf(new_filename, "%s%02d.ppm", filename, count++);
+    if (!stereo)
+      sprintf(new_filename, "%s%02d.ppm", filename, ++count);
+    else
+      sprintf(new_filename, "%s%02d-L.ppm", filename, ++count);
   }
   ofstream outdata(new_filename);
   if (!outdata.is_open()) {
@@ -174,7 +184,34 @@ void Image::save_ppm(char *filename)
     }
   }
   outdata.close();
-  printf("Finished writing image to %s\n", new_filename);
+  printf("Finished writing image of size (%d, %d) to %s\n", xres, yres,
+	 new_filename);
+  if (stereo) {
+    sprintf(new_filename, "%s%02d-R.ppm", filename, count);
+    outdata.open(new_filename);
+    if (!outdata.is_open()) {
+      cerr << "Image::save_ppm: ERROR: I/O fault: couldn't write image file: "
+	   << new_filename << "\n";
+      return;
+    }
+    outdata << "P6\n# PPM binary image created with rtrt\n";
+  
+    outdata << xres << " " << yres << "\n";
+    outdata << "255\n";
+  
+    unsigned char c[3];
+    for(int v=yres-1;v>=0;--v){
+      for(int u=0;u<xres;++u){
+	c[0]=image[v+yres][u].r;
+	c[1]=image[v+yres][u].g;
+	c[2]=image[v+yres][u].b;
+	outdata.write((char *)c, 3);
+      }
+    }
+    outdata.close();
+    printf("Finished writing Right image of size (%d, %d) to %s\n", xres, yres,
+	   new_filename);
+  }
 }
 
 // this code is added for tiled images...
