@@ -31,9 +31,7 @@ public:
 
   //! Required interfaces
   virtual InterpBase* query_interpolate() const = 0;
-  virtual InterpolateToScalar* query_interpolate_to_scalar() const = 0;
-  virtual bool get_minmax( double &, double & ) = 0;
-  virtual bool compute_minmax() = 0;
+//  virtual InterpolateToScalar* query_interpolate_to_scalar() const = 0;
 
   //! Persistent I/O.
   virtual void io(Piostream &stream);

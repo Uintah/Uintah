@@ -31,6 +31,10 @@ template class LockingHandle<Matrix>;
 template class TetVol<double>;
 template class GenericField<TetVolMesh, vector<double> >;
 
+#include <Core/Geometry/Tensor.h>
+template class TetVol<Tensor>;
+template class GenericField<TetVolMesh, vector<Tensor> >;
+
 #include <Core/Datatypes/LatticeVol.h>
 template class LatticeVol<double>;
 template class GenericField<LatVolMesh, FData3d<double> >;
