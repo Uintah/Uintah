@@ -42,7 +42,7 @@ Module* make_STreeExtractSurf(const clString& id)
 {
     return new STreeExtractSurf(id);
 }
-};
+}
 
 STreeExtractSurf::STreeExtractSurf(const clString& id)
 : Module("STreeExtractSurf", id, Filter), surfid("surfid", id, this)
@@ -97,12 +97,12 @@ void STreeExtractSurf::execute() {
     int ok;
     ok = cls.get_int(comp);
     if (!ok) {
-	for (comp=0; comp<st->surfNames.size(); comp++) {
-	    if (st->surfNames[comp] == cls) {
+	for (comp=0; comp<st->surfI.size(); comp++) {
+	    if (st->surfI[comp].name == cls) {
 		break;
 	    }
 	}
-	if (comp == st->surfNames.size()) {
+	if (comp == st->surfI.size()) {
 	    cerr << "Error: bad surface name "<<cls<<"\n";
 	    return;
 	}

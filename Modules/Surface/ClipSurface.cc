@@ -50,7 +50,7 @@ Module* make_ClipSurface(const clString& id)
 {
     return new ClipSurface(id);
 }
-};
+}
 
 static clString module_name("ClipSurface");
 
@@ -139,7 +139,7 @@ void ClipSurface::execute()
     } else if (st) {
 	SurfTree* nst=new SurfTree;
 	*nst=*st;
-	nst->points=pts;
+	nst->nodes=pts;
 	osh=nst;
     } else if (ss) {
 	ScalarTriSurface* nss=new ScalarTriSurface;

@@ -173,8 +173,8 @@ void BldEEGMesh::randomPointsInTetra(Array1<Point> &pts, const Point &v0,
 void BldEEGMesh::genPtsAndTets(SegFldHandle sf, SurfTree *st, int num, 
 			       Mesh* mesh) {
     BBox bb;
-    for (int iii=0; iii<st->points.size(); iii++)
-	bb.extend(st->points[iii]);
+    for (int iii=0; iii<st->nodes.size(); iii++)
+	bb.extend(st->nodes[iii]);
     Point min, max;
     min = bb.min();
     max = bb.max();
@@ -300,15 +300,15 @@ void BldEEGMesh::classifyElements(SegFldHandle sf, Mesh *m, SurfTree* st,
 //    Point v0, v1, v2, v3;
     int ci, cj, ck;
     cerr << "These are the components(materials) interior to "<<greyMatlIdx<<"(4): ";
-    for (int i=0; i<st->inner[greyMatlIdx].size(); i++) {
-	int inComp=st->inner[greyMatlIdx][i];
+    for (int i=0; i<st->surfI[greyMatlIdx].inner.size(); i++) {
+	int inComp=st->surfI[greyMatlIdx].inner[i];
 	int type=sf->get_type(sf->comps[inComp]);
 	cerr <<inComp<<"("<<type<<") ";
     }
     cerr << "\n";
     cerr << "These are the components(materials) interior to "<<whiteMatlIdx<<"(5): ";
-    for (i=0; i<st->inner[whiteMatlIdx].size(); i++) {
-	int inComp=st->inner[whiteMatlIdx][i];
+    for (i=0; i<st->surfI[whiteMatlIdx].inner.size(); i++) {
+	int inComp=st->surfI[whiteMatlIdx].inner[i];
 	int type=sf->get_type(sf->comps[inComp]);
 	cerr <<inComp<<"("<<type<<") ";
     }
@@ -339,21 +339,23 @@ void BldEEGMesh::classifyElements(SegFldHandle sf, Mesh *m, SurfTree* st,
 //		        cerr << "another of type 6, ";
 			popularity[6] = popularity[6]+1;
 		    } else {	
-			for (int k=0; k<st->inner[greyMatlIdx].size(); k++) {
-			    if (st->inner[greyMatlIdx][k] == comp) {
+			for (int k=0; k<st->surfI[greyMatlIdx].inner.size(); 
+			     k++) {
+			    if (st->surfI[greyMatlIdx].inner[k] == comp) {
 				break;
 			    }
 			}
-			if (k != st->inner[greyMatlIdx].size()) {
+			if (k != st->surfI[greyMatlIdx].inner.size()) {
 			    popularity[6]=popularity[6]+1;
 //			    cerr << "grey type 6, ";
 			} else {
-			    for (k=0; k<st->inner[whiteMatlIdx].size(); k++) {
-				if (st->inner[whiteMatlIdx][k] == comp) {
+			    for (k=0; k<st->surfI[whiteMatlIdx].inner.size(); 
+				 k++) {
+				if (st->surfI[whiteMatlIdx].inner[k] == comp) {
 				    break;
 				}
 			    }
-			    if (k != st->inner[whiteMatlIdx].size()) {
+			    if (k != st->surfI[whiteMatlIdx].inner.size()) {
 				popularity[6]=popularity[6]+1;
 			    } else {
 				popularity[type]=popularity[type]+1;
@@ -535,8 +537,8 @@ void BldEEGMesh::applyScalpBCs(Mesh *m, SurfTree *st,
 	double dist;
 	int closest;
 	double bcVal;
-	Point bcPt(st->points[st->bcIdx[i]]);
-	bcVal=st->bcVal[i];
+	Point bcPt(st->nodes[st->idx[i]]);
+	bcVal=st->data[i];
 	for (int j=0; j<m->nodes.size(); j++) {
 	    if (!used[j]) {
 		double d=(m->nodes[j]->p - bcPt).length2();
@@ -558,18 +560,18 @@ void BldEEGMesh::applyScalpBCs(Mesh *m, SurfTree *st,
 
 void BldEEGMesh::findCortexNodesInSTree(Mesh *m, SurfTree* st, int startCNode,
 					const Array1<int>& cortexBCMeshNodes){
-    Array1<int> isCortex(st->points.size());
+    Array1<int> isCortex(st->nodes.size());
     isCortex.initialize(0);
     int cortexIdx=-1;
-    for (int i=0; i<st->surfNames.size(); i++) {
-	if (st->surfNames[i] == "cortex") cortexIdx=i;
+    for (int i=0; i<st->surfI.size(); i++) {
+	if (st->surfI[i].name == "cortex") cortexIdx=i;
     }
     if (cortexIdx == -1) {
 	error("Error: no cortex in SurfTree!");
 	return;
     }
-    for (i=0; i<st->surfEls[cortexIdx].size(); i++) {
-	TSElement *e=st->elements[st->surfEls[cortexIdx][i]];
+    for (i=0; i<st->surfI[cortexIdx].faces.size(); i++) {
+	TSElement *e=st->faces[st->surfI[cortexIdx].faces[i]];
 	isCortex[e->i1]=isCortex[e->i2]=isCortex[e->i3]=1;
     }
     Array1<int> ctxPts;
@@ -582,17 +584,17 @@ void BldEEGMesh::findCortexNodesInSTree(Mesh *m, SurfTree* st, int startCNode,
 	Point p(m->nodes[cortexBCMeshNodes[i]]->p);
 //	cerr << "p="<<p<<"  ";
 	int idx=ctxPts[0];
-	double d=(p-st->points[idx]).length2();
+	double d=(p-st->nodes[idx]).length2();
 	for (int j=1; j<ctxPts.size(); j++) {
-	    double dd=(p-st->points[ctxPts[j]]).length2();
+	    double dd=(p-st->nodes[ctxPts[j]]).length2();
 	    if (dd<d) {
 		d=dd; 
 		idx=ctxPts[j];
 	    }
 	}
 //	cerr << "closest surface point is: "<<st->points[idx]<<"  d="<<d<<"\n";
-	st->bcIdx.add(idx);
-	st->bcVal.add(0);
+	st->idx.add(idx);
+	st->data.add(0);
     }
 //    cerr << "NbdryPts="<<st->bcIdx.size();
 
@@ -740,6 +742,11 @@ void BldEEGMesh::execute()
 	return;
     }
 
+    if (st->typ != SurfTree::NodeValuesSome) {
+	cerr << "Error - BldEEGMesh needs data of type NodeValuesSome in STree.\n";
+	return;
+    }
+
     update_state(JustStarted);
     Mesh *m = new Mesh;
 
@@ -750,7 +757,7 @@ void BldEEGMesh::execute()
     cerr << "SF (min,max) = "<<min<<" "<<max<<"\n";
     
     BBox bb;
-    for (int iii=0; iii<st->points.size(); iii++) bb.extend(st->points[iii]);
+    for (int iii=0; iii<st->nodes.size(); iii++) bb.extend(st->nodes[iii]);
     cerr << "Surf (min,max) = "<<bb.min()<<" "<<bb.max()<<"\n";
 
 
@@ -778,7 +785,7 @@ void BldEEGMesh::execute()
 
     removeAirAndGreyMatlElems(m, cortexBCMeshNodes);
 
-    Array1<int> scalpBCMeshNodes(st->bcIdx.size());
+    Array1<int> scalpBCMeshNodes(st->idx.size());
     applyScalpBCs(m, st, scalpBCMeshNodes, cortexBCMeshNodes);
     findCortexNodesInSTree(m, st, m->nodes.size()-cortexBCMeshNodes.size(),
 			   cortexBCMeshNodes);

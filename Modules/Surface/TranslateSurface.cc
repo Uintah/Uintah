@@ -48,7 +48,7 @@ Module* make_TranslateSurface(const clString& id)
 {
     return new TranslateSurface(id);
 }
-};
+}
 
 static clString module_name("TranslateSurface");
 
@@ -133,7 +133,7 @@ void TranslateSurface::execute()
     } else if (st) {
 	SurfTree* nst=new SurfTree;
 	*nst=*st;
-	nst->points=pts;
+	nst->nodes=pts;
 	osh=nst;
     } else if (ss) {
 	ScalarTriSurface* nss=new ScalarTriSurface;

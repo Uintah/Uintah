@@ -214,7 +214,7 @@ Module* InvEEGSolve::clone(int deep)
 void InvEEGSolve::setBdryCorticalBC(double *Phi_c, SurfTree *st, int ns, 
 				    int nc) {
     for (int i=0; i<nc; i++) {
-	st->bcVal[i+ns]=Phi_c[i+1];
+	st->data[i+ns]=Phi_c[i+1];
     }
     cerr << "WRITING FROM "<<nc<<" to "<<nc+ns<<"\n";
 
@@ -807,7 +807,7 @@ void InvEEGSolve::execute() {
     timer.start();
     for (int ns=0; ns<mesh->nodes.size() && mesh->nodes[ns]->bc != 0; ns++);
 
-    nc = st->bcIdx.size()-ns;
+    nc = st->idx.size()-ns;
     nv = mesh->nodes.size()-ns-nc;
 
     cerr << "(ns,nv,nc)="<<ns<<" "<<nv<<" "<<nc<<"\n";

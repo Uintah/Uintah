@@ -98,21 +98,21 @@ Module* Taubin::clone(int deep)
 
 void Taubin::bldNbrs() {
     st->bldNodeInfo();
-    nbrs.resize(st->nodeNbrs.size());
-    for (int i=0; i<st->nodeNbrs.size(); i++) 
-	nbrs[i].resize(st->nodeNbrs[i].size()+1);
+    nbrs.resize(st->nodeI.size());
+    for (int i=0; i<st->nodeI.size(); i++) 
+	nbrs[i].resize(st->nodeI[i].nbrs.size()+1);
 //    st->nodeNbrs;
 //    st->printNbrInfo();
     int j,k;
-    for (i=0; i<st->nodeNbrs.size(); i++) {
+    for (i=0; i<st->nodeI.size(); i++) {
 //	cerr << "i="<<i<<"  nbrsSize="<<st->nodeNbrs[i].size();
-	for (j=0, k=0; j<st->nodeNbrs[i].size(); j++, k++) {
-	    if ((st->nodeNbrs[i][j]>i) && (j==k)) {
+	for (j=0, k=0; j<st->nodeI[i].nbrs.size(); j++, k++) {
+	    if ((st->nodeI[i].nbrs[j]>i) && (j==k)) {
 		nbrs[i][k]=i;
 //		cerr << " "<<i;
 		k++;
 	    }
-	    nbrs[i][k]=st->nodeNbrs[i][j];
+	    nbrs[i][k]=st->nodeI[i].nbrs[j];
 //	    cerr << " "<<st->nodeNbrs[i][j];
 	}
 	if (j==k) {
@@ -164,31 +164,31 @@ void Taubin::bldMatrices() {
 
 void Taubin::Reset() {
     int i;
-    for (i=0; i<st->points.size(); i++) {
+    for (i=0; i<st->nodes.size(); i++) {
 	oldX[i]=origX[i];
 	oldY[i]=origY[i];
 	oldZ[i]=origZ[i];
-	st->points[i].x(oldX[i]);
-	st->points[i].y(oldY[i]);
-	st->points[i].z(oldZ[i]);
+	st->nodes[i].x(oldX[i]);
+	st->nodes[i].y(oldY[i]);
+	st->nodes[i].z(oldZ[i]);
     }
 }
 
 void Taubin::bldCols() {
     int i;
-    origX.resize(st->points.size());
-    origY.resize(st->points.size());
-    origZ.resize(st->points.size());
-    oldX.resize(st->points.size());
-    oldY.resize(st->points.size());
-    oldZ.resize(st->points.size());
-    tmpX.resize(st->points.size());
-    tmpY.resize(st->points.size());
-    tmpZ.resize(st->points.size());
-    for (i=0; i<st->points.size(); i++) {
-	origX[i]=oldX[i]=st->points[i].x();
-	origY[i]=oldY[i]=st->points[i].y();
-	origZ[i]=oldZ[i]=st->points[i].z();
+    origX.resize(st->nodes.size());
+    origY.resize(st->nodes.size());
+    origZ.resize(st->nodes.size());
+    oldX.resize(st->nodes.size());
+    oldY.resize(st->nodes.size());
+    oldZ.resize(st->nodes.size());
+    tmpX.resize(st->nodes.size());
+    tmpY.resize(st->nodes.size());
+    tmpZ.resize(st->nodes.size());
+    for (i=0; i<st->nodes.size(); i++) {
+	origX[i]=oldX[i]=st->nodes[i].x();
+	origY[i]=oldY[i]=st->nodes[i].y();
+	origZ[i]=oldZ[i]=st->nodes[i].z();
     }
 }
 
@@ -206,10 +206,10 @@ void Taubin::smooth() {
     }
 
     // copy the resultant points back into the data
-    for (int i=0; i<st->points.size(); i++) {
-	st->points[i].x(oldX[i]);
-	st->points[i].y(oldY[i]);
-	st->points[i].z(oldZ[i]);
+    for (int i=0; i<st->nodes.size(); i++) {
+	st->nodes[i].x(oldX[i]);
+	st->nodes[i].y(oldY[i]);
+	st->nodes[i].z(oldZ[i]);
     }    
 }
 

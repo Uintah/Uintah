@@ -958,7 +958,7 @@ void Coregister::setTransSurfPts(void) {
 	ts->points=trans_pts;
 	ts->normals=trans_vec;
     } else if (st) {
-	st->points=trans_pts;
+	st->nodes=trans_pts;
     } else if (ss) {
 	ss->points=trans_pts;
     }

@@ -113,10 +113,8 @@ void fldToTree(SegFld &field, SurfTree &surf) {
 
     Array1<int> visited(field.comps.size());
     Array1<int> queued(field.comps.size());
-    surf.inner.resize(field.comps.size());
-    surf.outer.resize(field.comps.size());
-    surf.surfNames.resize(field.comps.size());
-    surf.outer.initialize(-1);
+    surf.surfI.resize(field.comps.size());
+    for (i=0; i<field.comps.size(); i++) surf.surfI[i].outer=-1;
     visited.initialize(0);
     queued.initialize(0);
     for (i=0; i<touches.size(); i++) if (touches[i].size() == 0) visited[i]=1;
@@ -147,7 +145,7 @@ void fldToTree(SegFld &field, SurfTree &surf) {
 	    int outer=q.pop();
 	    int inner=q.pop();
 	    cerr << "outer="<<outer<<"   inner="<<inner<<"\n";
-	    surf.outer[inner]=outer;
+	    surf.surfI[inner].outer=outer;
 	    for (i=0; i<touches[inner].size(); i++) {
 		// if another component it touches has been visited
 		int nbr=touches[inner][i];
@@ -176,27 +174,29 @@ void fldToTree(SegFld &field, SurfTree &surf) {
     }
     // make sure everything's cool
     cerr << "Outer boundaries...\n";
-    for (i=0; i<surf.outer.size(); i++) {
-	if (surf.outer[i] != -1) {
-	    surf.inner[surf.outer[i]].add(i);
-	    cerr << "  Surface "<<i<<" is bounded by surface "<<surf.outer[i]<<"\n";
+    for (i=0; i<surf.surfI.size(); i++) {
+	if (surf.surfI[i].outer != -1) {
+	    surf.surfI[surf.surfI[i].outer].inner.add(i);
+	    cerr << "  Surface "<<i<<" is bounded by surface "<<surf.surfI[i].outer<<"\n";
 	}
     }
 
     cerr << "Inner boundaries...\n";
-    for (i=0; i<surf.inner.size(); i++) {
-	if (surf.inner[i].size() != 0) {
+    for (i=0; i<surf.surfI.size(); i++) {
+	if (surf.surfI[i].inner.size() != 0) {
 	    cerr << "  Surface "<<i<<" bounds surfaces: ";
-	    for (int j=0; j<surf.inner[i].size(); j++)
-		cerr << surf.inner[i][j] << " ";
+	    for (int j=0; j<surf.surfI[i].inner.size(); j++)
+		cerr << surf.surfI[i].inner[j] << " ";
 	    cerr << "\n";
 	}
     }
 
-    surf.surfEls.resize(field.comps.size());
-    surf.surfOrient.resize(field.comps.size());
     int p1, p2, p3, p4, p5, p6, p7, bcomp;
+    int e1, e2, e3, e4, e5, e6, e7, e8, e9, e10, e11, e12;
+    Array1<int> edges(3);
+    Array1<int> orient(3);
     HashTable<int,int>* hash = new HashTable<int,int>;
+    HashTable<int,int>* ehash = new HashTable<int,int>;
     Point min, max;
     field.get_bounds(min, max);
     Vector v((max-min)*.5);
@@ -267,56 +267,138 @@ void fldToTree(SegFld &field, SurfTree &surf) {
 #endif
 
 
+    // for each cell, look at the negative neighbors (down, back, left)
+    // if they're of a different material, build the triangles
+    // for each triangle, hash the nodes -- if they don't exist, add em
+    // we also need to build the edges -- we'll hash these too.
+
     for (i=1; i<field.nx; i++)
 	for (j=1; j<field.ny; j++)
 	    for (k=1; k<field.nz; k++) {
 		int comp=field.grid(i,j,k);
 		int pidx;
+		int eidx;
 		bcomp=field.grid(i-1,j,k);
 		if (bcomp != comp) {
 		    ii=i-1; jj=j-1; kk=k-1;
 		    pidx=(ii<<20)+(jj<<10)+kk;
 		    if (!hash->lookup(pidx, p3)) {
-			hash->insert(pidx, surf.points.size());
-			p3=surf.points.size();
-			surf.points.add(field.get_point(ii,jj,kk)+v);
+			hash->insert(pidx, surf.nodes.size());
+			p3=surf.nodes.size();
+			surf.nodes.add(field.get_point(ii,jj,kk)+v);
 		    }
 		    jj++; pidx+=1<<10;
 		    if (!hash->lookup(pidx, p1)) {
-			hash->insert(pidx, surf.points.size());
-			p1=surf.points.size();
-			surf.points.add(field.get_point(ii,jj,kk)+v);
+			hash->insert(pidx, surf.nodes.size());
+			p1=surf.nodes.size();
+			surf.nodes.add(field.get_point(ii,jj,kk)+v);
 		    }
 		    kk++; pidx++;
 		    if (!hash->lookup(pidx, p2)) {
-			hash->insert(pidx, surf.points.size());
-			p2=surf.points.size();
-			surf.points.add(field.get_point(ii,jj,kk)+v);
+			hash->insert(pidx, surf.nodes.size());
+			p2=surf.nodes.size();
+			surf.nodes.add(field.get_point(ii,jj,kk)+v);
 		    }
 		    jj--; pidx-=1<<10;
 		    if (!hash->lookup(pidx, p4)) {
-			hash->insert(pidx, surf.points.size());
-			p4=surf.points.size();
-			surf.points.add(field.get_point(ii,jj,kk)+v);
+			hash->insert(pidx, surf.nodes.size());
+			p4=surf.nodes.size();
+			surf.nodes.add(field.get_point(ii,jj,kk)+v);
 		    }
-		    int iii=surf.elements.size();
-		    surf.elements.add(new TSElement(p3, p1, p2));
-		    surf.elements.add(new TSElement(p2, p4, p3));
+		    kk--;
+
+		    eidx=(ii<<21)+(jj<<12)+(kk<<3);	// edge 1 in dir 1
+
+		    eidx+=0;
+//		    cerr << "eidx="<<eidx<<"\n";
+		    if (!ehash->lookup(eidx, e1)) {
+			ehash->insert(eidx, surf.edges.size());
+			e1=surf.edges.size();
+			surf.edges.add(new TSEdge(p3, p1));
+			surf.edgeI.resize(surf.edgeI.size()+1);
+//			cerr << "Adding edge 1 in dir 1 ("<<p3<<","<<p1<<")\n";
+		    }
+		    eidx-=0;
+
+		    eidx+=3;	// edge 3 in dir 4
+//		    cerr << "eidx="<<eidx<<"\n";
+		    if (!ehash->lookup(eidx, e3)) {
+			ehash->insert(eidx, surf.edges.size());
+			e3=surf.edges.size();
+			surf.edges.add(new TSEdge(p3, p2));
+			surf.edgeI.resize(surf.edgeI.size()+1);
+//			cerr << "Adding edge 3 in dir 4 ("<<p3<<","<<p2<<")\n";
+		    }
+		    eidx-=3;
+
+		    eidx+=1;	// edge 5 in dir 2
+//		    cerr << "eidx="<<eidx<<"\n";
+		    if (!ehash->lookup(eidx, e5)) {
+			ehash->insert(eidx, surf.edges.size());
+			e5=surf.edges.size();
+			surf.edges.add(new TSEdge(p3, p4));
+			surf.edgeI.resize(surf.edgeI.size()+1);
+//			cerr << "Adding edge 5 in dir 2 ("<<p3<<","<<p4<<")\n";
+		    }
+		    eidx-=1;
+
+		    eidx+=((1<<12)+1); // j++ -> edge 2 in dir 2
+//		    cerr << "eidx="<<eidx<<"\n";
+		    if (!ehash->lookup(eidx, e2)) {
+			ehash->insert(eidx, surf.edges.size());
+			e2=surf.edges.size();
+			surf.edges.add(new TSEdge(p1, p2));
+			surf.edgeI.resize(surf.edgeI.size()+1);
+//			cerr << "Adding edge 2 in dir 2 ("<<p1<<","<<p2<<")\n";
+		    }
+		    eidx-=((1<<12)+1);
+
+		    eidx+=(1<<3);  // k++ -> edge 4 in dir 1
+//		    cerr << "eidx="<<eidx<<"\n";
+		    if (!ehash->lookup(eidx, e4)) {
+			ehash->insert(eidx, surf.edges.size());
+			e4=surf.edges.size();
+			surf.edges.add(new TSEdge(p4, p2));
+			surf.edgeI.resize(surf.edgeI.size()+1);
+//			cerr << "Adding edge 4 in dir 1 ("<<p4<<","<<p2<<")\n";
+		    }
+		    eidx-=(1<<3);
+
+		    int iii=surf.faces.size();
+
+		    surf.edgeI[e2].faces.add(iii);
+		    surf.edgeI[e3].faces.add(iii);
+		    surf.edgeI[e1].faces.add(iii);
+		    surf.faces.add(new TSElement(p3, p1, p2));
+		    edges[0]=e2; edges[1]=e3; edges[2]=e1;
+		    orient[0]=1; orient[1]=0; orient[2]=1;
+		    surf.faceI.resize(surf.faceI.size()+2);
+		    surf.faceI[iii].edges = edges; 
+		    surf.faceI[iii].edgeOrient = orient;
+		    surf.edgeI[e5].faces.add(iii+1);
+		    surf.edgeI[e3].faces.add(iii+1);
+		    surf.edgeI[e4].faces.add(iii+1);
+		    surf.faces.add(new TSElement(p2, p4, p3));
+		    edges[0]=e5; edges[1]=e3; edges[2]=e4;
+		    orient[0]=0; orient[1]=1; orient[2]=0;
+		    surf.faceI[iii+1].edges = edges; 
+		    surf.faceI[iii+1].edgeOrient = orient;
+		    
 //		    if (surf.outer[comp]!=bcomp) {
-			surf.surfEls[bcomp].add(iii);
-			surf.surfEls[bcomp].add(iii+1);
-//			surf.surfOrient[bcomp].add(comp>bcomp);
-//			surf.surfOrient[bcomp].add(comp>bcomp);
-			surf.surfOrient[bcomp].add(1);
-			surf.surfOrient[bcomp].add(1);
+			surf.surfI[bcomp].faces.add(iii);
+			surf.surfI[bcomp].faces.add(iii+1);
+//			surf.surfI[bcomp].faceOrient.add(comp>bcomp);
+//			surf.surfI[bcomp].faceOrient.add(comp>bcomp);
+			surf.surfI[bcomp].faceOrient.add(1);
+			surf.surfI[bcomp].faceOrient.add(1);
 //		    }
 //		    if (surf.outer[bcomp]!=comp) {
-			surf.surfEls[comp].add(iii);
-			surf.surfEls[comp].add(iii+1);
-//			surf.surfOrient[comp].add(bcomp>comp);
-//			surf.surfOrient[comp].add(bcomp>comp);
-			surf.surfOrient[comp].add(0);
-			surf.surfOrient[comp].add(0);
+			surf.surfI[comp].faces.add(iii);
+			surf.surfI[comp].faces.add(iii+1);
+//			surf.surfI[comp].faceOrient.add(bcomp>comp);
+//			surf.surfI[comp].faceOrient.add(bcomp>comp);
+			surf.surfI[comp].faceOrient.add(0);
+			surf.surfI[comp].faceOrient.add(0);
 //		    }
 		}
 		bcomp=field.grid(i,j-1,k);
@@ -324,47 +406,122 @@ void fldToTree(SegFld &field, SurfTree &surf) {
 		    ii=i-1; jj=j-1; kk=k-1;
 		    pidx=(ii<<20)+(jj<<10)+kk;
 		    if (!hash->lookup(pidx, p3)) {
-			hash->insert(pidx, surf.points.size());
-			p3=surf.points.size();
-			surf.points.add(field.get_point(ii,jj,kk)+v);
+			hash->insert(pidx, surf.nodes.size());
+			p3=surf.nodes.size();
+			surf.nodes.add(field.get_point(ii,jj,kk)+v);
 		    }
 		    ii++; pidx+=1<<20;
 		    if (!hash->lookup(pidx, p5)) {
-			hash->insert(pidx, surf.points.size());
-			p5=surf.points.size();
-			surf.points.add(field.get_point(ii,jj,kk)+v);
+			hash->insert(pidx, surf.nodes.size());
+			p5=surf.nodes.size();
+			surf.nodes.add(field.get_point(ii,jj,kk)+v);
 		    }
 		    kk++; pidx++;
 		    if (!hash->lookup(pidx, p6)) {
-			hash->insert(pidx, surf.points.size());
-			p6=surf.points.size();
-			surf.points.add(field.get_point(ii,jj,kk)+v);
+			hash->insert(pidx, surf.nodes.size());
+			p6=surf.nodes.size();
+			surf.nodes.add(field.get_point(ii,jj,kk)+v);
 		    }
 		    ii--; pidx-=1<<20;
 		    if (!hash->lookup(pidx, p4)) {
-			hash->insert(pidx, surf.points.size());
-			p4=surf.points.size();
-			surf.points.add(field.get_point(ii,jj,kk)+v);
+			hash->insert(pidx, surf.nodes.size());
+			p4=surf.nodes.size();
+			surf.nodes.add(field.get_point(ii,jj,kk)+v);
 		    }
-		    int iii=surf.elements.size();
-		    surf.elements.add(new TSElement(p6, p5, p3));
-		    surf.elements.add(new TSElement(p3, p4, p6));
+		    kk--;
+
+		    eidx=(ii<<21)+(jj<<12)+(kk<<3);
+
+		    eidx+=1;	// edge 5 in dir 2
+//		    cerr << "eidx="<<eidx<<"\n";
+		    if (!ehash->lookup(eidx, e5)) {
+			ehash->insert(eidx, surf.edges.size());
+			e5=surf.edges.size();
+			surf.edges.add(new TSEdge(p3, p4));
+			surf.edgeI.resize(surf.edgeI.size()+1);
+//			cerr << "Adding edge 5 in dir 2 ("<<p3<<","<<p4<<")\n";
+		    }
+		    eidx-=1;
+
+		    eidx+=4;	// edge 7 in dir 5
+//		    cerr << "eidx="<<eidx<<"\n";
+		    if (!ehash->lookup(eidx, e7)) {
+			ehash->insert(eidx, surf.edges.size());
+			e7=surf.edges.size();
+			surf.edges.add(new TSEdge(p3, p6));
+			surf.edgeI.resize(surf.edgeI.size()+1);
+//			cerr << "Adding edge 7 in dir 5 ("<<p3<<","<<p6<<")\n";
+		    }
+		    eidx-=4;
+
+		    eidx+=2;	// edge 6 in dir 3
+//		    cerr << "eidx="<<eidx<<"\n";
+		    if (!ehash->lookup(eidx, e6)) {
+			ehash->insert(eidx, surf.edges.size());
+			e6=surf.edges.size();
+			surf.edges.add(new TSEdge(p3, p5));
+			surf.edgeI.resize(surf.edgeI.size()+1);
+//			cerr << "Adding edge 6 in dir 3 ("<<p3<<","<<p5<<")\n";
+		    }		    
+		    eidx-=2;
+
+		    eidx+=((1<<3)+2);	// k++ -> edge 9 in dir 3
+//		    cerr << "eidx="<<eidx<<"\n";
+		    if (!ehash->lookup(eidx, e9)) {
+			ehash->insert(eidx, surf.edges.size());
+			e9=surf.edges.size();
+			surf.edges.add(new TSEdge(p4, p6));
+			surf.edgeI.resize(surf.edgeI.size()+1);
+//			cerr << "Adding edge 9 in dir 3 ("<<p4<<","<<p6<<")\n";
+		    }
+		    eidx-=((1<<3)+2);
+		    
+		    eidx+=((1<<21)+1);  // i++ -> edge 8 in dir 2
+//		    cerr << "eidx="<<eidx<<"\n";
+		    if (!ehash->lookup(eidx, e8)) {
+			ehash->insert(eidx, surf.edges.size());
+			e8=surf.edges.size();
+			surf.edges.add(new TSEdge(p5, p6));
+			surf.edgeI.resize(surf.edgeI.size()+1);
+//			cerr << "Adding edge 8 in dir 2 ("<<p5<<","<<p6<<")\n";
+		    }
+		    eidx-=((1<<21)+1);
+			
+		    int iii=surf.faces.size();
+
+		    surf.edgeI[e6].faces.add(iii);
+		    surf.edgeI[e7].faces.add(iii);
+		    surf.edgeI[e8].faces.add(iii);
+		    surf.faces.add(new TSElement(p6, p5, p3));
+		    edges[0]=e6; edges[1]=e7; edges[2]=e8;
+		    orient[0]=0; orient[1]=1; orient[2]=0;
+		    surf.faceI.resize(surf.faceI.size()+2);
+		    surf.faceI[iii].edges = edges; 
+		    surf.faceI[iii].edgeOrient = orient;
+		    surf.edgeI[e9].faces.add(iii+1);
+		    surf.edgeI[e7].faces.add(iii+1);
+		    surf.edgeI[e5].faces.add(iii+1);
+		    surf.faces.add(new TSElement(p3, p4, p6));
+		    edges[0]=e9; edges[1]=e7; edges[2]=e5;
+		    orient[0]=1; orient[1]=0; orient[2]=1;
+		    surf.faceI[iii+1].edges = edges; 
+		    surf.faceI[iii+1].edgeOrient = orient;
 
 //		    if (surf.outer[comp]!=bcomp) {
-			surf.surfEls[bcomp].add(iii);
-			surf.surfEls[bcomp].add(iii+1);
-//			surf.surfOrient[bcomp].add(comp>bcomp);
-//			surf.surfOrient[bcomp].add(comp>bcomp);
-			surf.surfOrient[bcomp].add(1);
-			surf.surfOrient[bcomp].add(1);
+			surf.surfI[bcomp].faces.add(iii);
+			surf.surfI[bcomp].faces.add(iii+1);
+//			surf.surfI[bcomp].faceOrient.add(comp>bcomp);
+//			surf.surfI[bcomp].faceOrient.add(comp>bcomp);
+			surf.surfI[bcomp].faceOrient.add(1);
+			surf.surfI[bcomp].faceOrient.add(1);
 //		    }
 //		    if (surf.outer[bcomp]!=comp) {
-			surf.surfEls[comp].add(iii);
-			surf.surfEls[comp].add(iii+1);
-//			surf.surfOrient[comp].add(bcomp>comp);
-//			surf.surfOrient[comp].add(bcomp>comp);
-			surf.surfOrient[comp].add(0);
-			surf.surfOrient[comp].add(0);
+			surf.surfI[comp].faces.add(iii);
+			surf.surfI[comp].faces.add(iii+1);
+//			surf.surfI[comp].faceOrient.add(bcomp>comp);
+//			surf.surfI[comp].faceOrient.add(bcomp>comp);
+			surf.surfI[comp].faceOrient.add(0);
+			surf.surfI[comp].faceOrient.add(0);
 //		    }
 		}
 		bcomp=field.grid(i,j,k-1);
@@ -372,51 +529,126 @@ void fldToTree(SegFld &field, SurfTree &surf) {
 		    ii=i-1; jj=j-1; kk=k-1;
 		    pidx=(ii<<20)+(jj<<10)+kk;
 		    if (!hash->lookup(pidx, p3)) {
-			hash->insert(pidx, surf.points.size());
-			p3=surf.points.size();
-			surf.points.add(field.get_point(ii,jj,kk)+v);
+			hash->insert(pidx, surf.nodes.size());
+			p3=surf.nodes.size();
+			surf.nodes.add(field.get_point(ii,jj,kk)+v);
 		    }
 		    ii++; pidx+=1<<20;
 		    if (!hash->lookup(pidx, p5)) {
-			hash->insert(pidx, surf.points.size());
-			p5=surf.points.size();
-			surf.points.add(field.get_point(ii,jj,kk)+v);
+			hash->insert(pidx, surf.nodes.size());
+			p5=surf.nodes.size();
+			surf.nodes.add(field.get_point(ii,jj,kk)+v);
 		    }
 		    jj++; pidx+=1<<10;
 		    if (!hash->lookup(pidx, p7)) {
-			hash->insert(pidx, surf.points.size());
-			p7=surf.points.size();
-			surf.points.add(field.get_point(ii,jj,kk)+v);
+			hash->insert(pidx, surf.nodes.size());
+			p7=surf.nodes.size();
+			surf.nodes.add(field.get_point(ii,jj,kk)+v);
 		    }
 		    ii--; pidx-=1<<20;
 		    if (!hash->lookup(pidx, p1)) {
-			hash->insert(pidx, surf.points.size());
-			p1=surf.points.size();
-			surf.points.add(field.get_point(ii,jj,kk)+v);
+			hash->insert(pidx, surf.nodes.size());
+			p1=surf.nodes.size();
+			surf.nodes.add(field.get_point(ii,jj,kk)+v);
 		    }
-		    int iii=surf.elements.size();
-		    surf.elements.add(new TSElement(p3, p5, p7));
-		    surf.elements.add(new TSElement(p7, p1, p3));
+		    jj--;
+
+		    eidx=(ii<<21)+(jj<<12)+(kk<<3);	// edge 1 in dir 1
+
+		    eidx+=0;
+//		    cerr << "eidx="<<eidx<<"\n";
+		    if (!ehash->lookup(eidx, e1)) {
+			ehash->insert(eidx, surf.edges.size());
+			e1=surf.edges.size();
+			surf.edges.add(new TSEdge(p3, p1));
+			surf.edgeI.resize(surf.edgeI.size()+1);
+//			cerr << "Adding edge 1 in dir 1 ("<<p3<<","<<p1<<")\n";
+		    }
+		    eidx-=0;
+
+		    eidx+=5;	// edge 11 in dir 6
+//		    cerr << "eidx="<<eidx<<"\n";
+		    if (!ehash->lookup(eidx, e11)) {
+			ehash->insert(eidx, surf.edges.size());
+			e11=surf.edges.size();
+			surf.edges.add(new TSEdge(p3, p7));
+			surf.edgeI.resize(surf.edgeI.size()+1);
+//			cerr << "Adding edge 11 in dir 6 ("<<p3<<","<<p7<<")\n";
+		    }
+		    eidx-=5;
+
+		    eidx+=2;	// edge 6 in dir 3
+//		    cerr << "eidx="<<eidx<<"\n";
+		    if (!ehash->lookup(eidx, e6)) {
+			ehash->insert(eidx, surf.edges.size());
+			e6=surf.edges.size();
+			surf.edges.add(new TSEdge(p3, p5));
+			surf.edgeI.resize(surf.edgeI.size()+1);
+//			cerr << "Adding edge 6 in dir 3 ("<<p3<<","<<p5<<")\n";
+		    }		    
+		    eidx-=2;
+
+		    eidx+=((1<<12)+2);	// j++ -> edge 12 in dir 3
+//		    cerr << "eidx="<<eidx<<"\n";
+		    if (!ehash->lookup(eidx, e12)) {
+			ehash->insert(eidx, surf.edges.size());
+			e12=surf.edges.size();
+			surf.edges.add(new TSEdge(p1, p7));
+			surf.edgeI.resize(surf.edgeI.size()+1);
+//			cerr << "Adding edge 12 in dir 3 ("<<p1<<","<<p7<<")\n";
+		    }
+		    eidx-=((1<<12)+2);
+
+		    eidx+=(1<<21);  	// i++ -> edge 10 in dir 1
+//		    cerr << "eidx="<<eidx<<"\n";
+		    if (!ehash->lookup(eidx, e10)) {
+			ehash->insert(eidx, surf.edges.size());
+			e10=surf.edges.size();
+			surf.edges.add(new TSEdge(p5, p7));
+			surf.edgeI.resize(surf.edgeI.size()+1);
+//			cerr << "Adding edge 10 in dir 1 ("<<p5<<","<<p7<<")\n";
+		    }
+		    eidx-=(1<<21);
+
+		    int iii=surf.faces.size();
+
+		    surf.edgeI[e10].faces.add(iii);
+		    surf.edgeI[e11].faces.add(iii);
+		    surf.edgeI[e6].faces.add(iii);
+		    surf.faces.add(new TSElement(p3, p5, p7));
+		    edges[0]=e10; edges[1]=e11; edges[2]=e6;
+		    orient[0]=1; orient[1]=0; orient[2]=1;
+		    surf.faceI.resize(surf.faceI.size()+2);
+		    surf.faceI[iii].edges = edges; 
+		    surf.faceI[iii].edgeOrient = orient;
+		    surf.edgeI[e1].faces.add(iii+1);
+		    surf.edgeI[e11].faces.add(iii+1);
+		    surf.edgeI[e12].faces.add(iii+1);
+		    surf.faces.add(new TSElement(p7, p1, p3));
+		    edges[0]=e1; edges[1]=e11; edges[2]=e12;
+		    orient[0]=0; orient[1]=1; orient[2]=0;
+		    surf.faceI[iii+1].edges = edges; 
+		    surf.faceI[iii+1].edgeOrient = orient;
+
 //		    if (surf.outer[comp]!=bcomp) {
-			surf.surfEls[bcomp].add(iii);
-			surf.surfEls[bcomp].add(iii+1);
-//			surf.surfOrient[bcomp].add(comp>bcomp);
-//			surf.surfOrient[bcomp].add(comp>bcomp);
-			surf.surfOrient[bcomp].add(1);
-			surf.surfOrient[bcomp].add(1);
+			surf.surfI[bcomp].faces.add(iii);
+			surf.surfI[bcomp].faces.add(iii+1);
+//			surf.surfI[bcomp].faceOrient.add(comp>bcomp);
+//			surf.surfI[bcomp].faceOrient.add(comp>bcomp);
+			surf.surfI[bcomp].faceOrient.add(1);
+			surf.surfI[bcomp].faceOrient.add(1);
 //		    }
 //		    if (surf.outer[bcomp]!=comp) {
-			surf.surfEls[comp].add(iii);
-			surf.surfEls[comp].add(iii+1);
-//			surf.surfOrient[comp].add(bcomp>comp);
-//			surf.surfOrient[comp].add(bcomp>comp);
-			surf.surfOrient[comp].add(0);
-			surf.surfOrient[comp].add(0);
+			surf.surfI[comp].faces.add(iii);
+			surf.surfI[comp].faces.add(iii+1);
+//			surf.surfI[comp].faceOrient.add(bcomp>comp);
+//			surf.surfI[comp].faceOrient.add(bcomp>comp);
+			surf.surfI[comp].faceOrient.add(0);
+			surf.surfI[comp].faceOrient.add(0);
 //		    }
 		}
 	    }
 
-    surf.matl.resize(field.comps.size());
     int bigGreyIdx=-1;
     int bigGreySize=-1;
     int bigWhiteIdx=-1;
@@ -425,7 +657,7 @@ void fldToTree(SegFld &field, SurfTree &surf) {
 	if (field.comps[i]) {
 	    int thisType=field.get_type(field.comps[i]);
 	    int thisSize=field.get_size(field.comps[i]);
-	    surf.matl[i]=thisType;
+	    surf.surfI[i].matl=thisType;
 	    if (thisType==4 && thisSize>bigGreySize) {
 		bigGreyIdx=i;
 		bigGreySize=thisSize;
@@ -434,17 +666,17 @@ void fldToTree(SegFld &field, SurfTree &surf) {
 		bigWhiteSize=thisSize;
 	    }
 	}
-	else surf.matl[i]=-1;
-	cerr << "surf.matl["<<i<<"]="<<surf.matl[i]<<"\n";
+	else surf.surfI[i].matl=-1;
+	cerr << "surf.matl["<<i<<"]="<<surf.surfI[i].matl<<"\n";
     }
-    if (surf.outer.size()>1 && surf.outer[1] == 0)
-        surf.surfNames[1]="scalpAll";
-    surf.surfNames[0]="scalp";
+    if (surf.surfI.size()>1 && surf.surfI[1].outer == 0)
+        surf.surfI[1].name="scalpAll";
+    surf.surfI[0].name="scalp";
     if (bigGreyIdx != -1) {
-        surf.surfNames[bigGreyIdx]="cortex";
+        surf.surfI[bigGreyIdx].name="cortex";
 	cerr << "**** Biggest grey matter (material 4) is region "<<bigGreyIdx<<"\n";
 
-	if (surf.inner[bigGreyIdx].size()) {
+	if (surf.surfI[bigGreyIdx].inner.size()) {
 	    cerr << "**** WARNING: this region contains inner regions!\n";
 	}
     } else {
@@ -452,7 +684,7 @@ void fldToTree(SegFld &field, SurfTree &surf) {
     }
     if (bigWhiteIdx != -1) {
 	cerr << "**** Biggest white matter (material 5) is region "<<bigWhiteIdx<<"\n";
-	if (surf.inner[bigWhiteIdx].size()) {
+	if (surf.surfI[bigWhiteIdx].inner.size()) {
 	    cerr << "**** WARNING: this region contains inner regions!\n";
 	}
     } else {

@@ -43,7 +43,7 @@ Module* make_SurfExtractBCNodes(const clString& id)
 {
     return new SurfExtractBCNodes(id);
 }
-};
+}
 
 static clString module_name("SurfExtractBCNodes");
 

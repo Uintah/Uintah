@@ -148,7 +148,7 @@ void RescaleSurface::execute()
     } else if (st) {
 	SurfTree* nst=new SurfTree;
 	*nst=*st;
-	nst->points=pts;
+	nst->nodes=pts;
 	osh=nst;
     } else if (ss) {
 	ScalarTriSurface* nss=new ScalarTriSurface;

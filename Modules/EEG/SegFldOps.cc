@@ -34,7 +34,7 @@ public:
     TCLstring itype;
     TCLstring meth;
     TCLint sendCharFlag;
-    TCLint annexSize;
+    TCLint assimilateSize;
 
     void tcl_command( TCLArgs&, void * );
     SegFldOps(const clString& id);
@@ -54,7 +54,7 @@ Module* make_SegFldOps(const clString& id)
 SegFldOps::SegFldOps(const clString& id)
 : Module("SegFldOps", id, Filter), itype("itype", id, this), 
   meth("meth", id, this), sendCharFlag("sendCharFlag", id, this),
-  annexSize("annexSize", id, this)
+  assimilateSize("assimilateSize", id, this)
 {
     iscl=new ScalarFieldIPort(this, "ScalarIn", ScalarFieldIPort::Atomic);
     add_iport(iscl);
@@ -74,7 +74,7 @@ SegFldOps::SegFldOps(const clString& id)
 SegFldOps::SegFldOps(const SegFldOps& copy, int deep)
 : Module(copy, deep), itype("itype", id, this), 
   meth("meth", id, this), sendCharFlag("sendCharFlag", id, this),
-  annexSize("annexSize", id, this)
+  assimilateSize("assimilateSize", id, this)
 {
 }
 
@@ -133,10 +133,10 @@ void SegFldOps::execute()
     lastType=itype.get();
 
     if (tcl_exec) {
-	if (meth.get()=="annex") {
-	    int ann=annexSize.get();
-	    if (ann>0) {
-		segFldHandle->killSmallComponents(ann);
+	if (meth.get()=="assimilate") {
+	    int asize=assimilateSize.get();
+	    if (asize>0) {
+		segFldHandle->killSmallComponents(asize);
 	    }
 	}
     }

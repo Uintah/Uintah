@@ -65,7 +65,7 @@ Module* make_SurfInterpVals(const clString& id)
 {
     return new SurfInterpVals(id);
 }
-};
+}
 
 static clString module_name("SurfInterpVals");
 
@@ -146,12 +146,12 @@ void SurfInterpVals::execute()
 	    int ok;
 	    ok = sid.get_int(comp);
 	    if (!ok) {
-		for (comp=0; comp<st->surfNames.size(); comp++) {
-		    if (st->surfNames[comp] == sid) {
+		for (comp=0; comp<st->surfI.size(); comp++) {
+		    if (st->surfI[comp].name == sid) {
 			break;
 		    }
 		}
-		if (comp == st->surfNames.size()) {
+		if (comp == st->surfI.size()) {
 		    cerr << "Error: bad surface name "<<sid<<"\n";
 		    return;
 		}
@@ -197,12 +197,12 @@ void SurfInterpVals::execute()
 	    int ok;
 	    ok = sid.get_int(comp);
 	    if (!ok) {
-		for (comp=0; comp<st->surfNames.size(); comp++) {
-		    if (st->surfNames[comp] == sid) {
+		for (comp=0; comp<st->surfI.size(); comp++) {
+		    if (st->surfI[comp].name == sid) {
 			break;
 		    }
 		}
-		if (comp == st->surfNames.size()) {
+		if (comp == st->surfI.size()) {
 		    cerr << "Error: bad surface name "<<sid<<"\n";
 		    return;
 		}
@@ -213,9 +213,9 @@ void SurfInterpVals::execute()
 		cerr << "Error, couldn't extract triSurface.\n";
 		return;
 	    } else {
-		if (st->bcVal.size() == ts->bcVal.size()) {
-		    st->bcVal.resize(0);
-		    st->bcIdx.resize(0);
+		if (st->data.size() == ts->bcIdx.size()) {
+		    st->data.resize(0);
+		    st->idx.resize(0);
 		}
 //		cerr << "Got surface "<<comp<<" out of st.  ST had "<<st->bcVal.size()<<" bcs.  TS has "<<ts->bcVal.size()<<"\n";
 	    }
@@ -361,17 +361,17 @@ void SurfInterpVals::execute()
 	if (st=sh->getSurfTree()) {
 	    Array1<int> seen(ts->bcVal.size());
 	    seen.initialize(0);
-	    for (int aa=0; aa<st->bcIdx.size(); aa++) {
-		if (map[st->bcIdx[aa]] != -1) {
+	    for (int aa=0; aa<st->idx.size(); aa++) {
+		if (map[st->idx[aa]] != -1) {
 		    // this node is already known to have a value -- set it
-		    st->bcVal[aa]=ts->bcVal[map[st->bcIdx[aa]]];
+		    st->data[aa]=ts->bcVal[map[st->idx[aa]]];
 		    seen[aa]=1;
 		}
 	    }
 	    for (aa=0; aa<ts->bcVal.size(); aa++) {
 		if (!seen[aa]) { // this one didn't have a value yet -- add it
-		    st->bcIdx.add(imap[ts->bcIdx[aa]]);
-		    st->bcVal.add(ts->bcVal[aa]);
+		    st->idx.add(imap[ts->bcIdx[aa]]);
+		    st->data.add(ts->bcVal[aa]);
 		}
 	    }
 	    delete ts;

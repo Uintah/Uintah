@@ -79,25 +79,26 @@ Module* LabelSurface::clone(int deep)
 void LabelSurface::execute()
 {
     SurfaceHandle iSurf;
-
+    int i;
     if(!iport->get(iSurf))
 	return;
     SurfTree* st=iSurf->getSurfTree();
     TriSurface *ts=iSurf->getTriSurface();
     if (st) {
       if (st->generation != generation) {
-	if (st->surfNames.size() != st->surfEls.size()) 
-	  st->surfNames.resize(st->surfEls.size());
-	origNames = st->surfNames;
+	  origNames.resize(0);
+	  for (i=0; i<st->surfI.size(); i++) origNames.add(st->surfI[i].name);
       }
       int fnum=numberf.get();
       clString fname=namef.get();
-
-      st->surfNames=origNames;
       
-      if (fnum>0 && fnum<st->surfNames.size() && st->surfNames[fnum] != fname) {
+      for (i=0; i<st->surfI.size(); i++)
+	  st->surfI[i].name=origNames[i];
+      
+      if (fnum>0 && fnum<st->surfI.size() && 
+	  st->surfI[fnum].name != fname) {
 	cerr << "Added label: "<<fname<<" to surface number: "<<fnum<<"\n";
-	st->surfNames[fnum]=fname;
+	st->surfI[fnum].name=fname;
       }
     } else if (ts) {
       ts->name = namef.get();

@@ -224,7 +224,7 @@ void SurfToGeom::execute()
 			for (int i=0; i< ts->points.size(); i++) {
 			    double interp;
 			    MaterialHandle mat1;
-			    int ok=1;
+//			    int ok=1;
 			    int ix=0;
 			    if (sfield->interpolate(ts->points[ts->elements[i]->i1], 
 						    interp, ix, 1.e-4, 1.e-4)){
@@ -281,7 +281,7 @@ void SurfToGeom::execute()
 			    clr[ts->bcIdx[q]]=cmap->lookup(ts->bcVal[q]);
 			}
 			for (int i=0; i< ts->points.size(); i++) {
-			    double interp;
+//			    double interp;
 			    MaterialHandle mat1;
 			    int i1=i;
 			    if (used[i1]!=-1) {
@@ -321,7 +321,7 @@ void SurfToGeom::execute()
 	    int nrm=normals.get();
 	    if (nrm) ts->bldNormals(TriSurface::VertexType);
 
-	    int i;
+//	    int i;
 //	    for (i=0; i<ts->nodeNormals.size(); i+=100) {
 //		cerr << i<<": "<<ts->nodeNormals[i]<<"\n";
 //	    }
@@ -453,7 +453,7 @@ void SurfToGeom::execute()
 		    }
 		    for (int i=0; i< ts->elements.size(); i++) {
 			if (!(i%500)) update_progress(i,ts->elements.size());
-			double interp;
+//			double interp;
 			Color mat1,mat2,mat3;
 			int i1=ts->elements[i]->i1; 
 			int i2=ts->elements[i]->i2;
@@ -534,18 +534,16 @@ void SurfToGeom::execute()
 	    }
 	}
     } else if (st) {
-	if (st->surfNames.size() != st->surfEls.size()) 
-	    st->surfNames.resize(st->surfEls.size());
 	if (nodes.get()) {
 	    if (!sph) { 
-		ptsGroup=new GeomPts(3*st->points.size());
-		ptsGroup->pts.resize(3*st->points.size());
+		ptsGroup=new GeomPts(3*st->nodes.size());
+		ptsGroup->pts.resize(3*st->nodes.size());
 	    }		
-	    for (int i=0; i<st->points.size(); i++) {
+	    for (int i=0; i<st->nodes.size(); i++) {
 		if (sph) {
-		    spheres->add(scinew GeomSphere(st->points[i], radius, res, res));
+		    spheres->add(scinew GeomSphere(st->nodes[i], radius, res, res));
 		} else {	     
-		    Point newP=st->points[i];
+		    Point newP=st->nodes[i];
 		    ptsGroup->pts[i*3]=newP.x();
 		    ptsGroup->pts[i*3+1]=newP.y();
 		    ptsGroup->pts[i*3+2]=newP.z();
@@ -555,53 +553,55 @@ void SurfToGeom::execute()
 	    int nrm=normals.get();
 	    if (nrm) {
 		st->bldNormals();
-		VPMgroup.resize(st->surfEls.size());
+		VPMgroup.resize(st->surfI.size());
 		for (int i=0; i<VPMgroup.size(); i++)
 		    VPMgroup[i] = scinew GeomTrianglesVP;
-		for (i=0; i< st->surfEls.size(); i++) {
-		    if (!st->surfEls[i].size()) continue;
-		    for (int j=0; j < st->surfEls[i].size(); j++) {
-			int elIdx=st->surfEls[i][j];
-			int i1=st->elements[elIdx]->i1;
-			int i2=st->elements[elIdx]->i2;
-			int i3=st->elements[elIdx]->i3;
-			if (st->surfOrient.size()>i && 
-			    st->surfOrient[i].size()>j && st->surfOrient[i][j])
-			    VPMgroup[i]->add(st->points[i1], 
-					     st->nodeNormals[i][i1],
-					     st->points[i2],
-					     st->nodeNormals[i][i2],
-					     st->points[i3],
-					     st->nodeNormals[i][i3]);
+		for (i=0; i< st->surfI.size(); i++) {
+		    if (!st->surfI[i].faces.size()) continue;
+		    for (int j=0; j < st->surfI[i].faces.size(); j++) {
+			int elIdx=st->surfI[i].faces[j];
+			int i1=st->faces[elIdx]->i1;
+			int i2=st->faces[elIdx]->i2;
+			int i3=st->faces[elIdx]->i3;
+			if (st->surfI.size()>i && 
+			    st->surfI[i].faceOrient.size()>j && 
+			    st->surfI[i].faceOrient[j])
+			    VPMgroup[i]->add(st->nodes[i1], 
+					     st->surfI[i].nodeNormals[i1],
+					     st->nodes[i2],
+					     st->surfI[i].nodeNormals[i2],
+					     st->nodes[i3],
+					     st->surfI[i].nodeNormals[i3]);
 			else	
-			    VPMgroup[i]->add(st->points[i1], 
-					     st->nodeNormals[i][i1],
-					     st->points[i3],
-					     st->nodeNormals[i][i3],
-					     st->points[i2],
-					     st->nodeNormals[i][i2]);
+			    VPMgroup[i]->add(st->nodes[i1], 
+					     st->surfI[i].nodeNormals[i1],
+					     st->nodes[i3],
+					     st->surfI[i].nodeNormals[i3],
+					     st->nodes[i2],
+					     st->surfI[i].nodeNormals[i2]);
 		    }	
 		}	
 	    } else {
-		PMgroup.resize(st->surfEls.size());
+		PMgroup.resize(st->surfI.size());
 		for (int i=0; i<PMgroup.size(); i++)
 		    PMgroup[i] = scinew GeomTrianglesP;
-		for (i=0; i< st->surfEls.size(); i++) {
-		    if (!st->surfEls[i].size()) continue;
-		    for (int j=0; j < st->surfEls[i].size(); j++) {
-			int elIdx=st->surfEls[i][j];
-			int i1=st->elements[elIdx]->i1;
-			int i2=st->elements[elIdx]->i2;
-			int i3=st->elements[elIdx]->i3;
-			if (st->surfOrient.size()>i && 
-			    st->surfOrient[i].size()>j && st->surfOrient[i][j])
-			    PMgroup[i]->add(st->points[i1], 
-					    st->points[i2],
-					    st->points[i3]);
+		for (i=0; i< st->surfI.size(); i++) {
+		    if (!st->surfI[i].faces.size()) continue;
+		    for (int j=0; j < st->surfI[i].faces.size(); j++) {
+			int elIdx=st->surfI[i].faces[j];
+			int i1=st->faces[elIdx]->i1;
+			int i2=st->faces[elIdx]->i2;
+			int i3=st->faces[elIdx]->i3;
+			if (st->surfI.size()>i && 
+			    st->surfI[i].faceOrient.size()>j && 
+			    st->surfI[i].faceOrient[j])
+			    PMgroup[i]->add(st->nodes[i1], 
+					    st->nodes[i2],
+					    st->nodes[i3]);
 			else	
-			    PMgroup[i]->add(st->points[i1], 
-					    st->points[i3],
-					    st->points[i2]);
+			    PMgroup[i]->add(st->nodes[i1], 
+					    st->nodes[i3],
+					    st->nodes[i2]);
 		    }	
 		}	
 	    }
@@ -633,20 +633,20 @@ void SurfToGeom::execute()
     int nmd = named.get();
     for (int i=0; i<PMgroup.size(); i++)
 	if (PMgroup[i]->size()) {
-	    if (st && st->surfNames[i] != clString("")) {
-		ogeom->addObj(scinew GeomMaterial(PMgroup[i], c[(st->matl[i])%7]), st->surfNames[i]);
+	    if (st && st->surfI[i].name != clString("")) {
+		ogeom->addObj(scinew GeomMaterial(PMgroup[i], c[(st->surfI[i].matl)%7]), st->surfI[i].name);
 	    } else {
 		if (st && !nmd)
-		    ogeom->addObj(scinew GeomMaterial(PMgroup[i], c[(st->matl[i])%7]), clString("Surface ")+to_string(i));
+		    ogeom->addObj(scinew GeomMaterial(PMgroup[i], c[(st->surfI[i].matl)%7]), clString("Surface ")+to_string(i));
 	    }
 	}
     for (i=0; i<VPMgroup.size(); i++)
 	if (VPMgroup[i]->size()) {
-	    if (st && st->surfNames[i] != clString("")) {
-		ogeom->addObj(scinew GeomMaterial(VPMgroup[i], c[(st->matl[i])%7]), st->surfNames[i]);
+	    if (st && st->surfI[i].name != clString("")) {
+		ogeom->addObj(scinew GeomMaterial(VPMgroup[i], c[(st->surfI[i].matl)%7]), st->surfI[i].name);
 	    } else {
 		if (st && !nmd)
-		    ogeom->addObj(scinew GeomMaterial(VPMgroup[i], c[(st->matl[i])%7]), clString("Surface ")+to_string(i));
+		    ogeom->addObj(scinew GeomMaterial(VPMgroup[i], c[(st->surfI[i].matl)%7]), clString("Surface ")+to_string(i));
 	    }
 	}
 }

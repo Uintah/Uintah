@@ -5,14 +5,14 @@ OBJS = AugmentSurf.o  ClipSurface.o  ContoursToSurf.o  GenSurface.o  \
 	LabelSurface.o \
 	RescaleSurface.o  RotateSurface.o  SFUGtoSurf.o  \
 	SurfExtractBCNodes.o  SurfNewVals.o  SurfInterpVals.o  \
-	SurfGen.o  SurfToGeom.o  \
-	TransformSurf.o  TranslateSurface.o 
+	SurfGen.o  SurfToGeom.o  SurfTreeToTopoSurf.o  \
+	TopoSurfToGeom.o  TransformSurf.o  TranslateSurface.o 
 SRCS = AugmentSurf.cc ClipSurface.cc ContoursToSurf.cc GenSurface.cc \
 	LabelSurface.cc \
 	RescaleSurface.cc RotateSurface.cc SFUGtoSurf.cc \
 	SurfExtractBCNodes.cc SurfNewVals.cc SurfInterpVals.cc \
-	SurfGen.cc SurfToGeom.cc \
-	TransformSurf.cc TranslateSurface.cc
+	SurfGen.cc SurfToGeom.cc SurfTreeToTopoSurf.cc \
+	TopoSurfToGeom.cc TransformSurf.cc TranslateSurface.cc
 
 
 LIBNAME = Surface

@@ -20,11 +20,11 @@ itcl_class SegFldOps {
     method set_defaults {} {
 	global $this-itype
 	global $this-meth
-	global $this-annexSize
+	global $this-assimilateSize
 	global $this-sendCharFlag
 	set $this-itype "char"
-	set $this-meth "annex"
-	set $this-annexSize 10
+	set $this-meth "assimilate"
+	set $this-assimilateSize 10
 	set $this-sendCharFlag 0
     }
     method ui {} {
@@ -41,7 +41,7 @@ itcl_class SegFldOps {
         set n "$this-c needexecute "
 	global $this-itype
 	global $this-meth
-	global $this-annexSize
+	global $this-assimilateSize
 	global $this-sendCharFlag
 	make_labeled_radio $w.f.i "Input Port:" "" \
 		left $this-itype \
@@ -52,9 +52,9 @@ itcl_class SegFldOps {
 	make_labeled_radio $w.f.m "Method:" "" \
 		left $this-meth \
 		{{None "none"}
-		{Annex "annex"}}
+		{Assimilate "assimilate"}}
 	set $this-meth "none"
-	scale $w.f.s -label "Annex Scale:" -variable $this-annexSize \
+	scale $w.f.s -label "Assimilate Scale:" -variable $this-assimilateSize \
 		-orient horizontal -showvalue true -from 1 -to 400
 	frame $w.f.b
 	checkbutton $w.f.b.s -variable $this-sendCharFlag -text \
