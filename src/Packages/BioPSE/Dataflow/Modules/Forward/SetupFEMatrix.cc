@@ -168,7 +168,6 @@ void SetupFEMatrix::execute(){
   if(BuildFEMatrix::build_FEMatrix(hCondMesh, dirBC, tens, hGblMtrx_, hRhs_)){
     msgStream_ << "Matrix is ready" << endl;
     msgStream_ << "Size: " << hGblMtrx_->nrows() << "-by-" << hGblMtrx_->ncols() << endl;
-    //msgStream_ << "N of nonzeros " << hGblMtrx_->nnz << endl;
   };
   
   //! outputing
