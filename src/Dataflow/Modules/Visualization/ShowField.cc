@@ -26,7 +26,7 @@
 #include <Core/Geom/GeomSphere.h>
 #include <Core/Geom/GeomLine.h>
 #include <Core/Geom/GeomTri.h>
-#include <Core/Geom/GeomVertexPrim.h>
+#include <Core/Geom/Pt.h>
 
 #include <Core/GuiInterface/GuiVar.h>
 #include <Core/Util/DebugStream.h>
@@ -63,10 +63,13 @@ class ShowField : public Module
   //! top level nodes for switching on and off..
   //! nodes.
   GeomSwitch*              node_switch_;
+  bool                     nodes_on_;
   //! edges.
   GeomSwitch*              edge_switch_;
+  bool                     edges_on_;
   //! faces.
   GeomSwitch*              face_switch_;
+  bool                     faces_on_;
 
   //! holds options for how to visualize nodes.
   GuiString                node_display_type_;
@@ -85,7 +88,7 @@ public:
 			 MaterialHandle m0);
   inline void add_axis(const Point &p, double scale, GeomGroup *g, 
 		       MaterialHandle m0);
-  inline void add_point(const Point &p, GeomGroup *g, 
+  inline void add_point(const Point &p, GeomPts *g, 
 			MaterialHandle m0);
   inline void add_edge(const Point &p1, const Point &p2, double scale, 
 		       GeomGroup *g, MaterialHandle m0);
@@ -108,8 +111,11 @@ ShowField::ShowField(const clString& id) :
   edge_id_(0),
   face_id_(0),
   node_switch_(0),
+  nodes_on_(true),
   edge_switch_(0),
+  edges_on_(true),
   face_switch_(0),
+  faces_on_(true),
   node_display_type_("node_display_type", id, this),
   showProgress_("show_progress", id, this)
  {
@@ -132,12 +138,8 @@ void
 ShowField::execute()
 {
 
-  // Check for generation number. FIX_ME
-  cerr << "Starting Execution..." << endl;
-  dbg_ << "SHOWGEOMETRY EXECUTING" << endl;
-
   // tell module downstream to delete everything we have sent it before.
-  // This is typically salmon, it owns the scene graph memory we create here.
+  // This is typically viewer, it owns the scene graph memory we create here.
     
   ogeom_->delAll(); 
   FieldHandle geom_handle;
@@ -187,58 +189,70 @@ ShowField::execute()
     return;
   }
 
-  node_id_ = ogeom_->addObj(node_switch_, "Nodes");
-  //edge_id_ = ogeom_->addObj(edge_switch_, "Edges");
-  //face_id_ = ogeom_->addObj(edge_switch_, "Edges");
+  if (nodes_on_) node_id_ = ogeom_->addObj(node_switch_, "Nodes");
+  if (edges_on_) edge_id_ = ogeom_->addObj(edge_switch_, "Edges");
+  //if (faces_on_) face_id_ = ogeom_->addObj(face_switch_, "Faces");
   ogeom_->flushViews();
 }
 
 template <class Field>
 bool
-ShowField::render(Field *geom, Field *c_index, ColorMapHandle cm) {
-
-  GeomGroup *verts = scinew GeomGroup;
+ShowField::render(Field *geom, Field *c_index, ColorMapHandle cm) 
+{
   typename Field::mesh_handle_type mesh = geom->get_typed_mesh();
 
-  // First pass over the nodes
-  typename Field::mesh_type::node_iterator niter = mesh->node_begin();  
-  while (niter != mesh->node_end()) {
-    
-    Point p;
-    mesh->get_point(p, *niter);
-    double val;
-    if (! c_index->value(val, *niter)) { return false; }
-
-    if (node_display_type_.get() == "Spheres") {
-      add_sphere(p, 0.03, verts, cm->lookup(val));
-    } else if (node_display_type_.get() == "Axis") {
-      add_axis(p, 1., verts, cm->lookup(val));
-    } else {
-      add_point(p, verts, cm->lookup(val));
+  if (nodes_on_) {
+    GeomGroup* nodes = scinew GeomGroup;
+    node_switch_ = scinew GeomSwitch(nodes);
+    GeomPts *pts = 0;
+    node_display_type_.reset();
+    if (node_display_type_.get() == "Points") {
+      pts = scinew GeomPts(mesh->nodes_size());
     }
-    ++niter;
-  }
-  node_switch_ = scinew GeomSwitch(verts);
-  
-  GeomGroup *edges = scinew GeomGroup;
-  // Second pass over the edges
-  mesh->compute_edges();
-  typename Field::mesh_type::edge_iterator eiter = mesh->edge_begin();  
-  while (eiter != mesh->edge_end()) {        
-    typename Field::mesh_type::node_array nodes;
-    mesh->get_nodes(nodes, *eiter); ++eiter;
+    // First pass over the nodes
+    typename Field::mesh_type::node_iterator niter = mesh->node_begin();  
+    while (niter != mesh->node_end()) {
     
-    Point p1, p2;
-    mesh->get_point(p1, nodes[0]);
-    mesh->get_point(p2, nodes[1]);
-    double val1;
-    if (! c_index->value(val1, nodes[0])) { return false; }
-    double val2;
-    if (! c_index->value(val2, nodes[1])) { return false; } 
-    val1 = (val1 + val2) * .5;
-    add_edge(p1, p2, 1.0, edges, cm->lookup(val1));
+      Point p;
+      mesh->get_point(p, *niter);
+      double val;
+      if (! c_index->value(val, *niter)) { return false; }
+
+      if (node_display_type_.get() == "Spheres") {
+	add_sphere(p, 0.03, nodes, cm->lookup(val));
+      } else if (node_display_type_.get() == "Axes") {
+	add_axis(p, 0.03, nodes, cm->lookup(val));
+      } else {
+	add_point(p, pts, cm->lookup(val));
+      }
+      ++niter;
+    }
+    if (node_display_type_.get() == "Points") {
+      nodes->add(pts);
+    }
   }
-  edge_switch_ = scinew GeomSwitch(edges);
+
+  if (edges_on_) {
+    GeomGroup* edges = scinew GeomGroup;
+    edge_switch_ = scinew GeomSwitch(edges);
+    // Second pass over the edges
+    mesh->compute_edges();
+    typename Field::mesh_type::edge_iterator eiter = mesh->edge_begin();  
+    while (eiter != mesh->edge_end()) {        
+      typename Field::mesh_type::node_array nodes;
+      mesh->get_nodes(nodes, *eiter); ++eiter;
+    
+      Point p1, p2;
+      mesh->get_point(p1, nodes[0]);
+      mesh->get_point(p2, nodes[1]);
+      double val1;
+      if (! c_index->value(val1, nodes[0])) { return false; }
+      double val2;
+      if (! c_index->value(val2, nodes[1])) { return false; } 
+      val1 = (val1 + val2) * .5;
+      add_edge(p1, p2, 1.0, edges, cm->lookup(val1));
+    }
+  }
 }
 
 void 
@@ -269,9 +283,9 @@ void
 ShowField::add_axis(const Point &p0, double scale, 
 		    GeomGroup *g, MaterialHandle mh) 
 {
-  const Vector x(1., 0., 0.);
-  const Vector y(0., 1., 0.);
-  const Vector z(0., 0., 1.);
+  static const Vector x(1., 0., 0.);
+  static const Vector y(0., 1., 0.);
+  static const Vector z(0., 0., 1.);
 
   Point p1 = p0 + x * scale;
   Point p2 = p0 - x * scale;
@@ -291,12 +305,8 @@ ShowField::add_axis(const Point &p0, double scale,
 }
 
 void 
-ShowField::add_point(const Point &p0, GeomGroup *g, MaterialHandle mh) {
-#if 0
-  GeomVertex *v = new Geom(p0);
-  g->add(scinew GeomMaterial(v, mh));
-#endif
-  add_edge(p0, p0, 1.0, g, mh);
+ShowField::add_point(const Point &p, GeomPts *pts, MaterialHandle mh) {
+  pts->add(p, mh->diffuse);
 }
 
 void 
@@ -323,23 +333,20 @@ ShowField::tcl_command(TCLArgs& args, void* userdata) {
 
   } else if (args[1] == "toggle_display_nodes"){
     // Toggle the GeomSwitch.
-    if (! node_switch_) return;
-    bool node_toggle = ! node_switch_->get_state();
-    node_switch_->set_state(node_toggle);
+    nodes_on_ = ! nodes_on_;
+    if (node_switch_) node_switch_->set_state(nodes_on_);
     // Tell viewer to redraw itself.
     ogeom_->flushViews();
   } else if (args[1] == "toggle_display_edges"){
     // Toggle the GeomSwitch.
-    if (! edge_switch_) return;
-    bool edge_toggle = ! edge_switch_->get_state();
-    edge_switch_->set_state(edge_toggle);
+    edges_on_ = ! edges_on_;
+    if (edge_switch_) edge_switch_->set_state(edges_on_);
     // Tell viewer to redraw itself.
     ogeom_->flushViews();
   } else if (args[1] == "toggle_display_faces"){
     // Toggle the GeomSwitch.
-    if (! face_switch_) return;
-    bool face_toggle = ! face_switch_->get_state();
-    face_switch_->set_state(face_toggle);
+    faces_on_ = ! faces_on_;
+    if (face_switch_) face_switch_->set_state(faces_on_);
     // Tell viewer to redraw itself.
     ogeom_->flushViews();
   } else {
