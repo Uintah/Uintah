@@ -61,8 +61,28 @@ itcl_class SCIRun_Render_Viewer {
 	return $id
     }
 
+    method addViewer {} {
+	set rid [makeViewWindowID]
+	ViewWindow $rid -viewer $this 
+	lappend openViewersList $rid
+    }
+    
     method ui {{rid -1}} {
+	# Update the viewer window list by culling all the windows
+	# which no longer exist.  This could be eliminated, by a
+	# function which automatically updates the list when the
+	# viewer is exited.
+	set newViewersList ""
+	for {set window 0} {$window < [llength $openViewersList] } { incr window } {
+	    set rid_temp [lindex $openViewersList $window]
+	    if {[winfo exists .ui[$rid_temp modname]]} {
+		lappend newViewersList $rid_temp
+	    }
+	}
+	set openViewersList $newViewersList
 
+	
+	
 	# If there are no open viewers, then create one
 	if { [llength $openViewersList] == 0 } { 
 
@@ -238,7 +258,7 @@ itcl_class ViewWindow {
 	set w .ui[modname]
 	toplevel $w
 
-	wm protocol $w WM_DELETE_WINDOW "wm iconify $w"
+#	wm protocol $w WM_DELETE_WINDOW "wm withdraw $w"
 
 	bind $w <Destroy> "$this killWindow %W" 
 	wm title $w "ViewWindow"
@@ -319,12 +339,16 @@ itcl_class ViewWindow {
 	    incr i
 	}
 
+	button $w.menu.newviewer -text "NewViewer" \
+	    -command "$viewer addViewer" -borderwidth 0
+	
 	pack $w.menu.file -side left
 	pack $w.menu.edit -side left
 #	pack $w.menu.renderer -side left
 #	pack $w.menu.spawn -side left
 #	pack $w.menu.dialbox -side left
 	pack $w.menu.visual -side left
+	pack $w.menu.newviewer -side left
 #	tk_menuBar $w.menu $w.menu.edit $w.menu.renderer \
 #		$w.menu.spawn $w.menu.dialbox $w.menu.visual
 
