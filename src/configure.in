@@ -437,6 +437,27 @@ AC_SUBST(BLT_INCLUDE_DIR)
 AC_SUBST(BLT_LIB_DIR)
 AC_SUBST(BLT_LIB_FLAG)
 
+##-- Find location of GL headers --------------------------------------------
+
+echo -n "Looking for location of GL headers... "
+
+if test -e /usr/include/GL; then
+  GL_INCLUDE_DIR="/usr/include"
+elif test -e /usr/X11R6/include/GL; then
+  GL_INCLUDE_DIR="/usr/X11R6/include"
+fi
+
+if test "$GL_INCLUDE_DIR" = ""; then
+  echo "couldn't find the location of the GL headers."
+  echo "by standard convention, they should be in /usr/include/GL"
+  echo ""
+  exit 1
+else
+  echo "$GL_INCLUDE_DIR"
+fi
+
+AC_SUBST(GL_INCLUDE_DIR)
+
 ##-- Check for option to build new parallel (distributed memory) SCIRun ------
 
 AC_ARG_ENABLE(enable_parallel,
@@ -575,6 +596,9 @@ AC_OUTPUT(Makefile \
 
 #
 # $Log$
+# Revision 1.57  2000/06/10 04:18:22  moulding
+# added a section to search for GL headers
+#
 # Revision 1.56  2000/06/09 17:46:16  kuzimmer
 # Modified so that linux and 64bit compiles won't choke on the new image
 # and compression libraries
