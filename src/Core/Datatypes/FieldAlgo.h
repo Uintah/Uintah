@@ -148,7 +148,6 @@ struct LinearInterp : public InterpFunctor<Field> {
   void 
   operator()(const Field &field, Index idx, int widx) {
       result_ += field.value(idx) * weights_[widx];
-      cout << "linear interping :)" << endl;
     }
 };
 
