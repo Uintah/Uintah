@@ -287,23 +287,15 @@ void BV1::make_tree(int nprims, Object** subprims, double* slabs, int which){
 }
 
 inline void isect_bbox(const Point& orig, const Vector& idir,
-		       double* slabs, bool& lhit, bool& rhit,
-		       double maxt) {
+		       double* slabs, int sstart[6], bool& lhit, bool& rhit,
+		       double maxt)
+{
     double MINa=1.e-6, MAXa=maxt;
     double MINb=1.e-6, MAXb=maxt;
-    double x0a, x1a;
-    double x0b, x1b;
-    if(idir.x() > 0){
-	x0a=idir.x()*(slabs[0]-orig.x());
-	x1a=idir.x()*(slabs[3]-orig.x());
-	x0b=idir.x()*(slabs[6]-orig.x());
-	x1b=idir.x()*(slabs[9]-orig.x());
-    } else {
-	x0a=idir.x()*(slabs[3]-orig.x());
-	x1a=idir.x()*(slabs[0]-orig.x());
-	x0b=idir.x()*(slabs[9]-orig.x());
-	x1b=idir.x()*(slabs[6]-orig.x());
-    }
+    double x0a = idir.x()*(slabs[sstart[0]]-orig.x());
+    double x1a = idir.x()*(slabs[sstart[1]]-orig.x());
+    double x0b = idir.x()*(slabs[sstart[0]+6]-orig.x());
+    double x1b = idir.x()*(slabs[sstart[1]+6]-orig.x());
     if(x0a>MINa)
 	MINa=x0a;
     if(x1a<MAXa)
@@ -312,23 +304,16 @@ inline void isect_bbox(const Point& orig, const Vector& idir,
 	MINb=x0b;
     if(x1b<MAXb)
 	MAXb=x1b;
+#if 0
     if(MAXa<MINa && MAXb<MINb){
 	lhit=rhit=false;
 	return;
     }
-    double y0a, y1a;
-    double y0b, y1b;
-    if(idir.y() > 0){
-	y0a=idir.y()*(slabs[1]-orig.y());
-	y1a=idir.y()*(slabs[4]-orig.y());
-	y0b=idir.y()*(slabs[7]-orig.y());
-	y1b=idir.y()*(slabs[10]-orig.y());
-    } else {
-	y0a=idir.y()*(slabs[4]-orig.y());
-	y1a=idir.y()*(slabs[1]-orig.y());
-	y0b=idir.y()*(slabs[10]-orig.y());
-	y1b=idir.y()*(slabs[7]-orig.y());
-    }
+#endif
+    double y0a = idir.y()*(slabs[sstart[2]]-orig.y());
+    double y1a = idir.y()*(slabs[sstart[3]]-orig.y());
+    double y0b = idir.y()*(slabs[sstart[2]+6]-orig.y());
+    double y1b = idir.y()*(slabs[sstart[3]+6]-orig.y());
     if(y0a>MINa)
 	MINa=y0a;
     if(y1a<MAXa)
@@ -337,23 +322,16 @@ inline void isect_bbox(const Point& orig, const Vector& idir,
 	MINb=y0b;
     if(y1b<MAXb)
 	MAXb=y1b;
+#if 0
     if(MAXa<MINa && MAXb<MINb){
 	lhit=rhit=false;
 	return;
     }
-    double z0a, z1a;
-    double z0b, z1b;
-    if(idir.z() > 0){
-	z0a=idir.z()*(slabs[2]-orig.z());
-	z1a=idir.z()*(slabs[5]-orig.z());
-	z0b=idir.z()*(slabs[8]-orig.z());
-	z1b=idir.z()*(slabs[11]-orig.z());
-    } else {
-	z0a=idir.z()*(slabs[5]-orig.z());
-	z1a=idir.z()*(slabs[2]-orig.z());
-	z0b=idir.z()*(slabs[11]-orig.z());
-	z1b=idir.z()*(slabs[8]-orig.z());
-    }
+#endif
+    double z0a = idir.z()*(slabs[sstart[4]]-orig.z());
+    double z1a = idir.z()*(slabs[sstart[5]]-orig.z());
+    double z0b = idir.z()*(slabs[sstart[4]+6]-orig.z());
+    double z1b = idir.z()*(slabs[sstart[5]+6]-orig.z());
     if(z0a>MINa)
 	MINa=z0a;
     if(z1a<MAXa)
@@ -384,12 +362,6 @@ inline void isect_bbox(const Point& orig, const Vector& idir,
     } else {
 	rhit=false;
     }
-#if 0
-    if(lhit)
-      cerr << "lhit\n";
-    if(rhit)
-      cerr << "rhit\n";
-#endif
 }
 
 void BV1::intersect(Ray& ray, HitInfo& hit,
@@ -415,40 +387,64 @@ void BV1::intersect(Ray& ray, HitInfo& hit,
     Object** prims=&normal_tree->prims[0];
 #define BSTACK_SIZE 100
     int bstack[BSTACK_SIZE];
-    Point orig(ray.origin());
-    Vector dir(ray.direction());
+    const Point& orig(ray.origin());
+    const Vector& dir(ray.direction());
     Vector idir(1./dir.x(), 1./dir.y(), 1./dir.z());
+    int sstart[6];
+    if(idir.x() > 0){
+      sstart[0]=0;
+      sstart[1]=3;
+    } else {
+      sstart[0]=3;
+      sstart[1]=0;
+    }
+    if(idir.y() > 0){
+      sstart[2]=1;
+      sstart[3]=4;
+    } else {
+      sstart[2]=4;
+      sstart[3]=1;
+    }
+    if(idir.z() > 0){
+      sstart[4]=2;
+      sstart[5]=5;
+    } else {
+      sstart[4]=5;
+      sstart[5]=2;
+    }
     for(;;){
 	int L=2*idx+1;
 	int R=L+1;
 	bool lhit, rhit;
-	isect_bbox(orig, idir, &slabs[L*6], lhit, rhit, hit.min_t);
+	isect_bbox(orig, idir, &slabs[L*6], sstart, lhit, rhit, hit.min_t);
 
-	st->bv_total_isect+=2;
+	//st->bv_total_isect+=2;
 	if(lhit){
 	    if(rhit){
 		if(L>=primStart){
-		    st->bv_prim_isect+=2;
+		  //st->bv_prim_isect+=2;
 		    prims[L-primStart]->intersect(ray, hit, st, ppc);
 		    prims[R-primStart]->intersect(ray, hit, st, ppc);
 		    if(--sp<0)
 			break;
 		    idx=bstack[sp];
 		} else if(R>=primStart){
-		    st->bv_prim_isect++;
+		  //st->bv_prim_isect++;
 		    prims[R-primStart]->intersect(ray, hit, st, ppc);
 		    idx=L;
 		} else {
 		    bstack[sp++]=R;
+#if 0
 		    if(sp>=BSTACK_SIZE){
 			cerr << "BSTACK OVERFLOW!\n";
 			Thread::exitAll(-1);
 		    }
+#endif
 		    idx=L;
 		}
 	    } else {
 		if(L>=primStart){
-		    st->bv_prim_isect++;
+		  //st->bv_prim_isect++;
 		    prims[L-primStart]->intersect(ray, hit, st, ppc);
 		    if(--sp<0)
 			break;
@@ -460,7 +456,7 @@ void BV1::intersect(Ray& ray, HitInfo& hit,
 	} else {
 	    if(rhit){
 		if(R>=primStart){
-		    st->bv_prim_isect++;
+		  //st->bv_prim_isect++;
 		    prims[R-primStart]->intersect(ray, hit, st, ppc);
 		    if(--sp<0)
 			break;
@@ -500,24 +496,46 @@ void BV1::light_intersect(Ray& lightray,
   int idx=0;
   int sp=0;
   int bstack[BSTACK_SIZE];
-  Point orig(lightray.origin());
-  Vector dir(lightray.direction());
+  const Point& orig(lightray.origin());
+  const Vector& dir(lightray.direction());
   Vector idir(1./dir.x(), 1./dir.y(), 1./dir.z());
+  int sstart[6];
+  if(idir.x() > 0){
+    sstart[0]=0;
+    sstart[1]=3;
+  } else {
+    sstart[0]=3;
+    sstart[1]=0;
+  }
+  if(idir.y() > 0){
+    sstart[2]=1;
+    sstart[3]=4;
+  } else {
+    sstart[2]=4;
+    sstart[3]=1;
+  }
+  if(idir.z() > 0){
+    sstart[4]=2;
+    sstart[5]=5;
+  } else {
+    sstart[4]=5;
+    sstart[5]=2;
+  }
   for(;;){
     int L=2*idx+1;
     int R=L+1;
     bool lhit, rhit;
-    isect_bbox(orig, idir, &slabs[L*6], lhit, rhit, hit.min_t);
-    st->bv_total_isect_light+=2;
+    isect_bbox(orig, idir, &slabs[L*6], sstart, lhit, rhit, hit.min_t);
+    //st->bv_total_isect_light+=2;
     if(lhit){
       if(rhit){
 	if(L>=primStart){
 	  prims[L-primStart]->light_intersect(lightray, hit, atten, st, ppc);
-	  st->bv_prim_isect_light++;
+	  //st->bv_prim_isect_light++;
 	  if(hit.was_hit)
 	    return;
 	  prims[R-primStart]->light_intersect(lightray, hit, atten, st, ppc);
-	  st->bv_prim_isect_light++;
+	  //st->bv_prim_isect_light++;
 	  if(hit.was_hit)
 	    return;
 	  if(--sp<0)
@@ -525,23 +543,25 @@ void BV1::light_intersect(Ray& lightray,
 	  idx=bstack[sp];
 	} else if(R>=primStart){
 	  prims[R-primStart]->light_intersect(lightray, hit, atten, st, ppc);
-	  st->bv_prim_isect_light++;
+	  //st->bv_prim_isect_light++;
 	  if(hit.was_hit)
 	    return;
 	  idx=L;
 	} else {
 	  bstack[sp++]=R;
-	  st->bv_prim_isect_light++;
+	  //st->bv_prim_isect_light++;
+#if 0
 	  if(sp>=BSTACK_SIZE){
 	    cerr << "BSTACK OVERFLOW!\n";
 	    Thread::exitAll(-1);
 	  }
+#endif
 	  idx=L;
 	}
       } else {
 	if(L>=primStart){
 	  prims[L-primStart]->light_intersect(lightray, hit, atten, st, ppc);
-	  st->bv_prim_isect_light++;
+	  //st->bv_prim_isect_light++;
 	  if(hit.was_hit)
 	    return;
 	  if(--sp<0)
@@ -555,7 +575,7 @@ void BV1::light_intersect(Ray& lightray,
       if(rhit){
 	if(R>=primStart){
 	  prims[R-primStart]->light_intersect(lightray, hit, atten, st, ppc);
-	  st->bv_prim_isect_light++;
+	  //st->bv_prim_isect_light++;
 	  if(hit.was_hit)
 	    return;
 	  if(--sp<0)
@@ -597,26 +617,48 @@ void BV1::softshadow_intersect(Light* light, Ray& lightray,
   int idx=0;
   int sp=0;
   int bstack[BSTACK_SIZE];
-  Point orig(lightray.origin());
-  Vector dir(lightray.direction());
+  const Point& orig(lightray.origin());
+  const Vector& dir(lightray.direction());
   Vector idir(1./dir.x(), 1./dir.y(), 1./dir.z());
+  int sstart[6];
+  if(idir.x() > 0){
+    sstart[0]=0;
+    sstart[1]=3;
+  } else {
+    sstart[0]=3;
+    sstart[1]=0;
+  }
+  if(idir.y() > 0){
+    sstart[2]=1;
+    sstart[3]=4;
+  } else {
+    sstart[2]=4;
+    sstart[3]=1;
+  }
+  if(idir.z() > 0){
+    sstart[4]=2;
+    sstart[5]=5;
+  } else {
+    sstart[4]=5;
+    sstart[5]=2;
+  }
   for(;;){
     int L=2*idx+1;
     int R=L+1;
     bool lhit, rhit;
-    isect_bbox(orig, idir, &slabs[L*6], lhit, rhit, hit.min_t);
-    st->bv_total_isect_light+=2;
+    isect_bbox(orig, idir, &slabs[L*6], sstart, lhit, rhit, hit.min_t);
+    //st->bv_total_isect_light+=2;
     if(lhit){
       if(rhit){
 	if(L>=primStart){
 	  prims[L-primStart]->softshadow_intersect(light, lightray, hit, dist, atten, st, ppc);
 	  if(hit.was_hit)
 	    return;
-	  st->bv_prim_isect_light++;
+	  //st->bv_prim_isect_light++;
 	  prims[R-primStart]->softshadow_intersect(light, lightray, hit, dist, atten, st, ppc);
 	  if(hit.was_hit)
 	    return;
-	  st->bv_prim_isect_light++;
+	  //st->bv_prim_isect_light++;
 	  if(--sp<0)
 	    break;
 	  idx=bstack[sp];
@@ -624,15 +666,17 @@ void BV1::softshadow_intersect(Light* light, Ray& lightray,
 	  prims[R-primStart]->softshadow_intersect(light, lightray, hit, dist, atten, st, ppc);
 	  if(hit.was_hit)
 	    return;
-	  st->bv_prim_isect_light++;
+	  //st->bv_prim_isect_light++;
 	  idx=L;
 	} else {
 	  bstack[sp++]=R;
-	  st->bv_prim_isect_light++;
+	  //st->bv_prim_isect_light++;
+#if 0
 	  if(sp>=BSTACK_SIZE){
 	    cerr << "BSTACK OVERFLOW!\n";
 	    Thread::exitAll(-1);
 	  }
+#endif
 	  idx=L;
 	}
       } else {
@@ -640,7 +684,7 @@ void BV1::softshadow_intersect(Light* light, Ray& lightray,
 	  prims[L-primStart]->softshadow_intersect(light, lightray, hit, dist, atten, st, ppc);
 	  if(hit.was_hit)
 	    return;
-	  st->bv_prim_isect_light++;
+	  //st->bv_prim_isect_light++;
 	  if(--sp<0)
 	    break;
 	  idx=bstack[sp];
@@ -654,7 +698,7 @@ void BV1::softshadow_intersect(Light* light, Ray& lightray,
 	  prims[R-primStart]->softshadow_intersect(light, lightray, hit, dist, atten, st, ppc);
 	  if(hit.was_hit)
 	    return;
-	  st->bv_prim_isect_light++;
+	  //st->bv_prim_isect_light++;
 	  if(--sp<0)
 	    break;
 	  idx=bstack[sp];
@@ -706,10 +750,32 @@ void BV1::multi_light_intersect(Light* light, const Point& orig,
 #define BSTACK_SIZE 100
     int bstack[BSTACK_SIZE];
     Vector idirs[100];
+    int sstart[100][6];
     for(int i=0;i<dirs.size();i++){
 	const Vector& dir=dirs[i];
 	Vector idir(1./dir.x(), 1./dir.y(), 1./dir.z());
 	idirs[i]=idir;
+	if(dir.x() > 0){
+	  sstart[i][0]=0;
+	  sstart[i][1]=3;
+	} else {
+	  sstart[i][0]=3;
+	  sstart[i][1]=0;
+	}
+	if(dir.y() > 0){
+	  sstart[i][2]=1;
+	  sstart[i][3]=4;
+	} else {
+	  sstart[i][2]=4;
+	  sstart[i][3]=1;
+	}
+	if(dir.z() > 0){
+	  sstart[i][4]=2;
+	  sstart[i][5]=5;
+	} else {
+	  sstart[i][4]=5;
+	  sstart[i][5]=2;
+	}
     }
     Color* attens=&in_attens[0];
     int ndirs=dirs.size();
@@ -721,18 +787,18 @@ void BV1::multi_light_intersect(Light* light, const Point& orig,
 	for(int i=0;i<ndirs;i++){
 	    if(attens[i].luminance() != 0){
 		bool lh, rh;
-		isect_bbox(orig, idirs[i], &slabs[L*6], lh, rh, 1.e30);
+		isect_bbox(orig, idirs[i], &slabs[L*6], sstart[i], lh, rh, 1.e30);
 		lhit|=lh;
 		rhit|=rh;
 		if(lhit && rhit)
 		    break;
 	    }
 	}
-	st->bv_total_isect+=2;
+	//st->bv_total_isect+=2;
 	if(lhit){
 	    if(rhit){
 		if(L>=primStart){
-		    st->bv_prim_isect+=2;
+		  //st->bv_prim_isect+=2;
 		    prims[L-primStart]->multi_light_intersect(light, orig,
 							      dirs, in_attens,
 							      dist, st, ppc);
@@ -743,22 +809,24 @@ void BV1::multi_light_intersect(Light* light, const Point& orig,
 			break;
 		    idx=bstack[sp];
 		} else if(R>=primStart){
-		    st->bv_prim_isect++;
+		  //st->bv_prim_isect++;
 		    prims[R-primStart]->multi_light_intersect(light, orig,
 							      dirs, in_attens,
 							      dist, st, ppc);
 		    idx=L;
 		} else {
 		    bstack[sp++]=R;
+#if 0
 		    if(sp>=BSTACK_SIZE){
 			cerr << "BSTACK OVERFLOW!\n";
 			Thread::exitAll(-1);
 		    }
+#endif
 		    idx=L;
 		}
 	    } else {
 		if(L>=primStart){
-		    st->bv_prim_isect++;
+		  //st->bv_prim_isect++;
 		    prims[L-primStart]->multi_light_intersect(light, orig,
 							      dirs, in_attens,
 							      dist, st, ppc);
@@ -772,7 +840,7 @@ void BV1::multi_light_intersect(Light* light, const Point& orig,
 	} else {
 	    if(rhit){
 		if(R>=primStart){
-		    st->bv_prim_isect++;
+		  //st->bv_prim_isect++;
 		    prims[R-primStart]->multi_light_intersect(light, orig,
 							      dirs, in_attens,
 							      dist, st, ppc);
