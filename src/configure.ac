@@ -1621,6 +1621,17 @@ AC_SUBST(HAVE_COLLAB_VIS)
 
 
 if test "$sci_check_plplot" = "yes"; then
+#  SCI_TRY_LINK(PLPLOTTCLTK,optional optimized plplottcltk library and headers,[
+#
+#  ],$_sci_inc,plplottcltk, $_sci_lib,$TK_LIB_DIR_FLAG $TK_LIB_FLAG $TCL_LIB_DIR_FLAG $TCL_LIB_FLAG,,optional)
+
+
+#  if test "$HAVE_PLPLOTTCLTK" = "no"; then
+#    SCI_TRY_LINK(PLPLOTTCLTK,optional debug plplottcltk library and headers,[
+#
+#    ],$_sci_inc,plplottcltkd, $_sci_lib,$TK_LIB_DIR_FLAG $TK_LIB_FLAG $TCL_LIB_DIR_FLAG $TCL_LIB_FLAG,,optional)
+#  fi
+
   SCI_TRY_LINK(PLPLOT,optional optimized plplot library and headers,[
   #include <plplot/plplot.h> 
   ],$_sci_inc,plplot, $_sci_lib,$TK_LIB_DIR_FLAG $TK_LIB_FLAG $TCL_LIB_DIR_FLAG $TCL_LIB_FLAG,,optional)
@@ -1629,7 +1640,7 @@ if test "$sci_check_plplot" = "yes"; then
   if test "$HAVE_PLPLOT" = "no"; then
     SCI_TRY_LINK(PLPLOT,optional debug plplot library and headers,[
     #include <plplot/plplot.h> 
-    ],$_sci_inc,plplotd, $_sci_lib,$TK_LIB_DIR_FLAG $TK_LIB_FLAG $TCL_LIB_DIR_FLAG $TCL_LIB_FLAG,,optional)
+    ],$_sci_inc,plplotd, $_sci_lib,$ITK_LIB_DIR_FLAG $ITK_LIB_FLAG $ITCL_LIB_DIR_FLAG $ITCL_LIB_FLAG,,optional)
   fi
 
   if test "$HAVE_PLPLOT" = "yes"; then
@@ -1651,6 +1662,8 @@ if test "$sci_check_plplot" = "yes"; then
   fi
 fi #end sci_check_plplot
 
+#AC_SUBST(PLPLOTTCLTK_LIB_FLAG)
+#AC_SUBST(PLPLOTTCLTK_LIB_DIR_FLAG)
 AC_SUBST(PLPLOT_LIB_FLAG)
 AC_SUBST(PLPLOT_LIB_DIR_FLAG)
 AC_SUBST(INC_PLPLOT_H)
@@ -2294,11 +2307,9 @@ AC_SUBST(DEF_INSIGHT)
 
 
 ##  --  search for xalan-c++ --
-echo
-AS_MESSAGE(checking for required Xalan-C++ components......)
-echo
-
 if test "$with_xalan"; then
+  AC_MSG_CHECKING(for  Xalan-C++.)
+
   _xalan_lib_path="$with_xalan/c/lib"
   _xalan_inc="$with_xalan/c/src $_xer_inc"
 
@@ -2628,6 +2639,7 @@ if test "$sci_check_hdf5" = "yes"; then
   fi
 fi #end sci_check_hdf5
 
+AC_SUBST(LIB_DIR_HDF5)
 AC_SUBST(HDF5_LIB_FLAG)
 AC_SUBST(HDF5_LIB_DIR_FLAG)
 AC_SUBST(INC_HDF5_H)
