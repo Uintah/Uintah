@@ -43,11 +43,14 @@
 #include <Core/CCA/spec/cca_sidl.h>
 #include <CCA/Components/Builder/NetworkCanvasView.h>
 #include <CCA/Components/Builder/ClusterDialog.h>
+#include <CCA/Components/Builder/PathDialog.h>
+#include <CCA/Components/Builder/QtUtils.h>
 #include <SCIRun/TypeMap.h>
 #include <Core/Thread/Thread.h>
 #include <Core/Containers/StringUtil.h>
 
 #include <fstream>
+#include <iostream>
 
 #include <qaction.h>
 #include <qcanvas.h>
@@ -62,7 +65,6 @@
 #include <qtextedit.h>
 #include <qvbox.h>
 #include <qwhatsthis.h>
-#include <iostream>
 #include <qiconset.h> 
 #include <qtoolbutton.h>
 #include <qtooltip.h> 
@@ -197,9 +199,6 @@ BuilderWindow::BuilderWindow(const sci::cca::Services::pointer& services)
     vBox->setSpacing(2);
 
     msgLabel = new QLabel(msgTextEdit, "Messages:", vBox);
-    //QMimeSourceFactory::defaultFactory()->setPixmap("SCIRun logo", QPixmap(SCIRun_logo));
-    //QLabel* logo_image = new QLabel("SCIRun logo", layout4);
-    //logo_image->setPixmap( QPixmap(SCIRun_logo));
 
     msgTextEdit = new QTextEdit(vBox, "messages");
     msgTextEdit->setTextFormat(Qt::PlainText);
@@ -213,29 +212,20 @@ BuilderWindow::BuilderWindow(const sci::cca::Services::pointer& services)
     QToolTip::add(msgTextEdit, "View SCIRun2 messages.");
     // version number?
     displayMsg("SCIRun2\n");
-
-    sci::cca::ports::BuilderService::pointer builder =
-	pidl_cast<sci::cca::ports::BuilderService::pointer>(services->getPort("cca.BuilderService"));
-    if (builder.isNull()) {
-	std::cerr << "Fatal Error: Cannot find builder service" << std::endl;
-	// if fatal error, attempt to exit here?
+    displayMsg("Framework URL: ");
+    sci::cca::ports::FrameworkProperties::pointer fwkProperties =
+	pidl_cast<sci::cca::ports::FrameworkProperties::pointer>(
+	    services->getPort("cca.FrameworkProperties")
+	);
+    if (fwkProperties.isNull()) {
+	QString msg("url not available");
+	displayMsg(msg);
     } else {
-	displayMsg("Framework URL: ");
-	sci::cca::ports::FrameworkProperties::pointer fwkProperties =
-	    pidl_cast<sci::cca::ports::FrameworkProperties::pointer>(services->getPort("cca.FrameworkProperties"));
+	sci::cca::TypeMap::pointer tm = fwkProperties->getProperties();
+	std::string url = tm->getString("url", "");
+	displayMsg(url);
 
-	if (fwkProperties.isNull()) {
-	    QString msg("url not available");
-	    displayMsg(msg);
-	} else {
-	    sci::cca::TypeMap::pointer tm = fwkProperties->getProperties();
-	    std::string url;
-	    url = tm->getString("url", "");
-	    displayMsg(url);
-
-	    services->releasePort("cca.FrameworkProperties");
-	}
-	services->releasePort("cca.BuilderService");
+	services->releasePort("cca.FrameworkProperties");
     }
     displayMsg("\n----------------------\n");
 
@@ -260,10 +250,11 @@ BuilderWindow::BuilderWindow(const sci::cca::Services::pointer& services)
     sci::cca::ports::ComponentEventService::pointer ces =
 	pidl_cast<sci::cca::ports::ComponentEventService::pointer>(services->getPort("cca.ComponentEventService"));
     if (ces.isNull()) {
-	std::cerr << "Cannot get componentEventService!" << std::endl;
+	displayMsg("Error: Cannot find component event service.\n");
     } else {
 	sci::cca::ports::ComponentEventListener::pointer listener(this);
-	ces->addComponentEventListener(sci::cca::ports::AllComponentEvents, listener, true);
+	ces->addComponentEventListener(sci::cca::ports::AllComponentEvents,
+	    listener, true);
 	services->releasePort("cca.ComponentEventService");
     }
     updateMiniView();
@@ -291,8 +282,8 @@ void BuilderWindow::setupFileActions()
 
     // Load
     loadAction = new QAction("&Load", CTRL+Key_L, this, "load");
-    loadAction->setText("Load");
-    loadAction->setWhatsThis("Load network from a file.");
+    loadAction->setText("Load a network from a file.");
+    loadAction->setWhatsThis("Load a network from a file.");
     connect(loadAction, SIGNAL( activated() ), this, SLOT( load() ));
     loadAction->addTo(file);
     new QToolButton( QIconSet( QPixmap(load) ), "Load", QString::null,
@@ -308,7 +299,7 @@ void BuilderWindow::setupFileActions()
 
     // Save
     saveAction = new QAction("&Save", CTRL+Key_S, this, "save");
-    saveAction->setText("Save");
+    saveAction->setText("Save network to file");
     connect(saveAction, SIGNAL( activated() ), this, SLOT( save() ));
     saveAction->addTo(file);
     new QToolButton( QIconSet( QPixmap(save) ), "Save", QString::null,
@@ -316,7 +307,7 @@ void BuilderWindow::setupFileActions()
 
     // Save As
     saveAsAction = new QAction("Save &As", 0, this, "save as");
-    saveAction->setText("Save File As");
+    saveAsAction->setText("Save network to file as");
     connect(saveAsAction, SIGNAL( activated() ), this, SLOT( saveAs() ));
     saveAsAction->addTo(file);
 
@@ -336,17 +327,26 @@ void BuilderWindow::setupFileActions()
     new QToolButton( QIconSet( QPixmap(info) ), "Add Info", QString::null,
 		     this, SLOT( addInfo() ), fileTools, "addInfo" );
 
+    // Add Sidl Xml Path
+    addPathAction = new QAction("Add Sidl XML Path", 0, this, "edit path");
+    addPathAction->setText("Add a path to XML descriptions of components.");
+    addPathAction->setWhatsThis("Add a path to XML descriptions of components are found.");
+    connect(addPathAction, SIGNAL( activated() ),
+	    this, SLOT( addSidlXmlPath() ));
+    addPathAction->addTo(file);
+
     file->insertSeparator();
 
     // Quit
-    quitAction = new QAction("Quit GUI (Leave SCIRun Running)", CTRL+Key_Q, this, "Quit");
-    quitAction->setText("Quit");
+    quitAction = new QAction("Quit GUI", CTRL+Key_Q, this, "Quit");
+    quitAction->setText("Quit GUI (leave SCIRun2 running)");
     connect(quitAction, SIGNAL( activated() ), this, SLOT( close() ));
     quitAction->addTo(file);
 
     // Exit
-    exitAction = new QAction("Exit (Terminate All Components)", CTRL+Key_X, this, "Exit");
-    quitAction->setText("Exit");
+    exitAction = new QAction("Exit", CTRL+Key_X, this, "Exit");
+    exitAction->setText("Exit (terminate all components)");
+    exitAction->setWhatsThis("Terminate all components and exit.");
     connect(exitAction, SIGNAL( activated() ), this, SLOT( exit() ));
     exitAction->addTo(file);
 
@@ -375,6 +375,7 @@ void BuilderWindow::setupClusterActions()
     connect(refreshAction, SIGNAL( activated() ), this, SLOT( refresh() ));
     refreshAction->addTo(clusters);
 
+#if 0
 /*
     QPopupMenu* mxn = new QPopupMenu( this );
     menuBar()->insertItem("&MxN", mxn );
@@ -386,6 +387,7 @@ void BuilderWindow::setupClusterActions()
     performance->insertItem( "&Performance Manager", this, SLOT( performance_mngr() ), Key_F1 );
     performance->insertItem( "&Add Tau component", this, SLOT( performance_tau_add() ), Key_F2 );
 */
+#endif
 }
 
 void BuilderWindow::insertHelpMenu()
@@ -409,6 +411,7 @@ void BuilderWindow::insertHelpMenu()
   help->insertSeparator();
   help->insertItem( "What's &This", this, SLOT( whatsThis() ), SHIFT+Key_F1 );
 
+#if 0
 /*  
     help->insertTearOffHandle();
     menuBar()->insertItem( "&Help", help );
@@ -417,6 +420,7 @@ void BuilderWindow::insertHelpMenu()
     help->insertSeparator();
     help->insertItem( "&About", this, SLOT( about() ), Key_F3 );
 */
+#endif
 }
 
 void BuilderWindow::closeEvent( QCloseEvent* ce )
@@ -438,8 +442,9 @@ void BuilderWindow::closeEvent( QCloseEvent* ce )
   }
 }
 
-void BuilderWindow::buildRemotePackageMenus(const sci::cca::ports::ComponentRepository::pointer &reg,
-					    const std::string &frameworkURL)
+void BuilderWindow::buildRemotePackageMenus(
+    const sci::cca::ports::ComponentRepository::pointer &reg,
+    const std::string &frameworkURL)
 {
     if (reg.isNull()) {
 	displayMsg("Cannot get component registry, not building component menus.\n");
@@ -501,7 +506,7 @@ void BuilderWindow::buildPackageMenus()
     sci::cca::ports::ComponentRepository::pointer reg =
 	pidl_cast<sci::cca::ports::ComponentRepository::pointer>(services->getPort("cca.ComponentRepository"));
     if (reg.isNull()) {
-	displayMsg("Cannot get component registry, not building component menus.");
+	displayMsg("Error: cannot find component registry, not building component menus.\n");
 	unsetCursor();
 	return;
     }
@@ -554,36 +559,42 @@ void BuilderWindow::writeFile()
 {
     QCanvasItemList tempQCL = miniCanvas->allItems();
     setCursor(Qt::WaitCursor);
-    ofstream saveOutputFile(filename);
+    std::ofstream saveOutputFile(filename);
 
-  std::vector<Module*> saveModules = networkCanvasView->getModules();
-  std::vector<Connection*> saveConnections = networkCanvasView->getConnections();
+    std::vector<Module*> saveModules = networkCanvasView->getModules();
+    std::vector<Connection*> saveConnections = networkCanvasView->getConnections();
 
-  saveOutputFile << saveModules.size() << std::endl;
-  saveOutputFile << saveConnections.size() << std::endl;
+    saveOutputFile << saveModules.size() << std::endl;
+    saveOutputFile << saveConnections.size() << std::endl;
   
-  if (saveOutputFile.is_open()) {
-    for (unsigned int j = 0; j < saveModules.size(); j++) {
-      saveOutputFile << saveModules[j]->moduleName << std::endl;
-      saveOutputFile << saveModules[j]->x() << std::endl;
-      saveOutputFile << saveModules[j]->y() << std::endl;
-    }
+    if (saveOutputFile.is_open()) {
+	for (unsigned int j = 0; j < saveModules.size(); j++) {
+	    saveOutputFile << saveModules[j]->moduleName() << std::endl;
+	    saveOutputFile << saveModules[j]->x() << std::endl;
+	    saveOutputFile << saveModules[j]->y() << std::endl;
+	}
 
-    for (unsigned int k = 0; k < saveConnections.size(); k++) {
-      Module * getProvidesModule();
+	for (unsigned int k = 0; k < saveConnections.size(); k++) {
+	    Module* getProvidesModule();
 
-      Module * um = saveConnections[k]->getUsesModule();
-      Module * pm = saveConnections[k]->getProvidesModule();
-      unsigned int iu = 0;
-      unsigned int ip = 0;
-      for (unsigned int i = 0; i < saveModules.size();i++) {
-	if(saveModules[i] == um) iu = i;
-	if(saveModules[i] == pm) ip = i;
-      }
-      saveOutputFile << iu<<" "<< saveConnections[k]->getUsesPortName() << " "
-		     << ip<<" "<< saveConnections[k]->getProvidesPortName() <<std::endl;
+	    Module* um = saveConnections[k]->getUsesModule();
+	    Module* pm = saveConnections[k]->getProvidesModule();
+	    unsigned int iu = 0;
+	    unsigned int ip = 0;
+	    for (unsigned int i = 0; i < saveModules.size();i++) {
+		if (saveModules[i] == um) {
+		    iu = i;
+		}
+
+		if (saveModules[i] == pm) {
+		    ip = i;
+		}
+	    }
+	    saveOutputFile << iu << " " <<
+	    saveConnections[k]->getUsesPortName() << " " << ip << " " <<
+	    saveConnections[k]->getProvidesPortName() << std::endl;
+	}
     }
-  }
     saveOutputFile.close();
     unsetCursor();
 }
@@ -591,9 +602,12 @@ void BuilderWindow::writeFile()
 void BuilderWindow::save()
 {
     if (filename.isEmpty()) {
-	QString fn = QFileDialog::getSaveFileName( QString::null,
-						   "Network File (*.net)", this );
-	if(!fn.isEmpty()) {
+	QString fn = QFileDialog::getSaveFileName(QString::null,
+						  "Network File (*.net)",
+                                                  this);
+	if (fn.isEmpty()) {
+	    statusBar()->message("Saving aborted", 2000);
+	} else {
 	    if (fn.endsWith(".net")) {
 		filename = fn;
 	    } else {
@@ -601,38 +615,44 @@ void BuilderWindow::save()
 		filename = fnExt;
 	    }
 	    writeFile();
-	} else {
-	  statusBar()->message("Saving aborted", 2000);
 	}
     }
 }
 
 void BuilderWindow::saveAs()
 {
-  QString fn = QFileDialog::getSaveFileName( QString::null,
-					     "Network File (*.net)", this );
-
-  if( !fn.isEmpty() ) {
-    if ( fn.endsWith(".net") ) {
-	filename = fn;
+    QString fn = QFileDialog::getSaveFileName(QString::null,
+					      "Network File (*.net)",
+                                              this);
+    if (fn.isEmpty()) {
+	statusBar()->message("Saving aborted", 2000);
     } else {
-	QString fnExt = fn + ".net";
-	filename = fnExt;
+	if (fn.endsWith(".net")) {
+	    filename = fn;
+	} else {
+	    QString fnExt = fn + ".net";
+	    filename = fnExt;
+	}
+	writeFile();
     }
-    writeFile();
-  } else {
-    statusBar()->message("Saving aborted", 2000);
-  }
 }
 
 void BuilderWindow::load()
 {
-  std::vector<Module*> grab_latest_Modules;
-  std::vector<Module*> ptr_table;
-  QString fn = QFileDialog::getOpenFileName( QString::null, "Network File (*.net)", this );
-  if(fn.isEmpty()) return;
+    setCursor(Qt::WaitCursor);
+
+    std::vector<Module*> grab_latest_Modules;
+    std::vector<Module*> ptr_table;
+    QString fn = QFileDialog::getOpenFileName(QString::null,
+                                              "Network File (*.net)",
+                                              this);
+    if (fn.isEmpty()) {
+	unsetCursor();
+	return;
+    }
+
   filename = fn;
-  ifstream is( fn ); 
+  std::ifstream is( fn ); 
 
   int load_Modules_size = 0;
   int load_Connections_size = 0;
@@ -671,7 +691,9 @@ void BuilderWindow::load()
     }
 
   is.close();
-  std::cout<<"Loading is Done"<<std::endl;
+
+  unsetCursor();
+  statusBar()->message("Loading done.");
   return;
 }
 
@@ -690,7 +712,7 @@ void BuilderWindow::clear()
 
     for (unsigned int j = 0; j < clearModules.size(); j++) {
 	std::cerr << "modules->getName = " <<
-	    clearModules[j]->moduleName << std::endl;
+	    clearModules[j]->moduleName() << std::endl;
 	clearModules[j]->destroy();
     }
     unsetCursor();
@@ -734,13 +756,18 @@ void BuilderWindow::about()
   (new QMessageBox())->about(this, "About", "CCA Builder (SCIRun Implementation)");
 }
 
-Module* BuilderWindow::instantiateComponent(const sci::cca::ComponentClassDescription::pointer& cd)
+Module* BuilderWindow::instantiateComponent(
+    const sci::cca::ComponentClassDescription::pointer& cd)
 {
+std::cerr << "BuilderWindow::instantiateComponent from component class description." << std::endl;
+
     statusBar()->message("Instantating component...");
     setCursor(Qt::WaitCursor);
 
     sci::cca::ports::BuilderService::pointer builder =
-	pidl_cast<sci::cca::ports::BuilderService::pointer>(services->getPort("cca.BuilderService"));
+	pidl_cast<sci::cca::ports::BuilderService::pointer>(
+	    services->getPort("cca.BuilderService")
+	);
     if (builder.isNull()) {
 	std::cerr << "Fatal Error: Cannot find builder service" << std::endl;
 	unsetCursor();
@@ -781,11 +808,15 @@ Module* BuilderWindow::instantiateComponent(const std::string& className,
 					    const std::string& type,
 					    const std::string& loaderName)
 {
+std::cerr << "BuilderWindow::instantiateComponent from className, type, loaderName." << std::endl;
+
     statusBar()->message("Instantating component " + className);
     setCursor(Qt::WaitCursor);
 
     sci::cca::ports::BuilderService::pointer builder =
-	pidl_cast<sci::cca::ports::BuilderService::pointer>(services->getPort("cca.BuilderService"));
+	pidl_cast<sci::cca::ports::BuilderService::pointer>(
+	    services->getPort("cca.BuilderService")
+	);
 
     if (builder.isNull()) {
 	std::cerr << "Fatal Error: Cannot find builder service" << std::endl;
@@ -796,7 +827,7 @@ Module* BuilderWindow::instantiateComponent(const std::string& className,
     TypeMap *tm = new TypeMap;
     tm->putString("LOADER NAME", loaderName);
     sci::cca::ComponentID::pointer cid =
-    builder->createInstance(className, type, sci::cca::TypeMap::pointer(tm));
+	builder->createInstance(className, type, sci::cca::TypeMap::pointer(tm));
 
     if(cid.isNull()){
 	std::cerr << "instantiateFailed..." << std::endl;
@@ -834,7 +865,7 @@ void BuilderWindow::displayMsg(const char *msg)
 
 void BuilderWindow::displayMsg(const QString &text)
 {
-  msgTextEdit->insert(text);
+    msgTextEdit->insert(text);
 }
 
 void BuilderWindow::updateMiniView()
@@ -880,27 +911,43 @@ void BuilderWindow::addCluster()
     sci::cca::ports::BuilderService::pointer builder =
 	pidl_cast<sci::cca::ports::BuilderService::pointer>(services->getPort("cca.BuilderService"));
     if (builder.isNull()) {
-	std::cerr << "Fatal Error: Cannot find builder service" << std::endl;
+	displayMsg("Error: Cannot find builder service\n");
+	return;
     }
 
-    ClusterDialog *dialog = new ClusterDialog(this, "Add Cluster", TRUE);
+    sci::cca::ports::FrameworkProperties::pointer fwkProperties =
+	pidl_cast<sci::cca::ports::FrameworkProperties::pointer>(services->getPort("cca.FrameworkProperties"));
+
+    ClusterDialog *dialog;
+    //string loaderName="qwerty";
+    //string domainName="qwerty.sci.utah.edu";
+    //string login="kzhang";
+    if (fwkProperties.isNull()) {
+	displayMsg("Error: Cannot find framework properties\n");
+	dialog = new ClusterDialog("qwerty", "qwerty.sci.utah.edu",
+				    "", this, "Add Cluster", TRUE);
+    } else {
+	sci::cca::TypeMap::pointer tm = fwkProperties->getProperties();
+	dialog = new ClusterDialog("qwerty", "qwerty.sci.utah.edu",
+		(tm->getString("default_login", "")).c_str(), this,
+		"Add Loader", TRUE);
+	services->releasePort("cca.FrameworkProperties");
+    }
+
     if (dialog->exec() == QDialog::Accepted) {
-	////////////////////////
-	//Assume a QT Dialog will return
-	//string loaderName="qwerty";
-	string loaderName = dialog->loader();
-	//string domainName="qwerty.sci.utah.edu";
-	string domainName = dialog->domain();
-	//string login="kzhang";
-	string login = dialog->login();
-	string loaderPath="mpirun -np 3 ploader";
+	std::string loaderName = dialog->loader();
+	std::string domainName = dialog->domain();
+	std::string login = dialog->login();
+	std::string loaderPath="mpirun -np 3 ploader";
 	//string password="****"; //not used;
 
 	builder->addLoader(loaderName, login, domainName, loaderPath); // spawns xterm
 	services->releasePort("cca.BuilderService");
     } else { // QDialog::Rejected
+	return;
     }
   
+#if 0
   //buildPackageMenus(loaderName);
 
   /*
@@ -928,20 +975,81 @@ void BuilderWindow::addCluster()
   for(unsigned int i = 0; i<urls.size(); i++)
     std::cout << "URL = " << urls[i] << "" << std::endl;
   */
+#endif
 }
 
 void BuilderWindow::rmCluster()
 {
     sci::cca::ports::BuilderService::pointer builder =
-	pidl_cast<sci::cca::ports::BuilderService::pointer>(services->getPort("cca.BuilderService"));
+	pidl_cast<sci::cca::ports::BuilderService::pointer>(
+	    services->getPort("cca.BuilderService")
+	);
     if (builder.isNull()) {
-	std::cerr << "Fatal Error: Cannot find builder service" << std::endl;
+	displayMsg("Error: Cannot find builder service\n");
+	return;
     }
     builder->removeLoader("buzz");
     services->releasePort("cca.BuilderService");
 }
 
 void BuilderWindow::refresh(){
+    buildPackageMenus();
+}
+
+// add or edit?
+void BuilderWindow::addSidlXmlPath()
+{
+    PathDialog* pd = new PathDialog(this, "SIDL XML path dialog");
+    if (pd->exec() == QDialog::Rejected) {
+	return;
+    }
+
+    if (pd->selectedDirectory().isEmpty()) {
+	displayMsg("Error: the directory path is blank.\n");
+	return;
+    }
+
+    if (pd->selectedComponentModel().isEmpty()) {
+	displayMsg("Error: the component model is blank.\n");
+	return;
+    }
+
+    // append directory to sidl path!
+   sci::cca::ports::FrameworkProperties::pointer fwkProperties =
+	pidl_cast<sci::cca::ports::FrameworkProperties::pointer>(
+	    services->getPort("cca.FrameworkProperties")
+	);
+
+    if (fwkProperties.isNull()) {
+	displayMsg("Error: cannot find framework properties, not adding new components.\n");
+	return;
+    }
+    sci::cca::TypeMap::pointer tm = fwkProperties->getProperties();
+    std::string path = tm->getString("sidl_xml_path", "");
+    path.append(";");
+    std::string dir = pd->selectedDirectory();
+    path.append(dir);
+    tm->putString("sidl_xml_path", path);
+    fwkProperties->setProperties(tm);
+    services->releasePort("cca.FrameworkProperties");
+
+    sci::cca::ports::ComponentRepository::pointer reg =
+	pidl_cast<sci::cca::ports::ComponentRepository::pointer>(
+	    services->getPort("cca.ComponentRepository")
+	);
+    if (reg.isNull()) {
+	std::cerr << "Error: cannot find component repository" << std::endl;
+	return;
+    }
+    statusBar()->message("Updating component classes.");
+    setCursor(Qt::WaitCursor);
+
+    reg->addComponentClass(pd->selectedComponentModel());
+
+    statusBar()->clear();
+    unsetCursor();
+    services->releasePort("cca.ComponentRepository");
+
     buildPackageMenus();
 }
 
