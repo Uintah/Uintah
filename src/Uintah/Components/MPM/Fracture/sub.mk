@@ -17,11 +17,13 @@ SRCS     += $(SRCDIR)/Fracture.cc \
 	$(SRCDIR)/CubicSpline.cc \
 	$(SRCDIR)/QuarticSpline.cc \
 	$(SRCDIR)/ExponentialSpline.cc \
-	$(SRCDIR)/LeastSquare.cc \
 	$(SRCDIR)/Visibility.cc
 	
 #
 # $Log$
+# Revision 1.14  2000/10/25 22:08:21  jas
+# Remove duplicate LeastSquare entry.
+#
 # Revision 1.13  2000/09/22 07:18:57  tan
 # MPM code works with fracture in three point bending.
 #
