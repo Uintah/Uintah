@@ -129,8 +129,8 @@ void CompNeoHook::computeStressTensor(const Patch* patch,
                                           DataWarehouseP& new_dw)
 {
   Matrix3 velGrad,Shear,fbar,deformationGradientInc;
-  double J,p;
-  double c_dil, c_rot,WaveSpeed;
+  double J,p,U,W,se=0.;
+  double c_dil=0.0, c_rot=0.0,WaveSpeed=0.0;
   double onethird = (1.0/3.0);
   Matrix3 Identity;
 
@@ -234,6 +234,12 @@ void CompNeoHook::computeStressTensor(const Patch* patch,
 
     c_dil = Max(c_dil,(lambda + 2.*mu)*pvolume[idx]/pmass[idx]);
     c_rot = Max(c_rot, mu*pvolume[idx]/pmass[idx]);
+
+    // Compute the strain energy for all the particles
+    U = .5*bulk*(.5*(pow(J,2.0) - 1.0) - log(J));
+    W = .5*shear*(bElBar[idx].Trace() - 3.0);
+
+    se += (U + W)*pvolume[idx];
   }
 
   WaveSpeed = sqrt(Max(c_rot,c_dil));
@@ -244,6 +250,9 @@ void CompNeoHook::computeStressTensor(const Patch* patch,
   new_dw->put(deformationGradient, lb->pDeformationMeasureLabel,
                 matlindex, patch);
   new_dw->put(bElBar, bElBarLabel, matlindex, patch);
+
+  // Put the strain energy in the data warehouse
+  new_dw->put(sum_vartype(se), lb->StrainEnergyLabel);
 
   // This is just carried forward with the updated alpha
   new_dw->put(cmdata, p_cmdata_label, matlindex, patch);
@@ -344,6 +353,10 @@ const TypeDescription* fun_getTypeDescription(CompNeoHook::CMData*)
 }
 
 // $Log$
+// Revision 1.14  2000/05/31 22:37:09  guilkey
+// Put computation of strain energy inside the computeStressTensor functions,
+// and store it in a reduction variable in the datawarehouse.
+//
 // Revision 1.13  2000/05/30 21:07:02  dav
 // delt to delT
 //
