@@ -155,6 +155,8 @@ c--------------------------------------------------------------------
      $        PASS3B(spx_fcy), 
      $        PASS3A(dfx_fcy)
      $        PASS3B(dfx_fcy), 
+     $        PASS3A(kstabu)
+     $        PASS3B(kstabu), 
      $        PASS3A(ug_cc)
      $        PASS3B(ug_cc), 
      $        PASS3A(up_fcy)
@@ -163,6 +165,8 @@ c--------------------------------------------------------------------
      $        PASS3B(epsg), 
      $        PASS3A(den)
      $        PASS3B(den), 
+     $        PASS3A(dmicr)
+     $        PASS3B(dmicr), 
      $        PASS3A(epss)
      $        PASS3B(epss),
      $        PASS1(sew), 
@@ -198,6 +202,8 @@ c--------------------------------------------------------------------
      $        PASS3B(spx_fcy), 
      $        PASS3A(dfx_fcy)
      $        PASS3B(dfx_fcy), 
+     $        PASS3A(kstabu)
+     $        PASS3B(kstabu), 
      $        PASS3A(ug_cc)
      $        PASS3B(ug_cc), 
      $        PASS3A(up_fcy)
@@ -206,6 +212,8 @@ c--------------------------------------------------------------------
      $        PASS3B(epsg), 
      $        PASS3A(den)
      $        PASS3B(den), 
+     $        PASS3A(dmicr)
+     $        PASS3B(dmicr), 
      $        PASS3A(epss)
      $        PASS3B(epss), 
      $        PASS1(sew), 

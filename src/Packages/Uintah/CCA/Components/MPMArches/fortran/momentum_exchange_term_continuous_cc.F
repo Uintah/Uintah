@@ -423,14 +423,17 @@ c     later we will get discrete fraction from mpm to input here.
 
                   if (lmltm) then
                      visturb = factor*((csmag*dist)**2*
-     $                    denMicro(i,j,k)*abs(
+     $                    denmicro(i,j,k)*abs(
      $                    (ug_cc(i,j,k) - up_cc(i,j,k))/
      $                    dist) + viscos)
                      tmult = visturb/dist
                   else
                      tmult = factor*viscos/dist
                   endif
-                     
+
+                  kstabu(i,j,k) = kstabu(i,j,k) + 
+     $                 tmult*area/den(i,j,k)
+
                   sux_cc(i,j,k) = sux_cc(i,j,k) + 
      $                 tmult*area*up_cc(i,j,k) 
 
@@ -479,6 +482,8 @@ c     causing the build to fail on linux.
      $     PASS3B(spx_fcy), 
      $     PASS3A(dfx_fcy)
      $     PASS3B(dfx_fcy), 
+     $     PASS3A(kstabu)
+     $     PASS3B(kstabu), 
      $     PASS3A(ug_cc)
      $     PASS3B(ug_cc), 
      $     PASS3A(up_fcy)
@@ -487,6 +492,8 @@ c     causing the build to fail on linux.
      $     PASS3B(epsg), 
      $     PASS3A(den)
      $     PASS3B(den), 
+     $     PASS3A(denmicro)
+     $     PASS3B(denmicro), 
      $     PASS3A(epss)
      $     PASS3B(epss),
      $     PASS1(sew), 
@@ -516,6 +523,8 @@ c     direction 2 (i.e., bottom and top faces)
      $     PASS3B(spx_fcz),
      $     PASS3A(dfx_fcz)
      $     PASS3B(dfx_fcz), 
+     $     PASS3A(kstabu)
+     $     PASS3B(kstabu), 
      $     PASS3A(ug_cc)
      $     PASS3B(ug_cc), 
      $     PASS3A(up_fcz)
@@ -524,6 +533,8 @@ c     direction 2 (i.e., bottom and top faces)
      $     PASS3B(epsg), 
      $     PASS3A(den)
      $     PASS3B(den), 
+     $     PASS3A(denmicro)
+     $     PASS3B(denmicro), 
      $     PASS3A(epss)
      $     PASS3B(epss),
      $     PASS1(sew), 
