@@ -44,8 +44,10 @@ div.content-layer1 {
   padding-left: 5px;
   padding-right: 5px;
   background-color: white;
-  margin-left: 8%;
-  margin-right: 8%;
+  margin-left: 0.25in;
+  margin-right: 0.25in;
+  border-top: 0.25in solid rgb(73, 91, 105);
+  border-bottom: 0.25in solid rgb(73, 91, 105);;
 }
 
 .title {
