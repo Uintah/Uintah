@@ -55,7 +55,7 @@ void IgnitionCombustion::computeBurn(double gasTemperature,
   releasedHeat = burnedMass * Enthalpy;
 }
 
-
-
-
-
+double IgnitionCombustion::getThresholdTemperature()
+{
+   return thresholdTemp;
+}

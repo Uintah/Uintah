@@ -169,6 +169,7 @@ void ViscoScram::computeStableTimestep(const Patch* patch,
 		      Max(c_dil+fabs(pvelocity[idx].z()),WaveSpeed.z()));
     }
     WaveSpeed = dx/WaveSpeed;
+
     double delT_new = WaveSpeed.minComponent();
     new_dw->put(delt_vartype(delT_new), lb->delTLabel);
 }
@@ -554,8 +555,17 @@ void ViscoScram::computeStressTensor(const PatchSubset* patches,
 		        Max(c_dil+fabs(pvelocity[idx].z()),WaveSpeed.z()));
     }
 
+    delt_vartype doMech;
+    old_dw->get(doMech, lb->doMechLabel);
+
     WaveSpeed = dx/WaveSpeed;
     double delT_new = WaveSpeed.minComponent();
+    if(doMech < 0.){
+	delT_new = WaveSpeed.minComponent();
+    }
+    else{
+	delT_new = 100.0;
+    }
     new_dw->put(delt_vartype(delT_new),lb->delTLabel);
     new_dw->put(pstressnew,            lb->pStressLabel_afterStrainRate);
     new_dw->put(pCrackRadius,          lb->pCrackRadiusLabel_preReloc);
@@ -573,6 +583,7 @@ void ViscoScram::addComputesAndRequires(Task* task,
 {
   const MaterialSubset* matlset = matl->thisMaterial();
   task->requires(Task::OldDW, lb->delTLabel);
+  task->requires(Task::OldDW, lb->doMechLabel);
   task->requires(Task::OldDW, lb->pXLabel,           matlset, Ghost::None);
   task->requires(Task::OldDW, p_statedata_label,     matlset, Ghost::None);
   task->requires(Task::OldDW, pRandLabel,            matlset, Ghost::None);

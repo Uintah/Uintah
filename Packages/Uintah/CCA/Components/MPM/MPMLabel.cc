@@ -303,6 +303,8 @@ MPMLabel::MPMLabel()
   pCellNAPIDLabel =
     scinew VarLabel("cellNAPID", CCVariable<short int>::getTypeDescription());
 
+  doMechLabel = scinew VarLabel( "doMech", delt_vartype::getTypeDescription() );
+
 } 
 
 MPMLabel::~MPMLabel()
@@ -399,6 +401,7 @@ MPMLabel::~MPMLabel()
 
   delete partCountLabel;
   delete delTLabel;
+  delete doMechLabel;
 
   delete StrainEnergyLabel;
   delete KineticEnergyLabel;
