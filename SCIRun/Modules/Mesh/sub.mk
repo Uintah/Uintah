@@ -27,7 +27,6 @@ SRCS     += \
 	$(SRCDIR)/MeshInterpVals.cc\
 	$(SRCDIR)/MeshRender.cc\
 	$(SRCDIR)/MeshToGeom.cc\
-	$(SRCDIR)/SliceMeshToGeom.cc\
 	$(SRCDIR)/MeshView.cc\
 	$(SRCDIR)/SliceMeshToGeom.cc\
 #[INSERT NEW MODULE HERE]
@@ -42,6 +41,13 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.6  2000/09/07 00:16:16  zyp
+# Removing the SliceMeshToGeom.cc because I accidently added it in my
+# last commit.  Also in the last commit I didn't add the comments
+# properly, so I will mention them now.  I changed MakeScalarField to be
+# able to handle a ColumnMatrix of the size of the number of nodes in a
+# mesh or the number of elements and assign the values from the matrix accordingly.
+#
 # Revision 1.5  2000/09/07 00:12:19  zyp
 # MakeScalarField.cc
 #
