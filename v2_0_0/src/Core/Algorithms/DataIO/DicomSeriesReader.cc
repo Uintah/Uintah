@@ -283,7 +283,7 @@ int DicomSeriesReader::read( DicomImage & di )
 
   return 0;
 }
-
+ 
 /*===========================================================================*/
 // 
 // get_series_uids
