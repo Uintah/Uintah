@@ -10,7 +10,6 @@ namespace Uintah {
     //     +x -x +y -y +z -z
     double  e, w, n, s, t, b;
   };
-  const TypeDescription* fun_getTypeDescription(Stencil7*);
 }
 
 namespace SCIRun {
