@@ -138,7 +138,7 @@ TimestepSelector::execute()
        tcl_status.set( to_string( times[idx] ));
        time.set( idx );
        handle->SetTimestep( idx );
-       out->send_intermediate( handle );
+       out->send( handle, true );
        reset_vars();
        v =  times[idx];
        hour = trunc( v/3600.0);
