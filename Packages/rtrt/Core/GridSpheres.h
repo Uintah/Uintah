@@ -15,7 +15,6 @@
 namespace rtrt {
 using std::string;
 
-struct GridSpheresTree;
 struct BoundedObject;
 struct MCell;
 class  RegularColorMap;
@@ -43,7 +42,6 @@ protected:
   double transp;
   double ior;
   BBox bbox;
-  friend class GridSpheresMatl;
   friend class GridSpheresDpy;
   GridSpheresDpy* dpy;
   double icellsize;
