@@ -12,6 +12,7 @@
  *  Copyright (C) 1997 SCI Group
  */
 
+#define _GNU_SOURCE
 #define __USE_UNIX98
 #include <pthread.h>
 #define private public
@@ -497,6 +498,12 @@ static void exit_handler()
 }
 
 void
+Thread::allow_sgi_OpenGL_page0_sillyness()
+{
+  // Nothing necessary here
+}
+
+void
 Thread::initialize()
 {
   atexit(exit_handler);
@@ -808,6 +815,9 @@ ConditionVariable::conditionBroadcast()
 
 //
 // $Log$
+// Revision 1.13  2000/03/20 21:58:30  yarden
+// Linux port: add a stub : Thread::allow_sgi_OpenGL_page0_sillyness()
+//
 // Revision 1.12  1999/10/15 20:56:52  ikits
 // Fixed conflict w/ get_tid in /usr/include/task.h. Replaced by get_thread_id.
 //
