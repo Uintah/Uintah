@@ -26,62 +26,73 @@ namespace SCICore {
 	}
 	inline ~IntVector() {
 	}
-	inline IntVector(const IntVector& copy)
-	    : d_x(copy.d_x), d_y(copy.d_y), d_z(copy.d_z) {
+	inline IntVector(const IntVector& copy) {
+	  for (int indx = 0; indx < 3; indx ++)
+	    d_value[indx] = copy.d_value[indx];
 	}
 	inline IntVector& operator=(const IntVector& copy) {
-	    d_x=copy.d_x; d_y=copy.d_y; d_z=copy.d_z;
-	    return *this;	
+	  for (int indx = 0; indx < 3; indx ++)
+	    d_value[indx] = copy.d_value[indx];
+	  return *this;	
 	}
 
 	inline bool operator==(const IntVector& a) {
-	   return d_x == a.d_x && d_y == a.d_y && d_z == a.d_z;
+	   return d_value[0] == a.d_value[0] && d_value[1] == a.d_value[1] && d_value[2] == a.d_value[2];
 	}
 
 	inline bool operator!=(const IntVector& a) {
-	   return d_x != a.d_x || d_y != a.d_y || d_z != a.d_z;
+	   return d_value[0] != a.d_value[0] || d_value[1] != a.d_value[1] || d_value[2] != a.d_value[2];
 	}
 
-	inline IntVector(int x, int y, int z)
-	    : d_x(x), d_y(y), d_z(z)
-	{
+	inline IntVector(int x, int y, int z) {
+	  d_value[0] = x;
+	  d_value[1] = y;
+	  d_value[2] = z;
 	}
 
 	inline IntVector operator*(const IntVector& v) const {
-	    return IntVector(d_x*v.d_x, d_y*v.d_y, d_z*v.d_z);
+	    return IntVector(d_value[0]*v.d_value[0], d_value[1]*v.d_value[1],
+			     d_value[2]*v.d_value[2]);
 	}
 	inline IntVector operator/(const IntVector& v) const {
-	    return IntVector(d_x/v.d_x, d_y/v.d_y, d_z/v.d_z);
+	    return IntVector(d_value[0]/v.d_value[0], d_value[1]/v.d_value[1],
+			     d_value[2]/v.d_value[2]);
 	}
 	inline IntVector operator+(const IntVector& v) const {
-	    return IntVector(d_x+v.d_x, d_y+v.d_y, d_z+v.d_z);
+	    return IntVector(d_value[0]+v.d_value[0], d_value[1]+v.d_value[1], 
+			     d_value[2]+v.d_value[2]);
 	}
 	inline IntVector operator-(const IntVector& v) const {
-	    return IntVector(d_x-v.d_x, d_y-v.d_y, d_z-v.d_z);
+	    return IntVector(d_value[0]-v.d_value[0], d_value[1]-v.d_value[1], 
+			     d_value[2]-v.d_value[2]);
 	}
 
 	inline int x() const {
-	    return d_x;
+	    return d_value[0];
 	}
 	inline int y() const {
-	    return d_y;
+	    return d_value[1];
 	}
 	inline int z() const {
-	    return d_z;
+	    return d_value[2];
 	}
 	inline void x(int x) {
-	    d_x=x;
+	    d_value[0]=x;
 	}
 	inline void y(int y) {
-	    d_y=y;
+	    d_value[1]=y;
 	}
 	inline void z(int z) {
-	    d_z=z;
+	    d_value[2]=z;
+	}
+	// get the array pointer
+	inline int* get_pointer() {
+	  return d_value;
 	}
         friend inline Vector operator*(const Vector&, const IntVector&);
         friend inline Vector operator*(const IntVector&, const Vector&);
     private:
-	int d_x, d_y, d_z;
+	int d_value[3];
     };
 
     inline Vector operator*(const Vector& a, const IntVector& b) {
@@ -108,6 +119,10 @@ std::ostream& operator<<(std::ostream&, const SCICore::Geometry::IntVector&);
 
 //
 // $Log$
+// Revision 1.6  2000/06/20 20:39:53  rawat
+// modified implementation of IntVector.h. Storing vector components as array
+// of dim 3. Also added get_pointer for passing into fortran subroutines
+//
 // Revision 1.5  2000/05/20 08:05:31  sparker
 // Added == and != operators
 //
