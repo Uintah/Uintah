@@ -1560,8 +1560,10 @@ void MPMArches::computeVoidFrac(const ProcessorGroup*,
 	if (solid_sum[*iter] > 1.0)
 	  solid_sum[*iter] = 1.0;
 
-	for (int m = 0; m < numMPMMatls; m++) {
-	  solid_fraction_cc[m][*iter] = solid_fraction_cc[m][*iter]/solid_frac_sum;
+	if (solid_frac_sum > 0.0) {
+	  for (int m = 0; m < numMPMMatls; m++) {
+	    solid_fraction_cc[m][*iter] = solid_fraction_cc[m][*iter]/solid_frac_sum;
+	  }
 	}
       }
 
