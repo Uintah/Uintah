@@ -330,7 +330,7 @@ double MWViscoElastic::computeRhoMicroCM(double pressure,
   //double p_ref=101325.0;
   double p_gauge = pressure - p_ref;
   double rho_cur;
-  double G = d_initialData.G;
+  //double G = d_initialData.G;
   double bulk = d_initialData.K;
 
   rho_cur = rho_orig/(1-p_gauge/bulk);
