@@ -27,7 +27,10 @@ package require Iwidgets 3.0
 
 class Diagram {
 
-    variable w 
+    variable opt
+    variable menu
+    variable gl
+    variable parent
     variable n
     variable initialized
     
@@ -41,39 +44,54 @@ class Diagram {
     }
 
     method ui { window name } {
-	set w $window
+	set opt $window.opt
+	set menu $window.menu
 	set n $name
 
     }
 
     method init {} {
-	frame $w.b
-	iwidgets::labeledframe $w.b.all -labeltext $n -labelpos nw
-	iwidgets::labeledframe $w.b.one -labeltext $n -labelpos nw
-	pack $w.b.all 
+	# widgets menu
+	$menu add menubutton .widgets -text "Widgets"
 
-	frame $w.select 
-	label $w.select.label -text "Select:"
+	$menu add command .widgets.hairline -label Hairline -underline 0 \
+	    -command "$this widget hairline"
+
+	# option
+	frame $opt.b
+	iwidgets::labeledframe $opt.b.all -labeltext $n -labelpos nw
+	iwidgets::labeledframe $opt.b.one -labeltext $n -labelpos nw
+	pack $opt.b.all 
+
+	frame $opt.select 
+	label $opt.select.label -text "Select:"
 	set $this-select 2
-	radiobutton $w.select.one -text "One" \
+	radiobutton $opt.select.one -text "One" \
 	    -variable $this-select -value 1 \
 	    -command "$this select one"
-	radiobutton $w.select.many -text "Many" \
+	radiobutton $opt.select.many -text "Many" \
 	    -variable $this-select -value 2 \
 	    -command "$this select many"
-	pack $w.select.label $w.select.one $w.select.many -side left
+	pack $opt.select.label $opt.select.one $opt.select.many -side left
 
-	frame $w.scale 
-	label $w.scale.label -text "Scale:"
+	frame $opt.scale 
+	label $opt.scale.label -text "Scale:"
 	set $this-scale 1
-	radiobutton $w.scale.all -text "All" -variable $this-scale -value 1 \
+	radiobutton $opt.scale.all -text "All" -variable $this-scale \
+	    -value 1 \
 	    -command "$this-c redraw" -anchor w
-	radiobutton $w.scale.each -text "Each" -variable $this-scale -value 2 \
+	radiobutton $opt.scale.each -text "Each" -variable $this-scale \
+	    -value 2 \
 	    -command "$this-c redraw" -anchor w
-	pack $w.scale.label $w.scale.all $w.scale.each -side left 
+	pack $opt.scale.label $opt.scale.all $opt.scale.each -side left 
 	
-	pack $w.b $w.select $w.scale -side top 
+	pack $opt.b $opt.select $opt.scale -side top 
 
+
+	bind DiagramTags <ButtonPress> "$this-c ButtonPress %x %y %b "
+	bind DiagramTags <B1-Motion> "$this-c Motion %x %y %b "
+	bind DiagramTags <ButtonRelease> "$this-c ButtonRelease %x %y %b "
+	
 	set initialized 1
     }
 	
@@ -82,13 +100,13 @@ class Diagram {
 	    $this init
 	}
 	    
-	set cs [$w.b.all childsite]
+	set cs [$opt.b.all childsite]
 	checkbutton $cs.$name -text $name -variable val($name) \
 	    -command "$this-c select $n \$val($name)"
 	$cs.$name select
 	pack $cs.$name -side left
 
-	set cs [$w.b.one childsite]
+	set cs [$opt.b.one childsite]
 	radiobutton $cs.$name -text $name -variable select-one -value $n \
 	    -command "$this-c select-one $n"
 	pack $cs.$name -side left
@@ -97,12 +115,20 @@ class Diagram {
 
     method select {which} {
 	if { $which == "one" } {
-	    pack forget $w.b.all
-	    pack $w.b.one -side left
+	    pack forget $opt.b.all
+	    pack $opt.b.one -side left
 	} else {
-	    pack forget $w.b.one 
-	    pack $w.b.all -side left
+	    pack forget $opt.b.one 
+	    pack $opt.b.all -side left
 	}
 	$this-c redraw
+    }
+
+    method widget { name } {
+	$this-c widget $name
+    }
+
+    method getbinds {} {
+	return DiagramTags
     }
 }
