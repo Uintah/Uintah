@@ -78,8 +78,8 @@ ScalarMinMaxAlgoCountT<FIELD>::execute(FieldHandle field,
       
 
     if( field->basis_order() == 0 ){
-      typename FIELD::mesh_type::CellIter iter; m->begin( iter );
-      typename FIELD::mesh_type::CellIter iter_end; m->end( iter_end );
+      typename FIELD::mesh_type::Cell::iterator iter; m->begin( iter );
+      typename FIELD::mesh_type::Cell::iterator iter_end; m->end( iter_end );
 
       for( ; iter != iter_end; ++iter){
 	double value = fld->fdata()[*iter];
@@ -107,8 +107,8 @@ ScalarMinMaxAlgoCountT<FIELD>::execute(FieldHandle field,
 	}
       }
     } else {
-      typename FIELD::mesh_type::NodeIter iter;  m->begin( iter );
-      typename FIELD::mesh_type::NodeIter iter_end; m->end( iter_end );
+      typename FIELD::mesh_type::Node::iterator iter;  m->begin( iter );
+      typename FIELD::mesh_type::Node::iterator iter_end; m->end( iter_end );
 
       for( ; iter != iter_end; ++iter){
 	double value  = fld->fdata()[*iter];

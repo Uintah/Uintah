@@ -161,7 +161,7 @@ void ImageToNrrd::create_nrrd(ITKDatatypeHandle &img) {
   
   img_iter.GoToBegin();
   while(!img_iter.IsAtEnd()) {
-    PixelType *&i = (PixelType*&)p;
+    //PixelType *&i = (PixelType*&)p;
     *i = img_iter.Get();
     
     // increment pointers
@@ -239,9 +239,9 @@ void ImageToNrrd::create_nrrd2(ITKDatatypeHandle &img) {
   ValueType *&i = (ValueType*&)p;
 
   img_iter.GoToBegin();
-  int count = 0;
+  //int count = 0;
   while(!img_iter.IsAtEnd()) {
-    ValueType *&i = (ValueType*&)p;
+    //ValueType *&i = (ValueType*&)p;
     *i = img_iter.Get()[0];
     ++i;
     *i = img_iter.Get()[1];
@@ -291,7 +291,7 @@ bool ImageToNrrd::run2( itk::Object* obj1)
 
 void ImageToNrrd::execute() {
   inport1_ = (ITKDatatypeIPort *)get_iport("InputImage");
-  onrrd_ = (NrrdOPort *)get_oport("OutputNrrd");
+  onrrd_ = (NrrdOPort *)get_oport("OutputNrrd");  
   
   if (!inport1_) {
     error("Unable to initialize iport 'InputImage'.");
@@ -301,7 +301,10 @@ void ImageToNrrd::execute() {
     error("Unable to initialize oport 'OutputNrrd'.");
     return;
   }
-  if(!inport1_->get(inhandle1_))
+
+  inport1_->get(inhandle1_);
+  
+  if(!inhandle1_.get_rep())
     return;
   
   // get input
