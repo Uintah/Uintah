@@ -70,9 +70,9 @@ WARNING
     // Count particles in a patch
     //
     virtual particleIndex countParticles(const Patch*,
-					 std::vector<GeometryObject*>&) const;
-    virtual particleIndex countParticles(GeometryObject* obj,
-					 const Patch*) const;
+					 std::vector<GeometryObject*>&) ;
+    virtual particleIndex countAndCreateParticles(const Patch*,
+						  GeometryObject* obj) ;
 
     /////////////////////////////////////////////////////////////////////////
     //

@@ -5,6 +5,7 @@
 #include <Packages/Uintah/Core/Grid/ParticleVariable.h>
 #include <sgi_stl_warnings_off.h>
 #include <vector>
+#include <map>
 #include <sgi_stl_warnings_on.h>
 
 namespace Uintah {
@@ -36,15 +37,34 @@ namespace Uintah {
 					    MPMLabel* lb,
 					    vector<GeometryObject*>&);
 
+    virtual ParticleSubset* allocateVariables(particleIndex numParticles,
+					      int dwi, MPMLabel* lb, 
+					      const Patch* patch,
+					      DataWarehouse* new_dw);
+
+    virtual void allocateVariablesAdd(MPMLabel* lb, DataWarehouse* new_dw,
+				      ParticleSubset* subset,
+				      map<const VarLabel*,ParticleVariableBase*>* newState);
+
     virtual void registerPermanentParticleState(MPMMaterial* matl,
 						MPMLabel* lb);
 
     virtual particleIndex countParticles(const Patch*,
-				 std::vector<GeometryObject*>&) const;
-    virtual particleIndex countParticles(GeometryObject* obj,
-				 const Patch*) const;
+					 std::vector<GeometryObject*>&);
+
+    virtual particleIndex countAndCreateParticles(const Patch*,
+						  GeometryObject* obj);
 
   protected:
+
+    void createPoints(const Patch* patch, GeometryObject* obj);
+
+    virtual void initializeParticle(const Patch* patch,
+				    vector<GeometryObject*>::const_iterator obj, 
+				    MPMMaterial* matl,
+				    Point p, IntVector cell_idx,
+				    particleIndex i,
+				    CCVariable<short int>& cellNAPI);
     
     // Get the LoadCurveID applicable for this material point
     int getLoadCurveID(const Point& pp, const Vector& dxpp);
@@ -60,10 +80,6 @@ namespace Uintah {
     int checkForSurface(const GeometryPiece* piece, const Point p,
                         const Vector dxpp);
     
-    ParticleSubset* allocateVariables(particleIndex numParticles,
-				      int dwi, MPMLabel* lb, 
-				      const Patch* patch,
-				      DataWarehouse* new_dw);
 
     ParticleVariable<Point> position;
     ParticleVariable<Vector> pvelocity, pexternalforce, psize;
@@ -78,6 +94,8 @@ namespace Uintah {
     bool d_doErosion;
 
     vector<const VarLabel* > particle_state, particle_state_preReloc;
+    typedef map<pair<const Patch*,GeometryObject*>,vector<Point> > geompoints;
+    geompoints d_object_points;
   };
 
 

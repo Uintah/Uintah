@@ -53,18 +53,18 @@ DefaultParticleCreator::createParticles(MPMMaterial* matl,
 
 particleIndex 
 DefaultParticleCreator::countParticles(const Patch* patch,
-				       vector<GeometryObject*>& d_geom_objs) const
+				       vector<GeometryObject*>& d_geom_objs) 
 {
 
   return ParticleCreator::countParticles(patch,d_geom_objs);
 }
 
 particleIndex 
-DefaultParticleCreator::countParticles(GeometryObject* obj,
-				       const Patch* patch) const
+DefaultParticleCreator::countAndCreateParticles(const Patch* patch,
+						GeometryObject* obj) 
 {
 
-  return ParticleCreator::countParticles(obj,patch);
+  return ParticleCreator::countAndCreateParticles(patch,obj);
 }
 
 
