@@ -9,7 +9,7 @@ itcl_class Uintah_Visualization_EigenEvaluator {
 
     method set_defaults {} {
 	global $this-eigenSelect
-	set $this-eigenSelect 2
+	set $this-eigenSelect 0
     }
     method ui {} {
 	set w .ui[modname]
@@ -24,7 +24,7 @@ itcl_class Uintah_Visualization_EigenEvaluator {
 	pack $w.m -padx 2 -pady 2 -fill x -expand yes
 
 	make_labeled_radio $w.m.r "Which Eigen Value" $n left \
-		$this-eigenSelect {{"Largest" 2} {"Middle" 1} {"Smallest" 0}}
+		$this-eigenSelect {{"Largest" 0} {"Middle" 1} {"Smallest" 2}}
 	pack $w.m.r
 
 	button $w.b -text Close -command "destroy $w"
