@@ -157,6 +157,13 @@ public:
 				const MaterialSet* matls,
 			        const TimeIntegratorLabel* timelabels);
 
+      inline double recomputeTimestep(double current_dt) {
+        return current_dt;
+      }
+      
+      inline bool restartableTimesteps() {
+        return false;
+      }
   
 protected :
 

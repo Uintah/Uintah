@@ -454,6 +454,12 @@ ArchesLabel::ArchesLabel()
 				       max_vartype::getTypeDescription() );
   d_maxUxplusInterm_label = VarLabel::create("maxUxplusInterm",
 				       max_vartype::getTypeDescription() );
+  d_avUxplus_label = VarLabel::create("avUxplus",
+				       sum_vartype::getTypeDescription() );
+  d_avUxplusPred_label = VarLabel::create("avUxplusPred",
+				       sum_vartype::getTypeDescription() );
+  d_avUxplusInterm_label = VarLabel::create("avUxplusInterm",
+				       sum_vartype::getTypeDescription() );
 // filtered convection terms in momentum eqn
   d_filteredRhoUjULabel = VarLabel::create("filteredRhoUjU",
 				   SFCXVariable<double>::getTypeDescription() );
@@ -659,6 +665,9 @@ ArchesLabel::~ArchesLabel()
   VarLabel::destroy(d_maxUxplus_label);
   VarLabel::destroy(d_maxUxplusPred_label);
   VarLabel::destroy(d_maxUxplusInterm_label);
+  VarLabel::destroy(d_avUxplus_label);
+  VarLabel::destroy(d_avUxplusPred_label);
+  VarLabel::destroy(d_avUxplusInterm_label);
 // filtered convection terms in momentum eqn
   VarLabel::destroy(d_filteredRhoUjULabel);
   VarLabel::destroy(d_filteredRhoUjVLabel);

@@ -181,6 +181,7 @@ MomentumSolver::sched_buildLinearMatrix(SchedulerP& sched,
 
     tsk->computes(timelabels->maxabsu_out);
     tsk->computes(timelabels->maxuxplus_out);
+    tsk->computes(timelabels->avuxplus_out);
 
     break;
 
@@ -367,6 +368,12 @@ MomentumSolver::buildLinearMatrix(const ProcessorGroup* pc,
     IntVector ixHigh;
     //double maxUxplus = -10000000000.0;
     bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
+    double avUxplus = 0.0;
+    const Level* level = patch->getLevel();
+    IntVector low, high;
+    level->findCellIndexRange(low, high);
+    IntVector range = high-low;
+    double num_elem = range.y()*range.z();
     
     switch (index) {
     case Arches::XDIR:
@@ -395,12 +402,16 @@ MomentumSolver::buildLinearMatrix(const ProcessorGroup* pc,
               IntVector currCell(colX, colY, colZ);
               IntVector xplusCell(colX+1, colY, colZ);
 
-	      if (constVelocityVars.cellType[xplusCell] == outlet_celltypeval)
+	      if (constVelocityVars.cellType[xplusCell] == outlet_celltypeval) {
 	        maxUxplus = Max(velocityVars.uVelRhoHat[currCell], maxUxplus);
+		avUxplus += velocityVars.uVelRhoHat[currCell];
+	      }
           }
         }
       }
       new_dw->put(max_vartype(maxUxplus), timelabels->maxuxplus_out); 
+      avUxplus /= num_elem;
+      new_dw->put(sum_vartype(avUxplus), timelabels->avuxplus_out);
 
       break;
     case Arches::YDIR:
@@ -548,12 +559,14 @@ MomentumSolver::sched_buildLinearMatrixVelHat(SchedulerP& sched,
     tsk->requires(Task::OldDW, timelabels->maxabsv_in);
     tsk->requires(Task::OldDW, timelabels->maxabsw_in);
     tsk->requires(Task::OldDW, timelabels->maxuxplus_in);
+    tsk->requires(Task::OldDW, timelabels->avuxplus_in);
   }
   else {
     tsk->requires(Task::NewDW, timelabels->maxabsu_in);
     tsk->requires(Task::NewDW, timelabels->maxabsv_in);
     tsk->requires(Task::NewDW, timelabels->maxabsw_in);
     tsk->requires(Task::NewDW, timelabels->maxuxplus_in);
+    tsk->requires(Task::NewDW, timelabels->avuxplus_in);
   }
   // required for computing div constraint
 //#ifdef divergenceconstraint
@@ -659,26 +672,31 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
   double maxAbsV;
   double maxAbsW;
   double maxUxplus;
+  double avUxplus;
   max_vartype mxAbsU;
   max_vartype mxAbsV;
   max_vartype mxAbsW;
   max_vartype mxUxp;
+  sum_vartype avUxp;
   if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
     old_dw->get(mxAbsU, timelabels->maxabsu_in);
     old_dw->get(mxAbsV, timelabels->maxabsv_in);
     old_dw->get(mxAbsW, timelabels->maxabsw_in);
     old_dw->get(mxUxp, timelabels->maxuxplus_in);
+    old_dw->get(avUxp, timelabels->avuxplus_in);
   }
   else {
     new_dw->get(mxAbsU, timelabels->maxabsu_in);
     new_dw->get(mxAbsV, timelabels->maxabsv_in);
     new_dw->get(mxAbsW, timelabels->maxabsw_in);
     new_dw->get(mxUxp, timelabels->maxuxplus_in);
+    new_dw->get(avUxp, timelabels->avuxplus_in);
   }
   maxAbsU = mxAbsU;
   maxAbsV = mxAbsV;
   maxAbsW = mxAbsW;
   maxUxplus = mxUxp;
+  avUxplus = avUxp;
 
   for (int p = 0; p < patches->size(); p++) {
   TAU_PROFILE_START(input);
@@ -1282,9 +1300,13 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
 #endif
     
     }
-    if (d_boundaryCondition->getInletBC())
+    double time_shift = 0.0;
+    if (d_boundaryCondition->getInletBC()) {
+    time_shift = delta_t * timelabels->time_position_multiplier;
     d_boundaryCondition->velRhoHatInletBC(pc, patch, cellinfo,
-					  &velocityVars, &constVelocityVars);
+					  &velocityVars, &constVelocityVars,
+					  time_shift);
+    }
     if (d_boundaryCondition->getPressureBC())
     d_boundaryCondition->velRhoHatPressureBC(pc, patch, cellinfo, delta_t,
 					     &velocityVars, &constVelocityVars);

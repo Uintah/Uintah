@@ -439,7 +439,8 @@ public:
 			    const Patch* patch,
 			    CellInformation* cellinfo,
 			    ArchesVariables* vars,
-			    ArchesConstVariables* constvars);
+			    ArchesConstVariables* constvars,
+			    double time_shift);
 
       void velRhoHatPressureBC(const ProcessorGroup* pc,
 			    const Patch* patch,
