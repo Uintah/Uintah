@@ -128,6 +128,7 @@ JohnsonCookPlastic::evaluateFlowStress(const double& ep,
     strainRatePart = 1.0 + d_CM.C*log(epdot);
   double Tr = matl->getRoomTemperature();
   double Tm = matl->getMeltTemperature();
+  ASSERT(T < Tm);
   d_CM.TRoom = Tr;  d_CM.TMelt = Tm;
   double m = d_CM.m;
   double Tstar = (T-Tr)/(Tm-Tr);
