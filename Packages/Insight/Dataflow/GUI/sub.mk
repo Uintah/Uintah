@@ -21,6 +21,7 @@ $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/Switch.tcl\
 	$(SRCDIR)/ImageReaderFloat2D.tcl\
 	$(SRCDIR)/ImageReaderFloat3D.tcl\
+	$(SRCDIR)/GradientAnisotropicDiffusionImageFilter.tcl\
 #[INSERT NEW TCL FILE HERE]
 	$(OBJTOP)/createTclIndex $(SRCTOP)/Packages/Insight/Dataflow/GUI
 

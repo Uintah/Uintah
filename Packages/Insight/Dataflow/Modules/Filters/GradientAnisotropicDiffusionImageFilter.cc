@@ -1,7 +1,7 @@
 /*
- * DiscreteGaussianImageFilter.cc
+ * GradientAnisotropicDiffusionImageFilter.cc
  *
- *   Auto Generated File For DiscreteGaussianImageFilter
+ *   Auto Generated File For GradientAnisotropicDiffusionImageFilter
  *
  */
 
@@ -13,20 +13,21 @@
 
 #include <Packages/Insight/Dataflow/Ports/ITKDatatypePort.h>
 
-#include <itkDiscreteGaussianImageFilter.h>
+#include <itkGradientAnisotropicDiffusionImageFilter.h>
 
 namespace Insight 
 {
 
 using namespace SCIRun;
 
-class InsightSHARE DiscreteGaussianImageFilter : public Module 
+class InsightSHARE GradientAnisotropicDiffusionImageFilter : public Module 
 {
 public:
 
   // Declare GuiVars
-  GuiDouble gui_variance_;
-  GuiDouble gui_maximum_error_;
+  GuiDouble gui_time_step_;
+  GuiInt gui_iterations_;
+  GuiDouble gui_conductance_parameter_;
     
   // Declare Ports
   ITKDatatypeIPort* inport1_;
@@ -36,9 +37,9 @@ public:
   ITKDatatypeHandle outhandle1_;
 
   
-  DiscreteGaussianImageFilter(GuiContext*);
+  GradientAnisotropicDiffusionImageFilter(GuiContext*);
 
-  virtual ~DiscreteGaussianImageFilter();
+  virtual ~GradientAnisotropicDiffusionImageFilter();
 
   virtual void execute();
 
@@ -54,7 +55,7 @@ public:
 
 
 template<class InputImageType, class OutputImageType>
-bool DiscreteGaussianImageFilter::run( itk::Object *obj1) 
+bool GradientAnisotropicDiffusionImageFilter::run( itk::Object *obj1) 
 {
   InputImageType *data1 = dynamic_cast<  InputImageType * >(obj1);
   if( !data1 ) {
@@ -63,13 +64,15 @@ bool DiscreteGaussianImageFilter::run( itk::Object *obj1)
 
 
   // create a new filter
-  itk::DiscreteGaussianImageFilter< InputImageType, OutputImageType >::Pointer filter = itk::DiscreteGaussianImageFilter< InputImageType, OutputImageType >::New();
+  itk::GradientAnisotropicDiffusionImageFilter< InputImageType, OutputImageType >::Pointer filter = itk::GradientAnisotropicDiffusionImageFilter< InputImageType, OutputImageType >::New();
 
   // set filter 
   
-  filter->SetVariance( gui_variance_.get() );
+  filter->SetTimeStep( gui_time_step_.get() );
   
-  filter->SetMaximumError( gui_maximum_error_.get() );
+  filter->SetIterations( gui_iterations_.get() );
+  
+  filter->SetConductanceParameter( gui_conductance_parameter_.get() );
      
   // set inputs 
 
@@ -99,20 +102,21 @@ bool DiscreteGaussianImageFilter::run( itk::Object *obj1)
 }
 
 
-DECLARE_MAKER(DiscreteGaussianImageFilter)
+DECLARE_MAKER(GradientAnisotropicDiffusionImageFilter)
 
-DiscreteGaussianImageFilter::DiscreteGaussianImageFilter(GuiContext* ctx)
-  : Module("DiscreteGaussianImageFilter", ctx, Source, "Filters", "Insight"),
-     gui_variance_(ctx->subVar("variance")),
-     gui_maximum_error_(ctx->subVar("maximum_error"))
+GradientAnisotropicDiffusionImageFilter::GradientAnisotropicDiffusionImageFilter(GuiContext* ctx)
+  : Module("GradientAnisotropicDiffusionImageFilter", ctx, Source, "Filters", "Insight"),
+     gui_time_step_(ctx->subVar("time_step")),
+     gui_iterations_(ctx->subVar("iterations")),
+     gui_conductance_parameter_(ctx->subVar("conductance_parameter"))
 {
 }
 
-DiscreteGaussianImageFilter::~DiscreteGaussianImageFilter() 
+GradientAnisotropicDiffusionImageFilter::~GradientAnisotropicDiffusionImageFilter() 
 {
 }
 
-void DiscreteGaussianImageFilter::execute() 
+void GradientAnisotropicDiffusionImageFilter::execute() 
 {
   // check input ports
   inport1_ = (ITKDatatypeIPort *)get_iport("InputImage");
@@ -138,8 +142,8 @@ void DiscreteGaussianImageFilter::execute()
   
   // can we operate on it?
   if(0) { } 
-  else if(run< itk::Image<float, 2>, itk::Image<float, 2> >( data1 )) { } 
-  else if(run< itk::Image<float, 3>, itk::Image<float, 3> >( data1 )) { }
+  else if(run< itk::Image<float, 2>, itk::Image<float, 2 > >( data1 )) { } 
+  else if(run< itk::Image<float, 3>, itk::Image<float, 3 > >( data1 )) { }
   else {
     // error
     error("Incorrect input type");
@@ -151,7 +155,7 @@ void DiscreteGaussianImageFilter::execute()
   
 }
 
-void DiscreteGaussianImageFilter::tcl_command(GuiArgs& args, void* userdata)
+void GradientAnisotropicDiffusionImageFilter::tcl_command(GuiArgs& args, void* userdata)
 {
   Module::tcl_command(args, userdata);
 
