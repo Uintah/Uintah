@@ -4548,12 +4548,11 @@ void GeomText::draw(DrawInfoOpenGL* di, Material* matl, double)
     //cerr << "GeomText::draw: Initializing fonts." << endl;
     di->dpy = XOpenDisplay( NULL );
     XFontStruct* fontInfo = XLoadQueryFont(di->dpy,
-      //"-adobe-helvetica-bold-r-normal-*-14-120-*-*-p-60-iso8859-1");
-      "-schumacher-clean-medium-r-normal--8-80-75-75-c-50-iso8859-1");
+      "-adobe-helvetica-bold-r-normal-*-14-120-*-*-p-60-iso8859-1");
     if (fontInfo == NULL) {
       fontInfo =
 	XLoadQueryFont(di->dpy,
-      "-schumacher-clean-medium-r-normal-*-*-60-*-*-*-*-*");
+          "-schumacher-clean-bold-r-normal-*-*-120-*-*-*-*-*");
     }
     if (fontInfo == NULL)
     {
@@ -4599,12 +4598,11 @@ void GeomTexts::draw(DrawInfoOpenGL* di, Material* matl, double)
     //cerr << "GeomText::draw: Initializing fonts." << endl;
     di->dpy = XOpenDisplay( NULL );
     XFontStruct* fontInfo = XLoadQueryFont(di->dpy,
-      //"-adobe-helvetica-bold-r-normal-*-14-120-*-*-p-60-iso8859-1");
-      "-schumacher-clean-medium-r-normal--8-80-75-75-c-50-iso8859-1");
+      "-adobe-helvetica-bold-r-normal-*-14-120-*-*-p-60-iso8859-1");
     if (fontInfo == NULL) {
       fontInfo =
 	XLoadQueryFont(di->dpy,
-      "-schumacher-clean-medium-r-normal-*-*-60-*-*-*-*-*");
+          "-schumacher-clean-bold-r-normal-*-*-120-*-*-*-*-*");
     }
     if (fontInfo == NULL)
     {
@@ -4653,12 +4651,11 @@ void GeomTextsCulled::draw(DrawInfoOpenGL* di, Material* matl, double)
     //cerr << "GeomText::draw: Initializing fonts." << endl;
     di->dpy = XOpenDisplay( NULL );
     XFontStruct* fontInfo = XLoadQueryFont(di->dpy,
-      //"-adobe-helvetica-bold-r-normal-*-14-120-*-*-p-60-iso8859-1");
-      "-schumacher-clean-medium-r-normal--8-80-75-75-c-50-iso8859-1");
+      "-adobe-helvetica-bold-r-normal-*-14-120-*-*-p-60-iso8859-1");
     if (fontInfo == NULL) {
       fontInfo =
 	XLoadQueryFont(di->dpy,
-      "-schumacher-clean-medium-r-normal-*-*-60-*-*-*-*-*");
+	 "-schumacher-clean-bold-r-normal-*-*-120-*-*-*-*-*");
     }
     if (fontInfo == NULL)
     {
