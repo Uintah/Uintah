@@ -2781,6 +2781,9 @@ myargs=`echo $args | sed 's%\^% %g'`
 # It thinks we are cross compiling. Don't set it.
 #IFS=' '
 
+## Cut off the /configure from the configure command (eg: ../src/configure)
+path_to_src=`echo $0 | sed 's/\/configure//'`
+
 if test "$package" = "all"; then
   echo "$as_me:$LINENO: result: Enabling all the packages in your SCIRun/src/Packages directory." >&5
 echo "${ECHO_T}Enabling all the packages in your SCIRun/src/Packages directory." >&6
@@ -4653,7 +4656,7 @@ fi
 
 
 # Provide some information about the compiler.
-echo "$as_me:4656:" \
+echo "$as_me:4659:" \
      "checking for Fortran 77 compiler version" >&5
 ac_compiler=`set X $ac_compile; echo $2`
 { (eval echo "$as_me:$LINENO: \"$ac_compiler --version </dev/null >&5\"") >&5
