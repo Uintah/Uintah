@@ -36,10 +36,6 @@ rmacrosfile := srugmacros.rtex
 # Macros used by latex and latex2html.  Generated from ${rmacrosfile}
 macrosfile := srugmacros.tex
 
-# Style file used by latex.   This file has the exact same content as
-# ${macrosfile} and is automatically generated from it.
-styfile := srugmacros.sty
-
 # Figures
 psfigs := Figures/*.gz 
 htmlfigs := Figures/*.gif Figures/*.jpg
@@ -93,7 +89,6 @@ ${dvifile}: ${srcs} ${psfigs}
 
 ${macrosfile}: ${rmacrosfile} ${edition}
 	eruby --delimiters tex $< >$@
-	cp ${macrosfile} ${styfile}
 
 ${htmldir}: ${dvifile} ${htmlfigs}
 	${call rmdirs,${htmldir}}
@@ -108,4 +103,4 @@ clean:
 
 veryclean: clean
 	${call rmdirs,${htmldir}}
-	${call rmfiles,${pdffile} ${bn}.bbl ${macrosfile} ${styfile}}
+	${call rmfiles,${pdffile} ${bn}.bbl ${macrosfile}}

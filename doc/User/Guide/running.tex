@@ -36,7 +36,7 @@ initialization file:
 
 \begin{alltt}
   mkdir ~/on-the-fly-libs
-  echo "SCIRUN_ON_THE_FLY_LIBS_DIR=~/on-the-fly-libs" \latexhtml{\ra\ra}{\begin{rawhtml}&gt;&gt;\end{rawhtml}}} .scirunrc
+  echo "SCIRUN_ON_THE_FLY_LIBS_DIR=~/on-the-fly-libs" \latexhtml{\ra\ra}{\begin{rawhtml}&gt;&gt;\end{rawhtml}} .scirunrc
 \end{alltt}
 
 See \secref{Environment Variables}{sec:environ}, \secref{\sr{}'s
@@ -44,7 +44,7 @@ Initialization File---\filename{.scirunrc}}{sec:scirunrc},  and \secref{Dynamic
 Compilation}{sec:dyncomp} for more information on \sr{}'s
 environment variables, initialization file, and ``on the fly libs.''
   
-Mac OSX users must increase the number of open files limit.
+Mac OSX users must increase the open files limit.
 Users of csh-type shells on Mac OSX must type:
 
 \begin{alltt}
@@ -56,39 +56,6 @@ and users of sh-type shells must type:
 \begin{alltt}
   ulimit -n unlimited
 \end{alltt}
-
-%% \section{Starting Power Apps}
-%% \label{sec:startpa}
-
-%% To start a Power App for a \sr{} installation from source code, change
-%% the working directory to \sr{}'s build directory, for example:
-
-%% \begin{alltt}
-%%   cd SCIRun/sgi32
-%% \end{alltt}
-
-%% and then type the name of the Power App.  For example:
-
-%% \begin{alltt}
-%%   ./BioTensor
-%% \end{alltt}
-
-%% For an installation from an RPM, change the working directory to
-%% \filename{/usr/local/bin}:
-
-%% \begin{alltt}
-%%   cd /usr/local/SCIRun/bin
-%% \end{alltt}
-
-%% and type the name of the Power App, for example:
-
-%% \begin{alltt}
-%%   ./BioFEM
-%% \end{alltt}
-
-
-%% \section{Starting \sr}
-%% \label{sec:sciruncmd}
 
 %begin{latexonly}
 \newcommand{\srwindow}%
@@ -122,7 +89,7 @@ and type:
 \end{alltt}
 
 \note{Do not start \sr{} in the background, \ie do not type
-  \keyboard{scirun \&}}.
+  \keyboard{scirun \&}.}
 
 The \command{scirun} command may take 1 argument, the name of a
 \dfn{\sr{} network file} (network files have a \filename{.net} extension)
