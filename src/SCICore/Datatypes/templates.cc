@@ -42,6 +42,7 @@ template class DiscreteAttrib<double>;
 template class FlatAttrib<double>;
 template class AccelAttrib<double>;
 template class BrickAttrib<double>;
+template class GenSField<double, LatticeGeom>;
 template class GenSField<double, LatticeGeom, FlatAttrib<double> >;
 template class GenSField<double, LatticeGeom, AccelAttrib<double> >;
 
