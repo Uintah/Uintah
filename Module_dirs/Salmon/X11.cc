@@ -34,6 +34,8 @@ public:
 				   const clString& width,
 				   const clString& height);
     virtual void redraw(Salmon* salmon, Roe* roe);
+    virtual void get_pick(Salmon*, Roe*, int x, int y,
+			  GeomObj*&, GeomPick*&);
     virtual void hide();
 };
 
@@ -228,4 +230,9 @@ void X11::redraw(Salmon* salmon, Roe* roe)
 void X11::hide()
 {
     tkwin=0;
+}
+
+void X11::get_pick(Salmon*, Roe*, int, int, GeomObj*&, GeomPick*&)
+{
+    NOT_FINISHED("X11::get_pick");
 }

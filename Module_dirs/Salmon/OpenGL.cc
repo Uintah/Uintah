@@ -29,10 +29,14 @@ public:
 				   const clString& width,
 				   const clString& height);
     virtual void redraw(Salmon*, Roe*);
+    virtual void get_pick(Salmon*, Roe*, int, int, GeomObj*&, GeomPick*&);
     virtual void hide();
 };
 
 static OpenGL* current_drawer=0;
+static const int pick_buffer_size = 512;
+static const double pick_window = 5.0;
+
 extern "C" GLXContext OpenGLGetContext(Tcl_Interp*, char*);
 extern Tcl_Interp* the_interp;
 
@@ -165,6 +169,7 @@ void OpenGL::redraw(Salmon* salmon, Roe* roe)
 	    glEnable(GL_LIGHTING);
 	else
 	    glDisable(GL_LIGHTING);
+	drawinfo.pickmode=0;
 
 	// Draw it all...
 	drawinfo.push_matl(salmon->default_matl.get_rep());
@@ -204,4 +209,104 @@ void OpenGL::hide()
     tkwin=0;
     if(current_drawer==this)
 	current_drawer=0;
+}
+
+void OpenGL::get_pick(Salmon* salmon, Roe* roe, int x, int y,
+		      GeomObj*& pick_obj, GeomPick*& pick_pick)
+{
+    pick_obj=0;
+    pick_pick=0;
+    // Make ourselves current
+    if(current_drawer != this){
+	current_drawer=this;
+	TCLTask::lock();
+	glXMakeCurrent(dpy, win, cx);
+	TCLTask::unlock();
+    }
+    // Setup the view...
+    View view(roe->view.get());
+    double aspect=double(xres)/double(yres);
+    double fovy=RtoD(2*Atan(aspect*Tan(DtoR(view.fov/2.))));
+
+    DrawInfoOpenGL drawinfo;
+    drawinfo.polycount=0;
+
+    // Compute znear and zfar...
+    double znear;
+    double zfar;
+    if(compute_depth(roe, view, znear, zfar)){
+	// Setup picking...
+	TCLTask::lock();
+	GLuint pick_buffer[pick_buffer_size];
+	glSelectBuffer(pick_buffer_size, pick_buffer);
+	glRenderMode(GL_SELECT);
+	glInitNames();
+	glPushName(0);
+
+	glViewport(0, 0, xres, yres);
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	int viewport[4];
+	glGetIntegerv(GL_VIEWPORT, viewport);
+	gluPickMatrix(x, y, pick_window, pick_window, viewport);
+	gluPerspective(fovy, aspect, znear, zfar);
+	
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+	Point eyep(view.eyep);
+	Point lookat(view.lookat);
+	Vector up(view.up);
+	gluLookAt(eyep.x(), eyep.y(), eyep.z(),
+		  lookat.x(), lookat.y(), lookat.z(),
+		  up.x(), up.y(), up.z());
+
+	drawinfo.lighting=0;
+	drawinfo.drawtype=DrawInfoOpenGL::Flat;
+	drawinfo.pickmode=1;
+
+	// Draw it all...
+	drawinfo.push_matl(salmon->default_matl.get_rep());
+	HashTableIter<int,HashTable<int, GeomObj*>*> iter(&salmon->portHash);
+	for (iter.first(); iter.ok(); ++iter) {
+	    HashTable<int, GeomObj*>* serHash=iter.get_data();
+	    HashTableIter<int, GeomObj*> serIter(serHash);
+	    for (serIter.first(); serIter.ok(); ++serIter) {
+		GeomObj *geom=serIter.get_data();
+
+		// Look up this object by name and see if it is supposed to be
+		// displayed...
+		if(geom->get_pick()){
+		    glLoadName((GLuint)geom);
+		    geom->draw(&drawinfo);
+		}
+	    }
+	}
+	drawinfo.pop_matl();
+	glFlush();
+	int hits=glRenderMode(GL_RENDER);
+	TCLTask::unlock();
+	GLuint min_z;
+	GLuint hit_obj=0;
+	GLuint hit_pick=0;
+	if(hits >= 1){
+	    int idx=0;
+	    min_z=pick_buffer[1];
+	    hit_obj=pick_buffer[3];
+	    hit_pick=pick_buffer[4];
+	    for (int h=0; h<hits; h++) {
+		int nnames=pick_buffer[idx++];
+		ASSERT(nnames >= 2);
+		GLuint z=pick_buffer[idx++];
+		if (h==0 || z < min_z) {
+		    min_z=z;
+		    idx++; // Skip Max Z
+		    hit_obj=pick_buffer[idx++];
+		    idx+=nnames-2; // Skip to the last one...
+		    hit_pick=pick_buffer[idx++];
+		}
+	    }
+	}
+	pick_obj=(GeomObj*)hit_obj;
+	pick_pick=(GeomPick*)hit_pick;
+    }
 }

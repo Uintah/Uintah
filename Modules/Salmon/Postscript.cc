@@ -10,6 +10,8 @@ public:
 				   const clString& width,
 				   const clString& height);
     virtual void redraw(Salmon*, Roe*);
+    virtual void get_pick(Salmon*, Roe*, int x, int y,
+			  GeomObj*&, GeomPick*&);
     virtual void hide();
 };
 
@@ -37,9 +39,14 @@ clString Postscript::create_window(const clString& name,
 
 void Postscript::redraw(Salmon*, Roe*)
 {
-    NOT_FINISHED("X11::redraw");
+    NOT_FINISHED("Postscript::redraw");
 }
 
 void Postscript::hide()
 {
+}
+
+void Postscript::get_pick(Salmon*, Roe*, int, int, GeomObj*&, GeomPick*&)
+{
+    NOT_FINISHED("Postscript::get_pick");
 }

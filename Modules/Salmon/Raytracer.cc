@@ -10,6 +10,8 @@ public:
 				   const clString& width,
 				   const clString& height);
     virtual void redraw(Salmon*, Roe*);
+    virtual void get_pick(Salmon*, Roe*, int x, int y,
+			  GeomObj*&, GeomPick*&);
     virtual void hide();
 };
 
@@ -37,9 +39,14 @@ clString Raytracer::create_window(const clString& name,
 
 void Raytracer::redraw(Salmon*, Roe*)
 {
-    NOT_FINISHED("X11::redraw");
+    NOT_FINISHED("Raytracer::redraw");
 }
 
 void Raytracer::hide()
 {
+}
+
+void Raytracer::get_pick(Salmon*, Roe*, int, int, GeomObj*&, GeomPick*&)
+{
+    NOT_FINISHED("Raytracer::get_pick");
 }

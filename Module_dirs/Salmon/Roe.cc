@@ -1,6 +1,6 @@
 
 /*
- *  Salmon.cc:  The Geometry Viewer Window
+ *  Roe.cc:  The Geometry Viewer Window
  *
  *  Written by:
  *   David Weinstein
@@ -25,6 +25,7 @@
 #include <Geometry/Transform.h>
 #include <Geometry/Vector.h>
 #include <Geom/Geom.h>
+#include <Geom/Pick.h>
 #include <Geom/PointLight.h>
 #include <Math/Trig.h>
 #include <iostream.h>
@@ -34,9 +35,6 @@
 #define MouseStart 0
 #define MouseEnd 1
 #define MouseMove 2
-
-static const int pick_buffer_size = 512;
-static const double pick_window = 5.0;
 
 Roe::Roe(Salmon* s, const clString& id)
 : id(id), manager(s), view("view", id, this), shading("shading", id, this),
@@ -81,78 +79,6 @@ void Roe::perspCB(CallbackData*, void*) {
     need_redraw=1;
 }
 
-void Roe::redrawCB(CallbackData*, void*){
-    if(!doneInit)
-	initCB(0, 0);
-    need_redraw=1;
-}
-
-void Roe::initCB(CallbackData*, void*) {
-    XVisualInfo* vi;
-    graphics->GetVisualInfo(&vi);
-    graphics->GetValues();
-    // Create a GLX context
-    evl->lock();
-    cx = glXCreateContext(XtDisplay(*graphics), vi, 0, GL_TRUE);
-    if(!cx){
-	cerr << "Error making glXCreateContext\n";
-	exit(0);
-    }
-    make_current();
-
-    // set the view
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-
-    // opted for orthographic as the default
-    glOrtho(-8, 8, -6, 6, -100, 100);
-    get_bounds(bb);
-    if (bb.valid()) {
-	Point cen(bb.center());
-	double cx=cen.x();
-	double cy=cen.y();
-	double xw=cx-bb.min().x();
-	double yw=cy-bb.min().y();
-	double scl=4/Max(xw,yw);
-	glScaled(scl,scl,scl);
-    }
-    glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
-    gluLookAt(2,2,5,2,2,2,0,1,0);
-
-    glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_TRUE);
-    GLfloat light_position[] = { 0, 0, -1, 0 };
-    glLightfv(GL_LIGHT2, GL_POSITION, light_position);
-    GLfloat light_white[] = {1,1,1,1};
-    glLightfv(GL_LIGHT0, GL_DIFFUSE, light_white);
-    glLightfv(GL_LIGHT0, GL_SPECULAR, light_white);
-    glLightfv(GL_LIGHT1, GL_DIFFUSE, light_white);
-    glLightfv(GL_LIGHT1, GL_SPECULAR, light_white);
-    glLightfv(GL_LIGHT2, GL_DIFFUSE, light_white);
-    glLightfv(GL_LIGHT2, GL_SPECULAR, light_white);
-    GLfloat light_black[] = {0,0,0,1};
-    glLightfv(GL_LIGHT0, GL_AMBIENT, light_black);;
-    glLightfv(GL_LIGHT1, GL_AMBIENT, light_black);
-    glLightfv(GL_LIGHT2, GL_AMBIENT, light_black);
-    glEnable(GL_NORMALIZE);
-    glEnable(GL_LIGHTING);
-    glDisable(GL_LIGHT0);
-    glDisable(GL_LIGHT1);
-    glEnable(GL_LIGHT2);
-    glDepthFunc(GL_LEQUAL);
-    glEnable(GL_DEPTH_TEST);
-    glFogf(GL_FOG_END, 30.0);
-    glFogf(GL_FOG_MODE, GL_LINEAR);
-
-    if (haveInheritMat) {
-	glLoadMatrixd(inheritMat);
-    } else {
-	glGetDoublev(GL_MODELVIEW_MATRIX, inheritMat);
-    }
-
-    evl->unlock();
-    doneInit=1;
-}
 #endif
 
 void Roe::itemAdded(GeomObj *g, const clString& name)
@@ -169,84 +95,12 @@ void Roe::itemDeleted(GeomObj *g)
     bb.reset();
 }
 
-
-#ifdef OLDUI
-void Roe::redrawAll()
-{
-    if (doneInit) {
-	// clear screen
-        make_current();  
-
-	// have to redraw the lights for them to have the right transformation
-	drawinfo->polycount=0;
-	WallClockTimer timer;
-	timer.clear();
-	timer.start();
-	GLfloat light_position0[] = { 500,500,-100,1};
-	glLightfv(GL_LIGHT0, GL_POSITION, light_position0);
-	GLfloat light_position1[] = { -50,-100,100,1};
-	glLightfv(GL_LIGHT1, GL_POSITION, light_position1);
-	if (!drawinfo->pick_mode && !drawinfo->edit_mode) {
-	    glClearColor(0,0,0,1);
-	    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	}
-	drawinfo->push_matl(manager->default_matl);
-	HashTableIter<int,HashTable<int, GeomObj*>*> iter(&manager->portHash);
-	for (iter.first(); iter.ok(); ++iter) {
-	    HashTable<int, GeomObj*>* serHash=iter.get_data();
-	    HashTableIter<int, GeomObj*> serIter(serHash);
-	    for (serIter.first(); serIter.ok(); ++serIter) {
-		GeomObj *geom=serIter.get_data();
-		for (int i=0; i<geomItemA.size(); i++)
-		    if (geomItemA[i]->geom == geom)
-			// we draw it if we're editing, if it's pickable,
-			//  or if we're not in pick-mode
-			if (geomItemA[i]->vis && 
-			    (drawinfo->edit_mode || !drawinfo->pick_mode || 
-			     geom->pick)){
-			    if (drawinfo->edit_mode || drawinfo->pick_mode)
-				glLoadName((GLuint)geom);
-			    if (drawinfo->pick_mode)
-				glPushName((GLuint)geom->pick);
-			    geom->draw(drawinfo);
-			    if (drawinfo->pick_mode)
-				glPopName();
-			}
-	    }
-	}
-	drawinfo->pop_matl();
-#ifdef OLDUI
-	if (!drawinfo->pick_mode && !drawinfo->edit_mode)
-	    GLwDrawingAreaSwapBuffers(*graphics);
-#endif
-	timer.stop();
-#ifdef OLDUI
-	perf_string1=to_string(drawinfo->polycount)+" polygons in "
-	    +to_string(timer.time())+" seconds";
-	perf_string2=to_string(double(drawinfo->polycount)/timer.time())
-	    +" polygons/second";
-	redraw_perf(0, 0);
-	evl->unlock();       
-#endif
-    }
-}
-#endif
-
 // need to fill this in!   
 #ifdef OLDUI
 void Roe::itemCB(CallbackData*, void *gI) {
     GeomItem *g = (GeomItem *)gI;
     g->vis = !g->vis;
     need_redraw=1;
-}
-
-void Roe::destroyWidgetCB(CallbackData*, void*)
-{
-    // can't close the only window -- this doesn't seem to work, though...
-    if (firstGen && (manager->topRoe.size() == 1) && (kids.size()==0)) 
-	return;
-    else
-	delete this;
 }
 
 void Roe::spawnChCB(CallbackData*, void*)
@@ -369,13 +223,6 @@ void Roe::autoViewCB(CallbackData*, void*)
     need_redraw=1;
 }    
 
-void Roe::setHomeCB(CallbackData*, void*)
-{
-    evl->lock();
-    make_current();
-    glGetDoublev(GL_MODELVIEW_MATRIX, inheritMat);
-    evl->unlock();
-}
 #endif
 
 void Roe::rotate(double angle, Vector v, Point c)
@@ -628,136 +475,60 @@ void Roe::mouse_rotate(int action, int x, int y)
 
 void Roe::mouse_pick(int action, int x, int y)
 {
-    NOT_FINISHED("Roe::mouse_pick");
-#ifdef OLDUI
     switch(action){
-    case BUTTON_DOWN:
+    case MouseStart:
 	{
 	    total_x=0;
 	    total_y=0;
 	    total_z=0;
 	    last_x=x;
 	    last_y=y;
-#ifdef OLDUI
-	    evl->lock();
-#endif
-	    make_current();
-	    GLint viewport[4];
-	    glGetIntegerv(GL_VIEWPORT, viewport);
-	    GLuint pick_buffer[pick_buffer_size];
-	    glSelectBuffer(pick_buffer_size, pick_buffer);
-	    glRenderMode(GL_SELECT);
-	    glInitNames();
-	    glPushName(0);
+	    current_renderer->get_pick(manager, this, x, y,
+				       pick_obj, pick_pick);
 
-	    // load the old perspetive matrix, so we can use it
-	    double pm[16];
-	    glGetDoublev(GL_PROJECTION_MATRIX, pm);
-	    glMatrixMode(GL_PROJECTION);
-	    glPushMatrix();
-	    glLoadIdentity();
-	    gluPickMatrix(x,viewport[3]-y,pick_window,pick_window,viewport);
-	    glMultMatrixd(pm);
-
-	    // Redraw the scene
-#ifdef __GNUG__
-	    int
-#else
-	    DrawInfo::DrawType
-#endif
-	           olddrawtype(drawinfo->drawtype);
-	    drawinfo->drawtype=DrawInfo::Flat;
-	    drawinfo->pick_mode=1;
-	    redrawAll();
-	    drawinfo->drawtype=olddrawtype;
-	    drawinfo->pick_mode=0;
-
-	    glPopMatrix();
-	    glMatrixMode(GL_MODELVIEW);
-	    glFlush();
-	    int hits=glRenderMode(GL_RENDER);
-	    GLuint min_z;
-	    GLuint pick_index=0;
-	    GLuint pick_pick=0;
-	    if(hits >= 1){
-		min_z=pick_buffer[1];
-		pick_index=pick_buffer[3];
-		pick_pick=pick_buffer[4];
-		for (int h=1; h<hits; h++) {
-		    ASSERT(pick_buffer[h*5]==2);
-		    if (pick_buffer[h*5+1] < min_z) {
-			min_z=pick_buffer[h*5+1];
-			pick_index=pick_buffer[h*5+3];
-			pick_pick=pick_buffer[h*5+4];
-		    }
-		}
-	    }
-	    geomSelected=(GeomObj *)pick_index;
-	    gpick=(GeomPick*)pick_pick;
-	    if (geomSelected) {
-		for (int i=0; i<geomItemA.size(); i++) {
-#ifdef OLDUI
-		    if (geomItemA[i]->geom == geomSelected)
-			update_mode_string(clString("pick: ")+
-					   geomItemA[i]->name);
-#endif
-		}
-		gpick->pick();
+	    if (pick_obj){
+		NOT_FINISHED("update mode string for pick");
+		pick_pick->pick();
 	    } else {
-#ifdef OLDUI
 		update_mode_string("pick: none");
-#endif
 	    }
-#ifdef OLDUI
-	    evl->unlock();
-#endif
 	}
 	break;
-    case BUTTON_MOTION:
+    case MouseMove:
 	{
-	    if (!geomSelected || !gpick) break;
+	    if (!pick_obj || !pick_pick) break;
 	    double xmtn=last_x-x;
 	    double ymtn=last_y-y;
-	    xmtn/=30;
-	    ymtn/=30;
-#ifdef OLDUI
-	    evl->lock();
-#endif
-	    make_current();
 // project the center of the item grabbed onto the screen -- take the z
 // component and unprojec the last and current x, y locations to get a 
 // vector in object space.
 	    BBox itemBB;
-	    geomSelected->get_bounds(itemBB);
-	    double midz=itemBB.center().z();
-	    double mm[16], pm[16];
-	    int vp[4];
-	    glGetDoublev(GL_MODELVIEW_MATRIX, mm);
-	    glGetDoublev(GL_PROJECTION_MATRIX, pm);
-	    glGetIntegerv(GL_VIEWPORT, vp);
-	    double x0, x1, y0, y1, z0, z1;
-	    // unproject the center of the viewport, w/ z-value=.94
-	    // to find the point we want to rotate around.
-	    if (gluUnProject(last_x, vp[3]-last_y, midz, mm, pm, vp, 
-			 &x0, &y0, &z0) == GL_FALSE) 
-		cerr << "Error Projecting!\n";
-	    if (gluUnProject(x, vp[3]-y, midz, mm, pm, vp, 
-			 &x1, &y1, &z1) == GL_FALSE) 
-		cerr << "Error Projecting!\n";
-	    Vector dir(Point(x1, y1, z1)-Point(x0,y0,z0));
-	    double dist=dir.length();
-	    dir.normalize();
-	    double dot=0;
+	    pick_obj->get_bounds(itemBB);
+	    View tmpview(view.get());
+	    Point cen(itemBB.center());
+	    double depth=tmpview.depth(cen);
+
+	    int xres=current_renderer->xres;
+	    int yres=current_renderer->yres;
+	    Point p1(2*x/double(xres)-1, 2*y/double(yres)-1, depth);
+	    Point p0(2*last_x/double(xres)-1, 2*last_y/double(yres)-1, depth);
+	    double aspect=double(xres)/double(yres);
+	    p1=tmpview.eyespace_to_objspace(p1, aspect);
+	    p0=tmpview.eyespace_to_objspace(p0, aspect);
+	    Vector dir(p1-p0);
+	    double dist=dir.normalize();
+
+	    double maxdot=0;
 	    int prin_dir=-1;
-	    double currdot;
-	    for (int i=0; i<gpick->nprincipal(); i++) {
-		if ((currdot=Dot(dir, gpick->principal(i))) >dot){
-		    dot=currdot;
+	    for (int i=0; i<pick_pick->nprincipal(); i++) {
+		double pdot=Dot(dir, pick_pick->principal(i));
+		if(pdot > maxdot){
+		    maxdot=pdot;
 		    prin_dir=i;
 		}
 	    }
 	    if(prin_dir != -1){
-		Vector mtn(gpick->principal(prin_dir)*dist);
+		Vector mtn(pick_pick->principal(prin_dir)*dist);
 		total_x+=mtn.x();
 		total_y+=mtn.y();
 		total_z+=mtn.z();
@@ -765,42 +536,24 @@ void Roe::mouse_pick(int action, int x, int y)
 		if (Abs(total_y) < .0001) total_y=0;
 		if (Abs(total_z) < .0001) total_z=0;
 		need_redraw=1;
-		for (i=0; i<geomItemA.size(); i++) {
-#ifdef OLDUI
-		    if (geomItemA[i]->geom == geomSelected)
-			update_mode_string(clString("pick: ")+
-					   geomItemA[i]->name+
-					   " "+to_string(total_x)+
-					   ", "+to_string(total_y)+
-					   ", "+to_string(total_z));
-#endif
-		}
-		gpick->moved(prin_dir, dist, mtn);
+		update_mode_string("picked someting...");
+		pick_pick->moved(prin_dir, dist, mtn);
 	    } else {
-#ifdef OLDUI
 		update_mode_string(clString("Bad direction..."));
-#endif
 	    }
-#ifdef OLDUI
-	    evl->unlock();
-#endif
 	    last_x = x;
 	    last_y = y;
 	}
 	break;
-    case BUTTON_UP:
-	if(gpick){
-	    gpick->release();
-	} else {
-	    geomSelected=0;
-	    gpick=0;
+    case MouseEnd:
+	if(pick_pick){
+	    pick_pick->release();
 	}
-#ifdef OLDUI
+	pick_pick=0;
+	pick_obj=0;
 	update_mode_string("");
-#endif
 	break;
     }
-#endif
 }
 
 #ifdef OLDUI
