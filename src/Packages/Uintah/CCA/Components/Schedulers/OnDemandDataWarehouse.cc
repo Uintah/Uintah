@@ -1635,7 +1635,7 @@ getGridVar(VariableBase& var, DWDatabase& db,
            const VarLabel* label, int matlIndex, const Patch* patch,
            Ghost::GhostType gtype, int numGhostCells)
 {
-  ASSERTEQ(basis, Patch::translateTypeToBasis(var.virtualGetTypeDescription()->getType(), true));  
+  ASSERTEQ(basis,Patch::translateTypeToBasis(var.virtualGetTypeDescription()->getType(), true));  
 
   if(!db.exists(label, matlIndex, patch))
     SCI_THROW(UnknownVariable(label->getName(), getID(), patch, matlIndex));
@@ -1656,7 +1656,7 @@ getGridVar(VariableBase& var, DWDatabase& db,
   
   if (gtype == Ghost::None) {
     if(numGhostCells != 0)
-      SCI_THROW(InternalError("Ghost cells specified with ghost type none!\n"));
+      SCI_THROW(InternalError("Ghost cells specified with type: None!\n"));
     // if this assertion fails, then it is having problems getting the
     // correct window of the data.
     bool no_realloc = var.rewindow(low, high);
@@ -1681,7 +1681,8 @@ getGridVar(VariableBase& var, DWDatabase& db,
       bool ignore = d_isInitializationDW && d_finalized;
       if (!ignore) {
 	ostringstream errmsg;
-	errmsg << d_myworld->myrank() << " Reallocation Error: Reallocation needed for " << label->getName();
+	errmsg << d_myworld->myrank() << " Reallocation Error:" <<
+	  " Reallocation needed for " << label->getName();
 	if (patch)
 	  errmsg << " on patch " << patch->getID();
 	errmsg << " for material " << matlIndex;
@@ -1694,13 +1695,16 @@ getGridVar(VariableBase& var, DWDatabase& db,
       const Patch* neighbor = neighbors[i];
       if(neighbor && (neighbor != patch)){
 	if(!db.exists(label, matlIndex, neighbor))
-	  SCI_THROW(UnknownVariable(label->getName(), getID(), neighbor, matlIndex,
-				neighbor == patch?"on patch":"on neighbor"));
+	  SCI_THROW(UnknownVariable(label->getName(), getID(), neighbor,
+				    matlIndex, neighbor == patch?
+				    "on patch":"on neighbor"));
 	VariableBase* srcvar = var.cloneType();
 	db.get(label, matlIndex, neighbor, *srcvar);
 	
-	low = Max(lowIndex, neighbor->getLowIndex(basis, label->getBoundaryLayer()));
-	high= Min(highIndex, neighbor->getHighIndex(basis, label->getBoundaryLayer()));
+	low = Max(lowIndex,
+		  neighbor->getLowIndex(basis, label->getBoundaryLayer()));
+	high= Min(highIndex, 
+		  neighbor->getHighIndex(basis, label->getBoundaryLayer()));
 	
 	if( ( high.x() < low.x() ) || ( high.y() < low.y() ) 
 	    || ( high.z() < low.z() ) )
@@ -1714,8 +1718,8 @@ getGridVar(VariableBase& var, DWDatabase& db,
       }
     }
     
-    dn = highIndex - lowIndex;
-    long wanted = dn.x()*dn.y()*dn.z();
+    //dn = highIndex - lowIndex;
+    //long wanted = dn.x()*dn.y()*dn.z();
     //ASSERTEQ(wanted, total);
   }
 }
@@ -2079,9 +2083,9 @@ void OnDemandDataWarehouse::logMemoryUse(ostream& out, unsigned long& total,
 }
 
 inline void
-OnDemandDataWarehouse::checkGetAccess(const VarLabel* label,
-                                      int matlIndex, const Patch* patch,
-                                      Ghost::GhostType gtype,int numGhostCells)
+OnDemandDataWarehouse::checkGetAccess(const VarLabel* /*label*/,
+                                      int /*matlIndex*/, const Patch* /*patch*/,
+                                      Ghost::GhostType /*gtype*/,int /*numGhostCells*/)
 {
 #if 0
 #if SCI_ASSERTION_LEVEL >= 1
@@ -2162,8 +2166,8 @@ OnDemandDataWarehouse::checkGetAccess(const VarLabel* label,
 }
 
 inline void
-OnDemandDataWarehouse::checkPutAccess(const VarLabel* label, int matlIndex,
-                                      const Patch* patch, bool replace)
+OnDemandDataWarehouse::checkPutAccess(const VarLabel* /*label*/, int /*matlIndex*/,
+                                      const Patch* /*patch*/, bool /*replace*/)
 {
 #if 0
 #if SCI_ASSERTION_LEVEL >= 1
@@ -2284,8 +2288,8 @@ OnDemandDataWarehouse::getOtherDataWarehouse(Task::WhichDW dw)
   return result;
 }
 
-void OnDemandDataWarehouse::checkTasksAccesses(const PatchSubset* patches,
-                                               const MaterialSubset* matls)
+void OnDemandDataWarehouse::checkTasksAccesses(const PatchSubset* /*patches*/,
+                                               const MaterialSubset* /*matls*/)
 {
 #if 0
 #if SCI_ASSERTION_LEVEL >= 1
