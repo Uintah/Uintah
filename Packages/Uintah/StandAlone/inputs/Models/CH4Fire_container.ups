@@ -452,18 +452,50 @@
             <pressure>           101325.0            </pressure>
            </geom_object>
          </material>
+
+         <material name = "product">
+           <EOS type = "JWLC">
+             <A>8.580805e11</A>
+             <B>7.546e9</B>
+             <C>7.8127e8</C>
+             <R1>4.306</R1>
+             <R2>0.80</R2>
+             <om>0.30</om>
+             <rho0>1894.0</rho0>
+           </EOS>
+           <includeFlowWork>        false               </includeFlowWork>
+           <dynamic_viscosity>          0.0            </dynamic_viscosity>
+           <thermal_conductivity>       0.0            </thermal_conductivity>
+           <specific_heat>              544.96         </specific_heat>
+           <speed_of_sound>             374.17            </speed_of_sound>
+           <gamma>                      1.4            </gamma>
+           <geom_object>
+                  <box>
+                    <min>           [ 1.0, 1.0, 1.0] </min>
+                    <max>           [ 2.0, 2.0, 2.0] </max>
+                  </box>
+             <res>                      [2,2,2]       </res>
+             <velocity>           [0.0,0.0,0.0]       </velocity>
+             <temperature>        300.0               </temperature>
+             <density>            1.62605283294106    </density>
+             <pressure>           101325.0            </pressure>
+           </geom_object>
+         </material>
       </ICE>       
        
       <exchange_properties> 
          <exchange_coefficients>
-              <momentum>  [ 0, 0, 0, 1e15,
-                               0, 0, 1e15,
-                                  0, 1e15,
-                                     1e15]     </momentum>
-              <heat>      [ 0, 0, 0, 1e10,
-                               0, 0, 1e10,
-                                  0, 1e10,
-                                     1e10]     </heat>
+              <momentum>  [ 0, 0, 0, 1e15, 1e15,
+                               0, 0, 1e15, 1e15,
+                                  0, 1e15, 1e15,
+                                     1e15, 1e15,
+                                           1e15]     </momentum>
+
+              <heat>      [ 0, 0, 0, 1e10, 1e10,
+                               0, 0, 1e10, 1e10,
+                                  0, 1e10, 1e10,
+                                     1e10, 1e10,
+                                           1e10]     </heat>
         </exchange_coefficients>
       </exchange_properties> 
     </MaterialProperties>
@@ -478,7 +510,7 @@
         <ThresholdTemp>       450.0 </ThresholdTemp>
         <ThresholdPressure> 50000.0 </ThresholdPressure>
         <Enthalpy>        2000000.0 </Enthalpy>
-        <BurnCoeff>            75.3 </BurnCoeff>
+        <BurnCoeff>            7.53 </BurnCoeff>
         <refPressure>      101325.0 </refPressure>
       </Model>
  -->
