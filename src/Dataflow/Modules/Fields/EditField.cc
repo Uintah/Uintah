@@ -71,6 +71,7 @@ public:
   ScaledBoxWidget *box_;
   Transform        box_initial_transform__;
   BBox             box_initial_bounds_;
+  int              generation_;
 
   int widgetid_;
   pair<double,double> minmax_;
@@ -83,7 +84,6 @@ public:
   void update_input_attributes(FieldHandle);
   bool check_types(FieldHandle);
   void build_widget(FieldHandle);
-  bool bbox_similar_to(const BBox &a, const BBox &b);
 
   virtual void execute();
 
@@ -115,6 +115,7 @@ EditField::EditField(const string& id)
     cdataminmax_("cdataminmax", id, this),
     cbbox_("cbbox", id, this),
     widget_lock_("EditField widget lock"),
+    generation_(-1),
     minmax_(1,0)
   
 {
@@ -342,21 +343,6 @@ check_ratio(double x, double y, double lower, double upper)
 }
 
 
-bool
-EditField::bbox_similar_to(const BBox &a, const BBox &b)
-{
-  return 
-    a.valid() &&
-    b.valid() &&
-    check_ratio(a.min().x(), b.min().x(), 0.5, 2.0) &&
-    check_ratio(a.min().y(), b.min().y(), 0.5, 2.0) &&
-    check_ratio(a.min().z(), b.min().z(), 0.5, 2.0) &&
-    check_ratio(a.min().x(), b.min().x(), 0.5, 2.0) &&
-    check_ratio(a.min().y(), b.min().y(), 0.5, 2.0) &&
-    check_ratio(a.min().z(), b.min().z(), 0.5, 2.0);
-}
-
-
 void
 EditField::execute()
 {
@@ -386,10 +372,10 @@ EditField::execute()
   update_input_attributes(fh);
 
   // build the transform widget
-  if (!bbox_similar_to(box_initial_bounds_, fh->mesh()->get_bounding_box()))
-  {
+  if (generation_ != fh.get_rep()->generation) {
+    generation_ = fh.get_rep()->generation;
     build_widget(fh);
-  } 
+  }
 
   if (!cfldname_.get() &&
       !ctypename_.get() &&
