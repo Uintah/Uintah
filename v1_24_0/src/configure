@@ -911,8 +911,7 @@ Optional Features:
                           Output ellapsed wall-times
 --enable-perfex         Use perfex hardware counters (sgi only)
 --enable-package=<list> Use the SCIRun packages specified by list. example:
-                          --enable-package='BioPSE Teem' default: all
-                          directories under SCIRun/src/Packages
+                          --enable-package='BioPSE Teem'
 --enable-exename=<name> Use name for executable name instead of the default:
                           scirun
 --enable-largesos       Build one .so per directory
@@ -4483,7 +4482,7 @@ fi
 
 
 # Provide some information about the compiler.
-echo "$as_me:4486:" \
+echo "$as_me:4485:" \
      "checking for Fortran 77 compiler version" >&5
 ac_compiler=`set X $ac_compile; echo $2`
 { (eval echo "$as_me:$LINENO: \"$ac_compiler --version </dev/null >&5\"") >&5
