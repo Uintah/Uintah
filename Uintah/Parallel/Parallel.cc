@@ -37,11 +37,21 @@ Parallel::usingMPI()
 }
 
 void
-Parallel::initializeManager(int argc, char* argv[])
+Parallel::initializeManager(int& argc, char**& argv)
 {
+   ::usingMPI=false;
+   // Look for SGI MPI
    if(getenv("MPI_ENVIRONMENT")){
       ::usingMPI=true;
-
+   } else {
+      // Look for mpich
+      for(int i=0;i<argc;i++){
+	 string s = argv[i];
+	 if(s.substr(0,3) == "-p4")
+	    ::usingMPI=true;
+      }
+   }
+   if(::usingMPI){	
       int status;
       if((status=MPI_Init(&argc, &argv)) != MPI_SUCCESS)
 	 MpiError("MPI_Init", status);
@@ -55,7 +65,6 @@ Parallel::initializeManager(int argc, char* argv[])
       rootContext = scinew ProcessorGroup(0, worldComm, true,
 					  worldRank,worldSize);
    } else {
-      ::usingMPI=false;
       rootContext = scinew ProcessorGroup(0,0, false, 0, 1);
       worldComm=-1;
    }
@@ -92,6 +101,9 @@ Parallel::getRootProcessorGroup()
 
 //
 // $Log$
+// Revision 1.9  2000/09/25 18:13:51  sparker
+// Correctly handle mpich
+//
 // Revision 1.8  2000/07/27 22:39:54  sparker
 // Implemented MPIScheduler
 // Added associated support
