@@ -592,6 +592,17 @@ ShowField::tcl_command(GuiArgs& args, void* userdata) {
   } else if (args[1] == "data_scale") {
     data_dirty_ = true;
     maybe_execute(DATA);
+  } else if (args[1] == "resolution_scale") {
+    nodes_dirty_ = true;
+    edges_dirty_ = true;
+    if (nodes_on_.get())
+    {
+      maybe_execute(NODE);
+    }
+    else if (edges_on_.get())
+    {
+      maybe_execute(EDGE);
+    }
   } else if (args[1] == "default_color_change") {
     def_color_r_.reset();
     def_color_g_.reset();
