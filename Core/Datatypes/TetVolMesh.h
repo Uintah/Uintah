@@ -61,6 +61,9 @@ public:
   typedef CellIndex<index_type>       cell_index;
   typedef CellIterator<index_type>    cell_iterator;
 
+  typedef cell_index                  elem_index;
+  typedef cell_iterator               elem_iterator;
+
   typedef vector<node_index> node_array;
   typedef vector<edge_index> edge_array;
   typedef vector<face_index> face_array;
@@ -88,6 +91,9 @@ public:
   cell_iterator cell_begin() const;
   cell_iterator cell_end() const;
   index_type    cells_size() const { return cells_.size() >> 2; }
+  elem_iterator elem_begin() const { return cell_begin(); }
+  elem_iterator elem_end() const {return cell_end(); }
+  index_type    elems_size() const { return cells_size(); }
 
   void get_nodes(node_array &array, edge_index idx) const;
   void get_nodes(node_array &array, face_index idx) const;

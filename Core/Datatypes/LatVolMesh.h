@@ -255,6 +255,10 @@ public:
   typedef CellIter        cell_iterator;
   typedef CellIndex       cell_size_type;
 
+  typedef cell_index      elem_index;
+  typedef cell_iterator   elem_iterator;
+  typedef cell_size_type  elem_size_type;
+
   // storage types for get_* functions
   typedef vector<node_index>  node_array;
   typedef vector<edge_index>  edge_array;
@@ -314,6 +318,10 @@ public:
   { return cell_iterator(this, min_x_, min_y_, min_z_ + nz_-1); }
   cell_size_type cells_size() const 
   { return cell_size_type(nx_-1, ny_-1,nz_-1); }
+
+  elem_iterator elem_begin() const { return cell_begin(); }
+  elem_iterator elem_end() const { return cell_end(); }
+  elem_size_type elems_size() const { return cells_size(); }
 
   //! get the mesh statistics
   unsigned get_nx() const { return nx_; }
