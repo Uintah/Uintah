@@ -174,24 +174,20 @@ ApplyFEMCurrentSource::execute_dipole()
     return;
   }
 
-  TetVolMeshHandle hTetMesh(0);
-  HexVolMeshHandle hHexMesh(0);
-  TriSurfMeshHandle hTriMesh(0);
-
-  if (hField->get_type_name(0) == "TetVolField")
+  TetVolMesh *hTetMesh = 0;
+  HexVolMesh *hHexMesh = 0;
+  TriSurfMesh *hTriMesh = 0;
+  if ((hTetMesh = dynamic_cast<TetVolMesh*>(hField->mesh().get_rep())))
   {
     remark("Input is a 'TetVolField'");
-    hTetMesh = dynamic_cast<TetVolMesh*>(hField->mesh().get_rep());
   }
-  else if (hField->get_type_name(0) == "HexVolField")
-  {
+  else if ((hHexMesh = dynamic_cast<HexVolMesh*>(hField->mesh().get_rep())))
+  {    
     remark("Input is a 'HexVolField'");
-    hHexMesh = dynamic_cast<HexVolMesh*>(hField->mesh().get_rep());
   }
-  else if (hField->get_type_name(0) == "TriSurfField")
+  else if ((hTriMesh = dynamic_cast<TriSurfMesh*> (hField->mesh().get_rep())))
   {
-    remark("Input is a 'TriSurfField<int>'");
-    hTriMesh = dynamic_cast<TriSurfMesh*> (hField->mesh().get_rep());
+    remark("Input is a 'TriSurfField'");
   }
   else
   {
@@ -199,58 +195,60 @@ ApplyFEMCurrentSource::execute_dipole()
     return;
   }
 
-  MatrixHandle  hRhsIn;
-  ColumnMatrix* rhsIn;
-  ColumnMatrix* rhs;
   int nsize = 0;
-
-  if (hTetMesh.get_rep())
+  if (hTetMesh)
   {
     TetVolMesh::Node::size_type nsizeTet; hTetMesh->size(nsizeTet);
     nsize = nsizeTet;
   }
-  else if (hHexMesh.get_rep())
+  else if (hHexMesh)
   {
     HexVolMesh::Node::size_type nsizeHex; hHexMesh->size(nsizeHex);
     nsize = nsizeHex;
   }
-  else if (hTriMesh.get_rep())
+  else if (hTriMesh)
   {
     TriSurfMesh::Node::size_type nsizeTri; hTriMesh->size(nsizeTri);
     nsize = nsizeTri;
   }
 
-  if (nsize > 0)
-  {
-    rhs = scinew ColumnMatrix(nsize);
-  }
-  else
+  if (nsize <= 0)
   {
     error("Input mesh has zero size");
     return;
   }
 
-  // -- if the user passed in a vector the right size, copy it into ours
-  if (iportRhs_->get(hRhsIn) &&
-      (rhsIn=dynamic_cast<ColumnMatrix*>(hRhsIn.get_rep())) &&
-      (rhsIn->nrows() == nsize))
+  // If the user passed in a vector the right size, copy it into ours.
+  ColumnMatrix* rhs = 0;
+  MatrixHandle  hRhsIn;
+  if (iportRhs_->get(hRhsIn) && hRhsIn.get_rep())
   {
-    string units;
-    if (rhsIn->get_property("units", units))
-      rhs->set_property("units", units, false);
+    if (hRhsIn->nrows() == nsize && hRhsIn->ncols() == 1)
+    {
+      rhs = scinew ColumnMatrix(nsize);
+      string units;
+      if (hRhsIn->get_property("units", units))
+        rhs->set_property("units", units, false);
 
-    for (int i=0; i < nsize; i++)
-      (*rhs)[i]=(*rhsIn)[i];
+      for (int i=0; i < nsize; i++)
+      {
+        rhs->put(i, hRhsIn->get(i, 1));
+      }
+    }
+    else
+    {
+      warning("The supplied RHS doesn't correspond to the input mesh in size.  Creating empty one.");
+    }
   }
-  else
+  if (rhs == 0)
   {
+    rhs = scinew ColumnMatrix(nsize);
     rhs->set_property("units", string("volts"), false);
-    //   msgStream_ << "The supplied RHS doesn't correspond to the mesh in size. Creating own one..." << endl;
     rhs->zero();
   }
 
   // Process mesh.
-  if (hTetMesh.get_rep())
+  if (hTetMesh)
   {
     FieldHandle hSource;
     if (!iportSource_->get(hSource) || !hSource.get_rep()) {
@@ -260,7 +258,8 @@ ApplyFEMCurrentSource::execute_dipole()
 	
     LockingHandle<PointCloudField<Vector> > hDipField;
 	
-    if (hSource->get_type_name(0)!="PointCloudField" || hSource->get_type_name(1)!="Vector")
+    if (hSource->get_type_name(0)!="PointCloudField" ||
+        hSource->get_type_name(1)!="Vector")
     {
       error("Supplied field is not of type PointCloudField<Vector>.");
       return;
@@ -331,7 +330,7 @@ ApplyFEMCurrentSource::execute_dipole()
     oportWeights->send(MatrixHandle(w));
     oportRhs->send(MatrixHandle(rhs));
   }
-  else if (hHexMesh.get_rep())
+  else if (hHexMesh)
   { // process hex mesh
     FieldHandle hSource;
     if (!iportSource_->get(hSource) || !hSource.get_rep()) {
@@ -339,7 +338,8 @@ ApplyFEMCurrentSource::execute_dipole()
       return;
     }
     LockingHandle<PointCloudField<Vector> > hDipField;
-    if (hSource->get_type_name(0)!="PointCloudField" || hSource->get_type_name(1)!="Vector")
+    if (hSource->get_type_name(0)!="PointCloudField" ||
+        hSource->get_type_name(1)!="Vector")
     {
       error("Supplied field is not of type PointCloudField<Vector>.");
       return;
@@ -400,7 +400,7 @@ ApplyFEMCurrentSource::execute_dipole()
     }
     oportRhs->send(MatrixHandle(rhs));
   }
-  else if (hTriMesh.get_rep())
+  else if (hTriMesh)
   {
     FieldHandle hSource;
     if (!iportSource_->get(hSource) || !hSource.get_rep()) {
@@ -501,18 +501,15 @@ ApplyFEMCurrentSource::execute_sources_and_sinks()
     return;
   }
 
-  TetVolMeshHandle hTetMesh(0);
-  TriSurfMeshHandle hTriMesh(0);
-
-  if (hField->get_type_name(0) == "TetVolField")
+  TetVolMesh *hTetMesh = 0;
+  TriSurfMesh *hTriMesh = 0;
+  if ((hTetMesh = dynamic_cast<TetVolMesh*>(hField->mesh().get_rep())))
   {
     remark("Input is a 'TetVolField'");
-    hTetMesh = dynamic_cast<TetVolMesh*>(hField->mesh().get_rep());
   }
-  else if (hField->get_type_name(0) == "TriSurfField")
+  else if ((hTriMesh = dynamic_cast<TriSurfMesh*> (hField->mesh().get_rep())))
   {
-    remark("Input is a 'TriSurfField<int>'");
-    hTriMesh = dynamic_cast<TriSurfMesh*> (hField->mesh().get_rep());
+    remark("Input is a 'TriSurfField'");
   }
   else
   {
@@ -520,53 +517,55 @@ ApplyFEMCurrentSource::execute_sources_and_sinks()
     return;
   }
 
-  MatrixHandle  hRhsIn;
-  ColumnMatrix* rhsIn;
-  ColumnMatrix* rhs;
   int nsize = 0;
-
-  if (hTetMesh.get_rep())
+  if (hTetMesh)
   {
     TetVolMesh::Node::size_type nsizeTet; hTetMesh->size(nsizeTet);
     nsize = nsizeTet;
   }
-  else if (hTriMesh.get_rep())
+  else if (hTriMesh)
   {
     TriSurfMesh::Node::size_type nsizeTri; hTriMesh->size(nsizeTri);
     nsize = nsizeTri;
   }
 
-  if (nsize > 0)
-  {
-    rhs = scinew ColumnMatrix(nsize);
-  }
-  else
+  if (nsize <= 0)
   {
     error("Input mesh has zero size");
     return;
   }
 
-  // -- if the user passed in a vector the right size, copy it into ours
-  if (iportRhs_->get(hRhsIn) &&
-      (rhsIn=dynamic_cast<ColumnMatrix*>(hRhsIn.get_rep())) &&
-      (rhsIn->nrows() == nsize))
+  // If the user passed in a vector the right size, copy it into ours.
+  ColumnMatrix* rhs = 0;
+  MatrixHandle  hRhsIn;
+  if (iportRhs_->get(hRhsIn) && hRhsIn.get_rep())
   {
-    string units;
-    if (rhsIn->get_property("units", units))
-      rhs->set_property("units", units, false);
+    if (hRhsIn->ncols() == 1 && hRhsIn->nrows() == nsize)
+    {
+      rhs = scinew ColumnMatrix(nsize);
+      string units;
+      if (hRhsIn->get_property("units", units))
+        rhs->set_property("units", units, false);
 
-    for (int i=0; i < nsize; i++)
-      (*rhs)[i]=(*rhsIn)[i];
+      for (int i=0; i < nsize; i++)
+      {
+        rhs->put(i, hRhsIn->get(i, 1));
+      }
+    }
+    else
+    {
+      warning("The supplied RHS doesn't correspond to the input mesh in size.  Creating empty one.");
+    }
   }
-  else
+  if (rhs == 0)
   {
+    rhs = scinew ColumnMatrix(nsize);
     rhs->set_property("units", string("volts"), false);
-    //   msgStream_ << "The supplied RHS doesn't correspond to the mesh in size. Creating own one..." << endl;
     rhs->zero();
   }
 
   // process mesh
-  if (hTetMesh.get_rep())
+  if (hTetMesh)
   {
     FieldHandle hInterp;
     iportInterp_->get(hInterp);
@@ -680,7 +679,7 @@ ApplyFEMCurrentSource::execute_sources_and_sinks()
     }
     oportRhs->send(MatrixHandle(rhs));
   }
-  else if (hTriMesh.get_rep())
+  else if (hTriMesh)
   {
     FieldHandle hInterp;
     iportInterp_->get(hInterp);
@@ -746,11 +745,10 @@ ApplyFEMCurrentSource::execute_electrode_set()
     return;
   }
 
-  TriSurfMeshHandle hTriMesh;
-  if (hField->get_type_name(0) == "TriSurfField")
+  TriSurfMesh *hTriMesh = 0;
+  if ((hTriMesh = dynamic_cast<TriSurfMesh*> (hField->mesh().get_rep())))
   {
-    remark("Input is a 'TriSurfField<int>'");
-    hTriMesh = dynamic_cast<TriSurfMesh*> (hField->mesh().get_rep());
+    remark("Input is a 'TriSurfField'");
   }
   else
   {
@@ -758,37 +756,40 @@ ApplyFEMCurrentSource::execute_electrode_set()
     return;
   }
 
-  MatrixHandle  hRhsIn;
-  ColumnMatrix* rhsIn;
-  ColumnMatrix* rhs;
-
   TriSurfMesh::Node::size_type nsizeTri; hTriMesh->size(nsizeTri);
   const int nsize = nsizeTri;
-  if (nsize > 0)
-  {
-    rhs = scinew ColumnMatrix(nsize);
-  }
-  else
+  if (nsize <= 0)
   {
     error("Input mesh has zero size");
     return;
   }
 
-  // -- if the user passed in a vector the right size, copy it into ours
-  if (iportRhs_->get(hRhsIn) && (rhsIn = hRhsIn->as_column()) &&
-      (rhsIn->nrows() == nsize))
+  // If the user passed in a vector the right size, copy it into ours.
+  ColumnMatrix* rhs = 0;
+  MatrixHandle  hRhsIn;
+  if (iportRhs_->get(hRhsIn) && hRhsIn.get_rep())
   {
-    string units;
-    if (rhsIn->get_property("units", units))
-      rhs->set_property("units", units, false);
+    if (hRhsIn->ncols() == 1 && hRhsIn->nrows() == nsize)
+    {
+      rhs = scinew ColumnMatrix(nsize);
+      string units;
+      if (hRhsIn->get_property("units", units))
+        rhs->set_property("units", units, false);
 
-    for (int i=0; i < nsize; i++)
-      (*rhs)[i]=(*rhsIn)[i];
+      for (int i=0; i < nsize; i++)
+      {
+        rhs->put(i, hRhsIn->get(i, 1));
+      }
+    }
+    else
+    {
+      warning("The supplied RHS doesn't correspond to the input mesh in size.  Creating empty one.");
+    }
   }
-  else
+  if (rhs == 0)
   {
+    rhs = scinew ColumnMatrix(nsize);
     rhs->set_property("units", string("volts"), false);
-    //   msgStream_ << "The supplied RHS doesn't correspond to the mesh in size. Creating own one..." << endl;
     rhs->zero();
   }
 
@@ -822,7 +823,8 @@ ApplyFEMCurrentSource::ProcessTriElectrodeSet( ColumnMatrix* rhs,
   // -----------------------------------------
   MatrixHandle  hElectrodeParams;
 
-  if (!iportElectrodeParams_->get(hElectrodeParams) || !hElectrodeParams.get_rep())
+  if (!iportElectrodeParams_->get(hElectrodeParams) ||
+      !hElectrodeParams.get_rep())
   {
     error("Can't get handle to electrode parameters matrix.");
     return;
