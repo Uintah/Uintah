@@ -447,7 +447,7 @@ proc popupSaveMenu {} {
     global netedit_savefile
     if { $netedit_savefile != "" } {
 	# We know the name of the savefile, dont ask for name, just save it
-	saveSubnet 0 $netedit_savefile
+	netedit savenetwork $netedit_savefile
     } else { ;# Otherwise, ask the user for the name to save as
 	popupSaveAsMenu
     }
@@ -464,7 +464,7 @@ proc popupSaveAsMenu {} {
     set netedit_savefile \
 	[tk_getSaveFile -defaultextension {.net} -filetypes $types ]
     if { $netedit_savefile != "" } {
-	saveSubnet 0 $netedit_savefile
+	netedit savenetwork $netedit_savefile
 	# Cut off the path from the net name and put in on the title bar:
 	wm title . "SCIRun ([lindex [split "$netedit_savefile" /] end])"
     }
@@ -930,7 +930,7 @@ proc showSplash { {steps none} } {
 
 
 
-proc licenseDialog {} {
+proc licenseDialog { {firsttime 1} } {
     global SCIRUN_SRCDIR
     set filename [file join $SCIRUN_SRCDIR LICENSE]
     set stream [open $filename r]
@@ -957,10 +957,19 @@ proc licenseDialog {} {
     close $stream
     .license.text.text configure -state disabled
     bind .license.text.text <1> {focus %W}
-    button .license.ok -text OK -command {destroy .license}
-    pack .license.ok -padx 5 -pady 5 -side bottom
+    frame .license.b
+    pack .license.b -side bottom
+    if { $firsttime } {
 
-    update idletasks
+	button .license.b.accept -text Accept -command {destroy .license}
+	button .license.b.decline -text Decline -command {destroy .license}
+	pack .license.b.accept .license.b.decline -padx 5 -pady 5 -side right
+    } else {
+	button .license.b.OK -text OK -command {destroy .license}
+	pack .license.b.OK -padx 5 -pady 5 -side bottom
+    }
+    raise .license
+    grab .license
 }
 
 
