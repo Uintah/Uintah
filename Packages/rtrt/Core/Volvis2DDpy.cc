@@ -219,19 +219,21 @@ Volvis2DDpy::drawBackground( void ) {
   glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
   glTexEnvf( GL_TEXTURE_ENV, GL_TEXTURE_ENV_COLOR, GL_BLEND );
   glBindTexture( GL_TEXTURE_2D, transFuncTextName );
+  // recalculate the transfer functions only if it has changed
   if( transFunc_changed ) {
-    GLint xoffset = (GLint)(subT_left);
-    GLint yoffset = (GLint)(subT_bottom);
-    GLsizei width = (GLsizei)(subT_right-subT_left+1);
-    GLsizei height = (GLsizei)(subT_top-subT_bottom+1);
-    SubTexture<GLfloat> subImage( subT_left, subT_bottom,
-				  subT_right-subT_left+1,
-				  subT_top-subT_bottom+1,
-				  transTexture1->textArray );
-
-    cerr << subT_left << endl << subT_top << endl << subT_bottom << "\n\n";
-    glTexSubImage2D( GL_TEXTURE_2D, 0, xoffset, yoffset, width, height,
-  		     GL_RGBA, GL_FLOAT, subImage.textArray.get_dataptr() );
+      GLint xoffset = (GLint)(subT_left);
+      GLint yoffset = (GLint)(subT_bottom);
+//        GLsizei width = (GLsizei)(subT_right-subT_left+1);
+      GLsizei width = (GLsizei)(textureWidth-subT_left);
+      GLsizei height = (GLsizei)(subT_top-subT_bottom+1);
+      SubTexture<GLfloat> subImage( subT_left, subT_bottom,
+//    				    subT_right-subT_left+1,
+  				    textureWidth-subT_left,
+				    subT_top-subT_bottom+1,
+				    transTexture1->textArray );
+      
+      glTexSubImage2D( GL_TEXTURE_2D, 0, xoffset, yoffset, width, height,
+		       GL_RGBA, GL_FLOAT, subImage.textArray.get_dataptr() );
     transFunc_changed = false;
   }
 
@@ -259,16 +261,31 @@ Volvis2DDpy::boundSubTexture( Widget* widget ) {
   float toTextureX = ((float)textureWidth-1.0)/(worldWidth - 2*borderSize);
   float toTextureY = ((float)textureHeight-1.0)/(worldHeight - menuHeight
 						 - 2*borderSize);
-  subT_left = (int)((min(widget->getTextULBound()->x,
-			 widget->getTextLLBound()->x)
-		     - borderSize)*toTextureX);
-  subT_top = (int)(widget->getTextULBound()->y -
-		   menuHeight - borderSize) * toTextureY;
-//    subT_right = (int)((max(widget->getTextLRBound()->x,
-//  			  widget->getTextURBound()->x)
-//  		      - borderSize)*toTextureX);
-  subT_bottom = (int)((widget->getTextLRBound()->y
-		       - menuHeight - borderSize) * toTextureY);
+  if( waiting_for_redraw ) {
+    subT_left = min((int)((min(widget->getTextULBound()->x,
+			       widget->getTextLLBound()->x)
+			   - borderSize)*toTextureX), subT_left);
+    subT_top = max((int)((widget->getTextULBound()->y -
+			  menuHeight - borderSize) * toTextureY), subT_top);
+    subT_right = max((int)((max(widget->getTextLRBound()->x,
+				widget->getTextURBound()->x)
+			    - borderSize)*toTextureX), subT_right);
+    subT_bottom = min((int)((widget->getTextLRBound()->y
+			     - menuHeight - borderSize) * toTextureY),
+		      subT_bottom);
+  } else {
+    subT_left = (int)((min(widget->getTextULBound()->x,
+			   widget->getTextLLBound()->x)
+		       - borderSize)*toTextureX);
+    subT_top = (int)((widget->getTextULBound()->y -
+		     menuHeight - borderSize) * toTextureY);
+    subT_right = (int)((max(widget->getTextLRBound()->x,
+			    widget->getTextURBound()->x)
+			- borderSize)*toTextureX);
+    subT_bottom = (int)((widget->getTextLRBound()->y
+			 - menuHeight - borderSize) * toTextureY);
+    waiting_for_redraw = true;
+  }
 }
 
 
@@ -308,13 +325,7 @@ Volvis2DDpy::cycleWidgets(void) {
   // remove widget
   widgets.pop_back();
 
-  float old_ulx = min( old_wid->getTextULBound()->x,
-		       old_wid->getTextLLBound()->x );
-  float old_lrx = max( old_wid->getTextURBound()->x,
-		       old_wid->getTextURBound()->x );
-  float old_uly = old_wid->getTextULBound()->y;
-  float old_lry = old_wid->getTextLRBound()->y;
-
+  boundSubTexture( old_wid );
   // and replace with appropriate type
   switch( old_wid->type ) {
   case Tri:
@@ -330,22 +341,7 @@ Volvis2DDpy::cycleWidgets(void) {
     new_wid = new TriWidget( old_wid );
     break;
   } // switch(type)
-
-  float new_ulx = min( new_wid->getTextULBound()->x,
-		       new_wid->getTextLLBound()->x );
-  float new_lrx = max( new_wid->getTextURBound()->x,
-		       new_wid->getTextLRBound()->x );
-  float new_uly = new_wid->getTextULBound()->y;
-  float new_lry = new_wid->getTextLRBound()->y;
-
-  float toTextureX = ((float)textureWidth-1.0)/(worldWidth - 2*borderSize);
-  float toTextureY = ((float)textureHeight-1.0)/(worldHeight - menuHeight
-						 - 2*borderSize);
-
-  subT_left = (int)((min(old_ulx,new_ulx)-borderSize)*toTextureX);
-  subT_top = (int)((max(old_uly,new_uly)-menuHeight-borderSize)*toTextureY);
-  //subT_right = (int)((max(old_lrx,new_lrx)-borderSize)*toTextureX);
-  subT_bottom = (int)((min(old_lry,new_lry)-menuHeight-borderSize)*toTextureY);
+  boundSubTexture( new_wid );
 
   delete old_wid;
   widgets.push_back( new_wid );
@@ -436,9 +432,6 @@ Volvis2DDpy::processHits( GLint hits, GLuint buffer[] ) {
 // template<class T>
 void
 Volvis2DDpy::pickShape( int x, int y ) {
-//    old_x = x;   // updates old_x
-//    old_y = y;   // updates old_y
-
   GLuint selectBuf[BUFSIZE];
   GLint hits;
   GLint viewport[4];
@@ -677,12 +670,24 @@ Volvis2DDpy::adjustRaySize( unsigned long key ) {
 void
 Volvis2DDpy::key_pressed(unsigned long key) {
   switch (key) {
-    // exit program
-  case XK_q:
-  case XK_Q:
-  case XK_Escape:
-    close_display();
-    exit(0);
+    // adjust histogram parameters
+  case XK_b:
+  case XK_B:
+    hist_adjust = !hist_adjust;
+    redraw = true;
+    break;
+
+    // revert histogram to selected parameters
+  case XK_c:
+  case XK_C:
+    current_vmin = selected_vmin;
+    current_vmax = selected_vmax;
+    current_gmin = selected_gmin;
+    current_gmax = selected_gmax;
+    text_x_convert = ((float)textureWidth-1.0f)/(current_vmax-current_vmin);
+    text_y_convert = ((float)textureHeight-1.0f)/(current_gmax-current_gmin);
+    createBGText( selected_vmin, selected_vmax, selected_gmin, selected_gmax );
+    redraw = true;
     break;
 
     // help output for user
@@ -735,25 +740,29 @@ Volvis2DDpy::key_pressed(unsigned long key) {
 	 << "------------------------------------------------------------\n\n";
     break;
 
-    // adjust histogram parameters
-  case XK_b:
-  case XK_B:
-    hist_adjust = !hist_adjust;
-    redraw = true;
+    // information display
+  case XK_i:
+  case XK_I: {
+    cerr << "--------------------------------------------------------------\n"
+	 << "--                   FILE INFORMATION                       --\n"
+	 << "--------------------------------------------------------------\n"
+	 << "\n--Unused save states:\n";
+    char file[20] = "savedUIState0.txt";
+    for( int i = 0; i < 10; i++ ) {
+      ifstream filecheck( file );
+      if( !filecheck.good() )
+	cerr << "\t" << file << "\n";
+      file[12]++;
+    }
+    cerr << "--Most recently saved state (this session):\n"
+  	 << "\t" << lastSaveState << endl
+	 << "--Most recently loaded state (this session):\n"
+	 << "\t" << lastLoadState << endl << endl
+	 << "--------------------------------------------------------------\n"
+	 << "--               END OF FILE INFORMATION                    --\n"
+	 << "--------------------------------------------------------------\n";
     break;
-
-    // revert histogram to selected parameters
-  case XK_c:
-  case XK_C:
-    current_vmin = selected_vmin;
-    current_vmax = selected_vmax;
-    current_gmin = selected_gmin;
-    current_gmax = selected_gmax;
-    text_x_convert = ((float)textureWidth-1.0f)/(current_vmax-current_vmin);
-    text_y_convert = ((float)textureHeight-1.0f)/(current_gmax-current_gmin);
-    createBGText( selected_vmin, selected_vmax, selected_gmin, selected_gmax );
-    redraw = true;
-    break;
+  }
 
     // revert to original histogram parameters
   case XK_o:
@@ -768,14 +777,30 @@ Volvis2DDpy::key_pressed(unsigned long key) {
     redraw = true;
     break;
 
+    // exit program
+  case XK_q:
+  case XK_Q:
+  case XK_Escape:
+    close_display();
+    exit(0);
+    break;
+
+    // render accurately
+  case XK_r:
+  case XK_R:
+    render_mode = !render_mode;
+    cerr << "rendering hack is now " << render_mode << ".\n";
+    break;
+
     // switch between vertically/horizontally aligned widget transfer functions
   case XK_s:
   case XK_S:
-    if( pickedIndex >= 0 )
+    if( pickedIndex >= 0 ) {
       widgets[pickedIndex]->changeTextureAlignment();
-    boundSubTexture( widgets[pickedIndex] );
-    transFunc_changed = true;
-    redraw = true;
+      boundSubTexture( widgets[pickedIndex] );
+      transFunc_changed = true;
+      redraw = true;
+    }
     break;
 
     // remove widget in focus
@@ -815,35 +840,6 @@ Volvis2DDpy::key_pressed(unsigned long key) {
       saveUIState( key );
     break;
 
-    // render accurately
-  case XK_r:
-  case XK_R:
-    render_mode = !render_mode;
-    cerr << "rendering hack is now " << render_mode << ".\n";
-    break;
-
-    // information display
-  case XK_i:
-  case XK_I:
-    cerr << "--------------------------------------------------------------\n"
-	 << "--                   FILE INFORMATION                       --\n"
-	 << "--------------------------------------------------------------\n"
-	 << "\n--Unused save states:\n";
-    char file[20] = "savedUIState0.txt";
-    for( int i = 0; i < 10; i++ ) {
-      ifstream filecheck( file );
-      if( !filecheck.good() )
-	cerr << "\t" << file << "\n";
-      file[12]++;
-    }
-    cerr << "--Most recently saved state (this session):\n"
-  	 << "\t" << lastSaveState << endl
-	 << "--Most recently loaded state (this session):\n"
-	 << "\t" << lastLoadState << endl << endl
-	 << "--------------------------------------------------------------\n"
-	 << "--               END OF FILE INFORMATION                    --\n"
-	 << "--------------------------------------------------------------\n";
-    break;
   } // switch()
 } // key_pressed()
 
@@ -887,10 +883,6 @@ Volvis2DDpy::button_pressed(MouseButton button, const int x, const int y) {
     return;
   }
 
-//    // update old_x and old_y
-//    old_x = x;
-//    old_y = y;
-
   delete_voxel_storage();
   // if user selected the cutplane probe widget, add it to the widget vector
   float hist_x = x/pixel_width;
@@ -900,19 +892,17 @@ Volvis2DDpy::button_pressed(MouseButton button, const int x, const int y) {
   float cpy = cp_probe->getCenterY();
   float cpwidth = cp_probe->width;
   float cpheight = cp_probe->height;
-  if( display_probe &&
-      hist_x >= cpx - 0.5*cpwidth - 5 && hist_x <= cpx + 0.5*cpwidth + 5 &&
-      hist_y >= cpy - cpheight*0.5 - 5 && hist_y <= cpy + cpheight*0.5 + 5 ) {
-    widgets.push_back( new EllipWidget( cpx, cpy, cpwidth, cpheight, color ) );
-    widgets[widgets.size()-1]->changeColor( 0.0, 0.6, 0.85 );
-    if(widgets.size() > 1) {
-      widgets[widgets.size()-2]->changeColor( 0.85, 0.6, 0.6 );
-      display_probe = false;
-    } else {
+  if( display_probe ) {
+      if( hist_x >= cpx - 0.5*cpwidth - 5 && hist_x <= cpx + 0.5*cpwidth + 5 &&
+	  hist_y >= cpy - cpheight*0.5 - 5&&hist_y <= cpy + cpheight*0.5 + 5) {
+	widgets.push_back(new EllipWidget(cpx, cpy, cpwidth, cpheight, color));
+	widgets[widgets.size()-1]->changeColor( 0.0, 0.6, 0.85 );
+	if(widgets.size() > 1)
+	  widgets[widgets.size()-2]->changeColor( 0.85, 0.6, 0.6 );
+      }
       display_probe = false;
       redraw = true;
       transFunc_changed = true;
-    }
   }
   
   switch( button ) {
@@ -1067,47 +1057,14 @@ Volvis2DDpy::button_motion(MouseButton button, const int x, const int y) {
     return;
   }
 
+
   if( button == MouseButton1 ) {
     // if the user has selected a widget by its frame
     if( pickedIndex >= 0 && widgets[pickedIndex]->drawFlag != Cmap ) {
-      float old_ulx = min( widgets[pickedIndex]->getTextULBound()->x,
-			   widgets[pickedIndex]->getTextLLBound()->x );
-      float old_lrx = max( widgets[pickedIndex]->getTextURBound()->x,
-			   widgets[pickedIndex]->getTextLRBound()->x );
-      float old_uly = widgets[pickedIndex]->getTextULBound()->y;
-      float old_lry = widgets[pickedIndex]->getTextLRBound()->y;
-      
-      float toTextureX = ((float)textureWidth-1.0)/(worldWidth - 2*borderSize);
-      float toTextureY = ((float)textureHeight-1.0)/(worldHeight - menuHeight
-						     - 2*borderSize);
-      if( waiting_for_redraw ) {
-	subT_left = min(subT_left, (int)((old_ulx-borderSize)*toTextureX));
-	//subT_right = max(subT_right, (int)((old_lrx-borderSize)*toTextureX));
-	subT_top = max(subT_top, (int)((old_uly-menuHeight-borderSize)
-				       *toTextureY));
-	subT_bottom = min(subT_bottom,(int)((old_lry-menuHeight-borderSize)
-					    *toTextureY));
-      } else {
-	subT_left = (int)((old_ulx-borderSize)*toTextureX);
-	//subT_right = (int)((old_lrx-borderSize)*toTextureX);
-	subT_top = (int)((old_uly-menuHeight-borderSize)*toTextureY);
-	subT_bottom = (int)((old_lry-menuHeight-borderSize)*toTextureY);
-	waiting_for_redraw = true;
-      }
+      boundSubTexture( widgets[pickedIndex] );
       widgets[pickedIndex]->manipulate( x/pixel_width, 330.0-y/pixel_height );
-      float new_ulx = min( widgets[pickedIndex]->getTextULBound()->x,
-			   widgets[pickedIndex]->getTextLLBound()->x );
-      float new_lrx = max( widgets[pickedIndex]->getTextURBound()->x,
-			   widgets[pickedIndex]->getTextLRBound()->x );
-      float new_uly = widgets[pickedIndex]->getTextULBound()->y;
-      float new_lry = widgets[pickedIndex]->getTextLRBound()->y;
-      subT_left = min(subT_left, (int)((new_ulx-borderSize)*toTextureX));
-      //subT_right = max(subT_right, (int)((new_lrx-borderSize)*toTextureX));
-      subT_top = max(subT_top, (int)((new_uly-menuHeight-borderSize)
-				     *toTextureY));
-      subT_bottom = min(subT_bottom,(int)((new_lry-menuHeight-borderSize)
-					  *toTextureY));
-      
+      boundSubTexture( widgets[pickedIndex] );      
+
       if( !widgetsMaintained ) {
 	// store away all unchanging widgets' textures to speed up performance
 	for( int i = 0; i < textureHeight; i++ )
@@ -1120,7 +1077,6 @@ Volvis2DDpy::button_motion(MouseButton button, const int x, const int y) {
 	for( int i = 0; i < widgets.size()-1; i++ )
 	  widgets[i]->paintTransFunc( transTexture3->textArray,
 				      master_opacity );
-
 	widgetsMaintained = true;
       }
       transFunc_changed = true;
@@ -1128,29 +1084,13 @@ Volvis2DDpy::button_motion(MouseButton button, const int x, const int y) {
     }
 
     // if the user has selected a widget by its texture
-    else if( pickedIndex >= 0 ) {
-      // no reason to adjust a rainbow widget's texture color
-      if( widgets[pickedIndex]->type == Rainbow )
-	return;
-
-      float toTextureX = ((float)textureWidth-1.0)/(worldWidth - 2*borderSize);
-      float toTextureY = ((float)textureHeight-1.0)/(worldHeight - menuHeight
-						     - 2*borderSize);
-      subT_left = (int)((min(widgets[pickedIndex]->getTextULBound()->x,
-			     widgets[pickedIndex]->getTextLLBound()->x )
-			 - borderSize)*toTextureX);
-//        subT_right = (int)((max(widgets[pickedIndex]->getTextURBound()->x,
-//  			      widgets[pickedIndex]->getTextLRBound()->x )
-//  			  - borderSize)*toTextureX);
-      subT_top = (int)((widgets[pickedIndex]->getTextULBound()->y-
-			  menuHeight-borderSize)*toTextureY);
-      subT_bottom = (int)((widgets[pickedIndex]->getTextLRBound()->y-
-			   menuHeight-borderSize)*toTextureY);
+    else if( pickedIndex >= 0 && widgets[pickedIndex]->type != Rainbow ) {
+      boundSubTexture( widgets[pickedIndex] );
 
       // adjust widget texture's color
       widgets[pickedIndex]->transText->colormap( x, y );
       if( widgets[pickedIndex]->type != Tri )
-	// invert the widget frame's color to make it visible with texture
+	// invert the widget frame's color to make it visible on texture
 	widgets[pickedIndex]->invertFocus();
 
       transFunc_changed = true;
@@ -1164,37 +1104,8 @@ Volvis2DDpy::button_motion(MouseButton button, const int x, const int y) {
 				   (330-y)/pixel_height-3 <
 				   m_opacity_slider->top ))) {
       adjustMasterOpacity( (float)x/pixel_width );
-      float toTextureX = ((float)textureWidth-1.0)/(worldWidth - 2*borderSize);
-      float toTextureY = ((float)textureHeight-1.0)/(worldHeight - menuHeight
-						     - 2*borderSize);
-      if( widgets.size() > 0 ) {
-	subT_left = (int)((min(widgets[0]->getTextULBound()->x,
-			       widgets[0]->getTextLLBound()->x)
-			   - borderSize)*toTextureX);
-//  	subT_right = (int)((max(widgets[0]->getTextURBound()->x,
-//  				widgets[0]->getTextLRBound()->x)
-//  			    - borderSize)*toTextureX);
-	subT_top = (int)((widgets[0]->getTextULBound()->y - menuHeight
-			 - borderSize)*toTextureY);
-	subT_bottom = (int)((widgets[0]->getTextLLBound()->y - menuHeight
-			     - borderSize)*toTextureY);
-	for( int i = 1; i < widgets.size(); i++ ) {
-	  subT_left = min(subT_left,
-			  (int)((min(widgets[i]->getTextULBound()->x,
-				     widgets[i]->getTextLLBound()->x)
-				 - borderSize)*toTextureX));
-//  	  subT_right = max(subT_right,
-//  			   (int)((max(widgets[i]->getTextURBound()->x,
-//  				      widgets[i]->getTextLRBound()->x)
-//  				  - borderSize)*toTextureX));
-	  subT_top = max(subT_top,
-			 (int)((widgets[i]->getTextULBound()->y - menuHeight
-				- borderSize)*toTextureY));
-	  subT_bottom = min(subT_bottom,
-			    (int)((widgets[i]->getTextLLBound()->y - menuHeight
-				   - borderSize)*toTextureY));
-	}
-      }
+      for( int i = 0; i < widgets.size(); i++ )
+	boundSubTexture( widgets[i] );
     }
     
     // if the user is trying to adjust the cutplane opacity or
@@ -1213,15 +1124,7 @@ Volvis2DDpy::button_motion(MouseButton button, const int x, const int y) {
 				  cp_gs_slider->top ))
 	      adjustCutplaneGS( (float)x/pixel_width );
     }
-
-    // if no widget was selected
-    else
-      return;
-      
-//      old_x = x;       // updates old_x
-//      old_y = y;       // updates old_y
   } // if(mousebutton1)
-
 } // button_motion
 
 
@@ -1804,7 +1707,7 @@ Volvis2DDpy::loadUIState( unsigned long key ) {
   infile.close();
   transFunc_changed = true;
   subT_left = 0;
-  //subT_right = textureWidth - 1;
+  subT_right = textureWidth - 1;
   subT_top = textureHeight - 1;
   subT_bottom = 0;
   redraw = true;
@@ -1960,7 +1863,7 @@ Volvis2DDpy::loadWidgets( char* file )
   infile.close();
   transFunc_changed = true;
   subT_left = 0;
-  //subT_right = textureWidth - 1;
+  subT_right = textureWidth - 1;
   subT_top = textureHeight - 1;
   subT_bottom = 0;
   redraw = true;
