@@ -45,14 +45,12 @@ using SCIRun::Thread;
 ProxyBase::ProxyBase(const Reference& ref)
   : d_ref(ref), attached_( false )
 {
-  cerr << "ProxyBase:: thread = " << Thread::self() << endl;
 }
 
 ProxyBase::~ProxyBase()
 {
   if( attached_ )
     {
-      cerr << "ProxyBase::destructor  thread = " << Thread::self() << endl;
       int size=0;
       globus_nexus_buffer_t buffer;
       if(int gerr=globus_nexus_buffer_init(&buffer, size, 0))
@@ -83,7 +81,7 @@ void ProxyBase::_proxyGetReference(Reference& ref, bool copy) const
   ref=d_ref;
   if( copy ){
     if( int gerr = globus_nexus_startpoint_copy(
-              &ref.d_sp, const_cast<globus_nexus_startpoint_t*>(&d_ref.d_sp)))
+						&ref.d_sp, const_cast<globus_nexus_startpoint_t*>(&d_ref.d_sp)))
       throw GlobusError("startpoint_copy", gerr);
   }
 }

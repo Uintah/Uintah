@@ -74,6 +74,7 @@ DESCRIPTION
 	    // or globus_nexus_put_startpoint_transfer.
 	    void _proxyGetReference(Reference&, bool copy) const;
 
+	    //////////
 	    // Once the constructor of a sub class has finished
 	    // successfully attached, it will call this function.
 	    // This is used so that the destructor does NOT run if

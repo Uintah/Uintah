@@ -49,19 +49,16 @@ Object_proxy::Object_proxy(const Reference& ref)
 Object_proxy::Object_proxy(const URL& url)
     : ProxyBase(Reference())
 {
-    std::string s(url.getString());
-    d_ref.d_vtable_base=TypeInfo::vtable_methods_start;
-    char* str=const_cast<char*>(s.c_str());
-    cout << "Object_proxy: attaching\n";
-    if(int gerr=globus_nexus_attach(str, &d_ref.d_sp)){
-	d_ref.d_vtable_base=TypeInfo::vtable_invalid;
-	cout << "nexus_attach error\n";
-
-	throw GlobusError("nexus_attach", gerr);
-    }
-    cout << "Object_proxy: DONE attaching\n";
-
-    attach_done();
+  std::string s(url.getString());
+  d_ref.d_vtable_base=TypeInfo::vtable_methods_start;
+  char* str=const_cast<char*>(s.c_str());
+  if(int gerr=globus_nexus_attach(str, &d_ref.d_sp)){
+    d_ref.d_vtable_base=TypeInfo::vtable_invalid;
+    cout << "nexus_attach error\n";
+    
+    throw GlobusError("nexus_attach", gerr);
+  }
+  attach_done();
 }
 
 Object_proxy::~Object_proxy()
