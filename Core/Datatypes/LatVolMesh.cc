@@ -210,6 +210,47 @@ LatVolMesh::get_cell_range(Cell::range_iter &iter, Cell::iterator &end,
   }
 }
 
+void
+LatVolMesh::get_node_range(Node::range_iter &iter, Node::iterator &end,
+			   const BBox &box) {
+  // get the min and max points of the bbox and make sure that they lie
+  // inside the mesh boundaries.
+  BBox mesh_boundary = get_bounding_box();
+  // crop by min boundary
+  Point min = Max(box.min(), mesh_boundary.min());
+  Point max = Max(box.max(), mesh_boundary.min());
+  // crop by max boundary
+  min = Min(min, mesh_boundary.max());
+  max = Min(max, mesh_boundary.max());
+  
+  Node::index_type min_index, max_index;
+
+  // If one of the locates return true, then we have a valid iteration
+  bool min_located = locate(min_index, min);
+  bool max_located = locate(max_index, max);
+  if (min_located || max_located) {
+    // This tests is designed for a slice in the xy plane.  If z (or k)
+    // is equal then you have this condition.  When this happens you
+    // need to increment k so that you will iterate over the xy values.
+    if (min_index.k_ != max_index.k_)
+      end = Node::iterator(this, min_index.i_, min_index.j_, max_index.k_);
+    else
+      end = Node::iterator(this, min_index.i_, min_index.j_, max_index.k_ + 1);
+
+    // Initialize the range iterator
+    iter = Node::range_iter(this,
+			    min_index.i_, min_index.j_, min_index.k_,
+			    max_index.i_, max_index.j_, max_index.k_);
+  } else {
+    // If both of these are false then we are outside the boundary.
+    // Set both iterators to be the same thing and exit.  When they are the
+    // same any for loop using these iterators [for(;iter != end; iter++)]
+    // will never enter.
+    iter = Node::range_iter(this, 0, 0, 0, 0, 0, 0);
+    end = Node::iterator(this, 0, 0, 0);
+  }
+}
+
 
 void
 LatVolMesh::get_center(Point &result, Node::index_type idx) const
