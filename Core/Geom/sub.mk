@@ -24,7 +24,7 @@ SRCDIR   := Core/Geom
 SRCS     += $(SRCDIR)/GeomObj.cc $(SRCDIR)/GeomOpenGL.cc \
 	$(SRCDIR)/GeomArrows.cc $(SRCDIR)/Pt.cc $(SRCDIR)/GeomText.cc \
 	$(SRCDIR)/BBoxCache.cc $(SRCDIR)/ColorMapTex.cc \
-	$(SRCDIR)/GeomGrid.cc \
+	$(SRCDIR)/GeomGrid.cc $(SRCDIR)/HistogramTex.cc \
 	$(SRCDIR)/GeomQMesh.cc $(SRCDIR)/TimeGrid.cc \
 	$(SRCDIR)/GeomBillboard.cc $(SRCDIR)/GeomGroup.cc \
 	$(SRCDIR)/GeomRenderMode.cc $(SRCDIR)/GeomTimeGroup.cc \
