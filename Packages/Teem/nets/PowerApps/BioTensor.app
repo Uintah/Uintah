@@ -16,7 +16,6 @@
 
 puts "\nLoading BioTensor (this may take a minute)...\n"
 
-
 #######################################################################
 # Check environment variables.  Ask user for input if not set:
 # Attempt to get environment variables:
@@ -1698,6 +1697,16 @@ global plane_y
 set plane_y 0
 global plane_z
 set plane_z 0
+global exec_planes
+set exec_planes(GatherPoints) 0
+set exec_planes(ChooseField-ColorPlanes) 0
+set exec_planes(GenStandardColorMaps-ColorPlanes) 0
+set exec_planes(ShowField-X) 0
+set exec_planes(ShowField-Y) 0
+set exec_planes(ShowField-Z) 0
+set exec_planes(update-X) 0
+set exec_planes(update-Y) 0
+set exec_planes(update-Z) 0
 
 
 ### registration globals
@@ -1746,6 +1755,15 @@ set isosurface_color-g 0.5
 global isosurface_color-b
 set isosurface_color-b 0.5
 
+global exec_iso
+set exec_iso(Isosurface) 0
+set exec_iso(IsoClip-X) 0
+set exec_iso(IsoClip-Y) 0
+set exec_iso(IsoClip-Z) 0
+set exec_iso(ChooseField-Isoval) 0
+set exec_iso(ShowField-Isosurface) 0
+set exec_iso(GenStandardColorMaps-Isosurface) 0
+
 # glyphs
 global glyph_display_type
 set glyph_display_type boxes
@@ -1774,6 +1792,15 @@ set glyph_rake 1
 global glyph_point
 set glyph_point 1
 
+global exec_glyphs
+set exec_glyphs(ChooseNrrd-Norm) 0
+set exec_glyphs(TendNorm-Glyphs) 0
+set exec_glyphs(ShowField-Glyphs) 0 
+set exec_glyphs(TendAnscale-Glyphs) 0 
+set exec_glyphs(ChooseField-Glyphs) 0
+set exec_glyphs(ChooseField-GlyphSeeds) 0
+set exec_glyphs(GenStandardColorMaps-Glyphs) 0
+
 
 # fibers
 global fiber_color
@@ -1800,6 +1827,13 @@ set fiber_rake 1
 global fiber_point
 set fiber_point 1
 
+global exec_fibers
+set exec_fibers(TendFiber) 0
+set exec_fibers(ChooseField-FiberSeeds) 0
+set exec_fibers(ChooseField-Fibers) 0
+# rerender_edges
+set exec_fibers(ShowField-Fibers) 0
+set exec_fibers(GenStandardColorMaps-Fibers) 0
 
                                                                                
 #######################################################
@@ -1916,6 +1950,9 @@ class BioTensorApp {
         set last_z 6
         set plane_inc "-0.1"
         set plane_type "Principle Eigenvector"
+
+	#isosurfaces
+        set iso_type "Principle Eigenvector"
 
         # glyphs
         set clip_x "<"
@@ -2056,7 +2093,7 @@ class BioTensorApp {
 	set tips(GlyphsScale) \
 	    "Scale all glyphs."
 	set tips(GlyphsShape) \
-	    "Toggle shape exageration.\nValues < 1.0 will\nmake it more isotropic.\nValues > 1.0 will make\nit more anisotropic."
+	    "Toggle shape exaggeration.\nValues < 1.0 will\nmake it more isotropic.\nValues > 1.0 will make\nit more anisotropic."
 	set tips(GlyphsSeedPoint) \
 	    "Seed the Glyphs\nat a Point using\nthe Probe widget\n(sphere)."
 	set tips(GlyphsSeedLine) \
@@ -3467,7 +3504,7 @@ class BioTensorApp {
 	    {{Other} { * }}
 	}
 	
-	if {$saveFile == ""} {
+	if {$saveFile == "" } {
 	    set saveFile [tk_getOpenFile -filetypes $types]
 	}
 
@@ -3894,18 +3931,30 @@ class BioTensorApp {
 	    change_indicate_val 1
 	} elseif {$which == $mods(ShowField-Fibers) && $state == "Completed"} { 
 	    change_indicate_val 2
-	} elseif {$which == $mods(SampleField-GlyphSeeds) && $state == "Completed" && ![set $mods(ShowField-Glyphs)-tensors-on]} {
-	    after 100 \
-		"uplevel \#0 set \"\{$mods(Viewer)-ViewWindow_0-SampleField Rake (7)\}\" 0; $mods(Viewer)-ViewWindow_0-c redraw"
-	} elseif {$which == $mods(Probe-GlyphSeeds) && $state == "Completed" && ![set $mods(ShowField-Glyphs)-tensors-on]} {
-	    after 100 \
-		"uplevel \#0 set \"\{$mods(Viewer)-ViewWindow_0-Probe Selection Widget (8)\}\" 0; $mods(Viewer)-ViewWindow_0-c redraw"
-	} elseif {$which == $mods(SampleField-FiberSeeds) && $state == "Completed" && ![set $mods(ShowField-Fibers)-edges-on]} {
-	    after 100 \
-		"uplevel \#0 set \"\{$mods(Viewer)-ViewWindow_0-SampleField Rake (12)\}\" 0; $mods(Viewer)-ViewWindow_0-c redraw"
-	} elseif {$which == $mods(Probe-FiberSeeds) && $state == "Completed" && ![set $mods(ShowField-Fibers)-edges-on]} {
-	    after 100 \
-		"uplevel \#0 set \"\{$mods(Viewer)-ViewWindow_0-Probe Selection Widget (11)\}\" 0; $mods(Viewer)-ViewWindow_0-c redraw"
+	} elseif {$which == $mods(SampleField-GlyphSeeds) && $state == "Completed"} {
+	    global $mods(ChooseField-GlyphSeeds)-port-index
+	    if {![set $mods(ShowField-Glyphs)-tensors-on] || [set $mods(ChooseField-GlyphSeeds)-port-index] != 1}  {
+		after 100 \
+		    "uplevel \#0 set \"\{$mods(Viewer)-ViewWindow_0-SampleField Rake (7)\}\" 0; $mods(Viewer)-ViewWindow_0-c redraw"
+	    }
+	} elseif {$which == $mods(Probe-GlyphSeeds) && $state == "Completed"} {
+	    global $mods(ChooseField-GlyphSeeds)-port-index
+	    if {![set $mods(ShowField-Glyphs)-tensors-on] || [set $mods(ChooseField-GlyphSeeds)-port-index] != 0} {
+		after 100 \
+		    "uplevel \#0 set \"\{$mods(Viewer)-ViewWindow_0-Probe Selection Widget (8)\}\" 0; $mods(Viewer)-ViewWindow_0-c redraw"
+	    }
+	} elseif {$which == $mods(SampleField-FiberSeeds) && $state == "Completed"} {
+	    global $mods(ChooseField-FiberSeeds)-port-index
+	    if {![set $mods(ShowField-Fibers)-edges-on] || [set $mods(ChooseField-FiberSeeds)-port-index] != 1}  {
+		after 100 \
+		    "uplevel \#0 set \"\{$mods(Viewer)-ViewWindow_0-SampleField Rake (12)\}\" 0; $mods(Viewer)-ViewWindow_0-c redraw"
+	    }
+	} elseif {$which == $mods(Probe-FiberSeeds) && $state == "Completed"} {
+	    global $mods(ChooseField-FiberSeeds)-port-index
+	    if {![set $mods(ShowField-Fibers)-edges-on] || [set $mods(ChooseField-FiberSeeds)-port-index] != 0} {
+		after 100 \
+		    "uplevel \#0 set \"\{$mods(Viewer)-ViewWindow_0-Probe Selection Widget (11)\}\" 0; $mods(Viewer)-ViewWindow_0-c redraw"
+	    }
 	} 
     }
 
@@ -4001,7 +4050,6 @@ class BioTensorApp {
 	global data_mode
 	global $mods(ChooseNrrd1)-port-index
 
-
 	if {$data_mode == "DWI" || $data_mode == "DWIknownB0"} {
 	    # determine if we are loading nrrd, dicom, or analyze
 	    # and check if both DWI and T2 files have been specified
@@ -4024,7 +4072,7 @@ class BioTensorApp {
 			set answer [tk_messageBox -message \
 					"Please specify an existing nrrd file\nwith a T2 reference image before\nexecuting." -type ok -icon info -parent .standalone] 
 			return
-		    }		
+		    }
 		    
 		    global $mods(NrrdReader-T2)-axis
 		    set $mods(NrrdReader-T2)-axis axis0
@@ -4102,7 +4150,7 @@ class BioTensorApp {
 
 		if {[set $mods(DicomToNrrd1)-num-entries] == 0} {
 		    set answer [tk_messageBox -message \
-				    "Please specify existing Dicom files\nof Tensors before\nexecuting." -type ok -icon info -parent .standalone] 
+				    "Please specify existing Dicom files\nofTensors before\nexecuting." -type ok -icon info -parent .standalone] 
 		    return
 		}
 	    } elseif {[set $mods(ChooseNrrd1)-port-index] == 2} {
@@ -4978,7 +5026,7 @@ class BioTensorApp {
 
     
     method view_Vis {} {
-        if {$dt_completed} {
+        if {$dt_completed && $c_vis_tab == "Variance"} {
             # view planes tab
             $vis_tab1 view "Planes"
             $vis_tab2 view "Planes"
@@ -5023,6 +5071,20 @@ class BioTensorApp {
 	
 	set vis_activated 1
 
+	global exec_planes
+	if {$exec_planes(update-X)} {
+	    update_plane_x
+	    set exec_planes(update-X) 0
+	}
+	if {$exec_planes(update-Y)} {
+	    update_plane_y
+	    set exec_planes(update-Y) 0
+	}
+	if {$exec_planes(update-Z)} {
+	    update_plane_z
+	    set exec_planes(update-Z) 0
+	}
+	
 	# bring planes tab forward
 	view_Vis
     }
@@ -5157,7 +5219,7 @@ class BioTensorApp {
 
 	if {![winfo exists $f.show]} {
 	    checkbutton $f.show -text "Show Planes:" -variable show_planes \
-		-command "$this toggle_show_planes" -state disabled
+		-command "$this toggle_show_planes" -foreground grey64
 	    Tooltip $f.show $tips(PlanesToggle)
 
 	    pack $f.show -side top -anchor nw -padx 3 -pady 3
@@ -5170,7 +5232,7 @@ class BioTensorApp {
 	    
 	    checkbutton $f.axis.x.check -text "X" \
 		-variable show_plane_x \
-		-state disabled \
+		-foreground grey64 \
 		-command "$this toggle_plane X"
 	    Tooltip $f.axis.x.check $tips(PlanesXToggle)
 
@@ -5179,11 +5241,11 @@ class BioTensorApp {
 		-showvalue false \
 		-length 150  -width 15 \
 		-sliderlength 15 \
-		-state disabled -foreground grey64 \
+		-foreground grey64 \
 		-orient horizontal 
 	    Tooltip $f.axis.x.slider $tips(PlanesXSlider)
 	    bind $f.axis.x.slider <ButtonRelease> "app update_plane_x"
-	    label $f.axis.x.label -textvariable plane_x -state disabled
+	    label $f.axis.x.label -textvariable plane_x -foreground grey64
 	    pack $f.axis.x.check $f.axis.x.slider $f.axis.x.label -side left -anchor nw \
 		-padx 2 -pady 3
 	    
@@ -5191,7 +5253,7 @@ class BioTensorApp {
 	    pack $f.axis.y -side top -anchor nw 
 	    checkbutton $f.axis.y.check -text "Y" \
 		-variable show_plane_y \
-		-state disabled \
+		-foreground grey64 \
 		-command "$this toggle_plane Y"
 	    Tooltip $f.axis.y.check $tips(PlanesYToggle)
 	    scale $f.axis.y.slider -from 0 -to 512 \
@@ -5199,11 +5261,11 @@ class BioTensorApp {
 		-showvalue false \
 		-length 150  -width 15 \
 		-sliderlength 15 \
-		-state disabled -foreground grey64 \
+		-foreground grey64 \
 		-orient horizontal 
 	    Tooltip $f.axis.y.slider $tips(PlanesYSlider)
 	    bind $f.axis.y.slider <ButtonRelease> "app update_plane_y"
-	    label $f.axis.y.label -textvariable plane_y -state disabled
+	    label $f.axis.y.label -textvariable plane_y -foreground grey64
 	    pack $f.axis.y.check $f.axis.y.slider $f.axis.y.label -side left -anchor nw \
 		-padx 2 -pady 3
 	    
@@ -5211,7 +5273,7 @@ class BioTensorApp {
 	    pack $f.axis.z -side top -anchor nw 
 	    checkbutton $f.axis.z.check -text "Z" \
 		-variable show_plane_z \
-		-state disabled \
+		-foreground grey64 \
 		-command "$this toggle_plane Z"
 	    Tooltip $f.axis.x.check $tips(PlanesZToggle)
 	    scale $f.axis.z.slider -from 0 -to 512 \
@@ -5219,16 +5281,16 @@ class BioTensorApp {
 		-showvalue false \
 		-length 150  -width 15 \
 		-sliderlength 15 \
-		-state disabled -foreground grey64 \
+		-foreground grey64 \
 		-orient horizontal 
 	    Tooltip $f.axis.z.slider $tips(PlanesZSlider)
 	    bind $f.axis.z.slider <ButtonRelease> "app update_plane_z"
-	    label $f.axis.z.label -textvariable plane_z -state disabled
+	    label $f.axis.z.label -textvariable plane_z -foreground grey64
 	    pack $f.axis.z.check $f.axis.z.slider $f.axis.z.label -side left -anchor nw \
 		-padx 2 -pady 3
 	    
 	    iwidgets::labeledframe $f.color \
-		-labelpos nw -labeltext "Color Planes Based On" -foreground grey64
+		-labelpos nw -labeltext "Color Planes Bsed On" -foreground grey64
 	    pack $f.color -side top -anchor nw -padx 3 -pady 3
 	    
 	    set fr [$f.color childsite]
@@ -5239,7 +5301,7 @@ class BioTensorApp {
 		-labelpos w \
 	        -width 150 \
 		-command "$this select_color_planes_color $fr.select" \
-		-state disabled
+		-foreground grey64
 	    pack $fr.select.color -side left -anchor n -padx 1 -pady 3
 	    
 	    addColorSelection $fr.select "Color" clip_to_isosurface_color "clip_color_change"
@@ -5263,8 +5325,8 @@ class BioTensorApp {
 	    radiobutton $maps.gray.b -text "Gray" \
 		-variable $mods(GenStandardColorMaps-ColorPlanes)-mapType \
 		-value 0 \
-		-state disabled \
-		-command "$mods(GenStandardColorMaps-ColorPlanes)-c needexecute"
+		-foreground grey64 \
+		-command "$this update_planes_color_map"
 	    Tooltip $maps.gray.b $tips(PlanesColorMap)
 	    pack $maps.gray.b -side left -anchor nw -padx 3 -pady 0
 	    
@@ -5283,8 +5345,8 @@ class BioTensorApp {
 	    radiobutton $maps.rainbow.b -text "Rainbow" \
 		-variable $mods(GenStandardColorMaps-ColorPlanes)-mapType \
 		-value 2 \
-		-state disabled \
-		-command "$mods(GenStandardColorMaps-ColorPlanes)-c needexecute"
+		-foreground grey64 \
+		-command "$this update_planes_color_map"
 	    Tooltip $maps.rainbow.b $tips(PlanesColorMap)
 	    pack $maps.rainbow.b -side left -anchor nw -padx 3 -pady 0
 	    
@@ -5302,8 +5364,8 @@ class BioTensorApp {
 	    radiobutton $maps.darkhue.b -text "Darkhue" \
 		-variable $mods(GenStandardColorMaps-ColorPlanes)-mapType \
 		-value 5 \
-		-state disabled \
-		-command "$mods(GenStandardColorMaps-ColorPlanes)-c needexecute"
+		-foreground grey64 \
+		-command "$this update_planes_color_map"
 	    Tooltip $maps.darkhue.b $tips(PlanesColorMap)
 	    pack $maps.darkhue.b -side left -anchor nw -padx 3 -pady 0
 	    
@@ -5322,8 +5384,8 @@ class BioTensorApp {
 	    radiobutton $maps.blackbody.b -text "Blackbody" \
 		-variable $mods(GenStandardColorMaps-ColorPlanes)-mapType \
 		-value 7 \
-		-state disabled \
-		-command "$mods(GenStandardColorMaps-ColorPlanes)-c needexecute"
+		-foreground grey64 \
+		-command "$this update_planes_color_map"
 	    Tooltip $maps.blackbody.b $tips(PlanesColorMap)
 	    pack $maps.blackbody.b -side left -anchor nw -padx 3 -pady 0
 	    
@@ -5342,8 +5404,8 @@ class BioTensorApp {
 	    radiobutton $maps.bpseismic.b -text "Red-to-Blue" \
 		-variable $mods(GenStandardColorMaps-ColorPlanes)-mapType \
 		-value 17 \
-		-state disabled \
-		-command "$mods(GenStandardColorMaps-ColorPlanes)-c needexecute"
+		-foreground grey64 \
+		-command "$this update_planes_color_map"
 	    Tooltip $maps.bpseismic.b $tips(PlanesColorMap)
 	    pack $maps.bpseismic.b -side left -anchor nw -padx 3 -pady 0
 	    
@@ -5358,11 +5420,23 @@ class BioTensorApp {
 	    global clip_to_isosurface_color
 	    checkbutton $f.clipiso -text "Clip to Isosurface" \
 		-variable clip_to_isosurface \
-		-command "$this toggle_clip_to_isosurface" -state disabled
+		-command "$this toggle_clip_to_isosurface" -foreground grey64
 	    Tooltip $f.clipiso $tips(PlanesClipToIso)
 	    pack $f.clipiso -side top -anchor nw -padx 5 -pady 5
 
 	} 
+    }
+
+    method update_planes_color_map {} {
+	global mods
+	global show_planes
+
+	if {$vis_activated && $show_planes} {
+	    $mods(GenStandardColorMaps-ColorPlanes)-c needexecute
+	} else {
+	    global exec_planes
+	    set exec_planes(GenStandardColorMaps-ColorPlanes) 1
+	}
     }
 
 
@@ -5382,7 +5456,6 @@ class BioTensorApp {
 
 	if {!$dt_completed} {
 	    global plane_x plane_y plane_z
-	    # FIX ME
 	    set plane_x [expr $size_x/2]
 	    set plane_y [expr $size_y/2]
 	    set plane_z [expr $size_z/2]
@@ -5507,29 +5580,43 @@ class BioTensorApp {
 	$planes_tab2.color.childsite.select.color select $which
 	
         # execute 
-        $mods(ChooseField-ColorPlanes)-c needexecute
-	$mods(ShowField-X)-c rerender_faces
-	$mods(ShowField-Y)-c rerender_faces
-	$mods(ShowField-Z)-c rerender_faces
+	global show_planes
+	
+	if {$vis_activated && $show_planes == 1} {
+	    $mods(ChooseField-ColorPlanes)-c needexecute
+	    $mods(ShowField-X)-c rerender_faces
+	    $mods(ShowField-Y)-c rerender_faces
+	    $mods(ShowField-Z)-c rerender_faces
+	}  else {
+	    global exec_planes
+	    set exec_planes(ChooseField-ColorPlanes) 1
+	    set exec_planes(ShowField-X) 1
+	    set exec_planes(ShowField-Y) 1
+	    set exec_planes(ShowField-Z) 1
+	}
     }
 
     method disable_planes_colormaps {} {
 	foreach w [winfo children $planes_tab1.color.childsite.maps] {
-	    disable_widget $w
+	    grey_widget $w
 	}
 
 	foreach w [winfo children $planes_tab2.color.childsite.maps] {
-	    disable_widget $w
+	    grey_widget $w
 	}
     }
 
     method enable_planes_colormaps {} {
-	foreach w [winfo children $planes_tab1.color.childsite.maps] {
-	    activate_widget $w
-	}
-
-	foreach w [winfo children $planes_tab2.color.childsite.maps] {
-	    activate_widget $w
+	global show_planes
+	
+	if {$vis_activated && $show_planes} {
+	    foreach w [winfo children $planes_tab1.color.childsite.maps] {
+		activate_widget $w
+	    }
+	    
+	    foreach w [winfo children $planes_tab2.color.childsite.maps] {
+		activate_widget $w
+	    }
 	}
     }
   
@@ -5634,30 +5721,32 @@ class BioTensorApp {
 	global mods
         global clip_by_planes
         global $mods(Viewer)-ViewWindow_0-global-clip
-        if {$clip_by_planes == 0} {
-	    set $mods(Viewer)-ViewWindow_0-global-clip 0
-	    $isosurface_tab1.clip.flipx configure -state disabled -foreground grey64
-	    $isosurface_tab2.clip.flipx configure -state disabled -foreground grey64
+	if {$vis_activated} {
+	    if {$clip_by_planes == 0} {
+		set $mods(Viewer)-ViewWindow_0-global-clip 0
+		$isosurface_tab1.clip.flipx configure -state disabled -foreground grey64
+		$isosurface_tab2.clip.flipx configure -state disabled -foreground grey64
+		
+		$isosurface_tab1.clip.flipy configure -state disabled -foreground grey64
+		$isosurface_tab2.clip.flipy configure -state disabled -foreground grey64
+		
+		$isosurface_tab1.clip.flipz configure -state disabled -foreground grey64
+		$isosurface_tab2.clip.flipz configure -state disabled -foreground grey64
+	    } else {
+		set $mods(Viewer)-ViewWindow_0-global-clip 1
+		
+		$isosurface_tab1.clip.flipx configure -state normal -foreground black
+		$isosurface_tab2.clip.flipx configure -state normal -foreground black
+		
+		$isosurface_tab1.clip.flipy configure -state normal -foreground black
+		$isosurface_tab2.clip.flipy configure -state normal -foreground black
+		
+		$isosurface_tab1.clip.flipz configure -state normal -foreground black
+		$isosurface_tab2.clip.flipz configure -state normal -foreground black
+	    }
 	    
-	    $isosurface_tab1.clip.flipy configure -state disabled -foreground grey64
-	    $isosurface_tab2.clip.flipy configure -state disabled -foreground grey64
-	    
-	    $isosurface_tab1.clip.flipz configure -state disabled -foreground grey64
-	    $isosurface_tab2.clip.flipz configure -state disabled -foreground grey64
-        } else {
-	    set $mods(Viewer)-ViewWindow_0-global-clip 1
-
-	    $isosurface_tab1.clip.flipx configure -state normal -foreground black
-	    $isosurface_tab2.clip.flipx configure -state normal -foreground black
-	    
-	    $isosurface_tab1.clip.flipy configure -state normal -foreground black
-	    $isosurface_tab2.clip.flipy configure -state normal -foreground black
-	    
-	    $isosurface_tab1.clip.flipz configure -state normal -foreground black
-	    $isosurface_tab2.clip.flipz configure -state normal -foreground black
-        }
-
-        $mods(Viewer)-ViewWindow_0-c redraw
+	    $mods(Viewer)-ViewWindow_0-c redraw
+	}
     }
 
     method flip_x_clipping_plane {} {
@@ -5837,6 +5926,7 @@ class BioTensorApp {
 	    # configure ClipByFunction
 	    configure_ClipByFunction
 
+	    
             # only update if fibers or glyphs are on?
 	    # and if they are seeding on grid
             global $mods(ShowField-Glyphs)-tensors-on
@@ -5845,10 +5935,13 @@ class BioTensorApp {
 	    global $mods(ChooseField-FiberSeeds)-port-index
 	    if {([set $mods(ShowField-Glyphs)-tensors-on] && [set $mods(ChooseField-GlyphSeeds)-port-index] == 3) || ([set $mods(ChooseField-FiberSeeds)-port-index] == 3 && [set $mods(ShowField-Fibers)-edges-on])} {
 		$mods(ClipByFunction-Seeds)-c needexecute
-	    }
-	    	    
+	    }	    	   
+	    
 	    $mods(SamplePlane-X)-c needexecute
 	    $mods(Viewer)-ViewWindow_0-c redraw
+	} else {
+	    global exec_planes
+	    set exec_planes(update-X) 1
 	}
     }
     
@@ -5874,7 +5967,7 @@ class BioTensorApp {
 	    
 	    # configure ClipByFunction
 	    configure_ClipByFunction
-	    
+
             # only update if fibers or glyphs are on?
 	    # and if they are seeding on grid
             global $mods(ShowField-Glyphs)-tensors-on
@@ -5883,10 +5976,13 @@ class BioTensorApp {
 	    global $mods(ChooseField-FiberSeeds)-port-index
 	    if {([set $mods(ShowField-Glyphs)-tensors-on] && [set $mods(ChooseField-GlyphSeeds)-port-index] == 3) || ([set $mods(ChooseField-FiberSeeds)-port-index] == 3 && [set $mods(ShowField-Fibers)-edges-on])} {
 		$mods(ClipByFunction-Seeds)-c needexecute
-	    }
+	    }	    
 	    
 	    $mods(SamplePlane-Y)-c needexecute
 	    $mods(Viewer)-ViewWindow_0-c redraw
+	} else {
+	    global exec_planes
+	    set exec_planes(update-Y) 1
 	}
     }
     
@@ -5925,6 +6021,9 @@ class BioTensorApp {
 	    
 	    $mods(SamplePlane-Z)-c needexecute
 	    $mods(Viewer)-ViewWindow_0-c redraw
+	} else {
+	    global exec_planes
+	    set exec_planes(update-Y) 1
 	}
     }
     
@@ -5966,10 +6065,17 @@ class BioTensorApp {
 		$mods(ClipByFunction-Seeds)-c needexecute
 	    }
 
-	    $mods(GatherPoints)-c needexecute
-	    
-	    $mods(ShowField-X)-c toggle_display_faces  
-	    $mods(Viewer)-ViewWindow_0-c redraw
+	    global show_planes
+	    if {$vis_activated && $show_planes} {
+		$mods(GatherPoints)-c needexecute
+		
+		$mods(ShowField-X)-c toggle_display_faces  
+		$mods(Viewer)-ViewWindow_0-c redraw
+	    } else {
+		global exec_planes
+		set exec_planes(GatherPoints) 1
+		set exec_planes(ShowField-X) 1
+	    }
 	} elseif {$which == "Y"} {
 	    global $clip-visible-$last_y
 	    if {$show_plane_y == 0} {
@@ -5989,10 +6095,17 @@ class BioTensorApp {
 		$mods(ClipByFunction-Seeds)-c needexecute
 	    }
 
-	    $mods(GatherPoints)-c needexecute
-	    
-	    $mods(ShowField-Y)-c toggle_display_faces
-	    $mods(Viewer)-ViewWindow_0-c redraw
+	    global show_planes
+	    if {$vis_activated && $show_planes} {
+		$mods(GatherPoints)-c needexecute
+		
+		$mods(ShowField-Y)-c toggle_display_faces
+		$mods(Viewer)-ViewWindow_0-c redraw
+	    } else {
+		global exec_planes
+		set exec_planes(GatherPoints) 1
+		set exec_planes(ShowField-Y) 1
+	    }
 	} else {
 	    # Z plane
 	    global $clip-visible-$last_z
@@ -6013,43 +6126,20 @@ class BioTensorApp {
 		$mods(ClipByFunction-Seeds)-c needexecute
 	    }
 	    
-	    $mods(GatherPoints)-c needexecute
-	    
-	    $mods(ShowField-Z)-c toggle_display_faces
-	    $mods(Viewer)-ViewWindow_0-c redraw
+	    global show_planes
+	    if {$vis_activated && $show_planes} {
+		$mods(GatherPoints)-c needexecute
+		
+		$mods(ShowField-Z)-c toggle_display_faces
+		$mods(Viewer)-ViewWindow_0-c redraw
+	    } else {
+		global exec_planes
+		set exec_planes(GatherPoints) 1
+		set exec_planes(ShowField-Z) 1
+	    }
 	}
     }
     
-    method toggle_plane_y {} {
-	global mods
-	global show_plane_y
-	global $mods(ShowField-Y)-faces-on
-	
-	if {$show_plane_y == 0} {
-	    set $mods(ShowField-Y)-faces-on 0
-	} else {
-	    set $mods(ShowField-X)-faces-on 1
-	}     
-	
-	# execute showfield
-	$mods(ShowField-X)-c toggle_display_faces
-    }
-    
-    method toggle_plane_x {} {
-	global mods
-	global show_plane_x
-	global $mods(ShowField-X)-faces-on
-	
-	if {$show_plane_x == 0} {
-	    set $mods(ShowField-X)-faces-on 0
-	} else {
-	    set $mods(ShowField-X)-faces-on 1
-	}     
-	
-	# execute showfield
-	$mods(ShowField-X)-c toggle_display_faces
-    }
-
     method toggle_show_planes {} {
 	global mods
 	global show_planes
@@ -6075,8 +6165,12 @@ class BioTensorApp {
 	    set $mods(ShowField-Y)-faces-on 0
 	    set $mods(ShowField-Z)-faces-on 0
 	    
-	    $mods(ChooseField-ColorPlanes)-c needexecute
-	    $mods(Viewer)-ViewWindow_0-c redraw
+	    if {$vis_activated} {
+		$mods(ChooseField-ColorPlanes)-c needexecute
+		set exec_planes(ChooseField-ColorPlanes) 0
+
+		$mods(Viewer)-ViewWindow_0-c redraw
+	    }
 	} else {
 	    global show_plane_x show_plane_y show_plane_z
 	    
@@ -6092,8 +6186,38 @@ class BioTensorApp {
 		set $mods(ShowField-Z)-faces-on 1
 		set $clip-visible-$last_z 1
 	    }
-	    $mods(ChooseField-ColorPlanes)-c needexecute
-	    $mods(Viewer)-ViewWindow_0-c redraw
+
+	    if {$vis_activated} {
+		# loop through array of planes modules and execute
+		# ones that have had their gui modified but haven't
+		# been executed
+		global exec_planes
+		if {$exec_planes(GatherPoints)} {
+		    $mods(GatherPoints)-c needexecute
+		    set exec_planes(GatherPoints) 0
+		}
+		if {$exec_planes(GenStandardColorMaps-ColorPlanes)} {
+		    $mods(GenStandardColorMaps-ColorPlanes)-c needexecute
+		    set exec_planes(GenStandardColorMaps-ColorPlanes) 0
+		}
+		if {$exec_planes(ShowField-X)} {
+		    $mods(ShowField-X)-c toggle_display_faces
+		    set exec_planes(ShowField-X) 0
+		}
+		if {$exec_planes(ShowField-Y)} {
+		    $mods(ShowField-Y)-c toggle_display_faces
+		    set exec_planes(ShowField-Y) 0
+		}
+		if {$exec_planes(ShowField-Z)} {
+		    $mods(ShowField-Z)-c toggle_display_faces
+		    set exec_planes(ShowField-Z) 0
+		}
+		
+		$mods(ChooseField-ColorPlanes)-c needexecute
+		set exec_planes(ChooseField-ColorPlanes) 0
+		
+		$mods(Viewer)-ViewWindow_0-c redraw
+	    }
 	}
     }
     
@@ -6109,7 +6233,7 @@ class BioTensorApp {
 	if {![winfo exists $f.show]} {
 	    checkbutton $f.show -text "Show Isosurface" \
 		-variable $mods(ShowField-Isosurface)-faces-on \
-		-command "$this toggle_show_isosurface" -state disabled
+		-command "$this toggle_show_isosurface" -foreground grey64
 	    Tooltip $f.show $tips(IsoToggle)
 	    pack $f.show -side top -anchor nw -padx 3 -pady 3
 	    
@@ -6117,27 +6241,27 @@ class BioTensorApp {
 	    frame $f.isoval
 	    pack $f.isoval -side top -anchor nw -padx 3 -pady 3
 	    
-	    label $f.isoval.l -text "Isoval:" -state disabled -state disabled
+	    label $f.isoval.l -text "Isoval:" -foreground grey64
 	    scale $f.isoval.s -from 0.0 -to 1.0 \
 		-length 100 -width 15 \
 		-sliderlength 15 \
 		-resolution 0.0001 \
 		-variable $mods(Isosurface)-isoval \
 		-showvalue false \
-		-state disabled -foreground grey64\
+		-foreground grey64\
 		-orient horizontal \
 		-command "$this update_isovals"
 	    
 	    bind $f.isoval.s <ButtonRelease> "$this execute_isoval_change"
 	    
-	    label $f.isoval.val -textvariable $mods(Isosurface)-isoval -state disabled
+	    label $f.isoval.val -textvariable $mods(Isosurface)-isoval -foreground grey64
 	    
 	    pack $f.isoval.l $f.isoval.s $f.isoval.val -side left -anchor nw -padx 3      
 	    
 	    iwidgets::optionmenu $f.isovalcolor -labeltext "Isoval\nBased On:" \
 		-labelpos w \
 	        -width 150 \
-		-state disabled \
+		-foreground grey64 \
 		-command "$this select_isoval_based_on $f"
 	    pack $f.isovalcolor -side top -anchor nw -padx 1 -pady 3
 	    
@@ -6159,7 +6283,7 @@ class BioTensorApp {
 	    iwidgets::optionmenu $isocolor.select.color -labeltext "" \
 		-labelpos w \
 	        -width 150 \
-		-state disabled \
+		-foreground grey64 \
 		-command "$this select_isosurface_color $isocolor.select"
 	    pack $isocolor.select.color -side left -anchor n -padx 1 -pady 3
 	    
@@ -6186,8 +6310,8 @@ class BioTensorApp {
 	    radiobutton $maps.gray.b -text "Gray" \
 		-variable $mods(GenStandardColorMaps-Isosurface)-mapType \
 		-value 0 \
-		-state disabled \
-		-command "$mods(GenStandardColorMaps-Isosurface)-c needexecute"
+		-foreground grey64 \
+		-command "$this update_isoval_color_map"
 	    Tooltip $maps.gray.b $tips(IsoColorMap)
 	    pack $maps.gray.b -side left -anchor nw -padx 3 -pady 0
 	    
@@ -6206,8 +6330,8 @@ class BioTensorApp {
 	    radiobutton $maps.rainbow.b -text "Rainbow" \
 		-variable $mods(GenStandardColorMaps-Isosurface)-mapType \
 		-value 2 \
-		-state disabled \
-		-command "$mods(GenStandardColorMaps-Isosurface)-c needexecute"
+		-foreground grey64 \
+		-command "$this update_isoval_color_map"
 	    Tooltip $maps.rainbow.b $tips(IsoColorMap)
 	    pack $maps.rainbow.b -side left -anchor nw -padx 3 -pady 0
 	    
@@ -6225,8 +6349,8 @@ class BioTensorApp {
 	    radiobutton $maps.darkhue.b -text "Darkhue" \
 		-variable $mods(GenStandardColorMaps-Isosurface)-mapType \
 		-value 5 \
-		-state disabled \
-		-command "$mods(GenStandardColorMaps-Isosurface)-c needexecute"
+		-foreground grey64 \
+		-command "$this update_isoval_color_map"
 	    Tooltip $maps.darkhue.b $tips(IsoColorMap)
 	    pack $maps.darkhue.b -side left -anchor nw -padx 3 -pady 0
 	    
@@ -6245,8 +6369,8 @@ class BioTensorApp {
 	    radiobutton $maps.blackbody.b -text "Blackbody" \
 		-variable $mods(GenStandardColorMaps-Isosurface)-mapType \
 		-value 7 \
-		-state disabled \
-		-command "$mods(GenStandardColorMaps-Isosurface)-c needexecute"
+		-foreground grey64 \
+		-command "$this update_isoval_color_map"
 	    Tooltip $maps.blackbody.b $tips(IsoColorMap)
 	    pack $maps.blackbody.b -side left -anchor nw -padx 3 -pady 0
 	    
@@ -6264,8 +6388,8 @@ class BioTensorApp {
 	    radiobutton $maps.bpseismic.b -text "Red-to-Blue" \
 		-variable $mods(GenStandardColorMaps-Isosurface)-mapType \
 		-value 17 \
-		-state disabled \
-		-command "$mods(GenStandardColorMaps-Isosurface)-c needexecute"
+		-foreground grey64 \
+		-command "$this update_isoval_color_map"
 	    Tooltip $maps.bpseismic.b $tips(IsoColorMap)
 	    pack $maps.bpseismic.b -side left -anchor nw -padx 3 -pady 0
 	    
@@ -6282,26 +6406,41 @@ class BioTensorApp {
 	    pack $f.clip -side top -anchor nw -padx 3 -pady 5
 	    
 	    checkbutton $f.clip.check -text "Clip by Planes" \
-		-variable clip_by_planes -state disabled \
+		-variable clip_by_planes -foreground grey64 \
 		-command "$this toggle_clip_by_planes $f.clip"
 	    Tooltip $f.clip.check $tips(ToggleClipPlanes)
 	    
 	    button $f.clip.flipx -text "Flip X" \
 		-command "$this flip_x_clipping_plane" \
-		-state disabled
+		-state disabled \
+		-foreground grey64
 	    Tooltip $f.clip.flipx $tips(FlipX)
 	    button $f.clip.flipy -text "Flip Y" \
 		-command "$this flip_y_clipping_plane" \
-		-state disabled
+		-state disabled \
+		-foreground grey64
 	    Tooltip $f.clip.flipy $tips(FlipY)
 	    button $f.clip.flipz -text "Flip Z" \
 		-command "$this flip_z_clipping_plane" \
-		-state disabled
+		-state disabled \
+		-foreground grey64
 	    Tooltip $f.clip.flipz $tips(FlipZ)
 	    
 	    pack $f.clip.check $f.clip.flipx $f.clip.flipy $f.clip.flipz \
 		-side left -anchor nw -padx 3 -pady 3 -ipadx 2 
 	} 
+    }
+
+    method update_isoval_color_map {} {
+	global mods
+	global $mods(ShowField-Isosurface)-faces-on
+
+	if {$vis_activated && [set $mods(ShowField-Isosurface)-faces-on]==1} {
+	    $mods(GenStandardColorMaps-Isosurface)-c needexecute
+	} else {
+	    global exec_iso
+	    set exec_iso(GenStandardColorMaps-Isosurface) 1
+	}
     }
     
 
@@ -6357,7 +6496,7 @@ class BioTensorApp {
 	global $mods(ShowField-Isosurface)-faces-on
 
 	if {$initialized != 0} {
-	    if {[set $mods(ShowField-Isosurface)-faces-on] == 1} {
+	    if {$vis_activated && [set $mods(ShowField-Isosurface)-faces-on] == 1} {
 		foreach w [winfo children $isosurface_tab1] {
 		    activate_widget $w
 		}
@@ -6366,11 +6505,11 @@ class BioTensorApp {
 		}
 		
 		# configure color button
-		if {$plane_type == "Constant"} {
+		if {$iso_type == "Constant"} {
 		    $isosurface_tab1.isocolor.childsite.select.colorFrame.set_color configure -state normal
 		    $isosurface_tab2.isocolor.childsite.select.colorFrame.set_color configure -state normal
 		    disable_isosurface_colormaps
-		} elseif {$plane_type == "Principle Eigenvector"} {
+		} elseif {$iso_type == "Principle Eigenvector"} {
 		    $isosurface_tab1.isocolor.childsite.select.colorFrame.set_color configure -state disabled
 		    $isosurface_tab2.isocolor.childsite.select.colorFrame.set_color configure -state disabled
 		    disable_isosurface_colormaps
@@ -6378,13 +6517,14 @@ class BioTensorApp {
 		} else {
 		    $isosurface_tab1.isocolor.childsite.select.colorFrame.set_color configure -state disabled
 		    $isosurface_tab2.isocolor.childsite.select.colorFrame.set_color configure -state disabled
+		    enable_isosurface_colormaps
 		}
 	    } else {
 		foreach w [winfo children $isosurface_tab1] {
-		    disable_widget $w
+		    grey_widget $w
 		}
 		foreach w [winfo children $isosurface_tab2] {
-		    disable_widget $w
+		    grey_widget $w
 		}
 		$isosurface_tab1.show configure -state normal -foreground black
 		$isosurface_tab2.show configure -state normal -foreground black
@@ -6392,7 +6532,7 @@ class BioTensorApp {
 		$isosurface_tab1.clip.check configure -state normal -foreground black
 		$isosurface_tab2.clip.check configure -state normal -foreground black
 	    }
-	    
+
 	    # configure flip buttons
 	    global clip_by_planes
 	    if {$clip_by_planes == 1} {
@@ -6418,12 +6558,48 @@ class BioTensorApp {
     }
 
     method toggle_show_isosurface {} {
-       global mods
-       global $mods(ShowField-Isosurface)-faces-on
- 
-	configure_isosurface_tabs
+	global mods
+	global $mods(ShowField-Isosurface)-faces-on
 	
-	$mods(ShowField-Isosurface)-c toggle_display_faces
+	configure_isosurface_tabs
+
+	if {$vis_activated} {
+	    # loop through array of iso modules and execute
+	    # ones that have had their gui modified but haven't
+	    # been executed
+	    global exec_iso
+	    if {$exec_iso(ChooseField-Isoval)} {
+		$mods(ChooseField-Isosurface)-c needexecute
+		set exec_iso(ChooseField-Isosurface) 0
+	    }
+	    if {$exec_iso(Isosurface)} {
+		$mods(Isosurface)-c needexecute
+		set exec_iso(Isosurface) 0
+	    }
+	    if {$exec_iso(IsoClip-X)} {
+		$mods(IsoClip-X)-c needexecute
+		set exec_iso(IsoClip-X) 0
+	    }
+	    if {$exec_iso(IsoClip-Y)} {
+		$mods(IsoClip-Y)-c needexecute
+		set exec_iso(IsoClip-Y) 0
+	    }
+	    if {$exec_iso(IsoClip-Z)} {
+		$mods(IsoClip-Z)-c needexecute
+		set exec_iso(IsoClip-Z) 0
+	    }
+	    if {$exec_iso(GenStandardColorMaps-Isosurface)} {
+		$mods(GenStandardColorMaps-Isosurface)-c needexecute
+		set exec_iso(GenStandardColorMaps-Isosurface) 0
+	    }
+	    if {$exec_iso(ShowField-Isosurface)} {
+		$mods(ShowField-Isosurface)-c rerender_faces
+		set exec_iso(ShowField-Isosurface) 0
+	    }
+	    
+	    
+	    $mods(ShowField-Isosurface)-c toggle_display_faces
+	}
     }
 
 
@@ -6452,6 +6628,7 @@ class BioTensorApp {
 	set $mods(ShowField-Isosurface)-faces-usedefcolor 0
 	
         if {$which == "Principle Eigenvector"} {
+	    set iso_type "Principle Eigenvector"
 	    $isosurface_tab1.isocolor.childsite.select.colorFrame.set_color configure -state disabled
 	    $isosurface_tab2.isocolor.childsite.select.colorFrame.set_color configure -state disabled
 
@@ -6459,6 +6636,7 @@ class BioTensorApp {
 	    set $mods(ChooseField-Isosurface)-port-index 3
 	    disable_isosurface_colormaps
         } elseif {$which == "Fractional Anisotropy"} {
+	    set iso_type "Fractional Anisotropy"
 	    $isosurface_tab1.isocolor.childsite.select.colorFrame.set_color configure -state disabled
 	    $isosurface_tab2.isocolor.childsite.select.colorFrame.set_color configure -state disabled	    
 
@@ -6466,6 +6644,7 @@ class BioTensorApp {
 	    set $mods(ChooseField-Isosurface)-port-index 0
 	    enable_isosurface_colormaps
         } elseif {$which == "Linear Anisotropy"} {
+	    set iso_type "Linear Anisotropy"
 	    $isosurface_tab1.isocolor.childsite.select.colorFrame.set_color configure -state disabled
 	    $isosurface_tab2.isocolor.childsite.select.colorFrame.set_color configure -state disabled	   
 
@@ -6473,6 +6652,7 @@ class BioTensorApp {
 	    set $mods(ChooseField-Isosurface)-port-index 1
 	    enable_isosurface_colormaps
         } elseif {$which == "Planar Anisotropy"} {
+	    set iso_type "Planar Anisotropy"
 	    $isosurface_tab1.isocolor.childsite.select.colorFrame.set_color configure -state disabled
 	    $isosurface_tab2.isocolor.childsite.select.colorFrame.set_color configure -state disabled	    
 
@@ -6480,6 +6660,7 @@ class BioTensorApp {
 	    set $mods(ChooseField-Isosurface)-port-index 2
 	    enable_isosurface_colormaps
         } else {
+	    set iso_type "Constant"
 	    # constant color
 	    $isosurface_tab1.isocolor.childsite.select.colorFrame.set_color configure -state normal
 	    $isosurface_tab2.isocolor.childsite.select.colorFrame.set_color configure -state normal	   
@@ -6494,27 +6675,38 @@ class BioTensorApp {
 	$isosurface_tab2.isocolor.childsite.select.color select $which
 	
         # execute 
-        $mods(ChooseField-Isosurface)-c needexecute
-	$mods(ShowField-Isosurface)-c rerender_faces
+	global $mods(ShowField-Isosurface)-faces-on
+	if {$vis_activated && [set $mods(ShowField-Isosurface)-faces-on]==1} {
+	    $mods(ChooseField-Isosurface)-c needexecute
+	    $mods(ShowField-Isosurface)-c rerender_faces
+	} else {
+	    global exec_iso
+	    set exec_iso(ChooseField-Isosurface) 1
+	    set exec_iso(ShowField-Isosurface) 1
+	}
     }
     
     method disable_isosurface_colormaps {} {
 	foreach w [winfo children $isosurface_tab1.isocolor.childsite.maps] {
-	    disable_widget $w
+	    grey_widget $w
 	}
 
 	foreach w [winfo children $isosurface_tab2.isocolor.childsite.maps] {
-	    disable_widget $w
+	    grey_widget $w
 	}
     }
 
     method enable_isosurface_colormaps {} {
-	foreach w [winfo children $isosurface_tab1.isocolor.childsite.maps] {
-	    activate_widget $w
-	}
-
-	foreach w [winfo children $isosurface_tab2.isocolor.childsite.maps] {
-	    activate_widget $w
+	global mods
+	global $mods(ShowField-Isosurface)-faces-on
+	if {$vis_activated && [set $mods(ShowField-Isosurface)-faces-on]==1} {	
+	    foreach w [winfo children $isosurface_tab1.isocolor.childsite.maps] {
+		activate_widget $w
+	    }
+	    
+	    foreach w [winfo children $isosurface_tab2.isocolor.childsite.maps] {
+		activate_widget $w
+	    }
 	}
     }
   
@@ -6538,18 +6730,32 @@ class BioTensorApp {
 	$isosurface_tab2.isovalcolor select $which
 	
         # execute 
-        $mods(ChooseField-Isoval)-c needexecute
+	global $mods(ShowField-Isosurface)-faces-on
+	if {$vis_activated && [set $mods(ShowField-Isosurface)-faces-on]==1} {
+	    $mods(ChooseField-Isoval)-c needexecute
+	} else {
+	    global exec_iso
+	    set exec_iso(ChooseField-Isoval) 1
+	}
     }
     
 
     method execute_isoval_change {} {
 	global mods
-	
-	if {$vis_activated} {
+	global $mods(ShowField-Isosurface)-faces-on
+
+	if {$vis_activated && [set $mods(ShowField-Isosurface)-faces-on]==1} {
 	    $mods(Isosurface)-c needexecute
 	    $mods(IsoClip-X)-c needexecute
 	    $mods(IsoClip-Y)-c needexecute
 	    $mods(IsoClip-Z)-c needexecute
+	} else {
+	    global exec_iso
+	    set exec_iso(Isosurface) 1
+	    set exec_iso(IsoClip-X) 1
+	    set exec_iso(IsoClip-Y) 1
+	    set exec_iso(IsoClip-Z) 1
+
 	}
     }
 
@@ -6566,7 +6772,7 @@ class BioTensorApp {
 	if {![winfo exists $f.show]} {
 	    checkbutton $f.show -text "Show Glyphs" \
 		-variable $mods(ShowField-Glyphs)-tensors-on \
-		-command "$this toggle_show_glyphs" -state disabled
+		-command "$this toggle_show_glyphs" -foreground grey64
 	    Tooltip $f.show $tips(GlyphsToggle)
 	    
 	    pack $f.show -side top -anchor nw -padx 3 -pady 3	
@@ -6577,20 +6783,19 @@ class BioTensorApp {
 	    frame $f.disc
 	    pack $f.disc -side top -anchor nw -padx 8 -pady 0
 	    
-	    label $f.disc.la -text "Discretization: " -state disabled
+	    label $f.disc.la -text "Discretization: " -foreground grey64
 	    
 	    scale $f.disc.s -from 3 -to 20 \
                 -resolution 1 \
   		-length 135  -width 15 \
 		-sliderlength 15 \
                 -orient horizontal \
-   	        -state disabled \
 		-showvalue false \
    	        -foreground grey64 \
 	        -variable $mods(ShowField-Glyphs)-data-resolution
 	    Tooltip $f.disc.s $tips(GlyphsRes)
 
-	    label $f.disc.l -textvariable $mods(ShowField-Glyphs)-data-resolution -state disabled
+	    label $f.disc.l -textvariable $mods(ShowField-Glyphs)-data-resolution -foreground grey64
 	    bind $f.disc.s <ButtonRelease> {app change_glyph_disc}
 	    
 	    pack $f.disc.la $f.disc.s $f.disc.l -side left -anchor nw -padx 1 -pady 0
@@ -6605,23 +6810,22 @@ class BioTensorApp {
 	    
 	    checkbutton $f.scale.b -text "Normalize" \
 		-variable scale_glyph \
-		-state disabled \
+		-foreground grey64 \
 		-command "$this toggle_scale_glyph"
 	    Tooltip $f.scale.b $tips(GlyphsNormalize)
 
-	    label $f.scale.sc -text "   Scale:" -state disabled
+	    label $f.scale.sc -text "   Scale:" -foreground grey64
 	    
 	    scale $f.scale.s -from 0.1 -to 5.0 \
                 -resolution 0.01 \
   		-length 100  -width 15 \
 		-sliderlength 15 \
                 -orient horizontal \
-   	        -state disabled \
 		-showvalue false \
    	        -foreground grey64 \
 	        -variable glyph_scale_val
 	    Tooltip $f.scale.s $tips(GlyphsScale)
-	    label $f.scale.l -textvariable glyph_scale_val -state disabled
+	    label $f.scale.l -textvariable glyph_scale_val -foreground grey64
 	    bind $f.scale.s <ButtonRelease> {app change_glyph_scale}
 	    
 	    pack $f.scale.b $f.scale.sc $f.scale.s $f.scale.l -side left -anchor nw -padx 1 -pady 0
@@ -6635,7 +6839,7 @@ class BioTensorApp {
 	    
 	    checkbutton $f.exag.b -text "Shape Exaggerate:" \
 		-variable exag_glyph \
-		-state disabled \
+		-foreground grey64 \
 		-command "$this toggle_exag_glyph"
 	    Tooltip $f.exag.b $tips(GlyphsShape)
 	    
@@ -6644,13 +6848,12 @@ class BioTensorApp {
   		-length 100  -width 15 \
 		-sliderlength 15 \
                 -orient horizontal \
-   	        -state disabled \
 		-showvalue false \
    	        -foreground grey64 \
 	        -variable $mods(TendAnscale-Glyphs)-scale
 	    Tooltip $f.exag.s $tips(GlyphsShape)
 
-	    label $f.exag.l -textvariable $mods(TendAnscale-Glyphs)-scale -state disabled
+	    label $f.exag.l -textvariable $mods(TendAnscale-Glyphs)-scale -foreground grey64
 	    bind $f.exag.s <ButtonRelease> {app change_glyph_exag}
 	    
 	    pack $f.exag.b $f.exag.s $f.exag.l -side left -anchor nw -padx 1 -pady 0
@@ -6675,14 +6878,14 @@ class BioTensorApp {
 	    radiobutton $seed.a.pointf.point -text "Single Point" \
 		-variable $mods(ChooseField-GlyphSeeds)-port-index \
 		-value 0 \
-		-state disabled \
+		-foreground grey64 \
 		-command "$this update_glyph_seed_method"
 	    Tooltip $seed.a.pointf.point $tips(GlyphsSeedPoint)
 
 	    global glyph_point
 	    checkbutton $seed.a.pointf.w -text "Widget" \
 		-variable glyph_point \
-		-state disabled \
+		-foreground grey64 \
 		-command "$this toggle_glyph_point"
 	    Tooltip $seed.a.pointf.w $tips(GlyphsTogglePoint)
 
@@ -6695,14 +6898,14 @@ class BioTensorApp {
 	    radiobutton $seed.a.rakef.rake -text "Along Line  " \
 		-variable $mods(ChooseField-GlyphSeeds)-port-index \
 		-value 1 \
-		-state disabled \
+		-foreground grey64 \
 		-command "$this update_glyph_seed_method"
 	    Tooltip $seed.a.rakef.rake $tips(GlyphsSeedLine)
 
 	    global glyph_rake
 	    checkbutton $seed.a.rakef.w -text "Widget" \
 		-variable glyph_rake \
-		-state disabled \
+		-foreground grey64 \
 		-command "$this toggle_glyph_rake"
 	    Tooltip $seed.a.rakef.w $tips(GlyphsToggleRake)
 
@@ -6713,14 +6916,14 @@ class BioTensorApp {
 	    radiobutton $seed.b.plane -text "On Planes" \
 		-variable $mods(ChooseField-GlyphSeeds)-port-index \
 		-value 2 \
-		-state disabled \
+		-foreground grey64 \
 		-command "$this update_glyph_seed_method"
 	    Tooltip $seed.b.plane $tips(GlyphsSeedLine)
 	    
 	    radiobutton $seed.b.grid -text "On Grid" \
 		-variable $mods(ChooseField-GlyphSeeds)-port-index \
 		-value 3 \
-		-state disabled \
+		-foreground grey64 \
 		-command "$this update_glyph_seed_method"
 	    Tooltip $seed.b.grid $tips(GlyphsSeedGrid)
 	    
@@ -6743,12 +6946,12 @@ class BioTensorApp {
 	    radiobutton $rep.f1.boxes -text "Boxes     " \
 		-variable glyph_display_type \
 		-value boxes \
-		-state disabled \
+		-foreground grey64 \
 		-command "$this change_glyph_display_type radio $rep"
 	    Tooltip $rep.f1.boxes $tips(GlyphsBoxes)
 	    
 	    iwidgets::optionmenu $rep.f1.type -labeltext "" \
-		-width 150 -state disabled \
+		-width 150 -foreground grey64 \
 		-command "$this change_glyph_display_type men $rep.f1"
 	    pack $rep.f1.boxes $rep.f1.type -side left -anchor nw -padx 2 -pady 0
 	    
@@ -6761,14 +6964,14 @@ class BioTensorApp {
 	    radiobutton $rep.f2.ellips -text "Ellipsoids" \
 		-variable glyph_display_type \
 		-value ellipsoids \
-		-state disabled \
+		-foreground grey64 \
 		-command "$this change_glyph_display_type radio $rep"
 	    Tooltip $rep.f2.ellips $tips(GlyphsEllipsoids)
 	    
 	    iwidgets::optionmenu $rep.f2.type -labeltext "" \
 		-width 150 \
 		-command "$this change_glyph_display_type men $rep.f2" \
-		-state disabled
+		-foreground grey64
 	    pack $rep.f2.ellips $rep.f2.type -side left -anchor nw -padx 2 -pady 0
 	    
 	    $rep.f2.type insert end "Principle Eigenvector" "Fractional Anisotropy" "Linear Anisotropy" "Planar Anisotropy" "Constant"
@@ -6781,12 +6984,12 @@ class BioTensorApp {
 	    radiobutton $rep.f3.quad -text "Super \nQuadrics " \
 		-variable glyph_display_type \
 		-value superquadrics \
-		-state disabled \
+		-foreground grey64 \
 		-command "$this change_glyph_display_type radio $rep"
 	    Tooltip $rep.f3.quad $tips(GlyphsSQ)
 	    
 	    iwidgets::optionmenu $rep.f3.type -labeltext "" \
-		-width 150 -state disabled \
+		-width 150 -foreground grey64 \
 		-command "$this change_glyph_display_type men $rep.f3"
 	    pack $rep.f3.quad $rep.f3.type -side left -anchor nw -padx 2 -pady 0
 	    
@@ -6813,8 +7016,8 @@ class BioTensorApp {
 	    radiobutton $maps.gray.b -text "Gray" \
 		-variable $mods(GenStandardColorMaps-Glyphs)-mapType \
 		-value 0 \
-		-state disabled \
-		-command "$mods(GenStandardColorMaps-Glyphs)-c needexecute"
+		-foreground grey64 \
+		-command "$this update_glyphs_color_map"
 	    Tooltip $maps.gray.b $tips(GlyphsColorMap)
 	    pack $maps.gray.b -side left -anchor nw -padx 3 -pady 0
 	    
@@ -6833,8 +7036,8 @@ class BioTensorApp {
 	    radiobutton $maps.rainbow.b -text "Rainbow" \
 		-variable $mods(GenStandardColorMaps-Glyphs)-mapType \
 		-value 2 \
-		-state disabled \
-		-command "$mods(GenStandardColorMaps-Glyphs)-c needexecute"
+		-foreground grey64 \
+		-command "$this update_glyphs_color_map"
 	    Tooltip $maps.rainbow.b $tips(GlyphsColorMap)
 	    pack $maps.rainbow.b -side left -anchor nw -padx 3 -pady 0
 	    
@@ -6852,8 +7055,8 @@ class BioTensorApp {
 	    radiobutton $maps.darkhue.b -text "Darkhue" \
 		-variable $mods(GenStandardColorMaps-Glyphs)-mapType \
 		-value 5 \
-		-state disabled \
-		-command "$mods(GenStandardColorMaps-Glyphs)-c needexecute"
+		-foreground grey64 \
+		-command "$this update_glyphs_color_map"
 	    Tooltip $maps.darkhue.b $tips(GlyphsColorMap)
 	    pack $maps.darkhue.b -side left -anchor nw -padx 3 -pady 0
 	    
@@ -6872,8 +7075,8 @@ class BioTensorApp {
 	    radiobutton $maps.blackbody.b -text "Blackbody" \
 		-variable $mods(GenStandardColorMaps-Glyphs)-mapType \
 		-value 7 \
-		-state disabled \
-		-command "$mods(GenStandardColorMaps-Glyphs)-c needexecute"
+		-foreground grey64 \
+		-command "$this update_glyphs_color_map"
 	    Tooltip $maps.blackbody.b $tips(GlyphsColorMap)
 	    pack $maps.blackbody.b -side left -anchor nw -padx 3 -pady 0
 	    
@@ -6892,8 +7095,8 @@ class BioTensorApp {
 	    radiobutton $maps.bpseismic.b -text "Red-to-Blue" \
 		-variable $mods(GenStandardColorMaps-Glyphs)-mapType \
 		-value 17 \
-		-state disabled \
-		-command "$mods(GenStandardColorMaps-Glyphs)-c needexecute"
+		-foreground grey64 \
+		-command "$this update_glyphs_color_map"
 	    Tooltip $maps.bpseismic.b $tips(GlyphsColorMap)
 	    pack $maps.bpseismic.b -side left -anchor nw -padx 3 -pady 0
 	    
@@ -6905,6 +7108,18 @@ class BioTensorApp {
 	    draw_colormap "Red-to-Blue" $maps.bpseismic.f.canvas	         
 	    
 	} 
+    }
+
+    method update_glyphs_color_map {} {
+	global mods
+	global $mods(ShowField-Glyphs)-tensors-on
+
+	if {$vis_activated && [set $mods(ShowField-Glyphs)-tensors-on]==1} {
+	    $mods(GenStandardColorMaps-Glyphs)-c needexecute
+	} else {
+	    global exec_glyphs
+	    set exec_glyphs(GenStandardColorMaps-Glyphs) 1
+	}
     }
 
     method sync_glyphs_tabs {} {
@@ -6987,141 +7202,172 @@ class BioTensorApp {
 	global $mods(ShowField-Glyphs)-tensors-on        
 	global glyph_display_type
 	global scale_glyph exag_glyph
-
-        if {[set $mods(ShowField-Glyphs)-tensors-on] == 1} {
+	
+	if {$vis_activated} {
 	    foreach w [winfo children $glyphs_tab1] {
 		activate_widget $w
 	    }
 	    foreach w [winfo children $glyphs_tab2] {
 		activate_widget $w
 	    }
+	}
 
-            # configure boxes/ellipsoids optionmenus
-	    if {$glyph_display_type == "boxes"} {
-		$glyphs_tab1.rep.childsite.f1.type configure -state normal
-		$glyphs_tab2.rep.childsite.f1.type configure -state normal
-		$glyphs_tab1.rep.childsite.f2.type configure -state disabled
-		$glyphs_tab2.rep.childsite.f2.type configure -state disabled
-		$glyphs_tab1.rep.childsite.f3.type configure -state disabled
-		$glyphs_tab2.rep.childsite.f3.type configure -state disabled
-	    } elseif {$glyph_display_type == "superquadrics"} {
-		$glyphs_tab1.rep.childsite.f1.type configure -state disabled
-		$glyphs_tab2.rep.childsite.f1.type configure -state disabled
-		$glyphs_tab1.rep.childsite.f2.type configure -state disabled
-		$glyphs_tab2.rep.childsite.f2.type configure -state disabled
-		$glyphs_tab1.rep.childsite.f3.type configure -state normal
-		$glyphs_tab2.rep.childsite.f3.type configure -state normal
-	    } else {
-		$glyphs_tab1.rep.childsite.f1.type configure -state disabled
-		$glyphs_tab2.rep.childsite.f1.type configure -state disabled
-		$glyphs_tab1.rep.childsite.f2.type configure -state normal
-		$glyphs_tab2.rep.childsite.f2.type configure -state normal
-		$glyphs_tab1.rep.childsite.f3.type configure -state disabled
-		$glyphs_tab2.rep.childsite.f3.type configure -state disabled
-	    }       
-
-	    if {$scale_glyph == 0} {
-		$glyphs_tab1.scale.s configure -state disabled -foreground grey64
-		$glyphs_tab2.scale.s configure -state disabled -foreground grey64
-	    } else {
-		$glyphs_tab1.scale.s configure -state normal -foreground black
-		$glyphs_tab2.scale.s configure -state normal -foreground black
-	    }
-
-	    if {$exag_glyph == 0} {
-		$glyphs_tab1.exag.s configure -state disabled -foreground grey64
-		$glyphs_tab2.exag.s configure -state disabled -foreground grey64
-	    } else {
-		$glyphs_tab1.exag.s configure -state normal -foreground black
-		$glyphs_tab2.exag.s configure -state normal -foreground black
-	    }	
-
-	    # configure color swatch
-	    if {$glyph_type == "Constant"} {
-		$glyphs_tab1.rep.childsite.select.colorFrame.set_color configure -state normal
-		$glyphs_tab2.rep.childsite.select.colorFrame.set_color configure -state normal
-		disable_glyphs_colormaps
-	    } elseif {$glyph_type == "Principle Eigenvector"} {
-		$glyphs_tab1.rep.childsite.select.colorFrame.set_color configure -state disabled
-		$glyphs_tab2.rep.childsite.select.colorFrame.set_color configure -state disabled
-		disable_glyphs_colormaps
-	    } else {
-		$glyphs_tab1.rep.childsite.select.colorFrame.set_color configure -state disabled
-		$glyphs_tab2.rep.childsite.select.colorFrame.set_color configure -state disabled
-	    }
-
-	    # configure glyph rake
-	    global $mods(ChooseField-GlyphSeeds)-port-index
-	    if {[set $mods(ChooseField-GlyphSeeds)-port-index] == 1} {
-		$glyphs_tab1.seed.childsite.a.rakef.w configure -state normal
-		$glyphs_tab2.seed.childsite.a.rakef.w configure -state normal
-		$glyphs_tab1.seed.childsite.a.pointf.w configure -state disabled
-		$glyphs_tab2.seed.childsite.a.pointf.w configure -state disabled
-	    } elseif {[set $mods(ChooseField-GlyphSeeds)-port-index]== 0} {
-		$glyphs_tab1.seed.childsite.a.pointf.w configure -state normal
-		$glyphs_tab2.seed.childsite.a.pointf.w configure -state normal
-		$glyphs_tab1.seed.childsite.a.rakef.w configure -state disabled
-		$glyphs_tab2.seed.childsite.a.rakef.w configure -state disabled
-	    } else {
-		$glyphs_tab1.seed.childsite.a.rakef.w configure -state disabled
-		$glyphs_tab2.seed.childsite.a.rakef.w configure -state disabled
-		$glyphs_tab1.seed.childsite.a.pointf.w configure -state disabled
-		$glyphs_tab2.seed.childsite.a.pointf.w configure -state disabled
-	    }
-        } else {
+	# configure boxes/ellipsoids optionmenus
+	if {$glyph_display_type == "boxes"} {
+	    $glyphs_tab1.rep.childsite.f1.type configure -state normal
+	    $glyphs_tab2.rep.childsite.f1.type configure -state normal
+	    $glyphs_tab1.rep.childsite.f2.type configure -state disabled
+	    $glyphs_tab2.rep.childsite.f2.type configure -state disabled
+	    $glyphs_tab1.rep.childsite.f3.type configure -state disabled
+	    $glyphs_tab2.rep.childsite.f3.type configure -state disabled
+	} elseif {$glyph_display_type == "superquadrics"} {
+	    $glyphs_tab1.rep.childsite.f1.type configure -state disabled
+	    $glyphs_tab2.rep.childsite.f1.type configure -state disabled
+	    $glyphs_tab1.rep.childsite.f2.type configure -state disabled
+	    $glyphs_tab2.rep.childsite.f2.type configure -state disabled
+	    $glyphs_tab1.rep.childsite.f3.type configure -state normal
+	    $glyphs_tab2.rep.childsite.f3.type configure -state normal
+	} else {
+	    $glyphs_tab1.rep.childsite.f1.type configure -state disabled
+	    $glyphs_tab2.rep.childsite.f1.type configure -state disabled
+	    $glyphs_tab1.rep.childsite.f2.type configure -state normal
+	    $glyphs_tab2.rep.childsite.f2.type configure -state normal
+	    $glyphs_tab1.rep.childsite.f3.type configure -state disabled
+	    $glyphs_tab2.rep.childsite.f3.type configure -state disabled
+	}       
+	
+	if {$scale_glyph == 0} {
+	    $glyphs_tab1.scale.s configure -state disabled -foreground grey64
+	    $glyphs_tab2.scale.s configure -state disabled -foreground grey64
+	} else {
+	    $glyphs_tab1.scale.s configure -state normal -foreground black
+	    $glyphs_tab2.scale.s configure -state normal -foreground black
+	}
+	
+	if {$exag_glyph == 0} {
+	    $glyphs_tab1.exag.s configure -state disabled -foreground grey64
+	    $glyphs_tab2.exag.s configure -state disabled -foreground grey64
+	} else {
+	    $glyphs_tab1.exag.s configure -state normal -foreground black
+	    $glyphs_tab2.exag.s configure -state normal -foreground black
+	}	
+	
+	# configure color swatch
+	if {$glyph_type == "Constant"} {
+	    $glyphs_tab1.rep.childsite.select.colorFrame.set_color configure -state normal
+	    $glyphs_tab2.rep.childsite.select.colorFrame.set_color configure -state normal
+	    disable_glyphs_colormaps
+	} elseif {$glyph_type == "Principle Eigenvector"} {
+	    $glyphs_tab1.rep.childsite.select.colorFrame.set_color configure -state disabled
+	    $glyphs_tab2.rep.childsite.select.colorFrame.set_color configure -state disabled
+	    disable_glyphs_colormaps
+	} else {
+	    $glyphs_tab1.rep.childsite.select.colorFrame.set_color configure -state disabled
+	    $glyphs_tab2.rep.childsite.select.colorFrame.set_color configure -state disabled
+	}
+	
+	# configure glyph rake
+	global $mods(ChooseField-GlyphSeeds)-port-index
+	if {[set $mods(ChooseField-GlyphSeeds)-port-index] == 1} {
+	    $glyphs_tab1.seed.childsite.a.rakef.w configure -state normal
+	    $glyphs_tab2.seed.childsite.a.rakef.w configure -state normal
+	    $glyphs_tab1.seed.childsite.a.pointf.w configure -state disabled
+	    $glyphs_tab2.seed.childsite.a.pointf.w configure -state disabled
+	} elseif {[set $mods(ChooseField-GlyphSeeds)-port-index]== 0} {
+	    $glyphs_tab1.seed.childsite.a.pointf.w configure -state normal
+	    $glyphs_tab2.seed.childsite.a.pointf.w configure -state normal
+	    $glyphs_tab1.seed.childsite.a.rakef.w configure -state disabled
+	    $glyphs_tab2.seed.childsite.a.rakef.w configure -state disabled
+	} else {
+	    $glyphs_tab1.seed.childsite.a.rakef.w configure -state disabled
+	    $glyphs_tab2.seed.childsite.a.rakef.w configure -state disabled
+	    $glyphs_tab1.seed.childsite.a.pointf.w configure -state disabled
+	    $glyphs_tab2.seed.childsite.a.pointf.w configure -state disabled
+	}
+	
+	if {[set $mods(ShowField-Glyphs)-tensors-on] == 0} {
 	    foreach w [winfo children $glyphs_tab1] {
-		disable_widget $w
+		grey_widget $w
 	    }
 	    foreach w [winfo children $glyphs_tab2] {
-		disable_widget $w
+		grey_widget $w
 	    }
-
+	}
+	
+	if {$vis_activated} {
 	    # activate checkbox
 	    $glyphs_tab1.show configure -state normal -foreground black
 	    $glyphs_tab2.show configure -state normal -foreground black
-	}
+	}   
     }
 
     method toggle_scale_glyph {} {
 	global mods
         global $mods(ChooseNrrd-Norm)-port-index
         global scale_glyph
+        global $mods(ShowField-Glyphs)-tensors-on
 
+	
 	if {$scale_glyph == 0} {
 	    # $glyphs_tab1.scale.s configure -state disabled -foreground grey64
 	    # $glyphs_tab2.scale.s configure -state disabled -foreground grey64
-
-	   set $mods(ChooseNrrd-Norm)-port-index 1
-
-           $mods(ChooseNrrd-Norm)-c needexecute
-        } else {
-	   #$glyphs_tab1.scale.s configure -state normal -foreground black
-	   #$glyphs_tab2.scale.s configure -state normal -foreground black
-
-	   set $mods(ChooseNrrd-Norm)-port-index 0
-
-           $mods(TendNorm-Glyphs)-c needexecute
-        }
-
+	    
+	    set $mods(ChooseNrrd-Norm)-port-index 1
+		
+	    if {$vis_activated && [set $mods(ShowField-Glyphs)-tensors-on]} {
+		$mods(ChooseNrrd-Norm)-c needexecute
+	    } else {
+		global exec_glyphs
+		set exec_glyphs(ChooseNrrd-Norm) 1
+	    }
+	} else {
+	    #$glyphs_tab1.scale.s configure -state normal -foreground black
+	    #$glyphs_tab2.scale.s configure -state normal -foreground black
+	    
+	    set $mods(ChooseNrrd-Norm)-port-index 0
+		
+	    if {$vis_activated && [set $mods(ShowField-Glyphs)-tensors-on]} {
+		$mods(TendNorm-Glyphs)-c needexecute
+	    } else {
+		global exec_glyphs
+		set exec_glyphs(TendNorm-Glyphs) 1
+	    }
+	}
+	
     }
-
+    
     method toggle_exag_glyph {} {
 	global mods
         global $mods(ChooseNrrd-Exag)-port-index
         global exag_glyph
 
 	if {$exag_glyph == 0} {
-	   $glyphs_tab1.exag.s configure -state disabled -foreground grey64
-	   $glyphs_tab2.exag.s configure -state disabled -foreground grey64
-
-	   set $mods(ChooseNrrd-Exag)-port-index 1
-           $mods(ChooseNrrd-Exag)-c needexecute
+	    $glyphs_tab1.exag.s configure -state disabled -foreground grey64
+	    $glyphs_tab2.exag.s configure -state disabled -foreground grey64
+	    
+	    set $mods(ChooseNrrd-Exag)-port-index 1
+	    
+	    global $mods(ShowField-Glyphs)-tensors-on
+	    if {$vis_activated && [set $mods(ShowField-Glyphs)-tensors-on]} {
+		$mods(ChooseNrrd-Exag)-c needexecute
+	    } else {
+		global exec_glyphs
+		set exec_glyphs(ChooseNrrd-Exag) 1
+	    }
         } else {
-	   $glyphs_tab1.exag.s configure -state normal -foreground black
-	   $glyphs_tab2.exag.s configure -state normal -foreground black
+	    $glyphs_tab1.exag.s configure -state normal -foreground black
+	    $glyphs_tab2.exag.s configure -state normal -foreground black
+	    
+	    set $mods(ChooseNrrd-Exag)-port-index 0
 
-	   set $mods(ChooseNrrd-Exag)-port-index 0
-           $mods(TendAnscale-Glyphs)-c needexecute
+	    
+	    global $mods(ShowField-Glyphs)-tensors-on
+	    if {$vis_activated && [set $mods(ShowField-Glyphs)-tensors-on]} {
+		$mods(TendAnscale-Glyphs)-c needexecute
+	    } else {
+		global exec_glyphs
+		set exec_glyphs(TendAnscale-Glyphs) 1
+	    }
         }
     }
 
@@ -7212,17 +7458,24 @@ class BioTensorApp {
 	# sync attached/detached optionmenus
 	configure_glyphs_tabs
 
-	$mods(ShowField-Glyphs)-c data_display_type
-	$mods(ChooseField-Glyphs)-c needexecute
+	global $mods(ShowField-Glyphs)-tensors-on
+	if {$vis_activated && [set $mods(ShowField-Glyphs)-tensors-on]} {
+	    $mods(ShowField-Glyphs)-c data_display_type
+	    $mods(ChooseField-Glyphs)-c needexecute
+	} else {
+	    global exec_glyphs
+	    set exec_glyphs(ShowField-Glyphs) 1
+	    set exec_glyphs(ChooseField-Glyphs) 1
+	}
     }
 
     method disable_glyphs_colormaps {} {
 	foreach w [winfo children $glyphs_tab1.rep.childsite.maps] {
-	    disable_widget $w
+	    grey_widget $w
 	}
 
 	foreach w [winfo children $glyphs_tab2.rep.childsite.maps] {
-	    disable_widget $w
+	    grey_widget $w
 	}
     }
 
@@ -7240,40 +7493,45 @@ class BioTensorApp {
         global mods
         global $mods(ChooseField-GlyphSeeds)-port-index
 
-        if {[set $mods(ChooseField-GlyphSeeds)-port-index] == 0} {
+	if {[set $mods(ChooseField-GlyphSeeds)-port-index] == 0} {
 	    # Point
-            uplevel \#0 set "\{$mods(Viewer)-ViewWindow_0-Probe Selection Widget (8)\}" 1
-            uplevel \#0 set "\{$mods(Viewer)-ViewWindow_0-SampleField Rake (7)\}" 0
+	    uplevel \#0 set "\{$mods(Viewer)-ViewWindow_0-Probe Selection Widget (8)\}" 1
+	    uplevel \#0 set "\{$mods(Viewer)-ViewWindow_0-SampleField Rake (7)\}" 0
 	    $glyphs_tab1.seed.childsite.a.pointf.w configure -state normal
 	    $glyphs_tab2.seed.childsite.a.pointf.w configure -state normal
-
+	    
 	    $glyphs_tab1.seed.childsite.a.rakef.w configure -state disabled
 	    $glyphs_tab2.seed.childsite.a.rakef.w configure -state disabled
-        } elseif {[set $mods(ChooseField-GlyphSeeds)-port-index] == 1} {
+	} elseif {[set $mods(ChooseField-GlyphSeeds)-port-index] == 1} {
 	    # Rake
-            uplevel \#0 set "\{$mods(Viewer)-ViewWindow_0-Probe Selection Widget (8)\}" 0
-            uplevel \#0 set "\{$mods(Viewer)-ViewWindow_0-SampleField Rake (7)\}" 1
+	    uplevel \#0 set "\{$mods(Viewer)-ViewWindow_0-Probe Selection Widget (8)\}" 0
+	    uplevel \#0 set "\{$mods(Viewer)-ViewWindow_0-SampleField Rake (7)\}" 1
 	    $glyphs_tab1.seed.childsite.a.pointf.w configure -state disabled
 	    $glyphs_tab2.seed.childsite.a.pointf.w configure -state disabled
-
+	    
 	    $glyphs_tab1.seed.childsite.a.rakef.w configure -state normal
 	    $glyphs_tab2.seed.childsite.a.rakef.w configure -state normal
-        } else {
+	} else {
 	    # Grid or Planes
-            uplevel \#0 set "\{$mods(Viewer)-ViewWindow_0-Probe Selection Widget (8)\}" 0
-            uplevel \#0 set "\{$mods(Viewer)-ViewWindow_0-SampleField Rake (7)\}" 0
+	    uplevel \#0 set "\{$mods(Viewer)-ViewWindow_0-Probe Selection Widget (8)\}" 0
+	    uplevel \#0 set "\{$mods(Viewer)-ViewWindow_0-SampleField Rake (7)\}" 0
 	    $glyphs_tab1.seed.childsite.a.pointf.w configure -state disabled
 	    $glyphs_tab2.seed.childsite.a.pointf.w configure -state disabled
-
+	    
 	    $glyphs_tab1.seed.childsite.a.rakef.w configure -state disabled
 	    $glyphs_tab2.seed.childsite.a.rakef.w configure -state disabled
-	    if {[set $mods(ChooseField-GlyphSeeds)-port-index] == 3} {
+	    if {$vis_activated && [set $mods(ChooseField-GlyphSeeds)-port-index] == 3} {
 		$mods(ClipByFunction-Seeds)-c needexecute
 	    }
-        }
+	}
 	
-        $mods(ChooseField-GlyphSeeds)-c needexecute
-	
+	global $mods(ShowField-Glyphs)-tensors-on
+	if {$vis_activated && [set $mods(ShowField-Glyphs)-tensors-on]} {	    
+	    $mods(ChooseField-GlyphSeeds)-c needexecute       
+	} else {
+	    global exec_glyphs
+	    set exec_glyphs(ChooseField-GlyphSeeds) 1
+	}  
 	$mods(Viewer)-ViewWindow_0-c redraw
     }
 
@@ -7325,38 +7583,94 @@ class BioTensorApp {
         }
 
 	configure_glyphs_tabs
-	
-        $mods(ShowField-Glyphs)-c toggle_display_tensors
-        after 100 "$mods(Viewer)-ViewWindow_0-c redraw"
+
+	# loop through array of iso modules and execute
+	# ones that have had their gui modified but haven't
+	# been executed
+	global exec_glyphs
+	if {$exec_glyphs(ChooseField-Glyphs)} {
+	    $mods(ChooseField-Glyphs)-c needexecute
+	    set exec_glyphs(ChooseField-Glyphs) 0
+	}
+	if {$exec_glyphs(ChooseField-GlyphSeeds)} {
+	    $mods(ChooseField-GlyphSeeds)-c needexecute
+	    set exec_glyphs(ChooseField-GlyphSeeds) 0
+	}
+	if {$exec_glyphs(GenStandardColorMaps-Glyphs)} {
+	    $mods(GenStandardColorMaps-Glyphs)-c needexecute
+	    set exec_glyphs(GenStandardColorMaps-Glyphs) 0
+	}
+	if {$exec_glyphs(ShowField-Glyphs)} {
+	    $mods(ShowField-Glyphs)-c data_resolution_scale
+	    $mods(ShowField-Glyphs)-c data_scale
+	    $mods(ShowField-Glyphs)-c data_display_type
+	    $mods(ShowField-Glyphs)-c needexecute
+	    set exec_glyphs(ShowField-Glyphs) 0
+	}
+	if {$exec_glyphs(ChooseNrrd-Norm)} {
+	    $mods(ChooseNrrd-Norm)-c needexecute
+	    set exec_glyphs(ChooseNrrd-Norm) 0
+	}
+	if {$exec_glyphs(TendNorm-Glyphs)} {
+	    $mods(TendNorm-Glyphs)-c needexecute
+	    set exec_glyphs(TendNorm-Glyphs) 0
+	}
+	if {$exec_glyphs(TendAnscale-Glyphs)} {
+	    $mods(TendAnscale-Glyphs)-c needexecute
+	    set exec_glyphs(TendAnscale-Glyphs) 0
+	}
+
+	if {$vis_activated} {
+	    $mods(ShowField-Glyphs)-c toggle_display_tensors
+	}
+	$mods(Viewer)-ViewWindow_0-c redraw
     }
 
     method change_glyph_scale {} {
 	global scale_glyph
-	if {$vis_activated && $scale_glyph} {
-	    global mods
-	    global $mods(ShowField-Glyphs)-tensors_scale
-	    global glyph_scale_val
+	global mods
+	global $mods(ShowField-Glyphs)-tensors-on
+	global $mods(ShowField-Glyphs)-tensors_scale
 
-	    set $mods(ShowField-Glyphs)-tensors_scale [expr $average_spacing * $glyph_scale_val]
+	global glyph_scale_val
+	
+	set $mods(ShowField-Glyphs)-tensors_scale [expr $average_spacing * $glyph_scale_val]
+	
+	if {$vis_activated && $scale_glyph && [set $mods(ShowField-Glyphs)-tensors-on]} {
 
 	    $mods(ShowField-Glyphs)-c data_scale
+	} else {
+	    global exec_glyphs
+	    set exec_glyphs(ShowField-Glyphs) 1
 	}
     }
 
 
     method change_glyph_disc {} {
-	if {$vis_activated} {
+	global mods
+	global $mods(ShowField-Glyphs)-tensors-on
+
+	if {$vis_activated && [set $mods(ShowField-Glyphs)-tensors-on]} {
 	    global mods
 	    $mods(ShowField-Glyphs)-c data_resolution_scale
 	    $mods(ShowField-Glyphs)-c needexecute
+	} else {
+	    global exec_glyphs
+	    set exec_glyphs(ShowField-Glyphs) 1
 	}
     }
 
     method change_glyph_exag {} {
 	global exag_glyph
-	if {$vis_activated && $exag_glyph} {
+	global mods
+	global $mods(ShowField-Glyphs)-tensors-on
+
+	if {$vis_activated && [set $mods(ShowField-Glyphs)-tensors-on] && $exag_glyph} {
 	    global mods
 	    $mods(TendAnscale-Glyphs)-c needexecute
+	} else {
+	    global exec_glyphs
+	    set exec_glyphs(TendAnscale-Glyphs) 1
 	}
     }
     
@@ -7372,7 +7686,7 @@ class BioTensorApp {
 	if {![winfo exists $f.show]} {
 	    checkbutton $f.show -text "Show Fibers" \
 		-variable $mods(ShowField-Fibers)-edges-on \
-		-command "$this toggle_show_fibers" -state disabled
+		-command "$this toggle_show_fibers" -foreground grey64
 	    Tooltip $f.show $tips(FibersToggle)
 	    
 	    pack $f.show -side top -anchor nw -padx 3 -pady 0
@@ -7391,14 +7705,14 @@ class BioTensorApp {
 	    radiobutton $algo.f.evec1 -text "Major Eigenvector" \
 		-variable $mods(TendFiber)-fibertype \
 		-value evec1 \
-		-command "$mods(TendFiber)-c needexecute" \
-		-state disabled
+		-command "$this execute_TendFiber" \
+		-foreground grey64
 	    
 	    radiobutton $algo.f.tl -text "Tensorlines (TL)" \
 		-variable $mods(TendFiber)-fibertype \
 		-value tensorline \
-		-command "$mods(TendFiber)-c needexecute" \
-		-state disabled
+		-command "$this execute_TendFiber" \
+		-foreground grey64
 	    
 	    pack $algo.f.evec1 $algo.f.tl -side left -anchor nw -padx 5 -pady 1
 	    
@@ -7406,7 +7720,7 @@ class BioTensorApp {
 	    frame $algo.stepsize
 	    pack $algo.stepsize -side top -anchor nw -padx 3 -pady 1
 	    
-	    label $algo.stepsize.l -text "Step Size:" -state disabled
+	    label $algo.stepsize.l -text "Step Size:" -foreground grey64
 	    scale $algo.stepsize.step -label "" \
 		-from 0.1 -to 10 \
 		-resolution 0.1 \
@@ -7415,8 +7729,8 @@ class BioTensorApp {
 		-orient horizontal \
 		-showvalue false \
 		-variable fibers_stepsize \
-		-state disabled -foreground grey64
-	    label $algo.stepsize.val -textvariable fibers_stepsize -state disabled
+	        -foreground grey64
+	    label $algo.stepsize.val -textvariable fibers_stepsize -foreground grey64
 	    pack $algo.stepsize.l $algo.stepsize.step $algo.stepsize.val -side left -anchor nw -padx 3 -pady 1
 	    bind $algo.stepsize.step <ButtonRelease> {app configure_fibers_stepsize}
 	    
@@ -7424,17 +7738,17 @@ class BioTensorApp {
 	    pack $algo.method -side top -anchor nw -padx 3 -pady 0
 	    
 	    global $mods(TendFiber)-integration
-	    label $algo.method.l -text "Integration Method: " -state disabled
+	    label $algo.method.l -text "Integration Method: " -foreground grey64
 	    radiobutton $algo.method.e -text "Euler" \
 		-variable $mods(TendFiber)-integration \
 		-value Euler \
-		-state disabled \
-		-command "$mods(TendFiber)-c needexecute"
+		-foreground grey64 \
+		-command "$this execute_TendFiber"
 	    radiobutton $algo.method.rk -text "RK4" \
 		-variable $mods(TendFiber)-integration \
 		-value RK4 \
-		-state disabled \
-		-command "$mods(TendFiber)-c needexecute"
+		-foreground grey64 \
+		-command "$this execute_TendFiber"
 	    
 	    pack $algo.method.l $algo.method.e $algo.method.rk -side left -anchor nw \
 		-padx 3 -pady 0
@@ -7454,20 +7768,20 @@ class BioTensorApp {
 	    radiobutton $rs.f.tent -text "Tent" \
 		-variable $mods(TendFiber)-kernel \
 		-value tent \
-		-state disabled \
-		-command "$mods(TendFiber)-c needexecute"
+		-foreground grey64 \
+		-command "$this execute_TendFiber"
 	    
 	    radiobutton $rs.f.cat -text "Catmull-Rom" \
 		-variable $mods(TendFiber)-kernel \
 		-value cubicCR \
-		-state disabled \
-		-command "$mods(TendFiber)-c needexecute"
+		-foreground grey64 \
+		-command "$this execute_TendFiber"
 	    
 	    radiobutton $rs.f.b -text "B-Spline" \
 		-variable $mods(TendFiber)-kernel \
 		-value cubicBS \
-		-state disabled \
-		-command "$mods(TendFiber)-c needexecute"
+		-foreground grey64 \
+		-command "$this execute_TendFiber"
 	    
 	    pack $rs.f.tent $rs.f.cat $rs.f.b -side left -anchor nw -padx 3 -pady 0
 	    
@@ -7485,8 +7799,8 @@ class BioTensorApp {
 	    
 	    checkbutton $stop.fiber.check -text "Max Fiber Length:" \
 		-variable $mods(TendFiber)-use-length \
-		-command "$this toggle_fibers_fiber_length; $mods(TendFiber)-c needexecute" \
-		-state disabled -foreground grey64
+		-command "$this toggle_fibers_fiber_length; $this execute_TendFiber" \
+		-foreground grey64 
 	    scale $stop.fiber.val -label "" \
 		-from 1 -to 400 \
 		-resolution 1 \
@@ -7495,8 +7809,8 @@ class BioTensorApp {
 		-orient horizontal \
 		-showvalue false \
 		-variable fibers_length \
-		-state disabled -foreground grey64
-	    label $stop.fiber.l -textvariable fibers_length -state disabled
+		-foreground grey64 
+	    label $stop.fiber.l -textvariable fibers_length -foreground grey64
 	    pack $stop.fiber.check $stop.fiber.val $stop.fiber.l -side left \
 		-anchor nw -padx 3 -pady 0
 	    bind $stop.fiber.val <ButtonRelease> {app change_fibers_fiber_length}
@@ -7509,8 +7823,8 @@ class BioTensorApp {
 	    
 	    checkbutton $stop.steps.check -text "Number of Steps: " \
 		-variable $mods(TendFiber)-use-steps \
-		-command "$this toggle_fibers_steps; $mods(TendFiber)-c needexecute" \
-		-state disabled -foreground grey64
+		-command "$this toggle_fibers_steps; $this execute_TendFiber" \
+		-foreground grey64 
 	    scale $stop.steps.val -label "" \
 		-from 10 -to 1000 \
 		-resolution 10 \
@@ -7519,8 +7833,8 @@ class BioTensorApp {
 		-orient horizontal \
 		-showvalue false \
 		-variable fibers_steps \
-		-state disabled -foreground grey64
-	    label $stop.steps.l -textvariable fibers_steps -state disabled
+		-foreground grey64 
+	    label $stop.steps.l -textvariable fibers_steps -foreground grey64
 	    pack $stop.steps.check $stop.steps.val $stop.steps.l -side left \
 		-anchor nw -padx 3 -pady 0
 	    bind $stop.steps.val <ButtonRelease> {app change_fibers_steps}
@@ -7535,8 +7849,8 @@ class BioTensorApp {
 	    
 	    checkbutton $stop.aniso1.check -text "Anisotropy Threshold:" \
 		-variable $mods(TendFiber)-use-aniso \
-		-command "$this toggle_fibers_aniso; $mods(TendFiber)-c needexecute" \
-		-state disabled -foreground grey64
+		-command "$this toggle_fibers_aniso; $this execute_TendFiber" \
+		-foreground grey64 
 	    scale $stop.aniso1.val -label "" \
 		-from 0.0 -to 1.0 \
 		-resolution 0.01 \
@@ -7545,8 +7859,8 @@ class BioTensorApp {
 		-orient horizontal \
 		-showvalue false \
 		-variable $mods(TendFiber)-aniso-thresh \
-		-state disabled -foreground grey64
-	    label $stop.aniso1.l -textvariable $mods(TendFiber)-aniso-thresh -state disabled
+		-foreground grey64 
+	    label $stop.aniso1.l -textvariable $mods(TendFiber)-aniso-thresh -foreground grey64
 	    pack $stop.aniso1.check $stop.aniso1.val $stop.aniso1.l -side left \
 		-anchor nw -padx 3 -pady 0
 
@@ -7558,14 +7872,14 @@ class BioTensorApp {
 	    radiobutton $stop.aniso2.cl -text "Linear Anisotropy" \
 		-variable $mods(TendFiber)-aniso-metric \
 		-value tenAniso_Cl2 \
-		-state disabled \
-		-command "$mods(TendFiber)-c needexecute"
+		-foreground grey64 \
+		-command "$this execute_TendFiber"
 	    
 	    radiobutton $stop.aniso2.fa -text "Fractional Anisotropy" \
 		-variable $mods(TendFiber)-aniso-metric \
 		-value tenAniso_FA \
-		-state disabled \
-		-command "$mods(TendFiber)-c needexecute"
+		-foreground grey64 \
+		-command "$this execute_TendFiber"
 	    pack $stop.aniso2.cl $stop.aniso2.fa -side left -anchor nw -padx 3 -pady 0
 	    
 	    
@@ -7590,14 +7904,14 @@ class BioTensorApp {
 	    radiobutton $seed.a.pointf.point -text "Single Point" \
 		-variable $mods(ChooseField-FiberSeeds)-port-index \
 		-value 0 \
-		-state disabled \
+		-foreground grey64 \
 		-command "$this update_fiber_seed_method"
 	    Tooltip $seed.a.pointf.point $tips(FibersSeedPoint)
 
 	    global fiber_point
 	    checkbutton $seed.a.pointf.w -text "Widget" \
 		-variable fiber_point \
-		-state disabled \
+		-foreground grey64 \
 		-command "$this toggle_fiber_point"
 	    Tooltip $seed.a.pointf.w $tips(FibersTogglePoint)
 
@@ -7610,14 +7924,14 @@ class BioTensorApp {
 	    radiobutton $seed.a.rakef.rake -text "Along Line  " \
 		-variable $mods(ChooseField-FiberSeeds)-port-index \
 		-value 1 \
-		-state disabled \
+		-foreground grey64 \
 		-command "$this update_fiber_seed_method"
 	    Tooltip $seed.a.rakef.rake $tips(FibersSeedLine)
 
 	    global fiber_rake
 	    checkbutton $seed.a.rakef.w -text "Widget" \
 		-variable fiber_rake \
-		-state disabled \
+		-foreground grey64 \
 		-command "$this toggle_fiber_rake"
 	    Tooltip $seed.a.rakef.w $tips(FibersToggleLine)
 
@@ -7628,14 +7942,14 @@ class BioTensorApp {
 	    radiobutton $seed.b.plane -text "On Planes" \
 		-variable $mods(ChooseField-FiberSeeds)-port-index \
 		-value 2 \
-		-state disabled \
+		-foreground grey64 \
 		-command "$this update_fiber_seed_method"
 	    Tooltip $seed.b.plane $tips(FibersSeedPlanes)
 	    
 	    radiobutton $seed.b.grid -text "On Grid" \
 		-variable $mods(ChooseField-FiberSeeds)-port-index \
 		-value 3 \
-		-state disabled \
+		-foreground grey64 \
 		-command "$this update_fiber_seed_method"
 	    Tooltip $seed.b.grid $tips(FibersSeedGrid)
 	    
@@ -7655,7 +7969,7 @@ class BioTensorApp {
 	    pack $rep.f1 -side top -anchor nw -padx 3 -pady 1
 	    
 	    iwidgets::optionmenu $rep.f1.type -labeltext "" \
-		-width 150 -state disabled \
+		-width 150 -foreground grey64 \
 		-command "$this change_fiber_color_by $rep.f1"
 	    pack $rep.f1.type -side left -anchor nw -padx 2 -pady 0
 	    
@@ -7686,8 +8000,8 @@ class BioTensorApp {
 	    radiobutton $maps.a.gray.b -text "Gray" \
 		-variable $mods(GenStandardColorMaps-Fibers)-mapType \
 		-value 0 \
-		-state disabled \
-		-command "$mods(GenStandardColorMaps-Fibers)-c needexecute"
+		-foreground grey64 \
+		-command "$this update_fibers_color_map"
 	    Tooltip $maps.a.gray.b $tips(FibersColorMap)
 	    pack $maps.a.gray.b -side left -anchor nw -padx 1 -pady 0
 	    
@@ -7707,8 +8021,8 @@ class BioTensorApp {
 	    radiobutton $maps.a.rainbow.b -text "Rainbow" \
 		-variable $mods(GenStandardColorMaps-Fibers)-mapType \
 		-value 2 \
-		-state disabled \
-		-command "$mods(GenStandardColorMaps-Fibers)-c needexecute"
+		-foreground grey64 \
+		-command "$this update_fibers_color_map"
 	    Tooltip $maps.a.rainbow.b $tips(FibersColorMap)
 	    pack $maps.a.rainbow.b -side left -anchor nw -padx 1 -pady 0
 	    
@@ -7726,8 +8040,8 @@ class BioTensorApp {
 	    radiobutton $maps.a.darkhue.b -text "Darkhue" \
 		-variable $mods(GenStandardColorMaps-Fibers)-mapType \
 		-value 5 \
-		-state disabled \
-		-command "$mods(GenStandardColorMaps-Fibers)-c needexecute"
+		-foreground grey64 \
+		-command "$this update_fibers_color_map"
 	    Tooltip $maps.a.darkhue.b $tips(FibersColorMap)
 	    pack $maps.a.darkhue.b -side left -anchor nw -padx 1 -pady 0
 	    
@@ -7753,8 +8067,8 @@ class BioTensorApp {
 	    radiobutton $maps.b.blackbody.b -text "Blackbody" \
 		-variable $mods(GenStandardColorMaps-Fibers)-mapType \
 		-value 7 \
-		-state disabled \
-		-command "$mods(GenStandardColorMaps-Fibers)-c needexecute"
+		-foreground grey64 \
+		-command "$this update_fibers_color_map"
 	    Tooltip $maps.b.blackbody.b $tips(FibersColorMap)
 	    pack $maps.b.blackbody.b -side left -anchor nw -padx 1 -pady 0
 	    
@@ -7773,8 +8087,8 @@ class BioTensorApp {
 	    radiobutton $maps.b.bpseismic.b -text "Red-to-Blue" \
 		-variable $mods(GenStandardColorMaps-Fibers)-mapType \
 		-value 17 \
-		-state disabled \
-		-command "$mods(GenStandardColorMaps-Fibers)-c needexecute"
+		-foreground grey64 \
+		-command "$this update_fibers_color_map"
 	    Tooltip $maps.b.bpseismic.b $tips(FibersColorMap)
 	    pack $maps.b.bpseismic.b -side left -anchor nw -padx 1 -pady 0
 	    
@@ -7785,6 +8099,29 @@ class BioTensorApp {
 	    
 	    draw_mini_colormap "Red-to-Blue" $maps.b.bpseismic.f.canvas
 	} 
+    }
+
+    method update_fibers_color_map {} {
+	global mods
+	global $mods(ShowField-Fibers)-edges-on
+
+	if {$vis_activated && [set $mods(ShowField-Fibers)-edges-on]} {
+	    $mods(GenStandardColorMaps-Fibers)-c needexecute
+	} else {
+	    global exec_fibers
+	    set exec_fibers(GenStandardColorMaps-Fibers) 1
+	}
+    }
+
+    method execute_TendFiber {} {
+	global mods 
+	global $mods(ShowField-Fibers)-edges-on
+	if {$vis_activated && [set $mods(ShowField-Fibers)-edges-on]} {
+	    $mods(TendFiber)-c needexecute
+	} else {
+	    global exec_fibers
+	    set exec_fibers(TendFiber) 1
+	}
     }
 
     method sync_fibers_tabs {} {
@@ -7822,7 +8159,7 @@ class BioTensorApp {
         global mods
 	global $mods(ShowField-Fibers)-edges-on  
 	
-        if {[set $mods(ShowField-Fibers)-edges-on] == 1} {
+        if {$vis_activated && [set $mods(ShowField-Fibers)-edges-on] == 1} {
 	    foreach w [winfo children $fibers_tab1] {
 		activate_widget $w
 	    }
@@ -7870,18 +8207,23 @@ class BioTensorApp {
 		$fibers_tab1.seed.childsite.a.pointf.w configure -state disabled
 		$fibers_tab2.seed.childsite.a.pointf.w configure -state disabled
 	    }
-
-	} else {
-	    foreach w [winfo children $fibers_tab1] {
-		disable_widget $w
-	    }
-	    foreach w [winfo children $fibers_tab2] {
-		disable_widget $w
-	    }
-
+	} elseif {[set $mods(ShowField-Fibers)-edges-on] == 0 && $vis_activated} {
+		foreach w [winfo children $fibers_tab1] {
+		    grey_widget $w
+		}
+		foreach w [winfo children $fibers_tab2] {
+		    grey_widget $w
+		}
 	    # enable checkbutton
 	    $fibers_tab1.show configure -state normal -foreground black
-	    $fibers_tab2.show configure -state normal -foreground black
+	    $fibers_tab2.show configure -state normal -foreground black 
+	} else {
+	    foreach w [winfo children $fibers_tab1] {
+		grey_widget $w
+	    }
+	    foreach w [winfo children $fibers_tab2] {
+		grey_widget $w
+	    }
 	}
     }
 
@@ -7889,14 +8231,16 @@ class BioTensorApp {
     method change_fibers_fiber_length {} {
 	global mods
 	global $mods(TendFiber)-use-length
-	if {$vis_activated && [set $mods(TendFiber)-use-length]} {
-	    global mods
-	    global $mods(TendFiber)-length
-	    global fibers_length
-	    
-	    set $mods(TendFiber)-length [expr $fibers_length/100.0]
-	    
+	global $mods(TendFiber)-length
+	global fibers_length
+	
+	set $mods(TendFiber)-length [expr $fibers_length/100.0]
+
+	if {$vis_activated && [set $mods(TendFiber)-use-length]} {	  
 	    $mods(TendFiber)-c needexecute
+	} else {
+	    global exec_fibers
+	    set exec_fibers(TendFiber) 1
 	}
     }
     
@@ -7925,14 +8269,16 @@ class BioTensorApp {
     method change_fibers_steps {} {
 	global mods
 	global $mods(TendFiber)-use-steps
+	global $mods(TendFiber)-steps
+	global fibers_steps
+	
+	set $mods(TendFiber)-steps [expr $fibers_steps/100.0]
+	
 	if {$vis_activated && [set $mods(TendFiber)-use-steps]} {
-	    global mods
-	    global $mods(TendFiber)-steps
-	    global fibers_steps
-	    
-	    set $mods(TendFiber)-steps [expr $fibers_steps/100.0]
-	    
 	    $mods(TendFiber)-c needexecute
+	} else {
+	    global exec_fibers
+	    set exec_fibers(TendFiber) 1
 	}
     }
 
@@ -7994,9 +8340,13 @@ class BioTensorApp {
     method change_fibers_aniso {} {
 	global mods
 	global $mods(TendFiber)-use-aniso
+	global $mods(ShowField-Fibers)-edges-on
 
-	if {$vis_activated && [set $mods(TendFiber)-use-aniso]} {
+	if {$vis_activated && [set $mods(ShowField-Fibers)-edges-on] && [set $mods(TendFiber)-use-aniso]} {
 	    $mods(TendFiber)-c needexecute
+	} else {
+	    global exec_fibers
+	    set exec_fibers(ShowField-Fibers) 1
 	}
     }
 
@@ -8015,31 +8365,41 @@ class BioTensorApp {
 	# configure color
 	if {$type == "Principle Eigenvector"} {
 	    set fiber_type "Principle Eigenvector"
+            $fibers_tab1.rep.childsite.f1.colorFrame.set_color configure -state disabled
+            $fibers_tab2.rep.childsite.f1.colorFrame.set_color configure -state disabled
+
 	    set $mods(ChooseField-Fibers)-port-index 3
 
 	    set $mods(ChooseColorMap-Fibers)-port-index 1
 	    disable_fibers_colormaps
 	} elseif {$type == "Fractional Anisotropy"} {
 	    set fiber_type "Fractional Anisotropy"
+            $fibers_tab1.rep.childsite.f1.colorFrame.set_color configure -state disabled
+            $fibers_tab2.rep.childsite.f1.colorFrame.set_color configure -state disabled
 	    set $mods(ChooseField-Fibers)-port-index 0
 
 	    set $mods(ChooseColorMap-Fibers)-port-index 0
 	    enable_fibers_colormaps
 	} elseif {$type == "Linear Anisotropy"} {
 	    set fiber_type "Linear Anisotropy"
+            $fibers_tab1.rep.childsite.f1.colorFrame.set_color configure -state disabled
+            $fibers_tab2.rep.childsite.f1.colorFrame.set_color configure -state disabled
 	    set $mods(ChooseField-Fibers)-port-index 1
 
 	    set $mods(ChooseColorMap-Fibers)-port-index 0
 	    enable_fibers_colormaps
 	} elseif {$type == "Planar Anisotropy"} {
 	    set fiber_type "Planar Anisotropy"
+            $fibers_tab1.rep.childsite.f1.colorFrame.set_color configure -state disabled
+            $fibers_tab2.rep.childsite.f1.colorFrame.set_color configure -state disabled
 	    set $mods(ChooseField-Fibers)-port-index 2
 
 	    set $mods(ChooseColorMap-Fibers)-port-index 0
 	    enable_fibers_colormaps
 	} elseif {$type == "Constant"} {
 	    set fiber_type "Constant"
-
+            $fibers_tab1.rep.childsite.f1.colorFrame.set_color configure -state normal
+            $fibers_tab2.rep.childsite.f1.colorFrame.set_color configure -state normal
 	    set $mods(ChooseColorMap-Fibers)-port-index 1
 	    set $mods(ShowField-Fibers)-edges-usedefcolor 1
 	    set $mods(ChooseField-Fibers)-port-index 0
@@ -8052,17 +8412,24 @@ class BioTensorApp {
 
 	configure_fibers_tabs
 
-	$mods(ChooseField-Fibers)-c needexecute
-	$mods(ShowField-Fibers)-c rerender_edges
+	global $mods(ShowField-Fibers)-edges-on
+	if {$vis_activated && [set $mods(ShowField-Fibers)-edges-on]} {
+	    $mods(ChooseField-Fibers)-c needexecute
+	    $mods(ShowField-Fibers)-c rerender_edges
+	} else {
+	    global exec_fibers
+	    set exec_fibers(ChooseField-Fibers) 1
+	    set exec_fibers(ShowField-Fibers) 1
+	}
     }
  
     method disable_fibers_colormaps {} {
 	foreach w [winfo children $fibers_tab1.rep.childsite.maps] {
-	    disable_widget $w
+	    grey_widget $w
 	}
 
 	foreach w [winfo children $fibers_tab2.rep.childsite.maps] {
-	    disable_widget $w
+	    grey_widget $w
 	}
     }
 
@@ -8078,59 +8445,65 @@ class BioTensorApp {
 
 
     method configure_fibers_stepsize {} {
-	if {$vis_activated} {
-	    global mods
-	    global $mods(TendFiber)-stepsize
-	    
-	    global fibers_stepsize
-	    
-	    set $mods(TendFiber)-stepsize [expr $fibers_stepsize/100.0]
-	    
+	global mods
+	global $mods(ShowField-Fibers)-edges-on
+	
+	global $mods(TendFiber)-stepsize
+	global fibers_stepsize
+	set $mods(TendFiber)-stepsize [expr $fibers_stepsize/100.0]
+
+	if {$vis_activated && [set $mods(ShowField-Fibers)-edges-on]} {	    
 	    $mods(TendFiber)-c needexecute
+	} else {
+	    global exec_fibers
+	    set exec_fibers(TendFiber) 1
 	}
     }
-   
 
 
     method update_fiber_seed_method {} {
         global mods
         global $mods(ChooseField-FiberSeeds)-port-index
-
-        if {[set $mods(ChooseField-FiberSeeds)-port-index] == 0} {
+	
+	if {[set $mods(ChooseField-FiberSeeds)-port-index] == 0} {
 	    # Point
-            uplevel \#0 set "\{$mods(Viewer)-ViewWindow_0-Probe Selection Widget (11)\}" 1
-            uplevel \#0 set "\{$mods(Viewer)-ViewWindow_0-SampleField Rake (12)\}" 0
+	    uplevel \#0 set "\{$mods(Viewer)-ViewWindow_0-Probe Selection Widget (11)\}" 1
+	    uplevel \#0 set "\{$mods(Viewer)-ViewWindow_0-SampleField Rake (12)\}" 0
 	    $fibers_tab1.seed.childsite.a.pointf.w configure -state normal
 	    $fibers_tab2.seed.childsite.a.pointf.w configure -state normal
-
+	    
 	    $fibers_tab1.seed.childsite.a.rakef.w configure -state disabled
 	    $fibers_tab2.seed.childsite.a.rakef.w configure -state disabled
-        } elseif {[set $mods(ChooseField-FiberSeeds)-port-index] == 1} {
+	} elseif {[set $mods(ChooseField-FiberSeeds)-port-index] == 1} {
 	    # Rake
-            uplevel \#0 set "\{$mods(Viewer)-ViewWindow_0-Probe Selection Widget (11)\}" 0
-            uplevel \#0 set "\{$mods(Viewer)-ViewWindow_0-SampleField Rake (12)\}" 1
+	    uplevel \#0 set "\{$mods(Viewer)-ViewWindow_0-Probe Selection Widget (11)\}" 0
+	    uplevel \#0 set "\{$mods(Viewer)-ViewWindow_0-SampleField Rake (12)\}" 1
 	    $fibers_tab1.seed.childsite.a.pointf.w configure -state disabled
 	    $fibers_tab2.seed.childsite.a.pointf.w configure -state disabled
-
+	    
 	    $fibers_tab1.seed.childsite.a.rakef.w configure -state normal
 	    $fibers_tab2.seed.childsite.a.rakef.w configure -state normal
-        } else {
+	} else {
 	    # Grid or Planes
-            uplevel \#0 set "\{$mods(Viewer)-ViewWindow_0-Probe Selection Widget (11)\}" 0
-            uplevel \#0 set "\{$mods(Viewer)-ViewWindow_0-SampleField Rake (12)\}" 0
+	    uplevel \#0 set "\{$mods(Viewer)-ViewWindow_0-Probe Selection Widget (11)\}" 0
+	    uplevel \#0 set "\{$mods(Viewer)-ViewWindow_0-SampleField Rake (12)\}" 0
 	    $fibers_tab1.seed.childsite.a.pointf.w configure -state disabled
 	    $fibers_tab2.seed.childsite.a.pointf.w configure -state disabled
-
+	    
 	    $fibers_tab1.seed.childsite.a.rakef.w configure -state disabled
 	    $fibers_tab2.seed.childsite.a.rakef.w configure -state disabled
-	    if {[set $mods(ChooseField-FiberSeeds)-port-index] == 3} {
+	    if {$vis_activated && [set $mods(ChooseField-FiberSeeds)-port-index] == 3} {
 		$mods(ClipByFunction-Seeds)-c needexecute
 	    }
-        }
+	}
 	
-        $mods(ChooseField-FiberSeeds)-c needexecute
-	$mods(Viewer)-ViewWindow_0-c redraw
-	
+	global $mods(ShowField-Fibers)-edges-on
+	if {$vis_activated && [set $mods(ShowField-Fibers)-edges-on]} {
+	    $mods(ChooseField-FiberSeeds)-c needexecute
+	} else {
+	    global exec_glyphs
+	    set exec_glyphs(ChooseField-FiberSeeds) 1
+	}
 	$mods(Viewer)-ViewWindow_0-c redraw
     }
 
@@ -8188,9 +8561,33 @@ class BioTensorApp {
         }
 
 	configure_fibers_tabs
-	
-        $mods(ShowField-Fibers)-c toggle_display_edges
-        $mods(Viewer)-ViewWindow_0-c redraw
+
+	if {$vis_activated} {
+
+	    global exec_fibers
+	    if {$exec_fibers(ChooseField-Fibers)} {
+		$mods(ChooseField-Fibers)-c needexecute
+		set exec_fibers(ChooseField-Fibers) 0
+	    }
+	    if {$exec_fibers(ChooseField-FiberSeeds)} {
+		$mods(ChooseField-FiberSeeds)-c needexecute
+		set exec_fibers(ChooseField-FiberSeeds) 0
+	    }
+	    if {$exec_fibers(GenStandardColorMaps-Fibers)} {
+		$mods(GenStandardColorMaps-Fibers)-c needexecute
+		set exec_fibers(GenStandardColorMaps-Fibers) 0
+	    }
+	    if {$exec_fibers(TendFiber)} {
+		$mods(TendFiber)-c needexecute
+		set exec_fibers(TendFiber) 0
+	    }
+	    if {$exec_fibers(ShowField-Fibers)} {
+		$mods(ShowField-Fibers)-c rerender_edges
+		set exec_fibers(ShowField-Fibers) 0
+	    }
+	    $mods(ShowField-Fibers)-c toggle_display_edges
+	}
+	$mods(Viewer)-ViewWindow_0-c redraw
     }
     
 
@@ -8302,8 +8699,14 @@ class BioTensorApp {
 	    if {$mode == "load"}  {
 		return
 	    }
-
-            $mods(ChooseField-ColorPlanes)-c needexecute
+	    
+	    global show_planes
+	    if {$vis_activated && $show_planes} {
+		$mods(ChooseField-ColorPlanes)-c needexecute
+	    } else {
+		global exec_planes
+		set exec_planes(ChooseField-ColorPlanes) 1
+	    }
          } elseif {$color == "isosurface_color"} {
             # set the default color for ShowField
             global mods
@@ -8317,8 +8720,14 @@ class BioTensorApp {
 	    if {$mode == "load"}  {
 		return
 	    }
-
-            $mods(Isosurface)-c needexecute
+	    
+	    global $mods(ShowField-Isosurface)-faces-on
+	    if {$vis_activated && [set $mods(ShowField-Isosurface)-faces-on]} {
+		$mods(Isosurface)-c needexecute
+	    } else {
+		global exec_iso
+		set exec_iso(Isosurface) 1
+	    }
          } elseif {$color == "glyph_color"} {
              # set the default color for ShowField
              global mods
@@ -8332,8 +8741,14 @@ class BioTensorApp {
 	     if {$mode == "load"}  {
 		 return
 	     }
-
-             $mods(DirectInterpolate-Glyphs)-c needexecute
+	     
+	     global $mods(ShowField-Glyphs)-tensors-on
+	     if {$vis_activated && [set $mods(ShowField-Glyphs)-tensors-on]} {
+		 $mods(DirectInterpolate-Glyphs)-c needexecute
+	     } else {
+		 global exec_glyphs
+		 set exec_glyphs(ChooseField-GlyphSeeds) 1
+	     }
          } elseif {$color == "fiber_color"} {
              # set the default color for ShowField
              global mods
@@ -8348,7 +8763,13 @@ class BioTensorApp {
 		 return
 	     }
 	     
-             $mods(DirectInterpolate-Fibers)-c needexecute
+	     global $mods(ShowField-Fibers)-edges-on
+	     if {$vis_activated && [set $mods(ShowField-Fibers)-edges-on]} {
+		 $mods(DirectInterpolate-Fibers)-c needexecute
+	     } else {
+		 global exec_fobers
+		 set exec_fibers(ChooseField-FiberSeeds) 1
+	     }
          }
 
     }
@@ -8659,6 +9080,9 @@ class BioTensorApp {
     variable last_z
     variable plane_inc
     variable plane_type
+
+    # isosurfaces
+    variable iso_type
 
     # glyphs
     variable clip_x
