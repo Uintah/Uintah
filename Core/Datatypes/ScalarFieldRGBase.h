@@ -69,7 +69,7 @@ public:
     ScalarFieldRGuchar* getRGUchar();
 
     Point get_point(int, int, int);
-    void locate(const Point&, int&, int&, int&);
+    bool locate(int *loc, const Point &p);
     void midLocate(const Point&, int&, int&, int&);
     void set_bounds(const Point &min, const Point &max);
     ScalarFieldRGBase(clString, int x, int y, int z);

@@ -170,16 +170,17 @@ LatticeGeom::getPoint(int x, int y, int z)
 
 
 bool
-LatticeGeom::locate(const Point &p, int &i, int &j, int &k)
+LatticeGeom::locate(int *loc, const Point &p)
 {
   Point r;
   itransform(p, r);
-  i = r.x() + 0.5;
-  j = r.y() + 0.5;
-  k = r.z() + 0.5;
-  if (i < 0 || i >= d_nx ||
-      j < 0 || j >= d_ny ||
-      k < 0 || k >= d_nz)
+  loc[0] = r.x() + 0.5;
+  loc[1] = r.y() + 0.5;
+  loc[2] = r.z() + 0.5;
+
+  if (loc[0] < 0 || loc[0] >= d_nx ||
+      loc[1] < 0 || loc[1] >= d_ny ||
+      loc[2] < 0 || loc[2] >= d_nz)
   {
     return false;
   }

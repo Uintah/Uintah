@@ -24,7 +24,7 @@ namespace SCIRun {
 class SCICORESHARE VectorFieldRGCC : public VectorFieldRG {
 public:
     Point get_point(int, int, int);
-    virtual void locate(const Point&, int&, int&, int&);
+    virtual bool locate(int *loc, const Point &p);
 
     VectorFieldRGCC();
     virtual ~VectorFieldRGCC();

@@ -41,7 +41,7 @@ Point VectorFieldRG::get_point(int i, int j, int k)
     return Point(x,y,z);
 }
 
-void VectorFieldRG::locate(const Point& p, int& ix, int& iy, int& iz)
+bool VectorFieldRG::locate(int *ijk, const Point& p)
 {
     Vector pn=p-bmin;
     double dx=diagonal.x();
@@ -50,9 +50,20 @@ void VectorFieldRG::locate(const Point& p, int& ix, int& iy, int& iz)
     double x=pn.x()*(nx-1)/dx;
     double y=pn.y()*(ny-1)/dy;
     double z=pn.z()*(nz-1)/dz;
-    ix=(int)x;
-    iy=(int)y;
-    iz=(int)z;
+    ijk[0]=(int)x;
+    ijk[1]=(int)y;
+    ijk[2]=(int)z;
+
+    if (ijk[0] < 0 || ijk[0] >= nx ||
+	ijk[1] < 0 || ijk[1] >= ny ||
+	ijk[2] < 0 || ijk[2] >= nz)
+    {
+      return false;
+    }
+    else
+    {
+      return true;
+    }
 }
 
 #define VectorFIELDRG_VERSION 1
