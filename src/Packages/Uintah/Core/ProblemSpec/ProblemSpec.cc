@@ -89,7 +89,8 @@ ProblemSpecP ProblemSpec::findNextBlock() const
 
 ProblemSpecP ProblemSpec::findNextBlock(const std::string& name) const 
 {
-  // Iterate through all of the child nodes that have this name
+  // Iterate through all of the child nodes of the next node
+  // until one is found that has this name
 
   const DOMNode* found_node = d_node->getNextSibling();
 
@@ -205,8 +206,8 @@ ProblemSpecP ProblemSpec::get(const std::string& name, int &value)
       if (child->getNodeType() == DOMNode::TEXT_NODE) {
 	//DOMString val = child->getNodeValue();
 	const char* s = to_char_ptr(child->getNodeValue());
-       string stringValue(s);
-       checkForInputError(stringValue,"int");
+	string stringValue(s);
+	checkForInputError(stringValue,"int");
 	value = atoi(s);
       }
     }
@@ -318,8 +319,8 @@ ProblemSpecP ProblemSpec::get(const std::string& name,
 	std::string z_val(string_value,i3+1,i4-i3-1);
        
 	checkForInputError(x_val, "double"); 
-       checkForInputError(y_val, "double");
-       checkForInputError(z_val, "double");
+	checkForInputError(y_val, "double");
+	checkForInputError(z_val, "double");
 
 	value.x(atof(x_val.c_str()));
 	value.y(atof(y_val.c_str()));
@@ -332,6 +333,7 @@ ProblemSpecP ProblemSpec::get(const std::string& name,
 
 }
 
+// value should probably be empty before calling this...
 ProblemSpecP ProblemSpec::get(const std::string& name, 
                            vector<double>& value)
 {
@@ -377,7 +379,7 @@ ProblemSpecP ProblemSpec::get(const std::string& name,
 
 }
 
-
+// value should probably be empty before calling this...
 ProblemSpecP ProblemSpec::get(const std::string& name, 
                            vector<int>& value)
 {
@@ -452,9 +454,9 @@ ProblemSpecP ProblemSpec::get(const std::string& name,
 	std::string y_val(string_value,i2+1,i3-i2-1);
 	std::string z_val(string_value,i3+1,i4-i3-1);
 
-       checkForInputError(x_val, "int");     
-       checkForInputError(y_val, "int");     
-       checkForInputError(z_val, "int");     
+	checkForInputError(x_val, "int");     
+	checkForInputError(y_val, "int");     
+	checkForInputError(z_val, "int");     
                 
 	value.x(atoi(x_val.c_str()));
 	value.y(atoi(y_val.c_str()));
@@ -465,6 +467,284 @@ ProblemSpecP ProblemSpec::get(const std::string& name,
           
   return ps;
 
+}
+
+ProblemSpecP ProblemSpec::getWithDefault(const std::string& name, 
+					 double& value, double defaultVal) 
+{
+  ProblemSpecP ps = get(name, value);
+  if (ps == 0) {
+
+    //create DOMNode to add to the tree
+    DOMNode* elt = 
+      d_node->getOwnerDocument()->createElement(to_xml_ch_ptr(name.c_str()));
+    ostringstream str;
+    str << defaultVal;
+    DOMText* txt = d_node->getOwnerDocument()->createTextNode(to_xml_ch_ptr(str.str().c_str()));
+    elt->appendChild(txt);
+
+    // append to current node and make it look pretty
+    DOMText* ws = d_node->getOwnerDocument()->createTextNode(to_xml_ch_ptr("\t\t"));
+    DOMText* newline = d_node->getOwnerDocument()->createTextNode(to_xml_ch_ptr("\n"));
+    d_node->appendChild(ws);
+    d_node->appendChild(elt);
+    d_node->appendChild(newline);
+    // set default values
+    ps = this;
+    value = defaultVal;
+  }
+
+  return ps;
+}
+ProblemSpecP ProblemSpec::getWithDefault(const std::string& name, 
+					 int& value, int defaultVal)
+{
+  ProblemSpecP ps = get(name, value);
+  if (ps == 0) {
+
+    //create DOMNode to add to the tree
+    DOMNode* elt = 
+      d_node->getOwnerDocument()->createElement(to_xml_ch_ptr(name.c_str()));
+    ostringstream str;
+    str << defaultVal;
+    DOMText* txt = d_node->getOwnerDocument()->createTextNode(to_xml_ch_ptr(str.str().c_str()));
+    elt->appendChild(txt);
+
+    // append to current node and make it look pretty
+    DOMText* ws = d_node->getOwnerDocument()->createTextNode(to_xml_ch_ptr("\t\t"));
+    DOMText* newline = d_node->getOwnerDocument()->createTextNode(to_xml_ch_ptr("\n"));
+    d_node->appendChild(ws);
+    d_node->appendChild(elt);
+    d_node->appendChild(newline);
+
+    // set default values
+    ps = this;
+    value=defaultVal;
+  }
+
+  return ps;
+}
+ProblemSpecP ProblemSpec::getWithDefault(const std::string& name, 
+					 bool& value, bool defaultVal)
+{
+  ProblemSpecP ps = get(name, value);
+  if (ps == 0) {
+    std::string val;
+    if (defaultVal)
+      val = "true";
+    else
+      val = "false";
+
+    //create DOMNode to add to the tree
+    DOMNode* elt = 
+      d_node->getOwnerDocument()->createElement(to_xml_ch_ptr(name.c_str()));
+    DOMText* txt = d_node->getOwnerDocument()->createTextNode(to_xml_ch_ptr(val.c_str()));
+    elt->appendChild(txt);
+
+    // append to current node and make it look pretty
+    DOMText* ws = d_node->getOwnerDocument()->createTextNode(to_xml_ch_ptr("\t\t"));
+    DOMText* newline = d_node->getOwnerDocument()->createTextNode(to_xml_ch_ptr("\n"));
+    d_node->appendChild(ws);
+    d_node->appendChild(elt);
+    d_node->appendChild(newline);
+
+    // set default values
+    ps = this;
+    value=defaultVal;
+  }
+
+  return ps;
+}
+ProblemSpecP ProblemSpec::getWithDefault(const std::string& name, 
+					 std::string& value, std::string defaultVal)
+{
+  ProblemSpecP ps = get(name, value);
+  if (ps == 0) {
+
+    //create DOMNode to add to the tree
+    DOMNode* elt = 
+      d_node->getOwnerDocument()->createElement(to_xml_ch_ptr(name.c_str()));
+     DOMText* txt = d_node->getOwnerDocument()->createTextNode(to_xml_ch_ptr(defaultVal.c_str()));
+    elt->appendChild(txt);
+
+    // append to current node and make it look pretty
+    DOMText* ws = d_node->getOwnerDocument()->createTextNode(to_xml_ch_ptr("\t\t"));
+    DOMText* newline = d_node->getOwnerDocument()->createTextNode(to_xml_ch_ptr("\n"));
+    d_node->appendChild(ws);
+    d_node->appendChild(elt);
+    d_node->appendChild(newline);
+
+    // set default values
+    ps = this;
+    value = defaultVal;
+  }
+
+
+  return ps;
+}
+ProblemSpecP ProblemSpec::getWithDefault(const std::string& name, 
+					 IntVector& value, IntVector defaultVal)
+{
+  ProblemSpecP ps = get(name, value);
+  if (ps == 0) {
+
+    //create DOMNode to add to the tree
+    DOMNode* elt = 
+      d_node->getOwnerDocument()->createElement(to_xml_ch_ptr(name.c_str()));
+
+    ostringstream VecStream;
+    VecStream << '[' << defaultVal.x() << ',' << defaultVal.y() << ',' 
+	      << defaultVal.z() << ']';
+
+    DOMText* txt = d_node->getOwnerDocument()->createTextNode(to_xml_ch_ptr(VecStream.str().c_str()));
+    elt->appendChild(txt);
+
+    // append to current node and make it look pretty
+    DOMText* ws = d_node->getOwnerDocument()->createTextNode(to_xml_ch_ptr("\t\t"));
+    DOMText* newline = d_node->getOwnerDocument()->createTextNode(to_xml_ch_ptr("\n"));
+    d_node->appendChild(ws);
+    d_node->appendChild(elt);
+    d_node->appendChild(newline);
+
+    // set default values
+    ps = this;
+    value = defaultVal;
+  }
+
+  return ps;
+}
+ProblemSpecP ProblemSpec::getWithDefault(const std::string& name, 
+					 Vector& value, Vector& defaultVal)
+{
+  ProblemSpecP ps = get(name, value);
+  if (ps == 0) {
+
+    //create DOMNode to add to the tree
+    DOMNode* elt = 
+      d_node->getOwnerDocument()->createElement(to_xml_ch_ptr(name.c_str()));
+
+    ostringstream VecStream;
+    VecStream << '[' << defaultVal.x() << ',' << defaultVal.y() << ',' 
+	      << defaultVal.z() << ']';
+
+    DOMText* txt = d_node->getOwnerDocument()->createTextNode(to_xml_ch_ptr(VecStream.str().c_str()));
+    elt->appendChild(txt);
+
+    // append to current node and make it look pretty
+    DOMText* ws = d_node->getOwnerDocument()->createTextNode(to_xml_ch_ptr("\t\t"));
+    DOMText* newline = d_node->getOwnerDocument()->createTextNode(to_xml_ch_ptr("\n"));
+    d_node->appendChild(ws);
+    d_node->appendChild(elt);
+    d_node->appendChild(newline);
+
+    // set default values
+    ps = this;
+    value = defaultVal;
+  }
+
+  return ps;
+}
+ProblemSpecP ProblemSpec::getWithDefault(const std::string& name, 
+					 Point& value, Point& defaultVal)
+{
+  ProblemSpecP ps = get(name, value);
+  if (ps == 0) {
+
+    //create DOMNode to add to the tree
+    DOMNode* elt = 
+      d_node->getOwnerDocument()->createElement(to_xml_ch_ptr(name.c_str()));
+
+    ostringstream VecStream;
+    VecStream << '[' << defaultVal.x() << ',' << defaultVal.y() << ',' 
+	      << defaultVal.z() << ']';
+
+    DOMText* txt = d_node->getOwnerDocument()->createTextNode(to_xml_ch_ptr(VecStream.str().c_str()));
+    elt->appendChild(txt);
+
+    // append to current node and make it look pretty
+    DOMText* ws = d_node->getOwnerDocument()->createTextNode(to_xml_ch_ptr("\t\t"));
+    DOMText* newline = d_node->getOwnerDocument()->createTextNode(to_xml_ch_ptr("\n"));
+    d_node->appendChild(ws);
+    d_node->appendChild(elt);
+    d_node->appendChild(newline);
+
+    // set default values
+    ps = this;
+    value = defaultVal;
+  }
+
+  return ps;
+}
+ProblemSpecP ProblemSpec::getWithDefault(const std::string& name, 
+					 vector<double>& value, vector<double> defaultVal)
+{
+  value.clear();
+  ProblemSpecP ps = get(name, value);
+  if (ps == 0) {
+
+    //create DOMNode to add to the tree
+    DOMNode* elt = 
+      d_node->getOwnerDocument()->createElement(to_xml_ch_ptr(name.c_str()));
+
+    ostringstream VecStream;
+    VecStream << '[' << defaultVal[0] << ',' << defaultVal[1] << ',' 
+	      << defaultVal[2] << ']';
+
+    DOMText* txt = d_node->getOwnerDocument()->createTextNode(to_xml_ch_ptr(VecStream.str().c_str()));
+    elt->appendChild(txt);
+
+    // append to current node and make it look pretty
+    DOMText* ws = d_node->getOwnerDocument()->createTextNode(to_xml_ch_ptr("\t\t"));
+    DOMText* newline = d_node->getOwnerDocument()->createTextNode(to_xml_ch_ptr("\n"));
+    d_node->appendChild(ws);
+    d_node->appendChild(elt);
+    d_node->appendChild(newline);
+
+    // set default values
+    ps = this;
+
+    value.clear();
+    int size = defaultVal.size();
+    for (int i = 0; i < size; i++)
+      value.push_back(defaultVal[i]);
+  }
+
+  return ps;
+}
+ProblemSpecP ProblemSpec::getWithDefault(const std::string& name, 
+					 vector<int>& value, vector<int> defaultVal)
+{
+  value.clear();
+  ProblemSpecP ps = get(name, value);
+  if (ps == 0) {
+
+    //create DOMNode to add to the tree
+    DOMNode* elt = 
+      d_node->getOwnerDocument()->createElement(to_xml_ch_ptr(name.c_str()));
+
+    ostringstream VecStream;
+    VecStream << '[' << defaultVal[0] << ',' << defaultVal[1] << ',' 
+	      << defaultVal[2] << ']';
+
+    DOMText* txt = d_node->getOwnerDocument()->createTextNode(to_xml_ch_ptr(VecStream.str().c_str()));
+    elt->appendChild(txt);
+
+    // append to current node and make it look pretty
+    DOMText* ws = d_node->getOwnerDocument()->createTextNode(to_xml_ch_ptr("\t\t"));
+    DOMText* newline = d_node->getOwnerDocument()->createTextNode(to_xml_ch_ptr("\n"));
+    d_node->appendChild(ws);
+    d_node->appendChild(elt);
+    d_node->appendChild(newline);
+
+    // set default values
+    ps = this;
+    value.clear();
+    int size = defaultVal.size();
+    for (int i = 0; i < size; i++)
+      value.push_back(defaultVal[i]);
+  }
+
+  return ps;
 }
 
 void ProblemSpec::require(const std::string& name, double& value)
