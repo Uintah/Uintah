@@ -17,6 +17,7 @@ PressureBurn::PressureBurn(ProblemSpecP& ps)
   ps->require("Enthalpy",Enthalpy);
   ps->require("BurnCoeff",BurnCoeff);
   ps->require("PressureExponent",pressureExponent);
+  ps->require("ReferencePressure",refPressure);
 
   d_burnable = true;  
 
@@ -38,7 +39,7 @@ void PressureBurn::computeBurn(double gasTemperature,
 			     double &surfaceArea)
 {
   if ((gasTemperature > thresholdTemp) && (gasPressure > thresholdPressure)) {
-    burnedMass = surfaceArea * BurnCoeff * pow(gasPressure,pressureExponent);
+    burnedMass = surfaceArea * BurnCoeff * pow(gasPressure/refPressure,pressureExponent);
   }
   else {
     burnedMass = 0;
