@@ -115,7 +115,7 @@ set $m3-orig_error {1}
 set $m3-current_error {9.84662e-07}
 set $m3-iteration {86}
 set $m3-maxiter {500}
-set $m3-use_previous_soln {0}
+set $m3-use_previous_soln {1}
 set $m3-emit_partial {0}
 
 set $m6-widgetSizeGui_ [expr 0.05 * ${global-scale}]
