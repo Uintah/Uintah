@@ -243,7 +243,7 @@ proc updateSubnetState { subnet_number name1 name2 op } {
     SubnetIcon$subnet_number setColorAndTitle
 }
 
-proc generateUniqueSubnetName {} {
+proc getAllSubnetNames {} {
     global Subnet SubnetScripts
     set taken ""
     if { [info exists SubnetScripts] } {
@@ -252,7 +252,12 @@ proc generateUniqueSubnetName {} {
     foreach namekey [array names Subnet *_Name] {
 	lappend taken $Subnet($namekey)
     }
-    puts "taken $taken"
+    return $taken
+}    
+
+proc generateUniqueSubnetName {} {
+    global Subnet SubnetScripts
+    set taken [getAllSubnetNames]
     set num 1
     set name "Sub-Network \#$num"
     while { [lsearch $taken $name] != -1 } {
