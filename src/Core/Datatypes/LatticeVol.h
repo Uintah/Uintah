@@ -15,7 +15,7 @@ public:
   typedef Data value_type;
  
   FData3d():Array3<Data>(){}
-  ~FData3d(){}
+  virtual ~FData3d(){}
  
   value_type operator[](typename LatVolMesh::cell_index idx) const
     { return operator()(idx.i_,idx.j_,idx.k_); } 
@@ -49,7 +49,12 @@ public:
   virtual ~LatticeVol(){};
 
   static const string type_name(int );
+  static PersistentTypeID type_id;
 };
+
+template <class Data>
+PersistentTypeID 
+LatticeVol<Data>::type_id("LatticeVol","Datatype",0);
 
 template <class Data>
 const string

@@ -180,7 +180,6 @@ public:
   unsigned get_nz() const { return nz_; }
   Point get_min() const { return min_; }
   Point get_max() const { return max_; }
-
   virtual BBox get_bounding_box() const;
 
   //! get the child elements of the given index

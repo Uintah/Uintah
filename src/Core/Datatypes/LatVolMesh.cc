@@ -320,6 +320,8 @@ LatVolMesh::io(Piostream& stream)
   Pio(stream, nx_);
   Pio(stream, ny_);
   Pio(stream, nz_);
+  Pio(stream, min_);
+  Pio(stream, max_);
 
   stream.end_class();
 }
