@@ -33,9 +33,9 @@ public:
   virtual FieldHandle execute(FieldHandle src, FieldHandle itp) = 0;
 
   //! support the dynamically compiled algorithm concept
-  static CompileInfo *get_compile_info(const TypeDescription *fsrc,
-				       const TypeDescription *fitp,
-				       const TypeDescription *litp);
+  static CompileInfoHandle get_compile_info(const TypeDescription *fsrc,
+					    const TypeDescription *fitp,
+					    const TypeDescription *litp);
 };
 
 

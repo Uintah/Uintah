@@ -97,9 +97,9 @@ Gradient::execute()
     const TypeDescription *ftd  = fieldin->get_type_description(0);
     const TypeDescription *ttd = fieldin->get_type_description(1);
 
-    CompileInfo *ci = GradientAlgo::get_compile_info(ftd,ttd);
+    CompileInfoHandle ci = GradientAlgo::get_compile_info(ftd,ttd);
     Handle<GradientAlgo> algo;
-    if (!module_dynamic_compile(*ci, algo)) return;
+    if (!module_dynamic_compile(ci, algo)) return;
 
     fieldout_ = algo->execute(fieldin);
   }
@@ -120,7 +120,7 @@ Gradient::execute()
   }
 }
 
-CompileInfo *
+CompileInfoHandle
 GradientAlgo::get_compile_info(const TypeDescription *ftd,
 			       const TypeDescription *ttd)
 {

@@ -33,7 +33,7 @@ SageAlg::get_h_file_path() {
   return path;
 }
 
-CompileInfo *
+CompileInfoHandle
 SageAlg::get_compile_info(const TypeDescription *td) {
 
   string fname("Sage." + td->get_name(".", "."));

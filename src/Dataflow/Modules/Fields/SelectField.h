@@ -35,8 +35,8 @@ public:
   virtual FieldHandle execute(MeshHandle src, Field::data_location at) = 0;
 
   //! support the dynamically compiled algorithm concept
-  static CompileInfo *get_compile_info(const TypeDescription *msrc,
-				       const TypeDescription *fsrc);
+  static CompileInfoHandle get_compile_info(const TypeDescription *msrc,
+					    const TypeDescription *fsrc);
 };
 
 
@@ -69,8 +69,8 @@ public:
 		       bool replace_p, int replace_value) = 0;
 
   //! support the dynamically compiled algorithm concept
-  static CompileInfo *get_compile_info(const TypeDescription *fld,
-				       const TypeDescription *loc);
+  static CompileInfoHandle get_compile_info(const TypeDescription *fld,
+					    const TypeDescription *loc);
 };
 
 

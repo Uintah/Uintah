@@ -39,7 +39,7 @@ public:
   virtual void execute(const MeshHandle mesh, FieldHandle &bndry, FieldHandle &intrp) = 0;
 
   //! support the dynamically compiled algorithm concept
-  static CompileInfo *get_compile_info(const TypeDescription *mesh);
+  static CompileInfoHandle get_compile_info(const TypeDescription *mesh);
   static bool determine_tri_order(const Point p[3], const Point &inside);
 };
 
@@ -160,7 +160,7 @@ public:
 		       FieldHandle &bndry, FieldHandle &intrp) = 0;
 
   //! support the dynamically compiled algorithm concept
-  static CompileInfo *get_compile_info(const TypeDescription *mesh);
+  static CompileInfoHandle get_compile_info(const TypeDescription *mesh);
 };
 
 
@@ -187,9 +187,9 @@ FieldBoundaryAlgoT<Msh>::execute(ModuleReporter *mod, const MeshHandle mesh,
   else
   {
     const TypeDescription *mtd = get_type_description((Msh *)0);
-    CompileInfo *ci = FieldBoundaryAlgoAux::get_compile_info(mtd);
+    CompileInfoHandle ci = FieldBoundaryAlgoAux::get_compile_info(mtd);
     Handle<FieldBoundaryAlgoAux> algo;
-    if (mod->module_dynamic_compile(*ci, algo))
+    if (mod->module_dynamic_compile(ci, algo))
       algo->execute(mesh, boundary, interp);
   }
 }

@@ -25,7 +25,7 @@ ConvertTetBase::~ConvertTetBase()
 {
 }
 
-CompileInfo *
+CompileInfoHandle
 ConvertTetBase::get_compile_info(const TypeDescription *td) {
   CompileInfo *rval = scinew CompileInfo(dyn_file_name(td), 
 					 base_class_name(), 

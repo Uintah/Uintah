@@ -87,9 +87,9 @@ TransformScalarData::execute()
 
   const TypeDescription *ftd = ifieldhandle->get_type_description();
   const TypeDescription *ltd = ifieldhandle->data_at_type_description();
-  CompileInfo *ci = TransformScalarDataAlgo::get_compile_info(ftd, ltd);
+  CompileInfoHandle ci = TransformScalarDataAlgo::get_compile_info(ftd, ltd);
   Handle<TransformScalarDataAlgo> algo;
-  if (!module_dynamic_compile(*ci, algo)) return;
+  if (!module_dynamic_compile(ci, algo)) return;
 
   FieldHandle ofieldhandle(algo->execute(ifieldhandle, function));
 
@@ -104,9 +104,9 @@ TransformScalarData::execute()
 }
 
 
-CompileInfo *
+CompileInfoHandle
 TransformScalarDataAlgo::get_compile_info(const TypeDescription *field_td,
-					 const TypeDescription *loc_td)
+					  const TypeDescription *loc_td)
 {
   // use cc_to_h if this is in the .cc file, otherwise just __FILE__
   static const string include_path(TypeDescription::cc_to_h(__FILE__));

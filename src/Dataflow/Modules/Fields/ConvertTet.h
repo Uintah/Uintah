@@ -54,7 +54,7 @@ public:
   }
 
   //! support the dynamically compiled algorithm concept
-  static CompileInfo *get_compile_info(const TypeDescription *td);
+  static CompileInfoHandle get_compile_info(const TypeDescription *td);
 };
 
 template <class Fld>

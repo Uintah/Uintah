@@ -36,11 +36,11 @@ public:
 			      bool interp, bool closest, double dist) = 0;
 
   //! support the dynamically compiled algorithm concept
-  static CompileInfo *get_compile_info(const TypeDescription *msrc,
-				       const TypeDescription *lsrc,
-				       const TypeDescription *mdst,
-				       const TypeDescription *ldst,
-				       const TypeDescription *fdst);
+  static CompileInfoHandle get_compile_info(const TypeDescription *msrc,
+					    const TypeDescription *lsrc,
+					    const TypeDescription *mdst,
+					    const TypeDescription *ldst,
+					    const TypeDescription *fdst);
 };
 
 

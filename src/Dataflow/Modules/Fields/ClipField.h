@@ -42,7 +42,7 @@ public:
 				   bool any_inside_p) = 0;
 
   //! support the dynamically compiled algorithm concept
-  static CompileInfo *get_compile_info(const TypeDescription *fsrc);
+  static CompileInfoHandle get_compile_info(const TypeDescription *fsrc);
 };
 
 
@@ -276,7 +276,7 @@ public:
   virtual ClipperHandle execute(MeshHandle src) = 0;
 
   //! support the dynamically compiled algorithm concept
-  static CompileInfo *get_compile_info(const TypeDescription *msrc);
+  static CompileInfoHandle get_compile_info(const TypeDescription *msrc);
 };
 
 

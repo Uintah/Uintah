@@ -238,9 +238,9 @@ ClipLattice::execute()
 
     // Dynamically compile the clipper.
     const TypeDescription *ftd = ifieldhandle->get_type_description();
-    CompileInfo *ci = ClipLatticeAlgo::get_compile_info(ftd);
+    CompileInfoHandle ci = ClipLatticeAlgo::get_compile_info(ftd);
     Handle<ClipLatticeAlgo> algo;
-    if (!module_dynamic_compile(*ci, algo)) return;
+    if (!module_dynamic_compile(ci, algo)) return;
 
     // Get widget bounds.
     Point center, r, d, i, top, bottom;
@@ -309,7 +309,7 @@ ClipLattice::tcl_command(GuiArgs& args, void* userdata) {
   }
 }
 
-CompileInfo *
+CompileInfoHandle
 ClipLatticeAlgo::get_compile_info(const TypeDescription *fsrc)
 {
   // use cc_to_h if this is in the .cc file, otherwise just __FILE__

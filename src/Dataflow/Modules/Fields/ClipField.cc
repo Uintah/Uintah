@@ -178,9 +178,9 @@ ClipField::execute()
     last_clip_generation_ = cfieldhandle->generation;
 
     const TypeDescription *ftd = cfieldhandle->mesh()->get_type_description();
-    CompileInfo *ci = ClipFieldMeshAlgo::get_compile_info(ftd);
+    CompileInfoHandle ci = ClipFieldMeshAlgo::get_compile_info(ftd);
     Handle<ClipFieldMeshAlgo> algo;
-    if (!module_dynamic_compile(*ci, algo)) return;
+    if (!module_dynamic_compile(ci, algo)) return;
 
     clipper_ = algo->execute(cfieldhandle->mesh());
     do_clip_p = true;
@@ -293,9 +293,9 @@ ClipField::execute()
     exec_mode_.set("");
 
     const TypeDescription *ftd = ifieldhandle->get_type_description();
-    CompileInfo *ci = ClipFieldAlgo::get_compile_info(ftd);
+    CompileInfoHandle ci = ClipFieldAlgo::get_compile_info(ftd);
     Handle<ClipFieldAlgo> algo;
-    if (!module_dynamic_compile(*ci, algo)) return;
+    if (!module_dynamic_compile(ci, algo)) return;
 
 
 
@@ -348,7 +348,7 @@ ClipField::widget_moved(bool last)
 
 
 
-CompileInfo *
+CompileInfoHandle
 ClipFieldAlgo::get_compile_info(const TypeDescription *fsrc)
 {
   // use cc_to_h if this is in the .cc file, otherwise just __FILE__
@@ -370,7 +370,7 @@ ClipFieldAlgo::get_compile_info(const TypeDescription *fsrc)
 }
 
 
-CompileInfo *
+CompileInfoHandle
 ClipFieldMeshAlgo::get_compile_info(const TypeDescription *fsrc)
 {
   // use cc_to_h if this is in the .cc file, otherwise just __FILE__

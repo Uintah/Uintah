@@ -296,8 +296,8 @@ ShowField::fetch_typed_algorithm(FieldHandle fld_handle)
   cur_field_data_type_ = data_type_description->get_name();
 
   // Get the Algorithm.
-  CompileInfo *ci = RenderFieldBase::get_compile_info(ftd, ltd);
-  if (!module_dynamic_compile(*ci, renderer_))
+  CompileInfoHandle ci = RenderFieldBase::get_compile_info(ftd, ltd);
+  if (!module_dynamic_compile(ci, renderer_))
   {
     field_generation_ = -1;
     mesh_generation_ = -1;

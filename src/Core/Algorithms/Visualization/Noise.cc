@@ -50,7 +50,7 @@ NoiseAlg::get_field()
 }
 
 
-CompileInfo *
+CompileInfoHandle
 NoiseAlg::get_compile_info(const TypeDescription *td) {
   string subname;
   string subinc;

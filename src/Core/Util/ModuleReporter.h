@@ -51,10 +51,10 @@ public:
   virtual void msgStream_flush() = 0;
 
   template <class DC>
-  bool module_dynamic_compile(const CompileInfo &ci, DC &result);
+  bool module_dynamic_compile(CompileInfoHandle ci, DC &result);
 
   template <class DC>
-  bool module_maybe_dynamic_compile(const CompileInfo &ci, DC &result);
+  bool module_maybe_dynamic_compile(CompileInfoHandle ci, DC &result);
 
 protected:
   virtual void light_module() = 0;
@@ -64,8 +64,10 @@ protected:
 
 template <class DC>
 bool
-ModuleReporter::module_dynamic_compile(const CompileInfo &ci, DC &result)
+ModuleReporter::module_dynamic_compile(CompileInfoHandle cih, DC &result)
 {
+  ASSERT(cih.get_rep());
+  const CompileInfo &ci = *(cih.get_rep());
   DynamicAlgoHandle algo_handle;
   if (! DynamicLoader::scirun_loader().fetch(ci, algo_handle))
   {
@@ -98,8 +100,10 @@ ModuleReporter::module_dynamic_compile(const CompileInfo &ci, DC &result)
 
 template <class DC>
 bool
-ModuleReporter::module_maybe_dynamic_compile(const CompileInfo &ci, DC &result)
+ModuleReporter::module_maybe_dynamic_compile(CompileInfoHandle cih, DC &result)
 {
+  ASSERT(cih.get_rep());
+  const CompileInfo &ci = *(cih.get_rep());
   DynamicAlgoHandle algo_handle;
   if (! DynamicLoader::scirun_loader().fetch(ci, algo_handle))
   {

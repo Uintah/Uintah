@@ -48,7 +48,8 @@ CompileInfo::CompileInfo(const string &fn, const string &bcn,
   filename_(fn),
   base_class_name_(bcn),
   template_class_name_(tcn),
-  template_arg_(tcdec)
+  template_arg_(tcdec),
+  ref_cnt(0)
 {
 }
 

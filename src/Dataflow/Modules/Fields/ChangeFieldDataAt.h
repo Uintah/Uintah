@@ -40,8 +40,8 @@ public:
 			      bool &same_value_type_p) = 0;
 
   //! support the dynamically compiled algorithm concept
-  static CompileInfo *get_compile_info(const TypeDescription *fsrc,
-				       const string &fdstname);
+  static CompileInfoHandle get_compile_info(const TypeDescription *fsrc,
+					    const string &fdstname);
 };
 
 

@@ -40,8 +40,8 @@ public:
   virtual FieldHandle execute(ModuleReporter *module, FieldHandle src) = 0;
 
   //! support the dynamically compiled algorithm concept
-  static CompileInfo *get_compile_info(const TypeDescription *fsrc,
-				       const string &partial_fdst);
+  static CompileInfoHandle get_compile_info(const TypeDescription *fsrc,
+					    const string &partial_fdst);
 };
 
 

@@ -264,9 +264,9 @@ void
 SampleField::execute_random()
 {
   const TypeDescription *mtd = vfhandle_->mesh()->get_type_description();
-  CompileInfo *ci = SampleFieldRandomAlgo::get_compile_info(mtd);
+  CompileInfoHandle ci = SampleFieldRandomAlgo::get_compile_info(mtd);
   Handle<SampleFieldRandomAlgo> algo;
-  if (!module_dynamic_compile(*ci, algo)) return;
+  if (!module_dynamic_compile(ci, algo)) return;
   FieldHandle seedhandle(algo->execute(this, vfhandle_, numSeeds_.get(),
 				       rngSeed_.get(), randDist_.get(), 
 				       clamp_.get()));
@@ -327,7 +327,7 @@ SampleField::execute()
 
 
 
-CompileInfo *
+CompileInfoHandle
 SampleFieldRandomAlgo::get_compile_info(const TypeDescription *mesh_td)
 {
   // use cc_to_h if this is in the .cc file, otherwise just __FILE__

@@ -40,7 +40,7 @@ public:
 		       string &cellstr) = 0;
 
   //! support the dynamically compiled algorithm concept
-  static CompileInfo *get_compile_info(const TypeDescription *msrc);
+  static CompileInfoHandle get_compile_info(const TypeDescription *msrc);
 };
 
 
@@ -205,7 +205,7 @@ public:
   virtual bool get_cell(MeshHandle mesh_h, const string &index, Point &p) = 0;
 
   //! support the dynamically compiled algorithm concept
-  static CompileInfo *get_compile_info(const TypeDescription *msrc);
+  static CompileInfoHandle get_compile_info(const TypeDescription *msrc);
 };
 
 

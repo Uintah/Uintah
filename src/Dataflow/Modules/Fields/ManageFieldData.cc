@@ -95,13 +95,13 @@ ManageFieldData::execute()
   }
   
   // Compute output matrix.
-  CompileInfo *ci_field =
+  CompileInfoHandle ci_field =
     ManageFieldDataAlgoField::
     get_compile_info(ifieldhandle->get_type_description(),
 		     ifieldhandle->data_at_type_description(),
 		     svt_flag);
   Handle<ManageFieldDataAlgoField> algo_field;
-  if (!module_dynamic_compile(*ci_field, algo_field)) return;
+  if (!module_dynamic_compile(ci_field, algo_field)) return;
 
   MatrixOPort *omp = (MatrixOPort *)get_oport("Output Matrix");
   if (!omp) {
@@ -141,13 +141,13 @@ ManageFieldData::execute()
       matrix_svt_flag = 2;
     }
 
-    CompileInfo *ci_mesh =
+    CompileInfoHandle ci_mesh =
       ManageFieldDataAlgoMesh::
       get_compile_info(ifieldhandle->mesh()->get_type_description(),
 		       ifieldhandle->get_type_description(),
 		       matrix_svt_flag);
     Handle<ManageFieldDataAlgoMesh> algo_mesh;
-    if (!module_dynamic_compile(*ci_mesh, algo_mesh)) return;
+    if (!module_dynamic_compile(ci_mesh, algo_mesh)) return;
 
     result_field =
       algo_mesh->execute(this, ifieldhandle->mesh(), imatrixhandle);
@@ -167,7 +167,7 @@ ManageFieldData::execute()
 
 
 
-CompileInfo *
+CompileInfoHandle
 ManageFieldDataAlgoField::get_compile_info(const TypeDescription *fsrc,
 					   const TypeDescription *lsrc,
 					   int svt_flag)
@@ -208,7 +208,7 @@ ManageFieldDataAlgoField::get_compile_info(const TypeDescription *fsrc,
 
 
 
-CompileInfo *
+CompileInfoHandle
 ManageFieldDataAlgoMesh::get_compile_info(const TypeDescription *msrc,
 					  const TypeDescription *fsrc,
 					  int svt_flag)

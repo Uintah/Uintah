@@ -221,16 +221,14 @@ void EditFusionField::execute(){
   if( !fHandle_.get_rep() || updateAll || updateField ) {
 
     const TypeDescription *ftd = fHandle->get_type_description();
-    CompileInfo *ci = EditFusionFieldAlgo::get_compile_info(ftd);
+    CompileInfoHandle ci = EditFusionFieldAlgo::get_compile_info(ftd);
     Handle<EditFusionFieldAlgo> algo;
-    if (!module_dynamic_compile(*ci, algo)) return;
+    if (!module_dynamic_compile(ci, algo)) return;
 
     fHandle_ = algo->execute(fHandle,
 			     istart_, jstart_, kstart_,
 			     iend_, jend_, kend_,
 			     iskip_, jskip_, kskip_);
-
-    delete ci;
   }
 
   // Get a handle to the output field port.
@@ -248,7 +246,7 @@ void EditFusionField::execute(){
   }
 }
 
-CompileInfo *
+CompileInfoHandle
 EditFusionFieldAlgo::get_compile_info(const TypeDescription *ftd)
 {
   // use cc_to_h if this is in the .cc file, otherwise just __FILE__

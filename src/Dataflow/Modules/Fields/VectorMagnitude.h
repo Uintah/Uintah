@@ -42,10 +42,10 @@ public:
 
   //! support the dynamically compiled algorithm concept
 #ifdef __sgi
-  static CompileInfo *get_compile_info(const TypeDescription *iftd,
-				       const TypeDescription *oftd);
+  static CompileInfoHandle get_compile_info(const TypeDescription *iftd,
+					    const TypeDescription *oftd);
 #else
-  static CompileInfo *get_compile_info(const TypeDescription *ftd);
+  static CompileInfoHandle get_compile_info(const TypeDescription *ftd);
 #endif
 };
 

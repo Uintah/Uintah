@@ -34,7 +34,7 @@ public:
   virtual void execute(MeshHandle src, int &num_nodes, int &num_elems) = 0;
 
   //! support the dynamically compiled algorithm concept
-  static CompileInfo *get_compile_info(const TypeDescription *msrc);
+  static CompileInfoHandle get_compile_info(const TypeDescription *msrc);
 };
 
 

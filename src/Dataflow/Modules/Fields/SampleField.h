@@ -41,7 +41,7 @@ public:
 			      int rng_seed, const string &dist, int clamp) = 0;
 
   //! support the dynamically compiled algorithm concept
-  static CompileInfo *get_compile_info(const TypeDescription *msrc);
+  static CompileInfoHandle get_compile_info(const TypeDescription *msrc);
 };
 
 

@@ -148,9 +148,9 @@ FieldInfo::update_input_attributes(FieldHandle f)
 
   // Do this last, sometimes takes a while.
   const TypeDescription *meshtd = f->mesh()->get_type_description();
-  CompileInfo *ci = FieldInfoAlgoCount::get_compile_info(meshtd);
+  CompileInfoHandle ci = FieldInfoAlgoCount::get_compile_info(meshtd);
   Handle<FieldInfoAlgoCount> algo;
-  if (!module_dynamic_compile(*ci, algo)) return;
+  if (!module_dynamic_compile(ci, algo)) return;
 
   int num_nodes;
   int num_elems;
@@ -189,7 +189,7 @@ FieldInfo::execute()
   }
 }
 
-CompileInfo *
+CompileInfoHandle
 FieldInfoAlgoCount::get_compile_info(const TypeDescription *mesh_td)
 {
   // use cc_to_h if this is in the .cc file, otherwise just __FILE__

@@ -41,7 +41,7 @@ MarchingCubesAlg::get_h_file_path() {
   return path;
 }
 
-CompileInfo *
+CompileInfoHandle
 MarchingCubesAlg::get_compile_info(const TypeDescription *td) {
 
   string subname;

@@ -186,9 +186,9 @@ void FusionSlicer::execute(){
     const TypeDescription *ftd = fHandle->get_type_description(0);
     const TypeDescription *ttd = fHandle->get_type_description(1);
 
-    CompileInfo *ci = FusionSlicerAlgo::get_compile_info(ftd,ttd);
+    CompileInfoHandle ci = FusionSlicerAlgo::get_compile_info(ftd,ttd);
     Handle<FusionSlicerAlgo> algo;
-    if (!module_dynamic_compile(*ci, algo)) return;
+    if (!module_dynamic_compile(ci, algo)) return;
 
     unsigned int index;
     if (axis_ == 0) {
@@ -218,7 +218,7 @@ void FusionSlicer::execute(){
   }
 }
 
-CompileInfo *
+CompileInfoHandle
 FusionSlicerAlgo::get_compile_info(const TypeDescription *ftd,
 				   const TypeDescription *ttd)
 {

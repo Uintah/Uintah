@@ -40,9 +40,9 @@ public:
 			      bool interp, bool closest, double dist) = 0;
 
   //! support the dynamically compiled algorithm concept
-  static CompileInfo *get_compile_info(const TypeDescription *fsrc,
-				       const TypeDescription *fdst,
-				       const TypeDescription *element);
+  static CompileInfoHandle get_compile_info(const TypeDescription *fsrc,
+					    const TypeDescription *fdst,
+					    const TypeDescription *element);
 };
 
 
@@ -109,9 +109,9 @@ public:
 			      bool interp, bool closest, double dist) = 0;
 
   //! support the dynamically compiled algorithm concept
-  static CompileInfo *get_compile_info(const TypeDescription *fsrc,
-				       const TypeDescription *fdst,
-				       const TypeDescription *element);
+  static CompileInfoHandle get_compile_info(const TypeDescription *fsrc,
+					    const TypeDescription *fdst,
+					    const TypeDescription *element);
 };
 
 
@@ -178,9 +178,9 @@ public:
 			      TensorFieldInterface *tfi,
 			      bool interp, bool closest, double dist) = 0;
   //! support the dynamically compiled algorithm concept
-  static CompileInfo *get_compile_info(const TypeDescription *fsrc,
-				       const TypeDescription *fdst,
-				       const TypeDescription *element);
+  static CompileInfoHandle get_compile_info(const TypeDescription *fsrc,
+					    const TypeDescription *fdst,
+					    const TypeDescription *element);
 };
 
 

@@ -72,8 +72,8 @@ class ScalarFieldInterfaceMaker : public DynamicAlgoBase
 {
 public:
   virtual ScalarFieldInterface *make(FieldHandle field) = 0;
-  static CompileInfo *get_compile_info(const TypeDescription *ftd,
-				       const TypeDescription *ltd);
+  static CompileInfoHandle get_compile_info(const TypeDescription *ftd,
+					    const TypeDescription *ltd);
 };
 
 
@@ -273,8 +273,8 @@ class VectorFieldInterfaceMaker : public DynamicAlgoBase
 {
 public:
   virtual VectorFieldInterface *make(FieldHandle field) = 0;
-  static CompileInfo *get_compile_info(const TypeDescription *ftd,
-				       const TypeDescription *ltd);
+  static CompileInfoHandle get_compile_info(const TypeDescription *ftd,
+					    const TypeDescription *ltd);
 };
 
 
@@ -476,8 +476,8 @@ class TensorFieldInterfaceMaker : public DynamicAlgoBase
 {
 public:
   virtual TensorFieldInterface *make(FieldHandle field) = 0;
-  static CompileInfo *get_compile_info(const TypeDescription *ftd,
-				       const TypeDescription *ltd);
+  static CompileInfoHandle get_compile_info(const TypeDescription *ftd,
+					    const TypeDescription *ltd);
 };
 
 

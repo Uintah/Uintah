@@ -104,14 +104,14 @@ BuildInterpolant::execute()
     return;
   }
 
-  CompileInfo *ci =
+  CompileInfoHandle ci =
     BuildInterpAlgo::get_compile_info(fsrc_h->mesh()->get_type_description(),
 				      fsrc_h->data_at_type_description(),
 				      fdst_h->mesh()->get_type_description(),
 				      fdst_h->data_at_type_description(),
 				      fdst_h->get_type_description());
   Handle<BuildInterpAlgo> algo;
-  if (!module_dynamic_compile(*ci, algo)) return;
+  if (!module_dynamic_compile(ci, algo)) return;
 
   ofp = (FieldOPort *)get_oport("Interpolant");
   if(!ofp) {
@@ -125,7 +125,7 @@ BuildInterpolant::execute()
 
 
 
-CompileInfo *
+CompileInfoHandle
 BuildInterpAlgo::get_compile_info(const TypeDescription *msrc,
 				  const TypeDescription *lsrc,
 				  const TypeDescription *mdst,

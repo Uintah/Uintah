@@ -237,8 +237,8 @@ Isosurface::execute()
   case 0:  // Marching Cubes
     {
       LockingHandle<MarchingCubesAlg> mc_alg;
-      CompileInfo *ci = MarchingCubesAlg::get_compile_info(td);
-      if (!module_dynamic_compile(*ci, mc_alg))
+      CompileInfoHandle ci = MarchingCubesAlg::get_compile_info(td);
+      if (!module_dynamic_compile(ci, mc_alg))
       {
 	error( "Marching Cubes can not work with this field.");
 	return;
@@ -262,8 +262,8 @@ Isosurface::execute()
       LockingHandle<NoiseAlg> noise_alg;
       if (! noise_alg.get_rep())
       {
-	CompileInfo *ci = NoiseAlg::get_compile_info(td);
-	if (! module_dynamic_compile(*ci, noise_alg))
+	CompileInfoHandle ci = NoiseAlg::get_compile_info(td);
+	if (! module_dynamic_compile(ci, noise_alg))
 	{
 	  error( "NOISE can not work with this field.");
 	  return;
@@ -282,8 +282,8 @@ Isosurface::execute()
     {
       LockingHandle<SageAlg> sage_alg;
       {
-	CompileInfo *ci = SageAlg::get_compile_info(td);
-	if (! module_dynamic_compile(*ci, sage_alg))
+	CompileInfoHandle ci = SageAlg::get_compile_info(td);
+	if (! module_dynamic_compile(ci, sage_alg))
 	{
 	  error( "SAGE can not work with this field.");
 	  return;

@@ -97,9 +97,10 @@ void InsertVoltageSource::execute() {
   if (groundfirst) {
     // just need to know the position of the first point of the mesh
     const TypeDescription *meshtd = isourceH->mesh()->get_type_description();
-    CompileInfo *ci = InsertVoltageSourceGetPtBase::get_compile_info(meshtd);
+    CompileInfoHandle ci =
+      InsertVoltageSourceGetPtBase::get_compile_info(meshtd);
     Handle<InsertVoltageSourceGetPtBase> algo;
-    if (!module_dynamic_compile(*ci, algo)) return;
+    if (!module_dynamic_compile(ci, algo)) return;
 
     Point pt = algo->execute(isourceH->mesh());
     sources.push_back(pt);
@@ -107,11 +108,11 @@ void InsertVoltageSource::execute() {
   } else {
     const TypeDescription *field_td = isourceH->get_type_description();
     const TypeDescription *loc_td = isourceH->data_at_type_description();
-    CompileInfo *ci = 
+    CompileInfoHandle ci = 
       InsertVoltageSourceGetPtsAndValsBase::get_compile_info(field_td, 
 							     loc_td);
     Handle<InsertVoltageSourceGetPtsAndValsBase> algo;
-    if (!module_dynamic_compile(*ci, algo)) return;
+    if (!module_dynamic_compile(ci, algo)) return;
 
     algo->execute(isourceH, sources, vals);
   }
@@ -190,7 +191,7 @@ void InsertVoltageSource::execute() {
 } // End namespace BioPSE
 
 namespace SCIRun {
-CompileInfo *
+CompileInfoHandle
 InsertVoltageSourceGetPtBase::get_compile_info(const TypeDescription *mesh_td)
 {
   // use cc_to_h if this is in the .cc file, otherwise just __FILE__
@@ -211,7 +212,7 @@ InsertVoltageSourceGetPtBase::get_compile_info(const TypeDescription *mesh_td)
   return rval;
 }
 
-CompileInfo *
+CompileInfoHandle
 InsertVoltageSourceGetPtsAndValsBase::get_compile_info(const TypeDescription *field_td, const TypeDescription *loc_td)
 {
   // use cc_to_h if this is in the .cc file, otherwise just __FILE__

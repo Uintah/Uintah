@@ -47,10 +47,10 @@ public:
   virtual FieldHandle execute(FieldHandle src, AttractorHandle a) = 0;
 
   //! support the dynamically compiled algorithm concept
-  static CompileInfo *get_compile_info(const TypeDescription *fsrc,
-				       const TypeDescription *floc,
-				       const TypeDescription *msrc,
-				       bool scale_p);
+  static CompileInfoHandle get_compile_info(const TypeDescription *fsrc,
+					    const TypeDescription *floc,
+					    const TypeDescription *msrc,
+					    bool scale_p);
 };
 
 

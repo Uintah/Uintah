@@ -431,9 +431,9 @@ StreamLines::execute()
 
   const TypeDescription *smtd = sf_->mesh()->get_type_description();
   const TypeDescription *sltd = sf_->data_at_type_description();
-  CompileInfo *ci = StreamLinesAlgo::get_compile_info(smtd, sltd); 
+  CompileInfoHandle ci = StreamLinesAlgo::get_compile_info(smtd, sltd); 
   Handle<StreamLinesAlgo> algo;
-  if (!module_dynamic_compile(*ci, algo)) return;
+  if (!module_dynamic_compile(ci, algo)) return;
   vf_->mesh()->synchronize(Mesh::LOCATE_E);
 
   oport_->send(algo->execute(sf_->mesh(), vfi,
@@ -443,7 +443,7 @@ StreamLines::execute()
 }
 
 
-CompileInfo *
+CompileInfoHandle
 StreamLinesAlgo::get_compile_info(const TypeDescription *msrc,
 				  const TypeDescription *sloc)
 {

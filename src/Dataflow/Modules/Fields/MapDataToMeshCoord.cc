@@ -123,10 +123,10 @@ MapDataToMeshCoord::execute()
     last_generation_ = ifield->generation;
     last_gui_coord_ = coord;
 
-    CompileInfo *ci = MapDataToMeshCoordAlgo::get_compile_info(ftd);
+    CompileInfoHandle ci = MapDataToMeshCoordAlgo::get_compile_info(ftd);
 
     Handle<MapDataToMeshCoordAlgo> algo;
-    if (!module_dynamic_compile(*ci, algo)) return;
+    if (!module_dynamic_compile(ci, algo)) return;
     
     FieldHandle ofield(algo->execute(ifield, coord));
     
@@ -139,7 +139,7 @@ MapDataToMeshCoord::execute()
   }
 }
 
-CompileInfo *
+CompileInfoHandle
 MapDataToMeshCoordAlgo::get_compile_info(const TypeDescription *field_td)
 {
   // use cc_to_h if this is in the .cc file, otherwise just __FILE__
