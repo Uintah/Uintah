@@ -35,6 +35,7 @@
 
 #undef OREN_PRESS_EQ
 
+
 using std::vector;
 using std::max;
 using std::min;
@@ -98,6 +99,7 @@ ICE::ICE(const ProcessorGroup* myworld)
   d_modelSetup = 0;
   
   d_usingLODI = false;
+  d_usingNG_hack = false;       // NG hack
   d_Lodi_variable_basket = scinew Lodi_variable_basket();
 }
 
@@ -166,6 +168,8 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
   //__________________________________
   //  Read LODI user inputs
   d_usingLODI = read_LODI_BC_inputs(prob_spec,d_Lodi_variable_basket);
+
+  d_usingNG_hack = using_NG_hack(prob_spec);    // NG hack
 
   //__________________________________
   // read in all the printData switches
@@ -728,6 +732,7 @@ void ICE::scheduleComputePressure(SchedulerP& sched,
       t->requires(Task::NewDW,V_Label, ice_matls->getUnion());
     }
   }
+  
   sched->addTask(t, patches, ice_matls);
 }
 
@@ -889,7 +894,7 @@ void ICE::scheduleComputeDelPressAndUpdatePressCC(SchedulerP& sched,
                                             const PatchSet* patches,
                                             const MaterialSubset* press_matl,
                                             const MaterialSubset* ice_matls,
-					    const MaterialSubset* /*mpm_matls*/,
+					         const MaterialSubset* /*mpm_matls*/,
                                             const MaterialSet* matls)
 {
   cout_doing << "ICE::scheduleComputeDelPressAndUpdatePressCC" << endl;
@@ -921,6 +926,10 @@ void ICE::scheduleComputeDelPressAndUpdatePressCC(SchedulerP& sched,
       VarLabel* V_Label = getMaxMach_face_VarLabel(*f);
       task->requires(Task::NewDW,V_Label, ice_matls);
     }
+  }
+  
+  if(d_usingNG_hack){
+    addRequires_NGNozzle(task, "update_press_CC", lb, ice_matls);  // NG hack
   }
   
   task->modifies(lb->press_CCLabel,        press_matl, oims);
@@ -1244,6 +1253,9 @@ void ICE::scheduleAddExchangeToMomentumAndEnergy(SchedulerP& sched,
       t->requires(Task::NewDW,V_Label, ice_matls);
     }
   } 
+  if(d_usingNG_hack){  
+    addRequires_NGNozzle(t, "CC_Exchange", lb, ice_matls); // NG hack
+  }
 /*===========TESTING==========`*/
   t->computes(lb->Tdot_CCLabel);
   t->computes(lb->mom_L_ME_CCLabel);      
@@ -1331,6 +1343,10 @@ void ICE::scheduleAdvectAndAdvanceInTime(SchedulerP& sched,
       task->requires(Task::NewDW,V_Label, ice_matlsub);
     }
   } // Lodi
+  
+  if(d_usingNG_hack){
+    addRequires_NGNozzle(task, "Advection", lb, ice_matlsub); // NG hack
+  }
   
   task->modifies(lb->rho_CCLabel);
   task->modifies(lb->sp_vol_CCLabel);
@@ -2150,10 +2166,16 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
                    patch, new_dw, d_sharedState, d_Lodi_variable_basket, false);
       }
     } 
+    
+    NG_BC_vars* ng = new NG_BC_vars;  // NG hack
+    if(d_usingNG_hack){
+      ng->setNGBcs = true;
+      getVars_for_NGNozzle(old_dw, new_dw, lb, patch, 1,"EqPress",ng);
+    }
 /*===========TESTING==========`*/
     setBC(press_new,   rho_micro, placeHolder, d_surroundingMatl_indx,
-          "rho_micro", "Pressure", patch , d_sharedState, 0, new_dw, lv);
-    delete lv;
+          "rho_micro", "Pressure", patch , d_sharedState, 0, new_dw, lv, ng);
+    delete lv, ng;
     
     press_copy.copyData(press_new);
     
@@ -2743,13 +2765,20 @@ void ICE::addExchangeContributionToFCVel(const ProcessorGroup*,
     //________________________________
     //  Boundary Conditons for Dirichlet and Neumann ONLY
     //  For LODI they are computed above.
+    NG_BC_vars* ng = new NG_BC_vars;
+    getVars_for_NGNozzle(old_dw, new_dw, lb, patch, 1,"velFC_Exchange",ng);    
+    
     for (int m = 0; m < numMatls; m++)  {
       Material* matl = d_sharedState->getMaterial( m );
       int indx = matl->getDWIndex();
-      setBC<SFCXVariable<double> >(uvel_FCME[m],"Velocity",patch,indx,d_sharedState); 
-      setBC<SFCYVariable<double> >(vvel_FCME[m],"Velocity",patch,indx,d_sharedState);
-      setBC<SFCZVariable<double> >(wvel_FCME[m],"Velocity",patch,indx,d_sharedState);
+      setBC<SFCXVariable<double> >(uvel_FCME[m],"Velocity",patch,indx,
+                                    d_sharedState, ng); 
+      setBC<SFCYVariable<double> >(vvel_FCME[m],"Velocity",patch,indx,
+                                    d_sharedState, ng);
+      setBC<SFCZVariable<double> >(wvel_FCME[m],"Velocity",patch,indx,
+                                    d_sharedState, ng);
     }
+    delete ng;
 
    //---- P R I N T   D A T A ------ 
     if (switchDebug_Exchange_FC ) {
@@ -2956,12 +2985,22 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
                   patch, new_dw, d_sharedState, d_Lodi_variable_basket, false); 
       }
     } 
+    
+    
+    NG_BC_vars* ng = new NG_BC_vars; // NG hack
+    if(d_usingNG_hack){
+      ng->setNGBcs = true;
+      new_dw->allocateTemporary(ng->press_CC, patch);
+      ng->press_CC.copy(press_CC);
+      getVars_for_NGNozzle(old_dw, new_dw, lb, patch, 1,"update_press_CC",ng);
+    }
 /*===========TESTING==========`*/ 
     
     setBC(press_CC, placeHolder, sp_vol_CC, d_surroundingMatl_indx,
-          "sp_vol", "Pressure", patch ,d_sharedState, 0, new_dw, lv);
+          "sp_vol", "Pressure", patch ,d_sharedState, 0, new_dw, lv, ng);
           
-    delete lv;                      
+    delete lv;
+    delete ng;                      
        
    //---- P R I N T   D A T A ------  
     if (switchDebug_explicit_press) {
@@ -4262,17 +4301,24 @@ void ICE::addExchangeToMomentumAndEnergy(const ProcessorGroup*,
         lv->gamma = gamma[m];
       }
     }
-    //__________________________________
-    /*==========TESTING==========`*/    
-  
+    
+    NG_BC_vars* ng = new NG_BC_vars;      // NG hack
+    if(d_usingNG_hack){
+      ng->setNGBcs = true;
+      new_dw->allocateTemporary(ng->vel_CC, patch);
+      ng->vel_CC.copyData(vel_CC[1]);
+      getVars_for_NGNozzle(old_dw, new_dw, lb, patch, 1,"CC_Exchange",ng);
+    } 
+/*===========TESTING==========`*/  
     for (int m = 0; m < numALLMatls; m++)  {
       Material* matl = d_sharedState->getMaterial( m );
       int indx = matl->getDWIndex();
-      setBC(vel_CC[m], "Velocity",   patch, d_sharedState, indx, new_dw,lv);
+      setBC(vel_CC[m], "Velocity",   patch, d_sharedState, indx, new_dw,lv, ng);
       setBC(Temp_CC[m],"Temperature",gamma[m], cv[m], 
-                                      patch, d_sharedState, indx, new_dw,lv);
+                                      patch, d_sharedState, indx, new_dw,lv,ng);
     }
     delete lv;
+    delete ng;    // NG hack
 
     //__________________________________
     // Convert vars. primitive-> flux 
@@ -4642,7 +4688,8 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup* /*pg*/,
       update_q_CC<constCCVariable<double>, double>
                   ("energy",temp, int_eng_L_ME, q_advected, 
                    mass_L, mass_new, mass_advected, cv, cv_new, patch);                        
-                                                    
+ 
+/*`==========TESTING==========*/                                                    
       //__________________________________
       //  set BC for rho_CC, temp_CC, vel_CC
       //  preprocessing for lodi bcs
@@ -4655,12 +4702,26 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup* /*pg*/,
                             rho_CC, vel_CC, old_dw, new_dw,
                             d_sharedState);
       }
+      
+      NG_BC_vars* ng = new NG_BC_vars;    // NG hack
+      if(d_usingNG_hack){
+        ng->setNGBcs = true;
+        new_dw->allocateTemporary(ng->rho_CC, patch);
+        new_dw->allocateTemporary(ng->vel_CC, patch);
+        ng->rho_CC.copy(rho_CC);
+        ng->vel_CC.copy(vel_CC);
+        ng->dataArchiver = dataArchiver;
+        ng->dumpNow = true;
+        getVars_for_NGNozzle(old_dw, new_dw, lb, patch, indx,"Advection",ng);
+      } 
+/*===========TESTING==========`*/ 
+      
       setBC(rho_CC, "Density",  placeHolder, placeHolder,
-                                patch,d_sharedState, indx, new_dw, lv);
-      setBC(vel_CC, "Velocity", patch,d_sharedState, indx, new_dw, lv);       
+                                patch,d_sharedState, indx, new_dw, lv, ng);
+      setBC(vel_CC, "Velocity", patch,d_sharedState, indx, new_dw, lv, ng);       
       setBC(temp,"Temperature",gamma, cv,patch,d_sharedState,
-                                                     indx, new_dw,lv); 
-                                                     
+                                                     indx, new_dw,lv, ng); 
+      delete ng;                        // NG hack                                 
       //__________________________________
       // Compute Auxilary quantities
       for(CellIterator iter = patch->getExtraCellIterator();
