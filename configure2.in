@@ -92,10 +92,11 @@ AC_SUBST(ECHO_C)
 
 AC_DEFUN(SCI_MSG_ERROR,
   [
+      ## SCI_MSG_ERROR
       if test -z "$debugging"; then
          echo
          AC_MSG_WARN(Adding '--enable-verbosity' to configure line)
-         AC_MSG_WARN(may give more information about what is breaking)
+         AC_MSG_WARN(_may_ give more information about what is breaking)
       fi
       echo
       AC_MSG_ERROR($1)
@@ -1966,7 +1967,7 @@ AC_SUBST(DEF_PERFEX)
 
 ##  --  search for fastm  --------------------------------------------------
 
-SCI_CHECK_LIB($thirdparty/lib,fastm,main)
+SCI_CHECK_LIB($thirdparty/lib,fastm,main,,optional)
 
 if test "$HAVE_FASTM"; then
   DEF_FASTM="#define HAVE_FASTM 1"
