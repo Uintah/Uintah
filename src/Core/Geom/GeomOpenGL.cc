@@ -1195,7 +1195,7 @@ void GeomCylinder::draw(DrawInfoOpenGL* di, Material* matl, double)
 }
 
 void
-GeomColoredCylinders::draw(DrawInfoOpenGL* di, Material* matl, double)
+GeomCylinders::draw(DrawInfoOpenGL* di, Material* matl, double)
 {
   if(!pre_draw(di, matl, 1)) return;
 
@@ -1277,6 +1277,146 @@ GeomColoredCylinders::draw(DrawInfoOpenGL* di, Material* matl, double)
 	{
 	  glTexCoord1f(indices_[i+1]);
 	}
+	glVertex3f(tabx[k%nu_], taby[k%nu_], 1.0);
+      }
+      glEnd();
+
+      glPopMatrix();
+    }
+
+    glLineWidth(1.0);
+
+    glDisable(GL_TEXTURE_1D);
+
+    post_draw(di);
+}
+
+
+
+void
+GeomCappedCylinders::draw(DrawInfoOpenGL* di, Material* matl, double)
+{
+  if(!pre_draw(di, matl, 1)) return;
+
+    di->polycount+=points_.size() * nu_ * 2;
+
+    const bool texturing =
+      di->using_cmtexture_ && indices_.size() == points_.size();
+    if (texturing)
+    {
+      glColor4d(1.0, 1.0, 1.0, 1.0);
+
+      glEnable(GL_TEXTURE_1D);
+      glDisable(GL_TEXTURE_2D);
+      glBindTexture(GL_TEXTURE_1D, di->cmtexture_);
+    }
+
+    const bool coloring = colors_.size() == points_.size();
+
+    float tabx[40];
+    float taby[40];
+    for (int j=0; j<nu_; j++)
+    {
+      tabx[j] = sin(2.0 * M_PI * j / nu_);
+      taby[j] = cos(2.0 * M_PI * j / nu_);
+    }
+    
+    for (unsigned int i=0; i < points_.size(); i+=2)
+    {
+      int k;
+      Vector v0(points_[i+1] - points_[i+0]);
+      Vector v1, v2;
+      v0.find_orthogonal(v1, v2);
+      v1 *= radius_;
+      v2 *= radius_;
+
+      float matrix[16];
+      matrix[0] = v1.x();
+      matrix[1] = v1.y();
+      matrix[2] = v1.z();
+      matrix[3] = 0.0;
+      matrix[4] = v2.x();
+      matrix[5] = v2.y();
+      matrix[6] = v2.z();
+      matrix[7] = 0.0;
+      matrix[8] = v0.x();
+      matrix[9] = v0.y();
+      matrix[10] = v0.z();
+      matrix[11] = 0.0;
+      matrix[12] = points_[i].x();
+      matrix[13] = points_[i].y();
+      matrix[14] = points_[i].z();
+      matrix[15] = 1.0;
+
+      glPushMatrix();
+      glMultMatrixf(matrix);
+
+      glBegin(GL_QUAD_STRIP);
+      for (k=0; k<nu_+1; k++)
+      {
+	glNormal3f(tabx[k%nu_], taby[k%nu_], 0.0);
+	if (coloring)
+	{
+	  glColor3f(colors_[i]->diffuse.r(),
+		    colors_[i]->diffuse.g(),
+		    colors_[i]->diffuse.b());
+	}
+	if (texturing)
+	{
+	  glTexCoord1f(indices_[i]);
+	}
+	glVertex3f(tabx[k%nu_], taby[k%nu_], 0.0);
+
+	if (coloring)
+	{
+	  glColor3f(colors_[i+1]->diffuse.r(),
+		    colors_[i+1]->diffuse.g(),
+		    colors_[i+1]->diffuse.b());
+	}
+	if (texturing)
+	{
+	  glTexCoord1f(indices_[i+1]);
+	}
+	glVertex3f(tabx[k%nu_], taby[k%nu_], 1.0);
+      }
+      glEnd();
+
+      // Bottom cap
+      if (coloring)
+      {
+	glColor3f(colors_[i]->diffuse.r(),
+		  colors_[i]->diffuse.g(),
+		  colors_[i]->diffuse.b());
+      }
+      if (texturing)
+      {
+	glTexCoord1f(indices_[i]);
+      }
+      glNormal3f(0.0, 0.0, -1.0);
+      glBegin(GL_TRIANGLE_FAN);
+      glVertex3f(0.0, 0.0, 0.0);
+      for (k = 0; k < nu_+1; k++)
+      {
+	glVertex3f(tabx[k%nu_], taby[k%nu_], 0.0);
+      }
+      glEnd();
+
+      // Top cap
+      if (coloring)
+      {
+	glColor3f(colors_[i+1]->diffuse.r(),
+		  colors_[i+1]->diffuse.g(),
+		  colors_[i+1]->diffuse.b());
+      }
+      if (texturing)
+      {
+	glTexCoord1f(indices_[i+1]);
+      }
+      glNormal3f(0.0, 0.0, 1.0);
+      glBegin(GL_TRIANGLE_FAN);
+      glVertex3f(0.0, 0.0, 1.0);
+      for (k = nu_; k >= 0; k--)
+      {
 	glVertex3f(tabx[k%nu_], taby[k%nu_], 1.0);
       }
       glEnd();

@@ -61,6 +61,15 @@ Persistent* make_GeomCappedCylinder()
 PersistentTypeID GeomCappedCylinder::type_id("GeomCappedCylinder", "GeomObj",
 					     make_GeomCappedCylinder);
 
+Persistent* make_GeomCappedCylinders()
+{
+    return scinew GeomCappedCylinders;
+}
+
+PersistentTypeID GeomCappedCylinders::type_id("GeomCappedCylinders",
+					      "GeomCylinders",
+					      make_GeomCappedCylinders);
+
 GeomCylinder::GeomCylinder(int nu, int nv)
 : GeomObj(), bottom(0,0,0), top(0,0,1), rad(1), nu(nu), nv(nv)
 {
@@ -151,40 +160,38 @@ void GeomCylinder::io(Piostream& stream)
     stream.end_class();
 }
 
-Persistent* make_GeomColoredCylinders()
+Persistent* make_GeomCylinders()
 {
-    return new GeomColoredCylinders();
+    return new GeomCylinders();
 }
 
-PersistentTypeID GeomColoredCylinders::type_id("GeomColoredCylinders", "GeomObj", make_GeomColoredCylinders);
+PersistentTypeID GeomCylinders::type_id("GeomCylinders", "GeomObj", make_GeomCylinders);
 
-GeomColoredCylinders::GeomColoredCylinders()
-  : radius_(1.0),
-    nu_(4),
-    nv_(1)
+GeomCylinders::GeomCylinders(int nu, double r)
+  : radius_(r),
+    nu_(nu)
 {
 }
 
-GeomColoredCylinders::GeomColoredCylinders(const GeomColoredCylinders& copy)
+GeomCylinders::GeomCylinders(const GeomCylinders& copy)
   : radius_(copy.radius_),
     nu_(copy.nu_),
-    nv_(copy.nv_),
     points_(copy.points_),
     colors_(copy.colors_)
 {
 }
 
-GeomColoredCylinders::~GeomColoredCylinders()
+GeomCylinders::~GeomCylinders()
 {
 }
 
-GeomObj* GeomColoredCylinders::clone()
+GeomObj* GeomCylinders::clone()
 {
-  return new GeomColoredCylinders(*this);
+  return new GeomCylinders(*this);
 }
 
 void
-GeomColoredCylinders::get_bounds(BBox& bb)
+GeomCylinders::get_bounds(BBox& bb)
 {
   for (unsigned int i = 0; i < points_.size(); i+=2)
   {
@@ -197,14 +204,13 @@ GeomColoredCylinders::get_bounds(BBox& bb)
 #define GEOMLINES_VERSION 1
 
 void
-GeomColoredCylinders::io(Piostream& stream)
+GeomCylinders::io(Piostream& stream)
 {
 
-  stream.begin_class("GeomColoredCylinders", GEOMLINES_VERSION);
+  stream.begin_class("GeomCylinders", GEOMLINES_VERSION);
   GeomObj::io(stream);
   Pio(stream, radius_);
   Pio(stream, nu_);
-  Pio(stream, nv_);
   Pio(stream, points_);
   Pio(stream, colors_);
   Pio(stream, indices_);
@@ -213,7 +219,7 @@ GeomColoredCylinders::io(Piostream& stream)
 
 
 void
-GeomColoredCylinders::add(const Point& p1, const Point& p2)
+GeomCylinders::add(const Point& p1, const Point& p2)
 {
   if ((p1 - p2).length2() > 1.0e-12)
   {
@@ -223,7 +229,7 @@ GeomColoredCylinders::add(const Point& p1, const Point& p2)
 }
 
 void
-GeomColoredCylinders::add(const Point& p1, MaterialHandle c1,
+GeomCylinders::add(const Point& p1, MaterialHandle c1,
 			  const Point& p2, MaterialHandle c2)
 {
   if ((p1 - p2).length2() > 1.0e-12)
@@ -236,7 +242,7 @@ GeomColoredCylinders::add(const Point& p1, MaterialHandle c1,
 }
 
 void
-GeomColoredCylinders::add(const Point& p1, float index1,
+GeomCylinders::add(const Point& p1, float index1,
 			  const Point& p2, float index2)
 {
   if ((p1 - p2).length2() > 1.0e-12)
@@ -249,7 +255,7 @@ GeomColoredCylinders::add(const Point& p1, float index1,
 }
 
 void
-GeomColoredCylinders::set_nu_nv(int nu, int nv)
+GeomCylinders::set_nu_nv(int nu, int nv)
 {
   if (nu < 3) { nu_ = 3; }
   if (nu > 20) { nu_ = 20; }
@@ -292,6 +298,38 @@ void GeomCappedCylinder::io(Piostream& stream)
     GeomCylinder::io(stream);
     Pio(stream, nvdisc);
 }
+
+
+// Multiple Capped Geometry.
+
+GeomCappedCylinders::GeomCappedCylinders(int nu, double r)
+  : GeomCylinders(nu, r)
+{
+}
+
+GeomCappedCylinders::GeomCappedCylinders(const GeomCappedCylinders& copy)
+  : GeomCylinders(copy)
+{
+}
+
+GeomCappedCylinders::~GeomCappedCylinders()
+{
+}
+
+GeomObj* GeomCappedCylinders::clone()
+{
+    return scinew GeomCappedCylinders(*this);
+}
+
+#define GEOMCAPPEDCYLINDERS_VERSION 1
+
+void GeomCappedCylinders::io(Piostream& stream)
+{
+    stream.begin_class("GeomCappedCylinders", GEOMCAPPEDCYLINDERS_VERSION);
+    GeomCylinders::io(stream);
+}
+
+
 
 } // End namespace SCIRun
 
