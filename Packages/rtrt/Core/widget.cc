@@ -17,30 +17,44 @@ Widget::adjustOpacity( float x ) {
 
 void
 Widget::blend( GLfloat dest[4], float r, float g, float b, float o, float m ) {
+  o *= m;
   if( o < 0 ) o = 0;
   else if( o > 1 ) o = 1;
-  
-  o *= m;
-  if( o > 1 ) o = 1;
-  
-  dest[0] = o*r + (1-o)*dest[0];
-  dest[1] = o*g + (1-o)*dest[1];
-  dest[2] = o*b + (1-o)*dest[2];
-  dest[3] = o + (1-o)*dest[3];
+
+  if (dest[3] == 0) {
+    // We have a sample with no opacity, ignore what ever color was there before
+    dest[0] = r;
+    dest[1] = g;
+    dest[2] = b;
+    dest[3] = o;
+  } else {
+    // Then we have a sample with some opacity, do the blending
+    dest[0] = o*r + (1-o)*dest[0];
+    dest[1] = o*g + (1-o)*dest[1];
+    dest[2] = o*b + (1-o)*dest[2];
+    dest[3] = o + (1-o)*dest[3];
+  }
 } // blend()
 
 void
 Widget::blend( GLfloat dest[4], float rgb[3], float o, float m ) {
+  o *= m;
   if( o < 0 ) o = 0;
   else if( o > 1 ) o = 1;
-  
-  o *= m;
-  if( o > 1 ) o = 1;
-  
-  dest[0] = o*rgb[0] + (1-o)*dest[0];
-  dest[1] = o*rgb[1] + (1-o)*dest[1];
-  dest[2] = o*rgb[2] + (1-o)*dest[2];
-  dest[3] = o + (1-o)*dest[3];
+
+  if (dest[3] == 0) {
+    // We have a sample with no opacity, ignore what ever color was there before
+    dest[0] = rgb[0];
+    dest[1] = rgb[1];
+    dest[2] = rgb[2];
+    dest[3] = o;
+  } else {
+    // Then we have a sample with some opacity, do the blending
+    dest[0] = o*rgb[0] + (1-o)*dest[0];
+    dest[1] = o*rgb[1] + (1-o)*dest[1];
+    dest[2] = o*rgb[2] + (1-o)*dest[2];
+    dest[3] = o + (1-o)*dest[3];
+  }
 } // blend()
 
 
@@ -459,9 +473,7 @@ TriWidget::paintTransFunc( GLfloat dest[textureHeight][textureWidth][4],
 	else if( texture_x >= textureWidth )
   	  texture_x = textureWidth-1;
 	blend( dest[y][x], 
-	       transText->current_color[0], 
-	       transText->current_color[1], 
-	       transText->current_color[2],
+	       transText->current_color, 
 	       (transText->textArray[0][texture_x][3]+opacity_offset), 
 	       master_opacity );
       } // for()
@@ -469,9 +481,7 @@ TriWidget::paintTransFunc( GLfloat dest[textureHeight][textureWidth][4],
       int texture_y = (int)(((float)y-startyf)*heightFactor);      
       for( int x = startx; x < endx; x++ )
 	blend( dest[y][x], 
-	       transText->current_color[0],
-	       transText->current_color[1],
-	       transText->current_color[2],
+	       transText->current_color,
 	       transText->textArray[0][texture_y][3]+opacity_offset,
 	       master_opacity );
     }
@@ -1022,13 +1032,13 @@ TentWidget::paintTransFunc( GLfloat dest[textureHeight][textureWidth][4],
   float opacStar_opacity_off = (2.0f*(opac_x-uboundLeft->x)/
 			      (lboundRight->x-uboundLeft->x))-1.0f; 
   float height = f_endy-f_starty;
-  float width = f_endx-f_startx;
+  float invwidth = 1/(f_endx-f_startx);
 
   if( textureAlign == Vertical ) {
     float opacity_x_off = 2.0f*(focus_x-uboundLeft->x)/this->width-1.0f;
     for( int y = starty; y < endy; y++ ) {
       for( int x = startx; x < endx; x++ ) {
-	int texture_x = (int)(((float)x-f_startx)/width*f_textureWidth);
+	int texture_x = (int)(((float)x-f_startx)*invwidth*f_textureWidth);
 	// Do bounds checks
 	if( texture_x >= textureWidth )
 	  texture_x = textureWidth-1;
@@ -1037,7 +1047,7 @@ TentWidget::paintTransFunc( GLfloat dest[textureHeight][textureWidth][4],
 	blend( dest[y][x], 
 	       transText->current_color,
 	       (transText->textArray[0][texture_x][3]+opacStar_opacity_off+
-		opacity_x_off*((float)x-midx)/width),
+		opacity_x_off*((float)x-midx)*invwidth),
 	       master_opacity );
       } // for(x)
     } // for(y)
@@ -1151,9 +1161,7 @@ EllipWidget::paintTransFunc( GLfloat dest[textureHeight][textureWidth][4],
       if( opacity < 0.0f )
 	opacity = 0.0f;
       blend( dest[y][x], 
-	     transText->current_color[0], 
-	     transText->current_color[1], 
-	     transText->current_color[2],
+	     transText->current_color,
 	     opacity+opacStar_opacity_off,
 	     master_opacity );
     } // for()
