@@ -23,6 +23,7 @@
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Packages/Uintah/CCA/Ports/Scheduler.h>
+#include <Packages/Uintah/CCA/Ports/LoadBalancer.h>
 #include <Core/Containers/Array1.h>
 #include <Core/Containers/Array2.h>
 #include <Core/Geometry/IntVector.h>
@@ -798,7 +799,8 @@ void HypreSolver2::scheduleSolve(const LevelP& level, SchedulerP& sched,
   }
 
   task->requires(which_b_dw, b, Ghost::None, 0);
-  sched->addTask(task, level->eachPatch(), matls);
+  LoadBalancer* lb = sched->getLoadBalancer();
+  sched->addTask(task, lb->createPerProcessorPatchSet(level), matls);
 }
 
 } // end namespace Uintah
