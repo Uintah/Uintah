@@ -150,15 +150,17 @@ void UnuAxinfo::execute()
   }
 
   dimension_.reset();
+  bool do_clear = false;
   
   if (generation_ != nh.get_rep()->generation) 
   {
+    do_clear = true;
     generation_ = nh->generation;
     load_gui();
 
     // if the dimension, and sizes
     // don't clear
-    bool do_clear = false;
+
     if(dimension_.get() == nh->nrrd->dim) {
       for(int a = 0; a < dimension_.get(); a++) {
 	if(size_[a]->get() != nh->nrrd->axis[a].size) {
@@ -171,6 +173,7 @@ void UnuAxinfo::execute()
     }
        
     if (do_clear) {
+      cerr << "Clearing\n";
       // delete the guivars  in the vectors and then clear
       // all of them
       vector<GuiString*>::iterator iter1 = label_.begin();
