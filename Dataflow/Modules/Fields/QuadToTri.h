@@ -77,6 +77,13 @@ QuadToTriAlgoT<FSRC>::execute(FieldHandle srcH, FieldHandle& dstH,
   typename FSRC::mesh_type *qsmesh = qsfield->get_typed_mesh().get_rep();
   TriSurfMeshHandle tsmesh = scinew TriSurfMesh();
 
+  typename FSRC::mesh_type::Node::size_type hnsize; 
+  qsmesh->size(hnsize);
+  typename FSRC::mesh_type::Elem::size_type hesize; 
+  qsmesh->size(hesize);
+
+  tsmesh->node_reserve((unsigned int)hnsize);
+
   // Copy points directly, assuming they will have the same order.
   typename FSRC::mesh_type::Node::iterator nbi, nei;
   qsmesh->begin(nbi); qsmesh->end(nei);
@@ -90,12 +97,9 @@ QuadToTriAlgoT<FSRC>::execute(FieldHandle srcH, FieldHandle& dstH,
 
   qsmesh->synchronize(Mesh::NODE_NEIGHBORS_E);
 
-  vector<typename FSRC::mesh_type::Elem::index_type> elemmap;
+  tsmesh->elem_reserve((unsigned int)hesize * 2);
 
-  typename FSRC::mesh_type::Node::size_type hnsize; 
-  qsmesh->size(hnsize);
-  typename FSRC::mesh_type::Elem::size_type hesize; 
-  qsmesh->size(hesize);
+  vector<typename FSRC::mesh_type::Elem::index_type> elemmap;
 
   vector<bool> visited(hesize, false);
 
@@ -229,6 +233,13 @@ ImgToTriAlgoT<FSRC>::execute(FieldHandle srcH, FieldHandle& dstH,
   typename FSRC::mesh_type *imesh = ifield->get_typed_mesh().get_rep();
   TriSurfMeshHandle tmesh = scinew TriSurfMesh();
 
+  typename FSRC::mesh_type::Node::size_type hnsize; 
+  imesh->size(hnsize);
+  typename FSRC::mesh_type::Elem::size_type hesize; 
+  imesh->size(hesize);
+
+  tmesh->node_reserve((unsigned int)hnsize);
+
   // Copy points directly, assuming they will have the same order.
   typename FSRC::mesh_type::Node::iterator nbi, nei;
   imesh->begin(nbi); imesh->end(nei);
@@ -239,6 +250,8 @@ ImgToTriAlgoT<FSRC>::execute(FieldHandle srcH, FieldHandle& dstH,
     tmesh->add_point(p);
     ++nbi;
   }
+
+  tmesh->elem_reserve((unsigned int)hesize * 2);
 
   typedef TriSurfMesh::Node::index_type nindex_type;
   
