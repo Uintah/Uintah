@@ -21,6 +21,8 @@
 #include <Uintah/Components/Arches/Arches.h>
 #include <Uintah/Components/ICE/ICE.h>
 #include <Uintah/Components/Schedulers/SingleProcessorScheduler.h>
+#include <Uintah/Components/Schedulers/MPIScheduler.h>
+#include <Uintah/Components/Schedulers/SingleProcessorLoadBalancer.h>
 #include <Uintah/Components/DataArchiver/DataArchiver.h>
 #include <SCICore/Exceptions/Exception.h>
 #include <ieeefp.h>
@@ -55,6 +57,8 @@ int main(int argc, char** argv)
     bool do_ice=false;
     bool numThreads = 0;
     string filename;
+    string scheduler;
+    string loadbalancer;
 
     /*
      * Parse arguments
@@ -73,6 +77,17 @@ int main(int argc, char** argv)
 		usage(s, argv[0]);
 	    }
 	    numThreads = atoi(argv[i]);
+	} else if(s == "-scheduler"){
+	   if(++i == argc){
+	      cerr << "You must provide a scheduler name for -scheduler\n";
+	      usage(s, argv[0]);
+	   }
+	   scheduler = argv[i]; 
+	} else if(s == "-loadbalancer"){
+	   if(++i == argc){
+	      cerr << "You must provide a load balancer name for -loadbalancer\n";
+	      usage(s, argv[0]);
+	   }
 	} else {
 	    if(filename!="")
 		usage(s, argv[0]);
@@ -84,6 +99,16 @@ int main(int argc, char** argv)
     if(filename == ""){
 	cerr << "No input file specified\n";
 	usage("", argv[0]);
+    }
+
+    if(scheduler == ""){
+       if(Parallel::usingMPI()){
+	  scheduler="MPIScheduler"; // Default for parallel runs
+	  loadbalancer="RoundRobinLoadBalancer";
+       } else {
+	  scheduler="SingleProcessorScheduler"; // Default for serial runs
+	  loadbalancer="SingleProcessorLoadBalancer";
+       }
     }
 
     /*
@@ -116,15 +141,12 @@ int main(int argc, char** argv)
      */
     Parallel::initializeManager(argc, argv);
 
-    int MpiRank = Parallel::getRank();
-    int MpiProcesses = Parallel::getSize();
-
     /*
      * Create the components
      */
+    const ProcessorGroup* world = Parallel::getRootProcessorGroup();
     try {
-	SimulationController* sim = scinew SimulationController( MpiRank,
-							      MpiProcesses );
+	SimulationController* sim = scinew SimulationController(world);
 
 	// Reader
 	ProblemSpecInterface* reader = scinew ProblemSpecReader(filename);
@@ -134,7 +156,7 @@ int main(int argc, char** argv)
 	if(do_mpm){
 	    MPMInterface* mpm;
 	    if(numThreads == 0){
-		mpm = scinew MPM::SerialMPM( MpiRank, MpiProcesses );
+		mpm = scinew MPM::SerialMPM(world);
 	    } else {
 #ifdef WONT_COMPILE_YET
 		mpm = scinew ThreadedMPM();
@@ -148,7 +170,7 @@ int main(int argc, char** argv)
 	// Connect a CFD module if applicable
 	CFDInterface* cfd = 0;
 	if(do_arches){
-	    cfd = scinew ArchesSpace::Arches( MpiRank, MpiProcesses );
+	    cfd = scinew ArchesSpace::Arches(world);
 	}
 	if(do_ice){
 	    cfd = scinew ICESpace::ICE();
@@ -157,13 +179,33 @@ int main(int argc, char** argv)
 	    sim->attachPort("cfd", cfd);
 
 	// Output
-	Output* output = scinew DataArchiver(MpiRank, MpiProcesses );
+	Output* output = scinew DataArchiver(world);
 	sim->attachPort("output", output);
 
+	// Load balancer
+	SingleProcessorLoadBalancer* bal;
+	if(loadbalancer == "SingleProcessorLoadBalancer"){
+	   bal = scinew SingleProcessorLoadBalancer(world);
+	} else {
+	   cerr << "Unknown load balancer: " << loadbalancer << '\n';
+	   exit(1);
+	}
+
 	// Scheduler
-	SingleProcessorScheduler* sched = 
-	   scinew SingleProcessorScheduler( MpiRank, MpiProcesses );
-	sim->attachPort("scheduler", sched);
+	if(scheduler == "SingleProcessorScheduler"){
+	   SingleProcessorScheduler* sched = 
+	      scinew SingleProcessorScheduler(world);
+	   sim->attachPort("scheduler", sched);
+	   sched->attachPort("load balancer", bal);
+	} else if(scheduler == "MPIScheduler"){
+	   MPIScheduler* sched =
+	      scinew MPIScheduler(world);
+	   sim->attachPort("scheduler", sched);
+	   sched->attachPort("load balancer", bal);
+	} else {
+	   cerr << "Unknown schduler: " << scheduler << '\n';
+	   exit(1);
+	}
 
 	/*
 	 * Start the simulation controller
@@ -185,6 +227,9 @@ int main(int argc, char** argv)
 
 //
 // $Log$
+// Revision 1.14  2000/06/17 07:06:21  sparker
+// Changed ProcessorContext to ProcessorGroup
+//
 // Revision 1.13  2000/06/15 23:14:04  sparker
 // Cleaned up scheduler code
 // Renamed BrainDamagedScheduler to SingleProcessorScheduler
