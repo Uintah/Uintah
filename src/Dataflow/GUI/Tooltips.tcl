@@ -123,8 +123,8 @@ proc balloon_aux {w x y msg} {
     catch {destroy $t}
     toplevel $t
     wm overrideredirect $t 1
-    if {$::tcl_platform(platform) == "macintosh"} {
-	unsupported1 style $t floating sideTitlebar
+    if {$::tcl_platform(os) == "Darwin"} {
+#	unsupported1 style $t floating sideTitlebar
     }
     pack [label $t.l -text $msg -justify left -relief groove -bd 1 -bg white] -fill both
 #    set x [expr [winfo rootx $w]+6+[winfo width $w]/2]
