@@ -119,7 +119,11 @@ SparseRowMatrix::SparseRowMatrix(const SparseRowMatrix& copy)
   memcpy(columns, copy.columns, sizeof(int)*nnz);
 }
 
-DenseMatrix *SparseRowMatrix::toDense() {
+SparseRowMatrix *SparseRowMatrix::sparse() {
+  return this;
+}
+
+DenseMatrix *SparseRowMatrix::dense() {
   DenseMatrix *dm = scinew DenseMatrix(nnrows,nncols);
   if (nnrows==0) return dm;
   int count=0;
@@ -134,7 +138,7 @@ DenseMatrix *SparseRowMatrix::toDense() {
   return dm;
 }
 
-ColumnMatrix *SparseRowMatrix::toColumn() {
+ColumnMatrix *SparseRowMatrix::column() {
   ColumnMatrix *cm = scinew ColumnMatrix(nnrows);
   if (nnrows) {
     for (int i=0; i<nnrows; i++)

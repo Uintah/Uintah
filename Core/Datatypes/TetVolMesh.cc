@@ -170,7 +170,7 @@ TetVolMesh::transform(Transform &t)
   }
   
   // Recompute grid.
-  grid_.detach();
+  grid_=0;
   compute_grid();
 }
 

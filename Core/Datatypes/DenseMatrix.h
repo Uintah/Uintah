@@ -58,8 +58,9 @@ public:
   DenseMatrix(int, int);
   DenseMatrix(const DenseMatrix&);
 
-  SparseRowMatrix *toSparse();
-  ColumnMatrix *toColumn();
+  virtual DenseMatrix *dense();
+  virtual SparseRowMatrix *sparse();
+  virtual ColumnMatrix *column();
 
   //! Destructor
   virtual ~DenseMatrix();

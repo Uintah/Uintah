@@ -250,10 +250,10 @@ HexVolMesh::compute_edges()
 
 void
 HexVolMesh::flush_changes() {
-  compute_edges();
-  compute_faces();
-  compute_node_neighbors();
-  compute_grid();
+//  compute_edges();
+//  compute_faces();
+//  compute_node_neighbors();
+//  compute_grid();
 }
 
 
@@ -320,13 +320,13 @@ HexVolMesh::begin(HexVolMesh::Cell::iterator &itr) const
 void
 HexVolMesh::end(HexVolMesh::Cell::iterator &itr) const
 {
-  itr = cells_.size() >> 2;
+  itr = cells_.size() >> 3;
 }
 
 void
 HexVolMesh::size(HexVolMesh::Cell::size_type &s) const
 {
-  s = cells_.size() >> 2;
+  s = cells_.size() >> 3;
 }
 
 void
@@ -347,6 +347,7 @@ HexVolMesh::get_nodes(Node::array_type &array, Face::index_type idx) const
   array.push_back(f.nodes_[0]);
   array.push_back(f.nodes_[1]);
   array.push_back(f.nodes_[2]);
+  array.push_back(f.nodes_[3]);
 }
 
 
@@ -354,13 +355,17 @@ void
 HexVolMesh::get_nodes(Node::array_type &array, Cell::index_type idx) const
 {
   array.clear();
-  array.push_back(cells_[idx * 4 + 0]);
-  array.push_back(cells_[idx * 4 + 1]);
-  array.push_back(cells_[idx * 4 + 2]);
-  array.push_back(cells_[idx * 4 + 3]);
+  array.push_back(cells_[idx * 8 + 0]);
+  array.push_back(cells_[idx * 8 + 1]);
+  array.push_back(cells_[idx * 8 + 2]);
+  array.push_back(cells_[idx * 8 + 3]);
+  array.push_back(cells_[idx * 8 + 4]);
+  array.push_back(cells_[idx * 8 + 5]);
+  array.push_back(cells_[idx * 8 + 6]);
+  array.push_back(cells_[idx * 8 + 7]);
 }
 
-
+/* DAVE - FIX ME TO HAVE HEX FACES (THESE ARE TET FACES) */
 void
 HexVolMesh::get_edges(Edge::array_type &array, Face::index_type idx) const
 {
@@ -661,7 +666,7 @@ HexVolMesh::get_weights(const Point &p,
 void
 HexVolMesh::compute_grid()
 {
-  ASSERTFAIL("compute_grid not implemented for hexes");
+//  ASSERTFAIL("compute_grid not implemented for hexes");
 }
 
 bool

@@ -58,9 +58,11 @@ public:
   virtual ColumnMatrix* clone();
   inline double& operator[](int) const;
 
-  DenseMatrix *toDense();
-  SparseRowMatrix *toSparse();
+  virtual DenseMatrix *dense();
+  virtual SparseRowMatrix *sparse();
+  virtual ColumnMatrix *column();
 
+//  ColumnMatrix *add(ColumnMatrix *m);
   virtual Matrix *transpose();
 
   virtual double& get(int, int) const;
