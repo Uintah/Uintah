@@ -343,8 +343,8 @@ ProblemSpecP ProblemSpec::get(const std::string& name,
 	std::string::size_type i4 = string_value.find("]");
 	
 	std::string x_val(string_value,i1+1,i2-i1-1);
-	std::string y_val(string_value,i1+1,i3-i2-1);
-	std::string z_val(string_value,i1+1,i4-i3-1);
+	std::string y_val(string_value,i2+1,i3-i2-1);
+	std::string z_val(string_value,i3+1,i4-i3-1);
 
 	value.x(atof(x_val.c_str()));
 	value.y(atof(y_val.c_str()));
@@ -384,9 +384,9 @@ ProblemSpecP ProblemSpec::get(const std::string& name,
 	std::string::size_type i4 = string_value.find("]");
 	
 	std::string x_val(string_value,i1+1,i2-i1-1);
-	std::string y_val(string_value,i1+1,i3-i2-1);
-	std::string z_val(string_value,i1+1,i4-i3-1);
-
+	std::string y_val(string_value,i2+1,i3-i2-1);
+	std::string z_val(string_value,i3+1,i4-i3-1);
+			
 	value.x(atoi(x_val.c_str()));
 	value.y(atoi(y_val.c_str()));
 	value.z(atoi(z_val.c_str()));	
@@ -524,6 +524,10 @@ const TypeDescription* ProblemSpec::getTypeDescription()
 
 //
 // $Log$
+// Revision 1.17  2000/04/27 21:26:37  jas
+// Fixed the parsing of Vector and IntVector, offsets were wrong for the
+// y and z values.
+//
 // Revision 1.16  2000/04/27 00:28:37  jas
 // Can now read the attributes field of a tag.
 //
