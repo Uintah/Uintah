@@ -136,8 +136,7 @@ MatrixWriter::execute()
   SimpleIPort<MatrixHandle> *inport = 
     (SimpleIPort<MatrixHandle> *)get_iport("Input Data");
 
-  MatrixHandle handle;
-  if(!inport->get(handle) || !handle.get_rep())
+  if(!inport->get(handle_) || !handle_.get_rep())
   {
     remark("No data on input port.");
     return;
@@ -176,13 +175,13 @@ MatrixWriter::execute()
     }
 
     // Check whether the file should be split into header and data
-    handle->set_raw(split_.get());
+    handle_->set_raw(split_.get());
   
     if (stream->error()) {
       error("Could not open file for writing" + fn);
     } else {
       // Write the file
-      Pio(*stream, handle);
+      Pio(*stream, handle_);
       delete stream;
     } 
   }
