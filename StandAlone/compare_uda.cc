@@ -667,8 +667,8 @@ void compareFields(DataArchive* da1, DataArchive* da2, const string& var,
     Field field;
     da1->query(field, var, matl, patch, time);
 
-    map<const Patch*, Field> patch2FieldMap;
-    map<const Patch*, Field>::iterator findIter;
+    map<const Patch*, Field*> patch2FieldMap;
+    map<const Patch*, Field*>::iterator findIter;
     for ( ; !iter.done(); iter++ ) {
       const Patch* patch2 = patch2Map[*iter];
       findIter = patch2FieldMap.find(patch2);
@@ -677,12 +677,12 @@ void compareFields(DataArchive* da1, DataArchive* da2, const string& var,
 	  ConsecutiveRangeSet matls2 = da2->queryMaterials(var, patch2, time2);
 	  ASSERT(matls == matls2); // check should have been made previously
 	}
-	pField2 = &(patch2FieldMap.insert
-		    (make_pair(patch2, Field())).first->second);
+	pField2 = scinew Field();
+	patch2FieldMap[patch2] = pField2;
 	da2->query(*pField2, var, matl, patch2, time2);
       }
       else {
-	pField2 = &(*findIter).second;
+	pField2 = (*findIter).second;
       }
       if (!compare(field[*iter], (*pField2)[*iter], abs_tolerance,
 		   rel_tolerance)) {
@@ -694,6 +694,11 @@ void compareFields(DataArchive* da1, DataArchive* da2, const string& var,
 
 	tolerance_failure();
       }
+    }
+
+    map<const Patch*, Field*>::iterator iter = patch2FieldMap.begin();
+    for ( ; iter != patch2FieldMap.end(); iter++) {
+      delete (*iter).second;
     }
     firstMatl = false;
   }
