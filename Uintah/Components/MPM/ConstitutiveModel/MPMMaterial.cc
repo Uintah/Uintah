@@ -97,6 +97,7 @@ MPMMaterial::MPMMaterial(ProblemSpecP& ps)
 
    }
 
+   lb = scinew MPMLabel();
 }
 
 MPMMaterial::~MPMMaterial()
@@ -133,7 +134,7 @@ void MPMMaterial::createParticles(particleIndex numParticles,
 				  const Patch* patch,
 				  DataWarehouseP& new_dw)
 {
-   const MPMLabel* lb = MPMLabel::getLabels();
+  //   const MPMLabel* lb = MPMLabel::getLabels();
 
    ParticleSubset* subset = new_dw->createParticleSubset(numParticles,
 							 getDWIndex(), patch);
@@ -336,6 +337,12 @@ double MPMMaterial::getHeatTransferCoefficient() const
 
 
 // $Log$
+// Revision 1.39  2000/07/05 23:43:34  jas
+// Changed the way MPMLabel is used.  No longer a Singleton class.  Added
+// MPMLabel* lb to various classes to retain the original calling
+// convention.  Still need to actually fill the d_particleState with
+// the various VarLabels that are used.
+//
 // Revision 1.38  2000/06/26 18:44:37  tan
 // Different heat_conduction properties for different materials are allowed
 // in the MPM simulation.

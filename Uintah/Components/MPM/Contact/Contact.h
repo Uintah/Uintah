@@ -11,7 +11,7 @@
 #include <Uintah/Grid/VarTypes.h>
 #include <SCICore/Geometry/Vector.h>
 #include <SCICore/Math/MinMax.h>
-
+#include <Uintah/Components/MPM/MPMLabel.h>
 
 #include <math.h>
 
@@ -100,6 +100,9 @@ WARNING
          const VarLabel* gVelocityStarLabel;
          const VarLabel* gMomExedVelocityStarLabel;
 	 */
+
+      protected:
+	 MPMLabel* lb;
       };
       
       inline bool compare(double num1, double num2)
@@ -114,6 +117,12 @@ WARNING
 } // end namespace Uintah
    
 // $Log$
+// Revision 1.19  2000/07/05 23:43:35  jas
+// Changed the way MPMLabel is used.  No longer a Singleton class.  Added
+// MPMLabel* lb to various classes to retain the original calling
+// convention.  Still need to actually fill the d_particleState with
+// the various VarLabels that are used.
+//
 // Revision 1.18  2000/06/17 07:06:37  sparker
 // Changed ProcessorContext to ProcessorGroup
 //

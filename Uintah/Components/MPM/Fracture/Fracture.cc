@@ -70,7 +70,7 @@ initializeFracture(const Patch* patch,
 {
   int vfindex = d_sharedState->getMaterial(0)->getVFIndex();
 
-  const MPMLabel* lb = MPMLabel::getLabels();
+  //  const MPMLabel* lb = MPMLabel::getLabels();
   
   //For CCVariables
   //set default cSelfContact to false
@@ -120,7 +120,7 @@ labelCellSurfaceNormal (
            DataWarehouseP& old_dw,
            DataWarehouseP& new_dw)
 {
-  const MPMLabel* lb = MPMLabel::getLabels();
+  //  const MPMLabel* lb = MPMLabel::getLabels();
 
   ParticleVariable<Point> px;
   ParticleVariable<Vector> pSurfaceNormal;
@@ -176,7 +176,7 @@ labelSelfContactNodes(
            DataWarehouseP& old_dw,
            DataWarehouseP& new_dw)
 {
-  const MPMLabel* lb = MPMLabel::getLabels();
+  //  const MPMLabel* lb = MPMLabel::getLabels();
 
   CCVariable<Vector> cSurfaceNormal;
   new_dw->get(cSurfaceNormal, lb->cSurfaceNormalLabel, matlindex, patch,
@@ -202,7 +202,7 @@ labelSelfContactCells(
            DataWarehouseP& old_dw,
            DataWarehouseP& new_dw)
 {
-  const MPMLabel* lb = MPMLabel::getLabels();
+  //  const MPMLabel* lb = MPMLabel::getLabels();
 
   NCVariable<bool> gSelfContact;
   new_dw->get(gSelfContact, lb->gSelfContactLabel, matlindex, patch,
@@ -297,7 +297,8 @@ updateParticleInformationInContactCells(
            DataWarehouseP& old_dw,
            DataWarehouseP& new_dw)
 {
-  const MPMLabel* lb = MPMLabel::getLabels();
+  //  const MPMLabel* lb = MPMLabel::getLabels();
+
 
   delt_vartype delT;
   old_dw->get(delT, lb->delTLabel);
@@ -424,12 +425,20 @@ Fracture(ProblemSpecP& ps,SimulationStateP& d_sS)
   ps->require("toughness",d_toughness);
 
   d_sharedState = d_sS;
+
+  lb = scinew MPMLabel();
 }
   
 } //namespace MPM
 } //namespace Uintah
 
 // $Log$
+// Revision 1.26  2000/07/05 23:43:37  jas
+// Changed the way MPMLabel is used.  No longer a Singleton class.  Added
+// MPMLabel* lb to various classes to retain the original calling
+// convention.  Still need to actually fill the d_particleState with
+// the various VarLabels that are used.
+//
 // Revision 1.25  2000/07/05 21:37:52  tan
 // Filled in the function of updateParticleInformationInContactCells.
 //

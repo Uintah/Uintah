@@ -55,7 +55,7 @@ void CompNeoHook::initializeCMData(const Patch* patch,
    // constitutive model parameters and deformationMeasure
    Matrix3 Identity, zero(0.);
    Identity.Identity();
-   const MPMLabel* lb = MPMLabel::getLabels();
+   //   const MPMLabel* lb = MPMLabel::getLabels();
 
    ParticleSubset* pset = new_dw->getParticleSubset(matl->getDWIndex(), patch);
    ParticleVariable<CMData> cmdata;
@@ -100,7 +100,7 @@ void CompNeoHook::computeStableTimestep(const Patch* patch,
    // are computed as a side-effect of computeStressTensor
   Vector dx = patch->dCell();
   int matlindex = matl->getDWIndex();
-  const MPMLabel* lb = MPMLabel::getLabels();
+  //  const MPMLabel* lb = MPMLabel::getLabels();
   // Retrieve the array of constitutive parameters
   ParticleSubset* pset = new_dw->getParticleSubset(matlindex, patch);
   ParticleVariable<CMData> cmdata;
@@ -150,7 +150,7 @@ void CompNeoHook::computeStressTensor(const Patch* patch,
   double oodx[3] = {1./dx.x(), 1./dx.y(), 1./dx.z()};
 
   int matlindex = matl->getDWIndex();
-  const MPMLabel* lb = MPMLabel::getLabels();
+  //  const MPMLabel* lb = MPMLabel::getLabels();
   // Create array for the particle position
   ParticleSubset* pset = old_dw->getParticleSubset(matlindex, patch);
   ParticleVariable<Point> px;
@@ -278,7 +278,7 @@ double CompNeoHook::computeStrainEnergy(const Patch* patch,
 #if 0
   double U,W,J,se=0;
   int matlindex = matl->getDWIndex();
-  const MPMLabel* lb = MPMLabel::getLabels();
+  //  const MPMLabel* lb = MPMLabel::getLabels();
   // Create array for the particle deformation
   ParticleVariable<Matrix3> deformationGradient;
   new_dw->get(deformationGradient, lb->pDeformationMeasureLabel,
@@ -321,7 +321,7 @@ void CompNeoHook::addComputesAndRequires(Task* task,
 					 DataWarehouseP& old_dw,
 					 DataWarehouseP& new_dw) const
 {
-  const MPMLabel* lb = MPMLabel::getLabels();
+  //  const MPMLabel* lb = MPMLabel::getLabels();
    task->requires(old_dw, lb->pXLabel, matl->getDWIndex(), patch,
                   Ghost::None);
    task->requires(old_dw, lb->pDeformationMeasureLabel, matl->getDWIndex(), patch,
@@ -365,6 +365,12 @@ const TypeDescription* fun_getTypeDescription(CompNeoHook::CMData*)
 }
 
 // $Log$
+// Revision 1.27  2000/07/05 23:43:33  jas
+// Changed the way MPMLabel is used.  No longer a Singleton class.  Added
+// MPMLabel* lb to various classes to retain the original calling
+// convention.  Still need to actually fill the d_particleState with
+// the various VarLabels that are used.
+//
 // Revision 1.26  2000/06/23 23:15:48  guilkey
 // Corrected a ghost cell dependency problem to allow these models to work with
 // multiple patches.

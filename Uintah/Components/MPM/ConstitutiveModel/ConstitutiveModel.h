@@ -5,6 +5,7 @@
 #include <Uintah/Interface/ProblemSpecP.h>
 #include <Uintah/Interface/ProblemSpec.h>
 #include <vector>
+#include <Uintah/Components/MPM/MPMLabel.h>
 
 namespace Uintah {
    class Task;
@@ -88,12 +89,20 @@ WARNING
 	 */
 
         protected:
+
+	 MPMLabel* lb;
       };
       
    } // end namespace MPM
 } // end namespace Uintah
 
 // $Log$
+// Revision 1.20  2000/07/05 23:43:33  jas
+// Changed the way MPMLabel is used.  No longer a Singleton class.  Added
+// MPMLabel* lb to various classes to retain the original calling
+// convention.  Still need to actually fill the d_particleState with
+// the various VarLabels that are used.
+//
 // Revision 1.19  2000/06/16 05:03:05  sparker
 // Moved timestep multiplier to simulation controller
 // Fixed timestep min/max clamping so that it really works now

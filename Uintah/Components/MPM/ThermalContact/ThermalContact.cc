@@ -15,6 +15,7 @@ using namespace Uintah::MPM;
 ThermalContact::ThermalContact(ProblemSpecP& ps,SimulationStateP& d_sS)
 {
   d_sharedState = d_sS;
+  lb = scinew MPMLabel();
 }
 
 void ThermalContact::computeHeatExchange(const ProcessorGroup*,
@@ -29,7 +30,7 @@ void ThermalContact::computeHeatExchange(const ProcessorGroup*,
   std::vector<NCVariable<double> > gTemperature(NVFs);
   std::vector<NCVariable<double> > thermalContactHeatExchangeRate(NVFs);
 
-  const MPMLabel *lb = MPMLabel::getLabels();
+  //  const MPMLabel *lb = MPMLabel::getLabels();
   
   int m, n, vfindex;
   Material* matl;
@@ -97,7 +98,7 @@ void ThermalContact::addComputesAndRequires(Task* t,
                                              DataWarehouseP& new_dw) const
 {
   int idx = matl->getDWIndex();
-  const MPMLabel* lb = MPMLabel::getLabels();
+  //  const MPMLabel* lb = MPMLabel::getLabels();
   t->requires( new_dw, lb->gMassLabel, idx, patch, Ghost::None);
   t->requires( new_dw, lb->gTemperatureLabel, idx, patch, Ghost::None);
 
@@ -107,6 +108,12 @@ void ThermalContact::addComputesAndRequires(Task* t,
 
 //
 // $Log$
+// Revision 1.11  2000/07/05 23:43:38  jas
+// Changed the way MPMLabel is used.  No longer a Singleton class.  Added
+// MPMLabel* lb to various classes to retain the original calling
+// convention.  Still need to actually fill the d_particleState with
+// the various VarLabels that are used.
+//
 // Revision 1.10  2000/06/28 01:09:39  tan
 // Thermal contact model start to work!
 //

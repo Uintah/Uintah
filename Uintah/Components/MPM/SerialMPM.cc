@@ -62,6 +62,7 @@ using namespace std;
 SerialMPM::SerialMPM(const ProcessorGroup* myworld) :
   UintahParallelComponent(myworld)
 {
+  lb = scinew MPMLabel();
 }
 
 SerialMPM::~SerialMPM()
@@ -123,7 +124,7 @@ void SerialMPM::scheduleTimeAdvance(double /*t*/, double /*dt*/,
 
    int numMatls = d_sharedState->getNumMatls();
 
-   const MPMLabel* lb = MPMLabel::getLabels();
+   //   const MPMLabel* lb = MPMLabel::getLabels();
 
    for(Level::const_patchIterator iter=level->patchesBegin();
        iter != level->patchesEnd(); iter++){
@@ -796,7 +797,7 @@ void SerialMPM::actuallyInitialize(const ProcessorGroup*,
 				   DataWarehouseP& new_dw)
 {
   int numMatls = d_sharedState->getNumMatls();
-  const MPMLabel* lb = MPMLabel::getLabels();
+  //  const MPMLabel* lb = MPMLabel::getLabels();
 
   PerPatch<long> NAPID(0);
   if(new_dw->exists(lb->ppNAPIDLabel, 0, patch))
@@ -846,7 +847,7 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
 
   // Dd: making this compile... don't know if this correct...
   int numMatls = d_sharedState->getNumMatls();
-  const MPMLabel* lb = MPMLabel::getLabels();
+  //  const MPMLabel* lb = MPMLabel::getLabels();
 
   for(int m = 0; m < numMatls; m++){
     Material* matl = d_sharedState->getMaterial( m );
@@ -1076,7 +1077,7 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
 
   int numMatls = d_sharedState->getNumMatls();
 
-  const MPMLabel* lb = MPMLabel::getLabels();
+  //  const MPMLabel* lb = MPMLabel::getLabels();
 
   for(int m = 0; m < numMatls; m++){
     Material* matl = d_sharedState->getMaterial( m );
@@ -1139,7 +1140,7 @@ void SerialMPM::computeInternalHeatRate(
   oodx[2] = 1.0/dx.z();
 
   int numMatls = d_sharedState->getNumMatls();
-  const MPMLabel* lb = MPMLabel::getLabels();
+  //  const MPMLabel* lb = MPMLabel::getLabels();
 
   ASSERT(MPMPhysicalModules::heatConductionModel);
 
@@ -1205,7 +1206,7 @@ void SerialMPM::solveEquationsMotion(const ProcessorGroup*,
 
   int numMatls = d_sharedState->getNumMatls();
 
-  const MPMLabel* lb = MPMLabel::getLabels();
+  //  const MPMLabel* lb = MPMLabel::getLabels();
 
   // Gravity
   Vector gravity = d_sharedState->getGravity();
@@ -1255,7 +1256,7 @@ void SerialMPM::solveHeatEquations(const ProcessorGroup*,
 {
   int numMatls = d_sharedState->getNumMatls();
 
-  const MPMLabel* lb = MPMLabel::getLabels();
+  //  const MPMLabel* lb = MPMLabel::getLabels();
 
   ASSERT(MPMPhysicalModules::heatConductionModel);
 
@@ -1321,7 +1322,7 @@ void SerialMPM::integrateAcceleration(const ProcessorGroup*,
 
   int numMatls = d_sharedState->getNumMatls();
 
-  const MPMLabel* lb = MPMLabel::getLabels();
+  //  const MPMLabel* lb = MPMLabel::getLabels();
 
   for(int m = 0; m < numMatls; m++){
     Material* matl = d_sharedState->getMaterial( m );
@@ -1386,7 +1387,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 
   int numMatls = d_sharedState->getNumMatls();
 
-  const MPMLabel* lb = MPMLabel::getLabels();
+  //  const MPMLabel* lb = MPMLabel::getLabels();
 
   for(int m = 0; m < numMatls; m++){
     Material* matl = d_sharedState->getMaterial( m );
@@ -1601,6 +1602,12 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 }
 
 // $Log$
+// Revision 1.98  2000/07/05 23:43:30  jas
+// Changed the way MPMLabel is used.  No longer a Singleton class.  Added
+// MPMLabel* lb to various classes to retain the original calling
+// convention.  Still need to actually fill the d_particleState with
+// the various VarLabels that are used.
+//
 // Revision 1.97  2000/06/28 01:08:20  tan
 // Thermal contact model start to work!
 //

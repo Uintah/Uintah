@@ -99,7 +99,7 @@ void FrictionContact::exMomInterpolated(const ProcessorGroup*,
   vector<NCVariable<double> > normtraction(NVFs);
   vector<NCVariable<Vector> > surfnorm(NVFs);
   
-  const MPMLabel *lb = MPMLabel::getLabels();
+  //  const MPMLabel *lb = MPMLabel::getLabels();
 
   // Retrieve necessary data from DataWarehouse
   for(int m = 0; m < numMatls; m++){
@@ -195,7 +195,7 @@ void FrictionContact::exMomIntegrated(const ProcessorGroup*,
   int numMatls = d_sharedState->getNumMatls();
   int NVFs = d_sharedState->getNumVelFields();
 
-  const MPMLabel* lb = MPMLabel::getLabels();
+  //  const MPMLabel* lb = MPMLabel::getLabels();
 
   // This model requires getting the normal component of the
   // surface traction.  The first step is to calculate the
@@ -564,7 +564,7 @@ void FrictionContact::addComputesAndRequiresInterpolated( Task* t,
 {
 
   int idx = matl->getDWIndex();
-  const MPMLabel* lb = MPMLabel::getLabels();
+  //  const MPMLabel* lb = MPMLabel::getLabels();
   t->requires( old_dw, gNormTractionLabel,idx , patch, Ghost::None, 0);
   t->requires( old_dw, gSurfNormLabel,idx , patch, Ghost::None, 0);
   t->requires( new_dw, lb->gMassLabel, idx, patch, Ghost::None);
@@ -583,7 +583,7 @@ void FrictionContact::addComputesAndRequiresIntegrated( Task* t,
 {
 
   int idx = matl->getDWIndex();
-  const MPMLabel* lb = MPMLabel::getLabels();
+  //  const MPMLabel* lb = MPMLabel::getLabels();
   t->requires( new_dw, lb->pStressLabel_preReloc, idx, patch,
                          Ghost::AroundNodes, 1);
   t->requires(new_dw, lb->gMassLabel, idx, patch, Ghost::None);
@@ -599,6 +599,12 @@ void FrictionContact::addComputesAndRequiresIntegrated( Task* t,
 }
 
 // $Log$
+// Revision 1.27  2000/07/05 23:43:36  jas
+// Changed the way MPMLabel is used.  No longer a Singleton class.  Added
+// MPMLabel* lb to various classes to retain the original calling
+// convention.  Still need to actually fill the d_particleState with
+// the various VarLabels that are used.
+//
 // Revision 1.26  2000/06/19 23:46:34  guilkey
 // changed a requires from pStressLabel to pStressLabel_preReloc.
 // Changed corresponding "gets" as well.

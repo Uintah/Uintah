@@ -209,7 +209,7 @@ MPMLabel::MPMLabel()
   ppNAPIDLabel = new VarLabel("NAPID",PerPatch<long>::getTypeDescription() );
 
 } 
-
+#if 0
 const MPMLabel* MPMLabel::getLabels()
 {
   static MPMLabel* instance=0;
@@ -217,8 +217,20 @@ const MPMLabel* MPMLabel::getLabels()
     instance=new MPMLabel();
   return instance;
 }
+#endif
+void MPMLabel::registerPermanentParticleState(const VarLabel* label)
+{
+  d_particleState.push_back(label);
+}
+
 
 // $Log$
+// Revision 1.17  2000/07/05 23:43:29  jas
+// Changed the way MPMLabel is used.  No longer a Singleton class.  Added
+// MPMLabel* lb to various classes to retain the original calling
+// convention.  Still need to actually fill the d_particleState with
+// the various VarLabels that are used.
+//
 // Revision 1.16  2000/06/28 01:09:06  tan
 // Thermal contact model start to work!
 //

@@ -7,6 +7,7 @@
 #include <Uintah/Grid/ParticleVariable.h>
 #include <Uintah/Grid/PerPatch.h>
 #include <vector>
+#include <Uintah/Components/MPM/MPMLabel.h>
 
 namespace SCICore {
    namespace Geometry {
@@ -117,6 +118,8 @@ WARNING
 
 	 std::vector<GeometryObject*> d_geom_objs;
 
+	 MPMLabel* lb;
+
 	 // Prevent copying of this class
 	 // copy constructor
 	 MPMMaterial(const MPMMaterial &mpmm);
@@ -129,6 +132,12 @@ WARNING
 #endif // __MPM_MATERIAL_H__
 
 // $Log$
+// Revision 1.27  2000/07/05 23:43:34  jas
+// Changed the way MPMLabel is used.  No longer a Singleton class.  Added
+// MPMLabel* lb to various classes to retain the original calling
+// convention.  Still need to actually fill the d_particleState with
+// the various VarLabels that are used.
+//
 // Revision 1.26  2000/06/26 18:44:28  tan
 // Different heat_conduction properties for different materials are allowed
 // in the MPM simulation.

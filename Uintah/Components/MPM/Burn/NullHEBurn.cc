@@ -65,7 +65,7 @@ void NullHEBurn::addMassRateComputesAndRequires(Task* task,
                                                DataWarehouseP& old_dw,
                                                DataWarehouseP& new_dw) const
 {
-  const MPMLabel* lb = MPMLabel::getLabels();
+  //  const MPMLabel* lb = MPMLabel::getLabels();
 
   task->requires(old_dw, lb->pMassLabel, matl->getDWIndex(),
                                 patch, Ghost::None);
@@ -93,7 +93,7 @@ void NullHEBurn::computeMassRate(const Patch* patch,
 				 DataWarehouseP& new_dw)
 {
   int matlindex = matl->getDWIndex();
-  const MPMLabel* lb = MPMLabel::getLabels();
+  //  const MPMLabel* lb = MPMLabel::getLabels();
 
   // Carry the mass and volume forward
   ParticleSubset* pset = old_dw->getParticleSubset(matl->getDWIndex(), patch);
@@ -108,6 +108,12 @@ void NullHEBurn::computeMassRate(const Patch* patch,
 }
 
 // $Log$
+// Revision 1.8  2000/07/05 23:43:31  jas
+// Changed the way MPMLabel is used.  No longer a Singleton class.  Added
+// MPMLabel* lb to various classes to retain the original calling
+// convention.  Still need to actually fill the d_particleState with
+// the various VarLabels that are used.
+//
 // Revision 1.7  2000/06/19 23:52:14  guilkey
 // Added boolean d_burns so that certain stuff only gets done
 // if a burn model is present.  Not to worry, the if's on this

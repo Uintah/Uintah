@@ -31,9 +31,10 @@ CompMooneyRivlin::CompMooneyRivlin(ProblemSpecP& ps)
   ps->require("he_constant_2",d_initialData.C2);
   ps->require("he_PR",d_initialData.PR);
   p_cmdata_label = scinew VarLabel("p.cmdata",
-				ParticleVariable<CMData>::getTypeDescription());
+			ParticleVariable<CMData>::getTypeDescription());
   p_cmdata_label_preReloc = scinew VarLabel("p.cmdata+",
-				ParticleVariable<CMData>::getTypeDescription());
+			ParticleVariable<CMData>::getTypeDescription());
+
 }
 
 CompMooneyRivlin::~CompMooneyRivlin()
@@ -47,7 +48,7 @@ void CompMooneyRivlin::initializeCMData(const Patch* patch,
 {
    // Put stuff in here to initialize each particle's
    // constitutive model parameters and deformationMeasure
-   const MPMLabel* lb = MPMLabel::getLabels();
+  //   const MPMLabel* lb = MPMLabel::getLabels();
    Matrix3 Identity, zero(0.);
    Identity.Identity();
    ParticleSubset* pset = new_dw->getParticleSubset(matl->getDWIndex(), patch);
@@ -79,7 +80,7 @@ void CompMooneyRivlin::computeStableTimestep(const Patch* patch,
    // are computed as a side-effect of computeStressTensor
   Vector dx = patch->dCell();
   int matlindex = matl->getDWIndex();
-  const MPMLabel* lb = MPMLabel::getLabels();
+  //  const MPMLabel* lb = MPMLabel::getLabels();
   // Retrieve the array of constitutive parameters
   ParticleSubset* pset = new_dw->getParticleSubset(matlindex, patch);
   ParticleVariable<CMData> cmdata;
@@ -133,7 +134,7 @@ void CompMooneyRivlin::computeStressTensor(const Patch* patch,
 
   int matlindex = matl->getDWIndex();
 
-  const MPMLabel* lb = MPMLabel::getLabels();
+  //  const MPMLabel* lb = MPMLabel::getLabels();
   // Create array for the particle position
   ParticleSubset* pset = old_dw->getParticleSubset(matlindex, patch);
   ParticleVariable<Point> px;
@@ -269,7 +270,7 @@ void CompMooneyRivlin::addComputesAndRequires(Task* task,
 					      DataWarehouseP& old_dw,
 					      DataWarehouseP& new_dw) const
 {
-  const MPMLabel* lb = MPMLabel::getLabels();
+  //  const MPMLabel* lb = MPMLabel::getLabels();
    task->requires(old_dw, lb->pXLabel, matl->getDWIndex(), patch,
 		  Ghost::None);
    task->requires(old_dw, lb->pDeformationMeasureLabel, matl->getDWIndex(), patch,
@@ -305,7 +306,7 @@ double CompMooneyRivlin::computeStrainEnergy(const Patch* patch,
   ParticleSubset* pset = old_dw->getParticleSubset(matlindex, patch);
   ParticleVariable<Matrix3> deformationGradient;
 
-  const MPMLabel* lb = MPMLabel::getLabels();
+  //  const MPMLabel* lb = MPMLabel::getLabels();
   new_dw->get(deformationGradient, lb->pDeformationMeasureLabel, pset);
   // Retrieve the array of constitutive parameters
   ParticleVariable<CMData> cmdata;
@@ -358,6 +359,12 @@ const TypeDescription* fun_getTypeDescription(CompMooneyRivlin::CMData*)
 }
 
 // $Log$
+// Revision 1.48  2000/07/05 23:43:33  jas
+// Changed the way MPMLabel is used.  No longer a Singleton class.  Added
+// MPMLabel* lb to various classes to retain the original calling
+// convention.  Still need to actually fill the d_particleState with
+// the various VarLabels that are used.
+//
 // Revision 1.47  2000/06/23 22:11:07  guilkey
 // Added hack to the wavespeed to avoid floating point exception in case of no particles
 // on a patch.

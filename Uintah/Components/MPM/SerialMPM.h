@@ -9,6 +9,7 @@
 #include <Uintah/Grid/LevelP.h>
 #include <Uintah/Components/MPM/Contact/Contact.h>
 #include <SCICore/Geometry/Vector.h>
+#include <Uintah/Components/MPM/MPMLabel.h>
 
 using SCICore::Geometry::Vector;
 
@@ -186,7 +187,7 @@ private:
   SerialMPM& operator=(const SerialMPM&);
 	 
   SimulationStateP d_sharedState;
-  
+  MPMLabel* lb;
   bool             d_burns;
 };
       
@@ -195,6 +196,12 @@ private:
    
 //
 // $Log$
+// Revision 1.46  2000/07/05 23:43:30  jas
+// Changed the way MPMLabel is used.  No longer a Singleton class.  Added
+// MPMLabel* lb to various classes to retain the original calling
+// convention.  Still need to actually fill the d_particleState with
+// the various VarLabels that are used.
+//
 // Revision 1.45  2000/06/22 21:22:24  tan
 // MPMPhysicalModules class is created to handle all the physical modules
 // in MPM, currently those physical submodules include HeatConduction,

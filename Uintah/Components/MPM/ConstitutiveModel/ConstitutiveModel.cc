@@ -15,6 +15,7 @@ using namespace Uintah::MPM;
 ConstitutiveModel::ConstitutiveModel()
 {
    // Constructor
+  lb = scinew MPMLabel();
 
 }
 

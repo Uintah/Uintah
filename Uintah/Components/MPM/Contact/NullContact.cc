@@ -65,7 +65,7 @@ void NullContact::exMomInterpolated(const ProcessorGroup*,
   int numMatls = d_sharedState->getNumMatls();
   int NVFs = d_sharedState->getNumVelFields();
 
-  const MPMLabel* lb = MPMLabel::getLabels();
+  //  const MPMLabel* lb = MPMLabel::getLabels();
 
   // Retrieve necessary data from DataWarehouse
   vector<NCVariable<double> > gmass(NVFs);
@@ -98,7 +98,7 @@ void NullContact::exMomIntegrated(const ProcessorGroup*,
 
   int numMatls = d_sharedState->getNumMatls();
   int NVFs = d_sharedState->getNumVelFields();
-  const MPMLabel* lb = MPMLabel::getLabels();
+  //  const MPMLabel* lb = MPMLabel::getLabels();
 
   vector<NCVariable<double> > gmass(NVFs);
   vector<NCVariable<Vector> > gvelocity_star(NVFs);
@@ -129,7 +129,7 @@ void NullContact::addComputesAndRequiresInterpolated( Task* t,
                                              DataWarehouseP& /*old_dw*/,
                                              DataWarehouseP& new_dw) const
 {
-  const MPMLabel* lb = MPMLabel::getLabels();
+  //  const MPMLabel* lb = MPMLabel::getLabels();
   int idx = matl->getDWIndex();
   t->requires( new_dw, lb->gVelocityLabel, idx, patch, Ghost::None);
 
@@ -145,7 +145,7 @@ void NullContact::addComputesAndRequiresIntegrated( Task* t,
                                              DataWarehouseP& new_dw) const
 {
 
-  const MPMLabel* lb = MPMLabel::getLabels();
+  //  const MPMLabel* lb = MPMLabel::getLabels();
   int idx = matl->getDWIndex();
   t->requires(new_dw, lb->gVelocityStarLabel, idx, patch, Ghost::None);
   t->requires(new_dw, lb->gAccelerationLabel, idx, patch, Ghost::None);
@@ -158,6 +158,12 @@ void NullContact::addComputesAndRequiresIntegrated( Task* t,
 
 
 // $Log$
+// Revision 1.15  2000/07/05 23:43:36  jas
+// Changed the way MPMLabel is used.  No longer a Singleton class.  Added
+// MPMLabel* lb to various classes to retain the original calling
+// convention.  Still need to actually fill the d_particleState with
+// the various VarLabels that are used.
+//
 // Revision 1.14  2000/06/17 07:06:38  sparker
 // Changed ProcessorContext to ProcessorGroup
 //
