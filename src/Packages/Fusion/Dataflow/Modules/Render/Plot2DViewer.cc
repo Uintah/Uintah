@@ -141,7 +141,7 @@ void Plot2DViewer::execute(){
       kdim = 1;
     } else {
       error( fHandle->get_type_description(0)->get_name() );
-      error( "Only availible for uniformly gridded or structure gridded data." );
+      error( "Only availible for regular topological data." );
       return;
     }
 

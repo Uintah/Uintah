@@ -19,6 +19,9 @@
 # by Allen R. Sanderson
 # March 2002
 
+# This GUI interface consists of a widget that allows for scaling of 
+# a height field in a surface.
+
 itcl_class Fusion_Fields_FusionSlicePlot {
     inherit Module
     constructor {config} {
@@ -31,7 +34,6 @@ itcl_class Fusion_Fields_FusionSlicePlot {
 	global $this-scale
 	set $this-scale 1.00
     }
-
 
     method ui {} {
 

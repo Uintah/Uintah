@@ -84,9 +84,8 @@ EditFusionFieldAlgoT<FIELD>::execute(FieldHandle field_h,
 
   // Account for the repeated values in the theta and phi directions
   // by subtracting 1 in the j and k directions.
-  const unsigned int idim_in = imesh->get_nx();
-  const unsigned int jdim_in = imesh->get_ny() - 1;
-  const unsigned int kdim_in = imesh->get_nz() - 1;
+  const unsigned int jdim_in = imesh->get_nj() - 1;
+  const unsigned int kdim_in = imesh->get_nk() - 1;
 
   // Add one because we want the last node.
   unsigned int idim_out = (iend - istart) / iskip + 1;
