@@ -4,7 +4,7 @@
 
 #include <Packages/Uintah/CCA/Ports/ModelInterface.h>
 #include <Packages/Uintah/Core/Grid/ComputeSet.h>
-
+#include <Packages/Uintah/CCA/Components/MPMICE/MPMICELabel.h>
 namespace Uintah {
 
 /**************************************
@@ -69,7 +69,7 @@ WARNING
 						   const LevelP& level,
 						   const ModelInfo*);
 
-  private:
+  private:    
     void massExchange(const ProcessorGroup*, const PatchSubset* patches,
 		      const MaterialSubset* matls, DataWarehouse*, 
 		      DataWarehouse* new_dw, const ModelInfo*);
@@ -80,10 +80,11 @@ WARNING
     ProblemSpecP params;
     const Material* matl0;
     const Material* matl1;
-
+    MPMICELabel* MIlb;
     MaterialSet* mymatls;
     double rate;
-    double d_cv_0;  //specific heat
+    bool d_is_mpm_matl;  // Is matl 0 a mpm_matl?
+    double d_cv_0;      //specific heat
   };
 }
 
