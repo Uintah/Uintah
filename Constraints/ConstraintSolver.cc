@@ -44,13 +44,13 @@ ostream& operator<<( ostream& os, StackItem& i ) {
 
 
 ConstraintSolver::ConstraintSolver()
-: Epsilon(1E-6), stack(200), NumVariables(0), variables(0)
+: Epsilon(1E-6), stack(200), NumVariables(0), variables(0), MaxDepth(25)
 {
 }
 
 
 ConstraintSolver::ConstraintSolver( const Real epsilon )
-: Epsilon(epsilon), stack(200), NumVariables(0), variables(0)
+: Epsilon(epsilon), stack(200), NumVariables(0), variables(0), MaxDepth(25)
 {
 }
 
@@ -75,6 +75,20 @@ ConstraintSolver::GetEpsilon() const
 
 
 void
+ConstraintSolver::SetMaxDepth( const Index max )
+{
+   MaxDepth = max;
+}
+
+
+Index
+ConstraintSolver::GetMaxDepth() const
+{
+   return MaxDepth;
+}
+
+
+void
 ConstraintSolver::AddVariable( BaseVariable* v )
 {
    variables.add(v);
@@ -93,8 +107,6 @@ ConstraintSolver::RemoveVariable( BaseVariable* v )
       }
 }
 
-
-const Index MaxDepth = 25;
 
 void
 ConstraintSolver::Solve( BaseVariable* var, const VarCore& newValue, const Scheme scheme )

@@ -50,6 +50,9 @@ public:
    void SetEpsilon( const Real epsilon );
    Real GetEpsilon() const;
 
+   void SetMaxDepth( const Index max );
+   Index GetMaxDepth() const;
+
    friend class BaseVariable;
 private:
    void AddVariable( BaseVariable* v );
@@ -57,6 +60,7 @@ private:
    void Solve( BaseVariable* var, const VarCore& newValue, const Scheme scheme );
 
    Real Epsilon;
+   Index MaxDepth;
 
    Stack<StackItem> stack;
 
