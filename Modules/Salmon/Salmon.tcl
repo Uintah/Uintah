@@ -214,6 +214,8 @@ itcl_class Roe {
 	set r "$this-c redraw"
 	
 	frame $m.eframe
+	pack $m.eframe -anchor w -padx 2 -side left
+
 	checkbutton $m.eframe.light -text Lighting -variable $this-global-light \
 		-command "$this-c redraw"
 	checkbutton $m.eframe.fog -text Fog -variable $this-global-fog \
@@ -222,6 +224,9 @@ itcl_class Roe {
 		-command "$this-c redraw"
 	checkbutton $m.eframe.clip -text "Use Clip" -variable $this-global-clip \
 		-command "$this-c redraw"
+
+
+# Dave's addition for dumping frames
 	checkbutton $m.eframe.cull -text "Back Cull" -variable $this-global-cull \
 		-command "$this-c redraw"
 	checkbutton $m.eframe.movie -text "Save Movie" -variable $this-global-movie
@@ -235,13 +240,28 @@ itcl_class Roe {
 	entry $m.eframe.mn.vn -relief sunken -width 4 -textvariable $this-global-movieName
 	pack $m.eframe.mn.ln $m.eframe.mn.vn -side left
 	
-	pack $m.eframe -anchor w -padx 2 -side left
 	pack  $m.eframe.light $m.eframe.fog $m.eframe.bbox $m.eframe.clip \
 		$m.eframe.cull $m.eframe.movie $m.eframe.mf $m.eframe.mn \
 		-in $m.eframe -side top -anchor w
+# end Dave's addition for dumping frames
+
 	make_labeled_radio $m.shade "Shading:" $r top $this-global-type \
 		{Wire Flat Gouraud}
 	pack $m.shade -in $m.eframe -side top -anchor w
+
+#  PPSloan's addition for dumping raw frames 
+#	checkbutton  $m.eframe.domovie -text Movie -variable \
+#	    $this-global-movie -onvalue 1 -offvalue 0 -command "$this-c redraw"
+
+#	entry $m.eframe.moviebase -textvariable "$this-global-movieName" 
+
+#	pack  $m.eframe.light $m.eframe.fog $m.eframe.bbox $m.eframe.clip -in $m.eframe \
+		-side top -anchor w
+
+#	pack $m.eframe.domovie $m.eframe.moviebase -in $m.eframe \
+#		-side top -anchor w
+#  End PPSloan's addition
+
 
 	global "$this-global-light"
 	global "$this-global-fog"
@@ -249,21 +269,36 @@ itcl_class Roe {
 	global "$this-global-type"
 	global "$this-global-debug"
 	global "$this-global-clip"
+
+#PPSloan
+#	global "$this-global-movie"
+#	global "$this-global-movieName"
+
+
+#Dave
 	global "$this-global-cull"
 	global "$this-global-movie"
 	global "$this-global-movieName"
 	global "$this-global-movieFrame"
+#
 	set "$this-global-light" 1
 	set "$this-global-fog" 0
 	set "$this-global-psize" 1
 	set "$this-global-type" Gouraud
 	set "$this-global-debug" 0
 	set "$this-global-clip" 0
+
+
+#PPSloan
+#	set "$this-global-movie" 0
+#	set "$this-global-movieName" "/tmp/movie"
+	
+#Dave
 	set "$this-global-cull" 0
 	set "$this-global-movie" 0
 	set "$this-global-movieName" "/tmp/movie"
 	set "$this-global-movieFrame" 0
-
+#
 	frame $m.objlist -relief groove -borderwidth 2
 	pack $m.objlist -side left -padx 2 -pady 2 -fill y
 	label $m.objlist.title -text "Objects:"
