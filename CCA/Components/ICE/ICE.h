@@ -239,7 +239,8 @@ using namespace SCIRun;
       bool switchDebug_advance_advect;
       bool switchDebug_advectQFirst;
       bool switchTestConservation;
-      bool switchMassExchange;
+      
+      bool d_massExchange;
       
       int d_max_iter_equilibration;
      
@@ -248,6 +249,7 @@ using namespace SCIRun;
       friend const TypeDescription* fun_getTypeDescription(eflux*);
       friend const TypeDescription* fun_getTypeDescription(cflux*);
       
+      friend class MPMICE;
       
       void influxOutfluxVolume(const SFCXVariable<double>& uvel_CC,
 			       const SFCYVariable<double>& vvel_CC,

@@ -241,11 +241,12 @@ int main(int argc, char** argv)
 	    mpmcfd = scinew MPMICE(world);
 	    sim->attachPort("mpmcfd", mpmcfd);
 	}
+#if 0
 	if(do_mpm && do_arches){
 	    mpmcfd = scinew MPMArches(world);
 	    sim->attachPort("mpmcfd", mpmcfd);
 	}
-
+#endif
 	// Output
 	Output* output = scinew DataArchiver(world);
 	sim->attachPort("output", output);
@@ -359,7 +360,7 @@ int main(int argc, char** argv)
     }
 
     // Shutdown XML crap
-    //    XMLPlatformUtils::Terminate();
+    XMLPlatformUtils::Terminate();
 
     /*
      * Finalize MPI

@@ -154,7 +154,6 @@
    </DataArchiver>
 
    <Debug>
-    <debug label = "switchMassExchange"/>
     <debug label = "switchTestConservation"/>
    <!--<debug label = "switchDebugInitialize"/>  -->
      <debug label = "switchDebug_equilibration_press"/>
@@ -262,14 +261,15 @@
 	    </geom_object>
 	  </material>
 	</ICE>	
-       
       
-       <MPMICE>
+       <exchange_properties>
          <exchange_coefficients>
 	       <momentum>	          [1e10, 1e10]         </momentum>
 	       <heat>                  [0.0, 0.0]           </heat>
-	   </exchange_coefficients>
-       </MPMICE>
+	 </exchange_coefficients>
+         <mass_exchange> true </mass_exchange>
+       </exchange_properties>
+
     </MaterialProperties>
             
 
