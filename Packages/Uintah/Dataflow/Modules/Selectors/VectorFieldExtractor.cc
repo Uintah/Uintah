@@ -42,6 +42,9 @@ LOG
 #include <Packages/Uintah/Core/Grid/Level.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Core/Containers/ConsecutiveRangeSet.h>
+#include <Packages/Uintah/Core/Grid/SFCXVariable.h>
+#include <Packages/Uintah/Core/Grid/SFCYVariable.h>
+#include <Packages/Uintah/Core/Grid/SFCZVariable.h>
 
 #include <iostream> 
 #include <sstream>
@@ -174,6 +177,8 @@ void VectorFieldExtractor::execute()
 	  vfd->set_property("generation",generation, true);
 	  vfd->set_property("timestep",timestep, true);
 	  vfd->set_property("delta_t",dt, true);
+	  vfd->set_property( "vartype",
+			     int(TypeDescription::NCVariable),true);
 	  build_field( archive, level, low, var, mat, time, gridVar, vfd );
 	  // send the field out to the port
 	  vfout->send(vfd);
@@ -195,6 +200,8 @@ void VectorFieldExtractor::execute()
 	  vfd->set_property("generation",generation, true);
 	  vfd->set_property("timestep",timestep, true);
 	  vfd->set_property("delta_t",dt, true);
+	  vfd->set_property( "vartype",
+			     int(TypeDescription::CCVariable),true);
 	  build_field( archive, level, low, var, mat, time, gridVar, vfd );
 	  // send the field out to the port
 	  vfout->send(vfd);
@@ -204,6 +211,76 @@ void VectorFieldExtractor::execute()
 	cerr<<"CCVariable<?> Unknown vector type\n";
 	return;
       }
+    case TypeDescription::SFCXVariable:
+      switch ( subtype->getType() ) {
+      case TypeDescription::Vector:
+	{	
+	  SFCXVariable<Vector> gridVar;
+	  LatVolField<Vector> *vfd =
+	    scinew LatVolField<Vector>( mesh_handle_, Field::NODE );
+	  // set the generation and timestep in the field
+	  vfd->set_property("varname",string(var), true);
+	  vfd->set_property("generation",generation, true);
+	  vfd->set_property("timestep",timestep, true);
+	  vfd->set_property("delta_t",dt, true);
+	  vfd->set_property( "vartype",
+			     int(TypeDescription::SFCXVariable),true);
+	  build_field( archive, level, low, var, mat, time, gridVar, vfd );
+	  // send the field out to the port
+	  vfout->send(vfd);
+	  return;
+	}
+      default:
+	cerr<<"SFCXVariable<?> Unknown vector type\n";
+	return;
+      }
+    case TypeDescription::SFCYVariable:
+      switch ( subtype->getType() ) {
+      case TypeDescription::Vector:
+	{	
+	  SFCYVariable<Vector> gridVar;
+	  LatVolField<Vector> *vfd =
+	    scinew LatVolField<Vector>( mesh_handle_, Field::NODE );
+	  // set the generation and timestep in the field
+	  vfd->set_property("varname",string(var), true);
+	  vfd->set_property("generation",generation, true);
+	  vfd->set_property("timestep",timestep, true);
+	  vfd->set_property("delta_t",dt, true);
+	  vfd->set_property( "vartype",
+			     int(TypeDescription::SFCYVariable),true);
+	  build_field( archive, level, low, var, mat, time, gridVar, vfd );
+	  // send the field out to the port
+	  vfout->send(vfd);
+	  return;
+	}
+      default:
+	cerr<<"SFCYVariable<?> Unknown vector type\n";
+	return;
+      }
+    case TypeDescription::SFCZVariable:
+      switch ( subtype->getType() ) {
+      case TypeDescription::Vector:
+	{	
+	  SFCZVariable<Vector> gridVar;
+	  LatVolField<Vector> *vfd =
+	    scinew LatVolField<Vector>( mesh_handle_, Field::NODE );
+	  // set the generation and timestep in the field
+	  vfd->set_property("varname",string(var), true);
+	  vfd->set_property("generation",generation, true);
+	  vfd->set_property("timestep",timestep, true);
+	  vfd->set_property("delta_t",dt, true);
+	  vfd->set_property( "vartype",
+			     int(TypeDescription::SFCZVariable),true);
+	  build_field( archive, level, low, var, mat, time, gridVar, vfd );
+	  // send the field out to the port
+	  vfout->send(vfd);
+	  return;
+	}
+      default:
+	cerr<<"SFCZVariable<?> Unknown vector type\n";
+	return;
+      }
+
     default:
       cerr<<"Not a VectorField\n";
       return;

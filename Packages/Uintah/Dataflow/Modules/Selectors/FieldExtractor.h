@@ -33,6 +33,7 @@ LOG
 #include <Packages/Uintah/Dataflow/Modules/Selectors/PatchToField.h>
 #include <Packages/Uintah/Core/Datatypes/Archive.h>
 #include <Packages/Uintah/Dataflow/Ports/ArchivePort.h>
+#include <Packages/Uintah/Core/Disclosure/TypeDescription.h>
 #include <Packages/Uintah/Core/Grid/GridP.h>
 #include <Packages/Uintah/Core/Grid/Level.h>
 #include <Dataflow/Ports/FieldPort.h>
@@ -113,13 +114,29 @@ void FieldExtractor::build_field(DataArchive& archive,
       r != level->patchesEnd(); ++r){
     IntVector low, hi;
     Var v;
+    int vartype;
     archive.query( v, varname, mat, *r, time);
     if( sfd->data_at() == Field::CELL){
       low = (*r)->getCellLowIndex();
       hi = (*r)->getCellHighIndex();
     } else {
+      sfd->get_property("vartype", vartype);
       low = (*r)->getNodeLowIndex();
       hi = (*r)->getNodeHighIndex();
+      switch (vartype) {
+      case TypeDescription::SFCXVariable:
+	hi.y(hi.y() - 1);
+	hi.z(hi.z() - 1);
+	break;
+      case TypeDescription::SFCYVariable:
+	hi.x(hi.x() - 1);
+	hi.z(hi.z() - 1);
+	break;
+      case TypeDescription::SFCZVariable:
+	hi.x(hi.x() - 1);
+	hi.y(hi.y() - 1);
+	break;
+      } 
     }
 
     IntVector range = hi - low;
@@ -134,24 +151,27 @@ void FieldExtractor::build_field(DataArchive& archive,
       int S = range.x() * range.y() * range.z() * sizeof(T);
       N = Min(Max(S/cs, 1), (max_workers-1));
     }
-    N = Max(N,1);
-    
+    N = Max(N,2);
     z_step = (z_max - z_min)/N;
     for(i = 0, z = z_min ; i < N; i++, z += z_step) {
-
+      
       IntVector min_i(low.x(), low.y(), z);
       IntVector max_i(hi.x(), hi.y(), Min(z+z_step, z_max));
       update_progress((count++/double(N))/size, my_timer);
-        
+      
       thread_sema->down();
-/*        PatchToFieldThread<Var, T> *ptft = */
-/*  	scinew PatchToFieldThread<Var, T>(sfd, v, lo, low, hi,//min_i, max_i, */
+/*       PatchToFieldThread<Var, T> *ptft = */
+/*        scinew PatchToFieldThread<Var, T>(sfd, v, lo, min_i, max_i,//low, hi, */
 /*  					  thread_sema, lock); */
-/*        ptft->run(); */
-      Thread *thrd = scinew Thread(
-	 (scinew PatchToFieldThread<Var, T>(sfd, v, lo, min_i, max_i,
-					       thread_sema, lock)),
-	    "patch_to_field_worker");
+/*       ptft->run(); */
+
+/*       cerr<<"low = "<<low<<", hi = "<<hi<<", min_i = "<<min_i */
+/* 	  <<", max_i = "<<max_i<<endl; */
+  
+      Thread *thrd = scinew Thread( 
+        (scinew PatchToFieldThread<Var, T>(sfd, v, lo, min_i, max_i,// low, hi,
+				      thread_sema, lock)),
+	"patch_to_field_worker");
       thrd->detach();
     }
   }

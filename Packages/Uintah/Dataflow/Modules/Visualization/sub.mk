@@ -12,6 +12,7 @@ SRCS     += \
 	$(SRCDIR)/ParticleColorMapKey.cc \
 	$(SRCDIR)/ParticleVis.cc \
 	$(SRCDIR)/CuttingPlane.cc\
+	$(SRCDIR)/FaceCuttingPlane.cc\
 	$(SRCDIR)/Hedgehog.cc\
 	$(SRCDIR)/AnimatedStreams.cc\
 	$(SRCDIR)/VariablePlotter.cc \
