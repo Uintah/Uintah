@@ -227,7 +227,7 @@ void ICE::computeFCPressDiffRF(const ProcessorGroup*,
 
     delt_vartype delT;
     old_dw->get(delT, d_sharedState->get_delt_label());
-    Vector dx      = patch->dCell();
+    //Vector dx      = patch->dCell();
 
     StaticArray<CCVariable<double>      > scratch(3); 
     StaticArray<constCCVariable<double> > rho_CC(numMatls);
@@ -299,10 +299,10 @@ void ICE::computeFCPressDiffRF(const ProcessorGroup*,
 //WARNING: We're currently using the 
 // isentropic compressibility instead of 
 // its cousin the isothermal compressiblity.  
-          double kappa_R = sp_vol_CC[m][R]/
-                          ( speedSound[m][R] * speedSound[m][R] );
-          double kappa_L = sp_vol_CC[m][L]/
-                          ( speedSound[m][L] * speedSound[m][L] );
+          //double kappa_R = sp_vol_CC[m][R]/
+          //                ( speedSound[m][R] * speedSound[m][R] );
+          //double kappa_L = sp_vol_CC[m][L]/
+          //                ( speedSound[m][L] * speedSound[m][L] );
                           
           double rho_brack = (rho_CC[m][R]*rho_CC[m][L])/
                              (rho_CC[m][R]+rho_CC[m][L]);           
@@ -606,7 +606,7 @@ void ICE::addExchangeToMomentumAndEnergyRF(const ProcessorGroup*,
     vector<Vector> del_vel_CC(numALLMatls, Vector(0,0,0));
     vector<double> if_mpm_matl_ignore(numALLMatls);
     
-    double tmp, sumBeta, alpha, term2, kappa, sp_vol_source, delta_KE;
+    double tmp, sumBeta, alpha, /*term2,*/ kappa, sp_vol_source, delta_KE;
 /*`==========TESTING==========*/
 // If this isn't 0.0 then you need to include extra terms -Todd
     double Joule_coeff   = 0.0;         // measure of "thermal imperfection" 
