@@ -26,6 +26,8 @@
 #include <Core/CCA/PIDL/TypeInfo.h>
 #include <Core/CCA/PIDL/URL.h>
 #include <Core/CCA/PIDL/PIDL.h>
+#include <Core/CCA/Comm/SocketMessage.h>
+
 #include <iostream>
 #include <string>
 
@@ -97,6 +99,11 @@ Object_proxy::Object_proxy(const std::vector<Object::pointer>& pxy, int mysize, 
     refList::const_iterator riter = refL->begin();
     for(unsigned int i=0; i < refL->size(); i++, riter++) {
       Reference *ref = (*riter)->clone();
+
+      Message *message=ref->chan->getMessage();
+      message->createMessage();
+      message->sendMessage(-101); //addReference;
+
       rm.insertReference(ref);
     }
   }
