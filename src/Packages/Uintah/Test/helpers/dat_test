@@ -103,10 +103,10 @@ If the 'failed' uda directory is actually more
 correct than the 'comparing' uda directory, then
 you should replace it in the cvs repository.
 
-Following is the result of a side by side diff comparison of the dat files.
-
 EOF
-         diff -y --width 160 --suppress-common-lines -x "*.xml" -x "taskgraph"  $TEST_UDADIR $COMPARE_UDADIR >> $TMPDIR/error.msg
+         # sending the diff information is too messy and they are better off
+         # using xdiff. 
+         #diff -y --width 160 --suppress-common-lines -x "*.xml" -x "taskgraph"  $TEST_UDADIR $COMPARE_UDADIR >> $TMPDIR/error.msg
          /usr/lib/sendmail "$ERRORS_TO" < $TMPDIR/error.msg
          echo "Mail sent"
        fi
