@@ -52,9 +52,6 @@ public:
   virtual void execute();
 
   void matrix_to_transform(MatrixHandle mH, Transform& t);
-
-private:  
-  Transform trans_;
 };
 
 
@@ -91,42 +88,43 @@ TransformField::execute()
 {
   // Get input field.
   FieldIPort *ifp = (FieldIPort *)get_iport("Input Field");
-  FieldHandle ifield_handle;
-  Field *ifield;
+  FieldHandle ifield;
   if (!ifp) {
     postMessage("Unable to initialize "+name+"'s iport\n");
     return;
   }
-  if (!(ifp->get(ifield_handle) && (ifield = ifield_handle.get_rep())))
+  if (!(ifp->get(ifield) && ifield.get_rep()))
   {
     return;
   }
 
   MatrixIPort *imp = (MatrixIPort *)get_iport("Transform Matrix");
-  MatrixHandle imatrix_handle;
+  MatrixHandle imatrix;
   if (!imp) {
     postMessage("Unable to initialize "+name+"'s iport\n");
     return;
   }
-  if (!(imp->get(imatrix_handle)))
+  if (!(imp->get(imatrix)))
   {
     return;
   }
-  matrix_to_transform(imatrix_handle, trans_);
 
-  Field *ofield = ifield->clone();
+  Transform trans;
+  matrix_to_transform(imatrix, trans);
+
+  FieldHandle ofield(ifield->clone());
   ofield->mesh_detach();
-
-  ofield->mesh()->transform(trans_);
+  
+  ofield->mesh()->transform(trans);
 
   FieldOPort *ofp = (FieldOPort *)get_oport("Transformed Field");
   if (!ofp) {
     postMessage("Unable to initialize "+name+"'s oport\n");
     return;
   }
-  FieldHandle fh(ofield);
-  ofp->send(fh);
+  ofp->send(ofield);
 }
+
 
 } // End namespace SCIRun
 
