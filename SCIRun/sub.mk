@@ -39,9 +39,9 @@ SRCS += $(SRCS) $(SRCDIR)/SCIRunLoader.cc
 endif
 
 
-SUBDIRS := $(SRCDIR)/CCA $(SRCDIR)/Dataflow $(SRCDIR)/Internal $(SRCDIR)/Bridge
+SUBDIRS := $(SRCDIR)/CCA $(SRCDIR)/Dataflow $(SRCDIR)/Internal
 ifeq ($(HAVE_BABEL),yes)
-  SUBDIRS += $(SRCDIR)/Babel
+  SUBDIRS += $(SRCDIR)/Bridge $(SRCDIR)/Babel
 endif
 
 include $(SCIRUN_SCRIPTS)/recurse.mk
