@@ -87,12 +87,8 @@ void SerialMPM::problemSetup(const ProblemSpecP& prob_spec, GridP& grid)
 	dw->put(pexternalforce,      "p.externalforce", region, 0);
 
 	cerr << "Creating particles for region\n";
-<<<<<<< SerialMPM.cc
 
-	Enigma.createParticles(region, dw);
-=======
 	prob_description.createParticles(region, dw);
->>>>>>> 1.16
     }
 #endif
     cerr << "SerialMPM::problemSetup not done\n";
@@ -702,6 +698,9 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorContext*,
 } // end namespace Uintah
 
 // $Log$
+// Revision 1.19  2000/04/19 22:30:00  dav
+// somehow SerialMPM.cc had cvs diff stuff in it.  I have removed it.  I hope I removed the right stuff.
+//
 // Revision 1.18  2000/04/19 21:20:01  dav
 // more MPI stuff
 //
