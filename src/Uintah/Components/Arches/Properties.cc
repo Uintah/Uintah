@@ -43,8 +43,8 @@ Properties::problemSetup(const ProblemSpecP& params)
   ProblemSpecP db = params->findBlock("Properties");
   db->require("denUnderrelax", d_denUnderrelax);
 
-  // Read the mixing variable streams, total is noofStreams - 1
-  d_numMixingVars = -1;
+  // Read the mixing variable streams, total is noofStreams 0 
+  d_numMixingVars = 0;
   for (ProblemSpecP stream_db = db->findBlock("Stream");
        stream_db != 0; stream_db = stream_db->findNextBlock("Stream")) {
 
@@ -226,6 +226,10 @@ Properties::Stream::problemSetup(ProblemSpecP& params)
 
 //
 // $Log$
+// Revision 1.18  2000/06/21 05:43:51  bbanerje
+// nofMixingVars init changed from -1 to 0 to avoid seg violation.
+// Was calling a vector with -1 as index.
+//
 // Revision 1.17  2000/06/19 18:00:30  rawat
 // added function to compute velocity and density profiles and inlet bc.
 // Fixed bugs in CellInformation.cc
