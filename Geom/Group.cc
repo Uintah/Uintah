@@ -13,7 +13,6 @@
 
 #include <Geom/Group.h>
 #include <Classlib/Array2.h>
-#include <Malloc/New.h>
 #include <values.h>
 
 GeomGroup::GeomGroup(int del_children)
@@ -91,7 +90,6 @@ void GeomGroup::make_prims(Array1<GeomObj*>& free,
 			 Array1<GeomObj*>& dontfree)
 {
     for(int i=0;i<objs.size();i++){
-	MemoryManager::audit(objs[i]);
 	objs[i]->make_prims(free, dontfree);
     }
 }

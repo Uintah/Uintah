@@ -21,7 +21,6 @@
 #include <Geometry/Transform.h>
 #include <Geom/Geom.h>
 #include <Geom/GeomX11.h>
-#include <Malloc/New.h>
 #include <Math/Trig.h>
 #include <TCL/TCLTask.h>
 
@@ -198,8 +197,6 @@ void X11::redraw(Salmon* salmon, Roe* roe)
 	HashTableIter<int, SceneItem*> objiter(portiter.get_data()->objs);
 	for(objiter.first();objiter.ok();++objiter){
 	    SceneItem* si=objiter.get_data();
-	    MemoryManager::audit(si);
-	    MemoryManager::audit(si->obj);
 	    si->obj->make_prims(free, dontfree);
 	}
     }
