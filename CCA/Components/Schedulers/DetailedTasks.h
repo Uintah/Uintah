@@ -137,7 +137,7 @@ namespace Uintah {
     {}
   };
 
-  typedef map<VarLabelMatlPatch, unsigned int> ScrubCountMap;
+  typedef map<VarLabelMatlPatch, int> ScrubCountMap;
   
   class DetailedTask {
   public:
@@ -283,16 +283,15 @@ namespace Uintah {
 
     DetailedTask* getNextInternalReadyTask();
     
-    unsigned int doScrubNew()
-    { return scrubNew_; }
+    int doScrubNew() { return scrubNew_; }
 
-    unsigned int getScrubCount(const VarLabel* label, int matlIndex,
-			       const Patch* patch)
-    { return scrubCountMap_[VarLabelMatlPatch(label, matlIndex, patch)]; }
+    int getScrubCount(const VarLabel* label, int matlIndex,
+		      const Patch* patch)
+      { return scrubCountMap_[VarLabelMatlPatch(label, matlIndex, patch)]; }
 
-    unsigned int getOldDWScrubCount(const VarLabel* label, int matlIndex,
-				    const Patch* patch)
-    { return oldDWScrubCountMap_[VarLabelMatlPatch(label, matlIndex, patch)]; }
+    int getOldDWScrubCount(const VarLabel* label, int matlIndex,
+			   const Patch* patch)
+      { return oldDWScrubCountMap_[VarLabelMatlPatch(label,matlIndex,patch)]; }
 
     void scrubExtraneousOldDW();
     
