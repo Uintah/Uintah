@@ -29,6 +29,8 @@
  */
 
 #include <iostream>
+#include <vector>
+#include <mpi.h>
 #include <Core/CCA/PIDL/PIDL.h>
 
 #include <Core/CCA/PIDL/MalformedURL.h>
@@ -61,43 +63,67 @@ int main(int argc, char* argv[])
 
     try {
       PIDL::initialize(argc,argv);
+      MPI_Init(&argc,&argv);
+      
+      int myrank = 0;
+      int mysize = 1;
+      bool client=false;
+      bool server=false;
+      std::vector <URL> server_urls;
+      int reps=10;
 
-	bool client=false;
-	bool server=false;
-	string client_url;
-	int reps=10;
+      MPI_Comm_size(MPI_COMM_WORLD,&mysize);
+      MPI_Comm_rank(MPI_COMM_WORLD,&myrank);
 
-	for(int i=1;i<argc;i++){
-	    string arg(argv[i]);
-	    if(arg == "-server"){
-		if(client)
-		    usage(argv[0]);
-		server=true;
-	    } else if(arg == "-client"){
-		if(server)
-		    usage(argv[0]);
-		if(++i>=argc)
-		    usage(argv[0]);
-		client_url=argv[i];
-		client=true;
-	    } else if(arg == "-reps"){
-		if(++i>=argc)
-		    usage(argv[0]);
-		reps=atoi(argv[i]);
-	    } else {
-		usage(argv[0]);
+        for(int i=1;i<argc;i++){
+	  string arg(argv[i]);
+	  if(arg == "-server"){
+	    if(client)
+	      usage(argv[0]);
+	    server=true;
+	  } else if(arg == "-client"){
+	    if(server)
+	      usage(argv[0]);
+	    i++;
+	    for(;i<argc;i++){
+	      string url_arg(argv[i]);
+	      server_urls.push_back(url_arg);
 	    }
-	}
+	    client=true;
+	    break;
+	  } else if(arg == "-reps"){
+	    if(++i>=argc)
+	      usage(argv[0]);
+	    reps=atoi(argv[i]);
+	  } else {
+	    usage(argv[0]);
+	  }
+        }
+
 	if(!client && !server)
 	    usage(argv[0]);
 
 	if(server) {
 	    PingThrow_impl::pointer pp(new PingThrow_impl);
 	    pp->addReference();
-	    cerr << "Waiting for pingthrow connections...\n";
-	    cerr << pp->getURL().getString() << '\n';
+	    if(myrank==0)
+	      cerr << "Waiting for pingthrow connections...\n";
+
+	    /*Reduce all URLs and have root print them out*/
+	    typedef char urlString[100] ;
+	    urlString s;
+	    strcpy(s, pp->getURL().getString().c_str());
+	    urlString *buf;
+	    if(myrank==0){
+	      buf=new urlString[mysize];
+	    }
+	    MPI_Gather(s, 100, MPI_CHAR, buf, 100, MPI_CHAR, 0, MPI_COMM_WORLD);
+	    if(myrank==0)
+	      for(int i=0; i<mysize; i++)
+		cerr << buf[i] << '\n';
+
 	} else {
-	  Object::pointer obj=PIDL::objectFrom(client_url);
+          Object::pointer obj=PIDL::objectFrom(server_urls,mysize,myrank);
 	  cerr << "Object_from completed\n";
 
 	  PingThrow::pointer pp=pidl_cast<PingThrow::pointer>(obj);
@@ -109,7 +135,7 @@ int main(int argc, char* argv[])
 	  double stime=Time::currentSeconds();
 	  int j=pp->pingthrow(13);
 	  double dt=Time::currentSeconds()-stime;
-	  cerr << reps << " reps in " << dt << " seconds\n";
+	  cerr << "in " << dt << " seconds\n";
 	  double us=dt/reps*1000*1000;
 	  cerr << us << " us/rep\n";
  	}

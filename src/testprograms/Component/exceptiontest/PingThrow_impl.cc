@@ -36,6 +36,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <iostream>
+#include <mpi.h>
 
 using namespace PingThrow_ns;
 using namespace std; 
@@ -50,7 +51,11 @@ PingThrow_impl::~PingThrow_impl()
 
 int PingThrow_impl::pingthrow(int arg)
 {
-  PPException* ppe = new PPException();
-  throw (ppe);
+  int myrank;
+  MPI_Comm_rank(MPI_COMM_WORLD,&myrank);
+  if(myrank == 0) {
+    PPException* ppe = new PPException();
+    throw (ppe);
+  }
   return arg;
 }
