@@ -402,10 +402,10 @@ void ArchesTable::interpolate(int index, CCVariable<double>& result,
 	long mask = 1<<j;
 	if(i & mask){
 	  index += idx1[j];
-	  weight *= (1-w[j]);
+	  weight *= w[j];
 	} else {
 	  index += idx0[j];
-	  weight *= w[j];
+	  weight *= 1-w[j];
 	}
       }
       double value = dep->data[index] * weight;
@@ -465,10 +465,10 @@ double ArchesTable::interpolate(int index, vector<double>& independents)
       long mask = 1<<j;
       if(i & mask){
         index += idx1[j];
-        weight *= (1-w[j]);
+        weight *= w[j];
       } else {
         index += idx0[j];
-        weight *= w[j];
+        weight *= 1-w[j];
       }
     }
     double value = dep->data[index] * weight;
