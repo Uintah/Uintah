@@ -42,10 +42,9 @@
 #include <Teem/Dataflow/Ports/NrrdPort.h>
 
 
-namespace SCIRun {
-using namespace SCITeem;
+namespace SCITeem {
+using namespace SCIRun;
 
-class ColumnMatrix;
 
 class MRITissueClassifier : public Module
 {
@@ -54,7 +53,7 @@ public:
   virtual ~MRITissueClassifier();
 
   virtual void execute();
-  virtual void tcl_command(GuiArgs &, void *);
+  //  virtual void tcl_command(GuiArgs &, void *);
 
   void EyeDetection ();
   void BackgroundDetection ();
@@ -133,14 +132,14 @@ protected:
   void set_nrrd_float(NrrdDataHandle, float, int, int);
   bool nrrd_check_bounds(NrrdDataHandle, int, int);
   
-
-
-
   ColumnMatrix get_m_Data(int, int, int);
 
-
-
   NrrdDataHandle	m_Data;			// volume of vectors     
+  NrrdDataHandle	m_T1_Data;
+  NrrdDataHandle	m_T2_Data;
+  NrrdDataHandle	m_PD_Data;
+  NrrdDataHandle	m_FATSAT_Data;
+  
   NrrdDataHandle	m_Label;		// volume of ints
   NrrdDataHandle	m_DistBG;		// volume of floats
   NrrdDataHandle	m_DistBG2D;		// volume of floats
@@ -176,11 +175,16 @@ protected:
   int *m_brainlim;
 
 
+  vector<int>	generation_;
+
   //  GuiInt	m_MaxIteration;
   //GuiDouble	m_MinChange;
   
 
 };
+
+
+DECLARE_MAKER(MRITissueClassifier)
 
 } // namespace SCIRun
 
