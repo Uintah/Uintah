@@ -815,24 +815,6 @@ void EnthalpySolver::buildLinearMatrixPred(const ProcessorGroup* pc,
 				  	       &enthalpyVars, wallID);
     }
 
-    // Calculate the enthalpy boundary conditions
-    // inputs : enthalpySP, scalCoefSBLM
-    // outputs: scalCoefSBLM
-    d_boundaryCondition->enthalpyBC(pc, patch,  cellinfo, 
-				  &enthalpyVars);
-
-    if (d_boundaryCondition->getIntrusionBC()) {
-      d_boundaryCondition->intrusionEnergyExBC(pc, patch,
-					       cellinfo, &enthalpyVars);
-      d_boundaryCondition->intrusionScalarBC(pc, patch, cellinfo,
-					  &enthalpyVars);
-    }
-
-    // apply multimaterial intrusion wallbc
-    if (d_MAlab)
-      d_boundaryCondition->mmscalarWallBC(pc, patch, cellinfo,
-					  &enthalpyVars);
-
     if (d_radiationCalc) {
 
       if (d_DORadiationCalc){
@@ -881,6 +863,24 @@ void EnthalpySolver::buildLinearMatrixPred(const ProcessorGroup* pc,
 					    cellinfo, &enthalpyVars);
     }
 
+    // Calculate the enthalpy boundary conditions
+    // inputs : enthalpySP, scalCoefSBLM
+    // outputs: scalCoefSBLM
+    d_boundaryCondition->enthalpyBC(pc, patch,  cellinfo, 
+				  &enthalpyVars);
+
+    if (d_boundaryCondition->getIntrusionBC()) {
+      d_boundaryCondition->intrusionEnergyExBC(pc, patch,
+					       cellinfo, &enthalpyVars);
+      d_boundaryCondition->intrusionEnthalpyBC(pc, patch, delta_t, cellinfo,
+					  &enthalpyVars);
+    }
+
+    // apply multimaterial intrusion wallbc
+    if (d_MAlab)
+      d_boundaryCondition->mmscalarWallBC(pc, patch, cellinfo,
+					  &enthalpyVars);
+
     // similar to mascal
     // inputs :
     // outputs:
@@ -892,17 +892,6 @@ void EnthalpySolver::buildLinearMatrixPred(const ProcessorGroup* pc,
     // outputs: scalCoefSBLM
     d_discretize->calculateScalarDiagonal(pc, patch, index, &enthalpyVars);
 
-    for (int ii = 0; ii < d_lab->d_stencilMatl->size(); ii++) {
-      // allocateAndPut instead:
-      /* new_dw->put(enthalpyVars.scalarCoeff[ii], 
-		  d_lab->d_enthCoefPredLabel, ii, patch); */;
-      // allocateAndPut instead:
-      /* new_dw->put(enthalpyVars.scalarDiffusionCoeff[ii],
-		  d_lab->d_enthDiffCoefPredLabel, ii, patch); */;
-    }
-    // allocateAndPut instead:
-    /* new_dw->put(enthalpyVars.scalarNonlinearSrc, 
-		d_lab->d_enthNonLinSrcPredLabel, matlIndex, patch); */;
 
   }
 }
@@ -1484,16 +1473,6 @@ void EnthalpySolver::buildLinearMatrixCorr(const ProcessorGroup* pc,
 				  	       &enthalpyVars, wallID);
     }
 
-    // Calculate the enthalpy boundary conditions
-    // inputs : enthalpySP, scalCoefSBLM
-    // outputs: scalCoefSBLM
-    d_boundaryCondition->enthalpyBC(pc, patch,  cellinfo, 
-				  &enthalpyVars);
-  // apply multimaterial intrusion wallbc
-
-    if (d_MAlab)
-      d_boundaryCondition->mmscalarWallBC(pc, patch, cellinfo,
-					  &enthalpyVars);
 
     if (d_radiationCalc) {
       if (d_DORadiationCalc) {
@@ -1531,6 +1510,16 @@ void EnthalpySolver::buildLinearMatrixCorr(const ProcessorGroup* pc,
        				  cellinfo, &enthalpyVars);
     }
 
+    // Calculate the enthalpy boundary conditions
+    // inputs : enthalpySP, scalCoefSBLM
+    // outputs: scalCoefSBLM
+    d_boundaryCondition->enthalpyBC(pc, patch,  cellinfo, 
+				  &enthalpyVars);
+  // apply multimaterial intrusion wallbc
+
+    if (d_MAlab)
+      d_boundaryCondition->mmscalarWallBC(pc, patch, cellinfo,
+					  &enthalpyVars);
     // similar to mascal
     // inputs :
     // outputs:
