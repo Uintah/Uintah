@@ -330,8 +330,6 @@ ConvertToNrrd<Fld>::convert_to_nrrd(FieldHandle ifh, NrrdDataHandle &pointsH,
     with_spacing = false;
   }
 
-  nconnect = scinew NrrdData();
-
   if (compute_points_p)
   {
     npoints = scinew NrrdData();
@@ -364,6 +362,7 @@ ConvertToNrrd<Fld>::convert_to_nrrd(FieldHandle ifh, NrrdDataHandle &pointsH,
 
   if (compute_connects_p)
   {
+    nconnect = scinew NrrdData();
     typename Fld::mesh_type::Elem::iterator iter2, end2;
     m->begin(iter2);
     m->end(end2);
