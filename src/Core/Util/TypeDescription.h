@@ -53,8 +53,8 @@ public:
   }
   //! The arguments determine how the templated types are separated.
   //! default is "<" and "> "
-  string get_name(string type_sep_start = "<", 
-		  string type_sep_end = "> ") const;
+  string get_name(const string & type_sep_start = "<", 
+		  const string & type_sep_end = "> ") const;
 
   string get_filename() const;
 
