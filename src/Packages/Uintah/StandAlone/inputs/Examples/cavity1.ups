@@ -8,7 +8,7 @@
    </Meta>
 
    <Time>
-	<maxTime>10.0</maxTime>
+	<maxTime>.3</maxTime>
 	<initTime>0.0</initTime>
 	<delt_min>0.00001</delt_min>
 	<delt_max>.05</delt_max>
@@ -16,7 +16,7 @@
    </Time>
    <DataArchiver>
         <filebase>cfd.uda</filebase>
-	<outputInterval>.1</outputInterval>
+	<outputInterval>.3</outputInterval>
 	<save label = "density"/>
 	<save label = "xvelocity"/>
 	<save label = "yvelocity"/>
@@ -29,11 +29,20 @@
 	<diffusion>.01</diffusion>
 	<viscosity>1.1</viscosity>
 	<dissipation>1</dissipation>
-	<correction_pin>[0.5,0.5,0.5]</correction_pin>
-	<diffusion_tolerance>1.e-6</diffusion_tolerance>
-	<viscosity_tolerance>1.e-6</viscosity_tolerance>
-	<correction_tolerance>1.e-9</correction_tolerance>
+	<pressure_pin>[0.5,0.5,0.5]</pressure_pin>
 	<advection_tolerance>1.e-4</advection_tolerance>
+	<maxadvect>1</maxadvect>
+	<keep_pressure>true</keep_pressure>
+	<Solver>
+	   <Parameters>
+	      <tolerance>1.e-4</tolerance>
+	      <norm>LInfinity</norm>
+	      <criteria>Absolute</criteria>
+	   </Parameters>
+	   <Parameters variable="pressure">
+	      <tolerance>1.e-6</tolerance>
+	   </Parameters>
+	</Solver>
         <Regions>
         </Regions>
 	<InitialConditions>
@@ -63,23 +72,29 @@
 		    <type>FixedValue</type>
 		    <applyAt>AllFaces</applyAt>
 		</Condition>
-		<!-- <Condition var="zvelocity">
+		<Condition var="zvelocity">
 		    <region name="allfaces"/>
 		    <value>0</value>
 		    <type>FixedValue</type>
 		    <applyAt>AllFaces</applyAt>
-		</Condition> -->
+		</Condition>
 		<Condition var="xvelocity">
-		    <region name="y+"/>
+		    <region name="z+"/>
 		    <value>1</value>
 		    <type>FixedValue</type>
-		    <applyAt>YFace</applyAt>
+		    <applyAt>ZFace</applyAt>
 		</Condition>
 		<Condition var="density">
 		    <region name="allfaces"/>
                     <value>0</value>
                     <type>FixedFlux</type>
 		    <applyAt>AllFaces</applyAt>
+		</Condition>
+		<Condition var="density">
+		    <region name="x+"/>
+                    <value>1</value>
+                    <type>FixedValue</type>
+		    <applyAt>XFace</applyAt>
 		</Condition>
 	</BoundaryConditions>
     </SimpleCFD>
@@ -89,7 +104,7 @@
 	    <Box label = "1">
 		<lower>[0,0,0]</lower>
 		<upper>[1.0,1.0,1.0]</upper>
-	        <resolution>[7,7,1]</resolution>
+	        <resolution>[39,39,39]</resolution>
 		<patches>[1,1,1]</patches>
 	    </Box>
 	</Level>

@@ -19,7 +19,7 @@
 	<outputInterval>.05</outputInterval>
 	<save label = "phi"/>
 	<!--	<save label = "residual"/> -->
-	<checkpoint cycle = "2" interval = "1"/>
+	<checkpoint cycle = "2" interval = ".1"/>
    </DataArchiver>
 
     <Poisson>
