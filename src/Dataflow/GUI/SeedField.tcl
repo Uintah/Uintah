@@ -34,7 +34,7 @@ itcl_class SCIRun_Fields_SeedField {
 	global $this-whichtab
 	set $this-wtype rake
 	set $this-maxseeds 15
-	set $this-dist importance
+	set $this-dist impuni
 	set $this-numseeds 10
 	set $this-rngseed 1234
 	set $this-whichtab Widget
@@ -48,7 +48,8 @@ itcl_class SCIRun_Fields_SeedField {
         }
         toplevel $w
 
-	iwidgets::tabnotebook  $w.tabs -raiseselect true -width 350
+	iwidgets::tabnotebook  $w.tabs -raiseselect true \
+		               -width 350 -height 200
 	pack $w.tabs -side top
 	set wtab [$w.tabs add -label "Widget" \
 		  -command "set $this-whichtab Widget"]
@@ -60,7 +61,8 @@ itcl_class SCIRun_Fields_SeedField {
 	    $w.tabs view 1
 	}
 
-	iwidgets::Labeledframe $wtab.type -labelpos nw -labeltext "Widget type"
+	iwidgets::Labeledframe $wtab.type -labelpos nw \
+		               -labeltext "Widget type"
 	pack $wtab.type 
 	set type [$wtab.type childsite]
 	radiobutton $type.rake -var $this-wtype -value rake -text "Rake" 
@@ -79,13 +81,24 @@ itcl_class SCIRun_Fields_SeedField {
 		               -labeltext "Distribution"
 	pack $rtab.dist
 	set dist [$rtab.dist childsite]
-	radiobutton $dist.uniwi -var $this-dist -value importance \
-		    -text "Importance" 
-	radiobutton $dist.uniwoi -var $this-dist -value uniform \
+	frame $dist.imp 
+	frame $dist.uni 
+	pack $dist.imp $dist.uni -side left -f both -e y
+
+	label $dist.imp.label -text "Importance Weighted"
+	radiobutton $dist.imp.uni -var $this-dist -value impuni \
+		    -text "Uniform" 
+	radiobutton $dist.imp.scat -var $this-dist -value impscat \
+		    -text "Scattered"
+	label $dist.uni.label -text "Not Weighted"
+	radiobutton $dist.uni.uni -var $this-dist -value uniuni \
 	            -text "Uniform" 
-	radiobutton $dist.scat -var $this-dist -value scattered \
+	radiobutton $dist.uni.scat -var $this-dist -value uniscat \
 	            -text "Scattered" 
-	pack $dist.uniwi $dist.uniwoi $dist.scat -side left -padx 5 -pady 5
+	pack $dist.imp.label $dist.imp.uni $dist.imp.scat \
+	     $dist.uni.label $dist.uni.uni $dist.uni.scat \
+	     -side top -padx 5 -pady 5
+
 	frame $rtab.f1 
 	pack $rtab.f1 -side top 
 	label $rtab.f1.rngseed_l -text "Seed value for RNG" -width 23 \
