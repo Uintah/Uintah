@@ -117,8 +117,14 @@ void Pio(Piostream& stream, Array2<T>*& data) {
 }
 
 template<class T>
-Array2<T>& Array2<T>::operator=(const Array2<T>&)
+Array2<T>& Array2<T>::operator=(const Array2<T> &copy)
 {
-    NOT_FINISHED("Array2::operator=");
-    return *this;
+  // ok, i did this, but i'm not quite sure it will work...
+  
+  newsize( copy.dim1(), copy.dim2() );
+
+  for(int i=0;i<dm1;i++)
+    for(int j=0;j<dm2;j++)
+      objs[i][j] = copy.objs[i][j];
+    return( *this );
 }

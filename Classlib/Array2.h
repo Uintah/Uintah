@@ -49,7 +49,6 @@ public:
 
     friend void Pio(Piostream&, Array2<T>&);
     friend void Pio(Piostream&, Array2<T>*&);
-
 };
 
 
