@@ -4,6 +4,7 @@
 #include <Packages/Uintah/Core/Grid/BoundCond.h>
 #include <Core/Geometry/Vector.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
+#include <map>
 
 namespace Uintah {
 using namespace SCIRun;
@@ -41,6 +42,7 @@ WARNING
      VelocityBoundCond(ProblemSpecP& ps, const std::string& kind);
      virtual ~VelocityBoundCond();
      virtual Vector getValue() const;
+     map<string,string> getMixed() const;
      
    private:
 #if 0
@@ -49,6 +51,7 @@ WARNING
 #endif
       
       Vector d_vel;
+      std::map<string,string> d_comp_var;
      
    };
 
