@@ -107,8 +107,6 @@ void DataArchiver::finalizeTimestep(double time, double delt,
 
    sched->addTask(t);
 
-   cerr << "Created reduction variable output task" << endl;
-
    if((d_currentTimestep++ % d_outputInterval) != 0)
       return;
 
@@ -529,6 +527,9 @@ static Dir makeVersionedDir(const std::string nameBase)
 
 //
 // $Log$
+// Revision 1.8  2000/06/05 19:51:26  guilkey
+// Removed gratuitous screen output.
+//
 // Revision 1.7  2000/06/03 05:24:25  sparker
 // Finished/changed reduced variable emits
 // Fixed bug in directory version numbers where the index was getting
