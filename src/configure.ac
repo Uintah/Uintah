@@ -960,6 +960,10 @@ case $host in
     ;;
 
   *)
+    if test "$enable_64bit" = "yes"; then
+      BASE_LIB_DIR=lib64
+    fi
+
     # linux
     ac_objext=o
     CFLAGS=" -Wall"
