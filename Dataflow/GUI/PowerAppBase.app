@@ -302,8 +302,6 @@ class PowerAppBase {
 	    disableModule $mods($m) 0
 	}
 	array donesearch mods $searchID
-
-	reset_defaults
     }
 
     #########################
