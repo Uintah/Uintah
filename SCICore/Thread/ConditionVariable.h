@@ -17,12 +17,14 @@
 
 #include <SCICore/share/share.h>
 
+#include <SCICore/Thread/Semaphore.h>
+#include <SCICore/Thread/Mutex.h>
+
 struct timespec;
 
 namespace SCICore {
     namespace Thread {
 	class ConditionVariable_private;
-	class Mutex;
 /**************************************
  
 CLASS
@@ -101,6 +103,10 @@ DESCRIPTION
 
 //
 // $Log$
+// Revision 1.10  1999/11/02 06:10:17  moulding
+// took out the pre-declaration for Mutex and replaced it
+// with #include <SCICore/Thread/Mutex.h>
+//
 // Revision 1.9  1999/09/24 18:55:06  moulding
 // added SCICORESHARE, for win32, to class declarations
 //
