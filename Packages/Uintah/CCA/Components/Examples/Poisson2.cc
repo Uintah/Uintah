@@ -121,7 +121,7 @@ void Poisson2::timeAdvance(const ProcessorGroup* pg,
   subsched->addTask(task, level->eachPatch(), sharedState_->allMaterials());
 
   // Compile the scheduler
-  subsched->compile(d_myworld);
+  subsched->compile();
 
   int count = 0;
   double residual;
@@ -132,7 +132,7 @@ void Poisson2::timeAdvance(const ProcessorGroup* pg,
     subsched->advanceDataWarehouse(grid);
     subsched->get_dw(0)->setScrubbing(DataWarehouse::ScrubComplete);
     subsched->get_dw(1)->setScrubbing(DataWarehouse::ScrubNonPermanent);
-    subsched->execute(d_myworld);    
+    subsched->execute();    
 
     sum_vartype residual_var;
     subsched->get_dw(1)->get(residual_var, lb_->residual);
