@@ -2093,8 +2093,9 @@ TetVolMesh::refine_elements_levels(const Cell::array_type &cells,
   while(!todo.empty()) {
     ++current_level;
     const unsigned int num_todo = todo.size();    
-    vector<Cell::array_type> todo_children(num_todo);;
+    vector<Cell::array_type> todo_children(num_todo);
     cell_2_cell_map_t green_children;
+    
     refine_elements(todo, todo_children, green_children);
 
     todo.clear();
@@ -2118,11 +2119,11 @@ TetVolMesh::refine_elements_levels(const Cell::array_type &cells,
 	}
       }
     }
-    
     cell_2_cell_map_t::iterator iter = green_children.begin();
     const cell_2_cell_map_t::iterator iter_end = green_children.end();
     while (iter != iter_end) {
       child_2_parent.insert(*iter);
+      iter++;
     }
   }
 }
@@ -2290,7 +2291,6 @@ TetVolMesh::refine_elements(const Cell::array_type &cells,
           Edge::edgei(Edge::opposite_edge(edge));
 
         // Perform the 2:1 split
-	
 	const Elem::index_type t1 = 
 	  add_tet(center, cells_[nnodes.first],
 		  cells_[onodes.second], cells_[onodes.first]);
@@ -2301,7 +2301,7 @@ TetVolMesh::refine_elements(const Cell::array_type &cells,
 	ASSERT(green_iter != green_children.end());
 	
 	green_children.insert(make_pair(t1, (*green_iter).second));
-              
+
         orient(mod_tet(cell, center, cells_[nnodes.second],
                        cells_[onodes.second], cells_[onodes.first]));
 
