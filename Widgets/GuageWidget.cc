@@ -38,12 +38,12 @@ GuageWidget::GuageWidget( Module* module, CrowdMonitor* lock, double widget_scal
 {
    Real INIT = 1.0*widget_scale;
    // Scheme3 is for resizing.
-   variables[GuageW_PointL] = new Variable("PntL", Scheme1, Point(0, 0, 0));
-   variables[GuageW_PointR] = new Variable("PntR", Scheme1, Point(INIT, 0, 0));
-   variables[GuageW_Slider] = new Variable("Slider", Scheme2, Point(INIT/2.0, 0, 0));
-   variables[GuageW_Dist] = new Variable("Dist", Scheme1, Point(INIT, 0, 0));
-   variables[GuageW_SDist] = new Variable("SDist", Scheme2, Point(INIT/2.0, 0, 0));
-   variables[GuageW_Ratio] = new Variable("Ratio", Scheme1, Point(0.5, 0, 0));
+   variables[GuageW_PointL] = new PointVariable("PntL", Scheme1, Point(0, 0, 0));
+   variables[GuageW_PointR] = new PointVariable("PntR", Scheme1, Point(INIT, 0, 0));
+   variables[GuageW_Slider] = new PointVariable("Slider", Scheme2, Point(INIT/2.0, 0, 0));
+   variables[GuageW_Dist] = new RealVariable("Dist", Scheme1, INIT);
+   variables[GuageW_SDist] = new RealVariable("SDist", Scheme2, INIT/2.0);
+   variables[GuageW_Ratio] = new RealVariable("Ratio", Scheme1, 0.5);
    
    constraints[GuageW_ConstLine] = new SegmentConstraint("ConstLine",
 							 NumSchemes,
@@ -141,24 +141,24 @@ GuageWidget::~GuageWidget()
 void
 GuageWidget::widget_execute()
 {
-   ((GeomSphere*)geometries[GuageW_GeomPointL])->move(variables[GuageW_PointL]->Get(),
+   ((GeomSphere*)geometries[GuageW_GeomPointL])->move(variables[GuageW_PointL]->GetPoint(),
 						      1*widget_scale);
-   ((GeomSphere*)geometries[GuageW_GeomPointR])->move(variables[GuageW_PointR]->Get(),
+   ((GeomSphere*)geometries[GuageW_GeomPointR])->move(variables[GuageW_PointR]->GetPoint(),
 						      1*widget_scale);
-   ((GeomCylinder*)geometries[GuageW_GeomShaft])->move(variables[GuageW_PointL]->Get(),
-						       variables[GuageW_PointR]->Get(),
+   ((GeomCylinder*)geometries[GuageW_GeomShaft])->move(variables[GuageW_PointL]->GetPoint(),
+						       variables[GuageW_PointR]->GetPoint(),
 						       0.5*widget_scale);
-   ((GeomCappedCylinder*)geometries[GuageW_GeomResizeL])->move(variables[GuageW_PointL]->Get(),
-							       variables[GuageW_PointL]->Get()
+   ((GeomCappedCylinder*)geometries[GuageW_GeomResizeL])->move(variables[GuageW_PointL]->GetPoint(),
+							       variables[GuageW_PointL]->GetPoint()
 							       - (GetAxis() * 1.5 * widget_scale),
 							       0.5*widget_scale);
-   ((GeomCappedCylinder*)geometries[GuageW_GeomResizeR])->move(variables[GuageW_PointR]->Get(),
-							       variables[GuageW_PointR]->Get()
+   ((GeomCappedCylinder*)geometries[GuageW_GeomResizeR])->move(variables[GuageW_PointR]->GetPoint(),
+							       variables[GuageW_PointR]->GetPoint()
 							       + (GetAxis() * 1.5 * widget_scale),
 							       0.5*widget_scale);
-   ((GeomCappedCylinder*)geometries[GuageW_GeomSlider])->move(variables[GuageW_Slider]->Get()
+   ((GeomCappedCylinder*)geometries[GuageW_GeomSlider])->move(variables[GuageW_Slider]->GetPoint()
 							      - (GetAxis() * 0.3 * widget_scale),
-							      variables[GuageW_Slider]->Get()
+							      variables[GuageW_Slider]->GetPoint()
 							      + (GetAxis() * 0.3 * widget_scale),
 							      1.1*widget_scale);
 
@@ -214,7 +214,8 @@ void
 GuageWidget::SetRatio( const Real ratio )
 {
    ASSERT((ratio>=0.0) && (ratio<=1.0));
-   variables[GuageW_Ratio]->Set(Point(ratio, 0.0, 0.0));
+   variables[GuageW_Ratio]->Set(ratio);
+   
    execute();
 }
 
@@ -222,7 +223,7 @@ GuageWidget::SetRatio( const Real ratio )
 Real
 GuageWidget::GetRatio() const
 {
-   return (variables[GuageW_Ratio]->Get().x());
+   return (variables[GuageW_Ratio]->GetReal());
 }
 
 
@@ -231,6 +232,7 @@ GuageWidget::SetEndpoints( const Point& end1, const Point& end2 )
 {
    variables[GuageW_PointL]->Move(end1);
    variables[GuageW_PointR]->Set(end2);
+   
    execute();
 }
 
@@ -238,15 +240,15 @@ GuageWidget::SetEndpoints( const Point& end1, const Point& end2 )
 void
 GuageWidget::GetEndpoints( Point& end1, Point& end2 ) const
 {
-   end1 = variables[GuageW_PointL]->Get();
-   end2 = variables[GuageW_PointR]->Get();
+   end1 = variables[GuageW_PointL]->GetPoint();
+   end2 = variables[GuageW_PointR]->GetPoint();
 }
 
 
 const Vector&
 GuageWidget::GetAxis()
 {
-   Vector axis(variables[GuageW_PointR]->Get() - variables[GuageW_PointL]->Get());
+   Vector axis(variables[GuageW_PointR]->GetPoint() - variables[GuageW_PointL]->GetPoint());
    if (axis.length2() <= 1e-6)
       return oldaxis;
    else 

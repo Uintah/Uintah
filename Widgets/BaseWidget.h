@@ -51,7 +51,8 @@ public:
    inline int GetState();
    inline void SetState( const int state );
 
-   inline const Point& GetVar( const Index vindex ) const;
+   inline const Point& GetPointVar( const Index vindex ) const;
+   inline Real GetRealVar( const Index vindex ) const;
    
    void execute();
 
@@ -73,7 +74,7 @@ protected:
    Index NumPicks;
 
    Array1<BaseConstraint*> constraints;
-   Array1<Variable*> variables;
+   Array1<BaseVariable*> variables;
    Array1<GeomObj*> geometries;
    Array1<MaterialHandle> materials;
    Array1<GeomPick*> picks;
@@ -174,11 +175,20 @@ operator<<( ostream& os, BaseWidget& w )
 
 
 inline const Point&
-BaseWidget::GetVar( const Index vindex ) const
+BaseWidget::GetPointVar( const Index vindex ) const
 {
    ASSERT(vindex<NumVariables);
 
-   return variables[vindex]->Get();
+   return variables[vindex]->GetPoint();
+}
+
+
+inline Real
+BaseWidget::GetRealVar( const Index vindex ) const
+{
+   ASSERT(vindex<NumVariables);
+
+   return variables[vindex]->GetReal();
 }
 
 

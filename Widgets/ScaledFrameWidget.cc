@@ -46,19 +46,19 @@ ScaledFrameWidget::ScaledFrameWidget( Module* module, CrowdMonitor* lock,
   oldaxis1(1, 0, 0), oldaxis2(0, 1, 0)
 {
    Real INIT = 1.0*widget_scale;
-   variables[SFrameW_PointUL] = new Variable("PntUL", Scheme1, Point(0, 0, 0));
-   variables[SFrameW_PointUR] = new Variable("PntUR", Scheme2, Point(INIT, 0, 0));
-   variables[SFrameW_PointDR] = new Variable("PntDR", Scheme1, Point(INIT, INIT, 0));
-   variables[SFrameW_PointDL] = new Variable("PntDL", Scheme2, Point(0, INIT, 0));
-   variables[SFrameW_Slider1] = new Variable("Slider1", Scheme3, Point(INIT/2.0, 0, 0));
-   variables[SFrameW_Slider2] = new Variable("Slider2", Scheme4, Point(0, INIT/2.0, 0));
-   variables[SFrameW_Dist1] = new Variable("Dist1", Scheme1, Point(INIT, 0, 0));
-   variables[SFrameW_Dist2] = new Variable("Dist2", Scheme1, Point(INIT, 0, 0));
-   variables[SFrameW_Hypo] = new Variable("Hypo", Scheme1, Point(sqrt(2*INIT*INIT), 0, 0));
-   variables[SFrameW_SDist1] = new Variable("SDist1", Scheme3, Point(INIT/2.0, 0, 0));
-   variables[SFrameW_SDist2] = new Variable("SDist2", Scheme4, Point(INIT/2.0, 0, 0));
-   variables[SFrameW_Ratio1] = new Variable("Ratio1", Scheme1, Point(0.5, 0, 0));
-   variables[SFrameW_Ratio2] = new Variable("Ratio2", Scheme1, Point(0.5, 0, 0));
+   variables[SFrameW_PointUL] = new PointVariable("PntUL", Scheme1, Point(0, 0, 0));
+   variables[SFrameW_PointUR] = new PointVariable("PntUR", Scheme2, Point(INIT, 0, 0));
+   variables[SFrameW_PointDR] = new PointVariable("PntDR", Scheme1, Point(INIT, INIT, 0));
+   variables[SFrameW_PointDL] = new PointVariable("PntDL", Scheme2, Point(0, INIT, 0));
+   variables[SFrameW_Slider1] = new PointVariable("Slider1", Scheme3, Point(INIT/2.0, 0, 0));
+   variables[SFrameW_Slider2] = new PointVariable("Slider2", Scheme4, Point(0, INIT/2.0, 0));
+   variables[SFrameW_Dist1] = new RealVariable("Dist1", Scheme1, INIT);
+   variables[SFrameW_Dist2] = new RealVariable("Dist2", Scheme1, INIT);
+   variables[SFrameW_Hypo] = new RealVariable("Hypo", Scheme1, sqrt(2*INIT*INIT));
+   variables[SFrameW_SDist1] = new RealVariable("SDist1", Scheme3, INIT/2.0);
+   variables[SFrameW_SDist2] = new RealVariable("SDist2", Scheme4, INIT/2.0);
+   variables[SFrameW_Ratio1] = new RealVariable("Ratio1", Scheme1, 0.5);
+   variables[SFrameW_Ratio2] = new RealVariable("Ratio2", Scheme1, 0.5);
 
    constraints[SFrameW_ConstLine1] = new SegmentConstraint("ConstLine1",
 							   NumSchemes,
@@ -302,61 +302,61 @@ ScaledFrameWidget::~ScaledFrameWidget()
 void
 ScaledFrameWidget::widget_execute()
 {
-   ((GeomSphere*)geometries[SFrameW_SphereUL])->move(variables[SFrameW_PointUL]->Get(),
+   ((GeomSphere*)geometries[SFrameW_SphereUL])->move(variables[SFrameW_PointUL]->GetPoint(),
 						     1*widget_scale);
-   ((GeomSphere*)geometries[SFrameW_SphereUR])->move(variables[SFrameW_PointUR]->Get(),
+   ((GeomSphere*)geometries[SFrameW_SphereUR])->move(variables[SFrameW_PointUR]->GetPoint(),
 						     1*widget_scale);
-   ((GeomSphere*)geometries[SFrameW_SphereDR])->move(variables[SFrameW_PointDR]->Get(),
+   ((GeomSphere*)geometries[SFrameW_SphereDR])->move(variables[SFrameW_PointDR]->GetPoint(),
 						     1*widget_scale);
-   ((GeomSphere*)geometries[SFrameW_SphereDL])->move(variables[SFrameW_PointDL]->Get(),
+   ((GeomSphere*)geometries[SFrameW_SphereDL])->move(variables[SFrameW_PointDL]->GetPoint(),
 						     1*widget_scale);
-   ((GeomCylinder*)geometries[SFrameW_CylU])->move(variables[SFrameW_PointUL]->Get(),
-						   variables[SFrameW_PointUR]->Get(),
+   ((GeomCylinder*)geometries[SFrameW_CylU])->move(variables[SFrameW_PointUL]->GetPoint(),
+						   variables[SFrameW_PointUR]->GetPoint(),
 						   0.5*widget_scale);
-   Point p(variables[SFrameW_PointUL]->Get() + (variables[SFrameW_PointUR]->Get()
-						- variables[SFrameW_PointUL]->Get()) / 2.0);
+   Point p(variables[SFrameW_PointUL]->GetPoint() + (variables[SFrameW_PointUR]->GetPoint()
+						- variables[SFrameW_PointUL]->GetPoint()) / 2.0);
    ((GeomCappedCylinder*)geometries[SFrameW_GeomResizeU])->move(p - (GetAxis2() * 0.6 * widget_scale),
 								p + (GetAxis2() * 0.6 * widget_scale),
 								0.75*widget_scale);
-   p = variables[SFrameW_PointUR]->Get() + (variables[SFrameW_PointDR]->Get()
-					    - variables[SFrameW_PointUR]->Get()) / 2.0;
+   p = variables[SFrameW_PointUR]->GetPoint() + (variables[SFrameW_PointDR]->GetPoint()
+					    - variables[SFrameW_PointUR]->GetPoint()) / 2.0;
    ((GeomCappedCylinder*)geometries[SFrameW_GeomResizeR])->move(p - (GetAxis1() * 0.6 * widget_scale),
 								p + (GetAxis1() * 0.6 * widget_scale),
 								0.75*widget_scale);
-   p = variables[SFrameW_PointDR]->Get() + (variables[SFrameW_PointDL]->Get()
-					    - variables[SFrameW_PointDR]->Get()) / 2.0;
+   p = variables[SFrameW_PointDR]->GetPoint() + (variables[SFrameW_PointDL]->GetPoint()
+					    - variables[SFrameW_PointDR]->GetPoint()) / 2.0;
    ((GeomCappedCylinder*)geometries[SFrameW_GeomResizeD])->move(p - (GetAxis2() * 0.6 * widget_scale),
 								p + (GetAxis2() * 0.6 * widget_scale),
 								0.75*widget_scale);
-   p = variables[SFrameW_PointDL]->Get() + (variables[SFrameW_PointUL]->Get()
-					    - variables[SFrameW_PointDL]->Get()) / 2.0;
+   p = variables[SFrameW_PointDL]->GetPoint() + (variables[SFrameW_PointUL]->GetPoint()
+					    - variables[SFrameW_PointDL]->GetPoint()) / 2.0;
    ((GeomCappedCylinder*)geometries[SFrameW_GeomResizeL])->move(p - (GetAxis1() * 0.6 * widget_scale),
 								p + (GetAxis1() * 0.6 * widget_scale),
 								0.75*widget_scale);
-   ((GeomCylinder*)geometries[SFrameW_CylR])->move(variables[SFrameW_PointUR]->Get(),
-						   variables[SFrameW_PointDR]->Get(),
+   ((GeomCylinder*)geometries[SFrameW_CylR])->move(variables[SFrameW_PointUR]->GetPoint(),
+						   variables[SFrameW_PointDR]->GetPoint(),
 						   0.5*widget_scale);
-   ((GeomCylinder*)geometries[SFrameW_CylD])->move(variables[SFrameW_PointDR]->Get(),
-						   variables[SFrameW_PointDL]->Get(),
+   ((GeomCylinder*)geometries[SFrameW_CylD])->move(variables[SFrameW_PointDR]->GetPoint(),
+						   variables[SFrameW_PointDL]->GetPoint(),
 						   0.5*widget_scale);
-   ((GeomCylinder*)geometries[SFrameW_CylL])->move(variables[SFrameW_PointDL]->Get(),
-						   variables[SFrameW_PointUL]->Get(),
+   ((GeomCylinder*)geometries[SFrameW_CylL])->move(variables[SFrameW_PointDL]->GetPoint(),
+						   variables[SFrameW_PointUL]->GetPoint(),
 						   0.5*widget_scale);
-   ((GeomCappedCylinder*)geometries[SFrameW_SliderCyl1])->move(variables[SFrameW_Slider1]->Get()
+   ((GeomCappedCylinder*)geometries[SFrameW_SliderCyl1])->move(variables[SFrameW_Slider1]->GetPoint()
 							       - (GetAxis1() * 0.3 * widget_scale),
-							       variables[SFrameW_Slider1]->Get()
+							       variables[SFrameW_Slider1]->GetPoint()
 							       + (GetAxis1() * 0.3 * widget_scale),
 							       1.1*widget_scale);
-   ((GeomCappedCylinder*)geometries[SFrameW_SliderCyl2])->move(variables[SFrameW_Slider2]->Get()
+   ((GeomCappedCylinder*)geometries[SFrameW_SliderCyl2])->move(variables[SFrameW_Slider2]->GetPoint()
 							       - (GetAxis2() * 0.3 * widget_scale),
-							       variables[SFrameW_Slider2]->Get()
+							       variables[SFrameW_Slider2]->GetPoint()
 							       + (GetAxis2() * 0.3 * widget_scale),
 							       1.1*widget_scale);
 
    SetEpsilon(widget_scale*1e-6);
 
-   Vector spvec1(variables[SFrameW_PointUR]->Get() - variables[SFrameW_PointUL]->Get());
-   Vector spvec2(variables[SFrameW_PointDL]->Get() - variables[SFrameW_PointUL]->Get());
+   Vector spvec1(variables[SFrameW_PointUR]->GetPoint() - variables[SFrameW_PointUL]->GetPoint());
+   Vector spvec2(variables[SFrameW_PointDL]->GetPoint() - variables[SFrameW_PointUL]->GetPoint());
    if ((spvec1.length2() > 0.0) && (spvec2.length2() > 0.0)) {
       spvec1.normalize();
       spvec2.normalize();
@@ -423,4 +423,156 @@ ScaledFrameWidget::geom_moved( int /* axis */, double /* dist */, const Vector& 
       break;
    }
 }
+
+
+void
+ScaledFrameWidget::SetPosition( const Point& UL, const Point& UR, const Point& DL )
+{
+   Real size1((UR-UL).length()), size2((DL-UL).length());
+   
+   variables[SFrameW_PointUL]->Move(UL);
+   variables[SFrameW_PointUR]->Move(UR);
+   variables[SFrameW_PointDL]->Move(DL);
+   variables[SFrameW_Dist1]->Move(size1);
+   variables[SFrameW_Dist2]->Move(size2);
+   variables[SFrameW_PointDR]->Set(UR+(DL-UL), Scheme5); // This should set Hypo...
+   variables[SFrameW_SDist1]->Set(size1*variables[SFrameW_Ratio1]->GetReal(), Scheme1); // Slider1...
+   variables[SFrameW_SDist2]->Set(size2*variables[SFrameW_Ratio2]->GetReal(), Scheme1); // Slider2...
+
+   execute();
+}
+
+
+void
+ScaledFrameWidget::GetPosition( Point& UL, Point& UR, Point& DL )
+{
+   UL = variables[SFrameW_PointUL]->GetPoint();
+   UR = variables[SFrameW_PointUR]->GetPoint();
+   DL = variables[SFrameW_PointDL]->GetPoint();
+}
+
+
+void
+ScaledFrameWidget::SetPosition( const Point& center, const Vector& normal,
+				const Real size1, const Real size2 )
+{
+   Real s1(size1/2.0), s2(size2/2.0);
+   Vector axis1, axis2;
+   normal.find_orthogonal(axis1, axis2);
+   
+   variables[SFrameW_PointUL]->Move(center-axis1*s1-axis2*s2);
+   variables[SFrameW_PointDR]->Move(center+axis1*s1+axis2*s2);
+   variables[SFrameW_PointUR]->Move(center+axis1*s1-axis2*s2);
+   variables[SFrameW_PointDL]->Move(center-axis1*s1+axis2*s2);
+   variables[SFrameW_Dist1]->Move(size1);
+   variables[SFrameW_Dist2]->Set(size2); // This should set the Hypo...
+   variables[SFrameW_SDist1]->Set(size1*variables[SFrameW_Ratio1]->GetReal(), Scheme1); // Slider1...
+   variables[SFrameW_SDist2]->Set(size2*variables[SFrameW_Ratio2]->GetReal(), Scheme1); // Slider2...
+
+   execute();
+}
+
+
+void
+ScaledFrameWidget::GetPosition( Point& center, Vector& normal,
+				Real& size1, Real& size2 )
+{
+   center = (variables[SFrameW_PointDR]->GetPoint()
+	     + ((variables[SFrameW_PointUL]->GetPoint()-variables[SFrameW_PointDR]->GetPoint())
+		/ 2.0));
+   normal = Cross(GetAxis1(), GetAxis2());
+   size1 = variables[SFrameW_Dist1]->GetReal();
+   size2 = variables[SFrameW_Dist2]->GetReal();
+}
+
+
+void
+ScaledFrameWidget::SetRatio1( const Real ratio )
+{
+   ASSERT((ratio>=0.0) && (ratio<=1.0));
+   variables[SFrameW_Ratio1]->Set(ratio);
+   
+   execute();
+}
+
+
+Real
+ScaledFrameWidget::GetRatio1() const
+{
+   return (variables[SFrameW_Ratio1]->GetReal());
+}
+
+
+void
+ScaledFrameWidget::SetRatio2( const Real ratio )
+{
+   ASSERT((ratio>=0.0) && (ratio<=1.0));
+   variables[SFrameW_Ratio2]->Set(ratio);
+   
+   execute();
+}
+
+
+Real
+ScaledFrameWidget::GetRatio2() const
+{
+   return (variables[SFrameW_Ratio2]->GetReal());
+}
+
+
+void
+ScaledFrameWidget::SetSize( const Real size1, const Real size2 )
+{
+   ASSERT((size1>=0.0)&&(size1>=0.0));
+
+   Point center(variables[SFrameW_PointDR]->GetPoint()
+		+ ((variables[SFrameW_PointUL]->GetPoint()-variables[SFrameW_PointDR]->GetPoint())
+		   / 2.0));
+   Vector axis1((variables[SFrameW_PointUR]->GetPoint() - variables[SFrameW_PointUL]->GetPoint())/2.0);
+   Vector axis2((variables[SFrameW_PointDL]->GetPoint() - variables[SFrameW_PointUL]->GetPoint())/2.0);
+   Real ratio1(size1/variables[SFrameW_Dist1]->GetReal());
+   Real ratio2(size2/variables[SFrameW_Dist2]->GetReal());
+
+   variables[SFrameW_PointUL]->Move(center-axis1*ratio1-axis2*ratio2);
+   variables[SFrameW_PointDR]->Move(center+axis1*ratio1+axis2*ratio2);
+   variables[SFrameW_PointUR]->Move(center+axis1*ratio1-axis2*ratio2);
+   variables[SFrameW_PointDL]->Move(center-axis1*ratio1+axis2*ratio2);
+
+   variables[SFrameW_Dist1]->Move(size1);
+   variables[SFrameW_Dist2]->Set(size2); // This should set the Hypo...
+   variables[SFrameW_SDist1]->Set(size1*variables[SFrameW_Ratio1]->GetReal(), Scheme1); // Slider1...
+   variables[SFrameW_SDist2]->Set(size2*variables[SFrameW_Ratio2]->GetReal(), Scheme1); // Slider2...
+
+   execute();
+}
+
+void
+ScaledFrameWidget::GetSize( Real& size1, Real& size2 ) const
+{
+   size1 = variables[SFrameW_Dist1]->GetReal();
+   size2 = variables[SFrameW_Dist2]->GetReal();
+}
+
+   
+Vector
+ScaledFrameWidget::GetAxis1()
+{
+   Vector axis(variables[SFrameW_PointUR]->GetPoint() - variables[SFrameW_PointUL]->GetPoint());
+   if (axis.length2() <= 1e-6)
+      return oldaxis1;
+   else
+      return (oldaxis1 = axis.normal());
+}
+
+
+Vector
+ScaledFrameWidget::GetAxis2()
+{
+   Vector axis(variables[SFrameW_PointDL]->GetPoint() - variables[SFrameW_PointUL]->GetPoint());
+   if (axis.length2() <= 1e-6)
+      return oldaxis2;
+   else
+      return (oldaxis2 = axis.normal());
+}
+
 

@@ -28,7 +28,7 @@ enum { PointW_Pick };
 PointWidget::PointWidget( Module* module, CrowdMonitor* lock, double widget_scale )
 : BaseWidget(module, lock, NumVars, NumCons, NumGeoms, NumMatls, NumPcks, widget_scale)
 {
-   variables[PointW_Point] = new Variable("Point", Scheme1, Point(0, 0, 0));
+   variables[PointW_Point] = new PointVariable("Point", Scheme1, Point(0, 0, 0));
 
    materials[PointW_PointMatl] = PointWidgetMaterial;
    materials[PointW_HighMatl] = HighlightWidgetMaterial;
@@ -51,7 +51,7 @@ PointWidget::~PointWidget()
 void
 PointWidget::widget_execute()
 {
-   ((GeomSphere*)geometries[PointW_GeomPoint])->move(variables[PointW_Point]->Get(),
+   ((GeomSphere*)geometries[PointW_GeomPoint])->move(variables[PointW_Point]->GetPoint(),
 						     1*widget_scale);
 }
 
@@ -79,6 +79,6 @@ PointWidget::SetPosition( const Point& p )
 const Point&
 PointWidget::GetPosition() const
 {
-   return variables[PointW_Point]->Get();
+   return variables[PointW_Point]->GetPoint();
 }
 

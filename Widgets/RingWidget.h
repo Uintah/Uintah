@@ -40,6 +40,9 @@ public:
       
    void SetRatio( const Real ratio );
    Real GetRatio() const;
+
+   void SetRadius( const Real radius );
+   Real GetRadius() const;
    
    const Vector& GetAxis1();
    const Vector& GetAxis2();

@@ -57,28 +57,28 @@ ScaledBoxWidget::ScaledBoxWidget( Module* module, CrowdMonitor* lock, double wid
 : BaseWidget(module, lock, NumVars, NumCons, NumGeoms, NumMatls, NumPcks, widget_scale)
 {
    Real INIT = 1.0*widget_scale;
-   variables[SBoxW_PointIUL] = new Variable("PntIUL", Scheme1, Point(0, 0, 0));
-   variables[SBoxW_PointIUR] = new Variable("PntIUR", Scheme2, Point(INIT, 0, 0));
-   variables[SBoxW_PointIDR] = new Variable("PntIDR", Scheme1, Point(INIT, INIT, 0));
-   variables[SBoxW_PointIDL] = new Variable("PntIDL", Scheme2, Point(0, INIT, 0));
-   variables[SBoxW_PointOUL] = new Variable("PntOUL", Scheme1, Point(0, 0, INIT));
-   variables[SBoxW_PointOUR] = new Variable("PntOUR", Scheme2, Point(INIT, 0, INIT));
-   variables[SBoxW_PointODR] = new Variable("PntODR", Scheme1, Point(INIT, INIT, INIT));
-   variables[SBoxW_PointODL] = new Variable("PntODL", Scheme2, Point(0, INIT, INIT));
-   variables[SBoxW_Slider1] = new Variable("Slider1", Scheme3, Point(INIT/2.0, 0, 0));
-   variables[SBoxW_Slider2] = new Variable("Slider2", Scheme4, Point(0, INIT/2.0, 0));
-   variables[SBoxW_Slider3] = new Variable("Slider3", Scheme4, Point(0, 0, INIT/2.0));
-   variables[SBoxW_Dist1] = new Variable("DIST1", Scheme1, Point(INIT, 0, 0));
-   variables[SBoxW_Dist2] = new Variable("DIST2", Scheme1, Point(INIT, 0, 0));
-   variables[SBoxW_Dist3] = new Variable("DIST3", Scheme1, Point(INIT, 0, 0));
-   variables[SBoxW_Hypo] = new Variable("HYPO", Scheme1, Point(sqrt(2*INIT*INIT), 0, 0));
-   variables[SBoxW_Diag] = new Variable("DIAG", Scheme1, Point(sqrt(3*INIT*INIT), 0, 0));
-   variables[SBoxW_SDist1] = new Variable("SDist1", Scheme3, Point(INIT/2.0, 0, 0));
-   variables[SBoxW_SDist2] = new Variable("SDist2", Scheme4, Point(INIT/2.0, 0, 0));
-   variables[SBoxW_SDist3] = new Variable("SDist3", Scheme4, Point(INIT/2.0, 0, 0));
-   variables[SBoxW_Ratio1] = new Variable("Ratio1", Scheme1, Point(0.5, 0, 0));
-   variables[SBoxW_Ratio2] = new Variable("Ratio2", Scheme1, Point(0.5, 0, 0));
-   variables[SBoxW_Ratio3] = new Variable("Ratio3", Scheme1, Point(0.5, 0, 0));
+   variables[SBoxW_PointIUL] = new PointVariable("PntIUL", Scheme1, Point(0, 0, 0));
+   variables[SBoxW_PointIUR] = new PointVariable("PntIUR", Scheme2, Point(INIT, 0, 0));
+   variables[SBoxW_PointIDR] = new PointVariable("PntIDR", Scheme1, Point(INIT, INIT, 0));
+   variables[SBoxW_PointIDL] = new PointVariable("PntIDL", Scheme2, Point(0, INIT, 0));
+   variables[SBoxW_PointOUL] = new PointVariable("PntOUL", Scheme1, Point(0, 0, INIT));
+   variables[SBoxW_PointOUR] = new PointVariable("PntOUR", Scheme2, Point(INIT, 0, INIT));
+   variables[SBoxW_PointODR] = new PointVariable("PntODR", Scheme1, Point(INIT, INIT, INIT));
+   variables[SBoxW_PointODL] = new PointVariable("PntODL", Scheme2, Point(0, INIT, INIT));
+   variables[SBoxW_Slider1] = new PointVariable("Slider1", Scheme3, Point(INIT/2.0, 0, 0));
+   variables[SBoxW_Slider2] = new PointVariable("Slider2", Scheme4, Point(0, INIT/2.0, 0));
+   variables[SBoxW_Slider3] = new PointVariable("Slider3", Scheme4, Point(0, 0, INIT/2.0));
+   variables[SBoxW_Dist1] = new RealVariable("DIST1", Scheme1, INIT);
+   variables[SBoxW_Dist2] = new RealVariable("DIST2", Scheme1, INIT);
+   variables[SBoxW_Dist3] = new RealVariable("DIST3", Scheme1, INIT);
+   variables[SBoxW_Hypo] = new RealVariable("HYPO", Scheme1, sqrt(2*INIT*INIT));
+   variables[SBoxW_Diag] = new RealVariable("DIAG", Scheme1, sqrt(3*INIT*INIT));
+   variables[SBoxW_SDist1] = new RealVariable("SDist1", Scheme3, INIT/2.0);
+   variables[SBoxW_SDist2] = new RealVariable("SDist2", Scheme4, INIT/2.0);
+   variables[SBoxW_SDist3] = new RealVariable("SDist3", Scheme4, INIT/2.0);
+   variables[SBoxW_Ratio1] = new RealVariable("Ratio1", Scheme1, 0.5);
+   variables[SBoxW_Ratio2] = new RealVariable("Ratio2", Scheme1, 0.5);
+   variables[SBoxW_Ratio3] = new RealVariable("Ratio3", Scheme1, 0.5);
 
    NOT_FINISHED("Constraints not right!");
    
@@ -434,199 +434,199 @@ ScaledBoxWidget::~ScaledBoxWidget()
 void
 ScaledBoxWidget::widget_execute()
 {
-   ((GeomSphere*)geometries[SBoxW_SphereIUL])->move(variables[SBoxW_PointIUL]->Get(),
+   ((GeomSphere*)geometries[SBoxW_SphereIUL])->move(variables[SBoxW_PointIUL]->GetPoint(),
 						    1*widget_scale);
-   ((GeomSphere*)geometries[SBoxW_SphereIUR])->move(variables[SBoxW_PointIUR]->Get(),
+   ((GeomSphere*)geometries[SBoxW_SphereIUR])->move(variables[SBoxW_PointIUR]->GetPoint(),
 						    1*widget_scale);
-   ((GeomSphere*)geometries[SBoxW_SphereIDR])->move(variables[SBoxW_PointIDR]->Get(),
+   ((GeomSphere*)geometries[SBoxW_SphereIDR])->move(variables[SBoxW_PointIDR]->GetPoint(),
 						    1*widget_scale);
-   ((GeomSphere*)geometries[SBoxW_SphereIDL])->move(variables[SBoxW_PointIDL]->Get(),
+   ((GeomSphere*)geometries[SBoxW_SphereIDL])->move(variables[SBoxW_PointIDL]->GetPoint(),
 						    1*widget_scale);
-   ((GeomSphere*)geometries[SBoxW_SphereOUL])->move(variables[SBoxW_PointOUL]->Get(),
+   ((GeomSphere*)geometries[SBoxW_SphereOUL])->move(variables[SBoxW_PointOUL]->GetPoint(),
 						    1*widget_scale);
-   ((GeomSphere*)geometries[SBoxW_SphereOUR])->move(variables[SBoxW_PointOUR]->Get(),
+   ((GeomSphere*)geometries[SBoxW_SphereOUR])->move(variables[SBoxW_PointOUR]->GetPoint(),
 						    1*widget_scale);
-   ((GeomSphere*)geometries[SBoxW_SphereODR])->move(variables[SBoxW_PointODR]->Get(),
+   ((GeomSphere*)geometries[SBoxW_SphereODR])->move(variables[SBoxW_PointODR]->GetPoint(),
 						    1*widget_scale);
-   ((GeomSphere*)geometries[SBoxW_SphereODL])->move(variables[SBoxW_PointODL]->Get(),
+   ((GeomSphere*)geometries[SBoxW_SphereODL])->move(variables[SBoxW_PointODL]->GetPoint(),
 						    1*widget_scale);
-   Point p(variables[SBoxW_PointOUL]->Get() + (variables[SBoxW_PointOUR]->Get()
-					       - variables[SBoxW_PointOUL]->Get()) / 3.0);
+   Point p(variables[SBoxW_PointOUL]->GetPoint() + (variables[SBoxW_PointOUR]->GetPoint()
+					       - variables[SBoxW_PointOUL]->GetPoint()) / 3.0);
    ((GeomCappedCylinder*)geometries[SBoxW_GeomResizeUU])->move(p - (GetAxis2() * 0.6 * widget_scale),
 							       p + (GetAxis2() * 0.6 * widget_scale),
 							       0.75*widget_scale);
-   p = variables[SBoxW_PointOUR]->Get() + (variables[SBoxW_PointIUR]->Get()
-					   - variables[SBoxW_PointOUR]->Get()) / 3.0;
+   p = variables[SBoxW_PointOUR]->GetPoint() + (variables[SBoxW_PointIUR]->GetPoint()
+					   - variables[SBoxW_PointOUR]->GetPoint()) / 3.0;
    ((GeomCappedCylinder*)geometries[SBoxW_GeomResizeUR])->move(p - (GetAxis2() * 0.6 * widget_scale),
 							       p + (GetAxis2() * 0.6 * widget_scale),
 							       0.75*widget_scale);
-   p = variables[SBoxW_PointIUR]->Get() + (variables[SBoxW_PointIUL]->Get()
-					   - variables[SBoxW_PointIUR]->Get()) / 3.0;
+   p = variables[SBoxW_PointIUR]->GetPoint() + (variables[SBoxW_PointIUL]->GetPoint()
+					   - variables[SBoxW_PointIUR]->GetPoint()) / 3.0;
    ((GeomCappedCylinder*)geometries[SBoxW_GeomResizeUD])->move(p - (GetAxis2() * 0.6 * widget_scale),
 							       p + (GetAxis2() * 0.6 * widget_scale),
 							       0.75*widget_scale);
-   p = variables[SBoxW_PointIUL]->Get() + (variables[SBoxW_PointOUL]->Get()
-					   - variables[SBoxW_PointIUL]->Get()) / 3.0;
+   p = variables[SBoxW_PointIUL]->GetPoint() + (variables[SBoxW_PointOUL]->GetPoint()
+					   - variables[SBoxW_PointIUL]->GetPoint()) / 3.0;
    ((GeomCappedCylinder*)geometries[SBoxW_GeomResizeUL])->move(p - (GetAxis2() * 0.6 * widget_scale),
 							       p + (GetAxis2() * 0.6 * widget_scale),
 							       0.75*widget_scale);
-   p = variables[SBoxW_PointIUR]->Get() + (variables[SBoxW_PointOUR]->Get()
-					   - variables[SBoxW_PointIUR]->Get()) / 3.0;
+   p = variables[SBoxW_PointIUR]->GetPoint() + (variables[SBoxW_PointOUR]->GetPoint()
+					   - variables[SBoxW_PointIUR]->GetPoint()) / 3.0;
    ((GeomCappedCylinder*)geometries[SBoxW_GeomResizeRU])->move(p - (GetAxis1() * 0.6 * widget_scale),
 							       p + (GetAxis1() * 0.6 * widget_scale),
 							       0.75*widget_scale);
-   p = variables[SBoxW_PointOUR]->Get() + (variables[SBoxW_PointODR]->Get()
-					   - variables[SBoxW_PointOUR]->Get()) / 3.0;
+   p = variables[SBoxW_PointOUR]->GetPoint() + (variables[SBoxW_PointODR]->GetPoint()
+					   - variables[SBoxW_PointOUR]->GetPoint()) / 3.0;
    ((GeomCappedCylinder*)geometries[SBoxW_GeomResizeRR])->move(p - (GetAxis1() * 0.6 * widget_scale),
 							       p + (GetAxis1() * 0.6 * widget_scale),
 							       0.75*widget_scale);
-   p = variables[SBoxW_PointODR]->Get() + (variables[SBoxW_PointIDR]->Get()
-					   - variables[SBoxW_PointODR]->Get()) / 3.0;
+   p = variables[SBoxW_PointODR]->GetPoint() + (variables[SBoxW_PointIDR]->GetPoint()
+					   - variables[SBoxW_PointODR]->GetPoint()) / 3.0;
    ((GeomCappedCylinder*)geometries[SBoxW_GeomResizeRD])->move(p - (GetAxis1() * 0.6 * widget_scale),
 							       p + (GetAxis1() * 0.6 * widget_scale),
 							       0.75*widget_scale);
-   p = variables[SBoxW_PointIDR]->Get() + (variables[SBoxW_PointIUR]->Get()
-					   - variables[SBoxW_PointIDR]->Get()) / 3.0;
+   p = variables[SBoxW_PointIDR]->GetPoint() + (variables[SBoxW_PointIUR]->GetPoint()
+					   - variables[SBoxW_PointIDR]->GetPoint()) / 3.0;
    ((GeomCappedCylinder*)geometries[SBoxW_GeomResizeRL])->move(p - (GetAxis1() * 0.6 * widget_scale),
 							       p + (GetAxis1() * 0.6 * widget_scale),
 							       0.75*widget_scale);
-   p = variables[SBoxW_PointIDL]->Get() + (variables[SBoxW_PointIDR]->Get()
-					   - variables[SBoxW_PointIDL]->Get()) / 3.0;
+   p = variables[SBoxW_PointIDL]->GetPoint() + (variables[SBoxW_PointIDR]->GetPoint()
+					   - variables[SBoxW_PointIDL]->GetPoint()) / 3.0;
    ((GeomCappedCylinder*)geometries[SBoxW_GeomResizeDU])->move(p - (GetAxis2() * 0.6 * widget_scale),
 							       p + (GetAxis2() * 0.6 * widget_scale),
 							       0.75*widget_scale);
-   p = variables[SBoxW_PointIDR]->Get() + (variables[SBoxW_PointODR]->Get()
-					   - variables[SBoxW_PointIDR]->Get()) / 3.0;
+   p = variables[SBoxW_PointIDR]->GetPoint() + (variables[SBoxW_PointODR]->GetPoint()
+					   - variables[SBoxW_PointIDR]->GetPoint()) / 3.0;
    ((GeomCappedCylinder*)geometries[SBoxW_GeomResizeDR])->move(p - (GetAxis2() * 0.6 * widget_scale),
 							       p + (GetAxis2() * 0.6 * widget_scale),
 							       0.75*widget_scale);
-   p = variables[SBoxW_PointODR]->Get() + (variables[SBoxW_PointODL]->Get()
-					   - variables[SBoxW_PointODR]->Get()) / 3.0;
+   p = variables[SBoxW_PointODR]->GetPoint() + (variables[SBoxW_PointODL]->GetPoint()
+					   - variables[SBoxW_PointODR]->GetPoint()) / 3.0;
    ((GeomCappedCylinder*)geometries[SBoxW_GeomResizeDD])->move(p - (GetAxis2() * 0.6 * widget_scale),
 							       p + (GetAxis2() * 0.6 * widget_scale),
 							       0.75*widget_scale);
-   p = variables[SBoxW_PointODL]->Get() + (variables[SBoxW_PointIDL]->Get()
-					   - variables[SBoxW_PointODL]->Get()) / 3.0;
+   p = variables[SBoxW_PointODL]->GetPoint() + (variables[SBoxW_PointIDL]->GetPoint()
+					   - variables[SBoxW_PointODL]->GetPoint()) / 3.0;
    ((GeomCappedCylinder*)geometries[SBoxW_GeomResizeDL])->move(p - (GetAxis2() * 0.6 * widget_scale),
 							       p + (GetAxis2() * 0.6 * widget_scale),
 							       0.75*widget_scale);
-   p = variables[SBoxW_PointOUL]->Get() + (variables[SBoxW_PointIUL]->Get()
-					   - variables[SBoxW_PointOUL]->Get()) / 3.0;
+   p = variables[SBoxW_PointOUL]->GetPoint() + (variables[SBoxW_PointIUL]->GetPoint()
+					   - variables[SBoxW_PointOUL]->GetPoint()) / 3.0;
    ((GeomCappedCylinder*)geometries[SBoxW_GeomResizeLU])->move(p - (GetAxis1() * 0.6 * widget_scale),
 							       p + (GetAxis1() * 0.6 * widget_scale),
 							       0.75*widget_scale);
-   p = variables[SBoxW_PointIUL]->Get() + (variables[SBoxW_PointIDL]->Get()
-					   - variables[SBoxW_PointIUL]->Get()) / 3.0;
+   p = variables[SBoxW_PointIUL]->GetPoint() + (variables[SBoxW_PointIDL]->GetPoint()
+					   - variables[SBoxW_PointIUL]->GetPoint()) / 3.0;
    ((GeomCappedCylinder*)geometries[SBoxW_GeomResizeLR])->move(p - (GetAxis1() * 0.6 * widget_scale),
 							       p + (GetAxis1() * 0.6 * widget_scale),
 							       0.75*widget_scale);
-   p = variables[SBoxW_PointIDL]->Get() + (variables[SBoxW_PointODL]->Get()
-					   - variables[SBoxW_PointIDL]->Get()) / 3.0;
+   p = variables[SBoxW_PointIDL]->GetPoint() + (variables[SBoxW_PointODL]->GetPoint()
+					   - variables[SBoxW_PointIDL]->GetPoint()) / 3.0;
    ((GeomCappedCylinder*)geometries[SBoxW_GeomResizeLD])->move(p - (GetAxis1() * 0.6 * widget_scale),
 							       p + (GetAxis1() * 0.6 * widget_scale),
 							       0.75*widget_scale);
-   p = variables[SBoxW_PointODL]->Get() + (variables[SBoxW_PointOUL]->Get()
-					   - variables[SBoxW_PointODL]->Get()) / 3.0;
+   p = variables[SBoxW_PointODL]->GetPoint() + (variables[SBoxW_PointOUL]->GetPoint()
+					   - variables[SBoxW_PointODL]->GetPoint()) / 3.0;
    ((GeomCappedCylinder*)geometries[SBoxW_GeomResizeLL])->move(p - (GetAxis1() * 0.6 * widget_scale),
 							       p + (GetAxis1() * 0.6 * widget_scale),
 							       0.75*widget_scale);
-   p = variables[SBoxW_PointIUL]->Get() + (variables[SBoxW_PointIUR]->Get()
-					   - variables[SBoxW_PointIUL]->Get()) / 3.0;
+   p = variables[SBoxW_PointIUL]->GetPoint() + (variables[SBoxW_PointIUR]->GetPoint()
+					   - variables[SBoxW_PointIUL]->GetPoint()) / 3.0;
    ((GeomCappedCylinder*)geometries[SBoxW_GeomResizeIU])->move(p - (GetAxis3() * 0.6 * widget_scale),
 							       p + (GetAxis3() * 0.6 * widget_scale),
 							       0.75*widget_scale);
-   p = variables[SBoxW_PointIUR]->Get() + (variables[SBoxW_PointIDR]->Get()
-					   - variables[SBoxW_PointIUR]->Get()) / 3.0;
+   p = variables[SBoxW_PointIUR]->GetPoint() + (variables[SBoxW_PointIDR]->GetPoint()
+					   - variables[SBoxW_PointIUR]->GetPoint()) / 3.0;
    ((GeomCappedCylinder*)geometries[SBoxW_GeomResizeIR])->move(p - (GetAxis3() * 0.6 * widget_scale),
 							       p + (GetAxis3() * 0.6 * widget_scale),
 							       0.75*widget_scale);
-   p = variables[SBoxW_PointIDR]->Get() + (variables[SBoxW_PointIDL]->Get()
-					   - variables[SBoxW_PointIDR]->Get()) / 3.0;
+   p = variables[SBoxW_PointIDR]->GetPoint() + (variables[SBoxW_PointIDL]->GetPoint()
+					   - variables[SBoxW_PointIDR]->GetPoint()) / 3.0;
    ((GeomCappedCylinder*)geometries[SBoxW_GeomResizeID])->move(p - (GetAxis3() * 0.6 * widget_scale),
 							       p + (GetAxis3() * 0.6 * widget_scale),
 							       0.75*widget_scale);
-   p = variables[SBoxW_PointIDL]->Get() + (variables[SBoxW_PointIUL]->Get()
-					   - variables[SBoxW_PointIDL]->Get()) / 3.0;
+   p = variables[SBoxW_PointIDL]->GetPoint() + (variables[SBoxW_PointIUL]->GetPoint()
+					   - variables[SBoxW_PointIDL]->GetPoint()) / 3.0;
    ((GeomCappedCylinder*)geometries[SBoxW_GeomResizeIL])->move(p - (GetAxis3() * 0.6 * widget_scale),
 							       p + (GetAxis3() * 0.6 * widget_scale),
 							       0.75*widget_scale);
-   p = variables[SBoxW_PointOUR]->Get() + (variables[SBoxW_PointOUL]->Get()
-					   - variables[SBoxW_PointOUR]->Get()) / 3.0;
+   p = variables[SBoxW_PointOUR]->GetPoint() + (variables[SBoxW_PointOUL]->GetPoint()
+					   - variables[SBoxW_PointOUR]->GetPoint()) / 3.0;
    ((GeomCappedCylinder*)geometries[SBoxW_GeomResizeOU])->move(p - (GetAxis3() * 0.6 * widget_scale),
 							       p + (GetAxis3() * 0.6 * widget_scale),
 							       0.75*widget_scale);
-   p = variables[SBoxW_PointOUL]->Get() + (variables[SBoxW_PointODL]->Get()
-					   - variables[SBoxW_PointOUL]->Get()) / 3.0;
+   p = variables[SBoxW_PointOUL]->GetPoint() + (variables[SBoxW_PointODL]->GetPoint()
+					   - variables[SBoxW_PointOUL]->GetPoint()) / 3.0;
    ((GeomCappedCylinder*)geometries[SBoxW_GeomResizeOR])->move(p - (GetAxis3() * 0.6 * widget_scale),
 							       p + (GetAxis3() * 0.6 * widget_scale),
 							       0.75*widget_scale);
-   p = variables[SBoxW_PointODL]->Get() + (variables[SBoxW_PointODR]->Get()
-					   - variables[SBoxW_PointODL]->Get()) / 3.0;
+   p = variables[SBoxW_PointODL]->GetPoint() + (variables[SBoxW_PointODR]->GetPoint()
+					   - variables[SBoxW_PointODL]->GetPoint()) / 3.0;
    ((GeomCappedCylinder*)geometries[SBoxW_GeomResizeOD])->move(p - (GetAxis3() * 0.6 * widget_scale),
 							       p + (GetAxis3() * 0.6 * widget_scale),
 							       0.75*widget_scale);
-   p = variables[SBoxW_PointODR]->Get() + (variables[SBoxW_PointOUR]->Get()
-					   - variables[SBoxW_PointODR]->Get()) / 3.0;
+   p = variables[SBoxW_PointODR]->GetPoint() + (variables[SBoxW_PointOUR]->GetPoint()
+					   - variables[SBoxW_PointODR]->GetPoint()) / 3.0;
    ((GeomCappedCylinder*)geometries[SBoxW_GeomResizeOL])->move(p - (GetAxis3() * 0.6 * widget_scale),
 							       p + (GetAxis3() * 0.6 * widget_scale),
 							       0.75*widget_scale);
-   ((GeomCylinder*)geometries[SBoxW_CylIU])->move(variables[SBoxW_PointIUL]->Get(),
-						  variables[SBoxW_PointIUR]->Get(),
+   ((GeomCylinder*)geometries[SBoxW_CylIU])->move(variables[SBoxW_PointIUL]->GetPoint(),
+						  variables[SBoxW_PointIUR]->GetPoint(),
 						  0.5*widget_scale);
-   ((GeomCylinder*)geometries[SBoxW_CylIR])->move(variables[SBoxW_PointIUR]->Get(),
-						  variables[SBoxW_PointIDR]->Get(),
+   ((GeomCylinder*)geometries[SBoxW_CylIR])->move(variables[SBoxW_PointIUR]->GetPoint(),
+						  variables[SBoxW_PointIDR]->GetPoint(),
 						  0.5*widget_scale);
-   ((GeomCylinder*)geometries[SBoxW_CylID])->move(variables[SBoxW_PointIDR]->Get(),
-						  variables[SBoxW_PointIDL]->Get(),
+   ((GeomCylinder*)geometries[SBoxW_CylID])->move(variables[SBoxW_PointIDR]->GetPoint(),
+						  variables[SBoxW_PointIDL]->GetPoint(),
 						  0.5*widget_scale);
-   ((GeomCylinder*)geometries[SBoxW_CylIL])->move(variables[SBoxW_PointIDL]->Get(),
-						  variables[SBoxW_PointIUL]->Get(),
+   ((GeomCylinder*)geometries[SBoxW_CylIL])->move(variables[SBoxW_PointIDL]->GetPoint(),
+						  variables[SBoxW_PointIUL]->GetPoint(),
 						  0.5*widget_scale);
-   ((GeomCylinder*)geometries[SBoxW_CylMU])->move(variables[SBoxW_PointIUL]->Get(),
-						  variables[SBoxW_PointOUL]->Get(),
+   ((GeomCylinder*)geometries[SBoxW_CylMU])->move(variables[SBoxW_PointIUL]->GetPoint(),
+						  variables[SBoxW_PointOUL]->GetPoint(),
 						  0.5*widget_scale);
-   ((GeomCylinder*)geometries[SBoxW_CylMR])->move(variables[SBoxW_PointIUR]->Get(),
-						  variables[SBoxW_PointOUR]->Get(),
+   ((GeomCylinder*)geometries[SBoxW_CylMR])->move(variables[SBoxW_PointIUR]->GetPoint(),
+						  variables[SBoxW_PointOUR]->GetPoint(),
 						  0.5*widget_scale);
-   ((GeomCylinder*)geometries[SBoxW_CylMD])->move(variables[SBoxW_PointIDR]->Get(),
-						  variables[SBoxW_PointODR]->Get(),
+   ((GeomCylinder*)geometries[SBoxW_CylMD])->move(variables[SBoxW_PointIDR]->GetPoint(),
+						  variables[SBoxW_PointODR]->GetPoint(),
 						  0.5*widget_scale);
-   ((GeomCylinder*)geometries[SBoxW_CylML])->move(variables[SBoxW_PointIDL]->Get(),
-						  variables[SBoxW_PointODL]->Get(),
+   ((GeomCylinder*)geometries[SBoxW_CylML])->move(variables[SBoxW_PointIDL]->GetPoint(),
+						  variables[SBoxW_PointODL]->GetPoint(),
 						  0.5*widget_scale);
-   ((GeomCylinder*)geometries[SBoxW_CylOU])->move(variables[SBoxW_PointOUL]->Get(),
-						  variables[SBoxW_PointOUR]->Get(),
+   ((GeomCylinder*)geometries[SBoxW_CylOU])->move(variables[SBoxW_PointOUL]->GetPoint(),
+						  variables[SBoxW_PointOUR]->GetPoint(),
 						  0.5*widget_scale);
-   ((GeomCylinder*)geometries[SBoxW_CylOR])->move(variables[SBoxW_PointOUR]->Get(),
-						  variables[SBoxW_PointODR]->Get(),
+   ((GeomCylinder*)geometries[SBoxW_CylOR])->move(variables[SBoxW_PointOUR]->GetPoint(),
+						  variables[SBoxW_PointODR]->GetPoint(),
 						  0.5*widget_scale);
-   ((GeomCylinder*)geometries[SBoxW_CylOD])->move(variables[SBoxW_PointODR]->Get(),
-						  variables[SBoxW_PointODL]->Get(),
+   ((GeomCylinder*)geometries[SBoxW_CylOD])->move(variables[SBoxW_PointODR]->GetPoint(),
+						  variables[SBoxW_PointODL]->GetPoint(),
 						  0.5*widget_scale);
-   ((GeomCylinder*)geometries[SBoxW_CylOL])->move(variables[SBoxW_PointODL]->Get(),
-						  variables[SBoxW_PointOUL]->Get(),
+   ((GeomCylinder*)geometries[SBoxW_CylOL])->move(variables[SBoxW_PointODL]->GetPoint(),
+						  variables[SBoxW_PointOUL]->GetPoint(),
 						  0.5*widget_scale);
-   ((GeomCappedCylinder*)geometries[SBoxW_SliderCyl1])->move(variables[SBoxW_Slider1]->Get()
+   ((GeomCappedCylinder*)geometries[SBoxW_SliderCyl1])->move(variables[SBoxW_Slider1]->GetPoint()
 							     - (GetAxis1() * 0.3 * widget_scale),
-							     variables[SBoxW_Slider1]->Get()
+							     variables[SBoxW_Slider1]->GetPoint()
 							     + (GetAxis1() * 0.3 * widget_scale),
 							     1.1*widget_scale);
-   ((GeomCappedCylinder*)geometries[SBoxW_SliderCyl2])->move(variables[SBoxW_Slider2]->Get()
+   ((GeomCappedCylinder*)geometries[SBoxW_SliderCyl2])->move(variables[SBoxW_Slider2]->GetPoint()
 							     - (GetAxis2() * 0.3 * widget_scale),
-							     variables[SBoxW_Slider2]->Get()
+							     variables[SBoxW_Slider2]->GetPoint()
 							     + (GetAxis2() * 0.3 * widget_scale),
 							     1.1*widget_scale);
-   ((GeomCappedCylinder*)geometries[SBoxW_SliderCyl3])->move(variables[SBoxW_Slider3]->Get()
+   ((GeomCappedCylinder*)geometries[SBoxW_SliderCyl3])->move(variables[SBoxW_Slider3]->GetPoint()
 							     - (GetAxis3() * 0.3 * widget_scale),
-							     variables[SBoxW_Slider3]->Get()
+							     variables[SBoxW_Slider3]->GetPoint()
 							     + (GetAxis3() * 0.3 * widget_scale),
 							     1.1*widget_scale);
 
    SetEpsilon(widget_scale*1e-6);
 
-   Vector spvec1(variables[SBoxW_PointIUR]->Get() - variables[SBoxW_PointIUL]->Get());
-   Vector spvec2(variables[SBoxW_PointIDL]->Get() - variables[SBoxW_PointIUL]->Get());
-   Vector spvec3(variables[SBoxW_PointOUL]->Get() - variables[SBoxW_PointIUL]->Get());
+   Vector spvec1(variables[SBoxW_PointIUR]->GetPoint() - variables[SBoxW_PointIUL]->GetPoint());
+   Vector spvec2(variables[SBoxW_PointIDL]->GetPoint() - variables[SBoxW_PointIUL]->GetPoint());
+   Vector spvec3(variables[SBoxW_PointOUL]->GetPoint() - variables[SBoxW_PointIUL]->GetPoint());
    if ((spvec1.length2() > 0.0) && (spvec2.length2() > 0.0) && (spvec3.length2() > 0.0)) {
       spvec1.normalize();
       spvec2.normalize();

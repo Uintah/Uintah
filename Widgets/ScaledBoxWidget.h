@@ -38,6 +38,10 @@ public:
    virtual void widget_execute();
    virtual void geom_moved(int, double, const Vector&, void*);
 
+   inline Real GetRatio1() const;
+   inline Real GetRatio2() const;
+   inline Real GetRatio3() const;
+
    inline Vector GetAxis1();
    inline Vector GetAxis2();
    inline Vector GetAxis3();
@@ -47,10 +51,31 @@ private:
 };
 
 
+inline Real
+ScaledBoxWidget::GetRatio1() const
+{
+   return (variables[SBoxW_Ratio1]->GetReal());
+}
+
+
+inline Real
+ScaledBoxWidget::GetRatio2() const
+{
+   return (variables[SBoxW_Ratio2]->GetReal());
+}
+
+
+inline Real
+ScaledBoxWidget::GetRatio3() const
+{
+   return (variables[SBoxW_Ratio3]->GetReal());
+}
+
+
 inline Vector
 ScaledBoxWidget::GetAxis1()
 {
-   Vector axis(variables[SBoxW_PointIUR]->Get() - variables[SBoxW_PointIUL]->Get());
+   Vector axis(variables[SBoxW_PointIUR]->GetPoint() - variables[SBoxW_PointIUL]->GetPoint());
    if (axis.length2() <= 1e-6)
       return oldaxis1;
    else
@@ -61,7 +86,7 @@ ScaledBoxWidget::GetAxis1()
 inline Vector
 ScaledBoxWidget::GetAxis2()
 {
-   Vector axis(variables[SBoxW_PointIDL]->Get() - variables[SBoxW_PointIUL]->Get());
+   Vector axis(variables[SBoxW_PointIDL]->GetPoint() - variables[SBoxW_PointIUL]->GetPoint());
    if (axis.length2() <= 1e-6)
       return oldaxis2;
    else
@@ -72,7 +97,7 @@ ScaledBoxWidget::GetAxis2()
 inline Vector
 ScaledBoxWidget::GetAxis3()
 {
-   Vector axis(variables[SBoxW_PointOUL]->Get() - variables[SBoxW_PointIUL]->Get());
+   Vector axis(variables[SBoxW_PointOUL]->GetPoint() - variables[SBoxW_PointIUL]->GetPoint());
    if (axis.length2() <= 1e-6)
       return oldaxis3;
    else

@@ -46,7 +46,7 @@ private:
 inline Vector
 FixedFrameWidget::GetAxis1()
 {
-   Vector axis(variables[FFrameW_PointUR]->Get() - variables[FFrameW_PointUL]->Get());
+   Vector axis(variables[FFrameW_PointUR]->GetPoint() - variables[FFrameW_PointUL]->GetPoint());
    if (axis.length2() <= 1e-6)
       return oldaxis1;
    else
@@ -57,7 +57,7 @@ FixedFrameWidget::GetAxis1()
 inline Vector
 FixedFrameWidget::GetAxis2()
 {
-   Vector axis(variables[FFrameW_PointDL]->Get() - variables[FFrameW_PointUL]->Get());
+   Vector axis(variables[FFrameW_PointDL]->GetPoint() - variables[FFrameW_PointUL]->GetPoint());
    if (axis.length2() <= 1e-6)
       return oldaxis2;
    else

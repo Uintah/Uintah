@@ -36,50 +36,28 @@ public:
    virtual void widget_execute();
    virtual void geom_moved(int, double, const Vector&, void*);
 
-   inline Real GetRatio1() const;
-   inline Real GetRatio2() const;
-   inline Vector GetAxis1();
-   inline Vector GetAxis2();
+   void SetPosition( const Point& UL, const Point& UR, const Point& DL );
+   void GetPosition( Point& UL, Point& UR, Point& DL );
+
+   void SetPosition( const Point& center, const Vector& normal,
+		     const Real size1, const Real size2 );
+   void GetPosition( Point& center, Vector& normal,
+		     Real& size1, Real& size2 );
+
+   void SetRatio1( const Real ratio );
+   Real GetRatio1() const;
+   void SetRatio2( const Real ratio );
+   Real GetRatio2() const;
+
+   void SetSize( const Real size1, const Real size2 );
+   void GetSize( Real& size1, Real& size2 ) const;
+   
+   Vector GetAxis1();
+   Vector GetAxis2();
 
 private:
    Vector oldaxis1, oldaxis2;
 };
-
-
-inline Real
-ScaledFrameWidget::GetRatio1() const
-{
-   return (variables[SFrameW_Ratio1]->Get().x());
-}
-
-
-inline Real
-ScaledFrameWidget::GetRatio2() const
-{
-   return (variables[SFrameW_Ratio2]->Get().x());
-}
-
-
-inline Vector
-ScaledFrameWidget::GetAxis1()
-{
-   Vector axis(variables[SFrameW_PointUR]->Get() - variables[SFrameW_PointUL]->Get());
-   if (axis.length2() <= 1e-6)
-      return oldaxis1;
-   else
-      return (oldaxis1 = axis.normal());
-}
-
-
-inline Vector
-ScaledFrameWidget::GetAxis2()
-{
-   Vector axis(variables[SFrameW_PointDL]->Get() - variables[SFrameW_PointUL]->Get());
-   if (axis.length2() <= 1e-6)
-      return oldaxis2;
-   else
-      return (oldaxis2 = axis.normal());
-}
 
 
 #endif

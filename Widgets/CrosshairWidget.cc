@@ -30,7 +30,7 @@ CrosshairWidget::CrosshairWidget( Module* module, CrowdMonitor* lock, double wid
 : BaseWidget(module, lock, NumVars, NumCons, NumGeoms, NumMatls, NumPcks, widget_scale),
   axis1(1, 0, 0), axis2(0, 1, 0), axis3(0, 0, 1)
 {
-   variables[CrosshairW_Center] = new Variable("Crosshair", Scheme1, Point(0, 0, 0));
+   variables[CrosshairW_Center] = new PointVariable("Crosshair", Scheme1, Point(0, 0, 0));
 
    materials[CrosshairW_CenterMatl] = PointWidgetMaterial;
    materials[CrosshairW_AxesMatl] = EdgeWidgetMaterial;
@@ -63,21 +63,21 @@ CrosshairWidget::~CrosshairWidget()
 void
 CrosshairWidget::widget_execute()
 {
-   ((GeomSphere*)geometries[CrosshairW_GeomCenter])->move(variables[CrosshairW_Center]->Get(),
+   ((GeomSphere*)geometries[CrosshairW_GeomCenter])->move(variables[CrosshairW_Center]->GetPoint(),
 							  1*widget_scale);
-   ((GeomCappedCylinder*)geometries[CrosshairW_GeomAxis1])->move(variables[CrosshairW_Center]->Get()
+   ((GeomCappedCylinder*)geometries[CrosshairW_GeomAxis1])->move(variables[CrosshairW_Center]->GetPoint()
 								 - (axis1 * 100.0 * widget_scale),
-								 variables[CrosshairW_Center]->Get()
+								 variables[CrosshairW_Center]->GetPoint()
 								 + (axis1 * 100.0 * widget_scale),
 								 0.5*widget_scale);
-   ((GeomCappedCylinder*)geometries[CrosshairW_GeomAxis2])->move(variables[CrosshairW_Center]->Get()
+   ((GeomCappedCylinder*)geometries[CrosshairW_GeomAxis2])->move(variables[CrosshairW_Center]->GetPoint()
 								 - (axis2 * 100.0 * widget_scale),
-								 variables[CrosshairW_Center]->Get()
+								 variables[CrosshairW_Center]->GetPoint()
 								 + (axis2 * 100.0 * widget_scale),
 								 0.5*widget_scale);
-   ((GeomCappedCylinder*)geometries[CrosshairW_GeomAxis3])->move(variables[CrosshairW_Center]->Get()
+   ((GeomCappedCylinder*)geometries[CrosshairW_GeomAxis3])->move(variables[CrosshairW_Center]->GetPoint()
 								 - (axis3 * 100.0 * widget_scale),
-								 variables[CrosshairW_Center]->Get()
+								 variables[CrosshairW_Center]->GetPoint()
 								 + (axis3 * 100.0 * widget_scale),
 								 0.5*widget_scale);
 }
@@ -106,7 +106,7 @@ CrosshairWidget::SetPosition( const Point& p )
 const Point&
 CrosshairWidget::GetPosition() const
 {
-   return variables[CrosshairW_Center]->Get();
+   return variables[CrosshairW_Center]->GetPoint();
 }
 
 

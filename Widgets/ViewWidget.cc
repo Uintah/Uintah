@@ -46,19 +46,19 @@ ViewWidget::ViewWidget( Module* module, CrowdMonitor* lock, Real widget_scale )
 {
    Real INIT = 1.0*widget_scale;
    // Scheme2/3 are used by the picks in GeomMoved!!
-   variables[ViewW_PointUL] = new Variable("PntUL", Scheme1, Point(0, 0, 0));
-   variables[ViewW_PointUR] = new Variable("PntUR", Scheme2, Point(INIT, 0, 0));
-   variables[ViewW_PointDR] = new Variable("PntDR", Scheme3, Point(INIT, INIT, 0));
-   variables[ViewW_PointDL] = new Variable("PntDL", Scheme4, Point(0, INIT, 0));
-   variables[ViewW_Eye] = new Variable("Eye", Scheme4, Point(INIT/2, INIT/2, -2*INIT));
-   variables[ViewW_ForeEye] = new Variable("ForeEye", Scheme4, Point(INIT/2, INIT/2, 0));
-   variables[ViewW_BackEye] = new Variable("BackEye", Scheme4, Point(INIT/2, INIT/2, 3*INIT));
-   variables[ViewW_Dist1] = new Variable("DIST1", Scheme1, Point(INIT, 0, 0));
-   variables[ViewW_Dist2] = new Variable("DIST2", Scheme1, Point(INIT, 0, 0));
-   variables[ViewW_Ratio] = new Variable("Ratio", Scheme1, Point(1.0, 0, 0));
-   variables[ViewW_Hypo] = new Variable("HYPO", Scheme1, Point(sqrt(2*INIT*INIT), 0, 0));
-   variables[ViewW_Fore] = new Variable("Fore", Scheme1, Point(2.0, 0, 0));
-   variables[ViewW_Back] = new Variable("Back", Scheme1, Point(5.0, 0, 0));
+   variables[ViewW_PointUL] = new PointVariable("PntUL", Scheme1, Point(0, 0, 0));
+   variables[ViewW_PointUR] = new PointVariable("PntUR", Scheme2, Point(INIT, 0, 0));
+   variables[ViewW_PointDR] = new PointVariable("PntDR", Scheme3, Point(INIT, INIT, 0));
+   variables[ViewW_PointDL] = new PointVariable("PntDL", Scheme4, Point(0, INIT, 0));
+   variables[ViewW_Eye] = new PointVariable("Eye", Scheme4, Point(INIT/2, INIT/2, -2*INIT));
+   variables[ViewW_ForeEye] = new PointVariable("ForeEye", Scheme4, Point(INIT/2, INIT/2, 0));
+   variables[ViewW_BackEye] = new PointVariable("BackEye", Scheme4, Point(INIT/2, INIT/2, 3*INIT));
+   variables[ViewW_Dist1] = new RealVariable("DIST1", Scheme1, INIT);
+   variables[ViewW_Dist2] = new RealVariable("DIST2", Scheme1, INIT);
+   variables[ViewW_Ratio] = new RealVariable("Ratio", Scheme1, 1.0);
+   variables[ViewW_Hypo] = new RealVariable("HYPO", Scheme1, sqrt(2*INIT*INIT));
+   variables[ViewW_Fore] = new RealVariable("Fore", Scheme1, 2.0);
+   variables[ViewW_Back] = new RealVariable("Back", Scheme1, 5.0);
 
    constraints[ViewW_ConstRatio] = new RatioConstraint("ConstRatio",
 						       NumSchemes,
@@ -256,52 +256,52 @@ ViewWidget::~ViewWidget()
 void
 ViewWidget::widget_execute()
 {
-   ((GeomSphere*)geometries[ViewW_GeomEye])->move(variables[ViewW_Eye]->Get(),
+   ((GeomSphere*)geometries[ViewW_GeomEye])->move(variables[ViewW_Eye]->GetPoint(),
 						  1*widget_scale);
-   ((GeomSphere*)geometries[ViewW_GeomForeEye])->move(variables[ViewW_ForeEye]->Get(),
+   ((GeomSphere*)geometries[ViewW_GeomForeEye])->move(variables[ViewW_ForeEye]->GetPoint(),
 						      1*widget_scale);
-   ((GeomSphere*)geometries[ViewW_GeomBackEye])->move(variables[ViewW_BackEye]->Get(),
+   ((GeomSphere*)geometries[ViewW_GeomBackEye])->move(variables[ViewW_BackEye]->GetPoint(),
 						      1*widget_scale);
-   ((GeomSphere*)geometries[ViewW_GeomPointUL])->move(variables[ViewW_PointUL]->Get(),
+   ((GeomSphere*)geometries[ViewW_GeomPointUL])->move(variables[ViewW_PointUL]->GetPoint(),
 						      1*widget_scale);
-   ((GeomSphere*)geometries[ViewW_GeomPointUR])->move(variables[ViewW_PointUR]->Get(),
+   ((GeomSphere*)geometries[ViewW_GeomPointUR])->move(variables[ViewW_PointUR]->GetPoint(),
 						      1*widget_scale);
-   ((GeomSphere*)geometries[ViewW_GeomPointDR])->move(variables[ViewW_PointDR]->Get(),
+   ((GeomSphere*)geometries[ViewW_GeomPointDR])->move(variables[ViewW_PointDR]->GetPoint(),
 						      1*widget_scale);
-   ((GeomSphere*)geometries[ViewW_GeomPointDL])->move(variables[ViewW_PointDL]->Get(),
+   ((GeomSphere*)geometries[ViewW_GeomPointDL])->move(variables[ViewW_PointDL]->GetPoint(),
 						      1*widget_scale);
-   ((GeomSphere*)geometries[ViewW_GeomCornerUL])->move(variables[ViewW_PointUL]->Get(),
+   ((GeomSphere*)geometries[ViewW_GeomCornerUL])->move(variables[ViewW_PointUL]->GetPoint(),
 						       0.5*widget_scale);
-   ((GeomSphere*)geometries[ViewW_GeomCornerUR])->move(variables[ViewW_PointUR]->Get(),
+   ((GeomSphere*)geometries[ViewW_GeomCornerUR])->move(variables[ViewW_PointUR]->GetPoint(),
 						       0.5*widget_scale);
-   ((GeomSphere*)geometries[ViewW_GeomCornerDR])->move(variables[ViewW_PointDR]->Get(),
+   ((GeomSphere*)geometries[ViewW_GeomCornerDR])->move(variables[ViewW_PointDR]->GetPoint(),
 						       0.5*widget_scale);
-   ((GeomSphere*)geometries[ViewW_GeomCornerDL])->move(variables[ViewW_PointDL]->Get(),
+   ((GeomSphere*)geometries[ViewW_GeomCornerDL])->move(variables[ViewW_PointDL]->GetPoint(),
 						       0.5*widget_scale);
-   Point p(variables[ViewW_PointUL]->Get() + (variables[ViewW_PointUR]->Get()
-					      - variables[ViewW_PointUL]->Get()) / 2.0);
+   Point p(variables[ViewW_PointUL]->GetPoint() + (variables[ViewW_PointUR]->GetPoint()
+					      - variables[ViewW_PointUL]->GetPoint()) / 2.0);
    ((GeomCappedCylinder*)geometries[ViewW_GeomResizeU])->move(p - (GetAxis2() * 0.6 * widget_scale),
 							      p + (GetAxis2() * 0.6 * widget_scale),
 							      0.75*widget_scale);
-   p = variables[ViewW_PointDR]->Get() + (variables[ViewW_PointDL]->Get()
-					  - variables[ViewW_PointDR]->Get()) / 2.0;
+   p = variables[ViewW_PointDR]->GetPoint() + (variables[ViewW_PointDL]->GetPoint()
+					  - variables[ViewW_PointDR]->GetPoint()) / 2.0;
    ((GeomCappedCylinder*)geometries[ViewW_GeomResizeD])->move(p - (GetAxis2() * 0.6 * widget_scale),
 							      p + (GetAxis2() * 0.6 * widget_scale),
 							      0.75*widget_scale);
-   ((GeomCylinder*)geometries[ViewW_GeomShaft])->move(variables[ViewW_Eye]->Get(),
-						     variables[ViewW_BackEye]->Get(),
+   ((GeomCylinder*)geometries[ViewW_GeomShaft])->move(variables[ViewW_Eye]->GetPoint(),
+						     variables[ViewW_BackEye]->GetPoint(),
 						     0.5*widget_scale);
-   ((GeomCylinder*)geometries[ViewW_GeomCylU])->move(variables[ViewW_PointUL]->Get(),
-						     variables[ViewW_PointUR]->Get(),
+   ((GeomCylinder*)geometries[ViewW_GeomCylU])->move(variables[ViewW_PointUL]->GetPoint(),
+						     variables[ViewW_PointUR]->GetPoint(),
 						     0.5*widget_scale);
-   ((GeomCylinder*)geometries[ViewW_GeomCylR])->move(variables[ViewW_PointUR]->Get(),
-						     variables[ViewW_PointDR]->Get(),
+   ((GeomCylinder*)geometries[ViewW_GeomCylR])->move(variables[ViewW_PointUR]->GetPoint(),
+						     variables[ViewW_PointDR]->GetPoint(),
 						     0.5*widget_scale);
-   ((GeomCylinder*)geometries[ViewW_GeomCylD])->move(variables[ViewW_PointDR]->Get(),
-						     variables[ViewW_PointDL]->Get(),
+   ((GeomCylinder*)geometries[ViewW_GeomCylD])->move(variables[ViewW_PointDR]->GetPoint(),
+						     variables[ViewW_PointDL]->GetPoint(),
 						     0.5*widget_scale);
-   ((GeomCylinder*)geometries[ViewW_GeomCylL])->move(variables[ViewW_PointDL]->Get(),
-						     variables[ViewW_PointUL]->Get(),
+   ((GeomCylinder*)geometries[ViewW_GeomCylL])->move(variables[ViewW_PointDL]->GetPoint(),
+						     variables[ViewW_PointUL]->GetPoint(),
 						     0.5*widget_scale);
    ((GeomCylinder*)geometries[ViewW_GeomEdgeU])->move(GetUL(),
 						      GetUR(),
@@ -316,16 +316,16 @@ ViewWidget::widget_execute()
 						      GetUL(),
 						      0.5*widget_scale);
    ((GeomCylinder*)geometries[ViewW_GeomDiagUL])->move(GetUL(),
-						       variables[ViewW_PointUL]->Get(),
+						       variables[ViewW_PointUL]->GetPoint(),
 						       0.5*widget_scale);
    ((GeomCylinder*)geometries[ViewW_GeomDiagUR])->move(GetUR(),
-						       variables[ViewW_PointUR]->Get(),
+						       variables[ViewW_PointUR]->GetPoint(),
 						       0.5*widget_scale);
    ((GeomCylinder*)geometries[ViewW_GeomDiagDR])->move(GetDR(),
-						       variables[ViewW_PointDR]->Get(),
+						       variables[ViewW_PointDR]->GetPoint(),
 						       0.5*widget_scale);
    ((GeomCylinder*)geometries[ViewW_GeomDiagDL])->move(GetDL(),
-						       variables[ViewW_PointDL]->Get(),
+						       variables[ViewW_PointDL]->GetPoint(),
 						       0.5*widget_scale);
 
    ((DistanceConstraint*)constraints[ViewW_ConstULUR])->SetMinimum(3.2*widget_scale);
@@ -337,8 +337,8 @@ ViewWidget::widget_execute()
 
    SetEpsilon(widget_scale*1e-6);
 
-   Vector spvec1(variables[ViewW_PointUR]->Get() - variables[ViewW_PointUL]->Get());
-   Vector spvec2(variables[ViewW_PointDL]->Get() - variables[ViewW_PointUL]->Get());
+   Vector spvec1(variables[ViewW_PointUR]->GetPoint() - variables[ViewW_PointUL]->GetPoint());
+   Vector spvec2(variables[ViewW_PointDL]->GetPoint() - variables[ViewW_PointUL]->GetPoint());
    if ((spvec1.length2() > 0.0) && (spvec2.length2() > 0.0)) {
       spvec1.normalize();
       spvec2.normalize();
@@ -396,10 +396,10 @@ ViewWidget::geom_moved( int /* axis */, double /* dist */, const Vector& delta,
       variables[ViewW_PointDL]->SetDelta(delta);
       break;
    case ViewW_PickResizeU:
-      if (((variables[ViewW_PointUL]->Get()+delta)-variables[ViewW_PointDL]->Get()).length()
+      if (((variables[ViewW_PointUL]->GetPoint()+delta)-variables[ViewW_PointDL]->GetPoint()).length()
 	  < 3.2*widget_scale) {
-	 delt = ((variables[ViewW_PointDL]->Get() + delta.normal()*3.2*widget_scale)
-		 - variables[ViewW_PointUL]->Get());
+	 delt = ((variables[ViewW_PointDL]->GetPoint() + delta.normal()*3.2*widget_scale)
+		 - variables[ViewW_PointUL]->GetPoint());
       }
       t = delt.length();
       if (Dot(delt, GetAxis2()) < 0.0)
@@ -410,10 +410,10 @@ ViewWidget::geom_moved( int /* axis */, double /* dist */, const Vector& delta,
       variables[ViewW_PointUR]->SetDelta(delt-GetAxis1()*t/2.0, Scheme5);
       break;
    case ViewW_PickResizeD:
-      if (((variables[ViewW_PointDR]->Get()+delta)-variables[ViewW_PointUR]->Get()).length()
+      if (((variables[ViewW_PointDR]->GetPoint()+delta)-variables[ViewW_PointUR]->GetPoint()).length()
 	  < 3.2*widget_scale) {
-	 delt = ((variables[ViewW_PointUR]->Get() + delta.normal()*3.2*widget_scale)
-		 - variables[ViewW_PointDR]->Get());
+	 delt = ((variables[ViewW_PointUR]->GetPoint() + delta.normal()*3.2*widget_scale)
+		 - variables[ViewW_PointDR]->GetPoint());
       }
       t = delt.length();
       if (Dot(delt, GetAxis2()) < 0.0)

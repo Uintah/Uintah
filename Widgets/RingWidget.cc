@@ -45,17 +45,17 @@ RingWidget::RingWidget( Module* module, CrowdMonitor* lock, Real widget_scale )
 {
    Real INIT = 1.0*widget_scale;
    // Scheme4 is used to resize.
-   variables[RingW_PointUL] = new Variable("PntUL", Scheme1, Point(0, 0, 0));
-   variables[RingW_PointUR] = new Variable("PntUR", Scheme2, Point(INIT, 0, 0));
-   variables[RingW_PointDR] = new Variable("PntDR", Scheme1, Point(INIT, INIT, 0));
-   variables[RingW_PointDL] = new Variable("PntDL", Scheme2, Point(0, INIT, 0));
-   variables[RingW_Center] = new Variable("Center", Scheme2, Point(INIT/2.0, INIT/2.0, 0));
-   variables[RingW_Slider] = new Variable("Slider", Scheme3, Point(0, 0, 0));
-   variables[RingW_Dist] = new Variable("Dist", Scheme1, Point(INIT, 0, 0));
-   variables[RingW_Hypo] = new Variable("Hypo", Scheme1, Point(sqrt(2*INIT*INIT), 0, 0));
-   variables[RingW_Const] = new Variable("sqrt(2)", Scheme1, Point(sqrt(2), 0, 0));
-   variables[RingW_SDist] = new Variable("SDist", Scheme3, Point(sqrt(INIT*INIT/2.0), 0, 0));
-   variables[RingW_Angle] = new Variable("Angle", Scheme1, Point(0, 0, 0));
+   variables[RingW_PointUL] = new PointVariable("PntUL", Scheme1, Point(0, 0, 0));
+   variables[RingW_PointUR] = new PointVariable("PntUR", Scheme2, Point(INIT, 0, 0));
+   variables[RingW_PointDR] = new PointVariable("PntDR", Scheme1, Point(INIT, INIT, 0));
+   variables[RingW_PointDL] = new PointVariable("PntDL", Scheme2, Point(0, INIT, 0));
+   variables[RingW_Center] = new PointVariable("Center", Scheme2, Point(INIT/2.0, INIT/2.0, 0));
+   variables[RingW_Slider] = new PointVariable("Slider", Scheme3, Point(0, 0, 0));
+   variables[RingW_Dist] = new RealVariable("Dist", Scheme1, INIT);
+   variables[RingW_Hypo] = new RealVariable("Hypo", Scheme1, sqrt(2*INIT*INIT));
+   variables[RingW_Const] = new RealVariable("sqrt(2)", Scheme1, sqrt(2));
+   variables[RingW_SDist] = new RealVariable("SDist", Scheme3, sqrt(INIT*INIT/2.0));
+   variables[RingW_Angle] = new RealVariable("Angle", Scheme1, 0);
 
    constraints[RingW_ConstAngle] = new AngleConstraint("ConstAngle",
 						       NumSchemes,
@@ -251,39 +251,39 @@ RingWidget::~RingWidget()
 void
 RingWidget::widget_execute()
 {
-   ((GeomSphere*)geometries[RingW_GeomPointUL])->move(variables[RingW_PointUL]->Get(),
+   ((GeomSphere*)geometries[RingW_GeomPointUL])->move(variables[RingW_PointUL]->GetPoint(),
 						      1*widget_scale);
-   ((GeomSphere*)geometries[RingW_GeomPointUR])->move(variables[RingW_PointUR]->Get(),
+   ((GeomSphere*)geometries[RingW_GeomPointUR])->move(variables[RingW_PointUR]->GetPoint(),
 						      1*widget_scale);
-   ((GeomSphere*)geometries[RingW_GeomPointDR])->move(variables[RingW_PointDR]->Get(),
+   ((GeomSphere*)geometries[RingW_GeomPointDR])->move(variables[RingW_PointDR]->GetPoint(),
 						      1*widget_scale);
-   ((GeomSphere*)geometries[RingW_GeomPointDL])->move(variables[RingW_PointDL]->Get(),
+   ((GeomSphere*)geometries[RingW_GeomPointDL])->move(variables[RingW_PointDL]->GetPoint(),
 						      1*widget_scale);
-   Vector normal(Plane(variables[RingW_PointUL]->Get(),
-		       variables[RingW_PointUR]->Get(),
-		       variables[RingW_PointDL]->Get()).normal());
-   Real rad = (variables[RingW_PointUL]->Get()-variables[RingW_PointDR]->Get()).length()/2.;
-   ((GeomTorus*)geometries[RingW_GeomRing])->move(variables[RingW_Center]->Get(), normal,
+   Vector normal(Plane(variables[RingW_PointUL]->GetPoint(),
+		       variables[RingW_PointUR]->GetPoint(),
+		       variables[RingW_PointDL]->GetPoint()).normal());
+   Real rad = (variables[RingW_PointUL]->GetPoint()-variables[RingW_PointDR]->GetPoint()).length()/2.;
+   ((GeomTorus*)geometries[RingW_GeomRing])->move(variables[RingW_Center]->GetPoint(), normal,
 						  rad, 0.5*widget_scale);
-   Vector v = variables[RingW_Slider]->Get()-variables[RingW_Center]->Get();
+   Vector v = variables[RingW_Slider]->GetPoint()-variables[RingW_Center]->GetPoint();
    Vector slide;
    if (v.length2() > 1e-6)
       slide = Cross(normal, v.normal());
    else
       slide = Vector(0,0,0);
-   ((GeomCappedCylinder*)geometries[RingW_GeomSlider])->move(variables[RingW_Slider]->Get()
+   ((GeomCappedCylinder*)geometries[RingW_GeomSlider])->move(variables[RingW_Slider]->GetPoint()
 							     - (slide * 0.3 * widget_scale),
-							     variables[RingW_Slider]->Get()
+							     variables[RingW_Slider]->GetPoint()
 							     + (slide * 0.3 * widget_scale),
 							     1.1*widget_scale);
-   v = variables[RingW_PointDR]->Get()-variables[RingW_Center]->Get();
+   v = variables[RingW_PointDR]->GetPoint()-variables[RingW_Center]->GetPoint();
    Vector resize;
    if (v.length2() > 1e-6)
       resize = v.normal();
    else
       resize = Vector(0,0,0);
-   ((GeomCappedCylinder*)geometries[RingW_GeomResize])->move(variables[RingW_PointDR]->Get(),
-							     variables[RingW_PointDR]->Get()
+   ((GeomCappedCylinder*)geometries[RingW_GeomResize])->move(variables[RingW_PointDR]->GetPoint(),
+							     variables[RingW_PointDR]->GetPoint()
 							     + (resize * 1.5 * widget_scale),
 							     0.5*widget_scale);
    
@@ -296,8 +296,8 @@ RingWidget::widget_execute()
 
    SetEpsilon(widget_scale*1e-6);
 
-   Vector spvec1(variables[RingW_PointUR]->Get() - variables[RingW_PointUL]->Get());
-   Vector spvec2(variables[RingW_PointDL]->Get() - variables[RingW_PointUL]->Get());
+   Vector spvec1(variables[RingW_PointUR]->GetPoint() - variables[RingW_PointUL]->GetPoint());
+   Vector spvec2(variables[RingW_PointDL]->GetPoint() - variables[RingW_PointUL]->GetPoint());
    if ((spvec1.length2() > 0.0) && (spvec2.length2() > 0.0)) {
       spvec1.normalize();
       spvec2.normalize();
@@ -376,11 +376,11 @@ RingWidget::SetPosition( const Point& center, const Vector& normal, const Real r
 void
 RingWidget::GetPosition( Point& center, Vector& normal, Real& radius ) const
 {
-   center = variables[RingW_Center]->Get();
-   normal = Plane(variables[RingW_PointUL]->Get(),
-		  variables[RingW_PointUR]->Get(),
-		  variables[RingW_PointDL]->Get()).normal();
-   radius = variables[RingW_SDist]->Get().x();
+   center = variables[RingW_Center]->GetPoint();
+   normal = Plane(variables[RingW_PointUL]->GetPoint(),
+		  variables[RingW_PointUR]->GetPoint(),
+		  variables[RingW_PointDL]->GetPoint()).normal();
+   radius = variables[RingW_SDist]->GetReal();
 }
 
 
@@ -388,7 +388,7 @@ void
 RingWidget::SetRatio( const Real ratio )
 {
    ASSERT((ratio>=0.0) && (ratio<=1.0));
-   variables[RingW_Angle]->Set(Point(ratio, 0.0, 0.0));
+   variables[RingW_Angle]->Set(ratio);
    execute();
 }
 
@@ -396,14 +396,43 @@ RingWidget::SetRatio( const Real ratio )
 Real
 RingWidget::GetRatio() const
 {
-   return (variables[RingW_Angle]->Get().x() + 3.14159) / (2.0 * 3.14159);
+   return (variables[RingW_Angle]->GetReal() + 3.14159) / (2.0 * 3.14159);
 }
 
 
+void
+RingWidget::SetRadius( const Real radius )
+{
+   ASSERT(radius>=0.0);
+   
+   Vector axis1(variables[RingW_PointUL]->GetPoint() - variables[RingW_Center]->GetPoint());
+   Vector axis2(variables[RingW_PointUR]->GetPoint() - variables[RingW_Center]->GetPoint());
+   Real ratio(radius/variables[RingW_SDist]->GetReal());
+
+   variables[RingW_PointUL]->Move(variables[RingW_Center]->GetPoint()+axis1*ratio);
+   variables[RingW_PointDR]->Move(variables[RingW_Center]->GetPoint()-axis1*ratio);
+   variables[RingW_PointUR]->Move(variables[RingW_Center]->GetPoint()+axis2*ratio);
+   variables[RingW_PointDL]->Move(variables[RingW_Center]->GetPoint()-axis2*ratio);
+
+   variables[RingW_Dist]->Move(variables[RingW_Dist]->GetReal()*ratio);
+   variables[RingW_Hypo]->Move(variables[RingW_Hypo]->GetReal()*ratio);
+   
+   variables[RingW_SDist]->Set(radius); // This should set the slider...
+
+   execute();
+}
+
+Real
+RingWidget::GetRadius() const
+{
+   return variables[RingW_SDist]->GetReal();
+}
+
+   
 const Vector&
 RingWidget::GetAxis1()
 {
-   Vector axis(variables[RingW_PointUR]->Get() - variables[RingW_PointUL]->Get());
+   Vector axis(variables[RingW_PointUR]->GetPoint() - variables[RingW_PointUL]->GetPoint());
    if (axis.length2() <= 1e-6)
       return oldaxis1;
    else
@@ -414,7 +443,7 @@ RingWidget::GetAxis1()
 const Vector&
 RingWidget::GetAxis2()
 {
-   Vector axis(variables[RingW_PointDL]->Get() - variables[RingW_PointUL]->Get());
+   Vector axis(variables[RingW_PointDL]->GetPoint() - variables[RingW_PointUL]->GetPoint());
    if (axis.length2() <= 1e-6)
       return oldaxis2;
    else

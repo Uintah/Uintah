@@ -47,7 +47,7 @@ private:
 inline Vector
 BoxWidget::GetAxis1()
 {
-   Vector axis(variables[BoxW_PointIUR]->Get() - variables[BoxW_PointIUL]->Get());
+   Vector axis(variables[BoxW_PointIUR]->GetPoint() - variables[BoxW_PointIUL]->GetPoint());
    if (axis.length2() <= 1e-6)
       return oldaxis1;
    else
@@ -58,7 +58,7 @@ BoxWidget::GetAxis1()
 inline Vector
 BoxWidget::GetAxis2()
 {
-   Vector axis(variables[BoxW_PointIDL]->Get() - variables[BoxW_PointIUL]->Get());
+   Vector axis(variables[BoxW_PointIDL]->GetPoint() - variables[BoxW_PointIUL]->GetPoint());
    if (axis.length2() <= 1e-6)
       return oldaxis2;
    else
@@ -69,7 +69,7 @@ BoxWidget::GetAxis2()
 inline Vector
 BoxWidget::GetAxis3()
 {
-   Vector axis(variables[BoxW_PointOUL]->Get() - variables[BoxW_PointIUL]->Get());
+   Vector axis(variables[BoxW_PointOUL]->GetPoint() - variables[BoxW_PointIUL]->GetPoint());
    if (axis.length2() <= 1e-6)
       return oldaxis3;
    else

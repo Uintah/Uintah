@@ -33,7 +33,7 @@ ArrowWidget::ArrowWidget( Module* module, CrowdMonitor* lock,
 : BaseWidget(module, lock, NumVars, NumCons, NumGeoms, NumMatls, NumPcks, widget_scale),
   direction(0, 0, 1.0)
 {
-   variables[ArrowW_Point] = new Variable("Point", Scheme1, Point(0, 0, 0));
+   variables[ArrowW_Point] = new PointVariable("Point", Scheme1, Point(0, 0, 0));
 
    materials[ArrowW_PointMatl] = PointWidgetMaterial;
    materials[ArrowW_EdgeMatl] = EdgeWidgetMaterial;
@@ -65,15 +65,15 @@ ArrowWidget::~ArrowWidget()
 void
 ArrowWidget::widget_execute()
 {
-   ((GeomSphere*)geometries[ArrowW_GeomPoint])->move(variables[ArrowW_Point]->Get(),
+   ((GeomSphere*)geometries[ArrowW_GeomPoint])->move(variables[ArrowW_Point]->GetPoint(),
 						     1*widget_scale);
-   ((GeomCylinder*)geometries[ArrowW_GeomShaft])->move(variables[ArrowW_Point]->Get(),
-						       variables[ArrowW_Point]->Get()
+   ((GeomCylinder*)geometries[ArrowW_GeomShaft])->move(variables[ArrowW_Point]->GetPoint(),
+						       variables[ArrowW_Point]->GetPoint()
 						       + direction * widget_scale * 3.0,
 						       0.5*widget_scale);
-   ((GeomCappedCone*)geometries[ArrowW_GeomHead])->move(variables[ArrowW_Point]->Get()
+   ((GeomCappedCone*)geometries[ArrowW_GeomHead])->move(variables[ArrowW_Point]->GetPoint()
 							+ direction * widget_scale * 3.0,
-							variables[ArrowW_Point]->Get()
+							variables[ArrowW_Point]->GetPoint()
 							+ direction * widget_scale * 5.0,
 							widget_scale,
 							0);
@@ -109,7 +109,7 @@ ArrowWidget::SetPosition( const Point& p )
 const Point&
 ArrowWidget::GetPosition() const
 {
-   return variables[ArrowW_Point]->Get();
+   return variables[ArrowW_Point]->GetPoint();
 }
 
 

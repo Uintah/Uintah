@@ -40,13 +40,13 @@ FrameWidget::FrameWidget( Module* module, CrowdMonitor* lock, Real widget_scale 
 {
    Real INIT = 1.0*widget_scale;
    // Schemes 5/6 are used by the picks in GeomMoved!!
-   variables[FrameW_PointUL] = new Variable("PntUL", Scheme1, Point(0, 0, 0));
-   variables[FrameW_PointUR] = new Variable("PntUR", Scheme2, Point(INIT, 0, 0));
-   variables[FrameW_PointDR] = new Variable("PntDR", Scheme3, Point(INIT, INIT, 0));
-   variables[FrameW_PointDL] = new Variable("PntDL", Scheme4, Point(0, INIT, 0));
-   variables[FrameW_Dist1] = new Variable("DIST1", Scheme1, Point(INIT, 0, 0));
-   variables[FrameW_Dist2] = new Variable("DIST2", Scheme1, Point(INIT, 0, 0));
-   variables[FrameW_Hypo] = new Variable("HYPO", Scheme1, Point(sqrt(2*INIT*INIT), 0, 0));
+   variables[FrameW_PointUL] = new PointVariable("PntUL", Scheme1, Point(0, 0, 0));
+   variables[FrameW_PointUR] = new PointVariable("PntUR", Scheme2, Point(INIT, 0, 0));
+   variables[FrameW_PointDR] = new PointVariable("PntDR", Scheme3, Point(INIT, INIT, 0));
+   variables[FrameW_PointDL] = new PointVariable("PntDL", Scheme4, Point(0, INIT, 0));
+   variables[FrameW_Dist1] = new RealVariable("DIST1", Scheme6, INIT);
+   variables[FrameW_Dist2] = new RealVariable("DIST2", Scheme5, INIT);
+   variables[FrameW_Hypo] = new RealVariable("HYPO", Scheme5, sqrt(2*INIT*INIT));
 
    constraints[FrameW_ConstPlane] = new PlaneConstraint("ConstPlane",
 							NumSchemes,
@@ -203,45 +203,45 @@ FrameWidget::~FrameWidget()
 void
 FrameWidget::widget_execute()
 {
-   ((GeomSphere*)geometries[FrameW_GeomPointUL])->move(variables[FrameW_PointUL]->Get(),
+   ((GeomSphere*)geometries[FrameW_GeomPointUL])->move(variables[FrameW_PointUL]->GetPoint(),
 						       1*widget_scale);
-   ((GeomSphere*)geometries[FrameW_GeomPointUR])->move(variables[FrameW_PointUR]->Get(),
+   ((GeomSphere*)geometries[FrameW_GeomPointUR])->move(variables[FrameW_PointUR]->GetPoint(),
 						       1*widget_scale);
-   ((GeomSphere*)geometries[FrameW_GeomPointDR])->move(variables[FrameW_PointDR]->Get(),
+   ((GeomSphere*)geometries[FrameW_GeomPointDR])->move(variables[FrameW_PointDR]->GetPoint(),
 						       1*widget_scale);
-   ((GeomSphere*)geometries[FrameW_GeomPointDL])->move(variables[FrameW_PointDL]->Get(),
+   ((GeomSphere*)geometries[FrameW_GeomPointDL])->move(variables[FrameW_PointDL]->GetPoint(),
 						       1*widget_scale);
-   Point p(variables[FrameW_PointUL]->Get() + (variables[FrameW_PointUR]->Get()
-					       - variables[FrameW_PointUL]->Get()) / 2.0);
+   Point p(variables[FrameW_PointUL]->GetPoint() + (variables[FrameW_PointUR]->GetPoint()
+						    - variables[FrameW_PointUL]->GetPoint()) / 2.0);
    ((GeomCappedCylinder*)geometries[FrameW_GeomResizeU])->move(p - (GetAxis2() * 0.6 * widget_scale),
 							       p + (GetAxis2() * 0.6 * widget_scale),
 							       0.75*widget_scale);
-   p = variables[FrameW_PointUR]->Get() + (variables[FrameW_PointDR]->Get()
-					   - variables[FrameW_PointUR]->Get()) / 2.0;
+   p = variables[FrameW_PointUR]->GetPoint() + (variables[FrameW_PointDR]->GetPoint()
+						- variables[FrameW_PointUR]->GetPoint()) / 2.0;
    ((GeomCappedCylinder*)geometries[FrameW_GeomResizeR])->move(p - (GetAxis1() * 0.6 * widget_scale),
 							       p + (GetAxis1() * 0.6 * widget_scale),
 							       0.75*widget_scale);
-   p = variables[FrameW_PointDR]->Get() + (variables[FrameW_PointDL]->Get()
-					   - variables[FrameW_PointDR]->Get()) / 2.0;
+   p = variables[FrameW_PointDR]->GetPoint() + (variables[FrameW_PointDL]->GetPoint()
+						- variables[FrameW_PointDR]->GetPoint()) / 2.0;
    ((GeomCappedCylinder*)geometries[FrameW_GeomResizeD])->move(p - (GetAxis2() * 0.6 * widget_scale),
 							       p + (GetAxis2() * 0.6 * widget_scale),
 							       0.75*widget_scale);
-   p = variables[FrameW_PointDL]->Get() + (variables[FrameW_PointUL]->Get()
-					   - variables[FrameW_PointDL]->Get()) / 2.0;
+   p = variables[FrameW_PointDL]->GetPoint() + (variables[FrameW_PointUL]->GetPoint()
+						- variables[FrameW_PointDL]->GetPoint()) / 2.0;
    ((GeomCappedCylinder*)geometries[FrameW_GeomResizeL])->move(p - (GetAxis1() * 0.6 * widget_scale),
 							       p + (GetAxis1() * 0.6 * widget_scale),
 							       0.75*widget_scale);
-   ((GeomCylinder*)geometries[FrameW_GeomCylU])->move(variables[FrameW_PointUL]->Get(),
-						      variables[FrameW_PointUR]->Get(),
+   ((GeomCylinder*)geometries[FrameW_GeomCylU])->move(variables[FrameW_PointUL]->GetPoint(),
+						      variables[FrameW_PointUR]->GetPoint(),
 						      0.5*widget_scale);
-   ((GeomCylinder*)geometries[FrameW_GeomCylR])->move(variables[FrameW_PointUR]->Get(),
-						      variables[FrameW_PointDR]->Get(),
+   ((GeomCylinder*)geometries[FrameW_GeomCylR])->move(variables[FrameW_PointUR]->GetPoint(),
+						      variables[FrameW_PointDR]->GetPoint(),
 						      0.5*widget_scale);
-   ((GeomCylinder*)geometries[FrameW_GeomCylD])->move(variables[FrameW_PointDR]->Get(),
-						      variables[FrameW_PointDL]->Get(),
+   ((GeomCylinder*)geometries[FrameW_GeomCylD])->move(variables[FrameW_PointDR]->GetPoint(),
+						      variables[FrameW_PointDL]->GetPoint(),
 						      0.5*widget_scale);
-   ((GeomCylinder*)geometries[FrameW_GeomCylL])->move(variables[FrameW_PointDL]->Get(),
-						      variables[FrameW_PointUL]->Get(),
+   ((GeomCylinder*)geometries[FrameW_GeomCylL])->move(variables[FrameW_PointDL]->GetPoint(),
+						      variables[FrameW_PointUL]->GetPoint(),
 						      0.5*widget_scale);
 
    ((DistanceConstraint*)constraints[FrameW_ConstULUR])->SetMinimum(3.2*widget_scale);
@@ -253,8 +253,8 @@ FrameWidget::widget_execute()
 
    SetEpsilon(widget_scale*1e-6);
 
-   Vector spvec1(variables[FrameW_PointUR]->Get() - variables[FrameW_PointUL]->Get());
-   Vector spvec2(variables[FrameW_PointDL]->Get() - variables[FrameW_PointUL]->Get());
+   Vector spvec1(variables[FrameW_PointUR]->GetPoint() - variables[FrameW_PointUL]->GetPoint());
+   Vector spvec2(variables[FrameW_PointDL]->GetPoint() - variables[FrameW_PointUL]->GetPoint());
    if ((spvec1.length2() > 0.0) && (spvec2.length2() > 0.0)) {
       spvec1.normalize();
       spvec2.normalize();
@@ -297,37 +297,37 @@ FrameWidget::geom_moved( int /* axis */, double /* dist */, const Vector& delta,
       variables[FrameW_PointDL]->SetDelta(delta);
       break;
    case FrameW_PickResizeU:
-      if (((variables[FrameW_PointUL]->Get()+delta)-variables[FrameW_PointDL]->Get()).length()
+      if (((variables[FrameW_PointUL]->GetPoint()+delta)-variables[FrameW_PointDL]->GetPoint()).length()
 	  < 3.2*widget_scale) {
-	 delt = ((variables[FrameW_PointDL]->Get() + delta.normal()*3.2*widget_scale)
-		 - variables[FrameW_PointUL]->Get());
+	 delt = ((variables[FrameW_PointDL]->GetPoint() + delta.normal()*3.2*widget_scale)
+		 - variables[FrameW_PointUL]->GetPoint());
       }
       variables[FrameW_PointUL]->MoveDelta(delt);
       variables[FrameW_PointUR]->SetDelta(delt, Scheme6);
       break;
    case FrameW_PickResizeR:
-      if (((variables[FrameW_PointUR]->Get()+delta)-variables[FrameW_PointUL]->Get()).length()
+      if (((variables[FrameW_PointUR]->GetPoint()+delta)-variables[FrameW_PointUL]->GetPoint()).length()
 	  < 3.2*widget_scale) {
-	 delt = ((variables[FrameW_PointUL]->Get() + delta.normal()*3.2*widget_scale)
-		 - variables[FrameW_PointUR]->Get());
+	 delt = ((variables[FrameW_PointUL]->GetPoint() + delta.normal()*3.2*widget_scale)
+		 - variables[FrameW_PointUR]->GetPoint());
       }
       variables[FrameW_PointUR]->MoveDelta(delt);
       variables[FrameW_PointDR]->SetDelta(delt, Scheme5);
       break;
    case FrameW_PickResizeD:
-      if (((variables[FrameW_PointDR]->Get()+delta)-variables[FrameW_PointUR]->Get()).length()
+      if (((variables[FrameW_PointDR]->GetPoint()+delta)-variables[FrameW_PointUR]->GetPoint()).length()
 	  < 3.2*widget_scale) {
-	 delt = ((variables[FrameW_PointUR]->Get() + delta.normal()*3.2*widget_scale)
-		 - variables[FrameW_PointDR]->Get());
+	 delt = ((variables[FrameW_PointUR]->GetPoint() + delta.normal()*3.2*widget_scale)
+		 - variables[FrameW_PointDR]->GetPoint());
       }
       variables[FrameW_PointDR]->MoveDelta(delt);
       variables[FrameW_PointDL]->SetDelta(delt, Scheme6);
       break;
    case FrameW_PickResizeL:
-      if (((variables[FrameW_PointDL]->Get()+delta)-variables[FrameW_PointDR]->Get()).length()
+      if (((variables[FrameW_PointDL]->GetPoint()+delta)-variables[FrameW_PointDR]->GetPoint()).length()
 	  < 3.2*widget_scale) {
-	 delt = ((variables[FrameW_PointDR]->Get() + delta.normal()*3.2*widget_scale)
-		 - variables[FrameW_PointDL]->Get());
+	 delt = ((variables[FrameW_PointDR]->GetPoint() + delta.normal()*3.2*widget_scale)
+		 - variables[FrameW_PointDL]->GetPoint());
       }
       variables[FrameW_PointDL]->MoveDelta(delt);
       variables[FrameW_PointUL]->SetDelta(delt, Scheme5);
@@ -340,4 +340,114 @@ FrameWidget::geom_moved( int /* axis */, double /* dist */, const Vector& delta,
       break;
    }
 }
+
+
+void
+FrameWidget::SetPosition( const Point& UL, const Point& UR, const Point& DL )
+{
+   variables[FrameW_PointUL]->Move(UL);
+   variables[FrameW_PointUR]->Move(UR);
+   variables[FrameW_PointDL]->Move(DL);
+   variables[FrameW_Dist1]->Move((UR-UL).length());
+   variables[FrameW_Dist2]->Move((DL-UL).length());
+   variables[FrameW_PointDR]->Set(UR+(DL-UL), Scheme5); // This should set Hypo...
+
+   execute();
+}
+
+
+void
+FrameWidget::GetPosition( Point& UL, Point& UR, Point& DL )
+{
+   UL = variables[FrameW_PointUL]->GetPoint();
+   UR = variables[FrameW_PointUR]->GetPoint();
+   DL = variables[FrameW_PointDL]->GetPoint();
+}
+
+
+void
+FrameWidget::SetPosition( const Point& center, const Vector& normal,
+			  const Real size1, const Real size2 )
+{
+   Real s1(size1/2.0), s2(size2/2.0);
+   Vector axis1, axis2;
+   normal.find_orthogonal(axis1, axis2);
+   
+   variables[FrameW_PointUL]->Move(center-axis1*s1-axis2*s2);
+   variables[FrameW_PointDR]->Move(center+axis1*s1+axis2*s2);
+   variables[FrameW_PointUR]->Move(center+axis1*s1-axis2*s2);
+   variables[FrameW_PointDL]->Move(center-axis1*s1+axis2*s2);
+   variables[FrameW_Dist1]->Move(size1);
+   variables[FrameW_Dist2]->Set(size2); // This should set the Hypo...
+
+   execute();
+}
+
+
+void
+FrameWidget::GetPosition( Point& center, Vector& normal,
+			  Real& size1, Real& size2 )
+{
+   center = (variables[FrameW_PointDR]->GetPoint()
+	     + ((variables[FrameW_PointUL]->GetPoint()-variables[FrameW_PointDR]->GetPoint())
+		/ 2.0));
+   normal = Cross(GetAxis1(), GetAxis2());
+   size1 = variables[FrameW_Dist1]->GetReal();
+   size2 = variables[FrameW_Dist2]->GetReal();
+}
+
+
+void
+FrameWidget::SetSize( const Real size1, const Real size2 )
+{
+   ASSERT((size1>=0.0)&&(size1>=0.0));
+
+   Point center(variables[FrameW_PointDR]->GetPoint()
+		+ ((variables[FrameW_PointUL]->GetPoint()-variables[FrameW_PointDR]->GetPoint())
+		   / 2.0));
+   Vector axis1((variables[FrameW_PointUR]->GetPoint() - variables[FrameW_PointUL]->GetPoint())/2.0);
+   Vector axis2((variables[FrameW_PointDL]->GetPoint() - variables[FrameW_PointUL]->GetPoint())/2.0);
+   Real ratio1(size1/variables[FrameW_Dist1]->GetReal());
+   Real ratio2(size2/variables[FrameW_Dist2]->GetReal());
+
+   variables[FrameW_PointUL]->Move(center-axis1*ratio1-axis2*ratio2);
+   variables[FrameW_PointDR]->Move(center+axis1*ratio1+axis2*ratio2);
+   variables[FrameW_PointUR]->Move(center+axis1*ratio1-axis2*ratio2);
+   variables[FrameW_PointDL]->Move(center-axis1*ratio1+axis2*ratio2);
+
+   variables[FrameW_Dist1]->Move(size1);
+   variables[FrameW_Dist2]->Set(size2); // This should set the Hypo...
+
+   execute();
+}
+
+void
+FrameWidget::GetSize( Real& size1, Real& size2 ) const
+{
+   size1 = variables[FrameW_Dist1]->GetReal();
+   size2 = variables[FrameW_Dist2]->GetReal();
+}
+
+   
+Vector
+FrameWidget::GetAxis1()
+{
+   Vector axis(variables[FrameW_PointUR]->GetPoint() - variables[FrameW_PointUL]->GetPoint());
+   if (axis.length2() <= 1e-6)
+      return oldaxis1;
+   else
+      return (oldaxis1 = axis.normal());
+}
+
+
+Vector
+FrameWidget::GetAxis2()
+{
+   Vector axis(variables[FrameW_PointDL]->GetPoint() - variables[FrameW_PointUL]->GetPoint());
+   if (axis.length2() <= 1e-6)
+      return oldaxis2;
+   else
+      return (oldaxis2 = axis.normal());
+}
+
 

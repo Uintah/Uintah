@@ -51,7 +51,7 @@ private:
 inline Vector
 ViewWidget::GetAxis1()
 {
-   Vector axis(variables[ViewW_PointUR]->Get() - variables[ViewW_PointUL]->Get());
+   Vector axis(variables[ViewW_PointUR]->GetPoint() - variables[ViewW_PointUL]->GetPoint());
    if (axis.length2() <= 1e-6)
       return oldaxis1;
    else
@@ -62,7 +62,7 @@ ViewWidget::GetAxis1()
 inline Vector
 ViewWidget::GetAxis2()
 {
-   Vector axis(variables[ViewW_PointDL]->Get() - variables[ViewW_PointUL]->Get());
+   Vector axis(variables[ViewW_PointDL]->GetPoint() - variables[ViewW_PointUL]->GetPoint());
    if (axis.length2() <= 1e-6)
       return oldaxis2;
    else
@@ -73,48 +73,48 @@ ViewWidget::GetAxis2()
 inline Point
 ViewWidget::GetUL()
 {
-   Vector v(variables[ViewW_PointUL]->Get() - variables[ViewW_Eye]->Get());
+   Vector v(variables[ViewW_PointUL]->GetPoint() - variables[ViewW_Eye]->GetPoint());
    if (v.length2() <= 1e-6)
-      return variables[ViewW_PointUL]->Get(); // ?!
+      return variables[ViewW_PointUL]->GetPoint(); // ?!
    else
-      return (variables[ViewW_Eye]->Get()
-	      + v * (variables[ViewW_Back]->Get().x() / variables[ViewW_Fore]->Get().x()));
+      return (variables[ViewW_Eye]->GetPoint()
+	      + v * (variables[ViewW_Back]->GetReal() / variables[ViewW_Fore]->GetReal()));
 }
 
 
 inline Point
 ViewWidget::GetUR()
 {
-   Vector v(variables[ViewW_PointUR]->Get() - variables[ViewW_Eye]->Get());
+   Vector v(variables[ViewW_PointUR]->GetPoint() - variables[ViewW_Eye]->GetPoint());
    if (v.length2() <= 1e-6)
-      return variables[ViewW_PointUR]->Get(); // ?!
+      return variables[ViewW_PointUR]->GetPoint(); // ?!
    else
-      return (variables[ViewW_Eye]->Get()
-	      + v * (variables[ViewW_Back]->Get().x() / variables[ViewW_Fore]->Get().x()));
+      return (variables[ViewW_Eye]->GetPoint()
+	      + v * (variables[ViewW_Back]->GetReal() / variables[ViewW_Fore]->GetReal()));
 }
 
 
 inline Point
 ViewWidget::GetDR()
 {
-   Vector v(variables[ViewW_PointDR]->Get() - variables[ViewW_Eye]->Get());
+   Vector v(variables[ViewW_PointDR]->GetPoint() - variables[ViewW_Eye]->GetPoint());
    if (v.length2() <= 1e-6)
-      return variables[ViewW_PointDR]->Get(); // ?!
+      return variables[ViewW_PointDR]->GetPoint(); // ?!
    else
-      return (variables[ViewW_Eye]->Get()
-	      + v * (variables[ViewW_Back]->Get().x() / variables[ViewW_Fore]->Get().x()));
+      return (variables[ViewW_Eye]->GetPoint()
+	      + v * (variables[ViewW_Back]->GetReal() / variables[ViewW_Fore]->GetReal()));
 }
 
 
 inline Point
 ViewWidget::GetDL()
 {
-   Vector v(variables[ViewW_PointDL]->Get() - variables[ViewW_Eye]->Get());
+   Vector v(variables[ViewW_PointDL]->GetPoint() - variables[ViewW_Eye]->GetPoint());
    if (v.length2() <= 1e-6)
-      return variables[ViewW_PointDL]->Get(); // ?!
+      return variables[ViewW_PointDL]->GetPoint(); // ?!
    else
-      return (variables[ViewW_Eye]->Get()
-	      + v * (variables[ViewW_Back]->Get().x() / variables[ViewW_Fore]->Get().x()));
+      return (variables[ViewW_Eye]->GetPoint()
+	      + v * (variables[ViewW_Back]->GetReal() / variables[ViewW_Fore]->GetReal()));
 }
 
 
