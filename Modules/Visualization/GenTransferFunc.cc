@@ -703,16 +703,21 @@ void GenTransferFunc::DoRelease(int win, int x, int y, int button)
 
 void GenTransferFunc::execute(void)
 {
-  if (!cmap.get_rep()) {
-    Array1<Color> ncolors(points.size());
-    Array1<float> times(points.size());
-
-    for(int i=0;i<points.size();i++) {
-      ncolors[i] = points[i]._rgb;
-      times[i] = points[i]._t;
-    }
-    cmap = scinew ColorMap(ncolors,times,alphas,aTimes);
+#if 0  
+  if (cmap.get_rep()) {
+    delete cmap.get_rep();
   }
+#endif
+  
+  Array1<Color> ncolors(points.size());
+  Array1<float> times(points.size());
+  
+  for(int i=0;i<points.size();i++) {
+    ncolors[i] = points[i]._rgb;
+    times[i] = points[i]._t;
+  }
+  cmap = scinew ColorMap(ncolors,times,alphas,aTimes);
+
   outport->send(cmap);
 }
 

@@ -58,8 +58,11 @@ itcl_class BB {
 	set redrawing           0
 	set $this-eview       100
 	set $this-raster      100
+	set $this-cmethod       1
 
 	set changing            0
+	set changing_raster     0
+	set changing_cmethod    0
     }
     
     #
@@ -121,21 +124,22 @@ itcl_class BB {
 	}
 	
 	toplevel $w
-	frame $w.f
+#	frame $w
 
 	
 	# create a button for each function
 	
-	frame $w.f.viewstuff
+	frame $w.viewstuff
 	$this makeViewPopup
-	frame $w.f.rastersize
+	frame $w.rastersize
 	$this adjustRasterSize
-	
+	frame $w.cmeth
+#	$this pickClassifyMethod
 	# place the buttons in a window
 
-        pack $w.f.viewstuff $w.f.rastersize                  \
+        pack $w.viewstuff $w.rastersize $w.cmeth \
 		-expand yes -fill x -pady 2 -padx 2
-	pack $w.f
+#	pack $w
 
 	# raise the OpenGL display window
 	
@@ -168,7 +172,7 @@ itcl_class BB {
 	    wm iconname $w view
 
 	    set view $this-eview
-	    
+
 	    # allow to adjust the eye and look at point, as well
 	    # as the normal vector and the field of view angle.
 	    
@@ -178,7 +182,8 @@ itcl_class BB {
 		    "$this notify_of_change_when_idle" "6c"
 	    makeNormalVector $w.up "Up Vector" $view-up \
 		    "$this notify_of_change_when_idle"
-	    
+
+
 	    # place the points in a window
 	    
 	    pack $w.eyep -side left -expand yes -fill x
@@ -212,21 +217,99 @@ itcl_class BB {
 
 	    # create the scale
 
-	    frame $w.f -relief groove -borderwidth 2
+	    frame $w.f -relief groove -borderwidth 4
+	    
 	    scale $w.f.res -orient horizontal -variable $this-raster \
 		    -from 100 -to 600 -label "Raster Size:" \
 		    -showvalue true -tickinterval 100 \
 		    -digits 3 -length 12c  \
-		    -command "$this notify_of_change_when_idle"
+		    -command "$this notify_of_raster_change_when_idle"
+
+	    # create the radiobuttons related to octree creation
 	    
+	    frame $w.r -relief groove -borderwidth 4
+	    frame $w.r.oct -relief groove -borderwidth 2
+	    frame $w.r.v -relief groove -borderwidth 2
+	    
+	    radiobutton $w.r.oct.nooctree -text "No octree" \
+		    -variable $this-cmethod -value 0 \
+		    -command "$this notify_of_classify_change_when_idle"
+	    radiobutton $w.r.oct.octree -text "Use octree" \
+		    -variable $this-cmethod -value 1 \
+		    -command "$this notify_of_classify_change_when_idle"
+
+	    # user clicks on this when the view in the Salmon window has
+	    # changed
+
+	    button $w.r.v.newview -text "New View"   \
+		    -command "$this notify_of_change_when_idle 1"
+
 	    # place the scales in a window
 	    
 	    pack $w.f.res -expand yes -fill x
+	    pack $w.r.oct.nooctree $w.r.oct.octree  $w.r.v.newview \
+		    -side left -expand yes -fill x
+	    pack $w.r.oct -side left -expand yes -fill x -padx 10
+	    pack $w.r.v -side right -expand yes -fill x -padx 10
+	    pack $w.f $w.r
+
+	}
+    }
+
+
+
+    #
+    #
+    #
+    ################################################################
+    #
+    # allows the user to adjust the raster size.
+    #
+    ################################################################
+
+    method pickClassifyMethod {} {
+
+	set w .classifyMethod$this
+
+	if {[winfo exists $w]} {
+	    raise $w
+	} else {
+
+	    # initialize variables
+	    
+	    toplevel $w
+	    wm title $w "Classification method"
+
+	    # allow selection
+
+	    frame $w.f -relief groove -borderwidth 2
+	    radiobutton $w.f.nooctree -text "No octree" \
+		    -variable $this-cmethod -value 0 \
+		    -command "$this notify_of_classify_change_when_idle"
+	    radiobutton $w.f.octree -text "Use octree" \
+		    -variable $this-cmethod -value 1 \
+		    -command "$this notify_of_classify_change_when_idle"
+
+	    # place the scales in a window
+	    
+	    pack $w.f.nooctree $w.f.octree -expand yes -fill x
 	    pack $w.f
 
 	}
     }
 
+    method change_classify {} {
+	set changing_cmethod 0
+	$this-c classify_changed
+    }
+
+
+    method notify_of_classify_change_when_idle {} {
+	if { ! $changing_cmethod } {
+	    after idle $this change_classify
+	    set changing_cmethod 1
+	}
+    }
 
     #
     #
@@ -273,6 +356,21 @@ itcl_class BB {
 	    set changing 1
 	}
     }
+    
+    method change_raster {} {
+	set changing_raster 0
+	$this-c raster_changed
+    }
+
+    method notify_of_raster_change_when_idle {joy} {
+
+	if { ! $changing_raster } {
+	    after idle $this change_raster
+	    set changing_raster 1
+	}
+    }
     protected redrawing
     protected changing
+    protected changing_raster
+    protected changing_cmethod
 }
