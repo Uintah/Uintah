@@ -15,8 +15,7 @@
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Ports/ColorMapPort.h>
 #include <Dataflow/Ports/GeometryPort.h>
-#include <Dataflow/Ports/ScalarFieldPort.h>
-#include <Dataflow/Ports/VectorFieldPort.h>
+#include <Dataflow/Ports/FieldPort.h>
 #include <Core/Geom/GeomArrows.h>
 #include <Core/Geom/GeomGroup.h>
 #include <Core/Geom/GeomLine.h>
@@ -35,8 +34,13 @@
 #include <Packages/Uintah/Core/Datatypes/ArchivePort.h>
 #include <Packages/Uintah/Core/Datatypes/Archive.h>
 
+#include <Core/Datatypes/LatticeVol.h>
+#include <Core/Datatypes/LatVolMesh.h>
 #include <Dataflow/Widgets/ScaledBoxWidget.h>
 #include <Dataflow/Widgets/ScaledFrameWidget.h>
+#include <Packages/Uintah/Core/Datatypes/LevelMesh.h>
+#include <Packages/Uintah/Core/Datatypes/LevelField.h>
+
 #include <iostream>
 #include <vector>
 
@@ -94,8 +98,8 @@ WARNING
 
 class NodeHedgehog : public Module {
   ArchiveIPort* ingrid;
-  VectorFieldIPort *invectorfield;
-  ScalarFieldIPort* inscalarfield;
+  FieldIPort *invectorfield;
+  FieldIPort* inscalarfield;
   ColorMapIPort *inColorMap;
   GeometryOPort* ogeom;
   CrowdMonitor widget_lock;
@@ -117,15 +121,14 @@ class NodeHedgehog : public Module {
   // GROUP: Private Function:
   //////////////////////
   // add_arrow -
-  void add_arrow(VectorFieldHandle vfield, ScalarFieldHandle ssfield,
-		 int have_sfield, int exhaustive, ColorMapHandle cmap,
+  void add_arrow(FieldHandle vfield, FieldHandle ssfield,
+		 int have_sfield, ColorMapHandle cmap,
 		 double lenscale, GeomArrows* arrows, Point p);
 
   GuiDouble length_scale;
   GuiDouble width_scale;
   GuiDouble head_length;
   GuiString type;
-  GuiInt exhaustive_flag;
   GuiInt drawcylinders;
   GuiInt skip_node;
   GuiDouble shaft_rad;
@@ -137,31 +140,35 @@ class NodeHedgehog : public Module {
   
 public:
  
-        // GROUP:  Constructors:
-        ///////////////////////////
-        // Constructs an instance of class NodeHedgehog
-        // Constructor taking
-        //    [in] id as an identifier
-   NodeHedgehog(const string& id);
-       
-        // GROUP:  Destructor:
-        ///////////////////////////
-        // Destructor
-   virtual ~NodeHedgehog();
+  // GROUP:  Constructors:
+  ///////////////////////////
+  // Constructs an instance of class NodeHedgehog
+  // Constructor taking
+  //    [in] id as an identifier
+  NodeHedgehog(const string& id);
   
-        // GROUP:  Access functions:
-        ///////////////////////////
-        // execute() - execution scheduled by scheduler
-   virtual void execute();
+  // GROUP:  Destructor:
+  ///////////////////////////
+  // Destructor
+  virtual ~NodeHedgehog();
+  
+  // GROUP:  Access functions:
+  ///////////////////////////
+  // execute() - execution scheduled by scheduler
+  virtual void execute();
+  
+  //////////////////////////
+  // tcl_commands - overides tcl_command in base class Module, takes:
+  //                                  findxy,
+  //                                  findyz,
+  //                                  findxz
+  virtual void tcl_command(TCLArgs&, void*);
 
-        //////////////////////////
-        // tcl_commands - overides tcl_command in base class Module, takes:
-        //                                  findxy,
-        //                                  findyz,
-        //                                  findxz
-   virtual void tcl_command(TCLArgs&, void*);
+  // used to get the values.
+  bool interpolate(FieldHandle f, const Point& p, Vector& val);
+  bool interpolate(FieldHandle f, const Point& p, double& val);
 };
-
+  
 static string module_name("NodeHedgehog");
 static string widget_name("NodeHedgehog Widget");
 
@@ -198,7 +205,6 @@ NodeHedgehog::NodeHedgehog(const string& id)
   drawcylinders("drawcylinders", id, this),
   skip_node("skip_node", id, this),
   shaft_rad("shaft_rad", id, this),
-  exhaustive_flag("exhaustive_flag", id, this),
   var_orientation("var_orientation",id,this)
 {
   // Create the input ports
@@ -208,13 +214,13 @@ NodeHedgehog::NodeHedgehog(const string& id)
   add_iport(ingrid);
 
   // scalar field
-  inscalarfield = scinew ScalarFieldIPort( this, "Scalar Field",
-					   ScalarFieldIPort::Atomic);
+  inscalarfield = scinew FieldIPort( this, "Scalar Field",
+					   FieldIPort::Atomic);
   add_iport( inscalarfield);
 
   // vector field
-  invectorfield = scinew VectorFieldIPort( this, "Vector Field",
-					   VectorFieldIPort::Atomic);
+  invectorfield = scinew FieldIPort( this, "Vector Field",
+					   FieldIPort::Atomic);
   add_iport( invectorfield);
 
   // color map
@@ -245,17 +251,16 @@ NodeHedgehog::~NodeHedgehog()
 }
 
 void
-NodeHedgehog::add_arrow(VectorFieldHandle vfield, ScalarFieldHandle ssfield,
-			int have_sfield, int exhaustive, ColorMapHandle cmap,
+NodeHedgehog::add_arrow(FieldHandle vfield, FieldHandle ssfield,
+			int have_sfield, ColorMapHandle cmap,
 			double lenscale, GeomArrows* arrows, Point p) {
   Vector vv;
-  int ii = 0;
-  if (vfield->interpolate( p, vv, ii, exhaustive)){
+  if (interpolate( vfield, p, vv)){
     if(have_sfield) {
       // get the color from cmap for p 	    
       MaterialHandle matl;
       double sval;
-      if (ssfield->interpolate( p, sval, ii, exhaustive))
+      if (interpolate( ssfield, p, sval))
 	matl = cmap->lookup( sval);
       else {
 	matl = outcolor;
@@ -278,18 +283,33 @@ void NodeHedgehog::execute()
   int old_grid_id = grid_id;
 
   // Must have a vector field and a grid, otherwise exit
-  VectorFieldHandle vfield;
+  FieldHandle vfield;
   if (!invectorfield->get( vfield ))
     return;
+
+  if( vfield->get_type_name(1) != "Vector" ){
+    cerr<<"First field must be a Vector field.\n";
+    return;
+  }
+  
+  if(vfield->get_type_name(0) != "LevelField" &&
+     vfield->get_type_name(0) != "LatticeVol" ){
+    cerr<<"Not a LatticeVol or LevelField\n";
+  }
 
   GridP grid = getGrid();
   if (!grid)
     return;
   
   // Get the scalar field and ColorMap...if you can
-  ScalarFieldHandle ssfield;
+  FieldHandle ssfield;
   int have_sfield=inscalarfield->get( ssfield );
-
+  if( have_sfield ){
+    if( !ssfield->is_scalar() ){
+      cerr<<"Second field is not a scalar field.  No Colormapping.\n";
+      have_sfield = 0;
+    }
+  }
   ColorMapHandle cmap;
   int have_cmap=inColorMap->get( cmap );
   if(!have_cmap)
@@ -325,23 +345,28 @@ void NodeHedgehog::execute()
   widget3d->SetCurrentMode(6);
 
   // draws the widget based on the vfield's size and position
-  double ld=vfield->longest_dimension();
   if (do_3d){
     if(need_find3d != 0){
+      BBox box;
       Point min, max;
-      vfield->get_bounds( min, max );
+      box = vfield->mesh()->get_bounding_box();
+      min = box.min(); max = box.max();
       Point center = min + (max-min)/2.0;
       Point right( max.x(), center.y(), center.z());
       Point down( center.x(), min.y(), center.z());
       Point in( center.x(), center.y(), min.z());
       widget3d->SetPosition( center, right, down, in);
+      double ld = Max (Max( (max.x() - min.x()), (max.y() - min.y()) ),
+		       max.z() - min.z());
       widget3d->SetScale( ld/20. );
     }
     need_find3d = 0;
   } else {
     if (need_find2d != 0){
+      BBox box;
       Point min, max;
-      vfield->get_bounds( min, max );
+      box = vfield->mesh()->get_bounding_box();
+      min = box.min(); max = box.max();
       
       Point center = min + (max-min)/2.0;
       double max_scale;
@@ -405,7 +430,6 @@ void NodeHedgehog::execute()
   double lenscale = length_scale.get();
   double widscale = width_scale.get();
   double headlen = head_length.get();
-  int exhaustive = exhaustive_flag.get();
   GeomArrows* arrows = scinew GeomArrows(widscale, 1.0-headlen, drawcylinders.get(), shaft_rad.get() );
 
   // loop over all the nodes in the graph taking the position
@@ -430,18 +454,16 @@ void NodeHedgehog::execute()
 	// for each node in the patch
 	for(NodeIterator iter = patch->getNodeIterator(boundaryRegion); !iter.done(); iter+=skip){
 	  Point p = patch->nodePosition(*iter);
-	  add_arrow(vfield, ssfield, have_sfield, exhaustive, cmap,
+	  add_arrow(vfield, ssfield, have_sfield, cmap,
 		    lenscale, arrows, p);
 	} // end for loop
 	break;
       case 1: // CC_VARIABLE
 	for(CellIterator iter = patch->getCellIterator(boundaryRegion); !iter.done(); iter+=skip){
 	  Point p = patch->cellPosition(*iter);
-	  add_arrow(vfield, ssfield, have_sfield, exhaustive, cmap,
+	  add_arrow(vfield, ssfield, have_sfield, cmap,
 		    lenscale, arrows, p);
 	}
-	break;
-      case 2: // FC_VARIABLE
 	break;
       } // end switch
     }
@@ -494,6 +516,111 @@ void NodeHedgehog::tcl_command(TCLArgs& args, void* userdata)
     Module::tcl_command(args, userdata);
   }
 }
+
+bool  
+NodeHedgehog::interpolate(FieldHandle vfld, const Point& p, Vector& val)
+{
+  const string field_type = vfld->get_type_name(0);
+  const string type = vfld->get_type_name(1);
+  if( field_type == "LevelField"){
+    if (type == "Vector") {
+      if( LevelField<Vector> *fld =
+	dynamic_cast<LevelField<Vector>*>(vfld.get_rep())){
+	return fld->interpolate(val ,p);
+      } else {
+	return false;
+      }
+    } else {
+      cerr << "Uintah::NodeHedgehog::interpolate:: error - unknown Field type: " << type << endl;
+      return false;
+    }
+  } else {
+    if( field_type == "LatticeVol"){
+      if (type == "Vector") {
+	LatticeVol<Vector> *fld =
+	  dynamic_cast<LatticeVol<Vector>*>(vfld.get_rep());
+	return fld->interpolate(val ,p);
+      } else {
+	cerr << "Uintah::NodeHedgehog::interpolate:: error - unknown Field type: " << type << endl;
+	return false;
+      }
+    }    
+    return false;
+  }
+}
+
+
+bool  
+NodeHedgehog::interpolate(FieldHandle sfld, const Point& p, double& val)
+{
+  const string field_type = sfld->get_type_name(0);
+  const string type = sfld->get_type_name(1);
+  if( sfld->get_type_name(0) == "LevelField" ){
+    if (type == "double") {
+      if(LevelField<double> *fld =
+	dynamic_cast<LevelField<double>*>(sfld.get_rep())){;
+	return fld->interpolate(val ,p);
+      } else {
+	return false;
+      }
+    } else if (type == "float") {
+      float result;
+      bool success;
+      LevelField<float> *fld =
+	dynamic_cast<LevelField<float>*>(sfld.get_rep());
+      success = fld->interpolate(result ,p);   
+      val = (double)result;
+      return success;
+    } else if (type == "long") {
+      long result;
+      bool success;
+      LevelField<long> *fld =
+	dynamic_cast<LevelField<long>*>(sfld.get_rep());
+      success =  fld->interpolate(result,p);
+      val = (double)result;
+      return success;
+    } else {
+      cerr << "Uintah::NodeHedgehog::interpolate:: error - unimplemented Field type: " << type << endl;
+      return false;
+    }
+  } else if( sfld->get_type_name(0) == "LatticeVol" ){
+    if (type == "double") {
+      LatticeVol<double> *fld =
+	dynamic_cast<LatticeVol<double>*>(sfld.get_rep());
+      return fld->interpolate(val ,p);
+    } else if (type == "float") {
+      float result;
+      bool success;
+      LatticeVol<float> *fld =
+	dynamic_cast<LatticeVol<float>*>(sfld.get_rep());
+      success = fld->interpolate(result ,p);   
+      val = (double)result;
+      return success;
+    } else if (type == "long") {
+      long result;
+      bool success;
+      LatticeVol<long> *fld =
+	dynamic_cast<LatticeVol<long>*>(sfld.get_rep());
+      success =  fld->interpolate(result,p);
+      val = (double)result;
+      return success;
+    } else if (type == "int") {
+      int result;
+      bool success;
+      LatticeVol<int> *fld =
+	dynamic_cast<LatticeVol<int>*>(sfld.get_rep());
+      success =  fld->interpolate(result,p);
+      val = (double)result;
+      return success;
+    } else {
+      cerr << "Uintah::NodeHedgehog::interpolate:: error - unimplemented Field type: " << type << endl;
+      return false;
+    }
+  } else {
+    return false;
+  }
+}
+
 } // End namespace Uintah
 
 
