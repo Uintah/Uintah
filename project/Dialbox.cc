@@ -177,7 +177,6 @@ int Dialbox::get_event_type()
     Display* display=evl->get_display();
     XDeviceInfo* devinfo=XListInputDevices(display, &ndev);
     for(int i=0;i<ndev;i++){
-	cerr << "dev=" << devinfo[i].name << endl;
 	if(!strcmp(devinfo[i].name, DIALBOX_DEVICE_NAME)){
 	    // Found it...
 	    break;

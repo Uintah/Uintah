@@ -20,7 +20,9 @@
 #include <Network.h>
 #include <NetworkEditor.h>
 #include <iostream.h>
+#include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 
 MtXEventLoop* evl;
 
@@ -30,6 +32,20 @@ int main(int argc, char** argv)
     // class.  This hands that class the list of arguments, and
     // the rest is handled "automagically".
     ArgProcessor::process_args(argc, argv);
+
+    // If the environmental variable SCI_DATA is set, change
+    // to that directory
+    char* datadir=getenv("SCI_DATA");
+    if(datadir){
+	cerr << "Changing to directory: " << datadir << endl;
+	if(chdir(datadir) == -1){
+	    perror("chdir");
+	    cerr << "Cannot change to directory: " << datadir << endl;
+	}
+	static char dirbuf[1000];
+	sprintf(dirbuf, "PWD=%s", datadir);
+	putenv(dirbuf);
+    }
 
     // Initialize the multithreader
     TaskManager::initialize();
