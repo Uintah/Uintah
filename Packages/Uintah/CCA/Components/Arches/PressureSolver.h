@@ -206,6 +206,7 @@ private:
       MultiMaterialSGSModel* d_mmSGSModel;
 #endif
       bool d_pressure_correction;
+      bool d_norm_pres;
 }; // End class PressureSolver
 
 } // End namespace Uintah
