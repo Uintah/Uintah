@@ -27,8 +27,7 @@ EOF
 The failed uda directory can be found in 
 $TEST_UDADIR at `hostname`.
 The comparing uda directory can be found in
-$COMPARE_UDADIR at `hostname`
-(but should also be in the cvs repository).
+$COMPARE_UDADIR at `hostname`.
 
 If the 'failed' uda directory is actually more
 correct than the 'comparing' uda directory, then
