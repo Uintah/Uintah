@@ -537,6 +537,13 @@ void OpenGL::redraw_frame()
 	    glFogi(GL_FOG_MODE,GL_LINEAR);
 	    glFogf(GL_FOG_START,float(znear));
 	    glFogf(GL_FOG_END,float(zfar));
+	    GLfloat bgArray[4];
+	    bgArray[0]=bg.r(); 
+	    bgArray[1]=bg.g(); 
+	    bgArray[2]=bg.b(); 
+	    bgArray[3]=1.0;
+	    glFogfv(GL_FOG_COLOR, bgArray);
+
 	    // now make the Roe setup its clipping planes...
 	    roe->setClip(drawinfo);
 	         
@@ -1793,6 +1800,9 @@ ImgReq::ImgReq(const clString& n, const clString& t)
 
 //
 // $Log$
+// Revision 1.28  2000/08/12 20:41:52  dmw
+// set fog color to be the same as the background color (instead of always being black)
+//
 // Revision 1.27  2000/07/28 21:14:58  yarden
 // handle dl (display list flag) in the draw info
 //
