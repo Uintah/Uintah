@@ -1,0 +1,39 @@
+Documentation
+         PowerApp Tutorial: improved images
+         SCIRun Tutorial: updated
+
+PowerApps
+         All: added support for specifying a PowerApp session on the
+            command line
+         BioTensor: added ability to change widget values before widget is
+            turned on (e.g. you can now change the isovalue ~before~
+            turning on the isosurface)
+
+Packages
+         Insight: more efficient Insight filter generation
+         Insight: added many Insight filters
+         BioPSE: add explicit control for whether ModifyConductivities
+            should load new conductivities or previously-saved UI
+            conductivities
+
+Modules
+         Isosurface: fixed memory leak
+         ShowColorMap: improved layout; multiple colormaps can now be
+            displayed simultaneously
+         SynchronizeGeometry: improved robustness
+         Viewer: use PWD for default location of saved images
+
+NetworkEditor
+         Reset port color when tracing connection
+         Remove annotations when module is destroyed
+
+Infrastructure
+         Added fix for ATI driver bug; uncomment line 118 of
+            Core/Geom/GeomOpenGL.cc to use (then recompile)
+         OSX fix to allow SCIRun and converters to be run from anywhere
+         Fixed EOL problem with dynamically compiled functions
+
+Datasets
+         Updated command line arguments for converter examples in
+            README file
+
