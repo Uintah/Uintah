@@ -176,10 +176,12 @@ namespace PSECommon {
       
       if ( base->getRGShort() )  
 	return new Sage<short, ScalarFieldRGshort,AI> (base->getRGShort(),ai);
-      
+
+#ifdef HAVE_USHORT      
       if ( base->getRGUshort() ) {
 	return new Sage<unsigned short, ScalarFieldRGushort,AI> (base->getRGUshort(),ai);
       }
+#endif
       if ( base->getRGChar() )   
 	return new Sage<char,  ScalarFieldRGchar,AI> (base->getRGChar(),ai);
       
