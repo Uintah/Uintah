@@ -482,19 +482,19 @@ TextureBuilderAlgo<FieldType>::fill_brick(TextureBrickHandle &brick,
               ++iter;
             }
             if(nx != brick->mx()) {
-              tex[k*ny*nx+j*nx+i] = 0;
+              tex[k*ny*nx+j*nx+i] = tex[k*ny*nx+j*nx+(brick->mx()-1)];
             }
           }
           if(ny != brick->my()) {
             for(i=0; i<Min(nx, brick->mx()+1); i++) {
-              tex[k*ny*nx+j*nx+i] = 0;
+              tex[k*ny*nx+j*nx+i] = tex[k*ny*nx+(brick->my()-1)*nx+i];
             }
           }
         }
         if(nz != brick->mz()) {
           for(j=0; j<Min(ny, brick->my()+1); j++) {
             for(i=0; i<Min(nx, brick->mx()+1); i++) {
-              tex[k*ny*nx+j*nx+i] = 0;
+              tex[k*ny*nx+j*nx+i] = tex[(brick->mz()-1)*ny*nx+j*nx+i];
             }
           }
         }
@@ -510,19 +510,19 @@ TextureBuilderAlgo<FieldType>::fill_brick(TextureBrickHandle &brick,
               ++iter;
             }
             if(nx != brick->mx()) {
-              tex[k*ny*nx+j*nx+i] = 0;
+              tex[k*ny*nx+j*nx+i] = tex[k*ny*nx+j*nx+(brick->mx()-1)];
             }
           }
           if(ny != brick->my()) {
             for(i=0; i<Min(nx, brick->mx()+1); i++) {
-              tex[k*ny*nx+j*nx+i] = 0;
+              tex[k*ny*nx+j*nx+i] = tex[k*ny*nx+(brick->my()-1)*nx+i];
             }
           }
         }
         if(nz != brick->mz()) {
           for(j=0; j<Min(ny, brick->my()+1); j++) {
             for(i=0; i<Min(nx, brick->mx()+1); i++) {
-              tex[k*ny*nx+j*nx+i] = 0;
+              tex[k*ny*nx+j*nx+i] = tex[(brick->mz()-1)*ny*nx+j*nx+i];
             }
           }
         }
@@ -550,34 +550,37 @@ TextureBuilderAlgo<FieldType>::fill_brick(TextureBrickHandle &brick,
               ++iter;
             }
             if(nx != brick->mx()) {
-              int idx = k*ny*nx+j*nx+i;
-              tex0[idx*4+0] = 0;
-              tex0[idx*4+1] = 0;
-              tex0[idx*4+2] = 0;
-              tex0[idx*4+3] = 0;
-              tex1[idx] = 0;
+              const int idx = k*ny*nx+j*nx+i;
+              const int idx1 = k*ny*nx+j*nx+(brick->mx()-1);
+              tex0[idx*4+0] = tex0[idx1*4+0];
+              tex0[idx*4+1] = tex0[idx1*4+1];
+              tex0[idx*4+2] = tex0[idx1*4+2];
+              tex0[idx*4+3] = tex0[idx1*4+3];
+              tex1[idx] = tex1[idx1];
             }
           }
           if(ny != brick->my()) {
             for(i=0; i<Min(nx, brick->mx()+1); i++) {
-              int idx = k*ny*nx+j*nx+i;
-              tex0[idx*4+0] = 0;
-              tex0[idx*4+1] = 0;
-              tex0[idx*4+2] = 0;
-              tex0[idx*4+3] = 0;
-              tex1[idx] = 0;
+              const int idx = k*ny*nx+j*nx+i;
+              const int idx1 = k*ny*nx+(brick->my()-1)*nx+i;
+              tex0[idx*4+0] = tex0[idx1*4+0];
+              tex0[idx*4+1] = tex0[idx1*4+1];
+              tex0[idx*4+2] = tex0[idx1*4+2];
+              tex0[idx*4+3] = tex0[idx1*4+3];
+              tex1[idx] = tex1[idx1];
             }
           }
         }
         if(nz != brick->mz()) {
           for(j=0; j<Min(ny, brick->my()+1); j++) {
             for(i=0; i<Min(nx, brick->mx()+1); i++) {
-              int idx = k*ny*nx+j*nx+i;
-              tex0[idx*4+0] = 0;
-              tex0[idx*4+1] = 0;
-              tex0[idx*4+2] = 0;
-              tex0[idx*4+3] = 0;
-              tex1[idx] = 0;
+              const int idx = k*ny*nx+j*nx+i;
+              const int idx1 = (brick->mz()-1)*ny*nx+j*nx+i;
+              tex0[idx*4+0] = tex0[idx1*4+0];
+              tex0[idx*4+1] = tex0[idx1*4+1];
+              tex0[idx*4+2] = tex0[idx1*4+2];
+              tex0[idx*4+3] = tex0[idx1*4+3];
+              tex1[idx] = tex1[idx1];
             }
           }
         }
@@ -588,7 +591,7 @@ TextureBuilderAlgo<FieldType>::fill_brick(TextureBrickHandle &brick,
           for(j=0, jj=y0; jj<y1; jj++, j++) {
             for(i=0, ii=x0; ii<x1; ii++, i++) {
               double v = vfld->fdata()[*iter];
-              int idx = k*ny*nx+j*nx+i;
+              const int idx = k*ny*nx+j*nx+i;
               tex0[idx*4+3] =
                 (unsigned char)(Clamp((v - vmin)/(vmax-vmin), 0.0, 1.0)*255.0);
               Vector g = gfld->fdata()[*iter];
@@ -600,34 +603,37 @@ TextureBuilderAlgo<FieldType>::fill_brick(TextureBrickHandle &brick,
               ++iter;
             }
             if(nx != brick->mx()) {
-              int idx = k*ny*nx+j*nx+i;
-              tex0[idx*4+0] = 0;
-              tex0[idx*4+1] = 0;
-              tex0[idx*4+2] = 0;
-              tex0[idx*4+3] = 0;
-              tex1[idx] = 0;
+              const int idx = k*ny*nx+j*nx+i;
+              const int idx1 = k*ny*nx+j*nx+(brick->mx()-1);
+              tex0[idx*4+0] = tex0[idx1*4+0];
+              tex0[idx*4+1] = tex0[idx1*4+1];
+              tex0[idx*4+2] = tex0[idx1*4+2];
+              tex0[idx*4+3] = tex0[idx1*4+3];
+              tex1[idx] = tex1[idx1];
             }
           }
           if(ny != brick->my()) {
             for(i=0; i<Min(nx, brick->mx()+1); i++) {
-              int idx = k*ny*nx+j*nx+i;
-              tex0[idx*4+0] = 0;
-              tex0[idx*4+1] = 0;
-              tex0[idx*4+2] = 0;
-              tex0[idx*4+3] = 0;
-              tex1[idx] = 0;
+              const int idx = k*ny*nx+j*nx+i;
+              const int idx1 = k*ny*nx+(brick->my()-1)*nx+i;
+              tex0[idx*4+0] = tex0[idx1*4+0];
+              tex0[idx*4+1] = tex0[idx1*4+1];
+              tex0[idx*4+2] = tex0[idx1*4+2];
+              tex0[idx*4+3] = tex0[idx1*4+3];
+              tex1[idx] = tex1[idx1];
             }
           }
         }
         if(nz != brick->mz()) {
           for(j=0; j<Min(ny, brick->my()+1); j++) {
             for(i=0; i<Min(nx, brick->mx()+1); i++) {
-              int idx = k*ny*nx+j*nx+i;
-              tex0[idx*4+0] = 0;
-              tex0[idx*4+1] = 0;
-              tex0[idx*4+2] = 0;
-              tex0[idx*4+3] = 0;
-              tex1[idx] = 0;
+              const int idx = k*ny*nx+j*nx+i;
+              const int idx1 = (brick->mz()-1)*ny*nx+j*nx+i;
+              tex0[idx*4+0] = tex0[idx1*4+0];
+              tex0[idx*4+1] = tex0[idx1*4+1];
+              tex0[idx*4+2] = tex0[idx1*4+2];
+              tex0[idx*4+3] = tex0[idx1*4+3];
+              tex1[idx] = tex1[idx1];
             }
           }
         }
