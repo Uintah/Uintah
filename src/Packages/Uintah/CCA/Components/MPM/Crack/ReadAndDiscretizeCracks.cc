@@ -51,7 +51,6 @@ Crack::Crack(const ProblemSpecP& ps,SimulationStateP& d_sS,
   dataArchiver = dataArchiver_tmp;
   lb = Mlb;
   d_8or27=n8or27;
-  d_outputCrackInterval=-1.0;
 
   if(d_8or27==8) {NGP=1; NGN=1;}
   else if(d_8or27==MAX_BASIS) {NGP=2; NGN=2;}
@@ -66,9 +65,15 @@ Crack::Crack(const ProblemSpecP& ps,SimulationStateP& d_sS,
   R=0;        // right
   L=1;        // left
 
+  // Flags for fracture analysis
+  d_calFractParameters = "false";
+  d_doCrackPropagation = "false";
+
   // Flag if using volume-integral in J-integral computation
-  d_useVolumeIntegral=false; 
-  
+  useVolumeIntegral=false; 
+  // Flag for crack geometry visualization
+  doCrackVisualization=false;
+
   // Initialize boundary type
   for(Patch::FaceType face = Patch::startFace;
        face<=Patch::endFace; face=Patch::nextFace(face)) {
@@ -79,17 +84,13 @@ Crack::Crack(const ProblemSpecP& ps,SimulationStateP& d_sS,
   GLP=Point(-9e99,-9e99,-9e99); 
   GHP=Point( 9e99, 9e99, 9e99); 
 
-  // Flags for fracture analysis  
-  d_calFractParameters = "false"; 
-  d_doCrackPropagation = "false"; 
-  doCrackVisualization=false;
+  // Intervals for calculating JK and doing crack propagation
+  calFractParasInterval=0.;
+  crackPropInterval=0.;
 
-  // Uda directory and output intervals
-  ProblemSpecP dataArchiver_ps = ps->findBlock("DataArchiver");
-  dataArchiver_ps->get("filebase", udaDir);
-  dataArchiver_ps->get("outputInterval",d_outputInterval);
-  dataArchiver_ps->get("outputCrackInterval", d_outputCrackInterval);
-  if(d_outputCrackInterval<0.) d_outputCrackInterval=d_outputInterval;
+  // Get .uda directory 
+  ProblemSpecP uda_ps = ps->findBlock("DataArchiver");
+  uda_ps->get("filebase", udaDir);
   
   /* Task 2: Read in MPM parameters related to fracture analysis
   */
@@ -98,7 +99,7 @@ Crack::Crack(const ProblemSpecP& ps,SimulationStateP& d_sS,
      mpm_soln_ps->get("calculate_fracture_parameters", d_calFractParameters);
      mpm_soln_ps->get("do_crack_propagation", d_doCrackPropagation);
      mpm_soln_ps->get("do_crack_visualization", doCrackVisualization);
-     mpm_soln_ps->get("useVolumeIntegral", d_useVolumeIntegral);
+     mpm_soln_ps->get("useVolumeIntegral", useVolumeIntegral);
      mpm_soln_ps->get("J_radius", rJ);
      mpm_soln_ps->get("save_J_matID", mS);
      mpm_soln_ps->get("dadx",rdadx);
