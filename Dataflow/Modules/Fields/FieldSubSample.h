@@ -41,7 +41,7 @@ namespace SCIRun {
 class FieldSubSampleAlgo : public DynamicAlgoBase
 {
 public:
-  virtual FieldHandle execute(FieldHandle src,
+  virtual FieldHandle execute(FieldHandle& src,
 			      unsigned int istart,
 			      unsigned int jstart,
 			      unsigned int kstart,
@@ -65,7 +65,7 @@ class FieldSubSampleAlgoT : public FieldSubSampleAlgo
 {
 public:
   //! virtual interface. 
-  virtual FieldHandle execute(FieldHandle src,
+  virtual FieldHandle execute(FieldHandle& src,
 			      unsigned int istart,
 			      unsigned int jstart,
 			      unsigned int kstart,
@@ -83,7 +83,7 @@ public:
 
 template <class FIELD>
 FieldHandle
-FieldSubSampleAlgoT<FIELD>::execute(FieldHandle field_h,
+FieldSubSampleAlgoT<FIELD>::execute(FieldHandle& field_h,
 				    unsigned int istart,
 				    unsigned int jstart,
 				    unsigned int kstart,
@@ -176,8 +176,11 @@ FieldSubSampleAlgoT<FIELD>::execute(FieldHandle field_h,
   // Now after the mesh has been created, create the field.
   FIELD *ofield = scinew FIELD(omesh, ifield->data_at());
 
+#ifdef SET_POINT_DEFINED
+  Point pt;
+#endif
 
-  Point p, o, pt;
+  Point p, o;
   typename FIELD::value_type value;
 
   typename FIELD::mesh_type::Node::iterator inodeItr, jnodeItr, knodeItr;

@@ -42,8 +42,7 @@ namespace SCIRun {
 class FieldSlicerAlgo : public DynamicAlgoBase
 {
 public:
-  virtual FieldHandle execute(FieldHandle src,
-			      int axis) = 0;
+  virtual FieldHandle execute(FieldHandle& src, int axis) = 0;
 
   //! support the dynamically compiled algorithm concept
   static CompileInfoHandle get_compile_info(const TypeDescription *ftd,
@@ -55,16 +54,15 @@ class FieldSlicerAlgoT : public FieldSlicerAlgo
 {
 public:
   //! virtual interface. 
-  virtual FieldHandle execute(FieldHandle src,
-			      int axis);
+  virtual FieldHandle execute(FieldHandle& src, int axis);
 };
 
 
 class FieldSlicerWorkAlgo : public DynamicAlgoBase
 {
 public:
-  virtual void execute(FieldHandle src,
-		       FieldHandle dst,
+  virtual void execute(FieldHandle& src,
+		       FieldHandle& dst,
 		       unsigned int index,
 		       int axis) = 0;
 
@@ -78,8 +76,8 @@ class FieldSlicerWorkAlgoT : public FieldSlicerWorkAlgo
 {
 public:
   //! virtual interface. 
-  virtual void execute(FieldHandle src,
-		       FieldHandle dst,
+  virtual void execute(FieldHandle& src,
+		       FieldHandle& dst,
 		       unsigned int index,
 		       int axis);
 };
@@ -88,8 +86,7 @@ public:
 
 template< class FIELD, class TYPE >
 FieldHandle
-FieldSlicerAlgoT<FIELD, TYPE>::execute(FieldHandle ifield_h,
-					int axis)
+FieldSlicerAlgoT<FIELD, TYPE>::execute(FieldHandle& ifield_h, int axis)
 {
   FieldHandle ofield_h;
 
@@ -214,8 +211,8 @@ FieldSlicerAlgoT<FIELD, TYPE>::execute(FieldHandle ifield_h,
 
 template< class IFIELD, class OFIELD >
 void
-FieldSlicerWorkAlgoT<IFIELD, OFIELD>::execute(FieldHandle ifield_h,
-					      FieldHandle ofield_h,
+FieldSlicerWorkAlgoT<IFIELD, OFIELD>::execute(FieldHandle& ifield_h,
+					      FieldHandle& ofield_h,
 					      unsigned int index,
 					      int axis)
 {

@@ -38,7 +38,7 @@ namespace SCIRun {
 class VectorMagnitudeAlgo : public DynamicAlgoBase
 {
 public:
-  virtual FieldHandle execute(FieldHandle src) = 0;
+  virtual FieldHandle execute(FieldHandle& src) = 0;
 
   //! support the dynamically compiled algorithm concept
 #ifdef __sgi
@@ -56,12 +56,12 @@ class VectorMagnitudeAlgoT : public VectorMagnitudeAlgo
 {
 public:
   //! virtual interface. 
-  virtual FieldHandle execute(FieldHandle src);
+  virtual FieldHandle execute(FieldHandle& src);
 };
 
 template< class IFIELD, class OFIELD >
 FieldHandle
-VectorMagnitudeAlgoT<IFIELD, OFIELD>::execute(FieldHandle field_h)
+VectorMagnitudeAlgoT<IFIELD, OFIELD>::execute(FieldHandle& field_h)
 {
   IFIELD *ifield = (IFIELD *) field_h.get_rep();
 
@@ -87,13 +87,13 @@ class VectorMagnitudeAlgoT : public VectorMagnitudeAlgo
 {
 public:
   //! virtual interface. 
-  virtual FieldHandle execute(FieldHandle src);
+  virtual FieldHandle execute(FieldHandle& src);
 };
 
 template< template<class> class FIELD >
 
 FieldHandle
-VectorMagnitudeAlgoT<FIELD>::execute(FieldHandle field_h)
+VectorMagnitudeAlgoT<FIELD>::execute(FieldHandle& field_h)
 {
   FIELD<Vector> *ifield = (FIELD<Vector> *) field_h.get_rep();
 

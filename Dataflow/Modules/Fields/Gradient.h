@@ -42,7 +42,7 @@ namespace SCIRun {
 class GradientAlgo : public DynamicAlgoBase
 {
 public:
-  virtual FieldHandle execute(FieldHandle src) = 0;
+  virtual FieldHandle execute(FieldHandle& src) = 0;
 
   //! support the dynamically compiled algorithm concept
   static CompileInfoHandle get_compile_info(const TypeDescription *ftd,
@@ -57,13 +57,13 @@ class GradientAlgoT : public GradientAlgo
 {
 public:
   //! virtual interface. 
-  virtual FieldHandle execute(FieldHandle src);
+  virtual FieldHandle execute(FieldHandle& src);
 };
 
 
 template< class IFIELD, class OFIELD >
 FieldHandle
-GradientAlgoT<IFIELD, OFIELD>::execute(FieldHandle field_h)
+GradientAlgoT<IFIELD, OFIELD>::execute(FieldHandle& field_h)
 {
   IFIELD *ifield = (IFIELD *) field_h.get_rep();
 
@@ -102,13 +102,13 @@ class GradientAlgoT : public GradientAlgo
 {
 public:
   //! virtual interface. 
-  virtual FieldHandle execute(FieldHandle src);
+  virtual FieldHandle execute(FieldHandle& src);
 };
 
 
 template< template<class> class FIELD, class TYPE >
 FieldHandle
-GradientAlgoT<FIELD, TYPE>::execute(FieldHandle field_h)
+GradientAlgoT<FIELD, TYPE>::execute(FieldHandle& field_h)
 {
   FIELD<TYPE> *ifield = (FIELD<TYPE> *) field_h.get_rep();
 
