@@ -49,19 +49,21 @@ template <class F, class L>
 class SFInterface : public ScalarFieldInterface {
 public:
   SFInterface(LockingHandle<F> fld) :
-    fld_(fld)
+    field_(fld)
   {}
   
-  virtual bool compute_min_max(double &minout, double &maxout) const;
+  virtual bool compute_min_max(double &minout, double &maxout,
+			       bool cache = true);
   virtual bool interpolate(double &result, const Point &p) const;
   virtual bool interpolate_many(vector<double> &results,
 				const vector<Point> &points) const;
   virtual double find_closest(double &result, const Point &p) const;
 private:
 
+  bool compute_min_max_aux(double &minout, double &maxout) const;
   bool finterpolate(double &result, const Point &p) const;
 
-  LockingHandle<F> fld_;
+  LockingHandle<F> field_;
 };
 
 
@@ -69,7 +71,7 @@ private:
 class ScalarFieldInterfaceMaker : public DynamicAlgoBase
 {
 public:
-  virtual ScalarFieldInterface *make(const Field *field) = 0;
+  virtual ScalarFieldInterface *make(FieldHandle field) = 0;
   static CompileInfo *get_compile_info(const TypeDescription *ftd,
 				       const TypeDescription *ltd);
 };
@@ -81,9 +83,10 @@ class SFInterfaceMaker : public ScalarFieldInterfaceMaker
 {
 public:
 
-  virtual ScalarFieldInterface *make(const Field *field)
+  virtual ScalarFieldInterface *make(FieldHandle field)
   {
-    const F *tfield = dynamic_cast<const F *>(field);
+    F *tfield = dynamic_cast<F *>(field.get_rep());
+    ASSERT(tfield);
     return scinew SFInterface<F, L>(tfield);
   }
 };
@@ -94,7 +97,7 @@ template <class F, class L>
 bool
 SFInterface<F, L>::finterpolate(double &result, const Point &p) const
 {
-  typename F::mesh_handle_type mesh = fld_->get_typed_mesh();
+  typename F::mesh_handle_type mesh = field_->get_typed_mesh();
 
   typename L::array_type locs;
   vector<double> weights;
@@ -107,7 +110,7 @@ SFInterface<F, L>::finterpolate(double &result, const Point &p) const
   for (unsigned int i = 0; i < locs.size(); i++)
   {
     typename F::value_type tmp;
-    if (fld_->value(tmp, locs[i]))
+    if (field_->value(tmp, locs[i]))
     {
       result += tmp * weights[i];
     }
@@ -143,13 +146,13 @@ SFInterface<F, L>::interpolate_many(vector<double> &results,
 
 template <class F, class L>
 bool
-SFInterface<F, L>::compute_min_max(double &minout, double &maxout) const
+SFInterface<F, L>::compute_min_max_aux(double &minout, double &maxout) const
 {
   bool result = false;
 
   typename F::fdata_type::const_iterator bi, ei;
-  bi = fld_->fdata().begin();
-  ei = fld_->fdata().end();
+  bi = field_->fdata().begin();
+  ei = field_->fdata().end();
 
   if (bi != ei)
   {
@@ -171,12 +174,48 @@ SFInterface<F, L>::compute_min_max(double &minout, double &maxout) const
 
 
 template <class F, class L>
+bool
+SFInterface<F, L>::compute_min_max(double &minout, double &maxout, bool cache)
+{
+  if (cache)
+  {
+    std::pair<double, double> minmax;
+    if (field_->get_property("minmax", minmax))
+    {
+      minout = minmax.first;
+      maxout = minmax.second;
+      return true;
+    }
+    else
+    {
+      field_->freeze();
+      if (compute_min_max_aux(minmax.first, minmax.second))
+      {
+	field_->set_property("minmax", minmax, true);
+	minout = minmax.first;
+	maxout = minmax.second;
+	return true;
+      }
+      else
+      {
+	return false;
+      }
+    }
+  }
+  else
+  {
+    return compute_min_max_aux(minout, maxout);
+  }
+}
+
+
+template <class F, class L>
 double
 SFInterface<F, L>::find_closest(double &minout, const Point &p) const
 {
   double mindist = DBL_MAX;
-  typename F::mesh_handle_type mesh = fld_->get_typed_mesh();
-  Field::data_location d_at = fld_->data_at();
+  typename F::mesh_handle_type mesh = field_->get_typed_mesh();
+  Field::data_location d_at = field_->data_at();
   if (d_at == Field::NODE) mesh->synchronize(Mesh::NODES_E);
   else if (d_at == Field::CELL) mesh->synchronize(Mesh::CELLS_E);
   else if (d_at == Field::FACE) mesh->synchronize(Mesh::FACES_E);
@@ -198,7 +237,7 @@ SFInterface<F, L>::find_closest(double &minout, const Point &p) const
     ++bi;
   }
   typename F::value_type val;
-  fld_->value(val, index);
+  field_->value(val, index);
   minout = (double)val;
 
   return mindist;
@@ -211,19 +250,21 @@ template <class F, class L>
 class VFInterface : public VectorFieldInterface {
 public:
   VFInterface(LockingHandle<F> fld) :
-    fld_(fld)
+    field_(fld)
   {}
   
-  virtual bool compute_min_max(Vector &minout, Vector  &maxout) const;
+  virtual bool compute_min_max(Vector &minout, Vector  &maxout,
+			       bool cache = true);
   virtual bool interpolate(Vector &result, const Point &p) const;
   virtual bool interpolate_many(vector<Vector> &results,
 				const vector<Point> &points) const;
   virtual double find_closest(Vector &result, const Point &p) const;
 
 private:
+  bool compute_min_max_aux(Vector &minout, Vector  &maxout) const;
   bool finterpolate(Vector &result, const Point &p) const;
 
-  LockingHandle<F>  fld_;
+  LockingHandle<F>  field_;
 };
 
 
@@ -231,7 +272,7 @@ private:
 class VectorFieldInterfaceMaker : public DynamicAlgoBase
 {
 public:
-  virtual VectorFieldInterface *make(const Field *field) = 0;
+  virtual VectorFieldInterface *make(FieldHandle field) = 0;
   static CompileInfo *get_compile_info(const TypeDescription *ftd,
 				       const TypeDescription *ltd);
 };
@@ -243,9 +284,10 @@ class VFInterfaceMaker : public VectorFieldInterfaceMaker
 {
 public:
 
-  virtual VectorFieldInterface *make(const Field *field)
+  virtual VectorFieldInterface *make(FieldHandle field)
   {
-    const F *tfield = dynamic_cast<const F *>(field);
+    F *tfield = dynamic_cast<F *>(field.get_rep());
+    ASSERT(tfield);
     return scinew VFInterface<F, L>(tfield);
   }
 };
@@ -256,7 +298,7 @@ template <class F, class L>
 bool
 VFInterface<F, L>::finterpolate(Vector &result, const Point &p) const
 {
-  typename F::mesh_handle_type mesh = fld_->get_typed_mesh();
+  typename F::mesh_handle_type mesh = field_->get_typed_mesh();
 
   typename L::array_type locs;
   vector<double> weights;
@@ -269,7 +311,7 @@ VFInterface<F, L>::finterpolate(Vector &result, const Point &p) const
   for (unsigned int i = 0; i < locs.size(); i++)
   {
     typename F::value_type tmp;
-    if (fld_->value(tmp, locs[i]))
+    if (field_->value(tmp, locs[i]))
     {
       result += tmp * weights[i];
     }
@@ -305,12 +347,12 @@ VFInterface<F, L>::interpolate_many(vector<Vector> &results,
 
 template <class F, class L>
 bool
-VFInterface<F, L>::compute_min_max(Vector &minout, Vector &maxout) const
+VFInterface<F, L>::compute_min_max_aux(Vector &minout, Vector &maxout) const
 {
   bool result = false;
   typename F::fdata_type::const_iterator bi, ei;
-  bi = fld_->fdata().begin();
-  ei = fld_->fdata().end();
+  bi = field_->fdata().begin();
+  ei = field_->fdata().end();
 
   if (bi != ei)
   {
@@ -341,12 +383,48 @@ VFInterface<F, L>::compute_min_max(Vector &minout, Vector &maxout) const
 
 
 template <class F, class L>
+bool
+VFInterface<F, L>::compute_min_max(Vector &minout, Vector &maxout, bool cache)
+{
+  if (cache)
+  {
+    std::pair<Vector, Vector> minmax;
+    if (field_->get_property("minmax", minmax))
+    {
+      minout = minmax.first;
+      maxout = minmax.second;
+      return true;
+    }
+    else
+    {
+      field_->freeze();
+      if (compute_min_max_aux(minmax.first, minmax.second))
+      {
+	field_->set_property("minmax", minmax, true);
+	minout = minmax.first;
+	maxout = minmax.second;
+	return true;
+      }
+      else
+      {
+	return false;
+      }
+    }
+  }
+  else
+  {
+    return compute_min_max_aux(minout, maxout);
+  }
+}
+
+
+template <class F, class L>
 double
 VFInterface<F, L>::find_closest(Vector &minout, const Point &p) const
 {
   double mindist = DBL_MAX;
-  typename F::mesh_handle_type mesh = fld_->get_typed_mesh();
-  Field::data_location d_at = fld_->data_at();
+  typename F::mesh_handle_type mesh = field_->get_typed_mesh();
+  Field::data_location d_at = field_->data_at();
   if (d_at == Field::NODE) mesh->synchronize(Mesh::NODES_E);
   else if (d_at == Field::CELL) mesh->synchronize(Mesh::CELLS_E);
   else if (d_at == Field::FACE) mesh->synchronize(Mesh::FACES_E);
@@ -367,7 +445,7 @@ VFInterface<F, L>::find_closest(Vector &minout, const Point &p) const
     }
     ++bi;
   }
-  fld_->value(minout, index);
+  field_->value(minout, index);
 
   return mindist;
 }
@@ -378,7 +456,7 @@ template <class F, class L>
 class TFInterface : public TensorFieldInterface {
 public:
   TFInterface(LockingHandle<F> fld) :
-    fld_(fld)
+    field_(fld)
   {}
 
   virtual bool interpolate(Tensor &result, const Point &p) const;
@@ -389,7 +467,7 @@ public:
 private:
   bool finterpolate(Tensor &result, const Point &p) const;
 
-  LockingHandle<F> fld_;
+  LockingHandle<F> field_;
 };
 
 
@@ -397,7 +475,7 @@ private:
 class TensorFieldInterfaceMaker : public DynamicAlgoBase
 {
 public:
-  virtual TensorFieldInterface *make(const Field *field) = 0;
+  virtual TensorFieldInterface *make(FieldHandle field) = 0;
   static CompileInfo *get_compile_info(const TypeDescription *ftd,
 				       const TypeDescription *ltd);
 };
@@ -409,9 +487,10 @@ class TFInterfaceMaker : public TensorFieldInterfaceMaker
 {
 public:
 
-  virtual TensorFieldInterface *make(const Field *field)
+  virtual TensorFieldInterface *make(FieldHandle field)
   {
-    const F *tfield = dynamic_cast<const Field *>(field);
+    F *tfield = dynamic_cast<F *>(field.get_rep());
+    ASSERT(tfield);
     return scinew TFInterface<F, L>(tfield);
   }
 };
@@ -422,7 +501,7 @@ template <class F, class L>
 bool
 TFInterface<F, L>::finterpolate(Tensor &result, const Point &p) const
 {
-  typename F::mesh_handle_type mesh = fld_->get_typed_mesh();
+  typename F::mesh_handle_type mesh = field_->get_typed_mesh();
 
   typename L::array_type locs;
   vector<double> weights;
@@ -435,7 +514,7 @@ TFInterface<F, L>::finterpolate(Tensor &result, const Point &p) const
   for (unsigned int i = 0; i < locs.size(); i++)
   {
     typename F::value_type tmp;
-    if (fld_->value(tmp, locs[i]))
+    if (field_->value(tmp, locs[i]))
     {
       result += tmp * weights[i];
     }
@@ -474,8 +553,8 @@ double
 TFInterface<F, L>::find_closest(Tensor &minout, const Point &p) const
 {
   double mindist = DBL_MAX;
-  typename F::mesh_handle_type mesh = fld_->get_typed_mesh();
-  Field::data_location d_at = fld_->data_at();
+  typename F::mesh_handle_type mesh = field_->get_typed_mesh();
+  Field::data_location d_at = field_->data_at();
   if (d_at == Field::NODE) mesh->synchronize(Mesh::NODES_E);
   else if (d_at == Field::CELL) mesh->synchronize(Mesh::CELLS_E);
   else if (d_at == Field::FACE) mesh->synchronize(Mesh::FACES_E);
@@ -498,7 +577,7 @@ TFInterface<F, L>::find_closest(Tensor &minout, const Point &p) const
     ++bi;
   }
 
-  fld_->value(minout, index);
+  field_->value(minout, index);
 
   return mindist;
 }
