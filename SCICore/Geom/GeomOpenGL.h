@@ -20,6 +20,8 @@
 #define CALLBACK APIENTRY
 #endif
 
+#include <stddef.h>
+#include <stdlib.h>
 #include <GL/glu.h>
 #include <GL/glx.h>
 
@@ -113,6 +115,10 @@ public:
 
 //
 // $Log$
+// Revision 1.5  1999/09/23 01:10:48  moulding
+// added #include <stddef.h> and <stdlib.h> for types wchar_t needed by the
+// win32 version of glu.h
+//
 // Revision 1.4  1999/08/28 17:54:41  sparker
 // Integrated new Thread library
 //
