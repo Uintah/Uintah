@@ -6,6 +6,10 @@ class PowerAppBase {
     # It will initialize variables regarding size, state, the progress indicator, tooltips, etc.
     # The constructor also configures the scheme (color, fonts, etc)
     constructor {} {
+	if [winfo exists .splash] {
+	    hideSplash true
+	}
+
 	configure_scheme 
 
 	# Standalone and viewer window
@@ -183,8 +187,8 @@ class PowerAppBase {
 	$m.main_menu.file.menu add command -label "Save Session... Ctr+S" \
 	    -underline 0 -command "$this save_session" -state active
 	
-	# $m.main_menu.file.menu add command -label "Save Image..." \
-	    # -underline 0 -command "$mods(Viewer)-ViewWindow_0 makeSaveImagePopup" -state active
+	$m.main_menu.file.menu add command -label "Save Image..." \
+	    -underline 0 -command "$this save_image" -state active 
 	
 	$m.main_menu.file.menu add command -label "Quit        Ctr+Q" \
 	    -underline 0 -command "$this exit_app" -state active
@@ -253,6 +257,18 @@ class PowerAppBase {
     method save_session {} {
 	puts "Define save_session for [appname] app"
     }
+
+
+    ##############################
+    ### save_image
+    ##############################
+    # To be filled in by child class. It should save out the
+    # viewer image.
+    method save_image {} {
+	puts "Define save_image for [appname] app"
+    }
+
+    
 
     ##########################
     ### save_module_variables
