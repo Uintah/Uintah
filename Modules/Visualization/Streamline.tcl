@@ -150,11 +150,11 @@ itcl_class Streamline {
 	pack $mi.label -side top -anchor w
 
 	#
-	# Selector for marker type - line, ribbon, surface
+	# Selector for marker type - LumiLine, line, tube, ribbon, surface, 
 	#
 	make_labeled_radio $mi.marker "Marker:" "$this selectmarker" \
 		left $this-markertype \
-		{Line Tube Ribbon Surface}
+		{LumLine Line Tube Ribbon Surface}
 	pack $mi.marker -side top
 
 	#
@@ -164,6 +164,18 @@ itcl_class Streamline {
 	pack $mi.info -side top -fill x
 
 	frame $mi.info.iLine
+	# later make this have a check...
+	frame $mi.info.iLumLine 
+
+	global $this-alphaval
+	set $this-alphaval 1.0
+	scale $mi.info.iLumLine.alpha -orient horizontal -label "Lumi ALpha" \
+		-from 0.00 -to 1.0 -resolution 0.01 -variable "this-alphaval"
+	checkbutton $mi.info.iLumLine.doseed -text "Use Scalar Seeds" 
+		
+	pack $mi.info.iLumLine.alpha $mi.info.iLumLine.doseed -anchor nw -fill x
+	
+
 	expscale $mi.info.iTube -orient horizontal -label "Tube scale:"
 	expscale $mi.info.iRibbon -orient horizontal -label "Ribbon scale:"
 	scale $mi.info.iSurface -orient horizontal -from 0 -to 90 \
@@ -290,6 +302,12 @@ itcl_class Streamline {
 	global $s-tubesize
 	set $s-tubesize 2
 
+	global $s-alphaval
+	set $s-alphaval 1.0
+
+	global $s-doseed
+	set $s-doseed 1
+
 	global $s-ribbonsize
 	set $s-ribbonsize 4
 
@@ -338,10 +356,15 @@ itcl_class Streamline {
     }
     method setup_markerspec {sid} {
 	set s $this-$sid
+	#global $s-alphaval
+	
+	$mi.info.iLumLine.alpha config -variable $s-alphaval
+	$mi.info.iLumLine.doseed config -variable $s-doseed
 	$mi.info.iTube config -variable $s-tubesize
 	$mi.info.iRibbon config -variable $s-ribbonsize
 	$mi.info.iSurface config -variable $s-maxbend
 
+	pack forget $mi.info.iLumLine
 	pack forget $mi.info.iLine
 	pack forget $mi.info.iTube
 	pack forget $mi.info.iRibbon

@@ -1,6 +1,6 @@
 
 /*
- *  IsoSurfaceSP.cc:  The first module!
+ *  IsoSurfaceMSRG.cc:  The first module!
  *
  *  Written by:
  *   Steven G. Parker
@@ -66,7 +66,7 @@ typedef struct zedges {
     int Left;
 } ZEDGES;
 
-class IsoSurfaceSP : public Module {
+class IsoSurfaceMSRG : public Module {
     ScalarFieldIPort* infield;
     ScalarFieldIPort* incolorfield;
     ColorMapIPort* inColorMap;
@@ -82,7 +82,7 @@ class IsoSurfaceSP : public Module {
 
     TriSurface* surf;
 
-    int IsoSurfaceSP_id;
+    int IsoSurfaceMSRG_id;
     int need_seed;
 
     XEDGES XEDGES_NEW;
@@ -144,9 +144,9 @@ class IsoSurfaceSP : public Module {
     int init;
     Point v[8];
 public:
-    IsoSurfaceSP(const clString& id);
-    IsoSurfaceSP(const IsoSurfaceSP&, int deep);
-    virtual ~IsoSurfaceSP();
+    IsoSurfaceMSRG(const clString& id);
+    IsoSurfaceMSRG(const IsoSurfaceMSRG&, int deep);
+    virtual ~IsoSurfaceMSRG();
     virtual Module* clone(int deep);
     virtual void execute();
 };
@@ -174,18 +174,18 @@ struct MCubeTable {
 #include "mcube2.h"
 
 extern "C" {
-Module* make_IsoSurfaceSP(const clString& id)
+Module* make_IsoSurfaceMSRG(const clString& id)
 {
-    return scinew IsoSurfaceSP(id);
+    return scinew IsoSurfaceMSRG(id);
 }
 };
 
-static clString module_name("IsoSurfaceSP");
-static clString surface_name("IsoSurfaceSP");
-static clString widget_name("IsoSurfaceSP widget");
+static clString module_name("IsoSurfaceMSRG");
+static clString surface_name("IsoSurfaceMSRG");
+static clString widget_name("IsoSurfaceMSRG widget");
 
-IsoSurfaceSP::IsoSurfaceSP(const clString& id)
-: Module("IsoSurfaceSP", id, Filter), seed_point("seed_point", id, this),
+IsoSurfaceMSRG::IsoSurfaceMSRG(const clString& id)
+: Module("IsoSurfaceMSRG", id, Filter), seed_point("seed_point", id, this),
   have_seedpoint("have_seedpoint", id, this), isoval("isoval", id, this),
   do_3dwidget("do_3dwidget", id, this), emit_surface("emit_surface", id, this),
   show_progress("show_progress", id, this)
@@ -210,7 +210,7 @@ IsoSurfaceSP::IsoSurfaceSP(const clString& id)
 
     matl=scinew Material(Color(0,0,0), Color(0,.8,0),
 		      Color(.7,.7,.7), 50);
-    IsoSurfaceSP_id=0;
+    IsoSurfaceMSRG_id=0;
 
     old_min=old_max=0;
     old_bmin=old_bmax=Point(0,0,0);
@@ -225,28 +225,28 @@ IsoSurfaceSP::IsoSurfaceSP(const clString& id)
 		-1;
 }
 
-IsoSurfaceSP::IsoSurfaceSP(const IsoSurfaceSP& copy, int deep)
+IsoSurfaceMSRG::IsoSurfaceMSRG(const IsoSurfaceMSRG& copy, int deep)
 : Module(copy, deep), seed_point("seed_point", id, this),
   have_seedpoint("have_seedpoint", id, this), isoval("isoval", id, this),
   do_3dwidget("do_3dwidget", id, this), emit_surface("emit_surface", id, this),
   show_progress("show_progress", id, this)
 {
-    NOT_FINISHED("IsoSurfaceSP::IsoSurfaceSP");
+    NOT_FINISHED("IsoSurfaceMSRG::IsoSurfaceMSRG");
 }
 
-IsoSurfaceSP::~IsoSurfaceSP()
+IsoSurfaceMSRG::~IsoSurfaceMSRG()
 {
 }
 
-Module* IsoSurfaceSP::clone(int deep)
+Module* IsoSurfaceMSRG::clone(int deep)
 {
-    return scinew IsoSurfaceSP(*this, deep);
+    return scinew IsoSurfaceMSRG(*this, deep);
 }
 
-void IsoSurfaceSP::execute()
+void IsoSurfaceMSRG::execute()
 {
-    if(IsoSurfaceSP_id){
-	ogeom->delObj(IsoSurfaceSP_id);
+    if(IsoSurfaceMSRG_id){
+	ogeom->delObj(IsoSurfaceMSRG_id);
     }
     ScalarFieldHandle field;
     if(!infield->get(field))
@@ -381,29 +381,29 @@ void IsoSurfaceSP::execute()
 //	    iso_tetrahedra_strip(unstructured_grid,iv,tgroup);
 	}
     } else {
-	error("I can't IsoSurfaceSP this type of field...");
+	error("I can't IsoSurfaceMSRG this type of field...");
     }
 
     if(tgroup->size() == 0){
 	delete tgroup;
 	if (emit_surface.get())
 	    delete surf;
-	IsoSurfaceSP_id=0;
+	IsoSurfaceMSRG_id=0;
     } else {
-	IsoSurfaceSP_id=ogeom->addObj(topobj, surface_name);
+	IsoSurfaceMSRG_id=ogeom->addObj(topobj, surface_name);
 	if (emit_surface.get()) {
 	    osurf->send(SurfaceHandle(surf));
 	}
     }
 }
 
-void IsoSurfaceSP::print_edges() {
+void IsoSurfaceMSRG::print_edges() {
     cerr << "z 0:"<<zedges.Bottom<<" 1:"<<zedges.Right<<" 2:"<<zedges.Top<<" 3:"<<zedges.Left<<"  4:"<<next_z.Bottom<<" 5:"<<next_z.Right<<" 6:"<<next_z.Top<<" 7:"<<next_z.Left;
     cerr << "  y 0:"<<yring[yring_idx].Front<<" 4:"<<yring[yring_idx].Back<<" 8:"<<yring[yring_idx].Left<<" 9:"<<yring[yring_idx].Right<<"  2:"<<next_y.Front<<" 6:"<<next_y.Back<<" 10:"<<next_y.Left<<" 11:"<<next_y.Right;
     cerr << "  x 1:"<<xring[xring_idx].Front<<" 5:"<<xring[xring_idx].Back<<" 9:"<<xring[xring_idx].Bottom<<" 11:"<<xring[xring_idx].Top<<"  3:"<<next_x.Front<<" 7:"<<next_x.Back<<" 8:"<<next_x.Bottom<<" 10:"<<next_x.Top<<"\n";
 }
 			       
-int IsoSurfaceSP::iso_cube(int i, int j, int k, double isoval,
+int IsoSurfaceMSRG::iso_cube(int i, int j, int k, double isoval,
 			   GeomTrianglesP* group, ScalarFieldRG* field,
 			   int marching, int building_trisurf)
 {
@@ -614,7 +614,7 @@ int IsoSurfaceSP::iso_cube(int i, int j, int k, double isoval,
     return(tcase->nbrs);
 }
 
-void IsoSurfaceSP::iso_reg_grid(ScalarFieldRG* field, double isoval,
+void IsoSurfaceMSRG::iso_reg_grid(ScalarFieldRG* field, double isoval,
 			      GeomTrianglesP* group)
 {
     int building_trisurf = emit_surface.get();
@@ -664,7 +664,7 @@ void IsoSurfaceSP::iso_reg_grid(ScalarFieldRG* field, double isoval,
     }
 }
 
-void IsoSurfaceSP::iso_reg_grid(ScalarFieldRG* field, const Point& p,
+void IsoSurfaceMSRG::iso_reg_grid(ScalarFieldRG* field, const Point& p,
 			      GeomTrianglesP* group)
 {
     int nx=field->nx;
@@ -764,7 +764,7 @@ void IsoSurfaceSP::iso_reg_grid(ScalarFieldRG* field, const Point& p,
 	    ogeom->delObj(groupid);
 }
 
-int IsoSurfaceSP::iso_tetra(Element* element, Mesh* mesh,
+int IsoSurfaceMSRG::iso_tetra(Element* element, Mesh* mesh,
 			  ScalarFieldUG* field, double isoval,
 			  GeomTrianglesP* group)
 {
@@ -888,7 +888,7 @@ int IsoSurfaceSP::iso_tetra(Element* element, Mesh* mesh,
     return faces;
 }
 
-void IsoSurfaceSP::iso_tetrahedra(ScalarFieldUG* field, double isoval,
+void IsoSurfaceMSRG::iso_tetrahedra(ScalarFieldUG* field, double isoval,
 				GeomTrianglesP* group)
 {
     Mesh* mesh=field->mesh.get_rep();
@@ -905,7 +905,7 @@ void IsoSurfaceSP::iso_tetrahedra(ScalarFieldUG* field, double isoval,
 // build tri-strips from iso-value
 
 
-void IsoSurfaceSP::iso_tetrahedra_strip(ScalarFieldUG* field, double isoval,
+void IsoSurfaceMSRG::iso_tetrahedra_strip(ScalarFieldUG* field, double isoval,
 				      GeomGroup* group)
 {
     Mesh* mesh=field->mesh.get_rep();
@@ -1051,7 +1051,7 @@ inline void add_strip_point(const int nvert, GeomTriStripList* group,
 // other high order bits:  4 bits of what faces must be checked for pushing
 // and 4 bits for the face to recures (only 1 can be set at most)
 
-int IsoSurfaceSP::iso_strip_enter(int inc, 
+int IsoSurfaceMSRG::iso_strip_enter(int inc, 
 				Element *element, Mesh* mesh, 
 				ScalarFieldUG* field, double isoval, 
 				GeomTriStripList* group)
@@ -1112,7 +1112,7 @@ const int FULL_RMAP_TABLE[16] =
 
 inline int REMAP_FULL(int val) { return FULL_RMAP_TABLE[val];}
 
-void IsoSurfaceSP::remap_element(int& rval, Element *src, Element *dst)
+void IsoSurfaceMSRG::remap_element(int& rval, Element *src, Element *dst)
 {
     // you only need to remap the 3 nodes for the incoming edge
     // but I'm being lazy for now...
@@ -1168,7 +1168,7 @@ void inline emit_in_2(int& rf, int& pf,
     group->add(pD,n2);    
 }
 
-int IsoSurfaceSP::iso_tetra_s(int nbr_status,Element *element, Mesh* mesh, 
+int IsoSurfaceMSRG::iso_tetra_s(int nbr_status,Element *element, Mesh* mesh, 
 			    ScalarFieldUG* field, double isoval, 
 			    GeomTriStripList* group)
 {
@@ -1398,7 +1398,7 @@ int IsoSurfaceSP::iso_tetra_s(int nbr_status,Element *element, Mesh* mesh,
     return rfaces|(pfaces<<6);
 }
 
-void IsoSurfaceSP::iso_tetra_strip(int ix, Mesh* mesh, 
+void IsoSurfaceMSRG::iso_tetra_strip(int ix, Mesh* mesh, 
 				 ScalarFieldUG* field, double iv, 
 				 GeomGroup* group, BitArray1& visited)
 {
@@ -1455,7 +1455,7 @@ void IsoSurfaceSP::iso_tetra_strip(int ix, Mesh* mesh,
 // this could easily be multi-threaded, and I am sure
 // that it is extremely inefficient (as far as stack space goes)
 
-void IsoSurfaceSP::iso_tetrahedra_strip(ScalarFieldUG* field, const Point& p,
+void IsoSurfaceMSRG::iso_tetrahedra_strip(ScalarFieldUG* field, const Point& p,
 				      GeomGroup* group)
 {
     Mesh* mesh=field->mesh.get_rep();
@@ -1611,7 +1611,7 @@ void IsoSurfaceSP::iso_tetrahedra_strip(ScalarFieldUG* field, const Point& p,
 
 // this is the version that just generates standard triangles
 
-void IsoSurfaceSP::iso_tetrahedra(ScalarFieldUG* field, const Point& p,
+void IsoSurfaceMSRG::iso_tetrahedra(ScalarFieldUG* field, const Point& p,
 				GeomTrianglesP* group)
 {
     Mesh* mesh=field->mesh.get_rep();
@@ -1681,9 +1681,9 @@ void IsoSurfaceSP::iso_tetrahedra(ScalarFieldUG* field, const Point& p,
 	ogeom->delObj(groupid);
 }
 
-void IsoSurfaceSP::find_seed_from_value(const ScalarFieldHandle& /*field*/)
+void IsoSurfaceMSRG::find_seed_from_value(const ScalarFieldHandle& /*field*/)
 {
-    NOT_FINISHED("IsoSurfaceSP::find_seed_from_value");
+    NOT_FINISHED("IsoSurfaceMSRG::find_seed_from_value");
 #if 0
     int nx=field->get_nx();
     int ny=field->get_ny();
@@ -1703,7 +1703,7 @@ void IsoSurfaceSP::find_seed_from_value(const ScalarFieldHandle& /*field*/)
 #endif
 }
 
-void IsoSurfaceSP::widget_moved(int last)
+void IsoSurfaceMSRG::widget_moved(int last)
 {
     if(last && !abort_flag){
 	abort_flag=1;

@@ -52,6 +52,7 @@ hook up user interface buttons
 #include <Geom/Sphere.h>
 #include <Geom/Switch.h>
 #include <Geom/Tube.h>
+#include <Geom/Line.h>
 #include <Geometry/Point.h>
 #include <Malloc/Allocator.h>
 #include <Math/MinMax.h>
@@ -207,6 +208,12 @@ struct SLSourceInfo {
 		     Streamline* module);
 };
 
+struct VertBatch {
+  Array1<Point>  ps;
+  Array1<double> ts; // times for animation
+  Array1<Color>  cs; // colors - might be zero-length
+};
+
 class Streamline : public Module {
     VectorFieldIPort* infield;
     ColorMapIPort* inColorMap;
@@ -241,6 +248,8 @@ class Streamline : public Module {
     int maxsteps;
     int skip;
     Array1<GeomPolyline*> lines;
+    TexGeomLines      *line_batch; // all of the stream lines are here...
+    Array1<VertBatch> llines;
     Array1<GeomTube*> tubes;
     double tubesize;
     Mutex grouplock;
@@ -255,7 +264,9 @@ class Streamline : public Module {
 
 public:
     void do_streamline(SLSourceInfo* si);
+    void do_streamlline(SLSourceInfo* si, int doseed=0);
     void parallel_streamline(int proc);
+    void parallel_streamlline(int proc);
     void do_streamtube(SLSourceInfo* si);
     void parallel_streamtube(int proc);
     void do_streamribbon(SLSourceInfo* si, double ribbonsize);
@@ -303,7 +314,7 @@ static clString widget_name("Streamline Widget");
 static clString module_name("Streamline");
 
 Streamline::Streamline(const clString& id)
-: Module(module_name, id, Filter), first_execute(1)
+: Module(module_name, id, Filter), first_execute(1),line_batch(0)
 {
     // Create the input ports
     infield=scinew VectorFieldIPort(this, "Vector Field",
@@ -433,7 +444,29 @@ void Streamline::execute()
 	}
 
 	// Do it...
-	if(markertype == "Line"){
+	if(markertype == "LumLine") {
+	  if(!get_tcl_intvar(sidstr, "drawmode", drawmode)){
+	    error("Error reading drawmode variable");
+	    return;
+	  }
+	  if(!get_tcl_doublevar(sidstr, "drawdist", drawdist)){
+	    error("Error reading drawdist variable");
+	    return;
+	  }
+	  double alphaval=1.0;
+	  if(!get_tcl_doublevar(sidstr,"alphaval",alphaval)) {
+	    error("Error reading alphaval variable");
+	  }
+	  int doseed=0;
+	  if (!get_tcl_intvar(sidstr,"doseed",doseed)) {
+	    error("Error reading doseed");
+	  }
+	  line_batch = scinew TexGeomLines; // create this guy...
+	  do_streamlline(si,doseed);
+	  line_batch->alpha = alphaval; // it is done...
+	  group->add(line_batch);
+	  
+	} else if(markertype == "Line"){
 	  if(!get_tcl_intvar(sidstr, "drawmode", drawmode)){
 	    error("Error reading drawmode variable");
 	    return;
@@ -470,7 +503,11 @@ void Streamline::execute()
 	// Remove the old and add the new
 	if(si->geomid)
 	    ogeom->delObj(si->geomid);
-	si->geomid=ogeom->addObj(group, module_name+to_string(si->sid));
+	if (sfield.get_rep())
+	  si->geomid=ogeom->
+	    addObj(group, module_name+to_string(si->sid)+" TransParent");
+	else 
+	  si->geomid=ogeom->addObj(group, module_name+to_string(si->sid));
 
     }
     // Flush it all out..
@@ -749,6 +786,161 @@ void Streamline::do_streamline(SLSourceInfo* si)
     lines.resize(tracers.size());
     np=Min(tracers.size(), Task::nprocessors());
     Task::multiprocess(np, do_parallel_streamline, this);
+}
+
+
+void Streamline::parallel_streamlline(int proc)
+{
+  GeomGroup* group=0;
+  int st=proc*tracers.size()/np;
+  int et=(proc+1)*tracers.size()/np;
+  double maxt=maxsteps*stepsize;
+
+  double t=0;
+  int step=0;
+  int ninside=1;
+  int started=0;
+
+  if (sfield.get_rep()) { // these are going to be colored...
+    while(step< maxsteps && ninside){
+      step++;
+      // If the group is discontinued, we have to start new polylines
+      if (!started) {
+	started=1; // it has been kicked off...
+	for(int i=st;i<et;i++){
+	  if(tracers[i]->inside){
+	    llines[i].ps.add(tracers[i]->p);
+	    llines[i].ts.add(t/maxt); // tag it with the time...
+	    double sval;
+	    Color cv(0,0,0);
+	    if (sfield->interpolate(tracers[i]->p,sval)) {
+	      MaterialHandle matl(cmap->lookup(sval));
+	      cv = matl->diffuse;
+	    } 
+	    llines[i].cs.add(cv);
+	  } else { // doesn't really matter - could add the batch here...
+	    // you are done here...
+	    if (llines[i].ps.size() > 2) { // you have to have something...
+	      grouplock.lock();
+	      line_batch->batch_add(llines[i].ts,
+				    llines[i].ps,
+				    llines[i].cs);
+	      llines[i].ps.resize(0);
+	      llines[i].ts.resize(0);
+	      llines[i].cs.resize(0);
+	      grouplock.unlock(); 
+	    }
+	  }
+	}
+      }
+      t+=stepsize;
+      
+      // Advance the tracers
+      ninside=0;
+      for(int i=st;i<et;i++){
+	int inside=tracers[i]->advance(field, stepsize, skip);
+	if(inside){
+	  llines[i].ps.add(tracers[i]->p);
+	  llines[i].ts.add(t/maxt); // tag it with the time...
+	  double sval;
+	  Color cv(0,0,0);
+	  if (sfield->interpolate(tracers[i]->p,sval)) {
+	    MaterialHandle matl(cmap->lookup(sval));
+	    cv = matl->diffuse;
+	  } 
+	  llines[i].cs.add(cv);
+	}
+	ninside+=inside;
+      }
+    }
+    
+  } else {
+    while(step< maxsteps && ninside){
+      step++;
+      // If the group is discontinued, we have to start new polylines
+      if (!started) {
+	started=1; // it has been kicked off...
+	for(int i=st;i<et;i++){
+	  if(tracers[i]->inside){
+	    llines[i].ps.add(tracers[i]->p);
+	    llines[i].ts.add(t/maxt); // tag it with the time...
+	  } else { // doesn't really matter - could add the batch here...
+	    // you are done here...
+	    if (llines[i].ps.size() > 2) { // you have to have something...
+	      grouplock.lock();
+	      line_batch->batch_add(llines[i].ts,
+				    llines[i].ps);
+	      llines[i].ps.resize(0);
+	      llines[i].ts.resize(0);
+	      // llines[i].cs.resize(0);
+	      grouplock.unlock(); 
+	    }
+	  }
+	}
+      }
+      t+=stepsize;
+      
+      // Advance the tracers
+      ninside=0;
+      for(int i=st;i<et;i++){
+	int inside=tracers[i]->advance(field, stepsize, skip);
+	if(inside){
+	  llines[i].ps.add(tracers[i]->p);
+	  llines[i].ts.add(t/maxt); // tag it with the time...
+	}
+	ninside+=inside;
+      }
+    }
+  }  // end of non-colored version...
+  cerr << "In the tangent part...\n";
+  for(int i=st;i<et;i++){
+    delete tracers[i];
+    // now add in ones that aren't empty...
+    if (llines[i].ps.size() > 2) {
+      grouplock.lock();
+      if (llines[i].cs.size()) {
+	line_batch->batch_add(llines[i].ts,
+			      llines[i].ps,
+			      llines[i].cs);
+      } else {
+	line_batch->batch_add(llines[i].ts,
+			      llines[i].ps);
+      } // don't have to clean up here...
+      grouplock.unlock(); 
+    }
+  }
+}
+
+static void do_parallel_streamlline(void* obj, int proc)
+{
+  Streamline* module=(Streamline*)obj;
+  module->parallel_streamlline(proc);
+}
+
+void Streamline::do_streamlline(SLSourceInfo* si, int doseed)
+{
+  tracers.remove_all();
+  if (!doseed) {
+    make_tracers(si->source, tracers, field, alg_enum);
+  } else { // use the seeds from the scalar field
+    double fac = 1.0/(sfield->samples.size()-1.0);
+    for(int i=0;i<sfield->samples.size();i++) {
+      if(downstream)
+	tracers.add(make_tracer(sfield->samples[i].loc,
+				i*fac,i*fac,field,1));
+      if (upstream)
+	tracers.add(make_tracer(sfield->samples[i].loc,
+				i*fac,i*fac,field,-1));
+    }
+  }
+  llines.resize(tracers.size());
+  for(int i=0;i<llines.size();i++) {
+    llines[i].ps.resize(0);
+    llines[i].ts.resize(0);
+    llines[i].cs.resize(0); // clear everything out...
+  }
+  np=Min(tracers.size(), Task::nprocessors());
+  Task::multiprocess(np, do_parallel_streamlline, this);
 }
 
 void Streamline::parallel_streamtube(int proc)
