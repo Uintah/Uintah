@@ -56,6 +56,7 @@ using namespace std;
 
 static DebugStream cout_doing("MPM", false);
 static DebugStream cout_dbg("SerialMPM", false);
+static DebugStream cout_heat("MPMHeat", false);
 static DebugStream amr_doing("AMRMPM", false);
 
 // From ThreadPool.cc:  Used for syncing cerr'ing so it is easier to read.
@@ -627,7 +628,7 @@ void SerialMPM::scheduleComputeInternalHeatRate(SchedulerP& sched,
   if(flags->d_8or27==27){
     t->requires(Task::OldDW, lb->pSizeLabel,                    gan, NGP);
   }
-  t->requires(Task::OldDW, lb->pMassLabel,                      gan,NGP);
+  t->requires(Task::OldDW, lb->pMassLabel,                      gan, NGP);
   t->requires(Task::NewDW, lb->pVolumeDeformedLabel,            gan, NGP);
   t->requires(Task::NewDW, lb->pInternalHeatRateLabel_preReloc, gan, NGP);
   t->requires(Task::NewDW, lb->pErosionLabel_preReloc,          gan, NGP);
@@ -876,23 +877,24 @@ void SerialMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
 
   t->requires(Task::OldDW, d_sharedState->get_delt_label() );
 
-  Ghost::GhostType  gac = Ghost::AroundCells;
-  t->requires(Task::NewDW, lb->gAccelerationLabel,     gac,NGN);
-  t->requires(Task::NewDW, lb->gVelocityStarLabel,     gac,NGN);
-  t->requires(Task::NewDW, lb->gTemperatureRateLabel,  gac,NGN);
-  t->requires(Task::NewDW, lb->gTemperatureLabel,      gac,NGN);
-  t->requires(Task::NewDW, lb->gTemperatureNoBCLabel,  gac,NGN);
-  t->requires(Task::NewDW, lb->frictionalWorkLabel,    gac,NGN);
-  t->requires(Task::OldDW, lb->pXLabel,                Ghost::None);
-  t->requires(Task::OldDW, lb->pMassLabel,             Ghost::None);
-  t->requires(Task::OldDW, lb->pParticleIDLabel,       Ghost::None);
-  t->requires(Task::OldDW, lb->pTemperatureLabel,      Ghost::None);
-  t->requires(Task::OldDW, lb->pSp_volLabel,           Ghost::None); 
-  t->requires(Task::OldDW, lb->pVelocityLabel,         Ghost::None);
-  t->requires(Task::OldDW, lb->pDispLabel,             Ghost::None);
-  t->requires(Task::OldDW, lb->pSizeLabel,            Ghost::None);
-  t->requires(Task::NewDW, lb->pVolumeDeformedLabel,   Ghost::None);
-  t->requires(Task::NewDW, lb->pErosionLabel_preReloc, Ghost::None);
+  Ghost::GhostType gac   = Ghost::AroundCells;
+  Ghost::GhostType gnone = Ghost::None;
+  t->requires(Task::NewDW, lb->gAccelerationLabel,              gac,NGN);
+  t->requires(Task::NewDW, lb->gVelocityStarLabel,              gac,NGN);
+  t->requires(Task::NewDW, lb->gTemperatureRateLabel,           gac,NGN);
+  t->requires(Task::NewDW, lb->gTemperatureLabel,               gac,NGN);
+  t->requires(Task::NewDW, lb->gTemperatureNoBCLabel,           gac,NGN);
+  t->requires(Task::NewDW, lb->frictionalWorkLabel,             gac,NGN);
+  t->requires(Task::OldDW, lb->pXLabel,                         gnone);
+  t->requires(Task::OldDW, lb->pMassLabel,                      gnone);
+  t->requires(Task::OldDW, lb->pParticleIDLabel,                gnone);
+  t->requires(Task::OldDW, lb->pTemperatureLabel,               gnone);
+  t->requires(Task::OldDW, lb->pSp_volLabel,                    gnone); 
+  t->requires(Task::OldDW, lb->pVelocityLabel,                  gnone);
+  t->requires(Task::OldDW, lb->pDispLabel,                      gnone);
+  t->requires(Task::OldDW, lb->pSizeLabel,                      gnone);
+  t->requires(Task::NewDW, lb->pVolumeDeformedLabel,            gnone);
+  t->requires(Task::NewDW, lb->pErosionLabel_preReloc,          gnone);
 
   // The dampingCoeff (alpha) is 0.0 for standard usage, otherwise
   // it is determined by the damping rate if the artificial damping
@@ -1763,7 +1765,7 @@ void SerialMPM::computeInternalHeatRate(const ProcessorGroup*,
     oodx[1] = 1.0/dx.y();
     oodx[2] = 1.0/dx.z();
 
-    Ghost::GhostType  gac = Ghost::AroundCells;
+    Ghost::GhostType  gac   = Ghost::AroundCells;
     Ghost::GhostType  gnone = Ghost::None;
     for(int m = 0; m < d_sharedState->getNumMPMMatls(); m++){
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
@@ -1786,9 +1788,10 @@ void SerialMPM::computeInternalHeatRate(const ProcessorGroup*,
                                                        Ghost::AroundNodes, NGP,
                                                        lb->pXLabel);
 
-      old_dw->get(px,           lb->pXLabel,              pset);
-      new_dw->get(pvol,         lb->pVolumeDeformedLabel, pset);
+      old_dw->get(px,           lb->pXLabel,                         pset);
+      new_dw->get(pvol,         lb->pVolumeDeformedLabel,            pset);
       new_dw->get(pIntHeatRate, lb->pInternalHeatRateLabel_preReloc, pset);
+
       old_dw->get(pMass,        lb->pMassLabel,                      pset);
       if(flags->d_8or27==27){
         old_dw->get(psize,      lb->pSizeLabel,           pset);
@@ -1804,12 +1807,12 @@ void SerialMPM::computeInternalHeatRate(const ProcessorGroup*,
       internalHeatRate.initialize(0.);
 
       // Create a temporary variable to store the mass weighted grid node
-      // internal heat rate that has been projected from the particles 
+      // internal heat rate that has been projected from the particles
       // to the grid
       NCVariable<double> gPIntHeatRate;
       new_dw->allocateTemporary(gPIntHeatRate, patch, gnone, 0);
       gPIntHeatRate.initialize(0.);
-      
+
       // First compute the temperature gradient at each particle
       double S[MAX_BASIS];
       IntVector ni[MAX_BASIS];
@@ -1847,14 +1850,16 @@ void SerialMPM::computeInternalHeatRate(const ProcessorGroup*,
         }
       }
 
+
       // Get the internal heat rate due to particle deformation at the
       // grid nodes by dividing gPIntHeatRate by the grid mass
       for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++) {
         IntVector c = *iter;
         gPIntHeatRate[c] /= gMass[c];
+        internalHeatRate[c] = gPIntHeatRate[c];
       }
 
-      // Compute T,ii + qdot
+      // Compute T,ii
       for(ParticleSubset::iterator iter = pset->begin();
           iter != pset->end(); iter++){
         particleIndex idx = *iter;
@@ -1878,8 +1883,8 @@ void SerialMPM::computeInternalHeatRate(const ProcessorGroup*,
             Vector div(d_S[k].x()*oodx[0],d_S[k].y()*oodx[1],
                        d_S[k].z()*oodx[2]);
             // Question: Why decreasing internal heat rate ?
-            T_ii = -Dot(div, T_i)*alpha*flags->d_adiabaticHeating;
-            internalHeatRate[node] += (T_ii + gPIntHeatRate[node]);
+            T_ii = Dot(div, T_i)*alpha*flags->d_adiabaticHeating;
+            internalHeatRate[node] -= T_ii;
           }
         }
       }
@@ -2680,15 +2685,15 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 
       ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
 
-      old_dw->get(px,                    lb->pXLabel,                     pset);
-      old_dw->get(pdisp,                 lb->pDispLabel,                  pset);
-      old_dw->get(pmass,                 lb->pMassLabel,                  pset);
-      old_dw->get(pids,                  lb->pParticleIDLabel,            pset);
-      old_dw->get(pSp_vol,               lb->pSp_volLabel,                pset);
-      new_dw->get(pvolume,               lb->pVolumeDeformedLabel,        pset);
-      old_dw->get(pvelocity,             lb->pVelocityLabel,              pset);
-      old_dw->get(pTemperature,          lb->pTemperatureLabel,           pset);
-      new_dw->get(pErosion,              lb->pErosionLabel_preReloc,      pset);
+      old_dw->get(px,           lb->pXLabel,                         pset);
+      old_dw->get(pdisp,        lb->pDispLabel,                      pset);
+      old_dw->get(pmass,        lb->pMassLabel,                      pset);
+      old_dw->get(pids,         lb->pParticleIDLabel,                pset);
+      old_dw->get(pSp_vol,      lb->pSp_volLabel,                    pset);
+      new_dw->get(pvolume,      lb->pVolumeDeformedLabel,            pset);
+      old_dw->get(pvelocity,    lb->pVelocityLabel,                  pset);
+      old_dw->get(pTemperature, lb->pTemperatureLabel,               pset);
+      new_dw->get(pErosion,     lb->pErosionLabel_preReloc,          pset);
 
       new_dw->allocateAndPut(pvelocitynew, lb->pVelocityLabel_preReloc,   pset);
       new_dw->allocateAndPut(pxnew,        lb->pXLabel_preReloc,          pset);
@@ -2763,12 +2768,13 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 
         // Accumulate the contribution from each surrounding vertex
         for (int k = 0; k < flags->d_8or27; k++) {
+          IntVector node = ni[k];
           S[k] *= pErosion[idx];
-          vel      += gvelocity_star[ni[k]]  * S[k];
-          acc      += gacceleration[ni[k]]   * S[k];
-          tempRate += (gTemperatureRate[ni[k]] + dTdt[ni[k]] +
-                       frictionTempRate[ni[k]])   * S[k];
-          burnFraction += massBurnFrac[ni[k]]     * S[k];
+          vel      += gvelocity_star[node]  * S[k];
+          acc      += gacceleration[node]   * S[k];
+          tempRate += (gTemperatureRate[node] + dTdt[node] +
+                       frictionTempRate[node])   * S[k];
+          burnFraction += massBurnFrac[node]     * S[k];
         }
 
         // Update the particle's position and velocity
@@ -2780,6 +2786,11 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
         pTempNew[idx]        = pTemperature[idx] + tempRate*delT ;
         pSp_volNew[idx]      = pSp_vol[idx];
 
+        cout_heat << "MPM::Particle = " << idx 
+                    << " T_old = " << pTemperature[idx]
+                    << " Tdot = " << tempRate
+                    << " dT = " << (tempRate*delT)
+                    << " T_new = " << pTempNew[idx] << endl;
 
         double rho;
         if(pvolume[idx] > 0.){
