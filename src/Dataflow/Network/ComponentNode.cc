@@ -460,7 +460,7 @@ void ProcessFileNode(const DOM_Node& d, file_node* n)
     if (childname.equals("description") && n->description==NOT_SET)
       n->description = rWSgSC(child);
     else if (childname.equals("datatype") && n->datatype==NOT_SET)
-      n->datatype = child.getFirstChild().getNodeValue().transcode();
+      n->datatype = rWSgSC(child);
   }
 }
 
@@ -473,12 +473,12 @@ void ProcessInportNode(const DOM_Node& d, inport_node* n)
     if (childname.equals("description") && n->description==NOT_SET)
       n->description = rWSgSC(child);
     else if (childname.equals("name") && n->name==NOT_SET)
-      n->name = child.getFirstChild().getNodeValue().transcode();
+      n->name = rWSgSC(child);
     else if (childname.equals("datatype") && n->datatype==NOT_SET)
-      n->datatype = child.getFirstChild().getNodeValue().transcode();
+      n->datatype = rWSgSC(child);
     else if (childname.equals("componentname") && n->upstream)
       n->upstream->insert(std::pair<int,char*>(n->upstream->size(),
-					       child.getFirstChild().getNodeValue().transcode()));
+					       rWSgSC(child)));
   }				       
 }
 
@@ -491,12 +491,12 @@ void ProcessOutportNode(const DOM_Node& d, outport_node* n)
     if (childname.equals("description") && n->description==NOT_SET)
       n->description = rWSgSC(child);
     else if (childname.equals("name") && n->name==NOT_SET)
-      n->name = child.getFirstChild().getNodeValue().transcode();
+      n->name = rWSgSC(child);
     else if (childname.equals("datatype") && n->datatype==NOT_SET)
-      n->datatype = child.getFirstChild().getNodeValue().transcode();
+      n->datatype = rWSgSC(child);
     else if (childname.equals("componentname") && n->downstream)
       n->downstream->insert(std::pair<int,char*>(n->downstream->size(),
-					       child.getFirstChild().getNodeValue().transcode()));
+					       rWSgSC(child)));
   }
 }
 
@@ -509,7 +509,7 @@ void ProcessDeviceNode(const DOM_Node& d, device_node* n)
     if (childname.equals("description") && n->description==NOT_SET)
       n->description = rWSgSC(child);
     else if (childname.equals("devicename") && n->devicename==NOT_SET)
-      n->devicename = child.getFirstChild().getNodeValue().transcode();
+      n->devicename = rWSgSC(child);
   }
 }
 
@@ -588,9 +588,9 @@ void ProcessParameterNode(const DOM_Node& d, parameter_node* n)
        child=child.getNextSibling()) {
     DOMString childname = child.getNodeName();
     if (childname.equals("label") && n->label==NOT_SET)
-      n->label = child.getFirstChild().getNodeValue().transcode();
+      n->label = rWSgSC(child);
     else if (childname.equals("widget") && n->widget==NOT_SET)
-      n->widget = child.getFirstChild().getNodeValue().transcode();
+      n->widget = rWSgSC(child);
     else if (childname.equals("description") && n->description==NOT_SET)
       n->description = rWSgSC(child);
   }
@@ -605,7 +605,7 @@ void ProcessGuiNode(const DOM_Node& d, gui_node* n)
     if (childname.equals("description") && n->description==NOT_SET)
       n->description = rWSgSC(child);
     else if (childname.equals("img") && n->image==NOT_SET)
-      n->image = child.getFirstChild().getNodeValue().transcode();
+      n->image = rWSgSC(child);
     else if (childname.equals("parameter") && n->parameters) {
       parameter_node* newparam = new parameter_node;
       newparam->widget = NOT_SET;
@@ -643,15 +643,16 @@ void ProcessOverviewNode(const DOM_Node& d, overview_node* n)
            author = author.getNextSibling()) {
         DOMString authorname = author.getNodeName();
         if (authorname.equals("author"))
-          n->authors->insert(std::pair<int,char*>(n->authors->size(),author.getFirstChild().getNodeValue().transcode()));
+          n->authors->insert(std::pair<int,char*>(n->authors->size(),
+            author.getFirstChild().getNodeValue().transcode()));
       }
     }
-    else if (childname.equals("description") && n->description==NOT_SET)
+    else if (childname.equals("description") && n->description==NOT_SET) {
       n->description = rWSgSC(child);
-    else if (childname.equals("summary") && n->summary==NOT_SET)
+    } else if (childname.equals("summary") && n->summary==NOT_SET)
       n->summary = rWSgSC(child);
     else if (childname.equals("examplesr") && n->examplesr==NOT_SET)
-      n->examplesr = child.getFirstChild().getNodeValue().transcode();
+      n->examplesr = rWSgSC(child);
   }
 }
 
@@ -662,11 +663,11 @@ void ProcessImplementationNode(const DOM_Node& d, implementation_node* n)
        child=child.getNextSibling()) {
     DOMString childname = child.getNodeName();
     if (childname.equals("ccfile") && n->ccfiles) { 
-      n->ccfiles->insert(std::pair<int,char*>(n->ccfiles->size(),child.getFirstChild().getNodeValue().transcode()));
+      n->ccfiles->insert(std::pair<int,char*>(n->ccfiles->size(),rWSgSC(child)));
     } else if (childname.equals("cfile") && n->cfiles) {
-      n->cfiles->insert(std::pair<int,char*>(n->cfiles->size(),child.getFirstChild().getNodeValue().transcode()));
+      n->cfiles->insert(std::pair<int,char*>(n->cfiles->size(),rWSgSC(child)));
     } else if (childname.equals("ffile") && n->ffiles) {
-      n->ffiles->insert(std::pair<int,char*>(n->ffiles->size(),child.getFirstChild().getNodeValue().transcode()));
+      n->ffiles->insert(std::pair<int,char*>(n->ffiles->size(),rWSgSC(child)));
     }
   }
 }
