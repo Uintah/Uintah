@@ -87,6 +87,8 @@ void HandlerStorage::clear(int handler_num)
 void HandlerStorage::add(int handler_num, int queue_num, void* data)
 {
   d_data_mutex.lock();
+  if ((unsigned int)queue_num > d_data[handler_num].size())
+    d_data[handler_num].resize(queue_num);
   voidvec::iterator viter = (d_data[handler_num]).begin() + queue_num;
   (*(d_data.find(handler_num))).second.insert(viter,data);
   d_data_mutex.unlock();
