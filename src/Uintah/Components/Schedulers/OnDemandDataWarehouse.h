@@ -10,9 +10,7 @@
 
 #include <map>
 #include <string>
-
-#include <iostream>
-#include <fstream>
+#include <iosfwd>
 
 using std::string;
 
@@ -135,7 +133,7 @@ public:
    virtual void emit(OutputContext&, const VarLabel* label,
 		     int matlIndex, const Patch* patch) const;
 
-   virtual void emit(ofstream& intout, vector <const VarLabel*> label) const;
+   virtual void emit(ostream& intout, const VarLabel* label) const;
 
 private:
 
@@ -187,6 +185,12 @@ private:
 
 //
 // $Log$
+// Revision 1.24  2000/06/03 05:27:24  sparker
+// Fixed dependency analysis for reduction variables
+// Removed warnings
+// Now allow for task patch to be null
+// Changed DataWarehouse emit code
+//
 // Revision 1.23  2000/06/01 23:14:04  guilkey
 // Added pleaseSaveIntegrated functionality to save ReductionVariables
 // to an archive.

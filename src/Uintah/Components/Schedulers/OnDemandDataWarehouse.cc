@@ -86,7 +86,6 @@ OnDemandDataWarehouse::put(const ReductionVariableBase& var,
    reductionDBtype::const_iterator iter = d_reductionDB.find(label);
    if(iter == d_reductionDB.end()){
       d_reductionDB[label]=scinew ReductionRecord(var.clone());
-      iter = d_reductionDB.find(label);
    } else {
       iter->second->var->reduce(var);
    }
@@ -665,25 +664,14 @@ void OnDemandDataWarehouse::emit(OutputContext& oc, const VarLabel* label,
    throw UnknownVariable(label->getName());
 }
 
-void OnDemandDataWarehouse::emit(ofstream& intout,
-				 vector <const VarLabel*> ivars) const
+void OnDemandDataWarehouse::emit(ostream& intout, const VarLabel* label) const
 {
-
-  static ts = 0;
-  if(ts == 0){
-     intout << "Step_number" << " ";
-     for(int i = 0;i<ivars.size();i++){
-	intout <<  ivars[i]->getName() << " ";
-     }
-     intout << endl;
-  }
-
-  for(int i = 0;i<ivars.size();i++){
-//	ivars[i]->emit(intout);
-  }
-  intout << endl;
-
-  ts++;
+   reductionDBtype::const_iterator iter = d_reductionDB.find(label);
+   if(iter == d_reductionDB.end()){
+      throw UnknownVariable(label->getName());
+   } else {
+      iter->second->var->emit(intout);
+   }
 }
 
 OnDemandDataWarehouse::ReductionRecord::ReductionRecord(ReductionVariableBase* var)
@@ -695,6 +683,12 @@ OnDemandDataWarehouse::ReductionRecord::ReductionRecord(ReductionVariableBase* v
 
 //
 // $Log$
+// Revision 1.29  2000/06/03 05:27:23  sparker
+// Fixed dependency analysis for reduction variables
+// Removed warnings
+// Now allow for task patch to be null
+// Changed DataWarehouse emit code
+//
 // Revision 1.28  2000/06/01 23:14:04  guilkey
 // Added pleaseSaveIntegrated functionality to save ReductionVariables
 // to an archive.

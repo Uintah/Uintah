@@ -72,9 +72,43 @@ BrainDamagedScheduler::initialize()
 void
 BrainDamagedScheduler::setupTaskConnections()
 {
-   // Perform a type consistency check
+   // Look for all of the reduction variables - we must treat those
+   // special.  Create a fake task that performs the reduction
+   // While we are at it, ensure that we aren't producing anything
+   // into a frozen data warehouse
    vector<TaskRecord*>::iterator iter;
+   map<const VarLabel*, Task*, VarLabel::Compare> reductionTasks;
+   for( iter=d_tasks.begin(); iter != d_tasks.end(); iter++ ) {
+      TaskRecord* task = *iter;
+      const vector<Task::Dependency*>& comps = task->task->getComputes();
+      for(vector<Task::Dependency*>::const_iterator iter = comps.begin();
+	  iter != comps.end(); iter++){
+	 Task::Dependency* dep = *iter;
+	 OnDemandDataWarehouse* dw = dynamic_cast<OnDemandDataWarehouse*>(dep->d_dw.get_rep());;
+	 if(dw->isFinalized()){
+	    throw InternalError("Variable produced in old datawarehouse: "+dep->d_var->getName());
+	 } else if(dep->d_var->typeDescription()->isReductionVariable()){
+	    // Look up this variable in the reductionTasks map
+	    const VarLabel* var = dep->d_var;
+	    map<const VarLabel*, Task*, VarLabel::Compare>::iterator it=reductionTasks.find(var);
+	    if(it == reductionTasks.end()){
+	       reductionTasks[var]=new Task(var->getName()+" reduction");
+	       it = reductionTasks.find(var);
+	       it->second->computes(dep->d_dw, var, -1, 0);
+	    }
+	    it->second->requires(dep->d_dw, var, 0, dep->d_patch, Ghost::None);
+	 }
+      }
+   }
 
+   // Add the new reduction tasks to the list of tasks
+   for(map<const VarLabel*, Task*, VarLabel::Compare>::iterator it = reductionTasks.begin();
+       it != reductionTasks.end(); it++){
+      addTask(it->second);
+   }
+
+   // Connect the tasks together using the computes/requires info
+   // Also do a type check
    for( iter=d_tasks.begin(); iter != d_tasks.end(); iter++ ) {
       TaskRecord* task = *iter;
       const vector<Task::Dependency*>& reqs = task->task->getRequires();
@@ -118,10 +152,14 @@ BrainDamagedScheduler::performTask(TaskRecord* task,
       }
    }
 
+#if 0
    double start = Time::currentSeconds();
+#endif
    task->task->doit(pc);
-   //double dt = Time::currentSeconds()-start;
-   //cout << "Completed task: " << task->task->getName() << " on patch: " << task->task->getPatch()->getID() << " (" << dt << " seconds)\n";
+#if 0
+   double dt = Time::currentSeconds()-start;
+   cout << "Completed task: " << task->task->getName() << " on patch: " << task->task->getPatch()->getID() << " (" << dt << " seconds)\n";
+#endif
 }
 
 void
@@ -146,7 +184,7 @@ BrainDamagedScheduler::execute(const ProcessorContext * pc,
 	 // Figure out which MPI node should be doing this task.
 	 // need to actually figure it out... THIS IS A HACK
 	 int taskLocation;
-	 if( patch->getID() >= 0 && patch->getID() <= 2 )
+	 if( !patch || patch->getID() >= 0 && patch->getID() <= 2 )
 	   taskLocation = 0;
 	 else if( patch->getID() >= 3 && patch->getID() <= 11 )
 	   taskLocation = 1;
@@ -263,7 +301,8 @@ BrainDamagedScheduler::addTask(Task* task)
    for(vector<Task::Dependency*>::const_iterator iter = comps.begin();
        iter != comps.end(); iter++){
       Task::Dependency* dep = *iter;
-      if(!dep->d_var->typeDescription()->isReductionVariable()){
+      if(task->isReductionTask() ||
+	  !dep->d_var->typeDescription()->isReductionVariable()){
 	 TaskProduct p(dep->d_patch, dep->d_matlIndex, dep->d_var);
 	 map<TaskProduct,TaskRecord*>::iterator aciter = d_allcomps.find(p);
 	 if(aciter != d_allcomps.end()) {
@@ -336,10 +375,13 @@ BrainDamagedScheduler::dumpDependencies()
 		const Task* task1 = taskrec->task;
 		const Task* task2 = deptask->second->task;
 
-		depfile << task1->getName() << "\\nPatch"
-	   		<< task1->getPatch()->getID() << " "
-			<< task2->getName() << "\\nPatch"
-			<< task2->getPatch()->getID() << endl;
+		depfile << task1->getName();
+		if(task1->getPatch())
+		   depfile << "\\nPatch" << task1->getPatch()->getID();
+		depfile << " "  << task2->getName() << "\\nPatch";
+		if(task2->getPatch())
+		   depfile << task2->getPatch()->getID();
+		depfile << endl;
 	    }
 	}
     }
@@ -362,6 +404,12 @@ TaskRecord::TaskRecord(Task* t)
 
 //
 // $Log$
+// Revision 1.17  2000/06/03 05:27:23  sparker
+// Fixed dependency analysis for reduction variables
+// Removed warnings
+// Now allow for task patch to be null
+// Changed DataWarehouse emit code
+//
 // Revision 1.16  2000/05/30 20:19:22  sparker
 // Changed new to scinew to help track down memory leaks
 // Changed region to patch
