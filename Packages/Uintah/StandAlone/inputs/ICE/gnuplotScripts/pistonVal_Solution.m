@@ -25,11 +25,11 @@ uda            = sprintf('pistonValidation.uda');    % uda to compare against
 % P_chamber = p_initial(Vol_initial/Vol_t) ^ gamma
 time_sec=[0:delT_dump:t_final];
 
-tmp = p_initial*(h_initial1./(h_initial1-(piston_vel*time_sec)))
-p_chamber_1 = tmp.^gamma
+tmp = (h_initial1./(h_initial1-(piston_vel*time_sec)))
+p_chamber_1 = p_initial*tmp.^gamma
 
-tmp = p_initial*(h_initial2./(h_initial1-(piston_vel*time_sec)))
-p_chamber_2 = tmp.^gamma
+tmp = (h_initial2./(h_initial1-(piston_vel*time_sec)))
+p_chamber_2 = p_initial*tmp.^gamma
   
 
 % plot the chamber pressure
