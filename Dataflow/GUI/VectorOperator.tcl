@@ -57,8 +57,11 @@ itcl_class Uintah_Operators_VectorOperator {
 	radiobutton $w.calc.length -text "Length" \
 		-variable $this-operation -value 3 \
 		-command "$this-c needexecute"
+	radiobutton $w.calc.vort -text "Vorticity" \
+		-variable $this-operation -value 4 \
+		-command "$this-c needexecute"
 	pack $w.calc.l $w.calc.u $w.calc.v \
-	    $w.calc.w $w.calc.length -anchor w
+	    $w.calc.w $w.calc.length $w.calc.vort -anchor w
 	pack $w.calc -side left -padx 2 -pady 2 -fill y
 
     }
