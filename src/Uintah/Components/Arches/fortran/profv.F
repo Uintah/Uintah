@@ -46,6 +46,8 @@ c*********************************************************************
 c*********************************************************************
 c     Local Variables :
 c*********************************************************************
+      integer iBegGhost, jBegGhost, kBegGhost
+      integer iEndGhost, jEndGhost, kEndGhost
       integer iBegGhostU, jBegGhostU, kBegGhostU
       integer iEndGhostU, jEndGhostU, kEndGhostU
       integer ISTU, JSTU, KSTU, IENDU, JENDU, KENDU
@@ -62,6 +64,12 @@ c*********************************************************************
 c*********************************************************************
 c     Start :
 c*********************************************************************
+      iBegGhost = domLo(1)
+      jBegGhost = domLo(2)
+      kBegGhost = domLo(3)
+      iEndGhost = domHi(1)
+      jEndGhost = domHi(2)
+      kEndGhost = domHi(3)
       iBegGhostU = domLoU(1)
       jBegGhostU = domLoU(2)
       kBegGhostU = domLoU(3)
@@ -119,15 +127,15 @@ c      AVGVELP = 0.1
 C--------------------------------------------------------------------
 C     EAST AND/OR WEST INLETS
 C--------------------------------------------------------------------
-      DO 200 K = kBegGhostU,kEndGhostU
-        DO 190 J = jBegGhostU,jEndGhostU
-          IF (PCELL(iBegGhostU,J,K).EQ.PFIELD) THEN
+      DO 200 K = kBegGhost,kEndGhost
+        DO 190 J = jBegGhost,jEndGhost
+          IF (PCELL(iBegGhost,J,K).EQ.PFIELD) THEN
             UU(iBegGhostU,J,K) = AVGVELP
             UU(ISTU,J,K) = AVGVELP
             VV(iBegGhostU,J,K) = ZERO
             WW(iBegGhostU,J,K) = ZERO
           END IF
-          IF (PCELL(iEndGhostU,J,K).EQ.PFIELD) THEN
+          IF (PCELL(iEndGhost,J,K).EQ.PFIELD) THEN
             UU(iEndGhostU,J,K) = -AVGVELP
 c            UINLT(J,K) = -AVGVELP
 c            UU(NI+1,J,K) = -AVGVELP
@@ -139,15 +147,15 @@ c            UU(NI+1,J,K) = -AVGVELP
 C--------------------------------------------------------------------
 C     NORTH AND/OR SOUTH INLETS
 C--------------------------------------------------------------------
-      DO 230 K = kBegGhostV,kEndGhostV
-        DO 220 I = iBegGhostV,iEndGhostV
-          IF (PCELL(I,jBegGhostV,K).EQ.PFIELD) THEN
+      DO 230 K = kBegGhost,kEndGhost
+        DO 220 I = iBegGhost,iEndGhost
+          IF (PCELL(I,jBegGhost,K).EQ.PFIELD) THEN
             VV(I,jBegGhostV,K) = AVGVELP
             VV(I,JSTV,K) = AVGVELP
             WW(I,jBegGhostV,K) = ZERO
             UU(I,jBegGhostV,K) = ZERO
           END IF
-          IF (PCELL(I,jEndGhostV,K).EQ.PFIELD) THEN
+          IF (PCELL(I,jEndGhost,K).EQ.PFIELD) THEN
             VV(I,jEndGhostV,K) = -AVGVELP
 c            VINLT(I,K) = -AVGVELP
 c            VV(I,NJ+1,K) = -AVGVELP
@@ -159,15 +167,15 @@ c            VV(I,NJ+1,K) = -AVGVELP
 C--------------------------------------------------------------------
 C     TOP AND/OR BOTTOM INLETS
 C--------------------------------------------------------------------
-      DO 260 J = jBegGhostW,jEndGhostW
-        DO 250 I = iBegGhostW,iEndGhostW
-          IF (PCELL(I,J,kBegGhostW).EQ.PFIELD) THEN
+      DO 260 J = jBegGhost,jEndGhost
+        DO 250 I = iBegGhost,iEndGhost
+          IF (PCELL(I,J,kBegGhost).EQ.PFIELD) THEN
             WW(I,J,kBegGhostW) = AVGVELP
             WW(I,J,KSTW) = AVGVELP
             VV(I,J,kBegGhostW) = ZERO
             UU(I,J,kBegGhostW) = ZERO
           END IF
-          IF (PCELL(I,J,kEndGhostW).EQ.PFIELD) THEN
+          IF (PCELL(I,J,kEndGhost).EQ.PFIELD) THEN
             WW(I,J,kEndGhostW) = -AVGVELP
 c            WINLT(I,J) = -AVGVELP
 c            WW(I,J,NK+1) = -AVGVELP
@@ -183,6 +191,9 @@ c            WW(I,J,NK+1) = -AVGVELP
 c*********************************************************************
 c
 c $Log$
+c Revision 1.4  2000/06/30 22:41:19  bbanerje
+c Corrected behavior of profv and profscalar
+c
 c Revision 1.3  2000/06/29 06:22:50  bbanerje
 c Updated FCVariable to SFCX, SFCY, SFCZVariables and made corresponding
 c changes to profv.  Code is broken until the changes are reflected
