@@ -222,6 +222,11 @@ using std::vector;
       const VarLabel* gNormalRotMomentLabel; 
       const VarLabel* gNormalRotMassLabel; 
       const VarLabel* gNormalRotAccLabel; 
+      
+      // particle Debugging Labels
+      const VarLabel* pColorLabel;
+      const VarLabel* pColorLabel_preReloc;
+      
 
     };
 } // End namespace Uintah
