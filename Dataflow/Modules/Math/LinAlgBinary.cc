@@ -80,28 +80,37 @@ void LinAlgBinary::execute() {
 
   string op = op_.get();
   if (op == "Add") {
-//    Matrix *m;
-//    omat_->send(MatrixHandle(m));
-    error("LinAlgBinary: Add has not been implemented yet.");
+    DenseMatrix *ad, *bd, *cd;
+    if (!aH.get_rep()) {
+      error("Empty A matrix for Add");
+      return;
+    }
+    if (!bH.get_rep()) {
+      error("Empty B matrix for Add");
+      return;
+    }
+    ad=aH->dense();
+    bd=bH->dense();
+    cd=scinew DenseMatrix(ad->nrows(), bd->ncols());
+    Add(*cd, *ad, *bd);
+    omat_->send(MatrixHandle(cd));
     return;
   } else if (op == "Mult") {
+    DenseMatrix *ad, *bd, *cd;
     if (!aH.get_rep()) {
-      aH = scinew DenseMatrix(Transform());
-    } else if (!bH.get_rep()) {
-      bH = scinew DenseMatrix(Transform());
-    }
-    if (aH->nrows() == 4 && aH->ncols() == 4 &&
-	bH->nrows() == 4 && bH->ncols() == 4) {
-      Transform aT(aH->toTransform());
-      Transform bT(bH->toTransform());
-      aT.post_trans(bT);
-      DenseMatrix *cm = scinew DenseMatrix(aT);
-      omat_->send(MatrixHandle(cm));
-      return;
-    } else {
-      error("Mult has only been implemented for 4x4 matrices.");
+      error("Empty A matrix for Add");
       return;
     }
+    if (!bH.get_rep()) {
+      error("Empty B matrix for Add");
+      return;
+    }
+    ad=aH->dense();
+    bd=bH->dense();
+    cd=scinew DenseMatrix(ad->nrows(), bd->ncols());
+    Mult(*cd, *ad, *bd);
+    omat_->send(MatrixHandle(cd));
+    return;
   } else if (op == "Function") {
     if (aH->nrows()*aH->ncols() != bH->nrows()*bH->ncols()) {
       error("Function only works if input matrices have the same number of elements.");
