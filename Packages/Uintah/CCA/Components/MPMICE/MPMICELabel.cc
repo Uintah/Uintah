@@ -30,9 +30,9 @@ MPMICELabel::MPMICELabel()
   mom_L_ME_CCLabel = scinew VarLabel("mom_L_ME_CC",
                      CCVariable<Vector>::getTypeDescription());
   int_eng_L_CCLabel= scinew VarLabel("int_eng_L_CC",
-                     CCVariable<Vector>::getTypeDescription());
+                     CCVariable<double>::getTypeDescription());
   int_eng_L_ME_CCLabel = scinew VarLabel("int_eng_L_ME_CC",
-                     CCVariable<Vector>::getTypeDescription());
+                     CCVariable<double>::getTypeDescription());
   dvdt_CCLabel     = scinew VarLabel( "dvdt_CC",
 			CCVariable<Vector>::getTypeDescription() );
   temp_CCLabel     = scinew VarLabel("temp_CC",
