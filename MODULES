@@ -32,8 +32,10 @@ OctreeToGeom
 SelectMesh
 
 Category: Readers
+ColumnMatrixReader
 ContourSetReader
 GeomReader
+MatrixReader
 MeshReader
 MultimeshReader
 PointsReader
@@ -73,7 +75,9 @@ VectorSeg
 WidgetTest
 
 Category: Writers
+ColumnMatrixWriter
 ContourSetWriter
+MatrixWriter
 MeshWriter
 MultiMeshWriter
 ScalarFieldWriter

@@ -19,3 +19,5 @@ option add *highlightThickness 0
 
 set tcl_prompt1 "puts -nonewline \"scirun> \""
 set tcl_prompt2 "puts -nonewline \"scirun>> \""
+
+set blt_library $env(SCI_WORK)/tcl/blt-1.7/library

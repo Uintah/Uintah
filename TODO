@@ -1,4 +1,18 @@
 
+Mesher:
+UI - random order, tolerances
+Tune it for 50^3 and 100^3, make sure that it still works on others.
+Profile 20^3 case
+change %200 to %1000 in Delaunay
+inline stuff
+Fix "done" array
+Start walk at last element, not first
+Trivial allocators
+Memory use:
+elems array - should this just be temporary, while building neighbors?
+or is it needed for other crap.
+Find a better way to allocate/store it...
+
 Make config script use versions - quarks, tcl, tk, itcl, mesa
 Fix SurfaceReader
 Save more Geom files to test
