@@ -209,6 +209,15 @@ void SerialMPM::scheduleTimeAdvance(const LevelP&         level,
 				    lb->pParticleIDLabel, matls);
 }
 
+// scheduleTimeAdvance version called by the AMR simulation controller.
+void
+SerialMPM::scheduleTimeAdvance(const LevelP&, SchedulerP&, int , int )
+{
+  cout << "SerialMPM component does not support ARM yet.\n";
+  throw InternalError("SerialMPM component does not support AMR yet.");
+}
+
+
 void SerialMPM::scheduleInterpolateParticlesToGrid(SchedulerP& sched,
 						   const PatchSet* patches,
 						   const MaterialSet* matls)

@@ -71,6 +71,9 @@ public:
   //////////
   // Insert Documentation Here:
   virtual void scheduleTimeAdvance(const LevelP& level, SchedulerP&);
+  // scheduleTimeAdvance version called by the AMR simulation controller.
+  virtual void scheduleTimeAdvance(const LevelP& level, 
+				   SchedulerP&, int step, int nsteps );
 
   void setSharedState(SimulationStateP& ssp);
 

@@ -167,6 +167,14 @@ void PatchCombiner::scheduleTimeAdvance(const LevelP& level, SchedulerP& sched)
   globalMatlSet->add(-1);
   sched->addTask(readTask, eachPatch /* ??? -- what to do for multi-proc */,
 		 globalMatlSet.get_rep());
+} // end scheduleTimeAdvance()
+
+// scheduleTimeAdvance version called by the AMR simulation controller.
+void
+PatchCombiner::scheduleTimeAdvance( const LevelP&, SchedulerP&, int , int )
+{
+  cout << "PatchCombiner component does not support ARM yet.\n";
+  throw InternalError("PatchCombiner component does not support AMR yet.");
 }
 
 void PatchCombiner::initialize(const ProcessorGroup*,

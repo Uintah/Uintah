@@ -323,6 +323,16 @@ void MPMICE::scheduleTimeAdvance(const LevelP&   level,
   // whatever tasks use react_sub will have their own reference to it.
   if (react_sub->removeReference())
     delete react_sub;
+} // end scheduleTimeAdvance()
+
+//______________________________________________________________________
+// scheduleTimeAdvance version called by the AMR simulation controller.
+
+void
+MPMICE::scheduleTimeAdvance(const LevelP&, SchedulerP&, int , int )
+{
+  cout << "MPMICE component does not support ARM yet.\n";
+  throw InternalError("MPMICE component does not support AMR yet.");
 }
 
 //______________________________________________________________________
