@@ -529,7 +529,6 @@ proc CreateNewModule {} {
     }
     set specfile [tk_getOpenFile -filetypes $types]
     if { [file exists $specfile] } {
-	puts "loading component spec file $specfile"
 	netedit load_component_spec $specfile
     }
 }

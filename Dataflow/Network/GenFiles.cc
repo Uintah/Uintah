@@ -116,10 +116,10 @@ void GenCategory(char* catname, char* packname, char* psepath)
   /* edit the modules sub.mk file - add the new category */
 
   char* modname = new char[strlen(catname)+25];
-  sprintf(modname,"\t%s\\\\\\\n",catname);
+  sprintf(modname,"\t%s\\\n",catname);
   string = new char[strlen(psepath)+strlen(packname)+25];
   sprintf(string,"%s/src/%s/Modules/sub.mk",psepath,packname);
-  InsertStringInFile(string,"#\\[INSERT NEW CATEGORY DIR HERE\\]",modname);
+  InsertStringInFile(string,"#[INSERT NEW CATEGORY DIR HERE]",modname);
   delete[] string;
 
 }
@@ -170,19 +170,19 @@ void GenComponent(component_node* n, char* packname, char* psepath)
 
   /* edit the category sub.mk file - add the new component */
   char* modname = new char[strlen(n->name)+25];
-  sprintf(modname,"\t$(SRCDIR)/%s.cc\\\\\\\n",n->name);
+  sprintf(modname,"\t$(SRCDIR)/%s.cc\\\n",n->name);
   string = new char[strlen(psepath)+strlen(packname)+strlen(n->category)+25];
   sprintf(string,"%s/src/%s/Modules/%s/sub.mk",psepath,packname,n->category);
-  InsertStringInFile(string,"#\\[INSERT NEW CODE FILE HERE\\]",modname);
+  InsertStringInFile(string,"#[INSERT NEW CODE FILE HERE]",modname);
   delete[] string;
   delete[] modname;
 
   /* edit the GUI sub.mk file - add the new component */
   modname = new char[strlen(n->name)+25];
-  sprintf(modname,"\t$(SRCDIR)/%s.tcl\\\\\\\n",n->name);
+  sprintf(modname,"\t$(SRCDIR)/%s.tcl\\\n",n->name);
   string = new char[strlen(psepath)+strlen(packname)+strlen(n->category)+25];
   sprintf(string,"%s/src/%s/GUI/sub.mk",psepath,packname);
-  InsertStringInFile(string,"#\\[INSERT NEW TCL FILE HERE\\]",modname);
+  InsertStringInFile(string,"#[INSERT NEW TCL FILE HERE]",modname);
   delete[] string;
 }
 
