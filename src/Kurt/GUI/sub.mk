@@ -13,13 +13,16 @@ $(SRCDIR)/tclIndex: $(SRCDIR)/VolVis.tcl $(SRCDIR)/PadField.tcl \
 	$(SRCDIR)/VisControl.tcl \
 	$(SRCDIR)/RescaleColorMapForParticles.tcl \
 	$(SRCDIR)/ParticleVis.tcl \
-	$(SRCDIR)/KurtScalarFieldReader.tcl \
+	$(SRCDIR)/KurtScalarFieldReader.tcl
 	$(SRCTOP)/scripts/createTclIndex $(SRCTOP)/Kurt/GUI
 
 CLEANPROGS := $(CLEANPROGS) $(SRCDIR)/tclIndex
 
 #
 # $Log$
+# Revision 1.9  2000/06/26 17:06:06  bigler
+# Fixed typo that was keeping tclIndex from building.
+#
 # Revision 1.8  2000/06/21 04:14:14  kuzimmer
 # removed unneeded dependencies on Kurt
 #
