@@ -12,6 +12,17 @@
     </description>
   </overview>
   <io>
+    <outputs>
+      <port>
+        <name>Axes</name>
+        <datatype>PSECore::Geometry</datatype>
+	<description>
+          <p>
+            A bunch of triangles that make a set of axes.
+          </p>
+        </description>
+      </port>
+    </outputs>
   </io>
   <testing>
   </testing>
