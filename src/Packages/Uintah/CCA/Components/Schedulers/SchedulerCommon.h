@@ -109,6 +109,11 @@ WARNING
 
     bool isOldDW(int idx) const;
     bool isNewDW(int idx) const;
+
+    // Only called by the SimulationController, and only once, and only
+    // if the simulation has been "restarted."
+    virtual void setGeneration( int id ) { d_generation = id; }
+
   protected:
     void finalizeTimestep();
     virtual void actuallyCompile( const ProcessorGroup * pc ) = 0;
