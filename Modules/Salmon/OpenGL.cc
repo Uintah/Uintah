@@ -27,6 +27,7 @@ class OpenGL : public Renderer {
     GLXContext cx;
     clString myname;
     char* strbuf;
+    int maxlights;
 public:
     OpenGL();
     virtual ~OpenGL();
@@ -82,6 +83,7 @@ void OpenGL::redraw(Salmon* salmon, Roe* roe)
 
     // Get window information
     if(!tkwin){
+	cerr << 1 << endl;
 	TCLTask::lock();
 	tkwin=Tk_NameToWindow(the_interp, myname(), Tk_MainWindow(the_interp));
 	if(!tkwin){
@@ -89,10 +91,20 @@ void OpenGL::redraw(Salmon* salmon, Roe* roe)
 	    TCLTask::unlock();
 	    return;
 	}
+	cerr << 1.1 << endl;
 	dpy=Tk_Display(tkwin);
 	win=Tk_WindowId(tkwin);
+	cerr << 1.2 << endl;
 	cx=OpenGLGetContext(the_interp, myname());
+	cerr << 1.3 << endl;
+	glXMakeCurrent(dpy, win, cx);
+	cerr << 1.4 << endl;
+	current_drawer=this;
+	int data[1];
+	glGetIntegerv(GL_MAX_LIGHTS, data);
+	maxlights=data[0];
 	TCLTask::unlock();
+	cerr << 2 << endl;
     }
 
     // Make ourselves current
@@ -143,7 +155,7 @@ void OpenGL::redraw(Salmon* salmon, Roe* roe)
 	    Light* light=l.lights[i];
 	    light->opengl_setup(view, &drawinfo, idx);
 	}
-	for(i=0;i<idx && i<GL_MAX_LIGHTS;i++)
+	for(i=0;i<idx && i<maxlights;i++)
 	    glEnable(GL_LIGHT0+i);
 	for(;i<GL_MAX_LIGHTS;i++)
 	    glDisable(GL_LIGHT0+i);
@@ -172,7 +184,7 @@ void OpenGL::redraw(Salmon* salmon, Roe* roe)
 	    drawinfo.set_drawtype(DrawInfoOpenGL::Gouraud);
 	    drawinfo.lighting=1;
 	}
-	drawinfo.currently_lit=0;
+	drawinfo.currently_lit=drawinfo.lighting;
 	if(drawinfo.lighting)
 	    glEnable(GL_LIGHTING);
 	else
