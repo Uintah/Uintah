@@ -226,7 +226,7 @@ BoundCondReader::read(ProblemSpecP& bc_ps)
 	delete m_itr->second;
   }
 
-#if 0
+#if 1
   // Find the mat_id = "all" (-1) information and store it in each 
   // materials boundary condition section.
   BCDataArray::bcDataArrayType::const_iterator  mat_all_itr, bc_geom_itr;
