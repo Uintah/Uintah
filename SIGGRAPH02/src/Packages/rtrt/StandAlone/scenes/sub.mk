@@ -52,11 +52,11 @@ SCENES := $(SRCDIR)/0.mo \
 	$(SRCDIR)/multi-scene.mo \
 	$(SRCDIR)/cutdemo.mo  \
 	$(SRCDIR)/basic-sea.mo  \
+	$(SRCDIR)/dtiglyph.mo \
 	$(SRCDIR)/envmap-sphere.mo  \
 	$(SRCDIR)/single-sphere.mo  \
 	$(SRCDIR)/ramsey.mo \
-	$(SRCDIR)/spinning_instance_demo.mo 
-# 	$(SRCDIR)/dtiglyph.mo
+	$(SRCDIR)/spinning_instance_demo.mo
 # 	$(SRCDIR)/cbox.mo \
 # 	$(SRCDIR)/mus_barrier.mo \
 #	$(SRCDIR)/graphics-museum-works.mo \
