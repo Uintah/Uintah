@@ -84,6 +84,11 @@ class FCVariable : public Array3<T>, public FCVariableBase {
 		      const IntVector& highIndex);
 
       FCVariable<T>& operator=(const FCVariable<T>&);
+      virtual void* getBasePointer();
+      virtual const TypeDescription* virtualGetTypeDescription() const;
+      virtual void getSizes(IntVector& low, IntVector& high,
+			   IntVector& siz) const;
+
      
      // Replace the values on the indicated face with value
       void fillFace(Patch::FaceType face, const T& value)
@@ -233,10 +238,18 @@ class FCVariable : public Array3<T>, public FCVariableBase {
       }
    
    template<class T>
+      const TypeDescription*
+      FCVariable<T>::virtualGetTypeDescription() const
+      {
+	 return getTypeDescription();
+      }
+
+
+   template<class T>
       Variable*
       FCVariable<T>::maker()
       {
-	 return scinew NCVariable<T>();
+	 return scinew FCVariable<T>();
       }
    
    template<class T>
@@ -360,6 +373,11 @@ class FCVariable : public Array3<T>, public FCVariableBase {
 
 //
 // $Log$
+// Revision 1.10  2000/10/05 23:11:06  jas
+// Fixed a typo in FCVariable so that maker returns a FCVariable instead of
+// a NCVariable.  Subclassed FCVariableBase from Variable like the other
+// variable types.
+//
 // Revision 1.9  2000/09/25 18:12:19  sparker
 // do not use covariant return types due to problems with g++
 // other linux/g++ fixes
