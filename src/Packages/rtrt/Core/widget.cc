@@ -472,7 +472,7 @@ TriWidget::insideWidget( int x, int y )
 
 // allows another file to access many of this widget's parameters
 void
-TriWidget::returnParams( float *p[10] )
+TriWidget::returnParams( float *p[numWidgetParams] )
 {
   // printf( "In TriWidget::returnParams\n" );
   p[0] = &upperLeftVertex[0];
