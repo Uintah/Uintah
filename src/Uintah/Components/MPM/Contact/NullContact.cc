@@ -13,9 +13,11 @@ static char *id="@(#) $Id$";
 
 using namespace Uintah::MPM;
 
-NullContact::NullContact()
+NullContact::NullContact(ProblemSpecP& ps,SimulationStateP& ss)
 {
   // Constructor
+
+  
 
 }
 
@@ -25,21 +27,28 @@ NullContact::~NullContact()
 
 }
 
-void NullContact::exMomInterpolated(const Region* region,
-                                  const DataWarehouseP& old_dw,
-                                  DataWarehouseP& new_dw)
+void NullContact::exMomInterpolated(const ProcessorContext*,
+				    const Region* region,
+				    const DataWarehouseP& old_dw,
+				    DataWarehouseP& new_dw)
 {
+  
 
 }
 
-void NullContact::exMomIntegrated(const Region* region,
+void NullContact::exMomIntegrated(const ProcessorContext*,
+				  const Region* region,
                                   const DataWarehouseP& old_dw,
                                   DataWarehouseP& new_dw)
 {
 
+  
 }
 
 // $Log$
+// Revision 1.5  2000/04/27 21:28:58  jas
+// Contact is now created using a factory.
+//
 // Revision 1.4  2000/04/26 06:48:20  sparker
 // Streamlined namespaces
 //
