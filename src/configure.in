@@ -1677,11 +1677,13 @@ for i in $with_globus $thirdparty $SCI_LAB_TP_DEFAULT; do
   fi
 done
 
-if test "$enable_parallel" = "yes" &&
-   test "$FOUND_ALL_GLOBUS" = "yes"; then
+if test "$enable_parallel" = "yes"; then
   if test "$with_globus" = "no"; then
     AC_MSG_ERROR(Must include --with-globus with --enable-parallel)
-    exit 1
+  fi
+  ## Must find all of globus if user specifies enable-parallel
+  if test "$FOUND_ALL_GLOBUS" = "no"; then
+    AC_MSG_ERROR(Did not find all of globus)
   fi
   PARALLEL_DEFINE="#define SCI_PARALLEL"
   BUILD_PARALLEL="yes"
