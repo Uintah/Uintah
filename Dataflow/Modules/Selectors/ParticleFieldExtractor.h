@@ -39,17 +39,25 @@ LOG
 #include <Dataflow/Network/Module.h> 
 #include <Core/GuiInterface/GuiVar.h> 
 #include <Core/Containers/ConsecutiveRangeSet.h>
+#include <Core/Thread/Runnable.h>
 #include <string>
 #include <vector>
 
 
+namespace SCIRun {
+  class Semaphore;
+  class Mutex;
+}
 
 namespace Uintah {
 
 using namespace SCIRun;
 
+//class Patch;
+class ParticleFieldExtractor;
+
 class ParticleFieldExtractor : public Module { 
-  
+
 public: 
 
   // GROUP: Constructors
@@ -157,6 +165,42 @@ private:
   void graph(string varname, vector<string> mat_list,
 	     vector<string> type_list, string particleID);
   //  void graph(string, string);
+
+  class  PFEThread : public Runnable
+    {
+    public:
+      PFEThread( ParticleFieldExtractor *pfe, DataArchive& archive, Patch *r,
+		 ScalarParticles*& sp, VectorParticles*& vp,
+		 TensorParticles*& tp, PSet* pset,
+		 int scalar_type, bool have_sp,
+		 bool have_vp, bool have_tp, bool have_ids,
+		 Semaphore *sema, Mutex *smutex,
+		 Mutex *vmutex, Mutex *tmutex, Mutex *imutex):
+	pfe(pfe), archive(archive), r(r), sp(sp), vp(vp), tp(tp), pset(pset),
+	scalar_type(scalar_type), have_sp(have_sp), have_vp(have_vp),
+	have_tp(have_tp), have_ids(have_ids), sema(sema), smutex(smutex),
+        vmutex(vmutex), tmutex(tmutex), imutex(imutex){}
+      
+      void  run();
+    private:
+      ParticleFieldExtractor *pfe;
+      DataArchive&  archive;
+      Patch *r;
+      ScalarParticles*& sp;
+      VectorParticles*& vp;
+      TensorParticles*& tp;
+      PSet* pset;
+      int scalar_type;
+      bool have_sp;
+      bool have_vp;
+      bool have_tp;
+      bool have_ids;
+      Semaphore *sema;
+      Mutex *smutex;
+      Mutex *vmutex;
+      Mutex *tmutex;
+      Mutex *imutex;
+    };
 };
 } // End namespace Uintah
 
