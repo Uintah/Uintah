@@ -29,6 +29,7 @@ using std::ostringstream;
 #include <Core/Algorithms/Visualization/TetMC.h>
 #include <Core/Algorithms/Visualization/HexMC.h>
 #include <Core/Algorithms/Visualization/MarchingCubes.h>
+#include <Core/Algorithms/Visualization/Noise.h>
 
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Ports/ColorMapPort.h>
@@ -88,6 +89,7 @@ class Isosurface : public Module {
   bool have_ColorMap;
 
   MarchingCubesAlg *mc_alg;
+  NoiseAlg *noise_alg;
   Loader loader;
   Loader minmax_loader;
 
@@ -140,6 +142,7 @@ Isosurface::Isosurface(const clString& id)
   prev_min=prev_max=0;
   last_generation = -1;
   mc_alg = 0;
+  noise_alg = 0;
   init = true;
 }
 
@@ -183,8 +186,8 @@ void Isosurface::execute()
   case 0:  // Marching Cubes
     // for now, use a trivial MC
     if ( !mc_alg ) {
-      string type = field->get_type_name();
-      cerr << "field type = " << type << endl;
+      string type = string("MC::") + field->get_type_name();
+      cerr << "look for alg = " << type << endl;
       if ( !loader.get( type, mc_alg ) ) {
 	error( "can not work with this field\n");
 	return;
@@ -196,8 +199,17 @@ void Isosurface::execute()
 
     break;
   case 1:  // Noise
-    error("Noise not implemented\n");
-    surface = 0;
+    //error("Noise not implemented\n");
+    if ( !noise_alg ) {
+      string type = string("Noise::") + field->get_type_name();
+      cerr <<"look for alg = " << type << endl;
+      if ( !loader.get( type, noise_alg ) ) {
+	error( "NOISE can not work with this field\n");
+	return;
+      }
+      noise_alg->set_field( field.get_rep() );
+    }
+    surface = noise_alg->search( iso_value );
     break;
   case 2:  // View Dependent
     error("View dependent not implemented\n");
@@ -251,12 +263,16 @@ void
 Isosurface::initialize()
 {
   minmax_loader.store("TetVol<double>", new Minmax<TetVol<double> > );
-  loader.store("TetVol<double>", 
+  loader.store("MC::TetVol<double>", 
 	       new MarchingCubes<Module,TetMC<TetVol<double> > >(this) );
+  loader.store("Noise::TetVol<double>", 
+	       new Noise<Module,TetMC<TetVol<double> > >(this) );
 
   minmax_loader.store("LatticeVol<double>", new Minmax<LatticeVol<double> > );
-  loader.store("LatticeVol<double>", 
+  loader.store("MC::LatticeVol<double>", 
 	       new MarchingCubes<Module,HexMC<LatticeVol<double> > >(this) );
+  loader.store("Noise::LatticeVol<double>", 
+	       new Noise<Module,HexMC<LatticeVol<double> > >(this) );
 
   
 //   widget_id = ogeom->addObj(widget->GetWidget(), widget_name, &widget_lock);
@@ -305,6 +321,7 @@ Isosurface::new_field( FieldHandle &field )
 
   // delete any algorithms created for the previous field.
   if ( mc_alg ) { delete mc_alg; mc_alg = 0;}
+  if ( noise_alg ) { delete noise_alg; noise_alg = 0;}
 }
 
 
