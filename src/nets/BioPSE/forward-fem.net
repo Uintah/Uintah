@@ -110,8 +110,8 @@ set $m2-BCFlag {none}
 set $m4-target_error 0.0001
 set $m4-orig_error 1
 set $m4-current_error {9.84662e-05}
-set $m4-method {conjugate_gradient_sci}
-set $m4-precond {Diag_P}
+set $m4-method {Conjugate Gradient & Precond. (SCI)}
+set $m4-precond {jacobi}
 set $m4-maxiter 200
 set $m4-use_previous_soln 1
 set $m4-emit_partial 1

@@ -130,8 +130,8 @@ set $m3-modeTCL {electrodes}
 set $m4-target_error 1e-06
 set $m4-orig_error 1.41421
 set $m4-current_error {7.84145e-07}
-set $m4-method {conjugate_gradient_sci}
-set $m4-precond {Diag_P}
+set $m4-method {Conjugate Gradient & Precond. (SCI)}
+set $m4-precond {jacobi}
 set $m4-maxiter 2000
 set $m4-use_previous_soln 1
 set $m4-emit_partial 0
@@ -141,8 +141,8 @@ set $m7-filename $env(SCIRUN_DATA)/$DATASET/$DATASET-electrodes.pcd.fld
 set $m9-target_error 1e-06
 set $m9-orig_error 9.65643e-07
 set $m9-current_error {9.65643e-07}
-set $m9-method {conjugate_gradient_sci}
-set $m9-precond {Diag_P}
+set $m9-method {Conjugate Gradient & Precond. (SCI)}
+set $m9-precond {jacobi}
 set $m9-maxiter 2000
 set $m9-use_previous_soln 1
 set $m9-emit_partial 0
