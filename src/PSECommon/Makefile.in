@@ -10,7 +10,7 @@ TCL_LIB_FLAG  = @TCL_LIB_FLAG@
 TK_LIB_FLAG   = @TK_LIB_FLAG@
 ITCL_LIB_FLAG = @ITCL_LIB_FLAG@
 
-SUBDIRS = ThirdParty Modules
+SUBDIRS = ThirdParty Modules GUI
 SOLIB   = libPSECommon.so
 
 SOLIBRARIES = -L$(OBJTOP)/SCICore -lSCICore \
