@@ -16,7 +16,7 @@
    </Time>
    <DataArchiver>
         <filebase>const_test_vs.uda</filebase>
-	<outputInterval>.01</outputInterval>
+	<outputInterval>.005</outputInterval>
 	<save label = "NTractionZMinus"/>
 	<save label = "KineticEnergy"/>
 	<save label = "TotalMass"/>
@@ -30,7 +30,7 @@
 	<save label = "p.stress"/>
 	<save label = "g.mass"/>
 	<save label = "g.stressFS"/>
-	<checkpoint cycle = "2" interval = "0.01"/>
+	<checkpoint cycle = "2" interval = "0.005"/>
    </DataArchiver>
 
     <MPM>
