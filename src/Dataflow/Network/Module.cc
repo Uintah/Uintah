@@ -43,6 +43,7 @@
 #include <Core/Malloc/Allocator.h>
 #include <Core/Util/soloader.h>
 #include <iostream>
+#include <fstream>
 #include <sstream>
 #include <stdio.h>
 #include <stack>
@@ -138,7 +139,6 @@ Module::Module(const string& name, GuiContext* ctx,
     helper(0),
     helper_thread(0),
     network(0), 
-    notes(ctx->subVar("notes")),
     show_stats_(true)
 {
   stacksize=0;
@@ -661,7 +661,16 @@ void Module::tcl_command(GuiArgs& args, void*)
     args.error("netedit needs a minor command");
     return;
   }
-  if(args[1] == "oportcolor") {
+  if(args[1] == "emit_vars") {
+    if (args.count() != 4)
+      args.error(args[0]+" "+args[1]+" needs a filename and variable name");
+    else { 
+      ofstream out;
+      out.open(args[2].c_str(), ofstream::out | ofstream::app);
+      emit_vars(out, args[3]);
+      out.close();
+    }
+  } else if(args[1] == "oportcolor") {
     if (args.count() != 3)
       args.error(args[0]+" "+args[1]+" takes a port #");
     int pnum;
@@ -854,9 +863,9 @@ int Module::numIPorts()
   return iports.size();
 }
 
-void Module::emit_vars(std::ostream& out, const std::string& modname)
+void Module::emit_vars(std::ostream& out, const std::string& prefix)
 {
-  ctx->emit(out, modname);
+  ctx->emit(out, prefix);
 }
 
 
