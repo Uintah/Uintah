@@ -2,7 +2,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-main()
+int
+main(char **, int )
 {
     unsigned long int tot=0;
     unsigned long int bytes=0;
@@ -20,6 +21,6 @@ main()
 	}
 	tot+=n;
     }
-    fprintf(stderr, "%u allocations (%u bytes)\n", tot, bytes);
+    fprintf(stderr, "%lu allocations (%lu bytes)\n", tot, bytes);
     return 0;
 }

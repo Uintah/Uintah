@@ -2,7 +2,8 @@
 #include <stdlib.h>
 
 
-main()
+int
+main(char **, int )
 {
     free(malloc(20));
     return 0;

@@ -2,7 +2,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-main()
+int
+main(char **, int )
 {
     fprintf(stderr, "This should fail - wrote to object after free\n\n\n");
     void* p=malloc(8);
