@@ -163,7 +163,8 @@ public:
   virtual ~DataArchive();
   
   void restartInitialize(int& timestep, const GridP& grid, DataWarehouse* dw,
-			 double* pTime /* passed back */);
+			 double* pTime /* passed back */,
+			 double* pDelt /* passed back */);
   
   // GROUP:  Information Access
   //////////
