@@ -10,7 +10,7 @@ hostname_test=`uname -n | grep inf`
 
 if test "$hostname" = "$hostname_test";
     then
-    test_dir=/usr/sci/projects/Uintah/tester/Linux/TestData
+    test_dir=/usr/sci/projects/Uintah/tester/Linux-TestData
 fi
 
 #Set the default TestData directory
@@ -22,6 +22,7 @@ INPUTS=../../../../src/Packages/Uintah/StandAlone/inputs
 do_mpm=0
 do_ice=0
 do_mpmice=0
+do_impm=0
 do_arches=0
 do_mpmarches=0
 do_examples=0
@@ -39,6 +40,7 @@ usage () {
     echo "  -ma            run the mpmarches tests"
     echo "  -i             run the ice tests"
     echo "  -mi            run the mpmice tests"
+    echo "  -im            run the implicit mpm tests"
     echo "  -dbg           use the dbg TestData"
     echo "  -opt           use the opt TestData"
     echo "  -r             remove the *.out *.compare and uda directories"
@@ -76,6 +78,9 @@ for args in $*; do
 	-mi)
 	    echo; echo "Running the mpmice tests . . ."
 	    do_mpmice=1;;
+	-im)
+	    echo; echo "Running the implicit mpm tests . . ."
+	    do_impm=1;;
 	-r)
 	    echo; echo "Removing *.out *.compare and *.uda files . . ."
 	    do_remove=1;;
@@ -94,8 +99,8 @@ done
 
 mpm_test_cases="disks2mat4patch heatcond2mat inclined_plane_sphere const_test_hypo const_test_nh const_test_cmr const_test_nhp const_test_vs"
 ice_test_cases="advect hotBlob2mat hotBlob2mat_sym hotBlob2mat8patch"
-#ice_test_cases="advect hotBlob2mat hotBlob2mat_sym"
 mpmice_test_cases="advect massX thermx thermx8patch"
+impm_test_cases="4disks_2d.1mat"
 arches_test_cases="methane_explicit_table"
 mpmarches_test_cases="matest_heptwb_cyl"
 examples_test_cases="poisson1"
@@ -118,8 +123,14 @@ fi
 
 REMOVE () {
     rm *.out;
-    rm chem.bin;
-    rm input.dtd;
+    if test -a chem.bin
+    	then
+    	rm chem.bin;
+    fi	
+    if test -a input.dtd
+       then
+       rm input.dtd;
+    fi
     rm *.compare; 
     rm -rf *.uda*
 }
@@ -177,6 +188,37 @@ mpmice_test () {
 	fi
 	echo "compare_uda $test_dir/$DIR/MPMICE/$udadir/$uda $uda &> $n.compare"
 	compare_uda $test_dir/$DIR/MPMICE/$udadir/$uda $uda &> $n.compare
+	compare=`grep "passed" $n.compare`
+	if test -n "$compare";
+	    then
+	    echo $compare
+	else
+	    echo; echo "FAILURE running compare_uda . . ."
+	fi
+    done
+}
+
+impm_test () {
+    echo; echo "Testing $impm_test_cases"
+    
+    for n in $impm_test_cases; do
+	echo; echo "Running sus -impm $INPUTS/IMPM/$n.ups"
+	uda=`grep filebase $INPUTS/IMPM/$n.ups | sed s/\<*filebase\>//g | sed s/\<// | awk '{print $1}'  `
+	sus -impm $INPUTS/IMPM/$n.ups &> $n.out
+	success=`grep "successfully" $n.out`
+	if test -n "$success";
+	    then 
+	    echo $success
+	    else
+	    echo; echo "FAILURE running sus . . ."
+	    continue;
+	fi
+	udadir=$n
+	if test "$n" = "4disks_2d.1mat"; then
+	    udadir=4disks1mat
+	fi
+	echo "compare_uda $test_dir/$DIR/IMPM/$udadir/$uda $uda &> $n.compare"
+	compare_uda $test_dir/$DIR/IMPM/$udadir/$uda $uda &> $n.compare
 	compare=`grep "passed" $n.compare`
 	if test -n "$compare";
 	    then
@@ -345,6 +387,11 @@ fi
 if test $do_mpmice -eq 1;
     then
     mpmice_test
+fi
+
+if test $do_impm -eq 1;
+    then
+    impm_test
 fi
 
 if test $do_arches -eq 1;
