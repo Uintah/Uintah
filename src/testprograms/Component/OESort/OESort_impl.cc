@@ -35,7 +35,8 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <stdlib.h>
-#include <algo.h>
+#include <algorithm>
+#include <vector>
 #include <iostream>
 
 using namespace OESort_ns;
@@ -49,9 +50,11 @@ OESort_impl::~OESort_impl()
 {
 }
 
-int OESort_impl::sort(CIA::array1<int>& arr)
+int OESort_impl::sort(const CIA::array1<int>& arr, CIA::array1<int>& odds, CIA::array1<int>& evens)
 {
-  sort(arr);
+  odds = arr;
+  std::sort(odds.begin(), odds.end());
+  evens = odds;
   return 0;
 }
 
@@ -63,83 +66,53 @@ OESplit_impl::~OESplit_impl()
 {
 }
 
-int OESplit_impl::split(CIA::array1<int>& arr)
+int OESplit_impl::split(const CIA::array1<int>& arr, CIA::array1<int>& result_arr)
 {
-  
-  //pp->sort(arr);
+  CIA::array1<int> odds;
+  CIA::array1<int> evens;
+std::cerr << "BEFORE THE CALL\n";
+  ss->sort(arr,odds,evens);
+std::cerr << "I JUST CALLED TO SAY...\n";
 
-  CIA::array1<int> Tarr(arr);
+  
   int totalsize = arr.size();
-  int halfsize = totalsize / 2;
-  int arri;
-  int Tarri;
-  int Tarrj;
+  int halfsize = odds.size();
+  int arri = 0;
+  int oddi = 0;
+  int eveni = 0;
 
-  /*Odd-Even -> Even*/
-  arri = 0;
-  Tarri = 1;
-  Tarrj = halfsize;
-  while (Tarri < halfsize) {
-    if (Tarrj < totalsize) {
-      if (Tarr[Tarri] < Tarr[Tarrj]) {
-	arr[arri] = Tarr[Tarri];
-	Tarri+=2;
+  result_arr.resize(totalsize);
+ 
+  if(evens.size() != (unsigned int)halfsize)
+    cerr << "ERROR: OESplit_impl::split -- ODDS and EVENS are not of the same size\n";
+  
+  while (oddi < halfsize) {
+    if (eveni < halfsize) {
+      if (odds[oddi] < evens[eveni]) {
+	result_arr[arri] = odds[oddi];
+	oddi++;
       }
       else {
-	arr[arri] = Tarr[Tarrj];
-	Tarrj+=2;
+	result_arr[arri] = evens[eveni];
+	eveni++;
       }
     }
     else {
-      arr[arri] = Tarr[Tarri];
-      Tarri+=2;
+      result_arr[arri] = odds[oddi];
+      oddi++;
     }
-    arri+=2;
+    arri++;
   }
-  while (Tarrj < totalsize) {
-    arr[arri] = Tarr[Tarrj];
-    arri+=2;
-    Tarrj+=2;
+  while (eveni < halfsize) {
+    result_arr[arri] = evens[eveni];
+    arri++;
+    eveni++;
   }
 
-  /*Even-Odd -> Odd*/
-  arri = 1;
-  Tarri = 0;
-  Tarrj = halfsize+1;
-  while (Tarri < halfsize) {
-    if (Tarrj < totalsize) {
-      if (Tarr[Tarri] < Tarr[Tarrj]) {
-	arr[arri] = Tarr[Tarri];
-	Tarri+=2;
-      }
-      else {
-	arr[arri] = Tarr[Tarrj];
-	Tarrj+=2;
-      }
-    }
-    else {
-      arr[arri] = Tarr[Tarri];
-      Tarri+=2;
-    }
-    arri+=2;
-  }
-  while (Tarrj < totalsize) {
-    arr[arri] = Tarr[Tarrj];
-    arri+=2;
-    Tarrj+=2;
-  }
-  
-  /*Pairwise check of merged array:*/
-  for(arri = 0; arri+1 < totalsize; arri+=2)
-    if (arr[arri] > arr[arri+1]) {
-      int t = arr[arri];
-      arr[arri] = arr[arri+1];
-      arr[arri+1] = t;
-    }
-  
-  
   return 0;
+  
 }
+
 
 
 

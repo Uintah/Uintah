@@ -17,7 +17,7 @@
 
 # Makefile fragment for this subdirectory
 
-SRCDIR := testprograms/Component/OESort
+SRCDIR := testprograms/Component/LUFactor
 
 ifeq ($(LARGESOS),yes)
 PSELIBS := Core
@@ -27,15 +27,10 @@ PSELIBS := Core/CCA/Component/CIA Core/CCA/Component/PIDL Core/Thread \
 endif
 LIBS := $(MPI_LIBRARY) 
 
-PROGRAM := $(SRCDIR)/OESort
-SRCS := $(SRCDIR)/OESort.cc $(SRCDIR)/OESort_sidl.cc \
-	$(SRCDIR)/OESort_impl.cc
-GENHDRS := $(SRCDIR)/OESort_sidl.h
-include $(SCIRUN_SCRIPTS)/program.mk
+PROGRAM := $(SRCDIR)/LUFactor
+SRCS := $(SRCDIR)/LUFactor.cc $(SRCDIR)/LUFactor_sidl.cc \
+	$(SRCDIR)/LUFactor_impl.cc
+GENHDRS := $(SRCDIR)/LUFactor_sidl.h
 
-PROGRAM := $(SRCDIR)/OESplit
-SRCS := $(SRCDIR)/OESplit.cc $(SRCDIR)/OESort_sidl.cc \
-        $(SRCDIR)/OESort_impl.cc
-GENHDRS := $(SRCDIR)/OESort_sidl.h
 include $(SCIRUN_SCRIPTS)/program.mk
 

@@ -86,8 +86,8 @@ int main(int argc, char* argv[])
 	if(server) {
 	  OESort_impl* pp=new OESort_impl;
 
-	  if(mysize != 4) {
-	    cerr << "ERROR -- This was meant to be executed by 4 parallel processes\n";
+	  if(mysize != 2) {
+	    cerr << "ERROR -- This was meant to be executed by 2 parallel processes\n";
 	  }
 
           int localsize = ARRSIZE / mysize;
@@ -101,9 +101,20 @@ int main(int argc, char* argv[])
           MxNArrayRep* arrr0 = new MxNArrayRep(1,dr0);
 	  pp->setCalleeDistribution("X",arrr0);
 
+          Index** dr1 = new Index* [1];
+          dr1[0] = new Index(sta,fin,1);
+          MxNArrayRep* arrr1 = new MxNArrayRep(1,dr1);
+	  pp->setCalleeDistribution("Y",arrr1);
+
+          Index** dr2 = new Index* [1];
+          dr2[0] = new Index(sta,fin,1);
+          MxNArrayRep* arrr2 = new MxNArrayRep(1,dr2);
+	  pp->setCalleeDistribution("Z",arrr2);
+
           std::cerr << "setCalleeDistribution completed\n";
 
-	  cerr << "Waiting for OESplit connections...\n";
+	  cerr << "Waiting for OESort connections...\n";
+
 	  cerr << pp->getURL().getString() << '\n';
 
 	}

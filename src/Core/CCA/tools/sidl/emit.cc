@@ -608,6 +608,7 @@ void CI::emit_handler_table_body(EmitState& e, int& vtable_base, bool top)
     e.out << "\n  //setCallerDistribution handler";
     e.out << "\n  epc->registerHandler(" << (++i)
           << ",(void*)_handler" << callerDistHandler << ");";
+    callerDistHandler = i-1;
     vtable_base+=vtab.size()+2;
   }
   else {
@@ -1232,11 +1233,12 @@ void CI::emit_proxy(EmitState& e)
     e.out << "  ::SCIRun::refList _refL;\n";
     e.out << "  ::SCIRun::refList::iterator iter;\n";
     e.out << "  _proxyGetReferenceList(_refL,false);\n";
-    e.out << "  //Turn on debug to a file\n";
-    e.out << "  std::ostringstream fname;\n";
-    e.out << "  fname << distname << \"_\" <<  _refL[0].par_rank << \".caller.out\";\n";
-    e.out << "  d_sched->dbg.open(fname.str().c_str(), std::ios_base::app);\n";
-    e.out << "  \n";
+    e.out << "  #ifdef DEBUGMXN\n";
+    e.out << "    //Turn on debug to a file\n";
+    e.out << "    std::ostringstream fname;\n";
+    e.out << "    fname << distname << \"_\" <<  _refL[0].par_rank << \".caller.out\";\n";
+    e.out << "    d_sched->dbg.open(fname.str().c_str(), std::ios_base::app);\n";
+    e.out << "  #endif\n";
     e.out << "  iter = _refL.begin();\n";
     e.out << "  for(unsigned int i=0; i < _refL.size(); i++, iter++) {\n";
     e.out << "    ::SCIRun::Message* message = (*iter).chan->getMessage();\n";
@@ -1283,7 +1285,9 @@ void CI::emit_proxy(EmitState& e)
     e.out << "    d_sched->setCalleeRepresentation(distname,arep);\n";
     e.out << "  }\n";
     e.out << "  d_sched->print();\n";
-    e.out << "  d_sched->dbg.close();\n";
+    e.out << "  #ifdef DEBUGMXN\n";
+    e.out << "    d_sched->dbg.close();\n";
+    e.out << "  #endif\n";
     e.out << "}\n\n";
   }  
 }
@@ -2240,6 +2244,7 @@ void NamedType::emit_unmarshal(EmitState& e, const string& arg,
 	e.out << leader2 << "}\n";
 
 	//TEMPORARY TEST:
+	e.out << "#ifdef DEBUGMXN\n";
 	e.out << leader2 << "//Test\n";
 	e.out << leader2 << "if (1) {\n";
 	e.out << leader2 << "std::ostringstream fname;\n";
@@ -2259,6 +2264,7 @@ void NamedType::emit_unmarshal(EmitState& e, const string& arg,
 	e.out << leader2 << "if (d_sched->dbg)\n";
 	e.out << leader2 << "  d_sched->dbg.close();\n";
 	e.out << leader2 << "}\n";
+	e.out << "#endif\n";
 	//EOF TEMPORARY TEST
 
 	// *********** END OF OUT arg -- Special Redis ******************************	
@@ -2274,6 +2280,7 @@ void NamedType::emit_unmarshal(EmitState& e, const string& arg,
 	e.out << leader2 << "#define " << arg << " (* " << arr_ptr_name << ")\n";
 	
 	//TEMPORARY TEST
+	e.out << "#ifdef DEBUGMXN\n";
 	e.out << leader2 << "//Test\n";
 	e.out << leader2 << "if (1) {\n";
 	e.out << leader2 << "std::ostringstream fname;\n";
@@ -2295,18 +2302,20 @@ void NamedType::emit_unmarshal(EmitState& e, const string& arg,
 	e.out << leader2 << "if (_sc->d_sched->dbg)\n";
 	e.out << leader2 << " _sc->d_sched->dbg.close();\n";
 	e.out << leader2 << "}\n";
+	e.out << "#endif\n";
 	//EOF TEMPORARY TEST
 	// *********** END OF IN arg -- No Special Redis ******************************
       }
       else if (ctx == ArgOut) {
 	// *********** OUT arg -- No Special Redis ********************************
+	string Dname = distarr->getName();
 	e.out << leader2 << "//OUT redistribution array detected. Get it afterwards\n";
 	e.out << leader2 << "//Resize array \n";
-	e.out << leader2 << "SCIRun::MxNArrayRep* _d_rep = d_sched->callerGetCallerRep(\"" 
-	      << distarr->getName() << "\");\n";
+	e.out << leader2 << "SCIRun::MxNArrayRep* _d_rep_" << Dname << " = d_sched->callerGetCallerRep(\"" 
+	      << Dname << "\");\n";
 	e.out << leader2 << arg << ".resize(";
 	for(int i=arr_t->dim; i > 0; i--) {
-	  e.out << "_d_rep->getSize(" << i << ")";
+	  e.out << "_d_rep_" << Dname << "->getSize(" << i << ")";
 	  if (i != 1) e.out << ", ";
 	}
 	e.out << ");\n";

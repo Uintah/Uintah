@@ -16,20 +16,33 @@
 */
 
 
-package OESort_ns {
-    distribution array X <int, 1>;
-    distribution array Y <int, 1>;
-    distribution array Z <int, 1>;
+/*
+ *  LUFactor_impl.h: Test client for PIDL
+ *
+ *  Written by:
+ *   Kostadin Damevski
+ *   Department of Computer Science
+ *   University of Utah
+ *   October, 2002
+ *
+ *  Copyright (C) 2002 SCI Group
+ */
 
-    distribution array A <int, 1>;
-    distribution array B <int, 1>;
+#ifndef LUFactor_LUFactor_impl_h
+#define LUFactor_LUFactor_impl_h
 
-    interface OESort {
-	int sort(in X arr, out Y odds, out Z evens);
+#include <mpi.h>
+#include <testprograms/Component/LUFactor/LUFactor_sidl.h>
+
+namespace LUFactor_ns {
+
+    class LUFactor_impl : public LUFactor {
+    public:
+	LUFactor_impl();
+	virtual ~LUFactor_impl();
+	virtual int LUFactorize(const CIA::array2<double>& );
     };
-    interface OESplit {	
-	int split(in A arr, out B result_arr);
-    };
-};
+} // End namespace LUFactor
 
+#endif
 
