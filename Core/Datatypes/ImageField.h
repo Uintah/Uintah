@@ -44,6 +44,7 @@ public:
   Data *end() { return &((*this)(dim1()-1,dim2()-1))+1; }
     
   FData2d():Array2<Data>() {}
+  FData2d(int):Array2<Data>() {}
   FData2d(const FData2d& data) {copy(data);} 
   virtual ~FData2d(){}
   
