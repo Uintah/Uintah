@@ -87,25 +87,25 @@ Tk_DrawBeveledLine(display, drawable, border, pointPtr, numPoints,
     /* struct TkBorder_struct *b = (struct TkBorder_struct*)border; */
     /* used for debugging */
 
-	GC gcDark = Tk_BorderDarkGC(border);
-	GC gcLight = Tk_BorderLightGC(border);
-	GC gcBg = Tk_BorderBgGC(border);
+    GC gcDark = Tk_BorderDarkGC(border);
+    GC gcLight = Tk_BorderLightGC(border);
+    GC gcBg = Tk_BorderBgGC(border);
 
-	if ( (gcDark==0) || (gcLight==0) || (gcBg==0) ) {
-		if ( (gcDark==0) && (gcLight==0) && (gcBg==0) ) {
-			printf("The GC's sent in the border to Tk_DrawBeveledLine() are all = 0\n");
-			return;
-		}
-		
-		if (gcDark==0) 
-			gcDark = (gcLight!=0?gcLight:gcBg);
-
-		if (gcLight==0)
-			gcLight = (gcDark!=0?gcDark:gcBg);
-
-		if (gcBg==0)
-			gcBg = (gcLight!=0?gcLight:gcDark);
-	}
+    if ( (gcDark==0) || (gcLight==0) || (gcBg==0) ) {
+      if ( (gcDark==0) && (gcLight==0) && (gcBg==0) ) {
+	printf("The GC's sent in the border to Tk_DrawBeveledLine() are all = 0\n");
+	return;
+      }
+      
+      if (gcDark==0) 
+	gcDark = (gcLight!=0?gcLight:gcBg);
+      
+      if (gcLight==0)
+	gcLight = (gcDark!=0?gcDark:gcBg);
+      
+      if (gcBg==0)
+	gcBg = (gcLight!=0?gcLight:gcDark);
+    }
 
 
 
