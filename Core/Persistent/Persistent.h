@@ -14,6 +14,7 @@
 #ifndef SCI_project_Persistent_h
 #define SCI_project_Persistent_h 1
 
+#include <SCICore/Containers/String.h>
 #include <SCICore/share/share.h>
 #include <iosfwd>
 
@@ -46,7 +47,7 @@ public:
 	Write
     };
 protected:
-    Piostream(Direction, int);
+    Piostream(Direction, int, const clString & =clString(""));
     Direction dir;
     int version;
     int err;
@@ -57,6 +58,8 @@ protected:
     static bool readHeader(const clString& filename, char* hdr,
 			   const char* type, int& version);
 public:
+    clString file_name;
+
     virtual ~Piostream();
     virtual clString peek_class()=0;
     int begin_class(const char* name, int current_version);
