@@ -45,10 +45,11 @@ WARNING
   
 ****************************************/
    class CompTable;
+  class SchedulerCommon;
   
    class TaskGraph {
    public:
-      TaskGraph();
+      TaskGraph(SchedulerCommon* sc);
       ~TaskGraph();
       
       //////////
@@ -58,7 +59,7 @@ WARNING
       //////////
       // Insert Documentation Here:
       void addTask(Task* t, const PatchSet* patchset,
-			   const MaterialSet* matlset);
+		   const MaterialSet* matlset);
 
       //////////
       // Insert Documentation Here:
@@ -66,7 +67,6 @@ WARNING
 
      DetailedTasks* createDetailedTasks( const ProcessorGroup* pg,
 					 LoadBalancer* lb,
-					 bool scrubNew,
 					 bool useInternalDeps );
      void createDetailedDependencies(DetailedTasks*, LoadBalancer* lb,
 				     const ProcessorGroup* pg);
@@ -153,6 +153,7 @@ WARNING
       
       vector<Task*>        d_tasks;
      vector<Task::Edge*> edges;
+     SchedulerCommon* sc;
 
       // data required from old data warehouse
      set<const VarLabel*, VarLabel::Compare> d_initRequiredVars;

@@ -59,9 +59,13 @@ WARNING
 
     //////////
     // Insert Documentation Here:
-    virtual void initialize();
+    virtual void initialize(int numOldDW = 1, int numNewDW = 1,
+			    DataWarehouse* parent_old_dw = 0,
+			    DataWarehouse* parent_new_dw = 0);
 
-    void compile( const ProcessorGroup * pg,  bool scrub_new );
+    virtual void clearMappings();
+    virtual void mapDataWarehouse(Task::WhichDW, int dwTag);
+    void compile( const ProcessorGroup * pg);
 
     //////////
     // Insert Documentation Here:
@@ -72,17 +76,14 @@ WARNING
     virtual LoadBalancer* getLoadBalancer();
     virtual void releaseLoadBalancer();
        
-    virtual DataWarehouse* get_old_dw();
-    virtual DataWarehouse* get_new_dw();
-
-    virtual void set_old_dw(DataWarehouse*);
-    virtual void set_new_dw(DataWarehouse*);
+    virtual DataWarehouse* get_dw(int idx);
 
     virtual void logMemoryUse();
       
     //////////
     // Insert Documentation Here:
     virtual void advanceDataWarehouse(const GridP& grid);
+    virtual void fillDataWarehouses(const GridP& grid);
 
     // Get the expected extents that may be needed for a particular variable
     // on a particular patch (which should include expected ghost cells.
@@ -108,9 +109,12 @@ WARNING
     // variable is valid (at least according to d_allcomps).
     typedef map< string, list<int> > VarLabelMaterialMap;
     virtual VarLabelMaterialMap* makeVarLabelMaterialMap();
+
+    bool isOldDW(int idx) const;
+    bool isNewDW(int idx) const;
   protected:
-    virtual void actuallyCompile( const ProcessorGroup * pc,
-				  bool scrubNew ) = 0;
+    void finalizeTimestep();
+    virtual void actuallyCompile( const ProcessorGroup * pc ) = 0;
     
     void makeTaskGraphDoc(const DetailedTasks* dt,
 			  int rank = 0);
@@ -126,7 +130,10 @@ WARNING
     TaskGraph graph;
     int       d_generation;
 
-    OnDemandDataWarehouseP dws_[2];
+    std::vector<OnDemandDataWarehouseP> dws;
+    int numOldDWs;
+
+    int dwmap[Task::TotalDWs];
     DetailedTasks         * dts_;
 
     Output* m_outPort;

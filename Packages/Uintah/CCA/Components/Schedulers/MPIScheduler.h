@@ -101,8 +101,7 @@ WARNING
     const ProcessorGroup* getProcessorGroup()
     { return pg_; }
   protected:
-    virtual void actuallyCompile( const ProcessorGroup * pg,
-				  bool scrubNew );
+    virtual void actuallyCompile( const ProcessorGroup * pg );
     
     // Runs the task. (In Mixed, gives the task to a thread.)
     virtual void initiateTask( DetailedTask          * task );

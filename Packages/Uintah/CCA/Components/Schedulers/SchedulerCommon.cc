@@ -42,18 +42,21 @@ extern DebugStream mixedDebug;
 static DebugStream dbg("SchedulerCommon", false);
 
 SchedulerCommon::SchedulerCommon(const ProcessorGroup* myworld, Output* oport)
-  : UintahParallelComponent(myworld), m_outPort(oport), m_graphDoc(NULL),
-    m_nodes(NULL)
+  : UintahParallelComponent(myworld), graph(this), m_outPort(oport),
+    m_graphDoc(NULL), m_nodes(NULL)
 {
-  dws_[ Task::OldDW ] = dws_[ Task::NewDW ] = 0;
   dts_ = 0;
   emit_taskgraph = false;
   memlogfile = 0;
+  for(int i=0;i<Task::TotalDWs;i++)
+    dwmap[i]=Task::InvalidDW;
+  // Default mapping...
+  dwmap[Task::OldDW]=0;
+  dwmap[Task::NewDW]=1;
 }
 
 SchedulerCommon::~SchedulerCommon()
 {
-  dws_[ Task::OldDW ] = dws_[ Task::NewDW ] = 0;
   if( dts_ )
     delete dts_;
   if(memlogfile)
@@ -176,8 +179,10 @@ SchedulerCommon::getLoadBalancer()
 
 void
 SchedulerCommon::addTask(Task* task, const PatchSet* patches,
-                      const MaterialSet* matls)
+			 const MaterialSet* matls)
 {
+  // Save the DW map
+  task->setMapping(dwmap);
   dbg << "adding Task: " << task->getName() << ", # patches: ";
   if( patches ) dbg << patches->size();
   else          dbg << "0";
@@ -187,29 +192,16 @@ SchedulerCommon::addTask(Task* task, const PatchSet* patches,
   dbg << "\n";
 
   graph.addTask(task, patches, matls);
+
   for (Task::Dependency* dep = task->getRequires(); dep != 0;
        dep = dep->next) {
     // Store the ghost cell information of each of the requires
     // so we can predict the total allocation needed for each variable.
     if (dep->numGhostCells > 0) {
-      const PatchSubset* dep_patches;
-      const MaterialSubset* dep_matls;
-      if (dep->patches_dom == Task::NormalDomain)
-        dep_patches = patches->getUnion();
-      else if (dep->patches_dom == Task::OutOfDomain)
-        dep_patches = dep->patches;
-      else {
-        throw InternalError("Unhandled patches_dom with > 0 ghost cells");
-      }
-      if (dep->matls_dom == Task::NormalDomain)
-        dep_matls = matls->getUnion();
-      else if (dep->matls_dom == Task::OutOfDomain)
-        dep_matls = dep->matls;
-      else {
-        throw InternalError("Unhandled patches_dom with > 0 ghost cells");
-      }
-      m_ghostOffsetVarMap.includeOffsets(dep->var, dep_matls, dep_patches,
-                                         dep->gtype, dep->numGhostCells);
+      constHandle<PatchSubset> dep_patches = dep->getPatchesUnderDomain(patches->getUnion());
+      constHandle<MaterialSubset> dep_matls = dep->getMaterialsUnderDomain(matls->getUnion());
+      m_ghostOffsetVarMap.includeOffsets(dep->var, dep_matls.get_rep(), dep_patches.get_rep(),
+					 dep->gtype, dep->numGhostCells);
     }
   }
 }
@@ -217,67 +209,81 @@ SchedulerCommon::addTask(Task* task, const PatchSet* patches,
 void
 SchedulerCommon::releaseLoadBalancer()
 {
-   releasePort("load balancer");
+  releasePort("load balancer");
 }
 
 void
-SchedulerCommon::initialize()
+SchedulerCommon::initialize(int numOldDW, int numNewDW,
+			    DataWarehouse* parent_old_dw,
+			    DataWarehouse* parent_new_dw)
 {
-   graph.initialize();
-   m_ghostOffsetVarMap.clear();
+  int numDW = numOldDW+numNewDW;
+  int oldnum = dws.size();
+  // Clear out the data warehouse so that memory will be freed
+  for(int i=numDW;i<oldnum;i++)
+    dws[i]=0;
+  dws.resize(numDW);
+  for(;oldnum < numDW; oldnum++)
+    dws[oldnum] = 0;
+  numOldDWs = numOldDW;
+  graph.initialize();
+  m_ghostOffsetVarMap.clear();
+  OnDemandDataWarehouse* pold = dynamic_cast<OnDemandDataWarehouse*>(parent_old_dw);
+  OnDemandDataWarehouse* pnew = dynamic_cast<OnDemandDataWarehouse*>(parent_new_dw);
+  if(parent_old_dw && parent_new_dw){
+    ASSERT(pold != 0);
+    ASSERT(pnew != 0);
+    ASSERT(numOldDW > 2);
+    dws[0]=pold;
+    dws[1]=pnew;
+  }
+}
+
+void SchedulerCommon::clearMappings()
+{
+  for(int i=0;i<Task::TotalDWs;i++)
+    dwmap[i]=-1;
+}
+
+void SchedulerCommon::mapDataWarehouse(Task::WhichDW which, int dwTag)
+{
+  ASSERTRANGE(which, 0, Task::TotalDWs);
+  ASSERTRANGE(dwTag, 0, (int)dws.size());
+  dwmap[which]=dwTag;
+}
+
+DataWarehouse*
+SchedulerCommon::get_dw(int idx)
+{
+  ASSERTRANGE(idx, 0, (int)dws.size());
+  return dws[idx].get_rep();
 }
 
 void 
-SchedulerCommon::set_old_dw(DataWarehouse* oldDW)
-{
-  OnDemandDataWarehouse* dw = dynamic_cast<OnDemandDataWarehouse*>(oldDW);
-  if (dw) {
-    dws_[ Task::OldDW ] = dw;
-  }
-  else {
-    throw InternalError("SchedulerCommon::set_old_dw: expecting OnDemandDataWarehous");
-  }
-}
-
-void 
-SchedulerCommon::set_new_dw(DataWarehouse* newDW)
-{
-  OnDemandDataWarehouse* dw = dynamic_cast<OnDemandDataWarehouse*>(newDW);
-  if (dw) {
-    dws_[ Task::NewDW ] = dw;
-  }
-  else {
-    throw InternalError("SchedulerCommon::set_old_dw: expecting OnDemandDataWarehous");
-  }
-}
-
-  void 
 SchedulerCommon::advanceDataWarehouse(const GridP& grid)
 {
-  dws_[ Task::OldDW ] = dws_[ Task::NewDW ];
-  int generation = d_generation++;
-  if (dws_[Task::OldDW] == 0) {
+  dbg << "advanceDataWarehouse, numDWs = " << dws.size() << '\n';
+  ASSERT(dws.size() >= 2);
+  // The last becomes last old, and the rest are new
+  dws[numOldDWs-1] = dws[dws.size()-1];
+  if (dws.size() == 2 && dws[0] == 0) {
     // first datawarehouse -- indicate that it is the "initialization"= dw.
-    dws_[Task::NewDW] = scinew
-      OnDemandDataWarehouse(d_myworld, this, generation, grid,
-                            true /* initialization dw */);
-  }
-  else {
-    dws_[Task::NewDW]=scinew OnDemandDataWarehouse(d_myworld, this, generation,
-                                                   grid);
+    int generation = d_generation++;
+    dws[1] = scinew OnDemandDataWarehouse(d_myworld, this, generation, grid,
+					  true /* initialization dw */);
+  } else {
+    for(int i=numOldDWs;i<(int)dws.size();i++)
+      dws[i]=scinew OnDemandDataWarehouse(d_myworld, this, d_generation++,
+					  grid);
   }
 }
 
-DataWarehouse*
-SchedulerCommon::get_old_dw()
+void SchedulerCommon::fillDataWarehouses(const GridP& grid)
 {
-  return dws_[Task::OldDW].get_rep();
-}
-
-DataWarehouse*
-SchedulerCommon::get_new_dw()
-{
-  return dws_[ Task::NewDW ].get_rep();
+  for(int i=numOldDWs;i<(int)dws.size();i++)
+    if(!dws[i])
+      dws[i]=scinew OnDemandDataWarehouse(d_myworld, this, d_generation++,
+					  grid);
 }
 
 const vector<const Patch*>* SchedulerCommon::
@@ -340,10 +346,16 @@ SchedulerCommon::logMemoryUse()
   }
   *memlogfile << '\n';
   unsigned long total = 0;
-  if( dws_[ Task::OldDW ] )
-    dws_[ Task::OldDW ]->logMemoryUse(*memlogfile, total, "OldDW");
-  if( dws_[ Task::NewDW ] )
-    dws_[ Task::NewDW ]->logMemoryUse(*memlogfile, total, "NewDW");
+  for(int i=0;i<(int)dws.size();i++){
+    char* name;
+    if(i==0)
+      name="OldDW";
+    else if(i==(int)dws.size()-1)
+      name="NewDW";
+    else
+      name="IntermediateDW";
+    dws[i]->logMemoryUse(*memlogfile, total, name);
+  }
   if(dts_)
     dts_->logMemoryUse(*memlogfile, total, "Taskgraph");
   *memlogfile << "Total: " << total << '\n';
@@ -368,13 +380,13 @@ void SchedulerCommon::doEmitTaskGraphDocs()
   emit_taskgraph=true;
 }
 
-void SchedulerCommon::compile( const ProcessorGroup * pg, bool scrub_new)
+void SchedulerCommon::compile( const ProcessorGroup * pg)
 {
-  bool needScrubExtraneous = dts_ ? !dts_->doScrubNew() : false;
-  
-  actuallyCompile(pg, scrub_new);
+  actuallyCompile(pg);
+  m_locallyComputedPatchVarMap.reset();
   if (dts_ != 0) {
     dts_->computeLocalTasks(pg->myrank());
+    dts_->createScrubCounts();
     
     // figure out the locally computed patches for each variable.
     for (int i = 0; i < dts_->numLocalTasks(); i++) {
@@ -388,10 +400,25 @@ void SchedulerCommon::compile( const ProcessorGroup * pg, bool scrub_new)
       }
     }
   }
+  m_locallyComputedPatchVarMap.makeGroups();
+}
 
-  if (needScrubExtraneous) {
-    // The last one was compiled with no new scrubbing (i.e. initialization);
-    // now scrub the OldDW data that won't be required by this new taskgraph.
-    dts_->scrubExtraneousOldDW();
-  }
+bool SchedulerCommon::isOldDW(int idx) const
+{
+  ASSERTRANGE(idx, 0, static_cast<int>(dws.size()));
+  return idx < numOldDWs;
+}
+
+bool SchedulerCommon::isNewDW(int idx) const
+{
+  ASSERTRANGE(idx, 0, static_cast<int>(dws.size()));
+  return idx >= numOldDWs;
+}
+
+void
+SchedulerCommon::finalizeTimestep()
+{
+  finalizeNodes();
+  for(unsigned int i=numOldDWs;i<dws.size();i++)
+    dws[i]->finalize();
 }

@@ -51,11 +51,7 @@ WARNING
 
     //////////
     // Insert Documentation Here:
-    virtual void execute( const ProcessorGroup * pg );
-    virtual void executeTimestep( const ProcessorGroup * pc );
-    virtual void executeRefine( const ProcessorGroup * pc );
-    virtual void executeCoarsen( const ProcessorGroup * pc );
-    virtual void finalizeTimestep(const GridP& grid);
+    virtual void execute( const ProcessorGroup * pg);
     
     virtual SchedulerP createSubScheduler();
     //////////
@@ -69,11 +65,10 @@ WARNING
 					    const MaterialSet* matls);
 
   protected:
-    virtual void actuallyCompile(const ProcessorGroup* pg, bool scrubNew);
+    virtual void actuallyCompile(const ProcessorGroup* pg );
   private:
     SPRelocate reloc;
     SingleProcessorScheduler& operator=(const SingleProcessorScheduler&);
-    virtual void execute_tasks( const ProcessorGroup * pc, DataWarehouse* oldDW, DataWarehouse* newDW );
 
     virtual void verifyChecksum();
 
