@@ -461,7 +461,7 @@ void MDSPlusDataReader::execute(){
 	    }
 	  }
 
-	  NrrdData* onrrd = new NrrdData(true);
+	  NrrdData* onrrd = new NrrdData();
 	  
 	  int axis = 0; // axis
 	  int incr = 1; // incr.
@@ -741,7 +741,7 @@ NrrdDataHandle MDSPlusDataReader::readDataset( string& server,
   if( data != NULL && dims[0] ) {
 
      // Stuff the data into the NRRD.
-    NrrdData *nout = scinew NrrdData(true);
+    NrrdData *nout = scinew NrrdData();
 
     // If the user asks us to assume vector or tensor data, the
     // assumption is based on the size of the last dimension of the hdf5 data

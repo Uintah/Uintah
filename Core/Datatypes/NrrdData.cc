@@ -55,16 +55,25 @@ NrrdData::maker()
 PersistentTypeID NrrdData::type_id("NrrdData", "PropertyManager", maker);
 
 
-NrrdData::NrrdData(bool owned) : 
+NrrdData::NrrdData() : 
   nrrd(nrrdNew()),
   embed_object_(false),
-  data_owned_(owned)
+  data_owner_(0)
+{
+}
+
+
+NrrdData::NrrdData(LockingHandle<Datatype> data_owner) : 
+  nrrd(nrrdNew()),
+  embed_object_(false),
+  data_owner_(data_owner)
 {
 }
 
 
 NrrdData::NrrdData(const NrrdData &copy) :
-  nrrd_fname_(copy.nrrd_fname_) 
+  data_owner_(0),
+  nrrd_fname_(copy.nrrd_fname_)
 {
   nrrd = nrrdNew();
   nrrdCopy(nrrd, copy.nrrd);
@@ -73,13 +82,14 @@ NrrdData::NrrdData(const NrrdData &copy) :
 
 NrrdData::~NrrdData()
 {
-  if(data_owned_)
+  if(!data_owner_.get_rep())
   {
     nrrdNuke(nrrd);
   }
   else
   {
     nrrdNix(nrrd);
+    data_owner_ = 0;
   }
 }
 
@@ -111,14 +121,14 @@ NrrdData::in_name_set(const string &s) const
 }
 
 
-#define NRRDDATA_VERSION 4
+#define NRRDDATA_VERSION 5
 
 //////////
 // PIO for NrrdData objects
 void NrrdData::io(Piostream& stream) 
 {
   int version =  stream.begin_class("NrrdData", NRRDDATA_VERSION);
-  // Do the base class first...
+  // Do the base class first.
   if (version > 2) 
   {
     PropertyManager::io(stream);
@@ -139,13 +149,14 @@ void NrrdData::io(Piostream& stream)
       // memory. 
       if (nrrd)
       {   // make sure we free any existing Nrrd Data set
-	if (data_owned_) 
+	if (!data_owner_.get_rep()) 
 	{
 	  nrrdNuke(nrrd);
 	} 
 	else 
 	{
 	  nrrdNix(nrrd);
+	  data_owner_ = 0;
 	}
 	// Make sure we put a zero pointer in the fiedl. There is no nrrd
 	nrrd = 0;
@@ -176,13 +187,14 @@ void NrrdData::io(Piostream& stream)
 		
       if (nrrd)
       {   // make sure we free any existing Nrrd Data set
-	if(data_owned_)
+	if(!data_owner_.get_rep())
 	{
 	  nrrdNuke(nrrd);
 	}
 	else
 	{
 	  nrrdNix(nrrd);
+	  data_owner_ = 0;
 	}
 	nrrd = 0;
       }
@@ -222,7 +234,7 @@ void NrrdData::io(Piostream& stream)
 	free(err);
 	biffDone(NRRD); 
       }
-      data_owned_ = true;
+      data_owner_ = 0;
 		
       stream.begin_cheap_delim();
       // Read the contents of the axis
@@ -544,7 +556,7 @@ void NrrdData::io(Piostream& stream)
       stream.end_cheap_delim();
     }
   }
-  if (version > 1) {
+  if (version > 1 && version < 5) { 
     // Somehow a statement got saved whether the nrrd owned the data
     // or not. Although it might not own the data while writing, when
     // creating a new object in case of reading the data, it always
@@ -552,9 +564,11 @@ void NrrdData::io(Piostream& stream)
     // new version it will write a dummy variable and as well read a
     // dummy. This dummy is set to one, so when older versions of
     // SCIRun read the data, they properly assume they own the data
-  
+    //
+    // Bumped version number. version > 1 is backwards, should
+    // probably have been version == 1.
     bool own_data = true;
-    Pio(stream, own_data);   // Always true, this field was mistakenly added in a previous version
+    Pio(stream, own_data);
   }
   stream.end_class();
 }

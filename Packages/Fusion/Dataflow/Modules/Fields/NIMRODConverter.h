@@ -106,7 +106,7 @@ NIMRODMeshConverterAlgoT< NTYPE >::execute(vector< NrrdDataHandle >& nHandles,
   int jdim = nHandles[mesh[Z  ]]->nrrd->axis[1].size; // Theta
   int kdim = nHandles[mesh[PHI]]->nrrd->axis[0].size; // Phi
 
-  NrrdData *nout = scinew NrrdData(true);
+  NrrdData *nout = scinew NrrdData();
 
   NTYPE* ndata = scinew NTYPE[idim*jdim*kdim*3];
 
@@ -218,7 +218,7 @@ NIMRODScalarConverterAlgoT< NTYPE >::execute(vector< NrrdDataHandle >& nHandles,
   int jdim = nHandles[data[0]]->nrrd->axis[1].size; // Theta
   int kdim = nHandles[data[0]]->nrrd->axis[2].size; // Phi
 
-  NrrdData *nout = scinew NrrdData(true);
+  NrrdData *nout = scinew NrrdData();
 
   NTYPE* ndata = scinew NTYPE[idim*jdim*kdim];
 
@@ -307,7 +307,7 @@ NIMRODRealSpaceConverterAlgoT< NTYPE >::execute(vector< NrrdDataHandle >& nHandl
     rank = 3;
   }
 
-  NrrdData *nout = scinew NrrdData(true);
+  NrrdData *nout = scinew NrrdData();
 
   NTYPE* ndata = scinew NTYPE[idim*jdim*kdim*rank];
 
@@ -470,7 +470,7 @@ NIMRODPerturbedConverterAlgoT< NTYPE >::execute(vector< NrrdDataHandle >& nHandl
 
   kdim = nHandles[mesh[PHI]]->nrrd->axis[0].size; // Phi
 
-  NrrdData *nout = scinew NrrdData(true);
+  NrrdData *nout = scinew NrrdData();
 
   register int i,j,k,m,cc = 0;
 

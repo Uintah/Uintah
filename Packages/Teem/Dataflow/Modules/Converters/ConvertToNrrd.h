@@ -404,7 +404,7 @@ ConvertToNrrd<Fld>::convert_to_nrrd(FieldHandle ifh, NrrdDataHandle &pointsH,
   // create the Data Nrrd
   if (compute_data_p)
   {
-    ndata = scinew NrrdData(pad_data);
+    ndata = scinew NrrdData(f);
     // switch based on the dims size because that is the size
     // of nrrd to create
     int dim = dims.size();

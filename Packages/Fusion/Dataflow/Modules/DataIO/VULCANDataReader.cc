@@ -272,7 +272,7 @@ VULCANDataReader::execute(){
     string nrrdName;
 
     // Points
-    NrrdData *nout = scinew NrrdData(true);
+    NrrdData *nout = scinew NrrdData();
 
     nrrdWrap(nout->nrrd, pdata, nrrdTypeDouble, ndims+1, rank, npos);
 
@@ -298,7 +298,7 @@ VULCANDataReader::execute(){
     nHandles_[0] = NrrdDataHandle( nout );
 
     // Velocity Vector
-    nout = scinew NrrdData(true);
+    nout = scinew NrrdData();
 
     nrrdWrap(nout->nrrd, vdata, nrrdTypeDouble, ndims+1, rank, npos);
 
@@ -363,7 +363,7 @@ VULCANDataReader::execute(){
     }
 
     // Connections
-    nout = scinew NrrdData(true);
+    nout = scinew NrrdData();
 
     nrrdWrap(nout->nrrd, cdata, nrrdTypeDouble, ndims+1, 4, ncon);
 
@@ -389,7 +389,7 @@ VULCANDataReader::execute(){
 
     // Data
     for( int i=0; i<6; i++ ) {
-      nout = scinew NrrdData(true);
+      nout = scinew NrrdData();
 
       nrrdWrap(nout->nrrd, data[i], nrrdTypeDouble, ndims, ncon);
 

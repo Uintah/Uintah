@@ -704,7 +704,7 @@ void matlabconverter::mlArrayTOsciNrrdData(matlabarray &mlarray,SCIRun::NrrdData
       try
       {
 	// new nrrd data handle
-	nrrddataptr = new SCIRun::NrrdData(true); // nrrd is owned by the object
+	nrrddataptr = new SCIRun::NrrdData(); // nrrd is owned by the object
 	nrrddataptr->nrrd = nrrdNew();
 				
 	// obtain the type of the new nrrd
