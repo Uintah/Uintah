@@ -85,10 +85,10 @@ public:
                                   const MaterialSet*);
 
   
-  void scheduleInterpolateNCToCC(SchedulerP&, 
-                                const PatchSet*,
-                                const MaterialSubset*,
-                                const MaterialSet*);
+  void scheduleComputeLagrangianValuesMPM(SchedulerP&, 
+                                          const PatchSet*,
+                                          const MaterialSubset*,
+                                          const MaterialSet*);
 
   void scheduleCCMomExchange(SchedulerP&, 
                             const PatchSet*,
@@ -151,11 +151,11 @@ public:
                            DataWarehouse* old_dw,
                            DataWarehouse* new_dw);
   
-  void interpolateNCToCC(const ProcessorGroup*,
-                         const PatchSubset* patch,
-                         const MaterialSubset* matls,
-                         DataWarehouse* old_dw,
-                         DataWarehouse* new_dw);
+  void computeLagrangianValuesMPM(const ProcessorGroup*,
+                                  const PatchSubset* patch,
+                                  const MaterialSubset* matls,
+                                  DataWarehouse* old_dw,
+                                  DataWarehouse* new_dw);
 
   void computeEquilibrationPressure(const ProcessorGroup*,
                                     const PatchSubset* patch,
@@ -249,7 +249,6 @@ protected:
   double d_SMALL_NUM;
   
   // Debugging switches
-  bool switchDebug_InterpolateNCToCC;
   bool switchDebug_InterpolateNCToCC_0;
   bool switchDebug_InterpolateCCToNC;
 };
