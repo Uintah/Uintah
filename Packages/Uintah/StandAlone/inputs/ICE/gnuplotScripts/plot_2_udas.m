@@ -23,8 +23,8 @@ uda2_txt = sprintf('good');
 
 [ans, test]=unix('printenv MATLAB_SHELL');
 
-command1 = sprintf('cd %s; inputs/ICE/gnuplotScripts/findTimesteps>&../ts_1',uda1)
-command2 = sprintf('cd %s; inputs/ICE/gnuplotScripts/findTimesteps>&../ts_2',uda2)
+command1 = sprintf('cd %s; ../inputs/ICE/gnuplotScripts/findTimesteps>&../ts_1',uda1)
+command2 = sprintf('cd %s; ../inputs/ICE/gnuplotScripts/findTimesteps>&../ts_2',uda2)
 unix(command1);
 unix(command2);
 
