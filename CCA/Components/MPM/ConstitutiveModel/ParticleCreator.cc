@@ -7,6 +7,7 @@
 #include <Packages/Uintah/Core/Grid/Box.h>
 
 using namespace Uintah;
+using std::vector;
 
 ParticleCreator::ParticleCreator()
 {
@@ -22,14 +23,14 @@ void ParticleCreator::createParticles(MPMMaterial* matl,
 				      CCVariable<short int>& cellNAPID,
 				      const Patch*,DataWarehouse* new_dw,
 				      MPMLabel* lb,
-				      std::vector<GeometryObject*>&)
+				      vector<GeometryObject*>&)
 {
   
 }
 
 particleIndex 
 ParticleCreator::countParticles(const Patch* patch,
-				std::vector<GeometryObject*>& d_geom_objs) const
+				vector<GeometryObject*>& d_geom_objs) const
 {
   particleIndex sum = 0;
   for(int i=0; i<(int)d_geom_objs.size(); i++)
