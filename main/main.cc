@@ -270,10 +270,10 @@ main(int argc, char *argv[], char **environment) {
     // determine which standalone and set splash
     if(strstr(argv[startnetno], "BioTensor")) {
       gui->eval("set splashImageFile $bioTensorSplashImageFile");
-      gui->eval("showProgress 1 5700 1");
+      gui->eval("showProgress 1 2575 1");
     } else if(strstr(argv[startnetno], "BioFEM")) {
       gui->eval("set splashImageFile $bioFEMSplashImageFile");
-      gui->eval("showProgress 1 1005 1");
+      gui->eval("showProgress 1 465 1");
     }
 
   }
