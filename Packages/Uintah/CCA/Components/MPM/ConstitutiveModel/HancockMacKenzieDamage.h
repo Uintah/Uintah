@@ -27,8 +27,8 @@ namespace Uintah {
     \f$ D \f$ = damage variable \n
     where \f$ D = 0 \f$ for virgin material, \n
     \f$ \epsilon_p \f$ is the plastic strain, \n
-    \f$ \sigma_h = (1/3) Tr(\sigma) \n
-    \f$ \sigma_{eq} = \sqrt{(3/2) \sigma_{dev}:\sigma_{dev}}
+    \f$ \sigma_h = (1/3) Tr(\sigma) \f$ \n
+    \f$ \sigma_{eq} = \sqrt{(3/2) \sigma_{dev}:\sigma_{dev}} \f$
   */
   /////////////////////////////////////////////////////////////////////////////
 
