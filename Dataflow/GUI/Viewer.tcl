@@ -1890,7 +1890,7 @@ itcl_class ViewWindow {
         wm title $w "Record Movie"
 
 	label $w.l -text "Record Movie as:"
-        pack $w.l -side top 
+        pack $w.l -side top -anchor w
 	checkbutton $w.resize -text "Resize: " \
 	    -variable $this-global-resize \
 	    -offvalue 0 -onvalue 1 -command "$this resize; $this-c redraw"
@@ -1911,13 +1911,23 @@ itcl_class ViewWindow {
 		    -state disabled -disabledforeground "" \
 		    -command "$this-c redraw"
 	}
-        entry $w.moviebase -relief sunken -width 16 \
+
+	frame $w.moviebase
+	label $w.moviebase.label -text "Name:" -width 6
+        entry $w.moviebase.entry -relief sunken -width 13 \
 	    -textvariable "$this-global-movieName" 
-        pack $w.none $w.raw $w.mpeg \
-            -side top  -anchor w
-        pack $w.moviebase -side top -anchor w -padx 2 -pady 2
-	pack $w.resize $w.e1 \
-	    $w.x $w.e2 -side left  -anchor w
+        pack $w.moviebase.label $w.moviebase.entry -side left
+
+	frame $w.movieframe
+	label $w.movieframe.label -text "Frame:" -width 6
+        entry $w.movieframe.entry -relief sunken -width 13 \
+	    -textvariable "$this-global-movieFrame" 
+        pack $w.movieframe.label $w.movieframe.entry -side left
+
+        pack $w.none $w.raw $w.mpeg -side top -anchor w
+        pack $w.moviebase  -side top -anchor w -pady 5 
+        pack $w.movieframe -side top -anchor w -pady 2
+	pack $w.resize $w.e1 $w.x $w.e2 -side left -anchor w -pady 5
 
 	bind $w.e1 <Return> "$this resize"
 	bind $w.e2 <Return> "$this resize"
