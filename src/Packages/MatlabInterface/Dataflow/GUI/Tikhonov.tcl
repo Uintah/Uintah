@@ -22,12 +22,12 @@
  #   01May25
  ##
 
-catch {rename MatlabInterface_Math_Focusing ""}
+catch {rename MatlabInterface_Math_Tikhonov ""}
 
-itcl_class MatlabInterface_Math_Focusing {
+itcl_class MatlabInterface_Math_Tikhonov {
     inherit Module
     constructor {config} {
-        set name Focusing
+        set name Tikhonov
         set_defaults
     }
     method set_defaults {} {

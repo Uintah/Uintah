@@ -24,7 +24,7 @@ addConnection $m0 0 $m4 0
 
 set $m0-notes {}
 set $m0-show_status 1
-set $m0-hpTCL {}
+set $m0-hpTCL {0.01 5}
 set $m1-notes {}
 set $m1-show_status 1
 set $m1-filename {/home/oleg/prj/scirun/1/SCIRun/src/Packages/MatlabInterface/matlab/Math/f.dmat}
