@@ -219,7 +219,7 @@ public:
 
   const Point &point(Node::index_type i) { return points_[i]; }
 
-private:
+protected:
 
   bool inside4_p(int, const Point &p) const;
 
