@@ -18,49 +18,31 @@
 
 package require Iwidgets 3.1
 
-class SamplerGui {
+class ItPDSimPartGui {
 
     variable w
     variable n
 
     constructor {} {
+	set n 0
     }
 
     method ui { window } {
 
+	puts "ItPDSimPartGui UI"
 	set w $window
 
-        iwidgets::entryfield $w.burning -labeltext "Burning:" \
-	    -validate numeric -command "$this-c burning \[$w.burning get\]" 
-
-        iwidgets::entryfield $w.monitor -labeltext "Monitor:" \
-	    -validate numeric -command "$this-c monitor \[$w.monitor get\]" 
-
-        iwidgets::entryfield $w.thin -labeltext "Thin:" \
-	    -validate numeric -command "$this-c thin  \[$w.thin get\]" 
-
-        iwidgets::entryfield $w.kappa -labeltext "Kappa:" \
-	    -validate numeric -command "$this-c kappa \[$w.kappa get\]" 
-
-	button $w.exec -text "Execute" -command "$this-c exec"
+        iwidgets::entryfield $w.df -labeltext "df:" \
+	    -validate numeric -command "$this-c df \[$w.df get\]" 
 
 	frame $w.children
 
-
-	pack $w.burning $w.monitor $w.thin  -anchor w
-	pack $w.exec -anchor w
+	pack $w.df  -anchor w
 	pack $w.children
 
-	set n 0
-	#iwidgets::Labeledframe $w.graph -labeltext "Progress"
-	#pack $w.graph -expand yes -fill both
     }
 
     method new-child-window { name } {
-#	set child [frame $w.children.$n]
-#	pack $child -side top
-#	incr n
-#	return $child
 	set child [iwidgets::Labeledframe $w.children.$n -labeltext $name]
 	pack $child -side top -anchor w
 	incr n
