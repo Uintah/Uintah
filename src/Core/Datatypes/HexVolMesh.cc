@@ -176,13 +176,13 @@ HexVolMesh::compute_faces()
 
   Cell::iterator ci, cie;
   begin(ci); end(cie);
-  Node::array_type arr(4);
+  Node::array_type arr(8);
   while (ci != cie)
   {
     get_nodes(arr, *ci);
     // 6 faces -- each is entered CCW from outside looking in
     hash_face(arr[0], arr[1], arr[2], arr[3], *ci, face_table_);
-    hash_face(arr[4], arr[5], arr[6], arr[7], *ci, face_table_);
+    hash_face(arr[7], arr[6], arr[5], arr[4], *ci, face_table_);
     hash_face(arr[0], arr[4], arr[5], arr[1], *ci, face_table_);
     hash_face(arr[2], arr[6], arr[7], arr[3], *ci, face_table_);
     hash_face(arr[3], arr[7], arr[4], arr[0], *ci, face_table_);
@@ -226,16 +226,25 @@ HexVolMesh::compute_edges()
 
   Cell::iterator ci, cie;
   begin(ci); end(cie);
-  Node::array_type arr(4);
+  Node::array_type arr;
   while (ci != cie)
   {
     get_nodes(arr, *ci);
     hash_edge(arr[0], arr[1], *ci, edge_table_);
-    hash_edge(arr[0], arr[2], *ci, edge_table_);
-    hash_edge(arr[0], arr[3], *ci, edge_table_);
     hash_edge(arr[1], arr[2], *ci, edge_table_);
-    hash_edge(arr[1], arr[3], *ci, edge_table_);
     hash_edge(arr[2], arr[3], *ci, edge_table_);
+    hash_edge(arr[3], arr[0], *ci, edge_table_);
+
+    hash_edge(arr[4], arr[5], *ci, edge_table_);
+    hash_edge(arr[5], arr[6], *ci, edge_table_);
+    hash_edge(arr[6], arr[7], *ci, edge_table_);
+    hash_edge(arr[7], arr[4], *ci, edge_table_);
+
+    hash_edge(arr[0], arr[4], *ci, edge_table_);
+    hash_edge(arr[5], arr[1], *ci, edge_table_);
+
+    hash_edge(arr[2], arr[6], *ci, edge_table_);
+    hash_edge(arr[7], arr[3], *ci, edge_table_);
     ++ci;
   }
   // dump edges into the edges_ container.
@@ -251,11 +260,12 @@ HexVolMesh::compute_edges()
 }
 
 void
-HexVolMesh::flush_changes() {
-//  compute_edges();
-//  compute_faces();
+HexVolMesh::flush_changes()
+{
+  compute_edges();
+  compute_faces();
 //  compute_node_neighbors();
-//  compute_grid();
+  compute_grid();
 }
 
 
@@ -345,7 +355,7 @@ void
 HexVolMesh::get_nodes(Node::array_type &array, Face::index_type idx) const
 {
   array.clear();
-  PFace f = faces_[idx];
+  const PFace &f = faces_[idx];
   array.push_back(f.nodes_[0]);
   array.push_back(f.nodes_[1]);
   array.push_back(f.nodes_[2]);
@@ -367,26 +377,20 @@ HexVolMesh::get_nodes(Node::array_type &array, Cell::index_type idx) const
   array.push_back(cells_[idx * 8 + 7]);
 }
 
-/* DAVE - FIX ME TO HAVE HEX FACES (THESE ARE TET FACES) */
 void
 HexVolMesh::get_edges(Edge::array_type &array, Face::index_type idx) const
 {
   array.clear();
-  static int table[4][3] =
-  {
-    {3, 4, 5},
-    {1, 2, 5},
-    {0, 2, 4},
-    {0, 1, 3}
-  };
+  const PFace &f = faces_[idx];
+  PEdge e0(f.nodes_[0], f.nodes_[1]);
+  PEdge e1(f.nodes_[1], f.nodes_[2]);
+  PEdge e2(f.nodes_[2], f.nodes_[3]);
+  PEdge e3(f.nodes_[3], f.nodes_[0]);
 
-  int base = idx / 4 * 6;
-  int off = idx % 4;
-
-  array.push_back(base + table[off][0]);
-  array.push_back(base + table[off][1]);
-  array.push_back(base + table[off][2]);
-  array.push_back(base + table[off][3]);
+  array.push_back((*(edge_table_.find(e0))).second);
+  array.push_back((*(edge_table_.find(e1))).second);
+  array.push_back((*(edge_table_.find(e2))).second);
+  array.push_back((*(edge_table_.find(e3))).second);
 }
 
 
@@ -394,21 +398,32 @@ void
 HexVolMesh::get_edges(Edge::array_type &array, Cell::index_type idx) const
 {
   array.clear();
+  const int off = idx * 8;
+  PEdge e00(cells_[off + 0], cells_[off + 1]);
+  PEdge e01(cells_[off + 1], cells_[off + 2]);
+  PEdge e02(cells_[off + 2], cells_[off + 3]);
+  PEdge e03(cells_[off + 3], cells_[off + 0]);
+  PEdge e04(cells_[off + 4], cells_[off + 5]);
+  PEdge e05(cells_[off + 5], cells_[off + 6]);
+  PEdge e06(cells_[off + 6], cells_[off + 7]);
+  PEdge e07(cells_[off + 7], cells_[off + 4]);
+  PEdge e08(cells_[off + 0], cells_[off + 4]);
+  PEdge e09(cells_[off + 5], cells_[off + 1]);
+  PEdge e10(cells_[off + 2], cells_[off + 6]);
+  PEdge e11(cells_[off + 7], cells_[off + 3]);
 
-  const int off = idx * 4;
-  PEdge e0(cells_[off + 0], cells_[off + 1]);
-  PEdge e1(cells_[off + 0], cells_[off + 2]);
-  PEdge e2(cells_[off + 0], cells_[off + 3]);
-  PEdge e3(cells_[off + 1], cells_[off + 2]);
-  PEdge e4(cells_[off + 1], cells_[off + 3]);
-  PEdge e5(cells_[off + 2], cells_[off + 3]);
-
-  array.push_back((*(edge_table_.find(e0))).second);
-  array.push_back((*(edge_table_.find(e1))).second);
-  array.push_back((*(edge_table_.find(e2))).second);
-  array.push_back((*(edge_table_.find(e3))).second);
-  array.push_back((*(edge_table_.find(e4))).second);
-  array.push_back((*(edge_table_.find(e5))).second);
+  array.push_back((*(edge_table_.find(e00))).second);
+  array.push_back((*(edge_table_.find(e01))).second);
+  array.push_back((*(edge_table_.find(e02))).second);
+  array.push_back((*(edge_table_.find(e03))).second);
+  array.push_back((*(edge_table_.find(e04))).second);
+  array.push_back((*(edge_table_.find(e05))).second);
+  array.push_back((*(edge_table_.find(e06))).second);
+  array.push_back((*(edge_table_.find(e07))).second);
+  array.push_back((*(edge_table_.find(e08))).second);
+  array.push_back((*(edge_table_.find(e09))).second);
+  array.push_back((*(edge_table_.find(e10))).second);
+  array.push_back((*(edge_table_.find(e11))).second);
 }
 
 
@@ -625,28 +640,24 @@ HexVolMesh::locate(Face::index_type &/*face*/, const Point & /* p */)
 bool
 HexVolMesh::locate(Cell::index_type &cell, const Point &p)
 {
-  if (grid_.get_rep() == 0) {
+  if (grid_.get_rep() == 0)
+  {
     compute_grid();
-    //ASSERTFAIL("Call compute_grid before calling locate!");
   }
   LatVolMeshHandle mesh = grid_->get_typed_mesh();
   LatVolMesh::Cell::index_type ci;
   if (!mesh->locate(ci, p)) { return false; }
-  bool found_p = false;
   vector<Cell::index_type> v = grid_->value(ci);
   vector<Cell::index_type>::iterator iter = v.begin();
   while (iter != v.end()) {
-    if (inside4_p((*iter) * 4, p)) {
-      found_p = true;
-      break;
+    if (inside8_p(*iter, p))
+    {
+      cell = *iter;
+      return true;
     }
     ++iter;
   }
-
-  if (found_p)
-    cell = *iter;
-
-  return found_p;
+  return false;
 }
 
 
@@ -673,15 +684,95 @@ HexVolMesh::get_weights(const Point &p,
 void
 HexVolMesh::compute_grid()
 {
-//  ASSERTFAIL("compute_grid not implemented for hexes");
+  grid_lock_.lock();
+  if (grid_.get_rep() != 0) {grid_lock_.unlock(); return;} // only create once.
+
+  cerr << "HexVolMesh::compute_grid starting" << endl;
+  BBox bb = get_bounding_box();
+  if (!bb.valid()) { grid_lock_.unlock(); return; }
+
+  // Cubed root of number of cells to get a subdivision ballpark.
+  const double one_third = 1.L/3.L;
+  Cell::size_type csize;  size(csize);
+  const int s = (int)ceil(pow((double)csize , one_third));
+  const double cell_epsilon = bb.diagonal().length() * 0.1 / s;
+
+  LatVolMeshHandle mesh(scinew LatVolMesh(s, s, s, bb.min(), bb.max()));
+  grid_ = scinew LatticeVol<vector<Cell::index_type> >(mesh, Field::CELL);
+  LatticeVol<vector<Cell::index_type> >::fdata_type &fd = grid_->fdata();
+
+  BBox box;
+  Node::array_type nodes;
+  Cell::iterator ci, cie;
+  begin(ci); end(cie);
+  while(ci != cie)
+  {
+    get_nodes(nodes, *ci);
+
+    box.reset();
+    for (unsigned int i = 0; i < nodes.size(); i++)
+    {
+      box.extend(points_[nodes[i]]);
+    }
+    const Point padmin(box.min().x() - cell_epsilon,
+		       box.min().y() - cell_epsilon,
+		       box.min().z() - cell_epsilon);
+    const Point padmax(box.max().x() + cell_epsilon,
+		       box.max().y() + cell_epsilon,
+		       box.max().z() + cell_epsilon);
+    box.extend(padmin);
+    box.extend(padmax);
+
+    // add this cell index to all overlapping cells in grid_
+    LatVolMesh::Cell::array_type carr;
+    mesh->get_cells(carr, box);
+    LatVolMesh::Cell::array_type::iterator giter = carr.begin();
+    while (giter != carr.end()) {
+      // Would like to just get a reference to the vector at the cell
+      // but can't from value. Bypass the interface.
+      vector<Cell::index_type> &v = fd[*giter];
+      v.push_back(*ci);
+      ++giter;
+    }
+    ++ci;
+  }
+  cerr << "HexVolMesh::compute_grid done." << endl << endl;
+  grid_lock_.unlock();
 }
 
+
+
 bool
-HexVolMesh::inside4_p(int /*i*/, const Point &/*p*/) const
+HexVolMesh::inside8_p(Cell::index_type i, const Point &p) const
 {
-  ASSERTFAIL("inside8_p not implemented");
-  return false;
+  Face::array_type faces;
+  get_faces(faces, i);
+
+  Point center;
+  get_center(center, i);
+
+  for (unsigned int i = 0; i < faces.size(); i++)
+  {
+    Node::array_type nodes;
+    get_nodes(nodes, faces[i]);
+    Point p0, p1, p2;
+    get_center(p0, nodes[0]);
+    get_center(p1, nodes[1]);
+    get_center(p2, nodes[2]);
+
+    const Vector v0(p1 - p0), v1(p2 - p0);
+    const Vector normal = Cross(v0, v1);
+    const Vector off0(p - p0);
+    const Vector off1(center - p0);
+    if (Dot(off0, normal) * Dot(off1, normal) < 0)
+    {
+      return false;
+    }
+  }
+  return true;
 }
+    
+
 
 //! return the volume of the hex.
 double
