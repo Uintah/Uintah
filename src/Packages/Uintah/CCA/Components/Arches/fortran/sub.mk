@@ -149,3 +149,5 @@ $(SRCDIR)/vvelsrc.o: $(SRCDIR)/vvelsrc_fort.h
 $(SRCDIR)/wallbc.o: $(SRCDIR)/wallbc_fort.h
 $(SRCDIR)/wvelcoef.o: $(SRCDIR)/wvelcoef_fort.h
 $(SRCDIR)/wvelsrc.o: $(SRCDIR)/wvelsrc_fort.h
+$(SRCDIR)/hatvelcalpbc.o: $(SRCDIR)/hatvelcalpbc_fort.h
+$(SRCDIR)/uvelcoeffupdate.o: $(SRCDIR)/uvelcoeffupdate_fort.h
