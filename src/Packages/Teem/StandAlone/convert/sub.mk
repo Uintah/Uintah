@@ -15,13 +15,19 @@
 #  University of Utah. All Rights Reserved.
 #
 
-#Makefile fragment for the Packages/Teem directory
+# Makefile fragment for this subdirectory
 
-SRCDIR := Packages/Teem
-SUBDIRS := \
-	$(SRCDIR)/Core \
-	$(SRCDIR)/Dataflow \
-	$(SRCDIR)/StandAlone \
+SRCDIR := Packages/Teem/StandAlone/convert
 
-include $(SCIRUN_SCRIPTS)/recurse.mk
+ifeq ($(LARGESOS),yes)
+PSELIBS := Core Packages/Teem/Core
+else
+PSELIBS := Core/Datatypes Core/Containers Core/Persistent Core/Exceptions Core/Thread Core/Geometry Core/Math Packages/Teem/Core/Datatypes
+endif
+LIBS := $(TEEM_LIBRARY) -llineal -lm
 
+INCLUDES += $(TEEM_INCLUDE)
+
+PROGRAM := $(SRCDIR)/MakeTensorsIsotropic
+SRCS := $(SRCDIR)/MakeTensorsIsotropic.cc
+include $(SCIRUN_SCRIPTS)/program.mk
