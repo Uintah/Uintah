@@ -67,7 +67,7 @@ NetworkEditor::NetworkEditor(Network* net, GuiInterface* gui)
 {
   // Create User interface...
   gui->add_command("netedit", this, 0);
-  gui->source_once("$DataflowTCL/NetworkEditor.tcl");
+  gui->source_once(SCIRUN_SRCDIR+string("/Dataflow/GUI/NetworkEditor.tcl"));
   gui->execute("makeNetworkEditor");
 }
 
