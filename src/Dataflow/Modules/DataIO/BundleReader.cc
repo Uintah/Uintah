@@ -41,12 +41,11 @@
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
 #include <Dataflow/Modules/DataIO/GenericReader.h>
-#include <Dataflow/share/share.h>
 
 using namespace SCIRun;
 using namespace std;
 
-class PSECORESHARE BundleReader : public GenericReader<BundleHandle> {
+class BundleReader : public GenericReader<BundleHandle> {
 public:
   BundleReader(GuiContext*);
 

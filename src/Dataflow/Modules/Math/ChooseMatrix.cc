@@ -48,7 +48,7 @@
 
 namespace SCIRun {
 
-class PSECORESHARE ChooseMatrix : public Module {
+class ChooseMatrix : public Module {
 private:
   GuiInt port_index_;
   GuiInt usefirstvalid_;

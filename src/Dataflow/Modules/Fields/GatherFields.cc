@@ -49,7 +49,7 @@
 
 namespace SCIRun {
 
-class PSECORESHARE GatherFields : public Module {
+class GatherFields : public Module {
 public:
   GatherFields(GuiContext* ctx);
   virtual ~GatherFields();

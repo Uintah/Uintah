@@ -41,16 +41,15 @@
  */
 
 #include <Dataflow/Ports/ImagePort.h>
-#include <Dataflow/share/share.h>
 #include <Core/Malloc/Allocator.h>
 
 namespace SCIRun { // Namespace {} necessary for xlC AIX compilation.
 
 extern "C" {
-PSECORESHARE IPort* make_ImageIPort(Module* module, const string& name) {
+IPort* make_ImageIPort(Module* module, const string& name) {
   return scinew SimpleIPort<ImageHandle>(module,name);
 }
-PSECORESHARE OPort* make_ImageOPort(Module* module, const string& name) {
+OPort* make_ImageOPort(Module* module, const string& name) {
   return scinew SimpleOPort<ImageHandle>(module,name);
 }
 }

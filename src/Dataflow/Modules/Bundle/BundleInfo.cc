@@ -40,12 +40,10 @@
 #include <Core/Bundle/Bundle.h>
 #include <Dataflow/Ports/BundlePort.h>
 
-#include <Dataflow/share/share.h>
-
 using namespace SCIRun;
 using namespace std;
 
-class PSECORESHARE BundleInfo : public Module {
+class BundleInfo : public Module {
 public:
   BundleInfo(GuiContext*);
 

@@ -45,7 +45,7 @@ namespace SCITeem {
 
 using namespace SCIRun;
 
-class PSECORESHARE UnuUnquantize : public Module {
+class UnuUnquantize : public Module {
 public:
   UnuUnquantize(GuiContext*);
 

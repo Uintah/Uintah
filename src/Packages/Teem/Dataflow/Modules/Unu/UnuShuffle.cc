@@ -45,7 +45,7 @@ namespace SCITeem {
 
 using namespace SCIRun;
 
-class PSECORESHARE UnuShuffle : public Module {
+class UnuShuffle : public Module {
 public:
   UnuShuffle(GuiContext*);
 

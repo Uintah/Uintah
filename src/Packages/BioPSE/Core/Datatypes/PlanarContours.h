@@ -58,7 +58,7 @@ using namespace SCIRun;
 class ContourSet;
 typedef LockingHandle<ContourSet> ContourSetHandle;
 
-class SCICORESHARE ContourSet : public Datatype {
+class ContourSet : public Datatype {
 public:
     Array1<Array1<Array1<Point> > > contours;
     Array1<Array1<double> > conductivity;

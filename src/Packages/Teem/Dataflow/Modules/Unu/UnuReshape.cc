@@ -46,7 +46,7 @@ namespace SCITeem {
 
 using namespace SCIRun;
 
-class PSECORESHARE UnuReshape : public Module {
+class UnuReshape : public Module {
 public:
   UnuReshape(GuiContext*);
 

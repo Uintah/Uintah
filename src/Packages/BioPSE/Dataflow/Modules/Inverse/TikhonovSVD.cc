@@ -35,8 +35,6 @@
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
 
-#include <Packages/BioPSE/share/share.h>
-
 #include <stdio.h>
 #include <math.h>
 #include <Dataflow/Ports/MatrixPort.h>
@@ -59,7 +57,7 @@ namespace BioPSE
 
   using namespace SCIRun;
 
-  class BioPSESHARE TikhonovSVD : public Module 
+  class TikhonovSVD : public Module 
   {
     	GuiDouble 	lambda_fix_;
     	GuiDouble 	lambda_sld_;

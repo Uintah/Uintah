@@ -41,12 +41,10 @@
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
 
-#include <Dataflow/share/share.h>
-
 using namespace SCIRun;
 using namespace std;
 
-class PSECORESHARE BundleSetMatrix : public Module {
+class BundleSetMatrix : public Module {
 public:
   BundleSetMatrix(GuiContext*);
 

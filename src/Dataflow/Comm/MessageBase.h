@@ -43,12 +43,11 @@
 #ifndef SCI_project_MessageBase_h
 #define SCI_project_MessageBase_h 1
 
-#include <Dataflow/share/share.h>
 #include <Dataflow/Comm/MessageTypes.h>
 
 namespace SCIRun {
 
-class PSECORESHARE MessageBase {
+class MessageBase {
 public:
     MessageTypes::MessageType type;
     MessageBase(MessageTypes::MessageType type);

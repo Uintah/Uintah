@@ -41,13 +41,11 @@
 #include <Core/Malloc/Allocator.h>
 #include <Dataflow/Modules/DataIO/GenericWriter.h>
 
-#include <Dataflow/share/share.h>
-
 using namespace SCIRun;
 using namespace std;
 
 
-class PSECORESHARE BundleWriter  : public GenericWriter<BundleHandle> {
+class BundleWriter  : public GenericWriter<BundleHandle> {
 public:
   BundleWriter(GuiContext*);
 

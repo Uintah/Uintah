@@ -48,7 +48,7 @@
 
 namespace SCIRun {
 
-class PSECORESHARE ChooseField : public Module {
+class ChooseField : public Module {
 private:
   GuiInt port_index_;
   GuiInt usefirstvalid_;

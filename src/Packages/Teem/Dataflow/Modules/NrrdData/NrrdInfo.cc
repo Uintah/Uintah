@@ -31,7 +31,6 @@
 //    Date   : Tue Feb  4 08:55:34 2003
 
 #include <Dataflow/Network/Module.h>
-#include <Dataflow/share/share.h>
 
 #include <Dataflow/Ports/NrrdPort.h>
 

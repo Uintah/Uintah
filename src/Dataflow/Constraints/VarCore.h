@@ -44,7 +44,6 @@
 #ifndef SCI_project_VarCore_h
 #define SCI_project_VarCore_h 1
 
-#include <Dataflow/share/share.h>
 #include <Dataflow/Constraints/manifest.h> 
 #include <Core/Geometry/Point.h>
 
@@ -53,7 +52,7 @@ namespace SCIRun {
 
 // VarCore is the data of a Variable.  It implements the polymorphism.
 class BaseVariable;
-class PSECORESHARE VarCore {
+class VarCore {
 public:
    enum VarType { PointVar, RealVar };
    // This controls operator= with different VarTypes.
@@ -84,7 +83,7 @@ public:
    VarCore& operator+=( const double r );
 
    inline bool epsilonequal( const double Epsilon, const VarCore& v );
-   friend PSECORESHARE std::ostream& operator<<( std::ostream& os, VarCore& c );
+   friend std::ostream& operator<<( std::ostream& os, VarCore& c );
 private:
    VarType vartype;
    Point pointvalue;

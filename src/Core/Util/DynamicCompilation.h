@@ -53,7 +53,7 @@
 namespace SCIRun {
 
 
-class SCICORESHARE DynamicCompilation
+class DynamicCompilation
 {
 public:
   virtual ~DynamicCompilation();

@@ -51,7 +51,7 @@
 
 namespace SCIRun {
 
-class PSECORESHARE ChangeCoordinates : public Module {
+class ChangeCoordinates : public Module {
 public:
   ChangeCoordinates(GuiContext* ctx);
   virtual ~ChangeCoordinates();

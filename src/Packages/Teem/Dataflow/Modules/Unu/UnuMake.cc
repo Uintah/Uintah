@@ -38,7 +38,6 @@
 
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
-#include <Dataflow/share/share.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <sys/stat.h>
 
@@ -53,7 +52,7 @@ namespace SCITeem {
 
 using namespace SCIRun;
 
-class PSECORESHARE UnuMake : public Module {
+class UnuMake : public Module {
 public:
   //! Constructor
   UnuMake(GuiContext*);

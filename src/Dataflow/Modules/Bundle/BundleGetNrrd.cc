@@ -42,12 +42,10 @@
 #include <Core/Malloc/Allocator.h>
 #include <Core/Datatypes/NrrdString.h>
 
-#include <Dataflow/share/share.h>
-
 using namespace SCIRun;
 using namespace std;
 
-class PSECORESHARE BundleGetNrrd : public Module {
+class BundleGetNrrd : public Module {
 public:
   BundleGetNrrd(GuiContext*);
 

@@ -87,7 +87,7 @@ typedef struct NodeInfo {
 //  friend void SCIRun::Pio(Piostream& stream, Datatypes::NodeInfo& node);
 } NodeInfo;
 
-class SCICORESHARE SepSurf : public QuadSurfField<int> {
+class SepSurf : public QuadSurfField<int> {
 public:
   Array1<QuadSurfMesh::Node::index_type> nodes; // array of all nodes
   Array1<QuadSurfMesh::Face::index_type> faces;	// array of all faces/elements

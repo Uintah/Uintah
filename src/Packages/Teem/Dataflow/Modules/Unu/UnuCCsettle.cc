@@ -46,7 +46,7 @@ namespace SCITeem {
 
 using namespace SCIRun;
 
-class PSECORESHARE UnuCCsettle : public Module {
+class UnuCCsettle : public Module {
 public:
   UnuCCsettle(GuiContext*);
 

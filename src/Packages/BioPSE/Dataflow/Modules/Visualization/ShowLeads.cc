@@ -40,13 +40,12 @@
 #include <Dataflow/Ports/MatrixPort.h>
 #include <Core/Datatypes/DenseMatrix.h>
 #include <Core/GuiInterface/GuiVar.h>
-#include <Packages/BioPSE/share/share.h>
 
 namespace BioPSE {
 
 using namespace SCIRun;
 
-class BioPSESHARE ShowLeads : public Module {
+class ShowLeads : public Module {
 public:
   ShowLeads(GuiContext *context);
 

@@ -38,8 +38,6 @@
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
 
-#include <Dataflow/share/share.h>
-
 #include <Core/Datatypes/ColumnMatrix.h>
 #include <Dataflow/Ports/MatrixPort.h>
 #include <Core/Math/Trig.h>
@@ -50,7 +48,7 @@ namespace BioPSE {
 
 using namespace SCIRun;
 
-class PSECORESHARE TrigCurrentPattern : public Module {
+class TrigCurrentPattern : public Module {
 public:
   GuiDouble magnitudeTCL_;
 

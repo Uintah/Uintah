@@ -34,8 +34,6 @@
 #include <Core/Malloc/Allocator.h>
 #include <Core/Algorithms/Geometry/SurfaceLaplacian.h>
 
-#include <Packages/BioPSE/share/share.h>
-
 #include <Dataflow/Ports/MatrixPort.h>
 #include <Dataflow/Ports/FieldPort.h>
 
@@ -52,7 +50,7 @@ namespace BioPSE {
 
 using namespace SCIRun;
 
-class BioPSESHARE AttributeTrf : public Module {
+class AttributeTrf : public Module {
 
 public:
 

@@ -52,7 +52,6 @@
 
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
-#include <Packages/Teem/share/share.h>
 #include <Dataflow/Ports/NrrdPort.h>
 #include <Core/GuiInterface/GuiVar.h>
 
@@ -81,7 +80,7 @@ struct series
   vector<string> files;
 };
 
-class TeemSHARE DicomNrrdReader : public Module 
+class  DicomNrrdReader : public Module 
 {
 
 public:

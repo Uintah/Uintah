@@ -46,7 +46,7 @@ namespace SCITeem {
 
 using namespace SCIRun;
 
-class PSECORESHARE UnuCCfind : public Module {
+class UnuCCfind : public Module {
 public:
   UnuCCfind(GuiContext*);
 

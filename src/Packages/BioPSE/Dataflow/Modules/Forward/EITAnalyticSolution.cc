@@ -54,15 +54,13 @@
 #include <iostream>
 
 
-#include <Packages/BioPSE/share/share.h>
-
 namespace BioPSE {
 
 using namespace SCIRun;
 typedef LockingHandle<TetVolField<int> >    CondTetFieldHandle;
 typedef LockingHandle<TriSurfField<int> >    CondTriFieldHandle;
 
-class BioPSESHARE EITAnalyticSolution : public Module {
+class EITAnalyticSolution : public Module {
   //! Private data
 
   //! Private methods

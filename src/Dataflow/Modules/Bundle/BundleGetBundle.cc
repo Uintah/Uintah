@@ -42,12 +42,10 @@
 #include <Dataflow/Ports/NrrdPort.h>
 #include <Core/Datatypes/NrrdString.h>
 
-#include <Dataflow/share/share.h>
-
 using namespace SCIRun;
 using namespace std;
 
-class PSECORESHARE BundleGetBundle : public Module {
+class BundleGetBundle : public Module {
 public:
   BundleGetBundle(GuiContext*);
 

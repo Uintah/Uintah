@@ -36,7 +36,6 @@
 #include <Core/Datatypes/DenseMatrix.h>
 #include <Dataflow/Ports/MatrixPort.h>
 #include <Core/GuiInterface/GuiVar.h>
-#include <Packages/BioPSE/share/share.h>
 #include <vector>
 #include <string>
 #include <fstream>
@@ -47,7 +46,7 @@ namespace BioPSE {
 
 using namespace SCIRun;
 
-class BioPSESHARE RawToDenseMatrix : public Module {
+class RawToDenseMatrix : public Module {
 public:
   RawToDenseMatrix(GuiContext *context);
 

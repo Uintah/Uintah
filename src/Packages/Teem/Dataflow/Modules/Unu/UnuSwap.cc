@@ -40,7 +40,7 @@ namespace SCITeem {
 
 using namespace SCIRun;
 
-class PSECORESHARE UnuSwap : public Module {
+class UnuSwap : public Module {
 public:
   UnuSwap(GuiContext*);
 

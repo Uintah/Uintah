@@ -57,10 +57,10 @@ using std::cerr;
 namespace SCIRun {
 
 extern "C" {
-  PSECORESHARE IPort* make_GeometryIPort(Module* module, const string& name) {
+  IPort* make_GeometryIPort(Module* module, const string& name) {
     return scinew GeometryIPort(module,name);
   }
-  PSECORESHARE OPort* make_GeometryOPort(Module* module, const string& name) {
+  OPort* make_GeometryOPort(Module* module, const string& name) {
     return scinew GeometryOPort(module,name);
   }
 }

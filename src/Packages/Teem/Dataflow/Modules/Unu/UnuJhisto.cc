@@ -47,7 +47,7 @@ namespace SCITeem {
 
 using namespace SCIRun;
 
-class PSECORESHARE UnuJhisto : public Module {
+class UnuJhisto : public Module {
 public:
   UnuJhisto(GuiContext*);
 

@@ -39,8 +39,6 @@
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
 
-#include <Dataflow/share/share.h>
-
 #include <Dataflow/Ports/NrrdPort.h>
 #include <Dataflow/Ports/ColorMapPort.h>
 
@@ -49,7 +47,7 @@ namespace SCITeem {
 
 using namespace SCIRun;
 
-class PSECORESHARE ColorMapToNrrd : public Module {
+class ColorMapToNrrd : public Module {
 public:
 
   ColorMapIPort* icmap_;

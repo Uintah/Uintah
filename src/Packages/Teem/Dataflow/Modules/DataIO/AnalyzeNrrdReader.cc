@@ -51,7 +51,6 @@
 
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
-#include <Packages/Teem/share/share.h>
 #include <Dataflow/Ports/NrrdPort.h>
 #include <Core/GuiInterface/GuiVar.h>
 
@@ -70,7 +69,7 @@ using namespace SCIRun;
 // *************************** Class: AnalyzeNrrdReader ***************************
 // ****************************************************************************
  
-class TeemSHARE AnalyzeNrrdReader : public Module 
+class  AnalyzeNrrdReader : public Module 
 {
 
 public:
