@@ -43,12 +43,14 @@ private:
   vector< vector<double> > data_;
 
 public:
-  GraphPart( PartInterface *parent = 0, const string &name="GraphPart");
+  GraphPart( PartInterface *parent = 0, const string &name="GraphPart",
+	     bool=true);
   virtual ~GraphPart();
 
   void set_num_lines( int );
   void add_values( vector<double> &);
 
+  Signal1< int > reset;
   Signal1< vector<double> & > new_values;
 };
 

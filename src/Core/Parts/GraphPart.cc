@@ -34,14 +34,12 @@
 
 namespace SCIRun {
   
-GraphPart::GraphPart( PartInterface *parent, const string &name) : 
+GraphPart::GraphPart( PartInterface *parent, const string &name, 
+		      bool initialize) : 
   Part( parent, name, this ), 
-  PartInterface( this, parent, "GraphGui" )
+  PartInterface( this, parent, "GraphGui", false )
 {
-    const type_info &ti = typeid(this); 
-    cerr << "GraphPart: typeid = " << ti.name() << endl;
-
-    parent->add_child(this); // can call add_child here
+    if ( initialize ) PartInterface::init();
 }
 
 GraphPart::~GraphPart()
@@ -53,14 +51,15 @@ GraphPart::set_num_lines( int n )
 {
   cerr << "resizing lines to " << n << endl;
   data_.resize(n);
+  reset(n);
 }
   
 void 
 GraphPart::add_values( vector<double> &v)
 {
   if (v.size() != data_.size()) {
-//    cerr << "add_values size " << v.size() << " != data_ size " 
-//	 << data_.size() << endl;
+    cerr << "add_values size " << v.size() << " != data_ size " 
+	 << data_.size() << endl;
     return;
   }
 
