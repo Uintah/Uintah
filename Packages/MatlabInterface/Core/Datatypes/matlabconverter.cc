@@ -1481,64 +1481,77 @@ void matlabconverter::mlArrayTOsciField(matlabarray &mlarray,SCIRun::FieldHandle
 	{
 		if (fs.scalarfield.isdense())
 		{
-			if (fs.scalarfield.getnumdims() == 2)
-			{ 
-				m = fs.scalarfield.getm();
-				n = fs.scalarfield.getn();
-				if ((m != 1)&&(n != 1)) 
-				{   // ignore the data and only load the mesh
-					data_at = SCIRun::Field::NONE;
+			if ((fs.snode.isempty())&&(fs.x.isempty())&&(fs.y.isempty())&&(fs.z.isempty()))
+			{
+		
+				if (fs.scalarfield.getnumdims() == 2)
+				{ 
+					m = fs.scalarfield.getm();
+					n = fs.scalarfield.getn();
+					if ((m != 1)&&(n != 1)) 
+					{   // ignore the data and only load the mesh
+						data_at = SCIRun::Field::NONE;
+					}
+					else
+					{
+						if (m != 1) fs.scalarfield.transpose();
+					}
 				}
 				else
-				{
-					if (m != 1) fs.scalarfield.transpose();
+				{   // ignore the data and only load the mesh 
+					data_at = SCIRun::Field::NONE;
 				}
-			}
-			else
-			{   // ignore the data and only load the mesh 
-				data_at = SCIRun::Field::NONE;
 			}
 		}
 		if (fs.vectorfield.isdense())
 		{
-			if (fs.vectorfield.getnumdims() == 2)
+			if ((fs.snode.isempty())&&(fs.x.isempty())&&(fs.y.isempty())&&(fs.z.isempty()))
 			{
-				m = fs.vectorfield.getm();
-				n = fs.vectorfield.getn();
-				if ((m != 3)&&(n != 3)) 
-				{
-					data_at = SCIRun::Field::NONE;
+
+				if (fs.vectorfield.getnumdims() == 2)
+				{   
+					m = fs.vectorfield.getm();
+					n = fs.vectorfield.getn();
+					if ((m != 3)&&(n != 3)) 
+					{
+						data_at = SCIRun::Field::NONE;
+					}
+					else
+					{
+						if (m != 3) fs.vectorfield.transpose();
+					}
 				}
 				else
 				{
-					if (m != 3) fs.vectorfield.transpose();
+					data_at = SCIRun::Field::NONE;
 				}
-			}
-			else
-			{
-				data_at = SCIRun::Field::NONE;
 			}
 		}
 		if (fs.tensorfield.isdense())
 		{
-			if (fs.tensorfield.getnumdims() == 2)
+			
+			if ((fs.snode.isempty())&&(fs.x.isempty())&&(fs.y.isempty())&&(fs.z.isempty()))
 			{
-				m = fs.tensorfield.getm();
-				n = fs.tensorfield.getn();
-				if ((m != 6)&&(n != 6)&&(m != 9)&&(n != 9))
+
+				if (fs.tensorfield.getnumdims() == 2)
 				{
-					data_at = SCIRun::Field::NONE;
+					m = fs.tensorfield.getm();
+					n = fs.tensorfield.getn();
+					if ((m != 6)&&(n != 6)&&(m != 9)&&(n != 9))
+					{
+						data_at = SCIRun::Field::NONE;
+					}
+					else
+					{
+						if ((m != 6)&&(m != 9)) fs.tensorfield.transpose();
+					}
 				}
 				else
 				{
-					if ((m != 6)&&(m != 9)) fs.tensorfield.transpose();
+					data_at = SCIRun::Field::NONE;
 				}
 			}
-			else
-			{
-				data_at = SCIRun::Field::NONE;
-			}
-		}			
+		}
 	}
 	
 	if ((fs.x.isdense())&&(fs.y.isdense())&&(fs.z.isdense()))
@@ -1651,21 +1664,21 @@ void matlabconverter::mlArrayTOsciField(matlabarray &mlarray,SCIRun::FieldHandle
 					{
 						SCIRun::StructQuadSurfField<double> *fieldptr;
 						fieldptr = new SCIRun::StructQuadSurfField<double>(meshH,data_at);
-//						addscalardata(fieldptr,fs.scalarfield);
+						addscalardata2d(fieldptr,fs.scalarfield);
 						scifield = static_cast<SCIRun::Field *>(fieldptr);
 					}
 					if (fs.vectorfield.isdense())
 					{
 						SCIRun::StructQuadSurfField<SCIRun::Vector> *fieldptr;
 						fieldptr = new SCIRun::StructQuadSurfField<SCIRun::Vector>(meshH,data_at);
-//						addvectordata(fieldptr,fs.vectorfield);
+						addvectordata2d(fieldptr,fs.vectorfield);
 						scifield = static_cast<SCIRun::Field *>(fieldptr);
 					}
 					if (fs.tensorfield.isdense())
 					{
 						SCIRun::StructQuadSurfField<SCIRun::Tensor> *fieldptr;
 						fieldptr = new SCIRun::StructQuadSurfField<SCIRun::Tensor>(meshH,data_at);
-//						addtensordata(fieldptr,fs.tensorfield);
+						addtensordata2d(fieldptr,fs.tensorfield);
 						scifield = static_cast<SCIRun::Field *>(fieldptr);
 					}		
 				}			
@@ -1704,21 +1717,21 @@ void matlabconverter::mlArrayTOsciField(matlabarray &mlarray,SCIRun::FieldHandle
 					{
 						SCIRun::StructHexVolField<double> *fieldptr;
 						fieldptr = new SCIRun::StructHexVolField<double>(meshH,data_at);
-//						addscalardata(fieldptr,fs.scalarfield);
+						addscalardata3d(fieldptr,fs.scalarfield);
 						scifield = static_cast<SCIRun::Field *>(fieldptr);
 					}
 					if (fs.vectorfield.isdense())
 					{
 						SCIRun::StructHexVolField<SCIRun::Vector> *fieldptr;
 						fieldptr = new SCIRun::StructHexVolField<SCIRun::Vector>(meshH,data_at);
-//						addvectordata(fieldptr,fs.vectorfield);
+						addvectordata3d(fieldptr,fs.vectorfield);
 						scifield = static_cast<SCIRun::Field *>(fieldptr);
 					}
 					if (fs.tensorfield.isdense())
 					{
 						SCIRun::StructHexVolField<SCIRun::Tensor> *fieldptr;
 						fieldptr = new SCIRun::StructHexVolField<SCIRun::Tensor>(meshH,data_at);
-//						addtensordata(fieldptr,fs.tensorfield);
+						addtensordata3d(fieldptr,fs.tensorfield);
 						scifield = static_cast<SCIRun::Field *>(fieldptr);
 					}		
 				}			
@@ -1821,21 +1834,21 @@ void matlabconverter::mlArrayTOsciField(matlabarray &mlarray,SCIRun::FieldHandle
 					{
 						SCIRun::StructQuadSurfField<double> *fieldptr;
 						fieldptr = new SCIRun::StructQuadSurfField<double>(meshH,data_at);
-//						addscalardata(fieldptr,fs.scalarfield);
+						addscalardata2d(fieldptr,fs.scalarfield);
 						scifield = static_cast<SCIRun::Field *>(fieldptr);
 					}
 					if (fs.vectorfield.isdense())
 					{
 						SCIRun::StructQuadSurfField<SCIRun::Vector> *fieldptr;
 						fieldptr = new SCIRun::StructQuadSurfField<SCIRun::Vector>(meshH,data_at);
-//						addvectordata(fieldptr,fs.vectorfield);
+						addvectordata2d(fieldptr,fs.vectorfield);
 						scifield = static_cast<SCIRun::Field *>(fieldptr);
 					}
 					if (fs.tensorfield.isdense())
 					{
 						SCIRun::StructQuadSurfField<SCIRun::Tensor> *fieldptr;
 						fieldptr = new SCIRun::StructQuadSurfField<SCIRun::Tensor>(meshH,data_at);
-//						addtensordata(fieldptr,fs.tensorfield);
+						addtensordata2d(fieldptr,fs.tensorfield);
 						scifield = static_cast<SCIRun::Field *>(fieldptr);
 					}		
 				}			
@@ -1871,21 +1884,21 @@ void matlabconverter::mlArrayTOsciField(matlabarray &mlarray,SCIRun::FieldHandle
 					{
 						SCIRun::StructHexVolField<double> *fieldptr;
 						fieldptr = new SCIRun::StructHexVolField<double>(meshH,data_at);
-//						addscalardata(fieldptr,fs.scalarfield);
+						addscalardata3d(fieldptr,fs.scalarfield);
 						scifield = static_cast<SCIRun::Field *>(fieldptr);
 					}
 					if (fs.vectorfield.isdense())
 					{
 						SCIRun::StructHexVolField<SCIRun::Vector> *fieldptr;
 						fieldptr = new SCIRun::StructHexVolField<SCIRun::Vector>(meshH,data_at);
-//						addvectordata(fieldptr,fs.vectorfield);
+						addvectordata3d(fieldptr,fs.vectorfield);
 						scifield = static_cast<SCIRun::Field *>(fieldptr);
 					}
 					if (fs.tensorfield.isdense())
 					{
 						SCIRun::StructHexVolField<SCIRun::Tensor> *fieldptr;
 						fieldptr = new SCIRun::StructHexVolField<SCIRun::Tensor>(meshH,data_at);
-//						addtensordata(fieldptr,fs.tensorfield);
+						addtensordata3d(fieldptr,fs.tensorfield);
 						scifield = static_cast<SCIRun::Field *>(fieldptr);
 					}		
 				}			
@@ -2211,6 +2224,72 @@ void matlabconverter::addscalardata(FIELDPTR fieldptr,matlabarray mlarray)
 	for (long p=0; p < numdata; p++) { fdata[p] = fielddata[p]; }
 }
 
+
+template <class FIELDPTR> 
+void matlabconverter::addscalardata2d(FIELDPTR fieldptr,matlabarray mlarray)
+{
+	std::vector<double> fielddata;
+	
+	mlarray.getnumericarray(fielddata); // cast and copy the real part of the data
+
+	fieldptr->resize_fdata();   // make sure it is resized to number of nodes/edges/faces/cells or whatever
+	SCIRun::FData2d<double>& fdata = fieldptr->fdata();  // get a reference to the actual data
+	
+	
+	long numdata = static_cast<long>(fdata.size());
+	if (numdata > fielddata.size()) numdata = fielddata.size(); // make sure we do not copy more data than there are elements
+	
+	double **data;
+	int dim1,dim2;
+	
+	data = fdata.get_dataptr();
+	dim1 = fdata.dim1();
+	dim2 = fdata.dim2();
+	
+	long p,q,r;
+	p = 0;
+	for (q=0;(q<dim1)&&(p < numdata);q++)
+		for (r=0;(r<dim2)&&(p < numdata);r++)
+		{
+			data[q][r] = fielddata[p];
+			p++;
+		}
+}
+
+template <class FIELDPTR> 
+void matlabconverter::addscalardata3d(FIELDPTR fieldptr,matlabarray mlarray)
+{
+	std::vector<double> fielddata;
+	
+	mlarray.getnumericarray(fielddata); // cast and copy the real part of the data
+
+	fieldptr->resize_fdata();   // make sure it is resized to number of nodes/edges/faces/cells or whatever
+	SCIRun::FData3d<double>& fdata = fieldptr->fdata();  // get a reference to the actual data
+	
+	
+	long numdata = static_cast<long>(fdata.size());
+	if (numdata > fielddata.size()) numdata = fielddata.size(); // make sure we do not copy more data than there are elements
+	
+	double ***data;
+	int dim1,dim2,dim3;
+	
+	data = fdata.get_dataptr();
+	dim1 = fdata.dim1();
+	dim2 = fdata.dim2();
+	dim3 = fdata.dim3();
+	
+	long p,q,r,s;
+	p = 0;
+	for (q=0;(q<dim1)&&(p < numdata);q++)
+		for (r=0;(r<dim2)&&(p < numdata);r++)
+			for (s=0;(s<dim3)&&(p <numdata); s++)
+			{
+				data[q][r][s] = fielddata[p];
+				p++;
+			}
+}
+
+
 template <class FIELDPTR> 
 void matlabconverter::addvectordata(FIELDPTR fieldptr,matlabarray mlarray)
 {
@@ -2228,6 +2307,70 @@ void matlabconverter::addvectordata(FIELDPTR fieldptr,matlabarray mlarray)
 	{ 
 		fdata[q++] = SCIRun::Vector(fielddata[p],fielddata[p+1],fielddata[p+2]); 
 	}
+}
+
+template <class FIELDPTR> 
+void matlabconverter::addvectordata2d(FIELDPTR fieldptr,matlabarray mlarray)
+{
+	std::vector<double> fielddata;
+	mlarray.getnumericarray(fielddata); // cast and copy the real part of the data
+
+	fieldptr->resize_fdata();   // make sure it is resized to number of nodes/edges/faces/cells or whatever
+	SCIRun::FData2d<SCIRun::Vector>& fdata = fieldptr->fdata();  // get a reference to the actual data
+	
+	long numdata = fielddata.size();
+	if (numdata > (3*fdata.size())) numdata = (3*fdata.size()); // make sure we do not copy more data than there are elements
+	
+	
+	SCIRun::Vector **data;
+	int dim1,dim2;
+	
+	data = fdata.get_dataptr();
+	dim1 = fdata.dim1();
+	dim2 = fdata.dim2();
+	
+	long q,r,p;
+	p = 0;
+	for (q=0;(q<dim1)&&(p < numdata);q++)
+		for (r=0;(r<dim2)&&(p < numdata);r++)
+		{
+			data[q][r] = SCIRun::Vector(fielddata[p],fielddata[p+1],fielddata[p+2]); 
+			p+=3;
+		}
+	
+}
+
+
+template <class FIELDPTR> 
+void matlabconverter::addvectordata3d(FIELDPTR fieldptr,matlabarray mlarray)
+{
+	std::vector<double> fielddata;
+	mlarray.getnumericarray(fielddata); // cast and copy the real part of the data
+
+	fieldptr->resize_fdata();   // make sure it is resized to number of nodes/edges/faces/cells or whatever
+	SCIRun::FData3d<SCIRun::Vector>& fdata = fieldptr->fdata();  // get a reference to the actual data
+	
+	long numdata = fielddata.size();
+	if (numdata > (3*fdata.size())) numdata = (3*fdata.size()); // make sure we do not copy more data than there are elements
+	
+	SCIRun::Vector ***data;
+	int dim1,dim2,dim3;
+	
+	data = fdata.get_dataptr();
+	dim1 = fdata.dim1();
+	dim2 = fdata.dim2();
+	dim3 = fdata.dim3();
+	
+	long q,r,s,p;
+	p = 0;
+	for (q=0;(q<dim1)&&(p < numdata);q++)
+		for (r=0;(r<dim2)&&(p < numdata);r++)
+			for (s=0;(s<dim3)&&(p <numdata);s++)
+			{
+				data[q][r][s] = SCIRun::Vector(fielddata[p],fielddata[p+1],fielddata[p+2]); 
+				p+=3;
+			}
+	
 }
 
 template <class FIELDPTR> 
@@ -2278,6 +2421,163 @@ void matlabconverter::addtensordata(FIELDPTR fieldptr,matlabarray mlarray)
 	}
 }
 
+
+
+template <class FIELDPTR> 
+void matlabconverter::addtensordata2d(FIELDPTR fieldptr,matlabarray mlarray)
+{
+	std::vector<double> fielddata;
+	mlarray.getnumericarray(fielddata); // cast and copy the real part of the data
+
+	fieldptr->resize_fdata();   // make sure it is resized to number of nodes/edges/faces/cells or whatever
+	SCIRun::FData2d<SCIRun::Tensor>& fdata = fieldptr->fdata();  // get a reference to the actual data
+	
+	SCIRun::ImageMesh::Cell::iterator r(0);
+	
+	long numdata = fielddata.size();
+	if (mlarray.getm() == 6)
+	{ // Compressed tensor data : xx,yy,zz,xy,xz,yz
+		if (numdata > (6*fdata.size())) numdata = (6*fdata.size()); // make sure we do not copy more data than there are elements
+
+		SCIRun::Tensor dummy;
+
+		SCIRun::Tensor **data;
+		int dim1,dim2;
+	
+		data = fdata.get_dataptr();
+		dim1 = fdata.dim1();
+		dim2 = fdata.dim2();
+				
+		long q,r,p;
+		p = 0;
+		for (q=0;(q<dim1)&&(p < numdata);q++)
+			for (r=0;(r<dim2)&&(p < numdata);r++)
+			{
+				dummy.mat_[0][0] = fielddata[p];
+				dummy.mat_[0][1] = fielddata[p+3];
+				dummy.mat_[0][2] = fielddata[p+4];
+				dummy.mat_[1][1] = fielddata[p+1];
+				dummy.mat_[1][2] = fielddata[p+5];
+				dummy.mat_[2][2] = fielddata[p+2];
+			
+				data[q][r] = dummy;
+				p+=6;
+			}
+
+	}
+	else
+	{  // UnCompressed tensor data : xx,xy,xz,yx,yy,yz,zx,zy,zz 
+		if (numdata > (9*fdata.size())) numdata = (9*fdata.size()); // make sure we do not copy more data than there are elements
+		SCIRun::Tensor dummy;
+		
+		SCIRun::Tensor **data;
+		int dim1,dim2;
+	
+		data = fdata.get_dataptr();
+		dim1 = fdata.dim1();
+		dim2 = fdata.dim2();
+				
+		long q,r,p;
+		p = 0;
+		for (q=0;(q<dim1)&&(p < numdata);q++)
+			for (r=0;(r<dim2)&&(p < numdata);r++)
+			{	
+				dummy.mat_[0][0] = fielddata[p++];
+				dummy.mat_[0][1] = fielddata[p++];
+				dummy.mat_[0][2] = fielddata[p++];
+				dummy.mat_[1][0] = fielddata[p++];
+				dummy.mat_[1][1] = fielddata[p++];
+				dummy.mat_[1][2] = fielddata[p++];
+				dummy.mat_[2][0] = fielddata[p++];
+				dummy.mat_[2][1] = fielddata[p++];
+				dummy.mat_[2][2] = fielddata[p++];
+				data[q][r] = dummy; 
+			}
+	}
+}
+
+
+template <class FIELDPTR> 
+void matlabconverter::addtensordata3d(FIELDPTR fieldptr,matlabarray mlarray)
+{
+	std::vector<double> fielddata;
+	mlarray.getnumericarray(fielddata); // cast and copy the real part of the data
+
+	fieldptr->resize_fdata();   // make sure it is resized to number of nodes/edges/faces/cells or whatever
+	SCIRun::FData3d<SCIRun::Tensor>& fdata = fieldptr->fdata();  // get a reference to the actual data
+	
+	SCIRun::LatVolMesh::Cell::iterator r;
+	
+	long numdata = fielddata.size();
+	if (mlarray.getm() == 6)
+	{ // Compressed tensor data : xx,yy,zz,xy,xz,yz
+		if (numdata > (6*fdata.size())) numdata = (6*fdata.size()); // make sure we do not copy more data than there are elements
+
+		SCIRun::Tensor dummy;
+
+		SCIRun::Tensor ***data;
+		int dim1,dim2,dim3;
+	
+		data = fdata.get_dataptr();
+		dim1 = fdata.dim1();
+		dim2 = fdata.dim2();
+		dim3 = fdata.dim3();
+				
+		long q,r,s,p;
+		p = 0;
+		for (q=0;(q<dim1)&&(p < numdata);q++)
+			for (r=0;(r<dim2)&&(p < numdata);r++)
+				for (s=0;(s<dim3)&&(p < numdata);s++)
+				{
+					dummy.mat_[0][0] = fielddata[p];
+					dummy.mat_[0][1] = fielddata[p+3];
+					dummy.mat_[0][2] = fielddata[p+4];
+					dummy.mat_[1][1] = fielddata[p+1];
+					dummy.mat_[1][2] = fielddata[p+5];
+					dummy.mat_[2][2] = fielddata[p+2];
+			
+					data[q][r][s] = dummy;
+					p+=6;
+				}
+
+	}
+	else
+	{  // UnCompressed tensor data : xx,xy,xz,yx,yy,yz,zx,zy,zz 
+		if (numdata > (9*fdata.size())) numdata = (9*fdata.size()); // make sure we do not copy more data than there are elements
+		SCIRun::Tensor dummy;
+		
+		SCIRun::Tensor ***data;
+		int dim1,dim2,dim3;
+	
+		data = fdata.get_dataptr();
+		dim1 = fdata.dim1();
+		dim2 = fdata.dim2();
+		dim3 = fdata.dim3();
+				
+		long q,r,s,p;
+		p = 0;
+		for (q=0;(q<dim1)&&(p < numdata);q++)
+			for (r=0;(r<dim2)&&(p < numdata);r++)
+				for (s=0; (s<dim3)&&(p <numdata); s++)
+				{	
+					dummy.mat_[0][0] = fielddata[p++];
+					dummy.mat_[0][1] = fielddata[p++];
+					dummy.mat_[0][2] = fielddata[p++];
+					dummy.mat_[1][0] = fielddata[p++];
+					dummy.mat_[1][1] = fielddata[p++];
+					dummy.mat_[1][2] = fielddata[p++];
+					dummy.mat_[2][0] = fielddata[p++];
+					dummy.mat_[2][1] = fielddata[p++];
+					dummy.mat_[2][2] = fielddata[p++];
+					data[q][r][s] = dummy; 
+				}
+	}
+}
+
+
+
+
+
 // Templates for adding mesh components
 
 template <class MESH>
@@ -2297,7 +2597,7 @@ void matlabconverter::addnodes(SCIRun::LockingHandle<MESH> meshH,matlabarray mla
 	std::vector<SCIRun::Point> points(numnodes);
 	
 	// FUNCTION TO BE ADDED
-	// meshH->reserve_nodes(numnodes);
+	meshH->node_reserve(numnodes);
 	
 	long p,q;
 	for (p = 0, q = 0; p < numnodes; p++, q+=3)
@@ -2334,14 +2634,13 @@ void matlabconverter::addedges(SCIRun::LockingHandle<MESH> meshH,matlabarray mla
 		for (p = 0; p < size; p++) { mldata[p]--;}
 	}
 	
-	// meshH->reserve_edges(mldata.getn());
+	meshH->elem_reserve(mlarray.getn());
 	
 	for (p = 0, q = 0; p < mlarray.getn(); p++, q += 2)
 	{
 		meshH->add_edge(typename MESH::Node::index_type(mldata[q]), typename MESH::Node::index_type(mldata[q+1]));
 	}
 		  
-	// meshH->add_edges(mldata);
 }
 
 
@@ -2374,7 +2673,7 @@ void matlabconverter::addfaces(SCIRun::LockingHandle<MESH> meshH,matlabarray mla
 	m = mlarray.getm();
 	n = mlarray.getn();
 	
-	// meshH->reserve_faces(n);	  
+	meshH->elem_reserve(n);	  
 			  	  
 	typename MESH::Node::array_type face(m);  
 	
@@ -2420,7 +2719,7 @@ void matlabconverter::addcells(SCIRun::LockingHandle<MESH> meshH,matlabarray mla
 	m = mlarray.getm();
 	n = mlarray.getn();
 	
-	// meshH->reserve_faces(n);	  
+	meshH->elem_reserve(n);	  
 			  	  
 	typename MESH::Node::array_type cell(m);  
 	
@@ -2499,15 +2798,23 @@ matlabconverter::fieldstruct matlabconverter::analyzefieldstruct(matlabarray &ma
 	if (index > -1) fs.scalarfield = ma.getfield(0,index);
 	index = ma.getfieldnameindexCI("data");
 	if (index > -1) fs.scalarfield = ma.getfield(0,index);
+	index = ma.getfieldnameindexCI("potvals");
+	if (index > -1) fs.scalarfield = ma.getfield(0,index);
 	index = ma.getfieldnameindexCI("scalarfield");
+	if (index > -1) fs.scalarfield = ma.getfield(0,index);
+	index = ma.getfieldnameindexCI("scalardata");
 	if (index > -1) fs.scalarfield = ma.getfield(0,index);
 
 	// FIELDEDGE MATRIX
 	index = ma.getfieldnameindexCI("vectorfield");
 	if (index > -1) fs.vectorfield = ma.getfield(0,index);
+	index = ma.getfieldnameindexCI("vectordata");
+	if (index > -1) fs.vectorfield = ma.getfield(0,index);
 
 	// FIELDFACE MATRIX
 	index = ma.getfieldnameindexCI("tensorfield");
+	if (index > -1) fs.tensorfield = ma.getfield(0,index);
+	index = ma.getfieldnameindexCI("tensordata");
 	if (index > -1) fs.tensorfield = ma.getfield(0,index);
 
 	// FIELDCELL MATRIX
