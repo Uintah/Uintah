@@ -1,7 +1,4 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<!DOCTYPE dir SYSTEM "../../../../doc/dirspec.dtd">
-<?xml-stylesheet href="../../../../doc/dirspec.xsl" type="text/xsl"?>
-<?cocoon-process type="xslt"?>
+
 <!--
   The contents of this file are subject to the University of Utah Public
   License (the "License"); you may not use this file except in compliance
@@ -19,27 +16,33 @@
   University of Utah. All Rights Reserved.
 -->
 
-<dir name="Dataflow/Network">
+<chapter>
+  <title>Dataflow Programming</title>
 
-<!-- ************** phase 1 content ************** -->
+  <sect1>
+    <para>
+      This chapter describes the elements of a SCIRun dataflow
+      program.
+    </para>
+  </sect1>
 
-  <fit>
-  <!-- describe how this directory fits into SCIRun - why does it 
-       exist, how does SCIRun benefit from it, etc. -->
-    <p>
+  <sect1>
+    <title>Introduction</title>
+
+    <para>
       Dataflow/Network provides the basic functionality of the SCIRun
       dataflow paradigm.  The notions of Modules, Ports, Connections
       and Networks are defined here.  It also provides the
       implementation for the NetworkEditor, which is the tool used by
       a network designer to build Networks.
-    </p>
-  </fit>
+    </para>
 
-  <use>
-    <why>
-    <!-- Discuss why a developer would need or want to use the
-         functions and/or classes in this directory. -->
-      <p>
+  </sect1>
+
+  <sect1>
+    <title>Programming SCIRun Dataflow</title>
+
+      <para>
         One of the useful features of SCIRun is that it can easily
 	be extended by developing new modules (algorithms) and new 
 	ports (datatypes) for it.  To do this, a developer would
@@ -47,34 +50,21 @@
 	in this directory.  By inheriting from these classes, a
 	developer can focus on the code needed to quickly implement
 	a new algorithm.
-      </p>
-    </why>
+      </para>
 
-    <when>
-    <!-- Discuss when or where to use the functions and classes in
-         this directory: From within modules?, when a certain event
-	 occurs? -->
-      <p>
+      <para>
         Most of the code in this directory is meant to be used
 	internally by the SCIRun PSE only.  There are three instances
 	in which a developer would use code in this directory
 	external to the PSE: When writing modules, When writing ports,
 	and when a developer would like to post a message to the 
 	NetworkEditor's message window.
-      </p>
-    </when>
-  </use>
+      </para>
 
-<!-- ************** phase 2 content ************** -->
+     <sect2>
+       <title>Module</title>
 
-  <definition>
-  <!-- Give the definition for a term, or concept, that is embodied
-       by this directory.  Please provide feature length rather than
-       short story definitions. -->
-    <term>
-      Module
-    </term>
-    <p>
+    <para>
       From the most abstract perspective, a module is considered to
       be a one or more algorithms that solves a single, specific and
       coarse grained, problem.  For example, suppose you have a large
@@ -83,42 +73,42 @@
       to solve this problem such as bubble sort, quick sort, etc.
       A module that solves this problem, likely named Sort, would
       be a collection of one or more of these algorithms.
-    </p>
+    </para>
 
-    <p>
+    <para>
       On a slightly more concrete level, a module can be compared 
       to a function or procedure (of a high level text based
       programming language) that also implements one or more
       algorithms to solve a specific problem.  The prototype for
       such a function (in C like syntax) might look like this:
-    </p>
+    </para>
 
-    <code>
+    <computeroutput>
         int Sort(string *words_to_sort, int alg_to_use);
-    </code>
+    </computeroutput>
 
-    <p>
+    <para>
       Where words_to_sort is a random , possibly large, list of words
       to be sorted (the data), and alg_to_use is a single integer used
       to control which of the implemented algorithms to use.
-    </p>
+    </para>
 
-    <p>
+    <para>
       The Sort module is identical to the Sort function in many ways:
       They both have input (data and control), they both have output,
       they both have a single point of entry for execution, and they
       can both be used modularly in any program, provided that they are
       simultaneously specific and general enough to be used universally.
-    </p>
+    </para>
 
-    <p>
+    <para>
       Some important differences include: The Sort module seperates
       the mode for communicating inputs of different kinds (i.e. data
       is treated differently and seperately from control) and the sort
       module can have more than one output.
-    </p>
+    </para>
     
-    <p>
+    <para>
       On the lowest level a module is exactly like the function.  The
       module is actually implemented as a C++ class with one member
       function named execute().  The execute member function is
@@ -129,9 +119,9 @@
       data to the execute function through formal parameters, instead
       it passes them through the use of seperate member functions
       (pseudo code):
-    </p>
+    </para>
     
-    <code>
+    <computeroutput>
       void execute() {
         string *words_to_sort;
 	int alg_to_use;
@@ -143,67 +133,57 @@
 	
 	send_data_to_output_port(words_to_sort);
       }
-    </code>
+    </computeroutput>
 
-    <p>
+    <para>
       Modules are often manifested as graphical boxes with ports, 
       a name, a timer and a progress bar.  Modules can exist outside
       this graphical representation as well.  Outside it's graphical
       manifestation, a module can be viewed as a node in an dataflow
       graph.
-    </p>
-  </definition>
+    </para>
+   </sect2>
 
-  <definition>
-    <term>
-      Port
-    </term>
-    <p>
+   <sect2>
+     <title>Port</title>
+    <para>
       Ports are the analog of formal paramaters of a C function.
       They are used to connect modules together and they enforce type
       matching.
-    </p>
-  </definition>
+    </para>
+   </sect2>
 
-  <definition>
-    <term>
-      Connection
-    </term>
-    <p>
-    </p>
-  </definition>
+   <sect2>
+     <title>Connection</title>
+    <para>
+    </para>
+   </sect2>
 
-  <definition>
-    <term>
-      Network
-    </term>
-    <p>
-    </p>
-  </definition>
+   <sect2>
+     <title>Network</title>
+    <para>
+    </para>
+   </sect2>
 
-  <definition>
-    <term>
-      Network Editor
-    </term>
-    <p>
-    </p>
-  </definition>
+   <sect2>
+     <title>Network Editor</title>
+    <para>
+    </para>
+   </sect2>
 
-  <example>
-  <!-- give an example of how to use the classes and/or functions
-       here.  Again, more is better, however give only exactly 
-       that which is being explained, no superfluous text (i.e.
-       please don't cut and paste from existing code.) -->
+   <sect2>
+     <title>Examples</title>
+   
     
-    <p>
+    <para>
       To get data into and out of your module's execute function, you
       need to use the module's ports.  In order to use the ports, 
       you first need to get a pointer to a specific port.  Then, call
       that port's get() function with a handle to the type of data
       expected on the port.  On success, the handle passed to get()
       will represent the data that is on that input port:
-    </p>
-    <code>
+    </para>
+    <computeroutput>
       #include &lt;Dataflow/Ports/MatrixPort.h&gt;
 
       ...
@@ -226,13 +206,8 @@
         
 	...
       }
-    </code>
+    </computeroutput>
+   </sect2>
+  </sect1>
+</chapter>
 
-  </example>
-</dir>
-
-<!-- author comments: suggestions for new/better tags for this xml file
-
-  Hey, I think this file should address known bugs, i.e. have a <bugs> tag.
-
--->

@@ -1,7 +1,3 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<!DOCTYPE dir SYSTEM "../../../../doc/dirspec.dtd">
-<?xml-stylesheet href="../../../../doc/dirspec.xsl" type="text/xsl"?>
-<?cocoon-process type="xslt"?>
 
 <!--
   The contents of this file are subject to the University of Utah Public
@@ -20,16 +16,20 @@
   University of Utah. All Rights Reserved.
 -->
 
-<dir name="Core/Persistent">
+<chapter>
+  <title>Persistent Data</title>
 
-<!-- ************** phase 1 content ************** -->
+  <sect1>
+    <para>
+      This chapter explains how SCIRun reads and writes data to and
+      from streams.
+    </para>
+  </sect1>
 
-  <fit>
-  <!-- describe how this directory fits into SCIRun - why does it 
-       exist, how does SCIRun benefit from it, etc. -->
-    <p>
-how it fits
+  <sect1>
+    <title>Introduction</title>
 
+    <para>
      To maximize their usefulness, all software systems must be able
      to store data to disk at the end of execution, and retrieve that
      data later for additional processing.  As the SW system becomes
@@ -39,21 +39,21 @@ how it fits
      and retrieval.  Core/Persistent encapsulates the SCIRun data
      storage and retrieval philosophy which attempts to provide such a
      solution to this problem.
+    </para>
 
+    <para>
      Core/Persistent provides a direct and uniform method for saving
      to disk the complex data structures used by SCIRun.  Through its
      use, a user can save and later retrieve data that is distributed
      across a large number of classes and sub-classes, and need not
      worry about manually handling dynamically allocated (and possibly
      cross referenced) memory.  
-    </p>
-  </fit>
+    </para>
+  </sect1>
 
-  <use>
-    <why>
-    <!-- Discuss why a developer would need or want to use the
-         functions and/or classes in this directory. -->
-      <p>
+  <sect1>
+    <title>Programming with SCIRun Persistent data</title>
+      <para>
        Because most of the code added to SCIRun will use a large
        number of complex SCIRun data structures, it is necessary for
        the developer to be able to manage storing data in a consistent
@@ -62,14 +62,9 @@ how it fits
        structures.  It also allows the user to implement these
        routines in his or her code and thus have a complete and
        consistent method of storing and retrieving data.
-      </p>
-    </why>
+      </para>
 
-    <when>
-    <!-- Discuss when or where to use the functions and classes in
-         this directory: From within modules?, when a certain event
-	 occurs? -->
-      <p>
+      <para>
        Many module implementors will need to include routines in their
        module for saving to and retrieve data from disk. Software
        engineers who develop parts of the SCIRun core will also many
@@ -78,9 +73,9 @@ how it fits
        easily define routines to save the data specifically created by
        their codes as well as save the data stored in any of the
        SCIRun data structures that they use.
-      </p>
+      </para>
 
-      <p>
+      <para>
        Specifically, programmers will, for the most part, use the
        Core/Persistent paradigm in "Datatypes" files.  Programmers are
        also encouraged to use Core/Persistent for their own data
@@ -90,29 +85,20 @@ how it fits
        encourages the implementor to consider and provide for the
        ability to handle multiple "versions" of data files,
        transparently to the rest of the code.
-      </p>
+      </para>
 
-    </when>
-  </use>
-
-<!-- ************** phase 2 content ************** -->
-
-  <definition>
-    <term>
-      Persistent Data
-    </term>
-    <p>
+      <sect2>
+        <title>Persistent Data</title>
+    <para>
       Persistent Data is a general term for any data that will at some
       point need to be written to disk, and then, later, read back in
       for further processing.
-    </p>
-  </definition>
+    </para>
+      </sect2>
 
-  <definition>
-    <term>
-      Persistent Object
-    </term>
-    <p>
+      <sect2>
+        <title>Persistent Object</title>
+    <para>
       A Persistent Object is a specific instance of "Persistent Data"
       and include all SCIRun datatypes that have been subclassed from
       the Persistent class.  (Classes found in Core/Datatypes usually
@@ -121,15 +107,13 @@ how it fits
       restore themselves from disk.  The data is stored on disk by
       specifying the "type" of object that created the data and
       version of that object.
-    </p>
-  </definition>
+    </para>
+      </sect2>
+      
+      <sect2>
+        <title>PersistentTypeID</title>
 
-
-  <definition>
-    <term>
-      PersistentTypeID
-    </term>
-    <p>
+    <para>
       Each "Persistent Object" has an unique "type id".  This type id
       allows SCIRun to load the object back from disk by first,
       creating a "new" object of this type, and then telling the
@@ -138,30 +122,25 @@ how it fits
       string that specifies the type), the parent class of the object,
       and the "maker" function that will be used to create new objects
       of this type.
-    </p>
-    <p>
+    </para>
+    <para>
       For templated types, the "type_name()" function is implemented.
       This function turns, for example, the type vector&lt;int&gt;, into the
       string, "vector&lt;int&gt;".  
-    </p>
-  </definition>
-
-  <definition>
-    <term>
-      Maker Functions
-    </term>
-    <p>
+    </para>
+      </sect2>
+      <sect2>
+        <title>Maker Functions</title>
+    <para>
       Maker functions are used to created a new Persistent Object.
       They are very straight forward consisting of code that
       allocates an object and then returns a pointer to the object.
-    </p>
-  </definition>
+    </para>
+      </sect2>
 
-  <definition>
-    <term>
-      Pio Streams
-    </term>
-    <p>
+      <sect2>
+        <title>Pio Streams</title>
+    <para>
       Pio Streams are used by Persistent Objects to read/write data
       from/to disk.  There are several types of Pio Streams, all of
       which inherit from the base class Piostream.  The subclasses of
@@ -169,32 +148,42 @@ how it fits
       GzipPiostream.  These correspond to binary output, text output,
       and zipped output.  (The type of output is usually set by the
       user at the time the data is to be written out.)
-    </p>
-  </definition>
+    </para>
+      </sect2>
 
-  <definition>
-    <term>
-      Pio() vs io()
-    </term>
-    <p>
+      <sect2>
+        <title>Pio() versus io()</title>
+
+    <para>
       Every persistent object has an a member function (and thus needs
       to implement) the io() function.  This function (an example is
       given below) implements the saving and loading of the data
       unique to that object.  The Pio() functions are not member
       functions.  They are defined for all data types and simply are
       used to start the saving of the data (see below.)
-    </p>
-  </definition>
+    </para>
 
-  <example>
-    <p>
+      </sect2>
+    </sect1>
+ 
+    <sect1>
+      <title>Examples</title>
+
+    <para>
       In order to make a "Datatype" (or any data structure for that
       matter) persistent, you must follow these steps:
+    </para>
 
-      <pre>
-      1) Inherit from class Persistent (or from class Datatype.)
-      2) Add the following to your class:
-
+      <para>
+        <orderedlist>
+          <listitem><para>
+      Inherit from class Persistent (or from class Datatype.)
+      </para>
+      </listitem>
+      <listitem><para>
+      Add the following to your class:
+      </para>
+      <computeroutput>
  	 void    io(Piostream &amp;stream);
 	 static  PersistentTypeID type_id;
 
@@ -203,39 +192,56 @@ how it fits
 
        private:
          static Persistent *maker();
-      </pre>
-    </p>
+      </computeroutput>
+    </listitem>
+    </orderedlist>
+    </para>
 
-    <p>
-      To save a persistent object, you simply create a persistent stream:
-
+    <para>
+      To save a persistent object, you simply create a persistent
+      stream:
+    </para>
+ 
+    <computeroutput>
       Piostream * stream = auto_istream( file_name );
+    </computeroutput>
 
+    <para>
       Then you call the Pio function for the object, with the stream:
+    </para>
 
+    <computeroutput>
       Pio( *stream, object );
-
+    </computeroutput>
+    
+    <para>
       The Pio() function will use the io() function provided by (or,
       in the case of built in types, provided for) the type.
-    </p>
+    </para>
 
-    <p>
+    <para>
       All Persistent objects need to define their current version:
+    </para>
+
+    <computeroutput>
 
       // Pio defs.
       const int MY_CLASS_VERSION = 1;      
+    </computeroutput>
 
+    <para>
       The version information can be used to successfully read in old
       data files.  Various "new" object data members can be defaulted
       to a reasonable value for these old data files.
-    </p>
+    </para>
 
-    <p>
+    <para>
       All Persistent objects must implement the io() function.  This
       is the function that will be called by Pio() to save/load the
       object.  This is an example io() function:
+    </para>
       
-      <pre>
+    <computeroutput>
       void 
       MyClass::io( Piostream &amp; stream )
       {
@@ -259,13 +265,7 @@ how it fits
 	// All input/output ends with this line:
 	stream.end_class();
       }
-      </pre>
-    </p>
-  </example>
-</dir>
+      </computeroutput>
+    </sect1>
+</chapter>
 
-<!-- author comments: suggestions for new/better tags for this xml file
-
-  Hey, I think this file should address known bugs, i.e. have a <bugs> tag.
-
--->
