@@ -6,9 +6,8 @@
 #include <Packages/Uintah/Core/Grid/Box.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Packages/Uintah/Core/Exceptions/InvalidGrid.h>
-#include <Packages/Uintah/Core/Exceptions/InvalidGrid.h>
-#include <Packages/Uintah/Core/Grid/BoundCondFactory.h>
-#include <Packages/Uintah/Core/Grid/BoundCondBase.h>
+#include <Packages/Uintah/Core/Grid/BoundCondReader.h>
+
 
 #include <Core/Geometry/BBox.h>
 #include <Core/Malloc/Allocator.h>
@@ -531,74 +530,33 @@ void Level::setBCTypes()
 
 void Level::assignBCS(const ProblemSpecP& grid_ps)
 {
-
-  // Read the bcs for the grid
   ProblemSpecP bc_ps = grid_ps->findBlock("BoundaryConditions");
   if (bc_ps == 0)
     return;
-  int nFaces = 0;  // counter for bulletproofing
-  for (ProblemSpecP face_ps = bc_ps->findBlock("Face");
-       face_ps != 0; face_ps=face_ps->findNextBlock("Face")) {
-    map<string,string> values;
-    face_ps->getAttributes(values);
 
-    Patch::FaceType face_side = Patch::invalidFace;
-    std::string fc = values["side"];
-    if (fc == "x-") {
-      face_side = Patch::xminus;
-      nFaces +=1;
-    }
-    else if (fc ==  "x+") {
-      face_side = Patch::xplus;
-      nFaces +=2;
-    }
-    else if (fc ==  "y-") {
-      face_side = Patch::yminus;
-      nFaces +=3;
-    }
-    else if (fc ==  "y+") {
-      face_side = Patch::yplus;
-      nFaces +=4;
-    }
-    else if (fc ==  "z-") {
-      face_side = Patch::zminus;
-      nFaces +=5;
-    }
-    else if (fc == "z+") {
-      face_side = Patch::zplus;
-      nFaces +=6;
-    }
+  BCReader reader;
+  reader.read(bc_ps);
 
-    BCData bc_data;
-    BoundCondFactory::create(face_ps,bc_data);
-#if 0
-    for(int i=0;i<(int)bcs.size();i++)
-      allbcs.push_back(bcs[i]);
-#endif
-
-    for(patchIterator iter=d_virtualAndRealPatches.begin(); iter != d_virtualAndRealPatches.end(); 
-	iter++){
+  for (Patch::FaceType face_side = Patch::startFace; 
+       face_side <= Patch::endFace; face_side=Patch::nextFace(face_side)) {
+    
+    for(patchIterator iter=d_virtualAndRealPatches.begin(); 
+	iter != d_virtualAndRealPatches.end(); iter++){
       Patch* patch = *iter;
       Patch::BCType bc_type = patch->getBCType(face_side);
+      BCData bc_data;
+      BCDataArray bcdata_array;
+      reader.getBC(face_side,bc_data);
+      bcdata_array = reader.getBC(face_side);
       if (bc_type == Patch::None) {
 	patch->setBCValues(face_side,bc_data);
+	patch->setArrayBCValues(face_side,bcdata_array);
       }
-#if 0
-      if (bc_type == Patch::None) {
-	cerr << "face side = " << face_side << endl;
-	BoundCondBase* new_bcs = patch->getBCValues(0,"Pressure",face_side);
-	cerr << "BC = " << new_bcs->getType() << endl;
-      }
-#endif
-    }  // end of patch iterator
-  } // end of face_ps
-  
-  //Should this be an exception? -todd
-  if (nFaces != 21) { 
-    cerr << "Error: Boundary conditions are not specified on all the faces\n";
-    cerr << "       nFaces = " << nFaces << "\n";
-    Thread::exitAll(1);
+    }  // end of patchIterator
   }
+
+  
+
 }
 
 Box Level::getBox(const IntVector& l, const IntVector& h) const

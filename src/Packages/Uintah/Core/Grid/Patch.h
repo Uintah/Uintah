@@ -4,6 +4,7 @@
 #include <Packages/Uintah/Core/Grid/Ghost.h>
 #include <Packages/Uintah/Core/Grid/Level.h>
 #include <Packages/Uintah/Core/Disclosure/TypeDescription.h>
+#include <Packages/Uintah/Core/Grid/BCDataArray.h>
 
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/Vector.h>
@@ -11,13 +12,15 @@
 #undef None
 
 #include <string>
+#include <map>
 #include <iosfwd>
 
 namespace Uintah {
 
 using namespace SCIRun;
   using std::string;
-   
+  using std::map;
+
   class NodeIterator;
   class CellIterator;
   class BCData;
@@ -311,8 +314,20 @@ WARNING
      BCType getBCType(FaceType face) const;
      void setBCType(FaceType face, BCType newbc);
      void setBCValues(FaceType face, BCData& bc);
+     void setArrayBCValues(FaceType face, BCDataArray& bc);
      const BoundCondBase* getBCValues(int mat_id,string type,
 				      FaceType face) const;
+
+     BCDataArray getBCDataArray(Patch::FaceType face) const;
+
+     const BoundCondBase* getArrayBCValues(FaceType face,int mat_id,
+					   string type,vector<IntVector>& b,
+					   vector<IntVector>& i,
+					   vector<IntVector>& sfx,
+					   vector<IntVector>& sfy,
+					   vector<IntVector>& sfz,
+					   int child) const;
+     
 
      bool atEdge(FaceType face) const;
      static FaceType nextFace(FaceType face) {
@@ -391,6 +406,9 @@ WARNING
 		  IntVector& l, IntVector& h) const;
      IntVector faceDirection(FaceType face) const;
      void getFaceNodes(FaceType face, int offset, IntVector& l,
+		       IntVector& h) const;
+
+     void getFaceCells(FaceType face, int offset, IntVector& l,
 		       IntVector& h) const;
 
      void computeVariableExtents(VariableBasis basis,
@@ -540,6 +558,7 @@ WARNING
      // Added an extra vector<> for each material
      BCType d_bctypes[numFaces];
      vector<BCData> d_bcs;
+     map<Patch::FaceType,BCDataArray > array_bcs;
      bool in_database;
      bool have_layout;
      IntVector layouthint;
