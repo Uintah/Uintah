@@ -237,6 +237,7 @@ public:
 
   int     ambient_mode;
   double  ambientScale_;
+  double  orig_ambientScale_;
 
   int frameno;
   FILE* frametime_fp;
