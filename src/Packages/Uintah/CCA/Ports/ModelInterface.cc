@@ -16,3 +16,8 @@ bool ModelInterface::computesThermoTransportProps() const
 {
   return d_modelComputesThermoTransportProps;
 }
+
+void ModelInterface::activateModel(GridP& , SimulationStateP& , ModelSetup* )
+{
+
+}

@@ -109,6 +109,9 @@ WARNING
      virtual void problemSetup(GridP& grid, SimulationStateP& sharedState,
 			       ModelSetup* setup) = 0;
       
+     virtual void activateModel(GridP& grid, SimulationStateP& sharedState,
+			        ModelSetup* setup);
+      
      virtual void scheduleInitialize(SchedulerP&,
 				     const LevelP& level,
 				     const ModelInfo*) = 0;
