@@ -45,6 +45,7 @@
 #include <Packages/Uintah/CCA/Components/Schedulers/SimpleLoadBalancer.h>
 #include <Packages/Uintah/CCA/Components/Solvers/CGSolver.h>
 #include <Packages/Uintah/CCA/Components/Solvers/DirectSolve.h>
+#include <Packages/Uintah/CCA/Components/Solvers/HypreSolver.h>
 #include <Packages/Uintah/CCA/Components/PatchCombiner/PatchCombiner.h>
 #include <Packages/Uintah/CCA/Components/DataArchiver/DataArchiver.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
@@ -55,6 +56,8 @@
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Thread/Mutex.h>
 #include <Core/Util/DebugStream.h>
+
+#include <sci_config.h>
 
 #if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
 #define IRIX
@@ -421,6 +424,13 @@ main( int argc, char** argv )
 	  solve = new CGSolver(world);
 	} else if(solver == "DirectSolve") {
 	  solve = new DirectSolve(world);
+	} else if(solver == "HypreSolver" || solver == "hypre"){
+#if HAVE_HYPRE
+	  solve = new HypreSolver2(world);
+#else
+	  cerr << "Hypre solver not available, hypre not configured\n";
+	  exit(1);
+#endif
 	} else {
 	  cerr << "Unknown solver: " << solver << '\n';
 	  exit(1);
