@@ -323,7 +323,7 @@ TextureBuilderAlgo<FieldType>::fill_brick(TextureBrick* brick,
   LatVolField<Vector>* gfld = 
     dynamic_cast<LatVolField<Vector>*>(gfield.get_rep());
 
-  if (! gfld) { 
+  if (gfield.get_rep() && !gfld) { 
     cerr << "dynamic cast failed! : gradient field" << endl;
     return;
   }
