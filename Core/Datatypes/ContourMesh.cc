@@ -38,9 +38,27 @@ ContourMesh::get_bounding_box() const
 }
 
 bool
-ContourMesh::locate(node_index &, const Point &) const
+ContourMesh::locate(node_index &idx, const Point &p) const
 {
-  return false;
+  node_iterator ni = node_begin();
+  node_iterator found = node_begin();
+
+  if (ni==node_end())
+    return false;
+
+  double closest = (p-nodes_[*ni]).length2();
+
+  ++ni;
+  for (; ni != node_end(); ++ni) {
+    if ( (p-nodes_[*ni]).length2() < closest ) {
+      closest = (p-nodes_[*ni]).length2();
+      found = ni;
+    }
+  }
+
+  idx = *found;
+
+  return true;
 }
 
 bool
