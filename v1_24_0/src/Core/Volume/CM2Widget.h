@@ -284,7 +284,7 @@ public:
   virtual void	set_value_range(double, double);
 protected:
   // nrrdSpatialResample ...
-  void				line(Array3<float> &, int, int, int, int);
+  void				line(Array3<float> &, int, int, int, int, bool first);
   void				draw_point(Array3<float> &, int, int);
   void				splat(Array3<float> &, int, int);
   Strokes			strokes_;
