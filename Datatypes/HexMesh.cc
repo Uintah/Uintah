@@ -556,32 +556,45 @@ void Hexahedron::calc_coeff ()
 
 void Hexahedron::find_stu (const Vector & p, double & s, double & t, double & u)
 {
-  int iter;
   Vector c, dc;
-  double err;
+  double cs, ct, cu, err1, err2, tmp, ts, tt, tu;
   double ratio = 1.0;
   
   s = t = u = 0.0;
+  err2 = 999999.0;
   
-  for (iter = 0; iter < 6; iter++)
+  do
   {
     dc = v1 + v2*s + (v3 + v5*s)*t + (v4 + v6*s + (v7 + v8*s)*t)*u - p;
-    if (iter % 2 == 0)
-      err = dc.length2 ();
+    err1 = dc.length2 ();
+    ts = Dot (dc, v2 + v5*t + (v6 + v8*t)*u) * ratio;
+    tt = Dot (dc, v3 + v5*s + (v7 + v8*s)*u) * ratio;
+    tu = Dot (dc, v4 + v6*s + (v7 + v8*s)*t) * ratio;
+    if (err1 < err2)
+    {
+      s -= ts;
+      t -= tt;
+      u -= tu;
+    }
     else
-      ratio *= err / (err - dc.length2 ());
-    s -= Dot (dc, v2 + v5*t + (v6 + v8*t)*u) * ratio;
-    t -= Dot (dc, v3 + v5*s + (v7 + v8*s)*u) * ratio;
-    u -= Dot (dc, v4 + v6*s + (v7 + v8*s)*t) * ratio;
-  }
-  
-  // Debug stuff
-  
-  // c = v1 + v2*s + (v3 + v5*s)*t + (v4 + v6*s + (v7 + v8*s)*t)*u;
-  // dc = v1 + v2*s + (v3 + v5*s)*t + (v4 + v6*s + (v7 + v8*s)*t)*u - p;
-  // cout << "px=" << p.x() << " py=" << p.y() << " pz=" << p.z() << endl;
-  // cout << "cx=" << c.x() << " cy=" << c.y() << " cz=" << c.z() << endl;
-  // cout << "err: " << dc.length2() << endl;
+    {
+      s += cs;
+      t += ct;
+      u += cu;
+      ratio = 0.5;
+      err2 = err1;
+      continue;
+    }
+    dc = v1 + v2*s + (v3 + v5*s)*t + (v4 + v6*s + (v7 + v8*s)*t)*u - p;
+    err2 = dc.length2 ();
+    tmp = err1 - err2;
+    if (err2 < 1.0e-8)
+      return;
+    ratio *= err1 / tmp;
+    s -= (cs = Dot (dc, v2 + v5*t + (v6 + v8*t)*u) * ratio);
+    t -= (ct = Dot (dc, v3 + v5*s + (v7 + v8*s)*u) * ratio);
+    u -= (cu = Dot (dc, v4 + v6*s + (v7 + v8*s)*t) * ratio);
+  } while (1);
 }
 
 
@@ -964,6 +977,11 @@ int HexMesh::locate (const Point& P, int & idx)
   int c, max_iter, m, next, fail;
   double smallest, dist;
   
+  // DEBUG Hack to avoid stupid search.
+  
+  if (idx < 1)
+    idx = 1;
+    
   // Do smart search here, artificially limit the depth.
 
   for (max_iter = 150; idx >= 0 && max_iter--;)
@@ -1000,6 +1018,11 @@ int HexMesh::locate (const Point& P, int & idx)
   }
   
   // Smart search failed -- do stupid search.
+
+  // Stupid search only needed for volumes with cavaties or concave components.
+  // Skip this step now.
+
+  return -1;
 
   HashTable<int, Hexahedron *> * hxhtp = & element_set;
   HashTableIter<int, Hexahedron *> hx (hxhtp);
@@ -1051,9 +1074,7 @@ double HexMesh::interpolate (const Point & P, const Array1<double> & data, int &
   tp1 = t + 1;
   um1 = u - 1;
   up1 = u + 1;
-  
-  // cout << "Interpolants " << s << " " << t << " " << u << endl << endl;
-  
+      
   // Return an interpolated value.
   
   return ( - sm1*tm1*um1*data[h->node_index(0)]

@@ -44,6 +44,13 @@ class HexMesh;
 
 
 /*******************************************************************************
+* Handles
+*******************************************************************************/
+
+typedef LockingHandle<HexMesh> HexMeshHandle;
+
+
+/*******************************************************************************
 * Index/pointer array structures  (Used to make copying/grouping easy.)
 *******************************************************************************/
 
@@ -229,11 +236,11 @@ class HexMesh : public Datatype
     HexNode * find_node   (int index);
     int       high_node   () { return highest_node_index; };
 
-
     int       add_face    (int index, int e, FourHexNodes & f); 
     int       add_face    (int e, FourHexNodes & f); 
     HexFace * find_face   (int index);
     HexFace * find_face   (FourHexNodes & f);
+    int       high_face   () { return highest_face_index; };
     
     int          add_element    (int index, EightHexNodes & e); 
     Hexahedron * find_element   (int index);

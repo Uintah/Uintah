@@ -1,7 +1,7 @@
 
 #include <config/sci.cf>
 
-OBJS = BasicSurfaces.o  ColorMap.o  ColorMapPort.o  \
+OBJS = BasicSurfaces.o  Colormap.o  ColormapPort.o  \
 	ColumnMatrix.o  ColumnMatrixPort.o  ContourSet.o  ContourSetPort.o  \
 	Datatype.o  DenseMatrix.o  \
 	GeometryPort.o  Image.o Interval.o IntervalPort.o \
@@ -11,21 +11,23 @@ OBJS = BasicSurfaces.o  ColorMap.o  ColorMapPort.o  \
 	ScalarFieldRGchar.o  ScalarFieldRGshort.o  ScalarFieldRGint.o \
 	ScalarFieldRGfloat.o  \
 	ScalarFieldRGdouble.o  ScalarFieldUG.o   \
-	ScalarTriSurface.o   \
-	ScaledBoxWidgetData.o  ScaledBoxWidgetDataPort.o  \
 	SigmaSet.o  SigmaSetPort.o  \
 	SoundPort.o  SparseRowMatrix.o  SurfOctree.o  SurfOctreeTopPort.o  \
 	Surface.o  SurfacePort.o  SymSparseRowMatrix.o \
 	TriDiagonalMatrix.o  TriSurface.o  \
 	VectorField.o  VectorFieldOcean.o \
 	VectorFieldPort.o  VectorFieldRG.o  VectorFieldUG.o \
-        HexMesh.o ScalarFieldHUG.o \
-	VoidStar.o  VoidStarPort.o  \
+        HexMeshPort.o HexMesh.o ScalarFieldHUG.o \
 	ssmult.o
+	
+#	ScalarTriSurface.o   \
+#	ScaledBoxWidgetData.o  ScaledBoxWidgetDataPort.o  \
+#	VoidStar.o  VoidStarPort.o  \
+
 GENSRCS = ScalarFieldRGchar.cc  ScalarFieldRGint.cc ScalarFieldRGfloat.cc \
 	ScalarFieldRGdouble.cc  ScalarFieldRG.cc
 SRCS = $(GENSRCS) BasicSurfaces.cc  \
-	ColorMap.cc ColorMapPort.cc \
+	Colormap.cc ColormapPort.cc \
 	ColumnMatrix.cc  ColumnMatrixPort.cc ContourSet.cc ContourSetPort.cc \
 	Datatype.cc DenseMatrix.cc \
 	GeometryPort.cc Image.cc Interval.cc IntervalPort.cc  \
@@ -34,17 +36,19 @@ SRCS = $(GENSRCS) BasicSurfaces.cc  \
 	ScalarFieldPort.cc ScalarFieldRG.cc ScalarFieldRGBase.cc \
 	ScalarFieldRGchar.cc ScalarFieldRGshort.cc ScalarFieldRGint.cc \
 	ScalarFieldRGfloat.cc ScalarFieldRGdouble.cc ScalarFieldUG.cc \
-	ScalarTriSurface.cc \
-	ScaledBoxWidgetData.cc  ScaledBoxWidgetDataPort.cc \
 	SigmaSet.cc SigmaSetPort.cc \
 	SoundPort.cc SparseRowMatrix.cc SurfOctree.cc SurfOctreeTopPort.cc \
 	Surface.cc SurfacePort.cc SymSparseRowMatrix.cc \
 	TriDiagonalMatrix.cc TriSurface.cc \
 	VectorField.cc  VectorFieldOcean.cc \
 	VectorFieldPort.cc VectorFieldRG.cc VectorFieldUG.cc \
-	HexMesh.cc ScalarFieldHUG.cc \
-	VoidStar.cc VoidStarPort.cc \
+	HexMeshPort.cc HexMesh.cc ScalarFieldHUG.cc \
 	ssmult.c
+
+#	ScalarTriSurface.cc \
+#	ScaledBoxWidgetData.cc  ScaledBoxWidgetDataPort.cc \
+#	VoidStar.cc VoidStarPort.cc \
+
 GENH = ScalarFieldRGchar.h  ScalarFieldRGshort.h ScalarFieldRGint.h  \
 	ScalarFieldRGfloat.h ScalarFieldRGdouble.h ScalarFieldRG.h
 SCALARC = ScalarFieldRGchar.cc ScalarFieldRGshort.cc ScalarFieldRGint.cc \
