@@ -18,6 +18,10 @@ namespace SCICore {
 #include <util/PlatformUtils.hpp>
 #include <parsers/DOMParser.hpp>
 #include <dom/DOM_Node.hpp>
+#include <util/XMLUni.hpp>
+#ifdef XERCESDEFS_HPP
+#include <util/XMLUniDefs.hpp>
+#endif
 #ifdef __sgi
 #pragma reset woff 1375
 #endif
@@ -127,6 +131,9 @@ namespace PSECore {
 
 //
 // $Log$
+// Revision 1.1.2.5  2000/12/04 04:22:10  moulding
+// moved fixes for newer xerces version from HEAD to FIELD_REDESIGN
+//
 // Revision 1.1.2.4  2000/10/26 14:16:59  moulding
 // merge HEAD into FIELD_REDESIGN
 //
