@@ -28,13 +28,13 @@
 
 %define defname SCIRun
 %define defver	1.24
-%define dotver  0
+%define dotver  1
 %define gccver  3.3.1
 %define plat	mdk9.2
 %define distro  Mandrake 9.2
 %define debug   opt
 %undefine	__check_files
-%define thirdpartydotver 0
+%define thirdpartydotver 1
 %define thirdpartyversion %{defver}.%{thirdpartydotver}
 %define hdf5    hdf5-1.6.2
 %define ftgl	ftgl-2.0.9
@@ -42,7 +42,7 @@
 
 Name:		%{defname}Fusion
 Version:	%{defver}.%{dotver}
-Serial:		7
+Serial:		8
 Release:	%{plat}
 Summary:	Problem Solving Environment Software
 Copyright:	University of Utah Limited
@@ -121,7 +121,7 @@ python $RPM_BUILD_DIR/Thirdparty_install.%{thirdpartyversion}/install /usr/local
 rm -rf /usr/local/SCIRun/bin
 mkdir -p /usr/local/SCIRun/bin
 cd /usr/local/SCIRun/bin
-/usr/local/SCIRun/src/configure --with-thirdparty="/usr/local/SCIRun/Thirdparty/%{defver}/Linux/gcc-%{gccver}-32bit/" --with-ftgl="/usr/local/%{ftgl}" --with-hdf5="/usr/local/%{hdf5}" --with-mdsplus="/usr/local/mdsplus"  --enable-package="Fusion DataIO Teem"
+/usr/local/SCIRun/src/configure --with-thirdparty="/usr/local/SCIRun/Thirdparty/%{thirdpartyversion}/Linux/gcc-%{gccver}-32bit/" --with-ftgl="/usr/local/%{ftgl}" --with-hdf5="/usr/local/%{hdf5}" --with-mdsplus="/usr/local/mdsplus"  --enable-package="Fusion DataIO Teem"
 cd /usr/local/SCIRun/bin/on-the-fly-libs
 tar -xvzf %{SOURCE7}
 cd /usr/local/SCIRun/bin/
