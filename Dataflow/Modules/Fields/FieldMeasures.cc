@@ -52,6 +52,7 @@ private:
   GuiInt idxFlag_;
   GuiInt sizeFlag_;
   GuiInt nNbrsFlag_;
+  GuiInt normalsFlag_;
   MeshHandle m_;
 public:
   FieldMeasures(GuiContext* ctx);
@@ -72,7 +73,8 @@ FieldMeasures::FieldMeasures(GuiContext* ctx)
     zFlag_(ctx->subVar("zFlag")), 
     idxFlag_(ctx->subVar("idxFlag")),
     sizeFlag_(ctx->subVar("sizeFlag")),
-    nNbrsFlag_(ctx->subVar("numNbrsFlag"))
+    nNbrsFlag_(ctx->subVar("numNbrsFlag")),
+    normalsFlag_(ctx->subVar("normalsFlag"))
 {
 }
 
@@ -125,12 +127,19 @@ FieldMeasures::execute()
 
   m_->synchronize(syncflag);
 
+  const bool nnormals =
+    normalsFlag_.get() && fieldhandle->data_at() == Field::NODE;
+  const bool fnormals =
+    normalsFlag_.get() && fieldhandle->data_at() == Field::FACE;
+  if (nnormals) { m_->synchronize(Mesh::NORMALS_E); }
+
   const TypeDescription *meshtd = m_->get_type_description();
   const TypeDescription *simptd = 
     scinew TypeDescription(meshtd->get_name()+"::"+simplexString_.get(), 
 			   meshtd->get_h_file_path(),
 			   meshtd->get_namespace());
-  CompileInfoHandle ci = FieldMeasuresAlgo::get_compile_info(meshtd, simptd);
+  CompileInfoHandle ci =
+    FieldMeasuresAlgo::get_compile_info(meshtd, simptd, nnormals, fnormals);
   Handle<FieldMeasuresAlgo> algo;
   if (!module_dynamic_compile(ci, algo)) 
   {
@@ -153,6 +162,31 @@ FieldMeasures::execute()
 				       syncflag)));
 }
 
+
+
+CompileInfoHandle
+FieldMeasuresAlgo::get_compile_info(const TypeDescription *mesh_td,
+				    const TypeDescription *simplex_td,
+				    bool nnormals, bool fnormals)
+{
+  // use cc_to_h if this is in the .cc file, otherwise just __FILE__
+  static const string include_path(__FILE__);
+  static const string template_class_name("FieldMeasuresAlgoT");
+  static const string base_class_name("FieldMeasuresAlgo");
+
+  CompileInfo *rval = 
+    scinew CompileInfo(template_class_name + "." +
+		       simplex_td->get_filename() + ".",
+                       base_class_name, 
+                       template_class_name, 
+                       mesh_td->get_name() + ", " + simplex_td->get_name());
+
+  // Add in the include path to compile this obj
+  rval->add_include(include_path);
+  mesh_td->fill_compile_info(rval);
+  simplex_td->fill_compile_info(rval);
+  return rval;
+}
 
 
 } // End namespace SCIRun
