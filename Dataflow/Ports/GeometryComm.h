@@ -39,53 +39,53 @@
 #include <Core/Geom/GeomObj.h>
 
 namespace SCIRun {
-  class Semaphore;
-  class GeometryData;
+class Semaphore;
+class GeometryData;
 
 
 struct GeomReply {
-    int portid;
-    GeomReply();
-    GeomReply(int);
+  int portid;
+  GeomReply();
+  GeomReply(int);
 };
 
 class PSECORESHARE GeometryComm : public MessageBase {
 public:
-    GeometryComm(Mailbox<GeomReply>*);
-    GeometryComm(int, GeomID, GeomHandle,
-		 const string&, CrowdMonitor* lock);
-    GeometryComm(int, LightID, LightHandle,
-		 const string&, CrowdMonitor* lock);
-    GeometryComm(int, GeomID);
-    GeometryComm(int, LightID);
-    GeometryComm(MessageTypes::MessageType, int);
-    GeometryComm(MessageTypes::MessageType, int, Semaphore* wait);
-    GeometryComm(MessageTypes::MessageType, int, int, View);
-    GeometryComm(MessageTypes::MessageType, int portid,
-		 FutureValue<GeometryData*>* reply,
-		 int which_viewwindow, int datamask);
-    GeometryComm(MessageTypes::MessageType, int portid,
-		 FutureValue<int>* reply);
-    GeometryComm(const GeometryComm &copy);
-    virtual ~GeometryComm();
+  GeometryComm(Mailbox<GeomReply> *);
+  GeometryComm(int, GeomID, GeomHandle,
+	       const string&, CrowdMonitor* lock);
+  GeometryComm(int, LightID, LightHandle,
+	       const string&, CrowdMonitor* lock);
+  GeometryComm(int, GeomID);
+  GeometryComm(int, LightID);
+  GeometryComm(MessageTypes::MessageType, int);
+  GeometryComm(MessageTypes::MessageType, int, Semaphore* wait);
+  GeometryComm(MessageTypes::MessageType, int, int, View);
+  GeometryComm(MessageTypes::MessageType, int portid,
+	       FutureValue<GeometryData*>* reply,
+	       int which_viewwindow, int datamask);
+  GeometryComm(MessageTypes::MessageType, int portid,
+	       FutureValue<int>* reply);
+  GeometryComm(const GeometryComm &copy);
+  virtual ~GeometryComm();
 
-    Mailbox<GeomReply>* reply;
-    int portno;
-    GeomID serial;
-    GeomHandle obj;
-    LightID lserial;
-    LightHandle light;
-    string name;
-    CrowdMonitor* lock;
-    Semaphore* wait;
-    View view;
+  Mailbox<GeomReply> *reply;
+  int portno;
+  GeomID serial;
+  GeomHandle obj;
+  LightID lserial;
+  LightHandle light;
+  string name;
+  CrowdMonitor* lock;
+  Semaphore* wait;
+  View view;
 
-    GeometryComm* next;
+  GeometryComm* next;
 
-    int which_viewwindow;
-    int datamask;
-    FutureValue<GeometryData*>* datareply;
-    FutureValue<int>* nreply;
+  int which_viewwindow;
+  int datamask;
+  FutureValue<GeometryData*>* datareply;
+  FutureValue<int>* nreply;
 };
 
 } // End namespace SCIRun

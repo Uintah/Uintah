@@ -175,11 +175,9 @@ SynchronizeGeometry::init_ports()
 
   int i, portno;
   for(i=0; i<init_ports_; i++) {
-    Mailbox<GeomReply> *tmp = 
-      new Mailbox<GeomReply>("Temporary GeometryOPort mailbox", 1);
-    
-    ogeom_->forward(scinew GeometryComm(tmp));
-    GeomReply reply = tmp->receive();
+    Mailbox<GeomReply> tmp("Temporary GeometryOPort mailbox", 0);    
+    ogeom_->forward(scinew GeometryComm(&tmp));
+    GeomReply reply = tmp.receive();
     portno=reply.portid;
     portno_map_[max_portno_ - init_ports_ + i] = portno;
   }
