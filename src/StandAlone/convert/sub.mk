@@ -31,6 +31,10 @@ PROGRAM := $(SRCDIR)/BugProgram
 SRCS := $(SRCDIR)/BugProgram.cc
 include $(SCIRUN_SCRIPTS)/program.mk
 
+PROGRAM := $(SRCDIR)/MaskLatVolWithHexVol
+SRCS := $(SRCDIR)/MaskLatVolWithHexVol.cc
+include $(SCIRUN_SCRIPTS)/program.mk
+
 PROGRAM := $(SRCDIR)/RawToHexVol
 SRCS := $(SRCDIR)/RawToHexVol.cc
 include $(SCIRUN_SCRIPTS)/program.mk
