@@ -42,9 +42,16 @@
 #include <SCIRun/Internal/FrameworkProperties.h>
 #include <SCIRun/SCIRunFramework.h>
 #include <SCIRun/PortInstance.h>
+#include <Core/OS/Dir.h>
+#include <Core/Util/Environment.h>
 
+#include <unistd.h>
 
 namespace SCIRun {
+
+const char* FrameworkProperties::CONFIG_DIR = "/.sr2";
+const char* FrameworkProperties::CONFIG_FILE = "sr2.config";
+const char* FrameworkProperties::CACHE_FILE = "sr2.cache";
 
 FrameworkProperties::FrameworkProperties(SCIRunFramework* framework,
 					    const std::string& name)
@@ -53,6 +60,8 @@ FrameworkProperties::FrameworkProperties(SCIRunFramework* framework,
     this->framework = framework;
     frameworkProperties = sci::cca::TypeMap::pointer(new TypeMap);
     frameworkProperties->putString("url", framework->getURL().getString());
+    frameworkProperties->putString("default_login", getLogin());
+    frameworkProperties->putString("sidl_xml_path", getSidlXMLPath());
 }
 
 FrameworkProperties::~FrameworkProperties()
@@ -83,6 +92,44 @@ FrameworkProperties::setProperties(const sci::cca::TypeMap::pointer& properties)
 sci::cca::Port::pointer FrameworkProperties::getService(const std::string& name)
 {
     return sci::cca::Port::pointer(this);
+}
+
+void FrameworkProperties::readPropertiesFromFile()
+{
+  std::cerr << "FrameworkProperties::readPropertiesFromFile not implemented" << std::endl;
+}
+
+std::string FrameworkProperties::getSidlXMLPath()
+{
+    // ';' seperated list of directories where one can find SIDL xml files
+    // getenv may return NULL if SIDL_XML_PATH was not set
+    const char *component_path = getenv("SIDL_XML_PATH");
+    if (component_path) {
+	return std::string(component_path);
+    }
+    return std::string();
+}
+
+std::string FrameworkProperties::getLogin()
+{
+    char *login = getlogin();
+    if (login) {
+	return std::string(login);
+    }
+    return std::string();
+}
+
+void FrameworkProperties::writePropertiesToFile()
+{
+    char *HOME = getenv("HOME");
+    std::string name(HOME);
+    name.append(CONFIG_DIR);
+    Dir dir(name);
+    if (! dir.exists()) {
+	Dir::create(name);
+    }
+    // get file
+    // write to file
 }
 
 }
