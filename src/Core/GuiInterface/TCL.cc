@@ -97,68 +97,74 @@ static string application()
 
 #endif
 
-void TCL::execute(const string& str)
+void
+TCL::execute(const string& str)
 {
 #ifndef _WIN32
-    if (gm != NULL) {
-    	int skt = gm->getConnection();
+  if (gm != NULL) {
+    int skt = gm->getConnection();
 
-	printf ("TCL::execute(%s): Got skt from gm->getConnection() = %d", 
-		str.c_str(), skt);
+    printf ("TCL::execute(%s): Got skt from gm->getConnection() = %d", 
+	    str.c_str(), skt);
 
-	// format request - no TCL variable name, just a string to execute
-	TCLMessage msg;
-	msg.f = exec;
-	strcpy (msg.un.tstring, str.c_str());
+    // format request - no TCL variable name, just a string to execute
+    TCLMessage msg;
+    msg.f = exec;
+    strcpy (msg.un.tstring, str.c_str());
 
-	// send request to server - no need for reply, error goes to Tk
-	if (sendRequest (&msg, skt) == -1) {
-	    // error case ???
-	}
-        gm->putConnection (skt);
-    } else
+    // send request to server - no need for reply, error goes to Tk
+    if (sendRequest (&msg, skt) == -1) {
+      // error case ???
+    }
+    gm->putConnection (skt);
+  }
+  else
 #endif
+  {
+    TCLTask::lock();
+    int code = Tcl_Eval(the_interp, const_cast<char *>(str.c_str()));
+    if(code != TCL_OK)
+      Tk_BackgroundError(the_interp);
+    TCLTask::unlock();
+  }
+}
+
+#if 0
+void
+TCL::execute(char* str)
+{
+#ifndef _WIN32
+  if (gm != NULL) {
+    int skt = gm->getConnection();
+    printf ("TCL::execute(%s): Got skt from gm->getConnection() = %d",
+	    str, skt);
+
+    // format request - no TCL variable name, just a string to execute
+    TCLMessage msg;
+    msg.f = exec;
+    strcpy (msg.un.tstring, str);
+
+    // send request to server - no need for reply, error goes to Tk
+    if (sendRequest (&msg, skt) == -1) {
+      // error case ???
+    }
+    gm->putConnection (skt);
+  }
+  else 
+#endif
+  {
+    //printf("TCL::execute() 1\n");
+    TCLTask::lock();
+    int code = Tcl_Eval(the_interp, str);
+    if(code != TCL_OK)
     {
-        TCLTask::lock();
-        int code = Tcl_Eval(the_interp, const_cast<char *>(str.c_str()));
-        if(code != TCL_OK)
-	    Tk_BackgroundError(the_interp);
-        TCLTask::unlock();
+      Tk_BackgroundError(the_interp);
+      printf("Tcl_Eval(the_inter,%s) failed\n",str);
     }
+    TCLTask::unlock();
+  }
 }
-
-void TCL::execute(char* str)
-{
-#ifndef _WIN32
-    if (gm != NULL) {
-    	int skt = gm->getConnection();
-printf ("TCL::execute(%s): Got skt from gm->getConnection() = %d", str, skt);
-
-	// format request - no TCL variable name, just a string to execute
-	TCLMessage msg;
-	msg.f = exec;
-	strcpy (msg.un.tstring, str);
-
-	// send request to server - no need for reply, error goes to Tk
-	if (sendRequest (&msg, skt) == -1) {
-	    // error case ???
-	}
-        gm->putConnection (skt);
-    }
-    else 
 #endif
-	{
-	    //printf("TCL::execute() 1\n");
-	    TCLTask::lock();
-        int code = Tcl_Eval(the_interp, str);
-        if(code != TCL_OK)
-		{
-			Tk_BackgroundError(the_interp);
-			printf("Tcl_Eval(the_inter,%s) failed\n",str);
-		}
-        TCLTask::unlock();
-    }
-}
 
 int TCL::eval(const string& str, string& result)
 {
@@ -174,6 +180,7 @@ int TCL::eval(const string& str, string& result)
     return code == TCL_OK;
 }
 
+#if 0
 int TCL::eval(char* str, string& result)
 {
     TCLTask::lock();
@@ -187,6 +194,7 @@ int TCL::eval(char* str, string& result)
     TCLTask::unlock();
     return code != TCL_OK;
 }
+#endif
 
 void TCL::source_once(const string& filename)
 {
@@ -205,7 +213,7 @@ void TCL::source_once(const string& filename)
 
     string pse_filename(filename);
 
-    char* fn=const_cast<char *>(pse_filename());
+    char* fn=const_cast<char *>(pse_filename.c_str());
     code = Tcl_EvalFile(the_interp, fn);
 
     if(code != TCL_OK) {
