@@ -85,6 +85,7 @@ ApplyInterpolant::execute()
   }
   if (!(src_port->get(fsrc_h) && fsrc_h.get_rep()))
   {
+    error("Could not get a handle or representation.");
     return;
   }
 
@@ -97,6 +98,7 @@ ApplyInterpolant::execute()
   }
   if (!(itp_port->get(fitp_h) && fitp_h.get_rep()))
   {
+    error("Could not get a handle or representation.");
     return;
   }
 
@@ -170,5 +172,3 @@ ApplyInterpAlgo::get_compile_info(const TypeDescription *fsrc,
 
 
 } // End namespace SCIRun
-
-
