@@ -37,6 +37,7 @@
 #include <Packages/Uintah/CCA/Components/Examples/Poisson3.h>
 #include <Packages/Uintah/CCA/Components/Examples/SimpleCFD.h>
 #include <Packages/Uintah/CCA/Components/Examples/AMRSimpleCFD.h>
+#include <Packages/Uintah/CCA/Components/Examples/SolverTest1.h>
 #include <Packages/Uintah/CCA/Components/Models/ModelFactory.h>
 #include <Packages/Uintah/CCA/Components/Schedulers/SimpleScheduler.h>
 #include <Packages/Uintah/CCA/Components/Schedulers/SingleProcessorScheduler.h>
@@ -215,6 +216,7 @@ main( int argc, char** argv )
     bool   do_poisson1=false;
     bool   do_poisson2=false;
     bool   do_poisson3=false;
+    bool   do_solvertest1=false;
     bool   do_simplecfd=false;
     bool   do_AMR=false;
     bool   emit_graphs=false;
@@ -298,6 +300,8 @@ main( int argc, char** argv )
 	    do_poisson2=true;
 	} else if(s == "-poisson3"){
 	    do_poisson3=true;
+	} else if(s == "-solvertest1"){
+	    do_solvertest1=true;
 	} else if(s == "-scfd" || s == "-simplecfd"){
 	    do_simplecfd=true;
 	} else if(s == "-mpmarches"){
@@ -401,7 +405,7 @@ main( int argc, char** argv )
     if(!(do_ice || do_arches || do_mpm || do_mpmf  || do_rmpm || do_smpm ||
 	 do_smpmice || do_rmpmice || do_fmpmice || do_impmpm || do_burger || do_wave ||
          do_particletest1 ||
-	 do_regriddertest || do_poisson1 || do_poisson2 || do_poisson3 ||
+	 do_regriddertest || do_poisson1 || do_poisson2 || do_poisson3 || do_solvertest1 ||
 	 do_simplecfd || combine_patches)){
 	usage( "You need to specify -arches, -ice, -mpmf, -rmpm, -smpm or -mpm", "", argv[0]);
     }
@@ -564,6 +568,10 @@ main( int argc, char** argv )
 	  Poisson3* poisson3 = scinew Poisson3(world);
 	  sim = poisson3;
 	  comp = poisson3;
+	} else if(do_solvertest1){
+	  SolverTest1* solvertest1 = scinew SolverTest1(world);
+	  sim = solvertest1;
+	  comp = solvertest1;
 	} else if(do_simplecfd){
 	  SimpleCFD* simplecfd;
 	  if(do_AMR)
