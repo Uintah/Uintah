@@ -33,6 +33,8 @@
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Ports/MatrixPort.h>
 #include <Dataflow/Ports/FieldPort.h>
+#include <Core/Datatypes/ContourField.h>
+#include <Core/Datatypes/PointCloud.h>
 #include <Core/Datatypes/TetVol.h>
 #include <Core/Datatypes/LatticeVol.h>
 #include <Core/Datatypes/TriSurf.h>
@@ -55,6 +57,8 @@ public:
   template <class F> void dispatch_tetvol(F *ifield);
   template <class F> void dispatch_latticevol(F *ifield);
   template <class F> void dispatch_trisurf(F *ifield);
+  template <class F> void dispatch_contourfield(F *ifield);
+  template <class F> void dispatch_pointcloud(F *ifield);
   virtual void execute();
 };
 
@@ -362,6 +366,131 @@ ManageFieldData::dispatch_trisurf(F *ifield)
 }
 
 
+
+template <class F>
+void
+ManageFieldData::dispatch_pointcloud(F *ifield)
+{
+  FieldOPort *ofield_port = (FieldOPort *)get_oport("Output Field");
+  if (ofield_port->nconnections() > 0)
+  {
+    MatrixIPort *imatrix_port = (MatrixIPort *)get_iport("Input Matrix");
+    MatrixHandle imatrix;
+    if (!imatrix_port->get(imatrix))
+    {
+      return;
+    }
+
+    const int rows = imatrix->nrows();
+    PointCloudMeshHandle mesh = ifield->get_typed_mesh();
+    PointCloud<double> *ofield;
+    if (rows == mesh->nodes_size())
+    {
+      int index = 0;
+      ofield = new PointCloud<double>(mesh, Field::NODE);
+      typename F::mesh_type::node_iterator iter = mesh->node_begin();
+      while (iter != mesh->node_end())
+      {
+	ofield->set_value(imatrix->get(index++, 0), *iter);
+	++iter;
+      }
+    }
+    else if (rows == mesh->edges_size())
+    {
+      int index = 0;
+      ofield = new PointCloud<double>(mesh, Field::EDGE);
+      typename F::mesh_type::edge_iterator iter = mesh->edge_begin();
+      while (iter != mesh->edge_end())
+      {
+	ofield->set_value(imatrix->get(index++, 0), *iter);
+	++iter;
+      }
+    }
+    else if (rows == mesh->faces_size())
+    {
+      int index = 0;
+      ofield = new PointCloud<double>(mesh, Field::FACE);
+      typename F::mesh_type::face_iterator iter = mesh->face_begin();
+      while (iter != mesh->face_end())
+      {
+	ofield->set_value(imatrix->get(index++, 0), *iter);
+	++iter;
+      }
+    }
+    else
+    {
+      // ERROR, matrix datasize does not match field geometry.
+      return;
+    }
+
+    FieldHandle fh(ofield);
+    ofield_port->send(fh);
+  }
+}
+
+
+template <class F>
+void
+ManageFieldData::dispatch_contourfield(F *ifield)
+{
+  FieldOPort *ofield_port = (FieldOPort *)get_oport("Output Field");
+  if (ofield_port->nconnections() > 0)
+  {
+    MatrixIPort *imatrix_port = (MatrixIPort *)get_iport("Input Matrix");
+    MatrixHandle imatrix;
+    if (!imatrix_port->get(imatrix))
+    {
+      return;
+    }
+
+    const int rows = imatrix->nrows();
+    ContourMeshHandle mesh = ifield->get_typed_mesh();
+    ContourField<double> *ofield;
+    if (rows == mesh->nodes_size())
+    {
+      int index = 0;
+      ofield = new ContourField<double>(mesh, Field::NODE);
+      typename F::mesh_type::node_iterator iter = mesh->node_begin();
+      while (iter != mesh->node_end())
+      {
+	ofield->set_value(imatrix->get(index++, 0), *iter);
+	++iter;
+      }
+    }
+    else if (rows == mesh->edges_size())
+    {
+      int index = 0;
+      ofield = new ContourField<double>(mesh, Field::EDGE);
+      typename F::mesh_type::edge_iterator iter = mesh->edge_begin();
+      while (iter != mesh->edge_end())
+      {
+	ofield->set_value(imatrix->get(index++, 0), *iter);
+	++iter;
+      }
+    }
+    else if (rows == mesh->faces_size())
+    {
+      int index = 0;
+      ofield = new ContourField<double>(mesh, Field::FACE);
+      typename F::mesh_type::face_iterator iter = mesh->face_begin();
+      while (iter != mesh->face_end())
+      {
+	ofield->set_value(imatrix->get(index++, 0), *iter);
+	++iter;
+      }
+    }
+    else
+    {
+      // ERROR, matrix datasize does not match field geometry.
+      return;
+    }
+
+    FieldHandle fh(ofield);
+    ofield_port->send(fh);
+  }
+}
+
+
 void
 ManageFieldData::execute()
 {
@@ -461,6 +590,67 @@ ManageFieldData::execute()
       // Signal some sort of error.
     }
   }
+  else if (geom_name == "PointCloud")
+  {
+    if (data_name == "double")
+    {
+      dispatch_scalar((PointCloud<double> *)ifield);
+      dispatch_pointcloud((PointCloud<double> *)ifield);
+    }
+    else if (data_name == "int")
+    {
+      dispatch_scalar((PointCloud<int> *)ifield);
+      dispatch_pointcloud((PointCloud<int> *)ifield);
+    }
+    else if (data_name == "short")
+    {
+      dispatch_scalar((PointCloud<short> *)ifield);
+      dispatch_pointcloud((PointCloud<short> *)ifield);
+    }
+    else if (data_name == "char")
+    {
+      dispatch_scalar((PointCloud<char> *)ifield);
+      dispatch_pointcloud((PointCloud<char> *)ifield);
+    }
+    else
+    {
+      // Don't know what to do with this field type.
+      // Signal some sort of error.
+    }
+  }
+  else if (geom_name == "ContourField")
+  {
+    if (data_name == "double")
+    {
+      dispatch_scalar((ContourField<double> *)ifield);
+      dispatch_contourfield((ContourField<double> *)ifield);
+    }
+    else if (data_name == "Vector")
+    {
+//      dispatch_scalar((ContourField<int> *)ifield);
+      dispatch_contourfield((ContourField<Vector> *)ifield);
+    }
+    else if (data_name == "int")
+    {
+      dispatch_scalar((ContourField<int> *)ifield);
+      dispatch_contourfield((ContourField<int> *)ifield);
+    }
+    else if (data_name == "short")
+    {
+      dispatch_scalar((ContourField<short> *)ifield);
+      dispatch_contourfield((ContourField<short> *)ifield);
+    }
+    else if (data_name == "char")
+    {
+      dispatch_scalar((ContourField<char> *)ifield);
+      dispatch_contourfield((ContourField<char> *)ifield);
+    }
+    else
+    {
+      // Don't know what to do with this field type.
+      // Signal some sort of error.
+    }
+  }
   else
   {
     // Don't know what to do with this field type.
@@ -470,3 +660,4 @@ ManageFieldData::execute()
 }
 
 } // End namespace SCIRun
+
