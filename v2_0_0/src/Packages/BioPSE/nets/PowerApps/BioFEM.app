@@ -175,9 +175,9 @@ set $m16-tolerance [expr 0.004 * ${global-scale}]
 set $m16-maxsteps {250}
 set $m16-method {5}
 
-set $m19-def-color-r {0.3}
-set $m19-def-color-g {0.3}
-set $m19-def-color-b {0.3}
+set $m19-def-color-r {0.5}
+set $m19-def-color-g {0.5}
+set $m19-def-color-b {0.5}
 set $m19-def-color-a {0.85}
 set $m19-nodes-on {0}
 set $m19-edges-on {1}
@@ -195,6 +195,7 @@ if {[file exists $DATADIR/$DATASET/$DATASET-dipole.pcv.fld]} {
 set $m22-nodes-on {0}
 set $m22-edges-on {0}
 set $m22-faces-on {1}
+set $m22-use-normals {1}
 
 ::netedit scheduleok
 
@@ -968,7 +969,13 @@ class BioFEMApp {
 	    bind $f.isoval.val <Return> "$mods(Isosurface)-c needexecute"
 
 	    pack $f.isoval.l $f.isoval.s $f.isoval.val \
-		-side left -anchor nw -padx 3      
+		-side left -anchor nw -padx 3
+
+	    checkbutton $f.normals -text "Interpolate Smooth Normals" \
+		    -variable $mods(ShowField-Isosurface)-use-normals \
+		    -command "$mods(ShowField-Isosurface)-c rerender_faces"
+
+	    pack $f.normals -side top -anchor w -padx 20
 	}
     }	    
 
