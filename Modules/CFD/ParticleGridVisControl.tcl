@@ -311,6 +311,35 @@ itcl_class ParticleGridVisControl {
 	if { $args != "" } {
 	    $w.graph element append "Particle Value" "$args"
 	}
+	frame $w.dump
+	pack $w.dump -side bottom -anchor s -expand yes -fill x
+	entry $w.dump.e -text ""
+	button $w.dump.b -text "Dump Values" \
+	    -command "$this dumpGraph $id $args"
+	pack $w.dump.b $w.dump.e -side left -expand yes \
+	    -fill x -padx 2 -pady 2
+
     }
-	    
+
+    method dumpGraph {id  args } {
+	set w .graph$this$id
+	
+	set filename [$w.dump.e get]
+	puts $filename
+	if { [string length $filename] == 0 } {
+	    set fd stdout
+	} else {
+	    set fd [open $filename w]
+	}
+	for { set i 0 } {$i < [llength $args] } { set i [expr $i + 2] } {
+	    set str [lindex $args $i]
+	    puts -nonewline $fd "$str "
+	    set str [lindex $args [expr $i + 1]]
+	    puts $fd $str
+	}
+	if { [string length $filename] != 0 } {
+	    close $fd
+	}
+    }
+    
 }

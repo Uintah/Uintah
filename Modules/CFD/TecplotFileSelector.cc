@@ -93,10 +93,13 @@ bool TecplotFileSelector::checkFile(const clString& fname)
 void TecplotFileSelector::execute() 
 { 
    tcl_status.set("Calling TecplotFileSelector!"); 
-
+   static executed = 0;
    // might have multiple filenames later for animations
-   clString command( id + " activate");
-   TCL::execute(command);
+   if( executed > 1 ){
+     clString command( id + " activate");
+     TCL::execute(command);
+   }
+   executed++;
    emit_vars(cout);
    cout << "Done!"<<endl; 
    //   command = id + " deselect";
@@ -138,7 +141,6 @@ void TecplotFileSelector::doAnimation()
 
   for(i = startFrame.get(); i <= endFrame.get(); i += increment.get() ){
     ostrstream ostr;
-    sleep(2);
     ostr.fill('0');
     ostr << path << "/"<< root<< setw(4)<<i;
     cerr << ostr.str()<< endl;

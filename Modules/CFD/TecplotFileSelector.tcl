@@ -92,7 +92,7 @@ itcl_class TecplotFileSelector {
     method activate {} {
 	set w .ui$this
 	
-	$w.f2.rb configure -state active
+	$w.f2.rb configure -state normal
 #	$w.f2.rb deselect
 	set color [$w.f2.rb cget -fg]
 	$w.f2.f1.entry configure -state normal
