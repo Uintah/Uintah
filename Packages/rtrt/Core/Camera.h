@@ -128,10 +128,10 @@ public:
     Origin
   };
   void transform(SCIRun::Transform t, TransformCenter);
-#if 0
   void scaleFOV(double);
   void translate(Vector);
   void dolly(double);
+#if 0
   void autoview(double fov);
 #endif
   

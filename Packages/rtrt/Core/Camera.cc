@@ -10,6 +10,8 @@
 #include <Packages/rtrt/Core/Light.h>
 
 #include <Core/Geometry/Transform.h>
+#include <Core/Math/MiscMath.h>
+#include <Core/Math/Trig.h>
 
 #include <sgi_stl_warnings_off.h>
 #include <iostream>
@@ -566,6 +568,32 @@ void Camera::transform(Transform t, TransformCenter center) {
   lookat = t2.project(lookat);
   setup();
 }
+
+void Camera::scaleFOV(double scale) {
+  double fov_min = 0;
+  double fov_max = 180;
+  double tfov = RtoD(2*atan(scale*tan(DtoR(fov/2.))));
+  tfov = Clamp(tfov, fov_min, fov_max);
+  set_fov(tfov);
+  setup();
+}
+
+void Camera::translate(Vector t)
+{
+  Vector trans(u*t.y()+v*t.x());
+
+  eye += trans;
+  lookat += trans;
+  setup();
+}
+
+void Camera::dolly(double scale)
+{
+  Vector dir = lookat - eye;
+  eye += dir*scale;
+  setup();
+}
+
 
 
 
