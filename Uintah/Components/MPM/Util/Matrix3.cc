@@ -16,13 +16,18 @@ using std::endl;
 using std::ostream;
 #include <stdlib.h>
 #include <Uintah/Grid/TypeDescription.h>
+#include <Uintah/Math/CubicPolyRoots.h>
 #include <SCICore/Util/FancyAssert.h>
 #include <SCICore/Malloc/Allocator.h>
+#include <SCICore/Util/Assert.h>
 #ifdef __sgi
 #define IRIX
 #pragma set woff 1209
 #endif
 
+// Anything with absolute value < NEAR_ZERO may be considered
+// zero, assuming error is caused by round-off.
+#define NEAR_ZERO 1e-8
 
 void Matrix3::set(const int i, const int j, const double value)
 {
@@ -30,7 +35,7 @@ void Matrix3::set(const int i, const int j, const double value)
    mat3[i-1][j-1] = value;
 }
 
-Matrix3 Matrix3::Inverse()
+Matrix3 Matrix3::Inverse() const
 {
   // Return the inverse of a 3x3 matrix
   // This looks ugly but it works -- just for 3x3
@@ -63,6 +68,292 @@ Matrix3 Matrix3::Inverse()
 
 } //end Inverse()
 
+// Reduce the matrix and rhs, representing the equation system:
+// A*x = y = rhs, to a matrix in upper triangular form with
+// corresponding rhs for an equivalent equation systme.
+// The guarantee for this new matrix is that the first non-zero
+// column of a row is to the right (greater) of the first non-zero
+// column in the row above it and the first non-zero column of
+// any row has zeroes in every other row and a one in that row.
+// If rhs == NULL, then the rhs is assumed to be
+// the zero vector and thus will not need to change.
+void Matrix3::triangularReduce(Matrix3& A, Vector* rhs, int& num_zero_rows)
+{
+  int i, j, k, pivot;
+  int pivoting_row = 0;
+  double tmp, mag;
+
+  // put the matrix in upper triangular form 
+  for (i = 0; i < 3; i++) {
+    // find pivot row (with greatest absolute ith column value)
+    pivot = -1;
+    // because of precision errors, consider anything smaller
+    // than NEAR_ZERO as zero
+    mag = NEAR_ZERO;
+    for (j = pivoting_row; j < 3; j++) {
+      tmp = fabs(A.mat3[j][i]);
+      if (tmp > mag) {
+	mag = tmp;
+	pivot = j;
+      }
+    }
+
+    if (pivot == -1) {
+      for (j = pivoting_row; j < 3; j++)
+	// < NEAR_ZERO absolute value is treated as zero, so set it to zero
+	A.mat3[j][i] = 0;
+      continue;
+    }
+
+    // swap rows and normalize
+    double norm_multiplier = 1 / A.mat3[pivot][i];
+    if (pivot != pivoting_row) {
+      A.mat3[pivot][i] = A.mat3[pivoting_row][i];
+      A.mat3[pivoting_row][i] = 1; // normalized    
+      for (j = i+1 /* zeroes don't need to be swapped */; j < 3; j++) {
+	tmp = A.mat3[pivot][j];
+	A.mat3[pivot][j] = A.mat3[pivoting_row][j];
+	A.mat3[pivoting_row][j] = tmp * norm_multiplier; // normalize
+      }
+      
+      if (rhs != NULL) {
+	// swap and normalize rhs in the same manner
+	tmp = (*rhs)(pivot);
+	(*rhs)(pivot) = (*rhs)(pivoting_row);
+	(*rhs)(pivoting_row) = tmp * norm_multiplier; // normalizing
+      }
+    }
+    else {
+      // just normalize
+      A.mat3[pivoting_row][i] = 1; 
+      for (j = i+1 /* zeroes don't need to be normalized */; j < 3; j++)
+	A.mat3[pivoting_row][j] *= norm_multiplier;
+      if (rhs != NULL)
+	(*rhs)(pivoting_row) *= norm_multiplier; // normalizing
+    }
+
+    // eliminate ith column from other rows via row reduction
+    for (k = 0; k < 3; k++) {
+      if (k == pivoting_row) continue;
+      // row reduction (ignoring zeroed out columns of pivoting_row
+      // (note that the pivoting row has been normalized)
+      double mult = A.mat3[k][i]; // remember that pivoting_row is normalized
+      for (j = i + 1; j < 3; j++)
+	A.mat3[k][j] -= mult * A.mat3[pivoting_row][j]; 
+      if (rhs != NULL)
+	(*rhs)(k) -= mult * (*rhs)(pivoting_row);
+      A.mat3[k][i] = 0;
+    }
+
+    pivoting_row++;
+  }
+
+  if (rhs != NULL) {
+    for (i = 0; i < 3; i++)
+      if (fabs((*rhs)(i)) < NEAR_ZERO)
+	(*rhs)(i) = 0; // set near zero's to zero to compensate for round-off
+  }
+  
+  num_zero_rows = 3 - pivoting_row;
+}
+
+// solveHomogenous for a Matrix that has already by triangularReduced
+// So the matrix is in one of the following forms:
+// {{1, 0, 0} {0, 1, 0} {0, 0, 1}}, single solution
+// {{1, 0, c} {0, 1, e} {0, 0, 0}}, line solution
+// {{1, b, 0} {0, 0, 1} {0, 0, 0}}, line solution
+// {{0, 1, 0} {0, 0, 1} {0, 0, 0}}, line solution
+// {{1, b, c} {0, 0, 0} {0, 0, 0}}, plane solution 
+// {{0, 1, c} {0, 0, 0} {0, 0, 0}}, plane solution 
+// {{0, 0, 1} {0, 0, 0} {0, 0, 0}}, plane solution 
+// {{0, 0, 0} {0, 0, 0} {0, 0, 0}} -> solution only iff rhs = {0, 0, 0} 
+bool Matrix3::solveParticularReduced(const Vector& rhs, Vector& xp,
+				     int num_zero_rows) const
+{
+  double x, y, z;
+  switch (num_zero_rows) {
+  case 0:
+    // x = rhs(0), y = rhs(1), z = rhs(2)
+    xp = rhs;
+    return true; // has solution
+    
+  case 1:
+    // {{a, b, c} {0, d, e} {0, 0, 0}}, line solution
+    if (rhs(2) != 0) // 0*x + 0*y + 0*z = rhs.z
+      return false;
+    
+    if (mat3[1][1] == 0) {
+      // {{1, b, 0} {0, 0, 1} {0, 0, 0}} or {{0, 1, 0} {0, 0, 1} {0, 0, 0}}
+
+      // z = rhs(1)
+      z = rhs(1);
+
+      if (mat3[0][0] == 0) {
+	// {{0, 1, 0} {0, 0, 1} {0, 0, 0}}
+	y = rhs(0); // y = rhs(0)
+	x = 0; // arbitrary choice -- for simplicity
+      }
+      else {
+	// {{1, b, 0} {0, 0, 1} {0, 0, 0}}
+	y = 0; // arbitrary choice -- for simplicity
+	x = rhs(0); // x + b*(y=0) = rhs(0) -> x = rhs(0)
+      }
+    }
+    else {
+      // {{1, 0, c} {0, 1, e} {0, 0, 0}}, a,d nonzero -> line solution
+
+      z = 0;  // since z can be anything, use z = 0 for simplicity
+      y = rhs(1); // y + e*(z=0) = rhs(1) -> y = rhs(1)
+      x = rhs(0); // x + c*(z=0) = rhs(0) -> x = rhs(0)
+    }
+
+    xp = Vector(x, y, z);
+    return true;
+
+  case 2:
+    // {{1, b, c} {0, 0, 0} {0, 0, 0}} or
+    // {{0, 1, c} {0, 0, 0} {0, 0, 0}} or
+    // {{0, 0, 1} {0, 0, 0} {0, 0, 0}} or
+    if ( rhs(1) != 0 || rhs(2) != 0) 
+      return false; // 0*x + 0*y + 0*z = rhs.y = rhs.z
+    
+    // find the first non-zero element in row 0
+    int i;
+    for (i = 0; i < 2; i++)
+      if (mat3[0][i] != 0) break;
+
+    // make xp(i) (first non-zero column) non-zero and
+    // the other two 0 because that is perfectly valid and
+    // for simplicity.
+    xp = Vector(0, 0, 0);
+    xp(i) = rhs(0);
+
+    return true;
+  case 3:
+    // solution only if rhs == 0 (in which case everywhere is a solution)
+    if (rhs == Vector(0, 0, 0)) {
+      xp = Vector(0, 0, 0); // arbitrarily choose {0, 0, 0}
+      return true;
+    }
+    else
+      return false;
+  default:
+    ASSERTFAIL("unexpected num_zero_rows in Matrix3::solveParticularReduced");
+  }
+}
+ 
+// solveHomogenous for a Matrix that has already by triangularReduced.
+std::vector<Vector> Matrix3::solveHomogenousReduced(int num_zero_rows) const
+{
+  std::vector<Vector> basis_vectors;
+
+  basis_vectors.resize(num_zero_rows);
+  
+  switch (num_zero_rows) {
+  case 3:
+    // Solutions everywhere : A = 0 matrix
+    basis_vectors[0] = Vector(1, 0, 0);
+    basis_vectors[1] = Vector(0, 1, 0);
+    basis_vectors[2] = Vector(0, 0, 1);
+    break;
+
+  case 1:
+    {
+    // line of solutions : A = {{a, b, c} {0, d, e} {0, 0, 0}}
+    // do backwards substition, using value of 1 arbitrarily
+    // if a variable is not constrained
+
+    Vector v;
+    if (mat3[1][1] == 0) {
+      // A = {{a, b, c} {0, 0, 1} {0, 0, 0}
+      v(2) = 0; // e*z = 0, e != 0 -> z = 0
+      if (mat3[0][0] == 0) {
+	// A = {{0, 1, c} {0, 0, 1} {0, 0, 0}
+	// y + c*z = 0 -> y = 0
+	v(1) = 0; // y = 0;
+	v(0) = 1; // x is arbitrary (non-zero)
+      }
+      else {
+	// A = {{1, b, c} {0, 0, 1} {0, 0, 0}
+	v(1) = 1; // y is arbitrary (non-zer0)
+	// x + b*y + c*0 = 0 -> x + b*y = 0 -> x = -b*y = -b
+	v(0) = -mat3[0][1];
+      }
+    }
+    else {
+      // A = {{1, b, c} {0, 1, e} {0, 0, 0}
+      v(2) = 1; // z is arbitrary (non-zero)
+
+      // y + e*z = 0 -> y = -e*z = -e
+      v(1) = -mat3[1][2];
+
+      //  x + b*y + c*z -> x = -(b*y + c*z) = -(b*y + c) 
+      v(0) = -(mat3[0][1] * v(1) + mat3[0][2]);
+    }
+    basis_vectors[0] = v;
+    break;
+    }
+
+  case 2:
+    // plane of solutions : A = {{a, b, c} {0, 0, 0} {0, 0, 0}}
+    // ax + by + cz = 0
+    // 3 line equations by taking
+    // x=0 : line1 := {0, c, -b} * t
+    // y=0 : line2 := {c, 0, -a} * t
+    // z=0 : line3 := {b, -a, 0} * t
+    // choose two that are unequal an non-zero
+
+    // find the largest absolute value between a, b, c to choose
+    // to two lines to use (assuming larger values are better,
+    // i.e. non-zero for sure)
+    int max_index = 0;
+    double max = fabs(mat3[0][0]);
+    if (fabs(mat3[0][1]) > max)
+      max_index = 1;
+    if (fabs(mat3[0][2]) > max)
+      max_index = 2;
+
+    if (max_index == 0) {
+      // |a| largest, use line2 and line3
+      basis_vectors[0] = Vector(mat3[0][2], 0, -mat3[0][0]); // {c, 0, -a}
+      basis_vectors[1] = Vector(mat3[0][1], -mat3[0][0], 0); // {b, -a, 0}
+    }
+    else if (max_index == 1) {
+      // |b| largest, use line1 and line3
+      basis_vectors[0] = Vector(0, mat3[0][2], -mat3[0][1]); // {0, c, -b}
+      basis_vectors[1] = Vector(mat3[0][1], -mat3[0][0], 0); // {b, -a, 0}
+    }
+    else {
+      // |c| largest, use line1 and line2
+      basis_vectors[0] = Vector(0, mat3[0][2], -mat3[0][1]); // {0, c, -b}
+      basis_vectors[1] = Vector(mat3[0][2], 0, -mat3[0][0]); // {c, 0, -a}
+    }
+  }
+
+  return basis_vectors;
+}
+
+int Matrix3::getEigenValues(double& e1, double& e2, double& e3) const
+{
+  // eigen values will be roots of the following cubic polynomial
+  // x^3 + b*x^2 + c*x + d
+  double b = -Trace();
+
+  double c = 0;
+  for (int i = 0; i < 2; i++) {
+    for (int j = i+1; j < 3; j++)
+      c += mat3[i][i]*mat3[j][j] - mat3[i][j]*mat3[j][i];
+  }
+  
+  double d = -Determinant();
+
+  cout << "b " << b << endl;
+  cout << "c " << c << endl;
+  cout << "d " << d << endl;
+
+  return cubic_poly_roots(b, c, d, e1, e2, e3);
+}
+
 ostream & operator << (ostream &out_file, const Matrix3 &m3)
 {
   // Overload the output stream << operator
@@ -72,7 +363,6 @@ ostream & operator << (ostream &out_file, const Matrix3 &m3)
   out_file <<  m3(3,1) << ' ' << m3(3,2) << ' ' << m3(3,3) ;
 
   return out_file;
-
 }
 
 namespace Uintah {
@@ -97,6 +387,11 @@ MPI_Datatype makeMPI_Matrix3()
 }
 
 //$Log$
+//Revision 1.5  2000/08/15 19:15:19  witzel
+//Added methods for finding eigenvalues, eigenvectors and solving
+//equation systems of the form Ax=b and Ax=0.  Also added M*v
+//operation (where M is a Matrix3 and v is a Vector).
+//
 //Revision 1.4  2000/08/08 01:32:44  jas
 //Changed new to scinew and eliminated some(minor) memory leaks in the scheduler
 //stuff.
