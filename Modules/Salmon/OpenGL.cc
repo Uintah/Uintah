@@ -107,8 +107,8 @@ void OpenGL::redraw(Salmon* salmon, Roe* roe)
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     // Setup the view...
-    glLoadIdentity();
-    double fovy=RtoD(2*Atan(aspect*Tan(DtoR(roe->view.fov/2.))));
+    View view(roe->view.get());
+    double fovy=RtoD(2*Atan(aspect*Tan(DtoR(view.fov/2.))));
 
     DrawInfoOpenGL drawinfo;
     drawinfo.polycount=0;
@@ -122,22 +122,25 @@ void OpenGL::redraw(Salmon* salmon, Roe* roe)
 	// We have something to draw...
 	Point min(bb.min());
 	Point max(bb.max());
-	Point eyep(roe->view.eyep);
-	Vector dir(roe->view.lookat-eyep);
+	Point eyep(view.eyep);
+	Vector dir(view.lookat-eyep);
 	dir.normalize();
-	double d=-(eyep.x()*dir.x()+eyep.y()*dir.y()+eyep.z()*dir.z());
-	for(int ix=0;ix<1;ix++){
-	    for(int iy=0;iy<1;iy++){
-		for(int iz=0;iz<1;iz++){
+	double d=-Dot(eyep, dir);
+	for(int ix=0;ix<2;ix++){
+	    for(int iy=0;iy<2;iy++){
+		for(int iz=0;iz<2;iz++){
 		    Point p(ix?max.x():min.x(),
 			    iy?max.y():min.y(),
 			    iz?max.z():min.z());
-		    double dist=p.x()*dir.x()+p.y()*dir.y()+p.z()*dir.z()+d;
+		    double dist=Dot(p, dir)+d;
+		    cerr << "dist=" << dist << endl;
 		    znear=Min(znear, dist);
 		    zfar=Max(zfar, dist);
 		}
 	    }
 	}
+	znear-=1;
+	zfar+=1;
 	if(znear <= 0){
 	    if(zfar <= 0){
 		// Everything is behind us - it doesn't matter what we do
@@ -147,12 +150,18 @@ void OpenGL::redraw(Salmon* salmon, Roe* roe)
 		znear=zfar*.001;
 	    }
 	}
+	glLoadIdentity();
 	gluPerspective(fovy, aspect, znear, zfar);
-	Point lookat(roe->view.lookat);
-	Vector up(roe->view.up);
+	Point lookat(view.lookat);
+	Vector up(view.up);
 	gluLookAt(eyep.x(), eyep.y(), eyep.z(),
 		  lookat.x(), lookat.y(), lookat.z(),
 		  up.x(), up.y(), up.z());
+	cerr << "eyep=" << eyep << ", lookat=" << lookat << ", up=" << up.string() << endl;
+	cerr << "fov=" << fovy << endl;
+	cerr << "aspect=" << aspect << endl;
+	cerr << "znear=" << znear << endl;
+	cerr << "zfar=" << zfar << endl;
 
 
 	// Draw it all...

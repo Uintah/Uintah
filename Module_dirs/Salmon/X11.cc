@@ -167,7 +167,7 @@ void X11::redraw(Salmon* salmon, Roe* roe)
     drawinfo->transform=&transform;
     drawinfo->current_matl=salmon->default_matl.get_rep();
     drawinfo->current_lit=1;
-    drawinfo->view=roe->view;
+    drawinfo->view=roe->view.get();
     NOT_FINISHED("Light source selection");
     drawinfo->lighting=salmon->lighting;
     AVLTree<double, GeomObj*> objs;

@@ -92,8 +92,9 @@ static MouseHandlerData* mouse_handlers[8][3] = {
 static total_salmon_count=1;
 
 Roe::Roe(Salmon* s, const clString& id)
-: id(id), manager(s), view(Point(0,0,1), Point(0,0,0), Vector(0,1,0), 45)
+: id(id), manager(s), view("view", id, this)
 {
+    view.set(View(Point(0,0,1), Point(0,0,0), Vector(0,1,0), 45));
     TCL::add_command(id, this, 0);
     current_renderer=0;
 }
@@ -475,11 +476,13 @@ void Roe::setHomeCB(CallbackData*, void*)
 }
 #endif
 
+#ifdef OLD
 Roe::Roe(const Roe& copy)
 : view(copy.view)
 {
     NOT_FINISHED("Roe::Roe");
 }
+#endif
 
 void Roe::rotate(double angle, Vector v, Point c)
 {
@@ -1309,5 +1312,30 @@ void Roe::tcl_command(TCLArgs& args, void* userdata)
 
 void Roe::redraw()
 {
+    reset_vars();
     current_renderer->redraw(manager, this);
+}
+
+TCLView::TCLView(const clString& name, const clString& id, TCL* tcl)
+: TCLvar(name, id, tcl), eyep("eyep", str(), tcl),
+  lookat("lookat", str(), tcl), up("up", str(), tcl),
+  fov("fov", str(), tcl)
+{
+}
+
+TCLView::~TCLView()
+{
+}
+
+View TCLView::get()
+{
+    return View(eyep.get(), lookat.get(), up.get(), fov.get());
+}
+
+void TCLView::set(const View& view)
+{
+    eyep.set(view.eyep);
+    lookat.set(view.lookat);
+    up.set(view.up);
+    fov.set(view.fov);
 }

@@ -1,15 +1,16 @@
 
 proc uiSalmon {modid} {
-    global nextrid
-    set nextrid($modid) 0
+    global nextrid,$modid
+    set nextrid,$modid 0
     spawnIndependentRoe $modid
 }
 
 proc makeRoeID {modid} {
-    global nextrid
-    set rid roe_$nextrid($modid)_$modid
+    global nextrid,$modid
+    set n [set nextrid,$modid]
+    set rid roe_$n,$modid
     puts "rid is $rid"
-    incr nextrid($modid)
+    incr nextrid,$modid
     return $rid
 }
 
@@ -21,7 +22,7 @@ proc spawnIndependentRoe {modid} {
 
 proc makeRoe {salmon rid} {
     $salmon addroe $rid
-    set w .roe$rid
+    set w .$rid
     toplevel $w
     wm title $w "Roe"
     wm iconname $w "Roe"
@@ -51,7 +52,8 @@ proc makeRoe {salmon rid} {
     menubutton $w.menu.edit -text "Edit" -underline 0 \
 	    -menu $w.menu.edit.menu
     menu $w.menu.edit.menu
-    $w.menu.edit.menu add command -label "View/Camera..." -underline 0
+    $w.menu.edit.menu add command -label "View/Camera..." -underline 0 \
+	    -command "makeViewPopup $rid"
     $w.menu.edit.menu add command -label "Renderer..." -underline 0
     $w.menu.edit.menu add command -label "Materials..." -underline 0
     $w.menu.edit.menu add command -label "Light Sources..." -underline 0
@@ -153,7 +155,7 @@ proc addMFrame {w rid} {
 }
 
 proc switchRenderer {rid renderer} {
-    set w .roe$rid
+    set w .$rid
     set width [winfo width $w.wframe.draw]
     set height [winfo height $w.wframe.draw]
     destroy $w.wframe.draw
@@ -164,7 +166,33 @@ proc switchRenderer {rid renderer} {
 }
 
 proc updatePerf {rid p1 p2} {
-    set w .roe$rid
+    set w .$rid
     $w.bframe.pf.perf1 configure -text $p1
     $w.bframe.pf.perf2 configure -text $p2
+}
+
+proc makeViewPopup {rid} {
+    set w .view$rid
+    toplevel $w
+    wm title $w "View"
+    wm iconname $w view
+    wm minsize $w 100 100
+    set c "$rid redraw "
+    set view view,$rid
+    makePoint $w.eyep "Eye Point" eyep,$view $c
+    pack $w.eyep -side left -expand yes -fill x
+    makePoint $w.lookat "Look at Point" lookat,$view $c
+    pack $w.lookat -side left -expand yes -fill x
+    makeNormalVector $w.up "Up Vector" up,$view $c
+    pack $w.up -side left -expand yes -fill x
+    global fov,$view
+    set fov,$view 45
+    frame $w.f -relief groove -borderwidth 2
+    pack $w.f
+    fscale $w.f.fov -orient horizontal -variable fov,$view \
+	    -from 0 -to 90 -label "Field of View:" \
+	    -showvalue true -tickinterval 30 \
+	    -activeforeground SteelBlue2 -digits 3 \
+	    -command $c
+    pack $w.f.fov -expand yes -fill x
 }
