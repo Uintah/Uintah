@@ -151,12 +151,44 @@ void CCAComponentInstance::addProvidesPort(const sci::cca::Port::pointer& port,
 					   const std::string& portType,
 					   const sci::cca::TypeMap::pointer& properties)
 {
+
   map<string, CCAPortInstance*>::iterator iter = ports.find(portName);
   if(iter != ports.end()){
     if(iter->second->porttype == CCAPortInstance::Provides)
       throw CCAException("name conflict between uses and provides ports");
     else
       throw CCAException("addProvidesPort called twice");
+  }
+  if(!properties.isNull() &&  properties->getInt("size",1)!=1){
+    //if port is collective.
+    int size=properties->getInt("size",1);
+    int rank=properties->getInt("rank",0);
+    map<string, vector<Object::pointer> >::iterator iter = preports.find(portName);
+    if(iter==preports.end()){
+      if(port.isNull()) cerr<<"port is NULL\n";
+      //      cerr<<"portURL="<<port->getURL().getString()<<"\n";
+
+
+      //new preport
+      vector<Object::pointer> urls(size);
+      preports[portName]=urls;
+      //      preports[portName][rank]=port->getURL();
+      preports[portName][rank]=port;
+      precnt[portName]=0;
+    }
+    else{
+      //existed preport  
+      iter->second[rank]=port;
+    }
+    if(++precnt[portName]==size){
+      //all member ports have arrived.
+      Object::pointer obj=PIDL::objectFrom(preports[portName],1,0);
+      sci::cca::Port::pointer cport=pidl_cast<sci::cca::Port::pointer>(obj);
+      ports.insert(make_pair(portName, new CCAPortInstance(portName, portType, properties, cport, CCAPortInstance::Provides)));
+      preports.erase(portName);
+      precnt.erase(portName);
+    }
+    return;
   }
   ports.insert(make_pair(portName, new CCAPortInstance(portName, portType, properties, port, CCAPortInstance::Provides)));
 }

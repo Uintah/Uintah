@@ -32,6 +32,7 @@
 #include <SCIRun/ComponentInstance.h>
 #include <SCIRun/PortInstanceIterator.h>
 #include <Core/CCA/spec/cca_sidl.h>
+#include <Core/CCA/PIDL/Object.h>
 #include <map>
 #include <string>
 
@@ -84,6 +85,9 @@ namespace SCIRun {
       Iterator& operator=(const Iterator&);
     };
     std::map<std::string, CCAPortInstance*> ports;
+    std::map<std::string, std::vector<Object::pointer> > preports;
+    std::map<std::string, int > precnt;
+ 
     sci::cca::Component::pointer component;
     Mutex *mutex;
 
