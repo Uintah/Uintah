@@ -15,31 +15,95 @@
 #define PropertyManager_h 
 
 #include <map>
-#include <Core/Datatypes/Datatype.h>
+#include <Core/Containers/LockingHandle.h>
+#include <Core/Malloc/Allocator.h>
+#include <Core/Datatypes/TypeName.h>
 #include <Core/Datatypes/builtin.h>
+#include <Core/Datatypes/Datatype.h>
 
 namespace SCIRun {
 
 
-class PropertyBase {
+class PropertyBase : public Datatype {
 public:
   void *obj_;
   virtual ~PropertyBase() {}
+  virtual void io(Piostream &) {}
+  static  PersistentTypeID type_id;
+private:
+  static Persistent *maker();
 };
 
 template<class T>
 class Property : public T, public PropertyBase {
 public:
+  Property() {}   // only Pio should use this constructor
   Property( T &o) { obj_= &o; } 
+  
+  static const string type_name( int n = -1 );
+  virtual void io(Piostream &stream);
+  static  PersistentTypeID type_id;
+private:
+  static Persistent *maker();
 };
 
 template<class T>
-class Property<T *> : public T, public PropertyBase {
+class Property<T *> : public Property<T> {
 public:
-  Property( T *o) { obj_ = o; } 
+  Property( T *obj ) : Property<T>( *obj ) {};
 };
 
 
+/*
+ * Persistent Io
+ */
+
+const int PROPERTY_VERSION = 1;
+
+/*
+ * Property<T>
+ */
+
+template<class T>
+const string Property<T>::type_name(int n)
+{
+  if ( n == -1 ) {
+    static const string name = type_name(0) + FTNS + type_name(1) + FTNE;
+    return name;
+  }
+  else if ( n == 0 ) {
+    static const string nm("Property");
+    return nm;
+  }
+  else
+    return find_type_name( (T *) 0);
+}
+
+template <class T>
+PersistentTypeID 
+Property<T>::type_id(type_name(), "PropertyBase", maker);
+
+template <class T>
+Persistent*
+Property<T>::maker()
+{
+  return scinew Property<T>;
+}
+
+template<class T>
+void
+Property<T>::io( Piostream &stream)
+{
+  stream.begin_class( type_name().c_str(), PROPERTY_VERSION);
+  if ( stream.reading() ) {
+    T *tmp = new T;
+    Pio(stream, *tmp );
+    obj_ = tmp;
+  }
+  else
+    Pio(stream, *static_cast<T *>(obj_));
+  stream.end_class();
+}
 
 
 /*
@@ -73,6 +137,7 @@ private:
 
   typedef map<string, PropertyBase *> map_type;
 
+  int size_;
   map_type properties_;
 };
 
@@ -95,9 +160,9 @@ PropertyManager::store( const string &name,  T& obj )
     delete loc->second;
     
   properties_[name] = new Property<T>( obj );
+  size_++;
 }
 
-  
 
 template<class T>
 bool 
@@ -129,7 +194,7 @@ PropertyManager::get(const string &name, T &ref)
   
   // either property not found, or it can not be cast to T
   return false;
-}
+} 
 
 template<> bool PropertyManager::get(const string &name, char &ref);
 template<> bool PropertyManager::get(const string &name, short &ref);
