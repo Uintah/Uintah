@@ -36,7 +36,7 @@ connects modules to form a network.
 To create a module, select its name from one of the package (\eg{} \sr)
 menus' category sub-menus.  The package menus may be accessed from the
 main window's menu bar and from the NetEdit frame's pop-up menu. 
-Activate the NetEdit frame's pop-up menu by clicking mouse button
+ The NetEdit frame's pop-up menu is activated by clicking mouse button
 3 while the mouse pointer is in the NetEdit frame (but not over a
 module or connection).  The pop-up menu contains a list of category
 sub-menus from the \sr{} package and other installed packages. 
@@ -136,9 +136,8 @@ for all modules and consists of the following elements:
     instances of the same module.
 
     \menuitemdesc{Execute} Tells the module to
-    execute (or re-execute).  The state of its input and
-    output ports will cause other modules in the network to
-    ``fire'' (execute) also..
+    execute (or re-execute).  This may cause other modules in the
+    network to ``fire'' (execute).
 
     \menuitemdesc{Help} Displays the module's help window.
     
@@ -294,16 +293,17 @@ over a connection.
 
 A few operations (see \secref{Moving Module(s)}{sec:movemod} and
 \secref{Destroying Module(s)}{sec:destroymod}) act on a group of
-modules.  A group of modules can be created in two ways
+modules.  A group of modules can be created in two ways:
 
 \begin{enumerate}
-\item Press mouse button 2 while the pointer is in the NetEdit frame, but not over
-a module or a connection.  Then drag the mouse.  This will draw a box
-outline.  Modules intersecting the box will be part of the group.  Release
-button 2 to complete the selection.
-\item Select the first module by clicking mouse button 2 while the pointer is
-over a module.  Then add modules to the group by pressing (and holding
-down) the \keyboard{control} key while clicking on modules with button 2.
+\item Press mouse button 2 while the pointer is in the NetEdit frame,
+  but not over a module or a connection.  Then drag the mouse.  This
+  will draw a box outline.  Modules intersecting the box will be part
+  of the group.  Release button 2 to complete the selection.
+\item Select the first module by clicking mouse button 2 while the
+  pointer is over a module.  Then add modules to the group by pressing
+  (and holding down) the \keyboard{control} key while clicking on
+  modules with button 2.
 \end{enumerate}
 
 Selected modules will be drawn in a darker shade of grey.

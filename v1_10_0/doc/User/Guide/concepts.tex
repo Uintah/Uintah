@@ -20,7 +20,7 @@
 \label{sec:concepts} 
 \index{concepts}
 
-This section describes the general design philosphy and goals of
+This section describes the general design philosophy and goals of
 integrated problem solving environments \index{problem solving
   environment} and how \BIOPSE{} embodies some of these ideas.
 
@@ -29,7 +29,7 @@ integrated problem solving environments \index{problem solving
 Traditional methods for solving bioelectric field problems use
 multiple, non-integrated computer programs.  For example, using
 a computer simulation to examine the effect of electrode patch placement on
-transcardiac current density in the design of a cardiac implantable
+transcardiac current density in the design of a cardiac implant-able
 defibrillator\cite{CRJ:Sch95b} requires geometric modeling, numerical
 simulation, and scientific visualization tools to complete the task.  The
 user might need one program to define the thoracic surfaces from medical
@@ -157,7 +157,7 @@ Progress\cite{MM:Vet95}, \index{Progress} and Magellan\cite{MM:Vet97a}
 It is important to understand the place of the software included in
 this package within the hierarchy of computational problem solving
 environments developed at the SCI Institute.  From a historical
-perspective, \SR{}, which began develepement in 1992, was the
+perspective, \SR{}, which began development in 1992, was the
 original implementation of the computational
 framework\cite{CRJ:Joh94c,RSM:Par95,RSM:Par95b,RSM:Par97,RSM:Par97b,CRJ:Parker99b}.
 Since then, \SR{} and its computational workbench infrastructure has
@@ -199,12 +199,12 @@ processing, the NetSolve package for linear algebra subroutines
 Knoxville), and a communications interface to the Matlab program.  \SCI{}
 has developed various forms of software wrappers or interfaces that
 allow \SR{} to leverage the strengths of these third party tools,
-links refered to as "bridges."
+links referred to as "bridges."
 
 There are instances when a tighter level of integration than a
 bridge between \SR{} and third-party software is necessary.  One example
-is the addition of mpeg support for capturing animations from the \SR{}
-Viewer module, for which the Berkeley and Alex Knowles' mpeg
+is the addition of MPEG support for capturing animations from the \SR{}
+Viewer module, for which the Berkeley and Alex Knowles' MPEG
 encoding tools are used.  Another example is the set of image generation and
 manipulation tools from Peter Haeberli called libimage.  To indicate
 whether or not such tools are available, the configure scripts for \SR{}
@@ -253,21 +253,19 @@ Interface enables the selection of a desired isochrone surface.
   \caption{\label{fig:conc-module} Example of a \SR{} module}
 \end{figure}
 
-Modules may contain other elements, but they will all have at least one
-input or one output port.  File readers are an example of a module with only an output port.
-The \htmladdnormallink{\emph{Viewer}}{viewer.html}
-module contains only input ports because it receives information and the
-``output'' is a visualization.  
-At this stage, it is important to appreciate the concept of a
-module and the dataflow that links one module to another (see \secref{Working with Networks}{sec:workwithnets} for a detailed description of modules).
+Modules may contain other elements, but all have at least one input or
+one output port. Most modules have input and output ports connected to
+other modules.  Data readers are modules with only an output port.
+Their ``input'' is read from a file.  The
+\htmladdnormallink{\emph{Viewer}}{viewer.html} module provides input
+ports only; scene data arrives on its input ports and a screen
+visualization is its ``output''.  
 
-A network diagram \index{network!diagram} describes the way data flows
-through \SR{} and is the main means of user interaction with the overall
-action of the program.  The network essentially defines the function of
-the program. Without a network, \SR{} and \BIOPSE{} is just a set of tools
-sitting in a chest.  By joining the modules into a network, the tools
-become a functioning program that do what the network tells it to.
-It is important to appreciate what the network is conceptually  (see \secref{Working withNetworks}{sec:workwithnets} for details).
+It is important to appreciate the concepts of modules, connections
+between modules, and the dataflow through a network (see
+\secref{Working with Networks}{sec:workwithnets} for more information
+on modules, ports, connections, and networks).
+
 
 \subsection{\sr{}'s Use of Third Party Software}
 \label{sec:con-links} 
@@ -334,6 +332,21 @@ information from the same database.   Contact Chris Butson
 \htmladdnormallink{butson@sci.utah.edu}{mailto:butson@sci.utah.edu}
 for details about the implementation of the GENESIS module.
 
+
+\subsubsection{PETSc}
+
+\htmladdnormallinkfoot{The Portable, Extensible, Toolkit for
+  Scientific Computation
+  (PETSc)}{http://www-unix.mcs.anl.gov/petsc/petsc-2/} is a library of
+data structures and functions for the parallel solution of partial
+differential equations.
+
+When PETSc is installed (and SCIRun is configured to use it), SCIRun's
+\module{SolveMatrix} module enables the use of PETSc solvers.
+
+Installation of PETSc is optional. SolveMatrix provides built-in
+solvers if PETSc is not available.
+
 \subsection{Extensibility}
 \label{sec:con-extend} 
 
@@ -345,7 +358,7 @@ different ways of connecting modules and creating new applications.
 Modules can be coded from scratch or with the assistance of the
 \sr's \dfn{Module Maker} component.
 
-\sci{} anticipates users  createing new modules. \sci{} 
+\sci{} anticipates users  creating new modules. \sci{} 
 encourages users to contribute modules to a repository on the \BIOPSE{}
 web site \index{BioPSE@\BIOPSE{}!web site} 
 (\htmladdnormallink{www.sci.utah.edu/ncrr/software/biopse.html} 
