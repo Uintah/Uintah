@@ -7,7 +7,11 @@ include $(SRCTOP)/scripts/smallso_prologue.mk
 
 SRCDIR   := Uintah/Components/ICE
 
-SRCS	+= $(SRCDIR)/ICE.cc
+SRCS	+= $(SRCDIR)/ICE.cc \
+	$(SRCDIR)/ICELabel.cc \
+	$(SRCDIR)/ICEMaterial.cc \
+	$(SRCDIR)/EquationOfState.cc \
+	$(SRCDIR)/EquationOfStateFactory.cc 
 
 PSELIBS := Uintah/Interface Uintah/Grid Uintah/Parallel \
 	Uintah/Exceptions SCICore/Exceptions SCICore/Thread \
@@ -18,6 +22,9 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.15  2000/10/04 20:16:37  jas
+# Add EOS,Label and Material to makefile.
+#
 # Revision 1.14  2000/10/04 19:26:46  jas
 # Changes to get ICE into UCF conformance.  Only skeleton for now.
 #
