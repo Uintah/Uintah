@@ -3,7 +3,7 @@
 #include <Packages/Uintah/CCA/Components/MPMICE/MPMICE.h>
 #include <Packages/Uintah/CCA/Components/MPMICE/MPMICELabel.h>
 #include <Packages/Uintah/CCA/Components/MPM/SerialMPM.h>
-#include <Packages/Uintah/CCA/Components/MPM/Burn/HEBurn.h>
+#include <Packages/Uintah/CCA/Components/MPMICE/Combustion/Burn.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
 #include <Packages/Uintah/CCA/Components/MPM/MPMPhysicalModules.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
@@ -14,7 +14,6 @@
 #include <Packages/Uintah/Core/Grid/Task.h>
 #include <Packages/Uintah/Core/Grid/NodeIterator.h>
 #include <Packages/Uintah/Core/Grid/CellIterator.h>
-#include <Packages/Uintah/Core/Grid/TemperatureBoundCond.h>
 
 #include <Core/Datatypes/DenseMatrix.h>
 
@@ -79,10 +78,24 @@ void MPMICE::scheduleInitialize(const LevelP& level,
 				SchedulerP& sched,
 				DataWarehouseP& dw)
 {
-  d_mpm->scheduleInitialize(level, sched, dw);
-  d_ice->scheduleInitialize(level, sched, dw);
-  cerr << "Doing Initialization \t\t\t MPMICE" <<endl;
-  cerr << "--------------------------------\n"<<endl; 
+
+  d_mpm->scheduleInitialize(      level, sched, dw);
+  d_ice->scheduleInitialize(      level, sched, dw);
+
+
+  Level::const_patchIterator iter;
+
+  for (iter=level->patchesBegin(); iter != level->patchesEnd(); iter++)
+    {
+      const Patch* patch=*iter;
+      Task* task = scinew Task("MPMICE::actuallyInitialize", patch, dw, dw,
+			   this, &MPMICE::actuallyInitialize);
+      sched->addTask(task);
+    }
+
+   cerr << "Doing Initialization \t\t\t MPMICE" <<endl;
+   cerr << "--------------------------------\n"<<endl; 
+
 }
 
 //______________________________________________________________________
@@ -156,6 +169,9 @@ void MPMICE::scheduleTimeAdvance(double, double,
 //    d_ice->scheduleAddExchangeToMomentumAndEnergy(patch,sched,old_dw,new_dw);
     d_mpm->scheduleInterpolateToParticlesAndUpdate( patch,sched,old_dw,new_dw);
     d_mpm->scheduleComputeMassRate(                 patch,sched,old_dw,new_dw);
+
+    scheduleComputeMassBurnRate(                    patch,sched,old_dw,new_dw);
+
     if(d_fracture) {
       d_mpm->scheduleComputeFracture(patch,sched,old_dw,new_dw);
     }
@@ -278,6 +294,7 @@ void MPMICE::scheduleInterpolateNCToCC_0(const Patch* patch,
    sched->addTask(t);
 
 }
+
 //______________________________________________________________________
 //
 void MPMICE::scheduleInterpolateNCToCC(const Patch* patch,
@@ -417,6 +434,43 @@ void MPMICE::scheduleComputeEquilibrationPressure(const Patch* patch,
   task->computes(new_dw,Ilb->press_equil_CCLabel,0, patch);
   sched->addTask(task);
 }
+
+void MPMICE::scheduleComputeMassBurnRate(const Patch* patch,
+					 SchedulerP& sched,
+					 DataWarehouseP& old_dw,
+					 DataWarehouseP& new_dw)
+{
+  Task* task = scinew Task("MPMICE::computeMassBurnRate",
+			   patch, old_dw, new_dw, this,
+			   &MPMICE::computeMassBurnRate);
+
+  task->requires(new_dw, Ilb->press_CCLabel, 0, patch, Ghost::None);
+
+  for(int m = 0; m < d_sharedState->getNumMatls(); m++) {
+    Material* matl = d_sharedState->getMaterial( m );
+    int dwindex = matl->getDWIndex();
+    
+    ICEMaterial* ice_matl = d_sharedState->getICEMaterial(0);
+
+    task->requires(old_dw, Ilb->temp_CCLabel, ice_matl->getDWIndex(), patch,
+		   Ghost::None);
+    
+    MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
+    if (mpm_matl) {
+      task->requires(new_dw, MIlb->temp_CCLabel,dwindex, patch, Ghost::None);
+      task->requires(new_dw, MIlb->cMassLabel,dwindex, patch, Ghost::None);
+      
+      task->computes(new_dw, MIlb->burnedMass_CCLabel, dwindex, patch);
+      task->computes(new_dw, MIlb->releasedHeat_CCLabel, dwindex, patch);
+    }
+  }
+
+  sched->addTask(task);
+
+  
+}
+
+
 /* ---------------------------------------------------------------------
  Function~  MPMICE::scheduleMassExchange--
 _____________________________________________________________________*/
@@ -437,10 +491,27 @@ void  MPMICE::scheduleMassExchange(const Patch* patch,
   }
   sched->addTask(task);
 }
+
 //______________________________________________________________________
 //       A C T U A L   S T E P S :
 //______________________________________________________________________
 //
+
+void MPMICE::actuallyInitialize(const ProcessorGroup*, 
+				const Patch* patch,
+				DataWarehouseP&,
+				DataWarehouseP& new_dw)
+{
+  CCVariable<double> burnedMass;
+  CCVariable<double> releasedHeat;
+  new_dw->allocate(burnedMass, MIlb->burnedMass_CCLabel, 0, patch);
+  new_dw->allocate(releasedHeat, MIlb->releasedHeat_CCLabel, 0, patch);
+  
+  new_dw->put(burnedMass, MIlb->burnedMass_CCLabel, 0, patch);
+  new_dw->put(releasedHeat, MIlb->releasedHeat_CCLabel, 0, patch);
+
+}
+
 
 
 void MPMICE::interpolatePressCCToPressNC(const ProcessorGroup*,
@@ -1022,31 +1093,11 @@ void MPMICE::doCCMomExchange(const ProcessorGroup*,
 #endif
 
 
-  // Setting dTdt = 0 in the ExtraCells
+  //HARDWIRING FOR NEUMANN TEMPERATURE BCS
   for(int m = 0; m < numALLMatls; m++){
     for(Patch::FaceType face = Patch::startFace;
       face <= Patch::endFace; face=Patch::nextFace(face)){
-        vector<BoundCondBase* > bcs;
-        bcs = patch->getBCValues(face);
-
-        if (bcs.size() == 0) continue;
-
-        BoundCondBase* bc_base = 0;
-
-        for (int i = 0; i<(int)bcs.size(); i++ ) {
-          if (bcs[i]->getType() == "Temperature") {
-            bc_base = bcs[i];
-            break;
-          }
-        }
-        if (bc_base == 0)
-          continue;
-        if (bc_base->getType() == "Temperature") {
-          TemperatureBoundCond* bc=dynamic_cast<TemperatureBoundCond*>(bc_base);
-          if (bc->getKind() == "Dirichlet" || bc->getKind() == "Neumann"){
-	    dTdt_CC[m].fillFace(face,0);
-	  }
-        }
+	dTdt_CC[m].fillFace(face,0);
     }
   }
 
@@ -1592,6 +1643,63 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
        d_ice->printData( patch,1,description, "vol_frac_CC", vol_frac[m]);
     }
    #endif
+  }
+ /*==========DEBUG============`*/
+  
+}
+
+void MPMICE::computeMassBurnRate(const ProcessorGroup*,
+				 const Patch* patch,
+				 DataWarehouseP& old_dw,
+				 DataWarehouseP& new_dw)
+
+{
+
+  for(int m = 0; m < d_sharedState->getNumMatls(); m++) {
+    Material* matl = d_sharedState->getMaterial( m );
+    int dwindex = matl->getDWIndex();
+   
+    CCVariable<double> gasTemperature;
+    CCVariable<double> gasPressure;
+    
+    ICEMaterial* ice_matl = d_sharedState->getICEMaterial(0);
+    
+    old_dw->get(gasTemperature, Ilb->temp_CCLabel, 
+		ice_matl->getDWIndex(), patch, Ghost::None, 0);
+    new_dw->get(gasPressure, Ilb->press_CCLabel, 0, patch, Ghost::None, 0);
+   
+    MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
+
+    if (mpm_matl) {
+      CCVariable<double> solidTemperature;
+      CCVariable<double> solidMass;
+      
+      new_dw->get(solidTemperature, MIlb->temp_CCLabel, dwindex, patch, 
+		  Ghost::None, 0);
+      new_dw->get(solidMass, MIlb->cMassLabel, dwindex, patch, Ghost::None, 0);
+  
+      CCVariable<double> burnedMass;
+      CCVariable<double> releasedHeat;
+
+      new_dw->allocate(burnedMass,MIlb->burnedMass_CCLabel, dwindex, patch);
+      new_dw->allocate(releasedHeat,MIlb->releasedHeat_CCLabel,dwindex,patch);
+
+
+      for (CellIterator iter = patch->getCellIterator();!iter.done();iter++){
+	matl->getBurnModel()->computeBurn(gasTemperature[*iter],
+					  gasPressure[*iter],
+					  solidMass[*iter],
+					  solidTemperature[*iter],
+					  burnedMass[*iter],
+					  releasedHeat[*iter]);
+      
+      }
+
+      new_dw->put(burnedMass, MIlb->burnedMass_CCLabel, dwindex, patch);
+      new_dw->put(releasedHeat, MIlb->releasedHeat_CCLabel, dwindex, patch);
+      cout << "Computed Burned mass \n";
+    }
+
   }  
 }
 
@@ -1614,9 +1722,16 @@ void MPMICE::massExchange(const ProcessorGroup*,  const Patch* patch,
     int dwindex = matl->getDWIndex();
     new_dw->allocate(mass_source[m],Ilb->mass_sourceLabel,dwindex,patch);
   }
+
     
   for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
     mass_source[HMX][*iter] =  -misha_change_in_mass_from_particles;
     mass_source[GAS][*iter] =  mass_source[HMX][*iter];
   } 
 }
+
+
+
+
+
+

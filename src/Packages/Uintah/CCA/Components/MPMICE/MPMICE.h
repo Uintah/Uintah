@@ -127,10 +127,18 @@ public:
                              DataWarehouseP&,
                              DataWarehouseP&);
 
-
+  void scheduleComputeMassBurnRate(const  Patch* patch,
+				   SchedulerP&,
+				   DataWarehouseP&,
+				   DataWarehouseP&);
+  
 //______________________________________________________________________
 //       A C T U A L   S T E P S : 
-                          
+  void actuallyInitialize(const ProcessorGroup*,
+			  const Patch* patch,
+			  DataWarehouseP&,
+			  DataWarehouseP& new_dw);
+                         
                                                     
   void interpolateNCToCC_0(const ProcessorGroup*,
                            const Patch* patch,
@@ -167,7 +175,6 @@ public:
 				   DataWarehouseP& old_dw,
 				   DataWarehouseP& new_dw);
 
-
   void interpolatePAndGradP(const ProcessorGroup*,
                             const Patch* patch,
                             DataWarehouseP& old_dw,
@@ -178,6 +185,11 @@ public:
                     DataWarehouseP& old_dw,
                     DataWarehouseP& new_dw);
 
+  void computeMassBurnRate(const ProcessorGroup*,
+			   const Patch* patch,
+			   DataWarehouseP& old_dw,
+			   DataWarehouseP& new_dw);
+  
   enum bctype { NONE=0,
                 FIXED,
                 SYMMETRY,
