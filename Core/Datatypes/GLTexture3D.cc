@@ -23,6 +23,7 @@
 #include <Core/Malloc/Allocator.h>
 #include <Core/Persistent/Persistent.h>
 #include <Core/Datatypes/LatticeVol.h>
+#include <Core/Datatypes/FieldAlgo.h>
 #include <Core/Thread/Thread.h>
 #include <Core/Thread/Semaphore.h>
 #include <Core/Thread/ThreadGroup.h>
