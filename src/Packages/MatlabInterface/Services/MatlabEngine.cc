@@ -429,6 +429,8 @@ bool MatlabEngine::init_service(IComPacketHandle &packet)
           if (secondstowait  < 1) secondstowait = 180;
         }
                 
+#ifndef _WIN32
+      // FIX
       struct timeval  tv;
       struct timespec tm;
       gettimeofday(&tv,0);
@@ -436,6 +438,7 @@ bool MatlabEngine::init_service(IComPacketHandle &packet)
       tm.tv_sec = tv.tv_sec + secondstowait;
                 
       matlab_handle_->wait_test_.timedWait(matlab_handle_->lock,&tm);
+#endif
       if (!(matlab_handle_->passed_test_))
         {
           matlab_handle_->unlock();
