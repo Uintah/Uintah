@@ -27,8 +27,6 @@
 #
 
 
-#catch {rename Viewer ""} 
-
 itcl_class SCIRun_Render_Viewer {
     inherit Module
 
@@ -42,17 +40,10 @@ itcl_class SCIRun_Render_Viewer {
 	set name Viewer
 	set_defaults
     }
-    destructor {
-	foreach window [winfo children .] {
-	    if ![string first .ui[modname] $window] {
-		destroy $window
-	    }
-	}
-	    
-	foreach rid $openViewersList {
-	    destroy .ui[$rid modname]
 
-	    $rid delete
+    destructor {
+	foreach rid $openViewersList {
+	    deleteViewWindow $rid
 	}
     }
 
@@ -77,6 +68,13 @@ itcl_class SCIRun_Render_Viewer {
 	set rid [makeViewWindowID]
 	ViewWindow $rid -viewer $this 
 	lappend openViewersList $rid
+    }
+
+    method deleteViewWindow { rid } {
+	$this-c deleteviewwindow $rid
+	listFindAndRemove openViewersList $rid
+	destroy .ui[$rid modname]
+	$rid delete
     }
 
     method duplicateViewer {old_vw} {
@@ -192,7 +190,6 @@ itcl_class ViewWindow {
 	set parts [split $this _]
 	return [lindex $parts end]
     }
-
 
     method set_defaults {} {
 
@@ -323,6 +320,10 @@ itcl_class ViewWindow {
     }
 
     destructor {
+	set w .ui[modname]
+	$w.dialbox delete
+	$w.dialbox2 delete
+	destroy $w
     }
 
     constructor {config} {
@@ -336,7 +337,8 @@ itcl_class ViewWindow {
 	# create the window (immediately withdraw it so that on the Mac it will size correctly.)
 	toplevel $w; wm withdraw $w
 
-	bind $w <Destroy> "$this killWindow %W" 
+	wm protocol $w WM_DELETE_WINDOW "$viewer deleteViewWindow $this"
+#	bind $w <Destroy> "$this killWindow %W" 
 	wm title $w "View Window [number]"
 	wm iconname $w "View Window [number]"
 	wm minsize $w 100 100
@@ -610,13 +612,6 @@ itcl_class ViewWindow {
 	bind $w <Lock-ButtonRelease-1> "$this-c mpick end %x %y %s %b"
 	bind $w <Lock-ButtonRelease-2> "$this-c mpick end %x %y %s %b"
 	bind $w <Lock-ButtonRelease-3> "$this-c mpick end %x %y %s %b"
-    }
-
-    method killWindow { vw } {
-        set w .ui[modname]
-	if {"$vw"=="$w"} {
-	    $this-c killwindow
-	}
     }
 
     method create_other_viewers_view_menu { m } {
@@ -2247,13 +2242,6 @@ itcl_class EmbeddedViewWindow {
 	bind $w <Lock-ButtonRelease-1> "$this-c mpick end %x %y %s %b"
 	bind $w <Lock-ButtonRelease-2> "$this-c mpick end %x %y %s %b"
 	bind $w <Lock-ButtonRelease-3> "$this-c mpick end %x %y %s %b"
-    }
-
-    method killWindow { vw } {
-        set w .ui[modname]
-	if {"$vw"=="$w"} {
-	    $this-c killwindow
-	}
     }
 
     method removeMFrame {w} {
