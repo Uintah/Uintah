@@ -81,7 +81,7 @@ BBox LevelMesh::get_bounding_box() const
 
 
 void
-LevelMesh::transform(Transform &t)
+LevelMesh::transform(Transform &)
 {
   ASSERTFAIL("Not Transformable mesh");
 }
