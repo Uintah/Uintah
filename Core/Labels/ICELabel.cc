@@ -14,6 +14,7 @@ ICELabel::ICELabel()
   delTLabel = 0; // Placed in later, in problemSetup
   doMechLabel
     = VarLabel::create("doMech",    delt_vartype::getTypeDescription());
+
   //__________________________________
   // Cell Centered variables
   press_CCLabel     =
@@ -204,6 +205,18 @@ ICELabel::ICELabel()
   modelVol_srcLabel =
     VarLabel::create( "modelVol_src",
 		      CCVariable<double>::getTypeDescription());
+  //__________________________________
+  // AMR variables
+  rho_CC_gradLabel = 
+    VarLabel::create("rho_CC_grad",     CCVariable<Vector>::getTypeDescription());
+  temp_CC_gradLabel = 
+    VarLabel::create("temp_CC_grad",    CCVariable<Vector>::getTypeDescription());  
+  vel_CC_mag_gradLabel = 
+    VarLabel::create("vel_CC_mag_grad", CCVariable<Vector>::getTypeDescription());  
+  vol_frac_CC_gradLabel = 
+    VarLabel::create("vol_frac_CC_grad",CCVariable<Vector>::getTypeDescription());
+  press_CC_gradLabel = 
+    VarLabel::create("press_CC_grad",   CCVariable<Vector>::getTypeDescription());
 
 }
 
@@ -306,4 +319,11 @@ ICELabel::~ICELabel()
     VarLabel::destroy(modelMom_srcLabel);
     VarLabel::destroy(modelEng_srcLabel);
     VarLabel::destroy(modelVol_srcLabel);
+    
+    // AMR variables
+    VarLabel::destroy(rho_CC_gradLabel);
+    VarLabel::destroy(temp_CC_gradLabel);
+    VarLabel::destroy(vel_CC_mag_gradLabel);
+    VarLabel::destroy(vol_frac_CC_gradLabel);
+    VarLabel::destroy(press_CC_gradLabel);
 }
