@@ -278,7 +278,7 @@ public:
 
 
   //! Get the size of an elemnt (length, area, volume)
-  double get_size(Node::index_type idx) const { return 0.0; }
+  double get_size(Node::index_type /*idx*/) const { return 0.0; }
   double get_size(Edge::index_type idx) const 
   {
     Node::array_type ra;
@@ -313,19 +313,19 @@ public:
   double get_volume(Cell::index_type idx) const { return get_size(idx); };
 
 
-  int get_valence(Node::index_type idx) const
+  unsigned int get_valence(Node::index_type idx) const
   {
     Node::array_type arr;
     get_neighbors(arr, idx);
     return arr.size();
   }
-  int get_valence(Edge::index_type idx) const { return 0; }
-  int get_valence(Face::index_type idx) const
+  unsigned int get_valence(Edge::index_type /*idx*/) const { return 0; }
+  unsigned int get_valence(Face::index_type idx) const
   {
     Face::index_type tmp;
     return (get_neighbor(tmp, idx) ? 1 : 0);
   }
-  int get_valence(Cell::index_type idx) const 
+  unsigned int get_valence(Cell::index_type idx) const 
   {
     Cell::array_type arr;
     get_neighbors(arr, idx);
