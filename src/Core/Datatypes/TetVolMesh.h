@@ -19,6 +19,7 @@
 #include <Core/Datatypes/FieldIterator.h>
 #include <vector>
 #include <Core/Persistent/PersistentSTL.h>
+#include <hash_set>
 
 namespace SCIRun {
 
@@ -93,9 +94,14 @@ public:
   template <class Iter, class Functor>
   void fill_data(Iter begin, Iter end, Functor fill_ftor);
   
+  //! (re)create the edge data based on cells.
+  void compute_edges();
  
+  //! Persistent IO
   virtual void io(Piostream&);
-  static PersistentTypeID type_id;
+  static PersistentTypeID type_id; 
+
+  //! Convenience function to query types. Returns "TetVolMesh" always.
   static  const string type_name(int);
   virtual const string get_type_name(int n) const { return type_name(n); }
 
@@ -110,6 +116,46 @@ private:
   //! face neighbors index to tet opposite the corresponding node in cells_
   vector<index_type>   neighbors_;
 
+
+  //! Edge information.
+  struct Edge {
+    node_index         nodes_[2];   //! 2 nodes makes an edge.
+    vector<cell_index> cells_;      //! list of all the cells this edge is in.
+    
+    Edge() : cells_(6) {
+      nodes_[0] = -1;
+      nodes_[1] = -1;
+    }
+    Edge(node_index n1, node_index n2) : cells_(6) {
+      nodes_[0] = n1;
+      nodes_[1] = n2;  
+    }
+
+    bool shared() const { return cells_.size() > 1; }
+    
+    //! true if both have the same nodes (order does not matter)
+    bool operator==(const Edge &e) const {
+      return (((nodes_[0] == e.nodes_[0]) || (nodes_[0] == e.nodes_[1])) &&
+	      ((nodes_[1] == e.nodes_[0]) || (nodes_[1] == e.nodes_[1])));
+    }
+  };
+
+  /*! container for edge storage. Must be computed each time 
+    nodes or cells change. */
+  vector<Edge>         edges_; 
+
+  /*! hash the egde's node_indecies such that edges with the same nodes 
+   *  hash to the same value regardless of the order of nodes in the
+   *  edge. */
+  struct EdgeHash {
+    size_t operator()(const Edge &e) const {
+      return 5 ; //FIX_ME 5 is not an optimal hash function.
+    }
+  };
+
+  inline
+  void hash_edge(node_index n1, node_index n2, 
+		 cell_index ci, hash_set<Edge, EdgeHash> &table) const;
 };
 
 // Handle type for TetVolMesh mesh.
