@@ -116,7 +116,8 @@ WARNING
       
       // Cell Centered (CC) Variables
       virtual void allocate(CCVariableBase&, const VarLabel*,
-			    int matlIndex, const Patch*) = 0;
+			    int matlIndex, const Patch*, 
+			    const IntVector gc = IntVector(0,0,0)) = 0;
       virtual void get(CCVariableBase&, const VarLabel*, int matlIndex,
 		       const Patch*, Ghost::GhostType, int numGhostCells) = 0;
       virtual void put(const CCVariableBase&, const VarLabel*,
