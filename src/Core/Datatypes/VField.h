@@ -22,22 +22,18 @@ using SCICore::Containers::LockingHandle;
 
 class Object;
 
-template <class T> class VField;
-typedef LockingHandle<VField<Object> > VFieldHandle;
+class VField;
+typedef LockingHandle<VField> VFieldHandle;
 
-template <class T> class VField:public Field{
+class VField : public Field {
 public:
   VField();
-  VField(const Geom&, const Attrib&);
-  VField(const VField&);
-  ~VField();
 
-  virtual void Interpolate(T&, const Point&);
-  virtual bool gradient(Vector&, const Point&);
-  virtual T& grid(int, int, int);
-  virtual T& operator[](int);
-  
-  
+  virtual ~VField();
+
+  virtual void io(Piostream&);
+  static PersistentTypeID type_id;
+
 private:
 };
 
