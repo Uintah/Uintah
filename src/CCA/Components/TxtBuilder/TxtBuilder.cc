@@ -35,13 +35,13 @@
 #include <stdlib.h>
 using namespace std;
 using namespace SCIRun;
-using namespace gov::cca;
+using namespace sci::cca;
 
 static Semaphore* startup;
 
-extern "C" gov::cca::Component::pointer make_SCIRun_TxtBuilder()
+extern "C" sci::cca::Component::pointer make_SCIRun_TxtBuilder()
 {
-  return gov::cca::Component::pointer(new TxtBuilder());
+  return sci::cca::Component::pointer(new TxtBuilder());
 }
 
 TxtBuilder::TxtBuilder()
@@ -52,23 +52,23 @@ TxtBuilder::~TxtBuilder()
 {
 }
 
-void TxtBuilder::setServices(const gov::cca::Services::pointer& services)
+void TxtBuilder::setServices(const sci::cca::Services::pointer& services)
 {
   //builderPort.setServices(services);
-  //gov::cca::TypeMap::pointer props = services->createTypeMap();
+  //sci::cca::TypeMap::pointer props = services->createTypeMap();
   //myBuilderPort::pointer bp(&builderPort);
-  //  services->addProvidesPort(bp,"builderPort","gov.cca.BuilderPort", props);
-  //services->registerUsesPort("builder", "gov.cca.BuilderPort", props);
+  //  services->addProvidesPort(bp,"builderPort","sci.cca.ports.BuilderPort", props);
+  //services->registerUsesPort("builder", "sci.cca.ports.BuilderPort", props);
 
   svc=services;
-  bs=pidl_cast<gov::cca::ports::BuilderService::pointer>
+  bs=pidl_cast<sci::cca::ports::BuilderService::pointer>
     (svc->getPort("cca.BuilderService"));
   if(bs.isNull()){
     cerr << "Fatal Error: cannot get BuilderService port\n";
     return;
   }
 
-  cr=pidl_cast<gov::cca::ports::ComponentRepository::pointer>
+  cr=pidl_cast<sci::cca::ports::ComponentRepository::pointer>
     (svc->getPort("cca.ComponentRepository"));
   if(bs.isNull()){
     cerr << "Fatal Error: cannot get ComponentRepository port\n";
@@ -208,7 +208,7 @@ int TxtBuilder::parse(string cmdline, string args[])
 
 void TxtBuilder::list_all(string args[])
 {
-  SIDL::array1<ComponentClassDescription::pointer> cds=cr->getAvailableComponentClasses();
+  SSIDL::array1<ComponentClassDescription::pointer> cds=cr->getAvailableComponentClasses();
   cout<<"Available Component Classes:\n";
   for(unsigned i=0; i<cds.size();i++){
     cout<<"#"<<i<<":\t"<<cds[i]->getComponentClassName()<<endl;
@@ -217,7 +217,7 @@ void TxtBuilder::list_all(string args[])
 
 void TxtBuilder::list_components(string args[])
 {
-  SIDL::array1<ComponentID::pointer> comps=bs->getComponentIDs();
+  SSIDL::array1<ComponentID::pointer> comps=bs->getComponentIDs();
   cout<<"Active Components:\n";
   for(unsigned i=0; i<comps.size();i++){
     cout<<"#"<<i<<":\t"<<comps[i]->getInstanceName()<<endl;
@@ -227,8 +227,8 @@ void TxtBuilder::list_components(string args[])
 void TxtBuilder::list_ports(string args[])
 {
   ComponentID::pointer cid=bs->getComponentID(args[0]);
-  SIDL::array1<string> ppNames=bs->getProvidedPortNames(cid);
-  SIDL::array1<string> upNames=bs->getUsedPortNames(cid);
+  SSIDL::array1<string> ppNames=bs->getProvidedPortNames(cid);
+  SSIDL::array1<string> upNames=bs->getUsedPortNames(cid);
   cout<<"Provided Port Names:\n";
   for(unsigned i=0; i<ppNames.size();i++){
     cout<<"#"<<i<<":\t"<<ppNames[i]<<endl;
@@ -242,16 +242,16 @@ void TxtBuilder::list_ports(string args[])
 void TxtBuilder::list_compatible(string args[])
 {
   ComponentID::pointer cid=bs->getComponentID(args[0]);
-  SIDL::array1<string> ppNames=bs->getProvidedPortNames(cid);
-  SIDL::array1<string> upNames=bs->getUsedPortNames(cid);
+  SSIDL::array1<string> ppNames=bs->getProvidedPortNames(cid);
+  SSIDL::array1<string> upNames=bs->getUsedPortNames(cid);
 
-  SIDL::array1<ComponentID::pointer> cids=bs->getComponentIDs();
+  SSIDL::array1<ComponentID::pointer> cids=bs->getComponentIDs();
   cout<<"Provided Port Names:\n";
   for(unsigned i=0; i<ppNames.size();i++){
     cout<<"#"<<i<<":\t"<<ppNames[i]<<endl;
     for(unsigned j=0; j<cids.size(); j++){
       if(cids[j]==cid)continue;
-      SIDL::array1<string> cps=bs->getCompatiblePortList(cid,ppNames[i],cids[j]);
+      SSIDL::array1<string> cps=bs->getCompatiblePortList(cid,ppNames[i],cids[j]);
       for(unsigned k=0; k<cps.size(); k++){
 	cout<<"\t|___ "<<cps[k]<<"\t("<<cids[j]->getInstanceName()<<")"<<endl;
       }
@@ -262,7 +262,7 @@ void TxtBuilder::list_compatible(string args[])
     cout<<"#"<<i<<":\t"<<upNames[i]<<endl;
     for(unsigned j=0; j<cids.size(); j++){
       if(cids[j]==cid)continue;
-      SIDL::array1<string> cps=bs->getCompatiblePortList(cid,upNames[i],cids[j]);
+      SSIDL::array1<string> cps=bs->getCompatiblePortList(cid,upNames[i],cids[j]);
       for(unsigned k=0; k<cps.size(); k++){
 	cout<<"\t|___ "<<cps[k]<<"\t("<<cids[j]->getInstanceName()<<")"<<endl;
       }
@@ -274,7 +274,7 @@ void TxtBuilder::list_connections(string args[])
 {
   vector<ComponentID::pointer> cids;
   cids.push_back(bs->getComponentID(args[0]));
-  SIDL::array1<ConnectionID::pointer> connIDs=bs->getConnectionIDs(cids);
+  SSIDL::array1<ConnectionID::pointer> connIDs=bs->getConnectionIDs(cids);
 
   cout<<"Connections of component "<<args[0]<<":\n";
   for(unsigned i=0; i<connIDs.size();i++){
@@ -301,14 +301,25 @@ void TxtBuilder::connect(string args[])
 
 void TxtBuilder::go(string args[])
 {
-  //if(hasGoPort)
+  ComponentID::pointer cid=bs->getComponentID(args[0]);
+  bool hasGoPort=false;
+  bool isSciPort=false;
+  SSIDL::array1<string> ports = bs->getProvidedPortNames(cid);
+  for(unsigned int i=0; i < ports.size(); i++){
+    if(ports[i]=="go") hasGoPort=true;
+    if(ports[i]=="sci.go"){
+      hasGoPort=true;
+      isSciPort=true;
+    }
+  }
+
+  if(hasGoPort)
   {
-    ComponentID::pointer cid=bs->getComponentID(args[0]);
     string instanceName = cid->getInstanceName();
     string goPortName = instanceName+" goPort";
-    svc->registerUsesPort(goPortName, "gov.cca.GoPort",
-			  gov::cca::TypeMap::pointer(0));
-    ConnectionID::pointer connID=bs->connect(svc->getComponentID(), goPortName, cid, "go");
+    svc->registerUsesPort(goPortName, "sci.cca.ports.GoPort",
+			  sci::cca::TypeMap::pointer(0));
+    ConnectionID::pointer connID=bs->connect(svc->getComponentID(), goPortName, cid, isSciPort?"sci.go":"go");
     Port::pointer p = svc->getPort(goPortName);
     ports::GoPort::pointer goPort = pidl_cast<ports::GoPort::pointer>(p);
     if(goPort.isNull()){
@@ -329,7 +340,7 @@ void TxtBuilder::disconnect(string args[])
   vector<ComponentID::pointer> cids;
   cids.push_back(bs->getComponentID(args[0]));
   string port=args[1];
-  SIDL::array1<ConnectionID::pointer> connIDs=bs->getConnectionIDs(cids);
+  SSIDL::array1<ConnectionID::pointer> connIDs=bs->getConnectionIDs(cids);
   for(unsigned i=0; i<connIDs.size();i++){
     if( (connIDs[i]->getProvider()==cids[0] && port==connIDs[i]->getProviderPortName())
 	||(connIDs[i]->getUser()==cids[0] && port==connIDs[i]->getUserPortName())){
@@ -347,7 +358,7 @@ void TxtBuilder::destroy(string args[])
 {
   vector<ComponentID::pointer> cids;
   cids.push_back(bs->getComponentID(args[0]));
-  SIDL::array1<ConnectionID::pointer> connIDs=bs->getConnectionIDs(cids);
+  SSIDL::array1<ConnectionID::pointer> connIDs=bs->getConnectionIDs(cids);
   for(unsigned i=0; i<connIDs.size();i++){
     bs->disconnect(connIDs[i],0);
   }
@@ -366,7 +377,7 @@ void TxtBuilder::execute(string args[])
     char cmdline[n];
     file.getline(cmdline,n);
     if(string(cmdline).find("EOF",0)==0) break;
-    cout<<"Executing: "<<cmdline<<endl;
+    cout<<endl<<"Executing: "<<cmdline<<endl;
     exec_command(cmdline);
   }
 }
@@ -418,7 +429,7 @@ void TxtBuilder::bad_command(string args[])
 
 
 /*
-void myBuilderPort::buildRemotePackageMenus(const  gov::cca::ports::ComponentRepository::pointer &reg,
+void myBuilderPort::buildRemotePackageMenus(const  sci::cca::ports::ComponentRepository::pointer &reg,
 				    const std::string &frameworkURL)
 {
   builder->buildRemotePackageMenus(reg, frameworkURL);
