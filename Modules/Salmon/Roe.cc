@@ -56,7 +56,8 @@ Roe::Roe(Salmon* s, const clString& id)
   do_stereo("do_stereo", id, this), drawimg("drawimg", id, this),
   saveprefix("saveprefix", id, this),
   tracker_state("tracker_state", id, this),
-  id(id),doingMovie(0),curFrame(0),curName("/tmp/movie")
+  id(id),doingMovie(0),makeMPEG(0),curFrame(0),curName("/tmp/movie"),
+  radioMovie("none")
 {
     inertia_mode=0;
     bgcolor.set(Color(0,0,0));

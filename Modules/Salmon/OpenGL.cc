@@ -1,4 +1,3 @@
-
 /*
  *  OpenGL.cc: Render geometry using opengl
  *
@@ -10,7 +9,6 @@
  *
  *  Copyright (C) 1994 SCI Group
  */
-
 
 #include <Modules/Salmon/Renderer.h>
 #include <Modules/Salmon/Roe.h>
@@ -38,6 +36,7 @@
 #include <string.h>
 #include <Datatypes/Image.h>
 #include <Multitask/AsyncReply.h>
+#include "MpegEncoder.h"
 
 #ifdef __sgi
 #include <X11/extensions/SGIStereo.h>
@@ -80,6 +79,12 @@ class OpenGL : public Renderer {
     OpenGLHelper* helper;
     clString my_openglname;
     Array1<XVisualInfo*> visuals;
+
+   /* Call this each time an mpeg frame is generated. */
+   void addMpegFrame();
+   MpegEncoder mpEncoder;
+   bool encoding_mpeg;
+  
 public:
     OpenGL();
     virtual ~OpenGL();
@@ -159,6 +164,7 @@ RegisterRenderer OpenGL_renderer("OpenGL", &query_OpenGL, &make_OpenGL);
 OpenGL::OpenGL()
 : tkwin(0), send_mb(10), recv_mb(10), helper(0), get_mb(5)
 {
+    encoding_mpeg = false;
     strbuf=scinew char[STRINGSIZE];
     drawinfo=scinew DrawInfoOpenGL;
     fpstimer.start();
@@ -168,6 +174,9 @@ OpenGL::~OpenGL()
 {
     fpstimer.stop();
     delete[] strbuf;
+    
+    if(encoding_mpeg) // make sure we finish up mpeg that was in progress
+      encoding_mpeg = false;
 }
 
 clString OpenGL::create_window(Roe*,
@@ -549,10 +558,12 @@ void OpenGL::redraw_frame()
 	    // Show the pretty picture
 	    glXSwapBuffers(dpy, win);
 #ifdef __sgi
-	    if(saveprefix != ""){
+	    // Note: saveprefix is controlled by the Roe Edit->Animation panel.
+	    static int framecount = 0; 
+	    if(saveprefix != ""){      
 	      // Save out the image...
 	      char filename[200];
-	      sprintf(filename, "%s%04d.rgb", saveprefix(), t);
+	      sprintf(filename, "%s%04d.rgb", saveprefix(), framecount++);
 	      unsigned short* reddata=scinew unsigned short[xres*yres];
 	      unsigned short* greendata=scinew unsigned short[xres*yres];
 	      unsigned short* bluedata=scinew unsigned short[xres*yres];
@@ -560,19 +571,19 @@ void OpenGL::redraw_frame()
 	      glReadPixels(0, 0, xres, yres, GL_GREEN, GL_UNSIGNED_SHORT, greendata);
 	      glReadPixels(0, 0, xres, yres, GL_BLUE, GL_UNSIGNED_SHORT, bluedata);
 	      IMAGE* image=iopen(filename, "w", RLE(1), 3, xres, yres, 3);
-	      unsigned short* rr=reddata;
-	      unsigned short* gg=greendata;
-	      unsigned short* bb=bluedata;
+	      unsigned short* rr=reddata; // (???) Are xx just for shorthand? No.
+	      unsigned short* gg=greendata;// -> xx is altered, must use handle 
+	      unsigned short* bb=bluedata;// -> so original pointers aren't lost.
 	      for(int y=0;y<yres;y++){
 		for(int x=0;x<xres;x++){
-		  rr[x]>>=8;
-		  gg[x]>>=8;
+		  rr[x]>>=8;	// (???) Why are these being shifted?
+		  gg[x]>>=8;	// -> because unsigned short is 16 bits.
 		  bb[x]>>=8;
 		}
-		putrow(image, rr, y, 0);
+		putrow(image, rr, y, 0); // (???) Where is this fcn defined?
 		putrow(image, gg, y, 1);
 		putrow(image, bb, y, 2);
-		rr+=xres;
+		rr+=xres;	// Move to the next row of pixels.
 		gg+=xres;
 		bb+=xres;
 	      }
@@ -633,40 +644,145 @@ void OpenGL::redraw_frame()
 	<< " seconds\" \"" << drawinfo->polycount/timer.time()
 	    << " polygons/second\"" << " \"" << fps_whole << "."
 		<< fps_tenths << " frames/sec\""	<< '\0';
-    if (roe->doingMovie) {
-      cerr << "Saving a movie!\n";
-      unsigned char movie[10];
-      int startDiv = 100;
-      int idx=0;
-      int fi = roe->curFrame;
-      while (startDiv >= 1) {
-	movie[idx] = '0' + fi/startDiv;
-	fi = fi - (startDiv)*(fi/startDiv);
-	startDiv /= 10;
-	idx++;
-      }
-      movie[idx] = 0;
-      clString segname(roe->curName);
 
+    /***********************************/
+    /* movie makin' movie-movie makin' */
+    /***********************************/
+    if (/*roe->radioMovie.get() != "") {*/ roe->doingMovie) {
+
+      // parse (or create) the name of the file
+      clString segname(roe->curName);
       int lasthash=-1;
       for (int ii=0; ii<segname.len(); ii++) {
-	  if (segname()[ii] == '/') lasthash=ii;
+	if (segname()[ii] == '/') lasthash=ii;
       }
       clString pathname;
       if (lasthash == -1) pathname = "./";
       else pathname = segname.substr(0, lasthash+1);
       clString fname = segname.substr(lasthash+1, -1);
-      fname = fname + ".raw";
-      clString framenum((char *)movie);
-      framenum = framenum + ".";
-      clString fullpath(pathname + framenum + fname);
-      cerr << "Dumping "<<fullpath<<"....  ";
-      dump_image(fullpath);
-      cerr << " done!\n";
-      roe->curFrame++;
+      
+      if(/*roe->radioMovie.get() == "genmpeg") { */roe->makeMPEG) {	
+	if(!encoding_mpeg) {
+	  encoding_mpeg = true;
+	  int sizex = ((xres + 15)/16)*16; // round up to multiple of 16
+	  int sizey = ((yres + 15)/16)*16;
+	  // initialize mpeg maker (name and frame size)
+	  fname = fname + ".mpg";
+	  cout << "Starting MPEG: "<< (pathname+fname)
+	       << " ("<<sizex<<"x"<<sizey<<")\n" << flush;
+	  mpEncoder.BeginMpegEncode((pathname + fname)(), sizex, sizey);
+	  // don't change the frame size after this or it'll probably crash.
+	}
+	addMpegFrame();
+      }
+      else { // dump each frame
+
+	/* if mpeg has just been turned off, close the file. */
+	if(encoding_mpeg) {
+	  encoding_mpeg = false;
+	  mpEncoder.DoneEncoding();
+	}
+	
+	unsigned char movie[10];
+	int startDiv = 100;
+	int idx=0;
+	int fi = roe->curFrame;
+	while (startDiv >= 1) {
+	  movie[idx] = '0' + fi/startDiv;
+	  fi = fi - (startDiv)*(fi/startDiv);
+	  startDiv /= 10;
+	  idx++;
+	}
+	movie[idx] = 0;
+      
+	fname = fname + ".raw";
+	clString framenum((char *)movie);
+	framenum = framenum + ".";
+	clString fullpath(pathname + framenum + fname);
+	cerr << "Dumping "<<fullpath<<"....  ";
+	dump_image(fullpath);
+	cerr << " done!\n";
+	roe->curFrame++;
+      } // done dumping frames
     }
+    else {
+      if(encoding_mpeg) { // make sure we finish up mpeg that was in progress
+	encoding_mpeg = false;
+	mpEncoder.DoneEncoding();
+      }
+    }
+    /* END Movie Makin' */
+    
     TCL::execute(str.str());
     TCLTask::unlock();
+}
+
+/* Call this each time an mpeg frame is generated. */
+void OpenGL::addMpegFrame() {
+  /* get the image data and pass it to the encoder */
+  GLint vp[4];
+  glGetIntegerv(GL_VIEWPORT,vp);
+  int n=3*vp[2]*vp[3];
+  //cerr << "Dumping: " << vp[2] << "x" << vp[3] << endl;
+  unsigned char* pxl=scinew unsigned char[n];
+  
+  //    glPixelStorei(GL_UNPACK_ALIGNMENT,1);
+  glPixelStorei(GL_PACK_ALIGNMENT,1);
+  
+  glReadBuffer(GL_FRONT);
+  glReadPixels(0,0,vp[2],vp[3],GL_RGB,GL_UNSIGNED_BYTE,pxl);
+
+  
+  int sizex = ((vp[2] + 15)/16)*16; // round up to multiple of 16
+  int sizey = ((vp[3] + 15)/16)*16;
+  unsigned char *pxlred = new unsigned char[sizex*sizey];
+  unsigned char *pxlgreen = new unsigned char[sizex*sizey];
+  unsigned char *pxlblue = new unsigned char[sizex*sizey];
+ 
+  int i;
+  for(i=0; i<sizey; i++)
+    for(int j=0; j<sizex; j++)
+      if(i < vp[3] && j < vp[2]) {
+	pxlred[(vp[3]-i)*sizex + j] = pxl[3*i*vp[2] + 3*j];
+	pxlgreen[(vp[3]-i)*sizex + j] = pxl[3*i*vp[2] + 3*j+1];
+	pxlblue[(vp[3]-i)*sizex + j] = pxl[3*i*vp[2] + 3*j+2];
+      }
+
+  /* Pad the arrays out so encoder doesn't freak */
+  /* pad out arrays so that sizex and sizey are multiples of 16. */
+  int diffx = sizex - vp[2];
+  int diffy = sizey - vp[3];
+  // pad extra columns
+  for(i=0; i<sizey; i++)
+    for(int j=vp[2]; j<(vp[2] + diffx); j++) 
+      pxlred[i*sizex + j] = pxlgreen[i*sizex + j] = pxlblue[i*sizex + j] = 0;
+  // pad extra rows
+  for(i=vp[3]; i<(vp[3] + diffy); i++)
+    for(int j=0; j<sizex; j++)
+      pxlred[i*sizex + j] = pxlgreen[i*sizex + j] = pxlblue[i*sizex + j] = 0;
+ 
+  /*
+  //camtmp
+  ofstream outfile("/tmp/snap.ppm", ios::out);
+  if(!outfile) printf("error opening file.\n");
+  outfile << "P6 "<< xres <<" " << yres << " 255\n";
+  
+  //for(i=0; i<n; i++)
+    //    outfile.put(pxl[i]);
+  for(i=0; i<(n/3); i++) {
+    outfile.put(pxlred[i]);
+    outfile.put(pxlgreen[i]);
+    outfile.put(pxlblue[i]);
+  }
+    
+  outfile.close();
+  */
+  //printf("Encoding frame...\n"); 
+  mpEncoder.EncodeFrame(pxlred, pxlgreen, pxlblue);
+  delete[] pxl;
+  delete[] pxlred;
+  delete[] pxlgreen;
+  delete[] pxlblue;
 }
 
 void OpenGL::hide()
@@ -847,6 +963,18 @@ void OpenGL::dump_image(const clString& name) {
 
     glReadBuffer(GL_FRONT);
     glReadPixels(0,0,vp[2],vp[3],GL_RGB,GL_UNSIGNED_BYTE,pxl);
+
+    //camtmp
+    ofstream outfile("/tmp/snap.ppm", ios::out);
+    if(!outfile) printf("error opening file.\n");
+    outfile << "P6 "<< xres <<" " << yres << " 255\n";
+
+    int i;
+    for(i=0; i<n; i++)
+      outfile.put(pxl[i]);
+    outfile.close();
+  //end camtmp
+  
     dumpfile.write(pxl,n);
     delete[] pxl;
 }
@@ -921,7 +1049,9 @@ void Roe::setState(DrawInfoOpenGL* drawinfo,clString tclID)
     clString debug(tclID+"-"+"debug");
     clString psize(tclID+"-"+"psize");
     clString movie(tclID+"-"+"movie");
+    clString mpeg(tclID+"-"+"mpeg");
     clString movieName(tclID+"-"+"movieName");
+    clString radmov(tclID+"-"+"radmov");
     clString movieFrame(tclID+"-"+"movieFrame");
     clString use_clip(tclID+"-"+"clip");
 
@@ -980,6 +1110,7 @@ void Roe::setState(DrawInfoOpenGL* drawinfo,clString tclID)
 	    drawinfo->check_clip = 0;
 	}
 
+	get_tcl_stringvar(id, radmov, radioMovie);
 	// only set with globals...
 	if (get_tcl_stringvar(id,movie,val)) {
 	    get_tcl_stringvar(id,movieName,curName);
@@ -995,6 +1126,11 @@ void Roe::setState(DrawInfoOpenGL* drawinfo,clString tclID)
 		    curFrame=0;
 		}
 	    }
+	    get_tcl_stringvar(id,mpeg,val);
+	    if(val == "0") 
+	      makeMPEG = 0;
+	    else
+	      makeMPEG = 1;
 	}
 
 	drawinfo->init_clip(); // set clipping 

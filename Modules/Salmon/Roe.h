@@ -141,6 +141,8 @@ public:
     HVect prev_quat[3];
 
     int doingMovie;
+    clString radioMovie;
+    int makeMPEG;
     int curFrame;
     clString curName;
 

@@ -65,6 +65,7 @@ itcl_class Roe {
 	global $this-tend
 	set $this-tend 1
 	global $this-framerate
+
 	set $this-framerate 15
 	global $this-totframes
 	set $this-totframes 30
@@ -117,6 +118,8 @@ itcl_class Roe {
 	$w.menu.edit.menu add command -label "Clipping Planes..." -underline 0 -command "$this makeClipPopup"
 	$w.menu.edit.menu add command -label "Animation..." -underline 0 \
 		-command "$this makeAnimationPopup"
+	$w.menu.edit.menu add command -label "Movies..." -underline 0 \
+		-command "$this makeMoviesPopup"
 	$w.menu.edit.menu add command -label "Point Size..." -underline 0 \
 		-command "$this makePointSizePopup"
 	menubutton $w.menu.spawn -text "Spawn" -underline 0 \
@@ -248,16 +251,19 @@ itcl_class Roe {
 
 
 #  PPSloan's addition for dumping raw frames 
-	checkbutton  $m.eframe.domovie -text Movie -variable \
-	    $this-global-movie -onvalue 1 -offvalue 0 -command "$this-c redraw"
-
-	entry $m.eframe.moviebase -textvariable "$this-global-movieName" 
-
-	pack  $m.eframe.light $m.eframe.fog $m.eframe.bbox $m.eframe.clip -in $m.eframe \
-		-side top -anchor w
-
-	pack $m.eframe.domovie $m.eframe.moviebase -in $m.eframe \
-		-side top -anchor w
+#	checkbutton  $m.eframe.domovie -text Movie -variable \
+#	    $this-global-movie -onvalue 1 -offvalue 0 -command "$this-c redraw"
+#
+#	checkbutton $m.eframe.dompeg -text MPEG -variable \
+#	    $this-global-mpeg -onvalue 1 -offvalue 0 -command "$this-c redraw"
+#
+#	entry $m.eframe.moviebase -textvariable "$this-global-movieName" 
+#
+#	pack  $m.eframe.light $m.eframe.fog $m.eframe.bbox $m.eframe.clip -in $m.eframe \
+#		-side top -anchor w
+#
+#	pack $m.eframe.domovie $m.eframe.dompeg $m.eframe.moviebase -in $m.eframe \
+#		-side top -anchor w
 #  End PPSloan's addition
 
 	make_labeled_radio $m.shade "Shading:" $r top $this-global-type \
@@ -666,6 +672,38 @@ itcl_class Roe {
 	set $clip-normal-x [set $clip-normal-x-$cs]
 	set $clip-normal-y [set $clip-normal-y-$cs]
 	set $clip-normal-z [set $clip-normal-z-$cs]
+    }
+
+    method makeMoviesPopup {} {
+	set w .movies$this
+	toplevel $w
+	wm title $w "Movies"
+	wm iconname $w "Movies"
+	wm minsize $w 100 100
+	frame $w.ctl
+	pack $w.ctl -side top -fill x
+	
+# how do I do radiobuttons?
+#???	set ex .movies$this.extra
+#	radiobutton $ex.movie -variable $this-global-radmov \
+#		-text "Dump Frames" -value "dumpframes"
+#	radiobutton $ex.geoma -variable $this-global-radmov \
+#		-text "Generate MPEG" -value "genmpeg"
+#	radiobutton $ex.none -variable $this-global-radmov \
+#		-text "None" -value ""
+#	$ex.none select
+#	pack $ex.movie $ex.mpeg $ex.none -side top -anchor w
+
+# the old way...
+	checkbutton $w.domovie -text "Dump Frames" -variable \
+	    $this-global-movie -onvalue 1 -offvalue 0 
+
+	checkbutton $w.dompeg -text "Generate MPEG" -variable \
+	    $this-global-mpeg -onvalue 1 -offvalue 0 
+	pack $w.domovie $w.dompeg -side top -fill x
+
+	entry $w.savefile -textvariable $this-global-movieName
+	pack $w.savefile -side top -fill x
     }
 
     method makeAnimationPopup {} {
