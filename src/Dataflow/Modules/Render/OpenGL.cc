@@ -1273,7 +1273,7 @@ OpenGL::redraw_frame()
     int fps_whole=(int)fps;
     int fps_hund=(int)((fps-fps_whole)*100);
     ostringstream str;
-    str << viewwindow->id << " setFrameRate " << fps_whole << "." << fps_hund;
+    //    str << viewwindow->id << " setFrameRate " << fps_whole << "." << fps_hund;
     gui->execute(str.str());
     viewwindow->set_current_time(tend);
   }
@@ -1346,9 +1346,9 @@ OpenGL::redraw_frame()
       pps=drawinfo->polycount;
     str << viewwindow->id << " updatePerf \"";
     str << drawinfo->polycount << " polygons in " << timer.time()
-	<< " seconds\" \"" << pps
-	<< " polygons/second\"" << " \"" << fps_whole << "."
-	<< fps_tenths << " frames/sec\"" << '\0';
+      	<< " seconds\" \"" << pps
+    	<< " polygons/second\"" << " \"" << fps_whole << "."
+    	<< fps_tenths << " frames/sec\"" << '\0';
   //    cerr <<"updatePerf: <" << str.str() << ">\n";
 
   } else if (fpstimer.time() > 0) {
