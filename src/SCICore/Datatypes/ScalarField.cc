@@ -24,7 +24,7 @@ namespace Datatypes {
 PersistentTypeID ScalarField::type_id("ScalarField", "Datatype", 0);
 
 ScalarField::ScalarField(Representation rep)
-: have_bounds(0), have_minmax(0), rep(rep)
+  : have_bounds(0), have_minmax(0), rep(rep), separate_raw(0), raw_filename("")
 {
 }
 
@@ -284,6 +284,18 @@ void ScalarField::io(Piostream& stream)
 
 //
 // $Log$
+// Revision 1.6  2000/02/04 00:19:32  yarden
+// enable to store the grid part of a ScalarField in a seperate file.
+// a flag (sererate_raw) signal if this ScalarField was read from a split
+// input file or should be writen as two. raw_filename specify the secondary
+// file name. if no filename is given during writing, the output routines
+// will try to extract the name from the output stream and attach a '.raw'
+// extension to the binary portion.
+//
+// replaced ScalarFieldRGxxx with ScalarFieldRGTYPE. it also replaces
+// the ScalarFieldRG files (i.e. the old RG with no type specification
+// which defaults to 'double'
+//
 // Revision 1.5  1999/10/07 02:07:32  sparker
 // use standard iostreams and complex type
 //
