@@ -115,4 +115,11 @@ WARNING
       };
 } // End namespace Uintah
 
+#include <Core/Util/Endian.h>
+namespace SCIRun {
+  using namespace Uintah;
+inline void swapbytes( Uintah::CompNeoHookPlas::StateData& d)
+{ swapbytes(d.Alpha); }
+} // namespace SCIRun
+
 #endif  // __NEOHOOK_CONSTITUTIVE_MODEL_H__ 
