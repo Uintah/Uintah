@@ -65,8 +65,9 @@ set timefmt "%s"
 set grid xtics ytics
 set xlabel "ElapsedTime"
 
-plot '.data' using 1:( \$4==\$3? \$2 :0  ) t 'restarted',\
-     '.data' using 1:2 t 'dt' with lines 
+plot '.data' using 1:2 t 'dt' with lines,\
+     '.data' using 1:( \$4==\$3? \$2 :0  ) t 'restarted'
+      
 pause -1 "Hit return to exit"
 fin
 gnuplot gp
