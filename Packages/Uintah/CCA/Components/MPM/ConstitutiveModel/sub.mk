@@ -45,7 +45,8 @@ SRCS     += \
 	$(SRCDIR)/AcousticTensorCheck.cc \
 	$(SRCDIR)/BeckerCheck.cc \
 	$(SRCDIR)/DruckerCheck.cc \
-	$(SRCDIR)/DruckerBeckerCheck.cc 
+	$(SRCDIR)/DruckerBeckerCheck.cc \
+	$(SRCDIR)/PlasticityState.cc 
 
 PSELIBS := Packages/Uintah/Core/Grid \
 	Packages/Uintah/CCA/Components/ICE \

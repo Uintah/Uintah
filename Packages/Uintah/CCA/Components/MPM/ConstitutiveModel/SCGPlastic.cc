@@ -105,62 +105,59 @@ SCGPlastic::updatePlastic(const particleIndex , const double& )
 }
 
 double 
-SCGPlastic::computeFlowStress(const double& plasticStrainRate,
-			      const double& ,
-                              const double& T,
+SCGPlastic::computeFlowStress(const PlasticityState* state,
                               const double& delT,
                               const double& ,
                               const MPMMaterial* ,
-                              const particleIndex idx)
+                              const particleIndex )
 {
-  // Calculate strain rate and incremental strain
-  double edot = plasticStrainRate;
-  double delEps = edot*delT;
+  // Get the state data
+  double ep = state->plasticStrain;
+  double mu = state->shearModulus;
+  ASSERT(mu > 0.0);
 
-  // Check if temperature is correct
-  if (T <= 0.0) {
-    ostringstream desc;
-    desc << "**SCG ERROR** Absolute temperature <= 0." << endl;
-    desc << "T = " << T << " edot = " << edot << endl;
-    throw InvalidValue(desc.str());
-  }
+  // Calculate mu/mu_0
+  double mu_mu_0 = mu/d_CM.mu_0;
 
-  double sigma = 0.0;
+  // Calculate Y <= Ymax
+  double Ya = 1.0 + d_CM.beta*(ep - d_CM.epsilon_p0);
+  ASSERT(Ya >= 0.0);
+  double Y = Min(d_CM.sigma_0*pow(Ya, d_CM.n), d_CM.Y_max);
+
+  double sigma = Y*mu_mu_0;
   return sigma;
 }
 
-/*! The evolving internal variable is \f$q = \hat\sigma_e\f$.  If the 
+/*! The evolving internal variable is \f$q = \epsilon_p\f$.  If the 
   evolution equation for internal variables is of the form 
   \f$ \dot q = \gamma h (\sigma, q) \f$, then 
   \f[
-  \dot q = \frac{d\hat\sigma_e}{dt} 
-  = \frac{d\hat\sigma_e}{d\epsilon} \frac{d\epsilon}{dt}
-  = \theta \dot\epsilon .
+  \dot q = \frac{d\epsilon_p}{dt} = \dot\epsilon_p .
   \f] 
-  If \f$\dot\epsilon = \gamma\f$, then \f$ \theta = h \f$.
-  Also, \f$ f_q = \frac{\partial f}{\partial \hat\sigma_e} \f$.
+  If \f$\dot\epsilon_p = \gamma\f$, then \f$ 1 = h \f$.
+  Also, \f$ f_q = \frac{\partial f}{\partial \epsilon_p} \f$.
   For the von Mises yield condition, \f$(f)\f$, 
-  \f$ f_q = \frac{\partial \sigma}{\partial \hat\sigma_e} \f$
+  \f$ f_q = \frac{\partial \sigma}{\partial \epsilon_p} \f$
   where \f$\sigma\f$ is the SCG flow stress.
 */
 void 
-SCGPlastic::computeTangentModulus(const Matrix3& sig,
-				  const double& plasticStrainRate,
-				  const double& plasticStrain,
-				  double T,
-				  double ,
-				  const particleIndex idx,
+SCGPlastic::computeTangentModulus(const Matrix3& stress,
+				  const PlasticityState* state,
+				  const double& ,
 				  const MPMMaterial* ,
+				  const particleIndex idx,
 				  TangentModulusTensor& Ce,
 				  TangentModulusTensor& Cep)
 {
+  // Get f_q = dsigma/dep (h = 1, therefore f_q.h = f_q)
+  double f_q = evalDerivativeWRTPlasticStrain(state, idx);
+
   // Calculate the deviatoric stress and rate of deformation
   Matrix3 one; one.Identity();
-  Matrix3 sigdev = sig - one*(sig.Trace()/3.0);
+  Matrix3 sigdev = stress - one*(stress.Trace()/3.0);
 
   // Calculate the equivalent stress and strain rate
   double sigeqv = sqrt(sigdev.NormSquared()); 
-  double edot = plasticStrainRate;
 
   // Calculate the direction of plastic loading (r)
   Matrix3 rr = sigdev*(1.5/sigeqv);
@@ -192,39 +189,99 @@ SCGPlastic::computeTangentModulus(const Matrix3& sig,
         int kk1 = kk+1;
 	for (int ll = 0; ll < 3; ++ll) {
           Cep(ii,jj,kk,ll) = Ce(ii,jj,kk,ll) - 
-	    Cr(ii1,jj1)*rC(kk1,ll+1)/rCr;
+	    Cr(ii1,jj1)*rC(kk1,ll+1)/(-f_q + rCr);
 	}  
       }  
     }  
   }  
 }
 
-
-double
-SCGPlastic::evalDerivativeWRTTemperature(double edot,
-                                         double ep,
-                                         double T,
-					 const particleIndex idx)
-{
-}
-
-double
-SCGPlastic::evalDerivativeWRTPlasticStrain(double edot,
-                                           double ep,
-                                           double T,
-					   const particleIndex idx)
-{
-}
-
-
 void
-SCGPlastic::evalDerivativeWRTScalarVars(double edot,
-                                        double ep,
-                                        double T,
+SCGPlastic::evalDerivativeWRTScalarVars(const PlasticityState* state,
                                         const particleIndex idx,
                                         Vector& derivs)
 {
-  derivs[0] = evalDerivativeWRTPlasticStrain(edot, ep, T, idx);
-  derivs[1] = evalDerivativeWRTTemperature(edot, ep, T, idx);
-  derivs[2] = derivs[0];
+  derivs[0] = evalDerivativeWRTPressure(state, idx);
+  derivs[1] = evalDerivativeWRTTemperature(state, idx);
+  derivs[2] = evalDerivativeWRTPlasticStrain(state, idx);
 }
+
+double
+SCGPlastic::evalDerivativeWRTPlasticStrain(const PlasticityState* state,
+					   const particleIndex )
+{
+  // Get the state data
+  double ep = state->plasticStrain;
+  double mu = state->shearModulus;
+  ASSERT(mu > 0.0);
+
+  // Calculate mu/mu_0
+  double mu_mu_0 = mu/d_CM.mu_0;
+
+  // Calculate Y <= Ymax
+  double Ya = 1.0 + d_CM.beta*(ep - d_CM.epsilon_p0);
+  ASSERT(Ya >= 0.0);
+  double Y = pow(Ya, d_CM.n-1.0);
+
+  double dsigma_dep = d_CM.sigma_0*mu_mu_0*d_CM.n*d_CM.beta*Y;
+  return dsigma_dep;
+}
+
+///////////////////////////////////////////////////////////////////////////
+/*  Compute the shear modulus. */
+///////////////////////////////////////////////////////////////////////////
+double
+SCGPlastic::computeShearModulus(const PlasticityState* state)
+{
+  double eta = state->density/state->initialDensity;
+  ASSERT(eta > 0.0);
+  eta = pow(eta, 1.0/3.0);
+  double mu = d_CM.mu_0*(1.0 + d_CM.A*state->pressure/eta + 
+              d_CM.B*(state->temperature - 300.0));
+  return mu;
+}
+
+///////////////////////////////////////////////////////////////////////////
+/* Compute the melting temperature */
+///////////////////////////////////////////////////////////////////////////
+double
+SCGPlastic::computeMeltingTemp(const PlasticityState* state)
+{
+  double eta = state->density/state->initialDensity;
+  double power = 2.0*(d_CM.Gamma_0 - d_CM.a - 1.0/3.0);
+  double Tm = state->initialMeltTemp*exp(2.0*d_CM.a*(1.0 - 1.0/eta))*
+              pow(eta,power);
+  return Tm;
+}
+
+double
+SCGPlastic::evalDerivativeWRTTemperature(const PlasticityState* state,
+					 const particleIndex )
+{
+  // Get the state data
+  double ep = state->plasticStrain;
+
+  // Calculate Y <= Ymax
+  double Ya = 1.0 + d_CM.beta*(ep - d_CM.epsilon_p0);
+  ASSERT(Ya >= 0.0);
+  double Y = Min(d_CM.sigma_0*pow(Ya, d_CM.n), d_CM.Y_max);
+
+  return Y*d_CM.B;
+}
+
+double
+SCGPlastic::evalDerivativeWRTPressure(const PlasticityState* state,
+				      const particleIndex )
+{
+  // Get the state data
+  double ep = state->plasticStrain;
+
+  // Calculate Y <= Ymax
+  double Ya = 1.0 + d_CM.beta*(ep - d_CM.epsilon_p0);
+  ASSERT(Ya >= 0.0);
+  double Y = Min(d_CM.sigma_0*pow(Ya, d_CM.n), d_CM.Y_max);
+
+  double eta = state->density/state->initialDensity;
+  return Y*d_CM.A/pow(eta,1.0/3.0);
+}
+
