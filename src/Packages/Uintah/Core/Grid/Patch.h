@@ -429,6 +429,8 @@ WARNING
      void getFaceCells(FaceType face, int offset, IntVector& l,
 		       IntVector& h) const;
 
+     vector<FaceType>* getBCFaces() { return &d_BCFaces; }
+
      static const int MAX_PATCH_SELECT = 32;
      typedef fixedvector<const Patch*, MAX_PATCH_SELECT> selectType;
 
@@ -589,6 +591,10 @@ WARNING
      bool in_database;
      bool have_layout;
      IntVector layouthint;
+
+     //////////
+     // Keep track of faces on the edge of the domain
+     vector<FaceType> d_BCFaces;
    };
 
 } // End namespace Uintah
