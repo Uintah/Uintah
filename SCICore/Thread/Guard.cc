@@ -1,6 +1,6 @@
 
 /*
- *  CrowdMonitor: Multiple reader/single writer locks
+ *  Guard: Automatically lock/unlock a mutex or crowdmonitor.
  *  $Id$
  *
  *  Written by:
@@ -12,8 +12,8 @@
  *  Copyright (C) 1997 SCI Group
  */
 
-#include <SCICore/Thread/CrowdMonitor.h>
 #include <SCICore/Thread/Guard.h>
+#include <SCICore/Thread/CrowdMonitor.h>
 #include <SCICore/Thread/Mutex.h>
 
 using SCICore::Thread::Guard;
@@ -45,6 +45,11 @@ Guard::~Guard()
 
 //
 // $Log$
+// Revision 1.5  1999/09/25 08:29:28  sparker
+// Added MutexPool class - a utility for sharing Mutexes among a large
+//  number of objects
+// Fixed comments in Guard
+//
 // Revision 1.4  1999/08/28 03:46:47  sparker
 // Final updates before integration with PSE
 //
