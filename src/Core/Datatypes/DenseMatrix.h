@@ -58,7 +58,6 @@ class ColumnMatrix;
 class SparseRowMatrix;
 
 class DenseMatrix : public Matrix {
-  double** data;
   double*  dataptr_;
 
   void swap_rows(double *a, double *b);
@@ -106,19 +105,19 @@ public:
   double  sumOfCol(int);
   double  sumOfRow(int);
   
-  int     solve(ColumnMatrix&, int overwrite=0);
-  int     solve(const ColumnMatrix& rhs, ColumnMatrix& lhs,
+  bool    solve(ColumnMatrix&, int overwrite=0);
+  bool    solve(const ColumnMatrix& rhs, ColumnMatrix& lhs,
 		int overwrite=0);
-  int     solve(vector<double>& sol, int overwrite=0);
-  int     solve(const vector<double>& rhs, vector<double>& lhs,
+  bool    solve(vector<double>& sol, int overwrite=0);
+  bool    solve(const vector<double>& rhs, vector<double>& lhs,
 		int overwrite=0);
 
   //! fast accessors
   inline double*  operator[](int r) {
-    return data[r];
+    return dataptr_ + r * ncols_;
   };
   inline double const*  operator[](int r) const{
-    return data[r];
+    return dataptr_ + r * ncols_;
   };
   
   inline double* getData() {
@@ -131,7 +130,7 @@ public:
   //! throws an assertion if not square
   double determinant();
 
-  void mult(double s);
+  void mult(double s) { scalar_multiply(s); }
   
   void svd(DenseMatrix&, SparseRowMatrix&, DenseMatrix&);
   void eigenvalues(ColumnMatrix&, ColumnMatrix&);
