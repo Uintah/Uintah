@@ -309,7 +309,7 @@ void DenseMatrix::invert()
             double factor=data[j][i]*denom;
             double* r2=data[j];
 	    double* n2=newdata[j];
-            for(int k=i;k<nr;k++){
+            for(int k=0;k<nr;k++){
                 r2[k]-=factor*r1[k];
 		n2[k]-=factor*n1[k];
 	    }
@@ -327,7 +327,7 @@ void DenseMatrix::invert()
             double factor=data[j][i]*denom;
             double* r2=data[j];
 	    double* n2=newdata[j];
-            for(int k=i;k<nr;k++){
+            for(int k=0;k<nr;k++){
                 r2[k]-=factor*r1[k];
 		n2[k]-=factor*n1[k];
 	    }
