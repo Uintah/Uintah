@@ -54,6 +54,7 @@ WARNING
 #define FORT_BCUVEL bcuvel_
 #define FORT_BCVVEL bcvvel_
 #define FORT_BCWVEL bcwvel_
+#define FORT_MASCAL mascal_
 #define FORT_PRESSBC pressbc_
 #define FORT_VELCOEF velcoef_
 #define FORT_SCALARCOEF scalcof_
@@ -61,7 +62,6 @@ WARNING
 #define FORT_VELSOURCE vsource_
 #define FORT_SCALARSOURCE ssource_
 #define FORT_APCAL apcal_
-#define FORT_MASCAL mascal_
 #define FORT_COLDPROPS cprops_
 #define FORT_UNDERRELAX urelax_
 #define FORT_RBGLISOLV lisolv_
@@ -451,6 +451,28 @@ extern "C"
 		    const double* fac3w, const double* fac4w,
 		    const int* ktsdw, const int* kbsdw);
 
+    ////////////////////////////////////////////////////////////////////////
+    //
+    // Calculate the velocity mass source terms
+    //
+    void
+    FORT_MASCAL(const int* domLo, const int* domHi,
+		const int* idxLo, const int* idxHi,
+		const double* velocity,  
+		const double* velCoefAP,
+		const double* velCoefAE,
+		const double* velCoefAW,
+		const double* velCoefAN,
+		const double* velCoefAS,
+		const double* velCoefAT,
+		const double* velCoefAB,
+		double* velNonLinSrc, double* velLinSrc,
+		double* velConvectCoefAE,
+		double* velConvectCoefAW,
+		double* velConvectCoefAN,
+		double* velConvectCoefAS,
+		double* velConvectCoefAT,
+		double* velConvectCoefAB);
 
 }
 
@@ -458,6 +480,9 @@ extern "C"
 
 //
 // $Log$
+// Revision 1.15  2000/07/12 07:35:46  bbanerje
+// Added stuff for mascal : Rawat: Labels and dataWarehouse in velsrc need to be corrected.
+//
 // Revision 1.14  2000/07/12 05:14:25  bbanerje
 // Added vvelsrc and wvelsrc .. some changes to uvelsrc.
 // Rawat :: Labels are getting hopelessly muddled unless we can do something

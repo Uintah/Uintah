@@ -288,9 +288,12 @@ PressureSolver::buildLinearMatrix(const ProcessorGroup* pc,
 				    Arches::PRESSURE);
 
     // Modify Velocity Mass Source
-    //  inputs :
-    //  outputs:
-    d_source->modifyVelMassSource(pc, patch, new_dw, new_dw, delta_t, index);
+    //  inputs : [u,v,w]VelocitySIVBC, [u,v,w]VelCoefPBLM, 
+    //           [u,v,w]VelConvCoefPBLM, [u,v,w]VelLinSrcPBLM, 
+    //           [u,v,w]VelNonLinSrcPBLM
+    //  outputs: [u,v,w]VelLinSrcPBLM, [u,v,w]VelNonLinSrcPBLM
+    d_source->modifyVelMassSource(pc, patch, new_dw, new_dw, delta_t, index,
+				  Arches::PRESSURE);
 
     // Calculate Velocity diagonal
     //  inputs : [u,v,w]VelCoefPBLM, [u,v,w]VelLinSrcPBLM
@@ -347,6 +350,9 @@ PressureSolver::normPressure(const Patch* ,
 
 //
 // $Log$
+// Revision 1.32  2000/07/12 07:35:46  bbanerje
+// Added stuff for mascal : Rawat: Labels and dataWarehouse in velsrc need to be corrected.
+//
 // Revision 1.31  2000/07/11 15:46:28  rawat
 // added setInitialGuess in PicardNonlinearSolver and also added uVelSrc
 //
