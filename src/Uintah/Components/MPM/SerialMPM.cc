@@ -84,6 +84,58 @@ void SerialMPM::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
     */
     
    MPMPhysicalModules::build(prob_spec,d_sharedState);
+
+      // Load up all the VarLabels that will be used in each of the
+   // physical models
+
+   lb->registerPermanentParticleState(lb->pVelocityLabel);
+   lb->registerPermanentParticleState(lb->pExternalForceLabel);
+   if (d_burns) {
+     lb->registerPermanentParticleState(lb->pSurfLabel);
+     lb->registerPermanentParticleState(lb->pIsIgnitedLabel);
+   }
+      if(MPMPhysicalModules::fractureModel){
+      lb->registerPermanentParticleState(lb->pSurfaceNormalLabel); 
+      lb->registerPermanentParticleState(lb->pAverageMicrocrackLength); 
+   }
+   if(MPMPhysicalModules::heatConductionModel){
+      lb->registerPermanentParticleState(lb->pTemperatureLabel); 
+      lb->registerPermanentParticleState(lb->pTemperatureGradientLabel);
+      //lb->registerPermanentParticleState(lb->pExternalHeatRateLabel); 
+   }
+   lb->registerPermanentParticleState(lb->pParticleIDLabel);
+   lb->registerPermanentParticleState(lb->pMassLabel);
+   lb->registerPermanentParticleState(lb->pVolumeLabel);
+   lb->registerPermanentParticleState(lb->pDeformationMeasureLabel);
+   lb->registerPermanentParticleState(lb->pStressLabel);
+
+   lb->registerPermanentParticleState_preReloc(lb->pVelocityLabel_preReloc);
+   lb->registerPermanentParticleState_preReloc(lb->pExternalForceLabel_preReloc);
+   if(d_burns){
+     lb->registerPermanentParticleState_preReloc(lb->pSurfLabel_preReloc);
+     lb->registerPermanentParticleState_preReloc(lb->pIsIgnitedLabel_preReloc); //for burn models
+   }
+   if(MPMPhysicalModules::fractureModel){
+     lb->registerPermanentParticleState_preReloc(lb->pSurfaceNormalLabel_preReloc); // fracture
+     lb->registerPermanentParticleState_preReloc(lb->pAverageMicrocrackLength_preReloc); //frac.
+   }
+
+   if(MPMPhysicalModules::heatConductionModel){
+     lb->registerPermanentParticleState_preReloc(lb->pTemperatureLabel_preReloc); //for heat 
+     lb->registerPermanentParticleState_preReloc(lb->pTemperatureGradientLabel_preReloc);
+      //lb->registerPermanentParticleState_preReloc(lb->pExternalHeatRateLabel_preReloc); //for heat conduction
+   }
+
+   lb->registerPermanentParticleState_preReloc(lb->pParticleIDLabel_preReloc);
+   lb->registerPermanentParticleState_preReloc(lb->pMassLabel_preReloc);
+   lb->registerPermanentParticleState_preReloc(lb->pVolumeLabel_preReloc);
+   lb->registerPermanentParticleState_preReloc(lb->pDeformationMeasureLabel_preReloc);
+   lb->registerPermanentParticleState_preReloc(lb->pStressLabel_preReloc);
+
+   Material* matl = d_sharedState->getMaterial( 0 );
+   MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
+   mpm_matl->getConstitutiveModel()->addParticleState(lb->d_particleState,
+				      lb->d_particleState_preReloc);
   
    cerr << "SerialMPM::problemSetup passed.\n";
 }
@@ -688,68 +740,12 @@ void SerialMPM::scheduleTimeAdvance(double /*t*/, double /*dt*/,
 
     }
 
-   // This array should contain a list of all of the particle state
-   // that will be used in the next time step
-   // We should figure out how to move this into MPMLabel - Steve
-   // We should also figure out how to get rid of the preReloc sillyness.
-   vector<const VarLabel*> plabels;
-   plabels.push_back(lb->pVelocityLabel);
-   plabels.push_back(lb->pExternalForceLabel);
-   if(d_burns){
-      plabels.push_back(lb->pSurfLabel);
-      plabels.push_back(lb->pIsIgnitedLabel); //for burn models
-   }
-   if(MPMPhysicalModules::fractureModel){
-      plabels.push_back(lb->pSurfaceNormalLabel); //for fracture
-      plabels.push_back(lb->pAverageMicrocrackLength); //for fracture
-   }
-   if(MPMPhysicalModules::heatConductionModel){
-      plabels.push_back(lb->pTemperatureLabel); //for heat conduction
-      plabels.push_back(lb->pTemperatureGradientLabel);
-      //plabels.push_back(lb->pExternalHeatRateLabel); //for heat conduction
-   }
-   plabels.push_back(lb->pParticleIDLabel);
-   plabels.push_back(lb->pMassLabel);
-   plabels.push_back(lb->pVolumeLabel);
-   plabels.push_back(lb->pDeformationMeasureLabel);
-   plabels.push_back(lb->pStressLabel);
-
-   // This array should contain a list of all of the particle state
-   // that will be used in the next time step
-   // We should figure out how to move this into MPMLabel - Steve
-   vector<const VarLabel*> plabels_preReloc;
-   plabels_preReloc.push_back(lb->pVelocityLabel_preReloc);
-   plabels_preReloc.push_back(lb->pExternalForceLabel_preReloc);
-   if(d_burns){
-     plabels_preReloc.push_back(lb->pSurfLabel_preReloc);
-     plabels_preReloc.push_back(lb->pIsIgnitedLabel_preReloc); //for burn models
-   }
-   if(MPMPhysicalModules::fractureModel){
-     plabels_preReloc.push_back(lb->pSurfaceNormalLabel_preReloc); // fracture
-     plabels_preReloc.push_back(lb->pAverageMicrocrackLength_preReloc); //frac.
-   }
-
-   if(MPMPhysicalModules::heatConductionModel){
-      plabels_preReloc.push_back(lb->pTemperatureLabel_preReloc); //for heat 
-      plabels_preReloc.push_back(lb->pTemperatureGradientLabel_preReloc);
-      //plabels_preReloc.push_back(lb->pExternalHeatRateLabel_preReloc); //for heat conduction
-   }
-
-   plabels_preReloc.push_back(lb->pParticleIDLabel_preReloc);
-   plabels_preReloc.push_back(lb->pMassLabel_preReloc);
-   plabels_preReloc.push_back(lb->pVolumeLabel_preReloc);
-   plabels_preReloc.push_back(lb->pDeformationMeasureLabel_preReloc);
-   plabels_preReloc.push_back(lb->pStressLabel_preReloc);
-
-   // This sucks, fix it - Steve
-   Material* matl = d_sharedState->getMaterial( 0 );
-   MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
-   mpm_matl->getConstitutiveModel()->addParticleState(plabels, plabels_preReloc);
-
 
    new_dw->scheduleParticleRelocation(level, sched, old_dw,
-				      lb->pXLabel_preReloc, plabels_preReloc,
-				      lb->pXLabel, plabels, numMatls);
+				      lb->pXLabel_preReloc, 
+				      lb->d_particleState_preReloc,
+				      lb->pXLabel, lb->d_particleState,
+				      numMatls);
    if(MPMPhysicalModules::fractureModel) {
       new_dw->pleaseSave(lb->pDeformationMeasureLabel, numMatls);
    }
@@ -1602,6 +1598,10 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 }
 
 // $Log$
+// Revision 1.99  2000/07/12 18:45:07  jas
+// Cleaned up the creation of the particle state and moved things into
+// MPMLabel.
+//
 // Revision 1.98  2000/07/05 23:43:30  jas
 // Changed the way MPMLabel is used.  No longer a Singleton class.  Added
 // MPMLabel* lb to various classes to retain the original calling

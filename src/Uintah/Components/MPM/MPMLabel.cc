@@ -223,8 +223,16 @@ void MPMLabel::registerPermanentParticleState(const VarLabel* label)
   d_particleState.push_back(label);
 }
 
+void MPMLabel::registerPermanentParticleState_preReloc(const VarLabel* label)
+{
+  d_particleState_preReloc.push_back(label);
+}
 
 // $Log$
+// Revision 1.18  2000/07/12 18:45:06  jas
+// Cleaned up the creation of the particle state and moved things into
+// MPMLabel.
+//
 // Revision 1.17  2000/07/05 23:43:29  jas
 // Changed the way MPMLabel is used.  No longer a Singleton class.  Added
 // MPMLabel* lb to various classes to retain the original calling
