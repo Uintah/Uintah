@@ -142,6 +142,21 @@ C-----------------------------------------------------------------------
      $     dim_lo_hts_fcz(2):dim_hi_hts_fcz(2),
      $     dim_lo_hts_fcz(3):dim_hi_hts_fcz(3))      
 
+      double precision hts_fcx_rad(
+     $     dim_lo_hts_fcx(1):dim_hi_hts_fcx(1),
+     $     dim_lo_hts_fcx(2):dim_hi_hts_fcx(2),
+     $     dim_lo_hts_fcx(3):dim_hi_hts_fcx(3))
+
+      double precision hts_fcy_rad(
+     $     dim_lo_hts_fcy(1):dim_hi_hts_fcy(1),
+     $     dim_lo_hts_fcy(2):dim_hi_hts_fcy(2),
+     $     dim_lo_hts_fcy(3):dim_hi_hts_fcy(3))
+
+      double precision hts_fcz_rad(
+     $     dim_lo_hts_fcz(1):dim_hi_hts_fcz(1),
+     $     dim_lo_hts_fcz(2):dim_hi_hts_fcz(2),
+     $     dim_lo_hts_fcz(3):dim_hi_hts_fcz(3))      
+
       double precision hts_cc(
      $     dim_lo_hts_cc(1):dim_hi_hts_cc(1),
      $     dim_lo_hts_cc(2):dim_hi_hts_cc(2),
@@ -334,7 +349,7 @@ c     alone,) so we don't need to divide by (1-epsg).
      $                    (tg(i-1,j,k) - 
      $                    ts_fcx(i,j,k))
 
-#if 0
+c#if 0
 c     radiative heat transfer to intrusions
 c     note that at this point (November 9, 2002) we
 c     have no model for partial cells. Qn: should there
@@ -343,12 +358,17 @@ c     cell not all the intrusion is seen by the gas?
 c     That would require a model for partial cells
 c     as well.
 
-c                     hts_fcx(i,j,k) = 
-c     $                    hts_fcx(i,j,k) + 
-c     $                    rfluxE(i-1,j,k)*areayz*
-c     $                    epss(i,j,k)
+                     hts_fcx(i,j,k) = 
+     $                    hts_fcx(i,j,k) + 
+     $                    rfluxE(i-1,j,k)*areayz*
+     $                    epss(i,j,k)
 
-#endif
+                     hts_fcx_rad(i,j,k) = 
+     $                    hts_fcx_rad(i,j,k) + 
+     $                    rfluxE(i-1,j,k)*areayz*
+     $                    epss(i,j,k)
+
+c#endif
 
 #ifdef debugEnergyExchange
                      print*, i,j,k, hts_fcx(i,j,k), 
@@ -388,7 +408,7 @@ c     $                    epss(i,j,k)
      $                    (tg(i+1,j,k) - 
      $                    ts_fcx(i,j,k))
 
-#if 0
+c#if 0
 c     radiative heat transfer to intrusions
 c     note that at this point (November 9, 2002) we
 c     have no model for partial cells. Qn: should there
@@ -397,12 +417,17 @@ c     cell not all the intrusion is seen by the gas?
 c     That would require a model for partial cells
 c     as well.
 
-c                     hts_fcx(i+1,j,k) = 
-c     $                    hts_fcx(i+1,j,k) + 
-c     $                    rfluxW(i+1,j,k)*areayz*
-c     $                    epss(i,j,k)
+                     hts_fcx(i+1,j,k) = 
+     $                    hts_fcx(i+1,j,k) + 
+     $                    rfluxW(i+1,j,k)*areayz*
+     $                    epss(i,j,k)
 
-#endif
+                     hts_fcx_rad(i+1,j,k) = 
+     $                    hts_fcx_rad(i+1,j,k) + 
+     $                    rfluxW(i+1,j,k)*areayz*
+     $                    epss(i,j,k)
+
+c#endif
 
 #ifdef debugEnergyExchange
                      print*, i+1,j,k, hts_fcx(i+1,j,k),
@@ -442,7 +467,7 @@ c     south face of intrusion
      $                    (tg(i,j-1,k) -
      $                    ts_fcy(i,j,k))
 
-#if 0
+c#if 0
 c     radiative heat transfer to intrusions
 c     note that at this point (November 9, 2002) we
 c     have no model for partial cells. Qn: should there
@@ -451,12 +476,17 @@ c     cell not all the intrusion is seen by the gas?
 c     That would require a model for partial cells
 c     as well.
 
-c                     hts_fcy(i,j,k) = 
-c     $                    hts_fcy(i,j,k) +
-c     $                    rfluxN(i,j-1,k)*areaxz*
-c     $                    epss(i,j,k)
+                     hts_fcy(i,j,k) = 
+     $                    hts_fcy(i,j,k) +
+     $                    rfluxN(i,j-1,k)*areaxz*
+     $                    epss(i,j,k)
 
-#endif
+                     hts_fcy_rad(i,j,k) = 
+     $                    hts_fcy_rad(i,j,k) +
+     $                    rfluxN(i,j-1,k)*areaxz*
+     $                    epss(i,j,k)
+
+c#endif
 
 #ifdef debugEnergyExchange
                      print*, i,j,k, hts_fcy(i,j,k),
@@ -496,7 +526,7 @@ c     $                    epss(i,j,k)
      $                    (tg(i,j+1,k) - 
      $                    ts_fcx(i,j,k))
 
-#if 0
+c#if 0
 c     radiative heat transfer to intrusions
 c     note that at this point (November 9, 2002) we
 c     have no model for partial cells. Qn: should there
@@ -505,12 +535,17 @@ c     cell not all the intrusion is seen by the gas?
 c     That would require a model for partial cells
 c     as well.
 
-c                     hts_fcy(i,j+1,k) = 
-c     $                    hts_fcy(i,j+1,k) +
-c     $                    rfluxS(i,j+1,k)*areaxz*
-c     $                    epss(i,j,k)
+                     hts_fcy(i,j+1,k) = 
+     $                    hts_fcy(i,j+1,k) +
+     $                    rfluxS(i,j+1,k)*areaxz*
+     $                    epss(i,j,k)
 
-#endif
+                     hts_fcy_rad(i,j+1,k) = 
+     $                    hts_fcy_rad(i,j+1,k) +
+     $                    rfluxS(i,j+1,k)*areaxz*
+     $                    epss(i,j,k)
+
+c#endif
 
 #ifdef debugEnergyExchange
                      print*, i,j+1,k, hts_fcy(i,j+1,k),
@@ -550,7 +585,7 @@ c     $                    epss(i,j,k)
      $                    (tg(i,j,k-1) - 
      $                    ts_fcz(i,j,k))
 
-#if 0
+c#if 0
 c     radiative heat transfer to intrusions
 c     note that at this point (November 9, 2002) we
 c     have no model for partial cells. Qn: should there
@@ -559,12 +594,17 @@ c     cell not all the intrusion is seen by the gas?
 c     That would require a model for partial cells
 c     as well.
 
-c                      hts_fcz(i,j,k) = 
-c     $                    hts_fcz(i,j,k) +
-c     $                    rfluxT(i,j,k-1)*areaxy*
-c     $                    epss(i,j,k)
+                      hts_fcz(i,j,k) = 
+     $                    hts_fcz(i,j,k) +
+     $                    rfluxT(i,j,k-1)*areaxy*
+     $                    epss(i,j,k)
 
-#endif
+                      hts_fcz_rad(i,j,k) = 
+     $                    hts_fcz_rad(i,j,k) +
+     $                    rfluxT(i,j,k-1)*areaxy*
+     $                    epss(i,j,k)
+
+c#endif
 
 #ifdef debugEnergyExchange
                      print*, i,j,k, hts_fcz(i,j,k),
@@ -604,7 +644,7 @@ c     $                    epss(i,j,k)
      $                    (tg(i,j,k+1) - 
      $                    ts_fcz(i,j,k))
 
-#if 0
+c#if 0
 c     radiative heat transfer to intrusions
 c     note that at this point (November 9, 2002) we
 c     have no model for partial cells. Qn: should there
@@ -613,12 +653,17 @@ c     cell not all the intrusion is seen by the gas?
 c     That would require a model for partial cells
 c     as well.
 
-c                     hts_fcz(i,j,k+1) =
-c     $                    hts_fcz(i,j,k+1) + 
-c     $                    rfluxB(i,j,k+1)*areaxy*
-c     $                    epss(i,j,k)
+                     hts_fcz(i,j,k+1) =
+     $                    hts_fcz(i,j,k+1) + 
+     $                    rfluxB(i,j,k+1)*areaxy*
+     $                    epss(i,j,k)
 
-#endif
+                     hts_fcz_rad(i,j,k+1) =
+     $                    hts_fcz_rad(i,j,k+1) + 
+     $                    rfluxB(i,j,k+1)*areaxy*
+     $                    epss(i,j,k)
+
+c#endif
 
 #ifdef debugEnergyExchange
                      print*, i,j,k+1, hts_fcz(i,j,k+1),
@@ -639,6 +684,9 @@ c     $                    epss(i,j,k)
 #endif
 
 c     part 2: cells that have both fluid and solid
+c     For now, this has only convective heat transfer.  When we
+c     do complex geometry treatment, then we will consider heat
+c     transfer to partial cells as well.
 
       do 720 i = valid_lo(1), valid_hi(1)
          do 710 j = valid_lo(2), valid_hi(2)
