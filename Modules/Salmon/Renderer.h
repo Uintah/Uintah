@@ -15,6 +15,8 @@
 
 #include <Classlib/AVLTree.h>
 #include <Classlib/String.h>
+class GeomObj;
+class GeomPick;
 class Renderer;
 class Roe;
 class Salmon;
@@ -31,6 +33,8 @@ public:
 				   const clString& width,
 				   const clString& height)=0;
     virtual void redraw(Salmon*, Roe*)=0;
+    virtual void get_pick(Salmon*, Roe*, int x, int y,
+			  GeomObj*&, GeomPick*&)=0;
     virtual void hide()=0;
 
     int compute_depth(Roe* roe, const View& view, double& near, double& far);

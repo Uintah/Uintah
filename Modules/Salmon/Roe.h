@@ -58,11 +58,13 @@ class Roe : public TCL {
 
     int need_redraw;
     int last_x, last_y;
-    double total_x, total_y;
+    double total_x, total_y, total_z;
     Point rot_point;
     int rot_point_valid;
     View rot_view;
     double total_scale;
+    GeomPick* pick_pick;
+    GeomObj* pick_obj;
 
     void update_mode_string(const clString&);
 public:
