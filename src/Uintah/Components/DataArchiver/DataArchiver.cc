@@ -689,8 +689,13 @@ void  DataArchiver::initSaveLabels(SchedulerP& sched)
    pLabelMatlMap = sched->makeVarLabelMaterialMap();
    for (list<SaveNameItem>::iterator it = d_saveLabelNames.begin();
         it != d_saveLabelNames.end(); it++) {
+      VarLabel* var = VarLabel::find((*it).labelName);
+      if (var == NULL)
+         throw ProblemSetupException((*it).labelName +
+				     " variable label not found to save.");
+
       Scheduler::VarLabelMaterialMap::iterator found =
-	 pLabelMatlMap->find((*it).labelName);
+	 pLabelMatlMap->find(var);
 
       if (found == pLabelMatlMap->end())
          throw ProblemSetupException((*it).labelName +
@@ -710,6 +715,9 @@ void  DataArchiver::initSaveLabels(SchedulerP& sched)
 
 //
 // $Log$
+// Revision 1.26  2000/12/23 01:48:39  witzel
+// Changed initSaveLabels() to reflect a change in Scheduler::VarLabelMaterialMap
+//
 // Revision 1.25  2000/12/22 00:12:06  jas
 // Changed NULL to 0 to get rid of g++ warnings.
 //
