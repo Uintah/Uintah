@@ -194,7 +194,13 @@
         <MPM>
             <material>
                 <burn>
-                  <type>null</type>
+                  <type>simple</type>
+		  <ThresholdTemp> 600 </ThresholdTemp>
+		  <ThresholdPressure> 500 </ThresholdPressure>
+	          <Enthalpy> 1.0 </Enthalpy>
+	          <BurnCoeff> 1.0 </BurnCoeff>
+		  <a> 0.0 </a>
+	          <b> 100000.0 </b>
                 </burn>
 	        <ideal_gas>
 		    <gas_constant>      287               </gas_constant>
