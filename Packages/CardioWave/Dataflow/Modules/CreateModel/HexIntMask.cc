@@ -46,6 +46,7 @@ using namespace SCIRun;
 class HexIntMask : public Module {
   
 public:
+  GuiString gui_exclude_;
   
   //! Constructor/Destructor
   HexIntMask(GuiContext *context);
@@ -53,6 +54,8 @@ public:
 
   //! Public methods
   virtual void execute();
+
+  void parse_exclude_list(const string &guistr, vector<int> &exclude);
 };
 
 
@@ -60,7 +63,8 @@ DECLARE_MAKER(HexIntMask)
 
 
 HexIntMask::HexIntMask(GuiContext *context) : 
-  Module("HexIntMask", context, Filter, "CreateModel", "CardioWave")
+  Module("HexIntMask", context, Filter, "CreateModel", "CardioWave"),
+  gui_exclude_(context->subVar("exclude"))
 {
 }
 
@@ -69,6 +73,37 @@ HexIntMask::~HexIntMask()
 {
 }
 
+
+void
+HexIntMask::parse_exclude_list(const string &guistr, vector<int> &exclude)
+{
+  // Test values, to be taken from GUI later.
+  const string str = guistr + " ";
+  bool skipping_p = true;
+  int last = 0;
+  for (unsigned int i = 0; i < str.size(); i++)
+  {
+    if (skipping_p)
+    {
+      if (str[i] >= '0' && str[i] <= '9')
+      {
+	last = i;
+	skipping_p = false;
+      }
+    }
+    if (!skipping_p)
+    {
+      if (str[i] < '0' || str[i] > '9')
+      {
+	const string val = str.substr(last, i-last);
+	int v = atoi(val.c_str());
+	exclude.push_back(v);
+	skipping_p = true;
+      }
+    }
+  }
+}
+  
 
 void
 HexIntMask::execute()
@@ -95,6 +130,16 @@ HexIntMask::execute()
     return;
   }
 
+  vector<int> exclude;
+  parse_exclude_list(gui_exclude_.get(), exclude);
+
+  for (unsigned int i = 0; i < exclude.size(); i++)
+  {
+    cout << "\nExcluding " << i << "  " << exclude[i] << "\n";
+  }
+  cout << "\n";
+
+
   HexVolMeshHandle hvmesh = hvfield->get_typed_mesh();
   HexVolMeshHandle clipped = scinew HexVolMesh();
 
@@ -112,12 +157,6 @@ HexIntMask::execute()
   hash_type nodemap;
 
   vector<HexVolMesh::Elem::index_type> elemmap;
-
-  // Test values, to be taken from GUI later.
-  vector<int> exclude(3);
-  exclude[0] = 0;
-  exclude[1] = 1;
-  exclude[2] = 2;
 
   HexVolMesh::Elem::iterator bi, ei;
   hvmesh->begin(bi);
