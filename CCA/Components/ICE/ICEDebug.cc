@@ -769,26 +769,31 @@ void  ICE::adjust_dbg_indices(  const int include_EC,
     high  = patch->getInteriorCellHighIndex();
   }
 
-#if 0 
+
+  IntVector beginIndx = d_dbgBeginIndx;
+  IntVector endIndx   = d_dbgEndIndx;
+  
+  
+#if 0    // turn this if you want to specify coarse level cells in the input file
   if (d_dbgGnuPlowt){                  // ignore extra cell specification
     low  = d_dbgBeginIndx;
     high = d_dbgEndIndx;
   }
-#endif
+
   const Level* level = patch->getLevel();
   const int levelIndx = level->getIndex();
   IntVector refineRatio(level->getRefinementRatio());
   //__________________________________
   //  for multilevel problems we need
   // to adjust what the user input
-  IntVector beginIndx = d_dbgBeginIndx;
-  IntVector endIndx   = d_dbgEndIndx;
-  if ( levelIndx > 0 ) {
+  if ( levelIndx > 0 ) {  // use this if you want to specify the coarse level cells
     IntVector numLevels(levelIndx,levelIndx,levelIndx);
     beginIndx =beginIndx* refineRatio * numLevels;
     endIndx   =endIndx  * refineRatio * numLevels;
   } 
-  
+#endif  
+
+
   //__________________________________                            
   // for multipatch & multilevel problems you need                             
   // further restrict the indicies                    
