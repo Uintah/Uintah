@@ -36,8 +36,10 @@ public:
    Vector GetUpVector();
    Real GetFOV() const;
 
-   void SetAspectRatio( const Real aspect );
+   void SetView( const View& view );
+
    Real GetAspectRatio() const;
+   void SetAspectRatio( const Real aspect );
    
    const Vector& GetEyeAxis();
    const Vector& GetUpAxis();

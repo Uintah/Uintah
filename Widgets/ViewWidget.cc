@@ -341,10 +341,14 @@ ViewWidget::GetFOV() const
 
 
 void
-ViewWidget::SetAspectRatio( const Real aspect )
+ViewWidget::SetView( const View& view )
 {
-   ratio = aspect;
-
+   variables[EyeVar]->Move(view.eyep);
+   variables[LookAtVar]->Move(view.lookat);
+   variables[ForeVar]->Move(view.eyep+(view.eyep-view.lookat)/2.0);
+   variables[EyeDistVar]->Move((view.lookat-view.eyep).length()/2.0);
+   variables[FOVVar]->Set(tan(view.fov/2.0)); // Should Set UpVar/UpDistVar...
+   
    execute();
 }
 
@@ -353,6 +357,15 @@ Real
 ViewWidget::GetAspectRatio() const
 {
    return ratio;
+}
+
+
+void
+ViewWidget::SetAspectRatio( const Real aspect )
+{
+   ratio = aspect;
+
+   execute();
 }
 
 
