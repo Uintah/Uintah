@@ -42,6 +42,7 @@
 #include <SCIRun/Internal/InternalComponentDescription.h>
 #include <SCIRun/Internal/BuilderService.h>
 #include <SCIRun/Internal/ComponentEventService.h>
+#include <SCIRun/Internal/ConnectionEventService.h>
 #include <SCIRun/Internal/ComponentRegistry.h>
 #include <SCIRun/Internal/FrameworkProperties.h>
 #include <SCIRun/Dataflow/DataflowScheduler.h>
@@ -59,6 +60,8 @@ InternalComponentModel::InternalComponentModel(SCIRunFramework* framework)
 	&ComponentRegistry::create, true));
     addService(new InternalComponentDescription(this, "cca.ComponentEventService",
 	&ComponentEventService::create, true));
+    addService(new InternalComponentDescription(this, "cca.ConnectionEventService",
+	&ConnectionEventService::create, true));
     addService(new InternalComponentDescription(this, "cca.DataflowScheduler",
 	&DataflowScheduler::create, true));
     addService(new InternalComponentDescription(this, "cca.FrameworkProperties",
