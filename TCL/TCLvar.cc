@@ -112,7 +112,7 @@ void TCLint::set(int val)
 	TCLTask::lock();
 	value=val;
 	char buf[20];
-	sprintf(buf, "%f", val);
+	sprintf(buf, "%d", val);
 	Tcl_SetVar(the_interp, varname(), buf, TCL_GLOBAL_ONLY);
 	TCLTask::unlock();
     }
