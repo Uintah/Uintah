@@ -380,18 +380,11 @@ ParticleFieldExtractor::buildData(DataArchive& archive, double time,
   
   GridP grid = archive.queryGrid( time );
   LevelP level = grid->getLevel( 0 );
-
+  
   PSet* pset = new PSet();
   pset->SetCallbackClass( this );
   
-  
-   
-  ParticleSubset* dest_subset = scinew ParticleSubset();
-  ParticleVariable< long > ids( dest_subset );
-  ParticleVariable< Vector > vectors(dest_subset);
-  ParticleVariable< Point > positions(dest_subset);
-  ParticleVariable< double > scalars(dest_subset);
-  ParticleVariable< Matrix3 > tensors( dest_subset );
+
 
   bool have_sp = false;
   bool have_vp = false;
@@ -402,9 +395,19 @@ ParticleFieldExtractor::buildData(DataArchive& archive, double time,
     if (names[i] == psVar.get())
       scalar_type = types[i]->getSubType()->getType();
 
+
   // iterate over patches
   for(Level::const_patchIterator r = level->patchesBegin();
       r != level->patchesEnd(); r++ ){
+
+    ParticleSubset* dest_subset = scinew ParticleSubset();
+   
+    ParticleVariable< long > ids( dest_subset );
+    ParticleVariable< Vector > vectors(dest_subset);
+    ParticleVariable< Point > positions(dest_subset);
+    ParticleVariable< double > scalars(dest_subset);
+    ParticleVariable< Matrix3 > tensors( dest_subset );
+
     ParticleVariable< Vector > pvv;
     ParticleVariable< Matrix3 > pvt;
     ParticleVariable< double > pvs;
@@ -458,6 +461,7 @@ ParticleFieldExtractor::buildData(DataArchive& archive, double time,
 	source_subset = pvint.getParticleSubset();
 	break;
       }
+      
       particleIndex dest = dest_subset->addParticles(source_subset->numParticles());
       vectors.resync();
       positions.resync();
@@ -495,6 +499,8 @@ ParticleFieldExtractor::buildData(DataArchive& archive, double time,
 	
 	positions[dest]=pvp[*iter];
       }
+      if(dest != 0 )
+	cerr<<"position["<<dest-1<<"] = "<<positions[dest-1]<<endl;
     }
     pset->AddParticles( positions, ids, *r);
     
