@@ -333,8 +333,8 @@ bool ParticleLoadBalancer::assignPatchesParticle(const GridP& grid)
           d_tempAssignment[p] = currentProc;
           allParticles[p].assigned = true;
           totalCost -= patch_costs[p];
-          //dbg << "Patch " << p << "-> proc " << currentProc << " Cost: " 
-          //  << patch_costs[p] << endl;
+          dbg << "Patch " << p << "-> proc " << currentProc << " Cost: " 
+              << patch_costs[p] << endl;
           currentProc++;
         }
       }
@@ -351,33 +351,39 @@ bool ParticleLoadBalancer::assignPatchesParticle(const GridP& grid)
 
       IntVector lastIndex = patchset[0]->getLowIndex();
       for (int p = 0; p < numPatches; p++, z++) {
-        IntVector low = patchset[p]->getLowIndex();
-        if (low.z() <= lastIndex.z() && z>0) {
-          // we wrapped in z
-          if (z_patches == -1 && z > 0)
-            z_patches = p;
-          wrap_z = !wrap_z;
-          z = 0;
-          y++;
+        int index;
+        if (d_doSpaceCurve) {
+          IntVector low = patchset[p]->getLowIndex();
+          if (low.z() <= lastIndex.z() && z>0) {
+            // we wrapped in z
+            if (z_patches == -1 && z > 0)
+              z_patches = p;
+            wrap_z = !wrap_z;
+            z = 0;
+            y++;
+          }
+          if (low.y() <= lastIndex.y() && y > 0 && z_patches != -1 && z == 0) {
+            // we wrapped in y
+            if (y_patches == -1)
+              y_patches = p/z_patches;
+            wrap_y = !wrap_y;
+            y = 0;
+            x++;
+          }
+          // we should do something here to compare in x (for different levels 
+          // or boxes)
+          
+          lastIndex = low;
+          
+          //translate x,y, and z into a number
+          index = x * (y_patches*z_patches) + 
+            ((wrap_y) ? (y_patches-1-y)*z_patches : y*z_patches) +
+            ((wrap_z) ? z_patches-1-z : z);
         }
-        if (low.y() <= lastIndex.y() && y > 0 && z_patches != -1 && z == 0) {
-          // we wrapped in y
-          if (y_patches == -1)
-            y_patches = p/z_patches;
-          wrap_y = !wrap_y;
-          y = 0;
-          x++;
+        else {
+          // not attempting space-filling curve
+          index = p;
         }
-        // we should do something here to compare in x (for different levels 
-        // or boxes)
-        
-        lastIndex = low;
-        
-        //translate x,y, and z into a number
-        int index = x * (y_patches*z_patches) + 
-          ((wrap_y) ? (y_patches-1-y)*z_patches : y*z_patches) +
-          ((wrap_z) ? z_patches-1-z : z);
-        
         if (allParticles[index].assigned)
           continue;
 
@@ -393,19 +399,19 @@ bool ParticleLoadBalancer::assignPatchesParticle(const GridP& grid)
           totalCost -= currentProcCost;
           avg_costPerProc = totalCost / (numProcs-currentProc);
           currentProcCost = patchCost;
-          //dbg << "Patch " << index << "-> proc " << currentProc 
-          //    << " PatchCost: " << patchCost << ", ProcCost: " 
-          //    << currentProcCost 
-          //    << ", idcheck: " << patchset[index]->getGridIndex() << endl;
+          dbg << "Patch " << index << "-> proc " << currentProc 
+              << " PatchCost: " << patchCost << ", ProcCost: " 
+              << currentProcCost 
+              << ", idcheck: " << patchset[index]->getGridIndex() << endl;
         }
         else {
           // add patch to currentProc
           d_tempAssignment[index] = currentProc;
           currentProcCost += patchCost;
-          //dbg << "Patch " << index << "-> proc " << currentProc 
-          //    << " PatchCost: " << patchCost << ", ProcCost: " 
-          //    << currentProcCost 
-          //    << ", idcheck: " << patchset[index]->getGridIndex() << endl;
+          dbg << "Patch " << index << "-> proc " << currentProc 
+              << " PatchCost: " << patchCost << ", ProcCost: " 
+              << currentProcCost 
+              << ", idcheck: " << patchset[index]->getGridIndex() << endl;
         }
       }
     }
@@ -502,7 +508,7 @@ bool ParticleLoadBalancer::assignPatchesCyclic(const GridP&)
 
   int numProcs = d_myworld->size();
   for (unsigned i = 0; i < d_tempAssignment.size(); i++) {
-    d_tempAssignment[i] = (d_tempAssignment[i] + 1 ) % numProcs;
+    d_tempAssignment[i] = (d_processorAssignment[i] + 1 ) % numProcs;
   }
   return true;
 }
@@ -581,21 +587,19 @@ ParticleLoadBalancer::needRecompile(double /*time*/, double /*delt*/,
     dbg << d_myworld->myrank() << " PLB - NOT scheduling recompile " <<endl;
     return false;
   }
-    
-
-  dbg << d_myworld->myrank() << " PLB recompile: " << d_state << endl;
-  return d_state != idle; // to recompile when need to load balance or post lb
-} 
+    } 
 
 void
 ParticleLoadBalancer::restartInitialize(ProblemSpecP& pspec, XMLURL tsurl)
 {
   // here we need to grab the uda data to reassign patch data to the 
   // processor that will get the data
+  d_state = idle;
+
   dbg << " PLB: restartInitialize\n";
   d_state = restartLoadBalance;
-  for (unsigned i = 0; i < d_oldAssignment.size(); i++)
-    d_oldAssignment[i]= -1;
+  for (unsigned i = 0; i < d_processorAssignment.size(); i++)
+    d_processorAssignment[i]= -1;
 
   ASSERT(pspec != 0);
   ProblemSpecP datanode = pspec->findBlock("Data");
@@ -628,9 +632,9 @@ ParticleLoadBalancer::restartInitialize(ProblemSpecP& pspec, XMLURL tsurl)
             int patchid;
             if(!r->get("patch", patchid) && !r->get("region", patchid))
               throw InternalError("Cannot get patch id");
-            if (d_oldAssignment[patchid] == -1) {
+            if (d_processorAssignment[patchid] == -1) {
               // assign the patch to the processor
-              d_oldAssignment[patchid] = procnum % d_myworld->size();
+              d_processorAssignment[patchid] = procnum % d_myworld->size();
             }
           }
         }            
@@ -638,8 +642,11 @@ ParticleLoadBalancer::restartInitialize(ProblemSpecP& pspec, XMLURL tsurl)
       }
     }
   }
-  for (unsigned i = 0; i < d_oldAssignment.size(); i++)
-    ASSERT(d_oldAssignment[i] != -1);
+  for (unsigned i = 0; i < d_processorAssignment.size(); i++)
+    ASSERT(d_processorAssignment[i] != -1);
+
+  d_oldAssignment = d_processorAssignment;
+
   if (dbg.active()) {
     if (d_myworld->myrank() == 0) {
       dbg << d_myworld->myrank() << " POST RESTART\n";
@@ -653,7 +660,7 @@ ParticleLoadBalancer::restartInitialize(ProblemSpecP& pspec, XMLURL tsurl)
 void 
 ParticleLoadBalancer::setDynamicAlgorithm(std::string algo, double interval,
                                           int timestepInterval, float factor,
-                                          double threshold)
+                                          bool spaceCurve, double threshold)
 {
   if (algo == "cyclic")
     d_dynamicAlgorithm = cyclic_lb;
@@ -686,6 +693,7 @@ ParticleLoadBalancer::setDynamicAlgorithm(std::string algo, double interval,
   }
   d_lbInterval = interval;
   d_lbTimestepInterval = timestepInterval;
+  d_doSpaceCurve = spaceCurve;
   d_lbThreshold = threshold;
   d_cellFactor = factor;
 }
@@ -735,8 +743,8 @@ bool ParticleLoadBalancer::possiblyDynamicallyReallocate(const GridP& grid, bool
            iter != level->patchesEnd(); iter++) {
         Patch *patch = *iter;
         int patchid = patch->getGridIndex();
-        d_processorAssignment[patchid] = 
-          patchid % numProcs;
+        int levelidx = patch->getLevelIndex();
+        d_processorAssignment[patchid] = levelidx * numProcs / patch->getLevel()->numPatches();
         ASSERTRANGE(patchid,0,numPatches);
       }
     }
@@ -758,7 +766,8 @@ bool ParticleLoadBalancer::possiblyDynamicallyReallocate(const GridP& grid, bool
            iter != level->patchesEnd(); iter++) {
         Patch *patch = *iter;
         int patchid = patch->getGridIndex();
-        d_processorAssignment[patchid] = patchid % numProcs;
+        int levelidx = patch->getLevelIndex();
+        d_processorAssignment[patchid] = levelidx * numProcs / patch->getLevel()->numPatches();
         ASSERTRANGE(patchid,0,numPatches);
       }
     }
@@ -789,7 +798,7 @@ bool ParticleLoadBalancer::possiblyDynamicallyReallocate(const GridP& grid, bool
   
   if (dbg.active()) {
     for (int i = 0; i < numPatches; i++) {
-      if (myrank == 0) 
+      //      if (myrank == 0) 
         dbg << myrank << " patch " << i << " -> proc " << d_processorAssignment[i] << " (old " << d_oldAssignment[i] << ") - " << d_processorAssignment.size() << ' ' << d_oldAssignment.size() << "\n";
     }
   }
