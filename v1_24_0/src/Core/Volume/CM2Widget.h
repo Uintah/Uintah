@@ -270,7 +270,7 @@ public:
   virtual void		io(Piostream &stream);
   static PersistentTypeID type_id;
 
-  void			add_stroke(double width = 1.0/35.0);
+  void			add_stroke(double width = -1.0);
   bool			pop_stroke();
   void			add_coordinate(const Coordinate &);
 protected:
