@@ -43,47 +43,6 @@
 
 namespace SCIRun {
 
-class ScalarClipper : public Clipper
-{
-private:
-  ScalarFieldInterfaceHandle sfi_;
-  string function_;
-  GuiInterface *gui_;
-  string id_;
-
-public:
-  ScalarClipper(ScalarFieldInterfaceHandle sfi,
-		string function,
-		GuiInterface *gui,
-		string id) :
-    sfi_(sfi),
-    function_(function),
-    gui_(gui),
-    id_(id)
-  { 
-  }
-
-  virtual bool inside_p(const Point &p)
-  {
-    double val;
-    if (sfi_->interpolate(val, p))
-    {
-      string result;
-      gui_->eval(id_ + " functioneval " +
-		 to_string(val) + " {" + function_ + "}",
-		 result);
-      if (result == "1")
-      {
-	return true;
-      }
-    }
-    return false;
-  }
-
-  virtual bool mesh_p() { return true; }
-};
-
-
 using std::stack;
 
 class ClipField : public Module
@@ -97,8 +56,6 @@ private:
   GuiInt    autoexec_;
   GuiInt    autoinvert_;
   GuiString exec_mode_;
-  GuiInt    usefunction_;
-  GuiString clipfunction_;
   int  last_input_generation_;
   int  last_clip_generation_;
   ClipperHandle clipper_;
@@ -127,8 +84,6 @@ ClipField::ClipField(GuiContext* ctx)
     autoexec_(ctx->subVar("autoexecute")),
     autoinvert_(ctx->subVar("autoinvert")),
     exec_mode_(ctx->subVar("execmode")),
-    usefunction_(ctx->subVar("usefunction")),
-    clipfunction_(ctx->subVar("clipfunction")),
     last_input_generation_(0),
     last_clip_generation_(0),
     widgetid_(0),
@@ -225,23 +180,6 @@ ClipField::execute()
     do_clip_p = true;
   }
 
-  bool using_function_p = false;
-  if (usefunction_.get())
-  {
-    ifieldhandle->mesh()->synchronize(Mesh::LOCATE_E);
-    ScalarFieldInterfaceHandle sfi = ifieldhandle->query_scalar_interface();
-    if (sfi.get_rep())
-    {
-      clipper_ = scinew ScalarClipper(sfi, clipfunction_.get(), gui, id);
-      do_clip_p = true;
-      using_function_p = true;
-    }
-    else
-    {
-      remark("Functional clips on non-scalar fields are not supported.");
-    }
-  }
-
   // Update the widget.
   const BBox bbox = ifieldhandle->mesh()->get_bounding_box();
   if (!bbox_similar_to(last_bounds_, bbox) || exec_mode_.get() == "reset")
@@ -300,7 +238,7 @@ ClipField::execute()
     clipper_ = box_->get_clipper();
     do_clip_p = true;
   }
-  else if (exec_mode_.get() == "execute" && !using_function_p)
+  else if (exec_mode_.get() == "execute")
   {
     undo_stack_.push(clipper_);
     ClipperHandle ctmp = box_->get_clipper();
