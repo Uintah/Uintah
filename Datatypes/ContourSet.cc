@@ -88,9 +88,9 @@ void ContourSet::scale(double sc) {
 // rotate doesn't refigure bbox, it just sets it to invalid
 void ContourSet::rotate(const Vector &rot) {
     Transform tran;
-    tran.rotate(rot.x(), Vector(1,0,0));
-    tran.rotate(rot.y(), Vector(0,1,0));
-    tran.rotate(rot.z(), Vector(0,0,1));
+    tran.pre_rotate(rot.x(), Vector(1,0,0));
+    tran.pre_rotate(rot.y(), Vector(0,1,0));
+    tran.pre_rotate(rot.z(), Vector(0,0,1));
     double m[16];
     tran.get(m);
     for(int i=0;i<16;i++)

@@ -14,15 +14,13 @@
 #ifndef SCI_project_GeometryPort_h
 #define SCI_project_GeometryPort_h 1
 
-#include <Classlib/String.h>
-#include <Comm/MessageBase.h>
 #include <Dataflow/Port.h>
-#include <Geometry/Vector.h>
-#include <Geometry/Point.h>
 #include <Multitask/ITC.h>
 
 typedef int GeomID;
+class clString;
 class GeomObj;
+class MessageBase;
 
 class GeometryIPort : public IPort {
 public:
@@ -61,29 +59,6 @@ public:
     void flushViews();
 
     int busy();
-};
-
-struct GeomReply {
-    int portid;
-    int* busy_bit;
-    GeomReply();
-    GeomReply(int, int*);
-};
-
-class GeometryComm : public MessageBase {
-public:
-    GeometryComm(Mailbox<GeomReply>*);
-    GeometryComm(int, GeomID, GeomObj*, const clString&);
-    GeometryComm(int, GeomID);
-    GeometryComm(int);
-    GeometryComm();
-    virtual ~GeometryComm();
-
-    Mailbox<GeomReply>* reply;
-    int portno;
-    GeomID serial;
-    GeomObj* obj;
-    clString name;
 };
 
 #endif /* SCI_project_GeometryPort_h */
