@@ -229,9 +229,11 @@ Gui::quit()
   cerr << "Quitting rtrt.\n";
   // Stop threads...
   activeGui->dpy_->scene->rtrt_engine->exit_clean(1);
+  activeGui->dpy_->numThreadsRequested_ = 0;
   // Stop Glut mainloop.
   usleep(1000);
-  Thread::exitAll( 0 );
+  //  Thread::exitAll( 0 );
+  Thread::exit();
 }
 
 void
@@ -1174,7 +1176,7 @@ Gui::handleWindowResizeCB( int width, int height )
     activeGui->dpy_->release(win);
     first=false;
   }
-  if (0 && activeGui->dpy_->display_frames) {
+  if (activeGui->dpy_->display_frames) {
     activeGui->dpy_->priv->xres=width;
     activeGui->dpy_->priv->yres=height;
     activeGui->camera_->setWindowAspectRatio((double)height/width);
