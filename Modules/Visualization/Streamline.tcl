@@ -37,10 +37,10 @@ proc uiStreamline {modid} {
 	-variable markertype,$modid -value Ribbon -command $n
     pack $w.f.marker.line $w.f.marker.ribbon -side left
 
-    global radius,$modid
-    set radius,$modid .25
-    fscale $w.f.lineradius -variable radius,$modid -digits 3 \
-	-from 0.0 -to 1.0 -label "Line/Ribbon Scale:" \
+    global lineradius,$modid
+    set lineradius,$modid .25
+    fscale $w.f.lineradius -variable lineradius,$modid -digits 3 \
+	-from 0.0 -to 5.0 -label "Line/Ribbon Scale:" \
 	-resolution .01 -showvalue true -tickinterval .2 \
 	-activeforeground SteelBlue2 -orient horizontal
     pack $w.f.lineradius -fill x -pady 2
@@ -63,9 +63,9 @@ proc uiStreamline {modid} {
     pack $w.f.alg.euler $w.f.alg.rk4 $w.f.alg.sf -side top -anchor w
 
     global stepsize,$modid
-    set stepsize,$modid 0.1
+    set stepsize,$modid 0.02
     fscale $w.f.stepsize -variable stepsize,$modid -digits 3 \
-	-from -20.0 -to 20.0 -label "Step size:" \
+	-from -2.0 -to 2.0 -label "Step size:" \
 	-resolution .01 -showvalue true -tickinterval 2 \
 	-activeforeground SteelBlue2 -orient horizontal
     pack $w.f.stepsize -fill x -pady 2
@@ -85,11 +85,11 @@ proc uiStreamline {modid} {
 
     global range_min,$modid
     fscale $w.f.min -variable range_min,$modid -digits 4 \
-	    -from 0.0 -to 90 -label "Color min:" \
+	    -from -2.0 -to 2.0 -label "Color min:" \
 	    -resolution .01 -showvalue true \
 	    -activeforeground SteelBlue2 -orient horizontal
     fscale $w.f.max -variable range_max,$modid -digits 4 \
-	    -from 0.0 -to 90 -label "Color max:" \
+	    -from -2.0 -to 2.0 -label "Color max:" \
 	    -resolution .01 -showvalue true \
 	    -activeforeground SteelBlue2 -orient horizontal
     pack $w.f.min $w.f.max -side top -fill x

@@ -185,6 +185,10 @@ int SRibbon::advance(const VectorFieldHandle& field, int rk4,
 	    return 0;
 	}
 	Vector tmp(lp-rp);
+	if(tmp.length2() < 1.e-6){
+	    outside=1;
+	    return 0;
+	}
 	Vector diag ( tmp.normal() * width ); // only want fixed sized Ribbon
 	Point p1 = p +  diag;  
 	Point p2 = p -  diag; 
@@ -229,6 +233,10 @@ int SRibbon::advance(const VectorFieldHandle& field, int rk4,
  
         tmp = lp-rp; 
         p = lp + tmp/2.0;  // define the center point        
+	if(tmp.length2() < 1.e-6){
+	    outside=1;
+	    return 0;
+	}
         diag = tmp.normal() * width; // only want fixed sized Ribbon
         Point p1 = p +  diag;  
         Point p2 = p -  diag; 
@@ -344,16 +352,17 @@ void Streamline::execute()
     if(need_p1){
 	Point min, max;
 	field->get_bounds(min, max);
-	p1=Interpolate(min, max, 0.5);
+	Point cen=Interpolate(min, max, 0.5);
 	double s=field->longest_dimension();
-	p2=p1+Vector(1,0,0)*(s/10);
-	p3=p1+Vector(0,1,0)*(s/10);
-	p4=p1+Vector(1,1,0)*(s/10);
+	p1=cen-Vector(1,0,0)*(s/5);
+	p2=cen+Vector(1,0,0)*(s/5);
+	p3=cen+Vector(0,1,0)*(s/10);
+	p4=cen+Vector(1,1,0)*(s/10);
 	Vector sp(p2-p1);
 	slider1_dist=slider2_dist=sp.length()/10;
 	need_p1=0;
     }
-    widget_scale=0.01*field->longest_dimension();
+    widget_scale=0.05*field->longest_dimension();
     if(widgettype.get() != oldwidgettype){
 	oldwidgettype=widgettype.get();
 	if(widget_id)
