@@ -14,7 +14,8 @@ SRCDIR := Packages/VS/Dataflow/GUI
 
 SRCS := \
 	$(SRCDIR)/HotBox.tcl          \
-	$(SRCDIR)/ICUMonitor.tcl      \
+	$(SRCDIR)/ICUMonitor.tcl \
+	$(SRCDIR)/ExecutiveState.tcl
 
 include $(SCIRUN_SCRIPTS)/tclIndex.mk
 
