@@ -122,7 +122,10 @@ NrrdSelectTime::send_selection(NrrdDataHandle nrrd_handle,
   // Copy the properties.
   onrrd_handle->copy_properties(nrrd_handle.get_rep());
 
-  onrrd->send(onrrd_handle, !last_p);
+  if( !last_p )
+    onrrd->send_intermediate(onrrd_handle);
+  else
+    onrrd->send(onrrd_handle);
 }
 
 

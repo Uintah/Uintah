@@ -115,7 +115,7 @@ NrrdInfo::clear_vals()
 void
 NrrdInfo::update_input_attributes(NrrdDataHandle nh) 
 {
-  string name;   ;
+  string name;
   if (nh->get_property( "Name", name)) { 
     gui->execute(string("set ") + id + "-name \"" + name+"\"");
   } else {

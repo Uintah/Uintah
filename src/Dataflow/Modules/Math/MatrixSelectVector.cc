@@ -166,8 +166,15 @@ MatrixSelectVector::send_selection(MatrixHandle mh, int which, int ncopy,
 
   bool isIndependent = (dependence_.get()=="independent");
 
-  ovec->send(matrix, !last_p);
-  osel->send(MatrixHandle(selected), !last_p & isIndependent);
+  if( !last_p )
+    ovec->send_intermediate(matrix);
+  else
+    ovec->send(matrix);
+
+  if( !last_p & isIndependent )
+    osel->send_intermediate(MatrixHandle(selected));
+  else
+    osel->send(MatrixHandle(selected));
 }
 
 

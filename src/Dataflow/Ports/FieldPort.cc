@@ -45,12 +45,21 @@ template<> string SimpleIPort<FieldHandle>::port_color_("yellow");
 //! Specialization for field ports.
 //! Field ports must only send const fields i.e. frozen fields.
 template<>
-void SimpleOPort<FieldHandle>::send(const FieldHandle& data, bool intermediate)
+void SimpleOPort<FieldHandle>::send(const FieldHandle& data)
 {
   if (data.get_rep() && (! data->is_frozen()))
     data->freeze();
 
-  do_send(data, intermediate);
+  do_send(data, SEND_NORMAL);
+}
+
+template<>
+void SimpleOPort<FieldHandle>::send_intermediate(const FieldHandle& data)
+{
+  if (data.get_rep() && (! data->is_frozen()))
+    data->freeze();
+
+  do_send(data, SEND_INTERMEDIATE);
 }
 
 } // End namespace SCIRun

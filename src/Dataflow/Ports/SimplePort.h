@@ -84,7 +84,8 @@ public:
   virtual void finish();
   virtual void detach(Connection *conn, bool blocked);
 
-  void send(const T&, bool intermediate = false);
+  void send(const T&);
+  void send_intermediate(const T&);
   void set_cache( bool cache = true )
   {
     cache_ = cache;
@@ -98,7 +99,9 @@ public:
   virtual void resend(Connection* conn);
 
 private:
-  void do_send(const T&, bool intermediate = false);
+  enum SendType {SEND_NORMAL=0, SEND_INTERMEDIATE=1};
+
+  void do_send(const T&, SendType type = SEND_NORMAL);
 
   bool cache_;
   bool sent_something_;
@@ -211,19 +214,25 @@ SimpleOPort<T>::detach(Connection *conn, bool blocked)
 //! Field ports must only send const fields i.e. frozen fields.
 //! Definition in FieldPort.cc
 template<>
-void SimpleOPort<FieldHandle>::send(const FieldHandle& data,
-				    bool intermediate);
+void SimpleOPort<FieldHandle>::send(const FieldHandle& data);
 
 template<class T>
 void
-SimpleOPort<T>::send(const T& data, bool intermediate)
+SimpleOPort<T>::send(const T& data)
 {
-  do_send(data, intermediate);
+  do_send(data, SEND_NORMAL);
 }
 
 template<class T>
 void
-SimpleOPort<T>::do_send(const T& data, bool intermediate)
+SimpleOPort<T>::send_intermediate(const T& data)
+{
+  do_send(data, SEND_INTERMEDIATE);
+}
+
+template<class T>
+void
+SimpleOPort<T>::do_send(const T& data, SendType type)
 {
   handle_ = cache_ ? data : 0;
 
@@ -232,7 +241,7 @@ SimpleOPort<T>::do_send(const T& data, bool intermediate)
   // Change oport state and colors on screen.
   if (module->show_stats()) { turn_on(); }
 
-  if( intermediate )
+  if( type == SEND_INTERMEDIATE )
     module->request_multisend(this);
 
   for (int i = 0; i < nconnections(); i++)
