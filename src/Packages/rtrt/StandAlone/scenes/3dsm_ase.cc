@@ -383,7 +383,7 @@ Scene* make_scene(int argc, char* argv[], int) {
 			 bgcolor, groundcolor*bgcolor, bgcolor, groundplane,
 			 ambient_scale);
   scene->add_light(new Light(Point(500,-300,300), Color(.8,.8,.8), 0));
-  scene->set_background_ptr(new EnvironmentMapBackground("/home/dmw/stadium/SKY.ppm"));
+  scene->set_background_ptr(new EnvironmentMapBackground("/home/sci/dmw/stadium/SKY.ppm"));
   scene->shadow_mode=1;
   scene->set_materials(ase_matls);
   cerr << "num materials="<<ase_matls.size()<<"\n";
@@ -397,4 +397,6 @@ Scene* make_scene(int argc, char* argv[], int) {
 }
 
 // usage:
-// ./rtrt -np 16 -no_shadows -bv 3 -gridcellsize 80 -scene scenes/3dsm_ase /home/dmw/stadium/Ford\ SGI\ model\ 003.ASE
+// ./rtrt -np 16 -no_shadows -bv 3 -gridcellsize 80 -scene scenes/3dsm_ase /home/sci/dmw/stadium/Ford\ SGI\ model\ 003.ASE
+//
+// ./rtrt -np 16 -no_shadows -bv 4 -hgridcellsize 40 20 10 -minobjs 100 1000 -scene scenes/3dsm_ase /home/sci/dmw/stadium/Ford\ SGI\ model\ 003.ASE
