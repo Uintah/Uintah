@@ -842,7 +842,7 @@ TaskGraph::createDetailedDependencies(DetailedTasks* dt,
     if(patches && !patches->empty() && matls && !matls->empty()){
       for(int i=0;i<patches->size();i++){
 	const Patch* patch = patches->get(i);
-	Level::selectType neighbors;
+	Patch::selectType neighbors;
 	IntVector low, high;
 	patch->computeVariableExtents(req->var->typeDescription()->getType(),
 				      req->var->getBoundaryLayer(),

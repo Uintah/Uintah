@@ -512,7 +512,7 @@ void Level::setBCTypes()
 	face <= Patch::endFace; face=Patch::nextFace(face)){
       IntVector l,h;
       patch->getFace(face, IntVector(0,0,0), IntVector(1,1,1), l, h);
-      Level::selectType neighbors;
+      Patch::selectType neighbors;
       selectPatches(l, h, neighbors);
       if(neighbors.size() == 0){
 	if(d_index != 0){

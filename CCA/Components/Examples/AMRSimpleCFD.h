@@ -3,6 +3,7 @@
 #define Packages_Uintah_CCA_Components_Examples_AMRSimpleCFD_h
 
 #include <Packages/Uintah/CCA/Components/Examples/SimpleCFD.h>
+#include <Packages/Uintah/Core/Grid/Task.h>
 
 namespace Uintah {
   class AMRSimpleCFD : public SimpleCFD {

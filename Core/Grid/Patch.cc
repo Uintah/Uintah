@@ -1,5 +1,6 @@
 
 #include <Packages/Uintah/Core/Grid/Patch.h>
+#include <Packages/Uintah/Core/Grid/Level.h>
 #include <Packages/Uintah/Core/Grid/CellIterator.h>
 #include <Packages/Uintah/Core/Grid/NodeIterator.h>
 #include <Packages/Uintah/Core/Exceptions/InvalidGrid.h>
@@ -117,6 +118,19 @@ const Patch* Patch::getByID(int id)
     return 0;
   else
     return iter->second;
+}
+
+Vector Patch::dCell() const {
+  // This will need to change for stretched grids
+  return d_level->dCell();
+}
+
+Point Patch::nodePosition(const IntVector& idx) const {
+  return d_level->getNodePosition(idx);
+}
+
+Point Patch::cellPosition(const IntVector& idx) const {
+  return d_level->getCellPosition(idx);
 }
 
 int Patch::findClosestNode(const Point& pos, IntVector& idx) const
@@ -1648,7 +1662,7 @@ void Patch::computeVariableExtents(VariableBasis basis,
 void Patch::computeVariableExtents(VariableBasis basis,
 				   const IntVector& boundaryLayer,
 				   Ghost::GhostType gtype, int numGhostCells,
-				   Level::selectType& neighbors,
+				   Patch::selectType& neighbors,
 				   IntVector& low, IntVector& high) const
 {
   IntVector lowOffset, highOffset;
@@ -1670,7 +1684,7 @@ void Patch::computeVariableExtents(TypeDescription::Type basis,
 void Patch::computeVariableExtents(TypeDescription::Type basis,
 				   const IntVector& boundaryLayer,
 				   Ghost::GhostType gtype, int numGhostCells,
-				   Level::selectType& neighbors,
+				   Patch::selectType& neighbors,
 				   IntVector& low, IntVector& high) const
 {
   bool basisMustExist = (gtype != Ghost::None);
@@ -1710,7 +1724,7 @@ void Patch::computeExtents(VariableBasis basis,
 }
 
 void Patch::getOtherLevelPatches(int levelOffset,
-				 Level::selectType& patches) const
+				 Patch::selectType& patches) const
 {
   const LevelP& otherLevel = d_level->getRelativeLevel(levelOffset);
   IntVector low = 

@@ -9,6 +9,7 @@
 // Reuse some data between solves?
 #include <Packages/Uintah/CCA/Components/Solvers/HypreSolver.h>
 #include <Packages/Uintah/CCA/Components/Solvers/MatrixUtil.h>
+#include <Packages/Uintah/Core/Grid/Level.h>
 #include <Packages/Uintah/Core/Grid/CCVariable.h>
 #include <Packages/Uintah/Core/Grid/NCVariable.h>
 #include <Packages/Uintah/Core/Grid/SFCXVariable.h>
@@ -24,6 +25,7 @@
 #include <Packages/Uintah/CCA/Ports/Scheduler.h>
 #include <Core/Containers/Array1.h>
 #include <Core/Containers/Array2.h>
+#include <Core/Geometry/IntVector.h>
 #include <Core/Math/MiscMath.h>
 #include <Core/Math/MinMax.h>
 #include <Core/Thread/Time.h>

@@ -13,6 +13,7 @@
 #include <Packages/Uintah/Core/Grid/SFCYVariable.h>
 #include <Packages/Uintah/Core/Grid/SFCZVariable.h>
 #include <Packages/Uintah/Core/Grid/Stencil7.h>
+#include <Packages/Uintah/Core/Grid/Task.h>
 #include <Core/Geometry/IntVector.h>
 
 namespace Uintah {

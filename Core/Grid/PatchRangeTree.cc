@@ -37,7 +37,7 @@ PatchRangeTree::~PatchRangeTree()
 }
 
 void PatchRangeTree::query(const IntVector& low, const IntVector& high,
-			   Level::selectType& foundPatches)
+			   Patch::selectType& foundPatches)
 {
   list<PatchPoint*> foundPoints;
 
