@@ -204,7 +204,7 @@ PetscSolver::matrixCreate(const PatchSet* allpatches,
     l2g.initialize(-1234);
     long totalCells=0;
     const Level* level = patch->getLevel();
-    Level::selectType neighbors;
+    Patch::selectType neighbors;
     level->selectPatches(lowIndex, highIndex, neighbors);
     for(int i=0;i<neighbors.size();i++){
       const Patch* neighbor = neighbors[i];
