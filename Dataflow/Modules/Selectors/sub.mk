@@ -18,6 +18,7 @@ PSELIBS := \
 	Packages/Uintah/Core/DataArchive     \
 	Packages/Uintah/CCA/Ports          \
 	Packages/Uintah/Core/Grid          \
+	Packages/Uintah/Core/Util          \
 	Packages/Uintah/Core/Math          \
 	Packages/Uintah/Core/Disclosure    \
 	Packages/Uintah/Core/ProblemSpec   \
