@@ -56,6 +56,7 @@ using namespace std;
 #undef INTEGRAL_TRACTION
 
 static DebugStream cout_doing("MPM", false);
+static DebugStream amr_doing("AMRMPM", false);
 
 // From ThreadPool.cc:  Used for syncing cerr'ing so it is easier to read.
 extern Mutex cerrLock;
@@ -882,8 +883,10 @@ void SerialMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
 }
 
 void SerialMPM::scheduleRefine(const LevelP& fineLevel, 
-                               SchedulerP& scheduler)
+                               SchedulerP& sched)
 {
+  Task* task = scinew Task("SerialMPM::refine", this, &SerialMPM::refine);
+  sched->addTask(task, fineLevel->eachPatch(), d_sharedState->allMPMMaterials());
   // do nothing for now
 }
 
@@ -2908,7 +2911,7 @@ void SerialMPM::initialErrorEstimate(const ProcessorGroup*,
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     
-    cout_doing << "Doing errorEstimate on patch "<< patch->getID()<<" \t\t\t AMRSimpleCFD" << '\n';
+    amr_doing << "Doing SerialMPM::initialErrorEstimate on patch "<< patch->getID()<< endl;
     CCVariable<int> refineFlag;
     PerPatch<PatchFlagP> refinePatchFlag;
     new_dw->getModifiable(refineFlag, d_sharedState->get_refineFlag_label(),
@@ -2954,7 +2957,7 @@ void SerialMPM::errorEstimate(const ProcessorGroup* group,
   
     for(int p=0;p<patches->size();p++){  
       const Patch* coarsePatch = patches->get(p);
-      cout_doing << "\t\t on patch " << coarsePatch->getID();
+      amr_doing << "Doing SerialMPM::errorEstimate on patch " << coarsePatch->getID() << endl;
       // Find the overlapping regions...
 
       CCVariable<int> refineFlag;
@@ -3000,3 +3003,55 @@ void SerialMPM::errorEstimate(const ProcessorGroup* group,
     } // coarse patch loop 
   }
 }  
+
+void SerialMPM::refine(const ProcessorGroup*,
+                       const PatchSubset* patches,
+                       const MaterialSubset* matls,
+                       DataWarehouse*,
+                       DataWarehouse* new_dw)
+{
+  // just create a particle subset if one doesn't exist
+  for (int p = 0; p<patches->size(); p++) {
+    const Patch* patch = patches->get(p);
+
+    int numMPMMatls=d_sharedState->getNumMPMMatls();
+    for(int m = 0; m < numMPMMatls; m++){
+      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
+      int dwi = mpm_matl->getDWIndex();
+      cout_doing <<"Doing refine on patch "
+                 << patch->getID() << " material # = " << dwi << endl;
+      if (!new_dw->haveParticleSubset(dwi, patch)) {
+        ParticleSubset* pset = new_dw->createParticleSubset(0, dwi, patch);
+
+        // Create arrays for the particle data
+        ParticleVariable<Point>  px;
+        ParticleVariable<double> pmass, pvolume, pTemperature, pSp_vol;
+        ParticleVariable<Vector> pvelocity, pexternalforce, psize, pdisp;
+        ParticleVariable<double> pErosion;
+        ParticleVariable<int>    pLoadCurve;
+        ParticleVariable<long64> pID;
+        ParticleVariable<Matrix3> pdeform, pstress;
+        
+        new_dw->allocateAndPut(px,             lb->pXLabel,             pset);
+        new_dw->allocateAndPut(pmass,          lb->pMassLabel,          pset);
+        new_dw->allocateAndPut(pvolume,        lb->pVolumeLabel,        pset);
+        new_dw->allocateAndPut(pSp_vol,        lb->pSp_volLabel,        pset);
+        new_dw->allocateAndPut(pvelocity,      lb->pVelocityLabel,      pset);
+        new_dw->allocateAndPut(pTemperature,   lb->pTemperatureLabel,   pset);
+        new_dw->allocateAndPut(pexternalforce, lb->pExternalForceLabel, pset);
+        new_dw->allocateAndPut(pID,            lb->pParticleIDLabel,    pset);
+        new_dw->allocateAndPut(pdisp,          lb->pDispLabel,          pset);
+        new_dw->allocateAndPut(pdeform,        lb->pDeformationMeasureLabel, pset);
+        new_dw->allocateAndPut(pstress,        lb->pStressLabel,        pset);
+        if (flags->d_useLoadCurves)
+          new_dw->allocateAndPut(pLoadCurve,   lb->pLoadCurveIDLabel,   pset);
+        if(flags->d_8or27==27){
+          new_dw->allocateAndPut(psize,        lb->pSizeLabel,          pset);
+        }
+        new_dw->allocateAndPut(pErosion,       lb->pErosionLabel,       pset);
+
+      }
+    }
+  }
+
+}
