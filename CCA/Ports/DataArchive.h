@@ -5,7 +5,7 @@
 #include <Packages/Uintah/Core/Grid/NCVariable.h>
 #include <Packages/Uintah/Core/Grid/CCVariable.h>
 #include <Packages/Uintah/Core/Grid/GridP.h>
-
+#include <Packages/Uintah/Core/ProblemSpec/Handle.h>
 #include <Packages/Uintah/Core/Exceptions/VariableNotFoundInGrid.h>
 #include <Core/Thread/Mutex.h>
 #include <Core/Thread/Time.h>
@@ -302,7 +302,7 @@ private:
   std::vector<XMLURL> d_tsurl;
   TimeHashMaps* d_varHashMaps;
   
-  typedef map<pair<int, const Patch*>, ParticleSubset*> psetDBType;
+  typedef map<pair<int, const Patch*>, Handle<ParticleSubset> > psetDBType;
   psetDBType d_psetDB;
  
   // if used, different processors read different parts of the archive

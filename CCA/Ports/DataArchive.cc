@@ -324,7 +324,7 @@ DataArchive::query( Variable& var, DOM_Node vnode, XMLURL url,
     ParticleSubset* psubset = 0;
     psetDBType::iterator psetIter = d_psetDB.find(key);
     if(psetIter != d_psetDB.end()) {
-      psubset = (*psetIter).second;
+      psubset = (*psetIter).second.get_rep();
     }
     if (psubset == 0 || psubset->numParticles() != numParticles)
     {
