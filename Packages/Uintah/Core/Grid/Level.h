@@ -17,8 +17,7 @@
 #include <string>
 #include <vector>
 
-#define SELECT_GRID
-//#define SELECT_RANGETREE
+#define SELECT_RANGETREE
 
 #ifdef SELECT_RANGETREE
 class PatchRangeTree;
