@@ -39,12 +39,12 @@ using namespace std;
 static DebugStream cout_norm("MPMICE_NORMAL_COUT", false);  
 static DebugStream cout_doing("MPMICE_DOING_COUT", false);
 
-//#define EOSCM
-#undef EOSCM
-#define IDEAL_GAS
-//#undef IDEAL_GAS
-#define FAKE_BURN_MODEL
-
+#define EOSCM
+//#undef EOSCM
+//#define IDEAL_GAS
+#undef IDEAL_GAS
+//#define FAKE_BURN_MODEL
+#undef FAKE_BURN_MODEL
 MPMICE::MPMICE(const ProcessorGroup* myworld)
   : UintahParallelComponent(myworld)
 {
