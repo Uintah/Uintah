@@ -49,9 +49,15 @@ void    ICE::printData(const Patch* patch, int include_GC,
       low   = patch->getInteriorCellLowIndex();
       high  = patch->getInteriorCellHighIndex();
     }
+    if (d_dbgBeginIndx != IntVector(0,0,0)) {
+      low = d_dbgBeginIndx;
+    }
+    if (d_dbgEndIndx != IntVector(0,0,0) ) {
+      high = d_dbgEndIndx;
+    } 
 
     cerr.setf(ios::scientific,ios::floatfield);
-    cerr.precision(16);  
+    cerr.precision(5);  
     for(int k = low.z(); k < high.z(); k++)  {
       for(int j = low.y(); j < high.y(); j++) {
         for(int i = low.x(); i < high.x(); i++) {
@@ -101,7 +107,12 @@ void    ICE::printData(const Patch* patch, int include_GC,
       low   = patch->getInteriorCellLowIndex();
       high  = patch->getInteriorCellHighIndex();
     }
-
+    if (d_dbgBeginIndx != IntVector(0,0,0) ) {
+      low = d_dbgBeginIndx;
+    }
+    if (d_dbgEndIndx != IntVector(0,0,0) ) {
+      high = d_dbgEndIndx;
+    } 
     for(int k = low.z(); k < high.z(); k++)  {
       for(int j = low.y(); j < high.y(); j++) {
         for(int i = low.x(); i < high.x(); i++) {
@@ -151,9 +162,14 @@ void    ICE::printVector(const Patch* patch, int include_GC,
       low   = patch->getInteriorCellLowIndex();
       high  = patch->getInteriorCellHighIndex();
     }
-
+    if (d_dbgBeginIndx != IntVector(0,0,0) ) {
+      low = d_dbgBeginIndx;
+    }
+    if (d_dbgEndIndx != IntVector(0,0,0) ) {
+      high = d_dbgEndIndx;
+    } 
     cerr.setf(ios::scientific,ios::floatfield);
-    cerr.precision(16);  
+    cerr.precision(5);  
     for(int k = low.z(); k < high.z(); k++)  {
       for(int j = low.y(); j < high.y(); j++) {
         for(int i = low.x(); i < high.x(); i++) {
@@ -204,9 +220,14 @@ void    ICE::printData_FC(const Patch* patch, int include_GC,
       low   = patch->getInteriorCellLowIndex();
       high  = patch->getInteriorCellHighIndex();
     }
-
+    if (d_dbgBeginIndx != IntVector(0,0,0) ) {
+      low = d_dbgBeginIndx;
+    }
+    if (d_dbgEndIndx != IntVector(0,0,0) ) {
+      high = d_dbgEndIndx;
+    } 
     cerr.setf(ios::scientific,ios::floatfield);
-    cerr.precision(16);  
+    cerr.precision(5);  
     for(int k = low.z(); k < high.z(); k++)  {
       for(int j = low.y(); j < high.y(); j++) {
       //for(int j = high.y()-1; j >= low.y(); j--) {
@@ -256,9 +277,14 @@ void    ICE::printData_FC(const Patch* patch, int include_GC,
       low   = patch->getInteriorCellLowIndex();
       high  = patch->getInteriorCellHighIndex();
     }
-
+    if (d_dbgBeginIndx != IntVector(0,0,0) ) {
+      low = d_dbgBeginIndx;
+    }
+    if (d_dbgEndIndx != IntVector(0,0,0) ) {
+      high = d_dbgEndIndx;
+    } 
     cerr.setf(ios::scientific,ios::floatfield);
-    cerr.precision(16);
+    cerr.precision(5);
     for(int k = low.z(); k < high.z(); k++)  {
       for(int j = low.y(); j < high.y(); j++) {
       //for(int j = high.y()-1; j >= low.y(); j--) {
@@ -310,9 +336,14 @@ void    ICE::printData_FC(const Patch* patch, int include_GC,
       low   = patch->getInteriorCellLowIndex();
       high  = patch->getInteriorCellHighIndex();
     }
-
+    if (d_dbgBeginIndx != IntVector(0,0,0) ) {
+      low = d_dbgBeginIndx;
+    }
+    if (d_dbgEndIndx != IntVector(0,0,0) ) {
+      high = d_dbgEndIndx;
+    } 
     cerr.setf(ios::scientific,ios::floatfield);
-    cerr.precision(16);   
+    cerr.precision(5);   
     for(int k = low.z(); k < high.z(); k++)  {
       for(int j = low.y(); j < high.y(); j++) {
       //for(int j = high.y()-1; j >= low.y(); j--) {
