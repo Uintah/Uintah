@@ -111,12 +111,14 @@ public:
   void get_weights(const Point &, Cell::array_type &, vector<double> &)
   {ASSERTFAIL("StructCurveMesh::get_weights for cells isn't supported");}
 
-  void get_point(Point &point, Node::index_type &index) const
+  void get_point(Point &point, Node::index_type index) const
   { get_center(point,index); }
-  void set_point(Node::index_type &index, const Point &point )
+  void set_point(Node::index_type index, const Point &point )
   { points_[index] = point; }
+  void get_normal(Vector &vector, Node::index_type index) const
+  { ASSERTFAIL("not implemented") }
 
-  void get_normal(Vector &vector, Node::index_type &index) const
+  void get_random_point(Point &p, const Elem::index_type &ei, int seed=0) const
   { ASSERTFAIL("not implemented") }
 
   virtual bool is_editable() const { return true; }
