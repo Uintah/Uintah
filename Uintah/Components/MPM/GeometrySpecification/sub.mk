@@ -5,21 +5,14 @@
 
 SRCDIR   := Uintah/Components/MPM/GeometrySpecification
 
-SRCS     += $(SRCDIR)/GeometryObject.cc \
-	$(SRCDIR)/Problem.cc
-#	$(SRCDIR)/GeometryPiece.cc \
-#	$(SRCDIR)/SphereGeometryPiece.cc  $(SRCDIR)/BoxGeometryPiece.cc \
-#	$(SRCDIR)/SphereGeometryPiece.cc \
-#	$(SRCDIR)/CylinderGeometryPiece.cc \
-#	$(SRCDIR)/TriGeometryPiece.cc \
-#	$(SRCDIR)/UnionGeometryPiece.cc \
-#	$(SRCDIR)/DifferenceGeometryPiece.cc \
-#	$(SRCDIR)/IntersectionGeometryPiece.cc \
-#	$(SRCDIR)/GeometryPieceFactory.cc
-
+SRCS     += $(SRCDIR)/GeometryObject.cc
 
 #
 # $Log$
+# Revision 1.8  2000/11/06 20:51:53  guilkey
+# Moved what little Problem did inside of SerialMPM.  CylinderGeometryObject
+# hasn't been doing anything for months.
+#
 # Revision 1.7  2000/06/09 18:45:20  jas
 # Moved GeometryPiece stuff to Grid/.
 #
