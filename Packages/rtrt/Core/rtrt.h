@@ -18,7 +18,6 @@ namespace rtrt {
       updatePercent(0.5),
       clusterSize(1),
       shuffleClusters(1),
-      np(4),
       framelessMode(1),
       nworkers(1),
       worker_run_gl_test(false),
@@ -39,7 +38,6 @@ namespace rtrt {
     double updatePercent;
     int clusterSize;
     int shuffleClusters;
-    int np;
     int framelessMode; // mode for frameless rendering...
     double Gjitter_vals[1000];
     double Gjitter_valsb[1000];
@@ -47,6 +45,7 @@ namespace rtrt {
     unsigned int C[NCOMB][NCOMB];
     int comb_table_inited;
 
+    // This should only be modified by Dpy or before the rendering starts.
     int nworkers;
     int rtrt_nworkers() { return nworkers; }
 
