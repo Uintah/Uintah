@@ -268,7 +268,7 @@ void GridSpheresDpy::button_pressed(MouseButton button,
     }
     break;
   }
-  post_redraw();
+  redraw = true;
 }
 
 void GridSpheresDpy::button_motion(MouseButton button,
@@ -282,7 +282,7 @@ void GridSpheresDpy::button_motion(MouseButton button,
     } else {
       move(new_range_begin, x_mouse, y_mouse);
     }
-    post_redraw();
+    redraw = true;
     break;
   case MouseButton2:
     break;
@@ -293,7 +293,7 @@ void GridSpheresDpy::button_motion(MouseButton button,
     } else {
       move(new_range_end, x_mouse, y_mouse);
     }
-    post_redraw();
+    redraw = true;
     break;
   }
 }
