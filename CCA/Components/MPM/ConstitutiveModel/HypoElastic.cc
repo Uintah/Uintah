@@ -46,44 +46,44 @@ HypoElastic::HypoElastic(ProblemSpecP& ps, MPMLabel* Mlb, MPMFlags* Mflag)
     // Read in fracture criterion and the toughness curve
     ProblemSpecP curve_ps = ps->findBlock("fracture_toughness_curve");
     if(curve_ps!=0) {
-      crackPropagationCriterion="max_hoop_stress";	  
-      curve_ps->get("crack_propagation_criterion",crackPropagationCriterion);	  
+      crackPropagationCriterion="max_hoop_stress";        
+      curve_ps->get("crack_propagation_criterion",crackPropagationCriterion);     
 
       if(crackPropagationCriterion!="max_hoop_stress" && 
-	 crackPropagationCriterion!="max_principal_stress" &&
-	 crackPropagationCriterion!="max_energy_release_rate" &&
-	 crackPropagationCriterion!="strain_energy_density" &&
+         crackPropagationCriterion!="max_principal_stress" &&
+         crackPropagationCriterion!="max_energy_release_rate" &&
+         crackPropagationCriterion!="strain_energy_density" &&
          crackPropagationCriterion!="empirical_criterion") {
-	cout << "!!! Undefinded crack propagation criterion: "
-	     << crackPropagationCriterion 
-	     << " for hypo-elastic material. Program terminated."
-	     << endl;
-	exit(1);       
-      }	    
+        cout << "!!! Undefinded crack propagation criterion: "
+             << crackPropagationCriterion 
+             << " for hypo-elastic material. Program terminated."
+             << endl;
+        exit(1);       
+      }     
 
       if(crackPropagationCriterion=="empirical_criterion") {
         // Get parameters p & q in the fracture locus equation
         // (KI/Ic)^p+(KII/KIIc)^q=1 and KIIc=r*KIc       
         p=q=2.0;  // Default elliptical fracture locus  
-	r=-1.;
+        r=-1.;
         curve_ps->get("p",p);
         curve_ps->get("q",q);
         curve_ps->get("r",r);
       }
-	    
+            
       for(ProblemSpecP child_ps=curve_ps->findBlock("point"); child_ps!=0; 
-	  child_ps=child_ps->findNextBlock("point")) {
-	double Vc,KIc,KIIc;
-	child_ps->get("Vc",Vc);
-	child_ps->get("KIc",KIc);
+          child_ps=child_ps->findNextBlock("point")) {
+        double Vc,KIc,KIIc;
+        child_ps->get("Vc",Vc);
+        child_ps->get("KIc",KIc);
         if(r<0.) { // Input KIIc manually
           child_ps->get("KIIc",KIIc);
         }
         else { // The ratio of KIIc to KIc is a constant (r) 
-	  KIIc=r*KIc;
-        }	
-	d_initialData.Kc.push_back(Vector(Vc,KIc,KIIc));
-      }		  
+          KIIc=r*KIc;
+        }       
+        d_initialData.Kc.push_back(Vector(Vc,KIc,KIIc));
+      }           
     }
   }
 }
@@ -107,35 +107,33 @@ HypoElastic::~HypoElastic()
 }
 
 void HypoElastic::initializeCMData(const Patch* patch,
-                                        const MPMMaterial* matl,
-                                        DataWarehouse* new_dw)
+                                   const MPMMaterial* matl,
+                                   DataWarehouse* new_dw)
 {
-  // Put stuff in here to initialize each particle's
-  // constitutive model parameters and deformationMeasure
-  Matrix3 Identity, zero(0.);
-  Identity.Identity();
+  // Initialize the variables shared by all constitutive models
+  // This method is defined in the ConstitutiveModel base class.
+  initSharedDataForExplicit(patch, matl, new_dw);
 
-  ParticleSubset* pset = new_dw->getParticleSubset(matl->getDWIndex(), patch);
-
-  ParticleVariable<Matrix3> deformationGradient;
-  new_dw->allocateAndPut(deformationGradient,lb->pDeformationMeasureLabel,pset);
-  ParticleVariable<Matrix3> pstress;
-  new_dw->allocateAndPut(pstress, lb->pStressLabel, pset);
-  // for J-Integral
-  ParticleVariable<Matrix3> pdispGrads;
-  ParticleVariable<double>  pstrainEnergyDensity;
   if (flag->d_fracture) {
-    new_dw->allocateAndPut(pdispGrads, lb->pDispGradsLabel, pset);
-    new_dw->allocateAndPut(pstrainEnergyDensity, lb->pStrainEnergyDensityLabel, pset);
-  }
+    // Put stuff in here to initialize each particle's
+    // constitutive model parameters and deformationMeasure
+    Matrix3 Identity, zero(0.);
+    Identity.Identity();
 
-  for(ParticleSubset::iterator iter = pset->begin();iter != pset->end();iter++){
-     deformationGradient[*iter] = Identity;
-     pstress[*iter] = zero;
-     if (flag->d_fracture) {
-       pdispGrads[*iter] = zero;
-       pstrainEnergyDensity[*iter] = 0.0;
-     }
+    ParticleSubset* pset = new_dw->getParticleSubset(matl->getDWIndex(), patch);
+
+    // for J-Integral
+    ParticleVariable<Matrix3> pdispGrads;
+    ParticleVariable<double>  pstrainEnergyDensity;
+    new_dw->allocateAndPut(pdispGrads, lb->pDispGradsLabel, pset);
+    new_dw->allocateAndPut(pstrainEnergyDensity, lb->pStrainEnergyDensityLabel, 
+                           pset);
+
+    ParticleSubset::iterator iter = pset->begin();
+    for(;iter != pset->end();iter++){
+      pdispGrads[*iter] = zero;
+      pstrainEnergyDensity[*iter] = 0.0;
+    }
   }
 
   computeStableTimestep(patch, matl, new_dw);
@@ -143,87 +141,77 @@ void HypoElastic::initializeCMData(const Patch* patch,
 
 
 void HypoElastic::allocateCMDataAddRequires(Task* task,
-					    const MPMMaterial* matl,
-					    const PatchSet* ,
-					    MPMLabel* lb) const
+                                            const MPMMaterial* matl,
+                                            const PatchSet* patches,
+                                            MPMLabel* lb) const
 {
-  const MaterialSubset* matlset = matl->thisMaterial(); 
-  task->requires(Task::NewDW,lb->pDeformationMeasureLabel_preReloc, 
-                 matlset, Ghost::None);
-  task->requires(Task::NewDW,lb->pStressLabel_preReloc, 
-                 matlset, Ghost::None);
+  const MaterialSubset* matlset = matl->thisMaterial();
+
+  // Allocate the variables shared by all constitutive models
+  // for the particle convert operation
+  // This method is defined in the ConstitutiveModel base class.
+  addSharedRForConvertExplicit(task, matlset, patches);
+
+  // Add requires local to this model
+  Ghost::GhostType  gnone = Ghost::None;
   if (flag->d_fracture) {
-    task->requires(Task::NewDW,lb->pDispGradsLabel_preReloc,
-		   matlset, Ghost::None);
-    task->requires(Task::NewDW,lb->pStrainEnergyDensityLabel_preReloc,
-		   matlset, Ghost::None);
+    task->requires(Task::NewDW, lb->pDispGradsLabel_preReloc, matlset, gnone);
+    task->requires(Task::NewDW, lb->pStrainEnergyDensityLabel_preReloc,
+                   matlset, gnone);
   }
 }
 
 
 void HypoElastic::allocateCMDataAdd(DataWarehouse* new_dw,
-				    ParticleSubset* addset,
-				    map<const VarLabel*, ParticleVariableBase*>* newState,
-				    ParticleSubset* delset,
-				    DataWarehouse* )
+                                    ParticleSubset* addset,
+     map<const VarLabel*, ParticleVariableBase*>* newState,
+                                    ParticleSubset* delset,
+                                    DataWarehouse* )
 {
-  // Put stuff in here to initialize each particle's
-  // constitutive model parameters and deformationMeasure
-
-  ParticleVariable<Matrix3> deformationGradient,pstress;
-  constParticleVariable<Matrix3> o_deformationGradient,o_stress;
-  new_dw->allocateTemporary(deformationGradient,addset);
-  new_dw->allocateTemporary(pstress,addset);
-  new_dw->get(o_deformationGradient,lb->pDeformationMeasureLabel_preReloc,
-              delset);
-  new_dw->get(o_stress,lb->pStressLabel_preReloc,delset);
-
-  ParticleVariable<Matrix3> pdispGrads;
-  constParticleVariable<Matrix3> o_dispGrads;
-  ParticleVariable<double>  pstrainEnergyDensity;
-    constParticleVariable<double>  o_strainEnergyDensity;
+  // Copy the data common to all constitutive models from the particle to be 
+  // deleted to the particle to be added. 
+  // This method is defined in the ConstitutiveModel base class.
+  copyDelToAddSetForConvertExplicit(new_dw, delset, addset, newState);
+  
+  // Copy the data local to this constitutive model from the particles to 
+  // be deleted to the particles to be added
   if (flag->d_fracture) {
-  // for J-Integral
+    ParticleVariable<Matrix3> pdispGrads;
+    constParticleVariable<Matrix3> o_dispGrads;
+    ParticleVariable<double>  pstrainEnergyDensity;
+    constParticleVariable<double>  o_strainEnergyDensity;
+    // for J-Integral
     new_dw->allocateTemporary(pdispGrads, addset);
     new_dw->get(o_dispGrads,lb->pDispGradsLabel_preReloc,delset);
     new_dw->allocateTemporary(pstrainEnergyDensity,addset);
     new_dw->get(o_strainEnergyDensity,lb->pStrainEnergyDensityLabel_preReloc,
-		delset);
-  }
+                delset);
 
-  ParticleSubset::iterator o, n = addset->begin();
-  for (o=delset->begin(); o != delset->end(); o++, n++) {
-     deformationGradient[*n] = o_deformationGradient[*o];
-     pstress[*n] = o_stress[*o];
-     if (flag->d_fracture) {
-       pdispGrads[*n] = o_dispGrads[*o];
-       pstrainEnergyDensity[*n] = o_strainEnergyDensity[*o];
-     }
-  }
+    ParticleSubset::iterator o, n = addset->begin();
+    for (o=delset->begin(); o != delset->end(); o++, n++) {
+      pdispGrads[*n] = o_dispGrads[*o];
+      pstrainEnergyDensity[*n] = o_strainEnergyDensity[*o];
+    }
 
-  (*newState)[lb->pDeformationMeasureLabel]=deformationGradient.clone();
-  (*newState)[lb->pStressLabel]=pstress.clone();
-
-  if (flag->d_fracture) {
     (*newState)[lb->pDispGradsLabel]=pdispGrads.clone();
     (*newState)[lb->pStrainEnergyDensityLabel]=pstrainEnergyDensity.clone();
   }
 }
 
 void HypoElastic::addParticleState(std::vector<const VarLabel*>& from,
-				   std::vector<const VarLabel*>& to)
+                                   std::vector<const VarLabel*>& to)
 {
-   from.push_back(lb->pDeformationMeasureLabel);
-   from.push_back(lb->pStressLabel);
-   to.push_back(lb->pDeformationMeasureLabel_preReloc);
-   to.push_back(lb->pStressLabel_preReloc);
+  // Add the particle state data common to all constitutive models.
+  // This method is defined in the ConstitutiveModel base class.
+  addSharedParticleState(from, to);
 
-   if (flag->d_fracture) {
-     from.push_back(lb->pDispGradsLabel);
-     from.push_back(lb->pStrainEnergyDensityLabel);
-     to.push_back(lb->pDispGradsLabel_preReloc);
-     to.push_back(lb->pStrainEnergyDensityLabel_preReloc);
-   }
+  // Add the local particle state data for this constitutive model.
+  if (flag->d_fracture) {
+    from.push_back(lb->pDispGradsLabel);
+    from.push_back(lb->pStrainEnergyDensityLabel);
+    to.push_back(lb->pDispGradsLabel_preReloc);
+    to.push_back(lb->pStrainEnergyDensityLabel_preReloc);
+  }
 }
 
 void HypoElastic::computeStableTimestep(const Patch* patch,
@@ -253,8 +241,8 @@ void HypoElastic::computeStableTimestep(const Patch* patch,
      // Compute wave speed at each particle, store the maximum
      c_dil = sqrt((bulk + 4.*G/3.)*pvolume[idx]/pmass[idx]);
      WaveSpeed=Vector(Max(c_dil+fabs(pvelocity[idx].x()),WaveSpeed.x()),
-		      Max(c_dil+fabs(pvelocity[idx].y()),WaveSpeed.y()),
-		      Max(c_dil+fabs(pvelocity[idx].z()),WaveSpeed.z()));
+                      Max(c_dil+fabs(pvelocity[idx].y()),WaveSpeed.y()),
+                      Max(c_dil+fabs(pvelocity[idx].z()),WaveSpeed.z()));
     }
     WaveSpeed = dx/WaveSpeed;
     double delT_new = WaveSpeed.minComponent();
@@ -332,20 +320,28 @@ void HypoElastic::computeStressTensor(const PatchSubset* patches,
           
       new_dw->allocateAndPut(pdispGrads_new, lb->pDispGradsLabel_preReloc, pset);
       new_dw->allocateAndPut(pstrainEnergyDensity_new,
-			     lb->pStrainEnergyDensityLabel_preReloc, pset);
+                             lb->pStrainEnergyDensityLabel_preReloc, pset);
     }
 
     new_dw->allocateAndPut(pstress_new,     lb->pStressLabel_preReloc,   pset);
     new_dw->allocateAndPut(pvolume_deformed, lb->pVolumeDeformedLabel,   pset);
     new_dw->allocateAndPut(deformationGradient_new,
-			   lb->pDeformationMeasureLabel_preReloc, pset);
+                           lb->pDeformationMeasureLabel_preReloc, pset);
  
+    // Allocate variable to store internal heating rate
+    ParticleVariable<double> pIntHeatRate;
+    new_dw->allocateAndPut(pIntHeatRate, lb->pInternalHeatRateLabel_preReloc, 
+                           pset);
+
     double G    = d_initialData.G;
     double bulk = d_initialData.K;
 
     for(ParticleSubset::iterator iter = pset->begin();
-					iter != pset->end(); iter++){
+                                        iter != pset->end(); iter++){
       particleIndex idx = *iter;
+
+      // Assign zero internal heating by default - modify if necessary.
+      pIntHeatRate[idx] = 0.0;
 
       // Get the node indices that surround the cell
       IntVector ni[MAX_BASIS];
@@ -361,18 +357,18 @@ void HypoElastic::computeStressTensor(const PatchSubset* patches,
        Vector gvel;
        velGrad.set(0.0);
        for(int k = 0; k < flag->d_8or27; k++) {
-	 if (flag->d_fracture) {
-	   if(pgCode[idx][k]==1) gvel = gvelocity[ni[k]];
-	   if(pgCode[idx][k]==2) gvel = Gvelocity[ni[k]];
-	 } else
-	   gvel = gvelocity[ni[k]];
-	 for (int j = 0; j<3; j++){
-	   for (int i = 0; i<3; i++) {
-	     velGrad(i,j)+=gvel[i] * d_S[k][j] * oodx[j];
-	     if (flag->d_fracture)
-	       pvelGrads[idx](i,j)  = velGrad(i,j);
-	    }
-	  }
+         if (flag->d_fracture) {
+           if(pgCode[idx][k]==1) gvel = gvelocity[ni[k]];
+           if(pgCode[idx][k]==2) gvel = Gvelocity[ni[k]];
+         } else
+           gvel = gvelocity[ni[k]];
+         for (int j = 0; j<3; j++){
+           for (int i = 0; i<3; i++) {
+             velGrad(i,j)+=gvel[i] * d_S[k][j] * oodx[j];
+             if (flag->d_fracture)
+               pvelGrads[idx](i,j)  = velGrad(i,j);
+            }
+          }
       }
 
       // Calculate rate of deformation D, and deviatoric rate DPrime
@@ -417,11 +413,11 @@ void HypoElastic::computeStressTensor(const PatchSubset* patches,
       Matrix3 AvgStress = (pstress_new[idx] + pstress[idx])*.5;
 
       double e = (D(0,0)*AvgStress(0,0) +
-	          D(1,1)*AvgStress(1,1) +
-	          D(2,2)*AvgStress(2,2) +
-	       2.*(D(0,1)*AvgStress(0,1) +
-		   D(0,2)*AvgStress(0,2) +
-		   D(1,2)*AvgStress(1,2))) * pvolume_deformed[idx]*delT;
+                  D(1,1)*AvgStress(1,1) +
+                  D(2,2)*AvgStress(2,2) +
+               2.*(D(0,1)*AvgStress(0,1) +
+                   D(0,2)*AvgStress(0,2) +
+                   D(1,2)*AvgStress(1,2))) * pvolume_deformed[idx]*delT;
 
       se += e;
 
@@ -436,8 +432,8 @@ void HypoElastic::computeStressTensor(const PatchSubset* patches,
       // Compute wave speed at each particle, store the maximum
       Vector pvelocity_idx = pvelocity[idx];
       WaveSpeed=Vector(Max(c_dil+fabs(pvelocity_idx.x()),WaveSpeed.x()),
-		       Max(c_dil+fabs(pvelocity_idx.y()),WaveSpeed.y()),
-		       Max(c_dil+fabs(pvelocity_idx.z()),WaveSpeed.z()));
+                       Max(c_dil+fabs(pvelocity_idx.y()),WaveSpeed.y()),
+                       Max(c_dil+fabs(pvelocity_idx.z()),WaveSpeed.z()));
     }
 
     WaveSpeed = dx/WaveSpeed;
@@ -456,29 +452,14 @@ void HypoElastic::carryForward(const PatchSubset* patches,
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     int dwi = matl->getDWIndex();
-    ParticleVariable<Matrix3> pdefm_new,pstress_new;
-    ParticleVariable<double> pvolume_deformed;
-    constParticleVariable<double> pmass;
-    constParticleVariable<Matrix3> pdefm,pstress;
     ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
-    old_dw->get(pdefm,         lb->pDeformationMeasureLabel,           pset);
-    old_dw->get(pstress,       lb->pStressLabel,                       pset);
-    old_dw->get(pmass,         lb->pMassLabel,                         pset);
 
-    new_dw->allocateAndPut(pdefm_new,lb->pDeformationMeasureLabel_preReloc,
-                                                                       pset);
-    new_dw->allocateAndPut(pvolume_deformed, lb->pVolumeDeformedLabel, pset);
-    new_dw->allocateAndPut(pstress_new,lb->pStressLabel_preReloc,      pset);
+    // Carry forward the data common to all constitutive models 
+    // when using RigidMPM.
+    // This method is defined in the ConstitutiveModel base class.
+    carryForwardSharedData(pset, old_dw, new_dw, matl);
 
-    double rho_orig = matl->getInitialDensity();
-
-    for(ParticleSubset::iterator iter = pset->begin();
-                                 iter != pset->end(); iter++){
-      particleIndex idx = *iter;
-      pdefm_new[idx] = pdefm[idx];
-      pstress_new[idx] = pstress[idx];
-      pvolume_deformed[idx]=(pmass[idx]/rho_orig);
-    }
+    // Carry forward the data local to this constitutive model 
     new_dw->put(delt_vartype(patch->getLevel()->adjustDelt(1.e10)), 
                 lb->delTLabel);
     new_dw->put(sum_vartype(0.),     lb->StrainEnergyLabel);
@@ -569,26 +550,26 @@ HypoElastic::CrackPropagates(const double& Vc,const double& KI,
         double KIIi=Kc[i].z();
         double KIIj=Kc[i+1].z();
         KIc=KIi+(KIj-KIi)*(Vc-Vi)/(Vj-Vi);
-        KIIc=KIIi+(KIIj-KIIi)*(Vc-Vi)/(Vj-Vi);	
-	break;
+        KIIc=KIIi+(KIIj-KIIi)*(Vc-Vi)/(Vj-Vi);  
+        break;
       }
     } // End of loop over i
   }
 
   /* Task 2: Determine crack propagation direction (theta) and 
-  	     the equivalent stress intensity factor (Kq)
-  */	     
+             the equivalent stress intensity factor (Kq)
+  */         
   double Kq=-9e32;
   if(crackPropagationCriterion=="max_hoop_stress" ||
      crackPropagationCriterion=="max_energy_release_rate") {
-    // Crack propagation direction	  
+    // Crack propagation direction        
     double sinTheta,cosTheta,value;
     if(KI==0.0 || (KI!=0. && fabs(KII/KI)>1000.)) { // Pure mode II
       cosTheta = 1./3.;
       sinTheta = (KII>=0.) ? -sqrt(8./9.) : sqrt(8./9.);
     }
     else {  // Mixed mode or pure mode I 
-      double R=KII/KI;	    
+      double R=KII/KI;      
       cosTheta=(3.*R*R+sqrt(1.+8.*R*R))/(1.+9.*R*R);
       value=fabs(R*(3.*cosTheta-1.));
       sinTheta = (KII>=0.)? -value : value;
@@ -605,9 +586,9 @@ HypoElastic::CrackPropagates(const double& Vc,const double& KI,
     if(KII==0. || (KII!=0. && fabs(KI/KII)>1000.)) { // Pure mode I
       theta=0.;
       Kq=KI; 
-    }	    
+    }       
     else { // Mixed mode or pure mode II
-      double R=KI/KII;	    
+      double R=KI/KII;      
       int sign = (KII>0.)? -1 : 1;
       double tanTheta2=(R+sign*sqrt(R*R+8.))/4.;
       double theta2=atan(tanTheta2);
@@ -615,7 +596,7 @@ HypoElastic::CrackPropagates(const double& Vc,const double& KI,
       double st=sin(theta2);
       Kq=KI*pow(ct,3)-3*KII*ct*ct*st;
       theta=2*theta2;
-    }				  
+    }                             
   } // End of max_principal_stress criterion
   
   if(crackPropagationCriterion=="strain_energy_density") {
@@ -669,7 +650,7 @@ HypoElastic::CrackPropagates(const double& Vc,const double& KI,
 // for FRACTURE
 double
 HypoElastic::CrackPropagationAngleFromStrainEnergyDensityCriterion(const double& k,
-		const double& KI, const double& KII)
+                const double& KI, const double& KII)
 {
   double errF=1.e-6,errV=1.e-2,PI=3.141592654;
   double a,b,c,fa,fb,fc;
@@ -702,15 +683,15 @@ HypoElastic::CrackPropagationAngleFromStrainEnergyDensityCriterion(const double&
           break;
         }
         else { // Record the cross point with axis x
-  	  cp=c;
-	}  
-	  
-	// Narrow the region of the root
+          cp=c;
+        }  
+          
+        // Narrow the region of the root
         if(fc*fa<0.) { // The root is in (a,c)
-	  fb=fc; b=c;
-  	}
+          fb=fc; b=c;
+        }
         else if(fc*fb<0.) { // The root is in (c,b)
-  	  fa=fc; a=c;
+          fa=fc; a=c;
         }
       } // End of loop over j
     } // End of if(fa*fb<0.)
@@ -721,7 +702,7 @@ HypoElastic::CrackPropagationAngleFromStrainEnergyDensityCriterion(const double&
   int count=0;
   double S0=0.0;
   for(int i=0;i<(int)root.size();i++) {
-    double r=root[i];	    
+    double r=root[i];       
 
     // The signs of propagation angle and KII must be opposite 
     if(KII*r>0.) continue;
@@ -729,17 +710,17 @@ HypoElastic::CrackPropagationAngleFromStrainEnergyDensityCriterion(const double&
     // Calculate the second derivative of the strain energy density
     double sr=sin(r),cr=cos(r),sr2=sin(2*r),cr2=cos(2*r);
     double dsdr2=KI*KI*((1-k)*cr+2*cr2)-2*KI*KII*(4*sr2+(1-k)*sr)+
-    	         KII*KII*((k-1)*cr-6*cr2); 
+                 KII*KII*((k-1)*cr-6*cr2); 
     if(dsdr2>0.) { 
       // Determine propagation angle by comparison of strain energy density. 
       // Along the angle there exists the minimum strain energy density. 
       double S=(1+cr)*(k-cr)*KI*KI+2*sr*(2*cr-k+1)*KI*KII+
-	       ((k+1)*(1-cr)+(1+cr)*(3*cr-1))*KII*KII; 
+               ((k+1)*(1-cr)+(1+cr)*(3*cr-1))*KII*KII; 
       if(count==0 || (count>0 && S<S0)) {
         theta=r;  
-      	S0=S;
+        S0=S;
         count++;
-      }	
+      } 
     }
   } // Enf of loop over i
   root.clear();
@@ -748,45 +729,30 @@ HypoElastic::CrackPropagationAngleFromStrainEnergyDensityCriterion(const double&
 }
 
 void HypoElastic::addComputesAndRequires(Task* task,
-					 const MPMMaterial* matl,
-					 const PatchSet* ) const
+                                         const MPMMaterial* matl,
+                                         const PatchSet* patches) const
 {
-  Ghost::GhostType  gac   = Ghost::AroundCells;
+  // Add the computes and requires that are common to all explicit 
+  // constitutive models.  The method is defined in the ConstitutiveModel
+  // base class.
   const MaterialSubset* matlset = matl->thisMaterial();
-  task->requires(Task::OldDW, lb->delTLabel);
-  task->requires(Task::OldDW, lb->pXLabel,                matlset,Ghost::None);
-  task->requires(Task::OldDW, lb->pMassLabel,             matlset,Ghost::None);
-  task->requires(Task::OldDW, lb->pStressLabel,           matlset,Ghost::None);
-  task->requires(Task::OldDW, lb->pVolumeLabel,           matlset,Ghost::None);
-  task->requires(Task::OldDW, lb->pVelocityLabel,         matlset,Ghost::None);
-  task->requires(Task::OldDW, lb->pTemperatureLabel,      matlset,Ghost::None);
-  task->requires(Task::OldDW, lb->pDeformationMeasureLabel,matlset,
-		 Ghost::None);
-  if(flag->d_8or27==27){
-    task->requires(Task::OldDW, lb->pSizeLabel,           matlset,Ghost::None);
-  }
-  task->requires(Task::NewDW, lb->gVelocityLabel,         matlset, gac, NGN);
+  addSharedCRForExplicit(task, matlset, patches);
 
+  // Other constitutive model and input dependent computes and requires
   if (flag->d_fracture) {
-    task->requires(Task::NewDW, lb->GVelocityLabel,       matlset, gac, NGN);
-    task->requires(Task::NewDW, lb->pgCodeLabel,          matlset,Ghost::None);
-    task->requires(Task::OldDW, lb->pDispGradsLabel,      matlset,Ghost::None);
-    task->requires(Task::OldDW,lb->pStrainEnergyDensityLabel,matlset,
-		   Ghost::None);
+    Ghost::GhostType  gnone = Ghost::None;
+    task->requires(Task::OldDW, lb->pDispGradsLabel,           matlset, gnone);
+    task->requires(Task::OldDW, lb->pStrainEnergyDensityLabel, matlset, gnone);
     
     task->computes(lb->pDispGradsLabel_preReloc,             matlset);
     task->computes(lb->pVelGradsLabel,                       matlset);
     task->computes(lb->pStrainEnergyDensityLabel_preReloc,   matlset);
   }
-
-  task->computes(lb->pStressLabel_preReloc,                matlset);
-  task->computes(lb->pDeformationMeasureLabel_preReloc,    matlset);
-  task->computes(lb->pVolumeDeformedLabel,                 matlset);
 }
 
 void 
 HypoElastic::addComputesAndRequires(Task*,const MPMMaterial*, const PatchSet*,
-				    const bool ) const
+                                    const bool ) const
 {
 }
 
@@ -858,8 +824,8 @@ const TypeDescription* fun_getTypeDescription(HypoElastic::StateData*)
    static TypeDescription* td = 0;
    if(!td){
       td = scinew
-	TypeDescription(TypeDescription::Other,
-			"HypoElastic::StateData", true, &makeMPI_CMData);
+        TypeDescription(TypeDescription::Other,
+                        "HypoElastic::StateData", true, &makeMPI_CMData);
    }
    return td;
 }

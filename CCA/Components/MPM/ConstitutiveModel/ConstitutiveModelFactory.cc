@@ -79,6 +79,9 @@ ConstitutiveModel* ConstitutiveModelFactory::create(ProblemSpecP& ps,
   else if (mat_type ==  "visco_scram")
     return(scinew ViscoScram(child,lb,flags));
    
+  //else if (mat_type ==  "viscoSCRAM")
+  //  return(scinew ViscoSCRAM(child,lb,flags));
+   
   else if (mat_type ==  "hypo_elastic") {
     if (flags->d_integrator_type == "explicit" || 
         flags->d_integrator_type == "fracture")
@@ -135,6 +138,9 @@ ConstitutiveModelFactory::createCopy(const ConstitutiveModel* cm)
    
   else if (dynamic_cast<const ViscoScram*>(cm)) 
     return(scinew ViscoScram(dynamic_cast<const ViscoScram*>(cm)));
+   
+//  else if (dynamic_cast<const ViscoSCRAM*>(cm)) 
+//    return(scinew ViscoSCRAM(dynamic_cast<const ViscoSCRAM*>(cm)));
    
   else if (dynamic_cast<const HypoElastic*>(cm)) 
     return(scinew HypoElastic(dynamic_cast<const HypoElastic*>(cm)));

@@ -71,6 +71,10 @@ void MWViscoElastic::initializeCMData(const Patch* patch,
                                         const MPMMaterial* matl,
                                         DataWarehouse* new_dw)
 {
+  // Initialize the variables shared by all constitutive models
+  // This method is defined in the ConstitutiveModel base class.
+  initSharedDataForExplicit(patch, matl, new_dw);
+
   // Put stuff in here to initialize each particle's
   // constitutive model parameters and deformationMeasure
   Matrix3 Identity, zero(0.);
@@ -78,10 +82,8 @@ void MWViscoElastic::initializeCMData(const Patch* patch,
   
   ParticleSubset* pset = new_dw->getParticleSubset(matl->getDWIndex(), patch);
 
-  ParticleVariable<Matrix3> deformationGradient;
   ParticleVariable<Matrix3> pstress_e,pstress_ve_d,pstress_e_d;
   ParticleVariable<double> pstress_ve_v,pstress_e_v;
-  new_dw->allocateAndPut(deformationGradient,lb->pDeformationMeasureLabel,pset);
   new_dw->allocateAndPut(pstress_e,          lb->pStress_eLabel,          pset);
   new_dw->allocateAndPut(pstress_ve_v,       lb->pStress_ve_vLabel,       pset);
   new_dw->allocateAndPut(pstress_ve_d,       lb->pStress_ve_dLabel,       pset);
@@ -89,7 +91,6 @@ void MWViscoElastic::initializeCMData(const Patch* patch,
   new_dw->allocateAndPut(pstress_e_d,        lb->pStress_e_dLabel,        pset);
 
   for(ParticleSubset::iterator iter = pset->begin();iter != pset->end();iter++){
-      deformationGradient[*iter] = Identity;
       pstress_e[*iter] = zero;
       pstress_ve_v[*iter] = 0.0;
       pstress_ve_d[*iter] = zero;
@@ -103,50 +104,50 @@ void MWViscoElastic::initializeCMData(const Patch* patch,
 
 void MWViscoElastic::allocateCMDataAddRequires(Task* task,
 					       const MPMMaterial* matl,
-					       const PatchSet* ,
+					       const PatchSet* patches,
 					       MPMLabel* lb) const
 {
-  const MaterialSubset* matlset = matl->thisMaterial(); 
-  task->requires(Task::NewDW,lb->pDeformationMeasureLabel_preReloc, 
-                 matlset, Ghost::None);
-  task->requires(Task::NewDW,lb->pStress_eLabel, 
-                 matlset, Ghost::None);
-  task->requires(Task::NewDW,lb->pStress_ve_vLabel, 
-                 matlset, Ghost::None);
-  task->requires(Task::NewDW,lb->pStress_ve_dLabel, 
-                 matlset, Ghost::None);
-  task->requires(Task::NewDW,lb->pStress_e_vLabel, 
-                 matlset, Ghost::None);
-  task->requires(Task::NewDW,lb->pStress_e_dLabel, 
-                 matlset, Ghost::None);
+  const MaterialSubset* matlset = matl->thisMaterial();
+
+  // Allocate the variables shared by all constitutive models
+  // for the particle convert operation
+  // This method is defined in the ConstitutiveModel base class.
+  addSharedRForConvertExplicit(task, matlset, patches);
+
+  // Add requires local to this model
+  Ghost::GhostType  gnone = Ghost::None;
+  task->requires(Task::NewDW, lb->pStress_ve_vLabel, matlset, gnone);
+  task->requires(Task::NewDW, lb->pStress_ve_dLabel, matlset, gnone);
+  task->requires(Task::NewDW, lb->pStress_e_vLabel,  matlset, gnone);
+  task->requires(Task::NewDW, lb->pStress_e_dLabel,  matlset, gnone);
 }
 
 
 void MWViscoElastic::allocateCMDataAdd(DataWarehouse* new_dw,
 				       ParticleSubset* addset,
-				       map<const VarLabel*, ParticleVariableBase*>* newState,
+	map<const VarLabel*, ParticleVariableBase*>* newState,
 				       ParticleSubset* delset,
 				       DataWarehouse* )
 {
-  // Put stuff in here to initialize each particle's
-  // constitutive model parameters and deformationMeasure
+  // Copy the data common to all constitutive models from the particle to be 
+  // deleted to the particle to be added. 
+  // This method is defined in the ConstitutiveModel base class.
+  copyDelToAddSetForConvertExplicit(new_dw, delset, addset, newState);
   
-  ParticleVariable<Matrix3> deformationGradient,pstress_e,pstress_ve_d,
-    pstress_e_d;
-  ParticleVariable<double> pstress_ve_v,pstress_e_v;
+  // Copy the data local to this constitutive model from the particles to 
+  // be deleted to the particles to be added
+  ParticleVariable<Matrix3> pstress_e, pstress_ve_d, pstress_e_d;
+  ParticleVariable<double>  pstress_ve_v, pstress_e_v;
 
-  constParticleVariable<Matrix3> o_deformationGradient,o_stress_e,
-    o_stress_ve_d,o_stress_e_d;
-  constParticleVariable<double> o_stress_ve_v,o_stress_e_v;
+  constParticleVariable<Matrix3> o_stress_e, o_stress_ve_d, o_stress_e_d;
+  constParticleVariable<double>  o_stress_ve_v, o_stress_e_v;
 
-  new_dw->allocateTemporary(deformationGradient,addset);
   new_dw->allocateTemporary(pstress_e,addset);
   new_dw->allocateTemporary(pstress_ve_v,addset);
   new_dw->allocateTemporary(pstress_ve_d,addset);
   new_dw->allocateTemporary(pstress_e_v,addset);
   new_dw->allocateTemporary(pstress_e_d,addset);
 
-  new_dw->get(o_deformationGradient,lb->pDeformationMeasureLabel_preReloc,delset);
   new_dw->get(o_stress_e,          lb->pStress_eLabel,          delset);
   new_dw->get(o_stress_ve_v,       lb->pStress_ve_vLabel,       delset);
   new_dw->get(o_stress_ve_d,       lb->pStress_ve_dLabel,       delset);
@@ -155,7 +156,6 @@ void MWViscoElastic::allocateCMDataAdd(DataWarehouse* new_dw,
 
   ParticleSubset::iterator o,n = addset->begin();
   for (o=delset->begin(); o != delset->end(); o++, n++) {
-    deformationGradient[*n] = o_deformationGradient[*o];
     pstress_e[*n] = o_stress_e[*o];
     pstress_ve_v[*n] = o_stress_ve_v[*o];
     pstress_ve_d[*n] = o_stress_ve_d[*o];
@@ -163,7 +163,6 @@ void MWViscoElastic::allocateCMDataAdd(DataWarehouse* new_dw,
     pstress_e_d[*n] = o_stress_e_d[*o];
   }
 
-  (*newState)[lb->pDeformationMeasureLabel]=deformationGradient.clone();
   (*newState)[lb->pStress_eLabel]=pstress_e.clone();
   (*newState)[lb->pStress_ve_vLabel]=pstress_ve_v.clone();
   (*newState)[lb->pStress_ve_dLabel]=pstress_ve_d.clone();
@@ -175,9 +174,11 @@ void MWViscoElastic::allocateCMDataAdd(DataWarehouse* new_dw,
 void MWViscoElastic::addParticleState(std::vector<const VarLabel*>& from,
 				   std::vector<const VarLabel*>& to)
 {
-   from.push_back(lb->pDeformationMeasureLabel);
-   to.push_back(lb->pDeformationMeasureLabel_preReloc);
-   to.push_back(lb->pStressLabel_preReloc);
+  // Add the particle state data common to all constitutive models.
+  // This method is defined in the ConstitutiveModel base class.
+  addSharedParticleState(from, to);
+
+  // Add the local particle state data for this constitutive model.
 }
 
 void MWViscoElastic::computeStableTimestep(const Patch* patch,
@@ -294,6 +295,11 @@ void MWViscoElastic::computeStressTensor(const PatchSubset* patches,
       new_dw->get(Gvelocity,lb->GVelocityLabel, dwi, patch, gac, NGN);
     }
 
+    // Allocate variable to store internal heating rate
+    ParticleVariable<double> pIntHeatRate;
+    new_dw->allocateAndPut(pIntHeatRate, lb->pInternalHeatRateLabel_preReloc, 
+                           pset);
+
     double e_shear = d_initialData.E_Shear;
     double e_bulk = d_initialData.E_Bulk;
     double ve_shear = d_initialData.VE_Shear;
@@ -306,6 +312,9 @@ void MWViscoElastic::computeStressTensor(const PatchSubset* patches,
     for(ParticleSubset::iterator iter = pset->begin();
 					iter != pset->end(); iter++){
       particleIndex idx = *iter;
+
+      // Assign zero internal heating by default - modify if necessary.
+      pIntHeatRate[idx] = 0.0;
 
       // Get the node indices that surround the cell
       IntVector ni[MAX_BASIS];
@@ -404,29 +413,13 @@ void MWViscoElastic::computeStressTensor(const PatchSubset* patches,
 
 void MWViscoElastic::addComputesAndRequires(Task* task,
 					 const MPMMaterial* matl,
-					 const PatchSet* ) const
+					 const PatchSet* patches ) const
 {
-  Ghost::GhostType  gac   = Ghost::AroundCells;
+  // Add the computes and requires that are common to all explicit 
+  // constitutive models.  The method is defined in the ConstitutiveModel
+  // base class.
   const MaterialSubset* matlset = matl->thisMaterial();
-  task->requires(Task::OldDW, lb->delTLabel);
-  task->requires(Task::OldDW, lb->pXLabel,                 matlset,Ghost::None);
-  task->requires(Task::OldDW, lb->pMassLabel,              matlset,Ghost::None);
-  task->requires(Task::OldDW, lb->pVolumeLabel,            matlset,Ghost::None);
-  task->requires(Task::OldDW, lb->pTemperatureLabel,       matlset,Ghost::None);
-  task->requires(Task::OldDW, lb->pDeformationMeasureLabel,matlset,Ghost::None);
-  if(flag->d_8or27==27){
-    task->requires(Task::OldDW, lb->pSizeLabel,            matlset,Ghost::None);
-  }
-  task->requires(Task::NewDW, lb->gVelocityLabel,          matlset,gac, NGN);
-
-  if (flag->d_fracture) {
-    task->requires(Task::NewDW, lb->pgCodeLabel,         matlset,Ghost::None);
-    task->requires(Task::NewDW, lb->GVelocityLabel,      matlset, gac, NGN);
-  }
-
-  task->computes(lb->pStressLabel_preReloc,             matlset);
-  task->computes(lb->pDeformationMeasureLabel_preReloc, matlset);
-  task->computes(lb->pVolumeDeformedLabel,              matlset);
+  addSharedCRForExplicit(task, matlset, patches);
 }
 
 void 
