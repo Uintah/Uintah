@@ -137,16 +137,13 @@ void SpecifiedBodyContact::exMomInterpolated(const ProcessorGroup*,
     // set velocity to profile vel
     for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){
       IntVector c = *iter; 
-      gvelocity[0][c] = new_velocity;
       
-      if(!compare(gmass[0][c],0.0)){
-
-        for(int n = 1; n < numMatls; n++){
-          // set each velocity component either to it's own velocity
-          // or that of the rigid body
-	  if(d_direction[0]) gvelocity[n][c].x( gvelocity[0][c].x() );
-	  if(d_direction[1]) gvelocity[n][c].y( gvelocity[0][c].y() );
-	  if(d_direction[2]) gvelocity[n][c].z( gvelocity[0][c].z() );
+      if(!compare(gmass[0][c],0.0)){ // only update if shares cell with rigid body
+        for(int n = 1; n < numMatls; n++){ // dont update rigid body here
+          // set each velocity component that is being modified to new velocity
+          if(d_direction[0]) gvelocity[n][c].x( new_velocity.x() );
+          if(d_direction[1]) gvelocity[n][c].y( new_velocity.y() );
+          if(d_direction[2]) gvelocity[n][c].z( new_velocity.z() );
         }
       }
     }
@@ -183,31 +180,26 @@ void SpecifiedBodyContact::exMomIntegrated(const ProcessorGroup*,
        frictionWork[m].initialize(0.);
      }
     }
-
+    
     delt_vartype delT;
     old_dw->get(delT, lb->delTLabel, getLevel(patches));
 
     // set velocity to profile vel
-    double tcurr = d_sharedState->getElapsedTime();
+    const double tcurr = d_sharedState->getElapsedTime();
     Vector new_velocity = findVel(tcurr);
     
     for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){
       IntVector c = *iter; 
-      gacceleration[0][c]    = (new_velocity - gvelocity_star[0][c])/delT;
-      gvelocity_star[0][c]   = new_velocity;
-    }
-
-    for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){
-      IntVector c = *iter; 
-
-      if(!compare(gmass[0][c],0.0)){  // rigid matl is in index 0
-        for(int  n = 1; n < numMatls; n++){
-          Vector other_vel( gvelocity_star[n][c] );
-          if(d_direction[0]) other_vel.x( new_velocity.x() );
-          if(d_direction[1]) other_vel.x( new_velocity.y() );
-          if(d_direction[2]) other_vel.x( new_velocity.z() );
-          gacceleration[n][c]   += (other_vel - gvelocity_star[n][c])/delT;
-          gvelocity_star[n][c]   = other_vel;
+      
+      if(!compare(gmass[0][c],0.0)){  // rigid matl is always index 0
+        
+        for(int  n = 0; n < numMatls; n++){ // update material 0 to new velocity also.
+          Vector new_vel( gvelocity_star[n][c] );
+          if(d_direction[0]) new_vel.x( new_velocity.x() );
+          if(d_direction[1]) new_vel.y( new_velocity.y() );
+          if(d_direction[2]) new_vel.z( new_velocity.z() );
+          gacceleration[n][c]   += (new_vel - gvelocity_star[n][c])/delT;
+          gvelocity_star[n][c]   = new_vel;
         }
       }
     }
