@@ -178,6 +178,10 @@ PROGRAM := $(SRCDIR)/TetgenToTetVol
 SRCS := $(SRCDIR)/TetgenToTetVol.cc
 include $(SCIRUN_SCRIPTS)/program.mk
 
+PROGRAM := $(SRCDIR)/vff2nrrd
+SRCS := $(SRCDIR)/vff2nrrd.cc
+include $(SCIRUN_SCRIPTS)/program.mk
+
 ####################################
 # added by C.Wolters, Nov.18 2004:
 PROGRAM := $(SRCDIR)/gmvTopts
