@@ -31,7 +31,14 @@ IandG::IandG(const ProcessorGroup* myworld, ProblemSpecP& params)
   Ilb  = scinew ICELabel();
   //__________________________________
   //  diagnostic labels
-  reactedFractionLabel   = VarLabel::create("IandG::F",
+  reactedFractionLabel   = VarLabel::create("F",
+                     CCVariable<double>::getTypeDescription());
+                     
+  IandGterm1Label   = VarLabel::create("IandGterm1",
+                     CCVariable<double>::getTypeDescription());
+  IandGterm2Label   = VarLabel::create("IandGterm2",
+                     CCVariable<double>::getTypeDescription());
+  IandGterm3Label   = VarLabel::create("IandGterm3",
                      CCVariable<double>::getTypeDescription());
                      
 }
@@ -41,6 +48,9 @@ IandG::~IandG()
   delete Ilb;
 
   VarLabel::destroy(reactedFractionLabel);
+  VarLabel::destroy(IandGterm1Label);
+  VarLabel::destroy(IandGterm2Label);
+  VarLabel::destroy(IandGterm3Label);
   
   if(mymatls && mymatls->removeReference())
     delete mymatls;
@@ -140,6 +150,9 @@ void IandG::scheduleMassExchange(SchedulerP& sched,
 
   t->requires(Task::NewDW, Ilb->press_equil_CCLabel, press_matl,gn);
   t->computes(reactedFractionLabel, react_matl);
+  t->computes(IandGterm1Label, react_matl);
+  t->computes(IandGterm2Label, react_matl);
+  t->computes(IandGterm3Label, react_matl);
 
   t->modifies(mi->mass_source_CCLabel);
   t->modifies(mi->momentum_source_CCLabel);
@@ -190,6 +203,7 @@ void IandG::massExchange(const ProcessorGroup*,
     constCCVariable<double> rctTemp,rctRho,rctSpvol,prodRho;
     constCCVariable<Vector> rctvel_CC;
     CCVariable<double> Fr;
+    CCVariable<double> term1,term2,term3;
 	    
     Vector dx = patch->dCell();
     double cell_vol = dx.x()*dx.y()*dx.z();
@@ -201,16 +215,22 @@ void IandG::massExchange(const ProcessorGroup*,
     old_dw->get(rctvel_CC,     Ilb->vel_CCLabel,   m0,patch,gn, 0);
     new_dw->get(rctRho,        Ilb->rho_CCLabel,   m0,patch,gn, 0);
     new_dw->get(rctSpvol,      Ilb->sp_vol_CCLabel,m0,patch,gn, 0);
-    new_dw->allocateAndPut(Fr, reactedFractionLabel,m0,patch);
+    new_dw->allocateAndPut(Fr,reactedFractionLabel,m0,patch);
+    new_dw->allocateAndPut(term1, IandGterm1Label, m0,patch);
+    new_dw->allocateAndPut(term2, IandGterm2Label, m0,patch);
+    new_dw->allocateAndPut(term3, IandGterm3Label, m0,patch);
     Fr.initialize(0.);
+    term1.initialize(0.);
+    term2.initialize(0.);
+    term3.initialize(0.);
 
     //__________________________________
     // Product Data, 
-    new_dw->get(prodRho,       Ilb->rho_CCLabel,   m1,patch,gn, 0);
+    new_dw->get(prodRho,       Ilb->rho_CCLabel,        m1, patch,gn, 0);
 
     //__________________________________
     //   Misc.
-    new_dw->get(press_CC,         Ilb->press_equil_CCLabel,0,  patch,gn, 0);
+    new_dw->get(press_CC,      Ilb->press_equil_CCLabel,0,  patch,gn, 0);
   
     double cv_reactant = matl0->getSpecificHeat();
 
@@ -219,31 +239,27 @@ void IandG::massExchange(const ProcessorGroup*,
       if (press_CC[c] > d_threshold_pressure){
         //__________________________________
         // Insert Burn Model Here
-        double burnedMass;
+        double burnedMass = 0.;
         double delF = 0;
         double F = prodRho[c]/(rctRho[c]+prodRho[c]);
-        if(F>1){
-          cout << "cell = " << c << endl;
-          cout << "pR = " << prodRho[c] << endl;
-          cout << "rR = " << rctRho[c] << endl;
-        }
         if(F >= 0. && F < d_Figmax){
-          delF += d_I*pow((1.-F),d_b)*pow((1./(rctSpvol[c]*d_rho0)-1.-d_a),d_x);
+         term1[c]=d_I*pow((1.-F),d_b)*pow((1./(rctSpvol[c]*d_rho0)-1.-d_a),d_x);
+         delF += term1[c];
         }
         if(F >= 0. && F < d_FG1max){
-          delF += d_G1*pow((1.-F),d_c)*pow(F,d_d)*pow(press_CC[c],d_y);
-//          cout << "d_G1*pow((1.-F),d_c)=" << d_G1*pow((1.-F),d_c) << endl;
-//          cout << "pow(F,d_d)=" << pow(F,d_d) << endl;
-//          cout << "pow(press_CC[c],d_y)=" << pow(press_CC[c],d_y) << endl;
+          term2[c] = d_G1*pow((1.-F),d_c)*pow(F,d_d)*pow(press_CC[c],d_y);
+          delF += term2[c];
         }
-        if(F >= d_FG2min && F < 1.){
-          double term3 = d_G2*pow((1.-F),d_e)*pow(F,d_g)*pow(press_CC[c],d_z);
-          delF += term3;
+        if(F >= d_FG2min && F < 0.99){
+          term3[c] = d_G2*pow((1.-F),d_e)*pow(F,d_g)*pow(press_CC[c],d_z);
+          delF += term3[c];
         }
         delF*=delT;
         Fr[c] = F;
         double rctMass = rctRho[c]*cell_vol;
-        burnedMass = min((delF/(1.-F))*rctMass, rctMass);
+        double prdMass = prodRho[c]*cell_vol;
+        burnedMass = min(delF*(prdMass+rctMass), rctMass);
+        burnedMass = min(burnedMass, .2*d_rho0*cell_vol);
 
         //__________________________________
         // conservation of mass, momentum and energy                           
@@ -269,6 +285,10 @@ void IandG::massExchange(const ProcessorGroup*,
     //  set symetric BC
     setBC(mass_src_0, "set_if_sym_BC",patch, d_sharedState, m0);
     setBC(mass_src_1, "set_if_sym_BC",patch, d_sharedState, m1);
+    setBC(term1, "set_if_sym_BC",patch, d_sharedState, m0);
+    setBC(term2, "set_if_sym_BC",patch, d_sharedState, m0);
+    setBC(term3, "set_if_sym_BC",patch, d_sharedState, m0);
+    setBC(Fr,    "set_if_sym_BC",patch, d_sharedState, m0);
   }
 }
 //______________________________________________________________________
