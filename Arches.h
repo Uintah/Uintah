@@ -145,6 +145,13 @@ public:
 	virtual bool need_recompile(double time, double dt,
 			    const GridP& grid);
 
+      // GROUP: Access Functions :
+      ///////////////////////////////////////////////////////////////////////
+	// Boolean to see whether or not Enthalpy is solved for
+      inline bool checkSolveEnthalpy() const{
+	return d_calcEnthalpy;
+      }
+
       // for multimaterial
       void setMPMArchesLabel(const MPMArchesLabel* MAlb)
 	{
