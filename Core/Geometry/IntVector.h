@@ -67,6 +67,18 @@ namespace SCICore {
 			     d_value[2]-v.d_value[2]);
 	}
 
+	// IntVector i(1)=i.x()
+	//           i(2)=i.y()
+	//           i(3)=i.z()
+	//   --tan
+	inline int operator()(int i) const {
+	    return d_value[i-1];
+	}
+
+	inline int& operator()(int i) {
+	    return d_value[i-1];
+	}
+
 	inline int x() const {
 	    return d_value[0];
 	}
@@ -119,6 +131,9 @@ std::ostream& operator<<(std::ostream&, const SCICore::Geometry::IntVector&);
 
 //
 // $Log$
+// Revision 1.7  2000/07/07 03:09:43  tan
+// Added operator operator()(int i) to index IntVector element by integer.
+//
 // Revision 1.6  2000/06/20 20:39:53  rawat
 // modified implementation of IntVector.h. Storing vector components as array
 // of dim 3. Also added get_pointer for passing into fortran subroutines
