@@ -115,7 +115,7 @@ void FrictionContact::exMomInterpolated(const ProcessorGroup*,
       IntVector low(patch->getInteriorNodeLowIndex());
       IntVector high(patch->getInteriorNodeHighIndex());
 
-      int ILOW,IHIGH,JLOW,JHIGH,KLOW,KHIGH;
+      int ILOW=0,IHIGH=0,JLOW=0,JHIGH=0,KLOW=0,KHIGH=0;
       // First, figure out some ranges for for loops
       for(Patch::FaceType face = Patch::startFace;
       		  face <= Patch::endFace; face=Patch::nextFace(face)){
