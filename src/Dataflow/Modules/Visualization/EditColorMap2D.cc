@@ -555,10 +555,11 @@ EditColorMap2D::load_file() {
   if (icmap.get_rep()) {
     widgets_ = icmap->widgets();
     icmap_generation_ = icmap->generation;
+    while (!undo_stack_.empty()) undo_stack_.pop();
   }
   
-  update_to_gui();      
-  select_widget(-1,0);
+  update_to_gui();
+  select_widget(-1,0); 
   redraw(true);
   force_execute();
 }
