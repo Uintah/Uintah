@@ -12,7 +12,7 @@
 #include <Core/Persistent/PersistentSTL.h>
 
 // This is for HAVE_PNG
-#include <sci_defs.h>
+#include <sci_defs/image_defs.h>
 
 #ifdef HAVE_PNG
 #include <Core/Thread/Mutex.h>
