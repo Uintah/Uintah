@@ -51,6 +51,11 @@ using SCICore::PersistentSpace::Piostream;
 using SCICore::Tester::RigorousTest;
 
 template<class T>
+class Array1;
+template<class T>
+void Pio(Piostream& stream, Array1<T>& array);
+
+template<class T>
 
 /**************************************
 
@@ -171,7 +176,7 @@ public:
     //Rigorous Tests
     static void test_rigorous(RigorousTest* __test);
 
-    friend void TEMPLATE_TAG Pio TEMPLATE_BOX (Piostream&, Array1<T>&);
+    friend void TEMPLATE_TAG Pio <> (Piostream&, Array1<T>&);
 };
 
 } // End namespace Containers
@@ -381,6 +386,10 @@ void Pio(Piostream& stream, Containers::Array1<T>*& array) {
 
 //
 // $Log$
+// Revision 1.9  1999/08/30 20:19:26  sparker
+// Updates to compile with -LANG:std on SGI
+// Other linux/irix porting oscillations
+//
 // Revision 1.8  1999/08/25 03:48:29  sparker
 // Changed SCICore/CoreDatatypes to SCICore/Datatypes
 // Changed PSECore/CommonDatatypes to PSECore/Datatypes

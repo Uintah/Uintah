@@ -19,14 +19,18 @@ namespace Datatypes {
 
 using namespace SCICore::Datatypes;
 
-clString SimpleIPort<ScaledBoxWidgetDataHandle>::port_type("Data");
-clString SimpleIPort<ScaledBoxWidgetDataHandle>::port_color("black");
+template<> clString SimpleIPort<ScaledBoxWidgetDataHandle>::port_type("Data");
+template<> clString SimpleIPort<ScaledBoxWidgetDataHandle>::port_color("black");
 
 } // End namespace Datatypes
 } // End namespace PSECore
 
 //
 // $Log$
+// Revision 1.4  1999/08/30 20:19:24  sparker
+// Updates to compile with -LANG:std on SGI
+// Other linux/irix porting oscillations
+//
 // Revision 1.3  1999/08/25 03:48:23  sparker
 // Changed SCICore/CoreDatatypes to SCICore/Datatypes
 // Changed PSECore/CommonDatatypes to PSECore/Datatypes

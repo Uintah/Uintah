@@ -43,6 +43,13 @@ namespace Containers {
 using SCICore::PersistentSpace::Piostream;
 using SCICore::Tester::RigorousTest;
 
+template<class T>
+class Array2;
+template<class T>
+void Pio(Piostream& stream, Containers::Array2<T>& data);
+template<class T>
+void Pio(Piostream& stream, Containers::Array2<T>*& data);
+
 /**************************************
 
 CLASS
@@ -276,6 +283,10 @@ void Pio(Piostream& stream, Containers::Array2<T>*& data) {
 
 //
 // $Log$
+// Revision 1.6  1999/08/30 20:19:26  sparker
+// Updates to compile with -LANG:std on SGI
+// Other linux/irix porting oscillations
+//
 // Revision 1.5  1999/08/28 17:54:34  sparker
 // Integrated new Thread library
 //

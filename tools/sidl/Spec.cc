@@ -4,11 +4,8 @@
 #include <map>
 #include <pair.h>
 #include <iostream>
-#if 0
+#include <string>
 #include <sstream>
-#else
-#include <strstream.h>
-#endif
 
 using std::string;
 using std::cerr;
@@ -608,19 +605,17 @@ ArrayType::~ArrayType()
 
 std::string ArrayType::fullname() const
 {
-#if 0
     std::ostringstream o;
     o << "array<" << subtype->fullname() << ", " << dim << ">";
     return o.str();
-#else
-    char dimstr[8];
-    ostrstream o(dimstr, 8);
-    o << dim;
-    return "array<"+subtype->fullname()+", "+dimstr+">";
-#endif
 }
+
 //
 // $Log$
+// Revision 1.3  1999/08/30 20:19:29  sparker
+// Updates to compile with -LANG:std on SGI
+// Other linux/irix porting oscillations
+//
 // Revision 1.2  1999/08/30 17:39:54  sparker
 // Updates to configure script:
 //  rebuild configure if configure.in changes (Bug #35)

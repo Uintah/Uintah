@@ -19,14 +19,18 @@ namespace Datatypes {
 
 using namespace SCICore::Datatypes;
 
-clString SimpleIPort<cVectorHandle>::port_type("cVector");
-clString SimpleIPort<cVectorHandle>::port_color("yellow");
+template<> clString SimpleIPort<cVectorHandle>::port_type("cVector");
+template<> clString SimpleIPort<cVectorHandle>::port_color("yellow");
 
 } // End namespace Datatypes
 } // End namespace PSECore
 
 //
 // $Log$
+// Revision 1.4  1999/08/30 20:19:25  sparker
+// Updates to compile with -LANG:std on SGI
+// Other linux/irix porting oscillations
+//
 // Revision 1.3  1999/08/25 03:48:26  sparker
 // Changed SCICore/CoreDatatypes to SCICore/Datatypes
 // Changed PSECore/CommonDatatypes to PSECore/Datatypes

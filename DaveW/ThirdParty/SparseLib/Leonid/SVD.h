@@ -91,7 +91,7 @@ SVD<Data_Type>::SVD(MatrixDense<Data_Type> &AA,char* memory){
 }
 
 //----------------------------------------------------------------------------
-void SVD<double>::solve(){
+template<> void SVD<double>::solve(){
 
  data_type = "double";
   

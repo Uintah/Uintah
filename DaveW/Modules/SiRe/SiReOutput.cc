@@ -138,7 +138,7 @@ void SiReOutput::execute()
        s1 = clString("set vol-nz ")+to_string(x1);
        TCL::execute(s1);
 
-       int scale=((int)pow(2, s->s.NPasses-s->s.PassIdx-1))*s->s.ShrinkFactor;
+       int scale=((int)pow(2., s->s.NPasses-s->s.PassIdx-1))*s->s.ShrinkFactor;
 
        ScalarFieldRGuchar* sft = new ScalarFieldRGuchar();
 
@@ -326,6 +326,10 @@ void SiReOutput::execute()
 
 //
 // $Log$
+// Revision 1.3  1999/08/30 20:19:21  sparker
+// Updates to compile with -LANG:std on SGI
+// Other linux/irix porting oscillations
+//
 // Revision 1.2  1999/08/25 03:47:42  sparker
 // Changed SCICore/CoreDatatypes to SCICore/Datatypes
 // Changed PSECore/CommonDatatypes to PSECore/Datatypes

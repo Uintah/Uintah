@@ -85,7 +85,8 @@ Color DRaytracer::singleTrace(const Point& curr, Point& xyz, Pixel* p) {
     lambda.initialize(0);
 //cerr << "ns="<<ns<<"\n";
     if (ns == 0) {    // shoot em all through the middle
-	scene.trace(RTRay(camera.view.eyep(), curr, lambda, p), 0);
+	RTRay ray(camera.view.eyep(), curr, lambda, p);
+	scene.trace(ray, 0);
     } else {	
 	Array1<double> lambda_temp(specNum);
 	lensPixelSamples(s, pixX, pixY, lensX, lensY, w, shuffle);
@@ -362,6 +363,10 @@ void DRaytracer::io(Piostream& stream) {
 
 //
 // $Log$
+// Revision 1.4  1999/08/30 20:19:20  sparker
+// Updates to compile with -LANG:std on SGI
+// Other linux/irix porting oscillations
+//
 // Revision 1.3  1999/08/29 00:46:34  sparker
 // Integrated new thread library
 // using statement tweaks to compile with both MipsPRO and g++

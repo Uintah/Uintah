@@ -19,14 +19,18 @@
 
 using namespace Uintah::Datatypes;
 
-clString ParticleGridReaderIPort::port_type("ParticleGridReader");
-clString ParticleGridReaderIPort::port_color("cyan");
+template<> clString ParticleGridReaderIPort::port_type("ParticleGridReader");
+template<> clString ParticleGridReaderIPort::port_color("cyan");
 
 //} // End namespace Datatypes
 //} // End namespace Uintah
 
 //
 // $Log$
+// Revision 1.3  1999/08/30 20:19:28  sparker
+// Updates to compile with -LANG:std on SGI
+// Other linux/irix porting oscillations
+//
 // Revision 1.2  1999/08/17 06:40:08  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

@@ -2,10 +2,8 @@
 #include "Spec.h"
 #include "parser.h"
 #include <string.h>
-#ifdef FLEX_SCANNER
 int lineno;
 char* curfile;
-#endif
 #define YY_DECL extern "C" int yylex (void)
 %}
 
@@ -80,8 +78,21 @@ char* curfile;
 
 %%
 
+extern "C" {
+
+int yywrap()
+{
+  return 1;
+}
+
+}
+
 //
 // $Log$
+// Revision 1.3  1999/08/30 20:19:29  sparker
+// Updates to compile with -LANG:std on SGI
+// Other linux/irix porting oscillations
+//
 // Revision 1.2  1999/08/30 17:39:55  sparker
 // Updates to configure script:
 //  rebuild configure if configure.in changes (Bug #35)

@@ -746,7 +746,7 @@ void MatrixDense<Data_Type>::write(char * filename){
 }
   
 //---------------------------------------------------------------------
-void MatrixDense<double>:: info(){
+template<> void MatrixDense<double>:: info(){
   
   cout<<"********************************************"<<endl; 
   cout<<"Matrix:"<<endl;

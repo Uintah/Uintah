@@ -20,14 +20,18 @@
 using namespace SCICore::Containers;
 using namespace Uintah::Datatypes;
 
-clString SimpleIPort<ParticleSetHandle>::port_type("ParticleSet");
-clString SimpleIPort<ParticleSetHandle>::port_color("purple4");
+template<> clString SimpleIPort<ParticleSetHandle>::port_type("ParticleSet");
+template<> clString SimpleIPort<ParticleSetHandle>::port_color("purple4");
 
 //} // End namespace Datatypes
 //} // End namespace Uintah
 
 //
 // $Log$
+// Revision 1.3  1999/08/30 20:19:28  sparker
+// Updates to compile with -LANG:std on SGI
+// Other linux/irix porting oscillations
+//
 // Revision 1.2  1999/08/17 06:40:09  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

@@ -34,11 +34,13 @@ Datatype::Datatype(const Datatype&)
     generation=current_generation++;
 }
 
-Datatype& Datatype::operator=(const Datatype& copy)
+Datatype& Datatype::operator=(const Datatype&)
 {
     // XXX:
     // Should probably throw an exception if ref_cnt is > 0 or
     // something.
+    generation=current_generation++;
+    return *this;
 }
 
 Datatype::~Datatype()
@@ -50,6 +52,10 @@ Datatype::~Datatype()
 
 //
 // $Log$
+// Revision 1.6  1999/08/30 20:19:27  sparker
+// Updates to compile with -LANG:std on SGI
+// Other linux/irix porting oscillations
+//
 // Revision 1.5  1999/08/29 00:46:52  sparker
 // Integrated new thread library
 // using statement tweaks to compile with both MipsPRO and g++
