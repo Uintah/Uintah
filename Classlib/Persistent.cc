@@ -15,6 +15,7 @@
 #include <Classlib/Pstreams.h>
 #include <Classlib/HashTable.h>
 #include <Classlib/String.h>
+#include <Multitask/Task.h>
 #include <fstream.h>
 
 static HashTable<clString, PersistentTypeID*>* table=0;
@@ -41,12 +42,42 @@ Persistent::~Persistent()
 
 Piostream::Piostream(Direction dir, int version)
 : dir(dir), version(version), err(0), outpointers(0), inpointers(0),
-  current_pointer_id(1)
+  current_pointer_id(1), timer_id(0)
 {
 }
 
 Piostream::~Piostream()
 {
+    cancel_timers();
+}
+
+void Piostream::cancel_timers()
+{
+    if(timer_id){
+	Task::self()->cancel_itimer(timer_id);
+	timer_id=0;
+    }
+}
+
+static void handle_itimer(void* cbdata)
+{
+    Piostream* stream=(Piostream*)cbdata;
+    stream->do_itimer();
+}
+
+void Piostream::do_itimer()
+{
+    double pd=get_percent_done();
+    (*timer_func)(pd, timer_data);
+}
+
+void Piostream::watch_progress(void (*tf)(double, void*), void* td)
+{
+    timer_func=tf;
+    timer_data=td;
+    // Start an interrupt timer which will monitor the progress of the
+    // stream...
+    timer_id=Task::self()->start_itimer(0.2, 0.2, handle_itimer, (void*)this);
 }
 
 int Piostream::reading()

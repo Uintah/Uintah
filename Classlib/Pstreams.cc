@@ -23,6 +23,13 @@
 TextPiostream::TextPiostream(ifstream* istr, int version)
 : Piostream(Read, version), istr(istr), ostr(0)
 {
+    int fd=istr->rdbuf()->fd();
+    struct stat buf;
+    if(fstat(fd, &buf) != 0){
+	perror("fstat");
+	exit(-1);
+    }
+    len=buf.st_size;
 }
 
 TextPiostream::TextPiostream(const clString& filename, Direction dir)
@@ -48,6 +55,7 @@ TextPiostream::TextPiostream(const clString& filename, Direction dir)
 
 TextPiostream::~TextPiostream()
 {
+    cancel_timers();
     if(istr)
 	delete istr;
     if(ostr)
@@ -347,6 +355,16 @@ void TextPiostream::emit_pointer(int& have_data, int& pointer_id)
     }
 }
 
+double TextPiostream::get_percent_done()
+{
+    if(dir == Read){
+	int pos=istr->tellg();
+	return double(pos)/double(len);
+    } else {
+	return 0;
+    }
+}
+
 BinaryPiostream::BinaryPiostream(ifstream* istr, int version)
 : Piostream(Read, version)
 {
@@ -380,19 +398,27 @@ BinaryPiostream::BinaryPiostream(ifstream* istr, int version)
 
 BinaryPiostream::~BinaryPiostream()
 {
+    cerr << "In BinaryPiostream DTOR\n";
+    cancel_timers();
     if(xdr){
+	cerr << "Destroying xdr\n";
 	xdr_destroy(xdr);
 	delete xdr;
 	if(dir==Read){
 #ifdef SCI_NOMMAP_IO
 #else
+	    cerr << "unmapping!\n";
+	    cerr << "addr=" << addr << endl;
+	    cerr << "len=" << len << endl;
 	    if(munmap((caddr_t)addr, len) != 0){
 		perror("munmap");
 		exit(-1);
 	    }
+	    cerr << "munmap done" << endl;
 	}
 #endif
     }
+    cerr << "BinaryPiostream::~BinaryPiostream done" << endl;
 }
 
 BinaryPiostream::BinaryPiostream(const clString& filename, Direction dir)
@@ -591,3 +617,12 @@ void BinaryPiostream::emit_pointer(int& have_data, int& pointer_id)
     }
 }
 
+double BinaryPiostream::get_percent_done()
+{
+    if(dir == Read){
+	int pos=xdr_getpos(xdr);
+	return double(pos)/double(len);
+    } else {
+	return 0;
+    }
+}

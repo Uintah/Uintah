@@ -44,7 +44,14 @@ protected:
     HashTable<int, Persistent*>* inpointers;
     int current_pointer_id;
     virtual void emit_pointer(int&, int&)=0;
+    virtual double get_percent_done()=0;
+
+    int timer_id;
+    void (*timer_func)(double, void*);
+    void* timer_data;
+    void cancel_timers();
 public:
+    void do_itimer();
     virtual ~Piostream();
     virtual clString peek_class()=0;
     virtual int begin_class(const clString& name, int current_version)=0;
@@ -70,6 +77,7 @@ public:
     int reading();
     int writing();
     int error();
+    void watch_progress(void (*tf)(double, void*), void* td);
 };
 
 Piostream* auto_istream(const clString& filename);
