@@ -76,6 +76,30 @@ DataArchive::~DataArchive()
   delete d_varHashMaps;
 }
 
+string DataArchive::queryEndianness()
+{
+  string ret;
+  DOM_Node meta = findNode("Meta", d_indexDoc.getDocumentElement());
+  if( meta == 0 )
+    throw InternalError("Meta node not found in index.xml");
+  DOM_Node endian_node = findNode("endianness", meta);
+  if( endian_node == 0 ){
+    cout<<"\nXML Warning: endianness node not found.\n"<<
+      "Assuming data was created on a big endian machine.\n"<<
+      "To eliminate this message and express the correct\n"<<
+      "endianess, please add either\n"<<
+      "\t<endianness>little_endian</endianness>\n"<<
+      "or\n\t<endianness>big_endian</endianness>\n"<<
+      "to the <Meta> section of the index.xml file.\n\n";
+    ret = string("big_endian");
+    return ret;
+  }
+  DOM_Node child = endian_node.getFirstChild();
+  DOMString endian = child.getNodeValue();
+  ret = string(toString(endian));
+  return ret;
+}
+
 void
 DataArchive::queryTimesteps( std::vector<int>& index,
 			     std::vector<double>& times )

@@ -179,6 +179,7 @@ public:
 		       std::vector< const TypeDescription *>&  );
   void queryTimesteps( std::vector<int>& index,
 		       std::vector<double>& times );
+  string queryEndianness();
   GridP queryGrid( double time );
 
   void purgeTimestepCache(double time)
