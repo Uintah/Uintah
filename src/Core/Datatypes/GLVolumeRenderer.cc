@@ -92,7 +92,8 @@ GLVolumeRenderer::GLVolumeRenderer(int id,
     drawZ(false),
     drawView(false),
     _interp(true),
-    _lighting(0)
+    _lighting(0),
+    di_(0)
 {
   rCount++;
 }
@@ -121,7 +122,8 @@ GLVolumeRenderer::GLVolumeRenderer(const GLVolumeRenderer& copy)
     drawZ(copy.drawZ),
     drawView(copy.drawView),
     _interp(copy._interp),
-    _lighting(copy._lighting)
+    _lighting(copy._lighting),
+    di_(copy.di_)
 {
   rCount++;
 } 
@@ -156,6 +158,7 @@ GLVolumeRenderer::draw(DrawInfoOpenGL* di, Material* mat, double)
     //AuditAllocator(default_allocator);
   if( !pre_draw(di, mat, _lighting) ) return;
   mutex.lock();
+  di_ = di;
   if( di->get_drawtype() == DrawInfoOpenGL::WireFrame ){
     drawWireFrame();
   } else {
@@ -171,6 +174,7 @@ GLVolumeRenderer::draw(DrawInfoOpenGL* di, Material* mat, double)
     cleanup();
     //AuditAllocator(default_allocator);
   }
+  di_ = 0;
   mutex.unlock();
 
 }

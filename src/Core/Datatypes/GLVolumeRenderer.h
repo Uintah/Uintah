@@ -160,7 +160,7 @@ private:
 
   bool cmapHasChanged;
   bool drawX, drawY, drawZ, drawView;
-  
+  DrawInfoOpenGL* di_;
  
 
   // Sets the state function without having to write a bunch of code
@@ -179,7 +179,7 @@ template <class T>
 T* GLVolumeRenderer::state( T* st, int l)
 { 
   if(st == 0) 
-    st = new T(this);
+    st = scinew T(this);
   _lighting = l;
   return st;
 }
