@@ -4,6 +4,7 @@
 #include "TensorField.h"
 #include <Uintah/Components/MPM/Util/Matrix3.h>
 #include <Uintah/Grid/CCVariable.h>
+#include <Uintah/Grid/Grid.h>
 #include <Uintah/Grid/GridP.h>
 #include <Uintah/Grid/LevelP.h>
 #include <SCICore/Geometry/Point.h>
