@@ -1,12 +1,9 @@
 #ifndef UINTAH_HOMEBREW_Variable_H
 #define UINTAH_HOMEBREW_Variable_H
 
-#include <Packages/Uintah/Core/Exceptions/InvalidCompressionMode.h>
-#include <Packages/Uintah/CCA/Ports/InputContext.h>
-#include <Packages/Uintah/CCA/Ports/OutputContext.h>
-#include <Packages/Uintah/Core/Grid/Patch.h>
-#include <Packages/Uintah/Core/Grid/SpecializedRunLengthEncoder.h>
-#include <iostream>
+#include <string>
+#include <iosfwd>
+class DOM_Element;
 
 namespace Uintah {
 
@@ -15,6 +12,7 @@ namespace Uintah {
    class InputContext;
    class OutputContext;
    class Patch;
+   class RefCounted;
 
 /**************************************
      
@@ -60,17 +58,8 @@ public:
   virtual void emitNormal(ostream& out, DOM_Element varnode) = 0;
   virtual void readNormal(istream& in) = 0;
 
-  virtual void emitRLE(ostream& /*out*/, DOM_Element /*varnode*/ /*,
-				  bool *//*equal_only*/ /* can force it to use
-					      EqualElementSequencer */)
-  { throw InvalidCompressionMode("rle",
-				 virtualGetTypeDescription()->getName()); }
-  
-  virtual void readRLE(istream& /*in*/ /*,
-				  bool*/ /*equal_only*/ /* can force it to use
-			                      EqualElementSequencer */)
-  { throw InvalidCompressionMode("rle",
-				 virtualGetTypeDescription()->getName()); }
+  virtual void emitRLE(ostream& /*out*/, DOM_Element /*varnode*/);
+  virtual void readRLE(istream& /*in*/);
   
   virtual void allocate(const Patch* patch) = 0;
 

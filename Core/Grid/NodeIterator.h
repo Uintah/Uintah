@@ -2,9 +2,6 @@
 #ifndef UINTAH_HOMEBREW_NodeIterator_H
 #define UINTAH_HOMEBREW_NodeIterator_H
 
-#include <Packages/Uintah/Core/Grid/Array3Index.h>
-#include <Packages/Uintah/Core/Grid/Patch.h>
-
 namespace Uintah {
 /**************************************
 

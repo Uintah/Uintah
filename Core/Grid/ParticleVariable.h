@@ -2,7 +2,6 @@
 #define UINTAH_HOMEBREW_PARTICLEVARIABLE_H
 
 #include <Core/Util/FancyAssert.h>
-#include <Core/Exceptions/ErrnoException.h>
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Util/Assert.h>
 #include <Core/Malloc/Allocator.h>
@@ -13,17 +12,18 @@
 #include <Packages/Uintah/Core/Exceptions/TypeMismatchException.h>
 #include <Packages/Uintah/Core/Grid/ParticleData.h>
 #include <Packages/Uintah/Core/Grid/ParticleSubset.h>
+#include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
 #include <Packages/Uintah/Core/Disclosure/TypeDescription.h>
 #include <Packages/Uintah/Core/Disclosure/TypeUtils.h>
-#include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
+#include <Packages/Uintah/Core/Grid/SpecializedRunLengthEncoder.h>
 
 #include <unistd.h>
-#include <errno.h>
 
 namespace Uintah {
 
 using namespace SCIRun;
 
+  class ProcessorGroup;
 class TypeDescription;
 
 /**************************************

@@ -4,6 +4,8 @@
 
 #include <Packages/Uintah/Core/Grid/Variable.h>
 #include <iosfwd>
+#include <sci_config.h> // For MPIPP_H on SGI
+#include <mpi.h>
 
 namespace Uintah {
 

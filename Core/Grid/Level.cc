@@ -3,6 +3,8 @@
 #include <Packages/Uintah/Core/Grid/Grid.h>
 #include <Packages/Uintah/Core/ProblemSpec/Handle.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
+#include <Packages/Uintah/Core/Grid/Box.h>
+#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Packages/Uintah/Core/Exceptions/InvalidGrid.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Util/FancyAssert.h>

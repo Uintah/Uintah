@@ -1,4 +1,10 @@
+
 #include <Packages/Uintah/Core/Grid/Variable.h>
+#include <Packages/Uintah/Core/Exceptions/InvalidCompressionMode.h>
+#include <Packages/Uintah/Core/Disclosure/TypeDescription.h>
+#include <Packages/Uintah/CCA/Ports/InputContext.h>
+#include <Packages/Uintah/CCA/Ports/OutputContext.h>
+#include <Packages/Uintah/Core/Grid/SpecializedRunLengthEncoder.h>
 #include <Core/Exceptions/ErrnoException.h>
 #include <Core/Malloc/Allocator.h>
 #include <Dataflow/XMLUtil/XMLUtil.h>
@@ -223,4 +229,16 @@ void Variable::read(InputContext& ic, long end, const string& compressionMode)
     readNormal(instream);
   ASSERT(instream.fail() == 0);
   ASSERT((unsigned long)instream.tellg() == uncompressedData->size());
+}
+
+void Variable::emitRLE(ostream& /*out*/, DOM_Element /*varnode*/)
+{
+  throw InvalidCompressionMode("rle",
+			       virtualGetTypeDescription()->getName());
+}
+  
+void Variable::readRLE(istream& /*in*/)
+{
+  throw InvalidCompressionMode("rle",
+			       virtualGetTypeDescription()->getName());
 }
