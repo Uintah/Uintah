@@ -339,7 +339,7 @@ class FCVariable : public Array3<T>, public FCVariableBase {
 	       for(int y=l.y();y<h.y();y++){
 		  size_t size = sizeof(T)*(h.x()-l.x());
 		  ssize_t s=write(oc.fd, &(*this)[IntVector(l.x(),y,z)], size);
-		  if(size != s)
+		  if((ssize_t)size != s)
 		     throw ErrnoException("FCVariable::emit (write call)", errno);
 		  oc.cur+=size;
 	       }
@@ -369,7 +369,7 @@ class FCVariable : public Array3<T>, public FCVariableBase {
 	       for(int y=l.y();y<h.y();y++){
 		  size_t size = sizeof(T)*(h.x()-l.x());
 		  ssize_t s=::read(oc.fd, &(*this)[IntVector(l.x(),y,z)], size);
-		  if(size != s)
+		  if((ssize_t)size != s)
 		     throw ErrnoException("FCVariable::emit (write call)", errno);
 		  oc.cur+=size;
 	       }
@@ -384,6 +384,9 @@ class FCVariable : public Array3<T>, public FCVariableBase {
 
 //
 // $Log$
+// Revision 1.14  2000/10/26 23:27:20  jas
+// Added Density Boundary Conditions needed for ICE.
+//
 // Revision 1.13  2000/10/18 03:46:46  jas
 // Added pressure boundary conditions.
 //

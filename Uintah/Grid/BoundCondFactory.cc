@@ -6,6 +6,7 @@
 #include <Uintah/Grid/TempThermalBoundCond.h>
 #include <Uintah/Grid/FluxThermalBoundCond.h>
 #include <Uintah/Grid/PressureBoundCond.h>
+#include <Uintah/Grid/DensityBoundCond.h>
 #include <Uintah/Interface/ProblemSpec.h>
 #include <Uintah/Interface/ProblemSpecP.h>
 #include <iostream>
@@ -47,6 +48,9 @@ void BoundCondFactory::create(const ProblemSpecP& ps,
      else if (bc_attr["var"] == "pressure")
        objs.push_back(new PressureBoundCond(child));
      
+     else if (bc_attr["var"] == "density")
+       objs.push_back(new DensityBoundCond(child));
+
      else {
        cerr << "Unknown Boundary Condition Type " << "(" << bc_attr["var"] 
 	    << ")" << endl;
@@ -56,6 +60,9 @@ void BoundCondFactory::create(const ProblemSpecP& ps,
 }
 
 // $Log$
+// Revision 1.3  2000/10/26 23:27:20  jas
+// Added Density Boundary Conditions needed for ICE.
+//
 // Revision 1.2  2000/10/18 03:46:46  jas
 // Added pressure boundary conditions.
 //
