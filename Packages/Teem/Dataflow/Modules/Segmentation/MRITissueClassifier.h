@@ -106,10 +106,11 @@ protected:
 
   //VisPack replacement functions
   void  write_flat_volume(NrrdDataHandle data, string filename);
-  void	dilate(NrrdDataHandle, NrrdDataHandle);
-  void	erode(NrrdDataHandle, NrrdDataHandle);
-  void	opening(NrrdDataHandle, NrrdDataHandle);
-  void	closing(NrrdDataHandle, NrrdDataHandle);
+  void  write_image(NrrdDataHandle data, string filename);
+  NrrdDataHandle	dilate(NrrdDataHandle, NrrdDataHandle);
+  NrrdDataHandle	erode(NrrdDataHandle, NrrdDataHandle);
+  NrrdDataHandle	opening(NrrdDataHandle, NrrdDataHandle);
+  NrrdDataHandle	closing(NrrdDataHandle, NrrdDataHandle);
   void	floodFill(NrrdDataHandle, 
 		  int, int, unsigned int, unsigned int, unsigned int);
   void	floodFill(NrrdDataHandle,
@@ -125,63 +126,58 @@ protected:
   NrrdDataHandle create_nrrd_of_floats(int, int);
   bool nrrd_check_bounds(NrrdDataHandle, int, int);
 
-#ifdef DEBUG_NRRDS
-  int get_nrrd_int(NrrdDataHandle data, int x, int y, int z);
-  float get_nrrd_float(NrrdDataHandle data, int x, int y, int z);
-  int get_nrrd_int(NrrdDataHandle data, int x, int y);
-  float get_nrrd_float(NrrdDataHandle data, int x, int y);
-
-  void set_nrrd_int(NrrdDataHandle data, int val, int x, int y, int z);
-  void set_nrrd_float(NrrdDataHandle data, float val, int x, int y, int z);
-  void set_nrrd_int(NrrdDataHandle data, int val, int x, int y);
-  void set_nrrd_float(NrrdDataHandle data, float val, int x, int y);
-#else
-  inline int get_nrrd_int(NrrdDataHandle data, int x, int y, int z) {
-    int *idata = (int*)data->nrrd->data;
-    return idata[x + data->nrrd->axis[1].size*(y + data->nrrd->axis[2].size*z)];
+  
+  inline int get_nrrd_int(const NrrdDataHandle &data, int x, int y, int z) {
+    Nrrd &nrrd = *data.get_rep()->nrrd;
+    int *idata = (int*)nrrd.data;
+    return idata[x + nrrd.axis[1].size*(y + nrrd.axis[2].size*z)];
   }
 
-  inline float get_nrrd_float(NrrdDataHandle data, int x, int y, int z) {
-    float *idata = (float*)data->nrrd->data;
-    return idata[x + data->nrrd->axis[1].size*(y + data->nrrd->axis[2].size*z)];
+  inline float get_nrrd_float(const NrrdDataHandle &data, int x, int y, int z) {
+    Nrrd &nrrd = *data.get_rep()->nrrd;
+    float *idata = (float*)nrrd.data;
+    return idata[x + nrrd.axis[1].size*(y + nrrd.axis[2].size*z)];
   }
 
-  inline void set_nrrd_int(NrrdDataHandle data, int val, int x, int y, int z) {
-    int *idata = (int*)data->nrrd->data;
-    idata[x + data->nrrd->axis[1].size*(y + data->nrrd->axis[2].size*z)] = val;
+  inline void set_nrrd_int(const NrrdDataHandle &data, int val, int x, int y, int z) {
+    Nrrd &nrrd = *data.get_rep()->nrrd;
+    int *idata = (int*)nrrd.data;
+    idata[x + nrrd.axis[1].size*(y + nrrd.axis[2].size*z)] = val;
   }
 
-  inline void set_nrrd_float(NrrdDataHandle data, float val, int x, int y, int z){
-    float *idata = (float*)data->nrrd->data;
-    idata[x + data->nrrd->axis[1].size*(y + data->nrrd->axis[2].size*z)] = val;
+  inline void set_nrrd_float(const NrrdDataHandle &data, float val, int x, int y, int z){
+    Nrrd &nrrd = *data.get_rep()->nrrd;
+    float *idata = (float*)nrrd.data;
+    idata[x + nrrd.axis[1].size*(y + nrrd.axis[2].size*z)] = val;
   }
 
-  inline int get_nrrd_int(NrrdDataHandle data, int x, int y) {
-    int *idata = (int*)data->nrrd->data;
-    return idata[x + data->nrrd->axis[1].size*y];
+  inline int get_nrrd_int2(const NrrdDataHandle &data, int x, int y) {
+    Nrrd &nrrd = *data.get_rep()->nrrd;
+    int *idata = (int*)nrrd.data;
+    return idata[x + nrrd.axis[1].size*y];
   }
 
-  inline float get_nrrd_float(NrrdDataHandle data, int x, int y) {
-    float *idata = (float*)data->nrrd->data;
-    return idata[x + data->nrrd->axis[1].size*y];
+  inline float get_nrrd_float2(const NrrdDataHandle &data, int x, int y) {
+    Nrrd &nrrd = *data.get_rep()->nrrd;
+    float *idata = (float*)nrrd.data;
+    return idata[x + nrrd.axis[1].size*y];
   }
 
-  inline void set_nrrd_int(NrrdDataHandle data, int val, int x, int y) {
-    int *idata = (int*)data->nrrd->data;
-    idata[x + data->nrrd->axis[1].size*y] = val;
+  inline void set_nrrd_int2(const NrrdDataHandle &data, int val, int x, int y) {
+    Nrrd &nrrd = *data.get_rep()->nrrd;
+    int *idata = (int*)nrrd.data;
+    idata[x + nrrd.axis[1].size*y] = val;
   }
 
-  inline void set_nrrd_float(NrrdDataHandle data, float val, int x, int y){
-    float *idata = (float*)data->nrrd->data;
-    idata[x + data->nrrd->axis[1].size*y] = val;
+  inline void set_nrrd_float2(const NrrdDataHandle &data, float val, int x, int y){
+    Nrrd &nrrd = *data.get_rep()->nrrd;
+    float *idata = (float*)nrrd.data;
+    idata[x + nrrd.axis[1].size*y] = val;
   }
-#endif
-
 
   
   ColumnMatrix get_m_Data(int, int, int);
 
-  NrrdDataHandle	m_Data;			// volume of vectors     
   NrrdDataHandle	m_T1_Data;
   NrrdDataHandle	m_T2_Data;
   NrrdDataHandle	m_PD_Data;
