@@ -82,8 +82,10 @@ ParticleVis::ParticleVis(GuiContext* ctx) :
   shaft_rad.set(0.1);
   show_nth.set(1); 
 */
-  outcolor=scinew Material(Color(0.3,0.3,0.3), Color(0.3,0.3,0.3),
-			   Color(0.3,0.3,0.3), 0);
+  //outcolor=scinew Material(Color(0.3,0.3,0.3), Color(0.3,0.3,0.3),
+//			   Color(0.3,0.3,0.0), 0);
+  outcolor=scinew Material(Color(1.0,1.0,0.0), Color(1.0,1.0,0.0),
+			   Color(1.0,1.0,0.0), 0);
     
 }
 
