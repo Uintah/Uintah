@@ -225,6 +225,7 @@ namespace Uintah {
 
       const VarLabel* d_oldCCVelocityLabel;
       const VarLabel* d_newCCVelocityLabel;
+      const VarLabel* d_newCCVelMagLabel;
       const VarLabel* d_newCCUVelocityLabel;
       const VarLabel* d_newCCVVelocityLabel;
       const VarLabel* d_newCCWVelocityLabel;
