@@ -21,7 +21,7 @@ proc makeFilebox {w var command cancel} {
 	    -yscrollcommand "$w.f.bro.file.filess1 set" \
 	    -xscrollcommand "$w.f.bro.file.filess2 set"
     set files $w.f.bro.file.files
-    tk_listboxSingleSelect $files
+#   tk_listboxSingleSelect $files
     bind $w.f.bro.file.files <Button-1> \
 	    "fbselect %y $w $files $var"
     bind $w.f.bro.file.files <Double-Button-1> \
@@ -45,7 +45,7 @@ proc makeFilebox {w var command cancel} {
 	    -yscrollcommand "$w.f.bro.dir.dirss1 set" \
 	    -xscrollcommand "$w.f.bro.dir.dirss2 set"
     set dirs $w.f.bro.dir.dirs
-    tk_listboxSingleSelect $dirs
+#    tk_listboxSingleSelect $dirs
     bind $w.f.bro.dir.dirs <Double-Button-1> "fbdirs %y $w $dirs $files"
     scrollbar $w.f.bro.dir.dirss1 -relief sunken \
 	    -command "$w.f.bro.dir.dirs yview"
@@ -124,7 +124,7 @@ proc fbdirs {y w dirs files} {
     global path,$w
 
     set ind [$dirs nearest $y]
-    $dirs select from $ind
+    $dirs selection set $ind
     set dir [$dirs get $ind]
 
     if [expr [string compare "." $dir] == 0] {
@@ -184,7 +184,7 @@ proc fbselect {y w files var} {
     global path,$w oldsel,$w $var
 
     set ind [$files nearest $y]
-    $files select from $ind
+    $files selection set $ind
     set $var [set path,$w]/[$files get $ind]
     set oldsel,$w [set $var]
 }
