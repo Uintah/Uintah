@@ -1,7 +1,7 @@
 
 #include <Packages/rtrt/Core/Light.h>
 #include <Packages/rtrt/Core/MusilRNG.h>
-#include <Packages/rtrt/Core/LambertianMaterial.h>
+#include <Packages/rtrt/Core/LightMaterial.h>
 #include <math.h>
 
 using namespace rtrt;
@@ -58,9 +58,9 @@ Light::Light(const Point& pos,
     get_cone_vectors(d, .03, n, &beamdirs[0]);
 
     if( !flat_yellow )
-        flat_yellow = new LambertianMaterial(Color(.8,.8,.0));
+        flat_yellow = new LightMaterial(Color(.8,.8,.0));
     if( !flat_orange )
-        flat_orange = new LambertianMaterial(Color(1.0,.7,.0));
+        flat_orange = new LightMaterial(Color(1.0,.7,.0));
 
     // Create a yellow sphere that can be rendered in the location
     // of the light.
