@@ -554,6 +554,7 @@ bool VH_injury::isset()
                   rad0set == true && rad1set == true) ||
                 ((geom_type == "hollow_cylinder") &&
                   point0set == true && point1set == true &&
+                  inside_rad0set  == true && inside_rad1set == true &&
                   rad0set == true && rad1set == true)
                );
   return state;
