@@ -890,22 +890,19 @@ Discretization::calculatePressDiagonal(const ProcessorGroup*,
   IntVector idxLo = patch->getCellFORTLowIndex();
   IntVector idxHi = patch->getCellFORTHighIndex();
 
-#ifdef WONT_COMPILE_YET
+  // Calculate the diagonal terms (AP)
   FORT_APCAL(domLo.get_pointer(), domHi.get_pointer(),
 	     idxLo.get_pointer(), idxHi.get_pointer(),
-	     presLinearSrc.getPointer(),
 	     pressCoeff[Arches::AP].getPointer(), 
 	     pressCoeff[Arches::AE].getPointer(), 
 	     pressCoeff[Arches::AW].getPointer(), 
 	     pressCoeff[Arches::AN].getPointer(), 
 	     pressCoeff[Arches::AS].getPointer(), 
 	     pressCoeff[Arches::AT].getPointer(), 
-	     pressCoeff[Arches::AB].getPointer());
-#endif
+	     pressCoeff[Arches::AB].getPointer(),
+	     presLinearSrc.getPointer());
 
-  for (int ii = 0; ii < nofStencils; ii++) {
-    new_dw->put(pressCoeff[ii], d_presCoefPBLMLabel, ii, patch);
-  }
+  new_dw->put(pressCoeff[Arches::AP], d_presCoefPBLMLabel, Arches::AP, patch);
 }
 
 //****************************************************************************
@@ -965,6 +962,9 @@ Discretization::calculateScalarDiagonal(const ProcessorGroup*,
 
 //
 // $Log$
+// Revision 1.30  2000/07/13 04:58:45  bbanerje
+// Updated pressureDiagonal calc.
+//
 // Revision 1.29  2000/07/12 22:15:02  bbanerje
 // Added pressure Coef .. will do until Kumar's code is up and running
 //
