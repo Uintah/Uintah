@@ -56,6 +56,7 @@ SRCS += $(GENSRCS) \
         $(SRCDIR)/TriDiagonalMatrix.cc	    \
         $(SRCDIR)/TriSurface.cc		    \
         $(SRCDIR)/TriSurfaceGeom.cc	    \
+	$(SRCDIR)/TypeName.cc		    \
         $(SRCDIR)/UnstructuredGeom.cc	    \
         $(SRCDIR)/VField.cc		    \
         $(SRCDIR)/VectorField.cc	    \
