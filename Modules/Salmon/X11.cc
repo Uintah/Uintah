@@ -226,7 +226,7 @@ void X11::redraw(Salmon* salmon, Roe* roe)
 	XClearWindow(drawinfo->dpy, drawinfo->win);
 	for(iter.first();iter.ok();++iter){
 	    GeomObj* obj=iter.get_data();
-	    obj->draw(drawinfo);
+	    obj->draw(drawinfo, salmon->default_matl.get_rep());
 	}
 	TCLTask::unlock();
 	for(i=0;i<free.size();i++){

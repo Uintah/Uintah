@@ -129,7 +129,8 @@ void Raytracer::redraw(Salmon* _salmon, Roe* _roe)
     v.normalize();
     Vector u(Cross(v, direction));
     u.normalize();
-    double width=2.0*dist*Tan(DtoR(view.fov*0.5))/yres;
+    double aspect=double(xres)/double(yres);
+    double width=aspect*2.0*dist*Tan(DtoR(view.fov*0.5))/yres;
     u*=width;
     v*=width;
 
@@ -137,6 +138,9 @@ void Raytracer::redraw(Salmon* _salmon, Roe* _roe)
     Color* scanline=new Color[xres];
     topobj=&group;
     for(int yc=0;yc<yres;yc++){
+	while(salmon->process_event(0)) { /* Nothing... */ }
+	if(roe->need_redraw)break;
+	   
 	if(yc%10==0 && yc>0){
 	    ostrstream str(strbuf, STRINGSIZE);
 	    str << "updatePerf " << roe->id << " \""
@@ -156,10 +160,7 @@ void Raytracer::redraw(Salmon* _salmon, Roe* _roe)
 	    Ray ray(view.eyep, raydir);
 	    scanline[x]=trace_ray(ray, 0, 1.0, 1.0);
 	}
-	if(nscan>32)nscan=32;
-	for(int i=0;i<nscan;i++){
-	    rend->put_scanline(y+i, xres, scanline);
-	}
+	rend->put_scanline(y, xres, scanline);
     }
     timer.stop();
     ostrstream str(strbuf, STRINGSIZE);
@@ -181,13 +182,13 @@ Color Raytracer::trace_ray(const Ray& ray, int level, double weight,
 			   double ior)
 {
     Hit hits;
-    topobj->intersect(ray, topmatl, hits);
+    topobj->intersect(ray, topmatl.get_rep(), hits);
     if(hits.hit() > 0){
 	return shade(ray, hits, level, weight, ior);
     } else {
 	// Hit the background
 	if(!bg_firstonly || level==0)
-	    return Color(0,0,0.4);//bgcolor;
+	    return bgcolor;
 	else
 	    return Color(0,0,0);
     }

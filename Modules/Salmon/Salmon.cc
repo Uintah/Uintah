@@ -78,71 +78,84 @@ void Salmon::do_execute()
     while(1){
 	if(mailbox.nitems() == 0){
 	    // See if anything needs to be redrawn...
-	    for(int i=0;i<roe.size();i++)
-		roe[i]->redraw_if_needed();
-	}
-	busy_bit=0;
-	MessageBase* msg=mailbox.receive();
-	busy_bit=1;
-	GeometryComm* gmsg=(GeometryComm*)msg;
-	switch(msg->type){
-#ifdef OLDUI
-	case MessageTypes::DoDBCallback:
-	    {
-		DBCallback_Message* cmsg=(DBCallback_Message*)msg;
-		cmsg->mcb->perform(cmsg->context, cmsg->which,
-				   cmsg->value, cmsg->delta, cmsg->cbdata);
-	    }
-	    break;
-#endif
-	case MessageTypes::ExecuteModule:
-	    // We ignore these messages...
-	    break;
-	case MessageTypes::RoeRedraw:
-	    {
-		RedrawMessage* rmsg=(RedrawMessage*)msg;
+	    int did_some=1;
+	    while(did_some){
+		did_some=0;
 		for(int i=0;i<roe.size();i++){
-		    Roe* r=roe[i];
-		    if(r->id == rmsg->rid){
-			r->redraw();
-			break;
-		    }
+		    did_some+=roe[i]->need_redraw;
+		    roe[i]->redraw_if_needed();
 		}
 	    }
-	    break;
-	case MessageTypes::RoeMouse:
-	    {
-		RoeMouseMessage* rmsg=(RoeMouseMessage*)msg;
-		for(int i=0;i<roe.size();i++){
-		    Roe* r=roe[i];
-		    if(r->id == rmsg->rid){
-			(r->*(rmsg->handler))(rmsg->action, rmsg->x, rmsg->y);
-			break;
-		    }
-		}
-	    }
-	    break;
-	case MessageTypes::GeometryInit:
-	    initPort(gmsg->reply);
-	    break;	
-	case MessageTypes::GeometryAddObj:
-	case MessageTypes::GeometryDelObj:
-	case MessageTypes::GeometryDelAll:
-	    append_port_msg(gmsg);
-	    msg=0; // Don't delete it yet...
-	    break;
-	case MessageTypes::GeometryFlush:
-	    flushPort(gmsg->portno);
-	    break;
-	default:
-	    cerr << "Salomon: Illegal Message type: " << msg->type << endl;
-	    break;
 	}
-	if(msg)
-	    delete msg;
+	process_event(1);
     }
 }
 
+int Salmon::process_event(int block)
+{
+    int ni=mailbox.nitems();
+    if(!block && ni==0)return 0;
+    if(!ni)busy_bit=0;
+    MessageBase* msg=mailbox.receive();
+    busy_bit=1;
+    GeometryComm* gmsg=(GeometryComm*)msg;
+    switch(msg->type){
+#ifdef OLDUI
+    case MessageTypes::DoDBCallback:
+	{
+	    DBCallback_Message* cmsg=(DBCallback_Message*)msg;
+	    cmsg->mcb->perform(cmsg->context, cmsg->which,
+			       cmsg->value, cmsg->delta, cmsg->cbdata);
+	    }	
+	break;
+#endif
+    case MessageTypes::ExecuteModule:
+	// We ignore these messages...
+	break;
+    case MessageTypes::RoeRedraw:
+	{
+	    RedrawMessage* rmsg=(RedrawMessage*)msg;
+	    for(int i=0;i<roe.size();i++){
+		Roe* r=roe[i];
+		if(r->id == rmsg->rid){
+		    r->need_redraw=1;
+		    break;
+		}
+	    }
+	}
+	break;
+    case MessageTypes::RoeMouse:
+	{
+	    RoeMouseMessage* rmsg=(RoeMouseMessage*)msg;
+	    for(int i=0;i<roe.size();i++){
+		Roe* r=roe[i];
+		if(r->id == rmsg->rid){
+		    (r->*(rmsg->handler))(rmsg->action, rmsg->x, rmsg->y);
+		    break;
+		}
+	    }
+	}
+	break;
+    case MessageTypes::GeometryInit:
+	initPort(gmsg->reply);
+	break;	
+    case MessageTypes::GeometryAddObj:
+    case MessageTypes::GeometryDelObj:
+    case MessageTypes::GeometryDelAll:
+	append_port_msg(gmsg);
+	msg=0; // Don't delete it yet...
+	break;
+    case MessageTypes::GeometryFlush:
+	flushPort(gmsg->portno);
+	break;
+    default:
+	cerr << "Salmon: Illegal Message type: " << msg->type << endl;
+	break;
+    }
+    if(msg)
+	delete msg;
+    return 1;
+}
 
 int Salmon::should_execute()
 {

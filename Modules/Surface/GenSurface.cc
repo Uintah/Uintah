@@ -16,6 +16,7 @@
 #include <Datatypes/BasicSurfaces.h>
 #include <Datatypes/GeometryPort.h>
 #include <Datatypes/SurfacePort.h>
+#include <Geom/Material.h>
 #include <Geom/Pick.h>
 #include <Geom/Sphere.h>
 #include <Geometry/Point.h>
@@ -105,11 +106,11 @@ void GenSurface::execute()
 	    MaterialHandle widget_matl(new Material(Color(0,0,0),
 						    widget_color.get(),
 						    Color(.6, .6, .6), 10));
-	    widget->set_matl(widget_matl);
-	    GeomPick* pick=new GeomPick(this, Vector(1,0,0), Vector(0,1,0),
+	    GeomMaterial* matl=new GeomMaterial(widget, widget_matl);
+	    GeomPick* pick=new GeomPick(matl, this,
+					Vector(1,0,0), Vector(0,1,0),
 					Vector(0,0,1));
-	    widget->set_pick(pick);
-	    ogeom->addObj(widget, widget_name);
+	    ogeom->addObj(pick, widget_name);
 	    sphere=widget;
 	} else {
 	    NOT_FINISHED("Other surfaces");

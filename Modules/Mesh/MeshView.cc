@@ -21,6 +21,7 @@
 #include <Geometry/Point.h>
 #include <Geom/Geom.h>
 #include <Geom/Group.h>
+#include <Geom/Material.h>
 #include <Geom/Tetra.h>
 #include <TCL/TCLvar.h>
 #include <iostream.h>
@@ -208,11 +209,8 @@ void MeshView::execute()
 	}
     }
 
-    levGroup -> set_matl(mat1);
-    othGroup -> set_matl(mat2);
-
-    group -> add(othGroup);
-    group -> add(levGroup);
+    group -> add(new GeomMaterial(othGroup, mat2));
+    group -> add(new GeomMaterial(levGroup, mat1));
     ogeom -> addObj(group, mesh_name);
 }
 

@@ -18,6 +18,7 @@
 #include <Datatypes/VectorFieldPort.h>
 #include <Geom/Geom.h>
 #include <Geom/Group.h>
+#include <Geom/Material.h>
 #include <Geom/Line.h>
 #include <Geometry/Point.h>
 #include <iostream.h>

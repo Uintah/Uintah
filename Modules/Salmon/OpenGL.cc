@@ -199,7 +199,6 @@ void OpenGL::redraw(Salmon* salmon, Roe* roe)
 	drawinfo.pickmode=0;
 
 	// Draw it all...
-	drawinfo.push_matl(salmon->default_matl.get_rep());
 	HashTableIter<int, PortInfo*> iter(&salmon->portHash);
 	for (iter.first(); iter.ok(); ++iter) {
 	    HashTable<int, SceneItem*>* serHash=iter.get_data()->objs;
@@ -212,11 +211,10 @@ void OpenGL::redraw(Salmon* salmon, Roe* roe)
 		ObjTag* vis;
 		if(roe->visible.lookup(si->name, vis)){
 		    if(vis->visible->get())
-			si->obj->draw(&drawinfo);
+			si->obj->draw(&drawinfo, salmon->default_matl.get_rep());
 		} 
  	    }
 	}
-	drawinfo.pop_matl();
     }
 
     // Show the pretty picture
@@ -295,7 +293,6 @@ void OpenGL::get_pick(Salmon* salmon, Roe* roe, int x, int y,
 	drawinfo.pickmode=1;
 
 	// Draw it all...
-	drawinfo.push_matl(salmon->default_matl.get_rep());
 	HashTableIter<int, PortInfo*> iter(&salmon->portHash);
 	for (iter.first(); iter.ok(); ++iter) {
 	    HashTable<int, SceneItem*>* serHash=iter.get_data()->objs;
@@ -305,13 +302,10 @@ void OpenGL::get_pick(Salmon* salmon, Roe* roe, int x, int y,
 
 		// Look up this object by name and see if it is supposed to be
 		// displayed...
-		if(si->obj->get_pick()){
-		    glLoadName((GLuint)si->obj);
-		    si->obj->draw(&drawinfo);
-		}
+		glLoadName((GLuint)si->obj);
+		si->obj->draw(&drawinfo, salmon->default_matl.get_rep());
 	    }
 	}
-	drawinfo.pop_matl();
 	glFlush();
 	int hits=glRenderMode(GL_RENDER);
 	TCLTask::unlock();

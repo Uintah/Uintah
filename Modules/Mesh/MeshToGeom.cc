@@ -18,6 +18,7 @@
 #include <Geom/Color.h>
 #include <Geom/Geom.h>
 #include <Geom/Group.h>
+#include <Geom/Material.h>
 #include <Geom/Tri.h>
 #include <Datatypes/MeshPort.h>
 #include <Datatypes/Mesh.h>
@@ -92,8 +93,10 @@ void MeshToGeom::execute()
 			       mesh->nodes[mesh->elems[i]->n[2]]->p,
 			       mesh->nodes[mesh->elems[i]->n[3]]->p));
     }
-    group->set_matl(new Material(Color(0,0,0), Color(0,.6,0), 
-				 Color(.5,.5,.5), 20));
+    GeomMaterial* matl=new GeomMaterial(group,
+					new Material(Color(0,0,0),
+						     Color(0,.6,0), 
+						     Color(.5,.5,.5), 20));
     ogeom->delAll();
-    ogeom->addObj(group, "Mesh1");
+    ogeom->addObj(matl, "Mesh1");
 }
