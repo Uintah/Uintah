@@ -49,9 +49,9 @@
 	    <Box label="1">
 	        <lower>[0,0,0]</lower>
 	        <upper>[30,30,30]</upper>
-	        <resolution>[100,100,100]</resolution>
+	        <resolution>[10,10,10]</resolution>
                 <extraCells>[1,1,1]</extraCells>
-		<patches>[4,4,2]</patches>
+		<patches>[2,2,2]</patches>
 	    </Box>
 	</Level>
     </Grid>
@@ -129,8 +129,8 @@
                        <MaxValue>1.0</MaxValue>
                        <MinValue>0.0</MinValue>
                        <MidValue>0.5</MidValue>
-                       <NumDivsBelow>25</NumDivsBelow>
-                       <NumDivsAbove>25</NumDivsAbove>
+                       <NumDivsBelow>40</NumDivsBelow>
+                       <NumDivsAbove>40</NumDivsAbove>
                      </MixFracVariance>
                   </MixRxnTableInfo>
                   <TableType>static</TableType>

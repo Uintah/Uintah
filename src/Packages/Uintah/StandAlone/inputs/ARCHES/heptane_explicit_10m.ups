@@ -19,8 +19,9 @@
    </Time>
 
    <DataArchiver>
-        <filebase>heptaneplumeexplicit.uda</filebase>
+        <filebase>heptaneplumeexplicit_clipped.uda</filebase>
 	<outputInterval>0.1</outputInterval>
+	<save label="totalKineticEnergy"/>
 	<save label="pressurePS"/>
         <save label="newCCUVelocity"/>	
         <save label="newCCVVelocity"/>	
@@ -31,12 +32,10 @@
 	<save label="viscosityCTS"/>
 	<save label="tempIN"/>
         <save label="co2IN"/>
-        <save label="enthalpyRXN"/>
-        <save label="enthalpySP"/>
-        <save label="absorpIN"/>
-        <save label="sootFVIN"/>
-	<save label="cellType"/>
-	<checkpoint interval="0.5" cycle="2"/>
+        <save label="CsLabel"/>
+        <save label="scalarVarSP"/>
+        <save label="scalarDissSP"/>
+	<checkpoint interval="0.2" cycle="2"/>
    </DataArchiver>
 
     <PhysicalConstants>
@@ -49,10 +48,10 @@
 	<Level>
 	    <Box label="1">
 	        <lower>[0,0,0]</lower>
-	        <upper>[50,50,50]</upper>
-	        <resolution>[10,10,10]</resolution>
+	        <upper>[30,30,30]</upper>
+	        <resolution>[100,100,100]</resolution>
                 <extraCells>[1,1,1]</extraCells>
-		<patches>[1,1,1]</patches>
+		<patches>[4,4,2]</patches>
 	    </Box>
 	</Level>
     </Grid>
@@ -65,9 +64,9 @@
 	    <grow_dt>0.02</grow_dt>
 	    <variable_dt>true</variable_dt>
    	    <nonlinear_solver>explicit</nonlinear_solver>
-    	    <turbulence_model>smagorinsky</turbulence_model>
+    	    <turbulence_model>dynamicprocedure</turbulence_model>
             <reacting_flow>true</reacting_flow>
-            <solve_enthalpy>true</solve_enthalpy>	
+            <solve_enthalpy>false</solve_enthalpy>	
 	    <solve_reactingscalar>false</solve_reactingscalar>
 	    <Turbulence>
 		<cf>0.001</cf>
@@ -77,15 +76,15 @@
 	    </Turbulence>
 
 	    <Properties>
-		<denUnderrelax>0.9</denUnderrelax>
+		<denUnderrelax>1.0</denUnderrelax>
 	        <ref_point>[3,3,3]</ref_point>
-	        <radiation>true</radiation>
-	        <mixing_model>meanMixingModel</mixing_model>
-	        <MeanMixingModel>
-		  <adiabatic>false</adiabatic>
-                  <mixstatvars>0</mixstatvars>
+	        <radiation>false</radiation>
+	        <mixing_model>pdfMixingModel</mixing_model>
+	        <PDFMixingModel>
+		  <adiabatic>true</adiabatic>
+                  <mixstatvars>1</mixstatvars>
                   <rxnvars>0</rxnvars>
-                  <PDFShape>Beta</PDFShape>
+                  <PDFShape>ClippedGaussian</PDFShape>
 		  <reaction_model>EquilibriumReactionModel</reaction_model>
 		  <Stream>
 		    <pressure>1.01325e+05</pressure>
@@ -93,7 +92,7 @@
 		    <enthalpyLoss>0</enthalpyLoss>
 		    <mole>true</mole>
 		    <Species>
-		      <symbol>C7H16</symbol>
+		      <symbol>NC7H16</symbol>
                       <mfraction>1.0</mfraction>
                     </Species>
 		  </Stream>
@@ -122,12 +121,19 @@
                     <MixtureFraction>
                        <MaxValue>1.0</MaxValue>
                        <MinValue>0.0</MinValue>
-                       <MidValue>0.1</MidValue>
-     		       <NumDivsBelow>20</NumDivsBelow>
-     		       <NumDivsAbove>20</NumDivsAbove>
+                       <MidValue>0.5</MidValue>
+     		       <NumDivsBelow>40</NumDivsBelow>
+     		       <NumDivsAbove>40</NumDivsAbove>
                      </MixtureFraction>
+                     <MixFracVariance>
+                       <MaxValue>1.0</MaxValue>
+                       <MinValue>0.0</MinValue>
+                       <MidValue>0.5</MidValue>
+                       <NumDivsBelow>25</NumDivsBelow>
+                       <NumDivsAbove>25</NumDivsAbove>
+                     </MixFracVariance>
                   </MixRxnTableInfo>
-                  <TableType>dynamic</TableType>
+                  <TableType>static</TableType>
                   <TableStorage>2DVector</TableStorage>
 		  <Integrator>
 		     <favre>false</favre>
@@ -152,7 +158,7 @@
                     <TableType>dynamic</TableType>
                     <TableStorage>2DVector</TableStorage>
 	          </EquilibriumReactionModel>
-                </MeanMixingModel>
+                </PDFMixingModel>
 	    </Properties>
 
 	    <BoundaryConditions>
@@ -165,8 +171,8 @@
 		    <inletType>primary</inletType>
 		    <geom_object>
 		      <cylinder label = "inlet">
-			<bottom>[-5,25,25]</bottom>
-			<top>[0,25,25]</top>
+			<bottom>[-5,15,15]</bottom>
+			<top>[0,15,15]</top>
 			<radius> 5 </radius>
 		      </cylinder>
 		    </geom_object>
@@ -188,20 +194,20 @@
 		    <RefPressure>0.0</RefPressure>
 		    <geom_object>
 		      <box label="posY_xzWall">
-			<min>[0,50,-1]</min>
-			<max>[50,51,51]</max>
+			<min>[0,30,-1]</min>
+			<max>[30,51,51]</max>
 		      </box>
 		      <box label="zeroY_xzWall">
 			<min>[0,-1,-1]</min>
-			<max>[50,0,51]</max>
+			<max>[30,0,51]</max>
 		      </box>
 		      <box label="posZ_xyWall">
-			<min>[0,-1,50]</min>
-			<max>[50,51,51]</max>
+			<min>[0,-1,30]</min>
+			<max>[30,51,51]</max>
 		      </box>
                       <box label="zeroZ_xyWall">	
 			<min>[0,-1,-1]</min>
-			<max>[50,51,0]</max>
+			<max>[30,51,0]</max>
 		      </box>
 		    </geom_object>
 		</PressureBC>
@@ -214,7 +220,7 @@
 		    <RefPressure>0.0</RefPressure>
 		    <geom_object>
 		      <box label="topWall">
-			<min>[50,-1,-1]</min>
+			<min>[30,-1,-1]</min>
 			<max>[51,51,51]</max>
 		      </box>
 		    </geom_object>
@@ -238,11 +244,12 @@
 		    <finite_difference>second</finite_difference>
 		    <linear_solver>petsc</linear_solver>
 		    <LinearSolver>
+                        <ksptype>cg</ksptype>
 			<pctype>jacobi</pctype>
 			<overlap>1</overlap>
 			<max_iter>75</max_iter>
 			<res_tol>0.0003</res_tol>
-		        <underrelax>0.97</underrelax>
+		        <underrelax>0.997</underrelax>
 		    </LinearSolver>
 		</PressureSolver>
 
@@ -267,7 +274,7 @@
 			<underrelax>0.9</underrelax>
 		    </LinearSolver>
 		</MixtureFractionSolver>
-		<cal_enthalpy>true</cal_enthalpy>
+		<cal_enthalpy>false</cal_enthalpy>
 		<EnthalpySolver>
                     <radiation>true</radiation>
 		    <finite_difference>second</finite_difference>
