@@ -113,7 +113,7 @@ itcl_class Volume_Visualization_EditTransferFunc2 {
 		    frame $widgets.e-$i
 		    entry $widgets.e-$i.name \
 			-textvariable $this-name-$i -width 16
-		    set cmmd "$this raise_color $widgets.e-$i.color $this-$i-color color_change"
+		    set cmmd "$this raise_color $widgets.e-$i.color $this-$i-color color_change-$i"
 		    button $widgets.e-$i.color -width 8 \
 			-command $cmmd
 		    pack $widgets.e-$i.name $widgets.e-$i.color \
