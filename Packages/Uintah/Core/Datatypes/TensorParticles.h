@@ -75,7 +75,7 @@ public:
   // return the Tensors
   vector<ShareAssignParticleVariable<Matrix3> >& get(){ return tensors; }
   PSet* getParticleSet(){ return psetH.get_rep(); }
-
+  LevelP getLevel(){ return level; }
 
   // GROUP: Modify
   //////////  

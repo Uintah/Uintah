@@ -75,7 +75,7 @@ public:
   // return the Vectors
   vector<ShareAssignParticleVariable<Vector> >& get(){ return vectors; }
   PSet* getParticleSet(){ return psetH.get_rep(); }
-
+  LevelP getLevel(){ return level; }
 
   // GROUP: Modify
   //////////  
