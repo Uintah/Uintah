@@ -34,7 +34,6 @@ ParticleCreator::ParticleCreator(MPMMaterial* matl,
 {
   d_8or27 = flags->d_8or27;
   d_useLoadCurves = flags->d_useLoadCurves;
-  d_doErosion = flags->d_doErosion;
   d_with_color = flags->d_with_color;
 
   registerPermanentParticleState(matl,lb);
@@ -238,6 +237,7 @@ ParticleCreator::allocateVariables(particleIndex numParticles,
   new_dw->allocateAndPut(psize,          lb->pSizeLabel,          subset);
   new_dw->allocateAndPut(psp_vol,        lb->pSp_volLabel,        subset); 
   new_dw->allocateAndPut(pfiberdir,      lb->pFiberDirLabel,      subset); 
+  new_dw->allocateAndPut(perosion,       lb->pErosionLabel,       subset); 
   if (d_useLoadCurves) {
     new_dw->allocateAndPut(pLoadCurveID,   lb->pLoadCurveIDLabel,   subset); 
   }
@@ -263,6 +263,7 @@ void ParticleCreator::allocateVariablesAddRequires(Task* task,
   //task->requires(Task::OldDW,lb->pExternalForceLabel, Ghost::None);
   task->requires(Task::NewDW,lb->pVolumeDeformedLabel, Ghost::None);
   //task->requires(Task::OldDW,lb->pVolumeLabel, Ghost::None);
+  task->requires(Task::OldDW,lb->pErosionLabel, Ghost::None);
 
   if (d_8or27 == 27)
     task->requires(Task::OldDW,lb->pSizeLabel, Ghost::None);
@@ -270,8 +271,6 @@ void ParticleCreator::allocateVariablesAddRequires(Task* task,
   if (d_useLoadCurves)
     task->requires(Task::OldDW,lb->pLoadCurveIDLabel, Ghost::None);
 
-  if (d_doErosion)
-    task->requires(Task::OldDW,lb->pErosionLabel, Ghost::None);
 }
 
 
@@ -321,12 +320,11 @@ void ParticleCreator::allocateVariablesAdd(MPMLabel* lb,DataWarehouse* new_dw,
   //old_dw->get(o_external_force,lb->pExternalForceLabel,delset);
   new_dw->get(o_volume,lb->pVolumeDeformedLabel,delset);
   //old_dw->get(o_volume,lb->pVolumeLabel,delset);
+  new_dw->get(o_erosion,lb->pErosionLabel,delset);
   if (d_8or27 == 27) 
     old_dw->get(o_size,lb->pSizeLabel,delset);
   if (d_useLoadCurves) 
     old_dw->get(o_loadcurve,lb->pLoadCurveIDLabel,delset);
-  if (d_doErosion) 
-    old_dw->get(o_erosion,lb->pErosionLabel,delset);
 
   n = addset->begin();
   for (o=delset->begin(); o != delset->end(); o++, n++) {
@@ -339,12 +337,11 @@ void ParticleCreator::allocateVariablesAdd(MPMLabel* lb,DataWarehouse* new_dw,
     ptemperature[*n]=o_temperature[*o];
     psp_vol[*n]=o_sp_vol[*o];
     pparticleID[*n]=o_particleID[*o];
+    perosion[*n]=o_erosion[*o];
     if (d_8or27 == 27) 
       psize[*n]=o_size[*o];
     if (d_useLoadCurves) 
       pLoadCurveID[*n]=o_loadcurve[*o];
-    if (d_doErosion) 
-      perosion[*n]=o_erosion[*o];
   }
   
   (*newState)[lb->pDispLabel]=pdisp.clone();
@@ -356,12 +353,11 @@ void ParticleCreator::allocateVariablesAdd(MPMLabel* lb,DataWarehouse* new_dw,
   (*newState)[lb->pTemperatureLabel]=ptemperature.clone();
   (*newState)[lb->pSp_volLabel]=psp_vol.clone();
   (*newState)[lb->pParticleIDLabel]=pparticleID.clone();
+  (*newState)[lb->pErosionLabel]=perosion.clone();
   if (d_8or27 == 27) 
     (*newState)[lb->pSizeLabel]=psize.clone();
   if (d_useLoadCurves) 
     (*newState)[lb->pLoadCurveIDLabel]=pLoadCurveID.clone();
-  if (d_doErosion) 
-    (*newState)[lb->pErosionLabel]=perosion.clone();
 }
 
 
@@ -421,6 +417,7 @@ ParticleCreator::initializeParticle(const Patch* patch,
   ParticleCreator::applyForceBC(dxpp, p, pmass[i], pExtForce);
   pexternalforce[i] = pExtForce;
   pfiberdir[i] = matl->getConstitutiveModel()->getInitialFiberDir();
+  perosion[i] = 1.0;
 
   ASSERT(cell_idx.x() <= 0xffff && cell_idx.y() <= 0xffff
 	 && cell_idx.z() <= 0xffff);
@@ -540,6 +537,9 @@ void ParticleCreator::registerPermanentParticleState(MPMMaterial* matl,
   particle_state.push_back(lb->pParticleIDLabel);
   particle_state_preReloc.push_back(lb->pParticleIDLabel_preReloc);
   
+  particle_state.push_back(lb->pErosionLabel);
+  particle_state_preReloc.push_back(lb->pErosionLabel_preReloc);
+
   if (d_with_color){
     particle_state.push_back(lb->pColorLabel);
     particle_state_preReloc.push_back(lb->pColorLabel_preReloc);
@@ -553,11 +553,6 @@ void ParticleCreator::registerPermanentParticleState(MPMMaterial* matl,
   if (d_useLoadCurves) {
     particle_state.push_back(lb->pLoadCurveIDLabel);
     particle_state_preReloc.push_back(lb->pLoadCurveIDLabel_preReloc);
-  }
-
-  if (d_doErosion) {
-    particle_state.push_back(lb->pErosionLabel);
-    particle_state_preReloc.push_back(lb->pErosionLabel_preReloc);
   }
 
   matl->getConstitutiveModel()->addParticleState(particle_state,
