@@ -276,7 +276,7 @@ C--------------------------------------------------------------------
       DO 210 K = kst,kend
          DO 200 J = jst,jend
             IF (PCELL(iEndGhost,J,K).EQ.PBCFLD
-     &           .AND. UU(idxUInlet,J,K).GT.0.0) THEN
+     &           .AND. UU(iEndGhost+1,J,K).GT.0.0) THEN
                WW(iEndGhost,J,K) = WW(iend,J,K)
                AE(iend,J,K) = 2.0*TINY
             END IF
@@ -291,9 +291,9 @@ C-------------------------------------------------------------------
 C      NORTH AND/OR SOUTH WALLS
 C-------------------------------------------------------------------
       DO 310 K = kst,kend
-        DO 300 I = kst,iend
+        DO 300 I = ist,iend
           IF (PCELL(I,jEndGhost,K).EQ.PBCFLD
-     &          .AND. VV(I,idxVInlet,K).GT.0.0) THEN
+     &          .AND. VV(I,jEndGhost+1,K).GT.0.0) THEN
              WW(I,jEndGhost,K) = WW(I,jend,K)
              AN(I,jend,K) = 2.0*TINY
           END IF
@@ -304,12 +304,28 @@ C-------------------------------------------------------------------
           END IF
   300   CONTINUE
   310 CONTINUE
+C-------------------------------------------------------------------
+C      TOP AND/OR BOTTOM WALLS
+C-------------------------------------------------------------------
+      DO 410 J = jst,jend
+        DO 400 I = ist,iend
+          IF (PCELL(I,J,kEndGhost).EQ.PBCFLD) THEN
+             WW(I,J,kEndGhost+1) = WW(I,J,kEndGhost)
+          END IF
+          IF (PCELL(I,J,kBegGhost).EQ.PBCFLD) THEN
+            WW(I,J,kBegGhost) = WW(I,J,kst)
+          END IF
+  400   CONTINUE
+  410 CONTINUE
       RETURN
       END
 
 c*********************************************************************
 c
 c $Log$
+c Revision 1.4  2000/09/07 23:07:21  rawat
+c fixed some bugs in bc and added pressure solver using petsc
+c
 c Revision 1.3  2000/08/23 06:20:53  bbanerje
 c 1) Results now correct for pressure solve.
 c 2) Modified BCU, BCV, BCW to add stuff for pressure BC.

@@ -216,6 +216,14 @@ ArchesLabel::ArchesLabel()
   d_scalarRes = scinew VarLabel("scalarRes",
 				   CCVariable<double>::getTypeDescription() );
 
+  d_old_uVelocityGuess = scinew VarLabel("olduVelocityguess",
+				       SFCXVariable<double>::getTypeDescription());
+  d_old_vVelocityGuess = scinew VarLabel("oldvVelocityguess",
+				       SFCYVariable<double>::getTypeDescription());
+  d_old_wVelocityGuess = scinew VarLabel("oldwVelocityguess",
+				       SFCZVariable<double>::getTypeDescription());
+  d_old_scalarGuess = scinew VarLabel("oldscalarguess",
+				       CCVariable<double>::getTypeDescription());
 
   // Unsure stuff
   // Unsure stuff
@@ -249,6 +257,9 @@ ArchesLabel::~ArchesLabel()
 
 //
 // $Log$
+// Revision 1.8  2000/09/07 23:07:17  rawat
+// fixed some bugs in bc and added pressure solver using petsc
+//
 // Revision 1.7  2000/08/18 05:06:57  bbanerje
 // Added interpolation from FC Var to CC Var for velocity viz in
 // Picard.

@@ -275,7 +275,7 @@ C--------------------------------------------------------------------
       DO 210 K = kst,kend
          DO 200 J = jst,jend
             IF (PCELL(iEndGhost,J,K).EQ.PBCFLD
-     &           .AND. UU(idxUInlet,J,K).GT.0.0) THEN
+     &           .AND. UU(iEndGhost+1,J,K).GT.0.0) THEN
                VV(iEndGhost,J,K) = VV(iend,J,K)
                AE(iend,J,K) = 2.0*TINY
             END IF
@@ -286,13 +286,30 @@ C--------------------------------------------------------------------
             END IF
  200     CONTINUE
  210  CONTINUE
+
+C--------------------------------------------------------------------
+C     PRESSURE BOUNDARY CONDITONS
+C       North AND/OR South WALLS
+C--------------------------------------------------------------------
+      DO 310 K = kst,kend
+         DO 300 I = ist,iend
+            IF (PCELL(I,jEndGhost,K).EQ.PBCFLD) THEN
+               VV(I,jEndGhost+1,K) = VV(I,jEndGhost,K)
+            END IF
+            IF (PCELL(I,jBegGhost,K).EQ.PBCFLD) THEN
+               VV(I,jBegGhost,K) = VV(I,jst,K)
+            END IF
+ 300     CONTINUE
+ 310  CONTINUE
+
+
 C--------------------------------------------------------------------
 C     TOP AND/OR BOTTOM WALL OUTLET
 C--------------------------------------------------------------------
       DO 410 J = jst,jend
          DO 400 I = ist,iend
             IF (PCELL(I,J,kEndGhost).EQ.PBCFLD
-     &           .AND.WW(I,J,idxWInlet).GT.0.0) THEN
+     &           .AND.WW(I,J,kEndGhost+1).GT.0.0) THEN
                VV(I,J,kEndGhost) = VV(I,J,kend)
                AT(I,J,kend) = 2.0*TINY
             END IF
@@ -309,6 +326,9 @@ C--------------------------------------------------------------------
 c*********************************************************************
 c
 c $Log$
+c Revision 1.4  2000/09/07 23:07:21  rawat
+c fixed some bugs in bc and added pressure solver using petsc
+c
 c Revision 1.3  2000/08/23 06:20:53  bbanerje
 c 1) Results now correct for pressure solve.
 c 2) Modified BCU, BCV, BCW to add stuff for pressure BC.

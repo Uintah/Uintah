@@ -61,7 +61,7 @@ Source::calculateVelocitySource(const ProcessorGroup* ,
   double gravity = d_physicalConsts->getGravity(index);
   // get iref, jref, kref and ref density by broadcasting from a patch that contains
   // iref, jref and kref
-  double den_ref = vars->density[IntVector(5,5,5)]; // change it!!! use ipref, jpref and kpref
+  double den_ref = vars->density[IntVector(3,3,3)]; // change it!!! use ipref, jpref and kpref
   cerr << " ref_ density" << den_ref << endl;
   // Get the patch and variable indices
   IntVector domLoU = vars->uVelocity.getFortLowIndex();
@@ -772,6 +772,9 @@ Source::addPressureSource(const ProcessorGroup* ,
 
 //
 //$Log$
+//Revision 1.39  2000/09/07 23:07:17  rawat
+//fixed some bugs in bc and added pressure solver using petsc
+//
 //Revision 1.38  2000/08/23 06:20:52  bbanerje
 //1) Results now correct for pressure solve.
 //2) Modified BCU, BCV, BCW to add stuff for pressure BC.

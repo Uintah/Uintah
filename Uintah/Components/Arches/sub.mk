@@ -27,14 +27,17 @@ PSELIBS := Uintah/Parallel Uintah/Interface Uintah/Grid Uintah/Exceptions \
 	   SCICore/Exceptions
 LIBS := $(XML_LIBRARY) -lftn -lm
 #CFLAGS += -g -DARCHES_VEL_DEBUG
-CFLAGS += -g -DARCHES_DEBUG -DARCHES_GEOM_DEBUG -DARCHES_BC_DEBUG -DARCHES_COEF_DEBUG 
-CFLAGS += -DARCHES_SRC_DEBUG -DARCHES_PRES_DEBUG -DARCHES_VEL_DEBUG
+#CFLAGS += -g -DARCHES_DEBUG -DARCHES_GEOM_DEBUG -DARCHES_BC_DEBUG -DARCHES_COEF_DEBUG 
+#CFLAGS += -DARCHES_SRC_DEBUG -DARCHES_PRES_DEBUG -DARCHES_VEL_DEBUG
 #LIBS += -lblas
 
 include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.26  2000/09/07 23:07:17  rawat
+# fixed some bugs in bc and added pressure solver using petsc
+#
 # Revision 1.25  2000/08/23 06:20:52  bbanerje
 # 1) Results now correct for pressure solve.
 # 2) Modified BCU, BCV, BCW to add stuff for pressure BC.

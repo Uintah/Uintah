@@ -358,6 +358,8 @@ ScalarSolver::scalarLinearSolve(const ProcessorGroup* pc,
   // apply underelax to eqn
   d_linearSolver->computeScalarUnderrelax(pc, patch, new_dw, matrix_dw, index, 
 					  d_scalarVars);
+  new_dw->allocate(d_scalarVars->old_scalar, d_lab->d_old_scalarGuess,
+		   index, patch);
   d_scalarVars->old_scalar = d_scalarVars->scalar;
   // make it a separate task later
   d_linearSolver->scalarLisolve(pc, patch, new_dw, matrix_dw, index, delta_t, 
@@ -369,6 +371,9 @@ ScalarSolver::scalarLinearSolve(const ProcessorGroup* pc,
 
 //
 // $Log$
+// Revision 1.24  2000/09/07 23:07:17  rawat
+// fixed some bugs in bc and added pressure solver using petsc
+//
 // Revision 1.23  2000/08/15 00:23:33  rawat
 // added explicit solve for momentum and scalar eqns
 //

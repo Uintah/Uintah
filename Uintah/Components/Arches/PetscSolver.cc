@@ -1,9 +1,9 @@
-//----- RBGSSolver.cc ----------------------------------------------
+//----- PetscSolver.cc ----------------------------------------------
 
 /* REFERENCED */
 static char *id="@(#) $Id$";
 
-#include <Uintah/Components/Arches/RBGSSolver.h>
+#include <Uintah/Components/Arches/PetscSolver.h>
 #include <Uintah/Components/Arches/PressureSolver.h>
 #include <Uintah/Components/Arches/Discretization.h>
 #include <Uintah/Components/Arches/Source.h>
@@ -32,16 +32,16 @@ using namespace Uintah::ArchesSpace;
 using namespace std;
 
 //****************************************************************************
-// Default constructor for RBGSSolver
+// Default constructor for PetscSolver
 //****************************************************************************
-RBGSSolver::RBGSSolver()
+PetscSolver::PetscSolver()
 {
 }
 
 //****************************************************************************
 // Destructor
 //****************************************************************************
-RBGSSolver::~RBGSSolver()
+PetscSolver::~PetscSolver()
 {
 }
 
@@ -49,12 +49,18 @@ RBGSSolver::~RBGSSolver()
 // Problem setup
 //****************************************************************************
 void 
-RBGSSolver::problemSetup(const ProblemSpecP& params)
+PetscSolver::problemSetup(const ProblemSpecP& params)
 {
   ProblemSpecP db = params->findBlock("LinearSolver");
   db->require("max_iter", d_maxSweeps);
   db->require("res_tol", d_residual);
   db->require("underrelax", d_underrelax);
+  int argc = 1;
+  cahr** argv;
+  argv = new char*[1];
+  argv[0] = "PetscSolver::problemSetup";
+  int ierr = PetscInitialize(&argc, &argv, PETSC_NULL, PETSC_NULL);
+  CHKERRQ(ierr);
 }
 
 
@@ -62,7 +68,7 @@ RBGSSolver::problemSetup(const ProblemSpecP& params)
 // Actual compute of pressure residual
 //****************************************************************************
 void 
-RBGSSolver::computePressResidual(const ProcessorGroup*,
+PetscSolver::computePressResidual(const ProcessorGroup*,
 				 const Patch* patch,
 				 DataWarehouseP&,
 				 DataWarehouseP&,
@@ -112,7 +118,7 @@ RBGSSolver::computePressResidual(const ProcessorGroup*,
 // Actual calculation of order of magnitude term for pressure equation
 //****************************************************************************
 void 
-RBGSSolver::computePressOrderOfMagnitude(const ProcessorGroup* ,
+PetscSolver::computePressOrderOfMagnitude(const ProcessorGroup* ,
 				const Patch* ,
 				DataWarehouseP& ,
 				DataWarehouseP& , ArchesVariables* )
@@ -126,7 +132,7 @@ RBGSSolver::computePressOrderOfMagnitude(const ProcessorGroup* ,
 // Actual compute of pressure underrelaxation
 //****************************************************************************
 void 
-RBGSSolver::computePressUnderrelax(const ProcessorGroup*,
+PetscSolver::computePressUnderrelax(const ProcessorGroup*,
 				   const Patch* patch,
 				   DataWarehouseP&,
 				   DataWarehouseP&, 
@@ -187,7 +193,7 @@ RBGSSolver::computePressUnderrelax(const ProcessorGroup*,
 // Actual linear solve for pressure
 //****************************************************************************
 void 
-RBGSSolver::pressLisolve(const ProcessorGroup* pc,
+PetscSolver::pressLisolve(const ProcessorGroup* pc,
 			 const Patch* patch,
 			 DataWarehouseP& old_dw,
 			 DataWarehouseP& new_dw,
@@ -200,57 +206,257 @@ RBGSSolver::pressLisolve(const ProcessorGroup* pc,
   IntVector domHi = vars->pressure.getFortHighIndex();
   IntVector idxLo = patch->getCellFORTLowIndex();
   IntVector idxHi = patch->getCellFORTHighIndex();
-  //bool lswpwe = true;
-  //bool lswpsn = true;
-  //bool lswpbt = true;
-  Array1<double> e1;
-  Array1<double> f1;
-  Array1<double> e2;
-  Array1<double> f2;
-  Array1<double> e3;
-  Array1<double> f3;
-  IntVector Size = domHi - domLo + IntVector(1,1,1);
-  e1.resize(Size.x());
-  f1.resize(Size.x());
-  e2.resize(Size.y());
-  f2.resize(Size.y());
-  e3.resize(Size.z());
-  f3.resize(Size.z());
-  sum_vartype residP;
-  sum_vartype truncP;
-  old_dw->get(residP, lab->d_presResidPSLabel);
-  old_dw->get(truncP, lab->d_presTruncPSLabel);
-  double nlResid = residP;
-  double trunc_conv = truncP*1.0E-7;
-  //  double theta = 0.5;
-  double theta = 0.0;
-  int pressIter = 0;
-  double pressResid = 0.0;
-  do {
-  //fortran call for lineGS solver
-    FORT_LINEGS(domLo.get_pointer(), domHi.get_pointer(),
-		idxLo.get_pointer(), idxHi.get_pointer(),
-		vars->pressure.getPointer(),
-		vars->pressCoeff[Arches::AE].getPointer(), 
-		vars->pressCoeff[Arches::AW].getPointer(), 
-		vars->pressCoeff[Arches::AN].getPointer(), 
-		vars->pressCoeff[Arches::AS].getPointer(), 
-		vars->pressCoeff[Arches::AT].getPointer(), 
-		vars->pressCoeff[Arches::AB].getPointer(), 
-		vars->pressCoeff[Arches::AP].getPointer(), 
-		vars->pressNonlinearSrc.getPointer(),
-		e1.get_objs(), f1.get_objs(), e2.get_objs(), f2.get_objs(),
-		e3.get_objs(), f3.get_objs(), &theta);
-      //, &lswpwe, &lswpsn, &lswpbt);
-    computePressResidual(pc, patch, old_dw, new_dw, vars);
-    pressResid = vars->residPress;
-    ++pressIter;
+  Vec x,b,u; // approx solution, RHS, exact solution
+  Mat A; // linear system matrix
+  SLES sles; // linear solver context
+  KSP ksp;
+  int ierr;
+  /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+         Compute the matrix and right-hand-side vector that define
+         the linear system, Ax = b.
+     - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+    /* 
+     Create parallel matrix, specifying only its global dimensions.
+     When using MatCreate(), the matrix format can be specified at
+     runtime. Also, the parallel partitioning of the matrix is
+     determined by PETSc at runtime.
+
+     Performance tuning note:  For problems of substantial size,
+     preallocation of matrix memory is crucial for attaining good 
+     performance.  Since preallocation is not possible via the generic
+     matrix creation routine MatCreate(), we recommend for practical 
+     problems instead to use the creation routine for a particular matrix
+     format, e.g.,
+         MatCreateMPIAIJ() - parallel AIJ (compressed sparse row)
+         MatCreateMPIBAIJ() - parallel block AIJ
+     See the matrix chapter of the users manual for details.
+  */
+  int numrows = (idxHi[0]-idxLo[0]+1)*(idxHi[1]-idxLo[1]+1)*
+                (idxHi[2]-idxLo[2]+1);
+  int nnx = idxHi[0]-idxLo[0]+1;
+  int nny = idxHi[1]-idxLo[1]+1;
+  int nnz = idxHi[2]-idxLo[2]+1;
+  int numcolumns = numrows;
+  int numnonzero = 7; // 7 point stencil
+  ierr = MatCreateSeqAIJ(PETSC_COMM_WORLD, numrows, numcolumns, numnonzero,
+			 PETSC_NULL, A);
+  CHKERRA(ierr);
+  int row;
+  int col[7];
+  double value[7];
+  // fill matrix where all 7 components are present
+  for (row = nnx*nny; row < (nnz-1)*nnx*nny; row++) {
+    col[0] = row-nnx*nny;
+    col[1] = row-nnx;
+    col[2] = row - 1;
+    col[3] = row;
+    col[4] = row + 1;
+    col[5] = row+nnx;
+    col[6] = row+nnx*nny;
+    int ii = ((row%(nnx*nny))%nnx);
+    int jj = ((row - ii)%(nnx*nny))/nnx;
+    int kk = (row-ii-nnx*jj)/(nnx*nny);
+    // make it compatible with uintah's indices
+    ii++;
+    jj++;
+    kk++;
+    value[0] = vars->pressCoeff[Arches::AB](IntVector(ii,jj,kk));
+    value[1] = vars->pressCoeff[Arches::AS](IntVector(ii,jj,kk));
+    value[2] = vars->pressCoeff[Arches::AW](IntVector(ii,jj,kk));
+    value[3] = vars->pressCoeff[Arches::AP](IntVector(ii,jj,kk));
+    value[4] = vars->pressCoeff[Arches::AE](IntVector(ii,jj,kk));
+    value[5] = vars->pressCoeff[Arches::AN](IntVector(ii,jj,kk));
+    value[6] = vars->pressCoeff[Arches::AT](IntVector(ii,jj,kk));
+    ierr = MatSetValues(A,1,&row,7,col,value,INSERT_VALUES);
+    CHKERRA(ierr);
+  }
+  for (row = nnx; row < (nny-1)*nnx; row++) {
+    col[0] = row-nnx;
+    col[1] = row-1;
+    col[2] = row;
+    col[3] = row+1;
+    col[4] = row+nnx;
+    col[5] = row+nnx*nny;
+    int ii = ((row%(nnx*nny))%nnx);
+    int jj = ((row - ii)%(nnx*nny))/nnx;
+    int kk = (row-ii-nnx*jj)/(nnx*nny);
+    // make it compatible with uintah's indices
+    ii++;
+    jj++;
+    kk++;
+    value[0] = vars->pressCoeff[Arches::AS](IntVector(ii,jj,kk));
+    value[1] = vars->pressCoeff[Arches::AW](IntVector(ii,jj,kk));
+    value[2] = vars->pressCoeff[Arches::AP](IntVector(ii,jj,kk));
+    value[3] = vars->pressCoeff[Arches::AE](IntVector(ii,jj,kk));
+    value[4] = vars->pressCoeff[Arches::AN](IntVector(ii,jj,kk));
+    value[5] = vars->pressCoeff[Arches::AT](IntVector(ii,jj,kk));
+    ierr = MatSetValues(A,1,&row,6,col,value,INSERT_VALUES);
+    CHKERRA(ierr);
+  }
+  for (row = nnx*nny*(nnz-1)+nnx; row < (nnz-1)*nnx*nny+nnx*(nny-1); row++) {
+    col[0] = row-nnx*nny;
+    col[1] = row-nnx;
+    col[2] = row-1;
+    col[3] = row;
+    col[4] = row+1;
+    col[5] = row+nnx;
+    int ii = ((row%(nnx*nny))%nnx);
+    int jj = ((row - ii)%(nnx*nny))/nnx;
+    int kk = (row-ii-nnx*jj)/(nnx*nny);
+    // make it compatible with uintah's indices
+    ii++;
+    jj++;
+    kk++;
+    value[0] = vars->pressCoeff[Arches::AB](IntVector(ii,jj,kk));
+    value[1] = vars->pressCoeff[Arches::AS](IntVector(ii,jj,kk));
+    value[2] = vars->pressCoeff[Arches::AW](IntVector(ii,jj,kk));
+    value[3] = vars->pressCoeff[Arches::AP](IntVector(ii,jj,kk));
+    value[4] = vars->pressCoeff[Arches::AE](IntVector(ii,jj,kk));
+    value[5] = vars->pressCoeff[Arches::AN](IntVector(ii,jj,kk));
+    ierr = MatSetValues(A,1,&row,6,col,value,INSERT_VALUES);
+    CHKERRA(ierr);
+  }
+  for (row = 1; row < nnx; row++) {
+    col[0] = row-1;
+    col[1] = row;
+    col[2] = row+1;
+    col[3] = row+nnx;
+    col[4] = row+nnx*nny;
+    int ii = ((row%(nnx*nny))%nnx);
+    int jj = ((row - ii)%(nnx*nny))/nnx;
+    int kk = (row-ii-nnx*jj)/(nnx*nny);
+    // make it compatible with uintah's indices
+    ii++;
+    jj++;
+    kk++;
+    value[0] = vars->pressCoeff[Arches::AW](IntVector(ii,jj,kk));
+    value[1] = vars->pressCoeff[Arches::AP](IntVector(ii,jj,kk));
+    value[2] = vars->pressCoeff[Arches::AE](IntVector(ii,jj,kk));
+    value[3] = vars->pressCoeff[Arches::AN](IntVector(ii,jj,kk));
+    value[4] = vars->pressCoeff[Arches::AT](IntVector(ii,jj,kk));
+    ierr = MatSetValues(A,1,&row,5,col,value,INSERT_VALUES);
+    CHKERRA(ierr);
+  }
+  for (row = nnx*nny*(nnz-1)+nnx*(nny-1); 
+       row < nnx*nny*(nnz-1)+nnx*(nny-1)+ nnx-1; row++) {
+    col[0] = row-nnx*nny;
+    col[1] = row-nnx;
+    col[2] = row-1;
+    col[3] = row;
+    col[4] = row+1;
+    int ii = ((row%(nnx*nny))%nnx);
+    int jj = ((row - ii)%(nnx*nny))/nnx;
+    int kk = (row-ii-nnx*jj)/(nnx*nny);
+    // make it compatible with uintah's indices
+    ii++;
+    jj++;
+    kk++;
+    value[0] = vars->pressCoeff[Arches::AB](IntVector(ii,jj,kk));
+    value[1] = vars->pressCoeff[Arches::AS](IntVector(ii,jj,kk));
+    value[2] = vars->pressCoeff[Arches::AW](IntVector(ii,jj,kk));
+    value[3] = vars->pressCoeff[Arches::AP](IntVector(ii,jj,kk));
+    value[4] = vars->pressCoeff[Arches::AE](IntVector(ii,jj,kk));
+    ierr = MatSetValues(A,1,&row,5,col,value,INSERT_VALUES);
+    CHKERRA(ierr);
+  }
+  row = 0;
+  col[0] = row;
+  col[1] = row+1;
+  col[2] = row+nnx;
+  col[3] = row+nnx*nny;
+  ii = 1;
+  jj = 1;
+  kk = 1;
+  value[0] = vars->pressCoeff[Arches::AP](IntVector(ii,jj,kk));
+  value[1] = vars->pressCoeff[Arches::AE](IntVector(ii,jj,kk));
+  value[2] = vars->pressCoeff[Arches::AN](IntVector(ii,jj,kk));
+  value[3] = vars->pressCoeff[Arches::AT](IntVector(ii,jj,kk));
+  ierr = MatSetValues(A,1,&row,4,col,value,INSERT_VALUES);
+  CHKERRA(ierr);
+  row = nnx*nny*nnz-1;
+  col[0] = row-nnx*nny;
+  col[1] = row-nnx;
+  col[2] = row-1;
+  col[3] = row;
+  ii = nnx;
+  jj = nny;
+  kk = nnz;
+  value[0] = vars->pressCoeff[Arches::AB](IntVector(ii,jj,kk));
+  value[1] = vars->pressCoeff[Arches::AS](IntVector(ii,jj,kk));
+  value[2] = vars->pressCoeff[Arches::AW](IntVector(ii,jj,kk));
+  value[3] = vars->pressCoeff[Arches::AP](IntVector(ii,jj,kk));
+  ierr = MatSetValues(A,1,&row,4,col,value,INSERT_VALUES);
+  CHKERRA(ierr);
+
+  ierr = MatAssemblyBegin(A,MAT_FINAL_ASSEMBLY);CHKERRA(ierr);
+  ierr = MatAssemblyEnd(A,MAT_FINAL_ASSEMBLY);CHKERRA(ierr);
+
+  /* 
+     Create vectors.  Note that we form 1 vector from scratch and
+     then duplicate as needed.
+  */
+  ierr = VecCreate(PETSC_COMM_WORLD,PETSC_DECIDE,numrows,&x);CHKERRA(ierr);
+  ierr = VecSetFromOptions(x);CHKERRA(ierr);
+  ierr = VecDuplicate(x,&b);CHKERRA(ierr);
+  ierr = VecDuplicate(x,&u);CHKERRA(ierr);
+  // assemble right hand side and solution vector
+  double vecvalueb, vecvaluex;
+  for(row = 0; row < numrows; row++) {
+    int ii = ((row%(nnx*nny))%nnx);
+    int jj = ((row - ii)%(nnx*nny))/nnx;
+    int kk = (row-ii-nnx*jj)/(nnx*nny);
+    // make it compatible with uintah's indices
+    ii++;
+    jj++;
+    kk++;
+    vecvalueb = vars->pressNonlinearSrc(IntVector(ii,jj,kk));
+    vecvaluex = vars->pressure(IntVector(ii,jj,kk));
+    ierr = VecSetValue(b, row, vecvalueb, INSERT_VALUES); CHKERRA(ierr);
+    ierr = VecSetValue(x, row, vecvaluex, INSERT_VALUES); CHKERRA(ierr);
+  }
+  ierr = VecAssemblyBegin(b);CHKERRA(ierr);
+  ierr = VecAssemblyEnd(b);CHKERRA(ierr);
+  ierr = VecAssemblyBegin(x);CHKERRA(ierr);
+  ierr = VecAssemblyEnd(x);CHKERRA(ierr);
+  /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+                Create the linear solver and set various options
+     - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+
+  ierr = SLESCreate(PETSC_COMM_WORLD,&sles);CHKERRA(ierr);
+  ierr = SLESSetOperators(sles,A,A,DIFFERENT_NONZERO_PATTERN);CHKERRA(ierr);
+  ierr = SLESGetKSP(sles,&ksp);CHKERRA(ierr);
+  ierr = KSPSetInitialGuessNonzero(ksp);CHKERRA(ierr);
+  ierr = SLESSetFromOptions(sles);CHKERRA(ierr);
+
+  /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+                      Solve the linear system
+     - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+  int its; double norm;
+  ierr = SLESSolve(sles,b,u,&its);CHKERRA(ierr);
+  // check the error
+  int neg_one = -1.0;
+  ierr = MatMult(A, x, u);CHKERRA(ierr);
+  ierr = VecAXPY(&neg_one, b, u); CHKERRA(ierr);
+  ierr  = VecNorm(u,NORM_2,&norm);CHKERRA(ierr);
+  ierr = PetscPrintf(PETSC_COMM_WORLD,"Norm of error %A, Iterations %d\n",norm,its);CHKERRA(ierr);
+  /* 
+/* 
+     Free work space.  All PETSc objects should be destroyed when they
+     are no longer needed.
+  */
+  ierr = SLESDestroy(sles);CHKERRA(ierr); 
+  ierr = VecDestroy(u);CHKERRA(ierr);
+  ierr = VecDestroy(b);CHKERRA(ierr);
+  ierr = MatDestroy(A);CHKERRA(ierr);
+
+
+ 
+
 #ifdef ARCHES_PRES_DEBUG
     cerr << "Iter # = " << pressIter << " Max Iters = " << d_maxSweeps 
 	 << " Press. Resid = " << pressResid << " d_residual = " << d_residual
 	 << " nlResid = " << nlResid << endl;
 #endif
-  } while((pressIter < d_maxSweeps)&&((pressResid > d_residual*nlResid)));
   // while((pressIter < d_maxSweeps)&&((pressResid > d_residual*nlResid)||
   //			      (pressResid > trunc_conv)));
 #ifdef ARCHES_PRES_DEBUG
@@ -273,12 +479,18 @@ RBGSSolver::pressLisolve(const ProcessorGroup* pc,
 
 }
 
+// Shutdown PETSc
+void PetscSolver::finalizeSolver()
+{
+  int ierr = PetscFinalize(); CHKERRQ(ierr);
+}
+
 //****************************************************************************
 // Actual compute of Velocity residual
 //****************************************************************************
 
 void 
-RBGSSolver::computeVelResidual(const ProcessorGroup* ,
+PetscSolver::computeVelResidual(const ProcessorGroup* ,
 			       const Patch* patch,
 			       DataWarehouseP& ,
 			       DataWarehouseP& , 
@@ -415,7 +627,7 @@ RBGSSolver::computeVelResidual(const ProcessorGroup* ,
 // Actual calculation of order of magnitude term for Velocity equation
 //****************************************************************************
 void 
-RBGSSolver::computeVelOrderOfMagnitude(const ProcessorGroup* ,
+PetscSolver::computeVelOrderOfMagnitude(const ProcessorGroup* ,
 				const Patch* ,
 				DataWarehouseP& ,
 				DataWarehouseP& , ArchesVariables* )
@@ -433,7 +645,7 @@ RBGSSolver::computeVelOrderOfMagnitude(const ProcessorGroup* ,
 // Velocity Underrelaxation
 //****************************************************************************
 void 
-RBGSSolver::computeVelUnderrelax(const ProcessorGroup* ,
+PetscSolver::computeVelUnderrelax(const ProcessorGroup* ,
 				 const Patch* patch,
 				 DataWarehouseP& ,
 				 DataWarehouseP& , 
@@ -603,7 +815,7 @@ RBGSSolver::computeVelUnderrelax(const ProcessorGroup* ,
 // Velocity Solve
 //****************************************************************************
 void 
-RBGSSolver::velocityLisolve(const ProcessorGroup* pc,
+PetscSolver::velocityLisolve(const ProcessorGroup* pc,
 			    const Patch* patch,
 			    DataWarehouseP& old_dw ,
 			    DataWarehouseP& new_dw, 
@@ -891,7 +1103,7 @@ RBGSSolver::velocityLisolve(const ProcessorGroup* pc,
 // Calculate Scalar residuals
 //****************************************************************************
 void 
-RBGSSolver::computeScalarResidual(const ProcessorGroup* ,
+PetscSolver::computeScalarResidual(const ProcessorGroup* ,
 				  const Patch* patch,
 				  DataWarehouseP& ,
 				  DataWarehouseP& , 
@@ -926,7 +1138,7 @@ RBGSSolver::computeScalarResidual(const ProcessorGroup* ,
 // Actual calculation of order of magnitude term for Scalar equation
 //****************************************************************************
 void 
-RBGSSolver::computeScalarOrderOfMagnitude(const ProcessorGroup* ,
+PetscSolver::computeScalarOrderOfMagnitude(const ProcessorGroup* ,
 				const Patch* ,
 				DataWarehouseP& ,
 				DataWarehouseP& , ArchesVariables* )
@@ -940,7 +1152,7 @@ RBGSSolver::computeScalarOrderOfMagnitude(const ProcessorGroup* ,
 // Scalar Underrelaxation
 //****************************************************************************
 void 
-RBGSSolver::computeScalarUnderrelax(const ProcessorGroup* ,
+PetscSolver::computeScalarUnderrelax(const ProcessorGroup* ,
 				    const Patch* patch,
 				    DataWarehouseP& ,
 				    DataWarehouseP& , 
@@ -966,7 +1178,7 @@ RBGSSolver::computeScalarUnderrelax(const ProcessorGroup* ,
 // Scalar Solve
 //****************************************************************************
 void 
-RBGSSolver::scalarLisolve(const ProcessorGroup* pc,
+PetscSolver::scalarLisolve(const ProcessorGroup* pc,
 			  const Patch* patch,
 			  DataWarehouseP& old_dw,
 			  DataWarehouseP& new_dw, 
@@ -1072,7 +1284,7 @@ RBGSSolver::scalarLisolve(const ProcessorGroup* pc,
 
 //
 // $Log$
-// Revision 1.22  2000/09/07 23:07:17  rawat
+// Revision 1.1  2000/09/07 23:07:17  rawat
 // fixed some bugs in bc and added pressure solver using petsc
 //
 // Revision 1.21  2000/08/23 06:20:52  bbanerje

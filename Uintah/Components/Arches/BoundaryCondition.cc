@@ -1490,14 +1490,13 @@ BoundaryCondition::scalarBC(const ProcessorGroup*,
 
   // Get the wall boundary and flow field codes
   int wall_celltypeval = d_wallBdry->d_cellTypeID;
-  int flow_celltypeval = d_flowfieldCellTypeVal;
   int press_celltypeval = d_pressureBdry->d_cellTypeID;
   // ** WARNING ** Symmetry/sfield/outletfield/ffield hardcoded to -3,-4,-5, -6
   //               Fmixin hardcoded to 0
   int symmetry_celltypeval = -3;
   int sfield = -4;
   int outletfield = -5;
-  int ffield = -6;
+  int ffield = -1;
   double fmixin = 0.0;
 
   //fortran call
@@ -1524,7 +1523,7 @@ BoundaryCondition::scalarBC(const ProcessorGroup*,
 		cellinfo->stb.get_objs(),
 		vars->cellType.getPointer(),
 		&wall_celltypeval, &symmetry_celltypeval,
-		&flow_celltypeval, &press_celltypeval,
+		&d_flowInlets[0].d_cellTypeID, &press_celltypeval,
 		&ffield, &sfield, &outletfield);
 
 #ifdef ARCHES_BC_DEBUG
@@ -1901,18 +1900,10 @@ BoundaryCondition::setFlatProfile(const ProcessorGroup* pc,
   }   
   if (d_pressureBdry) {
     // set density
-    //FORT_PROFSCALAR(domLo.get_pointer(), domHi.get_pointer(), 
-	//	    idxLo.get_pointer(), idxHi.get_pointer(),
-	//	    density.getPointer(), cellType.getPointer(),
-	//	    &d_pressureBdry->density, &d_pressureBdry->d_cellTypeID);
-    // set scalar values at the boundary
-    for (int indx = 0; indx < d_nofScalars; indx++) {
-      double scalarValue = d_pressureBdry->streamMixturefraction[indx];
-      FORT_PROFSCALAR(domLo.get_pointer(), domHi.get_pointer(), 
-		      idxLo.get_pointer(), idxHi.get_pointer(),
-		      scalar[indx].getPointer(), cellType.getPointer(),
-		      &scalarValue, &d_pressureBdry->d_cellTypeID);
-    }
+    FORT_PROFSCALAR(domLo.get_pointer(), domHi.get_pointer(), 
+		    idxLo.get_pointer(), idxHi.get_pointer(),
+		    density.getPointer(), cellType.getPointer(),
+		    &d_pressureBdry->density, &d_pressureBdry->d_cellTypeID);
   }    
   for (int indx = 0; indx < d_nofScalars; indx++) {
     for (int ii = 0; ii < d_numInlets; ii++) {
@@ -2199,6 +2190,9 @@ BoundaryCondition::FlowOutlet::problemSetup(ProblemSpecP& params)
 
 //
 // $Log$
+// Revision 1.56  2000/09/07 23:07:17  rawat
+// fixed some bugs in bc and added pressure solver using petsc
+//
 // Revision 1.55  2000/08/23 06:20:51  bbanerje
 // 1) Results now correct for pressure solve.
 // 2) Modified BCU, BCV, BCW to add stuff for pressure BC.
