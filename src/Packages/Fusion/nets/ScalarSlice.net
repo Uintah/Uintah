@@ -94,20 +94,20 @@ set $m5-i-stop {384}
 set $m5-j-stop {0}
 set $m5-k-stop {0}
 set $m5-i-skip {5}
-set $m5-j-skip {4}
+set $m5-j-skip {5}
 set $m5-k-skip {1}
 set $m5-i-wrap {0}
 set $m5-j-wrap {1}
 set $m5-k-wrap {1}
 set $m6-notes {}
 set $m6-show_status {1}
-set $m6-axis {1}
+set $m6-axis {2}
 set $m6-dims {3}
 set $m6-idim {78}
-set $m6-jdim {49}
+set $m6-jdim {40}
 set $m6-kdim {11}
 set $m6-iindex {0}
 set $m6-jindex {0}
-set $m6-kindex {6}
+set $m6-kindex {2}
 
 ::netedit scheduleok
