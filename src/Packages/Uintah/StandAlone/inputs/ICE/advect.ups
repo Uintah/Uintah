@@ -151,6 +151,7 @@
    </DataArchiver>
 
   <Debug>
+       <debug label = "switchTestConservation"/> 
     <!--<debug label = "switchDebug_equilibration_press"/>
        <debug label = "switchDebug_vel_FC"/>            
        <debug label = "switchDebug_explicit_press"/>   
