@@ -7,7 +7,12 @@
 #include <Core/Containers/ConsecutiveRangeSet.h>
 
 namespace Uintah {
-   
+
+using std::string;
+using std::vector;
+using std::list;
+using std::pair;
+
    /**************************************
      
      CLASS
@@ -61,7 +66,7 @@ namespace Uintah {
 				    DataWarehouseP&);
       //////////
       // Insert Documentation Here:
-      virtual const std::string getOutputLocation() const;
+      virtual const string getOutputLocation() const;
 
       //////////
       // Insert Documentation Here:
@@ -70,7 +75,7 @@ namespace Uintah {
 		  DataWarehouseP& old_dw,
 		  DataWarehouseP& new_dw,
 		  Dir* p_dir, int timestep,
-		  std::pair<const VarLabel*, int>
+		  pair<const VarLabel*, int>
 		  /* combined as a pair because Tasks take up to 3 extra
 		     args and I'm too lazy to overload for a 4 arg Task */);
 
@@ -100,11 +105,11 @@ namespace Uintah {
 
       //////////
       // Get the directory of the current time step for outputting info.
-      virtual const std::string& getLastTimestepOutputLocation() const
+      virtual const string& getLastTimestepOutputLocation() const
       { return d_lastTimestepLocation; }
    private:
       struct SaveNameItem {
-	 std::string labelName;
+	 string labelName;
          ConsecutiveRangeSet matls;
       };
       struct SaveItem {
@@ -116,11 +121,11 @@ namespace Uintah {
       void initCheckpoints(SchedulerP& sched);
      
       // helper for finalizeTimestep
-      void outputTimestep(Dir& dir, std::vector<SaveItem>& saveLabels,
+      void outputTimestep(Dir& dir, vector<SaveItem>& saveLabels,
 			  double time, double delt,
 			  const LevelP& level, SchedulerP& sched,
 			  DataWarehouseP& new_dw,
-			  std::string* pTimestepDir /* passed back */,
+			  string* pTimestepDir /* passed back */,
 			  bool hasGlobals = false);
 
       // helper for problemSetup
@@ -135,13 +140,13 @@ namespace Uintah {
       // add saved global (reduction) variables to index.xml
       void indexAddGlobals();
 
-      std::string d_filebase;
+      string d_filebase;
       double d_outputInterval;
       double d_nextOutputTime;
       int d_currentTimestep;
       Dir d_dir;
       bool d_writeMeta;
-      std::string d_lastTimestepLocation;
+      string d_lastTimestepLocation;
       bool d_wasOutputTimestep;
 
       bool d_wereSavesAndCheckpointsInitialized;      
@@ -150,19 +155,19 @@ namespace Uintah {
       // information will be basically transferred to d_saveLabels or
       // d_saveReductionLabels after mapping VarLabel names to their
       // actual VarLabel*'s.
-      std::list< SaveNameItem > d_saveLabelNames;
-      std::vector< SaveItem > d_saveLabels;
-      std::vector< SaveItem > d_saveReductionLabels;
+      list< SaveNameItem > d_saveLabelNames;
+      vector< SaveItem > d_saveLabels;
+      vector< SaveItem > d_saveReductionLabels;
 
       // d_checkpointLabelNames is a temporary list containing
       // the names of labels to save when checkpointing
-      std::vector< SaveItem > d_checkpointLabels;
-      std::vector< SaveItem > d_checkpointReductionLabels;
+      vector< SaveItem > d_checkpointLabels;
+      vector< SaveItem > d_checkpointReductionLabels;
       double d_checkpointInterval;
       int d_checkpointCycle;
 
       Dir d_checkpointsDir;
-      list<std::string> d_checkpointTimestepDirs;
+      list<string> d_checkpointTimestepDirs;
       double d_nextCheckpointTime;
 
       DataArchiver(const DataArchiver&);

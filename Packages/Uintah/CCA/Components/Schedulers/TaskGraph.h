@@ -9,9 +9,8 @@
 #include <map>
 
 namespace Uintah {
-using std::map;
-using std::vector;
-using std::list;
+
+using namespace std;
 
 struct TaskData {
 

@@ -239,7 +239,7 @@ int CCScalarField<T>::interpolate(const Point& p, double& value, double,
 {
   static const Patch* patch = 0;
   static int i = 0;
-  static int count = 0;
+  //  static int count = 0;
   IntVector index;
   if( patch !=0 && patch->findCell(p, index)){
     value = _vars[i][index];
@@ -272,7 +272,6 @@ int CCScalarField<T>::interpolate(const Point& p, double& value, double,
 template <class T>
 Vector CCScalarField<T>::gradient(const Point& p)
 {
-  using SCICore::Math::Interpolate;
   Uintah::Box b;
   int i;
   Level::const_patchIterator r;

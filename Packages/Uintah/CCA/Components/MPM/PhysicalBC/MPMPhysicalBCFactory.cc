@@ -1,10 +1,13 @@
 #include <Packages/Uintah/CCA/Components/MPM/PhysicalBC/MPMPhysicalBCFactory.h>
 
 #include <Packages/Uintah/CCA/Components/MPM/PhysicalBC/ForceBC.h>
+#include <Packages/Uintah/CCA/Components/MPM/PhysicalBC/CrackBC.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
+#include <Core/Malloc/Allocator.h>
 
 using namespace std;
 using namespace Uintah;
+using namespace SCIRun;
 
 std::vector<MPMPhysicalBC*> MPMPhysicalBCFactory::mpmPhysicalBCs;
 

@@ -9,6 +9,7 @@ using namespace Uintah;
 using namespace SCIRun;
 
 using std::string;
+using std::ostringstream;
 
 map<string, VarLabel*> VarLabel::allLabels;
 

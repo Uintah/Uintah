@@ -8,6 +8,8 @@
 
 namespace Uintah {
 
+using std::ostream;
+
 /**************************************
 
 CLASS

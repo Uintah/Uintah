@@ -8,9 +8,6 @@
 #include <Packages/Uintah/Core/ProblemSpec/RefCounted.h>
 #include <Packages/Uintah/Core/Grid/ParticleVariableBase.h>
 #include <Packages/Uintah/Core/Grid/NCVariableBase.h>
-#include <Packages/Uintah/Core/Grid/XFCVariableBase.h>
-#include <Packages/Uintah/Core/Grid/YFCVariableBase.h>
-#include <Packages/Uintah/Core/Grid/ZFCVariableBase.h>
 #include <Packages/Uintah/Core/Grid/SFCXVariableBase.h>
 #include <Packages/Uintah/Core/Grid/SFCYVariableBase.h>
 #include <Packages/Uintah/Core/Grid/SFCZVariableBase.h>
