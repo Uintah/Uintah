@@ -33,16 +33,7 @@
 #include <float.h>
 #include <iostream>
 
-#undef OREN_DEBUG
 #undef OREN_PRESS_EQ
-
-#ifdef OREN_DEBUG
-//----- BEGIN   Oren 28-Jul-2004: added timing of mom/energy exchange solution -----
-#include <strings.h>
-#include <fstream>
-#include <Core/Thread/Time.h>
-//----- END     Oren 28-Jul-2004: added timing of mom/energy exchange solution -----
-#endif
 
 using std::vector;
 using std::max;
@@ -3933,16 +3924,6 @@ void ICE::addExchangeToMomentumAndEnergy(const ProcessorGroup*,
                              DataWarehouse* new_dw)
 {
   const Level* level = getLevel(patches);
-#ifdef OREN_DEBUG
-  /*
-  char fileName[64];
-  sprintf(fileName, "lse%d.out", d_sharedState->getCurrentTopLevelTimeStep());
-  FILE *lseOutput = fopen(fileName,"w");
-  if (!lseOutput) {
-    throw InternalError("Cannot open LSE output file for writing!\n");
-  }
-  */
-#endif
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     cout_doing << "Doing doCCMomExchange on patch "<< patch->getID()
@@ -3978,11 +3959,7 @@ void ICE::addExchangeToMomentumAndEnergy(const ProcessorGroup*,
     double b[MAX_MATLS];
     Vector bb[MAX_MATLS];
     vector<double> sp_vol(numALLMatls);
-#ifdef OREN_DEBUG
-    vector<double> X_LSE(numALLMatls);
-    vector<double> Residual(numALLMatls);
-    FastMatrix a_original(numALLMatls, numALLMatls);
-#endif
+
     double tmp;
     FastMatrix beta(numALLMatls, numALLMatls),acopy(numALLMatls, numALLMatls);
     FastMatrix K(numALLMatls, numALLMatls), H(numALLMatls, numALLMatls);
@@ -4054,13 +4031,7 @@ void ICE::addExchangeToMomentumAndEnergy(const ProcessorGroup*,
         printVector( indx, patch,1, desc.str(),"vel_CC", 0,  vel_CC[m]);
       }
     }
-#ifdef OREN_DEBUG
-    //----- BEGIN   Oren 28-Jul-2004: added timing of mom/energy exchange solution (old vs. new approach) -----
-    double time_invert = 0.0;
-    double time_lse = 0.0;
-    double start_t;
-    //----- END     Oren 28-Jul-2004: added timing of mom/energy exchange solution (old vs. new approach) -----
-#endif    
+
     for(CellIterator iter = patch->getCellIterator(); !iter.done();iter++){
       IntVector c = *iter;
       //---------- M O M E N T U M   E X C H A N G E
@@ -4081,50 +4052,6 @@ void ICE::addExchangeToMomentumAndEnergy(const ProcessorGroup*,
         }
       }
 
-#ifdef OREN_DEBUG
-      //--------------------------------------------------------------
-      // Added printout Randy & Oren July 27 2004
-      int doit = 0;
-      for(int n = 0; n < numALLMatls; n++) {
-	if ((vol_frac_CC[n][c] > 0.0001) & (vol_frac_CC[n][c] < 0.99999)) {
-	  doit = 1;
-	  cout << "Near edge of material " << n << endl;
-	  break;
-	}
-	IntVector lowIndex  = vol_frac_CC[n].getLowIndex();
-	IntVector highIndex = vol_frac_CC[n].getHighIndex();
-	if ((c.x() == lowIndex.x()) || 
-	    (c.y() == lowIndex.y()) ||
-	    (c.z() == lowIndex.z())) {
-	  doit = 1;
-	  cout << "Near lower edge of the domain" << endl;
-	  break;
-	}
-	
-	if ((c.x() == (highIndex.x()+lowIndex.x())/2) &&
-	    (c.y() == (highIndex.y()+lowIndex.y())/2) &&
-	    (c.z() == (highIndex.z()+lowIndex.z())/2)) {
-	  doit = 1;
-	  cout << "In the middle of the domain" << endl;
-	  break;
-	}
-      }
-      if (doit) {
-	cout << "Cell number " << c << endl;
-	cout << "a = " << endl;
-	a.print(cout);
-      }
-      // End Added printout Randy & Oren July 27 2004
-      //--------------------------------------------------------------
-      //----- BEGIN   Oren 28-Jul-2004: added timing of mom/energy exchange solution (old vs. new approach) -----
-      a_original.copy(a);
-      start_t      = Time::currentSeconds();     
-#endif
-#ifdef OREN_DEBUG
-      time_invert += (Time::currentSeconds() - start_t);
-      a.copy(a_original);
-      //----- END     Oren 28-Jul-2004: added timing of mom/energy exchange solution (old vs. new approach) -----
-#endif
       for(int m = 0; m < numALLMatls; m++) {
         Vector sum(0,0,0);
         const Vector& vel_m = vel_CC[m][c];
@@ -4134,50 +4061,9 @@ void ICE::addExchangeToMomentumAndEnergy(const ProcessorGroup*,
         }
         bb[m] = sum;
       }
-#ifdef OREN_DEBUG
-      //----- BEGIN   Oren 28-Jul-2004: added timing of mom/energy exchange solution (old vs. new approach) -----
-      //	fprintf(lseOutput,"%3d %3d %3d ",c.x(),c.y(),c.z());
-      //	cout << "a = " << endl;
-      //	a.print(cout);	
-      //	cout << "b = " << endl;
-      //	for(int m = 0; m < numALLMatls; m++) cout << b[m] << " ";
-      //	cout << endl;
 
-      //	double n;
-      double totalMomentum = 0.0;
-      for(int m = 0; m < numALLMatls; m++) totalMomentum += b[m];
-      //	double newTotalMomentum;
-
-      start_t      = Time::currentSeconds();
-#endif
       a.destructiveSolve(bb);
-#ifdef OREN_DEBUG
-      // This stuff is probably busted now...
-      time_invert += (Time::currentSeconds() - start_t);
-      a.multiply(X,Residual);
-      n = 0.0;
-      for (int m = 0; m < numALLMatls; m++) {
-        double temp = b[m] - Residual[m];
-        n += temp*temp;
-      }
-      newTotalMomentum = 0.0;
-      for(int m = 0; m < numALLMatls; m++) newTotalMomentum += X[m];
-      //	fprintf(lseOutput,"%+le %+le ",sqrt(n),newTotalMomentum - totalMomentum);
-      start_t      = Time::currentSeconds();
-      // In fact note that we can do QR factorization before the loop over dirs and compute X per-b faster.
-      a.lseSolve(b,X_LSE,totalMomentum);           // New way of solving: min||Ax-b|| s.t. total momentum is preserved
-      time_lse    += (Time::currentSeconds() - start_t);
-      a.multiply(X_LSE,Residual);
-      n = 0.0;
-      for (int m = 0; m < numALLMatls; m++) {
-        double temp = b[m] - Residual[m];
-        n += temp*temp;
-      }
-      newTotalMomentum = 0.0;
-      for(int m = 0; m < numALLMatls; m++) newTotalMomentum += X_LSE[m];
-      //	fprintf(lseOutput,"%+le %+le\n",sqrt(n),newTotalMomentum - totalMomentum);
-      //----- END     Oren 28-Jul-2004: added timing of mom/energy exchange solution -----
-#endif
+
       for(int m = 0; m < numALLMatls; m++) {
         vel_CC[m][c] += bb[m];
       }
@@ -4211,12 +4097,7 @@ void ICE::addExchangeToMomentumAndEnergy(const ProcessorGroup*,
         Temp_CC[m][c] = Temp_CC[m][c] + b[m];
       }
     }  //end CellIterator loop
-#ifdef OREN_DEBUG
-    //----- BEGIN   Oren 28-Jul-2004: added timing of mom/energy exchange solution (old vs. new approach) -----
-    cout << "Total time of inverting + multiplying A^{-1}*b = " << time_invert << endl;
-    cout << "Total time of solving with LSE                 = " << time_lse << endl;
-    //----- END     Oren 28-Jul-2004: added timing of mom/energy exchange solution (old vs. new approach) -----
-#endif
+
   if(d_convective){
     //  Loop over matls
     //  if (mpm_matl)
@@ -4419,44 +4300,7 @@ void ICE::addExchangeToMomentumAndEnergy(const ProcessorGroup*,
         printData(  indx, patch,1, desc.str(),"Temp_CC",     Temp_CC[m]);
       }
     }
-#ifdef OREN_DEBUG
-    //----- BEGIN   Oren 03-Aug-2004: printouts of momentum after  -----
-    fprintf(stderr,"Total momentum during momentum exchange:\n");
-    Vector tot_sum_mom_L_CC     = Vector(0.0, 0.0, 0.0);
-    Vector tot_sum_mom_L_ME_CC  = Vector(0.0, 0.0, 0.0);
-    for(int m = 0; m < numALLMatls; m++) {
-      Vector sum_mom_L_CC     = Vector(0.0, 0.0, 0.0);
-      Vector sum_mom_L_ME_CC  = Vector(0.0, 0.0, 0.0);
-      for (CellIterator iter=patch->getCellIterator(); !iter.done();iter++){
-	IntVector c = *iter;
-	sum_mom_L_CC    += mom_L   [m][c];
-	sum_mom_L_ME_CC += mom_L_ME[m][c];
-      }
-      tot_sum_mom_L_CC += sum_mom_L_CC;
-      tot_sum_mom_L_ME_CC += sum_mom_L_ME_CC;      
-      fprintf(stderr,"Material %2d   BEFORE EXCHANGE = [",m);
-      fprintf(stderr,"%+le %+le %+le]",sum_mom_L_CC[0],sum_mom_L_CC[1],sum_mom_L_CC[2]);
-      fprintf(stderr,"      AFTER EXCHANGE = [");
-      fprintf(stderr,"%+le %+le %+le]",sum_mom_L_ME_CC[0],sum_mom_L_ME_CC[1],sum_mom_L_ME_CC[2]);
-      fprintf(stderr,"      AFTER-BEFORE = [");
-      fprintf(stderr,"%+le %+le %+le]",sum_mom_L_ME_CC[0]-sum_mom_L_CC[0],sum_mom_L_ME_CC[1]-sum_mom_L_CC[1],
-	      sum_mom_L_ME_CC[2]-sum_mom_L_CC[2]);
-      fprintf(stderr,"\n");
-    }
-    fprintf(stderr,"TOTAL         BEFORE EXCHANGE = [");
-    fprintf(stderr,"%+le %+le %+le]",tot_sum_mom_L_CC[0],tot_sum_mom_L_CC[1],tot_sum_mom_L_CC[2]);
-    fprintf(stderr,"      AFTER EXCHANGE = [");
-    fprintf(stderr,"%+le %+le %+le]",tot_sum_mom_L_ME_CC[0],tot_sum_mom_L_ME_CC[1],tot_sum_mom_L_ME_CC[2]);
-    fprintf(stderr,"      AFTER-BEFORE = [");
-    fprintf(stderr,"%+le %+le %+le]",tot_sum_mom_L_ME_CC[0]-tot_sum_mom_L_CC[0],tot_sum_mom_L_ME_CC[1]-tot_sum_mom_L_CC[1],
-	    tot_sum_mom_L_ME_CC[2]-tot_sum_mom_L_CC[2]);
-    fprintf(stderr,"\n");
-    //----- END     Oren 03-Aug-2004: printouts of momentum after  -----
-#endif
   } //patches
-#ifdef OREN_DEBUG
-  //  fclose(lseOutput);
-#endif
 }
 
 /* ---------------------------------------------------------------------
