@@ -32,7 +32,6 @@ itk::usual Linkedpane {
 setProgressText "Loading BioImage Modules, Please Wait..."
 
 #######################################################################
-# Check environment variables.  Ask user for input if not set:
 # Attempt to get environment variables:
 set DATADIR [netedit getenv SCIRUN_DATA]
 set DATASET [netedit getenv SCIRUN_DATASET]
@@ -44,51 +43,28 @@ set bbox {0 0 3100 3100}
 
 set m1 [addModuleAtPosition "SCIRun" "Render" "Viewer" 17 2900]
 
-
 global mods
 set mods(Viewer) $m1
+setGlobal "$mods(Viewer)-ViewWindow_0-Slice0 (1)" 1
+setGlobal "$mods(Viewer)-ViewWindow_0-Slice1 (1)" 1
+setGlobal "$mods(Viewer)-ViewWindow_0-Slice2 (1)" 1
+setGlobal "$mods(Viewer)-ViewWindow_0-MIP Slice0 (1)" 0
+setGlobal "$mods(Viewer)-ViewWindow_0-MIP Slice1 (1)" 0
+setGlobal "$mods(Viewer)-ViewWindow_0-MIP Slice2 (1)" 0
 
 set mods(ViewSlices) ""
 set mods(EditColorMap2D) ""
 
-# Tooltips
-global tips
-
-global new_label
-set new_label "Unknown"
-
-global eye
-set eye 0
+setGlobal new_label "Unknown"
+setGlobal eye 0
 
 # volume orientations
-global top
-set top "S"
+setGlobal top "S"
+setGlobal front "A"
+setGlobal side "L"
 
-global front
-set front "A"
-
-global side
-set side "L"
-
-# show planes
-global show_plane_x
-global show_plane_y
-global show_plane_z
-global show_MIP_x
-global show_MIP_y
-global show_MIP_z
-global show_guidelines
-set show_plane_x 1
-set show_plane_y 1
-set show_plane_z 1
-set show_MIP_x 0
-set show_MIP_y 0
-set show_MIP_z 0
-set show_guidelines 1
-global filter2Dtextures
-set filter2Dtextures 1
-global planes_mapType
-set planes_mapType 0
+setGlobal show_guidelines 1
+setGlobal planes_mapType 0
 
 global slice_frame
 set slice_frame(axial) ""
@@ -99,19 +75,11 @@ set slice_frame(axial_color) \#1A66FF ;#blue
 set slice_frame(coronal_color) \#7FFF1A ;#green
 set slice_frame(sagittal_color)  \#CC3366 ;#red
 
-
-
-
-
 # volume rendering
-global show_vol_ren
-set show_vol_ren 0
-global link_winlevel
-set link_winlevel 1
-global vol_width
-set vol_width 0
-global vol_level
-set vol_level 0
+setGlobal show_vol_ren 0
+setGlobal link_winlevel 1
+setGlobal vol_width 0
+setGlobal vol_level 0
 
 setProgressText "Loading BioImage Application, Please Wait..."
 
@@ -448,15 +416,10 @@ class BioImageApp {
 		upvar \#0 $mods(ViewSlices)-background_threshold thresh
 		set thresh $min_val
 
-		# turn off MIP stuff
-		after 100 "uplevel \#0 set \"\{$mods(Viewer)-ViewWindow_0-MIP Slice0 (1)\}\" 0; $mods(Viewer)-ViewWindow_0-c redraw"
-		after 100 "uplevel \#0 set \"\{$mods(Viewer)-ViewWindow_0-MIP Slice1 (1)\}\" 0; $mods(Viewer)-ViewWindow_0-c redraw"
-		after 100 "uplevel \#0 set \"\{$mods(Viewer)-ViewWindow_0-MIP Slice2 (1)\}\" 0; $mods(Viewer)-ViewWindow_0-c redraw"
-
                 set 2D_fixed 1
 
 		# re-execute ViewSlices so that all the planes show up (hack)
-                #$mods(ViewSlices)-c needexecute
+#                #$mods(ViewSlices)-c needexecute
 	    } 
 
 	    global $mods(ViewSlices)-min $mods(ViewSlices)-max
@@ -2138,41 +2101,37 @@ class BioImageApp {
             frame $page.planes 
             pack $page.planes -side top -anchor nw -expand no -fill x
 
-	    global show_plane_x show_plane_y show_plane_z
-	    global show_MIP_x show_MIP_y show_MIP_z
-
 	    checkbutton $page.planes.xp -text "Show Sagittal Plane" \
-		-variable show_plane_x \
-		-command "$this toggle_show_plane_x"
+		-variable "$mods(Viewer)-ViewWindow_0-Slice0 (1)" \
+		-command "$mods(Viewer)-ViewWindow_0-c redraw"
             Tooltip $page.planes.xp "Turn Sagittal plane on/off"
 
   	    checkbutton $page.planes.xm -text "Show Sagittal MIP" \
-  		-variable show_MIP_x \
-  		-command "$this toggle_show_MIP_x"
+  		-variable "$mods(Viewer)-ViewWindow_0-MIP Slice0 (1)" \
+		-command "$mods(Viewer)-ViewWindow_0-c redraw"
             Tooltip $page.planes.xm "Turn Sagittal MIP on/off"
 
 
 	    checkbutton $page.planes.yp -text "Show Coronal Plane" \
-		-variable show_plane_y \
-		-command "$this toggle_show_plane_y"
-            Tooltip $page.planes.yp "Turn Coronal plane on/off"
+		-variable "$mods(Viewer)-ViewWindow_0-Slice1 (1)" \
+		-command "$mods(Viewer)-ViewWindow_0-c redraw"
+            Tooltip $page.planes.yp "Turn Sagittal plane on/off"
 
   	    checkbutton $page.planes.ym -text "Show Coronal MIP" \
-  		-variable show_MIP_y \
-  		-command "$this toggle_show_MIP_y"
-              Tooltip $page.planes.ym "Turn Coronal MIP on/off"
+  		-variable "$mods(Viewer)-ViewWindow_0-MIP Slice1 (1)" \
+		-command "$mods(Viewer)-ViewWindow_0-c redraw"
+            Tooltip $page.planes.ym "Turn Sagittal MIP on/off"
 
 
 	    checkbutton $page.planes.zp -text "Show Axial Plane" \
-		-variable show_plane_z \
-		-command "$this toggle_show_plane_z"
-            Tooltip $page.planes.zp "Turn Axial plane on/off"
+		-variable "$mods(Viewer)-ViewWindow_0-Slice2 (1)" \
+		-command "$mods(Viewer)-ViewWindow_0-c redraw"
+            Tooltip $page.planes.zp "Turn Sagittal plane on/off"
 
   	    checkbutton $page.planes.zm -text "Show Axial MIP" \
-  		-variable show_MIP_z \
-  		-command "$this toggle_show_MIP_z"
-              Tooltip $page.planes.zm "Turn Axial MIP on/off"
-
+  		-variable "$mods(Viewer)-ViewWindow_0-MIP Slice2 (1)" \
+		-command "$mods(Viewer)-ViewWindow_0-c redraw"
+            Tooltip $page.planes.zm "Turn Sagittal MIP on/off"
 
             grid configure $page.planes.xp -row 0 -column 0 -sticky "w"
             grid configure $page.planes.xm -row 0 -column 1 -sticky "w"
@@ -2252,10 +2211,9 @@ class BioImageApp {
             pack $page.lines -side top -anchor nw -padx 4 -pady 7
             Tooltip $page.lines "Toggle 2D Viewer guidelines"
 
-            global filter2Dtextures
 	    checkbutton $page.2Dtext -text "Filter 2D Textures" \
-		-variable filter2Dtextures \
-		-command "$this toggle_filter2Dtextures" 
+		-variable $mods(ViewSlices)-texture_filter \
+		-command "$mods(ViewSlices)-c texture_rebind" 
             pack $page.2Dtext -side top -anchor nw -padx 4 -pady 7
             Tooltip $page.2Dtext "Turn filtering 2D textures\non/off"
 
@@ -4508,34 +4466,6 @@ class BioImageApp {
         puts $fileid "global side"
         puts $fileid "set side \{[set side]\}"
 
-        global show_plane_x
-        puts $fileid "global show_plane_x"
-        puts $fileid "set show_plane_x \{[set show_plane_x]\}"
-
-        global show_plane_y
-        puts $fileid "global show_plane_y"
-        puts $fileid "set show_plane_y \{[set show_plane_y]\}"
-
-        global show_plane_z
-        puts $fileid "global show_plane_z"
-        puts $fileid "set show_plane_z \{[set show_plane_z]\}"
-
-        global show_MIP_x
-        puts $fileid "global show_MIP_x"
-        puts $fileid "set show_MIP_x \{[set show_MIP_x]\}"
-
-        global show_MIP_y
-        puts $fileid "global show_MIP_y"
-        puts $fileid "set show_MIP_y \{[set show_MIP_y]\}"
-
-        global show_MIP_z
-        puts $fileid "global show_MIP_z"
-        puts $fileid "set show_MIP_z \{[set show_MIP_z]\}"
-
-        global filter2Dtextures
-        puts $fileid "global filter2Dtextures"
-        puts $fileid "set filter2Dtextures \{[set filter2Dtextures]\}"
-
         global planes_mapType
         puts $fileid "global planes_mapType"
         puts $fileid "set planes_mapType \{[set planes_mapType]\}"
@@ -4859,91 +4789,10 @@ class BioImageApp {
     }	
 
 
-    #########################
-    ### toggle_show_plane_n
-    ##########################
-    # Methods to turn on/off planes
-    method toggle_show_plane_x {} {
-	$this check_crop
-	global mods show_plane_x
-	if {$show_plane_x == 1} {
-	    after 100 "uplevel \#0 set \"\{$mods(Viewer)-ViewWindow_0-Slice0 (1)\}\" 1; $mods(Viewer)-ViewWindow_0-c redraw"
-	} else {
-	    after 100 "uplevel \#0 set \"\{$mods(Viewer)-ViewWindow_0-Slice0 (1)\}\" 0; $mods(Viewer)-ViewWindow_0-c redraw"
-	}
-    }
-
-    method toggle_show_plane_y {} {
-	$this check_crop
-	global mods show_plane_y
-	if {$show_plane_y == 1} {
-	    after 100 "uplevel \#0 set \"\{$mods(Viewer)-ViewWindow_0-Slice1 (1)\}\" 1; $mods(Viewer)-ViewWindow_0-c redraw"
-	} else {
-	    after 100 "uplevel \#0 set \"\{$mods(Viewer)-ViewWindow_0-Slice1 (1)\}\" 0; $mods(Viewer)-ViewWindow_0-c redraw"
-	}
-    }
-
-    method toggle_show_plane_z {} {
-	$this check_crop
-	global mods show_plane_z
-	if {$show_plane_z == 1} {
-	    after 100 "uplevel \#0 set \"\{$mods(Viewer)-ViewWindow_0-Slice2 (1)\}\" 1; $mods(Viewer)-ViewWindow_0-c redraw"
-	} else {
-	    after 100 "uplevel \#0 set \"\{$mods(Viewer)-ViewWindow_0-Slice2 (1)\}\" 0; $mods(Viewer)-ViewWindow_0-c redraw"
-	}
-    }
-
-
-    #########################
-    ### toggle_show_MIP_n
-    ##########################
-    # Methods to turn on/off MIP
-    method toggle_show_MIP_x {} {
-	$this check_crop
-	global mods show_MIP_x
-	if {$show_MIP_x == 1} {
- 	    after 100 "uplevel \#0 set \"\{$mods(Viewer)-ViewWindow_0-MIP Slice0 (1)\}\" 1; $mods(Viewer)-ViewWindow_0-c redraw"
-  	} else {
- 	    after 100 "uplevel \#0 set \"\{$mods(Viewer)-ViewWindow_0-MIP Slice0 (1)\}\" 0; $mods(Viewer)-ViewWindow_0-c redraw"
-  	}
-    }
-
-    method toggle_show_MIP_y {} {
-	$this check_crop
-	global mods show_MIP_y
-	if {$show_MIP_y == 1} {
-	    after 100 "uplevel \#0 set \"\{$mods(Viewer)-ViewWindow_0-MIP Slice1 (1)\}\" 1; $mods(Viewer)-ViewWindow_0-c redraw"
-  		} else {
- 	    after 100 "uplevel \#0 set \"\{$mods(Viewer)-ViewWindow_0-MIP Slice1 (1)\}\" 0; $mods(Viewer)-ViewWindow_0-c redraw"
-  	}
-    }
-
-    method toggle_show_MIP_z {} {
-	$this check_crop
-	global mods show_MIP_z
-	if {$show_MIP_z == 1} {
-	    after 100 "uplevel \#0 set \"\{$mods(Viewer)-ViewWindow_0-MIP Slice2 (1)\}\" 1; $mods(Viewer)-ViewWindow_0-c redraw"
-  		} else {
- 	    after 100 "uplevel \#0 set \"\{$mods(Viewer)-ViewWindow_0-MIP Slice2 (1)\}\" 0; $mods(Viewer)-ViewWindow_0-c redraw"
-  	}
-    }
-
     method update_planes_threshold_slider_min_max { min max } {
 	$attachedVFr.f.vis.childsite.tnb.canvas.notebook.cs.page1.cs.thresh.s configure -from $min -to $max
 	$detachedVFr.f.vis.childsite.tnb.canvas.notebook.cs.page1.cs.thresh.s configure -from $min -to $max
     }
-
-   method toggle_filter2Dtextures {} {
-       global filter2Dtextures mods slice_frame
-       upvar \#0 $mods(ViewSlices)-texture_filter filter
-       set filter $filter2Dtextures
-
-       $mods(ViewSlices)-c texture_rebind $slice_frame(axial).bd.axial
-       $mods(ViewSlices)-c texture_rebind $slice_frame(sagittal).bd.sagittal
-       $mods(ViewSlices)-c texture_rebind $slice_frame(coronal).bd.coronal
-
-
-   }
 
     method toggle_show_guidelines {} {
 
