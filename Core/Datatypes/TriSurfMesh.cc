@@ -49,8 +49,20 @@
 #include <Core/Geometry/Transform.h>
 #include <Core/Math/Trig.h>
 #include <sci_hash_map.h>
+#include <set>
 
 namespace SCIRun {
+
+using std::set;
+
+struct less_int
+{
+  bool operator()(const int s1, const int s2) const
+  {
+    return s1 < s2;
+  }
+};
+
 
 PersistentTypeID TriSurfMesh::type_id("TriSurfMesh", "Mesh", maker);
 
@@ -1126,6 +1138,54 @@ TriSurfMesh::add_find_point(const Point &p, double err)
   }
 }
 
+// swap the shared edge between 2 faces. If faces don't share an edge, 
+// do nothing.
+bool
+TriSurfMesh::swap_shared_edge(Face::index_type f1, Face::index_type f2) 
+{
+  const int face1 = f1 * 3;
+  set<int, less_int> shared;
+  shared.insert(faces_[face1]);
+  shared.insert(faces_[face1 + 1]);
+  shared.insert(faces_[face1 + 2]);
+  
+  int not_shar[2];
+  int *ns = not_shar;
+  const int face2 = f2 * 3;
+  pair<set<int, less_int>::iterator, bool> p = shared.insert(faces_[face2]);
+  if (!p.second) { *ns = faces_[face2]; ++ns;}
+  p = shared.insert(faces_[face2 + 1]);
+  if (!p.second) { *ns = faces_[face2 + 1]; ++ns;}
+  p = shared.insert(faces_[face2 + 2]);
+  if (!p.second) { *ns = faces_[face2]; }
+
+  // no shared nodes means no shared edge.
+  if (shared.size() > 4) return false;  
+
+  set<int>::iterator iter = shared.find(not_shar[0]);
+  shared.erase(iter);
+
+  iter = shared.find(not_shar[1]);
+  shared.erase(iter);
+
+  iter = shared.begin();
+  int s1 = *iter++;
+  int s2 = *iter;
+  face_lock_.lock();
+  faces_[face1] = s1;
+  faces_[face1 + 1] = not_shar[0];
+  faces_[face1 + 2] = s2;
+
+  faces_[face2] = s2;
+  faces_[face2 + 1] = not_shar[1];
+  faces_[face2 + 2] = s1;
+
+  synchronized_ &= ~EDGE_NEIGHBORS_E;
+  synchronized_ &= ~NODE_NEIGHBORS_E;
+  synchronized_ &= ~NORMALS_E;
+  face_lock_.unlock();
+  return true;
+}
 
 void
 TriSurfMesh::add_triangle(Node::index_type a, Node::index_type b, Node::index_type c)
