@@ -73,6 +73,8 @@ private:
   GuiDouble		  phi1_;
   GuiInt                  cyl_active_;
 
+  TextureHandle          old_tex_;
+  ColorMapHandle         old_cmap_;
   SliceRenderer          *slice_ren_;
   Point                   dmin_;
   Vector                  ddx_;
@@ -105,6 +107,8 @@ VolumeSlicer::VolumeSlicer(GuiContext* ctx)
     phi0_(ctx->subVar("phi_0")),
     phi1_(ctx->subVar("phi_1")),
     cyl_active_(ctx->subVar("cyl_active")),
+    old_tex_(0),
+    old_cmap_(0),
     slice_ren_(0)
 {
 }
@@ -132,7 +136,6 @@ void
   }
 
   
-  static TextureHandle oldtex = 0;
   if (!intexture_->get(tex_)) {
     return;
   } else if (!tex_.get_rep()) {
@@ -183,9 +186,11 @@ void
     phi1_.reset();
     slice_ren_->set_cylindrical(cyl_active_.get(), draw_phi0_.get(), phi0_.get(), 
 			     draw_phi1_.get(), phi1_.get());
+    old_tex_ = tex_;
+    old_cmap_ = cmap;
   } else {
-    if( tex_.get_rep() != oldtex.get_rep() ){
-      oldtex = tex_;
+    if( tex_.get_rep() != old_tex_.get_rep() ){
+      old_tex_ = tex_;
       BBox b;
       tex_->get_bounds(b);
       Vector dv(b.diagonal());
@@ -203,7 +208,11 @@ void
       }
       slice_ren_->SetTexture( tex_ );
       slice_ren_->SetControlPoint(tex_->get_field_transform().unproject(control_widget_->ReferencePoint()));
+    }
+
+    if( cmap != old_cmap_ ){
       slice_ren_->SetColorMap( cmap );
+      old_cmap_ = cmap;
     }
   }
  
