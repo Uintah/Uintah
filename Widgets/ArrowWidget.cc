@@ -87,13 +87,13 @@ ArrowWidget::execute()
 						  1*widget_scale);
    ((GeomCylinder*)geometries[ArrowW_Cylinder])->move(variables[ArrowW_Point]->Get(),
 						      variables[ArrowW_Point]->Get()
-						      + direction * widget_scale,
+						      + direction * widget_scale * 2.0,
 						      0.5*widget_scale);
    ((GeomCone*)geometries[ArrowW_Cone])->move(variables[ArrowW_Point]->Get()
 					      + direction * widget_scale,
 					      variables[ArrowW_Point]->Get()
-					      + direction * widget_scale * 1.5,
-					      1*widget_scale,
+					      + direction * widget_scale * 2.5,
+					      0.9*widget_scale,
 					      0);
 
    for (Index geom = 0; geom < NumGeoms; geom++) {
