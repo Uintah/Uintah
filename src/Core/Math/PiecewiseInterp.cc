@@ -20,13 +20,13 @@ namespace Math{
 
 using namespace SCICore::Containers;
 
-PiecewiseInterp::PiecewiseInterp()
-: data_valid(false), 
-  curr_intrv(-1), 
-  min_bnd(0), 
-  max_bnd(0)
-{
-}
+// PiecewiseInterp::PiecewiseInterp()
+// : data_valid(false), 
+//   curr_intrv(-1), 
+//   min_bnd(0), 
+//   max_bnd(0)
+// {
+// }
 
 } // Math
 } // SCICore
