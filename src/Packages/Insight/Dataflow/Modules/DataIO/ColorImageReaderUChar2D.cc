@@ -69,8 +69,7 @@ ColorImageReaderUChar2D::ColorImageReaderUChar2D(GuiContext* ctx)
 ColorImageReaderUChar2D::~ColorImageReaderUChar2D(){
 }
 
-void
- ColorImageReaderUChar2D::execute(){
+void ColorImageReaderUChar2D::execute(){
   // check ports
   outport_ = (ITKDatatypeOPort *)get_oport("Image");
   if(!outport_) {
@@ -87,8 +86,13 @@ void
   string fn = gui_FileName_.get();
   reader->SetFileName( fn.c_str() );
   
-  reader->Update();  
-  
+  try {
+    reader->Update();  
+  } catch  ( itk::ExceptionObject & err ) {
+     error("ExceptionObject caught!");
+     error(err.GetDescription());
+  }
+
   // get reader output
   if(!handle_.get_rep() || (fn != prevFile))
   {
@@ -99,12 +103,10 @@ void
   }
   
   // Send the data downstream
-  outport_->send(handle_);
-    
+  outport_->send(handle_);    
 }
 
-void
- ColorImageReaderUChar2D::tcl_command(GuiArgs& args, void* userdata)
+void ColorImageReaderUChar2D::tcl_command(GuiArgs& args, void* userdata)
 {
   Module::tcl_command(args, userdata);
 }
