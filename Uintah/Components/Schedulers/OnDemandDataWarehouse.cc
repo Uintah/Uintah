@@ -55,12 +55,6 @@ OnDemandDataWarehouse::setGrid(const GridP& grid)
 
 OnDemandDataWarehouse::~OnDemandDataWarehouse()
 {
-  for (reductionDBtype::const_iterator iter = d_reductionDB.begin(); 
-       iter != d_reductionDB.end(); iter++) {
-    delete iter->second->var;
-    delete iter->second;
-  }
-
   for (dataLocationDBtype::const_iterator iter = d_dataLocation.begin();
        iter != d_dataLocation.end(); iter++) {
     for (int i = 0; i<(int)iter->second->size(); i++ )
@@ -93,15 +87,16 @@ void OnDemandDataWarehouse::finalize()
 
 void
 OnDemandDataWarehouse::get(ReductionVariableBase& var,
-			   const VarLabel* label)
+			   const VarLabel* label, int matlIndex /*= -1*/)
 {
   d_lock.readLock();
-  reductionDBtype::const_iterator iter = d_reductionDB.find(label);
 
-   if(iter == d_reductionDB.end())
-      throw UnknownVariable(label->getName(), "on reduction");
+  if(!d_reductionDB.exists(label, matlIndex, NULL)) {
+        throw UnknownVariable(label->getName(), NULL, matlIndex,
+			      "on reduction");
+  }
+  d_reductionDB.get(label, matlIndex, NULL, var);
 
-   var.copyPointer(*iter->second->var);
   d_lock.readUnlock();
 }
 
@@ -241,8 +236,7 @@ OnDemandDataWarehouse::sendMPI(const VarLabel* label, int matlIndex,
    cerr << "NC:\n";
    d_ncDB.print(cerr);
    cerr << "\n\n";
-   throw UnknownVariable(label->getName(), patch->getID(), patch->toString(),
-			 matlIndex, "in sendMPI");
+   throw UnknownVariable(label->getName(), patch, matlIndex, "in sendMPI");
 }
 
 void
@@ -406,20 +400,25 @@ OnDemandDataWarehouse::recvMPI(DataWarehouseP& old_dw,
 
 void
 OnDemandDataWarehouse::reduceMPI(const VarLabel* label,
+				 int matlIndex,
 				 const ProcessorGroup* world)
 {
   d_lock.writeLock();
-   reductionDBtype::const_iterator iter = d_reductionDB.find(label);
 
-   if(iter == d_reductionDB.end())
-      throw UnknownVariable(label->getName(), "on reduceMPI");
-
+   ReductionVariableBase* var;
+   try {
+      var = d_reductionDB.get(label, matlIndex, NULL);
+   }
+   catch (UnknownVariable) {
+      throw UnknownVariable(label->getName(), NULL, matlIndex, "on reduceMPI");
+   }
+   
    void* sendbuf;
    int sendcount;
    MPI_Datatype senddatatype;
    MPI_Op sendop;
-   iter->second->var->getMPIBuffer(sendbuf, sendcount, senddatatype, sendop);
-   ReductionVariableBase* tmp = iter->second->var->clone();
+   var->getMPIBuffer(sendbuf, sendcount, senddatatype, sendop);
+   ReductionVariableBase* tmp = var->clone();
    void* recvbuf;
    int recvcount;
    MPI_Datatype recvdatatype;
@@ -436,7 +435,7 @@ OnDemandDataWarehouse::reduceMPI(const VarLabel* label,
      throw InternalError("reduceMPI: MPI error");     
    }
 
-   iter->second->var->copyPointer(*tmp);
+   var->copyPointer(*tmp);
 
    delete tmp;
   d_lock.writeUnlock();
@@ -444,7 +443,7 @@ OnDemandDataWarehouse::reduceMPI(const VarLabel* label,
 
 void
 OnDemandDataWarehouse::allocate(ReductionVariableBase&,
-				const VarLabel*)
+				const VarLabel*, int)
 {
    cerr << "OnDemend DataWarehouse::allocate(ReductionVariable) "
 	<< "not finished\n";
@@ -452,32 +451,32 @@ OnDemandDataWarehouse::allocate(ReductionVariableBase&,
 
 void
 OnDemandDataWarehouse::put(const ReductionVariableBase& var,
-			   const VarLabel* label)
+			   const VarLabel* label, int matlIndex /* = -1 */)
 {
   d_lock.writeLock();
    ASSERT(!d_finalized);
 
-   reductionDBtype::const_iterator iter = d_reductionDB.find(label);
-   if(iter == d_reductionDB.end()){
-      d_reductionDB[label]=scinew ReductionRecord(var.clone());
-   } else {
-      iter->second->var->reduce(var);
-   }
+   // Error checking
+   if(d_reductionDB.exists(label, matlIndex, NULL))
+      throw InternalError("put: Reduction variable already exists: " +
+			  label->getName());
+
+   // Put it in the database
+   d_reductionDB.put(label, matlIndex, NULL, var.clone(), true);
+
   d_lock.writeUnlock();
 }
 
 void
 OnDemandDataWarehouse::override(const ReductionVariableBase& var,
-				const VarLabel* label)
+				const VarLabel* label, int matlIndex /*=-1*/)
 {
 
   d_lock.writeLock();
-   reductionDBtype::const_iterator iter = d_reductionDB.find(label);
-   if(iter != d_reductionDB.end()){
-      delete iter->second->var;
-      delete iter->second;
-   }
-   d_reductionDB[label]=scinew ReductionRecord(var.clone());
+
+   // Put it in the database, replace whatever may already be there
+   d_reductionDB.put(label, matlIndex, NULL, var.clone(), true);
+   
   d_lock.writeUnlock();
 }
 
@@ -513,8 +512,8 @@ OnDemandDataWarehouse::getParticleSubset(int matlIndex, const Patch* patch)
    psetDBType::iterator iter = d_psetDB.find(key);
    if(iter == d_psetDB.end()){
   d_lock.readUnlock();
-      throw UnknownVariable("ParticleSet", patch->getID(), patch->toString(),
-			    matlIndex, "Cannot find particle set on patch");
+      throw UnknownVariable("ParticleSet", patch, matlIndex,
+			    "Cannot find particle set on patch");
    }
   d_lock.readUnlock();
    return iter->second;
@@ -609,8 +608,7 @@ OnDemandDataWarehouse::get(ParticleVariableBase& var,
 
    if(pset->getGhostType() == Ghost::None){
       if(!d_particleDB.exists(label, matlIndex, patch))
-	 throw UnknownVariable(label->getName(), patch->getID(),
-			       patch->toString(), matlIndex);
+	 throw UnknownVariable(label->getName(), patch, matlIndex);
       d_particleDB.get(label, matlIndex, patch, var);
    } else {
       const vector<const Patch*>& neighbors = pset->getNeighbors();
@@ -619,8 +617,7 @@ OnDemandDataWarehouse::get(ParticleVariableBase& var,
       for(int i=0;i<(int)neighbors.size();i++){
 	 const Patch* neighbor=neighbors[i];
 	 if(!d_particleDB.exists(label, matlIndex, neighbors[i]))
-	    throw UnknownVariable(label->getName(), neighbor->getID(),
-				  neighbor->toString(), matlIndex,
+	    throw UnknownVariable(label->getName(), neighbor, matlIndex,
 				  neighbor == patch?"on patch":"on neighbor");
 	 neighborvars[i] = d_particleDB.get(label, matlIndex, neighbors[i]);
       }
@@ -638,8 +635,7 @@ OnDemandDataWarehouse::getParticleVariable(const VarLabel* label,
 
    if(pset->getGhostType() == Ghost::None){
       if(!d_particleDB.exists(label, matlIndex, patch))
-	 throw UnknownVariable(label->getName(), patch->getID(),
-			       patch->toString(), matlIndex);
+	 throw UnknownVariable(label->getName(), patch, matlIndex);
       return d_particleDB.get(label, matlIndex, patch);
    } else {
       throw InternalError("getParticleVariable should not be used with ghost cells");
@@ -703,8 +699,7 @@ OnDemandDataWarehouse::get(NCVariableBase& var, const VarLabel* label,
 	 throw InternalError("Ghost cells specified with task type none!\n");
 #endif
       if(!d_ncDB.exists(label, matlIndex, patch))
-	 throw UnknownVariable(label->getName(), patch->getID(),
-			       patch->toString(), matlIndex);
+	 throw UnknownVariable(label->getName(), patch, matlIndex);
       d_ncDB.get(label, matlIndex, patch, var);
 #if 1
    } else {
@@ -746,8 +741,7 @@ OnDemandDataWarehouse::get(NCVariableBase& var, const VarLabel* label,
 	 const Patch* neighbor = neighbors[i];
 	 if(neighbor){
 	    if(!d_ncDB.exists(label, matlIndex, neighbor))
-	       throw UnknownVariable(label->getName(), neighbor->getID(),
-				     neighbor->toString(), matlIndex,
+	       throw UnknownVariable(label->getName(), neighbor, matlIndex,
 				     neighbor == patch?"on patch":"on neighbor");
 	    NCVariableBase* srcvar = 
 	       d_ncDB.get(label, matlIndex, neighbor);
@@ -828,8 +822,8 @@ OnDemandDataWarehouse::get(PerPatchBase& var, const VarLabel* label,
 {
   d_lock.readLock();
   if(!d_perpatchDB.exists(label, matlIndex, patch))
-     throw UnknownVariable(label->getName(), patch->getID(), patch->toString(),
-			   matlIndex, "perpatch data");
+     throw UnknownVariable(label->getName(), patch, matlIndex,
+			   "perpatch data");
   d_perpatchDB.get(label, matlIndex, patch, var);
   d_lock.readUnlock();
 }
@@ -880,12 +874,10 @@ OnDemandDataWarehouse::get(CCVariableBase& var, const VarLabel* label,
 	 throw InternalError("Ghost cells specified with task type none!\n");
 #endif
       if(!d_ccDB.exists(label, matlIndex, patch))
-	 throw UnknownVariable(label->getName(), patch->getID(),
-			       patch->toString(), matlIndex);
+	 throw UnknownVariable(label->getName(), patch, matlIndex);
       d_ccDB.get(label, matlIndex, patch, var);
 #if 1
    } else {
-      int l,h;
       IntVector gc(numGhostCells, numGhostCells, numGhostCells);
       IntVector lowIndex;
       IntVector highIndex;
@@ -1001,8 +993,7 @@ OnDemandDataWarehouse::get(XFCVariableBase& var, const VarLabel* label,
 	 throw InternalError("Ghost cells specified with task type none!\n");
 #endif
       if(!d_xfcDB.exists(label, matlIndex, patch))
-	 throw UnknownVariable(label->getName(), patch->getID(),
-			       patch->toString(), matlIndex);
+	 throw UnknownVariable(label->getName(), patch, matlIndex);
       d_xfcDB.get(label, matlIndex, patch, var);
 #if 1
    } else {
@@ -1124,8 +1115,7 @@ OnDemandDataWarehouse::get(YFCVariableBase& var, const VarLabel* label,
 	 throw InternalError("Ghost cells specified with task type none!\n");
 #endif
       if(!d_yfcDB.exists(label, matlIndex, patch))
-	 throw UnknownVariable(label->getName(), patch->getID(),
-			       patch->toString(), matlIndex);
+	 throw UnknownVariable(label->getName(), patch, matlIndex);
       d_yfcDB.get(label, matlIndex, patch, var);
 #if 1
    } else {
@@ -1246,8 +1236,7 @@ OnDemandDataWarehouse::get(ZFCVariableBase& var, const VarLabel* label,
 	 throw InternalError("Ghost cells specified with task type none!\n");
 #endif
       if(!d_zfcDB.exists(label, matlIndex, patch))
-	 throw UnknownVariable(label->getName(), patch->getID(),
-			       patch->toString(), matlIndex);
+	 throw UnknownVariable(label->getName(), patch, matlIndex);
       d_zfcDB.get(label, matlIndex, patch, var);
 #if 1
    } else {
@@ -1348,12 +1337,10 @@ OnDemandDataWarehouse::get(SFCXVariableBase& var, const VarLabel* label,
 	 throw InternalError("Ghost cells specified with task type none!\n");
 #endif
       if(!d_sfcxDB.exists(label, matlIndex, patch))
-	 throw UnknownVariable(label->getName(), patch->getID(),
-			       patch->toString(), matlIndex);
+	 throw UnknownVariable(label->getName(), patch, matlIndex);
       d_sfcxDB.get(label, matlIndex, patch, var);
 #if 1
    } else {
-      int l,h;
       IntVector gc(numGhostCells, numGhostCells, numGhostCells);
       IntVector lowIndex;
       IntVector highIndex;
@@ -1468,12 +1455,10 @@ OnDemandDataWarehouse::get(SFCYVariableBase& var, const VarLabel* label,
 	 throw InternalError("Ghost cells specified with task type none!\n");
 #endif
       if(!d_sfcyDB.exists(label, matlIndex, patch))
-	 throw UnknownVariable(label->getName(), patch->getID(),
-			       patch->toString(), matlIndex);
+	 throw UnknownVariable(label->getName(), patch, matlIndex);
       d_sfcyDB.get(label, matlIndex, patch, var);
 #if 1
    } else {
-      int l,h;
       IntVector gc(numGhostCells, numGhostCells, numGhostCells);
       IntVector lowIndex;
       IntVector highIndex;
@@ -1587,12 +1572,10 @@ OnDemandDataWarehouse::get(SFCZVariableBase& var, const VarLabel* label,
 	 throw InternalError("Ghost cells specified with task type none!\n");
 #endif
       if(!d_sfczDB.exists(label, matlIndex, patch))
-	 throw UnknownVariable(label->getName(), patch->getID(),
-			       patch->toString(), matlIndex);
+	 throw UnknownVariable(label->getName(), patch, matlIndex);
       d_sfczDB.get(label, matlIndex, patch, var);
 #if 1
    } else {
-      int l,h;
       IntVector gc(numGhostCells, numGhostCells, numGhostCells);
       IntVector lowIndex;
       IntVector highIndex;
@@ -1734,11 +1717,10 @@ OnDemandDataWarehouse::exists(const VarLabel* label, const Patch* patch) const
 {
   d_lock.readLock();
    if(!patch){
-      reductionDBtype::const_iterator iter = d_reductionDB.find(label);
-      if(iter != d_reductionDB.end()){
+     if( d_reductionDB.exists(label, NULL) ) {
 	d_lock.readUnlock();
-	return true;
-      }
+	return true;       
+     }
    } else {
       if( d_ncDB.exists(label, patch) || 
 	  d_ccDB.exists(label, patch) ||
@@ -1806,26 +1788,24 @@ void OnDemandDataWarehouse::emit(OutputContext& oc, const VarLabel* label,
      return;
    }
 
-   throw UnknownVariable(label->getName(), patch->getID(), patch->toString(),
-			 matlIndex, "on emit");
+   throw UnknownVariable(label->getName(), patch, matlIndex, "on emit");
 }
 
-void OnDemandDataWarehouse::emit(ostream& intout, const VarLabel* label) const
+void OnDemandDataWarehouse::emit(ostream& intout, const VarLabel* label,
+				 int matlIndex /* = -1 */) const
 {
   d_lock.readLock();
-   reductionDBtype::const_iterator iter = d_reductionDB.find(label);
 
-   if(iter == d_reductionDB.end()){
-      throw UnknownVariable(label->getName(), "on emit reduction");
-   } else {
-      iter->second->var->emit(intout);
+   try {
+      ReductionVariableBase* var = d_reductionDB.get(label, matlIndex, NULL);
+      var->emit(intout);
    }
-  d_lock.readUnlock();
-}
+   catch (UnknownVariable) {
+      throw UnknownVariable(label->getName(), NULL, matlIndex,
+			    "on emit reduction");
+   }
 
-OnDemandDataWarehouse::ReductionRecord::ReductionRecord(ReductionVariableBase* var)
-   : var(var)
-{
+  d_lock.readUnlock();
 }
 
 void
@@ -1854,21 +1834,26 @@ OnDemandDataWarehouse::gather(const Patch* from, const Patch* to)
        = d_sgDB.find(idx);
    if(iter == d_sgDB.end()){
       cerr << "gather: could not find (" << from->getID() << ", " << to->getID() << ")\n";
-      throw UnknownVariable("scatter/gather", from->getID(), from->toString(),
-			   -1, " to patch "+to->toString());
+      throw UnknownVariable("scatter/gather", from,
+			    -1, " to patch "+to->toString());
    }
   d_lock.readUnlock();
    return iter->second;
 }
 
 void
-OnDemandDataWarehouse::deleteParticles(ParticleSubset* delset)
+OnDemandDataWarehouse::deleteParticles(ParticleSubset* /* delset */)
 {
 
 }
 
 //
 // $Log$
+// Revision 1.59  2000/12/06 23:39:52  witzel
+// Changes to allow reduction variables to be specified for different
+// materials as well as globally.  Also, changed UnknownVariable throws
+// to reflect change in UnknownVariable constructor.
+//
 // Revision 1.58  2000/11/28 03:55:22  jas
 // Added X,Y,Z FCVariables to the data warehouse.
 //

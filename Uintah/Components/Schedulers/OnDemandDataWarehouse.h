@@ -64,10 +64,14 @@ public:
    virtual bool exists(const VarLabel*, int matIndex, const Patch*) const;
 
    // Reduction Variables
-   virtual void allocate(ReductionVariableBase&, const VarLabel*);
-   virtual void get(ReductionVariableBase&, const VarLabel*);
-   virtual void put(const ReductionVariableBase&, const VarLabel*);
-   virtual void override(const ReductionVariableBase&, const VarLabel*);
+   virtual void allocate(ReductionVariableBase&, const VarLabel*,
+			 int matIndex = -1);
+   virtual void get(ReductionVariableBase&, const VarLabel*,
+		    int matIndex = -1);
+   virtual void put(const ReductionVariableBase&, const VarLabel*,
+		    int matIndex = -1);
+   virtual void override(const ReductionVariableBase&, const VarLabel*,
+			 int matIndex = -1);
 
    // Scatther/gather.  This will need a VarLabel if anyone but the
    // scheduler ever wants to use it.
@@ -182,7 +186,8 @@ public:
    virtual void emit(OutputContext&, const VarLabel* label,
 		     int matlIndex, const Patch* patch) const;
 
-   virtual void emit(ostream& intout, const VarLabel* label) const;
+   virtual void emit(ostream& intout, const VarLabel* label,
+		     int matlIndex = -1) const;
 
    void sendMPI(const VarLabel* label, int matlIndex,
 		const Patch* patch, const ProcessorGroup* world,
@@ -191,7 +196,8 @@ public:
 		const VarLabel* label, int matlIndex,
 		const Patch* patch, const ProcessorGroup* world,
 		int dest, int tag, int* size, MPI_Request* requestid);
-   void reduceMPI(const VarLabel* label, const ProcessorGroup* world);
+   void reduceMPI(const VarLabel* label, int matlIndex,
+		  const ProcessorGroup* world);
 private:
 
    struct dataLocation {
@@ -199,28 +205,22 @@ private:
             int        mpiNode;
    };
 
-   struct ReductionRecord {
-      ReductionVariableBase* var;
-      ReductionRecord(ReductionVariableBase*);
-   };
-
    typedef vector<dataLocation*> variableListType;
-   typedef map<const VarLabel*, ReductionRecord*, VarLabel::Compare> reductionDBtype;
    typedef map<const VarLabel*, variableListType*, VarLabel::Compare> dataLocationDBtype;
    typedef map<pair<int, const Patch*>, ParticleSubset*> psetDBType;
 
-   DWDatabase<NCVariableBase>       d_ncDB;
-   DWDatabase<CCVariableBase>       d_ccDB;
+   DWDatabase<NCVariableBase>        d_ncDB;
+   DWDatabase<CCVariableBase>        d_ccDB;
    DWDatabase<XFCVariableBase>       d_xfcDB;
    DWDatabase<YFCVariableBase>       d_yfcDB;
    DWDatabase<ZFCVariableBase>       d_zfcDB;
-   DWDatabase<SFCXVariableBase>     d_sfcxDB;
-   DWDatabase<SFCYVariableBase>     d_sfcyDB;
-   DWDatabase<SFCZVariableBase>     d_sfczDB;
-   DWDatabase<ParticleVariableBase> d_particleDB;
-   reductionDBtype                  d_reductionDB;
-   DWDatabase<PerPatchBase>         d_perpatchDB;
-   psetDBType			    d_psetDB;
+   DWDatabase<SFCXVariableBase>      d_sfcxDB;
+   DWDatabase<SFCYVariableBase>      d_sfcyDB;
+   DWDatabase<SFCZVariableBase>      d_sfczDB;
+   DWDatabase<ParticleVariableBase>  d_particleDB;
+   DWDatabase<ReductionVariableBase> d_reductionDB;
+   DWDatabase<PerPatchBase>          d_perpatchDB;
+   psetDBType                        d_psetDB;
 
    map<pair<const Patch*, const Patch*>, ScatterGatherBase* > d_sgDB;
 
@@ -248,6 +248,11 @@ private:
 
 //
 // $Log$
+// Revision 1.41  2000/12/06 23:39:52  witzel
+// Changes to allow reduction variables to be specified for different
+// materials as well as globally.  Also, changed UnknownVariable throws
+// to reflect change in UnknownVariable constructor.
+//
 // Revision 1.40  2000/11/28 03:55:22  jas
 // Added X,Y,Z FCVariables to the data warehouse.
 //
