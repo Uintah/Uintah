@@ -1,5 +1,5 @@
 /*
- *  Ted.cc:  2D OpenGL Viewer
+ *  TeD.cc:  2D OpenGL Viewer
  *
  *  Written by:
  *    Scott Morris
@@ -51,13 +51,13 @@ class Ted : public Module {
   ScalarFieldIPort *inscalarfield2;   // Input for mask
   ScalarFieldIPort *inscalarfield3;   // Input for mask2
   ScalarFieldOPort *outscalarfield;   // Output the masked image
+  ScalarFieldOPort *outscalarfield2;   // Output the points selected
   
   int grid_id;
 
   ScalarFieldRG *mask,*mask2; // this only works on regular grids for chaining
   ScalarFieldRGfloat* backup;
   ScalarFieldRG* ingrid32;
-  ScalarFieldRG* ingrid32b;
   ScalarFieldRG* outmask;
   ScalarFieldRGfloat *ingridf;
     
@@ -65,8 +65,11 @@ class Ted : public Module {
   ScalarField* sfield2;
   ScalarField* sfield3;
 
-  ScalarFieldHandle handle;
+  ScalarFieldHandle handle,handle2;
 
+  ScalarFieldRG *points;
+  int numpoints;
+  
   GLXContext		ctx;    // OpenGL Contexts
   Display		*dpy;
   Window		win;
@@ -76,7 +79,7 @@ class Ted : public Module {
   int                   width,height,zdim;  // dims of image
   int                   drawn,rgb,m1,m2;  
 
-  int np;
+  int np,gen,override,maxpoints;
   
   TCLdouble zoom;
   TCLdouble normal;
@@ -85,7 +88,7 @@ class Ted : public Module {
   double zoomval;             // Pixelzoom value
   double px,py;               // Raster Position, used for Pan
   int oldx,oldy,oldpx,oldpy;  // old values for Panning
-  double maxval;              // Max image value, used for scaling
+  double maxval,minval;       // Max image value, used for scaling
   
 public: 
   Ted(const clString& id);
@@ -142,11 +145,14 @@ Ted::Ted(const clString& id)
 					  ScalarFieldIPort::Atomic);
   outscalarfield = scinew ScalarFieldOPort( this, "Scalar Field",
 					  ScalarFieldIPort::Atomic);
+  outscalarfield2 = scinew ScalarFieldOPort( this, "Scalar Field",
+					  ScalarFieldIPort::Atomic);
   
   add_iport( inscalarfield);
   add_iport( inscalarfield2);
   add_iport( inscalarfield3);
   add_oport( outscalarfield);
+  add_oport( outscalarfield2);
   
   ctx = 0;    // null for now - no window is bound yet
   bdown = -1;
@@ -157,9 +163,15 @@ Ted::Ted(const clString& id)
   py=0;       // no pan and no zoom
   oldx=0;
   oldy=0;
-
+  gen=0;
+  
   ingridf = new ScalarFieldRGfloat;
-
+  points = new ScalarFieldRG;
+  maxpoints = 100;
+  numpoints = 0;
+  
+  points->resize(maxpoints,2,1);
+  //points->compute_bounds();
 }
 
 Ted::Ted(const Ted& copy, int deep)
@@ -180,41 +192,20 @@ Module* Ted::clone(int deep)
   return scinew Ted(*this, deep);
 }
 
-// Make these three do 3 channels (RGB)
-
-
-void Ted::abs_parallel(int proc)  // Scales up negatives 
-{
-  int start = (width-1)*proc/np;
-  int end   = (proc+1)*(width-1)/np;
-
-  for (int z=0; z<zdim; z++)
-    for (int x=start; x<end; x++)
-      for (int y=0; y<height; y++) {
-	if ((ingrid32->grid(y,x,z)<0) && (negative.get()))
-	  ingrid32b->grid(y,x,z) = ingrid32->grid(y,x,z)- \
-	    2*ingrid32->grid(y,x,z);
-	else ingrid32b->grid(y,x,z)=ingrid32->grid(y,x,z);
-	if (normal.get())
-	  if (ingrid32b->grid(y,x,z)>maxval)
-	    maxval=ingrid32b->grid(y,x,z);
-      }
-}
-
 void Ted::scale_parallel(int proc)  // Scales image to 1.0 
 {
-  int start = (width-1)*proc/np;
-  int end   = (proc+1)*(width-1)/np;
+  int start = (width)*proc/np;
+  int end   = (proc+1)*(width)/np;
 
   for (int z=0; z<zdim; z++)
     for (int x=start; x<end; x++)
       for (int y=0; y<height; y++) {
 	if (ingrid32->grid(y,x,z)>=0)
-	  ingridf->grid(y,x,z)=float(ingrid32b->grid(y,x,z))/maxval;
+	  ingridf->grid(y,x,z)=float(ingrid32->grid(y,x,z)/maxval);
 	else
 	  if (negative.get())
 	    ingridf->grid(y,x,z)=1.0 - \
-	      float(ingrid32b->grid(y,x,z))/maxval;
+	      float((ingrid32->grid(y,x,z)-2*ingrid32->grid(y,x,z))/maxval);
 	  else
 	  ingridf->grid(y,x,z)=0;
       }
@@ -222,14 +213,14 @@ void Ted::scale_parallel(int proc)  // Scales image to 1.0
 
 void Ted::mask_parallel(int proc)  // creates the mask 
 {
-  int start = (width-1)*proc/np;
-  int end   = (proc+1)*(width-1)/np;
+  int start = (width)*proc/np;
+  int end   = (proc+1)*(width)/np;
 
   for (int x=start; x<end; x++)
     for (int y=0; y<height; y++) {
       backup->grid(y,x,2)=backup->grid(y,x,1)=backup->grid(y,x,0)=\
 	ingridf->grid(y,x,0);
-      if (mask->grid(y,x,0)!=0) { 
+      if ((m1) && (mask->grid(y,x,0)!=0)) { 
 	backup->grid(y,x,0)=1.0;
 	backup->grid(y,x,1)=0;
 	backup->grid(y,x,2)=0;
@@ -241,17 +232,12 @@ void Ted::mask_parallel(int proc)  // creates the mask
 	  backup->grid(y,x,1)=0;
 	  backup->grid(y,x,2)=1.0;
 	}
-      outmask->grid(y,x,0)=backup->grid(y,x,0);
-      outmask->grid(y,x,1)=backup->grid(y,x,1);
-      outmask->grid(y,x,2)=backup->grid(y,x,2);
+      if ((m1) || (m2)) {
+	outmask->grid(y,x,0)=backup->grid(y,x,0);
+	outmask->grid(y,x,1)=backup->grid(y,x,1);
+	outmask->grid(y,x,2)=backup->grid(y,x,2);
+      }
     }
-}
-
-static void abs_starter(void* obj,int proc)
-{
-  Ted* img = (Ted*) obj;
-
-  img->abs_parallel (proc);
 }
 
 static void scale_starter(void* obj,int proc)
@@ -278,22 +264,31 @@ void Ted::execute()
     return;
   sfield=sfieldh.get_rep();
 
+  if (drawn)
+    gen = ingrid32->generation;
+  
   ingrid32=sfield->getRG();
   
-  if (!ingrid32)
+  if (!ingrid32) {
+    cerr << "No input image to TED!\n";
     return;
-
-  maxval=0;
+  }
+  
+  int newimage = (gen!=ingrid32->generation) || override;
+  override = 0;
 
   np = Task::nprocessors();
+  
+  if (newimage) {
+    cerr << "New image received..\n";
+  }
 
-  ingrid32b = new ScalarFieldRG(*ingrid32);
   width = ingrid32->grid.dim2();
   height = ingrid32->grid.dim1();
   zdim = ingrid32->grid.dim3();
   
   cerr << "TED - dims : " << width << " by " << height << "\n";
-
+    
   rgb = (ingrid32->grid.dim3()==3);
   
 /*  if (!normal.get()) {   // compute max value for 32bit signed int
@@ -303,24 +298,34 @@ void Ted::execute()
     maxval=maxval-1;
   }
 */
-
+  ingrid32->compute_minmax();
+  ingrid32->get_minmax(minval,maxval);    
+  ingridf = new ScalarFieldRGfloat;
+  ingridf->resize(height,width,zdim);
+  /*ingridf->compute_bounds();
+    Point pmin(0,0,0),pmax(height,width,zdim);
+    ingridf->set_bounds(pmin,pmax); */
+  cerr << "Ted Min/Max : " << minval << " / " << maxval << "\n";
+  
+  if ((abs(minval)>maxval) && (negative.get()))
+    maxval=abs(minval);
+  
+  
   if (!normal.get()) {
     maxval=255;  // Assume 8 bit images by default
   }
   
-  Task::multiprocess(np, abs_starter, this);
-
-  ingridf = new ScalarFieldRGfloat;
-  ingridf->resize(height,width,zdim);
-  ingridf->compute_bounds();
-  Point pmin(0,0,0),pmax(height,width,zdim);
-  ingridf->set_bounds(pmin,pmax);
-  cerr << "Maximum value : " << maxval << "\n";
+  cerr << "Scaling to " << maxval << ".\n";
   
   Task::multiprocess(np, scale_starter, this);
-
+  ingridf->compute_minmax();
+  ingridf->get_minmax(minval,maxval);    
+  cerr << "Float Min/Max : " << minval << " / " << maxval << "\n";
+  
   // Check for any overlays
 
+ 
+    
   ScalarFieldHandle sfieldh2;
   m1=m2=0;
   if (inscalarfield2->get( sfieldh2 )) {
@@ -347,18 +352,27 @@ void Ted::execute()
       }
     }
   }
+
+    
+
+
   if (m1) {
+
     backup=new ScalarFieldRGfloat(*ingridf);
     backup->resize(ingrid32->grid.dim1(),ingrid32->grid.dim2(),3);
-
+    
     outmask=new ScalarFieldRG(*ingrid32);
     outmask->resize(ingrid32->grid.dim1(),ingrid32->grid.dim2(),3);
 
     Task::multiprocess(np, mask_starter, this);
 
     handle = outmask;
-  } else {
+  } else if (newimage) {
+    backup=new ScalarFieldRGfloat(*ingridf);
+    backup->resize(ingrid32->grid.dim1(),ingrid32->grid.dim2(),3);
 
+    Task::multiprocess(np, mask_starter, this);
+    
     handle = ingrid32;
     mask = 0;
     cerr << "No Mask(s)\n";
@@ -371,6 +385,11 @@ void Ted::execute()
   // Send out the overlayed image, or just the image that came in
 
   outscalarfield->send(handle);
+
+  if (numpoints) {
+    handle2 = points;
+    outscalarfield2->send(handle2);
+  }
 
 }
 
@@ -394,14 +413,15 @@ void Ted::Refresh()
   
   if (drawn) {
 
-    if ((!m1) && (!rgb)) {
+    if ((!m1) && (!rgb) && (!numpoints)) {
+      cerr << "Drawing normal greyscale image..\n";
       glDrawPixels(width,height,GL_LUMINANCE,GL_FLOAT,&ingridf->grid(0,0,0));
     } else
     if (rgb) {
       glDrawPixels(width,height,GL_RGB,GL_FLOAT,&ingridf->grid(0,0,0));
       cerr << "Drawing color RGB Image...\n";
     }
-    if (m1) {
+    if ((m1) || (numpoints)) {
       cerr << "Drawing with overlay...\n";
       glDrawPixels(width,height,GL_RGB,GL_FLOAT,&backup->grid(0,0,0));
     }
@@ -451,8 +471,7 @@ void Ted::Resize()
 
 
   TCLTask::unlock();
-  Refresh();
-  
+  //  Refresh();
 }
 
 void Ted::tcl_command( TCLArgs& args, void* userdata)
@@ -470,6 +489,17 @@ void Ted::tcl_command( TCLArgs& args, void* userdata)
     args[3].get_int(y);
 
     output_grid(x,y);
+  } else
+  if (args[1] == "ovrrefresh") {
+    override = 1;
+  } else
+  if (args[1] == "resetpoints") {
+    numpoints=0;
+    points = new ScalarFieldRG;
+    points->resize(100,2,1);
+    //    points->compute_bounds();
+    cerr << "Clearing the points..\n";
+    override = 1;
   } else
   
   if (args[1] == "resetraster") {
@@ -520,16 +550,17 @@ void Ted::tcl_command( TCLArgs& args, void* userdata)
 
 void Ted::DoMotion( int x, int y,int which)
 {
-  y = winY - y;
-
   if (which==2) {
-    px = oldpx + (x-oldx);
-    py = oldpy + (y-oldy);
-//    cerr << px << " " << py << "\n";
-  }
-  
-  Refresh();
+    y = winY - y;
 
+    if (which==2) {
+      px = oldpx + (x-oldx);
+      py = oldpy + (y-oldy);
+//    cerr << px << " " << py << "\n";
+    }
+  
+    Refresh();
+  }
 }
 
 void Ted::output_grid(int x,int y)
@@ -557,26 +588,60 @@ void Ted::DoDown(int x, int y, int which)
   switch (which) {
   case 1:
 
-   cerr << "Clicked at : " << x/zoomval-px/zoomval << " " <<
-    y/zoomval-py/zoomval << ";\n";
+    cerr << "Clicked at : " << x/zoomval-px/zoomval << " " <<
+      y/zoomval-py/zoomval << ";\n";
    
-   x = (x/zoomval)-(px/zoomval);
-   y = (y/zoomval)-(py/zoomval);
-
-   output_grid(x,y);
+    x = (x/zoomval)-(px/zoomval);
+    y = (y/zoomval)-(py/zoomval);
+    
+    output_grid(x,y);
    
-   break;
+    break;
   case 2:
     cerr << "Starting Pan..\n";
-
+    
     oldpx=px;
     oldpy=py;
     oldx=x;
     oldy=y;
     break;
+  case 3:
+    cerr << "Recording Point at : " << x/zoomval-px/zoomval << " " <<
+    y/zoomval-py/zoomval << ";\n";
+   
+    x = (x/zoomval)-(px/zoomval);
+    y = (y/zoomval)-(py/zoomval);
+
+    points->grid(numpoints,0,0)=x;
+    points->grid(numpoints,1,0)=y;
+    numpoints++;
+
+    if (numpoints==maxpoints) {
+      maxpoints*=2;
+      ScalarFieldRG* temp = new ScalarFieldRG(*points);
+      for (int i=0; i<maxpoints/2; i++) {
+	temp->grid(i,0,0) = points->grid(i,0,0);
+	temp->grid(i,1,0) = points->grid(i,1,0);
+      }
+      points->resize(maxpoints,2,1);
+      for (i=0; i<maxpoints; i++) {
+	if (i<maxpoints/2) {
+	  points->grid(i,0,0) = temp->grid(i,0,0);
+	  points->grid(i,1,0) = temp->grid(i,1,0);
+	} else
+	  points->grid(i,0,0) = points->grid(i,1,0) = 0;
+      }
+    }
+
+    if ((ingrid32) && (x < width) && (y < height) && (x>=0) && (y>=0)) {
+      backup->grid(y,x,1)=1.0;
+      backup->grid(y,x,0)=0;
+      backup->grid(y,x,2)=0;
+      Refresh();
+    } else cerr << "Not a valid point on the Image!";
+    // Check that it doesn't go over here you Moron!
+       
   }
-    
-  
   bdown = which;
 }
 
@@ -636,6 +701,8 @@ template class Array1<GeomMaterial*>;
 template class Array1<double>;
 
 #endif
+
+
 
 
 
