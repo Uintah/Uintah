@@ -80,8 +80,7 @@ MPMMaterial::MPMMaterial(ProblemSpecP& ps, MPMLabel* lb, int n8or27,
 
 void
 MPMMaterial::standardInitialization(ProblemSpecP& ps, MPMLabel* lb, int n8or27,
-			            string integrator, bool haveLoadCurve,
-			            bool doErosion)
+			            string integrator, bool , bool )
 {
   // Follow the layout of the input file
   // Steps:

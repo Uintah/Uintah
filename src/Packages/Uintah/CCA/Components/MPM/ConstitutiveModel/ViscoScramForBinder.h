@@ -78,14 +78,6 @@ WARNING
 ****************************************/
   class ViscoScramForBinder : public ConstitutiveModel {
 
-  public:
-
-    static const int StatedataSize() 
-    {
-      //return d_initialData.numMaxwellElements*9+1;
-      return (22*9+1);
-    }
-
   private:
 
     bool d_useModifiedEOS;

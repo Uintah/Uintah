@@ -225,7 +225,7 @@ MTSPlastic::computeTangentModulus(const Matrix3& sig,
 				  double T,
 				  double ,
 				  const particleIndex idx,
-				  const MPMMaterial* matl,
+				  const MPMMaterial* ,
 				  TangentModulusTensor& Ce,
 				  TangentModulusTensor& Cep)
 {
