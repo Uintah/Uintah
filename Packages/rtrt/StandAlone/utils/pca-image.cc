@@ -1,3 +1,13 @@
+/* Some useful commands
+
+unu permute -i ../sphere00000.nrrd -p 0 3 1 2 | unu reshape -s 24 64 64 -o group.nrrd
+
+./pca-image -i group.nrrd -numbases 1 -o munged1
+
+unu reshape -i munged1.nrrd -s 3 8 64 64 | unu permute -p 0 2 3 1 | unu reshape -s 3 64 64 2 4 | unu permute -p 0 1 3 2 4 | unu reshape -s 3 128 256 | XV &
+
+*/
+
 #include <teem/nrrd.h>
 #include <teem/ell.h>
 
@@ -25,6 +35,9 @@ void usage(char *me, const char *unknown = 0) {
   printf("-output <filename>\n");
   printf("-numbases <int>\n");
   printf("-usegk\n");
+  printf("-v - verbose\n");
+  printf("-vv [int] - verbose level\n");
+	 
 
   if (unknown)
     exit(1);
@@ -39,6 +52,7 @@ int main(int argc, char *argv[]) {
   int num_bases = 0;
   int num_channels;
   bool usegk = false;
+  int verbose = 0;
 
   if (argc < 2) {
     usage(me);
@@ -55,6 +69,10 @@ int main(int argc, char *argv[]) {
       num_bases = atoi(argv[++i]);
     } else if (arg == "-usegk" ) {
       usegk = true;
+    } else if (arg == "-v" ) {
+      verbose++;
+    } else if (arg == "-vv" ) {
+      verbose = atoi(argv[++i]);
     } else {
       usage(me, arg.c_str());
     }
@@ -177,8 +195,7 @@ int main(int argc, char *argv[]) {
   nrrdEmpty(slab);
   nrrdEmpty(pixel);
 
-  if (0)
-  {
+  if (verbose > 10) {
     double *cov_data = (double*)(cov->data);
     for(int c = 0; c < cov->axis[1].size; c++)
       {
@@ -203,7 +220,7 @@ int main(int argc, char *argv[]) {
 	}
   }
 
-  if (0)
+  if (verbose > 10)
   {
     cout << "After minux mean\n";
     double *cov_data = (double*)(cov->data);
@@ -252,7 +269,12 @@ int main(int argc, char *argv[]) {
     evec_data = cov_data;
   }
 
-  cout << "Eigen values are ["<<eval[0]<<", "<<eval[1]<<", "<<eval[2]<<"]\n";
+  if (verbose) {
+    cout << "Eigen values are [";
+    for (int i = 0; i < num_channels; i++)
+      cout << eval[i]<<", ";
+    cout << "]\n";
+  }
   delete[] eval;
   
   // Cull our eigen vectors
@@ -284,18 +306,20 @@ int main(int argc, char *argv[]) {
       }
     }
 
-    cout << "\ntransform matrix\n";
-    tdata = (float*)(transform->data);
-    for(int c = 0; c < num_bases; c++)
-      {
-	cout << "[";
-	for(int r = 0; r < num_channels; r++)
-	  {
-	    cout << tdata[c*num_channels + r] << ", ";
-	  }
-	cout << "]\n";
-      }
-    cout << "\n\n";
+    if (verbose) {
+      cout << "\ntransform matrix\n";
+      tdata = (float*)(transform->data);
+      for(int c = 0; c < num_bases; c++)
+	{
+	  cout << "[";
+	  for(int r = 0; r < num_channels; r++)
+	    {
+	      cout << tdata[c*num_channels + r] << ", ";
+	    }
+	  cout << "]\n";
+	}
+      cout << "\n\n";
+    }
   }
   
   // Compute our basis textures
