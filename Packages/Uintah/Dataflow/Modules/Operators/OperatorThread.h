@@ -34,7 +34,7 @@ public:
   Array3<Data>::iterator it(data_.begin());
   Array3<Data>::iterator it_end(data_.end());
   IntVector min(data_.getLowIndex() - offset_);
-  IntVector size(data_.getHighIndex() - min);
+  IntVector size(data_.getHighIndex() - min - offset_);
   typename ScalarField::mesh_type mesh(m, min.x(), min.y(), min.z(),
 				       size.x(), size.y(), size.z());
   if( sf_->data_at() == Field::CELL ){
