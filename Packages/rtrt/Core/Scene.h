@@ -257,6 +257,7 @@ public:
   int store_depth;
   int display_depth;
   int display_sils;
+  float max_depth;
 
   int     ambient_mode;
   double  ambientScale_;

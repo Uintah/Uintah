@@ -24,7 +24,10 @@
 #include <Core/Math/MinMax.h>
 #include <Core/Malloc/Allocator.h>
 
+#include <sgi_stl_warnings_off.h>
 #include <iostream>
+#include <sgi_stl_warnings_on.h>
+
 #include <stdlib.h>
 #include <unistd.h>
 
@@ -164,6 +167,13 @@ void Scene::init(const Camera& cam, const Color& bgcolor)
   ambientColor_      = origAmbientColor_;
 
   setAmbientLevel( ambientScale_ );
+
+  // Make a guess at the initial max_depth
+  BBox bbox;
+  obj->compute_bounds(bbox, 0);
+  Vector diag = bbox.max() - bbox.min();
+  max_depth = diag.length();
+  cout << "Scene::max_depth = "<<max_depth<<"\n";
 }
 
 void
