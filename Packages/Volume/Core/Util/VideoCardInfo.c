@@ -25,9 +25,11 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //  
-//    File   : CardInfo.cc
+//    File   : VideoCardInfo.c
 //    Author : Milan Ikits
 //    Date   : Sun Jul 11 10:15:33 2004
+
+#include <Packages/Volume/Core/Util/VideoCardInfo.h>
 
 #ifdef __linux__
 
@@ -334,9 +336,20 @@ int video_card_memory_size()
 
 #elif __APPLE__
 
+#include <AGL/agl.h>
+
 int video_card_memory_size()
 {
-  //system("/usr/sbin/system_profiler SPPCIDataType");
+    AGLRendererInfo info;
+    info = aglQueryRendererInfo(NULL, 0);
+    if(!info) {
+	return 0;
+    }
+    else {
+      GLint mem;
+      aglDescribeRenderer(info, AGL_VIDEO_MEMORY, &mem);
+      return mem/1024/1024;
+    }
 }
 
 #endif

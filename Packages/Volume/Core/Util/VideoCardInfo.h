@@ -25,12 +25,12 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //  
-//    File   : CardInfo.h
+//    File   : VideoCardInfo.h
 //    Author : Milan Ikits
 //    Date   : Sun Jul 11 10:15:43 2004
 
-#ifndef CardInfo_h
-#define CardInfo_h
+#ifndef VideoCardInfo_h
+#define VideoCardInfo_h
 
 #ifdef __cplusplus
 extern "C" {
@@ -42,4 +42,4 @@ int video_card_memory_size();
 }
 #endif
   
-#endif // CardInfo_h
+#endif // VideoCardInfo_h
