@@ -1,4 +1,7 @@
 #include <iostream>
+#include <iomanip>
+#include <sstream>
+#include <stdio.h>
 #include <PSECore/XMLUtil/SimpleErrorHandler.h>
 #include <PSECore/XMLUtil/XMLUtil.h>
 #include "TaskGraph.h"
@@ -62,7 +65,7 @@ void Edge::relaxEdgeDown()
 
 
 TaskGraph*
-TaskGraph::inflate(string xmlFileName)
+TaskGraph::inflate(string xmlDir)
 {
   try {
     XMLPlatformUtils::Initialize();
@@ -71,38 +74,75 @@ TaskGraph::inflate(string xmlFileName)
     return 0;
   }
 
+  list<DOM_Document> xmlDocs;
   DOMParser parser;
   parser.setDoValidation(false);
   SimpleErrorHandler handler;
   parser.setErrorHandler(&handler);
-  
-  parser.parse(xmlFileName.c_str());
-  if (handler.foundError) {
-    cerr << "Error parsing taskgraph file " << xmlFileName << endl;
+
+  int process = 0;
+  string xmlFileName;
+  do {
+    ostringstream pname;
+    pname << "/taskgraph_" << setw(5) << setfill('0') << process << ".xml";
+    xmlFileName = xmlDir + pname.str();
+    if (fopen(xmlFileName.c_str(), "r") == NULL)
+      break;
+    parser.parse(xmlFileName.c_str());
+    if (handler.foundError) {
+      cerr << "Error parsing taskgraph file " << xmlFileName << endl;
+      return 0;
+    }
+    xmlDocs.push_back(parser.getDocument());
+    process++;
+  } while (process < 100000 /* it will most likely always break out of loop
+			       -- but just so it won't ever be caught in an
+			       infinite loop */);
+
+  if (process == 0) {
+    cerr << "Task graph data does not exist:" << endl;
+    cerr << xmlFileName << " does not exist." << endl;
     return 0;
   }
   
-  return scinew TaskGraph(parser.getDocument());
+  return scinew TaskGraph(xmlDocs);
 }
 
-TaskGraph::TaskGraph(DOM_Document xmlDoc)
+TaskGraph::TaskGraph(std::list<DOM_Document> xmlDocs)
   : m_criticalPathCost(0), m_thresholdPercent(0)
 {
-  DOM_Element docElement = xmlDoc.getDocumentElement();
+  if (xmlDocs.size() < 1) return;
+  DOM_Element docElement;
   
-  DOM_Node nodes = findNode("Nodes", docElement);
-  for (DOM_Node node = findNode("node", nodes); node != 0;
-       node = findNextNode("node", node)) {
-    string task_name;
-    double task_duration;
-    get(node, "name", task_name);
-    get(node, "duration", task_duration);
-    
-    Task* task = scinew Task(task_name, task_duration, this);
-    m_tasks.push_back(task);
-    m_taskMap[task_name] = task;
+  // get the nodes from each of the documents
+  for (list<DOM_Document>::iterator p_xmlDoc = xmlDocs.begin();
+       p_xmlDoc != xmlDocs.end(); p_xmlDoc++) {    
+   docElement = (*p_xmlDoc).getDocumentElement();
+   DOM_Node nodes = findNode("Nodes", docElement);
+    for (DOM_Node node = findNode("node", nodes); node != 0;
+	 node = findNextNode("node", node)) {
+      string task_name;
+      double task_duration;
+      get(node, "name", task_name);
+      get(node, "duration", task_duration);
+
+      Task* task;
+      if ((task = findTask(task_name)) != NULL) {
+	// task already exists
+	// It may be a reduction task... in any case
+	// make its duration the maximum of given durations.
+	task->testSetDuration(task_duration); 
+      }
+      else {
+	task = scinew Task(task_name, task_duration, this);
+	m_tasks.push_back(task);
+	m_taskMap[task_name] = task;
+      }
+    }
   }
-  
+
+  // get the edges from the last document
+  // (they should all contain the same edges)
   DOM_Node edges = findNode("Edges", docElement);
   for (DOM_Node node = findNode("edge", edges); node != 0;
        node = findNextNode("edge", node)) {

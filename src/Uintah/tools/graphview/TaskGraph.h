@@ -20,6 +20,11 @@ public:
   std::string getName() const { return m_name; }
   double getDuration() const { return m_duration; }
 
+  // replaces the duration if the given duration is greater than
+  // the old duration (sets to the maximum of given durations).
+  void testSetDuration(double duration)
+  { if (m_duration < duration) m_duration = duration; }
+  
   const std::list<Edge*>& getDependencyEdges() const
   { return m_dependencyEdges; }
 
@@ -111,7 +116,7 @@ private:
 
 class TaskGraph {
 public:
-  static TaskGraph* inflate(std::string xmlFileName);
+  static TaskGraph* inflate(std::string xmlDir);
   
   ~TaskGraph();
   
@@ -131,7 +136,10 @@ public:
   double getCriticalPathCost() const
   { return m_criticalPathCost; }
 private:
-  TaskGraph(DOM_Document xmlDoc);
+  // Creates a graph from an array of documents.
+  // Each document contains node information for a sub-set
+  // of the graph, but they should all contain the same edges.
+  TaskGraph(std::list<DOM_Document> xmlDoc);
 
   // Compute the maximum paths above and below each
   // node as well as the critical path cost.
@@ -144,9 +152,3 @@ private:
   double m_criticalPathCost;
   float m_thresholdPercent;
 };
-
-
-
-
-
-
