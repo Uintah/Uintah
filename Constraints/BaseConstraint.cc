@@ -15,7 +15,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <Constraints/BaseConstraint.h>
-#include <TCL/Debug.h>
+#include <Classlib/Debug.h>
 
 //static DebugSwitch bc_debug("BaseConstraint", "print");
 
