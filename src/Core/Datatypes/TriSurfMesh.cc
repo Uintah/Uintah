@@ -603,6 +603,263 @@ TriSurfMesh::compute_normals()
 }
 
 
+void
+TriSurfMesh::insert_node(const Face::index_type face, const Point &p)
+{
+  const bool do_neighbors = synchronized_ & EDGE_NEIGHBORS_E;
+  const bool do_normals = false; // synchronized_ & NORMALS_E;
+
+  Node::index_type pi = add_point(p);
+  const unsigned f0 = face*3;
+  const unsigned f1 = faces_.size();
+  const unsigned f2 = f1+3;
+  
+  faces_.push_back(faces_[f0+1]);
+  faces_.push_back(faces_[f0+2]);
+  faces_.push_back(pi);
+
+  faces_.push_back(faces_[f0+2]);
+  faces_.push_back(faces_[f0+0]);
+  faces_.push_back(pi);
+
+  // must do last
+  faces_[f0+2] = pi;
+
+  if (do_neighbors)
+  {
+    edge_neighbors_.push_back(edge_neighbors_[f0+1]);
+    if (edge_neighbors_.back() != -1) 
+      edge_neighbors_[edge_neighbors_.back()] = edge_neighbors_.size()-1;
+    edge_neighbors_.push_back(f2+2);
+    edge_neighbors_.push_back(f0+1);
+    
+    edge_neighbors_.push_back(edge_neighbors_[f0+2]);
+    if (edge_neighbors_.back() != -1) 
+      edge_neighbors_[edge_neighbors_.back()] = edge_neighbors_.size()-1;
+    edge_neighbors_.push_back(f0+2);
+    edge_neighbors_.push_back(f1+1);
+    
+    edge_neighbors_[f0+1] = f1+2;
+    edge_neighbors_[f0+2] = f2+1;
+  }
+
+  if (do_normals)
+  {
+    Vector normal = (p.asVector() +
+		     normals_[faces_[f0]] + 
+		     normals_[faces_[f1]] + 
+		     normals_[faces_[f2]]).normalize();
+
+    normals_.push_back(normals_[faces_[f1]]);
+    normals_.push_back(normals_[faces_[f2]]);
+    normals_.push_back(normal);
+
+    normals_.push_back(normals_[faces_[f2]]);
+    normals_.push_back(normals_[faces_[f0]]);
+    normals_.push_back(normal);
+
+    normals_[faces_[f0+2]] = normal;
+
+  }
+
+  if (!do_neighbors) synchronized_ &= ~NODE_NEIGHBORS_E;
+  synchronized_ &= ~EDGES_E;
+  if (!do_normals) synchronized_ &= ~NORMALS_E;
+
+    
+  
+}
+
+  
+  
+
+
+bool
+TriSurfMesh::insert_node(const Point &p)
+{
+  Face::index_type face;
+  if (!locate(face,p)) return false;
+  insert_node(face,p);
+  return true;
+}
+
+ 
+/*             2
+//             ^
+//            / \
+//           /f3 \
+//        5 /-----\ 4
+//         / \fac/ \
+//        /f1 \ /f2 \
+//       /     V     \
+//      <------------->
+//     0       3       1
+*/
+
+#define DEBUGINFO(f) cerr << "Face #" << f/3 << " N1: " << faces_[f+0] << " N2: " << faces_[f+1] << " N3: " << faces_[f+2] << "  B1: " << edge_neighbors_[f] << " B2: " << edge_neighbors_[f+1] << "  B3: " << edge_neighbors_[f+2] << endl;
+void
+TriSurfMesh::bisect_element(const Face::index_type face)
+{
+  const bool do_neighbors = synchronized_ & EDGE_NEIGHBORS_E;
+  const bool do_normals = false; //synchronized_ & NORMALS_E;
+  
+  const unsigned f0 = face*3;
+  Node::array_type nodes;
+  get_nodes(nodes,face);
+  vector<Vector> normals(3);
+  for (int edge = 0; edge < 3; ++edge)
+  {
+    Point p = ((points_[faces_[f0+edge]] + 
+		points_[faces_[next(f0+edge)]]) / 2.0).asPoint();
+    nodes.push_back(add_point(p));
+
+    if (do_normals)
+      normals[edge] = (normals_[faces_[f0+edge]] + 
+		       normals_[faces_[next(f0+edge)]]).normalize();
+
+  }
+
+  const unsigned f1 = faces_.size();
+  faces_.push_back(nodes[0]);
+  faces_.push_back(nodes[3]);
+  faces_.push_back(nodes[5]);
+
+  const unsigned f2 = faces_.size();
+  faces_.push_back(nodes[1]);
+  faces_.push_back(nodes[4]);
+  faces_.push_back(nodes[3]);
+
+  const unsigned f3 = faces_.size();
+  faces_.push_back(nodes[2]);
+  faces_.push_back(nodes[5]);
+  faces_.push_back(nodes[4]);
+
+  faces_[f0+0] = nodes[3];
+  faces_[f0+1] = nodes[4];
+  faces_[f0+2] = nodes[5];
+
+  if (do_neighbors)
+  {
+
+    edge_neighbors_.push_back(edge_neighbors_[f0+0]);
+    edge_neighbors_.push_back(f0+2);
+    edge_neighbors_.push_back(-1);
+    
+    edge_neighbors_.push_back(edge_neighbors_[f0+1]);
+    edge_neighbors_.push_back(f0+0);
+    edge_neighbors_.push_back(-1);
+    
+    edge_neighbors_.push_back(edge_neighbors_[f0+2]);
+    edge_neighbors_.push_back(f0+1);
+    edge_neighbors_.push_back(-1);    
+
+    // must do last
+    edge_neighbors_[f0+0] = f2+1;
+    edge_neighbors_[f0+1] = f3+1;
+    edge_neighbors_[f0+2] = f1+1;
+
+  }
+
+  if (do_normals)
+  {
+    normals_.push_back(normals_[f0+0]);
+    normals_.push_back(normals[0]);
+    normals_.push_back(normals[2]);
+    
+    normals_.push_back(normals_[f0+1]);
+    normals_.push_back(normals[1]);
+    normals_.push_back(normals[0]);
+    
+    normals_.push_back(normals_[f0+2]);
+    normals_.push_back(normals[2]);
+    normals_.push_back(normals[1]);    
+
+    normals_[f0+0] = normals[0];
+    normals_[f0+1] = normals[1];
+    normals_[f0+2] = normals[2];
+  }
+  
+
+  if (do_neighbors && edge_neighbors_[f1] != -1)
+  {
+    const unsigned nbr = edge_neighbors_[f1];
+    const unsigned pnbr = prev(nbr);
+    const unsigned f4 = faces_.size();
+    faces_.push_back(nodes[1]);
+    faces_.push_back(nodes[3]);
+    faces_.push_back(faces_[pnbr]);
+    edge_neighbors_[f2+2] = f4;
+    edge_neighbors_.push_back(f2+2);
+    edge_neighbors_.push_back(pnbr);
+    edge_neighbors_.push_back(edge_neighbors_[pnbr]);
+    edge_neighbors_[edge_neighbors_.back()] = f4+2;
+    faces_[nbr] = nodes[3];
+    edge_neighbors_[pnbr] = f4+1;    
+    if (do_normals)
+    {
+      normals_[nbr] = normals[0];
+      normals_.push_back(normals_[f0+1]);
+      normals_.push_back(normals[0]);
+      normals_.push_back(normals_[pnbr]);
+    }
+    
+  }
+
+  if (do_neighbors && edge_neighbors_[f2] != -1)
+  {
+    const unsigned nbr = edge_neighbors_[f2];
+    const unsigned pnbr = prev(nbr);
+    const unsigned f5 = faces_.size();
+    faces_.push_back(nodes[2]);
+    faces_.push_back(nodes[4]);
+    faces_.push_back(faces_[pnbr]);
+    edge_neighbors_[f3+2] = f5;
+    edge_neighbors_.push_back(f3+2);
+    edge_neighbors_.push_back(pnbr);
+    edge_neighbors_.push_back(edge_neighbors_[pnbr]);
+    edge_neighbors_[edge_neighbors_.back()] = f5+2;
+    faces_[nbr] = nodes[4];
+    edge_neighbors_[pnbr] = f5+1;
+    if (do_normals)
+    {
+      normals_[nbr] = normals[1];
+      normals_.push_back(normals_[f0+2]);
+      normals_.push_back(normals[1]);
+      normals_.push_back(normals_[pnbr]);
+    }
+  }
+
+  if (do_neighbors && edge_neighbors_[f3] != -1)
+  {
+    const unsigned nbr = edge_neighbors_[f3];
+    const unsigned pnbr = prev(nbr);
+    const unsigned f6 = faces_.size();
+    faces_.push_back(nodes[0]);
+    faces_.push_back(nodes[5]);
+    faces_.push_back(faces_[pnbr]);
+    edge_neighbors_[f1+2] = f6;
+    edge_neighbors_.push_back(f1+2);
+    edge_neighbors_.push_back(pnbr);
+    edge_neighbors_.push_back(edge_neighbors_[pnbr]);
+    edge_neighbors_[edge_neighbors_.back()] = f6+2;
+    faces_[nbr] = nodes[5];
+    edge_neighbors_[pnbr] = f6+1;
+    if (do_normals)
+    {
+      normals_[nbr] = normals[2];
+      normals_.push_back(normals_[f0+0]);
+      normals_.push_back(normals[2]);
+      normals_.push_back(normals_[pnbr]);
+    }
+  }   
+
+  if (!do_neighbors) synchronized_ &= ~NODE_NEIGHBORS_E;
+  synchronized_ &= ~EDGES_E;
+  if (!do_normals) synchronized_ &= ~NORMALS_E;
+
+}
+
+
 struct edgecompare
 {
   bool operator()(const pair<int, int> &a, const pair<int, int> &b) const

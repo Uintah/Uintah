@@ -978,7 +978,7 @@ TetVolMesh::locate(Face::index_type &face, const Point &p)
 bool
 TetVolMesh::locate(Cell::index_type &cell, const Point &p)
 {
-  if (!synchronized_ & LOCATE_E)
+  if (!(synchronized_ & LOCATE_E))
     synchronize(LOCATE_E);
   ASSERT(grid_.get_rep());
 
@@ -1433,6 +1433,170 @@ TetVolMesh::orient(Cell::index_type ci) {
   }
 }
 
+
+bool
+TetVolMesh::insert_node(const Point &p)
+{
+  Node::index_type pi = add_point(p);
+  Cell::index_type cell;
+  locate(cell, p);
+
+  const unsigned index = cell*4;
+  if (!inside4_p(index, p)) return false;
+
+  if (synchronized_ & NODE_NEIGHBORS_E) delete_cell_node_neighbors(cell);
+  if (synchronized_ & EDGES_E) delete_cell_edges(cell);
+  if (synchronized_ & FACES_E) delete_cell_faces(cell);
+
+  Cell::array_type tets(4,cell);
+
+  tets[1] = add_tet(cells_[index+0], cells_[index+3], cells_[index+1], pi);
+  tets[2] = add_tet(cells_[index+1], cells_[index+3], cells_[index+2], pi);
+  tets[3] = add_tet(cells_[index+0], cells_[index+2], cells_[index+3], pi);
+  
+  cells_[index+3] = pi;
+    
+  if (synchronized_ & NODE_NEIGHBORS_E) create_cell_node_neighbors(cell);
+  if (synchronized_ & EDGES_E) create_cell_edges(cell);
+  if (synchronized_ & FACES_E) create_cell_faces(cell);
+
+  return true;
+}
+
+void
+TetVolMesh::insert_node_watson(const Point &p)
+{
+}
+
+
+
+void
+TetVolMesh::bisect_element(const Cell::index_type cell)
+{
+  synchronize(FACE_NEIGHBORS_E | EDGE_NEIGHBORS_E);
+  int edge, face;
+  vector<Edge::array_type> edge_neighbors(6);
+  Node::array_type nodes;
+  get_nodes(nodes,cell);
+  for (edge = 0; edge < 6; ++edge)
+  {
+    Point p;
+    get_center(p, Edge::index_type(cell*6+edge));
+    nodes.push_back(add_point(p));
+    pair<Edge::HalfEdgeSet::iterator, Edge::HalfEdgeSet::iterator> range =
+      all_edges_.equal_range(cell*6+edge);
+    edge_neighbors[edge].insert(edge_neighbors[edge].end(), range.first, range.second);
+  }
+
+  Face::array_type face_neighbors(4);
+  for (face = 0; face < 4; ++face)
+    get_neighbor(face_neighbors[face], Face::index_type(cell*4+face));
+
+  set<unsigned> done;
+  done.insert(cell);
+
+  Cell::array_type tets(8);
+  tets[0] = mod_tet(cell,nodes[4],nodes[6],nodes[5],nodes[0]);
+  tets[1] = add_tet(nodes[4], nodes[7], nodes[9], nodes[1]);
+  tets[2] = add_tet(nodes[7], nodes[5], nodes[8], nodes[2]);
+  tets[3] = add_tet(nodes[6], nodes[8], nodes[9], nodes[3]);
+  tets[4] = add_tet(nodes[4], nodes[9], nodes[8], nodes[6]);
+  tets[5] = add_tet(nodes[4], nodes[8], nodes[5], nodes[6]);
+  tets[6] = add_tet(nodes[4], nodes[5], nodes[8], nodes[7]);
+  tets[7] = add_tet(nodes[4], nodes[8], nodes[9], nodes[7]);
+
+  if (face_neighbors[0] != -1)
+  {
+    Node::index_type opp = cells_[face_neighbors[0]];
+    mod_tet(face_neighbors[0]/4,nodes[7],nodes[8],nodes[9],opp);
+    add_tet(nodes[7],nodes[2],nodes[8],opp);
+    add_tet(nodes[8],nodes[3],nodes[9],opp);
+    add_tet(nodes[9],nodes[1],nodes[7],opp);
+    done.insert(face_neighbors[0]/4);
+  }
+
+  if (face_neighbors[1] != -1)
+  {
+    Node::index_type opp = cells_[face_neighbors[1]];
+    mod_tet(face_neighbors[1]/4,nodes[5],nodes[6],nodes[8],opp);
+    add_tet(nodes[5],nodes[0],nodes[6],opp);
+    add_tet(nodes[6],nodes[3],nodes[8],opp);
+    add_tet(nodes[8],nodes[2],nodes[5],opp);
+    done.insert(face_neighbors[1]/4);
+  }
+
+  if (face_neighbors[2] != -1)
+  {
+    Node::index_type opp = cells_[face_neighbors[2]];
+    mod_tet(face_neighbors[2]/4,nodes[4],nodes[9],nodes[6],opp);
+    add_tet(nodes[4],nodes[1],nodes[9],opp);
+    add_tet(nodes[9],nodes[3],nodes[6],opp);
+    add_tet(nodes[6],nodes[0],nodes[4],opp);
+    done.insert(face_neighbors[2]/4);
+  }
+
+  if (face_neighbors[3] != -1)
+  {
+    Node::index_type opp = cells_[face_neighbors[3]];
+    mod_tet(face_neighbors[3]/4,nodes[4],nodes[5],nodes[7],opp);
+    add_tet(nodes[4],nodes[0],nodes[5],opp);
+    add_tet(nodes[5],nodes[2],nodes[7],opp);
+    add_tet(nodes[7],nodes[1],nodes[4],opp);
+    done.insert(face_neighbors[3]/4);
+  }
+
+#if 0
+  for (edge = 0; edge < 6; ++edge)
+  {
+    for (unsigned shared = 0; shared < edge_neighbors[edge].size(); ++shared)
+      if (done.find(edge_neighbors[edge][shared]/6) == done.end())
+      {	
+	Edge::index_type nedge = edge_neighbors[edge][shared];
+	Cell::index_type ntet = nedge/6;
+	Edge::index_type oedge;
+	switch(nedge % 6)
+	{
+	case 0: oedge = 4; break;
+	case 1: oedge = 5; break;
+	case 2: oedge = 3; break;
+	case 3: oedge = 2; break;
+	case 4: oedge = 0; break;
+	default:
+	case 5: oedge = 1; break;
+	}
+	pair<Node::index_type, Node::index_type> nnodes = Edge::edgei(nedge);
+	pair<Node::index_type, Node::index_type> onodes = Edge::edgei(oedge);
+	orient(mod_tet(ntet,nodes[4+edge], nnodes.first, onodes.first, onodes.second));
+	orient(add_tet(nodes[4+edge], nnodes.second, onodes.second, onodes.first));
+	done.insert(ntet);
+      }
+  }
+#endif
+  
+}
+
+
+
+TetVolMesh::Elem::index_type
+TetVolMesh::mod_tet(Cell::index_type cell, 
+		    Node::index_type a,
+		    Node::index_type b,
+		    Node::index_type c,
+		    Node::index_type d)
+{
+  if (synchronized_ & NODE_NEIGHBORS_E) delete_cell_node_neighbors(cell);
+  if (synchronized_ & EDGES_E) delete_cell_edges(cell);
+  if (synchronized_ & FACES_E) delete_cell_faces(cell);
+  cells_[cell*4+0] = a;
+  cells_[cell*4+1] = b;
+  cells_[cell*4+2] = c;
+  cells_[cell*4+3] = d;  
+  if (synchronized_ & NODE_NEIGHBORS_E) create_cell_node_neighbors(cell);
+  if (synchronized_ & EDGES_E) create_cell_edges(cell);
+  if (synchronized_ & FACES_E) create_cell_faces(cell);
+  synchronized_ &= ~LOCATE_E;
+  return cell;
+}
 
 
 #define TETVOLMESH_VERSION 2
