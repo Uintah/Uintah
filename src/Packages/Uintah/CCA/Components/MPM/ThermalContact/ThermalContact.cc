@@ -13,7 +13,7 @@
 
 using namespace Uintah;
 
-ThermalContact::ThermalContact(ProblemSpecP& ps,SimulationStateP& d_sS)
+ThermalContact::ThermalContact(ProblemSpecP&,SimulationStateP& d_sS)
 {
   d_sharedState = d_sS;
   lb = scinew MPMLabel();
@@ -97,8 +97,8 @@ void ThermalContact::initializeThermalContact(const Patch* /*patch*/,
 }
 
 void ThermalContact::addComputesAndRequires(Task* t,
-					    const PatchSet* patch,
-					    const MaterialSet* matls) const
+					    const PatchSet*,
+					    const MaterialSet*) const
 {
   t->requires(Task::NewDW, lb->gMassLabel, Ghost::None);
   t->requires(Task::NewDW, lb->gTemperatureLabel, Ghost::None);
