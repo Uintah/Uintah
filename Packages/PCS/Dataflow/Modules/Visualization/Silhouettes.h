@@ -28,7 +28,7 @@
 
 
 /*
- *  Silhoettes.h:
+ *  Silhouettes.h:
  *
  *  Written by:
  *   Allen Sanderson
@@ -39,8 +39,8 @@
  *  Copyright (C) 2004 SCI Group
  */
 
-#if !defined(Silhoettes_h)
-#define Silhoettes_h
+#if !defined(Silhouettes_h)
+#define Silhouettes_h
 
 #include <Core/Util/TypeDescription.h>
 #include <Core/Util/DynamicLoader.h>
@@ -53,7 +53,7 @@ namespace PCS {
 
 using namespace SCIRun;
 
-class SilhoettesAlgo : public DynamicAlgoBase
+class SilhouettesAlgo : public DynamicAlgoBase
 {
 public:
   virtual FieldHandle execute(FieldHandle& src) = 0;
@@ -65,7 +65,7 @@ public:
 
 
 template< class IFIELD, class OFIELD, class OMESH >
-class SilhoettesAlgoT : public SilhoettesAlgo
+class SilhouettesAlgoT : public SilhouettesAlgo
 {
 public:
   //! virtual interface. 
@@ -75,7 +75,7 @@ public:
 // The goal dump all all of the unshared edges into a new field.
 template< class IFIELD, class OFIELD, class OMESH >
 FieldHandle
-SilhoettesAlgoT<IFIELD, OFIELD, OMESH >::execute(FieldHandle& field_h)
+SilhouettesAlgoT<IFIELD, OFIELD, OMESH >::execute(FieldHandle& field_h)
 {
   // Get the input field and mesh.
   IFIELD *ifield = (IFIELD *) field_h.get_rep();
@@ -156,4 +156,4 @@ SilhoettesAlgoT<IFIELD, OFIELD, OMESH >::execute(FieldHandle& field_h)
 
 } // end namespace PCS
 
-#endif // Silhoettes_h
+#endif // Silhouettes_h

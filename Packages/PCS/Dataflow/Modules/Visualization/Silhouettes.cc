@@ -1,5 +1,5 @@
 /*
- *  Silhoettes.cc:
+ *  Silhouettes.cc:
  *
  *  Written by:
  *   allen
@@ -15,17 +15,17 @@
 #include <Dataflow/Ports/FieldPort.h>
 #include <Core/Containers/Handle.h>
 
-#include <Packages/PCS/Dataflow/Modules/Visualization/Silhoettes.h>
+#include <Packages/PCS/Dataflow/Modules/Visualization/Silhouettes.h>
 
 namespace PCS {
 
 using namespace SCIRun;
 
-class PSECORESHARE Silhoettes : public Module {
+class PSECORESHARE Silhouettes : public Module {
 public:
-  Silhoettes(GuiContext*);
+  Silhouettes(GuiContext*);
 
-  virtual ~Silhoettes();
+  virtual ~Silhouettes();
 
   virtual void execute();
 
@@ -38,18 +38,18 @@ protected:
 };
 
 
-DECLARE_MAKER(Silhoettes)
-Silhoettes::Silhoettes(GuiContext* ctx)
-  : Module("Silhoettes", ctx, Source, "Visualization", "PCS"),
+DECLARE_MAKER(Silhouettes)
+Silhouettes::Silhouettes(GuiContext* ctx)
+  : Module("Silhouettes", ctx, Source, "Visualization", "PCS"),
     fGeneration_(-1)
 {
 }
 
-Silhoettes::~Silhoettes(){
+Silhouettes::~Silhouettes(){
 }
 
 void
-Silhoettes::execute(){
+Silhouettes::execute(){
   FieldIPort* ifp = (FieldIPort *)get_iport("Input Field");
 
   FieldHandle fieldin;
@@ -82,8 +82,8 @@ Silhoettes::execute(){
     const TypeDescription *ttd = fieldin->get_type_description(1);
 
     CompileInfoHandle ci =
-      SilhoettesAlgo::get_compile_info(ftd, ttd);
-    Handle<SilhoettesAlgo> algo;
+      SilhouettesAlgo::get_compile_info(ftd, ttd);
+    Handle<SilhouettesAlgo> algo;
     if (!module_dynamic_compile(ci, algo)) return;
 
     fieldout_ = algo->execute(fieldin);
@@ -91,10 +91,10 @@ Silhoettes::execute(){
 
   // Get a handle to the output field port.
   if ( fieldout_.get_rep() ) {
-    FieldOPort* ofp = (FieldOPort *) get_oport("Silhoettes");
+    FieldOPort* ofp = (FieldOPort *) get_oport("Silhouettes");
 
     if (!ofp) {
-      error("Unable to initialize oport 'Silhoettes'.");
+      error("Unable to initialize oport 'Silhouettes'.");
       return;
     }
 
@@ -104,19 +104,19 @@ Silhoettes::execute(){
 }
 
 void
-Silhoettes::tcl_command(GuiArgs& args, void* userdata)
+Silhouettes::tcl_command(GuiArgs& args, void* userdata)
 {
   Module::tcl_command(args, userdata);
 }
 
 CompileInfoHandle
-SilhoettesAlgo::get_compile_info(const TypeDescription *ftd,
+SilhouettesAlgo::get_compile_info(const TypeDescription *ftd,
 				 const TypeDescription *ttd )
 {
   // use cc_to_h if this is in the .cc file, otherwise just __FILE__
   static const string include_path(TypeDescription::cc_to_h(__FILE__));
-  static const string template_class_name("SilhoettesAlgoT");
-  static const string base_class_name("SilhoettesAlgo");
+  static const string template_class_name("SilhouettesAlgoT");
+  static const string base_class_name("SilhouettesAlgo");
 
   CompileInfo *rval = 
     scinew CompileInfo(template_class_name + "." +
