@@ -76,7 +76,7 @@ set $m0-is_fixed 0
 set $m0-max_brick_dim 128
 set $m0-min 0
 set $m0-max 181
-set $m1-filename $DATADIR/aneurysm/ansurysm-mra-lowres.lvs.fld
+set $m1-filename $DATADIR/aneurysm/aneurysm-mra-lowres.lvs.fld
 $m2 ui
 set $m2-ViewWindow_0-view-eyep-x ${view-eyep-x}
 set $m2-ViewWindow_0-view-eyep-y ${view-eyep-y}
