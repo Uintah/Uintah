@@ -73,10 +73,14 @@ inline SCICORESHARE double SmoothStep(double d, double min, double max)
 }
 
 // Interpolation:
-inline SCICORESHARE double Interpolate(double d1, double d2, double weight)
+template <class T>
+inline SCICORESHARE T Interpolate(T d1, T d2, double weight)
 {
   return d2*weight+d1*(1.0-weight);
 }
+
+
+
 
 // Integer/double conversions
 inline SCICORESHARE double Fraction(double d)
@@ -161,6 +165,9 @@ inline SCICORESHARE int Tile(int tile, int tf)
 
 //
 // $Log$
+// Revision 1.2.4.1  2000/10/06 19:38:19  michaelc
+// Templatize Interpolate
+//
 // Revision 1.2  1999/08/17 06:39:34  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.
