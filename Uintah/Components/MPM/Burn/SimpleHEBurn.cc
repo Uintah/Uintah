@@ -203,6 +203,9 @@ void SimpleHEBurn::computeMassRate(const Patch* patch,
   old_dw->get(burnedMass, lb->cBurnedMassLabel,
 			matlindex, patch,Ghost::None,0);
 
+  ParticleSubset* remove_subset =
+		new_dw->createParticleSubset(0, matlindex, patch);
+
   for(ParticleSubset::iterator iter = pset->begin();
       iter != pset->end(); iter++){
      particleIndex idx = *iter;
@@ -214,9 +217,10 @@ void SimpleHEBurn::computeMassRate(const Patch* patch,
 	   pvolume[idx] = pmass[idx]/1000.0;
 	   burnedMass[ci] += .5*a;
 	
-	   if(pmass[idx]<0.0){
+	   if(pmass[idx]<=0.0){
 	     pmass[idx]=0.0;
 	     burnedMass[ci] -= .5*a;
+	     remove_subset->addParticle(idx);
 	   }
 	}
      }
@@ -228,9 +232,15 @@ void SimpleHEBurn::computeMassRate(const Patch* patch,
   new_dw->put(pmass,lb->pMassLabel_preReloc);
   new_dw->put(pvolume,lb->pVolumeLabel_preReloc);
   new_dw->put(burnedMass,lb->cBurnedMassLabel, matlindex, patch);
+
+  new_dw->deleteParticles(remove_subset);
 }
  
 // $Log$
+// Revision 1.11  2000/06/21 20:51:40  guilkey
+// Implemented the removal of particles that are completely consumed.
+// The function that does the removal doesn't yet work.
+//
 // Revision 1.10  2000/06/19 23:52:14  guilkey
 // Added boolean d_burns so that certain stuff only gets done
 // if a burn model is present.  Not to worry, the if's on this
