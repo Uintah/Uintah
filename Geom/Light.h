@@ -14,7 +14,7 @@
 #ifndef SCI_Geom_Light_h
 #define SCI_Geom_Light_h 1
 
-#include <variant.h>
+#include <config.h>
 #include <Classlib/String.h>
 
 class Color;

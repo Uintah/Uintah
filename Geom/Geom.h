@@ -16,7 +16,7 @@
 
 #include <Classlib/Array1.h>
 #include <Classlib/Handle.h>
-#include <variant.h>
+#include <config.h>
 
 class BBox;
 class BSphere;
