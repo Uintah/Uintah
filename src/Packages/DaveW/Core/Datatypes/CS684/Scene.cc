@@ -340,9 +340,10 @@ int Scene::findIntersect(RTRay& R, RTHit &hit, int shadowFlag) {
     }
 }
 
+#if 0
 #ifdef __sgi
 #if _MIPS_SZPTR == 64
-#include <Classlib/Array1.cc>
+#include <SCICore/Containers/Array1.cc>
 
 static void _dummy_(Piostream& p1, Array1<RTObject*>& p2)
 {
@@ -351,11 +352,15 @@ static void _dummy_(Piostream& p1, Array1<RTObject*>& p2)
 
 #endif
 #endif
+#endif
 
 } // End namespace Datatypes
 } // End namespace DaveW
 //
 // $Log$
+// Revision 1.4  2000/02/02 21:44:25  dmw
+// new modules
+//
 // Revision 1.3  1999/10/07 02:06:19  sparker
 // use standard iostreams and complex type
 //
