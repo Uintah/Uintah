@@ -117,12 +117,34 @@ AC_CANONICAL_HOST
 ##-- Thread libraries --------------------------------------------------------
 
 AC_ARG_ENABLE(threads,
-	[  --enable-threads		Specify a thread implementation (pthreds, irix)],
+	[  --enable-threads		Specify a thread implementation (pthreads, irix)],
 	[threads="$enableval"],
 	[threads=${threads='unknown'}])
 AC_SUBST(LOCK_IMPL)
 AC_SUBST(THREAD_IMPL)
 AC_SUBST(TIME_IMPL)
+
+##-- Compiler options --------------------------------------------------------
+AC_ARG_ENABLE(debug,
+	[  --enable-debug		Turn on debugging (usually -g flag)],
+	[debug="$enableval"],
+	[debug=${debug='no'}])
+AC_ARG_ENABLE(optimize,
+	[  --enable-optimize		Turn on debugging (usually -O2 flag)],
+	[optimize="$enableval"],
+	[optimize=${optimize='no'}])
+
+extra_cflags="";
+if test "$debug" = "yes"; then
+  extra_cflags="-g ${extra_cflags}";
+elif ! test "$debug" = "no"; then
+  extra_cflags="$debug ${extra_cflags}";
+fi
+if test "$optimize" = "yes"; then
+  extra_cflags="-O2 ${extra_cflags}";
+elif ! test "$optimize" = "no"; then
+  extra_cflags="$optimize ${extra_cflags}";
+fi
 
 ##-- Host-Specific Defaults --------------------------------------------------
 
@@ -173,7 +195,7 @@ case $host in
                echo "Using Assembler ${AS}"
              fi
            fi
-           CFLAGS="-fullwarn -xansi -LANG:std ${CFLAGS} $BINARYFLAGS"
+           CFLAGS="-fullwarn -xansi -LANG:std ${CFLAGS} $BINARYFLAGS $extra_cflags"
 	   ASFLAGS="$BINARYFLAGS ${ASFLAGS}"
            SOFLAGS="-shared $BINARYFLAGS -LANG:std -no_unresolved -J\$(MAKE_PARALLELISM) -update_registry \$(OBJTOP)/so_locations ${SOFLAGS}"
            LDFLAGS="$BINARYFLAGS -LANG:std -no_unresolved -J\$(MAKE_PARALLELISM)"
@@ -342,7 +364,7 @@ if test "$TCL_VERSION" = "8.0" -a "$TCL_PATCH_LEVEL" = ".4" ; then
 else
   echo "not found -- must build"
   echo "  Implement me."
-  exit
+  exit 1
 fi
 
 AC_SUBST(TCL_INCLUDE_DIR)
@@ -379,14 +401,14 @@ if test "$TK_VERSION" = "8.0" -a "$TK_PATCH_LEVEL" = ".4" ; then
   if ! test "$TCL_VERSION" = "$TK_VERSION" -a \
             "$TCL_PATCH_LEVEL" = "$TK_PATCH_LEVEL" ; then
     echo "  ERROR: Tcl and Tk are not the same version & patch level; this is Wrong"
-    exit
+    exit 1
   fi
 
 else
   echo "not found -- must build"
   BUILDING_TK=1
   echo "  Implement me."
-  exit
+  exit 1
 fi
 
 AC_SUBST(TK_INCLUDE_DIR)
@@ -418,7 +440,7 @@ if test "$ITCL_VERSION" = "3.0" ; then
 else
   echo "not found -- must build"
   echo "  Implement me."
-  exit
+  exit 1
 fi
 
 AC_SUBST(ITCL_INCLUDE_DIR)
