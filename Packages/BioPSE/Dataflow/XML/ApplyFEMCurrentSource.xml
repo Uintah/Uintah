@@ -71,6 +71,14 @@
 	<componentname>FieldReader</componentname>
       </port>
       <port>
+	<name>Interpolant</name>
+	<description>
+	  <p>Maps electrode indices to mesh indices</p>
+	</description>
+	<datatype>SCIRun::Field</datatype>
+	<componentname>FieldReader</componentname>
+      </port>
+      <port>
 	<name>Input RHS</name>
 	<description>
 	  <p>Takes handle to the matrix containing RHS for FE
