@@ -173,9 +173,9 @@ SCIRexRenderer::~SCIRexRenderer()
   delete [] render_data_->write_buffer_;
   delete [] render_data_->comp_order_;
   
-  vector<GLTexture3D *>::iterator tit = textures.begin();
+  vector<GLTexture3DHandle>::iterator tit = textures.begin();
   for(; tit != textures.end(); tit++)
-    delete *tit;
+    *tit = 0;
 
   vector<GLVolumeRenderer *>::iterator vit = renderers.begin();
     for(; vit != renderers.end(); vit++)
@@ -191,7 +191,7 @@ SCIRexRenderer::clone()
 void SCIRexRenderer::get_bounds(BBox& bb)
 {
   BBox b;
-  std::vector<GLTexture3D *>::iterator it = textures.begin();
+  std::vector<GLTexture3DHandle>::iterator it = textures.begin();
   for(; it != textures.end(); it++){
     (*it)->get_bounds(b);
 //      cerr<<"texture bounding box = "<<b.min()<<", "<<b.max()<<endl;
@@ -267,8 +267,8 @@ SCIRexRenderer::draw()
 //  glBlendFunc(GL_DST_COLOR, GL_SRC_COLOR);
 //  glBlendFunc(GL_DST_COLOR, GL_ONE_MINUS_SRC_COLOR);
 //  glBlendFunc(GL_ONE_MINUS_DST_COLOR, GL_SRC_COLOR);
-//  glBlendFunc( GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
- glBlendFunc( GL_ONE,GL_ONE_MINUS_SRC_ALPHA);
+  glBlendFunc( GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
+// glBlendFunc( GL_ONE,GL_ONE_MINUS_SRC_ALPHA);
 
   glDrawPixels(render_data_->viewport_x_,
 	       render_data_->viewport_y_,
@@ -330,9 +330,9 @@ SCIRexRenderer::update_compositer_data()
   int i, j;
 //   cerr<<"View Point  = "<<viewPt<<endl;
   vector<double> dist;
-  vector<GLTexture3D *>::iterator it = textures.begin();
+  vector<GLTexture3DHandle>::iterator it = textures.begin();
   for(i = 0; it != textures.end(); it++, i++){
-    GLTexture3D *t = *it;
+    GLTexture3DHandle t(*it);
     Point center = (t->min() + (t->max() -t->min()) * 0.5);
     center = field_transform.project(center);
 //     cerr<<"Center Point-"<<i<<" = "<<center<<", ";
@@ -570,11 +570,20 @@ void
 SCIRexRenderer::Build()
 {
   mutex_.lock();
-  GLTexture3D *texture;
+  LatVolField<double> *lvf;
+  lvf = dynamic_cast< LatVolField<double> *>(tex_.get_rep());
+  if(lvf) 
+    cerr<<"Got it!\n";
+  else{
+    cerr<<"Only works with doubles\n";
+    return;
+  }
   LatVolMesh *mesh = dynamic_cast<LatVolMesh *> (tex_->mesh().get_rep());
   if(mesh){
     // set the transform for later use.
     field_transform = mesh->get_transform();
+    Point minP, maxP;
+    Vector D;
 
     // establish the axis with the most data.  We'll split along that axis.
     int long_dim = 0; // 0 not set, 1 x, 2 y, 3 z
@@ -588,6 +597,10 @@ SCIRexRenderer::Build()
       min_y = mesh->get_min_y(),
       min_z = mesh->get_min_z();
 
+    minP = field_transform.project(Point(min_x, min_y, min_z));
+    maxP = field_transform.project(Point(min_x, min_y, min_z) + 
+				    Vector(x_dim,y_dim,z_dim));
+    D = maxP-minP;
     if ( x_dim >= y_dim && x_dim >= z_dim ){ 
       long_dim = 1;
       long_dim_size = x_dim;
@@ -606,40 +619,64 @@ SCIRexRenderer::Build()
     // should not be using this code.
     cerr<<"Original brick size is "<<brick_size_<<endl;
     int bsize = brick_size_;
-    while( long_dim_size  < (ntextures-1)* bsize ){
+    int split_size = long_dim_size/ntextures;
+//     while( long_dim_size  < (ntextures-1)* bsize ){
+//       bsize = largestPowerOf2( bsize -1 );
+//     }  
+    while ( long_dim_size < bsize/2.0 ){
       bsize = largestPowerOf2( bsize -1 );
-    }  
-    for(i = 0, j = 0; i < ntextures; i++, j+= (bsize-1)){
-      // edit the mesh so that the texture constructor 
-      // iterates over the correct range.
+    }
+    for(i = 0, j = 0; i < ntextures; i++, j+= (split_size-2)){
+      Transform trans;
       if( i == (ntextures - 1) ){
 	if(long_dim == 1){
 	  mesh->set_min_x(min_x + j); 
 	  mesh->set_nx(x_dim - j); 
+	  trans.pre_translate(Vector(2*i*D.x()/x_dim,0,0));
 	} else if(long_dim == 2){
 	  mesh->set_min_y(min_y + j); 
 	  mesh->set_ny(y_dim - j); 
+	  trans.pre_translate(Vector(0,2*i*D.y()/y_dim,0));
 	} else {
 	  mesh->set_min_z(min_z + j); 
 	  mesh->set_nz(z_dim - j); 
+	  trans.pre_translate(Vector(0,0,2*i*D.z()/z_dim));
+	}	  
+      } else if( i == 0 ){
+	if(long_dim == 1){
+	  mesh->set_min_x(min_x + j);
+	  mesh->set_nx(split_size); 
+	} else if(long_dim == 2){
+	  mesh->set_min_y(min_y + j); 
+	  mesh->set_ny(split_size); 
+	} else {
+	  mesh->set_min_z(min_z + j);
+	  mesh->set_nz(split_size);
 	}	  
       } else {
 	if(long_dim == 1){
 	  mesh->set_min_x(min_x + j);
-	  mesh->set_nx(bsize); 
+	  mesh->set_nx(split_size); 
+	  trans.pre_translate(Vector(2*i*D.x()/x_dim,0,0));
 	} else if(long_dim == 2){
 	  mesh->set_min_y(min_y + j); 
-	  mesh->set_ny(bsize); 
+	  mesh->set_ny(split_size); 
+	  trans.pre_translate(Vector(0,2*i*D.y()/y_dim,0));
 	} else {
 	  mesh->set_min_z(min_z + j);
 	  mesh->set_nz(bsize);
+	  trans.pre_translate(Vector(0,0,2*i*D.z()/z_dim));
 	}	  
       }
+      mesh->transform(trans);
       if(!textures[i]->replace_data(tex_, min_, max_, is_fixed_)){
 	textures[i] = scinew GLTexture3D(tex_, min_, max_, 
-					 is_fixed_, brick_size_);
+					 is_fixed_, bsize);
       }
-    }
+      trans.invert();
+      mesh->transform(trans);
+
+
     // Now just in case something unseen is using the mesh, set it back to
     // its original form. Probably, unecessary.
     // update!! it is necessary! Can't animate without it...
@@ -650,6 +687,7 @@ SCIRexRenderer::Build()
     mesh->set_ny(y_dim);
     mesh->set_nz(z_dim);
 
+    }
   } else {
     cerr<<"dynamic_cast<LatVolMesh *> failed !\n";
     cerr<<"initialization/rebuild failed !\n";
@@ -657,6 +695,7 @@ SCIRexRenderer::Build()
   }
   mutex_.unlock();
 }
+
 void
 SCIRexRenderer::make_render_windows(FieldHandle tex_, 
 			      double& min_, double& max,
@@ -664,10 +703,20 @@ SCIRexRenderer::make_render_windows(FieldHandle tex_,
 			      vector<char *>& displays)
 {
   GLTexture3D *texture;
+  LatVolField<double> *lvf;
+  lvf = dynamic_cast< LatVolField<double> *>(tex_.get_rep());
+  if(lvf) 
+    cerr<<"Got it!\n";
+  else{
+    cerr<<"Only works with doubles\n";
+    return;
+  }
   LatVolMesh *mesh = dynamic_cast<LatVolMesh *> (tex_->mesh().get_rep());
   if(mesh){
     // set the transform for later use.
     field_transform = mesh->get_transform();
+    Point minP, maxP;
+    Vector D;
 
     // establish the axis with the most data.  We'll split along that axis.
     int long_dim = 0; // 0 not set, 1 x, 2 y, 3 z
@@ -681,6 +730,10 @@ SCIRexRenderer::make_render_windows(FieldHandle tex_,
       min_y = mesh->get_min_y(),
       min_z = mesh->get_min_z();
 
+    minP = field_transform.project(Point(min_x, min_y, min_z));
+    maxP = field_transform.project(Point(min_x, min_y, min_z) + 
+				    Vector(x_dim,y_dim,z_dim));
+    D = maxP-minP;
     if ( x_dim >= y_dim && x_dim >= z_dim ){ 
       long_dim = 1;
       long_dim_size = x_dim;
@@ -692,6 +745,7 @@ SCIRexRenderer::make_render_windows(FieldHandle tex_,
       long_dim_size = z_dim;
     }
 
+
     // How many windows?  Make a subtexture for each window.
     int nwindows = displays.size();
     int i,j;
@@ -699,15 +753,20 @@ SCIRexRenderer::make_render_windows(FieldHandle tex_,
     // should not be using this code.
     cerr<<"Original brick size is "<<brick_size_<<endl;
     int bsize = brick_size_;
-    while( long_dim_size  < (nwindows-1)* bsize ){
+    int split_size = long_dim_size/nwindows;
+//     cerr<<"split size = "<<split_size<<endl;
+//     while( long_dim_size  < (nwindows-1)* bsize ){
+//       bsize = largestPowerOf2( bsize -1 );
+//     }  
+
+    while ( long_dim_size < bsize/2.0 ){
       bsize = largestPowerOf2( bsize -1 );
-    }  
+    }
     cerr<<"Using brick size "<< bsize <<endl;
-    //    cerr<<"long dim is "<< long_dim <<", long dim size is "<<long_dim_size<<endl;
     // make an array for ordering the composition
     render_data_->comp_order_ = new int[ nwindows ];
 
-    for(i = 0, j = 0; i < nwindows; i++, j+= (bsize-1)){
+    for(i = 0, j = 0; i < nwindows; i++, j+= (split_size-2)){
       
       //build the rendering windows
       render_data_->comp_order_[i] = i; // just use default order for setup
@@ -719,44 +778,60 @@ SCIRexRenderer::make_render_windows(FieldHandle tex_,
       cerr<<"in SCIRexRenderer using display "<<displays[i]<<endl;
       windows.push_back( new SCIRexWindow(w,displays[i], render_data_));
 
-
-      // edit the mesh so that the texture constructor 
-      // iterates over the correct range.
+      Transform trans;
       if( i == (nwindows - 1) ){
 	if(long_dim == 1){
 	  mesh->set_min_x(min_x + j); 
 	  mesh->set_nx(x_dim - j); 
+	  trans.pre_translate(Vector(2*i*D.x()/x_dim,0,0));
 	} else if(long_dim == 2){
 	  mesh->set_min_y(min_y + j); 
 	  mesh->set_ny(y_dim - j); 
+	  trans.pre_translate(Vector(0,2*i*D.y()/y_dim,0));
 	} else {
 	  mesh->set_min_z(min_z + j); 
 	  mesh->set_nz(z_dim - j); 
+	  trans.pre_translate(Vector(0,0,2*i*D.z()/z_dim));
+	}	  
+      } else if( i == 0 ){
+	if(long_dim == 1){
+	  mesh->set_min_x(min_x + j);
+	  mesh->set_nx(split_size); 
+	} else if(long_dim == 2){
+	  mesh->set_min_y(min_y + j); 
+	  mesh->set_ny(split_size); 
+	} else {
+	  mesh->set_min_z(min_z + j);
+	  mesh->set_nz(split_size);
 	}	  
       } else {
 	if(long_dim == 1){
 	  mesh->set_min_x(min_x + j);
-	  mesh->set_nx(bsize); 
+	  mesh->set_nx(split_size); 
+	  trans.pre_translate(Vector(2*i*D.x()/x_dim,0,0));
 	} else if(long_dim == 2){
 	  mesh->set_min_y(min_y + j); 
-	  mesh->set_ny(bsize); 
+	  mesh->set_ny(split_size); 
+	  trans.pre_translate(Vector(0,2*i*D.y()/y_dim,0));
 	} else {
 	  mesh->set_min_z(min_z + j);
-	  mesh->set_nz(bsize);
+	  mesh->set_nz(split_size);
+	  trans.pre_translate(Vector(0,0,2*i*D.z()/z_dim));
 	}	  
-      }
-      
+      }	
       //build the texture
+      mesh->transform(trans);
       texture = scinew GLTexture3D(tex_, min_, max_, is_fixed_,
 				   bsize);
-
+      trans.invert();
+      mesh->transform(trans);
       if (!is_fixed_) { // if not fixed, overwrite min/max values on Gui
 	texture->getminmax(min_, max_);
       }
-//       BBox bb0;
-//       texture->get_bounds( bb0 );
-//       cerr<<"texture bounding box at construction = "<<
-// 	bb0.min()<<", "<<bb0.max()<<endl;
+      BBox bb0;
+      texture->get_bounds( bb0 );
+      cerr<<"texture bounding box at construction = "<<
+	bb0.min()<<", "<<bb0.max()<<endl;
 
       texture->set_slice_bounds(Point(min_x, min_y, min_z),
 				Point(min_x + x_dim, min_y + y_dim, 

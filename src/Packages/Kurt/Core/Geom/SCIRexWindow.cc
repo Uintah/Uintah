@@ -297,7 +297,6 @@ SCIRexWindow::draw(){
   }
 
   glDrawBuffer(GL_FRONT);
-  glClear(GL_DEPTH_BUFFER_BIT);
   //  glClearColor(0.2,0.2,0.5,1.0);
   glShadeModel(GL_SMOOTH);
   glMatrixMode( GL_PROJECTION );
@@ -310,21 +309,27 @@ SCIRexWindow::draw(){
     glLoadMatrixd( rd->mvmat_ );
 
 
-  //  glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+  glClear(GL_DEPTH_BUFFER_BIT);
+  glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+  glEnable(GL_DEPTH_TEST);  
   glDrawPixels(rd->viewport_x_,
 		rd->viewport_y_,
 	       GL_DEPTH_COMPONENT,
 	       GL_UNSIGNED_BYTE, rd->depth_buffer_);
-  
+
   glClearColor(0,0,0,0.0);
   glClear(GL_COLOR_BUFFER_BIT);
+
+
+
   vector<GeomObj *>::iterator i;
+  glDepthMask(GL_FALSE);
   for( i = geom_objs.begin(); i != geom_objs.end(); i++){
     (*i)->draw( rd->di_, rd->mat_, rd->time_);
   }
-  //glPopMatrix();
+  glDepthMask(GL_TRUE);
+  glDisable(GL_DEPTH_TEST);  //glPopMatrix();
   readFB(pbuffer, 0,0,_width, _height);
-  
 
 }
 

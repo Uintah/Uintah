@@ -189,7 +189,7 @@ private:
   
   vector<SCIRexWindow *> windows;
   vector<SCIRexCompositer *> compositers;
-  vector<GLTexture3D *> textures;
+  vector<GLTexture3DHandle> textures;
   vector<GLVolumeRenderer *> renderers;
   SCIRexRenderData *render_data_;
 

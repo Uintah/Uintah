@@ -267,8 +267,10 @@ itcl_class Kurt_Visualization_SCIRex {
 
     method disableDpy {} {
 	set w .ui[modname]
-	set color "#505050"
-	$w.dpyframe.entry configure -state disabled -foreground $color
+	if {[winfo exists $w]} {
+	    set color "#505050"
+	    $w.dpyframe.entry configure -state disabled -foreground $color
+	}
     }
 }
 
