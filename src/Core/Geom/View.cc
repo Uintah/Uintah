@@ -86,6 +86,16 @@ View::operator==(const View& copy)
     return 0;
 }
 
+int
+View::operator!=(const View& copy)
+{
+  if ( eyep_ != copy.eyep_ || lookat_ != copy.lookat_ ||
+       up_ != copy.up_     || fov_ != copy.fov_           )
+    return 1;
+  else
+    return 0;
+}
+
 void View::get_viewplane(double aspect, double zdist,
 			 Vector& u, Vector& v)
 {
