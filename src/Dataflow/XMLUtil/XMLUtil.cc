@@ -50,7 +50,7 @@ const DOMNode* findNode(const std::string &name, const DOMNode *node)
       return child;
     }
     child = child->getNextSibling();
-    delete child_name;
+    delete [] child_name;
   }
   return 0;
 }
@@ -66,7 +66,7 @@ const DOMNode* findNextNode(const std::string& name, const DOMNode* node)
       break;
     }
     found_node = found_node->getNextSibling();
-    delete found_node_name;
+    delete [] found_node_name;
   }
   return found_node;
 }
@@ -174,7 +174,7 @@ ostream& operator<<(ostream& target, const DOMNode* toWrite)
 	    //  Note that "<" must be escaped in attribute values.
 	    outputContent(target, XMLString::transcode(attribute->getNodeValue()));
 	    target << '"';
-	    delete attrName;
+	    delete [] attrName;
 	 }
 	 
 	 //  Test for the presence of children, which includes both
@@ -224,9 +224,9 @@ ostream& operator<<(ostream& target, const DOMNode* toWrite)
 	   << (long)toWrite->getNodeType() << endl;
    }
 
-   delete nodeName;
+   delete [] nodeName;
    if (!valueDeleted)
-     delete nodeValue;
+     delete [] nodeValue;
    return target;
 }
 
