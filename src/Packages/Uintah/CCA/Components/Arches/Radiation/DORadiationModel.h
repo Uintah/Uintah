@@ -123,7 +123,7 @@ private:
 
       OffsetArray1<double> fraction;
 
-      OffsetArray1<double> ord;
+      //      OffsetArray1<double> ord;
       OffsetArray1<double> oxi;
       OffsetArray1<double> omu;
       OffsetArray1<double> oeta;
@@ -131,16 +131,17 @@ private:
       OffsetArray1<double> arean;
       OffsetArray1<double> areatb;
 
-      OffsetArray1<double> srcbm;
-      OffsetArray1<double> srcpone;
-      OffsetArray1<double> qfluxbbm;
-      const ProcessorGroup* d_myworld;
-
       OffsetArray1<double> rgamma;
       OffsetArray1<double> sd15;
       OffsetArray1<double> sd;
       OffsetArray1<double> sd7;
       OffsetArray1<double> sd3;
+
+      OffsetArray1<double> srcbm;
+      OffsetArray1<double> srcpone;
+      OffsetArray1<double> qfluxbbm;
+      const ProcessorGroup* d_myworld;
+
 
 }; // end class RadiationModel
 
