@@ -23,6 +23,7 @@ if {[llength [array get env SCIRUN_DATA]] == 0} {
    puts "*** Please exit, set it in your shell, and rerun."
    puts "*** (e.g. setenv SCIRUN_DATA /local/data/SCIRunData/)"
    puts ""
+   ::netedit scheduleok
    return
 }
 
@@ -32,394 +33,271 @@ global userName
 set userName "dmw"
 
 global runDate
-set runDate " Wed  Apr 12 19100"
+set runDate " Sun  Jun 10 2001"
 
 global runTime
-set runTime " 23:14:26"
+set runTime " 20:26:15"
 
-set m0 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 666 0]
-set m1 [addModuleAtPosition "SCIRun" "Fields" "BuildInterpolant" 526 80]
-set m2 [addModuleAtPosition "SCIRun" "Math" "ManipMatrix" 886 441]
-set m3 [addModuleAtPosition "SCIRun" "Math" "SolveMatrix" 870 334]
-set m4 [addModuleAtPosition "SCIRun" "Math" "ErrorMetric" 868 525]
-set m5 [addModuleAtPosition "SCIRun" "Fields" "ManageFieldData" 613 568]
-set m6 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 613 641]
-set m7 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 462 561]
-set m8 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 422 470]
-set m9 [addModuleAtPosition "SCIRun" "Render" "Viewer" 577 724]
-set m10 [addModuleAtPosition "SCIRun" "Fields" "ManageFieldData" 294 482]
-set m11 [addModuleAtPosition "SCIRun" "Math" "ManipMatrix" 631 507]
-set m12 [addModuleAtPosition "BioPSE" "Inverse" "ConductivitySearch" 941 251]
-set m13 [addModuleAtPosition "SCIRun" "DataIO" "MatrixReader" 959 4]
-set m14 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 503 0]
-set m15 [addModuleAtPosition "SCIRun" "Math" "ManipMatrix" 312 378]
-set m16 [addModuleAtPosition "SCIRun" "Math" "SolveMatrix" 312 305]
-set m17 [addModuleAtPosition "BioPSE" "Forward" "SetupFEMatrix" 312 159]
-set m18 [addModuleAtPosition "BioPSE" "Forward" "ApplyFEMCurrentSource" 490 161]
-set m19 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 136 558]
-set m20 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 136 643]
-set m22 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 613 354]
-set m23 [addModuleAtPosition "SCIRun" "DataIO" "MatrixReader" 649 443]
-set m24 [addModuleAtPosition "BioPSE" "Forward" "SetupFEMatrix" 977 87]
-set m25 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 1040 325]
-set m26 [addModuleAtPosition "SCIRun" "Visualization" "Isosurface" 1040 397]
-set m27 [addModuleAtPosition "SCIRun" "Fields" "BuildInterpolant" 1037 478]
-set m28 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 1049 543]
-set m29 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 1013 613]
-set m30 [addModuleAtPosition "SCIRun" "Math" "BuildTransform" 1022 682]
-set m31 [addModuleAtPosition "SCIRun" "Fields" "TransformField" 836 750]
-set m32 [addModuleAtPosition "SCIRun" "Math" "BuildTransform" 1022 747]
+set m0 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 320 7]
+set m1 [addModuleAtPosition "BioPSE" "Inverse" "ConductivitySearch" 12 113]
+set m2 [addModuleAtPosition "BioPSE" "Forward" "SetupFEMatrix" 287 234]
+set m3 [addModuleAtPosition "BioPSE" "Forward" "ApplyFEMCurrentSource" 484 251]
+set m4 [addModuleAtPosition "SCIRun" "Math" "SolveMatrix" 466 313]
+set m5 [addModuleAtPosition "SCIRun" "Fields" "BuildInterpolant" 343 159]
+set m6 [addModuleAtPosition "SCIRun" "Fields" "ManageFieldData" 320 403]
+set m7 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 492 69]
+set m8 [addModuleAtPosition "SCIRun" "Fields" "ApplyInterpolant" 630 488]
+set m9 [addModuleAtPosition "SCIRun" "Math" "SolveMatrix" 48 329]
+set m10 [addModuleAtPosition "SCIRun" "Fields" "ManageFieldData" 30 386]
+set m11 [addModuleAtPosition "SCIRun" "Fields" "ApplyInterpolant" 34 469]
+set m12 [addModuleAtPosition "SCIRun" "Fields" "ManageFieldData" 34 530]
+set m13 [addModuleAtPosition "SCIRun" "Fields" "ManageFieldData" 630 546]
+set m14 [addModuleAtPosition "SCIRun" "Math" "ErrorMetric" 117 625]
+set m15 [addModuleAtPosition "SCIRun" "DataIO" "MatrixReader" 30 6]
+set m16 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 343 69]
+set m17 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 452 399]
+set m18 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 281 567]
+set m19 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 452 567]
+set m20 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 263 626]
+set m21 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 434 627]
+set m22 [addModuleAtPosition "SCIRun" "Render" "Viewer" 365 712]
+set m23 [addModuleAtPosition "SCIRun" "Fields" "BuildInterpolant" 188 405]
+set m24 [addModuleAtPosition "SCIRun" "Fields" "FieldBoundary" 206 338]
+set m25 [addModuleAtPosition "SCIRun" "Fields" "ApplyInterpolant" 170 473]
 
-addConnection $m3 0 $m2 0
-addConnection $m5 0 $m6 0
-addConnection $m8 0 $m7 1
-addConnection $m20 0 $m9 0
-addConnection $m7 0 $m9 1
-addConnection $m6 0 $m9 2
+addConnection $m0 0 $m1 0
+addConnection $m0 0 $m2 0
+addConnection $m0 0 $m3 0
+addConnection $m3 0 $m4 1
+addConnection $m2 0 $m4 0
+addConnection $m4 0 $m6 1
+addConnection $m0 0 $m6 0
+addConnection $m7 0 $m5 1
+addConnection $m6 0 $m8 0
+addConnection $m5 0 $m8 1
+addConnection $m3 0 $m9 1
+addConnection $m9 0 $m10 1
+addConnection $m1 2 $m9 0
 addConnection $m0 0 $m10 0
-addConnection $m10 0 $m7 0
-addConnection $m8 0 $m6 1
-addConnection $m0 0 $m1 1
-addConnection $m2 0 $m4 1
-addConnection $m11 0 $m5 1
-addConnection $m13 0 $m12 1
-addConnection $m15 0 $m10 1
-#addConnection $m1 0 $m15 1
-#addConnection $m1 1 $m18 3
-addConnection $m16 0 $m15 0
-addConnection $m14 0 $m17 0
-addConnection $m14 0 $m18 0
-addConnection $m18 0 $m16 1
-addConnection $m17 0 $m16 0
-addConnection $m14 0 $m1 0
-addConnection $m19 0 $m20 0
-addConnection $m8 0 $m20 1
-addConnection $m18 0 $m3 1
-#addConnection $m1 0 $m2 1
-addConnection $m15 0 $m4 0
-addConnection $m3 0 $m11 0
-addConnection $m23 0 $m11 1
-addConnection $m22 0 $m5 0
-#addConnection $m4 0 $m12 3
-addConnection $m12 0 $m3 0
-addConnection $m14 0 $m12 0
-addConnection $m14 0 $m24 0
-addConnection $m24 0 $m12 2
-#addConnection $m12 1 $m27 2
-addConnection $m14 0 $m27 1
-addConnection $m28 0 $m29 1
-addConnection $m29 0 $m9 3
-addConnection $m26 0 $m27 0
-addConnection $m30 0 $m32 0
-addConnection $m32 0 $m31 1
-addConnection $m27 0 $m31 0
-addConnection $m31 0 $m29 0
-addConnection $m25 0 $m26 0
+addConnection $m10 0 $m11 0
+addConnection $m5 0 $m11 1
+addConnection $m11 0 $m12 0
+addConnection $m8 0 $m13 0
+addConnection $m12 1 $m14 0
+addConnection $m13 1 $m14 1
+addConnection $m14 0 $m1 2
+addConnection $m15 0 $m1 1
+addConnection $m16 0 $m5 0
+addConnection $m5 0 $m3 2
+addConnection $m17 0 $m18 0
+addConnection $m18 0 $m20 1
+addConnection $m17 0 $m19 0
+addConnection $m8 0 $m19 1
+addConnection $m19 0 $m21 1
+addConnection $m8 0 $m21 0
+addConnection $m20 0 $m22 0
+addConnection $m21 0 $m22 1
+addConnection $m24 0 $m23 1
+addConnection $m23 0 $m25 1
+addConnection $m10 0 $m25 0
+addConnection $m25 0 $m18 1
+addConnection $m25 0 $m20 0
+addConnection $m16 0 $m24 0
+addConnection $m16 0 $m23 0
 
 set $m0-notes {}
 set $m0-show_status 1
-set $m0-filename {/res/sci/u2/dmw/mydata/newDS/h.elec62.surf}
+set $m0-filename $env(SCIRUN_DATA)/cylinder3-sm.tvt.fld
 set $m1-notes {}
 set $m1-show_status 1
-set $m1-method {project}
-set $m1-zeroTCL 0
-set $m1-potMatTCL 0
+set $m1-seed_gui 1
 set $m2-notes {}
 set $m2-show_status 1
-set $m2-opTCL {AtimesB}
+set $m2-UseCondTCL 1
+set $m2-BCFlag {GroundZero}
 set $m3-notes {}
 set $m3-show_status 1
-set $m3-target_error 1e-06
-set $m3-flops 284740
-set $m3-floprate 4.68984
-set $m3-memrefs 4.9078e+06
-set $m3-memrate 80.8344
-set $m3-orig_error 1.73205
-set $m3-current_error {7.4502e-05}
-set $m3-method {conjugate_gradient_sci}
-set $m3-precond {Diag_P}
-set $m3-iteration 28
-set $m3-maxiter 1000
-set $m3-use_previous_soln 1
-set $m3-emit_partial 0
-set $m3-status {}
-set $m3-np 16
+set $m3-sourceNodeTCL 100
+set $m3-sinkNodeTCL 300
+set $m3-modeTCL {electrodes}
 set $m4-notes {}
 set $m4-show_status 1
-set $m4-haveUI 1
-set $m4-methodTCL {RMSrel}
-set $m4-pTCL {1}
+set $m4-target_error 1e-06
+set $m4-flops 1.28892e+07
+set $m4-floprate 168.644
+set $m4-memrefs 2.2314e+08
+set $m4-memrate 2919.59
+set $m4-orig_error 1.41421
+set $m4-current_error {7.84145e-07}
+set $m4-method {conjugate_gradient_sci}
+set $m4-precond {Diag_P}
+set $m4-iteration 119
+set $m4-maxiter 2000
+set $m4-use_previous_soln 1
+set $m4-emit_partial 0
+set $m4-status {}
+set $m4-np 1
 set $m5-notes {}
 set $m5-show_status 1
-set $m5-surfid {}
+set $m5-interp_op_gui {}
 set $m6-notes {}
 set $m6-show_status 1
-set $m6-range_min -0.19344
-set $m6-range_max 0.170187
-set $m6-rad 0.04
-set $m6-range {cmap}
-set $m6-named 0
-set $m6-invert 0
-set $m6-nodes 0
-set $m6-resol 9
-set $m6-clr-r 0.5
-set $m6-clr-g 0.7
-set $m6-clr-b 0.3
-set $m6-normals 1
-set $m6-ntype {spheres}
 set $m7-notes {}
 set $m7-show_status 1
-set $m7-range_min -0.015
-set $m7-range_max 0.018
-set $m7-rad 7
-set $m7-range {manual}
-set $m7-named 0
-set $m7-invert 0
-set $m7-nodes 1
-set $m7-resol 9
-set $m7-clr-r 0.5
-set $m7-clr-g 0.7
-set $m7-clr-b 0.3
-set $m7-normals 0
-set $m7-ntype {spheres}
+set $m7-filename $env(SCIRUN_DATA)/cylinder3-sm-bdry.pcd.fld
 set $m8-notes {}
 set $m8-show_status 1
-set $m8-tcl_status {Calling GenStandardColorMaps!}
-set $m8-positionList {}
-set $m8-nodeList {}
-set $m8-width 366
-set $m8-height 40
-set $m8-mapType 3
-set $m8-minRes 12
-set $m8-resolution 255
 set $m9-notes {}
 set $m9-show_status 1
-SCIRun_Render_Viewer_0 ui $m9-Roe_0
-set $m9-Roe_0-view-eyep-x 253.365
-set $m9-Roe_0-view-eyep-y 1674.6
-set $m9-Roe_0-view-eyep-z 2223.79
-set $m9-Roe_0-view-lookat-x 224.349
-set $m9-Roe_0-view-lookat-y 13.0594
-set $m9-Roe_0-view-lookat-z -27.8716
-set $m9-Roe_0-view-up-x -0.0321398
-set $m9-Roe_0-view-up-y 0.804425
-set $m9-Roe_0-view-up-z -0.593185
-set $m9-Roe_0-view-fov 6.56476
-set $m9-Roe_0-view-eyep-x 253.365
-set $m9-Roe_0-view-eyep-y 1674.6
-set $m9-Roe_0-view-eyep-z 2223.79
-set $m9-Roe_0-view-eyep-x 253.365
-set $m9-Roe_0-view-eyep-y 1674.6
-set $m9-Roe_0-view-eyep-z 2223.79
-set $m9-Roe_0-view-lookat-x 224.349
-set $m9-Roe_0-view-lookat-y 13.0594
-set $m9-Roe_0-view-lookat-z -27.8716
-set $m9-Roe_0-view-lookat-x 224.349
-set $m9-Roe_0-view-lookat-y 13.0594
-set $m9-Roe_0-view-lookat-z -27.8716
-set $m9-Roe_0-view-up-x -0.0321398
-set $m9-Roe_0-view-up-y 0.804425
-set $m9-Roe_0-view-up-z -0.593185
-set $m9-Roe_0-view-up-x -0.0321398
-set $m9-Roe_0-view-up-y 0.804425
-set $m9-Roe_0-view-up-z -0.593185
-set $m9-Roe_0-view-fov 6.56476
-set $m9-Roe_0-view-eyep_offset-x -1.79769e+308
-set $m9-Roe_0-view-eyep_offset-y -1.79769e+308
-set $m9-Roe_0-view-eyep_offset-z -1.79769e+308
-set $m9-Roe_0-view-eyep_offset-x -1.79769e+308
-set $m9-Roe_0-view-eyep_offset-y -1.79769e+308
-set $m9-Roe_0-view-eyep_offset-z -1.79769e+308
-set $m9-Roe_0-bgcolor-r 0
-set $m9-Roe_0-bgcolor-g 0
-set $m9-Roe_0-bgcolor-b 0
-set $m9-Roe_0-bgcolor-r 0
-set $m9-Roe_0-bgcolor-g 0
-set $m9-Roe_0-bgcolor-b 0
-set $m9-Roe_0-shading {}
-set $m9-Roe_0-do_stereo 0
-set $m9-Roe_0-do_bawgl 0
-set $m9-Roe_0-drawimg -2147483647
-set $m9-Roe_0-saveprefix {}
-set {$m9-Roe_0-Axes (4)} 0
-set {$m9-Roe_0- (5)} 1
-set {$m9-Roe_0-sourceSink (1)} 1
-set {$m9-Roe_0-Fwd (2)} 1
-set {$m9-Roe_0-Fwd (3)} 1
+set $m9-target_error 1e-06
+set $m9-flops 166944
+set $m9-floprate 8.65635
+set $m9-memrefs 3.16544e+06
+set $m9-memrate 164.133
+set $m9-orig_error 9.65643e-07
+set $m9-current_error {9.65643e-07}
+set $m9-method {conjugate_gradient_sci}
+set $m9-precond {Diag_P}
+set $m9-iteration 1
+set $m9-maxiter 2000
+set $m9-use_previous_soln 1
+set $m9-emit_partial 0
+set $m9-status {}
+set $m9-np 1
 set $m10-notes {}
 set $m10-show_status 1
-set $m10-surfid {}
 set $m11-notes {}
 set $m11-show_status 1
-set $m11-opTCL {AtimesB}
 set $m12-notes {}
 set $m12-show_status 1
-set $m12-refnodeTCL {0}
-set $m12-pinzeroTCL 1
 set $m13-notes {}
 set $m13-show_status 1
-set $m13-filename {/home/sci/dmw/mydata/newDS/h.condParam.mat}
 set $m14-notes {}
 set $m14-show_status 1
-set $m14-filename {/home/sci/dmw/mydata/newDS/h64.mesh}
+set $m14-haveUI 1
+set $m14-methodTCL {CCinv}
+set $m14-pTCL {1}
 set $m15-notes {}
 set $m15-show_status 1
-set $m15-opTCL {AtimesB}
+set $m15-filename $env(SCIRUN_DATA)/cylinder3-condParam.mat
 set $m16-notes {}
 set $m16-show_status 1
-set $m16-target_error 1e-06
-set $m16-flops 1.97786e+07
-set $m16-floprate 144.974
-set $m16-memrefs 3.44195e+08
-set $m16-memrate 2522.89
-set $m16-orig_error 1
-set $m16-current_error {8.45635e-05}
-set $m16-method {conjugate_gradient_sci}
-set $m16-precond {Diag_P}
-set $m16-iteration 157
-set $m16-maxiter 1000
-set $m16-use_previous_soln 1
-set $m16-emit_partial 0
-set $m16-status {}
-set $m16-np 16
+set $m16-filename $env(SCIRUN_DATA)/cylinder3-sm.tvd.fld
 set $m17-notes {}
 set $m17-show_status 1
-set $m17-BCFlag {PinZero}
-set $m17-UseCondTCL 1
-set $m17-refnodeTCL {0}
+set $m17-tcl_status {Calling GenStandardColorMaps!}
+set $m17-positionList {}
+set $m17-nodeList {}
+set $m17-width 1
+set $m17-height 1
+set $m17-mapType 3
+set $m17-minRes 12
+set $m17-resolution 12
 set $m18-notes {}
 set $m18-show_status 1
-set $m18-sourceNodeTCL {6}
-set $m18-sinkNodeTCL {51}
-set $m18-modeTCL {electrodes}
+set $m18-isFixed 0
+set $m18-min -0.0345029
+set $m18-max 0.0160781
 set $m19-notes {}
 set $m19-show_status 1
-set $m19-filename {/home/sci/dmw/mydata/newDS/h.sourceSink.surf}
+set $m19-isFixed 0
+set $m19-min -0.171082
+set $m19-max 0.0702525
 set $m20-notes {}
 set $m20-show_status 1
-set $m20-range_min -1
-set $m20-range_max 1
-set $m20-rad 10
-set $m20-range {cmap}
-set $m20-named 0
-set $m20-invert 0
-set $m20-nodes 1
-set $m20-resol 8
-set $m20-clr-r 0.5
-set $m20-clr-g 0.7
-set $m20-clr-b 0.3
-set $m20-normals 0
-set $m20-ntype {spheres}
+set $m20-nodes-on 0
+set $m20-edges-on 0
+set $m20-faces-on 1
+set $m20-def-color-r 0.5
+set $m20-def-color-g 0.5
+set $m20-def-color-b 0.5
+set $m20-node_display_type {Spheres}
+set $m20-edge_display_type {Lines}
+set $m20-node_scale 0.03
+set $m20-edge_scale 0.03
+set $m20-show_progress -2147483647
+set $m20-resolution 4
+set $m21-notes {}
+set $m21-show_status 1
+set $m21-nodes-on 1
+set $m21-edges-on 0
+set $m21-faces-on 0
+set $m21-def-color-r 0.5
+set $m21-def-color-g 0.5
+set $m21-def-color-b 0.5
+set $m21-node_display_type {Spheres}
+set $m21-edge_display_type {Lines}
+set $m21-node_scale 3.5
+set $m21-edge_scale 0.03
+set $m21-show_progress -2147483647
+set $m21-resolution 10
 set $m22-notes {}
 set $m22-show_status 1
-set $m22-filename {/home/sci/dmw/mydata/newDS/h64.bdry.surf}
+$m22 ui
+set $m22-ViewWindow_0-pos {}
+set $m22-ViewWindow_0-caxes 0
+set $m22-ViewWindow_0-iaxes -2147483647
+set $m22-ViewWindow_0-view-eyep-x 902.32
+set $m22-ViewWindow_0-view-eyep-y -193.981
+set $m22-ViewWindow_0-view-eyep-z -182.468
+set $m22-ViewWindow_0-view-lookat-x -2.8076
+set $m22-ViewWindow_0-view-lookat-y -2.04485
+set $m22-ViewWindow_0-view-lookat-z 109.358
+set $m22-ViewWindow_0-view-up-x -0.295492
+set $m22-ViewWindow_0-view-up-y 0.0565201
+set $m22-ViewWindow_0-view-up-z -0.953672
+set $m22-ViewWindow_0-view-fov 20
+set $m22-ViewWindow_0-view-eyep-x 902.32
+set $m22-ViewWindow_0-view-eyep-y -193.981
+set $m22-ViewWindow_0-view-eyep-z -182.468
+set $m22-ViewWindow_0-view-eyep-x 902.32
+set $m22-ViewWindow_0-view-eyep-y -193.981
+set $m22-ViewWindow_0-view-eyep-z -182.468
+set $m22-ViewWindow_0-view-lookat-x -2.8076
+set $m22-ViewWindow_0-view-lookat-y -2.04485
+set $m22-ViewWindow_0-view-lookat-z 109.358
+set $m22-ViewWindow_0-view-lookat-x -2.8076
+set $m22-ViewWindow_0-view-lookat-y -2.04485
+set $m22-ViewWindow_0-view-lookat-z 109.358
+set $m22-ViewWindow_0-view-up-x -0.295492
+set $m22-ViewWindow_0-view-up-y 0.0565201
+set $m22-ViewWindow_0-view-up-z -0.953672
+set $m22-ViewWindow_0-view-up-x -0.295492
+set $m22-ViewWindow_0-view-up-y 0.0565201
+set $m22-ViewWindow_0-view-up-z -0.953672
+set $m22-ViewWindow_0-view-fov 20
+set $m22-ViewWindow_0-view-eyep_offset-x -1.79769e+308
+set $m22-ViewWindow_0-view-eyep_offset-y -1.79769e+308
+set $m22-ViewWindow_0-view-eyep_offset-z -1.79769e+308
+set $m22-ViewWindow_0-view-eyep_offset-x -1.79769e+308
+set $m22-ViewWindow_0-view-eyep_offset-y -1.79769e+308
+set $m22-ViewWindow_0-view-eyep_offset-z -1.79769e+308
+set $m22-ViewWindow_0-bgcolor-r 0
+set $m22-ViewWindow_0-bgcolor-g 0
+set $m22-ViewWindow_0-bgcolor-b 0
+set $m22-ViewWindow_0-bgcolor-r 0
+set $m22-ViewWindow_0-bgcolor-g 0
+set $m22-ViewWindow_0-bgcolor-b 0
+set $m22-ViewWindow_0-shading {}
+set $m22-ViewWindow_0-do_stereo 0
+set $m22-ViewWindow_0-sbase 1
+set $m22-ViewWindow_0-sr 1
+set $m22-ViewWindow_0-do_bawgl 0
+set $m22-ViewWindow_0-drawimg -2147483647
+set $m22-ViewWindow_0-saveprefix {}
+set $m22-ViewWindow_0-unused 1
+set $m22-ViewWindow_0-unused 1
 set $m23-notes {}
 set $m23-show_status 1
-set $m23-filename {/home/sci/dmw/mydata/newDS/h64.bdryinterp.mat}
+set $m23-interp_op_gui {}
 set $m24-notes {}
 set $m24-show_status 1
-set $m24-BCFlag {none}
-set $m24-UseCondTCL 1
-set $m24-refnodeTCL {0}
 set $m25-notes {}
 set $m25-show_status 1
-set $m25-filename {/home/sci/dmw/mydata/newDS/h64.sfug}
-set $m26-notes {}
-set $m26-show_status 1
-set $m26-seed_point-x -1.79769e+308
-set $m26-seed_point-y -1.79769e+308
-set $m26-seed_point-z -1.79769e+308
-set $m26-seed_point-x -1.79769e+308
-set $m26-seed_point-y -1.79769e+308
-set $m26-seed_point-z -1.79769e+308
-set $m26-have_seedpoint 0
-set $m26-isoval 100
-set $m26-do_3dwidget 1
-set $m26-emit_surface 1
-set $m26-show_progress -2147483647
-set $m27-notes {}
-set $m27-show_status 1
-set $m27-splitDirTCL {X}
-set $m27-splitValTCL 118
-set $m28-notes {}
-set $m28-show_status 1
-set $m28-tcl_status {Calling GenStandardColorMaps!}
-set $m28-positionList {}
-set $m28-nodeList {}
-set $m28-width 366
-set $m28-height 40
-set $m28-mapType 2
-set $m28-minRes 12
-set $m28-resolution 255
-set $m29-notes {}
-set $m29-show_status 1
-set $m29-rx 0
-set $m29-ry 0
-set $m29-rz 1
-set $m29-th 0
-set $m29-tx 230
-set $m29-ty 0
-set $m29-tz 0
-set $m29-scale 0
-set $m29-scalex 0
-set $m29-scaley 0
-set $m29-scalez 0
-set $m29-sha 0
-set $m29-shb 0
-set $m29-shc 1
-set $m29-shd 1
-set $m29-xmapTCL 1
-set $m29-ymapTCL 2
-set $m29-zmapTCL 3
-set $m29-pre 1
-set $m29-whichxform 0
-set $m29-widgetShowResizeHandles 0
-set $m29-widgetScale 1
-set $m30-notes {}
-set $m30-show_status 1
-set $m31-notes {}
-set $m31-show_status 1
-set $m31-range_min -1.82
-set $m31-range_max 1.04
-set $m31-rad 1
-set $m31-range {manual}
-set $m31-named 0
-set $m31-invert 0
-set $m31-nodes 0
-set $m31-resol 8
-set $m31-clr-r 0.5
-set $m31-clr-g 0.7
-set $m31-clr-b 0.3
-set $m31-normals 0
-set $m31-ntype {points}
-set $m32-notes {}
-set $m32-show_status 1
-set $m32-rx 0
-set $m32-ry 0
-set $m32-rz 1
-set $m32-th 0
-set $m32-tx 0
-set $m32-ty 0
-set $m32-tz 0
-set $m32-scale 0
-set $m32-scalex 0
-set $m32-scaley 0
-set $m32-scalez 0
-set $m32-sha 0
-set $m32-shb 0
-set $m32-shc 1
-set $m32-shd 1
-set $m32-xmapTCL 1
-set $m32-ymapTCL 2
-set $m32-zmapTCL 3
-set $m32-pre 1
-set $m32-whichxform 0
-set $m32-widgetShowResizeHandles 0
-set $m32-widgetScale 1
+$m1 ui
 $m3 ui
 $m4 ui
-$m12 ui
-$m16 ui
-$m26 ui
+$m9 ui
+$m14 ui
 
 ::netedit scheduleok
