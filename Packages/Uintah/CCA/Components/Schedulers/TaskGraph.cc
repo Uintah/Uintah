@@ -241,16 +241,11 @@ TaskGraph::setupTaskConnections()
 	// If DW is finalized, we assume that we already have it,
 	// or that we will get it sent to us.  Otherwise, we set
 	// up an edge to connect this req to a comp
-	CompMap::iterator compiter = comps.find(req->var);
-	if(compiter == comps.end()){
-	  cerr << "Vars:\n";
-	  for(CompMap::iterator iter=comps.begin();iter != comps.end();iter++)
-	    cerr << iter->first->getName() << '\n';
-	  throw InternalError("Scheduler could not find production for variable: "+req->var->getName()+", required for task: "+task->getName());
-	}
-	CompMap::iterator end = comps.upper_bound(req->var);
+	pair<CompMap::iterator,CompMap::iterator> iters 
+	  = comps.equal_range(req->var);
 	int count=0;
-	for(;compiter != end; ++compiter){
+	for(CompMap::iterator compiter = iters.first;
+	    compiter != iters.second; ++compiter){
 	  if(req->var->typeDescription() != compiter->first->typeDescription())
 	    throw TypeMismatchException("Type mismatch for variable: "+req->var->getName());
 	  // Make sure that we get the comp from the reduction task
@@ -279,7 +274,8 @@ TaskGraph::setupTaskConnections()
 	    }
 	  }
 	}
-	if(count == 0)
+	if(count == 0 && (!req->matls || req->matls->size() > 0) 
+	   && (!req->patches || req->patches->size() > 0))
 	  throw InternalError("Scheduler could not find specific production for variable: "+req->var->getName()+", required for task: "+task->getName());
       }
     }
@@ -675,14 +671,19 @@ TaskGraph::VarLabelMaterialMap* TaskGraph::makeVarLabelMaterialMap()
        list<int>& matls = (*result)[label->getName()];
        const MaterialSubset* msubset = comp->matls;
        if(msubset){
-	 for(int mm=0;mm<msubset->size();mm++)
+	 for(int mm=0;mm<msubset->size();mm++){
 	   matls.push_back(msubset->get(mm));
+	 }
+       } else if(label->typeDescription()->getType() == TypeDescription::ReductionVariable) {
+	 // Default to material -1 (global)
+	 matls.push_back(-1);
        } else {
 	 const MaterialSet* ms = task->getMaterialSet();
 	 for(int m=0;m<ms->size();m++){
 	   const MaterialSubset* msubset = ms->getSubset(m);
-	   for(int mm=0;mm<msubset->size();mm++)
+	   for(int mm=0;mm<msubset->size();mm++){
 	     matls.push_back(msubset->get(mm));
+	   }
 	 }
        }
      }
