@@ -1962,6 +1962,32 @@ BoundaryCondition::recomputePressureBC(const ProcessorGroup* ,
   }
 } 
 
+// modified pressure bc
+void 
+BoundaryCondition::newrecomputePressureBC(const ProcessorGroup* /*pc*/,
+					  const Patch* patch,
+					  CellInformation* cellinfo,
+					  ArchesVariables* vars)
+{
+  // Get the low and high index for the patch and the variables
+    IntVector idxLo = patch->getCellFORTLowIndex();
+    IntVector idxHi = patch->getCellFORTHighIndex();
+    bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
+    bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
+    bool yminus = patch->getBCType(Patch::yminus) != Patch::Neighbor;
+    bool yplus =  patch->getBCType(Patch::yplus) != Patch::Neighbor;
+    bool zminus = patch->getBCType(Patch::zminus) != Patch::Neighbor;
+    bool zplus =  patch->getBCType(Patch::zplus) != Patch::Neighbor;
+
+    fort_calpbc(vars->uVelRhoHat, vars->vVelRhoHat, vars->wVelRhoHat, idxLo, idxHi,
+		vars->pressure, vars->density, vars->cellType, d_pressureBdry->d_cellTypeID,
+		d_pressureBdry->refPressure,
+		xminus, xplus, yminus, yplus, zminus, zplus);
+
+}
+
+
+
 //****************************************************************************
 // Actually set flat profile at flow inlet boundary
 //****************************************************************************

@@ -1538,11 +1538,14 @@ PressureSolver::buildLinearMatrixPred(const ProcessorGroup* pc,
 				       &pressureVars);
     d_discretize->calculateVelRhoHat(pc, patch, index, delta_t,
 				     cellinfo, &pressureVars);
+
 #ifdef ARCHES_PRES_DEBUG
     std::cerr << "Done building matrix for press coeff" << endl;
 #endif
     
     }
+    d_boundaryCondition->newrecomputePressureBC(pc, patch,
+						cellinfo, &pressureVars); 
 
   // put required vars
 
