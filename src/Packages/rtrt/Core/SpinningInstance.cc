@@ -10,7 +10,7 @@ SpinningInstance::SpinningInstance(InstanceWrapperObject* o, Transform* trans, P
   axis.normalize();
 
   location_trans = new Transform();
-  *location_trans = *t;
+  *location_trans = *currentTransform;
   location_trans->pre_translate(Point(0,0,0)-cen); 
 
   o->compute_bounds(bbox_orig,0);
@@ -149,11 +149,10 @@ void SpinningInstance::animate(double time, bool& changed) {
 
   //There should be a more efficient way to do this, the copies are bad.
   //But seem necessary to prevent degeneration on off angles
-  *t=*location_trans;
+  *currentTransform=*location_trans;
   //the pretranslate is done in the constructor
-  t->pre_rotate(time*rate, axis);
-  
-  t->pre_translate(cen-Point(0,0,0));
+  currentTransform->pre_rotate(time*rate, axis);
+  currentTransform->pre_translate(cen-Point(0,0,0));
   changed = true;
   
 }
@@ -164,9 +163,9 @@ void SpinningInstance::intersect(const Ray& ray, HitInfo& hit, DepthStats* st,
 
   double min_t = hit.min_t;
   if (!bbox.intersect(ray, min_t)) return;	  
-  
+
   Ray tray;  
-  ray.transform(t,tray);
+  ray.transform(currentTransform,tray);
   //double scale = tray.direction().length() / ray.direction().length();
 
   HitInfo thit;
