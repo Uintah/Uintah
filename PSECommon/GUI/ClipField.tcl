@@ -37,19 +37,19 @@ itcl_class PSECommon_Fields_ClipField {
 	set n "$this-c needexecute "
 
 	frame $w.f.r
-#	range $w.f.r.x -from 1 -to 256 -label "X" -showvalue true \
-#		-var_min $this-x_min -var_max $this-x_max -orient horizontal \
-#		-length 300 -nonzero 1
-#	$w.f.r.x setMinMax 1 256
-#	range $w.f.r.y -from 1 -to 256 -label "Y" -showvalue true \
-#		-var_min $this-y_min -var_max $this-y_max -orient horizontal \
-#		-length 300 -nonzero 1
-#	$w.f.r.y setMinMax 1 256
-#	range $w.f.r.z -from 1 -to 81 -label "Z" -showvalue true \
-#		-var_min $this-z_min -var_max $this-z_max -orient horizontal \
-#		-length 300 -nonzero 1
-#	$w.f.r.z setMinMax 5 5
-#	pack $w.f.r.x $w.f.r.y $w.f.r.z -side top
+	range $w.f.r.x -from 1 -to 256 -label "X" -showvalue true \
+		-var_min $this-x_min -var_max $this-x_max -orient horizontal \
+		-length 300 -nonzero 1
+	$w.f.r.x setMinMax 1 256
+	range $w.f.r.y -from 1 -to 256 -label "Y" -showvalue true \
+		-var_min $this-y_min -var_max $this-y_max -orient horizontal \
+		-length 300 -nonzero 1
+	$w.f.r.y setMinMax 1 256
+	range $w.f.r.z -from 1 -to 81 -label "Z" -showvalue true \
+		-var_min $this-z_min -var_max $this-z_max -orient horizontal \
+		-length 300 -nonzero 1
+	$w.f.r.z setMinMax 5 5
+	pack $w.f.r.x $w.f.r.y $w.f.r.z -side top
 	button $w.f.go -text "Execute" -relief raised -command $n
 	checkbutton $w.f.same -variable $this-sameInput -text "Same Inputs?"
 	$w.f.same select
