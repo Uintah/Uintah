@@ -47,3 +47,15 @@ font-weight: bold;
 span.texttt {
 font-family: monospace;
 }
+
+span.notetitle {
+font-weight: bold;
+font-style: oblique;
+}
+
+div.note {
+border-top: 1px solid;
+border-bottom: 1px solid;
+margin-left: 5%;
+margin-right: 5%;
+}
