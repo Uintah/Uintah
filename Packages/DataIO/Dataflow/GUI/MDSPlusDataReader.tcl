@@ -78,7 +78,7 @@ itcl_class DataIO_Readers_MDSPlusDataReader {
 	global allow_selection
 	set allow_selection true
     }
-
+    
     method set_power_app { cmd } {
 	global $this-power_app
 	global power_app_command
@@ -314,11 +314,13 @@ itcl_class DataIO_Readers_MDSPlusDataReader {
 
 
 	frame $sd.controls
-	button $sd.controls.add -text "Add Entry" \
+	button $sd.controls.add -text "Add New Entry" \
 	    -command "$this addEntry"
-	button $sd.controls.delete -text "Delete Entry" \
-	    -command "$this deleteEntry"
-	pack $sd.controls.add $sd.controls.delete \
+	button $sd.controls.delete -text "Delete Checked Entry" \
+	    -command "$this deleteEntry 0"
+	button $sd.controls.deleteall -text "Delete All Entries" \
+	    -command "$this deleteEntry 1"
+	pack $sd.controls.add $sd.controls.delete $sd.controls.deleteall \
 	    -side left -fill x -expand y
 
 	pack $sd.controls -side top -fill both -expand yes
@@ -490,7 +492,7 @@ itcl_class DataIO_Readers_MDSPlusDataReader {
 	create_entries
     }
 
-    method deleteEntry {} {
+    method deleteEntry { all } {
 	set w .ui[modname]
 	if {[winfo exists $w]} {
 
@@ -501,18 +503,20 @@ itcl_class DataIO_Readers_MDSPlusDataReader {
 
 	    set j 0
 
-	    for {set i 0} {$i < [set $this-num-entries]} {incr i} {
+	    if { $all == 0 } {
+		for {set i 0} {$i < [set $this-num-entries]} {incr i} {
 
-		# Shift the enties in the list. 
-		if { [set $this-check-$i] == 0 } {
-		    set $this-check-$j 0
-		    set $this-server-$j [set $this-server-$i]
-		    set $this-tree-$j   [set $this-tree-$i]
-		    set $this-shot-$j   [set $this-shot-$i]
-		    set $this-signal-$j [set $this-signal-$i]
-		    set $this-status-$j [set $this-status-$i]
-		    set $this-port-$j   [set $this-port-$i]
-		    incr j
+		    # Shift the enties in the list. 
+		    if { [set $this-check-$i] == 0 } {
+			set $this-check-$j 0
+			set $this-server-$j [set $this-server-$i]
+			set $this-tree-$j   [set $this-tree-$i]
+			set $this-shot-$j   [set $this-shot-$i]
+			set $this-signal-$j [set $this-signal-$i]
+			set $this-status-$j [set $this-status-$i]
+			set $this-port-$j   [set $this-port-$i]
+			incr j
+		    }
 		}
 	    }
 
