@@ -124,7 +124,7 @@ XML_TLINK := -L$(XML_LIB_DIR)
 
 ifeq ($(BUILD_PARALLEL),yes)
 GLOBUS_LIB_DIR := @GLOBUS_LIB@
-GLOBUS_LIBS := $(LDRUN_PREFIX)$(GLOBUS_LIB_DIR) -L$(GLOBUS_LIB_DIR)
+GLOBUS_LIBS := $(LDRUN_PREFIX)$(GLOBUS_LIB_DIR) -L$(GLOBUS_LIB_DIR) -lglobus_nexus
 GLOBUS_COMMON := $(LDRUN_PREFIX)$(GLOBUS_LIB_DIR) -L$(GLOBUS_LIB_DIR) -lglobus_common
 GLOBUS_TLINK := -L$(GLOBUS_LIB_DIR)
 endif
@@ -248,7 +248,7 @@ clean::
 	rm -f $(CLEANLIBS)
 	rm -f $(CLEANPROGS)
 	rm -f y.output
-	rmdir $(LIBDIR)
+	rm -Rf $(LIBDIR)
 
 distclean:: clean
 	rm -f config.status config.log config.cache
@@ -281,6 +281,9 @@ endif
 
 #
 # $Log$
+# Revision 1.22  2000/04/12 22:02:10  dav
+# changed rmdir libdir to rm minus Rf libdir so that it actually removes it when libdir still has stuff in it.
+#
 # Revision 1.21  2000/04/12 21:12:39  dav
 # fixed the globus_lib_dir in makefile.in to use @GLOBUS_LIB@ from the config script instead of being hard coded.
 #
