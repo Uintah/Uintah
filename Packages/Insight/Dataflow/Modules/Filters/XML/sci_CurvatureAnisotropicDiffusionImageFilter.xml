@@ -18,7 +18,7 @@
   University of Utah. All Rights Reserved.
 -->
 
-<filter name="CurvatureAnisotropicDiffusionImageFilter">
+<filter>
    <include href="ITK/itk_CurvatureAnisotropicDiffusionImageFilter.xml"/>
    <filter-sci name="CurvatureAnisotropicDiffusionImageFilter">
       <package>Insight</package>

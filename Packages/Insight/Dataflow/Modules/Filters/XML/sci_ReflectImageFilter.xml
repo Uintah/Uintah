@@ -18,7 +18,7 @@
   University of Utah. All Rights Reserved.
 -->
 
-<filter name="ReflectImageFilter">
+<filter>
    <include href="ITK/itk_ReflectImageFilter.xml"/>
    <include href="Dataflow/Modules/Filters/XML/gui_ReflectImageFilter.xml"/>
    <filter-sci name="ReflectImageFilter">

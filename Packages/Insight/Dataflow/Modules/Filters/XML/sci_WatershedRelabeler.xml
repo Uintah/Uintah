@@ -18,7 +18,7 @@
   University of Utah. All Rights Reserved.
 -->
 
-<filter name="watershed::Relabeler">
+<filter>
   <include href="ITK/itk_WatershedRelabeler.xml"/>
   <include href="Dataflow/Modules/Filters/XML/gui_WatershedRelabeler.xml"/>
 
