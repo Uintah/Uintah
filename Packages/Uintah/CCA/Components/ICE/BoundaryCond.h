@@ -116,7 +116,7 @@ template<class T>
  Purpose~   does the actual work
  ---------------------------------------------------------------------  */
 template <class T>
-void getIteratorBCValueBCKind( const Patch* patch, 
+bool getIteratorBCValueBCKind( const Patch* patch, 
                                const Patch::FaceType face,
                                const int child,
                                const string& desc,
@@ -125,6 +125,7 @@ void getIteratorBCValueBCKind( const Patch* patch,
                                vector<IntVector>& bound,
                                string& bc_kind)
 { 
+  bound.push_back(IntVector(-9,-9,-9));
   //__________________________________
   //  find the iterator, BC value and BC kind
   vector<IntVector> nbound,sfx,sfy,sfz;
@@ -153,6 +154,15 @@ void getIteratorBCValueBCKind( const Patch* patch,
   }
   delete bc;
   delete sym_bc;
+  
+  // Did I find an iterator
+  if( bc_kind == "NotSet" || *bound.begin() == IntVector(-9,-9,-9)){
+    return false;
+  }else{
+    return true;
+  }
+       
+       
 }
 /* --------------------------------------------------------------------- 
  Function~  setNeumanDirichletBC--
@@ -345,15 +355,15 @@ void setBC(T& vel_FC,
       Vector bc_value(-9,-9,-9);;
       string bc_kind = "NotSet";
       vector<IntVector> bound;
-
-      getIteratorBCValueBCKind<Vector>( patch, face, child, desc, mat_id,
-					bc_value, bound,bc_kind); 
-                                   
+      bool foundIterator = 
+        getIteratorBCValueBCKind<Vector>( patch, face, child, desc, mat_id,
+					       bc_value, bound,bc_kind); 
+                                       
       if(bc_kind == "LODI") {
         BC_dbg << "Face: "<<face<< " LODI bcs specified: do Nothing"<< endl; 
       }
       
-      if (bc_kind != "NotSet" && bc_kind != "LODI" ) {
+      if (foundIterator && bc_kind != "LODI" ) {
         //__________________________________
         // Extract which SFC variable you're
         //  working on, the value and the principal
