@@ -235,6 +235,12 @@ def runSusTest(test, susdir, inputxml, compare_root, algo, mode, max_parallelism
     if rc != 0:
 	if rc == 5 * 256:
      	    print "\t*** Warning, %s has changed.  You must update the gold standard." % (input(test))
+    	    print "\tSee %s/compare_sus_runs.log for more comparison information." % (getcwd())
+ 	    print "%s" % replace_msg
+	    return 1
+	elif rc == 10 * 256:
+     	    print "\t*** Warning, %s has changed.  You must update the gold standard." % (input(test))
+    	    print "\tAll other comparison tests passed so the change was likely trivial."
  	    print "%s" % replace_msg
 	    return 1
 	elif rc == 1 * 256:
