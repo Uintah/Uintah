@@ -37,12 +37,17 @@ using Component::PIDL::PIDL;
 #include <afxwin.h>
 #endif
 
-
 using namespace SCIRun;
+
+#ifndef FM_COMP_PATH
+#error main/sub.mk needs to define FM_COMP_PATH
+#endif
+
 
 namespace SCIRun {
 extern bool global_remote;
 void set_guiManager( GuiManager * );
+const char* FIELD_MANIP_COMPILATION_PATH = FM_COMP_PATH;
 
 }
 
@@ -70,87 +75,87 @@ char** global_argv;
 // master creates slave by rsh "sr -slave hostname portnumber"
 int main(int argc, char** argv)
 {
-    global_argc=argc;
-    global_argv=argv;
+  global_argc=argc;
+  global_argv=argv;
 
 #ifdef SCI_PARALLEL
-    try {
-	PIDL::initialize(argc, argv);
-    } catch(const Exception& e) {
-	cerr << "Caught exception:\n";
-	cerr << e.message() << '\n';
-	abort();
-    } catch(...) {
-	cerr << "Caught unexpected exception!\n";
-	abort();
-} // End namespace SCIRun
+  try {
+    PIDL::initialize(argc, argv);
+  } catch(const Exception& e) {
+    cerr << "Caught exception:\n";
+    cerr << e.message() << '\n';
+    abort();
+  } catch(...) {
+    cerr << "Caught unexpected exception!\n";
+    abort();
+  } 
 #endif
 
-    // Start up TCL...
-    TCLTask* tcl_task = new TCLTask(argc, argv);
-    Thread* t=new Thread(tcl_task, "TCL main event loop");
-    t->detach();
-    tcl_task->mainloop_waitstart();
+  // Start up TCL...
+  TCLTask* tcl_task = new TCLTask(argc, argv);
+  Thread* t=new Thread(tcl_task, "TCL main event loop");
+  t->detach();
+  tcl_task->mainloop_waitstart();
 
-    // Set up the TCL environment to find core components
-    clString result;
-    TCL::eval("global PSECoreTCL CoreTCL",result);
-    TCL::eval("set DataflowTCL "PSECORETCL,result);
-    TCL::eval("set CoreTCL "SCICORETCL,result);
-    TCL::eval("lappend auto_path "SCICORETCL,result);
-    TCL::eval("lappend auto_path "PSECORETCL,result);
-    TCL::eval("lappend auto_path "ITCL_WIDGETS,result);
+  // Set up the TCL environment to find core components
+  clString result;
+  TCL::eval("global PSECoreTCL CoreTCL",result);
+  TCL::eval("set DataflowTCL "PSECORETCL,result);
+  TCL::eval("set CoreTCL "SCICORETCL,result);
+  TCL::eval("lappend auto_path "SCICORETCL,result);
+  TCL::eval("lappend auto_path "PSECORETCL,result);
+  TCL::eval("lappend auto_path "ITCL_WIDGETS,result);
 
-    // Create initial network
-    // We build the Network with a 1, indicating that this is the
-    // first instantiation of the network class, and this network
-    // should read the command line specified files (if any)
-    Network* net=new Network(1);
+  // Create initial network
+  // We build the Network with a 1, indicating that this is the
+  // first instantiation of the network class, and this network
+  // should read the command line specified files (if any)
+  Network* net=new Network(1);
 
-    // Fork off task for the network editor.  It is a detached
-    // task, and the Task* will be deleted by the task manager
-    NetworkEditor* gui_task=new NetworkEditor(net);
+  // Fork off task for the network editor.  It is a detached
+  // task, and the Task* will be deleted by the task manager
+  NetworkEditor* gui_task=new NetworkEditor(net);
 
-    // Activate the network editor and scheduler.  Arguments and return
-    // values are meaningless
-    Thread* t2=new Thread(gui_task, "Scheduler");
-    t2->setDaemon(true);
-    t2->detach();
+  // Activate the network editor and scheduler.  Arguments and return
+  // values are meaningless
+  Thread* t2=new Thread(gui_task, "Scheduler");
+  t2->setDaemon(true);
+  t2->detach();
 
-    // wait for the main window to display before continuing the startup.
-    TCL::eval("tkwait visibility .top.globalViewFrame.canvas",result);
+  // wait for the main window to display before continuing the startup.
+  TCL::eval("tkwait visibility .top.globalViewFrame.canvas",result);
 
-    // Load in the default packages
-    if(getenv("PACKAGE_PATH")!=NULL)
-      packageDB.loadPackage(getenv("PACKAGE_PATH"));
-    else
-      packageDB.loadPackage(DEFAULT_PACKAGE_PATH);
+  // Load in the default packages
+  if(getenv("PACKAGE_PATH")!=NULL)
+    packageDB.loadPackage(getenv("PACKAGE_PATH"));
+  else
+    packageDB.loadPackage(DEFAULT_PACKAGE_PATH);
     
 
 #if 0
-    // startup master-side GuiServer, even when no slave..
-    // XXX: Is this a remnant of dist'd stuff?  Michelle?
-    GuiServer* gui_server = new GuiServer;
-    Thread* t3=new Thread(gui_server, "GUI server thread");
-    t3->setDaemon(true);
-    t3->detach();
+  // startup master-side GuiServer, even when no slave..
+  // XXX: Is this a remnant of dist'd stuff?  Michelle?
+  GuiServer* gui_server = new GuiServer;
+  Thread* t3=new Thread(gui_server, "GUI server thread");
+  t3->setDaemon(true);
+  t3->detach();
 #endif
 
-    // Now activate the TCL event loop
-    tcl_task->release_mainloop();
+  // Now activate the TCL event loop
+  tcl_task->release_mainloop();
 
 #ifdef _WIN32
-	// windows has a semantic problem with atexit(), so we wait here instead.
-	HANDLE forever = CreateSemaphore(0,0,1,"forever");
-	WaitForSingleObject(forever,INFINITE);
+  // windows has a semantic problem with atexit(), so we wait here instead.
+  HANDLE forever = CreateSemaphore(0,0,1,"forever");
+  WaitForSingleObject(forever,INFINITE);
 #endif
 
 #ifndef __sgi
-	Semaphore wait("main wait", 0);
-	wait.down();
+  Semaphore wait("main wait", 0);
+  wait.down();
 #endif
 	
-    // Never reached
-    return 0;
+  // Never reached
+  return 0;
 
 }

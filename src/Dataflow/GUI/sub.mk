@@ -50,6 +50,7 @@ $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/LightWidget.tcl \
 	$(SRCDIR)/LocateNbrhd.tcl \
 	$(SRCDIR)/MacroModule.tcl \
+	$(SRCDIR)/ManipFields.tcl \
 	$(SRCDIR)/MatMat.tcl \
 	$(SRCDIR)/MatSelectVec.tcl \
 	$(SRCDIR)/MatVec.tcl \
