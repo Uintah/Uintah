@@ -493,6 +493,7 @@ case $host in
     ;;
   *-darwin*)
     NUM_CPUS=2
+    HAVE_OSX="yes"
     ;;
   *-aix*)
     NUM_CPUS=4
