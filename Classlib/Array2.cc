@@ -137,6 +137,8 @@ Array2<T>& Array2<T>::operator=(const Array2<T> &copy)
 
 
 #include <Classlib/String.h>
+#include <iostream.h>
+
 
 
 void Array2<int>::test_rigorous(RigorousTest* __test)
