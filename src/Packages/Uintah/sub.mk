@@ -50,8 +50,14 @@ LIBS 	:= $(XML_LIBRARY)
 
 include $(SRCTOP)/scripts/program.mk
 
+SUBDIRS := $(SRCDIR)/tools
+include $(SRCTOP)/scripts/recurse.mk
+
 #
 # $Log$
+# Revision 1.15  2000/07/28 05:13:15  jehall
+# - Added tools directory
+#
 # Revision 1.14  2000/07/11 20:00:11  kuzimmer
 # Modified so that CCVariables and Matrix3 are recognized
 #
