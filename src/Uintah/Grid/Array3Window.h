@@ -4,6 +4,36 @@
 #include "RefCounted.h"
 #include "Array3Data.h"
 
+namespace Uintah {
+namespace Grid {
+
+/**************************************
+
+CLASS
+   Array3Window
+   
+GENERAL INFORMATION
+
+   Array3Window.h
+
+   Steven G. Parker
+   Department of Computer Science
+   University of Utah
+
+   Center for the Simulation of Accidental Fires and Explosions (C-SAFE)
+  
+   Copyright (C) 2000 SCI Group
+
+KEYWORDS
+   Array3Window
+
+DESCRIPTION
+   Long description...
+  
+WARNING
+  
+****************************************/
+
 template<class T>
 class Array3Window : public RefCounted {
 public:
@@ -76,5 +106,15 @@ Array3Window<T>::~Array3Window()
     if(data && data->removeReference())
 	delete data;
 }
+
+} // end namespace Grid
+} // end namespace Uintah
+
+//
+// $Log$
+// Revision 1.2  2000/03/16 22:07:58  dav
+// Added the beginnings of cocoon docs.  Added namespaces.  Did a few other coding standards updates too
+//
+//
 
 #endif

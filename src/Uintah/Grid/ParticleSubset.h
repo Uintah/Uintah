@@ -1,54 +1,118 @@
-
-#ifndef ParticleSubset_h
-#define ParticleSubset_h
+#ifndef PARTICLESUBSET_H
+#define PARTICLESUBSET_H
 
 #include "ParticleSet.h"
 #include "RefCounted.h"
 #include <vector>
+
+namespace Uintah {
+namespace Grid {
+
+/**************************************
+
+CLASS
+   ParticleSubset
+   
+   Short description...
+
+GENERAL INFORMATION
+
+   ParticleSubset.h
+
+   Steven G. Parker
+   Department of Computer Science
+   University of Utah
+
+   Center for the Simulation of Accidental Fires and Explosions (C-SAFE)
+  
+   Copyright (C) 2000 SCI Group
+
+KEYWORDS
+   Particle, ParticleSet, ParticleSubset
+
+DESCRIPTION
+   Long description...
+  
+WARNING
+  
+****************************************/
 
 class ParticleSubset : public RefCounted {
 public:
     ParticleSubset(ParticleSet* pset);
     ~ParticleSubset();
 
+    //////////
+    // Insert Documentation Here:
     ParticleSet* getParticleSet() const {
-	return pset;
+	return d_pset;
     }
 
-    ParticleSet::index addParticle() {
-	ParticleSet::index idx = pset->addParticle();
-	particles.push_back(idx);
+    //////////
+    // Insert Documentation Here:
+    particleIndex addParticle() {
+	particleIndex idx = d_pset->addParticle();
+	d_particles.push_back(idx);
 	return idx;
     }
 
-    typedef std::vector<ParticleSet::index>::iterator iterator;
+    typedef std::vector<particleIndex>::iterator iterator;
+
+    //////////
+    // Insert Documentation Here:
     iterator begin() {
-	return particles.begin();
+	return d_particles.begin();
     }
+
+    //////////
+    // Insert Documentation Here:
     iterator end() {
-	return particles.end();
+	return d_particles.end();
     }
 
-    ParticleSet::index numParticles() {
-	return (ParticleSet::index)particles.size();
+    //////////
+    // Insert Documentation Here:
+    particleIndex numParticles() {
+	return (particleIndex) d_particles.size();
     }
+
+    //////////
+    // Insert Documentation Here:
     iterator seek(int idx) {
-	return particles.begin()+idx;
-    }
-    void resize(ParticleSet::index newSize) {
-	particles.resize(newSize);
+	return d_particles.begin() + idx;
     }
 
-    void set(ParticleSet::index idx, ParticleSet::index value) {
-	particles[idx] = value;
+    //////////
+    // Insert Documentation Here:
+    void resize(particleIndex newSize) {
+	d_particles.resize(newSize);
+    }
+
+    //////////
+    // Insert Documentation Here:
+    void set(particleIndex idx, particleIndex value) {
+	d_particles[idx] = value;
     }
 
 private:
-    ParticleSet* pset;
-    std::vector<ParticleSet::index> particles;
+    //////////
+    // Insert Documentation Here:
+    ParticleSet*               d_pset;
+    std::vector<particleIndex> d_particles;
+
     ParticleSubset();
     ParticleSubset(const ParticleSubset& copy);
     ParticleSubset& operator=(const ParticleSubset&);
 };
+
+} // end namespace Grid
+} // end namespace Uintah
+
+//
+// $Log$
+// Revision 1.2  2000/03/16 22:08:00  dav
+// Added the beginnings of cocoon docs.  Added namespaces.  Did a few other coding standards updates too
+//
+//
 
 #endif

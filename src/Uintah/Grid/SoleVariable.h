@@ -1,10 +1,41 @@
-
-#ifndef UINTAH_HOMEBREW_SoleVariable_H
-#define UINTAH_HOMEBREW_SoleVariable_H
+#ifndef UINTAH_HOMEBREW_SOLEVARIABLE_H
+#define UINTAH_HOMEBREW_SOLEVARIABLE_H
 
 #include <Uintah/Grid/DataItem.h>
 #include <Uintah/Exceptions/TypeMismatchException.h>
 #include <iostream> // TEMPORARY
+
+namespace Uintah {
+namespace Grid {
+
+/**************************************
+
+CLASS
+   SoleVariable
+   
+   Short description...
+
+GENERAL INFORMATION
+
+   SoleVariable.h
+
+   Steven G. Parker
+   Department of Computer Science
+   University of Utah
+
+   Center for the Simulation of Accidental Fires and Explosions (C-SAFE)
+  
+   Copyright (C) 2000 SCI Group
+
+KEYWORDS
+   Sole_Variable
+
+DESCRIPTION
+   Long description...
+  
+WARNING
+  
+****************************************/
 
 template<class T>
 class SoleVariable : public DataItem {
@@ -28,14 +59,16 @@ private:
 };
 
 template<class T>
-const TypeDescription* SoleVariable<T>::getTypeDescription()
+const TypeDescription*
+SoleVariable<T>::getTypeDescription()
 {
     //cerr << "SoleVariable::getTypeDescription not done\n";
     return 0;
 }
 
 template<class T>
-void SoleVariable<T>::get(DataItem& copy) const
+void
+SoleVariable<T>::get(DataItem& copy) const
 {
     SoleVariable<T>* ref = dynamic_cast<SoleVariable<T>*>(&copy);
     if(!ref)
@@ -49,22 +82,35 @@ SoleVariable<T>::~SoleVariable()
 }
 
 template<class T>
-SoleVariable<T>* SoleVariable<T>::clone() const
+SoleVariable<T>*
+SoleVariable<T>::clone() const
 {
     return new SoleVariable<T>(*this);
 }
 
 template<class T>
-SoleVariable<T>& SoleVariable<T>::operator=(const SoleVariable<T>& copy)
+SoleVariable<T>&
+SoleVariable<T>::operator=(const SoleVariable<T>& copy)
 {
     value = copy.value;
     return *this;
 }
 
 template<class T>
-void SoleVariable<T>::allocate(const Region*)
+void
+SoleVariable<T>::allocate(const Region*)
 {
     throw TypeMismatchException("SoleVariable shouldn't use allocate");
 }
+
+} // end namespace Grid
+} // end namespace Uintah
+
+//
+// $Log$
+// Revision 1.3  2000/03/16 22:08:01  dav
+// Added the beginnings of cocoon docs.  Added namespaces.  Did a few other coding standards updates too
+//
+//
 
 #endif

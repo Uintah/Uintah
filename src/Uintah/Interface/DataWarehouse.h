@@ -1,6 +1,6 @@
-
 #ifndef UINTAH_HOMEBREW_DataWarehouse_H
 #define UINTAH_HOMEBREW_DataWarehouse_H
+
 
 #include <Uintah/Grid/Handle.h>
 #include <Uintah/Grid/GridP.h>
@@ -11,11 +11,19 @@
 #include <Uintah/Exceptions/SchedulerException.h>
 #include <iostream> // TEMPORARY
 #include <string>
+
 namespace SCICore {
     namespace Geometry {
 	class Vector;
     }
 }
+
+namespace Uintah {
+namespace Interface {
+
+using Uintah::Grid::RefCounted;
+using Uintah::Grid::DataItem;
+
 class Region;
 class TypeDescription;
 
@@ -75,5 +83,15 @@ private:
     DataWarehouse(const DataWarehouse&);
     DataWarehouse& operator=(const DataWarehouse&);
 };
+
+} // end namespace Interface
+} // end namespace Uintah
+
+//
+// $Log$
+// Revision 1.3  2000/03/16 22:08:22  dav
+// Added the beginnings of cocoon docs.  Added namespaces.  Did a few other coding standards updates too
+//
+//
 
 #endif

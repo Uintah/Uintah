@@ -1,20 +1,37 @@
+/* REFERENCED */
+static char *id="@(#) $Id$";
 
 #include "ParticleSubset.h"
+
 #include <iostream>
+
 using std::cerr;
+
+namespace Uintah {
+namespace Grid {
 
 ParticleSubset::~ParticleSubset()
 {
-    if(pset && pset->removeReference())
-	delete pset;
+    if(d_pset && d_pset->removeReference())
+	delete d_pset;
 }
 
 ParticleSubset::ParticleSubset(ParticleSet* pset)
-    : pset(pset)
+    : d_pset(pset)
 {
-    pset->addReference();
-    int np = pset->numParticles();
-    particles.resize(np);
+    d_pset->addReference();
+    int np = d_pset->numParticles();
+    d_particles.resize(np);
     for(int i=0;i<np;i++)
-	particles[i]=i;
+	d_particles[i]=i;
 }
+
+} // end namespace Grid
+} // end namespace Uintah
+
+//
+// $Log$
+// Revision 1.2  2000/03/16 22:08:00  dav
+// Added the beginnings of cocoon docs.  Added namespaces.  Did a few other coding standards updates too
+//
+//

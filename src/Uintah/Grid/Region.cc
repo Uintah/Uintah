@@ -1,19 +1,26 @@
+/* REFERENCED */
+static char *id="@(#) $Id$";
 
 #include <Uintah/Grid/Region.h>
 #include <Uintah/Grid/NodeSubIterator.h>
 #include <Uintah/Math/Primes.h>
 #include <Uintah/Grid/SubRegion.h>
+#include <SCICore/Math/MiscMath.h>
+
+#include <values.h>
+
 using SCICore::Geometry::Point;
 using SCICore::Geometry::Vector;
 using SCICore::Geometry::Max;
 using SCICore::Geometry::Min;
-#include <SCICore/Math/MiscMath.h>
 using SCICore::Math::Floor;
-#include <values.h>
+
+namespace Uintah {
+namespace Grid {
 
 Region::Region(const Point& lower, const Point& upper,
 	       int nx, int ny, int nz)
-    : lower(lower), upper(upper), nx(nx), ny(ny), nz(nz)
+    : d_lower(lower), d_upper(upper), d_nx(nx), d_ny(ny), d_nz(nz)
 {
 }
 
@@ -23,13 +30,14 @@ Region::~Region()
 
 Vector Region::dCell() const
 {
-    Vector diag = upper-lower;
-    return Vector(diag.x()/nx, diag.y()/ny, diag.z()/nz);
+    Vector diag = d_upper - d_lower;
+    return Vector(diag.x()/d_nx, diag.y()/d_ny, diag.z()/d_nz);
 }
 
 void Region::findCell(const Vector& pos, int& ix, int& iy, int& iz) const
 {
-    Vector cellpos = (pos-lower.asVector())*Vector(nx, ny, nz)/(upper-lower);
+    Vector cellpos = (pos-d_lower.asVector()) * 
+                      Vector(d_nx, d_ny, d_nz) / (d_upper-d_lower);
     ix = Floor(cellpos.x());
     iy = Floor(cellpos.y());
     iz = Floor(cellpos.z());
@@ -38,7 +46,8 @@ void Region::findCell(const Vector& pos, int& ix, int& iy, int& iz) const
 bool Region::findCellAndWeights(const Vector& pos,
 				Array3Index ni[8], double S[8]) const
 {
-    Vector cellpos = (pos-lower.asVector())*Vector(nx, ny, nz)/(upper-lower);
+    Vector cellpos = (pos-d_lower.asVector())*
+                      Vector(d_nx, d_ny, d_nz)/(d_upper-d_lower);
     int ix = Floor(cellpos.x());
     int iy = Floor(cellpos.y());
     int iz = Floor(cellpos.z());
@@ -64,14 +73,15 @@ bool Region::findCellAndWeights(const Vector& pos,
     S[5] = fx * fy1 * fz;
     S[6] = fx * fy * fz1;
     S[7] = fx * fy * fz;
-    return ix>= 0 && iy>=0 && iz>=0 && ix<nx && iy<ny && iz<nz;
+    return ix>= 0 && iy>=0 && iz>=0 && ix<d_nx && iy<d_ny && iz<d_nz;
 }
 
 bool Region::findCellAndShapeDerivatives(const Vector& pos,
 					 Array3Index ni[8],
 					 Vector d_S[8]) const
 {
-    Vector cellpos = (pos-lower.asVector())*Vector(nx, ny, nz)/(upper-lower);
+    Vector cellpos = (pos-d_lower.asVector())*
+                      Vector(d_nx, d_ny, d_nz)/(d_upper-d_lower);
     int ix = Floor(cellpos.x());
     int iy = Floor(cellpos.y());
     int iz = Floor(cellpos.z());
@@ -97,7 +107,7 @@ bool Region::findCellAndShapeDerivatives(const Vector& pos,
     d_S[5] = Vector(  fy1 * fz,  -fx  * fz,   fx  * fy1);
     d_S[6] = Vector(  fy  * fz1,  fx  * fz1, -fx  * fy);
     d_S[7] = Vector(  fy  * fz,   fx  * fz,   fx  * fy);
-    return ix>= 0 && iy>=0 && iz>=0 && ix<nx && iy<ny && iz<nz;
+    return ix>= 0 && iy>=0 && iz>=0 && ix<d_nx && iy<d_ny && iz<d_nz;
 }
 
 void decompose(int numProcessors, int sizex, int sizey, int sizez,
@@ -149,9 +159,9 @@ void Region::subregionIteratorPair(int i, int n,
 				   NodeSubIterator& end) const
 {
     int npx, npy, npz;
-    int nodesx = nx+1;
-    int nodesy = ny+1;
-    int nodesz = nz+1;
+    int nodesx = d_nx+1;
+    int nodesy = d_ny+1;
+    int nodesz = d_nz+1;
     decompose(n, nodesx, nodesy, nodesz, npx, npy, npz);
     int ipz = i%npz;
     int ipy = (i/npz)%npy;
@@ -169,9 +179,9 @@ void Region::subregionIteratorPair(int i, int n,
 SubRegion Region::subregion(int i, int n) const
 {
     int npx, npy, npz;
-    int nodesx = nx+1;
-    int nodesy = ny+1;
-    int nodesz = nz+1;
+    int nodesx = d_nx+1;
+    int nodesy = d_ny+1;
+    int nodesz = d_nz+1;
     decompose(n, nodesx, nodesy, nodesz, npx, npy, npz);
     int ipz = i%npz;
     int ipy = (i/npz)%npy;
@@ -182,10 +192,20 @@ SubRegion Region::subregion(int i, int n) const
     int ey = (ipy+1)*nodesy/npy - 1;
     int sz = ipz*nodesz/npz;
     int ez = (ipz+1)*nodesz/npz - 1;
-    Vector diag(upper-lower);
-    Point l(lower+diag*Vector(sx-1, sy-1, sz-1)/Vector(nx, ny, nz));
-    Point u(lower+diag*Vector(ex+1, ey+1, ez+1)/Vector(nx, ny, nz));
-    l=Max(l, lower); // For "ghost cell"
-    u=Min(u, upper);
+    Vector diag(d_upper-d_lower);
+    Point l(d_lower+diag*Vector(sx-1, sy-1, sz-1)/Vector(d_nx, d_ny, d_nz));
+    Point u(d_lower+diag*Vector(ex+1, ey+1, ez+1)/Vector(d_nx, d_ny, d_nz));
+    l=Max(l, d_lower); // For "ghost cell"
+    u=Min(u, d_upper);
     return SubRegion(l, u, sx, sy, sz, ex, ey, ez);
 }
+
+} // end namespace Grid
+} // end namespace Uintah
+
+//
+// $Log$
+// Revision 1.3  2000/03/16 22:08:01  dav
+// Added the beginnings of cocoon docs.  Added namespaces.  Did a few other coding standards updates too
+//
+//

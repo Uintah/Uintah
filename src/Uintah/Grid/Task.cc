@@ -1,9 +1,12 @@
+/* REFERENCED */
+static char *id="@(#) $Id$";
 
 #include <Uintah/Grid/Task.h>
 #include <Uintah/Exceptions/SchedulerException.h>
 #include <iostream>
-using std::cerr;
-using std::vector;
+
+namespace Uintah {
+namespace Grid {
 
 Task::ActionBase::~ActionBase()
 {
@@ -11,84 +14,104 @@ Task::ActionBase::~ActionBase()
 
 Task::~Task()
 {
-    for(vector<Dependency*>::iterator iter=reqs.begin();
-	iter != reqs.end(); iter++)
-	delete *iter;
-    for(vector<Dependency*>::iterator iter=comps.begin();
-	iter != comps.end(); iter++)
-	delete *iter;
+  vector<Dependency*>::iterator iter;
 
-    delete action;
+  for( iter=d_reqs.begin(); iter != d_reqs.end(); iter++ )
+    { delete *iter; }
+  for( iter=d_comps.begin(); iter != d_comps.end(); iter++)
+    { delete *iter; }
+  delete d_action;
 }
 
 void Task::usesMPI(bool state)
 {
-    d_usesMPI = state;
+  d_usesMPI = state;
 }
 
 void Task::usesThreads(bool state)
 {
-    d_usesThreads = state;
+  d_usesThreads = state;
 }
 
 void Task::subregionCapable(bool state)
 {
-    d_subregionCapable = state;
+  d_subregionCapable = state;
 }
 
 void Task::requires(const DataWarehouseP& ds, const std::string& name,
 		    const TypeDescription* td)
 {
-    reqs.push_back(new Dependency(this, ds, name, td, 0, 0));
+  d_reqs.push_back(new Dependency(this, ds, name, td, 0, 0));
 }
 
 void Task::requires(const DataWarehouseP& ds, const std::string& name,
 		    const Region* region, int numGhostCells,
 		    const TypeDescription* td)
 {
-    reqs.push_back(new Dependency(this, ds, name, td, region, numGhostCells));
+  d_reqs.push_back(new Dependency(this, ds, name, td, region, numGhostCells));
 }
 
 void Task::computes(const DataWarehouseP& ds, const std::string& name,
 		    const TypeDescription* td)
 {
-    comps.push_back(new Dependency(this, ds, name, td, 0, 0));
+  d_comps.push_back(new Dependency(this, ds, name, td, 0, 0));
 }
 
 void Task::computes(const DataWarehouseP& ds, const std::string& name,
 		    const Region*, int numGhostCells,
 		    const TypeDescription* td)
 {
-    comps.push_back(new Dependency(this, ds, name, td, region, numGhostCells));
+  d_comps.push_back(new Dependency(this, ds, name, td, 
+				   d_region, numGhostCells));
 }
 
 void Task::doit(const ProcessorContext* pc)
 {
-    if(completed)
-	throw SchedulerException("Task performed, but already completed");
-    action->doit(pc, region, fromDW, toDW);
-    //completed=true;
+  if( d_completed )
+    throw SchedulerException("Task performed, but already completed");
+  d_action->doit(pc, d_region, d_fromDW, d_toDW);
+  //d_completed=true;
 }
 
 Task::Dependency::Dependency(Task* task, const DataWarehouseP& dw,
 			     std::string varname,
 			     const TypeDescription* vartype,
 			     const Region* region, int numGhostCells)
-    : task(task), dw(dw), varname(varname), vartype(vartype), region(region),
-      numGhostCells(numGhostCells)
+    : d_task(task),
+      d_dw(dw),
+      d_varname(varname),
+      d_vartype(vartype),
+      d_region(region),
+      d_numGhostCells(numGhostCells)
 {
 }
 
 void Task::addReqs(std::vector<Dependency*>& to) const
 {
-    for(vector<Dependency*>::const_iterator iter = reqs.begin();
-	iter != reqs.end(); iter++)
-	to.push_back(*iter);
+  vector<Dependency*>::const_iterator iter;
+
+  for( iter = d_reqs.begin(); iter != d_reqs.end(); iter++ )
+    {
+      to.push_back(*iter);
+    }
 }
 
 void Task::addComps(std::vector<Dependency*>& to) const
 {
-    for(vector<Dependency*>::const_iterator iter = comps.begin();
-	iter != comps.end(); iter++)
-	to.push_back(*iter);
+  vector<Dependency*>::const_iterator iter;
+
+  for( iter = d_comps.begin(); iter != d_comps.end(); iter++ )
+    {
+      to.push_back(*iter);
+    }
 }
+
+} // end namespace Grid
+} // end namespace Uintah
+
+//
+// $Log$
+// Revision 1.3  2000/03/16 22:08:01  dav
+// Added the beginnings of cocoon docs.  Added namespaces.  Did a few other coding standards updates too
+//
+//

@@ -1,4 +1,3 @@
-
 #ifndef UINTAH_HOMEBREW_Task_H
 #define UINTAH_HOMEBREW_Task_H
 
@@ -7,99 +6,179 @@
 #include <string>
 #include <vector>
 
+using std::vector;
+using std::string;
+
+namespace Uintah {
+namespace Grid {
+
 class ProcessorContext;
 class Region;
 class TypeDescription;
 
-class Task {
-    class ActionBase {
-    public:
-	virtual ~ActionBase();
- 	virtual void doit(const ProcessorContext* pc,
-			  const Region* region,
-			  const DataWarehouseP& fromDW,
-			  DataWarehouseP& toDW) = 0;
-    };
-    template<class T> class Action : public ActionBase {
-	T* ptr;
-	void (T::*pmf)(const ProcessorContext*, const Region*, const DataWarehouseP&, DataWarehouseP&);
-    public:
-	Action(T* ptr, void (T::*pmf)(const ProcessorContext*, const Region*, const DataWarehouseP&,
-				      DataWarehouseP&))
-	    : ptr(ptr), pmf(pmf) {}
-	virtual ~Action() {}
+/**************************************
 
- 	virtual void doit(const ProcessorContext* pc,
-			  const Region* region,
-			  const DataWarehouseP& fromDW,
-			  DataWarehouseP& toDW) {
-	    (ptr->*pmf)(pc, region, fromDW, toDW);
-	}
-    };
+CLASS
+   Task
+   
+   Short description...
+
+GENERAL INFORMATION
+
+   Task.h
+
+   Steven G. Parker
+   Department of Computer Science
+   University of Utah
+
+   Center for the Simulation of Accidental Fires and Explosions (C-SAFE)
+  
+   Copyright (C) 2000 SCI Group
+
+KEYWORDS
+   Task
+
+DESCRIPTION
+   Long description...
+  
+WARNING
+  
+****************************************/
+
+class Task {
+
+  class ActionBase {
+  public:
+    virtual ~ActionBase();
+    virtual void doit(const ProcessorContext* pc,
+		      const Region* region,
+		      const DataWarehouseP& fromDW,
+			    DataWarehouseP& toDW) = 0;
+  };
+
+  template<class T>
+  class Action : public ActionBase {
+
+    T* ptr;
+    void (T::*pmf)(const ProcessorContext*,
+		   const Region*,
+		   const DataWarehouseP&,
+		   DataWarehouseP&);
+  public:
+    Action( T* ptr,
+	    void (T::*pmf)(const ProcessorContext*, 
+			   const Region*, 
+			   const DataWarehouseP&,
+			         DataWarehouseP&) )
+      : ptr(ptr), pmf(pmf) {}
+    virtual ~Action() {}
+
+    //////////
+    // Insert Documentation Here:
+    virtual void doit(const ProcessorContext* pc,
+		      const Region* region,
+		      const DataWarehouseP& fromDW,
+			    DataWarehouseP& toDW) {
+      (ptr->*pmf)(pc, region, fromDW, toDW);
+    }
+  };
 
 public:
-    template<class T>
-    Task(const std::string& taskName, const Region* region,
-	 const DataWarehouseP& fromDW, DataWarehouseP& toDW,
-	 T* ptr, void (T::*pmf)(const ProcessorContext*, const Region*, const DataWarehouseP&,
-				DataWarehouseP&))
-	: taskName(taskName), region(region),
-	  action(new Action<T>(ptr, pmf)),
-          fromDW(fromDW), toDW(toDW) {
-	      completed = false;
-	      d_usesThreads = false;
-	      d_usesMPI = false;
-	      d_subregionCapable = false;
-    }
+  template<class T>
+  Task(const string&         taskName,
+       const Region*         region,
+       const DataWarehouseP& fromDW,
+       DataWarehouseP&       toDW,
+       T*                     ptr,
+       void (T::*pmf)(const ProcessorContext*,
+		      const Region*,
+		      const DataWarehouseP&,
+			    DataWarehouseP&) )
+    : d_taskName( taskName ), 
+      d_region( region ),
+      d_action( new Action<T>(ptr, pmf) ),
+      d_fromDW( fromDW ),
+      d_toDW( toDW )
+  {
+    d_completed = false;
+    d_usesThreads = false;
+    d_usesMPI = false;
+    d_subregionCapable = false;
+  }
 
-    ~Task();
+  ~Task();
 
-    void usesMPI(bool state=true);
-    void usesThreads(bool state);
-    bool usesThreads() const {
-	return d_usesThreads;
-    }
-    void subregionCapable(bool state=true);
-    void requires(const DataWarehouseP& ds, const std::string& name,
-		  const TypeDescription* td);
-    void requires(const DataWarehouseP& ds, const std::string& name,
-		  const Region* region, int numGhostCells,
-		  const TypeDescription* td);
+  void usesMPI(bool state=true);
+  void usesThreads(bool state);
+  bool usesThreads() const {
+    return d_usesThreads;
+  }
 
-    void computes(const DataWarehouseP& ds, const std::string& name,
-		  const TypeDescription* td);
-    void computes(const DataWarehouseP& ds, const std::string& name,
-		  const Region* region, int numGhostCells,
-		  const TypeDescription* td);
+  //////////
+  // Insert Documentation Here:
+  void subregionCapable(bool state=true);
 
-    void doit(const ProcessorContext* pc);
-    const std::string& getName() const {
-	return taskName;
-    }
-    bool isCompleted() const {
-	return completed;
-    }
+  //////////
+  // Insert Documentation Here:
+  void requires(const DataWarehouseP& ds, const string& name,
+		const TypeDescription* td);
 
-    struct Dependency {
-	Task* task;
-	DataWarehouseP dw;
-	std::string varname;
-	const TypeDescription* vartype;
+  //////////
+  // Insert Documentation Here:
+  void requires(const DataWarehouseP& ds, const string& name,
+		const Region* region, int numGhostCells,
+		const TypeDescription* td);
 
-	const Region* region;
-	int numGhostCells;
-	Dependency(Task* task, const DataWarehouseP& dw, std::string varname,
-		   const TypeDescription*, const Region*, int numGhostcells);
-	bool operator<(const Dependency& c) const {
-	    if(varname < c.varname) {
+  //////////
+  // Insert Documentation Here:
+  void computes(const DataWarehouseP& ds, const string& name,
+		const TypeDescription* td);
+
+  //////////
+  // Insert Documentation Here:
+  void computes(const DataWarehouseP& ds, const string& name,
+		const Region* region, int numGhostCells,
+		const TypeDescription* td);
+
+  //////////
+  // Insert Documentation Here:
+  void doit(const ProcessorContext* pc);
+  const string& getName() const {
+    return d_taskName;
+  }
+
+  //////////
+  // Insert Documentation Here:
+  bool isCompleted() const {
+    return d_completed;
+  }
+
+  struct Dependency {
+          Task*            d_task;
+          DataWarehouseP   d_dw;
+          string           d_varname;
+    const TypeDescription* d_vartype;
+
+    const Region*          d_region;
+    int                    d_numGhostCells;
+
+    Dependency(      Task*           task,
+	       const DataWarehouseP& dw,
+		     string varname,
+	       const TypeDescription*,
+	       const Region*,
+		     int numGhostcells );
+
+    bool operator<(const Dependency& c) const {
+      if(d_varname < c.d_varname) {
 		return true;
-	    } else if(varname == c.varname){
-		if(region < c.region){
+	    } else if(d_varname == c.d_varname){
+		if(d_region < c.d_region){
 		    return true;
-		} else if(region == c.region) {
-		    if(dw.get_rep() < c.dw.get_rep()) {
+		} else if(d_region == c.d_region) {
+		    if(d_dw.get_rep() < c.d_dw.get_rep()) {
 			return true;
-		    } else if(dw.get_rep() == c.dw.get_rep()){
+		    } else if(d_dw.get_rep() == c.d_dw.get_rep()){
 			return false;
 		    } else {
 			return false;
@@ -111,26 +190,44 @@ public:
 		return false;
 	    }
 	}
-    };
+    }; // end struct Dependency
 
-    void addComps(std::vector<Dependency*>&) const;
-    void addReqs(std::vector<Dependency*>&) const;
+  //////////
+  // Insert Documentation Here:
+  void addComps(std::vector<Dependency*>&) const;
+
+  //////////
+  // Insert Documentation Here:
+  void addReqs(std::vector<Dependency*>&) const;
+
 private:
-    std::string taskName;
-    const Region* region;
-    ActionBase* action;
-    DataWarehouseP fromDW;
-    DataWarehouseP toDW;
-    bool completed;
-    std::vector<Dependency*> reqs;
-    std::vector<Dependency*> comps;
+    //////////
+    // Insert Documentation Here:
+          string              d_taskName;
+    const Region*             d_region;
+          ActionBase*         d_action;
+          DataWarehouseP      d_fromDW;
+          DataWarehouseP      d_toDW;
+          bool                d_completed;
+          vector<Dependency*> d_reqs;
+          vector<Dependency*> d_comps;
 
-    bool d_usesMPI;
-    bool d_usesThreads;
-    bool d_subregionCapable;
+          bool                d_usesMPI;
+          bool                d_usesThreads;
+          bool                d_subregionCapable;
 
     Task(const Task&);
     Task& operator=(const Task&);
 };
+
+} // end namespace Grid
+} // end namespace Uintah
+
+//
+// $Log$
+// Revision 1.3  2000/03/16 22:08:01  dav
+// Added the beginnings of cocoon docs.  Added namespaces.  Did a few other coding standards updates too
+//
+//
 
 #endif

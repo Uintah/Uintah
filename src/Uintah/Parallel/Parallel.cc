@@ -1,8 +1,13 @@
+/* REFERENCED */
+static char *id="@(#) $Id$";
 
 #include "Parallel.h"
 #include <iostream>
 using std::cerr;
 #include <mpi.h>
+
+namespace Uintah {
+namespace Parallel {
 
 static bool usingMPI;
 #if 0
@@ -12,7 +17,9 @@ static int worldSize;
 static int worldRank;
 
 #if 0
-static void MPI_Error(char* what, int errorcode)
+static
+void
+MPI_Error(char* what, int errorcode)
 {
     // Simple error handling for now...
     char string[1000];
@@ -23,7 +30,8 @@ static void MPI_Error(char* what, int errorcode)
 }
 #endif
 
-void Parallel::initializeManager(int argc, char* argv[])
+void
+Parallel::initializeManager(int argc, char* argv[])
 {
     if(getenv("MPI_ENVIRONMENT")){
 	usingMPI=true;
@@ -51,7 +59,8 @@ void Parallel::initializeManager(int argc, char* argv[])
     cerr << '\n';
 }
 
-void Parallel::finalizeManager()
+void
+Parallel::finalizeManager()
 {
     if(usingMPI){
 #if 0
@@ -61,3 +70,13 @@ void Parallel::finalizeManager()
 #endif
     }
 }
+
+} // end namespace Parallel
+} // end namespace Uintah
+
+//
+// $Log$
+// Revision 1.2  2000/03/16 22:08:38  dav
+// Added the beginnings of cocoon docs.  Added namespaces.  Did a few other coding standards updates too
+//
+//
