@@ -210,7 +210,7 @@ void BuildElemLeadField::execute() {
       for (int j=0; j<3; j++) {
 	(*leadfield_mat)[counter+1][i*3+j]=-(*sol_in.get_rep())[i][j];
       }
-    cerr << "BuildElemLeadField: "<<counter<<"/"<<nelecs-1<<"\n";
+    cerr << "BuildElemLeadField: "<<counter+1<<"/"<<nelecs-1<<"\n";
     counter++;
     
   }

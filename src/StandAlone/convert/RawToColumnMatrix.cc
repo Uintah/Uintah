@@ -44,11 +44,13 @@ using namespace SCIRun;
 int numRowsHeader;
 int binOutput;
 int debugOn;
+int groundZero;
 
 void setDefaults() {
   numRowsHeader=1;
   binOutput=0;
   debugOn=0;
+  groundZero=0;
 }
 
 int parseArgs(int argc, char *argv[]) {
@@ -62,6 +64,9 @@ int parseArgs(int argc, char *argv[]) {
       currArg++;
     } else if (!strcmp(argv[currArg], "-debug")) {
       debugOn=1;
+      currArg++;
+    } else if (!strcmp(argv[currArg], "-groundZero")) {
+      groundZero=1;
       currArg++;
     } else {
       cerr << "Error - unrecognized argument: "<<argv[currArg]<<"\n";
@@ -94,8 +99,8 @@ int getNumNonEmptyLines(char *fname) {
 
 int
 main(int argc, char **argv) {
-  if (argc < 3 || argc > 6) {
-    cerr << "Usage: "<<argv[0]<<" data ColumnMatrix [-noNumRows] [-binOutput] [-debug]\n";
+  if (argc < 3 || argc > 7) {
+    cerr << "Usage: "<<argv[0]<<" data ColumnMatrix [-noNumRows] [-binOutput] [-debug] [-groundZero]\n";
     return 0;
   }
   setDefaults();
@@ -114,8 +119,11 @@ main(int argc, char **argv) {
   for (i=0; i<ndata; i++) {
     double x;
     datastream >> x;
+    if (groundZero && i!=0) x-=(*cm)[0];
     (*cm)[i]=x;
   }
+  if (groundZero) (*cm)[0]=0;
+
   cerr << "done adding data.\n";
 
   MatrixHandle cmh(cm);
@@ -128,4 +136,4 @@ main(int argc, char **argv) {
     Pio(out_stream, cmh);
   }
   return 0;  
-}    
+}

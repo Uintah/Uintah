@@ -31,6 +31,10 @@
 #include <Dataflow/Modules/Render/OpenGL.h>
 #include <Dataflow/Modules/Render/logo.h>
 
+namespace C_Magick {
+#include <magick/magick.h>
+}
+
 extern "C" GLXContext OpenGLGetContext(Tcl_Interp*, char*);
 extern Tcl_Interp* the_interp;
 
@@ -42,8 +46,7 @@ namespace SCIRun {
 #define REDRAW_DONE 4
 #define PICK_DONE 5
 #define DO_IMAGE 6
-#define DO_HIRES_IMAGE 7
-#define IMAGE_DONE 8
+#define IMAGE_DONE 7
 
 
 static map<string, ObjTag*>::iterator viter;
@@ -76,13 +79,14 @@ RegisterRenderer OpenGL_renderer("OpenGL", &query_OpenGL, &make_OpenGL);
 
 OpenGL::OpenGL()
   : tkwin(0),
+    do_hi_res(false),
+    encoding_mpeg(false),
+
     send_mb("OpenGL renderer send mailbox",10),
     recv_mb("OpenGL renderer receive mailbox", 10),
     get_mb("OpenGL renderer request mailbox", 5),
     img_mb("OpenGL renderer image data mailbox", 5),
     helper_thread(0),
-    do_hi_res(false),
-    encoding_mpeg(false),
     dead(0)
 {
   drawinfo=scinew DrawInfoOpenGL;
@@ -210,7 +214,7 @@ void OpenGL::kill_helper()
 
 void OpenGL::redraw_loop()
 {
-  int r;
+  int r,resx,resy;
   string fname, ftype;
   // Tell the ViewWindow that we are started...
   TimeThrottle throttle;
@@ -253,10 +257,11 @@ void OpenGL::redraw_loop()
 	  real_getData(req.datamask, req.result);
 	} else if(r== DO_IMAGE) {
 	  ImgReq req(img_mb.receive());
-	  real_saveImage(req.name, req.type);
-	} else if(r== DO_HIRES_IMAGE) {
-	  ImgReq req(img_mb.receive());
 	  do_hi_res = true;
+	  fname = req.name;
+	  ftype = req.type;
+	  resx = req.resx;
+	  resy = req.resy;
 	} else {
 	  // Gobble them up...
 	  nreply++;
@@ -310,12 +315,11 @@ void OpenGL::redraw_loop()
 	  real_getData(req.datamask, req.result);
 	} else if(r== DO_IMAGE) {
 	  ImgReq req(img_mb.receive());
-	  real_saveImage(req.name, req.type);
-	} else if(r== DO_HIRES_IMAGE) {
-	  ImgReq req(img_mb.receive());
 	  do_hi_res = true;
 	  fname = req.name;
 	  ftype = req.type;
+	  resx = req.resx;
+	  resy = req.resy;
 	} else {
 	  nreply++;
 	  break;
@@ -326,27 +330,191 @@ void OpenGL::redraw_loop()
       throttle.clear();
       throttle.start();
     }
+
+    if(do_hi_res)
+      render_and_save_image(resx,resy,fname,ftype);
+
     redraw_frame();
     for(int i=0;i<nreply;i++)
       recv_mb.send(REDRAW_DONE);
 
-    if( do_hi_res) {
-      
-       real_saveImage( string("1.")+fname, "ppm");
-       redraw_frame();
-       sleep(1);
-       real_saveImage(string("2.")+fname, "ppm");
-       redraw_frame();
-       sleep(1);
-       real_saveImage(string("3.")+fname, "ppm");
-       redraw_frame();
-       sleep(1);
-       real_saveImage(string("4.")+fname, "ppm");
-       do_hi_res = false;
-       redraw_frame();
-     }
+
   }
 }
+
+void
+OpenGL::render_and_save_image(int x, int y, 
+			      const string& fname, const string &ftype)
+{
+  cerr << "Saving Image: " << fname.c_str() << " with width :" << x 
+       << " and height: " << y <<"...";
+
+  TCLTask::lock();  
+  Tk_RestackWindow(tkwin,Above,NULL);
+  // Make sure our GL context is current
+  if(current_drawer != this){
+    current_drawer=this;
+    glXMakeCurrent(dpy, win, cx);
+  }
+
+  // Get Viewport dimensions
+  GLint vp[4];
+  glGetIntegerv(GL_VIEWPORT,vp);
+  
+  hi_res.resx = x;
+  hi_res.resy = y;
+  // The EXACT # of screen rows and columns needed to render the image
+  hi_res.ncols = (double)hi_res.resx/(double)vp[2];
+  hi_res.nrows = (double)hi_res.resy/(double)vp[3];
+
+  // The # of screen rows and columns that will be rendered to make the image
+  const int nrows = (int)ceil(hi_res.nrows);
+  const int ncols = (int)ceil(hi_res.ncols);
+      
+  deriveFrustum();
+
+  ofstream *image_file;
+  C_Magick::Image *image;
+  C_Magick::ImageInfo *image_info;
+  int channel_bytes, num_channels;
+  bool do_magick = false;
+
+  if (ftype == "ppm" || ftype == "raw")
+  {
+    image_file = scinew ofstream(fname.c_str());
+    channel_bytes = 1;
+    num_channels = 3;
+    do_magick = false;
+    if (ftype == "ppm")
+    {
+      (*image_file) << "P6" << endl;
+      (*image_file) << hi_res.resx << " " << hi_res.resy << endl;
+      (*image_file) << 255 << endl;
+    }
+  }
+  else
+  {
+    C_Magick::InitializeMagick(0);
+    num_channels = 4;
+    channel_bytes = 2;
+    do_magick = true;
+    image_info=C_Magick::CloneImageInfo((C_Magick::ImageInfo *)0);
+    strcpy(image_info->filename,fname.c_str());
+    image_info->colorspace = C_Magick::RGBColorspace;
+    image_info->quality = 90;
+    image=C_Magick::AllocateImage(image_info);
+    image->columns=hi_res.resx;
+    image->rows=hi_res.resy;
+
+  }
+
+  const int pix_size = channel_bytes*num_channels;
+    
+  // Write out a screen height X image width chunk of pixels at a time
+  unsigned char* pixels= 
+    scinew unsigned char[hi_res.resx*vp[3]*pix_size];
+      
+  // Start writing image_file
+  static unsigned char* tmp_row = 0;
+  if(!tmp_row )
+    tmp_row = scinew unsigned char[hi_res.resx*pix_size];
+
+
+  TCLTask::unlock();  
+  for (hi_res.row = nrows - 1; hi_res.row >= 0; --hi_res.row)
+  {
+    int read_height = hi_res.resy - hi_res.row * vp[3];
+    read_height = (vp[3] < read_height) ? vp[3] : read_height;
+    
+    if (do_magick)
+    {
+      pixels = (unsigned char *)C_Magick::SetImagePixels
+	(image,0,vp[3]*(nrows - 1 - hi_res.row),hi_res.resx,read_height);
+    }
+
+    if (!pixels)
+    {
+      cerr << "No ImageMagick Memory! Aborting...\n";
+      break;
+    }
+     
+    for (hi_res.col = 0; hi_res.col < ncols; hi_res.col++)
+    {
+      // render the col and row in the hi_res struct
+      redraw_frame();
+      TCLTask::lock();
+	  
+      // Tell OpenGL where to put the data in our pixel buffer
+      glPixelStorei(GL_PACK_ALIGNMENT,1);
+      glPixelStorei(GL_PACK_SKIP_PIXELS, hi_res.col * vp[2]);
+      glPixelStorei(GL_PACK_SKIP_ROWS,0);
+      glPixelStorei(GL_PACK_ROW_LENGTH, hi_res.resx);
+
+      int read_width = hi_res.resx - hi_res.col * vp[2];
+      read_width = (vp[2] < read_width) ? vp[2] : read_width;
+      
+      // Read the data from OpenGL into our memory
+      glReadBuffer(GL_FRONT);
+      glReadPixels(0,0,read_width, read_height,
+		   (num_channels == 3) ? GL_RGB : GL_BGRA,
+		   (channel_bytes == 1) ? GL_UNSIGNED_BYTE : GL_UNSIGNED_SHORT,
+		   pixels);
+
+      TCLTask::unlock();
+    }
+    // OpenGL renders upside-down to image_file writing
+    unsigned char *top_row, *bot_row;	
+    int top, bot;
+    for(top = read_height-1, bot = 0; bot < read_height/2; top--, bot++)
+    {
+      top_row = pixels + hi_res.resx*top*pix_size;
+      bot_row = pixels + hi_res.resx*bot*pix_size;
+      memcpy(tmp_row, top_row, hi_res.resx*pix_size);
+      memcpy(top_row, bot_row, hi_res.resx*pix_size);
+      memcpy(bot_row, tmp_row, hi_res.resx*pix_size);
+    }
+    if (do_magick)
+      C_Magick::SyncImagePixels(image);
+    else
+      image_file->write((char *)pixels, hi_res.resx*read_height*pix_size);
+  }
+  TCLTask::lock();
+
+  // Set OpenGL back to nice PixelStore values for somebody else
+  glPixelStorei(GL_PACK_SKIP_PIXELS,0);
+  glPixelStorei(GL_PACK_ROW_LENGTH,0);
+
+  if (do_magick)
+  {
+    if (!C_Magick::WriteImage(image_info,image))
+    {
+      cerr << "\nCannont Write " << fname.c_str() << " because: " 
+	   << image->exception.reason << endl;
+    }
+	
+    C_Magick::DestroyImageInfo(image_info);
+    C_Magick::DestroyImage(image);
+    C_Magick::DestroyMagick();
+  }
+  else
+  {
+    image_file->close();
+    delete[] pixels;
+  }
+
+  if (tmp_row)
+  {
+    delete[] tmp_row;
+    tmp_row = 0;
+  }
+     
+  TCLTask::unlock();
+
+  do_hi_res = false;
+  cout << "done." << endl;
+}
+
+
 
 void OpenGL::make_image()
 {
@@ -572,10 +740,6 @@ void OpenGL::redraw_frame()
 	      glMatrixMode(GL_PROJECTION);
 	      glLoadIdentity();
 	      gluPerspective(fovy, aspect, znear, zfar);
-	      deriveFrustum();
-// 	      if( do_hi_res ) {
-// 		cycleFrustum();
-// 	      }
 	      glMatrixMode(GL_MODELVIEW);
 	      glLoadIdentity();
 	      Point eyep(view.eyep());
@@ -595,11 +759,10 @@ void OpenGL::redraw_frame()
 	      gluLookAt(eyep.x(), eyep.y(), eyep.z(),
 			lookat.x(), lookat.y(), lookat.z(),
 			up.x(), up.y(), up.z());
-	      if( do_hi_res ) {
-		glMatrixMode(GL_PROJECTION);
-		cycleFrustum();
+	      if(do_hi_res) 
+	      {
+		setFrustumToWindowPortion();
 	      }
-
 	    }
 	    
 	    // Set up Lighting
@@ -1685,110 +1848,38 @@ void OpenGL::setvisual(const string& wname, int which, int width, int height)
   myname = wname;
 }
 
-void OpenGL::saveHiResImage(const string& fname,
-			    const string& type) //= "ppm")
-{
-  send_mb.send(DO_HIRES_IMAGE);
-  img_mb.send(ImgReq(fname, type));
-}
-
 void OpenGL::deriveFrustum()
 {
-  double pmat[16] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
-  glGetDoublev( GL_PROJECTION_MATRIX, pmat);
-  double G = (pmat[10]-1)/(pmat[10]+1);
-  double n = frustum.n = -(pmat[14]*(G-1))/(2*G);
-  double f = frustum.f = n*G;
-  double l = frustum.l = n*(pmat[8]-1)/pmat[0];
-  double r = frustum.r = n*(pmat[8]+1)/pmat[0];
-  double b = frustum.b = n*(pmat[9]-1)/pmat[5];
-  double t = frustum.t = n*(pmat[9]+1)/pmat[5];
-
-  double clr = l + (r-l)/2.0;
-  double cbt = b + (t-b)/2.0;
-  frustum.tb[0][0]=l; frustum.tb[0][1]=clr; frustum.tb[0][2]=cbt;
-  frustum.tb[0][3]=t; frustum.tb[0][4]=n; frustum.tb[0][5]=f;
-  frustum.tb[1][0]=clr; frustum.tb[1][1]=r; frustum.tb[1][2]=cbt;
-  frustum.tb[1][3]=t; frustum.tb[1][4]=n; frustum.tb[1][5]=f;
-  frustum.tb[2][0]=l; frustum.tb[2][1]=clr; frustum.tb[2][2]=b;
-  frustum.tb[2][3]=cbt; frustum.tb[2][4]=n; frustum.tb[2][5]=f;
-  frustum.tb[3][0]=clr; frustum.tb[3][1]=r; frustum.tb[3][2]=b;
-  frustum.tb[3][3]=cbt; frustum.tb[3][4]=n; frustum.tb[3][5]=f;
+  double pmat[16];
+  glGetDoublev(GL_PROJECTION_MATRIX, pmat);
+  const double G = (pmat[10]-1)/(pmat[10]+1);
+  frustum.znear = -(pmat[14]*(G-1))/(2*G);
+  frustum.zfar = frustum.znear*G;
+  frustum.left = frustum.znear*(pmat[8]-1)/pmat[0];
+  frustum.right = frustum.znear*(pmat[8]+1)/pmat[0];
+  frustum.bottom = frustum.znear*(pmat[9]-1)/pmat[5];
+  frustum.top = frustum.znear*(pmat[9]+1)/pmat[5];
+  frustum.width = frustum.right - frustum.left;
+  frustum.height = frustum.top - frustum.bottom;
 }
 
-void OpenGL::cycleFrustum()
+void OpenGL::setFrustumToWindowPortion()
 {
-  // glMatrixMode( GL_PROJECTION );
-  static int cycle = 0;
+  glMatrixMode( GL_PROJECTION );
   glLoadIdentity();
-  glFrustum( frustum.tb[cycle][0],frustum.tb[cycle][1],frustum.tb[cycle][2],
-	     frustum.tb[cycle][3],frustum.tb[cycle][4],frustum.tb[cycle][5]);
-  ++cycle;
-  if( cycle == 4 ) cycle = 0;
+  glFrustum(frustum.left + frustum.width / hi_res.ncols * hi_res.col,
+	    frustum.left + frustum.width / hi_res.ncols * (hi_res.col+1),
+	    frustum.bottom + frustum.height / hi_res.nrows * hi_res.row,
+	    frustum.bottom + frustum.height / hi_res.nrows * (hi_res.row+1),
+	    frustum.znear, frustum.zfar);
 }
 
 void OpenGL::saveImage(const string& fname,
-		       const string& type) //= "ppm")
+		       const string& type,
+		       int x, int y) //= "ppm")
 {
   send_mb.send(DO_IMAGE);
-  img_mb.send(ImgReq(fname,type));
-}
-
-void OpenGL::real_saveImage(const string& name,
-			    const string& type) //= "ppm")
-{
-  GLint vp[4];
-  
-  if(current_drawer != this){
-    current_drawer=this;
-    TCLTask::lock();
-    glXMakeCurrent(dpy, win, cx);
-    TCLTask::unlock();
-  }
-  TCLTask::lock();  
-  glGetIntegerv(GL_VIEWPORT,vp);
-  int n=3*vp[2]*vp[3];
-  unsigned char* pxl=scinew unsigned char[n];
-  glPixelStorei(GL_PACK_ALIGNMENT,1);
-  glReadBuffer(GL_FRONT);
-  glReadPixels(0,0,vp[2],vp[3],GL_RGB,GL_UNSIGNED_BYTE,pxl);
-
-
-  if(type == "raw"){
-    cerr << "Saving raw file "<<name<<":  size = " << vp[2] << "x" << vp[3] 
-	 << "\n";
-    ofstream dumpfile(name.c_str());
-    dumpfile.write((const char *)pxl,n);
-    dumpfile.close();
-  } else if( type == "ppm") {
-    cerr << "Saving PPM file " << name << "\n";
-
-    int width = vp[2];
-    int height = vp[3];
-    int r=3*width;
-    static unsigned char* row = 0;
-    if( !row )
-      row = scinew unsigned char[r];
-    unsigned char* p0, *p1;
-    
-    int k, j;
-    for(k = height -1, j = 0; j < height/2; k--, j++){
-      p0 = pxl + r*j;
-      p1 = pxl + r*k;
-      memcpy( row, p0, r);
-      memcpy( p0, p1, r);
-      memcpy( p1, row, r);
-    }
-    ofstream ppm(name.c_str());
-    ppm <<"P6 "<<width<<" "<<height<<" "<<255<<"\n";
-    ppm.write((const char *)pxl, n);
-    ppm.close();
-  }
-  else {
-    cerr<<"Error unknown image file type\n";
-  }
-  delete[] pxl;
-  TCLTask::unlock();
+  img_mb.send(ImgReq(fname,type,x,y));
 }
 
 
@@ -1980,8 +2071,8 @@ GetReq::GetReq(int datamask, FutureValue<GeometryData*>* result)
 ImgReq::ImgReq()
 {
 }
-ImgReq::ImgReq(const string& n, const string& t)
-  : name(n), type(t)
+ImgReq::ImgReq(const string& n, const string& t, int x, int y)
+  : name(n), type(t), resx(x), resy(y)
 {
 }
 

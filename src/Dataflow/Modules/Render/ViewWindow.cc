@@ -111,7 +111,11 @@ ViewWindow::ViewWindow(Viewer* s, const string& id)
     do_bawgl("do_bawgl", id, this),  
     // --  BAWGL -- 
     drawimg("drawimg", id, this),
-    saveprefix("saveprefix", id, this)
+    saveprefix("saveprefix", id, this),
+    file_resx("resx", id, this),
+    file_resy("resy", id, this),
+    file_aspect("aspect",id,this),
+    file_aspect_ratio("aspect_ratio",id,this)
 {
   inertia_mode=0;
   bgcolor.set(Color(0,0,0));
@@ -1653,7 +1657,7 @@ void ViewWindow::tcl_command(TCLArgs& args, void*)
     args.result("0");
 #endif // MPEG
   } else if (args[1] == "dump_viewwindow") {
-    if (args.count() != 4) {
+    if (args.count() != 6) {
       args.error("ViewWindow::dump_viewwindow needs an output file name and type");
       return;
     }
@@ -1664,16 +1668,7 @@ void ViewWindow::tcl_command(TCLArgs& args, void*)
     // redraw message gets dispatched.
     manager->
       mailbox.send(scinew  ViewerMessage(MessageTypes::ViewWindowDumpImage,
-					 id, args[2], args[3]));
-  }else if (args[1] == "dump_hires_viewwindow"){
-    if (args.count() != 3){
-     args.error("ViewWindow::dump_hires)viewwindow needs an output file name");
-      return;
-    }
-    manager->
-      mailbox.send(scinew ViewerMessage(MessageTypes::ViewWindowDumpHiResImage,
-					id, args[2]));
- 
+					 id, args[2], args[3],args[4],args[5]));
   }else if (args[1] == "startup") {
     // Fill in the visibility database...
     GeomIndexedGroup::IterIntGeomObj iter = manager->ports.getIter();
@@ -1977,7 +1972,7 @@ void ViewWindow::tcl_command(TCLArgs& args, void*)
     manager->delete_viewwindow(this);
     return;
   } else if(args[1] == "saveobj") {
-    if(args.count() != 4){
+    if(args.count() != 6){
       args.error("ViewWindow::dump_viewwindow needs an output file name and format!");
       return;
     }
@@ -1987,7 +1982,7 @@ void ViewWindow::tcl_command(TCLArgs& args, void*)
     // viewwindow gets killed by the time the
     // redraw message gets dispatched.
     manager->mailbox.send(scinew ViewerMessage(MessageTypes::ViewWindowDumpObjects,
-					       id, args[2], args[3]));
+					       id, args[2], args[3],args[4],args[5]));
   } else if(args[1] == "listvisuals"){
     current_renderer->listvisuals(args);
   } else if(args[1] == "switchvisual"){
@@ -2279,7 +2274,7 @@ void ViewWindow::do_for_visible(Renderer* r, ViewWindowVisPMF pmf)
 
   // now run through the transparent objects...
 
-  for(i=0;i<transp_objs.size();i++) {
+  for(i=0;i<(int)transp_objs.size();i++) {
     GeomViewerItem *si = transp_objs[i];    
 
     if(si->lock)
