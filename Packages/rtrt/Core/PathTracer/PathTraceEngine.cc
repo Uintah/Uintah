@@ -228,7 +228,7 @@ void PathTraceWorker::run() {
 TextureSphere::TextureSphere(const Point &cen, double radius, int tex_res):
   Sphere(0, cen, radius), texture(tex_res, tex_res)
 {
-  texture.initialize(0);
+  texture.initialize(Color(0,0,0));
 }
 
 void TextureSphere::writeTexture(char* basename, int index)
@@ -249,7 +249,11 @@ void TextureSphere::writeTexture(char* basename, int index)
   fprintf(out, "dimension: 3\n");
   fprintf(out, "sizes: 3 %d %d\n", width, height);
   fprintf(out, "spacings: NaN 1 1\n");
+#ifdef __sgi
   fprintf(out, "endian: big\n");
+#else
+  fprintf(out, "endian: little\n");
+#endif
   fprintf(out, "encoding: raw\n");
   fprintf(out, "\n");
   // Iterate over each texel
