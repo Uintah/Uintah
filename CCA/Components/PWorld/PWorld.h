@@ -48,9 +48,7 @@ namespace SCIRun {
   
   class StringPort: public sci::cca::ports::StringPort{
   public:
-    std::string getString(){
-      return "PWorld";
-    }
+    std::string getString();
   };
   
 } //namepace SCIRun
