@@ -21,6 +21,7 @@
 #include <Core/Malloc/Allocator.h>
 #include <Core/Datatypes/TetVolField.h>
 #include <Core/Datatypes/QuadraticTetVolField.h>
+#include <Core/Datatypes/FieldAlgo.h>
 #include <Core/Datatypes/Matrix.h>
 #include <Core/Datatypes/ColumnMatrix.h>
 #include <Core/Datatypes/SparseRowMatrix.h>
@@ -383,7 +384,8 @@ void BuildFEMatrixQuadratic::parallel(int proc)
   }
 }
 
-void BuildFEMatrixQuadratic::build_local_matrix(double lcl_a[10][10], TetVolMesh::Cell::index_type c_ind)
+void BuildFEMatrixQuadratic::build_local_matrix(double lcl_a[10][10], 
+					 TetVolMesh::Cell::index_type c_ind)
 {
 
   Point pt;
@@ -479,7 +481,20 @@ void BuildFEMatrixQuadratic::build_local_matrix(double lcl_a[10][10], TetVolMesh
   // so el_cond[1][2] is the same as sigma yz
 
   vector<pair<string, Tensor> > tens;
-  qtv->get_property("conductivity_table", tens);
+  if (! qtv->get_property("conductivity_table", tens)) {
+    remark("Using identity conductivity tensors.");
+    pair<int,int> minmax;
+    minmax.second=1;
+    field_minmax(*qtv, minmax);
+    tens.resize(minmax.second+1);
+    vector<double> t(6);
+    t[0] = t[3] = t[5] = 1;
+    t[1] = t[2] = t[4] = 0;
+    Tensor ten(t);
+    for (unsigned int i = 0; i < tens.size(); i++) {
+      tens[i] = pair<string, Tensor>(to_string((int)i), ten);
+    }
+  }
   int  ind = qtv->value(c_ind);
 
   if (UseCond) {
