@@ -380,8 +380,8 @@ Volvis2DDpy::display() {
 		(selected_gmin-current_gmin)/(current_gmax-current_gmin)*
 		240.0f+55.0f );
     glEnd();
-    sprintf( text, "selected view: [%.5g,%.5g] x [%.5g,%.5g]", selected_vmin, selected_vmax, 
-	     selected_gmin, selected_gmax );
+    sprintf( text, "selected view: [%.5g,%.5g] x [%.5g,%.5g]", selected_vmin,
+	     selected_vmax, selected_gmin, selected_gmax );
     printString( fontbase, 200, 10, text, textColor );
   }
   sprintf( text, "master alpha = %.3g", master_alpha );
@@ -511,10 +511,8 @@ Volvis2DDpy::key_pressed(unsigned long key) {
     render_mode = CLEAN;
     break;
   case XK_f:
-    render_mode = FAST;
-    break;
   case XK_F:
-    render_mode = SUPERFAST;
+    render_mode = FAST;
     break;
   } // switch()
 } // key_pressed()
@@ -686,6 +684,7 @@ Volvis2DDpy::adjustMasterAlpha( float dx ) {
     m_alpha_adjusting = true;
     m_alpha_slider->translate( dx, 0 );
     master_alpha += dx/235.0f;
+    master_alpha=master_alpha<1.e-4?0:(master_alpha>2.0)?2.0:master_alpha;
     redraw = true;
   }
 } // adjustMasterAlpha()
@@ -1095,6 +1094,7 @@ Volvis2DDpy::loadUIState( unsigned long key ) {
   infile.close();
   redraw = true;
 } // loadUIState()
+
 
 
 
