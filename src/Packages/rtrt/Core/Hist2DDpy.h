@@ -59,11 +59,11 @@ class Hist2DDpy : public DpyBase {
   float cx, cy; // the center of the screen
   float ix, iy; // the intersection point along the diagonal
   void set_p();
-  void set_line();
+  void set_lines();
   int whichp;
   bool have_p;
   
-  void set_clip();
+  void set_clip(float x0, float y0, float x1, float y1);
 
   // Called at the start of run.
   virtual void init();
