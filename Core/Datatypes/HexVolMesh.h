@@ -157,14 +157,14 @@ public:
 
   //! function to test if at least one of cell's nodes are in supplied range
   inline bool test_nodes_range(Cell::index_type ci, int sn, int en){
-    if (cells_[ci*4]>=sn && cells_[ci*4]<en
-	|| cells_[ci*4+1]>=sn && cells_[ci*4+1]<en
-	|| cells_[ci*4+2]>=sn && cells_[ci*4+2]<en
-	|| cells_[ci*4+3]>=sn && cells_[ci*4+3]<en
-	|| cells_[ci*4+4]>=sn && cells_[ci*4+4]<en
-	|| cells_[ci*4+5]>=sn && cells_[ci*4+5]<en
-	|| cells_[ci*4+6]>=sn && cells_[ci*4+6]<en
-	|| cells_[ci*4+7]>=sn && cells_[ci*4+7]<en)
+    if (cells_[ci*8]>=sn && cells_[ci*8]<en
+	|| cells_[ci*8+1]>=sn && cells_[ci*8+1]<en
+	|| cells_[ci*8+2]>=sn && cells_[ci*8+2]<en
+	|| cells_[ci*8+3]>=sn && cells_[ci*8+3]<en
+	|| cells_[ci*8+4]>=sn && cells_[ci*8+4]<en
+	|| cells_[ci*8+5]>=sn && cells_[ci*8+5]<en
+	|| cells_[ci*8+6]>=sn && cells_[ci*8+6]<en
+	|| cells_[ci*8+7]>=sn && cells_[ci*8+7]<en)
       return true;
     else
       return false;
@@ -223,13 +223,13 @@ public:
 
 private:
 
-  bool inside4_p(int, const Point &p) const;
+  bool inside8_p(Cell::index_type i, const Point &p) const;
 
   //! all the nodes.
   vector<Point>        points_;
   Mutex                points_lock_;
 
-  //! each 4 indecies make up a Hex
+  //! each 8 indecies make up a Hex
   vector<under_type>   cells_;
   Mutex                cells_lock_;
   //! face neighbors index to Hex opposite the corresponding node in cells_
@@ -239,16 +239,22 @@ private:
   struct PFace {
     Node::index_type         nodes_[4];   //! 4 nodes makes a face.
     Cell::index_type         cells_[2];   //! 2 cells may have this face is in.
+    Node::index_type         snodes_[4];   //! sorted nodes, used for hashing
+
 
     PFace() {
       nodes_[0] = -1;
       nodes_[1] = -1;
       nodes_[2] = -1;
       nodes_[3] = -1;
+      snodes_[0] = -1;
+      snodes_[1] = -1;
+      snodes_[2] = -1;
+      snodes_[3] = -1;
       cells_[0] = -1;
       cells_[1] = -1;
     }
-    // nodes_ must be sorted. See Hash Function below.
+    // snodes_ must be sorted. See Hash Function below.
     PFace(Node::index_type n1, Node::index_type n2, Node::index_type n3, Node::index_type n4) {
       cells_[0] = -1;
       cells_[1] = -1;
@@ -256,13 +262,17 @@ private:
       nodes_[1] = n2;
       nodes_[2] = n3;
       nodes_[3] = n4;
+      snodes_[0] = n1;
+      snodes_[1] = n2;
+      snodes_[2] = n3;
+      snodes_[3] = n4;
       Node::index_type tmp;
       // bubble sort the 4 node indices -- smallest one goes to nodes_[0]
       int i,j;
       for (i=0; i<3; i++) {
 	for (j=i+1; j<4; j++) {
-	  if (nodes_[i] > nodes_[j]) {
-	    tmp = nodes_[i]; nodes_[i]=nodes_[j]; nodes_[j]=tmp;
+	  if (snodes_[i] > snodes_[j]) {
+	    tmp = snodes_[i]; snodes_[i] = snodes_[j]; snodes_[j] = tmp;
 	  }
 	}
       }
@@ -272,8 +282,8 @@ private:
 
     //! true if both have the same nodes (order does not matter)
     bool operator==(const PFace &f) const {
-      return ((nodes_[0] == f.nodes_[0]) && (nodes_[1] == f.nodes_[1]) &&
-	      (nodes_[1] == f.nodes_[1]) && (nodes_[3] == f.nodes_[3]));
+      return ((snodes_[0] == f.snodes_[0]) && (snodes_[1] == f.snodes_[1]) &&
+	      (snodes_[1] == f.snodes_[1]) && (snodes_[3] == f.snodes_[3]));
     }
   };
 
@@ -317,10 +327,10 @@ private:
     static const int low4_mask = ~(top4_mask | mid4_mask);
 
     size_t operator()(const PFace &f) const {
-      return ((f.nodes_[0] << sz_quarter_int << sz_quarter_int <<sz_quarter_int) |
-	      (up4_mask & (f.nodes_[1] << sz_quarter_int << sz_quarter_int)) |
-	      (mid4_mask & (f.nodes_[2] << sz_quarter_int)) |
-	      (low4_mask & f.nodes_[3]));
+      return ((f.snodes_[0] << sz_quarter_int << sz_quarter_int <<sz_quarter_int) |
+	      (up4_mask & (f.snodes_[1] << sz_quarter_int << sz_quarter_int)) |
+	      (mid4_mask & (f.snodes_[2] << sz_quarter_int)) |
+	      (low4_mask & f.snodes_[3]));
     }
   };
 
