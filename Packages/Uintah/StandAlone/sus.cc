@@ -131,6 +131,9 @@ int main(int argc, char** argv)
 	} else if(s == "-mpmice"){
 	    do_ice=true;
 	    do_mpm=true;
+	} else if(s == "-mpmarches"){
+	    do_arches=true;
+	    do_mpm=true;
 	} else if(s == "-nthreads"){
 	  cerr << "reading number of threads\n";
 	    if(++i == argc){
@@ -239,14 +242,12 @@ int main(int argc, char** argv)
 	MPMCFDInterface* mpmcfd = 0;
 	if(do_mpm && do_ice){
 	    mpmcfd = scinew MPMICE(world);
-	    sim->attachPort("mpmcfd", mpmcfd);
 	}
-#if 0
 	if(do_mpm && do_arches){
 	    mpmcfd = scinew MPMArches(world);
-	    sim->attachPort("mpmcfd", mpmcfd);
 	}
-#endif
+	if (mpmcfd)
+	  sim->attachPort("mpmcfd", mpmcfd);
 	// Output
 	Output* output = scinew DataArchiver(world);
 	sim->attachPort("output", output);
