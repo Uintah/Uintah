@@ -6,8 +6,8 @@ BUILD_DIR=/usr/sci/projects/Uintah/tester/"$OS"/
 BUILDROOT=/usr/sci/projects/Uintah/tester/"$OS"/SCIRun_NoUintah
 SCRIPT_DIR=/usr/sci/projects/Uintah/tester/bin
 USE_PREV_BUILD="no"
-#SEND_MAIL_TO="scirun-develop@cs.utah.edu"
-SEND_MAIL_TO="worthen@cs.utah.edu"
+SEND_MAIL_TO="scirun-develop@cs.utah.edu"
+#SEND_MAIL_TO="worthen@cs.utah.edu"
 PARALLELISM=1
 VERBOSE="no"
 
