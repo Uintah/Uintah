@@ -123,7 +123,7 @@
               <lower>        [0,0,0]          </lower>
               <upper>        [2.5,2.5,2.5]    </upper>
               <extraCells> [1,1,1]            </extraCells>
-              <patches>    [1,1,1]            </patches>
+              <patches>    [4,2,2]            </patches>
            </Box>
            <spacing>        [0.5,0.5,0.5]     </spacing>
        </Level>
