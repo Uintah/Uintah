@@ -76,7 +76,7 @@ Roe::Roe(Salmon* s)
     graphics->SetWidth(400);
     graphics->SetHeight(300);
     graphics->SetRgba(True);
-//    graphics->SetDoublebuffer(True);
+    graphics->SetDoublebuffer(True);
     new MotifCallback<Roe>FIXCB(graphics, GLwNexposeCallback,
 				&manager->mailbox, this,
 				&Roe::redrawCB,
@@ -128,6 +128,7 @@ Roe::Roe(Salmon* s)
     shadeRC=new RowColumnC;
     shadeRC->SetOrientation(XmVERTICAL);
     shadeRC->SetRadioAlwaysOne(True);
+    shadeRC->SetRadioBehavior(True);
     shadeRC->Create(*shadeBox, "shadeRC");
     wire=new ToggleButtonC;
     new MotifCallback<Roe>FIXCB(wire, XmNactivateCallback,
@@ -141,18 +142,18 @@ Roe::Roe(Salmon* s)
 				&Roe::flatCB,
 				0, 0);
     flat->Create(*shadeRC, "Flat");
-    phong=new ToggleButtonC;
-    new MotifCallback<Roe>FIXCB(phong, XmNactivateCallback,
-			&manager->mailbox, this,
-				&Roe::phongCB,
-				0, 0);
-    phong->Create(*shadeRC, "Phong");
     gouraud=new ToggleButtonC;
     new MotifCallback<Roe>FIXCB(gouraud, XmNactivateCallback,
 				&manager->mailbox, this,
 				&Roe::gouraudCB,
 				0, 0);
     gouraud->Create(*shadeRC, "Gouraud");
+    phong=new ToggleButtonC;
+    new MotifCallback<Roe>FIXCB(phong, XmNactivateCallback,
+			&manager->mailbox, this,
+				&Roe::phongCB,
+				0, 0);
+    phong->Create(*shadeRC, "Phong");
     
     lightBox=new RowColumnC;
     lightBox->SetOrientation(XmVERTICAL);
@@ -241,9 +242,6 @@ void Roe::redrawCB(CallbackData*, void*){
     if(!doneInit)
 	initCB(0, 0);
     redrawAll();
-    evl->lock();
-    glFlush();
-    evl->unlock();
 }
 
 void Roe::initCB(CallbackData*, void*) {
@@ -264,9 +262,7 @@ void Roe::make_current() {
 }
 void Roe::redrawAll()
 {
-    cerr << "I'm in Roe::redrawAll\n";
     if (doneInit) {
-	cerr << "I'm trying to clear the screen\n";
 	// clear screen
 evl->lock();
 	make_current();
@@ -287,14 +283,13 @@ evl->lock();
 	    HashTableIter<int, GeomObj*> serIter(serHash);
 	    for (serIter.first(); serIter.ok(); ++serIter) {
 		GeomObj *geom=serIter.get_data();
-		cerr << "I'm tring to draw an object!!!!\n";
 		geom->draw();
 	    }
 	}
 	for (int i=0; i<kids.size(); i++) {
 	    kids[i]->redrawAll();
 	}
-	glFlush();
+	GLwDrawingAreaSwapBuffers(*graphics);
 evl->unlock();       
     }
 }
