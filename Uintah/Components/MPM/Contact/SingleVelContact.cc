@@ -148,8 +148,8 @@ void SingleVelContact::exMomIntegrated(const ProcessorContext*,
 		  region, Ghost::None, 0);
     }
   }
-  delt_vartype delt;
-  old_dw->get(delt, lb->deltLabel);
+  delt_vartype delT;
+  old_dw->get(delT, lb->delTLabel);
 
   for(NodeIterator iter = region->getNodeIterator(); !iter.done(); iter++){
     centerOfMassMom=zero;
@@ -164,7 +164,7 @@ void SingleVelContact::exMomIntegrated(const ProcessorContext*,
     if(!compare(centerOfMassMass,0.0)){
       centerOfMassVelocity=centerOfMassMom/centerOfMassMass;
       for(int  n = 0; n < NVFs; n++){
-        Dvdt = (centerOfMassVelocity - gvelocity_star[n][*iter])/delt;
+        Dvdt = (centerOfMassVelocity - gvelocity_star[n][*iter])/delT;
 	gvelocity_star[n][*iter] = centerOfMassVelocity;
 	gacceleration[n][*iter]+=Dvdt;
       }
@@ -214,6 +214,9 @@ void SingleVelContact::addComputesAndRequiresIntegrated( Task* t,
 }
 
 // $Log$
+// Revision 1.19  2000/05/30 17:08:54  dav
+// Changed delt to delT
+//
 // Revision 1.18  2000/05/26 21:37:35  jas
 // Labels are now created and accessed using Singleton class MPMLabel.
 //

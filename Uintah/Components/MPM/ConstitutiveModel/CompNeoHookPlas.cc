@@ -112,8 +112,8 @@ void CompNeoHookPlas::computeStableTimestep(const Region* region,
     }
     double WaveSpeed = sqrt(Max(c_rot,c_dil));
     // Fudge factor of .8 added, just in case
-    double delt_new = .8*(Min(dx.x(), dx.y(), dx.z())/WaveSpeed);
-    new_dw->put(delt_vartype(delt_new), lb->deltLabel);
+    double delT_new = .8*(Min(dx.x(), dx.y(), dx.z())/WaveSpeed);
+    new_dw->put(delt_vartype(delT_new), lb->delTLabel);
 }
 
 void CompNeoHookPlas::computeStressTensor(const Region* region,
@@ -164,8 +164,8 @@ void CompNeoHookPlas::computeStressTensor(const Region* region,
 
   new_dw->get(gvelocity, lb->gMomExedVelocityLabel, matlindex,region,
 	      Ghost::None, 0);
-  delt_vartype delt;
-  old_dw->get(delt, lb->deltLabel);
+  delt_vartype delT;
+  old_dw->get(delT, lb->delTLabel);
 
   ParticleSubset* pset = px.getParticleSubset();
   ASSERT(pset == pstress.getParticleSubset());
@@ -204,7 +204,7 @@ void CompNeoHookPlas::computeStressTensor(const Region* region,
     // Compute the deformation gradient increment using the time_step
     // velocity gradient
     // F_n^np1 = dudx * dt + Identity
-    deformationGradientInc = velGrad * delt + Identity;
+    deformationGradientInc = velGrad * delT + Identity;
 
     // Update the deformation gradient tensor to its time n+1 value.
     deformationGradient[idx] = deformationGradientInc *
@@ -272,8 +272,8 @@ void CompNeoHookPlas::computeStressTensor(const Region* region,
 
   WaveSpeed = sqrt(Max(c_rot,c_dil));
   // Fudge factor of .8 added, just in case
-  double delt_new = .8*Min(dx.x(), dx.y(), dx.z())/WaveSpeed;
-  new_dw->put(delt_vartype(delt_new), lb->deltLabel);
+  double delT_new = .8*Min(dx.x(), dx.y(), dx.z())/WaveSpeed;
+  new_dw->put(delt_vartype(delT_new), lb->delTLabel);
   new_dw->put(pstress, lb->pStressLabel, matlindex, region);
   new_dw->put(deformationGradient, lb->pDeformationMeasureLabel,
 		matlindex, region);
@@ -349,9 +349,9 @@ void CompNeoHookPlas::addComputesAndRequires(Task* task,
                   Ghost::AroundCells, 1);
    task->requires(old_dw, bElBarLabel, matl->getDWIndex(), region,
                   Ghost::None);
-   task->requires(old_dw, lb->deltLabel);
+   task->requires(old_dw, lb->delTLabel);
 
-   task->computes(new_dw, lb->deltLabel);
+   task->computes(new_dw, lb->delTLabel);
    task->computes(new_dw, lb->pStressLabel, matl->getDWIndex(),  region);
    task->computes(new_dw, lb->pDeformationMeasureLabel, matl->getDWIndex(), region);
    task->computes(new_dw, bElBarLabel, matl->getDWIndex(),  region);
@@ -381,6 +381,9 @@ const TypeDescription* fun_getTypeDescription(CompNeoHookPlas::CMData*)
 }
 
 // $Log$
+// Revision 1.17  2000/05/30 17:08:26  dav
+// Changed delt to delT
+//
 // Revision 1.16  2000/05/26 21:37:33  jas
 // Labels are now created and accessed using Singleton class MPMLabel.
 //
