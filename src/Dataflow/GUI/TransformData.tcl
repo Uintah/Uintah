@@ -68,13 +68,16 @@ itcl_class SCIRun_FieldsData_TransformData {
 		 char short int float double Vector Tensor string} \
 	    $this-outputdatatype
 
+	label $w.info -text "Function (note: you can use the values 'v', 'x', 'y', and 'z')"
+
 	option add *textBackground white	
 	iwidgets::scrolledtext $w.row1 -height 60 -hscrollmode dynamic
 
 	bind $w.row1 <Leave> "$this update_text"
 	$w.row1 insert end [set $this-function]
 
-	pack $w.row1 -side top -e y -f both -padx 5 -pady 5
+	pack $w.info -side top -anchor w -padx 5 -pady 5
+	pack $w.row1 -side top -e y -f both -padx 5
 
 	makeSciButtonPanel $w $w $this
 	moveToCursor $w
