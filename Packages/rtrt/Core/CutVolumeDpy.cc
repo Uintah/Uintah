@@ -36,8 +36,8 @@ CutVolumeDpy::CutVolumeDpy(float isoval, ColorMap *cmap)
 //moves the selected color to a new mouse position
 void CutVolumeDpy::movecolor(int x)
 {
-  if (cmap && cmap->valid) {
-    if (selcolor == (cmap->size-1)) return;
+  if (cmap) {
+    if (selcolor == (cmap->size()-1)) return;
     if (selcolor == 0) return;
     
     int checksel = 0;
@@ -50,7 +50,7 @@ void CutVolumeDpy::movecolor(int x)
       val=datamax;
     val = val/datamax;
   
-    for (int i = 0; i < cmap->size; i++) {    
+    for (int i = 0; i < cmap->size(); i++) {    
       if (cmap->ColorCells[i]->v > val) {
 	checksel = i;
 	break;
@@ -81,13 +81,14 @@ void CutVolumeDpy::movecolor(int x)
 	}
       }
     }
+    cmap->create_slices();
   }
 }
 
 //chooses the next greater color from the mouse as the new selected color
 void CutVolumeDpy::selectcolor(int x)
 {
-  if (cmap && cmap->valid) {
+  if (cmap) {
 
     float xn=float(x)/xres;
     float val=datamin+xn*(datamax-datamin);
@@ -97,7 +98,7 @@ void CutVolumeDpy::selectcolor(int x)
       val=datamax;
     val = val/datamax;
     
-    for (int i = 0; i < cmap->size; i++) {    
+    for (int i = 0; i < cmap->size(); i++) {    
       if (cmap->ColorCells[i]->v > val) {
 	selcolor = i;
 	break;
@@ -111,7 +112,7 @@ void CutVolumeDpy::selectcolor(int x)
 //inserts a new color and sets it to grey initially
 void CutVolumeDpy::insertcolor(int x)
 {
-  if (cmap && cmap->valid) {
+  if (cmap) {
     float xn=float(x)/xres;
     float val=datamin+xn*(datamax-datamin);
     if(val<datamin)
@@ -120,14 +121,14 @@ void CutVolumeDpy::insertcolor(int x)
       val=datamax;
     val = val/datamax;
     
-    for (int i = 0; i < cmap->size; i++) {    
+    for (int i = 0; i < cmap->size(); i++) {    
       if (cmap->ColorCells[i]->v > val) {
 	cmap->ColorCells.insert(i, new ColorCell(Color(0.5,0.5,0.5), val));
 	selcolor = i;
-	cmap->size++;
 	break;
       }
     }
+    cmap->create_slices();    
   }
   
 }
@@ -161,37 +162,38 @@ void CutVolumeDpy::button_motion(MouseButton button,
 }
 
 void CutVolumeDpy::key_pressed(unsigned long key) {
-  if (cmap && cmap->valid) {
+  if (cmap) {
     //E/R raise and lower Red
     //F/G Green
     //V/B Blue
     //left and right change the selected color
     //delete removes the selected color (first and last are disallowed)
     //S saves the colormap to a new file
+    bool update_colormap = false;
     switch(key){
     case XK_e:
       cmap->ColorCells[selcolor]->c -= Color(0.05,0,0);
-      redraw=true;
+      update_colormap=redraw=true;
       break;
     case XK_r:
       cmap->ColorCells[selcolor]->c += Color(0.05,0,0);
-      redraw=true;
+      update_colormap=redraw=true;
       break;
     case XK_f:
       cmap->ColorCells[selcolor]->c -= Color(0,0.05,0);
-      redraw=true;
+      update_colormap=redraw=true;
       break;
     case XK_g:
       cmap->ColorCells[selcolor]->c += Color(0,0.05,0);
-      redraw=true;
+      update_colormap=redraw=true;
       break;
     case XK_v:
       cmap->ColorCells[selcolor]->c -= Color(0,0,0.05);
-      redraw=true;
+      update_colormap=redraw=true;
       break;
     case XK_b:
       cmap->ColorCells[selcolor]->c += Color(0,0,0.05);
-      redraw=true;
+      update_colormap=redraw=true;
       break;
     case XK_KP_Left:
       if (selcolor != 0) {
@@ -200,23 +202,24 @@ void CutVolumeDpy::key_pressed(unsigned long key) {
       }
       break;
     case XK_KP_Right:
-      if (selcolor != (cmap->size-1)) {
+      if (selcolor != (cmap->size()-1)) {
 	selcolor++;
 	redraw=true;
       }
       break;
     case XK_Delete:
-      if ((selcolor != 0) && (selcolor != (cmap->size-1))) {
+      if ((selcolor != 0) && (selcolor != (cmap->size()-1))) {
 	cmap->ColorCells.remove(selcolor);
-	cmap->size--;
 	selcolor--;	
-	redraw=true;
+	update_colormap=redraw=true;
       }
       break;
     case XK_s:
       cmap->save();
       break;
     }
+    if (update_colormap)
+      cmap->create_slices();
   }
 }
 
@@ -246,7 +249,7 @@ void CutVolumeDpy::draw_hist(bool redraw_isoval)
 
     glColor3f(0,0,1);
     for(int i=0;i<nhist;i++){
-      if (cmap && cmap->valid) {
+      if (cmap) {
 	Color iv = cmap->indexColorMap((float)i/(float)nhist);
 	glColor3f(iv.red(), iv.green(), iv.blue());
       }
@@ -257,8 +260,8 @@ void CutVolumeDpy::draw_hist(bool redraw_isoval)
     }
 
     //print active cutplane color map index points
-    if (cmap && cmap->valid) {
-      for (int i = 0; i < cmap->size; i++) {    
+    if (cmap) {
+      for (int i = 0; i < cmap->size(); i++) {    
 	Color iv = cmap->ColorCells[i]->c;
 	glColor3f(iv.red(), iv.green(), iv.blue());
 	int v = cmap->ColorCells[i]->v * nhist;
