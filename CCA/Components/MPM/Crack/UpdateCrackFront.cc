@@ -201,9 +201,57 @@ void Crack::RecollectCrackFrontSegments(const ProcessorGroup*,
 
         MPI_Barrier(mpi_crack_comm);
 
+        /* Task 2: Detect if crack-front nodes are inside of materials
+        */
+        vector<short> cfSegCenterInMat;
+        cfSegCenterInMat.resize(cfSegNodes[m].size()/2);
+        for(int i=0; i<(int)cfSegNodes[m].size()/2;i++) {
+          cfSegCenterInMat[i]=YES;
+        }
+
+        for(int i=0; i<patch_size; i++) {
+          int num=cfsset[m][i].size();
+          short* inMat=new short[num];
+
+          if(pid==i) { // Rank i does it
+            for(int j=0; j<num; j++) {
+              int idx=cfsset[m][i][j];
+              int node1=cfSegNodes[m][2*idx];
+	      int node2=cfSegNodes[m][2*idx+1];
+              Point cent=cx[m][node1]+(cx[m][node2]-cx[m][node1])/2.;
+              inMat[j]=YES;
+
+              // Get the node indices that surround the cell
+              if(d_8or27==8)
+                patch->findCellAndWeights(cent, ni, S);
+              else if(d_8or27==27)
+                patch->findCellAndWeights27(cent, ni, S, psize[j]);
+
+              for(int k = 0; k < d_8or27; k++) {
+                double totalMass=gmass[ni[k]]+Gmass[ni[k]];
+                if(totalMass<d_cell_mass/32.) {
+                  inMat[j]=NO;
+                  break;
+                }
+              }
+            } // End of loop over j
+          } // End of if(pid==i)
+
+          MPI_Bcast(&inMat[0],num,MPI_SHORT,i,mpi_crack_comm);
+
+          for(int j=0; j<num; j++) {
+            int idx=cfsset[m][i][j];
+            cfSegCenterInMat[idx]=inMat[j];
+          }
+          delete [] inMat;
+        } // End of loop over patches
+
+        MPI_Barrier(mpi_crack_comm);
+
+	
         /* Task 1a: Detect if crack-front-segment center is inside of
                    materials for single crack-front-seg problems
-        */
+        
         int ncfSegs=(int)cfSegNodes[m].size()/2;
         short cfSegCenterInMat=YES;
         if(ncfSegs==1) {
@@ -236,8 +284,8 @@ void Crack::RecollectCrackFrontSegments(const ProcessorGroup*,
         } // End of if(ncfSegs==1)
 
         MPI_Barrier(mpi_crack_comm);
-
-        /* Task 2: Recollect crack-front segs, discarding the dead ones
+*/
+        /* Task 3: Recollect crack-front segs, discarding the dead ones
         */
         // Store crack-front parameters in temporary arraies
         int old_size=(int)cfSegNodes[m].size();
@@ -252,6 +300,9 @@ void Crack::RecollectCrackFrontSegments(const ProcessorGroup*,
           int nd2=copyData[2*i+1];
 
           short thisSegActive=NO;
+	  if(cfSegNodesInMat[2*i] || cfSegNodesInMat[2*i+1] || cfSegCenterInMat[i])
+		  thisSegActive=YES;
+/*	  
           if(old_size/2==1) { // for single seg problems
             // Remain active if any of two ends and center are inside
             if(cfSegNodesInMat[2*i] || cfSegNodesInMat[2*i+1] ||
@@ -262,7 +313,7 @@ void Crack::RecollectCrackFrontSegments(const ProcessorGroup*,
             if(cfSegNodesInMat[2*i] || cfSegNodesInMat[2*i+1])
               thisSegActive=YES;
           }
-
+*/
           if(thisSegActive) { // Collect parameters of the node
             cfSegNodes[m].push_back(nd1);
             cfSegNodes[m].push_back(nd2);
@@ -322,7 +373,8 @@ void Crack::RecollectCrackFrontSegments(const ProcessorGroup*,
         } // End if(cfSegNodes[m].size()>0)
 	else { // Crack has penetrated the material
           // If all crack-front segs dead, the material is broken.
-	  if(pid==0) cout << "   !!! Material " << m << " is broken. " << endl;
+	  if(pid==0) cout << "!!! Material " << m 
+		          << " has no crack or is broken." << endl;
 	}	
       } // End of if(d_doCrackPropagation!="false")
 
