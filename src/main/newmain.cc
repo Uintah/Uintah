@@ -38,13 +38,17 @@ using namespace gov::cca;
                         // SCIRun/doc/edition.xml
 #include <sys/stat.h>
 
+//string defaultBuilder("qt"); 
+string defaultBuilder("txt"); 
+
 void
 usage()
 {
   cout << "Usage: scirun [args] [net_file]\n";
-  cout << "       [-]-v[ersion] : prints out version information\n";
-  cout << "       [-]-h[elp]    : prints usage information\n";
-  cout << "       net_file      : SCIRun Network Input File\n";
+  cout << "       [-]-v[ersion]          : prints out version information\n";
+  cout << "       [-]-h[elp]             : prints usage information\n";
+  cout << "       [-]-b[uilder] qt/txt   : selects qt or text builder\n";
+  cout << "       net_file               : SCIRun Network Input File\n";
   exit( 0 );
 }
 
@@ -63,6 +67,13 @@ parse_args( int argc, char *argv[] )
       } else if ( ( arg == "--help" ) || ( arg == "-help" ) ||
 		  ( arg == "-h" ) ||  ( arg == "--h" ) ) {
 	usage();
+      } else if ( ( arg == "--builder" ) || ( arg == "-builder" ) ||
+		  ( arg == "-b" ) ||  ( arg == "--b" ) ) {
+	if(++cnt<argc) defaultBuilder=argv[cnt];
+	else{
+	  cerr << "Unkown builder."<<endl;
+	  usage();
+	}
       } else {
 	  struct stat buf;
 	  if (stat(arg.c_str(),&buf) < 0) {
@@ -77,8 +88,8 @@ parse_args( int argc, char *argv[] )
 int
 main(int argc, char *argv[] )
 {
-  bool gui=true;
   bool framework=true;
+
   parse_args( argc, argv );
 
   try {
@@ -110,21 +121,28 @@ main(int argc, char *argv[] )
       Thread::exitAll(1);
     }
 
-    if(gui){
-      ComponentID::pointer gui_id=builder->createInstance("gui", "cca:SCIRun.Builder", gov::cca::TypeMap::pointer(0),"");
+    if(defaultBuilder=="qt"){
+      ComponentID::pointer gui_id=builder->createInstance("QtBuilder", "cca:SCIRun.Builder", gov::cca::TypeMap::pointer(0));
       if(gui_id.isNull()){
-	cerr << "Cannot create GUI component\n";
+	cerr << "Cannot create component: cca:SCIRun.Builder\n";
+	Thread::exitAll(1);
+      }
+    }
+    else{
+      ComponentID::pointer gui_id=builder->createInstance("TxtBuilder", "cca:SCIRun.TxtBuilder", gov::cca::TypeMap::pointer(0));
+      if(gui_id.isNull()){
+	cerr << "Cannot create component: cca:SCIRun.TxtBuilder\n";
 	Thread::exitAll(1);
       }
     }
     main_services->releasePort("cca.BuilderService");
-    cerr << "SCIRun " << VERSION << " started...\n";
+    cout << "SCIRun " << VERSION << " started...\n";
 
     //broadcast, listen to URL periodically
-    sr->share(main_services);
+    //sr->share(main_services);
 
     PIDL::serveObjects();
-    cerr << "serveObjects done!\n";
+    cout << "serveObjects done!\n";
 
 
 

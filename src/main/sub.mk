@@ -45,7 +45,7 @@ ifeq ($(LARGESOS),yes)
 else
   PSELIBS := Core/Exceptions Core/CCA/Component/Comm\
         Core/CCA/Component/PIDL Core/globus_threads Core/CCA/spec \
-	SCIRun Core/CCA/Component/CIA Core/Thread
+	SCIRun Core/CCA/Component/SIDL Core/Thread
 endif
 
 LIBS :=
