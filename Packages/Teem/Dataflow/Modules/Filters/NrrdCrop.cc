@@ -254,8 +254,8 @@ NrrdCrop::execute()
     }
   }
 
-  int min[num_axes_.get()];
-  int max[num_axes_.get()];
+  int *min = scinew int[num_axes_.get()];
+  int *max = scinew int[num_axes_.get()];
 
   for(int i = 1; i <  num_axes_.get(); i++) {
     min[i] = mins_[i]->get();
@@ -277,4 +277,7 @@ NrrdCrop::execute()
   nrrd->copy_sci_data(*nrrdH.get_rep());
   last_nrrdH_ = nrrd;
   onrrd_->send(last_nrrdH_);
+
+  delete min;
+  delete max;
 }
