@@ -8,6 +8,13 @@ testname="$3"
 force="$4" # if set to -f then it won't ask you yes/no questions
            # if set to -m then it won't ask, but will only replace memory stats
 
+# Info for a log file, to keep track of who replaced gold standards
+logfile="$gold_standard_dir/$testname/replace.log"
+user=`whoami`
+do_uda="false"
+do_mem="false"
+do_perf="false"
+
 # prompt for and replace udas
 if [ $# -ne 3 -a $# -ne 4 ]; then
   echo "usage: $0 <gold_standard_dir> <replacement_dir> <testname> [-f]"
@@ -28,10 +35,10 @@ else
     echo "Replace the udas at $gold_standard_dir/$testname with $replacement_dir/$testname? (Enter 'yes' or 'y' to continue.) "
     read yesno
   fi
-
+  
   # remove the udas, and copy the new ones
   if [ $yesno = "y" -o $yesno = "yes" ]; then
-  # echo "rm -rf $gold_standard_dir/$testname/*.uda"
+    do_uda="true"
     failcode="0"
     echo -n "Replacing $testname udas ... "
     rm -rf $gold_standard_dir/$testname/*.uda
@@ -73,6 +80,7 @@ else
     read yesno
   fi
   if [ $yesno = "y" -o $yesno = "yes" ]; then
+    do_mem="true"
     echo "Replacing $testname memory results"
     rm $gold_standard_dir/$testname/*malloc* > /dev/null 2>&1
     cp $replacement_dir/$testname/malloc_stats $gold_standard_dir/$testname/. > /dev/null 2>&1
@@ -99,6 +107,7 @@ else
   fi
 
   if [ $yesno = "y" -o $yesno = "yes" ]; then
+    do_perf="true"
     echo "Replacing $testname performance results"
     rm "$gold_standard_dir/$testname/*timestamp" > /dev/null 2>&1
     cp $replacement_dir/$testname/timestamp $gold_standard_dir/$testname/. > /dev/null 2>&1
@@ -114,9 +123,37 @@ else
   fi
 fi
 
+if [ "$do_uda" = "true" -o "$do_mem" = "true" -o "$do_perf" = "true" ]; then
+  # make a log
+  if [ ! -f $logfile ]; then
+    echo "Replacement log for $gold_standard_dir/$testname" >> $logfile
+    echo "---------------------------------------------------------------------" >> $logfile
+  fi
+
+  echo -n "`date`: user $user " >> $logfile
+  if [ "$do_uda" = "true" ]; then
+    echo -n "replaced uda" >> $logfile
+  fi
+  if [ "$do_mem" = "true" ]; then
+    if [ "$do_uda" = "true" ]; then
+      echo -n ", memory usage" >> $logfile
+    else
+      echo -n "replaced memory usage" >> $logfile
+    fi
+  fi
+  if [ "$do_perf" = "true" ]; then
+    if [ "$do_mem" = "true" -o "do_uda" = "true" ]; then
+      echo -n ", performance results" >> $logfile
+    else
+      echo -n "replaced performance results" >> $logfile
+    fi
+  fi
+  echo >> $logfile
+
 # change groups and permissions so (hopefully) anybody can replace them later
-find "$gold_standard_dir/$testname" -user `whoami` | /usr/bin/xargs chmod g+wrX,o+rX
-find "$gold_standard_dir/$testname" -user `whoami` | /usr/bin/xargs chgrp csafe
+  find "$gold_standard_dir/$testname" -user `whoami` | /usr/bin/xargs chmod g+wrX,o+rX
+  find "$gold_standard_dir/$testname" -user `whoami` | /usr/bin/xargs chgrp csafe
+fi
 
 echo
 
