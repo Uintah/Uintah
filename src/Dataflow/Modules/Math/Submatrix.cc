@@ -38,10 +38,10 @@ namespace SCIRun {
 class Submatrix : public Module
 {
 private:
-  GuiInt mincol_;
-  GuiInt maxcol_;
-  GuiInt minrow_;
-  GuiInt maxrow_;
+  GuiString mincol_;
+  GuiString maxcol_;
+  GuiString minrow_;
+  GuiString maxrow_;
   GuiInt nrow_;
   GuiInt ncol_;
 
@@ -127,10 +127,10 @@ Submatrix::execute()
   }
   else
   {
-    minrow = minrow_.get();
-    maxrow = maxrow_.get();
-    mincol = mincol_.get();
-    maxcol = maxcol_.get();
+    if (!string_to_int(minrow_.get(), minrow)) minrow = 0;
+    if (!string_to_int(maxrow_.get(), maxrow)) maxrow = imatrix->nrows()-1;
+    if (!string_to_int(mincol_.get(), mincol)) mincol = 0;
+    if (!string_to_int(maxcol_.get(), maxcol)) maxcol = imatrix->ncols()-1;
   }
 
   minrow = Min(Max(0, minrow), imatrix->nrows()-1);
@@ -138,10 +138,10 @@ Submatrix::execute()
   mincol = Min(Max(0, mincol), imatrix->ncols()-1);
   maxcol = Min(Max(0, maxcol), imatrix->ncols()-1);
 
-  minrow_.set(minrow);
-  maxrow_.set(maxrow);
-  mincol_.set(mincol);
-  maxcol_.set(maxcol);
+  minrow_.set(to_string(minrow));
+  maxrow_.set(to_string(maxrow));
+  mincol_.set(to_string(mincol));
+  maxcol_.set(to_string(maxcol));
     
   if (mincol > maxcol || minrow > maxrow)
   {
