@@ -57,7 +57,9 @@ void usage(const std::string& badarg, const std::string& progname)
     cerr << "  -v,--variable <variable name>\n";
     cerr << "  -m,--material <material number> [defaults to 0]\n";
     //    cerr << "  -binary (prints out the data in binary)\n";
-    cerr << "  -timestep,--timestep [int] (only outputs timestep from int) [defaults to 0]\n";
+    cerr << "  -tlow,--timesteplow [int] (sets start output timestep to int) [defaults to 0]\n";
+    cerr << "  -thigh,--timestephigh [int] (sets end output timestep to int) [defaults to last timestep]\n";
+    cerr << "  -timestep,--timestep [int] (only outputs from timestep int) [defaults to 0]\n";
     cerr << "  -istart,--indexs <x> <y> <z> (cell index) [defaults to 0,0,0]\n";
     cerr << "  -iend,--indexe <x> <y> <z> (cell index) [defaults to 0,0,0]\n";
     cerr << "  -o,--out <outputfilename> [defaults to stdout]\n";
@@ -73,86 +75,79 @@ void usage(const std::string& badarg, const std::string& progname)
 template<class T>
 void printData(DataArchive* archive, string& variable_name,
 	       int material, IntVector& var_start, IntVector& var_end,
-               unsigned long time_step, ostream& out) 
+               unsigned long time_start, unsigned long time_end, ostream& out) 
 
 {
+  // query time info from dataarchive
   vector<int> index;
   vector<double> times;
 
-  // query time info from dataarchive
   archive->queryTimesteps(index, times);
   ASSERTEQ(index.size(), times.size());
-  if (!quiet) cout << "There are " << index.size() << " timesteps:\n";
+  if (!quiet) cout << "There are " << index.size() << " timesteps\n";
       
+
   //------------------------------
   // figure out the lower and upper bounds on the timesteps
-  if (time_step >= times.size()) {
-    cerr << "timestep must be between 0 and " << times.size()-1 << endl;
+  if (time_start >= times.size()) {
+    cerr << "timesteplow must be between 0 and " << times.size()-1 << endl;
     exit(1);
   }
 
-  if (!quiet) cout << "outputting for times["<<time_step<<"] = " << times[time_step]<< endl;
+  // set default max time value
+  if (time_end == (unsigned long)-1) {
+    if (verbose)
+      cout <<"Initializing time_step_upper to "<<times.size()-1<<"\n";
+    time_end = times.size() - 1;
+  }
 
-
-  // Determine which index is varying
+  if (time_end >= times.size() || time_end < time_start) {
+    cerr << "timestephigh("<<time_end<<") must be greater than " << time_start 
+	 << " and less than " << times.size()-1 << endl;
+    exit(1);
+  }
+  
+  // make sure the user knows it could be really slow if he
+  // tries to output a big range of data...
   IntVector var_range = var_end - var_start;
-  bool range_over_x = true;
-  bool range_over_y = true;
-  bool range_over_z = true;
-  if(var_range.x() == 0)
-     range_over_x = false;
-  if(var_range.y() == 0)
-    range_over_y = false;
-  if(var_range.z() == 0)
-    range_over_z = false;
-
-  if((range_over_x && range_over_y) ||
-     (range_over_x && range_over_z) ||
-     (range_over_y && range_over_z)){
-       cerr << "Only one index may vary" << endl;
-       exit(1);
+  if (var_range.x() && var_range.y() && var_range.z()) {
+    cerr << "PERFORMANCE WARNING: Outputting over 3 dimensions!\n";
+  }
+  else if ((var_range.x() && var_range.y()) ||
+           (var_range.x() && var_range.z()) ||
+           (var_range.y() && var_range.z())){
+    cerr << "PERFORMANCE WARNING: Outputting over 2 dimensions\n";
   }
 
-  int index_range=0;
-  int inc_x=0;
-  int inc_y=0;
-  int inc_z=0;
-
-  if(range_over_x){
-   index_range=var_range.x();
-   inc_x=1;
-  }
-  if(range_over_y){
-   index_range=var_range.y();
-   inc_y=1;
-  }
-  if(range_over_z){
-   index_range=var_range.z();
-   inc_z=1;
+  //------------------------------
+  // figure out the lower and upper bounds on the timesteps
+  if (time_start >= times.size() || time_end > times.size()) {
+    cerr << "timestep must be between 0 and " << times.size()-1 << endl;
+    exit(1);
   }
 
   // set defaults for output stream
   out.setf(ios::scientific,ios::floatfield);
   out.precision(8);
   
-  // for each type available, we need to query the values for the time range, 
-  // variable name, and material
-  IntVector var_id = var_start - IntVector(inc_x,inc_y,inc_z);
-  vector<T> values;
-  for(int i=0;i<=index_range;i++){
-    var_id += IntVector(inc_x,inc_y,inc_z);
-    try {
-      archive->query(values, variable_name, material, var_id, times[time_step], times[time_step]);
-    } catch (const VariableNotFoundInGrid& exception) {
-      cerr << "Caught VariableNotFoundInGrid Exception: " << exception.message() << endl;
-      exit(1);
+  for (unsigned long time_step = time_start; time_step <= time_end; time_step++) {
+  
+    out << "outputting for times["<<time_step<<"] = " << times[time_step]<< endl;
+    
+    // for each type available, we need to query the values for the time range, 
+    // variable name, and material
+    
+    for (CellIterator ci(var_start, var_end + IntVector(1,1,1)); !ci.done(); ci++) {
+      vector<T> values;
+      try {
+        archive->query(values, variable_name, material, *ci, times[time_step], times[time_step]);
+      } catch (const VariableNotFoundInGrid& exception) {
+        cerr << "Caught VariableNotFoundInGrid Exception: " << exception.message() << endl;
+        exit(1);
+      }
+      out << *ci << ": " << values[0] << endl;
     }
-  }  // for
-  // Print out data
-  var_id = var_start - IntVector(inc_x,inc_y,inc_z);
-  for(unsigned int i = 0; i < values.size(); i++) {
-    var_id += IntVector(inc_x,inc_y,inc_z);
-    out << var_id.x() << " " << var_id.y() << " " << var_id.z() << " " << values[i] << endl;
+    out << endl;
   }
 } 
 
@@ -163,8 +158,8 @@ int main(int argc, char** argv)
    */
   bool do_binary=false;
 
-  unsigned long time_step = 0;
-
+  unsigned long time_start = 0;
+  unsigned long time_end = (unsigned long)-1;
   string input_uda_name;
   string output_file_name("-");
   IntVector var_start(0,0,0);
@@ -191,8 +186,14 @@ int main(int argc, char** argv)
       verbose = true;
     } else if (s == "-q" || s == "--quiet") {
       quiet = true;
+    } else if (s == "-tlow" || s == "--timesteplow") {
+      time_start = strtoul(argv[++i],(char**)NULL,10);
+    } else if (s == "-thigh" || s == "--timestephigh") {
+      time_end = strtoul(argv[++i],(char**)NULL,10);
     } else if (s == "-timestep" || s == "--timestep") {
-      time_step = strtoul(argv[++i],(char**)NULL,10);
+      int val = strtoul(argv[++i],(char**)NULL,10);
+      time_start = val;
+      time_end = val;
     } else if (s == "-istart" || s == "--indexs") {
       int x = atoi(argv[++i]);
       int y = atoi(argv[++i]);
@@ -280,19 +281,19 @@ int main(int argc, char** argv)
   switch (subtype->getType()) {
   case Uintah::TypeDescription::double_type:
     printData<double>(archive, variable_name, material, var_start, var_end,
-		      time_step, *output_stream);
+		      time_start, time_end, *output_stream);
     break;
   case Uintah::TypeDescription::float_type:
     printData<float>(archive, variable_name, material, var_start, var_end,
-		      time_step, *output_stream);
+		      time_start, time_end, *output_stream);
     break;
   case Uintah::TypeDescription::int_type:
     printData<int>(archive, variable_name, material, var_start, var_end,
-		   time_step, *output_stream);
+		   time_start, time_end, *output_stream);
     break;
   case Uintah::TypeDescription::Vector:
     printData<Vector>(archive, variable_name, material, var_start, var_end,
-		   time_step, *output_stream);    
+		   time_start, time_end, *output_stream);    
     break;
   case Uintah::TypeDescription::Matrix3:
   case Uintah::TypeDescription::bool_type:
