@@ -13,8 +13,13 @@ using namespace SCIRun;
 
 class StartSCIRun : public Runnable {
 public:
-  virtual ~StartSCIRun() { std::cerr << "~StartSCIRun" << std::endl; }
-    void run();
+  StartSCIRun(std::string netPath) { netName = netPath; }
+  StartSCIRun() { netName = ""; }
+  virtual ~StartSCIRun() { netName = "";  std::cerr << "~StartSCIRun" << std::endl; }
+  void run();
+private:
+  std::string netName;
+  
 };
 
 class PTIIWorker : public Runnable {
@@ -29,5 +34,19 @@ private:
 //     jclass cls_;
 //     jmethodID mid_;
 };
+
+
+class AddNet : public Runnable {
+public:
+  AddNet();
+  virtual ~AddNet() {}
+  void run();
+
+  static int pt_flag;  //1 when done, 0 while going
+  
+private:
+    std::string command;
+};
+
 
 #endif

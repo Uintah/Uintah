@@ -137,9 +137,17 @@ void StartSCIRun::run()
     packageDB->loadPackage();  // load the packages
     gui->eval("hideProgress");
 
+	// Check the dynamic compilation directory for validity
+	sci_putenv("SCIRUN_ON_THE_FLY_LIBS_DIR",gui->eval("getOnTheFlyLibsDir"));
+
+	
     // Activate "File" menu sub-menus once packages are all loaded.
     gui->eval("activate_file_submenus");
 
+	//string command = "loadnet {/scratch/SCIRun/test.net}";
+	if(netName != "")
+		gui->eval("loadnet {" + netName + "}");
+	
     // Now activate the TCL event loop
     tcl_task->release_mainloop();
 
@@ -164,3 +172,25 @@ void PTIIWorker::run()
 {
     JNIUtils::sem().down();
 }
+
+//add network
+AddNet::AddNet(){
+	
+    command = "loadnet {/scratch/SCIRun/test.net}";
+	
+	//command called in main to load a network from the command line
+	//gui->eval("loadnet {"+string(argv[startnetno])+"}");
+	
+}
+
+
+void AddNet::run()
+{
+    JNIUtils::sem().down();
+    std::cerr << "AddNet::run: " << command << std::endl;
+    //gui->eval(command);
+	
+	std::cerr << "AddNet flag set" << std::endl;
+    JNIUtils::sem().up();
+}
+
