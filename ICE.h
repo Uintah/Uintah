@@ -147,7 +147,12 @@ using namespace SCIRun;
 		 const Patch* p);
       void setBC(SFCZVariable<double>& variable,const std::string& type,
 		 const std::string& comp, const Patch* p);      
-      
+
+
+      void printData(const  Patch* patch,int include_GC,char message1[],
+		     char message2[], const  CCVariable<int>& q_CC);
+      void printData(const  Patch* patch,int include_GC,char message1[],
+		     char message2[], const  CCVariable<double>& q_CC);      
     private:
       friend const TypeDescription* fun_getTypeDescription(fflux*);
       friend const TypeDescription* fun_getTypeDescription(eflux*);
@@ -218,9 +223,6 @@ using namespace SCIRun;
       
       
       void Message(int abort, char message1[],char message2[],char message3[]);
-                        
-      void printData(const  Patch* patch,int include_GC,char message1[],
-		     char message2[], const  CCVariable<double>& q_CC);
 
       void printVector(const  Patch* patch,int include_GC,char message1[],
 		     char message2[], int component, 
