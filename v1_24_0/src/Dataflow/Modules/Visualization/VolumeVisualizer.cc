@@ -185,8 +185,8 @@ VolumeVisualizer::execute()
   
   ColorMapHandle cmap1;
   ColorMap2Handle cmap2;
-  bool c1 = icmap1->get(cmap1);
-  bool c2 = icmap2->get(cmap2);
+  bool c1 = (icmap1->get(cmap1) && cmap1.get_rep());
+  bool c2 = (icmap2->get(cmap2) && cmap2.get_rep());
 
   if (c2)
   {
