@@ -416,7 +416,7 @@ void Worker::run()
 		    }
 		  }
 		} // end else hot spot mode 2.
-	      } else if (false) {
+	      } else if (scene->store_depth) {
                 // This stores off the depth stuff
                 double dist;
 		for(int y=sy;y<ey;y++){
