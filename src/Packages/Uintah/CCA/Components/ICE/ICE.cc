@@ -42,8 +42,6 @@ using namespace Uintah;
 
 #undef  CONVECT
 //#define CONVECT
-#undef  NEARWALL
-//#define NEARWALL
 
 //__________________________________
 //  To turn on normal output
@@ -914,14 +912,8 @@ void ICE::scheduleAccumulateMomentumSourceSinks(SchedulerP& sched,
     t->requires(Task::NewDW,lb->vvel_FCMELabel,   ice_matls_sub, gac, 3);
     t->requires(Task::NewDW,lb->wvel_FCMELabel,   ice_matls_sub, gac, 3);
     t->computes(lb->turb_viscosity_CCLabel,   ice_matls_sub);
-    #ifdef NEARWALL
-    t->requires(Task::OldDW,MIlb->NC_CCweightLabel, press_matl, gac, 1);
-    t->requires(Task::NewDW,lb->vol_frac_CCLabel, mpm_matls_sub, Ghost::None);
-    t->requires(Task::NewDW,MIlb->gMassLabel, mpm_matls_sub,    gac, 1);
-    t->requires(Task::NewDW,MIlb->gVelocityLabel, mpm_matls_sub, Ghost::None);
-    #endif
   } 
- 
+
   t->computes(lb->mom_source_CCLabel);
   t->computes(lb->press_force_CCLabel);
   sched->addTask(t, patches, matls);
@@ -2710,20 +2702,6 @@ void ICE::accumulateMomentumSourceSinks(const ProcessorGroup*,
     new_dw->get(pressY_FC,lb->pressY_FCLabel, 0, patch, gac, 1);
     new_dw->get(pressZ_FC,lb->pressZ_FCLabel, 0, patch, gac, 1);
 
-#ifdef NEARWALL
-    constCCVariable<double>   mpm_vol_frac;
-    int involve_mpm=0;
-    int* mpm_indx = new int[numMatls];
-    
-    for(int m = 0; m < numMatls; m++) {
-      Material* matl        = d_sharedState->getMaterial( m );
-      MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
-       if (mpm_matl){
-        involve_mpm++;
-        mpm_indx[involve_mpm] = matl->getDWIndex();
-       }
-     }
-#endif
   //__________________________________
   //  Matl loop 
     for(int m = 0; m < numMatls; m++) {
@@ -2768,59 +2746,10 @@ void ICE::accumulateMomentumSourceSinks(const ProcessorGroup*,
           tot_viscosity.initialize(viscosity);
           
          if(d_Turb){
-          constSFCXVariable<double> uvel_FC;
-          constSFCYVariable<double> vvel_FC;
-          constSFCZVariable<double> wvel_FC;
-
-          CCVariable<double> turb_viscosity, turb_viscosity_copy;
-          new_dw->allocateTemporary(turb_viscosity, patch, gac, 1);
-          new_dw->allocateAndPut(turb_viscosity_copy,lb->turb_viscosity_CCLabel,indx, patch);
-          turb_viscosity.initialize(0.0);          
-
-          new_dw->get(uvel_FC,     lb->uvel_FCMELabel,            indx,patch,gac,3);  
-          new_dw->get(vvel_FC,     lb->vvel_FCMELabel,            indx,patch,gac,3);  
-          new_dw->get(wvel_FC,    lb->wvel_FCMELabel,            indx,patch,gac,3);
-
-          d_turbulence->computeTurbViscosity(new_dw,patch,vel_CC,uvel_FC,vvel_FC,
-                                                 wvel_FC,rho_CC,indx,d_sharedState,turb_viscosity);
-#ifdef NEARWALL
-          NearWallTreatment* wall_treatment = scinew NearWallTreatment();
-          wall_treatment->computeNearBoundaryWallValue(patch, vel_CC, rho_CC, indx, 
-                                                                                    viscosity, turb_viscosity);
-
-          if(involve_mpm > 0){           
-             constNCVariable<double> NC_CCweight, NCsolidMass;
-             constNCVariable<Vector> NCvelocity;
-             old_dw->get(NC_CCweight,     MIlb->NC_CCweightLabel,  0,   patch,gac,1);
-             for (int i=1; i<=involve_mpm; i++){
-               new_dw->get(mpm_vol_frac, lb->vol_frac_CCLabel,mpm_indx[i],patch,gn 0);
-               new_dw->get(NCsolidMass, MIlb->gMassLabel, mpm_indx[i],patch,gac,1);
-               new_dw->get(NCvelocity,MIlb->gVelocityLabel, mpm_indx[i],patch,gn, 0);
-           
-               wall_treatment->computeNearSolidInterfaceValue(patch,vel_CC,rho_CC,
-               mpm_vol_frac,NC_CCweight,NCsolidMass,NCvelocity,viscosity,turb_viscosity);
-             }
-           }
-          delete [] mpm_indx;
-          delete wall_treatment;
-#endif           
-
-           setBC(turb_viscosity,    "zeroNeumann",  patch, d_sharedState, indx);
-           // make copy of turb_viscosity for visualization.
-          for(CellIterator iter = patch->getExtraCellIterator(); !iter.done();iter++){
-            IntVector c = *iter;    
-                   turb_viscosity_copy[c] = turb_viscosity[c];         
-           }
-          //__________________________________
-           //  At patch boundaries you need to extend
-           // the computational footprint by one cell in ghostCells
-           CellIterator iter = patch->getCellIterator();
-           CellIterator iterPlusGhost = patch->addGhostCell_Iter(iter,1);
-  
-           for(CellIterator iter = iterPlusGhost; !iter.done(); iter++) {  
-             IntVector c = *iter;    
-             tot_viscosity[c] += turb_viscosity[c];         
-           } 
+           TurbulenceFactory*  turbulence_factory = scinew TurbulenceFactory();
+           turbulence_factory->callTurb(new_dw,patch,vel_CC,rho_CC,indx,lb,
+                                       d_sharedState,d_turbulence, tot_viscosity);
+           delete turbulence_factory;
          }//turb
            
           computeTauX(patch, rho_CC, sp_vol_CC, vel_CC,tot_viscosity,dx, tau_X_FC);
