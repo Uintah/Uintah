@@ -46,17 +46,13 @@
 #ifndef _TKRANGE
 #define _TKRANGE
 
-#include <Core/share/share.h>
-
 #ifndef _TK
 #  include <tk.h>
 #endif
 
 
-#if defined(BUILD_tk) || defined(BUILD_SCICORE)
 # undef TCL_STORAGE_CLASS
 # define TCL_STORAGE_CLASS DLLEXPORT
-#endif
 
 /*
  * Legal values for the "orient" field of TkRange records.

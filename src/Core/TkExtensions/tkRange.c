@@ -242,7 +242,11 @@ static void		RangeSetMaxVariable _ANSI_ARGS_((TkRange *rangePtr));
  * that can be invoked from generic window code.
  */
 
+#if (TCL_MINOR_VERSION >= 4)
+static Tk_ClassProcs rangeClass = {
+#else 
 static TkClassProcs rangeClass = {
+#endif
     NULL,			/* createProc. */
     RangeWorldChanged,		/* geometryProc. */
     NULL			/* modalProc. */
@@ -377,7 +381,11 @@ Tk_RangeObjCmd(clientData, interp, objc, objv)
     rangePtr->takeFocusPtr	= NULL;
     rangePtr->flags		= NEVER_SET;
 
+#if (TCL_MINOR_VERSION >= 4)
+    Tk_SetClassProcs(rangePtr->tkwin, &rangeClass, (ClientData) rangePtr);
+#else
     TkSetClassProcs(rangePtr->tkwin, &rangeClass, (ClientData) rangePtr);
+#endif
     Tk_CreateEventHandler(rangePtr->tkwin,
 	    ExposureMask|StructureNotifyMask|FocusChangeMask,
 	    RangeEventProc, (ClientData) rangePtr);

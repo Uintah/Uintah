@@ -45,11 +45,11 @@
 
 #include <sci_defs/ogl_defs.h>
 
-#define BUILD_tcl
+//#define BUILD_tcl
 #include <tk.h>
 #include "locale.h"
 #include <itk.h>
-#undef BUILD_tcl
+//#undef BUILD_tcl
 
 #include <stdio.h>
 
@@ -91,7 +91,7 @@ extern int BLineInit _ANSI_ARGS_((void));
 /* this calls Thread::exitAll(int); */
 extern void exit_all_threads(int rv);
 
-#ifdef _WIN32 
+#if 0 // use static BLT library
 #define EXPORT  __declspec(dllimport)
 #else
 #define EXPORT
@@ -139,7 +139,7 @@ static void* wait_func_data;
  *----------------------------------------------------------------------
  */
 
-SHARE int
+int
 tkMain(argc, argv, nwait_func, nwait_func_data)
      int argc;			/* Number of command-line arguments. */
      char **argv;		/* Values of command-line arguments. */
@@ -153,10 +153,11 @@ tkMain(argc, argv, nwait_func, nwait_func_data)
    * Create the console channels and install them as the standard
    * channels.  All I/O will be discarded until TkConsoleInit is
    * called to attach the console to a text widget.
-   */
+   
 
   printf("Calling TkConsoleCreate\n");
   TkConsoleCreate();
+  */
 #endif
   Tk_Main(argc, argv, Tcl_AppInit);
   return 0;			/* Needed only to prevent compiler warning. */
@@ -209,12 +210,13 @@ Tcl_AppInit(interp)
   /*
    * Initialize the console only if we are running as an interactive
    * application.
-   */
+   
   printf("Calling TkConsoleInit\n");
   if (TkConsoleInit(interp) == TCL_ERROR) {
     printf("Error in TkConsoleInit\n");
     return TCL_ERROR;
   }
+  */
 #endif
 
 
