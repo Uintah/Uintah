@@ -263,28 +263,28 @@ Arches::sched_paramInit(const LevelP& level,
     // primitive variable initialization
     Task* tsk = scinew Task( "Arches::paramInit",
 			    this, &Arches::paramInit);
-    tsk->computes(d_lab->d_uVelocityINLabel);
-    tsk->computes(d_lab->d_vVelocityINLabel);
-    tsk->computes(d_lab->d_wVelocityINLabel);
+    tsk->computes(d_lab->d_uVelocitySPBCLabel);
+    tsk->computes(d_lab->d_vVelocitySPBCLabel);
+    tsk->computes(d_lab->d_wVelocitySPBCLabel);
     tsk->computes(d_lab->d_newCCUVelocityLabel);
     tsk->computes(d_lab->d_newCCVVelocityLabel);
     tsk->computes(d_lab->d_newCCWVelocityLabel);
-    tsk->computes(d_lab->d_pressureINLabel);
+    tsk->computes(d_lab->d_pressurePSLabel);
     if (!(d_timeIntegratorType == "FE"))
       tsk->computes(d_lab->d_pressurePredLabel);
     if (d_timeIntegratorType == "RK3SSP")
       tsk->computes(d_lab->d_pressureIntermLabel);
 
     for (int ii = 0; ii < d_nofScalars; ii++) 
-      tsk->computes(d_lab->d_scalarINLabel); // only work for 1 scalar
+      tsk->computes(d_lab->d_scalarSPLabel); // only work for 1 scalar
     for (int ii = 0; ii < d_nofScalarStats; ii++) {
       tsk->computes(d_lab->d_scalarVarSPLabel); // only work for 1 scalarStat
       tsk->computes(d_lab->d_scalarDissSPLabel); // only work for 1 scalarStat
     }
     if (d_calcReactingScalar)
-      tsk->computes(d_lab->d_reactscalarINLabel);
+      tsk->computes(d_lab->d_reactscalarSPLabel);
     if (d_calcEnthalpy) {
-      tsk->computes(d_lab->d_enthalpyINLabel); 
+      tsk->computes(d_lab->d_enthalpySPLabel); 
       tsk->computes(d_lab->d_radiationSRCINLabel);
       tsk->computes(d_lab->d_radiationFluxEINLabel); 
       tsk->computes(d_lab->d_radiationFluxWINLabel);
@@ -294,8 +294,8 @@ Arches::sched_paramInit(const LevelP& level,
       tsk->computes(d_lab->d_radiationFluxBINLabel); 
     }
 
-    tsk->computes(d_lab->d_densityINLabel);
-    tsk->computes(d_lab->d_viscosityINLabel);
+    tsk->computes(d_lab->d_densityCPLabel);
+    tsk->computes(d_lab->d_viscosityCTSLabel);
     tsk->computes(d_lab->d_oldDeltaTLabel);
     // for reacting flows save temperature and co2 
     if (d_MAlab)
@@ -485,10 +485,10 @@ Arches::paramInit(const ProcessorGroup* ,
     uVelocityCC.initialize(0.0);
     vVelocityCC.initialize(0.0);
     wVelocityCC.initialize(0.0);
-    new_dw->allocateAndPut(uVelocity, d_lab->d_uVelocityINLabel, matlIndex, patch);
-    new_dw->allocateAndPut(vVelocity, d_lab->d_vVelocityINLabel, matlIndex, patch);
-    new_dw->allocateAndPut(wVelocity, d_lab->d_wVelocityINLabel, matlIndex, patch);
-    new_dw->allocateAndPut(pressure, d_lab->d_pressureINLabel, matlIndex, patch);
+    new_dw->allocateAndPut(uVelocity, d_lab->d_uVelocitySPBCLabel, matlIndex, patch);
+    new_dw->allocateAndPut(vVelocity, d_lab->d_vVelocitySPBCLabel, matlIndex, patch);
+    new_dw->allocateAndPut(wVelocity, d_lab->d_wVelocitySPBCLabel, matlIndex, patch);
+    new_dw->allocateAndPut(pressure, d_lab->d_pressurePSLabel, matlIndex, patch);
     if (!(d_timeIntegratorType == "FE")) {
       new_dw->allocateAndPut(pressurePred, d_lab->d_pressurePredLabel,
 			     matlIndex, patch);
@@ -506,7 +506,7 @@ Arches::paramInit(const ProcessorGroup* ,
     }
     // will only work for one scalar
     for (int ii = 0; ii < d_nofScalars; ii++) {
-      new_dw->allocateAndPut(scalar[ii], d_lab->d_scalarINLabel, matlIndex, patch);
+      new_dw->allocateAndPut(scalar[ii], d_lab->d_scalarSPLabel, matlIndex, patch);
     }
     for (int ii = 0; ii < d_nofScalarStats; ii++) {
       new_dw->allocateAndPut(scalarVar_new[ii], d_lab->d_scalarVarSPLabel, matlIndex, patch);
@@ -515,13 +515,13 @@ Arches::paramInit(const ProcessorGroup* ,
     }
     CCVariable<double> reactscalar;
     if (d_calcReactingScalar) {
-      new_dw->allocateAndPut(reactscalar, d_lab->d_reactscalarINLabel,
+      new_dw->allocateAndPut(reactscalar, d_lab->d_reactscalarSPLabel,
 		       matlIndex, patch);
       reactscalar.initialize(0.0);
     }
 
     if (d_calcEnthalpy) {
-      new_dw->allocateAndPut(enthalpy, d_lab->d_enthalpyINLabel, matlIndex, patch);
+      new_dw->allocateAndPut(enthalpy, d_lab->d_enthalpySPLabel, matlIndex, patch);
       enthalpy.initialize(0.0);
 
       CCVariable<double> qfluxe;
@@ -556,8 +556,8 @@ Arches::paramInit(const ProcessorGroup* ,
       qfluxb.initialize(0.0);
 
     }
-    new_dw->allocateAndPut(density, d_lab->d_densityINLabel, matlIndex, patch);
-    new_dw->allocateAndPut(viscosity, d_lab->d_viscosityINLabel, matlIndex, patch);
+    new_dw->allocateAndPut(density, d_lab->d_densityCPLabel, matlIndex, patch);
+    new_dw->allocateAndPut(viscosity, d_lab->d_viscosityCTSLabel, matlIndex, patch);
 
   // ** WARNING **  this needs to be changed soon (6/9/2000)
     IntVector domLoU = uVelocity.getFortLowIndex();

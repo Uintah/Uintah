@@ -107,27 +107,6 @@ public:
       double getSmagorinskyConst() const {
 	return d_CF;
       }
-       // GROUP: Action Computations :
-      ///////////////////////////////////////////////////////////////////////
-      // Calculate the wall velocity boundary conditions
-      //    [in] 
-      //        index = documentation here
-      virtual void calcVelocityWallBC(const ProcessorGroup*,
-				      const Patch* patch,
-				      DataWarehouseP& old_dw,
-				      DataWarehouseP& new_dw, 
-				      int index,
-				      int eqnType);
-
-      ///////////////////////////////////////////////////////////////////////
-      // Calculate the velocity source terms
-      //    [in] 
-      //        index = documentation here
-      virtual void calcVelocitySource(const ProcessorGroup*,
-				      const Patch* patch,
-				      const DataWarehouseP& old_dw,
-				      DataWarehouseP& new_dw, 
-				      int index);
 
 protected:
       PhysicalConstants* d_physicalConsts;

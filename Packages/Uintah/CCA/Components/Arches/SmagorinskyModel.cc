@@ -96,15 +96,13 @@ SmagorinskyModel::sched_computeTurbSubmodel(const LevelP&,
   // Requires
   tsk->requires(Task::NewDW, d_lab->d_densityCPLabel, Ghost::None,
 		Arches::ZEROGHOSTCELLS);
-  tsk->requires(Task::NewDW, d_lab->d_viscosityINLabel, Ghost::None,
-		Arches::ZEROGHOSTCELLS);
-  tsk->requires(Task::NewDW, d_lab->d_uVelocitySPLabel, 
+  tsk->requires(Task::NewDW, d_lab->d_uVelocitySPBCLabel, 
 		Ghost::AroundFaces,
 		Arches::ONEGHOSTCELL);
-  tsk->requires(Task::NewDW, d_lab->d_vVelocitySPLabel,
+  tsk->requires(Task::NewDW, d_lab->d_vVelocitySPBCLabel,
 		Ghost::AroundFaces,
 		Arches::ONEGHOSTCELL);
-  tsk->requires(Task::NewDW, d_lab->d_wVelocitySPLabel,
+  tsk->requires(Task::NewDW, d_lab->d_wVelocitySPBCLabel,
 		Ghost::AroundFaces,
 		Arches::ONEGHOSTCELL);
   tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel, 
@@ -112,7 +110,7 @@ SmagorinskyModel::sched_computeTurbSubmodel(const LevelP&,
 
 
       // Computes
-  tsk->computes(d_lab->d_viscosityCTSLabel);
+  tsk->modifies(d_lab->d_viscosityCTSLabel);
 
   sched->addTask(tsk, patches, matls);
 
@@ -134,26 +132,24 @@ SmagorinskyModel::sched_reComputeTurbSubmodel(SchedulerP& sched,
 			  timelabels);
 
   // Requires
-  tsk->requires(Task::NewDW, timelabels->density_out,
+  tsk->requires(Task::NewDW, d_lab->d_densityCPLabel,
 		Ghost::None, Arches::ZEROGHOSTCELLS);
-  tsk->requires(Task::NewDW, timelabels->uvelocity_out,
+  tsk->requires(Task::NewDW, d_lab->d_uVelocitySPBCLabel,
 		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-  tsk->requires(Task::NewDW, timelabels->vvelocity_out, 
+  tsk->requires(Task::NewDW, d_lab->d_vVelocitySPBCLabel, 
 		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-  tsk->requires(Task::NewDW, timelabels->wvelocity_out, 
+  tsk->requires(Task::NewDW, d_lab->d_wVelocitySPBCLabel, 
 		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
 
   tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel, 
 		Ghost::AroundCells, Arches::ONEGHOSTCELL);
-  tsk->requires(Task::NewDW, d_lab->d_viscosityINLabel, 
-		Ghost::None, Arches::ZEROGHOSTCELLS);
   // for multimaterial
   if (d_MAlab)
     tsk->requires(Task::NewDW, d_lab->d_mmgasVolFracLabel, 
 		  Ghost::None, Arches::ZEROGHOSTCELLS);
 
       // Computes
-  tsk->computes(timelabels->viscosity_out);
+  tsk->modifies(d_lab->d_viscosityCTSLabel);
 
   sched->addTask(tsk, patches, matls);
 }
@@ -182,14 +178,12 @@ SmagorinskyModel::computeTurbSubmodel(const ProcessorGroup*,
 
     // Get the velocity, density and viscosity from the old data warehouse
     
-    new_dw->allocateAndPut(viscosity, d_lab->d_viscosityCTSLabel, matlIndex, patch);
-    new_dw->copyOut(viscosity, d_lab->d_viscosityINLabel, matlIndex, patch,
-		    Ghost::None, Arches::ZEROGHOSTCELLS);
-    new_dw->get(uVelocity, d_lab->d_uVelocitySPLabel, matlIndex, patch,
+    new_dw->getModifiable(viscosity, d_lab->d_viscosityCTSLabel, matlIndex, patch);
+    new_dw->get(uVelocity, d_lab->d_uVelocitySPBCLabel, matlIndex, patch,
 		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-    new_dw->get(vVelocity, d_lab->d_vVelocitySPLabel, matlIndex, patch, 
+    new_dw->get(vVelocity, d_lab->d_vVelocitySPBCLabel, matlIndex, patch, 
 		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-    new_dw->get(wVelocity,d_lab->d_wVelocitySPLabel, matlIndex, patch, 
+    new_dw->get(wVelocity, d_lab->d_wVelocitySPBCLabel, matlIndex, patch, 
 		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
     new_dw->get(density, d_lab->d_densityCPLabel, matlIndex, patch,
 		Ghost::None, Arches::ZEROGHOSTCELLS);
@@ -362,18 +356,16 @@ SmagorinskyModel::reComputeTurbSubmodel(const ProcessorGroup*,
     constCCVariable<int> cellType;
     // Get the velocity, density and viscosity from the old data warehouse
 
-    new_dw->allocateAndPut(viscosity, timelabels->viscosity_out,
+    new_dw->getModifiable(viscosity, d_lab->d_viscosityCTSLabel,
 			   matlIndex, patch);
-    new_dw->copyOut(viscosity, d_lab->d_viscosityINLabel, matlIndex, patch,
-		    Ghost::None, Arches::ZEROGHOSTCELLS);
     
-    new_dw->get(uVelocity, timelabels->uvelocity_out, matlIndex, patch, 
+    new_dw->get(uVelocity, d_lab->d_uVelocitySPBCLabel, matlIndex, patch, 
 		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-    new_dw->get(vVelocity, timelabels->vvelocity_out, matlIndex, patch,
+    new_dw->get(vVelocity, d_lab->d_vVelocitySPBCLabel, matlIndex, patch,
 		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-    new_dw->get(wVelocity, timelabels->wvelocity_out, matlIndex, patch, 
+    new_dw->get(wVelocity, d_lab->d_wVelocitySPBCLabel, matlIndex, patch, 
 		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-    new_dw->get(density, timelabels->density_out, matlIndex, patch,
+    new_dw->get(density, d_lab->d_densityCPLabel, matlIndex, patch,
 		Ghost::None, Arches::ZEROGHOSTCELLS);
     
     if (d_MAlab)
@@ -526,7 +518,7 @@ SmagorinskyModel::sched_computeScalarVariance(SchedulerP& sched,
   
   // Requires, only the scalar corresponding to matlindex = 0 is
   //           required. For multiple scalars this will be put in a loop
-  tsk->requires(Task::NewDW, timelabels->scalar_out, 
+  tsk->requires(Task::NewDW, d_lab->d_scalarSPLabel, 
 		Ghost::AroundCells, Arches::ONEGHOSTCELL);
 
   // Computes
@@ -556,7 +548,7 @@ SmagorinskyModel::computeScalarVariance(const ProcessorGroup*,
     constCCVariable<double> scalar;
     CCVariable<double> scalarVar;
     // Get the velocity, density and viscosity from the old data warehouse
-    new_dw->get(scalar, timelabels->scalar_out, matlIndex, patch,
+    new_dw->get(scalar, d_lab->d_scalarSPLabel, matlIndex, patch,
 		Ghost::AroundCells, Arches::ONEGHOSTCELL);
 
     if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First)
@@ -614,9 +606,9 @@ SmagorinskyModel::sched_computeScalarDissipation(SchedulerP& sched,
   // Requires, only the scalar corresponding to matlindex = 0 is
   //           required. For multiple scalars this will be put in a loop
   // assuming scalar dissipation is computed before turbulent viscosity calculation 
-  tsk->requires(Task::NewDW, timelabels->scalar_out,
+  tsk->requires(Task::NewDW, d_lab->d_scalarSPLabel,
 		Ghost::AroundCells, Arches::ONEGHOSTCELL);
-  tsk->requires(Task::NewDW, timelabels->viscosity_in,
+  tsk->requires(Task::NewDW, d_lab->d_viscosityCTSLabel,
 		Ghost::AroundCells, Arches::ONEGHOSTCELL);
 
   // Computes
@@ -646,9 +638,9 @@ SmagorinskyModel::computeScalarDissipation(const ProcessorGroup*,
     constCCVariable<double> scalar;
     CCVariable<double> scalarDiss;  // dissipation..chi
 
-    new_dw->get(scalar, timelabels->scalar_out, matlIndex, patch,
+    new_dw->get(scalar, d_lab->d_scalarSPLabel, matlIndex, patch,
 		Ghost::AroundCells, Arches::ONEGHOSTCELL);
-    new_dw->get(viscosity, timelabels->viscosity_in, matlIndex, patch,
+    new_dw->get(viscosity, d_lab->d_viscosityCTSLabel, matlIndex, patch,
 		Ghost::AroundCells, Arches::ONEGHOSTCELL);
 
     if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First)
@@ -699,272 +691,4 @@ SmagorinskyModel::computeScalarDissipation(const ProcessorGroup*,
       }
     }
   }
-}
-
-
-
-
-//****************************************************************************
-// Calculate the Velocity BC at the Wall
-//****************************************************************************
-void SmagorinskyModel::calcVelocityWallBC(const ProcessorGroup*,
-					  const Patch*,
-					  DataWarehouseP&,
-					  DataWarehouseP&,
-					  int,
-					  int)
-{
-#ifdef WONT_COMPILE_YET
-  int matlIndex = 0;
-  SFCXVariable<double> uVelocity;
-  SFCYVariable<double> vVelocity;
-  SFCZVariable<double> wVelocity;
-  switch(eqnType) {
-  case Arches::PRESSURE:
-    old_dw->get(uVelocity, d_lab->d_uVelocitySIVBCLabel, matlIndex, patch, Ghost::None,
-		Arches::ZEROGHOSTCELLS);
-    old_dw->get(vVelocity, d_lab->d_vVelocitySIVBCLabel, matlIndex, patch, Ghost::None,
-		Arches::ZEROGHOSTCELLS);
-    old_dw->get(wVelocity, d_lab->d_wVelocitySIVBCLabel, matlIndex, patch, Ghost::None,
-		Arches::ZEROGHOSTCELLS);
-    break;
-  case Arches::MOMENTUM:
-    old_dw->get(uVelocity, d_lab->d_uVelocityCPBCLabel, matlIndex, patch, Ghost::None,
-		Arches::ZEROGHOSTCELLS);
-    old_dw->get(vVelocity, d_lab->d_vVelocityCPBCLabel, matlIndex, patch, Ghost::None,
-		Arches::ZEROGHOSTCELLS);
-    old_dw->get(wVelocity, d_lab->d_wVelocityCPBCLabel, matlIndex, patch, Ghost::None,
-		Arches::ZEROGHOSTCELLS);
-    break;
-  default:
-    throw InvalidValue("Equation type can only be pressure or momentum");
-  }
-
-  CCVariable<double> density;
-  old_dw->get(density, d_lab->d_densityCPLabel, matlIndex, patch, Ghost::None,
-	      Arches::ZEROGHOSTCELLS);
-
-  // Get the PerPatch CellInformation data
-  PerPatch<CellInformationP> cellInfoP;
-  //  old_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
-  new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
-  //  if (old_dw->exists(d_cellInfoLabel, patch)) 
-  //  old_dw->get(cellInfoP, d_cellInfoLabel, matlIndex, patch);
-  //else {
-  //  cellInfoP.setData(scinew CellInformation(patch));
-  //  old_dw->put(cellInfoP, d_cellInfoLabel, matlIndex, patch);
-  //}
-  CellInformation* cellinfo = cellInfoP;
-  
-  // stores cell type info for the patch with the ghost cell type
-  CCVariable<int> cellType;
-  old_dw->get(cellType, d_lab->d_cellTypeLabel, matlIndex, patch, Ghost::None,
-	      Arches::ZEROGHOSTCELLS);
-
-  //get Molecular Viscosity of the fluid
-  double mol_viscos = d_physicalConsts->getMolecularViscosity();
-
-
-  cellFieldType walltype = WALLTYPE;
-
-
-
-  SFCXVariable<double> uVelLinearSrc; //SP term in Arches
-  SFCXVariable<double> uVelNonLinearSrc; // SU in Arches
-  SFCYVariable<double> vVelLinearSrc; //SP term in Arches
-  SFCYVariable<double> vVelNonLinearSrc; // SU in Arches
-  SFCZVariable<double> wVelLinearSrc; //SP term in Arches
-  SFCZVariable<double> wVelNonLinearSrc; // SU in Arches
-
-  switch(eqnType) {
-  case Arches::PRESSURE:
-    switch(index) {
-    case 0:
-      new_dw->get(uVelLinearSrc, d_uVelLinSrcPBLMLabel, matlIndex, patch, 
-		  Ghost::None, Arches::ZEROGHOSTCELLS);
-      new_dw->get(uVelNonLinearSrc, d_uVelNonLinSrcPBLMLabel, matlIndex, patch, 
-		  Ghost::None, Arches::ZEROGHOSTCELLS);
-      break;
-    case 1:
-      new_dw->get(vVelLinearSrc, d_vVelLinSrcPBLMLabel, matlIndex, patch, 
-		  Ghost::None, Arches::ZEROGHOSTCELLS);
-      new_dw->get(vVelNonLinearSrc, d_vVelNonLinSrcPBLMLabel, matlIndex, patch, 
-		  Ghost::None, Arches::ZEROGHOSTCELLS);
-      break;
-    case 2:
-      new_dw->get(wVelLinearSrc, d_wVelLinSrcPBLMLabel, matlIndex, patch, 
-		  Ghost::None, Arches::ZEROGHOSTCELLS);
-      new_dw->get(wVelNonLinearSrc, d_vVelNonLinSrcPBLMLabel, matlIndex, patch, 
-		  Ghost::None, Arches::ZEROGHOSTCELLS);
-      break;
-    default:
-      throw InvalidValue("Index can only be 0, 1 or 2");
-    }
-    break;
-  case Arches::MOMENTUM:
-    switch(index) {
-    case 0:
-      new_dw->get(uVelLinearSrc, d_uVelLinSrcMBLMLabel, matlIndex, patch, 
-		  Ghost::None, Arches::ZEROGHOSTCELLS);
-      new_dw->get(uVelNonLinearSrc, d_uVelNonLinSrcMBLMLabel, matlIndex, patch, 
-		  Ghost::None, Arches::ZEROGHOSTCELLS);
-      break;
-    case 1:
-      new_dw->get(vVelLinearSrc, d_vVelLinSrcMBLMLabel, matlIndex, patch, 
-		  Ghost::None, Arches::ZEROGHOSTCELLS);
-      new_dw->get(vVelNonLinearSrc, d_vVelNonLinSrcMBLMLabel, matlIndex, patch, 
-		  Ghost::None, Arches::ZEROGHOSTCELLS);
-      break;
-    case 2:
-      new_dw->get(wVelLinearSrc, d_wVelLinSrcMBLMLabel, matlIndex, patch, 
-		  Ghost::None, Arches::ZEROGHOSTCELLS);
-      new_dw->get(wVelNonLinearSrc, d_vVelNonLinSrcMBLMLabel, matlIndex, patch, 
-		  Ghost::None, Arches::ZEROGHOSTCELLS);
-      break;
-    default:
-      throw InvalidValue("Index can only be 0, 1 or 2");
-    }
-    break;
-  default:
-    throw InvalidValue("Equation type can only be pressure or momentum");
-  }
-
-  // Get the patch and variable details
-  IntVector domLo = density.getFortLowIndex();
-  IntVector domHi = density.getFortHighIndex();
-  IntVector idxLo = patch->getCellFORTLowIndex();
-  IntVector idxHi = patch->getCellFORTHighIndex();
-
-  switch(index) {
-  case 1:
-    {
-      // Get the patch and variable details
-      IntVector domLoU = uVelocity.getFortLowIndex();
-      IntVector domHiU = uVelocity.getFortHighIndex();
-      IntVector idxLoU = patch->getSFCXFORTLowIndex();
-      IntVector idxHiU = patch->getSFCXFORTHighIndex();
-
-
-      // compute momentum source because of turbulence
-      FORT_BCUTURB(domLoU.get_pointer(), domHiU.get_pointer(),
-		   idxLoU.get_pointer(), idxHiU.get_pointer(),
-		   uVelLinearSrc.getPointer(), 
-		   uVelNonLinearSrc.getPointer(), 
-		   uVelocity.getPointer(), 
-		   domLo.get_pointer(), domHi.get_pointer(),
-		   idxLo.get_pointer(), idxHi.get_pointer(),
-		   density.getPointer(), 
-		   &mol_viscos, 
-		   cellType.getPointer(), 
-		   cellinfo->x, cellinfo->y, cellinfo->z,
-		   cellinfo->xu, cellinfo->yv, cellinfo->zw);
-    }
-    break;
-  case 2:  
-    {
-      // Get the patch and variable details
-      IntVector domLoV = vVelocity.getFortLowIndex();
-      IntVector domHiV = vVelocity.getFortHighIndex();
-      IntVector idxLoV = patch->getSFCYFORTLowIndex();
-      IntVector idxHiV = patch->getSFCYFORTHighIndex();
-
-
-      // compute momentum source because of turbulence
-      FORT_BCVTURB(domLoV.get_pointer(), domHiV.get_pointer(),
-		   idxLoV.get_pointer(), idxHiV.get_pointer(),
-		   vVelLinearSrc.getPointer(), 
-		   vVelNonLinearSrc.getPointer(), 
-		   vVelocity.getPointer(), 
-		   domLo.get_pointer(), domHi.get_pointer(),
-		   idxLo.get_pointer(), idxHi.get_pointer(),
-		   density.getPointer(), 
-		   &mol_viscos, 
-		   cellType.getPointer(), 
-		   cellinfo->x, cellinfo->y, cellinfo->z,
-		   cellinfo->xu, cellinfo->yv, cellinfo->zw);
-
-    }
-    break;
-  case 3:
-    {
-      // Get the patch and variable details
-      IntVector domLoW = wVelocity.getFortLowIndex();
-      IntVector domHiW = wVelocity.getFortHighIndex();
-      IntVector idxLoW = patch->getSFCZFORTLowIndex();
-      IntVector idxHiW = patch->getSFCZFORTHighIndex();
-
-
-      // compute momentum source because of turbulence
-      FORT_BCWTURB(domLoW.get_pointer(), domHiW.get_pointer(),
-		   idxLoW.get_pointer(), idxHiW.get_pointer(),
-		   wVelLinearSrc.getPointer(), 
-		   wVelNonLinearSrc.getPointer(), 
-		   wVelocity.getPointer(), 
-		   domLo.get_pointer(), domHi.get_pointer(),
-		   idxLo.get_pointer(), idxHi.get_pointer(),
-		   density.getPointer(), 
-		   &mol_viscos, 
-		   cellType.getPointer(), 
-		   cellinfo->x, cellinfo->y, cellinfo->z,
-		   cellinfo->xu, cellinfo->yv, cellinfo->zw);
-
-    }
-    break;
-  default:
-    throw InvalidValue("Invalid Index value in CalcVelWallBC");
-  }
-
-  switch(eqnType) {
-  case Arches::PRESSURE:
-    switch(index) {
-    case 0:
-      new_dw->put(uVelLinearSrc, d_uVelLinSrcPBLMLabel, matlIndex, patch);
-      new_dw->put(uVelNonLinearSrc, d_uVelNonLinSrcPBLMLabel, matlIndex, patch);
-      break;
-    case 1:
-      new_dw->put(vVelLinearSrc, d_vVelLinSrcPBLMLabel, matlIndex, patch);
-      new_dw->put(vVelNonLinearSrc, d_vVelNonLinSrcPBLMLabel, matlIndex, patch);
-      break;
-    case 2:
-      new_dw->put(wVelLinearSrc, d_wVelLinSrcPBLMLabel, matlIndex, patch);
-      new_dw->put(wVelNonLinearSrc, d_wVelNonLinSrcPBLMLabel, matlIndex, patch);
-      break;
-    default:
-      throw InvalidValue("Index can only be 0, 1 or 2");
-    }
-    break;
-  case Arches::MOMENTUM:
-    switch(index) {
-    case 0:
-      new_dw->put(uVelLinearSrc, d_uVelLinSrcMBLMLabel, matlIndex, patch);
-      new_dw->put(uVelNonLinearSrc, d_uVelNonLinSrcMBLMLabel, matlIndex, patch);
-      break;
-    case 1:
-      new_dw->put(vVelLinearSrc, d_vVelLinSrcMBLMLabel, matlIndex, patch);
-      new_dw->put(vVelNonLinearSrc, d_vVelNonLinSrcMBLMLabel, matlIndex, patch);
-      break;
-    case 2:
-      new_dw->put(wVelLinearSrc, d_wVelLinSrcMBLMLabel, matlIndex, patch);
-      new_dw->put(wVelNonLinearSrc, d_wVelNonLinSrcMBLMLabel, matlIndex, patch);
-      break;
-    default:
-      throw InvalidValue("Index can only be 0, 1 or 2");
-    }
-    break;
-  default:
-    throw InvalidValue("Equation type can only be pressure or momentum");
-  }
-#endif
-}
-
-
-//****************************************************************************
-// No source term for smagorinsky model
-//****************************************************************************
-void SmagorinskyModel::calcVelocitySource(const ProcessorGroup*,
-					  const Patch*,
-					  const DataWarehouseP&,
-					  DataWarehouseP&,
-					  int)
-{
 }

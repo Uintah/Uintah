@@ -79,7 +79,8 @@ c         print*,'Temperature = ',tg(ii,jj,kk)
             else
                aw(ii,jj,kk) = 0.0d0
                su(ii,jj,kk) = su(ii,jj,kk) + (abs(omu(l))*areaew) *
-     &              SIG * PI1 * abskg(ii-1,jj,kk) * 
+     &              SIG * PI1 * 
+c abskg(ii-1,jj,kk) * 
      &              tg(ii-1,jj,kk)**4
             end if
          else
@@ -88,7 +89,8 @@ c         print*,'Temperature = ',tg(ii,jj,kk)
             else
                aw(ii,jj,kk) = 0.0d0
                su(ii,jj,kk) = su(ii,jj,kk) + (abs(omu(l)) * areaew) * 
-     &              SIG * PI1 * abskg(ii+1,jj,kk) * 
+     &              SIG * PI1 * 
+c abskg(ii+1,jj,kk) * 
      &              tg(ii+1,jj,kk)**4
             end if
          endif
@@ -100,7 +102,8 @@ c         print*,'Temperature = ',tg(ii,jj,kk)
                as(ii,jj,kk) = 0.0d0
                su(ii,jj,kk) = su(ii,jj,kk) + 
      &              (abs(oeta(l))*arean(ii)) *
-     &              SIG * PI1 * abskg(ii,jj-1,kk) *
+     &              SIG * PI1 * 
+c abskg(ii,jj-1,kk) *
      &              tg(ii,jj-1,kk)**4
             end if
          else
@@ -110,7 +113,8 @@ c         print*,'Temperature = ',tg(ii,jj,kk)
                as(ii,jj,kk) = 0.0d0
                su(ii,jj,kk) = su(ii,jj,kk) + 
      &              (abs(oeta(l))*arean(ii)) *
-     &              SIG * PI1 * abskg(ii,jj+1,kk) * 
+     &              SIG * PI1 * 
+c abskg(ii,jj+1,kk) * 
      &              tg(ii,jj+1,kk)**4
             end if
          endif
@@ -122,7 +126,8 @@ c         print*,'Temperature = ',tg(ii,jj,kk)
                ab(ii,jj,kk) = 0.0d0
                su(ii,jj,kk) = su(ii,jj,kk) + 
      &              (abs(oxi(l))*areatb(ii)) *
-     &              SIG * PI1 * abskg(ii,jj,kk-1) *
+     &              SIG * PI1 * 
+c abskg(ii,jj,kk-1) *
      &              tg(ii,jj,kk-1)**4
             end if
          else
@@ -132,7 +137,8 @@ c         print*,'Temperature = ',tg(ii,jj,kk)
                ab(ii,jj,kk) = 0.0d0
                su(ii,jj,kk) = su(ii,jj,kk) + 
      &              (abs(oxi(l))*areatb(ii)) * 
-     &              SIG * PI1 * abskg(ii,jj,kk+1) * 
+     &              SIG * PI1 * 
+c abskg(ii,jj,kk+1) * 
      &              tg(ii,jj,kk+1)**4
             end if
          endif

@@ -156,26 +156,18 @@ PressureSolver::sched_buildLinearMatrix(SchedulerP& sched,
   tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel, 
 		Ghost::AroundCells, Arches::ONEGHOSTCELL);
 
-  tsk->requires(Task::NewDW, timelabels->pressure_in,
-		Ghost::None, Arches::ZEROGHOSTCELLS);
-/*
-// pressure initial gue and underrelaxation value is taken from corresponding
+// pressure initial guess and underrelaxation value is taken from corresponding
 // time substep in the old_dw
-// THINK ABOUT IT LATER WITHOUT UNDERRELAXATION THIS PROBLEM GOES AWAY
-  if (timelabels->integrator_last_step)
-    tsk->requires(Task::NewDW, timelabels->pressure_guess,
-		  Ghost::None, Arches::ZEROGHOSTCELLS);
-  else
-    tsk->requires(Task::OldDW, timelabels->pressure_guess,
-		  Ghost::None, Arches::ZEROGHOSTCELLS);
-*/
-  tsk->requires(Task::NewDW, timelabels->density_out, 
+  tsk->requires(Task::OldDW, timelabels->pressure_guess,
+		Ghost::None, Arches::ZEROGHOSTCELLS);
+
+  tsk->requires(Task::NewDW, d_lab->d_densityCPLabel, 
 		Ghost::AroundCells, Arches::ONEGHOSTCELL);
-  tsk->requires(Task::NewDW, timelabels->uvelhat_out,
+  tsk->requires(Task::NewDW, d_lab->d_uVelRhoHatLabel,
 		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-  tsk->requires(Task::NewDW, timelabels->vvelhat_out,
+  tsk->requires(Task::NewDW, d_lab->d_vVelRhoHatLabel,
 		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-  tsk->requires(Task::NewDW, timelabels->wvelhat_out,
+  tsk->requires(Task::NewDW, d_lab->d_wVelRhoHatLabel,
 		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
   // get drhodt that goes in the rhs of the pressure equation
   tsk->requires(Task::NewDW, d_lab->d_filterdrhodtLabel,
@@ -233,22 +225,16 @@ PressureSolver::buildLinearMatrix(const ProcessorGroup* pc,
     new_dw->get(constPressureVars.cellType, d_lab->d_cellTypeLabel, 
 		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
 
-    new_dw->get(constPressureVars.pressure, timelabels->pressure_in, 
+    old_dw->get(constPressureVars.pressure, timelabels->pressure_guess, 
 		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-/*    if (timelabels->integrator_last_step)
-      new_dw->get(constPressureVars.pressure, timelabels->pressure_guess, 
-		  matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-    else
-      old_dw->get(constPressureVars.pressure, timelabels->pressure_guess, 
-		  matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-*/
-    new_dw->get(constPressureVars.density, timelabels->density_out, 
+
+    new_dw->get(constPressureVars.density, d_lab->d_densityCPLabel, 
 		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
-    new_dw->get(constPressureVars.uVelRhoHat, timelabels->uvelhat_out, 
+    new_dw->get(constPressureVars.uVelRhoHat, d_lab->d_uVelRhoHatLabel, 
 		matlIndex, patch, Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-    new_dw->get(constPressureVars.vVelRhoHat, timelabels->vvelhat_out, 
+    new_dw->get(constPressureVars.vVelRhoHat, d_lab->d_vVelRhoHatLabel, 
 		matlIndex, patch, Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-    new_dw->get(constPressureVars.wVelRhoHat, timelabels->wvelhat_out, 
+    new_dw->get(constPressureVars.wVelRhoHat, d_lab->d_wVelRhoHatLabel, 
 		matlIndex, patch, Ghost::AroundFaces, Arches::ONEGHOSTCELL);
     new_dw->get(constPressureVars.filterdrhodt, d_lab->d_filterdrhodtLabel,
 		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
@@ -374,10 +360,6 @@ PressureSolver::sched_pressureLinearSolve(const LevelP& level,
   // coefficient for the variable for which solve is invoked
 
   if (!(d_pressure_correction))
-  if (timelabels->integrator_last_step)
-    tsk->requires(Task::NewDW, timelabels->pressure_guess, 
-		  Ghost::None, Arches::ZEROGHOSTCELLS);
-  else
     tsk->requires(Task::OldDW, timelabels->pressure_guess, 
 		  Ghost::None, Arches::ZEROGHOSTCELLS);
 
@@ -488,10 +470,6 @@ PressureSolver::pressureLinearSolve(const ProcessorGroup* pc,
   new_dw->allocateAndPut(pressureVars.pressure, timelabels->pressure_out,
 			 matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
   if (!(d_pressure_correction))
-  if (timelabels->integrator_last_step)
-    new_dw->copyOut(pressureVars.pressure, timelabels->pressure_guess, 
-	            matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-  else
     old_dw->copyOut(pressureVars.pressure, timelabels->pressure_guess, 
 	            matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
   else
