@@ -1,6 +1,8 @@
-      subroutine mrhlen(leniwk, lenrwk, lencwk, linc, lout, fname)
+      subroutine mrhlen(leniwk, lenrwk, lencwk, linc, lout, fname,
+     1                  flength)
       character*30 fname
-      open(linc, FORM='UNFORMATTED', FILE=fname)
+      integer flength
+      open(linc, FORM='UNFORMATTED', FILE=fname(1:flength))
       write(*,*) leniwk, lenrwk, lencwk, linc, lout
       call flush(lout)
       call cklen(linc,lout,leniwk,lenrwk,lencwk)
@@ -9,12 +11,14 @@
       end
  
       subroutine mrhinit(leniwk, lenrwk, lencwk, linc, lout,
-     1                 ickwrk,rckwrk, cckwrk, fname)
+     1                 ickwrk,rckwrk, cckwrk, fname, flength)
       character*16 cckwrk(1)
       character*30 fname
+      integer flength
       call ckinit(leniwk,lenrwk,lencwk, linc, lout, ickwrk,
      1            rckwrk, cckwrk)
-      write(*,*) 'Initialized Chemkin with linkfile: ',fname,'.'
+      write(*,*) 'Initialized Chemkin with linkfile: ',
+     1fname(1:flength),'.'
       call flush(lout)
       end
  

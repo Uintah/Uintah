@@ -28,8 +28,9 @@ ChemkinInterface::ChemkinInterface() {
   // character*16 data format.
 
   // Find required array lengths
+  int cklinkfilenamelength=strlen(cklinkfile);
   mrhlen(&d_leniwk, &d_lenrwk, &d_lencwk, &linc, &d_lout, cklinkfile, 
-	  strlen(cklinkfile));
+	  &cklinkfilenamelength);
   d_ickwrk = new int[d_leniwk];
   d_rckwrk = new double[d_lenrwk];
   //cout << "CK: lenrwk "<<d_lenrwk<<endl;
@@ -42,7 +43,7 @@ ChemkinInterface::ChemkinInterface() {
 
   // Read the binary file and create the internal work arrays
   mrhinit(&d_leniwk, &d_lenrwk, &d_lencwk, &linc, &d_lout, d_ickwrk, 
-	  d_rckwrk, d_cckwrk[0], cklinkfile, strlen(cklinkfile));
+	  d_rckwrk, d_cckwrk[0], cklinkfile, &cklinkfilenamelength);
   ckindx(d_ickwrk, d_rckwrk, &d_numElements, &d_numSpecies, &d_numRxns, 
 	 &d_nfit);
 
