@@ -271,7 +271,10 @@ itcl_class SCIRun_Visualization_EditColorMap2D {
         global env
 
         set path $env(HOME)
-        set path "$path/.scirun"
+        set path "$path/SCIRun"
+	if { ! [file isdirectory $path] } {
+	    file mkdir $path
+	}
         set curdir [pwd]
         cd $path
         set res [glob -nocomplain  *.ppm]
@@ -290,8 +293,8 @@ itcl_class SCIRun_Visualization_EditColorMap2D {
             pack $f.swatchFrame$row
 
             foreach r $res {
-                # Every 5 buttons, create new row and reset col
-                if {$col == 5} {
+                # Every 4 buttons, create new row and reset col
+                if {$col == 4} {
                     incr row
                     frame $f.swatchFrame$row
                     pack $f.swatchFrame$row -side top -anchor nw
@@ -299,7 +302,6 @@ itcl_class SCIRun_Visualization_EditColorMap2D {
                 }
                 
                 set num [lindex [split $r "."] 0]
-                #image create photo img-$r -format "ppm" -file $path/$num.ppm
                 image create photo img-$r -format "ppm" -file $path/$num.ppm
                 #Load in the image to diplay on the button and do that.
                 button $f.swatchFrame$row.swatch$num -image img-$r -command "set $this-filename $path/$num.ppm.xff; $this swatch_load $num"
@@ -321,7 +323,7 @@ itcl_class SCIRun_Visualization_EditColorMap2D {
         if {[winfo exists $w.swatchpicker]} {
             set f [$w.swatchpicker childsite]
 
-            if {$col == 5} {
+            if {$col == 4} {
                 incr row
                 frame $f.swatchFrame$row
                 pack $f.swatchFrame$row -side top -anchor nw
@@ -334,7 +336,7 @@ itcl_class SCIRun_Visualization_EditColorMap2D {
             #Load in the image to diplay on the button and do that.
             
             button $f.swatchFrame$row.swatch$num -image img-$r \
-		-command "set $this-filename $path/.scirun/$num.ppm.xff; $this swatch_load $num"
+		-command "set $this-filename $path/SCIRun/$num.ppm.xff; $this swatch_load $num"
             grid configure $f.swatchFrame$row.swatch$num -row $row \
 		-col $col -sticky "nw"
             
@@ -360,7 +362,7 @@ itcl_class SCIRun_Visualization_EditColorMap2D {
         set basename [file split $deleteSwatch] 
         set basename [lindex $basename end]
         set basename [lindex [split $basename "."] 0]
-        set path "$env(HOME)/.scirun"
+        set path "$env(HOME)/SCIRun"
         file delete "$path/$basename.ppm"
         file delete "$path/$basename.ppm.xff"
 
@@ -382,7 +384,7 @@ itcl_class SCIRun_Visualization_EditColorMap2D {
         global deleteSwatch
         global env
 
-        set path "$env(HOME)/.scirun"
+        set path "$env(HOME)/SCIRun"
         set deleteSwatch "$path/$swatchNum.ppm.xff"
         $this-c load
     }
@@ -395,27 +397,21 @@ itcl_class SCIRun_Visualization_EditColorMap2D {
         set numPPM 0
        
         set names [array names env] 
-        cd "$path/.scirun"
+        cd "$path/SCIRun"
         set files [glob -nocomplain "*.ppm"]
         cd $curdir
 
         set numPPM [clock format [clock seconds] -format {%Y%m%d_%H%M%S}]
         
-        set $this-filename "$path/.scirun/$numPPM.ppm"
+        set $this-filename "$path/SCIRun/$numPPM.ppm"
         $this-c "saveppm"
 
-	#set status [catch {exec ls} result]
-        #if [catch {exec ls&} res ] {
-         # puts stderr "$res"
-        #}
-        #else {
-        #  puts stderr "ls was fine"
-        #}
-	
-        #set output [exec ls]
-        # convert $path/.scirun/$numPPM.ppm -resize 100x50 $path/.scirun/$numPPM.gif
-        #file delete $path/.scirun/$numPPM.ppm
-        update_swatches $path/.scirun/$numPPM.ppm
+	# the "saveppm" command does nothing if the TF has not been changed
+	# since it was last saved, which
+	# leads to a non-existant $path/.scirun/$numPPM.ppm
+	if { [file exists $path/SCIRun/$numPPM.ppm] } {
+	    update_swatches $path/SCIRun/$numPPM.ppm
+	}
     }
 
     method label_widget_columns { frame } {
