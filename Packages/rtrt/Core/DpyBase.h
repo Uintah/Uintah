@@ -141,7 +141,7 @@ public:
 
   // Sets the resolution of the window.  Currently this only has an effect
   // before you create the window.
-  void set_resolution(const int xres_in, const int yres_in);
+  virtual void set_resolution(const int width, const int height);
   
   // This run funtion will handle the basic events defined above.  If you
   // need something more sophisticated, then you can redefine this function.
