@@ -164,8 +164,13 @@ def runSusTests(argv, TESTS, algo, callback = nullCallback):
     # Run normal test
     environ['WEBLOG'] = "%s/%s-results/%s" % (weboutputpath, ALGO, testname)
     rc = runSusTest(test, susdir, inputxml, compare_root, algo, mode, max_parallelism, "no", newalgo)
-    if rc == 0:
+
+    # rc of 2 means it failed comparison or memory test, so try to run restart
+    # anyway
+    if rc == 0 or rc == 2:
       # Prepare for restart test
+      if rc == 2:
+          failcode = 1
       mkdir("restart")
       chdir("restart")
       system("cp ../replace_gold_standard .")
@@ -175,7 +180,7 @@ def runSusTests(argv, TESTS, algo, callback = nullCallback):
       # Run restart test
       environ['WEBLOG'] = "%s/%s-results/%s/restart" % (weboutputpath, ALGO, testname)
       rc = runSusTest(test, susdir, inputxml, compare_root, algo, mode, max_parallelism, DO_RESTART, newalgo)
-      if rc == 1:
+      if rc > 0:
         failcode = 1
       chdir("..")
     elif rc == 1: # negative one means skipping -- not a failure
@@ -272,25 +277,22 @@ def runSusTest(test, susdir, inputxml, compare_root, algo, mode, max_parallelism
       chdir("restart")
     print "\tComparing udas on %s" % (date())
     replace_msg = "\tTo replace the gold standard uda and memory usage with these results,\n\trun: %s/replace_gold_standard" % (getcwd())
-    rc = system("compare_sus_runs %s %s %s %s > compare_sus_runs.log.txt 2>&1" % (testname, getcwd(), compare_root, susdir))
-    if rc != 0:
-	if rc == 5 * 256:
+    cu_rc = system("compare_sus_runs %s %s %s %s > compare_sus_runs.log.txt 2>&1" % (testname, getcwd(), compare_root, susdir))
+    if cu_rc != 0:
+	if cu_rc == 5 * 256:
      	    print "\t*** Warning, %s has changed.  You must update the gold standard." % (input(test))
     	    print '\t<A href=\"%s/compare_sus_runs.log.txt\">See compare_sus_runs.log</A> for more comparison information.' % (logpath)
  	    print "%s" % replace_msg
-	    return 1
-	elif rc == 10 * 256:
+	elif cu_rc == 10 * 256:
      	    print "\t*** Warning, %s has changed.  You must update the gold standard." % (input(test))
     	    print "\tAll other comparison tests passed so the change was likely trivial."
  	    print "%s" % replace_msg
-	    return 1
-	elif rc == 1 * 256:
-    	    print "\t*** Warning, test %s failed uda comparison with error code %s" % (testname, rc)
+	elif cu_rc == 1 * 256:
+    	    print "\t*** Warning, test %s failed uda comparison with error code %s" % (testname, cu_rc)
             print '\t<A href=\"%s/compare_sus_runs.log.txt\">See compare_sus_runs.log</a> for more comparison information.' % (logpath)
 	    if do_restart != "yes":
  	    	print "%s" % replace_msg
-	    return 1
-	elif rc == 65280: # (-1 return code)
+	elif cu_rc == 65280: # (-1 return code)
 	    print "\tComparison tests passed.  (Note: No dat files to compare.)"
         else:
 	    print "\tComparison tests passed.  (Note: No previous gold standard.)"
@@ -314,17 +316,20 @@ def runSusTest(test, susdir, inputxml, compare_root, algo, mode, max_parallelism
 	elif rc == 256:
 	    print "\t*** Warning, test %s failed memory leak test." % (testname)
             print '\t<A href=\"%s/mem_leak_check.log.txt\">See mem_leak_check.log</a> for more comparison information.' % (logpath)
-	    return 1
+	    return 2
 	elif rc == 2*256:
 	    print "\t*** Warning, test %s failed memory highwater test." % (testname)
 	    if short_message != "":
 		print "\t%s" % (short_message)
             print '\t<A href=\"%s/mem_leak_check.log.txt\">See mem_leak_check.log</a> for more comparison information.' % (logpath)
  	    print "%s" % replace_msg
-	    return 1
+	    return 2
 	else:
 	    print "\tMemory leak tests passed. (Note: no previous memory usage stats)."
 
+    # if comparison tests fail, return here, so mem_leak tests can run
+    if cu_rc != 0:
+        return 2;
   return 0
 
 
