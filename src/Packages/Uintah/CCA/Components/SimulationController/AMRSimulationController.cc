@@ -300,73 +300,71 @@ void AMRSimulationController::run()
      if (regridder->needsToReGrid() && !first) {
        cout << "REGRIDDING!!!!!\n";
        currentGrid = regridder->regrid(oldGrid.get_rep(), scheduler, ups);
-       cout << "---------- OLD GRID ----------" << endl << *(oldGrid.get_rep());
-       cout << "---------- NEW GRID ----------" << endl << *(currentGrid.get_rep());
-
-       cout << "---------- ABOUT TO RESCHEDULE ----------" << endl;
-
-       // Compute number of dataWarehouses
-       //int numDWs=1;
-       //for(int i=1;i<oldGrid->numLevels();i++)
-       //numDWs *= oldGrid->getLevel(i)->timeRefinementRatio();
-
-       scheduler->advanceDataWarehouse(currentGrid);
-       scheduler->initialize(1, 1);
-       scheduler->clearMappings();
-       scheduler->mapDataWarehouse(Task::OldDW, 0);
-       scheduler->mapDataWarehouse(Task::NewDW, 1);
-
-       OnDemandDataWarehouse* oldDataWarehouse = dynamic_cast<OnDemandDataWarehouse*>(scheduler->get_dw(0));
-       OnDemandDataWarehouse* newDataWarehouse = dynamic_cast<OnDemandDataWarehouse*>(scheduler->getLastDW());
-
-       for ( int levelIndex = 0; levelIndex < currentGrid->numLevels(); levelIndex++ ) {
-	 Task* task = new Task("SchedulerCommon::copyDataToNewGrid",
-			       dynamic_cast<SchedulerCommon*>(scheduler.get_rep()),
-			       &SchedulerCommon::copyDataToNewGrid);
-	 vector<VarLabelMatlPatch> variableInfo;
-	 oldDataWarehouse->getVarLabelMatlPatchTriples(variableInfo);
-	 for ( unsigned int i = 0; i < variableInfo.size(); i++ ) {
-	   VarLabelMatlPatch currentVar = variableInfo[i];
-	   task->computes(currentVar.label_);
-	 }
-	 cout << "RANDY: Going to copy data for level " << levelIndex << " with ID of ";
-	 cout << currentGrid->getLevel(levelIndex)->getID() << endl;
-	 scheduler->addTask(task, currentGrid->getLevel(levelIndex)->eachPatch(), sharedState->allMaterials());
-	 if ( levelIndex != 0 ) {
-	   sim->scheduleRefine(currentGrid->getLevel(levelIndex), scheduler);
-	 }
-       }
+       if (currentGrid != oldGrid) {
+         cout << "---------- OLD GRID ----------" << endl << *(oldGrid.get_rep());
+         cout << "---------- NEW GRID ----------" << endl << *(currentGrid.get_rep());
+         
+         cout << "---------- ABOUT TO RESCHEDULE ----------" << endl;
+         
+         // Compute number of dataWarehouses
+         //int numDWs=1;
+         //for(int i=1;i<oldGrid->numLevels();i++)
+         //numDWs *= oldGrid->getLevel(i)->timeRefinementRatio();
+         
+         scheduler->advanceDataWarehouse(currentGrid);
+         scheduler->initialize(1, 1);
+         scheduler->clearMappings();
+         scheduler->mapDataWarehouse(Task::OldDW, 0);
+         scheduler->mapDataWarehouse(Task::NewDW, 1);
+         
+         OnDemandDataWarehouse* oldDataWarehouse = dynamic_cast<OnDemandDataWarehouse*>(scheduler->get_dw(0));
+         OnDemandDataWarehouse* newDataWarehouse = dynamic_cast<OnDemandDataWarehouse*>(scheduler->getLastDW());
+         
+         for ( int levelIndex = 0; levelIndex < currentGrid->numLevels(); levelIndex++ ) {
+           Task* task = new Task("SchedulerCommon::copyDataToNewGrid",
+                                 dynamic_cast<SchedulerCommon*>(scheduler.get_rep()),
+                                 &SchedulerCommon::copyDataToNewGrid);
+           vector<VarLabelMatlPatch> variableInfo;
+           oldDataWarehouse->getVarLabelMatlPatchTriples(variableInfo);
+           for ( unsigned int i = 0; i < variableInfo.size(); i++ ) {
+             VarLabelMatlPatch currentVar = variableInfo[i];
+             task->computes(currentVar.label_);
+           }
+           cout << "RANDY: Going to copy data for level " << levelIndex << " with ID of ";
+           cout << currentGrid->getLevel(levelIndex)->getID() << endl;
+           scheduler->addTask(task, currentGrid->getLevel(levelIndex)->eachPatch(), sharedState->allMaterials());
+           if ( levelIndex != 0 ) {
+             sim->scheduleRefine(currentGrid->getLevel(levelIndex), scheduler);
+           }
+         }
 	
-       scheduler->compile();
-       scheduler->execute();
+         scheduler->compile();
+         scheduler->execute();
 
-       vector<VarLabelMatlLevel> reductionVariableInfo;
-       oldDataWarehouse->getVarLabelMatlLevelTriples(reductionVariableInfo);
+         vector<VarLabelMatlLevel> reductionVariableInfo;
+         oldDataWarehouse->getVarLabelMatlLevelTriples(reductionVariableInfo);
+         
+         cerr << getpid() << ": RANDY: Copying reduction variables" << endl;
 
-       cerr << getpid() << ": RANDY: Copying reduction variables" << endl;
-
-       for ( unsigned int i = 0; i < reductionVariableInfo.size(); i++ ) {
-	 VarLabelMatlLevel currentReductionVar = reductionVariableInfo[i];
-	 // cout << "REDUNCTION:  Label(" << setw(15) << currentReductionVar.label_->getName() << "): Patch(" << reinterpret_cast<int>(currentReductionVar.level_) << "): Material(" << currentReductionVar.matlIndex_ << ")" << endl; 
-	 const Level* oldLevel = currentReductionVar.level_;
-	 const Level* newLevel = NULL;
-	 if (oldLevel) {
-	   newLevel = (newDataWarehouse->getGrid()->getLevel( oldLevel->getIndex() )).get_rep();
-	 }
-
-	 if(!oldDataWarehouse->d_reductionDB.exists(currentReductionVar.label_, currentReductionVar.matlIndex_, currentReductionVar.level_))
-	   SCI_THROW(UnknownVariable(currentReductionVar.label_->getName(), oldDataWarehouse->getID(), currentReductionVar.level_, currentReductionVar.matlIndex_, "in copyDataTo ReductionVariable"));
-	 ReductionVariableBase* v = oldDataWarehouse->d_reductionDB.get(currentReductionVar.label_, currentReductionVar.matlIndex_, currentReductionVar.level_);
-	 newDataWarehouse->d_reductionDB.put(currentReductionVar.label_, currentReductionVar.matlIndex_, newLevel, v->clone(), false);
-       }
-       cout << "---------- DONE RESCHEDULING ----------" << endl;
-
-       if (oldGrid == currentGrid) {
-	 cerr << "The grids are the same!" << endl;
+         for ( unsigned int i = 0; i < reductionVariableInfo.size(); i++ ) {
+           VarLabelMatlLevel currentReductionVar = reductionVariableInfo[i];
+           // cout << "REDUNCTION:  Label(" << setw(15) << currentReductionVar.label_->getName() << "): Patch(" << reinterpret_cast<int>(currentReductionVar.level_) << "): Material(" << currentReductionVar.matlIndex_ << ")" << endl; 
+           const Level* oldLevel = currentReductionVar.level_;
+           const Level* newLevel = NULL;
+           if (oldLevel) {
+             newLevel = (newDataWarehouse->getGrid()->getLevel( oldLevel->getIndex() )).get_rep();
+           }
+           
+           if(!oldDataWarehouse->d_reductionDB.exists(currentReductionVar.label_, currentReductionVar.matlIndex_, currentReductionVar.level_))
+             SCI_THROW(UnknownVariable(currentReductionVar.label_->getName(), oldDataWarehouse->getID(), currentReductionVar.level_, currentReductionVar.matlIndex_, "in copyDataTo ReductionVariable"));
+           ReductionVariableBase* v = oldDataWarehouse->d_reductionDB.get(currentReductionVar.label_, currentReductionVar.matlIndex_, currentReductionVar.level_);
+           newDataWarehouse->d_reductionDB.put(currentReductionVar.label_, currentReductionVar.matlIndex_, newLevel, v->clone(), false);
+         }
+         cout << "---------- DONE RESCHEDULING ----------" << endl;
+	 cerr << "The grids are different!" << endl;         
        } else {
-	 cerr << "The grids are different!" << endl;
+	 cerr << "The grids are the same!" << endl;
        }
-       //	level = currentGrid->getLevel(0);
      }
 
      scheduler->advanceDataWarehouse(currentGrid);
