@@ -15,7 +15,7 @@
 
 #include <Comm/MessageTypes.h>
 #include <Dataflow/Module.h>
-#include <Geom/Geom.h>
+#include <Geom/PickMessage.h>
 
 #include <iostream.h>
 
