@@ -1763,6 +1763,7 @@ set exec_iso(IsoClip-Z) 0
 set exec_iso(ChooseField-Isoval) 0
 set exec_iso(ShowField-Isosurface) 0
 set exec_iso(GenStandardColorMaps-Isosurface) 0
+set exec_iso(global-clip) "off"
 
 # glyphs
 global glyph_display_type
@@ -5071,6 +5072,14 @@ class BioTensorApp {
 	
 	set vis_activated 1
 
+	global exec_iso
+        global $mods(Viewer)-ViewWindow_0-global-clip
+	if { $exec_iso(global-clip) == "on"} {
+	    set $mods(Viewer)-ViewWindow_0-global-clip 1
+	} else {
+	    set $mods(Viewer)-ViewWindow_0-global-clip 1
+	}
+
 	global exec_planes
 	if {$exec_planes(update-X)} {
 	    update_plane_x
@@ -5721,6 +5730,7 @@ class BioTensorApp {
 	global mods
         global clip_by_planes
         global $mods(Viewer)-ViewWindow_0-global-clip
+
 	if {$vis_activated} {
 	    if {$clip_by_planes == 0} {
 		set $mods(Viewer)-ViewWindow_0-global-clip 0
@@ -5746,6 +5756,14 @@ class BioTensorApp {
 	    }
 	    
 	    $mods(Viewer)-ViewWindow_0-c redraw
+	} else {
+	    # need to set the global clipping planes when vis is activated
+	    global exec_iso
+	    if {$clip_by_planes == 0} {
+		set exec_iso(global-clip) "off"
+	    } else {
+		set exec_iso(global-clip) "on"
+	    }
 	}
     }
 
@@ -5900,7 +5918,9 @@ class BioTensorApp {
 	}
 	
 	# re-execute
-	$mods(ChooseField-ColorPlanes)-c needexecute
+	if {$vis_activated} {
+	    $mods(ChooseField-ColorPlanes)-c needexecute
+	}
     }
     
     method update_plane_x { } {
@@ -6496,65 +6516,71 @@ class BioTensorApp {
 	global $mods(ShowField-Isosurface)-faces-on
 
 	if {$initialized != 0} {
-	    if {$vis_activated && [set $mods(ShowField-Isosurface)-faces-on] == 1} {
+	    if {$vis_activated} {
 		foreach w [winfo children $isosurface_tab1] {
 		    activate_widget $w
 		}
 		foreach w [winfo children $isosurface_tab2] {
 		    activate_widget $w
 		}
+	    }
+	    
+	    # configure color button
+	    if {$iso_type == "Constant"} {
+		$isosurface_tab1.isocolor.childsite.select.colorFrame.set_color configure -state normal
+		$isosurface_tab2.isocolor.childsite.select.colorFrame.set_color configure -state normal
+		disable_isosurface_colormaps
+	    } elseif {$iso_type == "Principle Eigenvector"} {
+		$isosurface_tab1.isocolor.childsite.select.colorFrame.set_color configure -state disabled
+		$isosurface_tab2.isocolor.childsite.select.colorFrame.set_color configure -state disabled
+		disable_isosurface_colormaps
 		
-		# configure color button
-		if {$iso_type == "Constant"} {
-		    $isosurface_tab1.isocolor.childsite.select.colorFrame.set_color configure -state normal
-		    $isosurface_tab2.isocolor.childsite.select.colorFrame.set_color configure -state normal
-		    disable_isosurface_colormaps
-		} elseif {$iso_type == "Principle Eigenvector"} {
-		    $isosurface_tab1.isocolor.childsite.select.colorFrame.set_color configure -state disabled
-		    $isosurface_tab2.isocolor.childsite.select.colorFrame.set_color configure -state disabled
-		    disable_isosurface_colormaps
-		    
-		} else {
-		    $isosurface_tab1.isocolor.childsite.select.colorFrame.set_color configure -state disabled
-		    $isosurface_tab2.isocolor.childsite.select.colorFrame.set_color configure -state disabled
-		    enable_isosurface_colormaps
-		}
 	    } else {
+		$isosurface_tab1.isocolor.childsite.select.colorFrame.set_color configure -state disabled
+		$isosurface_tab2.isocolor.childsite.select.colorFrame.set_color configure -state disabled
+		enable_isosurface_colormaps
+	    }
+      
+
+	    if {[set $mods(ShowField-Isosurface)-faces-on] == 0} {		
 		foreach w [winfo children $isosurface_tab1] {
 		    grey_widget $w
 		}
 		foreach w [winfo children $isosurface_tab2] {
 		    grey_widget $w
 		}
+	    }
+
+	    if {$vis_activated} {
 		$isosurface_tab1.show configure -state normal -foreground black
 		$isosurface_tab2.show configure -state normal -foreground black
 		
 		$isosurface_tab1.clip.check configure -state normal -foreground black
 		$isosurface_tab2.clip.check configure -state normal -foreground black
-	    }
-
-	    # configure flip buttons
-	    global clip_by_planes
-	    if {$clip_by_planes == 1} {
-		$isosurface_tab1.clip.flipx configure -state normal -foreground black
-		$isosurface_tab2.clip.flipx configure -state normal -foreground black
 		
-		$isosurface_tab1.clip.flipy configure -state normal -foreground black
-		$isosurface_tab2.clip.flipy configure -state normal -foreground black
-		
-		$isosurface_tab1.clip.flipz configure -state normal -foreground black
-		$isosurface_tab2.clip.flipz configure -state normal -foreground black
-	    } else {
-		$isosurface_tab1.clip.flipx configure -state disabled -foreground grey64
-		$isosurface_tab2.clip.flipx configure -state disabled -foreground grey64
-		
-		$isosurface_tab1.clip.flipy configure -state disabled -foreground grey64
-		$isosurface_tab2.clip.flipy configure -state disabled -foreground grey64
-		
-		$isosurface_tab1.clip.flipz configure -state disabled -foreground grey64
-		$isosurface_tab2.clip.flipz configure -state disabled -foreground grey64
-            }
-	} 
+		# configure flip buttons
+		global clip_by_planes
+		if {$clip_by_planes == 1} {
+		    $isosurface_tab1.clip.flipx configure -state normal -foreground black
+		    $isosurface_tab2.clip.flipx configure -state normal -foreground black
+		    
+		    $isosurface_tab1.clip.flipy configure -state normal -foreground black
+		    $isosurface_tab2.clip.flipy configure -state normal -foreground black
+		    
+		    $isosurface_tab1.clip.flipz configure -state normal -foreground black
+		    $isosurface_tab2.clip.flipz configure -state normal -foreground black
+		} else {
+		    $isosurface_tab1.clip.flipx configure -state disabled -foreground grey64
+		    $isosurface_tab2.clip.flipx configure -state disabled -foreground grey64
+		    
+		    $isosurface_tab1.clip.flipy configure -state disabled -foreground grey64
+		    $isosurface_tab2.clip.flipy configure -state disabled -foreground grey64
+		    
+		    $isosurface_tab1.clip.flipz configure -state disabled -foreground grey64
+		    $isosurface_tab2.clip.flipz configure -state disabled -foreground grey64
+		}
+	    } 
+	}
     }
 
     method toggle_show_isosurface {} {
