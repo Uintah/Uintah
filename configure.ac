@@ -1485,7 +1485,7 @@ esac
 ##  --  required STL headers 
 ##  --      (only look for STL after going into cplusplus mode)
 ##
-AC_LANG_PUSH(C++)
+AC_LANG(C++)
 
 SCI_TRY_LINK(STL_HEADERS,standard template library headers,[
 #include <algorithm>
@@ -1523,8 +1523,6 @@ else
 fi
 AC_SUBST(DEF_HASHMAP)
 AC_CHECK_HEADERS(ext/algorithm)
-
-AC_LANG_POP(C++)
 
 ##  --  search for tcl stuff  ---------------------------------------------
 echo 
@@ -1680,7 +1678,7 @@ else
   _xer_lib_path="$sci_thirdparty_libs"
   _xer_inc="$sci_thirdparty_includes"
 fi
-AC_LANG_PUSH(C++)
+
 _xer_lib="xerces-c"
 case $host in
   *aix*)
@@ -1723,7 +1721,6 @@ else
    # Use SCIRun sstream compatibility files...
    SSTREAM_COMPAT="yes"
 fi
-AC_LANG_POP(C++)
 
 AC_SUBST(SSTREAM_COMPAT)
 
@@ -2295,7 +2292,6 @@ if test "$with_xalan"; then
   _xalan_lib_path="$with_xalan/c/lib"
   _xalan_inc="$with_xalan/c/src $_xer_inc"
 
-  AC_LANG_PUSH(C++)
   _xalan_lib="xalan-c1_5_0"
 
   SCI_TRY_LINK(XALAN,xalan library and headers,[
@@ -2470,12 +2466,10 @@ if test "$sci_check_glui" = "yes"; then
      _sci_inc="$sci_thirdparty_includes"
    fi
 
-   AC_LANG_PUSH(C++)
    SCI_TRY_LINK(GLUI,glui library and headers,[
    #include <GL/glut.h>
    #include <glui.h>
    ],$_sci_inc,glui,$_sci_lib,$libs $GLUT_LIB_DIR_FLAG $GLUT_LIB_FLAG,,not-optional)
-   AC_LANG_POP(C++)
 
 fi # end sci_check_glui
 AC_SUBST(INC_GLUI_H)
@@ -2762,9 +2756,14 @@ if test "$sci_check_qt" = "yes"; then
   else
     _sci_lib="$sci_thirdparty_libs"
   fi
+
+  _qt_inc="$with_qt/include"
   
-  SCI_TRY_LINK(QT_MT,qt library,,,qt-mt,$_sci_lib,,,optional)  
-  
+  # Only looking for one .h file... assuming all the rest are in the same place.
+  SCI_TRY_LINK(QT_MT,qt library,[
+     #include <qcanvas.h>
+     ],$_qt_inc,qt-mt,$_sci_lib,,,optional)  
+
   QT_MOC_BIN=""
   AS_MESSAGE(checking for moc in $LIB_DIR_QT_MT/../bin...)
   AC_CHECK_PROG(QT_MOC_BIN,moc,$LIB_DIR_QT_MT/../bin/moc,NOMOC,$LIB_DIR_QT_MT/../bin)
@@ -2898,7 +2897,6 @@ esac
 
 if test "$sci_check_uuid" = "yes"; then
   # This is typical on SGI and ??
-  AC_LANG_PUSH(C++)
   AC_MSG_CHECKING(for uuid_create in sys/uuid.h)
   AC_TRY_COMPILE([#include <sys/types.h>
                extern "C" {
@@ -2982,7 +2980,6 @@ if test "$sci_check_uuid" = "yes"; then
     fi
     LIBS="$old_LIBS"
   fi
-  AC_LANG_POP(C++)
 
 fi # end sci_check_uuid
 
