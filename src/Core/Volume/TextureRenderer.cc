@@ -256,6 +256,8 @@ TextureRenderer::compute_view()
 void
 TextureRenderer::load_brick(Brick* brick)
 {
+  if (tex_pool_.size() == 0) return;
+
   int nc = brick->nc();
   int idx[2];
   for(int c=0; c<nc; c++) {
