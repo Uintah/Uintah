@@ -33,6 +33,20 @@ namespace Uintah {
     const VarLabel* temperature_matrix;
     const VarLabel* temperature_rhs;
 
+    const VarLabel* ccvorticity;
+    const VarLabel* ccvorticitymag;
+    const VarLabel* vcforce;
+    const VarLabel* NN;
+
+    // For AMRSimpleCFD
+    const VarLabel* pressure2;
+    const VarLabel* pressure2_matrix;
+    const VarLabel* pressure2_rhs;
+
+    const VarLabel* pressure_gradient_mag;
+    const VarLabel* temperature_gradient_mag;
+    const VarLabel* density_gradient_mag;
+
     // For Burger
     const VarLabel* u;
 
@@ -42,5 +56,3 @@ namespace Uintah {
 }
 
 #endif
-
-

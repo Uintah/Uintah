@@ -6,6 +6,7 @@
 #include <Packages/Uintah/Core/Grid/CellIterator.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Core/Math/MiscMath.h>
+#include <iomanip>
 
 using namespace SCIRun;
 using namespace Uintah;
@@ -126,6 +127,9 @@ void BoundaryConditions::set(NCVariable<int>& bctype, const Patch* patch)
     default:
       throw InternalError("Unknown BC basis");
     }
+#if 0
+    cerr << "\n\ncondition: " << iter->first.first << '\n';
+#endif
     iter->second->set(bctype, patch, centeroffset);
   }
 }
@@ -226,6 +230,29 @@ ConditionBase::~ConditionBase()
 {
 }
 
+#if 0
+static void printhex(const Array3<int>& d, int mask,
+		     const char* name, int pre=0)
+{
+  IntVector l(d.getLowIndex());
+  IntVector h(d.getHighIndex());
+  cerr << name << ": " << l << "-" << h << "\n";
+  pre+=l.x()*13;
+  for(int k=h.z()-1;k>=l.z();k--){
+    cerr << "k=" << k << '\n';
+    for(int j=h.y()-1;j>=l.y();j--){
+      for(int i=0;i<pre;i++)
+	cerr << ' ';
+      for(int i=l.x();i<h.x();i++){
+	cerr << setw(13) << setbase(16) << (d[IntVector(i,j,k)]&mask);
+      }
+      cerr << '\n';
+    }
+  }
+  cerr << setbase(10);
+}
+#endif
+
 void ConditionBase::set(NCVariable<int>& bctype, const Patch* patch,
 			const IntVector& centeroffset)
 {
@@ -235,6 +262,12 @@ void ConditionBase::set(NCVariable<int>& bctype, const Patch* patch,
   int n=numRegions();
   for(int i=1;i<n;i++) // Skip global region
     getRegion(i)->set(bctype, patch, mask, totaloffset);
+#if 0
+  if(mask != 0){
+    cerr << "\n\noffset=" << offset << ", centeroffset=" << centeroffset << '\n';
+    printhex(bctype, mask, "bctype");
+  }
+#endif
 }
 
 void ConditionBase::setupMasks(int& shift)
@@ -280,8 +313,9 @@ void BCRegionBase::getRange(const Patch* patch, IntVector& l, IntVector& h,
   }
 }
 
-void BCRegionBase::set(NCVariable<int>& bctype, const Patch* patch,
-		       int mask, const IntVector& topoffset)
+void BCRegionBase::set(NCVariable<int>& bctype,
+		       const Patch* patch, int mask,
+		       const IntVector& topoffset)
 {
   IntVector l,h;
   getRange(patch, l, h, topoffset);
@@ -294,8 +328,128 @@ void BCRegionBase::set(NCVariable<int>& bctype, const Patch* patch,
 	bctype[*iter] = (bctype[*iter]&~mask)|idx;
     }
   } else {
-    for(CellIterator iter(l, h); !iter.done(); iter++){
-      bctype[*iter] = (bctype[*iter]&~mask)|idx;
+    if(type == BC::CoarseGrid){
+      for(Patch::FaceType face = Patch::startFace;
+	  face <= Patch::endFace; face=Patch::nextFace(face)){
+	if(patch->getBCType(face) != Patch::Coarse)
+	  continue;
+
+	IntVector l,h;
+	patch->getFace(face, IntVector(0,0,0), IntVector(1,1,1), l, h);
+	if(face == Patch::xplus){
+	  l.x(l.x()+topoffset.x());
+	  h.x(h.x()+topoffset.x());
+	} else if(face != Patch::xminus){
+	  h.x(h.x()+topoffset.x());
+	}
+	if(face == Patch::yplus){
+	  l.y(l.y()+topoffset.y());
+	  h.y(h.y()+topoffset.y());
+	} else if(face != Patch::yminus){
+	  h.y(h.y()+topoffset.y());
+	}
+	if(face == Patch::zplus){
+	  l.z(l.z()+topoffset.z());
+	  h.z(h.z()+topoffset.z());
+	} else if(face != Patch::zminus){
+	  h.z(h.z()+topoffset.z());
+	}
+	switch(face){
+	case Patch::xminus:
+	case Patch::xplus:
+	  l-=IntVector(0,1,1);
+	  h+=IntVector(0,1,1);
+	  break;
+	case Patch::yminus:
+	case Patch::yplus:
+	  l-=IntVector(1,0,1);
+	  h+=IntVector(1,0,1);
+	  break;
+	case Patch::zminus:
+	case Patch::zplus:
+	  l-=IntVector(1,1,0);
+	  h+=IntVector(1,1,0);
+	  break;
+	default:
+	  break;
+	}
+#if 0
+	if(face != Patch::xminus && face != Patch::xplus && patch->getBCType(Patch::xplus) == Patch::Neighbor){
+	  h-=IntVector(1,0,0);
+	}
+	if(face != Patch::yminus && face != Patch::yplus && patch->getBCType(Patch::yplus) == Patch::Neighbor){
+	  h-=IntVector(0,1,0);
+	}
+	if(face != Patch::zminus && face != Patch::zplus && patch->getBCType(Patch::zplus) == Patch::Neighbor){
+	  h-=IntVector(0,0,1);
+	}
+#endif
+	l = Max(l, bctype.getLowIndex());
+	h = Min(h, bctype.getHighIndex());
+	for(CellIterator iter(l, h); !iter.done(); iter++)
+	  bctype[*iter] = (bctype[*iter]&~mask)|idx;
+      }
+    } else if(type == BC::Exterior){
+      for(Patch::FaceType face = Patch::startFace;
+	  face <= Patch::endFace; face=Patch::nextFace(face)){
+	if(patch->getBCType(face) != Patch::None)
+	  continue;
+
+	IntVector l,h;
+	patch->getFace(face, IntVector(0,0,0), IntVector(1,1,1), l, h);
+	if(face == Patch::xplus){
+	  l.x(l.x()+topoffset.x());
+	  h.x(h.x()+topoffset.x());
+	} else if(face != Patch::xminus){
+	  h.x(h.x()+topoffset.x());
+	}
+	if(face == Patch::yplus){
+	  l.y(l.y()+topoffset.y());
+	  h.y(h.y()+topoffset.y());
+	} else if(face != Patch::yminus){
+	  h.y(h.y()+topoffset.y());
+	}
+	if(face == Patch::zplus){
+	  l.z(l.z()+topoffset.z());
+	  h.z(h.z()+topoffset.z());
+	} else if(face != Patch::zminus){
+	  h.z(h.z()+topoffset.z());
+	}
+	switch(face){
+	case Patch::xminus:
+	case Patch::xplus:
+	  l-=IntVector(0,1,1);
+	  h+=IntVector(0,1,1);
+	  break;
+	case Patch::yminus:
+	case Patch::yplus:
+	  l-=IntVector(1,0,1);
+	  h+=IntVector(1,0,1);
+	  break;
+	case Patch::zminus:
+	case Patch::zplus:
+	  l-=IntVector(1,1,0);
+	  h+=IntVector(1,1,0);
+	  break;
+	default:
+	  break;
+	}
+	l = Max(l, bctype.getLowIndex());
+	h = Min(h, bctype.getHighIndex());
+	for(CellIterator iter(l, h); !iter.done(); iter++)
+	  bctype[*iter] = (bctype[*iter]&~mask)|idx;
+      }
+    } else {
+      for(CellIterator iter(l, h); !iter.done(); iter++){
+	bctype[*iter] = (bctype[*iter]&~mask)|idx;
+      }
     }
   }
 }
+
+void BoundaryConditions::merge(int& bc1, int bc2)
+{
+  for(MapType::iterator iter = conditions.begin(); iter != conditions.end(); iter++){
+    iter->second->merge(bc1, bc2, iter->first.second == Patch::CellBased);
+  }
+}  

@@ -48,12 +48,16 @@ void Poisson3::problemSetup(const ProblemSpecP& params, GridP&,
 void Poisson3::scheduleInitialize(const LevelP& level,
 				  SchedulerP& sched)
 {
-  dbg << "scheduleInitialize\n";
-  Task* task = scinew Task("initialize",
-			   this, &Poisson3::initialize);
-  task->computes(lb_->phi);
-  task->computes(lb_->residual, level.get_rep());
-  sched->addTask(task, level->eachPatch(), sharedState_->allMaterials());
+  if(level->getIndex() == 0){
+    dbg << "scheduleInitialize\n";
+    Task* task = scinew Task("initialize",
+			     this, &Poisson3::initialize);
+    task->computes(lb_->phi);
+    task->computes(lb_->residual, level.get_rep());
+    sched->addTask(task, level->eachPatch(), sharedState_->allMaterials());
+  } else {
+    scheduleRefine(level, sched);
+  }
 }
  
 void Poisson3::scheduleComputeStableTimestep(const LevelP& level,
@@ -176,7 +180,7 @@ void Poisson3::timeAdvance(const ProcessorGroup*,
   }
 }
 
-void Poisson3::scheduleRefine(LevelP& fineLevel, SchedulerP& sched)
+void Poisson3::scheduleRefine(const LevelP& fineLevel, SchedulerP& sched)
 {
   dbg << "Poisson3::scheduleRefine\n";
   Task* task = scinew Task("refine", this, &Poisson3::refine);
@@ -245,7 +249,8 @@ void Poisson3::refine(const ProcessorGroup*,
 }
 
 
-void Poisson3::scheduleRefineInterface(LevelP& fineLevel, SchedulerP& sched,
+void Poisson3::scheduleRefineInterface(const LevelP& fineLevel,
+				       SchedulerP& sched,
 				       int step, int nsteps)
 {
   dbg << "Poisson3::scheduleRefineInterface\n";
@@ -348,7 +353,7 @@ void Poisson3::refineInterface(const ProcessorGroup*,
 }
 
 
-void Poisson3::scheduleCoarsen(LevelP& coarseLevel, SchedulerP& sched)
+void Poisson3::scheduleCoarsen(const LevelP& coarseLevel, SchedulerP& sched)
 {
   Task* task = scinew Task("coarsen", this, &Poisson3::coarsen);
   task->requires(Task::NewDW, lb_->phi,
