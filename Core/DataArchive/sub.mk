@@ -9,8 +9,10 @@ SRCS += $(SRCDIR)/DataArchive.cc
 PSELIBS := \
 	Packages/Uintah/Core/Parallel    \
 	Packages/Uintah/Core/ProblemSpec \
+	Packages/Uintah/Core/Util \
 	Packages/Uintah/CCA/Components/ProblemSpecification \
 	Packages/Uintah/Core/Grid        \
+	Packages/Uintah/Core/Variables   \
 	Packages/Uintah/Core/Disclosure  \
 	Packages/Uintah/Core/Exceptions  \
 	Core/Thread                      \

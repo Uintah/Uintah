@@ -1,5 +1,5 @@
 #include <Packages/Uintah/CCA/Components/ICE/Advection/SecondOrderBase.h>
-#include <Packages/Uintah/Core/Grid/CellIterator.h>
+#include <Packages/Uintah/Core/Variables/CellIterator.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Packages/Uintah/Core/Disclosure/TypeDescription.h>

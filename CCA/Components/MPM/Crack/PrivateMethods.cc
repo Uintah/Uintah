@@ -13,9 +13,9 @@
 #include <Core/Geometry/IntVector.h>
 #include <Packages/Uintah/Core/Grid/Grid.h>
 #include <Packages/Uintah/Core/Grid/Level.h>
-#include <Packages/Uintah/Core/Grid/NCVariable.h>
+#include <Packages/Uintah/Core/Variables/NCVariable.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
-#include <Packages/Uintah/Core/Grid/NodeIterator.h>
+#include <Packages/Uintah/Core/Variables/NodeIterator.h>
 #include <Packages/Uintah/Core/Grid/SimulationState.h>
 #include <Packages/Uintah/Core/Grid/SimulationStateP.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
@@ -23,7 +23,7 @@
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
-#include <Packages/Uintah/Core/Grid/VarTypes.h>
+#include <Packages/Uintah/Core/Variables/VarTypes.h>
 #include <Core/Containers/StaticArray.h>
 #include <sgi_stl_warnings_off.h>
 #include <vector>

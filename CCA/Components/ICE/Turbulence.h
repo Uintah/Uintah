@@ -3,11 +3,11 @@
 
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
 #include <Packages/Uintah/CCA/Ports/SimulationInterface.h>
-#include <Packages/Uintah/Core/Grid/ComputeSet.h>
-#include <Packages/Uintah/Core/Grid/CCVariable.h>
-#include <Packages/Uintah/Core/Grid/SFCXVariable.h>
-#include <Packages/Uintah/Core/Grid/SFCYVariable.h>
-#include <Packages/Uintah/Core/Grid/SFCZVariable.h>
+#include <Packages/Uintah/Core/Variables/ComputeSet.h>
+#include <Packages/Uintah/Core/Variables/CCVariable.h>
+#include <Packages/Uintah/Core/Variables/SFCXVariable.h>
+#include <Packages/Uintah/Core/Variables/SFCYVariable.h>
+#include <Packages/Uintah/Core/Variables/SFCZVariable.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Core/Geometry/Vector.h>
 

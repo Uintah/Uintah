@@ -9,6 +9,8 @@ SRCS     += \
 	$(SRCDIR)/ProcessorGroup.cc          \
 	$(SRCDIR)/UintahParallelComponent.cc \
 	$(SRCDIR)/UintahParallelPort.cc      \
+	$(SRCDIR)/BufferInfo.cc              \
+	$(SRCDIR)/PackBufferInfo.cc          \
 	$(SRCDIR)/Vampir.cc
 
 PSELIBS := \

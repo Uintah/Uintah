@@ -1,8 +1,8 @@
 #ifndef SIMPLE_SOLVER_H
 #define SIMPLE_SOLVER_H
 
-#include <Packages/Uintah/Core/Grid/ComputeSet.h>
-#include <Packages/Uintah/Core/Grid/Array3.h>
+#include <Packages/Uintah/Core/Variables/ComputeSet.h>
+#include <Packages/Uintah/Core/Variables/Array3.h>
 #include <Packages/Uintah/Core/Math/Sparse.h>
 #include <sgi_stl_warnings_off.h>
 #include <map>

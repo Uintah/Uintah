@@ -2,9 +2,9 @@
 #define UINTAH_HOMEBREW_GRID_H
 
 #include <Packages/Uintah/Core/Grid/GridP.h>
-#include <Packages/Uintah/Core/ProblemSpec/Handle.h>
+#include <Packages/Uintah/Core/Util/Handle.h>
 #include <Packages/Uintah/Core/Grid/LevelP.h>
-#include <Packages/Uintah/Core/ProblemSpec/RefCounted.h>
+#include <Packages/Uintah/Core/Util/RefCounted.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 
 #include <sgi_stl_warnings_off.h>

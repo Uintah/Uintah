@@ -4,7 +4,7 @@
 
 #include <Packages/Uintah/Core/Parallel/UintahParallelComponent.h>
 #include <Packages/Uintah/CCA/Ports/SimulationInterface.h>
-#include <Packages/Uintah/Core/Grid/ComputeSet.h>
+#include <Packages/Uintah/Core/Variables/ComputeSet.h>
 #include <Packages/Uintah/CCA/Ports/SolverInterface.h>
 
 namespace Uintah {

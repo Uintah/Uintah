@@ -1,16 +1,16 @@
 #ifndef UINTAH_HOMEBREW_DataArchive_H
 #define UINTAH_HOMEBREW_DataArchive_H
 
-#include <Packages/Uintah/Core/Grid/ParticleVariable.h>
-#include <Packages/Uintah/Core/Grid/NCVariable.h>
-#include <Packages/Uintah/Core/Grid/CCVariable.h>
-#include <Packages/Uintah/Core/Grid/SFCXVariable.h>
-#include <Packages/Uintah/Core/Grid/SFCYVariable.h>
-#include <Packages/Uintah/Core/Grid/SFCZVariable.h>
+#include <Packages/Uintah/Core/Variables/ParticleVariable.h>
+#include <Packages/Uintah/Core/Variables/NCVariable.h>
+#include <Packages/Uintah/Core/Variables/CCVariable.h>
+#include <Packages/Uintah/Core/Variables/SFCXVariable.h>
+#include <Packages/Uintah/Core/Variables/SFCYVariable.h>
+#include <Packages/Uintah/Core/Variables/SFCZVariable.h>
 #include <Packages/Uintah/Core/Grid/Level.h>
 #include <Packages/Uintah/Core/Grid/GridP.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
-#include <Packages/Uintah/Core/ProblemSpec/Handle.h>
+#include <Packages/Uintah/Core/Util/Handle.h>
 #include <Packages/Uintah/Core/Exceptions/VariableNotFoundInGrid.h>
 #include <Core/Thread/Mutex.h>
 #include <Core/Thread/Time.h>

@@ -4,7 +4,7 @@
 #include <Packages/Uintah/CCA/Ports/Regridder.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouseP.h>
 #include <Packages/Uintah/Core/Parallel/UintahParallelComponent.h>
-#include <Packages/Uintah/Core/Grid/CCVariable.h>
+#include <Packages/Uintah/Core/Variables/CCVariable.h>
 #include <Packages/Uintah/Core/Grid/SimulationState.h>
 #include <Core/Geometry/IntVector.h>
 #include <vector>

@@ -3,7 +3,7 @@
 
 #include <Packages/Uintah/CCA/Ports/Output.h>
 #include <Packages/Uintah/Core/Parallel/UintahParallelComponent.h>
-#include <Packages/Uintah/Core/Grid/MaterialSetP.h>
+#include <Packages/Uintah/Core/Variables/MaterialSetP.h>
 #include <Packages/Uintah/Core/Grid/SimulationState.h>
 #include <Packages/Uintah/Core/Grid/SimulationStateP.h>
 #include <Core/OS/Dir.h>

@@ -6,13 +6,13 @@
 #include <Packages/Uintah/CCA/Components/Examples/RegionDB.h>
 #include <Packages/Uintah/Core/Parallel/UintahParallelComponent.h>
 #include <Packages/Uintah/CCA/Ports/SimulationInterface.h>
-#include <Packages/Uintah/Core/Grid/ComputeSet.h>
-#include <Packages/Uintah/Core/Grid/CCVariable.h>
-#include <Packages/Uintah/Core/Grid/NCVariable.h>
-#include <Packages/Uintah/Core/Grid/SFCXVariable.h>
-#include <Packages/Uintah/Core/Grid/SFCYVariable.h>
-#include <Packages/Uintah/Core/Grid/SFCZVariable.h>
-#include <Packages/Uintah/Core/Grid/Stencil7.h>
+#include <Packages/Uintah/Core/Variables/ComputeSet.h>
+#include <Packages/Uintah/Core/Variables/CCVariable.h>
+#include <Packages/Uintah/Core/Variables/NCVariable.h>
+#include <Packages/Uintah/Core/Variables/SFCXVariable.h>
+#include <Packages/Uintah/Core/Variables/SFCYVariable.h>
+#include <Packages/Uintah/Core/Variables/SFCZVariable.h>
+#include <Packages/Uintah/Core/Variables/Stencil7.h>
 #include <Packages/Uintah/Core/Grid/Task.h>
 #include <Core/Geometry/IntVector.h>
 

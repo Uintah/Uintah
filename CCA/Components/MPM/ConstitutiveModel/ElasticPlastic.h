@@ -15,7 +15,7 @@
 #include <Packages/Uintah/Core/Math/TangentModulusTensor.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouseP.h>
-#include <Packages/Uintah/Core/Grid/NCVariable.h>
+#include <Packages/Uintah/Core/Variables/NCVariable.h>
 
 namespace Uintah {
 

@@ -11,8 +11,8 @@
 #include <Core/Geometry/Vector.h>
 #include <Packages/Uintah/CCA/Components/MPM/MPMFlags.h>
 #include <Packages/Uintah/CCA/Components/MPM/PhysicalBC/MPMPhysicalBC.h>
-#include <Packages/Uintah/Core/Grid/ParticleSet.h>
-#include <Packages/Uintah/Core/Grid/ParticleVariable.h>
+#include <Packages/Uintah/Core/Variables/ParticleSet.h>
+#include <Packages/Uintah/Core/Variables/ParticleVariable.h>
 #include <Packages/Uintah/CCA/Components/MPM/Crack/Crack.h>//for Fracture
 
 namespace Uintah {

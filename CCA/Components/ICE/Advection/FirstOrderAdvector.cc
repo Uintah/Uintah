@@ -1,9 +1,9 @@
 #include <Packages/Uintah/CCA/Components/ICE/Advection/FirstOrderAdvector.h>
-#include <Packages/Uintah/Core/Grid/CellIterator.h>
+#include <Packages/Uintah/Core/Variables/CellIterator.h>
 #include <Core/Geometry/IntVector.h>
 
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
-#include <Packages/Uintah/Core/Grid/VarLabel.h>
+#include <Packages/Uintah/Core/Variables/VarLabel.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Packages/Uintah/Core/Disclosure/TypeDescription.h>
 #include <Core/Malloc/Allocator.h>

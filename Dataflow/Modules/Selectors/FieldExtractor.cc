@@ -40,11 +40,11 @@ LOG
 #include <Packages/Uintah/Core/Grid/Level.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Packages/Uintah/Core/Grid/Box.h>
-#include <Packages/Uintah/Core/Grid/LocallyComputedPatchVarMap.h>
+#include <Packages/Uintah/Core/Variables/LocallyComputedPatchVarMap.h>
 #include <Core/Containers/ConsecutiveRangeSet.h>
 #include <Core/Geometry/Transform.h>
-#include <Packages/Uintah/Core/Grid/ShareAssignArray3.h>
-//#include <Packages/Uintah/Core/Grid/NodeIterator.h>
+#include <Packages/Uintah/Core/Variables/ShareAssignArray3.h>
+//#include <Packages/Uintah/Core/Variables/NodeIterator.h>
 #include "FieldExtractor.h"
  
 #include <iostream> 

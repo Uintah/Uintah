@@ -4,7 +4,7 @@
 #include <Packages/Uintah/CCA/Components/Schedulers/SchedulerCommon.h>
 #include <Packages/Uintah/CCA/Components/Schedulers/Relocate.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouseP.h>
-#include <Packages/Uintah/Core/Grid/TaskProduct.h>
+ 
 #include <Packages/Uintah/Core/Grid/Task.h>
 #include <sgi_stl_warnings_off.h>
 #include <vector>

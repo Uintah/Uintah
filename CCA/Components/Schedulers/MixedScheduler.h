@@ -7,7 +7,7 @@
 #include <Packages/Uintah/CCA/Components/Schedulers/MessageLog.h>
 #include <Packages/Uintah/CCA/Components/Schedulers/ThreadPool.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouseP.h>
-#include <Packages/Uintah/Core/Grid/TaskProduct.h>
+ 
 #include <Packages/Uintah/Core/Grid/Task.h>
 
 #include <sgi_stl_warnings_off.h>

@@ -13,6 +13,7 @@ SRCS     += \
 	$(SRCDIR)/PetscError.cc             \
 	$(SRCDIR)/ProblemSetupException.cc  \
 	$(SRCDIR)/TypeMismatchException.cc  \
+	$(SRCDIR)/UnknownVariable.cc        \
 	$(SRCDIR)/VariableNotFoundInGrid.cc \
 	$(SRCDIR)/MaxIteration.cc	    
 

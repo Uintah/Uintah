@@ -9,15 +9,15 @@
 #include <Packages/Uintah/CCA/Components/Arches/StencilMatrix.h>
 #include <Packages/Uintah/CCA/Components/Arches/TurbulenceModel.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
-#include <Packages/Uintah/Core/Grid/CCVariable.h>
+#include <Packages/Uintah/Core/Variables/CCVariable.h>
 #include <Packages/Uintah/Core/Grid/Level.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
-#include <Packages/Uintah/Core/Grid/PerPatch.h>
+#include <Packages/Uintah/Core/Variables/PerPatch.h>
 #include <Packages/Uintah/Core/Grid/Task.h>
-#include <Packages/Uintah/Core/Grid/SFCXVariable.h>
-#include <Packages/Uintah/Core/Grid/SFCYVariable.h>
-#include <Packages/Uintah/Core/Grid/SFCZVariable.h>
-#include <Packages/Uintah/Core/Grid/SoleVariable.h>
+#include <Packages/Uintah/Core/Variables/SFCXVariable.h>
+#include <Packages/Uintah/Core/Variables/SFCYVariable.h>
+#include <Packages/Uintah/Core/Variables/SFCZVariable.h>
+#include <Packages/Uintah/Core/Variables/SoleVariable.h>
 
 using namespace Uintah;
 using namespace SCIRun;

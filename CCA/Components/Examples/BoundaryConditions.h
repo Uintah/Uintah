@@ -3,11 +3,11 @@
 #define Packages_Uintah_CCA_Components_Examples_BoundaryConditions_h
 
 #include <Core/Geometry/IntVector.h>
-#include <Packages/Uintah/Core/Grid/GeomPiece/GeometryPiece.h>
+#include <Packages/Uintah/Core/GeometryPiece/GeometryPiece.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
-#include <Packages/Uintah/Core/Grid/NCVariable.h>
+#include <Packages/Uintah/Core/Variables/NCVariable.h>
 #include <sgi_stl_warnings_off.h>
 #include <map>
 #include <string>

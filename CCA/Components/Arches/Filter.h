@@ -9,9 +9,9 @@
 #include <Packages/Uintah/CCA/Ports/DataWarehouseP.h>
 #include <Packages/Uintah/Core/Grid/LevelP.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
-#include <Packages/Uintah/Core/Grid/Array3.h>
-#include <Packages/Uintah/Core/Grid/CCVariable.h>
-#include <Packages/Uintah/Core/Grid/ComputeSet.h>
+#include <Packages/Uintah/Core/Variables/Array3.h>
+#include <Packages/Uintah/Core/Variables/CCVariable.h>
+#include <Packages/Uintah/Core/Variables/ComputeSet.h>
 #include <Core/Geometry/IntVector.h>
 
 #include <Core/Containers/Array1.h>

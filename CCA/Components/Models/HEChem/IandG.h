@@ -3,7 +3,7 @@
 #define Packages_Uintah_CCA_Components_Models_IandG_h
 
 #include <Packages/Uintah/CCA/Ports/ModelInterface.h>
-#include <Packages/Uintah/Core/Grid/ComputeSet.h>
+#include <Packages/Uintah/Core/Variables/ComputeSet.h>
 
 namespace Uintah {
   class ICELabel;

@@ -34,10 +34,10 @@ WARNING
 ****************************************/
 
 #include <Packages/Uintah/CCA/Components/MPMArches/CutCellInfoP.h>
-#include <Packages/Uintah/Core/ProblemSpec/RefCounted.h>
+#include <Packages/Uintah/Core/Util/RefCounted.h>
 #include <Core/Containers/OffsetArray1.h>
-#include <Packages/Uintah/Core/Grid/CCVariable.h>
-#include <Packages/Uintah/Core/Grid/Array3.h>
+#include <Packages/Uintah/Core/Variables/CCVariable.h>
+#include <Packages/Uintah/Core/Variables/Array3.h>
 namespace Uintah {
   using namespace SCIRun;
 

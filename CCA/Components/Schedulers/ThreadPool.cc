@@ -10,7 +10,7 @@
 #include <Packages/Uintah/CCA/Components/Schedulers/SendState.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
 #include <Packages/Uintah/Core/Parallel/Parallel.h>
-#include <Packages/Uintah/Core/ProblemSpec/Handle.h>
+#include <Packages/Uintah/Core/Util/Handle.h>
 
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Thread/Time.h>

@@ -1,13 +1,13 @@
 #ifndef UINTAH_HOMEBREW_Task_H
 #define UINTAH_HOMEBREW_Task_H
 
-#include <Packages/Uintah/Core/Grid/ComputeSet.h>
+#include <Packages/Uintah/Core/Variables/ComputeSet.h>
 #include <Packages/Uintah/Core/Grid/fixedvector.h>
 #include <Packages/Uintah/Core/Grid/Ghost.h>
-#include <Packages/Uintah/Core/ProblemSpec/Handle.h>
-#include <Packages/Uintah/Core/ProblemSpec/constHandle.h>
-#include <Packages/Uintah/Core/Grid/SimpleString.h>
-#include <Packages/Uintah/Core/Grid/VarLabel.h>
+#include <Packages/Uintah/Core/Util/Handle.h>
+#include <Packages/Uintah/Core/Util/constHandle.h>
+#include <Packages/Uintah/Core/Variables/SimpleString.h>
+#include <Packages/Uintah/Core/Variables/VarLabel.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouseP.h>
 #include <Core/Containers/TrivialAllocator.h>
 #include <Core/Geometry/IntVector.h>

@@ -46,6 +46,7 @@ PSELIBS := \
 	Packages/Uintah/Core/ProblemSpec \
 	Packages/Uintah/Core/Parallel    \
 	Packages/Uintah/Core/Exceptions  \
+	Packages/Uintah/Core/GeometryPiece  \
 	Packages/Uintah/Core/Math        \
 	Core/Exceptions Core/Thread      \
 	Core/Geometry Core/Util          \

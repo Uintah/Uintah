@@ -6,13 +6,13 @@
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Packages/Uintah/Core/Grid/Box.h>
-#include <Packages/Uintah/Core/Grid/CellIterator.h>
+#include <Packages/Uintah/Core/Variables/CellIterator.h>
 #include <Packages/Uintah/Core/Grid/Level.h>
 #include <Packages/Uintah/Core/Grid/Material.h>
 #include <Packages/Uintah/Core/Grid/SimulationState.h>
-#include <Packages/Uintah/Core/Grid/VarTypes.h>
-#include <Packages/Uintah/Core/Grid/GeomPiece/GeometryPieceFactory.h>
-#include <Packages/Uintah/Core/Grid/GeomPiece/UnionGeometryPiece.h>
+#include <Packages/Uintah/Core/Variables/VarTypes.h>
+#include <Packages/Uintah/Core/GeometryPiece/GeometryPieceFactory.h>
+#include <Packages/Uintah/Core/GeometryPiece/UnionGeometryPiece.h>
 #include <Packages/Uintah/Core/Labels/ICELabel.h>
 #include <Packages/Uintah/Core/Exceptions/ParameterNotFound.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
