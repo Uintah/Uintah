@@ -105,10 +105,11 @@ int NrrdResample::getint(const char *str, int *n, int *none) {
   return 0;
 }
 
+// only do work on geometric axes FIX_ME MC
 int NrrdResample::get_sizes(string *resampAxis, Nrrd *nrrd,
 			    NrrdResampleInfo *info) {
   msgStream_ << "NrrdResample sizes: ";
-  for (int a=0; a<3; a++) {
+  for (int a=1; a<4; a++) {
     info->samples[a]=nrrd->axis[a].size;
     const char *str = resampAxis[a].c_str();
     int none=0;
@@ -176,7 +177,7 @@ NrrdResample::execute()
   else if (ftype == "cubicCR") { kern=nrrdKernelBCCubic; p[1]=0; p[2]=0.5; }
   else if (ftype == "cubicBS") { kern=nrrdKernelBCCubic; p[1]=1; p[2]=0; }
   else /* if (ftype == "quartic") */ { kern=nrrdKernelAQuartic; p[1]=0.0834; }
-  for (int a=0; a<3; a++) {
+  for (int a=1; a<4; a++) {
     info->kernel[a] = kern;
     memcpy(info->parm[a], p, NRRD_KERNEL_PARMS_NUM * sizeof(double));
     if (!(AIR_EXISTS(nin->axis[a].min) && AIR_EXISTS(nin->axis[a].max)))

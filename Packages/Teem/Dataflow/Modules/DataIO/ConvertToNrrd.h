@@ -73,52 +73,14 @@ public:
 };
 
 
-// nrrd Types that we need to convert to:
-//  nrrdTypeChar,          
-//  nrrdTypeUChar,         
-//  nrrdTypeShort,         
-//  nrrdTypeUShort,        
-//  nrrdTypeInt,           
-//  nrrdTypeUInt,          
-//  nrrdTypeLLong,         
-//  nrrdTypeULLong,        
-//  nrrdTypeFloat,         
-//  nrrdTypeDouble,
-
 template <class T>
-unsigned int get_nrrd_type();
+void fill_data(T &, double *);
 
 template <>
-unsigned int get_nrrd_type<char>();
+void fill_data<Tensor>(Tensor &t, double *p); 
 
 template <>
-unsigned int get_nrrd_type<unsigned char>();
-
-template <>
-unsigned int get_nrrd_type<short>();
-
-template <>
-unsigned int get_nrrd_type<unsigned short>();
-
-template <>
-unsigned int get_nrrd_type<int>();
-
-template <>
-unsigned int get_nrrd_type<unsigned int>();
-
-template <>
-unsigned int get_nrrd_type<long long>();
-
-template <>
-unsigned int get_nrrd_type<unsigned long long>();
-
-template <>
-unsigned int get_nrrd_type<float>();
-
-template <class T>
-unsigned int get_nrrd_type() {
-  return nrrdTypeDouble;
-}
+void fill_data<Vector>(Vector &v, double *p);
 
 template <class T>
 void fill_data(T &, double *) {
@@ -249,12 +211,12 @@ NrrdDataHandle
 ConvertToNrrd<Fld>::convert_to_nrrd(FieldHandle ifh, string &label)
 {
   typedef typename Fld::value_type val_t;
-  Fld *f = dynamic_cast<Fld*>(ifld.get_rep());
+  Fld *f = dynamic_cast<Fld*>(ifh.get_rep());
   ASSERT(f != 0);
 
   typename Fld::mesh_handle_type m = f->get_typed_mesh(); 
 
-  const string data_name(ifld->get_type_description(1)->get_name());
+  const string data_name(ifh->get_type_description(1)->get_name());
   const string vec("Vector");
   const string ten("Tensor");
 
@@ -353,7 +315,7 @@ ConvertToNrrd<Fld>::convert_to_nrrd(FieldHandle ifh, string &label)
 	nrrdAxesSet(nout->nrrd, nrrdAxesInfoCenter, nrrdCenterUnknown,
 		    nrrdCenterUnknown);
       }
-      nout->nrrd->axis[0].label = strdup(sink_label);
+      nout->nrrd->axis[0].label = strdup(sink_label.c_str());
       nout->nrrd->axis[1].label = strdup("x");
 
       if (with_spacing) {
@@ -379,7 +341,7 @@ ConvertToNrrd<Fld>::convert_to_nrrd(FieldHandle ifh, string &label)
 		    nrrdCenterUnknown, nrrdCenterUnknown, nrrdCenterUnknown);
       }
 
-      nout->nrrd->axis[0].label = strdup(sink_label);
+      nout->nrrd->axis[0].label = strdup(sink_label.c_str());
       nout->nrrd->axis[1].label = strdup("x");
       nout->nrrd->axis[2].label = strdup("y");
 
@@ -413,7 +375,7 @@ ConvertToNrrd<Fld>::convert_to_nrrd(FieldHandle ifh, string &label)
 		    nrrdCenterUnknown, nrrdCenterUnknown, 
 		    nrrdCenterUnknown, nrrdCenterUnknown);
       }
-      nout->nrrd->axis[0].label = strdup(sink_label);
+      nout->nrrd->axis[0].label = strdup(sink_label.c_str());
       nout->nrrd->axis[1].label = strdup("x");
       nout->nrrd->axis[2].label = strdup("y");
       nout->nrrd->axis[3].label = strdup("z");

@@ -28,11 +28,13 @@ SRCDIR   := Packages/Teem/Dataflow/Modules/DataIO
 
 
 SRCS     += \
+        $(SRCDIR)/ConvertToField.cc\
+	$(SRCDIR)/ConvertToNrrd.cc\
+	$(SRCDIR)/FieldToNrrd.cc\
 	$(SRCDIR)/NrrdReader.cc\
 	$(SRCDIR)/NrrdWriter.cc\
 	$(SRCDIR)/NrrdToField.cc\
-	$(SRCDIR)/FieldToNrrd.cc\
-        $(SRCDIR)/ConvertToNrrd.cc\
+
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS := Packages/Teem/Core/Datatypes Packages/Teem/Dataflow/Ports \

@@ -46,7 +46,7 @@ public:
 		  const string& namesp);
   ~TypeDescription();
      
-  const td_vec* get_sub_type() const {
+  td_vec* get_sub_type() const {
     return subtype_;
   }
   //! The arguments determine how the templated types are separated.

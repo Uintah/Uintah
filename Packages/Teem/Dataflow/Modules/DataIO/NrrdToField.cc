@@ -33,6 +33,8 @@
 #include <Dataflow/Ports/FieldPort.h>
 #include <Core/Datatypes/MaskedLatVolField.h>
 #include <Core/Malloc/Allocator.h>
+#include <Teem/Dataflow/Modules/DataIO/ConvertToField.h>
+#include <Core/Util/TypeDescription.h>
 #include <iostream>
 
 namespace SCITeem {
@@ -72,29 +74,23 @@ NrrdToField::~NrrdToField()
 	  f->fdata()(k,j,i) = *p++; \
     fieldH = f
 
-void NrrdToField::execute()
-{
-  NrrdDataHandle ninH;
-  inrrd = (NrrdIPort *)get_iport("Nrrd");
-  ofield = (FieldOPort *)get_oport("Field");
 
-  if (!inrrd) {
-    error("Unable to initialize iport 'Nrrd'.");
-    return;
-  }
-  if (!ofield) {
-    error("Unable to initialize oport 'Field'.");
-    return;
-  }
+bool convert_to_field(Mesh*, Nrrd*, FieldHandle) {
+  return false;
+}
 
-  if(!inrrd->get(ninH))
-    return;
+FieldHandle create_scanline_field(NrrdDataHandle) {
+  return FieldHandle(0);
+}
 
-  Nrrd *n = ninH->nrrd;
-  int i, j, k;
+FieldHandle create_image_field(NrrdDataHandle) {
+  return FieldHandle(0);
+}
 
-  FieldHandle fieldH;
+FieldHandle create_latvol_field(NrrdDataHandle) {
+#if 0
 
+  //FIX_ME get vector tensor from the sink label name
   if (n->dim == 4) {  // vector or tensor data
     if (n->type != nrrdTypeFloat) {
       error("Tensor nrrd's must be floats.");
@@ -178,6 +174,129 @@ void NrrdToField::execute()
     error("Unrecognized nrrd type.");
     return;
   }
-  
-  ofield->send(fieldH);
+
+#endif
+  return FieldHandle(0);
+}
+
+const TypeDescription *
+get_new_td(int t) {
+
+  switch (t) {
+  case nrrdTypeChar :  
+    return get_type_description((char*)0);
+    break;
+  case nrrdTypeUChar : 
+    return get_type_description((unsigned char*)0);
+    break;
+  case nrrdTypeShort : 
+    return get_type_description((short*)0);
+    break;
+  case nrrdTypeUShort :
+    return get_type_description((unsigned short*)0);
+    break;
+  case nrrdTypeInt :   
+    return get_type_description((int*)0);
+    break;
+  case nrrdTypeUInt :  
+    return get_type_description((unsigned int*)0);
+    break;
+  case nrrdTypeLLong : 
+    //return get_type_description((long long*)0);
+    break;
+  case nrrdTypeULLong :
+    //return get_type_description((unsigned long long*)0);
+    break;
+  case nrrdTypeFloat : 
+    return get_type_description((float*)0);
+    break;
+  case nrrdTypeDouble :
+    return get_type_description((double*)0);
+    break;
+  }
+  return 0;
+}
+
+void NrrdToField::execute()
+{
+  NrrdDataHandle ninH;
+  inrrd = (NrrdIPort *)get_iport("Nrrd");
+  ofield = (FieldOPort *)get_oport("Field");
+
+  if (!inrrd) {
+    error("Unable to initialize iport 'Nrrd'.");
+    return;
+  }
+  if (!ofield) {
+    error("Unable to initialize oport 'Field'.");
+    return;
+  }
+
+  if(!inrrd->get(ninH))
+    return;
+
+  Nrrd *n = ninH->nrrd;
+  bool dim_based_convert = true;
+  FieldHandle ofield_handle;
+
+  if (ninH->is_sci_nrrd()) {
+    // the NrrdData has a stored MeshHandle which from the originating field.
+    FieldHandle fh = ninH->get_orig_field();
+    const TypeDescription *td = fh->get_type_description();
+    // manipilate the type to match the nrrd.
+    const TypeDescription *sub = get_new_td(n->type);
+
+    TypeDescription::td_vec *v = td->get_sub_type();
+    v->clear();
+    v->push_back(sub);
+
+    CompileInfoHandle ci = ConvertToFieldBase::get_compile_info(td);
+    Handle<ConvertToFieldBase> algo;
+    if ((module_dynamic_compile(ci, algo)) && 
+	(algo->convert_to_field(fh, ninH->nrrd, ofield_handle))) 
+    {
+      remark("Creating a Field from original mesh in input nrrd");
+      dim_based_convert = false;
+    }
+    // if compilation fails or the algo cant match the data to the mesh,
+    // do a standard dimemsion based convert.
+  }
+
+  if (dim_based_convert) {
+
+    int dim = n->dim;
+    if (ninH->is_sci_nrrd()) {
+      // have always dim + 1 axes 
+      --dim;
+    }
+    switch (dim) {
+
+    case 1:
+      {
+	//get data from x axis and stuff into a Scanline
+	remark("Creating a ScanlineField from input nrrd");
+	ofield_handle = create_scanline_field(ninH);
+      }
+      break;
+    case 2:
+      {
+	//get data from x,y axes and stuff into an Image
+	remark("Creating a ImageField from input nrrd");
+	ofield_handle = create_image_field(ninH);
+      }
+      break;
+    case 3:
+      {
+	//get data from x,y,z axes and stuff into a LatVol
+	remark("Creating a LatVolField from input nrrd");
+	ofield_handle = create_latvol_field(ninH);
+      }
+      break;
+    default:
+      error("Cannot convert > 3 dimesional data to a SCIRun Field.");
+      return;
+    }
+  }
+ 
+  ofield->send(ofield_handle);
 }

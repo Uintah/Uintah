@@ -91,4 +91,62 @@ void NrrdData::io(Piostream& stream) {
   }
   stream.end_class();
 }
+
+
+template <>
+unsigned int get_nrrd_type<char>() {
+  return nrrdTypeChar;
+}
+
+
+template <>
+unsigned int get_nrrd_type<unsigned char>()
+{
+  return nrrdTypeUChar;
+}
+
+template <>
+unsigned int get_nrrd_type<short>()
+{
+  return nrrdTypeShort;
+}
+
+template <>
+unsigned int get_nrrd_type<unsigned short>()
+{
+  return nrrdTypeUShort;
+}
+
+template <>
+unsigned int get_nrrd_type<int>()
+{
+  return nrrdTypeInt;
+}
+
+template <>
+unsigned int get_nrrd_type<unsigned int>()
+{
+  return nrrdTypeUInt;
+}
+
+template <>
+unsigned int get_nrrd_type<long long>()
+{
+  return nrrdTypeLLong;
+}
+
+template <>
+unsigned int get_nrrd_type<unsigned long long>()
+{
+  return nrrdTypeULLong;
+}
+
+template <>
+unsigned int get_nrrd_type<float>()
+{
+  return nrrdTypeFloat;
+}
+
+
+
 }  // end namespace SCITeem

@@ -29,7 +29,7 @@
 #define SCI_Teem_NrrdData_h
 
 #include <Core/Datatypes/Datatype.h>
-#include <Core/Datatypes/Mesh.h>
+#include <Core/Datatypes/Field.h>
 #include <Core/Containers/LockingHandle.h>
 #include <nrrd.h>
 
@@ -51,7 +51,18 @@ public:
   NrrdData(const NrrdData&);
   ~NrrdData();
 
-  void set_orig_mesh(MeshHandle mh) { originating_mesh_ = mh; }
+  void set_orig_field(FieldHandle fh) { originating_field_ = fh; }
+  FieldHandle get_orig_field() { return originating_field_; }
+
+  bool is_sci_nrrd() { return true; } //FIX_ME MC this is not always true...
+  // some methods to create and parse axis labels tuples and otherwise.
+  int get_x_axis()     const { return 1; }
+  int get_y_axis()     const { return 2; }
+  int get_z_axis()     const { return 3; }
+  int get_tuple_axis() const { return 0; }
+
+  
+  
 
   virtual void io(Piostream&);
   static PersistentTypeID type_id;
@@ -61,10 +72,62 @@ private:
   bool                 data_owned_;
   //! a handle to the mesh this data originally belonged with. 
   //! has a rep == 0 if there was no such mesh.
-  MeshHandle           originating_mesh_; 
+  FieldHandle           originating_field_; 
 };
 
 typedef LockingHandle<NrrdData> NrrdDataHandle;
+
+// some template helpers...
+
+
+// nrrd Types that we need to convert to:
+//  nrrdTypeChar,          
+//  nrrdTypeUChar,         
+//  nrrdTypeShort,         
+//  nrrdTypeUShort,        
+//  nrrdTypeInt,           
+//  nrrdTypeUInt,          
+//  nrrdTypeLLong,         
+//  nrrdTypeULLong,        
+//  nrrdTypeFloat,         
+//  nrrdTypeDouble,
+
+template <class T>
+unsigned int get_nrrd_type();
+
+template <>
+unsigned int get_nrrd_type<char>();
+
+template <>
+unsigned int get_nrrd_type<unsigned char>();
+
+template <>
+unsigned int get_nrrd_type<short>();
+
+template <>
+unsigned int get_nrrd_type<unsigned short>();
+
+template <>
+unsigned int get_nrrd_type<int>();
+
+template <>
+unsigned int get_nrrd_type<unsigned int>();
+
+template <>
+unsigned int get_nrrd_type<long long>();
+
+template <>
+unsigned int get_nrrd_type<unsigned long long>();
+
+template <>
+unsigned int get_nrrd_type<float>();
+
+template <class T>
+unsigned int get_nrrd_type() {
+  return nrrdTypeDouble;
+}
+
+
 } // end namespace SCITeem
 
 #endif // SCI_Teem_NrrdData_h
