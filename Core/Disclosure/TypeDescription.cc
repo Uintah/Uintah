@@ -128,6 +128,23 @@ TypeDescription::get_name(string type_sep_start,
   }
 }
 
+
+string 
+TypeDescription::get_filename() const
+{
+  string s = get_name();
+  string result;
+  for (unsigned int i = 0; i < s.size(); i++)
+  {
+    if (isalnum(s[i]))
+    {
+      result += s[i];
+    }
+  }
+  return result;
+}
+
+
 void 
 TypeDescription::fill_compile_info(CompileInfo *ci) const
 {
