@@ -9,6 +9,7 @@
 #include <Core/Thread/Mutex.h>
 #include <Core/Thread/Time.h>
 #include <Core/Util/DebugStream.h>
+#include <Core/Containers/ConsecutiveRangeSet.h>
 
 #include <string>
 #include <vector>
@@ -87,7 +88,7 @@ private:
   /* Helper classes for storing hash maps of variable data. */
   class PatchHashMaps;
   class MaterialHashMaps;
-
+  
   // Top of data structure for storing hash maps of variable data
   // - containing data for each time step.
   class TimeHashMaps {
@@ -96,14 +97,17 @@ private:
 		 const vector<XMLURL>& tsUrls,
 		 const vector<DOM_Node>& tsTopNodes,
 		 int processor, int numProcessors);
-
-    DOM_Node findVariable(const string& name, const Patch* patch, int matl,
-			  double time, XMLURL& foundUrl);
+    
+    inline DOM_Node findVariable(const string& name, const Patch* patch,
+				 int matl, double time, XMLURL& foundUrl);
+    
+    inline PatchHashMaps* findTimeData(double time);
+    MaterialHashMaps* findPatchData(double time, const Patch* patch);
   private:
     map<double, PatchHashMaps> d_patchHashMaps;
     map<double, PatchHashMaps>::iterator d_lastFoundIt;
   };
-
+  
   // Second layer of data structure for storing hash maps of variable data
   // - containing data for each patch at a certain time step.
   class PatchHashMaps {
@@ -112,39 +116,40 @@ private:
     PatchHashMaps();
     void init(XMLURL tsUrl, DOM_Node tsTopNode,
 	      int processor, int numProcessors);
-
-    DOM_Node findVariable(const string& name, const Patch* patch,
-			  int matl, XMLURL& foundUrl);
-    const MaterialHashMaps* findPatchData(int patchid);
+    
+    inline DOM_Node findVariable(const string& name, const Patch* patch,
+				 int matl, XMLURL& foundUrl);
+    MaterialHashMaps* findPatchData(const Patch* patch);
   private:
     void parse();    
     void add(const string& name, int patchid, int matl,
 	     DOM_Node varNode, XMLURL url)
     { d_matHashMaps[patchid].add(name, matl, varNode, url); }
-
+    
     map<int, MaterialHashMaps> d_matHashMaps;
     map<int, MaterialHashMaps>::iterator d_lastFoundIt;
     list<XMLURL> d_xmlUrls;
     bool d_isParsed;
   };
-
+  
   // Third layer of data structure for storing hash maps of variable data
   // - containing data for each material at a certain patch and time step.
   class MaterialHashMaps {
     friend class PatchHashMaps;
   public:
     MaterialHashMaps() {}
-
+    
     DOM_Node findVariable(const string& name, int matl,
 			  XMLURL& foundUrl);
+    
     // note that vector is offset by one to allow for matl=-1 at element 0
     const vector<VarHashMap>& getVarHashMaps() const
     { return d_varHashMaps; }
   private:
     void add(const string& name, int matl, DOM_Node varNode, XMLURL url);
-
+    
     vector<VarHashMap> d_varHashMaps;
-
+    
     // store a copy of the variable names so that char*'s don't become
     // invalid in the hash table.
     list<string> d_varNames;
@@ -155,16 +160,16 @@ public:
 	      int processor=0 /* use if you want to different processors
 				 to read different parts of the archive */,
 	      int numProcessors=1);
-
+  
   // GROUP: Destructors
   //////////
   // Destructor
   virtual ~DataArchive();
-
+  
   void restartInitialize(int& timestep, GridP grid,
 			 DataWarehouseP dw,
 			 double* pTime /* passed back */);
- 
+  
   // GROUP:  Information Access
   //////////
   // However, we need a means of determining the names of existing
@@ -176,7 +181,7 @@ public:
   void queryTimesteps( std::vector<int>& index,
 		       std::vector<double>& times );
   GridP queryGrid( double time );
-   
+  
 #if 0
   //////////
   // Does a variable exist in a particular patch?
@@ -188,17 +193,19 @@ public:
   //////////
   // how long does a particle live?  Not variable specific.
   void queryLifetime( double& min, double& max, particleId id);
-   
+  
   //////////
   // how long does a patch live?  Not variable specific
   void queryLifetime( double& min, double& max, const Patch* patch);
-
-  int queryNumMaterials(const std::string& name, const Patch* patch,
-			double time);
-
+  
+  ConsecutiveRangeSet queryMaterials(const std::string& name,
+				     const Patch* patch, double time);
+  
+  int queryNumMaterials(const Patch* patch, double time);
+  
   void query( Variable& var, const std::string& name,
 	      int matlIndex, const Patch* patch, double tine );
-   
+  
   //////////
   // query the variable value for a particular particle  overtime;
   // T = double/float/vector/Tensor I'm not sure of the proper
@@ -207,7 +214,7 @@ public:
   void query( ParticleVariable< T >&, const std::string& name, int matlIndex,
 	      particleId id,
 	      double min, double max);
-
+  
   //////////
   // query the variable value for a particular particle  overtime;
   // T = double/float/vector/Tensor I'm not sure of the proper
@@ -216,7 +223,7 @@ public:
   void query( NCVariable< T >&, const std::string& name, int matlIndex,
 	      const IntVector& index,
 	      double min, double max);
-   
+  
   //////////
   // query the variable value for a particular particle  overtime;
   // T = double/float/vector/Tensor I'm not sure of the proper
@@ -225,7 +232,7 @@ public:
   void query( CCVariable< T >&, const std::string& name, int matlIndex,
 	      const IntVector& index,
 	      double min, double max);
-   
+  
   //////////
   // query the variable value for a particular particle  overtime;
   template<class T>
@@ -238,7 +245,7 @@ public:
   template<class T>
   void query(std::vector<T>& values, const std::string& name, int matlIndex,
 	     IntVector loc, double startTime, double endTime);
-   
+  
 #if 0
   //////////
   // In other cases we will have noticed something interesting and we
@@ -247,41 +254,53 @@ public:
   template<class T> void get(T& data, const std::string& name,
 			     const Patch* patch, cellIndex min, cellIndex max);
 #endif
-   
+  
 protected:
   DataArchive();
-   
+  
 private:
   DataArchive(const DataArchive&);
   DataArchive& operator=(const DataArchive&);
-
+  
   DOM_Node getTimestep(double time, XMLURL& url);
   void query( Variable& var, DOM_Node vnode, XMLURL url,
 	      int matlIndex,	const Patch* patch );
-
+  
+  TimeHashMaps* getTopLevelVarHashMaps()
+  {
+    if (d_varHashMaps == NULL) {
+      vector<int> indices;
+      vector<double> times;
+      queryTimesteps(indices, times);
+      d_varHashMaps = scinew TimeHashMaps(times, d_tsurl, d_tstop,
+					  d_processor, d_numProcessors);
+    }
+    return d_varHashMaps;
+  }
+  
   // for restartInitialize
   void initVariable(const Patch* patch,
 		    DataWarehouseP& new_dw,
 		    VarLabel* label, int matl,
 		    pair<DOM_Node, XMLURL> dataRef);   
-   
+  
   std::string d_filebase;
   DOM_Document d_indexDoc;
   XMLURL d_base;
-
+  
   bool have_timesteps;
   std::vector<int> d_tsindex;
   std::vector<double> d_tstimes;
   std::vector<DOM_Node> d_tstop;
   std::vector<XMLURL> d_tsurl;
   TimeHashMaps* d_varHashMaps;
-
-   // if used, different processors read different parts of the archive
+  
+  // if used, different processors read different parts of the archive
   int d_processor;
   int d_numProcessors;
-   
+  
   Mutex d_lock;
-
+  
   DOM_Node findVariable(const string& name, const Patch* patch,
 			int matl, double time, XMLURL& url);
   void findPatchAndIndex(GridP grid, Patch*& patch, particleIndex& idx,
@@ -298,7 +317,7 @@ private:
   {
     cerr << "DataArchive::query not finished\n";
   }
-
+  
   template<class T>
   void DataArchive::query( CCVariable< T >&, const std::string& name, int matlIndex,
 			   const IntVector& index,
@@ -306,7 +325,7 @@ private:
   {
     cerr << "DataArchive::query not finished\n";
   }
-
+  
   template<class T>
   void DataArchive::query(ParticleVariable< T >& var, const std::string& name,
 			  int matlIndex, particleId id,
@@ -314,15 +333,15 @@ private:
   {
     cerr << "DataArchive::query not finished\n";
   }
-
-
+  
+  
   template<class T>
   void DataArchive::query(std::vector<T>& values, const std::string& name,
 			  int matlIndex, long particleID,
 			  double startTime, double endTime)
   {
     double call_start = Time::currentSeconds();
-
+    
     if (!have_timesteps) {
       vector<int> index;
       vector<double> times;
@@ -354,7 +373,7 @@ private:
     particleIndex idx;
     for ( ; (ts < (int)d_tstimes.size()) && (d_tstimes[ts] < endTime); ts++) {
       double t = d_tstimes[ts];
-
+      
       // figure out what patch contains the cell. As far as I can tell,
       // nothing prevents this from changing between timesteps, so we have to
       // do this every time -- if that can't actually happen we might be able
@@ -369,26 +388,26 @@ private:
       //now find the index that corresponds to the particleID
       //cerr <<" time = "<<t<<",  value = "<<var[idx]<<endl;
       values.push_back(var[idx]);
-    
+      
     }
     dbg << "DataArchive::query(values) completed in "
 	<< (Time::currentSeconds() - call_start) << " seconds\n";
   }  
-
+  
   template<class T>
   void DataArchive::query(std::vector<T>& values, const std::string& name,
 			  int matlIndex, IntVector loc,
 			  double startTime, double endTime)
   {
     double call_start = Time::currentSeconds();
-
+    
     if (!have_timesteps) {
       vector<int> index;
       vector<double> times;
       queryTimesteps(index, times);
       // will build d_ts* as a side effect
     }
-
+    
     // figure out what kind of variable we're looking for
     vector<string> type_names;
     vector<const TypeDescription*> type_descriptions;
@@ -408,10 +427,10 @@ private:
     int ts = 0;
     while ((ts < (int)d_tstimes.size()) && (startTime > d_tstimes[ts]))
       ts++;
-
+    
     for ( ; (ts < (int)d_tstimes.size()) && (d_tstimes[ts] < endTime); ts++) {
       double t = d_tstimes[ts];
-
+      
       // figure out what patch contains the cell. As far as I can tell,
       // nothing prevents this from changing between timesteps, so we have to
       // do this every time -- if that can't actually happen we might be able
@@ -421,7 +440,7 @@ private:
       for (int level_nr = 0;
 	   (level_nr < grid->numLevels()) && (patch == NULL); level_nr++) {
 	const LevelP level = grid->getLevel(level_nr);
-
+	
 	switch (type->getType()) {
 	case TypeDescription::CCVariable:
 	  for (Level::const_patchIterator iter = level->patchesBegin();
@@ -430,7 +449,7 @@ private:
 	      patch = *iter;
 	  }
 	  break;
-	    
+	  
 	case TypeDescription::NCVariable:
 	  // Unfortunately, this const cast hack is necessary.
 	  patch = ((LevelP)level)->getPatchFromPoint(level->getNodePosition(loc));
@@ -439,14 +458,14 @@ private:
       }
       if (patch == NULL)
 	throw InternalError("Couldn't find patch containing location");
-
+      
       switch (type->getType()) {
       case TypeDescription::CCVariable: {
 	CCVariable<T> var;
 	query(var, name, matlIndex, patch, t);
 	values.push_back(var[loc]);
       } break;
-
+      
       case TypeDescription::NCVariable: {
 	NCVariable<T> var;
 	query(var, name, matlIndex, patch, t);
@@ -454,11 +473,11 @@ private:
       } break;
       }
     }
-
+    
     dbg << "DataArchive::query(values) completed in "
         << (Time::currentSeconds() - call_start) << " seconds\n";
   }
-
+  
 } // end namespace Uintah
 
 #endif
