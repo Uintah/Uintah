@@ -134,14 +134,14 @@ int SynchronizeGeometry::enforce_barrier(MessageBase* message) {
 
     new_enforce = get_enforce();
     if(new_enforce) {
-	append_msg(gmsg);
-	forward_saved_msg();
+      append_msg(gmsg);
+      forward_saved_msg();
     } else {
-	gmsg->portno = portno_map_[portno];      
-	if (enforce != new_enforce)
-	  flush_all_msgs();
-	if(!(ogeom_->direct_forward(gmsg)))
-	  delete gmsg;
+      gmsg->portno = portno_map_[portno];      
+      if(enforce != new_enforce)
+	flush_all_msgs();
+      if(!(ogeom_->direct_forward(gmsg)))
+	delete gmsg;
     }
     enforce = new_enforce;
     msg = 0;
@@ -295,11 +295,9 @@ void SynchronizeGeometry::flush_all_msgs() {
 }
 
 void
- SynchronizeGeometry::tcl_command(GuiArgs& args, void* userdata)
+SynchronizeGeometry::tcl_command(GuiArgs& args, void* userdata)
 {
   Module::tcl_command(args, userdata);
 }
 
 } // End namespace SCIRun
-
-

@@ -278,6 +278,7 @@ GLTexture3D::replace_bon_tree_data(Point min, Point max,
   Octree<Brick *> *node = parent;
 
   Brick* brick = (*parent)();
+  *(brick->texNameP()) = 0; // needed so that texture resources get deleted
   Array3<unsigned char> *brickData = brick->texture();
   int padx_ = 0,pady_ = 0,padz_ = 0;
   
@@ -315,7 +316,6 @@ GLTexture3D::replace_bon_tree_data(Point min, Point max,
                                           tex, brickData);
      mbd.run();
 #endif      
-     
   } else {
     double stepx, stepy, stepz;
     stepx = pow(2.0, levels_ - level);
@@ -581,12 +581,12 @@ GLTexture3D::build_bon_tree(Point min, Point max,
     brick = scinew Brick(min, max, padx_, pady_, padz_, level, brickData);
 
     node = scinew Octree<Brick*>(brick, Octree<Brick *>::LEAF, parent );
+
   } else { // we must subdivide
 
     brickData->resize( zmax_, ymax_, xmax_);
 
     double stepx, stepy, stepz;
-//     if( level > 0 ){
 
       stepx = pow(2.0, levels_ - level);
       if( xmax_ > xsize ) {
@@ -612,7 +612,6 @@ GLTexture3D::build_bon_tree(Point min, Point max,
 	  padz_ = (int)((zmax_*stepz - zsize)/stepz);
 	}
       }
-//     }
 
     string  group_name("thread group ");
     ostringstream osstr;
@@ -742,10 +741,8 @@ GLTexture3D::build_bon_tree(Point min, Point max,
 
 #ifdef __sgi
     group->join();
-    //group->stop();
       
     thread_sema->down();
-    //    Thread *t =
     scinew Thread(new GLTexture3D::run_make_low_res_brick_data(this, 
 						    thread_sema,
 						    xmax_, ymax_, zmax_,

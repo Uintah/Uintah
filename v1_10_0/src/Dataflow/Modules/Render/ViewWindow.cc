@@ -152,7 +152,8 @@ ViewWindow::ViewWindow(Viewer* s, GuiInterface* gui, GuiContext* ctx)
     gui_global_clip_(ctx->subVar("global-clip")),
     gui_global_cull_(ctx->subVar("global-cull")),
     gui_global_dl_(ctx->subVar("global-dl")),
-    gui_global_type_(ctx->subVar("global-type"))
+    gui_global_type_(ctx->subVar("global-type")),
+    gui_ortho_view_(ctx->subVar("ortho-view"))
 {
   inertia_mode=0;
   bgcolor.set(Color(0,0,0));
@@ -260,6 +261,50 @@ void ViewWindow::itemDeleted(GeomViewerItem *si)
   bb.reset();
   need_redraw=true;
 }
+
+void ViewWindow::itemRenamed(GeomViewerItem *si, string newname)
+{
+  // Remove old
+  {
+    ObjTag *vis;
+    viter = visible.find(si->name_);
+    if (viter == visible.end()) { // if not found
+      cerr << "Where did that object go???" << "\n";
+    }
+    else {
+      vis = (*viter).second;
+      ostringstream str;
+      str << id << " removeObject " << vis->tagid;
+      gui->execute(str.str());
+    }
+  }
+
+  // Rename.
+  si->name_ = newname;
+
+  // Reinsert.
+  {
+    ObjTag* vis;
+    
+    viter = visible.find(si->name_);
+    if(viter==visible.end()){
+      // Make one...
+      vis=scinew ObjTag;
+      vis->visible=scinew GuiInt(ctx->subVar(si->name_), 1);
+      vis->tagid=maxtag++;
+      visible[si->name_] = vis;
+      ostringstream str;
+      str << id << " addObject " << vis->tagid << " \"" << si->name_ << "\"";
+      gui->execute(str.str());
+    } else {
+      vis = (*viter).second;
+      ostringstream str;
+      str << id << " addObject2 " << vis->tagid;
+      gui->execute(str.str());
+    }
+  }
+}
+
 
 // need to fill this in!   
 #ifdef OLDUI
@@ -897,23 +942,22 @@ void ViewWindow::mouse_scale(int action, int x, int y, int, int, int)
   case MouseMove:
     {
       double scl;
-      double xmtn=last_x-x;
-      double ymtn=last_y-y;
-      xmtn/=30;
-      ymtn/=30;
+      const double xmtn = (last_x-x) * 6.0 / current_renderer->xres;
+      const double ymtn = (y-last_y) * 6.0 / current_renderer->yres;
       last_x = x;
       last_y = y;
-      if (Abs(xmtn)>Abs(ymtn)) scl=xmtn; else scl=ymtn;
-      if (scl<0) scl=1/(1-scl); else scl+=1;
+      const double len = sqrt(xmtn * xmtn + ymtn * ymtn);
+      if (Abs(xmtn)>Abs(ymtn)) scl = xmtn; else scl = ymtn;
+      if (scl<0) scl = 1.0 / (1.0 + len); else scl = len + 1.0;
       total_scale*=scl;
 
       View tmpview(view.get());
-      tmpview.fov(RtoD(2*Atan(scl*Tan(DtoR(tmpview.fov()/2.)))));
+      tmpview.eyep(tmpview.lookat() + (tmpview.eyep() - tmpview.lookat())*scl);
 
       view.set(tmpview);
       need_redraw=true;
       ostringstream str;
-      str << "scale: " << total_scale*100 << "%";
+      str << "scale: " << 100.0/total_scale << "%";
       update_mode_string(str.str());
     }
     break;

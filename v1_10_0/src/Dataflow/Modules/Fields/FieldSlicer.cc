@@ -76,7 +76,7 @@ DECLARE_MAKER(FieldSlicer)
 
 
 FieldSlicer::FieldSlicer(GuiContext *context)
-  : Module("FieldSlicer", context, Source, "Fields", "SCIRun"),
+  : Module("FieldSlicer", context, Filter, "Fields", "SCIRun"),
     
     Axis_(context->subVar("axis")),
     Dims_(context->subVar("dims")),
@@ -173,6 +173,12 @@ void FieldSlicer::execute(){
   } else {
     error( fHandle->get_type_description(0)->get_name() );
     error( "Only availible for regular topology e.g. uniformly gridded or structure gridded data." );
+    return;
+  }
+
+  if( fHandle->data_at() != Field::NODE ) {
+    error( fHandle->get_type_description(0)->get_name() );
+    error( "Currently only availible for node data." );
     return;
   }
 

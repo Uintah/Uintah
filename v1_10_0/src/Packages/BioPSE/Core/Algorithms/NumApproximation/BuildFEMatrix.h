@@ -77,7 +77,8 @@ public:
 		int, double);
   static bool build_FEMatrix(TetVolFieldIntHandle,
 			     vector<pair<string, Tensor> > &,
-			     MatrixHandle&, double);
+			     MatrixHandle&, double,
+			     int num_procs = -1);
   //! Destuctor
   virtual ~BuildFEMatrix();
   virtual void io(Piostream&);

@@ -273,7 +273,7 @@ template <class Data>
 bool LatVolField<Data>::get_gradient(Vector &g, const Point &p)
 {
   // for now we only know how to do this for fields with scalars at the nodes
-  if (query_scalar_interface())
+  if (query_scalar_interface().get_rep())
   {
     if( data_at() == Field::NODE)
     {

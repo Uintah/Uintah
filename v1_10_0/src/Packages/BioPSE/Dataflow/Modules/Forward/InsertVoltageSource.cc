@@ -136,8 +136,9 @@ void InsertVoltageSource::execute() {
 
   TetVolMesh::Node::array_type nbrs(4);
 
-  Array1<pair<double, double> > closest(tvm_nnodes); // store the dist/val
-                                                     // of the closest node
+  Array1<vector<pair<double, double> > > closest(tvm_nnodes); 
+                                     // store the dist/val
+                                     // to source nodes
   Array1<int> have_some(tvm_nnodes);
   have_some.initialize(0);
   Array1<TetVolMesh::Node::index_type> bc_tet_nodes;
@@ -146,7 +147,7 @@ void InsertVoltageSource::execute() {
     int didx=dirichlet[di].first;
     // so other BCs can't over-write this one
     have_some[didx]=1;
-    closest[didx].first=0;
+    closest[didx].push_back(pair<double, double>(0,dirichlet[di].second));
   }
     
   // for each surface data_at position/value...
@@ -172,19 +173,33 @@ void InsertVoltageSource::execute() {
       tvm->get_center(nbr_pt, nidx);
       double d = (pt - nbr_pt).length();
       pair<double, double> p(d, val);
+//      if (!have_some[nidx]) {
+//	have_some[nidx]=1;
+//	bc_tet_nodes.add(nidx);
+//	closest[nidx]=p;
+//      } else if (closest[nidx].first < d) {
+//	closest[nidx]=p;
+//      }
+
       if (!have_some[nidx]) {
 	have_some[nidx]=1;
 	bc_tet_nodes.add(nidx);
-	closest[nidx]=p;
-      } else if (closest[nidx].first < d) {
-	closest[nidx]=p;
       }
+      closest[nidx].push_back(p);
+
     }
   }
 
-  for (int i=0; i<bc_tet_nodes.size(); i++)
-    dirichlet.push_back(pair<int, double>(bc_tet_nodes[i],
-					  closest[bc_tet_nodes[i]].second));
+  for (int i=0; i<bc_tet_nodes.size(); i++) {
+    double val=0;
+    int nsrcs=closest[bc_tet_nodes[i]].size();
+    for (int j=0; j<nsrcs; j++)
+      val+=closest[bc_tet_nodes[i]][j].second/nsrcs;
+//    dirichlet.push_back(pair<int, double>(bc_tet_nodes[i],
+//					  closest[bc_tet_nodes[i]].second));
+//    }
+    dirichlet.push_back(pair<int, double>(bc_tet_nodes[i], val));
+  }
   imeshH->set_property("dirichlet", dirichlet, false);
   imeshH->set_property("conductivity_table", conds, false);
   omesh->send(imeshH);

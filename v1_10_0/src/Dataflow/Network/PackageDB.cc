@@ -158,15 +158,16 @@ bool PackageDB::findMaker(ModuleInfo* moduleInfo)
     category_error = SOError();
 
   if (!category_so && !package_so) {
+
+    string msg = "Unable to load all of package '" + moduleInfo->packageName +
+      "' (category '" + moduleInfo->categoryName + "' failed) :\n - " +
+      package_error + "\n - " + category_error;
+
     if(gui){
-      gui->postMessage("Unable to load all of package '" + moduleInfo->packageName +
-		       "' (category '" + moduleInfo->categoryName + "' failed) :\n - " +
-		       package_error + "\n - " + category_error + "\n");
+      gui->postMessage( msg );
       gui->execute("update idletasks");
     } else {
-      cerr << "Unable to load all of package '" << moduleInfo->packageName
-	   << "' (category '" << moduleInfo->categoryName << "' failed) :\n - "
-	   << package_error << "\n - " << category_error << "\n";
+      cerr << msg << "\n";
     }
     return false;
   }

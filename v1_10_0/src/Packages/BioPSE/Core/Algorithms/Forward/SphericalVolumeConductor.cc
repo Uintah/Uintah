@@ -55,12 +55,16 @@ SphericalVolumeConductor::SphericalVolumeConductor(DenseMatrix &dipoles, DenseMa
   }
 
   // project electrodes on outer sphere surface and get locations in spherical coordinates
-  getSphericalElectrodePositions();
+  //getSphericalElectrodePositions();
 
   // get dipole positions and moments in spherical coordinates and rotate the system such that
   // the dipole moment is in the xz plane
-  if(!getSphericalDipoleRepresentation()) {
-	printf("Dipole is not within inner sphere (brain)\n");
+  //if(!getSphericalDipoleRepresentation()) {
+  //printf("Dipole is not within inner sphere (brain)\n");
+  //}
+
+  if(!getSphericalDipoleAndElectrodePositions()) {
+	printf("Dipole is not within inner sphere\n");
   }
 
   // normalize radii, dipole position, ...
@@ -96,15 +100,24 @@ bool SphericalVolumeConductor::initialize() {
   moment = new double[6];
   if(moment == NULL)
 	return false;
+  momentcart = new double[6];
+  if(momentcart == NULL)
+	return false;
   seriesCoeff = new double[nt];
   if(seriesCoeff == NULL)
 	return false;
   electrode = new double*[numElec];
+  eleccart  = new double*[numElec];
   if(electrode == NULL)
+	return false;
+  if(eleccart == NULL)
 	return false;
   for(int i = 0; i < numElec; i++) {
 	electrode[i] = new double[6];
+	eleccart[i]  = new double[6];
 	if(electrode[i] == NULL)
+	  return false;
+	if(eleccart[i] == NULL)
 	  return false;
   }
   // get local copies with index starting at 1 (to be in sync with the paper)
@@ -125,6 +138,12 @@ bool SphericalVolumeConductor::initialize() {
 	rc[i+1] = radCond_[i]*unitsScale; /* unit */
 	tc[i+1] = tanCond_[i]*unitsScale; /* unit */
   }
+  // get local copies of electrode positions in cartesian coordinates
+  for(int i=0; i<numElec; i++) {
+	eleccart[i][XC] = elecCart_[i][XC];
+	eleccart[i][YC] = elecCart_[i][YC];
+	eleccart[i][ZC] = elecCart_[i][ZC];
+  }
   return true;
 }
 
@@ -137,6 +156,8 @@ void SphericalVolumeConductor::destroy() {
   dipole = NULL;
   delete []moment;
   moment = NULL;
+  delete []momentcart;
+  momentcart = NULL;
   delete []seriesCoeff;
   seriesCoeff = NULL;
   double *tmp = r+1;
@@ -150,10 +171,14 @@ void SphericalVolumeConductor::destroy() {
   tmp3 = NULL;
   for(int i = 0; i < numElec; i++) {
 	delete []electrode[i];
+	delete []eleccart[i];
 	electrode[i] = NULL;
+	eleccart[i]  = NULL;
   }
   delete []electrode;
   electrode = NULL;
+  delete []eleccart;
+  eleccart  = NULL;
 }
 
 /**
@@ -624,6 +649,139 @@ void SphericalVolumeConductor::normalizeLengthScales() {
   rc[2] *= norm; tc[2] *= norm;
   rc[3] *= norm; tc[3] *= norm;
   rc[4] *= norm; tc[4] *= norm;
+}
+
+bool SphericalVolumeConductor::getSphericalDipoleAndElectrodePositions() {
+  double tmp;
+  double phi_tmp;
+  // get dipole position in spherical coordinates
+  dipole[RAD]   = getRadius(dipCart_[0][XC], dipCart_[0][YC], dipCart_[0][ZC]);
+  dipole[THETA] = getTheta(dipCart_[0][ZC], dipole[RAD]);
+  dipole[PHI]   = getPhi(dipCart_[0][XC], dipCart_[0][YC]);
+  // get intersection point sphere surface & dipole moment
+  moment[XM] = dipCart_[0][XM]; moment[YM] = dipCart_[0][YM]; moment[ZM] = dipCart_[0][ZM];
+  abs_moment = sqrt(moment[XM]*moment[XM] + moment[YM]*moment[YM] + moment[ZM]*moment[ZM]);
+  moment[XM] /= abs_moment; moment[YM] /= abs_moment; moment[ZM] /= abs_moment;
+  double B = 2.0 * (moment[XM]*dipCart_[0][XC] + moment[YM]*dipCart_[0][YC] + moment[ZM]*dipCart_[0][ZC]);
+  double C = dipCart_[0][XC]*dipCart_[0][XC] + dipCart_[0][YC]*dipCart_[0][YC] + dipCart_[0][ZC]*dipCart_[0][ZC] - radii_[SCALP]*radii_[SCALP];
+  double d = B*B - 4.0*C;
+  if(d < 0.0) {
+	printf("SphericalVolumeConductor -> impossible to determine ray sphere intersection\n");
+  }
+  d = sqrt(d);
+  double t0 = (-B + d)*0.5;
+  double t1 = (-B - d)*0.5;
+  double t  = 0.0;
+  if(t0 > 0.0) {
+	t = t0;
+  }
+  else {
+	if(t1 > 0.0) {
+	  t = t1;
+	}
+	else {
+	  printf("SphericalVolumeConductor -> impossible to determine ray sphere intersection\n");
+	}
+  }
+  momentcart[XC] = dipCart_[0][XC] + t*moment[XM]; momentcart[YC] = dipCart_[0][YC] + t*moment[YM]; momentcart[ZC] = dipCart_[0][ZC] + t*moment[ZM];
+  // a) put dipole into xz-plane
+  if(fabs(dipole[PHI]) > 1e-8) {
+	tmp = momentcart[XC];
+	momentcart[XC] = momentcart[XC]*cos(dipole[PHI]) + momentcart[YC]*sin(dipole[PHI]); 
+	momentcart[YC] = -tmp*sin(dipole[PHI]) + momentcart[YC]*cos(dipole[PHI]);
+  }
+  // b) put dipole onto z-axis
+  if(fabs(dipole[THETA]) > 1e-8) {
+	tmp = momentcart[XC];
+	momentcart[XC] = momentcart[XC]*cos(dipole[THETA]) - momentcart[ZC]*sin(dipole[THETA]);
+	momentcart[ZC] = tmp*sin(dipole[THETA]) + momentcart[ZC]*cos(dipole[THETA]);
+  }
+  // c) put dipole moment into xz-plane
+  phi_tmp = getPhi(momentcart[XC], momentcart[YC]);
+  if(fabs(phi_tmp) > 1e-8) {
+	tmp = momentcart[XC];
+	momentcart[XC] = momentcart[XC]*cos(phi_tmp) + momentcart[YC]*sin(phi_tmp); 
+	momentcart[YC] = -tmp*sin(phi_tmp) + momentcart[YC]*cos(phi_tmp);
+  }
+  // get moment position in spherical coordinates
+  moment[RAD]   = getRadius(momentcart[XC], momentcart[YC], momentcart[ZC]);
+  moment[PHI]   = getPhi(momentcart[XC], momentcart[YC]);
+  moment[THETA] = getTheta(momentcart[ZC], moment[RAD]);
+  // get transformed dipole info ... //
+  double dz = momentcart[ZC]-dipole[RAD];
+  double dx = momentcart[XC];
+  getDipoleMoment(dx,dz);
+  // get transformed electrode positions //
+  double r_tmp;
+  for(int i = 0; i < numElec; i++) {
+	// a)
+	if(fabs(dipole[PHI]) > 1e-8) {
+	  tmp = eleccart[i][XC];
+	  eleccart[i][XC] = eleccart[i][XC]*cos(dipole[PHI]) + eleccart[i][YC]*sin(dipole[PHI]); 
+	  eleccart[i][YC] = -tmp*sin(dipole[PHI]) + eleccart[i][YC]*cos(dipole[PHI]);
+	}
+	// b)
+	if(fabs(dipole[THETA]) > 1e-8) {
+	  tmp = eleccart[i][XC];
+	  eleccart[i][XC] = eleccart[i][XC]*cos(dipole[THETA]) - eleccart[i][ZC]*sin(dipole[THETA]);
+	  eleccart[i][ZC] = tmp*sin(dipole[THETA]) + eleccart[i][ZC]*cos(dipole[THETA]);
+	}
+	// c)
+	if(fabs(phi_tmp) > 1e-8) {
+	  tmp = eleccart[i][XC];
+	  eleccart[i][XC] = eleccart[i][XC]*cos(phi_tmp) + eleccart[i][YC]*sin(phi_tmp); 
+	  eleccart[i][YC] = -tmp*sin(phi_tmp) + eleccart[i][YC]*cos(phi_tmp);
+	}
+	// get spherical coordinates of electrode positions
+	electrode[i][PHI] = getPhi(eleccart[i][XC], eleccart[i][YC]);
+	r_tmp = getRadius(eleccart[i][XC], eleccart[i][YC], eleccart[i][ZC]);
+	electrode[i][THETA] = getTheta(eleccart[i][ZC], r_tmp);
+	electrode[i][RAD] = radii_[SCALP];
+  }
+
+  if(dipole[RAD] > radii_[BRAIN])
+	return false;
+  return true;
+ 
+}
+
+void SphericalVolumeConductor::getDipoleMoment(double dx, double dz) {
+  if(dx < 0.0) {
+	printf("\n error: dx < 0 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+	dipole[RM] = 0.0; dipole[TM] = 0.0;
+	return;
+  }
+  if(dx == 0.0 && dz == 0.0) {
+	dipole[RM] = 0.0;
+	dipole[TM] = 0.0;
+	return;
+  }
+  if((dx == 0.0) && (dz != 0.0)) {
+	dipole[TM] = 0.0;
+	if(dz > 0) 
+	  dipole[RM] = abs_moment;
+	else
+	  dipole[RM] = -abs_moment;
+	return;
+  }
+  if((dz == 0) && (dx != 0.0)) {
+	dipole[RM] = 0.0;
+	dipole[TM] = -abs_moment; 
+	return;
+  }
+  //case 1
+  if(dz > 0.0) {
+	double theta = atan(dz/dx);
+	dipole[RM] = abs_moment * sin(theta);
+	dipole[TM] = -abs_moment * cos(theta); 
+	return;
+  }
+  // case 2
+  if(dz < 0.0) {
+	double theta = atan(fabs(dz/dx));
+	dipole[RM] = -abs_moment * sin(theta);
+	dipole[TM] = -abs_moment * cos(theta); 
+  }
 }
 
 } // end namespace

@@ -52,6 +52,10 @@ using namespace SCIRun;
 typedef std::map<int,IPortInfo*>::iterator iport_iter;
 typedef std::map<int,OPortInfo*>::iterator oport_iter;
 
+namespace SCIRun {
+extern bool regression_testing_flag;
+}
+
 #ifdef __APPLE__
 const string ext = ".dylib";
 #else
@@ -160,7 +164,7 @@ Module::Module(const string& name, GuiContext* ctx,
     for (oport_iter i2=info->oports->begin();
 	 i2!=info->oports->end();
 	 i2++) {
-      int strlength = strlen(((*i2).second)->datatype.c_str());
+      unsigned long strlength = ((*i2).second)->datatype.length();
       char* package = new char[strlength+1];
       char* datatype = new char[strlength+1];
       sscanf(((*i2).second)->datatype.c_str(),"%[^:]::%s",package,datatype);
@@ -179,7 +183,7 @@ Module::Module(const string& name, GuiContext* ctx,
     for (iport_iter i1=info->iports->begin();
 	 i1!=info->iports->end();
 	 i1++) {
-      int strlength = strlen(((*i1).second)->datatype.c_str());
+      unsigned long strlength = ((*i1).second)->datatype.length();
       char* package = new char[strlength+1];
       char* datatype = new char[strlength+1];
       sscanf(((*i1).second)->datatype.c_str(),"%[^:]::%s",package,datatype);
@@ -687,7 +691,10 @@ void Module::setPid(int pid)
 // Error conditions
 void Module::error(const string& str)
 {
-  //gui->postMessage("ERROR: " + moduleName + ": " + str, true);
+  if (regression_testing_flag)
+  {
+    cout << id << ":ERROR: " << str << "\n";
+  }
   msgStream_ << "ERROR: " << str << '\n';
   msgStream_.flush();
   update_msg_state(Error); 
@@ -695,7 +702,10 @@ void Module::error(const string& str)
 
 void Module::warning(const string& str)
 {
-  // gui->postMessage("WARNING: " + moduleName + ": " + str, false);
+  if (regression_testing_flag)
+  {
+    cout << id << ":WARNING: " << str << "\n";
+  }
   msgStream_ << "WARNING: " << str << '\n';
   msgStream_.flush();
   update_msg_state(Warning); 
@@ -703,7 +713,10 @@ void Module::warning(const string& str)
 
 void Module::remark(const string& str)
 {
-  //gui->postMessage("REMARK: " + moduleName + ": " + str, false);
+  if (regression_testing_flag)
+  {
+    cout << id << ":REMARK: " << str << "\n";
+  }
   msgStream_ << "REMARK: " << str << '\n';
   msgStream_.flush();
   update_msg_state(Remark); 
@@ -711,6 +724,10 @@ void Module::remark(const string& str)
 
 void Module::postMessage(const string& str)
 {
+  if (regression_testing_flag)
+  {
+    cout << id << ":postMessage: " << str << "\n";
+  }
   gui->postMessage(moduleName + ": " + str, false);
 }
 

@@ -114,6 +114,32 @@ public:
   virtual bool saveobj(std::ostream&, const string& format, GeomSave*);
 };
 
+
+class SCICORESHARE GeomTranspLines : public GeomCLines {
+protected:
+  vector<unsigned int> xindices_;
+  vector<unsigned int> yindices_;
+  vector<unsigned int> zindices_;
+
+public:
+  GeomTranspLines();
+  GeomTranspLines(const GeomTranspLines&);
+
+  virtual ~GeomTranspLines();
+  virtual GeomObj* clone();
+
+  void sort();
+
+#ifdef SCI_OPENGL
+  virtual void draw(DrawInfoOpenGL*, Material*, double time);
+#endif
+  
+  virtual void io(Piostream&);
+  static PersistentTypeID type_id;
+  virtual bool saveobj(std::ostream&, const string& format, GeomSave*);
+};
+
+
 // can generate "lit" streamlines this way
 
 class SCICORESHARE TexGeomLines : public GeomObj {

@@ -256,7 +256,13 @@ int Viewer::process_event()
     geomlock_.writeLock();
     initPort(gmsg->reply);
     geomlock_.writeUnlock();
-    break;	
+    break;
+
+  case MessageTypes::GeometryDetach:
+    geomlock_.writeLock();
+    detachPort(gmsg->portno);
+    geomlock_.writeUnlock();
+    break;
 
   case MessageTypes::GeometryAddObj:
   case MessageTypes::GeometryDelObj:
@@ -335,11 +341,90 @@ int Viewer::process_event()
 void Viewer::initPort(Mailbox<GeomReply>* reply)
 {
   int portid=max_portno_++;
-				// Create the port
-  // PortInfo* pi=scinew PortInfo;
+  portno_map_.push_back(portid);
+  syncronized_map_.push_back(false);
+
+  // Create the port
   GeomViewerPort *pi = new GeomViewerPort(portid);
   ports_.addObj(pi,portid);
   reply->send(GeomReply(portid));
+}
+
+//----------------------------------------------------------------------
+int Viewer::real_portno(int portno)
+{
+  for (unsigned int i=0; i < portno_map_.size(); i++)
+  {
+    if (portno == portno_map_[i])
+    {
+      return i + 1;
+    }
+  }
+  ASSERTFAIL("PORTNO NOT FOUND");
+  return 0;
+}
+
+//----------------------------------------------------------------------
+void Viewer::delete_patch_portnos(int portid)
+{
+  int found = -1;
+  for (unsigned int i=0; i < portno_map_.size(); i++)
+  {
+    if (found >= 0)
+    {
+      GeomViewerPort *pi;
+      if(!(pi = ((GeomViewerPort*)ports_.getObj(portno_map_[i]).get_rep())))
+      {
+	warning("Geometry message sent to bad port!!!\n");
+	continue;
+      }
+      GeomIndexedGroup::IterIntGeomObj iter = pi->getIter();
+      for (; iter.first != iter.second; iter.first++)
+      {
+	GeomViewerItem* si;
+	if (si = dynamic_cast<GeomViewerItem*>((*iter.first).second.get_rep()))
+	{
+	  const string::size_type loc = si->getString().find_last_of('(');
+	  string newname =
+	    si->getString().substr(0, loc+1) + to_string(i) + ")";
+
+	  // Do a rename here.
+	  for (unsigned int j = 0; j < view_window_.size(); j++)
+	  {
+	    view_window_[j]->itemRenamed(si, newname);
+	  }
+	}
+      }
+    }
+    else if (portid == portno_map_[i])
+    {
+      found = i;
+    }
+  }
+
+  if (found >= 0)
+  {
+    portno_map_.erase(portno_map_.begin() + found);
+    syncronized_map_.erase(syncronized_map_.begin() + found);
+  }
+
+}
+
+//----------------------------------------------------------------------
+void Viewer::detachPort(int portid)
+{
+  GeomViewerPort* pi;
+  if(!(pi = ((GeomViewerPort*)ports_.getObj(portid).get_rep())))
+  {
+    warning("Geometry message sent to bad port!!!\n");
+    return;
+  }
+  delAll(pi);
+  ports_.delObj(portid);
+
+  delete_patch_portnos(portid);
+
+  flushViews();
 }
 
 //----------------------------------------------------------------------
@@ -349,11 +434,12 @@ void Viewer::flushViews()
     view_window_[i]->force_redraw();
 }
 
+
 //----------------------------------------------------------------------
 void Viewer::addObj(GeomViewerPort* port, int serial, GeomHandle obj,
 		    const string& name, CrowdMonitor* lock)
 {
-  string pname(name+" ("+to_string(port->portno)+")");
+  string pname(name + " ("+to_string(real_portno(port->portno))+")");
   GeomViewerItem* si = scinew GeomViewerItem(obj, pname, lock);
   port->addObj(si,serial);
   // port->objs->insert(serial, si);
@@ -577,6 +663,8 @@ void Viewer::append_port_msg(GeometryComm* gmsg)
 //----------------------------------------------------------------------
 void Viewer::flushPort(int portid)
 {
+  extern bool regression_testing_flag;
+
   // Look up the right port number
   GeomViewerPort* pi;
   if(!(pi = ((GeomViewerPort*)ports_.getObj(portid).get_rep())))
@@ -609,6 +697,37 @@ void Viewer::flushPort(int portid)
   {
     flushViews();
     pi->msg_head=pi->msg_tail=0;
+  }
+
+  syncronized_map_[real_portno(portid)-1] = true;
+  bool all = true;
+  unsigned int i;
+  for (i=0; i < numIPorts()-1; i++)
+  {
+    if (syncronized_map_[i] == false)
+    {
+      all = false;
+      break;
+    }
+  }
+  if (all)
+  {
+    if (regression_testing_flag)
+    {
+      geomlock_.writeUnlock();
+      for (i = 0; i < view_window_.size(); i++)
+      {
+	const string name = string("snapshot") + to_string(i) + ".ppm";
+	view_window_[i]->redraw_if_needed();
+	view_window_[i]->current_renderer->saveImage(name, "ppm", 640, 512);
+      }
+      geomlock_.writeLock();
+    }
+
+    for (i = 0; i < syncronized_map_.size(); i++)
+    {
+      syncronized_map_[i] = false;
+    }
   }
 }
 

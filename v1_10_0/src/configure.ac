@@ -50,7 +50,7 @@
 ##  --------------------------------------------------------------------
 
 ##  initialize configure 
-AC_INIT([SCIRun],[1.9],[scirun-users@sci.utah.edu])
+AC_INIT([SCIRun],[1.10],[scirun-users@sci.utah.edu])
 
 ##  require autoconf version 2.53
 AC_PREREQ(2.53)
@@ -74,6 +74,11 @@ AC_COPYRIGHT(
 ##
 )
 
+## Clean up files that could be left around if configure was 
+## interrupted (by control-c, ^c) because I do not know how to add
+## cleanup to the builtin AC function that uses the 'trap' command.
+rm -rf ii_files sedscript
+
 AC_CONFIG_SRCDIR(configVars.mk.in)
 
 ##  set the location of config.guess, config.sub, and install.sh
@@ -82,16 +87,17 @@ AC_CONFIG_AUX_DIR(scripts)
 ##  set the output header to "sci_config.h"
 AC_CONFIG_HEADER(sci_config.h)
 
-path_to_src=`echo $0 | sed 's/configure//'`
+## Cut off the /configure from the configure command (eg: ../src/configure)
+path_to_src=`echo $0 | sed 's/\/configure//'`
 
-echo $path_to_src
-if test "$path_to_src" = "./" -o "$path_to_src" = ""; then
+## If user tried to configure in current directory, this will block it.
+if test "$path_to_src" = "configure" -o "$path_to_src" = "."; then
    AC_MSG_WARN(DO NOT CONFIGURE IN THE SRC DIRECTORY:)
    AC_MSG_WARN(___ Try creating a dir such as: ../archBITSdebug)
    AC_MSG_WARN(___ eg: ../sgi32opt or ../linux32debug)
    AC_MSG_WARN(___ cd to that dir and then type: ../src/configure)
    rm -f config.log config.cache confdefs.h conftest.out
-   AC_MSG_ERROR(You have been warned!)
+   AC_MSG_ERROR(Tried to configure in src directory.)
 fi
 
 # make sure these variables are considered precious.
@@ -112,64 +118,38 @@ SCI_ARG_VAR(CXXCPP,C++ preprocessor)
 ## all the optional tests we have... These get set in the macro 
 # SCI_SET_PACKAGE_CHECKS found in aclocal.m4.  Each package sets the 
 # checks that they 
+INIT_PACKAGE_CHECK_VARS()
 
-# want or require in the macro.
-sci_check_unipetc=no
-sci_check_mpiuni=yes
 
-#sci_check_dependency mode=no
-sci_check_gmake=no 
-sci_check_awk=no
-sci_check_etags=no
-sci_check_thirdparty=no
-sci_check_exc=no 
+## find the machine's pwd, and don't use the sh built-in pwd.
+## sh pwd can print the wd with symbolic links depending on
+## how you got to that directory, and thus has the potential
+## to print different pwd's for the same wd, and change files
+## like sci_defs.h
 
-# typically Remote
-sci_check_jpeg=no
-sci_check_tiff=no
+sci_pwd=""
+for my_pwd in pwd /bin/pwd /usr/bin/pwd; do
+  mkdir pwd_test
+  ln -s pwd_test pwd_temp
 
-# typically rtrt
-sci_check_glut=no
-sci_check_glui=no
-sci_check_oogl=no
-sci_check_audio=no
+  cd pwd_test
+  pwd_1=`$my_pwd`
 
-# typically fusion
-sci_check_plplot=no
-sci_check_mdsplus=no
+  cd ../pwd_temp
+  pwd_2=`$my_pwd`
 
-# typically uintah
-sci_check_fortran=no
-sci_check_mpi=no
-sci_check_tau=no
-sci_check_gzopen=no
-sci_check_blas=no
-sci_check_lapack=no
-sci_check_hypre=no
-sci_check_petsc=no
-sci_check_perl=no
-sci_check_tools=no
-
-# typically teem
-sci_check_teem=no
-
-#typically VDT
-sci_check_vdt=no
-
-# typically Netsolve
-sci_check_netsolve=no
-
-# typically Insight
-sci_check_instight=no
-
-# SCIRun2
-sci_check_babel=no
-sci_check_fortran=no
-sci_check_ssl=no
-sci_check_crypto=no
-sci_check_globus=no
-sci_check_qt=no
-sci_check_uuid=no
+  cd ..
+  rm -r pwd_test pwd_temp
+  if test "$pwd_1" = "$pwd_2"; then
+    sci_pwd=$my_pwd
+    alias pwd="$my_pwd"
+    break
+  fi
+done
+if test -z "$sci_pwd"; then
+   AC_MSG_WARN("Using unstable version of pwd")
+   sci_pwd=pwd
+fi
 
 
 ##  initialize the recognized argument lists
@@ -269,11 +249,19 @@ SCI_ARG_WITH(tiff,
                  Use the tiff installation in DIR),
   [with_tiff="$withval"],
   [with_tiff=""])
+
 SCI_ARG_WITH(mdsplus,
   AC_HELP_STRING(--with-mdsplus=DIR,
                  Use the mdsplus installation in DIR),
   [with_mdsplus="$withval"],
   [with_mdsplus=""])
+
+SCI_ARG_WITH(hdf5,
+  AC_HELP_STRING(--with-hdf5=DIR,
+                 Use the hdf5 installation in DIR),
+  [with_hdf5="$withval"],
+  [with_hdf5=""])
+
 SCI_ARG_WITH(glut,
   AC_HELP_STRING(--with-glut=DIR,
                  Use the glut installation in DIR),
@@ -386,39 +374,6 @@ myargs=`echo $args | sed 's%\^% %g'`
 # It thinks we are cross compiling. Don't set it.
 #IFS=' '
 
-##  --------------------------------------------------------------------
-##  -----------  check for unknown or mis-spelled arguments  -----------
-##  --------------------------------------------------------------------
-
-##
-##  If you use SCI_ARG_WITH or SCI_ARG_ENABLE to declare arguments, they
-##  will be added automatically to this check.  There should be no need
-##  to modify this section.
-##
-
-# this is choking on standard configure arguments. FIX_ME_MC
-#echo $CC
-#_sci_found_arg=no
-#for i in $myargs; do
-#  i_mod=`echo $i | sed 's% %%g' | sed 's%=.*%%g'`
-#  echo $i
-#  echo $i_mod
-#  for j in $sci_arg_with_list $sci_arg_enable_list $sci_arg_var_list; do
-#    echo $j
-#    if test $i_mod = $j; then 
-#      _sci_found_arg=yes
-#      break
-#    fi
-#  done
-#  if test "$_sci_found_arg" = "yes"; then
-#    _sci_found_arg=no
-#    continue
-#  else
-#    echo
-#    SCI_MSG_ERROR(unknown (or mis-spelled) argument: $i.)
-#  fi
-#done
-#
 PACKAGE_DIRS=""
 # make sure the package dir exists
 for i in $package; do
@@ -431,13 +386,13 @@ for i in $package; do
 done
 
 # Set the subdir name in the bin tree for matlab engine.
-if test $pkg_MatlabInterface == yes; then
+if test "$pkg_MatlabInterface" == "yes"; then
   MATLAB_ENG=matlab
   AC_SUBST(MATLAB_ENG)
 fi
 
 # Take care of package dependencies
-if test $pkg_Fusion == yes; then
+if test "$pkg_Fusion" == "yes"; then
   # Fusion depends upon Teem Package.  
   if test -z $pkg_Teem; then
     AC_MSG_ERROR([The Fusion Package depends on the Teem Package. Please 
@@ -464,18 +419,25 @@ if test -z "$DIRNAME_IS" -o -z "$BASENAME_IS"; then
 fi
 
 if test "$CC" = ""; then
+  # Apparently AC_PROG_CC will set CFLAGS to "-O2 -g" if you don't specify
+  # its value first, so...
+  CFLAGS=""
   AC_PROG_CC()
   AC_MSG_WARN(C compiler not specified with 'CC' environment variable.\
 	    Using default... $CC)
-  
 fi
+
 if test "$CXX" = ""; then
+  # Apparently AC_PROG_CXX will set CXXFLAGS to "-O2 -g" if you don't specify
+  # its value first, so...
+  CXXFLAGS=""
   AC_PROG_CXX(CC g++ c++)
   AC_MSG_WARN(C++ compiler not specified with 'CXX' environment variable.\
 	    Using default... $CXX)
 fi
 
 if test $sci_check_fortran = "yes"; then
+
   if test "$F77" = ""; then
     AC_PROG_F77()
     AC_MSG_WARN(Fortran compiler not specified with 'F77' environment \
@@ -816,20 +778,16 @@ case $host in
 
     ;;
   *-darwin*)
+    ac_objext=o
     LDRUN_PREFIX="-L"
-    CFLAGS="$CFLAGS -fno-common -dynamic -fcoalesce-templates -Wno-long-double -I/sw/include -L/sw/lib"
+    CFLAGS="$CFLAGS $extra_cflags -fno-common -dynamic -fcoalesce-templates -Wno-long-double -I/sw/include -L/sw/lib"
+    CXXFLAGS="$CXXFLAGS $CFLAGS"
     SOFLAGS="-dynamiclib -init __ZNSt8ios_base4InitC4Ev \${LIBDIR}/../osx/osx_init.o  ${SOFLAGS}"
     ;;
 
   *)
+    # linux
     ac_objext=o
-    #
-    # put '_' at end and two '_'s if there is a '_' in name. 
-    # This flag is used by the genfspec.pl script in Uintah (generated
-    # from fspec.pl.in).
-    #
-    FORTRAN_UNDERSCORE=linux
-
     BASE_LIB_DIR=lib
     CFLAGS=" -Wall"
     if test "$CC" != "pgcc"; then
@@ -854,13 +812,18 @@ case $host in
       *g77*)
          # extra_fflags has array checking if in debug mode.
          FFLAGS="$FFLAGS $extra_cflags $extra_fflags"
+
+         # put '_' at end and two '_'s if there is a '_' in name. 
+         # This flag is used by the genfspec.pl script in Uintah (generated
+         # from fspec.pl.in).
+	 FORTRAN_UNDERSCORE=linux
          ;;
       *)
          FFLAGS="$FFLAGS $extra_cflags"
          ;;
     esac
 
-    CXXFLAGS="$extra_cflags"
+    CXXFLAGS="$CXXFLAGS $extra_cflags"
     SOFLAGS="-shared ${SOFLAGS}"
     NEED_SONAME=yes
     ;;
@@ -1388,7 +1351,7 @@ SCI_TRY_LINK(GL,OpenGL libraries and headers,[
 #include<GL/glu.h>
 #include<GL/glx.h>
 
-],$_sci_inc,GL GLU,$_sci_lib $GLU_OTHERS,,,not-optional)
+],$_sci_inc,GLU GL,$_sci_lib $GLU_OTHERS,,,not-optional)
 
 AC_SUBST(GL_LIB_FLAG)
 AC_SUBST(GL_LIB_DIR_FLAG)
@@ -1554,11 +1517,14 @@ if test -f "$_sci_lib/tkConfig.sh"; then
   _sci_tk_inc="$_sci_inc $TK_SRC_DIR/generic"
 fi
 
+#
+# Note: TK_DEFS (used below to help resolve tk issues) comes from tkConfig.sh
+#
 SCI_TRY_LINK(TK,required tk library and headers,[
 #include <tk.h> 
 #include <tk3d.h>
 #include <tkPort.h>
-],$_sci_tk_inc,tk,$_sci_lib,$TCL_LIB_DIR_FLAG $TCL_LIB_FLAG,,not-optional)
+],$_x_inc_dir $_sci_tk_inc,tk,$_sci_lib,$TK_DEFS $TCL_LIB_DIR_FLAG $TCL_LIB_FLAG,,not-optional)
 
 AC_SUBST(TK_LIB_FLAG)
 AC_SUBST(TK_LIB_DIR_FLAG)
@@ -1577,7 +1543,7 @@ AC_SUBST(INC_ITCL_H)
 # -- itk --
 SCI_TRY_LINK(ITK,required itk library and headers,[
 #include <itk.h> 
-],$_sci_inc,itk,$_sci_lib,$ITCL_LIB_DIR_FLAG $ITCL_LIB_FLAG $TK_LIB_DIR_FLAG $TK_LIB_FLAG $TCL_LIB_DIR_FLAG $TCL_LIB_FLAG,,not-optional)
+],$_x_inc_dir $_sci_inc,itk,$_sci_lib,$ITCL_LIB_DIR_FLAG $ITCL_LIB_FLAG $TK_LIB_DIR_FLAG $TK_LIB_FLAG $TCL_LIB_DIR_FLAG $TCL_LIB_FLAG,,not-optional)
 
 AC_SUBST(ITK_LIB_FLAG)
 AC_SUBST(ITK_LIB_DIR_FLAG)
@@ -1868,7 +1834,7 @@ if test $sci_check_fortran = "yes"; then
       ;;
     *linux*)
       # Linux Library Check
-      if test "$F77" = "pgf90"; then
+      if test "$F77" = "pgf77"; then
         SCI_TRY_LINK(F,required fortran libraries,,,pgftnrtl,,,,not-optional)
       else
         SCI_TRY_LINK(F,required fortran libraries,,,g2c,,,,not-optional)
@@ -2094,47 +2060,46 @@ esac
 # Again required for the following uni-petsc checks, that attempt to support
 # the MatrixSolver module.
 
-if test "$sci_check_mpiuni" = "yes"; then
-  if test "$with_mpiuni"; then
-    _sci_lib="$with_mpiuni/lib"
-    _sci_inc="$with_mpiuni/include" 
-  elif test "$with_unipetsc"; then
-    _sci_lib="$with_unipetsc/lib/$PETSC_SUB/$PETSC_ARCH"
-    _sci_inc="$with_unipetsc/src/sys/src/mpiuni $with_unipetsc/bmake/$PETSC_ARCH" 
-  else
-    _sci_lib="$sci_thirdparty_libs"
-    _sci_inc="$sci_thirdparty_includes"
-  fi
+if test "$with_mpiuni"; then
+  _sci_lib="$with_mpiuni/lib"
+  _sci_inc="$with_mpiuni/include" 
+elif test "$with_unipetsc"; then
+  _sci_lib="$with_unipetsc/lib/$PETSC_SUB/$PETSC_ARCH"
+  _sci_inc="$with_unipetsc/src/sys/src/mpiuni $with_unipetsc/bmake/$PETSC_ARCH" 
+else
+  _sci_lib="$sci_thirdparty_libs"
+  _sci_inc="$sci_thirdparty_includes"
+fi
 
-  SCI_TRY_LINK(MPIUNI,optional mpi-uni libraries and headers,[
-  #include <mpi.h>
-  ],$_sci_inc,mpiuni,$_sci_lib,,,optional)
+SCI_TRY_LINK(MPIUNI,optional mpi-uni libraries and headers,[
+#include <mpi.h>
+],$_sci_inc,mpiuni,$_sci_lib,,,optional)
 
-  if test "$HAVE_MPIUNI" = "no"; then
-     SCI_TRY_LINK(MPIUNICH,optional mpiunich and pmpiunich libraries,,
-                    $_sci_inc,mpiunich pmpiunich,$_sci_lib,,,optional)
+if test "$HAVE_MPIUNI" = "no"; then
+   SCI_TRY_LINK(MPIUNICH,optional mpiunich and pmpiunich libraries,,
+                  $_sci_inc,mpiunich pmpiunich,$_sci_lib,,,optional)
 
-     if test "$HAVE_MPIUNICH" = "yes"; then
-       LIB_DIR_MPIUNI="$LIB_DIR_MPIUNICH"
-       MPIUNI_LIB_FLAG="$MPIUNICH_LIB_FLAG"
-       MPIUNI_LIB_DIR_FLAG="$MPIUNICH_LIB_DIR_FLAG"
-     fi
-  fi
-  
-  if test "$HAVE_MPIUNI" = "yes"; then
-     if test "$HAVE_MPIUNICH" = "yes"; then
-       DEF_MPIUNI="#define HAVE_MPIUNICH 1"
-     else
-       DEF_MPIUNI="#define HAVE_MPIUNI 1"
-     fi
-  fi
-  
-  if test "$with_mpiuni" && test ! "$DEF_MPIUNI"; then
-    echo
-    AC_MSG_ERROR(One or more of the MPIUNI components is missing.)
-    echo
-  fi
-fi # end sci_check_mpiuni
+   if test "$HAVE_MPIUNICH" = "yes"; then
+     LIB_DIR_MPIUNI="$LIB_DIR_MPIUNICH"
+     MPIUNI_LIB_FLAG="$MPIUNICH_LIB_FLAG"
+     MPIUNI_LIB_DIR_FLAG="$MPIUNICH_LIB_DIR_FLAG"
+   fi
+fi
+
+if test "$HAVE_MPIUNI" = "yes"; then
+   if test "$HAVE_MPIUNICH" = "yes"; then
+     DEF_MPIUNI="#define HAVE_MPIUNICH 1"
+   else
+     DEF_MPIUNI="#define HAVE_MPIUNI 1"
+   fi
+fi
+
+if test "$with_mpiuni" && test ! "$DEF_MPIUNI"; then
+  echo
+  AC_MSG_ERROR(One or more of the MPIUNI components is missing.)
+  echo
+fi
+
 
 AC_SUBST(MPIUNI_LIB_FLAG)
 AC_SUBST(MPIUNI_LIB_DIR_FLAG)
@@ -2552,7 +2517,7 @@ if test "$sci_check_mdsplus" = "yes"; then
   
   if test "$with_mdsplus" && test ! "$DEF_MDSPLUS"; then
     echo
-    AC_MSG_ERROR(One or more of the MDS PLUS components is missing.)
+    AC_MSG_ERROR(One or more of the MDSPLUS components is missing.)
     echo
   fi
 fi #end sci_check_mdsplus
@@ -2561,6 +2526,37 @@ AC_SUBST(MDSPLUS_LIB_FLAG)
 AC_SUBST(MDSPLUS_LIB_DIR_FLAG)
 AC_SUBST(INC_MDSPLUS_H)
 AC_SUBST(DEF_MDSPLUS)
+
+##  --  search for hdf5  -------------------------------------------------
+
+if test "$sci_check_hdf5" = "yes"; then
+  if test "$with_hdf5"; then
+    _sci_lib="$with_hdf5/lib"
+    _sci_inc="$with_hdf5/include"
+  else
+    _sci_lib="/usr/local/hdf5/1.4.5/lib"
+    _sci_inc="/usr/local/hdf5/1.4.5/include"
+  fi
+
+  SCI_TRY_LINK(HDF5,hdf5 library and headers,[
+   #include <hdf5.h>
+   ],$_sci_inc,hdf5,$_sci_lib,,,optional)
+
+  if test "$HAVE_HDF5" = "yes"; then
+     DEF_HDF5="#define HAVE_HDF5 1"
+  fi
+  
+  if test "$with_hdf5" && test ! "$DEF_HDF5"; then
+    echo
+    AC_MSG_ERROR(One or more of the HDF5 components is missing.)
+    echo
+  fi
+fi #end sci_check_hdf5
+
+AC_SUBST(HDF5_LIB_FLAG)
+AC_SUBST(HDF5_LIB_DIR_FLAG)
+AC_SUBST(INC_HDF5_H)
+AC_SUBST(DEF_HDF5)
 
 ##  --  search for perfex  -----------------------------------------------
 
@@ -2970,6 +2966,18 @@ fi
 no_create=no
 no_recursion=no
 
+# these are to alias pwd to the right thing in the config.status
+# script so that pwd returns the same value for a path even if you
+# get there by two different paths (symbolic links)
+cat > sedscript << SCIEOF
+/debug=false/i\\
+alias pwd=$sci_pwd
+SCIEOF
+
+AC_CONFIG_COMMANDS_POST(sed -f sedscript < config.status > config_test.status;\
+			    mv config_test.status config.status ;\
+			    chmod 755 config.status)
+
 
 AC_CONFIG_COMMANDS([do_stamp],[echo timestamp > stamp-h ])
 AC_OUTPUT
@@ -2983,44 +2991,8 @@ else
   AC_MSG_WARN(sci_defs.h has changed.)
 fi
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+#### Clean up: ####
+## Possible temporary template directories
+rm -rf ii_files
+## sedscript
+rm -f sedscript

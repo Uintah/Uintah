@@ -54,7 +54,7 @@ Field::get_type_name(int n) const
 }
 
 
-ScalarFieldInterface*
+ScalarFieldInterfaceHandle
 Field::query_scalar_interface(ModuleReporter *m)
 {
   if (data_at_ == Field::NONE) { return 0; }
@@ -86,7 +86,7 @@ Field::query_scalar_interface(ModuleReporter *m)
 }
 
 
-VectorFieldInterface*
+VectorFieldInterfaceHandle
 Field::query_vector_interface(ModuleReporter *m)
 {
   if (data_at_ == Field::NONE) { return 0; }
@@ -118,7 +118,7 @@ Field::query_vector_interface(ModuleReporter *m)
 }
 
 
-TensorFieldInterface*
+TensorFieldInterfaceHandle
 Field::query_tensor_interface(ModuleReporter *m)
 {
   if (data_at_ == Field::NONE) { return 0; }

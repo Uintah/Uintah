@@ -159,7 +159,7 @@ public:
     Point center; 
     get_center(center, idx);
     double volume = 0.0;
-    for (int f = 0; f < faces.size(); f++)
+    for (unsigned int f = 0; f < faces.size(); f++)
       {
 	Node::array_type nodes;
 	get_nodes(nodes, faces[f]);

@@ -159,8 +159,8 @@ void TexCuttingPlanes::execute(void)
   if( !icmap_->get(cmap)){
     return;
   }
-
-
+  
+  
   if(!control_widget_){
     control_widget_=scinew PointWidget(this, &control_lock_, 0.2);
     control_widget_->Connect(ogeom_);
@@ -190,7 +190,7 @@ void TexCuttingPlanes::execute(void)
     //AuditAllocator(default_allocator);
   if( !volren_ ){
     volren_ = scinew GLVolumeRenderer(tex_, cmap);
-
+    
     volren_->SetControlPoint(tex_->get_field_transform().unproject(control_widget_->ReferencePoint()));
     volren_->SetInterp( bool(interp_mode_.get()));
     

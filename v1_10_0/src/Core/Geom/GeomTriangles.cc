@@ -33,6 +33,7 @@
 #include <Core/Geom/GeomTri.h>
 #include <Core/Geometry/BBox.h>
 #include <Core/Malloc/Allocator.h>
+#include <Core/Persistent/PersistentSTL.h>
 #include <iostream>
 #include <functional>
 #include <algorithm>
@@ -44,8 +45,8 @@ using std::ostream;
 namespace SCIRun {
 
 static bool
-pair_less(const pair<float, unsigned int> &a,
-	  const pair<float, unsigned int> &b)
+pair_less(const pair<double, unsigned int> &a,
+	  const pair<double, unsigned int> &b)
 {
   return a.first < b.first;
 }
@@ -63,8 +64,15 @@ Persistent* make_GeomTranspTriangles()
     return scinew GeomTranspTriangles;
 }
 
-PersistentTypeID GeomTranspTriangles::type_id("GeomTranspTriangles", "GeomTriangles", make_GeomTranspTriangles);
+PersistentTypeID GeomTranspTriangles::type_id("GeomTranspTriangles", "GeomFastTriangles", make_GeomTranspTriangles);
 
+
+Persistent* make_GeomFastTriangles()
+{
+    return scinew GeomFastTriangles;
+}
+
+PersistentTypeID GeomFastTriangles::type_id("GeomFastTriangles", "GeomObj", make_GeomFastTriangles);
 
 Persistent* make_GeomTrianglesP()
 {
@@ -255,18 +263,164 @@ bool GeomTriangles::saveobj(ostream&, const string&, GeomSave*)
 }
 
 
+GeomFastTriangles::GeomFastTriangles()
+  : material_(0)
+{
+}
+
+GeomFastTriangles::GeomFastTriangles(const GeomFastTriangles& copy)
+  : points_(copy.points_),
+    colors_(copy.colors_),
+    normals_(copy.normals_),
+    material_(0)
+{
+}
+
+GeomFastTriangles::~GeomFastTriangles()
+{
+}
+
+
+GeomObj*
+GeomFastTriangles::clone()
+{
+  return scinew GeomFastTriangles(*this);
+}
+
+
+int
+GeomFastTriangles::size()
+{
+  return points_.size() / 9;
+}
+
+
+void
+GeomFastTriangles::get_bounds(BBox& bb)
+{
+  for(unsigned int i=0;i<points_.size();i+=3)
+  {
+    bb.extend(Point(points_[i+0], points_[i+1], points_[i+2]));
+  }
+}
+
+
+static unsigned char
+COLOR_FTOB(double v)
+{
+  const int inter = (int)(v * 255 + 0.5);
+  if (inter > 255) return 255;
+  if (inter < 0) return 0;
+  return (unsigned char)inter;
+}
+
+void
+GeomFastTriangles::add(const Point &p0, const MaterialHandle &m0,
+		       const Point &p1, const MaterialHandle &m1,
+		       const Point &p2, const MaterialHandle &m2)
+{
+  Vector n(Cross(p1-p0, p2-p0));
+#ifndef SCI_NORM_OGL
+  if(n.length2() > 0)
+  {
+    n.normalize();
+  }
+  else
+  {
+    cerr << "Degenerate triangle in GeomTriangles::add(" << p1 << ", " << p2 << ", " << p3 << ")" << endl;
+    return;
+  }
+#endif
+  add(p0, n, m0, p1, n, m1, p2, n, m2);
+}
+
+
+void
+GeomFastTriangles::add(const Point &p0, const Vector &n0,
+		       const MaterialHandle &m0,
+		       const Point &p1, const Vector &n1,
+		       const MaterialHandle &m1,
+		       const Point &p2, const Vector &n2,
+		       const MaterialHandle &m2)
+{
+  points_.push_back(p0.x());
+  points_.push_back(p0.y());
+  points_.push_back(p0.z());
+
+  points_.push_back(p1.x());
+  points_.push_back(p1.y());
+  points_.push_back(p1.z());
+
+  points_.push_back(p2.x());
+  points_.push_back(p2.y());
+  points_.push_back(p2.z());
+
+  colors_.push_back(COLOR_FTOB(m0->diffuse.r()));
+  colors_.push_back(COLOR_FTOB(m0->diffuse.g()));
+  colors_.push_back(COLOR_FTOB(m0->diffuse.b()));
+  colors_.push_back(COLOR_FTOB(m0->transparency * m0->transparency *
+			       m0->transparency * m0->transparency));
+
+  colors_.push_back(COLOR_FTOB(m1->diffuse.r()));
+  colors_.push_back(COLOR_FTOB(m1->diffuse.g()));
+  colors_.push_back(COLOR_FTOB(m1->diffuse.b()));
+  colors_.push_back(COLOR_FTOB(m1->transparency * m1->transparency *
+			       m1->transparency * m1->transparency));
+
+  colors_.push_back(COLOR_FTOB(m2->diffuse.r()));
+  colors_.push_back(COLOR_FTOB(m2->diffuse.g()));
+  colors_.push_back(COLOR_FTOB(m2->diffuse.b()));
+  colors_.push_back(COLOR_FTOB(m2->transparency * m2->transparency *
+			       m2->transparency * m2->transparency));
+
+  normals_.push_back(n0.x());
+  normals_.push_back(n0.y());
+  normals_.push_back(n0.z());
+
+  normals_.push_back(n1.x());
+  normals_.push_back(n1.y());
+  normals_.push_back(n1.z());
+
+  normals_.push_back(n2.x());
+  normals_.push_back(n2.y());
+  normals_.push_back(n2.z());
+
+  material_ = m0;
+}
+
+
+#define GEOMFASTTRIANGLES_VERSION 1
+
+void GeomFastTriangles::io(Piostream& stream)
+{
+
+    stream.begin_class("GeomFastTriangles", GEOMFASTTRIANGLES_VERSION);
+    Pio(stream, points_);
+    Pio(stream, colors_);
+    Pio(stream, normals_);
+    stream.end_class();
+}
+
+
+bool GeomFastTriangles::saveobj(ostream&, const string&, GeomSave*)
+{
+    NOT_FINISHED("GeomFastTriangles::saveobj");
+    return false;
+}
+
+
 
 GeomTranspTriangles::GeomTranspTriangles()
-  : sorted_p_(false)
 {
 }
 
 GeomTranspTriangles::GeomTranspTriangles(const GeomTranspTriangles& copy)
-  : GeomTriangles(copy), sorted_p_(false)
+  : GeomFastTriangles(copy)
 {
 }
 
-GeomTranspTriangles::~GeomTranspTriangles() {
+GeomTranspTriangles::~GeomTranspTriangles()
+{
 }
 
 
@@ -278,36 +432,66 @@ GeomObj* GeomTranspTriangles::clone()
 void
 GeomTranspTriangles::SortPolys()
 {
-  xlist_.clear();
-  ylist_.clear();
-  zlist_.clear();
-  
-  for (int i=0; i < verts.size(); i+=3)
+  const unsigned int vsize = points_.size() / 9;
+  if (xlist_.size() == vsize*3) return;
+
+  vector<pair<float, unsigned int> > tmp(vsize);
+  unsigned int i;
+
+  for (i = 0; i < vsize;i++)
   {
-    const Vector center =
-      verts[i+0]->p.asVector() +
-      verts[i+1]->p.asVector() +
-      verts[i+2]->p.asVector();
-    xlist_.push_back(pair<float, unsigned int>(center.x(), i));
-    ylist_.push_back(pair<float, unsigned int>(center.y(), i));
-    zlist_.push_back(pair<float, unsigned int>(center.z(), i));
+    tmp[i].first = points_[i*9+0] + points_[i*9+3] + points_[i*9+6];
+    tmp[i].second = i*9;
+  }
+  std::sort(tmp.begin(), tmp.end(), pair_less);
+
+  xlist_.resize(vsize*3);
+  for (i=0; i < vsize; i++)
+  {
+    xlist_[i*3+0] = tmp[i].second / 3 + 0;
+    xlist_[i*3+1] = tmp[i].second / 3 + 1;
+    xlist_[i*3+2] = tmp[i].second / 3 + 2;
   }
 
-  std::sort(xlist_.begin(), xlist_.end(), pair_less);
-  std::sort(ylist_.begin(), ylist_.end(), pair_less);
-  std::sort(zlist_.begin(), zlist_.end(), pair_less);
-  sorted_p_ = true;
+  for (i = 0; i < vsize;i++)
+  {
+    tmp[i].first = points_[i*9+1] + points_[i*9+4] + points_[i*9+7];
+    tmp[i].second = i*9;
+  }
+  std::sort(tmp.begin(), tmp.end(), pair_less);
+
+  ylist_.resize(vsize*3);
+  for (i=0; i < vsize; i++)
+  {
+    ylist_[i*3+0] = tmp[i].second / 3 + 0;
+    ylist_[i*3+1] = tmp[i].second / 3 + 1;
+    ylist_[i*3+2] = tmp[i].second / 3 + 2;
+  }
+
+  for (i = 0; i < vsize;i++)
+  {
+    tmp[i].first = points_[i*9+2] + points_[i*9+5] + points_[i*9+8];
+    tmp[i].second = i*9;
+  }
+  std::sort(tmp.begin(), tmp.end(), pair_less);
+
+  zlist_.resize(vsize*3);
+  for (i=0; i < vsize; i++)
+  {
+    zlist_[i*3+0] = tmp[i].second / 3 + 0;
+    zlist_[i*3+1] = tmp[i].second / 3 + 1;
+    zlist_[i*3+2] = tmp[i].second / 3 + 2;
+  }
 }
 
 
-#define GEOMTRANSPTRIANGLES_VERSION 1
+#define GEOMTRANSPTRIANGLES_VERSION 2
 
 void GeomTranspTriangles::io(Piostream& stream)
 {
-
-    stream.begin_class("GeomTranspTriangles", GEOMTRANSPTRIANGLES_VERSION);
-    GeomTriangles::io(stream);
-    stream.end_class();
+  stream.begin_class("GeomTranspTriangles", GEOMTRANSPTRIANGLES_VERSION);
+  GeomFastTriangles::io(stream);
+  stream.end_class();
 }
 
 

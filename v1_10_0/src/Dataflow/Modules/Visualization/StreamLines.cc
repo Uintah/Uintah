@@ -97,7 +97,7 @@ StreamLines::~StreamLines()
 
 //! interpolate using the generic linear interpolator
 static bool
-interpolate(VectorFieldInterface *vfi, const Point &p, Vector &v)
+interpolate(VectorFieldInterfaceHandle vfi, const Point &p, Vector &v)
 {
   return vfi->interpolate(v, p) && (v.safe_normalize() > 0.0);
 }
@@ -122,7 +122,7 @@ static int
 ComputeRKFTerms(vector<Vector> &v, // storage for terms
 		const Point &p,    // previous point
 		double s,          // current step size
-		VectorFieldInterface *vfi)
+		VectorFieldInterfaceHandle vfi)
 {
   // Already computed this one when we did the inside test.
   //  if (!interpolate(vfi, p, v[0]))
@@ -175,7 +175,7 @@ FindRKF(vector<Point> &v, // storage for points
 	double t2,       // square error tolerance
 	double s,         // initial step size
 	int n,            // max number of steps
-	VectorFieldInterface *vfi) // the field
+	VectorFieldInterfaceHandle vfi) // the field
 {
   vector <Vector> terms(6, Vector(0.0, 0.0, 0.0));
 
@@ -228,7 +228,7 @@ FindHeun(vector<Point> &v, // storage for points
 	 double t2,       // square error tolerance
 	 double s,         // initial step size
 	 int n,            // max number of steps
-	 VectorFieldInterface *vfi) // the field
+	 VectorFieldInterfaceHandle vfi) // the field
 {
   int i;
   Vector v0, v1;
@@ -253,7 +253,7 @@ FindRK4(vector<Point> &v,
 	double t2,
 	double s,
 	int n,
-	VectorFieldInterface *vfi)
+	VectorFieldInterfaceHandle vfi)
 {
   vector<Vector> terms(6, Vector(0.0, 0.0, 0.0));
   Vector f[4];
@@ -285,7 +285,7 @@ FindAdamsBashforth(vector<Point> &v, // storage for points
 		   double t2,       // square error tolerance
 		   double s,         // initial step size
 		   int n,            // max number of steps
-		   VectorFieldInterface *vfi) // the field
+		   VectorFieldInterfaceHandle vfi) // the field
 {
   FindRK4(v, x, t2, s, Min(n, 5), vfi);
   if (v.size() < 5) { return; }
@@ -341,7 +341,7 @@ StreamLinesAlgo::FindNodes(vector<Point> &v, // storage for points
 			   double t2,       // square error tolerance
 			   double s,         // initial step size
 			   int n,            // max number of steps
-			   VectorFieldInterface *vfi, // the field
+			   VectorFieldInterfaceHandle vfi, // the field
 			   bool remove_colinear_p,
 			   int method)
 {
@@ -408,8 +408,8 @@ StreamLines::execute()
   }
   
   // Check that the flow field input is a vector field.
-  VectorFieldInterface *vfi = vf_->query_vector_interface(this);
-  if (!vfi) {
+  VectorFieldInterfaceHandle vfi = vf_->query_vector_interface(this);
+  if (!vfi.get_rep()) {
     error("FlowField is not a Vector field.  Exiting.");
     return;
   }

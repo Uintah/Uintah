@@ -121,8 +121,8 @@ GLTexture3D::init(double& min, double &max, bool use_minmax)
     return false;
   }
   
-  ScalarFieldInterface *sfi = texfld_->query_scalar_interface();
-  if (!sfi)
+  ScalarFieldInterfaceHandle sfi = texfld_->query_scalar_interface();
+  if (!sfi.get_rep())
   {
     cerr << "GLTexture3D constructor error - nonscalar LatVolField type.\n";
     return false;

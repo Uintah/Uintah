@@ -77,16 +77,48 @@ public:
 };
 
 
-
-class SCICORESHARE GeomTranspTriangles : public GeomTriangles {
+class SCICORESHARE GeomFastTriangles : public GeomObj {
+protected:
+  vector<float> points_;
+  vector<unsigned char> colors_;
+  vector<float> normals_;
+  MaterialHandle material_;
 
 public:
-  bool sorted_p_;
+  GeomFastTriangles();
+  GeomFastTriangles(const GeomFastTriangles&);
+  virtual ~GeomFastTriangles();
+  virtual GeomObj* clone();
 
-  vector<pair<float, unsigned int> > xlist_;
-  vector<pair<float, unsigned int> > ylist_;
-  vector<pair<float, unsigned int> > zlist_;
+  int size(void);
+  void add(const Point&, const MaterialHandle&,
+	   const Point&, const MaterialHandle&,
+	   const Point&, const MaterialHandle&);
+  void add(const Point&, const Vector&, const MaterialHandle&,
+	   const Point&, const Vector&, const MaterialHandle&,
+	   const Point&, const Vector&, const MaterialHandle&);
 
+  virtual void get_bounds(BBox& bb);
+
+#ifdef SCI_OPENGL
+  virtual void draw(DrawInfoOpenGL*, Material*, double time);
+#endif
+
+  virtual void io(Piostream&);
+  static PersistentTypeID type_id;
+  virtual bool saveobj(std::ostream&, const string& format, GeomSave*);
+};
+
+
+
+class SCICORESHARE GeomTranspTriangles : public GeomFastTriangles
+{
+protected:
+  vector<unsigned int> xlist_;
+  vector<unsigned int> ylist_;
+  vector<unsigned int> zlist_;
+
+public:
   GeomTranspTriangles();
   GeomTranspTriangles(const GeomTranspTriangles&);
   virtual ~GeomTranspTriangles();

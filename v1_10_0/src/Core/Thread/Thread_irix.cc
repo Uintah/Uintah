@@ -386,9 +386,10 @@ Thread::initialize()
 #endif	// __sgi
   }
   // disallow_sgi_OpenGL_page0_sillyness();
+  int maxThreads = numProcessors()+100;
   usconfig(CONF_ARENATYPE, US_SHAREDONLY);
   usconfig(CONF_INITSIZE, 30*1024*1024);
-  usconfig(CONF_INITUSERS, (unsigned int)140);
+  usconfig(CONF_INITUSERS, (unsigned int)maxThreads);
   arena=usinit("/dev/zero");
   if(!arena)
     throw ThreadError(std::string("Error calling usinit: ")

@@ -22,14 +22,15 @@
 #include <Core/Datatypes/PropertyManager.h>
 #include <Core/Datatypes/Mesh.h>
 #include <Core/Containers/LockingHandle.h>
+#include <Core/Datatypes/FieldInterface.h>
 
 namespace SCIRun {
  
-class ScalarFieldInterface;
-class VectorFieldInterface;
-class TensorFieldInterface;
 class ModuleReporter;
- 
+typedef LockingHandle<ScalarFieldInterface> ScalarFieldInterfaceHandle;
+typedef LockingHandle<VectorFieldInterface> VectorFieldInterfaceHandle;
+typedef LockingHandle<TensorFieldInterface> TensorFieldInterfaceHandle;
+
 class  SCICORESHARE Field: public PropertyManager
 {
 public:
@@ -58,9 +59,12 @@ public:
   
 
   //! Required interfaces
-  virtual ScalarFieldInterface* query_scalar_interface(ModuleReporter *m = 0);
-  virtual VectorFieldInterface* query_vector_interface(ModuleReporter *m = 0);
-  virtual TensorFieldInterface* query_tensor_interface(ModuleReporter *m = 0);
+  virtual ScalarFieldInterfaceHandle query_scalar_interface(ModuleReporter *m 
+							    = 0);
+  virtual VectorFieldInterfaceHandle query_vector_interface(ModuleReporter *m
+							    = 0);
+  virtual TensorFieldInterfaceHandle query_tensor_interface(ModuleReporter *m
+							    = 0);
 
   //! Persistent I/O.
   static  PersistentTypeID type_id;
