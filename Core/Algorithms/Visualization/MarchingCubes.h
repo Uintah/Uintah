@@ -65,6 +65,7 @@ protected:
   vector<Tesselator *> tess_;
   mesh_handle_type mesh_;
   GeomObj *geom_;
+  TriSurfMeshHandle trisurf_;
 public:
   MarchingCubes() : mesh_(0) { tess_.resize( np_, 0 ); }
   virtual ~MarchingCubes() {}
@@ -74,7 +75,7 @@ public:
   virtual void set_field( Field * );
   virtual void search( double, bool=false );
   virtual GeomObj* get_geom() { return geom_; } 
-  virtual TriSurfMeshHandle get_trisurf() { return TriSurfMeshHandle(0); }
+  virtual TriSurfMeshHandle get_trisurf() { return trisurf_; }
 
   void parallel_search( int, double, bool );
 };
@@ -131,6 +132,7 @@ MarchingCubes<Tesselator>::search( double iso, bool build_trisurf )
       ++cell;
     }
     geom_ = tess_[0]->get_geom();
+    trisurf_ = tess_[0]->get_trisurf();
   }
   else {
     Thread::parallel( this,  
