@@ -69,6 +69,7 @@ public:
   inline Point operator-() const;
   inline double& operator()(int idx);
   inline double operator()(int idx) const;
+  inline void addscaled(const Point& p, const double scale);  // this += p * w;
   inline void x(const double);
   inline double x() const;
   inline void y(const double);
@@ -207,11 +208,6 @@ inline Point Point::operator/(const double d) const
     return Point(_x/d,_y/d,_z/d);
 }
 
-inline void Point::x(const double d)
-{
-    _x=d;
-}
-
 inline double& Point::operator()(int idx) {
 	return (&_x)[idx];
 }
@@ -220,6 +216,17 @@ inline double Point::operator()(int idx) const {
 	return (&_x)[idx];
 }
 
+inline void Point::addscaled(const Point& p, const double scale) {
+  // this += p * w;
+  _x += p._x * scale;
+  _y += p._y * scale;
+  _z += p._z * scale;
+}
+
+inline void Point::x(const double d)
+{
+    _x=d;
+}
 
 inline double Point::x() const
 {
