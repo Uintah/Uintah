@@ -448,6 +448,8 @@ float Galpha=1.0; // doh!  global variable...  probably should be moved...
 
 static Stealth stealth;
 
+static bool follow_path = false;
+
 void
 Dpy::handle_keypress( unsigned long key )
 {
@@ -530,6 +532,9 @@ Dpy::handle_keypress( unsigned long key )
     break;
   case XK_1:
     stereo=false;
+    break;
+  case XK_x:
+    follow_path = !follow_path;
     break;
   case XK_a:
     animate=!animate;
@@ -1382,7 +1387,11 @@ void Dpy::run()
 
       if (display_frames) {
 	get_input(); // this does all of the x stuff...
-	priv->camera->updatePosition( stealth );
+	if( !follow_path )
+	  priv->camera->updatePosition( stealth );
+	else
+	  priv->camera->followPath( stealth );
+
       }
 
       if(im->get_xres() != priv->xres || im->get_yres() != priv->yres || im->get_stereo() != stereo){

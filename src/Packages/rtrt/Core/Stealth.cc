@@ -12,8 +12,13 @@ Stealth::Stealth( double scale /* = 100 */ ) :
   pitch_speed_( 0 ), rotate_speed_( 0 ),
   accel_cnt_( 0 ), horizontal_accel_cnt_( 0 ),
   vertical_accel_cnt_( 0 ), pitch_accel_cnt_( 0 ), rotate_accel_cnt_( 0 ),
-  scale_( scale )
+  scale_( scale ), segment_percentage_( 0 )
 {
+  path_.push_back( Point(0,0,0) );
+  path_.push_back( Point(5,5,2) );
+  path_.push_back( Point(0,10,0) );
+  path_.push_back( Point(5,5,-2) );
+  path_.push_back( Point(0,0,0) );
 }
 
 Stealth::~Stealth()
@@ -159,3 +164,27 @@ Stealth::slowDown()
   rotate_speed_     /= slow_factor;
 }
 
+Point
+Stealth::getNextLocation()
+{
+  segment_percentage_ += 1;
+
+  if( segment_percentage_ >= 100 )
+    {
+      cout << "remove point\n";
+      path_.erase( path_.begin() );
+      if( path_.size() == 0 )
+	{
+	  printf("got to the end of the path");
+	  return Point(0,0,0);
+	}
+      segment_percentage_ = 0;
+    }
+
+  Point & begin = path_[0];
+  Point & end = path_[1];
+
+  Point new_loc = Point((end - begin) * (segment_percentage_ / 100.0));
+
+  return new_loc;
+}

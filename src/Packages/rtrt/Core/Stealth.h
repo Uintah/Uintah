@@ -4,6 +4,7 @@
 #define STEALTH_H 1
 
 #include <iostream>
+#include <vector>
 
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/Vector.h>
@@ -11,7 +12,9 @@
 namespace rtrt {
 
 using namespace SCIRun;
+
 using std::cout;
+using std::vector;
 
 // "Stealth" comes from the DoD term for an invisible watcher on the
 // simulated battlefield.  The stealths are used in relation to
@@ -92,6 +95,9 @@ public:
   // Display the Stealth's speeds, etc.
   void print();
 
+  // Returns next location in the path.
+  Point getNextLocation();
+
 private:
 
   void increase_a_speed( double & speed, int & accel_cnt );
@@ -117,6 +123,11 @@ private:
   int vertical_accel_cnt_;   // + up, - down
   int pitch_accel_cnt_;      // + up, - down
   int rotate_accel_cnt_;     // + right, - left
+
+  // Path information  (rough draft)
+
+  vector<Point> path_;
+  double        segment_percentage_;
 
 };
 

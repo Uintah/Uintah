@@ -139,6 +139,15 @@ void Camera::getParams(Point& origin, Vector& direction,
 }
 
 void
+Camera::followPath( Stealth & stealth )
+{
+  Point new_loc = stealth.getNextLocation();
+  lookat = lookat + (new_loc - eye);
+  eye = new_loc;
+  setup();
+}
+
+void
 Camera::updatePosition( const Stealth & stealth )
 {
   Vector forward( direction );
