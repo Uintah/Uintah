@@ -1,15 +1,36 @@
 # SCI Network 1.20
+#
+# The contents of this file are subject to the University of Utah Public
+# License (the "License"); you may not use this file except in compliance
+# with the License.
+# 
+# Software distributed under the License is distributed on an "AS IS"
+# basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+# License for the specific language governing rights and limitations under
+# the License.
+# 
+# The Original Source Code is SCIRun, released March 12, 2001.
+# 
+# The Original Source Code was developed by the University of Utah.
+# Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+# University of Utah. All Rights Reserved.
+
+set results [sourceSettingsFile]
+
+if { $results == "failed" } {
+
+    ::netedit scheduleok
+    return 
+
+} else {
+
+    set DATADIR [lindex $results 0]
+    set DATASET [lindex $results 1]
+}
+
+source $DATADIR/$DATASET/$DATASET.settings
 
 ::netedit dontschedule
-
-global userName
-set userName ""
-
-global runDate
-set runDate ""
-
-global runTime
-set runTime ""
 
 set bbox {9 8 823 738}
 set Name {Main}
@@ -79,15 +100,18 @@ set c31 [addConnection $m16 0 $m8 5]
 
 # Set the GUI variables for each Module
 set $m0-notes {}
-set $m0-filename {/usr/sci/data/SCIRunData/1.20.0/utahtorso-lowres/utahtorso-lowres-mesh.tvt.fld}
+set $m0-filename $DATADIR/$DATASET/$DATASET-mesh.tvt.fld
+
 set $m1-notes {}
 set $m1-UseCondTCL {1}
 set $m1-UseBasisTCL {0}
 set $m1-nprocs {auto}
+
 set $m2-notes {}
 set $m2-sourceNodeTCL {0}
 set $m2-sinkNodeTCL {1}
 set $m2-modeTCL {dipole}
+
 set $m3-notes {}
 set $m3-target_error {0.000001}
 set $m3-flops {20700170}
@@ -105,108 +129,34 @@ set $m3-emit_partial {0}
 set $m3-emit_iter {50}
 set $m3-status {}
 set $m3-np {4}
+
 set $m4-notes {}
+
 set $m5-notes {}
+
 set $m6-notes {}
-set $m6-widgetSizeGui_ {10.0}
+set $m6-widgetSizeGui_ [expr 0.05 * ${global-scale}]
 set $m6-scaleModeGui_ {normalize}
 set $m6-showLastVecGui_ {1}
 set $m6-showLinesGui_ {0}
+
 set $m7-notes {}
-set $m7-filename {/usr/sci/data/SCIRunData/1.20.0/utahtorso-lowres/utahtorso-lowres-dipole.pcv.fld}
+set $m7-filename $DATADIR/$DATASET/$DATASET-dipole.pcv.fld
+
 set $m8-notes {}
 $m8 ui
-set $m8-ViewWindow_0-pos {}
-set $m8-ViewWindow_0-caxes {0}
-set $m8-ViewWindow_0-raxes {1}
-set $m8-ViewWindow_0-iaxes {}
-set $m8-ViewWindow_0-have_collab_vis {0}
-set $m8-ViewWindow_0-view-eyep-x {472.646}
-set $m8-ViewWindow_0-view-eyep-y {-2271.61}
-set $m8-ViewWindow_0-view-eyep-z {500.798}
-set $m8-ViewWindow_0-view-lookat-x {9.67431}
-set $m8-ViewWindow_0-view-lookat-y {-19.9598}
-set $m8-ViewWindow_0-view-lookat-z {294.587}
-set $m8-ViewWindow_0-view-up-x {-0.0155892}
-set $m8-ViewWindow_0-view-up-y {0.0880108}
-set $m8-ViewWindow_0-view-up-z {0.995998}
-set $m8-ViewWindow_0-view-fov {18.8986}
-set $m8-ViewWindow_0-view-eyep_offset-x {}
-set $m8-ViewWindow_0-view-eyep_offset-y {}
-set $m8-ViewWindow_0-view-eyep_offset-z {}
-set $m8-ViewWindow_0-lightColors {{1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0}}
-set $m8-ViewWindow_0-lightVectors {{ 0 0 1 } { 0 0 1 } { 0 0 1 } { 0 0 1 }}
-set $m8-ViewWindow_0-bgcolor-r {0}
-set $m8-ViewWindow_0-bgcolor-g {0}
-set $m8-ViewWindow_0-bgcolor-b {0}
-set $m8-ViewWindow_0-shading {}
-set $m8-ViewWindow_0-do_stereo {0}
-set $m8-ViewWindow_0-ambient-scale {1.0}
-set $m8-ViewWindow_0-diffuse-scale {1.0}
+set $m8-ViewWindow_0-view-eyep-x ${view-eyep-x}
+set $m8-ViewWindow_0-view-eyep-y ${view-eyep-y}
+set $m8-ViewWindow_0-view-eyep-z ${view-eyep-z}
+set $m8-ViewWindow_0-view-lookat-x ${view-lookat-x}
+set $m8-ViewWindow_0-view-lookat-y ${view-lookat-y}
+set $m8-ViewWindow_0-view-lookat-z ${view-lookat-z}
+set $m8-ViewWindow_0-view-up-x ${view-up-x}
+set $m8-ViewWindow_0-view-up-y ${view-up-y}
+set $m8-ViewWindow_0-view-up-z ${view-up-z}
+set $m8-ViewWindow_0-view-fov ${view-fov}
 set $m8-ViewWindow_0-specular-scale {0.4}
-set $m8-ViewWindow_0-emission-scale {1.0}
-set $m8-ViewWindow_0-shininess-scale {1.0}
-set $m8-ViewWindow_0-polygon-offset-factor {1.0}
-set $m8-ViewWindow_0-polygon-offset-units {0.0}
-set $m8-ViewWindow_0-point-size {1.0}
-set $m8-ViewWindow_0-line-width {1.0}
-set $m8-ViewWindow_0-sbase {0.40}
-set $m8-ViewWindow_0-sr {1}
-set $m8-ViewWindow_0-do_bawgl {0}
-set $m8-ViewWindow_0-drawimg {}
-set $m8-ViewWindow_0-saveprefix {}
-set $m8-ViewWindow_0-resx {}
-set $m8-ViewWindow_0-resy {}
-set $m8-ViewWindow_0-aspect {}
-set $m8-ViewWindow_0-aspect_ratio {}
-set $m8-ViewWindow_0-global-light {1}
-set $m8-ViewWindow_0-global-fog {0}
-set $m8-ViewWindow_0-global-debug {0}
-set $m8-ViewWindow_0-global-clip {1}
-set $m8-ViewWindow_0-global-cull {0}
-set $m8-ViewWindow_0-global-dl {0}
-set $m8-ViewWindow_0-global-type {Gouraud}
-set $m8-ViewWindow_0-ortho-view {0}
-set $m8-ViewWindow_0-clip-num {}
-set $m8-ViewWindow_0-clip-visible {}
-set $m8-ViewWindow_0-clip-selected {}
-set $m8-ViewWindow_0-clip-visible-1 {}
-set $m8-ViewWindow_0-clip-normal-x-1 {}
-set $m8-ViewWindow_0-clip-normal-y-1 {}
-set $m8-ViewWindow_0-clip-normal-z-1 {}
-set $m8-ViewWindow_0-clip-normal-d-1 {}
-set $m8-ViewWindow_0-clip-visible-2 {}
-set $m8-ViewWindow_0-clip-normal-x-2 {}
-set $m8-ViewWindow_0-clip-normal-y-2 {}
-set $m8-ViewWindow_0-clip-normal-z-2 {}
-set $m8-ViewWindow_0-clip-normal-d-2 {}
-set $m8-ViewWindow_0-clip-visible-3 {}
-set $m8-ViewWindow_0-clip-normal-x-3 {}
-set $m8-ViewWindow_0-clip-normal-y-3 {}
-set $m8-ViewWindow_0-clip-normal-z-3 {}
-set $m8-ViewWindow_0-clip-normal-d-3 {}
-set $m8-ViewWindow_0-clip-visible-4 {}
-set $m8-ViewWindow_0-clip-normal-x-4 {}
-set $m8-ViewWindow_0-clip-normal-y-4 {}
-set $m8-ViewWindow_0-clip-normal-z-4 {}
-set $m8-ViewWindow_0-clip-normal-d-4 {}
-set $m8-ViewWindow_0-clip-visible-5 {}
-set $m8-ViewWindow_0-clip-normal-x-5 {}
-set $m8-ViewWindow_0-clip-normal-y-5 {}
-set $m8-ViewWindow_0-clip-normal-z-5 {}
-set $m8-ViewWindow_0-clip-normal-d-5 {}
-set $m8-ViewWindow_0-clip-visible-6 {}
-set $m8-ViewWindow_0-clip-normal-x-6 {}
-set $m8-ViewWindow_0-clip-normal-y-6 {}
-set $m8-ViewWindow_0-clip-normal-z-6 {}
-set $m8-ViewWindow_0-clip-normal-d-6 {}
-set $m8-ViewWindow_0-unused {1}
-set $m8-ViewWindow_0-unused {1}
-set $m8-ViewWindow_0-unused {1}
-set $m8-ViewWindow_0-unused {1}
-set $m8-ViewWindow_0-unused {1}
-set $m8-ViewWindow_0-unused {1}
-set $m8-ViewWindow_0-unused {1}
+
 set $m9-notes {}
 set $m9-tcl_status {Calling GenStandardColorMaps!}
 set $m9-positionList {}
@@ -218,11 +168,13 @@ set $m9-minRes {12}
 set $m9-resolution {128}
 set $m9-realres {128}
 set $m9-gamma {0}
+
 set $m10-notes {}
 set $m10-isFixed {0}
 set $m10-min {-0.071586911855055169}
 set $m10-max {0.060695833085155068}
 set $m10-makeSymmetric {0}
+
 set $m11-notes {}
 set $m11-isoval {0}
 set $m11-isoval-min {-3.8930731908477481}
@@ -243,152 +195,51 @@ set $m11-update_type {on release}
 set $m11-color-r {0.4}
 set $m11-color-g {0.2}
 set $m11-color-b {0.9}
+
 set $m12-notes {}
-set $m12-filename {/usr/sci/data/SCIRunData/1.20.0/utahtorso-lowres/utahtorso-lowres-electrodes.pcd.fld}
+set $m12-filename $DATADIR/$DATASET/$DATASET-electrodes.pcd.fld
+
 set $m13-notes {}
 set $m13-interpolation_basis {linear}
 set $m13-map_source_to_single_dest {0}
 set $m13-exhaustive_search {1}
 set $m13-exhaustive_search_max_dist {-1}
 set $m13-np {1}
+
 set $m14-notes {}
 set $m14-nodes-on {1}
-set $m14-nodes-transparency {0}
-set $m14-nodes-as-disks {0}
-set $m14-nodes-usedefcolor {0}
 set $m14-edges-on {0}
-set $m14-edges-transparency {0}
-set $m14-edges-usedefcolor {0}
 set $m14-faces-on {0}
-set $m14-use-normals {0}
-set $m14-use-transparency {0}
-set $m14-faces-usedefcolor {0}
-set $m14-vectors-on {0}
-set $m14-normalize-vectors {}
-set $m14-has_vector_data {0}
-set $m14-bidirectional {0}
-set $m14-vectors-usedefcolor {0}
-set $m14-tensors-on {0}
-set $m14-has_tensor_data {0}
-set $m14-tensors-usedefcolor {0}
-set $m14-scalars-on {0}
-set $m14-scalars-transparency {0}
-set $m14-scalars-usedefcolor {0}
-set $m14-has_scalar_data {1}
 set $m14-text-on {0}
-set $m14-text-use-default-color {1}
-set $m14-text-color-r {1.0}
-set $m14-text-color-g {1.0}
-set $m14-text-color-b {1.0}
-set $m14-text-backface-cull {0}
-set $m14-text-fontsize {1}
-set $m14-text-precision {2}
-set $m14-text-render_locations {0}
-set $m14-text-show-data {1}
-set $m14-text-show-nodes {0}
-set $m14-text-show-edges {0}
-set $m14-text-show-faces {0}
-set $m14-text-show-cells {0}
 set $m14-def-color-r {0.5}
 set $m14-def-color-g {0.5}
 set $m14-def-color-b {0.5}
 set $m14-def-color-a {0.5}
 set $m14-node_display_type {Spheres}
-set $m14-edge_display_type {Lines}
-set $m14-data_display_type {Arrows}
-set $m14-tensor_display_type {Boxes}
-set $m14-scalar_display_type {Points}
 set $m14-active_tab {Nodes}
-set $m14-node_scale {6.0}
-set $m14-edge_scale {0.015}
-set $m14-vectors_scale {0.30}
-set $m14-tensors_scale {0.30}
-set $m14-scalars_scale {0.30}
-set $m14-show_progress {}
-set $m14-interactive_mode {Interactive}
+set $m14-node_scale [expr 0.03 * ${global-scale}]
 set $m14-field-name {Electrodes}
-set $m14-field-name-update {1}
 set $m14-node-resolution {6}
-set $m14-edge-resolution {6}
-set $m14-data-resolution {6}
+
 set $m15-notes {}
-set $m15-endpoints {1}
-set $m15-endpoint0x {-207.19651766499581}
-set $m15-endpoint0y {-72.877172554998623}
-set $m15-endpoint0z {244.12962058375103}
-set $m15-endpoint1x {199.76651766499586}
-set $m15-endpoint1y {96.690758832497906}
-set $m15-endpoint1z {362.82717255499858}
-set $m15-widgetscale {12.20889105989975}
 set $m15-maxseeds {50}
 set $m15-numseeds {35}
-set $m15-rngseed {1}
-set $m15-rnginc {1}
-set $m15-clamp {0}
-set $m15-autoexecute {1}
-set $m15-type {}
-set $m15-dist {uniuni}
 set $m15-whichtab {Widget}
+
 set $m16-notes {}
 set $m16-nodes-on {0}
-set $m16-nodes-transparency {0}
-set $m16-nodes-as-disks {0}
-set $m16-nodes-usedefcolor {0}
 set $m16-edges-on {1}
-set $m16-edges-transparency {0}
-set $m16-edges-usedefcolor {0}
 set $m16-faces-on {0}
-set $m16-use-normals {0}
-set $m16-use-transparency {0}
-set $m16-faces-usedefcolor {0}
-set $m16-vectors-on {0}
-set $m16-normalize-vectors {}
-set $m16-has_vector_data {0}
-set $m16-bidirectional {0}
-set $m16-vectors-usedefcolor {0}
-set $m16-tensors-on {0}
-set $m16-has_tensor_data {0}
-set $m16-tensors-usedefcolor {0}
-set $m16-scalars-on {0}
-set $m16-scalars-transparency {0}
-set $m16-scalars-usedefcolor {0}
-set $m16-has_scalar_data {1}
 set $m16-text-on {0}
-set $m16-text-use-default-color {1}
-set $m16-text-color-r {1.0}
-set $m16-text-color-g {1.0}
-set $m16-text-color-b {1.0}
-set $m16-text-backface-cull {0}
-set $m16-text-fontsize {1}
-set $m16-text-precision {2}
-set $m16-text-render_locations {0}
-set $m16-text-show-data {1}
-set $m16-text-show-nodes {0}
-set $m16-text-show-edges {0}
-set $m16-text-show-faces {0}
-set $m16-text-show-cells {0}
 set $m16-def-color-r {0.5}
 set $m16-def-color-g {0.5}
 set $m16-def-color-b {0.5}
 set $m16-def-color-a {0.5}
-set $m16-node_display_type {Points}
 set $m16-edge_display_type {Cylinders}
-set $m16-data_display_type {Arrows}
-set $m16-tensor_display_type {Boxes}
-set $m16-scalar_display_type {Points}
-set $m16-active_tab {Nodes}
-set $m16-node_scale {2.0}
-set $m16-edge_scale {2.0}
-set $m16-vectors_scale {0.30}
-set $m16-tensors_scale {0.30}
-set $m16-scalars_scale {0.30}
-set $m16-show_progress {}
-set $m16-interactive_mode {Interactive}
+set $m16-edge_scale [expr 0.01 * ${global-scale}]
 set $m16-field-name {StreamLines}
-set $m16-field-name-update {1}
-set $m16-node-resolution {6}
 set $m16-edge-resolution {6}
-set $m16-data-resolution {6}
+
 set $m17-notes {}
 set $m17-stepsize {0.8}
 set $m17-tolerance {0.8}
@@ -398,72 +249,29 @@ set $m17-color {1}
 set $m17-remove-colinear {1}
 set $m17-method {5}
 set $m17-np {1}
+
 set $m18-notes {}
 set $m18-interpolation_basis {linear}
 set $m18-map_source_to_single_dest {0}
 set $m18-exhaustive_search {1}
 set $m18-exhaustive_search_max_dist {-1}
 set $m18-np {1}
+
 set $m19-notes {}
+
 set $m20-notes {}
 set $m20-nodes-on {0}
-set $m20-nodes-transparency {0}
-set $m20-nodes-as-disks {0}
-set $m20-nodes-usedefcolor {0}
 set $m20-edges-on {1}
 set $m20-edges-transparency {1}
-set $m20-edges-usedefcolor {0}
 set $m20-faces-on {0}
-set $m20-use-normals {0}
-set $m20-use-transparency {0}
-set $m20-faces-usedefcolor {0}
-set $m20-vectors-on {0}
-set $m20-normalize-vectors {}
-set $m20-has_vector_data {0}
-set $m20-bidirectional {0}
-set $m20-vectors-usedefcolor {0}
-set $m20-tensors-on {0}
-set $m20-has_tensor_data {0}
-set $m20-tensors-usedefcolor {0}
-set $m20-scalars-on {0}
-set $m20-scalars-transparency {0}
-set $m20-scalars-usedefcolor {0}
-set $m20-has_scalar_data {1}
 set $m20-text-on {0}
-set $m20-text-use-default-color {1}
-set $m20-text-color-r {1.0}
-set $m20-text-color-g {1.0}
-set $m20-text-color-b {1.0}
-set $m20-text-backface-cull {0}
-set $m20-text-fontsize {1}
-set $m20-text-precision {2}
-set $m20-text-render_locations {0}
-set $m20-text-show-data {1}
-set $m20-text-show-nodes {0}
-set $m20-text-show-edges {0}
-set $m20-text-show-faces {0}
-set $m20-text-show-cells {0}
-set $m20-def-color-r {0.3}
-set $m20-def-color-g {0.3}
-set $m20-def-color-b {0.3}
-set $m20-def-color-a {0.9}
-set $m20-node_display_type {Points}
+set $m20-def-color-r {0.30}
+set $m20-def-color-g {0.30}
+set $m20-def-color-b {0.30}
+set $m20-def-color-a {0.80}
 set $m20-edge_display_type {Lines}
-set $m20-data_display_type {Arrows}
-set $m20-tensor_display_type {Boxes}
-set $m20-scalar_display_type {Points}
-set $m20-active_tab {Nodes}
-set $m20-node_scale {1.0}
-set $m20-edge_scale {1.0}
-set $m20-vectors_scale {0.30}
-set $m20-tensors_scale {0.30}
-set $m20-scalars_scale {0.30}
-set $m20-show_progress {}
-set $m20-interactive_mode {Interactive}
+set $m20-active_tab {Edges}
+set $m20-edge_scale {2.000000e+00}
 set $m20-field-name {Boundary}
-set $m20-field-name-update {1}
-set $m20-node-resolution {6}
-set $m20-edge-resolution {6}
-set $m20-data-resolution {6}
 
 ::netedit scheduleok
