@@ -662,30 +662,6 @@
     <soName>libDaveW.so</soName>
   </soNames>
 
-  <dataflow-component name="EditPath">
-    <meta>
-      <authors>
-        <author>David Weinstein</author>
-      </authors>
-      <version-date>July 1994</version-date>
-      <version>1.0</version>
-      <description>No description available</description>
-    </meta>
-    <inputs></inputs>
-    <outputs></outputs>
-    <parameters></parameters>
-    <implementation>
-      <creationFunction>make_EditPath</creationFunction>
-    </implementation>
-  </dataflow-component>
-  <!-- INSERT NEW Path COMPONENT HERE -->
-  </scirun-library>
-  <scirun-library category="SiRe">
-  <soNames>
-    <soName>libDaveW_Modules_SiRe.so</soName>
-    <soName>libDaveW.so</soName>
-  </soNames>
-
   <dataflow-component name="SiReAll">
     <meta>
       <authors>
@@ -758,22 +734,6 @@
     <soName>libDaveW.so</soName>
   </soNames>
 
-  <dataflow-component name="PathReader">
-    <meta>
-      <authors>
-        <author>Steven G. Parker</author>
-      </authors>
-      <version-date>July 1994</version-date>
-      <version>1.0</version>
-      <description>No description available</description>
-    </meta>
-    <inputs></inputs>
-    <outputs></outputs>
-    <parameters></parameters>
-    <implementation>
-      <creationFunction>make_PathReader</creationFunction>
-    </implementation>
-  </dataflow-component>
   <dataflow-component name="SegFldReader">
     <meta>
       <authors>
@@ -1038,22 +998,6 @@
     <soName>libDaveW.so</soName>
   </soNames>
 
-  <dataflow-component name="PathWriter">
-    <meta>
-      <authors>
-        <author>Steven G. Parker</author>
-      </authors>
-      <version-date>July 1994</version-date>
-      <version>1.0</version>
-      <description>No description available</description>
-    </meta>
-    <inputs></inputs>
-    <outputs></outputs>
-    <parameters></parameters>
-    <implementation>
-      <creationFunction>make_PathWriter</creationFunction>
-    </implementation>
-  </dataflow-component>
   <dataflow-component name="SegFldWriter">
     <meta>
       <authors>
