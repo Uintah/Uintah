@@ -5,8 +5,11 @@
 #include <Uintah/Grid/Grid.h>
 #include "CCTensorField.h"
 #include <values.h>
+#include <iostream>
 
 using std::vector;
+using std::cerr;
+using std::endl;
 
 
 namespace SCICore{
@@ -45,6 +48,7 @@ CCTensorField::CCTensorField(GridP grid, LevelP level,
     _vars.push_back( vars[i]);
   }
   computeHighLowIndices();
+  cerr<<"low index = "<<low<<", high index = "<<high<<endl;
   nx = high.x() - low.x();
   ny = high.y() - low.y();
   nz = high.z() - low.z();

@@ -6,16 +6,20 @@
 #include <Uintah/Interface/DataArchive.h>
 //#include <Uintah/Components/MPM/Util/Matrix3.h>
 #include <Uintah/Grid/ParticleVariable.h>
+#include <Uintah/Grid/GridP.h>
+#include <Uintah/Grid/LevelP.h>
+#include <Uintah/Grid/Patch.h>
 #include <SCICore/Persistent/Persistent.h>
 #include <SCICore/Geometry/Point.h>
 #include <SCICore/Geometry/Vector.h>
 #include <iostream>
+#include <vector>
+using std::vector;
 
 namespace Uintah {
 namespace Datatypes {
 
-using Uintah::DataArchive;
-using Uintah::ParticleVariable;
+using namespace Uintah;
 using SCICore::Datatypes::Datatype;
 using SCICore::Containers::LockingHandle;
 using SCICore::PersistentSpace::Piostream;
@@ -63,8 +67,8 @@ public:
   ScalarParticles();
   //////////
   // Constructor
-  ScalarParticles(const ParticleVariable<Point>& positions,
-		 const ParticleVariable<double>& scalars,
+  ScalarParticles(const vector <ParticleVariable<Point> >& positions,
+		 const vector <ParticleVariable<double> >& scalars,
 		 void* callbackClass);
 
   // GROUP: Destructors
@@ -75,23 +79,36 @@ public:
   // GROUP: Access
   //////////
   // return the Points
-  ParticleVariable<Point>&  getPositions(){ return positions;}
+  vector<ParticleVariable<Point> >&  getPositions(){ return positions;}
+
   //////////
   // return the Scalars
-  ParticleVariable<double>& get(){ return scalars; }
+  vector<ParticleVariable<double> >& get(){ return scalars; }
+
   //////////
   // return the callback
   void* getCallbackClass(){ return cbClass; }
   // GROUP: Modify
   //////////  
   // Set the Scalars
-  void Set(const ParticleVariable<double>& s){ scalars = s; }
+  void Set(vector <ParticleVariable<double> >& s){ scalars = s; }
   //////////
   // Set the particle Positions
-  void SetPositions(const ParticleVariable<Point>& p){ positions = p; }
+  void SetPositions(vector <ParticleVariable<Point> >& p){ positions = p; }
+  // Set the particle ids
   //////////
   // Set callback class
   void SetCallbackClass( void* cbc){ cbClass = cbc; }
+
+  void AddVar( const ParticleVariable<Point> locs,
+	       const ParticleVariable<double> parts,
+	       const Patch* p);
+
+  void SetGrid( GridP g ){ _grid = g; }
+  void SetLevel( LevelP l){ _level = l; }
+  void SetName( string vname ) { _varname = vname; }
+  void SetMaterial( int index) { _matIndex = index; }
+	       
 
   // Persistant representation
   virtual void io(Piostream&);
@@ -117,8 +134,14 @@ private:
 
   void* cbClass;
 
-  ParticleVariable<Point> positions;
-  ParticleVariable<double> scalars;
+  GridP _grid;
+  LevelP _level;
+  string _varname;
+  int _matIndex;
+
+  vector<ParticleVariable<Point> >  positions;
+  vector<ParticleVariable<double> >  scalars;
+
 };
 
 } // end namespace Datatypes
