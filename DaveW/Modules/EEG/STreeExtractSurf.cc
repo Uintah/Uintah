@@ -39,6 +39,7 @@ class STreeExtractSurf : public Module {
     SurfaceIPort* istree;
     SurfaceOPort* osurf;
     TCLstring surfid;
+    TCLint remapTCL;
 public:
     STreeExtractSurf(const clString& id);
     virtual ~STreeExtractSurf();
@@ -51,7 +52,8 @@ Module* make_STreeExtractSurf(const clString& id)
 }
 
 STreeExtractSurf::STreeExtractSurf(const clString& id)
-: Module("STreeExtractSurf", id, Filter), surfid("surfid", id, this)
+: Module("STreeExtractSurf", id, Filter), surfid("surfid", id, this),
+  remapTCL("remapTCL", id, this)
 {
     istree=new SurfaceIPort(this, "SurfTreeIn", SurfaceIPort::Atomic);
     add_iport(istree);
@@ -109,7 +111,7 @@ void STreeExtractSurf::execute() {
 //	 cerr <<"  "<<i<<"  "<<st->bcVal[i]<<"  "<<st->points[st->bcIdx[i]]<<"\n";
 
     ts = new TriSurface;
-    if (!st->extractTriSurface(ts, map, imap, comp)) {
+    if (!st->extractTriSurface(ts, map, imap, comp, remapTCL.get())) {
 	cerr << "Error, couldn't extract triSurface.\n";
 	return;
     }
@@ -130,6 +132,9 @@ void STreeExtractSurf::execute() {
 
 //
 // $Log$
+// Revision 1.5  1999/11/17 00:32:00  dmw
+// fixed a bug in Taubin (nrows has to equal ncols) and added a flag to STreeExtractSurf so the node numbers dont change
+//
 // Revision 1.4  1999/10/07 02:06:28  sparker
 // use standard iostreams and complex type
 //
