@@ -13,20 +13,22 @@ SUBDIRS := $(SRCDIR)/ConstitutiveModel $(SRCDIR)/Contact \
 	$(SRCDIR)/ThermalContact \
 	$(SRCDIR)/GeometrySpecification \
 	$(SRCDIR)/PhysicalBC \
-	$(SRCDIR)/Util
+
+#	$(SRCDIR)/Util <- Not used any more... 
 
 include $(SCIRUN_SCRIPTS)/recurse.mk
 
 PSELIBS := \
-	Packages/Uintah/CCA/Ports \
-	Packages/Uintah/Core/Grid \
+	Packages/Uintah/CCA/Ports        \
+	Packages/Uintah/Core/Grid        \
+	Packages/Uintah/Core/Disclosure  \
 	Packages/Uintah/Core/ProblemSpec \
-	Packages/Uintah/Core/Parallel \
-	Packages/Uintah/Core/Exceptions \
-	Packages/Uintah/Core/Math \
-	Core/Exceptions Core/Thread \
-	Core/Disclosure \
-	Core/Geometry Dataflow/XMLUtil \
+	Packages/Uintah/Core/Parallel    \
+	Packages/Uintah/Core/Exceptions  \
+	Packages/Uintah/Core/Math        \
+	Core/Exceptions Core/Thread      \
+	Core/Disclosure                  \
+	Core/Geometry Dataflow/XMLUtil   \
 	Packages/Uintah/CCA/Components/HETransformation
 
 

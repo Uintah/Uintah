@@ -12,15 +12,16 @@ SRCS     += $(SRCDIR)/CFDInterface.cc $(SRCDIR)/DataArchive.cc \
 	$(SRCDIR)/MDInterface.cc $(SRCDIR)/Analyze.cc
 
 PSELIBS := \
-	Packages/Uintah/Core/Parallel \
+	Packages/Uintah/Core/Parallel    \
 	Packages/Uintah/Core/ProblemSpec \
-	Packages/Uintah/Core/Grid \
-	Packages/Uintah/Core/Exceptions \
-	Dataflow/XMLUtil \
-	Core/Thread \
-	Core/Exceptions \
-	Core/Geometry \
-	Core/Containers \
+	Packages/Uintah/Core/Grid        \
+	Packages/Uintah/Core/Disclosure  \
+	Packages/Uintah/Core/Exceptions  \
+	Dataflow/XMLUtil                 \
+	Core/Thread                      \
+	Core/Exceptions                  \
+	Core/Geometry                    \
+	Core/Containers                  \
 	Core/Util
 
 LIBS := $(XML_LIBRARY) $(MPI_LIBRARY)

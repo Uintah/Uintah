@@ -35,7 +35,7 @@
 #include <Packages/Uintah/Core/Grid/Level.h>
 #include <Packages/Uintah/Core/Grid/VarLabel.h>
 #include <Packages/Uintah/Core/Grid/VarTypes.h>
-#include <Packages/Uintah/Core/Grid/TypeUtils.h>
+#include <Packages/Uintah/Core/Disclosure/TypeUtils.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Containers/StaticArray.h>
 #include <iostream>
