@@ -103,7 +103,10 @@ Task::requires(WhichDW dw, const VarLabel* var,
     // default material for a reduction variable is the global material (-1)
     matls = getGlobalMatlSubset();
     matls_dom = OutOfDomain;
-  }  
+  }
+  else if (matls != 0 && matls->size() == 0) {
+    return; // no materials, no dependency
+  }
   Dependency* dep = scinew Dependency(this, dw, var, patches, matls,
 				      patches_dom, matls_dom,
 				      gtype, numGhostCells);
