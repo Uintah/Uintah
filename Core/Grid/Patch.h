@@ -391,7 +391,8 @@ WARNING
      class Compare {
      public:
        inline bool operator()(const Patch* p1, const Patch* p2) const {
-	 return p1->getID() < p2->getID();
+	 return (p1 != 0 && p2 != 0) ? (p1->getID() < p2->getID()) :
+	   ((p2 != 0) ? true : false);
        }
      private:
      };
