@@ -303,6 +303,7 @@ void StreamLines::execute()
   CompileInfo *ci = StreamLinesAlgo::get_compile_info(smtd, sltd); 
   Handle<StreamLinesAlgo> algo;
   if (!module_dynamic_compile(*ci, algo)) return;
+  vf_->mesh()->synchronize(Mesh::LOCATE_E);
 
   oport_->send(algo->execute(sf_->mesh(), vfi,
 			     tolerance, stepsize, maxsteps, direction, color,

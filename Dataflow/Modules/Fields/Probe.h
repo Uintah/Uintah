@@ -67,7 +67,7 @@ ProbeLocateAlgoT<MESH>::execute(MeshHandle mesh_h,
 				string &cellstr)
 {
   MESH *mesh = dynamic_cast<MESH *>(mesh_h.get_rep());
-  mesh->synchronize(Mesh::ALL_ELEMENTS_E | Mesh::GRID_E);
+  mesh->synchronize(Mesh::ALL_ELEMENTS_E | Mesh::LOCATE_E);
 
   {
     typename MESH::Node::index_type index;
@@ -226,7 +226,6 @@ ProbeCenterAlgoT<MESH>::get_node(MeshHandle mesh_h, const string &indexstr,
 				 Point &p)
 {
   MESH *mesh = dynamic_cast<MESH *>(mesh_h.get_rep());
-  mesh->synchronize(Mesh::NODES_E);
 
   unsigned int i = atoi(indexstr.c_str());
   typename MESH::Node::index_type index(i);
@@ -292,7 +291,6 @@ ProbeCenterAlgoT<MESH>::get_cell(MeshHandle mesh_h, const string &indexstr,
 				 Point &p)
 {
   MESH *mesh = dynamic_cast<MESH *>(mesh_h.get_rep());
-  mesh->synchronize(Mesh::CELLS_E);
 
   unsigned int i = atoi(indexstr.c_str());
   typename MESH::Cell::index_type index(i);

@@ -98,6 +98,7 @@ void CastTVtoMLV::execute()
 
   LatVolMesh::Node::iterator ib, ie; lvm->begin(ib); lvm->end(ie);
   TetVolMesh::Cell::index_type tet;
+  tvm->synchronize(Mesh::LOCATE_E); // for get_weights
   Point p;
   int cnt=0;
   while (ib != ie) {
