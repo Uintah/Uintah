@@ -199,8 +199,8 @@ num_proc () {
 
 run_test () {
     cd $results
-    cp ../$INPUTS/$CASE/$n.ups ../
-    input_file=../$n.ups
+    cp ../$INPUTS/$CASE/$n.ups ../$n.ups.rt
+    input_file=../$n.ups.rt
    
     num_proc
    
