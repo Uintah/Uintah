@@ -365,6 +365,7 @@ void SegLatVolField::initialize() {
       comps_.add(pair<int, long>(workingMatls[i], 
 				compMembers_[finalLabels[i]]->size()));
 
+  cerr << "... ended up with "<<comps_.size()<<" components.\n";
 //  printComponents();
 }
 
@@ -395,7 +396,7 @@ void SegLatVolField::absorbSmallComponents(int min) {
     }
     if (min_sz>min) break;
     idx=(*compMembers_[min_comp])[0];
-//    cerr << "C: "<<min_comp<<", size="<<compSize(min_comp)<<", material="<<compMatl(min_comp);
+    cerr << "C: "<<min_comp<<", size="<<compSize(min_comp)<<", material="<<compMatl(min_comp)<<"\n";
 //    cerr << "idx.i_="<<idx.i_<<" idx.j_="<<idx.j_<<" idx.k_="<<idx.k_<<"\n";
     visited.initialize(0);
     visit_q.push(idx);

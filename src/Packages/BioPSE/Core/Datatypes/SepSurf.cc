@@ -321,7 +321,7 @@ void SepSurf::io(Piostream& stream) {
   stream.end_class();
 }
 
-SepSurf* SepSurf::clone()
+SepSurf* SepSurf::clone() const
 {
   return scinew SepSurf(*this);
 }
