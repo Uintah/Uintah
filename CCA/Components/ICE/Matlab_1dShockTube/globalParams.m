@@ -11,6 +11,6 @@ global ...
 ghost_Right ...         % Index of right ghost cell
 firstCell ...           % Index of first interior cell
 lastCell ...            % Index of last interior cell
-fout ...                % output file
 d_SMALL_NUM ...         % A small number (for bullet-proofing)
+P ...                   % Parameter structure
 
