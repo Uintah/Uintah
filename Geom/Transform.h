@@ -1,4 +1,3 @@
-
 /*
  *  Transform.h:  Transform Properities for Geometry
  *
@@ -10,18 +9,6 @@
  *
  *  Copyright (C) 1996 SCI Group
  */
-
-
-
-/****************   WARNING!!!!!!   *******************/
-/*****  I didn't get a chance to verify that **********/
-/*****  this actually works.  the rendering  **********/
-/*****  still needs to be checked.  i didn't **********/
-/*****  end up using this code, so it was    **********/
-/*****  never checked.  sorry...             **********/
-/****************   WARNING!!!!!!  ********************/
-
-
 
 #ifndef SCI_Geom_Transform_h
 #define SCI_Geom_Transform_h 1
@@ -36,12 +23,20 @@
 class GeomTransform : public GeomContainer {
     Transform trans;
 public:
+    GeomTransform(GeomObj*);
     GeomTransform(GeomObj*, const Transform);
     GeomTransform(const GeomTransform&);
     void setTransform(const Transform);
     Transform getTransform();
     virtual ~GeomTransform();
     virtual GeomObj* clone();
+
+    virtual void get_bounds(BBox&);
+    virtual void get_bounds(BSphere&);
+
+    void scale(const Vector&);
+    void translate(const Vector&);
+    void rotate(double, const Vector&);
 
     // For OpenGL
 #ifdef SCI_OPENGL

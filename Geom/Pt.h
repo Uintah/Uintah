@@ -16,12 +16,23 @@
 
 #include <Geom/Geom.h>
 #include <Geometry/Point.h>
+#include <Geometry/Vector.h>
 
 class GeomPts : public GeomObj {
 public:
-    Array1<Point> pts;
+    Array1<float> pts;
+    inline void add(const Point& p) {
+	int s=pts.size();
+	pts.grow(3);
+ 	pts[s]=p.x();
+	pts[s+1]=p.y();
+	pts[s+2]=p.z();
+    }
+    int have_normal;
+    Vector n;
     GeomPts(const GeomPts&);
     GeomPts(int size);
+    GeomPts(int size, const Vector &);
     virtual ~GeomPts();
     virtual GeomObj* clone();
     virtual void get_bounds(BBox&);

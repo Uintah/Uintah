@@ -899,23 +899,27 @@ void GeomPolylineTC::draw(DrawInfoOpenGL* di, Material* matl, double currenttime
 
 }
 
-// --------------------------------------------------
 void GeomPts::draw(DrawInfoOpenGL* di, Material* matl, double)
 {
-    pre_draw(di, matl, 0);
-    di->polycount+=pts.size();
-    double old_size;
-    glGetDoublev(GL_POINT_SIZE, &old_size);
+//    if (have_normal) 
+//	pre_draw(di, matl, 1);
+//    else 
+	pre_draw(di, matl, 0);
+    di->polycount+=pts.size()/3;
+//    glPushAttrib(GL_POINT_BIT);
+    glHint(GL_POINT_SMOOTH_HINT, GL_NICEST);
     glPointSize(di->point_size);
     glBegin(GL_POINTS);
-    for (int i=0; i<pts.size(); i++) {
-	glVertex3d(pts[i].x(), pts[i].y(), pts[i].z());
+    float* p=&pts[0];
+//    if (have_normal)
+//	glNormal3d(n.x(), n.y(), n.z());
+    for (int i=0; i<pts.size(); i+=3) {
+	glVertex3fv(p);
+	p+=3;
     }
     glEnd();
-    glPointSize(old_size);
+//    glPopAttrib();
 }
-
-// WARNING not fixed for lighting yet!
 
 void GeomTube::draw(DrawInfoOpenGL* di, Material* matl, double)
 {
@@ -1287,7 +1291,7 @@ void GeomTransform::draw(DrawInfoOpenGL* di, Material* matl, double time)
 {
   glPushMatrix();
   double mat[16];
-  trans.get(mat);
+  trans.get_trans(mat);
   glMultMatrixd(mat);
   child->draw(di, matl, time);
   glPopMatrix();

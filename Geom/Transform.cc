@@ -1,37 +1,25 @@
-
 /*
  *  Transform.cc: Transform properties for Geometry
  *
  *  Written by:
- *   Steven G. Parker
+ *   David Weinstein
  *   Department of Computer Science
  *   University of Utah
- *   April 1994
+ *   March 1997
  *
- *  Copyright (C) 1994 SCI Group
+ *  Copyright (C) 1997 SCI Group
+ *
  */
 
-
-
-
-/****************   WARNING!!!!!!   *******************/
-/*****  I didn't get a chance to verify that **********/
-/*****  this actually works.  the rendering  **********/
-/*****  still needs to be checked.  i didn't **********/
-/*****  end up using this code, so it was    **********/
-/*****  never checked.  sorry...             **********/
-/****************   WARNING!!!!!!  ********************/
-
-
-
-
-
-
 #include <Geom/Transform.h>
+#include <Geometry/BBox.h>
+#include <Geometry/BSphere.h>
 #include <Classlib/NotFinished.h>
 #include <Classlib/String.h>
 #include <Geom/Save.h>
 #include <Malloc/Allocator.h>
+
+#include <iostream.h>
 
 Persistent* make_GeomTransform()
 {
@@ -40,6 +28,11 @@ Persistent* make_GeomTransform()
 }
 
 PersistentTypeID GeomTransform::type_id("GeomTransform", "GeomObj", make_GeomTransform);
+
+GeomTransform::GeomTransform(GeomObj* obj)
+: GeomContainer(obj)
+{
+}
 
 GeomTransform::GeomTransform(GeomObj* obj, const Transform trans)
 : GeomContainer(obj), trans(trans)
@@ -56,6 +49,18 @@ void GeomTransform::setTransform(const Transform copy)
     trans=copy;
 }
 
+void GeomTransform::scale(const Vector &v) {
+    trans.pre_scale(v);
+}
+
+void GeomTransform::translate(const Vector &v) {
+    trans.pre_translate(v);
+}
+
+void GeomTransform::rotate(double angle, const Vector &v) {
+    trans.pre_rotate(angle,v);
+}
+
 Transform GeomTransform::getTransform()
 {
     return trans;
@@ -68,6 +73,24 @@ GeomTransform::~GeomTransform()
 GeomObj* GeomTransform::clone()
 {
     return scinew GeomTransform(*this);
+}
+
+void GeomTransform::get_bounds(BBox& bb)
+{
+    BBox b;
+    child->get_bounds(b);
+    bb.extend(trans.project(b.min()));
+    bb.extend(trans.project(b.max()));
+}
+
+void GeomTransform::get_bounds(BSphere& bs)
+{
+    BBox b;
+    child->get_bounds(b);
+    BBox b2;
+    b2.extend(trans.project(b.min()));
+    b2.extend(trans.project(b.max()));
+    bs.extend(b2.center(), b2.longest_edge()/1.9999999);
 }
 
 void GeomTransform::make_prims(Array1<GeomObj*>& free,

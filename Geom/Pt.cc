@@ -30,11 +30,16 @@ Persistent* make_GeomPts()
 PersistentTypeID GeomPts::type_id("GeomPts", "GeomObj", make_GeomPts);
 
 GeomPts::GeomPts(const GeomPts &copy)
-: pts(copy.pts) {
+: pts(copy.pts), have_normal(copy.have_normal), n(copy.n) {
 }
 
 GeomPts::GeomPts(int size)
-: pts(0, size)
+: pts(0, size*3), have_normal(0)
+{
+}
+
+GeomPts::GeomPts(int size, const Vector &n)
+: pts(0, size*3), n(n), have_normal(1)
 {
 }
 
@@ -49,14 +54,14 @@ GeomObj* GeomPts::clone()
 
 void GeomPts::get_bounds(BBox& bb)
 {
-    for (int i=0; i<pts.size(); i++)
-	bb.extend(pts[i]);
+    for (int i=0; i<pts.size(); i+=3)
+	bb.extend(Point(pts[i], pts[i+1], pts[i+2]));
 }
 
 void GeomPts::get_bounds(BSphere& bs)
 {
-    for (int i=0; i<pts.size(); i++)
-	bs.extend(pts[i]);
+    for (int i=0; i<pts.size(); i+=3)
+	bs.extend(Point(pts[i], pts[i+1], pts[i+2]));
 }
 
 void GeomPts::make_prims(Array1<GeomObj*>&,
@@ -77,17 +82,24 @@ void GeomPts::intersect(const Ray&, Material*, Hit&)
 
 Vector GeomPts::normal(const Point&, const Hit&)
 {
-    NOT_FINISHED("Don't know the normal to a point -- returning (1,0,0)");
-    return(Vector(1,0,0));
+    if (have_normal) return n;
+    else {
+	NOT_FINISHED("These points don't have normals -- returning (1,0,0)");
+	return(Vector(1,0,0));
+    }
 }
 
-#define GEOMPTS_VERSION 1
+#define GEOMPTS_VERSION 2
 
 void GeomPts::io(Piostream& stream)
 {
-    stream.begin_class("GeomPts", GEOMPTS_VERSION);
+    int version=stream.begin_class("GeomPts", GEOMPTS_VERSION);
     GeomObj::io(stream);
     Pio(stream, pts);
+    if (version > 1) {
+	Pio(stream, have_normal);
+	Pio(stream, n);
+    }
     stream.end_class();
 }
 
