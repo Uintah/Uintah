@@ -1,3 +1,4 @@
+#include <Core/Malloc/Allocator.h>
 #include <Packages/Uintah/Core/Grid/BoundCondFactory.h>
 #include <Packages/Uintah/Core/Grid/NoneBoundCond.h>
 #include <Packages/Uintah/Core/Grid/SymmetryBoundCond.h>
@@ -8,6 +9,7 @@
 #include <Packages/Uintah/Core/Grid/DensityBoundCond.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
+#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <iostream>
 #include <string>
 #include <map>
@@ -26,43 +28,47 @@ void BoundCondFactory::create(const ProblemSpecP& ps,BCData& objs)
      map<string,string> bc_attr;
      child->getAttributes(bc_attr);
      int mat_id;
+     // Check to see if "id" is defined
+     if (bc_attr.find("id") == bc_attr.end()) 
+       throw ProblemSetupException("id is not specified in the BCType tag");
+     
      if (bc_attr["id"] != "all")
        mat_id = atoi(bc_attr["id"].c_str());
      else
        mat_id = 0;
      
      if (bc_attr["var"] == "None") {
-       BoundCondBase* bc = new NoneBoundCond(child);
+       BoundCondBase* bc = scinew NoneBoundCond(child);
        objs.setBCValues(mat_id,bc);
      }
      
      else if (bc_attr["label"] == "Symmetric") {
-       BoundCondBase* bc = new SymmetryBoundCond(child);
+       BoundCondBase* bc = scinew SymmetryBoundCond(child);
        objs.setBCValues(mat_id,bc);
      }
      
      else if (bc_attr["var"] ==  "Neighbor") {
-       BoundCondBase* bc = new NeighBoundCond(child);
+       BoundCondBase* bc = scinew NeighBoundCond(child);
        objs.setBCValues(mat_id,bc);
      }
      
      else if (bc_attr["label"] == "Velocity") {
-       BoundCondBase* bc = new VelocityBoundCond(child,bc_attr["var"]);
+       BoundCondBase* bc = scinew VelocityBoundCond(child,bc_attr["var"]);
        objs.setBCValues(mat_id,bc);
      }
      
      else if (bc_attr["label"] == "Temperature") {
-       BoundCondBase* bc = new TemperatureBoundCond(child,bc_attr["var"]);
+       BoundCondBase* bc = scinew TemperatureBoundCond(child,bc_attr["var"]);
        objs.setBCValues(mat_id,bc);
      }
      
      else if (bc_attr["label"] == "Pressure") {
-       BoundCondBase* bc = new PressureBoundCond(child,bc_attr["var"]);
+       BoundCondBase* bc = scinew PressureBoundCond(child,bc_attr["var"]);
        objs.setBCValues(mat_id,bc);
      }
      
      else if (bc_attr["label"] == "Density") {
-       BoundCondBase* bc = new DensityBoundCond(child,bc_attr["var"]);
+       BoundCondBase* bc = scinew DensityBoundCond(child,bc_attr["var"]);
        objs.setBCValues(mat_id,bc);
      }
 
