@@ -9,7 +9,7 @@ namespace Uintah
 {
   class SimpleMaterial;
   class ExamplesLabel;
-
+  class VarLabel;
 /**************************************
 
 CLASS
@@ -76,6 +76,11 @@ WARNING
 			 const MaterialSubset* matls,
 			 DataWarehouse*, DataWarehouse* new_dw, bool initial);
 
+    void coarsen ( const ProcessorGroup*,
+                   const PatchSubset* patches,
+                   const MaterialSubset* matls,
+                   DataWarehouse*, DataWarehouse* new_dw);
+
     void refine ( const ProcessorGroup*,
 		  const PatchSubset* patches,
 		  const MaterialSubset* matls,
@@ -85,14 +90,21 @@ WARNING
     SimulationStateP d_sharedState;
     SimpleMaterial*  d_material;
 
+    VarLabel* d_oldDensityLabel;
+    VarLabel* d_currentAngleLabel;
+    SCIRun::Vector d_gridMax;
+    SCIRun::Vector d_gridMin;
+
     // Fake cylinder
     SCIRun::Vector d_centerOfBall;
     SCIRun::Vector d_centerOfDomain;
     SCIRun::Vector d_oldCenterOfBall;
     double         d_radiusOfBall;
     double         d_radiusOfOrbit;
-    double         d_currentAngle;
     double         d_angularVelocity;
+
+    bool           d_radiusGrowth;
+    bool           d_radiusGrowthDir;
   };
 
 } // namespace Uintah
