@@ -413,11 +413,6 @@ class BioImageApp {
                 set 2D_fixed 1
 	    } 
 
-	    if {$has_autoviewed == 0} {
-		set has_autoviewed 1
-		after 200 "$mods(Viewer)-ViewWindow_0-c autoview"
-	    }
-
 	    global $mods(ViewSlices)-min $mods(ViewSlices)-max
 
 	    $this update_planes_threshold_slider_min_max [set $mods(ViewSlices)-min] [set $mods(ViewSlices)-max]
@@ -803,7 +798,7 @@ class BioImageApp {
 	foreach axis "sagittal coronal axial" {
 	    create_2d_frame $slice_frame($axis) $axis
 	    $viewimage gl_frame $slice_frame($axis).$axis
-	    pack $slice_frame($axis).$axis \
+	    pack $slice_frame($axis).$axis -expand 1 -fill both \
 		-side top -padx 0 -ipadx 0 -pady 0 -ipady 0
 	}
 
@@ -822,7 +817,7 @@ class BioImageApp {
     method create_2d_frame { window axis } {
 	# Modes for $axis
 	frame $window.modes
-	pack $window.modes -side bottom -padx 0 -pady 0 -expand 1 -fill x
+	pack $window.modes -side bottom -padx 0 -pady 0 -expand 0 -fill x
 	
 	frame $window.modes.buttons
 	frame $window.modes.slider
@@ -1364,6 +1359,7 @@ class BioImageApp {
 	    trace variable $m26-crop_maxAxis0 w "$this update_crop_values"
 	    trace variable $m26-crop_maxAxis1 w "$this update_crop_values"
 	    trace variable $m26-crop_maxAxis2 w "$this update_crop_values"
+	    trace variable $m26-geom_flushed  w "$this maybe_autoview"
 
             global $m27-mapType planes_mapType
 	    set $m27-mapType $planes_mapType
@@ -2082,7 +2078,6 @@ class BioImageApp {
 
             trace variable $mods(ViewSlices)-min w "$this update_window_level_scales"
             trace variable $mods(ViewSlices)-max w "$this update_window_level_scales"
-
             # Background threshold
             global planes_threshold
             frame $page.thresh 
@@ -4668,7 +4663,15 @@ class BioImageApp {
 	global $mods(Viewer)-ViewWindow_0-view-fov
         set $mods(Viewer)-ViewWindow_0-view-fov {20.0}
     }
+    
 
+    method maybe_autoview { args } {
+	global mods
+	if {$has_autoviewed == 0} {
+          set has_autoviewed 1
+          $mods(Viewer)-ViewWindow_0-c autoview
+	}
+    }
 
 
     # Application placing and size
@@ -4757,6 +4760,3 @@ bind all <Control-v> {
     global mods
     $mods(Viewer)-ViewWindow_0-c autoview
 }
-
-
-
