@@ -44,8 +44,6 @@ itcl_class Fusion_Fields_NIMRODConverter {
     }
 
     method ui {} {
-	global env
-
         set w .ui[modname]
         if {[winfo exists $w]} {
             raise $w
