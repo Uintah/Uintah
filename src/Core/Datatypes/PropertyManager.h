@@ -50,7 +50,6 @@ public:
   //PropertyBase(const PropertyBase &p) : transient_(p.transient_) {} 
   virtual PropertyBase* clone() const { 
     ASSERTFAIL("PropertyBase clone called");
-    return 0;
   }
 
   virtual void io(Piostream &) {}
