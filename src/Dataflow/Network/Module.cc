@@ -52,6 +52,10 @@ using namespace SCIRun;
 typedef std::map<int,IPortInfo*>::iterator iport_iter;
 typedef std::map<int,OPortInfo*>::iterator oport_iter;
 
+namespace SCIRun {
+extern bool regression_testing_flag;
+}
+
 #ifdef __APPLE__
 const string ext = ".dylib";
 #else
@@ -687,7 +691,10 @@ void Module::setPid(int pid)
 // Error conditions
 void Module::error(const string& str)
 {
-  //gui->postMessage("ERROR: " + moduleName + ": " + str, true);
+  if (regression_testing_flag)
+  {
+    cout << id << ":ERROR: " << str << "\n";
+  }
   msgStream_ << "ERROR: " << str << '\n';
   msgStream_.flush();
   update_msg_state(Error); 
@@ -695,7 +702,10 @@ void Module::error(const string& str)
 
 void Module::warning(const string& str)
 {
-  // gui->postMessage("WARNING: " + moduleName + ": " + str, false);
+  if (regression_testing_flag)
+  {
+    cout << id << ":WARNING: " << str << "\n";
+  }
   msgStream_ << "WARNING: " << str << '\n';
   msgStream_.flush();
   update_msg_state(Warning); 
@@ -703,7 +713,10 @@ void Module::warning(const string& str)
 
 void Module::remark(const string& str)
 {
-  //gui->postMessage("REMARK: " + moduleName + ": " + str, false);
+  if (regression_testing_flag)
+  {
+    cout << id << ":REMARK: " << str << "\n";
+  }
   msgStream_ << "REMARK: " << str << '\n';
   msgStream_.flush();
   update_msg_state(Remark); 
@@ -711,6 +724,10 @@ void Module::remark(const string& str)
 
 void Module::postMessage(const string& str)
 {
+  if (regression_testing_flag)
+  {
+    cout << id << ":postMessage: " << str << "\n";
+  }
   gui->postMessage(moduleName + ": " + str, false);
 }
 
