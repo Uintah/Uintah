@@ -23,7 +23,7 @@ itcl_class Uintah_Visualization_ParticleEigenEvaluator {
 	frame $w.m 
 	pack $w.m -padx 2 -pady 2 -fill x -expand yes
 
-	make_labeled_radio $w.m.r "Which Eigen Value" $n left \
+	make_labeled_radio $w.m.r "Which Eigen Value" $n top \
 		$this-eigenSelect {{"Largest" 0} {"Middle" 1} {"Smallest" 2}}
 	pack $w.m.r
 
