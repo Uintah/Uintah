@@ -331,7 +331,7 @@ public:
   unsigned get_cells(Cell::array_type &, Face::index_type) const { return 0; }
 
   //! return all face_indecies that overlap the BBox in arr.
-  void get_faces(Face::array_type &arr, const BBox &box) const;
+  void get_faces(Face::array_type &arr, const BBox &box);
 
   //! similar to get_faces() with Face::index_type argument, but
   //  returns the "other" face if it exists, not all that exist
@@ -346,9 +346,9 @@ public:
   void get_center(Point &, Face::index_type) const;
   void get_center(Point &, Cell::index_type) const {}
 
-  bool locate(Node::index_type &, const Point &) const;
+  bool locate(Node::index_type &, const Point &);
   bool locate(Edge::index_type &, const Point &) const { return false; }
-  bool locate(Face::index_type &, const Point &) const;
+  bool locate(Face::index_type &, const Point &);
   bool locate(Cell::index_type &, const Point &) const { return false; }
 
   void get_point(Point &p, Node::index_type i) const

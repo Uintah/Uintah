@@ -49,7 +49,7 @@ ImageMesh::ImageMesh(unsigned x, unsigned y,
   transform_.pre_scale(Vector(1.0 / (x-1.0), 1.0 / (y-1.0), 1.0));
   transform_.pre_scale(max - min);
   transform_.pre_translate(Vector(min));
-  transform_.invert();
+  transform_.compute_imat();
 }
 
 
@@ -63,10 +63,10 @@ ImageMesh::get_bounding_box() const
   Point p3(0.0, ny_, 0.0);
   
   BBox result;
-  result.extend(transform_.const_unproject(p0));
-  result.extend(transform_.const_unproject(p1));
-  result.extend(transform_.const_unproject(p2));
-  result.extend(transform_.const_unproject(p3));
+  result.extend(transform_.project(p0));
+  result.extend(transform_.project(p1));
+  result.extend(transform_.project(p2));
+  result.extend(transform_.project(p3));
   return result;
 }
 
@@ -82,7 +82,7 @@ ImageMesh::get_nodes(Node::array_type &array, Face::index_type idx) const
 
 //! return all face_indecies that overlap the BBox in arr.
 void
-ImageMesh::get_faces(Face::array_type &arr, const BBox &bbox) const
+ImageMesh::get_faces(Face::array_type &arr, const BBox &bbox)
 {
   arr.clear();
   Face::index_type min;
@@ -105,7 +105,7 @@ void
 ImageMesh::get_center(Point &result, Node::index_type idx) const
 {
   Point p(idx.i_, idx.j_, 0.0);
-  result = transform_.const_unproject(p);
+  result = transform_.project(p);
 }
 
 
@@ -113,13 +113,13 @@ void
 ImageMesh::get_center(Point &result, Face::index_type idx) const
 {
   Point p(idx.i_ + 0.5, idx.j_ + 0.5, 0.0);
-  result = transform_.const_unproject(p);
+  result = transform_.project(p);
 }
 
 bool
-ImageMesh::locate(Face::index_type &face, const Point &p) const
+ImageMesh::locate(Face::index_type &face, const Point &p)
 {
-  const Point r = transform_.project(p);
+  const Point r = transform_.unproject(p);
 
   face.i_ = (unsigned int)r.x();
   face.j_ = (unsigned int)r.y();
@@ -136,7 +136,7 @@ ImageMesh::locate(Face::index_type &face, const Point &p) const
 }
 
 bool
-ImageMesh::locate(Node::index_type &node, const Point &p) const
+ImageMesh::locate(Node::index_type &node, const Point &p)
 {
   Node::array_type nodes;     // storage for node_indeces
   Face::index_type face;
