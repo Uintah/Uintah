@@ -5,7 +5,6 @@
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
 #include <Packages/Uintah/Core/Grid/VarLabel.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
-#include <Packages/Uintah/Core/Exceptions/OutFluxVolume.h>
 #include <Packages/Uintah/Core/Disclosure/TypeDescription.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Util/Endian.h>
@@ -117,20 +116,27 @@ void FirstOrderAdvector::inFluxOutFluxVolume(
   
   //__________________________________
   // if total_fluxout > vol then 
-  // find the cell and throw an exception.  
+  // -find the cell, 
+  // -set the outflux slab vol in all cells = 0.0,
+  // -request that the timestep be restarted.
   if (error && bulletProof_test) {
+    vector<IntVector> badCells;
+    vector<double>  badOutflux;
+    
     for(CellIterator iter = patch->getCellIterator(gc); !iter.done(); iter++){
       IntVector c = *iter; 
       double total_fluxout = 0.0;
       for(int face = TOP; face <= BACK; face++ )  {
         total_fluxout  += d_OFS[c].d_fflux[face];
+        d_OFS[c].d_fflux[face] = 0.0;
       }
+      // keep track of which cells are bad
       if (vol - total_fluxout < 0.0) {
-        warning_restartTimestep( c, total_fluxout, vol, indx, new_dw);
-        return; 
-        //throw OutFluxVolume(*iter,total_fluxout, vol, indx);
+        badCells.push_back(c);
+        badOutflux.push_back(total_fluxout);
       }
     }  // cell iter
+    warning_restartTimestep( badCells,badOutflux, vol, indx, patch, new_dw);
   }  // if total_fluxout > vol
   
   if (error && !bulletProof_test) {
