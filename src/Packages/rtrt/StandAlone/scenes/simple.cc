@@ -59,10 +59,14 @@ Scene* make_scene(int /*argc*/, char* /*argv*/[], int /*nworkers*/)
   group->add( obj2 );
 #endif
 
-  ImageMaterial * painting = 
+  Material * painting = 
     new ImageMaterial( "/usr/sci/projects/rtrt/paintings/delaware.ppm",
 		       ImageMaterial::Clamp, ImageMaterial::Clamp,
 		       1, Color(0,0,0), 0 );
+  if (!((ImageMaterial*)painting)->valid()) {
+    delete painting;
+    painting = new LambertianMaterial(Color(1,0,1));
+  }
 
   Object * picture = new Rect( painting,
 			       Point(5,5,5), Vector(0,1,0), Vector(0,0,-1) );
