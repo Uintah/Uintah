@@ -90,8 +90,10 @@ AC_DEFUN(SCI_CHECK_LIB,
     _SCI_NOTFOUND_='echo -n ""'
     _SCI_DECL_="char $3();"
     _SCI_CALL_="$3();"
-    _SCI_VAR_NAME_=LIB`echo $2 | sed 'y%abcdefghijklmnopqrstuvwxyz./-%ABCDEFGHIJKLMNOPQRSTUVWXYZ___%'`
+    _SCI_VAR_LIBNAME_=`echo $2 | sed 'y%abcdefghijklmnopqrstuvwxyz./-%ABCDEFGHIJKLMNOPQRSTUVWXYZ___%'`
+    _SCI_VAR_NAME_=LIB$_SCI_VAR_LIBNAME_
     _SCI_VAR_HAVE_="HAVE_$_SCI_VAR_NAME_"
+    _SCI_VAR_LIBRARY_="$_SCI_VAR_LIBNAME_"_LIBRARY
 
     if test "$1" = "/usr/lib" ||
        test "$1" = "/lib" ||
@@ -141,19 +143,22 @@ EOF
          test "$1" != "/lib/"; then
         eval $_SCI_VAR_NAME_='$1'
         eval $_SCI_VAR_HAVE_=yes
+        eval $_SCI_VAR_LIBRARY_='-L$1'
       else
         eval $_SCI_VAR_NAME_='\ '
         eval $_SCI_VAR_HAVE_=yes
+        eval $_SCI_VAR_LIBRARY_=''
       fi
       AC_MSG_RESULT(yes)
       eval $_SCI_FOUND_
     else
       eval $_SCI_VAR_NAME_=''
       eval $_SCI_VAR_HAVE_=''
+      eval $_SCI_VAR_LIBRARY_=''
       AC_MSG_RESULT(no)
       eval $_SCI_NOTFOUND_
     fi
-    rm -f conftest* a.out
+#    rm -f conftest* a.out
   ])
 
 ##
@@ -1117,10 +1122,10 @@ echo
 
 ##  --  search for the math library  -------------------------------------
 
-SCI_CHECK_LIB(/usr/lib,m,main,HAVE_LIBMATH=yes,,)
-SCI_CHECK_HEADERS(/usr/include,math.h,,HAVE_GL_H=no)
+SCI_CHECK_LIB(/usr/lib,m,main,HAVE_LIBM=yes,,)
+SCI_CHECK_HEADERS(/usr/include,math.h,,HAVE_MATH_H=no)
 
-if test "$HAVE_LIBMATH" &&
+if test "$HAVE_LIBM" &&
    test "$HAVE_MATH_H" != "no"; then
   FOUND_ALL_MATH=yes
 fi
@@ -1135,8 +1140,10 @@ AC_PATH_XTRA
 if test "$x_libraries" &&
    test "$x_libraries" != "/usr/lib"; then
   LIBX=$x_libraries
+  X_LIBRARY="-L$LIBX"
 else
   LIBX=""
+  X_LIBRARY=""
 fi
 if test "$x_includes" &&
    test "$x_includes" != "/usr/include"; then
@@ -1274,7 +1281,7 @@ AC_CHECK_HEADERS(stdio.h stdlib.h stddef.h stdarg.h string.h limits.h \
 
 ##  --  required SGI headers
 if test "$host" = "irix"; then
-  AC_CHECK_HEADERS(libexc.h ieeefp.h ulocks.h sys/uuid.h,,
+  AC_CHECK_HEADERS(ieeefp.h ulocks.h sys/uuid.h,,
     echo configure: error: could not find a required standard header. exiting.
   exit)
 fi
@@ -1302,19 +1309,19 @@ for i in $tcl $thirdparty $SCI_LAB_TP_DEFAULT; do
 
   SCI_CHECK_LIB($i/lib,tk,main,
     if test -f "$i/lib/tkConfig.sh"; then . $i/lib/tkConfig.sh; fi,continue,
-    -L$LIBTCL -ltcl)
+    $TCL_LIBRARY -ltcl)
   SCI_CHECK_HEADERS($TK_SRC_DIR/generic/, tk.h tk3d.h tkPort.h,,
     break,-I$INCTCL_H)
 
-  SCI_CHECK_LIB($i/lib,itcl,main,,continue, -L$LIBTCL -ltcl)
+  SCI_CHECK_LIB($i/lib,itcl,main,,continue, $TCL_LIBRARY -ltcl)
   SCI_CHECK_HEADER($i/include,itcl.h,,,-I$INCTCL_H)
 
   SCI_CHECK_LIB($i/lib,itk,main,,continue,
-    -L$LIBITCL -litcl -L$LIBTK -ltk -L$LIBTCL -ltcl)
+    $ITCL_LIBRARY -litcl $TK_LIBRARY -ltk $TCL_LIBRARY -ltcl)
   SCI_CHECK_HEADER($i/include,itk.h,,, 
     -I$INCITCL_H -I$INCTK_H -I$INCTCL_H)
 
-  SCI_CHECK_LIB($i/lib,BLT,main,,continue,-L$LIBTK -ltk -L$LIBTCL -ltcl)
+  SCI_CHECK_LIB($i/lib,BLT,main,,continue,$TK_LIBRARY -ltk $TCL_LIBRARY -ltcl)
   SCI_CHECK_HEADER($i/include,blt.h,,, -I$INCTCL_H -I$INCTK_H)
 
   if test "$LIBTCL" &&
@@ -1429,6 +1436,7 @@ for i in $mpi $thirdparty $SCI_LAB_TP_DEFAULT; do
       test "$LIBMPICH") &&
      test "$INCBLT_H"; then
     LIBMPI="$i/lib"
+    MPI_LIBRARY="-L$LIBMPI"
     FOUND_ALL_MPI=yes
     DEF_MPI="#define HAVE_MPI 1"
     break
@@ -1634,8 +1642,10 @@ AC_SUBST(DEF_CL)
 
 ##  --  search for SGI'S traceback library  ------------------------------ 
 
-SCI_CHECK_LIB($thirdparty/lib,exc,main)
-SCI_CHECK_HEADER($thirdparty/lib,libexc.h,,,)
+SCI_CHECK_LIB($thirdparty/lib,exc,main,,)
+if test "$HAVE_LIBEXC"; then
+  SCI_CHECK_HEADER($thirdparty/lib,libexc.h,,)
+fi
 
 if test "$HAVE_LIBEXC" &&
    test "$INCLIBEXC_H"; then
@@ -1664,15 +1674,17 @@ for i in $with_globus $thirdparty $SCI_LAB_TP_DEFAULT; do
     continue
   fi
   SCI_CHECK_LIB($i/lib$NBITS,globus_utp,main,,continue,
-    -L$LIBSSL -lssl -L$LIBCRYPTO -lcrypto)
+    $SSL_LIBRARY -lssl $CRYPTO_LIBRARY -lcrypto)
   SCI_CHECK_LIB($i/lib$NBITS,globus_mp,main,,continue,
-    -lglobus_utp -L$LIBSSL -lssl -L$LIBCRYPTO -lcrypto)
+    -lglobus_utp $SSL_LIBRARY -lssl $CRYPTO_LIBRARY -lcrypto)
   SCI_CHECK_LIB($i/lib$NBITS,globus_gss_assist,main,,continue,
-    -lglobus_mp -lglobus_utp -L$LIBSSL -lssl -L$LIBCRYPTO -lcrypto)
+    -lglobus_mp -lglobus_utp $SSL_LIBRARY -lssl $CRYPTO_LIBRARY -lcrypto)
   SCI_CHECK_LIB($i/lib$NBITS,globus_gss,main,,continue,
-    -lglobus_gss_assist -lglobus_mp -lglobus_utp -L$LIBSSL -lssl -L$LIBCRYPTO -lcrypto)
+    -lglobus_gss_assist -lglobus_mp -lglobus_utp $SSL_LIBRARY -lssl \
+    $CRYPTO_LIBRARY -lcrypto)
   SCI_CHECK_LIB($i/lib$NBITS,globus_gaa,main,,continue,
-    -lglobus_gss -lglobus_gss_assist -lglobus_mp -lglobus_utp -L$LIBSSL -lssl -L$LIBCRYPTO -lcrypto)
+    -lglobus_gss -lglobus_gss_assist -lglobus_mp -lglobus_utp \
+    $SSL_LIBRARY -lssl $CRYPTO_LIBRARY -lcrypto)
   ##
   ##  which globus headers should be tested for?
   ##
@@ -1687,7 +1699,7 @@ for i in $with_globus $thirdparty $SCI_LAB_TP_DEFAULT; do
     GLOBUS_LIB="$LIBGLOBUS_UTP"
     is_linux=`echo $host | sed 's/.*linux.*/linux/'`
     if test "$is_linux" = "linux"; then
-      GLOBUS_EXTRA_DIRS="-lglobus_gaa -lglobus_gss -lglobus_gss_assist -lglobus_mp -lglobus_utp -L$LIBSSL -lssl -L$LIBCRYPTO -lcrypto"
+      GLOBUS_EXTRA_DIRS="-lglobus_gaa -lglobus_gss -lglobus_gss_assist -lglobus_mp -lglobus_utp $SSL_LIBRARY -lssl $CRYPTO_LIBRARY -lcrypto"
     fi
     break
   fi
@@ -1753,7 +1765,7 @@ for i in $lapack `dirname $LIBBLAS` $thirdparty $SCI_LAB_TP_DEFAULT; do
   if test ! -d "$i"; then 
     continue
   fi
-  SCI_CHECK_LIB($i/lib,lapack,main,break,continue,-L$LIBBLAS -lblas $FLIBS)
+  SCI_CHECK_LIB($i/lib,lapack,main,break,continue,$BLAS_LIBRARY -lblas $FLIBS)
 done
 
 if test "$LIBLAPACK"; then
@@ -1765,34 +1777,59 @@ AC_SUBST(HAVE_LAPACK)
 AC_SUBST(LIBLAPACK)
 
 ##  --  search for petsc stuff  ------------------------------------------
+
+if test "$debug" = "yes"; then
+  PETSC_SUB=libg
+else
+  PETSC_SUB=libO
+fi
+
+case $host in
+  *-irix*)
+    if test "is_64bit" = "yes"; then
+      PETSC_ARCH=IRIX64
+    else
+      PETSC_ARCH=IRIX
+    fi
+    ;;
+  *linux*)
+    PETSC_ARCH=linux
+    ;;
+  *)
+    PETSC_ARCH=unknown
+esac
+
+AC_CHECKING(for an MPI PETSc...)
+
 FOUND_ALL_PETSC=no
 for i in $petsc $thirdparty $SCI_LAB_TP_DEFAULT; do
   if test ! -d "$i"; then 
     continue
   fi
-  SCI_CHECK_LIB($i/lib,petsc,main,,continue,
+  if test "$PETSC_ARCH" = "unknown" &&
+     test -x "$i/bin/petscarch"; then
+    PETSC_ARCH=`$i/bin/petscarch`
+  fi
+  SCI_CHECK_LIB($i/lib/$PETSC_SUB/$PETSC_ARCH,petsc,main,,HAVE_LIBPETSC=no,
     -lpetsccontrib -lpetscdm -lpetscmat -lpetscsles -lpetscsnes \
-    -lpetscts -lpetscvec -L$LIBLAPACK -llapack -L$LIBBLAS -lblas -L$LIBX \
-    -lX11 -L$LIBMPI $MPI $FLIBS -lm)
-  SCI_CHECK_HEADERS($i/include,petsc.h petscsles.h,,break,)
+    -lpetscts -lpetscvec $LAPACK_LIBRARY -llapack $BLAS_LIBRARY -lblas \
+    $X_LIBRARY -lX11 $MPI_LIBRARY $MPI $FLIBS -lm)
+  if test "$HAVE_LIBPETSC" != "yes"; then
+    SCI_CHECK_LIB($i/lib,petsc,main,,continue,
+      -lpetsccontrib -lpetscdm -lpetscmat -lpetscsles -lpetscsnes \
+      -lpetscts -lpetscvec $LAPACK_LIBRARY -llapack $BLAS_LIBRARY -lblas \
+      $X_LIBRARY -lX11 $MPI_LIBRARY $MPI $FLIBS -lm)
+  fi
+  SCI_CHECK_HEADERS($i/include,petsc.h petscsles.h,,break,
+    -I$INCMPI_H -I$i/bmake/$PETSC_ARCH)
   if test "$LIBPETSC" &&
-     test "$INCPETSC_H" &&
-     test -x "$i/bin/petscarch"; then 
+     test "$INCPETSC_H"; then
     FOUND_ALL_PETSC=yes
     DEF_PETSC="#define HAVE_PETSC 1"
     PETSC_DIR=$i
-    if test "$debug" = "yes"; then
-      PETSC_SUB=libg
-    else
-      PETSC_SUB=libO
-    fi
     PETSC_EXTRA_LIBS="-lpetsccontrib -lpetscdm -lpetscmat \
-      -lpetscsles -lpetscsnes -lpetscts -lpetscvec -L$LIBLAPACK -llapack \
-      -L$LIBBLAS -lblas -L$LIBX -lX11 -L$LIBMPI $MPI $FLIBS -lm"
-    PETSC_ARCH=`$i/bin/petscarch`
-    if test "$is_64bit" != "yes" -a "$PETSC_ARCH" = "IRIX64"; then
-      PETSC_ARCH="IRIX"
-    fi
+      -lpetscsles -lpetscsnes -lpetscts -lpetscvec $LAPACK_LIBRARY -llapack \
+      $BLAS_LIBRARY -lblas $X_LIBRARY -lX11 $MPI_LIBRARY $MPI $FLIBS -lm"
     break
   fi 
 done
@@ -1813,15 +1850,31 @@ AC_SUBST(INCPETSC_H)
 AC_SUBST(DEF_PETSC)
 
 ##  --  search for uni-petsc  --------------------------------------------
+
+AC_CHECKING(for an mpiuni PETSc...)
+
 FOUND_ALL_PETSC=no
 for i in $unipetsc $thirdparty $SCI_LAB_TP_DEFAULT; do
   if test ! -d "$i"; then 
     continue
   fi
-  SCI_CHECK_LIB($i/lib,petsc,main,,continue,-lpetscsles -lpetscmat -lpetscvec \
-      -lpetscdm -lpetsccontrib -L$LIBLAPACK -llapack \
-      -L$LIBBLAS -lblas -L$LIBX -lX11 -lmpiuni $FLIBS -lm)
-  SCI_CHECK_HEADERS($i/include,petsc.h petscsles.h,,break,)
+  if test "$PETSC_ARCH" = "unknown" &&
+     test -x "$i/bin/petscarch"; then
+    PETSC_ARCH=`$i/bin/petscarch`
+  fi
+  SCI_CHECK_LIB($i/lib/$PETSC_SUB/$PETSC_ARCH,petsc,main,,continue,
+    -lpetscsles -lpetscmat -lpetscvec \
+    -lpetscdm -lpetsccontrib $LAPACK_LIBRARY -llapack \
+    $BLAS_LIBRARY -lblas $X_LIBRARY -lX11 \
+    -L$i/lib/$PETSC_SUB/$PETSC_ARCH -lmpiuni $FLIBS -lm)
+  if test "$HAVE_LIBPETSC" != "yes"; then
+    SCI_CHECK_LIB($i/lib,petsc,main,,continue,
+      -lpetscsles -lpetscmat -lpetscvec \
+      -lpetscdm -lpetsccontrib $LAPACK_LIBRARY -llapack \
+      $BLAS_LIBRARY -lblas $X_LIBRARY -lX11 -lmpiuni $FLIBS -lm)    
+  fi
+  SCI_CHECK_HEADERS($i/include,petsc.h petscsles.h,,break,
+    -I$i/bmake/$PETSC_ARCH -I$i/src/sys/src/mpiuni)
   if test "$LIBPETSC" &&
      test "$INCPETSC_H" &&
      test -x "$i/bin/petscarch"; then 
@@ -1833,8 +1886,8 @@ for i in $unipetsc $thirdparty $SCI_LAB_TP_DEFAULT; do
       UNIPETSC_SUB=libO
     fi
     UNIPETSC_EXTRA_LIBS="-lpetscsles -lpetscmat -lpetscvec \
-      -lpetscdm -lpetsccontrib -L$LIBLAPACK -llapack \
-      -L$LIBBLAS -lblas -L$LIBX -lX11 -lmpiuni $FLIBS -lm"
+      -lpetscdm -lpetsccontrib $LAPACK_LIBRARY -llapack \
+      $BLAS_LIBRARY -lblas $X_LIBRARY -lX11 -lmpiuni $FLIBS -lm"
     UNIPETSC_ARCH=`$i/bin/petscarch`
     if test "$is_64bit" != "yes" -a "$UNIPETSC_ARCH" = "IRIX64"; then
       UNIPETSC_ARCH="IRIX"
