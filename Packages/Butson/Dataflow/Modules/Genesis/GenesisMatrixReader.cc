@@ -32,7 +32,7 @@ class PSECORESHARE GenesisMatrixReader : public Module {
   typedef vector<vector<double> > genMat;
   genMat d_mat;
 public:
-  GenesisMatrixReader(const clString& id) : 
+  GenesisMatrixReader(const string& id) : 
     Module("GenesisMatrixReader", id, Source)
   {
     // Create the output data handle and port
@@ -148,7 +148,7 @@ public:
   }
 };
 
-extern "C" PSECORESHARE Module* make_GenesisMatrixReader(const clString& id) {
+extern "C" PSECORESHARE Module* make_GenesisMatrixReader(const string& id) {
   return new GenesisMatrixReader(id);
 }
 } // End namespace Butson
