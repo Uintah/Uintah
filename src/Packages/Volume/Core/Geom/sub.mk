@@ -4,6 +4,7 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
 SRCDIR := Packages/Volume/Core/Geom
 SRCS   += \
+        $(SRCDIR)/VertexProgramARB.cc \
         $(SRCDIR)/FragmentProgramARB.cc \
 	$(SRCDIR)/TextureRenderer.cc \
 	$(SRCDIR)/SliceRenderer.cc \

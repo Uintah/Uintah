@@ -37,6 +37,7 @@ namespace Volume {
 
 using SCIRun::GeomObj;
 using SCIRun::DrawInfoOpenGL;
+class VertexProgramARB;
 class FragmentProgramARB;
 
 class VolumeRenderer : public TextureRenderer
@@ -92,6 +93,7 @@ protected:
   FragmentProgramARB* LitFogVolShader;
   FragmentProgramARB* MipShader1;
   FragmentProgramARB* MipShader4;
+  VertexProgramARB* FogVertexShader;
 };
 
 } // End namespace SCIRun
