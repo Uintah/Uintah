@@ -878,6 +878,7 @@ void MPMICE::doCCMomExchange(const ProcessorGroup*,
     StaticArray<CCVariable<double> > dTdt_CC(numALLMatls);
     StaticArray<NCVariable<double> > dTdt_NC(numALLMatls);
     StaticArray<CCVariable<double> > int_eng_L_ME(numALLMatls);
+    StaticArray<CCVariable<double> > rho_CC(numALLMatls);
     StaticArray<CCVariable<double> > mass_L(numALLMatls);
 
     vector<double> b(numALLMatls);
