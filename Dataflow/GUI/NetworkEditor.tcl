@@ -1398,7 +1398,7 @@ proc validDir { name } {
 
 proc getOnTheFlyLibsDir {} {
     global tcl_platform
-    set binOTF [file join $[netedit getenv SCIRUN_OBJDIR] on-the-fly-libs]
+    set binOTF [file join [netedit getenv SCIRUN_OBJDIR] on-the-fly-libs]
 
     set dir [netedit getenv SCIRUN_ON_THE_FLY_LIBS_DIR]
 
