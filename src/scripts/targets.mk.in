@@ -24,7 +24,7 @@ _included_targets_mk = yes
 
 MAKE_PARALLELISM = @MAKE_PARALLELISM@
 
-#MAKEFLAGS += --no-print-directory
+MAKEFLAGS += @NOPRINTDIR@
 
 ifeq ($(RECURSIVE_PATH),)
   RECURSIVE_PATH=.
