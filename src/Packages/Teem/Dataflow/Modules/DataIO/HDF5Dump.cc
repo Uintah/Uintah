@@ -500,7 +500,7 @@ herr_t HDF5Dump_data(hid_t obj_id, hid_t type, ostream* iostr) {
   else
     size = cc * H5Tget_size(mem_type_id);
 
-  void *data = new char[size];
+  void *data = new char[size+1];
 
   if( data == NULL ) {
     cerr << "Can not allocate enough memory for the data" << endl;
@@ -516,11 +516,12 @@ herr_t HDF5Dump_data(hid_t obj_id, hid_t type, ostream* iostr) {
   else
     status = H5Aread(obj_id, mem_type_id, data);
 
+  ((char*) data)[size] = '\0';
+
   if( status < 0 ) {
     cerr << "Can not read data" << endl;
     return -1;
   }
-
 
   HDF5Dump_tab( iostr );
   *iostr << "DATA {" << endl;
@@ -531,6 +532,7 @@ herr_t HDF5Dump_data(hid_t obj_id, hid_t type, ostream* iostr) {
 
   for( int ic=0; ic<ndims; ic++ )
     counters[ic] = 0;
+
 
   HDF5Dump_tab( iostr );
   for( int ic=0; ic<cc; ic++ ) {
