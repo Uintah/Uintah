@@ -66,7 +66,7 @@ class SCICORESHARE TriSurfMesh : public Mesh
 {
 public:
 
-  typedef int                           under_type;
+  typedef unsigned int                  under_type;
 
   //! Index and Iterator types required for Mesh Concept.
   struct Node {
@@ -214,13 +214,13 @@ public:
 			    Vector& g2);
 
   //! function to test if at least one of face's nodes are in supplied range
-  inline bool test_nodes_range(Face::index_type fi, int sn, int en){
-    if (faces_[fi*3]>=sn && faces_[fi*3]<en
-	|| faces_[fi*3+1]>=sn && faces_[fi*3+1]<en
-	|| faces_[fi*3+2]>=sn && faces_[fi*3+2]<en)
-      return true;
-    else
-      return false;
+  inline bool test_nodes_range(Face::index_type fi,
+			       unsigned int sn,
+			       unsigned int en)
+  {
+    return (faces_[fi*3]>=sn && faces_[fi*3]<en
+	    || faces_[fi*3+1]>=sn && faces_[fi*3+1]<en
+	    || faces_[fi*3+2]>=sn && faces_[fi*3+2]<en);
   }
 
   virtual bool		synchronize(unsigned int);
@@ -265,11 +265,11 @@ private:
   int prev(int i) { return ((i%3)==0) ? (i+2) : (i-1); }
 
   vector<Point>		points_;
-  vector<int>		edges_;
-  vector<int>		faces_;
-  vector<int>		edge_neighbors_;
+  vector<under_type>    edges_;
+  vector<under_type>	faces_;
+  vector<under_type>	edge_neighbors_;
   vector<Vector>	normals_;   //! normalized per node normal.
-  vector<set<int> >	node_neighbors_;
+  vector<set<under_type> > node_neighbors_;
   Mutex		        point_lock_;
   Mutex		        edge_lock_;
   Mutex		        face_lock_;

@@ -183,7 +183,7 @@ void
     table[f] = 0; // insert for the first time
   } else {
     PFace f = (*iter).first;
-    if (f.cells_[1] != -1) {
+    if (f.cells_[1] != MESH_NO_NEIGHBOR) {
       cerr << "This Mesh has problems: Cells #" 
 	   << f.cells_[0] << ", #" << f.cells_[1] << ", and #" << ci 
 	   << " are illegally adjacent." << endl; 
@@ -548,7 +548,7 @@ HexVolMesh::get_neighbor(Cell::index_type &neighbor, Cell::index_type from,
   } else {
     neighbor = f.cells_[0];
   }
-  if (neighbor == -1) return false;
+  if (neighbor == MESH_NO_NEIGHBOR) return false;
   return true;
 }
 

@@ -244,14 +244,20 @@ QuadraticTetVolMesh::get_nodes(Node::array_type &array,
 #endif
 }
 
+
 bool 
-QuadraticTetVolMesh::test_nodes_range(Cell::index_type ci, int sn, int en){
+QuadraticTetVolMesh::test_nodes_range(Cell::index_type ci,
+				      unsigned int sn,
+				      unsigned int en)
+{
   Node::array_type nodes;
   
   get_nodes(nodes,ci);
   
-  for (int i=0; i<10; i++) 
+  for (int i=0; i<10; i++)
+  {
     if (nodes[i]>=sn && nodes[i]<en) return true;
+  }
   return false;
 }
 
@@ -259,7 +265,7 @@ QuadraticTetVolMesh::test_nodes_range(Cell::index_type ci, int sn, int en){
 void 
 QuadraticTetVolMesh::get_point(Point &result, Node::index_type index) const
 { 
-  const int sz = points_.size();
+  const unsigned int sz = points_.size();
   if (index < sz) {
     TetVolMesh::get_point(result, index);
   } else {

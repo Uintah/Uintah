@@ -414,7 +414,7 @@ TetVolMesh::create_cell_edges(Cell::index_type c)
   //ASSERT(!is_frozen());
   if (!(synchronized_&EDGES_E) && !(synchronized_&EDGE_NEIGHBORS_E)) return;
   edge_lock_.lock();
-  for (int i = c*6; i < c*6+6; ++i)
+  for (unsigned int i = c*6; i < c*6+6; ++i)
   {
     edges_.insert(i);
     all_edges_.insert(i);
@@ -429,7 +429,7 @@ TetVolMesh::delete_cell_edges(Cell::index_type c)
   //ASSERT(!is_frozen());
   if (!(synchronized_&EDGES_E) && !(synchronized_&EDGE_NEIGHBORS_E)) return;
   edge_lock_.lock();
-  for (int i = c*6; i < c*6+6; ++i)
+  for (unsigned int i = c*6; i < c*6+6; ++i)
   {
     //! If the Shared Edge Set is represented by the particular
     //! cell/edge index that is being recomputed, then
@@ -475,7 +475,7 @@ TetVolMesh::create_cell_faces(Cell::index_type c)
   //ASSERT(!is_frozen());
   if (!(synchronized_&FACES_E) && !(synchronized_&FACE_NEIGHBORS_E)) return;
   face_lock_.lock();
-  for (int i = c*4; i < c*4+4; ++i)
+  for (unsigned int i = c*4; i < c*4+4; ++i)
   {
     faces_.insert(i);
     all_faces_.insert(i);
@@ -489,7 +489,7 @@ TetVolMesh::delete_cell_faces(Cell::index_type c)
   //ASSERT(!is_frozen());
   if (!(synchronized_&FACES_E) && !(synchronized_&FACE_NEIGHBORS_E)) return;
   face_lock_.lock();
-  for (int i = c*4; i < c*4+4; ++i)
+  for (unsigned int i = c*4; i < c*4+4; ++i)
   {
     // If the Shared Face Set is represented by the particular
     // cell/face index that is being recomputed, then
@@ -534,7 +534,7 @@ TetVolMesh::create_cell_node_neighbors(Cell::index_type c)
   //ASSERT(!is_frozen());
   if (!(synchronized_ & NODE_NEIGHBORS_E)) return;
   node_neighbor_lock_.lock();
-  for (int i = c*4; i < c*4+4; ++i)
+  for (unsigned int i = c*4; i < c*4+4; ++i)
   {
     node_neighbors_[cells_[i]].push_back(i);
   }
@@ -548,7 +548,7 @@ TetVolMesh::delete_cell_node_neighbors(Cell::index_type c)
   //ASSERT(!is_frozen());
   if (!(synchronized_ & NODE_NEIGHBORS_E)) return;
   node_neighbor_lock_.lock();
-  for (int i = c*4; i < c*4+4; ++i)
+  for (unsigned int i = c*4; i < c*4+4; ++i)
   {
     const int n = cells_[i];
     vector<Cell::index_type>::iterator node_cells_end = node_neighbors_[n].end();
@@ -1050,8 +1050,10 @@ bool
 TetVolMesh::get_face_opposite_node(Face::index_type &fi, Cell::index_type ci, 
 				   Node::index_type ni) const
 {
-  for (int f = ci * 4; f < (ci * 4) + 4; f++) {
-    if (cells_[f] == ni) {
+  for (unsigned int f = ci * 4; f < (ci * 4) + 4; f++)
+  {
+    if (cells_[f] == ni)
+    {
       fi = f;
       return true;
     }
@@ -1088,7 +1090,7 @@ TetVolMesh::get_neighbor(Face::index_type &neighbor, Face::index_type idx)const
   Face::HalfFaceSet::const_iterator second = range.first;
   if (++second == range.second)
   {
-    neighbor = -1;
+    neighbor = MESH_NO_NEIGHBOR;
     return false;
   }
 
@@ -1108,7 +1110,7 @@ TetVolMesh::get_neighbors(Cell::array_type &array, Cell::index_type idx) const
   ASSERTMSG(synchronized_ & FACE_NEIGHBORS_E,
 	    "Must call synchronize FACE_NEIGHBORS_E on TetVolMesh first.");
   Face::index_type face;
-  for (int i = idx*4; i < idx*4+4;i++)
+  for (unsigned int i = idx*4; i < idx*4+4; i++)
   {
     face.index_ = i;
     pair<const Face::HalfFaceSet::const_iterator,
@@ -1884,7 +1886,7 @@ TetVolMesh::insert_node_watson(const Point &p, Cell::array_type *new_cells, Cell
   synchronize(LOCATE_E | FACE_NEIGHBORS_E);
   if (!locate(cell,p)) { 
     cerr << "Watson outside volume: " << p.x() << ", " << p.y() << ", " << p.z() << endl;
-    return (TetVolMesh::Node::index_type)(-1); 
+    return (TetVolMesh::Node::index_type)(MESH_NO_NEIGHBOR); 
   }
 
   Node::index_type new_point_index = add_point(p);
@@ -2033,7 +2035,7 @@ TetVolMesh::bisect_element(const Cell::index_type cell)
   tets.push_back(add_tet(nodes[4], nodes[8], nodes[9], nodes[7]));
 
   // Perform a 4:1 split on tet sharing face 0
-  if (face_nbrs[0] != -1)
+  if (face_nbrs[0] != MESH_NO_NEIGHBOR)
   {
     Node::index_type opp = cells_[face_nbrs[0]];
     tets.push_back(mod_tet(face_nbrs[0]/4,nodes[7],nodes[8],nodes[9],opp));
@@ -2043,7 +2045,7 @@ TetVolMesh::bisect_element(const Cell::index_type cell)
     done.insert(face_nbrs[0]/4);
   }
   // Perform a 4:1 split on tet sharing face 1
-  if (face_nbrs[1] != -1)
+  if (face_nbrs[1] != MESH_NO_NEIGHBOR)
   {
     Node::index_type opp = cells_[face_nbrs[1]];
     tets.push_back(mod_tet(face_nbrs[1]/4,nodes[5],nodes[6],nodes[8],opp));
@@ -2053,7 +2055,7 @@ TetVolMesh::bisect_element(const Cell::index_type cell)
     done.insert(face_nbrs[1]/4);
   }
   // Perform a 4:1 split on tet sharing face 2
-  if (face_nbrs[2] != -1)
+  if (face_nbrs[2] != MESH_NO_NEIGHBOR)
   {
     Node::index_type opp = cells_[face_nbrs[2]];
     tets.push_back(mod_tet(face_nbrs[2]/4,nodes[4],nodes[9],nodes[6],opp));
@@ -2063,7 +2065,7 @@ TetVolMesh::bisect_element(const Cell::index_type cell)
     done.insert(face_nbrs[2]/4);
   }
   // Perform a 4:1 split on tet sharing face 3
-  if (face_nbrs[3] != -1)
+  if (face_nbrs[3] != MESH_NO_NEIGHBOR)
   {
     Node::index_type opp = cells_[face_nbrs[3]];
     tets.push_back(mod_tet(face_nbrs[3]/4,nodes[4],nodes[5],nodes[7],opp));

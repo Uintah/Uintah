@@ -295,12 +295,12 @@ TriSurfMesh::get_neighbor(Face::index_type &neighbor,
 {
   ASSERTMSG(synchronized_ & EDGE_NEIGHBORS_E,
 	    "Must call synchronize EDGE_NEIGHBORS_E on TriSurfMesh first");
-  int n = edge_neighbors_[edges_[edge]];
-  if (n != -1 && (n % 3) == face)
+  unsigned int n = edge_neighbors_[edges_[edge]];
+  if (n != MESH_NO_NEIGHBOR && (n % 3) == face)
   {
     n = edge_neighbors_[n];
   }
-  if (n != -1)
+  if (n != MESH_NO_NEIGHBOR)
   {
     neighbor = n / 3;
     return true;
@@ -318,7 +318,7 @@ TriSurfMesh::compute_node_neighbors()
     return;
   }
   node_neighbors_.clear();
-  node_neighbors_.resize(points_.size(),set<int>());
+  node_neighbors_.resize(points_.size(),set<unsigned int>());
   unsigned int nfaces = faces_.size();
   for (unsigned int f = 0; f < nfaces; ++f)
   {
@@ -775,13 +775,13 @@ TriSurfMesh::insert_node(Face::index_type face, const Point &p)
   if (do_neighbors)
   {
     edge_neighbors_.push_back(edge_neighbors_[f0+1]);
-    if (edge_neighbors_.back() != -1) 
+    if (edge_neighbors_.back() != MESH_NO_NEIGHBOR) 
       edge_neighbors_[edge_neighbors_.back()] = edge_neighbors_.size()-1;
     edge_neighbors_.push_back(f2+2);
     edge_neighbors_.push_back(f0+1);
     
     edge_neighbors_.push_back(edge_neighbors_[f0+2]);
-    if (edge_neighbors_.back() != -1) 
+    if (edge_neighbors_.back() != MESH_NO_NEIGHBOR) 
       edge_neighbors_[edge_neighbors_.back()] = edge_neighbors_.size()-1;
     edge_neighbors_.push_back(f0+2);
     edge_neighbors_.push_back(f1+1);
@@ -893,15 +893,15 @@ TriSurfMesh::bisect_element(const Face::index_type face)
   {
     edge_neighbors_.push_back(edge_neighbors_[f0+0]);
     edge_neighbors_.push_back(f0+2);
-    edge_neighbors_.push_back(-1);
+    edge_neighbors_.push_back(MESH_NO_NEIGHBOR);
     
     edge_neighbors_.push_back(edge_neighbors_[f0+1]);
     edge_neighbors_.push_back(f0+0);
-    edge_neighbors_.push_back(-1);
+    edge_neighbors_.push_back(MESH_NO_NEIGHBOR);
     
     edge_neighbors_.push_back(edge_neighbors_[f0+2]);
     edge_neighbors_.push_back(f0+1);
-    edge_neighbors_.push_back(-1);    
+    edge_neighbors_.push_back(MESH_NO_NEIGHBOR);
 
     // must do last
     edge_neighbors_[f0+0] = f2+1;
@@ -929,7 +929,7 @@ TriSurfMesh::bisect_element(const Face::index_type face)
   }
   
 
-  if (do_neighbors && edge_neighbors_[f1] != -1)
+  if (do_neighbors && edge_neighbors_[f1] != MESH_NO_NEIGHBOR)
   {
     const unsigned nbr = edge_neighbors_[f1];
     const unsigned pnbr = prev(nbr);
@@ -954,7 +954,7 @@ TriSurfMesh::bisect_element(const Face::index_type face)
     
   }
 
-  if (do_neighbors && edge_neighbors_[f2] != -1)
+  if (do_neighbors && edge_neighbors_[f2] != MESH_NO_NEIGHBOR)
   {
     const unsigned nbr = edge_neighbors_[f2];
     const unsigned pnbr = prev(nbr);
@@ -978,7 +978,7 @@ TriSurfMesh::bisect_element(const Face::index_type face)
     }
   }
 
-  if (do_neighbors && edge_neighbors_[f3] != -1)
+  if (do_neighbors && edge_neighbors_[f3] != MESH_NO_NEIGHBOR)
   {
     const unsigned nbr = edge_neighbors_[f3];
     const unsigned pnbr = prev(nbr);
@@ -1111,7 +1111,7 @@ TriSurfMesh::add_find_point(const Point &p, double err)
     node_neighbor_lock_.lock();
     point_lock_.lock();
     points_.push_back(p);
-    node_neighbors_.push_back(set<int>());
+    node_neighbors_.push_back(set<unsigned int>());
     node_neighbor_lock_.unlock();
     point_lock_.unlock();
     return static_cast<Node::index_type>(points_.size() - 1);
@@ -1172,7 +1172,7 @@ TriSurfMesh::compute_edge_neighbors(double /*err*/)
   edge_neighbors_.resize(faces_.size());
   for (unsigned int j = 0; j < edge_neighbors_.size(); j++)
   {
-    edge_neighbors_[j] = -1;
+    edge_neighbors_[j] = MESH_NO_NEIGHBOR;
   }
 
   int i;
@@ -1220,7 +1220,10 @@ TriSurfMesh::add_point(const Point &p)
   point_lock_.lock();
   points_.push_back(p);
   if (synchronized_ & NORMALS_E) normals_.push_back(Vector());
-  if (synchronized_ & NODE_NEIGHBORS_E) node_neighbors_.push_back(set<int>());
+  if (synchronized_ & NODE_NEIGHBORS_E)
+  {
+    node_neighbors_.push_back(set<unsigned int>());
+  }
   normal_lock_.unlock();
   node_neighbor_lock_.unlock();
   point_lock_.unlock();

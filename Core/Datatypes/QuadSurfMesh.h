@@ -62,7 +62,7 @@ class SCICORESHARE QuadSurfMesh : public Mesh
 {
 public:
 
-  typedef int                           under_type;
+  typedef unsigned int                  under_type;
 
   //! Index and Iterator types required for Mesh Concept.
   struct Node {

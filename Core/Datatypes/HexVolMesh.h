@@ -59,7 +59,7 @@ namespace SCIRun {
 class SCICORESHARE HexVolMesh : public Mesh
 {
 public:
-  typedef int under_type;
+  typedef unsigned int                  under_type;
 
   //! Index and Iterator types required for Mesh Concept.
   struct Node {
@@ -230,7 +230,10 @@ public:
 			    Vector& g5, Vector& g6, Vector& g7);
 
   //! function to test if at least one of cell's nodes are in supplied range
-  inline bool test_nodes_range(Cell::index_type ci, int sn, int en){
+  inline bool test_nodes_range(Cell::index_type ci,
+			       unsigned int sn,
+			       unsigned int en)
+  {
     if (cells_[ci*8]>=sn && cells_[ci*8]<en
 	|| cells_[ci*8+1]>=sn && cells_[ci*8+1]<en
 	|| cells_[ci*8+2]>=sn && cells_[ci*8+2]<en
@@ -239,9 +242,13 @@ public:
 	|| cells_[ci*8+5]>=sn && cells_[ci*8+5]<en
 	|| cells_[ci*8+6]>=sn && cells_[ci*8+6]<en
 	|| cells_[ci*8+7]>=sn && cells_[ci*8+7]<en)
+    {
       return true;
+    }
     else
+    {
       return false;
+    }
   }
   template <class Iter, class Functor>
   void fill_points(Iter begin, Iter end, Functor fill_ftor);
@@ -317,21 +324,21 @@ private:
 
 
     PFace() {
-      nodes_[0] = -1;
-      nodes_[1] = -1;
-      nodes_[2] = -1;
-      nodes_[3] = -1;
-      snodes_[0] = -1;
-      snodes_[1] = -1;
-      snodes_[2] = -1;
-      snodes_[3] = -1;
-      cells_[0] = -1;
-      cells_[1] = -1;
+      nodes_[0] = MESH_NO_NEIGHBOR;
+      nodes_[1] = MESH_NO_NEIGHBOR;
+      nodes_[2] = MESH_NO_NEIGHBOR;
+      nodes_[3] = MESH_NO_NEIGHBOR;
+      snodes_[0] = MESH_NO_NEIGHBOR;
+      snodes_[1] = MESH_NO_NEIGHBOR;
+      snodes_[2] = MESH_NO_NEIGHBOR;
+      snodes_[3] = MESH_NO_NEIGHBOR;
+      cells_[0] = MESH_NO_NEIGHBOR;
+      cells_[1] = MESH_NO_NEIGHBOR;
     }
     // snodes_ must be sorted. See Hash Function below.
     PFace(Node::index_type n1, Node::index_type n2, Node::index_type n3, Node::index_type n4) {
-      cells_[0] = -1;
-      cells_[1] = -1;
+      cells_[0] = MESH_NO_NEIGHBOR;
+      cells_[1] = MESH_NO_NEIGHBOR;
       nodes_[0] = n1;
       nodes_[1] = n2;
       nodes_[2] = n3;
@@ -352,7 +359,7 @@ private:
       }
     }
 
-    bool shared() const { return ((cells_[0] != -1) && (cells_[1] != -1)); }
+    bool shared() const { return ((cells_[0] != MESH_NO_NEIGHBOR) && (cells_[1] != MESH_NO_NEIGHBOR)); }
 
     //! true if both have the same nodes (order does not matter)
     bool operator==(const PFace &f) const {
@@ -368,8 +375,8 @@ private:
     vector<Cell::index_type> cells_;      //! list of all the cells this edge is in.
 
     PEdge() : cells_(0) {
-      nodes_[0] = -1;
-      nodes_[1] = -1;
+      nodes_[0] = MESH_NO_NEIGHBOR;
+      nodes_[1] = MESH_NO_NEIGHBOR;
     }
     // node_[0] must be smaller than node_[1]. See Hash Function below.
     PEdge(Node::index_type n1, Node::index_type n2) : cells_(0) {
