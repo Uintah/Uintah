@@ -1135,6 +1135,7 @@ proc startOPortConnection {omodid owhich x y} {
 proc buildConnection {connid portcolor omodid owhich imodid iwhich} {
     set path [routeConnection $omodid $owhich $imodid $iwhich]
     set minipath ""
+    set color $portcolor
 
     global SCALEX SCALEY
     set doingX 1
@@ -1151,18 +1152,29 @@ proc buildConnection {connid portcolor omodid owhich imodid iwhich} {
     eval $netedit_canvas create bline $path -width 7 \
 	-borderwidth 2 -fill \"$portcolor\" \
 	-tags $connid
+
     $netedit_canvas bind $connid <ButtonPress-3> \
 	    "destroyConnection $connid $omodid $imodid"
 
+    $netedit_canvas bind $connid <ButtonPress-1> {
+	$netedit_canvas itemconfigure current -fill red
+    }
+
+    $netedit_canvas bind $connid <ButtonRelease-1> \
+	    "resetPipe $portcolor"
+	
     eval $netedit_mini_canvas create line $minipath -width 1 \
 	-fill \"$portcolor\" -tags $connid
 
     $netedit_mini_canvas lower $connid
 }
 
-#"
+proc resetPipe {portcolor} {
+    global netedit_canvas
+    $netedit_canvas itemconfigure current -fill $portcolor
+}
 
-proc destroyConnection {connid omodid imodid} {
+proc destroyConnection {connid omodid imodid} { 
     global connection_list
 
     if { [string match [$omodid mod_type] "macromodule"] == 1 &&\
