@@ -42,6 +42,7 @@ Persistent* PropertyBase::maker()
   return scinew PropertyBase;
 }
 
+
 /*
  * Get
  */
@@ -101,6 +102,20 @@ PropertyManager::~PropertyManager()
   }
 }
 
+
+void
+PropertyManager::remove( const string &name )
+{
+  lock.lock();
+
+  map_type::iterator loc = properties_.find(name);
+  if (loc != properties_.end()) {
+    properties_.erase(name);
+    size_--;
+  }
+
+  lock.unlock();
+}
 
 #define PROPERTYMANAGER_VERSION 1
 
