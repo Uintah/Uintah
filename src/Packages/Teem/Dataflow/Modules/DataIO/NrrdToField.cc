@@ -487,9 +487,13 @@ NrrdToField::create_field_from_nrrds(NrrdDataHandle dataH, NrrdDataHandle points
 	// data and points must have the same number of dimensions and the all but the first
 	// must be the same size
 	int d = 0, p = 0;
+	if (!(dataH->nrrd->dim == pointsH->nrrd->dim || dataH->nrrd->dim == (pointsH->nrrd->dim-1))) {
+	  error ("Data and Points must have the same dimension for the domain.");
+	  return 0;
+	}
 	for (d = dataH->nrrd->dim-1, p = pointsH->nrrd->dim-1; p > 0; d--, p--) {
 	  if (dataH->nrrd->axis[d].size != pointsH->nrrd->axis[p].size) {
-	    error("Data and Points must have the same dimension size for all but the first axis.");
+	    error("Data and Points must have the same size for all domain axes.");
 	    return 0;
 	  }
 	}
