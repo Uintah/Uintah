@@ -219,7 +219,10 @@ void RegridderCommon::problemSetup(const ProblemSpecP& params,
   d_patchCreated[0]->initialize(0);
   d_patchDeleted[0]->initialize(0);
   if ( Mod( d_patchSize[0], d_latticeRefinementRatio[0] ) != IntVector(0,0,0) ) {
-    throw InternalError("Regridder: patch size is not divisible by lattice ratio on level 0!");
+    ostringstream msg;
+    msg << "Problem Setup: Regridder: you've specified a patch size that is not divisible by the lattice ratio on level 0 \n"
+        << " patch size " <<  d_patchSize[0] << " lattice refinement ratio " << d_latticeRefinementRatio[0] << endl;
+    throw ProblemSetupException(msg.str());
   }
 
   for (int k = 1; k < d_maxLevels; k++) {
@@ -239,8 +242,10 @@ void RegridderCommon::problemSetup(const ProblemSpecP& params,
     if (k < (d_maxLevels-1)) {
       if ( Mod( d_patchSize[k], d_latticeRefinementRatio[k] ) != IntVector(0,0,0) ) {
 	ostringstream msg;
-	msg << "Regridder: patch size is not divisible by lattice ratio on level " << k; 
-	throw InternalError(msg.str());
+	msg << "Regridder: patch size is not divisible by  the lattice ratio on level " << k;
+       msg << "Problem Setup: Regridder: you've specified a patch size that is not divisible by lattice ratio on level" << k
+           << "\npatch size " <<  d_patchSize[0] << " lattice refinement ratio " << d_latticeRefinementRatio[0] << endl; 
+	throw ProblemSetupException(msg.str());
       }
     }
   }
