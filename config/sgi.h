@@ -18,7 +18,7 @@
 #define SCI_NativeOtherCppFlags SCI_OtherCFlags +w -pte.cc -ptr$(TOP)/templates
 #define SCI_NativeCppIncludeLocation /usr/include/CC
 #define SCI_NativeLinker time CC
-#define SCI_NativeLinkerFlags -ptv
+#define SCI_NativeLinkerFlags -ptv -pta
 #define SCI_NativeLinkerNeedsCppFlags
 #define SCI_NativeLinkerLib
 
