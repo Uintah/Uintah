@@ -805,8 +805,12 @@ OnDemandDataWarehouse::put(ParticleVariableBase& var,
    checkPutAccess(label, matlIndex, patch, replace);
    
    // Error checking
-   if(!replace && d_particleDB.exists(label, matlIndex, patch))
-      throw InternalError("Variable already exists: "+label->getName());
+   if(!replace && d_particleDB.exists(label, matlIndex, patch)) {
+     ostringstream error_msg;
+     error_msg << "Variable already exists: " << label->getName()
+	       << " on patch " << patch->getID();
+     throw InternalError(error_msg.str());
+   }
 
 #if DAV_DEBUG
   cerr << "Putting: " << *label << " MI: " << matlIndex << " patch: " 
