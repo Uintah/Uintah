@@ -661,6 +661,8 @@ void Patch::computeVariableExtents(VariableBasis basis, Ghost::GhostType gtype,
 	case Ghost::None:
 	    if(gtype != 0)
 		throw InternalError("ghost cells should not be specified with Ghost::None");
+	    l = getGhostSFCXLowIndex(numGhostCells);
+	    h = getGhostSFCXHighIndex(numGhostCells);
 	    break;
 	case Ghost::AroundCells:    // X faces around cells
 	    l = getGhostSFCXLowIndex(numGhostCells);
@@ -685,6 +687,8 @@ void Patch::computeVariableExtents(VariableBasis basis, Ghost::GhostType gtype,
 	case Ghost::None:
 	    if(gtype != 0)
 		throw InternalError("ghost cells should not be specified with Ghost::None");
+	    l = getGhostSFCYLowIndex(numGhostCells);
+	    h = getGhostSFCYHighIndex(numGhostCells);
 	    break;
 	case Ghost::AroundCells:    // Y faces around cells
 	    l = getGhostSFCYLowIndex(numGhostCells);
@@ -709,6 +713,8 @@ void Patch::computeVariableExtents(VariableBasis basis, Ghost::GhostType gtype,
 	case Ghost::None:
 	    if(gtype != 0)
 		throw InternalError("ghost cells should not be specified with Ghost::None");
+	    l = getGhostSFCZLowIndex(numGhostCells);
+	    h = getGhostSFCZHighIndex(numGhostCells);
 	    break;
 	case Ghost::AroundCells:    // Z faces around cells
 	    l = getGhostSFCZLowIndex(numGhostCells);
