@@ -22,11 +22,13 @@
 #include <string>
 #include <Core/Util/soloader.h>
 #include <Core/Util/sci_system.h>
+#include <Core/Util/scirun_env.h>
 #include <fstream>
 #include <iostream>
 #include <algorithm>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <errno.h>
 #include <stdio.h>
 #include <unistd.h>
 #include <sstream>
@@ -35,18 +37,11 @@ namespace SCIRun {
 
 using namespace std;
 
-#ifndef ON_THE_FLY_SRC
-#error ON_THE_FLY_SRC is not defined!!
-#endif
-
-#ifndef ON_THE_FLY_OBJ
-#error ON_THE_FLY_OBJ is not defined!!
-#endif
-
-const string OTF_SRC_DIR(ON_THE_FLY_SRC);
-const string OTF_OBJ_DIR(ON_THE_FLY_OBJ);
+env_map scirunrc;
 
 DynamicLoader* DynamicLoader::scirun_loader_ = 0;
+string DynamicLoader::otf_dir_ = string(SCIRUN_OBJDIR) + "/on-the-fly-libs";
+bool DynamicLoader::otf_dir_found_ = false;
 
 CompileInfo::CompileInfo(const string &fn, const string &bcn, 
 			 const string &tcn, const string &tcdec) :
@@ -201,29 +196,27 @@ DynamicLoader::compile_and_store(const CompileInfo &info, bool maybe_compile_p,
     map_crowd_.writeUnlock();
   }
 
-  if (! do_compile) {
-    if (! wait_for_current_compile(info.filename_)) return false;
-  }
+  if (!do_compile && !wait_for_current_compile(info.filename_)) return false;
 
   // Try to load a .so that is already compiled
-  string full_so = OTF_OBJ_DIR + string("/") + 
+  string full_so = get_compile_dir() + string("/") + 
     info.filename_ + string("so");
 
   LIBRARY_HANDLE so = 0;
   struct stat buf;
   if (stat(full_so.c_str(), &buf) == 0) {
-    compile_so(info.filename_, serr); // make sure
+    compile_so(info, serr); // make sure
     so = GetLibraryHandle(full_so.c_str());
   } else {
     // the lib does not exist.  
-    create_cc(info, serr);
-    compile_so(info.filename_, serr);
+    create_cc(info, false, serr);
+    compile_so(info, serr);
     so = GetLibraryHandle(full_so.c_str());
 
     if (maybe_compile_p && so == 0)
     {
-      create_empty_cc(info, serr);
-      compile_so(info.filename_, serr);
+      create_cc(info, true, serr);
+      compile_so(info, serr);
       so = GetLibraryHandle(full_so.c_str());
     }
      
@@ -270,9 +263,10 @@ DynamicLoader::compile_and_store(const CompileInfo &info, bool maybe_compile_p,
 //! Attempt to compile file into a .so, return true if it succeeded
 //! false otherwise.
 bool 
-DynamicLoader::compile_so(const string& file, ostream &serr)
+DynamicLoader::compile_so(const CompileInfo &info, ostream &serr)
 {
-  string command = "cd " + OTF_OBJ_DIR + "; gmake " + file + "so";
+  string command = ("cd " + get_compile_dir() + "; gmake " + 
+		    info.filename_ + "so");
 
   serr << "DynamicLoader - Executing: " << command << endl;
 
@@ -281,7 +275,7 @@ DynamicLoader::compile_so(const string& file, ostream &serr)
 #ifdef __sgi
   //if (serr == cerr)
   //{
-  //command += " >> " + file + "log 2>&1";
+  //command += " >> " + info.filename_ + "log 2>&1";
   //}
   command += " 2>&1";
   pipe = popen(command.c_str(), "r");
@@ -291,14 +285,14 @@ DynamicLoader::compile_so(const string& file, ostream &serr)
     result = false;
   }
 #else
-  command += " > " + file + "log 2>&1";
+  command += " > " + info.filename_ + "log 2>&1";
   const int status = sci_system(command.c_str());
   if(status != 0) {
     serr << "DynamicLoader::compile_so() syscal error " << status << ": "
 	 << "command was '" << command << "'\n";
     result = false;
   }
-  pipe = fopen((OTF_OBJ_DIR + "/" + file + "log").c_str(), "r");
+  pipe = fopen((get_compile_dir()+"/" + info.filename_ + "log").c_str(), "r");
 #endif
 
   char buffer[256];
@@ -315,28 +309,30 @@ DynamicLoader::compile_so(const string& file, ostream &serr)
 
   if (result)
   {
-    serr << "DynamicLoader - Successfully compiled " << file + "so" << endl;
+    serr << "DynamicLoader - Successfully compiled " << info.filename_ + "so" 
+	 << endl;
   }
   return result;
 }
 
 
-
 //! DynamicLoader::create_cc
 //!
 //! Write a .cc file, from the compile info.
+//! If boolean empty == true, It contains an empty maker function.  
+//! Used if the actual compilation fails.
 bool 
-DynamicLoader::create_cc(const CompileInfo &info, ostream &serr)
+DynamicLoader::create_cc(const CompileInfo &info, bool empty, ostream &serr)
 {
   const string STD_STR("std::");
 
   // Try to open the file for writing.
-  string full = OTF_OBJ_DIR + "/" + info.filename_ + "cc";
+  string full = get_compile_dir() + "/" + info.filename_ + "cc";
   ofstream fstr(full.c_str());
 
   if (!fstr) {
-    serr << "DynamicLoader::create_cc - Could not create file " <<
-      full << endl;
+    serr << "DynamicLoader::create_cc(empty = " << (empty ? "true":"false") 
+	 << ") - Could not create file " << full << endl;
     return false;
   }
   fstr << "// This is an autamatically generated file, do not edit!" << endl;
@@ -374,82 +370,19 @@ DynamicLoader::create_cc(const CompileInfo &info, ostream &serr)
     ++nsiter;
   }
 
+  // Delcare the maker function
+  fstr << endl << "extern \"C\" {"  << endl
+       << info.base_class_name_ << "* maker() {" << endl;
 
-  fstr << endl;
-
-  fstr << "extern \"C\" {"  << endl
-       << info.base_class_name_ << "* maker() {" << endl
-       << "  return scinew "<< info.template_class_name_ << "<" 
+  // If making an empty maker, return nothing instead of newing up the class.
+  // Comments out the next line that news up the class.
+  if (empty)
+  {
+    fstr << "  return 0;" << endl << "//";
+  }
+  
+  fstr << "  return scinew "<< info.template_class_name_ << "<" 
        << info.template_arg_ << ">;" << endl
-       << "}" << endl << "}" << endl;
-
-  serr << "DynamicLoader - Successfully created " << full << endl;
-  return true;
-}
-
-
-//! DynamicLoader::create_empty_cc
-//!
-//! Write a .cc file, from the compile info.
-//! It contains an empty maker function.  Used if the actual compilation
-//! fails.
-bool 
-DynamicLoader::create_empty_cc(const CompileInfo &info, ostream &serr)
-{
-  const string STD_STR("std::");
-
-  // Try to open the file for writing.
-  string full = OTF_OBJ_DIR + "/" + info.filename_ + "cc";
-  ofstream fstr(full.c_str());
-
-  if (!fstr) {
-    serr << "DynamicLoader::create_empty_cc - Could not create file "
-	 << full << endl;
-    return false;
-  }
-  fstr << "// This is an autamatically generated file, do not edit!" << endl;
-
-  // generate standard includes
-  list<string>::const_iterator iter = info.includes_.begin();
-  while (iter != info.includes_.end()) { 
-    const string &s = *iter;
-    if (s.substr(0, 5) == STD_STR)
-    {
-      string std_include = s.substr(5, s.length() -1);
-      fstr << "#include <" << std_include << ">" << endl;
-    }
-    ++iter;
-  }
-
-  // generate other includes
-  iter = info.includes_.begin();
-  while (iter != info.includes_.end()) { 
-    const string &s = *iter;
-    if (!((s.substr(0, 5) == STD_STR) || s == "builtin"))
-    {
-      fstr << "#include \"" << s << "\"" << endl;
-    }
-    ++iter;
-  }
-
-  // output namespaces
-  CompileInfo::ci_map_type::const_iterator nsiter = info.namespaces_.begin();
-  while (nsiter != info.namespaces_.end()) { 
-    const string &s = (*nsiter).first;
-    if (s != "builtin") {
-      fstr << "using namespace " << s << ";" << endl;
-    }
-    ++nsiter;
-  }
-
-
-  fstr << endl;
-
-  fstr << "extern \"C\" {"  << endl
-       << info.base_class_name_ << "* maker() {" << endl
-       << "//  return scinew "<< info.template_class_name_ << "<" 
-       << info.template_arg_ << ">;" << endl
-       << "  return 0;" << endl
        << "}" << endl << "}" << endl;
 
   serr << "DynamicLoader - Successfully created " << full << endl;
@@ -502,6 +435,90 @@ DynamicLoader::maybe_get(const CompileInfo &ci, DynamicAlgoHandle &algo)
 	  (compile_and_store(ci, true, log) && fetch(ci, algo)));
 }
 
+
+bool
+DynamicLoader::validate_compile_dir(string &dir)
+{
+  cout << "Testing " << dir << endl;
+  struct stat buf;
+  if (!stat(dir.c_str(), &buf) && !errno) 
+  {    
+     // Rid the string of any trailing '/'s
+    string::iterator str_end = dir.end();
+    --str_end;
+    while ((*str_end) == '/') --str_end;
+    dir.erase(++str_end,dir.end());
+    
+    // Look for the makefile in the  directory
+    const int status = stat(string(dir + "/Makefile").c_str(), &buf);
+    return  ((!status && !errno) || // Found the Makefile there already
+	     // OR the Makefile wasnt found, but the copy was successful
+	     (status && errno == ENOENT && copy_makefile_to(dir)));
+  }
+  return false;
+}
+
+
+
+
+const string &
+DynamicLoader::get_compile_dir()
+{
+  if (!otf_dir_found_) 
+  {
+    char *ENV_DIR = getenv("SCI_ON_THE_FLY_LIBS_DIR");
+    if (ENV_DIR)
+      {
+	string env_dir(ENV_DIR);
+	if (!env_dir.empty()) otf_dir_found_ = validate_compile_dir(env_dir);
+	if (otf_dir_found_) otf_dir_ = env_dir;
+      }
+  }
+
+  if (!otf_dir_found_) 
+  {
+    env_iter rc = scirunrc.find("SCI_ON_THE_FLY_LIBS_DIR");
+    if (rc != scirunrc.end())
+    {
+      string rc_dir = (*rc).second;
+      if (!rc_dir.empty()) otf_dir_found_ = validate_compile_dir(rc_dir);
+      if (otf_dir_found_) otf_dir_ = rc_dir;
+    }
+  }
+      
+  otf_dir_found_ = true;
+  return otf_dir_;
+}
+      
+bool 
+DynamicLoader::copy_makefile_to(const string &dir)
+{
+  string command = ("cp -f " + string(SCIRUN_OBJDIR) + 
+		    "/on-the-fly-libs/Makefile " + dir);
+
+  bool result = true;
+#ifdef __sgi
+  pipe = popen(command.c_str(), "r");
+  if (pipe == NULL)
+  {
+    result = false;
+  }
+#else
+  const int status = sci_system(command.c_str());
+  if(status != 0) {
+    result = false;
+  }
+#endif
+  if (!result)
+  {
+    cerr << "DynamicLoader::copy_makefile() unable to copy " 
+         << SCIRUN_OBJDIR << "/on-the-fly-libs/Makefile to " << dir << endl;
+  }
+
+  return result;
+}
+
+
+
+
 } // End namespace SCIRun
-
-
