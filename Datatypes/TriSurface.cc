@@ -16,6 +16,7 @@
 #include <Classlib/TrivialAllocator.h>
 #include <Classlib/Queue.h>
 #include <Datatypes/TriSurface.h>
+#include <Datatypes/SurfTree.h>
 #include <Geometry/BBox.h>
 #include <Geometry/Grid.h>
 #include <Math/MiscMath.h>
@@ -48,7 +49,10 @@ TriSurface::TriSurface(Representation r)
 TriSurface::TriSurface(const TriSurface& copy, Representation r)
 : Surface(copy)
 {
-    NOT_FINISHED("TriSurface::TriSurface");
+    points=copy.points;
+    elements=copy.elements;
+    bcIdx=copy.bcIdx;
+    bcVal=copy.bcVal;
 }
 
 TriSurface::~TriSurface() {
@@ -613,12 +617,16 @@ void TriSurface::remove_triangle(int i) {
     }
 }
 
-#define TRISURFACE_VERSION 1
+#define TRISURFACE_VERSION 2
 
 void TriSurface::io(Piostream& stream) {
     remove_empty_index();
-    /*int version=*/stream.begin_class("TriSurface", TRISURFACE_VERSION);
+    int version=stream.begin_class("TriSurface", TRISURFACE_VERSION);
     Surface::io(stream);
+    if (version >= 2) {
+	Pio(stream, bcIdx);
+	Pio(stream, bcVal);
+    }
     Pio(stream, points);
     Pio(stream, elements);
     stream.end_class();
@@ -633,6 +641,17 @@ void Pio(Piostream& stream, TSElement*& data)
     Pio(stream, data->i2);
     Pio(stream, data->i3);
     stream.end_cheap_delim();
+}
+
+SurfTree* TriSurface::toSurfTree() {
+    SurfTree* st=new SurfTree;
+    st->elements=elements;
+    st->points=points;
+    st->surfEls.resize(1);
+    for (int i=0; i<elements.size(); i++) st->surfEls[0].add(i);
+    st->inner.resize(1);
+    st->matl.add(0);
+    return st;
 }
 
 Surface* TriSurface::clone()
@@ -668,6 +687,76 @@ GeomObj* TriSurface::get_obj(const ColorMapHandle&)
 {
     NOT_FINISHED("TriSurface::get_obj");
     return 0;
+}
+
+void TriSurface::compute_samples(int nsamp)
+{
+    samples.remove_all();
+    weights.remove_all();
+
+    samples.resize(nsamp);
+    weights.resize(elements.size());
+
+    for(int i=0;i<elements.size();i++) {
+	if (elements[i]) {
+	    TSElement* me = elements[i];
+	    Vector v1(points[me->i2]-points[me->i1]);
+	    Vector v2(points[me->i3]-points[me->i1]);
+
+	    weights[i] = Cross(v1,v2).length()*0.5;
+	} else {
+	    weights[i] = 0.0;
+	}
+    }
+}
+
+Point RandomPoint(Point& p1, Point& p2, Point& p3)
+{
+    double alpha,beta;
+
+    alpha = sqrt(drand48());
+    beta = drand48();
+
+    return AffineCombination(p1,1-alpha,
+			     p2,alpha-alpha*beta,
+			     p3,alpha*beta);
+}
+
+void TriSurface::distribute_samples()
+{
+  double total_importance =0.0;
+  Array1<double> psum(weights.size());
+  
+  for(int i=0;i<elements.size();i++) {
+    if (elements[i]) {
+      total_importance += weights[i];
+      psum[i] = total_importance;
+    } else {
+      psum[i] = -1;  // bad, so it will just skip over this...
+    }
+  }
+
+  // now just jump into the prefix sum table...
+  // this is a bit faster, especialy initialy...
+
+  int pi=0;
+  int nsamp = samples.size();
+  double factor = 1.0/(nsamp-1)*total_importance;
+
+  for(i=0;i<nsamp;i++) {
+    double val = (i*factor);
+    while ( (pi < weights.size()) && 
+           (psum[pi] < val))
+      pi++;
+    if (pi == weights.size()) {
+      cerr << "Over flow!\n";
+    } else {
+	samples[i] = RandomPoint(points[elements[pi]->i1],
+				 points[elements[pi]->i2],
+				 points[elements[pi]->i3]);
+    }
+  }
+
 }
 
 #ifdef __GNUG__

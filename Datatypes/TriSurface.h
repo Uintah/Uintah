@@ -15,11 +15,11 @@
 #define SCI_Datatypes_TriSurface_h 1
 
 #include <Datatypes/Surface.h>
-
 #include <Classlib/Array1.h>
 #include <Geometry/Point.h>
 #include <stdlib.h> // For size_t
 
+class SurfTree;
 struct TSElement {
     int i1; 
     int i2; 
@@ -36,6 +36,8 @@ class TriSurface : public Surface {
 public:
     Array1<Point> points;
     Array1<TSElement*> elements;
+    Array1<int> bcIdx;		// indices of any points w/ boundary conditions
+    Array1<double> bcVal;		// the values at each boundary condition
 private:
     int empty_index;
     int directed;	// are the triangle all ordered clockwise?
@@ -52,6 +54,8 @@ public:
     // pass in allocated surfaces for conn and d_conn. NOTE: contents will be
     // overwritten
     void separate(int idx, TriSurface* conn, TriSurface* d_conn);
+
+    SurfTree* toSurfTree();
 
     // NOTE: if elements have been added or removed from the surface
     // remove_empty_index() MUST be called before passing a TriSurface
@@ -77,6 +81,15 @@ public:
 			      const Point &p3);
 
     virtual GeomObj* get_obj(const ColorMapHandle&);
+
+    // this is for random distributions on the surface...
+
+    Array1< Point > samples; // random points
+    Array1< double > weights; // weight for particular element
+
+    void compute_samples(int nsamp); // compute the "weights" and 
+
+    void distribute_samples(); // samples are really computed
 
     // Persistent representation...
     virtual void io(Piostream&);
