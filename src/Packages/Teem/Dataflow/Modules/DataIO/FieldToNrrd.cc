@@ -124,6 +124,7 @@ void FieldToNrrd::execute()
 	for (int i=0; i<nx; i++)
 	  *p++=f->fdata()(k,j,i);
     nout->nrrd=nrrdNewWrap(data, nx*ny*nz, nrrdTypeFloat, 3);
+#if 0
   } else if (data == "unsigned_int") {
     LatticeVol<unsigned int> *f = 
       dynamic_cast<LatticeVol<unsigned int>*>(field);
@@ -139,6 +140,7 @@ void FieldToNrrd::execute()
 	for (int i=0; i<nx; i++)
 	  *p++=f->fdata()(k,j,i);
     nout->nrrd=nrrdNewWrap(data, nx*ny*nz, nrrdTypeUInt, 3);
+#endif
   } else if (data == "int") {
     LatticeVol<int> *f = 
       dynamic_cast<LatticeVol<int>*>(field);
@@ -154,6 +156,7 @@ void FieldToNrrd::execute()
 	for (int i=0; i<nx; i++)
 	  *p++=f->fdata()(k,j,i);
     nout->nrrd=nrrdNewWrap(data, nx*ny*nz, nrrdTypeInt, 3);
+#if 0
   } else if (data == "unsigned_short") {
     LatticeVol<unsigned short> *f = 
       dynamic_cast<LatticeVol<unsigned short>*>(field);
@@ -169,6 +172,7 @@ void FieldToNrrd::execute()
 	for (int i=0; i<nx; i++)
 	  *p++=f->fdata()(k,j,i);
     nout->nrrd=nrrdNewWrap(data, nx*ny*nz, nrrdTypeUShort, 3);
+#endif
   } else if (data == "short") {
     LatticeVol<short> *f = 
       dynamic_cast<LatticeVol<short>*>(field);
@@ -199,6 +203,7 @@ void FieldToNrrd::execute()
 	for (int i=0; i<nx; i++)
 	  *p++=f->fdata()(k,j,i);
     nout->nrrd=nrrdNewWrap(data, nx*ny*nz, nrrdTypeUChar, 3);
+#if 0
   } else if (data == "char") {
     LatticeVol<char> *f = 
       dynamic_cast<LatticeVol<char>*>(field);
@@ -214,6 +219,7 @@ void FieldToNrrd::execute()
 	for (int i=0; i<nx; i++)
 	  *p++=f->fdata()(k,j,i);
     nout->nrrd=nrrdNewWrap(data, nx*ny*nz, nrrdTypeChar, 3);
+#endif
   } else if (data == "Vector") {
     LatticeVol<Vector> *f = 
       dynamic_cast<LatticeVol<Vector>*>(field);
