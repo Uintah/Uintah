@@ -35,8 +35,8 @@
 
 #include <sys/stat.h>
 #include <string.h>
-#include <vector>
 #include <sgi_stl_warnings_off.h>
+#include <vector>
 #include <iostream>
 #include <fstream>
 #include <sgi_stl_warnings_on.h>
@@ -158,6 +158,8 @@ private:
   VH_AnatomyBoundingBox *maxSegmentVol;
 
   // the injured tissue list
+  XercesDOMParser injListParser;
+  DOMDocument *injListDoc;
   vector <VH_injury> injured_tissue;
 
   // the probe widget
@@ -179,7 +181,7 @@ private:
   // private methods
   void executeProbe();
   void execAdjacency();
-  void traverseDOMtree(DOMNode &, int, VH_injury **);
+  void traverseDOMtree(DOMNode &, int, int, VH_injury **);
   void execInjuryList();
   void executeOQAFMA();
   void executeHighlight();
@@ -271,6 +273,8 @@ HotBox::HotBox(GuiContext* ctx)
   // create the probe widget
   probeWidget_ = scinew PointWidget(this, &probeWidget_lock_, 1.0);
   probeWidget_->Connect((GeometryOPort*)get_oport("Probe Widget"));
+
+  injListDoc = (DOMDocument *)0;
 }
 
 HotBox::~HotBox(){
@@ -433,6 +437,34 @@ HotBox::execute()
       VH_Anatomy_findBoundingBox( boundBoxList, selectName);
 
   // we now have the anatomy name corresponding to the label value at the voxel
+  if(!injListDoc)
+  { // Read the Injury List -- First time the HotBox Evaluates
+    try {
+      XMLPlatformUtils::Initialize();
+    } catch (const XMLException& toCatch) {
+      std::cerr << "Error during XML parser initialization! :\n"
+           << StrX(toCatch.getMessage()) << endl;
+      return;
+    }
+
+    // Instantiate a DOM parser for the injury list file.
+    injListParser.setDoValidation(false);
+    const string injuryListDataSrc(injurylistdatasource_.get());
+
+    try {
+      injListParser.parse(injuryListDataSrc.c_str());
+    }  catch (const XMLException& toCatch) {
+      std::cerr << "Error during parsing: '" <<
+        injuryListDataSrc << "'\nException message is:  " <<
+        xmlto_string(toCatch.getMessage());
+        return;
+    }
+
+    // get the DOM document tree structure from the file
+    injListDoc = injListParser.getDocument();
+  }
+
+  // extract the injured tissues from the DOM Document whenever time changes
   execInjuryList();
 
   if(dataSource == VS_DATASOURCE_OQAFMA)
@@ -1153,7 +1185,7 @@ HotBox::executeOQAFMA()
   // </wound>
  *****************************************************************************/
 void
-HotBox::traverseDOMtree(DOMNode &woundNode, int nodeIndex,
+HotBox::traverseDOMtree(DOMNode &woundNode, int nodeIndex, int curTime,
                         VH_injury **injuryPtr)
 {
   // debugging...
@@ -1276,7 +1308,9 @@ HotBox::traverseDOMtree(DOMNode &woundNode, int nodeIndex,
          !strcmp(to_char_ptr(elem->getNodeName()), "time"))
       {
         (*injuryPtr)->timeStamp = atoi(to_char_ptr(elem->getNodeValue()));
-        (*injuryPtr)->timeSet = true;
+        // only collect wound for the current timeStep
+        if((*injuryPtr)->timeStamp == curTime)
+          (*injuryPtr)->timeSet = true;
       }
       else if(!strcmp(to_char_ptr(woundNode.getNodeName()), "fmaEntity") &&
               !strcmp(to_char_ptr(elem->getNodeName()), "FMAname"))
@@ -1294,7 +1328,7 @@ HotBox::traverseDOMtree(DOMNode &woundNode, int nodeIndex,
   } // end if(woundNode.hasAttributes())
 
   // if this node is complete
-  if((*injuryPtr)->isset())
+  if((*injuryPtr)->iscomplete())
   { // add this node to the injured tissue list
 
     cerr << "Adding: " << endl;
@@ -1318,7 +1352,7 @@ HotBox::traverseDOMtree(DOMNode &woundNode, int nodeIndex,
     {
       DOMNode &woundChild = *(woundChildList->item(i));
       // recurse down the tree
-      traverseDOMtree(woundChild, i, injuryPtr);
+      traverseDOMtree(woundChild, i, curTime, injuryPtr);
     } // end for(int i = 0; i < num_woundChildList; i++)
   } // end if(woundNode.hasChildNodes())
 } // end HotBox::traverseDOMtree()
@@ -1326,31 +1360,9 @@ HotBox::traverseDOMtree(DOMNode &woundNode, int nodeIndex,
 void
 HotBox::execInjuryList()
 {
-  // Read the Injury List -- Every time the HotBox Evaluates
-  try {
-    XMLPlatformUtils::Initialize();
-  } catch (const XMLException& toCatch) {
-    std::cerr << "Error during initialization! :\n"
-         << StrX(toCatch.getMessage()) << endl;
-    return;
-  }
-
-  // Instantiate a DOM parser for the injury list file.
-  XercesDOMParser injListParser;
-  injListParser.setDoValidation(false);
+  // get current time
+  const int curTime(gui_curTime_.get());
   const string injuryListDataSrc(injurylistdatasource_.get());
-
-  try {
-    injListParser.parse(injuryListDataSrc.c_str());
-  }  catch (const XMLException& toCatch) {
-    std::cerr << "Error during parsing: '" <<
-      injuryListDataSrc << "'\nException message is:  " <<
-      xmlto_string(toCatch.getMessage());
-      return;
-  }
-
-  // get the DOM document tree structure from the file
-  DOMDocument *injListDoc = injListParser.getDocument();
 
   DOMNodeList *
   woundList = injListDoc->getElementsByTagName(to_xml_ch_ptr("wound"));
@@ -1374,7 +1386,7 @@ HotBox::execInjuryList()
       // create the first injury record
       VH_injury *injuryPtr = new VH_injury();
       DOMNode &woundNode = *(woundList->item(i));
-      traverseDOMtree(woundNode, i, &injuryPtr);
+      traverseDOMtree(woundNode, i, curTime, &injuryPtr);
     } // end for (i = 0;i < num_injList; i++)
   } // end else (num_injList != 0)
 
