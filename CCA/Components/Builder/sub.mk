@@ -37,7 +37,8 @@ include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 PROGRAM := builder
 SRCS := $(SRCDIR)/builder.cc
 PSELIBS := CCA/Components/Builder Core/CCA/Component/CIA \
-	Core/CCA/Component/PIDL Core/Exceptions Core/CCA/spec
+	Core/CCA/Component/PIDL Core/Exceptions Core/CCA/spec \
+	Core/globus_threads
 LIBS := $(GLOBUS_LIBS) -lglobus_nexus -lglobus_dc -lglobus_common -lglobus_io $(QT_LIBS)
 
 include $(SCIRUN_SCRIPTS)/program.mk
