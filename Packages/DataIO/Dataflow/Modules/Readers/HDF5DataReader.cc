@@ -32,6 +32,9 @@
 #include <Packages/Teem/Core/Datatypes/NrrdData.h>
 #include <Packages/Teem/Dataflow/Ports/NrrdPort.h>
 
+#include <Core/Datatypes/ColumnMatrix.h>
+#include <Dataflow/Ports/MatrixPort.h>
+
 #include <Packages/DataIO/Dataflow/Modules/Readers/HDF5DataReader.h>
 
 #include <sci_defs.h>
@@ -61,6 +64,7 @@ HDF5DataReader::HDF5DataReader(GuiContext *context)
     range_min_(ctx->subVar("range_min")),
     range_max_(ctx->subVar("range_max")),
     playmode_(ctx->subVar("playmode")),
+    dependence_(ctx->subVar("dependence")),
     current_(ctx->subVar("current")),
     execmode_(ctx->subVar("execmode")),
     delay_(ctx->subVar("delay")),
@@ -81,7 +85,7 @@ HDF5DataReader::HDF5DataReader(GuiContext *context)
     mergeData_(context->subVar("mergeData")),
     assumeSVT_(context->subVar("assumeSVT")),
 
-    animate_       (context->subVar("animate")),
+    animate_(context->subVar("animate")),
 
     mergedata_(-1),
     assumesvt_(-1),
@@ -224,6 +228,7 @@ void HDF5DataReader::execute() {
   
   parseDatasets( new_datasets, paths, datasets );
   
+
   if( animate_.get() ) {
 
     vector< vector<string> > frame_paths;
@@ -232,21 +237,46 @@ void HDF5DataReader::execute() {
     unsigned int nframes =
       parseAnimateDatasets( paths, datasets, frame_paths, frame_datasets);
     
-    if( nframes != selectable_max_.get() ) {
-      ostringstream str;
-      str << id << " update_animate_range 0 " << nframes-1;
-      gui->execute(str.str().c_str());
+
+    // If there is a current index matrix, use it.
+    MatrixIPort *imatrix_port = (MatrixIPort *)get_iport("Current Index");
+
+    if (!imatrix_port) {
+      error("Unable to initialize iport 'Current Index'.");
+      return;
     }
 
-    animate_execute( new_filename, frame_paths, frame_datasets );
+    MatrixHandle mHandle;
+    if (imatrix_port->get(mHandle) && mHandle.get_rep()) {
+      unsigned int which = (unsigned int) (mHandle->get(0, 0));
 
+      if( 0 <= which && which <= frame_paths.size() ) {
+	current_.set(which);
+	current_.reset();
+	
+	ReadandSendData( new_filename, frame_paths[which],
+			 frame_datasets[which], true, true, which );
+      } else {
+	error( "Input index is out of range" );
+	return;
+      }
+    } else {
+
+      if( nframes != selectable_max_.get() ) {
+	ostringstream str;
+	str << id << " update_animate_range 0 " << nframes-1;
+	gui->execute(str.str().c_str());
+      }
+
+      animate_execute( new_filename, frame_paths, frame_datasets );
+    }
   } else if( error_ ||
 	     updateFile ||
 	     updateAll )
   {
     error_ = false;
 
-    ReadandSendData( new_filename, paths, datasets, true, true );
+    ReadandSendData( new_filename, paths, datasets, true, true, -1 );
 
   } else {
     remark( "Already read the file " +  new_filename );
@@ -284,10 +314,11 @@ void HDF5DataReader::execute() {
 }
 
 void HDF5DataReader::ReadandSendData( string& filename,
-				       vector< string >& paths,
-				       vector< string >& datasets,
-				       bool last,
-				       bool cache ) {
+				      vector< string >& paths,
+				      vector< string >& datasets,
+				      bool last,
+				      bool cache,
+				      int which ) {
 
   vector< vector<NrrdDataHandle> > nHandles;
   vector< vector<int> > ids;
@@ -476,8 +507,7 @@ void HDF5DataReader::ReadandSendData( string& filename,
 	string(portNumber) +
 	string( " Nrrd" );
       
-      NrrdOPort *ofield_port = 
-	(NrrdOPort *) get_oport(portName);
+      NrrdOPort *ofield_port = (NrrdOPort *) get_oport(portName);
     
       if (!ofield_port) {
 	error("Unable to initialize "+name+"'s " + portName + " oport\n");
@@ -493,6 +523,26 @@ void HDF5DataReader::ReadandSendData( string& filename,
 	ofield_port->send_intermediate( nHandles_[ic] );
     }
   }
+
+
+  MatrixOPort *omatrix_port = (MatrixOPort *)get_oport("Selected Index");
+
+  if (!omatrix_port) {
+    error("Unable to initialize oport 'Selected Index'.");
+    return;
+  }
+
+  ColumnMatrix *selected = scinew ColumnMatrix(1);
+  selected->put(0, 0, (double)which);
+
+  bool isDependent = (dependence_.get()==string("dependent"));
+
+  if ( last )
+    omatrix_port->send(MatrixHandle(selected));
+  else if ( isDependent )
+    omatrix_port->send(MatrixHandle(selected));
+  else
+    omatrix_port->send_intermediate(MatrixHandle(selected));
 }
 
 
@@ -1747,7 +1797,7 @@ HDF5DataReader::animate_execute( string new_filename,
 
   int which = current_.get();
 
-  bool cache = (playmode_.get() != "inc_w_exec");
+   bool cache = (playmode_.get() != "inc_w_exec");
 
   //  cerr << execmode << "  " << playmode_.get() << "  "  << cache<< endl;
 
@@ -1758,7 +1808,7 @@ HDF5DataReader::animate_execute( string new_filename,
     current_.reset();
 
     ReadandSendData( new_filename, frame_paths[which],
-		     frame_datasets[which], true, cache );
+		     frame_datasets[which], true, cache, which );
 
   } else if (execmode == "play") {
     stop_ = false;
@@ -1775,7 +1825,8 @@ HDF5DataReader::animate_execute( string new_filename,
       current_.reset();
 
       ReadandSendData( new_filename, frame_paths[which],
-		       frame_datasets[which], stop, stop ? cache : true );
+		       frame_datasets[which], stop, stop ? cache : true,
+		       which );
 
       if (!stop && delay > 0) {
 	const unsigned int secs = delay / 1000;
@@ -1791,7 +1842,7 @@ HDF5DataReader::animate_execute( string new_filename,
   } else {
     
     ReadandSendData( new_filename, frame_paths[which],
-		     frame_datasets[which], true, cache );
+		     frame_datasets[which], true, cache, which );
 
     if (playmode_.get() == "inc_w_exec") {
       which = increment(which, lower, upper);

@@ -38,6 +38,7 @@ itcl_class DataIO_Readers_HDF5DataReader {
         global $this-range_min
         global $this-range_max
 	global $this-playmode
+	global $this-dependence
 	global $this-current
 	global $this-execmode
 	global $this-delay
@@ -49,6 +50,7 @@ itcl_class DataIO_Readers_HDF5DataReader {
         set $this-range_min          0
         set $this-range_max          0
 	set $this-playmode           once
+	set $this-dependence         independent
 	set $this-current            0
 	set $this-execmode           "init"
 	set $this-delay              0
@@ -1190,9 +1192,10 @@ itcl_class DataIO_Readers_HDF5DataReader {
         toplevel $w
 
 	
-	frame $w.loc -borderwidth 2
-	frame $w.playmode -relief groove -borderwidth 2
-	frame $w.execmode -relief groove -borderwidth 2
+	frame $w.loc                       -borderwidth 2
+	frame $w.playmode   -relief groove -borderwidth 2
+	frame $w.dependence -relief groove -borderwidth 2
+	frame $w.execmode   -relief groove -borderwidth 2
 
         scale $w.loc.min -variable $this-range_min -label "Start " \
 		-showvalue true -orient horizontal -relief groove -length 200
@@ -1231,8 +1234,20 @@ itcl_class DataIO_Readers_HDF5DataReader {
 	radiobutton $w.playmode.bounce2 -text "Bounce2" \
 		-variable $this-playmode -value bounce2
 
+
 	radiobutton $w.playmode.inc_w_exec -text "Increment with Execute" \
 	    -variable $this-playmode -value inc_w_exec
+
+	label $w.dependence.label -text "Downstream Dependencies"
+	radiobutton $w.dependence.independent -text \
+	        "Column and Index are Independent" \
+	        -variable $this-dependence -value independent
+	radiobutton $w.dependence.dependent -text \
+	        "Column and Index are Dependent" \
+		-variable $this-dependence -value dependent
+	pack $w.dependence.label -side top -expand yes -fill both
+	pack $w.dependence.independent $w.dependence.dependent \
+	        -side top -anchor w
 
 	frame $w.playmode.delay
 	label $w.playmode.delay.label -text "Delay (ms)" \
@@ -1254,7 +1269,7 @@ itcl_class DataIO_Readers_HDF5DataReader {
         pack $w.execmode.play $w.execmode.stop $w.execmode.step \
 		-side left -fill both -expand yes
 
-        pack $w.loc $w.playmode $w.execmode \
+        pack $w.loc $w.playmode $w.dependence $w.execmode \
 		-padx 5 -pady 5 -fill both -expand yes
 
 	update_animate_range [set $this-selectable_min] [set $this-selectable_max]
