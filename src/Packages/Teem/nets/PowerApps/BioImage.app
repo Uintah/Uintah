@@ -2249,7 +2249,6 @@ class BioImageApp {
             
             set VolumeVisualizer [lindex [lindex $filters(0) $modules] 14]
             set n "$this check_crop; [set VolumeVisualizer]-c needexecute"
-            set s "[set VolumeVisualizer] state"
 
             global [set VolumeVisualizer]-render_style
 
@@ -2293,7 +2292,7 @@ class BioImageApp {
         #-----------------------------------------------------------
 	checkbutton $page.shading -text "Show shaded volume rendering" -relief flat \
             -variable [set VolumeVisualizer]-shading -onvalue 1 -offvalue 0 \
-            -anchor n -command "$s; $n"
+            -anchor n -command "$n"
         pack $page.shading -side top -fill x -padx 4
 
         #-----------------------------------------------------------
