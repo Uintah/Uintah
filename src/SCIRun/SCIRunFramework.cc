@@ -37,7 +37,7 @@
  *   October 2001
  *
  */
-
+#include <sci_defs/babel_defs.h>
 #include <SCIRun/SCIRunFramework.h>
 #include <SCIRun/Internal/InternalComponentModel.h>
 #include <SCIRun/CCA/CCAComponentModel.h>
