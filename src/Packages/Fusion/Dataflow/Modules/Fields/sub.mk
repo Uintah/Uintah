@@ -15,7 +15,6 @@ SRCDIR   := Packages/Fusion/Dataflow/Modules/Fields
 SRCS     += \
 	$(SRCDIR)/EditFusionField.cc\
 	$(SRCDIR)/TestStruct.cc\
-	$(SRCDIR)/VectorMagnitude.cc\
 	$(SRCDIR)/RadialGridDifferent.cc\
 #[INSERT NEW CODE FILE HERE]
 
