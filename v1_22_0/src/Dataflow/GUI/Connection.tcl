@@ -160,19 +160,10 @@ proc deleteTraces {} {
 proc disableConnection { conn } {
     global Disabled
     set connid [makeConnID $conn]
-    setIfExists disabled Disabled($connid) 0
-    if {$disabled} {
-	set Disabled($connid) 0
-	foreach conn [findRealConnections $conn] {
-	    eval netedit addconnection $conn
-	}
-    } else {
-	set Disabled($connid) 1
-	foreach conn [findRealConnections $conn] {
-	    netedit deleteconnection [makeConnID $conn] 1
-	}
-    }
-
+    setIfExists disabled Disabled($connid) 0   
+    # disabledTrace is called when Disabled is written to,
+    # it does the actual disabling of the connection in the network
+    set Disabled($connid) [expr $disabled?0:1]
 }
 
 proc drawConnectionTrace { conn } {
