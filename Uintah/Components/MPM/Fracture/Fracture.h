@@ -103,7 +103,7 @@ private:
            Vector* particleSurfaceNormal);
 
   double           d_averageMicrocrackLength;
-  double           d_materialToughness;
+  double           d_toughness;
   SimulationStateP d_sharedState;
 };
 
@@ -113,6 +113,9 @@ private:
 #endif //__FRACTURE_H__
 
 // $Log$
+// Revision 1.18  2000/06/23 01:37:59  tan
+// Moved material property toughness to Fracture class.
+//
 // Revision 1.17  2000/06/17 07:06:40  sparker
 // Changed ProcessorContext to ProcessorGroup
 //
