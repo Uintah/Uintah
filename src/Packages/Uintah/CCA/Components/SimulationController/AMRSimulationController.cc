@@ -626,13 +626,14 @@ void AMRSimulationController::problemSetup(const ProblemSpecP& params,
 bool
 AMRSimulationController::need_recompile(double time, double delt,
 					const GridP& grid,
-					SimulationInterface* /*sim*/,
+					SimulationInterface* sim,
 					Output* output,
 					vector<int>& levelids)
 {
-  // Currently, nothing but output can request a recompile.  This
-  // should be fixed - steve
+  // Currently, output and sim can request a recompile.  --bryan
   if(output && output->need_recompile(time, delt, grid))
+    return true;
+  if (sim && sim->need_recompile(time, delt, grid))
     return true;
   if(static_cast<int>(levelids.size()) != grid->numLevels())
     return true;
