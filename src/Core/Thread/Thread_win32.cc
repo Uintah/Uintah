@@ -842,7 +842,6 @@ void Thread_shutdown(Thread* thread, bool actually_exit)
     strcpy(name, thread->threadname_);
 
     ReleaseSemaphore(priv->done, 1, 0);
-    cerr << "Delting thread: " << priv->thread->threadname_ << " " << GetCurrentThreadId() << "\n";
 
     // Wait to be deleted...
 	if (WaitForSingleObject(priv->delete_ready,INFINITE)!=WAIT_OBJECT_0) {
@@ -911,7 +910,6 @@ unsigned long __stdcall run_threads(void* priv_v)
     //thread_local = new ThreadLocalMemory;
     //thread_local->current_thread = priv->thread;
     priv->state=Thread::RUNNING;
-    cerr << "Running thread: " << priv->thread->threadname_ << " " << GetCurrentThreadId() << "\n";
     Thread_run(priv->thread);
     priv->state=Thread::SHUTDOWN;
     Thread_shutdown(priv->thread, false);
