@@ -45,15 +45,6 @@ enum status_t{
   SHARED
 };
 
-//////////
-// Where the attribute lives in the geometry
-enum elem_t{
-  NODE,
-  EDGE,
-  FACE,
-  ELEM
-};
-
 
 class SCICORESHARE Field:public Datatype{
 public:
