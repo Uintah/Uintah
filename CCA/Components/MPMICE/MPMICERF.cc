@@ -251,10 +251,10 @@ void MPMICE::computeRateFormPressure(const ProcessorGroup*,
     //   in all the extra cells.
     // - make copy of press for implicit calc.
     for (int m = 0; m < numALLMatls; m++)   {
-      setBC(matl_press[m],rho_micro, placeHolder,
+      setBC(matl_press[m],rho_micro, placeHolder,d_ice->d_surroundingMatl_indx,
            "rho_micro", "Pressure", patch, d_sharedState, 0, new_dw);
     }  
-    setBC(press_new, rho_micro, placeHolder,
+    setBC(press_new, rho_micro, placeHolder,d_ice->d_surroundingMatl_indx,
           "rho_micro", "Pressure", patch, d_sharedState, 0,  new_dw);
           
     press_copy.copyData(press_new);
