@@ -1752,7 +1752,11 @@ itcl_class ViewWindow {
 	set w .ui[modname]-saveImage
 
 	if {[winfo exists $w]} {
-	   raise $w
+	    if { [winfo ismapped $w] == 1} {
+		raise $w
+	    } else {
+		wm deiconify $w
+	    }
            return
         }
 
@@ -1804,6 +1808,8 @@ itcl_class ViewWindow {
                 -formats {ppm raw "by_extension"} \
 	        -imgwidth $this-resx \
 	        -imgheight $this-resy
+	moveToCursor $w
+	wm deiconify $w
     }
     
     method changeName { w type} {
@@ -2317,14 +2323,18 @@ itcl_class EmbeddedViewWindow {
 	set $this-resx [winfo width $emb_win]
 	set $this-resy [winfo height $emb_win]
 	
-	#set w .ui[modname]-saveImage
+	set w .ui[modname]-saveImage
 
-	#if {[winfo exists $w]} {
-	#   raise $w
-        #   return
-        #}
+	if {[winfo exists $w]} {
+	    if { [winfo ismapped $w] == 1} {
+		raise $w
+	    } else {
+		wm deiconify $w
+	    }
+           return
+        }
 
-	#toplevel $w
+	toplevel $w
 
 	set initdir ""
 
@@ -2359,10 +2369,10 @@ itcl_class EmbeddedViewWindow {
 	######################################################
 	
 	makeSaveFilebox \
-		-parent . \
+		-parent $w \
 		-filevar $this-saveFile \
-		-command "$this doSaveImage; wm withdraw " \
-		-cancel "wm withdraw " \
+		-command "$this doSaveImage; wm withdraw $w" \
+		-cancel "wm withdraw $w" \
 		-title $title \
 		-filetypes $types \
 	        -initialfile $defname \
@@ -2372,6 +2382,8 @@ itcl_class EmbeddedViewWindow {
                 -formats {ppm raw "by_extension"} \
 	        -imgwidth $this-resx \
 	        -imgheight $this-resy
+	moveToCursor $w
+	wm deiconify $w
     }
     
     method changeName { w type} {
