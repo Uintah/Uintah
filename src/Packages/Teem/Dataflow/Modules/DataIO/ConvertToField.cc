@@ -18,6 +18,7 @@
 //    Date   : Wed Jan 22 13:41:24 2003
 
 #include <Teem/Dataflow/Modules/DataIO/ConvertToField.h>
+#include <teem/ten.h>
 
 namespace SCIRun {
 
@@ -97,6 +98,7 @@ template <class T>
 void do_tensor(Tensor &t, void *&ptr) 
 {
   T *&p = (T*&)ptr;
+  ++p; // skip first value (confidence)
   t.mat_[0][0] = (*p);
   ++p;
   t.mat_[0][1] = (*p);
@@ -108,10 +110,37 @@ void do_tensor(Tensor &t, void *&ptr)
   t.mat_[1][2] = (*p);
   ++p;
   t.mat_[2][2] = (*p);
-  ++p; // skip 7th valid metric.
   ++p;
 }
 
+void get_val_and_eigens_and_inc_nrrdptr(Tensor &t, void *&ptr)
+{
+  float *&p = (float*&)ptr;
+  float eval[3], evec[9], eval_scl[3], evec_scl[9];
+  tenEigensolve(eval, evec, p);
+  float scl = p[0] > 0;
+  for (int cc=0; cc<3; cc++) {
+    ELL_3V_SCALE(evec_scl+3*cc, scl, evec+3*cc);
+    eval_scl[cc] = scl*eval[cc];
+  }
+  t.set_outside_eigens(Vector(evec_scl[0], evec_scl[1], evec_scl[2]),
+		       Vector(evec_scl[3], evec_scl[4], evec_scl[5]),
+		       Vector(evec_scl[6], evec_scl[7], evec_scl[8]),
+		       eval_scl[0], eval_scl[1], eval_scl[2]);
+  ++p; // skip first value (confidence)
+  t.mat_[0][0] = (*p);
+  ++p;
+  t.mat_[0][1] = (*p);
+  ++p;
+  t.mat_[0][2] = (*p);
+  ++p;
+  t.mat_[1][1] = (*p);
+  ++p;
+  t.mat_[1][2] = (*p);
+  ++p;
+  t.mat_[2][2] = (*p);
+  ++p;
+}
 
 template <>
 void get_val_and_inc_nrrdptr<Tensor>(Tensor &t, void *&ptr, unsigned type)
