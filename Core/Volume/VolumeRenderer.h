@@ -63,8 +63,6 @@ public:
   
 #ifdef SCI_OPENGL
   virtual void draw(DrawInfoOpenGL*, Material*, double time);
-  virtual void draw();
-  virtual void draw_wireframe();
 #endif
   
   virtual GeomObj* clone();
@@ -74,6 +72,11 @@ protected:
   double ambient_, diffuse_, specular_, shine_;
   int light_;
   bool adaptive_;
+
+#ifdef SCI_OPENGL
+  virtual void draw();
+  virtual void draw_wireframe();
+#endif
 };
 
 } // End namespace SCIRun
