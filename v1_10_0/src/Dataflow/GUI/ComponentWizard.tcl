@@ -178,17 +178,30 @@ proc make_io_gui_pane {p d} {
     pack $uiinfo -fill x -side bottom -anchor sw \
         -padx $PADi 
     pack $p.cp -fill x -side bottom -anchor sw -padx $PADi -pady $PADi
-    pack $p.cp.pack $p.cp.cat $p.cp.path -side top -pady $PADi
+    pack $p.cp.name $p.cp.pack $p.cp.cat $p.cp.path -side top -pady $PADi
 
     pack $p.cp.name.label $p.cp.name.entry -side left
     pack $p.cp.pack.label $p.cp.pack.entry -side left
     pack $p.cp.cat.label $p.cp.cat.entry -side left
     pack $p.cp.path.label $p.cp.path.entry -side left
     
+    trace variable ${d}(title) w "update_title_entry_bind"
+
 #    pack $guidescript -fill x -side bottom -anchor sw \
 #        -padx $PADi 
     pack $p.cmds -expand no -side right -anchor ne -padx $PADi -pady $PADi
 }
+
+
+proc update_title_entry_bind {a b c} {
+    global .componentWizard.tmpdata
+
+    set p [.componentWizard.tabs childsite "I/O and GUI"]
+    set title_pentry $p.c.moduleFakeModule.ff.title
+    set tmp [set .componentWizard.tmpdata(title)]
+    set_prompted_entry $title_pentry $tmp
+}
+
 
 proc make_overview_pane {p d} {
     global $d
