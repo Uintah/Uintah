@@ -22,14 +22,9 @@ Portions created by UNIVERSITY are Copyright (C) 2001, 1994
 University of Utah. All Rights Reserved.
 -->
 
-<!-- 
-*Note*: This document is trying to be an XHTML document (but for practical
-reasons is not quite there yet).  Please try to code to the XHTML standard.
-See http://www.w3schools.com/xhtml/xhtml_reference.asp for reference.
--->
-
 <html>
 <head>
+
 <script type="text/javascript">
 var treetop="";
 var path = location.pathname;
@@ -45,70 +40,63 @@ while (base != roottag && base != "") {
 }
 var inDocTree = base == roottag;
 if (inDocTree) {
-document.write("<link href='",treetop,"doc/Utilities/HTML/doc_styles.css' rel='stylesheet' type='text/css'/>")
+document.write("<link href='",treetop,"doc/Utilities/HTML/subindex.css' rel='stylesheet' type='text/css'/>")
 }
 </script>
 
-<title>Cover Page for Intallation Docs</title>
-</head>
-<body>
+<title>Installation Documentation</title>
 
+</head>  
+
+<body>
 <script type="text/javascript">
 if (inDocTree) {
 document.write('<script type="text/javascript" src="',treetop,'doc/Utilities/HTML/banner_top.js"><\/script>');
 }
 </script>
 
+<br/><br/>
 
-<!-- Content goes here -->
-<p class="title">Installation Documentation</p>
 <!--%
 version = File.open("../edition.xml") do |f|
   /<edition>(.*)<\/edition>/.match(f.read())[1]
 end
 %-->
-<p class="subtitle">(for SCIRun version <!--%= version %-->)</p>
 
-<hr size="1" />
-
-<p class="head"><a href="Guide/index.html">Installation Guide</a></p>
-
-<p class="firstpara">The <a href="Guide/index.html"><b><i>Installation
-Guide</i></b></a> contains instructions for building SCIRun, it's
-packages, and its third party libraries.</p>
-
+<table align="center">
+<thead>
+<tr>
+<th>
+<div class="title">Installation Documentation</div>
+<div class="subtitle">(for SCIRun version <!--%= version %-->)</div>
+</th>
+</tr>
+</thead>
+<tfoot />
+<tbody>
+<tr>
+<td>
 <ul>
-<li><a href="Guide/quickstart.html">Quick Start Installation</a></li>
-
-<p class="firstpara">
-For the impatient (or the experienced).
-</p>
-
-<li><a href="Guide/inst.html">Complete Installation and Build Instructions</a>
+<li>
+<a href="Guide/quickstart.html">Quick Start</a>
+<p>For the experienced (or the impatient).</p>
 </li>
-
-<p class="firstpara">
-For installation first timers.
-</p>
-
-
-<li><a href="Guide/appendix.html">Configure Options</a>
-<p class="firstpara">Options to SCIRun's configure command.</p>
+<li>
+<a href="Guide/inst.html">Guide</a>
+<p>Complete Installation and Build Instructions.</p>
 </li>
-
-<li><a href="Guide/lsrcvs.html">CVS Source Code Control</a> <p
-class="firstpara">A method for putting SCIRun sources under
-control of CVS (helpful for external developers).  <em>Not</em> a
-requirement for installation.</p> 
+<li>
+<a href="../FAQBook/faq1.html">FAQ</a>
+<p>Common installation questions and answers.</p>
 </li>
-
 </ul>
+</td>
+</tr>
+</tbody>
+</table>
 
-<p class="head"><a href="../FAQBook/faq1.html">FAQ</a></p>
-
-<p>See the <a href="../FAQBook/faq1.html"><b><i>Installation FAQ
-</i></b></a> for troubleshooting installation problems.
-</p>
+<br/>
+<br/>
 
 <script type="text/javascript">
 if (inDocTree) {
@@ -117,6 +105,7 @@ document.write('<script type="text/javascript" src="',treetop,'doc/Utilities/HTM
 </script>
 
 </body>
+
 </html>
 
 <!-- Keep this comment at the end of the file

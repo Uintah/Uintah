@@ -25,14 +25,6 @@ University of Utah. All Rights Reserved.
 <html>
 <head>
 
-<style type="text/css">
-table.index { }
-table.index ul li { font-size: medium }
-table.index th { font-size: x-large }
-table.index tr { vertical-align: top }
-p.title { text-align: center; font-size: xx-large }
-</style>
-
 <script type="text/javascript">
 var treetop="";
 var path = location.pathname;
@@ -48,7 +40,7 @@ while (base != roottag && base != "") {
 }
 var inDocTree = base == roottag;
 if (inDocTree) {
-document.write("<link href='",treetop,"doc/Utilities/HTML/doc_styles.css' rel='stylesheet' type='text/css'/>")
+document.write("<link href='",treetop,"doc/Utilities/HTML/mainindex.css' rel='stylesheet' type='text/css'/>")
 }
 </script>
 
@@ -65,56 +57,86 @@ document.write('<script type="text/javascript" src="',treetop,'doc/Utilities/HTM
 
 <br />
 
-<p class="title">SCIRun Documentation</p>
 <!--%
 version = File.open("edition.xml") do |f|
   /<edition>(.*)<\/edition>/.match(f.read())[1]
 end
 %-->
-<p class="subtitle">(for SCIRun version <!--%= version %-->)</p>
 
-<br />
-<br />
-
-<table class="index" align="center">
+<table align="center">
 <thead>
 <tr>
-<th><a href="Installation/index.html">Installation</a></th>
-<th><a href="User/index.html">User</a></th>
-<th><a href="Developer/index.html">Developer</a></th>
+<th colspan="3">
+<div class="title">SCIRun Documentation</div>
+<div class="subtitle">(for SCIRun version <!--%= version %-->)</div>
+</th>
+</tr>
+<tr>
+<th>Installation</th>
+<th>User</th>
+<th>Developer</th>
 </tr>
 </thead>
-<tfoot />
 <tbody>
 <tr>
 <td>
 <ul>
-<li><a href="Installation/Guide/quickstart.html">Quick Start</a></li>
-<li><a href="Installation/Guide/inst.html">Guide</a></li>
-<li><a href="Installation/Guide/appendix.html">Configure Options</a></li>
-<li><a href="FAQBook/faq1.html">FAQ</a></li>
+<li>
+<a href="Installation/Guide/quickstart.html">Quick Start</a>
+<p>For the experienced (or the impatient).</p>
+</li>
+<li>
+<a href="Installation/Guide/inst.html">Guide</a>
+<p>Complete Installation and Build Instructions.</p>
+</li>
+<li>
+<a href="FAQBook/faq1.html">FAQ</a>
+<p>Common installation questions and answers.</p>
+</li>
 </ul>
 </td>
 <td>
 <ul>
-<li><a href="User/Tutorial/index.html">Tutorial</a></li>
-<li><a href="User/Guide/usersguide/index.html">Guide</a></li>
-<li><a href="Developer/Modules/index.html">Module Reference</a></li>
-<li><a href="FAQBook/faq2.html">FAQ</a></li>
+<li>
+<a href="User/Tutorial/index.html">Tutorial</a> 
+<p>An interactive introduction to SCIRun for new users.</p>
+</li>
+<li><a href="User/Guide/usersguide/index.html">Guide</a>
+<p>A guide to the concepts and use of the SCIRun problem solving
+environment.
+</p>
+</li>
+<li><a href="Developer/Modules/index.html">Module Reference</a>
+<p>Descriptions of SCIRun modules (organized by package).</p>
+</li>
+<li><a href="FAQBook/faq2.html">FAQ</a>
+<p>Common user questions and answers.</p>
+</li>
 </ul>
 </td>
 <td>
 <ul>
-<li><a href="Developer/Guide/index.html">Guide</a></li>
-<li><a href="Developer/CodeViews/html/index.html">Source Code Views</a></li>
-<li><a href="Developer/Modules/index.html">Module Reference</a></li>
-<li><a href="FAQBook/faq3.html">FAQ</a></li>
-<li><a href="Documentum/index.html">Documenting SCIRun</a></li>
+<li><a href="Developer/Guide/index.html">Guide</a>
+<p>A guide to writing SCIRun modules, data types, and other code.</p>
+</li>
+<li><a href="Developer/CodeViews/html/index.html">Source Code
+Views</a>
+<p>SCIRun source code from several points of view.</p>
+</li>
+<li><a href="FAQBook/faq3.html">FAQ</a>
+<p>Common developer questions and answers.</p>
+</li>
+<li><a href="Documentum/index.html">Documenting SCIRun</a>
+<p>Information for those writing or building SCIRun documentation.</p>
+</li>
 </ul>
 </td>
 </tr>
 </tbody>
 </table>
+
+<br/>
+<br/>
 
 <script type="text/javascript">
 if (inDocTree) {

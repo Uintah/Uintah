@@ -22,12 +22,6 @@ Portions created by UNIVERSITY are Copyright (C) 2001, 1994
 University of Utah. All Rights Reserved.
 -->
 
-<!-- 
-*Note*: This document is trying to be an XHTML document (but for practical
-reasons is not quite there yet).  Please try to code to the XHTML standard.
-See http://www.w3schools.com/xhtml/xhtml_reference.asp for reference.
--->
-
 <html>
 <head>
 
@@ -46,101 +40,66 @@ while (base != roottag && base != "") {
 }
 var inDocTree = base == roottag;
 if (inDocTree) {
-document.write("<link href='",treetop,"doc/Utilities/HTML/doc_styles.css' rel='stylesheet' type='text/css'/>")
+document.write("<link href='",treetop,"doc/Utilities/HTML/subindex.css' rel='stylesheet' type='text/css'/>")
 }
 </script>
 
-<title>User Documentation Cover Page</title>
-</head>
-<body>
+<title>User Documentation</title>
 
+</head>  
+
+<body>
 <script type="text/javascript">
 if (inDocTree) {
 document.write('<script type="text/javascript" src="',treetop,'doc/Utilities/HTML/banner_top.js"><\/script>');
 }
 </script>
 
-<!-- Content goes here -->
-<p class="title">User Documentation</p>
+<br/><br/>
+
 <!--%
 version = File.open("../edition.xml") do |f|
   /<edition>(.*)<\/edition>/.match(f.read())[1]
 end
 %-->
-<p class="subtitle">(for SCIRun version <!--%= version %-->)</p>
 
-<hr size="1" />
-
-<p class="head"><a href="Tutorial/index.html">Tutorial</a></p> 
-
-<p class="firstpara">The tutorial is intended to be an interactive
-introduction to SCIRun for new users.</p>
-
-<p class="head"><a href="Guide/usersguide/index.html">User's Guide</a></p>
-<p class="firstpara">
-The <a href="Guide/usersguide/index.html">User's Guide</a> provides
-information on the concepts and use of the SCIRun problem solving
-environment for those who will be building and executing SCIRun
-<dfn>networks</dfn>.
-</p>
-
+<table align="center">
+<thead>
+<tr>
+<th>
+<div class="title">User Documentation</div>
+<div class="subtitle">(for SCIRun version <!--%= version %-->)</div>
+</th>
+</tr>
+</thead>
+<tfoot />
+<tbody>
+<tr>
+<td>
 <ul>
 <li>
-<a href="Guide/usersguide/srug1.html">Introduction</a>
+<a href="Tutorial/index.html">Tutorial</a> 
+<p>An interactive introduction to SCIRun for new users.</p>
 </li>
-
-<li>
-<a href="Guide/usersguide/srug2.html">Concepts</a>
-</li>
-
-<li>
-<a href="Guide/usersguide/srug3.html">Starting SCIRun</a>
-</li>
-
-<li>
-<a href="Guide/usersguide/srug4.html">Working with Networks</a>
-</li>
-
-<li>
-<a href="Guide/usersguide/srug5.html">Visualization with
-the Viewer</a>
-</li>
-
-<li>
-<a href="Guide/usersguide/srug7.html">Importing Data Into SCIRun</a>
-</li>
-
-<li>
-<a href="Guide/usersguide/srugBibliography.html">Bibliography</a>
-</li>
-
-<li>
-<a href="Guide/usersguide/srugIndex.html">Index</a>
-</li>
-
-</ul>
-
-<p class="head"><a href="../Developer/Modules/index.html">Module Descriptions</a></p>
-<p class="firstpara">
-Descriptions of all the SCIRun modules, including datatypes used,
-functions performed and explanations of the user interface
-elements.
+<li><a href="Guide/usersguide/index.html">Guide</a>
+<p>A guide to the concepts and use of the SCIRun problem solving
+environment.
 </p>
-
-<ul>
-<li><a href="../Developer/Modules/SCIRun.html">SCIRun Package</a></li>
-<li><a href="../Developer/Modules/BioPSE.html">BioPSE Package</a></li>
-<li><a href="../Developer/Modules/MatlabInterface.html">MatlabInterface Package</a></li>
-<li><a href="../Developer/Modules/Teem.html">Teem Package</a></li>
-<li><a href="../Developer/Modules/Fusion.html">Fusion Package</a></li>
-<li><a href="../Developer/Modules/VDT.html">VDT Package</a></li>
+</li>
+<li><a href="../Developer/Modules/index.html">Module Reference</a>
+<p>Descriptions of SCIRun modules (organized by package).</p>
+</li>
+<li><a href="../FAQBook/faq2.html">FAQ</a>
+<p>Common user questions and answers.</p>
+</li>
 </ul>
+</td>
+</tr>
+</tbody>
+</table>
 
-<p class="head"><a href="../FAQBook/faq2.html">FAQ</a></p>
-
-<p class="firstpara">
-Discussions of user issues.
-</p>
+<br/>
+<br/>
 
 <script type="text/javascript">
 if (inDocTree) {
@@ -149,6 +108,7 @@ document.write('<script type="text/javascript" src="',treetop,'doc/Utilities/HTM
 </script>
 
 </body>
+
 </html>
 
 <!-- Keep this comment at the end of the file
