@@ -3,7 +3,7 @@
  *  LaceContuors.h: Lace a cContourSet into a Surface
  *
  *  Written by:
- *   Steven G. Parker
+ *   David Weinstein
  *   Department of Computer Science
  *   University of Utah
  *   July 1994

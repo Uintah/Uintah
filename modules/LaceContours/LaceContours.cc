@@ -38,7 +38,7 @@ LaceContours::LaceContours()
     // Create the input port
     incontour=new ContourSetIPort(this, "ContourSet", ContourSetIPort::Atomic);
     add_iport(incontour);
-    osurface=new SurfaceOPort(this, "Surface", SurfaceIPort::Atomic);
+    osurface=new SurfaceOPort(this, "Surface", SurfaceOPort::Atomic);
     add_oport(osurface);
 }
 
@@ -87,8 +87,8 @@ void LaceContours::lace_contours(const ContourSetHandle& contour,
 	   cerr << "Not enough points to lace!\n";
 	   return;
        }
-       // 0 will be the inext of our first bottom point, set top to be the 
-       // inex of the closest top point to it
+       // 0 will be the index of our first bottom point, set top to be the 
+       // index of the closest top point to it
        double dist=Sqr(contour->contours[i][0].x()-
 		       contour->contours[i-1][0].x())+
 		   Sqr(contour->contours[i][0].y()-
