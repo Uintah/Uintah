@@ -145,8 +145,7 @@ FieldMeasures::measure_trisurf()
   int length = lengthFlag_.get();
   int valence = valenceFlag_.get();
   if (valence) {
-    warning("TriSurfMesh node valence not yet implemented.");
-    valence=0;
+    mesh->synchronize(Mesh::NODE_NEIGHBORS_E);
   }
   int aspectRatio = aspectRatioFlag_.get();
   if (aspectRatio) {
@@ -174,6 +173,7 @@ FieldMeasures::measure_trisurf()
     mesh->begin(ni); mesh->end(nie);
     int row=0;
     int col=0;
+    TriSurfMesh::Node::array_type nbrs;
     while (ni != nie) {
       col=0;
       Point p;
@@ -181,7 +181,11 @@ FieldMeasures::measure_trisurf()
       if (x) { (*dm)[row][col]=p.x(); col++; }
       if (y) { (*dm)[row][col]=p.y(); col++; }
       if (z) { (*dm)[row][col]=p.z(); col++; }
-      if (valence) { (*dm)[row][col]=0; col++; }  // FIXME: should be num_nbrs
+      if (valence) { 
+	mesh->get_neighbors(nbrs,*ni);
+	(*dm)[row][col]=nbrs.size(); 
+	col++; 
+      }
       ++ni;
       row++;
     }
