@@ -37,9 +37,9 @@
  #  Copyright (C) 2000 SCI Group
  ##
 
-catch {rename Teem_Unu_UnuConvert ""}
+catch {rename Teem_UnuAtoM_UnuConvert ""}
 
-itcl_class Teem_Unu_UnuConvert {
+itcl_class Teem_UnuAtoM_UnuConvert {
     inherit Module
     constructor {config} {
         set name UnuConvert

@@ -70,7 +70,7 @@ private:
 
 DECLARE_MAKER(UnuCCmerge)
 UnuCCmerge::UnuCCmerge(GuiContext* ctx)
-  : Module("UnuCCmerge", ctx, Source, "Unu", "Teem"),
+  : Module("UnuCCmerge", ctx, Source, "UnuAtoM", "Teem"),
     dir_(ctx->subVar("dir")),
     maxsize_(ctx->subVar("maxsize")),
     maxneigh_(ctx->subVar("maxneigh")),

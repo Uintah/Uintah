@@ -33,7 +33,7 @@
 
 package require Iwidgets 3.0 
 
-itcl_class Teem_Unu_UnuMake {
+itcl_class Teem_UnuAtoM_UnuMake {
     inherit Module
 
     constructor {config} {

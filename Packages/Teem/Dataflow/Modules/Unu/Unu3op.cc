@@ -66,7 +66,7 @@ private:
 DECLARE_MAKER(Unu3op)
 
 Unu3op::Unu3op(SCIRun::GuiContext *ctx) : 
-  Module("Unu3op", ctx, Filter, "Unu", "Teem"), 
+  Module("Unu3op", ctx, Filter, "UnuAtoM", "Teem"), 
   operator_(ctx->subVar("operator")),
   float1_(ctx->subVar("float1")),
   float2_(ctx->subVar("float2")),

@@ -74,7 +74,7 @@ using namespace SCITeem;
 DECLARE_MAKER(UnuPermute)
 
 UnuPermute::UnuPermute(GuiContext *ctx) : 
-  Module("UnuPermute", ctx, Filter, "Unu", "Teem"),
+  Module("UnuPermute", ctx, Filter, "UnuNtoZ", "Teem"),
   dim_(ctx->subVar("dim")),
   last_generation_(-1), 
   last_nrrdH_(0)

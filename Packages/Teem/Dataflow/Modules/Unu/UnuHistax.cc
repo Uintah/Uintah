@@ -61,7 +61,7 @@ private:
 DECLARE_MAKER(UnuHistax)
 
 UnuHistax::UnuHistax(SCIRun::GuiContext *ctx) : 
-  Module("UnuHistax", ctx, Filter, "Unu", "Teem"),
+  Module("UnuHistax", ctx, Filter, "UnuAtoM", "Teem"),
   axis_(ctx->subVar("axis")),
   bins_(ctx->subVar("bins")),
   min_(ctx->subVar("min")),

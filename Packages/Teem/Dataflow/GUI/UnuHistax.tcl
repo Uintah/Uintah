@@ -29,9 +29,9 @@
 #    Author : Martin Cole
 #    Date   : Mon Sep  8 09:46:23 2003
 
-catch {rename Teem_Unu_UnuHistax ""}
+catch {rename Teem_UnuAtoM_UnuHistax ""}
 
-itcl_class Teem_Unu_UnuHistax {
+itcl_class Teem_UnuAtoM_UnuHistax {
     inherit Module
     constructor {config} {
         set name UnuHistax

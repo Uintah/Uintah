@@ -83,7 +83,7 @@ using namespace SCITeem;
 DECLARE_MAKER(UnuResample)
 
 UnuResample::UnuResample(GuiContext *ctx) : 
-  Module("UnuResample", ctx, Filter, "Unu", "Teem"),
+  Module("UnuResample", ctx, Filter, "UnuNtoZ", "Teem"),
   filtertype_(ctx->subVar("filtertype")),
   dim_(ctx->subVar("dim")),
   sigma_(ctx->subVar("sigma")),

@@ -76,7 +76,7 @@ private:
 
 DECLARE_MAKER(UnuMinmax)
 UnuMinmax::UnuMinmax(GuiContext* ctx)
-  : Module("UnuMinmax", ctx, Source, "Unu", "Teem"),
+  : Module("UnuMinmax", ctx, Source, "UnuAtoM", "Teem"),
     onrrd_(0), onrrd_handle_(0), in_generation_(0),
     nrrds_(ctx->subVar("nrrds"))
 {

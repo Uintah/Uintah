@@ -65,7 +65,7 @@ private:
 
 DECLARE_MAKER(UnuCCsettle)
 UnuCCsettle::UnuCCsettle(GuiContext* ctx)
-  : Module("UnuCCsettle", ctx, Source, "Unu", "Teem"),
+  : Module("UnuCCsettle", ctx, Source, "UnuAtoM", "Teem"),
     inrrd_(0), onrrd_(0)
 {
 }

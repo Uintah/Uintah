@@ -37,9 +37,9 @@
  #  Copyright (C) 2000 SCI Group
  ##
 
-catch {rename Teem_Unu_UnuPad ""}
+catch {rename Teem_UnuNtoZ_UnuPad ""}
 
-itcl_class Teem_Unu_UnuPad {
+itcl_class Teem_UnuNtoZ_UnuPad {
     inherit Module
     constructor {config} {
         set name UnuPad

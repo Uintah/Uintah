@@ -66,7 +66,7 @@ public:
 
 DECLARE_MAKER(UnuUnquantize)
 UnuUnquantize::UnuUnquantize(GuiContext* ctx)
-  : Module("UnuUnquantize", ctx, Source, "Unu", "Teem"),
+  : Module("UnuUnquantize", ctx, Source, "UnuNtoZ", "Teem"),
     min_(ctx->subVar("min")),
     max_(ctx->subVar("max")),
     double_(ctx->subVar("double"))

@@ -30,7 +30,7 @@
 #    Date   : January 2004
 
 
-itcl_class Teem_Unu_UnuAxinfo {
+itcl_class Teem_UnuAtoM_UnuAxinfo {
     inherit Module
     constructor {config} {
         set name UnuAxinfo

@@ -68,7 +68,7 @@ private:
 
 DECLARE_MAKER(UnuSave)
 UnuSave::UnuSave(GuiContext* ctx)
-  : Module("UnuSave", ctx, Source, "Unu", "Teem"),
+  : Module("UnuSave", ctx, Source, "UnuNtoZ", "Teem"),
     inrrd_(0), 
     format_(ctx->subVar("format")),
     encoding_(ctx->subVar("encoding")),

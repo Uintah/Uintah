@@ -111,7 +111,7 @@ using namespace SCITeem;
 DECLARE_MAKER(UnuMake)
 
 UnuMake::UnuMake(GuiContext* ctx)
-  : Module("UnuMake", ctx, Source, "Unu", "Teem"),
+  : Module("UnuMake", ctx, Source, "UnuAtoM", "Teem"),
     filename_(ctx->subVar("filename")),
     header_filename_(ctx->subVar("header_filename")),
     write_header_(ctx->subVar("write_header")),

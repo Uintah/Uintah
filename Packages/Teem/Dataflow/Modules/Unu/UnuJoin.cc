@@ -69,7 +69,7 @@ using namespace SCITeem;
 DECLARE_MAKER(UnuJoin)
 
 UnuJoin::UnuJoin(SCIRun::GuiContext *ctx) : 
-  Module("UnuJoin", ctx, Filter, "Unu", "Teem"), 
+  Module("UnuJoin", ctx, Filter, "UnuAtoM", "Teem"), 
   onrrd_(0),
   onrrd_handle_(0),
   in_generation_(0),

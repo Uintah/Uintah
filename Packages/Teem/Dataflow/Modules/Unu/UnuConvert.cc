@@ -69,7 +69,7 @@ using namespace SCITeem;
 DECLARE_MAKER(UnuConvert)
 
 UnuConvert::UnuConvert(SCIRun::GuiContext *ctx)
-  : Module("UnuConvert", ctx, Filter, "Unu", "Teem"), 
+  : Module("UnuConvert", ctx, Filter, "UnuAtoM", "Teem"), 
   type_(ctx->subVar("type")),
   last_type_(0), last_generation_(-1), last_nrrdH_(0)
 {

@@ -69,7 +69,7 @@ private:
 DECLARE_MAKER(UnuCmedian)
 
 UnuCmedian::UnuCmedian(SCIRun::GuiContext *ctx) : 
-  Module("UnuCmedian", ctx, Filter, "Unu", "Teem"), 
+  Module("UnuCmedian", ctx, Filter, "UnuAtoM", "Teem"), 
   mode_(ctx->subVar("mode")),
   radius_(ctx->subVar("radius")),
   weight_(ctx->subVar("weight")),

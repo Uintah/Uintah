@@ -69,7 +69,7 @@ private:
 DECLARE_MAKER(UnuAxinfo)
 
 UnuAxinfo::UnuAxinfo(GuiContext* ctx)
-  : Module("UnuAxinfo", ctx, Source, "Unu", "Teem"),
+  : Module("UnuAxinfo", ctx, Source, "UnuAtoM", "Teem"),
     axis_(ctx->subVar("axis")),
     label_(ctx->subVar("label")),
     kind_(ctx->subVar("kind")),

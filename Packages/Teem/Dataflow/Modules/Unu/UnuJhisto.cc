@@ -72,7 +72,7 @@ public:
 
 DECLARE_MAKER(UnuJhisto)
 UnuJhisto::UnuJhisto(GuiContext* ctx)
-  : Module("UnuJhisto", ctx, Source, "Unu", "Teem"),
+  : Module("UnuJhisto", ctx, Source, "UnuAtoM", "Teem"),
     bins_(ctx->subVar("bins")), mins_(ctx->subVar("mins")), 
     maxs_(ctx->subVar("maxs")), type_(ctx->subVar("type"))    
 {

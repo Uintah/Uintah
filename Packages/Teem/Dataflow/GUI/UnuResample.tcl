@@ -37,9 +37,9 @@
  #  Copyright (C) 2000 SCI Group
  ##
 
-catch {rename Teem_Unu_UnuResample ""}
+catch {rename Teem_UnuNtoZ_UnuResample ""}
 
-itcl_class Teem_Unu_UnuResample {
+itcl_class Teem_UnuNtoZ_UnuResample {
     inherit Module
     constructor {config} {
         set name UnuResample

@@ -37,9 +37,9 @@
  #  Copyright (C) 2000 SCI Group
  ##
 
-catch {rename Teem_Unu_UnuPermute ""}
+catch {rename Teem_UnuNtoZ_UnuPermute ""}
 
-itcl_class Teem_Unu_UnuPermute {
+itcl_class Teem_UnuNtoZ_UnuPermute {
     inherit Module
     constructor {config} {
         set name UnuPermute

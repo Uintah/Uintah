@@ -62,7 +62,7 @@ private:
 DECLARE_MAKER(Unu2op)
 
 Unu2op::Unu2op(SCIRun::GuiContext *ctx) : 
-  Module("Unu2op", ctx, Filter, "Unu", "Teem"), 
+  Module("Unu2op", ctx, Filter, "UnuAtoM", "Teem"), 
   operator_(ctx->subVar("operator")),
   float_input_(ctx->subVar("float_input")),
   first_nrrd_(true), second_nrrd_(true)

@@ -57,7 +57,7 @@ private:
 DECLARE_MAKER(UnuGamma)
 
 UnuGamma::UnuGamma(SCIRun::GuiContext *ctx) : 
-  Module("UnuGamma", ctx, Filter, "Unu", "Teem"), 
+  Module("UnuGamma", ctx, Filter, "UnuAtoM", "Teem"), 
   gamma_(ctx->subVar("gamma")),
   min_(ctx->subVar("min")),
   max_(ctx->subVar("max"))

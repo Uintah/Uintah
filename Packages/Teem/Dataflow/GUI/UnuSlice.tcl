@@ -29,9 +29,9 @@
 #    Author : Martin Cole
 #    Date   : Mon Sep  8 09:46:23 2003
 
-catch {rename Teem_Unu_UnuSlice ""}
+catch {rename Teem_UnuNtoZ_UnuSlice ""}
 
-itcl_class Teem_Unu_UnuSlice {
+itcl_class Teem_UnuNtoZ_UnuSlice {
     inherit Module
     constructor {config} {
         set name UnuSlice

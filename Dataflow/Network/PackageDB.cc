@@ -153,9 +153,12 @@ bool PackageDB::findMaker(ModuleInfo* moduleInfo)
   if (!package_so)
     errstr = string(" - ")+SOError()+string("\n");
 
-  // If package is FieldsChoose, FieldsCreate, FieldsHandle Fields Packages
+  // If package is FieldsChoose, FieldsCreate, FieldsHandle Fields Packages,
+  // or UnuA-M, UnuN-Z
   string cat_name = moduleInfo->categoryName;
   if (cat_name.substr(0, 6) == "Fields") { cat_name = "Fields"; }
+  else if (cat_name.substr(0, 7) == "UnuAtoM") { cat_name = "Unu"; }
+  else if (cat_name.substr(0, 7) == "UnuNtoZ") { cat_name = "Unu"; }
 
   // try the small version of the shared library
   LIBRARY_HANDLE category_so = findLib("lib" + cat_bname+cat_name+lib_ext);
@@ -661,6 +664,13 @@ PackageDB::getCategoryName(const string &packName,
 	  !(packName == "SCIRun" && catName == "Fields"))
       {
 	cerr << "WARNING: Remapping " <<
+	  packName << "_" << catName << "_" << modName << " to " <<
+	  packName << "_" << newcatname << "_" << modName << "\n";
+      }
+      else if (newcatname != catName &&
+	  !(packName == "Teem" && catName == "Unu"))
+      {
+	// cerr << "WARNING: Remapping " <<
 	  packName << "_" << catName << "_" << modName << " to " <<
 	  packName << "_" << newcatname << "_" << modName << "\n";
       }

@@ -61,7 +61,7 @@ private:
 DECLARE_MAKER(UnuDhisto)
 
 UnuDhisto::UnuDhisto(SCIRun::GuiContext *ctx) : 
-  Module("UnuDhisto", ctx, Filter, "Unu", "Teem"), 
+  Module("UnuDhisto", ctx, Filter, "UnuAtoM", "Teem"), 
   height_(ctx->subVar("height")),
   log_(ctx->subVar("log"))
 {

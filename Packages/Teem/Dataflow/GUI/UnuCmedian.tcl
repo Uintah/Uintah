@@ -29,9 +29,9 @@
 #    Author : Martin Cole
 #    Date   : Mon Aug 25 10:14:23 2003
 
-catch {rename Teem_Unu_UnuCmedian ""}
+catch {rename Teem_UnuAtoM_UnuCmedian ""}
 
-itcl_class Teem_Unu_UnuCmedian {
+itcl_class Teem_UnuAtoM_UnuCmedian {
     inherit Module
     constructor {config} {
         set name UnuCmedian

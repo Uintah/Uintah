@@ -61,7 +61,7 @@ private:
 DECLARE_MAKER(UnuProject)
 
 UnuProject::UnuProject(SCIRun::GuiContext *ctx) : 
-  Module("UnuProject", ctx, Filter, "Unu", "Teem"), 
+  Module("UnuProject", ctx, Filter, "UnuNtoZ", "Teem"), 
   axis_(ctx->subVar("axis")),
   measure_(ctx->subVar("measure"))
 {
