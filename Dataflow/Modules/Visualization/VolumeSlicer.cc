@@ -99,7 +99,8 @@ private:
   GuiInt gui_use_stencil_;
 
   TextureHandle old_tex_;
-  ColorMapHandle old_cmap_;
+  ColorMapHandle old_cmap1_;
+  ColorMap2Handle old_cmap2_;
   Point old_min_, old_max_;
   GeomID geom_id_;
   SliceRenderer* slice_ren_;
@@ -141,7 +142,8 @@ VolumeSlicer::VolumeSlicer(GuiContext* ctx)
     gui_outline_levels_(ctx->subVar("outline_levels")),
     gui_use_stencil_(ctx->subVar("use_stencil")),
     old_tex_(0),
-    old_cmap_(0),
+    old_cmap1_(0),
+    old_cmap2_(0),
     old_min_(Point(0,0,0)), old_max_(Point(0,0,0)),
     geom_id_(-1),
     slice_ren_(0)
@@ -235,21 +237,14 @@ void VolumeSlicer::execute()
   if( s == "0" )
     gui->execute(id + " buildTopLevel");
 
-//    cerr<<"tex_->nlevels() = "<<tex_->nlevels() <<"\n";
   if( tex_->nlevels() > 1 && gui_multi_level_.get() == 1){
     gui_multi_level_.set(tex_->nlevels());
-//      cerr<<"building multi-level ... ";
     gui->execute(id + " build_multi_level");
-//      cerr<<" done \n";
   } else if(tex_->nlevels() == 1 && gui_multi_level_.get() > 1){
-//      cerr<<"destroying multi_level\n";
     gui_multi_level_.set(1);
     gui->execute(id + " destroy_multi_level");
   }
 
-
-
-  //AuditAllocator(default_allocator);
   if(!slice_ren_) {
     slice_ren_ = new SliceRenderer(tex_, cmap1, cmap2,
 				   int(card_mem_*1024*1024*0.8));
@@ -266,7 +261,8 @@ void VolumeSlicer::execute()
     slice_ren_->set_cylindrical(cyl_active_.get(), draw_phi0_.get(), phi0_.get(), 
                                 draw_phi1_.get(), phi1_.get());
     old_tex_ = tex_;
-    old_cmap_ = cmap1;
+    old_cmap1_ = cmap1;
+    old_cmap2_ = cmap2;
     BBox b;
     tex_->get_bounds(b);
     old_min_ = b.min();
@@ -301,15 +297,19 @@ void VolumeSlicer::execute()
       slice_ren_->set_control_point(tex_->transform().unproject(control_widget_->ReferencePoint()));
     }
 
-    if(cmap1 != old_cmap_) {
+    if (cmap1 != old_cmap1_)
+    {
       slice_ren_->set_colormap1(cmap1);
-      old_cmap_ = cmap1;
+      old_cmap1_ = cmap1;
+    }
+    if (cmap2 != old_cmap2_)
+    {
+      slice_ren_->set_colormap2(cmap2);
+      old_cmap2_ = cmap2;
     }
   }
  
-  //AuditAllocator(default_allocator);
   slice_ren_->set_interp(bool(interp_mode_.get()));
-  //AuditAllocator(default_allocator);
   if(draw_x_.get() || draw_y_.get() || draw_z_.get()){
     if(control_id_ == -1) {
       GeomHandle w = control_widget_->GetWidget();
@@ -338,20 +338,16 @@ void VolumeSlicer::execute()
   if( tex_->nlevels() > 1 ){
     for(int i = 0; i < tex_->nlevels(); i++){
       string result;
-//        cerr<<"Calling isOn from module execute ... ";
       gui->eval(id + " isOn l" + to_string(i), result);
       if ( result == "0"){
-//  	cerr<<"result = 0\n";
   	slice_ren_->set_draw_level(tex_->nlevels()-1 -i, false);
       } else {
-//  	cerr<<"result = 1\n";
   	slice_ren_->set_draw_level(tex_->nlevels()-1 -i, true);
       }
     }
   }
   
   ogeom_->flushViews();		  
-  //AuditAllocator(default_allocator);
   
   if(ocmap_ && cmap1.get_rep()) {
     ColorMapHandle outcmap;
