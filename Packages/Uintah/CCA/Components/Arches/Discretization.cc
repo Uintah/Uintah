@@ -42,6 +42,161 @@ Discretization::~Discretization()
 }
 
 //****************************************************************************
+// compute vel hat for explicit projection
+//****************************************************************************
+void 
+Discretization::calculateVelRhoHat(const ProcessorGroup* /*pc*/,
+			    const Patch* patch,
+			    int index, double delta_t,
+			    CellInformation* cellinfo,
+			    ArchesVariables* vars)
+
+{
+  // Get the patch bounds and the variable bounds
+  IntVector domLoU;
+  IntVector domHiU;
+  IntVector domLoUO;
+  IntVector domHiUO;
+  IntVector domLong;
+  IntVector domHing;
+  IntVector idxLo;
+  IntVector idxHi;
+  // for explicit solver
+  IntVector domLoDen = vars->density.getFortLowIndex();
+  IntVector domHiDen = vars->density.getFortHighIndex();
+  int numGhostCells = 1;
+  IntVector domLoDenwg = patch->getGhostCellLowIndex(numGhostCells);
+  IntVector domHiDenwg = patch->getGhostCellHighIndex(numGhostCells) -
+                                                        IntVector(1,1,1);
+  
+  int ioff, joff, koff;
+
+  switch (index) {
+  case Arches::XDIR:
+    domLoU = vars->uVelRhoHat.getFortLowIndex();
+    domHiU = vars->uVelRhoHat.getFortHighIndex();
+    domLoUO = vars->uVelocity.getFortLowIndex();
+    domHiUO = vars->uVelocity.getFortHighIndex();
+    domLong = vars->uVelNonlinearSrc.getFortLowIndex();
+    domHing = vars->uVelNonlinearSrc.getFortHighIndex();
+    idxLo = patch->getSFCXFORTLowIndex();
+    idxHi = patch->getSFCXFORTHighIndex();
+    ioff = 1; joff = 0; koff = 0;
+
+    FORT_EXPLICIT_VEL(domLoU.get_pointer(), domHiU.get_pointer(),
+		      domLoUO.get_pointer(), domHiUO.get_pointer(),
+		      domLong.get_pointer(), domHing.get_pointer(),
+		      idxLo.get_pointer(), idxHi.get_pointer(),
+		      vars->uVelRhoHat.getPointer(),
+		      vars->uVelocity.getPointer(),
+		      vars->uVelocityCoeff[Arches::AE].getPointer(), 
+		      vars->uVelocityCoeff[Arches::AW].getPointer(), 
+		      vars->uVelocityCoeff[Arches::AN].getPointer(), 
+		      vars->uVelocityCoeff[Arches::AS].getPointer(), 
+		      vars->uVelocityCoeff[Arches::AT].getPointer(), 
+		      vars->uVelocityCoeff[Arches::AB].getPointer(), 
+		      vars->uVelocityCoeff[Arches::AP].getPointer(), 
+		      vars->uVelNonlinearSrc.getPointer(),
+		      domLoDen.get_pointer(), domHiDen.get_pointer(),
+		      domLoDenwg.get_pointer(), domHiDenwg.get_pointer(),
+		      vars->density.getPointer(), 
+		      cellinfo->sewu.get_objs(), cellinfo->sns.get_objs(),
+		      cellinfo->stb.get_objs(), &delta_t,
+		      &ioff, &joff, &koff);
+    break;
+  case Arches::YDIR:
+    domLoU = vars->vVelRhoHat.getFortLowIndex();
+    domHiU = vars->vVelRhoHat.getFortHighIndex();
+    domLoUO = vars->vVelocity.getFortLowIndex();
+    domHiUO = vars->vVelocity.getFortHighIndex();
+    domLong = vars->vVelNonlinearSrc.getFortLowIndex();
+    domHing = vars->vVelNonlinearSrc.getFortHighIndex();
+    idxLo = patch->getSFCYFORTLowIndex();
+    idxHi = patch->getSFCYFORTHighIndex();
+    ioff = 0; joff = 1; koff = 0;
+
+    FORT_EXPLICIT_VEL(domLoU.get_pointer(), domHiU.get_pointer(),
+		      domLoUO.get_pointer(), domHiUO.get_pointer(),
+		      domLong.get_pointer(), domHing.get_pointer(),
+		      idxLo.get_pointer(), idxHi.get_pointer(),
+		      vars->vVelRhoHat.getPointer(),
+		      vars->vVelocity.getPointer(),
+		      vars->vVelocityCoeff[Arches::AE].getPointer(), 
+		      vars->vVelocityCoeff[Arches::AW].getPointer(), 
+		      vars->vVelocityCoeff[Arches::AN].getPointer(), 
+		      vars->vVelocityCoeff[Arches::AS].getPointer(), 
+		      vars->vVelocityCoeff[Arches::AT].getPointer(), 
+		      vars->vVelocityCoeff[Arches::AB].getPointer(), 
+		      vars->vVelocityCoeff[Arches::AP].getPointer(), 
+		      vars->vVelNonlinearSrc.getPointer(),
+		      domLoDen.get_pointer(), domHiDen.get_pointer(),
+		      domLoDenwg.get_pointer(), domHiDenwg.get_pointer(),
+		      vars->density.getPointer(), 
+		      cellinfo->sew.get_objs(), cellinfo->snsv.get_objs(),
+		      cellinfo->stb.get_objs(), &delta_t,
+		      &ioff, &joff, &koff);
+
+    break;
+  case Arches::ZDIR:
+    domLoU = vars->wVelRhoHat.getFortLowIndex();
+    domHiU = vars->wVelRhoHat.getFortHighIndex();
+    domLoUO = vars->wVelocity.getFortLowIndex();
+    domHiUO = vars->wVelocity.getFortHighIndex();
+    domLong = vars->wVelNonlinearSrc.getFortLowIndex();
+    domHing = vars->wVelNonlinearSrc.getFortHighIndex();
+    idxLo = patch->getSFCZFORTLowIndex();
+    idxHi = patch->getSFCZFORTHighIndex();
+    ioff = 0; joff = 0; koff = 1;
+
+    FORT_EXPLICIT_VEL(domLoU.get_pointer(), domHiU.get_pointer(),
+		      domLoUO.get_pointer(), domHiUO.get_pointer(),
+		      domLong.get_pointer(), domHing.get_pointer(),
+		      idxLo.get_pointer(), idxHi.get_pointer(),
+		      vars->wVelRhoHat.getPointer(),
+		      vars->wVelocity.getPointer(),
+		      vars->wVelocityCoeff[Arches::AE].getPointer(), 
+		      vars->wVelocityCoeff[Arches::AW].getPointer(), 
+		      vars->wVelocityCoeff[Arches::AN].getPointer(), 
+		      vars->wVelocityCoeff[Arches::AS].getPointer(), 
+		      vars->wVelocityCoeff[Arches::AT].getPointer(), 
+		      vars->wVelocityCoeff[Arches::AB].getPointer(), 
+		      vars->wVelocityCoeff[Arches::AP].getPointer(), 
+		      vars->wVelNonlinearSrc.getPointer(),
+		      domLoDen.get_pointer(), domHiDen.get_pointer(),
+		      domLoDenwg.get_pointer(), domHiDenwg.get_pointer(),
+		      vars->density.getPointer(), 
+		      cellinfo->sew.get_objs(), cellinfo->sns.get_objs(),
+		      cellinfo->stbw.get_objs(), &delta_t,
+		      &ioff, &joff, &koff);
+
+
+#ifdef ARCHES_VEL_DEBUG
+    cerr << "Print wvelhat" << endl;
+    vars->wVelRhoHat.print(cerr);
+
+    cerr << " After W Vel Explicit solve : " << endl;
+    for (int ii = domLo.x(); ii <= domHi.x(); ii++) {
+      cerr << "W Vel for ii = " << ii << endl;
+      for (int jj = domLo.y(); jj <= domHi.y(); jj++) {
+	for (int kk = domLo.z(); kk <= domHi.z(); kk++) {
+	  cerr.width(14);
+	  cerr << vars->wVelocity[IntVector(ii,jj,kk)] << " " ; 
+	}
+	cerr << endl;
+      }
+    }
+#endif
+
+    vars->residWVel = 1.0E-7;
+    vars->truncWVel = 1.0;
+
+    break;
+  default:
+    throw InvalidValue("Invalid index in LinearSolver for velocity");
+  }
+}
+
+//****************************************************************************
 // Velocity stencil weights
 //****************************************************************************
 void 
@@ -397,12 +552,6 @@ Discretization::calculatePressureCoeff(const ProcessorGroup*,
   IntVector domHi = coeff_vars->density.getFortHighIndex();
   IntVector idxLo = patch->getCellFORTLowIndex();
   IntVector idxHi = patch->getCellFORTHighIndex();
-  IntVector domLoU = coeff_vars->uVelocityCoeff[Arches::AP].getFortLowIndex();
-  IntVector domHiU = coeff_vars->uVelocityCoeff[Arches::AP].getFortHighIndex();
-  IntVector domLoV = coeff_vars->vVelocityCoeff[Arches::AP].getFortLowIndex();
-  IntVector domHiV = coeff_vars->vVelocityCoeff[Arches::AP].getFortHighIndex();
-  IntVector domLoW = coeff_vars->wVelocityCoeff[Arches::AP].getFortLowIndex();
-  IntVector domHiW = coeff_vars->wVelocityCoeff[Arches::AP].getFortHighIndex();
   // no ghost cells
   IntVector domLong = coeff_vars->pressCoeff[Arches::AP].getFortLowIndex();
   IntVector domHing = coeff_vars->pressCoeff[Arches::AP].getFortHighIndex();
@@ -435,12 +584,6 @@ Discretization::calculatePressureCoeff(const ProcessorGroup*,
 		  coeff_vars->pressCoeff[Arches::AS].getPointer(), 
 		  coeff_vars->pressCoeff[Arches::AT].getPointer(), 
 		  coeff_vars->pressCoeff[Arches::AB].getPointer(), 
-		  domLoU.get_pointer(), domHiU.get_pointer(),
-		  coeff_vars->uVelocityCoeff[Arches::AP].getPointer(),
-		  domLoV.get_pointer(), domHiV.get_pointer(),
-		  coeff_vars->vVelocityCoeff[Arches::AP].getPointer(),
-		  domLoW.get_pointer(), domHiW.get_pointer(),
-		  coeff_vars->wVelocityCoeff[Arches::AP].getPointer(),
 		  cellinfo->sew.get_objs(), cellinfo->sns.get_objs(), 
 		  cellinfo->stb.get_objs(),
 		  cellinfo->sewu.get_objs(), cellinfo->dxep.get_objs(), 
@@ -817,11 +960,12 @@ Discretization::calculatePressDiagonal(const ProcessorGroup*,
 	     coeff_vars->pressCoeff[Arches::AT].getPointer(), 
 	     coeff_vars->pressCoeff[Arches::AB].getPointer(),
 	     coeff_vars->pressLinearSrc.getPointer());
-
 #ifdef ARCHES_COEF_DEBUG
   cerr << "AFTER Calculate Pressure Diagonal :" << endl;
   cerr << "Print AP - Pressure Linear source: " << endl;
   coeff_vars->pressCoeff[Arches::AP].print(cerr);
+  cerr << "Print nonlinear source: " << endl;
+  coeff_vars->pressNonlinearSrc.print(cerr);
 #endif
 
 }

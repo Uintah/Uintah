@@ -336,6 +336,65 @@ namespace Uintah {
       const VarLabel* d_densityMicroINLabel;
       const VarLabel* d_pressPlusHydroLabel;
 
+      // for outlet bc
+      const VarLabel* d_uvwoutLabel;
+      const VarLabel* d_uVelocityOUTBCLabel;
+      const VarLabel* d_vVelocityOUTBCLabel;
+      const VarLabel* d_wVelocityOUTBCLabel;
+      const VarLabel* d_scalarOUTBCLabel;
+      // pred-corr labels
+      const VarLabel* d_scalCoefPredLabel;
+
+      // Scalar Conv Coef
+
+      const VarLabel* d_scalConvCoefPredLabel;
+
+      // Scalar Linear Src
+
+      const VarLabel* d_scalLinSrcPredLabel;
+
+      // Scalar NonLinear Src
+
+      const VarLabel* d_scalNonLinSrcPredLabel;
+      // scalar pred
+      const VarLabel* d_scalarPredLabel;
+
+      const VarLabel* d_scalCoefCorrLabel;
+
+      // Scalar Conv Coef
+
+      const VarLabel* d_scalConvCoefCorrLabel;
+
+      // Scalar Linear Src
+
+      const VarLabel* d_scalLinSrcCorrLabel;
+
+      // Scalar NonLinear Src
+
+      const VarLabel* d_scalNonLinSrcCorrLabel;
+      // for density
+      const VarLabel* d_densityPredLabel;
+      // labels for pressure solver
+      const VarLabel* d_uVelRhoHatLabel;
+      const VarLabel* d_vVelRhoHatLabel;
+      const VarLabel* d_wVelRhoHatLabel;
+
+      const VarLabel* d_pressurePredLabel;
+
+      const VarLabel* d_presCoefCorrLabel;
+
+      // Pressure Linear Src Labels
+      // in pressureSolver::linearizeMatrix
+      const VarLabel* d_presLinSrcCorrLabel;
+
+      // Pressure Non Linear Src Labels
+      // in pressureSolver::linearizeMatrix
+      const VarLabel* d_presNonLinSrcCorrLabel;
+      
+      const VarLabel* d_uVelocityPredLabel;
+      const VarLabel* d_vVelocityPredLabel;
+      const VarLabel* d_wVelocityPredLabel;
+
     }; // End class ArchesLabel
 } // End namespace Uintah
 

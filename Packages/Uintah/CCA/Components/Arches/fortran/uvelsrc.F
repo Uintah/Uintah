@@ -183,11 +183,14 @@ c     viscous sources
 c
 c   Add all the source terms at one go (don't need as many array searches)
 c
+c modifying projection for explicit methods
                SU(I,J,K) = SU(I,J,K)+
      &              ((VISEI*DUDXE-VISWI*DUDXW)/SEWU(I) +
      &              (VISNI*DVDXN-VISSI*DVDXS)/SNS(J)   +
      &              (VISTI*DWDXT-VISBI*DWDXB)/STB(K)   +
-     &              old_DEN(I,J,K)*(old_UU(I,J,K)-UU(I,J,K))/
+c     &              old_DEN(I,J,K)*(old_UU(I,J,K)-UU(I,J,K))/
+     &              pt5*(old_DEN(I,J,K)+old_DEN(I-1,J,K))*
+     $              (old_UU(I,J,K))/
      $              DELTAT
      &              + (PT5*(DEN(I,J,K)+DEN(I-1,J,K))-
      $              pt5*(den_ref(i,j,k)+den_ref(i-1,j,k)))*

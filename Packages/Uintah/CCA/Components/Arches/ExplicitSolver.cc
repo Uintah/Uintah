@@ -1,6 +1,6 @@
-//----- PicardNonlinearSolver.cc ----------------------------------------------
+//----- ExplicitSolver.cc ----------------------------------------------
 
-#include <Packages/Uintah/CCA/Components/Arches/PicardNonlinearSolver.h>
+#include <Packages/Uintah/CCA/Components/Arches/ExplicitSolver.h>
 #include <Packages/Uintah/CCA/Components/Arches/Arches.h>
 #include <Packages/Uintah/CCA/Components/Arches/CellInformationP.h>
 #include <Packages/Uintah/CCA/Components/Arches/Properties.h>
@@ -22,34 +22,35 @@
 #include <Packages/Uintah/Core/Grid/SFCZVariable.h>
 #include <Packages/Uintah/Core/Grid/SimulationState.h>
 #include <Packages/Uintah/Core/Exceptions/InvalidValue.h>
-#include <Core/Util/NotFinished.h>
 #include <Core/Containers/StaticArray.h>
+#include <Core/Util/NotFinished.h>
 
 #include <math.h>
 
 using namespace Uintah;
 
 // ****************************************************************************
-// Default constructor for PicardNonlinearSolver
+// Default constructor for ExplicitSolver
 // ****************************************************************************
-PicardNonlinearSolver::
-PicardNonlinearSolver(const ArchesLabel* label, 
-		      const MPMArchesLabel* MAlb,
-		      Properties* props, 
-		      BoundaryCondition* bc,
-		      TurbulenceModel* turbModel,
-		      PhysicalConstants* physConst,
-		      const ProcessorGroup* myworld): NonlinearSolver(myworld),
-		       d_lab(label), d_MAlab(MAlb), d_props(props), 
-		       d_boundaryCondition(bc), d_turbModel(turbModel),
-		       d_physicalConsts(physConst)
+ExplicitSolver::
+ExplicitSolver(const ArchesLabel* label, 
+	       const MPMArchesLabel* MAlb,
+	       Properties* props, 
+	       BoundaryCondition* bc,
+	       TurbulenceModel* turbModel,
+	       PhysicalConstants* physConst,
+	       const ProcessorGroup* myworld): 
+               NonlinearSolver(myworld),
+	       d_lab(label), d_MAlab(MAlb), d_props(props), 
+	       d_boundaryCondition(bc), d_turbModel(turbModel),
+	       d_physicalConsts(physConst)
 {
 }
 
 // ****************************************************************************
 // Destructor
 // ****************************************************************************
-PicardNonlinearSolver::~PicardNonlinearSolver()
+ExplicitSolver::~ExplicitSolver()
 {
 }
 
@@ -57,14 +58,10 @@ PicardNonlinearSolver::~PicardNonlinearSolver()
 // Problem Setup 
 // ****************************************************************************
 void 
-PicardNonlinearSolver::problemSetup(const ProblemSpecP& params)
+ExplicitSolver::problemSetup(const ProblemSpecP& params)
   // MultiMaterialInterface* mmInterface
 {
-  ProblemSpecP db = params->findBlock("PicardSolver");
-  db->require("max_iter", d_nonlinear_its);
-  
-  // ** WARNING ** temporarily commented out
-  // dw->put(nonlinear_its, "max_nonlinear_its");
+  ProblemSpecP db = params->findBlock("ExplicitSolver");
   db->require("probe_data", d_probe_data);
   if (d_probe_data) {
     IntVector prbPoint;
@@ -75,7 +72,6 @@ PicardNonlinearSolver::problemSetup(const ProblemSpecP& params)
       d_probePoints.push_back(prbPoint);
     }
   }
-  db->require("res_tol", d_resTol);
   bool calPress;
   db->require("cal_pressure", calPress);
   if (calPress) {
@@ -98,29 +94,24 @@ PicardNonlinearSolver::problemSetup(const ProblemSpecP& params)
     d_scalarSolver = scinew ScalarSolver(d_lab, d_MAlab,
 					 d_turbModel, d_boundaryCondition,
 					 d_physicalConsts);
-    d_scalarSolver->problemSetup(db); // d_mmInterface
+    d_scalarSolver->problemSetup(db);
   }
 }
 
 // ****************************************************************************
 // Schedule non linear solve and carry out some actual operations
 // ****************************************************************************
-int PicardNonlinearSolver::nonlinearSolve(const LevelP& level,
+int ExplicitSolver::nonlinearSolve(const LevelP& level,
 					  SchedulerP& sched,
 					  double time, double delta_t)
 {
   const PatchSet* patches = level->eachPatch();
   const MaterialSet* matls = d_lab->d_sharedState->allArchesMaterials();
 
-#if 0
-  if (d_MAlab)
-    d_boundaryCondition->sched_mmWallCellTypeInit(sched, patches, matls);
-#endif
-
   //initializes and allocates vars for new_dw
   // set initial guess
-  // require : old_dw -> pressureSPBC, [u,v,w]velocitySPBC, scalarSP, densityCP,
-  //                     viscosityCTS
+  // require : old_dw -> pressureSPBC, [u,v,w]velocitySPBC, scalarSP, 
+  // densityCP, viscosityCTS
   // compute : new_dw -> pressureIN, [u,v,w]velocityIN, scalarIN, densityIN,
   //                     viscosityIN
 
@@ -128,102 +119,112 @@ int PicardNonlinearSolver::nonlinearSolve(const LevelP& level,
 
   // Start the iterations
 
-  int nlIterations = 0;
-  double nlResidual = 2.0*d_resTol;
   int nofScalars = d_props->getNumMixVars();
 
-  do{
-
-    //correct inlet velocities to account for change in properties
-    // require : densityIN, [u,v,w]VelocityIN (new_dw)
-    // compute : [u,v,w]VelocitySIVBC
-
-    d_boundaryCondition->sched_setInletVelocityBC(sched, patches, matls, time);
-    // linearizes and solves pressure eqn
-    // require : pressureIN, densityIN, viscosityIN,
-    //           [u,v,w]VelocitySIVBC (new_dw)
-    //           [u,v,w]VelocitySPBC, densityCP (old_dw)
-    // compute : [u,v,w]VelConvCoefPBLM, [u,v,w]VelCoefPBLM, 
-    //           [u,v,w]VelLinSrcPBLM, [u,v,w]VelNonLinSrcPBLM, (matrix_dw)
-    //           presResidualPS, presCoefPBLM, presNonLinSrcPBLM,(matrix_dw)
-    //           pressurePS (new_dw)
-
-    // if external boundary then recompute velocities using new pressure
-    // and puts them in nonlinear_dw
-    // require : densityCP, pressurePS, [u,v,w]VelocitySIVBC
-    // compute : [u,v,w]VelocityCPBC, pressureSPBC
-
-    d_boundaryCondition->sched_recomputePressureBC(sched, patches, matls);
-    // compute total flowin, flow out and overall mass balance
-    d_boundaryCondition->sched_computeFlowINOUT(sched, patches, matls, delta_t);
-    d_boundaryCondition->sched_computeOMB(sched, patches, matls);
-    d_boundaryCondition->sched_transOutletBC(sched, patches, matls, delta_t);
-
-    // calculate density reference array for buoyant plume calculation
-
-    d_props->sched_computeDenRefArray(sched, patches, matls);
-
-    d_pressSolver->solve(level, sched, time, delta_t);
-
-
-    // Momentum solver
-    // require : pressureSPBC, [u,v,w]VelocityCPBC, densityIN, 
-    // viscosityIN (new_dw)
-    //           [u,v,w]VelocitySPBC, densityCP (old_dw)
-    // compute : [u,v,w]VelCoefPBLM, [u,v,w]VelConvCoefPBLM
-    //           [u,v,w]VelLinSrcPBLM, [u,v,w]VelNonLinSrcPBLM
-    //           [u,v,w]VelResidualMS, [u,v,w]VelCoefMS, 
-    //           [u,v,w]VelNonLinSrcMS, [u,v,w]VelLinSrcMS,
-    //           [u,v,w]VelocitySPBC
-
-    for (int index = 1; index <= Arches::NDIM; ++index) {
-
-      d_momSolver->solve(sched, patches, matls, time, delta_t, index);
-
-    }
-
-    // equation for scalars
-    // require : scalarIN, [u,v,w]VelocitySPBC, densityIN, viscosityIN (new_dw)
-    //           scalarSP, densityCP (old_dw)
-    // compute : scalarCoefSBLM, scalarLinSrcSBLM, scalarNonLinSrcSBLM
-    //           scalResidualSS, scalCoefSS, scalNonLinSrcSS, scalarSS
-
-    for (int index = 0;index < nofScalars; index ++) {
-
-      // in this case we're only solving for one scalar...but
-      // the same subroutine can be used to solve multiple scalars
-
-      d_scalarSolver->solve(sched, patches, matls, time, delta_t, index);
-
-    }
-
-
-    // update properties
-    // require : densityIN
-    // compute : densityCP
-
-    d_props->sched_reComputeProps(sched, patches, matls);
-
-    // LES Turbulence model to compute turbulent viscosity
-    // that accounts for sub-grid scale turbulence
-    // require : densityCP, viscosityIN, [u,v,w]VelocitySPBC
-    // compute : viscosityCTS
-
-    d_turbModel->sched_reComputeTurbSubmodel(sched, patches, matls);
-    ++nlIterations;
-
-#if 0    
-    // residual represents the degrees of inaccuracies
-    nlResidual = computeResidual(level, sched, old_dw, new_dw);
+  //correct inlet velocities to account for change in properties
+  // require : densityIN, [u,v,w]VelocityIN (new_dw)
+  // compute : [u,v,w]VelocitySIVBC
+  d_boundaryCondition->sched_setInletVelocityBC(sched, patches, matls, time);
+  d_boundaryCondition->sched_recomputePressureBC(sched, patches, matls);
+  // compute total flowin, flow out and overall mass balance
+  d_boundaryCondition->sched_computeFlowINOUT(sched, patches, matls, delta_t);
+  d_boundaryCondition->sched_computeOMB(sched, patches, matls);
+  d_boundaryCondition->sched_transOutletBC(sched, patches, matls, delta_t);
+  // compute apo and drhodt, used in transport equations
+  // put a logical to call computetranscoeff 
+  // using a predictor corrector approach from Najm [1998]
+  // compute df/dt|n using old values of u,v,w
+  // use Adams-Bashforth time integration to compute predicted f*
+  // using f* from equation of state compute den* (predicted value)
+  // equation for scalars
+  // require : scalarIN, [u,v,w]VelocitySPBC, densityIN, viscosityIN (new_dw)
+  //           scalarSP, densityCP (old_dw)
+  // compute : scalarCoefSBLM, scalarLinSrcSBLM, scalarNonLinSrcSBLM
+  //           scalResidualSS, scalCoefSS, scalNonLinSrcSS, scalarSS
+  // compute drhophidt, compute dphidt and using both of them compute
+  // compute drhodt
+  for (int index = 0;index < nofScalars; index ++) {
+    // in this case we're only solving for one scalar...but
+    // the same subroutine can be used to solve multiple scalars
+    d_scalarSolver->solvePred(sched, patches, matls, time, delta_t, index);
+  }
+#ifdef correctorstep
+  d_props->sched_computePropsPred(sched, patches, matls);
+#else
+  d_props->sched_reComputeProps(sched, patches, matls);
 #endif
-
-  }while((nlIterations < d_nonlinear_its)&&(nlResidual > d_resTol));
-
+  // linearizes and solves pressure eqn
+  // require : pressureIN, densityIN, viscosityIN,
+  //           [u,v,w]VelocitySIVBC (new_dw)
+  //           [u,v,w]VelocitySPBC, densityCP (old_dw)
+  // compute : [u,v,w]VelConvCoefPBLM, [u,v,w]VelCoefPBLM, 
+  //           [u,v,w]VelLinSrcPBLM, [u,v,w]VelNonLinSrcPBLM, (matrix_dw)
+  //           presResidualPS, presCoefPBLM, presNonLinSrcPBLM,(matrix_dw)
+  //           pressurePS (new_dw)
+  // first computes, hatted velocities and then computes the pressure poisson equation
+  d_props->sched_computeDenRefArray(sched, patches, matls);
+  d_pressSolver->solvePred(level, sched, time, delta_t);
+  // Momentum solver
+  // require : pressureSPBC, [u,v,w]VelocityCPBC, densityIN, 
+  // viscosityIN (new_dw)
+  //           [u,v,w]VelocitySPBC, densityCP (old_dw)
+  // compute : [u,v,w]VelCoefPBLM, [u,v,w]VelConvCoefPBLM
+  //           [u,v,w]VelLinSrcPBLM, [u,v,w]VelNonLinSrcPBLM
+  //           [u,v,w]VelResidualMS, [u,v,w]VelCoefMS, 
+  //           [u,v,w]VelNonLinSrcMS, [u,v,w]VelLinSrcMS,
+  //           [u,v,w]VelocitySPBC
+  
+  // project velocities using the projection step
+  for (int index = 1; index <= Arches::NDIM; ++index) {
+    d_momSolver->solvePred(sched, patches, matls, time, delta_t, index);
+  }
+#ifdef correctorstep
+  // corrected step
+  for (int index = 0;index < nofScalars; index ++) {
+    // in this case we're only solving for one scalar...but
+    // the same subroutine can be used to solve multiple scalars
+    d_scalarSolver->solveCorr(sched, patches, matls, time, delta_t, index);
+  }
+  // same as corrector
+  d_props->sched_reComputeProps(sched, patches, matls);
+  // linearizes and solves pressure eqn
+  // require : pressureIN, densityIN, viscosityIN,
+  //           [u,v,w]VelocitySIVBC (new_dw)
+  //           [u,v,w]VelocitySPBC, densityCP (old_dw)
+  // compute : [u,v,w]VelConvCoefPBLM, [u,v,w]VelCoefPBLM, 
+  //           [u,v,w]VelLinSrcPBLM, [u,v,w]VelNonLinSrcPBLM, (matrix_dw)
+  //           presResidualPS, presCoefPBLM, presNonLinSrcPBLM,(matrix_dw)
+  //           pressurePS (new_dw)
+  // first computes, hatted velocities and then computes the pressure 
+  // poisson equation
+  d_pressSolver->solveCorr(level, sched, time, delta_t);
+  // Momentum solver
+  // require : pressureSPBC, [u,v,w]VelocityCPBC, densityIN, 
+  // viscosityIN (new_dw)
+  //           [u,v,w]VelocitySPBC, densityCP (old_dw)
+  // compute : [u,v,w]VelCoefPBLM, [u,v,w]VelConvCoefPBLM
+  //           [u,v,w]VelLinSrcPBLM, [u,v,w]VelNonLinSrcPBLM
+  //           [u,v,w]VelResidualMS, [u,v,w]VelCoefMS, 
+  //           [u,v,w]VelNonLinSrcMS, [u,v,w]VelLinSrcMS,
+  //           [u,v,w]VelocitySPBC
+  
+  // project velocities using the projection step
+  for (int index = 1; index <= Arches::NDIM; ++index) {
+    d_momSolver->solveCorr(sched, patches, matls, time, delta_t, index);
+  }
+  // if external boundary then recompute velocities using new pressure
+  // and puts them in nonlinear_dw
+  // require : densityCP, pressurePS, [u,v,w]VelocitySIVBC
+  // compute : [u,v,w]VelocityCPBC, pressureSPBC
+  
+#endif
+  d_turbModel->sched_reComputeTurbSubmodel(sched, patches, matls);
+ 
   // Schedule an interpolation of the face centered velocity data 
   // to a cell centered vector for used by the viz tools
 
   sched_interpolateFromFCToCC(sched, patches, matls);
-
+  
   // print information at probes provided in input file
 
   if (d_probe_data)
@@ -233,18 +234,21 @@ int PicardNonlinearSolver::nonlinearSolve(const LevelP& level,
   return(0);
 }
 
+
+
+
 // ****************************************************************************
 // Schedule initialize 
 // ****************************************************************************
 void 
-PicardNonlinearSolver::sched_setInitialGuess(SchedulerP& sched, 
-					     const PatchSet* patches,
-					     const MaterialSet* matls)
+ExplicitSolver::sched_setInitialGuess(SchedulerP& sched, 
+				      const PatchSet* patches,
+				      const MaterialSet* matls)
 {
   //copies old db to new_db and then uses non-linear
   //solver to compute new values
-  Task* tsk = scinew Task( "Picard::initialGuess",
-			  this, &PicardNonlinearSolver::setInitialGuess);
+  Task* tsk = scinew Task( "ExplicitSolver::initialGuess",
+			   this, &ExplicitSolver::setInitialGuess);
   int numGhostCells = 0;
   if (d_MAlab) 
     tsk->requires(Task::NewDW, d_lab->d_mmcellTypeLabel, 
@@ -292,12 +296,12 @@ PicardNonlinearSolver::sched_setInitialGuess(SchedulerP& sched,
 // Schedule Interpolate from SFCX, SFCY, SFCZ to CC<Vector>
 // ****************************************************************************
 void 
-PicardNonlinearSolver::sched_interpolateFromFCToCC(SchedulerP& sched, 
+ExplicitSolver::sched_interpolateFromFCToCC(SchedulerP& sched, 
 						   const PatchSet* patches,
 						   const MaterialSet* matls)
 {
-  Task* tsk = scinew Task( "Picard::interpFCToCC",
-			   this, &PicardNonlinearSolver::interpolateFromFCToCC);
+  Task* tsk = scinew Task( "ExplicitSolver::interpFCToCC",
+			   this, &ExplicitSolver::interpolateFromFCToCC);
   int numGhostCells = 1;
   tsk->requires(Task::NewDW, d_lab->d_uVelocityINLabel,
 		Ghost::AroundCells, numGhostCells);
@@ -324,30 +328,31 @@ PicardNonlinearSolver::sched_interpolateFromFCToCC(SchedulerP& sched,
 }
 
 void 
-PicardNonlinearSolver::sched_probeData(SchedulerP& sched, const PatchSet* patches,
+ExplicitSolver::sched_probeData(SchedulerP& sched, const PatchSet* patches,
 				       const MaterialSet* matls)
 {
-  Task* tsk = scinew Task( "Picard::probeData",
-			  this, &PicardNonlinearSolver::probeData);
+  Task* tsk = scinew Task( "ExplicitSolver::probeData",
+			  this, &ExplicitSolver::probeData);
   int numGhostCells = 1;
+  int zeroGhostCells = 0;
   
   tsk->requires(Task::NewDW, d_lab->d_uVelocitySPBCLabel,
-		Ghost::AroundCells, numGhostCells);
+		Ghost::None, zeroGhostCells);
   tsk->requires(Task::NewDW, d_lab->d_vVelocitySPBCLabel,
-		Ghost::AroundCells, numGhostCells);
+		Ghost::None, zeroGhostCells);
   tsk->requires(Task::NewDW, d_lab->d_wVelocitySPBCLabel,
-		Ghost::AroundCells, numGhostCells);
+		Ghost::None, zeroGhostCells);
   tsk->requires(Task::NewDW, d_lab->d_densityCPLabel, 
-		Ghost::AroundCells, numGhostCells);
-  tsk->requires(Task::NewDW, d_lab->d_pressurePSLabel,
-		Ghost::AroundCells, numGhostCells);
+		Ghost::None, zeroGhostCells);
+  tsk->requires(Task::NewDW, d_lab->d_pressureSPBCLabel,
+		Ghost::None, zeroGhostCells);
   tsk->requires(Task::NewDW, d_lab->d_viscosityCTSLabel,
-		Ghost::AroundCells, numGhostCells);
+		Ghost::None, zeroGhostCells);
   tsk->requires(Task::NewDW, d_lab->d_scalarSPLabel, 
-		Ghost::AroundCells, numGhostCells);
-
-  tsk->requires(Task::NewDW, d_lab->d_mmgasVolFracLabel, 
-		Ghost::AroundCells, numGhostCells);
+		Ghost::None, zeroGhostCells);
+  if (d_MAlab)
+    tsk->requires(Task::NewDW, d_lab->d_mmgasVolFracLabel, 
+		  Ghost::None, zeroGhostCells);
       
   sched->addTask(tsk, patches, matls);
   
@@ -356,7 +361,7 @@ PicardNonlinearSolver::sched_probeData(SchedulerP& sched, const PatchSet* patche
 // Actual initialize 
 // ****************************************************************************
 void 
-PicardNonlinearSolver::setInitialGuess(const ProcessorGroup* ,
+ExplicitSolver::setInitialGuess(const ProcessorGroup* ,
 				       const PatchSubset* patches,
 				       const MaterialSubset* matls,
 				       DataWarehouse* old_dw,
@@ -400,7 +405,7 @@ PicardNonlinearSolver::setInitialGuess(const ProcessorGroup* ,
 		Ghost::None, nofGhostCells);
 
     int nofScalars = d_props->getNumMixVars();
-    StaticArray< CCVariable<double> > scalar(nofScalars);
+    StaticArray< CCVariable<double> > scalar (nofScalars);
     for (int ii = 0; ii < nofScalars; ii++) {
       old_dw->get(scalar[ii], d_lab->d_scalarSPLabel, matlIndex, patch, 
 		  Ghost::None, nofGhostCells);
@@ -446,10 +451,9 @@ PicardNonlinearSolver::setInitialGuess(const ProcessorGroup* ,
     SFCZVariable<double> wVelocity_new;
     new_dw->allocate(wVelocity_new, d_lab->d_wVelocityINLabel, matlIndex, patch);
     wVelocity_new.copyPatch(wVelocity); // copy old into new
-    
-    StaticArray< CCVariable<double> > scalar_new(nofScalars);
+    StaticArray<CCVariable<double> > scalar_new(nofScalars);
     for (int ii = 0; ii < nofScalars; ii++) {
-      new_dw->allocate(scalar_new[ii], d_lab->d_scalarINLabel, ii, patch);
+      new_dw->allocate(scalar_new[ii], d_lab->d_scalarINLabel, matlIndex, patch);
       scalar_new[ii].copyPatch(scalar[ii]); // copy old into new
     }
 
@@ -483,7 +487,7 @@ PicardNonlinearSolver::setInitialGuess(const ProcessorGroup* ,
 //               interpolation
 // ****************************************************************************
 void 
-PicardNonlinearSolver::interpolateFromFCToCC(const ProcessorGroup* ,
+ExplicitSolver::interpolateFromFCToCC(const ProcessorGroup* ,
 					     const PatchSubset* patches,
 					     const MaterialSubset* matls,
 					     DataWarehouse* old_dw,
@@ -584,7 +588,7 @@ PicardNonlinearSolver::interpolateFromFCToCC(const ProcessorGroup* ,
 }
 
 void 
-PicardNonlinearSolver::probeData(const ProcessorGroup* ,
+ExplicitSolver::probeData(const ProcessorGroup* ,
 				 const PatchSubset* patches,
 				 const MaterialSubset* matls,
 				 DataWarehouse*,
@@ -615,14 +619,15 @@ PicardNonlinearSolver::probeData(const ProcessorGroup* ,
 		Ghost::None, nofGhostCells);
     new_dw->get(viscosity, d_lab->d_viscosityCTSLabel, matlIndex, patch, 
 		Ghost::None, nofGhostCells);
-    new_dw->get(pressure, d_lab->d_pressurePSLabel, matlIndex, patch, 
+    new_dw->get(pressure, d_lab->d_pressureSPBCLabel, matlIndex, patch, 
 		Ghost::None, nofGhostCells);
     new_dw->get(mixtureFraction, d_lab->d_scalarSPLabel, matlIndex, patch, 
 		Ghost::None, nofGhostCells);
     
     CCVariable<double> gasfraction;
-    new_dw->get(gasfraction, d_lab->d_mmgasVolFracLabel, matlIndex, patch, 
-		Ghost::None, nofGhostCells);
+    if (d_MAlab)
+      new_dw->get(gasfraction, d_lab->d_mmgasVolFracLabel, matlIndex, patch, 
+		  Ghost::None, nofGhostCells);
 
     for (vector<IntVector>::const_iterator iter = d_probePoints.begin();
 	 iter != d_probePoints.end(); iter++) {
@@ -630,14 +635,14 @@ PicardNonlinearSolver::probeData(const ProcessorGroup* ,
       if (patch->containsCell(*iter)) {
 	cerr << "for Intvector: " << *iter << endl;
 	cerr << "Density: " << density[*iter] << endl;
-	//	cerr << "Viscosity: " << viscosity[*iter] << endl;
+	cerr << "Viscosity: " << viscosity[*iter] << endl;
 	cerr << "Pressure: " << pressure[*iter] << endl;
-	//	cerr << "MixtureFraction: " << mixtureFraction[*iter] << endl;
+	cerr << "MixtureFraction: " << mixtureFraction[*iter] << endl;
 	cerr << "UVelocity: " << newUVel[*iter] << endl;
 	cerr << "VVelocity: " << newVVel[*iter] << endl;
 	cerr << "WVelocity: " << newWVel[*iter] << endl;
-
-	cerr << "gas vol fraction: " << gasfraction[*iter] << endl;
+	if (d_MAlab)
+	  cerr << "gas vol fraction: " << gasfraction[*iter] << endl;
 
       }
     }
@@ -648,7 +653,7 @@ PicardNonlinearSolver::probeData(const ProcessorGroup* ,
 // compute the residual
 // ****************************************************************************
 double 
-PicardNonlinearSolver::computeResidual(const LevelP& level,
+ExplicitSolver::computeResidual(const LevelP& level,
 				       SchedulerP& sched,
 				       DataWarehouseP& old_dw,
 				       DataWarehouseP& new_dw)

@@ -101,6 +101,11 @@ namespace Uintah {
       SFCXVariable<double> pressGradUSu;
       SFCYVariable<double> pressGradVSu;
       SFCZVariable<double> pressGradWSu;
+      // added velocity hat vars
+      SFCXVariable<double> uVelRhoHat;
+      SFCYVariable<double> vVelRhoHat;
+      SFCZVariable<double> wVelRhoHat;
+      CCVariable<double> densityPred;
 
       // multimaterial variables
       CCVariable<double> voidFraction;

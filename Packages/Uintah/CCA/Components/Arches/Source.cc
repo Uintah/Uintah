@@ -362,6 +362,60 @@ Source::calculateVelocitySource(const ProcessorGroup* ,
 // Pressure source calculation
 //****************************************************************************
 void 
+Source::calculatePressureSourcePred(const ProcessorGroup*,
+				    const Patch* patch,
+				    double delta_t,
+				    CellInformation* cellinfo,
+				    ArchesVariables* vars)
+{
+
+  // Get the patch and variable indices
+  int numGC = 1;
+  IntVector domLo = patch->getGhostCellLowIndex(numGC);
+  IntVector domHi = patch->getGhostCellHighIndex(numGC)- 
+                                                      IntVector(1,1,1);
+  IntVector idxLo = patch->getCellFORTLowIndex();
+  IntVector idxHi = patch->getCellFORTHighIndex();
+  IntVector domLoU = vars->uVelRhoHat.getFortLowIndex();
+  IntVector domHiU = vars->uVelRhoHat.getFortHighIndex();
+  IntVector domLoV = vars->vVelRhoHat.getFortLowIndex();
+  IntVector domHiV = vars->vVelRhoHat.getFortHighIndex();
+  IntVector domLoW = vars->wVelRhoHat.getFortLowIndex();
+  IntVector domHiW = vars->wVelRhoHat.getFortHighIndex();
+  // Get the patch and variable indices
+  IntVector domLong = vars->pressNonlinearSrc.getFortLowIndex();
+  IntVector domHing = vars->pressNonlinearSrc.getFortHighIndex();
+
+  IntVector domLoDen = vars->density.getFortLowIndex();
+  IntVector domHiDen = vars->density.getFortHighIndex();
+  IntVector domLoDenO = vars->old_density.getFortLowIndex();
+  IntVector domHiDenO = vars->old_density.getFortHighIndex();
+
+  FORT_PRESSRCPRED(domLo.get_pointer(), domHi.get_pointer(),
+		   domLong.get_pointer(), domHing.get_pointer(),
+		   idxLo.get_pointer(), idxHi.get_pointer(),
+		   vars->pressNonlinearSrc.getPointer(),
+		   domLoDen.get_pointer(),domHiDen.get_pointer(),
+		   vars->density.getPointer(), 
+		   domLoDenO.get_pointer(),domHiDenO.get_pointer(),
+		   vars->old_density.getPointer(), 
+		   domLoU.get_pointer(), domHiU.get_pointer(),
+		   vars->uVelRhoHat.getPointer(), 
+		   domLoV.get_pointer(), domHiV.get_pointer(),
+		   vars->vVelRhoHat.getPointer(), 
+		   domLoW.get_pointer(), domHiW.get_pointer(),
+		   vars->wVelRhoHat.getPointer(), 
+		   &delta_t,
+		   cellinfo->sew.get_objs(), cellinfo->sns.get_objs(), 
+		   cellinfo->stb.get_objs());
+
+
+}
+
+//****************************************************************************
+// Pressure source calculation
+//****************************************************************************
+void 
 Source::calculatePressureSource(const ProcessorGroup*,
 				const Patch* patch,
 				double delta_t,
@@ -433,6 +487,8 @@ Source::calculatePressureSource(const ProcessorGroup*,
 		  vars->wVelNonlinearSrc.getPointer(),
 		  cellinfo->sew.get_objs(), cellinfo->sns.get_objs(), 
 		  cellinfo->stb.get_objs(),
+		  cellinfo->sewu.get_objs(), cellinfo->snsv.get_objs(), 
+		  cellinfo->stbw.get_objs(),
 		  vars->cellType.getPointer(), &ffield, &delta_t);
 
 #ifdef ARCHES_SRC_DEBUG
@@ -1221,3 +1277,140 @@ Source::computemmMomentumSource(const ProcessorGroup* pc,
 
   // add in su and sp terms from multimaterial based on index
 }
+
+
+void 
+Source::calculateVelocityPred(const ProcessorGroup* ,
+			      const Patch* patch,
+			      double delta_t,
+			      int index,
+			      CellInformation* cellinfo,
+			      ArchesVariables* vars)
+{
+  
+  int ioff, joff, koff;
+  IntVector idxLoU;
+  IntVector idxHiU;
+  IntVector domLoU;
+  IntVector domHiU;
+  IntVector domLo = vars->pressure.getFortLowIndex();
+  IntVector domHi = vars->pressure.getFortHighIndex();
+  IntVector domLoDen = vars->density.getFortLowIndex();
+  IntVector domHiDen = vars->density.getFortHighIndex();
+  IntVector domLoDenO = vars->old_density.getFortLowIndex();
+  IntVector domHiDenO = vars->old_density.getFortHighIndex();
+  int numGC = 1;
+  IntVector domLoGeom = patch->getGhostCellLowIndex(numGC);
+  IntVector domHiGeom = patch->getGhostCellHighIndex(numGC) - IntVector(1,1,1);
+  switch(index) {
+  case Arches::XDIR:
+    domLoU = vars->uVelRhoHat.getFortLowIndex();
+    domHiU = vars->uVelRhoHat.getFortHighIndex();
+    idxLoU = patch->getSFCXFORTLowIndex();
+    idxHiU = patch->getSFCXFORTHighIndex();
+    ioff = 1; joff = 0; koff = 0;
+#if 0
+    cerr << "print before uhat compute" << endl;
+    cerr << "print domLoU: " << domLoU << endl;
+    cerr << "print domHiU: " << domHiU << endl;
+    cerr << "print idxLoU: " << idxLoU << endl;
+    cerr << "print idxHiU: " << idxHiU << endl;
+    cerr << "print density: " << endl;
+    vars->drhopred.print(cerr);
+    cerr << "print pressure: " << endl;
+    vars->pressure.print(cerr);
+    cerr << "print uvelRhoHat: " << endl;
+    vars->uVelRhoHat.print(cerr);
+#endif
+    // computes remaining diffusion term and also computes 
+    // source due to gravity...need to pass ipref, jpref and kpref
+    FORT_COMPUTEVEL(domLoU.get_pointer(), domHiU.get_pointer(),
+		    idxLoU.get_pointer(), idxHiU.get_pointer(),
+		    vars->uVelRhoHat.getPointer(),
+		    domLo.get_pointer(), domHi.get_pointer(),
+		    vars->pressure.getPointer(),
+		    domLoDen.get_pointer(), domHiDen.get_pointer(),
+		    vars->density.getPointer(),
+		    domLoDenO.get_pointer(), domHiDen.get_pointer(),
+		    vars->old_density.getPointer(),
+		    &delta_t, &ioff, &joff, &koff,
+		    domLoGeom.get_pointer(), domHiGeom.get_pointer(),
+		    cellinfo->dxpw.get_objs());
+#if 0
+    cerr << "print uvelRhoHat after solve: " << endl;
+    vars->uVelRhoHat.print(cerr);
+#endif
+    break;
+  case Arches::YDIR:
+    domLoU = vars->vVelRhoHat.getFortLowIndex();
+    domHiU = vars->vVelRhoHat.getFortHighIndex();
+    idxLoU = patch->getSFCYFORTLowIndex();
+    idxHiU = patch->getSFCYFORTHighIndex();
+    ioff = 0; joff = 1; koff = 0;
+#if 0
+    cerr << "print before vhat compute" << endl;
+    cerr << "print domLoU: " << domLoU << endl;
+    cerr << "print domHiU: " << domHiU << endl;
+    cerr << "print idxLoU: " << idxLoU << endl;
+    cerr << "print idxHiU: " << idxHiU << endl;
+    cerr << "print density: " << endl;
+    vars->drhopred.print(cerr);
+    cerr << "print pressure: " << endl;
+    vars->pressure.print(cerr);
+    cerr << "print vvelRhoHat: " << endl;
+    vars->vVelRhoHat.print(cerr);
+#endif
+    // computes remaining diffusion term and also computes 
+    // source due to gravity...need to pass ipref, jpref and kpref
+    FORT_COMPUTEVEL(domLoU.get_pointer(), domHiU.get_pointer(),
+		    idxLoU.get_pointer(), idxHiU.get_pointer(),
+		    vars->vVelRhoHat.getPointer(),
+		    domLo.get_pointer(), domHi.get_pointer(),
+		    vars->pressure.getPointer(),
+		    domLoDen.get_pointer(), domHiDen.get_pointer(),
+		    vars->density.getPointer(),
+		    domLoDenO.get_pointer(), domHiDenO.get_pointer(),
+		    vars->old_density.getPointer(),
+		    &delta_t, &ioff, &joff, &koff,
+		    domLoGeom.get_pointer(), domHiGeom.get_pointer(),
+		    cellinfo->dyps.get_objs());
+#if 0
+    cerr << "print vvelRhoHat after solve: " << endl;
+    vars->vVelRhoHat.print(cerr);
+#endif
+    break;
+  case Arches::ZDIR:
+    domLoU = vars->wVelRhoHat.getFortLowIndex();
+    domHiU = vars->wVelRhoHat.getFortHighIndex();
+    idxLoU = patch->getSFCZFORTLowIndex();
+    idxHiU = patch->getSFCZFORTHighIndex();
+#if 0 
+   cerr << "print domLoU: " << domLoU << endl;
+    cerr << "print domHiU: " << domHiU << endl;
+    cerr << "print idxLoU: " << idxLoU << endl;
+    cerr << "print idxHiU: " << idxHiU << endl;
+#endif
+    ioff = 0; joff = 0; koff = 1;
+    // computes remaining diffusion term and also computes 
+    // source due to gravity...need to pass ipref, jpref and kpref
+    FORT_COMPUTEVEL(domLoU.get_pointer(), domHiU.get_pointer(),
+		    idxLoU.get_pointer(), idxHiU.get_pointer(),
+		    vars->wVelRhoHat.getPointer(),
+		    domLo.get_pointer(), domHi.get_pointer(),
+		    vars->pressure.getPointer(),
+		    domLoDen.get_pointer(), domHiDen.get_pointer(),
+		    vars->density.getPointer(),
+		    domLoDenO.get_pointer(), domHiDenO.get_pointer(),
+		    vars->old_density.getPointer(),
+		    &delta_t, &ioff, &joff, &koff,
+		    domLoGeom.get_pointer(), domHiGeom.get_pointer(),
+		    cellinfo->dzpb.get_objs());
+
+    break;
+  default:
+    throw InvalidValue("Invalid index in Source::calcVelSrc");
+  }
+
+}
+
+

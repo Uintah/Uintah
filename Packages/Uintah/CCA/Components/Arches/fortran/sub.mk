@@ -25,12 +25,13 @@ SRCS     += $(SRCDIR)/init.F $(SRCDIR)/initScal.F $(SRCDIR)/celltypeInit.F \
 	$(SRCDIR)/scalsrc.F \
 	$(SRCDIR)/rescal.F \
 	$(SRCDIR)/arrl1.F $(SRCDIR)/underelax.F $(SRCDIR)/linegs.F \
-	$(SRCDIR)/normpress.F $(SRCDIR)/explicit.F \
+	$(SRCDIR)/normpress.F $(SRCDIR)/explicit.F $(SRCDIR)/explicit_velocity.F \
 	$(SRCDIR)/mmcelltypeinit.F \
 	$(SRCDIR)/mmmomsrc.F $(SRCDIR)/mmbcvelocity.F $(SRCDIR)/mmwallbc.F \
 	$(SRCDIR)/mm_modify_prescoef.F \
 	$(SRCDIR)/bcinout.F $(SRCDIR)/outarea.F $(SRCDIR)/denaccum.F \
-	$(SRCDIR)/add_hydrostatic_term_topressure.F
+	$(SRCDIR)/add_hydrostatic_term_topressure.F $(SRCDIR)/outletbc.F \
+	$(SRCDIR)/computeVel.F $(SRCDIR)/explicit_vel.F $(SRCDIR)/pressrcpred.F
 
 
 # SRCS     += $(SRCDIR)/apcal.F $(SRCDIR)/areain.F $(SRCDIR)/arradd.F \
@@ -61,7 +62,8 @@ PSELIBS :=
 #LIBS := -lftn -lm 
 
 #FFLAGS += -g -O3 -OPT:IEEE_arithmetic=3 -CG:if_conversion=false:reverse_if_conversion=false -LNO:pf2=0 -avoid_gp_overflow -I$(SRCDIR)
-FFLAGS += -g 
+#FFLAGS += -g 
+FFLAGS += -O2 
 
 #include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 

@@ -3,6 +3,7 @@
 #include <Packages/Uintah/CCA/Components/Arches/Arches.h>
 #include <Packages/Uintah/CCA/Components/Arches/ArchesFort.h>
 #include <Packages/Uintah/CCA/Components/Arches/PicardNonlinearSolver.h>
+#include <Packages/Uintah/CCA/Components/Arches/ExplicitSolver.h>
 #include <Packages/Uintah/CCA/Components/Arches/PhysicalConstants.h>
 #include <Packages/Uintah/CCA/Components/Arches/SmagorinskyModel.h>
 #include <Packages/Uintah/CCA/Components/Arches/BoundaryCondition.h>
@@ -33,6 +34,7 @@
 #include <Core/Geometry/Vector.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Math/MinMax.h>
+#include <Core/Math/MiscMath.h>
 #include <Core/Util/NotFinished.h>
 
 #include <iostream>
@@ -68,9 +70,10 @@ Arches::problemSetup(const ProblemSpecP& params,
 		     GridP&,
 		     SimulationStateP& sharedState)
 {
-  d_sharedState = sharedState;
+
+  d_sharedState= sharedState;
   d_lab->setSharedState(sharedState);
-  ArchesMaterial* mat = scinew ArchesMaterial();
+  ArchesMaterial* mat= scinew ArchesMaterial();
   sharedState->registerArchesMaterial(mat);
   ProblemSpecP db = params->findBlock("CFD")->findBlock("ARCHES");
   // not sure, do we need to reduce and put in datawarehouse
@@ -84,46 +87,6 @@ Arches::problemSetup(const ProblemSpecP& params,
   // for gravity, read it from shared state 
   //d_physicalConsts->problemSetup(params);
   d_physicalConsts->problemSetup(db);
-#ifdef multimaterialform
-  bool multimaterial;
-  db->require("MultiMaterial",multimaterial);
-  if (multimaterial) {
-    d_mmInterface = new MultiMaterialInterface();
-    d_mmInterface(db, d_sharedState);
-  }
-  else
-    d_mmInterface = 0;
-  d_props = scinew Properties(d_lab);
-  d_props->problemSetup(db, d_mmInterface);
-  d_nofScalars = d_props->getNumMixVars();
-
-  // read turbulence model
-  string turbModel;
-  db->require("turbulence_model", turbModel);
-  if (turbModel == "smagorinsky") 
-    d_turbModel = scinew SmagorinskyModel(d_lab, d_physicalConsts);
-  else 
-    throw InvalidValue("Turbulence Model not supported" + turbModel);
-  d_turbModel->problemSetup(db);
-
-  // read boundary
-  d_boundaryCondition = scinew BoundaryCondition(d_lab, d_turbModel, d_props);
-  // send params, boundary type defined at the level of Grid
-  d_boundaryCondition->problemSetup(db);
-  d_props->setBC(d_boundaryCondition);
-
-  string nlSolver;
-  db->require("nonlinear_solver", nlSolver);
-  if(nlSolver == "picard") {
-    d_nlSolver = scinew PicardNonlinearSolver(d_lab, d_props, d_boundaryCondition,
-					      d_turbModel, d_physicalConsts,
-					      d_myworld);
-  }
-  else
-    throw InvalidValue("Nonlinear solver not supported: "+nlSolver);
-
-  d_nlSolver->problemSetup(db, d_mmInterface);
-#endif
   // read properties
   // d_MAlab = multimaterial arches common labels
   d_props = scinew Properties(d_lab, d_MAlab);
@@ -153,6 +116,12 @@ Arches::problemSetup(const ProblemSpecP& params,
 					      d_turbModel, d_physicalConsts,
 					      d_myworld);
   }
+  else if (nlSolver == "explicit") {
+        d_nlSolver = scinew ExplicitSolver(d_lab, d_MAlab, d_props,
+					   d_boundaryCondition,
+					   d_turbModel, d_physicalConsts,
+					   d_myworld);
+  }
   else
     throw InvalidValue("Nonlinear solver not supported: "+nlSolver);
 
@@ -167,7 +136,7 @@ Arches::scheduleInitialize(const LevelP& level,
 			   SchedulerP& sched)
 {
   
-  const PatchSet* patches = level->eachPatch();
+  const PatchSet* patches= level->eachPatch();
   const MaterialSet* matls = d_sharedState->allArchesMaterials();
 
   // schedule the initialization of parameters
@@ -204,37 +173,6 @@ Arches::scheduleInitialize(const LevelP& level,
   // compute : pressureSPBC, [u,v,w]VelocitySPBC
   if (d_boundaryCondition->getPressureBC()) 
     d_boundaryCondition->sched_computePressureBC(sched, patches, matls);
-#if 0
-  // schedule init of cell type
-  // require : NONE
-  // compute : cellType
-  d_boundaryCondition->sched_cellTypeInit(level, sched, dw, dw);
-
-  // computing flow inlet areas
-  d_boundaryCondition->sched_calculateArea(level, sched, dw, dw);
-
-  // Set the profile (output Varlabel have SP appended to them)
-  // require : densityIN,[u,v,w]VelocityIN
-  // compute : densitySP, [u,v,w]VelocitySP, scalarSP
-  d_boundaryCondition->sched_setProfile(level, sched, dw, dw);
-
-  // Compute props (output Varlabel have CP appended to them)
-  // require : densitySP
-  // require scalarSP
-  // compute : densityCP
-  d_props->sched_computeProps(level, sched, dw, dw);
-
-  // Compute Turb subscale model (output Varlabel have CTS appended to them)
-  // require : densityCP, viscosityIN, [u,v,w]VelocitySP
-  // compute : viscosityCTS
-  d_turbModel->sched_computeTurbSubmodel(level, sched, dw, dw);
-
-  // Computes velocities at apecified pressure b.c's
-  // require : densityCP, pressureIN, [u,v,w]VelocitySP
-  // compute : pressureSPBC, [u,v,w]VelocitySPBC
-  if (d_boundaryCondition->getPressureBC()) 
-    d_boundaryCondition->sched_computePressureBC(level, sched, dw, dw);
-#endif
 }
 
 // ****************************************************************************
@@ -261,7 +199,8 @@ Arches::sched_paramInit(const LevelP& level,
     // for reacting flows save temperature and co2 
     tsk->computes(d_lab->d_tempINLabel);
     tsk->computes(d_lab->d_co2INLabel);
-    tsk->computes(d_lab->d_pressPlusHydroLabel);
+    if (d_MAlab)
+      tsk->computes(d_lab->d_pressPlusHydroLabel);
     sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials());
 
 }
@@ -274,25 +213,89 @@ Arches::scheduleComputeStableTimestep(const LevelP& level,
 				      SchedulerP& sched)
 {
   // primitive variable initialization
+  int zeroGhostCells = 0;
   Task* tsk = scinew Task( "Arches::computeStableTimeStep",
 			   this, &Arches::computeStableTimeStep);
+#if 1
+  tsk->requires(Task::NewDW, d_lab->d_uVelocitySPBCLabel,
+		Ghost::None, zeroGhostCells);
+  tsk->requires(Task::NewDW, d_lab->d_vVelocitySPBCLabel,
+		Ghost::None, zeroGhostCells);
+  tsk->requires(Task::NewDW, d_lab->d_wVelocitySPBCLabel,
+		Ghost::None, zeroGhostCells);
+#endif
   tsk->computes(d_sharedState->get_delt_label());
   sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials());
 
 
-#if 0
-  dw->put(delt_vartype(d_deltaT),  d_sharedState->get_delt_label()); 
-#endif
 }
 
 void 
 Arches::computeStableTimeStep(const ProcessorGroup* ,
-			      const PatchSubset*,
+			      const PatchSubset* patches,
 			      const MaterialSubset*,
 			      DataWarehouse* ,
 			      DataWarehouse* new_dw)
 {
-  new_dw->put(delt_vartype(d_deltaT),  d_sharedState->get_delt_label()); 
+  for (int p = 0; p < patches->size(); p++) {
+    const Patch* patch = patches->get(p);
+    int archIndex = 0; // only one arches material
+    int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+
+    int zeroGhostCells = 0;
+#if 1
+    SFCXVariable<double> uVelocity;
+    SFCYVariable<double> vVelocity;
+    SFCZVariable<double> wVelocity;
+    PerPatch<CellInformationP> cellInfoP;
+
+    if (new_dw->exists(d_lab->d_cellInfoLabel, matlIndex, patch)) 
+      
+      new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
+
+    else {
+
+      cellInfoP.setData(scinew CellInformation(patch));
+      new_dw->put(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
+
+    }
+
+    CellInformation* cellinfo = cellInfoP.get().get_rep();
+
+    new_dw->get(uVelocity, d_lab->d_uVelocitySPBCLabel, 
+		matlIndex, patch, Ghost::None, zeroGhostCells);
+    new_dw->get(vVelocity, d_lab->d_vVelocitySPBCLabel, 
+		matlIndex, patch, Ghost::None, zeroGhostCells);
+    new_dw->get(wVelocity, d_lab->d_wVelocitySPBCLabel, 
+		matlIndex, patch, Ghost::None, zeroGhostCells);
+    IntVector indexLow = patch->getCellFORTLowIndex();
+    IntVector indexHigh = patch->getCellFORTHighIndex() + IntVector(1,1,1);
+    int numGC = 1;
+    IntVector geomLow = patch->getGhostCellLowIndex(numGC);
+    //    voidFraction.print(cerr);
+  // set density for the whole domain
+    double delta_t = d_deltaT; // max value allowed
+    double temp_t = 0;
+    double small_num = 1e-30;
+    for (int colZ = indexLow.z(); colZ < indexHigh.z(); colZ ++) {
+      for (int colY = indexLow.y(); colY < indexHigh.y(); colY ++) {
+	for (int colX = indexLow.x(); colX < indexHigh.x(); colX ++) {
+	  IntVector currCell(colX, colY, colZ);
+	  delta_t=Min(Abs(cellinfo->sew[colX-geomLow.x()]/
+			  (uVelocity[currCell]+small_num)),delta_t);
+	  delta_t=Min(Abs(cellinfo->sns[colY-geomLow.y()]/
+			  (vVelocity[currCell]+small_num)), delta_t);
+	  delta_t=Min(Abs(cellinfo->stb[colZ-geomLow.z()]/
+			  (wVelocity[currCell]+small_num)), delta_t);
+	}
+      }
+    }
+    cerr << " min time step: " << delta_t << endl;
+    new_dw->put(delt_vartype(delta_t),  d_sharedState->get_delt_label()); 
+#else
+    new_dw->put(delt_vartype(d_deltaT),  d_sharedState->get_delt_label()); 
+#endif
+  }
 }
 
 // ****************************************************************************
@@ -304,27 +307,6 @@ Arches::scheduleTimeAdvance(double time, double dt,
 			    SchedulerP& sched)
 {
   d_nlSolver->nonlinearSolve(level, sched, time, dt);
-#if 0
-#ifdef ARCHES_MAIN_DEBUG
-  cerr << "Begin: Arches::scheduleTimeAdvance\n";
-#endif
-  // Schedule the non-linear solve
-  // require : densityCP, viscosityCTS, [u,v,w]VelocitySP, 
-  //           pressureIN. scalarIN
-  // compute : densityRCP, viscosityRCTS, [u,v,w]VelocityMS,
-  //           pressurePS, scalarSS 
-  d_nlSolver->nonlinearSolve(level, sched, old_dw, new_dw,
-					      time, dt);
-  //  if (!error_code) {
-  //    old_dw = new_dw;
-  //  }
-  //  else {
-  //    cerr << "Nonlinear Solver didn't converge" << endl;
-  //  }
-#ifdef ARCHES_MAIN_DEBUG
-  cerr << "Done: Arches::scheduleTimeAdvance\n";
-#endif
-#endif
 }
 
 
@@ -371,10 +353,10 @@ Arches::paramInit(const ProcessorGroup* ,
     new_dw->allocate(co2, d_lab->d_co2INLabel, matlIndex, patch);
     temperature.initialize(0.0);
     co2.initialize(0.0);
- 
-    new_dw->allocate(pPlusHydro, d_lab->d_pressPlusHydroLabel, matlIndex, patch);
-    pPlusHydro.initialize(0.0);
-
+    if (d_MAlab) {
+      new_dw->allocate(pPlusHydro, d_lab->d_pressPlusHydroLabel, matlIndex, patch);
+      pPlusHydro.initialize(0.0);
+    }
     // will only work for one scalar
     for (int ii = 0; ii < d_nofScalars; ii++) {
       new_dw->allocate(scalar[ii], d_lab->d_scalarINLabel, matlIndex, patch);
@@ -439,7 +421,8 @@ Arches::paramInit(const ProcessorGroup* ,
     new_dw->put(viscosity, d_lab->d_viscosityINLabel, matlIndex, patch);
     new_dw->put(temperature, d_lab->d_tempINLabel, matlIndex, patch);
     new_dw->put(co2, d_lab->d_co2INLabel, matlIndex, patch);
+    if (d_MAlab)
+      new_dw->put(pPlusHydro, d_lab->d_pressPlusHydroLabel, matlIndex, patch);
 
-    new_dw->put(pPlusHydro, d_lab->d_pressPlusHydroLabel, matlIndex, patch);
   }
 }

@@ -7,7 +7,7 @@ c*********************************************************************
      &     domLoV, domHiV,  VV,
      &     domLoW, domHiW,  WW,
      &     domLo, domHi, idxLo, idxHi, DEN,
-     &     PCELL, PFIELD,
+     &     PCELL, PFIELD, time,
      $     xminus, xplus, yminus, yplus, zminus, zplus,
      &     ierr)
 C-----------------------------------------------------------------------
@@ -38,6 +38,7 @@ c*********************************************************************
       integer PCELL(domLo(1):domHi(1), domLo(2):domHi(2), 
      &     domLo(3):domHi(3))
       integer PFIELD
+      double precision time
       integer xminus, xplus, yminus, yplus, zminus, zplus
       integer ierr
       
@@ -50,6 +51,7 @@ c*********************************************************************
       integer IST, IEND, JST, JEND, KST, KEND
 
       integer i, j, k
+      double precision factor
 
 c*********************************************************************
 c     Get the indices of interest
@@ -60,6 +62,21 @@ c*********************************************************************
       IEND = idxHi(1)
       JEND = idxHi(2)
       KEND = idxHi(3)
+      factor = 1.0
+      if (time .lt. 0.499) then
+         factor = (time+0.01)/0.5
+         if (time.lt.0.1) then
+            factor = 0.001*factor
+         elseif (time.lt.0.2) then
+            factor = 0.01*factor
+         elseif (time.lt.0.3) then
+            factor = 0.1*factor
+         elseif (time.lt.0.4) then
+            factor = 0.5*factor
+         elseif (time.lt.0.45) then
+            factor = 0.8*factor
+         endif
+      endif
 
 C-----------------------------------------------------------------------
 C     EAST AND WEST INLETS
@@ -69,7 +86,7 @@ C-----------------------------------------------------------------------
             DO 100 J = jst,jend
                IF (xminus) then
                   if (PCELL(ist-1,J,K).EQ.PFIELD) THEN
-                     UU(ist,J,K) = UU(ist-1,J,K) *
+                     UU(ist,J,K) = factor*UU(ist-1,J,K) *
      &                    DEN(ist-1,J,K)
      &                    / (PT5*(DEN(ist-1,J,K) + DEN(IST,J,K)))
                   ENDIF

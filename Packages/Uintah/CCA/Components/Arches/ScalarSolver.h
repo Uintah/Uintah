@@ -97,6 +97,41 @@ public:
       void sched_scalarLinearSolve(SchedulerP&, const PatchSet* patches,
 				   const MaterialSet* matls,
 				   double delta_t, int index);
+
+
+      void solvePred(SchedulerP& sched,
+		 const PatchSet* patches,
+		 const MaterialSet* matls,
+		 double time, double delta_t, int index);
+   
+      ///////////////////////////////////////////////////////////////////////
+      // Schedule Build of linearized matrix
+      void sched_buildLinearMatrixPred(SchedulerP&, const PatchSet* patches,
+				   const MaterialSet* matls,
+				   double delta_t, int index);
+
+      ///////////////////////////////////////////////////////////////////////
+      // Schedule Linear Solve for Scalar[index]
+      void sched_scalarLinearSolvePred(SchedulerP&, const PatchSet* patches,
+				   const MaterialSet* matls,
+				   double delta_t, int index);
+      void solveCorr(SchedulerP& sched,
+		 const PatchSet* patches,
+		 const MaterialSet* matls,
+		 double time, double delta_t, int index);
+   
+      ///////////////////////////////////////////////////////////////////////
+      // Schedule Build of linearized matrix
+      void sched_buildLinearMatrixCorr(SchedulerP&, const PatchSet* patches,
+				   const MaterialSet* matls,
+				   double delta_t, int index);
+
+      ///////////////////////////////////////////////////////////////////////
+      // Schedule Linear Solve for Scalar[index]
+      void sched_scalarLinearSolveCorr(SchedulerP&, const PatchSet* patches,
+				   const MaterialSet* matls,
+				   double delta_t, int index);
+
 protected:
 
 private:
@@ -123,6 +158,44 @@ private:
       //    [in] 
       //        add documentation here
       void scalarLinearSolve(const ProcessorGroup* pc,
+			     const PatchSubset* patches,
+			     const MaterialSubset* /*matls*/,
+			     DataWarehouse* old_dw,
+			     DataWarehouse* new_dw,
+			     double delta_t,
+			     int index);
+
+      void buildLinearMatrixPred(const ProcessorGroup* pc,
+			     const PatchSubset* patches,
+			     const MaterialSubset* /*matls*/,
+			     DataWarehouse* old_dw,
+			     DataWarehouse* new_dw,
+			     double delta_t, const int index);
+
+      ///////////////////////////////////////////////////////////////////////
+      // Actually Solver the Linear System for Scalar[index]
+      //    [in] 
+      //        add documentation here
+      void scalarLinearSolvePred(const ProcessorGroup* pc,
+			     const PatchSubset* patches,
+			     const MaterialSubset* /*matls*/,
+			     DataWarehouse* old_dw,
+			     DataWarehouse* new_dw,
+			     double delta_t,
+			     int index);
+
+      void buildLinearMatrixCorr(const ProcessorGroup* pc,
+			     const PatchSubset* patches,
+			     const MaterialSubset* /*matls*/,
+			     DataWarehouse* old_dw,
+			     DataWarehouse* new_dw,
+			     double delta_t, const int index);
+
+      ///////////////////////////////////////////////////////////////////////
+      // Actually Solver the Linear System for Scalar[index]
+      //    [in] 
+      //        add documentation here
+      void scalarLinearSolveCorr(const ProcessorGroup* pc,
 			     const PatchSubset* patches,
 			     const MaterialSubset* /*matls*/,
 			     DataWarehouse* old_dw,
