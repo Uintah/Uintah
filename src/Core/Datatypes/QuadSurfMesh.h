@@ -177,10 +177,10 @@ public:
 
   int get_weights(const Point &p, Node::array_type &l, double *w);
   int get_weights(const Point & , Edge::array_type & , double * )
-  {ASSERTFAIL("QuadSurfMesh::get_weights(Edges) not supported."); return 0;}
+  {ASSERTFAIL("QuadSurfMesh::get_weights(Edges) not supported."); }
   int get_weights(const Point &p, Face::array_type &l, double *w);
   int get_weights(const Point & , Cell::array_type & , double * )
-  {ASSERTFAIL("QuadSurfMesh::get_weights(Cells) not supported."); return 0;}
+  {ASSERTFAIL("QuadSurfMesh::get_weights(Cells) not supported."); }
 
   void get_point(Point &p, Node::index_type i) const { p = points_[i]; }
   void get_normal(Vector &n, Node::index_type i) const { n = normals_[i]; }

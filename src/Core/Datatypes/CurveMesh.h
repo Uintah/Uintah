@@ -177,9 +177,9 @@ public:
   int get_weights(const Point &p, Node::array_type &l, double *w);
   int get_weights(const Point &p, Edge::array_type &l, double *w);
   int get_weights(const Point & , Face::array_type & , double * )
-  {ASSERTFAIL("CurveMesh::get_weights for faces isn't supported"); return 0;}
+  {ASSERTFAIL("CurveMesh::get_weights for faces isn't supported"); }
   int get_weights(const Point & , Cell::array_type & , double * )
-  {ASSERTFAIL("CurveMesh::get_weights for cells isn't supported"); return 0;}
+  {ASSERTFAIL("CurveMesh::get_weights for cells isn't supported"); }
 
   void get_point(Point &result, Node::index_type idx) const
     { get_center(result,idx); }
