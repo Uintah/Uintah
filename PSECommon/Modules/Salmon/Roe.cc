@@ -26,6 +26,10 @@
 #include <SCICore/Geometry/BBox.h>
 #include <SCICore/Geometry/Transform.h>
 #include <SCICore/Geometry/Vector.h>
+#include <SCICore/Geom/GeomCone.h>      
+#include <SCICore/Geom/GeomCylinder.h>  
+#include <SCICore/Geom/GeomGroup.h>     
+#include <SCICore/Geom/Material.h>     
 #include <SCICore/Geom/GeomObj.h>
 #include <SCICore/Geom/GeomOpenGL.h>
 #include <SCICore/Geom/GeomPick.h>
@@ -62,6 +66,8 @@ using SCICore::GeomSpace::GeomScene;
 using SCICore::PersistentSpace::BinaryPiostream;
 using SCICore::PersistentSpace::TextPiostream;
 
+using namespace SCICore::GeomSpace;   
+
 //static DebugSwitch autoview_sw("Roe", "autoview");
 static Roe::MapClStringObjTag::iterator viter;
 
@@ -80,7 +86,7 @@ Roe::Roe(Salmon* s, const clString& id)
   drawimg("drawimg", id, this),
   saveprefix("saveprefix", id, this),
   id(id),doingMovie(false),makeMPEG(false),
-    curFrame(0),curName("movie"),pos("pos", id, this)
+    curFrame(0),curName("movie"),pos("pos", id, this),caxes("caxes", id, this),iaxes("iaxes", id, this) 
 
   {
     sr.set(1);
@@ -96,6 +102,9 @@ Roe::Roe(Salmon* s, const clString& id)
     // >>>>>>>>>>>>>>>>>>>> BAWGL >>>>>>>>>>>>>>>>>>>>
     bawgl = new SCIBaWGL();
     // <<<<<<<<<<<<<<<<<<<< BAWGL <<<<<<<<<<<<<<<<<<<<
+    roe_objs.add( createGenAxes() );     
+    roe_objs_draw.add(0);              
+    roe_objs_draw[0] = 1;
   }
 
 clString Roe::set_id(const clString& new_id)
@@ -212,6 +221,11 @@ void Roe::get_bounds(BBox& bbox)
 	si->get_bounds(bbox);
       }
     }
+    /* include the omnipresent items (e.g. axes), even
+       if there is no geometry coming in on the input ports */
+    int ro_length = roe_objs.size();
+    for(int loop = 0; loop < ro_length; loop++)
+      roe_objs[loop]->get_bounds(bbox);
   }
 }
 
@@ -1058,6 +1072,88 @@ void Roe::tcl_command(TCLArgs& args, void*)
     BBox bbox;
     get_bounds(bbox);
     autoview(bbox);
+  } else if(args[1] == "Snap") {
+    View sv(view.get());
+
+    // determine closest eyep position
+    Vector lookdir(sv.eyep() - sv.lookat());
+    cerr << "lookdir = " << lookdir << endl;
+    double distance = lookdir.length();
+
+    double x = lookdir.x();
+    double y = lookdir.y();
+    double z = lookdir.z();
+
+    // determine closest up vector position
+    if( fabs(x) > fabs(y)) {
+      if( fabs(x) > fabs(z)) {
+	if(lookdir.x() < 0.0) {
+	  distance *= -1;
+	  sv.eyep(Point(distance, 0.0, 0.0, 1.0));
+	} else {
+	  sv.eyep(Point(distance, 0.0, 0.0, 1.0));
+	}
+      } else if (fabs(z) > fabs(y)) {
+	if(lookdir.z() < 0.0) {
+	  distance *= -1;
+	  sv.eyep(Point(0.0, 0.0, distance, 1.0));
+	} else {
+	  sv.eyep(Point(0.0, 0.0, distance, 1.0)); 
+	}
+      }
+    } else if( fabs(y) > fabs(z)) {
+      if(lookdir.y() < 0.0) {
+	distance *= -1;
+	sv.eyep(Point(0.0, distance, 0.0, 1.0));
+      } else {
+	sv.eyep(Point(0.0, distance, 0.0, 1.0));
+      }
+    } else {
+      if(lookdir.z() < 0.0) {
+	distance *= -1;
+        sv.eyep(Point(0.0, 0.0, distance, 1.0)); 
+      } else {
+	sv.eyep(Point(0.0, 0.0, distance, 1.0));   
+      }
+    }
+   
+    x = sv.up().x();
+    y = sv.up().y();
+    z = sv.up().z();
+    Vector v;
+
+    // determine closest up vector position
+    if( fabs(x) > fabs(y)) {
+      if( fabs(x) > fabs(z)) {
+	if(sv.up().x() < 0.0) {
+	  Vector v(-1.0, 0.0, 0.0);
+	} else {
+	  Vector v(1.0, 0.0, 0.0);
+	}
+      } else if( fabs(z) > fabs(y)) {
+	if(sv.up().z() < 0.0) {
+	  Vector v(0.0, 0.0, -1.0);
+	} else {
+	  Vector v(0.0, 0.0, 1.0);
+	}
+      }
+    } else if( fabs(y) > fabs(z)) {
+      if(sv.up().y() < 0.0) {
+	  Vector v(0.0, -1.0, 0.0);
+	} else {
+	  Vector v(0.0, 1.0, 0.0);
+	}
+    } else {
+      if(sv.up().z() < 0.0) {
+	  Vector v(0.0, 0.0, -1.0);
+	} else {
+	  Vector v(0.0, 0.0, 1.0);
+	}
+    }
+    Vector lookdir2(sv.eyep() - sv.lookat());
+    cerr << "lookdir = " << lookdir2 << endl;
+    sv.up(v);   // set the up vector
+    animate_to_view(sv, 2.0); 
   } else if(args[1] == "Views") {
     View df(view.get());
       // position tells first which axis to look down 
@@ -1259,7 +1355,20 @@ void Roe::tcl_command(TCLArgs& args, void*)
   } else if(args[1] == "stopbawgl"){
     if( !bawgl_error ) bawgl->stop();
     // <<<<<<<<<<<<<<<<<<<< BAWGL <<<<<<<<<<<<<<<<<<<<
-  } else {
+  } else if(args[1] == "centerGenAxes") { 
+    if(caxes.get() == 1) {  // checked
+      roe_objs_draw[0] = 1;
+    } else {    // unchecked
+      roe_objs_draw[0] = 0;
+    }
+  } else if(args[1] == "iconGenAxes") {    
+    if(iaxes.get() == 1) {  // checked
+    
+    } else {  // unchecked 
+    
+    }
+    
+  }else {
     args.error("Unknown minor command '" + args[1] + "' for Roe");
   }
 }
@@ -1442,10 +1551,12 @@ void Roe::force_redraw()
 
 void Roe::do_for_visible(Renderer* r, RoeVisPMF pmf)
 {
-				// Do internal objects first...
+  				// Do internal objects first...
   int i;
   for (i = 0; i < roe_objs.size(); i++){
-    (r->*pmf)(manager, this, roe_objs[i]);
+    if(roe_objs_draw[i] == 1) {
+      (r->*pmf)(manager, this, roe_objs[i]);
+    }
   }
 
   Array1<GeomSalmonItem*> transp_objs; // transparent objects - drawn last
@@ -1551,12 +1662,62 @@ void Roe::setView(View newView) {
     view.set(newView);
     manager->mailbox.send(scinew SalmonMessage(id)); // Redraw
 }
+GeomGroup* Roe::createGenAxes() {     
+  
+   MaterialHandle dk_red = scinew Material(Color(0,0,0), Color(.2,0,0),
+			 Color(.5,.5,.5), 20);
+   MaterialHandle dk_green = scinew Material(Color(0,0,0), Color(0,.2,0),
+			   Color(.5,.5,.5), 20);
+   MaterialHandle dk_blue = scinew Material(Color(0,0,0), Color(0,0,.2),
+			  Color(.5,.5,.5), 20);
+   MaterialHandle lt_red = scinew Material(Color(0,0,0), Color(.8,0,0),
+			 Color(.5,.5,.5), 20);
+   MaterialHandle lt_green = scinew Material(Color(0,0,0), Color(0,.8,0),
+			   Color(.5,.5,.5), 20);
+   MaterialHandle lt_blue = scinew Material(Color(0,0,0), Color(0,0,.8),
+			  Color(.5,.5,.5), 20);
+
+   GeomGroup* xp = scinew GeomGroup; 
+   GeomGroup* yp = scinew GeomGroup;
+   GeomGroup* zp = scinew GeomGroup;
+   GeomGroup* xn = scinew GeomGroup;
+   GeomGroup* yn = scinew GeomGroup;
+   GeomGroup* zn = scinew GeomGroup;
+
+   double sz = 1.0;
+   xp->add(scinew GeomCylinder(Point(0,0,0), Point(sz, 0, 0), sz/20));
+   xp->add(scinew GeomCone(Point(sz, 0, 0), Point(sz+sz/5, 0, 0), sz/10, 0));
+   yp->add(scinew GeomCylinder(Point(0,0,0), Point(0, sz, 0), sz/20));
+   yp->add(scinew GeomCone(Point(0, sz, 0), Point(0, sz+sz/5, 0), sz/10, 0));
+   zp->add(scinew GeomCylinder(Point(0,0,0), Point(0, 0, sz), sz/20));
+   zp->add(scinew GeomCone(Point(0, 0, sz), Point(0, 0, sz+sz/5), sz/10, 0));
+   xn->add(scinew GeomCylinder(Point(0,0,0), Point(-sz, 0, 0), sz/20));
+   xn->add(scinew GeomCone(Point(-sz, 0, 0), Point(-sz-sz/5, 0, 0), sz/10, 0));
+   yn->add(scinew GeomCylinder(Point(0,0,0), Point(0, -sz, 0), sz/20));
+   yn->add(scinew GeomCone(Point(0, -sz, 0), Point(0, -sz-sz/5, 0), sz/10, 0));
+   zn->add(scinew GeomCylinder(Point(0,0,0), Point(0, 0, -sz), sz/20));
+   zn->add(scinew GeomCone(Point(0, 0, -sz), Point(0, 0, -sz-sz/5), sz/10, 0));
+   GeomGroup* all=scinew GeomGroup;
+   all->add(scinew GeomMaterial(xp, lt_red));
+   all->add(scinew GeomMaterial(yp, lt_green));
+   all->add(scinew GeomMaterial(zp, lt_blue));
+   all->add(scinew GeomMaterial(xn, dk_red));
+   all->add(scinew GeomMaterial(yn, dk_green));
+   all->add(scinew GeomMaterial(zn, dk_blue));
+  
+   return all;
+}
 
 } // End namespace Modules
 } // End namespace PSECommon
 
 //
 // $Log$
+// Revision 1.21  2000/11/27 23:09:38  darbyb
+// -Axes are now omnipresent in Roe
+// -Ability to turn axes on/off
+// -Scene initially autoviewed
+//
 // Revision 1.20  2000/11/03 19:08:25  darbyb
 // Added button in Salmon that allows the user to select specific orientations
 //

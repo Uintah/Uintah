@@ -16,6 +16,7 @@
 #include <SCICore/Containers/Array1.h>
 #include <PSECore/Comm/MessageBase.h>
 #include <SCICore/Geom/Color.h>
+#include <SCICore/Geom/GeomGroup.h>
 #include <SCICore/Geom/TCLGeom.h>
 #include <SCICore/Geom/TCLView.h>
 #include <SCICore/Geom/View.h>
@@ -63,6 +64,7 @@ using PSECore::Datatypes::GeometryData;
 using SCICore::GeomSpace::TCLColor;
 using SCICore::GeomSpace::TCLView;
 using SCICore::GeomSpace::View;
+ using SCICore::GeomSpace::GeomGroup; 
 using SCICore::GeomSpace::GeomObj;
 using SCICore::GeomSpace::GeomPick;
 using SCICore::GeomSpace::GeomSphere;
@@ -75,6 +77,7 @@ using SCICore::Containers::Array1;
 using SCICore::Thread::FutureValue;
 
 using namespace SCICore::TclInterface;
+
 
 class DBContext;
 class Renderer;
@@ -108,7 +111,9 @@ public:
 public:
   typedef map<clString, Renderer*>	MapClStringRenderer;
   typedef map<clString, ObjTag*>	MapClStringObjTag;
-  TCLstring pos;  
+  TCLstring pos;
+  TCLint caxes;
+  TCLint iaxes;  
 protected:
   friend class Salmon;
   
@@ -144,6 +149,7 @@ protected:
   Point mousep;
   GeomSphere* mouse_obj;
   Array1<GeomObj*> roe_objs;
+  Array1<char> roe_objs_draw;   
 
   void animate_to_view(const View& v, double time);
   void redraw();
@@ -273,6 +279,7 @@ public:
   
   void getData(int datamask, FutureValue<GeometryData*>* result);
   void setView(View view);
+  GeomGroup* createGenAxes();   
 };
 
 class RoeMouseMessage : public MessageBase {
@@ -297,6 +304,11 @@ public:
 
 //
 // $Log$
+// Revision 1.19  2000/11/27 23:09:38  darbyb
+// -Axes are now omnipresent in Roe
+// -Ability to turn axes on/off
+// -Scene initially autoviewed
+//
 // Revision 1.18  2000/11/03 19:08:26  darbyb
 // Added button in Salmon that allows the user to select specific orientations
 //
