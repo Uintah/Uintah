@@ -52,7 +52,6 @@ using namespace std;
 
 namespace SCIRun {
 
-static map<string, MatrixIEPlugin *> *plugin_table = 0;
 
 #ifdef __APPLE__
   // On the Mac, this comes from Core/Util/DynamicLoader.cc because
@@ -61,10 +60,12 @@ static map<string, MatrixIEPlugin *> *plugin_table = 0;
   // (Yes, this is a hack.  Perhaps this problem will go away in later
   // OSX releases, but probably not as it has something to do with the
   // Mac philosophy on when to load dynamic libraries.)
+  extern map<string, MatrixIEPlugin *> *matrix_plugin_table;
   extern Mutex matrixIEPluginMutex;
 #else
   // Same problem on Linux really.  We need control of the static
   // initializer order.
+  static map<string, MatrixIEPlugin *> *matrix_plugin_table = 0;
   extern Mutex matrixIEPluginMutex;
 #endif
 
@@ -85,20 +86,20 @@ MatrixIEPlugin::MatrixIEPlugin(const string& pname,
     filewriter(fwriter)
 {
   matrixIEPluginMutex.lock();
-  if (!plugin_table)
+  if (!matrix_plugin_table)
   {
-    plugin_table = scinew map<string, MatrixIEPlugin *>();
+    matrix_plugin_table = scinew map<string, MatrixIEPlugin *>();
   }
 
   string tmppname = pluginname;
   int counter = 2;
   while (1)
   {
-    map<string, MatrixIEPlugin *>::iterator loc = plugin_table->find(tmppname);
-    if (loc == plugin_table->end())
+    map<string, MatrixIEPlugin *>::iterator loc = matrix_plugin_table->find(tmppname);
+    if (loc == matrix_plugin_table->end())
     {
       if (tmppname != pluginname) { ((string)pluginname) = tmppname; }
-      (*plugin_table)[pluginname] = this;
+      (*matrix_plugin_table)[pluginname] = this;
       break;
     }
     if (*(*loc).second == *this)
@@ -120,30 +121,30 @@ MatrixIEPlugin::MatrixIEPlugin(const string& pname,
 
 MatrixIEPlugin::~MatrixIEPlugin()
 {
-  if (plugin_table == NULL)
+  if (matrix_plugin_table == NULL)
   {
-    cerr << "WARNING: MatrixIEPlugin.cc: ~MatrixIEPlugin(): plugin_table is NULL\n";
+    cerr << "WARNING: MatrixIEPlugin.cc: ~MatrixIEPlugin(): matrix_plugin_table is NULL\n";
     cerr << "         For: " << pluginname << "\n";
     return;
   }
 
   matrixIEPluginMutex.lock();
 
-  map<string, MatrixIEPlugin *>::iterator iter = plugin_table->find(pluginname);
-  if (iter == plugin_table->end())
+  map<string, MatrixIEPlugin *>::iterator iter = matrix_plugin_table->find(pluginname);
+  if (iter == matrix_plugin_table->end())
   {
     cerr << "WARNING: MatrixIEPlugin " << pluginname << 
       " not found in database for removal.\n";
   }
   else
   {
-    plugin_table->erase(iter);
+    matrix_plugin_table->erase(iter);
   }
 
-  if (plugin_table->size() == 0)
+  if (matrix_plugin_table->size() == 0)
   {
-    delete plugin_table;
-    plugin_table = 0;
+    delete matrix_plugin_table;
+    matrix_plugin_table = 0;
   }
 
   matrixIEPluginMutex.unlock();
@@ -166,8 +167,8 @@ void
 MatrixIEPluginManager::get_importer_list(vector<string> &results)
 {
   matrixIEPluginMutex.lock();
-  map<string, MatrixIEPlugin *>::const_iterator itr = plugin_table->begin();
-  while (itr != plugin_table->end())
+  map<string, MatrixIEPlugin *>::const_iterator itr = matrix_plugin_table->begin();
+  while (itr != matrix_plugin_table->end())
   {
     if ((*itr).second->filereader != NULL)
     {
@@ -183,8 +184,8 @@ void
 MatrixIEPluginManager::get_exporter_list(vector<string> &results)
 {
   matrixIEPluginMutex.lock();
-  map<string, MatrixIEPlugin *>::const_iterator itr = plugin_table->begin();
-  while (itr != plugin_table->end())
+  map<string, MatrixIEPlugin *>::const_iterator itr = matrix_plugin_table->begin();
+  while (itr != matrix_plugin_table->end())
   {
     if ((*itr).second->filewriter != NULL)
     {
@@ -200,8 +201,8 @@ MatrixIEPlugin *
 MatrixIEPluginManager::get_plugin(const string &name)
 {
   // Should check for invalid name.
-  map<string, MatrixIEPlugin *>::iterator loc = plugin_table->find(name);
-  if (loc == plugin_table->end())
+  map<string, MatrixIEPlugin *>::iterator loc = matrix_plugin_table->find(name);
+  if (loc == matrix_plugin_table->end())
   {
     return NULL;
   }

@@ -60,6 +60,12 @@ using namespace std;
   Mutex colormapIEPluginMutex("ColorMap Import/Export Plugin Table Lock");
   Mutex fieldIEPluginMutex("Field Import/Export Plugin Table Lock");
   Mutex matrixIEPluginMutex("Matrix Import/Export Plugin Table Lock");
+  class FieldIEPlugin;
+  map<string, FieldIEPlugin *> *field_plugin_table;
+  class MatrixIEPlugin;
+  map<string, MatrixIEPlugin *> *matrix_plugin_table;
+  class ColorMapIEPlugin;
+  map<string, ColorMapIEPlugin *> *colormap_plugin_table;
   const string ext("dylib");
 #else
   Mutex colormapIEPluginMutex("ColorMap Import/Export Plugin Table Lock");
