@@ -406,10 +406,9 @@ void MatlabDataReader::indexmatlabfile(bool postmsg)
 		// Scan the file and see which matrices are compatible
 		// Only those will be shown (you cannot select incompatible matrices).
 			
-		long p,r;
 		std::string infotext;
 		
-		for (p=0, r=0;p<mfile.getnummatlabarrays();p++)
+		for (long p=0;p<mfile.getnummatlabarrays();p++)
 		{
 			ma = mfile.getmatlabarrayinfo(p); // do not load all the data fields
 			for (long q=0;q<NUMPORTS;q++)
