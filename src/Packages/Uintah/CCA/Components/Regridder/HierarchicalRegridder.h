@@ -3,6 +3,9 @@
 
 #include <Packages/Uintah/CCA/Components/Regridder/RegridderCommon.h>
 
+#include <set>
+using std::set;
+
 namespace Uintah {
 
 /**************************************
@@ -48,16 +51,14 @@ class VarLabel;
   private:
     void MarkPatches( const GridP& origGrid, int levelIdx  ); 
     void ExtendPatches( const GridP& origGrid, int levelIdx  ); 
+    Grid* CreateGrid(Grid* oldGrid, const ProblemSpecP& ups);
+    Grid* CreateGrid2(Grid* oldGrid, const ProblemSpecP& ups);
+    void GatherSubPatches(const GridP& origGrid, SchedulerP& sched);
     void MarkPatches2(const ProcessorGroup*,
                       const PatchSubset* patches,
                       const MaterialSubset* ,
                       DataWarehouse* old_dw,
                       DataWarehouse* new_dw);
-    void ExtendPatches2(const ProcessorGroup*,
-                        const PatchSubset* patches,
-                        const MaterialSubset* ,
-                        DataWarehouse* old_dw,
-                        DataWarehouse* new_dw);
     inline void dummyTask(const ProcessorGroup*,
                           const PatchSubset* patches,
                           const MaterialSubset* ,
@@ -66,15 +67,30 @@ class VarLabel;
 
     inline IntVector StartCellToLattice ( SCIRun::IntVector startCell, int levelIdx );
     
-    // var labels for interior task graph
-    const VarLabel* patchCells;
-    const VarLabel* dilatedCellsCreation;
-    const VarLabel* dilatedCellsDeletion;
-    const VarLabel* dilatedCellsPatch;
-
     // activePatches will not act as a normal variable.  It will only be as large as the number
     // patches a level can be divided into.
-    const VarLabel* activePatches;
+    const VarLabel* d_activePatchesLabel;
+
+    // to store a list of the subpatches in sorted order
+    class IntVectorCompare {
+    public:
+      bool operator() (const IntVector &a, const IntVector& b)
+      {
+        // we want to sort IntVectors by x first then y then z
+        if (a.x() < b.x())
+          return true;
+        if (a.x() > b.x())
+          return false;
+        if (a.y() < b.y())
+          return true;
+        if (a.y() > b.y())
+          return false;
+        return a.z() < b.z();
+      }
+    };
+
+    typedef set<IntVector, IntVectorCompare> subpatchset;
+    vector<subpatchset> d_patches;    
   };
 
 } // End namespace Uintah
