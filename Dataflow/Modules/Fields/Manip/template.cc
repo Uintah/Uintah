@@ -10,7 +10,7 @@ extern "C" {
 
 void execute(const vector<FieldHandle>& in, vector<FieldHandle>& out)
 {
-   enum { number_of_outputs = 1 }   //TODO: replace with the right number
+   enum { number_of_outputs = 1 };   //TODO: replace with the right number
    out.resize( number_of_outputs );
 
    //TODO: implement your manipulation
