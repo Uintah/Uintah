@@ -1524,10 +1524,6 @@ PicardNonlinearSolver::interpolateFromFCToCC(const ProcessorGroup* ,
           newCCVelMag[idx] = sqrt(new_u*new_u+new_v*new_v+new_w*new_w);
           kineticEnergy[idx] = (new_u*new_u+new_v*new_v+new_w*new_w)/2.0;
 	  total_kin_energy += kineticEnergy[idx];
-	  u_norm += (newUVel[idx]-oldUVel[idx])*(newUVel[idx]-oldUVel[idx]);
-	  v_norm += (newVVel[idx]-oldVVel[idx])*(newVVel[idx]-oldVVel[idx]);
-	  w_norm += (newWVel[idx]-oldWVel[idx])*(newWVel[idx]-oldWVel[idx]);
-	  rho_norm += (density[idx]-old_density[idx])*(density[idx]-old_density[idx]);
 	}
       }
     }
@@ -1555,9 +1551,6 @@ PicardNonlinearSolver::interpolateFromFCToCC(const ProcessorGroup* ,
           kineticEnergy[idx] = (new_u*new_u+new_v*new_v+new_w*new_w)/2.0;
 	  total_kin_energy += kineticEnergy[idx];
 	  u_norm += (newUVel[idx]-oldUVel[idx])*(newUVel[idx]-oldUVel[idx]);
-	  v_norm += (newVVel[idx]-oldVVel[idx])*(newVVel[idx]-oldVVel[idx]);
-	  w_norm += (newWVel[idx]-oldWVel[idx])*(newWVel[idx]-oldWVel[idx]);
-	  rho_norm += (density[idx]-old_density[idx])*(density[idx]-old_density[idx]);
 	}
       }
     }
@@ -1584,10 +1577,6 @@ PicardNonlinearSolver::interpolateFromFCToCC(const ProcessorGroup* ,
           newCCVelMag[idx] = sqrt(new_u*new_u+new_v*new_v+new_w*new_w);
           kineticEnergy[idx] = (new_u*new_u+new_v*new_v+new_w*new_w)/2.0;
 	  total_kin_energy += kineticEnergy[idx];
-	  u_norm += (newUVel[idx]-oldUVel[idx])*(newUVel[idx]-oldUVel[idx]);
-	  v_norm += (newVVel[idx]-oldVVel[idx])*(newVVel[idx]-oldVVel[idx]);
-	  w_norm += (newWVel[idx]-oldWVel[idx])*(newWVel[idx]-oldWVel[idx]);
-	  rho_norm += (density[idx]-old_density[idx])*(density[idx]-old_density[idx]);
 	}
       }
     }
@@ -1614,10 +1603,7 @@ PicardNonlinearSolver::interpolateFromFCToCC(const ProcessorGroup* ,
           newCCVelMag[idx] = sqrt(new_u*new_u+new_v*new_v+new_w*new_w);
           kineticEnergy[idx] = (new_u*new_u+new_v*new_v+new_w*new_w)/2.0;
 	  total_kin_energy += kineticEnergy[idx];
-	  u_norm += (newUVel[idx]-oldUVel[idx])*(newUVel[idx]-oldUVel[idx]);
 	  v_norm += (newVVel[idx]-oldVVel[idx])*(newVVel[idx]-oldVVel[idx]);
-	  w_norm += (newWVel[idx]-oldWVel[idx])*(newWVel[idx]-oldWVel[idx]);
-	  rho_norm += (density[idx]-old_density[idx])*(density[idx]-old_density[idx]);
 	}
       }
     }
@@ -1644,10 +1630,6 @@ PicardNonlinearSolver::interpolateFromFCToCC(const ProcessorGroup* ,
           newCCVelMag[idx] = sqrt(new_u*new_u+new_v*new_v+new_w*new_w);
           kineticEnergy[idx] = (new_u*new_u+new_v*new_v+new_w*new_w)/2.0;
 	  total_kin_energy += kineticEnergy[idx];
-	  u_norm += (newUVel[idx]-oldUVel[idx])*(newUVel[idx]-oldUVel[idx]);
-	  v_norm += (newVVel[idx]-oldVVel[idx])*(newVVel[idx]-oldVVel[idx]);
-	  w_norm += (newWVel[idx]-oldWVel[idx])*(newWVel[idx]-oldWVel[idx]);
-	  rho_norm += (density[idx]-old_density[idx])*(density[idx]-old_density[idx]);
 	}
       }
     }
@@ -1674,10 +1656,7 @@ PicardNonlinearSolver::interpolateFromFCToCC(const ProcessorGroup* ,
           newCCVelMag[idx] = sqrt(new_u*new_u+new_v*new_v+new_w*new_w);
           kineticEnergy[idx] = (new_u*new_u+new_v*new_v+new_w*new_w)/2.0;
 	  total_kin_energy += kineticEnergy[idx];
-	  u_norm += (newUVel[idx]-oldUVel[idx])*(newUVel[idx]-oldUVel[idx]);
-	  v_norm += (newVVel[idx]-oldVVel[idx])*(newVVel[idx]-oldVVel[idx]);
 	  w_norm += (newWVel[idx]-oldWVel[idx])*(newWVel[idx]-oldWVel[idx]);
-	  rho_norm += (density[idx]-old_density[idx])*(density[idx]-old_density[idx]);
 	}
       }
     }
