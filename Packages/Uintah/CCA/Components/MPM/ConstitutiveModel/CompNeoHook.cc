@@ -10,6 +10,8 @@
 #include <Packages/Uintah/Core/Grid/VarLabel.h>
 #include <Packages/Uintah/Core/Grid/VarTypes.h>
 #include <Packages/Uintah/Core/Math/Matrix3.h>
+#include <Packages/Uintah/Core/Math/Short27.h> //for Fracture
+#include <Packages/Uintah/Core/Grid/NodeIterator.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <Packages/Uintah/CCA/Components/MPM/MPMLabel.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
@@ -23,6 +25,9 @@
 using std::cerr;
 using namespace Uintah;
 using namespace SCIRun;
+
+#define FRACTURE
+#undef FRACTURE
 
 CompNeoHook::CompNeoHook(ProblemSpecP& ps,  MPMLabel* Mlb, int n8or27)
 {
@@ -164,7 +169,17 @@ void CompNeoHook::computeStressTensor(const PatchSubset* patches,
 
     new_dw->get(gvelocity, lb->gVelocityLabel,dwi,patch,gac,NGN);
     old_dw->get(delT, lb->delTLabel);
-      
+
+#ifdef FRACTURE
+    // for Fracture -----------------------------------------------------------
+    constParticleVariable<Short27> pgCode;
+    new_dw->get(pgCode, lb->pgCodeLabel, pset);
+    
+    constNCVariable<Vector> Gvelocity; 
+    new_dw->get(Gvelocity,lb->GVelocityLabel, dwi, patch, gac, NGN);
+    // ------------------------------------------------------------------------
+#endif
+
     double shear = d_initialData.Shear;
     double bulk  = d_initialData.Bulk;
 
@@ -172,31 +187,45 @@ void CompNeoHook::computeStressTensor(const PatchSubset* patches,
 
     for(ParticleSubset::iterator iter = pset->begin();
 	iter != pset->end(); iter++){
-       particleIndex idx = *iter;
-
-       // Get the node indices that surround the cell
-       IntVector ni[MAX_BASIS];
-       Vector d_S[MAX_BASIS];
-
-       if(d_8or27==8){
-          patch->findCellAndShapeDerivatives(px[idx], ni, d_S);
-        }
-        else if(d_8or27==27){
-          patch->findCellAndShapeDerivatives27(px[idx], ni, d_S,psize[idx]);
-        }
-
-       velGrad.set(0.0);
-
-       for(int k = 0; k < d_8or27; k++) {
-	    const Vector& gvel = gvelocity[ni[k]];
-	    for (int j = 0; j<3; j++){
-               double d_SXoodx = d_S[k][j] * oodx[j];
-	       for (int i = 0; i<3; i++) {
-		  velGrad(i+1,j+1) += gvel[i] * d_SXoodx;
-	       }
-	    }
-        }
-
+      particleIndex idx = *iter;
+      
+      velGrad.set(0.0);
+      // Get the node indices that surround the cell
+      IntVector ni[MAX_BASIS];
+      Vector d_S[MAX_BASIS];
+      
+      if(d_8or27==8){
+	patch->findCellAndShapeDerivatives(px[idx], ni, d_S);
+      }
+      else if(d_8or27==27){
+	patch->findCellAndShapeDerivatives27(px[idx], ni, d_S,psize[idx]);
+      }
+      
+      Vector gvel;
+      for(int k = 0; k < d_8or27; k++) {
+#ifdef FRACTURE
+	// for Fracture ------------------------------------------------------
+	if(pgCode[idx][k]==1)
+	  gvel = gvelocity[ni[k]];
+	else if(pgCode[idx][k]==2)
+	  gvel = Gvelocity[ni[k]];
+	else {
+	  cout << "Unknown velocity field in CompNeoHook::computeStressTensor:"
+	       << pgCode[idx][k] << endl;
+	  exit(1);
+	}
+	//-------------------------------------------------------------------
+#else
+	gvel = gvelocity[ni[k]];
+#endif
+	for (int j = 0; j<3; j++){
+	  double d_SXoodx = d_S[k][j] * oodx[j];
+	  for (int i = 0; i<3; i++) {
+	    velGrad(i+1,j+1) += gvel[i] * d_SXoodx;
+	  }
+	}
+      }
+      
       // Compute the deformation gradient increment using the time_step
       // velocity gradient
       // F_n^np1 = dudx * dt + Identity
@@ -287,6 +316,12 @@ void CompNeoHook::addComputesAndRequires(Task* task,
 
     task->requires(Task::OldDW, lb->delTLabel);
 
+#ifdef FRACTURE
+    // for Fracture -------------------------------------------------------
+    task->requires(Task::NewDW,  lb->pgCodeLabel,    matlset, Ghost::None);
+    task->requires(Task::NewDW,  lb->GVelocityLabel, matlset, gac, NGN);
+    // --------------------------------------------------------------------
+#endif
 
     task->computes(lb->pStressLabel_preReloc,             matlset);
     task->computes(lb->pDeformationMeasureLabel_preReloc, matlset);

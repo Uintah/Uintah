@@ -322,6 +322,68 @@ void Patch::findCellAndWeightsAndShapeDerivatives(const Point& pos,
 }
 #endif
 
+
+// for Fracture below **************************************
+void Patch::findCellNodes(const Point& pos,
+                               IntVector ni[8]) const
+{
+   Point cellpos = d_level->positionToIndex(pos);
+   int ix = Floor(cellpos.x());
+   int iy = Floor(cellpos.y());
+   int iz = Floor(cellpos.z());
+   ni[0] = IntVector(ix, iy, iz);
+   ni[1] = IntVector(ix, iy, iz+1);
+   ni[2] = IntVector(ix, iy+1, iz);
+   ni[3] = IntVector(ix, iy+1, iz+1);
+   ni[4] = IntVector(ix+1, iy, iz);
+   ni[5] = IntVector(ix+1, iy, iz+1);
+   ni[6] = IntVector(ix+1, iy+1, iz);
+   ni[7] = IntVector(ix+1, iy+1, iz+1);
+}
+
+void Patch::findCellNodes27(const Point& pos,
+                                 IntVector ni[27]) const
+{
+   Point cellpos = d_level->positionToIndex(pos);
+   int ix = Floor(cellpos.x());
+   int iy = Floor(cellpos.y());
+   int iz = Floor(cellpos.z());
+   int nnx,nny,nnz;
+
+   if(cellpos.x()-(ix) <= .5){ nnx = -1; } else{ nnx = 2; }
+   if(cellpos.y()-(iy) <= .5){ nny = -1; } else{ nny = 2; }
+   if(cellpos.z()-(iz) <= .5){ nnz = -1; } else{ nnz = 2; }
+
+   ni[0]  = IntVector(ix,    iy,      iz);
+   ni[1]  = IntVector(ix+1,  iy,      iz);
+   ni[2]  = IntVector(ix+nnx,iy,      iz);
+   ni[3]  = IntVector(ix,    iy+1,    iz);
+   ni[4]  = IntVector(ix+1,  iy+1,    iz);
+   ni[5]  = IntVector(ix+nnx,iy+1,    iz);
+   ni[6]  = IntVector(ix,    iy+nny,  iz);
+   ni[7]  = IntVector(ix+1,  iy+nny,  iz);
+   ni[8]  = IntVector(ix+nnx,iy+nny,  iz);
+   ni[9]  = IntVector(ix,    iy,      iz+1);
+   ni[10] = IntVector(ix+1,  iy,      iz+1);
+   ni[11] = IntVector(ix+nnx,iy,      iz+1);
+   ni[12] = IntVector(ix,    iy+1,    iz+1);
+   ni[13] = IntVector(ix+1,  iy+1,    iz+1);
+   ni[14] = IntVector(ix+nnx,iy+1,    iz+1);
+   ni[15] = IntVector(ix,    iy+nny,  iz+1);
+   ni[16] = IntVector(ix+1,  iy+nny,  iz+1);
+   ni[17] = IntVector(ix+nnx,iy+nny,  iz+1);
+   ni[18] = IntVector(ix,    iy,      iz+nnz);
+   ni[19] = IntVector(ix+1,  iy,      iz+nnz);
+   ni[20] = IntVector(ix+nnx,iy,      iz+nnz);
+   ni[21] = IntVector(ix,    iy+1,    iz+nnz);
+   ni[22] = IntVector(ix+1,  iy+1,    iz+nnz);
+   ni[23] = IntVector(ix+nnx,iy+1,    iz+nnz);
+   ni[24] = IntVector(ix,    iy+nny,  iz+nnz);
+   ni[25] = IntVector(ix+1,  iy+nny,  iz+nnz);
+   ni[26] = IntVector(ix+nnx,iy+nny,  iz+nnz);
+}
+// for Fracture above *******************************************
+
 void Patch::findCellAndWeights27(const Point& pos,
                                  IntVector ni[27],
                                  double S[27], const Vector& size) const

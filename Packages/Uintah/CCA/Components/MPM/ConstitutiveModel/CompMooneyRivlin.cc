@@ -1,4 +1,3 @@
-
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/CompMooneyRivlin.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
@@ -7,6 +6,7 @@
 #include <Packages/Uintah/Core/Grid/ParticleVariable.h>
 #include <Packages/Uintah/Core/Grid/Task.h>
 #include <Packages/Uintah/Core/Grid/VarLabel.h>
+#include <Packages/Uintah/Core/Math/Short27.h> // for Fracture
 #include <Packages/Uintah/Core/Grid/NodeIterator.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Packages/Uintah/Core/Grid/Box.h>
@@ -24,6 +24,9 @@ using std::cerr;
 
 using namespace Uintah;
 using namespace SCIRun;
+
+#define FRACTURE
+#undef FRACTURE
 
 // Material Constants are C1, C2 and PR (poisson's ratio).  
 // The shear modulus = 2(C1 + C2).
@@ -154,6 +157,16 @@ void CompMooneyRivlin::computeStressTensor(const PatchSubset* patches,
     new_dw->allocateAndPut(deformationGradient_new,
                                   lb->pDeformationMeasureLabel_preReloc, pset);
 
+#ifdef FRACTURE
+ // for Fracture -----------------------------------------------------------
+    constParticleVariable<Short27> pgCode;
+    new_dw->get(pgCode, lb->pgCodeLabel, pset);
+
+    constNCVariable<Vector> Gvelocity;
+    new_dw->get(Gvelocity,lb->GVelocityLabel, matlindex, patch, gac, NGN);
+    // ------------------------------------------------------------------------
+#endif
+
     new_dw->get(gvelocity, lb->gVelocityLabel, matlindex,patch, gac, NGN);
     old_dw->get(delT, lb->delTLabel);
 
@@ -167,31 +180,46 @@ void CompMooneyRivlin::computeStressTensor(const PatchSubset* patches,
 
     for(ParticleSubset::iterator iter = pset->begin();iter!=pset->end();iter++){
       particleIndex idx = *iter;
-
+      
       // Get the node indices that surround the cell
       IntVector ni[MAX_BASIS];
       Vector d_S[MAX_BASIS];
-
+      
       ASSERT(patch->getBox().contains(px[idx]));
       if(d_8or27==8){
-         patch->findCellAndShapeDerivatives(px[idx], ni, d_S);
-       }
-       else if(d_8or27==27){
-         patch->findCellAndShapeDerivatives27(px[idx], ni, d_S,psize[idx]);
-       }
-     
-       velGrad.set(0.0);
-     
-       for(int k = 0; k < d_8or27; k++) {
-	  const Vector& gvel = gvelocity[ni[k]];
-	  for (int j = 0; j<3; j++){
-            double d_SXoodx = d_S[k][j] * oodx[j];
-	    for (int i = 0; i<3; i++) {
-	      velGrad(i+1,j+1) += gvel[i] * d_SXoodx;
-//	      velGrad(i+1,j+1) += gvel[i] * d_S[k][j] * oodx[j];
-	    }
+	patch->findCellAndShapeDerivatives(px[idx], ni, d_S);
+      }
+      else if(d_8or27==27){
+	patch->findCellAndShapeDerivatives27(px[idx], ni, d_S,psize[idx]);
+      }
+      
+      Vector gvel;
+      velGrad.set(0.0);
+      
+      for(int k = 0; k < d_8or27; k++) {
+#ifdef FRACTURE
+	// for Fracture --------------------------------------------------------
+	if(pgCode[idx][k]==1)
+	  gvel = gvelocity[ni[k]]; // const Vector& 
+	else if(pgCode[idx][k]==2)
+	  gvel = Gvelocity[ni[k]];
+	else {
+	  cout << "Unknown velocity field in CompMooneyRivlin::computeStressTensor:"
+	       << pgCode[idx][k] << endl;
+	  exit(1);
+	}
+	// ----------------------------------------------------------------------
+#else
+	gvel = gvelocity[ni[k]];
+#endif
+	for (int j = 0; j<3; j++){
+	  double d_SXoodx = d_S[k][j] * oodx[j];
+	  for (int i = 0; i<3; i++) {
+	    velGrad(i+1,j+1) += gvel[i] * d_SXoodx;
+	    //	      velGrad(i+1,j+1) += gvel[i] * d_S[k][j] * oodx[j];
 	  }
-       }
+	}
+      }
       
       // Compute the deformation gradient increment using the time_step
       // velocity gradient
@@ -293,6 +321,13 @@ void CompMooneyRivlin::addComputesAndRequires(Task* task,
   task->requires(Task::NewDW, lb->gVelocityLabel,          matlset,gac, NGN);
 
   task->requires(Task::OldDW, lb->delTLabel);
+
+#ifdef FRACTURE
+  // for Fracture ------------------------------------------------------------
+  task->requires(Task::NewDW, lb->pgCodeLabel, matlset,Ghost::None);
+  task->requires(Task::NewDW, lb->GVelocityLabel, matlset, gac, NGN);
+  // -------------------------------------------------------------------------
+#endif
 
   task->computes(lb->pStressLabel_preReloc,             matlset);
   task->computes(lb->pDeformationMeasureLabel_preReloc, matlset);

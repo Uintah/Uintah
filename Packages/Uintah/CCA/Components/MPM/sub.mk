@@ -5,6 +5,7 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR   := Packages/Uintah/CCA/Components/MPM
 
 SRCS     += $(SRCDIR)/SerialMPM.cc \
+	$(SRCDIR)/FractureMPM.cc \
 	$(SRCDIR)/ImpMPM.cc \
 	$(SRCDIR)/MPMLabel.cc \
 	$(SRCDIR)/Solver.cc 	\
@@ -19,8 +20,9 @@ SUBDIRS := $(SRCDIR)/ConstitutiveModel $(SRCDIR)/Contact \
 	$(SRCDIR)/ThermalContact \
 	$(SRCDIR)/GeometrySpecification \
 	$(SRCDIR)/PhysicalBC \
-	$(SRCDIR)/ParticleCreator
-
+	$(SRCDIR)/ParticleCreator \
+	$(SRCDIR)/Crack			
+	
 include $(SCIRUN_SCRIPTS)/recurse.mk
 
 PSELIBS := \
