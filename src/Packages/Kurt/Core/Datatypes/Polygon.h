@@ -71,6 +71,7 @@ WARNING
 
 class SCICORESHARE Polygon {
     vector<Point> vertices;
+    vector<Point> texcoords;
 public:
 
   // GROUP:  Constructors:
@@ -80,13 +81,13 @@ public:
   //             to the vertices and an int specifying the length 
   //             of the array.  Points must be placed in counter
   //             clockwise order.
-  Polygon(const Point *p, int nPoints);
+  Polygon(const Point *p, const Point *t, int nPoints);
 
   //////////
   // Constructor
   // takes a std:vector of Points that are a counter clockwise
   // ordering of the vertices.
-  Polygon(const vector<Point>& v);
+  Polygon(const vector<Point>& v, const vector<Point>& t);
   //////////
   // Copy Constructor
   Polygon(const Polygon&);
@@ -111,8 +112,14 @@ public:
   // index method: return the ith vertex
   const Point& operator[](int i) const; 
   //////////
+  // index method: return the ith vertex
+  const Point& getVertex(int i) const; 
+  //////////
+  // index method: return the ith texture coordinate;
+  const Point& getTexCoord(int i) const; 
+  //////////
   // size method: How long is the vector?
-  int size() const { return vertices.size(); }
+  int size() const { return int(vertices.size()); }
   //////////
   // string method:
   clString string() const;

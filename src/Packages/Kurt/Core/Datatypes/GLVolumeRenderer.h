@@ -12,7 +12,6 @@
 #include <GL/gl.h>
 #include <GL/glu.h>
 
-#include "SliceTable.h"
 #include "Brick.h"
 #include "Octree.h"
 
@@ -74,14 +73,16 @@ public:
   GLVolumeRenderer(int id, GLTexture3DHandle tex,
 		   ColorMapHandle map);
 
-  void SetNSlices(int s) { slices = s; }
+  void SetNSlices(int s) { slices = s;}
   void SetSliceAlpha( double as){ slice_alpha = as;}
+  void BuildTransferFunctions();
+
 
   void SetVol( GLTexture3DHandle tex ){ 
     mutex.lock(); this->tex = tex; mutex.unlock();}
   void SetColorMap( ColorMapHandle map){
-    mutex.lock(); this->cmap = map; cmapHasChanged = true;
-    mutex.unlock(); }
+    mutex.lock(); this->cmap = map; BuildTransferFunctions();
+    cmapHasChanged = true; mutex.unlock(); }
   void SetControlPoint( const Point& point){ controlPoint = point; }
 
   void Reload() { _state->Reload(); }
@@ -148,18 +149,18 @@ private:
   bool cmapHasChanged;
   bool drawX, drawY, drawZ, drawView;
   
-   
  
 
   // Sets the state function without having to write a bunch of code
   template <class T>
     T* state( T* st, int l){ if(st == 0) st = new T(this); _lighting = l; return st;}
 
-
+  
   bool _interp;
   int _lighting;
   static double swapMatrix[16];
-  
+  static int rCount;
+  unsigned char TransferFunctions[8][1024];
 };
 
 
