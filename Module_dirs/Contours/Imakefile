@@ -13,7 +13,7 @@ SCIObjLibraryTarget($(LIBNAME),$(OBJS))
 
 #else
 all:
-depend:
+depend::
 
            RM_CMD = $(RM) *.CKP *.ln *.BAK *.bak core errs ,* *~ .emacs_* tags TAGS make.log MakeOut
 #endif

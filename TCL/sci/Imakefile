@@ -24,5 +24,6 @@ NormalLibraryTarget($(LIBNAME),$(OBJS))
 
 #else
 all:
-depend:
+depend::
+
 #endif

@@ -127,7 +127,7 @@ itcl_class MeshView {
 
 	range $w.f.elms.range -from -1 -to 1 -showvalue true \
 		-orient horizontal -command $n -label Volume \
-		-var_min $this-mMin -var_max $this-mMax
+		-var_min $this-mMin -var_max $this-mMax -resolution 0.000001
 	pack $w.f.elms.range -side left -fill x -expand 1
 
     }
