@@ -77,8 +77,8 @@ PersistentTypeID::PersistentTypeID(const char* typeName,
 }
 
 //----------------------------------------------------------------------
-PersistentTypeID::PersistentTypeID(string typeName, 
-				   string parentName,
+PersistentTypeID::PersistentTypeID(const string typeName, 
+				   const string parentName,
 				   Persistent* (*maker)())
   :  type(typeName), parent(parentName), maker(maker)
 {
