@@ -89,6 +89,15 @@ MoveElemToNode::execute()
     }
     ext = "Lat";
   }
+  if (mtd->get_name() == "StructHexVolMesh")
+  {
+    if (ifield->data_at() != Field::CELL)
+    {
+      error("StructHexVolMesh data must be at cell centers.");
+      return;
+    }
+    ext = "SHex";
+  }
   else if (mtd->get_name() == "ImageMesh")
   {
     if (ifield->data_at() != Field::FACE)
