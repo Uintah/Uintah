@@ -66,6 +66,12 @@ public:
   //////////
   virtual ~FieldExtractor(); 
 
+  // GROUP: cloning and execution 
+  ////////// 
+  virtual void execute(); 
+
+
+
 protected:
   virtual void get_vars(vector< string >&,
 		       vector< const TypeDescription *>&) = 0;
@@ -94,6 +100,18 @@ protected:
   GridP grid;
   ArchiveHandle  archiveH;
   LatVolMeshHandle mesh_handle_;
+
+  GuiString tcl_status;
+
+  GuiString sVar;
+  GuiInt sMatNum;
+
+  const TypeDescription *type;
+
+  ArchiveIPort *in;
+  FieldOPort *fout;
+
+
 }; //class 
 
 
