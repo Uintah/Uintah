@@ -1,11 +1,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
-#include <iostream>
 #include <GL/gl.h>
 #include <Core/Malloc/Allocator.h>
-#include <Core/Containers/Stack.h>
 #include <Packages/Yarden/Core/Algorithms/Visualization/Screen.h>
+
+#include <stack>
+using std::stack;
+
+#include <iostream>
 using std::cerr;
 using std::endl;
 
@@ -108,8 +111,8 @@ struct ScreenEntry {
   ScreenEntry( int i, int j, Word w ) :r(i), c(j), active(w) {}
 };
 
-Stack<MapEntry> map_stack;
-Stack<ScreenEntry> screen_stack;
+stack<MapEntry> map_stack;
+stack<ScreenEntry> screen_stack;
 
 Screen::Screen()
 {
@@ -622,8 +625,9 @@ Screen::visible( int left, int bottom, int right, int top )
   Word active_mask =  (cover ^ inner) & ~root_mask;
   if ( active_mask ) {
     Block &active = W2B(active_mask);
-    map_stack.remove_all();
-    screen_stack.remove_all();
+
+    while (!map_stack.empty()) { map_stack.pop(); }
+    while (!screen_stack.empty()) { screen_stack.pop(); }
 
     for (int r=tb-boff; r<=tt-toff; r++) {
       Byte b = active[r];
@@ -636,7 +640,8 @@ Screen::visible( int left, int bottom, int right, int top )
     }
 
     while ( !map_stack.empty() ) {
-      MapEntry entry = map_stack.pop();
+      MapEntry entry = map_stack.top();
+      map_stack.pop();
       if (visible_map( entry.r, entry.c, left, right, top, bottom)) {
         // 	{ if (show) printf(" visible - map\n");}
         return 1;
@@ -644,7 +649,8 @@ Screen::visible( int left, int bottom, int right, int top )
     }
 
     while ( !screen_stack.empty() ) {
-      ScreenEntry entry = screen_stack.pop();
+      ScreenEntry entry = screen_stack.top();
+      screen_stack.pop();
       int r = entry.r << 3;
       int c = entry.c << 3;
       Block &active = W2B(entry.active);

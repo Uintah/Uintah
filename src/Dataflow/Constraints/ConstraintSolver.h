@@ -34,7 +34,9 @@
 
 #include <Dataflow/share/share.h>
 #include <Dataflow/Constraints/BaseConstraint.h>
-#include <Core/Containers/Stack.h>
+
+#include <stack>
+using std::stack;
 
 namespace SCIRun {
 
@@ -85,7 +87,7 @@ private:
    Index MaxDepth;
    int changed;
    
-   Stack<StackItem> stack;
+   stack<StackItem> stack_;
    
    Index NumVariables;
    Array1<BaseVariable*> variables;
