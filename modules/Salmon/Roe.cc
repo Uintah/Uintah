@@ -282,11 +282,15 @@ void Roe::RoeInit(Salmon* s) {
     opt_proj->SetOrientation(XmVERTICAL);
     opt_proj->Create(*left, "opt_proj");
 
+    proj_fogRC = new RowColumnC;
+    proj_fogRC->SetOrientation(XmHORIZONTAL);
+    proj_fogRC->Create(*opt_proj, "proj_fog");
+
     projRC=new RowColumnC;
     projRC->SetOrientation(XmHORIZONTAL);
     projRC->SetRadioAlwaysOne(True);
     projRC->SetRadioBehavior(True);
-    projRC->Create(*opt_proj, "proj");
+    projRC->Create(*proj_fogRC, "proj");
 
     perspB=new ToggleButtonC;
     new MotifCallback<Roe>FIXCB(perspB, XmNvalueChangedCallback,
@@ -303,6 +307,13 @@ void Roe::RoeInit(Salmon* s) {
 				0, 0);
     orthoB->Create(*projRC, "Orthographic");
     
+    fogB=new ToggleButtonC;
+    new MotifCallback<Roe>FIXCB(fogB, XmNvalueChangedCallback,
+				&manager->mailbox, this,
+				&Roe::fogCB,
+				0, 0);
+    fogB->Create(*proj_fogRC, "fog");
+
     options=new RowColumnC;
     options->SetOrientation(XmHORIZONTAL);
     options->Create(*opt_proj, "options");
@@ -420,6 +431,8 @@ void Roe::initCB(CallbackData*, void*) {
     glEnable(GL_LIGHT0);
     glDepthFunc(GL_LEQUAL);
     glEnable(GL_DEPTH_TEST);
+    glFogf(GL_FOG_END, 30.0);
+    glFogf(GL_FOG_MODE, GL_LINEAR);
 
     if (haveInheritMat) {
 	glLoadMatrixd(inheritMat);
@@ -584,9 +597,11 @@ Roe::~Roe()
     delete ambient;
     delete point1;
     delete opt_proj;
+    delete proj_fogRC;
     delete projRC;
     delete orthoB;
     delete perspB;
+    delete fogB;
     delete options;
     delete viewRC;
     delete autoView;
@@ -691,6 +706,17 @@ void Roe::ambientCB(CallbackData*, void*)
 {
     NOT_FINISHED("Roe::ambientCB");
 }
+
+void Roe::fogCB(CallbackData*, void*) {
+    make_current();
+    if (!glIsEnabled(GL_FOG)) {
+	glEnable(GL_FOG);
+    } else {
+	glDisable(GL_FOG);
+    }
+    redrawAll();
+}
+
 void Roe::point1CB(CallbackData*, void*)
 {
     make_current();
@@ -941,6 +967,8 @@ void Roe::mouse_translate(int action, int x, int y, int, int)
     case BUTTON_DOWN:
 	last_x=x;
 	last_y=y;
+	total_x = 0;
+	total_y = 0;
 	update_mode_string("translate: ");
 	break;
     case BUTTON_MOTION:
@@ -951,13 +979,17 @@ void Roe::mouse_translate(int action, int x, int y, int, int)
 	    ymtn/=10;
 	    last_x = x;
 	    last_y = y;
+	    total_x += xmtn;
+	    total_y += ymtn;
+	    if (Abs(total_x) < .001) total_x = 0;
+	    if (Abs(total_y) < .001) total_y = 0;
 	    make_current();
 	    glTranslated(-xmtn, ymtn, 0);
 	    for (int i=0; i<kids.size(); i++)
 		kids[i]->translate(Vector(-xmtn, ymtn, 0));
 	    redrawAll();
-	    update_mode_string(clString("translate: ")+to_string(xmtn)
-			       +", "+to_string(ymtn));
+	    update_mode_string(clString("translate: ")+to_string(total_x)
+			       +", "+to_string(total_y));
 	}
 	break;
     case BUTTON_UP:
@@ -971,8 +1003,10 @@ void Roe::mouse_scale(int action, int x, int y, int, int)
     switch(action){
     case BUTTON_DOWN:
 	{
+	    update_mode_string("scale: ");
 	    last_x=x;
 	    last_y=y;
+	    total_x=1;
 	    bb.reset();
 	    HashTableIter<int,HashTable<int, GeomObj*>*> iter(&manager->portHash);
 	    for (iter.first(); iter.ok(); ++iter) {
@@ -1000,19 +1034,25 @@ void Roe::mouse_scale(int action, int x, int y, int, int)
 	    last_y = y;
 	    make_current();
 	    if (Abs(xmtn)>Abs(ymtn)) scl=xmtn; else scl=ymtn;
+	    if (scl<0) scl=1/(1-scl); else scl+=1;
+	    total_x*=scl;
 	    Point cntr(bb.center());
 	    glTranslated(cntr.x(), cntr.y(), cntr.z());
-	    glScaled(1+scl, 1+scl, 1+scl);
+	    glScaled(scl, scl, scl);
 	    glTranslated(-cntr.x(), -cntr.y(), -cntr.z());
 	    for (int i=0; i<kids.size(); i++) {
 		kids[i]->translate(Vector(cntr.x(), cntr.y(), cntr.z()));
-		kids[i]->scale(Vector(1+scl, 1+scl, 1+scl));
+		kids[i]->scale(Vector(scl, scl, scl));
 		kids[i]->translate(Vector(-cntr.x(), -cntr.y(), -cntr.z()));
 	    }
 	    redrawAll();
+	    update_mode_string(clString("scale: ")+to_string(total_x*100)+"%");
 	}
 	break;
-    }
+    case BUTTON_UP:
+	update_mode_string("");
+	break;
+    }	
 }
 
 void Roe::mouse_rotate(int action, int x, int y, int, int)
@@ -1020,6 +1060,7 @@ void Roe::mouse_rotate(int action, int x, int y, int, int)
     switch(action){
     case BUTTON_DOWN:
 	{
+	    update_mode_string("rotate:");
 	    last_x=x;
 	    last_y=y;
 	    bb.reset();
@@ -1055,9 +1096,11 @@ void Roe::mouse_rotate(int action, int x, int y, int, int)
 		kids[i]->translate(Vector(-cntr.x(), -cntr.y(), -cntr.z()));
 	    }
 	    redrawAll();
+	    update_mode_string("rotate:");
 	}
 	break;
     case BUTTON_UP:
+	update_mode_string("");
 	break;
     }
 }

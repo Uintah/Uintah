@@ -73,11 +73,13 @@ class Roe {
     ToggleButtonC* ambient;
     ToggleButtonC* point1;
     RowColumnC* opt_proj;
+    RowColumnC* proj_fogRC;
     RowColumnC* projRC;
     RowColumnC* options;
     RowColumnC* viewRC;
     ToggleButtonC* orthoB;
     ToggleButtonC* perspB;
+    ToggleButtonC* fogB;
     PushButtonC* autoView;
     PushButtonC* setHome;
     PushButtonC* goHome;
@@ -100,6 +102,7 @@ class Roe {
     void point1CB(CallbackData*, void*);
     void orthoCB(CallbackData*, void*);
     void perspCB(CallbackData*, void*);
+    void fogCB(CallbackData*, void*);
     void goHomeCB(CallbackData*, void*);
     void autoViewCB(CallbackData*, void*);
     void setHomeCB(CallbackData*, void*);
@@ -118,6 +121,8 @@ class Roe {
     int doneInit;
     int last_x;
     int last_y;
+    double total_x;
+    double total_y;
     int haveInheritMat;
     double inheritMat[16];
 
