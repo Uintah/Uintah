@@ -58,7 +58,7 @@ public:
   virtual void emitNormal(ostream& out, DOM_Element varnode) = 0;
   virtual void readNormal(istream& in) = 0;
 
-  virtual void emitRLE(ostream& /*out*/, DOM_Element /*varnode*/);
+  virtual bool emitRLE(ostream& /*out*/, DOM_Element /*varnode*/);
   virtual void readRLE(istream& /*in*/);
   
   virtual void allocate(const Patch* patch) = 0;

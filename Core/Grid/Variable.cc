@@ -62,8 +62,11 @@ void Variable::emit(OutputContext& oc, const string& compressionModeHint)
   
   ostringstream outstream;
 
-  if (use_rle)
-    emitRLE(outstream, oc.varnode);
+  if (use_rle) {
+    if (!emitRLE(outstream, oc.varnode))
+      throw InvalidCompressionMode("rle",
+				   virtualGetTypeDescription()->getName());
+  }
   else
     emitNormal(outstream, oc.varnode);
 
@@ -79,8 +82,7 @@ void Variable::emit(OutputContext& oc, const string& compressionModeHint)
 
     if (try_all) {
       ostringstream outstream2;
-      try {
-	emitRLE(outstream2, oc.varnode);
+      if (emitRLE(outstream2, oc.varnode)) {
 	preGzip2 = outstream2.str();
 	string* writeoutString2 = gzipCompress(&preGzip2, &buffer2);
 	
@@ -96,9 +98,6 @@ void Variable::emit(OutputContext& oc, const string& compressionModeHint)
 	}
 	else
 	  writeoutString2->erase(); // doesn't get used, so erase it
-      }
-      catch (InvalidCompressionMode& ) {
-	// just trying, if it doesn't like it then forget it
       }
     }
   }
@@ -136,8 +135,8 @@ string* Variable::gzipCompress(string* pUncompressed, string* pBuffer)
   unsigned long uncompressedSize = pUncompressed->size();
 
   // follows compress guidelines: 1% more than source size + 12
-  unsigned long compressBufsize =
-    (unsigned long)(ceil((double)uncompressedSize * 1.01) + 12); 
+  // (round up, so use + 13).
+  unsigned long compressBufsize = uncompressedSize * 101 / 100 + 13; 
 
   pBuffer->resize(compressBufsize + sizeof(unsigned long));
   char* buf = const_cast<char*>(pBuffer->c_str()); // casting from const
@@ -231,10 +230,9 @@ void Variable::read(InputContext& ic, long end, const string& compressionMode)
   ASSERT((unsigned long)instream.tellg() == uncompressedData->size());
 }
 
-void Variable::emitRLE(ostream& /*out*/, DOM_Element /*varnode*/)
+bool Variable::emitRLE(ostream& /*out*/, DOM_Element /*varnode*/)
 {
-  throw InvalidCompressionMode("rle",
-			       virtualGetTypeDescription()->getName());
+  return false; // not supported by default
 }
   
 void Variable::readRLE(istream& /*in*/)
