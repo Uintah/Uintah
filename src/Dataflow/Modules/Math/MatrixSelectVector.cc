@@ -115,12 +115,12 @@ MatrixSelectVector::send_selection(MatrixHandle mh, int which, int ncopy,
     }
     else
     {
-      DenseMatrix *dm = scinew DenseMatrix(mh->ncols(), ncopy);
-      for (int i = 0; i <= ncopy; i++)
+      DenseMatrix *dm = scinew DenseMatrix(ncopy, mh->ncols());
+      for (int i = 0; i < ncopy; i++)
       {
 	for (int c = 0; c < mh->ncols(); c++)
 	{
-	  dm->put(c, i, mh->get(which + i, c));
+	  dm->put(i, c, mh->get(which + i, c));
 	}
       }
       matrix = dm;
@@ -145,12 +145,12 @@ MatrixSelectVector::send_selection(MatrixHandle mh, int which, int ncopy,
     }
     else
     {
-      DenseMatrix *dm = scinew DenseMatrix(mh->ncols(), ncopy);
-      for (int i = 0; i <= ncopy; i++)
+      DenseMatrix *dm = scinew DenseMatrix(mh->nrows(), ncopy);
+      for (int r = 0; r < mh->nrows(); r++)
       {
-	for (int c = 0; c < mh->ncols(); c++)
+	for (int i = 0; i < ncopy; i++)
 	{
-	  dm->put(c, i, mh->get(which + i, c));
+	  dm->put(r, i, mh->get(r, which + i));
 	}
       }
       matrix = dm;
@@ -185,7 +185,7 @@ MatrixSelectVector::increment(int which, int lower, int upper)
     }
     return upper;
   }
-  const int inc_amount = Min(1, Max(upper, inc_amount_.get()));
+  const int inc_amount = Max(1, Min(upper, inc_amount_.get()));
   which += inc_ * inc_amount;
 
   if (which > upper)
@@ -406,7 +406,7 @@ MatrixSelectVector::execute()
 #endif
 
   const int maxsize = (use_row?mh->nrows():mh->ncols())-1;
-  const int send_amount = Min(1, Max(maxsize, send_amount_.get()));
+  const int send_amount = Max(1, Min(maxsize, send_amount_.get()));
 
   // If there is a current index matrix, use it.
   MatrixIPort *icur = (MatrixIPort *)get_iport("Current Index");
