@@ -30,6 +30,21 @@ bool is_sorted(Iter begin, Iter end)
   }
   return true;
 }
+
+template <class Iter, class StrictWeakOrdering>
+bool is_sorted(Iter begin, Iter end, StrictWeakOrdering comp)
+{
+  if(begin == end)
+    return true;
+  Iter cur = begin;
+  while(cur != end){
+    Iter next = cur; next++;
+    if (comp(*next, *cur))
+      return false;
+    cur = next;
+  }
+  return true;
+}
 #endif
 
 using namespace Uintah;
