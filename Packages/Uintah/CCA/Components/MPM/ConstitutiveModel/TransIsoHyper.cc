@@ -335,19 +335,19 @@ void TransIsoHyper::computeStressTensor(const PatchSubset* patches,
        shear = 2.*c1+c2;
 	}
       else
-      if (lambda_tilde < 1.062)
+      if (lambda_tilde < lambda_star)
        {
        dWdI4tilde = 0.5*c3*(exp(c4*(lambda_tilde-1.))-1.)/lambda_tilde/lambda_tilde;
        d2WdI4tilde2 = 0.25*c3*(c4*exp(c4*(lambda_tilde-1.))
                                       -1./lambda_tilde*(exp(c4*(lambda_tilde-1.))-1.))
 				      /(lambda_tilde*lambda_tilde*lambda_tilde);;
-       shear = 2.*c1+0.+I4tilde*(d2WdI4tilde2*lambda_tilde*lambda_tilde/0.25-dWdI4tilde*lambda_tilde/0.5);
+       shear = 2.*c1+c2+I4tilde*(d2WdI4tilde2*lambda_tilde*lambda_tilde*4.-dWdI4tilde*lambda_tilde*2.);
 	}
       else
        {
        dWdI4tilde = 0.5*(c5+c6/lambda_tilde)/lambda_tilde;
        d2WdI4tilde2 = - 0.25*c6/(lambda_tilde*lambda_tilde*lambda_tilde*lambda_tilde);
-       shear = 2.*1.44+0.+I4tilde*(d2WdI4tilde2*lambda_tilde*lambda_tilde/0.25-dWdI4tilde*lambda_tilde/0.5);
+       shear = 2.*c1+c2+I4tilde*(d2WdI4tilde2*lambda_tilde*lambda_tilde*4.-dWdI4tilde*lambda_tilde*2.);
        }
 
       //_______________________________ assemble Cauchy stress
