@@ -90,7 +90,29 @@ To: $SEND_MAIL_TO
 EOF
     cat "$BUILDROOT"/log >> "$BUILDROOT"/mail.msg
 
-     /usr/lib/sendmail "$SEND_MAIL_TO" < "$BUILDROOT"/mail.msg
+    /usr/lib/sendmail "$SEND_MAIL_TO" < "$BUILDROOT"/mail.msg
+    rm -f "$BUILDROOT"/mail.msg
+fi
+
+remake_file=""
+if [ -f "$BUILDROOT"/dbg/remake.log ]; then
+    remake_file="$BUILDROOT"/dbg/remake.log
+elif [ -f  "$BUILDROOT"/opt/remake.log ]; then
+    remake_file="$BUILDROOT"/opt/remake.log
+fi
+
+if [ "$MAIL_REMAKE_LOG_TO" != "" ]; then
+    subject="Failed to compile scirun with Uintah on `hostname`"
+
+    cat > "$BUILDROOT"/mail.msg <<EOF
+Subject: $subject
+To: $MAIL_REMAKE_LOG_TO
+$remake_file:
+
+EOF
+    cat $remake_file >> "$BUILDROOT"/mail.msg
+
+    /usr/lib/sendmail "$MAIL_REMAKE_LOG_TO" < "$BUILDROOT"/mail.msg
     rm -f "$BUILDROOT"/mail.msg
 fi
 
