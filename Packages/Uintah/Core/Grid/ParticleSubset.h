@@ -38,6 +38,8 @@ WARNING
   
 ****************************************/
 
+class ParticleVariableBase;
+
    class ParticleSubset : public RefCounted {
    public:
       ParticleSubset(ParticleSet* pset, bool fill,
@@ -138,6 +140,9 @@ WARNING
       int getMatlIndex() const {
 	 return d_matlIndex;
       }
+
+      // sort the set by particle IDs
+      void sort(ParticleVariableBase* particleIDs);
 
       const std::vector<const Patch*>& getNeighbors() const {
 	 return neighbors;
