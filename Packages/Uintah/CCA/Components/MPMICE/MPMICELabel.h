@@ -16,12 +16,8 @@ using std::vector;
       const VarLabel* cMassLabel;
       const VarLabel* cVolumeLabel;
       const VarLabel* vel_CCLabel;
-      const VarLabel* vel_CC_scratchLabel;
       const VarLabel* temp_CCLabel;
-      const VarLabel* temp_CC_scratchLabel;  // needed in doCCMomExchange()
       const VarLabel* press_NCLabel;
-      const VarLabel* velInc_CCLabel;
-      const VarLabel* velInc_NCLabel;
       const VarLabel* burnedMassCCLabel;
       const VarLabel* scratchLabel;         // to vis intermediate quantities
       const VarLabel* scratch1Label;
@@ -29,7 +25,6 @@ using std::vector;
       const VarLabel* scratch3Label; 
       const VarLabel* scratchVecLabel;
       const VarLabel* NC_CCweightLabel;
-      const VarLabel* rho_CCScratchLabel;
     };
 
 } // end namespace Uintah
