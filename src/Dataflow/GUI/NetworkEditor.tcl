@@ -188,6 +188,7 @@ proc makeNetworkEditor {} {
 	    [$netedit_canvas xview] 0] - 0.01 ] }
     bind . <KeyPress-Right> { $netedit_canvas xview moveto [expr [lindex \
 	    [$netedit_canvas xview] 0] + 0.01 ] }
+    bind . <Destroy> {if {"%W"=="."} {exit 1}} 
 }
 
 proc modulesMenuPressCB { x y } {
