@@ -20,6 +20,7 @@
 #include <Core/Datatypes/Field.h>
 #include <Core/Datatypes/FieldInterface.h>
 #include <Core/Datatypes/QuadSurfField.h>
+#include <Core/Datatypes/QuadSurfMesh.h>
 #include <Core/Datatypes/TriSurfField.h>
 #include <Core/Datatypes/LatVolField.h>
 #include <Core/Geom/GeomGroup.h>
@@ -637,27 +638,28 @@ HotBox::execute()
       boxScale_ = Point(1.0, 1.0, 1.0);
     }
   } // end if(!boundBoxList_)
+  VH_AnatomyBoundingBox *selectBox;
+  if(boundBoxList_ != NULL)
+  {
+    // compare the bounding box of the input field
+    // with the largest bounding volume of the segmentation
+    cerr << "HotBox::execute(): input field(";
+    cerr << inFieldBBox_.min() << "," << inFieldBBox_.max();
+    cerr << "), extent(" << inFieldBBextent << ")" << endl;
+    cerr << "                  segmentation([" << maxSegmentVol_->get_minX();
+    cerr << "," << maxSegmentVol_->get_minY() << ",";
+    cerr << maxSegmentVol_->get_minZ();
+    cerr << "],[" << maxSegmentVol_->get_maxX() << ",";
+    cerr << maxSegmentVol_->get_maxY();
+    cerr << "," << maxSegmentVol_->get_maxZ() << "]), extent(";
+    cerr << maxSegBBextent_ << ")" << endl;
+    cerr << "Max Volume: " <<  maxSegmentVol_->get_anatomyname() << endl;
 
-  // compare the bounding box of the input field
-  // with the largest bounding volume of the segmentation
-  cerr << "HotBox::execute(): input field(";
-  cerr << inFieldBBox_.min() << "," << inFieldBBox_.max();
-  cerr << "), extent(" << inFieldBBextent << ")" << endl;
-  cerr << "                  segmentation([" << maxSegmentVol_->get_minX();
-  cerr << "," << maxSegmentVol_->get_minY() << ",";
-  cerr << maxSegmentVol_->get_minZ();
-  cerr << "],[" << maxSegmentVol_->get_maxX() << ",";
-  cerr << maxSegmentVol_->get_maxY();
-  cerr << "," << maxSegmentVol_->get_maxZ() << "]), extent(";
-  cerr << maxSegBBextent_ << ")" << endl;
-  cerr << "Max Volume: " <<  maxSegmentVol_->get_anatomyname() << endl;
+    cerr << "boxTran = " << boxTran_ << ", boxScale = " << boxScale_ << endl;
 
-
-  cerr << "boxTran = " << boxTran_ << ", boxScale = " << boxScale_ << endl;
-
-  // get the bounding box information for the selected entity
-  VH_AnatomyBoundingBox *selectBox =
-      VH_Anatomy_findBoundingBox( boundBoxList_, selectName);
+    // get the bounding box information for the selected entity
+    selectBox = VH_Anatomy_findBoundingBox( boundBoxList_, selectName);
+  }
 
   // we now have the anatomy name corresponding to the label value at the voxel
   if(!injListDoc_ || activeInjList_ != injuryListDataSrc)
@@ -2087,8 +2089,16 @@ HotBox::executeHighlight()
   cerr << "executeHighlight: selection " << selectGeomFilename << endl;
 
   if (stat(selectGeomFilename.c_str(), &buf)) {
-    error("File '" + selectGeomFilename + "' not found.");
-    return;
+    remark("File '" + selectGeomFilename + "' not found.");
+    selectGeomFilename = geometryPath;
+    selectGeomFilename += "/";
+    selectGeomFilename += filePrefix;
+    selectGeomFilename += ".fld";
+
+    if (stat(selectGeomFilename.c_str(), &buf)) {
+      error("File '" + selectGeomFilename + "' not found.");
+      return;
+    }
   }
 
   Piostream *selectstream = auto_istream(selectGeomFilename);
