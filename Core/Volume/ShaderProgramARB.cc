@@ -307,7 +307,9 @@ ShaderProgramARB::setLocalParam(int i, float x, float y, float z, float w)
 VertexProgramARB::VertexProgramARB(const string& program)
   : ShaderProgramARB(program)
 {
+#ifdef HAVE_AVR_SUPPORT
   mType = GL_VERTEX_PROGRAM_ARB;
+#endif
 }
 
 VertexProgramARB::~VertexProgramARB()
@@ -316,7 +318,9 @@ VertexProgramARB::~VertexProgramARB()
 FragmentProgramARB::FragmentProgramARB(const string& program)
   : ShaderProgramARB(program)
 {
+#ifdef HAVE_AVR_SUPPORT
   mType = GL_FRAGMENT_PROGRAM_ARB;
+#endif
 }
 
 FragmentProgramARB::~FragmentProgramARB()
