@@ -49,120 +49,127 @@ using std::ostringstream;
 namespace SCIRun {
 
 DECLARE_MAKER(Isosurface)
-//static string module_name("Isosurface");
-static string surface_name("Isosurface");
+  //static string module_name("Isosurface");
+  static string surface_name("Isosurface");
 static string widget_name("Isosurface");
+
 
 Isosurface::Isosurface(GuiContext* ctx) : 
   Module("Isosurface", ctx, Filter, "Visualization", "SCIRun"), 
-  gui_iso_value(ctx->subVar("isoval")),
-  gui_iso_value_min(ctx->subVar("isoval-min")),
-  gui_iso_value_max(ctx->subVar("isoval-max")),
+  gui_iso_value_(ctx->subVar("isoval")),
+  gui_iso_value_min_(ctx->subVar("isoval-min")),
+  gui_iso_value_max_(ctx->subVar("isoval-max")),
   gui_iso_value_typed_(ctx->subVar("isoval-typed")),
   gui_iso_value_quantity_(ctx->subVar("isoval-quantity")),
-  extract_from_new_field(ctx->subVar("extract-from-new-field")),
-  use_algorithm(ctx->subVar("algorithm")),
-  build_trisurf_(ctx->subVar("build_trisurf")),
-  np_(ctx->subVar("np")),
-  active_isoval_selection_tab_(ctx->subVar("active-isoval-selection-tab")),
-  active_tab_(ctx->subVar("active_tab")),
-  update_type_(ctx->subVar("update_type")),
-  color_r_(ctx->subVar("color-r")),
-  color_g_(ctx->subVar("color-g")),
-  color_b_(ctx->subVar("color-b"))
+  gui_extract_from_new_field_(ctx->subVar("extract-from-new-field")),
+  gui_use_algorithm_(ctx->subVar("algorithm")),
+  gui_build_trisurf_(ctx->subVar("build_trisurf")),
+  gui_np_(ctx->subVar("np")),
+  gui_active_isoval_selection_tab_(ctx->subVar("active-isoval-selection-tab")),
+  gui_active_tab_(ctx->subVar("active_tab")),
+  gui_update_type_(ctx->subVar("update_type")),
+  gui_color_r_(ctx->subVar("color-r")),
+  gui_color_g_(ctx->subVar("color-g")),
+  gui_color_b_(ctx->subVar("color-b")),
+  geom_id_(0),
+  prev_min_(0),
+  prev_max_(0),
+  last_generation_(-1),
+  mc_alg_(0),
+  noise_alg_(0),
+  sage_alg_(0)
 {
-  geom_id=0;
-  
-  prev_min=prev_max=0;
-  last_generation = -1;
-  mc_alg_ = 0;
-  noise_alg_ = 0;
-  sage_alg_ = 0;
 }
+
 
 Isosurface::~Isosurface()
 {
 }
 
-void Isosurface::execute()
+
+void
+Isosurface::execute()
 {
   update_state(NeedData);
-  infield = (FieldIPort *)get_iport("Field");
-  inColorMap = (ColorMapIPort *)get_iport("Color Map");
-  osurf = (FieldOPort *)get_oport("Surface");
-  ogeom = (GeometryOPort *)get_oport("Geometry");
+  FieldIPort *infield = (FieldIPort *)get_iport("Field");
+  ColorMapIPort *inColorMap = (ColorMapIPort *)get_iport("Color Map");
   FieldHandle field;
 
-  if (!infield) {
+  if (!infield)
+  {
     error("Unable to initialize iport 'Field'.");
     return;
   }
-  if (!inColorMap) {
+  if (!inColorMap)
+  {
     error("Unable to initialize iport 'Color Map'.");
     return;
   }
-  if (!osurf) {
-    error("Unable to initialize oport 'Surface'.");
-    return;
-  }
-  if (!ogeom) {
-    error("Unable to initialize oport 'Geometry'.");
-    return;
-  }
-  
+
   infield->get(field);
-  if(!field.get_rep()){
+  if(!field.get_rep())
+  {
     return;
   }
 
   update_state(JustStarted);
 
-  if ( field->generation != last_generation ) {
+  if ( field->generation != last_generation_ )
+  {
     // new field
     new_field( field );
-    last_generation = field->generation;
-    if ( !extract_from_new_field.get() )
+    last_generation_ = field->generation;
+    if ( !gui_extract_from_new_field_.get() )
       return;
 
     // fall through and extract isosurface from the new field
   }
 
   // Color the surface
-  //   have_colorfield=incolorfield->get(colorfield);
-  have_ColorMap=inColorMap->get(cmap);
+  have_ColorMap_ = inColorMap->get(cmap_);
 
   isovals_.resize(0);
-  if (active_isoval_selection_tab_.get() == "0") { // slider
-    isovals_.push_back(gui_iso_value.get());
-  } else if (active_isoval_selection_tab_.get() == "1") { // typed
-    double val=gui_iso_value_typed_.get();
-    if (val<prev_min || val>prev_max) {
+  if (gui_active_isoval_selection_tab_.get() == "0")
+  { // slider
+    isovals_.push_back(gui_iso_value_.get());
+  }
+  else if (gui_active_isoval_selection_tab_.get() == "1")
+  { // typed
+    const double val = gui_iso_value_typed_.get();
+    if (val < prev_min_ || val > prev_max_)
+    {
       warning("Typed isovalue out of range -- skipping isosurfacing.");
       return;
     }
     isovals_.push_back(val);
-  } else if (active_isoval_selection_tab_.get() == "2") { // quantity
+  }
+  else if (gui_active_isoval_selection_tab_.get() == "2")
+  { // quantity
     int num=gui_iso_value_quantity_.get();
-    if (num<1) {
+    if (num<1)
+    {
       warning("Isosurface quantity must be at least one -- skipping isosurfacing.");
       return;
     }
-    double di=(prev_max-prev_min)/(num+1);
+    double di=(prev_max_ - prev_min_)/(num+1);
     for (int i=0; i<num; i++) 
-      isovals_.push_back((i+1)*di+prev_min);
-  } else {
+      isovals_.push_back((i+1)*di+prev_min_);
+  }
+  else
+  {
     error("Bad active_isoval_selection_tab value");
     return;
   }
 
-  surface.resize(0);
+  surface_.resize(0);
   trisurf_mesh_ = 0;
-  build_trisurf = build_trisurf_.get();
+  build_trisurf_ = gui_build_trisurf_.get();
   const TypeDescription *td = field->get_type_description();
-  switch (use_algorithm.get()) {
+  switch (gui_use_algorithm_.get()) {
   case 0:  // Marching Cubes
     {
-      if (! mc_alg_.get_rep()) {
+      if (! mc_alg_.get_rep())
+      {
 	CompileInfo *ci = MarchingCubesAlg::get_compile_info(td);
 	if (!module_dynamic_compile(*ci, mc_alg_))
 	{
@@ -170,13 +177,16 @@ void Isosurface::execute()
 	  return;
 	}
       }
-      mc_alg_->set_np( np_.get() ); 
-      if ( np_.get() > 1 )
-	build_trisurf = false;
+      mc_alg_->set_np( gui_np_.get() ); 
+      if ( gui_np_.get() > 1 )
+      {
+	build_trisurf_ = false;
+      }
       mc_alg_->set_field( field.get_rep() );
-      for (unsigned int iv=0; iv<isovals_.size(); iv++) {
-	mc_alg_->search( isovals_[iv], build_trisurf);
-	surface.push_back( mc_alg_->get_geom() );
+      for (unsigned int iv=0; iv<isovals_.size(); iv++)
+      {
+	mc_alg_->search( isovals_[iv], build_trisurf_);
+	surface_.push_back( mc_alg_->get_geom() );
       }
       // if multiple isosurfaces, just send last one for Field output
       trisurf_mesh_ = mc_alg_->get_field();
@@ -184,16 +194,19 @@ void Isosurface::execute()
     break;
   case 1:  // Noise
     {
-      if (! noise_alg_.get_rep()) {
+      if (! noise_alg_.get_rep())
+      {
 	CompileInfo *ci = NoiseAlg::get_compile_info(td);
-	if (! module_dynamic_compile(*ci, noise_alg_)) {
+	if (! module_dynamic_compile(*ci, noise_alg_))
+	{
 	  error( "NOISE can not work with this field.");
 	  return;
 	}
 	noise_alg_->set_field(field.get_rep());
       }
-      for (unsigned int iv=0; iv<isovals_.size(); iv++) {
-	surface.push_back(noise_alg_->search(isovals_[iv], build_trisurf));
+      for (unsigned int iv=0; iv<isovals_.size(); iv++)
+      {
+	surface_.push_back(noise_alg_->search(isovals_[iv], build_trisurf_));
       }
       // if multiple isosurfaces, just send last one for Field output
       trisurf_mesh_ = noise_alg_->get_field();
@@ -201,19 +214,22 @@ void Isosurface::execute()
     break;
   case 2:  // View Dependent
     {
-      if (! sage_alg_.get_rep()) {
+      if (! sage_alg_.get_rep())
+      {
 	CompileInfo *ci = SageAlg::get_compile_info(td);
-	if (! module_dynamic_compile(*ci, sage_alg_)) {
+	if (! module_dynamic_compile(*ci, sage_alg_))
+	{
 	  error( "SAGE can not work with this field.");
 	  return;
 	}
 	sage_alg_->set_field(field.get_rep());
       } 
-      for (unsigned int iv=0; iv<isovals_.size(); iv++) {
+      for (unsigned int iv=0; iv<isovals_.size(); iv++)
+      {
 	GeomGroup *group = new GeomGroup;
 	GeomPts *points = new GeomPts(1000);
 	sage_alg_->search(isovals_[0], group, points);
-	surface.push_back( group );
+	surface_.push_back( group );
       }
     }
     break;
@@ -224,38 +240,66 @@ void Isosurface::execute()
   send_results();
 }
 
+
 void
 Isosurface::send_results()
 {
   GeomGroup *geom = new GeomGroup;;
   
-  for (unsigned int iv=0; iv<isovals_.size(); iv++) {
+  for (unsigned int iv=0; iv<isovals_.size(); iv++)
+  {
     MaterialHandle matl;
-    if (have_ColorMap) 
-      matl=cmap->lookup(isovals_[iv]);
-    else 
-      matl=new Material(Color(color_r_.get(), color_g_.get(), color_b_.get()));
-    if (surface[iv]) 
-      geom->add(new GeomMaterial( surface[iv] , matl ));
+    if (have_ColorMap_) 
+    {
+      matl= cmap_->lookup(isovals_[iv]);
+    }
+    else
+    {
+      matl = scinew Material(Color(gui_color_r_.get(),
+				   gui_color_g_.get(),
+				   gui_color_b_.get()));
+    }
+    if (surface_[iv]) 
+    {
+      geom->add(scinew GeomMaterial( surface_[iv] , matl ));
+    }
   }
 
+  GeometryOPort *ogeom = (GeometryOPort *)get_oport("Geometry");
+  if (!ogeom)
+  {
+    error("Unable to initialize oport 'Geometry'.");
+    return;
+  }
+  
   // stop showing the prev. surface
-  if ( geom_id )
-    ogeom->delObj( geom_id );
+  if ( geom_id_ )
+  {
+    ogeom->delObj( geom_id_ );
+  }
 
-  if (!geom->size()) {
-    geom_id=0;
+  if (!geom->size())
+  {
+    geom_id_=0;
     return;
   }
 
   // send to viewer
-  geom_id=ogeom->addObj( geom, surface_name);
+  geom_id_ = ogeom->addObj( geom, surface_name);
 
   // output surface
-  if (build_trisurf && trisurf_mesh_.get_rep()) {
+  if (build_trisurf_ && trisurf_mesh_.get_rep())
+  {
+    FieldOPort *osurf = (FieldOPort *)get_oport("Surface");
+    if (!osurf)
+    {
+      error("Unable to initialize oport 'Surface'.");
+      return;
+    }
     osurf->send(trisurf_mesh_);
   }
 }
+
 
 void
 Isosurface::new_field( FieldHandle &field )
@@ -263,13 +307,15 @@ Isosurface::new_field( FieldHandle &field )
   const string type = field->get_type_description()->get_name();
 
   ScalarFieldInterface *sfi = field->query_scalar_interface(this);
-  if (! sfi) {
+  if (! sfi)
+  {
     error("Not a scalar input field.");
     return;
   }
 
   pair<double, double> minmax;
-  if ( !field->get_property("minmax", minmax)) {
+  if ( !field->get_property("minmax", minmax))
+  {
     sfi->compute_min_max(minmax.first, minmax.second);
     // cache this potentially expensive to compute value.
     field->set_property("minmax", minmax, true);
@@ -283,26 +329,30 @@ Isosurface::new_field( FieldHandle &field )
   gui->execute(info.str().c_str());
 
   // 2: min/max
-  if(minmax.first != prev_min || minmax.second != prev_max){
+  if (minmax.first != prev_min_ || minmax.second != prev_max_)
+  {
     ostringstream str;
     str << id << " set_minmax " << minmax.first << " " << minmax.second;
     gui->execute(str.str().c_str());
-    prev_min = minmax.first;
-    prev_max = minmax.second;
+    prev_min_ = minmax.first;
+    prev_max_ = minmax.second;
   }
 
   // delete any algorithms created for the previous field.
-  if (mc_alg_.get_rep()) { 
+  if (mc_alg_.get_rep())
+  { 
     MarchingCubesAlg *mc = dynamic_cast<MarchingCubesAlg*>(mc_alg_.get_rep());
     mc->release(); 
     mc_alg_ = 0;
   }
-  if (noise_alg_.get_rep()) { 
+  if (noise_alg_.get_rep())
+  { 
     NoiseAlg *noise = dynamic_cast<NoiseAlg*>(noise_alg_.get_rep());
     noise->release(); 
     noise_alg_ = 0;
   }
-  if (sage_alg_.get_rep()) { 
+  if (sage_alg_.get_rep())
+  { 
     SageAlg *sage = dynamic_cast<SageAlg*>(sage_alg_.get_rep());
     sage->release(); 
     sage_alg_ = 0;

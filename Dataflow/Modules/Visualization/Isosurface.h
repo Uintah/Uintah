@@ -61,48 +61,37 @@ public:
 };
 
 class Isosurface : public Module {
-  // Input Ports
-  FieldIPort* infield;
-  FieldIPort* incolorfield;
-  ColorMapIPort* inColorMap;
-
-  // Output Ports
-  FieldOPort* osurf;
-  GeometryOPort* ogeom;
-  
 
   //! GUI variables
-  GuiDouble  gui_iso_value;
-  GuiDouble  gui_iso_value_min;
-  GuiDouble  gui_iso_value_max;
+  GuiDouble  gui_iso_value_;
+  GuiDouble  gui_iso_value_min_;
+  GuiDouble  gui_iso_value_max_;
   GuiDouble  gui_iso_value_typed_;
   GuiInt     gui_iso_value_quantity_;
-  GuiInt     extract_from_new_field;
-  GuiInt     use_algorithm;
-  GuiInt     build_trisurf_;
-  GuiInt     np_;          
-  GuiString  active_isoval_selection_tab_;
-  GuiString  active_tab_; //! for saving nets state
-  GuiString  update_type_; //! for saving nets state
-  GuiDouble  color_r_;
-  GuiDouble  color_g_;
-  GuiDouble  color_b_;
+  GuiInt     gui_extract_from_new_field_;
+  GuiInt     gui_use_algorithm_;
+  GuiInt     gui_build_trisurf_;
+  GuiInt     gui_np_;          
+  GuiString  gui_active_isoval_selection_tab_;
+  GuiString  gui_active_tab_; //! for saving nets state
+  GuiString  gui_update_type_; //! for saving nets state
+  GuiDouble  gui_color_r_;
+  GuiDouble  gui_color_g_;
+  GuiDouble  gui_color_b_;
 
-  double iso_value;
   FieldHandle field_;
-  vector<GeomObj *> surface;
+  vector<GeomObj *> surface_;
   vector<double> isovals_;
-  FieldHandle colorfield;
-  ColorMapHandle cmap;
+  ColorMapHandle cmap_;
   FieldHandle trisurf_mesh_;
 
   //! status variables
-  int geom_id;
-  double prev_min, prev_max;
-  int last_generation;
-  int build_trisurf;
-  bool have_colorfield;
-  bool have_ColorMap;
+  int geom_id_;
+  double prev_min_;
+  double prev_max_;
+  int last_generation_;
+  int build_trisurf_;
+  bool have_ColorMap_;
 
   //! Handles to the isosurfacing algorithms.
   LockingHandle<MarchingCubesAlg>       mc_alg_;
