@@ -171,24 +171,24 @@ DECLARE_MAKER(HotBox)
 
 HotBox::HotBox(GuiContext* ctx)
   : Module("HotBox", ctx, Filter, "DataFlow", "VS"),
-  gui_label1_(ctx->subVar("gui_label1")),
-  gui_label2_(ctx->subVar("gui_label2")),
-  gui_label3_(ctx->subVar("gui_label3")),
-  gui_label4_(ctx->subVar("gui_label4")),
-  gui_label5_(ctx->subVar("gui_label5")),
-  gui_label6_(ctx->subVar("gui_label6")),
-  gui_label7_(ctx->subVar("gui_label7")),
-  gui_label8_(ctx->subVar("gui_label8")),
-  gui_label9_(ctx->subVar("gui_label9")),
-  gui_is_injured1_(ctx->subVar("gui_is_injured1")),
-  gui_is_injured2_(ctx->subVar("gui_is_injured2")),
-  gui_is_injured3_(ctx->subVar("gui_is_injured3")),
-  gui_is_injured4_(ctx->subVar("gui_is_injured4")),
-  gui_is_injured5_(ctx->subVar("gui_is_injured5")),
-  gui_is_injured6_(ctx->subVar("gui_is_injured6")),
-  gui_is_injured7_(ctx->subVar("gui_is_injured7")),
-  gui_is_injured8_(ctx->subVar("gui_is_injured8")),
-  gui_is_injured9_(ctx->subVar("gui_is_injured9")),
+  gui_label1_(ctx->subVar("gui_label(1)")),
+  gui_label2_(ctx->subVar("gui_label(2)")),
+  gui_label3_(ctx->subVar("gui_label(3)")),
+  gui_label4_(ctx->subVar("gui_label(4)")),
+  gui_label5_(ctx->subVar("gui_label(5)")),
+  gui_label6_(ctx->subVar("gui_label(6)")),
+  gui_label7_(ctx->subVar("gui_label(7)")),
+  gui_label8_(ctx->subVar("gui_label(8)")),
+  gui_label9_(ctx->subVar("gui_label(9)")),
+  gui_is_injured1_(ctx->subVar("gui_is_injured(1)")),
+  gui_is_injured2_(ctx->subVar("gui_is_injured(2)")),
+  gui_is_injured3_(ctx->subVar("gui_is_injured(3)")),
+  gui_is_injured4_(ctx->subVar("gui_is_injured(4)")),
+  gui_is_injured5_(ctx->subVar("gui_is_injured(5)")),
+  gui_is_injured6_(ctx->subVar("gui_is_injured(6)")),
+  gui_is_injured7_(ctx->subVar("gui_is_injured(7)")),
+  gui_is_injured8_(ctx->subVar("gui_is_injured(8)")),
+  gui_is_injured9_(ctx->subVar("gui_is_injured(9)")),
   enableDraw_(ctx->subVar("enableDraw")),
   datasource_(ctx->subVar("datasource")),
   querytype_(ctx->subVar("querytype")),
@@ -377,6 +377,7 @@ HotBox::execute()
       VH_Anatomy_findBoundingBox( boundBoxList, selectName);
 
   // we now have the anatomy name corresponding to the label value at the voxel
+  execInjuryList();
 
   if(dataSource == VS_DATASOURCE_OQAFMA)
   { // get the ontological hierarchy information
@@ -605,7 +606,6 @@ HotBox::execAdjacency()
 
   string selectName = currentselection_.get();
   gui_label5_.set(selectName);
-  VS_HotBoxUI->set_text(5, string(selectName, 0, 18));
   
   if(adjacencytable->get_num_rel(labelIndexVal) >= 6)
   { // Note: TCL UI is 1-indexed, row-major
