@@ -90,6 +90,8 @@ public:
 
 private:
 
+  void split_string( string src, vector<string> &container );
+
   //! GUI variables
   GuiString dir_;
   GuiInt start_index_;
@@ -217,23 +219,24 @@ void DicomToNrrd::execute(){
 // 
 // split_string
 //
-// Description : Splits a string into vector of strings based on a separator.
+// Description : Splits a string into vector of strings where each string is 
+//               space delimited in the original string.
 //
 // Arguments   :
 //
-// const T &src - String to be split.
-// C &container - Vector of strings to contain result.
-// typename T::value_type splitter - Separator string.
+// string src - String to be split.
+// vector<string> &container - Vector of strings to contain result.
 // 
-template < class T, class C >
-void split_string(const T &src, C &container, typename T::value_type splitter)
+void DicomToNrrd::split_string( string src, vector<string> &container )
 {
-  std::basic_istringstream<typename T::value_type> str_data(src);
-  T line;
-  while( std::getline(str_data, line, str_data.widen(splitter)) ) 
+  std::istringstream str_data(src);
+  //cerr << "(DicomToNrrd::split_string) src = " << src << "\n";
+  string word;
+  while( str_data >> word )
   {
-    container.push_back(line);
-  }
+    //cerr << "(DicomToNrrd::split_string) word = " << word << "\n";
+    container.push_back( word );
+  } 
 }
 
 /*===========================================================================*/
@@ -332,7 +335,7 @@ void DicomToNrrd::tcl_command(GuiArgs& args, void* userdata)
 
     // Convert string of file names to vector of file names
     vector<string> files;
-    split_string( series_files, files, ' ' );
+    split_string( series_files, files );
 
     // First entry is always extra, chop it off
 
@@ -361,11 +364,11 @@ void DicomToNrrd::tcl_command(GuiArgs& args, void* userdata)
 
     // Split the series_del string by spaces
     vector<string> info;
-    split_string( series_del, info, ' ' );
+    split_string( series_del, info );
 
     //cerr << "info size = " << info.size() << "\n";
 
-    if( info.size() < 17 ) {
+    if( info.size() < 11 ) {
       error("(DicomToNrrd::tcl_command) Delete series failed. Bad series info.");
       return;
     }
@@ -375,15 +378,15 @@ void DicomToNrrd::tcl_command(GuiArgs& args, void* userdata)
     //cerr << "(DicomToNrrd::tcl_command) dir = " << dir << "\n";
 
     // Get the series uid
-    string suid = info[6];
+    string suid = info[4];
     //cerr << "(DicomToNrrd::tcl_command) suid = " << suid << "\n";
 
     // Get the start file
-    string start_file = info[11];
+    string start_file = info[7];
     //cerr << "(DicomToNrrd::tcl_command) start_file = " << start_file << "\n";
 
     // Get the end file
-    string end_file = info[16];
+    string end_file = info[10];
     //cerr << "(DicomToNrrd::tcl_command) end_file = " << end_file << "\n";
 
     // Find the matching entry in the all_series vector and remove it
