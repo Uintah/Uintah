@@ -12,9 +12,14 @@ MP(ParticleGridVisControl)
 MP(PartToGeom)
 MP(RescaleParticleColorMap)
 MP(cfdGridLines)
+MP(VizControl)
 
 // Readers
 MP(ParticleSetReader)
+MP(TriangleReader)
+MP(MPReader)
+// Writeres
+MP(MPWriter)
 
 using namespace PSECore::Dataflow;
 using namespace Uintah::Modules;
@@ -30,9 +35,12 @@ void initPackage(const clString& tcl) {
   RM("MPMViz", "Part To Geom", make_PartToGeom, tcl+"/PartToGeom.tcl");
   RM("MPMViz", "Rescale Particle Color Map", make_RescaleParticleColorMap, tcl+"/RescaleParticleColorMap.tcl");
   RM("MPMViz", "cfd Grid Lines", make_cfdGridLines, tcl+"/cfdGridLines.tcl");
-
+  RM("MPMViz", "Viz Control", make_VizControl, tcl+"/VizControl.tcl");
   // Readers
   RM("Readers", "Particle Set Reader", make_ParticleSetReader, "");
-
+  RM("Readers", "MP Reader", make_MPReader, tcl+"/MPReader.tcl");
+  RM("Readers", "Triangle Reader", make_TriangleReader, tcl+"/TriangleReader.tcl");
+  // Writers
+  RM("Writers", "MP Writer", make_MPWriter, tcl+"/MPWriter.tcl");
 }
 }
