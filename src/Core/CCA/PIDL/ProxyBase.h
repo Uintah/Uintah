@@ -126,7 +126,7 @@ DESCRIPTION
     /////////
     // Set rank and size of this component; and reset the values
     // to the defaults.
-    void _proxysetRankAndSize(int size, int rank);
+    void _proxysetRankAndSize(int rank, int size);
     void _proxyresetRankAndSize();
 
     /////////
