@@ -16,7 +16,7 @@
 */
 
 /*
- *  ImageReaderUChar2D.cc:
+ *  ImageReaderUChar3D.cc:
  *
  *  Written by:
  *   darbyb
@@ -36,7 +36,7 @@ namespace Insight {
 
 using namespace SCIRun;
 
-class InsightSHARE ImageReaderUChar2D : public Module {
+class InsightSHARE ImageReaderUChar3D : public Module {
 public:
 
   //! GUI variables
@@ -44,12 +44,12 @@ public:
 
   ITKDatatypeOPort* outport_;
   ITKDatatypeHandle handle_;
-
-  string prevFile;
   
-  ImageReaderUChar2D(GuiContext*);
+  string prevFile;
 
-  virtual ~ImageReaderUChar2D();
+  ImageReaderUChar3D(GuiContext*);
+
+  virtual ~ImageReaderUChar3D();
 
   virtual void execute();
 
@@ -57,19 +57,19 @@ public:
 };
 
 
-DECLARE_MAKER(ImageReaderUChar2D)
-ImageReaderUChar2D::ImageReaderUChar2D(GuiContext* ctx)
-  : Module("ImageReaderUChar2D", ctx, Source, "DataIO", "Insight"),
+DECLARE_MAKER(ImageReaderUChar3D)
+ImageReaderUChar3D::ImageReaderUChar3D(GuiContext* ctx)
+  : Module("ImageReaderUChar3D", ctx, Source, "DataIO", "Insight"),
     gui_FileName_(ctx->subVar("FileName"))
 {
   prevFile = "";
 }
 
-ImageReaderUChar2D::~ImageReaderUChar2D(){
+ImageReaderUChar3D::~ImageReaderUChar3D(){
 }
 
 void
- ImageReaderUChar2D::execute(){
+ ImageReaderUChar3D::execute(){
   // check ports
   outport_ = (ITKDatatypeOPort *)get_oport("Image");
   if(!outport_) {
@@ -77,7 +77,7 @@ void
     return;
   }
 
-  typedef itk::ImageFileReader<itk::Image<unsigned char, 2> > FileReaderType;
+  typedef itk::ImageFileReader<itk::Image<unsigned char, 3> > FileReaderType;
   
   // create a new reader
   FileReaderType::Pointer reader = FileReaderType::New();
@@ -99,11 +99,11 @@ void
   
   // Send the data downstream
   outport_->send(handle_);
-    
+  
 }
 
 void
- ImageReaderUChar2D::tcl_command(GuiArgs& args, void* userdata)
+ ImageReaderUChar3D::tcl_command(GuiArgs& args, void* userdata)
 {
   Module::tcl_command(args, userdata);
 }

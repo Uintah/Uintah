@@ -45,6 +45,8 @@ public:
   ITKDatatypeOPort* outport_;
   ITKDatatypeHandle handle_;
 
+  string prevFile;
+
   ImageReaderFloat2D(GuiContext*);
 
   virtual ~ImageReaderFloat2D();
@@ -60,6 +62,7 @@ ImageReaderFloat2D::ImageReaderFloat2D(GuiContext* ctx)
   : Module("ImageReaderFloat2D", ctx, Source, "DataIO", "Insight"),
     gui_filename_(ctx->subVar("filename"))
 {
+  prevFile = "";
 }
 
 ImageReaderFloat2D::~ImageReaderFloat2D(){
@@ -85,11 +88,12 @@ void ImageReaderFloat2D::execute(){
   reader->Update();  
   
   // get reader output
-  if(!handle_.get_rep())
+  if(!handle_.get_rep() || (fn != prevFile) )
     {
       ITKDatatype *im = scinew ITKDatatype;
       im->data_ = reader->GetOutput();  
       handle_ = im; 
+      prevFile = fn;
     }
   
   // Send the data downstream

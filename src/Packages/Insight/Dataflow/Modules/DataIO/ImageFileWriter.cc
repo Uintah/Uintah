@@ -31,7 +31,8 @@
 
 #include <Insight/Dataflow/Ports/ITKDatatypePort.h>
 #include "itkImageFileWriter.h"
-#include "itkCastImageFilter.h"
+
+#include "itkRGBPixel.h"
 
 
 namespace Insight {
@@ -55,10 +56,10 @@ public:
 
   virtual void tcl_command(GuiArgs&, void*);
 
-  template<class T1, class T2> bool run(itk::Object* );
+  template<class T1> bool run(itk::Object* );
 };
 
-template<class T1, class T2>
+template<class T1>
 bool ImageFileWriter::run( itk::Object *obj )
 {
   T1 *data1 = dynamic_cast<T1 * >(obj);
@@ -68,18 +69,12 @@ bool ImageFileWriter::run( itk::Object *obj )
   }
 
   // create a new writer
-  itk::ImageFileWriter<T2>::Pointer writer = itk::ImageFileWriter<T2>::New();
+  typename itk::ImageFileWriter<T1>::Pointer writer = itk::ImageFileWriter<T1>::New();
   
-  // cast it to a writable type
-  itk::CastImageFilter<T1, T2>::Pointer to_char = itk::CastImageFilter<T1, T2>::New();
-  
-  to_char->SetInput( data1 );
-  to_char->Update();
-
   // set writer
   string fn = gui_FileName_.get();    
   writer->SetFileName( fn.c_str() );
-  writer->SetInput(to_char->GetOutput());
+  writer->SetInput( data1 );
   
   // write
   try
@@ -121,15 +116,22 @@ void ImageFileWriter::execute(){
   itk::Object* data = inhandle_.get_rep()->data_.GetPointer();
 
   // can we operate on it?
-  if ( !run<itk::Image<float,2>, itk::Image<unsigned short,2> >( data )
-       &&
-       !run<itk::Image<float,3>, itk::Image<unsigned short,3> >( data )
-       )
-    {
-          // error 
+  if(0) { }
+  else if(run<itk::Image<float,2> >( data )) { } 
+  else if(run<itk::Image<float,3> >( data )) { } 
+  else if(run<itk::Image<unsigned char,2> >( data )) { } 
+  else if(run<itk::Image<unsigned char,3> >( data )) { } 
+  else if(run<itk::Image<unsigned short,2> >( data )) {  }
+  else if(run<itk::Image<unsigned short,3> >( data )) { } 
+  else if(run<itk::Image<unsigned long,2> >( data )) { } 
+  else if(run<itk::Image<unsigned long,3> >( data )) { } 
+  else if(run<itk::Image<itk::RGBPixel<unsigned char>,2> >( data )) { } 
+  else if(run<itk::Image<itk::RGBPixel<unsigned char>,3> >( data )) { } 
+  else {
+    // error 
     error("Unknown type");
     return;
-    }
+  }
 }
 
 void

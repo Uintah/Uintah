@@ -44,6 +44,8 @@ public:
   ITKDatatypeOPort* outport_;
   ITKDatatypeHandle handle_;
 
+  string prevFile;
+
   ImageReaderUShort2D(GuiContext*);
 
   virtual ~ImageReaderUShort2D();
@@ -59,6 +61,7 @@ ImageReaderUShort2D::ImageReaderUShort2D(GuiContext* ctx)
   : Module("ImageReaderUShort2D", ctx, Source, "DataIO", "Insight"),
     gui_filename_(ctx->subVar("filename"))
 {
+  prevFile = "";
 }
 
 ImageReaderUShort2D::~ImageReaderUShort2D(){
@@ -84,11 +87,12 @@ void ImageReaderUShort2D::execute(){
   reader->Update();  
   
   // get reader output
-  if(!handle_.get_rep())
+  if(!handle_.get_rep() || (fn != prevFile))
     {
       ITKDatatype *im = scinew ITKDatatype;
       im->data_ = reader->GetOutput();  
       handle_ = im; 
+      prevFile = fn;
     }
   
   // Send the data downstream
