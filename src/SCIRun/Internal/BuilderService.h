@@ -80,12 +80,23 @@ namespace SCIRun {
 		const std::string& port1,
 		const sci::cca::ComponentID::pointer& c2);
 
+
     sci::cca::Port::pointer getService(const std::string&);
+
+    int addComponentClasses(const std::string &loaderName);
+    int removeComponentClasses(const std::string &loaderName);
+
+    int addLoader(const std::string &loaderName, const std::string &user, const std::string &domain, const std::string &loaderPath );
+    int removeLoader(const std::string &name);
     //virtual void registerFramework(const std::string &frameworkURL); 
     //virtual void registerServices(const sci::cca::Services::pointer &svc);
+
+
   private:
     BuilderService(SCIRunFramework* fwk, const std::string& name);
     std::vector<sci::cca::Services::pointer> servicesList;	
+    std::string getFrameworkURL();
+
   };
 }
 

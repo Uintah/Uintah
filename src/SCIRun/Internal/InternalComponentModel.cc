@@ -65,27 +65,36 @@ sci::cca::Port::pointer
 InternalComponentModel::getFrameworkService(const std::string& type,
 					    const std::string& componentName)
 {
+  //cerr<<"getFrameworkService #"<<1<<endl;
   map<string, InternalComponentDescription*>::iterator iter=services.find(type);
   if(iter == services.end())
     return sci::cca::Port::pointer(0);
-
+  //cerr<<"getFrameworkService #"<<2<<endl;
   InternalComponentDescription* cd = iter->second;
   InternalComponentInstance* ci;
   if(cd->isSingleton){
+    //cerr<<"getFrameworkService #"<<3<<endl;
     string cname = "internal: "+type;
     if(!cd->singleton_instance){
       cd->singleton_instance = (*cd->create)(framework, cname);
       framework->registerComponent(cd->singleton_instance, cname);
     }
+    //cerr<<"getFrameworkService #"<<4<<endl;
     ci = cd->singleton_instance;
   } else {
+    //cerr<<"getFrameworkService #"<<5<<endl;
     string cname = "internal: "+type+" for "+componentName;
     ci = (*cd->create)(framework, cname);
+    //cerr<<"getFrameworkService #"<<6<<endl;
     framework->registerComponent(ci, cname);
+    //cerr<<"getFrameworkService #"<<7<<endl;
   }
   ci->incrementUseCount();
+  //cerr<<"getFrameworkService #"<<8<<endl;
   sci::cca::Port::pointer ptr = ci->getService(type);
+  //cerr<<"getFrameworkService #"<<9<<endl;
   ptr->addReference();
+  //cerr<<"getFrameworkService #"<<10<<endl;
   return ptr;
 }
 
