@@ -31,6 +31,13 @@
 #define _GNU_SOURCE
 #define __USE_UNIX98
 #include <pthread.h>
+#ifndef PTHREAD_MUTEX_RECURSIVE
+#ifdef PTHREAD_MUTEX_RECURSIVE_NP
+#define PTHREAD_MUTEX_RECURSIVE PTHREAD_MUTEX_RECURSIVE_NP
+#else
+#error "No recursive pthread mutex found"
+#endif
+#endif
 #define private public
 #define protected public
 #include <Core/Thread/Thread.h>
@@ -50,7 +57,7 @@
 #include <errno.h>
 extern "C" {
 #include <semaphore.h>
-};
+}
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -420,7 +427,13 @@ Thread::exitAll(int code)
  */
 static
 void
-handle_abort_signals(int sig, struct sigcontext ctx)
+handle_abort_signals(int sig,
+#ifdef __sgi
+		     int,
+		     struct sigcontext* ctx)
+#else
+		     struct sigcontext ctx)
+#endif
 {
     struct sigaction action;
     sigemptyset(&action.sa_mask);
@@ -432,10 +445,18 @@ handle_abort_signals(int sig, struct sigcontext ctx)
 
     Thread* self=Thread::self();
     const char* tname=self?self->getThreadName():"idle or main";
+#ifdef __sgi
+#if defined(_LONGLONG)
+  caddr_t addr=(caddr_t)ctx->sc_badvaddr;
+#else
+  caddr_t addr=(caddr_t)ctx->sc_badvaddr.lo32;
+#endif
+#else
 #ifdef PPC
     void* addr=(void*)ctx.regs->dsisr;
 #else
     void* addr=(void*)ctx.cr2;
+#endif
 #endif
     char* signam=Core_Thread_signal_name(sig, addr);
     fprintf(stderr, "%c%c%cThread \"%s\"(pid %d) caught signal %s\n", 7,7,7,tname, getpid(), signam);
@@ -750,8 +771,8 @@ RecursiveMutex::RecursiveMutex(const char* name)
     if(pthread_mutexattr_init(&attr) != 0)
 	throw ThreadError(std::string("pthread_mutexattr_init: ")
 			  +strerror(errno));
-    if(pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE_NP) != 0)
-	throw ThreadError(std::string("pthread_mutexattr_setkind_np: ")
+    if(pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE) != 0)
+	throw ThreadError(std::string("pthread_mutexattr_settype: ")
 			  +strerror(errno));
     if(pthread_mutex_init(&priv_->mutex, &attr) != 0)
 	throw ThreadError(std::string("pthread_mutex_init: ")
