@@ -4000,39 +4000,49 @@ void ICE::maxMach_on_Lodi_BC_Faces(const ProcessorGroup*,
       patch->getID() << "\t\t\t ICE" << endl;
       
     Ghost::GhostType  gn = Ghost::None;
-    int numALLMatls = d_sharedState->getNumICEMatls();
-    StaticArray<constCCVariable<Vector> > vel_CC(numALLMatls);
-    StaticArray<constCCVariable<double> > speedSound(numALLMatls);
-    for(int m=0;m<matls->size();m++){
+    int numICEMatls = d_sharedState->getNumICEMatls();
+    StaticArray<constCCVariable<Vector> > vel_CC(numICEMatls);
+    StaticArray<constCCVariable<double> > speedSound(numICEMatls);
+          
+    for(int m=0;m < numICEMatls;m++){
       Material* matl = d_sharedState->getMaterial( m );
       int indx = matl->getDWIndex();
-      old_dw->get(vel_CC[m],      lb->vel_CCLabel,        indx,patch,gn,0);
-      old_dw->get(speedSound[m],  lb->speedSound_CCLabel, indx,patch,gn,0);
+      ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
+      if(ice_matl) {
+        old_dw->get(vel_CC[m],      lb->vel_CCLabel,        indx,patch,gn,0);
+        old_dw->get(speedSound[m],  lb->speedSound_CCLabel, indx,patch,gn,0);
+      }
     }
+
     //__________________________________
-    // Work on those faces that have lodi bcs
+    // Work on outside faces
     vector<Patch::FaceType>::const_iterator iter;
     for (iter  = patch->getBoundaryFaces()->begin(); 
          iter != patch->getBoundaryFaces()->end(); ++iter){
       Patch::FaceType face = *iter;
+      
+      //__________________________________
+      // compute maxMach number on this lodi face
+      // for only ICE matls
       double maxMach = 0.0;
       if (is_LODI_face(patch,face, d_sharedState) ) {
         
-        //__________________________________
-        //compute maxMach number on this lodi face
-        // for all matls
-        for(int m=0;m<matls->size();m++){
-          for(CellIterator iter=patch->getFaceCellIterator(face, "minusEdgeCells"); 
-                                                        !iter.done();iter++) {
-            IntVector c = *iter;
-            maxMach = Max(maxMach,vel_CC[m][c].length()/speedSound[m][c]);
-          }  
-        }
+        for(int m=0; m < numICEMatls;m++){
+          Material* matl = d_sharedState->getMaterial( m );
+          ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
+          if(ice_matl) {
+            for(CellIterator iter=patch->getFaceCellIterator(face, "minusEdgeCells"); 
+                                                          !iter.done();iter++) {
+              IntVector c = *iter;
+              maxMach = Max(maxMach,vel_CC[m][c].length()/speedSound[m][c]);
+            }
+          }  // icematl
+        }  // matl loop
         VarLabel* V_Label = getMaxMach_face_VarLabel(face);
         new_dw->put(max_vartype(maxMach), V_Label);
       }  // is lodi Face
-    }  // boundaryFaces  
-  } // patches
+    }  // boundaryFaces
+  }  // patches
 }
 
  
