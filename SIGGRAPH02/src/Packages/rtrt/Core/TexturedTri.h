@@ -21,6 +21,7 @@ class Rect;
 
 class TexturedTri : public Object, public UVMapping {
 
+ protected:
   Vector ngu,ngv;   // the normalized 2D basis for this triangle's
   // object space
   Vector ngungv;    // ngu cross ngv
@@ -37,7 +38,7 @@ class TexturedTri : public Object, public UVMapping {
   Vector e1, e2, e3;
   double e1l, e2l, e3l;
   bool bad;
-public:
+ public:
   inline bool isbad() {
     return bad;
   }

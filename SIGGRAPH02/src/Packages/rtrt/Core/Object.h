@@ -54,6 +54,7 @@ namespace rtrt {
  */
 
 class Object : public virtual SCIRun::Persistent {
+ protected:
   Material  *matl;
   UVMapping *uv;
   Grid2     *animGrid;      
