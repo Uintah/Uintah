@@ -75,8 +75,8 @@ itcl_class VolVis {
 #	set $this-bgColor-g 0
 #	set $this-bgColor-b 0
 
-	set $this-maxSV maxi
-	set $this-minSV what
+	set $this-maxSV 120
+	set $this-minSV 0
 
 	set $this-project 1
         set $this-centerit 1
@@ -266,7 +266,8 @@ itcl_class VolVis {
 
 	# as the mouse moves across the canvas, the sliders follow
 
-	bind $w.main.top.gcanvas <Any-Motion> "$this UpdateSliders $w %x %y"
+	bind $w.main.top.gcanvas <Any-Motion> \
+		"$this UpdateSliders $w %x %y; $this reportPos $w %x %y"
 
 	# change node color to black when the mouse cursor enters
 
@@ -285,10 +286,20 @@ itcl_class VolVis {
 	    set curY %y
 	}
 
+	#### hack
+
+	global $this-maxSV $this-minSV
+
+	set j [set $this-maxSV]
+
 	# interactively move the node
 	
 	$w.main.top.gcanvas bind node <B1-Motion> \
 		"set Selected 1; $this moveNode $w.main.top.gcanvas %x %y"
+
+##	$w.main.top.gcanvas bind node <B1-Motion> \
+##		"set Selected 1; $this moveNode $w.main.top.gcanvas %x %y; set hey %x; set xpos [expr $hey / $j ]; set ypos %y "
+##
 
 	# delete a node
 
@@ -776,6 +787,7 @@ itcl_class VolVis {
 
 	frame $w.main.top
 	frame $w.main.bot
+	frame $w.main.pos
 
 	# create a gridded canvas inside that frame
 
@@ -802,14 +814,65 @@ itcl_class VolVis {
 	BottomRuler $w.main.bot.entireBottomRuler \
 		$CanvasWidth $RulerWidth $HGrid
 
+	#### create the position label
+
+	ReportPosition $w.main.pos.position $CanvasWidth 20
+
 	pack $w.main.top.entireSideRuler $w.main.top.gcanvas \
 		-side right -anchor nw
 
 	pack $w.main.bot.entireBottomRuler $w.main.bot.fillin \
 		-side right -anchor nw
 
-	pack $w.main.top $w.main.bot -side top
+	pack $w.main.pos.position -side right -anchor nw
+
+	pack $w.main.top $w.main.bot $w.main.pos -side top
 	pack $w.main
+    }
+
+    method ReportPosition { where width height } {
+
+	global xpos ypos
+
+	frame $where
+	label $where.x -text "X = "
+	label $where.y -text "Y = "
+
+	entry $where.xx -width 6 -relief sunken -bd 2 -textvariable xpos
+	entry $where.yy -width 6 -relief sunken -bd 2 -textvariable ypos
+
+	set xpos "hi"
+	set ypos "ih"
+	
+	pack $where.x $where.xx $where.y $where.yy -side left
+
+    }
+
+
+    method reportPos { w x y } {
+	global xpos ypos
+	global $this-maxSV $this-minSV
+	global CanvasWidth CanvasHeight
+	global Selected
+
+	set temp [ expr [ expr [set $this-maxSV] - [set $this-minSV] ] * 1.0 ]
+	
+	if { $Selected } {
+	    
+	    set node    [ $w.main.top.gcanvas find withtag current ]
+	    set line    $LineType($node)
+	    set myIndex [lsearch $AllNodeIndexes($line) $node]
+	    set x    [lindex $Xvalues($line) $myIndex]
+	    set y    [lindex $Yvalues($line) $myIndex]
+	}
+	
+	set xpos [ expr [set $this-minSV] +  \
+		[ expr [ expr [expr $x * 1.0] / [expr $CanvasWidth - 1 ]]  \
+		* $temp ] ]
+	
+	set ypos [expr 1 - [expr [expr $y * 1.0] / [expr $CanvasHeight - 1] ] ]
+
+	puts "X = $xpos, Y = $ypos"
     }
 
     #
