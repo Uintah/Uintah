@@ -170,9 +170,9 @@ SliceRenderer::draw()
   //--------------------------------------------------------------------------
   // render bricks
 
-  Array1<float> vertex(0, 128, 128);
-  Array1<float> texcoord(0, 128, 128);
-  Array1<int> size(0, 128, 128);
+  vector<float> vertex;
+  vector<float> texcoord;
+  vector<int> size;
   
   Transform tform = tex_->transform();
   double mvmat[16];
@@ -185,9 +185,9 @@ SliceRenderer::draw()
     double t;
     TextureBrick* b = bricks[i];
     load_brick(b);
-    vertex.resize(0);
-    texcoord.resize(0);
-    size.resize(0);
+    vertex.clear();
+    texcoord.clear();
+    size.clear();
     const Point view = view_ray.origin();
     const Point &bmin = b->bbox().min();
     const Point &bmax = b->bbox().max();

@@ -383,8 +383,9 @@ TextureRenderer::load_brick(TextureBrick* brick)
 }
 
 void
-TextureRenderer::draw_polygons(Array1<float>& vertex, Array1<float>& texcoord,
-                               Array1<int>& poly, bool normal, bool fog, Pbuffer* buffer)
+TextureRenderer::draw_polygons(vector<float>& vertex, vector<float>& texcoord,
+                               vector<int>& poly, bool normal, bool fog,
+			       Pbuffer* buffer)
 {
 #ifdef HAVE_AVR_SUPPORT
   di_->polycount += poly.size();
@@ -438,9 +439,9 @@ TextureRenderer::draw_polygons(Array1<float>& vertex, Array1<float>& texcoord,
 
 
 void
-TextureRenderer::draw_polygons_wireframe(Array1<float>& vertex,
-					 Array1<float>& texcoord,
-					 Array1<int>& poly,
+TextureRenderer::draw_polygons_wireframe(vector<float>& vertex,
+					 vector<float>& texcoord,
+					 vector<int>& poly,
 					 bool normal, bool fog,
 					 Pbuffer* buffer)
 {
