@@ -1,10 +1,36 @@
+//----- Arches.h -----------------------------------------------
 
 #ifndef Uintah_Component_Arches_Arches_h
 #define Uintah_Component_Arches_Arches_h
 
-/*
- * Placeholder - nothing here yet
- */
+/**************************************
+
+CLASS
+   Arches
+   
+   Short description...
+
+GENERAL INFORMATION
+
+   Arches.h
+
+   Author: Rajesh Rawat (rawat@crsim.utah.edu)
+   Department of Chemical Engineering
+   University of Utah
+
+   Center for the Simulation of Accidental Fires and Explosions (C-SAFE)
+  
+   Copyright (C) 2000 University of Utah
+
+KEYWORDS
+   Arches
+
+DESCRIPTION
+   Long description...
+  
+WARNING
+  
+****************************************/
 
 #include <Uintah/Parallel/UintahParallelComponent.h>
 #include <Uintah/Parallel/ProcessorContext.h>
@@ -33,95 +59,138 @@ class Properties;
 class TurbulenceModel;
 class BoundaryCondition;
 
-/**************************************
-
-CLASS
-   Arches
-   
-   Short description...
-
-GENERAL INFORMATION
-
-   Arches.h
-
-   Author
-   Department
-   University of Utah
-
-   Center for the Simulation of Accidental Fires and Explosions (C-SAFE)
-  
-   Copyright (C) 2000 SCI Group
-
-KEYWORDS
-   Arches
-
-DESCRIPTION
-   Long description...
-  
-WARNING
-  
-****************************************/
-
 class Arches : public UintahParallelComponent, public CFDInterface {
+
 public:
-    static const int NDIM = 3;
 
-    Arches( int MpiRank, int MpiProcesses );
-    virtual ~Arches();
+      // GROUP: Static Variables:
+      ////////////////////////////////////////////////////////////////////////
+      //
+      // Number of dimensions in the problem
+      //
+      static const int NDIM = 3;
 
-    virtual void problemSetup(const ProblemSpecP& params, GridP& grid,
-			      SimulationStateP&);
+      // GROUP: Constructors:
+      ////////////////////////////////////////////////////////////////////////
+      //
+      // Arches constructor
+      //
+      Arches( int MpiRank, int MpiProcesses );
 
-    virtual void problemInit(const LevelP& level,
-			     SchedulerP& sched, DataWarehouseP& dw,
-			     bool restrt);
-    virtual void scheduleInitialize(const LevelP& level,
-				    SchedulerP&,
-				    DataWarehouseP&);
+      // GROUP: Destructors:
+      ////////////////////////////////////////////////////////////////////////
+      //
+      // Virtual destructor 
+      //
+      virtual ~Arches();
+
+      // GROUP: Problem Setup :
+      ///////////////////////////////////////////////////////////////////////
+      //
+      // Set up the problem specification database
+      //
+      virtual void problemSetup(const ProblemSpecP& params, 
+				GridP& grid,
+				SimulationStateP&);
+
+      // GROUP: Schedule Action :
+      ///////////////////////////////////////////////////////////////////////
+      //
+      // Schedule initialization
+      //
+      virtual void scheduleInitialize(const LevelP& level,
+				      SchedulerP&,
+				      DataWarehouseP&);
 	 
-    virtual void scheduleComputeStableTimestep(const LevelP& level,
-					       SchedulerP&,
-					       DataWarehouseP&);
-    virtual void scheduleTimeAdvance(double t, double dt,
-				     const LevelP& level, SchedulerP&,
-				     const DataWarehouseP&, DataWarehouseP&);
-    void sched_paramInit(const LevelP& level,
-			 SchedulerP& sched, DataWarehouseP& dw);
+      ///////////////////////////////////////////////////////////////////////
+      //
+      // Schedule Compute if Stable time step
+      //
+      virtual void scheduleComputeStableTimestep(const LevelP& level,
+						 SchedulerP&,
+						 DataWarehouseP&);
+
+      ///////////////////////////////////////////////////////////////////////
+      //
+      // Schedule time advance
+      //
+      virtual void scheduleTimeAdvance(double t, double dt,
+				       const LevelP& level, 
+				       SchedulerP&,
+				       DataWarehouseP&, 
+				       DataWarehouseP&);
+
+      /*
+      void sched_paramInit(const LevelP& level,
+                           SchedulerP& sched, 
+			   DataWarehouseP& dw);
+      */
+
+protected:
 
 private:
-    Arches(const Arches&);
-    Arches& operator=(const Arches&);
-    void paramInit(const ProcessorContext*,
-		   const Patch* patch,
-		   DataWarehouseP& old_dw,
-		   DataWarehouseP& );
-    double d_deltaT;
-    PhysicalConstants* d_physicalConsts;
-    NonlinearSolver* d_nlSolver;
-  // properties...solves density, temperature and species concentrations
-    Properties* d_props;
-  
-  // Turbulence Model
-    TurbulenceModel* d_turbModel;
-  // Boundary conditions
-    BoundaryCondition* d_boundaryCondition;
-    SimulationStateP d_sharedState;
-    // Variable labels that are used by the simulation controller
-    // 
-    //    const VarLabel* d_deltLabel;
-    const VarLabel* d_densityLabel;
-    const VarLabel* d_pressureLabel;
-    const VarLabel* d_scalarLabel;
-    const VarLabel* d_velocityLabel;
-    const VarLabel* d_viscosityLabel;
 
-};
+      // GROUP: Constructors (Private):
+      ////////////////////////////////////////////////////////////////////////
+      //
+      // Default Arches constructor
+      //
+      Arches();
+
+      ////////////////////////////////////////////////////////////////////////
+      //
+      // Arches copy constructor
+      //
+      Arches(const Arches&);
+
+      // GROUP: Overloaded Operators (Private):
+      ////////////////////////////////////////////////////////////////////////
+      //
+      // Arches assignment constructor
+      //
+      Arches& operator=(const Arches&);
+
+      // GROUP: Action Methods (Private):
+      ////////////////////////////////////////////////////////////////////////
+      //
+      // Arches assignment constructor
+      //
+      void paramInit(const ProcessorContext*,
+		     const Patch* patch,
+		     DataWarehouseP& old_dw,
+		     DataWarehouseP& );
+
+private:
+
+      double d_deltaT;
+      PhysicalConstants* d_physicalConsts;
+      NonlinearSolver* d_nlSolver;
+      // properties...solves density, temperature and species concentrations
+      Properties* d_props;
+      // Turbulence Model
+      TurbulenceModel* d_turbModel;
+      // Boundary conditions
+      BoundaryCondition* d_boundaryCondition;
+      SimulationStateP d_sharedState;
+      // Variable labels that are used by the simulation controller
+      // 
+      //    const VarLabel* d_deltLabel;
+      const VarLabel* d_densityLabel;
+      const VarLabel* d_pressureLabel;
+      const VarLabel* d_scalarLabel;
+      const VarLabel* d_velocityLabel;
+      const VarLabel* d_viscosityLabel;
+
+}; // end class Arches
 
 } // end namespace ArchesSpace
 } // end namespace Uintah
 
 //
 // $Log$
+// Revision 1.23  2000/06/04 23:57:46  bbanerje
+// Updated Arches to do ScheduleTimeAdvance.
+//
 // Revision 1.22  2000/05/30 20:18:45  sparker
 // Changed new to scinew to help track down memory leaks
 // Changed region to patch

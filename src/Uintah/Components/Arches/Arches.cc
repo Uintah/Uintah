@@ -1,3 +1,5 @@
+//----- Arches.cc ----------------------------------------------
+
 /* REFERENCED */
 static char *id="@(#) $Id$";
 
@@ -34,28 +36,38 @@ using std::endl;
 
 using namespace Uintah::ArchesSpace;
 
+//****************************************************************************
+// Actual constructor for Arches
+//****************************************************************************
 Arches::Arches( int MpiRank, int MpiProcesses ) :
   UintahParallelComponent( MpiRank, MpiProcesses )
 {
   d_densityLabel = scinew VarLabel("density", 
-				CCVariable<double>::getTypeDescription() );
+				   CCVariable<double>::getTypeDescription() );
   d_pressureLabel = scinew VarLabel("pressure", 
-				 CCVariable<double>::getTypeDescription() );
+				    CCVariable<double>::getTypeDescription() );
   d_scalarLabel = scinew VarLabel("scalars", 
-			       CCVariable<Vector>::getTypeDescription() );
+				  CCVariable<Vector>::getTypeDescription() );
   d_velocityLabel = scinew VarLabel("velocity", 
-				 CCVariable<Vector>::getTypeDescription() );
+				    CCVariable<Vector>::getTypeDescription() );
   d_viscosityLabel = scinew VarLabel("viscosity", 
-				  CCVariable<double>::getTypeDescription() );
+				     CCVariable<double>::getTypeDescription() );
 }
 
+//****************************************************************************
+// Destructor
+//****************************************************************************
 Arches::~Arches()
 {
 
 }
 
+//****************************************************************************
+// problem set up
+//****************************************************************************
 void 
-Arches::problemSetup(const ProblemSpecP& params, GridP&,
+Arches::problemSetup(const ProblemSpecP& params, 
+		     GridP&,
 		     SimulationStateP& sharedState)
 {
   d_sharedState = sharedState;
@@ -97,6 +109,7 @@ Arches::problemSetup(const ProblemSpecP& params, GridP&,
   d_nlSolver->problemSetup(db);
 }
 
+/*
 void 
 Arches::problemInit(const LevelP& ,
 		    SchedulerP& , 
@@ -116,7 +129,11 @@ Arches::problemInit(const LevelP& ,
   d_boundaryCondition->sched_pressureBC(level, sched, dw, dw);
 #endif
 }
+*/
 
+//****************************************************************************
+// Schedule initialization
+//****************************************************************************
 void 
 Arches::scheduleInitialize(const LevelP& level,
 			   SchedulerP& sched,
@@ -147,6 +164,9 @@ Arches::scheduleInitialize(const LevelP& level,
   }
 }
 
+//****************************************************************************
+// schedule computation of stable time step
+//****************************************************************************
 void 
 Arches::scheduleComputeStableTimestep(const LevelP&,
 				      SchedulerP&,
@@ -155,16 +175,20 @@ Arches::scheduleComputeStableTimestep(const LevelP&,
   dw->put(delt_vartype(d_deltaT),  d_sharedState->get_delt_label()); 
 }
 
+//****************************************************************************
+// Schedule time advance
+//****************************************************************************
 void 
 Arches::scheduleTimeAdvance(double time, double dt,
-			    const LevelP& level, SchedulerP& sched,
-			    const DataWarehouseP& old_dw, DataWarehouseP& new_dw)
+			    const LevelP& level, 
+			    SchedulerP& sched,
+			    DataWarehouseP& old_dw, 
+			    DataWarehouseP& new_dw)
 {
   cerr << "Arches::scheduleTimeAdvance\n";
 
-#ifdef WONT_COMPILE_YET
-  int error_code = d_nlSolver->nonlinearSolve(time, dt, level, 
-					      sched, old_dw, new_dw);
+  int error_code = d_nlSolver->nonlinearSolve(level, sched, old_dw, new_dw,
+					      time, dt);
   if (!error_code) {
 #if 0
     old_dw = new_dw;
@@ -173,10 +197,10 @@ Arches::scheduleTimeAdvance(double time, double dt,
   else {
     cerr << "Nonlinear Solver didn't converge" << endl;
   }
-#endif
   cerr << "Done: Arches::scheduleTimeAdvance\n";
 }
 
+/*
 void 
 Arches::sched_paramInit(const LevelP& level,
 			SchedulerP& sched, 
@@ -200,12 +224,16 @@ Arches::sched_paramInit(const LevelP& level,
     }
   }
 }
+*/
 
+//****************************************************************************
+// Actual initialization
+//****************************************************************************
 void
 Arches::paramInit(const ProcessorContext* ,
 		  const Patch* patch,
 		  DataWarehouseP& old_dw,
-		  DataWarehouseP& new_dw)
+		  DataWarehouseP& )
 {
   // ....but will only compute for computational domain
 
@@ -243,9 +271,33 @@ Arches::paramInit(const ProcessorContext* ,
   cerr << "Actual initialization - after put \n";
 }
   
+//****************************************************************************
+// Private default constructor for Arches
+//****************************************************************************
+//Arches::Arches():UintahParallelComponent()
+//{
+//}
+
+//****************************************************************************
+// Private copy constructor for Arches
+//****************************************************************************
+//Arches::Arches(const Arches&):UintahParallelComponent()
+//{
+//}
+
+//****************************************************************************
+// private operator=
+//****************************************************************************
+//Arches&
+//Arches::operator=(const Arches&)
+//{
+//}
 
 //
 // $Log$
+// Revision 1.33  2000/06/04 23:57:46  bbanerje
+// Updated Arches to do ScheduleTimeAdvance.
+//
 // Revision 1.32  2000/06/01 19:29:46  rawat
 // Modified BoundaryCondition to read multiple flowinlets
 //

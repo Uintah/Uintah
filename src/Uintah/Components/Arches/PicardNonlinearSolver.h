@@ -89,11 +89,11 @@ public:
       //    [out] 
       //        documentation here
       //
-      virtual int nonlinearSolve(double time, double deltat, 
-				 const LevelP&,
+      virtual int nonlinearSolve(const LevelP&,
 				 SchedulerP& sched,
 				 DataWarehouseP& old_dw,
-				 DataWarehouseP& new_dw);
+				 DataWarehouseP& new_dw,
+				 double time, double deltat);
   
       ///////////////////////////////////////////////////////////////////////
       //
@@ -113,10 +113,10 @@ public:
       //    [in] 
       //        documentation here
       //
-      void computeResidual(const LevelP&, 
-			   SchedulerP& sched,
-			   const DataWarehouseP& old_dw,
-			   DataWarehouseP& new_dw);
+      double computeResidual(const LevelP&, 
+			     SchedulerP& sched,
+			     DataWarehouseP& old_dw,
+			     DataWarehouseP& new_dw);
   
 protected :
 
@@ -181,6 +181,9 @@ private:
 
 //
 // $Log$
+// Revision 1.11  2000/06/04 23:57:46  bbanerje
+// Updated Arches to do ScheduleTimeAdvance.
+//
 // Revision 1.10  2000/06/04 22:40:14  bbanerje
 // Added Cocoon stuff, changed task, require, compute, get, put arguments
 // to reflect new declarations. Changed sub.mk to include all the new files.
