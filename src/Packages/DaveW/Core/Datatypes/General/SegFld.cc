@@ -18,6 +18,9 @@
 
 #include <iostream>
 using std::cerr;
+#include <queue>
+using std::queue;
+
 #include <stdio.h>
 
 namespace DaveW {
@@ -425,7 +428,7 @@ void SegFld::bldFromCharOld(ScalarFieldRGchar* ch) {
     cerr << "Number of independent components: ";
     for (i=0; i<compMembers.size(); i++) delete compMembers[i];
     compMembers.resize(0);
-    Queue<tripleInt> q;
+    queue<tripleInt> q;
     Array3<char> visited(nx, ny, nz);
     visited.initialize(0);
     Array1<int> is, js, ks;
@@ -434,7 +437,7 @@ void SegFld::bldFromCharOld(ScalarFieldRGchar* ch) {
 	    for (k=0; k<nz; k++) {
 		if (!visited(i,j,k)) {
 		    cerr << comps.size()<<" ";
-		    q.append(tripleInt(i,j,k));
+		    q.push(tripleInt(i,j,k));
 		    int compNum=comps.size();
 		    char currTypeChar=ch->grid(i,j,k);
 		    int currType=currTypeChar-'0';
@@ -444,9 +447,10 @@ void SegFld::bldFromCharOld(ScalarFieldRGchar* ch) {
 		    compMembers[compNum]=scinew Array1<tripleInt>;
 		    compMembers[compNum]->add(tripleInt(i,j,k));
 		    visited(i,j,k)=1;
-		    while(!q.is_empty()) {
+		    while(!q.empty()) {
 			// enqueue non-visited neighbors
-			tripleInt next=q.pop();
+			tripleInt next=q.front();
+			q.pop();
 			compMembers[compNum]->add(next);
 			comps[compNum]++;
 			int iii=next.x;
@@ -482,7 +486,7 @@ void SegFld::bldFromCharOld(ScalarFieldRGchar* ch) {
 			    if (!visited(ii,jj,kk) &&
 				(ch->grid(ii,jj,kk)==currTypeChar)) {
 				grid(ii,jj,kk)=compNum;
-				q.append(tripleInt(ii,jj,kk));
+				q.push(tripleInt(ii,jj,kk));
 				visited(ii,jj,kk)=1;
 			    }
 			}
@@ -503,7 +507,7 @@ void SegFld::killSmallComponents(int min) {
     int min_sz=0;
     Array3<char> visited(nx,ny,nz);
     int min_comp=-1;
-    Queue<tripleInt> visit_q;
+    queue<tripleInt> visit_q;
     Array1<int> bdry_comps(comps.size());
     Array1<int> type_count(6);
     while (min_sz<min) {
@@ -523,14 +527,15 @@ void SegFld::killSmallComponents(int min) {
 	idx=(*compMembers[min_comp])[0];
 	cerr << "C: "<<min_comp<<", size="<<get_size(comps[min_comp])<<", type="<<get_type(comps[min_comp]);
 	visited.initialize(0);
-	visit_q.append(idx);
+	visit_q.push(idx);
 	int max_sz=0;
 	int max_comp;
 	int max_type;
 	bdry_comps.initialize(0);
-	while(!visit_q.is_empty()) {
+	while(!visit_q.empty()) {
 	    // enqueue non-visited neighbors
-	    tripleInt next=visit_q.pop();
+	    tripleInt next=visit_q.front();
+	    visit_q.pop();
 	    int iii=next.x;
 	    int jjj=next.y;
 	    int kkk=next.z;
@@ -540,7 +545,7 @@ void SegFld::killSmallComponents(int min) {
 			if (!visited(ii,jj,kk)) {
 			    visited(ii,jj,kk)=1;
 			    if(grid(ii,jj,kk)==min_comp) {
-				visit_q.append(tripleInt(ii,jj,kk));
+				visit_q.push(tripleInt(ii,jj,kk));
 			    } else {
 				bdry_comps[grid(ii,jj,kk)]=1;
 			    }

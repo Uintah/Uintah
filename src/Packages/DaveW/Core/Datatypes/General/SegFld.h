@@ -18,7 +18,6 @@
 #include <Core/Containers/Array2.h>
 #include <Core/Containers/Array3.h>
 #include <Core/Containers/String.h>
-#include <Core/Containers/Queue.h>
 #include <Core/Datatypes/ScalarFieldRG.h>
 #include <Core/Persistent/Pstreams.h>
 

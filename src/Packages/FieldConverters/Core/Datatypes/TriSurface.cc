@@ -36,7 +36,6 @@
 #include <Core/Util/Assert.h>
 #include <Core/Util/NotFinished.h>
 #include <Core/Containers/TrivialAllocator.h>
-#include <Core/Containers/Queue.h>
 #include <FieldConverters/Core/Datatypes/SurfTree.h>
 #include <Core/Geometry/BBox.h>
 #include <Core/Math/MiscMath.h>
@@ -44,6 +43,9 @@
 
 #include <iostream>
 using std::cerr;
+
+#include <queue>
+using std::queue;
 
 #ifdef _WIN32
 #include <stdlib.h>
@@ -466,15 +468,16 @@ void TriSurface::separate(int idx, TriSurface* conn, TriSurface* d_conn, int upd
 	nbr[elements[i]->i3].add(elements[i]->i1);	
 	nbr[elements[i]->i3].add(elements[i]->i2);	
     }
-    Queue<int> q;
-    q.append(idx);
+    queue<int> q;
+    q.push(idx);
     visited[idx]=1;
-    while(!q.is_empty()) {
+    while(!q.empty()) {
 	// enqueue non-visited neighbors
-	int c=q.pop();
+	int c=q.front();
+	q.pop();
 	for (int j=0; j<nbr[c].size(); j++) {
 	    if (!visited[nbr[c][j]]) {
-		q.append(nbr[c][j]);
+		q.push(nbr[c][j]);
 		visited[nbr[c][j]] = 1;
 	    }
 	}

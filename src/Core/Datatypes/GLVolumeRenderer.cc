@@ -91,9 +91,9 @@ GLVolumeRenderer::GLVolumeRenderer(int id,
     drawY(false),
     drawZ(false),
     drawView(false),
+    di_(0),
     _interp(true),
-    _lighting(0),
-    di_(0)
+    _lighting(0)
 {
   rCount++;
 }
@@ -121,9 +121,9 @@ GLVolumeRenderer::GLVolumeRenderer(const GLVolumeRenderer& copy)
     drawY(copy.drawY),
     drawZ(copy.drawZ),
     drawView(copy.drawView),
+    di_(copy.di_),
     _interp(copy._interp),
-    _lighting(copy._lighting),
-    di_(copy.di_)
+    _lighting(copy._lighting)
 {
   rCount++;
 } 

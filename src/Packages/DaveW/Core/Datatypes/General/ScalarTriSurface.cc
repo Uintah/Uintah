@@ -14,7 +14,6 @@
 #include <Packages/DaveW/Core/Datatypes/General/ScalarTriSurface.h>
 #include <Core/Util/Assert.h>
 #include <Core/Containers/TrivialAllocator.h>
-#include <Core/Containers/Queue.h>
 #include <Core/Geometry/BBox.h>
 #include <Core/Geometry/Grid.h>
 #include <Core/Math/MiscMath.h>

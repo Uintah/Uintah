@@ -12,10 +12,12 @@
  */
 
 #include <Packages/DaveW/Core/Datatypes/General/ManhattanDist.h>
-#include <Core/Containers/Queue.h>
 #include <Core/Containers/String.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Malloc/Allocator.h>
+
+#include <queue>
+using std::queue;
 
 #include <iostream>
 using std::cerr;
@@ -125,17 +127,18 @@ void ManhattanDist::initialize() {
     }
 cerr << "   ... phase 1 complete!\n";
     Array3<char> visited(nx,ny,nz);
-    Queue<int> q;
+    queue<int> q;
     for (int p=1; p<pts.size(); p++) {
 	visited.initialize(0);	
 	locate(pts[p], i, j, k);
 	closestNodeIdx(i,j,k).add(p);
 	grid(i,j,k)=0;
-	q.append(i); q.append(j); q.append(k);
+	q.push(i); q.push(j); q.push(k);
 	visited(i,j,k)=1;
-	while (!q.is_empty()) {
-	    int a,b,c;
-	    a=q.pop(); b=q.pop(); c=q.pop();
+	while (!q.empty()) {
+	    const int a = q.front(); q.pop();
+	    const int b = q.front(); q.pop();
+	    const int c = q.front(); q.pop();
 	    int dist=grid(a,b,c);
 //	    int idx=closestNodeIdx(a,b,c);
 	    int a1, b1, c1;	
@@ -151,7 +154,7 @@ cerr << "   ... phase 1 complete!\n";
 				}
 				closestNodeIdx(a1,b1,c1).add(p);
 				visited(a1,b1,c1)=1;
-				q.append(a1); q.append(b1); q.append(c1);
+				q.push(a1); q.push(b1); q.push(c1);
 			    }
 			}
 		    }
@@ -170,13 +173,14 @@ void ManhattanDist::computeCellDistance(int i, int j, int k) {
 
     Array3<int> cellDist(nx,ny,nz);
     cellDist.initialize(-1);
-    Queue<int> q;
-    q.append(i); q.append(j); q.append(k);
+    queue<int> q;
+    q.push(i); q.push(j); q.push(k);
     cellDist(i,j,k)=0;
     int done=0;
-    int a,b,c;
-    while(!q.is_empty() && !done) {
-        a=q.pop(); b=q.pop(); c=q.pop();
+    while(!q.empty() && !done) {
+        const int a = q.front(); q.pop();
+        const int b = q.front(); q.pop();
+        const int c = q.front(); q.pop();
         if (grid(a,b,c)==0) {    // we're done!  just update the path...
             done=1;
         } else {
@@ -188,7 +192,7 @@ void ManhattanDist::computeCellDistance(int i, int j, int k) {
 			if (a1>=0 && a1<nx && b1>=0 && b1<ny && c1>=0 && 
 			    c1<nz && cellDist(a1,b1,c1)==-1) {
                             cellDist(a1,b1,c1)=dist+1;
-			    q.append(a1); q.append(b1); q.append(c1);
+			    q.push(a1); q.push(b1); q.push(c1);
 			}
 		    }
         }
@@ -204,16 +208,18 @@ void ManhattanDist::computeCellDistance(int i, int j, int k) {
 
     // sa, sb, sc is the closest surface node.  update cells along the path
     
-    Queue<int> q1, q2;
-    Queue<int> *oldQ, *newQ, *tempQ;
+    queue<int> q1, q2;
+    queue<int> *oldQ, *newQ, *tempQ;
     oldQ = &q1; newQ = &q2;
-    oldQ->append(sa); oldQ->append(sb); oldQ->append(sc);
+    oldQ->push(sa); oldQ->push(sb); oldQ->push(sc);
     int cd=gd+1;
     done=0;
     while (cd>0) {
 	cd--;
-	while(!oldQ->is_empty()) {
-            a=oldQ->pop(); b=oldQ->pop(); c=oldQ->pop();
+	while(!oldQ->empty()) {
+            a = oldQ->front(); oldQ->pop();
+	    b = oldQ->front(); oldQ->pop();
+	    c = oldQ->front(); oldQ->pop();
             cellDist(a,b,c)=-1;
             closestNodeIdx(a,b,c).add(sa);
 	    closestNodeIdx(a,b,c).add(sb);
@@ -231,7 +237,7 @@ void ManhattanDist::computeCellDistance(int i, int j, int k) {
 			for (c1=c-1; c1<=c+1; c1++) {
 			    if (a1>=0 && a1<nx && b1>=0 && b1<ny && c1>=0 && 
 				c1<nz && cellDist(a1,b1,c1)==cd-1) {
-				newQ->append(a1); newQ->append(b1); newQ->append(c1);
+				newQ->push(a1); newQ->push(b1); newQ->push(c1);
 				cellDist(a1,b1,c1)=-1;
 			    }
 			}
