@@ -31,9 +31,9 @@
 #include <vector>
 #include <Uintah/Grid/BoundCond.h>
 #include <Uintah/Grid/PressureBoundCond.h>
-#include <Uintah/Grid/SymmetryBoundCond.h>
+#include <Uintah/Grid/KinematicBoundCond.h>
 #include <Uintah/Grid/TempThermalBoundCond.h>
-#include <Uintah/Grid/FluxThermalBoundCond.h>
+#include <Uintah/Grid/DensityBoundCond.h>
 
 using std::vector;
 using std::max;
@@ -518,6 +518,22 @@ void ICE::actuallyInitialize(const ProcessorGroup*,
   CCVariable<double> uvel_CC,vvel_CC,wvel_CC, visc_CC;
   new_dw->allocate(press,lb->press_CCLabel,0,patch);
 
+  // Store the pressure BCs
+  for(Patch::FaceType face = Patch::startFace;
+      face <= Patch::endFace; face=Patch::nextFace(face)){
+    vector<BoundCond* > bcs;
+    bcs = patch->getBCValues(face);
+    for (int i = 0; i<(int)bcs.size(); i++ ) {
+      string bcs_type = bcs[i]->getType();
+      if (bcs_type == "Pressure") {
+	PressureBoundCond* bc = 
+	  static_cast<PressureBoundCond*>(bcs[i]);
+	press.fillFace(face,bc->getPressure());
+      }
+    }
+  }
+
+
   for (int m = 0; m < d_sharedState->getNumMatls(); m++ ) {
     Material* matl = d_sharedState->getMaterial(m);
     ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
@@ -534,7 +550,8 @@ void ICE::actuallyInitialize(const ProcessorGroup*,
       new_dw->allocate(vvel_CC,lb->vvel_CCLabel,vfindex,patch);
       new_dw->allocate(wvel_CC,lb->wvel_CCLabel,vfindex,patch);
 
-      // Set the boundary conditions first time through
+      // Set the boundary conditions:
+      //    uvel,vvel,wvel,temp,rho_CC
 
       for(Patch::FaceType face = Patch::startFace;
 	  face <= Patch::endFace; face=Patch::nextFace(face)){
@@ -542,26 +559,23 @@ void ICE::actuallyInitialize(const ProcessorGroup*,
 	bcs = patch->getBCValues(face);
 	for (int i = 0; i<(int)bcs.size(); i++ ) {
 	  string bcs_type = bcs[i]->getType();
-	  if (bcs_type == "Pressure") {
-	    PressureBoundCond* bc = 
-	      static_cast<PressureBoundCond*>(bcs[i]);
-	    //cout << "bc value = " << bc->getPressure() << endl;
-	    for (int m = 0; m<d_sharedState->getNumMatls(); m++) ;
-	    //	      press_new[m].fillFace(face,bc->getPressure());
-	  }
-	  if (bcs_type == "Symmetric") {
-	    SymmetryBoundCond* bc =
-	      static_cast<SymmetryBoundCond*>(bcs[i]);
+	  if (bcs_type == "Density") {
+	    DensityBoundCond* bc =
+	      static_cast<DensityBoundCond*>(bcs[i]);
+	    rho_CC.fillFace(face,bc->getRho());
 	  }
 	  if (bcs_type == "Temperature") {
 	    TempThermalBoundCond* bc = 
 	      static_cast<TempThermalBoundCond*>(bcs[i]);
-	    cout << "bc value = " << bc->getTemp() << endl;
+	    temp.fillFace(face,bc->getTemp());
 	  }
-	  if (bcs_type == "Flux") {
-	    FluxThermalBoundCond* bc = 
-	      static_cast<FluxThermalBoundCond*>(bcs[i]);
-	    cout << "bc value = " << bc->getFlux() << endl;
+	  if (bcs_type == "Kinematic") {
+	    KinematicBoundCond* bc = 
+	      static_cast<KinematicBoundCond*>(bcs[i]);
+	    uvel_CC.fillFace(face,bc->getVelocity().x());
+	    vvel_CC.fillFace(face,bc->getVelocity().y());
+	    wvel_CC.fillFace(face,bc->getVelocity().z());
+	    
 	  }
 	}
       }
@@ -802,20 +816,6 @@ void ICE::actuallyStep1b(const ProcessorGroup*,
 	  //cout << "bc value = " << bc->getPressure() << endl;
 	    press_new.fillFace(face,bc->getPressure());
 	}
-	if (bcs_type == "Symmetric") {
-	  SymmetryBoundCond* bc =
-	    static_cast<SymmetryBoundCond*>(bcs[i]);
-	}
-	if (bcs_type == "Temperature") {
-	  TempThermalBoundCond* bc = 
-	    static_cast<TempThermalBoundCond*>(bcs[i]);
-	  cout << "bc value = " << bc->getTemp() << endl;
-	}
-	if (bcs_type == "Flux") {
-	  FluxThermalBoundCond* bc = 
-	    static_cast<FluxThermalBoundCond*>(bcs[i]);
-	  cout << "bc value = " << bc->getFlux() << endl;
-	}
       }
     }
     
@@ -998,9 +998,26 @@ void ICE::actuallyStep1c(const ProcessorGroup*,
 #endif
 
       // Put Boundary condition stuff in here
-      //
-      //
+      // Update any neumann boundary conditions
 
+      for(Patch::FaceType face = Patch::startFace;
+	  face <= Patch::endFace; face=Patch::nextFace(face)){
+	vector<BoundCond* > bcs;
+	bcs = patch->getBCValues(face);
+	for (int i = 0; i<(int)bcs.size(); i++ ) {
+	  string bcs_type = bcs[i]->getType();
+	  if (bcs_type == "Kinematic") {
+	    KinematicBoundCond* bc = 
+	      static_cast<KinematicBoundCond*>(bcs[i]);
+	    uvel_CC.fillFace(face,bc->getVelocity().x());
+	    vvel_CC.fillFace(face,bc->getVelocity().y());
+	    wvel_CC.fillFace(face,bc->getVelocity().z());
+	    
+	  }
+	}
+      }
+
+            
       // Put the result in the datawarehouse
       new_dw->put(uvel_FC, lb->uvel_FCLabel, vfindex, patch);
       new_dw->put(vvel_FC, lb->vvel_FCLabel, vfindex, patch);
@@ -1112,41 +1129,23 @@ void ICE::actuallyStep1d(const ProcessorGroup*,
 
   // Apply grid boundary conditions to the velocity
   // before storing the data
-  
-  //      cout << "Patch id = " << patch->getID() << endl;
-  for(Patch::FaceType face = Patch::startFace;
-      face <= Patch::endFace; face=Patch::nextFace(face)){
-    vector<BoundCond* > bcs;
-    bcs = patch->getBCValues(face);
-    //cout << "number of bcs on face " << face << " = " 
-    //	     << bcs.size() << endl;
-    
-    for (int i = 0; i<(int)bcs.size(); i++ ) {
-      string bcs_type = bcs[i]->getType();
-      if (bcs_type == "Pressure") {
-	PressureBoundCond* bc = 
-	  static_cast<PressureBoundCond*>(bcs[i]);
-	//cout << "bc value = " << bc->getPressure() << endl;
-	//pres.fillFace(face,bc->getPressure());
-      }
-      if (bcs_type == "Symmetric") {
-	SymmetryBoundCond* bc =
-	  static_cast<SymmetryBoundCond*>(bcs[i]);
-	//gvelocity.fillFaceNormal(face);
-      }
-      if (bcs_type == "Temperature") {
-	TempThermalBoundCond* bc = 
-	  static_cast<TempThermalBoundCond*>(bcs[i]);
-	//cout << "bc value = " << bc->getTemp() << endl;
-      }
-      if (bcs_type == "Flux") {
-	FluxThermalBoundCond* bc = 
-	  static_cast<FluxThermalBoundCond*>(bcs[i]);
-	//cout << "bc value = " << bc->getFlux() << endl;
+  for (int m = 0; m < NVFs; m++) {
+    for(Patch::FaceType face = Patch::startFace;
+	face <= Patch::endFace; face=Patch::nextFace(face)){
+      vector<BoundCond* > bcs;
+      bcs = patch->getBCValues(face);
+      for (int i = 0; i<(int)bcs.size(); i++ ) {
+	string bcs_type = bcs[i]->getType();
+	if (bcs_type == "Kinematic") {
+	  KinematicBoundCond* bc = 
+	    static_cast<KinematicBoundCond*>(bcs[i]);
+	  uvel_FCME[m].fillFace(face,bc->getVelocity().x());
+	  vvel_FCME[m].fillFace(face,bc->getVelocity().y());
+	  wvel_FCME[m].fillFace(face,bc->getVelocity().z());
+	}
       }
     }
   }
-  
   // Put the result in the datawarehouse
   for(int m = 0; m < NVFs; m++){
       new_dw->put(uvel_FCME[m], lb->uvel_FCMELabel, m, patch);
@@ -1269,6 +1268,24 @@ void ICE::actuallyStep2(const ProcessorGroup*,
 	pressdP[*iter]  = pressure[*iter] + delPress[*iter];
   }
 
+
+  // Update the pressure BC
+  for(Patch::FaceType face = Patch::startFace;
+      face <= Patch::endFace; face=Patch::nextFace(face)){
+    vector<BoundCond* > bcs;
+    bcs = patch->getBCValues(face);
+    for (int i = 0; i<(int)bcs.size(); i++ ) {
+      string bcs_type = bcs[i]->getType();
+      if (bcs_type == "Pressure") {
+	PressureBoundCond* bc = 
+	  static_cast<PressureBoundCond*>(bcs[i]);
+	pressdP.fillFace(face,bc->getPressure());
+      }
+    }
+  }
+
+  
+
   new_dw->put(delPress, lb->delPress_CCLabel, 0, patch);
   new_dw->put(pressdP,  lb->pressdP_CCLabel,  0, patch);
 
@@ -1366,6 +1383,21 @@ void ICE::actuallyStep3(const ProcessorGroup*,
     * Update the boundary conditions
         update_CC_FC_physical_boundary_conditions(
     *___________________________________*/
+
+    // Update the pressure BC
+  for(Patch::FaceType face = Patch::startFace;
+      face <= Patch::endFace; face=Patch::nextFace(face)){
+    vector<BoundCond* > bcs;
+    bcs = patch->getBCValues(face);
+    for (int i = 0; i<(int)bcs.size(); i++ ) {
+      string bcs_type = bcs[i]->getType();
+      if (bcs_type == "Pressure") {
+	PressureBoundCond* bc = 
+	  static_cast<PressureBoundCond*>(bcs[i]);
+	press_FC.fillFace(face,bc->getPressure());
+      }
+    }
+  }
 
    new_dw->put(press_FC,lb->press_FCLabel, 0, patch);
 }
@@ -1741,6 +1773,27 @@ void ICE::actuallyStep5b(const ProcessorGroup*,
 
   }
 
+  // Update any neumann boundary conditions
+     // Update the velocity BC
+  for (int m = 0; m < NVFs; m++) {
+    for(Patch::FaceType face = Patch::startFace;
+	face <= Patch::endFace; face=Patch::nextFace(face)){
+      vector<BoundCond* > bcs;
+      bcs = patch->getBCValues(face);
+      for (int i = 0; i<(int)bcs.size(); i++ ) {
+	string bcs_type = bcs[i]->getType();
+	if (bcs_type == "Kinematic") {
+	  KinematicBoundCond* bc = 
+	    static_cast<KinematicBoundCond*>(bcs[i]);
+	  xmom_L_ME[m].fillFace(face,bc->getVelocity().x());
+	  ymom_L_ME[m].fillFace(face,bc->getVelocity().y());
+	  zmom_L_ME[m].fillFace(face,bc->getVelocity().z());
+	}
+      }
+    }
+  }
+  
+
   for(int m = 0; m < NVFs; m++){
      new_dw->put(xmom_L_ME[m],   lb->xmom_L_ME_CCLabel,   m, patch);
      new_dw->put(ymom_L_ME[m],   lb->ymom_L_ME_CCLabel,   m, patch);
@@ -1899,6 +1952,34 @@ void ICE::actuallyStep6and7(const ProcessorGroup*,
         }
       }
 
+      // Update the BCs
+
+            for(Patch::FaceType face = Patch::startFace;
+	  face <= Patch::endFace; face=Patch::nextFace(face)){
+	vector<BoundCond* > bcs;
+	bcs = patch->getBCValues(face);
+	for (int i = 0; i<(int)bcs.size(); i++ ) {
+	  string bcs_type = bcs[i]->getType();
+	  if (bcs_type == "Density") {
+	    DensityBoundCond* bc =
+	      static_cast<DensityBoundCond*>(bcs[i]);
+	    rho_CC.fillFace(face,bc->getRho());
+	  }
+	  if (bcs_type == "Temperature") {
+	    TempThermalBoundCond* bc = 
+	      static_cast<TempThermalBoundCond*>(bcs[i]);
+	    temp.fillFace(face,bc->getTemp());
+	  }
+	  if (bcs_type == "Kinematic") {
+	    KinematicBoundCond* bc = 
+	      static_cast<KinematicBoundCond*>(bcs[i]);
+	    uvel_CC.fillFace(face,bc->getVelocity().x());
+	    vvel_CC.fillFace(face,bc->getVelocity().y());
+	    wvel_CC.fillFace(face,bc->getVelocity().z());
+	    
+	  }
+	}
+      }
 
       new_dw->put(rho_CC,lb->rho_CCLabel,vfindex,patch);
       new_dw->put(uvel_CC,lb->uvel_CCLabel,vfindex,patch);
@@ -1921,7 +2002,6 @@ void ICE::influxOutfluxVolume(const FCVariable<double>& uvel_CC,
 			      CCVariable<fflux>& IFS, CCVariable<eflux>& IFE)
 
 {
-#define MAX(x,y) ((x)>(y)?(x):(y))
 
   Vector dx = patch->dCell();
   double delY_top,delY_bottom,delX_right,delX_left,delZ_front,delZ_back;
@@ -1930,12 +2010,12 @@ void ICE::influxOutfluxVolume(const FCVariable<double>& uvel_CC,
       //Calculate each cells outfluxes first
       //Here the CellIterator must visit ALL cells
       for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
-//	delY_top    = MAX(0.0, (vvel_FC[*iter][TOP]    * delT));
-//	delY_bottom = MAX(0.0,-(vvel_FC[*iter][BOTTOM] * delT));
-//	delX_right  = MAX(0.0, (uvel_FC[*iter][RIGHT]  * delT));
-//	delX_left   = MAX(0.0,-(uvel_FC[*iter][LEFT]   * delT));
-//	delZ_front  = MAX(0.0, (wvel_FC[*iter][FRONT]  * delT));
-//	delZ_back   = MAX(0.0,-(wvel_FC[*iter][BACK]   * delT));
+//	delY_top    = std::max(0.0, (vvel_FC[*iter][TOP]    * delT));
+//	delY_bottom = std::max(0.0,-(vvel_FC[*iter][BOTTOM] * delT));
+//	delX_right  = std::max(0.0, (uvel_FC[*iter][RIGHT]  * delT));
+//	delX_left   = std::max(0.0,-(uvel_FC[*iter][LEFT]   * delT));
+//	delZ_front  = std::max(0.0, (wvel_FC[*iter][FRONT]  * delT));
+//	delZ_back   = std::max(0.0,-(wvel_FC[*iter][BACK]   * delT));
 
 	delX_tmp    = dx.x() - delX_right - delX_left;
 	delY_tmp    = dx.y() - delY_top   - delY_bottom;
@@ -2206,6 +2286,9 @@ const TypeDescription* fun_getTypeDescription(ICE::eflux*)
 
 //
 // $Log$
+// Revision 1.52  2000/10/26 23:22:09  jas
+// BCs are now implemented.
+//
 // Revision 1.51  2000/10/26 00:52:54  guilkey
 // Work on step4b
 //
