@@ -107,7 +107,7 @@ MaskedTetVol<T>::maker()
 template <class T>
 PersistentTypeID 
 MaskedTetVol<T>::type_id(type_name(), 
-			 GenericField<TetVolMesh, vector<T> >::type_name(),
+			 TetVol<T>::type_name(),
 			 maker);
 
 
@@ -116,7 +116,7 @@ void
 MaskedTetVol<T>::io(Piostream& stream)
 {
   stream.begin_class(type_name().c_str(), MASKED_TET_VOL_VERSION);
-  GenericField<TetVolMesh, vector<T> >::io(stream);
+  TetVol<T>::io(stream);
   Pio(stream, mask_);
   stream.end_class();
 }
