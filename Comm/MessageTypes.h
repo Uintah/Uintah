@@ -22,7 +22,9 @@ public:
 	DoCallback,
 	DoDBCallback,
 	ExecuteModule,
+	TriggerPort,
 	ReSchedule,
+	MultiSend,
 
 	MUIDispatch,
 
