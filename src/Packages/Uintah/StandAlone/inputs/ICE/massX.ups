@@ -147,14 +147,15 @@
    </DataArchiver>
    
    <Debug>
- <!--<debug label = "switchDebugInitialize"/>       -->
+  <!--<debug label = "switchDebugInitialize"/>     
     <debug label = "switchDebug_equilibration_press"/>         
- <!--<debug label = "switchDebug_vel_FC"/>           
+    <debug label = "switchDebug_vel_FC"/>           
     <debug label = "switchDebug_explicit_press"/>     
     <debug label = "switchDebug_PressFC"/>           
-    <debug label = "switchDebugLagrangianValues"/>   --> 
+    <debug label = "switchDebugLagrangianValues"/>   
     <debug label = "switchDebugSource_Sink"/>          
     <debug label = "switchDebug_advance_advect"/> 
+    -->
      
     </Debug>
     <!--____________________________________________________________________-->
