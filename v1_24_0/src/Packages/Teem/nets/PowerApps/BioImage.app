@@ -2137,8 +2137,9 @@ class BioImageApp {
             pack $winlevel.ww $winlevel.wl -side top -anchor ne -pady 0
 
             label $winlevel.ww.l -text "Window Width"
-            scale $winlevel.ww.s -variable $mods(ViewSlices)-axial-viewport0-clut_ww \
-                -from 0 -to 9999 -length 130 -width 15 \
+            scale $winlevel.ww.s \
+                -variable $mods(ViewSlices)-axial-viewport0-clut_ww \
+                -from 0 -to 9999 -length 130 -width 14 \
                 -showvalue false -orient horizontal \
                 -command "$this change_window_width"
             Tooltip $winlevel.ww.s "Control the window width of\nthe 2D viewers"
@@ -2148,8 +2149,9 @@ class BioImageApp {
             pack $winlevel.ww.l $winlevel.ww.s $winlevel.ww.e -side left
 
             label $winlevel.wl.l -text "Window Level "
-            scale $winlevel.wl.s -variable $mods(ViewSlices)-axial-viewport0-clut_wl \
-                -from 0 -to 9999 -length 130 -width 15 \
+            scale $winlevel.wl.s \
+                -variable $mods(ViewSlices)-axial-viewport0-clut_wl \
+                -from 0 -to 9999 -length 130 -width 14 \
                 -showvalue false -orient horizontal \
                 -command "$this change_window_level"
             Tooltip $winlevel.wl.s "Control the window level of\nthe 2D viewers"
@@ -2169,22 +2171,42 @@ class BioImageApp {
             scale $page.thresh.s \
                 -from 0 -to 100 \
  	        -orient horizontal -showvalue false \
- 	        -length 100 -width 15 \
+ 	        -length 100 -width 14 \
 	        -variable $mods(ViewSlices)-background_threshold \
                 -command "$mods(ViewSlices)-c background_thresh"
 	    bind $page.thresh.s <Button1-Motion> "$mods(ViewSlices)-c background_thresh"
             bind $page.thresh.s <ButtonPress-1> "$this check_crop"
-            label $page.thresh.l2 -textvariable $mods(ViewSlices)-background_threshold
+            entry $page.thresh.l2 -textvariable $mods(ViewSlices)-background_threshold -width 4
             Tooltip $page.thresh.s "Clip out values less than\nspecified background threshold"
 
-            pack $page.thresh.l $page.thresh.s $page.thresh.l2 -side left -anchor nw \
-                -padx 2 -pady 2
+            pack $page.thresh.l -side left -anchor w
+            pack $page.thresh.l2 $page.thresh.s -side right -anchor e -padx 2
+            pack $page.thresh -side top -fill x -expand 0
 
             Tooltip $page.thresh.l "Change background threshold. Data\nvalues less than or equal to the threshold\nwill be transparent in planes."
             Tooltip $page.thresh.s "Change background threshold. Data\nvalues less than or equal to the threshold\nwill be transparent in planes."
             Tooltip $page.thresh.l2 "Change background threshold. Data\nvalues less than or equal to the threshold\nwill be transparent in planes."
 
 
+            frame $page.font
+            label $page.font.l -text "Font Size:"
+
+            scale $page.font.s \
+                -from 2 -to 30 -orient horizontal -showvalue 0 \
+ 	        -width 14 -length 100  -resolution 0.1 \
+	        -variable $mods(ViewSlices)-font_size \
+                -command "$mods(ViewSlices)-c set_font_sizes"
+            entry $page.font.l2 -textvariable $mods(ViewSlices)-font_size \
+                -width 4 
+            bind $page.font.l2 <KeyPress> \
+                "$mods(ViewSlices)-c set_font_sizes"
+	    bind $page.thresh.s <Button1-Motion> \
+                "$mods(ViewSlices)-c set_font_sizes"
+
+            pack $page.font.l -side left -anchor w -padx 2
+            pack $page.font.l2 $page.font.s -side right -anchor e -padx 2
+            pack $page.font -side top -fill x -expand 0
+           
 	    checkbutton $page.lines -text "Show Guidelines" \
 		-variable show_guidelines \
 		-command "$this toggle_show_guidelines" 
