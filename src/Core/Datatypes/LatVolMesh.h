@@ -63,7 +63,8 @@ public:
   {
   public:
     LatIndex() : i_(0), j_(0), k_(0), mesh_(0) {}
-    //LatIndex(unsigned i, unsigned j, unsigned k) : i_(i), j_(j), k_(k), mesh_(0) {}
+//    LatIndex(unsigned i, unsigned j, unsigned k) : 
+//      i_(i), j_(j), k_(k), mesh_(0) {}
 
     LatIndex(const LatVolMesh *m, unsigned i, unsigned j, 
 	     unsigned k) : i_(i), j_(j), k_(k), mesh_(m) {}
