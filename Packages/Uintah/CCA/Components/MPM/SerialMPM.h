@@ -288,6 +288,13 @@ protected:
 			    DataWarehouse* old_dw,
 			    DataWarehouse* new_dw);
 
+  void addNewParticles(const ProcessorGroup*,
+		       const PatchSubset* patches,
+		       const MaterialSubset* matls,
+		       DataWarehouse* old_dw,
+		       DataWarehouse* new_dw);
+
+
   //////////
   // Insert Documentation Here:
   void interpolateToParticlesAndUpdate(const ProcessorGroup*,
@@ -345,6 +352,9 @@ protected:
   virtual void scheduleInterpolateToParticlesAndUpdate(SchedulerP&, 
                                                        const PatchSet*,
                                                        const MaterialSet*);
+
+  void scheduleAddNewParticles( SchedulerP&, const PatchSet*,
+				const MaterialSet*);
 
   void scheduleCalculateDampingRate(              SchedulerP&, const PatchSet*,
                                                   const MaterialSet*);

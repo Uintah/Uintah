@@ -492,6 +492,13 @@ MPMLabel::MPMLabel()
 		     NCVariable<Vector>::getTypeDescription());
   gNormalRotMomentLabel = VarLabel::create( "g.normalRotMoment",
 		     NCVariable<Vector>::getTypeDescription());
+
+  gNormalRotMassLabel = VarLabel::create( "g.normalRotMass",
+		     NCVariable<double>::getTypeDescription());
+  gNormalRotAccLabel = VarLabel::create( "g.normalRotAcc",
+		     NCVariable<Vector>::getTypeDescription());
+
+
 } 
 
 MPMLabel::~MPMLabel()
@@ -604,7 +611,7 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(bElBarLabel_preReloc);
   VarLabel::destroy(pVolumeOldLabel_preReloc);
 
- // for Farcture --------------
+ // for Fracture --------------
   VarLabel::destroy(pDispLabel);
   VarLabel::destroy(pDispLabel_preReloc);
   VarLabel::destroy(pDispGradsLabel);
@@ -677,6 +684,8 @@ MPMLabel::~MPMLabel()
 
   VarLabel::destroy(gNormalRotRateLabel); 
   VarLabel::destroy(gNormalRotMomentLabel); 
+  VarLabel::destroy(gNormalRotMassLabel); 
+  VarLabel::destroy(gNormalRotAccLabel); 
 }
 
 void MPMLabel::registerPermanentParticleState(int i,
